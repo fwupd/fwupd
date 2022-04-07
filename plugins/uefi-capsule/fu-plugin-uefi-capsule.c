@@ -23,13 +23,107 @@ struct FuPluginData {
 	FuUefiBgrt *bgrt;
 	FuVolume *esp;
 	FuBackend *backend;
+	GFile *fwupd_efi_file;
+	GFileMonitor *fwupd_efi_monitor;
 };
+
+static gboolean
+fu_plugin_uefi_capsule_fwupd_efi_parse(FuPlugin *plugin, GError **error)
+{
+	FuPluginData *data = fu_plugin_get_data(plugin);
+	FuContext *ctx = fu_plugin_get_context(plugin);
+	const guint8 needle[] = "f\0w\0u\0p\0d\0-\0e\0f\0i\0 \0v\0e\0r\0s\0i\0o\0n\0 ";
+	gsize bufsz = 0;
+	gsize offset = 0;
+	guint16 version_tmp[16] = {0x0};
+	g_autofree gchar *buf = NULL;
+	g_autofree gchar *version = NULL;
+
+	/* find the UTF-16 version string */
+	if (!g_file_load_contents(data->fwupd_efi_file, NULL, &buf, &bufsz, NULL, error))
+		return FALSE;
+	if (!fu_memmem_safe((const guint8 *)buf, bufsz, needle, sizeof(needle), &offset, error)) {
+		g_autofree gchar *fn = g_file_get_path(data->fwupd_efi_file);
+		g_prefix_error(error, "searching %s: ", fn);
+		return FALSE;
+	}
+
+	/* align */
+	if (!fu_memcpy_safe((guint8 *)version_tmp,
+			    sizeof(version_tmp),
+			    0x0, /* dst */
+			    (const guint8 *)buf,
+			    bufsz,
+			    offset + sizeof(needle),
+			    sizeof(version_tmp) - sizeof(guint16),
+			    error))
+		return FALSE;
+
+	/* convert to UTF-8 */
+	version = g_utf16_to_utf8(version_tmp, -1, NULL, NULL, error);
+	if (version == NULL) {
+		g_autofree gchar *fn = g_file_get_path(data->fwupd_efi_file);
+		g_prefix_error(error, "converting %s: ", fn);
+		return FALSE;
+	}
+
+	/* success */
+	fu_context_add_runtime_version(ctx, "org.freedesktop.fwupd-efi", version);
+	return TRUE;
+}
+
+static void
+fu_plugin_uefi_capsule_fwupd_efi_changed_cb(GFileMonitor *monitor,
+					    GFile *file,
+					    GFile *other_file,
+					    GFileMonitorEvent event_type,
+					    gpointer user_data)
+{
+	FuPlugin *plugin = FU_PLUGIN(user_data);
+	FuContext *ctx = fu_plugin_get_context(plugin);
+	g_autoptr(GError) error_local = NULL;
+
+	if (!fu_plugin_uefi_capsule_fwupd_efi_parse(plugin, &error_local)) {
+		fu_context_add_runtime_version(ctx, "org.freedesktop.fwupd-efi", "1.0");
+		g_warning("failed to get new fwupd efi runtime version: %s", error_local->message);
+		return;
+	}
+}
+
+static gboolean
+fu_plugin_uefi_capsule_fwupd_efi_probe(FuPlugin *plugin, GError **error)
+{
+	FuPluginData *data = fu_plugin_get_data(plugin);
+	FuContext *ctx = fu_plugin_get_context(plugin);
+	g_autofree gchar *fn = NULL;
+
+	/* find the app binary */
+	fn = fu_uefi_get_built_app_path(error);
+	if (fn == NULL)
+		return FALSE;
+	data->fwupd_efi_file = g_file_new_for_path(fn);
+	data->fwupd_efi_monitor =
+	    g_file_monitor_file(data->fwupd_efi_file, G_FILE_MONITOR_NONE, NULL, error);
+	if (data->fwupd_efi_monitor == NULL)
+		return FALSE;
+	g_signal_connect(G_FILE_MONITOR(data->fwupd_efi_monitor),
+			 "changed",
+			 G_CALLBACK(fu_plugin_uefi_capsule_fwupd_efi_changed_cb),
+			 plugin);
+	if (!fu_plugin_uefi_capsule_fwupd_efi_parse(plugin, error)) {
+		fu_context_add_runtime_version(ctx, "org.freedesktop.fwupd-efi", "1.0");
+		return FALSE;
+	}
+	return TRUE;
+}
 
 static void
 fu_plugin_uefi_capsule_init(FuPlugin *plugin)
 {
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	FuPluginData *data = fu_plugin_alloc_data(plugin, sizeof(FuPluginData));
+	g_autoptr(GError) error_local = NULL;
+
 	data->backend = fu_uefi_backend_new(ctx);
 	data->bgrt = fu_uefi_bgrt_new();
 	fu_plugin_add_rule(plugin, FU_PLUGIN_RULE_RUN_AFTER, "upower");
@@ -38,6 +132,10 @@ fu_plugin_uefi_capsule_init(FuPlugin *plugin)
 	fu_plugin_add_rule(plugin, FU_PLUGIN_RULE_METADATA_SOURCE, "linux_lockdown");
 	fu_plugin_add_rule(plugin, FU_PLUGIN_RULE_METADATA_SOURCE, "acpi_phat");
 	fu_plugin_add_rule(plugin, FU_PLUGIN_RULE_CONFLICTS, "uefi"); /* old name */
+
+	/* add a requirement on the fwupd-efi version -- which can change  */
+	if (!fu_plugin_uefi_capsule_fwupd_efi_probe(plugin, &error_local))
+		g_debug("failed to get fwupd-efi runtime version: %s", error_local->message);
 }
 
 static void
@@ -46,6 +144,12 @@ fu_plugin_uefi_capsule_destroy(FuPlugin *plugin)
 	FuPluginData *data = fu_plugin_get_data(plugin);
 	if (data->esp != NULL)
 		g_object_unref(data->esp);
+	if (data->fwupd_efi_file != NULL)
+		g_object_unref(data->fwupd_efi_file);
+	if (data->fwupd_efi_monitor != NULL) {
+		g_file_monitor_cancel(data->fwupd_efi_monitor);
+		g_object_unref(data->fwupd_efi_monitor);
+	}
 	g_object_unref(data->backend);
 	g_object_unref(data->bgrt);
 }
