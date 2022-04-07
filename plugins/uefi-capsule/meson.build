@@ -34,7 +34,6 @@ shared_module('fu_plugin_uefi_capsule',
   sources : [
     'fu-plugin-uefi-capsule.c',
     'fu-uefi-bgrt.c',
-    'fu-ucs2.c',
     'fu-uefi-bootmgr.c',
     'fu-uefi-common.c',
     'fu-uefi-cod-device.c',
@@ -72,7 +71,6 @@ fwupdate = executable(
   sources : [
     'fu-uefi-tool.c',
     'fu-uefi-bgrt.c',
-    'fu-ucs2.c',
     'fu-uefi-bootmgr.c',
     'fu-uefi-common.c',
     'fu-uefi-device.c',
@@ -166,7 +164,6 @@ if get_option('tests')
       'fu-uefi-grub-device.c',
       'fu-uefi-devpath.c',
       'fu-uefi-update-info.c',
-      'fu-ucs2.c',
       backend_srcs,
     ],
     include_directories : [

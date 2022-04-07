@@ -15,7 +15,6 @@
 #include <unistd.h>
 
 #include "fu-context-private.h"
-#include "fu-ucs2.h"
 #include "fu-uefi-backend.h"
 #include "fu-uefi-cod-device.h"
 #include "fu-uefi-common.h"
@@ -267,7 +266,11 @@ main(int argc, char *argv[])
 		}
 		buf_ucs2 = g_new0(guint16, (sz / 2) + 1);
 		memcpy(buf_ucs2, buf, sz);
-		str = fu_ucs2_to_uft8(buf_ucs2, sz / 2);
+		str = g_utf16_to_utf8(buf_ucs2, sz / 2, NULL, NULL, &error_local);
+		if (str == NULL) {
+			g_printerr("failed: %s\n", error_local->message);
+			return EXIT_FAILURE;
+		}
 		g_print("%s", str);
 	}
 
