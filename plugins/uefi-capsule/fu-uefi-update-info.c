@@ -8,7 +8,6 @@
 
 #include <fwupdplugin.h>
 
-#include "fu-ucs2.h"
 #include "fu-uefi-common.h"
 #include "fu-uefi-devpath.h"
 #include "fu-uefi-update-info.h"
@@ -63,14 +62,9 @@ fu_uefi_update_info_parse_dp(const guint8 *buf, gsize sz, GError **error)
 	data = g_bytes_get_data(dp_data, &ucs2sz);
 	ucs2file = g_new0(guint16, (ucs2sz / 2) + 1);
 	memcpy(ucs2file, data, ucs2sz);
-	relpath = fu_ucs2_to_uft8(ucs2file, ucs2sz / sizeof(guint16));
-	if (relpath == NULL) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INTERNAL,
-				    "cannot convert to UTF-8");
+	relpath = g_utf16_to_utf8(ucs2file, ucs2sz / sizeof(guint16), NULL, NULL, error);
+	if (relpath == NULL)
 		return NULL;
-	}
 	g_strdelimit(relpath, "\\", '/');
 	return g_steal_pointer(&relpath);
 }

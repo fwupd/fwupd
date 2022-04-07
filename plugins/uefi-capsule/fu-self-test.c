@@ -9,22 +9,10 @@
 #include <fwupdplugin.h>
 
 #include "fu-context-private.h"
-#include "fu-ucs2.h"
 #include "fu-uefi-backend.h"
 #include "fu-uefi-bgrt.h"
 #include "fu-uefi-cod-device.h"
 #include "fu-uefi-common.h"
-
-static void
-fu_uefi_ucs2_func(void)
-{
-	g_autofree guint16 *str1 = NULL;
-	g_autofree gchar *str2 = NULL;
-	str1 = fu_uft8_to_ucs2("hw!", -1);
-	g_assert_cmpint(fu_ucs2_strlen(str1, -1), ==, 3);
-	str2 = fu_ucs2_to_uft8(str1, -1);
-	g_assert_cmpstr("hw!", ==, str2);
-}
 
 static void
 fu_uefi_bgrt_func(void)
@@ -308,7 +296,6 @@ main(int argc, char **argv)
 	g_setenv("G_MESSAGES_DEBUG", "all", TRUE);
 
 	/* tests go here */
-	g_test_add_func("/uefi/ucs2", fu_uefi_ucs2_func);
 	g_test_add_func("/uefi/bgrt", fu_uefi_bgrt_func);
 	g_test_add_func("/uefi/framebuffer", fu_uefi_framebuffer_func);
 	g_test_add_func("/uefi/bitmap", fu_uefi_bitmap_func);

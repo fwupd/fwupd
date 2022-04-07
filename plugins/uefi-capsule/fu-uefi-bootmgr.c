@@ -12,7 +12,6 @@
 #include <gio/gio.h>
 #include <stdio.h>
 
-#include "fu-ucs2.h"
 #include "fu-uefi-bootmgr.h"
 #include "fu-uefi-common.h"
 #include "fu-uefi-device.h"
@@ -368,12 +367,14 @@ fu_uefi_bootmgr_bootnext(FuDevice *device,
 	dp_size = sz;
 	dp_buf = g_malloc0(dp_size);
 	if (!use_fwup_path) {
+		glong items_written = 0;
 		g_autofree gchar *fwup_fs_basename = g_path_get_basename(target_app);
 		g_autofree gchar *fwup_esp_path = g_strdup_printf("\\%s", fwup_fs_basename);
-		loader_str = fu_uft8_to_ucs2(fwup_esp_path, -1);
-		loader_sz = fu_ucs2_strlen(loader_str, -1) * 2;
-		if (loader_sz)
-			loader_sz += 2;
+		loader_str = g_utf8_to_utf16(fwup_esp_path, -1, NULL, &items_written, error);
+		if (loader_str == NULL)
+			return FALSE;
+		if (items_written > 0)
+			loader_sz += (items_written + 1) * 2;
 	}
 
 	sz = efi_generate_file_device_path(dp_buf,
