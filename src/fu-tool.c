@@ -3132,6 +3132,10 @@ fu_util_version(FuUtilPrivate *priv, GError **error)
 	g_autoptr(GHashTable) metadata = NULL;
 	g_autofree gchar *str = NULL;
 
+	/* load engine */
+	if (!fu_util_start_engine(priv, FU_ENGINE_LOAD_FLAG_READONLY, error))
+		return FALSE;
+
 	/* get metadata */
 	metadata = fu_engine_get_report_metadata(priv->engine, error);
 	if (metadata == NULL)
