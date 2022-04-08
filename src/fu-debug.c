@@ -101,6 +101,16 @@ fu_debug_handler_cb(const gchar *log_domain,
 		return;
 	}
 
+	/* plain output */
+	if (g_getenv("NO_COLOR") != NULL) {
+		if (timestamp != NULL)
+			g_printerr("%s ", timestamp);
+		if (domain != NULL)
+			g_printerr("%s ", domain->str);
+		g_printerr("%s\n", message);
+		return;
+	}
+
 	/* to screen */
 	switch (log_level) {
 	case G_LOG_LEVEL_ERROR:

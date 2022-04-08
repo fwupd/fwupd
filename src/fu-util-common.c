@@ -49,6 +49,8 @@ fu_util_get_systemd_unit(void)
 gchar *
 fu_util_term_format(const gchar *text, FuUtilTermColor fg_color)
 {
+	if (g_getenv("NO_COLOR") != NULL)
+		return g_strdup(text);
 	return g_strdup_printf("\033[%um\033[1m%s\033[0m", fg_color, text);
 }
 
@@ -2066,17 +2068,17 @@ fu_security_attr_append_str(FwupdSecurityAttr *attr,
 	for (guint i = fu_common_strwidth(name); i < 30; i++)
 		g_string_append(str, " ");
 	if (fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_OBSOLETED)) {
-		g_string_append_printf(str,
-				       "\033[37m\033[1m%s\033[0m",
-				       fu_security_attr_get_result(attr));
+		g_autofree gchar *fmt = fu_util_term_format(fu_security_attr_get_result(attr),
+							    FU_UTIL_TERM_COLOR_YELLOW);
+		g_string_append(str, fmt);
 	} else if (fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS)) {
-		g_string_append_printf(str,
-				       "\033[32m\033[1m%s\033[0m",
-				       fu_security_attr_get_result(attr));
+		g_autofree gchar *fmt = fu_util_term_format(fu_security_attr_get_result(attr),
+							    FU_UTIL_TERM_COLOR_GREEN);
+		g_string_append(str, fmt);
 	} else {
-		g_string_append_printf(str,
-				       "\033[31m\033[1m%s\033[0m",
-				       fu_security_attr_get_result(attr));
+		g_autofree gchar *fmt =
+		    fu_util_term_format(fu_security_attr_get_result(attr), FU_UTIL_TERM_COLOR_RED);
+		g_string_append(str, fmt);
 	}
 	if ((flags & FU_SECURITY_ATTR_TO_STRING_FLAG_SHOW_URLS) > 0 &&
 	    fwupd_security_attr_get_url(attr) != NULL) {
