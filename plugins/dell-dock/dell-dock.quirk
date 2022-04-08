@@ -99,7 +99,7 @@ FirmwareSizeMax = 0x20000
 Flags = dual-image,self-recovery,usable-during-update
 DellDockUnlockTarget = 1
 DellDockBoardMin = 6
-DellDockVersionLowest = 01.00.00.00
+DellDockVersionLowest = 01.01.00.01
 DellDockBlobVersionOffset = 0x1AFC0
 InstallDuration = 60
 
