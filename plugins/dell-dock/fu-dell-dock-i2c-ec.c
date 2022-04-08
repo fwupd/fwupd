@@ -826,7 +826,6 @@ fu_dell_dock_ec_write_fw(FuDevice *device,
 
 	/* meet the minimum EC version */
 	if ((flags & FWUPD_INSTALL_FLAG_FORCE) == 0 &&
-	    (self->data->module_type != MODULE_TYPE_130_USB4) &&
 	    (fu_common_vercmp_full(dynamic_version,
 				   self->ec_minimum_version,
 				   FWUPD_VERSION_FORMAT_QUAD) < 0)) {
