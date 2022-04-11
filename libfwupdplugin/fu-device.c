@@ -2113,7 +2113,7 @@ fu_device_get_metadata_boolean(FuDevice *self, const gchar *key)
  *
  * Gets an item of metadata from the device.
  *
- * Returns: a string value, or %G_MAXUINT for unfound or failure to parse.
+ * Returns: an integer value, or %G_MAXUINT for unfound or failure to parse.
  *
  * Since: 0.9.7
  **/
