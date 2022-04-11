@@ -17,7 +17,7 @@ G_BEGIN_DECLS
  * @FWUPD_ERROR_INTERNAL:			Internal error
  * @FWUPD_ERROR_VERSION_NEWER:			Installed newer firmware version
  * @FWUPD_ERROR_VERSION_SAME:			Installed same firmware version
- * @FWUPD_ERROR_ALREADY_PENDING:		Already set be be installed offline
+ * @FWUPD_ERROR_ALREADY_PENDING:		Already set to be installed offline
  * @FWUPD_ERROR_AUTH_FAILED:			Failed to get authentication
  * @FWUPD_ERROR_READ:				Failed to read from device
  * @FWUPD_ERROR_WRITE:				Failed to write to the device

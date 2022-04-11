@@ -310,7 +310,7 @@ typedef enum {
 /**
  * FWUPD_DEVICE_FLAG_CAN_VERIFY:
  *
- * THe device checksums can be compared against metadata.
+ * The device checksums can be compared against metadata.
  *
  * Since: 1.3.3
  */
@@ -447,7 +447,7 @@ typedef enum {
 /**
  * FWUPD_DEVICE_FLAG_MD_SET_ICON:
  *
- *Deprecated, no not use
+ * Deprecated, no not use
  *
  * Since: 1.5.2
  * Deprecated 1.5.5
