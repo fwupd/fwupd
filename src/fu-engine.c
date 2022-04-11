@@ -1780,21 +1780,26 @@ fu_engine_get_proc_cmdline(GError **error)
 	return g_string_free(g_steal_pointer(&cmdline_safe), FALSE);
 }
 
-static gchar *
-fu_engine_get_kernel_cmdline(GError **error)
-{
-	/* Linuxish */
-	if (g_file_test("/proc/cmdline", G_FILE_TEST_EXISTS))
-		return fu_engine_get_proc_cmdline(error);
-
-	/* BSDish */
-	return fu_kenv_get_string("kernel_options", error);
-}
-
 static gboolean
 fu_engine_get_report_metadata_kernel_cmdline(GHashTable *hash, GError **error)
 {
-	g_autofree gchar *cmdline = fu_engine_get_kernel_cmdline(error);
+	g_autofree gchar *cmdline = NULL;
+
+#ifdef __linux__
+	/* Linuxish */
+	cmdline = fu_engine_get_proc_cmdline(error);
+#elif defined(__FreeBSD__)
+	/* BSDish */
+	cmdline = fu_kenv_get_string("kernel_options", error);
+#elif defined(_WIN32)
+	/* Windows */
+	cmdline = g_strdup("");
+#else
+	g_set_error_literal(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_NOT_SUPPORTED,
+			    "cannot get KernelCmdline on this OS");
+#endif
 	if (cmdline == NULL)
 		return FALSE;
 	if (cmdline[0] != '\0') {
