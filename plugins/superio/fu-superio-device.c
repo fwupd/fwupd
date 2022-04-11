@@ -487,6 +487,10 @@ fu_superio_device_init(FuSuperioDevice *self)
 static void
 fu_superio_device_finalize(GObject *object)
 {
+	FuSuperioDevice *self = FU_SUPERIO_DEVICE(object);
+	FuSuperioDevicePrivate *priv = GET_PRIVATE(self);
+	g_free(priv->chipset);
+
 	G_OBJECT_CLASS(fu_superio_device_parent_class)->finalize(object);
 }
 
