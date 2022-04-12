@@ -95,6 +95,10 @@ fu_util_client_notify_cb(GObject *object, GParamSpec *pspec, FuUtilPrivate *priv
 static void
 fu_util_update_device_request_cb(FwupdClient *client, FwupdRequest *request, FuUtilPrivate *priv)
 {
+	/* action has not been assigned yet */
+	if (priv->current_operation == FU_UTIL_OPERATION_UNKNOWN)
+		return;
+
 	/* nothing sensible to show */
 	if (fwupd_request_get_message(request) == NULL)
 		return;
@@ -119,6 +123,10 @@ static void
 fu_util_update_device_changed_cb(FwupdClient *client, FwupdDevice *device, FuUtilPrivate *priv)
 {
 	g_autofree gchar *str = NULL;
+
+	/* action has not been assigned yet */
+	if (priv->current_operation == FU_UTIL_OPERATION_UNKNOWN)
+		return;
 
 	/* allowed to set whenever the device has changed */
 	if (fwupd_device_has_flag(device, FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN))
@@ -985,10 +993,7 @@ fu_util_device_test(FuUtilPrivate *priv, gchar **values, GError **error)
 					 .name = "Unknown"};
 
 	/* required for interactive devices */
-	g_signal_connect(FWUPD_CLIENT(priv->client),
-			 "device-request",
-			 G_CALLBACK(fu_util_update_device_request_cb),
-			 priv);
+	priv->current_operation = FU_UTIL_OPERATION_UPDATE;
 
 	/* at least one argument required */
 	if (g_strv_length(values) == 0) {
@@ -1097,14 +1102,6 @@ fu_util_install(FuUtilPrivate *priv, gchar **values, GError **error)
 	}
 
 	priv->current_operation = FU_UTIL_OPERATION_INSTALL;
-	g_signal_connect(FWUPD_CLIENT(priv->client),
-			 "device-changed",
-			 G_CALLBACK(fu_util_update_device_changed_cb),
-			 priv);
-	g_signal_connect(FWUPD_CLIENT(priv->client),
-			 "device-request",
-			 G_CALLBACK(fu_util_update_device_request_cb),
-			 priv);
 
 	/* install with flags chosen by the user */
 	filename = fu_util_download_if_required(priv, values[0], error);
@@ -2372,14 +2369,6 @@ fu_util_update(FuUtilPrivate *priv, gchar **values, GError **error)
 	if (devices == NULL)
 		return FALSE;
 	priv->current_operation = FU_UTIL_OPERATION_UPDATE;
-	g_signal_connect(FWUPD_CLIENT(priv->client),
-			 "device-changed",
-			 G_CALLBACK(fu_util_update_device_changed_cb),
-			 priv);
-	g_signal_connect(FWUPD_CLIENT(priv->client),
-			 "device-request",
-			 G_CALLBACK(fu_util_update_device_request_cb),
-			 priv);
 	g_ptr_array_sort(devices, fu_util_sort_devices_by_flags_cb);
 	for (guint i = 0; i < devices->len; i++) {
 		FwupdDevice *dev = g_ptr_array_index(devices, i);
@@ -2619,14 +2608,6 @@ fu_util_downgrade(FuUtilPrivate *priv, gchar **values, GError **error)
 
 	/* update the console if composite devices are also updated */
 	priv->current_operation = FU_UTIL_OPERATION_DOWNGRADE;
-	g_signal_connect(FWUPD_CLIENT(priv->client),
-			 "device-changed",
-			 G_CALLBACK(fu_util_update_device_changed_cb),
-			 priv);
-	g_signal_connect(FWUPD_CLIENT(priv->client),
-			 "device-request",
-			 G_CALLBACK(fu_util_update_device_request_cb),
-			 priv);
 	priv->flags |= FWUPD_INSTALL_FLAG_ALLOW_OLDER;
 	if (!fu_util_update_device_with_release(priv, dev, rel, error))
 		return FALSE;
@@ -2688,14 +2669,6 @@ fu_util_reinstall(FuUtilPrivate *priv, gchar **values, GError **error)
 
 	/* update the console if composite devices are also updated */
 	priv->current_operation = FU_UTIL_OPERATION_INSTALL;
-	g_signal_connect(FWUPD_CLIENT(priv->client),
-			 "device-changed",
-			 G_CALLBACK(fu_util_update_device_changed_cb),
-			 priv);
-	g_signal_connect(FWUPD_CLIENT(priv->client),
-			 "device-request",
-			 G_CALLBACK(fu_util_update_device_request_cb),
-			 priv);
 	priv->flags |= FWUPD_INSTALL_FLAG_ALLOW_REINSTALL;
 	if (!fu_util_update_device_with_release(priv, dev, rel, error))
 		return FALSE;
@@ -2819,14 +2792,6 @@ fu_util_switch_branch(FuUtilPrivate *priv, gchar **values, GError **error)
 
 	/* update the console if composite devices are also updated */
 	priv->current_operation = FU_UTIL_OPERATION_INSTALL;
-	g_signal_connect(FWUPD_CLIENT(priv->client),
-			 "device-changed",
-			 G_CALLBACK(fu_util_update_device_changed_cb),
-			 priv);
-	g_signal_connect(FWUPD_CLIENT(priv->client),
-			 "device-request",
-			 G_CALLBACK(fu_util_update_device_request_cb),
-			 priv);
 	priv->flags |= FWUPD_INSTALL_FLAG_ALLOW_REINSTALL;
 	priv->flags |= FWUPD_INSTALL_FLAG_ALLOW_BRANCH_SWITCH;
 	if (!fu_util_update_device_with_release(priv, dev, rel, error))
@@ -3287,14 +3252,6 @@ fu_util_sync_bkc(FuUtilPrivate *priv, gchar **values, GError **error)
 
 	/* update the console if composite devices are also updated */
 	priv->current_operation = FU_UTIL_OPERATION_INSTALL;
-	g_signal_connect(FWUPD_CLIENT(priv->client),
-			 "device-changed",
-			 G_CALLBACK(fu_util_update_device_changed_cb),
-			 priv);
-	g_signal_connect(FWUPD_CLIENT(priv->client),
-			 "device-request",
-			 G_CALLBACK(fu_util_update_device_request_cb),
-			 priv);
 	priv->flags |= FWUPD_INSTALL_FLAG_ALLOW_OLDER;
 
 	/* for each device, find the release that matches the tag */
@@ -4360,6 +4317,14 @@ main(int argc, char *argv[])
 	g_signal_connect(FWUPD_CLIENT(priv->client),
 			 "notify::status",
 			 G_CALLBACK(fu_util_client_notify_cb),
+			 priv);
+	g_signal_connect(FWUPD_CLIENT(priv->client),
+			 "device-changed",
+			 G_CALLBACK(fu_util_update_device_changed_cb),
+			 priv);
+	g_signal_connect(FWUPD_CLIENT(priv->client),
+			 "device-request",
+			 G_CALLBACK(fu_util_update_device_request_cb),
 			 priv);
 
 	/* show a warning if the daemon is tainted */
