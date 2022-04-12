@@ -2308,15 +2308,18 @@ fu_util_update_device_with_release(FuUtilPrivate *priv,
 }
 
 static gboolean
-fu_util_maybe_send_reports(FuUtilPrivate *priv, const gchar *remote_id, GError **error)
+fu_util_maybe_send_reports(FuUtilPrivate *priv, FwupdRelease *rel, GError **error)
 {
 	g_autoptr(FwupdRemote) remote = NULL;
 	g_autoptr(GError) error_local = NULL;
-	if (remote_id == NULL) {
+	if (fwupd_release_get_remote_id(rel) == NULL) {
 		g_debug("not sending reports, no remote");
 		return TRUE;
 	}
-	remote = fwupd_client_get_remote_by_id(priv->client, remote_id, priv->cancellable, error);
+	remote = fwupd_client_get_remote_by_id(priv->client,
+					       fwupd_release_get_remote_id(rel),
+					       priv->cancellable,
+					       error);
 	if (remote == NULL)
 		return FALSE;
 	if (fwupd_remote_get_automatic_reports(remote)) {
@@ -2374,7 +2377,6 @@ fu_util_update(FuUtilPrivate *priv, gchar **values, GError **error)
 		FwupdDevice *dev = g_ptr_array_index(devices, i);
 		FwupdRelease *rel;
 		const gchar *device_id = fu_device_get_id(dev);
-		const gchar *remote_id;
 		g_autoptr(GPtrArray) rels = NULL;
 		g_autoptr(GError) error_local = NULL;
 		gboolean dev_skip_byid = TRUE;
@@ -2434,8 +2436,7 @@ fu_util_update(FuUtilPrivate *priv, gchar **values, GError **error)
 		fu_util_display_current_message(priv);
 
 		/* send report if we're supposed to */
-		remote_id = fwupd_release_get_remote_id(rel);
-		if (!fu_util_maybe_send_reports(priv, remote_id, error))
+		if (!fu_util_maybe_send_reports(priv, rel, error))
 			return FALSE;
 	}
 
@@ -2569,7 +2570,6 @@ fu_util_remote_disable(FuUtilPrivate *priv, gchar **values, GError **error)
 static gboolean
 fu_util_downgrade(FuUtilPrivate *priv, gchar **values, GError **error)
 {
-	const gchar *remote_id;
 	g_autoptr(FwupdDevice) dev = NULL;
 	g_autoptr(FwupdRelease) rel = NULL;
 	g_autoptr(GPtrArray) rels = NULL;
@@ -2615,8 +2615,7 @@ fu_util_downgrade(FuUtilPrivate *priv, gchar **values, GError **error)
 	fu_util_display_current_message(priv);
 
 	/* send report if we're supposed to */
-	remote_id = fwupd_release_get_remote_id(rel);
-	if (!fu_util_maybe_send_reports(priv, remote_id, error))
+	if (!fu_util_maybe_send_reports(priv, rel, error))
 		return FALSE;
 
 	/* we don't want to ask anything */
@@ -2631,7 +2630,6 @@ fu_util_downgrade(FuUtilPrivate *priv, gchar **values, GError **error)
 static gboolean
 fu_util_reinstall(FuUtilPrivate *priv, gchar **values, GError **error)
 {
-	const gchar *remote_id;
 	g_autoptr(FwupdRelease) rel = NULL;
 	g_autoptr(GPtrArray) rels = NULL;
 	g_autoptr(FwupdDevice) dev = NULL;
@@ -2675,8 +2673,7 @@ fu_util_reinstall(FuUtilPrivate *priv, gchar **values, GError **error)
 	fu_util_display_current_message(priv);
 
 	/* send report if we're supposed to */
-	remote_id = fwupd_release_get_remote_id(rel);
-	if (!fu_util_maybe_send_reports(priv, remote_id, error))
+	if (!fu_util_maybe_send_reports(priv, rel, error))
 		return FALSE;
 
 	/* we don't want to ask anything */
@@ -2697,7 +2694,6 @@ _g_str_equal0(gconstpointer str1, gconstpointer str2)
 static gboolean
 fu_util_switch_branch(FuUtilPrivate *priv, gchar **values, GError **error)
 {
-	const gchar *remote_id;
 	const gchar *branch;
 	g_autoptr(FwupdRelease) rel = NULL;
 	g_autoptr(GPtrArray) rels = NULL;
@@ -2799,8 +2795,7 @@ fu_util_switch_branch(FuUtilPrivate *priv, gchar **values, GError **error)
 	fu_util_display_current_message(priv);
 
 	/* send report if we're supposed to */
-	remote_id = fwupd_release_get_remote_id(rel);
-	if (!fu_util_maybe_send_reports(priv, remote_id, error))
+	if (!fu_util_maybe_send_reports(priv, rel, error))
 		return FALSE;
 
 	/* we don't want to ask anything */
