@@ -21,11 +21,14 @@
 
 struct _FuFlashromDevice {
 	FuUdevDevice parent_instance;
+	FuIfdRegion region;
 	struct flashrom_flashctx *flashctx;
 	struct flashrom_programmer *flashprog;
 };
 
 G_DEFINE_TYPE(FuFlashromDevice, fu_flashrom_device, FU_TYPE_UDEV_DEVICE)
+
+enum { PROP_0, PROP_REGION, PROP_LAST };
 
 static gboolean
 fu_flashrom_device_set_quirk_kv(FuDevice *device,
@@ -161,8 +164,8 @@ fu_flashrom_device_prepare(FuDevice *device,
 			return FALSE;
 		}
 
-		/* include bios region for safety reasons */
-		if (flashrom_layout_include_region(layout, "bios")) {
+		/* update only one specific region of the flash and do not touch others */
+		if (flashrom_layout_include_region(layout, fu_ifd_region_to_string(self->region))) {
 			g_set_error_literal(error,
 					    FWUPD_ERROR,
 					    FWUPD_ERROR_NOT_SUPPORTED,
@@ -223,8 +226,8 @@ fu_flashrom_device_write_firmware(FuDevice *device,
 		return FALSE;
 	}
 
-	/* include bios region for safety reasons */
-	if (flashrom_layout_include_region(layout, "bios")) {
+	/* update only one specific region of the flash and do not touch others */
+	if (flashrom_layout_include_region(layout, fu_ifd_region_to_string(self->region))) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
@@ -296,7 +299,6 @@ fu_flashrom_device_init(FuFlashromDevice *self)
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_ENSURE_SEMVER);
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_MD_SET_SIGNED);
 	fu_device_set_physical_id(FU_DEVICE(self), "flashrom");
-	fu_device_set_logical_id(FU_DEVICE(self), "bios");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PAIR);
 	fu_device_add_icon(FU_DEVICE(self), "computer");
 	fu_device_register_private_flag(FU_DEVICE(self),
@@ -312,6 +314,38 @@ fu_flashrom_device_constructed(GObject *obj)
 }
 
 static void
+fu_flashrom_device_get_property(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
+{
+	FuFlashromDevice *self = FU_FLASHROM_DEVICE(object);
+	switch (prop_id) {
+	case PROP_REGION:
+		g_value_set_uint(value, self->region);
+		break;
+	default:
+		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
+		break;
+	}
+}
+
+static void
+fu_flashrom_device_set_property(GObject *object,
+				guint prop_id,
+				const GValue *value,
+				GParamSpec *pspec)
+{
+	FuFlashromDevice *self = FU_FLASHROM_DEVICE(object);
+	switch (prop_id) {
+	case PROP_REGION:
+		self->region = g_value_get_uint(value);
+		fu_device_set_logical_id(FU_DEVICE(self), fu_ifd_region_to_string(self->region));
+		break;
+	default:
+		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
+		break;
+	}
+}
+
+static void
 fu_flashrom_device_finalize(GObject *object)
 {
 	G_OBJECT_CLASS(fu_flashrom_device_parent_class)->finalize(object);
@@ -320,8 +354,27 @@ fu_flashrom_device_finalize(GObject *object)
 static void
 fu_flashrom_device_class_init(FuFlashromDeviceClass *klass)
 {
+	GParamSpec *pspec;
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
+
+	object_class->get_property = fu_flashrom_device_get_property;
+	object_class->set_property = fu_flashrom_device_set_property;
+
+	/**
+	 * FuFlashromDevice:region:
+	 *
+	 * The IFD region that's being managed.
+	 */
+	pspec = g_param_spec_uint("region",
+				  NULL,
+				  NULL,
+				  0,
+				  G_MAXUINT,
+				  0,
+				  G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_NAME);
+	g_object_class_install_property(object_class, PROP_REGION, pspec);
+
 	object_class->constructed = fu_flashrom_device_constructed;
 	object_class->finalize = fu_flashrom_device_finalize;
 	klass_device->set_quirk_kv = fu_flashrom_device_set_quirk_kv;
@@ -334,7 +387,14 @@ fu_flashrom_device_class_init(FuFlashromDeviceClass *klass)
 }
 
 FuDevice *
-fu_flashrom_device_new(FuContext *ctx)
+fu_flashrom_device_new(FuContext *ctx, FuIfdRegion region)
 {
-	return FU_DEVICE(g_object_new(FU_TYPE_FLASHROM_DEVICE, "context", ctx, NULL));
+	return FU_DEVICE(
+	    g_object_new(FU_TYPE_FLASHROM_DEVICE, "context", ctx, "region", region, NULL));
+}
+
+FuIfdRegion
+fu_flashrom_device_get_region(FuFlashromDevice *self)
+{
+	return self->region;
 }
