@@ -1485,6 +1485,42 @@ fu_util_get_device_or_prompt(FuUtilPrivate *priv, gchar **values, GError **error
 	return fu_util_prompt_for_device(priv, devices, error);
 }
 
+static FwupdRelease *
+fu_util_get_release_for_device_version(FuUtilPrivate *priv,
+				       FwupdDevice *device,
+				       const gchar *version,
+				       GError **error)
+{
+	g_autoptr(GPtrArray) releases = NULL;
+
+	/* get all releases */
+	releases = fwupd_client_get_releases(priv->client,
+					     fwupd_device_get_id(device),
+					     priv->cancellable,
+					     error);
+	if (releases == NULL)
+		return NULL;
+
+	/* find using vercmp */
+	for (guint j = 0; j < releases->len; j++) {
+		FwupdRelease *release = g_ptr_array_index(releases, j);
+		if (fu_common_vercmp_full(fwupd_release_get_version(release),
+					  version,
+					  fwupd_device_get_version_format(device)) == 0) {
+			return g_object_ref(release);
+		}
+	}
+
+	/* did not find */
+	g_set_error(error,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_NOT_SUPPORTED,
+		    "Unable to locate release %s for %s",
+		    version,
+		    fu_device_get_name(device));
+	return NULL;
+}
+
 static gboolean
 fu_util_clear_results(FuUtilPrivate *priv, gchar **values, GError **error)
 {
@@ -2631,7 +2667,6 @@ static gboolean
 fu_util_reinstall(FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(FwupdRelease) rel = NULL;
-	g_autoptr(GPtrArray) rels = NULL;
 	g_autoptr(FwupdDevice) dev = NULL;
 
 	priv->filter_include |= FWUPD_DEVICE_FLAG_SUPPORTED;
@@ -2640,30 +2675,9 @@ fu_util_reinstall(FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 
 	/* try to lookup/match release from client */
-	rels = fwupd_client_get_releases(priv->client,
-					 fwupd_device_get_id(dev),
-					 priv->cancellable,
-					 error);
-	if (rels == NULL)
+	rel = fu_util_get_release_for_device_version(priv, dev, fu_device_get_version(dev), error);
+	if (rel == NULL)
 		return FALSE;
-	for (guint j = 0; j < rels->len; j++) {
-		FwupdRelease *rel_tmp = g_ptr_array_index(rels, j);
-		if (fu_common_vercmp_full(fwupd_release_get_version(rel_tmp),
-					  fu_device_get_version(dev),
-					  fwupd_device_get_version_format(dev)) == 0) {
-			rel = g_object_ref(rel_tmp);
-			break;
-		}
-	}
-	if (rel == NULL) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "Unable to locate release for %s version %s",
-			    fu_device_get_name(dev),
-			    fu_device_get_version(dev));
-		return FALSE;
-	}
 
 	/* update the console if composite devices are also updated */
 	priv->current_operation = FU_UTIL_OPERATION_INSTALL;
