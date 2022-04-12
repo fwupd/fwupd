@@ -1888,13 +1888,14 @@ fu_util_unlock(FuUtilPrivate *priv, gchar **values, GError **error)
 	if (dev == NULL)
 		return FALSE;
 
+	if (!fwupd_client_unlock(priv->client, fwupd_device_get_id(dev), priv->cancellable, error))
+		return FALSE;
+
+	/* check flags after unlocking in case the operation changes them */
 	if (fwupd_device_has_flag(dev, FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN))
 		priv->completion_flags |= FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN;
 	if (fwupd_device_has_flag(dev, FWUPD_DEVICE_FLAG_NEEDS_REBOOT))
 		priv->completion_flags |= FWUPD_DEVICE_FLAG_NEEDS_REBOOT;
-
-	if (!fwupd_client_unlock(priv->client, fwupd_device_get_id(dev), priv->cancellable, error))
-		return FALSE;
 
 	return fu_util_prompt_complete(priv->completion_flags, TRUE, error);
 }
