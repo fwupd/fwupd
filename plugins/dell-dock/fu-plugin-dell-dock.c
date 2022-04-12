@@ -81,10 +81,12 @@ fu_plugin_dell_dock_probe(FuPlugin *plugin, FuDevice *proxy, GError **error)
 		instance_id_mst = DELL_DOCK_VMM6210_INSTANCE_ID;
 	else
 		instance_id_mst = DELL_DOCK_VM5331_INSTANCE_ID;
+	fu_device_add_instance_id(FU_DEVICE(mst_device), instance_id_mst);
 	instance_guid_mst = fwupd_guid_hash_string(instance_id_mst);
 	fu_device_add_guid(FU_DEVICE(mst_device), instance_guid_mst);
+	if (!fu_device_probe(FU_DEVICE(mst_device), error))
+		return FALSE;
 	fu_device_add_child(FU_DEVICE(ec_device), FU_DEVICE(mst_device));
-	fu_device_add_instance_id(FU_DEVICE(mst_device), instance_id_mst);
 	if (!fu_plugin_dell_dock_create_node(plugin, FU_DEVICE(mst_device), error))
 		return FALSE;
 
