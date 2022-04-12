@@ -377,7 +377,7 @@ fu_security_attrs_depsolve(FuSecurityAttrs *self)
 				const gchar *obsolete = g_ptr_array_index(obsoletes, k);
 
 				if (g_strcmp0(attr_tmp_id, obsolete) == 0 ||
-				    g_strcmp0(attr_tmp_plugin, obsolete) != 0) {
+				    g_strcmp0(attr_tmp_plugin, obsolete) == 0) {
 					g_debug("security attr %s:%s obsoleted by %s:%s",
 						attr_tmp_id,
 						attr_tmp_plugin,
