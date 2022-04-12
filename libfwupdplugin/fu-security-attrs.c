@@ -329,44 +329,60 @@ fu_security_attrs_sort_cb(gconstpointer item1, gconstpointer item2)
 void
 fu_security_attrs_depsolve(FuSecurityAttrs *self)
 {
-	g_autoptr(GHashTable) attrs_by_id = NULL;
-
 	g_return_if_fail(FU_IS_SECURITY_ATTRS(self));
-
-	/* make hash of ID -> object */
-	attrs_by_id = g_hash_table_new(g_str_hash, g_str_equal);
-	for (guint i = 0; i < self->attrs->len; i++) {
-		FwupdSecurityAttr *attr = g_ptr_array_index(self->attrs, i);
-		g_hash_table_insert(attrs_by_id,
-				    (gpointer)fwupd_security_attr_get_appstream_id(attr),
-				    (gpointer)attr);
-	}
 
 	/* set flat where required */
 	for (guint i = 0; i < self->attrs->len; i++) {
 		FwupdSecurityAttr *attr = g_ptr_array_index(self->attrs, i);
+		const gchar *attr_id = fwupd_security_attr_get_appstream_id(attr);
+		const gchar *attr_plugin = fwupd_security_attr_get_plugin(attr);
 		GPtrArray *obsoletes = fwupd_security_attr_get_obsoletes(attr);
-		for (guint j = 0; j < obsoletes->len; j++) {
-			const gchar *obsolete = g_ptr_array_index(obsoletes, j);
-			FwupdSecurityAttr *attr_tmp = g_hash_table_lookup(attrs_by_id, obsolete);
 
-			/* by AppStream ID */
-			if (attr_tmp != NULL) {
-				g_debug("security attr %s obsoleted by %s",
-					obsolete,
-					fwupd_security_attr_get_appstream_id(attr_tmp));
-				fwupd_security_attr_add_flag(attr_tmp,
-							     FWUPD_SECURITY_ATTR_FLAG_OBSOLETED);
+		for (guint j = 0; j < self->attrs->len; j++) {
+			FwupdSecurityAttr *attr_tmp = g_ptr_array_index(self->attrs, j);
+			const gchar *attr_tmp_id = fwupd_security_attr_get_appstream_id(attr_tmp);
+			const gchar *attr_tmp_plugin = fwupd_security_attr_get_plugin(attr_tmp);
+
+			/* skip self */
+			if (g_strcmp0(attr_plugin, attr_tmp_plugin) == 0 &&
+			    g_strcmp0(attr_id, attr_tmp_id) == 0)
+				continue;
+
+			/* add duplicate (negative) attributes when obsolete not explicitly set
+			 */
+			if (obsoletes->len == 0) {
+				if (g_strcmp0(attr_id, attr_tmp_id) != 0)
+					continue;
+				if (fwupd_security_attr_has_flag(attr,
+								 FWUPD_SECURITY_ATTR_FLAG_SUCCESS))
+					continue;
+				if (fwupd_security_attr_has_flag(attr_tmp,
+								 FWUPD_SECURITY_ATTR_FLAG_SUCCESS))
+					continue;
+
+				if (fwupd_security_attr_has_obsolete(attr, attr_id))
+					continue;
+				if (fwupd_security_attr_has_obsolete(attr_tmp, attr_id))
+					continue;
+				g_debug("duplicate security attr %s from plugin %s implicitly "
+					"obsoleted by plugin %s",
+					attr_id,
+					attr_plugin,
+					attr_tmp_plugin);
+				fwupd_security_attr_add_obsolete(attr, attr_id);
 			}
 
-			/* by plugin name */
-			for (guint k = 0; k < self->attrs->len; k++) {
-				attr_tmp = g_ptr_array_index(self->attrs, k);
-				if (g_strcmp0(obsolete, fwupd_security_attr_get_plugin(attr_tmp)) ==
-				    0) {
-					g_debug("security attr %s obsoleted by %s",
-						obsolete,
-						fwupd_security_attr_get_appstream_id(attr_tmp));
+			/* walk all the obsoletes for matches appstream ID or plugin */
+			for (guint k = 0; k < obsoletes->len; k++) {
+				const gchar *obsolete = g_ptr_array_index(obsoletes, k);
+
+				if (g_strcmp0(attr_tmp_id, obsolete) == 0 ||
+				    g_strcmp0(attr_tmp_plugin, obsolete) != 0) {
+					g_debug("security attr %s:%s obsoleted by %s:%s",
+						attr_tmp_id,
+						attr_tmp_plugin,
+						attr_id,
+						attr_plugin);
 					fwupd_security_attr_add_flag(
 					    attr_tmp,
 					    FWUPD_SECURITY_ATTR_FLAG_OBSOLETED);
