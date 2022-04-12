@@ -431,7 +431,7 @@ Flags = manifest-poll,allow-zero-polltimeout,unsigned-payload
 RemoveDelay = 9000
 
 # AVer ATLAS CAM
-[USB\VID_2574&PID_0A70]
+[USB\VID_34AD&PID_0006]
 Plugin = dfu
 Flags = detach-for-attach
 RemoveDelay = 60000
