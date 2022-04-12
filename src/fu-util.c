@@ -1079,7 +1079,7 @@ fu_util_download(FuUtilPrivate *priv, gchar **values, GError **error)
 }
 
 static gboolean
-fu_util_install(FuUtilPrivate *priv, gchar **values, GError **error)
+fu_util_local_install(FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	const gchar *id;
 	g_autofree gchar *filename = NULL;
@@ -2700,6 +2700,63 @@ fu_util_reinstall(FuUtilPrivate *priv, gchar **values, GError **error)
 }
 
 static gboolean
+fu_util_install(FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	g_autoptr(FwupdDevice) dev = NULL;
+	g_autoptr(FwupdRelease) rel = NULL;
+
+	/* fall back for CLI compatibility */
+	if (g_strv_length(values) >= 1) {
+		if (g_file_test(values[0], G_FILE_TEST_EXISTS))
+			return fu_util_local_install(priv, values, error);
+	}
+
+	/* find device */
+	priv->filter_include |= FWUPD_DEVICE_FLAG_SUPPORTED;
+	dev = fu_util_get_device_or_prompt(priv, values, error);
+	if (dev == NULL)
+		return FALSE;
+
+	/* find release */
+	if (g_strv_length(values) >= 2) {
+		rel = fu_util_get_release_for_device_version(priv, dev, values[1], error);
+		if (rel == NULL)
+			return FALSE;
+	} else {
+		g_autoptr(GPtrArray) rels = NULL;
+		rels = fwupd_client_get_releases(priv->client,
+						 fwupd_device_get_id(dev),
+						 priv->cancellable,
+						 error);
+		if (rels == NULL)
+			return FALSE;
+		rel = fu_util_prompt_for_release(priv, rels, error);
+		if (rel == NULL)
+			return FALSE;
+	}
+
+	/* allow all actions */
+	priv->current_operation = FU_UTIL_OPERATION_INSTALL;
+	priv->flags |= FWUPD_INSTALL_FLAG_ALLOW_REINSTALL;
+	priv->flags |= FWUPD_INSTALL_FLAG_ALLOW_OLDER;
+	if (!fu_util_update_device_with_release(priv, dev, rel, error))
+		return FALSE;
+	fu_util_display_current_message(priv);
+
+	/* send report if we're supposed to */
+	if (!fu_util_maybe_send_reports(priv, rel, error))
+		return FALSE;
+
+	/* we don't want to ask anything */
+	if (priv->no_reboot_check) {
+		g_debug("skipping reboot check");
+		return TRUE;
+	}
+
+	return fu_util_prompt_complete(priv->completion_flags, TRUE, error);
+}
+
+static gboolean
 _g_str_equal0(gconstpointer str1, gconstpointer str2)
 {
 	return g_strcmp0(str1, str2) == 0;
@@ -3994,10 +4051,17 @@ main(int argc, char *argv[])
 	fu_util_cmd_array_add(cmd_array,
 			      "install",
 			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			      _("[DEVICE-ID|GUID] [VERSION]"),
+			      /* TRANSLATORS: command description */
+			      _("Install a specific firmware version on a device"),
+			      fu_util_install);
+	fu_util_cmd_array_add(cmd_array,
+			      "local-install",
+			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
 			      _("FILE [DEVICE-ID|GUID]"),
 			      /* TRANSLATORS: command description */
 			      _("Install a firmware file on this hardware"),
-			      fu_util_install);
+			      fu_util_local_install);
 	fu_util_cmd_array_add(cmd_array,
 			      "get-details",
 			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
