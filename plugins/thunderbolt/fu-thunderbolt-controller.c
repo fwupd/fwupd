@@ -174,6 +174,19 @@ fu_thunderbolt_controller_setup_usb4(FuThunderboltController *self, GError **err
 	return TRUE;
 }
 
+static void
+fu_thunderbolt_controller_set_signed(FuDevice *device)
+{
+	FuThunderboltController *self = FU_THUNDERBOLT_CONTROLLER(device);
+	GUdevDevice *udev_device = fu_udev_device_get_dev(FU_UDEV_DEVICE(device));
+	const gchar *tmp;
+
+	/* if it's a USB4 type not of host and generation 3; it's Intel */
+	tmp = g_udev_device_get_property(udev_device, "USB4_TYPE");
+	if (g_strcmp0(tmp, "host") != 0 && self->gen == 3)
+		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
+}
+
 static gboolean
 fu_thunderbolt_controller_setup(FuDevice *device, GError **error)
 {
@@ -297,6 +310,9 @@ fu_thunderbolt_controller_setup(FuDevice *device, GError **error)
 		if (!fu_thunderbolt_controller_setup_usb4(self, &error_local))
 			g_warning("failed to setup host: %s", error_local->message);
 	}
+
+	/* set up signed payload attribute */
+	fu_thunderbolt_controller_set_signed(device);
 
 	/* success */
 	return TRUE;
