@@ -147,7 +147,7 @@ fu_plugin_flashrom_coldplug(FuPlugin *plugin, GError **error)
 {
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	const gchar *dmi_vendor;
-	g_autoptr(FuDevice) device = fu_flashrom_device_new(ctx);
+	g_autoptr(FuDevice) device = fu_flashrom_device_new(ctx, FU_IFD_REGION_BIOS);
 
 	fu_device_set_name(device, fu_context_get_hwid_value(ctx, FU_HWIDS_KEY_PRODUCT_NAME));
 	fu_device_set_vendor(device, fu_context_get_hwid_value(ctx, FU_HWIDS_KEY_MANUFACTURER));
@@ -169,6 +169,31 @@ fu_plugin_flashrom_coldplug(FuPlugin *plugin, GError **error)
 	return TRUE;
 }
 
+static void
+fu_plugin_flashrom_device_registered(FuPlugin *plugin, FuDevice *device)
+{
+	GPtrArray *our_devices;
+	const gchar *me_region_str = fu_ifd_region_to_string(FU_IFD_REGION_ME);
+
+	/* we're only interested in a device from intel-spi plugin that corresponds to ME
+	 * region of IFD */
+	if (g_strcmp0(fu_device_get_plugin(device), "intel_spi") != 0)
+		return;
+	if (g_strcmp0(fu_device_get_logical_id(device), me_region_str) != 0)
+		return;
+
+	our_devices = fu_plugin_get_devices(plugin);
+	for (guint i = 0; i < our_devices->len; i++) {
+		FuFlashromDevice *our_device =
+		    FU_FLASHROM_DEVICE(g_ptr_array_index(our_devices, i));
+		if (fu_flashrom_device_get_region(our_device) == FU_IFD_REGION_ME) {
+			/* unlock operation requires device to be locked */
+			if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_LOCKED))
+				fu_device_add_flag(FU_DEVICE(our_device), FWUPD_DEVICE_FLAG_LOCKED);
+		}
+	}
+}
+
 static gboolean
 fu_plugin_flashrom_startup(FuPlugin *plugin, GError **error)
 {
@@ -188,6 +213,7 @@ fu_plugin_init_vfuncs(FuPluginVfuncs *vfuncs)
 {
 	vfuncs->build_hash = FU_BUILD_HASH;
 	vfuncs->init = fu_plugin_flashrom_init;
+	vfuncs->device_registered = fu_plugin_flashrom_device_registered;
 	vfuncs->startup = fu_plugin_flashrom_startup;
 	vfuncs->coldplug = fu_plugin_flashrom_coldplug;
 }
