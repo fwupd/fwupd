@@ -104,11 +104,10 @@ _show_modifiers()
 
 _fwupdtool()
 {
-	local cur prev command args
+	local cur prev command arg args
 	COMPREPLY=()
-	cur=`_get_cword`
-	prev=${COMP_WORDS[COMP_CWORD-1]}
-	command=${COMP_WORDS[1]}
+	_get_comp_words_by_ref cur prev
+	_get_first_arg
 	_count_args
 
 	case $prev in
@@ -122,7 +121,7 @@ _fwupdtool()
 		;;
 	esac
 
-	case $command in
+	case $arg in
 	get-details|install|install-blob|firmware-dump|firmware-read)
 		#find files
 		if [[ "$args" = "2" ]]; then
