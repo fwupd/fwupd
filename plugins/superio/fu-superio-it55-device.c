@@ -59,6 +59,7 @@ fu_superio_it55_device_to_string(FuDevice *device, guint idt, GString *str)
 	/* FuSuperioDevice->to_string */
 	FU_DEVICE_CLASS(fu_superio_it55_device_parent_class)->to_string(device, idt, str);
 
+	fu_common_string_append_kv(str, idt, "PrjName", self->prj_name);
 	fu_common_string_append_kx(str, idt, "AutoloadAction", self->autoload_action);
 }
 
