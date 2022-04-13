@@ -338,10 +338,10 @@ fu_intel_spi_device_setup(FuDevice *device, GError **error)
 	/* set size */
 	comp1_density = (self->components_rcd & 0x0f) >> 0;
 	if (comp1_density != 0xf)
-		total_size += 1 << (19 + comp1_density);
+		total_size += 1ull << (19 + comp1_density);
 	comp2_density = (self->components_rcd & 0xf0) >> 4;
 	if (comp2_density != 0xf)
-		total_size += 1 << (19 + comp2_density);
+		total_size += 1ull << (19 + comp2_density);
 	fu_device_set_firmware_size(device, total_size);
 
 	/* add children */
