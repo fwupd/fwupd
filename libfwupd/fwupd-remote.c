@@ -305,10 +305,10 @@ fwupd_remote_build_uri(FwupdRemote *self, const gchar *url, GError **error)
 				    url);
 			return NULL;
 		}
-		curl_url_get(uri_tmp, CURLUPART_PATH, &path, 0);
+		(void)curl_url_get(uri_tmp, CURLUPART_PATH, &path, 0);
 		basename = g_path_get_basename(path);
 		path_new = g_build_filename(priv->firmware_base_uri, basename, NULL);
-		curl_url_set(uri, CURLUPART_URL, path_new, 0);
+		(void)curl_url_set(uri, CURLUPART_URL, path_new, 0);
 
 		/* use the base URI of the metadata to build the full path */
 	} else if (g_strstr_len(url, -1, "/") == NULL) {
@@ -323,10 +323,10 @@ fwupd_remote_build_uri(FwupdRemote *self, const gchar *url, GError **error)
 				    priv->metadata_uri);
 			return NULL;
 		}
-		curl_url_get(uri, CURLUPART_PATH, &path, 0);
+		(void)curl_url_get(uri, CURLUPART_PATH, &path, 0);
 		basename = g_path_get_dirname(path);
 		path_new = g_build_filename(basename, url, NULL);
-		curl_url_set(uri, CURLUPART_URL, path_new, 0);
+		(void)curl_url_set(uri, CURLUPART_URL, path_new, 0);
 
 		/* a normal URI */
 	} else {
@@ -342,10 +342,10 @@ fwupd_remote_build_uri(FwupdRemote *self, const gchar *url, GError **error)
 
 	/* set the username and password */
 	if (priv->username != NULL)
-		curl_url_set(uri, CURLUPART_USER, priv->username, 0);
+		(void)curl_url_set(uri, CURLUPART_USER, priv->username, 0);
 	if (priv->password != NULL)
-		curl_url_set(uri, CURLUPART_PASSWORD, priv->password, 0);
-	curl_url_get(uri, CURLUPART_URL, &tmp_uri, 0);
+		(void)curl_url_set(uri, CURLUPART_PASSWORD, priv->password, 0);
+	(void)curl_url_get(uri, CURLUPART_URL, &tmp_uri, 0);
 	return g_strdup(tmp_uri);
 #else
 	if (priv->firmware_base_uri != NULL) {
