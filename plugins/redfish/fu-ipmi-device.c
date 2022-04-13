@@ -48,11 +48,16 @@
 #define IPMI_RESPONSE_NOT_PROVIDED_ERR	    0xCE
 #define IPMI_DUPLICATED_REQUEST_ERR	    0xCF
 #define IPMI_SDR_IN_UPDATE_MODE_ERR	    0xD0
-#define IPMI_DEVICE_IN_UPDATE_MODE_ERR	    0xD1
-#define IPMI_INITIALIZATION_IN_PROGRESS_ERR 0xD2
 #define IPMI_DESTINATION_UNAVAILABLE_ERR    0xD3
 #define IPMI_INSUFFICIENT_PRIVILEGE_ERR	    0xD4
 #define IPMI_COMMAND_DISABLED_ERR	    0xD6
+
+#ifndef IPMI_DEVICE_IN_UPDATE_MODE_ERR
+#define IPMI_DEVICE_IN_UPDATE_MODE_ERR 0xD1
+#endif
+#ifndef IPMI_DEVICE_IN_INIT_ERR
+#define IPMI_DEVICE_IN_INIT_ERR 0xD2
+#endif
 
 struct _FuIpmiDevice {
 	FuUdevDevice parent_instance;
@@ -182,14 +187,10 @@ fu_ipmi_device_errcode_to_string(guint8 errcode)
 		return "req-len-invalid";
 	if (errcode == IPMI_REQ_LEN_EXCEEDED_ERR)
 		return "req-len-exceeded";
-#ifdef HAVE_IPMI_DEVICE_IN_FW_UPDATE_ERR
-	if (errcode == IPMI_DEVICE_IN_FW_UPDATE_ERR)
-		return "device-in-fw-update";
-#endif
-#ifdef HAVE_IPMI_DEVICE_IN_INIT_ERR
+	if (errcode == IPMI_DEVICE_IN_UPDATE_MODE_ERR)
+		return "device-in-update-mode";
 	if (errcode == IPMI_DEVICE_IN_INIT_ERR)
 		return "device-in-init";
-#endif
 	if (errcode == IPMI_NOT_IN_MY_STATE_ERR)
 		return "not-in-my-state";
 	if (errcode == IPMI_LOST_ARBITRATION_ERR)
@@ -223,10 +224,6 @@ fu_ipmi_device_errcode_to_string(guint8 errcode)
 		return "duplicated-request";
 	if (errcode == IPMI_SDR_IN_UPDATE_MODE_ERR)
 		return "sdr-in-update-mode";
-	if (errcode == IPMI_DEVICE_IN_UPDATE_MODE_ERR)
-		return "device-in-update-mode";
-	if (errcode == IPMI_INITIALIZATION_IN_PROGRESS_ERR)
-		return "initialization-in-progress";
 	if (errcode == IPMI_DESTINATION_UNAVAILABLE_ERR)
 		return "destination-unavailable";
 	if (errcode == IPMI_INSUFFICIENT_PRIVILEGE_ERR)
