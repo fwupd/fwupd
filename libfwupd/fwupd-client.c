@@ -593,7 +593,7 @@ fwupd_client_curl_helper_set_proxy(FwupdClient *self, FwupdCurlHelper *helper, c
 		return;
 	}
 	if (g_strcmp0(proxies[0], "direct://") != 0)
-		curl_easy_setopt(helper->curl, CURLOPT_PROXY, proxies[0]);
+		(void)curl_easy_setopt(helper->curl, CURLOPT_PROXY, proxies[0]);
 }
 
 static FwupdCurlHelper *
@@ -616,21 +616,23 @@ fwupd_client_curl_new(FwupdClient *self, GError **error)
 		return NULL;
 	}
 	if (g_getenv("FWUPD_CURL_VERBOSE") != NULL)
-		curl_easy_setopt(helper->curl, CURLOPT_VERBOSE, 1L);
-	curl_easy_setopt(helper->curl, CURLOPT_XFERINFOFUNCTION, fwupd_client_progress_callback_cb);
-	curl_easy_setopt(helper->curl, CURLOPT_XFERINFODATA, self);
-	curl_easy_setopt(helper->curl, CURLOPT_USERAGENT, priv->user_agent);
-	curl_easy_setopt(helper->curl, CURLOPT_CONNECTTIMEOUT, 60L);
-	curl_easy_setopt(helper->curl, CURLOPT_NOPROGRESS, 0L);
-	curl_easy_setopt(helper->curl, CURLOPT_FOLLOWLOCATION, 1L);
-	curl_easy_setopt(helper->curl, CURLOPT_MAXREDIRS, 5L);
+		(void)curl_easy_setopt(helper->curl, CURLOPT_VERBOSE, 1L);
+	(void)curl_easy_setopt(helper->curl,
+			       CURLOPT_XFERINFOFUNCTION,
+			       fwupd_client_progress_callback_cb);
+	(void)curl_easy_setopt(helper->curl, CURLOPT_XFERINFODATA, self);
+	(void)curl_easy_setopt(helper->curl, CURLOPT_USERAGENT, priv->user_agent);
+	(void)curl_easy_setopt(helper->curl, CURLOPT_CONNECTTIMEOUT, 60L);
+	(void)curl_easy_setopt(helper->curl, CURLOPT_NOPROGRESS, 0L);
+	(void)curl_easy_setopt(helper->curl, CURLOPT_FOLLOWLOCATION, 1L);
+	(void)curl_easy_setopt(helper->curl, CURLOPT_MAXREDIRS, 5L);
 
 	/* relax the SSL checks for broken corporate proxies */
 	if (g_getenv("DISABLE_SSL_STRICT") != NULL)
-		curl_easy_setopt(helper->curl, CURLOPT_SSL_VERIFYPEER, 0L);
+		(void)curl_easy_setopt(helper->curl, CURLOPT_SSL_VERIFYPEER, 0L);
 
 	/* this disables the double-compression of the firmware.xml.gz file */
-	curl_easy_setopt(helper->curl, CURLOPT_HTTP_CONTENT_DECODING, 0L);
+	(void)curl_easy_setopt(helper->curl, CURLOPT_HTTP_CONTENT_DECODING, 0L);
 	return g_steal_pointer(&helper);
 }
 #endif
@@ -4726,10 +4728,12 @@ fwupd_client_download_http(FwupdClient *self, CURL *curl, const gchar *url, GErr
 	g_autoptr(GByteArray) buf = g_byte_array_new();
 
 	fwupd_client_set_status(self, FWUPD_STATUS_DOWNLOADING);
-	curl_easy_setopt(curl, CURLOPT_URL, url);
-	curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, errbuf);
-	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, fwupd_client_download_write_callback_cb);
-	curl_easy_setopt(curl, CURLOPT_WRITEDATA, buf);
+	(void)curl_easy_setopt(curl, CURLOPT_URL, url);
+	(void)curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, errbuf);
+	(void)curl_easy_setopt(curl,
+			       CURLOPT_WRITEFUNCTION,
+			       fwupd_client_download_write_callback_cb);
+	(void)curl_easy_setopt(curl, CURLOPT_WRITEDATA, buf);
 	res = curl_easy_perform(curl);
 	fwupd_client_set_status(self, FWUPD_STATUS_IDLE);
 	if (res != CURLE_OK) {
@@ -4934,11 +4938,11 @@ fwupd_client_upload_bytes_thread_cb(GTask *task,
 	gchar errbuf[CURL_ERROR_SIZE] = {'\0'};
 	g_autoptr(GByteArray) buf = g_byte_array_new();
 
-	curl_easy_setopt(helper->curl, CURLOPT_ERRORBUFFER, errbuf);
-	curl_easy_setopt(helper->curl,
-			 CURLOPT_WRITEFUNCTION,
-			 fwupd_client_download_write_callback_cb);
-	curl_easy_setopt(helper->curl, CURLOPT_WRITEDATA, buf);
+	(void)curl_easy_setopt(helper->curl, CURLOPT_ERRORBUFFER, errbuf);
+	(void)curl_easy_setopt(helper->curl,
+			       CURLOPT_WRITEFUNCTION,
+			       fwupd_client_download_write_callback_cb);
+	(void)curl_easy_setopt(helper->curl, CURLOPT_WRITEDATA, buf);
 	res = curl_easy_perform(helper->curl);
 	fwupd_client_set_status(self, FWUPD_STATUS_IDLE);
 	if (res != CURLE_OK) {
@@ -5026,26 +5030,26 @@ fwupd_client_upload_bytes_async(FwupdClient *self,
 	if ((flags & FWUPD_CLIENT_UPLOAD_FLAG_ALWAYS_MULTIPART) > 0 || signature != NULL) {
 		curl_mimepart *part;
 		helper->mime = curl_mime_init(helper->curl);
-		curl_easy_setopt(helper->curl, CURLOPT_MIMEPOST, helper->mime);
+		(void)curl_easy_setopt(helper->curl, CURLOPT_MIMEPOST, helper->mime);
 		part = curl_mime_addpart(helper->mime);
-		curl_mime_data(part, payload, CURL_ZERO_TERMINATED);
+		(void)curl_mime_data(part, payload, CURL_ZERO_TERMINATED);
 		curl_mime_name(part, "payload");
 		if (signature != NULL) {
 			part = curl_mime_addpart(helper->mime);
-			curl_mime_data(part, signature, CURL_ZERO_TERMINATED);
+			(void)curl_mime_data(part, signature, CURL_ZERO_TERMINATED);
 			curl_mime_name(part, "signature");
 		}
 	} else {
 		helper->headers = curl_slist_append(helper->headers, "Content-Type: text/plain");
-		curl_easy_setopt(helper->curl, CURLOPT_HTTPHEADER, helper->headers);
-		curl_easy_setopt(helper->curl, CURLOPT_POST, 1L);
-		curl_easy_setopt(helper->curl, CURLOPT_POSTFIELDSIZE, strlen(payload));
-		curl_easy_setopt(helper->curl, CURLOPT_COPYPOSTFIELDS, payload);
+		(void)curl_easy_setopt(helper->curl, CURLOPT_HTTPHEADER, helper->headers);
+		(void)curl_easy_setopt(helper->curl, CURLOPT_POST, 1L);
+		(void)curl_easy_setopt(helper->curl, CURLOPT_POSTFIELDSIZE, strlen(payload));
+		(void)curl_easy_setopt(helper->curl, CURLOPT_COPYPOSTFIELDS, payload);
 	}
 
 	fwupd_client_set_status(self, FWUPD_STATUS_IDLE);
 	g_debug("uploading to %s", url);
-	curl_easy_setopt(helper->curl, CURLOPT_URL, url);
+	(void)curl_easy_setopt(helper->curl, CURLOPT_URL, url);
 	g_task_set_task_data(task,
 			     g_steal_pointer(&helper),
 			     (GDestroyNotify)fwupd_client_curl_helper_free);
