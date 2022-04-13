@@ -4977,6 +4977,7 @@ fu_device_build_instance_id(FuDevice *self, GError **error, const gchar *subsyst
 {
 	FuDevice *parent = fu_device_get_parent(self);
 	FuDevicePrivate *priv = GET_PRIVATE(self);
+	gboolean ret = TRUE;
 	va_list args;
 	g_autoptr(GString) str = g_string_new(subsystem);
 
@@ -5001,12 +5002,17 @@ fu_device_build_instance_id(FuDevice *self, GError **error, const gchar *subsyst
 				    G_IO_ERROR_INVALID_DATA,
 				    "no value for %s",
 				    key);
-			return FALSE;
+			ret = FALSE;
+			break;
 		}
 		g_string_append(str, i == 0 ? "\\" : "&");
 		g_string_append_printf(str, "%s_%s", key, value);
 	}
 	va_end(args);
+
+	/* we set an error above */
+	if (!ret)
+		return FALSE;
 
 	/* success */
 	fu_device_add_instance_id(self, str->str);
@@ -5031,6 +5037,7 @@ gboolean
 fu_device_build_instance_id_quirk(FuDevice *self, GError **error, const gchar *subsystem, ...)
 {
 	FuDevicePrivate *priv = GET_PRIVATE(self);
+	gboolean ret = TRUE;
 	va_list args;
 	g_autoptr(GString) str = g_string_new(subsystem);
 
@@ -5051,12 +5058,17 @@ fu_device_build_instance_id_quirk(FuDevice *self, GError **error, const gchar *s
 				    G_IO_ERROR_INVALID_DATA,
 				    "no value for %s",
 				    key);
-			return FALSE;
+			ret = FALSE;
+			break;
 		}
 		g_string_append(str, i == 0 ? "\\" : "&");
 		g_string_append_printf(str, "%s_%s", key, value);
 	}
 	va_end(args);
+
+	/* we set an error above */
+	if (!ret)
+		return FALSE;
 
 	/* success */
 	fu_device_add_instance_id_full(self, str->str, FU_DEVICE_INSTANCE_FLAG_ONLY_QUIRKS);
