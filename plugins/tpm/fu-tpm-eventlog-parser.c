@@ -45,6 +45,8 @@ fu_tpm_eventlog_parser_item_free(FuTpmEventlogItem *item)
 	g_free(item);
 }
 
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuTpmEventlogItem, fu_tpm_eventlog_parser_item_free);
+
 void
 fu_tpm_eventlog_item_to_string(FuTpmEventlogItem *item, guint idt, GString *str)
 {
@@ -186,7 +188,7 @@ fu_tpm_eventlog_parser_parse_blob_v2(const guint8 *buf,
 		/* save blob if PCR=0 */
 		idx += sizeof(datasz);
 		if (pcr == ESYS_TR_PCR0 || flags & FU_TPM_EVENTLOG_PARSER_FLAG_ALL_PCRS) {
-			FuTpmEventlogItem *item;
+			g_autoptr(FuTpmEventlogItem) item = NULL;
 
 			/* build item */
 			item = g_new0(FuTpmEventlogItem, 1);
@@ -209,7 +211,7 @@ fu_tpm_eventlog_parser_parse_blob_v2(const guint8 *buf,
 				if (g_getenv("FWUPD_TPM_EVENTLOG_VERBOSE") != NULL)
 					fu_common_dump_bytes(G_LOG_DOMAIN, "TpmEvent", item->blob);
 			}
-			g_ptr_array_add(items, item);
+			g_ptr_array_add(items, g_steal_pointer(&item));
 		}
 
 		/* next entry */
@@ -279,7 +281,7 @@ fu_tpm_eventlog_parser_new(const guint8 *buf,
 			return NULL;
 		}
 		if (pcr == ESYS_TR_PCR0 || flags & FU_TPM_EVENTLOG_PARSER_FLAG_ALL_PCRS) {
-			FuTpmEventlogItem *item;
+			g_autoptr(FuTpmEventlogItem) item = NULL;
 			guint8 digest[TPM2_SHA1_DIGEST_SIZE] = {0x0};
 
 			/* copy hash */
@@ -313,7 +315,7 @@ fu_tpm_eventlog_parser_new(const guint8 *buf,
 				if (g_getenv("FWUPD_TPM_EVENTLOG_VERBOSE") != NULL)
 					fu_common_dump_bytes(G_LOG_DOMAIN, "TpmEvent", item->blob);
 			}
-			g_ptr_array_add(items, item);
+			g_ptr_array_add(items, g_steal_pointer(&item));
 		}
 		idx += datasz;
 	}
