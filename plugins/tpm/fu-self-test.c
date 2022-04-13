@@ -85,7 +85,7 @@ fu_tpm_device_2_0_func(void)
 	g_autoptr(GPtrArray) pcr0s = NULL;
 	g_autoptr(GPtrArray) pcrXs = NULL;
 	const gchar *tpm_server_running = g_getenv("TPM_SERVER_RUNNING");
-	g_setenv("FWUPD_FORCE_TPM2", "1", TRUE);
+	(void)g_setenv("FWUPD_FORCE_TPM2", "1", TRUE);
 
 #ifdef HAVE_GETUID
 	if (tpm_server_running == NULL && (getuid() != 0 || geteuid() != 0)) {
@@ -207,7 +207,7 @@ fu_tpm_empty_pcr_func(void)
 	/* save environment and set broken PCR data */
 	environ_old = g_get_environ();
 	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", "empty_pcr", NULL);
-	g_setenv("FWUPD_SYSFSTPMDIR", testdatadir, TRUE);
+	(void)g_setenv("FWUPD_SYSFSTPMDIR", testdatadir, TRUE);
 
 	/* load the plugin */
 	pluginfn = g_test_build_filename(G_TEST_BUILT, "libfu_plugin_tpm." G_MODULE_SUFFIX, NULL);
@@ -228,7 +228,9 @@ fu_tpm_empty_pcr_func(void)
 			FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
 
 	/* restore default environment */
-	g_setenv("FWUPD_SYSFSTPMDIR", g_environ_getenv(environ_old, "FWUPD_SYSFSTPMDIR"), TRUE);
+	(void)g_setenv("FWUPD_SYSFSTPMDIR",
+		       g_environ_getenv(environ_old, "FWUPD_SYSFSTPMDIR"),
+		       TRUE);
 }
 
 int
@@ -239,12 +241,12 @@ main(int argc, char **argv)
 	g_test_init(&argc, &argv, NULL);
 
 	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
-	g_setenv("FWUPD_SYSFSTPMDIR", testdatadir, TRUE);
-	g_setenv("FWUPD_UEFI_TEST", "1", TRUE);
+	(void)g_setenv("FWUPD_SYSFSTPMDIR", testdatadir, TRUE);
+	(void)g_setenv("FWUPD_UEFI_TEST", "1", TRUE);
 
 	/* only critical and error are fatal */
 	g_log_set_fatal_mask(NULL, G_LOG_LEVEL_ERROR | G_LOG_LEVEL_CRITICAL);
-	g_setenv("G_MESSAGES_DEBUG", "all", TRUE);
+	(void)g_setenv("G_MESSAGES_DEBUG", "all", TRUE);
 
 	/* tests go here */
 	g_test_add_func("/tpm/pcrs1.2", fu_tpm_device_1_2_func);

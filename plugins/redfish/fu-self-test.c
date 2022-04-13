@@ -375,13 +375,13 @@ main(int argc, char **argv)
 
 	g_test_init(&argc, &argv, NULL);
 
-	g_setenv("FWUPD_REDFISH_VERBOSE", "1", TRUE);
+	(void)g_setenv("FWUPD_REDFISH_VERBOSE", "1", TRUE);
 
 	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
 	smbios_data_fn = g_build_filename(testdatadir, "redfish-smbios.bin", NULL);
-	g_setenv("FWUPD_REDFISH_SMBIOS_DATA", smbios_data_fn, TRUE);
-	g_setenv("FWUPD_SYSFSFWDIR", testdatadir, TRUE);
-	g_setenv("CONFIGURATION_DIRECTORY", testdatadir, TRUE);
+	(void)g_setenv("FWUPD_REDFISH_SMBIOS_DATA", smbios_data_fn, TRUE);
+	(void)g_setenv("FWUPD_SYSFSFWDIR", testdatadir, TRUE);
+	(void)g_setenv("CONFIGURATION_DIRECTORY", testdatadir, TRUE);
 
 	g_log_set_fatal_mask(NULL, G_LOG_LEVEL_ERROR | G_LOG_LEVEL_CRITICAL);
 	fu_test_self_init(self);

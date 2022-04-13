@@ -214,7 +214,7 @@ main(int argc, char *argv[])
 
 	/* set verbose? */
 	if (verbose) {
-		g_setenv("G_MESSAGES_DEBUG", "all", FALSE);
+		(void)g_setenv("G_MESSAGES_DEBUG", "all", FALSE);
 	} else {
 		g_log_set_handler(G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, fu_util_ignore_cb, NULL);
 	}
