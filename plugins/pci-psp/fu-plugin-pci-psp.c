@@ -250,15 +250,18 @@ fu_plugin_pci_psp_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
 	FuDevice *psp_device = fu_plugin_cache_lookup(plugin, "pci-psp-device");
 	const gchar *sysfs_path = NULL;
+	g_autofree gchar *test_file = NULL;
 
 	/* only AMD */
 	if (fu_common_get_cpu_vendor() != FU_CPU_VENDOR_AMD)
 		return;
 
 	/* ccp not loaded */
-	if (psp_device)
+	if (psp_device) {
 		sysfs_path = fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(psp_device));
-	if (sysfs_path == NULL) {
+		test_file = g_build_filename(sysfs_path, "tsme_status", NULL);
+	}
+	if (sysfs_path == NULL || !g_file_test(test_file, G_FILE_TEST_EXISTS)) {
 		fu_plugin_pci_psp_set_missing_data(attrs);
 		return;
 	}
