@@ -1503,6 +1503,7 @@ fu_genesys_scaler_device_get_firmware_packet_version(FuGenesysScalerDevice *self
 	if (buf[0] == 0x6f && buf[1] == 0x6e) {
 		gsize len = buf[2] ^ 0x80;
 		guint8 checksum;
+		guint8 checksum_tmp = 0x0;
 
 		if (len >= sizeof(buf)) {
 			g_set_error(error,
@@ -1516,12 +1517,14 @@ fu_genesys_scaler_device_get_firmware_packet_version(FuGenesysScalerDevice *self
 
 		buf[0] = 0x50; /* drifted value */
 		checksum = fu_genesys_scaler_device_calculate_checksum(buf, len + 3);
-		if (buf[len + 3] != checksum) {
+		if (!fu_common_read_uint8_safe(buf, sizeof(buf), len + 3, &checksum_tmp, error))
+			return FALSE;
+		if (checksum_tmp != checksum) {
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INTERNAL,
 				    "error dddci checksum mismatch, got 0x%02x, expected 0x%02x",
-				    buf[len + 3],
+				    checksum_tmp,
 				    checksum);
 			return FALSE;
 		}
