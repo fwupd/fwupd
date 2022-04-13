@@ -481,6 +481,7 @@ fu_device_get_request_cnt(FuDevice *self, FwupdRequestKind request_kind)
 {
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FU_IS_DEVICE(self), G_MAXUINT);
+	g_return_val_if_fail(request_kind < FWUPD_REQUEST_KIND_LAST, G_MAXUINT);
 	return priv->request_cnts[request_kind];
 }
 
@@ -4768,6 +4769,10 @@ fu_device_emit_request(FuDevice *self, FwupdRequest *request)
 	}
 	if (fwupd_request_get_id(request) == NULL) {
 		g_critical("a request must have an assigned ID");
+		return;
+	}
+	if (fwupd_request_get_kind(request) >= FWUPD_REQUEST_KIND_LAST) {
+		g_critical("invalid request kind");
 		return;
 	}
 
