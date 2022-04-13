@@ -20,7 +20,7 @@ G_DEFINE_TYPE(FuSuperioIt85Device, fu_superio_it85_device, FU_TYPE_SUPERIO_DEVIC
 static gchar *
 fu_superio_it85_device_get_str(FuSuperioDevice *self, guint8 idx, GError **error)
 {
-	GString *str = g_string_new(NULL);
+	g_autoptr(GString) str = g_string_new(NULL);
 	if (!fu_superio_device_ec_write_cmd(self, idx, error))
 		return NULL;
 	for (guint i = 0; i < 0xff; i++) {
@@ -31,7 +31,7 @@ fu_superio_it85_device_get_str(FuSuperioDevice *self, guint8 idx, GError **error
 			break;
 		g_string_append_c(str, c);
 	}
-	return g_string_free(str, FALSE);
+	return g_string_free(g_steal_pointer(&str), FALSE);
 }
 
 static gboolean
