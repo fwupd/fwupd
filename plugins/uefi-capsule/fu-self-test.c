@@ -287,13 +287,13 @@ main(int argc, char **argv)
 	g_test_init(&argc, &argv, NULL);
 
 	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
-	g_setenv("FWUPD_SYSFSFWDIR", testdatadir, TRUE);
-	g_setenv("FWUPD_SYSFSDRIVERDIR", testdatadir, TRUE);
-	g_setenv("FWUPD_UEFI_TEST", "1", TRUE);
+	(void)g_setenv("FWUPD_SYSFSFWDIR", testdatadir, TRUE);
+	(void)g_setenv("FWUPD_SYSFSDRIVERDIR", testdatadir, TRUE);
+	(void)g_setenv("FWUPD_UEFI_TEST", "1", TRUE);
 
 	/* only critical and error are fatal */
 	g_log_set_fatal_mask(NULL, G_LOG_LEVEL_ERROR | G_LOG_LEVEL_CRITICAL);
-	g_setenv("G_MESSAGES_DEBUG", "all", TRUE);
+	(void)g_setenv("G_MESSAGES_DEBUG", "all", TRUE);
 
 	/* tests go here */
 	g_test_add_func("/uefi/bgrt", fu_uefi_bgrt_func);

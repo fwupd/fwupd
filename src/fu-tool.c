@@ -3356,7 +3356,7 @@ main(int argc, char *argv[])
 
 #ifdef _WIN32
 	/* workaround Windows setting the codepage to 1252 */
-	g_setenv("LANG", "C.UTF-8", FALSE);
+	(void)g_setenv("LANG", "C.UTF-8", FALSE);
 #endif
 
 	setlocale(LC_ALL, "");
@@ -3714,7 +3714,7 @@ main(int argc, char *argv[])
 			   _("Ignoring SSL strict checks, "
 			     "to do this automatically in the future "
 			     "export DISABLE_SSL_STRICT in your environment"));
-		g_setenv("DISABLE_SSL_STRICT", "1", TRUE);
+		(void)g_setenv("DISABLE_SSL_STRICT", "1", TRUE);
 	}
 
 	/* parse filter flags */

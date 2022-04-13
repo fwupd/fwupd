@@ -190,7 +190,7 @@ fu_config_reload(FuConfig *self, GError **error)
 	/* get the domains to run in verbose */
 	domains = g_key_file_get_string(keyfile, "fwupd", "VerboseDomains", NULL);
 	if (domains != NULL && domains[0] != '\0')
-		g_setenv("FWUPD_VERBOSE", domains, TRUE);
+		(void)g_setenv("FWUPD_VERBOSE", domains, TRUE);
 
 	/* whether to update the motd on changes */
 	self->update_motd =
