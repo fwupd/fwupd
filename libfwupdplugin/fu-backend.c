@@ -23,13 +23,14 @@ typedef struct {
 	gchar *name;
 	gboolean enabled;
 	gboolean done_setup;
+	gboolean can_invalidate;
 	GHashTable *devices; /* device_id : * FuDevice */
 	GThread *thread_init;
 } FuBackendPrivate;
 
 enum { SIGNAL_ADDED, SIGNAL_REMOVED, SIGNAL_CHANGED, SIGNAL_LAST };
 
-enum { PROP_0, PROP_NAME, PROP_CONTEXT, PROP_LAST };
+enum { PROP_0, PROP_NAME, PROP_CAN_INVALIDATE, PROP_CONTEXT, PROP_LAST };
 
 static guint signals[SIGNAL_LAST] = {0};
 
@@ -121,6 +122,39 @@ fu_backend_registered(FuBackend *self, FuDevice *device)
 	g_return_if_fail(FU_IS_DEVICE(device));
 	if (klass->registered != NULL)
 		klass->registered(self, device);
+}
+
+/**
+ * fu_backend_invalidate:
+ * @self: a #FuBackend
+ *
+ * Normally when calling fu_backend_setup() multiple times it is only actually done once.
+ * Calling this method causes the next requests to fu_backend_setup() to actually probe the
+ * hardware.
+ *
+ * Only subclassed backends setting `can-invalidate=TRUE` at construction time can use this
+ * method, as it is not always safe to call for backends shared between multiple plugins.
+ *
+ * This should be done in case the backing information source has changed, for instance if
+ * a platform subsystem has been updated.
+ *
+ * This also optionally calls the ->invalidate() vfunc for the backend. This allows the backend
+ * to perform shared backend actions on superclassed devices.
+ *
+ * Since: 1.8.0
+ **/
+void
+fu_backend_invalidate(FuBackend *self)
+{
+	FuBackendClass *klass = FU_BACKEND_GET_CLASS(self);
+	FuBackendPrivate *priv = GET_PRIVATE(self);
+
+	g_return_if_fail(FU_IS_BACKEND(self));
+	g_return_if_fail(priv->can_invalidate);
+
+	priv->done_setup = FALSE;
+	if (klass->invalidate != NULL)
+		klass->invalidate(self);
 }
 
 /**
@@ -314,6 +348,9 @@ fu_backend_get_property(GObject *object, guint prop_id, GValue *value, GParamSpe
 	case PROP_NAME:
 		g_value_set_string(value, priv->name);
 		break;
+	case PROP_CAN_INVALIDATE:
+		g_value_set_boolean(value, priv->can_invalidate);
+		break;
 	case PROP_CONTEXT:
 		g_value_set_object(value, priv->ctx);
 		break;
@@ -331,6 +368,9 @@ fu_backend_set_property(GObject *object, guint prop_id, const GValue *value, GPa
 	switch (prop_id) {
 	case PROP_NAME:
 		priv->name = g_value_dup_string(value);
+		break;
+	case PROP_CAN_INVALIDATE:
+		priv->can_invalidate = g_value_get_boolean(value);
 		break;
 	case PROP_CONTEXT:
 		g_set_object(&priv->ctx, g_value_get_object(value));
@@ -397,6 +437,21 @@ fu_backend_class_init(FuBackendClass *klass)
 				NULL,
 				G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_NAME, pspec);
+
+	/**
+	 * FuBackend:can-invalidate:
+	 *
+	 * If the backend can be invalidated.
+	 *
+	 * Since: 1.8.0
+	 */
+	pspec =
+	    g_param_spec_boolean("can-invalidate",
+				 NULL,
+				 NULL,
+				 FALSE,
+				 G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
+	g_object_class_install_property(object_class, PROP_CAN_INVALIDATE, pspec);
 
 	/**
 	 * FuBackend:context:

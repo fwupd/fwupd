@@ -18,8 +18,9 @@ struct _FuBackendClass {
 	gboolean (*setup)(FuBackend *self, GError **error) G_GNUC_WARN_UNUSED_RESULT;
 	gboolean (*coldplug)(FuBackend *self, GError **error) G_GNUC_WARN_UNUSED_RESULT;
 	void (*registered)(FuBackend *self, FuDevice *device);
+	void (*invalidate)(FuBackend *self);
 	/*< private >*/
-	gpointer padding[28];
+	gpointer padding[27];
 };
 
 const gchar *
@@ -46,3 +47,5 @@ void
 fu_backend_device_changed(FuBackend *self, FuDevice *device);
 void
 fu_backend_registered(FuBackend *self, FuDevice *device);
+void
+fu_backend_invalidate(FuBackend *self);
