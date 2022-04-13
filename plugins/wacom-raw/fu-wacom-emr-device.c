@@ -177,9 +177,9 @@ fu_wacom_emr_device_write_block(FuWacomEmrDevice *self,
 	memcpy(&req.data, data, datasz);
 
 	/* cmd and data checksums */
-	req.data[blocksz + 0] =
+	req.data_unused[0] =
 	    fu_wacom_emr_device_calc_checksum(0x05 + 0x00 + 0x4c + 0x00, (const guint8 *)&req, 8);
-	req.data[blocksz + 1] = fu_wacom_emr_device_calc_checksum(0x00, data, datasz);
+	req.data_unused[1] = fu_wacom_emr_device_calc_checksum(0x00, data, datasz);
 	if (!fu_wacom_device_cmd(FU_WACOM_DEVICE(self),
 				 &req,
 				 &rsp,
