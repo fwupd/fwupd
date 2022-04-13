@@ -102,11 +102,10 @@ _show_remotes()
 
 _fwupdmgr()
 {
-	local cur prev command args
+	local cur prev command arg args
 	COMPREPLY=()
-	cur=`_get_cword`
-	prev=${COMP_WORDS[COMP_CWORD-1]}
-	command=${COMP_WORDS[1]}
+	_get_comp_words_by_ref cur prev
+	_get_first_arg
 	_count_args
 
 	case $prev in
@@ -116,7 +115,7 @@ _fwupdmgr()
 		;;
 	esac
 
-	case $command in
+	case $arg in
 	activate|clear-results|downgrade|get-releases|get-results|unlock|verify|verify-update|get-updates|switch-branch|update|upgrade)
 		#device ID
 		if [[ "$args" = "2" ]]; then
