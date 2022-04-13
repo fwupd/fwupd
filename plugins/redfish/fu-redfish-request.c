@@ -180,8 +180,8 @@ fu_redfish_request_perform(FuRedfishRequest *self,
 
 	/* do request */
 #ifdef HAVE_LIBCURL_7_62_0
-	curl_url_set(self->uri, CURLUPART_PATH, path, 0);
-	curl_url_get(self->uri, CURLUPART_URL, &uri_str, 0);
+	(void)curl_url_set(self->uri, CURLUPART_PATH, path, 0);
+	(void)curl_url_get(self->uri, CURLUPART_URL, &uri_str, 0);
 #else
 	uri_str = g_strdup_printf("%s%s", self->uri_base, path);
 	if (curl_easy_setopt(self->curl, CURLOPT_URL, uri_str) != CURLE_OK) {
@@ -249,11 +249,11 @@ fu_redfish_request_patch(FuRedfishRequest *self,
 		g_debug("request to %s: %s", path, str->str);
 
 	/* patch */
-	curl_easy_setopt(self->curl, CURLOPT_CUSTOMREQUEST, "PATCH");
-	curl_easy_setopt(self->curl, CURLOPT_POSTFIELDS, str->str);
-	curl_easy_setopt(self->curl, CURLOPT_POSTFIELDSIZE, (long)str->len);
+	(void)curl_easy_setopt(self->curl, CURLOPT_CUSTOMREQUEST, "PATCH");
+	(void)curl_easy_setopt(self->curl, CURLOPT_POSTFIELDS, str->str);
+	(void)curl_easy_setopt(self->curl, CURLOPT_POSTFIELDSIZE, (long)str->len);
 	hs = curl_slist_append(hs, "Content-Type: application/json");
-	curl_easy_setopt(self->curl, CURLOPT_HTTPHEADER, hs);
+	(void)curl_easy_setopt(self->curl, CURLOPT_HTTPHEADER, hs);
 	return fu_redfish_request_perform(self, path, flags, error);
 }
 
@@ -280,7 +280,7 @@ fu_redfish_request_set_curlsh(FuRedfishRequest *self, CURLSH *curlsh)
 {
 	g_return_if_fail(FU_IS_REDFISH_REQUEST(self));
 	g_return_if_fail(curlsh != NULL);
-	curl_easy_setopt(self->curl, CURLOPT_SHARE, curlsh);
+	(void)curl_easy_setopt(self->curl, CURLOPT_SHARE, curlsh);
 }
 
 static void
@@ -292,8 +292,8 @@ fu_redfish_request_init(FuRedfishRequest *self)
 #endif
 	self->buf = g_byte_array_new();
 	self->json_parser = json_parser_new();
-	curl_easy_setopt(self->curl, CURLOPT_WRITEFUNCTION, fu_redfish_request_write_cb);
-	curl_easy_setopt(self->curl, CURLOPT_WRITEDATA, self->buf);
+	(void)curl_easy_setopt(self->curl, CURLOPT_WRITEFUNCTION, fu_redfish_request_write_cb);
+	(void)curl_easy_setopt(self->curl, CURLOPT_WRITEDATA, self->buf);
 }
 
 static void

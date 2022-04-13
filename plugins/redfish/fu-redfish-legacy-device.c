@@ -91,9 +91,9 @@ fu_redfish_legacy_device_write_firmware(FuDevice *device,
 	/* POST data */
 	request = fu_redfish_backend_request_new(backend);
 	curl = fu_redfish_request_get_curl(request);
-	curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "POST");
-	curl_easy_setopt(curl, CURLOPT_POSTFIELDS, g_bytes_get_data(fw, NULL));
-	curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, (long)g_bytes_get_size(fw));
+	(void)curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "POST");
+	(void)curl_easy_setopt(curl, CURLOPT_POSTFIELDS, g_bytes_get_data(fw, NULL));
+	(void)curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, (long)g_bytes_get_size(fw));
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_WRITE);
 	if (!fu_redfish_request_perform(request,
 					fu_redfish_backend_get_push_uri_path(backend),
