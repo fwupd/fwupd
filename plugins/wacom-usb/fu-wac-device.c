@@ -204,7 +204,7 @@ fu_wac_device_ensure_flash_descriptors(FuWacDevice *self, GError **error)
 
 	/* parse */
 	for (guint i = 0; i < self->nr_flash_blocks; i++) {
-		FuWacFlashDescriptor *fd = g_new0(FuWacFlashDescriptor, 1);
+		g_autofree FuWacFlashDescriptor *fd = g_new0(FuWacFlashDescriptor, 1);
 		const guint blksz = 0x0A;
 		if (!fu_common_read_uint32_safe(buf,
 						sz,
@@ -227,7 +227,7 @@ fu_wac_device_ensure_flash_descriptors(FuWacDevice *self, GError **error)
 						G_LITTLE_ENDIAN,
 						error))
 			return FALSE;
-		g_ptr_array_add(self->flash_descriptors, fd);
+		g_ptr_array_add(self->flash_descriptors, g_steal_pointer(&fd));
 	}
 	if (self->flash_descriptors->len > G_MAXUINT16) {
 		g_set_error(error,
