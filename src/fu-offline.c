@@ -162,7 +162,7 @@ main(int argc, char *argv[])
 		return EXIT_SUCCESS;
 
 	/* do this first to avoid a loop if this tool segfaults */
-	g_unlink(trigger);
+	(void)g_unlink(trigger);
 
 	/* ensure root user */
 #ifdef HAVE_GETUID
