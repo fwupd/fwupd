@@ -58,11 +58,12 @@ fu_plugin_redfish_change_expired(FuPlugin *plugin, GError **error)
 	json_builder_set_member_name(builder, "Password");
 	json_builder_add_string_value(builder, password_new);
 	json_builder_end_object(builder);
-	if (!fu_redfish_request_patch(request,
-				      uri,
-				      builder,
-				      FU_REDFISH_REQUEST_PERFORM_FLAG_LOAD_JSON,
-				      error))
+	if (!fu_redfish_request_perform_full(request,
+					     uri,
+					     "PATCH",
+					     builder,
+					     FU_REDFISH_REQUEST_PERFORM_FLAG_LOAD_JSON,
+					     error))
 		return FALSE;
 	fu_redfish_backend_set_password(data->backend, password_new);
 
@@ -310,11 +311,12 @@ fu_redfish_plugin_ipmi_create_user(FuPlugin *plugin, GError **error)
 	json_builder_set_member_name(builder, "Password");
 	json_builder_add_string_value(builder, password_new);
 	json_builder_end_object(builder);
-	if (!fu_redfish_request_patch(request,
-				      uri,
-				      builder,
-				      FU_REDFISH_REQUEST_PERFORM_FLAG_LOAD_JSON,
-				      error))
+	if (!fu_redfish_request_perform_full(request,
+					     uri,
+					     "PATCH",
+					     builder,
+					     FU_REDFISH_REQUEST_PERFORM_FLAG_LOAD_JSON,
+					     error))
 		return FALSE;
 	fu_redfish_backend_set_password(data->backend, password_new);
 
