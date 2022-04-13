@@ -116,6 +116,8 @@ fu_nordic_hid_cfg_channel_module_free(FuNordicCfgChannelModule *mod)
 	g_free(mod);
 }
 
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuNordicCfgChannelModule, fu_nordic_hid_cfg_channel_module_free);
+
 #ifdef HAVE_HIDRAW_H
 static FuUdevDevice *
 fu_nordic_hid_cfg_channel_get_udev_device(FuNordicHidCfgChannel *self, GError **error)
@@ -615,7 +617,7 @@ fu_nordic_hid_cfg_channel_load_module_info(FuNordicHidCfgChannel *self,
 					   guint8 module_idx,
 					   GError **error)
 {
-	FuNordicCfgChannelModule *mod = g_new0(FuNordicCfgChannelModule, 1);
+	g_autoptr(FuNordicCfgChannelModule) mod = g_new0(FuNordicCfgChannelModule, 1);
 
 	mod->idx = module_idx;
 	mod->options = g_ptr_array_new_with_free_func(
@@ -636,7 +638,7 @@ fu_nordic_hid_cfg_channel_load_module_info(FuNordicHidCfgChannel *self,
 	}
 
 	/* success */
-	g_ptr_array_add(self->modules, mod);
+	g_ptr_array_add(self->modules, g_steal_pointer(&mod));
 	return TRUE;
 }
 
