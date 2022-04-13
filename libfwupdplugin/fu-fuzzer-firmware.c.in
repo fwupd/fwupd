@@ -15,7 +15,7 @@ LLVMFuzzerTestOneInput(const guint8 *data, gsize size)
 	g_autoptr(GBytes) fw = g_bytes_new(data, size);
 	gboolean ret;
 
-	g_setenv("G_DEBUG", "fatal-criticals", FALSE);
+	(void)g_setenv("G_DEBUG", "fatal-criticals", FALSE);
 	ret = fu_firmware_parse(firmware, fw, FWUPD_INSTALL_FLAG_NONE, NULL);
 	if (!ret && fu_firmware_has_flag(firmware, FU_FIRMWARE_FLAG_HAS_CHECKSUM)) {
 		g_clear_object(&firmware);

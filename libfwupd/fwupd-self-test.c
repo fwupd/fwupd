@@ -592,7 +592,7 @@ fwupd_client_remotes_func(void)
 	g_autoptr(GPtrArray) array = NULL;
 
 	remotesdir = g_test_build_filename(G_TEST_DIST, "tests", "remotes.d", NULL);
-	g_setenv("FU_SELF_TEST_REMOTES_DIR", remotesdir, TRUE);
+	(void)g_setenv("FU_SELF_TEST_REMOTES_DIR", remotesdir, TRUE);
 
 	client = fwupd_client_new();
 
@@ -916,7 +916,7 @@ main(int argc, char **argv)
 
 	/* only critical and error are fatal */
 	g_log_set_fatal_mask(NULL, G_LOG_LEVEL_ERROR | G_LOG_LEVEL_CRITICAL);
-	g_setenv("G_MESSAGES_DEBUG", "all", TRUE);
+	(void)g_setenv("G_MESSAGES_DEBUG", "all", TRUE);
 
 	/* tests go here */
 	g_test_add_func("/fwupd/enums", fwupd_enums_func);

@@ -1903,7 +1903,7 @@ fu_engine_history_func(gconstpointer user_data)
 	g_assert_nonnull(component);
 
 	/* set the counter */
-	g_setenv("FWUPD_PLUGIN_TEST", "another-write-required", TRUE);
+	(void)g_setenv("FWUPD_PLUGIN_TEST", "another-write-required", TRUE);
 	fu_device_set_metadata_integer(device, "nr-update", 0);
 
 	/* install it */
@@ -2126,7 +2126,7 @@ fu_engine_history_inherit(gconstpointer user_data)
 	fu_engine_set_silo(engine, silo_empty);
 
 	/* set up dummy plugin */
-	g_setenv("FWUPD_PLUGIN_TEST", "fail", TRUE);
+	(void)g_setenv("FWUPD_PLUGIN_TEST", "fail", TRUE);
 	fu_engine_add_plugin(engine, self->plugin);
 	ret = fu_engine_load(engine, FU_ENGINE_LOAD_FLAG_NO_CACHE, &error);
 	g_assert_no_error(error);
@@ -2170,7 +2170,7 @@ fu_engine_history_inherit(gconstpointer user_data)
 	g_assert_nonnull(component);
 
 	/* install it */
-	g_setenv("FWUPD_PLUGIN_TEST", "requires-activation", TRUE);
+	(void)g_setenv("FWUPD_PLUGIN_TEST", "requires-activation", TRUE);
 	fu_release_set_device(release, device);
 	ret = fu_release_load(release, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
@@ -2266,7 +2266,7 @@ fu_engine_install_needs_reboot(gconstpointer user_data)
 	fu_engine_set_silo(engine, silo_empty);
 
 	/* set up dummy plugin */
-	g_setenv("FWUPD_PLUGIN_TEST", "fail", TRUE);
+	(void)g_setenv("FWUPD_PLUGIN_TEST", "fail", TRUE);
 	fu_engine_add_plugin(engine, self->plugin);
 	ret = fu_engine_load(engine, FU_ENGINE_LOAD_FLAG_NONE, &error);
 	g_assert_no_error(error);
@@ -2310,7 +2310,7 @@ fu_engine_install_needs_reboot(gconstpointer user_data)
 	g_assert_nonnull(component);
 
 	/* install it */
-	g_setenv("FWUPD_PLUGIN_TEST", "requires-reboot", TRUE);
+	(void)g_setenv("FWUPD_PLUGIN_TEST", "requires-reboot", TRUE);
 	fu_release_set_device(release, device);
 	ret = fu_release_load(release, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
@@ -2357,7 +2357,7 @@ fu_engine_history_error_func(gconstpointer user_data)
 	fu_engine_set_silo(engine, silo_empty);
 
 	/* set up dummy plugin */
-	g_setenv("FWUPD_PLUGIN_TEST", "fail", TRUE);
+	(void)g_setenv("FWUPD_PLUGIN_TEST", "fail", TRUE);
 	fu_engine_add_plugin(engine, self->plugin);
 	ret = fu_engine_load(engine, FU_ENGINE_LOAD_FLAG_NO_CACHE, &error);
 	g_assert_no_error(error);
@@ -3087,7 +3087,7 @@ fu_plugin_module_func(gconstpointer user_data)
 	fu_engine_set_silo(engine, silo_empty);
 
 	/* create a fake device */
-	g_setenv("FWUPD_PLUGIN_TEST", "registration", TRUE);
+	(void)g_setenv("FWUPD_PLUGIN_TEST", "registration", TRUE);
 	ret = fu_plugin_runner_startup(self->plugin, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -3479,7 +3479,7 @@ fu_plugin_composite_func(gconstpointer user_data)
 	g_assert_cmpint(components->len, ==, 3);
 
 	/* set up dummy plugin */
-	g_setenv("FWUPD_PLUGIN_TEST", "composite", TRUE);
+	(void)g_setenv("FWUPD_PLUGIN_TEST", "composite", TRUE);
 	fu_engine_add_plugin(engine, self->plugin);
 
 	ret = fu_plugin_runner_startup(self->plugin, &error);
@@ -3846,16 +3846,16 @@ main(int argc, char **argv)
 
 	/* only critical and error are fatal */
 	g_log_set_fatal_mask(NULL, G_LOG_LEVEL_ERROR | G_LOG_LEVEL_CRITICAL);
-	g_setenv("G_MESSAGES_DEBUG", "all", TRUE);
-	g_setenv("FWUPD_DEVICE_LIST_VERBOSE", "1", TRUE);
+	(void)g_setenv("G_MESSAGES_DEBUG", "all", TRUE);
+	(void)g_setenv("FWUPD_DEVICE_LIST_VERBOSE", "1", TRUE);
 	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
-	g_setenv("FWUPD_DATADIR", testdatadir, TRUE);
-	g_setenv("FWUPD_PLUGINDIR", testdatadir, TRUE);
-	g_setenv("FWUPD_SYSCONFDIR", testdatadir, TRUE);
-	g_setenv("FWUPD_SYSFSFWDIR", testdatadir, TRUE);
-	g_setenv("CONFIGURATION_DIRECTORY", testdatadir, TRUE);
-	g_setenv("FWUPD_OFFLINE_TRIGGER", "/tmp/fwupd-self-test/system-update", TRUE);
-	g_setenv("FWUPD_LOCALSTATEDIR", "/tmp/fwupd-self-test/var", TRUE);
+	(void)g_setenv("FWUPD_DATADIR", testdatadir, TRUE);
+	(void)g_setenv("FWUPD_PLUGINDIR", testdatadir, TRUE);
+	(void)g_setenv("FWUPD_SYSCONFDIR", testdatadir, TRUE);
+	(void)g_setenv("FWUPD_SYSFSFWDIR", testdatadir, TRUE);
+	(void)g_setenv("CONFIGURATION_DIRECTORY", testdatadir, TRUE);
+	(void)g_setenv("FWUPD_OFFLINE_TRIGGER", "/tmp/fwupd-self-test/system-update", TRUE);
+	(void)g_setenv("FWUPD_LOCALSTATEDIR", "/tmp/fwupd-self-test/var", TRUE);
 
 	/* ensure empty tree */
 	fu_self_test_mkroot();

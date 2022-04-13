@@ -566,13 +566,13 @@ main(int argc, char **argv)
 
 	/* change path */
 	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
-	g_setenv("FWUPD_SYSFSFWDIR", testdatadir, TRUE);
+	(void)g_setenv("FWUPD_SYSFSFWDIR", testdatadir, TRUE);
 
 	/* change behavior */
 	sysfsdir = fu_common_get_path(FU_PATH_KIND_SYSFSDIR_FW);
-	g_setenv("FWUPD_UEFI_ESP_PATH", sysfsdir, TRUE);
-	g_setenv("FWUPD_UEFI_TEST", "1", TRUE);
-	g_setenv("FWUPD_DELL_FAKE_SMBIOS", "1", FALSE);
+	(void)g_setenv("FWUPD_UEFI_ESP_PATH", sysfsdir, TRUE);
+	(void)g_setenv("FWUPD_UEFI_TEST", "1", TRUE);
+	(void)g_setenv("FWUPD_DELL_FAKE_SMBIOS", "1", FALSE);
 
 	/* only critical and error are fatal */
 	g_log_set_fatal_mask(NULL, G_LOG_LEVEL_ERROR | G_LOG_LEVEL_CRITICAL);

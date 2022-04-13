@@ -4301,7 +4301,7 @@ main(int argc, char *argv[])
 			   _("Ignoring SSL strict checks, "
 			     "to do this automatically in the future "
 			     "export DISABLE_SSL_STRICT in your environment"));
-		g_setenv("DISABLE_SSL_STRICT", "1", TRUE);
+		(void)g_setenv("DISABLE_SSL_STRICT", "1", TRUE);
 	}
 
 	/* this doesn't have to be precise (e.g. using the build-year) as we just
@@ -4347,8 +4347,8 @@ main(int argc, char *argv[])
 
 	/* set verbose? */
 	if (verbose) {
-		g_setenv("G_MESSAGES_DEBUG", "all", FALSE);
-		g_setenv("FWUPD_VERBOSE", "1", FALSE);
+		(void)g_setenv("G_MESSAGES_DEBUG", "all", FALSE);
+		(void)g_setenv("FWUPD_VERBOSE", "1", FALSE);
 	} else {
 		g_log_set_handler(G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, fu_util_ignore_cb, NULL);
 	}

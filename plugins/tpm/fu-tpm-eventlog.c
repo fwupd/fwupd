@@ -140,8 +140,8 @@ main(int argc, char *argv[])
 
 	/* set verbose? */
 	if (verbose) {
-		g_setenv("G_MESSAGES_DEBUG", "all", FALSE);
-		g_setenv("FWUPD_TPM_EVENTLOG_VERBOSE", "1", FALSE);
+		(void)g_setenv("G_MESSAGES_DEBUG", "all", FALSE);
+		(void)g_setenv("FWUPD_TPM_EVENTLOG_VERBOSE", "1", FALSE);
 	}
 
 	/* allow user to chose a local file */

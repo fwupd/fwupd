@@ -97,7 +97,7 @@ main(int argc, char **argv)
 	g_log_set_fatal_mask(NULL, G_LOG_LEVEL_ERROR | G_LOG_LEVEL_CRITICAL);
 
 	/* log everything */
-	g_setenv("G_MESSAGES_DEBUG", "all", FALSE);
+	(void)g_setenv("G_MESSAGES_DEBUG", "all", FALSE);
 
 	/* tests go here */
 	g_test_add_func("/wac/firmware{parse}", fu_wac_firmware_parse_func);

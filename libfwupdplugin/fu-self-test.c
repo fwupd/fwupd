@@ -358,7 +358,7 @@ fu_smbios_func(void)
 
 	/* these tests will not write */
 	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
-	g_setenv("FWUPD_SYSFSFWDIR", testdatadir, TRUE);
+	(void)g_setenv("FWUPD_SYSFSFWDIR", testdatadir, TRUE);
 
 	smbios = fu_smbios_new();
 	ret = fu_smbios_setup(smbios, &error);
@@ -633,7 +633,7 @@ fu_hwids_func(void)
 
 	/* these tests will not write */
 	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
-	g_setenv("FWUPD_SYSFSFWDIR", testdatadir, TRUE);
+	(void)g_setenv("FWUPD_SYSFSFWDIR", testdatadir, TRUE);
 
 	smbios = fu_smbios_new();
 	ret = fu_smbios_setup(smbios, &error);
@@ -888,17 +888,17 @@ fu_common_kernel_lockdown_func(void)
 #endif
 
 	old_kernel_dir = g_test_build_filename(G_TEST_DIST, "tests", "lockdown", NULL);
-	g_setenv("FWUPD_SYSFSSECURITYDIR", old_kernel_dir, TRUE);
+	(void)g_setenv("FWUPD_SYSFSSECURITYDIR", old_kernel_dir, TRUE);
 	ret = fu_common_kernel_locked_down();
 	g_assert_false(ret);
 
 	locked_dir = g_test_build_filename(G_TEST_DIST, "tests", "lockdown", "locked", NULL);
-	g_setenv("FWUPD_SYSFSSECURITYDIR", locked_dir, TRUE);
+	(void)g_setenv("FWUPD_SYSFSSECURITYDIR", locked_dir, TRUE);
 	ret = fu_common_kernel_locked_down();
 	g_assert_true(ret);
 
 	none_dir = g_test_build_filename(G_TEST_DIST, "tests", "lockdown", "none", NULL);
-	g_setenv("FWUPD_SYSFSSECURITYDIR", none_dir, TRUE);
+	(void)g_setenv("FWUPD_SYSFSSECURITYDIR", none_dir, TRUE);
 	ret = fu_common_kernel_locked_down();
 	g_assert_false(ret);
 }
@@ -3124,7 +3124,7 @@ fu_efivar_func(void)
 
 	/* these tests will write */
 	sysfsfwdir = g_test_build_filename(G_TEST_BUILT, "tests", NULL);
-	g_setenv("FWUPD_SYSFSFWDIR", sysfsfwdir, TRUE);
+	(void)g_setenv("FWUPD_SYSFSFWDIR", sysfsfwdir, TRUE);
 
 	/* check supported */
 	ret = fu_efivar_supported(&error);
@@ -3950,14 +3950,14 @@ main(int argc, char **argv)
 
 	/* only critical and error are fatal */
 	g_log_set_fatal_mask(NULL, G_LOG_LEVEL_ERROR | G_LOG_LEVEL_CRITICAL);
-	g_setenv("G_MESSAGES_DEBUG", "all", TRUE);
+	(void)g_setenv("G_MESSAGES_DEBUG", "all", TRUE);
 
 	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
-	g_setenv("FWUPD_DATADIR", testdatadir, TRUE);
-	g_setenv("FWUPD_PLUGINDIR", testdatadir, TRUE);
-	g_setenv("FWUPD_SYSCONFDIR", testdatadir, TRUE);
-	g_setenv("FWUPD_OFFLINE_TRIGGER", "/tmp/fwupd-self-test/system-update", TRUE);
-	g_setenv("FWUPD_LOCALSTATEDIR", "/tmp/fwupd-self-test/var", TRUE);
+	(void)g_setenv("FWUPD_DATADIR", testdatadir, TRUE);
+	(void)g_setenv("FWUPD_PLUGINDIR", testdatadir, TRUE);
+	(void)g_setenv("FWUPD_SYSCONFDIR", testdatadir, TRUE);
+	(void)g_setenv("FWUPD_OFFLINE_TRIGGER", "/tmp/fwupd-self-test/system-update", TRUE);
+	(void)g_setenv("FWUPD_LOCALSTATEDIR", "/tmp/fwupd-self-test/var", TRUE);
 
 	g_test_add_func("/fwupd/common{strnsplit}", fu_common_strnsplit_func);
 	g_test_add_func("/fwupd/common{memmem}", fu_common_memmem_func);

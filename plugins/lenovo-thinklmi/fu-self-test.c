@@ -96,7 +96,7 @@ fu_plugin_lenovo_thinklmi_bootorder_locked(gconstpointer user_data)
 	g_autoptr(FuDevice) dev = NULL;
 	g_autofree gchar *test_dir =
 	    g_test_build_filename(G_TEST_DIST, "tests", "firmware-attributes", "locked", NULL);
-	g_setenv("FWUPD_SYSFSFWATTRIBDIR", test_dir, TRUE);
+	(void)g_setenv("FWUPD_SYSFSFWATTRIBDIR", test_dir, TRUE);
 
 	dev = fu_test_probe_fake_esrt(self);
 	fu_plugin_runner_device_register(self->plugin_lenovo_thinklmi, dev);
@@ -110,7 +110,7 @@ fu_plugin_lenovo_thinklmi_bootorder_unlocked(gconstpointer user_data)
 	g_autoptr(FuDevice) dev = NULL;
 	g_autofree gchar *test_dir =
 	    g_test_build_filename(G_TEST_DIST, "tests", "firmware-attributes", "unlocked", NULL);
-	g_setenv("FWUPD_SYSFSFWATTRIBDIR", test_dir, TRUE);
+	(void)g_setenv("FWUPD_SYSFSFWATTRIBDIR", test_dir, TRUE);
 
 	dev = fu_test_probe_fake_esrt(self);
 	fu_plugin_runner_device_register(self->plugin_lenovo_thinklmi, dev);
@@ -145,16 +145,16 @@ main(int argc, char **argv)
 	/* starting thinklmi dir to make startup pass */
 	test_dir =
 	    g_test_build_filename(G_TEST_DIST, "tests", "firmware-attributes", "locked", NULL);
-	g_setenv("FWUPD_SYSFSFWATTRIBDIR", test_dir, TRUE);
+	(void)g_setenv("FWUPD_SYSFSFWATTRIBDIR", test_dir, TRUE);
 
 	/* starting ESRT path */
 	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
-	g_setenv("FWUPD_SYSFSFWDIR", testdatadir, TRUE);
+	(void)g_setenv("FWUPD_SYSFSFWDIR", testdatadir, TRUE);
 
 	/* change behavior of UEFI plugin for test mode */
 	sysfsdir = fu_common_get_path(FU_PATH_KIND_SYSFSDIR_FW);
-	g_setenv("FWUPD_UEFI_ESP_PATH", sysfsdir, TRUE);
-	g_setenv("FWUPD_UEFI_TEST", "1", TRUE);
+	(void)g_setenv("FWUPD_UEFI_ESP_PATH", sysfsdir, TRUE);
+	(void)g_setenv("FWUPD_UEFI_TEST", "1", TRUE);
 
 	/* only critical and error are fatal */
 	g_log_set_fatal_mask(NULL, G_LOG_LEVEL_ERROR | G_LOG_LEVEL_CRITICAL);
