@@ -36,11 +36,12 @@ fu_redfish_legacy_device_detach(FuDevice *dev, FuProgress *progress, GError **er
 	json_builder_end_object(builder);
 
 	/* patch the two fields */
-	return fu_redfish_request_patch(request,
-					"/redfish/v1/UpdateService",
-					builder,
-					FU_REDFISH_REQUEST_PERFORM_FLAG_LOAD_JSON,
-					error);
+	return fu_redfish_request_perform_full(request,
+					       "/redfish/v1/UpdateService",
+					       "PATCH",
+					       builder,
+					       FU_REDFISH_REQUEST_PERFORM_FLAG_LOAD_JSON,
+					       error);
 }
 
 static gboolean
@@ -61,11 +62,12 @@ fu_redfish_legacy_device_attach(FuDevice *dev, FuProgress *progress, GError **er
 	json_builder_end_object(builder);
 
 	/* patch the two fields */
-	return fu_redfish_request_patch(request,
-					"/redfish/v1/UpdateService",
-					builder,
-					FU_REDFISH_REQUEST_PERFORM_FLAG_LOAD_JSON,
-					error);
+	return fu_redfish_request_perform_full(request,
+					       "/redfish/v1/UpdateService",
+					       "PATCH",
+					       builder,
+					       FU_REDFISH_REQUEST_PERFORM_FLAG_LOAD_JSON,
+					       error);
 }
 
 static gboolean

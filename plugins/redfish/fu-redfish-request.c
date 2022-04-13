@@ -229,16 +229,22 @@ fu_redfish_request_perform(FuRedfishRequest *self,
 }
 
 gboolean
-fu_redfish_request_patch(FuRedfishRequest *self,
-			 const gchar *path,
-			 JsonBuilder *builder,
-			 FuRedfishRequestPerformFlags flags,
-			 GError **error)
+fu_redfish_request_perform_full(FuRedfishRequest *self,
+				const gchar *path,
+				const gchar *request,
+				JsonBuilder *builder,
+				FuRedfishRequestPerformFlags flags,
+				GError **error)
 {
 	struct curl_slist *hs = NULL;
 	g_autoptr(GString) str = g_string_new(NULL);
 	g_autoptr(JsonGenerator) json_generator = json_generator_new();
 	g_autoptr(JsonNode) json_root = NULL;
+
+	g_return_val_if_fail(FU_IS_REDFISH_REQUEST(self), FALSE);
+	g_return_val_if_fail(path != NULL, FALSE);
+	g_return_val_if_fail(request != NULL, FALSE);
+	g_return_val_if_fail(builder != NULL, FALSE);
 
 	/* export as a string */
 	json_root = json_builder_get_root(builder);
@@ -249,7 +255,7 @@ fu_redfish_request_patch(FuRedfishRequest *self,
 		g_debug("request to %s: %s", path, str->str);
 
 	/* patch */
-	(void)curl_easy_setopt(self->curl, CURLOPT_CUSTOMREQUEST, "PATCH");
+	(void)curl_easy_setopt(self->curl, CURLOPT_CUSTOMREQUEST, request);
 	(void)curl_easy_setopt(self->curl, CURLOPT_POSTFIELDS, str->str);
 	(void)curl_easy_setopt(self->curl, CURLOPT_POSTFIELDSIZE, (long)str->len);
 	hs = curl_slist_append(hs, "Content-Type: application/json");
