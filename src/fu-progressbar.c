@@ -324,10 +324,6 @@ fu_progressbar_update(FuProgressbar *self, FwupdStatus status, guint percentage)
 		return;
 	}
 
-	/* use cached value */
-	if (status == FWUPD_STATUS_UNKNOWN)
-		status = self->status;
-
 	if (!self->interactive) {
 		g_print("%s: %u%%\n", fu_progressbar_status_to_string(status), percentage);
 		self->status = status;
