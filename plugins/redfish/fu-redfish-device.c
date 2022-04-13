@@ -15,6 +15,8 @@ typedef struct {
 	JsonObject *member;
 	guint64 milestone;
 	gchar *build;
+	guint reset_pre_delay;	/* default of 0ms */
+	guint reset_post_delay; /* default of 0ms */
 } FuRedfishDevicePrivate;
 
 enum { PROP_0, PROP_BACKEND, PROP_MEMBER, PROP_LAST };
@@ -32,6 +34,8 @@ fu_redfish_device_to_string(FuDevice *device, guint idt, GString *str)
 		fu_common_string_append_kx(str, idt, "Milestone", priv->milestone);
 	if (priv->build != NULL)
 		fu_common_string_append_kv(str, idt, "Build", priv->build);
+	fu_common_string_append_ku(str, idt, "ResetPretDelay", priv->reset_pre_delay);
+	fu_common_string_append_ku(str, idt, "ResetPostDelay", priv->reset_post_delay);
 }
 
 static void
@@ -752,6 +756,49 @@ fu_redfish_device_poll_task(FuRedfishDevice *self,
 	return FALSE;
 }
 
+guint
+fu_redfish_device_get_reset_pre_delay(FuRedfishDevice *self)
+{
+	FuRedfishDevicePrivate *priv = GET_PRIVATE(self);
+	return priv->reset_pre_delay;
+}
+
+guint
+fu_redfish_device_get_reset_post_delay(FuRedfishDevice *self)
+{
+	FuRedfishDevicePrivate *priv = GET_PRIVATE(self);
+	return priv->reset_post_delay;
+}
+
+static gboolean
+fu_redfish_device_set_quirk_kv(FuDevice *device,
+			       const gchar *key,
+			       const gchar *value,
+			       GError **error)
+{
+	FuRedfishDevice *self = FU_REDFISH_DEVICE(device);
+	FuRedfishDevicePrivate *priv = GET_PRIVATE(self);
+	guint64 tmp = 0;
+
+	if (g_strcmp0(key, "RedfishResetPreDelay") == 0) {
+		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT, error))
+			return FALSE;
+		priv->reset_pre_delay = tmp;
+		return TRUE;
+	}
+	if (g_strcmp0(key, "RedfishResetPostDelay") == 0) {
+		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT, error))
+			return FALSE;
+		priv->reset_post_delay = tmp;
+		return TRUE;
+	}
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "quirk key not supported");
+	return FALSE;
+}
+
 static void
 fu_redfish_device_get_property(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
 {
@@ -812,6 +859,9 @@ fu_redfish_device_init(FuRedfishDevice *self)
 	fu_device_register_private_flag(FU_DEVICE(self),
 					FU_REDFISH_DEVICE_FLAG_WILDCARD_TARGETS,
 					"wildcard-targets");
+	fu_device_register_private_flag(FU_DEVICE(self),
+					FU_REDFISH_DEVICE_FLAG_MANAGER_RESET,
+					"manager-reset");
 }
 
 static void
@@ -840,6 +890,7 @@ fu_redfish_device_class_init(FuRedfishDeviceClass *klass)
 
 	klass_device->to_string = fu_redfish_device_to_string;
 	klass_device->probe = fu_redfish_device_probe;
+	klass_device->set_quirk_kv = fu_redfish_device_set_quirk_kv;
 
 	/**
 	 * FuRedfishDevice:backend:

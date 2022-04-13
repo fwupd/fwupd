@@ -38,6 +38,23 @@ when the firmware will actually be written to the SPI device.
 
 No vendor ID is set as there is no vendor field in the schema.
 
+## Quirk Use
+
+This plugin uses the following plugin-specific quirks:
+
+### RedfishResetPreDelay
+
+Delay in ms to use before querying the manager after a cleanup reset, default 0ms.
+
+Since: 1.8.0
+
+### RedfishResetPostDelay
+
+Delay in ms to use before querying /redfish/v1/UpdateService after a cleanup reset,
+default 0ms.
+
+Since: 1.8.0
+
 ## Setting Service IP Manually
 
 The service IP may not be automatically discoverable due to the absence of

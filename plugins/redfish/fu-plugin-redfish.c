@@ -14,8 +14,12 @@
 
 #include "fu-redfish-backend.h"
 #include "fu-redfish-common.h"
+#include "fu-redfish-device.h"
 #include "fu-redfish-network.h"
 #include "fu-redfish-smbios.h"
+
+#define FU_REDFISH_PLUGIN_CLEANUP_RETRIES_COUNT 120
+#define FU_REDFISH_PLUGIN_CLEANUP_RETRIES_DELAY 5000 /* ms */
 
 struct FuPluginData {
 	FuRedfishBackend *backend;
@@ -414,12 +418,102 @@ fu_plugin_redfish_startup(FuPlugin *plugin, GError **error)
 	return fu_backend_setup(FU_BACKEND(data->backend), error);
 }
 
+static gboolean
+fu_plugin_redfish_cleanup_cb(FuDevice *device, gpointer user_data, GError **error)
+{
+	FuPlugin *self = FU_PLUGIN(user_data);
+	FuPluginData *data = fu_plugin_get_data(self);
+	return fu_backend_setup(FU_BACKEND(data->backend), error);
+}
+
+static gboolean
+fu_plugin_redfish_cleanup(FuPlugin *self,
+			  FuDevice *device,
+			  FuProgress *progress,
+			  FwupdInstallFlags flags,
+			  GError **error)
+{
+	FuPluginData *data = fu_plugin_get_data(self);
+	g_autoptr(FuRedfishRequest) request = fu_redfish_backend_request_new(data->backend);
+	g_autoptr(JsonBuilder) builder = json_builder_new();
+	g_autoptr(GPtrArray) devices = NULL;
+
+	/* nothing to do */
+	if (!fu_device_has_private_flag(device, FU_REDFISH_DEVICE_FLAG_MANAGER_RESET))
+		return TRUE;
+
+	/* progress */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 24);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 25);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 25);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 50);
+
+	/* ask the BMC to reboot */
+	json_builder_begin_object(builder);
+	json_builder_set_member_name(builder, "ResetType");
+	json_builder_add_string_value(builder, "ForceRestart");
+	json_builder_end_object(builder);
+	if (!fu_redfish_request_perform_full(request,
+					     "/redfish/v1/Managers/1/Actions/Manager.Reset",
+					     "POST",
+					     builder,
+					     FU_REDFISH_REQUEST_PERFORM_FLAG_NONE,
+					     error)) {
+		g_prefix_error(error, "failed to reset manager: ");
+		return FALSE;
+	}
+	fu_progress_step_done(progress);
+
+	/* remove all the devices */
+	devices = fu_backend_get_devices(FU_BACKEND(data->backend));
+	for (guint i = 0; i < devices->len; i++) {
+		FuDevice *device_tmp = g_ptr_array_index(devices, i);
+		fu_backend_device_removed(FU_BACKEND(data->backend), device_tmp);
+	}
+
+	/* work around manager bugs... */
+	fu_backend_invalidate(FU_BACKEND(data->backend));
+	fu_progress_sleep(fu_progress_get_child(progress),
+			  fu_redfish_device_get_reset_pre_delay(FU_REDFISH_DEVICE(device)));
+	fu_progress_step_done(progress);
+
+	/* wait for the BMC to come back */
+	if (!fu_device_retry_full(device,
+				  fu_plugin_redfish_cleanup_cb,
+				  FU_REDFISH_PLUGIN_CLEANUP_RETRIES_COUNT,
+				  FU_REDFISH_PLUGIN_CLEANUP_RETRIES_DELAY,
+				  self,
+				  error)) {
+		g_prefix_error(error, "manager failed to come back: ");
+		return FALSE;
+	}
+	fu_progress_step_done(progress);
+
+	/* work around manager bugs... */
+	fu_progress_sleep(fu_progress_get_child(progress),
+			  fu_redfish_device_get_reset_post_delay(FU_REDFISH_DEVICE(device)));
+	fu_progress_step_done(progress);
+
+	/* get the new list of devices */
+	if (!fu_plugin_redfish_coldplug(self, error))
+		return FALSE;
+	fu_progress_step_done(progress);
+
+	/* success */
+	return TRUE;
+}
+
 static void
 fu_plugin_redfish_init(FuPlugin *plugin)
 {
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	FuPluginData *data = fu_plugin_alloc_data(plugin, sizeof(FuPluginData));
 	data->backend = fu_redfish_backend_new(ctx);
+	fu_context_add_quirk_key(ctx, "RedfishResetPreDelay");
+	fu_context_add_quirk_key(ctx, "RedfishResetPostDelay");
 	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_REDFISH_SMBIOS);
 }
 
@@ -438,4 +532,5 @@ fu_plugin_init_vfuncs(FuPluginVfuncs *vfuncs)
 	vfuncs->destroy = fu_plugin_redfish_destroy;
 	vfuncs->startup = fu_plugin_redfish_startup;
 	vfuncs->coldplug = fu_plugin_redfish_coldplug;
+	vfuncs->cleanup = fu_plugin_redfish_cleanup;
 }
