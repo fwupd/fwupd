@@ -7,7 +7,6 @@ ParentGuid = REDFISH\VENDOR_Lenovo&ID_BMC-Primary
 Flags = dual-image,is-backup,no-probe
 
 [REDFISH\VENDOR_Lenovo&ID_BMC-Primary]
-ParentGuid = REDFISH\VENDOR_Lenovo&ID_BMC-Primary
 Flags = dual-image
 
 [REDFISH\VENDOR_Lenovo&ID_LXPM]
