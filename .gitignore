@@ -35,3 +35,4 @@ plugins/tpm-eventlog/tests/
 plugins/uefi-dbx/tests/
 .buildconfig
 .ossfuzz
+*.rej
