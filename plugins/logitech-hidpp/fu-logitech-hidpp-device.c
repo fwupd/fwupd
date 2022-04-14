@@ -1332,7 +1332,10 @@ fu_logitech_hidpp_device_finalize(GObject *object)
 }
 
 static gboolean
-fu_logitech_hidpp_device_cleanup(FuDevice *device, FwupdInstallFlags flags, GError **error)
+fu_logitech_hidpp_device_cleanup(FuDevice *device,
+				 FuProgress *progress,
+				 FwupdInstallFlags flags,
+				 GError **error)
 {
 	FuDevice *parent = fu_device_get_parent(device);
 	if (parent != NULL)

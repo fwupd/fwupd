@@ -131,13 +131,15 @@ fu_flashrom_device_close(FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_flashrom_device_prepare(FuDevice *device, FwupdInstallFlags flags, GError **error)
+fu_flashrom_device_prepare(FuDevice *device,
+			   FuProgress *progress,
+			   FwupdInstallFlags flags,
+			   GError **error)
 {
 	FuFlashromDevice *self = FU_FLASHROM_DEVICE(device);
 	g_autofree gchar *firmware_orig = NULL;
 	g_autofree gchar *localstatedir = NULL;
 	g_autofree gchar *basename = NULL;
-	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 
 	/* if the original firmware doesn't exist, grab it now */
 	basename = g_strdup_printf("flashrom-%s.bin", fu_device_get_id(device));
