@@ -4413,9 +4413,6 @@ fu_device_setup(FuDevice *self, GError **error)
 			return FALSE;
 	}
 
-	/* no longer needed */
-	g_hash_table_remove_all(priv->instance_hash);
-
 	priv->done_setup = TRUE;
 	return TRUE;
 }
@@ -4816,7 +4813,6 @@ fu_device_add_instance_str(FuDevice *self, const gchar *key, const gchar *value)
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FU_IS_DEVICE(self));
 	g_return_if_fail(key != NULL);
-	g_return_if_fail(!priv->done_setup);
 	g_hash_table_insert(priv->instance_hash, g_strdup(key), g_strdup(value));
 }
 
@@ -4836,7 +4832,6 @@ fu_device_add_instance_strsafe(FuDevice *self, const gchar *key, const gchar *va
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FU_IS_DEVICE(self));
 	g_return_if_fail(key != NULL);
-	g_return_if_fail(!priv->done_setup);
 	g_hash_table_insert(priv->instance_hash,
 			    g_strdup(key),
 			    fu_common_instance_id_strsafe(value));
@@ -4858,7 +4853,6 @@ fu_device_add_instance_strup(FuDevice *self, const gchar *key, const gchar *valu
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FU_IS_DEVICE(self));
 	g_return_if_fail(key != NULL);
-	g_return_if_fail(!priv->done_setup);
 	g_hash_table_insert(priv->instance_hash,
 			    g_strdup(key),
 			    value != NULL ? g_utf8_strup(value, -1) : NULL);
@@ -4880,7 +4874,6 @@ fu_device_add_instance_u4(FuDevice *self, const gchar *key, guint8 value)
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FU_IS_DEVICE(self));
 	g_return_if_fail(key != NULL);
-	g_return_if_fail(!priv->done_setup);
 	g_hash_table_insert(priv->instance_hash, g_strdup(key), g_strdup_printf("%01X", value));
 }
 
@@ -4900,7 +4893,6 @@ fu_device_add_instance_u8(FuDevice *self, const gchar *key, guint8 value)
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FU_IS_DEVICE(self));
 	g_return_if_fail(key != NULL);
-	g_return_if_fail(!priv->done_setup);
 	g_hash_table_insert(priv->instance_hash, g_strdup(key), g_strdup_printf("%02X", value));
 }
 
@@ -4920,7 +4912,6 @@ fu_device_add_instance_u16(FuDevice *self, const gchar *key, guint16 value)
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FU_IS_DEVICE(self));
 	g_return_if_fail(key != NULL);
-	g_return_if_fail(!priv->done_setup);
 	g_hash_table_insert(priv->instance_hash, g_strdup(key), g_strdup_printf("%04X", value));
 }
 
@@ -4940,7 +4931,6 @@ fu_device_add_instance_u32(FuDevice *self, const gchar *key, guint32 value)
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FU_IS_DEVICE(self));
 	g_return_if_fail(key != NULL);
-	g_return_if_fail(!priv->done_setup);
 	g_hash_table_insert(priv->instance_hash, g_strdup(key), g_strdup_printf("%08X", value));
 }
 
@@ -4983,7 +4973,6 @@ fu_device_build_instance_id(FuDevice *self, GError **error, const gchar *subsyst
 
 	g_return_val_if_fail(FU_IS_DEVICE(self), FALSE);
 	g_return_val_if_fail(subsystem != NULL, FALSE);
-	g_return_val_if_fail(!priv->done_setup, FALSE);
 
 	va_start(args, subsystem);
 	for (guint i = 0;; i++) {
@@ -5043,7 +5032,6 @@ fu_device_build_instance_id_quirk(FuDevice *self, GError **error, const gchar *s
 
 	g_return_val_if_fail(FU_IS_DEVICE(self), FALSE);
 	g_return_val_if_fail(subsystem != NULL, FALSE);
-	g_return_val_if_fail(!priv->done_setup, FALSE);
 
 	va_start(args, subsystem);
 	for (guint i = 0;; i++) {
