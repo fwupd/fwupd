@@ -891,7 +891,10 @@ fu_wac_device_close(FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_wac_device_cleanup(FuDevice *device, FwupdInstallFlags flags, GError **error)
+fu_wac_device_cleanup(FuDevice *device,
+		      FuProgress *progress,
+		      FwupdInstallFlags flags,
+		      GError **error)
 {
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	return fu_wac_device_update_reset(FU_WAC_DEVICE(device), error);

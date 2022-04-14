@@ -72,6 +72,7 @@ typedef gboolean (*FuPluginDeviceProgressFunc)(FuPlugin *self,
 					       GError **error);
 typedef gboolean (*FuPluginFlaggedDeviceFunc)(FuPlugin *self,
 					      FuDevice *device,
+					      FuProgress *progress,
 					      FwupdInstallFlags flags,
 					      GError **error);
 typedef gboolean (*FuPluginDeviceArrayFunc)(FuPlugin *self, GPtrArray *devices, GError **error);
@@ -914,6 +915,7 @@ fu_plugin_runner_device_generic_progress(FuPlugin *self,
 static gboolean
 fu_plugin_runner_flagged_device_generic(FuPlugin *self,
 					FuDevice *device,
+					FuProgress *progress,
 					FwupdInstallFlags flags,
 					const gchar *symbol_name,
 					FuPluginFlaggedDeviceFunc func,
@@ -929,7 +931,7 @@ fu_plugin_runner_flagged_device_generic(FuPlugin *self,
 	if (func == NULL)
 		return TRUE;
 	g_debug("%s(%s)", symbol_name + 10, fu_plugin_get_name(self));
-	if (!func(self, device, flags, &error_local)) {
+	if (!func(self, device, progress, flags, &error_local)) {
 		if (error_local == NULL) {
 			g_critical("unset plugin error in %s(%s)",
 				   fu_plugin_get_name(self),
@@ -1091,8 +1093,9 @@ fu_plugin_runner_composite_cleanup(FuPlugin *self, GPtrArray *devices, GError **
 /**
  * fu_plugin_runner_prepare:
  * @self: a #FuPlugin
- * @flags: install flags
  * @device: a device
+ * @progress: a #FuProgress
+ * @flags: install flags
  * @error: (nullable): optional return location for an error
  *
  * Runs the update_prepare routine for the plugin
@@ -1102,11 +1105,16 @@ fu_plugin_runner_composite_cleanup(FuPlugin *self, GPtrArray *devices, GError **
  * Since: 1.7.0
  **/
 gboolean
-fu_plugin_runner_prepare(FuPlugin *self, FuDevice *device, FwupdInstallFlags flags, GError **error)
+fu_plugin_runner_prepare(FuPlugin *self,
+			 FuDevice *device,
+			 FuProgress *progress,
+			 FwupdInstallFlags flags,
+			 GError **error)
 {
 	FuPluginVfuncs *vfuncs = fu_plugin_get_vfuncs(self);
 	return fu_plugin_runner_flagged_device_generic(self,
 						       device,
+						       progress,
 						       flags,
 						       "fu_plugin_prepare",
 						       vfuncs->prepare,
@@ -1116,8 +1124,9 @@ fu_plugin_runner_prepare(FuPlugin *self, FuDevice *device, FwupdInstallFlags fla
 /**
  * fu_plugin_runner_cleanup:
  * @self: a #FuPlugin
- * @flags: install flags
  * @device: a device
+ * @progress: a #FuProgress
+ * @flags: install flags
  * @error: (nullable): optional return location for an error
  *
  * Runs the update_cleanup routine for the plugin
@@ -1127,11 +1136,16 @@ fu_plugin_runner_prepare(FuPlugin *self, FuDevice *device, FwupdInstallFlags fla
  * Since: 1.7.0
  **/
 gboolean
-fu_plugin_runner_cleanup(FuPlugin *self, FuDevice *device, FwupdInstallFlags flags, GError **error)
+fu_plugin_runner_cleanup(FuPlugin *self,
+			 FuDevice *device,
+			 FuProgress *progress,
+			 FwupdInstallFlags flags,
+			 GError **error)
 {
 	FuPluginVfuncs *vfuncs = fu_plugin_get_vfuncs(self);
 	return fu_plugin_runner_flagged_device_generic(self,
 						       device,
+						       progress,
 						       flags,
 						       "fu_plugin_cleanup",
 						       vfuncs->cleanup,

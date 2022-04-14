@@ -315,7 +315,8 @@ typedef struct {
 	/**
 	 * prepare:
 	 * @self: a #FuPlugin
-	 * @dev: a device
+	 * @device: a device
+	 * @progress: a #FuProgress
 	 * @flags: install flags
 	 * @error: (nullable): optional return location for an error
 	 *
@@ -325,12 +326,14 @@ typedef struct {
 	 **/
 	gboolean (*prepare)(FuPlugin *self,
 			    FuDevice *device,
+			    FuProgress *progress,
 			    FwupdInstallFlags flags,
 			    GError **error);
 	/**
 	 * cleanup
 	 * @self: a #FuPlugin
-	 * @dev: a device
+	 * @device: a device
+	 * @progress: a #FuProgress
 	 * @flags: install flags
 	 * @error: (nullable): optional return location for an error
 	 *
@@ -340,6 +343,7 @@ typedef struct {
 	 **/
 	gboolean (*cleanup)(FuPlugin *self,
 			    FuDevice *device,
+			    FuProgress *progress,
 			    FwupdInstallFlags flags,
 			    GError **error);
 	/**

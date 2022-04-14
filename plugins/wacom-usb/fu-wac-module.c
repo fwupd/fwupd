@@ -264,13 +264,16 @@ fu_wac_module_set_feature(FuWacModule *self,
 }
 
 static gboolean
-fu_wac_module_cleanup(FuDevice *device, FwupdInstallFlags flags, GError **error)
+fu_wac_module_cleanup(FuDevice *device,
+		      FuProgress *progress,
+		      FwupdInstallFlags flags,
+		      GError **error)
 {
 	FuDevice *parent = fu_device_get_parent(device);
 	g_autoptr(FuDeviceLocker) locker = fu_device_locker_new(parent, error);
 	if (locker == NULL)
 		return FALSE;
-	return fu_device_cleanup(parent, flags, error);
+	return fu_device_cleanup(parent, progress, flags, error);
 }
 
 static void

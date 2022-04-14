@@ -3988,6 +3988,7 @@ fu_device_reload(FuDevice *self, GError **error)
 /**
  * fu_device_prepare:
  * @self: a #FuDevice
+ * @progress: a #FuProgress
  * @flags: install flags
  * @error: (nullable): optional return location for an error
  *
@@ -3999,11 +4000,12 @@ fu_device_reload(FuDevice *self, GError **error)
  * Since: 1.3.3
  **/
 gboolean
-fu_device_prepare(FuDevice *self, FwupdInstallFlags flags, GError **error)
+fu_device_prepare(FuDevice *self, FuProgress *progress, FwupdInstallFlags flags, GError **error)
 {
 	FuDeviceClass *klass = FU_DEVICE_GET_CLASS(self);
 
 	g_return_val_if_fail(FU_IS_DEVICE(self), FALSE);
+	g_return_val_if_fail(FU_IS_PROGRESS(progress), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* no plugin-specific method */
@@ -4011,12 +4013,13 @@ fu_device_prepare(FuDevice *self, FwupdInstallFlags flags, GError **error)
 		return TRUE;
 
 	/* call vfunc */
-	return klass->prepare(self, flags, error);
+	return klass->prepare(self, progress, flags, error);
 }
 
 /**
  * fu_device_cleanup:
  * @self: a #FuDevice
+ * @progress: a #FuProgress
  * @flags: install flags
  * @error: (nullable): optional return location for an error
  *
@@ -4028,11 +4031,12 @@ fu_device_prepare(FuDevice *self, FwupdInstallFlags flags, GError **error)
  * Since: 1.3.3
  **/
 gboolean
-fu_device_cleanup(FuDevice *self, FwupdInstallFlags flags, GError **error)
+fu_device_cleanup(FuDevice *self, FuProgress *progress, FwupdInstallFlags flags, GError **error)
 {
 	FuDeviceClass *klass = FU_DEVICE_GET_CLASS(self);
 
 	g_return_val_if_fail(FU_IS_DEVICE(self), FALSE);
+	g_return_val_if_fail(FU_IS_PROGRESS(progress), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* no plugin-specific method */
@@ -4040,7 +4044,7 @@ fu_device_cleanup(FuDevice *self, FwupdInstallFlags flags, GError **error)
 		return TRUE;
 
 	/* call vfunc */
-	return klass->cleanup(self, flags, error);
+	return klass->cleanup(self, progress, flags, error);
 }
 
 static gboolean

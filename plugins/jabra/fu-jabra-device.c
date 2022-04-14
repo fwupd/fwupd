@@ -44,7 +44,10 @@ _g_usb_device_get_interface_for_class(GUsbDevice *dev, guint8 intf_class, GError
 /* slightly weirdly, this magic turns the device into appIDLE, so we
  * need the DFU plugin to further detach us into dfuIDLE */
 static gboolean
-fu_jabra_device_prepare(FuDevice *device, FwupdInstallFlags flags, GError **error)
+fu_jabra_device_prepare(FuDevice *device,
+			FuProgress *progress,
+			FwupdInstallFlags flags,
+			GError **error)
 {
 	FuJabraDevice *self = FU_JABRA_DEVICE(device);
 	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(device));
@@ -53,7 +56,6 @@ fu_jabra_device_prepare(FuDevice *device, FwupdInstallFlags flags, GError **erro
 	guint8 rep = 0x00;
 	guint8 iface_hid;
 	guint8 buf[33] = {0x00};
-	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GError) error_local = NULL;
 
 	/* parse string and create magic packet */

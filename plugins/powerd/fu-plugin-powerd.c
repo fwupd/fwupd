@@ -145,13 +145,21 @@ fu_plugin_powerd_startup(FuPlugin *plugin, GError **error)
 }
 
 static gboolean
-fu_plugin_powerd_prepare(FuPlugin *plugin, FuDevice *dev, FwupdInstallFlags flags, GError **error)
+fu_plugin_powerd_prepare(FuPlugin *plugin,
+			 FuDevice *device,
+			 FuProgress *progress,
+			 FwupdInstallFlags flags,
+			 GError **error)
 {
 	return fu_plugin_powerd_create_suspend_file(error);
 }
 
 static gboolean
-fu_plugin_powerd_cleanup(FuPlugin *plugin, FuDevice *dev, FwupdInstallFlags flags, GError **error)
+fu_plugin_powerd_cleanup(FuPlugin *plugin,
+			 FuDevice *device,
+			 FuProgress *progress,
+			 FwupdInstallFlags flags,
+			 GError **error)
 {
 	return fu_plugin_powerd_delete_suspend_file(error);
 }
