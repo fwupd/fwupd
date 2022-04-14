@@ -30,6 +30,7 @@ struct _FuConfig {
 	GPtrArray *blocked_firmware;  /* (element-type utf-8) */
 	GPtrArray *uri_schemes;	      /* (element-type utf-8) */
 	GPtrArray *filenames;	      /* (element-type utf-8) */
+	GArray *trusted_uids;	      /* (elementy type guint64) */
 	guint64 archive_size_max;
 	guint idle_timeout;
 	gchar *host_bkc;
@@ -58,6 +59,7 @@ fu_config_reload(FuConfig *self, GError **error)
 	g_auto(GStrv) blocked_firmware = NULL;
 	g_auto(GStrv) uri_schemes = NULL;
 	g_auto(GStrv) devices = NULL;
+	g_auto(GStrv) uids = NULL;
 	g_auto(GStrv) plugins = NULL;
 	g_autofree gchar *domains = NULL;
 	g_autofree gchar *host_bkc = NULL;
@@ -241,6 +243,20 @@ fu_config_reload(FuConfig *self, GError **error)
 	if (host_bkc != NULL && host_bkc[0] != '\0')
 		self->host_bkc = g_steal_pointer(&host_bkc);
 
+	/* get trusted uids */
+	g_array_set_size(self->trusted_uids, 0);
+	uids = g_key_file_get_string_list(keyfile,
+					  "fwupd",
+					  "TrustedUids",
+					  NULL, /* length */
+					  NULL);
+	if (uids != NULL) {
+		for (guint i = 0; uids[i] != NULL; i++) {
+			guint64 val = fu_common_strtoull(uids[i]);
+			g_array_append_val(self->trusted_uids, val);
+		}
+	}
+
 	return TRUE;
 }
 
@@ -330,6 +346,13 @@ fu_config_get_disabled_devices(FuConfig *self)
 {
 	g_return_val_if_fail(FU_IS_CONFIG(self), NULL);
 	return self->disabled_devices;
+}
+
+GArray *
+fu_config_get_trusted_uids(FuConfig *self)
+{
+	g_return_val_if_fail(FU_IS_CONFIG(self), NULL);
+	return self->trusted_uids;
 }
 
 GPtrArray *
@@ -451,6 +474,7 @@ fu_config_init(FuConfig *self)
 	self->disabled_plugins = g_ptr_array_new_with_free_func(g_free);
 	self->approved_firmware = g_ptr_array_new_with_free_func(g_free);
 	self->blocked_firmware = g_ptr_array_new_with_free_func(g_free);
+	self->trusted_uids = g_array_new(FALSE, FALSE, sizeof(guint64));
 	self->uri_schemes = g_ptr_array_new_with_free_func(g_free);
 	self->monitors = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 }
@@ -471,6 +495,7 @@ fu_config_finalize(GObject *obj)
 	g_ptr_array_unref(self->approved_firmware);
 	g_ptr_array_unref(self->blocked_firmware);
 	g_ptr_array_unref(self->uri_schemes);
+	g_array_unref(self->trusted_uids);
 	g_free(self->host_bkc);
 
 	G_OBJECT_CLASS(fu_config_parent_class)->finalize(obj);

@@ -284,7 +284,7 @@ fu_main_create_request(FuMainPrivate *priv, const gchar *sender, GError **error)
 		return NULL;
 	}
 	g_variant_get(value, "(u)", &calling_uid);
-	if (calling_uid == 0)
+	if (fu_engine_is_uid_trusted(priv->engine, calling_uid))
 		device_flags |= FWUPD_DEVICE_FLAG_TRUSTED;
 	fu_engine_request_set_device_flags(request, device_flags);
 
