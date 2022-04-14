@@ -354,6 +354,13 @@ fu_redfish_backend_setup(FuBackend *backend, GError **error)
 	return TRUE;
 }
 
+static void
+fu_redfish_backend_invalidate(FuBackend *backend)
+{
+	FuRedfishBackend *self = FU_REDFISH_BACKEND(backend);
+	g_hash_table_remove_all(self->request_cache);
+}
+
 void
 fu_redfish_backend_set_hostname(FuRedfishBackend *self, const gchar *hostname)
 {
@@ -432,6 +439,7 @@ fu_redfish_backend_class_init(FuRedfishBackendClass *klass)
 	FuBackendClass *klass_backend = FU_BACKEND_CLASS(klass);
 	klass_backend->coldplug = fu_redfish_backend_coldplug;
 	klass_backend->setup = fu_redfish_backend_setup;
+	klass_backend->invalidate = fu_redfish_backend_invalidate;
 	object_class->finalize = fu_redfish_backend_finalize;
 }
 
@@ -454,6 +462,12 @@ fu_redfish_backend_init(FuRedfishBackend *self)
 FuRedfishBackend *
 fu_redfish_backend_new(FuContext *ctx)
 {
-	return FU_REDFISH_BACKEND(
-	    g_object_new(FU_REDFISH_TYPE_BACKEND, "name", "redfish", "context", ctx, NULL));
+	return FU_REDFISH_BACKEND(g_object_new(FU_REDFISH_TYPE_BACKEND,
+					       "name",
+					       "redfish",
+					       "can-invalidate",
+					       TRUE,
+					       "context",
+					       ctx,
+					       NULL));
 }
