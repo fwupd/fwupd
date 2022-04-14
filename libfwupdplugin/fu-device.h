@@ -56,9 +56,11 @@ struct _FuDeviceClass {
 			     GError **error) G_GNUC_WARN_UNUSED_RESULT;
 	gboolean (*reload)(FuDevice *self, GError **error) G_GNUC_WARN_UNUSED_RESULT;
 	gboolean (*prepare)(FuDevice *self,
+			    FuProgress *progress,
 			    FwupdInstallFlags flags,
 			    GError **error) G_GNUC_WARN_UNUSED_RESULT;
 	gboolean (*cleanup)(FuDevice *self,
+			    FuProgress *progress,
 			    FwupdInstallFlags flags,
 			    GError **error) G_GNUC_WARN_UNUSED_RESULT;
 	void (*report_metadata_pre)(FuDevice *self, GHashTable *metadata);
@@ -634,13 +636,11 @@ fu_device_detach_full(FuDevice *self,
 gboolean
 fu_device_reload(FuDevice *self, GError **error) G_GNUC_WARN_UNUSED_RESULT;
 gboolean
-fu_device_prepare(FuDevice *self,
-		  FwupdInstallFlags flags,
-		  GError **error) G_GNUC_WARN_UNUSED_RESULT;
+fu_device_prepare(FuDevice *self, FuProgress *progress, FwupdInstallFlags flags, GError **error)
+    G_GNUC_WARN_UNUSED_RESULT;
 gboolean
-fu_device_cleanup(FuDevice *self,
-		  FwupdInstallFlags flags,
-		  GError **error) G_GNUC_WARN_UNUSED_RESULT;
+fu_device_cleanup(FuDevice *self, FuProgress *progress, FwupdInstallFlags flags, GError **error)
+    G_GNUC_WARN_UNUSED_RESULT;
 void
 fu_device_incorporate(FuDevice *self, FuDevice *donor);
 void

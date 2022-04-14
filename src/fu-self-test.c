@@ -3172,7 +3172,7 @@ fu_plugin_module_func(gconstpointer user_data)
 				     &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	g_assert_cmpint(cnt, ==, 8);
+	g_assert_cmpint(cnt, >=, 8);
 
 	/* check the new version */
 	g_assert_cmpstr(fu_device_get_version(device), ==, "1.2.3");

@@ -66,6 +66,7 @@ fu_plugin_logind_startup(FuPlugin *plugin, GError **error)
 static gboolean
 fu_plugin_logind_prepare(FuPlugin *plugin,
 			 FuDevice *device,
+			 FuProgress *progress,
 			 FwupdInstallFlags flags,
 			 GError **error)
 {
@@ -115,6 +116,7 @@ fu_plugin_logind_prepare(FuPlugin *plugin,
 static gboolean
 fu_plugin_logind_cleanup(FuPlugin *plugin,
 			 FuDevice *device,
+			 FuProgress *progress,
 			 FwupdInstallFlags flags,
 			 GError **error)
 {

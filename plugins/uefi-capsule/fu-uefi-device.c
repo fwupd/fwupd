@@ -555,7 +555,10 @@ fu_uefi_device_cleanup_esp(FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_uefi_device_prepare(FuDevice *device, FwupdInstallFlags flags, GError **error)
+fu_uefi_device_prepare(FuDevice *device,
+		       FuProgress *progress,
+		       FwupdInstallFlags flags,
+		       GError **error)
 {
 	FuUefiDevice *self = FU_UEFI_DEVICE(device);
 	FuUefiDevicePrivate *priv = GET_PRIVATE(self);
@@ -577,7 +580,10 @@ fu_uefi_device_prepare(FuDevice *device, FwupdInstallFlags flags, GError **error
 }
 
 static gboolean
-fu_uefi_device_cleanup(FuDevice *device, FwupdInstallFlags flags, GError **error)
+fu_uefi_device_cleanup(FuDevice *device,
+		       FuProgress *progress,
+		       FwupdInstallFlags flags,
+		       GError **error)
 {
 	FuUefiDevice *self = FU_UEFI_DEVICE(device);
 	FuUefiDevicePrivate *priv = GET_PRIVATE(self);

@@ -39,11 +39,17 @@ fu_plugin_runner_startup(FuPlugin *self, GError **error) G_GNUC_WARN_UNUSED_RESU
 gboolean
 fu_plugin_runner_coldplug(FuPlugin *self, GError **error) G_GNUC_WARN_UNUSED_RESULT;
 gboolean
-fu_plugin_runner_prepare(FuPlugin *self, FuDevice *device, FwupdInstallFlags flags, GError **error)
-    G_GNUC_WARN_UNUSED_RESULT;
+fu_plugin_runner_prepare(FuPlugin *self,
+			 FuDevice *device,
+			 FuProgress *progress,
+			 FwupdInstallFlags flags,
+			 GError **error) G_GNUC_WARN_UNUSED_RESULT;
 gboolean
-fu_plugin_runner_cleanup(FuPlugin *self, FuDevice *device, FwupdInstallFlags flags, GError **error)
-    G_GNUC_WARN_UNUSED_RESULT;
+fu_plugin_runner_cleanup(FuPlugin *self,
+			 FuDevice *device,
+			 FuProgress *progress,
+			 FwupdInstallFlags flags,
+			 GError **error) G_GNUC_WARN_UNUSED_RESULT;
 gboolean
 fu_plugin_runner_composite_prepare(FuPlugin *self,
 				   GPtrArray *devices,

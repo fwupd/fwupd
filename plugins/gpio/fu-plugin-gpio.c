@@ -94,7 +94,11 @@ fu_plugin_gpio_process_quirk(FuPlugin *self, const gchar *str, GError **error)
 }
 
 static gboolean
-fu_plugin_gpio_prepare(FuPlugin *self, FuDevice *device, FwupdInstallFlags flags, GError **error)
+fu_plugin_gpio_prepare(FuPlugin *self,
+		       FuDevice *device,
+		       FuProgress *progress,
+		       FwupdInstallFlags flags,
+		       GError **error)
 {
 	GPtrArray *guids = fu_device_get_guids(device);
 	for (guint i = 0; i < guids->len; i++) {
@@ -112,7 +116,11 @@ fu_plugin_gpio_prepare(FuPlugin *self, FuDevice *device, FwupdInstallFlags flags
 }
 
 static gboolean
-fu_plugin_gpio_cleanup(FuPlugin *self, FuDevice *device, FwupdInstallFlags flags, GError **error)
+fu_plugin_gpio_cleanup(FuPlugin *self,
+		       FuDevice *device,
+		       FuProgress *progress,
+		       FwupdInstallFlags flags,
+		       GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data(self);
 	g_autoptr(GPtrArray) current_logical_ids = NULL;
