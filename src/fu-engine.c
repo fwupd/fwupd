@@ -5770,6 +5770,23 @@ fu_engine_add_plugin(FuEngine *self, FuPlugin *plugin)
 	fu_plugin_list_add(self->plugin_list, plugin);
 }
 
+gboolean
+fu_engine_is_uid_trusted(FuEngine *self, guint64 calling_uid)
+{
+	GArray *trusted;
+
+	/* root is always trusted */
+	if (calling_uid == 0)
+		return TRUE;
+
+	trusted = fu_config_get_trusted_uids(self->config);
+	for (guint i = 0; i < trusted->len; i++) {
+		if (calling_uid == g_array_index(trusted, guint64, i))
+			return TRUE;
+	}
+	return FALSE;
+}
+
 static gboolean
 fu_engine_is_plugin_name_disabled(FuEngine *self, const gchar *name)
 {

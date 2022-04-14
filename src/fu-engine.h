@@ -68,6 +68,8 @@ const gchar *
 fu_engine_get_host_machine_id(FuEngine *self);
 const gchar *
 fu_engine_get_host_bkc(FuEngine *self);
+gboolean
+fu_engine_is_uid_trusted(FuEngine *self, guint64 calling_uid);
 const gchar *
 fu_engine_get_host_security_id(FuEngine *self);
 FwupdStatus

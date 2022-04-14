@@ -28,6 +28,8 @@ GPtrArray *
 fu_config_get_disabled_devices(FuConfig *self);
 GPtrArray *
 fu_config_get_disabled_plugins(FuConfig *self);
+GArray *
+fu_config_get_trusted_uids(FuConfig *self);
 GPtrArray *
 fu_config_get_approved_firmware(FuConfig *self);
 GPtrArray *
