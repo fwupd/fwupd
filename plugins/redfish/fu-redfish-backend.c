@@ -284,6 +284,17 @@ fu_redfish_backend_coldplug(FuBackend *backend, GError **error)
 	return TRUE;
 }
 
+static void
+fu_redfish_backend_set_update_uri_path(FuRedfishBackend *self, const gchar *update_uri_path)
+{
+	/* not changed */
+	if (g_strcmp0(self->update_uri_path, update_uri_path) == 0)
+		return;
+
+	g_free(self->update_uri_path);
+	self->update_uri_path = g_strdup(update_uri_path);
+}
+
 static gboolean
 fu_redfish_backend_setup(FuBackend *backend, GError **error)
 {
@@ -339,7 +350,7 @@ fu_redfish_backend_setup(FuBackend *backend, GError **error)
 				    "no @odata.id string");
 		return FALSE;
 	}
-	self->update_uri_path = g_strdup(data_id);
+	fu_redfish_backend_set_update_uri_path(self, data_id);
 	return TRUE;
 }
 
