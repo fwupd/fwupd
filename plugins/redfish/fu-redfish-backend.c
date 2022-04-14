@@ -355,6 +355,12 @@ fu_redfish_backend_setup(FuBackend *backend, GError **error)
 }
 
 void
+fu_redfish_backend_invalidate(FuRedfishBackend *self)
+{
+	g_hash_table_remove_all(self->request_cache);
+}
+
+void
 fu_redfish_backend_set_hostname(FuRedfishBackend *self, const gchar *hostname)
 {
 	g_free(self->hostname);

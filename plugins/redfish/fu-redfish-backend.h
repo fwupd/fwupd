@@ -17,6 +17,8 @@ G_DECLARE_FINAL_TYPE(FuRedfishBackend, fu_redfish_backend, FU, REDFISH_BACKEND, 
 FuRedfishBackend *
 fu_redfish_backend_new(FuContext *ctx);
 void
+fu_redfish_backend_invalidate(FuRedfishBackend *self);
+void
 fu_redfish_backend_set_hostname(FuRedfishBackend *self, const gchar *hostname);
 void
 fu_redfish_backend_set_username(FuRedfishBackend *self, const gchar *username);
