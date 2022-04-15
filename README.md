@@ -52,19 +52,27 @@ capsule in the hardware vendors section of the [fwupd website][Website].
 If you have a device with firmware supported by fwupd, this is how you will check
 for updates and apply them using fwupd's command line tools.
 
-`# fwupdmgr get-devices`
+```sh
+fwupdmgr get-devices
+```
 
 This will display all devices detected by fwupd.
 
-`# fwupdmgr refresh`
+```sh
+fwupdmgr refresh
+```
 
 This will download the latest metadata from LVFS.
 
-`# fwupdmgr get-updates`
+```sh
+fwupdmgr get-updates
+```
 
 If updates are available for any devices on the system, they'll be displayed.
 
-`# fwupdmgr update`
+```sh
+fwupdmgr update
+```
 
 This will download and apply all updates for your system.
 
@@ -194,13 +202,13 @@ fwupdmgr get-releases --json 3ef35d3b-ceeb-5e27-8c0a-ac25f90367ab
 There are several automated fuzzing tests in fwupd. These take some time to run:
 
 ```sh
-    CC=hfuzz-clang meson --default-library=static \
-        -Dudevdir=/tmp -Dsystemd_root_prefix=/tmp \
-        -Dplugin_redfish=disabled -Dcurl=disabled \
-        -Dintrospection=false ../
-    ninja install
-    ninja fuzz-firmware
-    ninja fuzz-tpm-eventlog
+CC=hfuzz-clang meson --default-library=static \
+    -Dudevdir=/tmp -Dsystemd_root_prefix=/tmp \
+    -Dplugin_redfish=disabled -Dcurl=disabled \
+    -Dintrospection=false ../
+ninja install
+ninja fuzz-firmware
+ninja fuzz-tpm-eventlog
 ```
     
 
