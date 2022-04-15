@@ -1,25 +1,25 @@
 # fwupd
 
-[![Build Status](https://github.com/fwupd/fwupd/actions/workflows/main.yml/badge.svg)](https://github.com/fwupd/fwupd/actions/workflows/main.yml)
-[![CodeQL](https://github.com/fwupd/fwupd/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/fwupd/fwupd/actions/workflows/codeql-analysis.yml)
-[![Coverity Scan Build Status](https://scan.coverity.com/projects/10744/badge.svg)](https://scan.coverity.com/projects/10744)
-[![Fuzzing Status](https://oss-fuzz-build-logs.storage.googleapis.com/badges/fwupd.svg)](https://bugs.chromium.org/p/oss-fuzz/issues/list?sort=-opened&can=1&q=proj:fwupd)
-[![CircleCI](https://circleci.com/gh/fwupd/fwupd/tree/main.svg?style=svg)](https://circleci.com/gh/fwupd/fwupd/tree/main)
+[![Badge Build]][Build Status]
+[![Badge CodeQL]][CodeQL]
+[![Badge Coverity]][Coverity]
+[![Badge Fuzzing]][Fuzzing]
+[![Badge CircleCI]][CircleCI]
 
 This project aims to make updating firmware on Linux automatic, safe and reliable.
 
-Additional information is available [at the website](https://fwupd.org/).
+Additional information is available [at the website][Website].
 
 ## Where to get help?
 
-- GitHub issues & discussions in [this repository](https://github.com/fwupd/fwupd)
+- GitHub issues & discussions in [this repository][Repository]
 - Libera IRC channel `#fwupd`.
-  You can join through Libera's [IRC](https://libera.chat/)
-  or via the IRC bridge on [Matrix](https://matrix.to/#/#fwupd:libera.chat).
+  You can join through Libera's [IRC]
+  or via the IRC bridge on [Matrix].
 
 ## Compiling
 
-The most up to date compilation instructions are available in the [Wiki](https://github.com/fwupd/fwupd/wiki/Compilation).
+The most up to date compilation instructions are available in the [Wiki][Compiling].
 
 **NOTE:** In most cases end users should never compile fwupd from scratch; it's a
 complicated project with dozens of dependencies (and as many configuration options)
@@ -30,8 +30,8 @@ tested by the package maintainer.
 The distribution will have also done some testing with how fwupd interacts with
 other software on your system, for instance using GNOME Software.
 
-Installing fwupd using [Snap](https://github.com/fwupd/fwupd/wiki/fwupd-snap)
-or using [Flatpak](https://github.com/fwupd/fwupd/wiki/fwupd-flatpak) might be
+Installing fwupd using [Snap]
+or using [Flatpak] might be
 useful to update a specific device on the command line that needs a bleeding
 edge fwupd version, but it should not be considered as a replacement to the
 distro-provided system version.
@@ -39,13 +39,13 @@ distro-provided system version.
 ## LVFS
 
 This project is configured by default to download firmware from the [Linux Vendor
-Firmware Service (LVFS)](https://fwupd.org/).
+Firmware Service (LVFS)][Website].
 
 This service is available to all OEMs and firmware creators who would like to make
 their firmware available to Linux users.
 
 You can find more information about the technical details of creating a firmware
-capsule in the hardware vendors section of the [fwupd website](https://fwupd.org).
+capsule in the hardware vendors section of the [fwupd website][Website].
 
 ## Basic usage flow (command line)
 
@@ -72,7 +72,7 @@ This will download and apply all updates for your system.
 - Updates that run at bootup will be staged for the next reboot.
 
 You can find more information about the update workflow in the end
-users section of the [fwupd website](https://fwupd.org).
+users section of the [fwupd website][Website].
 
 ## Reporting status
 
@@ -81,7 +81,7 @@ to LVFS.  This is an optional feature, but encouraged as it provides valuable
 feedback to LVFS administrators and OEM developers regarding firmware update
 process efficacy.
 
-The privacy policy regarding this data can be viewed on the [fwupd website](https://fwupd.org/privacy).
+The privacy policy regarding this data can be viewed on the [fwupd website][Privacy].
 
 To report the status of an update run:
 
@@ -165,19 +165,19 @@ This then appears when getting the releases for that specific GUID:
 
 ## Other frontends
 
-1. [GNOME Software](https://wiki.gnome.org/Apps/Software) is the graphical
+1. [GNOME Software][Gnome] is the graphical
  frontend available. When compiled with firmware support, it will check for
  updates periodically and automatically download firmware in the background.
  After the firmware has been downloaded a popup will be displayed in GNOME
  Software to perform the update.
 
-2. [KDE Discover](https://userbase.kde.org/Discover) is the software center,
+2. [KDE Discover][Discover] is the software center,
  generally bundled with KDE Plasma. With the release of
- [KDE Plasma 5.14](https://www.kde.org/announcements/plasma-5.14.0.php),
+ [KDE Plasma 5.14][Plasma],
  a new fwupd backend has been implemented in KDE Discover for firmware updates.
  These firmware updates are shown with other system updates.
 
-3. [Wyse Management Suite](https://www.dell.com/en-us/work/shop/wyse-endpoints-and-software/wyse-management-suite/spd/wyse-wms)
+3. [Wyse Management Suite][Wyse]
  A software suite available on Dell IoT gateways and Wyse thin clients with built-in fwupd support.
  The remote administration interface can be used to download and deploy firmware
  updates.
@@ -193,3 +193,39 @@ There are several automated fuzzing tests in fwupd. These take some time to run:
     ninja install
     ninja fuzz-firmware
     ninja fuzz-tpm-eventlog
+    
+
+<!----------------------------------------------------------------------------->
+
+[Compiling]: https://github.com/fwupd/fwupd/wiki/Compilation
+[Flatpak]: https://github.com/fwupd/fwupd/wiki/fwupd-flatpak
+[Snap]: https://github.com/fwupd/fwupd/wiki/fwupd-snap
+
+[Repository]: https://github.com/fwupd/fwupd
+[Privacy]: https://fwupd.org/privacy
+[Website]: https://fwupd.org/
+[Matrix]: https://matrix.to/#/#fwupd:libera.chat
+[IRC]: https://libera.chat/
+
+[Discover]: https://userbase.kde.org/Discover
+[Plasma]: https://www.kde.org/announcements/plasma-5.14.0.php
+[Gnome]: https://wiki.gnome.org/Apps/Software
+[Wyse]: https://www.dell.com/en-us/work/shop/wyse-endpoints-and-software/wyse-management-suite/spd/wyse-wms
+
+
+<!----------------------------------{ Badges }--------------------------------->
+
+[Badge Build]: https://github.com/fwupd/fwupd/actions/workflows/main.yml/badge.svg
+[Badge CodeQL]: https://github.com/fwupd/fwupd/actions/workflows/codeql-analysis.yml/badge.svg
+[Badge Fuzzing]: https://oss-fuzz-build-logs.storage.googleapis.com/badges/fwupd.svg
+[Badge CircleCI]: https://circleci.com/gh/fwupd/fwupd/tree/main.svg?style=svg
+[Badge Coverity]: https://scan.coverity.com/projects/10744/badge.svg
+
+
+<!----------------------------------{ Status }--------------------------------->
+
+[Build Status]: https://github.com/fwupd/fwupd/actions/workflows/main.yml
+[CircleCI]: https://circleci.com/gh/fwupd/fwupd/tree/main
+[Coverity]: https://scan.coverity.com/projects/10744
+[Fuzzing]: https://bugs.chromium.org/p/oss-fuzz/issues/list?sort=-opened&can=1&q=proj:fwupd
+[CodeQL]: https://github.com/fwupd/fwupd/actions/workflows/codeql-analysis.yml
