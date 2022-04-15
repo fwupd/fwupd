@@ -3,6 +3,8 @@
 
 <div align = center>
 
+<br>
+  
 # FWUPD
 
 ***Automatic*** *, **Reliable** & **Safe** updating of* ***Linux Firmware***
