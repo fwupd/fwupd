@@ -252,7 +252,7 @@ ninja fuzz-tpm-eventlog
 [Gnome]: https://wiki.gnome.org/Apps/Software
 [Wyse]: https://www.dell.com/en-us/work/shop/wyse-endpoints-and-software/wyse-management-suite/spd/wyse-wms
 
-[License]: LICENSE
+[License]: COPYING
 
 <!----------------------------------{ Badges }--------------------------------->
 
