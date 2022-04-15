@@ -13,10 +13,13 @@
 
 <br>
 
+[![Badge Website]][Website] 
+[![Badge Matrix]][Matrix] 
+[![Badge IRC]][IRC]
+
+<br>
+
 </div>
-
-
-Additional information is available [at the website][Website].
 
 ## Where to get help?
 
@@ -248,6 +251,9 @@ ninja fuzz-tpm-eventlog
 [Badge CircleCI]: https://circleci.com/gh/fwupd/fwupd/tree/main.svg?style=svg
 [Badge Coverity]: https://scan.coverity.com/projects/10744/badge.svg
 
+[Badge Website]: https://img.shields.io/badge/Webstite-2c7be5?style=for-the-badge
+[Badge Matrix]: https://img.shields.io/badge/Matrix-0dbd8b?style=for-the-badge
+[Badge IRC]: https://img.shields.io/badge/IRC-Libera-ff55dd?style=for-the-badge
 
 <!----------------------------------{ Status }--------------------------------->
 
