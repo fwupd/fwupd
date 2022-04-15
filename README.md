@@ -7,6 +7,8 @@
 [![Badge Fuzzing]][Fuzzing] 
 [![Badge CircleCI]][CircleCI]
 
+<br>
+  
 # FWUPD
 
 ***Automatic*** *, **Reliable** & **Safe** updating of* ***Linux Firmware***
