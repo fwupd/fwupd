@@ -116,52 +116,59 @@ Local metadata can be saved in `/var/lib/fwupd/local.d` or `/usr/share/fwupd/loc
 which are scanned at daemon startup. This can be used to add site-specific BKC
 tags to existing metadata stores. For instance:
 
-    <?xml version='1.0' encoding='utf-8'?>
-    <components origin="mycompanyname">
-      <component merge="append">
-        <provides>
-          <firmware>3ef35d3b-ceeb-5e27-8c0a-ac25f90367ab</firmware>
-          <firmware>2ef35d3b-ceeb-5e27-8c0a-ac25f90367ac</firmware>
-          <firmware>1ef35d3b-ceeb-5e27-8c0a-ac25f90367ad</firmware>
-        </provides>
-        <releases>
-          <release version="225.53.1649"/>
-          <release version="224.48.1605"/>
-        </releases>
-        <tags>
-          <tag>mycompanyname-2022q1</tag>
-        </tags>
-      </component>
-    </components>
+```xml
+<?xml version='1.0' encoding='utf-8'?>
+<components origin="mycompanyname">
+  <component merge="append">
+    <provides>
+      <firmware>3ef35d3b-ceeb-5e27-8c0a-ac25f90367ab</firmware>
+      <firmware>2ef35d3b-ceeb-5e27-8c0a-ac25f90367ac</firmware>
+      <firmware>1ef35d3b-ceeb-5e27-8c0a-ac25f90367ad</firmware>
+    </provides>
+    <releases>
+      <release version="225.53.1649"/>
+      <release version="224.48.1605"/>
+    </releases>
+    <tags>
+      <tag>mycompanyname-2022q1</tag>
+    </tags>
+  </component>
+</components>
+```
 
 This then appears when getting the releases for that specific GUID:
 
-    fwupdmgr get-releases --json 3ef35d3b-ceeb-5e27-8c0a-ac25f90367ab
+```sh
+fwupdmgr get-releases --json 3ef35d3b-ceeb-5e27-8c0a-ac25f90367ab
+```
+
+```json
+{
+  "Releases" : [
     {
-      "Releases" : [
-        {
-          ...
-          "Version" : "225.53.1649",
-          "Tags" : [
-            "mycompanyname-2022q1"
-          ],
-          ...
-        },
-        {
-          ...
-          "Version" : "224.48.1605",
-          "Tags" : [
-            "mycompanyname-2022q1"
-          ],
-          ...
-        },
-        {
-          ...
-          "Version" : "224.45.1389",
-          ...
-        }
-      ]
+      ...
+      "Version" : "225.53.1649",
+      "Tags" : [
+        "mycompanyname-2022q1"
+      ],
+      ...
+    },
+    {
+      ...
+      "Version" : "224.48.1605",
+      "Tags" : [
+        "mycompanyname-2022q1"
+      ],
+      ...
+    },
+    {
+      ...
+      "Version" : "224.45.1389",
+      ...
     }
+  ]
+}
+```
 
 ## Other frontends
 
@@ -186,6 +193,7 @@ This then appears when getting the releases for that specific GUID:
 
 There are several automated fuzzing tests in fwupd. These take some time to run:
 
+```sh
     CC=hfuzz-clang meson --default-library=static \
         -Dudevdir=/tmp -Dsystemd_root_prefix=/tmp \
         -Dplugin_redfish=disabled -Dcurl=disabled \
@@ -193,6 +201,7 @@ There are several automated fuzzing tests in fwupd. These take some time to run:
     ninja install
     ninja fuzz-firmware
     ninja fuzz-tpm-eventlog
+```
     
 
 <!----------------------------------------------------------------------------->
