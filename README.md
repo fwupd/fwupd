@@ -1,12 +1,20 @@
-# fwupd
 
-[![Badge Build]][Build Status]
-[![Badge CodeQL]][CodeQL]
-[![Badge Coverity]][Coverity]
-[![Badge Fuzzing]][Fuzzing]
+<div align = center>
+
+[![Badge Build]][Build Status] 
+[![Badge CodeQL]][CodeQL] 
+[![Badge Coverity]][Coverity] 
+[![Badge Fuzzing]][Fuzzing] 
 [![Badge CircleCI]][CircleCI]
 
-This project aims to make updating firmware on Linux automatic, safe and reliable.
+# FWUPD
+
+***Automatic*** *, **Reliable** & **Safe** updating of* ***Linux Firmware***
+
+<br>
+
+</div>
+
 
 Additional information is available [at the website][Website].
 
@@ -93,7 +101,9 @@ The privacy policy regarding this data can be viewed on the [fwupd website][Priv
 
 To report the status of an update run:
 
-`# fwupdmgr report-history`
+```sh
+fwupdmgr report-history
+```
 
  Only updates that were distributed from the LVFS will be reported to the LVFS.
 
