@@ -1,11 +1,7 @@
 
-<div align = center>
+[![Badge License]][License]
 
-[![Badge Build]][Build Status] 
-[![Badge CodeQL]][CodeQL] 
-[![Badge Coverity]][Coverity] 
-[![Badge Fuzzing]][Fuzzing] 
-[![Badge CircleCI]][CircleCI]
+<div align = center>
 
 # FWUPD
 
@@ -16,6 +12,18 @@
 [![Badge Website]][Website] 
 [![Badge Matrix]][Matrix] 
 [![Badge IRC]][IRC]
+
+<br>
+
+---
+
+[![Badge Build]][Build Status] 
+[![Badge CodeQL]][CodeQL] 
+[![Badge Coverity]][Coverity] 
+[![Badge Fuzzing]][Fuzzing] 
+[![Badge CircleCI]][CircleCI]
+
+---
 
 <br>
 
@@ -242,6 +250,7 @@ ninja fuzz-tpm-eventlog
 [Gnome]: https://wiki.gnome.org/Apps/Software
 [Wyse]: https://www.dell.com/en-us/work/shop/wyse-endpoints-and-software/wyse-management-suite/spd/wyse-wms
 
+[License]: LICENSE
 
 <!----------------------------------{ Badges }--------------------------------->
 
@@ -250,6 +259,8 @@ ninja fuzz-tpm-eventlog
 [Badge Fuzzing]: https://oss-fuzz-build-logs.storage.googleapis.com/badges/fwupd.svg
 [Badge CircleCI]: https://circleci.com/gh/fwupd/fwupd/tree/main.svg?style=svg
 [Badge Coverity]: https://scan.coverity.com/projects/10744/badge.svg
+
+[Badge License]: https://img.shields.io/badge/License-LGPL_v2.1-blue.svg?style=for-the-badge
 
 [Badge Website]: https://img.shields.io/badge/Webstite-2c7be5?style=for-the-badge
 [Badge Matrix]: https://img.shields.io/badge/Matrix-0dbd8b?style=for-the-badge
