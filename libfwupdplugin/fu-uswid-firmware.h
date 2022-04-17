@@ -6,13 +6,13 @@
 
 #pragma once
 
-#include "fu-coswid-firmware.h"
+#include "fu-firmware.h"
 
 #define FU_TYPE_USWID_FIRMWARE (fu_uswid_firmware_get_type())
-G_DECLARE_DERIVABLE_TYPE(FuUswidFirmware, fu_uswid_firmware, FU, USWID_FIRMWARE, FuCoswidFirmware)
+G_DECLARE_DERIVABLE_TYPE(FuUswidFirmware, fu_uswid_firmware, FU, USWID_FIRMWARE, FuFirmware)
 
 struct _FuUswidFirmwareClass {
-	FuCoswidFirmwareClass parent_class;
+	FuFirmwareClass parent_class;
 };
 
 FuFirmware *

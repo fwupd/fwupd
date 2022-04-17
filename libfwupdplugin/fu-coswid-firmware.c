@@ -118,15 +118,7 @@ fu_coswid_firmware_parse(FuFirmware *firmware,
 			    result.error.code);
 		return FALSE;
 	}
-	if (result.read != g_bytes_get_size(fw)) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "read 0x%x of payload 0x%x",
-			    (guint)result.read,
-			    (guint)g_bytes_get_size(fw));
-		return FALSE;
-	}
+	fu_firmware_set_size(firmware, result.read);
 
 	/* pretty-print the result */
 	if (g_getenv("FWUPD_CBOR_VERBOSE") != NULL) {
