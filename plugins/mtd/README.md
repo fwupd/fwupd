@@ -19,6 +19,10 @@ These devices use custom DeviceInstanceId values built from the device `NAME` an
 * `MTD\VENDOR_foo&NAME_baz`
 * `MTD\VENDOR_foo&PRODUCT_bar&NAME_baz`
 
+If the `FirmwareGType` quirk is set for the device then the firmware is read back from the device at
+daemon startup and parsed for the version number.
+In the event the firmware has multiple child images then the device GUIDs are used as firmware IDs.
+
 ## Update Behavior
 
 The MTD device is erased in chunks, written and then read back to verify.
