@@ -133,7 +133,7 @@ list of approved updates can be set in `daemon.conf` using a comma delimited lis
 
 For example:
 
-```
+```conf
 ApprovedFirmware=foo,bar
 ```
 
