@@ -133,7 +133,9 @@ list of approved updates can be set in `daemon.conf` using a comma delimited lis
 
 For example:
 
-    ApprovedFirmware=foo,bar
+```
+ApprovedFirmware=foo,bar
+```
 
 Where `foo,bar` refers to the container checksums that would correspond
 to two updates in the metadata file.
