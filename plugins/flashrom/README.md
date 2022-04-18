@@ -2,7 +2,10 @@
 
 ## Introduction
 
-This plugin uses `flashrom` to update the system firmware.
+This plugin uses `libflashrom` to update the system firmware.  It can be used
+to update BIOS or ME regions of the flash.  Device for ME region is created
+only if "Intel SPI" plugin indicates that such a region exists, which makes
+"Intel SPI" a dependency of this plugin for doing ME updates.
 
 ## Firmware Format
 
@@ -44,6 +47,16 @@ Internal device uses hardware ID values which are derived from SMBIOS.
 
 They should match the values provided by `fwupdtool hwids` or the
 `ComputerHardwareIds.exe` Windows utility.
+
+One more GUID has the following form:
+
+* `FLASHROM\VENDOR_{manufacturer}&PRODUCT_{product}&REGION_{ifd_region_name}`
+
+Its purpose is to target specific regions of the flash as defined by IFD (Intel
+SPI Flash Descriptor), examples:
+
+* `FLASHROM\VENDOR_Notebook&PRODUCT_NS50MU&REGION_BIOS`
+* `FLASHROM\VENDOR_Notebook&PRODUCT_NS50MU&REGION_ME`
 
 ## Update Behavior
 
