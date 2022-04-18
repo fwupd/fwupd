@@ -36,3 +36,7 @@ plugins/uefi-dbx/tests/
 .buildconfig
 .ossfuzz
 *.rej
+
+node_modules
+package-lock.json
+package.json

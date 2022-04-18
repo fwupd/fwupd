@@ -4,26 +4,34 @@
 <div align = center>
 
 <br>
-  
+
 # FWUPD
 
 ***Automatic*** *, **Reliable** & **Safe** updating of* ***Linux Firmware***
 
 <br>
 
+<!-- markdownlint-disable MD009 -->
+
 [![Badge Website]][Website] 
 [![Badge Matrix]][Matrix] 
 [![Badge IRC]][IRC]
 
+<!-- markdownlint-enable MD009 -->
+
 <br>
 
 ---
+
+<!-- markdownlint-disable MD009 -->
 
 [![Badge Build]][Build Status] 
 [![Badge CodeQL]][CodeQL] 
 [![Badge Coverity]][Coverity] 
 [![Badge Fuzzing]][Fuzzing] 
 [![Badge CircleCI]][CircleCI]
+
+<!-- markdownlint-enable MD009 -->
 
 ---
 
@@ -206,21 +214,21 @@ fwupdmgr get-releases --json 3ef35d3b-ceeb-5e27-8c0a-ac25f90367ab
 ## Other frontends
 
 1. [GNOME Software][Gnome] is the graphical
- frontend available. When compiled with firmware support, it will check for
- updates periodically and automatically download firmware in the background.
- After the firmware has been downloaded a popup will be displayed in GNOME
- Software to perform the update.
+   frontend available. When compiled with firmware support, it will check for
+   updates periodically and automatically download firmware in the background.
+   After the firmware has been downloaded a popup will be displayed in GNOME
+   Software to perform the update.
 
 2. [KDE Discover][Discover] is the software center,
- generally bundled with KDE Plasma. With the release of
- [KDE Plasma 5.14][Plasma],
- a new fwupd backend has been implemented in KDE Discover for firmware updates.
- These firmware updates are shown with other system updates.
+   generally bundled with KDE Plasma. With the release of
+   [KDE Plasma 5.14][Plasma],
+   a new fwupd backend has been implemented in KDE Discover for firmware updates.
+   These firmware updates are shown with other system updates.
 
 3. [Wyse Management Suite][Wyse]
- A software suite available on Dell IoT gateways and Wyse thin clients with built-in fwupd support.
- The remote administration interface can be used to download and deploy firmware
- updates.
+   A software suite available on Dell IoT gateways and Wyse thin clients with built-in fwupd support.
+   The remote administration interface can be used to download and deploy firmware
+   updates.
 
 ## Fuzzing
 
@@ -235,7 +243,6 @@ ninja install
 ninja fuzz-firmware
 ninja fuzz-tpm-eventlog
 ```
-    
 
 <!----------------------------------------------------------------------------->
 
