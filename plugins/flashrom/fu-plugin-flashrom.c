@@ -281,6 +281,12 @@ fu_plugin_flashrom_startup(FuPlugin *plugin, GError **error)
 	return TRUE;
 }
 
+static gboolean
+fu_plugin_flashrom_unlock(FuPlugin *self, FuDevice *device, GError **error)
+{
+	return fu_flashrom_device_unlock(FU_FLASHROM_DEVICE(device), error);
+}
+
 void
 fu_plugin_init_vfuncs(FuPluginVfuncs *vfuncs)
 {
@@ -290,4 +296,5 @@ fu_plugin_init_vfuncs(FuPluginVfuncs *vfuncs)
 	vfuncs->device_registered = fu_plugin_flashrom_device_registered;
 	vfuncs->startup = fu_plugin_flashrom_startup;
 	vfuncs->coldplug = fu_plugin_flashrom_coldplug;
+	vfuncs->unlock = fu_plugin_flashrom_unlock;
 }

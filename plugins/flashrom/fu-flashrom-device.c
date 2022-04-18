@@ -19,6 +19,11 @@
  */
 #define FU_FLASHROM_DEVICE_FLAG_RESET_CMOS (1 << 0)
 
+/*
+ * Flag to determine if manual ME unlocking by pressing Fn + M is supported.
+ */
+#define FU_FLASHROM_DEVICE_FLAG_FN_M_ME_UNLOCK (1 << 1)
+
 struct _FuFlashromDevice {
 	FuUdevDevice parent_instance;
 	FuIfdRegion region;
@@ -304,6 +309,9 @@ fu_flashrom_device_init(FuFlashromDevice *self)
 	fu_device_register_private_flag(FU_DEVICE(self),
 					FU_FLASHROM_DEVICE_FLAG_RESET_CMOS,
 					"reset-cmos");
+	fu_device_register_private_flag(FU_DEVICE(self),
+					FU_FLASHROM_DEVICE_FLAG_FN_M_ME_UNLOCK,
+					"fn-m-me-unlock");
 }
 
 static void
@@ -397,4 +405,28 @@ FuIfdRegion
 fu_flashrom_device_get_region(FuFlashromDevice *self)
 {
 	return self->region;
+}
+
+gboolean
+fu_flashrom_device_unlock(FuFlashromDevice *self, GError **error)
+{
+	if (fu_flashrom_device_get_region(self) == FU_IFD_REGION_ME &&
+	    fu_device_has_private_flag(FU_DEVICE(self), FU_FLASHROM_DEVICE_FLAG_FN_M_ME_UNLOCK)) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOTHING_TO_DO,
+				    "\n"
+				    "ME region should be unlocked manually the following way:\n"
+				    " 1. Power off your device\n"
+				    " 2. Press and keep holding Fn + M during the next step\n"
+				    " 3. Press power on button");
+		return FALSE;
+	}
+
+	g_set_error(error,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_NOT_SUPPORTED,
+		    "Unlocking of device %s is not supported",
+		    fu_device_get_name(FU_DEVICE(self)));
+	return FALSE;
 }

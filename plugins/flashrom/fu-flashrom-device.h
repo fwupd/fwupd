@@ -17,3 +17,6 @@ fu_flashrom_device_new(FuContext *ctx, FuIfdRegion region);
 
 FuIfdRegion
 fu_flashrom_device_get_region(FuFlashromDevice *self);
+
+gboolean
+fu_flashrom_device_unlock(FuFlashromDevice *self, GError **error);
