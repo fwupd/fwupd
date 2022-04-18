@@ -17,12 +17,25 @@
 
 #define SELFCHECK_TRUE 1
 
+struct FuPluginData {
+	gchar *guid; /* GUID from quirks that activated this plugin */
+};
+
 static void
 fu_plugin_flashrom_init(FuPlugin *plugin)
 {
+	(void)fu_plugin_alloc_data(plugin, sizeof(FuPluginData));
+
 	fu_plugin_add_rule(plugin, FU_PLUGIN_RULE_METADATA_SOURCE, "linux_lockdown");
 	fu_plugin_add_rule(plugin, FU_PLUGIN_RULE_CONFLICTS, "coreboot"); /* obsoleted */
 	fu_plugin_add_flag(plugin, FWUPD_PLUGIN_FLAG_REQUIRE_HWID);
+}
+
+static void
+fu_plugin_flashrom_destroy(FuPlugin *plugin)
+{
+	FuPluginData *data = fu_plugin_get_data(plugin);
+	g_free(data->guid);
 }
 
 static int
@@ -143,7 +156,10 @@ fu_plugin_flashrom_device_set_hwids(FuPlugin *plugin, FuDevice *device)
 }
 
 static FuDevice *
-fu_plugin_flashrom_add_device(FuPlugin *plugin, FuIfdRegion region, GError **error)
+fu_plugin_flashrom_add_device(FuPlugin *plugin,
+			      const gchar *guid,
+			      FuIfdRegion region,
+			      GError **error)
 {
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	const gchar *dmi_vendor;
@@ -166,6 +182,11 @@ fu_plugin_flashrom_add_device(FuPlugin *plugin, FuIfdRegion region, GError **err
 					 "PRODUCT",
 					 "REGION",
 					 NULL))
+		return NULL;
+
+	/* add this so we can attach board-specific quirks */
+	fu_device_add_instance_str(FU_DEVICE(device), "GUID", guid);
+	if (!fu_device_build_instance_id(FU_DEVICE(device), error, "FLASHROM", "GUID", NULL))
 		return NULL;
 
 	/* use same VendorID logic as with UEFI */
@@ -191,6 +212,7 @@ static void
 fu_plugin_flashrom_device_registered(FuPlugin *plugin, FuDevice *device)
 {
 	g_autoptr(FuDevice) me_device = NULL;
+	FuPluginData *data = fu_plugin_get_data(plugin);
 	const gchar *me_region_str = fu_ifd_region_to_string(FU_IFD_REGION_ME);
 
 	/* we're only interested in a device from intel-spi plugin that corresponds to ME
@@ -200,7 +222,7 @@ fu_plugin_flashrom_device_registered(FuPlugin *plugin, FuDevice *device)
 	if (g_strcmp0(fu_device_get_logical_id(device), me_region_str) != 0)
 		return;
 
-	me_device = fu_plugin_flashrom_add_device(plugin, FU_IFD_REGION_ME, NULL);
+	me_device = fu_plugin_flashrom_add_device(plugin, data->guid, FU_IFD_REGION_ME, NULL);
 	if (me_device == NULL)
 		return;
 
@@ -212,14 +234,42 @@ fu_plugin_flashrom_device_registered(FuPlugin *plugin, FuDevice *device)
 static gboolean
 fu_plugin_flashrom_coldplug(FuPlugin *plugin, GError **error)
 {
+	FuPluginData *data = fu_plugin_get_data(plugin);
 	g_autoptr(FuDevice) device =
-	    fu_plugin_flashrom_add_device(plugin, FU_IFD_REGION_BIOS, error);
+	    fu_plugin_flashrom_add_device(plugin, data->guid, FU_IFD_REGION_BIOS, error);
 	return (device != NULL);
+}
+
+/* finds GUID that activated this plugin */
+static const gchar *
+fu_plugin_flashrom_find_guid(FuPlugin *plugin, GError **error)
+{
+	FuContext *ctx = fu_plugin_get_context(plugin);
+	GPtrArray *hwids = fu_context_get_hwid_guids(ctx);
+
+	for (guint i = 0; i < hwids->len; i++) {
+		const gchar *guid = g_ptr_array_index(hwids, i);
+		const gchar *plugin_name =
+		    fu_context_lookup_quirk_by_id(ctx, guid, FU_QUIRKS_PLUGIN);
+		if (g_strcmp0(plugin_name, "flashrom") == 0)
+			return guid;
+	}
+
+	return NULL;
 }
 
 static gboolean
 fu_plugin_flashrom_startup(FuPlugin *plugin, GError **error)
 {
+	const gchar *guid;
+	FuPluginData *data = fu_plugin_get_data(plugin);
+
+	guid = fu_plugin_flashrom_find_guid(plugin, error);
+	if (guid == NULL)
+		return FALSE;
+
+	data->guid = g_strdup(guid);
+
 	if (flashrom_init(SELFCHECK_TRUE)) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -236,6 +286,7 @@ fu_plugin_init_vfuncs(FuPluginVfuncs *vfuncs)
 {
 	vfuncs->build_hash = FU_BUILD_HASH;
 	vfuncs->init = fu_plugin_flashrom_init;
+	vfuncs->destroy = fu_plugin_flashrom_destroy;
 	vfuncs->device_registered = fu_plugin_flashrom_device_registered;
 	vfuncs->startup = fu_plugin_flashrom_startup;
 	vfuncs->coldplug = fu_plugin_flashrom_coldplug;
