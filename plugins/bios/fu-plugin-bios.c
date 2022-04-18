@@ -53,10 +53,28 @@ fu_plugin_bios_coldplug(FuPlugin *plugin, GError **error)
 	return TRUE;
 }
 
+static void
+fu_plugin_bios_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
+{
+	g_autoptr(FwupdSecurityAttr) attr = NULL;
+
+	if (!fu_plugin_has_flag(plugin, FWUPD_PLUGIN_FLAG_LEGACY_BIOS))
+		return;
+
+	/* create attr */
+	attr = fwupd_security_attr_new(FWUPD_SECURITY_ATTR_ID_UEFI_SECUREBOOT);
+	fwupd_security_attr_set_plugin(attr, fu_plugin_get_name(plugin));
+	fu_security_attrs_append(attrs, attr);
+
+	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ISSUE);
+	fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
+}
+
 void
 fu_plugin_init_vfuncs(FuPluginVfuncs *vfuncs)
 {
 	vfuncs->build_hash = FU_BUILD_HASH;
 	vfuncs->startup = fu_plugin_bios_startup;
 	vfuncs->coldplug = fu_plugin_bios_coldplug;
+	vfuncs->add_security_attrs = fu_plugin_bios_add_security_attrs;
 }
