@@ -3374,7 +3374,6 @@ main(int argc, char *argv[])
 
 	/* when not using the engine */
 	priv->progress = fu_progress_new(G_STRLOC);
-	fu_progress_set_profile(priv->progress, g_getenv("FWUPD_VERBOSE") != NULL);
 	g_signal_connect(priv->progress,
 			 "percentage-changed",
 			 G_CALLBACK(fu_util_progress_percentage_changed_cb),
@@ -3702,6 +3701,7 @@ main(int argc, char *argv[])
 		g_print("%s: %s\n", _("Failed to parse arguments"), error->message);
 		return EXIT_FAILURE;
 	}
+	fu_progress_set_profile(priv->progress, g_getenv("FWUPD_VERBOSE") != NULL);
 
 	/* allow disabling SSL strict mode for broken corporate proxies */
 	if (priv->disable_ssl_strict) {
