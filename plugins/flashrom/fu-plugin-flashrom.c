@@ -18,6 +18,8 @@
 #define SELFCHECK_TRUE 1
 
 struct FuPluginData {
+	struct flashrom_flashctx *flashctx;
+	struct flashrom_programmer *flashprog;
 	gchar *guid; /* GUID from quirks that activated this plugin */
 };
 
@@ -35,6 +37,10 @@ static void
 fu_plugin_flashrom_destroy(FuPlugin *plugin)
 {
 	FuPluginData *data = fu_plugin_get_data(plugin);
+	if (data->flashctx != NULL)
+		flashrom_flash_release(data->flashctx);
+	if (data->flashprog != NULL)
+		flashrom_programmer_shutdown(data->flashprog);
 	g_free(data->guid);
 }
 
@@ -162,12 +168,13 @@ fu_plugin_flashrom_add_device(FuPlugin *plugin,
 			      GError **error)
 {
 	FuContext *ctx = fu_plugin_get_context(plugin);
+	FuPluginData *data = fu_plugin_get_data(plugin);
 	const gchar *dmi_vendor;
 	const gchar *product = fu_context_get_hwid_value(ctx, FU_HWIDS_KEY_PRODUCT_NAME);
 	const gchar *vendor = fu_context_get_hwid_value(ctx, FU_HWIDS_KEY_MANUFACTURER);
 	const gchar *region_str = fu_ifd_region_to_string(region);
 	g_autofree gchar *name = g_strdup_printf("%s (%s)", product, region_str);
-	g_autoptr(FuDevice) device = fu_flashrom_device_new(ctx, region);
+	g_autoptr(FuDevice) device = fu_flashrom_device_new(ctx, data->flashctx, region);
 
 	fu_device_set_name(device, name);
 	fu_device_set_vendor(device, vendor);
@@ -261,6 +268,7 @@ fu_plugin_flashrom_find_guid(FuPlugin *plugin, GError **error)
 static gboolean
 fu_plugin_flashrom_startup(FuPlugin *plugin, GError **error)
 {
+	gint rc;
 	const gchar *guid;
 	FuPluginData *data = fu_plugin_get_data(plugin);
 
@@ -278,6 +286,38 @@ fu_plugin_flashrom_startup(FuPlugin *plugin, GError **error)
 		return FALSE;
 	}
 	flashrom_set_log_callback(fu_plugin_flashrom_debug_cb);
+
+	if (flashrom_programmer_init(&data->flashprog, "internal", NULL)) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "programmer initialization failed");
+		return FALSE;
+	}
+
+	rc = flashrom_flash_probe(&data->flashctx, data->flashprog, NULL);
+	if (rc == 3) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "flash probe failed: multiple chips were found");
+		return FALSE;
+	}
+	if (rc == 2) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "flash probe failed: no chip was found");
+		return FALSE;
+	}
+	if (rc != 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "flash probe failed: unknown error");
+		return FALSE;
+	}
+
 	return TRUE;
 }
 
