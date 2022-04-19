@@ -12,8 +12,10 @@
 #define FU_TYPE_FLASHROM_DEVICE (fu_flashrom_device_get_type())
 G_DECLARE_FINAL_TYPE(FuFlashromDevice, fu_flashrom_device, FU, FLASHROM_DEVICE, FuUdevDevice)
 
+struct flashrom_flashctx;
+
 FuDevice *
-fu_flashrom_device_new(FuContext *ctx, FuIfdRegion region);
+fu_flashrom_device_new(FuContext *ctx, struct flashrom_flashctx *flashctx, FuIfdRegion region);
 
 FuIfdRegion
 fu_flashrom_device_get_region(FuFlashromDevice *self);

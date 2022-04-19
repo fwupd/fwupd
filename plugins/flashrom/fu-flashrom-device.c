@@ -28,12 +28,11 @@ struct _FuFlashromDevice {
 	FuUdevDevice parent_instance;
 	FuIfdRegion region;
 	struct flashrom_flashctx *flashctx;
-	struct flashrom_programmer *flashprog;
 };
 
 G_DEFINE_TYPE(FuFlashromDevice, fu_flashrom_device, FU_TYPE_UDEV_DEVICE)
 
-enum { PROP_0, PROP_REGION, PROP_LAST };
+enum { PROP_0, PROP_FLASHCTX, PROP_REGION, PROP_LAST };
 
 static gboolean
 fu_flashrom_device_set_quirk_kv(FuDevice *device,
@@ -81,37 +80,6 @@ static gboolean
 fu_flashrom_device_open(FuDevice *device, GError **error)
 {
 	FuFlashromDevice *self = FU_FLASHROM_DEVICE(device);
-	gint rc;
-
-	if (flashrom_programmer_init(&self->flashprog, "internal", NULL)) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "programmer initialization failed");
-		return FALSE;
-	}
-	rc = flashrom_flash_probe(&self->flashctx, self->flashprog, NULL);
-	if (rc == 3) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "flash probe failed: multiple chips were found");
-		return FALSE;
-	}
-	if (rc == 2) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "flash probe failed: no chip was found");
-		return FALSE;
-	}
-	if (rc != 0) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "flash probe failed: unknown error");
-		return FALSE;
-	}
 
 	/* get the flash size from the device if not already been quirked */
 	if (fu_device_get_firmware_size_max(device) == 0) {
@@ -126,15 +94,6 @@ fu_flashrom_device_open(FuDevice *device, GError **error)
 		fu_device_set_firmware_size_max(device, flash_size);
 	}
 
-	return TRUE;
-}
-
-static gboolean
-fu_flashrom_device_close(FuDevice *device, GError **error)
-{
-	FuFlashromDevice *self = FU_FLASHROM_DEVICE(device);
-	flashrom_flash_release(self->flashctx);
-	flashrom_programmer_shutdown(self->flashprog);
 	return TRUE;
 }
 
@@ -326,6 +285,9 @@ fu_flashrom_device_get_property(GObject *object, guint prop_id, GValue *value, G
 {
 	FuFlashromDevice *self = FU_FLASHROM_DEVICE(object);
 	switch (prop_id) {
+	case PROP_FLASHCTX:
+		g_value_set_pointer(value, self->flashctx);
+		break;
 	case PROP_REGION:
 		g_value_set_uint(value, self->region);
 		break;
@@ -343,6 +305,9 @@ fu_flashrom_device_set_property(GObject *object,
 {
 	FuFlashromDevice *self = FU_FLASHROM_DEVICE(object);
 	switch (prop_id) {
+	case PROP_FLASHCTX:
+		self->flashctx = g_value_get_pointer(value);
+		break;
 	case PROP_REGION:
 		self->region = g_value_get_uint(value);
 		fu_device_set_logical_id(FU_DEVICE(self), fu_ifd_region_to_string(self->region));
@@ -383,22 +348,39 @@ fu_flashrom_device_class_init(FuFlashromDeviceClass *klass)
 				  G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_REGION, pspec);
 
+	/**
+	 * FuFlashromDevice:flashctx:
+	 *
+	 * The JSON root member for the device.
+	 */
+	pspec =
+	    g_param_spec_pointer("flashctx",
+				 NULL,
+				 NULL,
+				 G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
+	g_object_class_install_property(object_class, PROP_FLASHCTX, pspec);
+
 	object_class->constructed = fu_flashrom_device_constructed;
 	object_class->finalize = fu_flashrom_device_finalize;
 	klass_device->set_quirk_kv = fu_flashrom_device_set_quirk_kv;
 	klass_device->probe = fu_flashrom_device_probe;
 	klass_device->open = fu_flashrom_device_open;
-	klass_device->close = fu_flashrom_device_close;
 	klass_device->set_progress = fu_flashrom_device_set_progress;
 	klass_device->prepare = fu_flashrom_device_prepare;
 	klass_device->write_firmware = fu_flashrom_device_write_firmware;
 }
 
 FuDevice *
-fu_flashrom_device_new(FuContext *ctx, FuIfdRegion region)
+fu_flashrom_device_new(FuContext *ctx, struct flashrom_flashctx *flashctx, FuIfdRegion region)
 {
-	return FU_DEVICE(
-	    g_object_new(FU_TYPE_FLASHROM_DEVICE, "context", ctx, "region", region, NULL));
+	return FU_DEVICE(g_object_new(FU_TYPE_FLASHROM_DEVICE,
+				      "context",
+				      ctx,
+				      "flashctx",
+				      flashctx,
+				      "region",
+				      region,
+				      NULL));
 }
 
 FuIfdRegion
