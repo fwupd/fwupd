@@ -28,6 +28,7 @@ struct _FuFlashromDevice {
 	FuUdevDevice parent_instance;
 	FuIfdRegion region;
 	struct flashrom_flashctx *flashctx;
+	struct flashrom_layout *layout;
 };
 
 G_DEFINE_TYPE(FuFlashromDevice, fu_flashrom_device, FU_TYPE_UDEV_DEVICE)
@@ -80,6 +81,7 @@ static gboolean
 fu_flashrom_device_open(FuDevice *device, GError **error)
 {
 	FuFlashromDevice *self = FU_FLASHROM_DEVICE(device);
+	struct flashrom_layout *layout;
 
 	/* get the flash size from the device if not already been quirked */
 	if (fu_device_get_firmware_size_max(device) == 0) {
@@ -92,6 +94,44 @@ fu_flashrom_device_open(FuDevice *device, GError **error)
 			return FALSE;
 		}
 		fu_device_set_firmware_size_max(device, flash_size);
+	}
+
+	if (flashrom_layout_read_from_ifd(&layout, self->flashctx, NULL, 0)) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_READ,
+				    "failed to read layout from Intel ICH descriptor");
+		return FALSE;
+	}
+
+	/* update only one specific region of the flash and do not touch others */
+	if (flashrom_layout_include_region(layout, fu_ifd_region_to_string(self->region))) {
+		flashrom_layout_release(layout);
+
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "invalid region name");
+		return FALSE;
+	}
+
+	/* flashrom_layout_set() doesn't transfer ownership, so we must manage layout's lifetime */
+	self->layout = layout;
+	flashrom_layout_set(self->flashctx, self->layout);
+
+	return TRUE;
+}
+
+static gboolean
+fu_flashrom_device_close(FuDevice *device, GError **error)
+{
+	FuFlashromDevice *self = FU_FLASHROM_DEVICE(device);
+
+	if (self->layout != NULL) {
+		flashrom_layout_release(self->layout);
+		self->layout = NULL;
+
+		flashrom_layout_set(self->flashctx, NULL);
 	}
 
 	return TRUE;
@@ -115,30 +155,9 @@ fu_flashrom_device_prepare(FuDevice *device,
 	if (!fu_common_mkdir_parent(firmware_orig, error))
 		return FALSE;
 	if (!g_file_test(firmware_orig, G_FILE_TEST_EXISTS)) {
-		struct flashrom_layout *layout;
 		gsize flash_size = fu_device_get_firmware_size_max(device);
 		g_autofree guint8 *newcontents = g_malloc0(flash_size);
 		g_autoptr(GBytes) buf = NULL;
-
-		if (flashrom_layout_read_from_ifd(&layout, self->flashctx, NULL, 0)) {
-			g_set_error_literal(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_READ,
-					    "failed to read layout from Intel ICH descriptor");
-			return FALSE;
-		}
-
-		/* update only one specific region of the flash and do not touch others */
-		if (flashrom_layout_include_region(layout, fu_ifd_region_to_string(self->region))) {
-			g_set_error_literal(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_NOT_SUPPORTED,
-					    "invalid region name");
-			return FALSE;
-		}
-
-		/* read region */
-		flashrom_layout_set(self->flashctx, layout);
 
 		fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_READ);
 		if (flashrom_image_read(self->flashctx, newcontents, flash_size)) {
@@ -164,7 +183,6 @@ fu_flashrom_device_write_firmware(FuDevice *device,
 				  GError **error)
 {
 	FuFlashromDevice *self = FU_FLASHROM_DEVICE(device);
-	struct flashrom_layout *layout;
 	gsize sz = 0;
 	gint rc;
 	const guint8 *buf;
@@ -182,25 +200,7 @@ fu_flashrom_device_write_firmware(FuDevice *device,
 		return FALSE;
 	buf = g_bytes_get_data(blob_fw, &sz);
 
-	if (flashrom_layout_read_from_ifd(&layout, self->flashctx, NULL, 0)) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_READ,
-				    "failed to read layout from Intel ICH descriptor");
-		return FALSE;
-	}
-
-	/* update only one specific region of the flash and do not touch others */
-	if (flashrom_layout_include_region(layout, fu_ifd_region_to_string(self->region))) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "invalid region name");
-		return FALSE;
-	}
-
 	/* write region */
-	flashrom_layout_set(self->flashctx, layout);
 	if (sz != fu_device_get_firmware_size_max(device)) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -226,7 +226,6 @@ fu_flashrom_device_write_firmware(FuDevice *device,
 		return FALSE;
 	}
 	fu_progress_step_done(progress);
-	flashrom_layout_release(layout);
 
 	/* Check if CMOS needs a reset */
 	if (fu_device_has_private_flag(device, FU_FLASHROM_DEVICE_FLAG_RESET_CMOS)) {
@@ -321,6 +320,10 @@ fu_flashrom_device_set_property(GObject *object,
 static void
 fu_flashrom_device_finalize(GObject *object)
 {
+	FuFlashromDevice *self = FU_FLASHROM_DEVICE(object);
+	if (self->layout != NULL)
+		flashrom_layout_release(self->layout);
+
 	G_OBJECT_CLASS(fu_flashrom_device_parent_class)->finalize(object);
 }
 
@@ -365,6 +368,7 @@ fu_flashrom_device_class_init(FuFlashromDeviceClass *klass)
 	klass_device->set_quirk_kv = fu_flashrom_device_set_quirk_kv;
 	klass_device->probe = fu_flashrom_device_probe;
 	klass_device->open = fu_flashrom_device_open;
+	klass_device->close = fu_flashrom_device_close;
 	klass_device->set_progress = fu_flashrom_device_set_progress;
 	klass_device->prepare = fu_flashrom_device_prepare;
 	klass_device->write_firmware = fu_flashrom_device_write_firmware;
