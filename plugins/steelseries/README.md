@@ -7,10 +7,15 @@ This plugin allows to update firmware on SteelSeries gamepads:
 * Stratus Duo
 * Stratus Duo USB wireless adapter
 * Proton
+* Rival 3 Wireless
 
-SteelSeries gaming mice support is limited by getting the correct version
-number. These mice have updatable firmware but so far no updates are available
-from the vendor.
+SteelSeries Rival 100 gaming mice support is limited by getting the correct
+version number. These mice have updatable firmware but so far no updates are
+available from the vendor.
+
+This plugin supports the following protocol IDs:
+
+* com.steelseries.sonic
 
 ## GUID Generation
 
@@ -31,6 +36,11 @@ updates, and is reset automatically to new firmware after flashing.
 ### Mice
 
 The device is not upgradable and thus requires no vendor ID set.
+
+### Wireless Mice
+
+The mouse switch button underneath must be set to 2.4G, and its 2.4G USB
+Wireless adapter must be connected to host.
 
 ## Vendor ID Security
 

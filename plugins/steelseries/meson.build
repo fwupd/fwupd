@@ -12,6 +12,7 @@ shared_module('fu_plugin_steelseries',
     'fu-steelseries-common.c',
     'fu-steelseries-device.c',
     'fu-steelseries-gamepad.c',
+    'fu-steelseries-sonic.c',
   ],
   include_directories : [
     root_incdir,
