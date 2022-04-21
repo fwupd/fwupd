@@ -5,6 +5,12 @@ GType = FuSteelseriesDevice
 Summary = An optical gaming mouse
 Icon = input-mouse
 
+# Rival 3 Wireless
+[USB\VID_1038&PID_1830]
+Plugin = steelseries
+GType = FuSteelseriesSonic
+Icon = input-mouse
+
 [USB\VID_1038&PID_1430]
 Plugin = steelseries
 GType = FuSteelseriesGamepad
