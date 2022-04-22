@@ -18,6 +18,10 @@ CounterpartGuid = USB\VID_0BDA&PID_5800
 [USB\VID_0BDA&PID_5800]
 Flags = detach-for-attach
 
+# As found in Lenovo ThinkPad P1 Gen3
+[USB\VID_13D3&PID_5405]
+Icon = camera-web
+
 # Openmoko Freerunner / GTA02
 [USB\VID_1D50&PID_5119]
 Plugin = dfu
