@@ -5,6 +5,9 @@ set -x
 #get any missing deps from the container
 ./contrib/ci/fwupd_setup_helpers.py install-dependencies --yes -o fedora
 
+# disable the safe directory feature
+git config --global safe.directory "*"
+
 #generate a tarball
 mkdir -p build && pushd build
 rm -rf *
