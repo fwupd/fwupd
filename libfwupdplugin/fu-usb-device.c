@@ -343,6 +343,49 @@ fu_usb_device_setup(FuDevice *device, GError **error)
 }
 
 static gboolean
+fu_usb_device_ready(FuDevice *device, GError **error)
+{
+#ifdef HAVE_GUSB
+	FuUsbDevice *self = FU_USB_DEVICE(device);
+	FuUsbDevicePrivate *priv = GET_PRIVATE(self);
+	g_autoptr(GPtrArray) intfs = NULL;
+
+	/* get the interface GUIDs */
+	intfs = g_usb_device_get_interfaces(priv->usb_device, error);
+	if (intfs == NULL)
+		return FALSE;
+
+	/* add fallback icon if there is nothing added already */
+	if (fu_device_get_icons(device)->len == 0) {
+		for (guint i = 0; i < intfs->len; i++) {
+			GUsbInterface *intf = g_ptr_array_index(intfs, i);
+
+			/* Video: Video Control: i.e. a webcam */
+			if (g_usb_interface_get_class(intf) == G_USB_DEVICE_CLASS_VIDEO &&
+			    g_usb_interface_get_subclass(intf) == 0x01) {
+				fu_device_add_icon(device, "camera-web");
+			}
+
+			/* Audio */
+			if (g_usb_interface_get_class(intf) == G_USB_DEVICE_CLASS_AUDIO)
+				fu_device_add_icon(device, "audio-card");
+
+			/* Mass Storage */
+			if (g_usb_interface_get_class(intf) == G_USB_DEVICE_CLASS_MASS_STORAGE)
+				fu_device_add_icon(device, "drive-harddisk");
+
+			/* Printer */
+			if (g_usb_interface_get_class(intf) == G_USB_DEVICE_CLASS_PRINTER)
+				fu_device_add_icon(device, "printer");
+		}
+	}
+#endif
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_usb_device_close(FuDevice *device, GError **error)
 {
 	FuUsbDevice *self = FU_USB_DEVICE(device);
@@ -825,6 +868,7 @@ fu_usb_device_class_init(FuUsbDeviceClass *klass)
 	object_class->set_property = fu_usb_device_set_property;
 	device_class->open = fu_usb_device_open;
 	device_class->setup = fu_usb_device_setup;
+	device_class->ready = fu_usb_device_ready;
 	device_class->close = fu_usb_device_close;
 	device_class->probe = fu_usb_device_probe;
 	device_class->to_string = fu_usb_device_to_string;

@@ -719,6 +719,10 @@ fu_vli_usbhub_device_ready(FuDevice *device, GError **error)
 	FuVliUsbhubDevice *self = FU_VLI_USBHUB_DEVICE(device);
 	g_autoptr(GError) error_tmp = NULL;
 
+	/* FuUsbDevice->ready */
+	if (!FU_DEVICE_CLASS(fu_vli_usbhub_device_parent_class)->ready(device, error))
+		return FALSE;
+
 	/* try to read a block of data which will fail for 813-type devices */
 	if (fu_device_has_private_flag(device, FU_VLI_USBHUB_DEVICE_FLAG_UNLOCK_LEGACY813) &&
 	    !fu_vli_device_spi_read_block(FU_VLI_DEVICE(self),
