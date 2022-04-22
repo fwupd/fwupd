@@ -1,4 +1,4 @@
-FROM fedora:35
+FROM fedora:36
 %%%OS%%%
 ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US:en
