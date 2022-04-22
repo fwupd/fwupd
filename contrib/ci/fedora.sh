@@ -6,7 +6,6 @@ set -x
 ./contrib/ci/fwupd_setup_helpers.py install-dependencies --yes -o fedora
 
 #generate a tarball
-git config tar.tar.xz.command "xz -c"
 mkdir -p build && pushd build
 rm -rf *
 
