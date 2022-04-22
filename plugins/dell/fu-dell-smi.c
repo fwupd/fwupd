@@ -74,6 +74,8 @@ fu_dell_get_res(FuDellSmiObj *smi_obj, guint8 arg)
 	return dell_smi_obj_get_res(smi_obj->smi, arg);
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wstringop-overread"
 gboolean
 fu_dell_execute_simple_smi(FuDellSmiObj *obj, guint16 class, guint16 select)
 {
@@ -87,6 +89,7 @@ fu_dell_execute_simple_smi(FuDellSmiObj *obj, guint16 class, guint16 select)
 	}
 	return TRUE;
 }
+#pragma GCC diagnostic pop
 
 gboolean
 fu_dell_detect_dock(FuDellSmiObj *smi_obj, guint32 *location)
