@@ -45,7 +45,7 @@ jobs:
                                   mingw64-libarchive
                                   mingw64-json-glib
                                   mingw64-curl
-                                  wine && dnf install -y https://kojipkgs.fedoraproject.org/packages/glib2/2.72.0/2.fc36/i686/glib2-2.72.0-2.fc36.i686.rpm https://kojipkgs.fedoraproject.org/packages/glib2/2.72.0/2.fc36/x86_64/glib2-2.72.0-2.fc36.x86_64.rpm https://kojipkgs.fedoraproject.org/packages/glib2/2.72.0/2.fc36/x86_64/glib2-devel-2.72.0-2.fc36.x86_64.rpm
+                                  wine
       - checkout
       - run:
           name: "Build Win32"

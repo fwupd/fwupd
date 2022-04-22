@@ -6,7 +6,6 @@ set -x
 ./contrib/ci/fwupd_setup_helpers.py install-dependencies --yes -o fedora
 
 #generate a tarball
-git config tar.tar.xz.command "xz -c"
 mkdir -p build && pushd build
 rm -rf *
 
@@ -14,8 +13,6 @@ if [ "$QUBES" = "true" ]; then
     QUBES_MACRO=(--define "qubes_packages 1")
 fi
 
-dnf install -y python3-pip
-python3 -m pip install --user "meson >= 0.60.0"
 meson .. \
     -Ddocs=none \
     -Dman=true \
