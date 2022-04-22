@@ -14,14 +14,6 @@ jobs:
     steps:
       - name: Check out the repo
         uses: actions/checkout@v2
-      # TODO(#122): Remove step when https://github.com/actions/virtual-environments/issues/2658 fixed
-      - name: update runc # https://github.com/actions/virtual-environments/issues/2698#issuecomment-779262068
-        if: startsWith(matrix.os, 'arch')
-        run: |
-          sudo apt-get install --assume-yes libseccomp-dev
-          git clone https://github.com/opencontainers/runc
-          cd runc && git checkout v1.0.0-rc93 && make -j`nproc` && sudo make install
-          cd .. && rm --recursive runc
       - name: "Generate Dockerfile"
         env:
           OS: ${{ matrix.os }}
