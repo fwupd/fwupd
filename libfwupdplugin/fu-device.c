@@ -1583,7 +1583,10 @@ fu_device_set_quirk_kv(FuDevice *self, const gchar *key, const gchar *value, GEr
 		return TRUE;
 	}
 	if (g_strcmp0(key, FU_QUIRKS_ICON) == 0) {
-		fu_device_add_icon(self, value);
+		g_auto(GStrv) sections = g_strsplit(value, ",", -1);
+		g_ptr_array_set_size(fu_device_get_icons(self), 0);
+		for (guint i = 0; sections[i] != NULL; i++)
+			fu_device_add_icon(self, sections[i]);
 		return TRUE;
 	}
 	if (g_strcmp0(key, FU_QUIRKS_GUID) == 0) {
