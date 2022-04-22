@@ -104,6 +104,22 @@ fu_progressbar_erase_line(FuProgressbar *self)
 }
 
 static gboolean
+_fu_status_is_predictable(FwupdStatus status)
+{
+	if (status == FWUPD_STATUS_DEVICE_ERASE)
+		return TRUE;
+	if (status == FWUPD_STATUS_DEVICE_VERIFY)
+		return TRUE;
+	if (status == FWUPD_STATUS_DEVICE_READ)
+		return TRUE;
+	if (status == FWUPD_STATUS_DEVICE_WRITE)
+		return TRUE;
+	if (status == FWUPD_STATUS_DOWNLOADING)
+		return TRUE;
+	return FALSE;
+}
+
+static gboolean
 fu_progressbar_estimate_ready(FuProgressbar *self, guint percentage)
 {
 	gdouble old;
@@ -115,6 +131,10 @@ fu_progressbar_estimate_ready(FuProgressbar *self, guint percentage)
 		self->last_estimate = 0;
 		return FALSE;
 	}
+
+	/* allow-list things that make sense... */
+	if (!_fu_status_is_predictable(self->status))
+		return FALSE;
 
 	old = self->last_estimate;
 	elapsed = g_timer_elapsed(self->time_elapsed, NULL);
