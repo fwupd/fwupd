@@ -44,7 +44,6 @@ fu_genesys_scaler_firmware_parse(FuFirmware *firmware,
 	gsize bufsz = 0;
 	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
 
-	buf = g_bytes_get_data(fw, &bufsz);
 	if (!fu_memcpy_safe((guint8 *)&self->footer,
 			    sizeof(self->footer),
 			    0, /* dst */
