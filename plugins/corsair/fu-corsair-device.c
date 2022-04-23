@@ -98,7 +98,7 @@ fu_corsair_device_command(FuDevice *device, guint8 *data, guint timeout, GError 
 		g_set_error(error,
 			    G_IO_ERROR,
 			    G_IO_ERROR_FAILED,
-			    "device replied with error: %" G_GSIZE_FORMAT,
+			    "device replied with error: 0x%02x",
 			    data[CORSAIR_OFFSET_CMD_STATUS]);
 		return FALSE;
 	}
