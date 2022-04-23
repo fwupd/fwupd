@@ -1505,7 +1505,7 @@ fu_genesys_scaler_device_get_firmware_packet_version(FuGenesysScalerDevice *self
 		guint8 checksum;
 		guint8 checksum_tmp = 0x0;
 
-		if (len >= sizeof(buf)) {
+		if (len > sizeof(buf) - 3) {
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INTERNAL,
