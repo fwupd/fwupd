@@ -325,7 +325,6 @@ fu_ch341a_cfi_device_write_firmware(FuDevice *device,
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GBytes) fw_verify = NULL;
 	g_autoptr(GPtrArray) pages = NULL;
-	g_autoptr(FuDeviceLocker) cslocker = NULL;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
 	/* open programmer */
