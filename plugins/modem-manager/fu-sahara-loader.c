@@ -241,7 +241,6 @@ fu_sahara_loader_qdl_read(FuSaharaLoader *self, GError **error)
 gboolean
 fu_sahara_loader_qdl_write(FuSaharaLoader *self, const guint8 *data, gsize sz, GError **error)
 {
-	gsize total_sent = 0;
 	gsize actual_len = 0;
 	g_autoptr(GPtrArray) chunks = NULL;
 	g_autoptr(GByteArray) bytes = NULL;
@@ -272,7 +271,6 @@ fu_sahara_loader_qdl_write(FuSaharaLoader *self, const guint8 *data, gsize sz, G
 				    actual_len);
 			return FALSE;
 		}
-		total_sent += actual_len;
 	}
 	if (sz % self->maxpktsize_out == 0) {
 		/* sent zlp packet if needed */
