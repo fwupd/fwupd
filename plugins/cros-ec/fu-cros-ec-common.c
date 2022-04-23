@@ -52,7 +52,7 @@ fu_cros_ec_parse_version(const gchar *version_raw, struct cros_ec_version *versi
 			    marker_split[0]);
 		return FALSE;
 	}
-	g_strlcpy(version->triplet, marker_split[0], 32);
+	(void)g_strlcpy(version->triplet, marker_split[0], 32);
 	if (g_strlcpy(version->boardname, v_split[0], 32) == 0) {
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "empty board name");
 		return FALSE;

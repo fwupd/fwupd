@@ -263,9 +263,9 @@ fu_dfuse_firmware_write_image(FuFirmware *image, GError **error)
 	hdr.alt_setting = fu_firmware_get_idx(image);
 	if (fu_firmware_get_id(image) != NULL) {
 		hdr.target_named = GUINT32_TO_LE(0x01);
-		g_strlcpy((gchar *)&hdr.target_name,
-			  fu_firmware_get_id(image),
-			  sizeof(hdr.target_name));
+		(void)g_strlcpy((gchar *)&hdr.target_name,
+				fu_firmware_get_id(image),
+				sizeof(hdr.target_name));
 	}
 	hdr.target_size = GUINT32_TO_LE(totalsz);
 	hdr.chunks = GUINT32_TO_LE(chunks->len);
