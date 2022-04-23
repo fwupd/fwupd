@@ -123,7 +123,6 @@ fu_genesys_usbhub_firmware_parse(FuFirmware *firmware,
 	guint32 code_size = 0;
 	guint32 static_ts_offset = 0;
 	guint16 version_raw = 0;
-	g_autoptr(GBytes) fw_payload = NULL;
 	g_autofree gchar *version = NULL;
 
 	/* check signature */
