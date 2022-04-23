@@ -91,6 +91,7 @@ warning_flags = [
   '-Wno-missing-field-initializers',
   '-Wno-strict-aliasing',
   '-Wno-suggest-attribute=format',
+  '-Wno-unknown-warning-option',
   '-Wno-unused-parameter',
   '-Wold-style-definition',
   '-Woverride-init',
