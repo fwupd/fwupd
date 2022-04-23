@@ -1920,7 +1920,7 @@ fwupd_device_to_variant_full(FwupdDevice *self, FwupdDeviceFlags flags)
 		g_variant_builder_add(&builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_VERSION_LOWEST_RAW,
-				      g_variant_new_uint64(priv->version_raw));
+				      g_variant_new_uint64(priv->version_lowest_raw));
 	}
 	if (priv->version_bootloader_raw > 0) {
 		g_variant_builder_add(&builder,
