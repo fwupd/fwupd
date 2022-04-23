@@ -2120,7 +2120,7 @@ fu_engine_history_inherit(gconstpointer user_data)
 	/* delete history */
 	localstatedir = fu_common_get_path(FU_PATH_KIND_LOCALSTATEDIR_PKG);
 	history_db = g_build_filename(localstatedir, "pending.db", NULL);
-	g_unlink(history_db);
+	(void)g_unlink(history_db);
 
 	/* no metadata in daemon */
 	fu_engine_set_silo(engine, silo_empty);
@@ -3205,8 +3205,8 @@ fu_plugin_module_func(gconstpointer user_data)
 	/* delete files */
 	localstatedir = fu_common_get_path(FU_PATH_KIND_LOCALSTATEDIR_PKG);
 	history_db = g_build_filename(localstatedir, "pending.db", NULL);
-	g_unlink(history_db);
-	g_unlink(pending_cap);
+	(void)g_unlink(history_db);
+	(void)g_unlink(pending_cap);
 }
 
 static void
@@ -3238,7 +3238,7 @@ fu_history_func(gconstpointer user_data)
 	if (!g_file_test(dirname, G_FILE_TEST_IS_DIR))
 		return;
 	filename = g_build_filename(dirname, "pending.db", NULL);
-	g_unlink(filename);
+	(void)g_unlink(filename);
 
 	/* add a device */
 	device = fu_device_new_with_context(self->ctx);
