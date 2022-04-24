@@ -58,11 +58,9 @@ if bluez.allowed()
 endif
 
 if build_daemon
-if introspection.allowed()
-  install_data(['org.freedesktop.fwupd.xml'],
-    install_dir : join_paths(datadir, 'dbus-1', 'interfaces')
-  )
-endif
+install_data(['org.freedesktop.fwupd.xml'],
+  install_dir : join_paths(datadir, 'dbus-1', 'interfaces')
+)
 fwupdmgr = executable(
   'fwupdmgr',
   fu_hash,
