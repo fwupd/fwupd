@@ -822,7 +822,7 @@ fu_vli_pd_device_set_progress(FuDevice *self, FuProgress *progress)
 static void
 fu_vli_pd_device_init(FuVliPdDevice *self)
 {
-	fu_device_add_icon(FU_DEVICE(self), "audio-card");
+	fu_device_add_icon(FU_DEVICE(self), "usb-hub");
 	fu_device_add_protocol(FU_DEVICE(self), "com.vli.pd");
 	fu_device_set_summary(FU_DEVICE(self), "USB power distribution device");
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
