@@ -441,3 +441,8 @@ RemoveDelay = 60000
 Plugin = dfu
 Flags = detach-for-attach
 RemoveDelay = 180000
+
+# FlatFrog DFU
+[USB\VID_25B5&PID_0004]
+Plugin = dfu
+Flags = manifest-poll,detach-for-attach,ignore-upload
