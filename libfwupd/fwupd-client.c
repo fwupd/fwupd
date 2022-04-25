@@ -3684,6 +3684,17 @@ fwupd_client_refresh_remote_async(FwupdClient *self,
 			     g_steal_pointer(&data),
 			     (GDestroyNotify)fwupd_client_refresh_remote_data_free);
 
+	/* sanity check */
+	if (fwupd_remote_get_metadata_uri_sig(remote) == NULL ||
+	    fwupd_remote_get_metadata_uri(remote) == NULL) {
+		g_task_return_new_error(task,
+					FWUPD_ERROR,
+					FWUPD_ERROR_NOT_SUPPORTED,
+					"no metadata URIs for %s",
+					fwupd_remote_get_id(remote));
+		return;
+	}
+
 	/* download signature */
 	fwupd_client_download_bytes_async(self,
 					  fwupd_remote_get_metadata_uri_sig(remote),
