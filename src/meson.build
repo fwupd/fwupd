@@ -2,7 +2,7 @@ if get_option('tests')
 subdir('tests')
 endif
 
-if build_daemon and get_option('introspection')
+if build_daemon
   install_data(['org.freedesktop.fwupd.xml'],
     install_dir : join_paths(datadir, 'dbus-1', 'interfaces')
   )
