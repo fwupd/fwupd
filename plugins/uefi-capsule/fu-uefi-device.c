@@ -649,11 +649,7 @@ fu_uefi_device_probe(FuDevice *device, GError **error)
 	fu_device_add_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_MD_SET_VENDOR);
 
 	/* add icons */
-	if (priv->kind == FU_UEFI_DEVICE_KIND_DEVICE_FIRMWARE) {
-		/* nothing better in the icon naming spec */
-		fu_device_add_icon(device, "audio-card");
-	} else {
-		/* this is probably system firmware */
+	if (priv->kind == FU_UEFI_DEVICE_KIND_SYSTEM_FIRMWARE) {
 		fu_device_add_icon(device, "computer");
 		fu_device_add_instance_id(device, "main-system-firmware");
 	}
