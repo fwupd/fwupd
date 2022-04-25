@@ -417,7 +417,7 @@ fu_fresco_pd_device_set_progress(FuDevice *self, FuProgress *progress)
 static void
 fu_fresco_pd_device_init(FuFrescoPdDevice *self)
 {
-	fu_device_add_icon(FU_DEVICE(self), "audio-card");
+	fu_device_add_icon(FU_DEVICE(self), "usb-hub");
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_protocol(FU_DEVICE(self), "com.frescologic.pd");
