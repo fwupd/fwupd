@@ -52,6 +52,7 @@ option('plugin_powerd', type : 'boolean', value : true, description : 'enable su
 option('qubes', type : 'boolean', value : false, description : 'build packages for Qubes OS')
 option('supported_build', type : 'boolean', value : false, description: 'distribution package with upstream support')
 option('systemd', type : 'boolean', value : true, description : 'enable systemd support')
+option('systemd_unit_user', type : 'string', description : 'User account to use for fwupd-refresh.service (empty for DynamicUser)')
 option('systemd_root_prefix', type: 'string', value: '', description: 'Directory to base systemd’s installation directories on')
 option('elogind', type : 'boolean', value : false, description : 'enable elogind support')
 option('tests', type : 'boolean', value : true, description : 'enable tests')

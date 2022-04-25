@@ -7,7 +7,7 @@ After=network.target
 Type=oneshot
 CacheDirectory=fwupdmgr
 StandardError=null
-DynamicUser=yes
+@user@
 RestrictAddressFamilies=AF_NETLINK AF_UNIX AF_INET AF_INET6
 SystemCallFilter=~@mount
 ProtectKernelModules=yes
