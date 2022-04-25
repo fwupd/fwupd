@@ -53,6 +53,7 @@ option('plugin_powerd', type : 'feature', description : 'support for powerd', de
 option('qubes', type : 'boolean', value : false, description : 'build packages for Qubes OS')
 option('supported_build', type : 'feature', description: 'distribution package with upstream support', deprecated: {'true': 'enabled', 'false': 'disabled'})
 option('systemd', type : 'feature', description : 'systemd support', deprecated: {'true': 'enabled', 'false': 'disabled'})
+option('systemd_unit_user', type : 'string', description : 'User account to use for fwupd-refresh.service (empty for DynamicUser)')
 option('systemd_root_prefix', type: 'string', value: '', description: 'Directory to base systemd’s installation directories on')
 option('elogind', type : 'feature', description : 'elogind support', deprecated: {'true': 'enabled', 'false': 'disabled'})
 option('tests', type : 'boolean', value : true, description : 'enable tests')
