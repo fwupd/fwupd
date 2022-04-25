@@ -267,9 +267,6 @@ GET_DEVICES = """{
       "VendorId" : "PCI:0x1234",
       "Version" : "02",
       "VersionFormat" : "plain",
-      "Icons" : [
-        "audio-card"
-      ],
       "Created" : 1614209932
     },
     {
@@ -439,9 +436,6 @@ GET_DEVICES_NO_UPDATES = """{
             "VendorId" : "PCI:0x10DE",
             "Version" : "a1",
             "VersionFormat" : "plain",
-            "Icons" : [
-                "audio-card"
-            ],
             "Created" : 1592899254
         },
         {
@@ -753,9 +747,6 @@ GET_DEVICES_NO_VERSION = """{
             "Vendor" : "NVIDIA Corporation",
             "VendorId" : "PCI:0x10DE",
             "VersionFormat" : "plain",
-            "Icons" : [
-                "audio-card"
-            ],
             "Created" : 1592899254
         },
         {

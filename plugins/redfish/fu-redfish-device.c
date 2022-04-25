@@ -62,7 +62,6 @@ fu_redfish_device_set_device_class(FuRedfishDevice *self, const gchar *tmp)
 		return;
 	}
 	g_debug("no icon mapping for %s", tmp);
-	fu_device_add_icon(FU_DEVICE(self), "audio-card");
 }
 
 static gboolean
