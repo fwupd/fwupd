@@ -48,3 +48,10 @@ for dir in /var/cache/fwupdate /var/lib/fwupdate; do
 	        rmdir --ignore-fail-on-non-empty $dir || true
 	fi
 done
+
+#create a user for fwupd-refresh.service/fwupd-refresh.timer
+adduser --quiet --system --group --no-create-home --home /run/systemd \
+    --gecos "fwupd-refresh user" fwupd-refresh
+if [ -d /run/systemd/system ]; then
+    systemctl reload dbus || true
+fi

@@ -49,7 +49,7 @@ ifeq (yes,$(shell dpkg-vendor --derives-from Ubuntu && echo yes))
        CONFARGS += -Dplugin_logitech_bulkcontroller=disabled
 endif
 
-CONFARGS += -Dplugin_dummy=true -Dplugin_powerd=disabled -Ddocs=gtkdoc -Dsupported_build=enabled -Dplugin_modem_manager=enabled
+CONFARGS += -Dplugin_dummy=true -Dplugin_powerd=disabled -Ddocs=gtkdoc -Dsupported_build=enabled -Dplugin_modem_manager=enabled -Dsystemd_unit_user=fwupd-refresh
 
 %:
 	dh $@ --with gir
@@ -75,6 +75,9 @@ override_dh_install:
 	rm -f debian/fwupd/usr/lib/*/fwupd-plugins-*/libfu_plugin_test_ble.so
 	rm -f debian/fwupd/usr/lib/*/fwupd-plugins-*/libfu_plugin_invalid.so
 	rm -f debian/fwupd/etc/fwupd/remotes.d/fwupd-tests.conf
+
+	#enable fwupd-refresh.service by default (we have a dedicated user)
+	rm -f debian/fwupd/lib/systemd/system-preset/fwupd-refresh.preset
 
 override_dh_strip_nondeterminism:
 	dh_strip_nondeterminism -Xfirmware-example.xml.gz
