@@ -359,6 +359,8 @@ void
 fu_byte_array_append_uint64(GByteArray *array, guint64 data, FuEndianType endian);
 void
 fu_byte_array_append_bytes(GByteArray *array, GBytes *bytes);
+gboolean
+fu_byte_array_compare(GByteArray *buf1, GByteArray *buf2, GError **error);
 
 void
 fu_common_write_uint16(guint8 *buf, guint16 val_native, FuEndianType endian);

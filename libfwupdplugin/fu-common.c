@@ -1943,6 +1943,27 @@ fu_common_bytes_compare(GBytes *bytes1, GBytes *bytes2, GError **error)
 }
 
 /**
+ * fu_byte_array_compare:
+ * @buf1: a data blob
+ * @buf2: another #GByteArray
+ * @error: (nullable): optional return location for an error
+ *
+ * Compares two buffers for equality.
+ *
+ * Returns: %TRUE if @buf1 and @buf2 are identical
+ *
+ * Since: 1.8.0
+ **/
+gboolean
+fu_byte_array_compare(GByteArray *buf1, GByteArray *buf2, GError **error)
+{
+	g_return_val_if_fail(buf1 != NULL, FALSE);
+	g_return_val_if_fail(buf2 != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+	return fu_common_bytes_compare_raw(buf1->data, buf1->len, buf2->data, buf2->len, error);
+}
+
+/**
  * fu_common_bytes_pad:
  * @bytes: data blob
  * @sz: the desired size in bytes
