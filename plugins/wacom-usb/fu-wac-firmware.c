@@ -19,6 +19,7 @@ struct _FuWacFirmware {
 G_DEFINE_TYPE(FuWacFirmware, fu_wac_firmware, FU_TYPE_FIRMWARE)
 
 #define FU_WAC_FIRMWARE_TOKENS_MAX 100000 /* lines */
+#define FU_WAC_FIRMWARE_SECTIONS_MAX 10
 
 typedef struct {
 	guint32 addr;
@@ -69,6 +70,16 @@ fu_wac_firmware_tokenize_cb(GString *token, guint token_idx, gpointer user_data,
 					    FWUPD_ERROR_INTERNAL,
 					    "invalid header, got %" G_GSIZE_FORMAT " bytes",
 					    token->len);
+				return FALSE;
+			}
+
+			/* sanity check */
+			if (helper->header_infos->len > FU_WAC_FIRMWARE_SECTIONS_MAX) {
+				g_set_error(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INTERNAL,
+					    "too many metadata sections: %u",
+					    helper->header_infos->len);
 				return FALSE;
 			}
 			if (!fu_firmware_strparse_uint4_safe(token->str,
