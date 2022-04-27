@@ -3742,6 +3742,8 @@ guint8
 fu_common_sum8_bytes(GBytes *blob)
 {
 	g_return_val_if_fail(blob != NULL, G_MAXUINT8);
+	if (g_bytes_get_size(blob) == 0)
+		return 0;
 	return fu_common_sum8(g_bytes_get_data(blob, NULL), g_bytes_get_size(blob));
 }
 
