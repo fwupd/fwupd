@@ -631,14 +631,22 @@ fu_ccgx_dmc_device_attach(FuDevice *device, FuProgress *progress, GError **error
 			if (!fu_ccgx_dmc_device_send_download_trigger(self,
 								      self->trigger_code,
 								      error)) {
-				fu_device_remove_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+				if (manual_replug)
+					fu_device_remove_flag(device,
+							      FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
+				else
+					fu_device_remove_flag(device,
+							      FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 				g_prefix_error(error, "download trigger error: ");
 				return FALSE;
 			}
 		}
 	} else if (self->update_model == DMC_UPDATE_MODEL_PENDING_RESET) {
 		if (!fu_ccgx_dmc_device_send_sort_reset(self, manual_replug, error)) {
-			fu_device_remove_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+			if (manual_replug)
+				fu_device_remove_flag(device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
+			else
+				fu_device_remove_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 			g_prefix_error(error, "soft reset error: ");
 			return FALSE;
 		}
