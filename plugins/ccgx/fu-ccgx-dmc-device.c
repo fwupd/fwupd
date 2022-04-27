@@ -616,17 +616,22 @@ fu_ccgx_dmc_device_attach(FuDevice *device, FuProgress *progress, GError **error
 	if (fu_device_get_update_state(self) != FWUPD_UPDATE_STATE_SUCCESS)
 		return TRUE;
 
+	if (manual_replug == FALSE)
+		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+
 	if (self->update_model == DMC_UPDATE_MODEL_DOWNLOAD_TRIGGER) {
 		if (self->trigger_code > 0) {
 			if (!fu_ccgx_dmc_device_send_download_trigger(self,
 								      self->trigger_code,
 								      error)) {
+				fu_device_remove_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 				g_prefix_error(error, "download trigger error: ");
 				return FALSE;
 			}
 		}
 	} else if (self->update_model == DMC_UPDATE_MODEL_PENDING_RESET) {
 		if (!fu_ccgx_dmc_device_send_sort_reset(self, manual_replug, error)) {
+			fu_device_remove_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 			g_prefix_error(error, "soft reset error: ");
 			return FALSE;
 		}
@@ -638,10 +643,7 @@ fu_ccgx_dmc_device_attach(FuDevice *device, FuProgress *progress, GError **error
 				  "update-pending",
 				  "A pending update will be completed next time the device "
 				  "is unplugged from your computer");
-		return TRUE;
 	}
-
-	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 
 	return TRUE;
 }
@@ -723,7 +725,7 @@ fu_ccgx_dmc_device_set_quirk_kv(FuDevice *device,
 }
 
 static void
-fu_ccgx_hid_device_set_progress(FuDevice *self, FuProgress *progress)
+fu_ccgx_dmc_device_set_progress(FuDevice *self, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_NO_PROFILE);	/* actually 0, 20, 0, 80! */
@@ -760,5 +762,5 @@ fu_ccgx_dmc_device_class_init(FuCcgxDmcDeviceClass *klass)
 	klass_device->attach = fu_ccgx_dmc_device_attach;
 	klass_device->setup = fu_ccgx_dmc_device_setup;
 	klass_device->set_quirk_kv = fu_ccgx_dmc_device_set_quirk_kv;
-	klass_device->set_progress = fu_ccgx_hid_device_set_progress;
+	klass_device->set_progress = fu_ccgx_dmc_device_set_progress;
 }
