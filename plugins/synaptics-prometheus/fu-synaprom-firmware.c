@@ -104,6 +104,17 @@ fu_synaprom_firmware_parse(FuFirmware *firmware,
 				    tag);
 			return FALSE;
 		}
+
+		/* sanity check */
+		img = fu_firmware_get_image_by_idx(firmware, tag, NULL);
+		if (img != NULL) {
+			g_set_error(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_INVALID_DATA,
+				    "tag 0x%04x already present in image",
+				    tag);
+			return FALSE;
+		}
 		hdrsz = GUINT32_FROM_LE(header.bufsz);
 		if (hdrsz == 0) {
 			g_set_error(error,
