@@ -616,8 +616,15 @@ fu_ccgx_dmc_device_attach(FuDevice *device, FuProgress *progress, GError **error
 	if (fu_device_get_update_state(self) != FWUPD_UPDATE_STATE_SUCCESS)
 		return TRUE;
 
-	if (manual_replug == FALSE)
+	if (manual_replug) {
+		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
+		fu_device_inhibit(device,
+				  "update-pending",
+				  "A pending update will be completed next time the device "
+				  "is unplugged from your computer");
+	} else {
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+	}
 
 	if (self->update_model == DMC_UPDATE_MODEL_DOWNLOAD_TRIGGER) {
 		if (self->trigger_code > 0) {
@@ -635,14 +642,6 @@ fu_ccgx_dmc_device_attach(FuDevice *device, FuProgress *progress, GError **error
 			g_prefix_error(error, "soft reset error: ");
 			return FALSE;
 		}
-	}
-
-	if (manual_replug) {
-		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
-		fu_device_inhibit(device,
-				  "update-pending",
-				  "A pending update will be completed next time the device "
-				  "is unplugged from your computer");
 	}
 
 	return TRUE;
