@@ -525,7 +525,7 @@ fu_synaptics_mst_device_update_panamera_firmware(FuSynapticsMstDevice *self,
 						 GError **error)
 {
 	guint16 crc_tmp = 0;
-	guint32 fw_size;
+	guint32 fw_size = 0;
 	guint32 unit_sz = BLOCK_UNIT;
 	guint32 write_loops = 0;
 	guint8 bank_to_update = BANKTAG_1;
@@ -543,8 +543,14 @@ fu_synaptics_mst_device_update_panamera_firmware(FuSynapticsMstDevice *self,
 	g_debug("bank to update:%x", bank_to_update);
 
 	/* get firmware size */
-	fw_size = 0x410 + (*(payload_data + 0x400) << 24) + (*(payload_data + 0x401) << 16) +
-		  (*(payload_data + 0x402) << 8) + (*(payload_data + 0x403));
+	if (!fu_common_read_uint32_safe(payload_data,
+					payload_len,
+					0x400,
+					&fw_size,
+					G_LITTLE_ENDIAN,
+					error))
+		return FALSE;
+	fw_size += 0x410;
 
 	/* Current max firmware size is 104K */
 	if (fw_size < payload_len)
