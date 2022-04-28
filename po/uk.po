@@ -24,6 +24,12 @@ msgstr[1] "Лишилося %.0f хвилини"
 msgstr[2] "Лишилося %.0f хвилин"
 msgstr[3] "Лишилася %.0f хвилина"
 
+#. TRANSLATORS: BMC refers to baseboard management controller which
+#. * is the device that updates all the other firmware on the system
+#, c-format
+msgid "%s BMC Update"
+msgstr "Оновлення BMC %s"
+
 #. TRANSLATORS: battery refers to the system power source
 #, c-format
 msgid "%s Battery Update"
@@ -71,6 +77,12 @@ msgstr "Оновлення %s Corporate ME"
 #, c-format
 msgid "%s Device Update"
 msgstr "Оновлення для пристрою %s"
+
+#. TRANSLATORS: Video Display refers to the laptop internal display or
+#. * external monitor
+#, c-format
+msgid "%s Display Update"
+msgstr "Оновлення дисплея %s"
 
 #. TRANSLATORS: the EC is typically the keyboard controller chip,
 #. * the first %s is the device name, e.g. 'ThinkPad P50`
@@ -663,6 +675,11 @@ msgstr "Пристрій створить резервну копію мікро
 msgid "Device will not re-appear after update completes"
 msgstr "Пристрій не з'явиться у списку пристроїв після завершення оновлення"
 
+#. TRANSLATORS: the device has a reason it can't update, e.g. laptop lid
+#. closed
+msgid "Devices not currently updatable:"
+msgstr "Пристрої, для яких зараз неможливе оновлення:"
+
 #. TRANSLATORS: a list of successful updates
 msgid "Devices that have been updated successfully:"
 msgstr "Пристрої, для яких вдалося успішно оновити дані:"
@@ -738,6 +755,10 @@ msgstr "Не включати префікс часової позначки"
 #. TRANSLATORS: command line option
 msgid "Do not perform device safety checks"
 msgstr "Не виконувати перевірок безпечності для пристрою"
+
+#. TRANSLATORS: command line option
+msgid "Do not prompt for devices"
+msgstr "Не запитувати про пристрої"
 
 #. TRANSLATORS: command line option
 msgid "Do not write to the history database"
@@ -1099,6 +1120,10 @@ msgstr "Виявлено повне шифрування диска"
 msgid "Full disk encryption secrets may be invalidated when updating"
 msgstr "Ключі шифрування усього диска можуть втрати чинність при оновленні"
 
+#. TRANSLATORS: Title: if the part has been fused
+msgid "Fused platform"
+msgstr "Злита платформа"
+
 #. TRANSLATORS: global ID common to all similar hardware
 msgid "GUID"
 msgid_plural "GUIDs"
@@ -1225,6 +1250,10 @@ msgstr "Встановити бінарну мікропрограму на пр
 msgid "Install a firmware file on this hardware"
 msgstr "Встановити файл мікропрограми на це обладнання"
 
+#. TRANSLATORS: command description
+msgid "Install a specific firmware version on a device"
+msgstr "Встановити на пристрій вказану версію мікропрограми"
+
 msgid "Install old version of signed system firmware"
 msgstr "Встановити стару версію підписаної мікропрограми системи"
 
@@ -1297,11 +1326,6 @@ msgstr "Активна Intel CET"
 #. * enabled means supported by the processor
 msgid "Intel CET Enabled"
 msgstr "Увімкнено Intel CET"
-
-#. TRANSLATORS: Title: Direct Connect Interface (DCI) allows
-#. * debugging of Intel processors using the USB3 port
-msgid "Intel DCI debugger"
-msgstr "Діагностика DCI Intel"
 
 #. TRANSLATORS: Title: SMAP = Supervisor Mode Access Prevention
 msgid "Intel SMAP"
@@ -1540,6 +1564,14 @@ msgstr "Зараз не увімкнено жодного віддаленого
 msgid "No remotes available"
 msgstr "Немає доступних віддалених сховищ"
 
+#. TRANSLATORS: this is an error string
+msgid "No updatable devices"
+msgstr "Немає придатних до оновлення пристроїв"
+
+#. TRANSLATORS: this is an error string
+msgid "No updates available"
+msgstr "Немає доступних оновлень"
+
 msgid "No updates available for remaining devices"
 msgstr "Для решти пристроїв немає доступних оновлень"
 
@@ -1626,6 +1658,10 @@ msgstr "Відсоток виконання"
 #. TRANSLATORS: prompt to apply the update
 msgid "Perform operation?"
 msgstr "Виконати дію?"
+
+#. TRANSLATORS: Title: Allows debugging of parts using proprietary hardware
+msgid "Platform Debugging"
+msgstr "Діагностика платформи"
 
 #. TRANSLATORS: 'recovery key' here refers to a code, rather than a physical
 #. metal thing
@@ -1797,6 +1833,10 @@ msgstr "Перезапускаємо пристрій…"
 msgid "Return all the hardware IDs for the machine"
 msgstr "Повернути усі ідентифікатори апаратного забезпечення комп’ютера"
 
+#. TRANSLATORS: Title: if firmware enforces rollback protection
+msgid "Rollback protection"
+msgstr "Захист від повернення до попередніх версій"
+
 #. TRANSLATORS: this is shown in the MOTD
 msgid "Run `fwupdmgr get-upgrades` for more information."
 msgstr "Віддайте команду «fwupdmgr get-upgrades», щоб дізнатися більше."
@@ -1833,9 +1873,17 @@ msgstr "Регіон BIOS SPI"
 msgid "SPI lock"
 msgstr "Блокування SPI"
 
+#. TRANSLATORS: Title: if hardware enforces control of SPI replays
+msgid "SPI replay protection"
+msgstr "Захист від відтворення SPI"
+
 #. TRANSLATORS: Title: SPI refers to the flash chip in the computer
 msgid "SPI write"
 msgstr "Запис SPI"
+
+#. TRANSLATORS: Title: if hardware enforces control of SPI writes
+msgid "SPI write protection"
+msgstr "Захист від запису SPI"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "SUBSYSTEM DRIVER [DEVICE-ID|GUID]"
@@ -1864,6 +1912,11 @@ msgstr "Secure Boot вимкнено"
 #. TRANSLATORS: HSI event title
 msgid "Secure Boot enabled"
 msgstr "Увімкнено Secure Boot"
+
+#. TRANSLATORS: the %1 is a URL to a wiki page
+#, c-format
+msgid "See %s for more details."
+msgstr "Див. %s, щоб дізнатися більше."
 
 #. TRANSLATORS: %s is a link to a website
 #, c-format
@@ -1965,6 +2018,10 @@ msgstr "Підписати вивантажені дані клієнтськи�
 msgid "Signature"
 msgstr "Підпис"
 
+#. TRANSLATORS: firmware is verified on-device the payload using strong crypto
+msgid "Signed Payload"
+msgstr "Підписаний вміст"
+
 #. TRANSLATORS: file size of the download
 msgid "Size"
 msgstr "Розмір"
@@ -2055,6 +2112,10 @@ msgstr "Резюме"
 msgid "Supported"
 msgstr "Є підтримка"
 
+#. TRANSLATORS: Title: if fwupd supports HSI on this chip
+msgid "Supported CPU"
+msgstr "Підтримувані процесори"
+
 #. TRANSLATORS: Is found in current metadata
 msgid "Supported on remote server"
 msgstr "Підтримуваний на віддаленому сервері"
@@ -2096,6 +2157,10 @@ msgstr "Відновлення PCR0 TPM"
 #. TRANSLATORS: HSI event title
 msgid "TPM PCR0 reconstruction is invalid"
 msgstr "Відновлення PCR0 TPM є некоректним"
+
+#. TRANSLATORS: HSI event title
+msgid "TPM PCR0 reconstruction is now valid"
+msgstr "Відновлення PCR0 TPM тепер є коректним"
 
 #. TRANSLATORS: Title: PCRs (Platform Configuration Registers) shouldn't be
 #. empty
@@ -2155,6 +2220,10 @@ msgstr "Годинник системи налаштовано неправил�
 #. TRANSLATORS: naughty vendor
 msgid "The vendor did not supply any release notes."
 msgstr "Виробником не надано ніяких нотаток щодо випуску."
+
+#. TRANSLATORS: now list devices with unfixed high-priority issues
+msgid "There are devices with issues:"
+msgstr "Маємо пристрої із проблемами:"
 
 #. TRANSLATORS: nothing to show
 msgid "There are no blocked firmware files"
@@ -2311,6 +2380,10 @@ msgstr "Демонтує ESP"
 msgid "Unset the debugging flag during update"
 msgstr "Зняти під час оновлення прапорець діагностики"
 
+#. TRANSLATORS: firmware payload is unsigned and it is possible to modify it
+msgid "Unsigned Payload"
+msgstr "Непідписаний вміст"
+
 #. TRANSLATORS: error message
 #, c-format
 msgid "Unsupported daemon version %s, client version is %s"
@@ -2327,6 +2400,10 @@ msgstr "Придатний до оновлення"
 #. TRANSLATORS: error message from last update attempt
 msgid "Update Error"
 msgstr "Помилка оновлення"
+
+#. TRANSLATORS: helpful image for the update
+msgid "Update Image"
+msgstr "Зображення оновлення"
 
 #. TRANSLATORS: helpful messages from last update
 #. TRANSLATORS: helpful messages for the update
@@ -2499,6 +2576,10 @@ msgstr "[ІД_ПРИСТРОЮ|GUID]"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[DEVICE-ID|GUID] [BRANCH]"
 msgstr "[ІД_ПРИСТРОЮ|GUID] [ГІЛКА]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[DEVICE-ID|GUID] [VERSION]"
+msgstr "[ІД_ПРИСТРОЮ|GUID] [ВЕРСІЯ]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[FILE FILE_SIG REMOTE-ID]"

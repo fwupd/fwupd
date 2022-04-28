@@ -208,6 +208,13 @@ msgid_plural "%u devices have a firmware upgrade available."
 msgstr[0] "%u laitteessa on saatavilla firmware -päivitys."
 msgstr[1] "%u laitteelle on saatavilla laiteohjelmistopäivitys."
 
+#. TRANSLATORS: this is shown in the MOTD
+#, c-format
+msgid "%u device is not the best known configuration."
+msgid_plural "%u devices are not the best known configuration."
+msgstr[0] "%u laitteet eivät ole tunnetuin kokoonpano."
+msgstr[1] "%u laitteet eivät ole tunnetuin kokoonpano."
+
 #. TRANSLATORS: duration in minutes
 #, c-format
 msgid "%u hour"
@@ -635,6 +642,11 @@ msgstr "Laite varmuuskopioi laiteohjelmiston ennen asennusta"
 msgid "Device will not re-appear after update completes"
 msgstr "Laitetta ei näytetä uudelleen päivityksen päätyttyä"
 
+#. TRANSLATORS: the device has a reason it can't update, e.g. laptop lid
+#. closed
+msgid "Devices not currently updatable:"
+msgstr "Laitteet, joita ei tällä hetkellä voi päivittää:"
+
 #. TRANSLATORS: a list of successful updates
 msgid "Devices that have been updated successfully:"
 msgstr "Onnistuneesti päivitetyt laitteet:"
@@ -710,6 +722,10 @@ msgstr "Älä sisällytä aikaleiman etuliitettä"
 #. TRANSLATORS: command line option
 msgid "Do not perform device safety checks"
 msgstr "Älä suorita laitteen turvallisuustarkastuksia"
+
+#. TRANSLATORS: command line option
+msgid "Do not prompt for devices"
+msgstr "Älä pyydä laitteita"
 
 #. TRANSLATORS: command line option
 msgid "Do not write to the history database"
@@ -1257,11 +1273,6 @@ msgstr "Intel CET aktiivinen"
 #. * enabled means supported by the processor
 msgid "Intel CET Enabled"
 msgstr "Intel CET käytössä"
-
-#. TRANSLATORS: Title: Direct Connect Interface (DCI) allows
-#. * debugging of Intel processors using the USB3 port
-msgid "Intel DCI debugger"
-msgstr "Intel DCI -virheenjäljitys"
 
 #. TRANSLATORS: Title: SMAP = Supervisor Mode Access Prevention
 msgid "Intel SMAP"

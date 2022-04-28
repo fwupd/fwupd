@@ -23,6 +23,12 @@ msgid_plural "%.0f minutes remaining"
 msgstr[0] "Manca %.0f minut"
 msgstr[1] "Manquen %.0f minuts"
 
+#. TRANSLATORS: BMC refers to baseboard management controller which
+#. * is the device that updates all the other firmware on the system
+#, c-format
+msgid "%s BMC Update"
+msgstr "Actualitza el BMC %s"
+
 #. TRANSLATORS: battery refers to the system power source
 #, c-format
 msgid "%s Battery Update"
@@ -70,6 +76,12 @@ msgstr "Actualització ME corporativa de %s"
 #, c-format
 msgid "%s Device Update"
 msgstr "Actualització del dispositiu %s"
+
+#. TRANSLATORS: Video Display refers to the laptop internal display or
+#. * external monitor
+#, c-format
+msgid "%s Display Update"
+msgstr "Actualitza la pantalla %s"
 
 #. TRANSLATORS: the EC is typically the keyboard controller chip,
 #. * the first %s is the device name, e.g. 'ThinkPad P50`
@@ -646,6 +658,11 @@ msgstr "El dispositiu farà una còpia de seguretat del microprogramari abans d'
 msgid "Device will not re-appear after update completes"
 msgstr "El dispositiu no tornarà a aparèixer un cop finalitzada l'actualització"
 
+#. TRANSLATORS: the device has a reason it can't update, e.g. laptop lid
+#. closed
+msgid "Devices not currently updatable:"
+msgstr "Dispositius que actualment no són actualitzables:"
+
 #. TRANSLATORS: a list of successful updates
 msgid "Devices that have been updated successfully:"
 msgstr "Els dispositius que s'han actualitzat correctament:"
@@ -721,6 +738,10 @@ msgstr "No incloure el prefix de la marca de temps"
 #. TRANSLATORS: command line option
 msgid "Do not perform device safety checks"
 msgstr "No realitzar les comprovacions de seguretat al dispositiu"
+
+#. TRANSLATORS: command line option
+msgid "Do not prompt for devices"
+msgstr "No demanis pels dispositius"
 
 #. TRANSLATORS: command line option
 msgid "Do not write to the history database"
@@ -1277,11 +1298,6 @@ msgstr "CET d'Intel actiu"
 msgid "Intel CET Enabled"
 msgstr "CET d'Intel habilitat"
 
-#. TRANSLATORS: Title: Direct Connect Interface (DCI) allows
-#. * debugging of Intel processors using the USB3 port
-msgid "Intel DCI debugger"
-msgstr "Depurador DCI d'Intel"
-
 #. TRANSLATORS: Title: SMAP = Supervisor Mode Access Prevention
 msgid "Intel SMAP"
 msgstr "SMAP d'Intel"
@@ -1516,6 +1532,14 @@ msgstr "Actualment, no hi ha cap remot habilitat, de manera que no hi ha metadad
 #. TRANSLATORS: no repositories to download from
 msgid "No remotes available"
 msgstr "No hi ha cap remot disponible"
+
+#. TRANSLATORS: this is an error string
+msgid "No updatable devices"
+msgstr "Dispositius no actualitzables"
+
+#. TRANSLATORS: this is an error string
+msgid "No updates available"
+msgstr "No hi ha cap actualització disponible"
 
 msgid "No updates available for remaining devices"
 msgstr "No hi ha cap actualització disponible per als dispositius restants"
@@ -1842,6 +1866,11 @@ msgstr "Està inhabilitada l'arrencada segura"
 msgid "Secure Boot enabled"
 msgstr "Està habilitada l'arrencada segura"
 
+#. TRANSLATORS: the %1 is a URL to a wiki page
+#, c-format
+msgid "See %s for more details."
+msgstr "Per a més detalls, vegeu %s."
+
 #. TRANSLATORS: %s is a link to a website
 #, c-format
 msgid "See %s for more information."
@@ -1941,6 +1970,10 @@ msgstr "Signa les dades enviades amb el certificat del client"
 
 msgid "Signature"
 msgstr "Signatura"
+
+#. TRANSLATORS: firmware is verified on-device the payload using strong crypto
+msgid "Signed Payload"
+msgstr "Part útil signada"
 
 #. TRANSLATORS: file size of the download
 msgid "Size"
@@ -2070,7 +2103,11 @@ msgstr "Reconstrucció PCR0 del TPM"
 
 #. TRANSLATORS: HSI event title
 msgid "TPM PCR0 reconstruction is invalid"
-msgstr "La reconstrucció PCR0 del TPM no es valida"
+msgstr "La reconstrucció PCR0 del TPM no és vàlida"
+
+#. TRANSLATORS: HSI event title
+msgid "TPM PCR0 reconstruction is now valid"
+msgstr "La reconstrucció PCR0 del TPM ara és vàlida"
 
 #. TRANSLATORS: Title: PCRs (Platform Configuration Registers) shouldn't be
 #. empty
@@ -2128,6 +2165,10 @@ msgstr "El rellotge del sistema no s'ha configurat correctament i pot fallar la 
 #. TRANSLATORS: naughty vendor
 msgid "The vendor did not supply any release notes."
 msgstr "El proveïdor no ha subministrat les notes de llançament."
+
+#. TRANSLATORS: now list devices with unfixed high-priority issues
+msgid "There are devices with issues:"
+msgstr "Hi ha dispositius amb problemes:"
 
 #. TRANSLATORS: nothing to show
 msgid "There are no blocked firmware files"
@@ -2284,6 +2325,10 @@ msgstr "Desmunta l'ESP."
 msgid "Unset the debugging flag during update"
 msgstr "No estableixis l'indicador de depuració durant l'actualització"
 
+#. TRANSLATORS: firmware payload is unsigned and it is possible to modify it
+msgid "Unsigned Payload"
+msgstr "Part útil sense signar"
+
 #. TRANSLATORS: error message
 #, c-format
 msgid "Unsupported daemon version %s, client version is %s"
@@ -2300,6 +2345,10 @@ msgstr "Actualitzable"
 #. TRANSLATORS: error message from last update attempt
 msgid "Update Error"
 msgstr "Error en actualitzar"
+
+#. TRANSLATORS: helpful image for the update
+msgid "Update Image"
+msgstr "Imatge d'actualització"
 
 #. TRANSLATORS: helpful messages from last update
 #. TRANSLATORS: helpful messages for the update

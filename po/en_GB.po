@@ -23,6 +23,12 @@ msgid_plural "%.0f minutes remaining"
 msgstr[0] "%.0f minute remaining"
 msgstr[1] "%.0f minutes remaining"
 
+#. TRANSLATORS: BMC refers to baseboard management controller which
+#. * is the device that updates all the other firmware on the system
+#, c-format
+msgid "%s BMC Update"
+msgstr "%s BMC Update"
+
 #. TRANSLATORS: battery refers to the system power source
 #, c-format
 msgid "%s Battery Update"
@@ -70,6 +76,12 @@ msgstr "%s Corporate ME Update"
 #, c-format
 msgid "%s Device Update"
 msgstr "%s Device Update"
+
+#. TRANSLATORS: Video Display refers to the laptop internal display or
+#. * external monitor
+#, c-format
+msgid "%s Display Update"
+msgstr "%s Display Update"
 
 #. TRANSLATORS: the EC is typically the keyboard controller chip,
 #. * the first %s is the device name, e.g. 'ThinkPad P50`
@@ -646,6 +658,11 @@ msgstr "Device will backup firmware before installing"
 msgid "Device will not re-appear after update completes"
 msgstr "Device will not re-appear after update completes"
 
+#. TRANSLATORS: the device has a reason it can't update, e.g. laptop lid
+#. closed
+msgid "Devices not currently updatable:"
+msgstr "Devices not currently updatable:"
+
 #. TRANSLATORS: a list of successful updates
 msgid "Devices that have been updated successfully:"
 msgstr "Devices that have been updated successfully:"
@@ -721,6 +738,10 @@ msgstr "Do not include timestamp prefix"
 #. TRANSLATORS: command line option
 msgid "Do not perform device safety checks"
 msgstr "Do not perform device safety checks"
+
+#. TRANSLATORS: command line option
+msgid "Do not prompt for devices"
+msgstr "Do not prompt for devices"
 
 #. TRANSLATORS: command line option
 msgid "Do not write to the history database"
@@ -832,6 +853,10 @@ msgstr "Encrypted"
 #. TRANSLATORS: Title: Memory contents are encrypted, e.g. Intel TME
 msgid "Encrypted RAM"
 msgstr "Encrypted RAM"
+
+#. TRANSLATORS: the vendor is no longer supporting the device
+msgid "End of life"
+msgstr "End of life"
 
 #. TRANSLATORS: command description
 msgid "Erase all firmware update history"
@@ -1076,6 +1101,10 @@ msgstr "Full Disk Encryption Detected"
 msgid "Full disk encryption secrets may be invalidated when updating"
 msgstr "Full disk encryption secrets may be invalidated when updating"
 
+#. TRANSLATORS: Title: if the part has been fused
+msgid "Fused platform"
+msgstr "Fused platform"
+
 #. TRANSLATORS: global ID common to all similar hardware
 msgid "GUID"
 msgid_plural "GUIDs"
@@ -1200,6 +1229,10 @@ msgstr "Install a firmware blob on a device"
 msgid "Install a firmware file on this hardware"
 msgstr "Install a firmware file on this hardware"
 
+#. TRANSLATORS: command description
+msgid "Install a specific firmware version on a device"
+msgstr "Install a specific firmware version on a device"
+
 msgid "Install old version of signed system firmware"
 msgstr "Install old version of signed system firmware"
 
@@ -1272,11 +1305,6 @@ msgstr "Intel CET Active"
 #. * enabled means supported by the processor
 msgid "Intel CET Enabled"
 msgstr "Intel CET Enabled"
-
-#. TRANSLATORS: Title: Direct Connect Interface (DCI) allows
-#. * debugging of Intel processors using the USB3 port
-msgid "Intel DCI debugger"
-msgstr "Intel DCI debugger"
 
 #. TRANSLATORS: Title: SMAP = Supervisor Mode Access Prevention
 msgid "Intel SMAP"
@@ -1513,6 +1541,14 @@ msgstr "No remotes are currently enabled so no metadata is available."
 msgid "No remotes available"
 msgstr "No remotes available"
 
+#. TRANSLATORS: this is an error string
+msgid "No updatable devices"
+msgstr "No updatable devices"
+
+#. TRANSLATORS: this is an error string
+msgid "No updates available"
+msgstr "No updates available"
+
 msgid "No updates available for remaining devices"
 msgstr "No updates available for remaining devices"
 
@@ -1599,6 +1635,10 @@ msgstr "Percentage complete"
 #. TRANSLATORS: prompt to apply the update
 msgid "Perform operation?"
 msgstr "Perform operation?"
+
+#. TRANSLATORS: Title: Allows debugging of parts using proprietary hardware
+msgid "Platform Debugging"
+msgstr "Platform Debugging"
 
 #. TRANSLATORS: 'recovery key' here refers to a code, rather than a physical
 #. metal thing
@@ -1770,6 +1810,10 @@ msgstr "Restarting device…"
 msgid "Return all the hardware IDs for the machine"
 msgstr "Return all the hardware IDs for the machine"
 
+#. TRANSLATORS: Title: if firmware enforces rollback protection
+msgid "Rollback protection"
+msgstr "Rollback protection"
+
 #. TRANSLATORS: this is shown in the MOTD
 msgid "Run `fwupdmgr get-upgrades` for more information."
 msgstr "Run `fwupdmgr get-upgrades` for more information."
@@ -1806,9 +1850,17 @@ msgstr "SPI BIOS region"
 msgid "SPI lock"
 msgstr "SPI lock"
 
+#. TRANSLATORS: Title: if hardware enforces control of SPI replays
+msgid "SPI replay protection"
+msgstr "SPI replay protection"
+
 #. TRANSLATORS: Title: SPI refers to the flash chip in the computer
 msgid "SPI write"
 msgstr "SPI write"
+
+#. TRANSLATORS: Title: if hardware enforces control of SPI writes
+msgid "SPI write protection"
+msgstr "SPI write protection"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "SUBSYSTEM DRIVER [DEVICE-ID|GUID]"
@@ -1837,6 +1889,11 @@ msgstr "Secure Boot disabled"
 #. TRANSLATORS: HSI event title
 msgid "Secure Boot enabled"
 msgstr "Secure Boot enabled"
+
+#. TRANSLATORS: the %1 is a URL to a wiki page
+#, c-format
+msgid "See %s for more details."
+msgstr "See %s for more details."
 
 #. TRANSLATORS: %s is a link to a website
 #, c-format
@@ -1938,6 +1995,10 @@ msgstr "Sign the uploaded data with the client certificate"
 msgid "Signature"
 msgstr "Signature"
 
+#. TRANSLATORS: firmware is verified on-device the payload using strong crypto
+msgid "Signed Payload"
+msgstr "Signed Payload"
+
 #. TRANSLATORS: file size of the download
 msgid "Size"
 msgstr "Size"
@@ -2026,6 +2087,10 @@ msgstr "Summary"
 msgid "Supported"
 msgstr "Supported"
 
+#. TRANSLATORS: Title: if fwupd supports HSI on this chip
+msgid "Supported CPU"
+msgstr "Supported CPU"
+
 #. TRANSLATORS: Is found in current metadata
 msgid "Supported on remote server"
 msgstr "Supported on remote server"
@@ -2067,6 +2132,10 @@ msgstr "TPM PCR0 reconstruction"
 #. TRANSLATORS: HSI event title
 msgid "TPM PCR0 reconstruction is invalid"
 msgstr "TPM PCR0 reconstruction is invalid"
+
+#. TRANSLATORS: HSI event title
+msgid "TPM PCR0 reconstruction is now valid"
+msgstr "TPM PCR0 reconstruction is now valid"
 
 #. TRANSLATORS: Title: PCRs (Platform Configuration Registers) shouldn't be
 #. empty
@@ -2124,6 +2193,10 @@ msgstr "The system clock has not been set correctly and downloading files may fa
 #. TRANSLATORS: naughty vendor
 msgid "The vendor did not supply any release notes."
 msgstr "The vendor did not supply any release notes."
+
+#. TRANSLATORS: now list devices with unfixed high-priority issues
+msgid "There are devices with issues:"
+msgstr "There are devices with issues:"
 
 #. TRANSLATORS: nothing to show
 msgid "There are no blocked firmware files"
@@ -2280,6 +2353,10 @@ msgstr "Unmounts the ESP"
 msgid "Unset the debugging flag during update"
 msgstr "Unset the debugging flag during update"
 
+#. TRANSLATORS: firmware payload is unsigned and it is possible to modify it
+msgid "Unsigned Payload"
+msgstr "Unsigned Payload"
+
 #. TRANSLATORS: error message
 #, c-format
 msgid "Unsupported daemon version %s, client version is %s"
@@ -2296,6 +2373,10 @@ msgstr "Updatable"
 #. TRANSLATORS: error message from last update attempt
 msgid "Update Error"
 msgstr "Update Error"
+
+#. TRANSLATORS: helpful image for the update
+msgid "Update Image"
+msgstr "Update Image"
 
 #. TRANSLATORS: helpful messages from last update
 #. TRANSLATORS: helpful messages for the update
@@ -2468,6 +2549,10 @@ msgstr "[DEVICE-ID|GUID]"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[DEVICE-ID|GUID] [BRANCH]"
 msgstr "[DEVICE-ID|GUID] [BRANCH]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[DEVICE-ID|GUID] [VERSION]"
+msgstr "[DEVICE-ID|GUID] [VERSION]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[FILE FILE_SIG REMOTE-ID]"

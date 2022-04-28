@@ -1173,11 +1173,6 @@ msgstr "Intel CET ativo"
 msgid "Intel CET Enabled"
 msgstr "Ativado para Intel CET"
 
-#. TRANSLATORS: Title: Direct Connect Interface (DCI) allows
-#. * debugging of Intel processors using the USB3 port
-msgid "Intel DCI debugger"
-msgstr "Depurador Intel DCI"
-
 #. TRANSLATORS: Title: SMAP = Supervisor Mode Access Prevention
 msgid "Intel SMAP"
 msgstr "Intel SMAP"

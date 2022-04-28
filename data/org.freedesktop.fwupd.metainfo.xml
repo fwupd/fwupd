@@ -34,6 +34,76 @@
     <binary>fwupdagent</binary>
   </provides>
   <releases>
+    <release version="1.8.0" date="2022-04-30">
+      <description>
+        <p>
+          This release adds the following features:
+        </p>
+        <ul>
+          <li>Add a new attribute for CPUs supported by HSI</li>
+          <li>Add coSWID and uSWID parsers to libfwupdplugin for initial SBoM support</li>
+          <li>Add new HSI attributes for the AMD PSP and various other system protections</li>
+          <li>Add the runtime fwupd-efi version as a firmware requirement</li>
+          <li>Allow 'fwupdmgr install' to install a specified firmware version</li>
+          <li>Allow overriding the detected machine type for debugging and development</li>
+          <li>Restart the BMC after installing BCM updates</li>
+          <li>Show the device serial number and instance IDs by default</li>
+          <li>Support dumping the MTD image to a firmware blob</li>
+          <li>Take a device inhibit when updating a device</li>
+          <li>Use the CFI manufacturer ID to set the vendor</li>
+          <li>Use the correct icon automatically for more hardware</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Add signed-payload metadata for more devices</li>
+          <li>Allow Capsule-on-Disk to work in more cases</li>
+          <li>Allow quirking the detected flashrom flash size</li>
+          <li>Check for os-release on FWUPD_SYSCONFDIR</li>
+          <li>Check the alignment when parsing raw firmware</li>
+          <li>Check the update protocol exists when checking requirements</li>
+          <li>Convert the build system to use meson tristate features</li>
+          <li>Correctly probe USB-2 hubs with more than 7 ports</li>
+          <li>Do not add the Windows compatibility ID to capsule devices</li>
+          <li>Do not allow the DBX update for specific motherboards</li>
+          <li>Do not expect KernelCmdline on Windows</li>
+          <li>Do not export USB4 host controllers as updatable if they don't have unique GUIDs</li>
+          <li>Do not fallback to audio-card and use a more suitable icon for USB hubs</li>
+          <li>Do not hardcode the libexecdir to /usr/libexec</li>
+          <li>Do not leak child processes when canceling</li>
+          <li>Do not show unconnected or unreachable devices in the client tools</li>
+          <li>Do not throw away the TPM eventlog when uploading to the LVFS</li>
+          <li>Do not use /var/run for the socket</li>
+          <li>Export the version_lowest_raw value correctly</li>
+          <li>Fix build for MacOS and add to the CI matrix</li>
+          <li>Fix eventlog replay for Intel TXT machines</li>
+          <li>Fix several small memory leaks</li>
+          <li>Fix writing large mtd images than 10kb</li>
+          <li>Ignore MTD devices that report EPERM on open</li>
+          <li>Mark the ME region device locked if it is read only</li>
+          <li>Never send the DeviceChanged signal with old data</li>
+          <li>Only show the CLI time remaining for predictable status phases</li>
+          <li>Respect the NO_COLOR env variable</li>
+          <li>Return the correct error when there is no GPIO device to open</li>
+          <li>Support the new UPower PENDING device states</li>
+        </ul>
+        <p>This release adds support for the following hardware:</p>
+        <ul>
+          <li>CH341A SPI programmer</li>
+          <li>Corsair Sabre RGB PRO and Slipstream USB receiver</li>
+          <li>Genesys GL3521 and GL3590 hubs</li>
+          <li>Google Servo Dock</li>
+          <li>Logitech M550, M650 and K650</li>
+          <li>More ELAN fingerprint readers</li>
+          <li>More integrated Wacom panels</li>
+          <li>More NovaCustom machines</li>
+          <li>More StaLabs StarLite machines</li>
+          <li>More Tuxedo laptops</li>
+          <li>Quectel EM05</li>
+          <li>FlatFrog devices</li>
+          <li>System76 launch_lite_1</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.7.6" date="2022-02-25">
       <description>
         <p>

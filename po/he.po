@@ -4,7 +4,7 @@
 #
 # Translators:
 # dhead666 <myfoolishgames@gmail.com>, 2015
-# GenghisKhan <genghiskhan@gmx.ca>, 2015
+# gk <genghiskhan@gmx.ca>, 2015
 # Omer I.S. <omeritzicschwartz@gmail.com>, 2021
 # Yaron Shahrabani <sh.yaron@gmail.com>, 2021
 msgid ""

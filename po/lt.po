@@ -770,11 +770,6 @@ msgstr "Įdiegiamas programinės aparatinės įrangos atnaujinimas…"
 msgid "Installing on %s…"
 msgstr "Įdiegiama ties %s…"
 
-#. TRANSLATORS: Title: Direct Connect Interface (DCI) allows
-#. * debugging of Intel processors using the USB3 port
-msgid "Intel DCI debugger"
-msgstr "Intel DCI derintuvė"
-
 #. TRANSLATORS: Device cannot be removed easily
 msgid "Internal device"
 msgstr "Vidinis įrenginys"

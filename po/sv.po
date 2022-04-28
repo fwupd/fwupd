@@ -28,6 +28,12 @@ msgid_plural "%.0f minutes remaining"
 msgstr[0] "%.0f minut kvarstår"
 msgstr[1] "%.0f minuter kvarstår"
 
+#. TRANSLATORS: BMC refers to baseboard management controller which
+#. * is the device that updates all the other firmware on the system
+#, c-format
+msgid "%s BMC Update"
+msgstr "%s BMC-uppdatering"
+
 #. TRANSLATORS: battery refers to the system power source
 #, c-format
 msgid "%s Battery Update"
@@ -75,6 +81,12 @@ msgstr "%s Corporate ME-uppdatering"
 #, c-format
 msgid "%s Device Update"
 msgstr "%s-enhetsuppdatering"
+
+#. TRANSLATORS: Video Display refers to the laptop internal display or
+#. * external monitor
+#, c-format
+msgid "%s Display Update"
+msgstr "%s-skärmuppdatering"
 
 #. TRANSLATORS: the EC is typically the keyboard controller chip,
 #. * the first %s is the device name, e.g. 'ThinkPad P50`
@@ -322,11 +334,11 @@ msgstr "Alternativ gren"
 
 #. TRANSLATORS: explain why we want to reboot
 msgid "An update requires a reboot to complete."
-msgstr "En uppdatering kräver en omstart för att färdigställas."
+msgstr "En uppdatering kräver en omstart för att slutföras."
 
 #. TRANSLATORS: explain why we want to shutdown
 msgid "An update requires the system to shutdown to complete."
-msgstr "En uppdatering kräver att systemet stängs ned för att färdigställas."
+msgstr "En uppdatering kräver att systemet stängs ned för att slutföras."
 
 #. TRANSLATORS: command line option
 msgid "Answer yes to all questions"
@@ -621,7 +633,7 @@ msgstr "Enheten kan inte nås"
 
 #. TRANSLATORS: Device remains usable during update
 msgid "Device is usable for the duration of the update"
-msgstr "Enhet är oanvändbar under tiden som uppdateringen pågår"
+msgstr "Enhet går använda under tiden som uppdateringen pågår"
 
 #. TRANSLATORS: this is when a device is hotplugged
 msgid "Device removed:"
@@ -633,7 +645,7 @@ msgstr "Enhet genomför uppdatering i steg"
 
 #. TRANSLATORS: there is more than one supplier of the firmware
 msgid "Device supports switching to a different branch of firmware"
-msgstr "Enheten stöder byte till en annan gren av fast programvara"
+msgstr "Enhet stöder byte till en annan gren av fast programvara"
 
 #. TRANSLATORS: command line option
 msgid "Device update method"
@@ -650,6 +662,11 @@ msgstr "Enheten kommer säkerhetskopiera fast programvara innan den installeras"
 #. TRANSLATORS: Device will not return after update completes
 msgid "Device will not re-appear after update completes"
 msgstr "Enhet kommer inte att dyka upp igen efter att uppdateringen färdigställs"
+
+#. TRANSLATORS: the device has a reason it can't update, e.g. laptop lid
+#. closed
+msgid "Devices not currently updatable:"
+msgstr "Enheter som inte går att uppdatera för tillfället:"
 
 #. TRANSLATORS: a list of successful updates
 msgid "Devices that have been updated successfully:"
@@ -681,7 +698,7 @@ msgstr "Enheter med den senaste tillgängliga uppdateringen för fast programvar
 
 #. TRANSLATORS: this is for the device tests
 msgid "Did not find any devices with matching GUIDs"
-msgstr "Hittade inga enheter med matchande GUID:n"
+msgstr "Hittade inga enheter med matchande GUID"
 
 #. TRANSLATORS: Suffix: the HSI result
 #. TRANSLATORS: Plugin is inactive and not used
@@ -726,6 +743,10 @@ msgstr "Inkludera inte tidsstämpelprefix"
 #. TRANSLATORS: command line option
 msgid "Do not perform device safety checks"
 msgstr "Utför inte säkerhetskontroller för enheter"
+
+#. TRANSLATORS: command line option
+msgid "Do not prompt for devices"
+msgstr "Fråga inte om enheter"
 
 #. TRANSLATORS: command line option
 msgid "Do not write to the history database"
@@ -1089,7 +1110,7 @@ msgstr "Krypteringshemligheter för hel disk kan göras ogiltiga vid uppdatering
 msgid "GUID"
 msgid_plural "GUIDs"
 msgstr[0] "GUID"
-msgstr[1] "GUID:n"
+msgstr[1] "GUID"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgctxt "A single GUID"
@@ -1175,7 +1196,7 @@ msgstr "IOMMU-enhetsskydd aktiverat"
 
 #. TRANSLATORS: daemon is inactive
 msgid "Idle…"
-msgstr "Väntar…"
+msgstr "Inaktiv…"
 
 #. TRANSLATORS: command line option
 msgid "Ignore SSL strict checks when downloading files"
@@ -1281,11 +1302,6 @@ msgstr "Intel CET aktiv"
 #. * enabled means supported by the processor
 msgid "Intel CET Enabled"
 msgstr "Intel CET aktiverad"
-
-#. TRANSLATORS: Title: Direct Connect Interface (DCI) allows
-#. * debugging of Intel processors using the USB3 port
-msgid "Intel DCI debugger"
-msgstr "Intel DCI-felsökare"
 
 #. TRANSLATORS: Title: SMAP = Supervisor Mode Access Prevention
 msgid "Intel SMAP"
@@ -1522,6 +1538,14 @@ msgstr "Inga fjärrkällor är aktiverade för närvarande, så ingen metadata �
 msgid "No remotes available"
 msgstr "Inga fjärrkällor tillgängliga"
 
+#. TRANSLATORS: this is an error string
+msgid "No updatable devices"
+msgstr "Inga enheter går att uppdatera"
+
+#. TRANSLATORS: this is an error string
+msgid "No updates available"
+msgstr "Inga uppdateringar tillgängliga"
+
 msgid "No updates available for remaining devices"
 msgstr "Inga uppdateringar tillgängliga för kvarvarande enheter"
 
@@ -1745,7 +1769,7 @@ msgstr "Rapport-URI"
 
 #. TRANSLATORS: Has been reported to a metadata server
 msgid "Reported to remote server"
-msgstr "Rapporterade till fjärrserver"
+msgstr "Rapporterat till fjärrserver"
 
 #. TRANSLATORS: the user is using Gentoo/Arch and has screwed something up
 msgid "Required efivarfs filesystem was not found"
@@ -1847,6 +1871,11 @@ msgstr "Secure Boot inaktiverad"
 msgid "Secure Boot enabled"
 msgstr "Secure Boot aktiverad"
 
+#. TRANSLATORS: the %1 is a URL to a wiki page
+#, c-format
+msgid "See %s for more details."
+msgstr "Se %s för mer detaljer."
+
 #. TRANSLATORS: %s is a link to a website
 #, c-format
 msgid "See %s for more information."
@@ -1946,6 +1975,10 @@ msgstr "Signera skickade data med klientcertifikatet"
 
 msgid "Signature"
 msgstr "Signatur"
+
+#. TRANSLATORS: firmware is verified on-device the payload using strong crypto
+msgid "Signed Payload"
+msgstr "Signerad nyttolast"
 
 #. TRANSLATORS: file size of the download
 msgid "Size"
@@ -2051,11 +2084,11 @@ msgstr "Gå-till-vänteläge-i-ram"
 #. * %1 is the old branch name, %2 is the new branch name
 #, c-format
 msgid "Switch branch from %s to %s?"
-msgstr "Ändra gren från %s till %s?"
+msgstr "Byt gren från %s till %s?"
 
 #. TRANSLATORS: command description
 msgid "Switch the firmware branch on the device"
-msgstr "Ändra gren för fast programvara på enheten"
+msgstr "Byt gren för fast programvara på enheten"
 
 #. TRANSLATORS: command description
 msgid "Sync firmware versions to the host best known configuration"
@@ -2076,6 +2109,10 @@ msgstr "TPM PCR0-rekonstruktion"
 #. TRANSLATORS: HSI event title
 msgid "TPM PCR0 reconstruction is invalid"
 msgstr "TPM PCR0-rekonstruktion är ogiltig"
+
+#. TRANSLATORS: HSI event title
+msgid "TPM PCR0 reconstruction is now valid"
+msgstr "TPM PCR0-rekonstruktion är nu giltig"
 
 #. TRANSLATORS: Title: PCRs (Platform Configuration Registers) shouldn't be
 #. empty
@@ -2124,7 +2161,7 @@ msgstr "Enhetsversionen matchade inte: fick %s, %s förväntades"
 #. TRANSLATORS: %1 is the firmware vendor, %2 is the device vendor name
 #, c-format
 msgid "The firmware from %s is not supplied by %s, the hardware vendor."
-msgstr "Fast programvara från %s levereras inte av %s, hårdvaruleverantören."
+msgstr "Fast programvara från %s levereras inte av %s, hårdvarutillverkaren."
 
 #. TRANSLATORS: try to help
 msgid "The system clock has not been set correctly and downloading files may fail."
@@ -2133,6 +2170,10 @@ msgstr "Systemklockan har inte ställts in korrekt och hämtning av filer kan mi
 #. TRANSLATORS: naughty vendor
 msgid "The vendor did not supply any release notes."
 msgstr "Tillverkaren tillhandahöll inte några kommentarer till utgåvan."
+
+#. TRANSLATORS: now list devices with unfixed high-priority issues
+msgid "There are devices with issues:"
+msgstr "Det finns enheter med problem:"
 
 #. TRANSLATORS: nothing to show
 msgid "There are no blocked firmware files"
@@ -2289,6 +2330,10 @@ msgstr "Avmonterar ESP"
 msgid "Unset the debugging flag during update"
 msgstr "Ta bort felsökningsflaggan under uppdatering"
 
+#. TRANSLATORS: firmware payload is unsigned and it is possible to modify it
+msgid "Unsigned Payload"
+msgstr "Osignerad nyttolast"
+
 #. TRANSLATORS: error message
 #, c-format
 msgid "Unsupported daemon version %s, client version is %s"
@@ -2305,6 +2350,10 @@ msgstr "Uppdateringsbar"
 #. TRANSLATORS: error message from last update attempt
 msgid "Update Error"
 msgstr "Uppdateringsfel"
+
+#. TRANSLATORS: helpful image for the update
+msgid "Update Image"
+msgstr "Uppdatera avbild"
 
 #. TRANSLATORS: helpful messages from last update
 #. TRANSLATORS: helpful messages for the update
