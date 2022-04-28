@@ -1057,7 +1057,7 @@ fu_common_spawn_timeout_func(void)
 static void
 fu_common_endian_func(void)
 {
-	guint8 buf[2];
+	guint8 buf[3];
 
 	fu_common_write_uint16(buf, 0x1234, G_LITTLE_ENDIAN);
 	g_assert_cmpint(buf[0], ==, 0x34);
@@ -1068,6 +1068,18 @@ fu_common_endian_func(void)
 	g_assert_cmpint(buf[0], ==, 0x12);
 	g_assert_cmpint(buf[1], ==, 0x34);
 	g_assert_cmpint(fu_common_read_uint16(buf, G_BIG_ENDIAN), ==, 0x1234);
+
+	fu_common_write_uint24(buf, 0x123456, G_LITTLE_ENDIAN);
+	g_assert_cmpint(buf[0], ==, 0x56);
+	g_assert_cmpint(buf[1], ==, 0x34);
+	g_assert_cmpint(buf[2], ==, 0x12);
+	g_assert_cmpint(fu_common_read_uint24(buf, G_LITTLE_ENDIAN), ==, 0x123456);
+
+	fu_common_write_uint24(buf, 0x123456, G_BIG_ENDIAN);
+	g_assert_cmpint(buf[0], ==, 0x12);
+	g_assert_cmpint(buf[1], ==, 0x34);
+	g_assert_cmpint(buf[2], ==, 0x56);
+	g_assert_cmpint(fu_common_read_uint24(buf, G_BIG_ENDIAN), ==, 0x123456);
 }
 
 static GBytes *

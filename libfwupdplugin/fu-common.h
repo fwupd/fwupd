@@ -365,11 +365,15 @@ fu_byte_array_compare(GByteArray *buf1, GByteArray *buf2, GError **error);
 void
 fu_common_write_uint16(guint8 *buf, guint16 val_native, FuEndianType endian);
 void
+fu_common_write_uint24(guint8 *buf, guint32 val_native, FuEndianType endian);
+void
 fu_common_write_uint32(guint8 *buf, guint32 val_native, FuEndianType endian);
 void
 fu_common_write_uint64(guint8 *buf, guint64 val_native, FuEndianType endian);
 guint16
 fu_common_read_uint16(const guint8 *buf, FuEndianType endian);
+guint32
+fu_common_read_uint24(const guint8 *buf, FuEndianType endian);
 guint32
 fu_common_read_uint32(const guint8 *buf, FuEndianType endian);
 guint64
