@@ -743,6 +743,7 @@ fu_firmware_parse_full(FuFirmware *self,
 		       GError **error)
 {
 	FuFirmwareClass *klass = FU_FIRMWARE_GET_CLASS(self);
+	FuFirmwarePrivate *priv = GET_PRIVATE(self);
 
 	g_return_val_if_fail(FU_IS_FIRMWARE(self), FALSE);
 	g_return_val_if_fail(fw != NULL, FALSE);
@@ -775,6 +776,19 @@ fu_firmware_parse_full(FuFirmware *self,
 	}
 	if (klass->parse != NULL)
 		return klass->parse(self, fw, addr_start, addr_end, flags, error);
+
+	/* verify alignment */
+	if (g_bytes_get_size(fw) % (1ull << priv->alignment) != 0) {
+		g_autofree gchar *str = NULL;
+		str = g_format_size_full(1ull << priv->alignment, G_FORMAT_SIZE_IEC_UNITS);
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "raw firmware is not aligned to 0x%x (%s)",
+			    (guint)(1ull << priv->alignment),
+			    str);
+		return FALSE;
+	}
 
 	/* just add entire blob */
 	fu_firmware_set_bytes(self, fw);
@@ -1603,6 +1617,7 @@ fu_firmware_export(FuFirmware *self, FuFirmwareExportFlags flags, XbBuilderNode 
 	fu_xmlb_builder_insert_kx(bn, "version_raw", priv->version_raw);
 	fu_xmlb_builder_insert_kx(bn, "addr", priv->addr);
 	fu_xmlb_builder_insert_kx(bn, "offset", priv->offset);
+	fu_xmlb_builder_insert_kx(bn, "alignment", priv->alignment);
 	fu_xmlb_builder_insert_kx(bn, "size", priv->size);
 	fu_xmlb_builder_insert_kv(bn, "filename", priv->filename);
 	if (priv->bytes != NULL) {
