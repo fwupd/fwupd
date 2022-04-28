@@ -104,7 +104,7 @@ fu_dfu_csr_device_get_status(FuDfuCsrDevice *self, GError **error)
 	}
 
 	self->dfu_state = buf[5];
-	self->dnload_timeout = buf[2] + (((guint32)buf[3]) << 8) + (((guint32)buf[4]) << 16);
+	self->dnload_timeout = fu_common_read_uint24(&buf[2], G_LITTLE_ENDIAN);
 	g_debug("timeout=%" G_GUINT32_FORMAT, self->dnload_timeout);
 	g_debug("state=%s", fu_dfu_state_to_string(self->dfu_state));
 	g_debug("status=%s", fu_dfu_status_to_string(buf[6]));

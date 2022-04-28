@@ -878,6 +878,34 @@ fu_common_write_uint16(guint8 *buf, guint16 val_native, FuEndianType endian)
 }
 
 /**
+ * fu_common_write_uint24:
+ * @buf: a writable buffer
+ * @val_native: a value in host byte-order
+ * @endian: an endian type, e.g. %G_LITTLE_ENDIAN
+ *
+ * Writes a value to a buffer using a specified endian.
+ *
+ * Since: 1.8.0
+ **/
+void
+fu_common_write_uint24(guint8 *buf, guint32 val_native, FuEndianType endian)
+{
+	guint32 val_hw;
+	switch (endian) {
+	case G_BIG_ENDIAN:
+		val_hw = GUINT32_TO_BE(val_native);
+		memcpy(buf, ((const guint8 *)&val_hw) + 0x1, 0x3);
+		break;
+	case G_LITTLE_ENDIAN:
+		val_hw = GUINT32_TO_LE(val_native);
+		memcpy(buf, &val_hw, 0x3);
+		break;
+	default:
+		g_assert_not_reached();
+	}
+}
+
+/**
  * fu_common_write_uint32:
  * @buf: a writable buffer
  * @val_native: a value in host byte-order
@@ -953,6 +981,37 @@ fu_common_read_uint16(const guint8 *buf, FuEndianType endian)
 		break;
 	case G_LITTLE_ENDIAN:
 		val_native = GUINT16_FROM_LE(val_hw);
+		break;
+	default:
+		g_assert_not_reached();
+	}
+	return val_native;
+}
+
+/**
+ * fu_common_read_uint24:
+ * @buf: a readable buffer
+ * @endian: an endian type, e.g. %G_LITTLE_ENDIAN
+ *
+ * Read a value from a buffer using a specified endian.
+ *
+ * Returns: a value in host byte-order
+ *
+ * Since: 1.8.0
+ **/
+guint32
+fu_common_read_uint24(const guint8 *buf, FuEndianType endian)
+{
+	guint32 val_hw = 0;
+	guint32 val_native;
+	switch (endian) {
+	case G_BIG_ENDIAN:
+		memcpy(((guint8 *)&val_hw) + 0x1, buf, 0x3);
+		val_native = GUINT32_FROM_BE(val_hw);
+		break;
+	case G_LITTLE_ENDIAN:
+		memcpy(&val_hw, buf, 0x3);
+		val_native = GUINT32_FROM_LE(val_hw);
 		break;
 	default:
 		g_assert_not_reached();
