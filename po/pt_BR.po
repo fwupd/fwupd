@@ -7,7 +7,7 @@
 # Derek W. Stavis <dekestavis@gmail.com>, 2016
 # Derek W. Stavis <dekestavis@gmail.com>, 2015-2016
 # Rafael Fontenelle <rafaelff@gnome.org>, 2017-2018
-# Rafael Fontenelle <rffontenelle@gmail.com>, 2015-2021
+# Rafael Fontenelle <rffontenelle@gmail.com>, 2015-2022
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
@@ -25,6 +25,12 @@ msgid "%.0f minute remaining"
 msgid_plural "%.0f minutes remaining"
 msgstr[0] "%.0f minuto restante"
 msgstr[1] "%.0f minutos restantes"
+
+#. TRANSLATORS: BMC refers to baseboard management controller which
+#. * is the device that updates all the other firmware on the system
+#, c-format
+msgid "%s BMC Update"
+msgstr "Atualização de BMC para %s"
 
 #. TRANSLATORS: battery refers to the system power source
 #, c-format
@@ -73,6 +79,12 @@ msgstr "Atualização corporativa de ME para %s"
 #, c-format
 msgid "%s Device Update"
 msgstr "Atualização do dispositivo %s"
+
+#. TRANSLATORS: Video Display refers to the laptop internal display or
+#. * external monitor
+#, c-format
+msgid "%s Display Update"
+msgstr "Atualização de tela para %s"
 
 #. TRANSLATORS: the EC is typically the keyboard controller chip,
 #. * the first %s is the device name, e.g. 'ThinkPad P50`
@@ -143,6 +155,26 @@ msgstr "Atualização de %s"
 msgid "%s and all connected devices may not be usable while updating."
 msgstr "%s e todos os dispositivos conectados não podem ser usados durante a atualização."
 
+#. TRANSLATORS: %1 refers to some kind of security test, e.g. "Encrypted RAM".
+#. %2 refers to a result value, e.g. "Invalid"
+#, c-format
+msgid "%s appeared: %s"
+msgstr "%s apareceu: %s"
+
+#. TRANSLATORS: %1 refers to some kind of security test, e.g. "UEFI platform
+#. key".
+#. * %2 and %3 refer to results value, e.g. "Valid" and "Invalid"
+#, c-format
+msgid "%s changed: %s → %s"
+msgstr "%s alterado: %s → %s"
+
+#. TRANSLATORS: %1 refers to some kind of security test, e.g. "SPI BIOS
+#. region".
+#. %2 refers to a result value, e.g. "Invalid"
+#, c-format
+msgid "%s disappeared: %s"
+msgstr "%s desapareceu: %s"
+
 #. TRANSLATORS: Title: %s is ME kind, e.g. CSME/TXT
 #, c-format
 msgid "%s manufacturing mode"
@@ -189,6 +221,13 @@ msgid_plural "%u devices have a firmware upgrade available."
 msgstr[0] " %u dispositivo tem uma atualização de firmware disponível."
 msgstr[1] "%u dispositivos têm uma atualização de firmware disponível."
 
+#. TRANSLATORS: this is shown in the MOTD
+#, c-format
+msgid "%u device is not the best known configuration."
+msgid_plural "%u devices are not the best known configuration."
+msgstr[0] "%u dispositivo não é a configuração mais conhecida."
+msgstr[1] "%u dispositivos não são a configuração mais conhecida."
+
 #. TRANSLATORS: duration in minutes
 #, c-format
 msgid "%u hour"
@@ -220,6 +259,10 @@ msgstr[1] "%u segundos"
 #. TRANSLATORS: this is shown as a suffix for obsoleted tests
 msgid "(obsoleted)"
 msgstr "(obsoleto)"
+
+#. TRANSLATORS: HSI event title
+msgid "A TPM PCR is now an invalid value"
+msgstr "Um PCR de TPM é agora um valor inválido"
 
 #. TRANSLATORS: the user needs to do something, e.g. remove the device
 msgid "Action Required:"
@@ -257,6 +300,14 @@ msgstr "Concordar e habilitar o remoto?"
 msgid "Alias to %s"
 msgstr "Atalho para %s"
 
+#. TRANSLATORS: HSI event title
+msgid "All TPM PCRs are now valid"
+msgstr "Todos PCRs de TPM são agora válidos"
+
+#. TRANSLATORS: HSI event title
+msgid "All TPM PCRs are valid"
+msgstr "Todos PCRs de TPM são válidos"
+
 #. TRANSLATORS: on some systems certain devices have to have matching
 #. versions,
 #. * e.g. the EFI driver for a given network card cannot be different
@@ -274,6 +325,10 @@ msgstr "Permite reinstalar versões de firmware existentes"
 #. TRANSLATORS: command line option
 msgid "Allow switching firmware branch"
 msgstr "Permite alternar a ramificação do firmware"
+
+#. TRANSLATORS: is not the main firmware stream
+msgid "Alternate branch"
+msgstr "Ramificação alternativa"
 
 #. TRANSLATORS: explain why we want to reboot
 msgid "An update requires a reboot to complete."
@@ -328,11 +383,11 @@ msgstr "Os detalhes de autenticação são necessários"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to downgrade the firmware on a removable device"
-msgstr "Autenticação é necessária para fazer downgrade da versão do firmware em um dispositivo removível"
+msgstr "Autenticação é necessária para desatualizar a versão do firmware em um dispositivo removível"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to downgrade the firmware on this machine"
-msgstr "Autenticação é necessária para fazer downgrade da versão do firmware nesta máquina"
+msgstr "Autenticação é necessária para desatualizar a versão do firmware nesta máquina"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify a configured remote used for firmware updates"
@@ -392,6 +447,10 @@ msgstr "Vincula novo driver de kernel"
 #. TRANSLATORS: there follows a list of hashes
 msgid "Blocked firmware files:"
 msgstr "Arquivos de firmware bloqueados:"
+
+#. TRANSLATORS: version cannot be installed due to policy
+msgid "Blocked version"
+msgstr "Versão bloqueada"
 
 #. TRANSLATORS: we will not offer this firmware to the user
 msgid "Blocking firmware:"
@@ -474,6 +533,10 @@ msgstr "Limpa os resultados da última atualização"
 msgid "Command not found"
 msgstr "Comando não encontrado"
 
+#. TRANSLATORS: is not supported by the vendor
+msgid "Community supported"
+msgstr "Suporte mantido pela comunidade"
+
 #. TRANSLATORS: command description
 msgid "Convert a firmware file"
 msgstr "Converte um arquivo de firmware"
@@ -521,6 +584,12 @@ msgstr "Modo desanexar ao gerenciador de boot"
 #. TRANSLATORS: more details about the update link
 msgid "Details"
 msgstr "Detalhes"
+
+#. TRANSLATORS: the best known configuration is a set of software that we know
+#. works well
+#. * together. In the OEM and ODM industries it is often called a BKC
+msgid "Deviate from the best known configuration?"
+msgstr "Desviar da configuração mais conhecida?"
 
 #. TRANSLATORS: description of device ability
 msgid "Device Flags"
@@ -592,6 +661,11 @@ msgstr "O dispositivo fará backup do firmware antes de instalar"
 msgid "Device will not re-appear after update completes"
 msgstr "O dispositivo não aparecerá novamente após a atualização ser concluída"
 
+#. TRANSLATORS: the device has a reason it can't update, e.g. laptop lid
+#. closed
+msgid "Devices not currently updatable:"
+msgstr "Dispositivos não atualizáveis:"
+
 #. TRANSLATORS: a list of successful updates
 msgid "Devices that have been updated successfully:"
 msgstr "Dispositivos que foram atualizados com sucesso:"
@@ -619,6 +693,10 @@ msgstr "Dispositivos com nenhuma atualização de firmware disponível:"
 #. * available
 msgid "Devices with the latest available firmware version:"
 msgstr "Dispositivos com a versão mais recente do firmware disponível:"
+
+#. TRANSLATORS: this is for the device tests
+msgid "Did not find any devices with matching GUIDs"
+msgstr "Não foi encontrado qualquer dispositivo com GUID correspondente"
 
 #. TRANSLATORS: Suffix: the HSI result
 #. TRANSLATORS: Plugin is inactive and not used
@@ -665,6 +743,10 @@ msgid "Do not perform device safety checks"
 msgstr "Não realiza verificações de segurança de dispositivo"
 
 #. TRANSLATORS: command line option
+msgid "Do not prompt for devices"
+msgstr "Não solicita dispositivos"
+
+#. TRANSLATORS: command line option
 msgid "Do not write to the history database"
 msgstr "Não escreve no banco de dados de histórico"
 
@@ -693,11 +775,11 @@ msgstr "Feito!"
 #. * %1 is the device name and %2 and %3 are version strings
 #, c-format
 msgid "Downgrade %s from %s to %s?"
-msgstr "Fazer downgrade %s de %s para %s?"
+msgstr "Desatualizar %s de %s para %s?"
 
 #. TRANSLATORS: command description
 msgid "Downgrades the firmware on a device"
-msgstr "Faz downgrade da versão do firmware em um dispositivo"
+msgstr "Desatualiza a versão do firmware em um dispositivo"
 
 #. TRANSLATORS: the first replacement is a display name
 #. * e.g. "ColorHugALS" and the second and third are
@@ -752,6 +834,10 @@ msgstr "Habilitado"
 msgid "Enabled fwupdate debugging"
 msgstr "Depuração de fwupdate habilitada"
 
+#. TRANSLATORS: Plugin is active only if hardware is found
+msgid "Enabled if hardware matches"
+msgstr "Habilitado se o hardware corresponder"
+
 #. TRANSLATORS: command description
 msgid "Enables a given remote"
 msgstr "Habilita um remoto dado"
@@ -770,6 +856,10 @@ msgstr "Criptografado"
 #. TRANSLATORS: Title: Memory contents are encrypted, e.g. Intel TME
 msgid "Encrypted RAM"
 msgstr "RAM criptografada"
+
+#. TRANSLATORS: the vendor is no longer supporting the device
+msgid "End of life"
+msgstr "Fim de vida"
 
 #. TRANSLATORS: command description
 msgid "Erase all firmware update history"
@@ -828,6 +918,10 @@ msgid "FILENAME DEVICE-ID"
 msgstr "NOME-DE-ARQUIVO ID-DISPOSITIVO"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME OFFSET DATA [FIRMWARE-TYPE]"
+msgstr "NOME-DE-ARQUIVO DESLOCAMENTO DADOS [TIPO-DO-FIRMWARE]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME [DEVICE-ID|GUID]"
 msgstr "NOME-DE-ARQUIVO [ID-DISPOSITIVO|GUID]"
 
@@ -838,6 +932,10 @@ msgstr "NOME-DE-ARQUIVO [TIPO-FIRMWARE]"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME-SRC FILENAME-DST [FIRMWARE-TYPE-SRC] [FIRMWARE-TYPE-DST]"
 msgstr "NOME-DE-ARQUIVO-ORIG NOME-DE-ARQUIVO-DEST [TIPO-FIRMWARE-ORIG] [TIPO-FIRMWARE-DEST]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME|CHECKSUM1[,CHECKSUM2][,CHECKSUM3]"
+msgstr "NOME-DE-ARQUIVO|SOMA-VERIFICAÇÃO1[,SOMA-VERIFICAÇÃO2][,SOMA-VERIFICAÇÃO3]"
 
 #. TRANSLATORS: Suffix: the fallback HSI result
 #. TRANSLATORS: the update state of the specific device
@@ -997,6 +1095,15 @@ msgstr "Força a ação ignorando todos avisos"
 msgid "Found"
 msgstr "Encontrado"
 
+#. TRANSLATORS: title text, shown as a warning
+msgid "Full Disk Encryption Detected"
+msgstr "Criptografia de disco completo detectada"
+
+#. TRANSLATORS: we might ask the user the recovery key when next booting
+#. Windows
+msgid "Full disk encryption secrets may be invalidated when updating"
+msgstr "Os segredos de criptografia de disco completa podem ser invalidados ao atualizar"
+
 #. TRANSLATORS: global ID common to all similar hardware
 msgid "GUID"
 msgid_plural "GUIDs"
@@ -1064,6 +1171,10 @@ msgstr "O hardware está aguardando para ser reconectado"
 msgid "High"
 msgstr "Alta"
 
+#. TRANSLATORS: title for host security events
+msgid "Host Security Events"
+msgstr "Eventos de segurança do host"
+
 #. TRANSLATORS: this is a string like 'HSI:2-U'
 msgid "Host Security ID:"
 msgstr "ID de segurança do host:"
@@ -1072,6 +1183,14 @@ msgstr "ID de segurança do host:"
 #. * https://en.wikipedia.org/wiki/Input%E2%80%93output_memory_management_unit
 msgid "IOMMU"
 msgstr "IOMMU"
+
+#. TRANSLATORS: HSI event title
+msgid "IOMMU device protection disabled"
+msgstr "Proteção de dispositivo IOMMU desabilitada"
+
+#. TRANSLATORS: HSI event title
+msgid "IOMMU device protection enabled"
+msgstr "Proteção de dispositivo IOMMU habilitada"
 
 #. TRANSLATORS: daemon is inactive
 msgid "Idle…"
@@ -1109,6 +1228,12 @@ msgstr "Instala um blob de firmware em um dispositivo"
 msgid "Install a firmware file on this hardware"
 msgstr "Instala um arquivo de firmware neste periférico"
 
+msgid "Install old version of signed system firmware"
+msgstr "Instalar versão antiga do firmware do sistema assinado"
+
+msgid "Install old version of unsigned system firmware"
+msgstr "Instalar a versão antiga do firmware do sistema não assinado"
+
 msgid "Install signed device firmware"
 msgstr "Instalar firmware assinado no dispositivo"
 
@@ -1137,6 +1262,10 @@ msgstr "Instalando atualização de firmware…"
 #, c-format
 msgid "Installing on %s…"
 msgstr "Instalando em %s…"
+
+#. TRANSLATORS: if it breaks, you get to keep both pieces
+msgid "Installing this update may also void any device warranty."
+msgstr "A instalação desta atualização também pode anular qualquer garantia do dispositivo."
 
 #. TRANSLATORS: Title: BootGuard is a trademark from Intel
 msgid "Intel BootGuard"
@@ -1172,11 +1301,6 @@ msgstr "Intel CET ativo"
 msgid "Intel CET Enabled"
 msgstr "Habilitado para Intel CET"
 
-#. TRANSLATORS: Title: Direct Connect Interface (DCI) allows
-#. * debugging of Intel processors using the USB3 port
-msgid "Intel DCI debugger"
-msgstr "Depurador Intel DCI"
-
 #. TRANSLATORS: Title: SMAP = Supervisor Mode Access Prevention
 msgid "Intel SMAP"
 msgstr "Intel SMAP"
@@ -1189,9 +1313,17 @@ msgstr "Dispositivo interno"
 msgid "Invalid"
 msgstr "Inválido"
 
+#. TRANSLATORS: version is older
+msgid "Is downgrade"
+msgstr "É desatualização"
+
 #. TRANSLATORS: Is currently in bootloader mode
 msgid "Is in bootloader mode"
 msgstr "Está no modo gerenciador de boot"
+
+#. TRANSLATORS: version is newer
+msgid "Is upgrade"
+msgstr "É atualização"
 
 #. TRANSLATORS: issue fixed with the release, e.g. CVE
 msgid "Issue"
@@ -1202,6 +1334,22 @@ msgstr[1] "Problemas"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "KEY,VALUE"
 msgstr "CHAVE,VALOR"
+
+#. TRANSLATORS: HSI event title
+msgid "Kernel is no longer tainted"
+msgstr "Kernel não está mais contaminado"
+
+#. TRANSLATORS: HSI event title
+msgid "Kernel is tainted"
+msgstr "Kernel está contaminado"
+
+#. TRANSLATORS: HSI event title
+msgid "Kernel lockdown disabled"
+msgstr "Isolamento do kernel desabilitado"
+
+#. TRANSLATORS: HSI event title
+msgid "Kernel lockdown enabled"
+msgstr "Isolamento do kernel habilitado"
 
 #. TRANSLATORS: keyring type, e.g. GPG or PKCS7
 msgid "Keyring"
@@ -1334,6 +1482,10 @@ msgstr "Monitora o daemon por eventos"
 msgid "Mounts the ESP"
 msgstr "Monta a ESP"
 
+#. TRANSLATORS: we're poking around as a power user
+msgid "NOTE: This program may only work correctly as root"
+msgstr "NOTA: Este programa pode funcionar corretamente apenas como root"
+
 #. TRANSLATORS: Requires a reboot to apply firmware or to reload hardware
 msgid "Needs a reboot after installation"
 msgstr "Precisa de uma reinicialização após a instalação"
@@ -1358,7 +1510,7 @@ msgstr "Nenhuma ação especificada!"
 #. * %1 is the device name
 #, c-format
 msgid "No downgrades for %s"
-msgstr "Nenhum downgrade para %s"
+msgstr "Nenhuma desatualização para %s"
 
 #. TRANSLATORS: nothing found
 msgid "No firmware IDs found"
@@ -1384,12 +1536,24 @@ msgstr "Nenhum remoto está atualmente habilitado, então nenhum metadado está 
 msgid "No remotes available"
 msgstr "Nenhum remoto disponível"
 
+#. TRANSLATORS: this is an error string
+msgid "No updatable devices"
+msgstr "Nenhum dispositivo atualizável"
+
+#. TRANSLATORS: this is an error string
+msgid "No updates available"
+msgstr "Nenhuma atualização disponível"
+
 msgid "No updates available for remaining devices"
 msgstr "Nenhuma atualização disponível para os dispositivos restantes"
 
 #. TRANSLATORS: nothing was updated offline
 msgid "No updates were applied"
 msgstr "Nenhuma atualização foi aplicada"
+
+#. TRANSLATORS: version cannot be installed due to policy
+msgid "Not approved"
+msgstr "Não aprovada"
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Not found"
@@ -1402,6 +1566,10 @@ msgstr "Não suportado"
 #. TRANSLATORS: Suffix: the HSI result
 msgid "OK"
 msgstr "OK"
+
+#. TRANSLATORS: this is for the device tests
+msgid "OK!"
+msgstr "OK!"
 
 #. TRANSLATORS: command line option
 msgid "Only show single PCR value"
@@ -1444,6 +1612,10 @@ msgstr "Analisando o dbx do sistema…"
 msgid "Password"
 msgstr "Senha"
 
+#. TRANSLATORS: command description
+msgid "Patch a firmware blob at a known offset"
+msgstr "Corrige um blob de firmware em um deslocamento conhecido"
+
 msgid "Payload"
 msgstr "Carga"
 
@@ -1459,6 +1631,11 @@ msgstr "Percentagem concluída"
 msgid "Perform operation?"
 msgstr "Efetuar a operação?"
 
+#. TRANSLATORS: 'recovery key' here refers to a code, rather than a physical
+#. metal thing
+msgid "Please ensure you have the volume recovery key before continuing."
+msgstr "Certifique-se de ter a chave de recuperação de volume antes de continuar."
+
 #. TRANSLATORS: the user isn't reading the question
 #, c-format
 msgid "Please enter a number from 0 to %u: "
@@ -1471,6 +1648,14 @@ msgstr "Dependências de plugin ausentes"
 #. TRANSLATORS: Title: DMA as in https://en.wikipedia.org/wiki/DMA_attack
 msgid "Pre-boot DMA protection"
 msgstr "Proteção de DMA pré-inicialização"
+
+#. TRANSLATORS: HSI event title
+msgid "Pre-boot DMA protection is disabled"
+msgstr "Proteção de DMA pré-inicialização está desabilitada"
+
+#. TRANSLATORS: HSI event title
+msgid "Pre-boot DMA protection is enabled"
+msgstr "Proteção de DMA pré-inicialização está habilitada"
 
 #. TRANSLATORS: version number of previous firmware
 msgid "Previous version"
@@ -1559,6 +1744,14 @@ msgstr "Reinstalando %s com %s… "
 msgid "Release Branch"
 msgstr "Ramificação de lançamento"
 
+#. TRANSLATORS: release attributes
+msgid "Release Flags"
+msgstr "Opções da versão"
+
+#. TRANSLATORS: the exact component on the server
+msgid "Release ID"
+msgstr "ID Versão"
+
 #. TRANSLATORS: the server the file is coming from
 #. TRANSLATORS: remote identifier, e.g. lvfs-testing
 msgid "Remote ID"
@@ -1612,6 +1805,10 @@ msgstr "Retorna todos os IDs de hardware para a máquina"
 msgid "Run `fwupdmgr get-upgrades` for more information."
 msgstr "Execute `fwupdmgr get-upgrades` para mais informações."
 
+#. TRANSLATORS: this is shown in the MOTD
+msgid "Run `fwupdmgr sync-bkc` to complete this action."
+msgstr "Execute `fwupdmgr sync-bkc` para concluir esta ação."
+
 #. TRANSLATORS: command line option
 msgid "Run the plugin composite cleanup routine when using install-blob"
 msgstr "Executa a rotina de limpeza da composição de plugin ao usar install-blob"
@@ -1663,6 +1860,19 @@ msgstr "Agenda instalação para próxima reinicialização quando possível"
 #. TRANSLATORS: scheduling an update to be done on the next boot
 msgid "Scheduling…"
 msgstr "Agendando…"
+
+#. TRANSLATORS: HSI event title
+msgid "Secure Boot disabled"
+msgstr "Inicialização segura desabilitada"
+
+#. TRANSLATORS: HSI event title
+msgid "Secure Boot enabled"
+msgstr "Inicialização segura habilitada"
+
+#. TRANSLATORS: the %1 is a URL to a wiki page
+#, c-format
+msgid "See %s for more details."
+msgstr "Veja %s para mais detalhes."
 
 #. TRANSLATORS: %s is a link to a website
 #, c-format
@@ -1764,9 +1974,17 @@ msgstr "Assina os dados enviados com o certificado cliente"
 msgid "Signature"
 msgstr "Assinatura"
 
+#. TRANSLATORS: firmware is verified on-device the payload using strong crypto
+msgid "Signed Payload"
+msgstr "Carga útil assinada"
+
 #. TRANSLATORS: file size of the download
 msgid "Size"
 msgstr "Tamanho"
+
+#. TRANSLATORS: the platform secret is stored in the PCRx registers on the TPM
+msgid "Some of the platform secrets may be invalidated when updating this firmware."
+msgstr "Alguns dos segredos da plataforma podem ser invalidados ao atualizar este firmware."
 
 #. TRANSLATORS: source (as in code) link
 msgid "Source"
@@ -1870,6 +2088,10 @@ msgstr "Trocar ramificação de %s para %s ?"
 msgid "Switch the firmware branch on the device"
 msgstr "Alterna a ramificação do firmware no dispositivo"
 
+#. TRANSLATORS: command description
+msgid "Sync firmware versions to the host best known configuration"
+msgstr "Sincroniza versões de firmware com a configuração mais conhecida do host"
+
 #. TRANSLATORS: Must be plugged in to an outlet
 msgid "System requires external power source"
 msgstr "O sistema exige uma fonte de alimentação externa"
@@ -1882,9 +2104,28 @@ msgstr "TEXTO"
 msgid "TPM PCR0 reconstruction"
 msgstr "Reconstrução de PCR0 de TPM"
 
+#. TRANSLATORS: HSI event title
+msgid "TPM PCR0 reconstruction is invalid"
+msgstr "Reconstrução PCR0 de TPM é inválido"
+
+#. TRANSLATORS: HSI event title
+msgid "TPM PCR0 reconstruction is now valid"
+msgstr "Reconstrução PCR0 de TPM é agora válido"
+
+#. TRANSLATORS: Title: PCRs (Platform Configuration Registers) shouldn't be
+#. empty
+msgid "TPM empty PCRs"
+msgstr "PCRs vazios de TMP"
+
 #. TRANSLATORS: Title: TPM = Trusted Platform Module
 msgid "TPM v2.0"
 msgstr "TPM v2.0"
+
+#. TRANSLATORS: release tag set for release, e.g. lenovo-2021q3
+msgid "Tag"
+msgid_plural "Tags"
+msgstr[0] "Tag"
+msgstr[1] "Tags"
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Tainted"
@@ -1909,6 +2150,12 @@ msgstr "O TPM PCR0 diverge da reconstrução."
 msgid "The daemon has loaded 3rd party code and is no longer supported by the upstream developers!"
 msgstr "O daemon carregou código de terceiros e não é mais suportado pelos desenvolvedores upstream!"
 
+#. TRANSLATORS: this is for the device tests, %1 is the device
+#. * version, %2 is what we expected
+#, c-format
+msgid "The device version did not match: got %s, expected %s"
+msgstr "A versão do dispositivo não corresponde: obteve %s, esperava %s"
+
 #. TRANSLATORS: %1 is the firmware vendor, %2 is the device vendor name
 #, c-format
 msgid "The firmware from %s is not supplied by %s, the hardware vendor."
@@ -1917,6 +2164,14 @@ msgstr "O firmware de %s não é fornecido por %s, o fornecedor de hardware."
 #. TRANSLATORS: try to help
 msgid "The system clock has not been set correctly and downloading files may fail."
 msgstr "O relógio do sistema não foi definido corretamente e baixar arquivos pode resultar em falha."
+
+#. TRANSLATORS: naughty vendor
+msgid "The vendor did not supply any release notes."
+msgstr "O fornecedor não forneceu nenhuma nota de lançamento."
+
+#. TRANSLATORS: now list devices with unfixed high-priority issues
+msgid "There are devices with issues:"
+msgstr "Existem dispositivos com problemas:"
 
 #. TRANSLATORS: nothing to show
 msgid "There are no blocked firmware files"
@@ -1927,6 +2182,16 @@ msgstr "Não há arquivos de firmware bloqueados"
 msgid "There is no approved firmware."
 msgstr "Nenhum firmware aprovado."
 
+#. TRANSLATORS: %1 is the current device version number, and %2 is the
+#. command name, e.g. `fwupdmgr sync-bkc`
+#, c-format
+msgid "This device will be reverted back to %s when the %s command is performed."
+msgstr "Este dispositivo será revertido para %s quando o comando %s for executado."
+
+#. TRANSLATORS: the vendor did not upload this
+msgid "This firmware is provided by LVFS community members and is not provided (or supported) by the original hardware vendor."
+msgstr "Este firmware é fornecido pelos membros da comunidade LVFS e não é fornecido (ou suportado) pelo fornecedor de hardware original."
+
 #. TRANSLATORS: unsupported build of the package
 msgid "This package has not been validated, it may not work properly."
 msgstr "Este pacote não foi validado, ele pode não funcionar corretamente."
@@ -1936,7 +2201,7 @@ msgid "This program may only work correctly as root"
 msgstr "Esse programa só pode funcionar corretamente como root"
 
 msgid "This remote contains firmware which is not embargoed, but is still being tested by the hardware vendor. You should ensure you have a way to manually downgrade the firmware if the firmware update fails."
-msgstr "Este remoto contém firmware que não está embargado, mas ainda está sendo testado pelo fornecedor do hardware. Você deve garantir que você tenha uma maneira de fazer downgrade manual do firmware se a atualização do firmware falhar."
+msgstr "Este remoto contém firmware que não está embargado, mas ainda está sendo testado pelo fornecedor do hardware. Você deve garantir que você tenha uma maneira de desatualizar manualmente o firmware se a atualização do firmware falhar."
 
 #. TRANSLATORS: this is instructions on how to improve the HSI suffix
 msgid "This system has HSI runtime issues."
@@ -1973,6 +2238,14 @@ msgstr "Esta ferramenta vai ler e analisar o log de evento de TPM do firmware do
 #. TRANSLATORS: the update state of the specific device
 msgid "Transient failure"
 msgstr "Falha transitória"
+
+#. TRANSLATORS: We verified the meatdata against the server
+msgid "Trusted metadata"
+msgstr "Metadados confiável"
+
+#. TRANSLATORS: We verified the payload against the server
+msgid "Trusted payload"
+msgstr "Carga útil confiável"
 
 #. TRANSLATORS: remote type, e.g. remote or local
 msgid "Type"
@@ -2055,6 +2328,10 @@ msgstr "Desmonta a ESP"
 msgid "Unset the debugging flag during update"
 msgstr "Desativa a opção de depuração durante atualização"
 
+#. TRANSLATORS: firmware payload is unsigned and it is possible to modify it
+msgid "Unsigned Payload"
+msgstr "Carga útil não assinada"
+
 #. TRANSLATORS: error message
 #, c-format
 msgid "Unsupported daemon version %s, client version is %s"
@@ -2071,6 +2348,10 @@ msgstr "Atualizável"
 #. TRANSLATORS: error message from last update attempt
 msgid "Update Error"
 msgstr "Erro de atualização"
+
+#. TRANSLATORS: helpful image for the update
+msgid "Update Image"
+msgstr "Atualizar imagem"
 
 #. TRANSLATORS: helpful messages from last update
 #. TRANSLATORS: helpful messages for the update
@@ -2103,6 +2384,10 @@ msgstr "Atualizar as informações de verificação armazenadas do dispositivo"
 #. TRANSLATORS: command description
 msgid "Update the stored metadata with current contents"
 msgstr "Atualiza os metadados armazenados com o conteúdo atual"
+
+#. TRANSLATORS: command description
+msgid "Updates all specified devices to latest firmware version, or all devices if unspecified"
+msgstr "Atualiza todos os dispositivos especificados para a versão de firmware mais recente ou todos os dispositivos se não especificados"
 
 msgid "Updating"
 msgstr "Atualizando"
@@ -2220,6 +2505,13 @@ msgstr "Seu distribuidor pode não ter verificado nenhuma das atualizações de 
 #, c-format
 msgid "Your hardware may be damaged using this firmware, and installing this release may void any warranty with %s."
 msgstr "Seu hardware pode ser danificado usando este firmware e instalar esta versão pode anular qualquer garantia com %s."
+
+#. TRANSLATORS: BKC is the industry name for the best known configuration and
+#. is a set
+#. * of firmware that works together
+#, c-format
+msgid "Your system is set up to the BKC of %s."
+msgstr "Seu sistema está configurado para o BKC de %s."
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[CHECKSUM]"
