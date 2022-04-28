@@ -2461,6 +2461,27 @@ fu_common_vercmp_func(void)
 }
 
 static void
+fu_firmware_raw_aligned_func(void)
+{
+	gboolean ret;
+	g_autoptr(FuFirmware) firmware1 = fu_firmware_new();
+	g_autoptr(FuFirmware) firmware2 = fu_firmware_new();
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GBytes) blob = g_bytes_new_static("hello", 5);
+
+	/* no alignment */
+	ret = fu_firmware_parse(firmware1, blob, FWUPD_INSTALL_FLAG_NONE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* invalid alignment */
+	fu_firmware_set_alignment(firmware2, FU_FIRMWARE_ALIGNMENT_4K);
+	ret = fu_firmware_parse(firmware2, blob, FWUPD_INSTALL_FLAG_NONE, &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
+	g_assert_false(ret);
+}
+
+static void
 fu_firmware_ihex_func(void)
 {
 	const guint8 *data;
@@ -4022,6 +4043,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/firmware{common}", fu_firmware_common_func);
 	g_test_add_func("/fwupd/firmware{dedupe}", fu_firmware_dedupe_func);
 	g_test_add_func("/fwupd/firmware{build}", fu_firmware_build_func);
+	g_test_add_func("/fwupd/firmware{raw-aligned}", fu_firmware_raw_aligned_func);
 	g_test_add_func("/fwupd/firmware{ihex}", fu_firmware_ihex_func);
 	g_test_add_func("/fwupd/firmware{ihex-xml}", fu_firmware_ihex_xml_func);
 	g_test_add_func("/fwupd/firmware{ihex-offset}", fu_firmware_ihex_offset_func);
