@@ -1034,3 +1034,9 @@ LIBFWUPDPLUGIN_1.8.0 {
     fu_uswid_firmware_new;
   local: *;
 } LIBFWUPDPLUGIN_1.7.7;
+
+LIBFWUPDPLUGIN_1.8.1 {
+  global:
+    fu_udev_device_ioctl_full;
+  local: *;
+} LIBFWUPDPLUGIN_1.8.0;
