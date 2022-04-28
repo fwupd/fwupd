@@ -332,6 +332,9 @@ endif
 if cc.has_header('linux/ethtool.h')
   conf.set('HAVE_ETHTOOL_H', '1')
 endif
+if cc.has_header('linux/bsg.h') and cc.has_header('scsi/scsi_bsg_ufs.h')
+  conf.set('HAVE_BSG_H', '1')
+endif
 if cc.has_header('mtd/mtd-user.h')
   conf.set('HAVE_MTD_USER_H', '1')
 endif
