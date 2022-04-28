@@ -57,6 +57,7 @@ Plugin = ccgx
 GType = FuCcgxDmcDevice
 Summary = Dock Management Controller Device
 ParentGuid = USB\VID_03F0&PID_0363
+Vendor = HP
 Name = HP USB-C Dock G5
 CcgxDmcTriggerCode = 0x01
 CcgxImageKind = dmc-composite
@@ -69,20 +70,33 @@ Plugin = ccgx
 GType = FuCcgxDmcDevice
 Summary = Dock Management Controller Device
 ParentGuid = USB\VID_03F0&PID_096B
+Vendor = HP
 Name = HP USB-C/A Universal Dock G2
 CcgxDmcTriggerCode = 0x01
 CcgxImageKind = dmc-composite
 InstallDuration = 180
 RemoveDelay = 162000
 
+# HP Thunderbolt Dock G4 Root Hub
+[USB\VID_1D5C&PID_5801]
+Summary = USB Hub
+Name = Thunderbolt Dock G4 top most USB Hub
+
+# HP Thunderbolt Dock G4 Hub
+[USB\VID_03F0&PID_2488]
+Summary = USB Hub
+ParentGuid = USB\VID_1D5C&PID_5801
+Name = Thunderbolt Dock G4 USB Hub
+
 # HP Thunderbolt Dock G4
 [USB\VID_03F0&PID_0488]
 Plugin = ccgx
 GType = FuCcgxDmcDevice
 Summary = Dock Management Controller Device
-ParentGuid = USB\VID_03F0&PID_0363
-Name = HP Thunderbolt Dock G4
+ParentGuid = USB\VID_03F0&PID_2488
+Vendor = HP
+Name = Thunderbolt Dock G4
 CcgxDmcTriggerCode = 0x01
 CcgxImageKind = dmc-composite
-InstallDuration = 800
-RemoveDelay = 203000
+InstallDuration = 898
+RemoveDelay = 732000
