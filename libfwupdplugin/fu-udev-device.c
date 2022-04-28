@@ -1375,25 +1375,32 @@ fu_udev_device_close(FuDevice *device, GError **error)
 }
 
 /**
- * fu_udev_device_ioctl:
+ * fu_udev_device_ioctl_full:
  * @self: a #FuUdevDevice
  * @request: request number
  * @buf: a buffer to use, which *must* be large enough for the request
  * @rc: (out) (nullable): the raw return value from the ioctl
+ * @timeout: (nullable): timeout in ms for the retry action, see %FU_UDEV_DEVICE_FLAG_IOCTL_RETRY
  * @error: (nullable): optional return location for an error
  *
  * Control a device using a low-level request.
  *
  * Returns: %TRUE for success
  *
- * Since: 1.3.3
+ * Since: 1.8.1
  **/
 gboolean
-fu_udev_device_ioctl(FuUdevDevice *self, gulong request, guint8 *buf, gint *rc, GError **error)
+fu_udev_device_ioctl_full(FuUdevDevice *self,
+			  gulong request,
+			  guint8 *buf,
+			  gint *rc,
+			  guint timeout,
+			  GError **error)
 {
 #ifdef HAVE_IOCTL_H
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
 	gint rc_tmp;
+	g_autoptr(GTimer) timer = g_timer_new();
 
 	g_return_val_if_fail(FU_IS_UDEV_DEVICE(self), FALSE);
 	g_return_val_if_fail(request != 0x0, FALSE);
@@ -1411,7 +1418,14 @@ fu_udev_device_ioctl(FuUdevDevice *self, gulong request, guint8 *buf, gint *rc, 
 		return FALSE;
 	}
 
-	rc_tmp = ioctl(priv->fd, request, buf);
+	/* poll if required  up to the timeout */
+	do {
+		rc_tmp = ioctl(priv->fd, request, buf);
+		if (rc_tmp >= 0)
+			break;
+	} while ((priv->flags & FU_UDEV_DEVICE_FLAG_IOCTL_RETRY) &&
+		 (errno == EINTR || errno == EAGAIN) &&
+		 g_timer_elapsed(timer, NULL) < timeout * 1000.f);
 	if (rc != NULL)
 		*rc = rc_tmp;
 	if (rc_tmp < 0) {
@@ -1441,6 +1455,26 @@ fu_udev_device_ioctl(FuUdevDevice *self, gulong request, guint8 *buf, gint *rc, 
 		    "Not supported as <sys/ioctl.h> not found");
 	return FALSE;
 #endif
+}
+
+/**
+ * fu_udev_device_ioctl:
+ * @self: a #FuUdevDevice
+ * @request: request number
+ * @buf: a buffer to use, which *must* be large enough for the request
+ * @rc: (out) (nullable): the raw return value from the ioctl
+ * @error: (nullable): optional return location for an error
+ *
+ * Control a device using a low-level request.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.3.3
+ **/
+gboolean
+fu_udev_device_ioctl(FuUdevDevice *self, gulong request, guint8 *buf, gint *rc, GError **error)
+{
+	return fu_udev_device_ioctl_full(self, request, buf, rc, 0, error);
 }
 
 /**

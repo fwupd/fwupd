@@ -34,6 +34,7 @@ struct _FuUdevDeviceClass {
  * @FU_UDEV_DEVICE_FLAG_USE_CONFIG:		Read and write from the device config
  * @FU_UDEV_DEVICE_FLAG_OPEN_NONBLOCK:		Open nonblocking, e.g. O_NONBLOCK
  * @FU_UDEV_DEVICE_FLAG_OPEN_SYNC:		Open sync, e.g. O_SYNC
+ * @FU_UDEV_DEVICE_FLAG_IOCTL_RETRY:		Retry the ioctl() call when required
  *
  * Flags used when opening the device using fu_device_open().
  **/
@@ -45,6 +46,7 @@ typedef enum {
 	FU_UDEV_DEVICE_FLAG_USE_CONFIG = 1 << 3,
 	FU_UDEV_DEVICE_FLAG_OPEN_NONBLOCK = 1 << 4,
 	FU_UDEV_DEVICE_FLAG_OPEN_SYNC = 1 << 5,
+	FU_UDEV_DEVICE_FLAG_IOCTL_RETRY = 1 << 6,
 	/*< private >*/
 	FU_UDEV_DEVICE_FLAG_LAST
 } FuUdevDeviceFlags;
@@ -101,6 +103,13 @@ fu_udev_device_set_fd(FuUdevDevice *self, gint fd);
 gboolean
 fu_udev_device_ioctl(FuUdevDevice *self, gulong request, guint8 *buf, gint *rc, GError **error)
     G_GNUC_WARN_UNUSED_RESULT;
+gboolean
+fu_udev_device_ioctl_full(FuUdevDevice *self,
+			  gulong request,
+			  guint8 *buf,
+			  gint *rc,
+			  guint timeout,
+			  GError **error) G_GNUC_WARN_UNUSED_RESULT;
 gboolean
 fu_udev_device_pwrite(FuUdevDevice *self, goffset port, guint8 data, GError **error)
     G_GNUC_WARN_UNUSED_RESULT;
