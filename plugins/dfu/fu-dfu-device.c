@@ -889,8 +889,7 @@ fu_dfu_device_refresh(FuDfuDevice *self, GError **error)
 	if (fu_device_has_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_IGNORE_POLLTIMEOUT)) {
 		priv->dnload_timeout = DFU_DEVICE_DNLOAD_TIMEOUT_DEFAULT;
 	} else {
-		priv->dnload_timeout =
-		    buf[1] + (((guint32)buf[2]) << 8) + (((guint32)buf[3]) << 16);
+		priv->dnload_timeout = fu_common_read_uint24(&buf[1], G_LITTLE_ENDIAN);
 		if (priv->dnload_timeout == 0 &&
 		    !fu_device_has_private_flag(FU_DEVICE(self),
 						FU_DFU_DEVICE_FLAG_ALLOW_ZERO_POLLTIMEOUT)) {

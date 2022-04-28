@@ -1024,7 +1024,9 @@ LIBFWUPDPLUGIN_1.8.0 {
     fu_byte_array_compare;
     fu_cfi_device_chip_select;
     fu_cfi_device_chip_select_locker_new;
+    fu_common_read_uint24;
     fu_common_reverse_uint8;
+    fu_common_write_uint24;
     fu_coswid_firmware_get_type;
     fu_coswid_firmware_new;
     fu_device_has_inhibit;
