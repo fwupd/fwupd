@@ -308,6 +308,9 @@ fu_scsi_device_write_firmware(FuDevice *device,
 			return FALSE;
 		}
 
+		/* wait for the timeout */
+		fu_progress_sleep(fu_progress_get_child(progress), self->ffu_timeout * 1000);
+
 		/* chunk done */
 		fu_progress_step_done(progress);
 	}
