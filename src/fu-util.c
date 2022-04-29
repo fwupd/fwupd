@@ -2708,7 +2708,7 @@ fu_util_install(FuUtilPrivate *priv, gchar **values, GError **error)
 
 	/* fall back for CLI compatibility */
 	if (g_strv_length(values) >= 1) {
-		if (g_file_test(values[0], G_FILE_TEST_EXISTS))
+		if (g_file_test(values[0], G_FILE_TEST_EXISTS) || fu_util_is_url(values[0]))
 			return fu_util_local_install(priv, values, error);
 	}
 
