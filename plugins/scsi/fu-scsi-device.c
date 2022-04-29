@@ -229,7 +229,7 @@ fu_scsi_device_send_scsi_cmd(FuScsiDevice *self,
 		sg_struct = &io_hdr_v3;
 	}
 	g_debug("cmd=0x%x len=0x%x sg_type=%d", cdb[0], (guint)bufsz, self->sg_version);
-	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self), SG_IO, sg_struct, NULL, error))
+	if (!fu_udev_device_ioctl_full(FU_UDEV_DEVICE(self), SG_IO, sg_struct, NULL, 5000, error))
 		return FALSE;
 
 	if (self->sg_version == 0x4) {
