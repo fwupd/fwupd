@@ -88,7 +88,7 @@ fu_scsi_device_probe(FuDevice *device, GError **error)
 
 	/* is FFU capable */
 	if (fu_udev_device_get_sysfs_attr_uint64(FU_UDEV_DEVICE(device),
-						 "device_descriptior/ufs_features",
+						 "device_descriptor/ufs_features",
 						 &ufs_features,
 						 NULL)) {
 		fu_device_set_summary(device, "UFS device");
@@ -99,7 +99,7 @@ fu_scsi_device_probe(FuDevice *device, GError **error)
 #endif
 		}
 		if (!fu_udev_device_get_sysfs_attr_uint64(FU_UDEV_DEVICE(device),
-							  "device_descriptior/ffu_timeout",
+							  "device_descriptor/ffu_timeout",
 							  &self->ffu_timeout,
 							  error)) {
 			g_prefix_error(error, "no ffu timeout specified: ");
