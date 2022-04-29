@@ -1,3 +1,9 @@
+fwupd (1.8.0-1pop0) jammy; urgency=medium
+
+  * Backport to Pop
+
+ -- Brock Szuszczewicz <bnr@tuta.io>  Thu, 28 Apr 2022 19:21:34 -0700
+
 fwupd (1.7.4-1pop0) focal; urgency=medium
 
   * Backport to Pop
