@@ -1691,6 +1691,7 @@ fu_engine_get_report_metadata_os_release(GHashTable *hash, GError **error)
 	return TRUE;
 }
 
+#ifdef __linux__
 static gchar *
 fu_engine_get_proc_cmdline(GError **error)
 {
@@ -1779,6 +1780,7 @@ fu_engine_get_proc_cmdline(GError **error)
 	}
 	return g_string_free(g_steal_pointer(&cmdline_safe), FALSE);
 }
+#endif
 
 static gboolean
 fu_engine_get_report_metadata_kernel_cmdline(GHashTable *hash, GError **error)
