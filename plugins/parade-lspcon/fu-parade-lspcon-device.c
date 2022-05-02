@@ -122,16 +122,6 @@ fu_parade_lspcon_device_probe(FuDevice *device, GError **error)
 	FuUdevDevice *udev_device = FU_UDEV_DEVICE(device);
 	const gchar *device_name;
 
-	device_name = fu_device_get_name(device);
-	if (g_strcmp0(device_name, "PS175") != 0) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "device name %s is not supported by this plugin",
-			    device_name);
-		return FALSE;
-	}
-
 	/* custom instance IDs to get device quirks */
 	fu_device_add_instance_str(device,
 				   "NAME",
@@ -142,6 +132,17 @@ fu_parade_lspcon_device_probe(FuDevice *device, GError **error)
 	if (!fu_device_build_instance_id(device, error, "PARADE-LSPCON", "NAME", NULL))
 		return FALSE;
 	fu_device_build_instance_id_quirk(device, NULL, "PARADE-LSPCON", "NAME", "FAMILY", NULL);
+
+	/* probably set from quirk */
+	device_name = fu_device_get_name(device);
+	if (g_strcmp0(device_name, "PS175") != 0) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "device name %s is not supported by this plugin",
+			    device_name);
+		return FALSE;
+	}
 
 	/* should know which aux device over which we read DPCD version */
 	if (self->aux_device_name == NULL) {
