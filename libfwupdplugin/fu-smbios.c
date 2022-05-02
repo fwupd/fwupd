@@ -12,6 +12,7 @@
 #include <string.h>
 
 #ifdef _WIN32
+#include <errhandlingapi.h>
 #include <sysinfoapi.h>
 #endif
 
