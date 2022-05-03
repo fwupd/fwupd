@@ -229,7 +229,10 @@ if sqlite.found()
 endif
 libarchive = dependency('libarchive', required: get_option('libarchive'))
 if libarchive.found()
-    conf.set('HAVE_LIBARCHIVE', '1')
+  conf.set('HAVE_LIBARCHIVE', '1')
+  if cc.has_header_symbol('archive.h', 'archive_write_add_filter_zstd')
+    conf.set('HAVE_LIBARCHIVE_WRITE_ADD_FILTER_ZSTD', '1')
+  endif
 endif
 endif
 libjcat = dependency('jcat', version : '>= 0.1.4', fallback : ['libjcat', 'libjcat_dep'])

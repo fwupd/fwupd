@@ -1037,6 +1037,16 @@ LIBFWUPDPLUGIN_1.8.0 {
 
 LIBFWUPDPLUGIN_1.8.1 {
   global:
+    fu_archive_add_entry;
+    fu_archive_compression_from_string;
+    fu_archive_compression_to_string;
+    fu_archive_firmware_get_compression;
+    fu_archive_firmware_get_format;
+    fu_archive_firmware_set_compression;
+    fu_archive_firmware_set_format;
+    fu_archive_format_from_string;
+    fu_archive_format_to_string;
+    fu_archive_write;
     fu_device_add_problem;
     fu_device_poll_locker_new;
     fu_device_remove_problem;
