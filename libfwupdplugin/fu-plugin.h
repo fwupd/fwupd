@@ -368,8 +368,18 @@ typedef struct {
 	 * Since: 1.7.2
 	 **/
 	gboolean (*composite_cleanup)(FuPlugin *self, GPtrArray *devices, GError **error);
+	/**
+	 * load
+	 * @ctx: a #FuContext
+	 *
+	 * Function to register context attributes, run during early startup even on plugins which
+	 * will be later disabled.
+	 *
+	 * Since: 1.8.1
+	 **/
+	void (*load)(FuContext *ctx);
 	/*< private >*/
-	gpointer padding[9];
+	gpointer padding[8];
 } FuPluginVfuncs;
 
 /**

@@ -857,10 +857,8 @@ fu_plugin_dell_device_registered(FuPlugin *plugin, FuDevice *device)
 }
 
 static void
-fu_plugin_dell_init(FuPlugin *plugin)
+fu_plugin_dell_load(FuContext *ctx)
 {
-	FuContext *ctx = fu_plugin_get_context(plugin);
-	FuPluginData *data = fu_plugin_alloc_data(plugin, sizeof(FuPluginData));
 	g_autofree gchar *tmp = NULL;
 
 	tmp = g_strdup_printf("%d.%d",
@@ -868,6 +866,12 @@ fu_plugin_dell_init(FuPlugin *plugin)
 			      smbios_get_library_version_minor());
 	fu_context_add_runtime_version(ctx, "com.dell.libsmbios", tmp);
 	g_debug("Using libsmbios %s", tmp);
+}
+
+static void
+fu_plugin_dell_init(FuPlugin *plugin)
+{
+	FuPluginData *data = fu_plugin_alloc_data(plugin, sizeof(FuPluginData));
 
 	data->smi_obj = g_malloc0(sizeof(FuDellSmiObj));
 	if (g_getenv("FWUPD_DELL_VERBOSE") != NULL)
@@ -959,6 +963,7 @@ void
 fu_plugin_init_vfuncs(FuPluginVfuncs *vfuncs)
 {
 	vfuncs->build_hash = FU_BUILD_HASH;
+	vfuncs->load = fu_plugin_dell_load;
 	vfuncs->init = fu_plugin_dell_init;
 	vfuncs->destroy = fu_plugin_dell_destroy;
 	vfuncs->startup = fu_plugin_dell_startup;

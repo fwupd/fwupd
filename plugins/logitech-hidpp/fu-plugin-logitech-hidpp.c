@@ -32,7 +32,6 @@ fu_plugin_logitech_hidpp_startup(FuPlugin *plugin, GError **error)
 static void
 fu_plugin_logitech_hidpp_init(FuPlugin *plugin)
 {
-	FuContext *ctx = fu_plugin_get_context(plugin);
 	fu_plugin_add_udev_subsystem(plugin, "hidraw");
 	fu_plugin_add_rule(plugin, FU_PLUGIN_RULE_CONFLICTS, "unifying");
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_UNIFYING_BOOTLOADER_NORDIC);
@@ -40,6 +39,11 @@ fu_plugin_logitech_hidpp_init(FuPlugin *plugin)
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_HIDPP_RUNTIME_UNIFYING);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_HIDPP_DEVICE);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_HIDPP_RUNTIME_BOLT);
+}
+
+static void
+fu_plugin_logitech_hidpp_load(FuContext *ctx)
+{
 	fu_context_add_quirk_key(ctx, "LogitechHidppModelId");
 }
 
@@ -47,6 +51,7 @@ void
 fu_plugin_init_vfuncs(FuPluginVfuncs *vfuncs)
 {
 	vfuncs->build_hash = FU_BUILD_HASH;
+	vfuncs->load = fu_plugin_logitech_hidpp_load;
 	vfuncs->init = fu_plugin_logitech_hidpp_init;
 	vfuncs->startup = fu_plugin_logitech_hidpp_startup;
 }

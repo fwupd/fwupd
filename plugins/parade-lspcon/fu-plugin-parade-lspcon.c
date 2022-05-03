@@ -9,6 +9,12 @@
 #include "fu-parade-lspcon-device.h"
 
 static void
+fu_plugin_parade_lspcon_load(FuContext *ctx)
+{
+	fu_context_add_quirk_key(ctx, "ParadeLspconAuxDeviceName");
+}
+
+static void
 fu_plugin_parade_lspcon_init(FuPlugin *plugin)
 {
 	fu_plugin_add_udev_subsystem(plugin, "i2c");
@@ -19,5 +25,6 @@ void
 fu_plugin_init_vfuncs(FuPluginVfuncs *vfuncs)
 {
 	vfuncs->build_hash = FU_BUILD_HASH;
+	vfuncs->load = fu_plugin_parade_lspcon_load;
 	vfuncs->init = fu_plugin_parade_lspcon_init;
 }

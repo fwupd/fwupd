@@ -1037,6 +1037,7 @@ LIBFWUPDPLUGIN_1.8.0 {
 
 LIBFWUPDPLUGIN_1.8.1 {
   global:
+    fu_plugin_runner_init;
     fu_udev_device_ioctl_full;
   local: *;
 } LIBFWUPDPLUGIN_1.8.0;

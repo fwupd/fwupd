@@ -35,6 +35,7 @@ typedef struct {
 	GModule *module;
 	guint order;
 	guint priority;
+	gboolean done_init;
 	GPtrArray *rules[FU_PLUGIN_RULE_LAST];
 	GPtrArray *devices; /* (nullable) (element-type FuDevice) */
 	GHashTable *runtime_versions;
@@ -298,7 +299,7 @@ fu_plugin_guess_name_from_fn(const gchar *filename)
  * @filename: the shared object filename to open
  * @error: (nullable): optional return location for an error
  *
- * Opens the plugin module
+ * Opens the plugin module, and calls `->load()` on it.
  *
  * Returns: TRUE for success, FALSE for fail
  *
@@ -349,9 +350,10 @@ fu_plugin_open(FuPlugin *self, const gchar *filename, GError **error)
 	}
 
 	/* optional */
-	if (vfuncs->init != NULL) {
-		g_debug("init(%s)", filename);
-		vfuncs->init(self);
+	if (vfuncs->load != NULL) {
+		FuContext *ctx = fu_plugin_get_context(self);
+		g_debug("load(%s)", filename);
+		vfuncs->load(ctx);
 	}
 
 	return TRUE;
@@ -801,6 +803,11 @@ fu_plugin_runner_startup(FuPlugin *self, GError **error)
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GFile) file = g_file_new_for_path(config_filename);
 
+	g_return_val_if_fail(FU_IS_PLUGIN(self), FALSE);
+
+	/* be helpful for unit tests */
+	fu_plugin_runner_init(self);
+
 	/* not enabled */
 	if (fu_plugin_has_flag(self, FWUPD_PLUGIN_FLAG_DISABLED))
 		return TRUE;
@@ -835,6 +842,38 @@ fu_plugin_runner_startup(FuPlugin *self, GError **error)
 
 	/* success */
 	return TRUE;
+}
+
+/**
+ * fu_plugin_runner_init:
+ * @self: a #FuPlugin
+ *
+ * Runs the init routine for the plugin, if enabled.
+ *
+ * Since: 1.8.1
+ **/
+void
+fu_plugin_runner_init(FuPlugin *self)
+{
+	FuPluginVfuncs *vfuncs = fu_plugin_get_vfuncs(self);
+	FuPluginPrivate *priv = GET_PRIVATE(self);
+
+	g_return_if_fail(FU_IS_PLUGIN(self));
+
+	/* already done */
+	if (priv->done_init)
+		return;
+
+	/* not enabled */
+	if (fu_plugin_has_flag(self, FWUPD_PLUGIN_FLAG_DISABLED))
+		return;
+
+	/* optional */
+	if (vfuncs->init != NULL) {
+		g_debug("init(%s)", fu_plugin_get_name(self));
+		vfuncs->init(self);
+		priv->done_init = TRUE;
+	}
 }
 
 static gboolean
@@ -1005,6 +1044,8 @@ fu_plugin_runner_coldplug(FuPlugin *self, GError **error)
 	FuPluginPrivate *priv = GET_PRIVATE(self);
 	FuPluginVfuncs *vfuncs = fu_plugin_get_vfuncs(self);
 	g_autoptr(GError) error_local = NULL;
+
+	g_return_val_if_fail(FU_IS_PLUGIN(self), FALSE);
 
 	/* not enabled */
 	if (fu_plugin_has_flag(self, FWUPD_PLUGIN_FLAG_DISABLED))
@@ -2508,7 +2549,7 @@ fu_plugin_finalize(GObject *object)
 	g_rw_lock_clear(&priv->cache_mutex);
 
 	/* optional */
-	if (vfuncs->destroy != NULL) {
+	if (priv->done_init && vfuncs->destroy != NULL) {
 		g_debug("destroy(%s)", fu_plugin_get_name(self));
 		vfuncs->destroy(self);
 	}

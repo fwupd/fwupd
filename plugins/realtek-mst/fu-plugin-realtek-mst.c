@@ -9,12 +9,15 @@
 #include "fu-realtek-mst-device.h"
 
 static void
+fu_plugin_realtek_mst_load(FuContext *ctx)
+{
+	fu_context_add_quirk_key(ctx, "RealtekMstDpAuxName");
+	fu_context_add_quirk_key(ctx, "RealtekMstDrmCardKernelName");
+}
+
+static void
 fu_plugin_realtek_mst_init(FuPlugin *plugin)
 {
-	FuContext *ctx = fu_plugin_get_context(plugin);
-
-	fu_context_add_quirk_key(ctx, "RealtekMstDpAuxName");
-
 	fu_plugin_add_udev_subsystem(plugin, "i2c");
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_REALTEK_MST_DEVICE);
 }
@@ -23,5 +26,6 @@ void
 fu_plugin_init_vfuncs(FuPluginVfuncs *vfuncs)
 {
 	vfuncs->build_hash = FU_BUILD_HASH;
+	vfuncs->load = fu_plugin_realtek_mst_load;
 	vfuncs->init = fu_plugin_realtek_mst_init;
 }

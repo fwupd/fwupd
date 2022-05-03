@@ -35,6 +35,12 @@ struct FuPluginData {
 };
 
 static void
+fu_plugin_mm_load(FuContext *ctx)
+{
+	fu_context_add_quirk_key(ctx, "ModemManagerBranchAtCommand");
+}
+
+static void
 fu_plugin_mm_udev_device_removed(FuPlugin *plugin)
 {
 	FuPluginData *priv = fu_plugin_get_data(plugin);
@@ -534,6 +540,7 @@ void
 fu_plugin_init_vfuncs(FuPluginVfuncs *vfuncs)
 {
 	vfuncs->build_hash = FU_BUILD_HASH;
+	vfuncs->load = fu_plugin_mm_load;
 	vfuncs->init = fu_plugin_mm_init;
 	vfuncs->destroy = fu_plugin_mm_destroy;
 	vfuncs->startup = fu_plugin_mm_startup;
