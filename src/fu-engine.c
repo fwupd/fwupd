@@ -7225,7 +7225,12 @@ static void
 fu_engine_finalize(GObject *obj)
 {
 	FuEngine *self = FU_ENGINE(obj);
+	GPtrArray *plugins = fu_plugin_list_get_all(self->plugin_list);
 
+	for (guint i = 0; i < plugins->len; i++) {
+		FuPlugin *plugin = g_ptr_array_index(plugins, i);
+		g_signal_handlers_disconnect_by_data(plugin, self);
+	}
 	for (guint i = 0; i < self->local_monitors->len; i++) {
 		GFileMonitor *monitor = g_ptr_array_index(self->local_monitors, i);
 		g_file_monitor_cancel(monitor);
