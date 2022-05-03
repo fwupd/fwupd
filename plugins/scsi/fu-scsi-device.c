@@ -46,6 +46,7 @@ static gboolean
 fu_scsi_device_probe(FuDevice *device, GError **error)
 {
 	FuScsiDevice *self = FU_SCSI_DEVICE(device);
+	const gchar *device_file = fu_udev_device_get_device_file(FU_UDEV_DEVICE(device));
 	const gchar *name;
 	const gchar *vendor;
 	const gchar *version;
@@ -105,6 +106,13 @@ fu_scsi_device_probe(FuDevice *device, GError **error)
 			g_prefix_error(error, "no ffu timeout specified: ");
 			return FALSE;
 		}
+	}
+
+	/* which sg API do we use? */
+	if (g_str_has_prefix(device_file, "/dev/sd")) {
+		self->sg_version = 0x3;
+	} else if (g_str_has_prefix(device_file, "/dev/bsg/ufs-bsg")) {
+		self->sg_version = 0x4;
 	}
 
 	/* add GUIDs */
@@ -344,7 +352,6 @@ fu_scsi_device_init(FuScsiDevice *self)
 	fu_udev_device_set_flags(FU_UDEV_DEVICE(self),
 				 FU_UDEV_DEVICE_FLAG_OPEN_READ | FU_UDEV_DEVICE_FLAG_OPEN_SYNC |
 				     FU_UDEV_DEVICE_FLAG_IOCTL_RETRY);
-	self->sg_version = fu_common_check_kernel_version("5.13.0", NULL) ? 0x4 : 0x3;
 }
 
 static void
