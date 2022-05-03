@@ -15,12 +15,16 @@ struct FuPluginData {
 };
 
 static void
+fu_plugin_gpio_load(FuContext *ctx)
+{
+	fu_context_add_quirk_key(ctx, "GpioForUpdate");
+}
+
+static void
 fu_plugin_gpio_init(FuPlugin *plugin)
 {
-	FuContext *ctx = fu_plugin_get_context(plugin);
 	FuPluginData *data = fu_plugin_alloc_data(plugin, sizeof(FuPluginData));
 	data->current_logical_ids = g_ptr_array_new_with_free_func(g_free);
-	fu_context_add_quirk_key(ctx, "GpioForUpdate");
 	fu_plugin_add_udev_subsystem(plugin, "gpio");
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_GPIO_DEVICE);
 }
@@ -164,6 +168,7 @@ void
 fu_plugin_init_vfuncs(FuPluginVfuncs *vfuncs)
 {
 	vfuncs->build_hash = FU_BUILD_HASH;
+	vfuncs->load = fu_plugin_gpio_load;
 	vfuncs->init = fu_plugin_gpio_init;
 	vfuncs->destroy = fu_plugin_gpio_destroy;
 	vfuncs->prepare = fu_plugin_gpio_prepare;

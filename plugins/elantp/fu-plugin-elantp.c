@@ -24,15 +24,19 @@ fu_plugin_elantp_device_created(FuPlugin *plugin, FuDevice *dev, GError **error)
 }
 
 static void
-fu_plugin_elantp_init(FuPlugin *plugin)
+fu_plugin_elantp_load(FuContext *ctx)
 {
-	FuContext *ctx = fu_plugin_get_context(plugin);
-	fu_plugin_add_udev_subsystem(plugin, "i2c-dev");
-	fu_plugin_add_udev_subsystem(plugin, "hidraw");
-	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_ELANTP_FIRMWARE);
 	fu_context_add_quirk_key(ctx, "ElantpI2cTargetAddress");
 	fu_context_add_quirk_key(ctx, "ElantpIapPassword");
 	fu_context_add_quirk_key(ctx, "ElantpIcPageCount");
+}
+
+static void
+fu_plugin_elantp_init(FuPlugin *plugin)
+{
+	fu_plugin_add_udev_subsystem(plugin, "i2c-dev");
+	fu_plugin_add_udev_subsystem(plugin, "hidraw");
+	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_ELANTP_FIRMWARE);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_ELANTP_I2C_DEVICE);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_ELANTP_HID_DEVICE);
 }
@@ -41,6 +45,7 @@ void
 fu_plugin_init_vfuncs(FuPluginVfuncs *vfuncs)
 {
 	vfuncs->build_hash = FU_BUILD_HASH;
+	vfuncs->load = fu_plugin_elantp_load;
 	vfuncs->init = fu_plugin_elantp_init;
 	vfuncs->device_created = fu_plugin_elantp_device_created;
 }

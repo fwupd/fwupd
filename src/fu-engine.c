@@ -6129,15 +6129,13 @@ fu_engine_get_host_security_events(FuEngine *self, guint limit, GError **error)
 	return g_steal_pointer(&events);
 }
 
-gboolean
+static gboolean
 fu_engine_load_plugins(FuEngine *self, GError **error)
 {
 	const gchar *fn;
 	g_autoptr(GDir) dir = NULL;
 	g_autofree gchar *plugin_path = NULL;
 	g_autofree gchar *suffix = g_strdup_printf(".%s", G_MODULE_SUFFIX);
-	g_autoptr(GPtrArray) plugins_disabled = g_ptr_array_new_with_free_func(g_free);
-	g_autoptr(GPtrArray) plugins_disabled_rt = g_ptr_array_new_with_free_func(g_free);
 
 	/* search */
 	plugin_path = fu_common_get_path(FU_PATH_KIND_PLUGINDIR_PKG);
@@ -6149,40 +6147,56 @@ fu_engine_load_plugins(FuEngine *self, GError **error)
 		g_autofree gchar *name = NULL;
 		g_autoptr(FuPlugin) plugin = NULL;
 		g_autoptr(GError) error_local = NULL;
-		g_autoptr(GPtrArray) firmware_gtypes = NULL;
 
 		/* ignore non-plugins */
 		if (!g_str_has_suffix(fn, suffix))
 			continue;
-
-		/* is disabled */
 		name = fu_plugin_guess_name_from_fn(fn);
 		if (name == NULL)
 			continue;
-		if (fu_engine_is_plugin_name_disabled(self, name) ||
-		    !fu_engine_is_plugin_name_enabled(self, name)) {
-			g_ptr_array_add(plugins_disabled, g_steal_pointer(&name));
-			continue;
-		}
 
 		/* open module */
 		filename = g_build_filename(plugin_path, fn, NULL);
 		plugin = fu_plugin_new(self->ctx);
 		fu_plugin_set_name(plugin, name);
+		fu_engine_add_plugin(self, plugin);
 
-		/* if loaded from fu_engine_load() open the plugin */
-		firmware_gtypes = fu_context_get_firmware_gtype_ids(self->ctx);
-		if (firmware_gtypes->len > 0) {
-			if (!fu_plugin_open(plugin, filename, &error_local)) {
-				g_warning("cannot load: %s", error_local->message);
-				fu_engine_add_plugin(self, plugin);
-				continue;
-			}
+		/* open the plugin and call ->load() */
+		if (!fu_plugin_open(plugin, filename, &error_local)) {
+			g_warning("cannot load: %s", error_local->message);
+			continue;
 		}
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_engine_plugins_init(FuEngine *self, GError **error)
+{
+	GPtrArray *plugins = fu_plugin_list_get_all(self->plugin_list);
+	g_autoptr(GPtrArray) plugins_disabled = g_ptr_array_new_with_free_func(g_free);
+	g_autoptr(GPtrArray) plugins_disabled_rt = g_ptr_array_new_with_free_func(g_free);
+
+	for (guint i = 0; i < plugins->len; i++) {
+		FuPlugin *plugin = g_ptr_array_index(plugins, i);
+		const gchar *name = fu_plugin_get_name(plugin);
+
+		/* is disabled */
+		if (fu_engine_is_plugin_name_disabled(self, name) ||
+		    !fu_engine_is_plugin_name_enabled(self, name)) {
+			g_ptr_array_add(plugins_disabled, g_strdup(name));
+			fu_plugin_add_flag(plugin, FWUPD_PLUGIN_FLAG_DISABLED);
+			continue;
+		}
+
+		/* init plugin, adding device and firmware GTypes */
+		fu_plugin_runner_init(plugin);
 
 		/* runtime disabled */
 		if (fu_plugin_has_flag(plugin, FWUPD_PLUGIN_FLAG_DISABLED)) {
-			g_ptr_array_add(plugins_disabled_rt, g_steal_pointer(&name));
+			g_ptr_array_add(plugins_disabled_rt, g_strdup(name));
 			continue;
 		}
 
@@ -6211,9 +6225,6 @@ fu_engine_load_plugins(FuEngine *self, GError **error)
 				 "config-changed",
 				 G_CALLBACK(fu_engine_plugin_config_changed_cb),
 				 self);
-
-		/* add */
-		fu_engine_add_plugin(self, plugin);
 	}
 
 	/* show list */
@@ -6795,6 +6806,12 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, GError **error)
 		fu_engine_add_blocked_firmware(self, csum);
 	}
 
+	/* load plugins early, as we have to call ->load() *before* building quirk silo */
+	if (!fu_engine_load_plugins(self, error)) {
+		g_prefix_error(error, "Failed to load plugins: ");
+		return FALSE;
+	}
+
 	/* set up idle exit */
 	if ((self->app_flags & FU_APP_FLAGS_NO_IDLE_SOURCES) == 0)
 		fu_idle_set_timeout(self->idle, fu_config_get_idle_timeout(self->config));
@@ -6875,9 +6892,9 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, GError **error)
 		return FALSE;
 	}
 
-	/* load plugin */
-	if (!fu_engine_load_plugins(self, error)) {
-		g_prefix_error(error, "Failed to load plugins: ");
+	/* init plugins, adding device and firmware GTypes */
+	if (!fu_engine_plugins_init(self, error)) {
+		g_prefix_error(error, "failed to init plugins: ");
 		return FALSE;
 	}
 

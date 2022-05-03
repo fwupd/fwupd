@@ -19,12 +19,16 @@ struct FuPluginData {
 #define BCR_SMM_BWP (1 << 5)
 
 static void
+fu_plugin_pci_bcr_load(FuContext *ctx)
+{
+	fu_context_add_quirk_key(ctx, "PciBcrAddr");
+}
+
+static void
 fu_plugin_pci_bcr_init(FuPlugin *plugin)
 {
-	FuContext *ctx = fu_plugin_get_context(plugin);
 	FuPluginData *priv = fu_plugin_alloc_data(plugin, sizeof(FuPluginData));
 	fu_plugin_add_udev_subsystem(plugin, "pci");
-	fu_context_add_quirk_key(ctx, "PciBcrAddr");
 
 	/* this is true except for some Atoms */
 	priv->bcr_addr = 0xdc;
@@ -219,6 +223,7 @@ void
 fu_plugin_init_vfuncs(FuPluginVfuncs *vfuncs)
 {
 	vfuncs->build_hash = FU_BUILD_HASH;
+	vfuncs->load = fu_plugin_pci_bcr_load;
 	vfuncs->init = fu_plugin_pci_bcr_init;
 	vfuncs->add_security_attrs = fu_plugin_pci_bcr_add_security_attrs;
 	vfuncs->device_registered = fu_plugin_pci_bcr_device_registered;

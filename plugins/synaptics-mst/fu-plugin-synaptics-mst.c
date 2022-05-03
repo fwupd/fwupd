@@ -136,7 +136,6 @@ fu_plugin_synaptics_mst_write_firmware(FuPlugin *plugin,
 static void
 fu_plugin_synaptics_mst_init(FuPlugin *plugin)
 {
-	FuContext *ctx = fu_plugin_get_context(plugin);
 	FuPluginData *priv = fu_plugin_alloc_data(plugin, sizeof(FuPluginData));
 
 	/* devices added by this plugin */
@@ -145,6 +144,11 @@ fu_plugin_synaptics_mst_init(FuPlugin *plugin)
 	fu_plugin_add_udev_subsystem(plugin, "drm"); /* used for uevent only */
 	fu_plugin_add_udev_subsystem(plugin, "drm_dp_aux_dev");
 	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_SYNAPTICS_MST_FIRMWARE);
+}
+
+static void
+fu_plugin_synaptics_mst_load(FuContext *ctx)
+{
 	fu_context_add_quirk_key(ctx, "SynapticsMstDeviceKind");
 }
 
@@ -161,6 +165,7 @@ void
 fu_plugin_init_vfuncs(FuPluginVfuncs *vfuncs)
 {
 	vfuncs->build_hash = FU_BUILD_HASH;
+	vfuncs->load = fu_plugin_synaptics_mst_load;
 	vfuncs->init = fu_plugin_synaptics_mst_init;
 	vfuncs->destroy = fu_plugin_synaptics_mst_destroy;
 	vfuncs->write_firmware = fu_plugin_synaptics_mst_write_firmware;

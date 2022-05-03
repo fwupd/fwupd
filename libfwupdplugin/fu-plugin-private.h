@@ -34,6 +34,8 @@ GHashTable *
 fu_plugin_get_report_metadata(FuPlugin *self);
 gboolean
 fu_plugin_open(FuPlugin *self, const gchar *filename, GError **error) G_GNUC_WARN_UNUSED_RESULT;
+void
+fu_plugin_runner_init(FuPlugin *self);
 gboolean
 fu_plugin_runner_startup(FuPlugin *self, GError **error) G_GNUC_WARN_UNUSED_RESULT;
 gboolean

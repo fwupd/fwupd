@@ -507,13 +507,18 @@ fu_plugin_redfish_cleanup(FuPlugin *self,
 }
 
 static void
+fu_plugin_redfish_load(FuContext *ctx)
+{
+	fu_context_add_quirk_key(ctx, "RedfishResetPreDelay");
+	fu_context_add_quirk_key(ctx, "RedfishResetPostDelay");
+}
+
+static void
 fu_plugin_redfish_init(FuPlugin *plugin)
 {
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	FuPluginData *data = fu_plugin_alloc_data(plugin, sizeof(FuPluginData));
 	data->backend = fu_redfish_backend_new(ctx);
-	fu_context_add_quirk_key(ctx, "RedfishResetPreDelay");
-	fu_context_add_quirk_key(ctx, "RedfishResetPostDelay");
 	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_REDFISH_SMBIOS);
 }
 
@@ -528,6 +533,7 @@ void
 fu_plugin_init_vfuncs(FuPluginVfuncs *vfuncs)
 {
 	vfuncs->build_hash = FU_BUILD_HASH;
+	vfuncs->load = fu_plugin_redfish_load;
 	vfuncs->init = fu_plugin_redfish_init;
 	vfuncs->destroy = fu_plugin_redfish_destroy;
 	vfuncs->startup = fu_plugin_redfish_startup;

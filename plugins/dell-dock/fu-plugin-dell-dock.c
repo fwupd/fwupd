@@ -20,10 +20,8 @@
 #include "fu-dell-dock-common.h"
 
 static void
-fu_plugin_dell_dock_init(FuPlugin *plugin)
+fu_plugin_dell_dock_load(FuContext *ctx)
 {
-	FuContext *ctx = fu_plugin_get_context(plugin);
-
 	fu_context_add_quirk_key(ctx, "DellDockBlobBuildOffset");
 	fu_context_add_quirk_key(ctx, "DellDockBlobMajorOffset");
 	fu_context_add_quirk_key(ctx, "DellDockBlobMinorOffset");
@@ -33,7 +31,11 @@ fu_plugin_dell_dock_init(FuPlugin *plugin)
 	fu_context_add_quirk_key(ctx, "DellDockInstallDurationI2C");
 	fu_context_add_quirk_key(ctx, "DellDockUnlockTarget");
 	fu_context_add_quirk_key(ctx, "DellDockVersionLowest");
+}
 
+static void
+fu_plugin_dell_dock_init(FuPlugin *plugin)
+{
 	/* allow these to be built by quirks */
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_DELL_DOCK_STATUS);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_DELL_DOCK_MST);
@@ -341,6 +343,7 @@ void
 fu_plugin_init_vfuncs(FuPluginVfuncs *vfuncs)
 {
 	vfuncs->build_hash = FU_BUILD_HASH;
+	vfuncs->load = fu_plugin_dell_dock_load;
 	vfuncs->init = fu_plugin_dell_dock_init;
 	vfuncs->device_registered = fu_plugin_dell_dock_device_registered;
 	vfuncs->backend_device_added = fu_plugin_dell_dock_backend_device_added;

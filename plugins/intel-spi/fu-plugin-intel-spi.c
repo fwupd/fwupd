@@ -11,14 +11,18 @@
 #include "fu-intel-spi-device.h"
 
 static void
-fu_plugin_intel_spi_init(FuPlugin *plugin)
+fu_plugin_intel_spi_load(FuContext *ctx)
 {
-	FuContext *ctx = fu_plugin_get_context(plugin);
-	fu_plugin_add_udev_subsystem(plugin, "pci");
 	fu_context_add_quirk_key(ctx, "IntelSpiKind");
 	fu_context_add_quirk_key(ctx, "IntelSpiBar");
 	fu_context_add_quirk_key(ctx, "IntelSpiBarProxy");
 	fu_context_add_quirk_key(ctx, "IntelSpiBiosCntl");
+}
+
+static void
+fu_plugin_intel_spi_init(FuPlugin *plugin)
+{
+	fu_plugin_add_udev_subsystem(plugin, "pci");
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_INTEL_SPI_DEVICE);
 }
 
@@ -39,6 +43,7 @@ void
 fu_plugin_init_vfuncs(FuPluginVfuncs *vfuncs)
 {
 	vfuncs->build_hash = FU_BUILD_HASH;
+	vfuncs->load = fu_plugin_intel_spi_load;
 	vfuncs->init = fu_plugin_intel_spi_init;
 	vfuncs->startup = fu_plugin_intel_spi_startup;
 }

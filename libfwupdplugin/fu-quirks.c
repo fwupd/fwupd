@@ -572,6 +572,7 @@ fu_quirks_init(FuQuirks *self)
 	fu_quirks_add_possible_key(self, FU_QUIRKS_ICON);
 	fu_quirks_add_possible_key(self, FU_QUIRKS_INHIBIT);
 	fu_quirks_add_possible_key(self, FU_QUIRKS_INSTALL_DURATION);
+	fu_quirks_add_possible_key(self, FU_QUIRKS_ISSUE);
 	fu_quirks_add_possible_key(self, FU_QUIRKS_NAME);
 	fu_quirks_add_possible_key(self, FU_QUIRKS_PARENT_GUID);
 	fu_quirks_add_possible_key(self, FU_QUIRKS_PLUGIN);
@@ -587,6 +588,7 @@ fu_quirks_init(FuQuirks *self)
 	fu_quirks_add_possible_key(self, FU_QUIRKS_VENDOR_ID);
 	fu_quirks_add_possible_key(self, FU_QUIRKS_VERSION);
 	fu_quirks_add_possible_key(self, FU_QUIRKS_VERSION_FORMAT);
+	fu_quirks_add_possible_key(self, "CfiDeviceCmdBlockErase");
 	fu_quirks_add_possible_key(self, "CfiDeviceCmdReadId");
 	fu_quirks_add_possible_key(self, "CfiDeviceCmdReadIdSz");
 	fu_quirks_add_possible_key(self, "CfiDeviceCmdChipErase");
