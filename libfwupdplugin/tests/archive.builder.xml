@@ -1,0 +1,12 @@
+<firmware gtype="FuArchiveFirmware">
+  <format>ustar</format>
+  <compression>gzip</compression>
+  <firmware>
+    <id>one.txt</id>
+    <data>aGVsbG8gd29ybGQ=</data> <!-- base64 -->
+  </firmware>
+  <firmware>
+    <id>two.txt</id>
+    <data>aGVsbG8gd29ybGQ=</data> <!-- base64 -->
+  </firmware>
+</firmware>
