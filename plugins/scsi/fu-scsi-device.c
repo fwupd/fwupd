@@ -109,10 +109,22 @@ fu_scsi_device_probe(FuDevice *device, GError **error)
 	}
 
 	/* which sg API do we use? */
-	if (g_str_has_prefix(device_file, "/dev/sd")) {
-		self->sg_version = 0x3;
-	} else if (g_str_has_prefix(device_file, "/dev/bsg/ufs-bsg")) {
-		self->sg_version = 0x4;
+	if (device_file != NULL) {
+		if (g_str_has_prefix(device_file, "/dev/sd")) {
+			self->sg_version = 0x3;
+		} else if (g_str_has_prefix(device_file, "/dev/bsg/ufs-bsg")) {
+			self->sg_version = 0x4;
+		}
+	}
+
+	/* fallback to bsg just existing */
+	if (self->sg_version == 0x0) {
+		g_autofree gchar *bsg_path = NULL;
+		bsg_path = g_build_filename(fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(device)),
+					    "bsg",
+					    NULL);
+		if (g_file_test(bsg_path, G_FILE_TEST_EXISTS))
+			self->sg_version = 0x4;
 	}
 
 	/* add GUIDs */
@@ -192,80 +204,98 @@ fu_scsi_device_sense_key_to_string(guint8 key)
 	return NULL;
 }
 
-/* utility function for SCSI command sending */
 static gboolean
-fu_scsi_device_send_scsi_cmd(FuScsiDevice *self,
-			     const guint8 *cdb,
-			     guint8 cdbsz,
-			     const guint8 *buf,
-			     guint32 bufsz,
-			     gint dir,
-			     GError **error)
+fu_scsi_device_send_scsi_cmd_v4(FuScsiDevice *self,
+				const guint8 *cdb,
+				guint8 cdbsz,
+				const guint8 *buf,
+				guint32 bufsz,
+				gint dir,
+				GError **error)
 {
-	void *sg_struct;
-	struct sg_io_v4 io_hdr_v4 = {0};
-	struct sg_io_hdr io_hdr_v3 = {0};
 	guint8 sense_buffer[SENSE_BUFF_LEN] = {0};
+	struct sg_io_v4 io_hdr = {.guard = 'Q',
+				  .protocol = BSG_PROTOCOL_SCSI,
+				  .subprotocol = BSG_SUB_PROTOCOL_SCSI_CMD};
 
-	if (self->sg_version == 0x4) {
-		io_hdr_v4.guard = 'Q';
-		io_hdr_v4.protocol = BSG_PROTOCOL_SCSI;
-		io_hdr_v4.subprotocol = BSG_SUB_PROTOCOL_SCSI_CMD;
-		io_hdr_v4.response = (__u64)sense_buffer;
-		io_hdr_v4.max_response_len = sizeof(sense_buffer);
-		io_hdr_v4.request_len = cdbsz;
-		if (dir == SG_DXFER_FROM_DEV) {
-			io_hdr_v4.din_xfer_len = (guint32)bufsz;
-			io_hdr_v4.din_xferp = (__u64)buf;
-		} else {
-			io_hdr_v4.dout_xfer_len = (guint32)bufsz;
-			io_hdr_v4.dout_xferp = (__u64)buf;
-		}
-		io_hdr_v4.request = (__u64)cdb;
-		sg_struct = &io_hdr_v4;
+	io_hdr.response = (__u64)sense_buffer;
+	io_hdr.max_response_len = sizeof(sense_buffer);
+	io_hdr.request = (__u64)cdb;
+	io_hdr.request_len = cdbsz;
+	if (dir == SG_DXFER_FROM_DEV) {
+		io_hdr.din_xfer_len = (guint32)bufsz;
+		io_hdr.din_xferp = (__u64)buf;
 	} else {
-		io_hdr_v3.interface_id = 'S';
-		io_hdr_v3.cmd_len = cdbsz;
-		io_hdr_v3.mx_sb_len = sizeof(sense_buffer);
-		io_hdr_v3.dxfer_direction = dir;
-		io_hdr_v3.dxfer_len = bufsz;
-		io_hdr_v3.dxferp = (guint8 *)buf;
-		/* pointer to command buf */
-		io_hdr_v3.cmdp = (guint8 *)cdb;
-		io_hdr_v3.sbp = sense_buffer;
-		io_hdr_v3.timeout = 60000; /* ms */
-		sg_struct = &io_hdr_v3;
+		io_hdr.dout_xfer_len = (guint32)bufsz;
+		io_hdr.dout_xferp = (__u64)buf;
 	}
+
 	g_debug("cmd=0x%x len=0x%x sg_type=%d", cdb[0], (guint)bufsz, self->sg_version);
-	if (!fu_udev_device_ioctl_full(FU_UDEV_DEVICE(self), SG_IO, sg_struct, NULL, 5000, error))
+	if (!fu_udev_device_ioctl_full(FU_UDEV_DEVICE(self),
+				       SG_IO,
+				       (guint8 *)&io_hdr,
+				       NULL,
+				       5000,
+				       error))
 		return FALSE;
 
-	if (self->sg_version == 0x4) {
-		if (io_hdr_v4.info != 0) {
-			g_set_error(
-			    error,
+	if (io_hdr.info != 0) {
+		g_set_error(error,
 			    G_IO_ERROR,
 			    G_IO_ERROR_FAILED,
-			    "Command fail with status %x , senseKey %s, asc 0x%02x, ascq 0x%02x",
-			    io_hdr_v4.info,
+			    "Command fail with status %x, senseKey %s, asc 0x%02x, ascq 0x%02x",
+			    io_hdr.info,
 			    fu_scsi_device_sense_key_to_string(sense_buffer[2]),
 			    sense_buffer[12],
 			    sense_buffer[13]);
-			return FALSE;
-		}
-	} else {
-		if (io_hdr_v3.status) {
-			g_set_error(
-			    error,
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_scsi_device_send_scsi_cmd_v3(FuScsiDevice *self,
+				const guint8 *cdb,
+				guint8 cdbsz,
+				const guint8 *buf,
+				guint32 bufsz,
+				gint dir,
+				GError **error)
+{
+	guint8 sense_buffer[SENSE_BUFF_LEN] = {0};
+	struct sg_io_hdr io_hdr = {.interface_id = 'S'};
+
+	io_hdr.cmd_len = cdbsz;
+	io_hdr.mx_sb_len = sizeof(sense_buffer);
+	io_hdr.dxfer_direction = dir;
+	io_hdr.dxfer_len = bufsz;
+	io_hdr.dxferp = (guint8 *)buf;
+	/* pointer to command buf */
+	io_hdr.cmdp = (guint8 *)cdb;
+	io_hdr.sbp = sense_buffer;
+	io_hdr.timeout = 60000; /* ms */
+
+	g_debug("cmd=0x%x len=0x%x sg_type=%d", cdb[0], (guint)bufsz, self->sg_version);
+	if (!fu_udev_device_ioctl_full(FU_UDEV_DEVICE(self),
+				       SG_IO,
+				       (guint8 *)&io_hdr,
+				       NULL,
+				       5000,
+				       error))
+		return FALSE;
+
+	if (io_hdr.status) {
+		g_set_error(error,
 			    G_IO_ERROR,
 			    G_IO_ERROR_FAILED,
-			    "Command fail with status %x , senseKey %s, asc 0x%02x, ascq 0x%02x",
-			    io_hdr_v3.status,
+			    "Command fail with status %x, senseKey %s, asc 0x%02x, ascq 0x%02x",
+			    io_hdr.status,
 			    fu_scsi_device_sense_key_to_string(sense_buffer[2]),
 			    sense_buffer[12],
 			    sense_buffer[13]);
-			return FALSE;
-		}
+		return FALSE;
 	}
 
 	/* success */
@@ -303,17 +333,32 @@ fu_scsi_device_write_firmware(FuDevice *device,
 
 		fu_common_write_uint24(cdb + 3, fu_chunk_get_address(chk), G_LITTLE_ENDIAN);
 		fu_common_write_uint24(cdb + 6, fu_chunk_get_data_sz(chk), G_LITTLE_ENDIAN);
-		if (!fu_scsi_device_send_scsi_cmd(self,
-						  cdb,
-						  sizeof(cdb),
-						  fu_chunk_get_data(chk),
-						  fu_chunk_get_data_sz(chk),
-						  SG_DXFER_TO_DEV,
-						  error)) {
-			g_prefix_error(error,
-				       "SG_IO WRITE BUFFER data error for chunk 0x%x: ",
-				       fu_chunk_get_idx(chk));
-			return FALSE;
+		if (self->sg_version == 0x4) {
+			if (!fu_scsi_device_send_scsi_cmd_v4(self,
+							     cdb,
+							     sizeof(cdb),
+							     fu_chunk_get_data(chk),
+							     fu_chunk_get_data_sz(chk),
+							     SG_DXFER_TO_DEV,
+							     error)) {
+				g_prefix_error(error,
+					       "SG_IO WRITE BUFFER data error for v4 chunk 0x%x: ",
+					       fu_chunk_get_idx(chk));
+				return FALSE;
+			}
+		} else {
+			if (!fu_scsi_device_send_scsi_cmd_v3(self,
+							     cdb,
+							     sizeof(cdb),
+							     fu_chunk_get_data(chk),
+							     fu_chunk_get_data_sz(chk),
+							     SG_DXFER_TO_DEV,
+							     error)) {
+				g_prefix_error(error,
+					       "SG_IO WRITE BUFFER data error for v3 chunk 0x%x: ",
+					       fu_chunk_get_idx(chk));
+				return FALSE;
+			}
 		}
 
 		/* wait for the timeout */
