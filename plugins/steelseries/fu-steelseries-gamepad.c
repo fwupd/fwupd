@@ -455,19 +455,17 @@ fu_steelseries_gamepad_class_init(FuSteelseriesGamepadClass *klass)
 }
 
 static void
-fu_steelseries_gamepad_init(FuSteelseriesGamepad *device)
+fu_steelseries_gamepad_init(FuSteelseriesGamepad *self)
 {
-	FuSteelseriesGamepad *self = FU_STEELSERIES_GAMEPAD(device);
-
 	self->device_kind = FU_STEELSERIES_DEVICE_GAMEPAD;
 
-	fu_device_set_remove_delay(FU_DEVICE(device), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
-	fu_device_set_version_format(FU_DEVICE(device), FWUPD_VERSION_FORMAT_BCD);
+	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
+	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_BCD);
 
-	fu_device_add_flag(FU_DEVICE(device), FWUPD_DEVICE_FLAG_ADD_COUNTERPART_GUIDS);
-	fu_device_add_internal_flag(FU_DEVICE(device), FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID);
-	fu_device_add_protocol(FU_DEVICE(device), "com.steelseries.gamepad");
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_ADD_COUNTERPART_GUIDS);
+	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID);
+	fu_device_add_protocol(FU_DEVICE(self), "com.steelseries.gamepad");
 
-	fu_device_set_firmware_size_max(FU_DEVICE(device),
+	fu_device_set_firmware_size_max(FU_DEVICE(self),
 					(G_MAXUINT16 + 1) * STEELSERIES_BUFFER_TRANSFER_SIZE);
 }
