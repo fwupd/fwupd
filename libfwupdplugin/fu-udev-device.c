@@ -1380,7 +1380,7 @@ fu_udev_device_close(FuDevice *device, GError **error)
  * @request: request number
  * @buf: a buffer to use, which *must* be large enough for the request
  * @rc: (out) (nullable): the raw return value from the ioctl
- * @timeout: (nullable): timeout in ms for the retry action, see %FU_UDEV_DEVICE_FLAG_IOCTL_RETRY
+ * @timeout: timeout in ms for the retry action, see %FU_UDEV_DEVICE_FLAG_IOCTL_RETRY
  * @error: (nullable): optional return location for an error
  *
  * Control a device using a low-level request.
