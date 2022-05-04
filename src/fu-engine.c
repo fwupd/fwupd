@@ -2866,10 +2866,12 @@ fu_engine_write_firmware(FuEngine *self,
 		g_autoptr(GError) error_cleanup = NULL;
 
 		/* attack back into runtime then cleanup */
+		fu_progress_reset(progress);
 		if (!fu_plugin_runner_attach(plugin, device, progress, &error_attach)) {
 			g_warning("failed to attach device after failed update: %s",
 				  error_attach->message);
 		}
+		fu_progress_reset(progress);
 		if (!fu_engine_cleanup(self, device_id, progress, flags, &error_cleanup)) {
 			g_warning("failed to update-cleanup after failed update: %s",
 				  error_cleanup->message);
