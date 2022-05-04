@@ -444,12 +444,11 @@ fu_plugin_redfish_cleanup(FuPlugin *self,
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 24);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 25);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 25);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 50);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 5);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 67);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 18);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 9);
 
 	/* ask the BMC to reboot */
 	json_builder_begin_object(builder);
