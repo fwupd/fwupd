@@ -210,9 +210,7 @@ fu_plugin_flashrom_add_device(FuPlugin *plugin,
 
 	/* success */
 	fu_plugin_device_add(plugin, device);
-
-	g_object_ref(device);
-	return device;
+	return g_steal_pointer(&device);
 }
 
 static void
