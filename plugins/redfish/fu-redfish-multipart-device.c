@@ -61,7 +61,6 @@ fu_redfish_multipart_device_write_firmware(FuDevice *device,
 	JsonObject *json_obj;
 	curl_mimepart *part;
 	const gchar *location;
-	g_autofree gchar *filename = NULL;
 	g_autoptr(curl_mime) mime = NULL;
 	g_autoptr(FuRedfishRequest) request = NULL;
 	g_autoptr(GBytes) fw = NULL;
@@ -71,9 +70,6 @@ fu_redfish_multipart_device_write_firmware(FuDevice *device,
 	fw = fu_firmware_get_bytes(firmware, error);
 	if (fw == NULL)
 		return FALSE;
-
-	/* Get the update version */
-	filename = g_strdup_printf("%s.bin", fu_device_get_name(FU_DEVICE(self)));
 
 	/* create the multipart request */
 	request = fu_redfish_backend_request_new(backend);
@@ -92,7 +88,7 @@ fu_redfish_multipart_device_write_firmware(FuDevice *device,
 	part = curl_mime_addpart(mime);
 	curl_mime_name(part, "UpdateFile");
 	(void)curl_mime_type(part, "application/octet-stream");
-	(void)curl_mime_filedata(part, filename);
+	(void)curl_mime_filedata(part, "firmware.bin");
 	(void)curl_mime_data(part, g_bytes_get_data(fw, NULL), g_bytes_get_size(fw));
 
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_WRITE);
@@ -105,8 +101,7 @@ fu_redfish_multipart_device_write_firmware(FuDevice *device,
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_FILE,
-			    "failed to upload %s: %li",
-			    filename,
+			    "failed to upload: %li",
 			    fu_redfish_request_get_status_code(request));
 		return FALSE;
 	}
