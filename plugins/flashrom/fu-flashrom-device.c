@@ -137,13 +137,29 @@ fu_flashrom_device_close(FuDevice *device, GError **error)
 	return TRUE;
 }
 
+static GBytes *
+fu_flashrom_device_dump_firmware(FuDevice *device, FuProgress *progress, GError **error)
+{
+	FuFlashromDevice *self = FU_FLASHROM_DEVICE(device);
+	gint rc;
+	gsize bufsz = fu_device_get_firmware_size_max(device);
+	g_autofree guint8 *buf = g_malloc0(bufsz);
+
+	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_READ);
+	rc = flashrom_image_read(self->flashctx, buf, bufsz);
+	if (rc != 0) {
+		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_READ, "failed to read flash [%i]", rc);
+		return NULL;
+	}
+	return g_bytes_new_take(g_steal_pointer(&buf), bufsz);
+}
+
 static gboolean
 fu_flashrom_device_prepare(FuDevice *device,
 			   FuProgress *progress,
 			   FwupdInstallFlags flags,
 			   GError **error)
 {
-	FuFlashromDevice *self = FU_FLASHROM_DEVICE(device);
 	g_autofree gchar *firmware_orig = NULL;
 	g_autofree gchar *localstatedir = NULL;
 	g_autofree gchar *basename = NULL;
@@ -155,19 +171,12 @@ fu_flashrom_device_prepare(FuDevice *device,
 	if (!fu_common_mkdir_parent(firmware_orig, error))
 		return FALSE;
 	if (!g_file_test(firmware_orig, G_FILE_TEST_EXISTS)) {
-		gsize flash_size = fu_device_get_firmware_size_max(device);
-		g_autofree guint8 *newcontents = g_malloc0(flash_size);
 		g_autoptr(GBytes) buf = NULL;
-
-		fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_READ);
-		if (flashrom_image_read(self->flashctx, newcontents, flash_size)) {
-			g_set_error_literal(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_READ,
-					    "failed to back up original firmware");
+		buf = fu_flashrom_device_dump_firmware(device, progress, error);
+		if (buf == NULL) {
+			g_prefix_error(error, "failed to back up original firmware: ");
 			return FALSE;
 		}
-		buf = g_bytes_new_static(newcontents, flash_size);
 		if (!fu_common_set_contents_bytes(firmware_orig, buf, error))
 			return FALSE;
 	}
@@ -258,6 +267,7 @@ fu_flashrom_device_init(FuFlashromDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_REQUIRE_AC);
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
 	fu_device_add_protocol(FU_DEVICE(self), "org.flashrom");
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_ENSURE_SEMVER);
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_MD_SET_SIGNED);
@@ -371,6 +381,7 @@ fu_flashrom_device_class_init(FuFlashromDeviceClass *klass)
 	klass_device->close = fu_flashrom_device_close;
 	klass_device->set_progress = fu_flashrom_device_set_progress;
 	klass_device->prepare = fu_flashrom_device_prepare;
+	klass_device->dump_firmware = fu_flashrom_device_dump_firmware;
 	klass_device->write_firmware = fu_flashrom_device_write_firmware;
 }
 
