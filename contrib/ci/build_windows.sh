@@ -20,8 +20,9 @@ python3 -m pip install --user "meson >= 0.60.0"
 meson .. \
     --cross-file=../contrib/mingw64.cross \
     --prefix=/ \
-    --libexecdir="" \
-    --bindir="" \
+    --sysconfdir="etc" \
+    --libexecdir="bin" \
+    --bindir="bin" \
     -Dbuild=all \
     -Ddocs=none \
     -Dhsi=false \
@@ -60,7 +61,7 @@ mkdir -p $DESTDIR/setup
 makensis -NOCD $build/contrib/setup-win32.nsi
 
 #so that it's actually executable
-cp /usr/x86_64-w64-mingw32/sys-root/mingw/bin/*.dll .
+cp /usr/x86_64-w64-mingw32/sys-root/mingw/bin/*.dll bin
 
 #remove static archives
 find -type f -print0 -name "*.dll.a" | xargs rm -f

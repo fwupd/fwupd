@@ -224,7 +224,7 @@ executable(
     '-DFU_OFFLINE_DESTDIR=""',
   ],
   install : true,
-  install_dir : join_paths(libexecdir, 'fwupd')
+  install_dir : daemon_dir
 )
 
 endif
