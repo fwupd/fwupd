@@ -2340,13 +2340,14 @@ main(int argc, char *argv[])
 			 G_CALLBACK(fu_main_argv_changed_cb),
 			 priv);
 
-#if GLIB_CHECK_VERSION(2, 63, 3)
+#if GLIB_CHECK_VERSION(2, 63, 3) && !defined(_WIN32)
 	/* shut down on low memory event as we can just rescan hardware */
 	priv->memory_monitor = g_memory_monitor_dup_default();
-	g_signal_connect(G_MEMORY_MONITOR(priv->memory_monitor),
-			 "low-memory-warning",
-			 G_CALLBACK(fu_main_memory_monitor_warning_cb),
-			 priv);
+	if (priv->memory_monitor != NULL)
+		g_signal_connect(G_MEMORY_MONITOR(priv->memory_monitor),
+				 "low-memory-warning",
+				 G_CALLBACK(fu_main_memory_monitor_warning_cb),
+				 priv);
 #endif
 
 	/* load introspection from file */
