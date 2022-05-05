@@ -18,8 +18,7 @@
 #include "fu-redfish-network.h"
 #include "fu-redfish-smbios.h"
 
-#define FU_REDFISH_PLUGIN_CLEANUP_RETRIES_COUNT 120
-#define FU_REDFISH_PLUGIN_CLEANUP_RETRIES_DELAY 5000 /* ms */
+#define FU_REDFISH_PLUGIN_CLEANUP_RETRIES_DELAY 10 /* seconds */
 
 struct FuPluginData {
 	FuRedfishBackend *backend;
@@ -430,6 +429,8 @@ static gboolean
 fu_plugin_redfish_cleanup(FuPlugin *self, FuDevice *device, FwupdInstallFlags flags, GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data(self);
+	guint64 reset_timeout = 0;
+	g_autofree gchar *restart_timeout_str = NULL;
 	g_autoptr(FuRedfishRequest) request = fu_redfish_backend_request_new(data->backend);
 	g_autoptr(JsonBuilder) builder = json_builder_new();
 	g_autoptr(GPtrArray) devices = NULL;
@@ -476,11 +477,20 @@ fu_plugin_redfish_cleanup(FuPlugin *self, FuDevice *device, FwupdInstallFlags fl
 			  fu_redfish_device_get_reset_pre_delay(FU_REDFISH_DEVICE(device)));
 	fu_progress_step_done(progress);
 
+	/* read the config file to work out how long to wait */
+	restart_timeout_str = fu_plugin_get_config_value(self, "ManagerResetTimeout");
+	if (restart_timeout_str != NULL)
+		fu_common_strtoull_full(restart_timeout_str, &reset_timeout, 1, 86400, NULL);
+	if (reset_timeout == 0) {
+		g_warning("no valid ManagerResetTimeout, falling back to default");
+		reset_timeout = 1800;
+	}
+
 	/* wait for the BMC to come back */
 	if (!fu_device_retry_full(device,
 				  fu_plugin_redfish_cleanup_cb,
-				  FU_REDFISH_PLUGIN_CLEANUP_RETRIES_COUNT,
-				  FU_REDFISH_PLUGIN_CLEANUP_RETRIES_DELAY,
+				  reset_timeout / FU_REDFISH_PLUGIN_CLEANUP_RETRIES_DELAY,
+				  FU_REDFISH_PLUGIN_CLEANUP_RETRIES_DELAY * 1000,
 				  self,
 				  error)) {
 		g_prefix_error(error, "manager failed to come back: ");
