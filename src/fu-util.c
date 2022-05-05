@@ -11,11 +11,11 @@
 #include <fcntl.h>
 #include <fwupd.h>
 #include <gio/gio.h>
-#include <gio/gunixfdlist.h>
 #include <glib/gi18n.h>
 #include <glib/gstdio.h>
 #include <xmlb.h>
 #ifdef HAVE_GIO_UNIX
+#include <gio/gunixfdlist.h>
 #include <glib-unix.h>
 #endif
 #include <locale.h>
