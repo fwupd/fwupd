@@ -60,6 +60,7 @@ typedef struct {
 	gint order;
 	guint priority;
 	guint poll_id;
+	gint poll_locker_cnt;
 	gboolean done_probe;
 	gboolean done_setup;
 	gboolean device_id_valid;
@@ -242,6 +243,8 @@ fu_device_internal_flag_to_string(FuDeviceInternalFlags flag)
 		return "no-probe";
 	if (flag == FU_DEVICE_INTERNAL_FLAG_MD_SET_SIGNED)
 		return "md-set-signed";
+	if (flag == FU_DEVICE_INTERNAL_AUTO_PAUSE_POLLING)
+		return "auto-pause-polling";
 	return NULL;
 }
 
@@ -306,6 +309,8 @@ fu_device_internal_flag_from_string(const gchar *flag)
 		return FU_DEVICE_INTERNAL_FLAG_NO_PROBE;
 	if (g_strcmp0(flag, "md-set-signed") == 0)
 		return FU_DEVICE_INTERNAL_FLAG_MD_SET_SIGNED;
+	if (g_strcmp0(flag, "auto-pause-polling") == 0)
+		return FU_DEVICE_INTERNAL_AUTO_PAUSE_POLLING;
 	return FU_DEVICE_INTERNAL_FLAG_UNKNOWN;
 }
 
@@ -717,6 +722,50 @@ fu_device_retry(FuDevice *self,
 	return fu_device_retry_full(self, func, count, priv->retry_delay, user_data, error);
 }
 
+static gboolean
+fu_device_poll_locker_open_cb(GObject *device, GError **error)
+{
+	FuDevice *self = FU_DEVICE(device);
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+	g_atomic_int_inc(&priv->poll_locker_cnt);
+	return TRUE;
+}
+
+static gboolean
+fu_device_poll_locker_close_cb(GObject *device, GError **error)
+{
+	FuDevice *self = FU_DEVICE(device);
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+	g_atomic_int_dec_and_test(&priv->poll_locker_cnt);
+	return TRUE;
+}
+
+/**
+ * fu_device_poll_locker_new:
+ * @self: a #FuDevice
+ * @error: (nullable): optional return location for an error
+ *
+ * Returns a device locker that prevents polling on the device. If there are no open poll lockers
+ * then the poll callback will be called.
+ *
+ * Use %FU_DEVICE_INTERNAL_AUTO_PAUSE_POLLING to opt into this functionality.
+ *
+ * Returns: (transfer full): a #FuDeviceLocker
+ *
+ * Since: 1.8.1
+ **/
+FuDeviceLocker *
+fu_device_poll_locker_new(FuDevice *self, GError **error)
+{
+	g_return_val_if_fail(FU_IS_DEVICE(self), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	return fu_device_locker_new_full(self,
+					 fu_device_poll_locker_open_cb,
+					 fu_device_poll_locker_close_cb,
+					 error);
+}
+
 /**
  * fu_device_poll:
  * @self: a #FuDevice
@@ -750,6 +799,14 @@ fu_device_poll_cb(gpointer user_data)
 	FuDevice *self = FU_DEVICE(user_data);
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 	g_autoptr(GError) error_local = NULL;
+
+	/* device is being detached, written, read, or attached */
+	if (fu_device_has_internal_flag(self, FU_DEVICE_INTERNAL_AUTO_PAUSE_POLLING) &&
+	    priv->poll_locker_cnt > 0) {
+		g_debug("ignoring poll callback as an action is in progress");
+		return G_SOURCE_CONTINUE;
+	}
+
 	if (!fu_device_poll(self, &error_local)) {
 		g_warning("disabling polling: %s", error_local->message);
 		priv->poll_id = 0;

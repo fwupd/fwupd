@@ -2687,6 +2687,7 @@ fu_engine_detach(FuEngine *self,
 	FuPlugin *plugin;
 	g_autofree gchar *str = NULL;
 	g_autoptr(FuDevice) device = NULL;
+	g_autoptr(FuDeviceLocker) poll_locker = NULL;
 
 	/* the device and plugin both may have changed */
 	device = fu_engine_get_device(self, device_id, error);
@@ -2694,6 +2695,12 @@ fu_engine_detach(FuEngine *self,
 		g_prefix_error(error, "failed to get device before update detach: ");
 		return FALSE;
 	}
+
+	/* pause the polling */
+	poll_locker = fu_device_poll_locker_new(device, error);
+	if (poll_locker == NULL)
+		return FALSE;
+
 	str = fu_device_to_string(device);
 	g_debug("detach -> %s", str);
 	plugin =
@@ -2733,6 +2740,7 @@ fu_engine_attach(FuEngine *self, const gchar *device_id, FuProgress *progress, G
 	FuPlugin *plugin;
 	g_autofree gchar *str = NULL;
 	g_autoptr(FuDevice) device = NULL;
+	g_autoptr(FuDeviceLocker) poll_locker = NULL;
 
 	/* the device and plugin both may have changed */
 	device = fu_engine_get_device(self, device_id, error);
@@ -2745,6 +2753,11 @@ fu_engine_attach(FuEngine *self, const gchar *device_id, FuProgress *progress, G
 	plugin =
 	    fu_plugin_list_find_by_name(self->plugin_list, fu_device_get_plugin(device), error);
 	if (plugin == NULL)
+		return FALSE;
+
+	/* pause the polling */
+	poll_locker = fu_device_poll_locker_new(device, error);
+	if (poll_locker == NULL)
 		return FALSE;
 
 	if (!fu_plugin_runner_attach(plugin, device, progress, error))
@@ -2843,6 +2856,7 @@ fu_engine_write_firmware(FuEngine *self,
 	g_autofree gchar *str = NULL;
 	g_autoptr(FuDevice) device = NULL;
 	g_autoptr(FuDevice) device_pending = NULL;
+	g_autoptr(FuDeviceLocker) poll_locker = NULL;
 
 	/* cancel the pending action */
 	if (!fu_engine_offline_invalidate(error))
@@ -2854,6 +2868,12 @@ fu_engine_write_firmware(FuEngine *self,
 		g_prefix_error(error, "failed to get device before update: ");
 		return FALSE;
 	}
+
+	/* pause the polling */
+	poll_locker = fu_device_poll_locker_new(device, error);
+	if (poll_locker == NULL)
+		return FALSE;
+
 	device_pending = fu_history_get_device_by_id(self->history, device_id, NULL);
 	str = fu_device_to_string(device);
 	g_debug("update -> %s", str);
@@ -2918,6 +2938,12 @@ fu_engine_firmware_dump(FuEngine *self,
 			GError **error)
 {
 	g_autoptr(FuDeviceLocker) locker = NULL;
+	g_autoptr(FuDeviceLocker) poll_locker = NULL;
+
+	/* pause the polling */
+	poll_locker = fu_device_poll_locker_new(device, error);
+	if (poll_locker == NULL)
+		return NULL;
 
 	/* open, read, close */
 	locker = fu_device_locker_new(device, error);

@@ -449,6 +449,15 @@ typedef guint64 FuDeviceInternalFlags;
  */
 #define FU_DEVICE_INTERNAL_FLAG_MD_SET_SIGNED (1ull << 23)
 
+/**
+ * FU_DEVICE_INTERNAL_AUTO_PAUSE_POLLING:
+ *
+ * Pause polling when reading or writing to the device
+ *
+ * Since: 1.8.1
+ */
+#define FU_DEVICE_INTERNAL_AUTO_PAUSE_POLLING (1ull << 24)
+
 /* accessors */
 gchar *
 fu_device_to_string(FuDevice *self);
@@ -720,3 +729,5 @@ gboolean
 fu_device_build_instance_id(FuDevice *self, GError **error, const gchar *subsystem, ...);
 gboolean
 fu_device_build_instance_id_quirk(FuDevice *self, GError **error, const gchar *subsystem, ...);
+FuDeviceLocker *
+fu_device_poll_locker_new(FuDevice *self, GError **error);
