@@ -162,6 +162,7 @@ fwupd_get_os_release(GError **error)
 
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
+#ifndef _WIN32
 	/* find the correct file */
 	if (sysconfdir != NULL)
 		g_ptr_array_add(paths, g_build_filename(sysconfdir, "os-release", NULL));
@@ -175,6 +176,7 @@ fwupd_get_os_release(GError **error)
 			break;
 		}
 	}
+#endif
 
 	hash = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
 	if (filename == NULL) {
