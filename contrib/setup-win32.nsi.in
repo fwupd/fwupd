@@ -64,7 +64,6 @@ Section "fwupd"
   File "/etc/pki/tls/certs/ca-bundle.crt"
 
   # fwupd
-  File "bin/jcat-tool.exe"
   File "bin/fwupdtool.exe"
   File "bin/libfwupd-2.dll"
   File "bin/libfwupdplugin-@FWUPD_PLUGINVER@.dll"
