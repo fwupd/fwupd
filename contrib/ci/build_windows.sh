@@ -22,7 +22,7 @@ meson .. \
     --prefix=/ \
     --libexecdir="" \
     --bindir="" \
-    -Dbuild=standalone \
+    -Dbuild=all \
     -Ddocs=none \
     -Dhsi=false \
     -Dman=false \
