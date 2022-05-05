@@ -6,18 +6,13 @@
 
 #include "config.h"
 
-#ifdef HAVE_BSG_H
-#include <linux/bsg.h>
-#include <scsi/scsi_bsg_ufs.h>
 #include <scsi/sg.h>
-#endif
 
 #include "fu-scsi-device.h"
 
 struct _FuScsiDevice {
 	FuUdevDevice parent_instance;
 	guint64 ffu_timeout;
-	guint8 sg_version; /* 3 or 4 */
 };
 
 G_DEFINE_TYPE(FuScsiDevice, fu_scsi_device, FU_TYPE_UDEV_DEVICE)
@@ -39,13 +34,18 @@ fu_scsi_device_to_string(FuDevice *device, guint idt, GString *str)
 	FuScsiDevice *self = FU_SCSI_DEVICE(device);
 	FU_DEVICE_CLASS(fu_scsi_device_parent_class)->to_string(device, idt, str);
 	fu_common_string_append_kx(str, idt, "FfuTimeout", self->ffu_timeout);
-	fu_common_string_append_kx(str, idt, "SgVersion", self->sg_version);
 }
 
 static gboolean
 fu_scsi_device_probe(FuDevice *device, GError **error)
 {
 	FuScsiDevice *self = FU_SCSI_DEVICE(device);
+	/*
+	 * XXX: pci is a parent node in the specific case, in general, controller
+	 * can be on any bus, so we somehow need to get from device node, to
+	 * controller node regardless of which bus it is on
+	 */
+	g_autoptr(FuUdevDevice) device_parent = fu_udev_device_get_parent_with_subsystem(FU_UDEV_DEVICE(device), "pci");
 	const gchar *device_file = fu_udev_device_get_device_file(FU_UDEV_DEVICE(device));
 	const gchar *name;
 	const gchar *vendor;
@@ -87,44 +87,26 @@ fu_scsi_device_probe(FuDevice *device, GError **error)
 	version = fu_udev_device_get_sysfs_attr(FU_UDEV_DEVICE(device), "rev", NULL);
 	fu_device_set_version(device, version);
 
-	/* is FFU capable */
-	if (fu_udev_device_get_sysfs_attr_uint64(FU_UDEV_DEVICE(device),
-						 "device_descriptor/ufs_features",
-						 &ufs_features,
-						 NULL)) {
-		fu_device_set_summary(device, "UFS device");
-		if (ufs_features & 0x1) {
-#ifdef HAVE_BSG_H
-			fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
-			fu_device_add_protocol(device, "org.jedec.ufs");
-#endif
+	if (device_parent != NULL) {
+		/* Check if this is a UFS device */
+		if (fu_udev_device_get_sysfs_attr_uint64(device_parent,
+							 "device_descriptor/ufs_features",
+							 &ufs_features,
+							 NULL)) {
+			fu_device_set_summary(device, "UFS device");
+			/* Least significant bit specifies FFU capability. */
+			if (ufs_features & 0x1) {
+				fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
+				fu_device_add_protocol(device, "org.jedec.ufs");
+			}
+			if (!fu_udev_device_get_sysfs_attr_uint64(device_parent,
+								  "device_descriptor/ffu_timeout",
+								  &self->ffu_timeout,
+								  error)) {
+				g_prefix_error(error, "no ffu timeout specified: ");
+				return FALSE;
+			}
 		}
-		if (!fu_udev_device_get_sysfs_attr_uint64(FU_UDEV_DEVICE(device),
-							  "device_descriptor/ffu_timeout",
-							  &self->ffu_timeout,
-							  error)) {
-			g_prefix_error(error, "no ffu timeout specified: ");
-			return FALSE;
-		}
-	}
-
-	/* which sg API do we use? */
-	if (device_file != NULL) {
-		if (g_str_has_prefix(device_file, "/dev/sd")) {
-			self->sg_version = 0x3;
-		} else if (g_str_has_prefix(device_file, "/dev/bsg/ufs-bsg")) {
-			self->sg_version = 0x4;
-		}
-	}
-
-	/* fallback to bsg just existing */
-	if (self->sg_version == 0x0) {
-		g_autofree gchar *bsg_path = NULL;
-		bsg_path = g_build_filename(fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(device)),
-					    "bsg",
-					    NULL);
-		if (g_file_test(bsg_path, G_FILE_TEST_EXISTS))
-			self->sg_version = 0x4;
 	}
 
 	/* add GUIDs */
@@ -167,7 +149,6 @@ fu_scsi_device_prepare_firmware(FuDevice *device,
 	return g_steal_pointer(&firmware);
 }
 
-#ifdef HAVE_BSG_H
 static const gchar *
 fu_scsi_device_sense_key_to_string(guint8 key)
 {
@@ -205,57 +186,6 @@ fu_scsi_device_sense_key_to_string(guint8 key)
 }
 
 static gboolean
-fu_scsi_device_send_scsi_cmd_v4(FuScsiDevice *self,
-				const guint8 *cdb,
-				guint8 cdbsz,
-				const guint8 *buf,
-				guint32 bufsz,
-				gint dir,
-				GError **error)
-{
-	guint8 sense_buffer[SENSE_BUFF_LEN] = {0};
-	struct sg_io_v4 io_hdr = {.guard = 'Q',
-				  .protocol = BSG_PROTOCOL_SCSI,
-				  .subprotocol = BSG_SUB_PROTOCOL_SCSI_CMD};
-
-	io_hdr.response = (__u64)sense_buffer;
-	io_hdr.max_response_len = sizeof(sense_buffer);
-	io_hdr.request = (__u64)cdb;
-	io_hdr.request_len = cdbsz;
-	if (dir == SG_DXFER_FROM_DEV) {
-		io_hdr.din_xfer_len = (guint32)bufsz;
-		io_hdr.din_xferp = (__u64)buf;
-	} else {
-		io_hdr.dout_xfer_len = (guint32)bufsz;
-		io_hdr.dout_xferp = (__u64)buf;
-	}
-
-	g_debug("cmd=0x%x len=0x%x sg_type=%d", cdb[0], (guint)bufsz, self->sg_version);
-	if (!fu_udev_device_ioctl_full(FU_UDEV_DEVICE(self),
-				       SG_IO,
-				       (guint8 *)&io_hdr,
-				       NULL,
-				       5000,
-				       error))
-		return FALSE;
-
-	if (io_hdr.info != 0) {
-		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
-			    "Command fail with status %x, senseKey %s, asc 0x%02x, ascq 0x%02x",
-			    io_hdr.info,
-			    fu_scsi_device_sense_key_to_string(sense_buffer[2]),
-			    sense_buffer[12],
-			    sense_buffer[13]);
-		return FALSE;
-	}
-
-	/* success */
-	return TRUE;
-}
-
-static gboolean
 fu_scsi_device_send_scsi_cmd_v3(FuScsiDevice *self,
 				const guint8 *cdb,
 				guint8 cdbsz,
@@ -277,7 +207,7 @@ fu_scsi_device_send_scsi_cmd_v3(FuScsiDevice *self,
 	io_hdr.sbp = sense_buffer;
 	io_hdr.timeout = 60000; /* ms */
 
-	g_debug("cmd=0x%x len=0x%x sg_type=%d", cdb[0], (guint)bufsz, self->sg_version);
+	g_debug("cmd=0x%x len=0x%x", cdb[0], (guint)bufsz);
 	if (!fu_udev_device_ioctl_full(FU_UDEV_DEVICE(self),
 				       SG_IO,
 				       (guint8 *)&io_hdr,
@@ -301,7 +231,6 @@ fu_scsi_device_send_scsi_cmd_v3(FuScsiDevice *self,
 	/* success */
 	return TRUE;
 }
-#endif
 
 static gboolean
 fu_scsi_device_write_firmware(FuDevice *device,
@@ -310,7 +239,6 @@ fu_scsi_device_write_firmware(FuDevice *device,
 			      FwupdInstallFlags flags,
 			      GError **error)
 {
-#ifdef HAVE_BSG_H
 	FuScsiDevice *self = FU_SCSI_DEVICE(device);
 	guint32 chunksz = 0x1000;
 	g_autoptr(GBytes) fw = NULL;
@@ -321,10 +249,12 @@ fu_scsi_device_write_firmware(FuDevice *device,
 	if (fw == NULL)
 		return FALSE;
 
-	/* write each block */
+	/* prepare chunks */
+	chunks = fu_chunk_array_new_from_bytes(fw, 0x00, 0x00, chunksz);
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_WRITE);
 	fu_progress_set_steps(progress, chunks->len);
-	chunks = fu_chunk_array_new_from_bytes(fw, 0x00, 0x00, chunksz);
+
+	/* write each block */
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index(chunks, i);
 		guint8 cdb[WRITE_BUF_CMDLEN] = {WRITE_BUFFER_CMD,
@@ -333,32 +263,18 @@ fu_scsi_device_write_firmware(FuDevice *device,
 
 		fu_common_write_uint24(cdb + 3, fu_chunk_get_address(chk), G_LITTLE_ENDIAN);
 		fu_common_write_uint24(cdb + 6, fu_chunk_get_data_sz(chk), G_LITTLE_ENDIAN);
-		if (self->sg_version == 0x4) {
-			if (!fu_scsi_device_send_scsi_cmd_v4(self,
-							     cdb,
-							     sizeof(cdb),
-							     fu_chunk_get_data(chk),
-							     fu_chunk_get_data_sz(chk),
-							     SG_DXFER_TO_DEV,
-							     error)) {
-				g_prefix_error(error,
-					       "SG_IO WRITE BUFFER data error for v4 chunk 0x%x: ",
-					       fu_chunk_get_idx(chk));
-				return FALSE;
-			}
-		} else {
-			if (!fu_scsi_device_send_scsi_cmd_v3(self,
-							     cdb,
-							     sizeof(cdb),
-							     fu_chunk_get_data(chk),
-							     fu_chunk_get_data_sz(chk),
-							     SG_DXFER_TO_DEV,
-							     error)) {
-				g_prefix_error(error,
-					       "SG_IO WRITE BUFFER data error for v3 chunk 0x%x: ",
-					       fu_chunk_get_idx(chk));
-				return FALSE;
-			}
+		if (!fu_scsi_device_send_scsi_cmd_v3(self,
+						     cdb,
+						     sizeof(cdb),
+						     fu_chunk_get_data(chk),
+						     fu_chunk_get_data_sz(chk),
+						     SG_DXFER_TO_DEV,
+						     error)) {
+			g_prefix_error(error,
+				       "SG_IO WRITE BUFFER data error for v3 chunk 0x%x: ",
+				       fu_chunk_get_idx(chk));
+
+			return FALSE;
 		}
 
 		/* wait for the timeout */
@@ -371,10 +287,6 @@ fu_scsi_device_write_firmware(FuDevice *device,
 	/* success! */
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
 	return TRUE;
-#else
-	g_set_error(error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED, "linux/bsg.h not found");
-	return FALSE;
-#endif
 }
 
 static void
