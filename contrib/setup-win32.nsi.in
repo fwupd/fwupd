@@ -7,6 +7,7 @@
 
 Name ""
 OutFile "setup/fwupd-@FWUPD_VERSION@-setup-x86_64.exe"
+Unicode True
 InstallDir "$ProgramFiles\fwupd"
 InstallDirRegKey HKLM SOFTWARE\fwupd "Install_Dir"
 ShowInstDetails hide
@@ -14,6 +15,7 @@ ShowUninstDetails hide
 XPStyle on
 Page directory
 Page instfiles
+RequestExecutionLevel admin
 
 ComponentText "Select which optional components you want to install."
 
@@ -83,6 +85,15 @@ Section "fwupd"
   File "etc/fwupd/remotes.d/lvfs.conf"
   File "etc/fwupd/remotes.d/lvfs-testing.conf"
 
+  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\fwupd" "DisplayName" "fwupd"
+  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\fwupd" "DisplayVersion" "@FWUPD_VERSION@"
+  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\fwupd" "Publisher" "The fwupd Team"
+  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\fwupd" "URLInfoAbout" "https://github.com/fwupd/fwupd"
+  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\fwupd" "UninstallString" '"$INSTDIR\uninst.exe"'
+  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\fwupd" "QuietUninstallString" '"$INSTDIR\uninst.exe" /S'
+  WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\fwupd" "NoModify" 1
+  WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\fwupd" "NoRepair" 1
+
   ReadEnvStr $0 COMSPEC
   SetOutPath "$INSTDIR"
 SectionEnd
@@ -94,8 +105,9 @@ Section "Uninstall"
   RMDir /rebootok /r "$INSTDIR\lib"
   RMDir /rebootok /r "$INSTDIR\share"
   RMDir /rebootok "$INSTDIR"
+  DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\fwupd"
 SectionEnd
 
 Section -post
-  WriteUninstaller "$INSTDIR\Uninstall fwupd.exe"
+  WriteUninstaller "$INSTDIR\uninst.exe"
 SectionEnd
