@@ -612,6 +612,54 @@ fu_steelseries_sonic_restart(FuDevice *device,
 }
 
 static gboolean
+fu_steelseries_sonic_wait_for_device(FuDevice *device, GError **error)
+{
+	SteelseriesSonicWirelessStatus wl_status;
+
+	if (!fu_steelseries_sonic_wireless_status(device, &wl_status, error)) {
+		g_prefix_error(error, "failed to get wireless status: ");
+		return FALSE;
+	}
+	g_debug("WirelessStatus: %u", wl_status);
+	if (wl_status != STEELSERIES_SONIC_WIRELESS_STATE_CONNECTED) {
+		g_autoptr(FwupdRequest) request = NULL;
+		g_autoptr(GTimer) timer = NULL;
+		g_autofree gchar *msg = NULL;
+
+		/* the user has to do something */
+		msg = g_strdup_printf("%s needs to be connected to start the update. "
+				      "Please put the switch button underneath to 2.4G, or "
+				      "click on any button to reconnect it.",
+				      fu_device_get_name(device));
+		request = fwupd_request_new();
+		fwupd_request_set_kind(request, FWUPD_REQUEST_KIND_IMMEDIATE);
+		fwupd_request_set_id(request, FWUPD_REQUEST_ID_PRESS_UNLOCK);
+		fwupd_request_set_message(request, msg);
+		fu_device_emit_request(device, request);
+
+		/* poll for the wireless status */
+		timer = g_timer_new();
+		do {
+			g_usleep(G_USEC_PER_SEC);
+			if (!fu_steelseries_sonic_wireless_status(device, &wl_status, error)) {
+				g_prefix_error(error, "failed to get wireless status: ");
+				return FALSE;
+			}
+			g_debug("WirelessStatus: %u", wl_status);
+		} while (wl_status != STEELSERIES_SONIC_WIRELESS_STATE_CONNECTED &&
+			 g_timer_elapsed(timer, NULL) * 1000.f <
+			     FU_DEVICE_REMOVE_DELAY_USER_REPLUG);
+		if (wl_status != STEELSERIES_SONIC_WIRELESS_STATE_CONNECTED) {
+			g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NEEDS_USER_ACTION, msg);
+			return FALSE;
+		}
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_steelseries_sonic_probe(FuDevice *device, GError **error)
 {
 #if G_USB_CHECK_VERSION(0, 3, 3)
@@ -724,47 +772,10 @@ fu_steelseries_sonic_prepare(FuDevice *device,
 			     FwupdInstallFlags flags,
 			     GError **error)
 {
-	SteelseriesSonicWirelessStatus wl_status;
 	guint16 bat_state;
 
-	if (!fu_steelseries_sonic_wireless_status(device, &wl_status, error)) {
-		g_prefix_error(error, "failed to get wireless status: ");
+	if (!fu_steelseries_sonic_wait_for_device(device, error))
 		return FALSE;
-	}
-	g_debug("WirelessStatus: %u", wl_status);
-	if (wl_status != STEELSERIES_SONIC_WIRELESS_STATE_CONNECTED) {
-		g_autoptr(FwupdRequest) request = NULL;
-		g_autoptr(GTimer) timer = NULL;
-		g_autofree gchar *msg = NULL;
-
-		/* the user has to do something */
-		msg = g_strdup_printf("%s needs to be connected to start the update. "
-				      "Please put the switch button underneath to 2.4G, or "
-				      "click on any button to reconnect it.",
-				      fu_device_get_name(device));
-		request = fwupd_request_new();
-		fwupd_request_set_kind(request, FWUPD_REQUEST_KIND_IMMEDIATE);
-		fwupd_request_set_id(request, FWUPD_REQUEST_ID_PRESS_UNLOCK);
-		fwupd_request_set_message(request, msg);
-		fu_device_emit_request(device, request);
-
-		/* poll for the wireless status */
-		timer = g_timer_new();
-		do {
-			g_usleep(G_USEC_PER_SEC);
-			if (!fu_steelseries_sonic_wireless_status(device, &wl_status, error)) {
-				g_prefix_error(error, "failed to get wireless status: ");
-				return FALSE;
-			}
-			g_debug("WirelessStatus: %u", wl_status);
-		} while (wl_status != STEELSERIES_SONIC_WIRELESS_STATE_CONNECTED &&
-			 g_timer_elapsed(timer, NULL) * 1000.f <
-			     FU_DEVICE_REMOVE_DELAY_USER_REPLUG);
-		if (wl_status != STEELSERIES_SONIC_WIRELESS_STATE_CONNECTED) {
-			g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NEEDS_USER_ACTION, msg);
-			return FALSE;
-		}
-	}
 
 	if (!fu_steelseries_sonic_battery_state(device, &bat_state, error)) {
 		g_prefix_error(error, "failed to get battery state: ");
@@ -901,6 +912,62 @@ fu_steelseries_sonic_verify_chip(FuDevice *device,
 
 	/* success */
 	return TRUE;
+}
+
+static FuFirmware *
+fu_steelseries_sonic_read_firmware(FuDevice *device, FuProgress *progress, GError **error)
+{
+	SteelseriesSonicChip chip;
+	g_autoptr(FuFirmware) firmware = fu_archive_firmware_new();
+	g_autoptr(FuFirmware) firmware_nordic = NULL;
+	g_autoptr(FuFirmware) firmware_holtek = NULL;
+	g_autoptr(FuFirmware) firmware_mouse = NULL;
+
+	if (!fu_steelseries_sonic_wait_for_device(device, error))
+		return NULL;
+
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_READ, 18);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_READ, 8);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_READ, 73);
+
+	fu_archive_firmware_set_format(FU_ARCHIVE_FIRMWARE(firmware), FU_ARCHIVE_FORMAT_ZIP);
+	fu_archive_firmware_set_compression(FU_ARCHIVE_FIRMWARE(firmware),
+					    FU_ARCHIVE_COMPRESSION_NONE);
+
+	/* nordic */
+	chip = STEELSERIES_SONIC_CHIP_NORDIC;
+	firmware_nordic =
+	    fu_steelseries_sonic_read_chip(device, chip, fu_progress_get_child(progress), error);
+	if (firmware_nordic == NULL)
+		return NULL;
+	fu_firmware_set_id(firmware_nordic, STEELSERIES_SONIC_FIRMWARE_ID[chip]);
+	fu_firmware_add_image(firmware, firmware_nordic);
+	fu_progress_step_done(progress);
+
+	/* holtek */
+	chip = STEELSERIES_SONIC_CHIP_HOLTEK;
+	firmware_holtek =
+	    fu_steelseries_sonic_read_chip(device, chip, fu_progress_get_child(progress), error);
+	if (firmware_holtek == NULL)
+		return NULL;
+	fu_firmware_set_id(firmware_holtek, STEELSERIES_SONIC_FIRMWARE_ID[chip]);
+	fu_firmware_add_image(firmware, firmware_holtek);
+	fu_progress_step_done(progress);
+
+	/* mouse */
+	chip = STEELSERIES_SONIC_CHIP_MOUSE;
+	firmware_mouse =
+	    fu_steelseries_sonic_read_chip(device, chip, fu_progress_get_child(progress), error);
+	if (firmware_mouse == NULL)
+		return NULL;
+	fu_firmware_set_id(firmware_mouse, STEELSERIES_SONIC_FIRMWARE_ID[chip]);
+	fu_firmware_add_image(firmware, firmware_mouse);
+	fu_progress_step_done(progress);
+
+	/* success */
+	fu_firmware_set_id(firmware, FU_FIRMWARE_ID_PAYLOAD);
+	return g_steal_pointer(&firmware);
 }
 
 static gboolean
@@ -1126,6 +1193,7 @@ fu_steelseries_sonic_class_init(FuSteelseriesSonicClass *klass)
 	klass_device->probe = fu_steelseries_sonic_probe;
 	klass_device->attach = fu_steelseries_sonic_attach;
 	klass_device->prepare = fu_steelseries_sonic_prepare;
+	klass_device->read_firmware = fu_steelseries_sonic_read_firmware;
 	klass_device->write_firmware = fu_steelseries_sonic_write_firmware;
 	klass_device->prepare_firmware = fu_steelseries_sonic_prepare_firmware;
 	klass_device->set_quirk_kv = fu_steelseries_sonic_set_quirk_kv;
