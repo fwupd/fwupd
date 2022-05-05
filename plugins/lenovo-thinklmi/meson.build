@@ -1,4 +1,4 @@
-if not get_option('plugin_uefi_capsule').disabled()
+if get_option('plugin_uefi_capsule').disable_auto_if(host_machine.system() != 'linux').allowed()
 
 cargs = ['-DG_LOG_DOMAIN="FuPluginLenovoThinkLmi"']
 
