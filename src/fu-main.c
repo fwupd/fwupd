@@ -9,8 +9,10 @@
 #include "config.h"
 
 #include <fwupd.h>
+#ifdef HAVE_GIO_UNIX
 #include <gio/gunixfdlist.h>
 #include <glib-unix.h>
+#endif
 #include <glib/gi18n.h>
 #include <glib/gstdio.h>
 #include <locale.h>
@@ -98,6 +100,7 @@ fu_main_machine_kind_from_string(const gchar *kind)
 	return FU_MAIN_MACHINE_KIND_UNKNOWN;
 }
 
+#ifdef HAVE_GIO_UNIX
 static gboolean
 fu_main_sigterm_cb(gpointer user_data)
 {
@@ -110,6 +113,7 @@ fu_main_sigterm_cb(gpointer user_data)
 	priv->pending_sigterm = TRUE;
 	return G_SOURCE_CONTINUE;
 }
+#endif
 
 static void
 fu_main_engine_changed_cb(FuEngine *engine, FuMainPrivate *priv)
@@ -250,7 +254,7 @@ fu_main_create_request(FuMainPrivate *priv, const gchar *sender, GError **error)
 {
 	FuSenderItem *sender_item;
 	FwupdDeviceFlags device_flags = FWUPD_DEVICE_FLAG_NONE;
-	uid_t calling_uid = 0;
+	guint64 calling_uid = 0;
 	g_autoptr(FuEngineRequest) request = fu_engine_request_new(FU_ENGINE_REQUEST_KIND_ACTIVE);
 	g_autoptr(GVariant) value = NULL;
 
@@ -359,6 +363,7 @@ fu_main_remote_array_to_variant(GPtrArray *remotes)
 	return g_variant_new("(aa{sv})", &builder);
 }
 
+#ifdef HAVE_GIO_UNIX
 static GVariant *
 fu_main_result_array_to_variant(GPtrArray *results)
 {
@@ -372,6 +377,7 @@ fu_main_result_array_to_variant(GPtrArray *results)
 	}
 	return g_variant_new("(aa{sv})", &builder);
 }
+#endif /* HAVE_GIO_UNIX */
 
 typedef struct {
 	GDBusMethodInvocation *invocation;
@@ -761,6 +767,7 @@ fu_main_authorize_modify_remote_cb(GObject *source, GAsyncResult *res, gpointer 
 	g_dbus_method_invocation_return_value(helper->invocation, NULL);
 }
 
+#ifdef HAVE_GIO_UNIX
 static void
 fu_main_authorize_install_queue(FuMainAuthHelper *helper);
 
@@ -844,6 +851,7 @@ fu_main_authorize_install_queue(FuMainAuthHelper *helper_ref)
 	fu_main_set_status(helper->priv, FWUPD_STATUS_IDLE);
 	g_dbus_method_invocation_return_value(helper->invocation, NULL);
 }
+#endif /* HAVE_GIO_UNIX */
 
 #if !GLIB_CHECK_VERSION(2, 54, 0)
 static gboolean
@@ -862,6 +870,7 @@ g_ptr_array_find(GPtrArray *haystack, gconstpointer needle, guint *index_)
 }
 #endif
 
+#ifdef HAVE_GIO_UNIX
 static gint
 fu_main_release_sort_cb(gconstpointer a, gconstpointer b)
 {
@@ -1050,6 +1059,7 @@ fu_main_install_with_helper(FuMainAuthHelper *helper_ref, GError **error)
 	fu_main_authorize_install_queue(g_steal_pointer(&helper));
 	return TRUE;
 }
+#endif /* HAVE_GIO_UNIX */
 
 static FuSenderItem *
 fu_main_ensure_sender_item(FuMainPrivate *priv, const gchar *sender)
@@ -1501,6 +1511,7 @@ fu_main_daemon_method_call(GDBusConnection *connection,
 		return;
 	}
 	if (g_strcmp0(method_name, "UpdateMetadata") == 0) {
+#ifdef HAVE_GIO_UNIX
 		GDBusMessage *message;
 		GUnixFDList *fd_list;
 		const gchar *remote_id = NULL;
@@ -1536,6 +1547,10 @@ fu_main_daemon_method_call(GDBusConnection *connection,
 			return;
 		}
 		g_dbus_method_invocation_return_value(invocation, NULL);
+#else
+		g_set_error(&error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "unsupported feature");
+		g_dbus_method_invocation_return_gerror(invocation, error);
+#endif /* HAVE_GIO_UNIX */
 		return;
 	}
 	if (g_strcmp0(method_name, "Unlock") == 0) {
@@ -1784,6 +1799,7 @@ fu_main_daemon_method_call(GDBusConnection *connection,
 	}
 
 	if (g_strcmp0(method_name, "Install") == 0) {
+#ifdef HAVE_GIO_UNIX
 		GVariant *prop_value;
 		const gchar *device_id = NULL;
 		const gchar *prop_key;
@@ -1869,11 +1885,16 @@ fu_main_daemon_method_call(GDBusConnection *connection,
 			g_dbus_method_invocation_return_gerror(invocation, error);
 			return;
 		}
+#else
+		g_set_error(&error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "unsupported feature");
+		g_dbus_method_invocation_return_gerror(invocation, error);
+#endif /* HAVE_GIO_UNIX */
 
 		/* async return */
 		return;
 	}
 	if (g_strcmp0(method_name, "GetDetails") == 0) {
+#ifdef HAVE_GIO_UNIX
 		GDBusMessage *message;
 		GUnixFDList *fd_list;
 		gint32 fd_handle = 0;
@@ -1906,6 +1927,10 @@ fu_main_daemon_method_call(GDBusConnection *connection,
 		}
 		val = fu_main_result_array_to_variant(results);
 		g_dbus_method_invocation_return_value(invocation, val);
+#else
+		g_set_error(&error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "unsupported feature");
+		g_dbus_method_invocation_return_gerror(invocation, error);
+#endif /* HAVE_GIO_UNIX */
 		return;
 	}
 	g_set_error(&error,
@@ -2304,7 +2329,9 @@ main(int argc, char *argv[])
 		return EXIT_FAILURE;
 	}
 
+#ifdef HAVE_GIO_UNIX
 	g_unix_signal_add_full(G_PRIORITY_DEFAULT, SIGTERM, fu_main_sigterm_cb, priv, NULL);
+#endif /* HAVE_GIO_UNIX */
 
 	/* restart the daemon if the binary gets replaced */
 	priv->argv0_monitor = g_file_monitor_file(argv0_file, G_FILE_MONITOR_NONE, NULL, &error);
