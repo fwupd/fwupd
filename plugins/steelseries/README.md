@@ -7,6 +7,7 @@ This plugin allows to update firmware on SteelSeries gamepads:
 * Stratus Duo
 * Stratus Duo USB wireless adapter
 * Stratus+
+* Aerox 3 Wireless
 * Rival 3 Wireless
 
 SteelSeries Rival 100 gaming mice support is limited by getting the correct
@@ -15,6 +16,7 @@ available from the vendor.
 
 This plugin supports the following protocol IDs:
 
+* com.steelseries.fizz
 * com.steelseries.gamepad
 * com.steelseries.sonic
 
@@ -40,8 +42,14 @@ The device is not upgradable and thus requires no vendor ID set.
 
 ### Wireless Mice
 
+### Rival 3 Wireless
+
 The mouse switch button underneath must be set to 2.4G, and its 2.4G USB
 Wireless adapter must be connected to host.
+
+### Aerox 3 Wireless
+
+The mouse must be connected to host via the USB-A to USB-C cable.
 
 ## Vendor ID Security
 

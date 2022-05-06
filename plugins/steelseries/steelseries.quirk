@@ -11,6 +11,24 @@ Plugin = steelseries
 GType = FuSteelseriesSonic
 Icon = input-mouse
 
+# Aerox 3 Wireless
+[USB\VID_1038&PID_1838]
+Plugin = steelseries
+GType = FuSteelseriesFizz
+Name = Aerox 3 Wireless Dongle
+Icon = input-mouse
+CounterpartGuid = USB\VID_1038&PID_1839
+FirmwareSize = 0x23000
+SteelSeriesDeviceKind = fizz-dongle
+
+[USB\VID_1038&PID_183A]
+Plugin = steelseries
+GType = FuSteelseriesFizz
+Name = Aerox 3 Wireless Mouse
+Icon = input-mouse
+CounterpartGuid = USB\VID_1038&PID_183B
+FirmwareSize = 0x27000
+
 # Stratus Duo RX
 [USB\VID_1038&PID_1430]
 Plugin = steelseries
