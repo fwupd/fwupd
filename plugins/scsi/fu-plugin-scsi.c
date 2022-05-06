@@ -13,7 +13,7 @@
 static void
 fu_plugin_scsi_init(FuPlugin *plugin)
 {
-	fu_plugin_add_udev_subsystem(plugin, "scsi");
+	fu_plugin_add_udev_subsystem(plugin, "block");
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_SCSI_DEVICE);
 }
 

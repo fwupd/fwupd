@@ -1,4 +1,4 @@
-[SCSI]
+[BLOCK]
 Plugin = scsi
 
 [SCSI\VEN_LSI&DEV_VirtualSES]
