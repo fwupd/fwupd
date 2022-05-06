@@ -14,10 +14,9 @@ configure_file(
 )
 
 if host_machine.system() == 'windows'
-  # replace @FWUPD_VERSION@
   configure_file(
-    input : 'setup-win32.nsi.in',
-    output : 'setup-win32.nsi',
-    configuration : con2,
+    input: 'fwupd.wxs.in',
+    output: 'fwupd.wxs',
+    configuration: conf
   )
 endif

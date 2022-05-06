@@ -62,6 +62,7 @@
     </distro>
     <distro id="fedora">
       <package />
+      <package variant="mingw64" />
     </distro>
     <distro id="debian">
       <package variant="x86_64" />
@@ -95,6 +96,9 @@
   <dependency type="build" id="gcc">
     <distro id="void">
       <package />
+    </distro>
+    <distro id="fedora">
+      <package variant="mingw64">mingw64-gcc</package>
     </distro>
   </dependency>
   <dependency type="build" id="gcc-multilib-s390x-linux-gnu">
@@ -150,6 +154,7 @@
     </distro>
     <distro id="fedora">
       <package variant="x86_64">json-glib-devel</package>
+      <package variant="mingw64">mingw64-json-glib</package>
     </distro>
     <distro id="void">
       <package variant="x86_64">json-glib-devel</package>
@@ -361,6 +366,8 @@
     </distro>
     <distro id="fedora">
       <package />
+      <!-- need native until meson includes https://github.com/mesonbuild/meson/pull/10291 -->
+      <package variant="mingw64">gcab</package>
     </distro>
     <distro id="void">
       <package />
@@ -382,6 +389,9 @@
     </distro>
     <distro id="fedora">
       <package />
+      <!-- need native too until meson fixes https://github.com/mesonbuild/meson/issues/10376 -->
+      <package variant="mingw64">gettext</package>
+      <package variant="mingw64">mingw64-gettext</package>
     </distro>
     <distro id="void">
       <package />
@@ -452,6 +462,7 @@
     </distro>
     <distro id="fedora">
       <package />
+      <package variant="mingw64" />
     </distro>
     <distro id="void">
       <package />
@@ -480,6 +491,9 @@
     </distro>
     <distro id="fedora">
       <package variant="x86_64">glib2-devel</package>
+      <!-- need native too until meson fixes https://github.com/mesonbuild/meson/issues/10376 -->
+      <package variant="mingw64">glib2-devel</package>
+      <package variant="mingw64">mingw64-glib2</package>
     </distro>
     <distro id="void">
       <package variant="x86_64">glib-devel</package>
@@ -545,6 +559,7 @@
     </distro>
     <distro id="fedora">
       <package variant="x86_64">gnutls-devel</package>
+      <package variant="mingw64">mingw64-gnutls</package>
     </distro>
     <distro id="void">
       <package variant="x86_64">gnutls-devel</package>
@@ -608,6 +623,7 @@
     </distro>
     <distro id="fedora">
       <package />
+      <package variant="mingw64" />
     </distro>
     <distro id="ubuntu">
       <control />
@@ -683,6 +699,7 @@
     </distro>
     <distro id="fedora">
       <package variant="x86_64">libarchive-devel</package>
+      <package variant="mingw64">mingw64-libarchive</package>
     </distro>
     <distro id="debian">
       <control />
@@ -839,6 +856,7 @@
     </distro>
     <distro id="fedora">
       <package variant="x86_64">libgusb-devel</package>
+      <package variant="mingw64">mingw64-libgusb</package>
     </distro>
     <distro id="void">
       <package variant="x86_64">libgusb-devel</package>
@@ -917,6 +935,7 @@
     </distro>
     <distro id="fedora">
       <package variant="x86_64">libcurl-devel</package>
+      <package variant="mingw64">mingw64-curl</package>
     </distro>
     <distro id="void">
       <package variant="x86_64">libcurl-devel</package>
@@ -992,6 +1011,7 @@
     </distro>
     <distro id="fedora">
       <package />
+      <package variant="mingw64" />
     </distro>
     <distro id="debian">
       <control />
@@ -1060,6 +1080,9 @@
     <distro id="ubuntu">
       <control />
       <package variant="x86_64" />
+    </distro>
+    <distro id="fedora">
+      <package variant="mingw64">mingw64-pkg-config</package>
     </distro>
     <distro id="void">
       <package />
@@ -1330,6 +1353,7 @@
     </distro>
     <distro id="fedora">
       <package variant="x86_64">sqlite-devel</package>
+      <package variant="mingw64">mingw64-sqlite</package>
     </distro>
     <distro id="debian">
       <control />
@@ -1632,6 +1656,12 @@
     </distro>
     <distro id="ubuntu">
       <package variant="x86_64" />
+    </distro>
+  </dependency>
+  <dependency type="build" id="wine">
+    <distro id="fedora">
+      <!-- for running the self tests -->
+      <package variant="mingw64">wine</package>
     </distro>
   </dependency>
 </dependencies>

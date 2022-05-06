@@ -564,13 +564,3 @@ subdir('docs')
 if build_daemon and libsystemd.found()
   meson.add_install_script('meson_post_install.sh', systemdunitdir)
 endif
-
-makensis = find_program('makensis', required : host_machine.system() == 'windows')
-if makensis.found()
-  run_target(
-    'makensis',
-    command: [
-      makensis,
-      join_paths(meson.project_source_root(), 'contrib', 'setup-win32.nsi'),
-  ])
-endif

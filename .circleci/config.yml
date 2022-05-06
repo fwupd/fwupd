@@ -20,33 +20,6 @@ jobs:
     docker:
       - image: fedora:36
     steps:
-      - run:
-          name: "Install deps"
-          command: dnf install -y diffutils
-                                  gettext
-                                  glib2-devel
-                                  git-core
-                                  gnutls-utils
-                                  jq
-                                  meson
-                                  git
-                                  gcc
-                                  gcab
-                                  ca-certificates
-                                  python3-pip
-                                  mingw32-nsis
-                                  mingw64-brotli
-                                  mingw64-gcc
-                                  mingw64-gettext
-                                  mingw64-pkg-config
-                                  mingw64-glib2
-                                  mingw64-gnutls
-                                  mingw64-libusbx
-                                  mingw64-sqlite
-                                  mingw64-libarchive
-                                  mingw64-json-glib
-                                  mingw64-curl
-                                  wine
       - checkout
       - run:
           name: "Build Win32"
@@ -54,7 +27,7 @@ jobs:
       - persist_to_workspace:
           root: .
           paths:
-            - "dist/setup/*.exe"
+            - "dist/setup/*.msi"
             - "dist/VERSION"
             - "dist/news.txt"
       - store_artifacts:
