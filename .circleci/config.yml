@@ -34,7 +34,8 @@ jobs:
                                   gcab
                                   ca-certificates
                                   python3-pip
-                                  mingw32-nsis
+                                  https://kojipkgs.fedoraproject.org//work/tasks/2047/86712047/mingw64-nsis-3.08-3.fc37.noarch.rpm
+                                  https://kojipkgs.fedoraproject.org//work/tasks/2047/86712047/mingw-nsis-base-3.08-3.fc37.x86_64.rpm
                                   mingw64-brotli
                                   mingw64-gcc
                                   mingw64-gettext
