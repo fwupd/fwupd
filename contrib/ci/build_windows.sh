@@ -18,7 +18,7 @@ rm -rf $DESTDIR $build
 mkdir -p $build $DESTDIR && cd $build
 python3 -m pip install --user "meson >= 0.60.0"
 meson .. \
-    --cross-file=../contrib/mingw64.cross \
+    --cross-file=/usr/share/mingw/toolchain-mingw64.meson \
     --prefix=/ \
     --sysconfdir="etc" \
     --libexecdir="bin" \
