@@ -356,6 +356,11 @@ fu_smbios_func(void)
 	g_autoptr(FuSmbios) smbios = NULL;
 	g_autoptr(GError) error = NULL;
 
+#ifdef _WIN32
+	g_test_skip("Windows uses GetSystemFirmwareTable rather than parsing the fake test data");
+	return;
+#endif
+
 	/* these tests will not write */
 	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
 	(void)g_setenv("FWUPD_SYSFSFWDIR", testdatadir, TRUE);
@@ -630,6 +635,11 @@ fu_hwids_func(void)
 		     {"HardwareID-1", "b7cceb67-774c-537e-bf8b-22c6107e9a74"},
 		     {"HardwareID-0", "147efce9-f201-5fc8-ab0c-c859751c3440"},
 		     {NULL, NULL}};
+
+#ifdef _WIN32
+	g_test_skip("Windows uses GetSystemFirmwareTable rather than parsing the fake test data");
+	return;
+#endif
 
 	/* these tests will not write */
 	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);

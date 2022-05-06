@@ -77,6 +77,5 @@ rm -fr gcab.exe \
        lib/pkgconfig/ \
        var
 
-export WINEPATH="/usr/x86_64-w64-mingw32/sys-root/mingw/bin/;$build/libfwupd/;$build/subprojects/libxmlb/src/;$build/subprojects/gcab/libgcab/"
-#TODO: fixup tests
-ninja -C $build test || true
+export WINEPATH="/usr/x86_64-w64-mingw32/sys-root/mingw/bin/;$build/libfwupd/;$build/libfwupdplugin/;$build/subprojects/libxmlb/src/;$build/subprojects/gcab/libgcab/;$build/subprojects/libjcat/libjcat/;$build/subprojects/gusb/gusb/"
+ninja -C $build test
