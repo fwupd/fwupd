@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <?define Version = @VERSION@?>
+  <?define UpgradeCode = "76493109-E6AB-5C48-940D-49544A688597"?>
+  <Product Id="76493109-E6AB-5C48-940D-49544A688596"
+           Name="fwupd $(var.Version) (64-bit)"
+           Manufacturer="the fwupd team"
+           Version="$(var.Version)"
+           UpgradeCode="$(var.UpgradeCode)"
+           Language="1033">
+    <Package InstallerVersion="200" Compressed="yes" Comments="comments" InstallScope="perMachine"/>
+    <Media Id="1" Cabinet="cabinet.cab" EmbedCab="yes"/>
+    <Property Id="ARPHELPLINK" Value="https://github.com/fwupd/fwupd"/>
+    <Property Id="ARPNOMODIFY" Value="1"/>
+    <Property Id="ARPNOREPAIR" Value="1"/>
+    <Property Id="ARPPRODUCTICON" Value="fwupd.ico"/>
+    <Property Id="ARPURLINFOABOUT" Value="https://github.com/fwupd/fwupd"/>
+    <Upgrade Id="$(var.UpgradeCode)">
+      <UpgradeVersion Minimum="$(var.Version)" OnlyDetect="yes" Property="NEWERVERSIONDETECTED"/>
+      <UpgradeVersion Minimum="0.0.0" Maximum="$(var.Version)" IncludeMinimum="yes" IncludeMaximum="no" Property="OLDERVERSIONBEINGUPGRADED"/>
+    </Upgrade>
+    <Condition Message="fwupd is already installed.">NOT NEWERVERSIONDETECTED</Condition>
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="ProgramFiles64Folder">
+        <Directory Id="INSTALLDIR" Name="fwupd">
+          <Directory Id="BINDIR" Name="bin"/>
+        </Directory>
+      </Directory>
+    </Directory>
+    <Feature Id="Complete"  Level="1">
+      <ComponentGroupRef Id="CG.fwupd-deps"/>
+      <ComponentGroupRef Id="CG.fwupd-certs"/>
+      <ComponentGroupRef Id="CG.fwupd-files"/>
+    </Feature>
+    <InstallExecuteSequence>
+      <RemoveExistingProducts After="InstallValidate"/>
+    </InstallExecuteSequence>
+    <Icon Id="fwupd.ico" SourceFile="data/fwupd.ico"/>
+  </Product>
+</Wix>
