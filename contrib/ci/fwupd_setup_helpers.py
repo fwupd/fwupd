@@ -42,7 +42,7 @@ def test_markdown():
     sys.exit(not new_enough)
 
 
-def parse_dependencies(OS, SUBOS, requested_type):
+def parse_dependencies(OS, variant, requested_type):
     import xml.etree.ElementTree as etree
 
     deps = []
@@ -60,10 +60,10 @@ def parse_dependencies(OS, SUBOS, requested_type):
                 continue
             packages = distro.findall("package")
             for package in packages:
-                if SUBOS:
+                if variant:
                     if "variant" not in package.attrib:
                         continue
-                    if package.attrib["variant"] != SUBOS:
+                    if package.attrib["variant"] != variant:
                         continue
                 if package.text:
                     dep = package.text
@@ -146,8 +146,8 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    # these require variants to be set
-    if not args.variant and (args.os == "ubuntu" or args.os == "debian"):
+    # fall back in all cases
+    if not args.variant:
         args.variant = os.uname().machine
     if not command:
         command = args.command
