@@ -864,7 +864,7 @@ typedef enum {
  * @FWUPD_KEYRING_KIND_PKCS7:			Verification using PKCS7
  * @FWUPD_KEYRING_KIND_JCAT:			Verification using Jcat
  *
- * The update state.
+ * Type of keyring used on a remote.
  **/
 typedef enum {
 	FWUPD_KEYRING_KIND_UNKNOWN, /* Since: 0.9.7 */
