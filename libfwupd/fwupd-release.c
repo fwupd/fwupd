@@ -1266,7 +1266,7 @@ fwupd_release_get_license(FwupdRelease *self)
 /**
  * fwupd_release_set_license:
  * @self: a #FwupdRelease
- * @license: (nullable): the description
+ * @license: (nullable): the update license.
  *
  * Sets the update license.
  *
@@ -1307,7 +1307,7 @@ fwupd_release_get_name(FwupdRelease *self)
 /**
  * fwupd_release_set_name:
  * @self: a #FwupdRelease
- * @name: (nullable): the description
+ * @name: (nullable): the update name.
  *
  * Sets the update name.
  *
