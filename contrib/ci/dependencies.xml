@@ -83,7 +83,7 @@
   </dependency>
   <dependency type="build" id="clang-format">
     <distro id="fedora">
-      <package>clang-tools-extra</package>
+      <package variant="x86_64">clang-tools-extra</package>
     </distro>
     <distro id="debian">
       <package variant="x86_64" />
@@ -104,13 +104,13 @@
   </dependency>
   <dependency type="build" id="libcairo-dev">
     <distro id="centos">
-      <package>cairo-devel</package>
+      <package variant="x86_64">cairo-devel</package>
     </distro>
     <distro id="fedora">
-      <package>cairo-devel</package>
+      <package variant="x86_64">cairo-devel</package>
     </distro>
     <distro id="void">
-      <package>cairo-devel</package>
+      <package variant="x86_64">cairo-devel</package>
     </distro>
     <distro id="debian">
       <control />
@@ -125,10 +125,10 @@
   </dependency>
   <dependency type="build" id="libcairo-gobject2">
     <distro id="centos">
-      <package>cairo-gobject-devel</package>
+      <package variant="x86_64">cairo-gobject-devel</package>
     </distro>
     <distro id="fedora">
-      <package>cairo-gobject-devel</package>
+      <package variant="x86_64">cairo-gobject-devel</package>
     </distro>
     <distro id="debian">
       <control />
@@ -143,16 +143,16 @@
   </dependency>
   <dependency type="build" id="libjson-glib-dev">
     <distro id="arch">
-      <package>json-glib</package>
+      <package variant="x86_64">json-glib</package>
     </distro>
     <distro id="centos">
-      <package>json-glib-devel</package>
+      <package variant="x86_64">json-glib-devel</package>
     </distro>
     <distro id="fedora">
-      <package>json-glib-devel</package>
+      <package variant="x86_64">json-glib-devel</package>
     </distro>
     <distro id="void">
-      <package>json-glib-devel</package>
+      <package variant="x86_64">json-glib-devel</package>
     </distro>
     <distro id="debian">
       <control>
@@ -171,13 +171,13 @@
   </dependency>
   <dependency type="build" id="libftdi1-dev">
     <distro id="arch">
-      <package>libftdi</package>
+      <package variant="x86_64">libftdi</package>
     </distro>
     <distro id="centos">
-      <package>libftdi-devel</package>
+      <package variant="x86_64">libftdi-devel</package>
     </distro>
     <distro id="fedora">
-      <package>libftdi-devel</package>
+      <package variant="x86_64">libftdi-devel</package>
     </distro>
     <distro id="debian">
       <package variant="x86_64" />
@@ -189,13 +189,13 @@
   </dependency>
   <dependency type="build" id="libpci-dev">
     <distro id="arch">
-      <package>pciutils</package>
+      <package variant="x86_64">pciutils</package>
     </distro>
     <distro id="centos">
-      <package>pciutils-devel</package>
+      <package variant="x86_64">pciutils-devel</package>
     </distro>
     <distro id="fedora">
-      <package>pciutils-devel</package>
+      <package variant="x86_64">pciutils-devel</package>
     </distro>
     <distro id="debian">
       <control />
@@ -209,16 +209,16 @@
   </dependency>
   <dependency type="build" id="fonts-noto">
     <distro id="arch">
-      <package>noto-fonts</package>
+      <package variant="x86_64">noto-fonts</package>
     </distro>
     <distro id="centos">
-      <package>google-noto-sans-cjk-ttc-fonts</package>
+      <package variant="x86_64">google-noto-sans-cjk-ttc-fonts</package>
     </distro>
     <distro id="fedora">
-      <package>google-noto-sans-cjk-ttc-fonts</package>
+      <package variant="x86_64">google-noto-sans-cjk-ttc-fonts</package>
     </distro>
     <distro id="void">
-      <package>noto-fonts-cjk</package>
+      <package variant="x86_64">noto-fonts-cjk</package>
     </distro>
     <distro id="debian">
       <control />
@@ -304,10 +304,10 @@
   </dependency>
   <dependency type="build" id="libfreetype6-dev">
     <distro id="centos">
-      <package>freetype</package>
+      <package variant="x86_64">freetype</package>
     </distro>
     <distro id="fedora">
-      <package>freetype</package>
+      <package variant="x86_64">freetype</package>
     </distro>
     <distro id="debian">
       <control />
@@ -339,7 +339,7 @@
   </dependency>
   <dependency type="build" id="libflashrom-dev">
     <distro id="fedora">
-      <package>flashrom-devel</package>
+      <package variant="x86_64">flashrom-devel</package>
     </distro>
     <distro id="debian">
       <control>
@@ -411,7 +411,7 @@
   </dependency>
   <dependency type="build" id="gnu-efi-devel">
     <distro id="arch">
-      <package>gnu-efi-libs</package>
+      <package variant="x86_64">gnu-efi-libs</package>
     </distro>
     <distro id="centos">
       <package />
@@ -420,7 +420,7 @@
       <package />
     </distro>
     <distro id="void">
-      <package>gnu-efi-libs</package>
+      <package variant="x86_64">gnu-efi-libs</package>
     </distro>
     <distro id="debian">
       <control>
@@ -476,13 +476,13 @@
   </dependency>
   <dependency type="build" id="libglib2.0-dev">
     <distro id="centos">
-      <package>glib2-devel</package>
+      <package variant="x86_64">glib2-devel</package>
     </distro>
     <distro id="fedora">
-      <package>glib2-devel</package>
+      <package variant="x86_64">glib2-devel</package>
     </distro>
     <distro id="void">
-      <package>glib-devel</package>
+      <package variant="x86_64">glib-devel</package>
     </distro>
     <distro id="debian">
       <control>
@@ -501,7 +501,7 @@
   </dependency>
   <dependency type="build" id="glibc-langpack-en">
     <distro id="fedora">
-      <package>glibc-langpack-en</package>
+      <package variant="x86_64">glibc-langpack-en</package>
     </distro>
   </dependency>
   <dependency type="build" id="gobject-introspection">
@@ -509,10 +509,10 @@
       <package />
     </distro>
     <distro id="centos">
-      <package>gobject-introspection-devel</package>
+      <package variant="x86_64">gobject-introspection-devel</package>
     </distro>
     <distro id="fedora">
-      <package>gobject-introspection-devel</package>
+      <package variant="x86_64">gobject-introspection-devel</package>
     </distro>
     <distro id="void">
       <package />
@@ -541,13 +541,13 @@
   </dependency>
   <dependency type="build" id="gnutls-dev">
     <distro id="centos">
-      <package>gnutls-devel</package>
+      <package variant="x86_64">gnutls-devel</package>
     </distro>
     <distro id="fedora">
-      <package>gnutls-devel</package>
+      <package variant="x86_64">gnutls-devel</package>
     </distro>
     <distro id="void">
-      <package>gnutls-devel</package>
+      <package variant="x86_64">gnutls-devel</package>
     </distro>
     <distro id="debian">
       <control />
@@ -562,13 +562,13 @@
   </dependency>
   <dependency type="build" id="gnutls-bin">
     <distro id="centos">
-      <package>gnutls-utils</package>
+      <package variant="x86_64">gnutls-utils</package>
     </distro>
     <distro id="fedora">
-      <package>gnutls-utils</package>
+      <package variant="x86_64">gnutls-utils</package>
     </distro>
     <distro id="void">
-      <package>gnutls-tools</package>
+      <package variant="x86_64">gnutls-tools</package>
     </distro>
     <distro id="debian">
       <control />
@@ -584,13 +584,13 @@
   <!-- TODO: Drop build dependency after switching to gidoc-gen -->
   <dependency type="build" id="gtk-doc-tools">
     <distro id="arch">
-      <package>gtk-doc</package>
+      <package variant="x86_64">gtk-doc</package>
     </distro>
     <distro id="centos">
-      <package>gtk-doc</package>
+      <package variant="x86_64">gtk-doc</package>
     </distro>
     <distro id="fedora">
-      <package>gtk-doc</package>
+      <package variant="x86_64">gtk-doc</package>
     </distro>
     <distro id="debian">
       <control />
@@ -616,18 +616,18 @@
   </dependency>
   <dependency type="build" id="libxmlb-dev">
     <distro id="arch">
-      <package>libxmlb</package>
+      <package variant="x86_64">libxmlb</package>
     </distro>
 <!--
     <distro id="centos">
-      <package>libxmlb-devel</package>
+      <package variant="x86_64">libxmlb-devel</package>
     </distro>
 -->
     <distro id="fedora">
-      <package>libxmlb-devel</package>
+      <package variant="x86_64">libxmlb-devel</package>
     </distro>
     <distro id="void">
-      <package>libxmlb-devel</package>
+      <package variant="x86_64">libxmlb-devel</package>
     </distro>
     <distro id="debian">
       <control>
@@ -646,7 +646,7 @@
   </dependency>
   <dependency type="build" id="libjcat-dev">
     <distro id="fedora">
-      <package>libjcat-devel</package>
+      <package variant="x86_64">libjcat-devel</package>
     </distro>
     <distro id="debian">
       <control />
@@ -659,12 +659,12 @@
       <package variant="x86_64" />
     </distro>
     <distro id="void">
-      <package>libjcat-devel</package>
+      <package variant="x86_64">libjcat-devel</package>
     </distro>
   </dependency>
   <dependency type="build" id="liblzma-dev">
     <distro id="fedora">
-      <package>xz-devel</package>
+      <package variant="x86_64">xz-devel</package>
     </distro>
     <distro id="debian">
       <control />
@@ -679,10 +679,10 @@
   </dependency>
   <dependency type="build" id="libarchive-dev">
     <distro id="centos">
-      <package>libarchive-devel</package>
+      <package variant="x86_64">libarchive-devel</package>
     </distro>
     <distro id="fedora">
-      <package>libarchive-devel</package>
+      <package variant="x86_64">libarchive-devel</package>
     </distro>
     <distro id="debian">
       <control />
@@ -695,18 +695,18 @@
       <package variant="x86_64" />
     </distro>
     <distro id="void">
-      <package>libarchive-devel</package>
+      <package variant="x86_64">libarchive-devel</package>
     </distro>
   </dependency>
   <dependency type="build" id="libcbor-dev">
     <distro id="arch">
-      <package>libcbor</package>
+      <package variant="x86_64">libcbor</package>
     </distro>
     <distro id="centos">
-      <package>libcbor-devel</package>
+      <package variant="x86_64">libcbor-devel</package>
     </distro>
     <distro id="fedora">
-      <package>libcbor-devel</package>
+      <package variant="x86_64">libcbor-devel</package>
     </distro>
     <distro id="debian">
       <control />
@@ -719,21 +719,21 @@
       <package variant="x86_64" />
     </distro>
     <distro id="void">
-      <package>libcbor-devel</package>
+      <package variant="x86_64">libcbor-devel</package>
     </distro>
   </dependency>
   <dependency type="build" id="libefivar-dev">
     <distro id="arch">
-      <package>efivar</package>
+      <package variant="x86_64">efivar</package>
     </distro>
     <distro id="centos">
-      <package>efivar-devel</package>
+      <package variant="x86_64">efivar-devel</package>
     </distro>
     <distro id="fedora">
-      <package>efivar-devel</package>
+      <package variant="x86_64">efivar-devel</package>
     </distro>
     <distro id="void">
-      <package>libefivar-devel</package>
+      <package variant="x86_64">libefivar-devel</package>
     </distro>
     <distro id="debian">
       <control>
@@ -778,13 +778,13 @@
   </dependency>
   <dependency type="build" id="libgcab-dev">
     <distro id="arch">
-      <package>gcab</package>
+      <package variant="x86_64">gcab</package>
     </distro>
     <distro id="centos">
-      <package>libgcab1-devel</package>
+      <package variant="x86_64">libgcab1-devel</package>
     </distro>
     <distro id="fedora">
-      <package>libgcab1-devel</package>
+      <package variant="x86_64">libgcab1-devel</package>
     </distro>
     <distro id="debian">
       <control />
@@ -797,7 +797,7 @@
       <package variant="x86_64" />
     </distro>
     <distro id="void">
-      <package>gcab-devel</package>
+      <package variant="x86_64">gcab-devel</package>
     </distro>
   </dependency>
   <dependency type="build" id="libgirepository1.0-dev">
@@ -814,10 +814,10 @@
   </dependency>
   <dependency type="build" id="libgudev-1.0-dev">
     <distro id="centos">
-      <package>libgudev1-devel</package>
+      <package variant="x86_64">libgudev1-devel</package>
     </distro>
     <distro id="fedora">
-      <package>libgudev1-devel</package>
+      <package variant="x86_64">libgudev1-devel</package>
     </distro>
     <distro id="debian">
       <control />
@@ -832,16 +832,16 @@
   </dependency>
   <dependency type="build" id="libgusb-dev">
     <distro id="arch">
-      <package>libgusb</package>
+      <package variant="x86_64">libgusb</package>
     </distro>
     <distro id="centos">
-      <package>libgusb-devel</package>
+      <package variant="x86_64">libgusb-devel</package>
     </distro>
     <distro id="fedora">
-      <package>libgusb-devel</package>
+      <package variant="x86_64">libgusb-devel</package>
     </distro>
     <distro id="void">
-      <package>libgusb-devel</package>
+      <package variant="x86_64">libgusb-devel</package>
     </distro>
     <distro id="debian">
       <control>
@@ -872,16 +872,16 @@
   </dependency>
   <dependency type="build" id="libsmbios-dev">
     <distro id="arch">
-      <package>libsmbios</package>
+      <package variant="x86_64">libsmbios</package>
     </distro>
     <distro id="centos">
-      <package>libsmbios-devel</package>
+      <package variant="x86_64">libsmbios-devel</package>
     </distro>
     <distro id="fedora">
-      <package>libsmbios-devel</package>
+      <package variant="x86_64">libsmbios-devel</package>
     </distro>
     <distro id="void">
-      <package>libsmbios-devel</package>
+      <package variant="x86_64">libsmbios-devel</package>
     </distro>
     <distro id="debian">
       <control>
@@ -905,21 +905,21 @@
       <package variant="x86_64" />
     </distro>
     <distro id="void">
-      <package>libsoup-devel</package>
+      <package variant="x86_64">libsoup-devel</package>
     </distro>
   </dependency>
   <dependency type="build" id="libcurl4-gnutls-dev">
     <distro id="arch">
-      <package>curl</package>
+      <package variant="x86_64">curl</package>
     </distro>
     <distro id="centos">
-      <package>libcurl-devel</package>
+      <package variant="x86_64">libcurl-devel</package>
     </distro>
     <distro id="fedora">
-      <package>libcurl-devel</package>
+      <package variant="x86_64">libcurl-devel</package>
     </distro>
     <distro id="void">
-      <package>libcurl-devel</package>
+      <package variant="x86_64">libcurl-devel</package>
     </distro>
     <distro id="debian">
       <control />
@@ -1033,13 +1033,13 @@
   </dependency>
   <dependency type="build" id="gir1.2-pango-1.0">
     <distro id="centos">
-      <package>pango-devel</package>
+      <package variant="x86_64">pango-devel</package>
     </distro>
     <distro id="fedora">
-      <package>pango-devel</package>
+      <package variant="x86_64">pango-devel</package>
     </distro>
     <distro id="void">
-      <package>pango-devel</package>
+      <package variant="x86_64">pango-devel</package>
     </distro>
     <distro id="debian">
       <control />
@@ -1067,16 +1067,16 @@
   </dependency>
   <dependency type="build" id="policykit-1">
     <distro id="arch">
-      <package>polkit</package>
+      <package variant="x86_64">polkit</package>
     </distro>
     <distro id="centos">
-      <package>polkit</package>
+      <package variant="x86_64">polkit</package>
     </distro>
     <distro id="fedora">
-      <package>polkit</package>
+      <package variant="x86_64">polkit</package>
     </distro>
     <distro id="void">
-      <package>polkit</package>
+      <package variant="x86_64">polkit</package>
     </distro>
     <distro id="debian">
       <control>
@@ -1095,13 +1095,13 @@
   </dependency>
   <dependency type="build" id="libmm-glib-dev">
     <distro id="centos">
-      <package>ModemManager-glib-devel</package>
+      <package variant="x86_64">ModemManager-glib-devel</package>
     </distro>
     <distro id="fedora">
-      <package>ModemManager-glib-devel</package>
+      <package variant="x86_64">ModemManager-glib-devel</package>
     </distro>
     <distro id="arch">
-      <package>modemmanager</package>
+      <package variant="x86_64">modemmanager</package>
     </distro>
     <distro id="debian">
       <control />
@@ -1116,13 +1116,13 @@
   </dependency>
   <dependency type="build" id="libqmi-glib-dev">
     <distro id="centos">
-      <package>libqmi-devel</package>
+      <package variant="x86_64">libqmi-devel</package>
     </distro>
     <distro id="fedora">
-      <package>libqmi-devel</package>
+      <package variant="x86_64">libqmi-devel</package>
     </distro>
     <distro id="arch">
-      <package>libqmi</package>
+      <package variant="x86_64">libqmi</package>
     </distro>
     <distro id="debian">
       <control />
@@ -1137,13 +1137,13 @@
   </dependency>
   <dependency type="build" id="libmbim-glib-dev">
     <distro id="centos">
-      <package>libmbim-devel</package>
+      <package variant="x86_64">libmbim-devel</package>
     </distro>
     <distro id="fedora">
-      <package>libmbim-devel</package>
+      <package variant="x86_64">libmbim-devel</package>
     </distro>
     <distro id="arch">
-      <package>libmbim</package>
+      <package variant="x86_64">libmbim</package>
     </distro>
     <distro id="debian">
       <control />
@@ -1166,13 +1166,13 @@
   </dependency>
   <dependency type="build" id="libpolkit-gobject-1-dev">
     <distro id="centos">
-      <package>polkit-devel</package>
+      <package variant="x86_64">polkit-devel</package>
     </distro>
     <distro id="fedora">
-      <package>polkit-devel</package>
+      <package variant="x86_64">polkit-devel</package>
     </distro>
     <distro id="void">
-      <package>polkit-devel</package>
+      <package variant="x86_64">polkit-devel</package>
     </distro>
     <distro id="debian">
       <control />
@@ -1192,7 +1192,7 @@
   </dependency>
   <dependency type="build" id="python3">
     <distro id="centos">
-      <package>python34-devel</package>
+      <package variant="x86_64">python34-devel</package>
     </distro>
     <distro id="fedora">
       <package />
@@ -1203,10 +1203,10 @@
   </dependency>
   <dependency type="build" id="python3-gi-cairo">
     <distro id="arch">
-      <package>python-cairo</package>
+      <package variant="x86_64">python-cairo</package>
     </distro>
     <distro id="fedora">
-      <package>python3-cairo</package>
+      <package variant="x86_64">python3-cairo</package>
     </distro>
     <distro id="debian">
       <control />
@@ -1280,7 +1280,7 @@
   </dependency>
   <dependency type="build" id="python3-gobject">
     <distro id="arch">
-      <package>python-gobject</package>
+      <package variant="x86_64">python-gobject</package>
     </distro>
     <distro id="fedora">
       <package />
@@ -1326,10 +1326,10 @@
   </dependency>
   <dependency type="build" id="libsqlite3-dev">
     <distro id="centos">
-      <package>sqlite-devel</package>
+      <package variant="x86_64">sqlite-devel</package>
     </distro>
     <distro id="fedora">
-      <package>sqlite-devel</package>
+      <package variant="x86_64">sqlite-devel</package>
     </distro>
     <distro id="debian">
       <control />
@@ -1342,12 +1342,12 @@
       <package variant="x86_64" />
     </distro>
     <distro id="void">
-      <package>sqlite-devel</package>
+      <package variant="x86_64">sqlite-devel</package>
     </distro>
   </dependency>
   <dependency type="build" id="logind">
     <distro id="void">
-      <package>elogind-devel</package>
+      <package variant="x86_64">elogind-devel</package>
     </distro>
   </dependency>
   <dependency type="build" id="systemd">
@@ -1374,10 +1374,10 @@
   </dependency>
   <dependency type="build" id="libsystemd-dev">
     <distro id="centos">
-      <package>systemd-devel</package>
+      <package variant="x86_64">systemd-devel</package>
     </distro>
     <distro id="fedora">
-      <package>systemd-devel</package>
+      <package variant="x86_64">systemd-devel</package>
     </distro>
     <distro id="debian">
       <control />
@@ -1437,10 +1437,10 @@
       <package />
     </distro>
     <distro id="centos">
-      <package>umockdev-devel</package>
+      <package variant="x86_64">umockdev-devel</package>
     </distro>
     <distro id="fedora">
-      <package>umockdev-devel</package>
+      <package variant="x86_64">umockdev-devel</package>
     </distro>
     <distro id="debian">
       <control />
@@ -1454,16 +1454,16 @@
   </dependency>
   <dependency type="build" id="valac">
     <distro id="arch">
-      <package>vala</package>
+      <package variant="x86_64">vala</package>
     </distro>
     <distro id="centos">
-      <package>vala</package>
+      <package variant="x86_64">vala</package>
     </distro>
     <distro id="fedora">
-      <package>vala</package>
+      <package variant="x86_64">vala</package>
     </distro>
     <distro id="void">
-      <package>vala</package>
+      <package variant="x86_64">vala</package>
     </distro>
     <distro id="debian">
       <control />
@@ -1481,10 +1481,10 @@
       <package />
     </distro>
     <distro id="centos">
-      <package>valgrind-devel</package>
+      <package variant="x86_64">valgrind-devel</package>
     </distro>
     <distro id="fedora">
-      <package>valgrind-devel</package>
+      <package variant="x86_64">valgrind-devel</package>
     </distro>
     <distro id="debian">
       <control>
@@ -1543,13 +1543,13 @@
   </dependency>
   <dependency type="build" id="libtss2-dev">
     <distro id="arch">
-      <package>tpm2-tss</package>
+      <package variant="x86_64">tpm2-tss</package>
     </distro>
     <distro id="centos">
-      <package>tpm2-tss-devel</package>
+      <package variant="x86_64">tpm2-tss-devel</package>
     </distro>
     <distro id="fedora">
-      <package>tpm2-tss-devel</package>
+      <package variant="x86_64">tpm2-tss-devel</package>
     </distro>
     <distro id="debian">
       <control />
@@ -1567,7 +1567,7 @@
       <package variant="x86_64" />
     </distro>
     <distro id="void">
-      <package>tpm2-tss-devel</package>
+      <package variant="x86_64">tpm2-tss-devel</package>
     </distro>
   </dependency>
   <dependency type="build" id="libgcrypt-devel">
@@ -1580,12 +1580,12 @@
       <package variant="x86_64" />
     </distro>
     <distro id="fedora">
-      <package>ShellCheck</package>
+      <package variant="x86_64">ShellCheck</package>
     </distro>
   </dependency>
   <dependency type="build" id="libprotobuf-c-dev">
     <distro id="arch">
-      <package>protobuf-c</package>
+      <package variant="x86_64">protobuf-c</package>
     </distro>
     <distro id="debian">
       <control />
@@ -1597,10 +1597,10 @@
       <package variant="x86_64" />
     </distro>
     <distro id="fedora">
-      <package>protobuf-c-devel</package>
+      <package variant="x86_64">protobuf-c-devel</package>
     </distro>
     <distro id="void">
-      <package>protobuf-c-devel</package>
+      <package variant="x86_64">protobuf-c-devel</package>
     </distro>
   </dependency>
   <dependency type="build" id="protobuf-c-compiler">
@@ -1617,7 +1617,7 @@
       <package />
     </distro>
     <distro id="void">
-      <package>protobuf</package>
+      <package variant="x86_64">protobuf</package>
     </distro>
   </dependency>
   <dependency type="build" id="sudo">
