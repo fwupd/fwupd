@@ -2299,9 +2299,9 @@ fwupd_device_set_update_state(FwupdDevice *self, FwupdUpdateState update_state)
  * fwupd_device_get_version_format:
  * @self: a #FwupdDevice
  *
- * Gets the update state.
+ * Gets the version format.
  *
- * Returns: the update state, or %FWUPD_VERSION_FORMAT_UNKNOWN if unset
+ * Returns: the version format, or %FWUPD_VERSION_FORMAT_UNKNOWN if unset
  *
  * Since: 1.2.9
  **/
@@ -2316,9 +2316,9 @@ fwupd_device_get_version_format(FwupdDevice *self)
 /**
  * fwupd_device_set_version_format:
  * @self: a #FwupdDevice
- * @version_format: the state, e.g. %FWUPD_VERSION_FORMAT_PENDING
+ * @version_format: the version format, e.g. %FWUPD_VERSION_FORMAT_NUMBER
  *
- * Sets the update state.
+ * Sets the version format.
  *
  * Since: 1.2.9
  **/
