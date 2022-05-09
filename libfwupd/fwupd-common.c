@@ -140,6 +140,33 @@ fwupd_checksum_get_best(GPtrArray *checksums)
 	return NULL;
 }
 
+static gchar *
+fwupd_get_os_release_filename(void)
+{
+#ifndef _WIN32
+	const gchar *sysconfdir = g_getenv("FWUPD_SYSCONFDIR");
+	g_autofree gchar *fn1 = NULL;
+
+	/* override */
+	if (sysconfdir != NULL) {
+		g_autofree gchar *fn2 = g_build_filename(sysconfdir, "os-release", NULL);
+		if (g_file_test(fn2, G_FILE_TEST_EXISTS))
+			return g_steal_pointer(&fn2);
+	}
+
+	/* host locations */
+	if (g_strcmp0(sysconfdir, "/etc") != 0) {
+		g_autofree gchar *fn2 = g_strdup("/etc/os-release");
+		if (g_file_test(fn2, G_FILE_TEST_EXISTS))
+			return g_steal_pointer(&fn2);
+	}
+	fn1 = g_strdup("/usr/lib/os-release");
+	if (g_file_test(fn1, G_FILE_TEST_EXISTS))
+		return g_steal_pointer(&fn1);
+#endif
+	return NULL;
+}
+
 /**
  * fwupd_get_os_release:
  * @error: (nullable): optional return location for an error
@@ -153,32 +180,15 @@ fwupd_checksum_get_best(GPtrArray *checksums)
 GHashTable *
 fwupd_get_os_release(GError **error)
 {
-	const gchar *filename = NULL;
-	const gchar *sysconfdir = g_getenv("FWUPD_SYSCONFDIR");
 	g_autofree gchar *buf = NULL;
+	g_autofree gchar *filename = NULL;
 	g_auto(GStrv) lines = NULL;
 	g_autoptr(GHashTable) hash = NULL;
-	g_autoptr(GPtrArray) paths = g_ptr_array_new_with_free_func(g_free);
 
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
-#ifndef _WIN32
-	/* find the correct file */
-	if (sysconfdir != NULL)
-		g_ptr_array_add(paths, g_build_filename(sysconfdir, "os-release", NULL));
-	if (g_strcmp0(sysconfdir, "/etc") != 0)
-		g_ptr_array_add(paths, g_strdup("/etc/os-release"));
-	g_ptr_array_add(paths, g_strdup("/usr/lib/os-release"));
-	for (guint i = 0; i < paths->len; i++) {
-		const gchar *path = g_ptr_array_index(paths, i);
-		if (g_file_test(path, G_FILE_TEST_EXISTS)) {
-			filename = path;
-			break;
-		}
-	}
-#endif
-
 	hash = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
+	filename = fwupd_get_os_release_filename();
 	if (filename == NULL) {
 #if defined(_WIN32)
 		/* TODO: Read the Windows version */
