@@ -153,41 +153,39 @@ fwupd_checksum_get_best(GPtrArray *checksums)
 GHashTable *
 fwupd_get_os_release(GError **error)
 {
-	const gchar *filename = NULL;
-	const gchar *sysconfdir = g_getenv("FWUPD_SYSCONFDIR");
+	const gchar *tmp = NULL;
 	g_autofree gchar *buf = NULL;
 	g_auto(GStrv) lines = NULL;
-	g_autoptr(GHashTable) hash = NULL;
+	g_autoptr(GHashTable) hash = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
 	g_autoptr(GPtrArray) paths = g_ptr_array_new_with_free_func(g_free);
 
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
-#ifndef _WIN32
+#if defined(_WIN32)
+	/* TODO: Read the Windows version */
+	g_hash_table_insert(hash, g_strdup("OS"), g_strdup("Windows"));
+#elif defined(__NetBSD__)
+	g_hash_table_insert(hash, g_strdup("OS"), g_strdup("NetBSD"));
+#elif defined(__OpenBSD__)
+	g_hash_table_insert(hash, g_strdup("OS"), g_strdup("OpenBSD"));
+#else
 	/* find the correct file */
-	if (sysconfdir != NULL)
-		g_ptr_array_add(paths, g_build_filename(sysconfdir, "os-release", NULL));
-	if (g_strcmp0(sysconfdir, "/etc") != 0)
+	tmp = g_getenv("FWUPD_SYSCONFDIR");
+	if (tmp != NULL)
+		g_ptr_array_add(paths, g_build_filename(tmp, "os-release", NULL));
+	if (g_strcmp0(tmp, "/etc") != 0)
 		g_ptr_array_add(paths, g_strdup("/etc/os-release"));
 	g_ptr_array_add(paths, g_strdup("/usr/lib/os-release"));
+	tmp = NULL;
 	for (guint i = 0; i < paths->len; i++) {
 		const gchar *path = g_ptr_array_index(paths, i);
 		if (g_file_test(path, G_FILE_TEST_EXISTS)) {
-			filename = path;
+			tmp = path;
 			break;
 		}
 	}
 #endif
-
-	hash = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
-	if (filename == NULL) {
-#if defined(_WIN32)
-		/* TODO: Read the Windows version */
-		g_hash_table_insert(hash, g_strdup("OS"), g_strdup("Windows"));
-#elif defined(__NetBSD__)
-		g_hash_table_insert(hash, g_strdup("OS"), g_strdup("NetBSD"));
-#elif defined(__OpenBSD__)
-		g_hash_table_insert(hash, g_strdup("OS"), g_strdup("OpenBSD"));
-#endif
+	if (tmp == NULL) {
 		if (g_hash_table_size(hash) > 0)
 			return g_steal_pointer(&hash);
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_READ, "No os-release found");
@@ -195,7 +193,7 @@ fwupd_get_os_release(GError **error)
 	}
 
 	/* load each line */
-	if (!g_file_get_contents(filename, &buf, NULL, error))
+	if (!g_file_get_contents(tmp, &buf, NULL, error))
 		return NULL;
 	lines = g_strsplit(buf, "\n", -1);
 	for (guint i = 0; lines[i] != NULL; i++) {
