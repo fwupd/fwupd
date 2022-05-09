@@ -1,4 +1,4 @@
-FROM ubuntu:devel
+FROM ubuntu:rolling
 %%%OS%%%
 ENV CI_NETWORK true
 ENV CC clang
