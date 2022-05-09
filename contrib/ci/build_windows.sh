@@ -108,6 +108,7 @@ find $MINGW32BINDIR \
 	-o -name libgmp-10.dll \
 	-o -name libgnutls-30.dll \
 	-o -name libgobject-2.0-0.dll \
+	-o -name libgusb-2.dll \
 	-o -name "libhogweed-*.dll" \
 	-o -name libidn2-0.dll \
 	-o -name libintl-8.dll \
