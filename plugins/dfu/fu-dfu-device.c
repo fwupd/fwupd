@@ -50,7 +50,6 @@ static void
 fu_dfu_device_finalize(GObject *object);
 
 typedef struct {
-	FuDfuDeviceAttrs attributes;
 	FuDfuState state;
 	FuDfuStatus status;
 	GPtrArray *targets;
@@ -101,9 +100,10 @@ fu_dfu_device_to_string(FuDevice *device, guint idt, GString *str)
 	fu_common_string_append_kx(str, idt, "IfaceNumber", priv->iface_number);
 	fu_common_string_append_kx(str, idt, "DnloadTimeout", priv->dnload_timeout);
 	fu_common_string_append_kx(str, idt, "TimeoutMs", priv->timeout_ms);
+
 	for (guint i = 0; i < priv->targets->len; i++) {
 		FuDfuTarget *target = g_ptr_array_index(priv->targets, i);
-		fu_dfu_target_to_string(target, idt + 1, str);
+		fu_device_add_string(FU_DEVICE(target), idt + 1, str);
 	}
 }
 
@@ -221,11 +221,11 @@ fu_dfu_device_parse_iface_data(FuDfuDevice *self, GBytes *iface_data, GError **e
 
 	/* ST-specific */
 	if (priv->version == FU_DFU_FIRMARE_VERSION_DFUSE &&
-	    desc.bmAttributes & FU_DFU_DEVICE_ATTR_CAN_ACCELERATE)
+	    desc.bmAttributes & FU_DFU_DEVICE_FLAG_CAN_ACCELERATE)
 		priv->transfer_size = 0x1000;
 
 	/* get attributes about the DFU operation */
-	priv->attributes = desc.bmAttributes;
+	fu_device_add_private_flag(FU_DEVICE(self), desc.bmAttributes);
 	return TRUE;
 }
 
@@ -293,8 +293,9 @@ fu_dfu_device_add_targets(FuDfuDevice *self, GError **error)
 				continue;
 			}
 		} else {
-			priv->attributes |=
-			    FU_DFU_DEVICE_ATTR_CAN_DOWNLOAD | FU_DFU_DEVICE_ATTR_CAN_UPLOAD;
+			fu_device_add_private_flag(FU_DEVICE(self),
+						   FU_DFU_DEVICE_FLAG_CAN_DOWNLOAD |
+						       FU_DFU_DEVICE_FLAG_CAN_UPLOAD);
 		}
 
 		/* fix up the version */
@@ -349,7 +350,7 @@ fu_dfu_device_add_targets(FuDfuDevice *self, GError **error)
 			target = fu_dfu_target_new();
 			break;
 		}
-		fu_dfu_target_set_device(target, self);
+		fu_device_set_proxy(FU_DEVICE(target), FU_DEVICE(self));
 		fu_dfu_target_set_alt_idx(target, g_usb_interface_get_index(iface));
 		fu_dfu_target_set_alt_setting(target, g_usb_interface_get_alternate(iface));
 
@@ -376,7 +377,9 @@ fu_dfu_device_add_targets(FuDfuDevice *self, GError **error)
 		priv->runtime_vid = g_usb_device_get_vid(usb_device);
 		priv->runtime_pid = g_usb_device_get_pid(usb_device);
 		priv->runtime_release = g_usb_device_get_release(usb_device);
-		priv->attributes = FU_DFU_DEVICE_ATTR_CAN_DOWNLOAD | FU_DFU_DEVICE_ATTR_CAN_UPLOAD;
+		fu_device_add_private_flag(FU_DEVICE(self),
+					   FU_DFU_DEVICE_FLAG_CAN_DOWNLOAD |
+					       FU_DFU_DEVICE_FLAG_CAN_UPLOAD);
 		return TRUE;
 	}
 
@@ -391,41 +394,9 @@ fu_dfu_device_add_targets(FuDfuDevice *self, GError **error)
 
 	/* the device upload is broken */
 	if (fu_device_has_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_IGNORE_UPLOAD))
-		priv->attributes &= ~FU_DFU_DEVICE_ATTR_CAN_UPLOAD;
+		fu_device_remove_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_CAN_UPLOAD);
 
 	return TRUE;
-}
-
-/**
- * fu_dfu_device_can_upload:
- * @self: a #FuDfuDevice
- *
- * Gets if the device can upload.
- *
- * Returns: %TRUE if the device can upload from device to host
- **/
-gboolean
-fu_dfu_device_can_upload(FuDfuDevice *self)
-{
-	FuDfuDevicePrivate *priv = GET_PRIVATE(self);
-	g_return_val_if_fail(FU_IS_DFU_DEVICE(self), FALSE);
-	return (priv->attributes & FU_DFU_DEVICE_ATTR_CAN_UPLOAD) > 0;
-}
-
-/**
- * fu_dfu_device_can_download:
- * @self: a #FuDfuDevice
- *
- * Gets if the device can download.
- *
- * Returns: %TRUE if the device can download from host to device
- **/
-gboolean
-fu_dfu_device_can_download(FuDfuDevice *self)
-{
-	FuDfuDevicePrivate *priv = GET_PRIVATE(self);
-	g_return_val_if_fail(FU_IS_DFU_DEVICE(self), FALSE);
-	return (priv->attributes & FU_DFU_DEVICE_ATTR_CAN_DOWNLOAD) > 0;
 }
 
 /**
@@ -492,38 +463,6 @@ fu_dfu_device_get_status(FuDfuDevice *self)
 }
 
 /**
- * fu_dfu_device_has_attribute: (skip)
- * @self: a #FuDfuDevice
- * @attribute: a device attribute, e.g. %FU_DFU_DEVICE_ATTR_CAN_DOWNLOAD
- *
- * Returns if an attribute set for the device.
- *
- * Returns: %TRUE if the attribute is set
- **/
-gboolean
-fu_dfu_device_has_attribute(FuDfuDevice *self, FuDfuDeviceAttrs attribute)
-{
-	FuDfuDevicePrivate *priv = GET_PRIVATE(self);
-	g_return_val_if_fail(FU_IS_DFU_DEVICE(self), FALSE);
-	return (priv->attributes & attribute) > 0;
-}
-
-/**
- * fu_dfu_device_remove_attribute: (skip)
- * @self: a #FuDfuDevice
- * @attribute: a device attribute, e.g. %FU_DFU_DEVICE_ATTR_CAN_DOWNLOAD
- *
- * Removes an attribute from the device.
- **/
-void
-fu_dfu_device_remove_attribute(FuDfuDevice *self, FuDfuDeviceAttrs attribute)
-{
-	FuDfuDevicePrivate *priv = GET_PRIVATE(self);
-	g_return_if_fail(FU_IS_DFU_DEVICE(self));
-	priv->attributes &= ~attribute;
-}
-
-/**
  * fu_dfu_device_new:
  *
  * Creates a new DFU device object.
@@ -536,22 +475,6 @@ fu_dfu_device_new(FuContext *ctx, GUsbDevice *usb_device)
 	FuDfuDevice *self;
 	self = g_object_new(FU_TYPE_DFU_DEVICE, "usb-device", usb_device, "context", ctx, NULL);
 	return self;
-}
-
-/**
- * fu_dfu_device_get_targets:
- * @self: a #FuDfuDevice
- *
- * Gets all the targets for this device.
- *
- * Returns: (transfer none) (element-type FuDfuTarget): #FuDfuTarget, or %NULL
- **/
-GPtrArray *
-fu_dfu_device_get_targets(FuDfuDevice *self)
-{
-	FuDfuDevicePrivate *priv = GET_PRIVATE(self);
-	g_return_val_if_fail(FU_IS_DFU_DEVICE(self), NULL);
-	return priv->targets;
 }
 
 /**
@@ -609,7 +532,7 @@ fu_dfu_device_get_target_by_alt_name(FuDfuDevice *self, const gchar *alt_name, G
 	/* find by ID */
 	for (guint i = 0; i < priv->targets->len; i++) {
 		FuDfuTarget *target = g_ptr_array_index(priv->targets, i);
-		if (g_strcmp0(fu_dfu_target_get_alt_name(target, NULL), alt_name) == 0)
+		if (g_strcmp0(fu_device_get_logical_id(FU_DEVICE(target)), alt_name) == 0)
 			return g_object_ref(target);
 	}
 
@@ -620,22 +543,6 @@ fu_dfu_device_get_target_by_alt_name(FuDfuDevice *self, const gchar *alt_name, G
 		    "No target with alt-name %s",
 		    alt_name);
 	return NULL;
-}
-
-/**
- * fu_dfu_device_get_platform_id:
- * @self: a #FuDfuDevice
- *
- * Gets the platform ID which normally corresponds to the port in some way.
- *
- * Returns: string or %NULL
- **/
-const gchar *
-fu_dfu_device_get_platform_id(FuDfuDevice *self)
-{
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
-	g_return_val_if_fail(FU_IS_DFU_DEVICE(self), NULL);
-	return g_usb_device_get_platform_id(usb_device);
 }
 
 /**
@@ -819,16 +726,6 @@ fu_dfu_device_refresh(FuDfuDevice *self, GError **error)
 	g_return_val_if_fail(FU_IS_DFU_DEVICE(self), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
-	/* no backing USB device */
-	if (usb_device == NULL) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INTERNAL,
-			    "failed to refresh: no GUsbDevice for %s",
-			    fu_dfu_device_get_platform_id(self));
-		return FALSE;
-	}
-
 	/* the device has no DFU runtime, so cheat */
 	if (priv->state == FU_DFU_STATE_APP_IDLE &&
 	    fu_device_has_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_NO_DFU_RUNTIME))
@@ -843,7 +740,7 @@ fu_dfu_device_refresh(FuDfuDevice *self, GError **error)
 	 * host by clearing bmAttributes bit bitManifestationTolerant.
 	 * so we assume the operation was successful */
 	if (priv->state == FU_DFU_STATE_DFU_MANIFEST &&
-	    !(priv->attributes & FU_DFU_DEVICE_ATTR_MANIFEST_TOL))
+	    !fu_device_has_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_MANIFEST_TOL))
 		return TRUE;
 
 	if (!g_usb_device_control_transfer(usb_device,
@@ -957,7 +854,6 @@ fu_dfu_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuDfuDevice *self = FU_DFU_DEVICE(device);
 	FuDfuDevicePrivate *priv = GET_PRIVATE(self);
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(device));
 
 	g_return_val_if_fail(FU_IS_DFU_DEVICE(self), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
@@ -967,16 +863,6 @@ fu_dfu_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 		return FALSE;
 	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER))
 		return TRUE;
-
-	/* no backing USB device */
-	if (usb_device == NULL) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INTERNAL,
-			    "failed to detach: no GUsbDevice for %s",
-			    fu_dfu_device_get_platform_id(self));
-		return FALSE;
-	}
 
 	/* the device has no DFU runtime, so cheat */
 	if (priv->state == FU_DFU_STATE_APP_IDLE &&
@@ -992,7 +878,7 @@ fu_dfu_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 		return FALSE;
 
 	/* do a host reset */
-	if ((priv->attributes & FU_DFU_DEVICE_ATTR_WILL_DETACH) == 0) {
+	if (!fu_device_has_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_WILL_DETACH)) {
 		g_debug("doing device reset as host will not self-reset");
 		if (!fu_dfu_device_reset(self, progress, error))
 			return FALSE;
@@ -1021,17 +907,8 @@ fu_dfu_device_abort(FuDfuDevice *self, GError **error)
 	g_autoptr(GError) error_local = NULL;
 
 	g_return_val_if_fail(FU_IS_DFU_DEVICE(self), FALSE);
+	g_return_val_if_fail(G_USB_IS_DEVICE(usb_device), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
-
-	/* no backing USB device */
-	if (usb_device == NULL) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INTERNAL,
-			    "failed to abort: no GUsbDevice for %s",
-			    fu_dfu_device_get_platform_id(self));
-		return FALSE;
-	}
 
 	/* the device has no DFU runtime, so cheat */
 	if (priv->state == FU_DFU_STATE_APP_IDLE &&
@@ -1086,21 +963,10 @@ gboolean
 fu_dfu_device_clear_status(FuDfuDevice *self, GError **error)
 {
 	FuDfuDevicePrivate *priv = GET_PRIVATE(self);
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
 	g_autoptr(GError) error_local = NULL;
 
 	g_return_val_if_fail(FU_IS_DFU_DEVICE(self), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
-
-	/* no backing USB device */
-	if (usb_device == NULL) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INTERNAL,
-			    "failed to clear status: no GUsbDevice for %s",
-			    fu_dfu_device_get_platform_id(self));
-		return FALSE;
-	}
 
 	/* the device has no DFU runtime, so cheat */
 	if (priv->state == FU_DFU_STATE_APP_IDLE &&
@@ -1116,7 +982,7 @@ fu_dfu_device_clear_status(FuDfuDevice *self, GError **error)
 	if (!fu_dfu_device_ensure_interface(self, error))
 		return FALSE;
 
-	if (!g_usb_device_control_transfer(usb_device,
+	if (!g_usb_device_control_transfer(fu_usb_device_get_dev(FU_USB_DEVICE(self)),
 					   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
 					   G_USB_DEVICE_REQUEST_TYPE_CLASS,
 					   G_USB_DEVICE_RECIPIENT_INTERFACE,
@@ -1169,7 +1035,6 @@ fu_dfu_device_open(FuDevice *device, GError **error)
 {
 	FuDfuDevice *self = FU_DFU_DEVICE(device);
 	FuDfuDevicePrivate *priv = GET_PRIVATE(self);
-	GPtrArray *targets = fu_dfu_device_get_targets(self);
 
 	g_return_val_if_fail(FU_IS_DFU_DEVICE(device), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
@@ -1230,8 +1095,8 @@ fu_dfu_device_open(FuDevice *device, GError **error)
 	}
 
 	/* set up target ready for use */
-	for (guint j = 0; j < targets->len; j++) {
-		FuDfuTarget *target = g_ptr_array_index(targets, j);
+	for (guint j = 0; j < priv->targets->len; j++) {
+		FuDfuTarget *target = g_ptr_array_index(priv->targets, j);
 		if (!fu_dfu_target_setup(target, error))
 			return FALSE;
 	}
@@ -1296,7 +1161,7 @@ fu_dfu_device_probe(FuDevice *device, GError **error)
 	}
 
 	/* check capabilities */
-	if (!fu_dfu_device_can_download(self)) {
+	if (!fu_device_has_private_flag(device, FU_DFU_DEVICE_FLAG_CAN_DOWNLOAD)) {
 		g_debug("%04x:%04x is missing download capability",
 			g_usb_device_get_vid(usb_device),
 			g_usb_device_get_pid(usb_device));
@@ -1316,24 +1181,13 @@ fu_dfu_device_probe(FuDevice *device, GError **error)
 gboolean
 fu_dfu_device_reset(FuDfuDevice *self, FuProgress *progress, GError **error)
 {
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GTimer) timer = g_timer_new();
 
 	g_return_val_if_fail(FU_IS_DFU_DEVICE(self), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
-	/* no backing USB device */
-	if (usb_device == NULL) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INTERNAL,
-			    "failed to reset: no GUsbDevice for %s",
-			    fu_dfu_device_get_platform_id(self));
-		return FALSE;
-	}
-
-	if (!g_usb_device_reset(usb_device, &error_local)) {
+	if (!g_usb_device_reset(fu_usb_device_get_dev(FU_USB_DEVICE(self)), &error_local)) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
@@ -1392,7 +1246,7 @@ fu_dfu_device_attach(FuDevice *device, FuProgress *progress, GError **error)
 
 	/* normal DFU mode just needs a bus reset */
 	if (fu_device_has_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_NO_BUS_RESET_ATTACH) &&
-	    fu_dfu_device_has_attribute(self, FU_DFU_DEVICE_ATTR_WILL_DETACH)) {
+	    fu_device_has_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_WILL_DETACH)) {
 		g_debug("Bus reset is not required. Device will reboot to normal");
 	} else if (!fu_dfu_target_attach(target, progress, error)) {
 		g_prefix_error(error, "failed to attach target: ");
@@ -1426,19 +1280,8 @@ fu_dfu_device_upload(FuDfuDevice *self,
 		     GError **error)
 {
 	FuDfuDevicePrivate *priv = GET_PRIVATE(self);
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
 	gboolean use_dfuse = FALSE;
 	g_autoptr(FuFirmware) firmware = NULL;
-
-	/* no backing USB device */
-	if (usb_device == NULL) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INTERNAL,
-			    "failed to upload: no GUsbDevice for %s",
-			    fu_dfu_device_get_platform_id(self));
-		return NULL;
-	}
 
 	/* ensure interface is claimed */
 	if (!fu_dfu_device_ensure_interface(self, error))
@@ -1447,7 +1290,7 @@ fu_dfu_device_upload(FuDfuDevice *self,
 	/* choose the most appropriate type */
 	for (guint i = 0; i < priv->targets->len; i++) {
 		FuDfuTarget *target = g_ptr_array_index(priv->targets, i);
-		if (fu_dfu_target_get_alt_name(target, NULL) != NULL || i > 0) {
+		if (fu_device_get_logical_id(FU_DEVICE(target)) != NULL || i > 0) {
 			use_dfuse = TRUE;
 			break;
 		}
@@ -1467,15 +1310,13 @@ fu_dfu_device_upload(FuDfuDevice *self,
 	fu_progress_set_steps(progress, priv->targets->len);
 	for (guint i = 0; i < priv->targets->len; i++) {
 		FuDfuTarget *target;
-		const gchar *alt_name;
 
 		/* upload to target and proxy signals */
 		target = g_ptr_array_index(priv->targets, i);
 
 		/* ignore some target types */
-		alt_name = fu_dfu_target_get_alt_name_for_display(target, NULL);
-		if (g_strcmp0(alt_name, "Option Bytes") == 0) {
-			g_debug("ignoring target %s", alt_name);
+		if (g_strcmp0(fu_device_get_name(FU_DEVICE(target)), "Option Bytes") == 0) {
+			g_debug("ignoring target %s", fu_device_get_name(target));
 			continue;
 		}
 		if (!fu_dfu_target_upload(target,
@@ -1532,21 +1373,10 @@ fu_dfu_device_download(FuDfuDevice *self,
 		       GError **error)
 {
 	FuDfuDevicePrivate *priv = GET_PRIVATE(self);
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
 	gboolean ret;
 	g_autoptr(GPtrArray) images = NULL;
 	guint16 firmware_pid = 0xffff;
 	guint16 firmware_vid = 0xffff;
-
-	/* no backing USB device */
-	if (usb_device == NULL) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INTERNAL,
-			    "failed to download: no GUsbDevice for %s",
-			    fu_dfu_device_get_platform_id(self));
-		return FALSE;
-	}
 
 	/* ensure interface is claimed */
 	if (!fu_dfu_device_ensure_interface(self, error))
@@ -1632,27 +1462,17 @@ fu_dfu_device_download(FuDfuDevice *self,
 	for (guint i = 0; i < images->len; i++) {
 		FuFirmware *image = g_ptr_array_index(images, i);
 		FuDfuTargetTransferFlags flags_local = DFU_TARGET_TRANSFER_FLAG_NONE;
-		const gchar *alt_name;
 		guint8 alt;
 		g_autoptr(FuDfuTarget) target_tmp = NULL;
-		g_autoptr(GError) error_local = NULL;
 
 		alt = fu_firmware_get_idx(image);
 		target_tmp = fu_dfu_device_get_target_by_alt_setting(self, alt, error);
 		if (target_tmp == NULL)
 			return FALSE;
-
-		/* we don't actually need to print this */
-		alt_name = fu_dfu_target_get_alt_name(target_tmp, &error_local);
-		if (alt_name == NULL) {
-			if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
-				alt_name = "unknown";
-			} else {
-				g_propagate_error(error, g_steal_pointer(&error_local));
-				return FALSE;
-			}
-		}
-		g_debug("downloading to target: %s", alt_name);
+		if (!fu_dfu_target_setup(target_tmp, error))
+			return FALSE;
+		g_debug("downloading to target: %s",
+			fu_device_get_logical_id(FU_DEVICE(target_tmp)));
 
 		/* download onto target */
 		if (flags & DFU_TARGET_TRANSFER_FLAG_VERIFY)
@@ -1815,38 +1635,6 @@ fu_dfu_device_set_quirk_kv(FuDevice *device, const gchar *key, const gchar *valu
 	return FALSE;
 }
 
-/**
- * fu_dfu_device_get_attributes_as_string: (skip)
- * @self: a #FuDfuDevice
- *
- * Gets a string describing the attributes for a device.
- *
- * Returns: a string, possibly empty
- **/
-gchar *
-fu_dfu_device_get_attributes_as_string(FuDfuDevice *self)
-{
-	FuDfuDevicePrivate *priv = GET_PRIVATE(self);
-	GString *str;
-
-	/* just append to a string */
-	str = g_string_new("");
-	if (priv->attributes & FU_DFU_DEVICE_ATTR_CAN_DOWNLOAD)
-		g_string_append_printf(str, "can-download|");
-	if (priv->attributes & FU_DFU_DEVICE_ATTR_CAN_UPLOAD)
-		g_string_append_printf(str, "can-upload|");
-	if (priv->attributes & FU_DFU_DEVICE_ATTR_MANIFEST_TOL)
-		g_string_append_printf(str, "manifest-tol|");
-	if (priv->attributes & FU_DFU_DEVICE_ATTR_WILL_DETACH)
-		g_string_append_printf(str, "will-detach|");
-	if (priv->attributes & FU_DFU_DEVICE_ATTR_CAN_ACCELERATE)
-		g_string_append_printf(str, "can-accelerate|");
-
-	/* remove trailing pipe */
-	g_string_truncate(str, str->len - 1);
-	return g_string_free(str, FALSE);
-}
-
 static void
 fu_dfu_device_set_progress(FuDevice *self, FuProgress *progress)
 {
@@ -1907,6 +1695,21 @@ fu_dfu_device_init(FuDfuDevice *self)
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID);
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
 
+	fu_device_register_private_flag(FU_DEVICE(self),
+					FU_DFU_DEVICE_FLAG_CAN_DOWNLOAD,
+					"can-download");
+	fu_device_register_private_flag(FU_DEVICE(self),
+					FU_DFU_DEVICE_FLAG_CAN_UPLOAD,
+					"can-upload");
+	fu_device_register_private_flag(FU_DEVICE(self),
+					FU_DFU_DEVICE_FLAG_MANIFEST_TOL,
+					"manifest-tol");
+	fu_device_register_private_flag(FU_DEVICE(self),
+					FU_DFU_DEVICE_FLAG_WILL_DETACH,
+					"will-detach");
+	fu_device_register_private_flag(FU_DEVICE(self),
+					FU_DFU_DEVICE_FLAG_CAN_ACCELERATE,
+					"can-accelerate");
 	fu_device_register_private_flag(FU_DEVICE(self),
 					FU_DFU_DEVICE_FLAG_ATTACH_EXTRA_RESET,
 					"attach-extra-reset");

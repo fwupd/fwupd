@@ -30,28 +30,15 @@
 
 #define DFU_TARGET_MANIFEST_MAX_POLLING_TRIES 200
 
-static void
-fu_dfu_target_finalize(GObject *object);
-
 typedef struct {
-	FuDfuDevice *device; /* not refcounted */
 	gboolean done_setup;
 	guint8 alt_setting;
 	guint8 alt_idx;
-	gchar *alt_name;
-	gchar *alt_name_for_display;
 	GPtrArray *sectors; /* of FuDfuSector */
 } FuDfuTargetPrivate;
 
-G_DEFINE_TYPE_WITH_PRIVATE(FuDfuTarget, fu_dfu_target, G_TYPE_OBJECT)
+G_DEFINE_TYPE_WITH_PRIVATE(FuDfuTarget, fu_dfu_target, FU_TYPE_DEVICE)
 #define GET_PRIVATE(o) (fu_dfu_target_get_instance_private(o))
-
-static void
-fu_dfu_target_class_init(FuDfuTargetClass *klass)
-{
-	GObjectClass *object_class = G_OBJECT_CLASS(klass);
-	object_class->finalize = fu_dfu_target_finalize;
-}
 
 static void
 fu_dfu_target_init(FuDfuTarget *self)
@@ -66,32 +53,18 @@ fu_dfu_target_finalize(GObject *object)
 	FuDfuTarget *self = FU_DFU_TARGET(object);
 	FuDfuTargetPrivate *priv = GET_PRIVATE(self);
 
-	g_free(priv->alt_name);
-	g_free(priv->alt_name_for_display);
 	g_ptr_array_unref(priv->sectors);
-
-	/* we no longer care */
-	if (priv->device != NULL) {
-		g_object_remove_weak_pointer(G_OBJECT(priv->device), (gpointer *)&priv->device);
-	}
 
 	G_OBJECT_CLASS(fu_dfu_target_parent_class)->finalize(object);
 }
 
-void
-fu_dfu_target_to_string(FuDfuTarget *self, guint idt, GString *str)
+static void
+fu_dfu_target_to_string(FuDevice *device, guint idt, GString *str)
 {
+	FuDfuTarget *self = FU_DFU_TARGET(device);
 	FuDfuTargetPrivate *priv = GET_PRIVATE(self);
 	fu_common_string_append_kx(str, idt, "AltSetting", priv->alt_setting);
 	fu_common_string_append_kx(str, idt, "AltIdx", priv->alt_idx);
-	if (priv->alt_name != NULL)
-		fu_common_string_append_kv(str, idt, "AltName", priv->alt_name);
-	if (priv->alt_name_for_display != NULL) {
-		fu_common_string_append_kv(str,
-					   idt,
-					   "AltNameForDisplay",
-					   priv->alt_name_for_display);
-	}
 	for (guint i = 0; i < priv->sectors->len; i++) {
 		FuDfuSector *sector = g_ptr_array_index(priv->sectors, i);
 		g_autofree gchar *tmp1 = g_strdup_printf("Idx%02x", i);
@@ -164,7 +137,7 @@ fu_dfu_target_parse_sector(FuDfuTarget *self,
 	}
 
 	/* handle weirdness */
-	if (fu_device_has_private_flag(FU_DEVICE(priv->device),
+	if (fu_device_has_private_flag(fu_device_get_proxy(FU_DEVICE(self)),
 				       FU_DFU_DEVICE_FLAG_ABSENT_SECTOR_SIZE)) {
 		if (tmp[1] == '\0') {
 			tmp[1] = tmp[0];
@@ -279,8 +252,7 @@ fu_dfu_target_parse_sectors(FuDfuTarget *self, const gchar *alt_name, GError **e
 
 	/* parse zones */
 	zones = g_strsplit(alt_name, "/", -1);
-	g_free(priv->alt_name_for_display);
-	priv->alt_name_for_display = g_strdup(g_strchomp(zones[0] + 1));
+	fu_device_set_name(FU_DEVICE(self), g_strchomp(zones[0] + 1));
 	for (guint i = 1; zones[i] != NULL; i += 2) {
 		guint32 addr;
 		guint64 addr_tmp;
@@ -431,16 +403,16 @@ fu_dfu_target_status_to_error_msg(FuDfuStatus status)
 static gboolean
 fu_dfu_target_manifest_wait(FuDfuTarget *self, GError **error)
 {
-	FuDfuTargetPrivate *priv = GET_PRIVATE(self);
+	FuDfuDevice *device = FU_DFU_DEVICE(fu_device_get_proxy(FU_DEVICE(self)));
 	guint polling_count = 0;
 
 	/* get the status */
-	if (!fu_dfu_device_refresh(priv->device, error))
+	if (!fu_dfu_device_refresh(device, error))
 		return FALSE;
 
 	/* wait for FU_DFU_STATE_DFU_MANIFEST to not be set */
-	while (fu_dfu_device_get_state(priv->device) == FU_DFU_STATE_DFU_MANIFEST_SYNC ||
-	       fu_dfu_device_get_state(priv->device) == FU_DFU_STATE_DFU_MANIFEST) {
+	while (fu_dfu_device_get_state(device) == FU_DFU_STATE_DFU_MANIFEST_SYNC ||
+	       fu_dfu_device_get_state(device) == FU_DFU_STATE_DFU_MANIFEST) {
 		g_debug("waiting for FU_DFU_STATE_DFU_MANIFEST to clear");
 
 		if (polling_count++ > DFU_TARGET_MANIFEST_MAX_POLLING_TRIES) {
@@ -451,18 +423,18 @@ fu_dfu_target_manifest_wait(FuDfuTarget *self, GError **error)
 			return FALSE;
 		}
 
-		g_usleep((fu_dfu_device_get_download_timeout(priv->device) + 1000) * 1000);
-		if (!fu_dfu_device_refresh(priv->device, error))
+		g_usleep((fu_dfu_device_get_download_timeout(device) + 1000) * 1000);
+		if (!fu_dfu_device_refresh(device, error))
 			return FALSE;
 	}
 
 	/* in an error state */
-	if (fu_dfu_device_get_state(priv->device) == FU_DFU_STATE_DFU_ERROR) {
+	if (fu_dfu_device_get_state(device) == FU_DFU_STATE_DFU_ERROR) {
 		g_set_error_literal(
 		    error,
 		    FWUPD_ERROR,
 		    FWUPD_ERROR_INTERNAL,
-		    fu_dfu_target_status_to_error_msg(fu_dfu_device_get_status(priv->device)));
+		    fu_dfu_target_status_to_error_msg(fu_dfu_device_get_status(device)));
 		return FALSE;
 	}
 
@@ -472,19 +444,19 @@ fu_dfu_target_manifest_wait(FuDfuTarget *self, GError **error)
 gboolean
 fu_dfu_target_check_status(FuDfuTarget *self, GError **error)
 {
-	FuDfuTargetPrivate *priv = GET_PRIVATE(self);
+	FuDfuDevice *device = FU_DFU_DEVICE(fu_device_get_proxy(FU_DEVICE(self)));
 	FuDfuStatus status;
 	g_autoptr(GTimer) timer = g_timer_new();
 
 	/* get the status */
-	if (!fu_dfu_device_refresh(priv->device, error))
+	if (!fu_dfu_device_refresh(device, error))
 		return FALSE;
 
 	/* wait for dfuDNBUSY to not be set */
-	while (fu_dfu_device_get_state(priv->device) == FU_DFU_STATE_DFU_DNBUSY) {
+	while (fu_dfu_device_get_state(device) == FU_DFU_STATE_DFU_DNBUSY) {
 		g_debug("waiting for FU_DFU_STATE_DFU_DNBUSY to clear");
-		g_usleep(fu_dfu_device_get_download_timeout(priv->device) * 1000);
-		if (!fu_dfu_device_refresh(priv->device, error))
+		g_usleep(fu_dfu_device_get_download_timeout(device) * 1000);
+		if (!fu_dfu_device_refresh(device, error))
 			return FALSE;
 		/* this is a really long time to save fwupd in case
 		 * the device has got wedged */
@@ -498,12 +470,12 @@ fu_dfu_target_check_status(FuDfuTarget *self, GError **error)
 	}
 
 	/* not in an error state */
-	if (fu_dfu_device_get_state(priv->device) != FU_DFU_STATE_DFU_ERROR)
+	if (fu_dfu_device_get_state(device) != FU_DFU_STATE_DFU_ERROR)
 		return TRUE;
 
 	/* STM32-specific long errors */
-	status = fu_dfu_device_get_status(priv->device);
-	if (fu_dfu_device_get_version(priv->device) == FU_DFU_FIRMARE_VERSION_DFUSE) {
+	status = fu_dfu_device_get_status(device);
+	if (fu_dfu_device_get_version(device) == FU_DFU_FIRMARE_VERSION_DFUSE) {
 		if (status == FU_DFU_STATUS_ERR_VENDOR) {
 			g_set_error(error,
 				    FWUPD_ERROR,
@@ -540,21 +512,22 @@ fu_dfu_target_check_status(FuDfuTarget *self, GError **error)
 static gboolean
 fu_dfu_target_use_alt_setting(FuDfuTarget *self, GError **error)
 {
+	FuDfuDevice *device = FU_DFU_DEVICE(fu_device_get_proxy(FU_DEVICE(self)));
 	FuDfuTargetPrivate *priv = GET_PRIVATE(self);
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(priv->device));
+	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(device));
 	g_autoptr(GError) error_local = NULL;
 
 	g_return_val_if_fail(FU_IS_DFU_TARGET(self), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* ensure interface is claimed */
-	if (!fu_dfu_device_ensure_interface(priv->device, error))
+	if (!fu_dfu_device_ensure_interface(device, error))
 		return FALSE;
 
 	/* use the correct setting */
-	if (fu_device_has_flag(FU_DEVICE(priv->device), FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
+	if (fu_device_has_flag(FU_DEVICE(device), FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
 		if (!g_usb_device_set_interface_alt(usb_device,
-						    (gint)fu_dfu_device_get_interface(priv->device),
+						    (gint)fu_dfu_device_get_interface(device),
 						    (gint)priv->alt_setting,
 						    &error_local)) {
 			g_set_error(error,
@@ -562,36 +535,13 @@ fu_dfu_target_use_alt_setting(FuDfuTarget *self, GError **error)
 				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "cannot set alternate setting 0x%02x on interface %i: %s",
 				    priv->alt_setting,
-				    fu_dfu_device_get_interface(priv->device),
+				    fu_dfu_device_get_interface(device),
 				    error_local->message);
 			return FALSE;
 		}
 	}
 
 	return TRUE;
-}
-
-void
-fu_dfu_target_set_alt_name(FuDfuTarget *self, const gchar *alt_name)
-{
-	FuDfuTargetPrivate *priv = GET_PRIVATE(self);
-
-	/* not changed */
-	if (g_strcmp0(priv->alt_name, alt_name) == 0)
-		return;
-
-	g_free(priv->alt_name);
-	priv->alt_name = g_strdup(alt_name);
-}
-
-void
-fu_dfu_target_set_device(FuDfuTarget *self, FuDfuDevice *device)
-{
-	FuDfuTargetPrivate *priv = GET_PRIVATE(self);
-	g_set_object(&priv->device, device);
-
-	/* if we try to ref the target and destroy the device */
-	g_object_add_weak_pointer(G_OBJECT(priv->device), (gpointer *)&priv->device);
 }
 
 /**
@@ -608,7 +558,7 @@ fu_dfu_target_setup(FuDfuTarget *self, GError **error)
 {
 	FuDfuTargetClass *klass = FU_DFU_TARGET_GET_CLASS(self);
 	FuDfuTargetPrivate *priv = GET_PRIVATE(self);
-	FuDevice *device = FU_DEVICE(priv->device);
+	FuDevice *device = fu_device_get_proxy(FU_DEVICE(self));
 
 	g_return_val_if_fail(FU_IS_DFU_TARGET(self), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
@@ -625,7 +575,7 @@ fu_dfu_target_setup(FuDfuTarget *self, GError **error)
 
 	/* GD32VF103 devices features and peripheral list */
 	if (priv->alt_setting == 0x0 &&
-	    fu_device_has_private_flag(FU_DEVICE(priv->device), FU_DFU_DEVICE_FLAG_GD32)) {
+	    fu_device_has_private_flag(device, FU_DFU_DEVICE_FLAG_GD32)) {
 		/*             RB R8 R6 R4  VB V8
 		 * Flash (KB) 128 64 32 16 128 64
 		 *             TB T8 T6 T4  CB C8 C6 C4
@@ -641,17 +591,23 @@ fu_dfu_target_setup(FuDfuTarget *self, GError **error)
 			return FALSE;
 		}
 		if (serial[2] == '2') {
-			fu_dfu_target_set_alt_name(self, "@Internal Flash  /0x8000000/8*1Kg");
+			fu_device_set_logical_id(FU_DEVICE(self),
+						 "@Internal Flash  /0x8000000/8*1Kg");
 		} else if (serial[2] == '4') {
-			fu_dfu_target_set_alt_name(self, "@Internal Flash  /0x8000000/16*1Kg");
+			fu_device_set_logical_id(FU_DEVICE(self),
+						 "@Internal Flash  /0x8000000/16*1Kg");
 		} else if (serial[2] == '6') {
-			fu_dfu_target_set_alt_name(self, "@Internal Flash  /0x8000000/32*1Kg");
+			fu_device_set_logical_id(FU_DEVICE(self),
+						 "@Internal Flash  /0x8000000/32*1Kg");
 		} else if (serial[2] == '8') {
-			fu_dfu_target_set_alt_name(self, "@Internal Flash  /0x8000000/64*1Kg");
+			fu_device_set_logical_id(FU_DEVICE(self),
+						 "@Internal Flash  /0x8000000/64*1Kg");
 		} else if (serial[2] == 'B') {
-			fu_dfu_target_set_alt_name(self, "@Internal Flash  /0x8000000/128*1Kg");
+			fu_device_set_logical_id(FU_DEVICE(self),
+						 "@Internal Flash  /0x8000000/128*1Kg");
 		} else if (serial[2] == 'D') {
-			fu_dfu_target_set_alt_name(self, "@Internal Flash  /0x8000000/256*1Kg");
+			fu_device_set_logical_id(FU_DEVICE(self),
+						 "@Internal Flash  /0x8000000/256*1Kg");
 		} else {
 			g_set_error(error,
 				    FWUPD_ERROR,
@@ -663,15 +619,18 @@ fu_dfu_target_setup(FuDfuTarget *self, GError **error)
 	}
 
 	/* get string */
-	if (priv->alt_idx != 0x00 && priv->alt_name == NULL) {
-		GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(priv->device));
-		priv->alt_name =
-		    g_usb_device_get_string_descriptor(usb_device, priv->alt_idx, NULL);
+	if (priv->alt_idx != 0x00 && fu_device_get_logical_id(FU_DEVICE(self)) == NULL) {
+		GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(device));
+		fu_device_set_logical_id(
+		    FU_DEVICE(self),
+		    g_usb_device_get_string_descriptor(usb_device, priv->alt_idx, NULL));
 	}
 
 	/* parse the DfuSe format according to UM0424 */
 	if (priv->sectors->len == 0) {
-		if (!fu_dfu_target_parse_sectors(self, priv->alt_name, error))
+		if (!fu_dfu_target_parse_sectors(self,
+						 fu_device_get_logical_id(FU_DEVICE(self)),
+						 error))
 			return FALSE;
 	}
 
@@ -684,7 +643,8 @@ fu_dfu_target_setup(FuDfuTarget *self, GError **error)
 					   0x0, /* zone */
 					   0x0, /* number */
 					   DFU_SECTOR_CAP_READABLE | DFU_SECTOR_CAP_WRITEABLE);
-		g_debug("no UM0424 sector description in %s", priv->alt_name);
+		g_debug("no UM0424 sector description in %s",
+			fu_device_get_logical_id(FU_DEVICE(self)));
 		g_ptr_array_add(priv->sectors, sector);
 	}
 
@@ -726,8 +686,8 @@ fu_dfu_target_download_chunk(FuDfuTarget *self,
 			     FuProgress *progress,
 			     GError **error)
 {
-	FuDfuTargetPrivate *priv = GET_PRIVATE(self);
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(priv->device));
+	FuDfuDevice *device = FU_DFU_DEVICE(fu_device_get_proxy(FU_DEVICE(self)));
+	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(device));
 	g_autoptr(GError) error_local = NULL;
 	gsize actual_length;
 
@@ -741,15 +701,15 @@ fu_dfu_target_download_chunk(FuDfuTarget *self,
 					   G_USB_DEVICE_RECIPIENT_INTERFACE,
 					   FU_DFU_REQUEST_DNLOAD,
 					   index,
-					   fu_dfu_device_get_interface(priv->device),
+					   fu_dfu_device_get_interface(device),
 					   (guint8 *)g_bytes_get_data(bytes, NULL),
 					   g_bytes_get_size(bytes),
 					   &actual_length,
-					   fu_dfu_device_get_timeout(priv->device),
+					   fu_dfu_device_get_timeout(device),
 					   NULL,
 					   &error_local)) {
 		/* refresh the error code */
-		fu_dfu_device_error_fixup(priv->device, &error_local);
+		fu_dfu_device_error_fixup(device, &error_local);
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
@@ -759,17 +719,17 @@ fu_dfu_target_download_chunk(FuDfuTarget *self,
 	}
 
 	/* for STM32 devices, the action only occurs when we do GetStatus */
-	if (fu_dfu_device_get_version(priv->device) == FU_DFU_FIRMARE_VERSION_DFUSE) {
-		if (!fu_dfu_device_refresh(priv->device, error))
+	if (fu_dfu_device_get_version(device) == FU_DFU_FIRMARE_VERSION_DFUSE) {
+		if (!fu_dfu_device_refresh(device, error))
 			return FALSE;
 	}
 
 	/* wait for the device to write contents to the EEPROM */
-	if (g_bytes_get_size(bytes) == 0 && fu_dfu_device_get_download_timeout(priv->device) > 0)
+	if (g_bytes_get_size(bytes) == 0 && fu_dfu_device_get_download_timeout(device) > 0)
 		fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_BUSY);
-	if (fu_dfu_device_get_download_timeout(priv->device) > 0) {
-		g_debug("sleeping for %ums…", fu_dfu_device_get_download_timeout(priv->device));
-		g_usleep(fu_dfu_device_get_download_timeout(priv->device) * 1000);
+	if (fu_dfu_device_get_download_timeout(device) > 0) {
+		g_debug("sleeping for %ums…", fu_dfu_device_get_download_timeout(device));
+		g_usleep(fu_dfu_device_get_download_timeout(device) * 1000);
 	}
 
 	/* find out if the write was successful, waiting for BUSY to clear */
@@ -789,15 +749,15 @@ fu_dfu_target_upload_chunk(FuDfuTarget *self,
 			   FuProgress *progress,
 			   GError **error)
 {
-	FuDfuTargetPrivate *priv = GET_PRIVATE(self);
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(priv->device));
+	FuDfuDevice *device = FU_DFU_DEVICE(fu_device_get_proxy(FU_DEVICE(self)));
+	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(device));
 	g_autoptr(GError) error_local = NULL;
 	guint8 *buf;
 	gsize actual_length;
 
 	/* unset */
 	if (buf_sz == 0)
-		buf_sz = (gsize)fu_dfu_device_get_transfer_size(priv->device);
+		buf_sz = (gsize)fu_dfu_device_get_transfer_size(device);
 
 	buf = g_new0(guint8, buf_sz);
 	if (!g_usb_device_control_transfer(usb_device,
@@ -806,15 +766,15 @@ fu_dfu_target_upload_chunk(FuDfuTarget *self,
 					   G_USB_DEVICE_RECIPIENT_INTERFACE,
 					   FU_DFU_REQUEST_UPLOAD,
 					   index,
-					   fu_dfu_device_get_interface(priv->device),
+					   fu_dfu_device_get_interface(device),
 					   buf,
 					   buf_sz,
 					   &actual_length,
-					   fu_dfu_device_get_timeout(priv->device),
+					   fu_dfu_device_get_timeout(device),
 					   NULL,
 					   &error_local)) {
 		/* refresh the error code */
-		fu_dfu_device_error_fixup(priv->device, &error_local);
+		fu_dfu_device_error_fixup(device, &error_local);
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
@@ -844,17 +804,10 @@ fu_dfu_target_set_alt_setting(FuDfuTarget *self, guint8 alt_setting)
 	priv->alt_setting = alt_setting;
 }
 
-FuDfuDevice *
-fu_dfu_target_get_device(FuDfuTarget *self)
-{
-	FuDfuTargetPrivate *priv = GET_PRIVATE(self);
-	return priv->device;
-}
-
 gboolean
 fu_dfu_target_attach(FuDfuTarget *self, FuProgress *progress, GError **error)
 {
-	FuDfuTargetPrivate *priv = GET_PRIVATE(self);
+	FuDfuDevice *device = FU_DFU_DEVICE(fu_device_get_proxy(FU_DEVICE(self)));
 	FuDfuTargetClass *klass = FU_DFU_TARGET_GET_CLASS(self);
 
 	/* ensure populated */
@@ -866,7 +819,7 @@ fu_dfu_target_attach(FuDfuTarget *self, FuProgress *progress, GError **error)
 		return klass->attach(self, progress, error);
 
 	/* normal DFU mode just needs a bus reset */
-	return fu_dfu_device_reset(priv->device, progress, error);
+	return fu_dfu_device_reset(device, progress, error);
 }
 
 static FuChunk *
@@ -877,11 +830,11 @@ fu_dfu_target_upload_element_dfu(FuDfuTarget *self,
 				 FuProgress *progress,
 				 GError **error)
 {
-	FuDfuTargetPrivate *priv = GET_PRIVATE(self);
+	FuDfuDevice *device = FU_DFU_DEVICE(fu_device_get_proxy(FU_DEVICE(self)));
 	GBytes *chunk_tmp;
 	guint percentage_size = expected_size > 0 ? expected_size : maximum_size;
 	gsize total_size = 0;
-	guint16 transfer_size = fu_dfu_device_get_transfer_size(priv->device);
+	guint16 transfer_size = fu_dfu_device_get_transfer_size(device);
 	g_autoptr(GBytes) contents = NULL;
 	g_autoptr(GPtrArray) chunks = NULL;
 
@@ -1001,7 +954,8 @@ fu_dfu_target_upload(FuDfuTarget *self,
 		return FALSE;
 
 	/* can the target do this? */
-	if (!fu_dfu_device_can_upload(priv->device)) {
+	if (!fu_device_has_private_flag(fu_device_get_proxy(FU_DEVICE(self)),
+					FU_DFU_DEVICE_FLAG_CAN_UPLOAD)) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
@@ -1024,7 +978,7 @@ fu_dfu_target_upload(FuDfuTarget *self,
 
 	/* create a new image */
 	image = fu_firmware_new();
-	fu_firmware_set_id(image, priv->alt_name);
+	fu_firmware_set_id(image, fu_device_get_logical_id(FU_DEVICE(self)));
 	fu_firmware_set_idx(image, priv->alt_setting);
 
 	/* get all the sectors for the device */
@@ -1104,9 +1058,9 @@ fu_dfu_target_download_element_dfu(FuDfuTarget *self,
 				   FuDfuTargetTransferFlags flags,
 				   GError **error)
 {
-	FuDfuTargetPrivate *priv = GET_PRIVATE(self);
+	FuDfuDevice *device = FU_DFU_DEVICE(fu_device_get_proxy(FU_DEVICE(self)));
 	guint32 nr_chunks;
-	guint16 transfer_size = fu_dfu_device_get_transfer_size(priv->device);
+	guint16 transfer_size = fu_dfu_device_get_transfer_size(device);
 	g_autoptr(GBytes) bytes = NULL;
 
 	/* round up as we have to transfer incomplete blocks */
@@ -1160,12 +1114,12 @@ fu_dfu_target_download_element(FuDfuTarget *self,
 			       FuDfuTargetTransferFlags flags,
 			       GError **error)
 {
-	FuDfuTargetPrivate *priv = GET_PRIVATE(self);
+	FuDevice *device = fu_device_get_proxy(FU_DEVICE(self));
 	FuDfuTargetClass *klass = FU_DFU_TARGET_GET_CLASS(self);
 
 	/* progress */
 	if (flags & DFU_TARGET_TRANSFER_FLAG_VERIFY &&
-	    fu_dfu_device_has_attribute(priv->device, FU_DFU_DEVICE_ATTR_CAN_UPLOAD)) {
+	    fu_device_has_private_flag(device, FU_DFU_DEVICE_FLAG_CAN_UPLOAD)) {
 		fu_progress_set_id(progress, G_STRLOC);
 		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 96);
 		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 4);
@@ -1194,7 +1148,7 @@ fu_dfu_target_download_element(FuDfuTarget *self,
 
 	/* verify */
 	if (flags & DFU_TARGET_TRANSFER_FLAG_VERIFY &&
-	    fu_dfu_device_has_attribute(priv->device, FU_DFU_DEVICE_ATTR_CAN_UPLOAD)) {
+	    fu_device_has_private_flag(device, FU_DFU_DEVICE_FLAG_CAN_UPLOAD)) {
 		g_autoptr(GBytes) bytes = NULL;
 		g_autoptr(GBytes) bytes_tmp = NULL;
 		g_autoptr(FuChunk) chunk_tmp = NULL;
@@ -1243,6 +1197,7 @@ fu_dfu_target_download(FuDfuTarget *self,
 		       FuDfuTargetTransferFlags flags,
 		       GError **error)
 {
+	FuDevice *device = fu_device_get_proxy(FU_DEVICE(self));
 	FuDfuTargetPrivate *priv = GET_PRIVATE(self);
 	g_autoptr(GPtrArray) chunks = NULL;
 
@@ -1255,7 +1210,7 @@ fu_dfu_target_download(FuDfuTarget *self,
 		return FALSE;
 
 	/* can the target do this? */
-	if (!fu_dfu_device_can_download(priv->device)) {
+	if (!fu_device_has_private_flag(device, FU_DFU_DEVICE_FLAG_CAN_DOWNLOAD)) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
@@ -1306,8 +1261,8 @@ fu_dfu_target_download(FuDfuTarget *self,
 		fu_progress_step_done(progress);
 	}
 
-	if (fu_device_has_private_flag(FU_DEVICE(priv->device), FU_DFU_DEVICE_FLAG_MANIFEST_POLL) &&
-	    fu_dfu_device_has_attribute(priv->device, FU_DFU_DEVICE_ATTR_MANIFEST_TOL))
+	if (fu_device_has_private_flag(device, FU_DFU_DEVICE_FLAG_MANIFEST_POLL) &&
+	    fu_device_has_private_flag(device, FU_DFU_DEVICE_FLAG_MANIFEST_TOL))
 		if (!fu_dfu_target_manifest_wait(self, error))
 			return FALSE;
 
@@ -1331,62 +1286,11 @@ fu_dfu_target_get_alt_setting(FuDfuTarget *self)
 	return priv->alt_setting;
 }
 
-/**
- * fu_dfu_target_get_alt_name:
- * @self: a #FuDfuTarget
- * @error: (nullable): optional return location for an error
- *
- * Gets the alternate setting name to use for this interface.
- *
- * Returns: the alternative setting name, typically %NULL
- **/
-const gchar *
-fu_dfu_target_get_alt_name(FuDfuTarget *self, GError **error)
+static void
+fu_dfu_target_class_init(FuDfuTargetClass *klass)
 {
-	FuDfuTargetPrivate *priv = GET_PRIVATE(self);
-	g_return_val_if_fail(FU_IS_DFU_TARGET(self), NULL);
-
-	/* ensure populated */
-	if (!fu_dfu_target_setup(self, error))
-		return NULL;
-
-	/* nothing */
-	if (priv->alt_name == NULL) {
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "no alt-name");
-		return NULL;
-	}
-
-	return priv->alt_name;
-}
-
-/**
- * fu_dfu_target_get_alt_name_for_display:
- * @self: a #FuDfuTarget
- * @error: (nullable): optional return location for an error
- *
- * Gets the alternate setting name to use for this interface that can be
- * shown on the display.
- *
- * Returns: the alternative setting name
- **/
-const gchar *
-fu_dfu_target_get_alt_name_for_display(FuDfuTarget *self, GError **error)
-{
-	FuDfuTargetPrivate *priv = GET_PRIVATE(self);
-	g_return_val_if_fail(FU_IS_DFU_TARGET(self), NULL);
-
-	/* ensure populated */
-	if (!fu_dfu_target_setup(self, error))
-		return NULL;
-
-	/* nothing */
-	if (priv->alt_name_for_display == NULL) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_FOUND,
-				    "no alt-name for display");
-		return NULL;
-	}
-
-	return priv->alt_name_for_display;
+	GObjectClass *object_class = G_OBJECT_CLASS(klass);
+	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
+	klass_device->to_string = fu_dfu_target_to_string;
+	object_class->finalize = fu_dfu_target_finalize;
 }
