@@ -15,6 +15,7 @@ available from the vendor.
 
 This plugin supports the following protocol IDs:
 
+* com.steelseries.gamepad
 * com.steelseries.sonic
 
 ## GUID Generation
