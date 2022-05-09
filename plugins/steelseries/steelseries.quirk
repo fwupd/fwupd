@@ -11,6 +11,7 @@ Plugin = steelseries
 GType = FuSteelseriesSonic
 Icon = input-mouse
 
+# Stratus Duo RX
 [USB\VID_1038&PID_1430]
 Plugin = steelseries
 GType = FuSteelseriesGamepad
@@ -18,13 +19,6 @@ Name = Stratus Duo RX
 Icon = input-gaming
 CounterpartGuid = USB\VID_1038&PID_1432
 SteelSeriesDeviceKind = gamepad-dongle
-
-[USB\VID_1038&PID_1431]
-Plugin = steelseries
-GType = FuSteelseriesGamepad
-Name = Stratus Duo Gamepad
-Icon = input-gaming
-CounterpartGuid = USB\VID_1038&PID_1433
 
 [USB\VID_1038&PID_1432]
 Plugin = steelseries
@@ -34,6 +28,14 @@ CounterpartGuid = USB\VID_1038&PID_1430
 Flags = is-bootloader
 SteelSeriesDeviceKind = gamepad-dongle
 
+# Stratus Duo
+[USB\VID_1038&PID_1431]
+Plugin = steelseries
+GType = FuSteelseriesGamepad
+Name = Stratus Duo Gamepad
+Icon = input-gaming
+CounterpartGuid = USB\VID_1038&PID_1433
+
 [USB\VID_1038&PID_1433]
 Plugin = steelseries
 GType = FuSteelseriesGamepad
@@ -41,6 +43,7 @@ Name = Stratus Duo bootloader
 CounterpartGuid = USB\VID_1038&PID_1431
 Flags = is-bootloader
 
+# Proton
 [USB\VID_1038&PID_1434]
 Plugin = steelseries
 GType = FuSteelseriesGamepad
