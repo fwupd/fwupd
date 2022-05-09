@@ -690,7 +690,7 @@ fu_dfu_tool_write(FuDfuTool *self, gchar **values, GError **error)
 	if (!fu_device_attach_full(FU_DEVICE(device), progress, error))
 		return FALSE;
 
-	if (fu_dfu_device_has_attribute(device, FU_DFU_DEVICE_ATTR_MANIFEST_TOL)) {
+	if (fu_device_has_private_flag(FU_DEVICE(device), FU_DFU_DEVICE_FLAG_MANIFEST_TOL)) {
 		if (!fu_dfu_device_wait_for_replug(self,
 						   device,
 						   fu_device_get_remove_delay(FU_DEVICE(device)),

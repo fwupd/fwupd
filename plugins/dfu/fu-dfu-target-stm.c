@@ -94,7 +94,7 @@ fu_dfu_target_stm_upload_element(FuDfuTarget *target,
 				 FuProgress *progress,
 				 GError **error)
 {
-	FuDfuDevice *device = fu_dfu_target_get_device(target);
+	FuDfuDevice *device = FU_DFU_DEVICE(fu_device_get_proxy(FU_DEVICE(target)));
 	FuDfuSector *sector;
 	FuChunk *chk = NULL;
 	GBytes *chunk_tmp;
@@ -413,7 +413,7 @@ fu_dfu_target_stm_download_element(FuDfuTarget *target,
 				   FuDfuTargetTransferFlags flags,
 				   GError **error)
 {
-	FuDfuDevice *device = fu_dfu_target_get_device(target);
+	FuDfuDevice *device = FU_DFU_DEVICE(fu_device_get_proxy(FU_DEVICE(target)));
 	g_autoptr(GBytes) bytes = NULL;
 	g_autoptr(GPtrArray) chunks = NULL;
 	g_autoptr(GPtrArray) sectors_array = g_ptr_array_new();

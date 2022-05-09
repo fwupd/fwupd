@@ -88,7 +88,7 @@ fu_dfu_target_avr_mass_erase(FuDfuTarget *target, FuProgress *progress, GError *
 	guint8 buf[3];
 
 	/* this takes a long time on some devices */
-	fu_dfu_device_set_timeout(fu_dfu_target_get_device(target), 5000);
+	fu_dfu_device_set_timeout(FU_DFU_DEVICE(fu_device_get_proxy(FU_DEVICE(target))), 5000);
 
 	/* format buffer */
 	buf[0] = DFU_AVR32_GROUP_EXEC;
@@ -178,7 +178,7 @@ fu_dfu_target_avr_select_memory_unit(FuDfuTarget *target,
 	guint8 buf[4];
 
 	/* check legacy protocol quirk */
-	if (fu_device_has_private_flag(FU_DEVICE(fu_dfu_target_get_device(target)),
+	if (fu_device_has_private_flag(fu_device_get_proxy(FU_DEVICE(target)),
 				       FU_DFU_DEVICE_FLAG_LEGACY_PROTOCOL)) {
 		g_debug("ignoring select memory unit as legacy protocol");
 		return TRUE;
@@ -504,7 +504,7 @@ fu_dfu_target_avr_setup(FuDfuTarget *target, GError **error)
 		return TRUE;
 
 	/* different methods for AVR vs. AVR32 */
-	if (fu_device_has_private_flag(FU_DEVICE(fu_dfu_target_get_device(target)),
+	if (fu_device_has_private_flag(fu_device_get_proxy(FU_DEVICE(target)),
 				       FU_DFU_DEVICE_FLAG_LEGACY_PROTOCOL)) {
 		chunk_sig = fu_dfu_target_avr_get_chip_signature(target, progress, error);
 		if (chunk_sig == NULL)
@@ -549,16 +549,16 @@ fu_dfu_target_avr_setup(FuDfuTarget *target, GError **error)
 	}
 
 	/* set the alt-name using the chip ID via a quirk */
-	device = fu_dfu_target_get_device(target);
+	device = FU_DFU_DEVICE(fu_device_get_proxy(FU_DEVICE(target)));
 	fu_device_add_instance_str(FU_DEVICE(device), "CID", chip_id_guid);
 	if (!fu_device_build_instance_id(FU_DEVICE(device), error, "DFU_AVR", "CID", NULL))
 		return FALSE;
 	chip_id = fu_dfu_device_get_chip_id(device);
 	if (chip_id == NULL) {
-		fu_dfu_device_remove_attribute(fu_dfu_target_get_device(target),
-					       FU_DFU_DEVICE_ATTR_CAN_DOWNLOAD);
-		fu_dfu_device_remove_attribute(fu_dfu_target_get_device(target),
-					       FU_DFU_DEVICE_ATTR_CAN_UPLOAD);
+		fu_device_remove_private_flag(fu_device_get_proxy(FU_DEVICE(target)),
+					      FU_DFU_DEVICE_FLAG_CAN_DOWNLOAD);
+		fu_device_remove_private_flag(fu_device_get_proxy(FU_DEVICE(target)),
+					      FU_DFU_DEVICE_FLAG_CAN_UPLOAD);
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
@@ -567,7 +567,7 @@ fu_dfu_target_avr_setup(FuDfuTarget *target, GError **error)
 			    chip_id_guid);
 		return FALSE;
 	}
-	fu_dfu_target_set_alt_name(target, chip_id);
+	fu_device_set_logical_id(FU_DEVICE(target), chip_id);
 
 	return TRUE;
 }
@@ -608,7 +608,7 @@ fu_dfu_target_avr_download_element_chunks(FuDfuTarget *target,
 		/* select page if required */
 		if (fu_chunk_get_page(chk) != *page_last) {
 			g_autoptr(FuProgress) progress_tmp = fu_progress_new(G_STRLOC);
-			if (fu_device_has_private_flag(FU_DEVICE(fu_dfu_target_get_device(target)),
+			if (fu_device_has_private_flag(fu_device_get_proxy(FU_DEVICE(target)),
 						       FU_DFU_DEVICE_FLAG_LEGACY_PROTOCOL)) {
 				if (!fu_dfu_target_avr_select_memory_page(target,
 									  fu_chunk_get_page(chk),
@@ -716,7 +716,7 @@ fu_dfu_target_avr_download_element(FuDfuTarget *target,
 	}
 
 	/* the original AVR protocol uses a half-size control block */
-	if (fu_device_has_private_flag(FU_DEVICE(fu_dfu_target_get_device(target)),
+	if (fu_device_has_private_flag(fu_device_get_proxy(FU_DEVICE(target)),
 				       FU_DFU_DEVICE_FLAG_LEGACY_PROTOCOL)) {
 		header_sz = ATMEL_AVR_CONTROL_BLOCK_SIZE;
 	}
@@ -809,7 +809,7 @@ fu_dfu_target_avr_upload_element_chunks(FuDfuTarget *target,
 		/* select page if required */
 		if (fu_chunk_get_page(chk) != page_last) {
 			g_autoptr(FuProgress) progress_tmp = fu_progress_new(G_STRLOC);
-			if (fu_device_has_private_flag(FU_DEVICE(fu_dfu_target_get_device(target)),
+			if (fu_device_has_private_flag(fu_device_get_proxy(FU_DEVICE(target)),
 						       FU_DFU_DEVICE_FLAG_LEGACY_PROTOCOL)) {
 				if (!fu_dfu_target_avr_select_memory_page(target,
 									  fu_chunk_get_page(chk),

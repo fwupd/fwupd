@@ -16,7 +16,7 @@
 #include "fu-dfu-sector.h"
 
 #define FU_TYPE_DFU_TARGET (fu_dfu_target_get_type())
-G_DECLARE_DERIVABLE_TYPE(FuDfuTarget, fu_dfu_target, FU, DFU_TARGET, GUsbDevice)
+G_DECLARE_DERIVABLE_TYPE(FuDfuTarget, fu_dfu_target, FU, DFU_TARGET, FuDevice)
 
 /**
  * FuDfuTargetTransferFlags:
@@ -39,7 +39,7 @@ typedef enum {
 } FuDfuTargetTransferFlags;
 
 struct _FuDfuTargetClass {
-	GUsbDeviceClass parent_class;
+	FuDeviceClass parent_class;
 	gboolean (*setup)(FuDfuTarget *self, GError **error);
 	gboolean (*attach)(FuDfuTarget *self, FuProgress *progress, GError **error);
 	gboolean (*detach)(FuDfuTarget *self, FuProgress *progress, GError **error);
@@ -63,10 +63,6 @@ FuDfuSector *
 fu_dfu_target_get_sector_default(FuDfuTarget *self);
 guint8
 fu_dfu_target_get_alt_setting(FuDfuTarget *self);
-const gchar *
-fu_dfu_target_get_alt_name(FuDfuTarget *self, GError **error);
-const gchar *
-fu_dfu_target_get_alt_name_for_display(FuDfuTarget *self, GError **error);
 gboolean
 fu_dfu_target_upload(FuDfuTarget *self,
 		     FuFirmware *firmware,
@@ -83,5 +79,3 @@ fu_dfu_target_download(FuDfuTarget *self,
 		       GError **error);
 gboolean
 fu_dfu_target_mass_erase(FuDfuTarget *self, FuProgress *progress, GError **error);
-void
-fu_dfu_target_to_string(FuDfuTarget *self, guint idt, GString *str);

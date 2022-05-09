@@ -72,7 +72,7 @@ fu_dfu_target_dfuse_func(void)
 
 	/* NULL */
 	target = g_object_new(FU_TYPE_DFU_TARGET, NULL);
-	fu_dfu_target_set_device(target, device);
+	fu_device_set_proxy(FU_DEVICE(target), FU_DEVICE(device));
 	ret = fu_dfu_target_parse_sectors(target, NULL, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
