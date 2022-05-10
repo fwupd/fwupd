@@ -53,7 +53,7 @@ CERTDIR=/etc/pki/tls/certs
 MINGW32BINDIR=/usr/x86_64-w64-mingw32/sys-root/mingw/bin
 
 #disable motd for Windows
-sed -i 's,UpdateMotd=.*,UpdateMotd=false,' $DESTDIR/etc/fwupd/daemon.conf
+sed -i 's,UpdateMotd=.*,UpdateMotd=false,' "$DESTDIR/etc/fwupd/daemon.conf"
 
 # copy deps
 cp -f -v \
