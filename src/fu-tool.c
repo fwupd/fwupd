@@ -63,6 +63,7 @@ struct FuUtilPrivate {
 	FuEngineRequest *request;
 	FuProgress *progress;
 	FuProgressbar *progressbar;
+	FwupdClient *client;
 	gboolean as_json;
 	gboolean no_reboot_check;
 	gboolean no_safety_check;
@@ -347,6 +348,8 @@ fu_util_private_free(FuUtilPrivate *priv)
 		g_object_unref(priv->engine);
 	if (priv->request != NULL)
 		g_object_unref(priv->request);
+	if (priv->client != NULL)
+		g_object_unref(priv->client);
 	if (priv->main_ctx != NULL)
 		g_main_context_unref(priv->main_ctx);
 	if (priv->loop != NULL)
@@ -2015,24 +2018,24 @@ fu_util_changed_cb(FwupdClient *client, gpointer user_data)
 static gboolean
 fu_util_monitor(FuUtilPrivate *priv, gchar **values, GError **error)
 {
-	g_autoptr(FwupdClient) client = fwupd_client_new();
-	fwupd_client_set_main_context(client, priv->main_ctx);
-
 	/* get all the devices */
-	if (!fwupd_client_connect(client, priv->cancellable, error))
+	if (!fwupd_client_connect(priv->client, priv->cancellable, error))
 		return FALSE;
 
 	/* watch for any hotplugged device */
-	g_signal_connect(FWUPD_CLIENT(client), "changed", G_CALLBACK(fu_util_changed_cb), priv);
-	g_signal_connect(FWUPD_CLIENT(client),
+	g_signal_connect(FWUPD_CLIENT(priv->client),
+			 "changed",
+			 G_CALLBACK(fu_util_changed_cb),
+			 priv);
+	g_signal_connect(FWUPD_CLIENT(priv->client),
 			 "device-added",
 			 G_CALLBACK(fu_util_device_added_cb),
 			 priv);
-	g_signal_connect(FWUPD_CLIENT(client),
+	g_signal_connect(FWUPD_CLIENT(priv->client),
 			 "device-removed",
 			 G_CALLBACK(fu_util_device_removed_cb),
 			 priv);
-	g_signal_connect(FWUPD_CLIENT(client),
+	g_signal_connect(FWUPD_CLIENT(priv->client),
 			 "device-changed",
 			 G_CALLBACK(fu_util_device_changed_cb),
 			 priv);
@@ -3371,6 +3374,11 @@ main(int argc, char *argv[])
 	priv->progressbar = fu_progressbar_new();
 	fu_progressbar_set_main_context(priv->progressbar, priv->main_ctx);
 	priv->request = fu_engine_request_new(FU_ENGINE_REQUEST_KIND_ACTIVE);
+
+	/* used for monitoring and downloading */
+	priv->client = fwupd_client_new();
+	fwupd_client_set_main_context(priv->client, priv->main_ctx);
+	fwupd_client_set_user_agent_for_package(priv->client, "fwupdtool", PACKAGE_VERSION);
 
 	/* when not using the engine */
 	priv->progress = fu_progress_new(G_STRLOC);
