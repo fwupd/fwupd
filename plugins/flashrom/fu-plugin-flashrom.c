@@ -262,6 +262,7 @@ fu_plugin_flashrom_find_guid(FuPlugin *plugin, GError **error)
 			return guid;
 	}
 
+	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no HwIDs found");
 	return NULL;
 }
 
