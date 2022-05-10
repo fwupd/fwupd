@@ -1,0 +1,2 @@
+[binaries]
+exe_wrapper = '/usr/bin/wine'

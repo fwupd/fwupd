@@ -14,6 +14,7 @@ fi
 # try to keep this and ../contrib/ci/build_windows.sh in sync as much as makes sense
 meson .. \
     --cross-file=/usr/share/mingw/toolchain-mingw64.meson \
+    --cross-file=../contrib/mingw64.cross \
     --prefix=/ \
     --sysconfdir="etc" \
     --libexecdir="bin" \
