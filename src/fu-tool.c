@@ -85,6 +85,16 @@ struct FuUtilPrivate {
 	FwupdDeviceFlags filter_exclude;
 };
 
+static void
+fu_util_client_notify_cb(GObject *object, GParamSpec *pspec, FuUtilPrivate *priv)
+{
+	if (priv->as_json)
+		return;
+	fu_progressbar_update(priv->progressbar,
+			      fwupd_client_get_status(priv->client),
+			      fwupd_client_get_percentage(priv->client));
+}
+
 static gboolean
 fu_util_save_current_state(FuUtilPrivate *priv, GError **error)
 {
@@ -1115,47 +1125,11 @@ fu_util_release_sort_cb(gconstpointer a, gconstpointer b)
 	return fu_release_compare(release1, release2);
 }
 
-static void
-fu_util_stdout_cb(const gchar *line, gpointer user_data)
-{
-	if (g_getenv("FWUPD_DOWNLOAD_VERBOSE") != NULL)
-		g_debug("'%s'", line);
-}
-
-static gboolean
-fu_util_download_out_of_process(const gchar *uri, const gchar *fn, GError **error)
-{
-#ifdef _WIN32
-	g_autofree gchar *basedir = fu_common_get_path(FU_PATH_KIND_WIN32_BASEDIR);
-	g_autofree gchar *cert = g_build_filename(basedir, "bin", "ca-bundle.crt", NULL);
-	const gchar *argv[][7] = {{"curl.exe", uri, "--output", fn, "--cacert", cert, NULL},
-				  {NULL}};
-#else
-	const gchar *argv[][5] = {{"wget", uri, "-O", fn, NULL},
-				  {"curl", uri, "--output", fn, NULL},
-				  {NULL}};
-#endif
-	for (guint i = 0; argv[i][0] != NULL; i++) {
-		g_autoptr(GError) error_local = NULL;
-		g_autofree gchar *fn_tmp = NULL;
-		fn_tmp = fu_common_find_program_in_path(argv[i][0], &error_local);
-		if (fn_tmp == NULL) {
-			g_debug("%s", error_local->message);
-			continue;
-		}
-		return fu_common_spawn_sync(argv[i], fu_util_stdout_cb, NULL, 0, NULL, error);
-	}
-	g_set_error_literal(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_FOUND,
-			    "no supported out-of-process downloaders found");
-	return FALSE;
-}
-
 static gchar *
 fu_util_download_if_required(FuUtilPrivate *priv, const gchar *perhapsfn, GError **error)
 {
 	g_autofree gchar *filename = NULL;
+	g_autoptr(GFile) file = NULL;
 
 	/* a local file */
 	if (g_file_test(perhapsfn, G_FILE_TEST_EXISTS))
@@ -1167,7 +1141,13 @@ fu_util_download_if_required(FuUtilPrivate *priv, const gchar *perhapsfn, GError
 	filename = fu_util_get_user_cache_path(perhapsfn);
 	if (!fu_common_mkdir_parent(filename, error))
 		return NULL;
-	if (!fu_util_download_out_of_process(perhapsfn, filename, error))
+	file = g_file_new_for_path(filename);
+	if (!fwupd_client_download_file(priv->client,
+					perhapsfn,
+					file,
+					FWUPD_CLIENT_DOWNLOAD_FLAG_NONE,
+					priv->cancellable,
+					error))
 		return NULL;
 	return g_steal_pointer(&filename);
 }
@@ -2701,8 +2681,6 @@ static gboolean
 fu_util_refresh_remote(FuUtilPrivate *priv, FwupdRemote *remote, GError **error)
 {
 	const gchar *metadata_uri = NULL;
-	g_autofree gchar *fn_raw = NULL;
-	g_autofree gchar *fn_sig = NULL;
 	g_autoptr(GBytes) bytes_raw = NULL;
 	g_autoptr(GBytes) bytes_sig = NULL;
 
@@ -2716,12 +2694,11 @@ fu_util_refresh_remote(FuUtilPrivate *priv, FwupdRemote *remote, GError **error)
 			    fwupd_remote_get_id(remote));
 		return FALSE;
 	}
-	fn_sig = fu_util_get_user_cache_path(metadata_uri);
-	if (!fu_common_mkdir_parent(fn_sig, error))
-		return FALSE;
-	if (!fu_util_download_out_of_process(metadata_uri, fn_sig, error))
-		return FALSE;
-	bytes_sig = fu_common_get_contents_bytes(fn_sig, error);
+	bytes_sig = fwupd_client_download_bytes(priv->client,
+						metadata_uri,
+						FWUPD_CLIENT_DOWNLOAD_FLAG_NONE,
+						priv->cancellable,
+						error);
 	if (bytes_sig == NULL)
 		return FALSE;
 	if (!fwupd_remote_load_signature_bytes(remote, bytes_sig, error))
@@ -2737,10 +2714,11 @@ fu_util_refresh_remote(FuUtilPrivate *priv, FwupdRemote *remote, GError **error)
 			    fwupd_remote_get_id(remote));
 		return FALSE;
 	}
-	fn_raw = fu_util_get_user_cache_path(metadata_uri);
-	if (!fu_util_download_out_of_process(metadata_uri, fn_raw, error))
-		return FALSE;
-	bytes_raw = fu_common_get_contents_bytes(fn_raw, error);
+	bytes_raw = fwupd_client_download_bytes(priv->client,
+						metadata_uri,
+						FWUPD_CLIENT_DOWNLOAD_FLAG_NONE,
+						priv->cancellable,
+						error);
 	if (bytes_raw == NULL)
 		return FALSE;
 
@@ -3379,6 +3357,14 @@ main(int argc, char *argv[])
 	priv->client = fwupd_client_new();
 	fwupd_client_set_main_context(priv->client, priv->main_ctx);
 	fwupd_client_set_user_agent_for_package(priv->client, "fwupdtool", PACKAGE_VERSION);
+	g_signal_connect(FWUPD_CLIENT(priv->client),
+			 "notify::percentage",
+			 G_CALLBACK(fu_util_client_notify_cb),
+			 priv);
+	g_signal_connect(FWUPD_CLIENT(priv->client),
+			 "notify::status",
+			 G_CALLBACK(fu_util_client_notify_cb),
+			 priv);
 
 	/* when not using the engine */
 	priv->progress = fu_progress_new(G_STRLOC);

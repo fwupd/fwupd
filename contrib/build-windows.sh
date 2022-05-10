@@ -53,7 +53,7 @@ CERTDIR=/etc/pki/tls/certs
 MINGW32BINDIR=/usr/x86_64-w64-mingw32/sys-root/mingw/bin
 
 # copy deps
-cp -f -v $MINGW32BINDIR/curl.exe \
+cp -f -v \
 	$MINGW32BINDIR/gspawn-win64-helper-console.exe \
 	$MINGW32BINDIR/gspawn-win64-helper.exe \
 	$MINGW32BINDIR/iconv.dll \

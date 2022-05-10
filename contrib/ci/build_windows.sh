@@ -90,8 +90,7 @@ MINGW32BINDIR=/usr/x86_64-w64-mingw32/sys-root/mingw/bin
 
 # deps
 find $MINGW32BINDIR \
-	-name curl.exe \
-	-o -name gspawn-win64-helper-console.exe \
+	-name gspawn-win64-helper-console.exe \
 	-o -name gspawn-win64-helper.exe \
 	-o -name iconv.dll \
 	-o -name libarchive-13.dll \
