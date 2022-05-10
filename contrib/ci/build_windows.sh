@@ -76,12 +76,8 @@ ninja -C "$build" test
 meson configure -Dtests=false -Dbuildtype=release
 ninja -C "$build" -v install
 
-#generate news release
-cd $root
-contrib/ci/generate_news.py $VERSION > $DESTDIR/news.txt
-echo $VERSION > $DESTDIR/VERSION
-
 #disable motd for Windows
+cd $root
 sed -i 's,UpdateMotd=.*,UpdateMotd=false,' $DESTDIR/etc/fwupd/daemon.conf
 
 # create a setup binary
@@ -179,3 +175,7 @@ wine msiexec /i "${MSI_FILENAME}"
 ls -R ~/.wine/drive_c/Program\ Files/fwupd/
 wine ~/.wine/drive_c/Program\ Files/fwupd/bin/fwupdtool get-plugins --json
 wine msiexec /x "${MSI_FILENAME}"
+
+#generate news release
+contrib/ci/generate_news.py $VERSION > $DESTDIR/news.txt
+echo $VERSION > $DESTDIR/VERSION
