@@ -4837,7 +4837,6 @@ fwupd_client_download_bytes2_async(FwupdClient *self,
 				   GAsyncReadyCallback callback,
 				   gpointer callback_data)
 {
-	FwupdClientPrivate *priv = GET_PRIVATE(self);
 	g_autoptr(GTask) task = NULL;
 #ifdef HAVE_LIBCURL
 	g_autoptr(GError) error = NULL;
@@ -4847,7 +4846,6 @@ fwupd_client_download_bytes2_async(FwupdClient *self,
 	g_return_if_fail(FWUPD_IS_CLIENT(self));
 	g_return_if_fail(urls != NULL);
 	g_return_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable));
-	g_return_if_fail(priv->proxy != NULL);
 
 	/* ensure networking set up */
 	task = g_task_new(self, cancellable, callback, callback_data);
@@ -4902,13 +4900,11 @@ fwupd_client_download_bytes_async(FwupdClient *self,
 				  GAsyncReadyCallback callback,
 				  gpointer callback_data)
 {
-	FwupdClientPrivate *priv = GET_PRIVATE(self);
 	g_autoptr(GPtrArray) urls = g_ptr_array_new_with_free_func(g_free);
 
 	g_return_if_fail(FWUPD_IS_CLIENT(self));
 	g_return_if_fail(url != NULL);
 	g_return_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable));
-	g_return_if_fail(priv->proxy != NULL);
 
 	/* just proxy */
 	g_ptr_array_add(urls, g_strdup(url));
