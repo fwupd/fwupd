@@ -143,6 +143,9 @@ echo $CERTDIR/ca-bundle.crt | wixl-heat \
 	--component-group "CG.fwupd-certs" | \
 	tee "$build/contrib/fwupd-certs.wxs"
 
+# no static libraries
+find "$DESTDIR/" -type f -name "*.a" -print0 | xargs rm -f
+
 # our files
 find "$DESTDIR" | \
 	wixl-heat \
