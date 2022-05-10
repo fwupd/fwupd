@@ -2184,10 +2184,6 @@ fwupd_client_download_bytes(FwupdClient *self,
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 	g_return_val_if_fail(fwupd_client_get_user_agent(self) != NULL, NULL);
 
-	/* connect */
-	if (!fwupd_client_connect(self, cancellable, error))
-		return NULL;
-
 	/* call async version and run loop until complete */
 	helper = fwupd_client_helper_new(self);
 	fwupd_client_download_bytes_async(self,
