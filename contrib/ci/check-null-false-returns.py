@@ -225,6 +225,8 @@ def test_files():
     # test all C source files
     validator = ReturnValidator()
     for fn in glob.glob("**/*.c", recursive=True):
+        if fn.startswith("dist/") or fn.startswith("subprojects/"):
+            continue
         validator.parse(fn)
     for warning in validator.warnings:
         print(warning)
