@@ -8,6 +8,10 @@ FirmwareSizeMax = 0x8000
 CounterpartGuid = USB\VID_273F&PID_1001
 InstallDuration = 8
 
+# ColorHug1: first batch!
+[USB\VID_04D8&PID_F8DA]
+Guid = USB\VID_273F&PID_1000
+
 [USB\VID_273F&PID_1001]
 Plugin = colorhug
 Flags = self-recovery
