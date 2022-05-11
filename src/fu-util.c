@@ -4274,6 +4274,20 @@ main(int argc, char *argv[])
 	/* sort by command name */
 	fu_util_cmd_array_sort(cmd_array);
 
+	/* non-TTY consoles cannot answer questions */
+	if (!fu_util_setup_interactive(priv, &error_console)) {
+		g_debug("failed to initialize interactive console: %s", error_console->message);
+		priv->no_unreported_check = TRUE;
+		priv->no_metadata_check = TRUE;
+		priv->no_reboot_check = TRUE;
+		priv->no_safety_check = TRUE;
+		priv->no_remote_check = TRUE;
+		priv->no_device_prompt = TRUE;
+	} else {
+		is_interactive = TRUE;
+	}
+	fu_progressbar_set_interactive(priv->progressbar, is_interactive);
+
 	/* get a list of the commands */
 	priv->context = g_option_context_new(NULL);
 	cmd_descriptions = fu_util_cmd_array_to_string(cmd_array);
@@ -4321,20 +4335,6 @@ main(int argc, char *argv[])
 			   _("The system clock has not been set "
 			     "correctly and downloading files may fail."));
 	}
-
-	/* non-TTY consoles cannot answer questions */
-	if (!fu_util_setup_interactive(priv, &error_console)) {
-		g_debug("failed to initialize interactive console: %s", error_console->message);
-		priv->no_unreported_check = TRUE;
-		priv->no_metadata_check = TRUE;
-		priv->no_reboot_check = TRUE;
-		priv->no_safety_check = TRUE;
-		priv->no_remote_check = TRUE;
-		priv->no_device_prompt = TRUE;
-	} else {
-		is_interactive = TRUE;
-	}
-	fu_progressbar_set_interactive(priv->progressbar, is_interactive);
 
 	/* parse filter flags */
 	if (filter != NULL) {
