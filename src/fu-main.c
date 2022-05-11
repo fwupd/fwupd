@@ -2381,6 +2381,10 @@ main(int argc, char *argv[])
 		} else {
 			socket_address = g_strdup(socket_filename);
 		}
+	} else {
+#ifdef _WIN32
+		socket_address = g_strdup("tcp:host=localhost,port=1341");
+#endif
 	}
 
 	/* own the object */
