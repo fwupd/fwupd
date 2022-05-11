@@ -804,6 +804,7 @@ fwupd_client_connect_async(FwupdClient *self,
 {
 	FwupdClientPrivate *priv = GET_PRIVATE(self);
 	const gchar *socket_filename = g_getenv("FWUPD_DBUS_SOCKET");
+	g_autofree gchar *socket_address = NULL;
 	g_autoptr(GTask) task = g_task_new(self, cancellable, callback, callback_data);
 	g_autoptr(GMutexLocker) locker = g_mutex_locker_new(&priv->proxy_mutex);
 
@@ -818,10 +819,18 @@ fwupd_client_connect_async(FwupdClient *self,
 		return;
 	}
 
-	/* use peer-to-peer only if the env variable is set */
+	/* convert from filename to address, if required */
 	if (socket_filename != NULL) {
-		g_autofree gchar *address = g_strdup_printf("unix:path=%s", socket_filename);
-		g_dbus_connection_new_for_address(address,
+		if (g_strrstr(socket_filename, "=") == NULL) {
+			socket_address = g_strdup_printf("unix:path=%s", socket_filename);
+		} else {
+			socket_address = g_strdup(socket_filename);
+		}
+	}
+
+	/* use peer-to-peer only if the env variable is set */
+	if (socket_address != NULL) {
+		g_dbus_connection_new_for_address(socket_address,
 						  G_DBUS_CONNECTION_FLAGS_AUTHENTICATION_CLIENT,
 						  NULL,
 						  cancellable,
