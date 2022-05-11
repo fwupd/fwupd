@@ -2247,6 +2247,7 @@ main(int argc, char *argv[])
 	     N_("Exit after the engine has loaded"),
 	     NULL},
 	    {NULL}};
+	g_autofree gchar *socket_address = NULL;
 	g_autoptr(FuMainPrivate) priv = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GFile) argv0_file = g_file_new_for_path(argv[0]);
@@ -2368,17 +2369,26 @@ main(int argc, char *argv[])
 	}
 #endif
 
-	/* own the object */
+	/* convert from filename to address, if required */
 	if (socket_filename != NULL) {
-		g_autofree gchar *address = g_strdup_printf("unix:path=%s", socket_filename);
+		if (g_strrstr(socket_filename, "=") == NULL) {
+#ifndef HAVE_SYSTEMD
+			/* this must be owned by root */
+			if (g_file_test(socket_filename, G_FILE_TEST_EXISTS))
+				g_unlink(socket_filename);
+#endif
+			socket_address = g_strdup_printf("unix:path=%s", socket_filename);
+		} else {
+			socket_address = g_strdup(socket_filename);
+		}
+	}
+
+	/* own the object */
+	if (socket_address != NULL) {
 		g_autofree gchar *guid = g_dbus_generate_guid();
 		g_autoptr(GDBusServer) server = NULL;
 
-		/* this must be owned by root */
-#ifndef HAVE_SYSTEMD
-		g_unlink(socket_filename);
-#endif
-		server = g_dbus_server_new_sync(address,
+		server = g_dbus_server_new_sync(socket_address,
 						G_DBUS_SERVER_FLAGS_AUTHENTICATION_ALLOW_ANONYMOUS,
 						guid,
 						NULL,
