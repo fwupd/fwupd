@@ -49,7 +49,6 @@ export WINEPATH="/usr/x86_64-w64-mingw32/sys-root/mingw/bin/;$build/libfwupd/;$b
 ninja -C "$build" install
 ninja -C "$build" test
 
-CERTDIR=/etc/pki/tls/certs
 MINGW32BINDIR=/usr/x86_64-w64-mingw32/sys-root/mingw/bin
 
 #disable motd for Windows
@@ -92,4 +91,3 @@ cp -f -v \
 	$MINGW32BINDIR/libxml2-2.dll \
 	$MINGW32BINDIR/zlib1.dll \
 	"$DESTDIR/bin/"
-cp -f -v "$CERTDIR/ca-bundle.crt" "$DESTDIR/bin/"
