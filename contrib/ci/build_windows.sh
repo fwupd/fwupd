@@ -129,15 +129,6 @@ find $MINGW32BINDIR \
 	--component-group "CG.fwupd-deps" | \
 	tee $build/contrib/fwupd-deps.wxs
 
-# CA bundle
-echo $CERTDIR/ca-bundle.crt | wixl-heat \
-	-p $CERTDIR/ \
-	--win64 \
-	--directory-ref BINDIR \
-	--var "var.CRTDIR" \
-	--component-group "CG.fwupd-certs" | \
-	tee "$build/contrib/fwupd-certs.wxs"
-
 # no static libraries
 find "$DESTDIR/" -type f -name "*.a" -print0 | xargs rm -f
 
@@ -162,7 +153,6 @@ mkdir -p "$DESTDIR/setup"
 wixl -v \
 	"$build/contrib/fwupd.wxs" \
 	"$build/contrib/fwupd-deps.wxs" \
-	"$build/contrib/fwupd-certs.wxs" \
 	"$build/contrib/fwupd-files.wxs" \
 	-D CRTDIR=$CERTDIR \
 	-D MINGW32BINDIR=$MINGW32BINDIR \

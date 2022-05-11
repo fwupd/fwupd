@@ -29,7 +29,6 @@
     </Directory>
     <Feature Id="Complete"  Level="1">
       <ComponentGroupRef Id="CG.fwupd-deps"/>
-      <ComponentGroupRef Id="CG.fwupd-certs"/>
       <ComponentGroupRef Id="CG.fwupd-files"/>
     </Feature>
     <InstallExecuteSequence>
