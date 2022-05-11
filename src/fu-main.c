@@ -2394,7 +2394,7 @@ main(int argc, char *argv[])
 						NULL,
 						NULL,
 						&error);
-
+		g_message("using socket address: %s", g_dbus_server_get_client_address(server));
 		if (server == NULL) {
 			g_printerr("Failed to create D-Bus server: %s\n", error->message);
 			return EXIT_FAILURE;
