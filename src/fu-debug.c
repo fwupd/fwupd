@@ -12,6 +12,10 @@
 #include <stdio.h>
 #include <unistd.h>
 
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
 typedef struct {
 	GOptionGroup *group;
 	gboolean verbose;
@@ -20,6 +24,9 @@ typedef struct {
 	gboolean no_domain;
 	gchar **plugin_verbose;
 	gchar **daemon_verbose;
+#ifdef _WIN32
+	HANDLE event_source;
+#endif
 } FuDebug;
 
 static void
@@ -29,6 +36,9 @@ fu_debug_free(FuDebug *self)
 	g_option_group_unref(self->group);
 	g_strfreev(self->plugin_verbose);
 	g_strfreev(self->daemon_verbose);
+#ifdef _WIN32
+	DeregisterEventSource(self->event_source);
+#endif
 	g_free(self);
 }
 
@@ -56,6 +66,43 @@ fu_debug_filter_cb(FuDebug *self, const gchar *log_domain, GLogLevelFlags log_le
 	return g_strv_contains((const gchar *const *)domains_str, log_domain);
 }
 
+#ifdef _WIN32
+static void
+fu_debug_handler_win32(FuDebug *self, GLogLevelFlags log_level, const gchar *msg)
+{
+	WORD type = 0x0;
+	DWORD evt_id = 0x0;
+
+	/* nothing to do */
+	if (self->event_source == NULL)
+		return;
+
+	/* map levels */
+	switch (log_level) {
+	case G_LOG_LEVEL_INFO:
+	case G_LOG_LEVEL_MESSAGE:
+		type = EVENTLOG_INFORMATION_TYPE;
+		evt_id = 0x0;
+		break;
+	case G_LOG_LEVEL_WARNING:
+		type = EVENTLOG_WARNING_TYPE;
+		evt_id = 0x1;
+		break;
+	case G_LOG_LEVEL_ERROR:
+	case G_LOG_LEVEL_CRITICAL:
+		type = EVENTLOG_ERROR_TYPE;
+		evt_id = 0x2;
+		break;
+	default:
+		return;
+		break;
+	}
+
+	/* add to log */
+	ReportEventA(self->event_source, type, 0, evt_id, NULL, 1, 0, (const char **)&msg, NULL);
+}
+#endif
+
 static void
 fu_debug_handler_cb(const gchar *log_domain,
 		    GLogLevelFlags log_level,
@@ -69,6 +116,11 @@ fu_debug_handler_cb(const gchar *log_domain,
 	/* should ignore */
 	if (!fu_debug_filter_cb(self, log_domain, log_level))
 		return;
+
+#ifdef _WIN32
+	/* use Windows event log */
+	fu_debug_handler_win32(self, log_level, message);
+#endif
 
 	/* time header */
 	if (!self->no_timestamp) {
@@ -225,6 +277,42 @@ fu_debug_post_parse_hook(GOptionContext *context,
 	return TRUE;
 }
 
+#ifdef _WIN32
+static void
+fu_debug_setup_event_source(FuDebug *self)
+{
+	HKEY key;
+	gchar msgfile[MAX_PATH];
+	DWORD dwData = EVENTLOG_ERROR_TYPE | EVENTLOG_WARNING_TYPE | EVENTLOG_INFORMATION_TYPE;
+
+	if (RegCreateKeyExA(HKEY_LOCAL_MACHINE,
+			    "SYSTEM\\CurrentControlSet\\Services\\"
+			    "EventLog\\Application\\fwupd",
+			    0,
+			    NULL,
+			    REG_OPTION_NON_VOLATILE,
+			    KEY_SET_VALUE,
+			    NULL,
+			    &key,
+			    NULL) != ERROR_SUCCESS) {
+		g_warning("RegCreateKeyExA failed [%u]", (guint)GetLastError());
+		return;
+	}
+	GetModuleFileNameA(NULL, msgfile, MAX_PATH);
+	RegSetValueExA(key,
+		       "EventMessageFile",
+		       0,
+		       REG_EXPAND_SZ,
+		       (BYTE *)msgfile,
+		       strlen(msgfile) + 1);
+	RegSetValueExA(key, "TypesSupported", 0, REG_DWORD, (BYTE *)&dwData, sizeof(dwData));
+	RegCloseKey(key);
+
+	/* good to go */
+	self->event_source = RegisterEventSourceA(NULL, "fwupd");
+}
+#endif
+
 /*(transfer): full */
 GOptionGroup *
 fu_debug_get_option_group(void)
@@ -240,5 +328,8 @@ fu_debug_get_option_group(void)
 	g_option_group_set_parse_hooks(self->group,
 				       fu_debug_pre_parse_hook,
 				       fu_debug_post_parse_hook);
+#ifdef _WIN32
+	fu_debug_setup_event_source(self);
+#endif
 	return g_option_group_ref(self->group);
 }
