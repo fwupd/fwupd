@@ -446,3 +446,13 @@ RemoveDelay = 180000
 [USB\VID_25B5&PID_0004]
 Plugin = dfu
 Flags = manifest-poll,detach-for-attach,ignore-upload
+
+# SunplusIT USB cameras
+[USB\VID_1BCF&PID_0B1D]
+Plugin = dfu
+Flags = detach-for-attach,ignore-upload,ignore-polltimeout
+
+[USB\VID_1BCF&PID_0B1E]
+Plugin = dfu
+Flags = detach-for-attach,ignore-upload
+
