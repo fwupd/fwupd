@@ -204,6 +204,7 @@ executable(
   fu_hash,
   sources : [
     'fu-main.c',
+    'fu-daemon.c',
     daemon_src,
   ],
   include_directories : [
