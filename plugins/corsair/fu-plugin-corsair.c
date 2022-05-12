@@ -21,6 +21,7 @@ fu_plugin_corsair_load(FuContext *ctx)
 {
 	fu_context_add_quirk_key(ctx, "CorsairDeviceKind");
 	fu_context_add_quirk_key(ctx, "CorsairVendorInterfaceId");
+	fu_context_add_quirk_key(ctx, "CorsairSubdeviceId");
 }
 
 void
