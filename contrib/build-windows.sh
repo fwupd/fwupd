@@ -73,6 +73,7 @@ cp -f -v \
 	$MINGW32BINDIR/libgmp-10.dll \
 	$MINGW32BINDIR/libgnutls-30.dll \
 	$MINGW32BINDIR/libgobject-2.0-0.dll \
+	$MINGW32BINDIR/libgusb-2.dll \
 	$MINGW32BINDIR/libhogweed-*.dll \
 	$MINGW32BINDIR/libidn2-0.dll \
 	$MINGW32BINDIR/libintl-8.dll \
