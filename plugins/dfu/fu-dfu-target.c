@@ -621,9 +621,9 @@ fu_dfu_target_setup(FuDfuTarget *self, GError **error)
 	/* get string */
 	if (priv->alt_idx != 0x00 && fu_device_get_logical_id(FU_DEVICE(self)) == NULL) {
 		GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(device));
-		fu_device_set_logical_id(
-		    FU_DEVICE(self),
-		    g_usb_device_get_string_descriptor(usb_device, priv->alt_idx, NULL));
+		g_autofree gchar *alt_name = NULL;
+		alt_name = g_usb_device_get_string_descriptor(usb_device, priv->alt_idx, NULL);
+		fu_device_set_logical_id(FU_DEVICE(self), alt_name);
 	}
 
 	/* parse the DfuSe format according to UM0424 */
