@@ -212,12 +212,20 @@ if get_option('man')
 endif
 
 if build_daemon
+
+# the StartServiceCtrlDispatcherA design is so different use a different source file
+if host_machine.system() == 'windows'
+  daemon_loader_src = 'fu-main-windows.c'
+else
+  daemon_loader_src = 'fu-main.c'
+endif
+
 executable(
   'fwupd',
   resources_src,
   fu_hash,
   sources : [
-    'fu-main.c',
+    daemon_loader_src,
     'fu-daemon.c',
     daemon_src,
   ],
