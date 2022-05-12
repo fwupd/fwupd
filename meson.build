@@ -436,6 +436,8 @@ if build_standalone
     EFI_MACHINE_TYPE_NAME = 'arm'
   elif host_cpu == 'aarch64'
     EFI_MACHINE_TYPE_NAME = 'aa64'
+  elif host_cpu == 'loongarch64'
+    EFI_MACHINE_TYPE_NAME = 'loongarch64'
   else
     EFI_MACHINE_TYPE_NAME = ''
   endif
