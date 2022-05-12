@@ -11,6 +11,7 @@ shared_module('fu_plugin_corsair',
     'fu-plugin-corsair.c',
     'fu-corsair-common.c',
     'fu-corsair-device.c',
+    'fu-corsair-bp.c',
   ],
   include_directories : [
     root_incdir,
