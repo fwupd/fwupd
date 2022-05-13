@@ -3,7 +3,14 @@ if bashcomp.found()
     pkgconfig_define: bashcomp.version().version_compare('>= 2.10') ? ['datadir', datadir] : ['prefix', prefix],
   )
 
-  install_data(['fwupdtool'],
+  con = configuration_data()
+  con.set('localstatedir', localstatedir)
+
+  configure_file(
+    input : 'fwupdtool',
+    output : 'fwupdtool',
+    configuration : con,
+    install : true,
     install_dir : completions_dir,
   )
 

@@ -9,3 +9,5 @@
 
 gboolean
 fu_engine_update_motd(FuEngine *self, GError **error);
+gboolean
+fu_engine_update_devices_file(FuEngine *self, GError **error);

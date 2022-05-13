@@ -129,6 +129,8 @@ G_DEFINE_TYPE(FuEngine, fu_engine, G_TYPE_OBJECT)
 static void
 fu_engine_emit_changed(FuEngine *self)
 {
+	g_autoptr(GError) error = NULL;
+
 	g_signal_emit(self, signals[SIGNAL_CHANGED], 0);
 	fu_engine_idle_reset(self);
 
@@ -138,6 +140,10 @@ fu_engine_emit_changed(FuEngine *self)
 		if (!fu_engine_update_motd(self, &error_local))
 			g_debug("failed to update MOTD: %s", error_local->message);
 	}
+
+	/* update the list of devices */
+	if (!fu_engine_update_devices_file(self, &error))
+		g_debug("failed to update list of devices: %s", error->message);
 }
 
 static void
@@ -6482,6 +6488,7 @@ fu_engine_backend_device_removed_cb(FuBackend *backend, FuDevice *device, FuEngi
 				fu_device_get_name(device_tmp),
 				fu_device_get_id(device_tmp));
 			fu_device_list_remove(self->device_list, device_tmp);
+			fu_engine_emit_changed(self);
 		}
 	}
 }

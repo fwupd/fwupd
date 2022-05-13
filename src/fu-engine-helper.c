@@ -12,6 +12,8 @@
 
 #include <glib/gi18n.h>
 
+#include "fwupd-device-private.h"
+
 #include "fu-engine-helper.h"
 #include "fu-engine.h"
 
@@ -134,4 +136,50 @@ fu_engine_update_motd(FuEngine *self, GError **error)
 	/* success, with an empty file if nothing to say */
 	g_debug("writing motd target %s", target);
 	return g_file_set_contents(target, str->str, str->len, error);
+}
+
+gboolean
+fu_engine_update_devices_file(FuEngine *self, GError **error)
+{
+	gsize len;
+	g_autoptr(JsonBuilder) builder = NULL;
+	g_autoptr(JsonGenerator) generator = NULL;
+	g_autoptr(JsonNode) root = NULL;
+	g_autoptr(GPtrArray) devices = NULL;
+	g_autofree gchar *data = NULL;
+	g_autofree gchar *directory = NULL;
+	g_autofree gchar *target = NULL;
+
+	builder = json_builder_new();
+	json_builder_begin_object(builder);
+	json_builder_set_member_name(builder, "Devices");
+	json_builder_begin_array(builder);
+	devices = fu_engine_get_devices(self, NULL);
+	if (devices != NULL) {
+		for (guint i = 0; i < devices->len; i++) {
+			FwupdDevice *dev = g_ptr_array_index(devices, i);
+			json_builder_begin_object(builder);
+			fwupd_device_to_json(dev, builder);
+			json_builder_end_object(builder);
+		}
+	}
+	json_builder_end_array(builder);
+	json_builder_end_object(builder);
+
+	root = json_builder_get_root(builder);
+	generator = json_generator_new();
+	json_generator_set_pretty(generator, TRUE);
+	json_generator_set_root(generator, root);
+	data = json_generator_to_data(generator, &len);
+	if (data == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "Failed to convert to JSON string");
+		return FALSE;
+	}
+
+	directory = fu_path_from_kind(FU_PATH_KIND_CACHEDIR_PKG);
+	target = g_build_filename(directory, "devices.json", NULL);
+	return fu_bytes_set_contents(target, g_bytes_new_take(g_steal_pointer(&data), len), error);
 }
