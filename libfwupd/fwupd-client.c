@@ -828,7 +828,7 @@ fwupd_client_connect_async(FwupdClient *self,
 		}
 	} else {
 #ifdef _WIN32
-		socket_address = g_strdup("tcp:host=localhost,port=1341");
+		socket_address = g_strdup(FWUPD_DBUS_P2P_SOCKET_ADDRESS);
 #endif
 	}
 

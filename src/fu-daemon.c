@@ -2110,11 +2110,9 @@ fu_daemon_set_machine_kind(FuDaemon *self, FuDaemonMachineKind machine_kind)
 }
 
 gboolean
-fu_daemon_setup(FuDaemon *self, GError **error)
+fu_daemon_setup(FuDaemon *self, const gchar *socket_address, GError **error)
 {
 	const gchar *machine_kind = g_getenv("FWUPD_MACHINE_KIND");
-	const gchar *socket_filename = g_getenv("FWUPD_DBUS_SOCKET");
-	g_autofree gchar *socket_address = NULL;
 
 	g_return_val_if_fail(FU_IS_DAEMON(self), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
@@ -2182,24 +2180,6 @@ fu_daemon_setup(FuDaemon *self, GError **error)
 		return FALSE;
 	}
 #endif
-
-	/* convert from filename to address, if required */
-	if (socket_filename != NULL) {
-		if (g_strrstr(socket_filename, "=") == NULL) {
-#ifndef HAVE_SYSTEMD
-			/* this must be owned by root */
-			if (g_file_test(socket_filename, G_FILE_TEST_EXISTS))
-				g_unlink(socket_filename);
-#endif
-			socket_address = g_strdup_printf("unix:path=%s", socket_filename);
-		} else {
-			socket_address = g_strdup(socket_filename);
-		}
-	} else {
-#ifdef _WIN32
-		socket_address = g_strdup("tcp:host=localhost,port=1341");
-#endif
-	}
 
 	/* own the object */
 	if (socket_address != NULL) {
