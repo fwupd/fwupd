@@ -83,7 +83,7 @@ _show_device_ids()
 		return 0
 	fi
 	local description
-	description="$(command fwupdmgr get-devices --json 2>/dev/null | jq '.Devices | .[] | .DeviceId')"
+	description="$(command jq '.Devices | .[] | .DeviceId' @localstatedir@/cache/fwupd/devices.json 2>/dev/null)"
 	COMPREPLY+=( $(compgen -W "${description}" -- "$cur") )
 }
 
