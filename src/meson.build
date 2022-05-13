@@ -57,6 +57,20 @@ if bluez.allowed()
   daemon_src += 'fu-bluez-backend.c'
 endif
 
+# include event message file
+if host_machine.system() == 'windows'
+  windmc = find_program('windmc')
+  fwupd_rc = custom_target('fwupd-rc',
+    input : 'fwupd-windows.mc',
+    output : 'fwupd-windows.rc',
+    command : [
+      windmc, '@INPUT@', '--rcdir', meson.current_build_dir(),
+    ],
+  )
+  windows = import('windows')
+  daemon_src += windows.compile_resources(fwupd_rc)
+endif
+
 if build_daemon
 install_data(['org.freedesktop.fwupd.xml'],
   install_dir : join_paths(datadir, 'dbus-1', 'interfaces')

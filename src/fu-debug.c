@@ -13,6 +13,7 @@
 #include <unistd.h>
 
 #ifdef _WIN32
+#include <fwupd-windows.h>
 #include <windows.h>
 #endif
 
@@ -70,8 +71,7 @@ fu_debug_filter_cb(FuDebug *self, const gchar *log_domain, GLogLevelFlags log_le
 static void
 fu_debug_handler_win32(FuDebug *self, GLogLevelFlags log_level, const gchar *msg)
 {
-	WORD type = 0x0;
-	DWORD evt_id = 0x0;
+	WORD ev_type = 0x0;
 
 	/* nothing to do */
 	if (self->event_source == NULL)
@@ -81,17 +81,14 @@ fu_debug_handler_win32(FuDebug *self, GLogLevelFlags log_level, const gchar *msg
 	switch (log_level) {
 	case G_LOG_LEVEL_INFO:
 	case G_LOG_LEVEL_MESSAGE:
-		type = EVENTLOG_INFORMATION_TYPE;
-		evt_id = 0x0;
+		ev_type = EVENTLOG_INFORMATION_TYPE;
 		break;
 	case G_LOG_LEVEL_WARNING:
-		type = EVENTLOG_WARNING_TYPE;
-		evt_id = 0x1;
+		ev_type = EVENTLOG_WARNING_TYPE;
 		break;
 	case G_LOG_LEVEL_ERROR:
 	case G_LOG_LEVEL_CRITICAL:
-		type = EVENTLOG_ERROR_TYPE;
-		evt_id = 0x2;
+		ev_type = EVENTLOG_ERROR_TYPE;
 		break;
 	default:
 		return;
@@ -99,7 +96,15 @@ fu_debug_handler_win32(FuDebug *self, GLogLevelFlags log_level, const gchar *msg
 	}
 
 	/* add to log */
-	ReportEventA(self->event_source, type, 0, evt_id, NULL, 1, 0, (const char **)&msg, NULL);
+	ReportEventA(self->event_source,
+		     ev_type,
+		     FWUPD_CATEGORY_GENERIC,
+		     FWUPD_MESSAGE_GENERIC,
+		     NULL,
+		     1,
+		     0,
+		     (const char **)&msg,
+		     NULL);
 }
 #endif
 
@@ -113,14 +118,14 @@ fu_debug_handler_cb(const gchar *log_domain,
 	g_autofree gchar *timestamp = NULL;
 	g_autoptr(GString) domain = NULL;
 
-	/* should ignore */
-	if (!fu_debug_filter_cb(self, log_domain, log_level))
-		return;
-
 #ifdef _WIN32
 	/* use Windows event log */
 	fu_debug_handler_win32(self, log_level, message);
 #endif
+
+	/* should ignore */
+	if (!fu_debug_filter_cb(self, log_domain, log_level))
+		return;
 
 	/* time header */
 	if (!self->no_timestamp) {
