@@ -13,6 +13,8 @@
 
 #include <windows.h>
 
+#include "fwupd-common.h"
+
 #include "fu-daemon.h"
 #include "fu-debug.h"
 
@@ -88,7 +90,7 @@ fu_main_svc_main_cb(DWORD dwArgc, LPSTR *lpszArgv)
 
 	/* set up the daemon, which includes coldplugging devices -- then run it */
 	fu_main_svc_report_status(SERVICE_START_PENDING, NO_ERROR, 1000);
-	if (!fu_daemon_setup(daemon, &error)) {
+	if (!fu_daemon_setup(daemon, FWUPD_DBUS_P2P_SOCKET_ADDRESS, &error)) {
 		g_warning("Failed to load daemon: %s", error->message);
 		return;
 	}
@@ -112,7 +114,7 @@ fu_main_console(int argc, char *argv[])
 	}
 
 	/* set up the daemon, which includes coldplugging devices -- then run it */
-	if (!fu_daemon_setup(daemon, &error)) {
+	if (!fu_daemon_setup(daemon, FWUPD_DBUS_P2P_SOCKET_ADDRESS, &error)) {
 		g_printerr("Failed to load daemon: %s\n", error->message);
 		return EXIT_FAILURE;
 	}

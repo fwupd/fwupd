@@ -21,7 +21,7 @@ typedef enum {
 FuDaemon *
 fu_daemon_new(void);
 gboolean
-fu_daemon_setup(FuDaemon *self, GError **error);
+fu_daemon_setup(FuDaemon *self, const gchar *socket_address, GError **error);
 void
 fu_daemon_start(FuDaemon *self);
 void

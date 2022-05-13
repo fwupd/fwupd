@@ -97,6 +97,7 @@ main(int argc, char *argv[])
 {
 	gboolean immediate_exit = FALSE;
 	gboolean timed_exit = FALSE;
+	const gchar *socket_filename = g_getenv("FWUPD_DBUS_SOCKET");
 	const GOptionEntry options[] = {
 	    {"timed-exit",
 	     '\0',
@@ -115,6 +116,7 @@ main(int argc, char *argv[])
 	     N_("Exit after the engine has loaded"),
 	     NULL},
 	    {NULL}};
+	g_autofree gchar *socket_address = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GFile) argv0_file = g_file_new_for_path(argv[0]);
 	g_autoptr(GOptionContext) context = NULL;
@@ -151,8 +153,22 @@ main(int argc, char *argv[])
 		fu_daemon_set_machine_kind(daemon, FU_DAEMON_MACHINE_KIND_PHYSICAL);
 	}
 
+	/* convert from filename to address, if required */
+	if (socket_filename != NULL) {
+		if (g_strrstr(socket_filename, "=") == NULL) {
+#ifndef HAVE_SYSTEMD
+			/* this must be owned by root */
+			if (g_file_test(socket_filename, G_FILE_TEST_EXISTS))
+				g_unlink(socket_filename);
+#endif
+			socket_address = g_strdup_printf("unix:path=%s", socket_filename);
+		} else {
+			socket_address = g_strdup(socket_filename);
+		}
+	}
+
 	/* set up the daemon, which includes coldplugging devices */
-	if (!fu_daemon_setup(daemon, &error)) {
+	if (!fu_daemon_setup(daemon, socket_address, &error)) {
 		g_printerr("Failed to load daemon: %s\n", error->message);
 		return EXIT_FAILURE;
 	}
