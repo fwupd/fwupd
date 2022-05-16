@@ -4857,7 +4857,8 @@ fu_engine_get_releases_for_device(FuEngine *self,
 	}
 
 	/* only show devices that can be updated */
-	if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE) &&
+	if (!fu_engine_request_has_feature_flag(request, FWUPD_FEATURE_FLAG_SHOW_PROBLEMS) &&
+	    !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE) &&
 	    !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN)) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
