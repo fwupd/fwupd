@@ -136,6 +136,16 @@ fwupd_device_remove_flag(FwupdDevice *self, FwupdDeviceFlags flag);
 gboolean
 fwupd_device_has_flag(FwupdDevice *self, FwupdDeviceFlags flag);
 guint64
+fwupd_device_get_problems(FwupdDevice *self);
+void
+fwupd_device_set_problems(FwupdDevice *self, guint64 problems);
+void
+fwupd_device_add_problem(FwupdDevice *self, FwupdDeviceProblem problem);
+void
+fwupd_device_remove_problem(FwupdDevice *self, FwupdDeviceProblem problem);
+gboolean
+fwupd_device_has_problem(FwupdDevice *self, FwupdDeviceProblem problem);
+guint64
 fwupd_device_get_created(FwupdDevice *self);
 void
 fwupd_device_set_created(FwupdDevice *self, guint64 created);

@@ -155,6 +155,12 @@ fwupd_enums_func(void)
 			break;
 		g_assert_cmpint(fwupd_device_flag_from_string(tmp), ==, i);
 	}
+	for (guint64 i = 1; i < FWUPD_DEVICE_PROBLEM_UNKNOWN; i *= 2) {
+		const gchar *tmp = fwupd_device_problem_to_string(i);
+		if (tmp == NULL)
+			break;
+		g_assert_cmpint(fwupd_device_problem_from_string(tmp), ==, i);
+	}
 	for (guint64 i = 1; i < FWUPD_PLUGIN_FLAG_UNKNOWN; i *= 2) {
 		const gchar *tmp = fwupd_plugin_flag_to_string(i);
 		if (tmp == NULL)

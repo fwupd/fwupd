@@ -540,6 +540,80 @@ typedef enum {
 typedef guint64 FwupdDeviceFlags;
 
 /**
+ * FWUPD_DEVICE_PROBLEM_NONE:
+ *
+ * No device problems detected.
+ *
+ * Since 1.8.1
+ */
+#define FWUPD_DEVICE_PROBLEM_NONE (0u)
+/**
+ * FWUPD_DEVICE_PROBLEM_SYSTEM_POWER_TOO_LOW:
+ *
+ * The system power is too low to perform the update.
+ *
+ * Since 1.8.1
+ */
+#define FWUPD_DEVICE_PROBLEM_SYSTEM_POWER_TOO_LOW (1u << 0)
+/**
+ * FWUPD_DEVICE_PROBLEM_UNREACHABLE:
+ *
+ * The device is unreachable, or out of wireless range.
+ *
+ * Since 1.8.1
+ */
+#define FWUPD_DEVICE_PROBLEM_UNREACHABLE (1u << 1)
+/**
+ * FWUPD_DEVICE_PROBLEM_POWER_TOO_LOW:
+ *
+ * The device battery power is too low.
+ *
+ * Since 1.8.1
+ */
+#define FWUPD_DEVICE_PROBLEM_POWER_TOO_LOW (1u << 2)
+/**
+ * FWUPD_DEVICE_PROBLEM_UPDATE_PENDING:
+ *
+ * The device is waiting for the update to be applied.
+ *
+ * Since 1.8.1
+ */
+#define FWUPD_DEVICE_PROBLEM_UPDATE_PENDING (1u << 3)
+/**
+ * FWUPD_DEVICE_PROBLEM_REQUIRE_AC_POWER:
+ *
+ * The device requires AC power to be connected.
+ *
+ * Since 1.8.1
+ */
+#define FWUPD_DEVICE_PROBLEM_REQUIRE_AC_POWER (1u << 4)
+/**
+ * FWUPD_DEVICE_PROBLEM_LID_IS_CLOSED:
+ *
+ * The device cannot be used while the laptop lid is closed.
+ *
+ * Since 1.8.1
+ */
+#define FWUPD_DEVICE_PROBLEM_LID_IS_CLOSED (1u << 5)
+/**
+ * FWUPD_DEVICE_PROBLEM_UNKNOWN:
+ *
+ * This problem is not defined, this typically will happen from mismatched
+ * fwupd library and clients.
+ *
+ * Since 1.8.1
+ */
+#define FWUPD_DEVICE_PROBLEM_UNKNOWN G_MAXUINT64
+/**
+ * FwupdDeviceProblem:
+ *
+ * Problems are reasons why the device is not updatable.
+ *
+ * All problems have to be fixable by the user, rather than the plugin author.
+ */
+typedef guint64 FwupdDeviceProblem;
+
+/**
  * FWUPD_RELEASE_FLAG_NONE:
  *
  * No flags are set.
@@ -931,6 +1005,10 @@ const gchar *
 fwupd_device_flag_to_string(FwupdDeviceFlags device_flag);
 FwupdDeviceFlags
 fwupd_device_flag_from_string(const gchar *device_flag);
+const gchar *
+fwupd_device_problem_to_string(FwupdDeviceProblem device_problem);
+FwupdDeviceProblem
+fwupd_device_problem_from_string(const gchar *device_problem);
 const gchar *
 fwupd_plugin_flag_to_string(FwupdPluginFlags plugin_flag);
 FwupdPluginFlags

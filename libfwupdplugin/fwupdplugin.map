@@ -1037,7 +1037,9 @@ LIBFWUPDPLUGIN_1.8.0 {
 
 LIBFWUPDPLUGIN_1.8.1 {
   global:
+    fu_device_add_problem;
     fu_device_poll_locker_new;
+    fu_device_remove_problem;
     fu_plugin_runner_init;
     fu_udev_device_ioctl_full;
   local: *;
