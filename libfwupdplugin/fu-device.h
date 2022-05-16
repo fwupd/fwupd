@@ -535,6 +535,10 @@ void
 fu_device_inhibit(FuDevice *self, const gchar *inhibit_id, const gchar *reason);
 void
 fu_device_uninhibit(FuDevice *self, const gchar *inhibit_id);
+void
+fu_device_add_problem(FuDevice *self, FwupdDeviceProblem problem);
+void
+fu_device_remove_problem(FuDevice *self, FwupdDeviceProblem problem);
 gboolean
 fu_device_has_inhibit(FuDevice *self, const gchar *inhibit_id);
 const gchar *

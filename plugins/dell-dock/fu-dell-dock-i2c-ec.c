@@ -582,10 +582,7 @@ fu_dell_dock_ec_get_dock_data(FuDevice *device, GError **error)
 			fu_device_uninhibit(device, "update-pending");
 		} else {
 			fu_device_add_flag(device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
-			fu_device_inhibit(device,
-					  "update-pending",
-					  "A pending update will be completed next time the dock "
-					  "is unplugged from your computer");
+			fu_device_add_problem(device, FWUPD_DEVICE_PROBLEM_UPDATE_PENDING);
 		}
 	} else {
 		fu_device_inhibit(device, "not-supported", "Utility does not support this board");

@@ -34,6 +34,11 @@
 
 static void
 fu_device_finalize(GObject *object);
+static void
+fu_device_inhibit_full(FuDevice *self,
+		       FwupdDeviceProblem problem,
+		       const gchar *inhibit_id,
+		       const gchar *reason);
 
 typedef struct {
 	gchar *alternate_id;
@@ -83,6 +88,7 @@ typedef struct {
 } FuDeviceRetryRecovery;
 
 typedef struct {
+	FwupdDeviceProblem problem;
 	gchar *inhibit_id;
 	gchar *reason;
 } FuDeviceInhibit;
@@ -1262,7 +1268,10 @@ fu_device_add_child(FuDevice *self, FuDevice *child)
 		g_autoptr(GList) values = g_hash_table_get_values(priv->inhibits);
 		for (GList *l = values; l != NULL; l = l->next) {
 			FuDeviceInhibit *inhibit = (FuDeviceInhibit *)l->data;
-			fu_device_inhibit(child, inhibit->inhibit_id, inhibit->reason);
+			fu_device_inhibit_full(child,
+					       inhibit->problem,
+					       inhibit->inhibit_id,
+					       inhibit->reason);
 		}
 	}
 
@@ -2635,6 +2644,7 @@ static void
 fu_device_ensure_inhibits(FuDevice *self)
 {
 	FuDevicePrivate *priv = GET_PRIVATE(self);
+	FwupdDeviceProblem problems = FWUPD_DEVICE_PROBLEM_NONE;
 	guint nr_inhibits = g_hash_table_size(priv->inhibits);
 
 	/* disable */
@@ -2658,6 +2668,7 @@ fu_device_ensure_inhibits(FuDevice *self)
 		for (GList *l = values; l != NULL; l = l->next) {
 			FuDeviceInhibit *inhibit = (FuDeviceInhibit *)l->data;
 			g_ptr_array_add(reasons, inhibit->reason);
+			problems |= inhibit->problem;
 		}
 		reasons_str = fu_common_strjoin_array(", ", reasons);
 		fu_device_set_update_error(self, reasons_str);
@@ -2669,9 +2680,96 @@ fu_device_ensure_inhibits(FuDevice *self)
 		fu_device_set_update_error(self, NULL);
 	}
 
+	/* sync with baseclass */
+	fwupd_device_set_problems(FWUPD_DEVICE(self), problems);
+
 	/* enable */
 	if (priv->notify_flags_handler_id != 0)
 		g_signal_handler_unblock(self, priv->notify_flags_handler_id);
+}
+
+static gchar *
+fu_device_problem_to_inhibit_reason(FuDevice *self, guint64 device_problem)
+{
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+	if (device_problem == FWUPD_DEVICE_PROBLEM_UNREACHABLE)
+		return g_strdup("Device is unreachable, or out of wireless range");
+	if (device_problem == FWUPD_DEVICE_PROBLEM_UPDATE_PENDING)
+		return g_strdup("Device is waiting for the update to be applied");
+	if (device_problem == FWUPD_DEVICE_PROBLEM_REQUIRE_AC_POWER)
+		return g_strdup("Device requires AC power to be connected");
+	if (device_problem == FWUPD_DEVICE_PROBLEM_LID_IS_CLOSED)
+		return g_strdup("Device cannot be used while the lid is closed");
+	if (device_problem == FWUPD_DEVICE_PROBLEM_SYSTEM_POWER_TOO_LOW) {
+		if (priv->ctx == NULL)
+			return g_strdup("System power is too low to perform the update");
+		return g_strdup_printf(
+		    "System power is too low to perform the update (%u%%, requires %u%%)",
+		    fu_context_get_battery_level(priv->ctx),
+		    fu_context_get_battery_threshold(priv->ctx));
+	}
+	if (device_problem == FWUPD_DEVICE_PROBLEM_POWER_TOO_LOW) {
+		if (fu_device_get_battery_level(self) == FWUPD_BATTERY_LEVEL_INVALID ||
+		    fu_device_get_battery_threshold(self) == FWUPD_BATTERY_LEVEL_INVALID) {
+			return g_strdup_printf("Device battery power is too low");
+		}
+		return g_strdup_printf("Device battery power is too low (%u%%, requires %u%%)",
+				       fu_device_get_battery_level(self),
+				       fu_device_get_battery_threshold(self));
+	}
+	return NULL;
+}
+
+static void
+fu_device_inhibit_full(FuDevice *self,
+		       FwupdDeviceProblem problem,
+		       const gchar *inhibit_id,
+		       const gchar *reason)
+{
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+	FuDeviceInhibit *inhibit;
+
+	g_return_if_fail(FU_IS_DEVICE(self));
+
+	/* lazy create as most devices will not need this */
+	if (priv->inhibits == NULL) {
+		priv->inhibits = g_hash_table_new_full(g_str_hash,
+						       g_str_equal,
+						       NULL,
+						       (GDestroyNotify)fu_device_inhibit_free);
+	}
+
+	/* can fallback */
+	if (inhibit_id == NULL)
+		inhibit_id = fwupd_device_problem_to_string(problem);
+
+	/* already exists */
+	inhibit = g_hash_table_lookup(priv->inhibits, inhibit_id);
+	if (inhibit != NULL)
+		return;
+
+	/* create new */
+	inhibit = g_new0(FuDeviceInhibit, 1);
+	inhibit->problem = problem;
+	inhibit->inhibit_id = g_strdup(inhibit_id);
+	if (reason != NULL) {
+		inhibit->reason = g_strdup(reason);
+	} else {
+		inhibit->reason = fu_device_problem_to_inhibit_reason(self, problem);
+	}
+	g_hash_table_insert(priv->inhibits, inhibit->inhibit_id, inhibit);
+
+	/* refresh */
+	fu_device_ensure_inhibits(self);
+
+	/* propagate to children */
+	if (fu_device_has_internal_flag(self, FU_DEVICE_INTERNAL_FLAG_INHIBIT_CHILDREN)) {
+		GPtrArray *children = fu_device_get_children(self);
+		for (guint i = 0; i < children->len; i++) {
+			FuDevice *child = g_ptr_array_index(children, i);
+			fu_device_inhibit(child, inhibit_id, reason);
+		}
+	}
 }
 
 /**
@@ -2691,42 +2789,9 @@ fu_device_ensure_inhibits(FuDevice *self)
 void
 fu_device_inhibit(FuDevice *self, const gchar *inhibit_id, const gchar *reason)
 {
-	FuDevicePrivate *priv = GET_PRIVATE(self);
-	FuDeviceInhibit *inhibit;
-
 	g_return_if_fail(FU_IS_DEVICE(self));
 	g_return_if_fail(inhibit_id != NULL);
-
-	/* lazy create as most devices will not need this */
-	if (priv->inhibits == NULL) {
-		priv->inhibits = g_hash_table_new_full(g_str_hash,
-						       g_str_equal,
-						       NULL,
-						       (GDestroyNotify)fu_device_inhibit_free);
-	}
-
-	/* already exists */
-	inhibit = g_hash_table_lookup(priv->inhibits, inhibit_id);
-	if (inhibit != NULL)
-		return;
-
-	/* create new */
-	inhibit = g_new0(FuDeviceInhibit, 1);
-	inhibit->inhibit_id = g_strdup(inhibit_id);
-	inhibit->reason = g_strdup(reason);
-	g_hash_table_insert(priv->inhibits, inhibit->inhibit_id, inhibit);
-
-	/* refresh */
-	fu_device_ensure_inhibits(self);
-
-	/* propagate to children */
-	if (fu_device_has_internal_flag(self, FU_DEVICE_INTERNAL_FLAG_INHIBIT_CHILDREN)) {
-		GPtrArray *children = fu_device_get_children(self);
-		for (guint i = 0; i < children->len; i++) {
-			FuDevice *child = g_ptr_array_index(children, i);
-			fu_device_inhibit(child, inhibit_id, reason);
-		}
-	}
+	fu_device_inhibit_full(self, FWUPD_DEVICE_PROBLEM_NONE, inhibit_id, reason);
 }
 
 /**
@@ -2751,6 +2816,48 @@ fu_device_has_inhibit(FuDevice *self, const gchar *inhibit_id)
 	if (priv->inhibits == NULL)
 		return FALSE;
 	return g_hash_table_contains(priv->inhibits, inhibit_id);
+}
+
+/**
+ * fu_device_remove_problem:
+ * @self: a #FuDevice
+ * @problem: a #FwupdDeviceProblem, e.g. %FWUPD_DEVICE_PROBLEM_SYSTEM_POWER_TOO_LOW
+ *
+ * Allow the device from being updated if there are no other inhibitors,
+ * changing it from %FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN to %FWUPD_DEVICE_FLAG_UPDATABLE.
+ *
+ * If the device already has no inhibit with the @inhibit_id then the request
+ * is ignored.
+ *
+ * Since: 1.8.1
+ **/
+void
+fu_device_remove_problem(FuDevice *self, FwupdDeviceProblem problem)
+{
+	g_return_if_fail(FU_IS_DEVICE(self));
+	g_return_if_fail(problem != FWUPD_DEVICE_PROBLEM_UNKNOWN);
+	return fu_device_uninhibit(self, fwupd_device_problem_to_string(problem));
+}
+
+/**
+ * fu_device_add_problem:
+ * @self: a #FuDevice
+ * @problem: a #FwupdDeviceProblem, e.g. %FWUPD_DEVICE_PROBLEM_SYSTEM_POWER_TOO_LOW
+ *
+ * Prevent the device from being updated, changing it from %FWUPD_DEVICE_FLAG_UPDATABLE
+ * to %FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN if not already inhibited.
+ *
+ * If the device already has an inhibit with the same @problem then the request
+ * is ignored.
+ *
+ * Since: 1.8.1
+ **/
+void
+fu_device_add_problem(FuDevice *self, FwupdDeviceProblem problem)
+{
+	g_return_if_fail(FU_IS_DEVICE(self));
+	g_return_if_fail(problem != FWUPD_DEVICE_PROBLEM_UNKNOWN);
+	fu_device_inhibit_full(self, problem, NULL, NULL);
 }
 
 /**
@@ -3102,7 +3209,7 @@ fu_device_add_flag(FuDevice *self, FwupdDeviceFlags flag)
 
 	/* do not let devices be updated until back in range */
 	if (flag & FWUPD_DEVICE_FLAG_UNREACHABLE)
-		fu_device_inhibit(self, "unreachable", "Device is unreachable");
+		fu_device_add_problem(self, FWUPD_DEVICE_PROBLEM_UNREACHABLE);
 }
 
 typedef struct {
@@ -3336,10 +3443,10 @@ fu_device_ensure_battery_inhibit(FuDevice *self)
 {
 	if (fu_device_get_battery_level(self) == FWUPD_BATTERY_LEVEL_INVALID ||
 	    fu_device_get_battery_level(self) >= fu_device_get_battery_threshold(self)) {
-		fu_device_uninhibit(self, "battery");
+		fu_device_remove_problem(self, FWUPD_DEVICE_PROBLEM_POWER_TOO_LOW);
 		return;
 	}
-	fu_device_inhibit(self, "battery", "Battery level is too low");
+	fu_device_add_problem(self, FWUPD_DEVICE_PROBLEM_POWER_TOO_LOW);
 }
 
 /**

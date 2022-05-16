@@ -328,6 +328,68 @@ fwupd_device_flag_from_string(const gchar *device_flag)
 }
 
 /**
+ * fwupd_device_problem_to_string:
+ * @device_problem: a device inhibit kind, e.g. %FWUPD_DEVICE_PROBLEM_SYSTEM_POWER_TOO_LOW
+ *
+ * Converts a device inhibit kind to a string.
+ *
+ * Returns: identifier string
+ *
+ * Since: 1.8.1
+ **/
+const gchar *
+fwupd_device_problem_to_string(FwupdDeviceProblem device_problem)
+{
+	if (device_problem == FWUPD_DEVICE_PROBLEM_NONE)
+		return "none";
+	if (device_problem == FWUPD_DEVICE_PROBLEM_SYSTEM_POWER_TOO_LOW)
+		return "system-power-too-low";
+	if (device_problem == FWUPD_DEVICE_PROBLEM_UNREACHABLE)
+		return "unreachable";
+	if (device_problem == FWUPD_DEVICE_PROBLEM_POWER_TOO_LOW)
+		return "power-too-low";
+	if (device_problem == FWUPD_DEVICE_PROBLEM_UPDATE_PENDING)
+		return "update-pending";
+	if (device_problem == FWUPD_DEVICE_PROBLEM_REQUIRE_AC_POWER)
+		return "require-ac-power";
+	if (device_problem == FWUPD_DEVICE_PROBLEM_LID_IS_CLOSED)
+		return "lid-is-closed";
+	if (device_problem == FWUPD_DEVICE_PROBLEM_UNKNOWN)
+		return "unknown";
+	return NULL;
+}
+
+/**
+ * fwupd_device_problem_from_string:
+ * @device_problem: (nullable): a string, e.g. `require-ac`
+ *
+ * Converts a string to a enumerated device inhibit kind.
+ *
+ * Returns: enumerated value
+ *
+ * Since: 1.8.1
+ **/
+FwupdDeviceProblem
+fwupd_device_problem_from_string(const gchar *device_problem)
+{
+	if (g_strcmp0(device_problem, "none") == 0)
+		return FWUPD_DEVICE_PROBLEM_NONE;
+	if (g_strcmp0(device_problem, "system-power-too-low") == 0)
+		return FWUPD_DEVICE_PROBLEM_SYSTEM_POWER_TOO_LOW;
+	if (g_strcmp0(device_problem, "unreachable") == 0)
+		return FWUPD_DEVICE_PROBLEM_UNREACHABLE;
+	if (g_strcmp0(device_problem, "power-too-low") == 0)
+		return FWUPD_DEVICE_PROBLEM_POWER_TOO_LOW;
+	if (g_strcmp0(device_problem, "update-pending") == 0)
+		return FWUPD_DEVICE_PROBLEM_UPDATE_PENDING;
+	if (g_strcmp0(device_problem, "require-ac-power") == 0)
+		return FWUPD_DEVICE_PROBLEM_REQUIRE_AC_POWER;
+	if (g_strcmp0(device_problem, "lid-is-closed") == 0)
+		return FWUPD_DEVICE_PROBLEM_LID_IS_CLOSED;
+	return FWUPD_DEVICE_PROBLEM_UNKNOWN;
+}
+
+/**
  * fwupd_plugin_flag_to_string:
  * @plugin_flag: plugin flags, e.g. %FWUPD_PLUGIN_FLAG_CLEAR_UPDATABLE
  *

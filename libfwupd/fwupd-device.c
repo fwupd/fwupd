@@ -34,6 +34,7 @@ typedef struct {
 	guint64 created;
 	guint64 modified;
 	guint64 flags;
+	guint64 problems;
 	GPtrArray *guids;
 	GPtrArray *vendor_ids;
 	GPtrArray *protocols;
@@ -86,6 +87,7 @@ enum {
 	PROP_UPDATE_IMAGE,
 	PROP_BATTERY_LEVEL,
 	PROP_BATTERY_THRESHOLD,
+	PROP_PROBLEMS,
 	PROP_LAST
 };
 
@@ -1663,6 +1665,107 @@ fwupd_device_has_flag(FwupdDevice *self, FwupdDeviceFlags flag)
 }
 
 /**
+ * fwupd_device_get_problems:
+ * @self: a #FwupdDevice
+ *
+ * Gets device problems.
+ *
+ * Returns: device problems, or 0 if unset
+ *
+ * Since: 1.8.1
+ **/
+guint64
+fwupd_device_get_problems(FwupdDevice *self)
+{
+	FwupdDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_DEVICE(self), 0);
+	return priv->problems;
+}
+
+/**
+ * fwupd_device_set_problems:
+ * @self: a #FwupdDevice
+ * @problems: device problems, e.g. %FWUPD_DEVICE_PROBLEM_SYSTEM_POWER_TOO_LOW
+ *
+ * Sets device problems.
+ *
+ * Since: 1.8.1
+ **/
+void
+fwupd_device_set_problems(FwupdDevice *self, guint64 problems)
+{
+	FwupdDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FWUPD_IS_DEVICE(self));
+	if (priv->problems == problems)
+		return;
+	priv->problems = problems;
+	g_object_notify(G_OBJECT(self), "problems");
+}
+
+/**
+ * fwupd_device_add_problem:
+ * @self: a #FwupdDevice
+ * @problem: the #FwupdDeviceProblem, e.g. #FWUPD_DEVICE_PROBLEM_SYSTEM_POWER_TOO_LOW
+ *
+ * Adds a specific device problem kind to the device.
+ *
+ * Since: 1.8.1
+ **/
+void
+fwupd_device_add_problem(FwupdDevice *self, FwupdDeviceProblem problem)
+{
+	FwupdDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FWUPD_IS_DEVICE(self));
+	if (problem == FWUPD_DEVICE_PROBLEM_NONE)
+		return;
+	if (fwupd_device_has_problem(self, problem))
+		return;
+	priv->problems |= problem;
+	g_object_notify(G_OBJECT(self), "problems");
+}
+
+/**
+ * fwupd_device_remove_problem:
+ * @self: a #FwupdDevice
+ * @problem: the #FwupdDeviceProblem, e.g. #FWUPD_DEVICE_PROBLEM_SYSTEM_POWER_TOO_LOW
+ *
+ * Removes a specific device problem kind from the device.
+ *
+ * Since: 1.8.1
+ **/
+void
+fwupd_device_remove_problem(FwupdDevice *self, FwupdDeviceProblem problem)
+{
+	FwupdDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FWUPD_IS_DEVICE(self));
+	if (problem == FWUPD_DEVICE_PROBLEM_NONE)
+		return;
+	if (!fwupd_device_has_problem(self, problem))
+		return;
+	priv->problems &= ~problem;
+	g_object_notify(G_OBJECT(self), "problems");
+}
+
+/**
+ * fwupd_device_has_problem:
+ * @self: a #FwupdDevice
+ * @problem: the #FwupdDeviceProblem
+ *
+ * Finds if the device has a specific device problem kind.
+ *
+ * Returns: %TRUE if the problem is set
+ *
+ * Since: 1.8.1
+ **/
+gboolean
+fwupd_device_has_problem(FwupdDevice *self, FwupdDeviceProblem problem)
+{
+	FwupdDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_DEVICE(self), FALSE);
+	return (priv->problems & problem) > 0;
+}
+
+/**
  * fwupd_device_get_created:
  * @self: a #FwupdDevice
  *
@@ -1751,6 +1854,7 @@ fwupd_device_incorporate(FwupdDevice *self, FwupdDevice *donor)
 	g_return_if_fail(FWUPD_IS_DEVICE(donor));
 
 	fwupd_device_add_flag(self, priv_donor->flags);
+	fwupd_device_add_problem(self, priv_donor->problems);
 	if (priv->created == 0)
 		fwupd_device_set_created(self, priv_donor->created);
 	if (priv->modified == 0)
@@ -1921,6 +2025,12 @@ fwupd_device_to_variant_full(FwupdDevice *self, FwupdDeviceFlags flags)
 				      "{sv}",
 				      FWUPD_RESULT_KEY_FLAGS,
 				      g_variant_new_uint64(priv->flags));
+	}
+	if (priv->problems > 0) {
+		g_variant_builder_add(&builder,
+				      "{sv}",
+				      FWUPD_RESULT_KEY_PROBLEMS,
+				      g_variant_new_uint64(priv->problems));
 	}
 	if (priv->created > 0) {
 		g_variant_builder_add(&builder,
@@ -2176,6 +2286,10 @@ fwupd_device_from_key_value(FwupdDevice *self, const gchar *key, GVariant *value
 		fwupd_device_set_flags(self, g_variant_get_uint64(value));
 		return;
 	}
+	if (g_strcmp0(key, FWUPD_RESULT_KEY_PROBLEMS) == 0) {
+		fwupd_device_set_problems(self, g_variant_get_uint64(value));
+		return;
+	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_CREATED) == 0) {
 		fwupd_device_set_created(self, g_variant_get_uint64(value));
 		return;
@@ -2367,6 +2481,23 @@ fwupd_pad_kv_dfl(GString *str, const gchar *key, guint64 device_flags)
 	}
 	if (tmp->len == 0) {
 		g_string_append(tmp, fwupd_device_flag_to_string(0));
+	} else {
+		g_string_truncate(tmp, tmp->len - 1);
+	}
+	fwupd_pad_kv_str(str, key, tmp->str);
+}
+
+static void
+fwupd_device_pad_kv_problems(GString *str, const gchar *key, guint64 device_problems)
+{
+	g_autoptr(GString) tmp = g_string_new("");
+	for (guint i = 0; i < 64; i++) {
+		if ((device_problems & ((guint64)1 << i)) == 0)
+			continue;
+		g_string_append_printf(tmp, "%s|", fwupd_device_problem_to_string((guint64)1 << i));
+	}
+	if (tmp->len == 0) {
+		g_string_append(tmp, fwupd_device_problem_to_string(0));
 	} else {
 		g_string_truncate(tmp, tmp->len - 1);
 	}
@@ -2831,6 +2962,18 @@ fwupd_device_to_json(FwupdDevice *self, JsonBuilder *builder)
 		}
 		json_builder_end_array(builder);
 	}
+	if (priv->problems != FWUPD_DEVICE_PROBLEM_NONE) {
+		json_builder_set_member_name(builder, FWUPD_RESULT_KEY_PROBLEMS);
+		json_builder_begin_array(builder);
+		for (guint i = 0; i < 64; i++) {
+			const gchar *tmp;
+			if ((priv->problems & ((guint64)1 << i)) == 0)
+				continue;
+			tmp = fwupd_device_problem_to_string((guint64)1 << i);
+			json_builder_add_string_value(builder, tmp);
+		}
+		json_builder_end_array(builder);
+	}
 	if (priv->checksums->len > 0) {
 		json_builder_set_member_name(builder, "Checksums");
 		json_builder_begin_array(builder);
@@ -3039,6 +3182,9 @@ fwupd_device_to_string(FwupdDevice *self)
 		fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_ISSUES, tmp);
 	}
 	fwupd_pad_kv_dfl(str, FWUPD_RESULT_KEY_FLAGS, priv->flags);
+	if (priv->problems != FWUPD_DEVICE_PROBLEM_NONE) {
+		fwupd_device_pad_kv_problems(str, FWUPD_RESULT_KEY_PROBLEMS, priv->problems);
+	}
 	for (guint i = 0; i < priv->checksums->len; i++) {
 		const gchar *checksum = g_ptr_array_index(priv->checksums, i);
 		g_autofree gchar *checksum_display = fwupd_checksum_format_for_display(checksum);
@@ -3117,6 +3263,9 @@ fwupd_device_get_property(GObject *object, guint prop_id, GValue *value, GParamS
 	case PROP_FLAGS:
 		g_value_set_uint64(value, priv->flags);
 		break;
+	case PROP_PROBLEMS:
+		g_value_set_uint64(value, priv->problems);
+		break;
 	case PROP_PROTOCOL:
 		g_value_set_string(value, priv->protocol);
 		break;
@@ -3160,6 +3309,9 @@ fwupd_device_set_property(GObject *object, guint prop_id, const GValue *value, G
 		break;
 	case PROP_FLAGS:
 		fwupd_device_set_flags(self, g_value_get_uint64(value));
+		break;
+	case PROP_PROBLEMS:
+		fwupd_device_set_problems(self, g_value_get_uint64(value));
 		break;
 	case PROP_PROTOCOL:
 		fwupd_device_add_protocol(self, g_value_get_string(value));
@@ -3235,6 +3387,22 @@ fwupd_device_class_init(FwupdDeviceClass *klass)
 				    FWUPD_DEVICE_FLAG_NONE,
 				    G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_FLAGS, pspec);
+
+	/**
+	 * FwupdDevice:problems:
+	 *
+	 * The problems with the device that the user could fix, e.g. "lid open".
+	 *
+	 * Since: 1.8.1
+	 */
+	pspec = g_param_spec_uint64("problems",
+				    NULL,
+				    NULL,
+				    FWUPD_DEVICE_PROBLEM_NONE,
+				    FWUPD_DEVICE_PROBLEM_UNKNOWN,
+				    FWUPD_DEVICE_PROBLEM_NONE,
+				    G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
+	g_object_class_install_property(object_class, PROP_PROBLEMS, pspec);
 
 	/**
 	 * FwupdDevice:protocol:
