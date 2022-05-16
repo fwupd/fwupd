@@ -26,6 +26,7 @@ fu_test_mtd_device_func(void)
 	g_autoptr(GRand) rand = g_rand_new_with_seed(0);
 	g_autoptr(GUdevClient) udev_client = g_udev_client_new(NULL);
 	g_autoptr(GUdevDevice) udev_device = NULL;
+	const gchar *dev_name;
 
 	/* do not save silo */
 	ret = fu_context_load_quirks(ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
@@ -48,6 +49,12 @@ fu_test_mtd_device_func(void)
 	}
 	g_assert_no_error(error);
 	g_assert_nonnull(locker);
+
+	dev_name = fu_device_get_name(device);
+	if (g_strcmp0(dev_name, "mtdram test device") != 0) {
+		g_test_skip("device is not mtdram test device");
+		return;
+	}
 
 	bufsz = fu_device_get_firmware_size_max(device);
 	g_assert_cmpint(bufsz, ==, 0x400000);
