@@ -1581,6 +1581,33 @@ fu_device_add_child_by_kv(FuDevice *self, const gchar *str, GError **error)
 }
 
 static gboolean
+fu_device_set_quirk_inhibit_section(FuDevice *self, const gchar *value, GError **error)
+{
+	g_auto(GStrv) sections = NULL;
+
+	g_return_val_if_fail(value != NULL, FALSE);
+
+	/* sanity check */
+	sections = g_strsplit(value, ":", -1);
+	if (g_strv_length(sections) != 2) {
+		g_set_error_literal(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_NOT_SUPPORTED,
+				    "quirk key not supported, expected k1:v1[,k2:v2][,k3:]");
+		return FALSE;
+	}
+
+	/* allow empty string to unset quirk */
+	if (g_strcmp0(sections[1], "") != 0)
+		fu_device_inhibit(self, sections[0], sections[1]);
+	else
+		fu_device_uninhibit(self, sections[0]);
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_device_set_quirk_kv(FuDevice *self, const gchar *key, const gchar *value, GError **error)
 {
 	FuDevicePrivate *priv = GET_PRIVATE(self);
@@ -1706,10 +1733,11 @@ fu_device_set_quirk_kv(FuDevice *self, const gchar *key, const gchar *value, GEr
 		return TRUE;
 	}
 	if (g_strcmp0(key, FU_QUIRKS_INHIBIT) == 0) {
-		if (value != NULL)
-			fu_device_inhibit(self, "quirk", value);
-		else
-			fu_device_uninhibit(self, "quirk");
+		g_auto(GStrv) sections = g_strsplit(value, ",", -1);
+		for (guint i = 0; sections[i] != NULL; i++) {
+			if (!fu_device_set_quirk_inhibit_section(self, sections[i], error))
+				return FALSE;
+		}
 		return TRUE;
 	}
 	if (g_strcmp0(key, FU_QUIRKS_GTYPE) == 0) {
