@@ -767,9 +767,16 @@ LIBFWUPD_1.8.1 {
   global:
     fwupd_client_get_battery_level;
     fwupd_client_get_battery_threshold;
+    fwupd_device_add_inhibit_kind;
     fwupd_device_get_battery_level;
     fwupd_device_get_battery_threshold;
+    fwupd_device_get_inhibit_kinds;
+    fwupd_device_has_inhibit_kind;
+    fwupd_device_inhibit_kind_from_string;
+    fwupd_device_inhibit_kind_to_string;
+    fwupd_device_remove_inhibit_kind;
     fwupd_device_set_battery_level;
     fwupd_device_set_battery_threshold;
+    fwupd_device_set_inhibit_kinds;
   local: *;
 } LIBFWUPD_1.8.0;

@@ -1304,6 +1304,57 @@ fu_util_update_state_to_string(FwupdUpdateState update_state)
 	return NULL;
 }
 
+static gchar *
+fu_util_device_inhibit_kind_to_string(FwupdClient *client,
+				      FwupdDevice *dev,
+				      guint64 device_inhibit_kind)
+{
+	if (device_inhibit_kind == FWUPD_DEVICE_INHIBIT_KIND_NONE)
+		return NULL;
+	if (device_inhibit_kind == FWUPD_DEVICE_INHIBIT_KIND_UNKNOWN)
+		return NULL;
+	if (device_inhibit_kind == FWUPD_DEVICE_INHIBIT_KIND_SYSTEM_POWER_TOO_LOW) {
+		if (fwupd_client_get_battery_level(client) == FWUPD_BATTERY_LEVEL_INVALID ||
+		    fwupd_client_get_battery_threshold(client) == FWUPD_BATTERY_LEVEL_INVALID) {
+			/* TRANSLATORS: as in laptop battery power */
+			return g_strdup(_("System power is too low to perform the update"));
+		}
+		return g_strdup_printf(
+		    /* TRANSLATORS: as in laptop battery power */
+		    _("System power is too low to perform the update (%u%%, requires %u%%)"),
+		    fwupd_client_get_battery_level(client),
+		    fwupd_client_get_battery_threshold(client));
+	}
+	if (device_inhibit_kind == FWUPD_DEVICE_INHIBIT_KIND_UNREACHABLE) {
+		/* TRANSLATORS: for example, a BlueTooth mouse that is in powersave mode */
+		return g_strdup(_("Device is unreachable, or out of wireless range"));
+	}
+	if (device_inhibit_kind == FWUPD_DEVICE_INHIBIT_KIND_POWER_TOO_LOW) {
+		if (fwupd_device_get_battery_level(dev) == FWUPD_BATTERY_LEVEL_INVALID ||
+		    fwupd_device_get_battery_threshold(dev) == FWUPD_BATTERY_LEVEL_INVALID) {
+			/* TRANSLATORS: for example the batteries *inside* the BlueTooth mouse */
+			return g_strdup_printf(_("Device battery power is too low"));
+		}
+		/* TRANSLATORS: for example the batteries *inside* the BlueTooth mouse */
+		return g_strdup_printf(_("Device battery power is too low (%u%%, requires %u%%)"),
+				       fwupd_device_get_battery_level(dev),
+				       fwupd_device_get_battery_threshold(dev));
+	}
+	if (device_inhibit_kind == FWUPD_DEVICE_INHIBIT_KIND_UPDATE_PENDING) {
+		/* TRANSLATORS: usually this is when we're waiting for a reboot */
+		return g_strdup(_("Device is waiting for the update to be applied"));
+	}
+	if (device_inhibit_kind == FWUPD_DEVICE_INHIBIT_KIND_REQUIRE_AC_POWER) {
+		/* TRANSLATORS: as in, wired mains power for a laptop */
+		return g_strdup(_("Device requires AC power to be connected"));
+	}
+	if (device_inhibit_kind == FWUPD_DEVICE_INHIBIT_KIND_LID_IS_CLOSED) {
+		/* TRANSLATORS: lid means "laptop top cover" */
+		return g_strdup(_("Device cannot be used while the lid is closed"));
+	}
+	return NULL;
+}
+
 gchar *
 fu_util_device_to_string(FwupdClient *client, FwupdDevice *dev, guint idt)
 {
@@ -1456,29 +1507,53 @@ fu_util_device_to_string(FwupdClient *client, FwupdDevice *dev, guint idt)
 		}
 	}
 
-	/* battery */
-	if (fwupd_device_get_battery_level(dev) != FWUPD_BATTERY_LEVEL_INVALID &&
-	    fwupd_device_get_battery_threshold(dev) != FWUPD_BATTERY_LEVEL_INVALID) {
-		g_autofree gchar *val = NULL;
-		/* TRANSLATORS: first percentage is current value, 2nd percentage is the lowest
-		 * limit the firmware update is allowed for the update to happen */
-		val = g_strdup_printf(_("%u%% (threshold %u%%)"),
-				      fwupd_device_get_battery_level(dev),
-				      fwupd_device_get_battery_threshold(dev));
-		/* TRANSLATORS: refers to the battery inside the peripheral device, e.g. mouse */
-		fu_common_string_append_kv(str, idt + 1, _("Battery"), val);
-	} else if (fwupd_device_get_battery_level(dev) != FWUPD_BATTERY_LEVEL_INVALID) {
-		g_autofree gchar *val = NULL;
-		val = g_strdup_printf("%u%%", fwupd_device_get_battery_level(dev));
-		/* TRANSLATORS: refers to the battery inside the peripheral device, e.g. mouse */
-		fu_common_string_append_kv(str, idt + 1, _("Battery"), val);
+	/* battery, but only if we're not about to show the same info as an inhibit */
+	if (!fwupd_device_has_inhibit_kind(dev, FWUPD_DEVICE_INHIBIT_KIND_POWER_TOO_LOW)) {
+		if (fwupd_device_get_battery_level(dev) != FWUPD_BATTERY_LEVEL_INVALID &&
+		    fwupd_device_get_battery_threshold(dev) != FWUPD_BATTERY_LEVEL_INVALID) {
+			g_autofree gchar *val = NULL;
+			/* TRANSLATORS: first percentage is current value, 2nd percentage is the
+			 * lowest limit the firmware update is allowed for the update to happen */
+			val = g_strdup_printf(_("%u%% (threshold %u%%)"),
+					      fwupd_device_get_battery_level(dev),
+					      fwupd_device_get_battery_threshold(dev));
+			/* TRANSLATORS: refers to the battery inside the peripheral device */
+			fu_common_string_append_kv(str, idt + 1, _("Battery"), val);
+		} else if (fwupd_device_get_battery_level(dev) != FWUPD_BATTERY_LEVEL_INVALID) {
+			g_autofree gchar *val = NULL;
+			val = g_strdup_printf("%u%%", fwupd_device_get_battery_level(dev));
+			/* TRANSLATORS: refers to the battery inside the peripheral device */
+			fu_common_string_append_kv(str, idt + 1, _("Battery"), val);
+		}
 	}
 
-	tmp = fwupd_device_get_update_error(dev);
-	if (tmp != NULL) {
-		g_autofree gchar *color = fu_util_term_format(tmp, FU_UTIL_TERM_COLOR_RED);
-		/* TRANSLATORS: error message from last update attempt */
-		fu_common_string_append_kv(str, idt + 1, _("Update Error"), color);
+	/* either show enumerated [translated] inhibits or the synthesized update error */
+	if (fwupd_device_get_inhibit_kinds(dev) == FWUPD_DEVICE_INHIBIT_KIND_NONE) {
+		tmp = fwupd_device_get_update_error(dev);
+		if (tmp != NULL) {
+			g_autofree gchar *color = fu_util_term_format(tmp, FU_UTIL_TERM_COLOR_RED);
+			/* TRANSLATORS: error message from last update attempt */
+			fu_common_string_append_kv(str, idt + 1, _("Update Error"), color);
+		}
+	} else {
+		/* TRANSLATORS: reasons the device is not updatable */
+		tmp = _("Inhibits");
+		for (guint i = 0; i < 64; i++) {
+			FwupdDeviceInhibitKind inhibit_kind = (guint64)1 << i;
+			g_autofree gchar *bullet = NULL;
+			g_autofree gchar *desc = NULL;
+			g_autofree gchar *color = NULL;
+
+			if (!fwupd_device_has_inhibit_kind(dev, inhibit_kind))
+				continue;
+			desc = fu_util_device_inhibit_kind_to_string(client, dev, inhibit_kind);
+			if (desc == NULL)
+				continue;
+			bullet = g_strdup_printf("• %s", desc);
+			color = fu_util_term_format(bullet, FU_UTIL_TERM_COLOR_RED);
+			fu_common_string_append_kv(str, idt + 1, tmp, color);
+			tmp = NULL;
+		}
 	}
 
 	/* modified date: for history devices */

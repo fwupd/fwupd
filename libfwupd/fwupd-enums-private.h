@@ -363,6 +363,14 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_RESULT_KEY_TRUST_FLAGS "TrustFlags"
 /**
+ * FWUPD_RESULT_KEY_INHIBIT_KINDS:
+ *
+ * Result key to represent inhibit kinds
+ *
+ * The D-Bus type signature string is 't' i.e. a unsigned 64 bit integer.
+ **/
+#define FWUPD_RESULT_KEY_INHIBIT_KINDS "InhibitKinds"
+/**
  * FWUPD_RESULT_KEY_UPDATE_MESSAGE:
  *
  * Result key to represent UpdateMessage

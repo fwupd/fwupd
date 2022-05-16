@@ -328,6 +328,68 @@ fwupd_device_flag_from_string(const gchar *device_flag)
 }
 
 /**
+ * fwupd_device_inhibit_kind_to_string:
+ * @device_inhibit_kind: a device inhibit kind, e.g. %FWUPD_DEVICE_INHIBIT_KIND_SYSTEM_POWER_TOO_LOW
+ *
+ * Converts a device inhibit kind to a string.
+ *
+ * Returns: identifier string
+ *
+ * Since: 1.8.1
+ **/
+const gchar *
+fwupd_device_inhibit_kind_to_string(FwupdDeviceInhibitKind device_inhibit_kind)
+{
+	if (device_inhibit_kind == FWUPD_DEVICE_INHIBIT_KIND_NONE)
+		return "none";
+	if (device_inhibit_kind == FWUPD_DEVICE_INHIBIT_KIND_SYSTEM_POWER_TOO_LOW)
+		return "system-power-too-low";
+	if (device_inhibit_kind == FWUPD_DEVICE_INHIBIT_KIND_UNREACHABLE)
+		return "unreachable";
+	if (device_inhibit_kind == FWUPD_DEVICE_INHIBIT_KIND_POWER_TOO_LOW)
+		return "power-too-low";
+	if (device_inhibit_kind == FWUPD_DEVICE_INHIBIT_KIND_UPDATE_PENDING)
+		return "update-pending";
+	if (device_inhibit_kind == FWUPD_DEVICE_INHIBIT_KIND_REQUIRE_AC_POWER)
+		return "require-ac-power";
+	if (device_inhibit_kind == FWUPD_DEVICE_INHIBIT_KIND_LID_IS_CLOSED)
+		return "lid-is-closed";
+	if (device_inhibit_kind == FWUPD_DEVICE_INHIBIT_KIND_UNKNOWN)
+		return "unknown";
+	return NULL;
+}
+
+/**
+ * fwupd_device_inhibit_kind_from_string:
+ * @device_inhibit_kind: (nullable): a string, e.g. `require-ac`
+ *
+ * Converts a string to a enumerated device inhibit kind.
+ *
+ * Returns: enumerated value
+ *
+ * Since: 1.8.1
+ **/
+FwupdDeviceInhibitKind
+fwupd_device_inhibit_kind_from_string(const gchar *device_inhibit_kind)
+{
+	if (g_strcmp0(device_inhibit_kind, "none") == 0)
+		return FWUPD_DEVICE_INHIBIT_KIND_NONE;
+	if (g_strcmp0(device_inhibit_kind, "system-power-too-low") == 0)
+		return FWUPD_DEVICE_INHIBIT_KIND_SYSTEM_POWER_TOO_LOW;
+	if (g_strcmp0(device_inhibit_kind, "unreachable") == 0)
+		return FWUPD_DEVICE_INHIBIT_KIND_UNREACHABLE;
+	if (g_strcmp0(device_inhibit_kind, "power-too-low") == 0)
+		return FWUPD_DEVICE_INHIBIT_KIND_POWER_TOO_LOW;
+	if (g_strcmp0(device_inhibit_kind, "update-pending") == 0)
+		return FWUPD_DEVICE_INHIBIT_KIND_UPDATE_PENDING;
+	if (g_strcmp0(device_inhibit_kind, "require-ac-power") == 0)
+		return FWUPD_DEVICE_INHIBIT_KIND_REQUIRE_AC_POWER;
+	if (g_strcmp0(device_inhibit_kind, "lid-is-closed") == 0)
+		return FWUPD_DEVICE_INHIBIT_KIND_LID_IS_CLOSED;
+	return FWUPD_DEVICE_INHIBIT_KIND_UNKNOWN;
+}
+
+/**
  * fwupd_plugin_flag_to_string:
  * @plugin_flag: plugin flags, e.g. %FWUPD_PLUGIN_FLAG_CLEAR_UPDATABLE
  *

@@ -534,7 +534,16 @@ fu_device_set_version_bootloader(FuDevice *self, const gchar *version);
 void
 fu_device_inhibit(FuDevice *self, const gchar *inhibit_id, const gchar *reason);
 void
+fu_device_inhibit_kind(FuDevice *self, FwupdDeviceInhibitKind inhibit_kind);
+void
+fu_device_inhibit_full(FuDevice *self,
+		       FwupdDeviceInhibitKind inhibit_kind,
+		       const gchar *inhibit_id,
+		       const gchar *reason);
+void
 fu_device_uninhibit(FuDevice *self, const gchar *inhibit_id);
+void
+fu_device_uninhibit_kind(FuDevice *self, FwupdDeviceInhibitKind inhibit_kind);
 gboolean
 fu_device_has_inhibit(FuDevice *self, const gchar *inhibit_id);
 const gchar *

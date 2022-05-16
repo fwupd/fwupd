@@ -1037,7 +1037,10 @@ LIBFWUPDPLUGIN_1.8.0 {
 
 LIBFWUPDPLUGIN_1.8.1 {
   global:
+    fu_device_inhibit_kind;
+    fu_device_inhibit_full;
     fu_device_poll_locker_new;
+    fu_device_uninhibit_kind;
     fu_plugin_runner_init;
     fu_udev_device_ioctl_full;
   local: *;

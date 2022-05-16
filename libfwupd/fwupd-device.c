@@ -34,6 +34,7 @@ typedef struct {
 	guint64 created;
 	guint64 modified;
 	guint64 flags;
+	guint64 inhibit_kinds;
 	GPtrArray *guids;
 	GPtrArray *vendor_ids;
 	GPtrArray *protocols;
@@ -86,6 +87,7 @@ enum {
 	PROP_UPDATE_IMAGE,
 	PROP_BATTERY_LEVEL,
 	PROP_BATTERY_THRESHOLD,
+	PROP_INHIBIT_KINDS,
 	PROP_LAST
 };
 
@@ -1663,6 +1665,107 @@ fwupd_device_has_flag(FwupdDevice *self, FwupdDeviceFlags flag)
 }
 
 /**
+ * fwupd_device_get_inhibit_kinds:
+ * @self: a #FwupdDevice
+ *
+ * Gets device inhibit kinds.
+ *
+ * Returns: device inhibit kinds, or 0 if unset
+ *
+ * Since: 1.8.1
+ **/
+guint64
+fwupd_device_get_inhibit_kinds(FwupdDevice *self)
+{
+	FwupdDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_DEVICE(self), 0);
+	return priv->inhibit_kinds;
+}
+
+/**
+ * fwupd_device_set_inhibit_kinds:
+ * @self: a #FwupdDevice
+ * @inhibit_kinds: device inhibit kinds, e.g. %FWUPD_DEVICE_INHIBIT_KIND_SYSTEM_POWER_TOO_LOW
+ *
+ * Sets device inhibit kinds.
+ *
+ * Since: 1.8.1
+ **/
+void
+fwupd_device_set_inhibit_kinds(FwupdDevice *self, guint64 inhibit_kinds)
+{
+	FwupdDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FWUPD_IS_DEVICE(self));
+	if (priv->inhibit_kinds == inhibit_kinds)
+		return;
+	priv->inhibit_kinds = inhibit_kinds;
+	g_object_notify(G_OBJECT(self), "inhibit-kinds");
+}
+
+/**
+ * fwupd_device_add_inhibit_kind:
+ * @self: a #FwupdDevice
+ * @inhibit_kind: the #FwupdDeviceInhibitKind, e.g. #FWUPD_DEVICE_INHIBIT_KIND_SYSTEM_POWER_TOO_LOW
+ *
+ * Adds a specific device inhibit_kind kind to the device.
+ *
+ * Since: 1.8.1
+ **/
+void
+fwupd_device_add_inhibit_kind(FwupdDevice *self, FwupdDeviceInhibitKind inhibit_kind)
+{
+	FwupdDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FWUPD_IS_DEVICE(self));
+	if (inhibit_kind == 0)
+		return;
+	if ((priv->inhibit_kinds | inhibit_kind) == priv->inhibit_kinds)
+		return;
+	priv->inhibit_kinds |= inhibit_kind;
+	g_object_notify(G_OBJECT(self), "inhibit-kinds");
+}
+
+/**
+ * fwupd_device_remove_inhibit_kind:
+ * @self: a #FwupdDevice
+ * @inhibit_kind: the #FwupdDeviceInhibitKind, e.g. #FWUPD_DEVICE_INHIBIT_KIND_SYSTEM_POWER_TOO_LOW
+ *
+ * Removes a specific device inhibit_kind kind from the device.
+ *
+ * Since: 1.8.1
+ **/
+void
+fwupd_device_remove_inhibit_kind(FwupdDevice *self, FwupdDeviceInhibitKind inhibit_kind)
+{
+	FwupdDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FWUPD_IS_DEVICE(self));
+	if (inhibit_kind == 0)
+		return;
+	if ((priv->inhibit_kinds & inhibit_kind) == 0)
+		return;
+	priv->inhibit_kinds &= ~inhibit_kind;
+	g_object_notify(G_OBJECT(self), "inhibit-kinds");
+}
+
+/**
+ * fwupd_device_has_inhibit_kind:
+ * @self: a #FwupdDevice
+ * @inhibit_kind: the #FwupdDeviceInhibitKind
+ *
+ * Finds if the device has a specific device inhibit_kind kind.
+ *
+ * Returns: %TRUE if the inhibit_kind is set
+ *
+ * Since: 1.8.1
+ **/
+gboolean
+fwupd_device_has_inhibit_kind(FwupdDevice *self, FwupdDeviceInhibitKind inhibit_kind)
+{
+	FwupdDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_DEVICE(self), FALSE);
+	return (priv->inhibit_kinds & inhibit_kind) > 0;
+}
+
+/**
  * fwupd_device_get_created:
  * @self: a #FwupdDevice
  *
@@ -1751,6 +1854,7 @@ fwupd_device_incorporate(FwupdDevice *self, FwupdDevice *donor)
 	g_return_if_fail(FWUPD_IS_DEVICE(donor));
 
 	fwupd_device_add_flag(self, priv_donor->flags);
+	fwupd_device_add_inhibit_kind(self, priv_donor->inhibit_kinds);
 	if (priv->created == 0)
 		fwupd_device_set_created(self, priv_donor->created);
 	if (priv->modified == 0)
@@ -1921,6 +2025,12 @@ fwupd_device_to_variant_full(FwupdDevice *self, FwupdDeviceFlags flags)
 				      "{sv}",
 				      FWUPD_RESULT_KEY_FLAGS,
 				      g_variant_new_uint64(priv->flags));
+	}
+	if (priv->inhibit_kinds > 0) {
+		g_variant_builder_add(&builder,
+				      "{sv}",
+				      FWUPD_RESULT_KEY_INHIBIT_KINDS,
+				      g_variant_new_uint64(priv->inhibit_kinds));
 	}
 	if (priv->created > 0) {
 		g_variant_builder_add(&builder,
@@ -2176,6 +2286,10 @@ fwupd_device_from_key_value(FwupdDevice *self, const gchar *key, GVariant *value
 		fwupd_device_set_flags(self, g_variant_get_uint64(value));
 		return;
 	}
+	if (g_strcmp0(key, FWUPD_RESULT_KEY_INHIBIT_KINDS) == 0) {
+		fwupd_device_set_inhibit_kinds(self, g_variant_get_uint64(value));
+		return;
+	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_CREATED) == 0) {
 		fwupd_device_set_created(self, g_variant_get_uint64(value));
 		return;
@@ -2367,6 +2481,25 @@ fwupd_pad_kv_dfl(GString *str, const gchar *key, guint64 device_flags)
 	}
 	if (tmp->len == 0) {
 		g_string_append(tmp, fwupd_device_flag_to_string(0));
+	} else {
+		g_string_truncate(tmp, tmp->len - 1);
+	}
+	fwupd_pad_kv_str(str, key, tmp->str);
+}
+
+static void
+fwupd_device_pad_kv_inhibit_kinds(GString *str, const gchar *key, guint64 device_inhibit_kinds)
+{
+	g_autoptr(GString) tmp = g_string_new("");
+	for (guint i = 0; i < 64; i++) {
+		if ((device_inhibit_kinds & ((guint64)1 << i)) == 0)
+			continue;
+		g_string_append_printf(tmp,
+				       "%s|",
+				       fwupd_device_inhibit_kind_to_string((guint64)1 << i));
+	}
+	if (tmp->len == 0) {
+		g_string_append(tmp, fwupd_device_inhibit_kind_to_string(0));
 	} else {
 		g_string_truncate(tmp, tmp->len - 1);
 	}
@@ -2831,6 +2964,18 @@ fwupd_device_to_json(FwupdDevice *self, JsonBuilder *builder)
 		}
 		json_builder_end_array(builder);
 	}
+	if (priv->inhibit_kinds != FWUPD_DEVICE_INHIBIT_KIND_NONE) {
+		json_builder_set_member_name(builder, FWUPD_RESULT_KEY_INHIBIT_KINDS);
+		json_builder_begin_array(builder);
+		for (guint i = 0; i < 64; i++) {
+			const gchar *tmp;
+			if ((priv->inhibit_kinds & ((guint64)1 << i)) == 0)
+				continue;
+			tmp = fwupd_device_inhibit_kind_to_string((guint64)1 << i);
+			json_builder_add_string_value(builder, tmp);
+		}
+		json_builder_end_array(builder);
+	}
 	if (priv->checksums->len > 0) {
 		json_builder_set_member_name(builder, "Checksums");
 		json_builder_begin_array(builder);
@@ -3039,6 +3184,11 @@ fwupd_device_to_string(FwupdDevice *self)
 		fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_ISSUES, tmp);
 	}
 	fwupd_pad_kv_dfl(str, FWUPD_RESULT_KEY_FLAGS, priv->flags);
+	if (priv->inhibit_kinds != FWUPD_DEVICE_INHIBIT_KIND_NONE) {
+		fwupd_device_pad_kv_inhibit_kinds(str,
+						  FWUPD_RESULT_KEY_INHIBIT_KINDS,
+						  priv->inhibit_kinds);
+	}
 	for (guint i = 0; i < priv->checksums->len; i++) {
 		const gchar *checksum = g_ptr_array_index(priv->checksums, i);
 		g_autofree gchar *checksum_display = fwupd_checksum_format_for_display(checksum);
@@ -3117,6 +3267,9 @@ fwupd_device_get_property(GObject *object, guint prop_id, GValue *value, GParamS
 	case PROP_FLAGS:
 		g_value_set_uint64(value, priv->flags);
 		break;
+	case PROP_INHIBIT_KINDS:
+		g_value_set_uint64(value, priv->inhibit_kinds);
+		break;
 	case PROP_PROTOCOL:
 		g_value_set_string(value, priv->protocol);
 		break;
@@ -3160,6 +3313,9 @@ fwupd_device_set_property(GObject *object, guint prop_id, const GValue *value, G
 		break;
 	case PROP_FLAGS:
 		fwupd_device_set_flags(self, g_value_get_uint64(value));
+		break;
+	case PROP_INHIBIT_KINDS:
+		fwupd_device_set_inhibit_kinds(self, g_value_get_uint64(value));
 		break;
 	case PROP_PROTOCOL:
 		fwupd_device_add_protocol(self, g_value_get_string(value));
@@ -3235,6 +3391,22 @@ fwupd_device_class_init(FwupdDeviceClass *klass)
 				    FWUPD_DEVICE_FLAG_NONE,
 				    G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_FLAGS, pspec);
+
+	/**
+	 * FwupdDevice:inhibit-kinds:
+	 *
+	 * The device inhibit kinds.
+	 *
+	 * Since: 1.8.1
+	 */
+	pspec = g_param_spec_uint64("inhibit-kinds",
+				    NULL,
+				    NULL,
+				    FWUPD_DEVICE_FLAG_NONE,
+				    FWUPD_DEVICE_FLAG_UNKNOWN,
+				    FWUPD_DEVICE_FLAG_NONE,
+				    G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
+	g_object_class_install_property(object_class, PROP_INHIBIT_KINDS, pspec);
 
 	/**
 	 * FwupdDevice:protocol:

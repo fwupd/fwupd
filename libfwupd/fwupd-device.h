@@ -136,6 +136,16 @@ fwupd_device_remove_flag(FwupdDevice *self, FwupdDeviceFlags flag);
 gboolean
 fwupd_device_has_flag(FwupdDevice *self, FwupdDeviceFlags flag);
 guint64
+fwupd_device_get_inhibit_kinds(FwupdDevice *self);
+void
+fwupd_device_set_inhibit_kinds(FwupdDevice *self, guint64 inhibit_kinds);
+void
+fwupd_device_add_inhibit_kind(FwupdDevice *self, FwupdDeviceInhibitKind inhibit_kind);
+void
+fwupd_device_remove_inhibit_kind(FwupdDevice *self, FwupdDeviceInhibitKind inhibit_kind);
+gboolean
+fwupd_device_has_inhibit_kind(FwupdDevice *self, FwupdDeviceInhibitKind inhibit_kind);
+guint64
 fwupd_device_get_created(FwupdDevice *self);
 void
 fwupd_device_set_created(FwupdDevice *self, guint64 created);

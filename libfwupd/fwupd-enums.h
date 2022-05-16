@@ -540,6 +540,78 @@ typedef enum {
 typedef guint64 FwupdDeviceFlags;
 
 /**
+ * FWUPD_DEVICE_INHIBIT_KIND_NONE:
+ *
+ * No inhibits set
+ *
+ * Since 1.8.1
+ */
+#define FWUPD_DEVICE_INHIBIT_KIND_NONE (0u)
+/**
+ * FWUPD_DEVICE_INHIBIT_KIND_SYSTEM_POWER_TOO_LOW:
+ *
+ * The system power is too low to perform the update.
+ *
+ * Since 1.8.1
+ */
+#define FWUPD_DEVICE_INHIBIT_KIND_SYSTEM_POWER_TOO_LOW (1u << 0)
+/**
+ * FWUPD_DEVICE_INHIBIT_KIND_UNREACHABLE:
+ *
+ * The device is unreachable, or out of wireless range.
+ *
+ * Since 1.8.1
+ */
+#define FWUPD_DEVICE_INHIBIT_KIND_UNREACHABLE (1u << 1)
+/**
+ * FWUPD_DEVICE_INHIBIT_KIND_POWER_TOO_LOW:
+ *
+ * The device battery power is too low.
+ *
+ * Since 1.8.1
+ */
+#define FWUPD_DEVICE_INHIBIT_KIND_POWER_TOO_LOW (1u << 2)
+/**
+ * FWUPD_DEVICE_INHIBIT_KIND_UPDATE_PENDING:
+ *
+ * The device is waiting for the update to be applied.
+ *
+ * Since 1.8.1
+ */
+#define FWUPD_DEVICE_INHIBIT_KIND_UPDATE_PENDING (1u << 3)
+/**
+ * FWUPD_DEVICE_INHIBIT_KIND_REQUIRE_AC_POWER:
+ *
+ * The device requires AC power to be connected.
+ *
+ * Since 1.8.1
+ */
+#define FWUPD_DEVICE_INHIBIT_KIND_REQUIRE_AC_POWER (1u << 4)
+/**
+ * FWUPD_DEVICE_INHIBIT_KIND_LID_IS_CLOSED:
+ *
+ * The device cannot be used while the laptop lid is closed.
+ *
+ * Since 1.8.1
+ */
+#define FWUPD_DEVICE_INHIBIT_KIND_LID_IS_CLOSED (1u << 5)
+/**
+ * FWUPD_DEVICE_INHIBIT_KIND_UNKNOWN:
+ *
+ * This inhibit is not defined, this typically will happen from mismatched
+ * fwupd library and clients.
+ *
+ * Since 1.8.1
+ */
+#define FWUPD_DEVICE_INHIBIT_KIND_UNKNOWN G_MAXUINT64
+/**
+ * FwupdDeviceInhibitKind:
+ *
+ * Inhibits are reasons why the device is not updatable.
+ */
+typedef guint64 FwupdDeviceInhibitKind;
+
+/**
  * FWUPD_RELEASE_FLAG_NONE:
  *
  * No flags are set.
@@ -931,6 +1003,10 @@ const gchar *
 fwupd_device_flag_to_string(FwupdDeviceFlags device_flag);
 FwupdDeviceFlags
 fwupd_device_flag_from_string(const gchar *device_flag);
+const gchar *
+fwupd_device_inhibit_kind_to_string(FwupdDeviceInhibitKind device_inhibit_kind);
+FwupdDeviceInhibitKind
+fwupd_device_inhibit_kind_from_string(const gchar *device_inhibit_kind);
 const gchar *
 fwupd_plugin_flag_to_string(FwupdPluginFlags plugin_flag);
 FwupdPluginFlags

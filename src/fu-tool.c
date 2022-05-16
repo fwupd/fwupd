@@ -285,7 +285,14 @@ fu_util_start_engine(FuUtilPrivate *priv, FuEngineLoadFlags flags, GError **erro
 	fu_util_show_unsupported_warn();
 
 	/* copy properties from engine to client */
-	g_object_set(priv->client, "host-product", fu_engine_get_host_product(priv->engine), NULL);
+	g_object_set(priv->client,
+		     "host-product",
+		     fu_engine_get_host_product(priv->engine),
+		     "battery-level",
+		     fu_context_get_battery_level(fu_engine_get_context(priv->engine)),
+		     "battery-threshold",
+		     fu_context_get_battery_threshold(fu_engine_get_context(priv->engine)),
+		     NULL);
 
 	/* success */
 	return TRUE;

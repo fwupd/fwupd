@@ -274,7 +274,7 @@ fu_scsi_device_write_firmware(FuDevice *device,
 	}
 
 	/* success! */
-	fu_device_inhibit(device, "needs-reboot", "Waiting for reboot to apply firmware");
+	fu_device_inhibit_kind(device, FWUPD_DEVICE_INHIBIT_KIND_UPDATE_PENDING);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
 	return TRUE;
 }
