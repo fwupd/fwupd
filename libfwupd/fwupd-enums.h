@@ -74,6 +74,7 @@ typedef enum {
  * @FWUPD_FEATURE_FLAG_REQUESTS:		Can show interactive requests
  * @FWUPD_FEATURE_FLAG_FDE_WARNING:		Can warn about full disk encryption
  * @FWUPD_FEATURE_FLAG_COMMUNITY_TEXT:		Can show information about community supported
+ * @FWUPD_FEATURE_FLAG_SHOW_PROBLEMS:		Can show problems when getting the update list
  *
  * The flags to the feature capabilities of the front-end client.
  **/
@@ -86,6 +87,7 @@ typedef enum {
 	FWUPD_FEATURE_FLAG_REQUESTS = 1 << 4,	    /* Since: 1.6.2 */
 	FWUPD_FEATURE_FLAG_FDE_WARNING = 1 << 5,    /* Since: 1.7.1 */
 	FWUPD_FEATURE_FLAG_COMMUNITY_TEXT = 1 << 6, /* Since: 1.7.5 */
+	FWUPD_FEATURE_FLAG_SHOW_PROBLEMS = 1 << 7,  /* Since: 1.8.1 */
 	/*< private >*/
 	FWUPD_FEATURE_FLAG_LAST
 } FwupdFeatureFlags;

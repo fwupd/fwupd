@@ -608,6 +608,8 @@ fwupd_feature_flag_to_string(FwupdFeatureFlags feature_flag)
 		return "fde-warning";
 	if (feature_flag == FWUPD_FEATURE_FLAG_COMMUNITY_TEXT)
 		return "community-text";
+	if (feature_flag == FWUPD_FEATURE_FLAG_SHOW_PROBLEMS)
+		return "show-problems";
 	return NULL;
 }
 
@@ -640,6 +642,8 @@ fwupd_feature_flag_from_string(const gchar *feature_flag)
 		return FWUPD_FEATURE_FLAG_FDE_WARNING;
 	if (g_strcmp0(feature_flag, "community-text") == 0)
 		return FWUPD_FEATURE_FLAG_COMMUNITY_TEXT;
+	if (g_strcmp0(feature_flag, "show-problems") == 0)
+		return FWUPD_FEATURE_FLAG_SHOW_PROBLEMS;
 	return FWUPD_FEATURE_FLAG_LAST;
 }
 

@@ -497,7 +497,8 @@ fu_release_check_requirements(FuRelease *self,
 	}
 
 	/* no update abilities */
-	if (!fu_device_has_flag(self->device, FWUPD_DEVICE_FLAG_UPDATABLE)) {
+	if (!fu_engine_request_has_feature_flag(self->request, FWUPD_FEATURE_FLAG_SHOW_PROBLEMS) &&
+	    !fu_device_has_flag(self->device, FWUPD_DEVICE_FLAG_UPDATABLE)) {
 		g_autoptr(GString) str = g_string_new(NULL);
 		g_string_append_printf(str,
 				       "Device %s [%s] does not currently allow updates",

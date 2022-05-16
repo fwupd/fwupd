@@ -614,7 +614,6 @@ fu_util_get_updates(FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(GNode) root = g_node_new(NULL);
-	g_autoptr(GPtrArray) devices_inhibited = g_ptr_array_new();
 	g_autoptr(GPtrArray) devices_no_support = g_ptr_array_new();
 	g_autoptr(GPtrArray) devices_no_upgrades = g_ptr_array_new();
 
@@ -663,10 +662,6 @@ fu_util_get_updates(FuUtilPrivate *priv, gchar **values, GError **error)
 			g_ptr_array_add(devices_no_support, dev);
 			continue;
 		}
-		if (fwupd_device_has_flag(dev, FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN)) {
-			g_ptr_array_add(devices_inhibited, dev);
-			continue;
-		}
 
 		/* get the releases for this device and filter for validity */
 		rels = fu_engine_get_upgrades(priv->engine,
@@ -703,16 +698,6 @@ fu_util_get_updates(FuUtilPrivate *priv, gchar **values, GError **error)
 		for (guint i = 0; i < devices_no_upgrades->len; i++) {
 			FwupdDevice *dev = g_ptr_array_index(devices_no_upgrades, i);
 			g_printerr(" • %s\n", fwupd_device_get_name(dev));
-		}
-	}
-	if (devices_inhibited->len > 0) {
-		/* TRANSLATORS: the device has a reason it can't update, e.g. laptop lid closed */
-		g_printerr("%s\n", _("Devices not currently updatable:"));
-		for (guint i = 0; i < devices_inhibited->len; i++) {
-			FwupdDevice *dev = g_ptr_array_index(devices_inhibited, i);
-			g_printerr(" • %s — %s\n",
-				   fwupd_device_get_name(dev),
-				   fwupd_device_get_update_error(dev));
 		}
 	}
 
@@ -3743,7 +3728,7 @@ main(int argc, char *argv[])
 		    priv->request,
 		    FWUPD_FEATURE_FLAG_DETACH_ACTION | FWUPD_FEATURE_FLAG_SWITCH_BRANCH |
 			FWUPD_FEATURE_FLAG_FDE_WARNING | FWUPD_FEATURE_FLAG_UPDATE_ACTION |
-			FWUPD_FEATURE_FLAG_COMMUNITY_TEXT);
+			FWUPD_FEATURE_FLAG_COMMUNITY_TEXT | FWUPD_FEATURE_FLAG_SHOW_PROBLEMS);
 	}
 	fu_progressbar_set_interactive(priv->progressbar, priv->interactive);
 
