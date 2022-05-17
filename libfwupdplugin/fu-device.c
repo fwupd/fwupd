@@ -24,8 +24,6 @@
 #define FU_DEVICE_RETRY_OPEN_COUNT 5
 #define FU_DEVICE_RETRY_OPEN_DELAY 500 /* ms */
 
-#define FU_DEVICE_DEFAULT_BATTERY_THRESHOLD 10 /* % */
-
 /**
  * FuDevice:
  *
@@ -54,8 +52,6 @@ typedef struct {
 	GRWLock parent_guids_mutex;
 	GPtrArray *parent_physical_ids; /* (nullable) */
 	guint remove_delay;		/* ms */
-	guint battery_level;
-	guint battery_threshold;
 	guint request_cnts[FWUPD_REQUEST_KIND_LAST];
 	gint order;
 	guint priority;
@@ -93,8 +89,6 @@ typedef struct {
 
 enum {
 	PROP_0,
-	PROP_BATTERY_LEVEL,
-	PROP_BATTERY_THRESHOLD,
 	PROP_PHYSICAL_ID,
 	PROP_LOGICAL_ID,
 	PROP_BACKEND_ID,
@@ -117,12 +111,6 @@ fu_device_get_property(GObject *object, guint prop_id, GValue *value, GParamSpec
 	FuDevice *self = FU_DEVICE(object);
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 	switch (prop_id) {
-	case PROP_BATTERY_LEVEL:
-		g_value_set_uint(value, priv->battery_level);
-		break;
-	case PROP_BATTERY_THRESHOLD:
-		g_value_set_uint(value, priv->battery_threshold);
-		break;
 	case PROP_PHYSICAL_ID:
 		g_value_set_string(value, priv->physical_id);
 		break;
@@ -152,12 +140,6 @@ fu_device_set_property(GObject *object, guint prop_id, const GValue *value, GPar
 {
 	FuDevice *self = FU_DEVICE(object);
 	switch (prop_id) {
-	case PROP_BATTERY_LEVEL:
-		fu_device_set_battery_level(self, g_value_get_uint(value));
-		break;
-	case PROP_BATTERY_THRESHOLD:
-		fu_device_set_battery_threshold(self, g_value_get_uint(value));
-		break;
 	case PROP_PHYSICAL_ID:
 		fu_device_set_physical_id(self, g_value_get_string(value));
 		break;
@@ -3352,9 +3334,8 @@ fu_device_set_update_state(FuDevice *self, FwupdUpdateState update_state)
 static void
 fu_device_ensure_battery_inhibit(FuDevice *self)
 {
-	FuDevicePrivate *priv = GET_PRIVATE(self);
-	if (priv->battery_level == FU_BATTERY_VALUE_INVALID ||
-	    priv->battery_level >= fu_device_get_battery_threshold(self)) {
+	if (fu_device_get_battery_level(self) == FWUPD_BATTERY_LEVEL_INVALID ||
+	    fu_device_get_battery_level(self) >= fu_device_get_battery_threshold(self)) {
 		fu_device_uninhibit(self, "battery");
 		return;
 	}
@@ -3374,17 +3355,16 @@ fu_device_ensure_battery_inhibit(FuDevice *self)
 guint
 fu_device_get_battery_level(FuDevice *self)
 {
-	FuDevicePrivate *priv = GET_PRIVATE(self);
-	g_return_val_if_fail(FU_IS_DEVICE(self), FU_BATTERY_VALUE_INVALID);
+	g_return_val_if_fail(FU_IS_DEVICE(self), FWUPD_BATTERY_LEVEL_INVALID);
 
 	/* use the parent if the child is unset */
 	if (fu_device_has_internal_flag(self, FU_DEVICE_INTERNAL_FLAG_USE_PARENT_FOR_BATTERY) &&
-	    priv->battery_level == FU_BATTERY_VALUE_INVALID) {
+	    fu_device_get_battery_level(self) == FWUPD_BATTERY_LEVEL_INVALID) {
 		FuDevice *parent = fu_device_get_parent(self);
 		if (parent != NULL)
 			return fu_device_get_battery_level(parent);
 	}
-	return priv->battery_level;
+	return fwupd_device_get_battery_level(FWUPD_DEVICE(self));
 }
 
 /**
@@ -3392,7 +3372,7 @@ fu_device_get_battery_level(FuDevice *self)
  * @self: a #FuDevice
  * @battery_level: the percentage value
  *
- * Sets the battery level, or %FU_BATTERY_VALUE_INVALID.
+ * Sets the battery level, or %FWUPD_BATTERY_LEVEL_INVALID.
  *
  * Setting this allows fwupd to show a warning if the device change is too low
  * to perform the update.
@@ -3402,13 +3382,9 @@ fu_device_get_battery_level(FuDevice *self)
 void
 fu_device_set_battery_level(FuDevice *self, guint battery_level)
 {
-	FuDevicePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FU_IS_DEVICE(self));
-	g_return_if_fail(battery_level <= FU_BATTERY_VALUE_INVALID);
-	if (priv->battery_level == battery_level)
-		return;
-	priv->battery_level = battery_level;
-	g_object_notify(G_OBJECT(self), "battery-level");
+	g_return_if_fail(battery_level <= FWUPD_BATTERY_LEVEL_INVALID);
+	fwupd_device_set_battery_level(FWUPD_DEVICE(self), battery_level);
 	fu_device_ensure_battery_inhibit(self);
 }
 
@@ -3429,22 +3405,16 @@ fu_device_set_battery_level(FuDevice *self, guint battery_level)
 guint
 fu_device_get_battery_threshold(FuDevice *self)
 {
-	FuDevicePrivate *priv = GET_PRIVATE(self);
-	g_return_val_if_fail(FU_IS_DEVICE(self), FU_BATTERY_VALUE_INVALID);
+	g_return_val_if_fail(FU_IS_DEVICE(self), FWUPD_BATTERY_LEVEL_INVALID);
 
 	/* use the parent if the child is unset */
 	if (fu_device_has_internal_flag(self, FU_DEVICE_INTERNAL_FLAG_USE_PARENT_FOR_BATTERY) &&
-	    priv->battery_threshold == FU_BATTERY_VALUE_INVALID) {
+	    fwupd_device_get_battery_threshold(FWUPD_DEVICE(self)) == FWUPD_BATTERY_LEVEL_INVALID) {
 		FuDevice *parent = fu_device_get_parent(self);
 		if (parent != NULL)
 			return fu_device_get_battery_threshold(parent);
 	}
-
-	/* default value */
-	if (priv->battery_threshold == FU_BATTERY_VALUE_INVALID)
-		return FU_DEVICE_DEFAULT_BATTERY_THRESHOLD;
-
-	return priv->battery_threshold;
+	return fwupd_device_get_battery_threshold(FWUPD_DEVICE(self));
 }
 
 /**
@@ -3452,7 +3422,7 @@ fu_device_get_battery_threshold(FuDevice *self)
  * @self: a #FuDevice
  * @battery_threshold: the percentage value
  *
- * Sets the battery level, or %FU_BATTERY_VALUE_INVALID for the default.
+ * Sets the battery level, or %FWUPD_BATTERY_LEVEL_INVALID for the default.
  *
  * Setting this allows fwupd to show a warning if the device change is too low
  * to perform the update.
@@ -3462,13 +3432,9 @@ fu_device_get_battery_threshold(FuDevice *self)
 void
 fu_device_set_battery_threshold(FuDevice *self, guint battery_threshold)
 {
-	FuDevicePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FU_IS_DEVICE(self));
-	g_return_if_fail(battery_threshold <= FU_BATTERY_VALUE_INVALID);
-	if (priv->battery_threshold == battery_threshold)
-		return;
-	priv->battery_threshold = battery_threshold;
-	g_object_notify(G_OBJECT(self), "battery-threshold");
+	g_return_if_fail(battery_threshold <= FWUPD_BATTERY_LEVEL_INVALID);
+	fwupd_device_set_battery_threshold(FWUPD_DEVICE(self), battery_threshold);
 	fu_device_ensure_battery_inhibit(self);
 }
 
@@ -3514,13 +3480,6 @@ fu_device_add_string(FuDevice *self, guint idt, GString *str)
 		fu_common_string_append_ku(str, idt + 1, "RemoveDelay", priv->remove_delay);
 	if (priv->custom_flags != NULL)
 		fu_common_string_append_kv(str, idt + 1, "CustomFlags", priv->custom_flags);
-	if (priv->battery_level != FU_BATTERY_VALUE_INVALID)
-		fu_common_string_append_ku(str, idt + 1, "BatteryLevel", priv->battery_level);
-	if (priv->battery_threshold != FU_BATTERY_VALUE_INVALID)
-		fu_common_string_append_ku(str,
-					   idt + 1,
-					   "BatteryThreshold",
-					   priv->battery_threshold);
 	if (priv->firmware_gtype != G_TYPE_INVALID) {
 		fu_common_string_append_kv(str,
 					   idt + 1,
@@ -5262,38 +5221,6 @@ fu_device_class_init(FuDeviceClass *klass)
 	g_object_class_install_property(object_class, PROP_BACKEND_ID, pspec);
 
 	/**
-	 * FuDevice:battery-level:
-	 *
-	 * The device battery level in percent.
-	 *
-	 * Since: 1.5.8
-	 */
-	pspec = g_param_spec_uint("battery-level",
-				  NULL,
-				  NULL,
-				  0,
-				  FU_BATTERY_VALUE_INVALID,
-				  FU_BATTERY_VALUE_INVALID,
-				  G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
-	g_object_class_install_property(object_class, PROP_BATTERY_LEVEL, pspec);
-
-	/**
-	 * FuDevice:battery-threshold:
-	 *
-	 * The device battery threshold in percent.
-	 *
-	 * Since: 1.5.8
-	 */
-	pspec = g_param_spec_uint("battery-threshold",
-				  NULL,
-				  NULL,
-				  0,
-				  FU_BATTERY_VALUE_INVALID,
-				  FU_BATTERY_VALUE_INVALID,
-				  G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
-	g_object_class_install_property(object_class, PROP_BATTERY_THRESHOLD, pspec);
-
-	/**
 	 * FuDevice:context:
 	 *
 	 * The #FuContext to use.
@@ -5341,8 +5268,6 @@ fu_device_init(FuDevice *self)
 {
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 	priv->order = G_MAXINT;
-	priv->battery_level = FU_BATTERY_VALUE_INVALID;
-	priv->battery_threshold = FU_BATTERY_VALUE_INVALID;
 	priv->parent_guids = g_ptr_array_new_with_free_func(g_free);
 	priv->possible_plugins = g_ptr_array_new_with_free_func(g_free);
 	priv->retry_recs = g_ptr_array_new_with_free_func(g_free);

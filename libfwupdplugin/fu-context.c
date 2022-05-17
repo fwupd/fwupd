@@ -674,7 +674,7 @@ fu_context_set_lid_state(FuContext *self, FuLidState lid_state)
  *
  * Gets the system battery level in percent.
  *
- * Returns: percentage value, or %FU_BATTERY_VALUE_INVALID for unknown
+ * Returns: percentage value, or %FWUPD_BATTERY_LEVEL_INVALID for unknown
  *
  * Since: 1.6.0
  **/
@@ -700,7 +700,7 @@ fu_context_set_battery_level(FuContext *self, guint battery_level)
 {
 	FuContextPrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FU_IS_CONTEXT(self));
-	g_return_if_fail(battery_level <= FU_BATTERY_VALUE_INVALID);
+	g_return_if_fail(battery_level <= FWUPD_BATTERY_LEVEL_INVALID);
 	if (priv->battery_level == battery_level)
 		return;
 	priv->battery_level = battery_level;
@@ -714,7 +714,7 @@ fu_context_set_battery_level(FuContext *self, guint battery_level)
  *
  * Gets the system battery threshold in percent.
  *
- * Returns: percentage value, or %FU_BATTERY_VALUE_INVALID for unknown
+ * Returns: percentage value, or %FWUPD_BATTERY_LEVEL_INVALID for unknown
  *
  * Since: 1.6.0
  **/
@@ -740,7 +740,7 @@ fu_context_set_battery_threshold(FuContext *self, guint battery_threshold)
 {
 	FuContextPrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FU_IS_CONTEXT(self));
-	g_return_if_fail(battery_threshold <= FU_BATTERY_VALUE_INVALID);
+	g_return_if_fail(battery_threshold <= FWUPD_BATTERY_LEVEL_INVALID);
 	if (priv->battery_threshold == battery_threshold)
 		return;
 	priv->battery_threshold = battery_threshold;
@@ -867,8 +867,8 @@ fu_context_class_init(FuContextClass *klass)
 				  NULL,
 				  NULL,
 				  0,
-				  FU_BATTERY_VALUE_INVALID,
-				  FU_BATTERY_VALUE_INVALID,
+				  FWUPD_BATTERY_LEVEL_INVALID,
+				  FWUPD_BATTERY_LEVEL_INVALID,
 				  G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_BATTERY_LEVEL, pspec);
 
@@ -883,8 +883,8 @@ fu_context_class_init(FuContextClass *klass)
 				  NULL,
 				  NULL,
 				  0,
-				  FU_BATTERY_VALUE_INVALID,
-				  FU_BATTERY_VALUE_INVALID,
+				  FWUPD_BATTERY_LEVEL_INVALID,
+				  FWUPD_BATTERY_LEVEL_INVALID,
 				  G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_BATTERY_THRESHOLD, pspec);
 
@@ -915,8 +915,8 @@ static void
 fu_context_init(FuContext *self)
 {
 	FuContextPrivate *priv = GET_PRIVATE(self);
-	priv->battery_level = FU_BATTERY_VALUE_INVALID;
-	priv->battery_threshold = FU_BATTERY_VALUE_INVALID;
+	priv->battery_level = FWUPD_BATTERY_LEVEL_INVALID;
+	priv->battery_threshold = FWUPD_BATTERY_LEVEL_INVALID;
 	priv->smbios = fu_smbios_new();
 	priv->hwids = fu_hwids_new();
 	priv->hwid_flags = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);

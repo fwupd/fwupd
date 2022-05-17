@@ -1454,6 +1454,25 @@ fu_util_device_to_string(FwupdDevice *dev, guint idt)
 			}
 		}
 	}
+
+	/* battery */
+	if (fwupd_device_get_battery_level(dev) != FWUPD_BATTERY_LEVEL_INVALID &&
+	    fwupd_device_get_battery_threshold(dev) != FWUPD_BATTERY_LEVEL_INVALID) {
+		g_autofree gchar *val = NULL;
+		/* TRANSLATORS: first percentage is current value, 2nd percentage is the lowest
+		 * limit the firmware update is allowed for the update to happen */
+		val = g_strdup_printf(_("%u%% (threshold %u%%)"),
+				      fwupd_device_get_battery_level(dev),
+				      fwupd_device_get_battery_threshold(dev));
+		/* TRANSLATORS: refers to the battery inside the peripheral device, e.g. mouse */
+		fu_common_string_append_kv(str, idt + 1, _("Battery"), val);
+	} else if (fwupd_device_get_battery_level(dev) != FWUPD_BATTERY_LEVEL_INVALID) {
+		g_autofree gchar *val = NULL;
+		val = g_strdup_printf("%u%%", fwupd_device_get_battery_level(dev));
+		/* TRANSLATORS: refers to the battery inside the peripheral device, e.g. mouse */
+		fu_common_string_append_kv(str, idt + 1, _("Battery"), val);
+	}
+
 	tmp = fwupd_device_get_update_error(dev);
 	if (tmp != NULL) {
 		g_autofree gchar *color = fu_util_term_format(tmp, FU_UTIL_TERM_COLOR_RED);

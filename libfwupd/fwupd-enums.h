@@ -915,6 +915,14 @@ typedef enum {
 	FWUPD_VERSION_FORMAT_LAST
 } FwupdVersionFormat;
 
+/**
+ * FWUPD_BATTERY_LEVEL_INVALID:
+ *
+ * This value signifies the battery level is either unset, or the value cannot
+ * be discovered.
+ */
+#define FWUPD_BATTERY_LEVEL_INVALID 101
+
 const gchar *
 fwupd_status_to_string(FwupdStatus status);
 FwupdStatus
