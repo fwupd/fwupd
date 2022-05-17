@@ -1246,6 +1246,9 @@
     <distro id="void">
       <package variant="x86_64" />
     </distro>
+    <distro id="fedora">
+      <package variant="x86_64" />
+    </distro>
   </dependency>
   <!-- These are needed for gi-docgen -->
   <dependency type="build" id="python3-pygments">
