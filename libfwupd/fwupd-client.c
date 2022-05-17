@@ -26,7 +26,7 @@
 #include "fwupd-common-private.h"
 #include "fwupd-deprecated.h"
 #include "fwupd-device-private.h"
-#include "fwupd-enums.h"
+#include "fwupd-enums-private.h"
 #include "fwupd-error.h"
 #include "fwupd-plugin-private.h"
 #include "fwupd-release-private.h"
@@ -58,6 +58,8 @@ typedef struct {
 	gboolean tainted;
 	gboolean interactive;
 	guint percentage;
+	guint32 battery_level;
+	guint32 battery_threshold;
 	GMutex idle_mutex; /* for @idle_id and @idle_sources */
 	guint idle_id;
 	GPtrArray *idle_sources; /* element-type FwupdClientContextHelper */
@@ -110,6 +112,8 @@ enum {
 	PROP_HOST_BKC,
 	PROP_INTERACTIVE,
 	PROP_ONLY_TRUSTED,
+	PROP_BATTERY_LEVEL,
+	PROP_BATTERY_THRESHOLD,
 	PROP_LAST
 };
 
@@ -356,6 +360,26 @@ fwupd_client_set_percentage(FwupdClient *self, guint percentage)
 }
 
 static void
+fwupd_client_set_battery_level(FwupdClient *self, guint32 battery_level)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE(self);
+	if (priv->battery_level == battery_level)
+		return;
+	priv->battery_level = battery_level;
+	g_object_notify(G_OBJECT(self), "battery-level");
+}
+
+static void
+fwupd_client_set_battery_threshold(FwupdClient *self, guint32 battery_threshold)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE(self);
+	if (priv->battery_threshold == battery_threshold)
+		return;
+	priv->battery_threshold = battery_threshold;
+	g_object_notify(G_OBJECT(self), "battery-threshold");
+}
+
+static void
 fwupd_client_properties_changed_cb(GDBusProxy *proxy,
 				   GVariant *changed_properties,
 				   const GStrv invalidated_properties,
@@ -393,6 +417,18 @@ fwupd_client_properties_changed_cb(GDBusProxy *proxy,
 		val = g_dbus_proxy_get_cached_property(proxy, "Percentage");
 		if (val != NULL)
 			fwupd_client_set_percentage(self, g_variant_get_uint32(val));
+	}
+	if (g_variant_dict_contains(dict, FWUPD_RESULT_KEY_BATTERY_LEVEL)) {
+		g_autoptr(GVariant) val = NULL;
+		val = g_dbus_proxy_get_cached_property(proxy, FWUPD_RESULT_KEY_BATTERY_LEVEL);
+		if (val != NULL)
+			fwupd_client_set_battery_level(self, g_variant_get_uint32(val));
+	}
+	if (g_variant_dict_contains(dict, FWUPD_RESULT_KEY_BATTERY_THRESHOLD)) {
+		g_autoptr(GVariant) val = NULL;
+		val = g_dbus_proxy_get_cached_property(proxy, FWUPD_RESULT_KEY_BATTERY_THRESHOLD);
+		if (val != NULL)
+			fwupd_client_set_battery_threshold(self, g_variant_get_uint32(val));
 	}
 	if (g_variant_dict_contains(dict, "DaemonVersion")) {
 		g_autoptr(GVariant) val = NULL;
@@ -3317,6 +3353,43 @@ fwupd_client_get_host_security_id(FwupdClient *self)
 }
 
 /**
+ * fwupd_client_get_battery_level:
+ * @self: a #FwupdClient
+ *
+ * Returns the system battery level.
+ *
+ * Returns: value in percent
+ *
+ * Since: 1.8.1
+ **/
+guint32
+fwupd_client_get_battery_level(FwupdClient *self)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_CLIENT(self), FWUPD_BATTERY_LEVEL_INVALID);
+	return priv->battery_level;
+}
+
+/**
+ * fwupd_client_get_battery_threshold:
+ * @self: a #FwupdClient
+ *
+ * Returns the system battery threshold under which a firmware update cannot be
+ * performed.
+ *
+ * Returns: value in percent
+ *
+ * Since: 1.8.1
+ **/
+guint32
+fwupd_client_get_battery_threshold(FwupdClient *self)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_CLIENT(self), FWUPD_BATTERY_LEVEL_INVALID);
+	return priv->battery_threshold;
+}
+
+/**
  * fwupd_client_get_status:
  * @self: a #FwupdClient
  *
@@ -5211,6 +5284,12 @@ fwupd_client_get_property(GObject *object, guint prop_id, GValue *value, GParamS
 	case PROP_INTERACTIVE:
 		g_value_set_boolean(value, priv->interactive);
 		break;
+	case PROP_BATTERY_LEVEL:
+		g_value_set_uint(value, priv->battery_level);
+		break;
+	case PROP_BATTERY_THRESHOLD:
+		g_value_set_uint(value, priv->battery_threshold);
+		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
 		break;
@@ -5229,6 +5308,12 @@ fwupd_client_set_property(GObject *object, guint prop_id, const GValue *value, G
 		break;
 	case PROP_PERCENTAGE:
 		priv->percentage = g_value_get_uint(value);
+		break;
+	case PROP_BATTERY_LEVEL:
+		fwupd_client_set_battery_level(self, g_value_get_uint(value));
+		break;
+	case PROP_BATTERY_THRESHOLD:
+		fwupd_client_set_battery_threshold(self, g_value_get_uint(value));
 		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
@@ -5530,6 +5615,38 @@ fwupd_client_class_init(FwupdClientClass *klass)
 				     TRUE,
 				     G_PARAM_READABLE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_ONLY_TRUSTED, pspec);
+
+	/**
+	 * FwupdClient:battery-level:
+	 *
+	 * The system battery level in percent.
+	 *
+	 * Since: 1.8.1
+	 */
+	pspec = g_param_spec_uint("battery-level",
+				  NULL,
+				  NULL,
+				  0,
+				  FWUPD_BATTERY_LEVEL_INVALID,
+				  FWUPD_BATTERY_LEVEL_INVALID,
+				  G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
+	g_object_class_install_property(object_class, PROP_BATTERY_LEVEL, pspec);
+
+	/**
+	 * FwupdClient:battery-threshold:
+	 *
+	 * The system battery threshold in percent.
+	 *
+	 * Since: 1.8.1
+	 */
+	pspec = g_param_spec_uint("battery-threshold",
+				  NULL,
+				  NULL,
+				  0,
+				  FWUPD_BATTERY_LEVEL_INVALID,
+				  FWUPD_BATTERY_LEVEL_INVALID,
+				  G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
+	g_object_class_install_property(object_class, PROP_BATTERY_THRESHOLD, pspec);
 }
 
 static void
@@ -5542,6 +5659,8 @@ fwupd_client_init(FwupdClient *self)
 	    g_ptr_array_new_with_free_func((GDestroyNotify)fwupd_client_context_helper_free);
 	priv->proxy_resolver = g_proxy_resolver_get_default();
 	priv->hints = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
+	priv->battery_level = FWUPD_BATTERY_LEVEL_INVALID;
+	priv->battery_threshold = FWUPD_BATTERY_LEVEL_INVALID;
 
 	/* we get this one for free */
 	fwupd_client_add_hint(self, "locale", g_getenv("LANG"));

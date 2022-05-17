@@ -381,6 +381,10 @@ const gchar *
 fwupd_client_get_host_machine_id(FwupdClient *self);
 const gchar *
 fwupd_client_get_host_security_id(FwupdClient *self);
+guint32
+fwupd_client_get_battery_level(FwupdClient *self);
+guint32
+fwupd_client_get_battery_threshold(FwupdClient *self);
 
 void
 fwupd_client_get_remotes_async(FwupdClient *self,
