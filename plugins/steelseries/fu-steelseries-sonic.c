@@ -76,6 +76,7 @@ const guint32 STEELSERIES_SONIC_FIRMWARE_SIZE[] = {0x9000U, 0x4000U, 0x12000U};
 const gchar *STEELSERIES_SONIC_FIRMWARE_ID[] = {"app-nordic.bin",
 						"app-holtek.bin",
 						"mouse-app.bin"};
+const guint STEELSERIES_SONIC_WRITE_PROGRESS_STEP_VALUE[][2] = {{5, 95}, {11, 89}, {3, 97}};
 
 struct _FuSteelseriesSonic {
 	FuSteelseriesDevice parent_instance;
@@ -664,8 +665,12 @@ fu_steelseries_sonic_write_chip(FuDevice *device,
 	g_autoptr(GBytes) blob = NULL;
 
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 5);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 95);
+	fu_progress_add_step(progress,
+			     FWUPD_STATUS_DEVICE_ERASE,
+			     STEELSERIES_SONIC_WRITE_PROGRESS_STEP_VALUE[chip][0]);
+	fu_progress_add_step(progress,
+			     FWUPD_STATUS_DEVICE_WRITE,
+			     STEELSERIES_SONIC_WRITE_PROGRESS_STEP_VALUE[chip][1]);
 
 	fw = fu_firmware_get_image_by_id(firmware, STEELSERIES_SONIC_FIRMWARE_ID[chip], error);
 	if (fw == NULL)
@@ -841,11 +846,11 @@ fu_steelseries_sonic_write_firmware(FuDevice *device,
 	SteelseriesSonicChip chip;
 
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 36);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 27);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 18);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 34);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 30);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 17);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 7);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 9);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 8);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 3);
 
 	/* mouse */
@@ -1001,9 +1006,9 @@ fu_steelseries_sonic_set_progress(FuDevice *self, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0); /* detach */
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 98);	/* write */
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 2); /* attach */
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 0);	/* reload */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 92);	/* write */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 5); /* attach */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 3);	/* reload */
 }
 
 static void
@@ -1030,8 +1035,8 @@ fu_steelseries_sonic_init(FuSteelseriesSonic *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID);
 	fu_device_add_protocol(FU_DEVICE(self), "com.steelseries.sonic");
-	fu_device_set_install_duration(FU_DEVICE(self), 135); /* 2 min 15 s */
-	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_USER_REPLUG);
+	fu_device_set_install_duration(FU_DEVICE(self), 120);				 /* 2 min */
+	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_USER_REPLUG); /* 40 s */
 	fu_device_set_battery_level(FU_DEVICE(self), FWUPD_BATTERY_LEVEL_INVALID);
 	fu_device_set_battery_threshold(FU_DEVICE(self), 20);
 }
