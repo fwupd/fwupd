@@ -2,7 +2,7 @@
 <dependencies>
   <dependency type="build" id="pesign">
     <distro id="fedora">
-      <package />
+      <package variant="x86_64" />
     </distro>
   </dependency>
   <dependency type="build" id="abigail-tools">
@@ -12,7 +12,7 @@
   </dependency>
   <dependency type="build" id="bash">
     <distro id="void">
-      <package />
+      <package variant="x86_64" />
     </distro>
   </dependency>
   <dependency type="build" id="bash-completion">
@@ -22,7 +22,7 @@
       <package variant="i386" />
     </distro>
     <distro id="fedora">
-      <package />
+      <package variant="x86_64" />
     </distro>
     <distro id="ubuntu">
       <package variant="x86_64" />
@@ -35,7 +35,7 @@
       <package variant="i386" />
     </distro>
     <distro id="fedora">
-      <package />
+      <package variant="x86_64" />
     </distro>
     <distro id="ubuntu">
       <package variant="x86_64" />
@@ -43,12 +43,12 @@
   </dependency>
   <dependency type="build" id="base-devel">
     <distro id="arch">
-      <package />
+      <package variant="x86_64" />
     </distro>
   </dependency>
   <dependency type="build" id="noto-fonts-cjk">
     <distro id="arch">
-      <package />
+      <package variant="x86_64" />
     </distro>
   </dependency>
   <dependency type="build" id="binutils-multiarch">
@@ -58,10 +58,10 @@
   </dependency>
   <dependency type="build" id="ca-certificates">
     <distro id="centos">
-      <package />
+      <package variant="x86_64" />
     </distro>
     <distro id="fedora">
-      <package />
+      <package variant="x86_64" />
       <package variant="mingw64" />
     </distro>
     <distro id="debian">
@@ -95,7 +95,7 @@
   </dependency>
   <dependency type="build" id="gcc">
     <distro id="void">
-      <package />
+      <package variant="x86_64" />
     </distro>
     <distro id="fedora">
       <package variant="mingw64">mingw64-gcc</package>
@@ -261,10 +261,10 @@
   </dependency>
   <dependency type="build" id="dbus-x11">
     <distro id="centos">
-      <package />
+      <package variant="x86_64" />
     </distro>
     <distro id="fedora">
-      <package />
+      <package variant="x86_64" />
     </distro>
     <distro id="debian">
       <package variant="x86_64" />
@@ -276,10 +276,10 @@
   </dependency>
   <dependency type="build" id="dconf">
     <distro id="centos">
-      <package />
+      <package variant="x86_64" />
     </distro>
     <distro id="fedora">
-      <package />
+      <package variant="x86_64" />
     </distro>
   </dependency>
   <dependency type="build" id="dh-strip-nondeterminism">
@@ -327,10 +327,10 @@
   </dependency>
   <dependency type="build" id="fontconfig">
     <distro id="centos">
-      <package />
+      <package variant="x86_64" />
     </distro>
     <distro id="fedora">
-      <package />
+      <package variant="x86_64" />
     </distro>
     <distro id="debian">
       <control />
@@ -362,15 +362,15 @@
   </dependency>
   <dependency type="build" id="gcab">
     <distro id="centos">
-      <package />
+      <package variant="x86_64" />
     </distro>
     <distro id="fedora">
-      <package />
+      <package variant="x86_64" />
       <!-- need native until meson includes https://github.com/mesonbuild/meson/pull/10291 -->
       <package variant="mingw64">gcab</package>
     </distro>
     <distro id="void">
-      <package />
+      <package variant="x86_64" />
     </distro>
     <distro id="debian">
       <control />
@@ -385,16 +385,16 @@
   </dependency>
   <dependency type="build" id="gettext">
     <distro id="centos">
-      <package />
+      <package variant="x86_64" />
     </distro>
     <distro id="fedora">
-      <package />
+      <package variant="x86_64" />
       <!-- need native too until meson fixes https://github.com/mesonbuild/meson/issues/10376 -->
       <package variant="mingw64">gettext</package>
       <package variant="mingw64">mingw64-gettext</package>
     </distro>
     <distro id="void">
-      <package />
+      <package variant="x86_64" />
     </distro>
     <distro id="debian">
       <control>
@@ -413,10 +413,10 @@
   </dependency>
   <dependency type="build" id="gnupg2">
     <distro id="centos">
-      <package />
+      <package variant="x86_64" />
     </distro>
     <distro id="fedora">
-      <package />
+      <package variant="x86_64" />
     </distro>
   </dependency>
   <dependency type="build" id="gnu-efi-devel">
@@ -424,10 +424,10 @@
       <package variant="x86_64">gnu-efi-libs</package>
     </distro>
     <distro id="centos">
-      <package />
+      <package variant="x86_64" />
     </distro>
     <distro id="fedora">
-      <package />
+      <package variant="x86_64" />
     </distro>
     <distro id="void">
       <package variant="x86_64">gnu-efi-libs</package>
@@ -455,17 +455,17 @@
   </dependency>
   <dependency type="build" id="git">
     <distro id="arch">
-      <package />
+      <package variant="x86_64" />
     </distro>
     <distro id="centos">
-      <package />
+      <package variant="x86_64" />
     </distro>
     <distro id="fedora">
-      <package />
+      <package variant="x86_64" />
       <package variant="mingw64" />
     </distro>
     <distro id="void">
-      <package />
+      <package variant="x86_64" />
     </distro>
     <distro id="debian">
       <package variant="x86_64" />
@@ -520,7 +520,7 @@
   </dependency>
   <dependency type="build" id="gobject-introspection">
     <distro id="arch">
-      <package />
+      <package variant="x86_64" />
     </distro>
     <distro id="centos">
       <package variant="x86_64">gobject-introspection-devel</package>
@@ -529,7 +529,7 @@
       <package variant="x86_64">gobject-introspection-devel</package>
     </distro>
     <distro id="void">
-      <package />
+      <package variant="x86_64" />
     </distro>
     <distro id="debian">
       <control />
@@ -543,7 +543,7 @@
   </dependency>
   <dependency type="build" id="gnome-desktop-testing">
     <distro id="fedora">
-      <package />
+      <package variant="x86_64" />
     </distro>
     <distro id="debian">
       <package variant="x86_64" />
@@ -619,10 +619,10 @@
   </dependency>
   <dependency type="build" id="jq">
     <distro id="centos">
-      <package />
+      <package variant="x86_64" />
     </distro>
     <distro id="fedora">
-      <package />
+      <package variant="x86_64" />
       <package variant="mingw64" />
     </distro>
     <distro id="ubuntu">
@@ -964,7 +964,7 @@
   </dependency>
   <dependency type="build" id="libstemmer-0">
     <distro id="centos">
-      <package />
+      <package variant="x86_64" />
     </distro>
   </dependency>
   <dependency type="build" id="libumockdev-dev">
@@ -1004,13 +1004,13 @@
   </dependency>
   <dependency type="build" id="meson">
     <distro id="arch">
-      <package />
+      <package variant="x86_64" />
     </distro>
     <distro id="centos">
-      <package />
+      <package variant="x86_64" />
     </distro>
     <distro id="fedora">
-      <package />
+      <package variant="x86_64" />
       <package variant="mingw64" />
     </distro>
     <distro id="debian">
@@ -1024,12 +1024,12 @@
       <package variant="x86_64" />
     </distro>
     <distro id="void">
-      <package />
+      <package variant="x86_64" />
     </distro>
   </dependency>
   <dependency type="build" id="mingw-w64-tools">
     <distro id="fedora">
-      <package />
+      <package variant="x86_64" />
     </distro>
     <distro id="debian">
       <control>
@@ -1085,7 +1085,7 @@
       <package variant="mingw64">mingw64-pkg-config</package>
     </distro>
     <distro id="void">
-      <package />
+      <package variant="x86_64" />
     </distro>
   </dependency>
   <dependency type="build" id="policykit-1">
@@ -1210,7 +1210,7 @@
   </dependency>
   <dependency type="build" id="python34-pip">
     <distro id="centos">
-      <package />
+      <package variant="x86_64" />
     </distro>
   </dependency>
   <dependency type="build" id="python3">
@@ -1218,10 +1218,10 @@
       <package variant="x86_64">python34-devel</package>
     </distro>
     <distro id="fedora">
-      <package />
+      <package variant="x86_64" />
     </distro>
     <distro id="void">
-      <package />
+      <package variant="x86_64" />
     </distro>
   </dependency>
   <dependency type="build" id="python3-gi-cairo">
@@ -1244,7 +1244,7 @@
   </dependency>
   <dependency type="build" id="gi-docgen">
     <distro id="void">
-      <package />
+      <package variant="x86_64" />
     </distro>
   </dependency>
   <!-- These are needed for gi-docgen -->
@@ -1264,7 +1264,7 @@
       <package variant="x86_64" />
     </distro>
     <distro id="fedora">
-      <package />
+      <package variant="x86_64" />
     </distro>
   </dependency>
   <dependency type="build" id="python3-toml">
@@ -1274,7 +1274,7 @@
       <package variant="i386" />
     </distro>
     <distro id="fedora">
-      <package />
+      <package variant="x86_64" />
     </distro>
     <distro id="ubuntu">
       <package variant="x86_64" />
@@ -1282,7 +1282,7 @@
   </dependency>
   <dependency type="build" id="python3-markdown">
     <distro id="fedora">
-      <package />
+      <package variant="x86_64" />
     </distro>
     <distro id="ubuntu">
       <package variant="x86_64" />
@@ -1295,7 +1295,7 @@
       <package variant="i386" />
     </distro>
     <distro id="fedora">
-      <package />
+      <package variant="x86_64" />
     </distro>
     <distro id="ubuntu">
       <package variant="x86_64" />
@@ -1306,15 +1306,15 @@
       <package variant="x86_64">python-gobject</package>
     </distro>
     <distro id="fedora">
-      <package />
+      <package variant="x86_64" />
     </distro>
     <distro id="void">
-      <package />
+      <package variant="x86_64" />
     </distro>
   </dependency>
   <dependency type="build" id="python3-requests">
     <distro id="fedora">
-      <package />
+      <package variant="x86_64" />
     </distro>
     <distro id="debian">
       <control />
@@ -1333,18 +1333,18 @@
   </dependency>
   <dependency type="build" id="rpm-build">
     <distro id="centos">
-      <package />
+      <package variant="x86_64" />
     </distro>
     <distro id="fedora">
-      <package />
+      <package variant="x86_64" />
     </distro>
   </dependency>
   <dependency type="build" id="redhat-rpm-config">
     <distro id="centos">
-      <package />
+      <package variant="x86_64" />
     </distro>
     <distro id="fedora">
-      <package />
+      <package variant="x86_64" />
     </distro>
   </dependency>
   <dependency type="build" id="libsqlite3-dev">
@@ -1376,10 +1376,10 @@
   </dependency>
   <dependency type="build" id="systemd">
     <distro id="centos">
-      <package />
+      <package variant="x86_64" />
     </distro>
     <distro id="fedora">
-      <package />
+      <package variant="x86_64" />
     </distro>
     <distro id="debian">
       <control>
@@ -1416,13 +1416,13 @@
   </dependency>
   <dependency type="build" id="shared-mime-info">
     <distro id="arch">
-      <package />
+      <package variant="x86_64" />
     </distro>
     <distro id="centos">
-      <package />
+      <package variant="x86_64" />
     </distro>
     <distro id="fedora">
-      <package />
+      <package variant="x86_64" />
     </distro>
     <distro id="debian">
       <control />
@@ -1458,7 +1458,7 @@
   </dependency>
   <dependency type="build" id="umockdev">
     <distro id="arch">
-      <package />
+      <package variant="x86_64" />
     </distro>
     <distro id="centos">
       <package variant="x86_64">umockdev-devel</package>
@@ -1502,7 +1502,7 @@
   </dependency>
   <dependency type="build" id="valgrind">
     <distro id="arch">
-      <package />
+      <package variant="x86_64" />
     </distro>
     <distro id="centos">
       <package variant="x86_64">valgrind-devel</package>
@@ -1554,15 +1554,15 @@
   </dependency>
   <dependency type="build" id="wget">
     <distro id="centos">
-      <package />
+      <package variant="x86_64" />
     </distro>
   </dependency>
   <dependency type="build" id="xz">
     <distro id="centos">
-      <package />
+      <package variant="x86_64" />
     </distro>
     <distro id="fedora">
-      <package />
+      <package variant="x86_64" />
     </distro>
   </dependency>
   <dependency type="build" id="libtss2-dev">
@@ -1596,7 +1596,7 @@
   </dependency>
   <dependency type="build" id="libgcrypt-devel">
     <distro id="fedora">
-      <package />
+      <package variant="x86_64" />
     </distro>
   </dependency>
   <dependency type="build" id="shellcheck">
@@ -1638,7 +1638,7 @@
       <package variant="x86_64" />
     </distro>
     <distro id="fedora">
-      <package />
+      <package variant="x86_64" />
     </distro>
     <distro id="void">
       <package variant="x86_64">protobuf</package>
