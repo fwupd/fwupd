@@ -14,6 +14,9 @@
 #define STEELSERIES_FIZZ_FILESYSTEM_RECEIVER 0x01U
 #define STEELSERIES_FIZZ_FILESYSTEM_MOUSE    0x02U
 
+#define STEELSERIES_FIZZ_RESET_MODE_NORMAL     0x00U
+#define STEELSERIES_FIZZ_RESET_MODE_BOOTLOADER 0x01U
+
 #define STEELSERIES_FIZZ_RECEIVER_FILESYSTEM_MAIN_BOOT_ID	  0x01U
 #define STEELSERIES_FIZZ_RECEIVER_FILESYSTEM_FSDATA_FILE_ID	  0x02U
 #define STEELSERIES_FIZZ_RECEIVER_FILESYSTEM_FACTORY_SETTINGS_ID  0x03U
@@ -508,9 +511,8 @@ static gboolean
 fu_steelseries_fizz_attach(FuDevice *device, FuProgress *progress, GError **error)
 {
 	g_autoptr(GError) error_local = NULL;
-	guint8 mode = 0x00U; /* normal */
 
-	if (!fu_steelseries_fizz_reset(device, mode, &error_local))
+	if (!fu_steelseries_fizz_reset(device, STEELSERIES_FIZZ_RESET_MODE_NORMAL, &error_local))
 		g_warning("failed to reset: %s", error_local->message);
 
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
@@ -531,6 +533,10 @@ fu_steelseries_fizz_setup(FuDevice *device, GError **error)
 	/* FuUsbDevice->setup */
 	if (!FU_DEVICE_CLASS(fu_steelseries_fizz_parent_class)->setup(device, error))
 		return FALSE;
+
+	/* skip if in bootloader mode */
+	if (fu_device_has_private_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER))
+		return TRUE;
 
 	version = fu_steelseries_fizz_version(device, error);
 	if (version == NULL) {

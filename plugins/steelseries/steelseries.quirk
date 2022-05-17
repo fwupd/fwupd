@@ -21,6 +21,14 @@ CounterpartGuid = USB\VID_1038&PID_1839
 FirmwareSize = 0x23000
 Flags = is-receiver
 
+[USB\VID_1038&PID_1839]
+Plugin = steelseries
+GType = FuSteelseriesFizz
+Name = Aerox 3 Wireless USB Receiver bootloader
+Icon = usb-receiver
+FirmwareSize = 0x23000
+Flags = is-bootloader,is-receiver,~usable-during-update
+
 [USB\VID_1038&PID_183A]
 Plugin = steelseries
 GType = FuSteelseriesFizz
@@ -28,6 +36,14 @@ Name = Aerox 3 Wireless Mouse
 Icon = input-mouse
 CounterpartGuid = USB\VID_1038&PID_183B
 FirmwareSize = 0x27000
+
+[USB\VID_1038&PID_183B]
+Plugin = steelseries
+GType = FuSteelseriesFizz
+Name = Aerox 3 Wireless Mouse bootloader
+Icon = input-mouse
+FirmwareSize = 0x27000
+Flags = is-bootloader,~usable-during-update
 
 # Stratus Duo RX
 [USB\VID_1038&PID_1430]
