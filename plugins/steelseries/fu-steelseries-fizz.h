@@ -23,6 +23,8 @@ fu_steelseries_fizz_new(FuDevice *self);
 #define STEELSERIES_FIZZ_FILESYSTEM_RECEIVER 0x01U
 #define STEELSERIES_FIZZ_FILESYSTEM_MOUSE    0x02U
 
+#define STEELSERIES_FIZZ_CONNECTION_STATUS_NOT_CONNECTED 0x00U
+
 #define STEELSERIES_FIZZ_RESET_MODE_NORMAL     0x00U
 #define STEELSERIES_FIZZ_RESET_MODE_BOOTLOADER 0x01U
 
@@ -108,3 +110,5 @@ fu_steelseries_fizz_write_file(FuDevice *device,
 			       GError **error);
 gboolean
 fu_steelseries_fizz_paired_status(FuDevice *device, guint8 *status, GError **error);
+gboolean
+fu_steelseries_fizz_connection_status(FuDevice *device, guint8 *status, GError **error);

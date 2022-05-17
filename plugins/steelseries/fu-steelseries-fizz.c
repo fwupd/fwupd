@@ -31,6 +31,9 @@
 #define STEELSERIES_FIZZ_PAIRED_STATUS_COMMAND_OFFSET 0x00U
 #define STEELSERIES_FIZZ_PAIRED_STATUS_STATUS_OFFSET  0x01U
 
+#define STEELSERIES_FIZZ_CONNECTION_STATUS_COMMAND_OFFSET 0x00U
+#define STEELSERIES_FIZZ_CONNECTION_STATUS_STATUS_OFFSET  0x01U
+
 #define STEELSERIES_FIZZ_WRITE_ACCESS_FILE_COMMAND_OFFSET    0x00U
 #define STEELSERIES_FIZZ_WRITE_ACCESS_FILE_FILESYSTEM_OFFSET 0x01U
 #define STEELSERIES_FIZZ_WRITE_ACCESS_FILE_ID_OFFSET	     0x02U
@@ -528,6 +531,37 @@ fu_steelseries_fizz_paired_status(FuDevice *device, guint8 *status, GError **err
 	if (!fu_common_read_uint8_safe(data,
 				       sizeof(data),
 				       STEELSERIES_FIZZ_PAIRED_STATUS_STATUS_OFFSET,
+				       status,
+				       error))
+		return FALSE;
+
+	/* success */
+	return TRUE;
+}
+
+gboolean
+fu_steelseries_fizz_connection_status(FuDevice *device, guint8 *status, GError **error)
+{
+	guint8 data[STEELSERIES_BUFFER_CONTROL_SIZE] = {0};
+	const guint16 cmd = 0xBCU;
+
+	if (!fu_common_write_uint8_safe(data,
+					sizeof(data),
+					STEELSERIES_FIZZ_CONNECTION_STATUS_COMMAND_OFFSET,
+					cmd,
+					error))
+		return FALSE;
+
+	if (g_getenv("FWUPD_STEELSERIES_FIZZ_VERBOSE") != NULL)
+		fu_common_dump_raw(G_LOG_DOMAIN, "ConnectionStatus", data, sizeof(data));
+	if (!fu_steelseries_device_cmd(FU_STEELSERIES_DEVICE(device), data, TRUE, error))
+		return FALSE;
+	if (g_getenv("FWUPD_STEELSERIES_FIZZ_VERBOSE") != NULL)
+		fu_common_dump_raw(G_LOG_DOMAIN, "ConnectionStatus", data, sizeof(data));
+
+	if (!fu_common_read_uint8_safe(data,
+				       sizeof(data),
+				       STEELSERIES_FIZZ_CONNECTION_STATUS_STATUS_OFFSET,
 				       status,
 				       error))
 		return FALSE;

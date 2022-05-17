@@ -16,19 +16,67 @@ struct _FuSteelseriesFizzTunnel {
 G_DEFINE_TYPE(FuSteelseriesFizzTunnel, fu_steelseries_fizz_tunnel, FU_TYPE_DEVICE)
 
 static gboolean
+fu_steelseries_fizz_tunnel_wait_for_reconnect_cb(FuDevice *device,
+						 gpointer user_data,
+						 GError **error)
+{
+	FuDevice *parent = fu_device_get_parent(device);
+	guint8 status;
+
+	if (!fu_steelseries_fizz_connection_status(parent, &status, error)) {
+		g_prefix_error(error, "failed to get connection status: ");
+		return FALSE;
+	}
+	g_debug("ConnectionStatus: %u", status);
+	if (status == STEELSERIES_FIZZ_CONNECTION_STATUS_NOT_CONNECTED) {
+		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "device is unreachable");
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_steelseries_fizz_tunnel_wait_for_reconnect(FuDevice *device, guint delay, GError **error)
+{
+	return fu_device_retry_full(device,
+				    fu_steelseries_fizz_tunnel_wait_for_reconnect_cb,
+				    delay / 1000,
+				    1000,
+				    NULL,
+				    error);
+}
+
+static gboolean
 fu_steelseries_fizz_tunnel_attach(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuDevice *parent = fu_device_get_parent(device);
+	guint remove_delay = fu_device_get_remove_delay(device);
 	g_autoptr(GError) error_local = NULL;
+
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 67);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 33);
 
 	if (!fu_steelseries_fizz_reset(parent,
 				       TRUE,
 				       STEELSERIES_FIZZ_RESET_MODE_NORMAL,
 				       &error_local))
 		g_warning("failed to reset: %s", error_local->message);
+	fu_progress_step_done(progress);
 
-	fu_progress_sleep(fu_progress_get_child(progress),
-			  fu_device_get_remove_delay(FU_DEVICE(device)));
+	/* wait for receiver to reset the connection status to 0 */
+	fu_progress_sleep(fu_progress_get_child(progress), 2000); /* 2 s */
+	remove_delay -= 2000;
+	fu_progress_step_done(progress);
+
+	if (!fu_steelseries_fizz_tunnel_wait_for_reconnect(device, remove_delay, error)) {
+		g_prefix_error(error, "device %s did not come back", fu_device_get_id(device));
+		return FALSE;
+	}
+	fu_progress_step_done(progress);
 
 	/* success */
 	return TRUE;
@@ -77,9 +125,20 @@ fu_steelseries_fizz_tunnel_setup(FuDevice *device, GError **error)
 	FuDevice *parent = fu_device_get_parent(device);
 	guint32 calculated_crc;
 	guint32 stored_crc;
+	guint8 status;
 	guint8 fs = STEELSERIES_FIZZ_FILESYSTEM_MOUSE;
 	guint8 id = STEELSERIES_FIZZ_MOUSE_FILESYSTEM_BACKUP_APP_ID;
 	g_autofree gchar *version = NULL;
+
+	if (!fu_steelseries_fizz_connection_status(parent, &status, error))
+		return FALSE;
+	g_debug("ConnectionStatus: %u", status);
+	if (status == STEELSERIES_FIZZ_CONNECTION_STATUS_NOT_CONNECTED) {
+		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UNREACHABLE);
+
+		/* success */
+		return TRUE;
+	}
 
 	version = fu_steelseries_fizz_version(parent, TRUE, error);
 	if (version == NULL) {
@@ -107,6 +166,29 @@ fu_steelseries_fizz_tunnel_setup(FuDevice *device, GError **error)
 			  fu_device_get_name(device),
 			  calculated_crc,
 			  stored_crc);
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_steelseries_fizz_tunnel_prepare(FuDevice *device,
+				   FuProgress *progress,
+				   FwupdInstallFlags flags,
+				   GError **error)
+{
+	FuDevice *parent = fu_device_get_parent(device);
+	guint8 status;
+
+	if (!fu_steelseries_fizz_connection_status(parent, &status, error)) {
+		g_prefix_error(error, "failed to get connection status: ");
+		return FALSE;
+	}
+	g_debug("ConnectionStatus: %u", status);
+	if (status == STEELSERIES_FIZZ_CONNECTION_STATUS_NOT_CONNECTED) {
+		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "device is unreachable");
+		return FALSE;
 	}
 
 	/* success */
@@ -172,10 +254,10 @@ static void
 fu_steelseries_fizz_tunnel_set_progress(FuDevice *self, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0);	 /* detach */
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 75);	 /* write */
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 25); /* attach */
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 0);	 /* reload */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0); /* detach */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 94);	/* write */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 6); /* attach */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 0);	/* reload */
 }
 
 static void
@@ -186,6 +268,7 @@ fu_steelseries_fizz_tunnel_class_init(FuSteelseriesFizzTunnelClass *klass)
 	klass_device->attach = fu_steelseries_fizz_tunnel_attach;
 	klass_device->probe = fu_steelseries_fizz_tunnel_probe;
 	klass_device->setup = fu_steelseries_fizz_tunnel_setup;
+	klass_device->prepare = fu_steelseries_fizz_tunnel_prepare;
 	klass_device->write_firmware = fu_steelseries_fizz_tunnel_write_firmware;
 	klass_device->read_firmware = fu_steelseries_fizz_tunnel_read_firmware;
 	klass_device->set_progress = fu_steelseries_fizz_tunnel_set_progress;
