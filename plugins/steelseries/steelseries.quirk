@@ -43,17 +43,17 @@ Name = Stratus Duo bootloader
 CounterpartGuid = USB\VID_1038&PID_1431
 Flags = is-bootloader
 
-# Proton
+# Stratus+
 [USB\VID_1038&PID_1434]
 Plugin = steelseries
 GType = FuSteelseriesGamepad
-Name = Proton gamepad
+Name = Stratus+ gamepad
 Icon = input-gaming
 CounterpartGuid = USB\VID_1038&PID_1435
 
 [USB\VID_1038&PID_1435]
 Plugin = steelseries
 GType = FuSteelseriesGamepad
-Name = Proton bootloader
+Name = Stratus+ bootloader
 CounterpartGuid = USB\VID_1038&PID_1434
 Flags = is-bootloader

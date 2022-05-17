@@ -6,7 +6,7 @@ This plugin allows to update firmware on SteelSeries gamepads:
 
 * Stratus Duo
 * Stratus Duo USB wireless adapter
-* Proton
+* Stratus+
 * Rival 3 Wireless
 
 SteelSeries Rival 100 gaming mice support is limited by getting the correct
