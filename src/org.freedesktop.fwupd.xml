@@ -112,6 +112,28 @@
     </property>
 
     <!--***********************************************************-->
+    <property name='BatteryLevel' type='u' access='read'>
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Returns the system battery level, or 101 for unknown.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
+    </property>
+
+    <!--***********************************************************-->
+    <property name='BatteryThreshold' type='u' access='read'>
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Returns the system battery threshold under which a firmware update cannot be performed.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
+    </property>
+
+    <!--***********************************************************-->
     <property name='OnlyTrusted' type='b' access='read'>
       <doc:doc>
         <doc:description>

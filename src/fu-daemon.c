@@ -20,6 +20,7 @@
 #include <jcat.h>
 
 #include "fwupd-device-private.h"
+#include "fwupd-enums-private.h"
 #include "fwupd-plugin-private.h"
 #include "fwupd-release-private.h"
 #include "fwupd-remote-private.h"
@@ -1953,6 +1954,16 @@ fu_daemon_daemon_get_property(GDBusConnection *connection_,
 
 	if (g_strcmp0(property_name, "Status") == 0)
 		return g_variant_new_uint32(fu_engine_get_status(self->engine));
+
+	if (g_strcmp0(property_name, FWUPD_RESULT_KEY_BATTERY_LEVEL) == 0) {
+		FuContext *ctx = fu_engine_get_context(self->engine);
+		return g_variant_new_uint32(fu_context_get_battery_level(ctx));
+	}
+
+	if (g_strcmp0(property_name, FWUPD_RESULT_KEY_BATTERY_THRESHOLD) == 0) {
+		FuContext *ctx = fu_engine_get_context(self->engine);
+		return g_variant_new_uint32(fu_context_get_battery_threshold(ctx));
+	}
 
 	if (g_strcmp0(property_name, "HostProduct") == 0)
 		return g_variant_new_string(fu_engine_get_host_product(self->engine));
