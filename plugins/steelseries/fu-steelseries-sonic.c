@@ -1146,6 +1146,6 @@ fu_steelseries_sonic_init(FuSteelseriesSonic *self)
 	fu_device_add_protocol(FU_DEVICE(self), "com.steelseries.sonic");
 	fu_device_set_install_duration(FU_DEVICE(self), 135); /* 2 min 15 s */
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_USER_REPLUG);
-	fu_device_set_battery_level(FU_DEVICE(self), FU_BATTERY_VALUE_INVALID);
+	fu_device_set_battery_level(FU_DEVICE(self), FWUPD_BATTERY_LEVEL_INVALID);
 	fu_device_set_battery_threshold(FU_DEVICE(self), 20);
 }

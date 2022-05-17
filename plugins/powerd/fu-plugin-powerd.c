@@ -76,7 +76,7 @@ fu_plugin_powerd_rescan(FuPlugin *plugin, GVariant *parameters)
 
 	/* checking if percentage is invalid */
 	if (current_level < 1 || current_level > 100)
-		current_level = FU_BATTERY_VALUE_INVALID;
+		current_level = FWUPD_BATTERY_LEVEL_INVALID;
 
 	fu_context_set_battery_state(ctx, current_state);
 	fu_context_set_battery_level(ctx, current_level);

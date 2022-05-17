@@ -482,5 +482,23 @@ G_BEGIN_DECLS
  * The D-Bus type signature string is 's' i.e. a string.
  **/
 #define FWUPD_RESULT_KEY_VERSION "Version"
+/**
+ * FWUPD_RESULT_KEY_BATTERY_LEVEL:
+ *
+ * Result key to represent the current battery level in percent.
+ * Expressed from 0-100%, or 101 for invalid or unset.
+ *
+ * The D-Bus type signature string is 'u' i.e. a unsigned 32 bit integer.
+ **/
+#define FWUPD_RESULT_KEY_BATTERY_LEVEL "BatteryLevel"
+/**
+ * FWUPD_RESULT_KEY_BATTERY_THRESHOLD:
+ *
+ * Result key to represent the minimum battery level required to perform an update.
+ * Expressed from 0-100%, or 101 for invalid or unset.
+ *
+ * The D-Bus type signature string is 'u' i.e. a unsigned 32 bit integer.
+ **/
+#define FWUPD_RESULT_KEY_BATTERY_THRESHOLD "BatteryThreshold"
 
 G_END_DECLS

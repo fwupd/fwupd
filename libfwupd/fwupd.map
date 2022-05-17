@@ -762,3 +762,12 @@ LIBFWUPD_1.8.0 {
     fwupd_client_get_only_trusted;
   local: *;
 } LIBFWUPD_1.7.6;
+
+LIBFWUPD_1.8.1 {
+  global:
+    fwupd_device_get_battery_level;
+    fwupd_device_get_battery_threshold;
+    fwupd_device_set_battery_level;
+    fwupd_device_set_battery_threshold;
+  local: *;
+} LIBFWUPD_1.8.0;

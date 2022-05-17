@@ -134,14 +134,6 @@ typedef enum {
 } FuCpuVendor;
 
 /**
- * FU_BATTERY_VALUE_INVALID:
- *
- * This value signifies the battery level is either unset, or the value cannot
- * be discovered.
- */
-#define FU_BATTERY_VALUE_INVALID 101
-
-/**
  * FuBatteryState:
  * @FU_BATTERY_STATE_UNKNOWN:		Unknown
  * @FU_BATTERY_STATE_CHARGING:		Charging
