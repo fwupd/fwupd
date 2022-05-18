@@ -301,17 +301,9 @@ fu_scsi_device_init(FuScsiDevice *self)
 }
 
 static void
-fu_scsi_device_finalize(GObject *object)
-{
-	G_OBJECT_CLASS(fu_scsi_device_parent_class)->finalize(object);
-}
-
-static void
 fu_scsi_device_class_init(FuScsiDeviceClass *klass)
 {
-	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
-	object_class->finalize = fu_scsi_device_finalize;
 	klass_device->to_string = fu_scsi_device_to_string;
 	klass_device->probe = fu_scsi_device_probe;
 	klass_device->prepare_firmware = fu_scsi_device_prepare_firmware;
