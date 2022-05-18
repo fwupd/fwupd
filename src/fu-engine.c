@@ -2954,6 +2954,30 @@ fu_engine_firmware_dump(FuEngine *self,
 	return fu_device_dump_firmware(device, progress, error);
 }
 
+FuFirmware *
+fu_engine_firmware_read(FuEngine *self,
+			FuDevice *device,
+			FuProgress *progress,
+			FwupdInstallFlags flags,
+			GError **error)
+{
+	g_autoptr(FuDeviceLocker) locker = NULL;
+	g_autoptr(FuDeviceLocker) poll_locker = NULL;
+
+	/* pause the polling */
+	poll_locker = fu_device_poll_locker_new(device, error);
+	if (poll_locker == NULL)
+		return NULL;
+
+	/* open, read, close */
+	locker = fu_device_locker_new(device, error);
+	if (locker == NULL) {
+		g_prefix_error(error, "failed to open device for firmware read: ");
+		return NULL;
+	}
+	return fu_device_read_firmware(device, progress, error);
+}
+
 gboolean
 fu_engine_install_blob(FuEngine *self,
 		       FuDevice *device,

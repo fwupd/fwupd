@@ -144,6 +144,12 @@ fu_engine_firmware_dump(FuEngine *self,
 			FuProgress *progress,
 			FwupdInstallFlags flags,
 			GError **error);
+FuFirmware *
+fu_engine_firmware_read(FuEngine *self,
+			FuDevice *device,
+			FuProgress *progress,
+			FwupdInstallFlags flags,
+			GError **error);
 gboolean
 fu_engine_modify_remote(FuEngine *self,
 			const gchar *remote_id,
