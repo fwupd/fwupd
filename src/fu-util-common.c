@@ -168,6 +168,7 @@ fu_util_prompt_for_boolean(gboolean def)
 static gboolean
 fu_util_traverse_tree(GNode *n, gpointer data)
 {
+	FwupdClient *client = FWUPD_CLIENT(data);
 	guint idx = g_node_depth(n) - 1;
 	g_autofree gchar *tmp = NULL;
 	g_auto(GStrv) split = NULL;
@@ -187,7 +188,7 @@ fu_util_traverse_tree(GNode *n, gpointer data)
 
 	/* root node */
 	if (n->data == NULL && g_getenv("FWUPD_VERBOSE") == NULL) {
-		const gchar *str = data;
+		const gchar *str = fwupd_client_get_host_product(client);
 		g_print("%s\n│\n", str != NULL ? str : "○");
 		return FALSE;
 	}
@@ -239,9 +240,9 @@ fu_util_traverse_tree(GNode *n, gpointer data)
 }
 
 void
-fu_util_print_tree(GNode *n, gpointer data)
+fu_util_print_tree(FwupdClient *client, GNode *n)
 {
-	g_node_traverse(n, G_PRE_ORDER, G_TRAVERSE_ALL, -1, fu_util_traverse_tree, data);
+	g_node_traverse(n, G_PRE_ORDER, G_TRAVERSE_ALL, -1, fu_util_traverse_tree, client);
 }
 
 static gboolean

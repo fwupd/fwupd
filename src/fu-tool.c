@@ -283,6 +283,11 @@ fu_util_start_engine(FuUtilPrivate *priv, FuEngineLoadFlags flags, GError **erro
 	}
 	fu_util_show_plugin_warnings(priv);
 	fu_util_show_unsupported_warn();
+
+	/* copy properties from engine to client */
+	g_object_set(priv->client, "host-product", fu_engine_get_host_product(priv->engine), NULL);
+
+	/* success */
 	return TRUE;
 }
 
@@ -498,12 +503,6 @@ fu_util_filter_device(FuUtilPrivate *priv, FwupdDevice *dev)
 	return TRUE;
 }
 
-static gchar *
-fu_util_get_tree_title(FuUtilPrivate *priv)
-{
-	return g_strdup(fu_engine_get_host_product(priv->engine));
-}
-
 static FuDevice *
 fu_util_prompt_for_device(FuUtilPrivate *priv, GPtrArray *devices_opt, GError **error)
 {
@@ -608,7 +607,6 @@ fu_util_get_updates(FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(GNode) root = g_node_new(NULL);
-	g_autofree gchar *title = NULL;
 	g_autoptr(GPtrArray) devices_inhibited = g_ptr_array_new();
 	g_autoptr(GPtrArray) devices_no_support = g_ptr_array_new();
 	g_autoptr(GPtrArray) devices_no_upgrades = g_ptr_array_new();
@@ -619,7 +617,6 @@ fu_util_get_updates(FuUtilPrivate *priv, gchar **values, GError **error)
 				      FU_ENGINE_LOAD_FLAG_REMOTES,
 				  error))
 		return FALSE;
-	title = fu_util_get_tree_title(priv);
 
 	/* parse arguments */
 	if (g_strv_length(values) == 0) {
@@ -725,7 +722,7 @@ fu_util_get_updates(FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 	}
 
-	fu_util_print_tree(root, title);
+	fu_util_print_tree(priv->client, root);
 	return TRUE;
 }
 
@@ -734,7 +731,6 @@ fu_util_get_details(FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(GPtrArray) array = NULL;
 	g_autoptr(GNode) root = g_node_new(NULL);
-	g_autofree gchar *title = NULL;
 	gint fd;
 
 	/* load engine */
@@ -743,7 +739,6 @@ fu_util_get_details(FuUtilPrivate *priv, gchar **values, GError **error)
 				      FU_ENGINE_LOAD_FLAG_REMOTES,
 				  error))
 		return FALSE;
-	title = fu_util_get_tree_title(priv);
 
 	/* check args */
 	if (g_strv_length(values) != 1) {
@@ -784,7 +779,7 @@ fu_util_get_details(FuUtilPrivate *priv, gchar **values, GError **error)
 		if (rel != NULL)
 			g_node_append_data(child, rel);
 	}
-	fu_util_print_tree(root, title);
+	fu_util_print_tree(priv->client, root);
 
 	return TRUE;
 }
@@ -830,7 +825,6 @@ static gboolean
 fu_util_get_devices(FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(GNode) root = g_node_new(NULL);
-	g_autofree gchar *title = NULL;
 	g_autoptr(GPtrArray) devs = NULL;
 
 	/* load engine */
@@ -839,7 +833,6 @@ fu_util_get_devices(FuUtilPrivate *priv, gchar **values, GError **error)
 				      FU_ENGINE_LOAD_FLAG_REMOTES,
 				  error))
 		return FALSE;
-	title = fu_util_get_tree_title(priv);
 
 	/* get devices and build tree */
 	devs = fu_engine_get_devices(priv->engine, error);
@@ -856,7 +849,7 @@ fu_util_get_devices(FuUtilPrivate *priv, gchar **values, GError **error)
 		g_print("%s\n", _("No hardware detected with firmware update capability"));
 		return TRUE;
 	}
-	fu_util_print_tree(root, title);
+	fu_util_print_tree(priv->client, root);
 
 	/* save the device state for other applications to see */
 	return fu_util_save_current_state(priv, error);
@@ -1466,7 +1459,8 @@ fu_util_update(FuUtilPrivate *priv, gchar **values, GError **error)
 
 		rel = g_ptr_array_index(rels, 0);
 		if (!priv->no_safety_check) {
-			if (!fu_util_prompt_warning(dev, rel, fu_util_get_tree_title(priv), error))
+			const gchar *title = fu_engine_get_host_product(priv->engine);
+			if (!fu_util_prompt_warning(dev, rel, title, error))
 				return FALSE;
 			if (!fu_util_prompt_warning_fde(dev, error))
 				return FALSE;
@@ -2607,7 +2601,6 @@ fu_util_get_history(FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(GNode) root = g_node_new(NULL);
-	g_autofree gchar *title = NULL;
 
 	/* load engine */
 	if (!fu_util_start_engine(priv,
@@ -2615,7 +2608,6 @@ fu_util_get_history(FuUtilPrivate *priv, gchar **values, GError **error)
 				      FU_ENGINE_LOAD_FLAG_REMOTES,
 				  error))
 		return FALSE;
-	title = fu_util_get_tree_title(priv);
 
 	/* get all devices from the history database */
 	devices = fu_engine_get_history(priv->engine, error);
@@ -2672,7 +2664,7 @@ fu_util_get_history(FuUtilPrivate *priv, gchar **values, GError **error)
 			continue;
 		}
 	}
-	fu_util_print_tree(root, title);
+	fu_util_print_tree(priv->client, root);
 
 	return TRUE;
 }
@@ -2764,12 +2756,10 @@ fu_util_get_remotes(FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(GNode) root = g_node_new(NULL);
 	g_autoptr(GPtrArray) remotes = NULL;
-	g_autofree gchar *title = NULL;
 
 	/* load engine */
 	if (!fu_util_start_engine(priv, FU_ENGINE_LOAD_FLAG_REMOTES, error))
 		return FALSE;
-	title = fu_util_get_tree_title(priv);
 
 	/* list remotes */
 	remotes = fu_engine_get_remotes(priv->engine, error);
@@ -2786,7 +2776,7 @@ fu_util_get_remotes(FuUtilPrivate *priv, gchar **values, GError **error)
 		FwupdRemote *remote_tmp = g_ptr_array_index(remotes, i);
 		g_node_append_data(root, remote_tmp);
 	}
-	fu_util_print_tree(root, title);
+	fu_util_print_tree(priv->client, root);
 
 	return TRUE;
 }
