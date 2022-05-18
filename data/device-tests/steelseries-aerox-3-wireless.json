@@ -1,0 +1,54 @@
+{
+  "name": "Steelseries Aerox 3 Wireless",
+  "interactive": false,
+  "steps": [
+    {
+      "url": "https://fwupd.org/downloads/e22dd276f649d895ffd484e14bfbbb394c82eee368f75c76c642b5f8d51e0e24-SteelSeries_Aerox_3_Wireless_Dongle_1.2.17.cab",
+      "components": [
+        {
+          "version": "1.2.17",
+          "guids": [
+            "291b0582-8d08-5714-88db-986911c744d9",
+            "df0cb7f0-be88-532f-87f9-65662da376b9"
+          ]
+        }
+      ]
+    },
+    {
+      "url": "https://fwupd.org/downloads/7cd77f93b72507beeb0bf75f43bb9acc12e37088f3e9e1decaa84d1a696fd7df-SteelSeries_Aerox_3_Wireless_Mouse_1.8.1.cab",
+      "components": [
+        {
+          "version": "1.8.1",
+          "guids": [
+            "4f3fac7c-981b-58cc-bb58-8a3b90f31c9c",
+            "ac7d7cbb-7ef5-5466-ab3d-e70ced97ee61"
+          ]
+        }
+      ]
+    },
+    {
+      "url": "https://fwupd.org/downloads/89fcc9ae1e7bd9d9f86aa029463fb25e21352a9490fad671a3e409b77da0200c-SteelSeries_Aerox_3_Wireless_Dongle_1.3.1.cab",
+      "components": [
+        {
+          "version": "1.3.1",
+          "guids": [
+            "291b0582-8d08-5714-88db-986911c744d9",
+            "df0cb7f0-be88-532f-87f9-65662da376b9"
+          ]
+        }
+      ]
+    },
+    {
+      "url": "https://fwupd.org/downloads/1a15d0bac6fdd76d10bb0ae5ce3899e0a68e7b9a7761ffb009c8449d157dbd32-SteelSeries_Aerox_3_Wireless_Mouse_1.9.3.cab",
+      "components": [
+        {
+          "version": "1.9.3",
+          "guids": [
+            "4f3fac7c-981b-58cc-bb58-8a3b90f31c9c",
+            "ac7d7cbb-7ef5-5466-ab3d-e70ced97ee61"
+          ]
+        }
+      ]
+    }
+  ]
+}
