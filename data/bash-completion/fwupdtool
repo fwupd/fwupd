@@ -36,6 +36,7 @@ _fwupdtool_cmd_list=(
 	'attach'
 	'detach'
 	'firmware-dump'
+	'firmware-read'
 	'refresh'
 	'verify-update'
 	'watch'

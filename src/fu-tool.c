@@ -1110,6 +1110,71 @@ fu_util_firmware_dump(FuUtilPrivate *priv, gchar **values, GError **error)
 	return fu_common_set_contents_bytes(values[0], blob_fw, error);
 }
 
+static gboolean
+fu_util_firmware_read(FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	g_autoptr(FuDevice) device = NULL;
+	g_autoptr(FuFirmware) fw = NULL;
+	g_autoptr(GBytes) blob_empty = g_bytes_new(NULL, 0);
+	g_autoptr(GBytes) blob_fw = NULL;
+
+	/* invalid args */
+	if (g_strv_length(values) == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_ARGS,
+				    "Invalid arguments");
+		return FALSE;
+	}
+
+	/* file already exists */
+	if ((priv->flags & FWUPD_INSTALL_FLAG_FORCE) == 0 &&
+	    g_file_test(values[0], G_FILE_TEST_EXISTS)) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_ARGS,
+				    "Filename already exists");
+		return FALSE;
+	}
+
+	/* write a zero length file to ensure the destination is writable to
+	 * avoid failing at the end of a potentially lengthy operation */
+	if (!fu_common_set_contents_bytes(values[0], blob_empty, error))
+		return FALSE;
+
+	/* load engine */
+	if (!fu_util_start_engine(priv,
+				  FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_HWINFO,
+				  error))
+		return FALSE;
+
+	/* get device */
+	priv->filter_include |= FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE;
+	if (g_strv_length(values) >= 2) {
+		device = fu_util_get_device(priv, values[1], error);
+		if (device == NULL)
+			return FALSE;
+	} else {
+		device = fu_util_prompt_for_device(priv, NULL, error);
+		if (device == NULL)
+			return FALSE;
+	}
+	priv->current_operation = FU_UTIL_OPERATION_READ;
+	g_signal_connect(FU_ENGINE(priv->engine),
+			 "device-changed",
+			 G_CALLBACK(fu_util_update_device_changed_cb),
+			 priv);
+
+	/* read firmware into the container format */
+	fw = fu_engine_firmware_read(priv->engine, device, priv->progress, priv->flags, error);
+	if (fw == NULL)
+		return FALSE;
+	blob_fw = fu_firmware_write(fw, error);
+	if (blob_fw == NULL)
+		return FALSE;
+	return fu_common_set_contents_bytes(values[0], blob_fw, error);
+}
+
 static gint
 fu_util_release_sort_cb(gconstpointer a, gconstpointer b)
 {
@@ -3541,6 +3606,13 @@ main(int argc, char *argv[])
 			      /* TRANSLATORS: command description */
 			      _("Read a firmware blob from a device"),
 			      fu_util_firmware_dump);
+	fu_util_cmd_array_add(cmd_array,
+			      "firmware-read",
+			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			      _("FILENAME [DEVICE-ID|GUID]"),
+			      /* TRANSLATORS: command description */
+			      _("Read a firmware from a device"),
+			      fu_util_firmware_read);
 	fu_util_cmd_array_add(cmd_array,
 			      "firmware-patch",
 			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
