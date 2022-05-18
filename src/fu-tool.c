@@ -1961,7 +1961,8 @@ fu_util_self_sign(FuUtilPrivate *priv, gchar **values, GError **error)
 static void
 fu_util_device_added_cb(FwupdClient *client, FwupdDevice *device, gpointer user_data)
 {
-	g_autofree gchar *tmp = fu_util_device_to_string(device, 0);
+	FuUtilPrivate *priv = (FuUtilPrivate *)user_data;
+	g_autofree gchar *tmp = fu_util_device_to_string(priv->client, device, 0);
 	/* TRANSLATORS: this is when a device is hotplugged */
 	g_print("%s\n%s", _("Device added:"), tmp);
 }
@@ -1969,7 +1970,8 @@ fu_util_device_added_cb(FwupdClient *client, FwupdDevice *device, gpointer user_
 static void
 fu_util_device_removed_cb(FwupdClient *client, FwupdDevice *device, gpointer user_data)
 {
-	g_autofree gchar *tmp = fu_util_device_to_string(device, 0);
+	FuUtilPrivate *priv = (FuUtilPrivate *)user_data;
+	g_autofree gchar *tmp = fu_util_device_to_string(priv->client, device, 0);
 	/* TRANSLATORS: this is when a device is hotplugged */
 	g_print("%s\n%s", _("Device removed:"), tmp);
 }
@@ -1977,7 +1979,8 @@ fu_util_device_removed_cb(FwupdClient *client, FwupdDevice *device, gpointer use
 static void
 fu_util_device_changed_cb(FwupdClient *client, FwupdDevice *device, gpointer user_data)
 {
-	g_autofree gchar *tmp = fu_util_device_to_string(device, 0);
+	FuUtilPrivate *priv = (FuUtilPrivate *)user_data;
+	g_autofree gchar *tmp = fu_util_device_to_string(priv->client, device, 0);
 	/* TRANSLATORS: this is when a device has been updated */
 	g_print("%s\n%s", _("Device changed:"), tmp);
 }

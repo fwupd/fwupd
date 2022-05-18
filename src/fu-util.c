@@ -1753,7 +1753,7 @@ fu_util_get_results(FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 	if (priv->as_json)
 		return fu_util_get_results_as_json(priv, rel, error);
-	tmp = fu_util_device_to_string(rel, 0);
+	tmp = fu_util_device_to_string(priv->client, rel, 0);
 	g_print("%s", tmp);
 	return TRUE;
 }
