@@ -112,7 +112,7 @@ gchar *
 fu_util_time_to_str(guint64 tmp);
 
 gchar *
-fu_util_device_to_string(FwupdDevice *dev, guint idt);
+fu_util_device_to_string(FwupdClient *client, FwupdDevice *dev, guint idt);
 gchar *
 fu_util_plugin_to_string(FwupdPlugin *plugin, guint idt);
 const gchar *

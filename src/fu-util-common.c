@@ -176,7 +176,7 @@ fu_util_traverse_tree(GNode *n, gpointer data)
 	/* get split lines */
 	if (FWUPD_IS_DEVICE(n->data)) {
 		FwupdDevice *dev = FWUPD_DEVICE(n->data);
-		tmp = fu_util_device_to_string(dev, idx);
+		tmp = fu_util_device_to_string(client, dev, idx);
 	} else if (FWUPD_IS_REMOTE(n->data)) {
 		FwupdRemote *remote = FWUPD_REMOTE(n->data);
 		tmp = fu_util_remote_to_string(remote, idx);
@@ -1305,7 +1305,7 @@ fu_util_update_state_to_string(FwupdUpdateState update_state)
 }
 
 gchar *
-fu_util_device_to_string(FwupdDevice *dev, guint idt)
+fu_util_device_to_string(FwupdClient *client, FwupdDevice *dev, guint idt)
 {
 	FwupdUpdateState state;
 	GPtrArray *guids = fwupd_device_get_guids(dev);
