@@ -5315,6 +5315,18 @@ fwupd_client_set_property(GObject *object, guint prop_id, const GValue *value, G
 	case PROP_BATTERY_THRESHOLD:
 		fwupd_client_set_battery_threshold(self, g_value_get_uint(value));
 		break;
+	case PROP_HOST_BKC:
+		fwupd_client_set_host_bkc(self, g_value_get_string(value));
+		break;
+	case PROP_HOST_PRODUCT:
+		fwupd_client_set_host_product(self, g_value_get_string(value));
+		break;
+	case PROP_HOST_MACHINE_ID:
+		fwupd_client_set_host_machine_id(self, g_value_get_string(value));
+		break;
+	case PROP_HOST_SECURITY_ID:
+		fwupd_client_set_host_security_id(self, g_value_get_string(value));
+		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
 		break;
@@ -5543,7 +5555,7 @@ fwupd_client_class_init(FwupdClientClass *klass)
 				    NULL,
 				    NULL,
 				    NULL,
-				    G_PARAM_READABLE | G_PARAM_STATIC_NAME);
+				    G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_HOST_BKC, pspec);
 
 	/**
@@ -5571,7 +5583,7 @@ fwupd_client_class_init(FwupdClientClass *klass)
 				    NULL,
 				    NULL,
 				    NULL,
-				    G_PARAM_READABLE | G_PARAM_STATIC_NAME);
+				    G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_HOST_PRODUCT, pspec);
 
 	/**
@@ -5585,7 +5597,7 @@ fwupd_client_class_init(FwupdClientClass *klass)
 				    NULL,
 				    NULL,
 				    NULL,
-				    G_PARAM_READABLE | G_PARAM_STATIC_NAME);
+				    G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_HOST_MACHINE_ID, pspec);
 
 	/**
@@ -5599,7 +5611,7 @@ fwupd_client_class_init(FwupdClientClass *klass)
 				    NULL,
 				    NULL,
 				    NULL,
-				    G_PARAM_READABLE | G_PARAM_STATIC_NAME);
+				    G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_HOST_SECURITY_ID, pspec);
 
 	/**
