@@ -186,6 +186,15 @@ fu_bluez_device_set_modalias(FuBluezDevice *self, const gchar *modalias)
 		g_autofree gchar *vendor_id = g_strdup_printf("BLUETOOTH:%04X", vid);
 		fu_device_add_vendor_id(FU_DEVICE(self), vendor_id);
 	}
+
+	/* set version if the revision has been set */
+	if (rev != 0x0 &&
+	    fu_device_get_version_format(FU_DEVICE(self)) == FWUPD_VERSION_FORMAT_UNKNOWN) {
+		g_autofree gchar *version = NULL;
+		version = fu_common_version_from_uint16(rev, FWUPD_VERSION_FORMAT_BCD);
+		fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_BCD);
+		fu_device_set_version(FU_DEVICE(self), version);
+	}
 }
 
 static void
