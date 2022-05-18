@@ -53,7 +53,7 @@ gboolean
 fu_util_prompt_for_boolean(gboolean def);
 
 void
-fu_util_print_tree(GNode *n, gpointer data);
+fu_util_print_tree(FwupdClient *client, GNode *n);
 gboolean
 fu_util_is_interesting_device(FwupdDevice *dev);
 gchar *

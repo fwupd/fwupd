@@ -506,12 +506,6 @@ fu_util_build_device_tree(FuUtilPrivate *priv, GNode *root, GPtrArray *devs, Fwu
 	}
 }
 
-static gchar *
-fu_util_get_tree_title(FuUtilPrivate *priv)
-{
-	return g_strdup(fwupd_client_get_host_product(priv->client));
-}
-
 static gboolean
 fu_util_get_releases_as_json(FuUtilPrivate *priv, GPtrArray *rels, GError **error)
 {
@@ -571,7 +565,6 @@ fu_util_get_devices(FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(GNode) root = g_node_new(NULL);
 	g_autoptr(GPtrArray) devs = NULL;
-	g_autofree gchar *title = fu_util_get_tree_title(priv);
 
 	/* get results from daemon */
 	devs = fwupd_client_get_devices(priv->client, priv->cancellable, error);
@@ -590,7 +583,7 @@ fu_util_get_devices(FuUtilPrivate *priv, gchar **values, GError **error)
 		g_print("%s\n", _("No hardware detected with firmware update capability"));
 		return TRUE;
 	}
-	fu_util_print_tree(root, title);
+	fu_util_print_tree(priv->client, root);
 
 	/* nag? */
 	if (!fu_util_perhaps_show_unreported(priv, error))
@@ -1157,7 +1150,6 @@ fu_util_get_details(FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(GPtrArray) array = NULL;
 	g_autoptr(GNode) root = g_node_new(NULL);
-	g_autofree gchar *title = fu_util_get_tree_title(priv);
 
 	/* check args */
 	if (g_strv_length(values) != 1) {
@@ -1178,7 +1170,7 @@ fu_util_get_details(FuUtilPrivate *priv, gchar **values, GError **error)
 		return fu_util_get_details_as_json(priv, array, error);
 
 	fu_util_build_device_tree(priv, root, array, NULL);
-	fu_util_print_tree(root, title);
+	fu_util_print_tree(priv->client, root);
 
 	return TRUE;
 }
@@ -1367,7 +1359,6 @@ fu_util_get_history(FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(GNode) root = g_node_new(NULL);
-	g_autofree gchar *title = fu_util_get_tree_title(priv);
 
 	/* get all devices from the history database */
 	devices = fwupd_client_get_history(priv->client, priv->cancellable, error);
@@ -1435,7 +1426,7 @@ fu_util_get_history(FuUtilPrivate *priv, gchar **values, GError **error)
 		}
 	}
 
-	fu_util_print_tree(root, title);
+	fu_util_print_tree(priv->client, root);
 
 	return TRUE;
 }
@@ -1803,12 +1794,11 @@ fu_util_get_releases(FuUtilPrivate *priv, gchar **values, GError **error)
 		}
 	} else {
 		g_autoptr(GNode) root = g_node_new(NULL);
-		g_autofree gchar *title = fu_util_get_tree_title(priv);
 		for (guint i = 0; i < rels->len; i++) {
 			FwupdRelease *rel = g_ptr_array_index(rels, i);
 			g_node_append_data(root, rel);
 		}
-		fu_util_print_tree(root, title);
+		fu_util_print_tree(priv->client, root);
 	}
 
 	return TRUE;
@@ -1988,7 +1978,6 @@ fu_util_get_updates(FuUtilPrivate *priv, gchar **values, GError **error)
 	g_autoptr(GPtrArray) devices = NULL;
 	gboolean supported = FALSE;
 	g_autoptr(GNode) root = g_node_new(NULL);
-	g_autofree gchar *title = fu_util_get_tree_title(priv);
 	g_autoptr(GPtrArray) devices_inhibited = g_ptr_array_new();
 	g_autoptr(GPtrArray) devices_no_support = g_ptr_array_new();
 	g_autoptr(GPtrArray) devices_no_upgrades = g_ptr_array_new();
@@ -2115,7 +2104,7 @@ fu_util_get_updates(FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 	}
 
-	fu_util_print_tree(root, title);
+	fu_util_print_tree(priv->client, root);
 
 	/* success */
 	return TRUE;
@@ -2144,7 +2133,6 @@ fu_util_get_remotes(FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(GNode) root = g_node_new(NULL);
 	g_autoptr(GPtrArray) remotes = NULL;
-	g_autofree gchar *title = fu_util_get_tree_title(priv);
 
 	remotes = fwupd_client_get_remotes(priv->client, priv->cancellable, error);
 	if (remotes == NULL)
@@ -2162,7 +2150,7 @@ fu_util_get_remotes(FuUtilPrivate *priv, gchar **values, GError **error)
 		FwupdRemote *remote_tmp = g_ptr_array_index(remotes, i);
 		g_node_append_data(root, remote_tmp);
 	}
-	fu_util_print_tree(root, title);
+	fu_util_print_tree(priv->client, root);
 
 	return TRUE;
 }
@@ -2306,7 +2294,7 @@ fu_util_prompt_warning_composite(FuUtilPrivate *priv,
 		for (guint j = 0; j < rels->len; j++) {
 			FwupdRelease *rel_tmp = g_ptr_array_index(rels, j);
 			if (fwupd_release_has_checksum(rel_tmp, rel_csum)) {
-				g_autofree gchar *title = fu_util_get_tree_title(priv);
+				const gchar *title = fwupd_client_get_host_product(priv->client);
 				if (!fu_util_prompt_warning(dev_tmp, rel_tmp, title, error))
 					return FALSE;
 				break;
@@ -2325,7 +2313,7 @@ fu_util_update_device_with_release(FuUtilPrivate *priv,
 				   GError **error)
 {
 	if (!priv->no_safety_check && !priv->assume_yes) {
-		g_autofree gchar *title = fu_util_get_tree_title(priv);
+		const gchar *title = fwupd_client_get_host_product(priv->client);
 		if (!fu_util_prompt_warning(dev, rel, title, error))
 			return FALSE;
 		if (!fu_util_prompt_warning_fde(dev, error))
