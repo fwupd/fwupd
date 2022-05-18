@@ -51,6 +51,18 @@ Summary = CCGx Power Delivery Device (Symmetric FW1)
 [USB\VID_04B4&PID_5218&SID_1F00&APP_6432&MODE_FW2]
 Summary = CCGx Power Delivery Device (Symmetric FW2)
 
+# Lenovo ThinkPad Universal USB-C Dock
+[USB\VID_17EF&PID_30A9]
+Plugin = ccgx
+GType = FuCcgxDmcDevice
+Summary = Dock Management Controller Device
+ParentGuid = USB\VID_17EF&PID_30AF
+Name = ThinkPad Universal USB-C Dock
+Flags = has-manual-replug
+CcgxDmcTriggerCode = 0x02
+CcgxImageKind = dmc-composite
+InstallDuration = 60
+
 # HP USB-C Dock G5
 [USB\VID_03F0&PID_046B]
 Plugin = ccgx
