@@ -12,7 +12,7 @@
  * fwupd_status_to_string:
  * @status: a status, e.g. %FWUPD_STATUS_DECOMPRESSING
  *
- * Converts a enumerated status to a string.
+ * Converts an enumerated status to a string.
  *
  * Returns: identifier string
  *
@@ -216,7 +216,7 @@ fwupd_device_flag_to_string(FwupdDeviceFlags device_flag)
  * fwupd_device_flag_from_string:
  * @device_flag: (nullable): a string, e.g. `require-ac`
  *
- * Converts a string to a enumerated device flag.
+ * Converts a string to an enumerated device flag.
  *
  * Returns: enumerated value
  *
@@ -483,7 +483,7 @@ fwupd_plugin_flag_from_string(const gchar *plugin_flag)
  * fwupd_update_state_to_string:
  * @update_state: the update state, e.g. %FWUPD_UPDATE_STATE_PENDING
  *
- * Converts a enumerated update state to a string.
+ * Converts an enumerated update state to a string.
  *
  * Returns: identifier string
  *
@@ -511,7 +511,7 @@ fwupd_update_state_to_string(FwupdUpdateState update_state)
  * fwupd_update_state_from_string:
  * @update_state: (nullable): a string, e.g. `pending`
  *
- * Converts a string to a enumerated update state.
+ * Converts a string to an enumerated update state.
  *
  * Returns: enumerated value
  *
@@ -539,7 +539,7 @@ fwupd_update_state_from_string(const gchar *update_state)
  * fwupd_trust_flag_to_string:
  * @trust_flag: the trust flags, e.g. %FWUPD_TRUST_FLAG_PAYLOAD
  *
- * Converts a enumerated trust flag to a string.
+ * Converts an enumerated trust flag to a string.
  *
  * Returns: identifier string
  *
@@ -561,7 +561,7 @@ fwupd_trust_flag_to_string(FwupdTrustFlags trust_flag)
  * fwupd_trust_flag_from_string:
  * @trust_flag: (nullable): a string, e.g. `payload`
  *
- * Converts a string to a enumerated trust flag.
+ * Converts a string to an enumerated trust flag.
  *
  * Returns: enumerated value
  *
@@ -617,7 +617,7 @@ fwupd_feature_flag_to_string(FwupdFeatureFlags feature_flag)
  * fwupd_feature_flag_from_string:
  * @feature_flag: (nullable): a string, e.g. `detach-action`
  *
- * Converts a string to a enumerated feature flag.
+ * Converts a string to an enumerated feature flag.
  *
  * Returns: enumerated value
  *
@@ -699,7 +699,7 @@ fwupd_keyring_kind_to_string(FwupdKeyringKind keyring_kind)
  * fwupd_release_flag_to_string:
  * @release_flag: a release flag, e.g. %FWUPD_RELEASE_FLAG_TRUSTED_PAYLOAD
  *
- * Converts a enumerated release flag to a string.
+ * Converts an enumerated release flag to a string.
  *
  * Returns: identifier string
  *
