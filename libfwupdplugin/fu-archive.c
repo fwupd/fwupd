@@ -70,17 +70,17 @@ fu_archive_init(FuArchive *self)
 GBytes *
 fu_archive_lookup_by_fn(FuArchive *self, const gchar *fn, GError **error)
 {
-	GBytes *fw;
+	GBytes *bytes;
 
 	g_return_val_if_fail(FU_IS_ARCHIVE(self), NULL);
 	g_return_val_if_fail(fn != NULL, NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
-	fw = g_hash_table_lookup(self->entries, fn);
-	if (fw == NULL) {
+	bytes = g_hash_table_lookup(self->entries, fn);
+	if (bytes == NULL) {
 		g_set_error(error, G_IO_ERROR, G_IO_ERROR_NOT_FOUND, "no blob for %s", fn);
 	}
-	return fw;
+	return bytes;
 }
 
 /**
