@@ -10,7 +10,7 @@
 
 /**
  * fu_cfu_device_reject_to_string:
- * @val: a enumerated value, e.g. %FU_CFU_DEVICE_REJECT_OLD_FIRMWARE
+ * @val: an enumerated value, e.g. %FU_CFU_DEVICE_REJECT_OLD_FIRMWARE
  *
  * Converts an enumerated reject type to a string.
  *
@@ -40,7 +40,7 @@ fu_cfu_device_reject_to_string(guint8 val)
 
 /**
  * fu_cfu_device_offer_to_string:
- * @val: a enumerated value, e.g. %FU_CFU_DEVICE_OFFER_ACCEPT
+ * @val: an enumerated value, e.g. %FU_CFU_DEVICE_OFFER_ACCEPT
  *
  * Converts an enumerated offer type to a string.
  *
@@ -68,7 +68,7 @@ fu_cfu_device_offer_to_string(guint8 val)
 
 /**
  * fu_cfu_device_status_to_string:
- * @val: a enumerated value, e.g. %FU_CFU_DEVICE_OFFER_ACCEPT
+ * @val: an enumerated value, e.g. %FU_CFU_DEVICE_OFFER_ACCEPT
  *
  * Converts an enumerated status type to a string.
  *
