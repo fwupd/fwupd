@@ -35,7 +35,7 @@ G_DEFINE_TYPE_WITH_PRIVATE(FwupdRequest, fwupd_request, G_TYPE_OBJECT)
  * fwupd_request_kind_to_string:
  * @kind: a update message kind, e.g. %FWUPD_REQUEST_KIND_IMMEDIATE
  *
- * Converts a enumerated update message kind to a string.
+ * Converts an enumerated update message kind to a string.
  *
  * Returns: identifier string
  *
