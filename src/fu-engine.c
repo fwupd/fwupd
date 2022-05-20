@@ -262,6 +262,10 @@ fu_engine_watch_device(FuEngine *self, FuDevice *device)
 			 G_CALLBACK(fu_engine_generic_notify_cb),
 			 self);
 	g_signal_connect(FU_DEVICE(device),
+			 "notify::problems",
+			 G_CALLBACK(fu_engine_generic_notify_cb),
+			 self);
+	g_signal_connect(FU_DEVICE(device),
 			 "notify::update-message",
 			 G_CALLBACK(fu_engine_generic_notify_cb),
 			 self);
