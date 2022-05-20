@@ -3,10 +3,10 @@
   "interactive": true,
   "steps": [
     {
-      "url": "https://fwupd.org/downloads/89791626948cb485e15d093ac47c7823d5ad6a7dcbe8b9917a3711f5c8694d52-SteelSeries_Rival_3_Wireless_0.20.cab",
+      "url": "https://fwupd.org/downloads/fe3775d33b41898e69f06698ed03779a158d99b9716a9b1c0ee7e3051ab857c3-SteelSeries_Rival_3_Wireless_1.0.cab",
       "components": [
         {
-          "version": "0.20",
+          "version": "1.0",
           "guids": [
             "73e6daa7-d5a1-567d-a0ff-01514f8498b1"
           ]
@@ -14,10 +14,10 @@
       ]
     },
     {
-      "url": "https://fwupd.org/downloads/fe3775d33b41898e69f06698ed03779a158d99b9716a9b1c0ee7e3051ab857c3-SteelSeries_Rival_3_Wireless_1.0.cab",
+      "url": "https://fwupd.org/downloads/30c6979b393fee0bbf27695fa1b36c1fa8ac276c7744a8e3845a859e79fb0c94-SteelSeries_Rival_3_Wireless_1.4.cab",
       "components": [
         {
-          "version": "1.0",
+          "version": "1.4",
           "guids": [
             "73e6daa7-d5a1-567d-a0ff-01514f8498b1"
           ]
