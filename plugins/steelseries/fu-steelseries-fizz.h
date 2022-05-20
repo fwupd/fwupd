@@ -106,3 +106,5 @@ fu_steelseries_fizz_write_file(FuDevice *device,
 			       FuProgress *progress,
 			       FwupdInstallFlags flags,
 			       GError **error);
+gboolean
+fu_steelseries_fizz_paired_status(FuDevice *device, guint8 *status, GError **error);
