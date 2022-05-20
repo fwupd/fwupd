@@ -28,6 +28,9 @@
 #define STEELSERIES_FIZZ_VERSION_COMMAND_OFFSET 0x00U
 #define STEELSERIES_FIZZ_VERSION_MODE_OFFSET	0x01U
 
+#define STEELSERIES_FIZZ_PAIRED_STATUS_COMMAND_OFFSET 0x00U
+#define STEELSERIES_FIZZ_PAIRED_STATUS_STATUS_OFFSET  0x01U
+
 #define STEELSERIES_FIZZ_WRITE_ACCESS_FILE_COMMAND_OFFSET    0x00U
 #define STEELSERIES_FIZZ_WRITE_ACCESS_FILE_FILESYSTEM_OFFSET 0x01U
 #define STEELSERIES_FIZZ_WRITE_ACCESS_FILE_ID_OFFSET	     0x02U
@@ -502,6 +505,37 @@ fu_steelseries_fizz_read_access_file(FuDevice *device,
 	return TRUE;
 }
 
+gboolean
+fu_steelseries_fizz_paired_status(FuDevice *device, guint8 *status, GError **error)
+{
+	guint8 data[STEELSERIES_BUFFER_CONTROL_SIZE] = {0};
+	const guint16 cmd = 0xBBU;
+
+	if (!fu_common_write_uint8_safe(data,
+					sizeof(data),
+					STEELSERIES_FIZZ_PAIRED_STATUS_COMMAND_OFFSET,
+					cmd,
+					error))
+		return FALSE;
+
+	if (g_getenv("FWUPD_STEELSERIES_FIZZ_VERBOSE") != NULL)
+		fu_common_dump_raw(G_LOG_DOMAIN, "PairedStatus", data, sizeof(data));
+	if (!fu_steelseries_device_cmd(FU_STEELSERIES_DEVICE(device), data, TRUE, error))
+		return FALSE;
+	if (g_getenv("FWUPD_STEELSERIES_FIZZ_VERBOSE") != NULL)
+		fu_common_dump_raw(G_LOG_DOMAIN, "PairedStatus", data, sizeof(data));
+
+	if (!fu_common_read_uint8_safe(data,
+				       sizeof(data),
+				       STEELSERIES_FIZZ_PAIRED_STATUS_STATUS_OFFSET,
+				       status,
+				       error))
+		return FALSE;
+
+	/* success */
+	return TRUE;
+}
+
 static gboolean
 fu_steelseries_fizz_attach(FuDevice *device, FuProgress *progress, GError **error)
 {
@@ -543,10 +577,18 @@ fu_steelseries_fizz_setup(FuDevice *device, GError **error)
 
 	/* it is a USB receiver */
 	if (fu_device_has_private_flag(device, FU_STEELSERIES_DEVICE_FLAG_IS_RECEIVER)) {
-		g_autoptr(FuSteelseriesFizzTunnel) mouse_device =
-		    fu_steelseries_fizz_tunnel_new(FU_STEELSERIES_FIZZ(device));
+		guint8 status;
 
-		fu_device_add_child(device, FU_DEVICE(mouse_device));
+		if (!fu_steelseries_fizz_paired_status(device, &status, error)) {
+			g_prefix_error(error, "failed to get paired status: ");
+			return FALSE;
+		}
+		if (status != 0) {
+			g_autoptr(FuSteelseriesFizzTunnel) mouse_device =
+			    fu_steelseries_fizz_tunnel_new(FU_STEELSERIES_FIZZ(device));
+
+			fu_device_add_child(device, FU_DEVICE(mouse_device));
+		}
 
 		fs = STEELSERIES_FIZZ_FILESYSTEM_RECEIVER;
 		id = STEELSERIES_FIZZ_RECEIVER_FILESYSTEM_BACKUP_APP_ID;
