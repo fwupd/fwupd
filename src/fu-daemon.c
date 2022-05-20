@@ -390,6 +390,9 @@ typedef struct {
 static void
 fu_daemon_auth_helper_free(FuMainAuthHelper *helper)
 {
+	/* always return to IDLE even in event of an auth error */
+	fu_daemon_set_status(helper->self, FWUPD_STATUS_IDLE);
+
 	if (helper->blob_cab != NULL)
 		g_bytes_unref(helper->blob_cab);
 #ifdef HAVE_POLKIT
@@ -494,7 +497,6 @@ fu_daemon_authorize_unlock_cb(GObject *source, GAsyncResult *res, gpointer user_
 	}
 
 	/* success */
-	fu_daemon_set_status(helper->self, FWUPD_STATUS_IDLE);
 	g_dbus_method_invocation_return_value(helper->invocation, NULL);
 }
 
@@ -524,7 +526,6 @@ fu_daemon_authorize_set_approved_firmware_cb(GObject *source, GAsyncResult *res,
 		const gchar *csum = g_ptr_array_index(helper->checksums, i);
 		fu_engine_add_approved_firmware(helper->self->engine, csum);
 	}
-	fu_daemon_set_status(helper->self, FWUPD_STATUS_IDLE);
 	g_dbus_method_invocation_return_value(helper->invocation, NULL);
 }
 
@@ -554,7 +555,6 @@ fu_daemon_authorize_set_blocked_firmware_cb(GObject *source, GAsyncResult *res, 
 		g_dbus_method_invocation_return_gerror(helper->invocation, error);
 		return;
 	}
-	fu_daemon_set_status(helper->self, FWUPD_STATUS_IDLE);
 	g_dbus_method_invocation_return_value(helper->invocation, NULL);
 }
 
@@ -588,7 +588,6 @@ fu_daemon_authorize_self_sign_cb(GObject *source, GAsyncResult *res, gpointer us
 	}
 
 	/* success */
-	fu_daemon_set_status(helper->self, FWUPD_STATUS_IDLE);
 	g_dbus_method_invocation_return_value(helper->invocation, g_variant_new("(s)", sig));
 }
 
@@ -619,7 +618,6 @@ fu_daemon_modify_config_cb(GObject *source, GAsyncResult *res, gpointer user_dat
 	}
 
 	/* success */
-	fu_daemon_set_status(helper->self, FWUPD_STATUS_IDLE);
 	g_dbus_method_invocation_return_value(helper->invocation, NULL);
 }
 
@@ -671,7 +669,6 @@ fu_daemon_authorize_activate_cb(GObject *source, GAsyncResult *res, gpointer use
 	}
 
 	/* success */
-	fu_daemon_set_status(helper->self, FWUPD_STATUS_IDLE);
 	g_dbus_method_invocation_return_value(helper->invocation, NULL);
 }
 
@@ -715,7 +712,6 @@ fu_daemon_authorize_verify_update_cb(GObject *source, GAsyncResult *res, gpointe
 	}
 
 	/* success */
-	fu_daemon_set_status(helper->self, FWUPD_STATUS_IDLE);
 	g_dbus_method_invocation_return_value(helper->invocation, NULL);
 }
 
@@ -751,7 +747,6 @@ fu_daemon_authorize_modify_remote_cb(GObject *source, GAsyncResult *res, gpointe
 	}
 
 	/* success */
-	fu_daemon_set_status(helper->self, FWUPD_STATUS_IDLE);
 	g_dbus_method_invocation_return_value(helper->invocation, NULL);
 }
 
@@ -836,7 +831,6 @@ fu_daemon_authorize_install_queue(FuMainAuthHelper *helper_ref)
 	}
 
 	/* success */
-	fu_daemon_set_status(helper->self, FWUPD_STATUS_IDLE);
 	g_dbus_method_invocation_return_value(helper->invocation, NULL);
 }
 #endif /* HAVE_GIO_UNIX */
