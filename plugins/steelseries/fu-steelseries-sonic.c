@@ -1024,7 +1024,6 @@ fu_steelseries_sonic_class_init(FuSteelseriesSonicClass *klass)
 static void
 fu_steelseries_sonic_init(FuSteelseriesSonic *self)
 {
-	fu_steelseries_device_set_kind(FU_STEELSERIES_DEVICE(self), FU_STEELSERIES_DEVICE_SONIC);
 	fu_steelseries_device_set_iface_idx_offset(FU_STEELSERIES_DEVICE(self), -1);
 
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_BCD);

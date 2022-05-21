@@ -33,10 +33,15 @@ struct _FuSteelseriesDeviceClass {
 #define STEELSERIES_BUFFER_CONTROL_SIZE 64
 #define STEELSERIES_TRANSACTION_TIMEOUT 5000
 
-FuSteelseriesDeviceKind
-fu_steelseries_device_get_kind(FuSteelseriesDevice *self);
-void
-fu_steelseries_device_set_kind(FuSteelseriesDevice *self, FuSteelseriesDeviceKind kind);
+/**
+ * FU_STEELSERIES_IS_DONGLE:
+ *
+ * The device is a dongle.
+ *
+ * Since 1.8.1
+ */
+#define FU_STEELSERIES_DEVICE_FLAG_IS_DONGLE (1 << 0)
+
 void
 fu_steelseries_device_set_iface_idx_offset(FuSteelseriesDevice *self, gint iface_idx_offset);
 gsize

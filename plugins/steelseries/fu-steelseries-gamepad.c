@@ -19,13 +19,10 @@ G_DEFINE_TYPE(FuSteelseriesGamepad, fu_steelseries_gamepad, FU_TYPE_STEELSERIES_
 static gboolean
 fu_steelseries_gamepad_cmd_erase(FuDevice *device, GError **error)
 {
-	FuSteelseriesGamepad *self = FU_STEELSERIES_GAMEPAD(device);
-
 	guint8 data[STEELSERIES_BUFFER_CONTROL_SIZE] = {0xA1, 0xAA, 0x55};
 
 	/* dongle for gamepad is using different options */
-	if (fu_steelseries_device_get_kind(FU_STEELSERIES_DEVICE(self)) ==
-	    FU_STEELSERIES_DEVICE_GAMEPAD_DONGLE) {
+	if (fu_device_has_private_flag(device, FU_STEELSERIES_DEVICE_FLAG_IS_DONGLE)) {
 		/* dongle */
 		data[8] = 0xD0;
 		data[9] = 0x01;
@@ -281,7 +278,6 @@ fu_steelseries_gamepad_class_init(FuSteelseriesGamepadClass *klass)
 static void
 fu_steelseries_gamepad_init(FuSteelseriesGamepad *self)
 {
-	fu_steelseries_device_set_kind(FU_STEELSERIES_DEVICE(self), FU_STEELSERIES_DEVICE_GAMEPAD);
 	fu_steelseries_device_set_iface_idx_offset(FU_STEELSERIES_DEVICE(self), -1);
 
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);

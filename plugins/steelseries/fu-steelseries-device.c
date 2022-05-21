@@ -9,7 +9,6 @@
 #include "fu-steelseries-device.h"
 
 typedef struct {
-	FuSteelseriesDeviceKind device_kind;
 	gint iface_idx_offset;
 	guint8 iface_idx;
 	guint8 ep;
@@ -18,52 +17,6 @@ typedef struct {
 
 G_DEFINE_TYPE_WITH_PRIVATE(FuSteelseriesDevice, fu_steelseries_device, FU_TYPE_USB_DEVICE)
 #define GET_PRIVATE(o) (fu_steelseries_device_get_instance_private(o))
-
-static FuSteelseriesDeviceKind
-fu_steelseries_device_type_from_string(const gchar *name)
-{
-	if (g_strcmp0(name, "fizz") == 0)
-		return FU_STEELSERIES_DEVICE_FIZZ;
-	if (g_strcmp0(name, "fizz-dongle") == 0)
-		return FU_STEELSERIES_DEVICE_FIZZ_DONGLE;
-	if (g_strcmp0(name, "gamepad") == 0)
-		return FU_STEELSERIES_DEVICE_GAMEPAD;
-	if (g_strcmp0(name, "gamepad-dongle") == 0)
-		return FU_STEELSERIES_DEVICE_GAMEPAD_DONGLE;
-	if (g_strcmp0(name, "sonic") == 0)
-		return FU_STEELSERIES_DEVICE_SONIC;
-	return FU_STEELSERIES_DEVICE_UNKNOWN;
-}
-
-static const gchar *
-fu_steelseries_device_type_to_string(FuSteelseriesDeviceKind type)
-{
-	if (type == FU_STEELSERIES_DEVICE_FIZZ)
-		return "fizz";
-	if (type == FU_STEELSERIES_DEVICE_FIZZ_DONGLE)
-		return "fizz-dongle";
-	if (type == FU_STEELSERIES_DEVICE_GAMEPAD)
-		return "gamepad";
-	if (type == FU_STEELSERIES_DEVICE_GAMEPAD_DONGLE)
-		return "gamepad-dongle";
-	if (type == FU_STEELSERIES_DEVICE_SONIC)
-		return "sonic";
-	return "unknown";
-}
-
-FuSteelseriesDeviceKind
-fu_steelseries_device_get_kind(FuSteelseriesDevice *self)
-{
-	FuSteelseriesDevicePrivate *priv = GET_PRIVATE(self);
-	return priv->device_kind;
-}
-
-void
-fu_steelseries_device_set_kind(FuSteelseriesDevice *self, FuSteelseriesDeviceKind kind)
-{
-	FuSteelseriesDevicePrivate *priv = GET_PRIVATE(self);
-	priv->device_kind = kind;
-}
 
 gsize
 fu_steelseries_device_get_transfer_size(FuSteelseriesDevice *self)
@@ -224,43 +177,16 @@ fu_steelseries_device_to_string(FuDevice *device, guint idt, GString *str)
 
 	FU_DEVICE_CLASS(fu_steelseries_device_parent_class)->to_string(device, idt, str);
 
-	fu_common_string_append_kv(str,
-				   idt,
-				   "DeviceKind",
-				   fu_steelseries_device_type_to_string(priv->device_kind));
 	fu_common_string_append_kx(str, idt, "Interface", priv->iface_idx);
 	fu_common_string_append_kx(str, idt, "Endpoint", priv->ep);
-}
-
-static gboolean
-fu_steelseries_device_set_quirk_kv(FuDevice *device,
-				   const gchar *key,
-				   const gchar *value,
-				   GError **error)
-{
-	FuSteelseriesDevice *self = FU_STEELSERIES_DEVICE(device);
-	FuSteelseriesDevicePrivate *priv = GET_PRIVATE(self);
-
-	if (g_strcmp0(key, "SteelSeriesDeviceKind") == 0) {
-		priv->device_kind = fu_steelseries_device_type_from_string(value);
-		if (priv->device_kind != FU_STEELSERIES_DEVICE_UNKNOWN)
-			return TRUE;
-
-		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
-				    "unsupported SteelSeriesDeviceKind quirk format");
-		return FALSE;
-	}
-
-	/* failed */
-	g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED, "quirk key not supported");
-	return FALSE;
 }
 
 static void
 fu_steelseries_device_init(FuSteelseriesDevice *self)
 {
+	fu_device_register_private_flag(FU_DEVICE(self),
+					FU_STEELSERIES_DEVICE_FLAG_IS_DONGLE,
+					"is-dongle");
 }
 
 static void
@@ -268,6 +194,5 @@ fu_steelseries_device_class_init(FuSteelseriesDeviceClass *klass)
 {
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
 	klass_device->to_string = fu_steelseries_device_to_string;
-	klass_device->set_quirk_kv = fu_steelseries_device_set_quirk_kv;
 	klass_device->probe = fu_steelseries_device_probe;
 }
