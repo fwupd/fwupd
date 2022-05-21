@@ -1,7 +1,7 @@
 # Rival 100
 [USB\VID_1038&PID_1702]
 Plugin = steelseries
-GType = FuSteelseriesDevice
+GType = FuSteelseriesMouse
 Summary = An optical gaming mouse
 Icon = input-mouse
 

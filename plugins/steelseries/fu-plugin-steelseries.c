@@ -8,15 +8,15 @@
 
 #include <fwupdplugin.h>
 
-#include "fu-steelseries-device.h"
 #include "fu-steelseries-fizz.h"
 #include "fu-steelseries-gamepad.h"
+#include "fu-steelseries-mouse.h"
 #include "fu-steelseries-sonic.h"
 
 static void
 fu_plugin_steelseries_init(FuPlugin *plugin)
 {
-	fu_plugin_add_device_gtype(plugin, FU_TYPE_STEELSERIES_DEVICE);
+	fu_plugin_add_device_gtype(plugin, FU_TYPE_STEELSERIES_MOUSE);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_STEELSERIES_FIZZ);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_STEELSERIES_GAMEPAD);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_STEELSERIES_SONIC);
