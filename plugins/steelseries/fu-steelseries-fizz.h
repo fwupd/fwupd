@@ -8,5 +8,11 @@
 
 #include <fwupdplugin.h>
 
+#include "fu-steelseries-device.h"
+
 #define FU_TYPE_STEELSERIES_FIZZ (fu_steelseries_fizz_get_type())
-G_DECLARE_FINAL_TYPE(FuSteelseriesFizz, fu_steelseries_fizz, FU, STEELSERIES_FIZZ, FuUsbDevice)
+G_DECLARE_FINAL_TYPE(FuSteelseriesFizz,
+		     fu_steelseries_fizz,
+		     FU,
+		     STEELSERIES_FIZZ,
+		     FuSteelseriesDevice)

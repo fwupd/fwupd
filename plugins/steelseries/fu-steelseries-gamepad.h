@@ -8,9 +8,11 @@
 
 #include <fwupdplugin.h>
 
+#include "fu-steelseries-device.h"
+
 #define FU_TYPE_STEELSERIES_GAMEPAD (fu_steelseries_gamepad_get_type())
 G_DECLARE_FINAL_TYPE(FuSteelseriesGamepad,
 		     fu_steelseries_gamepad,
 		     FU,
 		     STEELSERIES_GAMEPAD,
-		     FuUsbDevice)
+		     FuSteelseriesDevice)

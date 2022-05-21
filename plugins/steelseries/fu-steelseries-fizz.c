@@ -6,12 +6,9 @@
 
 #include "config.h"
 
-#include "fu-steelseries-common.h"
 #include "fu-steelseries-firmware.h"
 #include "fu-steelseries-fizz.h"
 
-#define STEELSERIES_TRANSACTION_TIMEOUT	 5000
-#define STEELSERIES_BUFFER_CONTROL_SIZE	 64
 #define STEELSERIES_BUFFER_TRANSFER_SIZE 52
 
 #define STEELSERIES_FIZZ_FILESYSTEM_DONGLE 0x01U
@@ -80,17 +77,13 @@
 #define STEELSERIES_FIZZ_RESET_MODE_OFFSET    0x1U
 
 struct _FuSteelseriesFizz {
-	FuUsbDevice parent_instance;
-	FuSteelseriesDeviceKind device_kind;
-	guint8 iface_idx;
-	guint8 ep;
-	gsize in_size;
+	FuSteelseriesDevice parent_instance;
 };
 
-G_DEFINE_TYPE(FuSteelseriesFizz, fu_steelseries_fizz, FU_TYPE_USB_DEVICE)
+G_DEFINE_TYPE(FuSteelseriesFizz, fu_steelseries_fizz, FU_TYPE_STEELSERIES_DEVICE)
 
 static gboolean
-fu_steelseries_fizz_command_error_to_error(guint8 cmd, guint8 err, GError **error)
+fu_steelseries_device_command_error_to_error(guint8 cmd, guint8 err, GError **error)
 {
 	/* success */
 	if (err == STEELSERIES_FIZZ_COMMAND_ERROR_SUCCESS)
@@ -161,85 +154,19 @@ fu_steelseries_fizz_command_error_to_error(guint8 cmd, guint8 err, GError **erro
 }
 
 static gboolean
-fu_steelseries_fizz_command(FuDevice *device, guint8 *data, gboolean answer, GError **error)
+fu_steelseries_device_command_and_check_error(FuDevice *device, guint8 *data, GError **error)
 {
-	FuSteelseriesFizz *self = FU_STEELSERIES_FIZZ(device);
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(device));
-	gsize actual_len = 0;
-	gboolean ret;
-
-	ret = g_usb_device_control_transfer(usb_device,
-					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					    G_USB_DEVICE_REQUEST_TYPE_CLASS,
-					    G_USB_DEVICE_RECIPIENT_INTERFACE,
-					    0x09,
-					    0x0200,
-					    self->iface_idx,
-					    data,
-					    STEELSERIES_BUFFER_CONTROL_SIZE,
-					    &actual_len,
-					    STEELSERIES_TRANSACTION_TIMEOUT,
-					    NULL,
-					    error);
-	if (!ret) {
-		g_prefix_error(error, "failed to do control transfer: ");
-		return FALSE;
-	}
-	if (actual_len != STEELSERIES_BUFFER_CONTROL_SIZE) {
-		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
-			    "only wrote %" G_GSIZE_FORMAT "bytes",
-			    actual_len);
-		return FALSE;
-	}
-
-	/* cleanup the buffer before receiving any data */
-	memset(data, 0x00, STEELSERIES_BUFFER_CONTROL_SIZE);
-
-	/* do not expect the answer from device */
-	if (answer != TRUE)
-		return TRUE;
-
-	ret = g_usb_device_interrupt_transfer(usb_device,
-					      self->ep,
-					      data,
-					      self->in_size,
-					      &actual_len,
-					      STEELSERIES_TRANSACTION_TIMEOUT,
-					      NULL,
-					      error);
-	if (!ret) {
-		g_prefix_error(error, "failed to do EP transfer: ");
-		return FALSE;
-	}
-	if (actual_len != self->in_size) {
-		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
-			    "only read %" G_GSIZE_FORMAT "bytes",
-			    actual_len);
-		return FALSE;
-	}
-
-	/* success */
-	return TRUE;
-}
-
-static gboolean
-fu_steelseries_fizz_command_and_check_error(FuDevice *device, guint8 *data, GError **error)
-{
-	FuSteelseriesFizz *self = FU_STEELSERIES_FIZZ(device);
 	gint gerr = G_FILE_ERROR_FAILED;
 	const guint8 command = data[0];
 	guint8 err;
 	guint8 cmd;
+	gsize transfer_sz = fu_steelseries_device_get_transfer_size(FU_STEELSERIES_DEVICE(device));
 
-	if (!fu_steelseries_fizz_command(device, data, TRUE, error))
+	if (!fu_steelseries_device_cmd(FU_STEELSERIES_DEVICE(device), data, TRUE, error))
 		return FALSE;
 
 	if (!fu_common_read_uint8_safe(data,
-				       self->in_size,
+				       transfer_sz,
 				       STEELSERIES_FIZZ_COMMAND_OFFSET,
 				       &cmd,
 				       error))
@@ -256,13 +183,13 @@ fu_steelseries_fizz_command_and_check_error(FuDevice *device, guint8 *data, GErr
 	}
 
 	if (!fu_common_read_uint8_safe(data,
-				       self->in_size,
+				       transfer_sz,
 				       STEELSERIES_FIZZ_ERROR_OFFSET,
 				       &err,
 				       error))
 		return FALSE;
 
-	return fu_steelseries_fizz_command_error_to_error(cmd, err, error);
+	return fu_steelseries_device_command_error_to_error(cmd, err, error);
 }
 
 static gchar *
@@ -288,7 +215,7 @@ fu_steelseries_fizz_version(FuDevice *device, GError **error)
 
 	if (g_getenv("FWUPD_STEELSERIES_FIZZ_VERBOSE") != NULL)
 		fu_common_dump_raw(G_LOG_DOMAIN, "Version", data, sizeof(data));
-	if (!fu_steelseries_fizz_command(device, data, TRUE, error))
+	if (!fu_steelseries_device_cmd(FU_STEELSERIES_DEVICE(device), data, TRUE, error))
 		return NULL;
 	if (g_getenv("FWUPD_STEELSERIES_FIZZ_VERBOSE") != NULL)
 		fu_common_dump_raw(G_LOG_DOMAIN, "Version", data, sizeof(data));
@@ -369,7 +296,7 @@ fu_steelseries_fizz_write_access_file(FuDevice *device,
 
 		if (g_getenv("FWUPD_STEELSERIES_FIZZ_VERBOSE") != NULL)
 			fu_common_dump_raw(G_LOG_DOMAIN, "AccessFile", data, sizeof(data));
-		if (!fu_steelseries_fizz_command_and_check_error(device, data, error))
+		if (!fu_steelseries_device_command_and_check_error(device, data, error))
 			return FALSE;
 		if (g_getenv("FWUPD_STEELSERIES_FIZZ_VERBOSE") != NULL)
 			fu_common_dump_raw(G_LOG_DOMAIN, "AccessFile", data, sizeof(data));
@@ -410,7 +337,7 @@ fu_steelseries_fizz_erase_file(FuDevice *device, guint8 fs, guint8 id, GError **
 
 	if (g_getenv("FWUPD_STEELSERIES_FIZZ_VERBOSE") != NULL)
 		fu_common_dump_raw(G_LOG_DOMAIN, "EraseFile", data, sizeof(data));
-	if (!fu_steelseries_fizz_command_and_check_error(device, data, error))
+	if (!fu_steelseries_device_command_and_check_error(device, data, error))
 		return FALSE;
 	if (g_getenv("FWUPD_STEELSERIES_FIZZ_VERBOSE") != NULL)
 		fu_common_dump_raw(G_LOG_DOMAIN, "EraseFile", data, sizeof(data));
@@ -441,7 +368,7 @@ fu_steelseries_fizz_reset(FuDevice *device, guint8 mode, GError **error)
 
 	if (g_getenv("FWUPD_STEELSERIES_FIZZ_VERBOSE") != NULL)
 		fu_common_dump_raw(G_LOG_DOMAIN, "Reset", data, sizeof(data));
-	if (!fu_steelseries_fizz_command(device, data, FALSE, error))
+	if (!fu_steelseries_device_cmd(FU_STEELSERIES_DEVICE(device), data, FALSE, error))
 		return FALSE;
 
 	/* success */
@@ -470,7 +397,7 @@ fu_steelseries_fizz_file_crc32(FuDevice *device,
 
 	if (g_getenv("FWUPD_STEELSERIES_FIZZ_VERBOSE") != NULL)
 		fu_common_dump_raw(G_LOG_DOMAIN, "FileCRC32", data, sizeof(data));
-	if (!fu_steelseries_fizz_command_and_check_error(device, data, error))
+	if (!fu_steelseries_device_command_and_check_error(device, data, error))
 		return FALSE;
 	if (g_getenv("FWUPD_STEELSERIES_FIZZ_VERBOSE") != NULL)
 		fu_common_dump_raw(G_LOG_DOMAIN, "FileCRC32", data, sizeof(data));
@@ -556,7 +483,7 @@ fu_steelseries_fizz_read_access_file(FuDevice *device,
 
 		if (g_getenv("FWUPD_STEELSERIES_FIZZ_VERBOSE") != NULL)
 			fu_common_dump_raw(G_LOG_DOMAIN, "AccessFile", data, sizeof(data));
-		if (!fu_steelseries_fizz_command_and_check_error(device, data, error))
+		if (!fu_steelseries_device_command_and_check_error(device, data, error))
 			return FALSE;
 		if (g_getenv("FWUPD_STEELSERIES_FIZZ_VERBOSE") != NULL)
 			fu_common_dump_raw(G_LOG_DOMAIN, "AccessFile", data, sizeof(data));
@@ -576,68 +503,6 @@ fu_steelseries_fizz_read_access_file(FuDevice *device,
 
 	/* success */
 	return TRUE;
-}
-
-static gboolean
-fu_steelseries_fizz_probe(FuDevice *device, GError **error)
-{
-#if G_USB_CHECK_VERSION(0, 3, 3)
-	FuSteelseriesFizz *self = FU_STEELSERIES_FIZZ(device);
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(device));
-	GUsbInterface *iface = NULL;
-	GUsbEndpoint *ep = NULL;
-	guint8 iface_id = 3;
-	guint8 ep_id;
-	guint16 packet_size;
-	g_autoptr(GPtrArray) ifaces = NULL;
-	g_autoptr(GPtrArray) endpoints = NULL;
-
-	/* FuUsbDevice->probe */
-	if (!FU_DEVICE_CLASS(fu_steelseries_fizz_parent_class)->probe(device, error))
-		return FALSE;
-
-	ifaces = g_usb_device_get_interfaces(usb_device, error);
-	if (ifaces == NULL || ifaces->len < iface_id) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_FOUND,
-				    "update interface not found");
-		return FALSE;
-	}
-
-	/* use the fourth interface for interrupt transfer */
-	iface = g_ptr_array_index(ifaces, iface_id);
-
-	endpoints = g_usb_interface_get_endpoints(iface);
-	/* expecting to have only one endpoint for communication */
-	if (endpoints == NULL || endpoints->len != 1) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_FOUND,
-				    "endpoint not found");
-		return FALSE;
-	}
-
-	ep = g_ptr_array_index(endpoints, 0);
-	ep_id = g_usb_endpoint_get_address(ep);
-	packet_size = g_usb_endpoint_get_maximum_packet_size(ep);
-
-	self->iface_idx = iface_id;
-	self->ep = ep_id;
-	self->in_size = packet_size;
-
-	fu_usb_device_add_interface(FU_USB_DEVICE(self), iface_id);
-
-	/* success */
-	return TRUE;
-#else
-	/* failed */
-	g_set_error_literal(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "this version of GUsb is not supported");
-	return FALSE;
-#endif
 }
 
 static gboolean
@@ -677,7 +542,8 @@ fu_steelseries_fizz_setup(FuDevice *device, GError **error)
 	fu_device_set_version(device, version);
 
 	/* it is a dongle */
-	if (self->device_kind == FU_STEELSERIES_DEVICE_FIZZ_DONGLE) {
+	if (fu_steelseries_device_get_kind(FU_STEELSERIES_DEVICE(self)) ==
+	    FU_STEELSERIES_DEVICE_FIZZ_DONGLE) {
 		fs = STEELSERIES_FIZZ_FILESYSTEM_DONGLE;
 		id = STEELSERIES_FIZZ_DONGLE_FILESYSTEM_BACKUP_APP_ID;
 	}
@@ -775,7 +641,8 @@ fu_steelseries_fizz_write_firmware(FuDevice *device,
 	guint8 id = STEELSERIES_FIZZ_MOUSE_FILESYSTEM_BACKUP_APP_ID;
 
 	/* it is a dongle */
-	if (self->device_kind == FU_STEELSERIES_DEVICE_FIZZ_DONGLE) {
+	if (fu_steelseries_device_get_kind(FU_STEELSERIES_DEVICE(self)) ==
+	    FU_STEELSERIES_DEVICE_FIZZ_DONGLE) {
 		fs = STEELSERIES_FIZZ_FILESYSTEM_DONGLE;
 		id = STEELSERIES_FIZZ_DONGLE_FILESYSTEM_BACKUP_APP_ID;
 	}
@@ -812,7 +679,8 @@ fu_steelseries_fizz_read_firmware(FuDevice *device, FuProgress *progress, GError
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_READ, 100);
 
 	/* it is a dongle */
-	if (self->device_kind == FU_STEELSERIES_DEVICE_FIZZ_DONGLE) {
+	if (fu_steelseries_device_get_kind(FU_STEELSERIES_DEVICE(self)) ==
+	    FU_STEELSERIES_DEVICE_FIZZ_DONGLE) {
 		fs = STEELSERIES_FIZZ_FILESYSTEM_DONGLE;
 		id = STEELSERIES_FIZZ_DONGLE_FILESYSTEM_BACKUP_APP_ID;
 		bufsz = 0x23000;
@@ -854,46 +722,6 @@ fu_steelseries_fizz_prepare_firmware(FuDevice *device,
 	return g_steal_pointer(&firmware);
 }
 
-static gboolean
-fu_steelseries_fizz_set_quirk_kv(FuDevice *device,
-				 const gchar *key,
-				 const gchar *value,
-				 GError **error)
-{
-	FuSteelseriesFizz *self = FU_STEELSERIES_FIZZ(device);
-
-	if (g_strcmp0(key, "SteelSeriesDeviceKind") == 0) {
-		self->device_kind = fu_steelseries_device_type_from_string(value);
-		if (self->device_kind != FU_STEELSERIES_DEVICE_UNKNOWN)
-			return TRUE;
-
-		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
-				    "unsupported SteelSeriesDeviceKind quirk format");
-		return FALSE;
-	}
-
-	/* failed */
-	g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED, "quirk key not supported");
-	return FALSE;
-}
-
-static void
-fu_steelseries_fizz_to_string(FuDevice *device, guint idt, GString *str)
-{
-	FuSteelseriesFizz *self = FU_STEELSERIES_FIZZ(device);
-
-	FU_DEVICE_CLASS(fu_steelseries_fizz_parent_class)->to_string(device, idt, str);
-
-	fu_common_string_append_kv(str,
-				   idt,
-				   "DeviceKind",
-				   fu_steelseries_device_type_to_string(self->device_kind));
-	fu_common_string_append_kx(str, idt, "Interface", self->iface_idx);
-	fu_common_string_append_kx(str, idt, "Endpoint", self->ep);
-}
-
 static void
 fu_steelseries_fizz_set_progress(FuDevice *self, FuProgress *progress)
 {
@@ -909,21 +737,19 @@ fu_steelseries_fizz_class_init(FuSteelseriesFizzClass *klass)
 {
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
 
-	klass_device->probe = fu_steelseries_fizz_probe;
 	klass_device->attach = fu_steelseries_fizz_attach;
 	klass_device->setup = fu_steelseries_fizz_setup;
 	klass_device->write_firmware = fu_steelseries_fizz_write_firmware;
 	klass_device->read_firmware = fu_steelseries_fizz_read_firmware;
 	klass_device->prepare_firmware = fu_steelseries_fizz_prepare_firmware;
-	klass_device->set_quirk_kv = fu_steelseries_fizz_set_quirk_kv;
-	klass_device->to_string = fu_steelseries_fizz_to_string;
 	klass_device->set_progress = fu_steelseries_fizz_set_progress;
 }
 
 static void
 fu_steelseries_fizz_init(FuSteelseriesFizz *self)
 {
-	self->device_kind = FU_STEELSERIES_DEVICE_FIZZ;
+	fu_steelseries_device_set_kind(FU_STEELSERIES_DEVICE(self), FU_STEELSERIES_DEVICE_FIZZ);
+	fu_steelseries_device_set_iface_idx_offset(FU_STEELSERIES_DEVICE(self), 0x03);
 
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);

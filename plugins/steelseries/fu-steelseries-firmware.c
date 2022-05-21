@@ -8,7 +8,6 @@
 
 #include <fwupdplugin.h>
 
-#include "fu-steelseries-common.h"
 #include "fu-steelseries-firmware.h"
 
 struct _FuSteelseriesFirmware {
