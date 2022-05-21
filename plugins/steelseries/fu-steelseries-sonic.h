@@ -10,7 +10,3 @@
 
 #define FU_TYPE_STEELSERIES_SONIC (fu_steelseries_sonic_get_type())
 G_DECLARE_FINAL_TYPE(FuSteelseriesSonic, fu_steelseries_sonic, FU, STEELSERIES_SONIC, FuUsbDevice)
-
-struct _FuSteelseriesSonicClass {
-	FuUsbDeviceClass parent_class;
-};

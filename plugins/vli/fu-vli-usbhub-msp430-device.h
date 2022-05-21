@@ -15,9 +15,5 @@ G_DECLARE_FINAL_TYPE(FuVliUsbhubMsp430Device,
 		     VLI_USBHUB_MSP430_DEVICE,
 		     FuDevice)
 
-struct _FuVliUsbhubMsp430DeviceClass {
-	FuDeviceClass parent_class;
-};
-
 FuDevice *
 fu_vli_usbhub_msp430_device_new(FuVliUsbhubDevice *parent);

@@ -15,9 +15,5 @@ G_DECLARE_FINAL_TYPE(FuVliUsbhubPdDevice,
 		     VLI_USBHUB_PD_DEVICE,
 		     FuDevice)
 
-struct _FuVliUsbhubPdDeviceClass {
-	FuDeviceClass parent_class;
-};
-
 FuDevice *
 fu_vli_usbhub_pd_device_new(FuVliUsbhubDevice *parent);

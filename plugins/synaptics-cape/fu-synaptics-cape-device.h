@@ -14,7 +14,3 @@ G_DECLARE_FINAL_TYPE(FuSynapticsCapeDevice,
 		     FU,
 		     SYNAPTICS_CAPE_DEVICE,
 		     FuHidDevice)
-
-struct _FuSynapticsCapeDeviceClass {
-	FuHidDeviceClass parent_class;
-};

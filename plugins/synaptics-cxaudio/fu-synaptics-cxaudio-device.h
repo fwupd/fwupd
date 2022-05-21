@@ -14,7 +14,3 @@ G_DECLARE_FINAL_TYPE(FuSynapticsCxaudioDevice,
 		     FU,
 		     SYNAPTICS_CXAUDIO_DEVICE,
 		     FuHidDevice)
-
-struct _FuSynapticsCxaudioDeviceClass {
-	FuHidDeviceClass parent_class;
-};

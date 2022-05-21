@@ -10,7 +10,3 @@
 
 #define FU_TYPE_STEELSERIES_FIZZ (fu_steelseries_fizz_get_type())
 G_DECLARE_FINAL_TYPE(FuSteelseriesFizz, fu_steelseries_fizz, FU, STEELSERIES_FIZZ, FuUsbDevice)
-
-struct _FuSteelseriesFizzClass {
-	FuUsbDeviceClass parent_class;
-};
