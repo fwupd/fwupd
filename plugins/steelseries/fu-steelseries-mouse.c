@@ -8,14 +8,18 @@
 
 #include <string.h>
 
-#include "fu-steelseries-device.h"
+#include "fu-steelseries-mouse.h"
 
 #define STEELSERIES_TRANSACTION_TIMEOUT 1000 /* ms */
 
-G_DEFINE_TYPE(FuSteelseriesDevice, fu_steelseries_device, FU_TYPE_USB_DEVICE)
+struct _FuSteelseriesMouse {
+	FuUsbDevice parent_instance;
+};
+
+G_DEFINE_TYPE(FuSteelseriesMouse, fu_steelseries_mouse, FU_TYPE_USB_DEVICE)
 
 static gboolean
-fu_steelseries_device_setup(FuDevice *device, GError **error)
+fu_steelseries_mouse_setup(FuDevice *device, GError **error)
 {
 	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(device));
 	gboolean ret;
@@ -24,7 +28,7 @@ fu_steelseries_device_setup(FuDevice *device, GError **error)
 	g_autofree gchar *version = NULL;
 
 	/* FuUsbDevice->setup */
-	if (!FU_DEVICE_CLASS(fu_steelseries_device_parent_class)->setup(device, error))
+	if (!FU_DEVICE_CLASS(fu_steelseries_mouse_parent_class)->setup(device, error))
 		return FALSE;
 
 	memset(data, 0x00, sizeof(data));
@@ -82,15 +86,15 @@ fu_steelseries_device_setup(FuDevice *device, GError **error)
 }
 
 static void
-fu_steelseries_device_init(FuSteelseriesDevice *self)
+fu_steelseries_mouse_init(FuSteelseriesMouse *self)
 {
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_usb_device_add_interface(FU_USB_DEVICE(self), 0x00);
 }
 
 static void
-fu_steelseries_device_class_init(FuSteelseriesDeviceClass *klass)
+fu_steelseries_mouse_class_init(FuSteelseriesMouseClass *klass)
 {
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
-	klass_device->setup = fu_steelseries_device_setup;
+	klass_device->setup = fu_steelseries_mouse_setup;
 }

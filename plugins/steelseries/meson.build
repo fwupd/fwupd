@@ -10,7 +10,7 @@ shared_module('fu_plugin_steelseries',
   sources : [
     'fu-plugin-steelseries.c',
     'fu-steelseries-common.c',
-    'fu-steelseries-device.c',
+    'fu-steelseries-mouse.c',
     'fu-steelseries-firmware.c',
     'fu-steelseries-fizz.c',
     'fu-steelseries-gamepad.c',
