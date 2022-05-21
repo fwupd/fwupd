@@ -12,7 +12,3 @@
 
 #define FU_TYPE_UEFI_NVRAM_DEVICE (fu_uefi_nvram_device_get_type())
 G_DECLARE_FINAL_TYPE(FuUefiNvramDevice, fu_uefi_nvram_device, FU, UEFI_NVRAM_DEVICE, FuUefiDevice)
-
-struct _FuUefiNvramDeviceClass {
-	FuUefiDeviceClass parent_class;
-};

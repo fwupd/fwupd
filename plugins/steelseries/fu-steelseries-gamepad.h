@@ -14,7 +14,3 @@ G_DECLARE_FINAL_TYPE(FuSteelseriesGamepad,
 		     FU,
 		     STEELSERIES_GAMEPAD,
 		     FuUsbDevice)
-
-struct _FuSteelseriesGamepadClass {
-	FuUsbDeviceClass parent_class;
-};

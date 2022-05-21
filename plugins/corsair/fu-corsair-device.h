@@ -10,7 +10,3 @@
 
 #define FU_TYPE_CORSAIR_DEVICE (fu_corsair_device_get_type())
 G_DECLARE_FINAL_TYPE(FuCorsairDevice, fu_corsair_device, FU, CORSAIR_DEVICE, FuUsbDevice)
-
-struct _FuCorsairDeviceClass {
-	FuUsbDeviceClass parent_class;
-};
