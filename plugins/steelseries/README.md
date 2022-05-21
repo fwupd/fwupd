@@ -28,6 +28,16 @@ These devices use the standard USB DeviceInstanceId values, e.g.
 * `USB\VID_1038&PID_1702`
 * `USB\VID_1038`
 
+## Quirk Use
+
+This plugin uses the following plugin-specific quirks:
+
+### Flags:is-dongle
+
+The device is a dongle.
+
+Since 1.8.1
+
 ## Update Behavior
 
 ### Gamepad

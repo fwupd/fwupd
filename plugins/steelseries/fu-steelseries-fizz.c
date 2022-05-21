@@ -523,7 +523,6 @@ fu_steelseries_fizz_attach(FuDevice *device, FuProgress *progress, GError **erro
 static gboolean
 fu_steelseries_fizz_setup(FuDevice *device, GError **error)
 {
-	FuSteelseriesFizz *self = FU_STEELSERIES_FIZZ(device);
 	guint32 calculated_crc;
 	guint32 stored_crc;
 	guint8 fs = STEELSERIES_FIZZ_FILESYSTEM_MOUSE;
@@ -542,8 +541,7 @@ fu_steelseries_fizz_setup(FuDevice *device, GError **error)
 	fu_device_set_version(device, version);
 
 	/* it is a dongle */
-	if (fu_steelseries_device_get_kind(FU_STEELSERIES_DEVICE(self)) ==
-	    FU_STEELSERIES_DEVICE_FIZZ_DONGLE) {
+	if (fu_device_has_private_flag(device, FU_STEELSERIES_DEVICE_FLAG_IS_DONGLE)) {
 		fs = STEELSERIES_FIZZ_FILESYSTEM_DONGLE;
 		id = STEELSERIES_FIZZ_DONGLE_FILESYSTEM_BACKUP_APP_ID;
 	}
@@ -636,13 +634,11 @@ fu_steelseries_fizz_write_firmware(FuDevice *device,
 				   FwupdInstallFlags flags,
 				   GError **error)
 {
-	FuSteelseriesFizz *self = FU_STEELSERIES_FIZZ(device);
 	guint8 fs = STEELSERIES_FIZZ_FILESYSTEM_MOUSE;
 	guint8 id = STEELSERIES_FIZZ_MOUSE_FILESYSTEM_BACKUP_APP_ID;
 
 	/* it is a dongle */
-	if (fu_steelseries_device_get_kind(FU_STEELSERIES_DEVICE(self)) ==
-	    FU_STEELSERIES_DEVICE_FIZZ_DONGLE) {
+	if (fu_device_has_private_flag(device, FU_STEELSERIES_DEVICE_FLAG_IS_DONGLE)) {
 		fs = STEELSERIES_FIZZ_FILESYSTEM_DONGLE;
 		id = STEELSERIES_FIZZ_DONGLE_FILESYSTEM_BACKUP_APP_ID;
 	}
@@ -667,7 +663,6 @@ fu_steelseries_fizz_write_firmware(FuDevice *device,
 static FuFirmware *
 fu_steelseries_fizz_read_firmware(FuDevice *device, FuProgress *progress, GError **error)
 {
-	FuSteelseriesFizz *self = FU_STEELSERIES_FIZZ(device);
 	guint8 fs = STEELSERIES_FIZZ_FILESYSTEM_MOUSE;
 	guint8 id = STEELSERIES_FIZZ_MOUSE_FILESYSTEM_BACKUP_APP_ID;
 	gsize bufsz = 0x27000;
@@ -679,8 +674,7 @@ fu_steelseries_fizz_read_firmware(FuDevice *device, FuProgress *progress, GError
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_READ, 100);
 
 	/* it is a dongle */
-	if (fu_steelseries_device_get_kind(FU_STEELSERIES_DEVICE(self)) ==
-	    FU_STEELSERIES_DEVICE_FIZZ_DONGLE) {
+	if (fu_device_has_private_flag(device, FU_STEELSERIES_DEVICE_FLAG_IS_DONGLE)) {
 		fs = STEELSERIES_FIZZ_FILESYSTEM_DONGLE;
 		id = STEELSERIES_FIZZ_DONGLE_FILESYSTEM_BACKUP_APP_ID;
 		bufsz = 0x23000;
@@ -748,7 +742,6 @@ fu_steelseries_fizz_class_init(FuSteelseriesFizzClass *klass)
 static void
 fu_steelseries_fizz_init(FuSteelseriesFizz *self)
 {
-	fu_steelseries_device_set_kind(FU_STEELSERIES_DEVICE(self), FU_STEELSERIES_DEVICE_FIZZ);
 	fu_steelseries_device_set_iface_idx_offset(FU_STEELSERIES_DEVICE(self), 0x03);
 
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_TRIPLET);
