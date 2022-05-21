@@ -714,7 +714,6 @@ fu_steelseries_fizz_write_file(FuDevice *device,
 	const guint8 *buf;
 	gsize bufsz;
 	g_autoptr(GBytes) blob = NULL;
-	g_autoptr(GPtrArray) chunks = NULL;
 
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 38);
