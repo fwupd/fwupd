@@ -79,7 +79,7 @@ struct FuUtilPrivate {
 	/* only valid in update and downgrade */
 	FuUtilOperation current_operation;
 	FwupdDevice *current_device;
-	gchar *current_message;
+	GPtrArray *post_requests;
 	FwupdDeviceFlags completion_flags;
 	FwupdDeviceFlags filter_include;
 	FwupdDeviceFlags filter_exclude;
@@ -386,7 +386,7 @@ fu_util_private_free(FuUtilPrivate *priv)
 		g_option_context_free(priv->context);
 	if (priv->lock_fd != 0)
 		g_close(priv->lock_fd, NULL);
-	g_free(priv->current_message);
+	g_ptr_array_unref(priv->post_requests);
 	g_free(priv);
 }
 
@@ -416,6 +416,10 @@ fu_util_update_device_request_cb(FwupdClient *client, FwupdRequest *request, FuU
 		tmp = g_strdup_printf("%s %s", fmt, fwupd_request_get_message(request));
 		fu_progressbar_set_title(priv->progressbar, tmp);
 	}
+
+	/* save for later */
+	if (fwupd_request_get_kind(request) == FWUPD_REQUEST_KIND_POST)
+		g_ptr_array_add(priv->post_requests, g_object_ref(request));
 }
 
 static void
@@ -915,21 +919,16 @@ fu_util_update_device_changed_cb(FwupdClient *client, FwupdDevice *device, FuUti
 		g_warning("no FuUtilOperation set");
 	}
 	g_set_object(&priv->current_device, device);
-
-	if (priv->current_message == NULL) {
-		const gchar *tmp = fwupd_device_get_update_message(priv->current_device);
-		if (tmp != NULL)
-			priv->current_message = g_strdup(tmp);
-	}
 }
 
 static void
 fu_util_display_current_message(FuUtilPrivate *priv)
 {
-	if (priv->current_message == NULL)
-		return;
-	g_print("%s\n", priv->current_message);
-	g_clear_pointer(&priv->current_message, g_free);
+	/* print all POST requests */
+	for (guint i = 0; i < priv->post_requests->len; i++) {
+		FwupdRequest *request = g_ptr_array_index(priv->post_requests, i);
+		g_print("%s\n", fwupd_request_get_message(request));
+	}
 }
 
 static gboolean
@@ -3423,6 +3422,7 @@ main(int argc, char *argv[])
 	priv->main_ctx = g_main_context_new();
 	priv->loop = g_main_loop_new(priv->main_ctx, FALSE);
 	priv->progressbar = fu_progressbar_new();
+	priv->post_requests = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 	fu_progressbar_set_main_context(priv->progressbar, priv->main_ctx);
 	priv->request = fu_engine_request_new(FU_ENGINE_REQUEST_KIND_ACTIVE);
 
