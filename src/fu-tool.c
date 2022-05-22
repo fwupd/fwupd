@@ -396,6 +396,29 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuUtilPrivate, fu_util_private_free)
 #pragma clang diagnostic pop
 
 static void
+fu_util_update_device_request_cb(FwupdClient *client, FwupdRequest *request, FuUtilPrivate *priv)
+{
+	/* action has not been assigned yet */
+	if (priv->current_operation == FU_UTIL_OPERATION_UNKNOWN)
+		return;
+
+	/* nothing sensible to show */
+	if (fwupd_request_get_message(request) == NULL)
+		return;
+
+	/* show this now */
+	if (fwupd_request_get_kind(request) == FWUPD_REQUEST_KIND_IMMEDIATE) {
+		g_autofree gchar *fmt = NULL;
+		g_autofree gchar *tmp = NULL;
+
+		/* TRANSLATORS: the user needs to do something, e.g. remove the device */
+		fmt = fu_util_term_format(_("Action Required:"), FU_UTIL_TERM_COLOR_RED);
+		tmp = g_strdup_printf("%s %s", fmt, fwupd_request_get_message(request));
+		fu_progressbar_set_title(priv->progressbar, tmp);
+	}
+}
+
+static void
 fu_main_engine_device_added_cb(FuEngine *engine, FuDevice *device, FuUtilPrivate *priv)
 {
 	g_autofree gchar *tmp = fu_device_to_string(device);
@@ -3728,7 +3751,8 @@ main(int argc, char *argv[])
 		    priv->request,
 		    FWUPD_FEATURE_FLAG_DETACH_ACTION | FWUPD_FEATURE_FLAG_SWITCH_BRANCH |
 			FWUPD_FEATURE_FLAG_FDE_WARNING | FWUPD_FEATURE_FLAG_UPDATE_ACTION |
-			FWUPD_FEATURE_FLAG_COMMUNITY_TEXT | FWUPD_FEATURE_FLAG_SHOW_PROBLEMS);
+			FWUPD_FEATURE_FLAG_COMMUNITY_TEXT | FWUPD_FEATURE_FLAG_SHOW_PROBLEMS |
+			FWUPD_FEATURE_FLAG_REQUESTS);
 	}
 	fu_progressbar_set_interactive(priv->progressbar, priv->interactive);
 
@@ -3798,6 +3822,10 @@ main(int argc, char *argv[])
 
 	/* load engine */
 	priv->engine = fu_engine_new(FU_APP_FLAGS_NO_IDLE_SOURCES);
+	g_signal_connect(FU_ENGINE(priv->engine),
+			 "device-request",
+			 G_CALLBACK(fu_util_update_device_request_cb),
+			 priv);
 	g_signal_connect(FU_ENGINE(priv->engine),
 			 "device-added",
 			 G_CALLBACK(fu_main_engine_device_added_cb),
