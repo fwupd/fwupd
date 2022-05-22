@@ -227,7 +227,7 @@ fu_util_prompt_for_device(FuUtilPrivate *priv, GPtrArray *devices, GError **erro
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_FOUND,
-				    "can't prompt for devices ");
+				    "can't prompt for devices");
 		return NULL;
 	}
 
