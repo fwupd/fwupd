@@ -563,14 +563,14 @@ fu_archive_write_cb(struct archive *arch, void *user_data, const void *buf, gsiz
 
 /**
  * fu_archive_write:
+ * @self: a #FuArchive
  * @format: a compression, e.g. `FU_ARCHIVE_FORMAT_ZIP`
  * @compression: a compression, e.g. `FU_ARCHIVE_COMPRESSION_NONE`
  * @error: (nullable): optional return location for an error
  *
- * Writes a @compression_type archive, iterating over the content returned by the @callback.
- * If any @callback returns %FALSE, saving is aborted.
+ * Writes an archive with specified @format and @compression.
  *
- * Returns: True if no @callback returned FALSE
+ * Returns: (transfer full): the archive blob
  *
  * Since: 1.8.1
  **/
