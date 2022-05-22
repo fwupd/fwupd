@@ -1655,13 +1655,9 @@ static GBytes *
 fu_genesys_scaler_device_dump_firmware(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuGenesysScalerDevice *self = FU_GENESYS_SCALER_DEVICE(device);
-	gsize size = fu_device_get_firmware_size_max(device);
-	guint addr = 0x000000;
+	gsize size = fu_cfi_device_get_size(self->cfi_device);
 	g_autofree guint8 *buf = NULL;
 	g_autoptr(FuDeviceLocker) locker = NULL;
-
-	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_DUAL_IMAGE))
-		addr = 0x200000;
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
@@ -1679,7 +1675,7 @@ fu_genesys_scaler_device_dump_firmware(FuDevice *device, FuProgress *progress, G
 
 	buf = g_malloc0(size);
 	if (!fu_genesys_scaler_device_read_flash(self,
-						 addr,
+						 0,
 						 buf,
 						 size,
 						 fu_progress_get_child(progress),
