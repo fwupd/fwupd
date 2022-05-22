@@ -758,13 +758,9 @@ static GBytes *
 fu_genesys_usbhub_device_dump_firmware(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuGenesysUsbhubDevice *self = FU_GENESYS_USBHUB_DEVICE(device);
-	gsize address = self->fw_bank_addr[0];
-	gsize size = self->code_size + self->extend_size;
+	gsize size = fu_cfi_device_get_size(self->cfi_device);
 	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autofree guint8 *buf = NULL;
-
-	if (self->fw_bank_vers[0] == 0 && fu_device_has_flag(device, FWUPD_DEVICE_FLAG_DUAL_IMAGE))
-		address = self->fw_bank_addr[1];
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
@@ -782,7 +778,7 @@ fu_genesys_usbhub_device_dump_firmware(FuDevice *device, FuProgress *progress, G
 
 	buf = g_malloc0(size);
 	if (!fu_genesys_usbhub_device_read_flash(self,
-						 address,
+						 0,
 						 buf,
 						 size,
 						 fu_progress_get_child(progress),
