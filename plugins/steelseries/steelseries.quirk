@@ -29,6 +29,13 @@ Icon = usb-receiver
 FirmwareSize = 0x23000
 Flags = is-bootloader,is-receiver,~usable-during-update
 
+[STEELSERIES\VID_1038&PID_1838&PROTOCOL_FIZZ_TUNNEL]
+Plugin = steelseries
+GType = FuSteelseriesFizzTunnel
+Name = Aerox 3 Wireless Mouse via USB Receiver
+Icon = input-mouse
+FirmwareSize = 0x27000
+
 [USB\VID_1038&PID_183A]
 Plugin = steelseries
 GType = FuSteelseriesFizz

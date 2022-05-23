@@ -59,7 +59,9 @@ Wireless adapter must be connected to host.
 
 ### Aerox 3 Wireless
 
-The mouse must be connected to host via the USB-A to USB-C cable.
+The mouse switch button underneath must be set to 2.4G, and its 2.4G USB
+Wireless adapter must be connected to host; or the mouse must be connected to
+host via the USB-A to USB-C cable.
 
 ## Vendor ID Security
 
