@@ -52,15 +52,16 @@ typedef enum {
 } SteelseriesSonicChip;
 
 typedef enum {
-	STEELSERIES_SONIC_WIRELESS_STATE_OFF,	 /* WDS not initiated, radio is off */
-	STEELSERIES_SONIC_WIRELESS_STATE_IDLE,	 /* WDS initiated, dongle is transmitting beacon
-						  * (mouse will not have this state) */
+	STEELSERIES_SONIC_WIRELESS_STATE_OFF,  /* WDS not initiated, radio is off */
+	STEELSERIES_SONIC_WIRELESS_STATE_IDLE, /* WDS initiated, USB receiver is transmitting beacon
+						* (mouse will not have this state) */
 	STEELSERIES_SONIC_WIRELESS_STATE_SEARCH, /* WDS initiated, mouse is trying to synchronize to
-						  * dongle (dongle will not have this state) */
-	STEELSERIES_SONIC_WIRELESS_STATE_LOCKED, /* Dongle and mouse are synchronized, but not
+						  * receiver (receiver will not have this state) */
+	STEELSERIES_SONIC_WIRELESS_STATE_LOCKED, /* USB receiver and mouse are synchronized, but not
 						  * necessarily connected. */
-	STEELSERIES_SONIC_WIRELESS_STATE_CONNECTED,  /* Dongle and mouse are connected. */
-	STEELSERIES_SONIC_WIRELESS_STATE_TERMINATED, /* Mouse has been disconnected from the dongle.
+	STEELSERIES_SONIC_WIRELESS_STATE_CONNECTED,  /* USB receiver and mouse are connected. */
+	STEELSERIES_SONIC_WIRELESS_STATE_TERMINATED, /* Mouse has been disconnected from the USB
+						      * receiver.
 						      */
 } SteelseriesSonicWirelessStatus;
 
@@ -88,7 +89,7 @@ fu_steelseries_sonic_wireless_status(FuDevice *device,
 				     GError **error)
 {
 	guint8 data[STEELSERIES_BUFFER_CONTROL_SIZE] = {0};
-	const guint16 opcode = 0xE8U; /* dongle */
+	const guint16 opcode = 0xE8U; /* USB receiver */
 	guint8 value;
 
 	if (!fu_common_write_uint8_safe(data,
@@ -605,7 +606,7 @@ fu_steelseries_sonic_attach(FuDevice *device, FuProgress *progress, GError **err
 	}
 	fu_progress_step_done(progress);
 
-	/* dongle (nordic, holtek; same command) */
+	/* USB receiver (nordic, holtek; same command) */
 	chip = STEELSERIES_SONIC_CHIP_HOLTEK;
 	if (!fu_steelseries_sonic_restart(device, chip, fu_progress_get_child(progress), error)) {
 		g_prefix_error(error, "failed to restart chip %u: ", chip);

@@ -10,15 +10,6 @@
 
 #include <fwupdplugin.h>
 
-typedef enum {
-	FU_STEELSERIES_DEVICE_UNKNOWN = 0,
-	FU_STEELSERIES_DEVICE_GAMEPAD,
-	FU_STEELSERIES_DEVICE_GAMEPAD_DONGLE,
-	FU_STEELSERIES_DEVICE_SONIC,
-	FU_STEELSERIES_DEVICE_FIZZ,
-	FU_STEELSERIES_DEVICE_FIZZ_DONGLE,
-} FuSteelseriesDeviceKind;
-
 #define FU_TYPE_STEELSERIES_DEVICE (fu_steelseries_device_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuSteelseriesDevice,
 			 fu_steelseries_device,
@@ -34,13 +25,13 @@ struct _FuSteelseriesDeviceClass {
 #define STEELSERIES_TRANSACTION_TIMEOUT 5000
 
 /**
- * FU_STEELSERIES_IS_DONGLE:
+ * FU_STEELSERIES_DEVICE_FLAG_IS_RECEIVER:
  *
- * The device is a dongle.
+ * The device is a USB receiver.
  *
  * Since 1.8.1
  */
-#define FU_STEELSERIES_DEVICE_FLAG_IS_DONGLE (1 << 0)
+#define FU_STEELSERIES_DEVICE_FLAG_IS_RECEIVER (1 << 0)
 
 void
 fu_steelseries_device_set_iface_idx_offset(FuSteelseriesDevice *self, gint iface_idx_offset);
