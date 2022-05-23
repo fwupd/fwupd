@@ -447,9 +447,8 @@ that can be used for the plugin.
     fu_plugin_steelseries_init(FuPlugin *plugin)
     {
         FuContext *ctx = fu_plugin_get_context(plugin);
-        fu_plugin_add_device_gtype(plugin, FU_TYPE_STEELSERIES_DEVICE);
+        fu_plugin_add_device_gtype(plugin, FU_TYPE_STEELSERIES_MOUSE);
         fu_plugin_add_device_gtype(plugin, FU_TYPE_STEELSERIES_GAMEPAD);
-        fu_context_add_quirk_key(ctx, "SteelSeriesDeviceKind");
     }
 
     void
