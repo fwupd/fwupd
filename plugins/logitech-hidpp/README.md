@@ -4,13 +4,13 @@
 
 This plugin can flash the firmware on:
 
-* Logitech Unifying dongles, both the Nordic (U0007) device and the
+* Logitech Unifying USB receivers, both the Nordic (U0007) device and the
    Texas Instruments (U0008) versions
-* Logitech Bolt dongles
+* Logitech Bolt USB receivers
 * Unifying peripherals through the Unifying receiver
 * Peripherals through the Bolt receiver and directly through BLE
 
-This plugin will not work with the different "Nano" dongle (U0010) as it does
+This plugin will not work with the different "Nano" USB receiver (U0010) as it does
 not use the Unifying protocol.
 
 Some bootloader protocol information was taken from the [Mousejack](https://www.mousejack.com/) project,
@@ -46,7 +46,7 @@ When in runtime mode, the HID raw DeviceInstanceId values are used:
 * `HIDRAW\VEN_046D&DEV_C52B&ENT_05`
 * `HIDRAW\VEN_046D`
 
-The Bolt dongle and peripherals use HID raw DeviceInstanceId values
+The Bolt USB receiver and peripherals use HID raw DeviceInstanceId values
 regardless of their mode. This might change once these devices are
 handled by the Logitech Linux driver instead of by the generic hid
 driver.
@@ -90,7 +90,7 @@ their hidraw device files.
 
 ## Design Notes
 
-When a dongle is detected in bootloader mode we detach the hidraw driver from
+When a USB receiver is detected in bootloader mode we detach the hidraw driver from
 the kernel and use raw control transfers. This ensures that we don't accidentally
 corrupt the uploading firmware. For application firmware we use hidraw which
 means the hardware keeps working while probing, and also allows us to detect

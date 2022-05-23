@@ -108,7 +108,7 @@ fu_logitech_hidpp_runtime_unifying_setup_internal(FuDevice *device, GError **err
 		    config[9]);
 		fu_device_set_version_bootloader(FU_DEVICE(device), version_bl);
 
-		/* is the dongle expecting signed firmware */
+		/* is the USB receiver expecting signed firmware */
 		if ((fu_logitech_hidpp_runtime_get_version_bl_major(self) == 0x01 &&
 		     config[8] >= 0x04) ||
 		    (fu_logitech_hidpp_runtime_get_version_bl_major(self) == 0x03 &&
