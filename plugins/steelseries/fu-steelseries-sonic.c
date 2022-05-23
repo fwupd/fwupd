@@ -174,7 +174,6 @@ fu_steelseries_sonic_read_from_ram(FuDevice *device,
 	chunks =
 	    fu_chunk_array_mutable_new(buf, bufsz, 0x0, 0x0, STEELSERIES_BUFFER_RAM_TRANSFER_SIZE);
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_READ);
 	fu_progress_set_steps(progress, chunks->len);
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index(chunks, i);
@@ -247,7 +246,6 @@ fu_steelseries_sonic_read_from_flash(FuDevice *device,
 					    0x0,
 					    STEELSERIES_BUFFER_FLASH_TRANSFER_SIZE);
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_READ);
 	fu_progress_set_steps(progress, chunks->len);
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index(chunks, i);
@@ -712,7 +710,6 @@ fu_steelseries_sonic_read_chip(FuDevice *device,
 	g_autofree guint8 *buf = NULL;
 
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_READ);
 	fu_progress_set_steps(progress, 1);
 
 	bufsz = STEELSERIES_SONIC_FIRMWARE_SIZE[chip];
