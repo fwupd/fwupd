@@ -21,9 +21,9 @@ fu_steelseries_gamepad_cmd_erase(FuDevice *device, GError **error)
 {
 	guint8 data[STEELSERIES_BUFFER_CONTROL_SIZE] = {0xA1, 0xAA, 0x55};
 
-	/* dongle for gamepad is using different options */
-	if (fu_device_has_private_flag(device, FU_STEELSERIES_DEVICE_FLAG_IS_DONGLE)) {
-		/* dongle */
+	/* USB receiver for gamepad is using different options */
+	if (fu_device_has_private_flag(device, FU_STEELSERIES_DEVICE_FLAG_IS_RECEIVER)) {
+		/* USB receiver */
 		data[8] = 0xD0;
 		data[9] = 0x01;
 	} else {

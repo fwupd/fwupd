@@ -32,9 +32,9 @@ These devices use the standard USB DeviceInstanceId values, e.g.
 
 This plugin uses the following plugin-specific quirks:
 
-### Flags:is-dongle
+### Flags:is-receiver
 
-The device is a dongle.
+The device is a USB receiver.
 
 Since 1.8.1
 
