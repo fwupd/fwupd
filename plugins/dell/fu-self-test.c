@@ -302,7 +302,7 @@ fu_plugin_dell_dock_func(gconstpointer user_data)
 	g_clear_error(&error);
 	g_assert_cmpint(devices->len, ==, 0);
 
-	/* inject a USB dongle matching correct VID/PID */
+	/* inject a USB receiver matching correct VID/PID */
 	out[0] = 0;
 	out[1] = 0;
 	fu_plugin_dell_inject_fake_data(self->plugin_dell,
