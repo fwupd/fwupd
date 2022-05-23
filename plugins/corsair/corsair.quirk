@@ -11,5 +11,5 @@ CorsairDeviceKind = mouse
 Plugin = corsair
 GType = FuCorsairDevice
 Name = SLIPSTREAM WIRELESS USB Receiver
-Icon = input-mouse
+Icon = usb-receiver
 CorsairDeviceKind = receiver
