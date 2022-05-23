@@ -16,7 +16,7 @@ Icon = input-mouse
 Plugin = steelseries
 GType = FuSteelseriesFizz
 Name = Aerox 3 Wireless Dongle
-Icon = input-mouse
+Icon = usb-receiver
 CounterpartGuid = USB\VID_1038&PID_1839
 FirmwareSize = 0x23000
 Flags = is-dongle
@@ -34,7 +34,7 @@ FirmwareSize = 0x27000
 Plugin = steelseries
 GType = FuSteelseriesGamepad
 Name = Stratus Duo RX
-Icon = input-gaming
+Icon = usb-receiver
 CounterpartGuid = USB\VID_1038&PID_1432
 Flags = is-dongle
 
@@ -42,6 +42,7 @@ Flags = is-dongle
 Plugin = steelseries
 GType = FuSteelseriesGamepad
 Name = Stratus Duo RX bootloader
+Icon = usb-receiver
 CounterpartGuid = USB\VID_1038&PID_1430
 Flags = is-dongle,is-bootloader
 

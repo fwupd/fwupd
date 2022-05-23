@@ -93,6 +93,7 @@ Flags = use-in-report-interrupt
 # USB audio codec Dongle
 [SYNAPTICS_CAPE\CX31993]
 Plugin = synaptics_cape
+Icon = usb-receiver
 
 # USB audio codec Hifi
 [SYNAPTICS_CAPE\CX31988]
