@@ -196,7 +196,7 @@ if get_option('tests')
     ],
   )
   test('fwupd-self-test', e, timeout: 60, env : env)
-  if gio.version().version_compare ('>= 2.64.0')
+  if run_sanitize_unsafe_tests and gio.version().version_compare ('>= 2.64.0')
     e = executable(
       'fwupd-thread-test',
       sources : [
