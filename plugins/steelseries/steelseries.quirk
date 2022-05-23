@@ -43,8 +43,7 @@ Plugin = steelseries
 GType = FuSteelseriesGamepad
 Name = Stratus Duo RX bootloader
 CounterpartGuid = USB\VID_1038&PID_1430
-Flags = is-bootloader
-Flags = is-dongle
+Flags = is-dongle,is-bootloader
 
 # Stratus Duo
 [USB\VID_1038&PID_1431]
