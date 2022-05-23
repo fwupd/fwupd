@@ -8,6 +8,7 @@
 
 #include <fwupdplugin.h>
 
+#include "fu-steelseries-fizz-tunnel.h"
 #include "fu-steelseries-fizz.h"
 #include "fu-steelseries-gamepad.h"
 #include "fu-steelseries-mouse.h"
@@ -18,6 +19,7 @@ fu_plugin_steelseries_init(FuPlugin *plugin)
 {
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_STEELSERIES_MOUSE);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_STEELSERIES_FIZZ);
+	fu_plugin_add_device_gtype(plugin, FU_TYPE_STEELSERIES_FIZZ_TUNNEL);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_STEELSERIES_GAMEPAD);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_STEELSERIES_SONIC);
 }
