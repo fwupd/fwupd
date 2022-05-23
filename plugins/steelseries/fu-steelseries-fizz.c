@@ -239,7 +239,6 @@ fu_steelseries_fizz_write_access_file(FuDevice *device,
 
 	chunks = fu_chunk_array_new(buf, bufsz, 0x0, 0x0, STEELSERIES_BUFFER_TRANSFER_SIZE);
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_WRITE);
 	fu_progress_set_steps(progress, chunks->len);
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index(chunks, i);
@@ -437,7 +436,7 @@ fu_steelseries_fizz_read_access_file(FuDevice *device,
 
 	chunks = fu_chunk_array_mutable_new(buf, bufsz, 0x0, 0x0, STEELSERIES_BUFFER_TRANSFER_SIZE);
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_WRITE);
+	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_READ);
 	fu_progress_set_steps(progress, chunks->len);
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index(chunks, i);
@@ -644,7 +643,7 @@ fu_steelseries_fizz_write_firmware(FuDevice *device,
 	}
 
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 100);
+	fu_progress_set_steps(progress, 1);
 
 	if (!fu_steelseries_fizz_write_file(device,
 					    fs,
