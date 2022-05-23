@@ -549,6 +549,14 @@ elif get_option('docs') == 'docgen'
   gidocgen = find_program('gi-docgen', required: introspection)
 endif
 
+# using "meson configure -Db_sanitize=address,undefined" is super useful in finding corruption,
+# but it does not work with our GMainContext-abuse tests...
+if get_option('b_sanitize').contains('address')
+  run_sanitize_unsafe_tests = false
+else
+  run_sanitize_unsafe_tests = true
+endif
+
 subdir('libfwupd')
 if polkit.found()
   subdir('policy')

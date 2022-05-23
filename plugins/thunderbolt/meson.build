@@ -38,7 +38,7 @@ install_data(['thunderbolt.conf'],
   install_dir:  join_paths(sysconfdir, 'fwupd')
 )
 # we use functions from 2.52 in the tests
-if get_option('tests') and umockdev.found() and gio.version().version_compare('>= 2.52')
+if get_option('tests') and run_sanitize_unsafe_tests and umockdev.found() and gio.version().version_compare('>= 2.52')
   env = environment()
   env.set('G_TEST_SRCDIR', meson.current_source_dir())
   env.set('G_TEST_BUILDDIR', meson.current_build_dir())
