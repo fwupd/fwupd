@@ -74,7 +74,8 @@ fu_redfish_common_fix_version(const gchar *version)
 	/* find the thing with dots */
 	for (guint i = 0; split[i] != NULL; i++) {
 		if (g_strstr_len(split[i], -1, ".")) {
-			g_debug("using %s for %s", split[i], version);
+			if (g_strcmp0(split[i], version) != 0)
+				g_debug("using %s for %s", split[i], version);
 			return g_strdup(split[i]);
 		}
 	}
