@@ -761,7 +761,7 @@ fu_steelseries_sonic_verify_chip(FuDevice *device,
 		return FALSE;
 	}
 	blob_tmp = fu_firmware_get_bytes(fw_tmp, error);
-	if (blob == NULL)
+	if (blob_tmp == NULL)
 		return FALSE;
 	if (!fu_common_bytes_compare(blob_tmp, blob, error)) {
 		if (g_getenv("FWUPD_STEELSERIES_SONIC_VERBOSE") != NULL) {
