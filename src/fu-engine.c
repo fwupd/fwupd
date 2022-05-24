@@ -3461,6 +3461,8 @@ fu_common_device_category_to_name(const gchar *cat)
 		return "Display";
 	if (g_strcmp0(cat, "X-BaseboardManagementController") == 0)
 		return "BMC";
+	if (g_strcmp0(cat, "X-UsbReceiver") == 0)
+		return "USB Receiver";
 	return NULL;
 }
 
