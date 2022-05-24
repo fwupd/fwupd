@@ -28,6 +28,9 @@ fu_steelseries_fizz_new(FuDevice *self);
 #define STEELSERIES_FIZZ_RESET_MODE_NORMAL     0x00U
 #define STEELSERIES_FIZZ_RESET_MODE_BOOTLOADER 0x01U
 
+#define STEELSERIES_FIZZ_BATTERY_LEVEL_CHARGING_BIT 0x80U
+#define STEELSERIES_FIZZ_BATTERY_LEVEL_STATUS_BITS  0x7fU
+
 #define STEELSERIES_FIZZ_RECEIVER_FILESYSTEM_MAIN_BOOT_ID	  0x01U
 #define STEELSERIES_FIZZ_RECEIVER_FILESYSTEM_FSDATA_FILE_ID	  0x02U
 #define STEELSERIES_FIZZ_RECEIVER_FILESYSTEM_FACTORY_SETTINGS_ID  0x03U
@@ -108,6 +111,8 @@ fu_steelseries_fizz_write_file(FuDevice *device,
 			       FuProgress *progress,
 			       FwupdInstallFlags flags,
 			       GError **error);
+gboolean
+fu_steelseries_fizz_battery_level(FuDevice *device, gboolean tunnel, guint8 *level, GError **error);
 gboolean
 fu_steelseries_fizz_paired_status(FuDevice *device, guint8 *status, GError **error);
 gboolean
