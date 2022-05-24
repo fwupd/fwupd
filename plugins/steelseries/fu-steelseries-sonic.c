@@ -539,47 +539,63 @@ fu_steelseries_sonic_restart(FuDevice *device,
 }
 
 static gboolean
-fu_steelseries_sonic_wait_for_device(FuDevice *device, GError **error)
+fu_steelseries_sonic_wait_for_connect_cb(FuDevice *device, gpointer user_data, GError **error)
+{
+	SteelseriesSonicWirelessStatus *wl_status = (SteelseriesSonicWirelessStatus *)user_data;
+
+	if (!fu_steelseries_sonic_wireless_status(device, wl_status, error)) {
+		g_prefix_error(error, "failed to get wireless status: ");
+		return FALSE;
+	}
+	g_debug("WirelessStatus: %u", *wl_status);
+	if (*wl_status != STEELSERIES_SONIC_WIRELESS_STATE_CONNECTED) {
+		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "device is unreachable");
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_steelseries_sonic_wait_for_connect(FuDevice *device, guint delay, GError **error)
 {
 	SteelseriesSonicWirelessStatus wl_status;
+	g_autoptr(FwupdRequest) request = NULL;
+	g_autoptr(GError) error_local = NULL;
+	g_autofree gchar *msg = NULL;
 
 	if (!fu_steelseries_sonic_wireless_status(device, &wl_status, error)) {
 		g_prefix_error(error, "failed to get wireless status: ");
 		return FALSE;
 	}
 	g_debug("WirelessStatus: %u", wl_status);
+	if (wl_status == STEELSERIES_SONIC_WIRELESS_STATE_CONNECTED) {
+		/* success */
+		return TRUE;
+	}
+
+	/* the user has to do something */
+	msg = g_strdup_printf("%s needs to be connected to start the update. "
+			      "Please put the switch button underneath to 2.4G, or "
+			      "click on any button to reconnect it.",
+			      fu_device_get_name(device));
+	request = fwupd_request_new();
+	fwupd_request_set_kind(request, FWUPD_REQUEST_KIND_IMMEDIATE);
+	fwupd_request_set_id(request, FWUPD_REQUEST_ID_PRESS_UNLOCK);
+	fwupd_request_set_message(request, msg);
+	fu_device_emit_request(device, request);
+
+	if (!fu_device_retry_full(device,
+				  fu_steelseries_sonic_wait_for_connect_cb,
+				  delay / 1000,
+				  1000,
+				  &wl_status,
+				  &error_local))
+		g_debug("%s", error_local->message);
 	if (wl_status != STEELSERIES_SONIC_WIRELESS_STATE_CONNECTED) {
-		g_autoptr(FwupdRequest) request = NULL;
-		g_autoptr(GTimer) timer = NULL;
-		g_autofree gchar *msg = NULL;
-
-		/* the user has to do something */
-		msg = g_strdup_printf("%s needs to be connected to start the update. "
-				      "Please put the switch button underneath to 2.4G, or "
-				      "click on any button to reconnect it.",
-				      fu_device_get_name(device));
-		request = fwupd_request_new();
-		fwupd_request_set_kind(request, FWUPD_REQUEST_KIND_IMMEDIATE);
-		fwupd_request_set_id(request, FWUPD_REQUEST_ID_PRESS_UNLOCK);
-		fwupd_request_set_message(request, msg);
-		fu_device_emit_request(device, request);
-
-		/* poll for the wireless status */
-		timer = g_timer_new();
-		do {
-			g_usleep(G_USEC_PER_SEC);
-			if (!fu_steelseries_sonic_wireless_status(device, &wl_status, error)) {
-				g_prefix_error(error, "failed to get wireless status: ");
-				return FALSE;
-			}
-			g_debug("WirelessStatus: %u", wl_status);
-		} while (wl_status != STEELSERIES_SONIC_WIRELESS_STATE_CONNECTED &&
-			 g_timer_elapsed(timer, NULL) * 1000.f <
-			     FU_DEVICE_REMOVE_DELAY_USER_REPLUG);
-		if (wl_status != STEELSERIES_SONIC_WIRELESS_STATE_CONNECTED) {
-			g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NEEDS_USER_ACTION, msg);
-			return FALSE;
-		}
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NEEDS_USER_ACTION, msg);
+		return FALSE;
 	}
 
 	/* success */
@@ -637,7 +653,9 @@ fu_steelseries_sonic_prepare(FuDevice *device,
 {
 	guint16 bat_state;
 
-	if (!fu_steelseries_sonic_wait_for_device(device, error))
+	if (!fu_steelseries_sonic_wait_for_connect(device,
+						   fu_device_get_remove_delay(device),
+						   error))
 		return FALSE;
 
 	if (!fu_steelseries_sonic_battery_state(device, &bat_state, error)) {
@@ -789,7 +807,9 @@ fu_steelseries_sonic_read_firmware(FuDevice *device, FuProgress *progress, GErro
 	g_autoptr(FuFirmware) firmware_holtek = NULL;
 	g_autoptr(FuFirmware) firmware_mouse = NULL;
 
-	if (!fu_steelseries_sonic_wait_for_device(device, error))
+	if (!fu_steelseries_sonic_wait_for_connect(device,
+						   fu_device_get_remove_delay(device),
+						   error))
 		return NULL;
 
 	fu_progress_set_id(progress, G_STRLOC);
