@@ -6456,7 +6456,7 @@ fu_engine_backend_device_changed_cb(FuBackend *backend, FuDevice *device, FuEngi
 					error->message);
 				continue;
 			}
-			g_warning("%s failed to change udev device %s: %s",
+			g_warning("%s failed to change device %s: %s",
 				  fu_plugin_get_name(plugin_tmp),
 				  fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(device)),
 				  error->message);
