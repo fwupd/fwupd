@@ -72,7 +72,7 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuSrecFirmwareRecord, fu_srec_firmware_record_free
  *
  * Returns a single firmware record
  *
- * Returns: (transfer full) (element-type FuSrecFirmwareRecord): records
+ * Returns: (transfer full): record
  *
  * Since: 1.3.2
  **/
