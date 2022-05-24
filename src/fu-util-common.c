@@ -797,6 +797,11 @@ fu_util_release_get_name(FwupdRelease *release)
 			 * is the device that updates all the other firmware on the system */
 			return g_strdup_printf(_("%s BMC Update"), name);
 		}
+		if (g_strcmp0(cat, "X-UsbReceiver") == 0) {
+			/* TRANSLATORS: Receiver refers to a radio device, e.g. a tiny Bluetooth
+			 * device that stays in the USB port so the wireless peripheral works */
+			return g_strdup_printf(_("%s USB Receiver Update"), name);
+		}
 	}
 
 	/* TRANSLATORS: this is the fallback where we don't know if the release
