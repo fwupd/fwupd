@@ -4469,6 +4469,13 @@ main(int argc, char *argv[])
 	/* run the specified command */
 	ret = fu_util_cmd_array_run(cmd_array, priv, argv[1], (gchar **)&argv[2], &error);
 	if (!ret) {
+#ifdef SUPPORTED_BUILD
+		/* sanity check */
+		if (error == NULL) {
+			g_critical("exec failed but no error set!");
+			return EXIT_FAILURE;
+		}
+#endif
 		g_printerr("%s\n", error->message);
 		if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_ARGS)) {
 			/* TRANSLATORS: error message explaining command on how to get help */
