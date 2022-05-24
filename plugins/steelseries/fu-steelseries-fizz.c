@@ -28,6 +28,9 @@
 #define STEELSERIES_FIZZ_VERSION_COMMAND_OFFSET 0x00U
 #define STEELSERIES_FIZZ_VERSION_MODE_OFFSET	0x01U
 
+#define STEELSERIES_FIZZ_BATTERY_LEVEL_COMMAND_OFFSET 0x00U
+#define STEELSERIES_FIZZ_BATTERY_LEVEL_LEVEL_OFFSET   0x01U
+
 #define STEELSERIES_FIZZ_PAIRED_STATUS_COMMAND_OFFSET 0x00U
 #define STEELSERIES_FIZZ_PAIRED_STATUS_STATUS_OFFSET  0x01U
 
@@ -503,6 +506,40 @@ fu_steelseries_fizz_read_access_file(FuDevice *device,
 
 		fu_progress_step_done(progress);
 	}
+
+	/* success */
+	return TRUE;
+}
+
+gboolean
+fu_steelseries_fizz_battery_level(FuDevice *device, gboolean tunnel, guint8 *level, GError **error)
+{
+	guint8 data[STEELSERIES_BUFFER_CONTROL_SIZE] = {0};
+	guint16 cmd = 0x92U;
+
+	if (tunnel)
+		cmd |= STEELSERIES_FIZZ_COMMAND_TUNNEL_BIT;
+
+	if (!fu_common_write_uint8_safe(data,
+					sizeof(data),
+					STEELSERIES_FIZZ_BATTERY_LEVEL_COMMAND_OFFSET,
+					cmd,
+					error))
+		return FALSE;
+
+	if (g_getenv("FWUPD_STEELSERIES_FIZZ_VERBOSE") != NULL)
+		fu_common_dump_raw(G_LOG_DOMAIN, "BatteryLevel", data, sizeof(data));
+	if (!fu_steelseries_device_cmd(FU_STEELSERIES_DEVICE(device), data, TRUE, error))
+		return FALSE;
+	if (g_getenv("FWUPD_STEELSERIES_FIZZ_VERBOSE") != NULL)
+		fu_common_dump_raw(G_LOG_DOMAIN, "BatteryLevel", data, sizeof(data));
+
+	if (!fu_common_read_uint8_safe(data,
+				       sizeof(data),
+				       STEELSERIES_FIZZ_BATTERY_LEVEL_LEVEL_OFFSET,
+				       level,
+				       error))
+		return FALSE;
 
 	/* success */
 	return TRUE;
