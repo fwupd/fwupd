@@ -510,7 +510,7 @@ conf.set_quoted('FWUPD_PLUGINDIR', plugin_dir)
 endif
 
 # sanity check, otherwise there is not point building
-if host_machine.system() == 'windows' and not gusb.found()
+if build_standalone and host_machine.system() == 'windows' and not gusb.found()
   error('gusb feature is required for Windows build')
 endif
 
