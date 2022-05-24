@@ -6404,6 +6404,14 @@ fu_engine_backend_device_added_cb(FuBackend *backend, FuDevice *device, FuEngine
 		if (plugin == NULL)
 			continue;
 		if (!fu_plugin_runner_backend_device_added(plugin, device, &error)) {
+#ifdef SUPPORTED_BUILD
+			/* sanity check */
+			if (error == NULL) {
+				g_critical("failed to add device %s: exec failed but no error set!",
+					   fu_device_get_backend_id(device));
+				continue;
+			}
+#endif
 			if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
 				if (g_getenv("FWUPD_PROBE_VERBOSE") != NULL) {
 					g_debug("%s ignoring: %s",
@@ -6450,6 +6458,15 @@ fu_engine_backend_device_changed_cb(FuBackend *backend, FuDevice *device, FuEngi
 		FuPlugin *plugin_tmp = g_ptr_array_index(plugins, j);
 		g_autoptr(GError) error = NULL;
 		if (!fu_plugin_runner_backend_device_changed(plugin_tmp, device, &error)) {
+#ifdef SUPPORTED_BUILD
+			/* sanity check */
+			if (error == NULL) {
+				g_critical(
+				    "failed to change device %s: exec failed but no error set!",
+				    fu_device_get_backend_id(device));
+				continue;
+			}
+#endif
 			if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
 				g_debug("%s ignoring: %s",
 					fu_plugin_get_name(plugin_tmp),
