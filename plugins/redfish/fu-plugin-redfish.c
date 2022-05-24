@@ -418,11 +418,18 @@ fu_plugin_redfish_startup(FuPlugin *plugin, GError **error)
 }
 
 static gboolean
-fu_plugin_redfish_cleanup_cb(FuDevice *device, gpointer user_data, GError **error)
+fu_plugin_redfish_cleanup_setup_cb(FuDevice *device, gpointer user_data, GError **error)
 {
 	FuPlugin *self = FU_PLUGIN(user_data);
 	FuPluginData *data = fu_plugin_get_data(self);
 	return fu_backend_setup(FU_BACKEND(data->backend), error);
+}
+
+static gboolean
+fu_plugin_redfish_cleanup_coldplug_cb(FuDevice *device, gpointer user_data, GError **error)
+{
+	FuPlugin *self = FU_PLUGIN(user_data);
+	return fu_plugin_redfish_coldplug(self, error);
 }
 
 static gboolean
@@ -491,12 +498,12 @@ fu_plugin_redfish_cleanup(FuPlugin *self,
 
 	/* wait for the BMC to come back */
 	if (!fu_device_retry_full(device,
-				  fu_plugin_redfish_cleanup_cb,
+				  fu_plugin_redfish_cleanup_setup_cb,
 				  reset_timeout / FU_REDFISH_PLUGIN_CLEANUP_RETRIES_DELAY,
 				  FU_REDFISH_PLUGIN_CLEANUP_RETRIES_DELAY * 1000,
 				  self,
 				  error)) {
-		g_prefix_error(error, "manager failed to come back: ");
+		g_prefix_error(error, "manager failed to come back from setup: ");
 		return FALSE;
 	}
 	fu_progress_step_done(progress);
@@ -507,8 +514,15 @@ fu_plugin_redfish_cleanup(FuPlugin *self,
 	fu_progress_step_done(progress);
 
 	/* get the new list of devices */
-	if (!fu_plugin_redfish_coldplug(self, error))
+	if (!fu_device_retry_full(device,
+				  fu_plugin_redfish_cleanup_coldplug_cb,
+				  reset_timeout / FU_REDFISH_PLUGIN_CLEANUP_RETRIES_DELAY,
+				  FU_REDFISH_PLUGIN_CLEANUP_RETRIES_DELAY * 1000,
+				  self,
+				  error)) {
+		g_prefix_error(error, "manager failed to come back from coldplug: ");
 		return FALSE;
+	}
 	fu_progress_step_done(progress);
 
 	/* success */
