@@ -1788,6 +1788,7 @@ fu_mm_device_incorporate(FuDevice *device, FuDevice *donor_device)
 	self->port_at_ifnum = fu_mm_device_get_port_at_ifnum(donor);
 	self->port_qmi_ifnum = fu_mm_device_get_port_qmi_ifnum(donor);
 	self->port_mbim_ifnum = fu_mm_device_get_port_mbim_ifnum(donor);
+	g_set_object(&self->manager, donor->manager);
 }
 
 static void
@@ -1827,7 +1828,8 @@ fu_mm_device_finalize(GObject *object)
 		g_source_remove(self->attach_idle);
 	if (self->qmi_pdc_active_id)
 		g_array_unref(self->qmi_pdc_active_id);
-	g_object_unref(self->manager);
+	if (self->manager != NULL)
+		g_object_unref(self->manager);
 	if (self->omodem != NULL)
 		g_object_unref(self->omodem);
 	g_free(self->detach_fastboot_at);
@@ -1921,7 +1923,6 @@ fu_mm_device_udev_new(FuContext *ctx, MMManager *manager, FuMmDevice *shadow_dev
 	FuMmDevice *self = g_object_new(FU_TYPE_MM_DEVICE, "context", ctx, NULL);
 	g_debug("creating udev-based mm device at %s",
 		fu_device_get_physical_id(FU_DEVICE(shadow_device)));
-	self->manager = g_object_ref(manager);
 	fu_device_incorporate(FU_DEVICE(self), FU_DEVICE(shadow_device));
 	return self;
 }
