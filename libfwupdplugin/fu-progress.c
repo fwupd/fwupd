@@ -685,6 +685,7 @@ fu_progress_get_child(FuProgress *self)
 						 G_CALLBACK(fu_progress_child_status_changed_cb),
 						 self);
 	fu_progress_set_parent(priv->child, self);
+	fu_progress_set_status(priv->child, priv->status);
 	return priv->child;
 }
 
