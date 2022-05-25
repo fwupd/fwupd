@@ -131,6 +131,57 @@ fu_flashrom_device_close(FuDevice *device, GError **error)
 	return TRUE;
 }
 
+typedef struct {
+	struct flashrom_flashctx *flashctx;
+	FuProgress *progress;
+} FuFlashromDeviceProgressHelper;
+
+#ifdef HAVE_FLASHROM_SET_PROGRESS_CALLBACK_V2
+static void
+fu_flashrom_device_progress_cb(enum flashrom_progress_stage stage,
+			       size_t current,
+			       size_t total,
+			       void *user_data)
+{
+	FuFlashromDeviceProgressHelper *helper = (FuFlashromDeviceProgressHelper *)user_data;
+
+	/* status */
+	if (stage == FLASHROM_PROGRESS_READ)
+		fu_progress_set_status(helper->progress, FWUPD_STATUS_DEVICE_READ);
+	else if (stage == FLASHROM_PROGRESS_WRITE)
+		fu_progress_set_status(helper->progress, FWUPD_STATUS_DEVICE_WRITE);
+	else if (stage == FLASHROM_PROGRESS_ERASE)
+		fu_progress_set_status(helper->progress, FWUPD_STATUS_DEVICE_ERASE);
+
+	/* progress */
+	fu_progress_set_percentage_full(helper->progress, current, total);
+}
+#endif
+
+static FuFlashromDeviceProgressHelper *
+fu_flashrom_device_helper_new(FuFlashromDevice *self, FuProgress *progress)
+{
+	FuFlashromDeviceProgressHelper *helper = g_new0(FuFlashromDeviceProgressHelper, 1);
+	helper->flashctx = self->flashctx;
+	helper->progress = g_object_ref(progress);
+#ifdef HAVE_FLASHROM_SET_PROGRESS_CALLBACK_V2
+	flashrom_set_progress_callback_v2(self->flashctx, fu_flashrom_device_progress_cb, helper);
+#endif
+	return helper;
+}
+
+static void
+fu_flashrom_device_helper_free(FuFlashromDeviceProgressHelper *helper)
+{
+#ifdef HAVE_FLASHROM_SET_PROGRESS_CALLBACK_V2
+	flashrom_set_progress_callback_v2(helper->flashctx, NULL, NULL);
+#endif
+	g_object_unref(helper->progress);
+	g_free(helper);
+}
+
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuFlashromDeviceProgressHelper, fu_flashrom_device_helper_free);
+
 static GBytes *
 fu_flashrom_device_dump_firmware(FuDevice *device, FuProgress *progress, GError **error)
 {
@@ -138,6 +189,11 @@ fu_flashrom_device_dump_firmware(FuDevice *device, FuProgress *progress, GError 
 	gint rc;
 	gsize bufsz = fu_device_get_firmware_size_max(device);
 	g_autofree guint8 *buf = g_malloc0(bufsz);
+	g_autoptr(FuFlashromDeviceProgressHelper) helper = NULL;
+
+	/* connect to flashrom progress callback function for the duration */
+	helper = fu_flashrom_device_helper_new(self, progress);
+	g_return_val_if_fail(helper != NULL, NULL);
 
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_READ);
 	rc = flashrom_image_read(self->flashctx, buf, bufsz);
@@ -192,7 +248,12 @@ fu_flashrom_device_write_firmware(FuDevice *device,
 	gsize sz = 0;
 	gint rc;
 	const guint8 *buf;
+	g_autoptr(FuFlashromDeviceProgressHelper) helper = NULL;
 	g_autoptr(GBytes) blob_fw = NULL;
+
+	/* connect to flashrom progress callback function for the duration */
+	helper = fu_flashrom_device_helper_new(self, progress);
+	g_return_val_if_fail(helper != NULL, FALSE);
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
