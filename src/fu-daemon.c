@@ -58,6 +58,7 @@ struct _FuDaemon {
 #ifdef HAVE_POLKIT
 	PolkitAuthority *authority;
 #endif
+	FwupdStatus status; /* last emitted */
 	guint owner_id;
 	guint process_quit_id;
 	FuEngine *engine;
@@ -223,6 +224,11 @@ fu_daemon_emit_property_changed(FuDaemon *self,
 static void
 fu_daemon_set_status(FuDaemon *self, FwupdStatus status)
 {
+	/* sanity check */
+	if (self->status == status)
+		return;
+	self->status = status;
+
 	g_debug("Emitting PropertyChanged('Status'='%s')", fwupd_status_to_string(status));
 	fu_daemon_emit_property_changed(self, "Status", g_variant_new_uint32(status));
 }
@@ -1947,7 +1953,7 @@ fu_daemon_daemon_get_property(GDBusConnection *connection_,
 		return g_variant_new_boolean(fu_engine_get_tainted(self->engine));
 
 	if (g_strcmp0(property_name, "Status") == 0)
-		return g_variant_new_uint32(fu_engine_get_status(self->engine));
+		return g_variant_new_uint32(self->status);
 
 	if (g_strcmp0(property_name, FWUPD_RESULT_KEY_BATTERY_LEVEL) == 0) {
 		FuContext *ctx = fu_engine_get_context(self->engine);
@@ -2233,6 +2239,7 @@ fu_daemon_sender_item_free(FuDaemonSenderItem *sender_item)
 static void
 fu_daemon_init(FuDaemon *self)
 {
+	self->status = FWUPD_STATUS_IDLE;
 	self->sender_items = g_hash_table_new_full(g_str_hash,
 						   g_str_equal,
 						   g_free,
