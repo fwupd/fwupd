@@ -52,6 +52,12 @@ void
 fu_engine_request_set_locale(FuEngineRequest *self, const gchar *locale)
 {
 	g_return_if_fail(FU_IS_ENGINE_REQUEST(self));
+
+	/* not changed */
+	if (g_strcmp0(self->locale, locale) == 0)
+		return;
+
+	g_free(self->locale);
 	self->locale = g_strdup(locale);
 
 	/* remove the UTF8 suffix as it is not present in the XML */
