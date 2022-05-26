@@ -111,7 +111,6 @@ struct _FuEngine {
 	FuConfig *config;
 	FuRemoteList *remote_list;
 	FuDeviceList *device_list;
-	FwupdStatus status;
 	gboolean tainted;
 	gboolean only_trusted;
 	gboolean write_history;
@@ -194,30 +193,10 @@ fu_engine_get_context(FuEngine *self)
 	return self->ctx;
 }
 
-/**
- * fu_engine_get_status:
- * @self: a #FuEngine
- *
- * Gets the current engine status.
- *
- * Returns: a #FwupdStatus, e.g. %FWUPD_STATUS_DECOMPRESSING
- **/
-FwupdStatus
-fu_engine_get_status(FuEngine *self)
-{
-	g_return_val_if_fail(FU_IS_ENGINE(self), 0);
-	return self->status;
-}
-
 static void
 fu_engine_set_status(FuEngine *self, FwupdStatus status)
 {
-	if (self->status == status)
-		return;
-	self->status = status;
-
 	/* emit changed */
-	g_debug("Emitting PropertyChanged('Status'='%s')", fwupd_status_to_string(status));
 	g_signal_emit(self, signals[SIGNAL_STATUS_CHANGED], 0, status);
 }
 
@@ -7199,7 +7178,6 @@ fu_engine_init(FuEngine *self)
 	g_autofree gchar *pkidir_md = NULL;
 	g_autofree gchar *sysconfdir = NULL;
 	self->percentage = 0;
-	self->status = FWUPD_STATUS_IDLE;
 	self->config = fu_config_new();
 	self->remote_list = fu_remote_list_new();
 	self->device_list = fu_device_list_new();

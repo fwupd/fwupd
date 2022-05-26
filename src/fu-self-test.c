@@ -1667,7 +1667,6 @@ fu_engine_downgrade_func(gconstpointer user_data)
 			     &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	g_assert_cmpint(fu_engine_get_status(engine), ==, FWUPD_STATUS_IDLE);
 	g_test_assert_expected_messages();
 
 	/* return all the remotes, even the broken one */
@@ -1863,7 +1862,6 @@ fu_engine_history_func(gconstpointer user_data)
 	ret = fu_engine_load(engine, FU_ENGINE_LOAD_FLAG_NO_CACHE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	g_assert_cmpint(fu_engine_get_status(engine), ==, FWUPD_STATUS_IDLE);
 
 	/* add a device so we can get upgrade it */
 	fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_TRIPLET);
@@ -2010,7 +2008,6 @@ fu_engine_multiple_rels_func(gconstpointer user_data)
 	ret = fu_engine_load(engine, FU_ENGINE_LOAD_FLAG_NO_CACHE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	g_assert_cmpint(fu_engine_get_status(engine), ==, FWUPD_STATUS_IDLE);
 
 	/* add a device so we can get upgrade it */
 	fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_TRIPLET);
@@ -2131,7 +2128,6 @@ fu_engine_history_inherit(gconstpointer user_data)
 	ret = fu_engine_load(engine, FU_ENGINE_LOAD_FLAG_NO_CACHE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	g_assert_cmpint(fu_engine_get_status(engine), ==, FWUPD_STATUS_IDLE);
 
 	/* add a device so we can get upgrade it */
 	fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_TRIPLET);
@@ -2271,7 +2267,6 @@ fu_engine_install_needs_reboot(gconstpointer user_data)
 	ret = fu_engine_load(engine, FU_ENGINE_LOAD_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	g_assert_cmpint(fu_engine_get_status(engine), ==, FWUPD_STATUS_IDLE);
 
 	/* add a device so we can get upgrade it */
 	fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_TRIPLET);
@@ -2362,7 +2357,6 @@ fu_engine_history_error_func(gconstpointer user_data)
 	ret = fu_engine_load(engine, FU_ENGINE_LOAD_FLAG_NO_CACHE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	g_assert_cmpint(fu_engine_get_status(engine), ==, FWUPD_STATUS_IDLE);
 
 	/* add a device so we can get upgrade it */
 	fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_TRIPLET);
