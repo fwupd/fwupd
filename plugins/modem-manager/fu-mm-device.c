@@ -1192,6 +1192,7 @@ fu_mm_device_write_firmware_mbim_qdu(FuDevice *device,
 	g_autofree gchar *version = NULL;
 	g_autoptr(FuArchive) archive = NULL;
 	g_autoptr(FuDeviceLocker) locker = NULL;
+	g_autoptr(GArray) digest = NULL;
 	g_autoptr(XbBuilder) builder = xb_builder_new();
 	g_autoptr(XbBuilderSource) source = xb_builder_source_new();
 	g_autoptr(XbSilo) silo = NULL;
@@ -1248,7 +1249,14 @@ fu_mm_device_write_firmware_mbim_qdu(FuDevice *device,
 		return FALSE;
 
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_WRITE);
-	fu_mbim_qdu_updater_write(self->mbim_qdu_updater, filename, data, device, progress, error);
+	digest = fu_mbim_qdu_updater_write(self->mbim_qdu_updater,
+					   filename,
+					   data,
+					   device,
+					   progress,
+					   error);
+	if (digest == NULL)
+		return FALSE;
 	if (!fu_device_locker_close(locker, error))
 		return FALSE;
 
