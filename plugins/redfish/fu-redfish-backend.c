@@ -214,6 +214,13 @@ fu_redfish_backend_check_wildcard_targets(FuRedfishBackend *self)
 	}
 }
 
+static void
+fu_redfish_backend_set_push_uri_path(FuRedfishBackend *self, const gchar *push_uri_path)
+{
+	g_free(self->push_uri_path);
+	self->push_uri_path = g_strdup(push_uri_path);
+}
+
 static gboolean
 fu_redfish_backend_coldplug(FuBackend *backend, GError **error)
 {
@@ -247,14 +254,14 @@ fu_redfish_backend_coldplug(FuBackend *backend, GError **error)
 		const gchar *tmp = json_object_get_string_member(json_obj, "MultipartHttpPushUri");
 		if (tmp != NULL) {
 			self->device_gtype = FU_TYPE_REDFISH_MULTIPART_DEVICE;
-			self->push_uri_path = g_strdup(tmp);
+			fu_redfish_backend_set_push_uri_path(self, tmp);
 		}
 	}
 	if (self->push_uri_path == NULL && json_object_has_member(json_obj, "HttpPushUri")) {
 		const gchar *tmp = json_object_get_string_member(json_obj, "HttpPushUri");
 		if (tmp != NULL) {
 			self->device_gtype = FU_TYPE_REDFISH_LEGACY_DEVICE;
-			self->push_uri_path = g_strdup(tmp);
+			fu_redfish_backend_set_push_uri_path(self, tmp);
 		}
 	}
 	if (self->push_uri_path == NULL) {
