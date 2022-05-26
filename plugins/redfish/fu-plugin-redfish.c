@@ -483,8 +483,10 @@ fu_plugin_redfish_cleanup(FuPlugin *self,
 
 	/* work around manager bugs... */
 	fu_backend_invalidate(FU_BACKEND(data->backend));
-	fu_progress_sleep(fu_progress_get_child(progress),
-			  fu_redfish_device_get_reset_pre_delay(FU_REDFISH_DEVICE(device)));
+	if (fu_redfish_device_get_reset_pre_delay(FU_REDFISH_DEVICE(device)) > 0) {
+		fu_progress_sleep(fu_progress_get_child(progress),
+				  fu_redfish_device_get_reset_pre_delay(FU_REDFISH_DEVICE(device)));
+	}
 	fu_progress_step_done(progress);
 
 	/* read the config file to work out how long to wait */
@@ -509,8 +511,11 @@ fu_plugin_redfish_cleanup(FuPlugin *self,
 	fu_progress_step_done(progress);
 
 	/* work around manager bugs... */
-	fu_progress_sleep(fu_progress_get_child(progress),
-			  fu_redfish_device_get_reset_post_delay(FU_REDFISH_DEVICE(device)));
+	if (fu_redfish_device_get_reset_post_delay(FU_REDFISH_DEVICE(device)) > 0) {
+		fu_progress_sleep(
+		    fu_progress_get_child(progress),
+		    fu_redfish_device_get_reset_post_delay(FU_REDFISH_DEVICE(device)));
+	}
 	fu_progress_step_done(progress);
 
 	/* get the new list of devices */
