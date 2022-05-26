@@ -47,7 +47,7 @@ struct _FuRedfishDeviceClass {
  * To use this option the payload must contain metadata that restricts it to a
  * specific SoftwareId.
  */
-#define FU_REDFISH_DEVICE_FLAG_WILDCARD_TARGETS (1 << 2)
+#define FU_REDFISH_DEVICE_FLAG_WILDCARD_TARGETS (1 << 3)
 
 FuRedfishBackend *
 fu_redfish_device_get_backend(FuRedfishDevice *self);
