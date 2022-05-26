@@ -3277,10 +3277,30 @@ fu_device_register_private_flag(FuDevice *self, guint64 value, const gchar *valu
 	g_return_if_fail(value_str != NULL);
 
 	/* ensure exists */
-	if (priv->private_flag_items == NULL)
+	if (priv->private_flag_items == NULL) {
 		priv->private_flag_items = g_ptr_array_new_with_free_func(
 		    (GDestroyNotify)fu_device_private_flag_item_free);
+	}
 
+	/* sanity check */
+	item = fu_device_private_flag_item_find_by_val(self, value);
+	if (item != NULL) {
+		g_critical("already registered private %s flag with value: %s:0x%x",
+			   G_OBJECT_TYPE_NAME(self),
+			   value_str,
+			   (guint)value);
+		return;
+	}
+	item = fu_device_private_flag_item_find_by_str(self, value_str);
+	if (item != NULL) {
+		g_critical("already registered private %s flag with string: %s:0x%x",
+			   G_OBJECT_TYPE_NAME(self),
+			   value_str,
+			   (guint)value);
+		return;
+	}
+
+	/* add new */
 	item = g_new0(FuDevicePrivateFlagItem, 1);
 	item->value = value;
 	item->value_str = g_strdup(value_str);
