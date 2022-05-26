@@ -228,6 +228,9 @@ fu_redfish_request_perform(FuRedfishRequest *self,
 	return TRUE;
 }
 
+typedef struct curl_slist _curl_slist;
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(_curl_slist, curl_slist_free_all)
+
 gboolean
 fu_redfish_request_perform_full(FuRedfishRequest *self,
 				const gchar *path,
@@ -236,7 +239,7 @@ fu_redfish_request_perform_full(FuRedfishRequest *self,
 				FuRedfishRequestPerformFlags flags,
 				GError **error)
 {
-	struct curl_slist *hs = NULL;
+	g_autoptr(_curl_slist) hs = NULL;
 	g_autoptr(GString) str = g_string_new(NULL);
 	g_autoptr(JsonGenerator) json_generator = json_generator_new();
 	g_autoptr(JsonNode) json_root = NULL;
