@@ -546,7 +546,7 @@ fu_cabinet_build_silo_file(FuCabinet *self,
 
 	/* indicate the metainfo file was signed */
 	if (release_flags & FWUPD_RELEASE_FLAG_TRUSTED_METADATA)
-		xb_builder_node_insert(bn_info, "metadata_trust", NULL);
+		xb_builder_node_insert_text(bn_info, "metadata_trust", NULL, NULL);
 	xb_builder_node_insert_text(bn_info, "filename", gcab_file_get_name(cabfile), NULL);
 	xb_builder_source_set_info(source, bn_info);
 
