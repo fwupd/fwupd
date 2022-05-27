@@ -884,21 +884,6 @@ fu_steelseries_fizz_read_firmware(FuDevice *device, FuProgress *progress, GError
 	return g_steal_pointer(&firmware);
 }
 
-static FuFirmware *
-fu_steelseries_fizz_prepare_firmware(FuDevice *device,
-				     GBytes *fw,
-				     FwupdInstallFlags flags,
-				     GError **error)
-{
-	g_autoptr(FuFirmware) firmware = fu_steelseries_firmware_new();
-
-	if (!fu_firmware_parse(FU_FIRMWARE(firmware), fw, flags, error))
-		return NULL;
-
-	/* success */
-	return g_steal_pointer(&firmware);
-}
-
 static void
 fu_steelseries_fizz_set_progress(FuDevice *self, FuProgress *progress)
 {
@@ -918,7 +903,6 @@ fu_steelseries_fizz_class_init(FuSteelseriesFizzClass *klass)
 	klass_device->setup = fu_steelseries_fizz_setup;
 	klass_device->write_firmware = fu_steelseries_fizz_write_firmware;
 	klass_device->read_firmware = fu_steelseries_fizz_read_firmware;
-	klass_device->prepare_firmware = fu_steelseries_fizz_prepare_firmware;
 	klass_device->set_progress = fu_steelseries_fizz_set_progress;
 }
 
@@ -933,4 +917,5 @@ fu_steelseries_fizz_init(FuSteelseriesFizz *self)
 	fu_device_add_protocol(FU_DEVICE(self), "com.steelseries.fizz");
 	fu_device_set_install_duration(FU_DEVICE(self), 13);				 /* 13 s */
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_USER_REPLUG); /* 40 s */
+	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_STEELSERIES_FIRMWARE);
 }
