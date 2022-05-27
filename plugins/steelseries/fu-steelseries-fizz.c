@@ -768,11 +768,12 @@ fu_steelseries_fizz_write_file(FuDevice *device,
 			       id);
 		return FALSE;
 	}
-	if (calculated_crc != stored_crc)
+	if (calculated_crc != stored_crc) {
 		g_warning("%s: checksum mismatch, got 0x%08x, expected 0x%08x",
 			  fu_device_get_name(device),
 			  calculated_crc,
 			  stored_crc);
+	}
 	fu_progress_step_done(progress);
 
 	/* success */
