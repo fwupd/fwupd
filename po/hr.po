@@ -670,11 +670,6 @@ msgstr "Uređaj će sigurnosno kopirati firmver prije instalacije"
 msgid "Device will not re-appear after update completes"
 msgstr "Uređaj se neće ponovno pojaviti nakon završetka nadopune"
 
-#. TRANSLATORS: the device has a reason it can't update, e.g. laptop lid
-#. closed
-msgid "Devices not currently updatable:"
-msgstr "Uređaji koji trenutno nisu nadopunjivi:"
-
 #. TRANSLATORS: a list of successful updates
 msgid "Devices that have been updated successfully:"
 msgstr "Uređaji koji su uspješno nadopunjeni:"

@@ -17,7 +17,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Language: fr\n"
-"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"Plural-Forms: nplurals=3; plural=(n == 0 || n == 1) ? 0 : n != 0 && n % 1000000 == 0 ? 1 : 2;\n"
 
 #. TRANSLATORS: more than a minute
 #, c-format
@@ -25,6 +25,7 @@ msgid "%.0f minute remaining"
 msgid_plural "%.0f minutes remaining"
 msgstr[0] "%.0f minute restante"
 msgstr[1] "%.0f minutes restantes"
+msgstr[2] "%.0f minutes restantes"
 
 #. TRANSLATORS: this is the fallback where we don't know if the release
 #. * is updating the system, the device, or a device class, or something else
@@ -50,6 +51,7 @@ msgid "%u day"
 msgid_plural "%u days"
 msgstr[0] "%u jour"
 msgstr[1] "%u jours"
+msgstr[2] "%u jours"
 
 #. TRANSLATORS: this is shown in the MOTD
 #, c-format
@@ -57,6 +59,7 @@ msgid "%u device has a firmware upgrade available."
 msgid_plural "%u devices have a firmware upgrade available."
 msgstr[0] "Une mise à jour de micrologiciel est disponible pour %u appareil."
 msgstr[1] "Une mise à jour de micrologiciel est disponible pour %u appareils."
+msgstr[2] "Une mise à jour de micrologiciel est disponible pour %u appareils."
 
 #. TRANSLATORS: duration in minutes
 #, c-format
@@ -64,6 +67,7 @@ msgid "%u hour"
 msgid_plural "%u hours"
 msgstr[0] "%u heure"
 msgstr[1] "%u heures"
+msgstr[2] "%u heures"
 
 #. TRANSLATORS: duration in minutes
 #, c-format
@@ -71,6 +75,7 @@ msgid "%u minute"
 msgid_plural "%u minutes"
 msgstr[0] "%u minute"
 msgstr[1] "%u minutes"
+msgstr[2] "%u minutes"
 
 #. TRANSLATORS: duration in seconds
 #, c-format
@@ -78,6 +83,7 @@ msgid "%u second"
 msgid_plural "%u seconds"
 msgstr[0] "%u seconde"
 msgstr[1] "%u secondes"
+msgstr[2] "%u secondes"
 
 #. TRANSLATORS: this is shown as a suffix for obsoleted tests
 msgid "(obsoleted)"
@@ -134,6 +140,7 @@ msgid "Approved firmware:"
 msgid_plural "Approved firmware:"
 msgstr[0] "Micrologiciel approuvé :"
 msgstr[1] "Micrologiciels approuvés :"
+msgstr[2] "Micrologiciels approuvés :"
 
 #. TRANSLATORS: stop nagging the user
 msgid "Ask again next time?"
@@ -473,6 +480,7 @@ msgid "GUID"
 msgid_plural "GUIDs"
 msgstr[0] "GUID"
 msgstr[1] "GUIDs"
+msgstr[2] "GUIDs"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgctxt "A single GUID"
@@ -882,6 +890,7 @@ msgid "Successfully uploaded %u report"
 msgid_plural "Successfully uploaded %u reports"
 msgstr[0] "Succès de l'envoi de %u rapport"
 msgstr[1] "Succès de l'envoi de %u rapports"
+msgstr[2] "Succès de l'envoi de %u rapports"
 
 #. TRANSLATORS: one line summary of device
 msgid "Summary"

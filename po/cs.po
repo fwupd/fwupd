@@ -176,6 +176,12 @@ msgstr "%s se změnilo: %s → %s"
 msgid "%s disappeared: %s"
 msgstr "%s zmizelo: %s"
 
+#. TRANSLATORS: the device has a reason it can't update, e.g. laptop lid
+#. closed
+#, c-format
+msgid "%s is not currently updatable"
+msgstr "%s v tuto chvíli není možné aktualizovat"
+
 #. TRANSLATORS: Title: %s is ME kind, e.g. CSME/TXT
 #, c-format
 msgid "%s manufacturing mode"
@@ -270,6 +276,12 @@ msgstr[0] "%u sekunda"
 msgstr[1] "%u sekundy"
 msgstr[2] "%u sekund"
 msgstr[3] "%u sekundy"
+
+#. TRANSLATORS: first percentage is current value, 2nd percentage is the
+#. * lowest limit the firmware update is allowed for the update to happen
+#, c-format
+msgid "%u%% (threshold %u%%)"
+msgstr "%u%% (dolní hranice %u%%)"
 
 #. TRANSLATORS: this is shown as a suffix for obsoleted tests
 msgid "(obsoleted)"
@@ -457,6 +469,10 @@ msgstr "XML-PRO-SESTAVENÍ CÍLOVÝ-SOUBOR"
 msgid "BYTES"
 msgstr "BAJTŮ"
 
+#. TRANSLATORS: refers to the battery inside the peripheral device
+msgid "Battery"
+msgstr "Akumulátor/baterie"
+
 #. TRANSLATORS: command description
 msgid "Bind new kernel driver"
 msgstr "Napojit nový ovladač jádra"
@@ -620,9 +636,23 @@ msgstr "Identifikátor zařízení"
 msgid "Device added:"
 msgstr "Přidáno zařízení:"
 
+#. TRANSLATORS: for example the batteries *inside* the Bluetooth mouse
+#, c-format
+msgid "Device battery power is too low"
+msgstr "Akumulátor/baterie v zařízení je příliš vybitý"
+
+#. TRANSLATORS: for example the batteries *inside* the Bluetooth mouse
+#, c-format
+msgid "Device battery power is too low (%u%%, requires %u%%)"
+msgstr "Akumulátor/baterie v zařízení je příliš vybitý (%u%%, vyžaduje %u%%)"
+
 #. TRANSLATORS: Device supports a safety mechanism for flashing
 msgid "Device can recover flash failures"
 msgstr "Zařízení se dovede vzpamatovat z nezdaru při zápisu firmware"
+
+#. TRANSLATORS: lid means "laptop top cover"
+msgid "Device cannot be used while the lid is closed"
+msgstr "Zařízení není možné používat pokud je víko s displejem přiklopené"
 
 #. TRANSLATORS: this is when a device has been updated
 msgid "Device changed:"
@@ -646,13 +676,25 @@ msgstr "Zařízení vyžaduje instalaci všech poskytnutých vydání"
 msgid "Device is unreachable"
 msgstr "Zařízení není dosažitelné"
 
+#. TRANSLATORS: for example, a Bluetooth mouse that is in powersave mode
+msgid "Device is unreachable, or out of wireless range"
+msgstr "Zařízení není dosažitelné nebo se nachází mimo dosah signálu"
+
 #. TRANSLATORS: Device remains usable during update
 msgid "Device is usable for the duration of the update"
 msgstr "Zařízení je možné používat i v průběhu aktualizace"
 
+#. TRANSLATORS: usually this is when we're waiting for a reboot
+msgid "Device is waiting for the update to be applied"
+msgstr "Zařízení čeká na instalaci aktualizací"
+
 #. TRANSLATORS: this is when a device is hotplugged
 msgid "Device removed:"
 msgstr "Odebráno zařízení:"
+
+#. TRANSLATORS: as in, wired mains power for a laptop
+msgid "Device requires AC power to be connected"
+msgstr "Zařízení vyžaduje, aby bylo připojeno napájení z elektrické zásuvky"
 
 #. TRANSLATORS: Device supports a safety mechanism for flashing
 msgid "Device stages updates"
@@ -677,11 +719,6 @@ msgstr "Zařízení provede zálohu stávajícího firmware před instalací nov
 #. TRANSLATORS: Device will not return after update completes
 msgid "Device will not re-appear after update completes"
 msgstr "Po dokončení aktualizace se zařízení hned znovu neobjeví"
-
-#. TRANSLATORS: the device has a reason it can't update, e.g. laptop lid
-#. closed
-msgid "Devices not currently updatable:"
-msgstr "Zařízení, u kterých v tuto chvíli není možné zaktualizovat:"
 
 #. TRANSLATORS: a list of successful updates
 msgid "Devices that have been updated successfully:"
@@ -1123,6 +1160,10 @@ msgstr "Zjištěno celodiskové šifrování"
 msgid "Full disk encryption secrets may be invalidated when updating"
 msgstr "Při aktualizaci mohou být zneplatněna tajemství pro celodiskové šifrování"
 
+#. TRANSLATORS: Title: if the part has been fused
+msgid "Fused platform"
+msgstr "Platforma s jednorázovým nastavením (fuse)"
+
 #. TRANSLATORS: global ID common to all similar hardware
 msgid "GUID"
 msgid_plural "GUIDs"
@@ -1248,6 +1289,10 @@ msgstr "Nainstalovat na zařízení binární soubor s firmwarem"
 #. TRANSLATORS: command description
 msgid "Install a firmware file on this hardware"
 msgstr "Nainstalovat soubor s firmwarem na tento hardware"
+
+#. TRANSLATORS: command description
+msgid "Install a specific firmware version on a device"
+msgstr "Nainstalovat konkrétní verzi firmware na zařízení"
 
 msgid "Install old version of signed system firmware"
 msgstr "Instalace starší verze podepsaného systémového firmware"
@@ -1654,6 +1699,10 @@ msgstr "Dokončeno procent"
 msgid "Perform operation?"
 msgstr "Provést operaci"
 
+#. TRANSLATORS: Title: Allows debugging of parts using proprietary hardware
+msgid "Platform Debugging"
+msgstr "Ladění platformy"
+
 #. TRANSLATORS: 'recovery key' here refers to a code, rather than a physical
 #. metal thing
 msgid "Please ensure you have the volume recovery key before continuing."
@@ -1694,6 +1743,10 @@ msgstr "Vypsat podrobná ladicí hlášení"
 msgid "Priority"
 msgstr "Priorita"
 
+#. TRANSLATORS: reasons the device is not updatable
+msgid "Problems"
+msgstr "Problémy"
+
 msgid "Proceed with upload?"
 msgstr "Pokračovat v nahrávání?"
 
@@ -1716,6 +1769,10 @@ msgstr "HODNOTA KLÍČE IDENTIF-VZDÁLENÉHO-ZDROJE"
 #. TRANSLATORS: command description
 msgid "Read a firmware blob from a device"
 msgstr "Vyčíst blob firmwaru ze zařízení"
+
+#. TRANSLATORS: command description
+msgid "Read a firmware from a device"
+msgstr "Vyčíst firmware ze zařízení"
 
 #. TRANSLATORS: command description
 msgid "Read firmware from device into a file"
@@ -1824,6 +1881,10 @@ msgstr "Restartování zařízení…"
 msgid "Return all the hardware IDs for the machine"
 msgstr "Vypsat všechny identifikátory hardwaru počítače"
 
+#. TRANSLATORS: Title: if firmware enforces rollback protection
+msgid "Rollback protection"
+msgstr "Zamezení instalaci starší verze"
+
 #. TRANSLATORS: this is shown in the MOTD
 msgid "Run `fwupdmgr get-upgrades` for more information."
 msgstr "Podrobnosti získáte spuštěním `fwupdmgr get-upgrades`."
@@ -1860,9 +1921,17 @@ msgstr "Oblast SPI BIOS"
 msgid "SPI lock"
 msgstr "SPI uzamčení"
 
+#. TRANSLATORS: Title: if hardware enforces control of SPI replays
+msgid "SPI replay protection"
+msgstr "Ochrana SPI před replay"
+
 #. TRANSLATORS: Title: SPI refers to the flash chip in the computer
 msgid "SPI write"
 msgstr "SPI zápis"
+
+#. TRANSLATORS: Title: if hardware enforces control of SPI writes
+msgid "SPI write protection"
+msgstr "Ochrana zápisu do SPI"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "SUBSYSTEM DRIVER [DEVICE-ID|GUID]"
@@ -2091,6 +2160,10 @@ msgstr "Souhrn"
 msgid "Supported"
 msgstr "Podporováno"
 
+#. TRANSLATORS: Title: if fwupd supports HSI on this chip
+msgid "Supported CPU"
+msgstr "Podporovaný procesor"
+
 #. TRANSLATORS: Is found in current metadata
 msgid "Supported on remote server"
 msgstr "Podporováno na vzdáleném serveru"
@@ -2116,6 +2189,15 @@ msgstr "Přepnout větev firmware na zařízení"
 #. TRANSLATORS: command description
 msgid "Sync firmware versions to the host best known configuration"
 msgstr "Synchronizovat verze firmwarů do stavu osvědčené kombinace"
+
+#. TRANSLATORS: as in laptop battery power
+msgid "System power is too low to perform the update"
+msgstr "Akumulátor notebooku není dostatečně nabitý, aby aktualizaci bylo možné provést"
+
+#. TRANSLATORS: as in laptop battery power
+#, c-format
+msgid "System power is too low to perform the update (%u%%, requires %u%%)"
+msgstr "Akumulátor notebooku není dostatečně nabitý, aby aktualizaci bylo možné provést (%u%%, vyžaduje %u%%)"
 
 #. TRANSLATORS: Must be plugged in to an outlet
 msgid "System requires external power source"
@@ -2551,6 +2633,10 @@ msgstr "[IDENTIF-ZAŘÍZENÍ|GUID]"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[DEVICE-ID|GUID] [BRANCH]"
 msgstr "[IDENTIF-ZAŘÍZENÍ|GUID] [VĚTEV]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[DEVICE-ID|GUID] [VERSION]"
+msgstr "[IDENTIF-ZAŘÍZENÍ|GUID] [VERZE]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[FILE FILE_SIG REMOTE-ID]"

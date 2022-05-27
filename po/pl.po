@@ -173,6 +173,12 @@ msgstr "„%s” zmieniło się: %s → %s"
 msgid "%s disappeared: %s"
 msgstr "„%s” zniknęło: %s"
 
+#. TRANSLATORS: the device has a reason it can't update, e.g. laptop lid
+#. closed
+#, c-format
+msgid "%s is not currently updatable"
+msgstr "Nie można obecnie zaktualizować urządzenia %s"
+
 #. TRANSLATORS: Title: %s is ME kind, e.g. CSME/TXT
 #, c-format
 msgid "%s manufacturing mode"
@@ -267,6 +273,12 @@ msgstr[0] "%u sekunda"
 msgstr[1] "%u sekundy"
 msgstr[2] "%u sekund"
 msgstr[3] "%u sekund"
+
+#. TRANSLATORS: first percentage is current value, 2nd percentage is the
+#. * lowest limit the firmware update is allowed for the update to happen
+#, c-format
+msgid "%u%% (threshold %u%%)"
+msgstr "%u%% (próg to %u%%)"
 
 #. TRANSLATORS: this is shown as a suffix for obsoleted tests
 msgid "(obsoleted)"
@@ -454,6 +466,10 @@ msgstr "BUILDER-XML NAZWA-PLIKU-DOCELOWEGO"
 msgid "BYTES"
 msgstr "BAJTY"
 
+#. TRANSLATORS: refers to the battery inside the peripheral device
+msgid "Battery"
+msgstr "Akumulator"
+
 #. TRANSLATORS: command description
 msgid "Bind new kernel driver"
 msgstr "Dowiązuje nowy sterownik jądra"
@@ -617,9 +633,23 @@ msgstr "Identyfikator urządzenia"
 msgid "Device added:"
 msgstr "Dodano urządzenie:"
 
+#. TRANSLATORS: for example the batteries *inside* the Bluetooth mouse
+#, c-format
+msgid "Device battery power is too low"
+msgstr "Poziom naładowania akumulatora urządzenia jest za niski"
+
+#. TRANSLATORS: for example the batteries *inside* the Bluetooth mouse
+#, c-format
+msgid "Device battery power is too low (%u%%, requires %u%%)"
+msgstr "Poziom naładowania akumulatora urządzenia jest za niski (%u%%, wymaga %u%%)"
+
 #. TRANSLATORS: Device supports a safety mechanism for flashing
 msgid "Device can recover flash failures"
 msgstr "Urządzenie może przywrócić się po niepowodzeniu wgrywania"
+
+#. TRANSLATORS: lid means "laptop top cover"
+msgid "Device cannot be used while the lid is closed"
+msgstr "Nie można używać urządzenia, kiedy pokrywa jest zamknięta"
 
 #. TRANSLATORS: this is when a device has been updated
 msgid "Device changed:"
@@ -643,13 +673,25 @@ msgstr "Urządzenie musi zainstalować wszystkie podane wydania"
 msgid "Device is unreachable"
 msgstr "Nie można komunikować się z urządzeniem"
 
+#. TRANSLATORS: for example, a Bluetooth mouse that is in powersave mode
+msgid "Device is unreachable, or out of wireless range"
+msgstr "Nie można komunikować się z urządzeniem lub jest poza zasięgiem"
+
 #. TRANSLATORS: Device remains usable during update
 msgid "Device is usable for the duration of the update"
 msgstr "Urządzenie może być używane podczas trwania aktualizacji"
 
+#. TRANSLATORS: usually this is when we're waiting for a reboot
+msgid "Device is waiting for the update to be applied"
+msgstr "Urządzenie oczekuje na zastosowanie aktualizacji"
+
 #. TRANSLATORS: this is when a device is hotplugged
 msgid "Device removed:"
 msgstr "Usunięto urządzenie:"
+
+#. TRANSLATORS: as in, wired mains power for a laptop
+msgid "Device requires AC power to be connected"
+msgstr "Urządzenie wymaga podłączenia do prądu"
 
 #. TRANSLATORS: Device supports a safety mechanism for flashing
 msgid "Device stages updates"
@@ -674,11 +716,6 @@ msgstr "Urządzenie wykona kopię zapasową oprogramowania sprzętowego przed in
 #. TRANSLATORS: Device will not return after update completes
 msgid "Device will not re-appear after update completes"
 msgstr "Urządzenie nie pojawi się z powrotem po ukończeniu aktualizacji"
-
-#. TRANSLATORS: the device has a reason it can't update, e.g. laptop lid
-#. closed
-msgid "Devices not currently updatable:"
-msgstr "Urządzenia, których nie można obecnie aktualizować:"
 
 #. TRANSLATORS: a list of successful updates
 msgid "Devices that have been updated successfully:"
@@ -1120,6 +1157,10 @@ msgstr "Wykryto pełne szyfrowanie dysku"
 msgid "Full disk encryption secrets may be invalidated when updating"
 msgstr "Hasła pełnego szyfrowania dysku mogą zostać unieważnione podczas aktualizacji"
 
+#. TRANSLATORS: Title: if the part has been fused
+msgid "Fused platform"
+msgstr "Platforma z bezpiecznikiem"
+
 #. TRANSLATORS: global ID common to all similar hardware
 msgid "GUID"
 msgid_plural "GUIDs"
@@ -1245,6 +1286,10 @@ msgstr "Instaluje zamknięte oprogramowanie sprzętowe na urządzeniu"
 #. TRANSLATORS: command description
 msgid "Install a firmware file on this hardware"
 msgstr "Instaluje plik oprogramowania sprzętowego na tym sprzęcie"
+
+#. TRANSLATORS: command description
+msgid "Install a specific firmware version on a device"
+msgstr "Instaluje podaną wersję oprogramowania sprzętowego na urządzeniu"
 
 msgid "Install old version of signed system firmware"
 msgstr "Instalacja poprzedniej wersji podpisanego oprogramowania sprzętowego komputera"
@@ -1651,6 +1696,10 @@ msgstr "Procent ukończenia"
 msgid "Perform operation?"
 msgstr "Wykonać działanie?"
 
+#. TRANSLATORS: Title: Allows debugging of parts using proprietary hardware
+msgid "Platform Debugging"
+msgstr "Debugowanie platformy"
+
 #. TRANSLATORS: 'recovery key' here refers to a code, rather than a physical
 #. metal thing
 msgid "Please ensure you have the volume recovery key before continuing."
@@ -1691,6 +1740,10 @@ msgstr "Wyświetla więcej komunikatów debugowania"
 msgid "Priority"
 msgstr "Priorytet"
 
+#. TRANSLATORS: reasons the device is not updatable
+msgid "Problems"
+msgstr "Problemy"
+
 msgid "Proceed with upload?"
 msgstr "Kontynuować wysyłanie?"
 
@@ -1713,6 +1766,10 @@ msgstr "IDENTYFIKATOR-REPOZYTORIUM KLUCZ WARTOŚĆ"
 #. TRANSLATORS: command description
 msgid "Read a firmware blob from a device"
 msgstr "Odczytuje zamknięte oprogramowanie sprzętowe z urządzenia"
+
+#. TRANSLATORS: command description
+msgid "Read a firmware from a device"
+msgstr "Odczytuje oprogramowanie sprzętowe z urządzenia"
 
 #. TRANSLATORS: command description
 msgid "Read firmware from device into a file"
@@ -1821,6 +1878,10 @@ msgstr "Ponowne uruchamianie urządzenia…"
 msgid "Return all the hardware IDs for the machine"
 msgstr "Zwraca wszystkie identyfikatory sprzętu dla komputera"
 
+#. TRANSLATORS: Title: if firmware enforces rollback protection
+msgid "Rollback protection"
+msgstr "Ochrona przed wycofaniem"
+
 #. TRANSLATORS: this is shown in the MOTD
 msgid "Run `fwupdmgr get-upgrades` for more information."
 msgstr "Polecenie „fwupdmgr get-upgrades” wyświetli więcej informacji."
@@ -1857,9 +1918,17 @@ msgstr "Region BIOS-u SPI"
 msgid "SPI lock"
 msgstr "Blokada SPI"
 
+#. TRANSLATORS: Title: if hardware enforces control of SPI replays
+msgid "SPI replay protection"
+msgstr "Ochrona przed odtwarzaniem SPI"
+
 #. TRANSLATORS: Title: SPI refers to the flash chip in the computer
 msgid "SPI write"
 msgstr "Zapis SPI"
+
+#. TRANSLATORS: Title: if hardware enforces control of SPI writes
+msgid "SPI write protection"
+msgstr "Ochrona przed zapisem SPI"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "SUBSYSTEM DRIVER [DEVICE-ID|GUID]"
@@ -2088,6 +2157,10 @@ msgstr "Podsumowanie"
 msgid "Supported"
 msgstr "Obsługiwane"
 
+#. TRANSLATORS: Title: if fwupd supports HSI on this chip
+msgid "Supported CPU"
+msgstr "Obsługiwany procesor"
+
 #. TRANSLATORS: Is found in current metadata
 msgid "Supported on remote server"
 msgstr "Obsługiwane na zdalnym serwerze"
@@ -2113,6 +2186,15 @@ msgstr "Przełącza gałąź oprogramowania sprzętowego na urządzeniu"
 #. TRANSLATORS: command description
 msgid "Sync firmware versions to the host best known configuration"
 msgstr "Synchronizuje wersje oprogramowania sprzętowego do najlepszej znanej konfiguracji komputera"
+
+#. TRANSLATORS: as in laptop battery power
+msgid "System power is too low to perform the update"
+msgstr "Poziom naładowania komputera jest za niski, aby wykonać aktualizację"
+
+#. TRANSLATORS: as in laptop battery power
+#, c-format
+msgid "System power is too low to perform the update (%u%%, requires %u%%)"
+msgstr "Poziom naładowania komputera jest za niski, aby wykonać aktualizację (%u%%, wymaga %u%%)"
 
 #. TRANSLATORS: Must be plugged in to an outlet
 msgid "System requires external power source"
@@ -2548,6 +2630,10 @@ msgstr "[IDENTYFIKATOR-URZĄDZENIA|GUID]"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[DEVICE-ID|GUID] [BRANCH]"
 msgstr "[IDENTYFIKATOR-URZĄDZENIA|GUID] [GAŁĄŹ]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[DEVICE-ID|GUID] [VERSION]"
+msgstr "[IDENTYFIKATOR-URZĄDZENIA|GUID] [WERSJA]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[FILE FILE_SIG REMOTE-ID]"

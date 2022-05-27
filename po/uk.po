@@ -173,6 +173,12 @@ msgstr "Змінено %s: %s → %s"
 msgid "%s disappeared: %s"
 msgstr "Зник %s: %s"
 
+#. TRANSLATORS: the device has a reason it can't update, e.g. laptop lid
+#. closed
+#, c-format
+msgid "%s is not currently updatable"
+msgstr "%s зараз непридатний до оновлення"
+
 #. TRANSLATORS: Title: %s is ME kind, e.g. CSME/TXT
 #, c-format
 msgid "%s manufacturing mode"
@@ -267,6 +273,12 @@ msgstr[0] "%u секунда"
 msgstr[1] "%u секунди"
 msgstr[2] "%u секунд"
 msgstr[3] "%u секунда"
+
+#. TRANSLATORS: first percentage is current value, 2nd percentage is the
+#. * lowest limit the firmware update is allowed for the update to happen
+#, c-format
+msgid "%u%% (threshold %u%%)"
+msgstr "%u%% (порогове значення — %u%%)"
 
 #. TRANSLATORS: this is shown as a suffix for obsoleted tests
 msgid "(obsoleted)"
@@ -454,6 +466,10 @@ msgstr "XML-ЗБИРАННЯ НАЗВА-ФАЙЛА-ДЖ"
 msgid "BYTES"
 msgstr "БАЙТИ"
 
+#. TRANSLATORS: refers to the battery inside the peripheral device
+msgid "Battery"
+msgstr "Акумулятор"
+
 #. TRANSLATORS: command description
 msgid "Bind new kernel driver"
 msgstr "Пов'язати новий драйвер ядра"
@@ -617,9 +633,23 @@ msgstr "Ід. пристрою"
 msgid "Device added:"
 msgstr "Додано пристрій:"
 
+#. TRANSLATORS: for example the batteries *inside* the Bluetooth mouse
+#, c-format
+msgid "Device battery power is too low"
+msgstr "Рівень заряду акумулятора пристрою є надто низьким"
+
+#. TRANSLATORS: for example the batteries *inside* the Bluetooth mouse
+#, c-format
+msgid "Device battery power is too low (%u%%, requires %u%%)"
+msgstr "Рівень заряду акумулятора пристрою є надто низьким (%u%%, має бути принаймні %u%%)"
+
 #. TRANSLATORS: Device supports a safety mechanism for flashing
 msgid "Device can recover flash failures"
 msgstr "Пристрій може відновлюватися при невдалих оновленнях"
+
+#. TRANSLATORS: lid means "laptop top cover"
+msgid "Device cannot be used while the lid is closed"
+msgstr "Пристроєм не можна користуватися. доки закрито кришку"
 
 #. TRANSLATORS: this is when a device has been updated
 msgid "Device changed:"
@@ -643,13 +673,25 @@ msgstr "Для встановлення усіх наданих випусків
 msgid "Device is unreachable"
 msgstr "Пристрій є недоступним"
 
+#. TRANSLATORS: for example, a Bluetooth mouse that is in powersave mode
+msgid "Device is unreachable, or out of wireless range"
+msgstr "Пристрій є недоступним або перебуває поза досяжністю бездротового зв'язку"
+
 #. TRANSLATORS: Device remains usable during update
 msgid "Device is usable for the duration of the update"
 msgstr "Пристроєм можна користуватися протягом оновлення"
 
+#. TRANSLATORS: usually this is when we're waiting for a reboot
+msgid "Device is waiting for the update to be applied"
+msgstr "Пристрій очікує на застосування оновлення"
+
 #. TRANSLATORS: this is when a device is hotplugged
 msgid "Device removed:"
 msgstr "Вилучено пристрій:"
+
+#. TRANSLATORS: as in, wired mains power for a laptop
+msgid "Device requires AC power to be connected"
+msgstr "Пристрій потребує з'єднання із джерелом змінного струму"
 
 #. TRANSLATORS: Device supports a safety mechanism for flashing
 msgid "Device stages updates"
@@ -674,11 +716,6 @@ msgstr "Пристрій створить резервну копію мікро
 #. TRANSLATORS: Device will not return after update completes
 msgid "Device will not re-appear after update completes"
 msgstr "Пристрій не з'явиться у списку пристроїв після завершення оновлення"
-
-#. TRANSLATORS: the device has a reason it can't update, e.g. laptop lid
-#. closed
-msgid "Devices not currently updatable:"
-msgstr "Пристрої, для яких зараз неможливе оновлення:"
 
 #. TRANSLATORS: a list of successful updates
 msgid "Devices that have been updated successfully:"
@@ -1703,6 +1740,10 @@ msgstr "Вивести докладні діагностичні повідом�
 msgid "Priority"
 msgstr "Пріоритетність"
 
+#. TRANSLATORS: reasons the device is not updatable
+msgid "Problems"
+msgstr "Проблеми"
+
 msgid "Proceed with upload?"
 msgstr "Продовжити вивантаження?"
 
@@ -1725,6 +1766,10 @@ msgstr "ВІДДАЛ-ІД КЛЮЧ ЗНАЧЕННЯ"
 #. TRANSLATORS: command description
 msgid "Read a firmware blob from a device"
 msgstr "Прочитати бінарну мікропрограму з пристрою"
+
+#. TRANSLATORS: command description
+msgid "Read a firmware from a device"
+msgstr "Прочитати мікропрограму з пристрою"
 
 #. TRANSLATORS: command description
 msgid "Read firmware from device into a file"
@@ -2141,6 +2186,15 @@ msgstr "Перемкнути гілку мікропрограми на прис
 #. TRANSLATORS: command description
 msgid "Sync firmware versions to the host best known configuration"
 msgstr "Синхронізувати версії мікропрограм із найкращою відомою конфігурацією вузла"
+
+#. TRANSLATORS: as in laptop battery power
+msgid "System power is too low to perform the update"
+msgstr "Живлення системи на надто низькому рівні для виконання оновлення"
+
+#. TRANSLATORS: as in laptop battery power
+#, c-format
+msgid "System power is too low to perform the update (%u%%, requires %u%%)"
+msgstr "Живлення системи на надто низькому рівні для виконання оновлення (%u%%, має бути принаймні %u%%)"
 
 #. TRANSLATORS: Must be plugged in to an outlet
 msgid "System requires external power source"

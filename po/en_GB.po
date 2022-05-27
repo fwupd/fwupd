@@ -253,6 +253,12 @@ msgid_plural "%u seconds"
 msgstr[0] "%u second"
 msgstr[1] "%u seconds"
 
+#. TRANSLATORS: first percentage is current value, 2nd percentage is the
+#. * lowest limit the firmware update is allowed for the update to happen
+#, c-format
+msgid "%u%% (threshold %u%%)"
+msgstr "%u%% (threshold %u%%)"
+
 #. TRANSLATORS: this is shown as a suffix for obsoleted tests
 msgid "(obsoleted)"
 msgstr "(obsoleted)"
@@ -437,6 +443,10 @@ msgstr "BUILDER-XML FILENAME-DST"
 msgid "BYTES"
 msgstr "BYTES"
 
+#. TRANSLATORS: refers to the battery inside the peripheral device
+msgid "Battery"
+msgstr "Battery"
+
 #. TRANSLATORS: command description
 msgid "Bind new kernel driver"
 msgstr "Bind new kernel driver"
@@ -600,9 +610,23 @@ msgstr "Device ID"
 msgid "Device added:"
 msgstr "Device added:"
 
+#. TRANSLATORS: for example the batteries *inside* the Bluetooth mouse
+#, c-format
+msgid "Device battery power is too low"
+msgstr "Device battery power is too low"
+
+#. TRANSLATORS: for example the batteries *inside* the Bluetooth mouse
+#, c-format
+msgid "Device battery power is too low (%u%%, requires %u%%)"
+msgstr "Device battery power is too low (%u%%, requires %u%%)"
+
 #. TRANSLATORS: Device supports a safety mechanism for flashing
 msgid "Device can recover flash failures"
 msgstr "Device can recover flash failures"
+
+#. TRANSLATORS: lid means "laptop top cover"
+msgid "Device cannot be used while the lid is closed"
+msgstr "Device cannot be used while the lid is closed"
 
 #. TRANSLATORS: this is when a device has been updated
 msgid "Device changed:"
@@ -626,13 +650,25 @@ msgstr "Device is required to install all provided releases"
 msgid "Device is unreachable"
 msgstr "Device is unreachable"
 
+#. TRANSLATORS: for example, a Bluetooth mouse that is in powersave mode
+msgid "Device is unreachable, or out of wireless range"
+msgstr "Device is unreachable, or out of wireless range"
+
 #. TRANSLATORS: Device remains usable during update
 msgid "Device is usable for the duration of the update"
 msgstr "Device is usable for the duration of the update"
 
+#. TRANSLATORS: usually this is when we're waiting for a reboot
+msgid "Device is waiting for the update to be applied"
+msgstr "Device is waiting for the update to be applied"
+
 #. TRANSLATORS: this is when a device is hotplugged
 msgid "Device removed:"
 msgstr "Device removed:"
+
+#. TRANSLATORS: as in, wired mains power for a laptop
+msgid "Device requires AC power to be connected"
+msgstr "Device requires AC power to be connected"
 
 #. TRANSLATORS: Device supports a safety mechanism for flashing
 msgid "Device stages updates"
@@ -657,11 +693,6 @@ msgstr "Device will backup firmware before installing"
 #. TRANSLATORS: Device will not return after update completes
 msgid "Device will not re-appear after update completes"
 msgstr "Device will not re-appear after update completes"
-
-#. TRANSLATORS: the device has a reason it can't update, e.g. laptop lid
-#. closed
-msgid "Devices not currently updatable:"
-msgstr "Devices not currently updatable:"
 
 #. TRANSLATORS: a list of successful updates
 msgid "Devices that have been updated successfully:"
@@ -1680,6 +1711,10 @@ msgstr "Print verbose debug statements"
 msgid "Priority"
 msgstr "Priority"
 
+#. TRANSLATORS: reasons the device is not updatable
+msgid "Problems"
+msgstr "Problems"
+
 msgid "Proceed with upload?"
 msgstr "Proceed with upload?"
 
@@ -1702,6 +1737,10 @@ msgstr "REMOTE-ID KEY VALUE"
 #. TRANSLATORS: command description
 msgid "Read a firmware blob from a device"
 msgstr "Read a firmware blob from a device"
+
+#. TRANSLATORS: command description
+msgid "Read a firmware from a device"
+msgstr "Read a firmware from a device"
 
 #. TRANSLATORS: command description
 msgid "Read firmware from device into a file"
@@ -2116,6 +2155,15 @@ msgstr "Switch the firmware branch on the device"
 #. TRANSLATORS: command description
 msgid "Sync firmware versions to the host best known configuration"
 msgstr "Sync firmware versions to the host best known configuration"
+
+#. TRANSLATORS: as in laptop battery power
+msgid "System power is too low to perform the update"
+msgstr "System power is too low to perform the update"
+
+#. TRANSLATORS: as in laptop battery power
+#, c-format
+msgid "System power is too low to perform the update (%u%%, requires %u%%)"
+msgstr "System power is too low to perform the update (%u%%, requires %u%%)"
 
 #. TRANSLATORS: Must be plugged in to an outlet
 msgid "System requires external power source"

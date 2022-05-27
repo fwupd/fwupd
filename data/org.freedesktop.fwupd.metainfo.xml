@@ -34,6 +34,51 @@
     <binary>fwupdagent</binary>
   </provides>
   <releases>
+    <release version="1.8.1" date="2022-05-27">
+      <description>
+        <p>
+          This release adds the following features:
+        </p>
+        <ul>
+          <li>Add archive writing support for devices with composite firmware</li>
+          <li>Add a way to read device composite firmware in fwupdtool</li>
+          <li>Allow clients to opt-in to showing updates with user-solvable problems</li>
+          <li>Allow the device to pause polling when writing firmware</li>
+          <li>Export the system and device battery levels on the D-Bus interface</li>
+          <li>Log errors and warnings to the win32 eventlog when required</li>
+          <li>Add X-UsbReceiver as an update category with icon usb-receiver</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Accurately return the last-set status to client tools</li>
+          <li>Allow dumping flashrom firmware using fwupdtool</li>
+          <li>Allow specifying a non-file D-Bus transport</li>
+          <li>Allow to request post actions from fwupdtool</li>
+          <li>Always be arch-explicit when installing OS deps</li>
+          <li>Be more resilient when restarting the Redfish BMC</li>
+          <li>Do not mark all Redfish updates as UPDATABLE</li>
+          <li>Do not use 'dongle' to describe USB receiver hardware</li>
+          <li>Download in-process when using fwupdtool</li>
+          <li>Fix a critical warning on failed modem update</li>
+          <li>Fix regression when probing PS175 devices</li>
+          <li>Hardcode the Redfish filedata name to firmware.bin</li>
+          <li>Set the Bluetooth version if REV has been set</li>
+          <li>Switch the Windows installer from NSIS to MSI</li>
+          <li>Use StartServiceCtrlDispatcherA for the daemon on Windows</li>
+          <li>Use the native certificate store on Windows</li>
+        </ul>
+        <p>This release adds support for the following hardware:</p>
+        <ul>
+          <li>Corsair KATAR PRO XT, SABRE PRO and KATAR PRO Wireless</li>
+          <li>HP Thunderbolt Dock G4</li>
+          <li>Lenovo ThinkPad Universal USB-C Dock</li>
+          <li>More PixArt wireless devices</li>
+          <li>More SunplusIT USB cameras</li>
+          <li>Some UFS devices</li>
+          <li>Steelseries Aerox 3 Wireless and Rival 3 Wireless</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.8.0" date="2022-04-30">
       <description>
         <p>

@@ -14,7 +14,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Language: pt\n"
-"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"Plural-Forms: nplurals=3; plural=(n == 0 || n == 1) ? 0 : n != 0 && n % 1000000 == 0 ? 1 : 2;\n"
 
 #. TRANSLATORS: more than a minute
 #, c-format
@@ -22,6 +22,7 @@ msgid "%.0f minute remaining"
 msgid_plural "%.0f minutes remaining"
 msgstr[0] "%.0f minuto restante"
 msgstr[1] "%.0f minutos restantes"
+msgstr[2] "%.0f minutos restantes"
 
 #. TRANSLATORS: battery refers to the system power source
 #, c-format
@@ -178,6 +179,7 @@ msgid "%u day"
 msgid_plural "%u days"
 msgstr[0] "%u dia"
 msgstr[1] "%u dias"
+msgstr[2] "%u dias"
 
 #. TRANSLATORS: this is shown in the MOTD
 #, c-format
@@ -185,6 +187,7 @@ msgid "%u device has a firmware upgrade available."
 msgid_plural "%u devices have a firmware upgrade available."
 msgstr[0] " %u dispositivo tem uma atualização de firmware disponível."
 msgstr[1] "%u dispositivos têm uma atualização de firmware disponível."
+msgstr[2] "%u dispositivos têm uma atualização de firmware disponível."
 
 #. TRANSLATORS: duration in minutes
 #, c-format
@@ -192,6 +195,7 @@ msgid "%u hour"
 msgid_plural "%u hours"
 msgstr[0] "%u hora"
 msgstr[1] "%u horas"
+msgstr[2] "%u horas"
 
 #. TRANSLATORS: how many local devices can expect updates now
 #, c-format
@@ -199,6 +203,7 @@ msgid "%u local device supported"
 msgid_plural "%u local devices supported"
 msgstr[0] "%u dispositivo local suportado"
 msgstr[1] "%u dispositivos locais suportados"
+msgstr[2] "%u dispositivos locais suportados"
 
 #. TRANSLATORS: duration in minutes
 #, c-format
@@ -206,6 +211,7 @@ msgid "%u minute"
 msgid_plural "%u minutes"
 msgstr[0] "%u minuto"
 msgstr[1] "%u minutos"
+msgstr[2] "%u minutos"
 
 #. TRANSLATORS: duration in seconds
 #, c-format
@@ -213,6 +219,7 @@ msgid "%u second"
 msgid_plural "%u seconds"
 msgstr[0] "%u segundo"
 msgstr[1] "%u segundos"
+msgstr[2] "%u segundos"
 
 #. TRANSLATORS: this is shown as a suffix for obsoleted tests
 msgid "(obsoleted)"
@@ -306,6 +313,7 @@ msgid "Approved firmware:"
 msgid_plural "Approved firmware:"
 msgstr[0] "Firmware aprovado:"
 msgstr[1] "Firmwares aprovados:"
+msgstr[2] "Firmwares aprovados:"
 
 #. TRANSLATORS: stop nagging the user
 msgid "Ask again next time?"
@@ -957,6 +965,7 @@ msgid "Firmware metadata has not been updated for %u day and may not be up to da
 msgid_plural "Firmware metadata has not been updated for %u days and may not be up to date."
 msgstr[0] "Os metadados do firmware não foram atualizados a %u dia e podem não estar atualizados."
 msgstr[1] "Os metadados do firmware não foram atualizados a %u dias e podem não estar atualizados."
+msgstr[2] "Os metadados do firmware não foram atualizados a %u dias e podem não estar atualizados."
 
 #. TRANSLATORS: error message for a user who ran fwupdmgr
 #. refresh recently %1 is an already translated timestamp such
@@ -1003,6 +1012,7 @@ msgid "GUID"
 msgid_plural "GUIDs"
 msgstr[0] "GUID"
 msgstr[1] "GUIDs"
+msgstr[2] "GUIDs"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgctxt "A single GUID"
@@ -1194,6 +1204,7 @@ msgid "Issue"
 msgid_plural "Issues"
 msgstr[0] "Problema"
 msgstr[1] "Problemas"
+msgstr[2] "Problemas"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "KEY,VALUE"
@@ -1839,6 +1850,7 @@ msgid "Successfully uploaded %u report"
 msgid_plural "Successfully uploaded %u reports"
 msgstr[0] "Enviado com sucesso %u relatório"
 msgstr[1] "Enviados com sucesso %u relatórios"
+msgstr[2] "Enviados com sucesso %u relatórios"
 
 #. TRANSLATORS: success message when user verified device checksums
 msgid "Successfully verified device checksums"
@@ -1895,6 +1907,7 @@ msgid "Tag"
 msgid_plural "Tags"
 msgstr[0] "Etiqueta"
 msgstr[1] "Etiquetas"
+msgstr[2] "Etiquetas"
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Tainted"

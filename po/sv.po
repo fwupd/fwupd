@@ -177,6 +177,12 @@ msgstr "%s ändrad: %s → %s"
 msgid "%s disappeared: %s"
 msgstr "%s försvann: %s"
 
+#. TRANSLATORS: the device has a reason it can't update, e.g. laptop lid
+#. closed
+#, c-format
+msgid "%s is not currently updatable"
+msgstr "%s går för tillfället inte uppdatera"
+
 #. TRANSLATORS: Title: %s is ME kind, e.g. CSME/TXT
 #, c-format
 msgid "%s manufacturing mode"
@@ -257,6 +263,12 @@ msgid "%u second"
 msgid_plural "%u seconds"
 msgstr[0] "%u sekund"
 msgstr[1] "%u sekunder"
+
+#. TRANSLATORS: first percentage is current value, 2nd percentage is the
+#. * lowest limit the firmware update is allowed for the update to happen
+#, c-format
+msgid "%u%% (threshold %u%%)"
+msgstr "%u%% (tröskelvärde %u%%)"
 
 #. TRANSLATORS: this is shown as a suffix for obsoleted tests
 msgid "(obsoleted)"
@@ -442,6 +454,10 @@ msgstr "BYGGAR-XML FILNAMN-MÅL"
 msgid "BYTES"
 msgstr "BYTE"
 
+#. TRANSLATORS: refers to the battery inside the peripheral device
+msgid "Battery"
+msgstr "Batteri"
+
 #. TRANSLATORS: command description
 msgid "Bind new kernel driver"
 msgstr "Bind ny kärndrivrutin"
@@ -605,9 +621,23 @@ msgstr "Enhets-ID"
 msgid "Device added:"
 msgstr "Enhet tillagd:"
 
+#. TRANSLATORS: for example the batteries *inside* the Bluetooth mouse
+#, c-format
+msgid "Device battery power is too low"
+msgstr "Enheten har för lite batteri"
+
+#. TRANSLATORS: for example the batteries *inside* the Bluetooth mouse
+#, c-format
+msgid "Device battery power is too low (%u%%, requires %u%%)"
+msgstr "Enheten har för lite batteri (%u%%, behöver %u%%)"
+
 #. TRANSLATORS: Device supports a safety mechanism for flashing
 msgid "Device can recover flash failures"
 msgstr "Enhet kan återhämta sig från flashningsfel"
+
+#. TRANSLATORS: lid means "laptop top cover"
+msgid "Device cannot be used while the lid is closed"
+msgstr "Enheten kan inte användas medan locket är stängt"
 
 #. TRANSLATORS: this is when a device has been updated
 msgid "Device changed:"
@@ -631,13 +661,25 @@ msgstr "Enhet krävs för att installera alla tillgängliga utgåvor"
 msgid "Device is unreachable"
 msgstr "Enheten kan inte nås"
 
+#. TRANSLATORS: for example, a Bluetooth mouse that is in powersave mode
+msgid "Device is unreachable, or out of wireless range"
+msgstr "Enheten kan inte nås, eller är utanför den trådlösa räckvidden"
+
 #. TRANSLATORS: Device remains usable during update
 msgid "Device is usable for the duration of the update"
 msgstr "Enhet går använda under tiden som uppdateringen pågår"
 
+#. TRANSLATORS: usually this is when we're waiting for a reboot
+msgid "Device is waiting for the update to be applied"
+msgstr "Enheten väntar på att uppdateringen ska tillämpas"
+
 #. TRANSLATORS: this is when a device is hotplugged
 msgid "Device removed:"
 msgstr "Enhet borttagen:"
+
+#. TRANSLATORS: as in, wired mains power for a laptop
+msgid "Device requires AC power to be connected"
+msgstr "Enheten behöver vara ansluten till nätspänning"
 
 #. TRANSLATORS: Device supports a safety mechanism for flashing
 msgid "Device stages updates"
@@ -662,11 +704,6 @@ msgstr "Enheten kommer säkerhetskopiera fast programvara innan den installeras"
 #. TRANSLATORS: Device will not return after update completes
 msgid "Device will not re-appear after update completes"
 msgstr "Enhet kommer inte att dyka upp igen efter att uppdateringen färdigställs"
-
-#. TRANSLATORS: the device has a reason it can't update, e.g. laptop lid
-#. closed
-msgid "Devices not currently updatable:"
-msgstr "Enheter som inte går att uppdatera för tillfället:"
 
 #. TRANSLATORS: a list of successful updates
 msgid "Devices that have been updated successfully:"
@@ -1106,6 +1143,10 @@ msgstr "Full diskkryptering upptäckt"
 msgid "Full disk encryption secrets may be invalidated when updating"
 msgstr "Krypteringshemligheter för hel disk kan göras ogiltiga vid uppdatering"
 
+#. TRANSLATORS: Title: if the part has been fused
+msgid "Fused platform"
+msgstr "Plattform med säkring"
+
 #. TRANSLATORS: global ID common to all similar hardware
 msgid "GUID"
 msgid_plural "GUIDs"
@@ -1229,6 +1270,10 @@ msgstr "Installera en fast programvaru-blob på en enhet"
 #. TRANSLATORS: command description
 msgid "Install a firmware file on this hardware"
 msgstr "Installera en fast programvarufil på denna hårdvara"
+
+#. TRANSLATORS: command description
+msgid "Install a specific firmware version on a device"
+msgstr "Installera en specifik version av fast programvara på en enhet"
 
 msgid "Install old version of signed system firmware"
 msgstr "Installera en gammal version av signerad fast programvara för systemet"
@@ -1633,6 +1678,10 @@ msgstr "Andel färdigställt"
 msgid "Perform operation?"
 msgstr "Utför operationen?"
 
+#. TRANSLATORS: Title: Allows debugging of parts using proprietary hardware
+msgid "Platform Debugging"
+msgstr "Plattformsfelsökning"
+
 #. TRANSLATORS: 'recovery key' here refers to a code, rather than a physical
 #. metal thing
 msgid "Please ensure you have the volume recovery key before continuing."
@@ -1673,6 +1722,10 @@ msgstr "Skriv ut utförliga felsökningssatser"
 msgid "Priority"
 msgstr "Prioritet"
 
+#. TRANSLATORS: reasons the device is not updatable
+msgid "Problems"
+msgstr "Problem"
+
 msgid "Proceed with upload?"
 msgstr "Fortsätt med att skicka upp?"
 
@@ -1695,6 +1748,10 @@ msgstr "FJÄRR-ID NYCKEL VÄRDE"
 #. TRANSLATORS: command description
 msgid "Read a firmware blob from a device"
 msgstr "Läs en fast programvaru-blob från en enhet"
+
+#. TRANSLATORS: command description
+msgid "Read a firmware from a device"
+msgstr "Läs om fast programvara från en enhet"
 
 #. TRANSLATORS: command description
 msgid "Read firmware from device into a file"
@@ -1803,6 +1860,10 @@ msgstr "Startar om enhet…"
 msgid "Return all the hardware IDs for the machine"
 msgstr "Returnera alla hårdvaru-ID:n för maskinen"
 
+#. TRANSLATORS: Title: if firmware enforces rollback protection
+msgid "Rollback protection"
+msgstr "Tillbakarullningsskydd"
+
 #. TRANSLATORS: this is shown in the MOTD
 msgid "Run `fwupdmgr get-upgrades` for more information."
 msgstr "Kör ”fwupdmgr get-upgrades” för vidare information."
@@ -1839,9 +1900,17 @@ msgstr "SPI BIOS-region"
 msgid "SPI lock"
 msgstr "SPI lås"
 
+#. TRANSLATORS: Title: if hardware enforces control of SPI replays
+msgid "SPI replay protection"
+msgstr "SPI-återuppspelningsskydd"
+
 #. TRANSLATORS: Title: SPI refers to the flash chip in the computer
 msgid "SPI write"
 msgstr "SPI skriv"
+
+#. TRANSLATORS: Title: if hardware enforces control of SPI writes
+msgid "SPI write protection"
+msgstr "SPI-skrivskydd"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "SUBSYSTEM DRIVER [DEVICE-ID|GUID]"
@@ -2068,6 +2137,10 @@ msgstr "Sammanfattning"
 msgid "Supported"
 msgstr "Stöds"
 
+#. TRANSLATORS: Title: if fwupd supports HSI on this chip
+msgid "Supported CPU"
+msgstr "CPU som stöds"
+
 #. TRANSLATORS: Is found in current metadata
 msgid "Supported on remote server"
 msgstr "Stöds på fjärrserver"
@@ -2093,6 +2166,15 @@ msgstr "Byt gren för fast programvara på enheten"
 #. TRANSLATORS: command description
 msgid "Sync firmware versions to the host best known configuration"
 msgstr "Synkronisera versioner för fast programvara till den mest kända konfigurationen hos värden"
+
+#. TRANSLATORS: as in laptop battery power
+msgid "System power is too low to perform the update"
+msgstr "Systemet har för lite batteri för att utföra uppdateringen"
+
+#. TRANSLATORS: as in laptop battery power
+#, c-format
+msgid "System power is too low to perform the update (%u%%, requires %u%%)"
+msgstr "Systemet har för lite batteri för att utföra uppdateringen (%u%%, behöver %u%%)"
 
 #. TRANSLATORS: Must be plugged in to an outlet
 msgid "System requires external power source"
@@ -2526,6 +2608,10 @@ msgstr "[ENHETS-ID|GUID]"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[DEVICE-ID|GUID] [BRANCH]"
 msgstr "[ENHETS-ID|GUID] [GREN]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[DEVICE-ID|GUID] [VERSION]"
+msgstr "[ENHETS-ID|GUID] [VERSION]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[FILE FILE_SIG REMOTE-ID]"

@@ -17,7 +17,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Language: pt_BR\n"
-"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"Plural-Forms: nplurals=3; plural=(n == 0 || n == 1) ? 0 : n != 0 && n % 1000000 == 0 ? 1 : 2;\n"
 
 #. TRANSLATORS: more than a minute
 #, c-format
@@ -25,6 +25,7 @@ msgid "%.0f minute remaining"
 msgid_plural "%.0f minutes remaining"
 msgstr[0] "%.0f minuto restante"
 msgstr[1] "%.0f minutos restantes"
+msgstr[2] "%.0f minutos restantes"
 
 #. TRANSLATORS: BMC refers to baseboard management controller which
 #. * is the device that updates all the other firmware on the system
@@ -213,6 +214,7 @@ msgid "%u day"
 msgid_plural "%u days"
 msgstr[0] "%u dia"
 msgstr[1] "%u dias"
+msgstr[2] "%u dias"
 
 #. TRANSLATORS: this is shown in the MOTD
 #, c-format
@@ -220,6 +222,7 @@ msgid "%u device has a firmware upgrade available."
 msgid_plural "%u devices have a firmware upgrade available."
 msgstr[0] " %u dispositivo tem uma atualização de firmware disponível."
 msgstr[1] "%u dispositivos têm uma atualização de firmware disponível."
+msgstr[2] "%u dispositivos têm uma atualização de firmware disponível."
 
 #. TRANSLATORS: this is shown in the MOTD
 #, c-format
@@ -227,6 +230,7 @@ msgid "%u device is not the best known configuration."
 msgid_plural "%u devices are not the best known configuration."
 msgstr[0] "%u dispositivo não é a configuração mais conhecida."
 msgstr[1] "%u dispositivos não são a configuração mais conhecida."
+msgstr[2] "%u dispositivos não são a configuração mais conhecida."
 
 #. TRANSLATORS: duration in minutes
 #, c-format
@@ -234,6 +238,7 @@ msgid "%u hour"
 msgid_plural "%u hours"
 msgstr[0] "%u hora"
 msgstr[1] "%u horas"
+msgstr[2] "%u horas"
 
 #. TRANSLATORS: how many local devices can expect updates now
 #, c-format
@@ -241,6 +246,7 @@ msgid "%u local device supported"
 msgid_plural "%u local devices supported"
 msgstr[0] "%u dispositivo local suportado"
 msgstr[1] "%u dispositivos locais suportados"
+msgstr[2] "%u dispositivos locais suportados"
 
 #. TRANSLATORS: duration in minutes
 #, c-format
@@ -248,6 +254,7 @@ msgid "%u minute"
 msgid_plural "%u minutes"
 msgstr[0] "%u minuto"
 msgstr[1] "%u minutos"
+msgstr[2] "%u minutos"
 
 #. TRANSLATORS: duration in seconds
 #, c-format
@@ -255,6 +262,7 @@ msgid "%u second"
 msgid_plural "%u seconds"
 msgstr[0] "%u segundo"
 msgstr[1] "%u segundos"
+msgstr[2] "%u segundos"
 
 #. TRANSLATORS: this is shown as a suffix for obsoleted tests
 msgid "(obsoleted)"
@@ -364,6 +372,7 @@ msgid "Approved firmware:"
 msgid_plural "Approved firmware:"
 msgstr[0] "Firmware aprovado:"
 msgstr[1] "Firmwares aprovados:"
+msgstr[2] "Firmwares aprovados:"
 
 #. TRANSLATORS: stop nagging the user
 msgid "Ask again next time?"
@@ -660,11 +669,6 @@ msgstr "O dispositivo fará backup do firmware antes de instalar"
 #. TRANSLATORS: Device will not return after update completes
 msgid "Device will not re-appear after update completes"
 msgstr "O dispositivo não aparecerá novamente após a atualização ser concluída"
-
-#. TRANSLATORS: the device has a reason it can't update, e.g. laptop lid
-#. closed
-msgid "Devices not currently updatable:"
-msgstr "Dispositivos não atualizáveis:"
 
 #. TRANSLATORS: a list of successful updates
 msgid "Devices that have been updated successfully:"
@@ -1058,6 +1062,7 @@ msgid "Firmware metadata has not been updated for %u day and may not be up to da
 msgid_plural "Firmware metadata has not been updated for %u days and may not be up to date."
 msgstr[0] "Os metadados do firmware não foram atualizados a %u dia e podem não estar atualizados."
 msgstr[1] "Os metadados do firmware não foram atualizados a %u dias e podem não estar atualizados."
+msgstr[2] "Os metadados do firmware não foram atualizados a %u dias e podem não estar atualizados."
 
 #. TRANSLATORS: error message for a user who ran fwupdmgr
 #. refresh recently %1 is an already translated timestamp such
@@ -1104,11 +1109,16 @@ msgstr "Criptografia de disco completo detectada"
 msgid "Full disk encryption secrets may be invalidated when updating"
 msgstr "Os segredos de criptografia de disco completa podem ser invalidados ao atualizar"
 
+#. TRANSLATORS: Title: if the part has been fused
+msgid "Fused platform"
+msgstr "Plataforma fundida"
+
 #. TRANSLATORS: global ID common to all similar hardware
 msgid "GUID"
 msgid_plural "GUIDs"
 msgstr[0] "GUID"
 msgstr[1] "GUIDs"
+msgstr[2] "GUIDs"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgctxt "A single GUID"
@@ -1228,6 +1238,10 @@ msgstr "Instala um blob de firmware em um dispositivo"
 msgid "Install a firmware file on this hardware"
 msgstr "Instala um arquivo de firmware neste periférico"
 
+#. TRANSLATORS: command description
+msgid "Install a specific firmware version on a device"
+msgstr "Instala uma versão específica de firmware em um dispositivo"
+
 msgid "Install old version of signed system firmware"
 msgstr "Instalar versão antiga do firmware do sistema assinado"
 
@@ -1330,6 +1344,7 @@ msgid "Issue"
 msgid_plural "Issues"
 msgstr[0] "Problema"
 msgstr[1] "Problemas"
+msgstr[2] "Problemas"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "KEY,VALUE"
@@ -1631,6 +1646,10 @@ msgstr "Percentagem concluída"
 msgid "Perform operation?"
 msgstr "Efetuar a operação?"
 
+#. TRANSLATORS: Title: Allows debugging of parts using proprietary hardware
+msgid "Platform Debugging"
+msgstr "Depuração de plataforma"
+
 #. TRANSLATORS: 'recovery key' here refers to a code, rather than a physical
 #. metal thing
 msgid "Please ensure you have the volume recovery key before continuing."
@@ -1801,6 +1820,10 @@ msgstr "Reiniciando dispositivo…"
 msgid "Return all the hardware IDs for the machine"
 msgstr "Retorna todos os IDs de hardware para a máquina"
 
+#. TRANSLATORS: Title: if firmware enforces rollback protection
+msgid "Rollback protection"
+msgstr "Proteção contra reversão"
+
 #. TRANSLATORS: this is shown in the MOTD
 msgid "Run `fwupdmgr get-upgrades` for more information."
 msgstr "Execute `fwupdmgr get-upgrades` para mais informações."
@@ -1837,9 +1860,17 @@ msgstr "Região BIOS do SPI"
 msgid "SPI lock"
 msgstr "Bloqueio de SPI"
 
+#. TRANSLATORS: Title: if hardware enforces control of SPI replays
+msgid "SPI replay protection"
+msgstr "Proteção contra repetição de SPI"
+
 #. TRANSLATORS: Title: SPI refers to the flash chip in the computer
 msgid "SPI write"
 msgstr "Escrita de SPI"
+
+#. TRANSLATORS: Title: if hardware enforces control of SPI writes
+msgid "SPI write protection"
+msgstr "Proteção contra escrita de SPI"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "SUBSYSTEM DRIVER [DEVICE-ID|GUID]"
@@ -2053,6 +2084,7 @@ msgid "Successfully uploaded %u report"
 msgid_plural "Successfully uploaded %u reports"
 msgstr[0] "Enviado com sucesso %u relatório"
 msgstr[1] "Enviados com sucesso %u relatórios"
+msgstr[2] "Enviados com sucesso %u relatórios"
 
 #. TRANSLATORS: success message when user verified device checksums
 msgid "Successfully verified device checksums"
@@ -2065,6 +2097,10 @@ msgstr "Resumo"
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Supported"
 msgstr "Suportado"
+
+#. TRANSLATORS: Title: if fwupd supports HSI on this chip
+msgid "Supported CPU"
+msgstr "CPU suportada"
 
 #. TRANSLATORS: Is found in current metadata
 msgid "Supported on remote server"
@@ -2126,6 +2162,7 @@ msgid "Tag"
 msgid_plural "Tags"
 msgstr[0] "Tag"
 msgstr[1] "Tags"
+msgstr[2] "Tags"
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Tainted"
@@ -2524,6 +2561,10 @@ msgstr "[ID-DISPOSITIVO|GUID]"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[DEVICE-ID|GUID] [BRANCH]"
 msgstr "[ID-DISPOSITIVO|GUID] [RAMIFICAÇÃO]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[DEVICE-ID|GUID] [VERSION]"
+msgstr "[ID-DISPOSITIVO|GUID] [VERSÃO]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[FILE FILE_SIG REMOTE-ID]"

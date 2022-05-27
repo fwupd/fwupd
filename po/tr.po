@@ -5,7 +5,7 @@
 # Translators:
 # Emin Tufan Çetin <etcetin@gmail.com>, 2020
 # Muhammet Kara <muhammetk@gmail.com>, 2016
-# Sabri Ünal <libreajans@gmail.com>, 2019-2020
+# Sabri Ünal <libreajans@gmail.com>, 2019-2020,2022
 # Sabri Ünal <yakushabb@gmail.com>, 2020
 # Serdar Sağlam <teknomobil@msn.com>, 2020
 # yunus kaba <yunuskaba@gmail.com>, 2021
@@ -99,7 +99,7 @@ msgstr "%s v%s"
 #. TRANSLATORS: Title: %s is ME kind, e.g. CSME/TXT
 #, c-format
 msgid "%s version"
-msgstr "%s version"
+msgstr "%s sürümü"
 
 #. TRANSLATORS: duration in days!
 #, c-format
@@ -277,7 +277,7 @@ msgstr "Sağlama Toplamı"
 #. TRANSLATORS: get interactive prompt, where branch is the
 #. * supplier of the firmware, e.g. "non-free" or "free"
 msgid "Choose a branch:"
-msgstr "Bağlı kol seçiniz:"
+msgstr "Dal seçiniz:"
 
 #. TRANSLATORS: get interactive prompt
 msgid "Choose a device:"
@@ -357,7 +357,7 @@ msgstr "Aygıt çıkarıldı:"
 
 #. TRANSLATORS: command line option
 msgid "Device update method"
-msgstr "Güncelleme yöntemi"
+msgstr "Aygıt güncelleme yöntemi"
 
 #. TRANSLATORS: message letting the user know no device upgrade
 #. * available due to missing on LVFS
@@ -393,7 +393,7 @@ msgstr "Ekran sürümü"
 
 #. TRANSLATORS: command line option
 msgid "Do not check for old metadata"
-msgstr "Eski üst verileri kontrol etme"
+msgstr "Eski üstverileri kontrol etme"
 
 #. TRANSLATORS: command line option
 msgid "Do not check for unreported history"
@@ -628,7 +628,7 @@ msgstr "Yüksek"
 
 #. TRANSLATORS: this is a string like 'HSI:2-U'
 msgid "Host Security ID:"
-msgstr "Host Güvenlik ID:"
+msgstr "Host Güvenlik Kimliği:"
 
 #. TRANSLATORS: Title:
 #. * https://en.wikipedia.org/wiki/Input%E2%80%93output_memory_management_unit
@@ -696,7 +696,7 @@ msgstr[1] "Sorunlar"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "KEY,VALUE"
-msgstr "KEY,VALUE"
+msgstr "ANAHTAR,DEĞER"
 
 #. TRANSLATORS: keyring type, e.g. GPG or PKCS7
 msgid "Keyring"
@@ -769,7 +769,7 @@ msgstr "Üstveri URI"
 
 #. TRANSLATORS: explain why no metadata available
 msgid "Metadata can be obtained from the Linux Vendor Firmware Service."
-msgstr "Üst veri Linux Tedarikçi Ürün Yazılımı Hizmetinden edinilebilir"
+msgstr "Üstveri Linux Tedarikçi Ürün Yazılımı Hizmetinden edinilebilir"
 
 #. TRANSLATORS: smallest version number installable on device
 msgid "Minimum Version"
@@ -816,7 +816,7 @@ msgstr "Sürüm bulunamadı"
 
 #. TRANSLATORS: explain why no metadata available
 msgid "No remotes are currently enabled so no metadata is available."
-msgstr "Şu anda uzaktan kumanda etkin değil, bu nedenle üst veri yok."
+msgstr "Şu anda uzaktan kumanda etkin değil, bu nedenle üstveri yok."
 
 #. TRANSLATORS: no repositories to download from
 msgid "No remotes available"
@@ -855,7 +855,7 @@ msgstr "Öntanımlı ESP yolunu geçersiz kıl"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "PATH"
-msgstr "Dizin"
+msgstr "YOL"
 
 #. TRANSLATORS: command description
 msgid "Parse and show details about a firmware file"
@@ -955,7 +955,7 @@ msgstr "Aygıt yeniden başlatılıyor…"
 
 #. TRANSLATORS: Title: SPI refers to the flash chip in the computer
 msgid "SPI lock"
-msgstr "SPI lock"
+msgstr "SPI kilidi"
 
 #. TRANSLATORS: command line option
 msgid "Schedule installation for next reboot when possible"
@@ -1180,7 +1180,7 @@ msgstr "Şifrelenmemiş"
 #. TRANSLATORS: we don't know the license of the update
 #. TRANSLATORS: unknown release urgency
 msgid "Unknown"
-msgstr "Bilinmiyor"
+msgstr "Bilinmeyen"
 
 #. TRANSLATORS: Name of hardware
 msgid "Unknown Device"
@@ -1284,7 +1284,7 @@ msgstr "Sürüm"
 
 #. TRANSLATORS: this is a prefix on the console
 msgid "WARNING:"
-msgstr "Dikkat:"
+msgstr "UYARI:"
 
 #. TRANSLATORS: waiting for device to do something
 msgid "Waiting…"

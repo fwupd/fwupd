@@ -1,0 +1,133 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the fwupd package.
+#
+# Translators:
+# Adolfo Jayme-Barrientos, 2021
+# Francisco Serrador <fserrador@gmail.com>, 2022
+msgid ""
+msgstr ""
+"Project-Id-Version: fwupd\n"
+"Report-Msgid-Bugs-To: \n"
+"Language-Team: Spanish (http://www.transifex.com/freedesktop/fwupd/language/es/)\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: es\n"
+"Plural-Forms: nplurals=3; plural=n == 1 ? 0 : n != 0 && n % 1000000 == 0 ? 1 : 2;\n"
+
+#. TRANSLATORS: command line option
+msgid "Apply update files"
+msgstr "Aplicar archivos de actualización"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to downgrade the firmware on a removable device"
+msgstr "Se requiere autenticación para bajar la versión del firmware en un dispositivo extraíble"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to downgrade the firmware on this machine"
+msgstr "Se requiere autenticación para bajar de versión el firmware en esta máquina"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to update the firmware on a removable device"
+msgstr "Se requiere autenticación para actualizar el firmware en un dispositivo extraíble"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to update the firmware on this machine"
+msgstr "Autenticación es requerida para actualizar el firmware en esta máquina"
+
+msgid "BYTES"
+msgstr "BYTES"
+
+#. TRANSLATORS: error message
+msgid "Command not found"
+msgstr "No se encontró la orden"
+
+#. TRANSLATORS: command line option
+msgid "Display version"
+msgstr "Representar la versión"
+
+msgid "Enabling this functionality is done at your own risk, which means you have to contact your original equipment manufacturer regarding any problems caused by these updates. Only problems with the update process itself should be filed at $OS_RELEASE:BUG_REPORT_URL$."
+msgstr "Active esta funcionalidad bajo su responsabilidad, lo que significa que tiene que contactar con el fabricante del equipo original ante cualquier problema causado por estas actualizaciones. Solo se deben reportar los problemas con el mismo proceso de actualización en $OS_RELEASE:BUG_REPORT_URL$."
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME"
+msgstr "NOMBRE-DE-ARCHIVO"
+
+#. TRANSLATORS: the user didn't read the man page
+msgid "Failed to parse arguments"
+msgstr "No se pudieron procesar los argumentos"
+
+#. TRANSLATORS: failed to read measurements file
+msgid "Failed to parse file"
+msgstr "No se pudo procesar el archivo"
+
+#. TRANSLATORS: user did not include a filename parameter
+msgid "Filename required"
+msgstr "Se requiere el nombre de archivo"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgctxt "A single GUID"
+msgid "GUID"
+msgstr "GUID"
+
+msgid "Install old version of signed system firmware"
+msgstr "Instala versión antigua de firmware del sistema firmado"
+
+msgid "Install old version of unsigned system firmware"
+msgstr "Instalar una versión antigua de firmware del sistema no firmado"
+
+msgid "Install signed device firmware"
+msgstr "Instalar firmware del dispositivo firmado"
+
+msgid "Install signed system firmware"
+msgstr "Instalar firmware del sistema firmado"
+
+msgid "Install unsigned device firmware"
+msgstr "Instalar firmware del dispositivo no firmado"
+
+msgid "Install unsigned system firmware"
+msgstr "Instalar firmware del sistema sin firmar"
+
+#. TRANSLATORS: this is shown when updating the firmware after the reboot
+msgid "Installing firmware update…"
+msgstr "Instalando actualización del firmware…"
+
+msgid "Linux Vendor Firmware Service (stable firmware)"
+msgstr "«Linux Vendor Firmware Service» (firmware estable)"
+
+msgid "Linux Vendor Firmware Service (testing firmware)"
+msgstr "«Linux Vendor Firmware Service» (firmware de pruebas)"
+
+#. TRANSLATORS: user did not tell the tool what to do
+msgid "No action specified!"
+msgstr "No se especificó ninguna acción."
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "PATH"
+msgstr "RUTA"
+
+#. TRANSLATORS: console message when not using plymouth
+msgid "Rebooting…"
+msgstr "Reiniciando…"
+
+#. TRANSLATORS: command line option
+msgid "Show extra debugging information"
+msgstr "Mostrar información de depuración adicional"
+
+#. TRANSLATORS: do not translate the variables marked using $
+msgid "The LVFS is a free service that operates as an independent legal entity and has no connection with $OS_RELEASE:NAME$. Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices. All firmware is provided only by the original equipment manufacturer."
+msgstr "El LVFS es un servicio libre que opera como una entidad independiente legal y no tiene contacto con $OS_RELEASE:NAME$. Su distribuidor puede no haber verificado ninguna de las actualizaciones del firmware por compatibilidad con su sistema o dispositivos conectados. Todo el firmware se distribuye únicamente a través el fabricante del equipo original."
+
+msgid "This remote contains firmware which is not embargoed, but is still being tested by the hardware vendor. You should ensure you have a way to manually downgrade the firmware if the firmware update fails."
+msgstr "Este remoto contiene firmware el cual no está embargado, pero aún está siendo probado por el proveedor de hardware. Debería asegurarse que tenga una manera de degradar el firmware manualmente si falla la actualización del firmware."
+
+msgid "Unlock the device to allow access"
+msgstr "Desbloquea el dispositivo para permitir acceso"
+
+msgid "VID:PID"
+msgstr "VID:PID"
+
+#. TRANSLATORS: the detected version number of the dbx
+msgid "Version"
+msgstr "Versión"

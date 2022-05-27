@@ -658,11 +658,6 @@ msgstr "El dispositiu farà una còpia de seguretat del microprogramari abans d'
 msgid "Device will not re-appear after update completes"
 msgstr "El dispositiu no tornarà a aparèixer un cop finalitzada l'actualització"
 
-#. TRANSLATORS: the device has a reason it can't update, e.g. laptop lid
-#. closed
-msgid "Devices not currently updatable:"
-msgstr "Dispositius que actualment no són actualitzables:"
-
 #. TRANSLATORS: a list of successful updates
 msgid "Devices that have been updated successfully:"
 msgstr "Els dispositius que s'han actualitzat correctament:"
@@ -1101,6 +1096,10 @@ msgstr "S'ha detectat una encriptació de tot el disc"
 msgid "Full disk encryption secrets may be invalidated when updating"
 msgstr "Els secrets d'encriptatge de tot el disc es poden invalidar en actualitzar"
 
+#. TRANSLATORS: Title: if the part has been fused
+msgid "Fused platform"
+msgstr "Plataforma fusionada"
+
 #. TRANSLATORS: global ID common to all similar hardware
 msgid "GUID"
 msgid_plural "GUIDs"
@@ -1224,6 +1223,10 @@ msgstr "Instal·la un blob de microprogramari en un dispositiu."
 #. TRANSLATORS: command description
 msgid "Install a firmware file on this hardware"
 msgstr "Instal·la un fitxer de microprogramari en aquest maquinari."
+
+#. TRANSLATORS: command description
+msgid "Install a specific firmware version on a device"
+msgstr "Instal·la en un dispositiu una versió específica del microprogramari"
 
 msgid "Install old version of signed system firmware"
 msgstr "Instal·la la versió antiga del microprogramari signat per al sistema"
@@ -1628,6 +1631,10 @@ msgstr "Percentatge completat"
 msgid "Perform operation?"
 msgstr "Realitzo l'operació?"
 
+#. TRANSLATORS: Title: Allows debugging of parts using proprietary hardware
+msgid "Platform Debugging"
+msgstr "Depuració de la plataforma"
+
 #. TRANSLATORS: 'recovery key' here refers to a code, rather than a physical
 #. metal thing
 msgid "Please ensure you have the volume recovery key before continuing."
@@ -1798,6 +1805,10 @@ msgstr "S'està reiniciant el dispositiu..."
 msgid "Return all the hardware IDs for the machine"
 msgstr "Retorna tots els ID del maquinari de la màquina."
 
+#. TRANSLATORS: Title: if firmware enforces rollback protection
+msgid "Rollback protection"
+msgstr "Protecció de versió antiga:"
+
 #. TRANSLATORS: this is shown in the MOTD
 msgid "Run `fwupdmgr get-upgrades` for more information."
 msgstr "Per a més informació executeu «fwupdmgr get-upgrades»."
@@ -1834,9 +1845,17 @@ msgstr "Regió del BIOS per a l'SPI"
 msgid "SPI lock"
 msgstr "Bloca l'SPI"
 
+#. TRANSLATORS: Title: if hardware enforces control of SPI replays
+msgid "SPI replay protection"
+msgstr "Protecció de repetició per a l'SPI"
+
 #. TRANSLATORS: Title: SPI refers to the flash chip in the computer
 msgid "SPI write"
 msgstr "Escriu l'SPI"
+
+#. TRANSLATORS: Title: if hardware enforces control of SPI writes
+msgid "SPI write protection"
+msgstr "Protecció d'escriptura per a l'SPI"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "SUBSYSTEM DRIVER [DEVICE-ID|GUID]"
@@ -2062,6 +2081,10 @@ msgstr "Resum"
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Supported"
 msgstr "Admesa"
+
+#. TRANSLATORS: Title: if fwupd supports HSI on this chip
+msgid "Supported CPU"
+msgstr "CPU admesa"
 
 #. TRANSLATORS: Is found in current metadata
 msgid "Supported on remote server"
@@ -2521,6 +2544,10 @@ msgstr "[ID_DISPOSITIU|GUID]"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[DEVICE-ID|GUID] [BRANCH]"
 msgstr "[ID_DISPOSITIU|GUID] [BRANCA]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[DEVICE-ID|GUID] [VERSION]"
+msgstr "[ID_DISPOSITIU|GUID] [VERSIÓ]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[FILE FILE_SIG REMOTE-ID]"

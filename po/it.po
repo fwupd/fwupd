@@ -14,7 +14,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Language: it\n"
-"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"Plural-Forms: nplurals=3; plural=n == 1 ? 0 : n != 0 && n % 1000000 == 0 ? 1 : 2;\n"
 
 #. TRANSLATORS: more than a minute
 #, c-format
@@ -22,6 +22,7 @@ msgid "%.0f minute remaining"
 msgid_plural "%.0f minutes remaining"
 msgstr[0] "Manca %.0f minuto"
 msgstr[1] "Mancano %.0f minuti"
+msgstr[2] "Mancano %.0f minuti"
 
 #. TRANSLATORS: BMC refers to baseboard management controller which
 #. * is the device that updates all the other firmware on the system
@@ -210,6 +211,7 @@ msgid "%u day"
 msgid_plural "%u days"
 msgstr[0] "%u giorno"
 msgstr[1] "%u giorni"
+msgstr[2] "%u giorni"
 
 #. TRANSLATORS: this is shown in the MOTD
 #, c-format
@@ -217,6 +219,7 @@ msgid "%u device has a firmware upgrade available."
 msgid_plural "%u devices have a firmware upgrade available."
 msgstr[0] "%u dispositivo ha un aggiornamento firmware disponibile."
 msgstr[1] "%u dispositivi hanno un aggiornamento firmware disponibile."
+msgstr[2] "%u dispositivi hanno un aggiornamento firmware disponibile."
 
 #. TRANSLATORS: this is shown in the MOTD
 #, c-format
@@ -224,6 +227,7 @@ msgid "%u device is not the best known configuration."
 msgid_plural "%u devices are not the best known configuration."
 msgstr[0] "%u dispositivo non dispone della configurazione migliore."
 msgstr[1] "%u dispositivi non dispongono della configurazione migliore."
+msgstr[2] "%u dispositivi non dispongono della configurazione migliore."
 
 #. TRANSLATORS: duration in minutes
 #, c-format
@@ -231,6 +235,7 @@ msgid "%u hour"
 msgid_plural "%u hours"
 msgstr[0] "%u ora"
 msgstr[1] "%u ore"
+msgstr[2] "%u ore"
 
 #. TRANSLATORS: how many local devices can expect updates now
 #, c-format
@@ -238,6 +243,7 @@ msgid "%u local device supported"
 msgid_plural "%u local devices supported"
 msgstr[0] "%u dispositivo locale supportato"
 msgstr[1] "%u dispositivi locali supportati"
+msgstr[2] "%u dispositivi locali supportati"
 
 #. TRANSLATORS: duration in minutes
 #, c-format
@@ -245,6 +251,7 @@ msgid "%u minute"
 msgid_plural "%u minutes"
 msgstr[0] "%u minuto"
 msgstr[1] "%u minuti"
+msgstr[2] "%u minuti"
 
 #. TRANSLATORS: duration in seconds
 #, c-format
@@ -252,6 +259,7 @@ msgid "%u second"
 msgid_plural "%u seconds"
 msgstr[0] "%u secondo"
 msgstr[1] "%u secondi"
+msgstr[2] "%u secondi"
 
 #. TRANSLATORS: this is shown as a suffix for obsoleted tests
 msgid "(obsoleted)"
@@ -361,6 +369,7 @@ msgid "Approved firmware:"
 msgid_plural "Approved firmware:"
 msgstr[0] "Firmware approvato:"
 msgstr[1] "Firmware approvati:"
+msgstr[2] "Firmware approvati:"
 
 #. TRANSLATORS: stop nagging the user
 msgid "Ask again next time?"
@@ -657,11 +666,6 @@ msgstr "Il dispositivo eseguirà un backup del firmware prima dell'installazione
 #. TRANSLATORS: Device will not return after update completes
 msgid "Device will not re-appear after update completes"
 msgstr "Il dispositivo non comparirà nuovamente dopo l'aggiornamento"
-
-#. TRANSLATORS: the device has a reason it can't update, e.g. laptop lid
-#. closed
-msgid "Devices not currently updatable:"
-msgstr "Dispositivi non aggiornabili:"
 
 #. TRANSLATORS: a list of successful updates
 msgid "Devices that have been updated successfully:"
@@ -1055,6 +1059,7 @@ msgid "Firmware metadata has not been updated for %u day and may not be up to da
 msgid_plural "Firmware metadata has not been updated for %u days and may not be up to date."
 msgstr[0] "I metadati del firmware non sono stati controllati per %u giorno e potrebbero non essere aggiornati."
 msgstr[1] "I metadati del firmware non sono stati controllati per %u giorni e potrebbero non essere aggiornati."
+msgstr[2] "I metadati del firmware non sono stati controllati per %u giorni e potrebbero non essere aggiornati."
 
 #. TRANSLATORS: error message for a user who ran fwupdmgr
 #. refresh recently %1 is an already translated timestamp such
@@ -1106,6 +1111,7 @@ msgid "GUID"
 msgid_plural "GUIDs"
 msgstr[0] "GUID"
 msgstr[1] "GUID"
+msgstr[2] "GUID"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgctxt "A single GUID"
@@ -1327,6 +1333,7 @@ msgid "Issue"
 msgid_plural "Issues"
 msgstr[0] "Problema"
 msgstr[1] "Problemi"
+msgstr[2] "Problemi"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "KEY,VALUE"
@@ -2050,6 +2057,7 @@ msgid "Successfully uploaded %u report"
 msgid_plural "Successfully uploaded %u reports"
 msgstr[0] "%u rapporto caricato con successo"
 msgstr[1] "%u rapporti caricati con successo"
+msgstr[2] "%u rapporti caricati con successo"
 
 #. TRANSLATORS: success message when user verified device checksums
 msgid "Successfully verified device checksums"
@@ -2123,6 +2131,7 @@ msgid "Tag"
 msgid_plural "Tags"
 msgstr[0] "Tag"
 msgstr[1] "Tag"
+msgstr[2] "Tag"
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Tainted"

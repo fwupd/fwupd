@@ -5,6 +5,7 @@
 # Translators:
 # Igor <f2404@yandex.ru>, 2017
 # Serge Vylekzhanin <vylekzhanin@mail.ru>, 2015-2019
+# Sergey A., 2022
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
@@ -24,6 +25,23 @@ msgstr[0] "Осталась %.0f минута"
 msgstr[1] "Осталось %.0f минуты"
 msgstr[2] "Осталось %.0f минут"
 msgstr[3] "Осталось %.0f минут"
+
+#. TRANSLATORS: battery refers to the system power source
+#, c-format
+msgid "%s Battery Update"
+msgstr "Обновление аккумулятора %s"
+
+#. TRANSLATORS: camera can refer to the laptop internal
+#. * camera in the bezel or external USB webcam
+#, c-format
+msgid "%s Camera Update"
+msgstr "Обновление камеры %s"
+
+#. TRANSLATORS: a specific part of hardware,
+#. * the first %s is the device name, e.g. 'Secure Boot`
+#, c-format
+msgid "%s Configuration Update"
+msgstr "Обновление конфигурации %s"
 
 #. TRANSLATORS: ME stands for Management Engine, where
 #. * the first %s is the device name, e.g. 'ThinkPad P50`
@@ -50,11 +68,22 @@ msgstr "Обновление подсистемы Corporate МЕ устройс�
 msgid "%s Device Update"
 msgstr "Обновление устройства %s"
 
+#. TRANSLATORS: Video Display refers to the laptop internal display or
+#. * external monitor
+#, c-format
+msgid "%s Display Update"
+msgstr "Обновление дисплея %s"
+
 #. TRANSLATORS: the EC is typically the keyboard controller chip,
 #. * the first %s is the device name, e.g. 'ThinkPad P50`
 #, c-format
 msgid "%s Embedded Controller Update"
 msgstr "Обновление встроенного контроллера %s"
+
+#. TRANSLATORS: Keyboard refers to an input device for typing
+#, c-format
+msgid "%s Keyboard Update"
+msgstr "Обновление клавиатуры %s"
 
 #. TRANSLATORS: ME stands for Management Engine, the Intel AMT thing,
 #. * the first %s is the device name, e.g. 'ThinkPad P50`
@@ -62,11 +91,27 @@ msgstr "Обновление встроенного контроллера %s"
 msgid "%s ME Update"
 msgstr "Обновление подсистемы МЕ устройства %s"
 
+#. TRANSLATORS: Mouse refers to a handheld input device
+#, c-format
+msgid "%s Mouse Update"
+msgstr "Обновление мыши %s"
+
+#. TRANSLATORS: Network Interface refers to the physical
+#. * PCI card, not the logical wired connection
+#, c-format
+msgid "%s Network Interface Update"
+msgstr "Обновление сетевого интерфейса %s"
+
 #. TRANSLATORS: the entire system, e.g. all internal devices,
 #. * the first %s is the device name, e.g. 'ThinkPad P50`
 #, c-format
 msgid "%s System Update"
 msgstr "Обновление системы %s"
+
+#. TRANSLATORS: TouchPad refers to a flat input device
+#, c-format
+msgid "%s Touchpad Update"
+msgstr "Обновление сенсорной панели %s"
 
 #. TRANSLATORS: this is the fallback where we don't know if the release
 #. * is updating the system, the device, or a device class, or something else
@@ -75,6 +120,16 @@ msgstr "Обновление системы %s"
 #, c-format
 msgid "%s Update"
 msgstr "Обновление устройства %s"
+
+#. TRANSLATORS: Title: %1 is ME kind, e.g. CSME/TXT, %2 is a version number
+#, c-format
+msgid "%s v%s"
+msgstr "%s v%s"
+
+#. TRANSLATORS: Title: %s is ME kind, e.g. CSME/TXT
+#, c-format
+msgid "%s version"
+msgstr "%s версия"
 
 #. TRANSLATORS: duration in days!
 #, c-format
@@ -225,6 +280,10 @@ msgstr "Для обновления прошивки на этой машине 
 msgid "Authentication is required to update the stored checksums for the device"
 msgstr "Для обновления хранимых контрольных сумм устройства требуется аутентификация"
 
+#. TRANSLATORS: firmware version of bootloader
+msgid "Bootloader Version"
+msgstr "Версия загрузчика"
+
 #. TRANSLATORS: command description
 msgid "Build firmware using a sandbox"
 msgstr "Собрать прошивку, используя песочницу"
@@ -250,6 +309,10 @@ msgid "Choose a device:"
 msgstr "Выберите устройство:"
 
 #. TRANSLATORS: get interactive prompt
+msgid "Choose a firmware type:"
+msgstr "Выбрать тип прошивки:"
+
+#. TRANSLATORS: get interactive prompt
 msgid "Choose a release:"
 msgstr "Выберите релиз:"
 
@@ -260,6 +323,14 @@ msgstr "Очистить результаты c последнего обнов�
 #. TRANSLATORS: error message
 msgid "Command not found"
 msgstr "Команда не найдена"
+
+#. TRANSLATORS: when the update was built
+msgid "Created"
+msgstr "Создано"
+
+#. TRANSLATORS: version number of current firmware
+msgid "Current version"
+msgstr "Текущая версия"
 
 #. TRANSLATORS: DFU stands for device firmware update
 msgid "DFU Utility"
@@ -293,9 +364,17 @@ msgstr "Добавлено устройство:"
 msgid "Device changed:"
 msgstr "Заменено устройство:"
 
+#. TRANSLATORS: Is locked and can be unlocked
+msgid "Device is locked"
+msgstr "Устройство заблокировано"
+
 #. TRANSLATORS: this is when a device is hotplugged
 msgid "Device removed:"
 msgstr "Удалено устройство:"
+
+#. TRANSLATORS: command line option
+msgid "Device update method"
+msgstr "Способ обновления устройства"
 
 #. TRANSLATORS: a list of successful updates
 msgid "Devices that have been updated successfully:"
@@ -304,6 +383,31 @@ msgstr "Устройства, которые были успешно обнов�
 #. TRANSLATORS: a list of failed updates
 msgid "Devices that were not updated correctly:"
 msgstr "Устройства, которые не были правильно обновлены:"
+
+#. TRANSLATORS: message letting the user know no device upgrade
+#. * available due to missing on LVFS
+#. TRANSLATORS: message letting the user know no device
+#. * upgrade available due to missing on LVFS
+#. TRANSLATORS: message letting the user know no device upgrade
+#. * available due to missing on LVFS
+#. TRANSLATORS: message letting the user know no device
+#. * upgrade available due to missing on LVFS
+msgid "Devices with no available firmware updates: "
+msgstr "Устройства без доступных обновлений прошивки:"
+
+#. TRANSLATORS: message letting the user know no device upgrade available
+#. TRANSLATORS: message letting the user know no device upgrade
+#. * available
+#. TRANSLATORS: message letting the user know no device upgrade available
+#. TRANSLATORS: message letting the user know no device upgrade
+#. * available
+msgid "Devices with the latest available firmware version:"
+msgstr "Устройства с последней доступной версией прошивки:"
+
+#. TRANSLATORS: Suffix: the HSI result
+#. TRANSLATORS: Plugin is inactive and not used
+msgid "Disabled"
+msgstr "Не активировано"
 
 msgid "Disabled fwupdate debugging"
 msgstr "Отладка fwupdate деактивирована"
@@ -349,6 +453,10 @@ msgstr "Понижение версии прошивки устройства %s
 msgid "Downgrading %s…"
 msgstr "Понижение версии прошивки устройства %s…"
 
+#. TRANSLATORS: command description
+msgid "Download a file"
+msgstr "Скачать файл"
+
 #. TRANSLATORS: downloading from a remote server
 msgid "Downloading…"
 msgstr "Получение..."
@@ -389,6 +497,10 @@ msgstr "Активирование этого функционала осуще�
 msgid "Enabling this remote is done at your own risk."
 msgstr "Активация этого репозитория осуществляется на свой страх и риск."
 
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Encrypted"
+msgstr "Зашифровано"
+
 #. TRANSLATORS: command description
 msgid "Erase all firmware update history"
 msgstr "Стереть всю историю обновлений прошивки"
@@ -404,6 +516,11 @@ msgstr "Выйти после небольшой задержки"
 #. TRANSLATORS: exit straight away, used for automatic profiling
 msgid "Exit after the engine has loaded"
 msgstr "Выйти после загрузки движка"
+
+#. TRANSLATORS: Suffix: the fallback HSI result
+#. TRANSLATORS: the update state of the specific device
+msgid "Failed"
+msgstr "Не удалось"
 
 #. TRANSLATORS: we could not talk to the fwupd daemon
 msgid "Failed to connect to daemon"
@@ -425,6 +542,10 @@ msgstr "Не удалось загрузить странности"
 msgid "Failed to parse arguments"
 msgstr "Не удалось разобрать аргументы"
 
+#. TRANSLATORS: failed to read measurements file
+msgid "Failed to parse file"
+msgstr "Не удалось проанализировать файл"
+
 #. TRANSLATORS: we could not reboot for some reason
 msgid "Failed to reboot"
 msgstr "Не удалось перезагрузить"
@@ -440,6 +561,10 @@ msgstr "Имя файла"
 #. TRANSLATORS: filename of the local file
 msgid "Filename Signature"
 msgstr "Подпись имени файла"
+
+#. TRANSLATORS: full path of the remote.conf file
+msgid "Filename Source"
+msgstr "Имя файла источника"
 
 #. TRANSLATORS: remote URI
 msgid "Firmware Base URI"
@@ -465,6 +590,10 @@ msgstr[0] "Метаданные прошивки не обновлялись в 
 msgstr[1] "Метаданные прошивки не обновлялись в течение %u дней и могут быть устаревшими."
 msgstr[2] "Метаданные прошивки не обновлялись в течение %u дней и могут быть устаревшими."
 msgstr[3] "Метаданные прошивки не обновлялись в течение %u дней и могут быть устаревшими."
+
+#. TRANSLATORS: Title: if firmware updates are available
+msgid "Firmware updates"
+msgstr "Обновления прошивки"
 
 msgid "Firmware updates are not supported on this machine."
 msgstr "Обновления прошивки не поддерживаются на этой машине."
@@ -520,6 +649,10 @@ msgstr "Получить результаты с последнего обнов
 msgid "Idle…"
 msgstr "Бездействие…"
 
+#. TRANSLATORS: length of time the update takes to apply
+msgid "Install Duration"
+msgstr "Продолжительность установки"
+
 #. TRANSLATORS: command description
 msgid "Install a firmware blob on a device"
 msgstr "Установить двоичную прошивку на устройство"
@@ -527,6 +660,12 @@ msgstr "Установить двоичную прошивку на устрой
 #. TRANSLATORS: command description
 msgid "Install a firmware file on this hardware"
 msgstr "Установить файл прошивки на это оборудование"
+
+msgid "Install old version of signed system firmware"
+msgstr "Установить старую версию подписанной системной прошивки"
+
+msgid "Install old version of unsigned system firmware"
+msgstr "Установить старую версию неподписанной системной прошивки"
 
 msgid "Install signed device firmware"
 msgstr "Установить подписанную прошивку устройства"
@@ -553,13 +692,25 @@ msgstr "Установка обновления прошивки…"
 msgid "Installing on %s…"
 msgstr "Установка на устройство %s…"
 
+#. TRANSLATORS: Device cannot be removed easily
+msgid "Internal device"
+msgstr "Внутреннее устройство"
+
 #. TRANSLATORS: keyring type, e.g. GPG or PKCS7
 msgid "Keyring"
 msgstr "Хранилище ключей"
 
+#. TRANSLATORS: the original time/date the device was modified
+msgid "Last modified"
+msgstr "Последнее изменение"
+
 #. TRANSLATORS: time remaining for completing firmware flash
 msgid "Less than one minute remaining"
 msgstr "Осталось меньше минуты"
+
+#. TRANSLATORS: e.g. GPLv2+, Proprietary etc
+msgid "License"
+msgstr "Лицензия"
 
 msgid "Linux Vendor Firmware Service (stable firmware)"
 msgstr "Linux Vendor Firmware Service (стабильная прошивка)"
@@ -575,6 +726,10 @@ msgstr "Вывести список поддерживаемых обновле�
 msgid "Loading…"
 msgstr "Загрузка…"
 
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Locked"
+msgstr "Заблокировано"
+
 #. TRANSLATORS: remote URI
 msgid "Metadata URI"
 msgstr "URI метаданных"
@@ -582,6 +737,10 @@ msgstr "URI метаданных"
 #. TRANSLATORS: explain why no metadata available
 msgid "Metadata can be obtained from the Linux Vendor Firmware Service."
 msgstr "Метаданные можно получить в Linux Vendor Firmware Service."
+
+#. TRANSLATORS: smallest version number installable on device
+msgid "Minimum Version"
+msgstr "Минимальная версия"
 
 #. TRANSLATORS: error message
 #, c-format
@@ -602,9 +761,21 @@ msgstr "Изменить настройки фоновой службы"
 msgid "Monitor the daemon for events"
 msgstr "Следить за событиями в фоновой службе"
 
+#. TRANSLATORS: the update state of the specific device
+msgid "Needs reboot"
+msgstr "Требуется перезагрузка"
+
+#. TRANSLATORS: version number of new firmware
+msgid "New version"
+msgstr "Новая версия"
+
 #. TRANSLATORS: user did not tell the tool what to do
 msgid "No action specified!"
 msgstr "Не определено никаких действий."
+
+#. TRANSLATORS: nothing found
+msgid "No firmware IDs found"
+msgstr "Идентификаторы прошивок не найдены"
 
 #. TRANSLATORS: nothing attached that can be upgraded
 msgid "No hardware detected with firmware update capability"
@@ -614,17 +785,36 @@ msgstr "Не обнаружено оборудования с возможнос
 msgid "No plugins found"
 msgstr "Плагины не найдены"
 
+#. TRANSLATORS: no repositories to download from
+msgid "No releases available"
+msgstr "Нет доступных выпусков"
+
 #. TRANSLATORS: explain why no metadata available
 msgid "No remotes are currently enabled so no metadata is available."
 msgstr "В настоящее время репозитории не активированы, поэтому метаданные недоступны."
+
+msgid "No updates available for remaining devices"
+msgstr "Нет доступных обновлений для остальных устройств"
 
 #. TRANSLATORS: nothing was updated offline
 msgid "No updates were applied"
 msgstr "Обновления не были применены"
 
 #. TRANSLATORS: Suffix: the HSI result
+msgid "Not found"
+msgstr "Не найдено"
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Not supported"
+msgstr "Не поддерживается"
+
+#. TRANSLATORS: Suffix: the HSI result
 msgid "OK"
 msgstr "ОК"
+
+#. TRANSLATORS: this is for the device tests
+msgid "OK!"
+msgstr "OK!"
 
 #. TRANSLATORS: command line option
 msgid "Override the default ESP path"
@@ -645,6 +835,10 @@ msgstr "Процент завершения"
 #, c-format
 msgid "Please enter a number from 0 to %u: "
 msgstr "Пожалуйста, введите число от 0 до %u:"
+
+#. TRANSLATORS: version number of previous firmware
+msgid "Previous version"
+msgstr "Предыдущая версия"
 
 msgid "Print the version number"
 msgstr "Напечатать номер версии"
@@ -670,6 +864,11 @@ msgstr "Считать прошивку из устройства в файл"
 #. TRANSLATORS: command description
 msgid "Read firmware from one partition into a file"
 msgstr "Считать прошивку из одного раздела в файл"
+
+#. TRANSLATORS: %1 is a device name
+#, c-format
+msgid "Reading from %s…"
+msgstr "Чтение из %s…"
 
 #. TRANSLATORS: reading from the flash chips
 msgid "Reading…"
@@ -743,6 +942,24 @@ msgstr "Запланировать установку на следующую п
 msgid "Scheduling…"
 msgstr "Планировка…"
 
+#. TRANSLATORS: the %1 is a URL to a wiki page
+#, c-format
+msgid "See %s for more details."
+msgstr "Подробнее смотрите %s."
+
+#. TRANSLATORS: %s is a link to a website
+#, c-format
+msgid "See %s for more information."
+msgstr "Подробнее смотрите %s."
+
+#. TRANSLATORS: device has been chosen by the daemon for the user
+msgid "Selected device"
+msgstr "Выбранное устройство"
+
+#. TRANSLATORS: serial number of hardware
+msgid "Serial Number"
+msgstr "Серийный номер"
+
 #. TRANSLATORS: command line option
 msgid "Set the debugging flag during update"
 msgstr "Установить флаг отладки во время обновления"
@@ -754,6 +971,10 @@ msgstr "Установить список одобренных прошивок"
 #. TRANSLATORS: command description
 msgid "Share firmware history with the developers"
 msgstr "Поделиться историей прошивки с разработчиками"
+
+#. TRANSLATORS: command line option
+msgid "Show all results"
+msgstr "Показать все результаты"
 
 #. TRANSLATORS: command line option
 msgid "Show client and daemon versions"
@@ -814,6 +1035,14 @@ msgstr "Подписать загруженные данные с использ
 msgid "Signature"
 msgstr "Подпись"
 
+#. TRANSLATORS: file size of the download
+msgid "Size"
+msgstr "Размер"
+
+#. TRANSLATORS: source (as in code) link
+msgid "Source"
+msgstr "Источник"
+
 msgid "Specify Vendor/Product ID(s) of DFU device"
 msgstr "Определить идентификатор(ы) поставщика / продукта устройства DFU"
 
@@ -823,6 +1052,20 @@ msgstr "Определить количество байтов на переда
 #. TRANSLATORS: one line summary of device
 msgid "Summary"
 msgstr "Сводка"
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Supported"
+msgstr "Поддерживается"
+
+#. TRANSLATORS: show and ask user to confirm --
+#. * %1 is the old branch name, %2 is the new branch name
+#, c-format
+msgid "Switch branch from %s to %s?"
+msgstr "Переключиться с ветки %s на %s?"
+
+#. TRANSLATORS: Title: TPM = Trusted Platform Module
+msgid "TPM v2.0"
+msgstr "TPM v2.0"
 
 msgid "Target"
 msgstr "Цель"
@@ -855,14 +1098,26 @@ msgstr "Тип"
 msgid "UEFI Firmware Utility"
 msgstr "Средство для прошивки UEFI"
 
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Unencrypted"
+msgstr "Не зашифровано"
+
 #. TRANSLATORS: current daemon status is unknown
 #. TRANSLATORS: we don't know the license of the update
 #. TRANSLATORS: unknown release urgency
 msgid "Unknown"
 msgstr "Неизвестно"
 
+#. TRANSLATORS: Name of hardware
+msgid "Unknown Device"
+msgstr "Неизвестное устройство"
+
 msgid "Unlock the device to allow access"
 msgstr "Разблокировать устройство для получения доступа"
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Unlocked"
+msgstr "Разблокировано"
 
 #. TRANSLATORS: command description
 msgid "Unlocks the device for firmware access"
@@ -876,6 +1131,14 @@ msgstr "Снять флаг отладки во время обновления"
 #, c-format
 msgid "Unsupported daemon version %s, client version is %s"
 msgstr "Неподдерживаемая фоновая служба версии %s, клиент версии %s"
+
+#. TRANSLATORS: error message from last update attempt
+msgid "Update Error"
+msgstr "Ошибка обновления"
+
+#. TRANSLATORS: hardware state, e.g. "pending"
+msgid "Update State"
+msgstr "Обновить статус"
 
 #. TRANSLATORS: the server sent the user a small message
 msgid "Update failure is a known issue, visit this URL for more information:"
@@ -916,6 +1179,17 @@ msgstr "Загрузка отчетов о прошивке помогает п�
 msgid "Username"
 msgstr "Имя пользователя"
 
+msgid "VID:PID"
+msgstr "VID:PID"
+
+#. TRANSLATORS: one line variant of release (e.g. 'Prerelease' or 'China')
+msgid "Variant"
+msgstr "Вариант"
+
+#. TRANSLATORS: manufacturer of hardware
+msgid "Vendor"
+msgstr "Производитель"
+
 #. TRANSLATORS: verifying we wrote the firmware correctly
 msgid "Verifying…"
 msgstr "Проверка…"
@@ -923,6 +1197,10 @@ msgstr "Проверка…"
 #. TRANSLATORS: the detected version number of the dbx
 msgid "Version"
 msgstr "Версия"
+
+#. TRANSLATORS: this is a prefix on the console
+msgid "WARNING:"
+msgstr "ПРЕДУПРЕЖДЕНИЕ:"
 
 #. TRANSLATORS: waiting for device to do something
 msgid "Waiting…"
@@ -940,6 +1218,10 @@ msgstr "Записать прошивку из файла на устройст�
 msgid "Write firmware from file into one partition"
 msgstr "Записать прошивку из файла на один раздел"
 
+#. TRANSLATORS: decompressing images from a container firmware
+msgid "Writing file:"
+msgstr "Запись файла:"
+
 #. TRANSLATORS: writing to the flash chips
 msgid "Writing…"
 msgstr "Запись…"
@@ -947,3 +1229,11 @@ msgstr "Запись…"
 #. TRANSLATORS: show the user a warning
 msgid "Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices."
 msgstr "Ваш распространитель системы может не проверять какие-либо обновления прошивки на совместимость с системой или подключенными устройствами."
+
+#. TRANSLATORS: this is the default branch name when unset
+msgid "default"
+msgstr "по умолчанию"
+
+#. TRANSLATORS: Title: if the fwupd plugins are all present and correct
+msgid "fwupd plugins"
+msgstr "плагины fwupd"

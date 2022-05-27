@@ -642,11 +642,6 @@ msgstr "Laite varmuuskopioi laiteohjelmiston ennen asennusta"
 msgid "Device will not re-appear after update completes"
 msgstr "Laitetta ei näytetä uudelleen päivityksen päätyttyä"
 
-#. TRANSLATORS: the device has a reason it can't update, e.g. laptop lid
-#. closed
-msgid "Devices not currently updatable:"
-msgstr "Laitteet, joita ei tällä hetkellä voi päivittää:"
-
 #. TRANSLATORS: a list of successful updates
 msgid "Devices that have been updated successfully:"
 msgstr "Onnistuneesti päivitetyt laitteet:"
