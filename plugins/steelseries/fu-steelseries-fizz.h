@@ -59,61 +59,64 @@ fu_steelseries_fizz_new(FuDevice *self);
 #define STEELSERIES_FIZZ_MOUSE_FILESYSTEM_FREE_SPACE_ID		0xf0U
 
 gchar *
-fu_steelseries_fizz_version(FuDevice *device, gboolean tunnel, GError **error);
+fu_steelseries_fizz_get_version(FuDevice *device, gboolean tunnel, GError **error);
 gboolean
-fu_steelseries_fizz_read_access_file(FuDevice *device,
-				     gboolean tunnel,
-				     guint8 fs,
-				     guint8 id,
-				     guint8 *buf,
-				     gsize bufsz,
-				     FuProgress *progress,
-				     GError **error);
+fu_steelseries_fizz_read_fs(FuDevice *device,
+			    gboolean tunnel,
+			    guint8 fs,
+			    guint8 id,
+			    guint8 *buf,
+			    gsize bufsz,
+			    FuProgress *progress,
+			    GError **error);
 gboolean
-fu_steelseries_fizz_write_access_file(FuDevice *device,
-				      gboolean tunnel,
-				      guint8 fs,
-				      guint8 id,
-				      const guint8 *buf,
-				      gsize bufsz,
-				      FuProgress *progress,
-				      GError **error);
+fu_steelseries_fizz_write_fs(FuDevice *device,
+			     gboolean tunnel,
+			     guint8 fs,
+			     guint8 id,
+			     const guint8 *buf,
+			     gsize bufsz,
+			     FuProgress *progress,
+			     GError **error);
 gboolean
-fu_steelseries_fizz_erase_file(FuDevice *device,
-			       gboolean tunnel,
-			       guint8 fs,
-			       guint8 id,
-			       GError **error);
+fu_steelseries_fizz_erase_fs(FuDevice *device,
+			     gboolean tunnel,
+			     guint8 fs,
+			     guint8 id,
+			     GError **error);
 gboolean
 fu_steelseries_fizz_reset(FuDevice *device, gboolean tunnel, guint8 mode, GError **error);
 gboolean
-fu_steelseries_fizz_file_crc32(FuDevice *device,
-			       gboolean tunnel,
-			       guint8 fs,
-			       guint8 id,
-			       guint32 *calculated_crc,
-			       guint32 *stored_crc,
-			       GError **error);
+fu_steelseries_fizz_get_crc32_fs(FuDevice *device,
+				 gboolean tunnel,
+				 guint8 fs,
+				 guint8 id,
+				 guint32 *calculated_crc,
+				 guint32 *stored_crc,
+				 GError **error);
 FuFirmware *
-fu_steelseries_fizz_read_file(FuDevice *device,
-			      gboolean tunnel,
-			      guint8 fs,
-			      guint8 id,
-			      gsize size,
-			      FuProgress *progress,
-			      GError **error);
+fu_steelseries_fizz_read_firmware_fs(FuDevice *device,
+				     gboolean tunnel,
+				     guint8 fs,
+				     guint8 id,
+				     gsize size,
+				     FuProgress *progress,
+				     GError **error);
 gboolean
-fu_steelseries_fizz_write_file(FuDevice *device,
-			       gboolean tunnel,
-			       guint8 fs,
-			       guint8 id,
-			       FuFirmware *firmware,
-			       FuProgress *progress,
-			       FwupdInstallFlags flags,
-			       GError **error);
+fu_steelseries_fizz_write_firmware_fs(FuDevice *device,
+				      gboolean tunnel,
+				      guint8 fs,
+				      guint8 id,
+				      FuFirmware *firmware,
+				      FuProgress *progress,
+				      FwupdInstallFlags flags,
+				      GError **error);
 gboolean
-fu_steelseries_fizz_battery_level(FuDevice *device, gboolean tunnel, guint8 *level, GError **error);
+fu_steelseries_fizz_get_battery_level(FuDevice *device,
+				      gboolean tunnel,
+				      guint8 *level,
+				      GError **error);
 gboolean
-fu_steelseries_fizz_paired_status(FuDevice *device, guint8 *status, GError **error);
+fu_steelseries_fizz_get_paired_status(FuDevice *device, guint8 *status, GError **error);
 gboolean
-fu_steelseries_fizz_connection_status(FuDevice *device, guint8 *status, GError **error);
+fu_steelseries_fizz_get_connection_status(FuDevice *device, guint8 *status, GError **error);
