@@ -23,7 +23,7 @@ fu_steelseries_fizz_tunnel_ping(FuDevice *device, gboolean *reached, GError **er
 	guint8 level;
 	g_autoptr(GError) error_local = NULL;
 
-	if (!fu_steelseries_fizz_connection_status(parent, &status, error)) {
+	if (!fu_steelseries_fizz_get_connection_status(parent, &status, error)) {
 		g_prefix_error(error, "failed to get connection status: ");
 		return FALSE;
 	}
@@ -35,10 +35,10 @@ fu_steelseries_fizz_tunnel_ping(FuDevice *device, gboolean *reached, GError **er
 	}
 
 	/* ping device anyway */
-	if (!fu_steelseries_fizz_battery_level(fu_device_get_parent(device),
-					       TRUE,
-					       &level,
-					       &error_local)) {
+	if (!fu_steelseries_fizz_get_battery_level(fu_device_get_parent(device),
+						   TRUE,
+						   &level,
+						   &error_local)) {
 		*reached = FALSE;
 
 		if (!g_error_matches(error_local,
@@ -76,7 +76,7 @@ fu_steelseries_fizz_tunnel_wait_for_reconnect_cb(FuDevice *device,
 	FuDevice *parent = fu_device_get_parent(device);
 	guint8 status;
 
-	if (!fu_steelseries_fizz_connection_status(parent, &status, error)) {
+	if (!fu_steelseries_fizz_get_connection_status(parent, &status, error)) {
 		g_prefix_error(error, "failed to get connection status: ");
 		return FALSE;
 	}
@@ -198,20 +198,20 @@ fu_steelseries_fizz_tunnel_setup(FuDevice *device, GError **error)
 		return TRUE;
 	}
 
-	version = fu_steelseries_fizz_version(parent, TRUE, error);
+	version = fu_steelseries_fizz_get_version(parent, TRUE, error);
 	if (version == NULL) {
 		g_prefix_error(error, "failed to get version: ");
 		return FALSE;
 	}
 	fu_device_set_version(device, version);
 
-	if (!fu_steelseries_fizz_file_crc32(parent,
-					    TRUE,
-					    fs,
-					    id,
-					    &calculated_crc,
-					    &stored_crc,
-					    error)) {
+	if (!fu_steelseries_fizz_get_crc32_fs(parent,
+					      TRUE,
+					      fs,
+					      id,
+					      &calculated_crc,
+					      &stored_crc,
+					      error)) {
 		g_prefix_error(error,
 			       "failed to get file CRC32 from FS 0x%02x ID 0x%02x: ",
 			       fs,
@@ -261,7 +261,7 @@ fu_steelseries_fizz_tunnel_poll(FuDevice *device, GError **error)
 	}
 
 	/* "deferred" setup */
-	version = fu_steelseries_fizz_version(parent, TRUE, &error_local);
+	version = fu_steelseries_fizz_get_version(parent, TRUE, &error_local);
 	if (version == NULL) {
 		g_debug("ignoring error on version: %s", error_local->message);
 
@@ -270,13 +270,13 @@ fu_steelseries_fizz_tunnel_poll(FuDevice *device, GError **error)
 	}
 	fu_device_set_version(device, version);
 
-	if (!fu_steelseries_fizz_file_crc32(parent,
-					    TRUE,
-					    fs,
-					    id,
-					    &calculated_crc,
-					    &stored_crc,
-					    &error_local)) {
+	if (!fu_steelseries_fizz_get_crc32_fs(parent,
+					      TRUE,
+					      fs,
+					      id,
+					      &calculated_crc,
+					      &stored_crc,
+					      &error_local)) {
 		g_debug("ignoring error on get file CRC32 from FS 0x%02x ID 0x%02x: %s",
 			fs,
 			id,
@@ -312,14 +312,14 @@ fu_steelseries_fizz_tunnel_write_firmware(FuDevice *device,
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 100);
 
-	if (!fu_steelseries_fizz_write_file(parent,
-					    TRUE,
-					    fs,
-					    id,
-					    firmware,
-					    fu_progress_get_child(progress),
-					    flags,
-					    error))
+	if (!fu_steelseries_fizz_write_firmware_fs(parent,
+						   TRUE,
+						   fs,
+						   id,
+						   firmware,
+						   fu_progress_get_child(progress),
+						   flags,
+						   error))
 		return FALSE;
 	fu_progress_step_done(progress);
 
@@ -338,13 +338,13 @@ fu_steelseries_fizz_tunnel_read_firmware(FuDevice *device, FuProgress *progress,
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_READ, 100);
 
-	firmware = fu_steelseries_fizz_read_file(parent,
-						 TRUE,
-						 fs,
-						 id,
-						 fu_device_get_firmware_size_max(device),
-						 fu_progress_get_child(progress),
-						 error);
+	firmware = fu_steelseries_fizz_read_firmware_fs(parent,
+							TRUE,
+							fs,
+							id,
+							fu_device_get_firmware_size_max(device),
+							fu_progress_get_child(progress),
+							error);
 	if (firmware == NULL)
 		return NULL;
 	fu_progress_step_done(progress);

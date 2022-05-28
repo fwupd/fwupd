@@ -189,7 +189,7 @@ fu_steelseries_device_command_and_check_error(FuDevice *device, guint8 *data, GE
 }
 
 gchar *
-fu_steelseries_fizz_version(FuDevice *device, gboolean tunnel, GError **error)
+fu_steelseries_fizz_get_version(FuDevice *device, gboolean tunnel, GError **error)
 {
 	guint8 data[STEELSERIES_BUFFER_CONTROL_SIZE] = {0};
 	guint16 cmd = STEELSERIES_FIZZ_VERSION_COMMAND;
@@ -224,14 +224,14 @@ fu_steelseries_fizz_version(FuDevice *device, gboolean tunnel, GError **error)
 }
 
 gboolean
-fu_steelseries_fizz_write_access_file(FuDevice *device,
-				      gboolean tunnel,
-				      guint8 fs,
-				      guint8 id,
-				      const guint8 *buf,
-				      gsize bufsz,
-				      FuProgress *progress,
-				      GError **error)
+fu_steelseries_fizz_write_fs(FuDevice *device,
+			     gboolean tunnel,
+			     guint8 fs,
+			     guint8 id,
+			     const guint8 *buf,
+			     gsize bufsz,
+			     FuProgress *progress,
+			     GError **error)
 {
 	guint16 cmd = STEELSERIES_FIZZ_WRITE_ACCESS_FILE_COMMAND;
 	guint8 data[STEELSERIES_BUFFER_CONTROL_SIZE] = {0};
@@ -311,11 +311,11 @@ fu_steelseries_fizz_write_access_file(FuDevice *device,
 }
 
 gboolean
-fu_steelseries_fizz_erase_file(FuDevice *device,
-			       gboolean tunnel,
-			       guint8 fs,
-			       guint8 id,
-			       GError **error)
+fu_steelseries_fizz_erase_fs(FuDevice *device,
+			     gboolean tunnel,
+			     guint8 fs,
+			     guint8 id,
+			     GError **error)
 {
 	guint8 data[STEELSERIES_BUFFER_CONTROL_SIZE] = {0};
 	guint16 cmd = STEELSERIES_FIZZ_ERASE_FILE_COMMAND;
@@ -388,13 +388,13 @@ fu_steelseries_fizz_reset(FuDevice *device, gboolean tunnel, guint8 mode, GError
 }
 
 gboolean
-fu_steelseries_fizz_file_crc32(FuDevice *device,
-			       gboolean tunnel,
-			       guint8 fs,
-			       guint8 id,
-			       guint32 *calculated_crc,
-			       guint32 *stored_crc,
-			       GError **error)
+fu_steelseries_fizz_get_crc32_fs(FuDevice *device,
+				 gboolean tunnel,
+				 guint8 fs,
+				 guint8 id,
+				 guint32 *calculated_crc,
+				 guint32 *stored_crc,
+				 GError **error)
 {
 	guint8 data[STEELSERIES_BUFFER_CONTROL_SIZE] = {0};
 	guint16 cmd = STEELSERIES_FIZZ_FILE_CRC32_COMMAND;
@@ -452,14 +452,14 @@ fu_steelseries_fizz_file_crc32(FuDevice *device,
 }
 
 gboolean
-fu_steelseries_fizz_read_access_file(FuDevice *device,
-				     gboolean tunnel,
-				     guint8 fs,
-				     guint8 id,
-				     guint8 *buf,
-				     gsize bufsz,
-				     FuProgress *progress,
-				     GError **error)
+fu_steelseries_fizz_read_fs(FuDevice *device,
+			    gboolean tunnel,
+			    guint8 fs,
+			    guint8 id,
+			    guint8 *buf,
+			    gsize bufsz,
+			    FuProgress *progress,
+			    GError **error)
 {
 	guint16 cmd = STEELSERIES_FIZZ_READ_ACCESS_FILE_COMMAND;
 	guint8 data[STEELSERIES_BUFFER_CONTROL_SIZE] = {0};
@@ -539,7 +539,10 @@ fu_steelseries_fizz_read_access_file(FuDevice *device,
 }
 
 gboolean
-fu_steelseries_fizz_battery_level(FuDevice *device, gboolean tunnel, guint8 *level, GError **error)
+fu_steelseries_fizz_get_battery_level(FuDevice *device,
+				      gboolean tunnel,
+				      guint8 *level,
+				      GError **error)
 {
 	guint8 data[STEELSERIES_BUFFER_CONTROL_SIZE] = {0};
 	guint16 cmd = STEELSERIES_FIZZ_BATTERY_LEVEL_COMMAND;
@@ -573,7 +576,7 @@ fu_steelseries_fizz_battery_level(FuDevice *device, gboolean tunnel, guint8 *lev
 }
 
 gboolean
-fu_steelseries_fizz_paired_status(FuDevice *device, guint8 *status, GError **error)
+fu_steelseries_fizz_get_paired_status(FuDevice *device, guint8 *status, GError **error)
 {
 	guint8 data[STEELSERIES_BUFFER_CONTROL_SIZE] = {0};
 	const guint16 cmd = STEELSERIES_FIZZ_PAIRED_STATUS_COMMAND;
@@ -604,7 +607,7 @@ fu_steelseries_fizz_paired_status(FuDevice *device, guint8 *status, GError **err
 }
 
 gboolean
-fu_steelseries_fizz_connection_status(FuDevice *device, guint8 *status, GError **error)
+fu_steelseries_fizz_get_connection_status(FuDevice *device, guint8 *status, GError **error)
 {
 	guint8 data[STEELSERIES_BUFFER_CONTROL_SIZE] = {0};
 	const guint16 cmd = STEELSERIES_FIZZ_CONNECTION_STATUS_COMMAND;
@@ -677,7 +680,7 @@ fu_steelseries_fizz_setup(FuDevice *device, GError **error)
 	if (fu_device_has_private_flag(device, FU_STEELSERIES_DEVICE_FLAG_IS_RECEIVER)) {
 		guint8 status;
 
-		if (!fu_steelseries_fizz_paired_status(device, &status, error)) {
+		if (!fu_steelseries_fizz_get_paired_status(device, &status, error)) {
 			g_prefix_error(error, "failed to get paired status: ");
 			return FALSE;
 		}
@@ -692,7 +695,7 @@ fu_steelseries_fizz_setup(FuDevice *device, GError **error)
 		id = STEELSERIES_FIZZ_RECEIVER_FILESYSTEM_BACKUP_APP_ID;
 	}
 
-	version = fu_steelseries_fizz_version(device, FALSE, error);
+	version = fu_steelseries_fizz_get_version(device, FALSE, error);
 	if (version == NULL) {
 		g_prefix_error(error, "failed to get version: ");
 		return FALSE;
@@ -705,17 +708,14 @@ fu_steelseries_fizz_setup(FuDevice *device, GError **error)
 		id = STEELSERIES_FIZZ_RECEIVER_FILESYSTEM_BACKUP_APP_ID;
 	}
 
-	if (!fu_steelseries_fizz_file_crc32(device,
-					    FALSE,
-					    fs,
-					    id,
-					    &calculated_crc,
-					    &stored_crc,
-					    error)) {
-		g_prefix_error(error,
-			       "failed to get file CRC32 from FS 0x%02x ID 0x%02x: ",
-			       fs,
-			       id);
+	if (!fu_steelseries_fizz_get_crc32_fs(device,
+					      FALSE,
+					      fs,
+					      id,
+					      &calculated_crc,
+					      &stored_crc,
+					      error)) {
+		g_prefix_error(error, "failed to get CRC32 FS 0x%02x ID 0x%02x: ", fs, id);
 		return FALSE;
 	}
 
@@ -730,14 +730,14 @@ fu_steelseries_fizz_setup(FuDevice *device, GError **error)
 }
 
 gboolean
-fu_steelseries_fizz_write_file(FuDevice *device,
-			       gboolean tunnel,
-			       guint8 fs,
-			       guint8 id,
-			       FuFirmware *firmware,
-			       FuProgress *progress,
-			       FwupdInstallFlags flags,
-			       GError **error)
+fu_steelseries_fizz_write_firmware_fs(FuDevice *device,
+				      gboolean tunnel,
+				      guint8 fs,
+				      guint8 id,
+				      FuFirmware *firmware,
+				      FuProgress *progress,
+				      FwupdInstallFlags flags,
+				      GError **error)
 {
 	guint32 calculated_crc;
 	guint32 stored_crc;
@@ -764,35 +764,32 @@ fu_steelseries_fizz_write_file(FuDevice *device,
 		return FALSE;
 	if (g_getenv("FWUPD_STEELSERIES_FIZZ_VERBOSE") != NULL)
 		fu_common_dump_raw(G_LOG_DOMAIN, "File", buf, bufsz);
-	if (!fu_steelseries_fizz_erase_file(device, tunnel, fs, id, error)) {
-		g_prefix_error(error, "failed to erase file 0x%02x:0x%02x: ", fs, id);
+	if (!fu_steelseries_fizz_erase_fs(device, tunnel, fs, id, error)) {
+		g_prefix_error(error, "failed to erase FS 0x%02x ID 0x%02x: ", fs, id);
 		return FALSE;
 	}
 	fu_progress_step_done(progress);
-	if (!fu_steelseries_fizz_write_access_file(device,
-						   tunnel,
-						   fs,
-						   id,
-						   buf,
-						   bufsz,
-						   fu_progress_get_child(progress),
-						   error)) {
-		g_prefix_error(error, "failed to write file 0x%02x:0x%02x: ", fs, id);
+	if (!fu_steelseries_fizz_write_fs(device,
+					  tunnel,
+					  fs,
+					  id,
+					  buf,
+					  bufsz,
+					  fu_progress_get_child(progress),
+					  error)) {
+		g_prefix_error(error, "failed to write FS 0x%02x ID 0x%02x: ", fs, id);
 		return FALSE;
 	}
 	fu_progress_step_done(progress);
 
-	if (!fu_steelseries_fizz_file_crc32(device,
-					    tunnel,
-					    fs,
-					    id,
-					    &calculated_crc,
-					    &stored_crc,
-					    error)) {
-		g_prefix_error(error,
-			       "failed to get file CRC32 from FS 0x%02x ID 0x%02x: ",
-			       fs,
-			       id);
+	if (!fu_steelseries_fizz_get_crc32_fs(device,
+					      tunnel,
+					      fs,
+					      id,
+					      &calculated_crc,
+					      &stored_crc,
+					      error)) {
+		g_prefix_error(error, "failed to get CRC32 FS 0x%02x ID 0x%02x: ", fs, id);
 		return FALSE;
 	}
 	if (calculated_crc != stored_crc) {
@@ -826,14 +823,14 @@ fu_steelseries_fizz_write_firmware(FuDevice *device,
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, 1);
 
-	if (!fu_steelseries_fizz_write_file(device,
-					    FALSE,
-					    fs,
-					    id,
-					    firmware,
-					    fu_progress_get_child(progress),
-					    flags,
-					    error))
+	if (!fu_steelseries_fizz_write_firmware_fs(device,
+						   FALSE,
+						   fs,
+						   id,
+						   firmware,
+						   fu_progress_get_child(progress),
+						   flags,
+						   error))
 		return FALSE;
 	fu_progress_step_done(progress);
 
@@ -842,13 +839,13 @@ fu_steelseries_fizz_write_firmware(FuDevice *device,
 }
 
 FuFirmware *
-fu_steelseries_fizz_read_file(FuDevice *device,
-			      gboolean tunnel,
-			      guint8 fs,
-			      guint8 id,
-			      gsize size,
-			      FuProgress *progress,
-			      GError **error)
+fu_steelseries_fizz_read_firmware_fs(FuDevice *device,
+				     gboolean tunnel,
+				     guint8 fs,
+				     guint8 id,
+				     gsize size,
+				     FuProgress *progress,
+				     GError **error)
 {
 	g_autoptr(FuFirmware) firmware = fu_steelseries_firmware_new();
 	g_autoptr(GBytes) blob = NULL;
@@ -858,14 +855,14 @@ fu_steelseries_fizz_read_file(FuDevice *device,
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_READ, 100);
 
 	buf = g_malloc0(size);
-	if (!fu_steelseries_fizz_read_access_file(device,
-						  tunnel,
-						  fs,
-						  id,
-						  buf,
-						  size,
-						  fu_progress_get_child(progress),
-						  error)) {
+	if (!fu_steelseries_fizz_read_fs(device,
+					 tunnel,
+					 fs,
+					 id,
+					 buf,
+					 size,
+					 fu_progress_get_child(progress),
+					 error)) {
 		g_prefix_error(error, "failed to read FS 0x%02x ID 0x%02x: ", fs, id);
 		return NULL;
 	}
@@ -897,13 +894,13 @@ fu_steelseries_fizz_read_firmware(FuDevice *device, FuProgress *progress, GError
 		id = STEELSERIES_FIZZ_RECEIVER_FILESYSTEM_BACKUP_APP_ID;
 	}
 
-	firmware = fu_steelseries_fizz_read_file(device,
-						 FALSE,
-						 fs,
-						 id,
-						 fu_device_get_firmware_size_max(device),
-						 fu_progress_get_child(progress),
-						 error);
+	firmware = fu_steelseries_fizz_read_firmware_fs(device,
+							FALSE,
+							fs,
+							id,
+							fu_device_get_firmware_size_max(device),
+							fu_progress_get_child(progress),
+							error);
 	if (firmware == NULL)
 		return NULL;
 	fu_progress_step_done(progress);
