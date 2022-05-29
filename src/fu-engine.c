@@ -282,10 +282,6 @@ fu_engine_ensure_device_battery_inhibit(FuEngine *self, FuDevice *device)
 	if (fu_context_get_battery_level(self->ctx) != FWUPD_BATTERY_LEVEL_INVALID &&
 	    fu_context_get_battery_threshold(self->ctx) != FWUPD_BATTERY_LEVEL_INVALID &&
 	    fu_context_get_battery_level(self->ctx) < fu_context_get_battery_threshold(self->ctx)) {
-		g_autofree gchar *reason = NULL;
-		reason = g_strdup_printf(
-		    "Cannot install update when system battery is not at least %u%%",
-		    fu_context_get_battery_threshold(self->ctx));
 		fu_device_add_problem(device, FWUPD_DEVICE_PROBLEM_SYSTEM_POWER_TOO_LOW);
 	} else {
 		fu_device_remove_problem(device, FWUPD_DEVICE_PROBLEM_SYSTEM_POWER_TOO_LOW);
