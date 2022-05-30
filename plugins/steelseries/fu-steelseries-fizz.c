@@ -28,15 +28,19 @@
 #define STEELSERIES_FIZZ_VERSION_COMMAND_OFFSET 0x00U
 #define STEELSERIES_FIZZ_VERSION_MODE_OFFSET	0x01U
 
+#define STEELSERIES_FIZZ_BATTERY_LEVEL_COMMAND	      0x92U
 #define STEELSERIES_FIZZ_BATTERY_LEVEL_COMMAND_OFFSET 0x00U
 #define STEELSERIES_FIZZ_BATTERY_LEVEL_LEVEL_OFFSET   0x01U
 
+#define STEELSERIES_FIZZ_PAIRED_STATUS_COMMAND	      0xBBU
 #define STEELSERIES_FIZZ_PAIRED_STATUS_COMMAND_OFFSET 0x00U
 #define STEELSERIES_FIZZ_PAIRED_STATUS_STATUS_OFFSET  0x01U
 
+#define STEELSERIES_FIZZ_CONNECTION_STATUS_COMMAND	  0xBCU
 #define STEELSERIES_FIZZ_CONNECTION_STATUS_COMMAND_OFFSET 0x00U
 #define STEELSERIES_FIZZ_CONNECTION_STATUS_STATUS_OFFSET  0x01U
 
+#define STEELSERIES_FIZZ_WRITE_ACCESS_FILE_COMMAND	     0x03U
 #define STEELSERIES_FIZZ_WRITE_ACCESS_FILE_COMMAND_OFFSET    0x00U
 #define STEELSERIES_FIZZ_WRITE_ACCESS_FILE_FILESYSTEM_OFFSET 0x01U
 #define STEELSERIES_FIZZ_WRITE_ACCESS_FILE_ID_OFFSET	     0x02U
@@ -44,6 +48,7 @@
 #define STEELSERIES_FIZZ_WRITE_ACCESS_FILE_OFFSET_OFFSET     0x05U
 #define STEELSERIES_FIZZ_WRITE_ACCESS_FILE_DATA_OFFSET	     0x09U
 
+#define STEELSERIES_FIZZ_READ_ACCESS_FILE_COMMAND	    0x83U
 #define STEELSERIES_FIZZ_READ_ACCESS_FILE_COMMAND_OFFSET    0x00U
 #define STEELSERIES_FIZZ_READ_ACCESS_FILE_FILESYSTEM_OFFSET 0x01U
 #define STEELSERIES_FIZZ_READ_ACCESS_FILE_ID_OFFSET	    0x02U
@@ -51,12 +56,21 @@
 #define STEELSERIES_FIZZ_READ_ACCESS_FILE_OFFSET_OFFSET	    0x05U
 #define STEELSERIES_FIZZ_READ_ACCESS_FILE_DATA_OFFSET	    0x02U
 
+#define STEELSERIES_FIZZ_ERASE_FILE_COMMAND	      0x02U
 #define STEELSERIES_FIZZ_ERASE_FILE_COMMAND_OFFSET    0x0U
 #define STEELSERIES_FIZZ_ERASE_FILE_FILESYSTEM_OFFSET 0x1U
 #define STEELSERIES_FIZZ_ERASE_FILE_ID_OFFSET	      0x2U
 
+#define STEELSERIES_FIZZ_RESET_COMMAND	      0x01U
 #define STEELSERIES_FIZZ_RESET_COMMAND_OFFSET 0x0U
 #define STEELSERIES_FIZZ_RESET_MODE_OFFSET    0x1U
+
+#define STEELSERIES_FIZZ_FILE_CRC32_COMMAND		  0x84U
+#define STEELSERIES_FIZZ_FILE_CRC32_COMMAND_OFFSET	  0x00U
+#define STEELSERIES_FIZZ_FILE_CRC32_FILESYSTEM_OFFSET	  0x01U
+#define STEELSERIES_FIZZ_FILE_CRC32_ID_OFFSET		  0x02U
+#define STEELSERIES_FIZZ_FILE_CRC32_CALCULATED_CRC_OFFSET 0x02U
+#define STEELSERIES_FIZZ_FILE_CRC32_STORED_CRC_OFFSET	  0x06U
 
 struct _FuSteelseriesFizz {
 	FuSteelseriesDevice parent_instance;
@@ -178,7 +192,7 @@ gchar *
 fu_steelseries_fizz_version(FuDevice *device, gboolean tunnel, GError **error)
 {
 	guint8 data[STEELSERIES_BUFFER_CONTROL_SIZE] = {0};
-	guint16 cmd = 0x90U;
+	guint16 cmd = STEELSERIES_FIZZ_VERSION_COMMAND;
 	const guint8 mode = 0U; /* string */
 
 	if (tunnel)
@@ -219,7 +233,7 @@ fu_steelseries_fizz_write_access_file(FuDevice *device,
 				      FuProgress *progress,
 				      GError **error)
 {
-	guint16 cmd = 0x03U;
+	guint16 cmd = STEELSERIES_FIZZ_WRITE_ACCESS_FILE_COMMAND;
 	guint8 data[STEELSERIES_BUFFER_CONTROL_SIZE] = {0};
 	g_autoptr(GPtrArray) chunks = NULL;
 
@@ -304,7 +318,7 @@ fu_steelseries_fizz_erase_file(FuDevice *device,
 			       GError **error)
 {
 	guint8 data[STEELSERIES_BUFFER_CONTROL_SIZE] = {0};
-	guint16 cmd = 0x02U;
+	guint16 cmd = STEELSERIES_FIZZ_ERASE_FILE_COMMAND;
 
 	if (tunnel)
 		cmd |= STEELSERIES_FIZZ_COMMAND_TUNNEL_BIT;
@@ -345,7 +359,7 @@ gboolean
 fu_steelseries_fizz_reset(FuDevice *device, gboolean tunnel, guint8 mode, GError **error)
 {
 	guint8 data[STEELSERIES_BUFFER_CONTROL_SIZE] = {0};
-	guint16 cmd = 0x01U;
+	guint16 cmd = STEELSERIES_FIZZ_RESET_COMMAND;
 
 	if (tunnel)
 		cmd |= STEELSERIES_FIZZ_COMMAND_TUNNEL_BIT;
@@ -383,18 +397,31 @@ fu_steelseries_fizz_file_crc32(FuDevice *device,
 			       GError **error)
 {
 	guint8 data[STEELSERIES_BUFFER_CONTROL_SIZE] = {0};
-	guint16 cmd = 0x84U;
+	guint16 cmd = STEELSERIES_FIZZ_FILE_CRC32_COMMAND;
 
 	if (tunnel)
 		cmd |= STEELSERIES_FIZZ_COMMAND_TUNNEL_BIT;
 
-	if (!fu_common_write_uint8_safe(data, sizeof(data), 0x00U, cmd, error))
+	if (!fu_common_write_uint8_safe(data,
+					sizeof(data),
+					STEELSERIES_FIZZ_FILE_CRC32_COMMAND_OFFSET,
+					cmd,
+					error))
 		return FALSE;
 
-	if (!fu_common_write_uint8_safe(data, sizeof(data), 0x01U, fs, error))
+	if (!fu_common_write_uint8_safe(data,
+					sizeof(data),
+					STEELSERIES_FIZZ_FILE_CRC32_FILESYSTEM_OFFSET,
+					fs,
+					error))
 		return FALSE;
 
-	if (!fu_common_write_uint8_safe(data, sizeof(data), 0x02U, id, error))
+	if (!fu_common_write_uint8_safe(data,
+					sizeof(data),
+					STEELSERIES_FIZZ_FILE_CRC32_ID_OFFSET,
+					id,
+					error))
+
 		return FALSE;
 
 	if (g_getenv("FWUPD_STEELSERIES_FIZZ_VERBOSE") != NULL)
@@ -406,7 +433,7 @@ fu_steelseries_fizz_file_crc32(FuDevice *device,
 
 	if (!fu_common_read_uint32_safe(data,
 					sizeof(data),
-					0x02U,
+					STEELSERIES_FIZZ_FILE_CRC32_CALCULATED_CRC_OFFSET,
 					calculated_crc,
 					G_LITTLE_ENDIAN,
 					error))
@@ -414,7 +441,7 @@ fu_steelseries_fizz_file_crc32(FuDevice *device,
 
 	if (!fu_common_read_uint32_safe(data,
 					sizeof(data),
-					0x06U,
+					STEELSERIES_FIZZ_FILE_CRC32_STORED_CRC_OFFSET,
 					stored_crc,
 					G_LITTLE_ENDIAN,
 					error))
@@ -434,7 +461,7 @@ fu_steelseries_fizz_read_access_file(FuDevice *device,
 				     FuProgress *progress,
 				     GError **error)
 {
-	guint16 cmd = 0x83U;
+	guint16 cmd = STEELSERIES_FIZZ_READ_ACCESS_FILE_COMMAND;
 	guint8 data[STEELSERIES_BUFFER_CONTROL_SIZE] = {0};
 	g_autoptr(GPtrArray) chunks = NULL;
 
@@ -515,7 +542,7 @@ gboolean
 fu_steelseries_fizz_battery_level(FuDevice *device, gboolean tunnel, guint8 *level, GError **error)
 {
 	guint8 data[STEELSERIES_BUFFER_CONTROL_SIZE] = {0};
-	guint16 cmd = 0x92U;
+	guint16 cmd = STEELSERIES_FIZZ_BATTERY_LEVEL_COMMAND;
 
 	if (tunnel)
 		cmd |= STEELSERIES_FIZZ_COMMAND_TUNNEL_BIT;
@@ -549,7 +576,7 @@ gboolean
 fu_steelseries_fizz_paired_status(FuDevice *device, guint8 *status, GError **error)
 {
 	guint8 data[STEELSERIES_BUFFER_CONTROL_SIZE] = {0};
-	const guint16 cmd = 0xBBU;
+	const guint16 cmd = STEELSERIES_FIZZ_PAIRED_STATUS_COMMAND;
 
 	if (!fu_common_write_uint8_safe(data,
 					sizeof(data),
@@ -580,7 +607,7 @@ gboolean
 fu_steelseries_fizz_connection_status(FuDevice *device, guint8 *status, GError **error)
 {
 	guint8 data[STEELSERIES_BUFFER_CONTROL_SIZE] = {0};
-	const guint16 cmd = 0xBCU;
+	const guint16 cmd = STEELSERIES_FIZZ_CONNECTION_STATUS_COMMAND;
 
 	if (!fu_common_write_uint8_safe(data,
 					sizeof(data),
