@@ -46,6 +46,7 @@ fu_scsi_device_probe(FuDevice *device, GError **error)
 	guint64 removable = 0;
 	g_autofree gchar *vendor_id = NULL;
 	g_autoptr(FuUdevDevice) ufshci_parent = NULL;
+	const gchar *subsystem_parents[] = {"pci", "platform", NULL};
 
 	/* check is valid */
 	if (g_strcmp0(g_udev_device_get_devtype(udev_device), "disk") != 0) {
@@ -76,12 +77,17 @@ fu_scsi_device_probe(FuDevice *device, GError **error)
 	vendor_id = g_strdup_printf("SCSI:%s", fu_device_get_vendor(device));
 	fu_device_add_vendor_id(device, vendor_id);
 
-	/* TODO: the ufshci controller could really be on any bus.. */
-	ufshci_parent = fu_udev_device_get_parent_with_subsystem(FU_UDEV_DEVICE(device), "pci");
+	/* the ufshci controller could really be on any bus... search in order of priority */
+	for (guint i = 0; subsystem_parents[i] != NULL && ufshci_parent == NULL; i++) {
+		ufshci_parent = fu_udev_device_get_parent_with_subsystem(FU_UDEV_DEVICE(device),
+									 subsystem_parents[i]);
+	}
 	if (ufshci_parent != NULL) {
 		guint64 ufs_features = 0;
 
 		/* check if this is a UFS device */
+		g_debug("found ufshci controller at %s",
+			fu_udev_device_get_sysfs_path(ufshci_parent));
 		if (fu_udev_device_get_sysfs_attr_uint64(ufshci_parent,
 							 "device_descriptor/ufs_features",
 							 &ufs_features,
