@@ -203,7 +203,7 @@ fu_plugin_msr_backend_device_added(FuPlugin *plugin, FuDevice *device, GError **
 						G_LITTLE_ENDIAN,
 						error))
 			return FALSE;
-		if (ver_raw != 0) {
+		if (ver_raw != 0 && ver_raw != G_MAXUINT32) {
 			FwupdVersionFormat verfmt = fu_device_get_version_format(device_cpu);
 			g_autofree gchar *ver_str = NULL;
 			ver_str = fu_common_version_from_uint32(ver_raw, verfmt);
