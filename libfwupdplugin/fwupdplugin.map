@@ -969,8 +969,11 @@ LIBFWUPDPLUGIN_1.8.2 {
     fu_path_mkdir_parent;
     fu_path_rmtree;
     fu_progress_add_step;
+    fu_progress_get_duration;
     fu_progress_get_name;
+    fu_progress_get_profile;
     fu_progress_set_name;
+    fu_progress_traceback;
     fu_string_append;
     fu_string_append_kb;
     fu_string_append_ku;

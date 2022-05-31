@@ -3125,17 +3125,26 @@ fu_progress_func(void)
 			 G_CALLBACK(fu_progress_percentage_changed_cb),
 			 &helper);
 
+	g_assert_cmpfloat_with_epsilon(fu_progress_get_duration(progress), 0.f, 0.001);
+
+	fu_progress_set_profile(progress, TRUE);
 	fu_progress_set_steps(progress, 5);
 	g_assert_cmpint(helper.last_percentage, ==, 0);
 
+	g_usleep(20 * 1000);
 	fu_progress_step_done(progress);
 	g_assert_cmpint(helper.updates, ==, 2);
 	g_assert_cmpint(helper.last_percentage, ==, 20);
 
-	for (guint i = 0; i < 4; i++)
+	for (guint i = 0; i < 4; i++) {
+		g_usleep(20 * 1000);
 		fu_progress_step_done(progress);
+	}
+
 	g_assert_cmpint(helper.last_percentage, ==, 100);
 	g_assert_cmpint(helper.updates, ==, 6);
+	g_assert_cmpfloat_with_epsilon(fu_progress_get_duration(progress), 0.1f, 0.01);
+	g_debug("\n%s", fu_progress_traceback(progress));
 }
 
 static void
@@ -3362,6 +3371,7 @@ main(int argc, char **argv)
 	(void)g_setenv("FWUPD_SYSCONFDIR", testdatadir, TRUE);
 	(void)g_setenv("FWUPD_OFFLINE_TRIGGER", "/tmp/fwupd-self-test/system-update", TRUE);
 	(void)g_setenv("FWUPD_LOCALSTATEDIR", "/tmp/fwupd-self-test/var", TRUE);
+	(void)g_setenv("FWUPD_PROFILE", "1", TRUE);
 
 	g_test_add_func("/fwupd/common{strnsplit}", fu_strsplit_func);
 	g_test_add_func("/fwupd/common{memmem}", fu_common_memmem_func);

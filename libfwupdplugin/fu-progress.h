@@ -73,6 +73,15 @@ typedef guint64 FuProgressFlags;
  */
 #define FU_PROGRESS_FLAG_CHILD_FINISHED (1ull << 2)
 
+/**
+ * FU_PROGRESS_FLAG_NO_TRACEBACK:
+ *
+ * The steps should not be shown in the traceback.
+ *
+ * Since: 1.8.2
+ */
+#define FU_PROGRESS_FLAG_NO_TRACEBACK (1ull << 3)
+
 FuProgress *
 fu_progress_new(const gchar *id);
 const gchar *
@@ -103,8 +112,12 @@ void
 fu_progress_set_percentage_full(FuProgress *self, gsize progress_done, gsize progress_total);
 guint
 fu_progress_get_percentage(FuProgress *self);
+gdouble
+fu_progress_get_duration(FuProgress *self);
 void
 fu_progress_set_profile(FuProgress *self, gboolean profile);
+gboolean
+fu_progress_get_profile(FuProgress *self);
 void
 fu_progress_reset(FuProgress *self);
 void
@@ -121,3 +134,5 @@ FuProgress *
 fu_progress_get_child(FuProgress *self);
 void
 fu_progress_sleep(FuProgress *self, guint delay_ms);
+gchar *
+fu_progress_traceback(FuProgress *self);
