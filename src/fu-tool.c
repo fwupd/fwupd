@@ -3981,6 +3981,13 @@ main(int argc, char *argv[])
 		return EXIT_FAILURE;
 	}
 
+	/* a good place to do the traceback */
+	if (fu_progress_get_profile(priv->progress)) {
+		g_autofree gchar *str = fu_progress_traceback(priv->progress);
+		if (str != NULL)
+			g_print("\n%s\n", str);
+	}
+
 	/* success */
 	return EXIT_SUCCESS;
 }

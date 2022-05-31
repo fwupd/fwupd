@@ -2242,6 +2242,13 @@ fu_daemon_setup(FuDaemon *self, const gchar *socket_address, GError **error)
 	}
 	fu_progress_step_done(progress);
 
+	/* a good place to do the traceback */
+	if (fu_progress_get_profile(progress)) {
+		g_autofree gchar *str = fu_progress_traceback(progress);
+		if (str != NULL)
+			g_print("\n%s\n", str);
+	}
+
 	/* success */
 	return TRUE;
 }

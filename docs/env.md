@@ -17,6 +17,7 @@ with a non-standard filesystem layout.
 * `FWUPD_XMLB_VERBOSE` can be set to show Xmlb silo regeneration and quirk matches
 * `FWUPD_DBUS_SOCKET` is used to set the socket filename if running without a dbus-daemon
 * `FWUPD_DOWNLOAD_VERBOSE` can be used to show wget or curl output
+* `FWUPD_PROFILE` can be used to set the profile traceback threshold value in ms
 * standard glibc variables like `LANG` are also honored for CLI tools that are translated
 * libcurl respects the session proxy, e.g. `http_proxy`, `all_proxy`, `sftp_proxy` and `no_proxy`
 
