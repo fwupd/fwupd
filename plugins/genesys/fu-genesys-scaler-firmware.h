@@ -8,6 +8,8 @@
 
 #include <fwupdplugin.h>
 
+#include "fu-genesys-common.h"
+
 #define FU_TYPE_GENESYS_SCALER_FIRMWARE (fu_genesys_scaler_firmware_get_type())
 G_DECLARE_FINAL_TYPE(FuGenesysScalerFirmware,
 		     fu_genesys_scaler_firmware,
@@ -134,10 +136,7 @@ typedef struct __attribute__((packed)) {
 typedef union __attribute__((packed)) {
 	guint8 raw[0x312];
 	struct {
-		struct {
-			guint8 N[0x206];
-			guint8 E[0x00c];
-		} __attribute__((packed)) public_key;
+		FuGenesysPublicKey public_key;
 		FuGenesysMtkRsaHeader header;
 	} data;
 } FuGenesysMtkFooter;
