@@ -1785,8 +1785,8 @@ fu_genesys_scaler_device_write_firmware(FuDevice *device,
 					GError **error)
 {
 	FuGenesysScalerDevice *self = FU_GENESYS_SCALER_DEVICE(device);
-	guint addr = 0x000000;
-	gsize size = 0x200000;
+	guint addr = fu_firmware_get_addr(firmware);
+	gsize size;
 	const guint8 *data;
 	g_autofree guint8 *buf = NULL;
 	g_autoptr(FuFirmware) payload = NULL;
@@ -1797,10 +1797,10 @@ fu_genesys_scaler_device_write_firmware(FuDevice *device,
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 54);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 42);
 
-	if (self->footer.data.header.configuration_setting.bits.second_image) {
-		addr = fu_common_read_uint32(
-		    (const guint8 *)self->footer.data.header.second_image_program_addr,
-		    G_LITTLE_ENDIAN);
+	/* sanity check */
+	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_DUAL_IMAGE) && addr == 0) {
+		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE, "invalid address");
+		return FALSE;
 	}
 
 	payload = fu_firmware_get_image_by_id(firmware, FU_FIRMWARE_ID_PAYLOAD, error);

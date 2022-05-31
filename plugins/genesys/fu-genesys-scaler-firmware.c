@@ -10,6 +10,8 @@
 
 #include "fu-genesys-scaler-firmware.h"
 
+#define GENESYS_SCALER_BANK_SIZE 0x200000U
+
 struct _FuGenesysScalerFirmware {
 	FuFirmwareClass parent_instance;
 	FuGenesysMtkFooter footer;
@@ -70,14 +72,26 @@ fu_genesys_scaler_firmware_parse(FuFirmware *firmware,
 	}
 
 	if (self->footer.data.header.configuration_setting.bits.second_image) {
+		guint32 addr;
 		if (!fu_common_read_uint32_safe(
 			self->footer.data.header.second_image_program_addr,
 			sizeof(self->footer.data.header.second_image_program_addr),
 			0,
-			&self->second_image_program_addr,
+			&addr,
 			G_LITTLE_ENDIAN,
 			error))
 			return FALSE;
+		if (addr % GENESYS_SCALER_BANK_SIZE != 0) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "invalid address, expected a multiple of 0x%x, and got 0x%x",
+				    GENESYS_SCALER_BANK_SIZE,
+				    addr);
+			return FALSE;
+		}
+		self->second_image_program_addr = addr;
+		fu_firmware_set_addr(firmware, addr);
 	}
 	if (self->footer.data.header.configuration_setting.bits.decrypt_mode) {
 		if (!fu_common_read_uint32_safe(
