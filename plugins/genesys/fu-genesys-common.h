@@ -7,6 +7,11 @@
 #pragma once
 
 typedef struct {
+	guint8 N[0x206];
+	guint8 E[0x00c];
+} FuGenesysPublicKey;
+
+typedef struct {
 	guint8 reg;
 	guint8 expected_val;
 } FuGenesysWaitFlashRegisterHelper;

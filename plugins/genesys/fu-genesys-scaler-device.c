@@ -62,7 +62,7 @@ typedef struct {
 struct _FuGenesysScalerDevice {
 	FuDevice parent_instance;
 	guint8 level;
-	guint8 public_key[0x212];
+	FuGenesysPublicKey public_key;
 	FuCfiDevice *cfi_device;
 	FuGenesysVendorCommand vc;
 	guint32 sector_size;
@@ -1556,12 +1556,27 @@ fu_genesys_scaler_device_probe(FuDevice *device, GError **error)
 		return FALSE;
 
 	if (!fu_genesys_scaler_device_get_public_key(self,
-						     self->public_key,
+						     (guint8 *)&self->public_key,
 						     sizeof(self->public_key),
 						     error))
 		return FALSE;
-	guid =
-	    fwupd_guid_hash_data(self->public_key, sizeof(self->public_key), FWUPD_GUID_FLAG_NONE);
+	if (memcmp(self->public_key.N, "N = ", 4) != 0 ||
+	    memcmp(self->public_key.E, "E = ", 4) != 0) {
+		if (g_getenv("FWUPD_GENESYS_SCALER_VERBOSE") != NULL) {
+			fu_common_dump_raw(G_LOG_DOMAIN,
+					   "PublicKey",
+					   (const guint8 *)&self->public_key,
+					   sizeof(self->public_key));
+		}
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_SIGNATURE_INVALID,
+				    "invalid public-key");
+		return FALSE;
+	}
+	guid = fwupd_guid_hash_data((const guint8 *)&self->public_key,
+				    sizeof(self->public_key),
+				    FWUPD_GUID_FLAG_NONE);
 
 	if (!fu_genesys_scaler_device_get_version(self, buf, sizeof(buf), error))
 		return FALSE;
@@ -1747,7 +1762,7 @@ fu_genesys_scaler_device_prepare_firmware(FuDevice *device,
 		return NULL;
 	}
 	if (memcmp(&self->footer.data.public_key,
-		   self->public_key,
+		   &self->public_key,
 		   sizeof(self->footer.data.public_key)) != 0) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -1854,7 +1869,7 @@ fu_genesys_scaler_device_to_string(FuDevice *device, guint idt, GString *str)
 	if (fu_memcpy_safe((guint8 *)public_key_e,
 			   sizeof(public_key_e),
 			   0, /* dst */
-			   self->public_key,
+			   (const guint8 *)&self->public_key,
 			   sizeof(self->public_key),
 			   sizeof(self->public_key) - 2 - (sizeof(public_key_e) - 1), /* src */
 			   sizeof(public_key_e) - 1,
@@ -1866,7 +1881,7 @@ fu_genesys_scaler_device_to_string(FuDevice *device, guint idt, GString *str)
 	if (fu_memcpy_safe((guint8 *)public_key_n,
 			   sizeof(public_key_n),
 			   0, /* dst */
-			   self->public_key,
+			   (const guint8 *)&self->public_key,
 			   sizeof(self->public_key),
 			   4, /* src */
 			   sizeof(public_key_n) - 1,

@@ -171,7 +171,7 @@ struct _FuGenesysUsbhubDevice {
 	gboolean read_first_bank;
 	gboolean write_recovery_bank;
 
-	guint8 public_key[0x212];
+	FuGenesysPublicKey public_key;
 	FuCfiDevice *cfi_device;
 };
 
@@ -1096,7 +1096,7 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 	/* has public key */
 	if (fu_device_has_private_flag(device, FU_GENESYS_USBHUB_FLAG_HAS_PUBLIC_KEY)) {
 		g_autofree gchar *guid = NULL;
-		if (!fu_memcpy_safe(self->public_key,
+		if (!fu_memcpy_safe((guint8 *)&self->public_key,
 				    sizeof(self->public_key),
 				    0, /* dst */
 				    g_bytes_get_data(blob, NULL),
@@ -1105,7 +1105,15 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 				    sizeof(self->public_key),
 				    error))
 			return FALSE;
-		guid = fwupd_guid_hash_data(self->public_key,
+		if (memcmp(&self->public_key.N, "N = ", 4) != 0 &&
+		    memcmp(&self->public_key.E, "E = ", 4) != 0) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_SIGNATURE_INVALID,
+					    "invalid public-key");
+			return FALSE;
+		}
+		guid = fwupd_guid_hash_data((const guint8 *)&self->public_key,
 					    sizeof(self->public_key),
 					    FWUPD_GUID_FLAG_NONE);
 		fu_device_add_instance_strup(device, "PUBKEY", guid);
@@ -1202,9 +1210,9 @@ fu_genesys_usbhub_device_prepare_firmware(FuDevice *device,
 		const guint8 *buf = g_bytes_get_data(fw, &bufsz);
 
 		if (g_getenv("FWUPD_GENESYS_USBHUB_VERBOSE") != NULL)
-			fu_common_dump_raw(G_LOG_DOMAIN, "Footer", buf, bufsz);
+			fu_common_dump_raw(G_LOG_DOMAIN, "PublicKey", buf, bufsz);
 		if (memcmp(buf + fu_firmware_get_size(firmware),
-			   self->public_key,
+			   &self->public_key,
 			   sizeof(self->public_key)) != 0) {
 			g_set_error_literal(error,
 					    FWUPD_ERROR,
