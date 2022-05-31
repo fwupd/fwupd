@@ -15,6 +15,8 @@
 #include "fu-genesys-scaler-device.h"
 #include "fu-genesys-scaler-firmware.h"
 
+#define GENESYS_SCALER_BANK_SIZE 0x200000U
+
 #define GENESYS_SCALER_MSTAR_READ     0x7a
 #define GENESYS_SCALER_MSTAR_WRITE    0x7b
 #define GENESYS_SCALER_MSTAR_DATA_OUT 0x7c
@@ -72,7 +74,6 @@ struct _FuGenesysScalerDevice {
 	guint16 gpio_out_reg;
 	guint16 gpio_en_reg;
 	guint8 gpio_val;
-	FuGenesysMtkFooter footer;
 };
 
 G_DEFINE_TYPE(FuGenesysScalerDevice, fu_genesys_scaler_device, FU_TYPE_DEVICE)
@@ -1720,70 +1721,27 @@ fu_genesys_scaler_device_prepare_firmware(FuDevice *device,
 {
 	FuGenesysScalerDevice *self = FU_GENESYS_SCALER_DEVICE(device);
 	g_autoptr(FuFirmware) firmware = fu_genesys_scaler_firmware_new();
-	g_autoptr(FuFirmware) footer = fu_firmware_new();
-	g_autoptr(FuFirmware) payload = fu_firmware_new();
-	g_autoptr(GBytes) fw_payload = NULL;
-	g_autoptr(GBytes) fw_footer = NULL;
+	g_autoptr(GBytes) blob_payload = NULL;
+	g_autoptr(GBytes) blob_public_key = NULL;
 
 	/* parse firmware */
 	if (!fu_firmware_parse(firmware, fw, flags, error))
 		return NULL;
 
-	/* payload */
-	fw_payload = fu_common_bytes_new_offset(fw,
-						0,
-						g_bytes_get_size(fw) - sizeof(FuGenesysMtkFooter),
-						error);
-	if (fw_payload == NULL)
+	/* check public-key */
+	blob_public_key =
+	    fu_firmware_get_image_by_id_bytes(firmware, FU_FIRMWARE_ID_SIGNATURE, error);
+	if (blob_public_key == NULL)
 		return NULL;
-	if (!fu_firmware_parse(payload, fw_payload, flags, error))
-		return NULL;
-	fu_firmware_set_id(payload, FU_FIRMWARE_ID_PAYLOAD);
-	fu_firmware_add_image(firmware, payload);
-
-	/* check size */
-	if (g_bytes_get_size(fw_payload) > fu_device_get_firmware_size_max(device)) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_FILE,
-			    "firmware too large, got 0x%x, expected <= 0x%x",
-			    (guint)g_bytes_get_size(fw_payload),
-			    (guint)fu_device_get_firmware_size_max(device));
-		return NULL;
-	}
-
-	/* footer */
-	fw_footer = fu_common_bytes_new_offset(fw,
-					       g_bytes_get_size(fw) - sizeof(FuGenesysMtkFooter),
-					       sizeof(FuGenesysMtkFooter),
-					       error);
-	if (!fu_firmware_parse(footer, fw_footer, flags, error))
-		return NULL;
-	if (!fu_memcpy_safe((guint8 *)&self->footer,
-			    sizeof(self->footer),
-			    0, /* dst */
-			    g_bytes_get_data(fw_footer, NULL),
-			    g_bytes_get_size(fw_footer),
-			    0, /* src */
-			    sizeof(self->footer),
-			    error))
-		return NULL;
-	fu_genesys_scaler_firmware_decrypt((guint8 *)&self->footer, sizeof(self->footer));
 	if (g_getenv("FWUPD_GENESYS_SCALER_VERBOSE") != NULL) {
 		fu_common_dump_raw(G_LOG_DOMAIN,
-				   "Footer",
-				   (const guint8 *)&self->footer,
-				   sizeof(self->footer));
+				   "PublicKey",
+				   g_bytes_get_data(blob_public_key, NULL),
+				   g_bytes_get_size(blob_public_key));
 	}
-	if (memcmp(self->footer.data.header.default_head,
-		   MTK_RSA_HEADER,
-		   sizeof(self->footer.data.header.default_head)) != 0) {
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "invalid footer");
-		return NULL;
-	}
-	if (memcmp(&self->footer.data.public_key,
+	if (memcmp(g_bytes_get_data(blob_public_key, NULL),
 		   &self->public_key,
-		   sizeof(self->footer.data.public_key) && sizeof(self->public_key)) != 0 &&
+		   sizeof(self->public_key)) != 0 &&
 	    (flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -1791,8 +1749,20 @@ fu_genesys_scaler_device_prepare_firmware(FuDevice *device,
 				    "mismatch public-key");
 		return NULL;
 	}
-	fu_firmware_set_id(footer, FU_FIRMWARE_ID_HEADER);
-	fu_firmware_add_image(firmware, footer);
+
+	/* check size */
+	blob_payload = fu_firmware_get_image_by_id_bytes(firmware, FU_FIRMWARE_ID_PAYLOAD, error);
+	if (blob_payload == NULL)
+		return NULL;
+	if (g_bytes_get_size(blob_payload) > fu_device_get_firmware_size_max(device)) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "firmware too large, got 0x%x, expected <= 0x%x",
+			    (guint)g_bytes_get_size(blob_payload),
+			    (guint)fu_device_get_firmware_size_max(device));
+		return NULL;
+	}
 
 	/* success */
 	return g_steal_pointer(&firmware);
@@ -1806,7 +1776,7 @@ fu_genesys_scaler_device_write_firmware(FuDevice *device,
 					GError **error)
 {
 	FuGenesysScalerDevice *self = FU_GENESYS_SCALER_DEVICE(device);
-	guint addr = fu_firmware_get_addr(firmware);
+	guint addr = 0;
 	gsize size;
 	const guint8 *data;
 	g_autofree guint8 *buf = NULL;
@@ -1818,11 +1788,8 @@ fu_genesys_scaler_device_write_firmware(FuDevice *device,
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 54, NULL);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 42, NULL);
 
-	/* sanity check */
-	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_DUAL_IMAGE) && addr == 0) {
-		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE, "invalid address");
-		return FALSE;
-	}
+	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_DUAL_IMAGE))
+		addr = GENESYS_SCALER_BANK_SIZE;
 
 	payload = fu_firmware_get_image_by_id(firmware, FU_FIRMWARE_ID_PAYLOAD, error);
 	if (payload == NULL)
