@@ -290,7 +290,7 @@ fu_vli_device_spi_write(FuVliDevice *self,
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 99);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 1); /* chk0 */
+	fu_progress_add_step_full(progress, FWUPD_STATUS_DEVICE_WRITE, 1, "device-write-chk0");
 
 	/* write SPI data, then CRC bytes last */
 	g_debug("writing 0x%x bytes @0x%x", (guint)bufsz, address);

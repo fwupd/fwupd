@@ -222,7 +222,7 @@ fu_hailuck_bl_device_write_firmware(FuDevice *device,
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 10);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 80);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 1); /* block 0 */
+	fu_progress_add_step_full(progress, FWUPD_STATUS_DEVICE_WRITE, 1, "device-write-blk0");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 9);
 
 	/* get default image */

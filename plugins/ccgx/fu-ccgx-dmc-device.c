@@ -464,8 +464,8 @@ fu_ccgx_dmc_write_firmware(FuDevice *device,
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 1);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 98);
+	fu_progress_add_step_full(progress, FWUPD_STATUS_DEVICE_WRITE, 1, "fwct");
+	fu_progress_add_step_full(progress, FWUPD_STATUS_DEVICE_WRITE, 98, "img");
 
 	/* get fwct record */
 	fwct_blob = fu_ccgx_dmc_firmware_get_fwct_record(FU_CCGX_DMC_FIRMWARE(firmware));

@@ -298,7 +298,7 @@ fu_rts54hid_device_write_firmware(FuDevice *device,
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 1);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 46);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 52);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1); /* reset */
+	fu_progress_add_step_full(progress, FWUPD_STATUS_DEVICE_BUSY, 1, "reset");
 
 	/* get default image */
 	fw = fu_firmware_get_bytes(firmware, error);

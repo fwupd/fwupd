@@ -1054,3 +1054,11 @@ LIBFWUPDPLUGIN_1.8.1 {
     fu_udev_device_ioctl_full;
   local: *;
 } LIBFWUPDPLUGIN_1.8.0;
+
+LIBFWUPDPLUGIN_1.8.2 {
+  global:
+    fu_progress_add_step_full;
+    fu_progress_get_name;
+    fu_progress_set_name;
+  local: *;
+} LIBFWUPDPLUGIN_1.8.1;

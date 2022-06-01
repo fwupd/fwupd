@@ -663,8 +663,8 @@ fu_parade_lspcon_device_write_firmware(FuDevice *device,
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 5);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 70);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 25);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 3);  /* boot */
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 2); /* boot */
+	fu_progress_add_step_full(progress, FWUPD_STATUS_DEVICE_WRITE, 3, "device-write-boot");
+	fu_progress_add_step_full(progress, FWUPD_STATUS_DEVICE_VERIFY, 2, "device-verify-boot");
 
 	blob_fw = fu_firmware_get_bytes(firmware, error);
 	if (blob_fw == NULL)

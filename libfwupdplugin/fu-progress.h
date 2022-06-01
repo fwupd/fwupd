@@ -71,6 +71,10 @@ fu_progress_get_id(FuProgress *self);
 void
 fu_progress_set_id(FuProgress *self, const gchar *id);
 const gchar *
+fu_progress_get_name(FuProgress *self);
+void
+fu_progress_set_name(FuProgress *self, const gchar *name);
+const gchar *
 fu_progress_flag_to_string(FuProgressFlags flag);
 FuProgressFlags
 fu_progress_flag_from_string(const gchar *flag);
@@ -100,6 +104,8 @@ guint
 fu_progress_get_steps(FuProgress *self);
 void
 fu_progress_add_step(FuProgress *self, FwupdStatus status, guint value);
+void
+fu_progress_add_step_full(FuProgress *self, FwupdStatus status, guint value, const gchar *name);
 void
 fu_progress_finished(FuProgress *self);
 void

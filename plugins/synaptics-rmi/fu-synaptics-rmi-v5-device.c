@@ -259,10 +259,10 @@ fu_synaptics_rmi_v5_device_write_firmware(FuDevice *device,
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 10);
+	fu_progress_add_step_full(progress, FWUPD_STATUS_DEVICE_BUSY, 10, "enter-iep");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 10);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 90);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 10);
+	fu_progress_add_step_full(progress, FWUPD_STATUS_DEVICE_BUSY, 10, "cfg-image");
 
 	/* we should be in bootloader mode now, but check anyway */
 	if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {

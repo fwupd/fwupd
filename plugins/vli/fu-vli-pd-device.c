@@ -500,9 +500,9 @@ fu_vli_pd_device_write_dual_firmware(FuVliPdDevice *self,
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 10); /* crc */
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 45);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 45);
+	fu_progress_add_step_full(progress, FWUPD_STATUS_DEVICE_BUSY, 10, "crc");
+	fu_progress_add_step_full(progress, FWUPD_STATUS_DEVICE_WRITE, 45, "backup");
+	fu_progress_add_step_full(progress, FWUPD_STATUS_DEVICE_WRITE, 45, "primary");
 
 	/* check spi fw1 crc16 */
 	spi_fw = fu_vli_device_spi_read(FU_VLI_DEVICE(self),

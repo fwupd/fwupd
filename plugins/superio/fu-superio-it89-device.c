@@ -518,8 +518,8 @@ fu_superio_it89_device_write_chunk(FuSuperioDevice *self,
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 1);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 21);
+	fu_progress_add_step_full(progress, FWUPD_STATUS_DEVICE_ERASE, 1, "page-erase");
+	fu_progress_add_step_full(progress, FWUPD_STATUS_DEVICE_ERASE, 21, "check-erase");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 59);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 20);
 
@@ -667,7 +667,7 @@ fu_superio_it89_device_write_firmware(FuDevice *device,
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 5); /* check e-flash */
+	fu_progress_add_step_full(progress, FWUPD_STATUS_DEVICE_BUSY, 5, "check-eflash");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 95);
 
 	/* check JEDEC ID */
