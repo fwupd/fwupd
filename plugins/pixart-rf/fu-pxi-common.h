@@ -38,6 +38,8 @@
 
 #define FU_PXI_WIRELESS_DEVICE_RETRY_MAXIMUM 1000
 
+#define FU_PXI_DEVICE_IOCTL_TIMEOUT 5000 /* ms */
+
 /* OTA spec check result */
 enum ota_spec_check_result {
 	OTA_SPEC_CHECK_OK = 1,	      /* Spec check ok */

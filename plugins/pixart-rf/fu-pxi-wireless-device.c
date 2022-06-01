@@ -49,6 +49,7 @@ fu_pxi_wireless_device_set_feature(FuDevice *self, const guint8 *buf, guint bufs
 				    HIDIOCSFEATURE(bufsz),
 				    (guint8 *)buf,
 				    NULL,
+				    FU_PXI_DEVICE_IOCTL_TIMEOUT,
 				    error);
 #else
 	g_set_error_literal(error,
@@ -63,7 +64,12 @@ static gboolean
 fu_pxi_wireless_device_get_feature(FuDevice *self, guint8 *buf, guint bufsz, GError **error)
 {
 #ifdef HAVE_HIDRAW_H
-	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self), HIDIOCGFEATURE(bufsz), buf, NULL, error)) {
+	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
+				  HIDIOCGFEATURE(bufsz),
+				  buf,
+				  NULL,
+				  FU_PXI_DEVICE_IOCTL_TIMEOUT,
+				  error)) {
 		return FALSE;
 	}
 	if (g_getenv("FWUPD_PIXART_RF_VERBOSE") != NULL)

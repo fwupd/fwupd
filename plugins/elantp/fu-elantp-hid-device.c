@@ -28,6 +28,8 @@ struct _FuElantpHidDevice {
 
 G_DEFINE_TYPE(FuElantpHidDevice, fu_elantp_hid_device, FU_TYPE_UDEV_DEVICE)
 
+#define FU_ELANTP_DEVICE_IOCTL_TIMEOUT 5000 /* ms */
+
 static gboolean
 fu_elantp_hid_device_detach(FuDevice *device, FuProgress *progress, GError **error);
 
@@ -87,7 +89,12 @@ fu_elantp_hid_device_send_cmd(FuElantpHidDevice *self,
 
 	if (g_getenv("FWUPD_ELANTP_VERBOSE") != NULL)
 		fu_common_dump_raw(G_LOG_DOMAIN, "SetReport", tx, txsz);
-	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self), HIDIOCSFEATURE(txsz), tx, NULL, error))
+	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
+				  HIDIOCSFEATURE(txsz),
+				  tx,
+				  NULL,
+				  FU_ELANTP_DEVICE_IOCTL_TIMEOUT,
+				  error))
 		return FALSE;
 	if (rxsz == 0)
 		return TRUE;
@@ -95,7 +102,12 @@ fu_elantp_hid_device_send_cmd(FuElantpHidDevice *self,
 	/* GetFeature */
 	buf = g_malloc0(bufsz);
 	buf[0] = tx[0]; /* report number */
-	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self), HIDIOCGFEATURE(bufsz), buf, NULL, error))
+	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
+				  HIDIOCGFEATURE(bufsz),
+				  buf,
+				  NULL,
+				  FU_ELANTP_DEVICE_IOCTL_TIMEOUT,
+				  error))
 		return FALSE;
 	if (g_getenv("FWUPD_ELANTP_VERBOSE") != NULL)
 		fu_common_dump_raw(G_LOG_DOMAIN, "GetReport", buf, bufsz);

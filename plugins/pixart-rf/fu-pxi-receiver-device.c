@@ -37,6 +37,7 @@ fu_pxi_receiver_device_get_raw_info(FuPxiReceiverDevice *self,
 				  HIDIOCGRAWINFO,
 				  (guint8 *)info,
 				  NULL,
+				  FU_PXI_DEVICE_IOCTL_TIMEOUT,
 				  error)) {
 		return FALSE;
 	}
@@ -66,6 +67,7 @@ fu_pxi_receiver_device_set_feature(FuPxiReceiverDevice *self,
 				    HIDIOCSFEATURE(bufsz),
 				    (guint8 *)buf,
 				    NULL,
+				    FU_PXI_DEVICE_IOCTL_TIMEOUT,
 				    error);
 #else
 	g_set_error_literal(error,
@@ -83,7 +85,12 @@ fu_pxi_receiver_device_get_feature(FuPxiReceiverDevice *self,
 				   GError **error)
 {
 #ifdef HAVE_HIDRAW_H
-	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self), HIDIOCGFEATURE(bufsz), buf, NULL, error)) {
+	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
+				  HIDIOCGFEATURE(bufsz),
+				  buf,
+				  NULL,
+				  FU_PXI_DEVICE_IOCTL_TIMEOUT,
+				  error)) {
 		return FALSE;
 	}
 	if (g_getenv("FWUPD_PIXART_RF_VERBOSE") != NULL)

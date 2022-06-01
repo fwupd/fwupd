@@ -69,6 +69,8 @@ struct _FuIpmiDevice {
 
 G_DEFINE_TYPE(FuIpmiDevice, fu_ipmi_device, FU_TYPE_UDEV_DEVICE)
 
+#define FU_IPMI_DEVICE_IOCTL_TIMEOUT 5000 /* ms */
+
 static void
 fu_ipmi_device_to_string(FuDevice *device, guint idt, GString *str)
 {
@@ -104,6 +106,7 @@ fu_ipmi_device_send(FuIpmiDevice *self,
 				    IPMICTL_SEND_COMMAND,
 				    (guint8 *)&req,
 				    NULL,
+				    FU_IPMI_DEVICE_IOCTL_TIMEOUT,
 				    error);
 }
 
@@ -128,6 +131,7 @@ fu_ipmi_device_recv(FuIpmiDevice *self,
 				  IPMICTL_RECEIVE_MSG_TRUNC,
 				  (guint8 *)&recv,
 				  NULL,
+				  FU_IPMI_DEVICE_IOCTL_TIMEOUT,
 				  error))
 		return FALSE;
 	if (g_getenv("FWUPD_REDFISH_VERBOSE") != NULL && buf != NULL)

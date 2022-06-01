@@ -27,6 +27,8 @@
 #define FU_NORDIC_HID_CFG_CHANNEL_RETRY_DELAY	  50  /* ms */
 #define FU_NORDIC_HID_CFG_CHANNEL_DFU_RETRY_DELAY 500 /* ms */
 
+#define FU_NORDIC_HID_CFG_CHANNEL_IOCTL_TIMEOUT 5000 /* ms */
+
 typedef enum {
 	CONFIG_STATUS_PENDING,
 	CONFIG_STATUS_GET_MAX_MOD_ID,
@@ -154,7 +156,12 @@ fu_nordic_hid_cfg_channel_send(FuNordicHidCfgChannel *self,
 		return FALSE;
 	if (g_getenv("FWUPD_NORDIC_HID_VERBOSE") != NULL)
 		fu_common_dump_raw(G_LOG_DOMAIN, "Sent", buf, bufsz);
-	if (!fu_udev_device_ioctl(udev_device, HIDIOCSFEATURE(bufsz), buf, NULL, error))
+	if (!fu_udev_device_ioctl(udev_device,
+				  HIDIOCSFEATURE(bufsz),
+				  buf,
+				  NULL,
+				  FU_NORDIC_HID_CFG_CHANNEL_IOCTL_TIMEOUT,
+				  error))
 		return FALSE;
 	return TRUE;
 #else
@@ -184,6 +191,7 @@ fu_nordic_hid_cfg_channel_receive(FuNordicHidCfgChannel *self,
 					  HIDIOCGFEATURE(sizeof(*recv_msg)),
 					  (guint8 *)recv_msg,
 					  NULL,
+					  FU_NORDIC_HID_CFG_CHANNEL_IOCTL_TIMEOUT,
 					  error))
 			return FALSE;
 		/* if the device is busy it return 06 00 00 00 00 response */

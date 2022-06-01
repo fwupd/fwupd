@@ -59,6 +59,8 @@ G_DEFINE_TYPE(FuSynapticsRmiHidDevice, fu_synaptics_rmi_hid_device, FU_TYPE_SYNA
 #define RMI_SLEEP_MODE_NORMAL	    0x00
 #define RMI_SLEEP_MODE_SENSOR_SLEEP 0x01
 
+#define FU_SYNAPTICS_RMI_HID_DEVICE_IOCTL_TIMEOUT 5000 /* ms */
+
 static GByteArray *
 fu_synaptics_rmi_hid_device_read(FuSynapticsRmiDevice *rmi_device,
 				 guint16 addr,
@@ -322,6 +324,7 @@ fu_synaptics_rmi_hid_device_set_mode(FuSynapticsRmiHidDevice *self,
 				    HIDIOCSFEATURE(sizeof(data)),
 				    (guint8 *)data,
 				    NULL,
+				    FU_SYNAPTICS_RMI_HID_DEVICE_IOCTL_TIMEOUT,
 				    error);
 }
 

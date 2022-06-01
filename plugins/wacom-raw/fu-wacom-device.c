@@ -24,6 +24,8 @@ G_DEFINE_TYPE_WITH_PRIVATE(FuWacomDevice, fu_wacom_device, FU_TYPE_UDEV_DEVICE)
 
 #define GET_PRIVATE(o) (fu_wacom_device_get_instance_private(o))
 
+#define FU_WACOM_DEVICE_IOCTL_TIMEOUT 5000 /* ms */
+
 static void
 fu_wacom_device_to_string(FuDevice *device, guint idt, GString *str)
 {
@@ -256,13 +258,19 @@ fu_wacom_device_set_feature(FuWacomDevice *self, const guint8 *data, guint datas
 				    HIDIOCSFEATURE(datasz),
 				    (guint8 *)data,
 				    NULL,
+				    FU_WACOM_DEVICE_IOCTL_TIMEOUT,
 				    error);
 }
 
 gboolean
 fu_wacom_device_get_feature(FuWacomDevice *self, guint8 *data, guint datasz, GError **error)
 {
-	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self), HIDIOCGFEATURE(datasz), data, NULL, error))
+	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
+				  HIDIOCGFEATURE(datasz),
+				  data,
+				  NULL,
+				  FU_WACOM_DEVICE_IOCTL_TIMEOUT,
+				  error))
 		return FALSE;
 	fu_common_dump_raw(G_LOG_DOMAIN, "GetFeature", data, datasz);
 	return TRUE;

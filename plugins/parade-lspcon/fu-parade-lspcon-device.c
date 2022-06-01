@@ -60,6 +60,8 @@
 
 #define FLASH_BLOCK_SIZE 0x10000
 
+#define FU_PARADE_LSPCON_DEVICE_IOCTL_TIMEOUT 5000 /* ms */
+
 /*
  * user1: 0x10000 - 0x20000
  * user2: 0x20000 - 0x30000
@@ -164,6 +166,7 @@ fu_parade_lspcon_ensure_i2c_address(FuParadeLspconDevice *self, guint8 address, 
 				  I2C_SLAVE,
 				  (guint8 *)(guintptr)address,
 				  NULL,
+				  FU_PARADE_LSPCON_DEVICE_IOCTL_TIMEOUT,
 				  error)) {
 		g_prefix_error(error, "failed to set I2C address: ");
 		return FALSE;

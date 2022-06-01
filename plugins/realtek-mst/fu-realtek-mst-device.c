@@ -113,6 +113,8 @@ struct _FuRealtekMstDevice {
 
 G_DEFINE_TYPE(FuRealtekMstDevice, fu_realtek_mst_device, FU_TYPE_I2C_DEVICE)
 
+#define FU_REALTEK_MST_DEVICE_IOCTL_TIMEOUT 5000 /* ms */
+
 static gboolean
 fu_realtek_mst_device_set_quirk_kv(FuDevice *device,
 				   const gchar *key,
@@ -257,6 +259,7 @@ mst_ensure_device_address(FuRealtekMstDevice *self, guint8 address, GError **err
 				    I2C_SLAVE,
 				    (guint8 *)(guintptr)address,
 				    NULL,
+				    FU_REALTEK_MST_DEVICE_IOCTL_TIMEOUT,
 				    error);
 }
 

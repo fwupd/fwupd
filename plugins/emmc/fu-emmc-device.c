@@ -64,6 +64,8 @@
 #define EXT_CSD_UPDATE_DISABLE (1 << 0)
 #define EXT_CSD_CMD_SET_NORMAL (1 << 0)
 
+#define FU_EMMC_DEVICE_IOCTL_TIMEOUT 5000 /* ms */
+
 struct _FuEmmcDevice {
 	FuUdevDevice parent_instance;
 	guint32 sect_size;
@@ -258,6 +260,7 @@ fu_emmc_read_extcsd(FuEmmcDevice *self, guint8 *ext_csd, gsize ext_csd_sz, GErro
 				    MMC_IOC_CMD,
 				    (guint8 *)&idata,
 				    NULL,
+				    FU_EMMC_DEVICE_IOCTL_TIMEOUT,
 				    error);
 }
 
@@ -412,6 +415,7 @@ fu_emmc_device_write_firmware(FuDevice *device,
 						  MMC_IOC_MULTI_CMD,
 						  (guint8 *)multi_cmd,
 						  NULL,
+						  FU_EMMC_DEVICE_IOCTL_TIMEOUT,
 						  error)) {
 				g_autoptr(GError) error_local = NULL;
 				g_prefix_error(error, "multi-cmd failed: ");
@@ -420,6 +424,7 @@ fu_emmc_device_write_firmware(FuDevice *device,
 							  MMC_IOC_CMD,
 							  (guint8 *)&multi_cmd->cmds[2],
 							  NULL,
+							  FU_EMMC_DEVICE_IOCTL_TIMEOUT,
 							  &error_local)) {
 					g_prefix_error(error, "%s: ", error_local->message);
 				}
@@ -490,6 +495,7 @@ fu_emmc_device_write_firmware(FuDevice *device,
 					  MMC_IOC_MULTI_CMD,
 					  (guint8 *)multi_cmd,
 					  NULL,
+					  FU_EMMC_DEVICE_IOCTL_TIMEOUT,
 					  error)) {
 			g_autoptr(GError) error_local = NULL;
 			/* In case multi-cmd ioctl failed before exiting from ffu mode */
@@ -498,6 +504,7 @@ fu_emmc_device_write_firmware(FuDevice *device,
 						  MMC_IOC_CMD,
 						  (guint8 *)&multi_cmd->cmds[2],
 						  NULL,
+						  FU_EMMC_DEVICE_IOCTL_TIMEOUT,
 						  &error_local)) {
 				g_prefix_error(error, "%s: ", error_local->message);
 			}

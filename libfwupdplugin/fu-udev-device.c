@@ -1377,7 +1377,7 @@ fu_udev_device_close(FuDevice *device, GError **error)
 }
 
 /**
- * fu_udev_device_ioctl_full:
+ * fu_udev_device_ioctl:
  * @self: a #FuUdevDevice
  * @request: request number
  * @buf: a buffer to use, which *must* be large enough for the request
@@ -1389,15 +1389,15 @@ fu_udev_device_close(FuDevice *device, GError **error)
  *
  * Returns: %TRUE for success
  *
- * Since: 1.8.1
+ * Since: 1.8.2
  **/
 gboolean
-fu_udev_device_ioctl_full(FuUdevDevice *self,
-			  gulong request,
-			  guint8 *buf,
-			  gint *rc,
-			  guint timeout,
-			  GError **error)
+fu_udev_device_ioctl(FuUdevDevice *self,
+		     gulong request,
+		     guint8 *buf,
+		     gint *rc,
+		     guint timeout,
+		     GError **error)
 {
 #ifdef HAVE_IOCTL_H
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
@@ -1457,26 +1457,6 @@ fu_udev_device_ioctl_full(FuUdevDevice *self,
 		    "Not supported as <sys/ioctl.h> not found");
 	return FALSE;
 #endif
-}
-
-/**
- * fu_udev_device_ioctl:
- * @self: a #FuUdevDevice
- * @request: request number
- * @buf: a buffer to use, which *must* be large enough for the request
- * @rc: (out) (nullable): the raw return value from the ioctl
- * @error: (nullable): optional return location for an error
- *
- * Control a device using a low-level request.
- *
- * Returns: %TRUE for success
- *
- * Since: 1.3.3
- **/
-gboolean
-fu_udev_device_ioctl(FuUdevDevice *self, gulong request, guint8 *buf, gint *rc, GError **error)
-{
-	return fu_udev_device_ioctl_full(self, request, buf, rc, 0, error);
 }
 
 /**

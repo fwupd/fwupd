@@ -19,6 +19,8 @@ struct _FuGpioDevice {
 
 G_DEFINE_TYPE(FuGpioDevice, fu_gpio_device, FU_TYPE_UDEV_DEVICE)
 
+#define FU_GPIO_DEVICE_IOCTL_TIMEOUT 5000 /* ms */
+
 static void
 fu_gpio_device_to_string(FuDevice *device, guint idt, GString *str)
 {
@@ -59,6 +61,7 @@ fu_gpio_device_setup(FuDevice *device, GError **error)
 				  GPIO_GET_CHIPINFO_IOCTL,
 				  (guint8 *)&info,
 				  NULL,
+				  FU_GPIO_DEVICE_IOCTL_TIMEOUT,
 				  error)) {
 		g_prefix_error(error, "failed to get chipinfo: ");
 		return FALSE;
@@ -134,6 +137,7 @@ fu_gpio_device_assign_full(FuGpioDevice *self, guint64 line, gboolean value, GEr
 				  GPIO_V2_GET_LINE_IOCTL,
 				  (guint8 *)&req,
 				  NULL,
+				  FU_GPIO_DEVICE_IOCTL_TIMEOUT,
 				  error)) {
 		g_prefix_error(error, "failed to assign: ");
 		return FALSE;
@@ -166,6 +170,7 @@ fu_gpio_device_assign(FuGpioDevice *self, const gchar *id, gboolean value, GErro
 					  GPIO_V2_GET_LINEINFO_IOCTL,
 					  (guint8 *)&info,
 					  NULL,
+					  FU_GPIO_DEVICE_IOCTL_TIMEOUT,
 					  error)) {
 			g_prefix_error(error, "failed to get lineinfo: ");
 			return FALSE;
@@ -178,6 +183,7 @@ fu_gpio_device_assign(FuGpioDevice *self, const gchar *id, gboolean value, GErro
 						  GPIO_V2_GET_LINEINFO_IOCTL,
 						  (guint8 *)&info,
 						  NULL,
+						  FU_GPIO_DEVICE_IOCTL_TIMEOUT,
 						  error)) {
 				g_prefix_error(error, "failed to get lineinfo: ");
 				return FALSE;
