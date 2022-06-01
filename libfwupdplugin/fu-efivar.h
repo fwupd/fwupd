@@ -64,6 +64,4 @@ fu_efivar_delete_with_glob(const gchar *guid,
 GPtrArray *
 fu_efivar_get_names(const gchar *guid, GError **error) G_GNUC_WARN_UNUSED_RESULT;
 gboolean
-fu_efivar_secure_boot_enabled(void);
-gboolean
-fu_efivar_secure_boot_enabled_full(GError **error);
+fu_efivar_secure_boot_enabled(GError **error);

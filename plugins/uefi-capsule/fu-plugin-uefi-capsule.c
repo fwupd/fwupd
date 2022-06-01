@@ -173,7 +173,7 @@ fu_plugin_uefi_capsule_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *att
 	fu_security_attrs_append(attrs, attr);
 
 	/* SB not available or disabled */
-	if (!fu_efivar_secure_boot_enabled_full(&error)) {
+	if (!fu_efivar_secure_boot_enabled(&error)) {
 		if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
 			fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_FOUND);
 			return;
@@ -608,7 +608,7 @@ static void
 fu_plugin_uefi_capsule_test_secure_boot(FuPlugin *plugin)
 {
 	const gchar *result_str = "Disabled";
-	if (fu_efivar_secure_boot_enabled())
+	if (fu_efivar_secure_boot_enabled(NULL))
 		result_str = "Enabled";
 	fu_plugin_add_report_metadata(plugin, "SecureBoot", result_str);
 }

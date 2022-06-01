@@ -106,7 +106,7 @@ fu_uefi_get_built_app_path(GError **error)
 	source_path_exists = g_file_test(source_path, G_FILE_TEST_EXISTS);
 	source_path_signed_exists = g_file_test(source_path_signed, G_FILE_TEST_EXISTS);
 
-	if (fu_efivar_secure_boot_enabled()) {
+	if (fu_efivar_secure_boot_enabled(NULL)) {
 		if (!source_path_signed_exists) {
 			g_set_error(error,
 				    G_IO_ERROR,

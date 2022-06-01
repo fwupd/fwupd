@@ -52,3 +52,4 @@ Remember: Plugins should be upstream!
 * `fu_usb_device_new_full()`: Use `fu_usb_device_new()` instead -- as the latter always specifies the context.
 * `fu_device_new_with_context()`: Use `fu_device_new()` instead -- as the latter always specifies the context.
 * `fu_plugin_has_custom_flag()`: Use `fu_plugin_has_private_flag()` instead.
+* `fu_efivar_secure_boot_enabled_full()`: Use `fu_efivar_secure_boot_enabled()` instead -- as the latter always specifies the error.
