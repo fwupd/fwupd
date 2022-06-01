@@ -241,7 +241,7 @@ fu_ep963x_device_write_firmware(FuDevice *device,
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 5); /* ICP */
+	fu_progress_add_step_full(progress, FWUPD_STATUS_DEVICE_BUSY, 5, "icp");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 95);
 
 	/* get default image */

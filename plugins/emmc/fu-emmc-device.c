@@ -354,7 +354,7 @@ fu_emmc_device_write_firmware(FuDevice *device,
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 5); /* ffu */
+	fu_progress_add_step_full(progress, FWUPD_STATUS_DEVICE_BUSY, 5, "ffu");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 50);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 45);
 

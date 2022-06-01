@@ -703,7 +703,7 @@ fu_synaptics_cape_device_write_firmware(FuDevice *device,
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 2); /* header */
+	fu_progress_add_step_full(progress, FWUPD_STATUS_DEVICE_WRITE, 2, "device-write-hdr");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 69);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 0);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 29);

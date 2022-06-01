@@ -314,10 +314,10 @@ fu_elantp_hid_device_write_firmware(FuDevice *device,
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 10); /* detach */
+	fu_progress_add_step_full(progress, FWUPD_STATUS_DEVICE_BUSY, 10, "detach");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 50);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 30);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 10); /* reset */
+	fu_progress_add_step_full(progress, FWUPD_STATUS_DEVICE_RESTART, 10, "reset");
 
 	/* simple image */
 	fw = fu_firmware_get_bytes(firmware, error);

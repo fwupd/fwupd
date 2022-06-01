@@ -347,11 +347,11 @@ fu_synaptics_rmi_v7_device_write_firmware(FuDevice *device,
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1);
+	fu_progress_add_step_full(progress, FWUPD_STATUS_DEVICE_BUSY, 1, "disable-sleep");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 10);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 20);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 20);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 20);
+	fu_progress_add_step_full(progress, FWUPD_STATUS_DEVICE_WRITE, 20, "flash-config");
+	fu_progress_add_step_full(progress, FWUPD_STATUS_DEVICE_WRITE, 20, "core-code");
+	fu_progress_add_step_full(progress, FWUPD_STATUS_DEVICE_WRITE, 20, "core-config");
 
 	/* we should be in bootloader mode now, but check anyway */
 	if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {

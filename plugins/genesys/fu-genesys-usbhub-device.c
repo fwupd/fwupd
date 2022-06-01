@@ -764,7 +764,7 @@ fu_genesys_usbhub_device_dump_firmware(FuDevice *device, FuProgress *progress, G
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1); /* detach */
+	fu_progress_add_step_full(progress, FWUPD_STATUS_DEVICE_BUSY, 1, "detach");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_READ, 99);
 
 	/* require detach -> attach */

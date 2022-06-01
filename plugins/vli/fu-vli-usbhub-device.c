@@ -1092,7 +1092,7 @@ fu_vli_usbhub_device_update_v2(FuVliUsbhubDevice *self,
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 72);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 20);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 8); /* HD2 */
+	fu_progress_add_step_full(progress, FWUPD_STATUS_DEVICE_BUSY, 8, "hd2");
 
 	/* make space */
 	if (!fu_vli_device_spi_erase(FU_VLI_DEVICE(self),

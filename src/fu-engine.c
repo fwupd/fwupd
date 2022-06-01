@@ -2970,9 +2970,9 @@ fu_engine_install_blob(FuEngine *self,
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_NO_PROFILE);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1);   /* prepare */
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 98); /* write */
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1);   /* cleanup */
+	fu_progress_add_step_full(progress, FWUPD_STATUS_DEVICE_BUSY, 1, "prepare");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 98);
+	fu_progress_add_step_full(progress, FWUPD_STATUS_DEVICE_BUSY, 1, "cleanup");
 
 	/* test the firmware is not an empty blob */
 	if (g_bytes_get_size(blob_fw) == 0) {

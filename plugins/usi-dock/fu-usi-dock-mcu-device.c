@@ -558,9 +558,9 @@ fu_usi_dock_mcu_device_write_firmware_with_idx(FuUsiDockMcuDevice *self,
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 0);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 6);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 40);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 13);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 42);
+	fu_progress_add_step_full(progress, FWUPD_STATUS_DEVICE_WRITE, 40, "write-external");
+	fu_progress_add_step_full(progress, FWUPD_STATUS_DEVICE_WRITE, 13, "wait-for-checksum");
+	fu_progress_add_step_full(progress, FWUPD_STATUS_DEVICE_WRITE, 42, "internal-flash");
 
 	/* initial external flash */
 	cmd = USBUID_ISP_DEVICE_CMD_FWBUFER_INITIAL;

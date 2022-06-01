@@ -130,12 +130,12 @@ fu_logitech_hidpp_bootloader_texas_write_firmware(FuDevice *device,
 	fu_progress_set_id(progress, G_STRLOC);
 	if (fu_device_has_private_flag(device, FU_LOGITECH_HIDPP_BOOTLOADER_FLAG_IS_SIGNED)) {
 		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 3);
-		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 1); /* clear */
+		fu_progress_add_step_full(progress, FWUPD_STATUS_DEVICE_ERASE, 1, "clear");
 		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 18);
 		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 79);
 	} else {
 		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 11);
-		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 1); /* clear */
+		fu_progress_add_step_full(progress, FWUPD_STATUS_DEVICE_ERASE, 1, "clear");
 		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 75);
 		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 12);
 	}

@@ -58,6 +58,7 @@
 
 typedef struct {
 	gchar *id;
+	gchar *name;
 	FuProgressFlags flags;
 	guint percentage;
 	FwupdStatus status;
@@ -126,6 +127,58 @@ fu_progress_set_id(FuProgress *self, const gchar *id)
 	/* set id */
 	g_free(priv->id);
 	priv->id = g_strdup(id);
+}
+
+/**
+ * fu_progress_get_name:
+ * @self: a #FuProgress
+ *
+ * Return the nice name of the progress, which is normally set by the caller.
+ *
+ * Returns: progress nice name, e.g. `add-devices`
+ *
+ * Since: 1.8.2
+ **/
+const gchar *
+fu_progress_get_name(FuProgress *self)
+{
+	FuProgressPrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_PROGRESS(self), NULL);
+	return priv->name;
+}
+
+static const gchar *
+fu_progress_get_name_fallback(FuProgress *self)
+{
+	FuProgressPrivate *priv = GET_PRIVATE(self);
+	if (priv->name != NULL)
+		return priv->name;
+	return fwupd_status_to_string(priv->status);
+}
+
+/**
+ * fu_progress_set_name:
+ * @self: a #FuProgress
+ * @name: progress nice name, e.g. `add-devices`, or perhaps just `G_STRFUNC`
+ *
+ * Sets the nice name of the progress.
+ *
+ * Since: 1.8.2
+ **/
+void
+fu_progress_set_name(FuProgress *self, const gchar *name)
+{
+	FuProgressPrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_PROGRESS(self));
+	g_return_if_fail(name != NULL);
+
+	/* not changed */
+	if (g_strcmp0(priv->name, name) == 0)
+		return;
+
+	/* set name */
+	g_free(priv->name);
+	priv->name = g_strdup(name);
 }
 
 /**
@@ -481,20 +534,21 @@ fu_progress_get_steps(FuProgress *self)
 }
 
 /**
- * fu_progress_add_step:
+ * fu_progress_add_step_full:
  * @self: A #FuProgress
  * @status: status value to use for this phase
  * @value: A step weighting variable argument array
+ * @name: Human readable name to identify the step
  *
  * This sets the step weighting, which you will want to do if one action
  * will take a bigger chunk of time than another.
  *
  * The progress ID must be set fu_progress_set_id() before this method is used.
  *
- * Since: 1.7.0
+ * Since: 1.8.2
  **/
 void
-fu_progress_add_step(FuProgress *self, FwupdStatus status, guint value)
+fu_progress_add_step_full(FuProgress *self, FwupdStatus status, guint value, const gchar *name)
 {
 	FuProgressPrivate *priv = GET_PRIVATE(self);
 	FuProgressStep *step;
@@ -515,6 +569,31 @@ fu_progress_add_step(FuProgress *self, FwupdStatus status, guint value)
 
 	/* in case anything is not using ->steps */
 	fu_progress_set_steps(self, priv->steps->len);
+}
+
+/**
+ * fu_progress_add_step:
+ * @self: A #FuProgress
+ * @status: status value to use for this phase
+ * @value: A step weighting variable argument array
+ *
+ * This sets the step weighting, which you will want to do if one action
+ * will take a bigger chunk of time than another.
+ *
+ * The progress ID must be set fu_progress_set_id() before this method is used.
+ *
+ * If context is needed to disambigute the steps (or it would be helpful for profiling), use
+ * fu_progress_add_step_full().
+ *
+ * Since: 1.7.0
+ **/
+void
+fu_progress_add_step(FuProgress *self, FwupdStatus status, guint value)
+{
+	FuProgressPrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_PROGRESS(self));
+	g_return_if_fail(priv->id != NULL);
+	fu_progress_add_step_full(self, status, value, NULL);
 }
 
 /**
@@ -741,9 +820,9 @@ fu_progress_show_profile(FuProgress *self)
 	g_string_append(str, "]");
 	if (priv->flags & FU_PROGRESS_FLAG_GUESSED) {
 #ifdef SUPPORTED_BUILD
-		g_debug("%s at %s", str->str, priv->id);
+		g_debug("%s at %s [%s]", str->str, priv->id, fu_progress_get_name_fallback(self));
 #else
-		g_warning("%s at %s", str->str, priv->id);
+		g_warning("%s at %s [%s]", str->str, priv->id, fu_progress_get_name_fallback(self));
 		g_warning("Please see "
 			  "https://github.com/fwupd/fwupd/wiki/Daemon-Warning:-FuProgress-steps");
 #endif
@@ -880,6 +959,7 @@ fu_progress_finalize(GObject *object)
 
 	fu_progress_reset(self);
 	g_free(priv->id);
+	g_free(priv->name);
 	g_ptr_array_unref(priv->steps);
 	g_timer_destroy(priv->timer);
 

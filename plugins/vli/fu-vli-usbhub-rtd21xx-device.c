@@ -322,9 +322,9 @@ fu_vli_usbhub_rtd21xx_device_write_firmware(FuDevice *device,
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 10); /* enable ISP */
+	fu_progress_add_step_full(progress, FWUPD_STATUS_DEVICE_BUSY, 10, "enable-isp");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 50);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 10); /* restart */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 10);
 
 	/* open device */
 	locker = fu_device_locker_new(parent, error);

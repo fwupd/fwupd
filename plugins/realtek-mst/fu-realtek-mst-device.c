@@ -767,7 +767,7 @@ fu_realtek_mst_device_write_firmware(FuDevice *device,
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 20);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 70);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 9);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1); /* flag */
+	fu_progress_add_step_full(progress, FWUPD_STATUS_DEVICE_BUSY, 1, "flag");
 
 	if (!mst_ensure_device_address(self, I2C_ADDR_ISP, error))
 		return FALSE;
