@@ -465,7 +465,6 @@ LIBFWUPDPLUGIN_1.4.0 {
     fu_efivar_delete_with_glob;
     fu_efivar_exists;
     fu_efivar_get_data;
-    fu_efivar_secure_boot_enabled;
     fu_efivar_set_data;
     fu_efivar_supported;
     fu_hid_device_get_interface;
@@ -535,7 +534,6 @@ LIBFWUPDPLUGIN_1.5.0 {
     fu_device_report_metadata_pre;
     fu_device_unbind_driver;
     fu_efivar_get_data_bytes;
-    fu_efivar_secure_boot_enabled_full;
     fu_efivar_set_data_bytes;
     fu_firmware_add_flag;
     fu_firmware_build;
@@ -1045,6 +1043,7 @@ LIBFWUPDPLUGIN_1.8.1 {
 LIBFWUPDPLUGIN_1.8.2 {
   global:
     fu_device_new;
+    fu_efivar_secure_boot_enabled;
     fu_progress_add_step_full;
     fu_progress_get_name;
     fu_progress_set_name;

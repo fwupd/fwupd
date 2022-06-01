@@ -290,7 +290,7 @@ fu_uefi_bootmgr_bootnext(FuDevice *device,
 		return FALSE;
 
 	/* test if we should use shim */
-	secure_boot = fu_efivar_secure_boot_enabled();
+	secure_boot = fu_efivar_secure_boot_enabled(NULL);
 	if (secure_boot) {
 		/* test to make sure shim is there if we need it */
 		shim_app = fu_uefi_get_esp_app_path(device, esp_path, "shim", error);

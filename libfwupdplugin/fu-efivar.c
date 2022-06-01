@@ -265,17 +265,17 @@ fu_efivar_set_data_bytes(const gchar *guid,
 }
 
 /**
- * fu_efivar_secure_boot_enabled_full:
+ * fu_efivar_secure_boot_enabled:
  * @error: (nullable): optional return location for an error
  *
  * Determines if secure boot was enabled
  *
  * Returns: %TRUE on success
  *
- * Since: 1.5.0
+ * Since: 1.8.2
  **/
 gboolean
-fu_efivar_secure_boot_enabled_full(GError **error)
+fu_efivar_secure_boot_enabled(GError **error)
 {
 	gsize data_size = 0;
 	g_autofree guint8 *data = NULL;
@@ -300,19 +300,4 @@ fu_efivar_secure_boot_enabled_full(GError **error)
 	/* available, but not enabled */
 	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "SecureBoot is not enabled");
 	return FALSE;
-}
-
-/**
- * fu_efivar_secure_boot_enabled:
- *
- * Determines if secure boot was enabled
- *
- * Returns: %TRUE on success
- *
- * Since: 1.4.0
- **/
-gboolean
-fu_efivar_secure_boot_enabled(void)
-{
-	return fu_efivar_secure_boot_enabled_full(NULL);
 }
