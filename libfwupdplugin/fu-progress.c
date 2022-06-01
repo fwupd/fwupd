@@ -610,7 +610,6 @@ fu_progress_finished(FuProgress *self)
 	FuProgressPrivate *priv = GET_PRIVATE(self);
 
 	g_return_if_fail(FU_IS_PROGRESS(self));
-	g_return_if_fail(priv->id != NULL);
 
 	/* is already at 100%? */
 	if (priv->step_now == priv->step_max)
