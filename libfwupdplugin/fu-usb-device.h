@@ -29,9 +29,7 @@ struct _FuUsbDeviceClass {
 };
 
 FuUsbDevice *
-fu_usb_device_new(GUsbDevice *usb_device) G_DEPRECATED_FOR(fu_usb_device_new_with_context);
-FuUsbDevice *
-fu_usb_device_new_with_context(FuContext *ctx, GUsbDevice *usb_device);
+fu_usb_device_new(FuContext *ctx, GUsbDevice *usb_device);
 guint16
 fu_usb_device_get_vid(FuUsbDevice *self);
 guint16

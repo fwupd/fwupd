@@ -578,28 +578,6 @@ fu_plugin_device_remove(FuPlugin *self, FuDevice *device)
 }
 
 /**
- * fu_plugin_has_custom_flag:
- * @self: a #FuPlugin
- * @flag: a custom text flag, specific to the plugin, e.g. `uefi-force-enable`
- *
- * Returns if a per-plugin HwId custom flag exists, typically added from a DMI quirk.
- *
- * Returns: %TRUE if the quirk entry exists
- *
- * Since: 1.3.1
- **/
-gboolean
-fu_plugin_has_custom_flag(FuPlugin *self, const gchar *flag)
-{
-	FuPluginPrivate *priv = GET_PRIVATE(self);
-
-	g_return_val_if_fail(FU_IS_PLUGIN(self), FALSE);
-	g_return_val_if_fail(flag != NULL, FALSE);
-
-	return fu_context_has_hwid_flag(priv->ctx, flag);
-}
-
-/**
  * fu_plugin_check_supported:
  * @self: a #FuPlugin
  * @guid: a hardware ID GUID, e.g. `6de5d951-d755-576b-bd09-c5cf66b27234`

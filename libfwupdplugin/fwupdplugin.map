@@ -137,7 +137,6 @@ LIBFWUPDPLUGIN_1.0.2 {
     fu_device_set_remove_delay;
     fu_usb_device_get_dev;
     fu_usb_device_get_type;
-    fu_usb_device_new;
     fu_usb_device_set_dev;
   local: *;
 } LIBFWUPDPLUGIN_1.0.1;
@@ -255,7 +254,6 @@ LIBFWUPDPLUGIN_1.1.2 {
     fu_udev_device_get_sysfs_path;
     fu_udev_device_get_type;
     fu_udev_device_get_vendor;
-    fu_udev_device_new;
     fu_udev_device_set_physical_id;
     fu_usb_device_get_pid;
     fu_usb_device_get_platform_id;
@@ -361,7 +359,6 @@ LIBFWUPDPLUGIN_1.3.1 {
     fu_ihex_firmware_get_type;
     fu_ihex_firmware_new;
     fu_memcpy_safe;
-    fu_plugin_has_custom_flag;
     fu_udev_device_get_device_file;
   local: *;
 } LIBFWUPDPLUGIN_1.2.9;
@@ -933,8 +930,6 @@ LIBFWUPDPLUGIN_1.7.1 {
     fu_device_get_internal_flags;
     fu_device_set_internal_flags;
     fu_security_attrs_append_internal;
-    fu_udev_device_new_with_context;
-    fu_usb_device_new_with_context;
   local: *;
 } LIBFWUPDPLUGIN_1.7.0;
 
@@ -1055,7 +1050,9 @@ LIBFWUPDPLUGIN_1.8.2 {
     fu_progress_get_name;
     fu_progress_set_name;
     fu_udev_device_ioctl;
+    fu_udev_device_new;
     fu_udev_device_pread;
     fu_udev_device_pwrite;
+    fu_usb_device_new;
   local: *;
 } LIBFWUPDPLUGIN_1.8.1;

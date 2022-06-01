@@ -276,8 +276,7 @@ fu_plugin_dell_dock_func(gconstpointer user_data)
 	gulong added_id;
 	gulong register_id;
 
-	fake_usb_device =
-	    fu_usb_device_new_with_context(fu_plugin_get_context(self->plugin_dell), NULL);
+	fake_usb_device = fu_usb_device_new(fu_plugin_get_context(self->plugin_dell), NULL);
 	devices = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 	added_id = g_signal_connect(FU_PLUGIN(self->plugin_uefi_capsule),
 				    "device-added",
