@@ -130,9 +130,9 @@ fu_wac_module_bluetooth_write_firmware(FuDevice *device,
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 20);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 79);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 20, NULL);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 79, NULL);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1, NULL);
 
 	/* get default image */
 	fw = fu_firmware_get_bytes(firmware, error);

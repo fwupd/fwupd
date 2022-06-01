@@ -1121,8 +1121,8 @@ fu_dfu_target_download_element(FuDfuTarget *self,
 	if (flags & DFU_TARGET_TRANSFER_FLAG_VERIFY &&
 	    fu_device_has_private_flag(device, FU_DFU_DEVICE_FLAG_CAN_UPLOAD)) {
 		fu_progress_set_id(progress, G_STRLOC);
-		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 96);
-		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 4);
+		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 96, NULL);
+		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 4, NULL);
 	} else {
 		fu_progress_set_id(progress, G_STRLOC);
 		fu_progress_set_steps(progress, 1);

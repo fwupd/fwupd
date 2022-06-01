@@ -1661,8 +1661,8 @@ fu_genesys_scaler_device_dump_firmware(FuDevice *device, FuProgress *progress, G
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_add_step_full(progress, FWUPD_STATUS_DEVICE_BUSY, 1, "detach");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_READ, 99);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1, "detach");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_READ, 99, NULL);
 
 	/* require detach -> attach */
 	locker = fu_device_locker_new_full(device,
@@ -1776,9 +1776,9 @@ fu_genesys_scaler_device_write_firmware(FuDevice *device,
 	g_autoptr(GBytes) fw_payload = NULL;
 
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 4);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 54);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 42);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 4, NULL);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 54, NULL);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 42, NULL);
 
 	if (self->footer.data.header.configuration_setting.bits.second_image) {
 		addr = fu_common_read_uint32(
@@ -1833,10 +1833,10 @@ static void
 fu_genesys_scaler_device_set_progress(FuDevice *self, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0); /* detach */
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 100); /* write */
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0); /* attach */
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 0);	/* reload */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0, "detach");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 100, "write");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0, "attach");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 0, "reload");
 }
 
 static void

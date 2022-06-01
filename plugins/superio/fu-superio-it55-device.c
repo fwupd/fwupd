@@ -341,10 +341,10 @@ fu_superio_it55_device_write_attempt(FuDevice *device,
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 10);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 80);
-	fu_progress_add_step_full(progress, FWUPD_STATUS_DEVICE_WRITE, 1, "device-write-blk0");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 9);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 10, NULL);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 80, NULL);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 1, "device-write-blk0");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 9, NULL);
 
 	if (!fu_superio_it55_device_erase(device, error))
 		return FALSE;
@@ -448,8 +448,8 @@ fu_superio_it55_device_write_firmware(FuDevice *device,
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 10);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 90);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 10, NULL);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 90, NULL);
 
 	/* require detach -> attach */
 	locker = fu_device_locker_new_full(device,

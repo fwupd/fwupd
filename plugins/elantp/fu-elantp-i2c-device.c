@@ -388,10 +388,10 @@ fu_elantp_i2c_device_write_firmware(FuDevice *device,
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 2);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 90);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 10);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 1);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 2, NULL);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 90, NULL);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 10, NULL);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 1, NULL);
 
 	/* simple image */
 	fw = fu_firmware_get_bytes(firmware, error);
@@ -684,10 +684,10 @@ fu_elantp_i2c_device_set_progress(FuDevice *self, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 2); /* detach */
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 94);	/* write */
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 2); /* attach */
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 2);	/* reload */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 2, "detach");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 94, "write");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 2, "attach");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 2, "reload");
 }
 
 static void

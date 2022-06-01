@@ -747,13 +747,13 @@ fu_steelseries_fizz_write_firmware_fs(FuDevice *device,
 
 	fu_progress_set_id(progress, G_STRLOC);
 	if (tunnel) {
-		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 13);
-		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 87);
-		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 1);
+		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 13, NULL);
+		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 87, NULL);
+		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 1, NULL);
 	} else {
-		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 38);
-		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 60);
-		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 2);
+		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 38, NULL);
+		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 60, NULL);
+		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 2, NULL);
 	}
 
 	blob = fu_firmware_get_bytes(firmware, error);
@@ -852,7 +852,7 @@ fu_steelseries_fizz_read_firmware_fs(FuDevice *device,
 	g_autofree guint8 *buf = NULL;
 
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_READ, 100);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_READ, 100, NULL);
 
 	buf = g_malloc0(size);
 	if (!fu_steelseries_fizz_read_fs(device,
@@ -886,7 +886,7 @@ fu_steelseries_fizz_read_firmware(FuDevice *device, FuProgress *progress, GError
 	g_autoptr(FuFirmware) firmware = NULL;
 
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_READ, 100);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_READ, 100, NULL);
 
 	/* it is a USB receiver */
 	if (fu_device_has_private_flag(device, FU_STEELSERIES_DEVICE_FLAG_IS_RECEIVER)) {
@@ -913,10 +913,10 @@ static void
 fu_steelseries_fizz_set_progress(FuDevice *self, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0); /* detach */
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 82);	/* write */
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0); /* attach */
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 18);	/* reload */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0, "detach");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 82, "write");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0, "attach");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 18, "reload");
 }
 
 static void

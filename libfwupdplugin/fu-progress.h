@@ -103,9 +103,7 @@ fu_progress_set_steps(FuProgress *self, guint step_max);
 guint
 fu_progress_get_steps(FuProgress *self);
 void
-fu_progress_add_step(FuProgress *self, FwupdStatus status, guint value);
-void
-fu_progress_add_step_full(FuProgress *self, FwupdStatus status, guint value, const gchar *name);
+fu_progress_add_step(FuProgress *self, FwupdStatus status, guint value, const gchar *name);
 void
 fu_progress_finished(FuProgress *self);
 void

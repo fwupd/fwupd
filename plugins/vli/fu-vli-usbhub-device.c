@@ -874,8 +874,8 @@ fu_vli_usbhub_device_update_v1(FuVliUsbhubDevice *self,
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 20);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 80);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 20, NULL);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 80, NULL);
 
 	/* simple image */
 	fw = fu_firmware_get_bytes(firmware, error);
@@ -919,8 +919,8 @@ fu_vli_usbhub_device_update_v2_recovery(FuVliUsbhubDevice *self,
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 20);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 80);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 20, NULL);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 80, NULL);
 
 	/* erase */
 	for (guint32 addr = 0; addr < bufsz; addr += 0x1000) {
@@ -1090,9 +1090,9 @@ fu_vli_usbhub_device_update_v2(FuVliUsbhubDevice *self,
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 72);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 20);
-	fu_progress_add_step_full(progress, FWUPD_STATUS_DEVICE_BUSY, 8, "hd2");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 72, NULL);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 20, NULL);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 8, "hd2");
 
 	/* make space */
 	if (!fu_vli_device_spi_erase(FU_VLI_DEVICE(self),
@@ -1203,10 +1203,10 @@ static void
 fu_vli_usbhub_device_set_progress(FuDevice *self, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0); /* detach */
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 92);	/* write */
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 2); /* attach */
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 7);	/* reload */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0, "detach");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 92, "write");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 2, "attach");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 7, "reload");
 }
 
 static void

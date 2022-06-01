@@ -500,9 +500,9 @@ fu_vli_pd_device_write_dual_firmware(FuVliPdDevice *self,
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
-	fu_progress_add_step_full(progress, FWUPD_STATUS_DEVICE_BUSY, 10, "crc");
-	fu_progress_add_step_full(progress, FWUPD_STATUS_DEVICE_WRITE, 45, "backup");
-	fu_progress_add_step_full(progress, FWUPD_STATUS_DEVICE_WRITE, 45, "primary");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 10, "crc");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 45, "backup");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 45, "primary");
 
 	/* check spi fw1 crc16 */
 	spi_fw = fu_vli_device_spi_read(FU_VLI_DEVICE(self),
@@ -606,8 +606,8 @@ fu_vli_pd_device_write_firmware(FuDevice *device,
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 63);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 37);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 63, NULL);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 37, NULL);
 
 	/* erase */
 	if (!fu_vli_device_spi_erase_all(FU_VLI_DEVICE(self),
@@ -813,10 +813,10 @@ fu_vli_pd_device_set_progress(FuDevice *self, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 2); /* detach */
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 94);	/* write */
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 2); /* attach */
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 2);	/* reload */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 2, "detach");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 94, "write");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 2, "attach");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 2, "reload");
 }
 
 static void

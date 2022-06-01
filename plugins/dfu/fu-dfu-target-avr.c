@@ -112,8 +112,8 @@ fu_dfu_target_avr_attach(FuDfuTarget *target, FuProgress *progress, GError **err
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_add_step_full(progress, FWUPD_STATUS_DEVICE_RESTART, 50, "download-chunk");
-	fu_progress_add_step_full(progress, FWUPD_STATUS_DEVICE_RESTART, 50, "download-zero");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 50, "download-chunk");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 50, "download-zero");
 
 	/* format buffer */
 	buf[0] = DFU_AVR32_GROUP_EXEC;
@@ -363,10 +363,10 @@ fu_dfu_target_avr32_get_chip_signature(FuDfuTarget *target, FuProgress *progress
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
-	fu_progress_add_step_full(progress, FWUPD_STATUS_DEVICE_READ, 25, "mem-unit");
-	fu_progress_add_step_full(progress, FWUPD_STATUS_DEVICE_READ, 25, "mem-page");
-	fu_progress_add_step_full(progress, FWUPD_STATUS_DEVICE_READ, 25, "read-memory");
-	fu_progress_add_step_full(progress, FWUPD_STATUS_DEVICE_READ, 25, "upload");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_READ, 25, "mem-unit");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_READ, 25, "mem-page");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_READ, 25, "read-memory");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_READ, 25, "upload");
 
 	/* select unit, and request 4 bytes */
 	if (!fu_dfu_target_avr_select_memory_unit(target,
@@ -411,8 +411,8 @@ fu_dfu_target_avr_get_chip_signature_for_addr(FuDfuTarget *target,
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
-	fu_progress_add_step_full(progress, FWUPD_STATUS_DEVICE_READ, 10, "req");
-	fu_progress_add_step_full(progress, FWUPD_STATUS_DEVICE_READ, 90, "res");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_READ, 10, "req");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_READ, 90, "res");
 
 	/* request a single byte */
 	if (!fu_dfu_target_avr_read_command(target,
@@ -674,8 +674,8 @@ fu_dfu_target_avr_download_element(FuDfuTarget *target,
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 10);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 90);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 10, NULL);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 90, NULL);
 
 	/* select a memory and erase everything */
 	if (!fu_dfu_target_avr_select_memory_unit(target,
@@ -751,8 +751,8 @@ fu_dfu_target_avr_upload_element_chunk(FuDfuTarget *target,
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 70);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_READ, 30);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 70, NULL);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_READ, 30, NULL);
 
 	/* prepare to read */
 	if (!fu_dfu_target_avr_read_memory(target,
@@ -884,8 +884,8 @@ fu_dfu_target_avr_upload_element(FuDfuTarget *target,
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 5);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_READ, 95);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 5, NULL);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_READ, 95, NULL);
 
 	/* select unit */
 	if (!fu_dfu_target_avr_select_memory_unit(target,

@@ -452,11 +452,11 @@ fu_plugin_redfish_cleanup(FuPlugin *self,
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_add_step_full(progress, FWUPD_STATUS_DEVICE_BUSY, 1, "manager-reboot");
-	fu_progress_add_step_full(progress, FWUPD_STATUS_DEVICE_RESTART, 5, "pre-delay");
-	fu_progress_add_step_full(progress, FWUPD_STATUS_DEVICE_RESTART, 67, "poll-manager");
-	fu_progress_add_step_full(progress, FWUPD_STATUS_DEVICE_RESTART, 18, "post-delay");
-	fu_progress_add_step_full(progress, FWUPD_STATUS_DEVICE_BUSY, 9, "recoldplug");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1, "manager-reboot");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 5, "pre-delay");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 67, "poll-manager");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 18, "post-delay");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 9, "recoldplug");
 
 	/* ask the BMC to reboot */
 	json_builder_begin_object(builder);

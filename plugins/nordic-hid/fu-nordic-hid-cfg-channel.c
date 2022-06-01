@@ -991,10 +991,10 @@ static void
 fu_nordic_hid_cfg_channel_set_progress(FuDevice *self, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 1); /* detach */
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 97);	/* write */
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 1); /* attach */
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1);	/* reload */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 1, "detach");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 97, "write");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 1, "attach");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1, "reload");
 }
 
 static void
@@ -1136,9 +1136,9 @@ fu_nordic_hid_cfg_channel_write_firmware(FuDevice *device,
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 1);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 99);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 0);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 1, NULL);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 98, NULL);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1, NULL);
 
 	/* TODO: check if there is unfinished operation before? */
 	blob = fu_firmware_get_bytes(firmware, error);

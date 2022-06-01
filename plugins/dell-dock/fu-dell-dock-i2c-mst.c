@@ -875,9 +875,9 @@ fu_dell_dock_mst_write_bank(FuDevice *device,
 
 		/* progress */
 		fu_progress_set_id(progress, G_STRLOC);
-		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 15);
-		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 84);
-		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 1);
+		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 15, NULL);
+		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 84, NULL);
+		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 1, NULL);
 
 		if (!fu_dell_dock_mst_erase_panamera_bank(device, bank, error))
 			return FALSE;
@@ -934,8 +934,8 @@ fu_dell_dock_mst_write_panamera(FuDevice *device,
 
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 10); /* stop esm */
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 90);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 10, "stop-esm");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 90, NULL);
 	/* determine the flash order */
 	if (!fu_dell_dock_mst_query_active_bank(fu_device_get_proxy(device), &bank_in_use, error))
 		return FALSE;
@@ -989,8 +989,8 @@ fu_dell_dock_mst_write_cayenne(FuDevice *device,
 
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 15); /* erase */
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 90);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 15, NULL);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 90, NULL);
 
 	for (guint i = 0; i < retries; i++) {
 		if (!fu_dell_dock_mst_erase_cayenne(device, error))
@@ -1227,10 +1227,10 @@ static void
 fu_dell_dock_mst_set_progress(FuDevice *self, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0); /* detach */
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 100); /* write */
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0); /* attach */
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 0);	/* reload */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0, "detach");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 100, "write");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0, "attach");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 0, "reload");
 }
 
 static void

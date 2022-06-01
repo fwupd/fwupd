@@ -260,8 +260,8 @@ fu_analogix_device_write_image(FuAnalogixDevice *self,
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
-	fu_progress_add_step_full(progress, FWUPD_STATUS_DEVICE_BUSY, 10, "initialization");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 90);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 10, "initialization");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 90, NULL);
 
 	/* offset into firmware */
 	block_bytes = fu_firmware_get_bytes(image, error);
@@ -328,10 +328,10 @@ fu_analogix_device_write_firmware(FuDevice *device,
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
-	fu_progress_add_step_full(progress, FWUPD_STATUS_DEVICE_WRITE, 25, "cus");
-	fu_progress_add_step_full(progress, FWUPD_STATUS_DEVICE_WRITE, 25, "stx");
-	fu_progress_add_step_full(progress, FWUPD_STATUS_DEVICE_WRITE, 25, "srx");
-	fu_progress_add_step_full(progress, FWUPD_STATUS_DEVICE_WRITE, 25, "ocm");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 25, "cus");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 25, "stx");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 25, "srx");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 25, "ocm");
 
 	/* CUSTOM_DEF */
 	fw_cus = fu_firmware_get_image_by_id(firmware, "custom", NULL);
@@ -398,10 +398,10 @@ fu_analogix_device_set_progress(FuDevice *self, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0); /* detach */
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 98);	/* write */
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0); /* attach */
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 2);	/* reload */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0, "detach");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 98, "write");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0, "attach");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 2, "reload");
 }
 
 static void

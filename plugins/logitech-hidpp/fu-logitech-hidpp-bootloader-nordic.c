@@ -230,15 +230,15 @@ fu_logitech_hidpp_bootloader_nordic_write_firmware(FuDevice *device,
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
 	if (fu_device_has_private_flag(device, FU_LOGITECH_HIDPP_BOOTLOADER_FLAG_IS_SIGNED)) {
-		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 4);
-		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 13);
-		fu_progress_add_step_full(progress, FWUPD_STATUS_DEVICE_WRITE, 1, "device-write0");
-		fu_progress_add_step_full(progress, FWUPD_STATUS_DEVICE_WRITE, 82, "reset vector");
+		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 4, NULL);
+		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 13, NULL);
+		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 1, "device-write0");
+		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 82, "reset vector");
 	} else {
-		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 22);
-		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 72);
-		fu_progress_add_step_full(progress, FWUPD_STATUS_DEVICE_WRITE, 1, "device-write0");
-		fu_progress_add_step_full(progress, FWUPD_STATUS_DEVICE_WRITE, 6, "reset-vector");
+		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 22, NULL);
+		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 72, NULL);
+		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 1, "device-write0");
+		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 6, "reset-vector");
 	}
 
 	/* get default image */

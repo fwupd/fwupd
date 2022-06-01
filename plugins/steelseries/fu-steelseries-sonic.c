@@ -610,8 +610,8 @@ fu_steelseries_sonic_attach(FuDevice *device, FuProgress *progress, GError **err
 	g_autofree gchar *msg = NULL;
 
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_add_step_full(progress, FWUPD_STATUS_DEVICE_RESTART, 50, "mouse");
-	fu_progress_add_step_full(progress, FWUPD_STATUS_DEVICE_RESTART, 50, "holtek");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 50, "mouse");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 50, "holtek");
 
 	/* mouse */
 	chip = STEELSERIES_SONIC_CHIP_MOUSE;
@@ -685,10 +685,12 @@ fu_steelseries_sonic_write_chip(FuDevice *device,
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress,
 			     FWUPD_STATUS_DEVICE_ERASE,
-			     STEELSERIES_SONIC_WRITE_PROGRESS_STEP_VALUE[chip][0]);
+			     STEELSERIES_SONIC_WRITE_PROGRESS_STEP_VALUE[chip][0],
+			     NULL);
 	fu_progress_add_step(progress,
 			     FWUPD_STATUS_DEVICE_WRITE,
-			     STEELSERIES_SONIC_WRITE_PROGRESS_STEP_VALUE[chip][1]);
+			     STEELSERIES_SONIC_WRITE_PROGRESS_STEP_VALUE[chip][1],
+			     NULL);
 
 	fw = fu_firmware_get_image_by_id(firmware, STEELSERIES_SONIC_FIRMWARE_ID[chip], error);
 	if (fw == NULL)
@@ -766,7 +768,7 @@ fu_steelseries_sonic_verify_chip(FuDevice *device,
 	g_autoptr(GBytes) blob = NULL;
 
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 100);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 100, NULL);
 
 	fw = fu_firmware_get_image_by_id(firmware, STEELSERIES_SONIC_FIRMWARE_ID[chip], error);
 	if (fw == NULL)
@@ -813,9 +815,9 @@ fu_steelseries_sonic_read_firmware(FuDevice *device, FuProgress *progress, GErro
 		return NULL;
 
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_add_step_full(progress, FWUPD_STATUS_DEVICE_READ, 18, "nordic");
-	fu_progress_add_step_full(progress, FWUPD_STATUS_DEVICE_READ, 8, "holtek");
-	fu_progress_add_step_full(progress, FWUPD_STATUS_DEVICE_READ, 73, "mouse");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_READ, 18, "nordic");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_READ, 8, "holtek");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_READ, 73, "mouse");
 
 	fu_archive_firmware_set_format(FU_ARCHIVE_FIRMWARE(firmware), FU_ARCHIVE_FORMAT_ZIP);
 	fu_archive_firmware_set_compression(FU_ARCHIVE_FIRMWARE(firmware),
@@ -866,12 +868,12 @@ fu_steelseries_sonic_write_firmware(FuDevice *device,
 	SteelseriesSonicChip chip;
 
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_add_step_full(progress, FWUPD_STATUS_DEVICE_WRITE, 34, "device-write-mouse");
-	fu_progress_add_step_full(progress, FWUPD_STATUS_DEVICE_VERIFY, 30, "device-verify-mouse");
-	fu_progress_add_step_full(progress, FWUPD_STATUS_DEVICE_WRITE, 17, "device-write-nordic");
-	fu_progress_add_step_full(progress, FWUPD_STATUS_DEVICE_VERIFY, 7, "device-verify-nordic");
-	fu_progress_add_step_full(progress, FWUPD_STATUS_DEVICE_WRITE, 8, "device-write-holtek");
-	fu_progress_add_step_full(progress, FWUPD_STATUS_DEVICE_VERIFY, 3, "device-verify-holtek");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 34, "device-write-mouse");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 30, "device-verify-mouse");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 17, "device-write-nordic");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 7, "device-verify-nordic");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 8, "device-write-holtek");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 3, "device-verify-holtek");
 
 	/* mouse */
 	chip = STEELSERIES_SONIC_CHIP_MOUSE;
@@ -1025,10 +1027,10 @@ static void
 fu_steelseries_sonic_set_progress(FuDevice *self, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0); /* detach */
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 92);	/* write */
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 5); /* attach */
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 3);	/* reload */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0, "detach");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 92, "write");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 5, "attach");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 3, "reload");
 }
 
 static void

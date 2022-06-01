@@ -764,8 +764,8 @@ fu_genesys_usbhub_device_dump_firmware(FuDevice *device, FuProgress *progress, G
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_add_step_full(progress, FWUPD_STATUS_DEVICE_BUSY, 1, "detach");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_READ, 99);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1, "detach");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_READ, 99, NULL);
 
 	/* require detach -> attach */
 	locker = fu_device_locker_new_full(device,
@@ -1356,10 +1356,10 @@ fu_genesys_usbhub_device_write_recovery(FuGenesysUsbhubDevice *self,
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
 	if (self->read_first_bank)
-		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_READ, 20);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 30);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 50);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 20);
+		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_READ, 20, NULL);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 30, NULL);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 50, NULL);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 20, NULL);
 
 	/* reuse fw on first bank for GL3523 */
 	if (self->read_first_bank) {
@@ -1443,13 +1443,13 @@ fu_genesys_usbhub_device_write_firmware(FuDevice *device,
 	fu_progress_set_id(progress, G_STRLOC);
 	if (self->write_recovery_bank) {
 		if (self->read_first_bank)
-			fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 120);
+			fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 120, NULL);
 		else
-			fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 100);
+			fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 100, NULL);
 	}
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 30);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 50);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 20);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 30, NULL);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 50, NULL);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 20, NULL);
 
 	/* write fw to recovery bank first? */
 	if (self->write_recovery_bank) {
@@ -1507,15 +1507,15 @@ fu_genesys_usbhub_device_set_progress(FuDevice *device, FuProgress *progress)
 
 	fu_progress_set_id(progress, G_STRLOC);
 	if (self->write_recovery_bank) {
-		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0); /* detach */
-		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 30);	/* write */
-		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0); /* attach */
-		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 70);	/* reload */
+		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0, "detach");
+		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 30, "write");
+		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0, "attach");
+		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 70, "reload");
 	} else {
-		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0); /* detach */
-		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 15);	/* write */
-		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0); /* attach */
-		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 85);	/* reload */
+		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0, "detach");
+		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 15, "write");
+		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0, "attach");
+		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 85, "reload");
 	}
 }
 

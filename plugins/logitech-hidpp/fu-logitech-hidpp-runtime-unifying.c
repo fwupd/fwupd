@@ -157,10 +157,10 @@ static void
 fu_logitech_hidpp_runtime_unifying_set_progress(FuDevice *self, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0); /* detach */
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 70);	/* write */
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 4); /* attach */
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 27);	/* reload */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0, "detach");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 70, "write");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 4, "attach");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 27, "reload");
 }
 
 static void

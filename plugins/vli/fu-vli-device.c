@@ -289,8 +289,8 @@ fu_vli_device_spi_write(FuVliDevice *self,
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 99);
-	fu_progress_add_step_full(progress, FWUPD_STATUS_DEVICE_WRITE, 1, "device-write-chk0");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 99, NULL);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 1, "device-write-chk0");
 
 	/* write SPI data, then CRC bytes last */
 	g_debug("writing 0x%x bytes @0x%x", (guint)bufsz, address);
@@ -337,8 +337,8 @@ fu_vli_device_spi_erase_all(FuVliDevice *self, FuProgress *progress, GError **er
 {
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 99);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 1);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 99, NULL);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 1, NULL);
 
 	if (!fu_vli_device_spi_write_enable(self, error))
 		return FALSE;

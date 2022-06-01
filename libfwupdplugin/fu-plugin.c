@@ -671,8 +671,8 @@ fu_plugin_device_write_firmware(FuPlugin *self,
 		/* progress */
 		fu_progress_set_id(progress, G_STRLOC);
 		fu_progress_add_flag(progress, FU_PROGRESS_FLAG_NO_PROFILE);
-		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_READ, 25);
-		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 75);
+		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_READ, 25, NULL);
+		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 75, NULL);
 
 		fw_old = fu_device_dump_firmware(device, fu_progress_get_child(progress), error);
 		if (fw_old == NULL) {

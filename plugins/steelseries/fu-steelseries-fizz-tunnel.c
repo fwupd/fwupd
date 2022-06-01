@@ -109,9 +109,9 @@ fu_steelseries_fizz_tunnel_attach(FuDevice *device, FuProgress *progress, GError
 	g_autoptr(GError) error_local = NULL;
 
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0);
-	fu_progress_add_step_full(progress, FWUPD_STATUS_DEVICE_RESTART, 67, "sleep");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 33);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0, NULL);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 67, "sleep");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 33, NULL);
 
 	if (!fu_steelseries_fizz_reset(parent,
 				       TRUE,
@@ -310,7 +310,7 @@ fu_steelseries_fizz_tunnel_write_firmware(FuDevice *device,
 	guint8 id = STEELSERIES_FIZZ_MOUSE_FILESYSTEM_BACKUP_APP_ID;
 
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 100);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 100, NULL);
 
 	if (!fu_steelseries_fizz_write_firmware_fs(parent,
 						   TRUE,
@@ -336,7 +336,7 @@ fu_steelseries_fizz_tunnel_read_firmware(FuDevice *device, FuProgress *progress,
 	g_autoptr(FuFirmware) firmware = NULL;
 
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_READ, 100);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_READ, 100, NULL);
 
 	firmware = fu_steelseries_fizz_read_firmware_fs(parent,
 							TRUE,
@@ -357,10 +357,10 @@ static void
 fu_steelseries_fizz_tunnel_set_progress(FuDevice *self, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0); /* detach */
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 94);	/* write */
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 6); /* attach */
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 0);	/* reload */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0, "detach");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 94, "write");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 6, "attach");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 0, "reload");
 }
 
 static void

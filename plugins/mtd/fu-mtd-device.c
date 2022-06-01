@@ -298,8 +298,8 @@ fu_mtd_device_write_verify(FuMtdDevice *self, GBytes *fw, FuProgress *progress, 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 50);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 50);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 50, NULL);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 50, NULL);
 
 	/* write */
 	if (!fu_mtd_device_write(self, chunks, fu_progress_get_child(progress), error))
@@ -380,8 +380,8 @@ fu_mtd_device_write_firmware(FuDevice *device,
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 50);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 50);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 50, NULL);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 50, NULL);
 
 	/* erase */
 	if (!fu_mtd_device_erase(self, fw, fu_progress_get_child(progress), error))
