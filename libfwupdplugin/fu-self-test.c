@@ -225,7 +225,7 @@ fu_common_version_guess_format_func(void)
 static void
 fu_device_version_format_func(void)
 {
-	g_autoptr(FuDevice) device = fu_device_new();
+	g_autoptr(FuDevice) device = fu_device_new(NULL);
 	fu_device_add_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_ENSURE_SEMVER);
 	fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_set_version(device, "Ver1.2.3 RELEASE");
@@ -236,7 +236,7 @@ static void
 fu_device_open_refcount_func(void)
 {
 	gboolean ret;
-	g_autoptr(FuDevice) device = fu_device_new();
+	g_autoptr(FuDevice) device = fu_device_new(NULL);
 	g_autoptr(GError) error = NULL;
 	fu_device_set_id(device, "test_device");
 	ret = fu_device_open(device, &error);
@@ -259,8 +259,8 @@ fu_device_open_refcount_func(void)
 static void
 fu_device_name_func(void)
 {
-	g_autoptr(FuDevice) device1 = fu_device_new();
-	g_autoptr(FuDevice) device2 = fu_device_new();
+	g_autoptr(FuDevice) device1 = fu_device_new(NULL);
+	g_autoptr(FuDevice) device2 = fu_device_new(NULL);
 
 	/* vendor then name */
 	fu_device_set_vendor(device1, "  Hughski  ");
@@ -318,7 +318,7 @@ fu_device_cfi_device_func(void)
 static void
 fu_device_metadata_func(void)
 {
-	g_autoptr(FuDevice) device = fu_device_new();
+	g_autoptr(FuDevice) device = fu_device_new(NULL);
 
 	/* string */
 	fu_device_set_metadata(device, "foo", "bar");
@@ -688,8 +688,8 @@ _plugin_device_added_cb(FuPlugin *plugin, FuDevice *device, gpointer user_data)
 static void
 fu_plugin_devices_func(void)
 {
-	g_autoptr(FuDevice) device = fu_device_new();
-	g_autoptr(FuDevice) child = fu_device_new();
+	g_autoptr(FuDevice) device = fu_device_new(NULL);
+	g_autoptr(FuDevice) child = fu_device_new(NULL);
 	g_autoptr(FuPlugin) plugin = fu_plugin_new(NULL);
 	GPtrArray *devices;
 
@@ -718,9 +718,9 @@ fu_plugin_devices_func(void)
 static void
 fu_plugin_device_inhibit_children_func(void)
 {
-	g_autoptr(FuDevice) parent = fu_device_new();
-	g_autoptr(FuDevice) child1 = fu_device_new();
-	g_autoptr(FuDevice) child2 = fu_device_new();
+	g_autoptr(FuDevice) parent = fu_device_new(NULL);
+	g_autoptr(FuDevice) child1 = fu_device_new(NULL);
+	g_autoptr(FuDevice) child2 = fu_device_new(NULL);
 
 	fu_device_set_id(parent, "testdev");
 	fu_device_set_name(parent, "testdev");
@@ -770,7 +770,7 @@ fu_plugin_delay_func(void)
 			 &device_tmp);
 
 	/* add device straight away */
-	device = fu_device_new();
+	device = fu_device_new(NULL);
 	fu_device_set_id(device, "testdev");
 	fu_plugin_device_add(plugin, device);
 	g_assert_nonnull(device_tmp);
@@ -860,7 +860,7 @@ fu_plugin_quirks_device_func(void)
 	FuDevice *device_tmp;
 	GPtrArray *children;
 	gboolean ret;
-	g_autoptr(FuDevice) device = fu_device_new();
+	g_autoptr(FuDevice) device = fu_device_new(NULL);
 	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(GError) error = NULL;
 
@@ -1008,7 +1008,7 @@ fu_device_locker_fail_func(void)
 {
 	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(GError) error = NULL;
-	g_autoptr(FuDevice) device = fu_device_new();
+	g_autoptr(FuDevice) device = fu_device_new(NULL);
 	locker = fu_device_locker_new_full(device,
 					   (FuDeviceLockerFunc)_fail_open_cb,
 					   (FuDeviceLockerFunc)_fail_close_cb,
@@ -1680,7 +1680,7 @@ fu_device_poll_cb(FuDevice *device, GError **error)
 static void
 fu_device_poll_func(void)
 {
-	g_autoptr(FuDevice) device = fu_device_new();
+	g_autoptr(FuDevice) device = fu_device_new(NULL);
 	FuDeviceClass *klass = FU_DEVICE_GET_CLASS(device);
 	guint cnt;
 
@@ -1703,7 +1703,7 @@ fu_device_poll_func(void)
 static void
 fu_device_func(void)
 {
-	g_autoptr(FuDevice) device = fu_device_new();
+	g_autoptr(FuDevice) device = fu_device_new(NULL);
 	g_autoptr(GPtrArray) possible_plugins = NULL;
 
 	/* only add one plugin name of the same type */
@@ -1718,7 +1718,7 @@ fu_device_instance_ids_func(void)
 {
 	gboolean ret;
 	g_autoptr(FuContext) ctx = fu_context_new();
-	g_autoptr(FuDevice) device = fu_device_new_with_context(ctx);
+	g_autoptr(FuDevice) device = fu_device_new(ctx);
 	g_autoptr(GError) error = NULL;
 
 	/* do not save silo */
@@ -1746,10 +1746,10 @@ fu_device_instance_ids_func(void)
 static void
 fu_device_composite_id_func(void)
 {
-	g_autoptr(FuDevice) dev1 = fu_device_new();
-	g_autoptr(FuDevice) dev2 = fu_device_new();
-	g_autoptr(FuDevice) dev3 = fu_device_new();
-	g_autoptr(FuDevice) dev4 = fu_device_new();
+	g_autoptr(FuDevice) dev1 = fu_device_new(NULL);
+	g_autoptr(FuDevice) dev2 = fu_device_new(NULL);
+	g_autoptr(FuDevice) dev3 = fu_device_new(NULL);
+	g_autoptr(FuDevice) dev4 = fu_device_new(NULL);
 
 	/* single device */
 	fu_device_set_id(dev1, "dev1");
@@ -1798,7 +1798,7 @@ fu_device_composite_id_func(void)
 static void
 fu_device_inhibit_func(void)
 {
-	g_autoptr(FuDevice) device = fu_device_new();
+	g_autoptr(FuDevice) device = fu_device_new(NULL);
 
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_set_battery_threshold(device, 25);
@@ -1835,7 +1835,7 @@ fu_device_inhibit_func(void)
 static void
 fu_device_inhibit_updateable_func(void)
 {
-	g_autoptr(FuDevice) device = fu_device_new();
+	g_autoptr(FuDevice) device = fu_device_new(NULL);
 
 	g_assert_false(fu_device_has_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE));
 	g_assert_false(fu_device_has_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN));
@@ -1862,7 +1862,7 @@ static void
 fu_device_private_flags_func(void)
 {
 	g_autofree gchar *tmp = NULL;
-	g_autoptr(FuDevice) device = fu_device_new();
+	g_autoptr(FuDevice) device = fu_device_new(NULL);
 
 	fu_device_register_private_flag(device, TEST_FLAG_FOO, "foo");
 	fu_device_register_private_flag(device, TEST_FLAG_BAR, "bar");
@@ -1890,7 +1890,7 @@ fu_device_private_flags_func(void)
 static void
 fu_device_flags_func(void)
 {
-	g_autoptr(FuDevice) device = fu_device_new();
+	g_autoptr(FuDevice) device = fu_device_new(NULL);
 
 	/* bitfield */
 	for (guint64 i = 1; i < FU_DEVICE_INTERNAL_FLAG_UNKNOWN; i *= 2) {
@@ -1930,8 +1930,8 @@ fu_device_children_func(void)
 {
 	gboolean ret;
 	g_autoptr(FuContext) ctx = fu_context_new();
-	g_autoptr(FuDevice) child = fu_device_new();
-	g_autoptr(FuDevice) parent = fu_device_new_with_context(ctx);
+	g_autoptr(FuDevice) child = fu_device_new(NULL);
+	g_autoptr(FuDevice) parent = fu_device_new(ctx);
 	g_autoptr(GError) error = NULL;
 
 	/* do not save silo */
@@ -1961,11 +1961,11 @@ fu_device_children_func(void)
 static void
 fu_device_parent_func(void)
 {
-	g_autoptr(FuDevice) child = fu_device_new();
+	g_autoptr(FuDevice) child = fu_device_new(NULL);
 	g_autoptr(FuDevice) child_root = NULL;
-	g_autoptr(FuDevice) grandparent = fu_device_new();
+	g_autoptr(FuDevice) grandparent = fu_device_new(NULL);
 	g_autoptr(FuDevice) grandparent_root = NULL;
-	g_autoptr(FuDevice) parent = fu_device_new();
+	g_autoptr(FuDevice) parent = fu_device_new(NULL);
 	g_autoptr(FuDevice) parent_root = NULL;
 
 	fu_device_set_physical_id(child, "dummy");
@@ -1993,8 +1993,8 @@ fu_device_parent_func(void)
 static void
 fu_device_incorporate_func(void)
 {
-	g_autoptr(FuDevice) device = fu_device_new();
-	g_autoptr(FuDevice) donor = fu_device_new();
+	g_autoptr(FuDevice) device = fu_device_new(NULL);
+	g_autoptr(FuDevice) donor = fu_device_new(NULL);
 
 	/* set up donor device */
 	fu_device_set_alternate_id(donor, "alt-id");
@@ -2031,8 +2031,8 @@ fu_backend_func(void)
 	FuDevice *dev;
 	gboolean ret;
 	g_autoptr(FuBackend) backend = g_object_new(FU_TYPE_BACKEND, NULL);
-	g_autoptr(FuDevice) dev1 = fu_device_new();
-	g_autoptr(FuDevice) dev2 = fu_device_new();
+	g_autoptr(FuDevice) dev1 = fu_device_new(NULL);
+	g_autoptr(FuDevice) dev2 = fu_device_new(NULL);
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 
@@ -3274,7 +3274,7 @@ static void
 fu_device_retry_success_func(void)
 {
 	gboolean ret;
-	g_autoptr(FuDevice) device = fu_device_new();
+	g_autoptr(FuDevice) device = fu_device_new(NULL);
 	g_autoptr(GError) error = NULL;
 	FuDeviceRetryHelper helper = {
 	    .cnt_success = 0,
@@ -3295,7 +3295,7 @@ static void
 fu_device_retry_failed_func(void)
 {
 	gboolean ret;
-	g_autoptr(FuDevice) device = fu_device_new();
+	g_autoptr(FuDevice) device = fu_device_new(NULL);
 	g_autoptr(GError) error = NULL;
 	FuDeviceRetryHelper helper = {
 	    .cnt_success = 0,
@@ -3316,7 +3316,7 @@ static void
 fu_device_retry_hardware_func(void)
 {
 	gboolean ret;
-	g_autoptr(FuDevice) device = fu_device_new();
+	g_autoptr(FuDevice) device = fu_device_new(NULL);
 	g_autoptr(GError) error = NULL;
 	FuDeviceRetryHelper helper = {
 	    .cnt_success = 0,

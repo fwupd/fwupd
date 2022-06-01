@@ -50,3 +50,5 @@ Remember: Plugins should be upstream!
 * `fu_udev_device_ioctl_full()`: Use `fu_udev_device_ioctl()` instead -- as the latter now always specifies the timeout.
 * `fu_udev_device_new_full()`: Use `fu_udev_device_new()` instead -- as the latter always specifies the context.
 * `fu_usb_device_new_full()`: Use `fu_usb_device_new()` instead -- as the latter always specifies the context.
+* `fu_device_new_with_context()`: Use `fu_device_new()` instead -- as the latter always specifies the context.
+* `fu_plugin_has_custom_flag()`: Use `fu_plugin_has_private_flag()` instead.

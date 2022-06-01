@@ -157,7 +157,7 @@ fu_plugin_dell_esrt_unlock(FuPlugin *plugin, FuDevice *device, GError **error)
 static gboolean
 fu_plugin_dell_esrt_coldplug(FuPlugin *plugin, GError **error)
 {
-	g_autoptr(FuDevice) dev = fu_device_new();
+	g_autoptr(FuDevice) dev = fu_device_new(NULL);
 
 	/* create a dummy device so we can unlock the feature */
 	fu_device_set_id(dev, "UEFI-dummy");

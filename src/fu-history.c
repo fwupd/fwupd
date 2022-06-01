@@ -55,7 +55,7 @@ fu_history_device_from_stmt(sqlite3_stmt *stmt)
 	FwupdRelease *release;
 
 	/* create new result */
-	device = fu_device_new();
+	device = fu_device_new(NULL);
 	release = fu_device_get_release_default(device);
 
 	/* device_id */
