@@ -2033,6 +2033,7 @@ fu_backend_func(void)
 	g_autoptr(FuBackend) backend = g_object_new(FU_TYPE_BACKEND, NULL);
 	g_autoptr(FuDevice) dev1 = fu_device_new(NULL);
 	g_autoptr(FuDevice) dev2 = fu_device_new(NULL);
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 
@@ -2041,10 +2042,10 @@ fu_backend_func(void)
 	g_assert_true(fu_backend_get_enabled(backend));
 
 	/* load */
-	ret = fu_backend_setup(backend, &error);
+	ret = fu_backend_setup(backend, progress, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	ret = fu_backend_coldplug(backend, &error);
+	ret = fu_backend_coldplug(backend, progress, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -3805,6 +3806,7 @@ fu_progress_child_func(void)
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 
 	/* reset */
+	fu_progress_set_profile(progress, TRUE);
 	fu_progress_set_steps(progress, 2);
 	g_signal_connect(FU_PROGRESS(progress),
 			 "percentage-changed",

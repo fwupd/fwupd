@@ -17,7 +17,7 @@ fu_plugin_uefi_recovery_init(FuPlugin *plugin)
 }
 
 static gboolean
-fu_plugin_uefi_recovery_startup(FuPlugin *plugin, GError **error)
+fu_plugin_uefi_recovery_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 {
 	/* are the EFI dirs set up so we can update each device */
 	if (!fu_efivar_supported(error))
@@ -26,7 +26,7 @@ fu_plugin_uefi_recovery_startup(FuPlugin *plugin, GError **error)
 }
 
 static gboolean
-fu_plugin_uefi_recovery_coldplug(FuPlugin *plugin, GError **error)
+fu_plugin_uefi_recovery_coldplug(FuPlugin *plugin, FuProgress *progress, GError **error)
 {
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	GPtrArray *hwids = fu_context_get_hwid_guids(ctx);

@@ -239,7 +239,7 @@ fu_plugin_flashrom_device_registered(FuPlugin *plugin, FuDevice *device)
 }
 
 static gboolean
-fu_plugin_flashrom_coldplug(FuPlugin *plugin, GError **error)
+fu_plugin_flashrom_coldplug(FuPlugin *plugin, FuProgress *progress, GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data(plugin);
 	g_autoptr(FuDevice) device =
@@ -267,15 +267,22 @@ fu_plugin_flashrom_find_guid(FuPlugin *plugin, GError **error)
 }
 
 static gboolean
-fu_plugin_flashrom_startup(FuPlugin *plugin, GError **error)
+fu_plugin_flashrom_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 {
 	gint rc;
 	const gchar *guid;
 	FuPluginData *data = fu_plugin_get_data(plugin);
 
+	/* progress */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 5, "find-guid");
+	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 90, "init");
+	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 5, "probe");
+
 	guid = fu_plugin_flashrom_find_guid(plugin, error);
 	if (guid == NULL)
 		return FALSE;
+	fu_progress_step_done(progress);
 
 	data->guid = g_strdup(guid);
 
@@ -287,6 +294,7 @@ fu_plugin_flashrom_startup(FuPlugin *plugin, GError **error)
 		return FALSE;
 	}
 	flashrom_set_log_callback(fu_plugin_flashrom_debug_cb);
+	fu_progress_step_done(progress);
 
 	if (flashrom_programmer_init(&data->flashprog, "internal", NULL)) {
 		g_set_error_literal(error,
@@ -318,6 +326,7 @@ fu_plugin_flashrom_startup(FuPlugin *plugin, GError **error)
 				    "flash probe failed: unknown error");
 		return FALSE;
 	}
+	fu_progress_step_done(progress);
 
 	return TRUE;
 }

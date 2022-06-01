@@ -180,6 +180,7 @@ fu_uefi_plugin_func(void)
 	gboolean ret;
 	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuBackend) backend = fu_uefi_backend_new(ctx);
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 
@@ -194,7 +195,7 @@ fu_uefi_plugin_func(void)
 	g_assert_true(ret);
 
 	/* add each device */
-	ret = fu_backend_coldplug(backend, &error);
+	ret = fu_backend_coldplug(backend, progress, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	devices = fu_backend_get_devices(backend);
@@ -243,6 +244,7 @@ fu_uefi_update_info_func(void)
 	gboolean ret;
 	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuBackend) backend = fu_uefi_backend_new(ctx);
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(FuUefiUpdateInfo) info = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
@@ -253,7 +255,7 @@ fu_uefi_update_info_func(void)
 #endif
 
 	/* add each device */
-	ret = fu_backend_coldplug(backend, &error);
+	ret = fu_backend_coldplug(backend, progress, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 

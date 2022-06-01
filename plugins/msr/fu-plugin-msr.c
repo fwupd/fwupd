@@ -59,7 +59,7 @@ fu_plugin_msr_init(FuPlugin *plugin)
 }
 
 static gboolean
-fu_plugin_msr_startup(FuPlugin *plugin, GError **error)
+fu_plugin_msr_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 {
 	FuPluginData *priv = fu_plugin_get_data(plugin);
 	guint eax = 0;

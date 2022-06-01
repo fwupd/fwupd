@@ -418,7 +418,7 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC(mei_context, mei_context_free)
 #pragma clang diagnostic pop
 
 static FuDevice *
-fu_plugin_amt_create_device(FuPlugin *plugin, GError **error)
+fu_plugin_amt_create_device(FuPlugin *plugin, FuProgress *progress, GError **error)
 {
 	guint8 state;
 	struct amt_code_versions ver;
@@ -433,9 +433,17 @@ fu_plugin_amt_create_device(FuPlugin *plugin, GError **error)
 	const uuid_le MEI_IAMTHIF =
 	    UUID_LE(0x12f80028, 0xb4b7, 0x4b2d, 0xac, 0xa8, 0x46, 0xe0, 0xff, 0x65, 0x81, 0x4c);
 
+	/* progress */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 50, "create-context");
+	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 33, "get-version");
+	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "verify-code-version");
+	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 17, "add-device");
+
 	/* create context */
 	if (!mei_context_new(ctx, &MEI_IAMTHIF, 0, error))
 		return NULL;
+	fu_progress_step_done(progress);
 
 	/* check version */
 	if (!amt_host_if_call(ctx,
@@ -449,11 +457,13 @@ fu_plugin_amt_create_device(FuPlugin *plugin, GError **error)
 		g_prefix_error(error, "Failed to check version: ");
 		return NULL;
 	}
+	fu_progress_step_done(progress);
 	if (!amt_verify_code_versions(response, error)) {
 		g_prefix_error(error, "failed to verify code versions: ");
 		return NULL;
 	}
 	memcpy(&ver, response->data, sizeof(struct amt_code_versions));
+	fu_progress_step_done(progress);
 
 	dev = fu_device_new(fu_plugin_get_context(plugin));
 	fu_device_set_id(dev, "/dev/mei0");
@@ -510,15 +520,16 @@ fu_plugin_amt_create_device(FuPlugin *plugin, GError **error)
 		fu_device_set_version(dev, version_fw->str);
 	if (version_bl->len > 0)
 		fu_device_set_version_bootloader(dev, version_bl->str);
+	fu_progress_step_done(progress);
 
 	return g_steal_pointer(&dev);
 }
 
 static gboolean
-fu_plugin_amt_coldplug(FuPlugin *plugin, GError **error)
+fu_plugin_amt_coldplug(FuPlugin *plugin, FuProgress *progress, GError **error)
 {
 	g_autoptr(FuDevice) dev = NULL;
-	dev = fu_plugin_amt_create_device(plugin, error);
+	dev = fu_plugin_amt_create_device(plugin, progress, error);
 	if (dev == NULL)
 		return FALSE;
 	fu_plugin_device_add(plugin, dev);

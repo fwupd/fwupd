@@ -277,6 +277,7 @@ main(int argc, char *argv[])
 	if (action_list || action_supported || action_info) {
 		g_autoptr(FuContext) ctx = fu_context_new();
 		g_autoptr(FuBackend) backend = fu_uefi_backend_new(ctx);
+		g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 		g_autoptr(GError) error_local = NULL;
 
 		/* load SMBIOS */
@@ -286,7 +287,7 @@ main(int argc, char *argv[])
 		}
 
 		/* add each device */
-		if (!fu_backend_coldplug(backend, &error_local)) {
+		if (!fu_backend_coldplug(backend, progress, &error_local)) {
 			g_printerr("failed: %s\n", error_local->message);
 			return EXIT_FAILURE;
 		}

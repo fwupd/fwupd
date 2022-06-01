@@ -901,7 +901,7 @@ fu_plugin_dell_destroy(FuPlugin *plugin)
 }
 
 static gboolean
-fu_plugin_dell_startup(FuPlugin *plugin, GError **error)
+fu_plugin_dell_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data(plugin);
 	g_autofree gchar *sysfsfwdir = NULL;
@@ -951,7 +951,7 @@ fu_plugin_dell_startup(FuPlugin *plugin, GError **error)
 }
 
 static gboolean
-fu_plugin_dell_coldplug(FuPlugin *plugin, GError **error)
+fu_plugin_dell_coldplug(FuPlugin *plugin, FuProgress *progress, GError **error)
 {
 	/* look for switchable TPM */
 	if (!fu_plugin_dell_detect_tpm(plugin, error))

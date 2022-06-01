@@ -63,7 +63,7 @@ fu_plugin_test_load_xml(FuPlugin *plugin, const gchar *xml, GError **error)
 }
 
 static gboolean
-fu_plugin_test_startup(FuPlugin *plugin, GError **error)
+fu_plugin_test_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 {
 	const gchar *xml = g_getenv("FWUPD_TEST_PLUGIN_XML");
 	if (xml != NULL) {
@@ -74,7 +74,7 @@ fu_plugin_test_startup(FuPlugin *plugin, GError **error)
 }
 
 static gboolean
-fu_plugin_test_coldplug(FuPlugin *plugin, GError **error)
+fu_plugin_test_coldplug(FuPlugin *plugin, FuProgress *progress, GError **error)
 {
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	g_autoptr(FuDevice) device = NULL;

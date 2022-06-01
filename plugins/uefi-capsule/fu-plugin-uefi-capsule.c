@@ -614,7 +614,7 @@ fu_plugin_uefi_capsule_test_secure_boot(FuPlugin *plugin)
 }
 
 static gboolean
-fu_plugin_uefi_capsule_startup(FuPlugin *plugin, GError **error)
+fu_plugin_uefi_capsule_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 {
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	FuPluginData *data = fu_plugin_get_data(plugin);
@@ -642,7 +642,7 @@ fu_plugin_uefi_capsule_startup(FuPlugin *plugin, GError **error)
 	}
 
 	/* check we can use this backend */
-	if (!fu_backend_setup(data->backend, &error_local)) {
+	if (!fu_backend_setup(data->backend, progress, &error_local)) {
 		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_WRITE)) {
 			fu_plugin_add_flag(plugin, FWUPD_PLUGIN_FLAG_EFIVAR_NOT_MOUNTED);
 			fu_plugin_add_flag(plugin, FWUPD_PLUGIN_FLAG_CLEAR_UPDATABLE);
@@ -806,7 +806,7 @@ fu_plugin_uefi_capsule_check_cod_support(GError **error)
 }
 
 static gboolean
-fu_plugin_uefi_capsule_coldplug(FuPlugin *plugin, GError **error)
+fu_plugin_uefi_capsule_coldplug(FuPlugin *plugin, FuProgress *progress, GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data(plugin);
 	const gchar *str;
@@ -815,6 +815,15 @@ fu_plugin_uefi_capsule_coldplug(FuPlugin *plugin, GError **error)
 	g_autoptr(GError) error_fde = NULL;
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
+
+	/* progress */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 63, "find-esp");
+	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "check-cod");
+	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 8, "check-bitlocker");
+	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "coldplug");
+	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 26, "add-devices");
+	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "setup-bgrt");
 
 	if (data->esp == NULL) {
 		data->esp = fu_common_get_esp_default(&error_udisks2);
@@ -825,6 +834,7 @@ fu_plugin_uefi_capsule_coldplug(FuPlugin *plugin, GError **error)
 			g_warning("cannot find default ESP: %s", error_udisks2->message);
 		}
 	}
+	fu_progress_step_done(progress);
 
 	/* firmware may lie */
 	if (!fu_plugin_get_config_value_boolean(plugin, "DisableCapsuleUpdateOnDisk")) {
@@ -836,16 +846,19 @@ fu_plugin_uefi_capsule_coldplug(FuPlugin *plugin, GError **error)
 							 FU_TYPE_UEFI_COD_DEVICE);
 		}
 	}
+	fu_progress_step_done(progress);
 
 	/*  warn the user that BitLocker might ask for recovery key after fw update */
 	if (!fu_common_check_full_disk_encryption(&error_fde)) {
 		g_debug("FDE in use, set flag: %s", error_fde->message);
 		has_fde = TRUE;
 	}
+	fu_progress_step_done(progress);
 
 	/* add each device */
-	if (!fu_backend_coldplug(data->backend, error))
+	if (!fu_backend_coldplug(data->backend, fu_progress_get_child(progress), error))
 		return FALSE;
+	fu_progress_step_done(progress);
 	devices = fu_backend_get_devices(data->backend);
 	for (guint i = 0; i < devices->len; i++) {
 		FuUefiDevice *dev = g_ptr_array_index(devices, i);
@@ -880,6 +893,7 @@ fu_plugin_uefi_capsule_coldplug(FuPlugin *plugin, GError **error)
 
 		fu_plugin_device_add(plugin, FU_DEVICE(dev));
 	}
+	fu_progress_step_done(progress);
 
 	/* for debugging problems later */
 	fu_plugin_uefi_capsule_test_secure_boot(plugin);
@@ -888,6 +902,7 @@ fu_plugin_uefi_capsule_coldplug(FuPlugin *plugin, GError **error)
 	str = fu_uefi_bgrt_get_supported(data->bgrt) ? "Enabled" : "Disabled";
 	g_debug("UX Capsule support : %s", str);
 	fu_plugin_add_report_metadata(plugin, "UEFIUXCapsule", str);
+	fu_progress_step_done(progress);
 
 	return TRUE;
 }

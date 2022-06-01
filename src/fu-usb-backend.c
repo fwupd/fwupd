@@ -77,7 +77,7 @@ fu_usb_backend_context_finalized_cb(gpointer data, GObject *where_the_object_was
 }
 
 static gboolean
-fu_usb_backend_setup(FuBackend *backend, GError **error)
+fu_usb_backend_setup(FuBackend *backend, FuProgress *progress, GError **error)
 {
 	FuUsbBackend *self = FU_USB_BACKEND(backend);
 
@@ -100,7 +100,7 @@ fu_usb_backend_setup(FuBackend *backend, GError **error)
 }
 
 static gboolean
-fu_usb_backend_coldplug(FuBackend *backend, GError **error)
+fu_usb_backend_coldplug(FuBackend *backend, FuProgress *progress, GError **error)
 {
 	FuUsbBackend *self = FU_USB_BACKEND(backend);
 	g_usb_context_enumerate(self->usb_ctx);

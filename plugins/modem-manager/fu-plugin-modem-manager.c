@@ -368,7 +368,7 @@ fu_plugin_mm_name_owner_updated(FuPlugin *plugin)
 }
 
 static gboolean
-fu_plugin_mm_coldplug(FuPlugin *plugin, GError **error)
+fu_plugin_mm_coldplug(FuPlugin *plugin, FuProgress *progress, GError **error)
 {
 	FuPluginData *priv = fu_plugin_get_data(plugin);
 	g_signal_connect_swapped(MM_MANAGER(priv->manager),
@@ -395,7 +395,7 @@ fu_plugin_mm_modem_power_changed_cb(GFileMonitor *monitor,
 }
 
 static gboolean
-fu_plugin_mm_startup(FuPlugin *plugin, GError **error)
+fu_plugin_mm_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 {
 	FuPluginData *priv = fu_plugin_get_data(plugin);
 	g_autoptr(GDBusConnection) connection = NULL;

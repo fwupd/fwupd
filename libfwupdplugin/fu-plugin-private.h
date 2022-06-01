@@ -37,9 +37,13 @@ fu_plugin_open(FuPlugin *self, const gchar *filename, GError **error) G_GNUC_WAR
 void
 fu_plugin_runner_init(FuPlugin *self);
 gboolean
-fu_plugin_runner_startup(FuPlugin *self, GError **error) G_GNUC_WARN_UNUSED_RESULT;
+fu_plugin_runner_startup(FuPlugin *self,
+			 FuProgress *progress,
+			 GError **error) G_GNUC_WARN_UNUSED_RESULT;
 gboolean
-fu_plugin_runner_coldplug(FuPlugin *self, GError **error) G_GNUC_WARN_UNUSED_RESULT;
+fu_plugin_runner_coldplug(FuPlugin *self,
+			  FuProgress *progress,
+			  GError **error) G_GNUC_WARN_UNUSED_RESULT;
 gboolean
 fu_plugin_runner_prepare(FuPlugin *self,
 			 FuDevice *device,

@@ -25,6 +25,7 @@ fu_tpm_device_1_2_func(void)
 	g_autofree gchar *pluginfn = NULL;
 	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuPlugin) plugin = fu_plugin_new(ctx);
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
 	g_autoptr(FwupdSecurityAttr) attr0 = NULL;
 	g_autoptr(FwupdSecurityAttr) attr1 = NULL;
@@ -42,7 +43,7 @@ fu_tpm_device_1_2_func(void)
 	ret = fu_plugin_open(plugin, pluginfn, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	ret = fu_plugin_runner_startup(plugin, &error);
+	ret = fu_plugin_runner_startup(plugin, progress, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -195,6 +196,7 @@ fu_tpm_empty_pcr_func(void)
 	g_auto(GStrv) environ_old = NULL;
 	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuPlugin) plugin = fu_plugin_new(ctx);
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
 	g_autoptr(GError) error = NULL;
@@ -214,7 +216,7 @@ fu_tpm_empty_pcr_func(void)
 	ret = fu_plugin_open(plugin, pluginfn, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	ret = fu_plugin_runner_startup(plugin, &error);
+	ret = fu_plugin_runner_startup(plugin, progress, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 

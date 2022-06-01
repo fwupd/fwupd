@@ -53,7 +53,7 @@ fu_engine_add_plugin_filter(FuEngine *self, const gchar *plugin_glob);
 void
 fu_engine_idle_reset(FuEngine *self);
 gboolean
-fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, GError **error);
+fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GError **error);
 gboolean
 fu_engine_get_tainted(FuEngine *self);
 gboolean

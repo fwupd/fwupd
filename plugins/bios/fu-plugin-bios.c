@@ -9,7 +9,7 @@
 #include <fwupdplugin.h>
 
 static gboolean
-fu_plugin_bios_startup(FuPlugin *plugin, GError **error)
+fu_plugin_bios_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 {
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	const gchar *vendor;
@@ -24,7 +24,7 @@ fu_plugin_bios_startup(FuPlugin *plugin, GError **error)
 }
 
 static gboolean
-fu_plugin_bios_coldplug(FuPlugin *plugin, GError **error)
+fu_plugin_bios_coldplug(FuPlugin *plugin, FuProgress *progress, GError **error)
 {
 	g_autofree gchar *sysfsfwdir = NULL;
 	g_autofree gchar *esrt_path = NULL;

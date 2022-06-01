@@ -96,7 +96,7 @@ fu_plugin_superio_load(FuContext *ctx)
 }
 
 static gboolean
-fu_plugin_superio_coldplug(FuPlugin *plugin, GError **error)
+fu_plugin_superio_coldplug(FuPlugin *plugin, FuProgress *progress, GError **error)
 {
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	GPtrArray *hwids;

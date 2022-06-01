@@ -124,7 +124,7 @@ fu_uefi_backend_linux_check_efivarfs(FuUefiBackendLinux *self, GError **error)
 }
 
 static gboolean
-fu_uefi_backend_linux_coldplug(FuBackend *backend, GError **error)
+fu_uefi_backend_linux_coldplug(FuBackend *backend, FuProgress *progress, GError **error)
 {
 	FuUefiBackendLinux *self = FU_UEFI_BACKEND_LINUX(backend);
 	const gchar *fn;
@@ -199,7 +199,7 @@ fu_uefi_backend_linux_check_smbios_enabled(FuContext *ctx, GError **error)
 }
 
 static gboolean
-fu_uefi_backend_linux_setup(FuBackend *backend, GError **error)
+fu_uefi_backend_linux_setup(FuBackend *backend, FuProgress *progress, GError **error)
 {
 	g_autoptr(GError) error_local = NULL;
 

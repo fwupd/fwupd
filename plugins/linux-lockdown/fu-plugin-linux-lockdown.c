@@ -94,7 +94,7 @@ fu_plugin_linux_lockdown_changed_cb(GFileMonitor *monitor,
 }
 
 static gboolean
-fu_plugin_linux_lockdown_startup(FuPlugin *plugin, GError **error)
+fu_plugin_linux_lockdown_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data(plugin);
 	g_autofree gchar *path = NULL;

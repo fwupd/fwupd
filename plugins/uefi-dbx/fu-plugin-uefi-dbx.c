@@ -18,14 +18,24 @@ fu_plugin_uefi_dbx_init(FuPlugin *plugin)
 }
 
 static gboolean
-fu_plugin_uefi_dbx_coldplug(FuPlugin *plugin, GError **error)
+fu_plugin_uefi_dbx_coldplug(FuPlugin *plugin, FuProgress *progress, GError **error)
 {
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	g_autoptr(FuUefiDbxDevice) device = fu_uefi_dbx_device_new(ctx);
+
+	/* progress */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 99, "probe");
+	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "setup");
+
 	if (!fu_device_probe(FU_DEVICE(device), error))
 		return FALSE;
+	fu_progress_step_done(progress);
+
 	if (!fu_device_setup(FU_DEVICE(device), error))
 		return FALSE;
+	fu_progress_step_done(progress);
+
 	if (fu_context_has_hwid_flag(fu_plugin_get_context(plugin), "no-dbx-updates")) {
 		fu_device_inhibit(FU_DEVICE(device),
 				  "no-dbx",

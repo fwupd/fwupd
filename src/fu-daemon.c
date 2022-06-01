@@ -2124,9 +2124,20 @@ gboolean
 fu_daemon_setup(FuDaemon *self, const gchar *socket_address, GError **error)
 {
 	const gchar *machine_kind = g_getenv("FWUPD_MACHINE_KIND");
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 
 	g_return_val_if_fail(FU_IS_DAEMON(self), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	/* progress */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_set_profile(progress, g_getenv("FWUPD_VERBOSE") != NULL);
+	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 99, "load-engine");
+	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "load-introspection");
+#ifdef HAVE_POLKIT
+	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "load-authority");
+#endif
+	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "own-name");
 
 	/* allow overriding for development */
 	if (machine_kind != NULL) {
@@ -2170,10 +2181,12 @@ fu_daemon_setup(FuDaemon *self, const gchar *socket_address, GError **error)
 	if (!fu_engine_load(self->engine,
 			    FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_HWINFO |
 				FU_ENGINE_LOAD_FLAG_REMOTES,
+			    fu_progress_get_child(progress),
 			    error)) {
 		g_prefix_error(error, "failed to load engine: ");
 		return FALSE;
 	}
+	fu_progress_step_done(progress);
 
 	/* load introspection from file */
 	self->introspection_daemon =
@@ -2182,6 +2195,7 @@ fu_daemon_setup(FuDaemon *self, const gchar *socket_address, GError **error)
 		g_prefix_error(error, "failed to load introspection: ");
 		return FALSE;
 	}
+	fu_progress_step_done(progress);
 
 #ifdef HAVE_POLKIT
 	/* get authority */
@@ -2190,6 +2204,7 @@ fu_daemon_setup(FuDaemon *self, const gchar *socket_address, GError **error)
 		g_prefix_error(error, "failed to load authority: ");
 		return FALSE;
 	}
+	fu_progress_step_done(progress);
 #endif
 
 	/* own the object */
@@ -2224,6 +2239,7 @@ fu_daemon_setup(FuDaemon *self, const gchar *socket_address, GError **error)
 						self,
 						NULL);
 	}
+	fu_progress_step_done(progress);
 
 	/* success */
 	return TRUE;

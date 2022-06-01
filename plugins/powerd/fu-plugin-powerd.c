@@ -95,7 +95,7 @@ fu_plugin_powerd_proxy_changed_cb(GDBusProxy *proxy,
 }
 
 static gboolean
-fu_plugin_powerd_startup(FuPlugin *plugin, GError **error)
+fu_plugin_powerd_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data(plugin);
 	g_autofree gchar *name_owner = NULL;

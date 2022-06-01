@@ -921,6 +921,7 @@ test_set_up(ThunderboltTest *tt, gconstpointer params)
 	g_autofree gchar *pluginfn = NULL;
 	g_autofree gchar *sysfs = NULL;
 	g_autoptr(GError) error = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	const gchar *udev_subsystems[] = {"thunderbolt", NULL};
 
 	tt->ctx = fu_context_new();
@@ -946,7 +947,7 @@ test_set_up(ThunderboltTest *tt, gconstpointer params)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
-	ret = fu_plugin_runner_startup(tt->plugin, &error);
+	ret = fu_plugin_runner_startup(tt->plugin, progress, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 

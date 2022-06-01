@@ -17,14 +17,24 @@ fu_plugin_cpu_init(FuPlugin *plugin)
 }
 
 static gboolean
-fu_plugin_cpu_coldplug(FuPlugin *plugin, GError **error)
+fu_plugin_cpu_coldplug(FuPlugin *plugin, FuProgress *progress, GError **error)
 {
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	g_autoptr(FuCpuDevice) dev = fu_cpu_device_new(ctx);
+
+	/* progress */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 99, "probe");
+	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "setup");
+
 	if (!fu_device_probe(FU_DEVICE(dev), error))
 		return FALSE;
+	fu_progress_step_done(progress);
+
 	if (!fu_device_setup(FU_DEVICE(dev), error))
 		return FALSE;
+	fu_progress_step_done(progress);
+
 	fu_plugin_cache_add(plugin, "cpu", dev);
 	fu_plugin_device_add(plugin, FU_DEVICE(dev));
 	return TRUE;
