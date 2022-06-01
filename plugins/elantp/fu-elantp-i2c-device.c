@@ -82,11 +82,11 @@ fu_elantp_i2c_device_send_cmd(FuElantpI2cDevice *self,
 {
 	if (g_getenv("FWUPD_ELANTP_VERBOSE") != NULL)
 		fu_common_dump_raw(G_LOG_DOMAIN, "Write", tx, txsz);
-	if (!fu_udev_device_pwrite_full(FU_UDEV_DEVICE(self), 0, tx, txsz, error))
+	if (!fu_udev_device_pwrite(FU_UDEV_DEVICE(self), 0, tx, txsz, error))
 		return FALSE;
 	if (rxsz == 0)
 		return TRUE;
-	if (!fu_udev_device_pread_full(FU_UDEV_DEVICE(self), 0, rx, rxsz, error))
+	if (!fu_udev_device_pread(FU_UDEV_DEVICE(self), 0, rx, rxsz, error))
 		return FALSE;
 	if (g_getenv("FWUPD_ELANTP_VERBOSE") != NULL)
 		fu_common_dump_raw(G_LOG_DOMAIN, "Read", rx, rxsz);
@@ -332,11 +332,7 @@ fu_elantp_i2c_device_open(FuDevice *device, GError **error)
 	}
 
 	/* read i2c device */
-	return fu_udev_device_pwrite_full(FU_UDEV_DEVICE(device),
-					  0x0,
-					  tx_buf,
-					  sizeof(tx_buf),
-					  error);
+	return fu_udev_device_pwrite(FU_UDEV_DEVICE(device), 0x0, tx_buf, sizeof(tx_buf), error);
 }
 
 static FuFirmware *

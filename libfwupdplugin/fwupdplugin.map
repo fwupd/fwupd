@@ -411,8 +411,6 @@ LIBFWUPDPLUGIN_1.3.3 {
     fu_quirks_lookup_by_id_iter;
     fu_udev_device_get_fd;
     fu_udev_device_ioctl;
-    fu_udev_device_pread;
-    fu_udev_device_pwrite;
     fu_udev_device_set_fd;
   local: *;
 } LIBFWUPDPLUGIN_1.3.2;
@@ -500,8 +498,6 @@ LIBFWUPDPLUGIN_1.4.5 {
     fu_udev_device_get_devtype;
     fu_udev_device_get_parent_name;
     fu_udev_device_get_sysfs_attr;
-    fu_udev_device_pread_full;
-    fu_udev_device_pwrite_full;
     fu_udev_device_write_sysfs;
   local: *;
 } LIBFWUPDPLUGIN_1.4.1;
@@ -1060,5 +1056,7 @@ LIBFWUPDPLUGIN_1.8.2 {
     fu_progress_add_step_full;
     fu_progress_get_name;
     fu_progress_set_name;
+    fu_udev_device_pread;
+    fu_udev_device_pwrite;
   local: *;
 } LIBFWUPDPLUGIN_1.8.1;

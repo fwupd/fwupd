@@ -608,7 +608,7 @@ fu_parade_lspcon_device_reload(FuDevice *device, GError **error)
 		return FALSE;
 
 	/* DPCD address 00500-00502: device OUI */
-	if (!fu_udev_device_pread_full(aux_device, 0x500, (guint8 *)&oui, 3, error))
+	if (!fu_udev_device_pread(aux_device, 0x500, (guint8 *)&oui, 3, error))
 		return FALSE;
 	oui = GUINT32_FROM_BE(oui) >> 8;
 	oui_string = g_strdup_printf("OUI:%06X", oui);
@@ -625,7 +625,7 @@ fu_parade_lspcon_device_reload(FuDevice *device, GError **error)
 
 	/* DPCD address 0x50A, 0x50B: branch device firmware
 	 * major and minor revision */
-	if (!fu_udev_device_pread_full(aux_device, 0x50a, version_buf, sizeof(version_buf), error))
+	if (!fu_udev_device_pread(aux_device, 0x50a, version_buf, sizeof(version_buf), error))
 		return FALSE;
 	version = g_strdup_printf("%d.%d", version_buf[0], version_buf[1]);
 	fu_device_set_version(device, version);

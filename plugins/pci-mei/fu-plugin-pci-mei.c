@@ -171,56 +171,32 @@ fu_plugin_pci_mei_backend_device_added(FuPlugin *plugin, FuDevice *device, GErro
 		return FALSE;
 
 	/* grab MEI config registers */
-	if (!fu_udev_device_pread_full(FU_UDEV_DEVICE(device),
-				       PCI_CFG_HFS_1,
-				       buf,
-				       sizeof(buf),
-				       error)) {
+	if (!fu_udev_device_pread(FU_UDEV_DEVICE(device), PCI_CFG_HFS_1, buf, sizeof(buf), error)) {
 		g_prefix_error(error, "could not read HFS1: ");
 		return FALSE;
 	}
 	priv->hfsts1.data = fu_common_read_uint32(buf, G_LITTLE_ENDIAN);
-	if (!fu_udev_device_pread_full(FU_UDEV_DEVICE(device),
-				       PCI_CFG_HFS_2,
-				       buf,
-				       sizeof(buf),
-				       error)) {
+	if (!fu_udev_device_pread(FU_UDEV_DEVICE(device), PCI_CFG_HFS_2, buf, sizeof(buf), error)) {
 		g_prefix_error(error, "could not read HFS2: ");
 		return FALSE;
 	}
 	priv->hfsts2.data = fu_common_read_uint32(buf, G_LITTLE_ENDIAN);
-	if (!fu_udev_device_pread_full(FU_UDEV_DEVICE(device),
-				       PCI_CFG_HFS_3,
-				       buf,
-				       sizeof(buf),
-				       error)) {
+	if (!fu_udev_device_pread(FU_UDEV_DEVICE(device), PCI_CFG_HFS_3, buf, sizeof(buf), error)) {
 		g_prefix_error(error, "could not read HFS3: ");
 		return FALSE;
 	}
 	priv->hfsts3.data = fu_common_read_uint32(buf, G_LITTLE_ENDIAN);
-	if (!fu_udev_device_pread_full(FU_UDEV_DEVICE(device),
-				       PCI_CFG_HFS_4,
-				       buf,
-				       sizeof(buf),
-				       error)) {
+	if (!fu_udev_device_pread(FU_UDEV_DEVICE(device), PCI_CFG_HFS_4, buf, sizeof(buf), error)) {
 		g_prefix_error(error, "could not read HFS4: ");
 		return FALSE;
 	}
 	priv->hfsts4.data = fu_common_read_uint32(buf, G_LITTLE_ENDIAN);
-	if (!fu_udev_device_pread_full(FU_UDEV_DEVICE(device),
-				       PCI_CFG_HFS_5,
-				       buf,
-				       sizeof(buf),
-				       error)) {
+	if (!fu_udev_device_pread(FU_UDEV_DEVICE(device), PCI_CFG_HFS_5, buf, sizeof(buf), error)) {
 		g_prefix_error(error, "could not read HFS5: ");
 		return FALSE;
 	}
 	priv->hfsts5.data = fu_common_read_uint32(buf, G_LITTLE_ENDIAN);
-	if (!fu_udev_device_pread_full(FU_UDEV_DEVICE(device),
-				       PCI_CFG_HFS_6,
-				       buf,
-				       sizeof(buf),
-				       error)) {
+	if (!fu_udev_device_pread(FU_UDEV_DEVICE(device), PCI_CFG_HFS_6, buf, sizeof(buf), error)) {
 		g_prefix_error(error, "could not read HFS6: ");
 		return FALSE;
 	}

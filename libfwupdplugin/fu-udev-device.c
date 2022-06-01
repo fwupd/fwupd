@@ -1480,7 +1480,7 @@ fu_udev_device_ioctl(FuUdevDevice *self, gulong request, guint8 *buf, gint *rc, 
 }
 
 /**
- * fu_udev_device_pread_full:
+ * fu_udev_device_pread:
  * @self: a #FuUdevDevice
  * @port: offset address
  * @buf: (in): data
@@ -1491,14 +1491,10 @@ fu_udev_device_ioctl(FuUdevDevice *self, gulong request, guint8 *buf, gint *rc, 
  *
  * Returns: %TRUE for success
  *
- * Since: 1.4.5
+ * Since: 1.8.2
  **/
 gboolean
-fu_udev_device_pread_full(FuUdevDevice *self,
-			  goffset port,
-			  guint8 *buf,
-			  gsize bufsz,
-			  GError **error)
+fu_udev_device_pread(FuUdevDevice *self, goffset port, guint8 *buf, gsize bufsz, GError **error)
 {
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
 
@@ -1589,7 +1585,7 @@ fu_udev_device_seek(FuUdevDevice *self, goffset offset, GError **error)
 }
 
 /**
- * fu_udev_device_pwrite_full:
+ * fu_udev_device_pwrite:
  * @self: a #FuUdevDevice
  * @port: offset address
  * @buf: (out): data
@@ -1600,14 +1596,14 @@ fu_udev_device_seek(FuUdevDevice *self, goffset offset, GError **error)
  *
  * Returns: %TRUE for success
  *
- * Since: 1.4.5
+ * Since: 1.8.2
  **/
 gboolean
-fu_udev_device_pwrite_full(FuUdevDevice *self,
-			   goffset port,
-			   const guint8 *buf,
-			   gsize bufsz,
-			   GError **error)
+fu_udev_device_pwrite(FuUdevDevice *self,
+		      goffset port,
+		      const guint8 *buf,
+		      gsize bufsz,
+		      GError **error)
 {
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
 
@@ -1643,25 +1639,6 @@ fu_udev_device_pwrite_full(FuUdevDevice *self,
 			    "Not supported as pwrite() is unavailable");
 	return FALSE;
 #endif
-}
-
-/**
- * fu_udev_device_pwrite:
- * @self: a #FuUdevDevice
- * @port: offset address
- * @data: value
- * @error: (nullable): optional return location for an error
- *
- * Write to a file descriptor at a given offset.
- *
- * Returns: %TRUE for success
- *
- * Since: 1.3.3
- **/
-gboolean
-fu_udev_device_pwrite(FuUdevDevice *self, goffset port, guint8 data, GError **error)
-{
-	return fu_udev_device_pwrite_full(self, port, &data, 0x01, error);
 }
 
 /**
@@ -1768,25 +1745,6 @@ fu_udev_device_get_sysfs_attr_uint64(FuUdevDevice *self,
 	if (value != NULL)
 		*value = tmp64;
 	return TRUE;
-}
-
-/**
- * fu_udev_device_pread:
- * @self: a #FuUdevDevice
- * @port: offset address
- * @data: (out): value
- * @error: (nullable): optional return location for an error
- *
- * Read from a file descriptor at a given offset.
- *
- * Returns: %TRUE for success
- *
- * Since: 1.3.3
- **/
-gboolean
-fu_udev_device_pread(FuUdevDevice *self, goffset port, guint8 *data, GError **error)
-{
-	return fu_udev_device_pread_full(self, port, data, 0x1, error);
 }
 
 /**
