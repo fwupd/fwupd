@@ -60,6 +60,7 @@ fu_pxi_ble_device_get_raw_info(FuPxiBleDevice *self, struct hidraw_devinfo *info
 				  HIDIOCGRAWINFO,
 				  (guint8 *)info,
 				  NULL,
+				  FU_PXI_DEVICE_IOCTL_TIMEOUT,
 				  error)) {
 		return FALSE;
 	}
@@ -127,6 +128,7 @@ fu_pxi_ble_device_set_feature_cb(FuDevice *device, gpointer user_data, GError **
 				    HIDIOCSFEATURE(req->len),
 				    (guint8 *)req->data,
 				    NULL,
+				    FU_PXI_DEVICE_IOCTL_TIMEOUT,
 				    error);
 }
 #endif
@@ -156,7 +158,12 @@ static gboolean
 fu_pxi_ble_device_get_feature(FuPxiBleDevice *self, guint8 *buf, guint bufsz, GError **error)
 {
 #ifdef HAVE_HIDRAW_H
-	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self), HIDIOCGFEATURE(bufsz), buf, NULL, error)) {
+	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
+				  HIDIOCGFEATURE(bufsz),
+				  buf,
+				  NULL,
+				  FU_PXI_DEVICE_IOCTL_TIMEOUT,
+				  error)) {
 		return FALSE;
 	}
 	if (g_getenv("FWUPD_PIXART_RF_VERBOSE") != NULL)
@@ -239,6 +246,7 @@ fu_pxi_ble_device_check_support_report_id(FuPxiBleDevice *self, GError **error)
 				  HIDIOCGRDESCSIZE,
 				  (guint8 *)&desc_size,
 				  NULL,
+				  FU_PXI_DEVICE_IOCTL_TIMEOUT,
 				  error))
 		return FALSE;
 
@@ -247,6 +255,7 @@ fu_pxi_ble_device_check_support_report_id(FuPxiBleDevice *self, GError **error)
 				  HIDIOCGRDESC,
 				  (guint8 *)&rpt_desc,
 				  NULL,
+				  FU_PXI_DEVICE_IOCTL_TIMEOUT,
 				  error))
 		return FALSE;
 	if (g_getenv("FWUPD_PIXART_RF_VERBOSE") != NULL)

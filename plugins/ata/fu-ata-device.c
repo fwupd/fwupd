@@ -52,6 +52,8 @@ struct ata_tf {
 #define SG_ATA_PROTO_PIO_IN   (4 << 1)
 #define SG_ATA_PROTO_PIO_OUT  (5 << 1)
 
+#define FU_ATA_DEVICE_IOCTL_TIMEOUT 5000 /* ms */
+
 enum {
 	SG_CDB2_TLEN_NODATA = 0 << 0,
 	SG_CDB2_TLEN_FEAT = 1 << 0,
@@ -568,7 +570,12 @@ fu_ata_device_command(FuAtaDevice *self,
 	io_hdr.sbp = sb;
 	io_hdr.pack_id = fu_ata_device_tf_to_pack_id(tf);
 	io_hdr.timeout = timeout_ms;
-	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self), SG_IO, (guint8 *)&io_hdr, NULL, error))
+	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
+				  SG_IO,
+				  (guint8 *)&io_hdr,
+				  NULL,
+				  FU_ATA_DEVICE_IOCTL_TIMEOUT,
+				  error))
 		return FALSE;
 	if (g_getenv("FWUPD_ATA_VERBOSE") != NULL) {
 		g_debug("ATA_%u status=0x%x, host_status=0x%x, driver_status=0x%x",

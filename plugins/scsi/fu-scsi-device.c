@@ -28,6 +28,8 @@ G_DEFINE_TYPE(FuScsiDevice, fu_scsi_device, FU_TYPE_UDEV_DEVICE)
 #define WRITE_BUFFER_CMD 0x3B
 #define READ_BUFFER_CMD	 0x3C
 
+#define FU_SCSI_DEVICE_IOCTL_TIMEOUT 5000 /* ms */
+
 static void
 fu_scsi_device_to_string(FuDevice *device, guint idt, GString *str)
 {
@@ -197,12 +199,12 @@ fu_scsi_device_send_scsi_cmd_v3(FuScsiDevice *self,
 
 	if (g_getenv("FWUPD_SCSI_VERBOSE") != NULL)
 		g_debug("cmd=0x%x len=0x%x", cdb[0], (guint)bufsz);
-	if (!fu_udev_device_ioctl_full(FU_UDEV_DEVICE(self),
-				       SG_IO,
-				       (guint8 *)&io_hdr,
-				       NULL,
-				       5000,
-				       error))
+	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
+				  SG_IO,
+				  (guint8 *)&io_hdr,
+				  NULL,
+				  FU_SCSI_DEVICE_IOCTL_TIMEOUT,
+				  error))
 		return FALSE;
 
 	if (io_hdr.status) {

@@ -28,6 +28,8 @@ struct _FuElantpI2cDevice {
 
 G_DEFINE_TYPE(FuElantpI2cDevice, fu_elantp_i2c_device, FU_TYPE_UDEV_DEVICE)
 
+#define FU_ELANTP_DEVICE_IOCTL_TIMEOUT 5000 /* ms */
+
 static gboolean
 fu_elantp_i2c_device_detach(FuDevice *device, FuProgress *progress, GError **error);
 
@@ -318,11 +320,13 @@ fu_elantp_i2c_device_open(FuDevice *device, GError **error)
 				  I2C_SLAVE,
 				  GINT_TO_POINTER(addr),
 				  NULL,
+				  FU_ELANTP_DEVICE_IOCTL_TIMEOUT,
 				  NULL)) {
 		if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(device),
 					  I2C_SLAVE_FORCE,
 					  GINT_TO_POINTER(addr),
 					  NULL,
+					  FU_ELANTP_DEVICE_IOCTL_TIMEOUT,
 					  error)) {
 			g_prefix_error(error,
 				       "failed to set target address to 0x%x: ",

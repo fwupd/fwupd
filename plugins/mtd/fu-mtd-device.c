@@ -19,6 +19,8 @@ struct _FuMtdDevice {
 
 G_DEFINE_TYPE(FuMtdDevice, fu_mtd_device, FU_TYPE_UDEV_DEVICE)
 
+#define FU_MTD_DEVICE_IOCTL_TIMEOUT 5000 /* ms */
+
 static void
 fu_mtd_device_to_string(FuDevice *device, guint idt, GString *str)
 {
@@ -194,7 +196,12 @@ fu_mtd_device_erase(FuMtdDevice *self, GBytes *fw, FuProgress *progress, GError 
 		    .start = fu_chunk_get_address(chk),
 		    .length = fu_chunk_get_data_sz(chk),
 		};
-		if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self), 2, (guint8 *)&erase, NULL, error)) {
+		if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
+					  2,
+					  (guint8 *)&erase,
+					  NULL,
+					  FU_MTD_DEVICE_IOCTL_TIMEOUT,
+					  error)) {
 			g_prefix_error(error, "failed to erase @0x%x: ", (guint)erase.start);
 			return FALSE;
 		}

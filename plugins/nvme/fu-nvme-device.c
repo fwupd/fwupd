@@ -31,6 +31,8 @@ struct _FuNvmeDevice {
 
 G_DEFINE_TYPE(FuNvmeDevice, fu_nvme_device, FU_TYPE_UDEV_DEVICE)
 
+#define FU_NVME_DEVICE_IOCTL_TIMEOUT 5000 /* ms */
+
 static void
 fu_nvme_device_to_string(FuDevice *device, guint idt, GString *str)
 {
@@ -86,6 +88,7 @@ fu_nvme_device_submit_admin_passthru(FuNvmeDevice *self, struct nvme_admin_cmd *
 				  NVME_IOCTL_ADMIN_CMD,
 				  (guint8 *)cmd,
 				  &rc,
+				  FU_NVME_DEVICE_IOCTL_TIMEOUT,
 				  error)) {
 		g_prefix_error(error, "failed to issue admin command 0x%02x: ", cmd->opcode);
 		return FALSE;

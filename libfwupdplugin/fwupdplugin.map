@@ -410,7 +410,6 @@ LIBFWUPDPLUGIN_1.3.3 {
     fu_plugin_add_firmware_gtype;
     fu_quirks_lookup_by_id_iter;
     fu_udev_device_get_fd;
-    fu_udev_device_ioctl;
     fu_udev_device_set_fd;
   local: *;
 } LIBFWUPDPLUGIN_1.3.2;
@@ -1047,7 +1046,6 @@ LIBFWUPDPLUGIN_1.8.1 {
     fu_device_poll_locker_new;
     fu_device_remove_problem;
     fu_plugin_runner_init;
-    fu_udev_device_ioctl_full;
   local: *;
 } LIBFWUPDPLUGIN_1.8.0;
 
@@ -1056,6 +1054,7 @@ LIBFWUPDPLUGIN_1.8.2 {
     fu_progress_add_step_full;
     fu_progress_get_name;
     fu_progress_set_name;
+    fu_udev_device_ioctl;
     fu_udev_device_pread;
     fu_udev_device_pwrite;
   local: *;

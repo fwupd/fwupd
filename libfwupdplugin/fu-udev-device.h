@@ -101,15 +101,12 @@ fu_udev_device_get_fd(FuUdevDevice *self);
 void
 fu_udev_device_set_fd(FuUdevDevice *self, gint fd);
 gboolean
-fu_udev_device_ioctl(FuUdevDevice *self, gulong request, guint8 *buf, gint *rc, GError **error)
-    G_GNUC_WARN_UNUSED_RESULT;
-gboolean
-fu_udev_device_ioctl_full(FuUdevDevice *self,
-			  gulong request,
-			  guint8 *buf,
-			  gint *rc,
-			  guint timeout,
-			  GError **error) G_GNUC_WARN_UNUSED_RESULT;
+fu_udev_device_ioctl(FuUdevDevice *self,
+		     gulong request,
+		     guint8 *buf,
+		     gint *rc,
+		     guint timeout,
+		     GError **error) G_GNUC_WARN_UNUSED_RESULT;
 gboolean
 fu_udev_device_pwrite(FuUdevDevice *self,
 		      goffset port,
