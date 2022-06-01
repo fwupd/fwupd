@@ -121,11 +121,11 @@ fu_plugin_msr_backend_device_added(FuPlugin *plugin, FuDevice *device, GError **
 
 	/* grab Intel MSR */
 	if (priv->ia32_debug_supported) {
-		if (!fu_udev_device_pread_full(FU_UDEV_DEVICE(device),
-					       PCI_MSR_IA32_DEBUG_INTERFACE,
-					       buf,
-					       sizeof(buf),
-					       error)) {
+		if (!fu_udev_device_pread(FU_UDEV_DEVICE(device),
+					  PCI_MSR_IA32_DEBUG_INTERFACE,
+					  buf,
+					  sizeof(buf),
+					  error)) {
 			g_prefix_error(error, "could not read IA32_DEBUG_INTERFACE: ");
 			return FALSE;
 		}
@@ -144,11 +144,11 @@ fu_plugin_msr_backend_device_added(FuPlugin *plugin, FuDevice *device, GError **
 
 	/* grab AMD MSRs */
 	if (priv->amd64_syscfg_supported) {
-		if (!fu_udev_device_pread_full(FU_UDEV_DEVICE(device),
-					       PCI_MSR_AMD64_SYSCFG,
-					       buf,
-					       sizeof(buf),
-					       error)) {
+		if (!fu_udev_device_pread(FU_UDEV_DEVICE(device),
+					  PCI_MSR_AMD64_SYSCFG,
+					  buf,
+					  sizeof(buf),
+					  error)) {
 			g_prefix_error(error, "could not read PCI_MSR_AMD64_SYSCFG: ");
 			return FALSE;
 		}
@@ -164,11 +164,11 @@ fu_plugin_msr_backend_device_added(FuPlugin *plugin, FuDevice *device, GError **
 			priv->amd64_syscfg.fields.sme_is_enabled);
 	}
 	if (priv->amd64_sev_supported) {
-		if (!fu_udev_device_pread_full(FU_UDEV_DEVICE(device),
-					       PCI_MSR_AMD64_SEV,
-					       buf,
-					       sizeof(buf),
-					       error)) {
+		if (!fu_udev_device_pread(FU_UDEV_DEVICE(device),
+					  PCI_MSR_AMD64_SEV,
+					  buf,
+					  sizeof(buf),
+					  error)) {
 			g_prefix_error(error, "could not read PCI_MSR_AMD64_SEV: ");
 			return FALSE;
 		}
@@ -187,11 +187,11 @@ fu_plugin_msr_backend_device_added(FuPlugin *plugin, FuDevice *device, GError **
 	/* get microcode version */
 	if (device_cpu != NULL) {
 		guint32 ver_raw;
-		if (!fu_udev_device_pread_full(FU_UDEV_DEVICE(device),
-					       PCI_MSR_IA32_BIOS_SIGN_ID,
-					       buf,
-					       sizeof(buf),
-					       error)) {
+		if (!fu_udev_device_pread(FU_UDEV_DEVICE(device),
+					  PCI_MSR_IA32_BIOS_SIGN_ID,
+					  buf,
+					  sizeof(buf),
+					  error)) {
 			g_prefix_error(error, "could not read IA32_BIOS_SIGN_ID: ");
 			return FALSE;
 		}

@@ -347,11 +347,11 @@ fu_pxi_ble_device_wait_notify(FuPxiBleDevice *self,
 
 	/* skip the wrong report id ,and keep polling until result is correct */
 	while (g_timer_elapsed(timer, NULL) * 1000.f < FU_PXI_BLE_DEVICE_NOTIFY_TIMEOUT_MS) {
-		if (!fu_udev_device_pread_full(FU_UDEV_DEVICE(self),
-					       port,
-					       res,
-					       (FU_PXI_BLE_DEVICE_NOTIFY_RET_LEN + 1) - port,
-					       error))
+		if (!fu_udev_device_pread(FU_UDEV_DEVICE(self),
+					  port,
+					  res,
+					  (FU_PXI_BLE_DEVICE_NOTIFY_RET_LEN + 1) - port,
+					  error))
 			return FALSE;
 		if (res[0] == PXI_HID_DEV_OTA_INPUT_REPORT_ID)
 			break;

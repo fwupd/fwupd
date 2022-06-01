@@ -42,3 +42,8 @@ Remember: Plugins should be upstream!
 * `fu_device_get_progress()`: Use `fu_progress_get_percentage()` instead.
 * `fu_device_set_progress_full()`: Use `fu_progress_set_percentage_full()` instead.
 * `fu_device_set_progress()`: Use `fu_progress_set_steps()`, `fu_progress_add_step()` and `fu_progress_done()` -- see the `FuProgress` docs for more details!
+
+## 1.8.2
+
+* `fu_udev_device_pread_full()`: Use `fu_udev_device_pread()` instead -- as the latter now specifies the buffer length.
+* `fu_udev_device_pread_full()`: Use `fu_udev_device_pwrite()` instead -- as the latter now specifies the buffer length.

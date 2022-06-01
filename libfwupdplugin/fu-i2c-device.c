@@ -196,7 +196,7 @@ fu_i2c_device_set_bus_number(FuI2cDevice *self, guint bus_number)
 gboolean
 fu_i2c_device_write(FuI2cDevice *self, guint8 data, GError **error)
 {
-	return fu_udev_device_pwrite_full(FU_UDEV_DEVICE(self), 0x0, &data, 0x01, error);
+	return fu_udev_device_pwrite(FU_UDEV_DEVICE(self), 0x0, &data, 0x01, error);
 }
 
 /**
@@ -214,7 +214,7 @@ fu_i2c_device_write(FuI2cDevice *self, guint8 data, GError **error)
 gboolean
 fu_i2c_device_read(FuI2cDevice *self, guint8 *data, GError **error)
 {
-	return fu_udev_device_pread_full(FU_UDEV_DEVICE(self), 0x0, data, 0x1, error);
+	return fu_udev_device_pread(FU_UDEV_DEVICE(self), 0x0, data, 0x1, error);
 }
 
 /**
@@ -233,7 +233,7 @@ fu_i2c_device_read(FuI2cDevice *self, guint8 *data, GError **error)
 gboolean
 fu_i2c_device_write_full(FuI2cDevice *self, const guint8 *buf, gsize bufsz, GError **error)
 {
-	return fu_udev_device_pwrite_full(FU_UDEV_DEVICE(self), 0x0, buf, bufsz, error);
+	return fu_udev_device_pwrite(FU_UDEV_DEVICE(self), 0x0, buf, bufsz, error);
 }
 
 /**
@@ -252,7 +252,7 @@ fu_i2c_device_write_full(FuI2cDevice *self, const guint8 *buf, gsize bufsz, GErr
 gboolean
 fu_i2c_device_read_full(FuI2cDevice *self, guint8 *buf, gsize bufsz, GError **error)
 {
-	return fu_udev_device_pread_full(FU_UDEV_DEVICE(self), 0x0, buf, bufsz, error);
+	return fu_udev_device_pread(FU_UDEV_DEVICE(self), 0x0, buf, bufsz, error);
 }
 
 static void

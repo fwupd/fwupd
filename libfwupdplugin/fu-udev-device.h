@@ -111,23 +111,14 @@ fu_udev_device_ioctl_full(FuUdevDevice *self,
 			  guint timeout,
 			  GError **error) G_GNUC_WARN_UNUSED_RESULT;
 gboolean
-fu_udev_device_pwrite(FuUdevDevice *self, goffset port, guint8 data, GError **error)
+fu_udev_device_pwrite(FuUdevDevice *self,
+		      goffset port,
+		      const guint8 *buf,
+		      gsize bufsz,
+		      GError **error) G_GNUC_WARN_UNUSED_RESULT;
+gboolean
+fu_udev_device_pread(FuUdevDevice *self, goffset port, guint8 *buf, gsize bufsz, GError **error)
     G_GNUC_WARN_UNUSED_RESULT;
-gboolean
-fu_udev_device_pwrite_full(FuUdevDevice *self,
-			   goffset port,
-			   const guint8 *buf,
-			   gsize bufsz,
-			   GError **error) G_GNUC_WARN_UNUSED_RESULT;
-gboolean
-fu_udev_device_pread(FuUdevDevice *self, goffset port, guint8 *data, GError **error)
-    G_GNUC_WARN_UNUSED_RESULT;
-gboolean
-fu_udev_device_pread_full(FuUdevDevice *self,
-			  goffset port,
-			  guint8 *buf,
-			  gsize bufsz,
-			  GError **error) G_GNUC_WARN_UNUSED_RESULT;
 gboolean
 fu_udev_device_seek(FuUdevDevice *self, goffset offset, GError **error) G_GNUC_WARN_UNUSED_RESULT;
 const gchar *
