@@ -52,9 +52,7 @@ typedef enum {
 } FuUdevDeviceFlags;
 
 FuUdevDevice *
-fu_udev_device_new(GUdevDevice *udev_device) G_DEPRECATED_FOR(fu_udev_device_new_with_context);
-FuUdevDevice *
-fu_udev_device_new_with_context(FuContext *ctx, GUdevDevice *udev_device);
+fu_udev_device_new(FuContext *ctx, GUdevDevice *udev_device);
 GUdevDevice *
 fu_udev_device_get_dev(FuUdevDevice *self);
 void

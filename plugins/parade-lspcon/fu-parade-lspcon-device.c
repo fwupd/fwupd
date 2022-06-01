@@ -598,8 +598,8 @@ fu_parade_lspcon_device_reload(FuDevice *device, GError **error)
 			    self->aux_device_name);
 		return FALSE;
 	}
-	aux_device = fu_udev_device_new_with_context(fu_device_get_context(device),
-						     g_steal_pointer(&aux_devices->data));
+	aux_device =
+	    fu_udev_device_new(fu_device_get_context(device), g_steal_pointer(&aux_devices->data));
 	g_debug("using aux dev %s", fu_udev_device_get_sysfs_path(aux_device));
 
 	/* the following open() requires the device have IDs set */

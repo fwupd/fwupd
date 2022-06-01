@@ -28,8 +28,7 @@ fu_udev_backend_device_add(FuUdevBackend *self, GUdevDevice *udev_device)
 	g_autoptr(FuUdevDevice) device = NULL;
 
 	/* success */
-	device =
-	    fu_udev_device_new_with_context(fu_backend_get_context(FU_BACKEND(self)), udev_device);
+	device = fu_udev_device_new(fu_backend_get_context(FU_BACKEND(self)), udev_device);
 	fu_backend_device_added(FU_BACKEND(self), FU_DEVICE(device));
 }
 

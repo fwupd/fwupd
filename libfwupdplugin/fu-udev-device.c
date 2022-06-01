@@ -1865,8 +1865,8 @@ fu_udev_device_get_siblings_with_subsystem(FuUdevDevice *self, const gchar *cons
 		 * located device's parent, they are siblings */
 		if (g_strcmp0(udev_parent_path, enumerated_parent_path) == 0) {
 			FuUdevDevice *dev =
-			    fu_udev_device_new_with_context(fu_device_get_context(FU_DEVICE(self)),
-							    g_steal_pointer(&enumerated_device));
+			    fu_udev_device_new(fu_device_get_context(FU_DEVICE(self)),
+					       g_steal_pointer(&enumerated_device));
 			g_ptr_array_add(out, dev);
 		}
 	}
@@ -1896,7 +1896,7 @@ fu_udev_device_get_parent_with_subsystem(FuUdevDevice *self, const gchar *subsys
 	device_tmp = g_udev_device_get_parent_with_subsystem(priv->udev_device, subsystem, NULL);
 	if (device_tmp == NULL)
 		return NULL;
-	return fu_udev_device_new_with_context(fu_device_get_context(FU_DEVICE(self)), device_tmp);
+	return fu_udev_device_new(fu_device_get_context(FU_DEVICE(self)), device_tmp);
 #else
 	return NULL;
 #endif
@@ -1939,8 +1939,8 @@ fu_udev_device_get_children_with_subsystem(FuUdevDevice *self, const gchar *cons
 		 * same as self */
 		if (g_strcmp0(self_path, enumerated_parent_path) == 0) {
 			FuUdevDevice *dev =
-			    fu_udev_device_new_with_context(fu_device_get_context(FU_DEVICE(self)),
-							    g_steal_pointer(&enumerated_device));
+			    fu_udev_device_new(fu_device_get_context(FU_DEVICE(self)),
+					       g_steal_pointer(&enumerated_device));
 			g_ptr_array_add(out, dev);
 		}
 	}
@@ -2136,7 +2136,7 @@ fu_udev_device_class_init(FuUdevDeviceClass *klass)
 }
 
 /**
- * fu_udev_device_new_with_context:
+ * fu_udev_device_new:
  * @ctx: (nullable): a #FuContext
  * @udev_device: a #GUdevDevice
  *
@@ -2144,10 +2144,10 @@ fu_udev_device_class_init(FuUdevDeviceClass *klass)
  *
  * Returns: (transfer full): a #FuUdevDevice
  *
- * Since: 1.7.1
+ * Since: 1.8.2
  **/
 FuUdevDevice *
-fu_udev_device_new_with_context(FuContext *ctx, GUdevDevice *udev_device)
+fu_udev_device_new(FuContext *ctx, GUdevDevice *udev_device)
 {
 #ifdef HAVE_GUDEV
 	/* create the correct object depending on the subsystem */
@@ -2161,20 +2161,4 @@ fu_udev_device_new_with_context(FuContext *ctx, GUdevDevice *udev_device)
 	}
 #endif
 	return g_object_new(FU_TYPE_UDEV_DEVICE, "context", ctx, "udev-device", udev_device, NULL);
-}
-
-/**
- * fu_udev_device_new:
- * @udev_device: a #GUdevDevice
- *
- * Creates a new #FuUdevDevice.
- *
- * Returns: (transfer full): a #FuUdevDevice
- *
- * Since: 1.1.2
- **/
-FuUdevDevice *
-fu_udev_device_new(GUdevDevice *udev_device)
-{
-	return fu_udev_device_new_with_context(NULL, udev_device);
 }

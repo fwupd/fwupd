@@ -53,7 +53,7 @@ fu_usb_backend_device_added_cb(GUsbContext *ctx, GUsbDevice *usb_device, FuBacke
 	g_autoptr(FuUsbDevice) device = NULL;
 
 	/* success */
-	device = fu_usb_device_new_with_context(fu_backend_get_context(backend), usb_device);
+	device = fu_usb_device_new(fu_backend_get_context(backend), usb_device);
 	fu_backend_device_added(backend, FU_DEVICE(device));
 }
 

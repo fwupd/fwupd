@@ -186,8 +186,7 @@ fu_realtek_mst_device_use_aux_dev(FuRealtekMstDevice *self, GError **error)
 		g_autoptr(FuUdevDevice) device = NULL;
 		g_autoptr(GPtrArray) i2c_devices = NULL;
 
-		device = fu_udev_device_new_with_context(fu_device_get_context(FU_DEVICE(self)),
-							 element->data);
+		device = fu_udev_device_new(fu_device_get_context(FU_DEVICE(self)), element->data);
 		if (bus_device != NULL) {
 			g_debug("Ignoring additional aux device %s",
 				fu_udev_device_get_sysfs_path(device));
@@ -228,8 +227,8 @@ fu_realtek_mst_device_use_drm_card(FuRealtekMstDevice *self, GError **error)
 		g_autoptr(FuUdevDevice) drm_device = NULL;
 		g_autoptr(GPtrArray) i2c_devices = NULL;
 
-		drm_device = fu_udev_device_new_with_context(fu_device_get_context(FU_DEVICE(self)),
-							     element->data);
+		drm_device =
+		    fu_udev_device_new(fu_device_get_context(FU_DEVICE(self)), element->data);
 		if (bus_device != NULL) {
 			g_debug("Ignoring additional drm device %s",
 				fu_udev_device_get_sysfs_path(drm_device));
