@@ -186,8 +186,8 @@ fu_cfu_device_write_firmware(FuDevice *device,
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 2);   /* offer */
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 98); /* payload */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 2, "offer");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 98, "payload");
 
 	/* send offer */
 	fw_offer = fu_firmware_get_image_by_id(firmware, FU_FIRMWARE_ID_HEADER, error);

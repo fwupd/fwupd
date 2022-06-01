@@ -233,8 +233,8 @@ fu_wacom_aes_device_write_firmware(FuDevice *device,
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 20);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 80);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 20, NULL);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 80, NULL);
 
 	/* erase */
 	if (!fu_wacom_aes_device_erase_all(self, progress, error))

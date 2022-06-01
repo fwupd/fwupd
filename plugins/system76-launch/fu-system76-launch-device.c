@@ -186,10 +186,10 @@ static void
 fu_system76_launch_device_set_progress(FuDevice *self, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 30); /* detach */
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 40);	 /* write */
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 5);	 /* attach */
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 25);	 /* reload */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 30, "detach");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 40, "write");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 5, "attach");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 25, "reload");
 }
 
 static void

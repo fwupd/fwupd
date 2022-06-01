@@ -357,9 +357,9 @@ fu_emmc_device_write_firmware(FuDevice *device,
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
-	fu_progress_add_step_full(progress, FWUPD_STATUS_DEVICE_BUSY, 5, "ffu");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 50);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 45);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 5, "ffu");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 50, NULL);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 45, NULL);
 
 	if (!fu_emmc_read_extcsd(FU_EMMC_DEVICE(device), ext_csd, sizeof(ext_csd), error))
 		return FALSE;
@@ -533,10 +533,10 @@ fu_emmc_device_set_progress(FuDevice *self, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0); /* detach */
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 98);	/* write */
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0); /* attach */
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 2);	/* reload */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0, "detach");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 98, "write");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0, "attach");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 2, "reload");
 }
 
 static void

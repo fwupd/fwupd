@@ -556,11 +556,11 @@ fu_usi_dock_mcu_device_write_firmware_with_idx(FuUsiDockMcuDevice *self,
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 0);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 6);
-	fu_progress_add_step_full(progress, FWUPD_STATUS_DEVICE_WRITE, 40, "write-external");
-	fu_progress_add_step_full(progress, FWUPD_STATUS_DEVICE_WRITE, 13, "wait-for-checksum");
-	fu_progress_add_step_full(progress, FWUPD_STATUS_DEVICE_WRITE, 42, "internal-flash");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 0, NULL);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 6, NULL);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 40, "write-external");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 13, "wait-for-checksum");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 42, "internal-flash");
 
 	/* initial external flash */
 	cmd = USBUID_ISP_DEVICE_CMD_FWBUFER_INITIAL;
@@ -701,10 +701,10 @@ fu_usi_dock_mcu_device_set_progress(FuDevice *self, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 2);	/* erase */
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 90);	/* write */
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 6); /* attach */
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 2);	/* reload */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 2, "detach");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 90, "write");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 6, "attach");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 2, "reload");
 }
 
 static void

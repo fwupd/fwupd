@@ -3883,9 +3883,9 @@ fu_progress_non_equal_steps_func(void)
 
 	/* test non-equal steps */
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 20);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 60);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_READ, 20);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 20, NULL);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 60, NULL);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_READ, 20, NULL);
 	g_assert_cmpint(fu_progress_get_percentage(progress), ==, 0);
 	g_assert_cmpint(fu_progress_get_status(progress), ==, FWUPD_STATUS_DEVICE_ERASE);
 
@@ -3918,8 +3918,8 @@ fu_progress_non_equal_steps_func(void)
 	child = fu_progress_get_child(progress);
 	fu_progress_set_id(child, G_STRLOC);
 	fu_progress_set_id(child, G_STRLOC);
-	fu_progress_add_step(child, FWUPD_STATUS_DEVICE_RESTART, 25);
-	fu_progress_add_step(child, FWUPD_STATUS_DEVICE_WRITE, 75);
+	fu_progress_add_step(child, FWUPD_STATUS_DEVICE_RESTART, 25, NULL);
+	fu_progress_add_step(child, FWUPD_STATUS_DEVICE_WRITE, 75, NULL);
 	g_assert_cmpint(fu_progress_get_status(progress), ==, FWUPD_STATUS_DEVICE_RESTART);
 
 	/* start child */
@@ -3939,8 +3939,8 @@ fu_progress_non_equal_steps_func(void)
 	 */
 	grandchild = fu_progress_get_child(child);
 	fu_progress_set_id(grandchild, G_STRLOC);
-	fu_progress_add_step(grandchild, FWUPD_STATUS_DEVICE_ERASE, 90);
-	fu_progress_add_step(grandchild, FWUPD_STATUS_DEVICE_WRITE, 10);
+	fu_progress_add_step(grandchild, FWUPD_STATUS_DEVICE_ERASE, 90, NULL);
+	fu_progress_add_step(grandchild, FWUPD_STATUS_DEVICE_WRITE, 10, NULL);
 
 	fu_progress_step_done(grandchild);
 

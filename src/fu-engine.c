@@ -2970,9 +2970,9 @@ fu_engine_install_blob(FuEngine *self,
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_NO_PROFILE);
-	fu_progress_add_step_full(progress, FWUPD_STATUS_DEVICE_BUSY, 1, "prepare");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 98);
-	fu_progress_add_step_full(progress, FWUPD_STATUS_DEVICE_BUSY, 1, "cleanup");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1, "prepare");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 98, NULL);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1, "cleanup");
 
 	/* test the firmware is not an empty blob */
 	if (g_bytes_get_size(blob_fw) == 0) {
@@ -3013,10 +3013,10 @@ fu_engine_install_blob(FuEngine *self,
 		if (fu_progress_get_steps(progress_local) == 0) {
 			fu_progress_set_id(progress_local, G_STRLOC);
 			fu_progress_add_flag(progress_local, FU_PROGRESS_FLAG_GUESSED);
-			fu_progress_add_step(progress_local, FWUPD_STATUS_DEVICE_RESTART, 2);
-			fu_progress_add_step(progress_local, FWUPD_STATUS_DEVICE_WRITE, 94);
-			fu_progress_add_step(progress_local, FWUPD_STATUS_DEVICE_RESTART, 2);
-			fu_progress_add_step(progress_local, FWUPD_STATUS_DEVICE_BUSY, 2);
+			fu_progress_add_step(progress_local, FWUPD_STATUS_DEVICE_RESTART, 2, NULL);
+			fu_progress_add_step(progress_local, FWUPD_STATUS_DEVICE_WRITE, 94, NULL);
+			fu_progress_add_step(progress_local, FWUPD_STATUS_DEVICE_RESTART, 2, NULL);
+			fu_progress_add_step(progress_local, FWUPD_STATUS_DEVICE_BUSY, 2, NULL);
 		}
 
 		/* detach to bootloader mode */

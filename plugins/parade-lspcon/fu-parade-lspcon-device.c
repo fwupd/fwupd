@@ -663,11 +663,11 @@ fu_parade_lspcon_device_write_firmware(FuDevice *device,
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 5);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 70);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 25);
-	fu_progress_add_step_full(progress, FWUPD_STATUS_DEVICE_WRITE, 3, "device-write-boot");
-	fu_progress_add_step_full(progress, FWUPD_STATUS_DEVICE_VERIFY, 2, "device-verify-boot");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 5, NULL);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 70, NULL);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 25, NULL);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 3, "device-write-boot");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 2, "device-verify-boot");
 
 	blob_fw = fu_firmware_get_bytes(firmware, error);
 	if (blob_fw == NULL)
@@ -834,10 +834,10 @@ fu_parade_lspcon_device_set_progress(FuDevice *self, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 2); /* detach */
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 94);	/* write */
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 2); /* attach */
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 2);	/* reload */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 2, "detach");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 94, "write");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 2, "attach");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 2, "reload");
 }
 
 static void

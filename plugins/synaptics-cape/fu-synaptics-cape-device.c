@@ -703,10 +703,10 @@ fu_synaptics_cape_device_write_firmware(FuDevice *device,
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_add_step_full(progress, FWUPD_STATUS_DEVICE_WRITE, 2, "device-write-hdr");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 69);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 0);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 29);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 2, "device-write-hdr");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 69, NULL);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 1, NULL);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 29, NULL);
 
 	fw_header = fu_firmware_get_image_by_id_bytes(firmware, FU_FIRMWARE_ID_HEADER, error);
 	if (fw_header == NULL)
@@ -757,10 +757,10 @@ static void
 fu_synaptics_cape_device_set_progress(FuDevice *self, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 2); /* detach */
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 94);	/* write */
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 2); /* attach */
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 2);	/* reload */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 2, "detach");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 94, "write");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 2, "attach");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 2, "reload");
 }
 
 static void

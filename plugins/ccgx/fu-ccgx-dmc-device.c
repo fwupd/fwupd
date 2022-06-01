@@ -364,8 +364,8 @@ fu_ccgx_dmc_write_firmware_record(FuCcgxDmcDevice *self,
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 99);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1, NULL);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 99, NULL);
 
 	/* write start row and number of rows to a device */
 	if (!fu_ccgx_dmc_device_send_write_command(self,
@@ -463,9 +463,9 @@ fu_ccgx_dmc_write_firmware(FuDevice *device,
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1);
-	fu_progress_add_step_full(progress, FWUPD_STATUS_DEVICE_WRITE, 1, "fwct");
-	fu_progress_add_step_full(progress, FWUPD_STATUS_DEVICE_WRITE, 98, "img");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1, NULL);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 1, "fwct");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 98, "img");
 
 	/* get fwct record */
 	fwct_blob = fu_ccgx_dmc_firmware_get_fwct_record(FU_CCGX_DMC_FIRMWARE(firmware));
@@ -730,10 +730,10 @@ fu_ccgx_dmc_device_set_progress(FuDevice *self, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_NO_PROFILE);	/* actually 0, 20, 0, 80! */
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0); /* detach */
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 75);	/* write */
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0); /* attach */
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 25);	/* reload */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0, "detach");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 75, "write");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0, "attach");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 25, "reload");
 }
 
 static void

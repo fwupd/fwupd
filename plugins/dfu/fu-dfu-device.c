@@ -1457,7 +1457,8 @@ fu_dfu_device_download(FuDfuDevice *self,
 			return FALSE;
 		fu_progress_add_step(progress,
 				     FWUPD_STATUS_DEVICE_WRITE,
-				     fu_dfu_device_calculate_chunks_size(chunks));
+				     fu_dfu_device_calculate_chunks_size(chunks),
+				     NULL);
 	}
 	for (guint i = 0; i < images->len; i++) {
 		FuFirmware *image = g_ptr_array_index(images, i);
@@ -1639,10 +1640,10 @@ static void
 fu_dfu_device_set_progress(FuDevice *self, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 1); /* detach */
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 88);	/* write */
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 1); /* attach */
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 10);	/* reload */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 1, "detach");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 88, "write");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 1, "attach");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 10, "reload");
 }
 
 static void

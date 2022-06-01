@@ -582,9 +582,9 @@ fu_bcm57xx_recovery_device_write_firmware(FuDevice *device,
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
-	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 1);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 95);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 5);
+	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 1, NULL);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 95, NULL);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 5, NULL);
 
 	/* build the images into one linear blob of the correct size */
 	blob = fu_firmware_write(firmware, error);
@@ -655,10 +655,10 @@ fu_bcm57xx_recovery_device_setup(FuDevice *device, GError **error)
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
-	fu_progress_add_step_full(progress, FWUPD_STATUS_DEVICE_BUSY, 10, "enable");
-	fu_progress_add_step_full(progress, FWUPD_STATUS_DEVICE_BUSY, 80, "nvram");
-	fu_progress_add_step_full(progress, FWUPD_STATUS_DEVICE_BUSY, 10, "veraddr");
-	fu_progress_add_step_full(progress, FWUPD_STATUS_DEVICE_BUSY, 10, "version");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 10, "enable");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 80, "nvram");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 10, "veraddr");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 10, "version");
 
 	locker = fu_device_locker_new_full(
 	    self,
@@ -846,10 +846,10 @@ fu_bcm57xx_recovery_device_set_progress(FuDevice *self, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 2); /* detach */
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 94);	/* write */
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 2); /* attach */
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 2);	/* reload */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 2, "detach");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 94, "write");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 2, "attach");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 2, "reload");
 }
 
 static void

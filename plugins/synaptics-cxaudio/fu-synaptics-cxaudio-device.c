@@ -626,11 +626,11 @@ fu_synaptics_cxaudio_device_write_firmware(FuDevice *device,
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_add_step_full(progress, FWUPD_STATUS_DEVICE_BUSY, 3, "park");
-	fu_progress_add_step_full(progress, FWUPD_STATUS_DEVICE_BUSY, 1, "init");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 94);
-	fu_progress_add_step_full(progress, FWUPD_STATUS_DEVICE_BUSY, 1, "invalidate");
-	fu_progress_add_step_full(progress, FWUPD_STATUS_DEVICE_BUSY, 1, "unpark");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 3, "park");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1, "init");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 94, NULL);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1, "invalidate");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1, "unpark");
 
 	/* check if a patch file fits completely into the EEPROM */
 	for (guint i = 0; i < records->len; i++) {
@@ -848,10 +848,10 @@ static void
 fu_synaptics_cxaudio_device_set_progress(FuDevice *self, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 3); /* detach */
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 37);	/* write */
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 1); /* attach */
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 60);	/* reload */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 3, "detach");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 37, "write");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 1, "attach");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 60, "reload");
 }
 
 static void

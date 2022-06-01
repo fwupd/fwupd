@@ -885,7 +885,6 @@ LIBFWUPDPLUGIN_1.7.0 {
     fu_plugin_runner_write_firmware;
     fu_plugin_set_config_value;
     fu_progress_add_flag;
-    fu_progress_add_step;
     fu_progress_finished;
     fu_progress_flag_from_string;
     fu_progress_flag_to_string;
@@ -1044,7 +1043,7 @@ LIBFWUPDPLUGIN_1.8.2 {
   global:
     fu_device_new;
     fu_efivar_secure_boot_enabled;
-    fu_progress_add_step_full;
+    fu_progress_add_step;
     fu_progress_get_name;
     fu_progress_set_name;
     fu_udev_device_ioctl;

@@ -147,10 +147,10 @@ static void
 fu_dell_dock_status_set_progress(FuDevice *self, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 13); /* detach */
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 72);	 /* write */
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 9);	 /* attach */
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 7);	 /* reload */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 13, "detach");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 72, "write");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 9, "attach");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 7, "reload");
 }
 
 static void

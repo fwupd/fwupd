@@ -404,9 +404,9 @@ main(int argc, char *argv[])
 		/* progress */
 		fu_progress_set_id(progress, G_STRLOC);
 		fu_progress_add_flag(progress, FU_PROGRESS_FLAG_NO_PROFILE);
-		fu_progress_add_step_full(progress, FWUPD_STATUS_DEVICE_BUSY, 1, "prepare");
-		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 98); /* write */
-		fu_progress_add_step_full(progress, FWUPD_STATUS_DEVICE_BUSY, 1, "cleanup");
+		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1, "prepare");
+		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 98, NULL);
+		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1, "cleanup");
 
 		/* load SMBIOS */
 		if (!fu_context_load_hwinfo(ctx, &error_local)) {

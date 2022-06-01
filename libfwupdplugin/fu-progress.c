@@ -534,11 +534,11 @@ fu_progress_get_steps(FuProgress *self)
 }
 
 /**
- * fu_progress_add_step_full:
+ * fu_progress_add_step:
  * @self: A #FuProgress
  * @status: status value to use for this phase
  * @value: A step weighting variable argument array
- * @name: Human readable name to identify the step
+ * @name: (nullable): Human readable name to identify the step
  *
  * This sets the step weighting, which you will want to do if one action
  * will take a bigger chunk of time than another.
@@ -548,7 +548,7 @@ fu_progress_get_steps(FuProgress *self)
  * Since: 1.8.2
  **/
 void
-fu_progress_add_step_full(FuProgress *self, FwupdStatus status, guint value, const gchar *name)
+fu_progress_add_step(FuProgress *self, FwupdStatus status, guint value, const gchar *name)
 {
 	FuProgressPrivate *priv = GET_PRIVATE(self);
 	FuProgressStep *step;
@@ -569,31 +569,6 @@ fu_progress_add_step_full(FuProgress *self, FwupdStatus status, guint value, con
 
 	/* in case anything is not using ->steps */
 	fu_progress_set_steps(self, priv->steps->len);
-}
-
-/**
- * fu_progress_add_step:
- * @self: A #FuProgress
- * @status: status value to use for this phase
- * @value: A step weighting variable argument array
- *
- * This sets the step weighting, which you will want to do if one action
- * will take a bigger chunk of time than another.
- *
- * The progress ID must be set fu_progress_set_id() before this method is used.
- *
- * If context is needed to disambigute the steps (or it would be helpful for profiling), use
- * fu_progress_add_step_full().
- *
- * Since: 1.7.0
- **/
-void
-fu_progress_add_step(FuProgress *self, FwupdStatus status, guint value)
-{
-	FuProgressPrivate *priv = GET_PRIVATE(self);
-	g_return_if_fail(FU_IS_PROGRESS(self));
-	g_return_if_fail(priv->id != NULL);
-	fu_progress_add_step_full(self, status, value, NULL);
 }
 
 /**
