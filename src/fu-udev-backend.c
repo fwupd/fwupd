@@ -127,8 +127,31 @@ fu_udev_backend_uevent_cb(GUdevClient *gudev_client,
 	}
 }
 
+static void
+fu_udev_backend_coldplug_subsystem(FuUdevBackend *self,
+				   const gchar *subsystem,
+				   FuProgress *progress)
+{
+	g_autolist(GObject) devices = NULL;
+
+	devices = g_udev_client_query_by_subsystem(self->gudev_client, subsystem);
+	if (g_getenv("FWUPD_PROBE_VERBOSE") != NULL)
+		g_debug("%u devices with subsystem %s", g_list_length(devices), subsystem);
+
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_set_name(progress, subsystem);
+	fu_progress_set_steps(progress, g_list_length(devices));
+	for (GList *l = devices; l != NULL; l = l->next) {
+		GUdevDevice *udev_device = l->data;
+		fu_progress_set_name(fu_progress_get_child(progress),
+				     g_udev_device_get_sysfs_path(udev_device));
+		fu_udev_backend_device_add(self, udev_device);
+		fu_progress_step_done(progress);
+	}
+}
+
 static gboolean
-fu_udev_backend_coldplug(FuBackend *backend, GError **error)
+fu_udev_backend_coldplug(FuBackend *backend, FuProgress *progress, GError **error)
 {
 	FuUdevBackend *self = FU_UDEV_BACKEND(backend);
 
@@ -147,18 +170,14 @@ fu_udev_backend_coldplug(FuBackend *backend, GError **error)
 	}
 
 	/* get all devices of class */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_set_steps(progress, self->subsystems->len);
 	for (guint i = 0; i < self->subsystems->len; i++) {
 		const gchar *subsystem = g_ptr_array_index(self->subsystems, i);
-		GList *devices = g_udev_client_query_by_subsystem(self->gudev_client, subsystem);
-		if (g_getenv("FWUPD_PROBE_VERBOSE") != NULL) {
-			g_debug("%u devices with subsystem %s", g_list_length(devices), subsystem);
-		}
-		for (GList *l = devices; l != NULL; l = l->next) {
-			GUdevDevice *udev_device = l->data;
-			fu_udev_backend_device_add(self, udev_device);
-		}
-		g_list_foreach(devices, (GFunc)g_object_unref, NULL);
-		g_list_free(devices);
+		fu_udev_backend_coldplug_subsystem(self,
+						   subsystem,
+						   fu_progress_get_child(progress));
+		fu_progress_step_done(progress);
 	}
 
 	return TRUE;

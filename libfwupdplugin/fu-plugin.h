@@ -110,6 +110,7 @@ typedef struct {
 	/**
 	 * startup:
 	 * @self: a #FuPlugin
+	 * @progress: a #FuProgress
 	 * @error: (nullable): optional return location for an error
 	 *
 	 * Tries to start the plugin.
@@ -121,17 +122,18 @@ typedef struct {
 	 *
 	 * Since: 1.7.2
 	 **/
-	gboolean (*startup)(FuPlugin *self, GError **error);
+	gboolean (*startup)(FuPlugin *self, FuProgress *progress, GError **error);
 	/**
 	 * coldplug:
 	 * @self: a #FuPlugin
+	 * @progress: a #FuProgress
 	 * @error: (nullable): optional return location for an error
 	 *
 	 * Probes for devices.
 	 *
 	 * Since: 1.7.2
 	 **/
-	gboolean (*coldplug)(FuPlugin *self, GError **error);
+	gboolean (*coldplug)(FuPlugin *self, FuProgress *progress, GError **error);
 	/**
 	 * device_created
 	 * @self: a #FuPlugin

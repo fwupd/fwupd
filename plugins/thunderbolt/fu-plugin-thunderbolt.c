@@ -69,7 +69,7 @@ fu_plugin_thunderbolt_init(FuPlugin *plugin)
 }
 
 static gboolean
-fu_plugin_thunderbolt_startup(FuPlugin *plugin, GError **error)
+fu_plugin_thunderbolt_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 {
 	return fu_plugin_thunderbolt_safe_kernel(plugin, error);
 }

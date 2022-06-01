@@ -16,7 +16,7 @@
 #include "fu-logitech-hidpp-runtime-unifying.h"
 
 static gboolean
-fu_plugin_logitech_hidpp_startup(FuPlugin *plugin, GError **error)
+fu_plugin_logitech_hidpp_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 {
 	/* check the kernel has CONFIG_HIDRAW */
 	if (!g_file_test("/sys/class/hidraw", G_FILE_TEST_IS_DIR)) {

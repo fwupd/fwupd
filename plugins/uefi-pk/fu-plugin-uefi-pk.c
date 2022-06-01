@@ -116,7 +116,7 @@ fu_plugin_uefi_pk_parse_signature(FuPlugin *plugin, FuEfiSignature *sig, GError 
 }
 
 static gboolean
-fu_plugin_uefi_pk_coldplug(FuPlugin *plugin, GError **error)
+fu_plugin_uefi_pk_coldplug(FuPlugin *plugin, FuProgress *progress, GError **error)
 {
 	FuPluginData *priv = fu_plugin_get_data(plugin);
 	g_autoptr(FuFirmware) img = NULL;

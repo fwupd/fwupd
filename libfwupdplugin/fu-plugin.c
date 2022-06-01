@@ -773,7 +773,7 @@ fu_plugin_device_read_firmware(FuPlugin *self,
  * Since: 0.8.0
  **/
 gboolean
-fu_plugin_runner_startup(FuPlugin *self, GError **error)
+fu_plugin_runner_startup(FuPlugin *self, FuProgress *progress, GError **error)
 {
 	FuPluginPrivate *priv = GET_PRIVATE(self);
 	FuPluginVfuncs *vfuncs = fu_plugin_get_vfuncs(self);
@@ -794,7 +794,7 @@ fu_plugin_runner_startup(FuPlugin *self, GError **error)
 	if (vfuncs->startup == NULL)
 		return TRUE;
 	g_debug("startup(%s)", fu_plugin_get_name(self));
-	if (!vfuncs->startup(self, &error_local)) {
+	if (!vfuncs->startup(self, progress, &error_local)) {
 		if (error_local == NULL) {
 			g_critical("unset plugin error in startup(%s)", fu_plugin_get_name(self));
 			g_set_error_literal(&error_local,
@@ -1008,6 +1008,7 @@ fu_plugin_runner_device_array_generic(FuPlugin *self,
 /**
  * fu_plugin_runner_coldplug:
  * @self: a #FuPlugin
+ * @progress: a #FuProgress
  * @error: (nullable): optional return location for an error
  *
  * Runs the coldplug routine for the plugin
@@ -1017,7 +1018,7 @@ fu_plugin_runner_device_array_generic(FuPlugin *self,
  * Since: 0.8.0
  **/
 gboolean
-fu_plugin_runner_coldplug(FuPlugin *self, GError **error)
+fu_plugin_runner_coldplug(FuPlugin *self, FuProgress *progress, GError **error)
 {
 	FuPluginPrivate *priv = GET_PRIVATE(self);
 	FuPluginVfuncs *vfuncs = fu_plugin_get_vfuncs(self);
@@ -1037,7 +1038,7 @@ fu_plugin_runner_coldplug(FuPlugin *self, GError **error)
 	if (vfuncs->coldplug == NULL)
 		return TRUE;
 	g_debug("coldplug(%s)", fu_plugin_get_name(self));
-	if (!vfuncs->coldplug(self, &error_local)) {
+	if (!vfuncs->coldplug(self, progress, &error_local)) {
 		if (error_local == NULL) {
 			g_critical("unset plugin error in coldplug(%s)", fu_plugin_get_name(self));
 			g_set_error_literal(&error_local,

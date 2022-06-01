@@ -33,7 +33,7 @@ fu_plugin_logind_destroy(FuPlugin *plugin)
 }
 
 static gboolean
-fu_plugin_logind_startup(FuPlugin *plugin, GError **error)
+fu_plugin_logind_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data(plugin);
 	g_autofree gchar *name_owner = NULL;

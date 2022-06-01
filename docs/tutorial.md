@@ -56,7 +56,7 @@ is taken automatically from the suffix of the `.so` file.
     }
 
     static gboolean
-    fu_plugin_foo_startup(FuPlugin *plugin, GError **error)
+    fu_plugin_foo_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
     {
         FuPluginData *data = fu_plugin_get_data(plugin);
         data->proxy = create_proxy();
@@ -92,7 +92,7 @@ derive the details about the `FuDevice` from the hardware, for example reading
 data from `sysfs` or `/dev`.
 
     static gboolean
-    fu_plugin_foo_coldplug(FuPlugin *plugin, GError **error)
+    fu_plugin_foo_coldplug(FuPlugin *plugin, FuProgress *progress, GError **error)
     {
         g_autoptr(FuDevice) dev = NULL;
         fu_device_set_id(dev, "dummy-1:2:3");

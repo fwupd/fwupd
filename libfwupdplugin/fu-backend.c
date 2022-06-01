@@ -160,6 +160,7 @@ fu_backend_invalidate(FuBackend *self)
 /**
  * fu_backend_setup:
  * @self: a #FuBackend
+ * @progress: a #FuProgress
  * @error: (nullable): optional return location for an error
  *
  * Sets up the backend ready for use, which typically calls the subclassed setup
@@ -170,7 +171,7 @@ fu_backend_invalidate(FuBackend *self)
  * Since: 1.6.1
  **/
 gboolean
-fu_backend_setup(FuBackend *self, GError **error)
+fu_backend_setup(FuBackend *self, FuProgress *progress, GError **error)
 {
 	FuBackendClass *klass = FU_BACKEND_GET_CLASS(self);
 	FuBackendPrivate *priv = GET_PRIVATE(self);
@@ -181,7 +182,7 @@ fu_backend_setup(FuBackend *self, GError **error)
 	if (priv->done_setup)
 		return TRUE;
 	if (klass->setup != NULL) {
-		if (!klass->setup(self, error)) {
+		if (!klass->setup(self, progress, error)) {
 			priv->enabled = FALSE;
 			return FALSE;
 		}
@@ -193,6 +194,7 @@ fu_backend_setup(FuBackend *self, GError **error)
 /**
  * fu_backend_coldplug:
  * @self: a #FuBackend
+ * @progress: a #FuProgress
  * @error: (nullable): optional return location for an error
  *
  * Adds devices using the subclassed backend. If fu_backend_setup() has not
@@ -203,16 +205,16 @@ fu_backend_setup(FuBackend *self, GError **error)
  * Since: 1.6.1
  **/
 gboolean
-fu_backend_coldplug(FuBackend *self, GError **error)
+fu_backend_coldplug(FuBackend *self, FuProgress *progress, GError **error)
 {
 	FuBackendClass *klass = FU_BACKEND_GET_CLASS(self);
 	g_return_val_if_fail(FU_IS_BACKEND(self), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
-	if (!fu_backend_setup(self, error))
+	if (!fu_backend_setup(self, progress, error))
 		return FALSE;
 	if (klass->coldplug == NULL)
 		return TRUE;
-	return klass->coldplug(self, error);
+	return klass->coldplug(self, progress, error);
 }
 
 /**

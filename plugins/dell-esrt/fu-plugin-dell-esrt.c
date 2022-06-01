@@ -94,7 +94,7 @@ fu_plugin_dell_esrt_init(FuPlugin *plugin)
 }
 
 static gboolean
-fu_plugin_dell_esrt_startup(FuPlugin *plugin, GError **error)
+fu_plugin_dell_esrt_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 {
 	gboolean capsule_disable = FALSE;
 	g_autofree gchar *sysfsfwdir = NULL;
@@ -155,7 +155,7 @@ fu_plugin_dell_esrt_unlock(FuPlugin *plugin, FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_plugin_dell_esrt_coldplug(FuPlugin *plugin, GError **error)
+fu_plugin_dell_esrt_coldplug(FuPlugin *plugin, FuProgress *progress, GError **error)
 {
 	g_autoptr(FuDevice) dev = fu_device_new(NULL);
 

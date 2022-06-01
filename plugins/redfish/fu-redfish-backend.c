@@ -222,7 +222,7 @@ fu_redfish_backend_set_push_uri_path(FuRedfishBackend *self, const gchar *push_u
 }
 
 static gboolean
-fu_redfish_backend_coldplug(FuBackend *backend, GError **error)
+fu_redfish_backend_coldplug(FuBackend *backend, FuProgress *progress, GError **error)
 {
 	FuRedfishBackend *self = FU_REDFISH_BACKEND(backend);
 	JsonObject *json_obj;
@@ -303,7 +303,7 @@ fu_redfish_backend_set_update_uri_path(FuRedfishBackend *self, const gchar *upda
 }
 
 static gboolean
-fu_redfish_backend_setup(FuBackend *backend, GError **error)
+fu_redfish_backend_setup(FuBackend *backend, FuProgress *progress, GError **error)
 {
 	FuRedfishBackend *self = FU_REDFISH_BACKEND(backend);
 	JsonObject *json_obj;

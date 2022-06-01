@@ -102,7 +102,7 @@ fu_plugin_dell_tpm_func(gconstpointer user_data)
 				       "device-register",
 				       G_CALLBACK(fu_engine_plugin_device_register_cb),
 				       self->plugin_uefi_capsule);
-	ret = fu_plugin_runner_coldplug(self->plugin_dell, &error);
+	ret = fu_plugin_runner_coldplug(self->plugin_dell, progress, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -506,6 +506,7 @@ fu_test_self_init(FuTest *self)
 {
 	gboolean ret;
 	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GError) error = NULL;
 	g_autofree gchar *pluginfn_uefi = NULL;
 	g_autofree gchar *pluginfn_dell = NULL;
@@ -524,7 +525,7 @@ fu_test_self_init(FuTest *self)
 	ret = fu_plugin_open(self->plugin_uefi_capsule, pluginfn_uefi, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	ret = fu_plugin_runner_startup(self->plugin_uefi_capsule, &error);
+	ret = fu_plugin_runner_startup(self->plugin_uefi_capsule, progress, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -534,7 +535,7 @@ fu_test_self_init(FuTest *self)
 	ret = fu_plugin_open(self->plugin_dell, pluginfn_dell, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	ret = fu_plugin_runner_startup(self->plugin_dell, &error);
+	ret = fu_plugin_runner_startup(self->plugin_dell, progress, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 }

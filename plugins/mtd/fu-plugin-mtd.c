@@ -18,7 +18,7 @@ fu_plugin_mtd_init(FuPlugin *plugin)
 }
 
 static gboolean
-fu_plugin_mtd_startup(FuPlugin *plugin, GError **error)
+fu_plugin_mtd_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 {
 #ifndef HAVE_MTD_USER_H
 	g_set_error_literal(error,

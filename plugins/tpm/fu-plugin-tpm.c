@@ -324,7 +324,7 @@ fu_plugin_tpm_coldplug_eventlog(FuPlugin *plugin, GError **error)
 }
 
 static gboolean
-fu_plugin_tpm_coldplug(FuPlugin *plugin, GError **error)
+fu_plugin_tpm_coldplug(FuPlugin *plugin, FuProgress *progress, GError **error)
 {
 	g_autoptr(GError) error_local = NULL;
 
@@ -337,7 +337,7 @@ fu_plugin_tpm_coldplug(FuPlugin *plugin, GError **error)
 }
 
 static gboolean
-fu_plugin_tpm_startup(FuPlugin *plugin, GError **error)
+fu_plugin_tpm_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data(plugin);
 	g_autofree gchar *sysfstpmdir = NULL;

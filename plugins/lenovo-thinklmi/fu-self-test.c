@@ -32,6 +32,7 @@ fu_test_self_init(FuTest *self)
 {
 	gboolean ret;
 	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GError) error = NULL;
 	g_autofree gchar *pluginfn_uefi = NULL;
 	g_autofree gchar *pluginfn_lenovo = NULL;
@@ -51,7 +52,7 @@ fu_test_self_init(FuTest *self)
 	ret = fu_plugin_open(self->plugin_uefi_capsule, pluginfn_uefi, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	ret = fu_plugin_runner_startup(self->plugin_uefi_capsule, &error);
+	ret = fu_plugin_runner_startup(self->plugin_uefi_capsule, progress, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -62,7 +63,7 @@ fu_test_self_init(FuTest *self)
 	ret = fu_plugin_open(self->plugin_lenovo_thinklmi, pluginfn_lenovo, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	ret = fu_plugin_runner_startup(self->plugin_lenovo_thinklmi, &error);
+	ret = fu_plugin_runner_startup(self->plugin_lenovo_thinklmi, progress, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 }
@@ -73,6 +74,7 @@ fu_test_probe_fake_esrt(FuTest *self)
 	gboolean ret;
 	gulong added_id;
 	FuDevice *dev = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GError) error = NULL;
 
 	added_id = g_signal_connect(FU_PLUGIN(self->plugin_uefi_capsule),
@@ -80,7 +82,7 @@ fu_test_probe_fake_esrt(FuTest *self)
 				    G_CALLBACK(_plugin_device_added_cb),
 				    &dev);
 
-	ret = fu_plugin_runner_coldplug(self->plugin_uefi_capsule, &error);
+	ret = fu_plugin_runner_coldplug(self->plugin_uefi_capsule, progress, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	g_assert_nonnull(dev);

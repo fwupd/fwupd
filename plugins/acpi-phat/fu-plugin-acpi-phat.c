@@ -23,7 +23,7 @@ fu_plugin_acpi_phat_init(FuPlugin *plugin)
 }
 
 static gboolean
-fu_plugin_acpi_phat_coldplug(FuPlugin *plugin, GError **error)
+fu_plugin_acpi_phat_coldplug(FuPlugin *plugin, FuProgress *progress, GError **error)
 {
 	g_autofree gchar *path = NULL;
 	g_autofree gchar *fn = NULL;

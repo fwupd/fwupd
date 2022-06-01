@@ -35,6 +35,7 @@ fu_test_self_init(FuTest *self)
 {
 	gboolean ret;
 	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GError) error = NULL;
 	g_autofree gchar *pluginfn = NULL;
 
@@ -59,14 +60,14 @@ fu_test_self_init(FuTest *self)
 	ret = fu_plugin_open(self->plugin, pluginfn, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	ret = fu_plugin_runner_startup(self->plugin, &error);
+	ret = fu_plugin_runner_startup(self->plugin, progress, &error);
 	if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE)) {
 		g_test_skip("no redfish.py running");
 		return;
 	}
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	ret = fu_plugin_runner_coldplug(self->plugin, &error);
+	ret = fu_plugin_runner_coldplug(self->plugin, progress, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 }

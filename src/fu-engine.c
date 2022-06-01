@@ -5376,37 +5376,48 @@ fu_engine_get_results(FuEngine *self, const gchar *device_id, GError **error)
 }
 
 static void
-fu_engine_plugins_setup(FuEngine *self)
+fu_engine_plugins_setup(FuEngine *self, FuProgress *progress)
 {
 	GPtrArray *plugins = fu_plugin_list_get_all(self->plugin_list);
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_set_steps(progress, plugins->len);
 	for (guint i = 0; i < plugins->len; i++) {
 		g_autoptr(GError) error = NULL;
 		FuPlugin *plugin = g_ptr_array_index(plugins, i);
-		if (!fu_plugin_runner_startup(plugin, &error)) {
+		FuProgress *progress_child = fu_progress_get_child(progress);
+		fu_progress_set_name(progress_child, fu_plugin_get_name(plugin));
+		if (!fu_plugin_runner_startup(plugin, progress_child, &error)) {
 			fu_plugin_add_flag(plugin, FWUPD_PLUGIN_FLAG_DISABLED);
 			if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
 				fu_plugin_add_flag(plugin, FWUPD_PLUGIN_FLAG_NO_HARDWARE);
 			}
+			fu_progress_finished(progress_child);
 			g_message("disabling plugin because: %s", error->message);
 		}
+		fu_progress_step_done(progress);
 	}
 }
 
 static void
-fu_engine_plugins_coldplug(FuEngine *self)
+fu_engine_plugins_coldplug(FuEngine *self, FuProgress *progress)
 {
 	GPtrArray *plugins;
 	g_autoptr(GString) str = g_string_new(NULL);
 
 	/* exec */
 	plugins = fu_plugin_list_get_all(self->plugin_list);
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_set_steps(progress, plugins->len);
 	for (guint i = 0; i < plugins->len; i++) {
 		g_autoptr(GError) error = NULL;
 		FuPlugin *plugin = g_ptr_array_index(plugins, i);
-		if (!fu_plugin_runner_coldplug(plugin, &error)) {
+		FuProgress *progress_child = fu_progress_get_child(progress);
+		fu_progress_set_name(progress_child, fu_plugin_get_name(plugin));
+		if (!fu_plugin_runner_coldplug(plugin, progress_child, &error)) {
 			fu_plugin_add_flag(plugin, FWUPD_PLUGIN_FLAG_DISABLED);
 			g_message("disabling plugin because: %s", error->message);
 		}
+		fu_progress_step_done(progress);
 	}
 
 	/* print what we do have */
@@ -6739,10 +6750,48 @@ fu_common_win32_registry_get_string(HKEY hkey,
 }
 #endif
 
+static void
+fu_engine_backends_coldplug(FuEngine *self, FuProgress *progress)
+{
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_set_steps(progress, self->backends->len);
+	for (guint i = 0; i < self->backends->len; i++) {
+		FuBackend *backend = g_ptr_array_index(self->backends, i);
+		FuProgress *progress_child = fu_progress_get_child(progress);
+		g_autoptr(GError) error_backend = NULL;
+
+		if (!fu_backend_get_enabled(backend)) {
+			fu_progress_step_done(progress);
+			continue;
+		}
+		g_signal_connect(FU_BACKEND(backend),
+				 "device-added",
+				 G_CALLBACK(fu_engine_backend_device_added_cb),
+				 self);
+		g_signal_connect(FU_BACKEND(backend),
+				 "device-removed",
+				 G_CALLBACK(fu_engine_backend_device_removed_cb),
+				 self);
+		g_signal_connect(FU_BACKEND(backend),
+				 "device-changed",
+				 G_CALLBACK(fu_engine_backend_device_changed_cb),
+				 self);
+		fu_progress_set_name(progress_child, fu_backend_get_name(backend));
+		if (!fu_backend_coldplug(backend, progress_child, &error_backend)) {
+			g_warning("failed to coldplug backend %s: %s",
+				  fu_backend_get_name(backend),
+				  error_backend->message);
+			continue;
+		}
+		fu_progress_step_done(progress);
+	}
+}
+
 /**
  * fu_engine_load:
  * @self: a #FuEngine
  * @flags: engine load flags, e.g. %FU_ENGINE_LOAD_FLAG_READONLY
+ * @progress: a #FuProgress
  * @error: (nullable): optional return location for an error
  *
  * Load the firmware update engine so it is ready for use.
@@ -6750,7 +6799,7 @@ fu_common_win32_registry_get_string(HKEY hkey,
  * Returns: %TRUE for success
  **/
 gboolean
-fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, GError **error)
+fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GError **error)
 {
 	FuQuirksLoadFlags quirks_flags = FU_QUIRKS_LOAD_FLAG_NONE;
 	GPtrArray *guids;
@@ -6766,6 +6815,29 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, GError **error)
 	/* avoid re-loading a second time if fu-tool or fu-util request to */
 	if (self->loaded)
 		return TRUE;
+
+	/* progress */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "read-config");
+	if (flags & FU_ENGINE_LOAD_FLAG_REMOTES)
+		fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "read-remotes");
+	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "ensure-client-cert");
+	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "write-db");
+	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "load-plugins");
+	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "load-quirks");
+	if (flags & FU_ENGINE_LOAD_FLAG_HWINFO)
+		fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "load-hwinfo");
+	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "load-appstream");
+	if (flags & FU_ENGINE_LOAD_FLAG_COLDPLUG)
+		fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "backend-setup");
+	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "plugins-init");
+	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "hwid-quirks");
+	if (flags & FU_ENGINE_LOAD_FLAG_COLDPLUG) {
+		fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "plugins-setup");
+		fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 3, "plugins-coldplug");
+	}
+	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 90, "backend-coldplug");
+	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "update-history-db");
 
 	/* sanity check libraries are in sync with daemon */
 	if (g_strcmp0(fwupd_version_string(), VERSION) != 0) {
@@ -6809,6 +6881,7 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, GError **error)
 		g_prefix_error(error, "Failed to load config: ");
 		return FALSE;
 	}
+	fu_progress_step_done(progress);
 
 	/* read remotes */
 	if (flags & FU_ENGINE_LOAD_FLAG_REMOTES) {
@@ -6821,10 +6894,12 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, GError **error)
 			g_prefix_error(error, "Failed to load remotes: ");
 			return FALSE;
 		}
+		fu_progress_step_done(progress);
 	}
 
 	/* create client certificate */
 	fu_engine_ensure_client_certificate(self);
+	fu_progress_step_done(progress);
 
 	/* get hardcoded approved and blocked firmware */
 	checksums_approved = fu_config_get_approved_firmware(self->config);
@@ -6853,12 +6928,14 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, GError **error)
 		const gchar *csum = g_ptr_array_index(checksums_blocked, i);
 		fu_engine_add_blocked_firmware(self, csum);
 	}
+	fu_progress_step_done(progress);
 
 	/* load plugins early, as we have to call ->load() *before* building quirk silo */
 	if (!fu_engine_load_plugins(self, error)) {
 		g_prefix_error(error, "Failed to load plugins: ");
 		return FALSE;
 	}
+	fu_progress_step_done(progress);
 
 	/* set up idle exit */
 	if ((self->app_flags & FU_APP_FLAGS_NO_IDLE_SOURCES) == 0)
@@ -6871,16 +6948,20 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, GError **error)
 		quirks_flags |= FU_QUIRKS_LOAD_FLAG_NO_CACHE;
 	if (!fu_context_load_quirks(self->ctx, quirks_flags, &error_quirks))
 		g_warning("Failed to load quirks: %s", error_quirks->message);
+	fu_progress_step_done(progress);
 
 	/* load SMBIOS and the hwids */
-	if (flags & FU_ENGINE_LOAD_FLAG_HWINFO)
+	if (flags & FU_ENGINE_LOAD_FLAG_HWINFO) {
 		fu_context_load_hwinfo(self->ctx, NULL);
+		fu_progress_step_done(progress);
+	}
 
 	/* load AppStream metadata */
 	if (!fu_engine_load_metadata_store(self, flags, error)) {
 		g_prefix_error(error, "Failed to load AppStream data: ");
 		return FALSE;
 	}
+	fu_progress_step_done(progress);
 
 	/* watch the local.d directories for changes */
 	if (!fu_engine_load_local_metadata_watches(self, error))
@@ -6917,7 +6998,9 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, GError **error)
 		for (guint i = 0; i < self->backends->len; i++) {
 			FuBackend *backend = g_ptr_array_index(self->backends, i);
 			g_autoptr(GError) error_backend = NULL;
-			if (!fu_backend_setup(backend, &error_backend)) {
+			if (!fu_backend_setup(backend,
+					      fu_progress_get_child(progress),
+					      &error_backend)) {
 				g_debug("failed to setup backend %s: %s",
 					fu_backend_get_name(backend),
 					error_backend->message);
@@ -6932,6 +7015,7 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, GError **error)
 					    "all backends failed setup");
 			return FALSE;
 		}
+		fu_progress_step_done(progress);
 	}
 
 	/* delete old data files */
@@ -6945,6 +7029,7 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, GError **error)
 		g_prefix_error(error, "failed to init plugins: ");
 		return FALSE;
 	}
+	fu_progress_step_done(progress);
 
 	/* set quirks for each hwid */
 	guids = fu_context_get_hwid_guids(self->ctx);
@@ -6952,6 +7037,7 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, GError **error)
 		const gchar *hwid = g_ptr_array_index(guids, i);
 		fu_engine_load_quirks_for_hwid(self, hwid);
 	}
+	fu_progress_step_done(progress);
 
 	/* set up battery threshold */
 	fu_engine_context_set_battery_threshold(self->ctx);
@@ -6973,41 +7059,22 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, GError **error)
 
 	/* add devices */
 	if (flags & FU_ENGINE_LOAD_FLAG_COLDPLUG) {
-		fu_engine_plugins_setup(self);
-		fu_engine_plugins_coldplug(self);
+		fu_engine_plugins_setup(self, fu_progress_get_child(progress));
+		fu_progress_step_done(progress);
+		fu_engine_plugins_coldplug(self, fu_progress_get_child(progress));
+		fu_progress_step_done(progress);
 	}
 
 	/* coldplug backends */
 	if (flags & FU_ENGINE_LOAD_FLAG_COLDPLUG) {
-		for (guint i = 0; i < self->backends->len; i++) {
-			FuBackend *backend = g_ptr_array_index(self->backends, i);
-			g_autoptr(GError) error_backend = NULL;
-			if (!fu_backend_get_enabled(backend))
-				continue;
-			g_signal_connect(FU_BACKEND(backend),
-					 "device-added",
-					 G_CALLBACK(fu_engine_backend_device_added_cb),
-					 self);
-			g_signal_connect(FU_BACKEND(backend),
-					 "device-removed",
-					 G_CALLBACK(fu_engine_backend_device_removed_cb),
-					 self);
-			g_signal_connect(FU_BACKEND(backend),
-					 "device-changed",
-					 G_CALLBACK(fu_engine_backend_device_changed_cb),
-					 self);
-			if (!fu_backend_coldplug(backend, &error_backend)) {
-				g_warning("failed to coldplug backend %s: %s",
-					  fu_backend_get_name(backend),
-					  error_backend->message);
-				continue;
-			}
-		}
+		fu_engine_backends_coldplug(self, fu_progress_get_child(progress));
+		fu_progress_step_done(progress);
 	}
 
 	/* update the db for devices that were updated during the reboot */
 	if (!fu_engine_update_history_database(self, error))
 		return FALSE;
+	fu_progress_step_done(progress);
 
 	fu_engine_set_status(self, FWUPD_STATUS_IDLE);
 	self->loaded = TRUE;

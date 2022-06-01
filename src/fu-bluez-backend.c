@@ -156,7 +156,7 @@ fu_bluez_backend_timeout_cb(gpointer user_data)
 }
 
 static gboolean
-fu_bluez_backend_setup(FuBackend *backend, GError **error)
+fu_bluez_backend_setup(FuBackend *backend, FuProgress *progress, GError **error)
 {
 	FuBluezBackend *self = FU_BLUEZ_BACKEND(backend);
 	g_autoptr(FuBluezBackendHelper) helper = g_new0(FuBluezBackendHelper, 1);
@@ -195,7 +195,7 @@ fu_bluez_backend_setup(FuBackend *backend, GError **error)
 }
 
 static gboolean
-fu_bluez_backend_coldplug(FuBackend *backend, GError **error)
+fu_bluez_backend_coldplug(FuBackend *backend, FuProgress *progress, GError **error)
 {
 	FuBluezBackend *self = FU_BLUEZ_BACKEND(backend);
 	g_autolist(GDBusObject) objects = NULL;

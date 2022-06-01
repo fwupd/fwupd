@@ -9,7 +9,7 @@
 #include <fwupdplugin.h>
 
 static gboolean
-fu_plugin_lenovo_thinklmi_startup(FuPlugin *plugin, GError **error)
+fu_plugin_lenovo_thinklmi_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 {
 	g_autofree gchar *sysfsfwdir = NULL;
 	g_autofree gchar *thinklmidir = NULL;

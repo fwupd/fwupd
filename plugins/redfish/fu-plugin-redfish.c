@@ -75,19 +75,19 @@ fu_plugin_redfish_change_expired(FuPlugin *plugin, GError **error)
 }
 
 static gboolean
-fu_plugin_redfish_coldplug(FuPlugin *plugin, GError **error)
+fu_plugin_redfish_coldplug(FuPlugin *plugin, FuProgress *progress, GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data(plugin);
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(GError) error_local = NULL;
 
 	/* get the list of devices */
-	if (!fu_backend_coldplug(FU_BACKEND(data->backend), &error_local)) {
+	if (!fu_backend_coldplug(FU_BACKEND(data->backend), progress, &error_local)) {
 		/* did the user password expire? */
 		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_AUTH_EXPIRED)) {
 			if (!fu_plugin_redfish_change_expired(plugin, error))
 				return FALSE;
-			if (!fu_backend_coldplug(FU_BACKEND(data->backend), error)) {
+			if (!fu_backend_coldplug(FU_BACKEND(data->backend), progress, error)) {
 				fu_plugin_add_flag(plugin, FWUPD_PLUGIN_FLAG_AUTH_REQUIRED);
 				return FALSE;
 			}
@@ -336,7 +336,7 @@ fu_redfish_plugin_ipmi_create_user(FuPlugin *plugin, GError **error)
 #endif
 
 static gboolean
-fu_plugin_redfish_startup(FuPlugin *plugin, GError **error)
+fu_plugin_redfish_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data(plugin);
 	g_autofree gchar *ca_check_str = NULL;
@@ -414,7 +414,7 @@ fu_plugin_redfish_startup(FuPlugin *plugin, GError **error)
 	}
 #endif
 
-	return fu_backend_setup(FU_BACKEND(data->backend), error);
+	return fu_backend_setup(FU_BACKEND(data->backend), progress, error);
 }
 
 static gboolean
@@ -422,14 +422,16 @@ fu_plugin_redfish_cleanup_setup_cb(FuDevice *device, gpointer user_data, GError 
 {
 	FuPlugin *self = FU_PLUGIN(user_data);
 	FuPluginData *data = fu_plugin_get_data(self);
-	return fu_backend_setup(FU_BACKEND(data->backend), error);
+	FuProgress *progress = fu_progress_new(G_STRLOC);
+	return fu_backend_setup(FU_BACKEND(data->backend), progress, error);
 }
 
 static gboolean
 fu_plugin_redfish_cleanup_coldplug_cb(FuDevice *device, gpointer user_data, GError **error)
 {
 	FuPlugin *self = FU_PLUGIN(user_data);
-	return fu_plugin_redfish_coldplug(self, error);
+	FuProgress *progress = fu_progress_new(G_STRLOC);
+	return fu_plugin_redfish_coldplug(self, progress, error);
 }
 
 static gboolean
