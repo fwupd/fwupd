@@ -150,7 +150,11 @@ fu_plugin_test_device_registered(FuPlugin *plugin, FuDevice *device)
 }
 
 static gboolean
-fu_plugin_test_verify(FuPlugin *plugin, FuDevice *device, FuPluginVerifyFlags flags, GError **error)
+fu_plugin_test_verify(FuPlugin *plugin,
+		      FuDevice *device,
+		      FuProgress *progress,
+		      FuPluginVerifyFlags flags,
+		      GError **error)
 {
 	if (g_strcmp0(fu_device_get_version(device), "1.2.2") == 0) {
 		fu_device_add_checksum(device, "90d0ad436d21e0687998cd2127b2411135e1f730");
