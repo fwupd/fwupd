@@ -4100,7 +4100,7 @@ fu_engine_get_result_from_component(FuEngine *self,
 	g_autoptr(XbQuery) query = NULL;
 #endif
 
-	dev = fu_device_new_with_context(self->ctx);
+	dev = fu_device_new(self->ctx);
 	provides = xb_node_query(component, "provides/firmware[@type=$'flashed']", 0, &error_local);
 	if (provides == NULL) {
 		g_set_error(error,

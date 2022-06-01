@@ -137,9 +137,7 @@ typedef gboolean (*FuDeviceRetryFunc)(FuDevice *self,
 				      GError **error) G_GNUC_WARN_UNUSED_RESULT;
 
 FuDevice *
-fu_device_new(void);
-FuDevice *
-fu_device_new_with_context(FuContext *ctx);
+fu_device_new(FuContext *ctx);
 
 /* helpful casting macros */
 #define fu_device_has_flag(d, v)	   fwupd_device_has_flag(FWUPD_DEVICE(d), v)

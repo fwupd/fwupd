@@ -455,7 +455,7 @@ fu_plugin_amt_create_device(FuPlugin *plugin, GError **error)
 	}
 	memcpy(&ver, response->data, sizeof(struct amt_code_versions));
 
-	dev = fu_device_new_with_context(fu_plugin_get_context(plugin));
+	dev = fu_device_new(fu_plugin_get_context(plugin));
 	fu_device_set_id(dev, "/dev/mei0");
 	fu_device_set_vendor(dev, "Intel");
 	fu_device_add_flag(dev, FWUPD_DEVICE_FLAG_INTERNAL);

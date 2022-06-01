@@ -5,7 +5,6 @@ LIBFWUPDPLUGIN_0.1.0 {
     fu_device_add_flag;
     fu_device_get_metadata;
     fu_device_get_type;
-    fu_device_new;
     fu_device_set_metadata;
   local: *;
 };
@@ -809,7 +808,6 @@ LIBFWUPDPLUGIN_1.6.2 {
     fu_device_get_results;
     fu_device_has_parent_physical_id;
     fu_device_has_private_flag;
-    fu_device_new_with_context;
     fu_device_register_private_flag;
     fu_device_remove_child;
     fu_device_remove_private_flag;
@@ -1046,6 +1044,7 @@ LIBFWUPDPLUGIN_1.8.1 {
 
 LIBFWUPDPLUGIN_1.8.2 {
   global:
+    fu_device_new;
     fu_progress_add_step_full;
     fu_progress_get_name;
     fu_progress_set_name;

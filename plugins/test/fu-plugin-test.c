@@ -78,7 +78,7 @@ fu_plugin_test_coldplug(FuPlugin *plugin, GError **error)
 {
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	g_autoptr(FuDevice) device = NULL;
-	device = fu_device_new_with_context(ctx);
+	device = fu_device_new(ctx);
 	fu_device_set_id(device, "FakeDevice");
 	fu_device_add_guid(device, "b585990a-003e-5270-89d5-3705a17f9a43");
 	fu_device_set_name(device, "Integrated_Webcam(TM)");
@@ -111,7 +111,7 @@ fu_plugin_test_coldplug(FuPlugin *plugin, GError **error)
 		g_autoptr(FuDevice) child1 = NULL;
 		g_autoptr(FuDevice) child2 = NULL;
 
-		child1 = fu_device_new_with_context(ctx);
+		child1 = fu_device_new(ctx);
 		fu_device_add_vendor_id(child1, "USB:FFFF");
 		fu_device_add_protocol(child1, "com.acme");
 		fu_device_set_physical_id(child1, "fake");
@@ -125,7 +125,7 @@ fu_plugin_test_coldplug(FuPlugin *plugin, GError **error)
 		fu_device_add_flag(child1, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 		fu_plugin_device_add(plugin, child1);
 
-		child2 = fu_device_new_with_context(ctx);
+		child2 = fu_device_new(ctx);
 		fu_device_add_vendor_id(child2, "USB:FFFF");
 		fu_device_add_protocol(child2, "com.acme");
 		fu_device_set_physical_id(child2, "fake");

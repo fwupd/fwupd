@@ -5456,23 +5456,10 @@ fu_device_finalize(GObject *object)
  *
  * Creates a new #Fudevice
  *
- * Since: 0.1.0
+ * Since: 1.8.2
  **/
 FuDevice *
-fu_device_new(void)
-{
-	return fu_device_new_with_context(NULL);
-}
-
-/**
- * fu_device_new_with_context:
- *
- * Creates a new #Fudevice
- *
- * Since: 1.6.2
- **/
-FuDevice *
-fu_device_new_with_context(FuContext *ctx)
+fu_device_new(FuContext *ctx)
 {
 	FuDevice *self = g_object_new(FU_TYPE_DEVICE, "context", ctx, NULL);
 	return FU_DEVICE(self);

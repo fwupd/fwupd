@@ -254,7 +254,7 @@ fu_plugin_dock_node(FuPlugin *plugin,
 		return FALSE;
 	}
 
-	dev = fu_device_new_with_context(ctx);
+	dev = fu_device_new(ctx);
 	fu_device_set_physical_id(dev, platform);
 	fu_device_set_logical_id(dev, component_guid);
 	if (component_desc != NULL) {
@@ -757,7 +757,7 @@ fu_plugin_dell_detect_tpm(FuPlugin *plugin, GError **error)
 	pretty_tpm_name_alt = g_strdup_printf("TPM %s", tpm_mode_alt);
 
 	/* build Standard device nodes */
-	dev = fu_device_new_with_context(ctx);
+	dev = fu_device_new(ctx);
 	fu_device_set_physical_id(dev, "DEVNAME=/dev/tpm0");
 	fu_device_set_logical_id(dev, "UEFI");
 	fu_device_add_instance_id(dev, tpm_guid_raw);
@@ -794,7 +794,7 @@ fu_plugin_dell_detect_tpm(FuPlugin *plugin, GError **error)
 
 	/* build alternate device node */
 	if (can_switch_modes) {
-		dev_alt = fu_device_new_with_context(ctx);
+		dev_alt = fu_device_new(ctx);
 		fu_device_set_id(dev_alt, tpm_id_alt);
 		fu_device_add_instance_id(dev_alt, tpm_guid_raw_alt);
 		fu_device_set_vendor(dev, "Dell Inc.");

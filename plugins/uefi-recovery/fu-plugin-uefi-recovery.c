@@ -31,7 +31,7 @@ fu_plugin_uefi_recovery_coldplug(FuPlugin *plugin, GError **error)
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	GPtrArray *hwids = fu_context_get_hwid_guids(ctx);
 	const gchar *dmi_vendor;
-	g_autoptr(FuDevice) device = fu_device_new_with_context(fu_plugin_get_context(plugin));
+	g_autoptr(FuDevice) device = fu_device_new(fu_plugin_get_context(plugin));
 	fu_device_set_id(device, "uefi-recovery");
 	fu_device_set_name(device, "System Firmware ESRT Recovery");
 	fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_TRIPLET);
