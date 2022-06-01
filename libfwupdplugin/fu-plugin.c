@@ -1767,7 +1767,7 @@ fu_plugin_runner_verify(FuPlugin *self,
 
 	/* run vfunc */
 	g_debug("verify(%s)", fu_plugin_get_name(self));
-	if (!vfuncs->verify(self, device, flags, &error_local)) {
+	if (!vfuncs->verify(self, device, progress, flags, &error_local)) {
 		g_autoptr(GError) error_attach = NULL;
 		if (error_local == NULL) {
 			g_critical("unset plugin error in verify(%s)", fu_plugin_get_name(self));

@@ -167,6 +167,7 @@ typedef struct {
 	 * verify:
 	 * @self: a #FuPlugin
 	 * @dev: a device
+	 * @progress: a #FuProgress
 	 * @flags: verify flags
 	 * @error: (nullable): optional return location for an error
 	 *
@@ -176,6 +177,7 @@ typedef struct {
 	 **/
 	gboolean (*verify)(FuPlugin *self,
 			   FuDevice *device,
+			   FuProgress *progress,
 			   FuPluginVerifyFlags flags,
 			   GError **error);
 	/**
