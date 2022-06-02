@@ -17,7 +17,7 @@ struct _FuGenesysScalerFirmware {
 	gsize protect_sector_size[2];
 	guint public_key_addr;
 	gsize public_key_size;
-	guint addr;
+	guint second_image_program_addr;
 };
 
 G_DEFINE_TYPE(FuGenesysScalerFirmware, fu_genesys_scaler_firmware, FU_TYPE_FIRMWARE)
@@ -74,7 +74,7 @@ fu_genesys_scaler_firmware_parse(FuFirmware *firmware,
 			self->footer.data.header.second_image_program_addr,
 			sizeof(self->footer.data.header.second_image_program_addr),
 			0,
-			&self->addr,
+			&self->second_image_program_addr,
 			G_LITTLE_ENDIAN,
 			error))
 			return FALSE;
@@ -156,7 +156,9 @@ fu_genesys_scaler_firmware_export(FuFirmware *firmware,
 				  self->footer.data.header.configuration_setting.r8);
 
 	if (self->footer.data.header.configuration_setting.bits.second_image)
-		fu_xmlb_builder_insert_kx(bn, "second_image_program_addr", self->addr);
+		fu_xmlb_builder_insert_kx(bn,
+					  "second_image_program_addr",
+					  self->second_image_program_addr);
 
 	if (self->footer.data.header.configuration_setting.bits.decrypt_mode) {
 		gchar N[0x200 + 1] = {'\0'};
@@ -197,7 +199,6 @@ fu_genesys_scaler_firmware_export(FuFirmware *firmware,
 					  "boot_code_size",
 					  self->footer.data.header.boot_code_size);
 	}
-	fu_xmlb_builder_insert_kx(bn, "addr", self->addr);
 }
 
 static gboolean

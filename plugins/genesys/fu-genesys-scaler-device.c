@@ -610,7 +610,7 @@ fu_genesys_scaler_device_pause_r2_cpu(FuGenesysScalerDevice *self, GError **erro
 }
 
 static gboolean
-fu_geensys_scaler_device_set_isp_mode(FuDevice *device, gpointer user_data, GError **error)
+fu_genesys_scaler_device_set_isp_mode(FuDevice *device, gpointer user_data, GError **error)
 {
 	FuGenesysScalerDevice *self = user_data;
 	FuDevice *parent_device = fu_device_get_parent(FU_DEVICE(self));
@@ -650,7 +650,7 @@ fu_genesys_scaler_device_enter_isp_mode(FuGenesysScalerDevice *self, GError **er
 	 */
 
 	if (!fu_device_retry_full(FU_DEVICE(self),
-				  fu_geensys_scaler_device_set_isp_mode,
+				  fu_genesys_scaler_device_set_isp_mode,
 				  2,
 				  1000 /* 1ms */,
 				  self,
@@ -852,6 +852,7 @@ fu_genesys_scaler_device_get_public_key(FuGenesysScalerDevice *self,
 		g_usleep(100000); /* 100ms */
 	}
 
+	/* success */
 	return TRUE;
 }
 
@@ -1159,7 +1160,7 @@ fu_genesys_scaler_device_flash_control_sector_erase(FuGenesysScalerDevice *self,
 	if (!fu_genesys_scaler_device_flash_control_write_status(self, 0x00, error))
 		return FALSE;
 
-	/* 5s: 500x10ms retries */
+	/* 5s */
 	if (!fu_device_retry(FU_DEVICE(self),
 			     fu_genesys_scaler_device_wait_flash_control_register_cb,
 			     500,
@@ -1210,7 +1211,7 @@ fu_genesys_scaler_device_flash_control_sector_erase(FuGenesysScalerDevice *self,
 		return FALSE;
 	}
 
-	/* 5s: 500x10ms retries */
+	/* 5s */
 	if (!fu_device_retry(FU_DEVICE(self),
 			     fu_genesys_scaler_device_wait_flash_control_register_cb,
 			     500,
@@ -1342,7 +1343,7 @@ fu_genesys_scaler_device_flash_control_page_program(FuGenesysScalerDevice *self,
 		fu_progress_step_done(progress);
 	}
 
-	/* 200ms: 20x10ms retries */
+	/* 200ms */
 	if (!fu_device_retry(FU_DEVICE(self),
 			     fu_genesys_scaler_device_wait_flash_control_register_cb,
 			     20,
@@ -1683,6 +1684,7 @@ fu_genesys_scaler_device_dump_firmware(FuDevice *device, FuProgress *progress, G
 		return NULL;
 	fu_progress_step_done(progress);
 
+	/* success */
 	return g_bytes_new_take(g_steal_pointer(&buf), size);
 }
 
@@ -1749,7 +1751,7 @@ fu_genesys_scaler_device_prepare_firmware(FuDevice *device,
 		   sizeof(self->footer.data.public_key)) != 0) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
-				    FWUPD_ERROR_INTERNAL,
+				    FWUPD_ERROR_SIGNATURE_INVALID,
 				    "mismatch public-key");
 		return NULL;
 	}
@@ -1925,6 +1927,7 @@ fu_genesys_scaler_device_set_quirk_kv(FuDevice *device,
 		return TRUE;
 	}
 
+	/* failure */
 	g_set_error_literal(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
@@ -1946,6 +1949,8 @@ fu_genesys_scaler_device_init(FuGenesysScalerDevice *self)
 					FU_SCALER_FLAG_PAUSE_R2_CPU,
 					"pause-r2-cpu");
 	fu_device_register_private_flag(FU_DEVICE(self), FU_SCALER_FLAG_USE_I2C_CH0, "use-i2c-ch0");
+	fu_device_set_install_duration(FU_DEVICE(self), 730); /* 12 min 10 s */
+
 	self->sector_size = 0x1000; /* 4KB */
 	self->page_size = 0x100;    /* 256B */
 	self->transfer_size = 0x40; /* 64B */
