@@ -4,6 +4,8 @@ install_data([
     '8bitdo-sfc30.json',
     'aiaiai-h05.json',
     'bizlink-no-sku-vli.json',
+    'corsair-katar-pro-wireless-mouse.json',
+    'corsair-katar-pro-wireless-receiver.json',
     'dell-kh08p.json',
     'dell-wd19tb.json',
     'fwupd-a3bu-xplained.json',
