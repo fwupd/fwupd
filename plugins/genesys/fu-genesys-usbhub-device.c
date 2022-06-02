@@ -334,7 +334,7 @@ fu_genesys_usbhub_device_cfi_setup(FuGenesysUsbhubDevice *self, GError **error)
 	}
 
 	/* failure */
-	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "no CFI device found");
+	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "no CFI device found");
 	return NULL;
 }
 #endif
@@ -408,6 +408,8 @@ fu_genesys_usbhub_device_set_isp_mode(FuGenesysUsbhubDevice *self,
 
 	if (mode == ISP_ENTER) {
 		FuGenesysWaitFlashRegisterHelper helper = {.reg = 5, .expected_val = 0};
+
+		/* 150ms */
 		if (!fu_device_retry(FU_DEVICE(self),
 				     fu_genesys_usbhub_device_wait_flash_status_register_cb,
 				     5,
@@ -471,7 +473,7 @@ fu_genesys_usbhub_device_authentication_request(FuGenesysUsbhubDevice *self,
 	if (buf != 1) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
-				    FWUPD_ERROR_INTERNAL,
+				    FWUPD_ERROR_AUTH_FAILED,
 				    "device authentication failed");
 		return FALSE;
 	}
@@ -637,7 +639,7 @@ fu_genesys_usbhub_device_check_fw_signature(FuGenesysUsbhubDevice *self,
 	if (memcmp(sig, GENESYS_USBHUB_FW_SIG_TEXT_HUB, GENESYS_USBHUB_FW_SIG_LEN) != 0) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
-				    FWUPD_ERROR_INTERNAL,
+				    FWUPD_ERROR_SIGNATURE_INVALID,
 				    "wrong firmware signature");
 		return FALSE;
 	}
@@ -786,6 +788,7 @@ fu_genesys_usbhub_device_dump_firmware(FuDevice *device, FuProgress *progress, G
 		return NULL;
 	fu_progress_step_done(progress);
 
+	/* success */
 	return g_bytes_new_take(g_steal_pointer(&buf), size);
 }
 
@@ -1150,6 +1153,7 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 	/* success */
 	return TRUE;
 #else
+	/* failure */
 	g_set_error_literal(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
@@ -1221,6 +1225,7 @@ fu_genesys_usbhub_device_prepare_firmware(FuDevice *device,
 		return NULL;
 	}
 
+	/* success */
 	return fu_firmware_new_from_bytes(fw);
 }
 
@@ -1268,6 +1273,7 @@ fu_genesys_usbhub_device_erase_flash(FuGenesysUsbhubDevice *self,
 			return FALSE;
 		}
 
+		/* 8s */
 		if (!fu_device_retry(FU_DEVICE(self),
 				     fu_genesys_usbhub_device_wait_flash_status_register_cb,
 				     self->flash_erase_delay / 30,
@@ -1328,6 +1334,7 @@ fu_genesys_usbhub_device_write_flash(FuGenesysUsbhubDevice *self,
 			return FALSE;
 		}
 
+		/* 5s */
 		if (!fu_device_retry(FU_DEVICE(self),
 				     fu_genesys_usbhub_device_wait_flash_status_register_cb,
 				     self->flash_write_delay / 30,
@@ -1561,6 +1568,7 @@ fu_genesys_usbhub_device_set_quirk_kv(FuDevice *device,
 		return TRUE;
 	}
 
+	/* failure */
 	g_set_error_literal(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
@@ -1575,19 +1583,21 @@ fu_genesys_usbhub_device_init(FuGenesysUsbhubDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
 	fu_device_add_protocol(FU_DEVICE(self), "com.genesys.usbhub");
-	fu_device_retry_set_delay(FU_DEVICE(self), 30);	   /* ms */
-	fu_device_set_remove_delay(FU_DEVICE(self), 5000); /* ms */
+	fu_device_retry_set_delay(FU_DEVICE(self), 30);	   /* 30ms */
+	fu_device_set_remove_delay(FU_DEVICE(self), 5000); /* 5s */
 	fu_device_register_private_flag(FU_DEVICE(self),
 					FU_GENESYS_USBHUB_FLAG_HAS_MSTAR_SCALER,
 					"has-mstar-scaler");
 	fu_device_register_private_flag(FU_DEVICE(self),
 					FU_GENESYS_USBHUB_FLAG_HAS_PUBLIC_KEY,
 					"has-public-key");
+	fu_device_set_install_duration(FU_DEVICE(self), 9); /* 9 s */
+
 	self->vcs.req_switch = GENESYS_USBHUB_GL_HUB_SWITCH;
 	self->vcs.req_read = GENESYS_USBHUB_GL_HUB_READ;
 	self->vcs.req_write = GENESYS_USBHUB_GL_HUB_WRITE;
-	self->flash_erase_delay = 8000;
-	self->flash_write_delay = 500;
+	self->flash_erase_delay = 8000;	  /* 8s */
+	self->flash_write_delay = 500;	  /* 500ms */
 	self->flash_block_size = 0x10000; /* 64KB */
 	self->flash_sector_size = 0x1000; /* 4KB */
 	self->flash_rw_size = 0x40;	  /* 64B */
