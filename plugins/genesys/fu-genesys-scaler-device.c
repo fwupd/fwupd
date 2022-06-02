@@ -1622,22 +1622,6 @@ fu_genesys_scaler_device_probe(FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_genesys_scaler_device_open(FuDevice *device, GError **error)
-{
-	FuDevice *parent_device = fu_device_get_parent(device);
-
-	return fu_device_open(parent_device, error);
-}
-
-static gboolean
-fu_genesys_scaler_device_close(FuDevice *device, GError **error)
-{
-	FuDevice *parent_device = fu_device_get_parent(device);
-
-	return fu_device_open(parent_device, error);
-}
-
-static gboolean
 fu_genesys_scaler_device_setup(FuDevice *device, GError **error)
 {
 	FuGenesysScalerDevice *self = FU_GENESYS_SCALER_DEVICE(device);
@@ -1957,6 +1941,7 @@ fu_genesys_scaler_device_init(FuGenesysScalerDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_DUAL_IMAGE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
+	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_USE_PARENT_FOR_OPEN);
 	fu_device_register_private_flag(FU_DEVICE(self),
 					FU_SCALER_FLAG_PAUSE_R2_CPU,
 					"pause-r2-cpu");
@@ -1974,8 +1959,6 @@ fu_genesys_scaler_device_class_init(FuGenesysScalerDeviceClass *klass)
 {
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
 	klass_device->probe = fu_genesys_scaler_device_probe;
-	klass_device->open = fu_genesys_scaler_device_open;
-	klass_device->close = fu_genesys_scaler_device_close;
 	klass_device->setup = fu_genesys_scaler_device_setup;
 	klass_device->dump_firmware = fu_genesys_scaler_device_dump_firmware;
 	klass_device->prepare_firmware = fu_genesys_scaler_device_prepare_firmware;
