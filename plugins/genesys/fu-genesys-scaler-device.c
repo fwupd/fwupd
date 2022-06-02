@@ -1161,11 +1161,12 @@ fu_genesys_scaler_device_flash_control_sector_erase(FuGenesysScalerDevice *self,
 		return FALSE;
 
 	/* 5s */
-	if (!fu_device_retry(FU_DEVICE(self),
-			     fu_genesys_scaler_device_wait_flash_control_register_cb,
-			     500,
-			     &helper,
-			     error)) {
+	if (!fu_device_retry_full(FU_DEVICE(self),
+				  fu_genesys_scaler_device_wait_flash_control_register_cb,
+				  100,
+				  50, /* 50ms */
+				  &helper,
+				  error)) {
 		g_prefix_error(error, "error waiting for flash control read status register: ");
 		return FALSE;
 	}
@@ -1212,11 +1213,12 @@ fu_genesys_scaler_device_flash_control_sector_erase(FuGenesysScalerDevice *self,
 	}
 
 	/* 5s */
-	if (!fu_device_retry(FU_DEVICE(self),
-			     fu_genesys_scaler_device_wait_flash_control_register_cb,
-			     500,
-			     &helper,
-			     error)) {
+	if (!fu_device_retry_full(FU_DEVICE(self),
+				  fu_genesys_scaler_device_wait_flash_control_register_cb,
+				  100,
+				  50, /* 50ms */
+				  &helper,
+				  error)) {
 		g_prefix_error(error, "error waiting for flash control read status register: ");
 		return FALSE;
 	}
