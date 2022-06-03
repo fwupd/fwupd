@@ -63,6 +63,7 @@ struct _FuGenesysScalerDevice {
 	FuDevice parent_instance;
 	guint8 level;
 	FuGenesysPublicKey public_key;
+	guint32 cfi_flash_id;
 	FuCfiDevice *cfi_device;
 	FuGenesysVendorCommand vc;
 	guint32 sector_size;
@@ -1643,8 +1644,10 @@ fu_genesys_scaler_device_setup(FuDevice *device, GError **error)
 	guint64 size;
 	guint32 sector_size;
 	guint32 page_size;
+	g_autofree gchar *flash_id = NULL;
 
-	self->cfi_device = fu_cfi_device_new(fu_device_get_context(FU_DEVICE(self)), "C84016");
+	flash_id = g_strdup_printf("%06X", self->cfi_flash_id);
+	self->cfi_device = fu_cfi_device_new(fu_device_get_context(FU_DEVICE(self)), flash_id);
 	if (!fu_device_setup(FU_DEVICE(self->cfi_device), error))
 		return FALSE;
 
@@ -1915,6 +1918,7 @@ fu_genesys_scaler_device_to_string(FuDevice *device, guint idt, GString *str)
 	fu_common_string_append_kx(str, idt, "GpioOutputRegister", self->gpio_out_reg);
 	fu_common_string_append_kx(str, idt, "GpioEnableRegister", self->gpio_en_reg);
 	fu_common_string_append_kx(str, idt, "GpioValue", self->gpio_val);
+	fu_common_string_append_kx(str, idt, "CfiFlashId", self->cfi_flash_id);
 }
 
 static gboolean
@@ -1954,6 +1958,14 @@ fu_genesys_scaler_device_set_quirk_kv(FuDevice *device,
 		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT16, error))
 			return FALSE;
 		self->gpio_val = tmp;
+
+		/* success */
+		return TRUE;
+	}
+	if (g_strcmp0(key, "GenesysScalerCfiFlashId") == 0) {
+		if (!fu_common_strtoull_full(value, &tmp, 0, 0x00ffffffU, error))
+			return FALSE;
+		self->cfi_flash_id = tmp;
 
 		/* success */
 		return TRUE;
