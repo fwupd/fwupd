@@ -1783,7 +1783,8 @@ fu_genesys_scaler_device_prepare_firmware(FuDevice *device,
 	}
 	if (memcmp(&self->footer.data.public_key,
 		   &self->public_key,
-		   sizeof(self->footer.data.public_key)) != 0) {
+		   sizeof(self->footer.data.public_key) && sizeof(self->public_key)) != 0 &&
+	    (flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_SIGNATURE_INVALID,

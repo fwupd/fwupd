@@ -1213,7 +1213,8 @@ fu_genesys_usbhub_device_prepare_firmware(FuDevice *device,
 			fu_common_dump_raw(G_LOG_DOMAIN, "PublicKey", buf, bufsz);
 		if (memcmp(buf + fu_firmware_get_size(firmware),
 			   &self->public_key,
-			   sizeof(self->public_key)) != 0) {
+			   sizeof(self->public_key)) != 0 &&
+		    (flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {
 			g_set_error_literal(error,
 					    FWUPD_ERROR,
 					    FWUPD_ERROR_SIGNATURE_INVALID,
