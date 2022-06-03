@@ -3,6 +3,9 @@ on:
   schedule:
     - cron:  '0 0 * * *'
 
+permissions:
+  contents: read
+
 jobs:
   push_to_registry:
     runs-on: ubuntu-latest
