@@ -1738,6 +1738,17 @@ fu_genesys_scaler_device_prepare_firmware(FuDevice *device,
 	fu_firmware_set_id(payload, FU_FIRMWARE_ID_PAYLOAD);
 	fu_firmware_add_image(firmware, payload);
 
+	/* check size */
+	if (g_bytes_get_size(fw_payload) > fu_device_get_firmware_size_max(device)) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "firmware too large, got 0x%x, expected <= 0x%x",
+			    (guint)g_bytes_get_size(fw_payload),
+			    (guint)fu_device_get_firmware_size_max(device));
+		return NULL;
+	}
+
 	/* footer */
 	fw_footer = fu_common_bytes_new_offset(fw,
 					       g_bytes_get_size(fw) - sizeof(FuGenesysMtkFooter),
