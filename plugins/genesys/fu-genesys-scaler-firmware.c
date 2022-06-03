@@ -10,8 +10,6 @@
 
 #include "fu-genesys-scaler-firmware.h"
 
-#define GENESYS_SCALER_BANK_SIZE 0x200000U
-
 struct _FuGenesysScalerFirmware {
 	FuFirmwareClass parent_instance;
 	FuGenesysMtkFooter footer;
