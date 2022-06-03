@@ -17,6 +17,8 @@ G_DECLARE_FINAL_TYPE(FuGenesysScalerFirmware,
 		     GENESYS_SCALER_FIRMWARE,
 		     FuFirmware)
 
+#define GENESYS_SCALER_BANK_SIZE 0x200000U
+
 #define MTK_RSA_HEADER "MTK_RSA_HEADER"
 
 typedef struct __attribute__((packed)) {

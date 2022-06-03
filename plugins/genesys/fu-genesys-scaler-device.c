@@ -1639,6 +1639,8 @@ static gboolean
 fu_genesys_scaler_device_setup(FuDevice *device, GError **error)
 {
 	FuGenesysScalerDevice *self = FU_GENESYS_SCALER_DEVICE(device);
+	guint64 size_min = fu_device_get_firmware_size_max(device);
+	guint64 size;
 	guint32 sector_size;
 	guint32 page_size;
 
@@ -1653,16 +1655,18 @@ fu_genesys_scaler_device_setup(FuDevice *device, GError **error)
 	if (page_size != 0)
 		self->page_size = page_size;
 
-	if (fu_device_get_firmware_size_max(device) == 0) {
-		guint64 size_max = fu_device_get_firmware_size_max(FU_DEVICE(self->cfi_device));
+	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_DUAL_IMAGE))
+		size_min *= 2;
 
-		if (size_max == 0)
-			size_max = 0x400000;
-
-		if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_DUAL_IMAGE))
-			size_max /= 2;
-
-		fu_device_set_firmware_size_max(FU_DEVICE(self), size_max);
+	size = fu_device_get_firmware_size_max(FU_DEVICE(self->cfi_device));
+	if (size != 0 && size < size_min) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "CFI device too small, got 0x%x, expected >= 0x%x",
+			    (guint)size,
+			    (guint)size_min);
+		return FALSE;
 	}
 
 	/* success */
@@ -1968,9 +1972,10 @@ fu_genesys_scaler_device_init(FuGenesysScalerDevice *self)
 	fu_device_register_private_flag(FU_DEVICE(self), FU_SCALER_FLAG_USE_I2C_CH0, "use-i2c-ch0");
 	fu_device_set_install_duration(FU_DEVICE(self), 730); /* 12 min 10 s */
 
-	self->sector_size = 0x1000; /* 4KB */
-	self->page_size = 0x100;    /* 256B */
-	self->transfer_size = 0x40; /* 64B */
+	self->sector_size = 0x1000;						/* 4KB */
+	self->page_size = 0x100;						/* 256B */
+	self->transfer_size = 0x40;						/* 64B */
+	fu_device_set_firmware_size(FU_DEVICE(self), GENESYS_SCALER_BANK_SIZE); /* 2MB */
 }
 
 static void
