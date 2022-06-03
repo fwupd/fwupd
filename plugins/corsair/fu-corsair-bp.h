@@ -17,6 +17,9 @@ struct _FuCorsairBpClass {
 	FuUsbDeviceClass parent_class;
 };
 
+void
+fu_corsair_bp_flush_input_reports(FuCorsairBp *self);
+
 gboolean
 fu_corsair_bp_get_property(FuCorsairBp *self,
 			   FuCorsairBpProperty property,

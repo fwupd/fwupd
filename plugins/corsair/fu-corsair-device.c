@@ -198,6 +198,9 @@ fu_corsair_device_setup(FuDevice *device, GError **error)
 	g_autofree gchar *version = NULL;
 	FuCorsairDevice *self = FU_CORSAIR_DEVICE(device);
 
+	if (!fu_device_has_private_flag(device, FU_CORSAIR_DEVICE_FLAG_IS_SUBDEVICE))
+		fu_corsair_bp_flush_input_reports(self->bp);
+
 	if (!fu_corsair_bp_get_property(self->bp, FU_CORSAIR_BP_PROPERTY_MODE, &mode, error))
 		return FALSE;
 	if (mode == FU_CORSAIR_DEVICE_MODE_BOOTLOADER)

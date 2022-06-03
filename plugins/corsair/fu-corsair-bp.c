@@ -29,6 +29,9 @@
 #define CORSAIR_OFFSET_CMD_SET_MODE	  0x04
 #define CORSAIR_OFFSET_CMD_DESTINATION	  0x00
 
+#define CORSAIR_INPUT_FLUSH_TIMEOUT    10
+#define CORSAIR_INPUT_FLUSH_ITERATIONS 3
+
 typedef enum {
 	FU_CORSAIR_BP_DESTINATION_SELF = 0x08,
 	FU_CORSAIR_BP_DESTINATION_SUBDEVICE = 0x09
@@ -119,6 +122,34 @@ fu_corsair_bp_command(FuCorsairBp *self,
 	}
 
 	return TRUE;
+}
+
+/**
+ * @brief Flush all input reports if there are any.
+ * @self: a #FuCorsairBp
+ *
+ * This function clears any dangling IN reports that
+ * the device may have sent after the enumeration.
+ */
+void
+fu_corsair_bp_flush_input_reports(FuCorsairBp *self)
+{
+	gsize actual_len;
+	g_autofree guint8 *buf = g_malloc0(self->cmd_read_size);
+	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
+
+	for (guint i = 0; i < CORSAIR_INPUT_FLUSH_ITERATIONS; i++) {
+		g_autoptr(GError) error_local = NULL;
+		if (!g_usb_device_interrupt_transfer(usb_device,
+						     self->epin,
+						     buf,
+						     self->cmd_read_size,
+						     &actual_len,
+						     CORSAIR_INPUT_FLUSH_TIMEOUT,
+						     NULL,
+						     &error_local))
+			g_debug("flushing status: %s", error_local->message);
+	}
 }
 
 static gboolean
