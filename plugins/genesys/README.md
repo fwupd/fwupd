@@ -126,6 +126,15 @@ Scaler GPIO value.
 
 Since 1.7.6.
 
+### GenesysScalerCfiFlashId
+
+CFI Flash Id.
+
+* HP M24fd USB-C Monitor: `0xC22016`
+* HP M27fd USB-C Monitor: `0xC84016`
+
+Since 1.8.2.
+
 ## Runtime Requirement
 
 The USB Hub devices and its attached Scaler require libgusb version [0.3.8][1] or later to be detected.
