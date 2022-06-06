@@ -983,8 +983,8 @@ fu_steelseries_sonic_parse_firmware(FuFirmware *firmware, FwupdInstallFlags flag
 					G_LITTLE_ENDIAN,
 					error))
 		return FALSE;
-	checksum_tmp = fu_common_crc32(g_bytes_get_data(blob, NULL),
-				       g_bytes_get_size(blob) - sizeof(checksum_tmp));
+	checksum_tmp =
+	    fu_crc32(g_bytes_get_data(blob, NULL), g_bytes_get_size(blob) - sizeof(checksum_tmp));
 	checksum_tmp = ~checksum_tmp;
 	if (checksum_tmp != checksum) {
 		if ((flags & FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM) == 0) {

@@ -154,7 +154,7 @@ fu_pxi_composite_receiver_cmd(guint8 opcode,
 	g_byte_array_prepend(wireless_mod_cmd, &rf_cmd_code, 0x01); /* command code */
 
 	/* prepend checksum */
-	checksum = fu_common_sum8(wireless_mod_cmd->data, wireless_mod_cmd->len);
+	checksum = fu_sum8(wireless_mod_cmd->data, wireless_mod_cmd->len);
 	g_byte_array_prepend(wireless_mod_cmd, &checksum, 0x01);
 
 	/* prepend feature report id */

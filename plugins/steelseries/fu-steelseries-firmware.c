@@ -36,8 +36,8 @@ fu_steelseries_firmware_parse(FuFirmware *firmware,
 					G_LITTLE_ENDIAN,
 					error))
 		return FALSE;
-	checksum_tmp = fu_common_crc32(g_bytes_get_data(fw, NULL),
-				       g_bytes_get_size(fw) - sizeof(checksum_tmp));
+	checksum_tmp =
+	    fu_crc32(g_bytes_get_data(fw, NULL), g_bytes_get_size(fw) - sizeof(checksum_tmp));
 	if (checksum_tmp != checksum) {
 		if ((flags & FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM) == 0) {
 			g_set_error(error,

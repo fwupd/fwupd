@@ -11,6 +11,7 @@
 #include <string.h>
 
 #include "fu-common.h"
+#include "fu-crc.h"
 #include "fu-dfu-firmware-private.h"
 
 /**
@@ -245,7 +246,7 @@ fu_dfu_firmware_parse_footer(FuDfuFirmware *self,
 		return FALSE;
 	crc = GUINT32_FROM_LE(ftr.crc);
 	if ((flags & FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM) == 0) {
-		crc_new = ~fu_common_crc32(data, len - 4);
+		crc_new = ~fu_crc32(data, len - 4);
 		if (crc != crc_new) {
 			g_set_error(error,
 				    FWUPD_ERROR,
@@ -323,7 +324,7 @@ fu_dfu_firmware_append_footer(FuDfuFirmware *self, GBytes *contents, GError **er
 	fu_byte_array_append_uint16(buf, priv->dfu_version, G_LITTLE_ENDIAN);
 	g_byte_array_append(buf, (const guint8 *)"UFD", 3);
 	fu_byte_array_append_uint8(buf, sizeof(FuDfuFirmwareFooter));
-	fu_byte_array_append_uint32(buf, ~fu_common_crc32(buf->data, buf->len), G_LITTLE_ENDIAN);
+	fu_byte_array_append_uint32(buf, ~fu_crc32(buf->data, buf->len), G_LITTLE_ENDIAN);
 	return g_byte_array_free_to_bytes(buf);
 }
 

@@ -165,7 +165,7 @@ fu_steelseries_gamepad_write_firmware_chunks(FuDevice *device,
 
 		/* block checksum */
 		/* probably not necessary */
-		chunk_checksum = fu_common_sum16(data + 3, STEELSERIES_BUFFER_TRANSFER_SIZE);
+		chunk_checksum = fu_sum16(data + 3, STEELSERIES_BUFFER_TRANSFER_SIZE);
 		if (!fu_common_write_uint16_safe(data,
 						 STEELSERIES_BUFFER_CONTROL_SIZE,
 						 0x03 + STEELSERIES_BUFFER_TRANSFER_SIZE,

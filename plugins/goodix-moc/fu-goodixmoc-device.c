@@ -47,11 +47,11 @@ goodixmoc_device_cmd_send(FuGoodixMocDevice *self,
 	fu_byte_array_append_uint8(buf, type);		    /* pkg_flag */
 	fu_byte_array_append_uint8(buf, self->dummy_seq++); /* reserved */
 	fu_byte_array_append_uint16(buf, req->len + GX_SIZE_CRC32, G_LITTLE_ENDIAN);
-	crc_hdr = fu_common_crc8(buf->data, buf->len);
+	crc_hdr = fu_crc8(buf->data, buf->len);
 	fu_byte_array_append_uint8(buf, crc_hdr);
 	fu_byte_array_append_uint8(buf, ~crc_hdr);
 	g_byte_array_append(buf, req->data, req->len);
-	crc_all = fu_common_crc32(buf->data, buf->len);
+	crc_all = fu_crc32(buf->data, buf->len);
 	fu_byte_array_append_uint32(buf, crc_all, G_LITTLE_ENDIAN);
 
 	/* send zero length package */
@@ -154,7 +154,7 @@ goodixmoc_device_cmd_recv(FuGoodixMocDevice *self,
 						error))
 			return FALSE;
 		offset = sizeof(GxfpPkgHeader) + header_len - GX_SIZE_CRC32;
-		crc_actual = fu_common_crc32(reply->data, offset);
+		crc_actual = fu_crc32(reply->data, offset);
 		if (!fu_common_read_uint32_safe(reply->data,
 						reply->len,
 						offset,

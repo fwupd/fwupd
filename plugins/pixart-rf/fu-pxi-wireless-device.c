@@ -340,7 +340,7 @@ fu_pxi_wireless_device_write_chunk(FuDevice *device, FuChunk *chk, GError **erro
 				    self->fwstate.mtu_size);
 
 	/* calculate checksum of chunk */
-	checksum = fu_common_sum16(fu_chunk_get_data(chk), fu_chunk_get_data_sz(chk));
+	checksum = fu_sum16(fu_chunk_get_data(chk), fu_chunk_get_data_sz(chk));
 	self->fwstate.checksum += checksum;
 
 	for (guint i = 0; i < chunks->len; i++) {
@@ -496,7 +496,7 @@ fu_pxi_wireless_device_fw_upgrade(FuDevice *device,
 				    g_bytes_get_size(fw),
 				    G_LITTLE_ENDIAN); /* ota fw upgrade command fw size */
 	fu_byte_array_append_uint16(ota_cmd,
-				    fu_common_sum16_bytes(fw),
+				    fu_sum16_bytes(fw),
 				    G_LITTLE_ENDIAN); /* ota fw upgrade command checksum */
 
 	version = fu_firmware_get_version(firmware);

@@ -94,7 +94,7 @@ fu_genesys_usbhub_firmware_verify(const guint8 *buf, gsize bufsz, guint16 code_s
 		return FALSE;
 
 	/* calculate checksum */
-	checksum = fu_common_sum16(buf, code_size - sizeof(checksum));
+	checksum = fu_sum16(buf, code_size - sizeof(checksum));
 	if (checksum != fw_checksum) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -266,7 +266,7 @@ fu_genesys_usbhub_firmware_write(FuFirmware *firmware, GError **error)
 		return NULL;
 
 	/* checksum */
-	checksum = fu_common_sum16(buf->data, code_size - sizeof(checksum));
+	checksum = fu_sum16(buf->data, code_size - sizeof(checksum));
 	if (!fu_common_write_uint16_safe(buf->data,
 					 buf->len,
 					 code_size - sizeof(guint16),

@@ -442,41 +442,7 @@ gboolean
 fu_common_check_full_disk_encryption(GError **error);
 
 guint8
-fu_common_crc8(const guint8 *buf, gsize bufsz);
-guint8
-fu_common_crc8_full(const guint8 *buf, gsize bufsz, guint8 crc_init, guint8 polynomial);
-guint16
-fu_common_crc16(const guint8 *buf, gsize bufsz);
-guint16
-fu_common_crc16_full(const guint8 *buf, gsize bufsz, guint16 crc, guint16 polynomial);
-guint32
-fu_common_crc32(const guint8 *buf, gsize bufsz);
-guint32
-fu_common_crc32_full(const guint8 *buf, gsize bufsz, guint32 crc, guint32 polynomial);
-
-guint8
 fu_common_reverse_uint8(guint8 value);
-
-guint8
-fu_common_sum8(const guint8 *buf, gsize bufsz);
-guint8
-fu_common_sum8_bytes(GBytes *blob);
-guint16
-fu_common_sum16(const guint8 *buf, gsize bufsz);
-guint16
-fu_common_sum16_bytes(GBytes *blob);
-guint16
-fu_common_sum16w(const guint8 *buf, gsize bufsz, FuEndianType endian);
-guint16
-fu_common_sum16w_bytes(GBytes *blob, FuEndianType endian);
-guint32
-fu_common_sum32(const guint8 *buf, gsize bufsz);
-guint32
-fu_common_sum32_bytes(GBytes *blob);
-guint32
-fu_common_sum32w(const guint8 *buf, gsize bufsz, FuEndianType endian);
-guint32
-fu_common_sum32w_bytes(GBytes *blob, FuEndianType endian);
 
 gchar *
 fu_common_uri_get_scheme(const gchar *uri);

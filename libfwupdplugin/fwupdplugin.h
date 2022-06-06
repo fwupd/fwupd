@@ -22,6 +22,7 @@
 #include <libfwupdplugin/fu-common-version.h>
 #include <libfwupdplugin/fu-common.h>
 #include <libfwupdplugin/fu-context.h>
+#include <libfwupdplugin/fu-crc.h>
 #include <libfwupdplugin/fu-device-locker.h>
 #include <libfwupdplugin/fu-device-metadata.h>
 #include <libfwupdplugin/fu-device.h>
@@ -44,6 +45,7 @@
 #include <libfwupdplugin/fu-progress.h>
 #include <libfwupdplugin/fu-security-attrs.h>
 #include <libfwupdplugin/fu-srec-firmware.h>
+#include <libfwupdplugin/fu-sum.h>
 #include <libfwupdplugin/fu-udev-device.h>
 #include <libfwupdplugin/fu-usb-device.h>
 #include <libfwupdplugin/fu-volume.h>

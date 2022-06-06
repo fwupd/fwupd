@@ -324,7 +324,7 @@ fu_pxi_ble_device_check_support_resume(FuPxiBleDevice *self,
 	/* calculate device current checksum */
 	for (guint i = 0; i < self->fwstate.offset; i++) {
 		FuChunk *chk = g_ptr_array_index(chunks, i);
-		checksum_tmp += fu_common_sum16(fu_chunk_get_data(chk), fu_chunk_get_data_sz(chk));
+		checksum_tmp += fu_sum16(fu_chunk_get_data(chk), fu_chunk_get_data_sz(chk));
 	}
 
 	/* check current file is different with previous fw bin or not */
@@ -496,7 +496,7 @@ fu_pxi_ble_device_write_chunk(FuPxiBleDevice *self, FuChunk *chk, GError **error
 	}
 
 	/* the last chunk */
-	checksum = fu_common_sum16(fu_chunk_get_data(chk), fu_chunk_get_data_sz(chk));
+	checksum = fu_sum16(fu_chunk_get_data(chk), fu_chunk_get_data_sz(chk));
 	self->fwstate.checksum += checksum;
 	if (checksum_device != self->fwstate.checksum) {
 		g_set_error(error,
@@ -598,7 +598,7 @@ fu_pxi_ble_device_fw_upgrade(FuPxiBleDevice *self,
 	fw = fu_firmware_get_bytes(firmware, error);
 	if (fw == NULL)
 		return FALSE;
-	checksum = fu_common_sum16_bytes(fw);
+	checksum = fu_sum16_bytes(fw);
 	fu_byte_array_append_uint8(req, PXI_HID_DEV_OTA_FEATURE_REPORT_ID);
 	fu_byte_array_append_uint8(req, FU_PXI_DEVICE_CMD_FW_UPGRADE);
 	fu_byte_array_append_uint32(req, g_bytes_get_size(fw), G_LITTLE_ENDIAN);
