@@ -471,7 +471,6 @@ LIBFWUPDPLUGIN_1.4.7 {
 
 LIBFWUPDPLUGIN_1.5.0 {
   global:
-    fu_common_cpuid;
     fu_device_bind_driver;
     fu_device_dump_firmware;
     fu_device_report_metadata_post;
@@ -532,7 +531,6 @@ LIBFWUPDPLUGIN_1.5.3 {
 
 LIBFWUPDPLUGIN_1.5.5 {
   global:
-    fu_common_get_cpu_vendor;
     fu_device_add_internal_flag;
     fu_device_has_internal_flag;
     fu_device_internal_flag_from_string;
@@ -952,6 +950,8 @@ LIBFWUPDPLUGIN_1.8.2 {
     fu_bytes_new_offset;
     fu_bytes_pad;
     fu_bytes_set_contents;
+    fu_cpu_get_vendor;
+    fu_cpuid;
     fu_crc16;
     fu_crc16_full;
     fu_crc32;

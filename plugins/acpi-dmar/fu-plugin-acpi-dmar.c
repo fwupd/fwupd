@@ -21,7 +21,7 @@ fu_plugin_acpi_dmar_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 	g_autoptr(GError) error_local = NULL;
 
 	/* only Intel */
-	if (fu_common_get_cpu_vendor() != FU_CPU_VENDOR_INTEL)
+	if (fu_cpu_get_vendor() != FU_CPU_VENDOR_INTEL)
 		return;
 
 	/* create attr */

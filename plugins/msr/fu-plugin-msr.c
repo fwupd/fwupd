@@ -75,15 +75,15 @@ fu_plugin_msr_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 	}
 
 	/* sdbg is supported: https://en.wikipedia.org/wiki/CPUID */
-	if (fu_common_get_cpu_vendor() == FU_CPU_VENDOR_INTEL) {
-		if (!fu_common_cpuid(0x01, NULL, NULL, &ecx, NULL, error))
+	if (fu_cpu_get_vendor() == FU_CPU_VENDOR_INTEL) {
+		if (!fu_cpuid(0x01, NULL, NULL, &ecx, NULL, error))
 			return FALSE;
 		priv->ia32_debug_supported = ((ecx >> 11) & 0x1) > 0;
 	}
 
 	/* indicates support for SME and SEV */
-	if (fu_common_get_cpu_vendor() == FU_CPU_VENDOR_AMD) {
-		if (!fu_common_cpuid(0x8000001f, &eax, &ebx, NULL, NULL, error))
+	if (fu_cpu_get_vendor() == FU_CPU_VENDOR_AMD) {
+		if (!fu_cpuid(0x8000001f, &eax, &ebx, NULL, NULL, error))
 			return FALSE;
 		g_debug("SME/SEV check MSR: eax 0%x, ebx 0%x", eax, ebx);
 		priv->amd64_syscfg_supported = ((eax >> 0) & 0x1) > 0;
@@ -234,7 +234,7 @@ fu_plugin_add_security_attr_dci_enabled(FuPlugin *plugin, FuSecurityAttrs *attrs
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
 
 	/* this MSR is only valid for a subset of Intel CPUs */
-	if (fu_common_get_cpu_vendor() != FU_CPU_VENDOR_INTEL)
+	if (fu_cpu_get_vendor() != FU_CPU_VENDOR_INTEL)
 		return;
 	if (!priv->ia32_debug_supported)
 		return;
@@ -266,7 +266,7 @@ fu_plugin_add_security_attr_dci_locked(FuPlugin *plugin, FuSecurityAttrs *attrs)
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
 
 	/* this MSR is only valid for a subset of Intel CPUs */
-	if (fu_common_get_cpu_vendor() != FU_CPU_VENDOR_INTEL)
+	if (fu_cpu_get_vendor() != FU_CPU_VENDOR_INTEL)
 		return;
 	if (!priv->ia32_debug_supported)
 		return;
@@ -333,7 +333,7 @@ fu_plugin_add_security_attr_amd_sme_enabled(FuPlugin *plugin, FuSecurityAttrs *a
 	g_autoptr(GError) error_local = NULL;
 
 	/* this MSR is only valid for a subset of AMD CPUs */
-	if (fu_common_get_cpu_vendor() != FU_CPU_VENDOR_AMD)
+	if (fu_cpu_get_vendor() != FU_CPU_VENDOR_AMD)
 		return;
 
 	/* create attr */

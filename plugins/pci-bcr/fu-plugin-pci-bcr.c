@@ -210,7 +210,7 @@ static void
 fu_plugin_pci_bcr_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
 	/* only Intel */
-	if (fu_common_get_cpu_vendor() != FU_CPU_VENDOR_INTEL)
+	if (fu_cpu_get_vendor() != FU_CPU_VENDOR_INTEL)
 		return;
 
 	/* add attrs */

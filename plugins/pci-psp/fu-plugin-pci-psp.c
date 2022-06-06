@@ -253,7 +253,7 @@ fu_plugin_pci_psp_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 	g_autofree gchar *test_file = NULL;
 
 	/* only AMD */
-	if (fu_common_get_cpu_vendor() != FU_CPU_VENDOR_AMD)
+	if (fu_cpu_get_vendor() != FU_CPU_VENDOR_AMD)
 		return;
 
 	/* ccp not loaded */
