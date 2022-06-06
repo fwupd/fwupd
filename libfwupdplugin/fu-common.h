@@ -207,8 +207,6 @@ fu_common_dump_full(const gchar *log_domain,
 		    FuDumpFlags flags);
 void
 fu_common_dump_bytes(const gchar *log_domain, const gchar *title, GBytes *bytes);
-gchar *
-fu_common_instance_id_strsafe(const gchar *str);
 gboolean
 fu_common_kernel_locked_down(void);
 gboolean
