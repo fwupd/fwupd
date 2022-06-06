@@ -1,3 +1,0 @@
-# match all devices with this udev subsystem
-[PLATFORM-INTEGRITY]
-Plugin = platform_integrity
