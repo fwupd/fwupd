@@ -359,7 +359,6 @@ done
 /usr/lib/modules-load.d/fwupd-msr.conf
 %config(noreplace)%{_sysconfdir}/fwupd/msr.conf
 %endif
-/usr/lib/modules-load.d/fwupd-redfish.conf
 %{_datadir}/dbus-1/system.d/org.freedesktop.fwupd.conf
 %{_datadir}/bash-completion/completions/fwupdmgr
 %{_datadir}/bash-completion/completions/fwupdtool
