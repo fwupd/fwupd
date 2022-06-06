@@ -241,7 +241,7 @@ fu_genesys_usbhub_firmware_write(FuFirmware *firmware, GError **error)
 	guint16 checksum;
 
 	/* fixed size */
-	fu_byte_array_set_size(buf, code_size);
+	fu_byte_array_set_size(buf, code_size, 0x00);
 
 	/* signature */
 	if (!fu_memcpy_safe(buf->data,

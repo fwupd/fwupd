@@ -261,7 +261,7 @@ fu_logitech_bulkcontroller_device_send_upd_cmd(FuLogitechBulkcontrollerDevice *s
 		return FALSE;
 
 	/* receiving INIT ACK */
-	fu_byte_array_set_size(buf_ack, MAX_DATA_SIZE);
+	fu_byte_array_set_size(buf_ack, MAX_DATA_SIZE, 0x00);
 
 	/* extending the bulk transfer timeout value, as android device takes some time to
 	   calculate Hash and respond */
@@ -570,7 +570,7 @@ fu_logitech_bulkcontroller_device_startlistening_sync(FuLogitechBulkcontrollerDe
 		helper->loop = g_main_loop_new(NULL, FALSE);
 		helper->device_response = g_byte_array_ref(device_response);
 
-		fu_byte_array_set_size(helper->buf_pkt, MAX_DATA_SIZE);
+		fu_byte_array_set_size(helper->buf_pkt, MAX_DATA_SIZE, 0x00);
 		g_usb_device_bulk_transfer_async(fu_usb_device_get_dev(FU_USB_DEVICE(self)),
 						 self->sync_ep[EP_IN],
 						 helper->buf_pkt->data,

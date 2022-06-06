@@ -216,7 +216,7 @@ fu_sahara_loader_qdl_read(FuSaharaLoader *self, GError **error)
 {
 	gsize actual_len = 0;
 	g_autoptr(GByteArray) buf = g_byte_array_sized_new(SAHARA_RAW_BUFFER_SIZE);
-	fu_byte_array_set_size(buf, SAHARA_RAW_BUFFER_SIZE);
+	fu_byte_array_set_size(buf, SAHARA_RAW_BUFFER_SIZE, 0x00);
 
 	if (!g_usb_device_bulk_transfer(fu_usb_device_get_dev(self->usb_device),
 					self->ep_in,
@@ -342,7 +342,7 @@ fu_sahara_create_byte_array_from_packet(const struct sahara_packet *pkt)
 	g_return_val_if_fail(pkt != NULL, NULL);
 
 	self = g_byte_array_sized_new(pkt->length);
-	fu_byte_array_set_size(self, pkt->length);
+	fu_byte_array_set_size(self, pkt->length, 0x00);
 	if (!fu_memcpy_safe(self->data,
 			    self->len,
 			    0,

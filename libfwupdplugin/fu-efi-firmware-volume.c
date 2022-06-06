@@ -399,7 +399,7 @@ fu_efi_firmware_volume_write(FuFirmware *firmware, GError **error)
 
 	/* pad contents to alignment */
 	fu_byte_array_append_bytes(buf, img_blob);
-	fu_byte_array_set_size_full(buf, fv_length, 0xFF);
+	fu_byte_array_set_size(buf, fv_length, 0xFF);
 
 	/* success */
 	return g_byte_array_free_to_bytes(g_steal_pointer(&buf));

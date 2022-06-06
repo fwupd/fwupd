@@ -595,7 +595,7 @@ fu_synaptics_rmi_firmware_write_v0x(FuFirmware *firmware, GError **error)
 	bufsz = g_bytes_get_size(buf_blob);
 
 	/* create empty block */
-	fu_byte_array_set_size(buf, RMI_IMG_FW_OFFSET + 0x4 + bufsz);
+	fu_byte_array_set_size(buf, RMI_IMG_FW_OFFSET + 0x4 + bufsz, 0x00);
 	buf->data[RMI_IMG_IO_OFFSET] = 0x0;		    /* no build_id or package_id */
 	buf->data[RMI_IMG_BOOTLOADER_VERSION_OFFSET] = 0x2; /* not hierarchical */
 	if (self->product_id != NULL) {
@@ -662,7 +662,7 @@ fu_synaptics_rmi_firmware_write_v10(FuFirmware *firmware, GError **error)
 	desc.content_length = GUINT32_TO_LE(bufsz);
 
 	/* create empty block */
-	fu_byte_array_set_size(buf, RMI_IMG_FW_OFFSET + 0x48);
+	fu_byte_array_set_size(buf, RMI_IMG_FW_OFFSET + 0x48, 0x00);
 	buf->data[RMI_IMG_IO_OFFSET] = 0x1;
 	buf->data[RMI_IMG_BOOTLOADER_VERSION_OFFSET] = 16; /* hierarchical */
 	if (self->product_id != NULL) {

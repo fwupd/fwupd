@@ -118,7 +118,7 @@ fu_bcm57xx_stage1_image_write(FuFirmware *firmware, GError **error)
 
 	/* fuzzing, so write a header with the version */
 	if (g_bytes_get_size(fw_nocrc) < BCM_NVRAM_STAGE1_VERSION)
-		fu_byte_array_set_size(buf, BCM_NVRAM_STAGE1_VERSION + sizeof(guint32));
+		fu_byte_array_set_size(buf, BCM_NVRAM_STAGE1_VERSION + sizeof(guint32), 0x00);
 
 	/* payload */
 	fu_byte_array_append_bytes(buf, fw_nocrc);
@@ -135,7 +135,8 @@ fu_bcm57xx_stage1_image_write(FuFirmware *firmware, GError **error)
 	/* align */
 	fu_byte_array_set_size(
 	    buf,
-	    fu_common_align_up(g_bytes_get_size(fw_nocrc), fu_firmware_get_alignment(firmware)));
+	    fu_common_align_up(g_bytes_get_size(fw_nocrc), fu_firmware_get_alignment(firmware)),
+	    0x00);
 
 	/* add CRC */
 	crc = fu_bcm57xx_nvram_crc(buf->data, buf->len);

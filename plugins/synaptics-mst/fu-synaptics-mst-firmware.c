@@ -64,7 +64,7 @@ fu_synaptics_mst_firmware_write(FuFirmware *firmware, GError **error)
 	g_autoptr(GBytes) blob = NULL;
 
 	/* assumed header */
-	fu_byte_array_set_size(buf, ADDR_CUSTOMER_ID + sizeof(guint16));
+	fu_byte_array_set_size(buf, ADDR_CUSTOMER_ID + sizeof(guint16), 0x00);
 	if (!fu_memwrite_uint16_safe(buf->data,
 				     buf->len,
 				     ADDR_CUSTOMER_ID,

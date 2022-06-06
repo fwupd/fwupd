@@ -647,7 +647,7 @@ fu_vli_pd_parade_device_dump_firmware(FuDevice *device, FuProgress *progress, GE
 
 	/* read */
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_VERIFY);
-	fu_byte_array_set_size(fw, fu_device_get_firmware_size_max(device));
+	fu_byte_array_set_size(fw, fu_device_get_firmware_size_max(device), 0x00);
 	blocks = fu_chunk_array_mutable_new(fw->data, fw->len, 0x0, 0x0, 0x10000);
 	fu_progress_set_steps(progress, blocks->len);
 	for (guint i = 0; i < blocks->len; i++) {

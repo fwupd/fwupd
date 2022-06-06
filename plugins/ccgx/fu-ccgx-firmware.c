@@ -466,7 +466,7 @@ fu_ccgx_firmware_write(FuFirmware *firmware, GError **error)
 	metadata.boot_seq = 0x0; /* unknown */
 
 	/* copy into place */
-	fu_byte_array_set_size(mdbuf, 0x80);
+	fu_byte_array_set_size(mdbuf, 0x80, 0x00);
 	if (!fu_memcpy_safe(mdbuf->data,
 			    mdbuf->len,
 			    0x40, /* dst */

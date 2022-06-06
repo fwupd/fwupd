@@ -41,7 +41,7 @@ proto_manager_generate_get_device_info_request(void)
 	usb_msg.message_case = LOGI__DEVICE__PROTO__USB_MSG__MESSAGE_REQUEST;
 	usb_msg.request = &request_msg;
 
-	fu_byte_array_set_size(buf, logi__device__proto__usb_msg__get_packed_size(&usb_msg));
+	fu_byte_array_set_size(buf, logi__device__proto__usb_msg__get_packed_size(&usb_msg), 0x00);
 	logi__device__proto__usb_msg__pack(&usb_msg, (unsigned char *)buf->data);
 	return buf;
 }
@@ -64,7 +64,7 @@ proto_manager_generate_transition_to_device_mode_request(void)
 	usb_msg.message_case = LOGI__DEVICE__PROTO__USB_MSG__MESSAGE_REQUEST;
 	usb_msg.request = &request_msg;
 
-	fu_byte_array_set_size(buf, logi__device__proto__usb_msg__get_packed_size(&usb_msg));
+	fu_byte_array_set_size(buf, logi__device__proto__usb_msg__get_packed_size(&usb_msg), 0x00);
 	logi__device__proto__usb_msg__pack(&usb_msg, (unsigned char *)buf->data);
 	return buf;
 }
@@ -99,7 +99,7 @@ proto_manager_generate_set_device_time_request(void)
 	usb_msg.message_case = LOGI__DEVICE__PROTO__USB_MSG__MESSAGE_REQUEST;
 	usb_msg.request = &request_msg;
 
-	fu_byte_array_set_size(buf, logi__device__proto__usb_msg__get_packed_size(&usb_msg));
+	fu_byte_array_set_size(buf, logi__device__proto__usb_msg__get_packed_size(&usb_msg), 0x00);
 	logi__device__proto__usb_msg__pack(&usb_msg, (unsigned char *)buf->data);
 	return buf;
 }
