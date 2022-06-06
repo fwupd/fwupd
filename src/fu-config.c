@@ -11,6 +11,7 @@
 #include <gio/gio.h>
 #include <glib-object.h>
 
+#include "fu-byte-array.h"
 #include "fu-common.h"
 #include "fu-config.h"
 

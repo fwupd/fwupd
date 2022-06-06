@@ -8,6 +8,7 @@
 
 #include "config.h"
 
+#include "fu-byte-array.h"
 #include "fu-cfu-offer.h"
 #include "fu-common.h"
 

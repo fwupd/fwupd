@@ -6,8 +6,7 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
+#include "fu-byte-array.h"
 #include "fu-efi-firmware-file.h"
 #include "fu-efi-firmware-filesystem.h"
 

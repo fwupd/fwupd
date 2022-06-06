@@ -18,6 +18,7 @@
 
 #include "fwupd-error.h"
 
+#include "fu-byte-array.h"
 #include "fu-common.h"
 #include "fu-kenv.h"
 #include "fu-smbios-private.h"
