@@ -18,6 +18,7 @@
 #include "fu-bytes.h"
 #include "fu-context-private.h"
 #include "fu-device-private.h"
+#include "fu-kernel.h"
 #include "fu-mutex.h"
 #include "fu-plugin-private.h"
 #include "fu-string.h"
@@ -1343,7 +1344,7 @@ fu_plugin_check_amdgpu_dpaux(FuPlugin *self, GError **error)
 	for (guint i = 0; lines[i] != NULL; i++) {
 		if (g_str_has_prefix(lines[i], "amdgpu ")) {
 			/* released 2019! */
-			return fu_common_check_kernel_version("5.2.0", error);
+			return fu_kernel_check_version("5.2.0", error);
 		}
 	}
 #endif

@@ -299,7 +299,7 @@ fu_plugin_msr_safe_kernel_for_sme(FuPlugin *plugin, GError **error)
 		g_debug("Ignoring kernel safety checks");
 		return TRUE;
 	}
-	return fu_common_check_kernel_version(min, error);
+	return fu_kernel_check_version(min, error);
 }
 
 static gboolean

@@ -73,3 +73,8 @@ Remember: Plugins should be upstream!
 * `fu_common_spawn_sync()`: Use `g_spawn_sync()` instead, or ideally not at all!
 * `fu_common_extract_archive()`: Use `FuArchiveFirmware()` instead.
 * `fu_common_instance_id_strsafe()`: Use `fu_device_add_instance_strsafe()` instead.
+* `fu_common_kernel_locked_down()`: Use `fu_kernel_locked_down` instead.
+* `fu_common_check_kernel_version()`: Use `fu_kernel_check_version` instead.
+* `fu_common_get_firmware_search_path()`: Use `fu_kernel_get_firmware_search_path` instead.
+* `fu_common_set_firmware_search_path()`: Use `fu_kernel_set_firmware_search_path` instead.
+* `fu_common_reset_firmware_search_path()`: Use `fu_kernel_reset_firmware_search_path` instead.
