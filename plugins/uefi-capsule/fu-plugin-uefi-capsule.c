@@ -493,7 +493,7 @@ fu_plugin_uefi_capsule_register_proxy_device(FuPlugin *plugin, FuDevice *device)
 	dev = fu_uefi_backend_device_new_from_dev(FU_UEFI_BACKEND(data->backend), device);
 	fu_plugin_uefi_capsule_load_config(plugin, FU_DEVICE(dev));
 	if (data->esp == NULL)
-		data->esp = fu_common_get_esp_default(&error_local);
+		data->esp = fu_volume_new_esp_default(&error_local);
 	if (data->esp == NULL) {
 		fu_device_inhibit(device, "no-esp", error_local->message);
 	} else {
@@ -664,7 +664,7 @@ fu_plugin_uefi_capsule_startup(FuPlugin *plugin, FuProgress *progress, GError **
 	/* override the default ESP path */
 	esp_path = fu_plugin_get_config_value(plugin, "OverrideESPMountPoint");
 	if (esp_path != NULL) {
-		data->esp = fu_common_get_esp_for_path(esp_path, error);
+		data->esp = fu_volume_new_esp_for_path(esp_path, error);
 		if (data->esp == NULL) {
 			g_prefix_error(error,
 				       "invalid OverrideESPMountPoint=%s "
@@ -826,7 +826,7 @@ fu_plugin_uefi_capsule_coldplug(FuPlugin *plugin, FuProgress *progress, GError *
 	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "setup-bgrt");
 
 	if (data->esp == NULL) {
-		data->esp = fu_common_get_esp_default(&error_udisks2);
+		data->esp = fu_volume_new_esp_default(&error_udisks2);
 		if (data->esp == NULL) {
 			fu_plugin_add_flag(plugin, FWUPD_PLUGIN_FLAG_ESP_NOT_FOUND);
 			fu_plugin_add_flag(plugin, FWUPD_PLUGIN_FLAG_CLEAR_UPDATABLE);

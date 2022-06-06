@@ -435,9 +435,6 @@ LIBFWUPDPLUGIN_1.4.5 {
 
 LIBFWUPDPLUGIN_1.4.6 {
   global:
-    fu_common_get_esp_default;
-    fu_common_get_esp_for_path;
-    fu_common_get_volumes_by_kind;
     fu_common_is_live_media;
     fu_volume_check_free_space;
     fu_volume_get_id;
@@ -494,8 +491,6 @@ LIBFWUPDPLUGIN_1.5.0 {
 
 LIBFWUPDPLUGIN_1.5.1 {
   global:
-    fu_common_get_volume_by_device;
-    fu_common_get_volume_by_devnum;
     fu_device_add_possible_plugin;
     fu_efivar_space_used;
     fu_volume_is_encrypted;
@@ -1021,5 +1016,10 @@ LIBFWUPDPLUGIN_1.8.2 {
     fu_version_guess_format;
     fu_version_parse_from_format;
     fu_version_verify_format;
+    fu_volume_new_by_device;
+    fu_volume_new_by_devnum;
+    fu_volume_new_by_kind;
+    fu_volume_new_esp_default;
+    fu_volume_new_esp_for_path;
   local: *;
 } LIBFWUPDPLUGIN_1.8.1;

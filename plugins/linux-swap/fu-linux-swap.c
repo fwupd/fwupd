@@ -35,7 +35,7 @@ fu_linux_swap_verify_partition(FuLinuxSwap *self, const gchar *fn, GError **erro
 	g_autoptr(FuVolume) volume = NULL;
 
 	/* find the device */
-	volume = fu_common_get_volume_by_device(fn, error);
+	volume = fu_volume_new_by_device(fn, error);
 	if (volume == NULL)
 		return FALSE;
 
@@ -78,7 +78,7 @@ fu_linux_swap_verify_file(FuLinuxSwap *self, const gchar *fn, GError **error)
 	devnum = g_file_info_get_attribute_uint32(info, G_FILE_ATTRIBUTE_UNIX_DEVICE);
 
 	/* find the device */
-	volume = fu_common_get_volume_by_devnum(devnum, error);
+	volume = fu_volume_new_by_devnum(devnum, error);
 	if (volume == NULL)
 		return FALSE;
 

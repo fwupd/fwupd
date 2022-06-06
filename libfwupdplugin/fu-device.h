@@ -9,6 +9,7 @@
 #include <fwupd.h>
 
 #include "fu-context.h"
+#include "fu-device-locker.h"
 #include "fu-firmware.h"
 #include "fu-progress.h"
 #include "fu-security-attrs.h"

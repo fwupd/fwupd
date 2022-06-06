@@ -8,8 +8,6 @@
 
 #include <xmlb.h>
 
-#include "fu-volume.h"
-
 /**
  * FuEndianType:
  *
@@ -78,16 +76,6 @@ gboolean
 fu_common_is_live_media(void);
 guint64
 fu_common_get_memory_size(void);
-GPtrArray *
-fu_common_get_volumes_by_kind(const gchar *kind, GError **error) G_GNUC_WARN_UNUSED_RESULT;
-FuVolume *
-fu_common_get_volume_by_device(const gchar *device, GError **error) G_GNUC_WARN_UNUSED_RESULT;
-FuVolume *
-fu_common_get_volume_by_devnum(guint32 devnum, GError **error) G_GNUC_WARN_UNUSED_RESULT;
-FuVolume *
-fu_common_get_esp_for_path(const gchar *esp_path, GError **error) G_GNUC_WARN_UNUSED_RESULT;
-FuVolume *
-fu_common_get_esp_default(GError **error) G_GNUC_WARN_UNUSED_RESULT;
 gboolean
 fu_common_check_full_disk_encryption(GError **error);
 

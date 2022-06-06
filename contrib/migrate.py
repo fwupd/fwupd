@@ -121,6 +121,11 @@ if __name__ == "__main__":
             "fu_common_version_guess_format": "fu_version_guess_format",
             "fu_common_version_parse_from_format": "fu_version_parse_from_format",
             "fu_common_version_verify_format": "fu_version_verify_format",
+            "fu_common_get_volumes_by_kind": "fu_volume_new_by_kind",
+            "fu_common_get_volume_by_device": "fu_volume_new_by_device",
+            "fu_common_get_volume_by_devnum": "fu_volume_new_by_devnum",
+            "fu_common_get_esp_for_path": "fu_volume_new_esp_for_path",
+            "fu_common_get_esp_default": "fu_volume_new_esp_default",
         }.items():
             if buf.find(old) == -1:
                 continue

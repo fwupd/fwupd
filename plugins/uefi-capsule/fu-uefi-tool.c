@@ -234,14 +234,14 @@ main(int argc, char *argv[])
 
 	/* override the default ESP path */
 	if (esp_path != NULL) {
-		esp = fu_common_get_esp_for_path(esp_path, &error);
+		esp = fu_volume_new_esp_for_path(esp_path, &error);
 		if (esp == NULL) {
 			/* TRANSLATORS: ESP is EFI System Partition */
 			g_print("%s: %s\n", _("ESP specified was not valid"), error->message);
 			return EXIT_FAILURE;
 		}
 	} else {
-		esp = fu_common_get_esp_default(&error);
+		esp = fu_volume_new_esp_default(&error);
 		if (esp == NULL) {
 			g_printerr("failed: %s\n", error->message);
 			return EXIT_FAILURE;
