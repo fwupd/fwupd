@@ -218,19 +218,7 @@ fu_common_extract_archive_entry(struct archive_entry *entry, const gchar *dir)
 }
 #endif
 
-/**
- * fu_common_extract_archive:
- * @blob: data archive as a blob
- * @dir: a directory name to extract to
- * @error: (nullable): optional return location for an error
- *
- * Extracts an archive to a directory.
- *
- * Returns: %TRUE for success
- *
- * Since: 0.9.7
- **/
-gboolean
+static gboolean
 fu_common_extract_archive(GBytes *blob, const gchar *dir, GError **error)
 {
 #ifdef HAVE_LIBARCHIVE

@@ -187,8 +187,6 @@ gboolean
 fu_common_mkdir(const gchar *dirname, GError **error) G_GNUC_WARN_UNUSED_RESULT;
 gboolean
 fu_common_mkdir_parent(const gchar *filename, GError **error) G_GNUC_WARN_UNUSED_RESULT;
-gboolean
-fu_common_extract_archive(GBytes *blob, const gchar *dir, GError **error) G_GNUC_WARN_UNUSED_RESULT;
 GBytes *
 fu_common_firmware_builder(GBytes *bytes,
 			   const gchar *script_fn,
