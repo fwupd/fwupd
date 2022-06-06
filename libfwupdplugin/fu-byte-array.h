@@ -9,9 +9,7 @@
 #include "fu-common.h"
 
 void
-fu_byte_array_set_size(GByteArray *array, guint length);
-void
-fu_byte_array_set_size_full(GByteArray *array, guint length, guint8 data);
+fu_byte_array_set_size(GByteArray *array, guint length, guint8 data);
 void
 fu_byte_array_align_up(GByteArray *array, guint8 alignment, guint8 data);
 void

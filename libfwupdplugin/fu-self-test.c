@@ -171,7 +171,7 @@ fu_common_byte_array_func(void)
 	g_assert_cmpint(array->len, ==, 5);
 	g_assert_cmpint(memcmp(array->data, "hello", array->len), ==, 0);
 
-	fu_byte_array_set_size(array, 10);
+	fu_byte_array_set_size(array, 10, 0x00);
 	g_assert_cmpint(array->len, ==, 10);
 	g_assert_cmpint(memcmp(array->data, "hello\0\0\0\0\0", array->len), ==, 0);
 }

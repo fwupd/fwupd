@@ -56,7 +56,7 @@ fu_hailuck_kbd_firmware_parse(FuFirmware *firmware,
 						    "buffer would have zero size");
 				return FALSE;
 			}
-			fu_byte_array_set_size(buf, rcd->addr + rcd->data->len);
+			fu_byte_array_set_size(buf, rcd->addr + rcd->data->len, 0x00);
 		}
 		if (!fu_memcpy_safe(buf->data,
 				    buf->len,

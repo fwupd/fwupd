@@ -157,7 +157,7 @@ fu_fmap_firmware_write(FuFirmware *firmware, GError **error)
 
 	/* pad to offset */
 	if (fu_firmware_get_offset(firmware) > 0)
-		fu_byte_array_set_size(buf, fu_firmware_get_offset(firmware));
+		fu_byte_array_set_size(buf, fu_firmware_get_offset(firmware), 0x00);
 
 	/* add header */
 	total_sz = offset = sizeof(hdr) + (sizeof(FuFmapArea) * images->len);

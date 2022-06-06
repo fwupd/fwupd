@@ -166,7 +166,7 @@ fu_elantp_firmware_write(FuFirmware *firmware, GError **error)
 	 *  SIGNATURE
 	 * ------
 	 */
-	fu_byte_array_set_size(buf, self->iap_addr + 0x2 + 0x2);
+	fu_byte_array_set_size(buf, self->iap_addr + 0x2 + 0x2, 0x00);
 	if (!fu_memwrite_uint16_safe(buf->data,
 				     buf->len,
 				     ETP_IAP_START_ADDR_WRDS * 2,

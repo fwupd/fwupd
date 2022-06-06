@@ -445,7 +445,7 @@ fu_uefi_device_fixup_firmware(FuUefiDevice *self, GBytes *fw, GError **error)
 
 		/* prepend the header to the payload */
 		g_byte_array_append(buf_hdr, (const guint8 *)&header, sizeof(header));
-		fu_byte_array_set_size(buf_hdr, hdrsize);
+		fu_byte_array_set_size(buf_hdr, hdrsize, 0x00);
 		g_byte_array_append(buf_hdr, buf, bufsz);
 		return g_byte_array_free_to_bytes(g_steal_pointer(&buf_hdr));
 	}

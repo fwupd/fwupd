@@ -118,7 +118,7 @@ goodixmoc_device_cmd_recv(FuGoodixMocDevice *self,
 		guint16 header_len = 0x0;
 		guint8 header_cmd0 = 0x0;
 		g_autoptr(GByteArray) reply = g_byte_array_new();
-		fu_byte_array_set_size(reply, GX_FLASH_TRANSFER_BLOCK_SIZE);
+		fu_byte_array_set_size(reply, GX_FLASH_TRANSFER_BLOCK_SIZE, 0x00);
 		if (!g_usb_device_bulk_transfer(usb_device,
 						GX_USB_BULK_EP_IN,
 						reply->data,

@@ -300,7 +300,7 @@ fu_ifd_firmware_write(FuFirmware *firmware, GError **error)
 	if (img_desc == NULL) {
 		g_autoptr(GByteArray) buf_desc = g_byte_array_new();
 		g_autoptr(GBytes) blob_desc = NULL;
-		fu_byte_array_set_size(buf_desc, FU_IFD_SIZE);
+		fu_byte_array_set_size(buf_desc, FU_IFD_SIZE, 0x00);
 
 		/* success */
 		blob_desc = g_byte_array_free_to_bytes(g_steal_pointer(&buf_desc));
@@ -340,7 +340,7 @@ fu_ifd_firmware_write(FuFirmware *firmware, GError **error)
 		/* check total size */
 		bufsz_max = MAX(fu_firmware_get_addr(img) + g_bytes_get_size(blob), bufsz_max);
 	}
-	fu_byte_array_set_size(buf, bufsz_max);
+	fu_byte_array_set_size(buf, bufsz_max, 0x00);
 
 	/* reserved */
 	for (guint i = 0; i < 0x10; i++)

@@ -49,6 +49,7 @@ if __name__ == "__main__":
             "fu_common_crc16_full": "fu_crc16_full",
             "fu_common_crc32": "fu_crc32",
             "fu_common_crc32_full": "fu_crc32_full",
+            "fu_byte_array_set_size_full": "fu_byte_array_set_size",
             "fu_common_string_replace": "fu_string_replace",
             "fu_common_string_append_kv": "fu_string_append",
             "fu_common_string_append_ku": "fu_string_append_ku",

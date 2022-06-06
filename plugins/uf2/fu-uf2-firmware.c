@@ -275,7 +275,7 @@ fu_uf2_firmware_write_chunk(FuUf2Firmware *self, FuChunk *chk, guint chk_len, GE
 
 	/* pad out data */
 	g_byte_array_append(datapad, fu_chunk_get_data(chk), fu_chunk_get_data_sz(chk));
-	fu_byte_array_set_size_full(datapad, 476, 0x0);
+	fu_byte_array_set_size(datapad, 476, 0x0);
 
 	/* optional */
 	if (family_id > 0)
