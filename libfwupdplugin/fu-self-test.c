@@ -579,8 +579,21 @@ fu_strsafe_func(void)
 		    {"dave\x03\x04XXX", "dave..X"},
 		    {"\x03\x03", NULL},
 		    {NULL, NULL}};
-	g_autofree gchar *id_part = fu_common_instance_id_strsafe("_ _LEN&VO&\\&");
-	g_assert_cmpstr(id_part, ==, "LEN-VO");
+	GPtrArray *instance_ids;
+	gboolean ret;
+	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuDevice) dev = fu_device_new(ctx);
+	g_autoptr(GError) error = NULL;
+
+	/* check bespoke legacy instance ID behavior */
+	fu_device_add_instance_strsafe(dev, "KEY", "_ _LEN&VO&\\&");
+	ret = fu_device_build_instance_id(dev, &error, "SUB", "KEY", NULL);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	instance_ids = fu_device_get_instance_ids(dev);
+	g_assert_cmpint(instance_ids->len, ==, 1);
+	g_assert_cmpstr(g_ptr_array_index(instance_ids, 0), ==, "SUB\\KEY_LEN-VO");
+
 	for (guint i = 0; strs[i].in != NULL; i++) {
 		g_autofree gchar *tmp = fu_strsafe(strs[i].in, 7);
 		g_assert_cmpstr(tmp, ==, strs[i].op);

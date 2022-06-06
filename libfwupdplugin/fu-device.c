@@ -5005,6 +5005,59 @@ fu_device_add_instance_str(FuDevice *self, const gchar *key, const gchar *value)
 	g_hash_table_insert(priv->instance_hash, g_strdup(key), g_strdup(value));
 }
 
+static gboolean
+fu_strsafe_instance_id_is_valid_char(gchar c)
+{
+	if (c == ' ')
+		return FALSE;
+	if (c == '_')
+		return FALSE;
+	if (c == '&')
+		return FALSE;
+	if (c == '/')
+		return FALSE;
+	if (c == '\\')
+		return FALSE;
+	return g_ascii_isprint(c);
+}
+
+/* NOTE: we can't use fu_strsafe as this behavior is now effectively ABI */
+static gchar *
+fu_common_instance_id_strsafe(const gchar *str)
+{
+	g_autoptr(GString) tmp = g_string_new(NULL);
+	gboolean has_content = FALSE;
+
+	/* sanity check */
+	if (str == NULL)
+		return NULL;
+
+	/* use - to replace problematic chars -- but only once per section */
+	for (guint i = 0; str[i] != '\0'; i++) {
+		gchar c = str[i];
+		if (!fu_strsafe_instance_id_is_valid_char(c)) {
+			if (has_content) {
+				g_string_append_c(tmp, '-');
+				has_content = FALSE;
+			}
+		} else {
+			g_string_append_c(tmp, c);
+			has_content = TRUE;
+		}
+	}
+
+	/* remove any trailing replacements */
+	if (tmp->len > 0 && tmp->str[tmp->len - 1] == '-')
+		g_string_truncate(tmp, tmp->len - 1);
+
+	/* nothing left! */
+	if (tmp->len == 0)
+		return NULL;
+
+	/* success */
+	return g_string_free(g_steal_pointer(&tmp), FALSE);
+}
+
 /**
  * fu_device_add_instance_strsafe:
  * @self: a #FuDevice

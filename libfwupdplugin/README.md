@@ -72,3 +72,4 @@ Remember: Plugins should be upstream!
 * `fu_common_bytes_compare_raw()`: Use `fu_memcmp_safe()` instead
 * `fu_common_spawn_sync()`: Use `g_spawn_sync()` instead, or ideally not at all!
 * `fu_common_extract_archive()`: Use `FuArchiveFirmware()` instead.
+* `fu_common_instance_id_strsafe()`: Use `fu_device_add_instance_strsafe()` instead.
