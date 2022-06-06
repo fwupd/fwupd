@@ -78,3 +78,4 @@ Remember: Plugins should be upstream!
 * `fu_common_get_firmware_search_path()`: Use `fu_kernel_get_firmware_search_path` instead.
 * `fu_common_set_firmware_search_path()`: Use `fu_kernel_set_firmware_search_path` instead.
 * `fu_common_reset_firmware_search_path()`: Use `fu_kernel_reset_firmware_search_path` instead.
+* `fu_common_firmware_builder()`: You should not be using this.

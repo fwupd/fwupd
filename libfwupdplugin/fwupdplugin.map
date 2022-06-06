@@ -70,7 +70,6 @@ LIBFWUPDPLUGIN_0.9.3 {
 
 LIBFWUPDPLUGIN_0.9.7 {
   global:
-    fu_common_firmware_builder;
     fu_common_mkdir_parent;
     fu_common_rmtree;
     fu_device_get_metadata_boolean;

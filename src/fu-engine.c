@@ -52,6 +52,7 @@
 #include "fu-engine-helper.h"
 #include "fu-engine-request.h"
 #include "fu-engine.h"
+#include "fu-firmware-builder.h"
 #include "fu-hash.h"
 #include "fu-history.h"
 #include "fu-idle.h"
@@ -2346,10 +2347,10 @@ fu_engine_install_release(FuEngine *self,
 	/* use a bubblewrap helper script to build the firmware */
 	tmp = fu_release_get_builder_script(release);
 	if (tmp != NULL) {
-		blob_fw2 = fu_common_firmware_builder(blob_fw,
-						      tmp,
-						      fu_release_get_builder_output(release),
-						      error);
+		blob_fw2 = fu_firmware_builder_process(blob_fw,
+						       tmp,
+						       fu_release_get_builder_output(release),
+						       error);
 		if (blob_fw2 == NULL)
 			return FALSE;
 	} else {
