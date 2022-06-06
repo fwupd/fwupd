@@ -12,6 +12,7 @@
 #include <glib-object.h>
 
 #include "fu-byte-array.h"
+#include "fu-bytes.h"
 #include "fu-common.h"
 #include "fu-config.h"
 #include "fu-string.h"
@@ -80,7 +81,7 @@ fu_config_reload(FuConfig *self, GError **error)
 		const gchar *fn = g_ptr_array_index(self->filenames, i);
 		g_debug("trying to load config values from %s", fn);
 		if (g_file_test(fn, G_FILE_TEST_EXISTS)) {
-			g_autoptr(GBytes) blob = fu_common_get_contents_bytes(fn, error);
+			g_autoptr(GBytes) blob = fu_bytes_get_contents(fn, error);
 			if (blob == NULL)
 				return FALSE;
 			fu_byte_array_append_bytes(buf, blob);

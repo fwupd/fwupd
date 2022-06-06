@@ -15,6 +15,7 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "fu-bytes.h"
 #include "fu-context-private.h"
 #include "fu-device-private.h"
 #include "fu-mutex.h"
@@ -690,7 +691,7 @@ fu_plugin_device_write_firmware(FuPlugin *self,
 		    fn,
 		    NULL);
 		fu_progress_step_done(progress);
-		if (!fu_common_set_contents_bytes(path, fw_old, error))
+		if (!fu_bytes_set_contents(path, fw_old, error))
 			return FALSE;
 		if (!fu_device_write_firmware(device,
 					      fw,

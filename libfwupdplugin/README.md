@@ -64,3 +64,6 @@ Remember: Plugins should be upstream!
 * `fu_common_sum*`: Use `fu_sum` prefix, i.e. remove the `_common`
 * `fu_byte_array_set_size_full()`: Use `fu_byte_array_set_size` instead -- as the latter now always specifies the fill char.
 * `fu_common_string*`: Use `fu_string` prefix, i.e. remove the `_common`
+* `fu_common_bytes*`: Use `fu_bytes` prefix, i.e. remove the `_common`
+* `fu_common_set_contents_bytes()`: Use `fu_bytes_set_contents()` instead
+* `fu_common_get_contents_bytes()`: Use `fu_bytes_get_contents()` instead

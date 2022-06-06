@@ -959,7 +959,7 @@ fu_util_install_blob(FuUtilPrivate *priv, gchar **values, GError **error)
 	}
 
 	/* parse blob */
-	blob_fw = fu_common_get_contents_bytes(values[0], error);
+	blob_fw = fu_bytes_get_contents(values[0], error);
 	if (blob_fw == NULL) {
 		fu_util_maybe_prefix_sandbox_error(values[0], error);
 		return FALSE;
@@ -1060,13 +1060,13 @@ fu_util_firmware_sign(FuUtilPrivate *priv, gchar **values, GError **error)
 	}
 
 	/* load arguments */
-	archive_blob_old = fu_common_get_contents_bytes(values[0], error);
+	archive_blob_old = fu_bytes_get_contents(values[0], error);
 	if (archive_blob_old == NULL)
 		return FALSE;
-	cert = fu_common_get_contents_bytes(values[1], error);
+	cert = fu_bytes_get_contents(values[1], error);
 	if (cert == NULL)
 		return FALSE;
-	privkey = fu_common_get_contents_bytes(values[2], error);
+	privkey = fu_bytes_get_contents(values[2], error);
 	if (privkey == NULL)
 		return FALSE;
 
@@ -1078,7 +1078,7 @@ fu_util_firmware_sign(FuUtilPrivate *priv, gchar **values, GError **error)
 	archive_blob_new = fu_cabinet_export(cabinet, FU_CABINET_EXPORT_FLAG_NONE, error);
 	if (archive_blob_new == NULL)
 		return FALSE;
-	return fu_common_set_contents_bytes(values[0], archive_blob_new, error);
+	return fu_bytes_set_contents(values[0], archive_blob_new, error);
 }
 
 static gboolean
@@ -1114,7 +1114,7 @@ fu_util_firmware_dump(FuUtilPrivate *priv, gchar **values, GError **error)
 
 	/* write a zero length file to ensure the destination is writable to
 	 * avoid failing at the end of a potentially lengthy operation */
-	if (!fu_common_set_contents_bytes(values[0], blob_empty, error))
+	if (!fu_bytes_set_contents(values[0], blob_empty, error))
 		return FALSE;
 
 	/* load engine */
@@ -1151,7 +1151,7 @@ fu_util_firmware_dump(FuUtilPrivate *priv, gchar **values, GError **error)
 	if (blob_fw == NULL)
 		return FALSE;
 	fu_progress_step_done(priv->progress);
-	return fu_common_set_contents_bytes(values[0], blob_fw, error);
+	return fu_bytes_set_contents(values[0], blob_fw, error);
 }
 
 static gboolean
@@ -1188,7 +1188,7 @@ fu_util_firmware_read(FuUtilPrivate *priv, gchar **values, GError **error)
 
 	/* write a zero length file to ensure the destination is writable to
 	 * avoid failing at the end of a potentially lengthy operation */
-	if (!fu_common_set_contents_bytes(values[0], blob_empty, error))
+	if (!fu_bytes_set_contents(values[0], blob_empty, error))
 		return FALSE;
 
 	/* load engine */
@@ -1228,7 +1228,7 @@ fu_util_firmware_read(FuUtilPrivate *priv, gchar **values, GError **error)
 	if (blob_fw == NULL)
 		return FALSE;
 	fu_progress_step_done(priv->progress);
-	return fu_common_set_contents_bytes(values[0], blob_fw, error);
+	return fu_bytes_set_contents(values[0], blob_fw, error);
 }
 
 static gint
@@ -1321,7 +1321,7 @@ fu_util_install(FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 
 	/* parse silo */
-	blob_cab = fu_common_get_contents_bytes(filename, error);
+	blob_cab = fu_bytes_get_contents(filename, error);
 	if (blob_cab == NULL) {
 		fu_util_maybe_prefix_sandbox_error(filename, error);
 		return FALSE;
@@ -2081,7 +2081,7 @@ fu_util_firmware_builder(FuUtilPrivate *priv, gchar **values, GError **error)
 				    "Invalid arguments");
 		return FALSE;
 	}
-	archive_blob = fu_common_get_contents_bytes(values[0], error);
+	archive_blob = fu_bytes_get_contents(values[0], error);
 	if (archive_blob == NULL)
 		return FALSE;
 	if (g_strv_length(values) > 2)
@@ -2091,7 +2091,7 @@ fu_util_firmware_builder(FuUtilPrivate *priv, gchar **values, GError **error)
 	firmware_blob = fu_common_firmware_builder(archive_blob, script_fn, output_fn, error);
 	if (firmware_blob == NULL)
 		return FALSE;
-	return fu_common_set_contents_bytes(values[1], firmware_blob, error);
+	return fu_bytes_set_contents(values[1], firmware_blob, error);
 }
 
 static gboolean
@@ -2259,7 +2259,7 @@ fu_util_firmware_parse(FuUtilPrivate *priv, gchar **values, GError **error)
 		firmware_type = g_strdup(values[1]);
 
 	/* load file */
-	blob = fu_common_get_contents_bytes(values[0], error);
+	blob = fu_bytes_get_contents(values[0], error);
 	if (blob == NULL)
 		return FALSE;
 
@@ -2313,7 +2313,7 @@ fu_util_firmware_export(FuUtilPrivate *priv, gchar **values, GError **error)
 		firmware_type = g_strdup(values[1]);
 
 	/* load file */
-	blob = fu_common_get_contents_bytes(values[0], error);
+	blob = fu_bytes_get_contents(values[0], error);
 	if (blob == NULL)
 		return FALSE;
 
@@ -2370,7 +2370,7 @@ fu_util_firmware_extract(FuUtilPrivate *priv, gchar **values, GError **error)
 		firmware_type = g_strdup(values[1]);
 
 	/* load file */
-	blob = fu_common_get_contents_bytes(values[0], error);
+	blob = fu_bytes_get_contents(values[0], error);
 	if (blob == NULL)
 		return FALSE;
 
@@ -2423,7 +2423,7 @@ fu_util_firmware_extract(FuUtilPrivate *priv, gchar **values, GError **error)
 		}
 		/* TRANSLATORS: decompressing images from a container firmware */
 		g_print("%s : %s\n", _("Writing file:"), fn);
-		if (!fu_common_set_contents_bytes(fn, blob_img, error))
+		if (!fu_bytes_set_contents(fn, blob_img, error))
 			return FALSE;
 	}
 
@@ -2456,7 +2456,7 @@ fu_util_firmware_build(FuUtilPrivate *priv, gchar **values, GError **error)
 	}
 
 	/* load file */
-	blob_src = fu_common_get_contents_bytes(values[0], error);
+	blob_src = fu_bytes_get_contents(values[0], error);
 	if (blob_src == NULL)
 		return FALSE;
 
@@ -2511,7 +2511,7 @@ fu_util_firmware_build(FuUtilPrivate *priv, gchar **values, GError **error)
 	blob_dst = fu_firmware_write(firmware, error);
 	if (blob_dst == NULL)
 		return FALSE;
-	if (!fu_common_set_contents_bytes(values[1], blob_dst, error))
+	if (!fu_bytes_set_contents(values[1], blob_dst, error))
 		return FALSE;
 
 	/* show what we wrote */
@@ -2556,7 +2556,7 @@ fu_util_firmware_convert(FuUtilPrivate *priv, gchar **values, GError **error)
 		firmware_type_dst = g_strdup(values[3]);
 
 	/* load file */
-	blob_src = fu_common_get_contents_bytes(values[0], error);
+	blob_src = fu_bytes_get_contents(values[0], error);
 	if (blob_src == NULL)
 		return FALSE;
 
@@ -2610,7 +2610,7 @@ fu_util_firmware_convert(FuUtilPrivate *priv, gchar **values, GError **error)
 	blob_dst = fu_firmware_write(firmware_dst, error);
 	if (blob_dst == NULL)
 		return FALSE;
-	if (!fu_common_set_contents_bytes(values[1], blob_dst, error))
+	if (!fu_bytes_set_contents(values[1], blob_dst, error))
 		return FALSE;
 	str_dst = fu_firmware_to_string(firmware_dst);
 	g_print("%s", str_dst);
@@ -2670,7 +2670,7 @@ fu_util_firmware_patch(FuUtilPrivate *priv, gchar **values, GError **error)
 		firmware_type = g_strdup(values[3]);
 
 	/* load file */
-	blob_src = fu_common_get_contents_bytes(values[0], error);
+	blob_src = fu_bytes_get_contents(values[0], error);
 	if (blob_src == NULL)
 		return FALSE;
 
@@ -2718,7 +2718,7 @@ fu_util_firmware_patch(FuUtilPrivate *priv, gchar **values, GError **error)
 	blob_dst = fu_firmware_write(firmware, error);
 	if (blob_dst == NULL)
 		return FALSE;
-	if (!fu_common_set_contents_bytes(values[0], blob_dst, error))
+	if (!fu_bytes_set_contents(values[0], blob_dst, error))
 		return FALSE;
 	str = fu_firmware_to_string(firmware);
 	g_print("%s", str);

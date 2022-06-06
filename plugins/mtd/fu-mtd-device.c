@@ -277,7 +277,7 @@ fu_mtd_device_verify(FuMtdDevice *self, GPtrArray *chunks, FuProgress *progress,
 			return FALSE;
 		}
 		blob2 = g_bytes_new_static(buf, fu_chunk_get_data_sz(chk));
-		if (!fu_common_bytes_compare(blob1, blob2, error)) {
+		if (!fu_bytes_compare(blob1, blob2, error)) {
 			g_prefix_error(error,
 				       "failed to verify @0x%x: ",
 				       (guint)fu_chunk_get_address(chk));

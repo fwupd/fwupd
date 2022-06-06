@@ -131,12 +131,10 @@ fu_engine_generate_md_func(gconstpointer user_data)
 	/* put cab file somewhere we can parse it */
 	filename =
 	    g_test_build_filename(G_TEST_DIST, "tests", "colorhug", "colorhug-als-3.0.2.cab", NULL);
-	data = fu_common_get_contents_bytes(filename, &error);
+	data = fu_bytes_get_contents(filename, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(data);
-	ret = fu_common_set_contents_bytes("/tmp/fwupd-self-test/var/cache/fwupd/foo.cab",
-					   data,
-					   &error);
+	ret = fu_bytes_set_contents("/tmp/fwupd-self-test/var/cache/fwupd/foo.cab", data, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -1520,7 +1518,7 @@ fu_engine_require_hwid_func(gconstpointer user_data)
 	/* get generated file as a blob */
 	filename =
 	    g_test_build_filename(G_TEST_BUILT, "tests", "missing-hwid", "hwid-1.2.3.cab", NULL);
-	blob_cab = fu_common_get_contents_bytes(filename, &error);
+	blob_cab = fu_bytes_get_contents(filename, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(blob_cab);
 	silo = fu_engine_get_silo_from_blob(engine, blob_cab, &error);
@@ -1894,7 +1892,7 @@ fu_engine_history_func(gconstpointer user_data)
 
 	filename =
 	    g_test_build_filename(G_TEST_BUILT, "tests", "missing-hwid", "noreqs-1.2.3.cab", NULL);
-	blob_cab = fu_common_get_contents_bytes(filename, &error);
+	blob_cab = fu_bytes_get_contents(filename, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(blob_cab);
 	silo = fu_engine_get_silo_from_blob(engine, blob_cab, &error);
@@ -2039,7 +2037,7 @@ fu_engine_multiple_rels_func(gconstpointer user_data)
 					 "multiple-rels",
 					 "multiple-rels-1.2.4.cab",
 					 NULL);
-	blob_cab = fu_common_get_contents_bytes(filename, &error);
+	blob_cab = fu_bytes_get_contents(filename, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(blob_cab);
 	silo = fu_engine_get_silo_from_blob(engine, blob_cab, &error);
@@ -2160,7 +2158,7 @@ fu_engine_history_inherit(gconstpointer user_data)
 
 	filename =
 	    g_test_build_filename(G_TEST_BUILT, "tests", "missing-hwid", "noreqs-1.2.3.cab", NULL);
-	blob_cab = fu_common_get_contents_bytes(filename, &error);
+	blob_cab = fu_bytes_get_contents(filename, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(blob_cab);
 	silo = fu_engine_get_silo_from_blob(engine, blob_cab, &error);
@@ -2299,7 +2297,7 @@ fu_engine_install_needs_reboot(gconstpointer user_data)
 
 	filename =
 	    g_test_build_filename(G_TEST_BUILT, "tests", "missing-hwid", "noreqs-1.2.3.cab", NULL);
-	blob_cab = fu_common_get_contents_bytes(filename, &error);
+	blob_cab = fu_bytes_get_contents(filename, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(blob_cab);
 	silo = fu_engine_get_silo_from_blob(engine, blob_cab, &error);
@@ -2390,7 +2388,7 @@ fu_engine_history_error_func(gconstpointer user_data)
 	/* install the wrong thing */
 	filename =
 	    g_test_build_filename(G_TEST_BUILT, "tests", "missing-hwid", "noreqs-1.2.3.cab", NULL);
-	blob_cab = fu_common_get_contents_bytes(filename, &error);
+	blob_cab = fu_bytes_get_contents(filename, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(blob_cab);
 	silo = fu_engine_get_silo_from_blob(engine, blob_cab, &error);

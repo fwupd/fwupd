@@ -68,18 +68,10 @@ LIBFWUPDPLUGIN_0.9.3 {
   local: *;
 } LIBFWUPDPLUGIN_0.8.0;
 
-LIBFWUPDPLUGIN_0.9.5 {
-  global:
-    fu_common_get_contents_fd;
-    fu_common_set_contents_bytes;
-  local: *;
-} LIBFWUPDPLUGIN_0.9.3;
-
 LIBFWUPDPLUGIN_0.9.7 {
   global:
     fu_common_extract_archive;
     fu_common_firmware_builder;
-    fu_common_get_contents_bytes;
     fu_common_mkdir_parent;
     fu_common_rmtree;
     fu_common_spawn_sync;
@@ -90,7 +82,7 @@ LIBFWUPDPLUGIN_0.9.7 {
     fu_plugin_device_register;
     fu_plugin_runner_device_register;
   local: *;
-} LIBFWUPDPLUGIN_0.9.5;
+} LIBFWUPDPLUGIN_0.9.3;
 
 LIBFWUPDPLUGIN_0.9.8 {
   global:
@@ -289,7 +281,6 @@ LIBFWUPDPLUGIN_1.2.2 {
 
 LIBFWUPDPLUGIN_1.2.4 {
   global:
-    fu_common_bytes_align;
     fu_common_dump_full;
     fu_device_incorporate_from_component;
     fu_plugin_get_build_hash;
@@ -307,8 +298,6 @@ LIBFWUPDPLUGIN_1.2.5 {
 
 LIBFWUPDPLUGIN_1.2.6 {
   global:
-    fu_common_bytes_compare;
-    fu_common_bytes_is_empty;
     fu_common_realpath;
     fu_device_activate;
     fu_device_get_firmware_size_max;
@@ -332,7 +321,6 @@ LIBFWUPDPLUGIN_1.3.1 {
     fu_byte_array_append_uint16;
     fu_byte_array_append_uint32;
     fu_byte_array_append_uint8;
-    fu_common_bytes_pad;
     fu_device_rescan;
     fu_firmware_add_image;
     fu_firmware_get_image_by_id;
@@ -573,12 +561,6 @@ LIBFWUPDPLUGIN_1.5.3 {
   local: *;
 } LIBFWUPDPLUGIN_1.5.2;
 
-LIBFWUPDPLUGIN_1.5.4 {
-  global:
-    fu_common_bytes_new_offset;
-  local: *;
-} LIBFWUPDPLUGIN_1.5.3;
-
 LIBFWUPDPLUGIN_1.5.5 {
   global:
     fu_common_get_cpu_vendor;
@@ -597,7 +579,7 @@ LIBFWUPDPLUGIN_1.5.5 {
     fu_efivar_get_monitor;
     fu_firmware_get_image_by_checksum;
   local: *;
-} LIBFWUPDPLUGIN_1.5.4;
+} LIBFWUPDPLUGIN_1.5.3;
 
 LIBFWUPDPLUGIN_1.5.6 {
   global:
@@ -939,7 +921,6 @@ LIBFWUPDPLUGIN_1.7.4 {
     fu_backend_registered;
     fu_cfi_device_get_block_size;
     fu_cfi_device_set_block_size;
-    fu_common_get_contents_stream;
     fu_context_get_lid_state;
     fu_context_set_lid_state;
     fu_firmware_add_patch;
@@ -1012,6 +993,15 @@ LIBFWUPDPLUGIN_1.8.1 {
 
 LIBFWUPDPLUGIN_1.8.2 {
   global:
+    fu_bytes_align;
+    fu_bytes_compare;
+    fu_bytes_get_contents;
+    fu_bytes_get_contents_fd;
+    fu_bytes_get_contents_stream;
+    fu_bytes_is_empty;
+    fu_bytes_new_offset;
+    fu_bytes_pad;
+    fu_bytes_set_contents;
     fu_crc16;
     fu_crc16_full;
     fu_crc32;

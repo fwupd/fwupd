@@ -142,7 +142,7 @@ fu_synaptics_cape_firmware_parse_header(FuSynapticsCapeFirmware *self,
 	version_str = g_strdup_printf("%u.%u.%u.%u", version_z, version_y, version_x, version_w);
 	fu_firmware_set_version(FU_FIRMWARE(self), version_str);
 
-	fw_hdr = fu_common_bytes_new_offset(fw, 0, sizeof(FuCapeHidFwCmdUpdateStartPar), error);
+	fw_hdr = fu_bytes_new_offset(fw, 0, sizeof(FuCapeHidFwCmdUpdateStartPar), error);
 	if (fw_hdr == NULL)
 		return FALSE;
 

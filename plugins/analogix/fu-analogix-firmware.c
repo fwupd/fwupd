@@ -49,9 +49,9 @@ fu_analogix_firmware_parse(FuFirmware *firmware,
 		blob_ocm = g_bytes_ref(blob);
 	} else if (g_bytes_get_size(blob) == CUSTOM_FLASH_SIZE) {
 		/* custom */
-		blob_cus = fu_common_bytes_new_offset(blob, 0, CUSTOM_FLASH_SIZE, error);
+		blob_cus = fu_bytes_new_offset(blob, 0, CUSTOM_FLASH_SIZE, error);
 	} else {
-		blob_ocm = fu_common_bytes_new_offset(blob, 0, OCM_FLASH_SIZE, error);
+		blob_ocm = fu_bytes_new_offset(blob, 0, OCM_FLASH_SIZE, error);
 		if (blob_ocm == NULL)
 			return FALSE;
 	}
@@ -82,11 +82,9 @@ fu_analogix_firmware_parse(FuFirmware *firmware,
 	}
 
 	/* TXFW is optional */
-	blob_stx = fu_common_bytes_new_offset(blob,
-					      FLASH_TXFW_ADDR - FLASH_OCM_ADDR,
-					      SECURE_OCM_TX_SIZE,
-					      NULL);
-	if (blob_stx != NULL && !fu_common_bytes_is_empty(blob_stx)) {
+	blob_stx =
+	    fu_bytes_new_offset(blob, FLASH_TXFW_ADDR - FLASH_OCM_ADDR, SECURE_OCM_TX_SIZE, NULL);
+	if (blob_stx != NULL && !fu_bytes_is_empty(blob_stx)) {
 		g_autoptr(FuFirmware) fw2 = fu_firmware_new_from_bytes(blob_stx);
 		fu_firmware_set_id(fw2, "stx");
 		fu_firmware_set_addr(fw2, FLASH_TXFW_ADDR);
@@ -94,17 +92,15 @@ fu_analogix_firmware_parse(FuFirmware *firmware,
 	}
 
 	/* RXFW is optional */
-	blob_srx = fu_common_bytes_new_offset(blob,
-					      FLASH_RXFW_ADDR - FLASH_OCM_ADDR,
-					      SECURE_OCM_RX_SIZE,
-					      NULL);
-	if (blob_srx != NULL && !fu_common_bytes_is_empty(blob_srx)) {
+	blob_srx =
+	    fu_bytes_new_offset(blob, FLASH_RXFW_ADDR - FLASH_OCM_ADDR, SECURE_OCM_RX_SIZE, NULL);
+	if (blob_srx != NULL && !fu_bytes_is_empty(blob_srx)) {
 		g_autoptr(FuFirmware) fw2 = fu_firmware_new_from_bytes(blob_srx);
 		fu_firmware_set_id(fw2, "srx");
 		fu_firmware_set_addr(fw2, FLASH_RXFW_ADDR);
 		fu_firmware_add_image(firmware, fw2);
 	}
-	if (blob_cus != NULL && !fu_common_bytes_is_empty(blob_cus)) {
+	if (blob_cus != NULL && !fu_bytes_is_empty(blob_cus)) {
 		g_autoptr(FuFirmware) fw2 = fu_firmware_new_from_bytes(blob_cus);
 		fu_firmware_set_id(fw2, "custom");
 		fu_firmware_set_addr(fw2, FLASH_CUSTOM_ADDR);

@@ -34,6 +34,7 @@
 #include "fwupd-security-attr-private.h"
 
 #include "fu-backend.h"
+#include "fu-bytes.h"
 #include "fu-cabinet.h"
 #include "fu-cfu-offer.h"
 #include "fu-cfu-payload.h"
@@ -3213,7 +3214,7 @@ fu_engine_create_metadata_builder_source(FuEngine *self, const gchar *fn, GError
 	g_autofree gchar *xml = NULL;
 
 	g_debug("building metadata for %s", fn);
-	blob = fu_common_get_contents_bytes(fn, error);
+	blob = fu_bytes_get_contents(fn, error);
 	if (blob == NULL)
 		return NULL;
 
@@ -3795,10 +3796,10 @@ fu_engine_get_system_jcat_result(FuEngine *self, FwupdRemote *remote, GError **e
 	g_autoptr(JcatItem) jcat_item = NULL;
 	g_autoptr(JcatFile) jcat_file = jcat_file_new();
 
-	blob = fu_common_get_contents_bytes(fwupd_remote_get_filename_cache(remote), error);
+	blob = fu_bytes_get_contents(fwupd_remote_get_filename_cache(remote), error);
 	if (blob == NULL)
 		return NULL;
-	blob_sig = fu_common_get_contents_bytes(fwupd_remote_get_filename_cache_sig(remote), error);
+	blob_sig = fu_bytes_get_contents(fwupd_remote_get_filename_cache_sig(remote), error);
 	if (blob_sig == NULL)
 		return NULL;
 	istream = g_memory_input_stream_new_from_bytes(blob_sig);
@@ -3970,14 +3971,12 @@ fu_engine_update_metadata_bytes(FuEngine *self,
 	}
 
 	/* save XML and signature to remotes.d */
-	if (!fu_common_set_contents_bytes(fwupd_remote_get_filename_cache(remote),
-					  bytes_raw,
-					  error))
+	if (!fu_bytes_set_contents(fwupd_remote_get_filename_cache(remote), bytes_raw, error))
 		return FALSE;
 	if (keyring_kind != FWUPD_KEYRING_KIND_NONE) {
-		if (!fu_common_set_contents_bytes(fwupd_remote_get_filename_cache_sig(remote),
-						  bytes_sig,
-						  error))
+		if (!fu_bytes_set_contents(fwupd_remote_get_filename_cache_sig(remote),
+					   bytes_sig,
+					   error))
 			return FALSE;
 	}
 	if (!fu_engine_load_metadata_store(self, FU_ENGINE_LOAD_FLAG_NONE, error))
@@ -4264,7 +4263,7 @@ fu_engine_get_details(FuEngine *self, FuEngineRequest *request, gint fd, GError 
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
 	/* get all components */
-	blob = fu_common_get_contents_fd(fd, fu_config_get_archive_size_max(self->config), error);
+	blob = fu_bytes_get_contents_fd(fd, fu_config_get_archive_size_max(self->config), error);
 	if (blob == NULL)
 		return NULL;
 	silo = fu_engine_get_silo_from_blob(self, blob, error);

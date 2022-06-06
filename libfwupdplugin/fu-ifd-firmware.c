@@ -7,6 +7,7 @@
 #include "config.h"
 
 #include "fu-byte-array.h"
+#include "fu-bytes.h"
 #include "fu-ifd-bios.h"
 #include "fu-ifd-common.h"
 #include "fu-ifd-firmware.h"
@@ -232,7 +233,7 @@ fu_ifd_firmware_parse(FuFirmware *firmware,
 
 		/* create image */
 		g_debug("freg %s 0x%04x -> 0x%04x", freg_str, freg_base, freg_limt);
-		contents = fu_common_bytes_new_offset(fw, freg_base, freg_size, error);
+		contents = fu_bytes_new_offset(fw, freg_base, freg_size, error);
 		if (contents == NULL)
 			return FALSE;
 		if (i == FU_IFD_REGION_BIOS) {

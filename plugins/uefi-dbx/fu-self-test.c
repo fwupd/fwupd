@@ -27,7 +27,7 @@ fu_efi_image_func(void)
 		return;
 	}
 	g_assert_nonnull(fn);
-	bytes = fu_common_get_contents_bytes(fn, &error);
+	bytes = fu_bytes_get_contents(fn, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(bytes);
 

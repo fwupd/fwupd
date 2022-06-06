@@ -25,7 +25,7 @@ fu_acpi_ivrs_dma_remap_func(void)
 		g_test_skip("Missing IVRS-REMAP");
 		return;
 	}
-	blob = fu_common_get_contents_bytes(fn, &error);
+	blob = fu_bytes_get_contents(fn, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(blob);
 	ivrs = fu_acpi_ivrs_new(blob, &error);
@@ -48,7 +48,7 @@ fu_acpi_ivrs_no_dma_remap_func(void)
 		g_test_skip("Missing IVRS-NOREMAP");
 		return;
 	}
-	blob = fu_common_get_contents_bytes(fn, &error);
+	blob = fu_bytes_get_contents(fn, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(blob);
 	ivrs = fu_acpi_ivrs_new(blob, &error);

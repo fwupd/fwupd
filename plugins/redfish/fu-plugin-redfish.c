@@ -178,7 +178,7 @@ fu_redfish_plugin_discover_smbios_table(FuPlugin *plugin, GError **error)
 	/* is optional if not in self tests */
 	smbios_data_fn = g_getenv("FWUPD_REDFISH_SMBIOS_DATA");
 	if (smbios_data_fn != NULL) {
-		smbios_data = fu_common_get_contents_bytes(smbios_data_fn, error);
+		smbios_data = fu_bytes_get_contents(smbios_data_fn, error);
 		if (smbios_data == NULL)
 			return FALSE;
 	} else {

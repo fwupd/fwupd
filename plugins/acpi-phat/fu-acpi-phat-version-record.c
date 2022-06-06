@@ -43,7 +43,7 @@ fu_acpi_phat_version_record_parse(FuFirmware *firmware,
 	for (guint32 i = 0; i < record_count; i++) {
 		g_autoptr(FuFirmware) firmware_tmp = fu_acpi_phat_version_element_new();
 		g_autoptr(GBytes) fw_tmp = NULL;
-		fw_tmp = fu_common_bytes_new_offset(fw, offset + 12, 28, error);
+		fw_tmp = fu_bytes_new_offset(fw, offset + 12, 28, error);
 		if (fw_tmp == NULL)
 			return FALSE;
 		fu_firmware_set_offset(firmware_tmp, offset + 12);

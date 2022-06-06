@@ -13,6 +13,7 @@
 #include <libfwupdplugin/fu-backend.h>
 #include <libfwupdplugin/fu-bluez-device.h>
 #include <libfwupdplugin/fu-byte-array.h>
+#include <libfwupdplugin/fu-bytes.h>
 #include <libfwupdplugin/fu-cfi-device.h>
 #include <libfwupdplugin/fu-cfu-common.h>
 #include <libfwupdplugin/fu-cfu-offer.h>

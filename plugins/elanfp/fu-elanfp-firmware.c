@@ -150,7 +150,7 @@ fu_elanfp_firmware_parse(FuFirmware *firmware,
 				    fwtype);
 			return FALSE;
 		}
-		blob = fu_common_bytes_new_offset(fw, start_addr, length, error);
+		blob = fu_bytes_new_offset(fw, start_addr, length, error);
 		if (blob == NULL)
 			return FALSE;
 		if (!fu_firmware_parse(img, blob, flags, error))

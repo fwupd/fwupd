@@ -63,6 +63,15 @@ if __name__ == "__main__":
             "fu_common_strtoull": "fu_strtoull",
             "fu_common_strtoull_full": "fu_strtoull_full",
             "FuCommonStrsplitFunc": "FuStrsplitFunc",
+            "fu_common_bytes_pad": "fu_bytes_pad",
+            "fu_common_bytes_new_offset": "fu_bytes_new_offset",
+            "fu_common_bytes_align": "fu_bytes_align",
+            "fu_common_bytes_is_empty": "fu_bytes_is_empty",
+            "fu_common_bytes_compare(": "fu_bytes_compare(",
+            "fu_common_set_contents_bytes": "fu_bytes_set_contents",
+            "fu_common_get_contents_bytes": "fu_bytes_get_contents",
+            "fu_common_get_contents_stream": "fu_bytes_get_contents_stream",
+            "fu_common_get_contents_fd": "fu_bytes_get_contents_fd",
         }.items():
             if buf.find(old) == -1:
                 continue

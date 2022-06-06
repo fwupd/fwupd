@@ -160,7 +160,7 @@ fu_synaptics_rmi_firmware_add_image(FuFirmware *firmware,
 	g_autoptr(GBytes) bytes = NULL;
 	g_autoptr(FuFirmware) img = NULL;
 
-	bytes = fu_common_bytes_new_offset(fw, offset, sz, error);
+	bytes = fu_bytes_new_offset(fw, offset, sz, error);
 	if (bytes == NULL)
 		return FALSE;
 	img = fu_firmware_new_from_bytes(bytes);

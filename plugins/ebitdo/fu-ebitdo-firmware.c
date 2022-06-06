@@ -80,7 +80,7 @@ fu_ebitdo_firmware_parse(FuFirmware *firmware,
 	fu_firmware_set_version_raw(firmware, GUINT32_FROM_LE(hdr->version));
 
 	/* add header */
-	fw_hdr = fu_common_bytes_new_offset(fw, 0x0, sizeof(FuEbitdoFirmwareHeader), error);
+	fw_hdr = fu_bytes_new_offset(fw, 0x0, sizeof(FuEbitdoFirmwareHeader), error);
 	if (fw_hdr == NULL)
 		return FALSE;
 	fu_firmware_set_id(img_hdr, FU_FIRMWARE_ID_HEADER);
@@ -88,8 +88,7 @@ fu_ebitdo_firmware_parse(FuFirmware *firmware,
 	fu_firmware_add_image(firmware, img_hdr);
 
 	/* add payload */
-	fw_payload =
-	    fu_common_bytes_new_offset(fw, sizeof(FuEbitdoFirmwareHeader), payload_len, error);
+	fw_payload = fu_bytes_new_offset(fw, sizeof(FuEbitdoFirmwareHeader), payload_len, error);
 	if (fw_payload == NULL)
 		return FALSE;
 	fu_firmware_set_id(firmware, FU_FIRMWARE_ID_PAYLOAD);

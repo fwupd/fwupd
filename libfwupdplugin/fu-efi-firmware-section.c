@@ -7,6 +7,7 @@
 #include "config.h"
 
 #include "fu-byte-array.h"
+#include "fu-bytes.h"
 #include "fu-efi-common.h"
 #include "fu-efi-firmware-common.h"
 #include "fu-efi-firmware-section.h"
@@ -177,7 +178,7 @@ fu_efi_firmware_section_parse(FuFirmware *firmware,
 	}
 
 	/* create blob */
-	blob = fu_common_bytes_new_offset(fw, offset, size - offset, error);
+	blob = fu_bytes_new_offset(fw, offset, size - offset, error);
 	if (blob == NULL)
 		return FALSE;
 	fu_firmware_set_offset(firmware, offset);

@@ -11,6 +11,7 @@
 #include <string.h>
 
 #include "fu-byte-array.h"
+#include "fu-bytes.h"
 #include "fu-chunk-private.h"
 #include "fu-common.h"
 #include "fu-dfu-firmware-private.h"
@@ -77,7 +78,7 @@ fu_firmware_image_chunk_parse(FuDfuseFirmware *self, GBytes *bytes, gsize *offse
 
 	/* create new chunk */
 	*offset += sizeof(hdr);
-	blob = fu_common_bytes_new_offset(bytes, *offset, GUINT32_FROM_LE(hdr.size), error);
+	blob = fu_bytes_new_offset(bytes, *offset, GUINT32_FROM_LE(hdr.size), error);
 	if (blob == NULL)
 		return NULL;
 	chk = fu_chunk_bytes_new(blob);

@@ -33,7 +33,7 @@ fu_test_synaprom_firmware_func(void)
 		g_test_skip("Missing test.pkg");
 		return;
 	}
-	fw = fu_common_get_contents_bytes(filename, &error);
+	fw = fu_bytes_get_contents(filename, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(fw);
 	buf = g_bytes_get_data(fw, &sz);

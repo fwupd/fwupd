@@ -28,6 +28,7 @@
 #include "fwupd-resources.h"
 #include "fwupd-security-attr-private.h"
 
+#include "fu-bytes.h"
 #include "fu-common.h"
 #include "fu-daemon.h"
 #include "fu-device-private.h"
@@ -1860,7 +1861,7 @@ fu_daemon_daemon_method_call(GDBusConnection *connection,
 		 * this will also close the fd when done */
 		archive_size_max =
 		    fu_config_get_archive_size_max(fu_engine_get_config(self->engine));
-		helper->blob_cab = fu_common_get_contents_fd(fd, archive_size_max, &error);
+		helper->blob_cab = fu_bytes_get_contents_fd(fd, archive_size_max, &error);
 		if (helper->blob_cab == NULL) {
 			g_dbus_method_invocation_return_gerror(invocation, error);
 			return;
