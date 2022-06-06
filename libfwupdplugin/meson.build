@@ -15,6 +15,8 @@ fwupdplugin_src = [
   'fu-cabinet.c',
   'fu-chunk.c',             # fuzzing
   'fu-common.c',            # fuzzing
+  'fu-sum.c',               # fuzzing
+  'fu-crc.c',               # fuzzing
   'fu-common-cab.c',
   'fu-common-guid.c',
   'fu-common-version.c',    # fuzzing
@@ -87,6 +89,8 @@ fwupdplugin_headers = [
   'fu-cabinet.h',
   'fu-chunk.h',
   'fu-common.h',
+  'fu-sum.h',
+  'fu-crc.h',
   'fu-common-cab.h',
   'fu-common-guid.h',
   'fu-common-version.h',

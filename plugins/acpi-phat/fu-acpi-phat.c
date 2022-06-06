@@ -163,7 +163,7 @@ fu_acpi_phat_parse(FuFirmware *firmware,
 
 	/* verify checksum */
 	if ((flags & FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM) == 0) {
-		guint8 checksum = fu_common_sum8(buf, length);
+		guint8 checksum = fu_sum8(buf, length);
 		if (checksum != 0x00) {
 			g_set_error(error,
 				    G_IO_ERROR,
@@ -273,7 +273,7 @@ fu_acpi_phat_write(FuFirmware *firmware, GError **error)
 	g_byte_array_append(buf, buf2->data, buf2->len);
 
 	/* fixup checksum */
-	buf->data[9] = 0xFF - fu_common_sum8(buf->data, buf->len);
+	buf->data[9] = 0xFF - fu_sum8(buf->data, buf->len);
 
 	/* success */
 	return g_byte_array_free_to_bytes(g_steal_pointer(&buf));

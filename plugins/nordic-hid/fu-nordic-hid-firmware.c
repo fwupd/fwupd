@@ -44,10 +44,10 @@ static guint32
 fu_nordic_hid_firmware_crc32(const guint8 *buf, gsize bufsz)
 {
 	guint crc32 = 0x01;
-	/* maybe skipped "^" step in fu_common_crc32_full()?
+	/* maybe skipped "^" step in fu_crc32_full()?
 	 * according https://github.com/madler/zlib/blob/master/crc32.c#L225 */
 	crc32 ^= 0xFFFFFFFFUL;
-	return fu_common_crc32_full(buf, bufsz, crc32, 0xEDB88320);
+	return fu_crc32_full(buf, bufsz, crc32, 0xEDB88320);
 }
 
 static gboolean

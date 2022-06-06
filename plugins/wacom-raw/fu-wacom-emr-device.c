@@ -58,7 +58,7 @@ fu_wacom_emr_device_setup(FuDevice *device, GError **error)
 static guint8
 fu_wacom_emr_device_calc_checksum(guint8 init1, const guint8 *buf, gsize bufsz)
 {
-	return init1 + ~(fu_common_sum8(buf, bufsz)) + 1;
+	return init1 + ~(fu_sum8(buf, bufsz)) + 1;
 }
 
 static gboolean

@@ -4,6 +4,8 @@ This library is only partially API and ABI stable. Keeping unused, unsafe and
 deprecated functions around forever is a maintenance burden and so symbols are
 removed when branching for new minor versions.
 
+Use `./contrib/migrate.py` to migrate up out-of-tree plugins to the new API.
+
 Remember: Plugins should be upstream!
 
 ## 1.5.5
@@ -58,3 +60,5 @@ Remember: Plugins should be upstream!
 * `fu_backend_coldplug`: Now requires a `FuProgress`, although it can be ignored.
 * `FuPluginVfuncs->setup`: Now requires a `FuProgress`, although it can be ignored.
 * `FuPluginVfuncs->coldplug`: Now requires a `FuProgress`, although it can be ignored.
+* `fu_common_crc*`: Use `fu_crc` prefix, i.e. remove the `_common`
+* `fu_common_sum*`: Use `fu_sum` prefix, i.e. remove the `_common`

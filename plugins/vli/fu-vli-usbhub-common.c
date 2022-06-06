@@ -12,7 +12,7 @@
 guint8
 fu_vli_usbhub_header_crc8(FuVliUsbhubHeader *hdr)
 {
-	return ~fu_common_crc8((const guint8 *)hdr, sizeof(*hdr) - 1);
+	return ~fu_crc8((const guint8 *)hdr, sizeof(*hdr) - 1);
 }
 
 void

@@ -12,6 +12,7 @@
 #include "fu-efi-firmware-common.h"
 #include "fu-efi-firmware-file.h"
 #include "fu-efi-firmware-section.h"
+#include "fu-sum.h"
 
 typedef struct {
 	guint8 type;
@@ -254,7 +255,7 @@ fu_efi_firmware_file_parse(FuFirmware *firmware,
 	/* verify data checksum */
 	if ((priv->attrib & FU_EFI_FIRMWARE_FILE_ATTRIB_CHECKSUM) > 0 &&
 	    (flags & FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM) == 0) {
-		guint8 data_checksum_verify = 0x100 - fu_common_sum8_bytes(blob);
+		guint8 data_checksum_verify = 0x100 - fu_sum8_bytes(blob);
 		if (data_checksum_verify != data_checksum) {
 			g_set_error(error,
 				    FWUPD_ERROR,
@@ -333,7 +334,7 @@ fu_efi_firmware_file_write(FuFirmware *firmware, GError **error)
 		return NULL;
 	g_byte_array_append(buf, (guint8 *)&guid, sizeof(guid));
 	fu_byte_array_append_uint8(buf, 0x0); /* hdr_checksum */
-	fu_byte_array_append_uint8(buf, 0x100 - fu_common_sum8_bytes(blob));
+	fu_byte_array_append_uint8(buf, 0x100 - fu_sum8_bytes(blob));
 	fu_byte_array_append_uint8(buf, priv->type);   /* data_checksum */
 	fu_byte_array_append_uint8(buf, priv->attrib); /* data_checksum */
 	fu_byte_array_append_uint32(buf,

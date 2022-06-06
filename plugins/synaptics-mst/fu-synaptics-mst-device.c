@@ -319,7 +319,7 @@ fu_synaptics_mst_device_update_esm(FuSynapticsMstDevice *self,
 	}
 
 	/* ESM checksum same */
-	checksum = fu_common_sum32(payload_data + EEPROM_ESM_OFFSET, esm_sz);
+	checksum = fu_sum32(payload_data + EEPROM_ESM_OFFSET, esm_sz);
 	if (checksum == flash_checksum) {
 		g_debug("ESM checksum already matches");
 		return TRUE;
@@ -469,7 +469,7 @@ fu_synaptics_mst_device_update_tesla_leaf_firmware(FuSynapticsMstDevice *self,
 								&flash_checksum,
 								error))
 			return FALSE;
-		checksum = fu_common_sum32(payload_data, payload_len);
+		checksum = fu_sum32(payload_data, payload_len);
 		if (checksum == flash_checksum)
 			break;
 		g_debug("attempt %u: checksum %x didn't match %x",

@@ -227,7 +227,7 @@ fu_ccgx_firmware_parse_md_block(FuCcgxFirmware *self, FwupdInstallFlags flags, G
 	}
 	for (guint i = 0; i < self->records->len - 1; i++) {
 		rcd = g_ptr_array_index(self->records, i);
-		checksum_calc += fu_common_sum8_bytes(rcd->data);
+		checksum_calc += fu_sum8_bytes(rcd->data);
 		fw_size += g_bytes_get_size(rcd->data);
 	}
 	if (fw_size != metadata.fw_size) {

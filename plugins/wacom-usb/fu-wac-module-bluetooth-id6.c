@@ -47,8 +47,7 @@ fu_wac_module_bluetooth_id6_reverse_bits(guint8 value)
 static guint8
 fu_wac_module_bluetooth_id6_calculate_crc(const guint8 *data, gsize sz)
 {
-	guint8 crc =
-	    ~fu_common_crc8_full(data, sz, 0x00, FU_WAC_MODULE_BLUETOOTH_ID6_CRC8_POLYNOMIAL);
+	guint8 crc = ~fu_crc8_full(data, sz, 0x00, FU_WAC_MODULE_BLUETOOTH_ID6_CRC8_POLYNOMIAL);
 	return fu_wac_module_bluetooth_id6_reverse_bits(crc);
 }
 

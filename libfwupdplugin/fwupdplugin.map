@@ -523,10 +523,6 @@ LIBFWUPDPLUGIN_1.5.0 {
   global:
     fu_byte_array_set_size;
     fu_common_cpuid;
-    fu_common_crc16;
-    fu_common_crc32;
-    fu_common_crc32_full;
-    fu_common_crc8;
     fu_common_filename_glob;
     fu_device_bind_driver;
     fu_device_dump_firmware;
@@ -791,7 +787,6 @@ LIBFWUPDPLUGIN_1.6.1 {
 LIBFWUPDPLUGIN_1.6.2 {
   global:
     fu_common_check_kernel_version;
-    fu_common_crc16_full;
     fu_common_get_firmware_search_path;
     fu_common_reset_firmware_search_path;
     fu_common_set_firmware_search_path;
@@ -919,7 +914,6 @@ LIBFWUPDPLUGIN_1.7.1 {
     fu_cfi_device_set_flash_id;
     fu_cfi_device_set_size;
     fu_common_check_full_disk_encryption;
-    fu_common_crc8_full;
     fu_common_mkdir;
     fu_device_add_string;
     fu_device_get_internal_flags;
@@ -950,16 +944,6 @@ LIBFWUPDPLUGIN_1.7.3 {
     fu_cfi_device_set_page_size;
     fu_cfi_device_set_sector_size;
     fu_common_strtoull_full;
-    fu_common_sum16;
-    fu_common_sum16_bytes;
-    fu_common_sum16w;
-    fu_common_sum16w_bytes;
-    fu_common_sum32;
-    fu_common_sum32_bytes;
-    fu_common_sum32w;
-    fu_common_sum32w_bytes;
-    fu_common_sum8;
-    fu_common_sum8_bytes;
   local: *;
 } LIBFWUPDPLUGIN_1.7.2;
 
@@ -1041,11 +1025,27 @@ LIBFWUPDPLUGIN_1.8.1 {
 
 LIBFWUPDPLUGIN_1.8.2 {
   global:
+    fu_crc16;
+    fu_crc16_full;
+    fu_crc32;
+    fu_crc32_full;
+    fu_crc8;
+    fu_crc8_full;
     fu_device_new;
     fu_efivar_secure_boot_enabled;
     fu_progress_add_step;
     fu_progress_get_name;
     fu_progress_set_name;
+    fu_sum16;
+    fu_sum16_bytes;
+    fu_sum16w;
+    fu_sum16w_bytes;
+    fu_sum32;
+    fu_sum32_bytes;
+    fu_sum32w;
+    fu_sum32w_bytes;
+    fu_sum8;
+    fu_sum8_bytes;
     fu_udev_device_ioctl;
     fu_udev_device_new;
     fu_udev_device_pread;

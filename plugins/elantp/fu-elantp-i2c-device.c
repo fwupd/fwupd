@@ -409,9 +409,8 @@ fu_elantp_i2c_device_write_firmware(FuDevice *device,
 	chunks = fu_chunk_array_new(buf + iap_addr, bufsz - iap_addr, 0x0, 0x0, self->fw_page_size);
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index(chunks, i);
-		guint16 csum_tmp = fu_common_sum16w(fu_chunk_get_data(chk),
-						    fu_chunk_get_data_sz(chk),
-						    G_LITTLE_ENDIAN);
+		guint16 csum_tmp =
+		    fu_sum16w(fu_chunk_get_data(chk), fu_chunk_get_data_sz(chk), G_LITTLE_ENDIAN);
 		gsize blksz = self->fw_page_size + 4;
 		g_autofree guint8 *blk = g_malloc0(blksz);
 

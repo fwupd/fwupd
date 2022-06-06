@@ -304,9 +304,9 @@ fu_plugin_uefi_capsule_write_splash_data(FuPlugin *plugin,
 	};
 
 	/* header, payload and image has to add to zero */
-	csum += fu_common_sum8((guint8 *)&capsule_header, sizeof(capsule_header));
-	csum += fu_common_sum8((guint8 *)&header, sizeof(header));
-	csum += fu_common_sum8_bytes(blob);
+	csum += fu_sum8((guint8 *)&capsule_header, sizeof(capsule_header));
+	csum += fu_sum8((guint8 *)&header, sizeof(header));
+	csum += fu_sum8_bytes(blob);
 	header.checksum = 0x100 - csum;
 
 	/* write capsule file */

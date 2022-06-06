@@ -156,7 +156,7 @@ fu_vli_pd_firmware_parse(FuFirmware *firmware,
 			g_prefix_error(error, "failed to read file CRC: ");
 			return FALSE;
 		}
-		crc_actual = fu_common_crc16(buf, bufsz - 2);
+		crc_actual = fu_crc16(buf, bufsz - 2);
 		if (crc_actual != crc_file) {
 			g_set_error(error,
 				    FWUPD_ERROR,
