@@ -208,10 +208,6 @@ fu_common_dump_full(const gchar *log_domain,
 void
 fu_common_dump_bytes(const gchar *log_domain, const gchar *title, GBytes *bytes);
 gboolean
-fu_common_kernel_locked_down(void);
-gboolean
-fu_common_check_kernel_version(const gchar *minimum_kernel, GError **error);
-gboolean
 fu_common_cpuid(guint32 leaf,
 		guint32 *eax,
 		guint32 *ebx,
@@ -244,12 +240,6 @@ gchar *
 fu_common_uri_get_scheme(const gchar *uri);
 gsize
 fu_common_align_up(gsize value, guint8 alignment);
-gchar *
-fu_common_get_firmware_search_path(GError **error);
-gboolean
-fu_common_set_firmware_search_path(const gchar *path, GError **error);
-gboolean
-fu_common_reset_firmware_search_path(GError **error);
 const gchar *
 fu_battery_state_to_string(FuBatteryState battery_state);
 const gchar *

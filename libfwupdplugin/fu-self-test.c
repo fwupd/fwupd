@@ -912,17 +912,17 @@ fu_common_kernel_lockdown_func(void)
 
 	old_kernel_dir = g_test_build_filename(G_TEST_DIST, "tests", "lockdown", NULL);
 	(void)g_setenv("FWUPD_SYSFSSECURITYDIR", old_kernel_dir, TRUE);
-	ret = fu_common_kernel_locked_down();
+	ret = fu_kernel_locked_down();
 	g_assert_false(ret);
 
 	locked_dir = g_test_build_filename(G_TEST_DIST, "tests", "lockdown", "locked", NULL);
 	(void)g_setenv("FWUPD_SYSFSSECURITYDIR", locked_dir, TRUE);
-	ret = fu_common_kernel_locked_down();
+	ret = fu_kernel_locked_down();
 	g_assert_true(ret);
 
 	none_dir = g_test_build_filename(G_TEST_DIST, "tests", "lockdown", "none", NULL);
 	(void)g_setenv("FWUPD_SYSFSSECURITYDIR", none_dir, TRUE);
-	ret = fu_common_kernel_locked_down();
+	ret = fu_kernel_locked_down();
 	g_assert_false(ret);
 }
 

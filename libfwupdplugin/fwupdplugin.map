@@ -401,17 +401,11 @@ LIBFWUPDPLUGIN_1.3.6 {
   local: *;
 } LIBFWUPDPLUGIN_1.3.5;
 
-LIBFWUPDPLUGIN_1.3.8 {
-  global:
-    fu_common_kernel_locked_down;
-  local: *;
-} LIBFWUPDPLUGIN_1.3.6;
-
 LIBFWUPDPLUGIN_1.3.9 {
   global:
     fu_common_vercmp_full;
   local: *;
-} LIBFWUPDPLUGIN_1.3.8;
+} LIBFWUPDPLUGIN_1.3.6;
 
 LIBFWUPDPLUGIN_1.4.0 {
   global:
@@ -736,10 +730,6 @@ LIBFWUPDPLUGIN_1.6.1 {
 
 LIBFWUPDPLUGIN_1.6.2 {
   global:
-    fu_common_check_kernel_version;
-    fu_common_get_firmware_search_path;
-    fu_common_reset_firmware_search_path;
-    fu_common_set_firmware_search_path;
     fu_device_add_guid_full;
     fu_device_add_parent_physical_id;
     fu_device_add_private_flag;
@@ -986,6 +976,11 @@ LIBFWUPDPLUGIN_1.8.2 {
     fu_crc8_full;
     fu_device_new;
     fu_efivar_secure_boot_enabled;
+    fu_kernel_check_version;
+    fu_kernel_get_firmware_search_path;
+    fu_kernel_locked_down;
+    fu_kernel_reset_firmware_search_path;
+    fu_kernel_set_firmware_search_path;
     fu_memcmp_safe;
     fu_memcpy_safe;
     fu_memdup_safe;

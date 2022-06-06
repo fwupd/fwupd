@@ -1445,7 +1445,7 @@ fu_mm_setup_firmware_dir(FuMmDevice *self, GError **error)
 		return FALSE;
 	}
 
-	if (!fu_common_set_firmware_search_path(mm_fw_dir, error))
+	if (!fu_kernel_set_firmware_search_path(mm_fw_dir, error))
 		return FALSE;
 
 	self->firmware_path = g_steal_pointer(&mm_fw_dir);
@@ -1474,7 +1474,7 @@ fu_mm_copy_firehose_prog(FuMmDevice *self, GBytes *prog, GError **error)
 static gboolean
 fu_mm_prepare_firmware_search_path(FuMmDevice *self, GError **error)
 {
-	self->restore_firmware_path = fu_common_get_firmware_search_path(NULL);
+	self->restore_firmware_path = fu_kernel_get_firmware_search_path(NULL);
 
 	return fu_mm_setup_firmware_dir(self, error);
 }
@@ -1483,9 +1483,9 @@ static gboolean
 fu_mm_restore_firmware_search_path(FuMmDevice *self, GError **error)
 {
 	if (self->restore_firmware_path != NULL && strlen(self->restore_firmware_path) > 0)
-		return fu_common_set_firmware_search_path(self->restore_firmware_path, error);
+		return fu_kernel_set_firmware_search_path(self->restore_firmware_path, error);
 
-	return fu_common_reset_firmware_search_path(error);
+	return fu_kernel_reset_firmware_search_path(error);
 }
 
 static gboolean

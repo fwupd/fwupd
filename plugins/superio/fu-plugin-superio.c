@@ -101,7 +101,7 @@ fu_plugin_superio_coldplug(FuPlugin *plugin, FuProgress *progress, GError **erro
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	GPtrArray *hwids;
 
-	if (fu_common_kernel_locked_down()) {
+	if (fu_kernel_locked_down()) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,

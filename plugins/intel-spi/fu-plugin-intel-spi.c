@@ -29,7 +29,7 @@ fu_plugin_intel_spi_init(FuPlugin *plugin)
 static gboolean
 fu_plugin_intel_spi_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 {
-	if (fu_common_kernel_locked_down()) {
+	if (fu_kernel_locked_down()) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
