@@ -6,9 +6,7 @@
 
 #pragma once
 
-#include <glib-object.h>
-
-#include "fu-device.h"
+#include <fwupdplugin.h>
 
 #define FU_TYPE_DEVICE_LIST (fu_device_list_get_type())
 G_DECLARE_FINAL_TYPE(FuDeviceList, fu_device_list, FU, DEVICE_LIST, GObject)

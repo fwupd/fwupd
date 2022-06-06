@@ -6,10 +6,7 @@
 
 #pragma once
 
-#include <fwupd.h>
-#include <glib-object.h>
-
-#include "fu-device.h"
+#include <fwupdplugin.h>
 
 #define FU_TYPE_IDLE (fu_idle_get_type())
 G_DECLARE_FINAL_TYPE(FuIdle, fu_idle, FU, IDLE, GObject)

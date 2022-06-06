@@ -6,8 +6,6 @@
 
 #pragma once
 
-#include <glib-object.h>
-
 #include "fu-usb-device.h"
 
 #define FU_TYPE_HID_DEVICE (fu_hid_device_get_type())

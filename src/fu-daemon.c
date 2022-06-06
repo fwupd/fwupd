@@ -8,12 +8,11 @@
 
 #include "config.h"
 
-#include <fwupd.h>
+#include <fwupdplugin.h>
 #ifdef HAVE_GIO_UNIX
 #include <gio/gunixfdlist.h>
 #endif
 #include <glib/gstdio.h>
-#include <xmlb.h>
 #ifdef HAVE_POLKIT
 #include <polkit/polkit.h>
 #endif
@@ -28,8 +27,6 @@
 #include "fwupd-resources.h"
 #include "fwupd-security-attr-private.h"
 
-#include "fu-bytes.h"
-#include "fu-common.h"
 #include "fu-daemon.h"
 #include "fu-device-private.h"
 #include "fu-engine.h"

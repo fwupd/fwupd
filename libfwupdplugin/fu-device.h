@@ -7,7 +7,6 @@
 #pragma once
 
 #include <fwupd.h>
-#include <glib-object.h>
 
 #include "fu-common-version.h"
 #include "fu-context.h"

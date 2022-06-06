@@ -4,14 +4,14 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#include "fu-security-attr.h"
+#include "config.h"
 
-#include <config.h>
 #include <glib/gi18n.h>
 #include <json-glib/json-glib.h>
 
 #include "fwupd-security-attr-private.h"
 
+#include "fu-security-attr.h"
 #include "fu-security-attrs-private.h"
 
 gchar *

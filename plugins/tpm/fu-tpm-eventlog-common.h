@@ -8,7 +8,6 @@
 
 #include <fwupdplugin.h>
 
-#include <gio/gio.h>
 #include <tss2/tss2_tpm2_types.h>
 
 typedef enum {

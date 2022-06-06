@@ -20,8 +20,6 @@
 
 #include <fwupdplugin.h>
 
-#include <glib-object.h>
-
 typedef struct __attribute__((packed)) {
 	guint8 i2ctargetaddr;
 	guint8 regaddrlen;

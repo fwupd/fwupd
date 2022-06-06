@@ -9,9 +9,7 @@
 #include "config.h"
 
 #include <gio/gio.h>
-#include <glib-object.h>
 #include <string.h>
-#include <xmlb.h>
 
 #include "fwupd-common.h"
 #include "fwupd-error.h"

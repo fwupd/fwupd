@@ -8,9 +8,6 @@
 
 #include "config.h"
 
-#include <fwupd.h>
-#include <gio/gio.h>
-#include <glib-object.h>
 #include <glib/gstdio.h>
 #include <json-glib/json-glib.h>
 #ifdef HAVE_SQLITE
@@ -20,11 +17,9 @@
 
 #include "fwupd-security-attr-private.h"
 
-#include "fu-common.h"
 #include "fu-device-private.h"
 #include "fu-history.h"
 #include "fu-mutex.h"
-#include "fu-path.h"
 #include "fu-security-attr.h"
 
 #define FU_HISTORY_CURRENT_SCHEMA_VERSION 7

@@ -7,7 +7,6 @@
 #pragma once
 
 #include <gio/gio.h>
-#include <glib-object.h>
 
 #include "fwupd-device.h"
 #include "fwupd-enums.h"

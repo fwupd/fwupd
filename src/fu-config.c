@@ -8,15 +8,9 @@
 
 #include "config.h"
 
-#include <gio/gio.h>
-#include <glib-object.h>
+#include <fwupdplugin.h>
 
-#include "fu-byte-array.h"
-#include "fu-bytes.h"
-#include "fu-common.h"
 #include "fu-config.h"
-#include "fu-path.h"
-#include "fu-string.h"
 
 enum { SIGNAL_CHANGED, SIGNAL_LAST };
 

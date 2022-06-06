@@ -4,12 +4,13 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#include "fu-systemd.h"
+#include "config.h"
 
-#include <config.h>
 #include <gio/gio.h>
 #include <glib/gi18n.h>
 #include <stdio.h>
+
+#include "fu-systemd.h"
 
 #define SYSTEMD_SERVICE		  "org.freedesktop.systemd1"
 #define SYSTEMD_OBJECT_PATH	  "/org/freedesktop/systemd1"

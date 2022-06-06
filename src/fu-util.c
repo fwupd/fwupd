@@ -8,12 +8,11 @@
 
 #include "config.h"
 
+#include <fwupdplugin.h>
+
 #include <fcntl.h>
-#include <fwupd.h>
-#include <gio/gio.h>
 #include <glib/gi18n.h>
 #include <glib/gstdio.h>
-#include <xmlb.h>
 #ifdef HAVE_GIO_UNIX
 #include <gio/gunixfdlist.h>
 #include <glib-unix.h>
@@ -28,12 +27,9 @@
 #include "fwupd-release-private.h"
 #include "fwupd-remote-private.h"
 
-#include "fu-bytes.h"
-#include "fu-path.h"
 #include "fu-plugin-private.h"
 #include "fu-polkit-agent.h"
 #include "fu-progressbar.h"
-#include "fu-security-attrs.h"
 #include "fu-util-common.h"
 
 #ifdef HAVE_SYSTEMD

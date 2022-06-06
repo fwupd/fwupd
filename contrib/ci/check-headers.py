@@ -32,16 +32,36 @@ def test_files() -> int:
 
     rc: int = 0
 
+    lib_headers1 = glob.glob("libfwupd/*.h")
+    lib_headers1.remove("libfwupd/fwupd.h")
+
+    lib_headers2 = glob.glob("libfwupdplugin/*.h")
+    lib_headers2.remove("libfwupdplugin/fwupdplugin.h")
+
     toplevel_headers = ["libfwupd/fwupd.h", "libfwupdplugin/fwupdplugin.h"]
     toplevel_headers_nopath = [os.path.basename(fn) for fn in toplevel_headers]
-    lib_headers = glob.glob("libfwupd*/*.h")
-    lib_headers.remove("libfwupd/fwupd.h")
-    lib_headers.remove("libfwupdplugin/fwupdplugin.h")
+    lib_headers = lib_headers1 + lib_headers2
     lib_headers_nopath = [os.path.basename(fn) for fn in lib_headers]
 
     # test all C and H files
     for fn in glob.glob("**/*.[c|h]", recursive=True):
         includes = __get_includes(fn)
+
+        # we do not care
+        if fn.startswith("subprojects"):
+            continue
+        if fn.startswith("build"):
+            continue
+        if fn.startswith("dist"):
+            continue
+        if fn.startswith("contrib/ci"):
+            continue
+        if fn in [
+            "libfwupd/fwupd-context-test.c",
+            "libfwupd/fwupd-thread-test.c",
+            "libfwupdplugin/fu-fuzzer-main.c",
+        ]:
+            continue
 
         if (
             fn.startswith("plugins")
@@ -90,6 +110,35 @@ def test_files() -> int:
                         "{} contains {} but also includes {}".format(
                             fn, toplevel_fn, include
                         )
+                    )
+                    rc = 1
+
+        # check for missing config.h
+        if fn.endswith(".c") and "config.h" not in includes:
+            print("{} does not include config.h".format(fn))
+            rc = 1
+
+        # check for one header implying the other
+        implied_headers = {
+            "fu-common.h": ["xmlb.h"],
+            "fwupdplugin.h": [
+                "gio/gio.h",
+                "glib.h",
+                "glib-object.h",
+                "xmlb.h",
+                "fwupd.h",
+            ]
+            + lib_headers1,
+            "gio/gio.h": ["glib.h", "glib-object.h"],
+            "glib-object.h": ["glib.h"],
+            "json-glib/json-glib.h": ["glib.h", "glib-object.h"],
+            "xmlb.h": ["gio/gio.h"],
+        }
+        for key, values in implied_headers.items():
+            for value in values:
+                if key in includes and value in includes:
+                    print(
+                        "{} contains {} which is implied by {}".format(fn, value, key)
                     )
                     rc = 1
 

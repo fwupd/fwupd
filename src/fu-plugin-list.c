@@ -8,10 +8,6 @@
 
 #include "config.h"
 
-#include <glib-object.h>
-
-#include "fwupd-error.h"
-
 #include "fu-plugin-list.h"
 #include "fu-plugin-private.h"
 

@@ -6,12 +6,11 @@
 
 #define G_LOG_DOMAIN "FuKeyring"
 
-#include "fu-keyring-utils.h"
+#include "config.h"
 
-#include <config.h>
 #include <string.h>
 
-#include "fwupd-error.h"
+#include "fu-keyring-utils.h"
 
 /**
  * fu_keyring_get_release_flags:

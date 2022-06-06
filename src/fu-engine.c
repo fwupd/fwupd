@@ -8,11 +8,9 @@
 
 #include "config.h"
 
-#include <gio/gio.h>
 #ifdef HAVE_GIO_UNIX
 #include <gio/gunixinputstream.h>
 #endif
-#include <glib-object.h>
 #include <stdlib.h>
 #include <string.h>
 #ifdef HAVE_UTSNAME_H
@@ -26,30 +24,21 @@
 #include <winreg.h>
 #endif
 
+#include <fwupdplugin.h>
+
 #include "fwupd-common-private.h"
 #include "fwupd-enums-private.h"
-#include "fwupd-error.h"
 #include "fwupd-release-private.h"
 #include "fwupd-remote-private.h"
 #include "fwupd-resources.h"
 #include "fwupd-security-attr-private.h"
 
-#include "fu-backend.h"
-#include "fu-bytes.h"
 #include "fu-cabinet.h"
-#include "fu-cfu-offer.h"
-#include "fu-cfu-payload.h"
-#include "fu-common-cab.h"
-#include "fu-common.h"
 #include "fu-context-private.h"
 #include "fu-coswid-firmware.h"
 #include "fu-debug.h"
 #include "fu-device-list.h"
 #include "fu-device-private.h"
-#include "fu-efi-firmware-file.h"
-#include "fu-efi-firmware-filesystem.h"
-#include "fu-efi-firmware-section.h"
-#include "fu-efi-firmware-volume.h"
 #include "fu-engine-helper.h"
 #include "fu-engine-request.h"
 #include "fu-engine.h"
@@ -57,24 +46,16 @@
 #include "fu-hash.h"
 #include "fu-history.h"
 #include "fu-idle.h"
-#include "fu-ifd-bios.h"
-#include "fu-ifd-firmware.h"
 #include "fu-kenv.h"
 #include "fu-keyring-utils.h"
 #include "fu-mutex.h"
-#include "fu-path.h"
 #include "fu-plugin-list.h"
 #include "fu-plugin-private.h"
-#include "fu-plugin.h"
-#include "fu-progress.h"
-#include "fu-quirks.h"
 #include "fu-release.h"
 #include "fu-remote-list.h"
 #include "fu-security-attr.h"
 #include "fu-security-attrs-private.h"
-#include "fu-string.h"
 #include "fu-udev-device-private.h"
-#include "fu-uswid-firmware.h"
 #include "fu-version.h"
 
 #ifdef HAVE_GUDEV
@@ -86,13 +67,6 @@
 #ifdef HAVE_BLUEZ
 #include "fu-bluez-backend.h"
 #endif
-
-#include "fu-archive-firmware.h"
-#include "fu-dfu-firmware.h"
-#include "fu-dfuse-firmware.h"
-#include "fu-fmap-firmware.h"
-#include "fu-ihex-firmware.h"
-#include "fu-srec-firmware.h"
 
 /* only needed until we hard depend on jcat 0.1.3 */
 #include <libjcat/jcat-version.h>

@@ -6,9 +6,7 @@
 
 #pragma once
 
-#include <glib-object.h>
-
-#include "fwupd-remote.h"
+#include <fwupdplugin.h>
 
 #define FU_TYPE_REMOTE_LIST (fu_remote_list_get_type())
 G_DECLARE_FINAL_TYPE(FuRemoteList, fu_remote_list, FU, REMOTE_LIST, GObject)

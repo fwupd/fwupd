@@ -6,13 +6,14 @@
 
 #define G_LOG_DOMAIN "FuCommon"
 
-#include "fu-common-version.h"
+#include "config.h"
 
-#include <config.h>
 #include <string.h>
 
 #include "fwupd-enums.h"
 #include "fwupd-error.h"
+
+#include "fu-common-version.h"
 
 #define FU_COMMON_VERSION_DECODE_BCD(val) ((((val) >> 4) & 0x0f) * 10 + ((val)&0x0f))
 

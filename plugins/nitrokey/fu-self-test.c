@@ -6,7 +6,8 @@
 
 #include "config.h"
 
-#include <fwupd.h>
+#include <fwupdplugin.h>
+
 #include <string.h>
 
 #include "fu-nitrokey-common.h"

@@ -8,6 +8,7 @@
 
 #define __FWUPDPLUGIN_H_INSIDE__
 
+#include <fwupd.h>
 #include <libfwupdplugin/fu-archive-firmware.h>
 #include <libfwupdplugin/fu-archive.h>
 #include <libfwupdplugin/fu-backend.h>
@@ -31,6 +32,10 @@
 #include <libfwupdplugin/fu-dfu-firmware.h>
 #include <libfwupdplugin/fu-dfuse-firmware.h>
 #include <libfwupdplugin/fu-dump.h>
+#include <libfwupdplugin/fu-efi-firmware-file.h>
+#include <libfwupdplugin/fu-efi-firmware-filesystem.h>
+#include <libfwupdplugin/fu-efi-firmware-section.h>
+#include <libfwupdplugin/fu-efi-firmware-volume.h>
 #include <libfwupdplugin/fu-efi-signature-list.h>
 #include <libfwupdplugin/fu-efi-signature.h>
 #include <libfwupdplugin/fu-efivar.h>
@@ -41,6 +46,7 @@
 #include <libfwupdplugin/fu-i2c-device.h>
 #include <libfwupdplugin/fu-ifd-bios.h>
 #include <libfwupdplugin/fu-ifd-firmware.h>
+#include <libfwupdplugin/fu-ifd-image.h>
 #include <libfwupdplugin/fu-ihex-firmware.h>
 #include <libfwupdplugin/fu-io-channel.h>
 #include <libfwupdplugin/fu-kernel.h>
@@ -55,6 +61,7 @@
 #include <libfwupdplugin/fu-sum.h>
 #include <libfwupdplugin/fu-udev-device.h>
 #include <libfwupdplugin/fu-usb-device.h>
+#include <libfwupdplugin/fu-uswid-firmware.h>
 #include <libfwupdplugin/fu-volume.h>
 
 #ifndef FWUPD_DISABLE_DEPRECATED

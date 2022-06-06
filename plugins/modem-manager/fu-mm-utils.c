@@ -8,8 +8,6 @@
 
 #include <fwupdplugin.h>
 
-#include <gio/gio.h>
-
 #include "fu-mm-utils.h"
 
 static gchar *

@@ -6,8 +6,6 @@
 
 #pragma once
 
-#include <glib-object.h>
-
 #include "fwupd-remote.h"
 
 #define FU_TYPE_CONFIG (fu_config_get_type())

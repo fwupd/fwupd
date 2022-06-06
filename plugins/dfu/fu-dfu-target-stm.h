@@ -6,9 +6,6 @@
 
 #pragma once
 
-#include <gio/gio.h>
-#include <glib-object.h>
-
 #include "fu-dfu-target.h"
 
 #define FU_TYPE_DFU_TARGET_STM (fu_dfu_target_stm_get_type())

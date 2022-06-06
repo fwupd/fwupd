@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <glib-object.h>
 #include <libfwupd/fwupd-security-attr.h>
 
 #define FU_TYPE_SECURITY_ATTRS (fu_security_attrs_get_type())

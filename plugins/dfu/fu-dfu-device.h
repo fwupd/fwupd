@@ -8,8 +8,6 @@
 
 #include <fwupdplugin.h>
 
-#include <gio/gio.h>
-#include <glib-object.h>
 #include <gusb.h>
 
 #include "fu-dfu-common.h"

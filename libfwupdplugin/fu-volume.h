@@ -7,8 +7,6 @@
 
 #pragma once
 
-#include <glib-object.h>
-
 #include "fu-device-locker.h"
 
 #define FU_TYPE_VOLUME (fu_volume_get_type())

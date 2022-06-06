@@ -14,6 +14,8 @@
  * SPDX-License-Identifier: LGPL-2.1+ OR MIT
  */
 
+#include "config.h"
+
 #include "fu-dell-dock-common.h"
 
 #define GR_USB_INTERFACE_NUMBER 0x0

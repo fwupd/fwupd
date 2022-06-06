@@ -8,15 +8,11 @@
 
 #include "config.h"
 
-#include <glib-object.h>
 #include <string.h>
-
-#include "fwupd-error.h"
 
 #include "fu-device-list.h"
 #include "fu-device-private.h"
 #include "fu-mutex.h"
-#include "fu-string.h"
 
 /**
  * FuDeviceList:

@@ -8,12 +8,9 @@
 
 #include "config.h"
 
-#include <glib.h>
 #include <glib/gi18n.h>
 
-#include "fu-common.h"
 #include "fu-progressbar.h"
-#include "fu-string.h"
 
 static void
 fu_progressbar_finalize(GObject *obj);

@@ -6,8 +6,6 @@
 
 #pragma once
 
-#include <glib-object.h>
-
 #include "fu-device.h"
 
 #define FU_TYPE_CFI_DEVICE (fu_cfi_device_get_type())

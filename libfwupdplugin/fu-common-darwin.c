@@ -6,7 +6,8 @@
 
 #define G_LOG_DOMAIN "FuCommon"
 
-#include <config.h>
+#include "config.h"
+
 #include <fnmatch.h>
 #include <sys/sysctl.h>
 

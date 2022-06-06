@@ -8,8 +8,6 @@
 
 #include <fwupdplugin.h>
 
-#include <gio/gio.h>
-
 #include "fu-wacom-aes-device.h"
 #include "fu-wacom-common.h"
 

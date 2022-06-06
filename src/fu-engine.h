@@ -6,19 +6,15 @@
 
 #pragma once
 
-#include <glib-object.h>
+#include <fwupdplugin.h>
+
 #include <jcat.h>
-#include <xmlb.h>
 
 #include "fwupd-device.h"
 #include "fwupd-enums.h"
 
-#include "fu-common.h"
 #include "fu-config.h"
-#include "fu-context.h"
-#include "fu-plugin.h"
 #include "fu-release.h"
-#include "fu-security-attrs.h"
 
 #define FU_TYPE_ENGINE (fu_engine_get_type())
 G_DECLARE_FINAL_TYPE(FuEngine, fu_engine, FU, ENGINE, GObject)

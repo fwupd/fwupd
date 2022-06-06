@@ -7,7 +7,6 @@
 #pragma once
 
 #include <gio/gio.h>
-#include <glib-object.h>
 
 #define FU_TYPE_DFU_SECTOR (fu_dfu_sector_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuDfuSector, fu_dfu_sector, FU, DFU_SECTOR, GObject)

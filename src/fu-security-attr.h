@@ -6,7 +6,8 @@
 
 #pragma once
 
-#include <fwupd.h>
+#include <fwupdplugin.h>
+
 #include <json-glib/json-glib.h>
 
 #include "fu-security-attrs-private.h"

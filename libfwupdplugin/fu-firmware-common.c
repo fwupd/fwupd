@@ -6,12 +6,12 @@
 
 #define G_LOG_DOMAIN "FuFirmware"
 
-#include "fu-firmware-common.h"
+#include "config.h"
 
-#include <config.h>
 #include <string.h>
 
 #include "fu-common.h"
+#include "fu-firmware-common.h"
 #include "fu-mem.h"
 #include "fu-string.h"
 

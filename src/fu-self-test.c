@@ -8,12 +8,10 @@
 
 #include <fwupdplugin.h>
 
-#include <glib-object.h>
 #include <glib/gstdio.h>
 #include <libgcab.h>
 #include <stdlib.h>
 #include <string.h>
-#include <xmlb.h>
 
 #include "fwupd-security-attr-private.h"
 

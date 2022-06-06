@@ -6,14 +6,15 @@
 
 #define G_LOG_DOMAIN "FuMain"
 
-#include <config.h>
+#include "config.h"
+
 #include <glib/gi18n.h>
 #include <stdio.h>
 #include <unistd.h>
 #ifdef HAVE_GUSB
 #include <gusb.h>
 #endif
-#include <fwupd.h>
+
 #include <xmlb.h>
 #ifdef HAVE_LIBCURL
 #include <curl/curl.h>
@@ -24,12 +25,8 @@
 #include <windows.h>
 #endif
 
-#include "fu-common.h"
 #include "fu-device-private.h"
-#include "fu-device.h"
 #include "fu-security-attr.h"
-#include "fu-security-attrs.h"
-#include "fu-string.h"
 #include "fu-util-common.h"
 
 #ifdef HAVE_SYSTEMD

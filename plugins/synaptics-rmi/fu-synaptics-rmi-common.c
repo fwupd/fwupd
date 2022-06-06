@@ -11,7 +11,6 @@
 #include <fwupdplugin.h>
 
 #include <fcntl.h>
-#include <gio/gio.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 
