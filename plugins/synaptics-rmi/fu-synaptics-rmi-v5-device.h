@@ -6,8 +6,6 @@
 
 #pragma once
 
-#include <glib-object.h>
-
 #include "fu-synaptics-rmi-device.h"
 
 gboolean

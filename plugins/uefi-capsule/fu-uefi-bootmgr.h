@@ -10,7 +10,6 @@
 #include <fwupdplugin.h>
 
 #include <efivar.h>
-#include <glib.h>
 
 typedef enum {
 	FU_UEFI_BOOTMGR_FLAG_NONE = 0,

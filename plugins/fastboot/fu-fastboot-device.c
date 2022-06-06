@@ -9,7 +9,6 @@
 #include <fwupdplugin.h>
 
 #include <string.h>
-#include <xmlb.h>
 
 #include "fu-fastboot-device.h"
 

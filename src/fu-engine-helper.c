@@ -8,11 +8,12 @@
 
 #include "config.h"
 
+#include <fwupdplugin.h>
+
 #include <glib/gi18n.h>
 
 #include "fu-engine-helper.h"
 #include "fu-engine.h"
-#include "fu-path.h"
 
 static FwupdRelease *
 fu_engine_get_release_with_tag(FuEngine *self,

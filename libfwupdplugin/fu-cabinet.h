@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <glib-object.h>
 #include <jcat.h>
 #include <xmlb.h>
 

@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#include "fu-efi-common.h"
+#include "config.h"
 
-#include <config.h>
+#include "fu-efi-common.h"
 
 /**
  * fu_efi_guid_to_name:

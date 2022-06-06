@@ -6,14 +6,14 @@
 
 #include "config.h"
 
-#include <fwupd.h>
+#include <fwupdplugin.h>
+
 #include <glib/gi18n.h>
 #include <glib/gstdio.h>
 #include <locale.h>
 #include <stdlib.h>
 
 #include "fu-history.h"
-#include "fu-path.h"
 #include "fu-plugin-private.h"
 #include "fu-spawn.h"
 #include "fu-util-common.h"

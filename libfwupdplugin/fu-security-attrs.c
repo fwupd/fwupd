@@ -6,9 +6,8 @@
 
 #define G_LOG_DOMAIN "FuSecurityAttrs"
 
-#include "fu-security-attrs.h"
+#include "config.h"
 
-#include <config.h>
 #include <glib/gi18n.h>
 
 #include "fwupd-security-attr-private.h"

@@ -12,7 +12,6 @@
 #include "fu-keyring-utils.h"
 #include "fu-release-common.h"
 #include "fu-release.h"
-#include "fu-string.h"
 
 /**
  * FuRelease:

@@ -9,8 +9,6 @@
 
 #include <fwupdplugin.h>
 
-#include <xmlb.h>
-
 #include "fu-sahara-loader.h"
 
 #define FU_TYPE_FIREHOSE_UPDATER (fu_firehose_updater_get_type())

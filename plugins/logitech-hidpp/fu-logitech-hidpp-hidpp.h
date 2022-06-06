@@ -8,8 +8,6 @@
 
 #include <fwupdplugin.h>
 
-#include <gio/gio.h>
-
 /*
  * Based on the HID++ documentation provided by Nestor Lopez Casado at:
  *   https://drive.google.com/folderview?id=0BxbRzx7vEV7eWmgwazJ3NUFfQ28&usp=sharing

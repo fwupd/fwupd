@@ -8,8 +8,6 @@
 
 #include "config.h"
 
-#include <gio/gio.h>
-#include <glib-object.h>
 #include <glib/gi18n.h>
 #include <xmlb.h>
 
@@ -18,14 +16,9 @@
 #include <sys/inotify.h>
 #endif
 
-#include "fwupd-common.h"
-#include "fwupd-error.h"
 #include "fwupd-remote-private.h"
 
-#include "fu-common.h"
-#include "fu-path.h"
 #include "fu-remote-list.h"
-#include "fu-string.h"
 
 enum { SIGNAL_CHANGED, SIGNAL_LAST };
 

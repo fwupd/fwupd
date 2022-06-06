@@ -11,7 +11,6 @@
 #include <glib/gstdio.h>
 #include <libgcab.h>
 #include <string.h>
-#include <xmlb.h>
 
 #include "fwupd-security-attr-private.h"
 
@@ -19,11 +18,6 @@
 #include "fu-common-private.h"
 #include "fu-context-private.h"
 #include "fu-device-private.h"
-#include "fu-efi-firmware-file.h"
-#include "fu-efi-firmware-filesystem.h"
-#include "fu-efi-firmware-section.h"
-#include "fu-efi-firmware-volume.h"
-#include "fu-ifd-image.h"
 #include "fu-plugin-private.h"
 #include "fu-security-attrs-private.h"
 #include "fu-smbios-private.h"

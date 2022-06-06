@@ -8,8 +8,6 @@
 
 #include "config.h"
 
-#include <glib-object.h>
-
 #include "fu-idle.h"
 #include "fu-mutex.h"
 

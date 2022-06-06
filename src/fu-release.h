@@ -6,11 +6,9 @@
 
 #pragma once
 
-#include <fwupd.h>
-#include <xmlb.h>
+#include <fwupdplugin.h>
 
 #include "fu-config.h"
-#include "fu-device.h"
 #include "fu-engine-request.h"
 
 #define FU_TYPE_RELEASE (fu_release_get_type())

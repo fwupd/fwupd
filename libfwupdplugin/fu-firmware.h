@@ -7,7 +7,6 @@
 #pragma once
 
 #include <fwupd.h>
-#include <glib-object.h>
 #include <xmlb.h>
 
 #include "fu-chunk.h"

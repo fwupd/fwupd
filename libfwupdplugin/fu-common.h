@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <gio/gio.h>
 #include <xmlb.h>
 
 #include "fu-volume.h"

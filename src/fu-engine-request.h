@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <fwupd.h>
+#include <fwupdplugin.h>
 
 #define FU_TYPE_ENGINE_REQUEST (fu_engine_request_get_type())
 G_DECLARE_FINAL_TYPE(FuEngineRequest, fu_engine_request, FU, ENGINE_REQUEST, GObject)

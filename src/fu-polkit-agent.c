@@ -13,10 +13,11 @@
 #ifdef __linux__
 #include <sys/prctl.h>
 #endif
+#include <fwupdplugin.h>
+
 #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <glib.h>
 #include <inttypes.h>
 #include <poll.h>
 #include <signal.h>
@@ -25,8 +26,6 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-#include "fu-common.h"
-#include "fu-path.h"
 #include "fu-polkit-agent.h"
 
 static pid_t agent_pid = 0;

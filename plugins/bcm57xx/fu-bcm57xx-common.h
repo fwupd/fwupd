@@ -6,8 +6,7 @@
 
 #pragma once
 
-#include <fwupd.h>
-#include <glib.h>
+#include <fwupdplugin.h>
 
 #define BCM_VENDOR_BROADCOM 0x14E4
 

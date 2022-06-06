@@ -9,7 +9,6 @@
 #include <fwupdplugin.h>
 
 #include <efivar/efiboot.h>
-#include <gio/gio.h>
 #include <stdio.h>
 
 #include "fu-uefi-bootmgr.h"

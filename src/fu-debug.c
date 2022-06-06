@@ -6,7 +6,8 @@
 
 #define G_LOG_DOMAIN "FuDebug"
 
-#include <config.h>
+#include "config.h"
+
 #include <fu-debug.h>
 #include <glib/gi18n.h>
 #include <stdio.h>

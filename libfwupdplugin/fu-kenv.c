@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#include <config.h>
+#include "config.h"
 
 #ifdef HAVE_KENV_H
 #include <kenv.h>

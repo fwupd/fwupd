@@ -6,8 +6,6 @@
 
 #pragma once
 
-#include <glib-object.h>
-
 #include "fu-udev-device.h"
 
 #define FU_TYPE_I2C_DEVICE (fu_i2c_device_get_type())

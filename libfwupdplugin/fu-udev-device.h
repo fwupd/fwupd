@@ -6,8 +6,6 @@
 
 #pragma once
 
-#include <glib-object.h>
-
 #ifdef HAVE_GUDEV
 #include <gudev/gudev.h>
 #else

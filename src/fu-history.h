@@ -6,9 +6,7 @@
 
 #pragma once
 
-#include <glib-object.h>
-
-#include "fu-device.h"
+#include <fwupdplugin.h>
 
 #define FU_TYPE_PENDING (fu_history_get_type())
 G_DECLARE_FINAL_TYPE(FuHistory, fu_history, FU, HISTORY, GObject)

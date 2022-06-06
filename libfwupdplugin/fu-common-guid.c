@@ -6,9 +6,9 @@
 
 #define G_LOG_DOMAIN "FuCommon"
 
-#include "fu-common-guid.h"
+#include "config.h"
 
-#include <config.h>
+#include "fu-common-guid.h"
 
 /**
  * fu_common_guid_is_plausible:

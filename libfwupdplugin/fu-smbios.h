@@ -6,8 +6,6 @@
 
 #pragma once
 
-#include <glib-object.h>
-
 #include "fu-firmware.h"
 
 #define FU_TYPE_SMBIOS (fu_smbios_get_type())

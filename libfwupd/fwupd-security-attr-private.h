@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <glib-object.h>
 #include <json-glib/json-glib.h>
 
 #include "fwupd-security-attr.h"

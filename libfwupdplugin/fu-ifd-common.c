@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#include "fu-ifd-common.h"
+#include "config.h"
 
-#include <config.h>
+#include "fu-ifd-common.h"
 
 /**
  * fu_ifd_region_to_string:

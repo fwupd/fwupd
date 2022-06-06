@@ -6,9 +6,7 @@
 
 #pragma once
 
-#include <gio/gio.h>
-
-#include "fwupd-enums.h"
+#include <fwupdplugin.h>
 
 #define FU_TYPE_PROGRESSBAR (fu_progressbar_get_type())
 G_DECLARE_FINAL_TYPE(FuProgressbar, fu_progressbar, FU, PROGRESSBAR, GObject)

@@ -11,9 +11,9 @@
 
 #include "config.h"
 
-#include <windows.h>
+#include <fwupdplugin.h>
 
-#include "fwupd-common.h"
+#include <windows.h>
 
 #include "fu-daemon.h"
 #include "fu-debug.h"

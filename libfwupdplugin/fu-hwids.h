@@ -6,8 +6,6 @@
 
 #pragma once
 
-#include <glib-object.h>
-
 #include "fu-smbios.h"
 
 #define FU_TYPE_HWIDS (fu_hwids_get_type())

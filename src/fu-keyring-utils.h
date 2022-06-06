@@ -6,10 +6,9 @@
 
 #pragma once
 
-#include <jcat.h>
-#include <xmlb.h>
+#include <fwupdplugin.h>
 
-#include "fwupd-enums.h"
+#include <jcat.h>
 
 gboolean
 fu_keyring_get_release_flags(XbNode *release, FwupdReleaseFlags *flags, GError **error);

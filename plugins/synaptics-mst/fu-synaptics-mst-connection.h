@@ -10,7 +10,6 @@
 #pragma once
 
 #include <gio/gio.h>
-#include <glib.h>
 
 #define FU_TYPE_SYNAPTICS_MST_CONNECTION (fu_synaptics_mst_connection_get_type())
 G_DECLARE_FINAL_TYPE(FuSynapticsMstConnection,

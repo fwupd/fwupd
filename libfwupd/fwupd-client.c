@@ -7,7 +7,6 @@
 #include "config.h"
 
 #include <gio/gio.h>
-#include <glib-object.h>
 #include <gmodule.h>
 #ifdef HAVE_LIBCURL
 #include <curl/curl.h>

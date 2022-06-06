@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <glib-object.h>
 #ifdef HAVE_GUSB
 #include <gusb.h>
 #else
