@@ -123,7 +123,7 @@ fu_cpu_device_add_instance_ids(FuDevice *device, GError **error)
 	guint32 stepping_id;
 
 	/* decode according to https://en.wikipedia.org/wiki/CPUID */
-	if (!fu_common_cpuid(0x1, &eax, NULL, NULL, NULL, error))
+	if (!fu_cpuid(0x1, &eax, NULL, NULL, NULL, error))
 		return FALSE;
 	processor_id = (eax >> 12) & 0x3;
 	model_id = (eax >> 4) & 0xf;
@@ -158,7 +158,7 @@ fu_cpu_device_probe_manufacturer_id(FuDevice *device, GError **error)
 	guint32 ecx = 0;
 	guint32 edx = 0;
 	gchar str[13] = {'\0'};
-	if (!fu_common_cpuid(0x0, NULL, &ebx, &ecx, &edx, error))
+	if (!fu_cpuid(0x0, NULL, &ebx, &ecx, &edx, error))
 		return FALSE;
 	if (!fu_memcpy_safe((guint8 *)str,
 			    sizeof(str),
@@ -201,7 +201,7 @@ fu_cpu_device_probe_model(FuDevice *device, GError **error)
 	gchar str[49] = {'\0'};
 
 	for (guint32 i = 0; i < 3; i++) {
-		if (!fu_common_cpuid(0x80000002 + i, &eax, &ebx, &ecx, &edx, error))
+		if (!fu_cpuid(0x80000002 + i, &eax, &ebx, &ecx, &edx, error))
 			return FALSE;
 		if (!fu_memcpy_safe((guint8 *)str,
 				    sizeof(str),
@@ -251,7 +251,7 @@ fu_cpu_device_probe_extended_features(FuDevice *device, GError **error)
 	guint32 ebx = 0;
 	guint32 ecx = 0;
 
-	if (!fu_common_cpuid(0x7, NULL, &ebx, &ecx, NULL, error))
+	if (!fu_cpuid(0x7, NULL, &ebx, &ecx, NULL, error))
 		return FALSE;
 	if ((ebx >> 20) & 0x1)
 		self->flags |= FU_CPU_DEVICE_FLAG_SMAP;
@@ -413,7 +413,7 @@ fu_cpu_device_add_supported_cpu_attribute(FuCpuDevice *self, FuSecurityAttrs *at
 	fwupd_security_attr_set_level(attr, FWUPD_SECURITY_ATTR_LEVEL_CRITICAL);
 	fwupd_security_attr_add_guids(attr, fu_device_get_guids(FU_DEVICE(self)));
 
-	switch (fu_common_get_cpu_vendor()) {
+	switch (fu_cpu_get_vendor()) {
 	case FU_CPU_VENDOR_INTEL:
 	case FU_CPU_VENDOR_AMD:
 		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
@@ -431,7 +431,7 @@ fu_cpu_device_add_security_attrs(FuDevice *device, FuSecurityAttrs *attrs)
 	FuCpuDevice *self = FU_CPU_DEVICE(device);
 
 	/* only Intel */
-	if (fu_common_get_cpu_vendor() == FU_CPU_VENDOR_INTEL) {
+	if (fu_cpu_get_vendor() == FU_CPU_VENDOR_INTEL) {
 		fu_cpu_device_add_security_attrs_intel_cet_enabled(self, attrs);
 		fu_cpu_device_add_security_attrs_intel_cet_active(self, attrs);
 		fu_cpu_device_add_security_attrs_intel_tme(self, attrs);

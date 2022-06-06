@@ -70,14 +70,10 @@ typedef enum {
 } FuLidState;
 
 gboolean
-fu_common_cpuid(guint32 leaf,
-		guint32 *eax,
-		guint32 *ebx,
-		guint32 *ecx,
-		guint32 *edx,
-		GError **error) G_GNUC_WARN_UNUSED_RESULT;
+fu_cpuid(guint32 leaf, guint32 *eax, guint32 *ebx, guint32 *ecx, guint32 *edx, GError **error)
+    G_GNUC_WARN_UNUSED_RESULT;
 FuCpuVendor
-fu_common_get_cpu_vendor(void);
+fu_cpu_get_vendor(void);
 gboolean
 fu_common_is_live_media(void);
 guint64

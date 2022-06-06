@@ -8,33 +8,17 @@
 
 #include "config.h"
 
-#include <glib/gstdio.h>
-
-#ifdef HAVE_KENV_H
-#include <kenv.h>
-#endif
-
 #ifdef HAVE_CPUID_H
 #include <cpuid.h>
 #endif
 
-#include <errno.h>
-#include <limits.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-
-#include "fwupd-error.h"
-
-#include "fu-bytes.h"
 #include "fu-common-private.h"
-#include "fu-common-version.h"
 #include "fu-firmware.h"
 #include "fu-string.h"
 #include "fu-volume-private.h"
 
 /**
- * fu_common_cpuid:
+ * fu_cpuid:
  * @leaf: the CPUID level, now called the 'leaf' by Intel
  * @eax: (out) (nullable): EAX register
  * @ebx: (out) (nullable): EBX register
@@ -46,15 +30,10 @@
  *
  * Returns: %TRUE if the registers are set.
  *
- * Since: 1.5.0
+ * Since: 1.8.2
  **/
 gboolean
-fu_common_cpuid(guint32 leaf,
-		guint32 *eax,
-		guint32 *ebx,
-		guint32 *ecx,
-		guint32 *edx,
-		GError **error)
+fu_cpuid(guint32 leaf, guint32 *eax, guint32 *ebx, guint32 *ecx, guint32 *edx, GError **error)
 {
 #ifdef HAVE_CPUID_H
 	guint eax_tmp = 0;
@@ -82,23 +61,23 @@ fu_common_cpuid(guint32 leaf,
 }
 
 /**
- * fu_common_get_cpu_vendor:
+ * fu_cpu_get_vendor:
  *
  * Uses CPUID to discover the CPU vendor.
  *
  * Returns: a CPU vendor, e.g. %FU_CPU_VENDOR_AMD if the vendor was AMD.
  *
- * Since: 1.5.5
+ * Since: 1.8.2
  **/
 FuCpuVendor
-fu_common_get_cpu_vendor(void)
+fu_cpu_get_vendor(void)
 {
 #ifdef HAVE_CPUID_H
 	guint ebx = 0;
 	guint ecx = 0;
 	guint edx = 0;
 
-	if (fu_common_cpuid(0x0, NULL, &ebx, &ecx, &edx, NULL)) {
+	if (fu_cpuid(0x0, NULL, &ebx, &ecx, &edx, NULL)) {
 		if (ebx == signature_INTEL_ebx && edx == signature_INTEL_edx &&
 		    ecx == signature_INTEL_ecx) {
 			return FU_CPU_VENDOR_INTEL;

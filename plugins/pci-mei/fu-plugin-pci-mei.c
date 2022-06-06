@@ -480,7 +480,7 @@ fu_plugin_pci_mei_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 	FuPluginData *priv = fu_plugin_get_data(plugin);
 
 	/* only Intel */
-	if (fu_common_get_cpu_vendor() != FU_CPU_VENDOR_INTEL)
+	if (fu_cpu_get_vendor() != FU_CPU_VENDOR_INTEL)
 		return;
 	if (priv->pci_device == NULL)
 		return;
