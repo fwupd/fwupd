@@ -1,0 +1,30 @@
+{
+  "name": "Corsair KATAR PRO WIRELESS Receiver",
+  "interactive": false,
+  "steps": [
+    {
+      "url": "https://fwupd.org/downloads/03c478a9248c658d985267c6a67da878ab8c856e71bbd49105424d48e7fbf98c-corsair-mandarin-receiver-2.3.22.cab",
+      "components": [
+        {
+          "version": "2.3.22",
+          "protocol": "com.corsair.bp",
+          "guids": [
+            "8bf1f03f-3c6f-53a1-9169-800fddf0952c"
+          ]
+        }
+      ]
+    },
+    {
+      "url": "https://fwupd.org/downloads/e89d2bda6e66c1af342ffe307e313c49a16371a83a7e9a5f87dcdeadba61f4ad-corsair-mandarin-receiver-2.3.23.cab",
+      "components": [
+        {
+          "version": "2.3.23",
+          "protocol": "com.corsair.bp",
+          "guids": [
+            "8bf1f03f-3c6f-53a1-9169-800fddf0952c"
+          ]
+        }
+      ]
+    }
+  ]
+}
