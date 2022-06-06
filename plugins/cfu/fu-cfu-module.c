@@ -22,8 +22,8 @@ static void
 fu_cfu_module_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuCfuModule *self = FU_CFU_MODULE(device);
-	fu_common_string_append_kx(str, idt, "ComponentId", self->component_id);
-	fu_common_string_append_kx(str, idt, "Bank", self->bank);
+	fu_string_append_kx(str, idt, "ComponentId", self->component_id);
+	fu_string_append_kx(str, idt, "Bank", self->bank);
 }
 
 guint8

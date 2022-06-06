@@ -80,7 +80,7 @@ fu_acpi_phat_version_element_parse(FuFirmware *firmware,
 			    "PHAT version element invalid");
 		return FALSE;
 	}
-	self->producer_id = fu_common_strsafe((const gchar *)producer_id, sizeof(producer_id));
+	self->producer_id = fu_strsafe((const gchar *)producer_id, sizeof(producer_id));
 	return TRUE;
 }
 

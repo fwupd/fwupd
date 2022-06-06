@@ -12,6 +12,7 @@
 #include "fu-chunk-private.h"
 #include "fu-common.h"
 #include "fu-firmware.h"
+#include "fu-string.h"
 
 /**
  * FuFirmware:
@@ -1627,7 +1628,7 @@ fu_firmware_export(FuFirmware *self, FuFirmwareExportFlags flags, XbBuilderNode 
 		g_autofree gchar *datastr = NULL;
 		g_autofree gchar *dataszstr = g_strdup_printf("0x%x", (guint)bufsz);
 		if (flags & FU_FIRMWARE_EXPORT_FLAG_ASCII_DATA) {
-			datastr = fu_common_strsafe((const gchar *)buf, MIN(bufsz, 16));
+			datastr = fu_strsafe((const gchar *)buf, MIN(bufsz, 16));
 		} else {
 #if GLIB_CHECK_VERSION(2, 61, 0)
 			datastr = g_base64_encode(buf, bufsz);

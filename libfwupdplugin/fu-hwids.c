@@ -17,6 +17,7 @@
 
 #include "fu-common.h"
 #include "fu-hwids.h"
+#include "fu-string.h"
 
 /**
  * FuHwids:
@@ -330,7 +331,7 @@ fu_hwids_convert_string_table_cb(FuSmbios *smbios, guint8 type, guint8 offset, G
 	if (tmp == NULL)
 		return NULL;
 	/* ComputerHardwareIds.exe seems to strip spaces */
-	return fu_common_strstrip(tmp);
+	return fu_strstrip(tmp);
 }
 
 static gchar *

@@ -16,6 +16,7 @@
 #include "fu-device-list.h"
 #include "fu-device-private.h"
 #include "fu-mutex.h"
+#include "fu-string.h"
 
 /**
  * FuDeviceList:
@@ -932,7 +933,7 @@ fu_device_list_wait_for_replug(FuDeviceList *self, GError **error)
 			fu_device_remove_flag(device_tmp, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 			g_ptr_array_add(device_ids, g_strdup(fu_device_get_id(device_tmp)));
 		}
-		device_ids_str = fu_common_strjoin_array(",", device_ids);
+		device_ids_str = fu_strjoin(",", device_ids);
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_FOUND,

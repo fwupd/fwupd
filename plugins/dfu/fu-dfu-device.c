@@ -79,27 +79,24 @@ fu_dfu_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuDfuDevice *self = FU_DFU_DEVICE(device);
 	FuDfuDevicePrivate *priv = GET_PRIVATE(self);
-	fu_common_string_append_kv(str, idt, "State", fu_dfu_state_to_string(priv->state));
-	fu_common_string_append_kv(str, idt, "Status", fu_dfu_status_to_string(priv->status));
-	fu_common_string_append_kb(str, idt, "DoneUploadOrDownload", priv->done_upload_or_download);
-	fu_common_string_append_kb(str, idt, "ClaimedInterface", priv->claimed_interface);
+	fu_string_append(str, idt, "State", fu_dfu_state_to_string(priv->state));
+	fu_string_append(str, idt, "Status", fu_dfu_status_to_string(priv->status));
+	fu_string_append_kb(str, idt, "DoneUploadOrDownload", priv->done_upload_or_download);
+	fu_string_append_kb(str, idt, "ClaimedInterface", priv->claimed_interface);
 	if (priv->chip_id != NULL)
-		fu_common_string_append_kv(str, idt, "ChipId", priv->chip_id);
-	fu_common_string_append_kx(str, idt, "Version", priv->version);
-	fu_common_string_append_kx(str, idt, "ForceVersion", priv->force_version);
+		fu_string_append(str, idt, "ChipId", priv->chip_id);
+	fu_string_append_kx(str, idt, "Version", priv->version);
+	fu_string_append_kx(str, idt, "ForceVersion", priv->force_version);
 	if (priv->force_transfer_size != 0x0) {
-		fu_common_string_append_kx(str,
-					   idt,
-					   "ForceTransferSize",
-					   priv->force_transfer_size);
+		fu_string_append_kx(str, idt, "ForceTransferSize", priv->force_transfer_size);
 	}
-	fu_common_string_append_kx(str, idt, "RuntimePid", priv->runtime_pid);
-	fu_common_string_append_kx(str, idt, "RuntimeVid", priv->runtime_vid);
-	fu_common_string_append_kx(str, idt, "RuntimeRelease", priv->runtime_release);
-	fu_common_string_append_kx(str, idt, "TransferSize", priv->transfer_size);
-	fu_common_string_append_kx(str, idt, "IfaceNumber", priv->iface_number);
-	fu_common_string_append_kx(str, idt, "DnloadTimeout", priv->dnload_timeout);
-	fu_common_string_append_kx(str, idt, "TimeoutMs", priv->timeout_ms);
+	fu_string_append_kx(str, idt, "RuntimePid", priv->runtime_pid);
+	fu_string_append_kx(str, idt, "RuntimeVid", priv->runtime_vid);
+	fu_string_append_kx(str, idt, "RuntimeRelease", priv->runtime_release);
+	fu_string_append_kx(str, idt, "TransferSize", priv->transfer_size);
+	fu_string_append_kx(str, idt, "IfaceNumber", priv->iface_number);
+	fu_string_append_kx(str, idt, "DnloadTimeout", priv->dnload_timeout);
+	fu_string_append_kx(str, idt, "TimeoutMs", priv->timeout_ms);
 
 	for (guint i = 0; i < priv->targets->len; i++) {
 		FuDfuTarget *target = g_ptr_array_index(priv->targets, i);
@@ -1615,13 +1612,13 @@ fu_dfu_device_set_quirk_kv(FuDevice *device, const gchar *key, const gchar *valu
 		return FALSE;
 	}
 	if (g_strcmp0(key, "DfuForceTimeout") == 0) {
-		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT, error))
+		if (!fu_strtoull_full(value, &tmp, 0, G_MAXUINT, error))
 			return FALSE;
 		priv->timeout_ms = tmp;
 		return TRUE;
 	}
 	if (g_strcmp0(key, "DfuForceTransferSize") == 0) {
-		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT16, error))
+		if (!fu_strtoull_full(value, &tmp, 0, G_MAXUINT16, error))
 			return FALSE;
 		priv->force_transfer_size = tmp;
 		return TRUE;

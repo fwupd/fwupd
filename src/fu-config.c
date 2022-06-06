@@ -14,6 +14,7 @@
 #include "fu-byte-array.h"
 #include "fu-common.h"
 #include "fu-config.h"
+#include "fu-string.h"
 
 enum { SIGNAL_CHANGED, SIGNAL_LAST };
 
@@ -253,7 +254,7 @@ fu_config_reload(FuConfig *self, GError **error)
 					  NULL);
 	if (uids != NULL) {
 		for (guint i = 0; uids[i] != NULL; i++) {
-			guint64 val = fu_common_strtoull(uids[i]);
+			guint64 val = fu_strtoull(uids[i]);
 			g_array_append_val(self->trusted_uids, val);
 		}
 	}

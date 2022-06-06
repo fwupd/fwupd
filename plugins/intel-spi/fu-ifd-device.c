@@ -61,18 +61,15 @@ fu_ifd_device_to_string(FuDevice *device, guint idt, GString *str)
 	FuIfdDevice *self = FU_IFD_DEVICE(device);
 	FuIfdDevicePrivate *priv = GET_PRIVATE(self);
 
-	fu_common_string_append_kv(str, idt, "Region", fu_ifd_region_to_string(priv->region));
-	fu_common_string_append_kx(str, idt, "Offset", priv->offset);
+	fu_string_append(str, idt, "Region", fu_ifd_region_to_string(priv->region));
+	fu_string_append_kx(str, idt, "Offset", priv->offset);
 
 	for (guint i = 0; i < FU_IFD_REGION_MAX; i++) {
 		g_autofree gchar *title = NULL;
 		if (priv->access[i] == FU_IFD_ACCESS_NONE)
 			continue;
 		title = g_strdup_printf("Access[%s]", fu_ifd_region_to_string(i));
-		fu_common_string_append_kv(str,
-					   idt,
-					   title,
-					   fu_ifd_access_to_string(priv->access[i]));
+		fu_string_append(str, idt, title, fu_ifd_access_to_string(priv->access[i]));
 	}
 }
 

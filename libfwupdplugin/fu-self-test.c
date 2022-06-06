@@ -186,15 +186,15 @@ fu_common_crc_func(void)
 }
 
 static void
-fu_common_string_append_kv_func(void)
+fu_string_append_func(void)
 {
 	g_autoptr(GString) str = g_string_new(NULL);
-	fu_common_string_append_kv(str, 0, "hdr", NULL);
-	fu_common_string_append_kv(str, 0, "key", "value");
-	fu_common_string_append_kv(str, 0, "key1", "value1");
-	fu_common_string_append_kv(str, 1, "key2", "value2");
-	fu_common_string_append_kv(str, 1, "", "value2");
-	fu_common_string_append_kv(str, 2, "key3", "value3");
+	fu_string_append(str, 0, "hdr", NULL);
+	fu_string_append(str, 0, "key", "value");
+	fu_string_append(str, 0, "key1", "value1");
+	fu_string_append(str, 1, "key2", "value2");
+	fu_string_append(str, 1, "", "value2");
+	fu_string_append(str, 2, "key3", "value3");
 	g_assert_cmpstr(str->str,
 			==,
 			"hdr:\n"
@@ -539,7 +539,7 @@ fu_common_memmem_func(void)
 }
 
 static void
-fu_common_strnsplit_func(void)
+fu_strsplit_func(void)
 {
 	const gchar *str = "123foo123bar123";
 	const guint bigsz = 1024 * 1024;
@@ -550,7 +550,7 @@ fu_common_strnsplit_func(void)
 	g_autoptr(GString) bigstr = g_string_sized_new(bigsz * 2);
 
 	/* works for me */
-	ret = fu_common_strnsplit_full(str, -1, "123", _strnsplit_add_cb, array, &error);
+	ret = fu_strsplit_full(str, -1, "123", _strnsplit_add_cb, array, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	g_assert_cmpint(array->len, ==, 3);
@@ -561,14 +561,14 @@ fu_common_strnsplit_func(void)
 	/* lets try something insane */
 	for (guint i = 0; i < bigsz; i++)
 		g_string_append(bigstr, "X\n");
-	ret = fu_common_strnsplit_full(bigstr->str, -1, "\n", _strnsplit_nop_cb, &cnt, &error);
+	ret = fu_strsplit_full(bigstr->str, -1, "\n", _strnsplit_nop_cb, &cnt, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	g_assert_cmpint(cnt, ==, bigsz);
 }
 
 static void
-fu_common_strsafe_func(void)
+fu_strsafe_func(void)
 {
 	struct {
 		const gchar *in;
@@ -582,7 +582,7 @@ fu_common_strsafe_func(void)
 	g_autofree gchar *id_part = fu_common_instance_id_strsafe("_ _LEN&VO&\\&");
 	g_assert_cmpstr(id_part, ==, "LEN-VO");
 	for (guint i = 0; strs[i].in != NULL; i++) {
-		g_autofree gchar *tmp = fu_common_strsafe(strs[i].in, 7);
+		g_autofree gchar *tmp = fu_strsafe(strs[i].in, 7);
 		g_assert_cmpstr(tmp, ==, strs[i].op);
 	}
 }
@@ -2187,7 +2187,7 @@ fu_chunk_func(void)
 }
 
 static void
-fu_common_strstrip_func(void)
+fu_strstrip_func(void)
 {
 	struct {
 		const gchar *old;
@@ -2199,7 +2199,7 @@ fu_common_strstrip_func(void)
 		   {"  ", ""},
 		   {NULL, NULL}};
 	for (guint i = 0; map[i].old != NULL; i++) {
-		g_autofree gchar *tmp = fu_common_strstrip(map[i].old);
+		g_autofree gchar *tmp = fu_strstrip(map[i].old);
 		g_assert_cmpstr(tmp, ==, map[i].new);
 	}
 }
@@ -2254,29 +2254,29 @@ fu_common_version_semver_full_func(void)
 }
 
 static void
-fu_common_strtoull_func(void)
+fu_strtoull_func(void)
 {
 	gboolean ret;
 	guint64 val = 0;
 	g_autoptr(GError) error = NULL;
 
-	ret = fu_common_strtoull_full("123", &val, 123, 200, &error);
+	ret = fu_strtoull_full("123", &val, 123, 200, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	g_assert_cmpint(val, ==, 123);
 
-	ret = fu_common_strtoull_full("0x123", &val, 0, 0x123, &error);
+	ret = fu_strtoull_full("0x123", &val, 0, 0x123, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	g_assert_cmpint(val, ==, 0x123);
 
-	ret = fu_common_strtoull_full(NULL, &val, 0, G_MAXUINT32, NULL);
+	ret = fu_strtoull_full(NULL, &val, 0, G_MAXUINT32, NULL);
 	g_assert_false(ret);
-	ret = fu_common_strtoull_full("", &val, 120, 123, NULL);
+	ret = fu_strtoull_full("", &val, 120, 123, NULL);
 	g_assert_false(ret);
-	ret = fu_common_strtoull_full("124", &val, 120, 123, NULL);
+	ret = fu_strtoull_full("124", &val, 120, 123, NULL);
 	g_assert_false(ret);
-	ret = fu_common_strtoull_full("119", &val, 120, 123, NULL);
+	ret = fu_strtoull_full("119", &val, 120, 123, NULL);
 	g_assert_false(ret);
 }
 
@@ -4023,7 +4023,7 @@ main(int argc, char **argv)
 	(void)g_setenv("FWUPD_OFFLINE_TRIGGER", "/tmp/fwupd-self-test/system-update", TRUE);
 	(void)g_setenv("FWUPD_LOCALSTATEDIR", "/tmp/fwupd-self-test/var", TRUE);
 
-	g_test_add_func("/fwupd/common{strnsplit}", fu_common_strnsplit_func);
+	g_test_add_func("/fwupd/common{strnsplit}", fu_strsplit_func);
 	g_test_add_func("/fwupd/common{memmem}", fu_common_memmem_func);
 	g_test_add_func("/fwupd/progress", fu_progress_func);
 	g_test_add_func("/fwupd/progress{child}", fu_progress_child_func);
@@ -4045,14 +4045,14 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/common{gpt-type}", fu_common_gpt_type_func);
 	g_test_add_func("/fwupd/common{byte-array}", fu_common_byte_array_func);
 	g_test_add_func("/fwupd/common{crc}", fu_common_crc_func);
-	g_test_add_func("/fwupd/common{string-append-kv}", fu_common_string_append_kv_func);
+	g_test_add_func("/fwupd/common{string-append-kv}", fu_string_append_func);
 	g_test_add_func("/fwupd/common{version-guess-format}", fu_common_version_guess_format_func);
-	g_test_add_func("/fwupd/common{strtoull}", fu_common_strtoull_func);
+	g_test_add_func("/fwupd/common{strtoull}", fu_strtoull_func);
 	g_test_add_func("/fwupd/common{version}", fu_common_version_func);
 	g_test_add_func("/fwupd/common{version-semver}", fu_common_version_semver_func);
 	g_test_add_func("/fwupd/common{version-semver-full}", fu_common_version_semver_full_func);
 	g_test_add_func("/fwupd/common{vercmp}", fu_common_vercmp_func);
-	g_test_add_func("/fwupd/common{strstrip}", fu_common_strstrip_func);
+	g_test_add_func("/fwupd/common{strstrip}", fu_strstrip_func);
 	g_test_add_func("/fwupd/common{endian}", fu_common_endian_func);
 	g_test_add_func("/fwupd/common{cabinet}", fu_common_cabinet_func);
 	g_test_add_func("/fwupd/common{cab-success}", fu_common_store_cab_func);
@@ -4074,7 +4074,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/common{spawn-timeout)", fu_common_spawn_timeout_func);
 	g_test_add_func("/fwupd/common{firmware-builder}", fu_common_firmware_builder_func);
 	g_test_add_func("/fwupd/common{kernel-lockdown}", fu_common_kernel_lockdown_func);
-	g_test_add_func("/fwupd/common{strsafe}", fu_common_strsafe_func);
+	g_test_add_func("/fwupd/common{strsafe}", fu_strsafe_func);
 	g_test_add_func("/fwupd/common{uri-scheme}", fu_common_uri_scheme_func);
 	g_test_add_func("/fwupd/efivar", fu_efivar_func);
 	g_test_add_func("/fwupd/hwids", fu_hwids_func);

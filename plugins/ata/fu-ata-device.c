@@ -114,12 +114,12 @@ fu_ata_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuAtaDevice *self = FU_ATA_DEVICE(device);
 	FU_DEVICE_CLASS(fu_ata_device_parent_class)->to_string(device, idt, str);
-	fu_common_string_append_kx(str, idt, "TransferMode", self->transfer_mode);
-	fu_common_string_append_kx(str, idt, "TransferBlocks", self->transfer_blocks);
+	fu_string_append_kx(str, idt, "TransferMode", self->transfer_mode);
+	fu_string_append_kx(str, idt, "TransferBlocks", self->transfer_blocks);
 	if (self->oui != 0x0)
-		fu_common_string_append_kx(str, idt, "OUI", self->oui);
-	fu_common_string_append_ku(str, idt, "PciDepth", self->pci_depth);
-	fu_common_string_append_ku(str, idt, "UsbDepth", self->usb_depth);
+		fu_string_append_kx(str, idt, "OUI", self->oui);
+	fu_string_append_ku(str, idt, "PciDepth", self->pci_depth);
+	fu_string_append_ku(str, idt, "UsbDepth", self->usb_depth);
 }
 
 /* https://docs.microsoft.com/en-us/windows-hardware/drivers/install/identifiers-for-ide-devices */
@@ -127,7 +127,7 @@ static gchar *
 fu_ata_device_pad_string_for_id(const gchar *name)
 {
 	GString *str = g_string_new(name);
-	fu_common_string_replace(str, " ", "_");
+	fu_string_replace(str, " ", "_");
 	for (guint i = str->len; i < 40; i++)
 		g_string_append_c(str, '_');
 	return g_string_free(str, FALSE);
@@ -847,7 +847,7 @@ fu_ata_device_set_quirk_kv(FuDevice *device, const gchar *key, const gchar *valu
 	guint64 tmp = 0;
 
 	if (g_strcmp0(key, "AtaTransferMode") == 0) {
-		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT8, error))
+		if (!fu_strtoull_full(value, &tmp, 0, G_MAXUINT8, error))
 			return FALSE;
 		if (tmp != ATA_SUBCMD_MICROCODE_DOWNLOAD_CHUNKS_ACTIVATE &&
 		    tmp != ATA_SUBCMD_MICROCODE_DOWNLOAD_CHUNKS &&
@@ -863,7 +863,7 @@ fu_ata_device_set_quirk_kv(FuDevice *device, const gchar *key, const gchar *valu
 		return TRUE;
 	}
 	if (g_strcmp0(key, "AtaTransferBlocks") == 0) {
-		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT16, error))
+		if (!fu_strtoull_full(value, &tmp, 0, G_MAXUINT16, error))
 			return FALSE;
 		self->transfer_blocks = (guint16)tmp;
 		return TRUE;

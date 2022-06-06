@@ -302,7 +302,7 @@ fu_logitech_hidpp_map_to_string(FuLogitechHidPpHidppMap *map, guint idt, GString
 	g_autofree gchar *tmp = g_strdup_printf("%s [0x%04x]",
 						fu_logitech_hidpp_feature_to_string(map->feature),
 						map->feature);
-	fu_common_string_append_kv(str, idt, title, tmp);
+	fu_string_append(str, idt, title, tmp);
 }
 
 static void
@@ -314,10 +314,10 @@ fu_logitech_hidpp_device_to_string(FuDevice *device, guint idt, GString *str)
 	/* FuUdevDevice->to_string */
 	FU_DEVICE_CLASS(fu_logitech_hidpp_device_parent_class)->to_string(device, idt, str);
 
-	fu_common_string_append_ku(str, idt, "HidppVersion", priv->hidpp_version);
-	fu_common_string_append_ku(str, idt, "HidppPid", priv->hidpp_pid);
-	fu_common_string_append_kx(str, idt, "DeviceIdx", priv->device_idx);
-	fu_common_string_append_kv(str, idt, "ModelId", priv->model_id);
+	fu_string_append_ku(str, idt, "HidppVersion", priv->hidpp_version);
+	fu_string_append_ku(str, idt, "HidppPid", priv->hidpp_pid);
+	fu_string_append_kx(str, idt, "DeviceIdx", priv->device_idx);
+	fu_string_append(str, idt, "ModelId", priv->model_id);
 	for (guint i = 0; i < priv->feature_index->len; i++) {
 		FuLogitechHidPpHidppMap *map = g_ptr_array_index(priv->feature_index, i);
 		fu_logitech_hidpp_map_to_string(map, idt, str);

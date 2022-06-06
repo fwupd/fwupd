@@ -72,7 +72,7 @@ fu_firehose_updater_log_message(const gchar *action, GBytes *msg)
 	if (msg_size > G_MAXINT)
 		return;
 
-	msg_strsafe = fu_common_strsafe(msg_data, msg_size);
+	msg_strsafe = fu_strsafe(msg_data, msg_size);
 
 	g_debug("%s: %.*s", action, (gint)msg_size, msg_strsafe);
 }

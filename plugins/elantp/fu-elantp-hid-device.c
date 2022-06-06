@@ -37,12 +37,12 @@ static void
 fu_elantp_hid_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuElantpHidDevice *self = FU_ELANTP_HID_DEVICE(device);
-	fu_common_string_append_kx(str, idt, "ModuleId", self->module_id);
-	fu_common_string_append_kx(str, idt, "Pattern", self->pattern);
-	fu_common_string_append_kx(str, idt, "FwPageSize", self->fw_page_size);
-	fu_common_string_append_kx(str, idt, "IcPageCount", self->ic_page_count);
-	fu_common_string_append_kx(str, idt, "IapType", self->iap_type);
-	fu_common_string_append_kx(str, idt, "IapCtrl", self->iap_ctrl);
+	fu_string_append_kx(str, idt, "ModuleId", self->module_id);
+	fu_string_append_kx(str, idt, "Pattern", self->pattern);
+	fu_string_append_kx(str, idt, "FwPageSize", self->fw_page_size);
+	fu_string_append_kx(str, idt, "IcPageCount", self->ic_page_count);
+	fu_string_append_kx(str, idt, "IapType", self->iap_type);
+	fu_string_append_kx(str, idt, "IapCtrl", self->iap_ctrl);
 }
 
 static gboolean
@@ -573,13 +573,13 @@ fu_elantp_hid_device_set_quirk_kv(FuDevice *device,
 	guint64 tmp = 0;
 
 	if (g_strcmp0(key, "ElantpIcPageCount") == 0) {
-		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT16, error))
+		if (!fu_strtoull_full(value, &tmp, 0, G_MAXUINT16, error))
 			return FALSE;
 		self->ic_page_count = (guint16)tmp;
 		return TRUE;
 	}
 	if (g_strcmp0(key, "ElantpIapPassword") == 0) {
-		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT16, error))
+		if (!fu_strtoull_full(value, &tmp, 0, G_MAXUINT16, error))
 			return FALSE;
 		self->iap_password = (guint16)tmp;
 		return TRUE;

@@ -88,10 +88,7 @@ fu_ch341a_device_to_string(FuDevice *device, guint idt, GString *str)
 	/* FuUsbDevice->to_string */
 	FU_DEVICE_CLASS(fu_ch341a_device_parent_class)->to_string(device, idt, str);
 
-	fu_common_string_append_kv(str,
-				   idt,
-				   "Speed",
-				   fu_ch341a_device_speed_to_string(self->speed));
+	fu_string_append(str, idt, "Speed", fu_ch341a_device_speed_to_string(self->speed));
 }
 
 static gboolean

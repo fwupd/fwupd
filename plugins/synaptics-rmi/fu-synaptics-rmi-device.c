@@ -70,14 +70,14 @@ fu_synaptics_rmi_flash_to_string(FuSynapticsRmiFlash *flash, guint idt, GString 
 	if (flash->bootloader_id[0] != 0x0) {
 		g_autofree gchar *tmp =
 		    g_strdup_printf("%02x.%02x", flash->bootloader_id[0], flash->bootloader_id[1]);
-		fu_common_string_append_kv(str, idt, "BootloaderId", tmp);
+		fu_string_append(str, idt, "BootloaderId", tmp);
 	}
-	fu_common_string_append_kx(str, idt, "BlockSize", flash->block_size);
-	fu_common_string_append_kx(str, idt, "BlockCountFw", flash->block_count_fw);
-	fu_common_string_append_kx(str, idt, "BlockCountCfg", flash->block_count_cfg);
-	fu_common_string_append_kx(str, idt, "FlashConfigLength", flash->config_length);
-	fu_common_string_append_kx(str, idt, "PayloadLength", flash->payload_length);
-	fu_common_string_append_kx(str, idt, "BuildID", flash->build_id);
+	fu_string_append_kx(str, idt, "BlockSize", flash->block_size);
+	fu_string_append_kx(str, idt, "BlockCountFw", flash->block_count_fw);
+	fu_string_append_kx(str, idt, "BlockCountCfg", flash->block_count_cfg);
+	fu_string_append_kx(str, idt, "FlashConfigLength", flash->config_length);
+	fu_string_append_kx(str, idt, "PayloadLength", flash->payload_length);
+	fu_string_append_kx(str, idt, "BuildID", flash->build_id);
 }
 
 static void
@@ -89,12 +89,12 @@ fu_synaptics_rmi_device_to_string(FuDevice *device, guint idt, GString *str)
 	/* FuUdevDevice->to_string */
 	FU_DEVICE_CLASS(fu_synaptics_rmi_device_parent_class)->to_string(device, idt, str);
 
-	fu_common_string_append_kx(str, idt, "CurrentPage", priv->current_page);
-	fu_common_string_append_kx(str, idt, "InIepMode", priv->in_iep_mode);
-	fu_common_string_append_kx(str, idt, "MaxPage", priv->max_page);
-	fu_common_string_append_kx(str, idt, "SigSize", priv->sig_size);
+	fu_string_append_kx(str, idt, "CurrentPage", priv->current_page);
+	fu_string_append_kx(str, idt, "InIepMode", priv->in_iep_mode);
+	fu_string_append_kx(str, idt, "MaxPage", priv->max_page);
+	fu_string_append_kx(str, idt, "SigSize", priv->sig_size);
 	if (priv->f34 != NULL) {
-		fu_common_string_append_kx(str, idt, "BlVer", priv->f34->function_version + 0x5);
+		fu_string_append_kx(str, idt, "BlVer", priv->f34->function_version + 0x5);
 	}
 	fu_synaptics_rmi_flash_to_string(&priv->flash, idt, str);
 }

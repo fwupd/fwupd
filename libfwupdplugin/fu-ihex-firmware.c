@@ -14,6 +14,7 @@
 #include "fu-common.h"
 #include "fu-firmware-common.h"
 #include "fu-ihex-firmware.h"
+#include "fu-string.h"
 
 /**
  * FuIhexFirmware:
@@ -94,7 +95,7 @@ fu_ihex_firmware_record_new(guint ln, const gchar *line, FwupdInstallFlags flags
 
 	/* check starting token */
 	if (line[0] != ':') {
-		g_autofree gchar *strsafe = fu_common_strsafe(line, 5);
+		g_autofree gchar *strsafe = fu_strsafe(line, 5);
 		if (strsafe != NULL) {
 			g_set_error(error,
 				    FWUPD_ERROR,
@@ -231,12 +232,12 @@ fu_ihex_firmware_tokenize(FuFirmware *firmware, GBytes *fw, FwupdInstallFlags fl
 {
 	FuIhexFirmware *self = FU_IHEX_FIRMWARE(firmware);
 	FuIhexFirmwareTokenHelper helper = {.self = self, .flags = flags};
-	return fu_common_strnsplit_full(g_bytes_get_data(fw, NULL),
-					g_bytes_get_size(fw),
-					"\n",
-					fu_ihex_firmware_tokenize_cb,
-					&helper,
-					error);
+	return fu_strsplit_full(g_bytes_get_data(fw, NULL),
+				g_bytes_get_size(fw),
+				"\n",
+				fu_ihex_firmware_tokenize_cb,
+				&helper,
+				error);
 }
 
 static gboolean

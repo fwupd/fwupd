@@ -103,7 +103,7 @@ fu_linux_swap_new(const gchar *buf, gsize bufsz, GError **error)
 	/* look at each line in /proc/swaps */
 	if (bufsz == 0)
 		bufsz = strlen(buf);
-	lines = fu_common_strnsplit(buf, bufsz, "\n", -1);
+	lines = fu_strsplit(buf, bufsz, "\n", -1);
 	if (g_strv_length(lines) > 2) {
 		for (guint i = 1; lines[i] != NULL && lines[i][0] != '\0'; i++) {
 			g_autofree gchar *fn = NULL;

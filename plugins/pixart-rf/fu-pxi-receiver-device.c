@@ -50,8 +50,8 @@ fu_pxi_receiver_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuPxiReceiverDevice *self = FU_PXI_RECEIVER_DEVICE(device);
 	fu_pxi_ota_fw_state_to_string(&self->fwstate, idt, str);
-	fu_common_string_append_kx(str, idt, "Vendor", self->vendor);
-	fu_common_string_append_kx(str, idt, "Product", self->product);
+	fu_string_append_kx(str, idt, "Vendor", self->vendor);
+	fu_string_append_kx(str, idt, "Product", self->product);
 }
 
 static gboolean
@@ -800,7 +800,7 @@ fu_pxi_receiver_device_setup_guid(FuPxiReceiverDevice *device, GError **error)
 
 	dev_name = g_string_new(fu_device_get_name(FU_DEVICE(device)));
 	g_string_ascii_up(dev_name);
-	fu_common_string_replace(dev_name, " ", "_");
+	fu_string_replace(dev_name, " ", "_");
 	devid = g_strdup_printf("HIDRAW\\VEN_%04X&DEV_%04X&NAME_%s",
 				(guint)hid_raw_info.vendor,
 				(guint)hid_raw_info.product,

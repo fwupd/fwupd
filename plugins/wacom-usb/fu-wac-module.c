@@ -109,18 +109,9 @@ fu_wac_module_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuWacModule *self = FU_WAC_MODULE(device);
 	FuWacModulePrivate *priv = GET_PRIVATE(self);
-	fu_common_string_append_kv(str,
-				   idt,
-				   "FwType",
-				   fu_wac_module_fw_type_to_string(priv->fw_type));
-	fu_common_string_append_kv(str,
-				   idt,
-				   "Status",
-				   fu_wac_module_status_to_string(priv->status));
-	fu_common_string_append_kv(str,
-				   idt,
-				   "Command",
-				   fu_wac_module_command_to_string(priv->command));
+	fu_string_append(str, idt, "FwType", fu_wac_module_fw_type_to_string(priv->fw_type));
+	fu_string_append(str, idt, "Status", fu_wac_module_status_to_string(priv->status));
+	fu_string_append(str, idt, "Command", fu_wac_module_command_to_string(priv->command));
 }
 
 static gboolean

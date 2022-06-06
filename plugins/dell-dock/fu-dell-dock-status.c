@@ -126,7 +126,7 @@ fu_dell_dock_status_set_quirk_kv(FuDevice *device,
 	FuDellDockStatus *self = FU_DELL_DOCK_STATUS(device);
 	if (g_strcmp0(key, "DellDockBlobVersionOffset") == 0) {
 		guint64 tmp = 0;
-		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT32, error))
+		if (!fu_strtoull_full(value, &tmp, 0, G_MAXUINT32, error))
 			return FALSE;
 		self->blob_version_offset = tmp;
 		return TRUE;

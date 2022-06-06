@@ -317,7 +317,7 @@ fu_ccgx_firmware_tokenize_cb(GString *token, guint token_idx, gpointer user_data
 	if (token_idx == 0) {
 		guint32 device_id = 0;
 		if (token->len != 12) {
-			g_autofree gchar *strsafe = fu_common_strsafe(token->str, 12);
+			g_autofree gchar *strsafe = fu_strsafe(token->str, 12);
 			if (strsafe != NULL) {
 				g_set_error(error,
 					    FWUPD_ERROR,
@@ -364,12 +364,12 @@ fu_ccgx_firmware_parse(FuFirmware *firmware,
 	FuCcgxFirmwareTokenHelper helper = {.self = self, .flags = flags};
 
 	/* tokenize */
-	if (!fu_common_strnsplit_full(g_bytes_get_data(fw, NULL),
-				      g_bytes_get_size(fw),
-				      "\n",
-				      fu_ccgx_firmware_tokenize_cb,
-				      &helper,
-				      error))
+	if (!fu_strsplit_full(g_bytes_get_data(fw, NULL),
+			      g_bytes_get_size(fw),
+			      "\n",
+			      fu_ccgx_firmware_tokenize_cb,
+			      &helper,
+			      error))
 		return FALSE;
 
 	/* address is first data entry */

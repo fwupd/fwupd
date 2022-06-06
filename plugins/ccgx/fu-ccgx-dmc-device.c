@@ -306,17 +306,17 @@ static void
 fu_ccgx_dmc_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuCcgxDmcDevice *self = FU_CCGX_DMC_DEVICE(device);
-	fu_common_string_append_kv(str,
-				   idt,
-				   "UpdateModel",
-				   fu_ccgx_dmc_update_model_type_to_string(self->update_model));
-	fu_common_string_append_kv(str,
-				   idt,
-				   "FwImageType",
-				   fu_ccgx_fw_image_type_to_string(self->fw_image_type));
-	fu_common_string_append_kx(str, idt, "EpBulkOut", self->ep_bulk_out);
-	fu_common_string_append_kx(str, idt, "EpIntrIn", self->ep_intr_in);
-	fu_common_string_append_kx(str, idt, "TriggerCode", self->trigger_code);
+	fu_string_append(str,
+			 idt,
+			 "UpdateModel",
+			 fu_ccgx_dmc_update_model_type_to_string(self->update_model));
+	fu_string_append(str,
+			 idt,
+			 "FwImageType",
+			 fu_ccgx_fw_image_type_to_string(self->fw_image_type));
+	fu_string_append_kx(str, idt, "EpBulkOut", self->ep_bulk_out);
+	fu_string_append_kx(str, idt, "EpIntrIn", self->ep_intr_in);
+	fu_string_append_kx(str, idt, "TriggerCode", self->trigger_code);
 }
 
 static gboolean
@@ -706,7 +706,7 @@ fu_ccgx_dmc_device_set_quirk_kv(FuDevice *device,
 	guint64 tmp;
 
 	if (g_strcmp0(key, "CcgxDmcTriggerCode") == 0) {
-		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT16, error))
+		if (!fu_strtoull_full(value, &tmp, 0, G_MAXUINT16, error))
 			return FALSE;
 		self->trigger_code = tmp;
 		return TRUE;

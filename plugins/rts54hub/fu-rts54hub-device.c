@@ -43,9 +43,9 @@ static void
 fu_rts54hub_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuRts54HubDevice *self = FU_RTS54HUB_DEVICE(device);
-	fu_common_string_append_kb(str, idt, "FwAuth", self->fw_auth);
-	fu_common_string_append_kb(str, idt, "DualBank", self->dual_bank);
-	fu_common_string_append_kb(str, idt, "RunningOnFlash", self->running_on_flash);
+	fu_string_append_kb(str, idt, "FwAuth", self->fw_auth);
+	fu_string_append_kb(str, idt, "DualBank", self->dual_bank);
+	fu_string_append_kb(str, idt, "RunningOnFlash", self->running_on_flash);
 }
 
 gboolean

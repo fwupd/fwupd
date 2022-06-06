@@ -23,6 +23,7 @@
 
 #include "fu-device-private.h"
 #include "fu-i2c-device.h"
+#include "fu-string.h"
 #include "fu-udev-device-private.h"
 
 /**
@@ -89,7 +90,7 @@ static guint32
 fu_udev_device_get_sysfs_attr_as_uint32(GUdevDevice *udev_device, const gchar *name)
 {
 #ifdef HAVE_GUDEV
-	guint64 tmp = fu_common_strtoull(g_udev_device_get_sysfs_attr(udev_device, name));
+	guint64 tmp = fu_strtoull(g_udev_device_get_sysfs_attr(udev_device, name));
 	if (tmp > G_MAXUINT32) {
 		g_warning("reading %s for %s overflowed",
 			  name,
@@ -106,7 +107,7 @@ static guint8
 fu_udev_device_get_sysfs_attr_as_uint8(GUdevDevice *udev_device, const gchar *name)
 {
 #ifdef HAVE_GUDEV
-	guint64 tmp = fu_common_strtoull(g_udev_device_get_sysfs_attr(udev_device, name));
+	guint64 tmp = fu_strtoull(g_udev_device_get_sysfs_attr(udev_device, name));
 	if (tmp > G_MAXUINT8) {
 		g_warning("reading %s for %s overflowed",
 			  name,
@@ -128,17 +129,17 @@ fu_udev_device_to_string_raw(GUdevDevice *udev_device, guint idt, GString *str)
 		return;
 	keys = g_udev_device_get_property_keys(udev_device);
 	for (guint i = 0; keys[i] != NULL; i++) {
-		fu_common_string_append_kv(str,
-					   idt,
-					   keys[i],
-					   g_udev_device_get_property(udev_device, keys[i]));
+		fu_string_append(str,
+				 idt,
+				 keys[i],
+				 g_udev_device_get_property(udev_device, keys[i]));
 	}
 	keys = g_udev_device_get_sysfs_attr_keys(udev_device);
 	for (guint i = 0; keys[i] != NULL; i++) {
-		fu_common_string_append_kv(str,
-					   idt,
-					   keys[i],
-					   g_udev_device_get_sysfs_attr(udev_device, keys[i]));
+		fu_string_append(str,
+				 idt,
+				 keys[i],
+				 g_udev_device_get_sysfs_attr(udev_device, keys[i]));
 	}
 }
 #endif
@@ -150,24 +151,24 @@ fu_udev_device_to_string(FuDevice *device, guint idt, GString *str)
 	FuUdevDevice *self = FU_UDEV_DEVICE(device);
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
 	if (priv->udev_device != NULL) {
-		fu_common_string_append_kv(str,
-					   idt,
-					   "SysfsPath",
-					   g_udev_device_get_sysfs_path(priv->udev_device));
-		fu_common_string_append_kv(str, idt, "Subsystem", priv->subsystem);
+		fu_string_append(str,
+				 idt,
+				 "SysfsPath",
+				 g_udev_device_get_sysfs_path(priv->udev_device));
+		fu_string_append(str, idt, "Subsystem", priv->subsystem);
 		if (priv->driver != NULL)
-			fu_common_string_append_kv(str, idt, "Driver", priv->driver);
+			fu_string_append(str, idt, "Driver", priv->driver);
 		if (priv->bind_id != NULL)
-			fu_common_string_append_kv(str, idt, "BindId", priv->bind_id);
+			fu_string_append(str, idt, "BindId", priv->bind_id);
 		if (priv->device_file != NULL)
-			fu_common_string_append_kv(str, idt, "DeviceFile", priv->device_file);
+			fu_string_append(str, idt, "DeviceFile", priv->device_file);
 	}
 	if (g_getenv("FU_UDEV_DEVICE_DEBUG") != NULL) {
 		g_autoptr(GUdevDevice) udev_parent = NULL;
 		fu_udev_device_to_string_raw(priv->udev_device, idt, str);
 		udev_parent = g_udev_device_get_parent(priv->udev_device);
 		if (udev_parent != NULL) {
-			fu_common_string_append_kv(str, idt, "Parent", NULL);
+			fu_string_append(str, idt, "Parent", NULL);
 			fu_udev_device_to_string_raw(udev_parent, idt + 1, str);
 		}
 	}
@@ -886,7 +887,7 @@ fu_udev_device_get_number(FuUdevDevice *self)
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FU_IS_UDEV_DEVICE(self), 0);
 	if (priv->udev_device != NULL)
-		return fu_common_strtoull(g_udev_device_get_number(priv->udev_device));
+		return fu_strtoull(g_udev_device_get_number(priv->udev_device));
 #endif
 	return G_MAXUINT64;
 }
@@ -1756,7 +1757,7 @@ fu_udev_device_get_sysfs_attr_uint64(FuUdevDevice *self,
 	tmp = fu_udev_device_get_sysfs_attr(self, attr, error);
 	if (tmp == NULL)
 		return FALSE;
-	tmp64 = fu_common_strtoull(tmp);
+	tmp64 = fu_strtoull(tmp);
 	if (value != NULL)
 		*value = tmp64;
 	return TRUE;

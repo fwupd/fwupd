@@ -34,17 +34,17 @@ static void
 fu_mei_hfsts_to_string(FuPlugin *plugin, guint idt, GString *str)
 {
 	FuPluginData *priv = fu_plugin_get_data(plugin);
-	fu_common_string_append_kv(str, idt, "HFSTS1", NULL);
+	fu_string_append(str, idt, "HFSTS1", NULL);
 	fu_mei_hfsts1_to_string(priv->hfsts1, idt + 1, str);
-	fu_common_string_append_kv(str, idt, "HFSTS2", NULL);
+	fu_string_append(str, idt, "HFSTS2", NULL);
 	fu_mei_hfsts2_to_string(priv->hfsts2, idt + 1, str);
-	fu_common_string_append_kv(str, idt, "HFSTS3", NULL);
+	fu_string_append(str, idt, "HFSTS3", NULL);
 	fu_mei_hfsts3_to_string(priv->hfsts3, idt + 1, str);
-	fu_common_string_append_kv(str, idt, "HFSTS4", NULL);
+	fu_string_append(str, idt, "HFSTS4", NULL);
 	fu_mei_hfsts4_to_string(priv->hfsts4, idt + 1, str);
-	fu_common_string_append_kv(str, idt, "HFSTS5", NULL);
+	fu_string_append(str, idt, "HFSTS5", NULL);
 	fu_mei_hfsts5_to_string(priv->hfsts5, idt + 1, str);
-	fu_common_string_append_kv(str, idt, "HFSTS6", NULL);
+	fu_string_append(str, idt, "HFSTS6", NULL);
 	fu_mei_hfsts6_to_string(priv->hfsts6, idt + 1, str);
 }
 
@@ -114,7 +114,7 @@ fu_mei_parse_fwvers(FuPlugin *plugin, const gchar *fwvers, GError **error)
 	}
 
 	/* parse platform and versions */
-	priv->vers.platform = fu_common_strtoull(sections[0]);
+	priv->vers.platform = fu_strtoull(sections[0]);
 	split = g_strsplit(sections[1], ".", -1);
 	if (g_strv_length(split) != 4) {
 		g_set_error(error,
@@ -124,10 +124,10 @@ fu_mei_parse_fwvers(FuPlugin *plugin, const gchar *fwvers, GError **error)
 			    sections[1]);
 		return FALSE;
 	}
-	priv->vers.major = fu_common_strtoull(split[0]);
-	priv->vers.minor = fu_common_strtoull(split[1]);
-	priv->vers.hotfix = fu_common_strtoull(split[2]);
-	priv->vers.buildno = fu_common_strtoull(split[3]);
+	priv->vers.major = fu_strtoull(split[0]);
+	priv->vers.minor = fu_strtoull(split[1]);
+	priv->vers.hotfix = fu_strtoull(split[2]);
+	priv->vers.buildno = fu_strtoull(split[3]);
 
 	/* check the AMT version for issues using the data from:
 	 * https://downloadcenter.intel.com/download/28632 */

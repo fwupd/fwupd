@@ -76,9 +76,9 @@ fu_pxi_ble_device_to_string(FuDevice *device, guint idt, GString *str)
 	/* FuUdevDevice->to_string */
 	FU_DEVICE_CLASS(fu_pxi_ble_device_parent_class)->to_string(device, idt, str);
 
-	fu_common_string_append_kv(str, idt, "ModelName", self->model_name);
+	fu_string_append(str, idt, "ModelName", self->model_name);
 	fu_pxi_ota_fw_state_to_string(&self->fwstate, idt, str);
-	fu_common_string_append_kx(str, idt, "RetransmitID", self->retransmit_id);
+	fu_string_append_kx(str, idt, "RetransmitID", self->retransmit_id);
 }
 
 static FuFirmware *
@@ -831,12 +831,12 @@ fu_pxi_ble_device_setup_guid(FuPxiBleDevice *self, GError **error)
 		return FALSE;
 	dev_name = g_string_new(fu_device_get_name(device));
 	g_string_ascii_up(dev_name);
-	fu_common_string_replace(dev_name, " ", "_");
+	fu_string_replace(dev_name, " ", "_");
 
 	/* extra GUID with model name*/
 	model_name = g_string_new(self->model_name);
 	g_string_ascii_up(model_name);
-	fu_common_string_replace(model_name, " ", "_");
+	fu_string_replace(model_name, " ", "_");
 
 	/* generate IDs */
 	fu_device_add_instance_u16(device, "VEN", hid_raw_info.vendor);

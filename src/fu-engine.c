@@ -68,6 +68,7 @@
 #include "fu-remote-list.h"
 #include "fu-security-attr.h"
 #include "fu-security-attrs-private.h"
+#include "fu-string.h"
 #include "fu-udev-device-private.h"
 #include "fu-uswid-firmware.h"
 #include "fu-version.h"
@@ -1205,7 +1206,7 @@ fu_engine_check_requirement_vendor_id(FuEngine *self, XbNode *req, FuDevice *dev
 	}
 
 	/* it is always safe to use a regex, even for simple strings */
-	vendor_ids_device = fu_common_strjoin_array("|", vendor_ids);
+	vendor_ids_device = fu_strjoin("|", vendor_ids);
 	if (!g_regex_match_simple(vendor_ids_metadata, vendor_ids_device, 0, 0)) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -1740,7 +1741,7 @@ fu_engine_get_proc_cmdline(GError **error)
 	if (!g_file_get_contents("/proc/cmdline", &buf, &bufsz, error))
 		return NULL;
 	if (bufsz > 0) {
-		g_auto(GStrv) tokens = fu_common_strnsplit(buf, bufsz - 1, " ", -1);
+		g_auto(GStrv) tokens = fu_strsplit(buf, bufsz - 1, " ", -1);
 		for (guint i = 0; tokens[i] != NULL; i++) {
 			g_auto(GStrv) kv = NULL;
 			if (strlen(tokens[i]) == 0)
@@ -5887,7 +5888,7 @@ fu_engine_add_plugin_filter(FuEngine *self, const gchar *plugin_glob)
 	g_return_if_fail(FU_IS_ENGINE(self));
 	g_return_if_fail(plugin_glob != NULL);
 	str = g_string_new(plugin_glob);
-	fu_common_string_replace(str, "-", "_");
+	fu_string_replace(str, "-", "_");
 	g_ptr_array_add(self->plugin_filter, g_string_free(str, FALSE));
 }
 
@@ -6733,7 +6734,7 @@ fu_engine_context_set_battery_threshold(FuContext *ctx)
 	if (battery_str == NULL)
 		minimum_battery = MINIMUM_BATTERY_PERCENTAGE_FALLBACK;
 	else
-		minimum_battery = fu_common_strtoull(battery_str);
+		minimum_battery = fu_strtoull(battery_str);
 	if (minimum_battery > 100) {
 		g_warning("invalid minimum battery level specified: "
 			  "%" G_GUINT64_FORMAT,

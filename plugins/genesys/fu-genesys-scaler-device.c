@@ -1585,7 +1585,7 @@ fu_genesys_scaler_device_probe(FuDevice *device, GError **error)
 	if (!fu_genesys_scaler_device_get_version(self, buf, sizeof(buf), error))
 		return FALSE;
 	/* ?xIM123; where ? is 0x06 (length?) */
-	panelrev = fu_common_strsafe((const gchar *)&buf[1], 6);
+	panelrev = fu_strsafe((const gchar *)&buf[1], 6);
 
 	if (!fu_genesys_scaler_device_get_firmware_packet_version(self, &ver, error))
 		return FALSE;
@@ -1837,7 +1837,7 @@ fu_genesys_scaler_device_to_string(FuDevice *device, guint idt, GString *str)
 	g_autoptr(GError) error_local_e = NULL;
 	g_autoptr(GError) error_local_n = NULL;
 
-	fu_common_string_append_kx(str, idt, "Level", self->level);
+	fu_string_append_kx(str, idt, "Level", self->level);
 	if (fu_memcpy_safe((guint8 *)public_key_e,
 			   sizeof(public_key_e),
 			   0, /* dst */
@@ -1846,7 +1846,7 @@ fu_genesys_scaler_device_to_string(FuDevice *device, guint idt, GString *str)
 			   sizeof(self->public_key) - 2 - (sizeof(public_key_e) - 1), /* src */
 			   sizeof(public_key_e) - 1,
 			   &error_local_e)) {
-		fu_common_string_append_kv(str, idt, "PublicKeyE", public_key_e);
+		fu_string_append(str, idt, "PublicKeyE", public_key_e);
 	} else {
 		g_debug("ignoring public-key parameter E: %s", error_local_e->message);
 	}
@@ -1858,19 +1858,19 @@ fu_genesys_scaler_device_to_string(FuDevice *device, guint idt, GString *str)
 			   4, /* src */
 			   sizeof(public_key_n) - 1,
 			   &error_local_n)) {
-		fu_common_string_append_kv(str, idt, "PublicKeyN", public_key_n);
+		fu_string_append(str, idt, "PublicKeyN", public_key_n);
 	} else {
 		g_debug("ignoring public-key parameter N: %s", error_local_n->message);
 	}
-	fu_common_string_append_kx(str, idt, "ReadRequestRead", self->vc.req_read);
-	fu_common_string_append_kx(str, idt, "WriteRequest", self->vc.req_write);
-	fu_common_string_append_kx(str, idt, "SectorSize", self->sector_size);
-	fu_common_string_append_kx(str, idt, "PageSize", self->page_size);
-	fu_common_string_append_kx(str, idt, "TransferSize", self->transfer_size);
-	fu_common_string_append_kx(str, idt, "GpioOutputRegister", self->gpio_out_reg);
-	fu_common_string_append_kx(str, idt, "GpioEnableRegister", self->gpio_en_reg);
-	fu_common_string_append_kx(str, idt, "GpioValue", self->gpio_val);
-	fu_common_string_append_kx(str, idt, "CfiFlashId", self->cfi_flash_id);
+	fu_string_append_kx(str, idt, "ReadRequestRead", self->vc.req_read);
+	fu_string_append_kx(str, idt, "WriteRequest", self->vc.req_write);
+	fu_string_append_kx(str, idt, "SectorSize", self->sector_size);
+	fu_string_append_kx(str, idt, "PageSize", self->page_size);
+	fu_string_append_kx(str, idt, "TransferSize", self->transfer_size);
+	fu_string_append_kx(str, idt, "GpioOutputRegister", self->gpio_out_reg);
+	fu_string_append_kx(str, idt, "GpioEnableRegister", self->gpio_en_reg);
+	fu_string_append_kx(str, idt, "GpioValue", self->gpio_val);
+	fu_string_append_kx(str, idt, "CfiFlashId", self->cfi_flash_id);
 }
 
 static gboolean
@@ -1883,7 +1883,7 @@ fu_genesys_scaler_device_set_quirk_kv(FuDevice *device,
 	guint64 tmp;
 
 	if (g_strcmp0(key, "GenesysScalerDeviceTransferSize") == 0) {
-		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT32, error))
+		if (!fu_strtoull_full(value, &tmp, 0, G_MAXUINT32, error))
 			return FALSE;
 		self->transfer_size = tmp;
 
@@ -1891,7 +1891,7 @@ fu_genesys_scaler_device_set_quirk_kv(FuDevice *device,
 		return TRUE;
 	}
 	if (g_strcmp0(key, "GenesysScalerGpioOutputRegister") == 0) {
-		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT16, error))
+		if (!fu_strtoull_full(value, &tmp, 0, G_MAXUINT16, error))
 			return FALSE;
 		self->gpio_out_reg = tmp;
 
@@ -1899,7 +1899,7 @@ fu_genesys_scaler_device_set_quirk_kv(FuDevice *device,
 		return TRUE;
 	}
 	if (g_strcmp0(key, "GenesysScalerGpioEnableRegister") == 0) {
-		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT16, error))
+		if (!fu_strtoull_full(value, &tmp, 0, G_MAXUINT16, error))
 			return FALSE;
 		self->gpio_en_reg = tmp;
 
@@ -1907,7 +1907,7 @@ fu_genesys_scaler_device_set_quirk_kv(FuDevice *device,
 		return TRUE;
 	}
 	if (g_strcmp0(key, "GenesysScalerGpioValue") == 0) {
-		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT16, error))
+		if (!fu_strtoull_full(value, &tmp, 0, G_MAXUINT16, error))
 			return FALSE;
 		self->gpio_val = tmp;
 
@@ -1915,7 +1915,7 @@ fu_genesys_scaler_device_set_quirk_kv(FuDevice *device,
 		return TRUE;
 	}
 	if (g_strcmp0(key, "GenesysScalerCfiFlashId") == 0) {
-		if (!fu_common_strtoull_full(value, &tmp, 0, 0x00ffffffU, error))
+		if (!fu_strtoull_full(value, &tmp, 0, 0x00ffffffU, error))
 			return FALSE;
 		self->cfi_flash_id = tmp;
 

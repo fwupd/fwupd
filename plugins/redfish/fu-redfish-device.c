@@ -31,11 +31,11 @@ fu_redfish_device_to_string(FuDevice *device, guint idt, GString *str)
 	FuRedfishDevice *self = FU_REDFISH_DEVICE(device);
 	FuRedfishDevicePrivate *priv = GET_PRIVATE(self);
 	if (priv->milestone > 0x0)
-		fu_common_string_append_kx(str, idt, "Milestone", priv->milestone);
+		fu_string_append_kx(str, idt, "Milestone", priv->milestone);
 	if (priv->build != NULL)
-		fu_common_string_append_kv(str, idt, "Build", priv->build);
-	fu_common_string_append_ku(str, idt, "ResetPretDelay", priv->reset_pre_delay);
-	fu_common_string_append_ku(str, idt, "ResetPostDelay", priv->reset_post_delay);
+		fu_string_append(str, idt, "Build", priv->build);
+	fu_string_append_ku(str, idt, "ResetPretDelay", priv->reset_pre_delay);
+	fu_string_append_ku(str, idt, "ResetPostDelay", priv->reset_post_delay);
 }
 
 static void
@@ -93,36 +93,28 @@ fu_redfish_device_probe_related_pcie_item(FuRedfishDevice *self, const gchar *ur
 	if (json_object_has_member(json_obj, "VendorId")) {
 		const gchar *tmp = json_object_get_string_member(json_obj, "VendorId");
 		if (tmp != NULL && tmp[0] != '\0') {
-			if (!fu_common_strtoull_full(tmp, &vendor_id, 0, G_MAXUINT16, error))
+			if (!fu_strtoull_full(tmp, &vendor_id, 0, G_MAXUINT16, error))
 				return FALSE;
 		}
 	}
 	if (json_object_has_member(json_obj, "DeviceId")) {
 		const gchar *tmp = json_object_get_string_member(json_obj, "DeviceId");
 		if (tmp != NULL && tmp[0] != '\0') {
-			if (!fu_common_strtoull_full(tmp, &model_id, 0, G_MAXUINT16, error))
+			if (!fu_strtoull_full(tmp, &model_id, 0, G_MAXUINT16, error))
 				return FALSE;
 		}
 	}
 	if (json_object_has_member(json_obj, "SubsystemVendorId")) {
 		const gchar *tmp = json_object_get_string_member(json_obj, "SubsystemVendorId");
 		if (tmp != NULL && tmp[0] != '\0') {
-			if (!fu_common_strtoull_full(tmp,
-						     &subsystem_vendor_id,
-						     0,
-						     G_MAXUINT16,
-						     error))
+			if (!fu_strtoull_full(tmp, &subsystem_vendor_id, 0, G_MAXUINT16, error))
 				return FALSE;
 		}
 	}
 	if (json_object_has_member(json_obj, "SubsystemId")) {
 		const gchar *tmp = json_object_get_string_member(json_obj, "SubsystemId");
 		if (tmp != NULL && tmp[0] != '\0') {
-			if (!fu_common_strtoull_full(tmp,
-						     &subsystem_model_id,
-						     0,
-						     G_MAXUINT16,
-						     error))
+			if (!fu_strtoull_full(tmp, &subsystem_model_id, 0, G_MAXUINT16, error))
 				return FALSE;
 		}
 	}
@@ -778,13 +770,13 @@ fu_redfish_device_set_quirk_kv(FuDevice *device,
 	guint64 tmp = 0;
 
 	if (g_strcmp0(key, "RedfishResetPreDelay") == 0) {
-		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT, error))
+		if (!fu_strtoull_full(value, &tmp, 0, G_MAXUINT, error))
 			return FALSE;
 		priv->reset_pre_delay = tmp;
 		return TRUE;
 	}
 	if (g_strcmp0(key, "RedfishResetPostDelay") == 0) {
-		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT, error))
+		if (!fu_strtoull_full(value, &tmp, 0, G_MAXUINT, error))
 			return FALSE;
 		priv->reset_post_delay = tmp;
 		return TRUE;

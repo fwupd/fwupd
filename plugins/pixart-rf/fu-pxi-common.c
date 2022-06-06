@@ -44,20 +44,17 @@ fu_pxi_receiver_cmd_result_to_string(guint8 result)
 void
 fu_pxi_ota_fw_state_to_string(struct ota_fw_state *fwstate, guint idt, GString *str)
 {
-	fu_common_string_append_kx(str, idt, "Status", fwstate->status);
-	fu_common_string_append_kx(str, idt, "NewFlow", fwstate->new_flow);
-	fu_common_string_append_kx(str, idt, "CurrentObjectOffset", fwstate->offset);
-	fu_common_string_append_kx(str, idt, "CurrentChecksum", fwstate->checksum);
-	fu_common_string_append_kx(str, idt, "MaxObjectSize", fwstate->max_object_size);
-	fu_common_string_append_kx(str, idt, "MtuSize", fwstate->mtu_size);
-	fu_common_string_append_kx(str,
-				   idt,
-				   "PacketReceiptNotificationThreshold",
-				   fwstate->prn_threshold);
-	fu_common_string_append_kv(str,
-				   idt,
-				   "SpecCheckResult",
-				   fu_pxi_spec_check_result_to_string(fwstate->spec_check_result));
+	fu_string_append_kx(str, idt, "Status", fwstate->status);
+	fu_string_append_kx(str, idt, "NewFlow", fwstate->new_flow);
+	fu_string_append_kx(str, idt, "CurrentObjectOffset", fwstate->offset);
+	fu_string_append_kx(str, idt, "CurrentChecksum", fwstate->checksum);
+	fu_string_append_kx(str, idt, "MaxObjectSize", fwstate->max_object_size);
+	fu_string_append_kx(str, idt, "MtuSize", fwstate->mtu_size);
+	fu_string_append_kx(str, idt, "PacketReceiptNotificationThreshold", fwstate->prn_threshold);
+	fu_string_append(str,
+			 idt,
+			 "SpecCheckResult",
+			 fu_pxi_spec_check_result_to_string(fwstate->spec_check_result));
 }
 
 gboolean

@@ -285,7 +285,7 @@ fu_wac_firmware_parse(FuFirmware *firmware,
 	}
 
 	/* tokenize */
-	if (!fu_common_strnsplit_full(data, sz, "\n", fu_wac_firmware_tokenize_cb, &helper, error))
+	if (!fu_strsplit_full(data, sz, "\n", fu_wac_firmware_tokenize_cb, &helper, error))
 		return FALSE;
 
 	/* verify data is complete */

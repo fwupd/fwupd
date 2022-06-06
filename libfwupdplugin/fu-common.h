@@ -225,14 +225,8 @@ fu_common_firmware_builder(GBytes *bytes,
 			   GError **error) G_GNUC_WARN_UNUSED_RESULT;
 GError *
 fu_common_error_array_get_best(GPtrArray *errors);
-guint64
-fu_common_strtoull(const gchar *str);
-gboolean
-fu_common_strtoull_full(const gchar *str, guint64 *value, guint64 min, guint64 max, GError **error);
 gchar *
 fu_common_find_program_in_path(const gchar *basename, GError **error) G_GNUC_WARN_UNUSED_RESULT;
-gchar *
-fu_common_strstrip(const gchar *str);
 void
 fu_common_dump_raw(const gchar *log_domain, const gchar *title, const guint8 *data, gsize len);
 void
@@ -263,8 +257,6 @@ fu_common_bytes_pad(GBytes *bytes, gsize sz);
 GBytes *
 fu_common_bytes_new_offset(GBytes *bytes, gsize offset, gsize length, GError **error)
     G_GNUC_WARN_UNUSED_RESULT;
-gsize
-fu_common_strwidth(const gchar *text);
 guint8 *
 fu_memdup_safe(const guint8 *src, gsize n, GError **error) G_GNUC_WARN_UNUSED_RESULT;
 gboolean
@@ -352,46 +344,8 @@ fu_common_read_uint32(const guint8 *buf, FuEndianType endian);
 guint64
 fu_common_read_uint64(const guint8 *buf, FuEndianType endian);
 
-guint
-fu_common_string_replace(GString *string, const gchar *search, const gchar *replace);
-void
-fu_common_string_append_kv(GString *str, guint idt, const gchar *key, const gchar *value);
-void
-fu_common_string_append_ku(GString *str, guint idt, const gchar *key, guint64 value);
-void
-fu_common_string_append_kx(GString *str, guint idt, const gchar *key, guint64 value);
-void
-fu_common_string_append_kb(GString *str, guint idt, const gchar *key, gboolean value);
-gchar **
-fu_common_strnsplit(const gchar *str, gsize sz, const gchar *delimiter, gint max_tokens);
-
-/**
- * FuCommonStrsplitFunc:
- * @token: a #GString
- * @token_idx: the token number
- * @user_data: user data
- * @error: a #GError or NULL
- *
- * The fu_common_strnsplit_full() iteration callback.
- */
-typedef gboolean (*FuCommonStrsplitFunc)(GString *token,
-					 guint token_idx,
-					 gpointer user_data,
-					 GError **error);
-gboolean
-fu_common_strnsplit_full(const gchar *str,
-			 gssize sz,
-			 const gchar *delimiter,
-			 FuCommonStrsplitFunc callback,
-			 gpointer user_data,
-			 GError **error);
-
-gchar *
-fu_common_strsafe(const gchar *str, gsize maxsz);
 gchar *
 fu_common_instance_id_strsafe(const gchar *str);
-gchar *
-fu_common_strjoin_array(const gchar *separator, GPtrArray *array);
 gboolean
 fu_common_kernel_locked_down(void);
 gboolean

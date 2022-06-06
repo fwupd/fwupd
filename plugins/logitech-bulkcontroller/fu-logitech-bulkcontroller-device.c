@@ -98,14 +98,13 @@ static void
 fu_logitech_bulkcontroller_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuLogitechBulkcontrollerDevice *self = FU_LOGITECH_BULKCONTROLLER_DEVICE(device);
-	fu_common_string_append_kx(str, idt, "SyncIface", self->sync_iface);
-	fu_common_string_append_kx(str, idt, "UpdateIface", self->update_iface);
-	fu_common_string_append_kv(
-	    str,
-	    idt,
-	    "Status",
-	    fu_logitech_bulkcontroller_device_status_to_string(self->status));
-	fu_common_string_append_kv(
+	fu_string_append_kx(str, idt, "SyncIface", self->sync_iface);
+	fu_string_append_kx(str, idt, "UpdateIface", self->update_iface);
+	fu_string_append(str,
+			 idt,
+			 "Status",
+			 fu_logitech_bulkcontroller_device_status_to_string(self->status));
+	fu_string_append(
 	    str,
 	    idt,
 	    "UpdateState",
@@ -483,7 +482,7 @@ fu_logitech_bulkcontroller_device_sync_cb(GObject *source_object,
 		g_debug("Received 0x%x message on sync interface", cmd_tmp);
 	switch (cmd_tmp) {
 	case CMD_ACK:
-		if (CMD_BUFFER_WRITE == fu_common_strtoull((const char *)ack_payload)) {
+		if (CMD_BUFFER_WRITE == fu_strtoull((const char *)ack_payload)) {
 			if (!fu_logitech_bulkcontroller_device_send_sync_cmd(self,
 									     CMD_UNINIT_BUFFER,
 									     NULL,
@@ -495,7 +494,7 @@ fu_logitech_bulkcontroller_device_sync_cb(GObject *source_object,
 				g_main_loop_quit(helper->loop);
 				return;
 			}
-		} else if (CMD_UNINIT_BUFFER != fu_common_strtoull((const char *)ack_payload)) {
+		} else if (CMD_UNINIT_BUFFER != fu_strtoull((const char *)ack_payload)) {
 			g_set_error(&helper->error,
 				    G_IO_ERROR,
 				    G_IO_ERROR_INVALID_DATA,
@@ -512,8 +511,8 @@ fu_logitech_bulkcontroller_device_sync_cb(GObject *source_object,
 				    response_length);
 		if (g_getenv("FWUPD_LOGITECH_BULKCONTROLLER_VERBOSE") != NULL) {
 			g_autofree gchar *strsafe =
-			    fu_common_strsafe((const gchar *)helper->device_response->data,
-					      helper->device_response->len);
+			    fu_strsafe((const gchar *)helper->device_response->data,
+				       helper->device_response->len);
 			g_debug("Received data on sync interface. length: %u, buffer: %s",
 				helper->device_response->len,
 				strsafe);
@@ -657,7 +656,7 @@ fu_logitech_bulkcontroller_device_get_data(FuDevice *device, gboolean send_req, 
 	}
 	if (g_getenv("FWUPD_LOGITECH_BULKCONTROLLER_VERBOSE") != NULL) {
 		g_autofree gchar *strsafe =
-		    fu_common_strsafe((const gchar *)decoded_pkt->data, decoded_pkt->len);
+		    fu_strsafe((const gchar *)decoded_pkt->data, decoded_pkt->len);
 		g_debug("Received device response: id: %u, length %u, data: %s",
 			proto_id,
 			device_response->len,
@@ -944,7 +943,7 @@ fu_logitech_bulkcontroller_device_get_handshake_cb(FuDevice *device,
 
 	if (g_getenv("FWUPD_LOGITECH_BULKCONTROLLER_VERBOSE") != NULL) {
 		g_autofree gchar *strsafe =
-		    fu_common_strsafe((const gchar *)decoded_pkt->data, decoded_pkt->len);
+		    fu_strsafe((const gchar *)decoded_pkt->data, decoded_pkt->len);
 		g_debug("Received initialization response: id: %u, length %u, data: %s",
 			proto_id,
 			device_response->len,
@@ -1005,7 +1004,7 @@ fu_logitech_bulkcontroller_device_set_time(FuDevice *device, GError **error)
 	}
 	if (g_getenv("FWUPD_LOGITECH_BULKCONTROLLER_VERBOSE") != NULL) {
 		g_autofree gchar *strsafe =
-		    fu_common_strsafe((const gchar *)decoded_pkt->data, decoded_pkt->len);
+		    fu_strsafe((const gchar *)decoded_pkt->data, decoded_pkt->len);
 		g_debug("Received device response while processing set device time request: id: "
 			"%u, length %u, data: %s",
 			proto_id,
@@ -1087,7 +1086,7 @@ fu_logitech_bulkcontroller_device_setup(FuDevice *device, GError **error)
 	}
 	if (g_getenv("FWUPD_LOGITECH_BULKCONTROLLER_VERBOSE") != NULL) {
 		g_autofree gchar *strsafe =
-		    fu_common_strsafe((const gchar *)decoded_pkt->data, decoded_pkt->len);
+		    fu_strsafe((const gchar *)decoded_pkt->data, decoded_pkt->len);
 		g_debug("Received transition mode response: id: %u, length %u, data: %s",
 			proto_id,
 			device_response->len,

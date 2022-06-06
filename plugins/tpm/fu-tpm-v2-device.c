@@ -98,7 +98,7 @@ fu_tpm_v2_device_get_string(ESYS_CONTEXT *ctx, guint32 query, GError **error)
 			result[i] = 0x20;
 	}
 
-	return fu_common_strstrip(result);
+	return fu_strstrip(result);
 }
 
 /* taken from TCG-TPM-Vendor-ID-Registry-Version-1.01-Revision-1.00.pdf */

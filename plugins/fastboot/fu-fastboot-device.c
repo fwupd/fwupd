@@ -34,8 +34,8 @@ static void
 fu_fastboot_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuFastbootDevice *self = FU_FASTBOOT_DEVICE(device);
-	fu_common_string_append_kx(str, idt, "BlockSize", self->blocksz);
-	fu_common_string_append_kb(str, idt, "Secure", self->secure);
+	fu_string_append_kx(str, idt, "BlockSize", self->blocksz);
+	fu_string_append_kb(str, idt, "Secure", self->secure);
 }
 
 static gboolean
@@ -661,13 +661,13 @@ fu_fastboot_device_set_quirk_kv(FuDevice *device,
 
 	/* load from quirks */
 	if (g_strcmp0(key, "FastbootBlockSize") == 0) {
-		if (!fu_common_strtoull_full(value, &tmp, 0x40, 0x100000, error))
+		if (!fu_strtoull_full(value, &tmp, 0x40, 0x100000, error))
 			return FALSE;
 		self->blocksz = tmp;
 		return TRUE;
 	}
 	if (g_strcmp0(key, "FastbootOperationDelay") == 0) {
-		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXSIZE, error))
+		if (!fu_strtoull_full(value, &tmp, 0, G_MAXSIZE, error))
 			return FALSE;
 		self->operation_delay = tmp;
 		return TRUE;

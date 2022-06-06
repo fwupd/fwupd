@@ -584,7 +584,7 @@ fu_plugin_dell_get_tpm_capability(ESYS_CONTEXT *ctx, guint32 query)
 			result[i] = 0x20;
 	}
 
-	return fu_common_strstrip(result);
+	return fu_strstrip(result);
 }
 
 static gboolean

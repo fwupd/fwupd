@@ -111,13 +111,13 @@ fu_mm_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuMmDevice *self = FU_MM_DEVICE(device);
 	if (self->port_at != NULL)
-		fu_common_string_append_kv(str, idt, "AtPort", self->port_at);
+		fu_string_append(str, idt, "AtPort", self->port_at);
 	if (self->port_qmi != NULL)
-		fu_common_string_append_kv(str, idt, "QmiPort", self->port_qmi);
+		fu_string_append(str, idt, "QmiPort", self->port_qmi);
 	if (self->port_mbim != NULL)
-		fu_common_string_append_kv(str, idt, "MbimPort", self->port_mbim);
+		fu_string_append(str, idt, "MbimPort", self->port_mbim);
 	if (self->port_qcdm != NULL)
-		fu_common_string_append_kv(str, idt, "QcdmPort", self->port_qcdm);
+		fu_string_append(str, idt, "QcdmPort", self->port_qcdm);
 }
 
 const gchar *

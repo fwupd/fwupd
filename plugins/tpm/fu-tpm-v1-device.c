@@ -43,8 +43,8 @@ fu_tpm_device_parse_line(const gchar *line, gpointer user_data)
 	}
 
 	/* get index */
-	idxstr = fu_common_strstrip(split[0]);
-	idx = fu_common_strtoull(idxstr);
+	idxstr = fu_strstrip(split[0]);
+	idx = fu_strtoull(idxstr);
 	if (idx > 64) {
 		g_debug("unexpected index, skipping: %s", idxstr);
 		return;
@@ -52,7 +52,7 @@ fu_tpm_device_parse_line(const gchar *line, gpointer user_data)
 
 	/* parse hash */
 	str = g_string_new(split[1]);
-	fu_common_string_replace(str, " ", "");
+	fu_string_replace(str, " ", "");
 	if ((str->len != 40 && str->len != 64) || !_g_string_isxdigit(str)) {
 		g_debug("not SHA-1 or SHA-256, skipping: %s", split[1]);
 		return;

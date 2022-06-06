@@ -490,7 +490,7 @@ fu_nordic_hid_cfg_channel_get_board_name(FuNordicHidCfgChannel *self, GError **e
 		return FALSE;
 	if (!fu_nordic_hid_cfg_channel_cmd_receive(self, CONFIG_STATUS_SUCCESS, res, error))
 		return FALSE;
-	self->board_name = fu_common_strsafe((const gchar *)res->data, res->data_len);
+	self->board_name = fu_strsafe((const gchar *)res->data, res->data_len);
 
 	/* success */
 	return TRUE;
@@ -527,7 +527,7 @@ fu_nordic_hid_cfg_channel_get_bl_name(FuNordicHidCfgChannel *self, GError **erro
 			    g_strndup((const gchar *)res->data, res->data_len));
 			return FALSE;
 		}
-		self->bl_name = fu_common_strsafe((const gchar *)res->data, res->data_len);
+		self->bl_name = fu_strsafe((const gchar *)res->data, res->data_len);
 	} else if (g_getenv("FWUPD_NORDIC_HID_VERBOSE") != NULL) {
 		g_debug("the board have no support of bootloader runtime detection");
 	}
@@ -611,7 +611,7 @@ fu_nordic_hid_cfg_channel_load_module_opts(FuNordicHidCfgChannel *self,
 		if (res->data[0] == END_OF_TRANSFER_CHAR)
 			break;
 		opt = g_new0(FuNordicCfgChannelModuleOption, 1);
-		opt->name = fu_common_strsafe((const gchar *)res->data, res->data_len);
+		opt->name = fu_strsafe((const gchar *)res->data, res->data_len);
 		opt->idx = i;
 		g_ptr_array_add(mod->options, opt);
 	}
@@ -1003,7 +1003,7 @@ fu_nordic_hid_cfg_channel_module_to_string(FuNordicCfgChannelModule *mod, guint 
 	for (guint i = 0; i < mod->options->len; i++) {
 		FuNordicCfgChannelModuleOption *opt = g_ptr_array_index(mod->options, i);
 		g_autofree gchar *title = g_strdup_printf("Option%02x", i);
-		fu_common_string_append_kv(str, idt, title, opt->name);
+		fu_string_append(str, idt, title, opt->name);
 	}
 }
 
@@ -1011,15 +1011,15 @@ static void
 fu_nordic_hid_cfg_channel_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuNordicHidCfgChannel *self = FU_NORDIC_HID_CFG_CHANNEL(device);
-	fu_common_string_append_kv(str, idt, "BoardName", self->board_name);
-	fu_common_string_append_kv(str, idt, "Bootloader", self->bl_name);
-	fu_common_string_append_kx(str, idt, "FlashAreaId", self->flash_area_id);
-	fu_common_string_append_kx(str, idt, "FlashedImageLen", self->flashed_image_len);
-	fu_common_string_append_kx(str, idt, "PeerId", self->peer_id);
+	fu_string_append(str, idt, "BoardName", self->board_name);
+	fu_string_append(str, idt, "Bootloader", self->bl_name);
+	fu_string_append_kx(str, idt, "FlashAreaId", self->flash_area_id);
+	fu_string_append_kx(str, idt, "FlashedImageLen", self->flashed_image_len);
+	fu_string_append_kx(str, idt, "PeerId", self->peer_id);
 	for (guint i = 0; i < self->modules->len; i++) {
 		FuNordicCfgChannelModule *mod = g_ptr_array_index(self->modules, i);
 		g_autofree gchar *title = g_strdup_printf("Module%02x", i);
-		fu_common_string_append_kv(str, idt, title, mod->name);
+		fu_string_append(str, idt, title, mod->name);
 		fu_nordic_hid_cfg_channel_module_to_string(mod, idt + 1, str);
 	}
 }

@@ -174,8 +174,8 @@ fu_steelseries_device_to_string(FuDevice *device, guint idt, GString *str)
 
 	FU_DEVICE_CLASS(fu_steelseries_device_parent_class)->to_string(device, idt, str);
 
-	fu_common_string_append_kx(str, idt, "Interface", priv->iface_idx);
-	fu_common_string_append_kx(str, idt, "Endpoint", priv->ep);
+	fu_string_append_kx(str, idt, "Interface", priv->iface_idx);
+	fu_string_append_kx(str, idt, "Endpoint", priv->ep);
 }
 
 static void

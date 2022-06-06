@@ -75,9 +75,9 @@ static void
 fu_ipmi_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuIpmiDevice *self = FU_IPMI_DEVICE(device);
-	fu_common_string_append_kx(str, idt, "DeviceId", self->device_id);
-	fu_common_string_append_kx(str, idt, "DeviceRev", self->device_rev);
-	fu_common_string_append_kx(str, idt, "VersionIpmi", self->version_ipmi);
+	fu_string_append_kx(str, idt, "DeviceId", self->device_id);
+	fu_string_append_kx(str, idt, "DeviceRev", self->device_rev);
+	fu_string_append_kx(str, idt, "VersionIpmi", self->version_ipmi);
 }
 
 static gboolean
@@ -524,7 +524,7 @@ fu_ipmi_device_get_user_password(FuIpmiDevice *self, guint8 user_id, GError **er
 	}
 
 	/* success */
-	return fu_common_strsafe((const gchar *)resp, resp_len);
+	return fu_strsafe((const gchar *)resp, resp_len);
 }
 
 gboolean

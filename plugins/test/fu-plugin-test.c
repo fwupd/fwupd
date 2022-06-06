@@ -192,7 +192,7 @@ fu_plugin_test_get_version(GBytes *blob_fw)
 	guint64 val = 0;
 	if (str == NULL)
 		return NULL;
-	val = fu_common_strtoull(str);
+	val = fu_strtoull(str);
 	if (val == 0x0)
 		return NULL;
 	return fu_common_version_from_uint32(val, FWUPD_VERSION_FORMAT_TRIPLET);

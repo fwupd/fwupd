@@ -467,7 +467,7 @@ fu_plugin_uefi_capsule_load_config(FuPlugin *plugin, FuDevice *device)
 	/* parse free space needed for ESP */
 	require_esp_free_space = fu_plugin_get_config_value(plugin, "RequireESPFreeSpace");
 	if (require_esp_free_space != NULL)
-		sz_reqd = fu_common_strtoull(require_esp_free_space);
+		sz_reqd = fu_strtoull(require_esp_free_space);
 	fu_device_set_metadata_integer(device, "RequireESPFreeSpace", sz_reqd);
 
 	/* shim used for SB or not? */

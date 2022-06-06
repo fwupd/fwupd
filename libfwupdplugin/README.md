@@ -62,3 +62,5 @@ Remember: Plugins should be upstream!
 * `FuPluginVfuncs->coldplug`: Now requires a `FuProgress`, although it can be ignored.
 * `fu_common_crc*`: Use `fu_crc` prefix, i.e. remove the `_common`
 * `fu_common_sum*`: Use `fu_sum` prefix, i.e. remove the `_common`
+* `fu_byte_array_set_size_full()`: Use `fu_byte_array_set_size` instead -- as the latter now always specifies the fill char.
+* `fu_common_string*`: Use `fu_string` prefix, i.e. remove the `_common`

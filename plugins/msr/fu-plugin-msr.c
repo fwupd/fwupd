@@ -310,7 +310,7 @@ fu_plugin_msr_kernel_enabled_sme(GError **error)
 	if (!g_file_get_contents("/proc/cpuinfo", &buf, &bufsz, error))
 		return FALSE;
 	if (bufsz > 0) {
-		g_auto(GStrv) tokens = fu_common_strnsplit(buf, bufsz, " ", -1);
+		g_auto(GStrv) tokens = fu_strsplit(buf, bufsz, " ", -1);
 		for (guint i = 0; tokens[i] != NULL; i++) {
 			if (g_strcmp0(tokens[i], "sme") == 0)
 				return TRUE;

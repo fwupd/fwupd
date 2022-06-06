@@ -14,6 +14,7 @@
 #include "fu-common.h"
 #include "fu-device-private.h"
 #include "fu-firmware-common.h"
+#include "fu-string.h"
 
 #define DEFAULT_PROXY_TIMEOUT 5000
 
@@ -209,10 +210,7 @@ fu_bluez_device_to_string(FuDevice *device, guint idt, GString *str)
 		g_hash_table_iter_init(&iter, priv->uuids);
 		while (g_hash_table_iter_next(&iter, &key, &value)) {
 			FuBluezDeviceUuidHelper *uuid_helper = (FuBluezDeviceUuidHelper *)value;
-			fu_common_string_append_kv(str,
-						   idt + 1,
-						   (const gchar *)key,
-						   uuid_helper->path);
+			fu_string_append(str, idt + 1, (const gchar *)key, uuid_helper->path);
 		}
 	}
 }

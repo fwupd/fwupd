@@ -11,6 +11,7 @@
 #include "fu-device-private.h"
 #include "fu-keyring-utils.h"
 #include "fu-release.h"
+#include "fu-string.h"
 
 /**
  * FuRelease:
@@ -236,7 +237,7 @@ fu_release_get_release_version(FuRelease *self, const gchar *version, GError **e
 		return g_strdup(version);
 
 	/* parse as integer */
-	ver_uint32 = fu_common_strtoull(version);
+	ver_uint32 = fu_strtoull(version);
 	if (fmt == FWUPD_VERSION_FORMAT_UNKNOWN || ver_uint32 == 0 || ver_uint32 > G_MAXUINT32)
 		return g_strdup(version);
 
@@ -458,7 +459,7 @@ fu_release_check_requirements(FuRelease *self,
 	    !fu_device_has_protocol(self->device, protocol) &&
 	    (install_flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {
 		g_autofree gchar *str = NULL;
-		str = fu_common_strjoin_array("|", fu_device_get_protocols(self->device));
+		str = fu_strjoin("|", fu_device_get_protocols(self->device));
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,

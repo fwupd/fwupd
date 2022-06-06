@@ -22,6 +22,7 @@
 #include "fu-common.h"
 #include "fu-kenv.h"
 #include "fu-smbios-private.h"
+#include "fu-string.h"
 
 /**
  * FuSmbios:
@@ -914,7 +915,7 @@ fu_smbios_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNod
 		for (guint j = 0; j < item->strings->len; j++) {
 			const gchar *tmp = g_ptr_array_index(item->strings, j);
 			g_autofree gchar *title = g_strdup_printf("%02u", j);
-			g_autofree gchar *value = fu_common_strsafe(tmp, 20);
+			g_autofree gchar *value = fu_strsafe(tmp, 20);
 			xb_builder_node_insert_text(bc, "string", value, "idx", title, NULL);
 		}
 	}

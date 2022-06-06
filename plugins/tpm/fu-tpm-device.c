@@ -75,7 +75,7 @@ fu_tpm_device_to_string(FuDevice *device, guint idt, GString *str)
 	FuTpmDevice *self = FU_TPM_DEVICE(device);
 	FuTpmDevicePrivate *priv = GET_PRIVATE(self);
 	if (priv->family != NULL)
-		fu_common_string_append_kv(str, idt, "Family", priv->family);
+		fu_string_append(str, idt, "Family", priv->family);
 }
 
 static void
