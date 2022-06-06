@@ -17,6 +17,7 @@
 #include "fu-common-version.h"
 #include "fu-common.h"
 #include "fu-kernel.h"
+#include "fu-path.h"
 
 /**
  * fu_kernel_locked_down:
@@ -30,7 +31,7 @@ fu_kernel_locked_down(void)
 {
 #ifdef __linux__
 	gsize len = 0;
-	g_autofree gchar *dir = fu_common_get_path(FU_PATH_KIND_SYSFSDIR_SECURITY);
+	g_autofree gchar *dir = fu_path_from_kind(FU_PATH_KIND_SYSFSDIR_SECURITY);
 	g_autofree gchar *fname = g_build_filename(dir, "lockdown", NULL);
 	g_autofree gchar *data = NULL;
 	g_auto(GStrv) options = NULL;
@@ -117,7 +118,7 @@ fu_kernel_get_firmware_search_path(GError **error)
 	g_autofree gchar *sys_fw_search_path = NULL;
 	g_autofree gchar *contents = NULL;
 
-	sys_fw_search_path = fu_common_get_path(FU_PATH_KIND_FIRMWARE_SEARCH);
+	sys_fw_search_path = fu_path_from_kind(FU_PATH_KIND_FIRMWARE_SEARCH);
 	if (!g_file_get_contents(sys_fw_search_path, &contents, &sz, error))
 		return NULL;
 
@@ -150,7 +151,7 @@ fu_kernel_set_firmware_search_path(const gchar *path, GError **error)
 	g_return_val_if_fail(path != NULL, FALSE);
 	g_return_val_if_fail(strlen(path) < PATH_MAX, FALSE);
 
-	sys_fw_search_path_prm = fu_common_get_path(FU_PATH_KIND_FIRMWARE_SEARCH);
+	sys_fw_search_path_prm = fu_path_from_kind(FU_PATH_KIND_FIRMWARE_SEARCH);
 
 	g_debug("writing firmware search path (%" G_GSIZE_FORMAT "): %s", strlen(path), path);
 
@@ -168,7 +169,7 @@ fu_kernel_set_firmware_search_path(const gchar *path, GError **error)
 	g_return_val_if_fail(path != NULL, FALSE);
 	g_return_val_if_fail(strlen(path) < PATH_MAX, FALSE);
 
-	sys_fw_search_path_prm = fu_common_get_path(FU_PATH_KIND_FIRMWARE_SEARCH);
+	sys_fw_search_path_prm = fu_path_from_kind(FU_PATH_KIND_FIRMWARE_SEARCH);
 	/* g_file_set_contents will try to create backup files in sysfs, so use fopen here */
 	fd = fopen(sys_fw_search_path_prm, "w");
 	if (fd == NULL) {

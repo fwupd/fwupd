@@ -101,7 +101,7 @@ fu_plugin_dell_esrt_startup(FuPlugin *plugin, FuProgress *progress, GError **err
 	g_autofree gchar *esrtdir = NULL;
 
 	/* already exists */
-	sysfsfwdir = fu_common_get_path(FU_PATH_KIND_SYSFSDIR_FW);
+	sysfsfwdir = fu_path_from_kind(FU_PATH_KIND_SYSFSDIR_FW);
 	esrtdir = g_build_filename(sysfsfwdir, "efi", "esrt", NULL);
 	if (g_file_test(esrtdir, G_FILE_TEST_EXISTS)) {
 		g_set_error_literal(error,

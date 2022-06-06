@@ -19,6 +19,7 @@
 
 #include "fu-common.h"
 #include "fu-mutex.h"
+#include "fu-path.h"
 #include "fu-quirks.h"
 #include "fu-string.h"
 
@@ -302,12 +303,12 @@ fu_quirks_check_silo(FuQuirks *self, GError **error)
 
 	/* system datadir */
 	builder = xb_builder_new();
-	datadir = fu_common_get_path(FU_PATH_KIND_DATADIR_QUIRKS);
+	datadir = fu_path_from_kind(FU_PATH_KIND_DATADIR_QUIRKS);
 	if (!fu_quirks_add_quirks_for_path(self, builder, datadir, error))
 		return FALSE;
 
 	/* something we can write when using Ostree */
-	localstatedir = fu_common_get_path(FU_PATH_KIND_LOCALSTATEDIR_QUIRKS);
+	localstatedir = fu_path_from_kind(FU_PATH_KIND_LOCALSTATEDIR_QUIRKS);
 	if (!fu_quirks_add_quirks_for_path(self, builder, localstatedir, error))
 		return FALSE;
 
@@ -318,7 +319,7 @@ fu_quirks_check_silo(FuQuirks *self, GError **error)
 		if (file == NULL)
 			return FALSE;
 	} else {
-		g_autofree gchar *cachedirpkg = fu_common_get_path(FU_PATH_KIND_CACHEDIR_PKG);
+		g_autofree gchar *cachedirpkg = fu_path_from_kind(FU_PATH_KIND_CACHEDIR_PKG);
 		g_autofree gchar *xmlbfn = g_build_filename(cachedirpkg, "quirks.xmlb", NULL);
 		file = g_file_new_for_path(xmlbfn);
 	}

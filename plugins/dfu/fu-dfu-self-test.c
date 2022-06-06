@@ -30,7 +30,7 @@ fu_test_compare_lines(const gchar *txt1, const gchar *txt2, GError **error)
 	g_autofree gchar *output = NULL;
 	if (g_strcmp0(txt1, txt2) == 0)
 		return TRUE;
-	if (fu_common_fnmatch(txt2, txt1))
+	if (fu_path_fnmatch(txt2, txt1))
 		return TRUE;
 	if (!g_file_set_contents("/tmp/a", txt1, -1, error))
 		return FALSE;

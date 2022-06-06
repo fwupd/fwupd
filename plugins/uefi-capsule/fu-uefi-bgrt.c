@@ -34,7 +34,7 @@ fu_uefi_bgrt_setup(FuUefiBgrt *self, GError **error)
 
 	g_return_val_if_fail(FU_IS_UEFI_BGRT(self), FALSE);
 
-	sysfsfwdir = fu_common_get_path(FU_PATH_KIND_SYSFSDIR_FW);
+	sysfsfwdir = fu_path_from_kind(FU_PATH_KIND_SYSFSDIR_FW);
 	bgrtdir = g_build_filename(sysfsfwdir, "acpi", "bgrt", NULL);
 	if (!g_file_test(bgrtdir, G_FILE_TEST_EXISTS)) {
 		g_set_error_literal(error,

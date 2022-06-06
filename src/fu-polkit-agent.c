@@ -27,6 +27,7 @@
 #include <unistd.h>
 
 #include "fu-common.h"
+#include "fu-path.h"
 #include "fu-polkit-agent.h"
 
 static pid_t agent_pid = 0;
@@ -181,7 +182,7 @@ fu_polkit_agent_open(GError **error)
 		return TRUE;
 
 	/* find binary */
-	pkttyagent_fn = fu_common_find_program_in_path("pkttyagent", error);
+	pkttyagent_fn = fu_path_find_program("pkttyagent", error);
 	if (pkttyagent_fn == NULL)
 		return FALSE;
 

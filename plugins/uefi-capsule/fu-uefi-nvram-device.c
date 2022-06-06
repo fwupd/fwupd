@@ -81,7 +81,7 @@ fu_uefi_nvram_device_write_firmware(FuDevice *device,
 	directory = fu_uefi_get_esp_path_for_os(device, esp_path);
 	basename = g_strdup_printf("fwupd-%s.cap", fw_class);
 	fn = g_build_filename(directory, "fw", basename, NULL);
-	if (!fu_common_mkdir_parent(fn, error))
+	if (!fu_path_mkdir_parent(fn, error))
 		return FALSE;
 	fixed_fw = fu_uefi_device_fixup_firmware(self, fw, error);
 	if (fixed_fw == NULL)

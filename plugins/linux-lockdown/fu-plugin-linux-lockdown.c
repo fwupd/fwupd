@@ -100,7 +100,7 @@ fu_plugin_linux_lockdown_startup(FuPlugin *plugin, FuProgress *progress, GError 
 	g_autofree gchar *path = NULL;
 	g_autofree gchar *fn = NULL;
 
-	path = fu_common_get_path(FU_PATH_KIND_SYSFSDIR_SECURITY);
+	path = fu_path_from_kind(FU_PATH_KIND_SYSFSDIR_SECURITY);
 	fn = g_build_filename(path, "lockdown", NULL);
 	if (!g_file_test(fn, G_FILE_TEST_EXISTS)) {
 		g_set_error_literal(error,

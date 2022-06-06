@@ -27,7 +27,7 @@ fu_plugin_acpi_facp_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 	fu_security_attrs_append(attrs, attr);
 
 	/* load FACP table */
-	path = fu_common_get_path(FU_PATH_KIND_ACPI_TABLES);
+	path = fu_path_from_kind(FU_PATH_KIND_ACPI_TABLES);
 	fn = g_build_filename(path, "FACP", NULL);
 	blob = fu_bytes_get_contents(fn, &error_local);
 	if (blob == NULL) {

@@ -52,7 +52,7 @@ fu_plugin_linux_swap_startup(FuPlugin *plugin, FuProgress *progress, GError **er
 	g_autofree gchar *fn = NULL;
 	g_autofree gchar *procfs = NULL;
 
-	procfs = fu_common_get_path(FU_PATH_KIND_PROCFS);
+	procfs = fu_path_from_kind(FU_PATH_KIND_PROCFS);
 	fn = g_build_filename(procfs, "swaps", NULL);
 	if (!g_file_test(fn, G_FILE_TEST_EXISTS)) {
 		g_set_error_literal(error,

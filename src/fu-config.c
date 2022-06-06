@@ -15,6 +15,7 @@
 #include "fu-bytes.h"
 #include "fu-common.h"
 #include "fu-config.h"
+#include "fu-path.h"
 #include "fu-string.h"
 
 enum { SIGNAL_CHANGED, SIGNAL_LAST };
@@ -305,8 +306,8 @@ fu_config_set_key_value(FuConfig *self, const gchar *key, const gchar *value, GE
 gboolean
 fu_config_load(FuConfig *self, GError **error)
 {
-	g_autofree gchar *configdir_mut = fu_common_get_path(FU_PATH_KIND_LOCALCONFDIR_PKG);
-	g_autofree gchar *configdir = fu_common_get_path(FU_PATH_KIND_SYSCONFDIR_PKG);
+	g_autofree gchar *configdir_mut = fu_path_from_kind(FU_PATH_KIND_LOCALCONFDIR_PKG);
+	g_autofree gchar *configdir = fu_path_from_kind(FU_PATH_KIND_SYSCONFDIR_PKG);
 
 	g_return_val_if_fail(FU_IS_CONFIG(self), FALSE);
 	g_return_val_if_fail(self->filenames->len == 0, FALSE);

@@ -344,7 +344,7 @@ fu_plugin_tpm_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 	g_autofree gchar *fn_pcrs = NULL;
 
 	/* look for TPM v1.2 */
-	sysfstpmdir = fu_common_get_path(FU_PATH_KIND_SYSFSDIR_TPM);
+	sysfstpmdir = fu_path_from_kind(FU_PATH_KIND_SYSFSDIR_TPM);
 	fn_pcrs = g_build_filename(sysfstpmdir, "tpm0", "pcrs", NULL);
 	if (g_file_test(fn_pcrs, G_FILE_TEST_EXISTS) && g_getenv("FWUPD_FORCE_TPM2") == NULL) {
 		data->tpm_device = fu_tpm_v1_device_new(fu_plugin_get_context(plugin));

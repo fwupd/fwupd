@@ -26,7 +26,7 @@ fu_plugin_powerd_create_suspend_file(GError **error)
 	g_autofree gchar *inhibitsuspend_filename = NULL;
 	g_autofree gchar *getpid_str = NULL;
 
-	lockdir = fu_common_get_path(FU_PATH_KIND_LOCKDIR);
+	lockdir = fu_path_from_kind(FU_PATH_KIND_LOCKDIR);
 	inhibitsuspend_filename = g_build_filename(lockdir, "power_override", "fwupd.lock", NULL);
 	getpid_str = g_strdup_printf("%d", getpid());
 	if (!g_file_set_contents(inhibitsuspend_filename, getpid_str, -1, error)) {
@@ -43,7 +43,7 @@ fu_plugin_powerd_delete_suspend_file(GError **error)
 	g_autofree gchar *lockdir = NULL;
 	g_autoptr(GFile) inhibitsuspend_file = NULL;
 
-	lockdir = fu_common_get_path(FU_PATH_KIND_LOCKDIR);
+	lockdir = fu_path_from_kind(FU_PATH_KIND_LOCKDIR);
 	inhibitsuspend_file =
 	    g_file_new_build_filename(lockdir, "power_override", "fwupd.lock", NULL);
 	if (!g_file_delete(inhibitsuspend_file, NULL, &local_error) &&

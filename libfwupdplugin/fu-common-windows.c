@@ -12,6 +12,7 @@
 #include <sysinfoapi.h>
 
 #include "fu-common-private.h"
+#include "fu-path-private.h"
 
 GPtrArray *
 fu_common_get_block_devices(GError **error)
@@ -21,7 +22,7 @@ fu_common_get_block_devices(GError **error)
 }
 
 gboolean
-fu_common_fnmatch_impl(const gchar *pattern, const gchar *str)
+fu_path_fnmatch_impl(const gchar *pattern, const gchar *str)
 {
 	g_return_val_if_fail(pattern != NULL, FALSE);
 	g_return_val_if_fail(str != NULL, FALSE);

@@ -17,6 +17,7 @@
 
 #include "fu-common.h"
 #include "fu-hwids.h"
+#include "fu-path.h"
 #include "fu-string.h"
 
 /**
@@ -355,8 +356,8 @@ fu_hwids_convert_integer_cb(FuSmbios *smbios, guint8 type, guint8 offset, GError
 static gboolean
 fu_hwids_setup_overrides(FuHwids *self, GError **error)
 {
-	g_autofree gchar *localstatedir = fu_common_get_path(FU_PATH_KIND_LOCALSTATEDIR_PKG);
-	g_autofree gchar *sysconfigdir = fu_common_get_path(FU_PATH_KIND_SYSCONFDIR_PKG);
+	g_autofree gchar *localstatedir = fu_path_from_kind(FU_PATH_KIND_LOCALSTATEDIR_PKG);
+	g_autofree gchar *sysconfigdir = fu_path_from_kind(FU_PATH_KIND_SYSCONFDIR_PKG);
 	g_autoptr(GKeyFile) kf = g_key_file_new();
 	g_autoptr(GPtrArray) fns = g_ptr_array_new_with_free_func(g_free);
 	g_autoptr(GPtrArray) keys = fu_hwids_get_keys(self);

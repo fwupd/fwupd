@@ -78,7 +78,7 @@ fu_self_test_mkroot(void)
 {
 	if (g_file_test("/tmp/fwupd-self-test", G_FILE_TEST_EXISTS)) {
 		g_autoptr(GError) error = NULL;
-		if (!fu_common_rmtree("/tmp/fwupd-self-test", &error))
+		if (!fu_path_rmtree("/tmp/fwupd-self-test", &error))
 			g_warning("failed to mkroot: %s", error->message);
 	}
 	g_assert_cmpint(g_mkdir_with_parents("/tmp/fwupd-self-test/var/lib/fwupd", 0755), ==, 0);
@@ -90,7 +90,7 @@ fu_test_compare_lines(const gchar *txt1, const gchar *txt2, GError **error)
 	g_autofree gchar *output = NULL;
 	if (g_strcmp0(txt1, txt2) == 0)
 		return TRUE;
-	if (fu_common_fnmatch(txt2, txt1))
+	if (fu_path_fnmatch(txt2, txt1))
 		return TRUE;
 	if (!g_file_set_contents("/tmp/a", txt1, -1, error))
 		return FALSE;
@@ -2126,7 +2126,7 @@ fu_engine_history_inherit(gconstpointer user_data)
 #endif
 
 	/* delete history */
-	localstatedir = fu_common_get_path(FU_PATH_KIND_LOCALSTATEDIR_PKG);
+	localstatedir = fu_path_from_kind(FU_PATH_KIND_LOCALSTATEDIR_PKG);
 	history_db = g_build_filename(localstatedir, "pending.db", NULL);
 	(void)g_unlink(history_db);
 
@@ -3208,7 +3208,7 @@ fu_plugin_module_func(gconstpointer user_data)
 	g_clear_error(&error);
 
 	/* delete files */
-	localstatedir = fu_common_get_path(FU_PATH_KIND_LOCALSTATEDIR_PKG);
+	localstatedir = fu_path_from_kind(FU_PATH_KIND_LOCALSTATEDIR_PKG);
 	history_db = g_build_filename(localstatedir, "pending.db", NULL);
 	(void)g_unlink(history_db);
 	(void)g_unlink(pending_cap);
@@ -3239,7 +3239,7 @@ fu_history_func(gconstpointer user_data)
 	g_assert_nonnull(history);
 
 	/* delete the database */
-	dirname = fu_common_get_path(FU_PATH_KIND_LOCALSTATEDIR_PKG);
+	dirname = fu_path_from_kind(FU_PATH_KIND_LOCALSTATEDIR_PKG);
 	if (!g_file_test(dirname, G_FILE_TEST_IS_DIR))
 		return;
 	filename = g_build_filename(dirname, "pending.db", NULL);

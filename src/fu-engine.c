@@ -62,6 +62,7 @@
 #include "fu-kenv.h"
 #include "fu-keyring-utils.h"
 #include "fu-mutex.h"
+#include "fu-path.h"
 #include "fu-plugin-list.h"
 #include "fu-plugin-private.h"
 #include "fu-plugin.h"
@@ -868,9 +869,9 @@ fu_engine_verify_update(FuEngine *self,
 	xb_builder_import_node(builder, component);
 
 	/* save silo */
-	localstatedir = fu_common_get_path(FU_PATH_KIND_LOCALSTATEDIR_PKG);
+	localstatedir = fu_path_from_kind(FU_PATH_KIND_LOCALSTATEDIR_PKG);
 	fn = g_strdup_printf("%s/verify/%s.xml", localstatedir, device_id);
-	if (!fu_common_mkdir_parent(fn, error))
+	if (!fu_path_mkdir_parent(fn, error))
 		return FALSE;
 	file = g_file_new_for_path(fn);
 	silo = xb_builder_compile(builder, XB_BUILDER_COMPILE_FLAG_NONE, NULL, error);
@@ -946,7 +947,7 @@ fu_engine_verify_from_local_metadata(FuEngine *self, FuDevice *device, GError **
 	g_autoptr(XbNode) release = NULL;
 	g_autoptr(XbSilo) silo = NULL;
 
-	localstatedir = fu_common_get_path(FU_PATH_KIND_LOCALSTATEDIR_PKG);
+	localstatedir = fu_path_from_kind(FU_PATH_KIND_LOCALSTATEDIR_PKG);
 	fn = g_strdup_printf("%s/verify/%s.xml", localstatedir, fu_device_get_id(device));
 	file = g_file_new_for_path(fn);
 	if (!g_file_query_exists(file, NULL)) {
@@ -1207,7 +1208,7 @@ fu_engine_require_vercmp(XbNode *req, const gchar *version, FwupdVersionFormat f
 		rc = fu_common_vercmp_full(version, version_req, fmt);
 		ret = rc >= 0;
 	} else if (g_strcmp0(tmp, "glob") == 0) {
-		ret = fu_common_fnmatch(version_req, version);
+		ret = fu_path_fnmatch(version_req, version);
 	} else if (g_strcmp0(tmp, "regex") == 0) {
 		ret = g_regex_match_simple(version_req, version, 0, 0);
 	} else {
@@ -1655,7 +1656,7 @@ fu_engine_check_trust(FuEngine *self, FuRelease *release, GError **error)
 {
 	if (fu_config_get_only_trusted(self->config) &&
 	    (fu_release_get_trust_flags(release) & FWUPD_TRUST_FLAG_PAYLOAD) == 0) {
-		g_autofree gchar *sysconfdir = fu_common_get_path(FU_PATH_KIND_SYSCONFDIR_PKG);
+		g_autofree gchar *sysconfdir = fu_path_from_kind(FU_PATH_KIND_SYSCONFDIR_PKG);
 		g_autofree gchar *fn = g_build_filename(sysconfdir, "daemon.conf", NULL);
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -2232,8 +2233,8 @@ fu_engine_offline_setup(GError **error)
 #ifdef HAVE_GIO_UNIX
 	gint rc;
 	g_autofree gchar *filename = NULL;
-	g_autofree gchar *symlink_target = fu_common_get_path(FU_PATH_KIND_LOCALSTATEDIR_PKG);
-	g_autofree gchar *trigger = fu_common_get_path(FU_PATH_KIND_OFFLINE_TRIGGER);
+	g_autofree gchar *symlink_target = fu_path_from_kind(FU_PATH_KIND_LOCALSTATEDIR_PKG);
+	g_autofree gchar *trigger = fu_path_from_kind(FU_PATH_KIND_OFFLINE_TRIGGER);
 
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
@@ -2269,7 +2270,7 @@ fu_engine_offline_setup(GError **error)
 static gboolean
 fu_engine_offline_invalidate(GError **error)
 {
-	g_autofree gchar *trigger = fu_common_get_path(FU_PATH_KIND_OFFLINE_TRIGGER);
+	g_autofree gchar *trigger = fu_path_from_kind(FU_PATH_KIND_OFFLINE_TRIGGER);
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GFile) file1 = NULL;
 
@@ -2345,7 +2346,7 @@ fu_engine_schedule_update(FuEngine *self,
 	}
 
 	/* create directory */
-	dirname = fu_common_get_path(FU_PATH_KIND_LOCALSTATEDIR_PKG);
+	dirname = fu_path_from_kind(FU_PATH_KIND_LOCALSTATEDIR_PKG);
 	file = g_file_new_for_path(dirname);
 	if (!g_file_query_exists(file, NULL)) {
 		if (!g_file_make_directory_with_parents(file, NULL, error))
@@ -2670,7 +2671,7 @@ fu_engine_device_check_power(FuEngine *self,
 			     GError **error)
 {
 	if (flags & FWUPD_INSTALL_FLAG_IGNORE_POWER) {
-		g_autofree gchar *configdir = fu_common_get_path(FU_PATH_KIND_SYSCONFDIR_PKG);
+		g_autofree gchar *configdir = fu_path_from_kind(FU_PATH_KIND_SYSCONFDIR_PKG);
 		g_autofree gchar *configfile = g_build_filename(configdir, "daemon.conf", NULL);
 		g_warning("Ignoring deprecated flag provided by client "
 			  "'FWUPD_INSTALL_FLAG_IGNORE_POWER'. To ignore power levels, modify %s",
@@ -3369,7 +3370,7 @@ fu_engine_create_metadata(FuEngine *self, XbBuilder *builder, FwupdRemote *remot
 
 	/* find all files in directory */
 	path = fwupd_remote_get_filename_cache(remote);
-	files = fu_common_get_files_recursive(path, error);
+	files = fu_path_get_files(path, error);
 	if (files == NULL)
 		return FALSE;
 
@@ -3705,12 +3706,12 @@ fu_engine_load_metadata_store_local(FuEngine *self,
 				    FuPathKind path_kind,
 				    GError **error)
 {
-	g_autofree gchar *fn = fu_common_get_path(path_kind);
+	g_autofree gchar *fn = fu_path_from_kind(path_kind);
 	g_autofree gchar *metadata_path = g_build_filename(fn, "local.d", NULL);
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GPtrArray) metadata_fns = NULL;
 
-	metadata_fns = fu_common_filename_glob(metadata_path, "*.xml", &error_local);
+	metadata_fns = fu_path_glob(metadata_path, "*.xml", &error_local);
 	if (metadata_fns == NULL) {
 		g_debug("ignoring: %s", error_local->message);
 		return TRUE;
@@ -3841,7 +3842,7 @@ fu_engine_load_metadata_store(FuEngine *self, FuEngineLoadFlags flags, GError **
 		if (xmlb == NULL)
 			return FALSE;
 	} else {
-		g_autofree gchar *cachedirpkg = fu_common_get_path(FU_PATH_KIND_CACHEDIR_PKG);
+		g_autofree gchar *cachedirpkg = fu_path_from_kind(FU_PATH_KIND_CACHEDIR_PKG);
 		g_autofree gchar *xmlbfn = g_build_filename(cachedirpkg, "metadata.xmlb", NULL);
 		xmlb = g_file_new_for_path(xmlbfn);
 	}
@@ -6008,7 +6009,7 @@ fu_engine_is_plugin_name_enabled(FuEngine *self, const gchar *name)
 		return TRUE;
 	for (guint i = 0; i < self->plugin_filter->len; i++) {
 		const gchar *name_tmp = g_ptr_array_index(self->plugin_filter, i);
-		if (fu_common_fnmatch(name_tmp, name))
+		if (fu_path_fnmatch(name_tmp, name))
 			return TRUE;
 	}
 	return FALSE;
@@ -6355,7 +6356,7 @@ fu_engine_load_plugins(FuEngine *self, FuProgress *progress, GError **error)
 	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 87, "load");
 
 	/* search */
-	plugin_path = fu_common_get_path(FU_PATH_KIND_PLUGINDIR_PKG);
+	plugin_path = fu_path_from_kind(FU_PATH_KIND_PLUGINDIR_PKG);
 	dir = g_dir_open(plugin_path, 0, error);
 	if (dir == NULL)
 		return FALSE;
@@ -6886,8 +6887,8 @@ fu_engine_ensure_paths_exist(GError **error)
 				   FU_PATH_KIND_CACHEDIR_PKG,
 				   FU_PATH_KIND_LAST};
 	for (guint i = 0; path_kinds[i] != FU_PATH_KIND_LAST; i++) {
-		g_autofree gchar *fn = fu_common_get_path(path_kinds[i]);
-		if (!fu_common_mkdir(fn, error))
+		g_autofree gchar *fn = fu_path_from_kind(path_kinds[i]);
+		if (!fu_path_mkdir(fn, error))
 			return FALSE;
 	}
 	return TRUE;
@@ -6914,7 +6915,7 @@ fu_engine_load_local_metadata_watches(FuEngine *self, GError **error)
 		GFileMonitor *monitor;
 		g_autoptr(GFile) file = NULL;
 		g_autoptr(GError) error_local = NULL;
-		g_autofree gchar *base = fu_common_get_path(path_kinds[i]);
+		g_autofree gchar *base = fu_path_from_kind(path_kinds[i]);
 		g_autofree gchar *fn = g_build_filename(base, "local.d", NULL);
 
 		file = g_file_new_for_path(fn);
@@ -7562,9 +7563,9 @@ fu_engine_init(FuEngine *self)
 
 	/* setup Jcat context */
 	self->jcat_context = jcat_context_new();
-	keyring_path = fu_common_get_path(FU_PATH_KIND_LOCALSTATEDIR_PKG);
+	keyring_path = fu_path_from_kind(FU_PATH_KIND_LOCALSTATEDIR_PKG);
 	jcat_context_set_keyring_path(self->jcat_context, keyring_path);
-	sysconfdir = fu_common_get_path(FU_PATH_KIND_SYSCONFDIR);
+	sysconfdir = fu_path_from_kind(FU_PATH_KIND_SYSCONFDIR);
 	pkidir_fw = g_build_filename(sysconfdir, "pki", "fwupd", NULL);
 	jcat_context_add_public_keys(self->jcat_context, pkidir_fw);
 	pkidir_md = g_build_filename(sysconfdir, "pki", "fwupd-metadata", NULL);

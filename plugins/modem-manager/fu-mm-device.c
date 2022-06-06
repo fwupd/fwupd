@@ -1433,7 +1433,7 @@ fu_mm_setup_firmware_dir(FuMmDevice *self, GError **error)
 	g_autofree gchar *mm_fw_dir = NULL;
 
 	/* create a directory to store firmware files for modem-manager plugin */
-	cachedir = fu_common_get_path(FU_PATH_KIND_CACHEDIR_PKG);
+	cachedir = fu_path_from_kind(FU_PATH_KIND_CACHEDIR_PKG);
 	mm_fw_dir = g_build_filename(cachedir, "modem-manager", "firmware", NULL);
 	if (g_mkdir_with_parents(mm_fw_dir, 0700) == -1) {
 		g_set_error(error,
@@ -1460,7 +1460,7 @@ fu_mm_copy_firehose_prog(FuMmDevice *self, GBytes *prog, GError **error)
 	g_autofree gchar *firehose_file_path = NULL;
 
 	qcom_fw_dir = g_build_filename(self->firmware_path, "qcom", NULL);
-	if (!fu_common_mkdir_parent(qcom_fw_dir, error))
+	if (!fu_path_mkdir_parent(qcom_fw_dir, error))
 		return FALSE;
 
 	firehose_file_path = g_build_filename(qcom_fw_dir, "prog_firehose_sdx24.mbn", NULL);

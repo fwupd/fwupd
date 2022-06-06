@@ -12,6 +12,7 @@
 
 #include "fu-engine-helper.h"
 #include "fu-engine.h"
+#include "fu-path.h"
 
 static FwupdRelease *
 fu_engine_get_release_with_tag(FuEngine *self,
@@ -94,12 +95,12 @@ fu_engine_update_motd(FuEngine *self, GError **error)
 		target = g_build_filename(g_getenv("RUNTIME_DIRECTORY"), MOTD_FILE, NULL);
 		/* otherwise use the cache directory */
 	} else {
-		g_autofree gchar *directory = fu_common_get_path(FU_PATH_KIND_CACHEDIR_PKG);
+		g_autofree gchar *directory = fu_path_from_kind(FU_PATH_KIND_CACHEDIR_PKG);
 		target = g_build_filename(directory, MOTD_DIR, MOTD_FILE, NULL);
 	}
 
 	/* create the directory and file, even if zero devices; we want an empty file then */
-	if (!fu_common_mkdir_parent(target, error))
+	if (!fu_path_mkdir_parent(target, error))
 		return FALSE;
 
 	/* nag about syncing or updating, but never both */
