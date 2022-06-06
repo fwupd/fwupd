@@ -578,7 +578,6 @@ LIBFWUPDPLUGIN_1.5.6 {
     fu_chunk_set_idx;
     fu_chunk_set_page;
     fu_common_get_memory_size;
-    fu_common_uri_get_scheme;
     fu_dfuse_firmware_get_type;
     fu_dfuse_firmware_new;
     fu_firmware_new_from_gtypes;

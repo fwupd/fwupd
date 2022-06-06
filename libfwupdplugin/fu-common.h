@@ -229,8 +229,6 @@ fu_common_check_full_disk_encryption(GError **error);
 guint8
 fu_common_reverse_uint8(guint8 value);
 
-gchar *
-fu_common_uri_get_scheme(const gchar *uri);
 gsize
 fu_common_align_up(gsize value, guint8 alignment);
 const gchar *

@@ -28,6 +28,7 @@
 #include "fu-plugin-list.h"
 #include "fu-plugin-private.h"
 #include "fu-progressbar.h"
+#include "fu-release-common.h"
 #include "fu-security-attr.h"
 #include "fu-smbios-private.h"
 #include "fu-spawn.h"
@@ -3924,6 +3925,25 @@ fu_release_compare_func(gconstpointer user_data)
 	g_assert_cmpint(fu_device_get_order(device_tmp), ==, 99);
 }
 
+static void
+fu_release_uri_scheme_func(void)
+{
+	struct {
+		const gchar *in;
+		const gchar *op;
+	} strs[] = {{"https://foo.bar/baz", "https"},
+		    {"HTTP://FOO.BAR/BAZ", "http"},
+		    {"ftp://", "ftp"},
+		    {"ftp:", "ftp"},
+		    {"foobarbaz", NULL},
+		    {"", NULL},
+		    {NULL, NULL}};
+	for (guint i = 0; strs[i].in != NULL; i++) {
+		g_autofree gchar *tmp = fu_release_uri_get_scheme(strs[i].in);
+		g_assert_cmpstr(tmp, ==, strs[i].op);
+	}
+}
+
 int
 main(int argc, char **argv)
 {
@@ -3990,6 +4010,7 @@ main(int argc, char **argv)
 			     self,
 			     fu_device_list_remove_chain_func);
 	g_test_add_data_func("/fwupd/release{compare}", self, fu_release_compare_func);
+	g_test_add_func("/fwupd/release{uri-scheme}", fu_release_uri_scheme_func);
 	g_test_add_data_func("/fwupd/engine{device-unlock}", self, fu_engine_device_unlock_func);
 	g_test_add_data_func("/fwupd/engine{multiple-releases}",
 			     self,

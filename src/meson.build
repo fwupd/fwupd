@@ -41,6 +41,7 @@ daemon_src = [
   'fu-history.c',
   'fu-idle.c',
   'fu-release.c',
+  'fu-release-common.c',
   'fu-keyring-utils.c',
   'fu-plugin-list.c',
   'fu-remote-list.c',

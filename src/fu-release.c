@@ -10,6 +10,7 @@
 
 #include "fu-device-private.h"
 #include "fu-keyring-utils.h"
+#include "fu-release-common.h"
 #include "fu-release.h"
 #include "fu-string.h"
 
@@ -266,7 +267,7 @@ fu_release_load_artifact(FuRelease *self, XbNode *artifact, GError **error)
 			g_autofree gchar *scheme = NULL;
 
 			/* check the scheme is allowed */
-			scheme = fu_common_uri_get_scheme(xb_node_get_text(n));
+			scheme = fu_release_uri_get_scheme(xb_node_get_text(n));
 			if (scheme != NULL) {
 				guint prio = fu_config_get_uri_scheme_prio(self->config, scheme);
 				if (prio == G_MAXUINT)
@@ -312,8 +313,8 @@ fu_release_scheme_compare_cb(gconstpointer a, gconstpointer b, gpointer user_dat
 	FuRelease *self = FU_RELEASE(user_data);
 	const gchar *location1 = *((const gchar **)a);
 	const gchar *location2 = *((const gchar **)b);
-	g_autofree gchar *scheme1 = fu_common_uri_get_scheme(location1);
-	g_autofree gchar *scheme2 = fu_common_uri_get_scheme(location2);
+	g_autofree gchar *scheme1 = fu_release_uri_get_scheme(location1);
+	g_autofree gchar *scheme2 = fu_release_uri_get_scheme(location2);
 	guint prio1 = fu_config_get_uri_scheme_prio(self->config, scheme1);
 	guint prio2 = fu_config_get_uri_scheme_prio(self->config, scheme2);
 	if (prio1 < prio2)

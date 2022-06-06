@@ -601,25 +601,6 @@ fu_strsafe_func(void)
 }
 
 static void
-fu_common_uri_scheme_func(void)
-{
-	struct {
-		const gchar *in;
-		const gchar *op;
-	} strs[] = {{"https://foo.bar/baz", "https"},
-		    {"HTTP://FOO.BAR/BAZ", "http"},
-		    {"ftp://", "ftp"},
-		    {"ftp:", "ftp"},
-		    {"foobarbaz", NULL},
-		    {"", NULL},
-		    {NULL, NULL}};
-	for (guint i = 0; strs[i].in != NULL; i++) {
-		g_autofree gchar *tmp = fu_common_uri_get_scheme(strs[i].in);
-		g_assert_cmpstr(tmp, ==, strs[i].op);
-	}
-}
-
-static void
 fu_hwids_func(void)
 {
 	g_autofree gchar *testdatadir = NULL;
@@ -3978,7 +3959,6 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/common{bytes-get-data}", fu_common_bytes_get_data_func);
 	g_test_add_func("/fwupd/common{kernel-lockdown}", fu_common_kernel_lockdown_func);
 	g_test_add_func("/fwupd/common{strsafe}", fu_strsafe_func);
-	g_test_add_func("/fwupd/common{uri-scheme}", fu_common_uri_scheme_func);
 	g_test_add_func("/fwupd/efivar", fu_efivar_func);
 	g_test_add_func("/fwupd/hwids", fu_hwids_func);
 	g_test_add_func("/fwupd/smbios", fu_smbios_func);
