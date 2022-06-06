@@ -82,3 +82,4 @@ Remember: Plugins should be upstream!
 * `fu_common_realpath()`: You should not be using this.
 * `fu_common_uri_get_scheme()`: You should not be using this.
 * `fu_common_dump*`: Use `fu_dump` prefix, i.e. remove the `_common`
+* `fu_common_error_array_get_best()`: You should not be using this.

@@ -1038,7 +1038,7 @@ fu_daemon_install_with_helper(FuMainAuthHelper *helper_ref, GError **error)
 
 	/* nothing suitable */
 	if (helper->releases->len == 0) {
-		GError *error_tmp = fu_common_error_array_get_best(helper->errors);
+		GError *error_tmp = fu_engine_error_array_get_best(helper->errors);
 		g_propagate_error(error, error_tmp);
 		return FALSE;
 	}
