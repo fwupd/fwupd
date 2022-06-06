@@ -1396,7 +1396,7 @@ fu_util_install(FuUtilPrivate *priv, gchar **values, GError **error)
 
 	/* nothing suitable */
 	if (releases->len == 0) {
-		GError *error_tmp = fu_common_error_array_get_best(errors);
+		GError *error_tmp = fu_engine_error_array_get_best(errors);
 		g_propagate_error(error, error_tmp);
 		return FALSE;
 	}

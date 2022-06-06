@@ -102,6 +102,7 @@ if __name__ == "__main__":
             "fu_common_dump_raw": "fu_dump_raw",
             "fu_common_dump_full": "fu_dump_full",
             "fu_common_dump_bytes": "fu_dump_bytes",
+            "fu_common_error_array_get_best": "fu_engine_error_array_get_best",
         }.items():
             if buf.find(old) == -1:
                 continue

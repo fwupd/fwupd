@@ -169,8 +169,6 @@ gboolean
 fu_common_mkdir(const gchar *dirname, GError **error) G_GNUC_WARN_UNUSED_RESULT;
 gboolean
 fu_common_mkdir_parent(const gchar *filename, GError **error) G_GNUC_WARN_UNUSED_RESULT;
-GError *
-fu_common_error_array_get_best(GPtrArray *errors);
 gchar *
 fu_common_find_program_in_path(const gchar *basename, GError **error) G_GNUC_WARN_UNUSED_RESULT;
 gboolean
