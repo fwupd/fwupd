@@ -71,3 +71,4 @@ Remember: Plugins should be upstream!
 * `fu_common_write*`: Use `fu_memwrite` prefix, i.e. replace the `_common` with `_mem`
 * `fu_common_bytes_compare_raw()`: Use `fu_memcmp_safe()` instead
 * `fu_common_spawn_sync()`: Use `g_spawn_sync()` instead, or ideally not at all!
+* `fu_common_extract_archive()`: Use `FuArchiveFirmware()` instead.
