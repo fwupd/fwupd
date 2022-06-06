@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <fwupdplugin.h>
+#include "fu-firmware.h"
 
 #define FU_TYPE_EFI_FIRMWARE_FILESYSTEM (fu_efi_firmware_filesystem_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuEfiFirmwareFilesystem,

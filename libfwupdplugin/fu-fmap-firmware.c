@@ -6,6 +6,7 @@
 
 #include "config.h"
 
+#include "fu-byte-array.h"
 #include "fu-common.h"
 #include "fu-fmap-firmware.h"
 

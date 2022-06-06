@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <fwupdplugin.h>
+#include "fu-firmware.h"
 
 #define FU_TYPE_EFI_FIRMWARE_SECTION (fu_efi_firmware_section_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuEfiFirmwareSection,

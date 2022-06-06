@@ -6,9 +6,9 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
+#include "fu-common.h"
 #include "fu-efi-firmware-volume.h"
+#include "fu-ifd-bios.h"
 
 /**
  * FuIfdBios:

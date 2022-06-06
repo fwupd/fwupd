@@ -10,6 +10,7 @@
 
 #include <string.h>
 
+#include "fu-byte-array.h"
 #include "fu-chunk-private.h"
 #include "fu-common.h"
 #include "fu-dfu-firmware-private.h"

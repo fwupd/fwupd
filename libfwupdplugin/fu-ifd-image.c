@@ -6,8 +6,7 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
+#include "fu-byte-array.h"
 #include "fu-ifd-image.h"
 
 typedef struct {

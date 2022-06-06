@@ -6,9 +6,11 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
+#include "fu-byte-array.h"
+#include "fu-ifd-bios.h"
 #include "fu-ifd-common.h"
+#include "fu-ifd-firmware.h"
+#include "fu-ifd-image.h"
 
 /**
  * FuIfdFirmware:
