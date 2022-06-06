@@ -1064,7 +1064,7 @@ fu_dfu_device_open(FuDevice *device, GError **error)
 		if (serial_blob == NULL)
 			return FALSE;
 		if (g_getenv("FWUPD_DFU_VERBOSE") != NULL)
-			fu_common_dump_bytes(G_LOG_DOMAIN, "GD32 serial", serial_blob);
+			fu_dump_bytes(G_LOG_DOMAIN, "GD32 serial", serial_blob);
 		buf = g_bytes_get_data(serial_blob, &bufsz);
 		if (bufsz < 2) {
 			g_set_error_literal(error,

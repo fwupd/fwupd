@@ -26,22 +26,6 @@ typedef enum {
 } FuAppFlags;
 
 /**
- * FuDumpFlags:
- * @FU_DUMP_FLAGS_NONE:			No flags set
- * @FU_DUMP_FLAGS_SHOW_ASCII:		Show ASCII in debugging dumps
- * @FU_DUMP_FLAGS_SHOW_ADDRESSES:	Show addresses in debugging dumps
- *
- * The flags to use when configuring debugging
- **/
-typedef enum {
-	FU_DUMP_FLAGS_NONE = 0,
-	FU_DUMP_FLAGS_SHOW_ASCII = 1 << 0,
-	FU_DUMP_FLAGS_SHOW_ADDRESSES = 1 << 1,
-	/*< private >*/
-	FU_DUMP_FLAGS_LAST
-} FuDumpFlags;
-
-/**
  * FuEndianType:
  *
  * The endian type, e.g. %G_LITTLE_ENDIAN
@@ -189,17 +173,6 @@ GError *
 fu_common_error_array_get_best(GPtrArray *errors);
 gchar *
 fu_common_find_program_in_path(const gchar *basename, GError **error) G_GNUC_WARN_UNUSED_RESULT;
-void
-fu_common_dump_raw(const gchar *log_domain, const gchar *title, const guint8 *data, gsize len);
-void
-fu_common_dump_full(const gchar *log_domain,
-		    const gchar *title,
-		    const guint8 *data,
-		    gsize len,
-		    guint columns,
-		    FuDumpFlags flags);
-void
-fu_common_dump_bytes(const gchar *log_domain, const gchar *title, GBytes *bytes);
 gboolean
 fu_common_cpuid(guint32 leaf,
 		guint32 *eax,

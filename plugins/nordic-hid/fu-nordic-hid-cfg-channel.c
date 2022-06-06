@@ -155,7 +155,7 @@ fu_nordic_hid_cfg_channel_send(FuNordicHidCfgChannel *self,
 	if (udev_device == NULL)
 		return FALSE;
 	if (g_getenv("FWUPD_NORDIC_HID_VERBOSE") != NULL)
-		fu_common_dump_raw(G_LOG_DOMAIN, "Sent", buf, bufsz);
+		fu_dump_raw(G_LOG_DOMAIN, "Sent", buf, bufsz);
 	if (!fu_udev_device_ioctl(udev_device,
 				  HIDIOCSFEATURE(bufsz),
 				  buf,
@@ -213,7 +213,7 @@ fu_nordic_hid_cfg_channel_receive(FuNordicHidCfgChannel *self,
 	}
 
 	if (g_getenv("FWUPD_NORDIC_HID_VERBOSE") != NULL)
-		fu_common_dump_raw(G_LOG_DOMAIN, "Received", buf, bufsz);
+		fu_dump_raw(G_LOG_DOMAIN, "Received", buf, bufsz);
 	/*
 	 * [TODO]: Possibly add the report-id fix for Bluez versions < 5.56:
 	 * https://github.com/bluez/bluez/commit/35a2c50437cca4d26ac6537ce3a964bb509c9b62

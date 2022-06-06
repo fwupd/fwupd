@@ -257,8 +257,6 @@ LIBFWUPDPLUGIN_1.2.2 {
     fu_archive_get_type;
     fu_archive_lookup_by_fn;
     fu_archive_new;
-    fu_common_dump_bytes;
-    fu_common_dump_raw;
     fu_device_has_guid;
     fu_io_channel_get_type;
     fu_io_channel_new_file;
@@ -274,7 +272,6 @@ LIBFWUPDPLUGIN_1.2.2 {
 
 LIBFWUPDPLUGIN_1.2.4 {
   global:
-    fu_common_dump_full;
     fu_device_incorporate_from_component;
     fu_plugin_get_build_hash;
     fu_udev_device_get_slot_depth;
@@ -972,6 +969,9 @@ LIBFWUPDPLUGIN_1.8.2 {
     fu_crc8;
     fu_crc8_full;
     fu_device_new;
+    fu_dump_bytes;
+    fu_dump_full;
+    fu_dump_raw;
     fu_efivar_secure_boot_enabled;
     fu_kernel_check_version;
     fu_kernel_get_firmware_search_path;

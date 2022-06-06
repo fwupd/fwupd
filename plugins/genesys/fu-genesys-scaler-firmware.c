@@ -42,10 +42,10 @@ fu_genesys_scaler_firmware_parse(FuFirmware *firmware,
 			    sizeof(self->public_key),
 			    error))
 		return FALSE;
-	fu_common_dump_raw(G_LOG_DOMAIN,
-			   "PublicKey",
-			   (const guint8 *)&self->public_key,
-			   sizeof(self->public_key));
+	fu_dump_raw(G_LOG_DOMAIN,
+		    "PublicKey",
+		    (const guint8 *)&self->public_key,
+		    sizeof(self->public_key));
 	if (memcmp(self->public_key.N, "N = ", 4) != 0 ||
 	    memcmp(self->public_key.E, "E = ", 4) != 0) {
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "invalid public-key");

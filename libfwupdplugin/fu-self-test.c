@@ -2904,12 +2904,12 @@ fu_firmware_dfu_patch_func(void)
 	data_new = fu_firmware_write(firmware, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(data_new);
-	fu_common_dump_full(G_LOG_DOMAIN,
-			    "patch",
-			    g_bytes_get_data(data_new, NULL),
-			    g_bytes_get_size(data_new),
-			    20,
-			    FU_DUMP_FLAGS_SHOW_ASCII | FU_DUMP_FLAGS_SHOW_ADDRESSES);
+	fu_dump_full(G_LOG_DOMAIN,
+		     "patch",
+		     g_bytes_get_data(data_new, NULL),
+		     g_bytes_get_size(data_new),
+		     20,
+		     FU_DUMP_FLAGS_SHOW_ASCII | FU_DUMP_FLAGS_SHOW_ADDRESSES);
 	csum = g_compute_checksum_for_bytes(G_CHECKSUM_SHA1, data_new);
 	g_assert_cmpstr(csum, ==, "0722727426092ac564861d1a11697182017be83f");
 }

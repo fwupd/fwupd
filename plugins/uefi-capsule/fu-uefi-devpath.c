@@ -88,12 +88,12 @@ fu_uefi_devpath_parse(const guint8 *buf, gsize sz, FuUefiDevpathParseFlags flags
 		/* work around a bug in efi_va_generate_file_device_path_from_esp */
 		if (offset + sizeof(efidp_header) + hdr->length > sz) {
 			hdr_length = 0;
-			fu_common_dump_full(G_LOG_DOMAIN,
-					    "efidp",
-					    buf + offset,
-					    sz - offset,
-					    32,
-					    FU_DUMP_FLAGS_SHOW_ADDRESSES);
+			fu_dump_full(G_LOG_DOMAIN,
+				     "efidp",
+				     buf + offset,
+				     sz - offset,
+				     32,
+				     FU_DUMP_FLAGS_SHOW_ADDRESSES);
 			for (gsize i = offset + 4; i <= sz - 4; i++) {
 				if (memcmp(buf + i, "\x7f\xff\x04\x00", 4) == 0) {
 					hdr_length = i - offset;

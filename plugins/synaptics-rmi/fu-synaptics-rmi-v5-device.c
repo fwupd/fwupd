@@ -147,7 +147,7 @@ fu_synaptics_rmi_v5_device_secure_check(FuDevice *device,
 	g_autoptr(GBytes) pubkey = NULL;
 
 	if (g_getenv("FWUPD_SYNAPTICS_RMI_VERBOSE") != NULL)
-		fu_common_dump_bytes(G_LOG_DOMAIN, "Signature", signature);
+		fu_dump_bytes(G_LOG_DOMAIN, "Signature", signature);
 
 	f34 = fu_synaptics_rmi_device_get_function(self, 0x34, error);
 	if (f34 == NULL)
@@ -212,12 +212,12 @@ fu_synaptics_rmi_v5_device_secure_check(FuDevice *device,
 		break;
 	}
 	if (g_getenv("FWUPD_SYNAPTICS_RMI_VERBOSE") != NULL) {
-		fu_common_dump_full(G_LOG_DOMAIN,
-				    "RSA public key",
-				    pubkey_buf->data,
-				    pubkey_buf->len,
-				    16,
-				    FU_DUMP_FLAGS_NONE);
+		fu_dump_full(G_LOG_DOMAIN,
+			     "RSA public key",
+			     pubkey_buf->data,
+			     pubkey_buf->len,
+			     16,
+			     FU_DUMP_FLAGS_NONE);
 	}
 
 	/* sanity check size */

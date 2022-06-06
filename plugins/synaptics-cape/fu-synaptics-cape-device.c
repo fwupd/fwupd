@@ -96,7 +96,7 @@ fu_synaptics_cape_device_set_report(FuSynapticsCapeDevice *self,
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	if (g_getenv("FWUPD_SYNAPTICS_CAPE_VERBOSE") != NULL)
-		fu_common_dump_raw(G_LOG_DOMAIN, "SetReport", (guint8 *)data, sizeof(*data));
+		fu_dump_raw(G_LOG_DOMAIN, "SetReport", (guint8 *)data, sizeof(*data));
 
 	return fu_hid_device_set_report(FU_HID_DEVICE(self),
 					FU_SYNAPTICS_CAPE_DEVICE_GOLEM_REPORT_ID,
@@ -127,7 +127,7 @@ fu_synaptics_cape_device_get_report(FuSynapticsCapeDevice *self,
 		return FALSE;
 
 	if (g_getenv("FWUPD_SYNAPTICS_CAPE_VERBOSE") != NULL)
-		fu_common_dump_raw(G_LOG_DOMAIN, "GetReport", (guint8 *)data, sizeof(*data));
+		fu_dump_raw(G_LOG_DOMAIN, "GetReport", (guint8 *)data, sizeof(*data));
 
 	/* success */
 	return TRUE;
@@ -157,7 +157,7 @@ fu_synaptics_cape_device_get_report_intr(FuSynapticsCapeDevice *self,
 	}
 
 	if (g_getenv("FWUPD_SYNAPTICS_CAPE_VERBOSE") != NULL)
-		fu_common_dump_raw(G_LOG_DOMAIN, "GetReport", (guint8 *)data, sizeof(*data));
+		fu_dump_raw(G_LOG_DOMAIN, "GetReport", (guint8 *)data, sizeof(*data));
 
 	/* success */
 	return TRUE;

@@ -253,7 +253,7 @@ fu_wacom_device_write_firmware(FuDevice *device,
 gboolean
 fu_wacom_device_set_feature(FuWacomDevice *self, const guint8 *data, guint datasz, GError **error)
 {
-	fu_common_dump_raw(G_LOG_DOMAIN, "SetFeature", data, datasz);
+	fu_dump_raw(G_LOG_DOMAIN, "SetFeature", data, datasz);
 	return fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
 				    HIDIOCSFEATURE(datasz),
 				    (guint8 *)data,
@@ -272,7 +272,7 @@ fu_wacom_device_get_feature(FuWacomDevice *self, guint8 *data, guint datasz, GEr
 				  FU_WACOM_DEVICE_IOCTL_TIMEOUT,
 				  error))
 		return FALSE;
-	fu_common_dump_raw(G_LOG_DOMAIN, "GetFeature", data, datasz);
+	fu_dump_raw(G_LOG_DOMAIN, "GetFeature", data, datasz);
 	return TRUE;
 }
 

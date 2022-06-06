@@ -9,6 +9,7 @@
 #include "config.h"
 
 #include "fu-device-private.h"
+#include "fu-dump.h"
 #include "fu-mem.h"
 #include "fu-string.h"
 #include "fu-usb-device-private.h"
@@ -198,7 +199,7 @@ fu_usb_device_query_hub(FuUsbDevice *self, GError **error)
 		return FALSE;
 	}
 	if (g_getenv("FU_USB_DEVICE_DEBUG") != NULL)
-		fu_common_dump_raw(G_LOG_DOMAIN, "HUB_DT", data, sz);
+		fu_dump_raw(G_LOG_DOMAIN, "HUB_DT", data, sz);
 
 	/* for USB 3: size is fixed as max ports is 15,
 	 * for USB 2: size is variable as max ports is 255 */

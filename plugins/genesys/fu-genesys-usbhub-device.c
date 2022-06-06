@@ -325,7 +325,7 @@ fu_genesys_usbhub_device_cfi_setup(FuGenesysUsbhubDevice *self, GError **error)
 				else
 					len = 2;
 
-				fu_common_dump_raw(G_LOG_DOMAIN, "Flash ID", buf, len);
+				fu_dump_raw(G_LOG_DOMAIN, "Flash ID", buf, len);
 				g_debug("CFI: %s", fu_device_get_name(FU_DEVICE(cfi_device)));
 			}
 
@@ -798,10 +798,10 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 		return FALSE;
 	}
 	if (g_getenv("FWUPD_GENESYS_USBHUB_VERBOSE") != NULL) {
-		fu_common_dump_raw(G_LOG_DOMAIN,
-				   "Static info",
-				   (guint8 *)&self->static_ts,
-				   sizeof(FuGenesysStaticToolString));
+		fu_dump_raw(G_LOG_DOMAIN,
+			    "Static info",
+			    (guint8 *)&self->static_ts,
+			    sizeof(FuGenesysStaticToolString));
 	}
 
 	if (memcmp(self->static_ts.mask_project_ic_type, "3521", 4) == 0) {
@@ -841,10 +841,10 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 		return FALSE;
 	}
 	if (g_getenv("FWUPD_GENESYS_USBHUB_VERBOSE") != NULL) {
-		fu_common_dump_raw(G_LOG_DOMAIN,
-				   "Dynamic info",
-				   (guint8 *)&self->dynamic_ts,
-				   sizeof(FuGenesysDynamicToolString));
+		fu_dump_raw(G_LOG_DOMAIN,
+			    "Dynamic info",
+			    (guint8 *)&self->dynamic_ts,
+			    sizeof(FuGenesysDynamicToolString));
 	}
 
 	fw_buf =
@@ -865,10 +865,10 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 		return FALSE;
 	}
 	if (g_getenv("FWUPD_GENESYS_USBHUB_VERBOSE") != NULL) {
-		fu_common_dump_raw(G_LOG_DOMAIN,
-				   "Fw info",
-				   (guint8 *)&self->fwinfo_ts,
-				   sizeof(FuGenesysFirmwareInfoToolString));
+		fu_dump_raw(G_LOG_DOMAIN,
+			    "Fw info",
+			    (guint8 *)&self->fwinfo_ts,
+			    sizeof(FuGenesysFirmwareInfoToolString));
 	}
 
 	tool_string_version = fu_genesys_tsdigit_value(self->static_ts.tool_string_version);
@@ -892,10 +892,10 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 			return FALSE;
 		}
 		if (g_getenv("FWUPD_GENESYS_USBHUB_VERBOSE") != NULL) {
-			fu_common_dump_raw(G_LOG_DOMAIN,
-					   "Vendor support",
-					   (guint8 *)&self->vs_ts,
-					   sizeof(FuGenesysVendorSupportToolString));
+			fu_dump_raw(G_LOG_DOMAIN,
+				    "Vendor support",
+				    (guint8 *)&self->vs_ts,
+				    sizeof(FuGenesysVendorSupportToolString));
 		}
 	}
 
@@ -1152,7 +1152,7 @@ fu_genesys_usbhub_device_prepare_firmware(FuDevice *device,
 		const guint8 *buf = g_bytes_get_data(fw, &bufsz);
 
 		if (g_getenv("FWUPD_GENESYS_USBHUB_VERBOSE") != NULL)
-			fu_common_dump_raw(G_LOG_DOMAIN, "PublicKey", buf, bufsz);
+			fu_dump_raw(G_LOG_DOMAIN, "PublicKey", buf, bufsz);
 		if (memcmp(buf + fu_firmware_get_size(firmware),
 			   &self->public_key,
 			   sizeof(self->public_key)) != 0 &&

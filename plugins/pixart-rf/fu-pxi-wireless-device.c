@@ -44,7 +44,7 @@ fu_pxi_wireless_device_set_feature(FuDevice *self, const guint8 *buf, guint bufs
 {
 #ifdef HAVE_HIDRAW_H
 	if (g_getenv("FWUPD_PIXART_RF_VERBOSE") != NULL)
-		fu_common_dump_raw(G_LOG_DOMAIN, "SetFeature", buf, bufsz);
+		fu_dump_raw(G_LOG_DOMAIN, "SetFeature", buf, bufsz);
 	return fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
 				    HIDIOCSFEATURE(bufsz),
 				    (guint8 *)buf,
@@ -73,7 +73,7 @@ fu_pxi_wireless_device_get_feature(FuDevice *self, guint8 *buf, guint bufsz, GEr
 		return FALSE;
 	}
 	if (g_getenv("FWUPD_PIXART_RF_VERBOSE") != NULL)
-		fu_common_dump_raw(G_LOG_DOMAIN, "GetFeature", buf, bufsz);
+		fu_dump_raw(G_LOG_DOMAIN, "GetFeature", buf, bufsz);
 	return TRUE;
 #else
 	g_set_error_literal(error,
@@ -188,7 +188,7 @@ fu_pxi_wireless_device_check_crc(FuDevice *device, guint16 checksum, GError **er
 		return FALSE;
 
 	if (g_getenv("FWUPD_PIXART_RF_VERBOSE") != NULL)
-		fu_common_dump_raw(G_LOG_DOMAIN, "crc buf", buf, sizeof(buf));
+		fu_dump_raw(G_LOG_DOMAIN, "crc buf", buf, sizeof(buf));
 
 	if (!fu_memread_uint8_safe(buf, sizeof(buf), 0x5, &status, error))
 		return FALSE;

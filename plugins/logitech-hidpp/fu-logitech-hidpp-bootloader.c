@@ -328,7 +328,7 @@ fu_logitech_hidpp_bootloader_request(FuLogitechHidPpBootloader *self,
 
 	/* send request */
 	if (g_getenv("FWUPD_LOGITECH_HIDPP_VERBOSE") != NULL) {
-		fu_common_dump_raw(G_LOG_DOMAIN, "host->device", buf_request, sizeof(buf_request));
+		fu_dump_raw(G_LOG_DOMAIN, "host->device", buf_request, sizeof(buf_request));
 	}
 	if (usb_device != NULL) {
 		if (!fu_hid_device_set_report(FU_HID_DEVICE(self),
@@ -357,10 +357,10 @@ fu_logitech_hidpp_bootloader_request(FuLogitechHidPpBootloader *self,
 			g_debug("ignoring: %s", error_ignore->message);
 		} else {
 			if (g_getenv("FWUPD_LOGITECH_HIDPP_VERBOSE") != NULL) {
-				fu_common_dump_raw(G_LOG_DOMAIN,
-						   "device->host",
-						   buf_response,
-						   actual_length);
+				fu_dump_raw(G_LOG_DOMAIN,
+					    "device->host",
+					    buf_response,
+					    actual_length);
 			}
 		}
 		return TRUE;
@@ -395,7 +395,7 @@ fu_logitech_hidpp_bootloader_request(FuLogitechHidPpBootloader *self,
 		actual_length = sizeof(buf_response);
 	}
 	if (g_getenv("FWUPD_LOGITECH_HIDPP_VERBOSE") != NULL) {
-		fu_common_dump_raw(G_LOG_DOMAIN, "device->host", buf_response, actual_length);
+		fu_dump_raw(G_LOG_DOMAIN, "device->host", buf_response, actual_length);
 	}
 
 	/* parse response */

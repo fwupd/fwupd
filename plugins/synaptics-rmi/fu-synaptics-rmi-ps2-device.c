@@ -700,12 +700,7 @@ fu_synaptics_rmi_ps2_device_read(FuSynapticsRmiDevice *rmi_device,
 	}
 	dump = g_strdup_printf("R %x", addr);
 	if (g_getenv("FWUPD_SYNAPTICS_RMI_VERBOSE") != NULL) {
-		fu_common_dump_full(G_LOG_DOMAIN,
-				    dump,
-				    buf->data,
-				    buf->len,
-				    80,
-				    FU_DUMP_FLAGS_NONE);
+		fu_dump_full(G_LOG_DOMAIN, dump, buf->data, buf->len, 80, FU_DUMP_FLAGS_NONE);
 	}
 	return g_steal_pointer(&buf);
 }
@@ -732,12 +727,7 @@ fu_synaptics_rmi_ps2_device_read_packet_register(FuSynapticsRmiDevice *rmi_devic
 
 	if (g_getenv("FWUPD_SYNAPTICS_RMI_VERBOSE") != NULL) {
 		g_autofree gchar *dump = g_strdup_printf("R %x", addr);
-		fu_common_dump_full(G_LOG_DOMAIN,
-				    dump,
-				    buf->data,
-				    buf->len,
-				    80,
-				    FU_DUMP_FLAGS_NONE);
+		fu_dump_full(G_LOG_DOMAIN, dump, buf->data, buf->len, 80, FU_DUMP_FLAGS_NONE);
 	}
 	return g_steal_pointer(&buf);
 }
@@ -766,7 +756,7 @@ fu_synaptics_rmi_ps2_device_write(FuSynapticsRmiDevice *rmi_device,
 	}
 	if (g_getenv("FWUPD_SYNAPTICS_RMI_VERBOSE") != NULL) {
 		g_autofree gchar *str = g_strdup_printf("W %x", addr);
-		fu_common_dump_full(G_LOG_DOMAIN, str, req->data, req->len, 80, FU_DUMP_FLAGS_NONE);
+		fu_dump_full(G_LOG_DOMAIN, str, req->data, req->len, 80, FU_DUMP_FLAGS_NONE);
 	}
 	return TRUE;
 }

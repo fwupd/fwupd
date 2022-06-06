@@ -195,7 +195,7 @@ fu_plugin_msr_backend_device_added(FuPlugin *plugin, FuDevice *device, GError **
 			g_prefix_error(error, "could not read IA32_BIOS_SIGN_ID: ");
 			return FALSE;
 		}
-		fu_common_dump_raw(G_LOG_DOMAIN, "IA32_BIOS_SIGN_ID", buf, sizeof(buf));
+		fu_dump_raw(G_LOG_DOMAIN, "IA32_BIOS_SIGN_ID", buf, sizeof(buf));
 		if (!fu_memread_uint32_safe(buf,
 					    sizeof(buf),
 					    0x4,

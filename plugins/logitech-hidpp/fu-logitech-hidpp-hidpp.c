@@ -78,7 +78,7 @@ fu_logitech_hidpp_send(FuIOChannel *io_channel,
 	/* detailed debugging */
 	if (g_getenv("FWUPD_LOGITECH_HIDPP_VERBOSE") != NULL) {
 		g_autofree gchar *str = fu_logitech_hidpp_msg_to_string(msg);
-		fu_common_dump_raw(G_LOG_DOMAIN, "host->device", (guint8 *)msg, len);
+		fu_dump_raw(G_LOG_DOMAIN, "host->device", (guint8 *)msg, len);
 		g_print("%s", str);
 	}
 
@@ -117,7 +117,7 @@ fu_logitech_hidpp_receive(FuIOChannel *io_channel,
 
 	/* check long enough, but allow returning oversize packets */
 	if (g_getenv("FWUPD_LOGITECH_HIDPP_VERBOSE") != NULL)
-		fu_common_dump_raw(G_LOG_DOMAIN, "device->host", (guint8 *)msg, read_size);
+		fu_dump_raw(G_LOG_DOMAIN, "device->host", (guint8 *)msg, read_size);
 	if (read_size < fu_logitech_hidpp_msg_get_payload_length(msg)) {
 		g_set_error(error,
 			    G_IO_ERROR,

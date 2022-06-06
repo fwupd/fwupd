@@ -62,7 +62,7 @@ fu_pxi_receiver_device_set_feature(FuPxiReceiverDevice *self,
 {
 #ifdef HAVE_HIDRAW_H
 	if (g_getenv("FWUPD_PIXART_RF_VERBOSE") != NULL)
-		fu_common_dump_raw(G_LOG_DOMAIN, "SetFeature", buf, bufsz);
+		fu_dump_raw(G_LOG_DOMAIN, "SetFeature", buf, bufsz);
 	return fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
 				    HIDIOCSFEATURE(bufsz),
 				    (guint8 *)buf,
@@ -94,7 +94,7 @@ fu_pxi_receiver_device_get_feature(FuPxiReceiverDevice *self,
 		return FALSE;
 	}
 	if (g_getenv("FWUPD_PIXART_RF_VERBOSE") != NULL)
-		fu_common_dump_raw(G_LOG_DOMAIN, "GetFeature", buf, bufsz);
+		fu_dump_raw(G_LOG_DOMAIN, "GetFeature", buf, bufsz);
 	return TRUE;
 #else
 	g_set_error_literal(error,
@@ -463,7 +463,7 @@ fu_pxi_receiver_device_fw_upgrade(FuDevice *device,
 
 	g_byte_array_append(ota_cmd, fw_version, sizeof(fw_version));
 	if (g_getenv("FWUPD_PIXART_RF_VERBOSE") != NULL)
-		fu_common_dump_raw(G_LOG_DOMAIN, "ota_cmd ", ota_cmd->data, ota_cmd->len);
+		fu_dump_raw(G_LOG_DOMAIN, "ota_cmd ", ota_cmd->data, ota_cmd->len);
 	self->sn++;
 
 	/* get pixart wireless module ota command */
@@ -638,7 +638,7 @@ fu_pxi_receiver_device_get_peripheral_info(FuPxiReceiverDevice *device,
 		return FALSE;
 
 	if (g_getenv("FWUPD_PIXART_RF_VERBOSE") != NULL)
-		fu_common_dump_raw(G_LOG_DOMAIN, "model_info", buf, sizeof(buf));
+		fu_dump_raw(G_LOG_DOMAIN, "model_info", buf, sizeof(buf));
 
 	if (!fu_memread_uint8_safe(buf, sizeof(buf), 0x9, &model->status, error))
 		return FALSE;
@@ -718,7 +718,7 @@ fu_pxi_receiver_device_get_peripheral_num(FuPxiReceiverDevice *device,
 	if (!fu_pxi_receiver_device_get_feature(device, buf, sizeof(buf), error))
 		return FALSE;
 	if (g_getenv("FWUPD_PIXART_RF_VERBOSE") != NULL) {
-		fu_common_dump_raw(G_LOG_DOMAIN, "buf from get model num", buf, sizeof(buf));
+		fu_dump_raw(G_LOG_DOMAIN, "buf from get model num", buf, sizeof(buf));
 	}
 	if (!fu_memread_uint8_safe(buf, sizeof(buf), 0xA, num_of_models, error))
 		return FALSE;

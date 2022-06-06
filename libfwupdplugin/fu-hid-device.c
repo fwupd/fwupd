@@ -8,6 +8,7 @@
 
 #include "config.h"
 
+#include "fu-dump.h"
 #include "fu-hid-device.h"
 #include "fu-string.h"
 
@@ -287,7 +288,7 @@ fu_hid_device_set_report_internal(FuHidDevice *self, FuHidDeviceRetryHelper *hel
 		if (g_getenv("FU_HID_DEVICE_VERBOSE") != NULL) {
 			g_autofree gchar *title = NULL;
 			title = g_strdup_printf("HID::SetReport [EP=0x%02x]", priv->ep_addr_out);
-			fu_common_dump_raw(G_LOG_DOMAIN, title, helper->buf, helper->bufsz);
+			fu_dump_raw(G_LOG_DOMAIN, title, helper->buf, helper->bufsz);
 		}
 		if (!g_usb_device_interrupt_transfer(usb_device,
 						     priv->ep_addr_out,
@@ -311,7 +312,7 @@ fu_hid_device_set_report_internal(FuHidDevice *self, FuHidDeviceRetryHelper *hel
 			title = g_strdup_printf("HID::SetReport [wValue=0x%04x ,wIndex=%u]",
 						wvalue,
 						priv->interface);
-			fu_common_dump_raw(G_LOG_DOMAIN, title, helper->buf, helper->bufsz);
+			fu_dump_raw(G_LOG_DOMAIN, title, helper->buf, helper->bufsz);
 		}
 		if (!g_usb_device_control_transfer(usb_device,
 						   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
@@ -427,7 +428,7 @@ fu_hid_device_get_report_internal(FuHidDevice *self, FuHidDeviceRetryHelper *hel
 		if (g_getenv("FU_HID_DEVICE_VERBOSE") != NULL) {
 			g_autofree gchar *title = NULL;
 			title = g_strdup_printf("HID::GetReport [EP=0x%02x]", priv->ep_addr_in);
-			fu_common_dump_raw(G_LOG_DOMAIN, title, helper->buf, helper->bufsz);
+			fu_dump_raw(G_LOG_DOMAIN, title, helper->buf, helper->bufsz);
 		}
 	} else {
 		guint16 wvalue = (FU_HID_REPORT_TYPE_INPUT << 8) | helper->value;
@@ -441,7 +442,7 @@ fu_hid_device_get_report_internal(FuHidDevice *self, FuHidDeviceRetryHelper *hel
 			title = g_strdup_printf("HID::GetReport [wValue=0x%04x, wIndex=%u]",
 						wvalue,
 						priv->interface);
-			fu_common_dump_raw(G_LOG_DOMAIN, title, helper->buf, actual_len);
+			fu_dump_raw(G_LOG_DOMAIN, title, helper->buf, actual_len);
 		}
 		if (!g_usb_device_control_transfer(usb_device,
 						   G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
@@ -464,7 +465,7 @@ fu_hid_device_get_report_internal(FuHidDevice *self, FuHidDeviceRetryHelper *hel
 			title = g_strdup_printf("HID::GetReport [wValue=0x%04x, wIndex=%u]",
 						wvalue,
 						priv->interface);
-			fu_common_dump_raw(G_LOG_DOMAIN, title, helper->buf, actual_len);
+			fu_dump_raw(G_LOG_DOMAIN, title, helper->buf, actual_len);
 		}
 	}
 	if ((helper->flags & FU_HID_DEVICE_FLAG_ALLOW_TRUNC) == 0 && actual_len != helper->bufsz) {

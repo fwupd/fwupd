@@ -635,7 +635,7 @@ fu_mm_device_qcdm_cmd(FuMmDevice *self, const guint8 *cmd, gsize cmd_len, GError
 	/* command */
 	qcdm_req = g_bytes_new(cmd, cmd_len);
 	if (g_getenv("FWUPD_MODEM_MANAGER_VERBOSE") != NULL)
-		fu_common_dump_bytes(G_LOG_DOMAIN, "writing", qcdm_req);
+		fu_dump_bytes(G_LOG_DOMAIN, "writing", qcdm_req);
 	if (!fu_io_channel_write_bytes(self->io_channel,
 				       qcdm_req,
 				       1500,
@@ -656,7 +656,7 @@ fu_mm_device_qcdm_cmd(FuMmDevice *self, const guint8 *cmd, gsize cmd_len, GError
 		return FALSE;
 	}
 	if (g_getenv("FWUPD_MODEM_MANAGER_VERBOSE") != NULL)
-		fu_common_dump_bytes(G_LOG_DOMAIN, "read", qcdm_res);
+		fu_dump_bytes(G_LOG_DOMAIN, "read", qcdm_res);
 
 	/* command == response */
 	if (g_bytes_compare(qcdm_res, qcdm_req) != 0) {
@@ -690,7 +690,7 @@ fu_mm_device_at_cmd_cb(FuDevice *device, gpointer user_data, GError **error)
 	/* command */
 	at_req = g_bytes_new(cmd_cr, strlen(cmd_cr));
 	if (g_getenv("FWUPD_MODEM_MANAGER_VERBOSE") != NULL)
-		fu_common_dump_bytes(G_LOG_DOMAIN, "writing", at_req);
+		fu_dump_bytes(G_LOG_DOMAIN, "writing", at_req);
 	if (!fu_io_channel_write_bytes(self->io_channel,
 				       at_req,
 				       1500,
@@ -717,7 +717,7 @@ fu_mm_device_at_cmd_cb(FuDevice *device, gpointer user_data, GError **error)
 		return FALSE;
 	}
 	if (g_getenv("FWUPD_MODEM_MANAGER_VERBOSE") != NULL)
-		fu_common_dump_bytes(G_LOG_DOMAIN, "read", at_res);
+		fu_dump_bytes(G_LOG_DOMAIN, "read", at_res);
 	buf = g_bytes_get_data(at_res, &bufsz);
 	if (bufsz < 6) {
 		g_set_error(error,
