@@ -122,6 +122,7 @@ fwupdoffline = executable(
   sources : [
     'fu-history.c',
     'fu-offline.c',
+    'fu-spawn.c',
     'fu-security-attr.c',
     'fu-util-common.c',
     systemd_src
@@ -269,6 +270,7 @@ if get_option('tests')
     fu_hash,
     sources : [
       'fu-progressbar.c',
+      'fu-spawn.c',
       'fu-self-test.c',
       daemon_src,
     ],

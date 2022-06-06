@@ -948,14 +948,6 @@ fu_common_firmware_builder_func(void)
 	g_assert_cmpstr(data, ==, "xobdnas eht ni gninnur");
 }
 
-static void
-fu_test_stdout_cb(const gchar *line, gpointer user_data)
-{
-	guint *lines = (guint *)user_data;
-	g_debug("got '%s'", line);
-	(*lines)++;
-}
-
 static gboolean
 _open_cb(GObject *device, GError **error)
 {
@@ -1018,50 +1010,6 @@ fu_device_locker_fail_func(void)
 	g_assert_true(fu_device_get_metadata_boolean(device, "Test::Open"));
 	g_assert_true(fu_device_get_metadata_boolean(device, "Test::Close"));
 	g_assert_false(fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_IS_OPEN));
-}
-
-static void
-fu_common_spawn_func(void)
-{
-	gboolean ret;
-	guint lines = 0;
-	g_autoptr(GError) error = NULL;
-	g_autofree gchar *fn = NULL;
-	const gchar *argv[4] = {"/bin/sh", "replace", "test", NULL};
-
-#ifdef _WIN32
-	g_test_skip("Known failures on Windows right now, skipping spawn func test");
-	return;
-#endif
-
-	fn = g_test_build_filename(G_TEST_DIST, "tests", "spawn.sh", NULL);
-	argv[1] = fn;
-	ret = fu_common_spawn_sync(argv, fu_test_stdout_cb, &lines, 0, NULL, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
-	g_assert_cmpint(lines, ==, 6);
-}
-
-static void
-fu_common_spawn_timeout_func(void)
-{
-	gboolean ret;
-	guint lines = 0;
-	g_autoptr(GError) error = NULL;
-	g_autofree gchar *fn = NULL;
-	const gchar *argv[4] = {"/bin/sh", "replace", "test", NULL};
-
-#ifdef _WIN32
-	g_test_skip("Known failures on Windows right now, skipping spawn timeout test");
-	return;
-#endif
-
-	fn = g_test_build_filename(G_TEST_DIST, "tests", "spawn.sh", NULL);
-	argv[1] = fn;
-	ret = fu_common_spawn_sync(argv, fu_test_stdout_cb, &lines, 500, NULL, &error);
-	g_assert_error(error, G_IO_ERROR, G_IO_ERROR_CANCELLED);
-	g_assert_false(ret);
-	g_assert_cmpint(lines, ==, 1);
 }
 
 static void
@@ -4070,8 +4018,6 @@ main(int argc, char **argv)
 			fu_common_store_cab_error_missing_file_func);
 	g_test_add_func("/fwupd/common{cab-error-size}", fu_common_store_cab_error_size_func);
 	g_test_add_func("/fwupd/common{bytes-get-data}", fu_common_bytes_get_data_func);
-	g_test_add_func("/fwupd/common{spawn)", fu_common_spawn_func);
-	g_test_add_func("/fwupd/common{spawn-timeout)", fu_common_spawn_timeout_func);
 	g_test_add_func("/fwupd/common{firmware-builder}", fu_common_firmware_builder_func);
 	g_test_add_func("/fwupd/common{kernel-lockdown}", fu_common_kernel_lockdown_func);
 	g_test_add_func("/fwupd/common{strsafe}", fu_strsafe_func);

@@ -14,6 +14,7 @@
 
 #include "fu-history.h"
 #include "fu-plugin-private.h"
+#include "fu-spawn.h"
 #include "fu-util-common.h"
 
 typedef enum {
@@ -46,7 +47,7 @@ fu_offline_set_splash_progress(FuUtilPrivate *priv, guint percentage, GError **e
 		argv[1] = "display-message";
 		argv[2] = "--text";
 	}
-	return fu_common_spawn_sync(argv, NULL, NULL, 200, NULL, error);
+	return fu_spawn_sync(argv, NULL, NULL, 200, NULL, error);
 }
 
 static gboolean
@@ -63,9 +64,9 @@ fu_offline_set_splash_mode(FuUtilPrivate *priv, GError **error)
 	}
 
 	/* try the new fancy mode, then fall back to really old mode */
-	if (!fu_common_spawn_sync(argv, NULL, NULL, 1500, NULL, &error_local)) {
+	if (!fu_spawn_sync(argv, NULL, NULL, 1500, NULL, &error_local)) {
 		argv[2] = "--updates";
-		if (!fu_common_spawn_sync(argv, NULL, NULL, 1500, NULL, error)) {
+		if (!fu_spawn_sync(argv, NULL, NULL, 1500, NULL, error)) {
 			g_prefix_error(error, "%s: ", error_local->message);
 			return FALSE;
 		}
@@ -92,10 +93,10 @@ fu_offline_set_splash_reboot(FuUtilPrivate *priv, GError **error)
 	}
 
 	/* try the new fancy mode, then fall back to really old mode */
-	if (!fu_common_spawn_sync(argv, NULL, NULL, 200, NULL, &error_local)) {
+	if (!fu_spawn_sync(argv, NULL, NULL, 200, NULL, &error_local)) {
 		/* fall back to really old mode that should be supported */
 		argv[2] = "--shutdown";
-		if (!fu_common_spawn_sync(argv, NULL, NULL, 200, NULL, error)) {
+		if (!fu_spawn_sync(argv, NULL, NULL, 200, NULL, error)) {
 			g_prefix_error(error, "%s: ", error_local->message);
 			return FALSE;
 		}
