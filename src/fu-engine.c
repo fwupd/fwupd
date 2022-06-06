@@ -6835,15 +6835,15 @@ fu_engine_context_set_battery_threshold(FuContext *ctx)
 		battery_str = g_strdup(
 		    fu_context_lookup_quirk_by_id(ctx, vendor_guid, FU_QUIRKS_BATTERY_THRESHOLD));
 	}
-	if (battery_str == NULL)
+	if (battery_str == NULL) {
 		minimum_battery = MINIMUM_BATTERY_PERCENTAGE_FALLBACK;
-	else
-		minimum_battery = fu_strtoull(battery_str);
-	if (minimum_battery > 100) {
-		g_warning("invalid minimum battery level specified: "
-			  "%" G_GUINT64_FORMAT,
-			  minimum_battery);
-		minimum_battery = MINIMUM_BATTERY_PERCENTAGE_FALLBACK;
+	} else {
+		g_autoptr(GError) error_local = NULL;
+		if (!fu_strtoull(battery_str, &minimum_battery, 0, 100, &error_local)) {
+			g_warning("invalid minimum battery level specified: %s",
+				  error_local->message);
+			minimum_battery = MINIMUM_BATTERY_PERCENTAGE_FALLBACK;
+		}
 	}
 	fu_context_set_battery_threshold(ctx, minimum_battery);
 }

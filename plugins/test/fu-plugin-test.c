@@ -190,9 +190,14 @@ fu_plugin_test_get_version(GBytes *blob_fw)
 {
 	const gchar *str = g_bytes_get_data(blob_fw, NULL);
 	guint64 val = 0;
+	g_autoptr(GError) error_local = NULL;
+
 	if (str == NULL)
 		return NULL;
-	val = fu_strtoull(str);
+	if (!fu_strtoull(str, &val, 0, G_MAXUINT32, &error_local)) {
+		g_debug("invalid version specified: %s", error_local->message);
+		return NULL;
+	}
 	if (val == 0x0)
 		return NULL;
 	return fu_version_from_uint32(val, FWUPD_VERSION_FORMAT_TRIPLET);

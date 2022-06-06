@@ -13,30 +13,6 @@
 /**
  * fu_strtoull:
  * @str: a string, e.g. `0x1234`
- *
- * Converts a string value to an integer. Values are assumed base 10, unless
- * prefixed with "0x" where they are parsed as base 16.
- *
- * Returns: integer value, or 0x0 for error
- *
- * Since: 1.8.2
- **/
-guint64
-fu_strtoull(const gchar *str)
-{
-	guint base = 10;
-	if (str == NULL)
-		return 0x0;
-	if (g_str_has_prefix(str, "0x")) {
-		str += 2;
-		base = 16;
-	}
-	return g_ascii_strtoull(str, NULL, base);
-}
-
-/**
- * fu_strtoull_full:
- * @str: a string, e.g. `0x1234`
  * @value: (out) (nullable): parsed value
  * @min: minimum acceptable value, typically 0
  * @max: maximum acceptable value, typically G_MAXUINT64
@@ -50,7 +26,7 @@ fu_strtoull(const gchar *str)
  * Since: 1.8.2
  **/
 gboolean
-fu_strtoull_full(const gchar *str, guint64 *value, guint64 min, guint64 max, GError **error)
+fu_strtoull(const gchar *str, guint64 *value, guint64 min, guint64 max, GError **error)
 {
 	gchar *endptr = NULL;
 	guint64 value_tmp;
@@ -73,7 +49,7 @@ fu_strtoull_full(const gchar *str, guint64 *value, guint64 min, guint64 max, GEr
 
 	/* convert */
 	value_tmp = g_ascii_strtoull(str, &endptr, base);
-	if ((gsize)(endptr - str) != strlen(str)) {
+	if ((gsize)(endptr - str) != strlen(str) && *endptr != '\n') {
 		g_set_error(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA, "cannot parse %s", str);
 		return FALSE;
 	}

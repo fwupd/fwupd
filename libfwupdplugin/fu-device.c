@@ -1694,43 +1694,43 @@ fu_device_set_quirk_kv(FuDevice *self, const gchar *key, const gchar *value, GEr
 		return TRUE;
 	}
 	if (g_strcmp0(key, FU_QUIRKS_FIRMWARE_SIZE_MIN) == 0) {
-		if (!fu_strtoull_full(value, &tmp, 0, G_MAXUINT64, error))
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT64, error))
 			return FALSE;
 		fu_device_set_firmware_size_min(self, tmp);
 		return TRUE;
 	}
 	if (g_strcmp0(key, FU_QUIRKS_FIRMWARE_SIZE_MAX) == 0) {
-		if (!fu_strtoull_full(value, &tmp, 0, G_MAXUINT64, error))
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT64, error))
 			return FALSE;
 		fu_device_set_firmware_size_max(self, tmp);
 		return TRUE;
 	}
 	if (g_strcmp0(key, FU_QUIRKS_FIRMWARE_SIZE) == 0) {
-		if (!fu_strtoull_full(value, &tmp, 0, G_MAXUINT64, error))
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT64, error))
 			return FALSE;
 		fu_device_set_firmware_size(self, tmp);
 		return TRUE;
 	}
 	if (g_strcmp0(key, FU_QUIRKS_INSTALL_DURATION) == 0) {
-		if (!fu_strtoull_full(value, &tmp, 0, 60 * 60 * 24, error))
+		if (!fu_strtoull(value, &tmp, 0, 60 * 60 * 24, error))
 			return FALSE;
 		fu_device_set_install_duration(self, tmp);
 		return TRUE;
 	}
 	if (g_strcmp0(key, FU_QUIRKS_PRIORITY) == 0) {
-		if (!fu_strtoull_full(value, &tmp, 0, G_MAXUINT8, error))
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT8, error))
 			return FALSE;
 		fu_device_set_priority(self, tmp);
 		return TRUE;
 	}
 	if (g_strcmp0(key, FU_QUIRKS_BATTERY_THRESHOLD) == 0) {
-		if (!fu_strtoull_full(value, &tmp, 0, 100, error))
+		if (!fu_strtoull(value, &tmp, 0, 100, error))
 			return FALSE;
 		fu_device_set_battery_threshold(self, tmp);
 		return TRUE;
 	}
 	if (g_strcmp0(key, FU_QUIRKS_REMOVE_DELAY) == 0) {
-		if (!fu_strtoull_full(value, &tmp, 0, G_MAXUINT, error))
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT, error))
 			return FALSE;
 		fu_device_set_remove_delay(self, tmp);
 		return TRUE;

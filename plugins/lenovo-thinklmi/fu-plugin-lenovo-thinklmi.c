@@ -31,6 +31,7 @@ fu_plugin_lenovo_thinklmi_startup(FuPlugin *plugin, FuProgress *progress, GError
 static gboolean
 fu_plugin_lenovo_firmware_pending_change(gboolean *result, GError **error)
 {
+	guint64 val = 0;
 	g_autofree gchar *buf = NULL;
 	g_autofree gchar *sysfsfwdir = NULL;
 	g_autofree gchar *pending = NULL;
@@ -45,8 +46,9 @@ fu_plugin_lenovo_firmware_pending_change(gboolean *result, GError **error)
 		g_prefix_error(error, "failed to get %s: ", pending);
 		return FALSE;
 	}
-	*result = fu_strtoull(buf) > 0;
-
+	if (!fu_strtoull(buf, &val, 0, G_MAXUINT32, error))
+		return FALSE;
+	*result = val > 0;
 	return TRUE;
 }
 

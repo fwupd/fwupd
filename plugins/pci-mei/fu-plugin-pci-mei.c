@@ -87,6 +87,7 @@ static gboolean
 fu_mei_parse_fwvers(FuPlugin *plugin, const gchar *fwvers, GError **error)
 {
 	FuPluginData *priv = fu_plugin_get_data(plugin);
+	guint64 tmp64 = 0;
 	g_auto(GStrv) lines = NULL;
 	g_auto(GStrv) sections = NULL;
 	g_auto(GStrv) split = NULL;
@@ -114,7 +115,11 @@ fu_mei_parse_fwvers(FuPlugin *plugin, const gchar *fwvers, GError **error)
 	}
 
 	/* parse platform and versions */
-	priv->vers.platform = fu_strtoull(sections[0]);
+	if (!fu_strtoull(sections[0], &tmp64, 0, G_MAXUINT8, error)) {
+		g_prefix_error(error, "failed to process platform version %s: ", sections[0]);
+		return FALSE;
+	}
+	priv->vers.platform = tmp64;
 	split = g_strsplit(sections[1], ".", -1);
 	if (g_strv_length(split) != 4) {
 		g_set_error(error,
@@ -124,10 +129,27 @@ fu_mei_parse_fwvers(FuPlugin *plugin, const gchar *fwvers, GError **error)
 			    sections[1]);
 		return FALSE;
 	}
-	priv->vers.major = fu_strtoull(split[0]);
-	priv->vers.minor = fu_strtoull(split[1]);
-	priv->vers.hotfix = fu_strtoull(split[2]);
-	priv->vers.buildno = fu_strtoull(split[3]);
+
+	if (!fu_strtoull(split[0], &tmp64, 0, G_MAXUINT8, error)) {
+		g_prefix_error(error, "failed to process major version %s: ", split[0]);
+		return FALSE;
+	}
+	priv->vers.major = tmp64;
+	if (!fu_strtoull(split[1], &tmp64, 0, G_MAXUINT8, error)) {
+		g_prefix_error(error, "failed to process minor version %s: ", split[1]);
+		return FALSE;
+	}
+	priv->vers.minor = tmp64;
+	if (!fu_strtoull(split[2], &tmp64, 0, G_MAXUINT8, error)) {
+		g_prefix_error(error, "failed to process hotfix version %s: ", split[2]);
+		return FALSE;
+	}
+	priv->vers.hotfix = tmp64;
+	if (!fu_strtoull(split[3], &tmp64, 0, G_MAXUINT16, error)) {
+		g_prefix_error(error, "failed to process buildno version %s: ", split[3]);
+		return FALSE;
+	}
+	priv->vers.buildno = tmp64;
 
 	/* check the AMT version for issues using the data from:
 	 * https://downloadcenter.intel.com/download/28632 */

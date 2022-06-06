@@ -32,6 +32,7 @@ fu_tpm_device_parse_line(const gchar *line, gpointer user_data)
 	g_autofree gchar *idxstr = NULL;
 	g_auto(GStrv) split = NULL;
 	g_autoptr(GString) str = NULL;
+	g_autoptr(GError) error_local = NULL;
 
 	/* split into index:hash */
 	if (line == NULL || line[0] == '\0')
@@ -44,9 +45,8 @@ fu_tpm_device_parse_line(const gchar *line, gpointer user_data)
 
 	/* get index */
 	idxstr = fu_strstrip(split[0]);
-	idx = fu_strtoull(idxstr);
-	if (idx > 64) {
-		g_debug("unexpected index, skipping: %s", idxstr);
+	if (!fu_strtoull(idxstr, &idx, 0, 64, &error_local)) {
+		g_debug("unexpected index %s, skipping: %s", idxstr, error_local->message);
 		return;
 	}
 

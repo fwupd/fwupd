@@ -152,12 +152,12 @@ fu_dell_dock_tbt_set_quirk_kv(FuDevice *device,
 	guint64 tmp = 0;
 
 	if (g_strcmp0(key, "DellDockUnlockTarget") == 0) {
-		if (!fu_strtoull_full(value, &tmp, 0, G_MAXUINT8, error))
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT8, error))
 			return FALSE;
 		self->unlock_target = tmp;
 		return TRUE;
 	} else if (g_strcmp0(key, "DellDockInstallDurationI2C") == 0) {
-		if (!fu_strtoull_full(value, &tmp, 0, 60 * 60 * 24, error))
+		if (!fu_strtoull(value, &tmp, 0, 60 * 60 * 24, error))
 			return FALSE;
 		fu_device_set_install_duration(device, tmp);
 		return TRUE;
@@ -165,12 +165,12 @@ fu_dell_dock_tbt_set_quirk_kv(FuDevice *device,
 		self->hub_minimum_version = g_strdup(value);
 		return TRUE;
 	} else if (g_strcmp0(key, "DellDockBlobMajorOffset") == 0) {
-		if (!fu_strtoull_full(value, &tmp, 0, G_MAXUINT32, error))
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT32, error))
 			return FALSE;
 		self->blob_major_offset = tmp;
 		return TRUE;
 	} else if (g_strcmp0(key, "DellDockBlobMinorOffset") == 0) {
-		if (!fu_strtoull_full(value, &tmp, 0, G_MAXUINT32, error))
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT32, error))
 			return FALSE;
 		self->blob_minor_offset = tmp;
 		return TRUE;

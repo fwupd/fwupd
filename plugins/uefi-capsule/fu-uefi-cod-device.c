@@ -88,6 +88,7 @@ static gboolean
 fu_uefi_cod_device_get_variable_idx(const gchar *name, guint *value, GError **error)
 {
 	gsize bufsz = 0;
+	guint64 tmp = 0;
 	g_autofree guint8 *buf = NULL;
 	g_autofree gchar *str = NULL;
 	gunichar2 buf16[VARIABLE_IDX_SIZE] = {0x0};
@@ -116,8 +117,10 @@ fu_uefi_cod_device_get_variable_idx(const gchar *name, guint *value, GError **er
 			    str);
 		return FALSE;
 	}
+	if (!fu_strtoull(str + strlen("Capsule"), &tmp, 0, G_MAXUINT32, error))
+		return FALSE;
 	if (value != NULL)
-		*value = fu_strtoull(str + strlen("Capsule"));
+		*value = tmp;
 	return TRUE;
 }
 

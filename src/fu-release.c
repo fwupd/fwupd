@@ -227,19 +227,21 @@ fu_release_get_release_version(FuRelease *self, const gchar *version, GError **e
 {
 	FwupdVersionFormat fmt = fu_device_get_version_format(self->device);
 	guint64 ver_uint32;
+	g_autoptr(GError) error_local = NULL;
 
 	/* already dotted notation */
 	if (g_strstr_len(version, -1, ".") != NULL)
 		return g_strdup(version);
 
 	/* don't touch my version! */
-	if (fmt == FWUPD_VERSION_FORMAT_PLAIN)
+	if (fmt == FWUPD_VERSION_FORMAT_PLAIN || fmt == FWUPD_VERSION_FORMAT_UNKNOWN)
 		return g_strdup(version);
 
 	/* parse as integer */
-	ver_uint32 = fu_strtoull(version);
-	if (fmt == FWUPD_VERSION_FORMAT_UNKNOWN || ver_uint32 == 0 || ver_uint32 > G_MAXUINT32)
+	if (!fu_strtoull(version, &ver_uint32, 1, G_MAXUINT32, &error_local)) {
+		g_warning("invalid release version %s: %s", version, error_local->message);
 		return g_strdup(version);
+	}
 
 	/* convert to dotted decimal */
 	return fu_version_from_uint32((guint32)ver_uint32, fmt);

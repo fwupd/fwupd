@@ -2131,23 +2131,28 @@ fu_strtoull_func(void)
 	guint64 val = 0;
 	g_autoptr(GError) error = NULL;
 
-	ret = fu_strtoull_full("123", &val, 123, 200, &error);
+	ret = fu_strtoull("123", &val, 123, 200, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	g_assert_cmpint(val, ==, 123);
 
-	ret = fu_strtoull_full("0x123", &val, 0, 0x123, &error);
+	ret = fu_strtoull("123\n", &val, 0, 200, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(val, ==, 123);
+
+	ret = fu_strtoull("0x123", &val, 0, 0x123, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	g_assert_cmpint(val, ==, 0x123);
 
-	ret = fu_strtoull_full(NULL, &val, 0, G_MAXUINT32, NULL);
+	ret = fu_strtoull(NULL, &val, 0, G_MAXUINT32, NULL);
 	g_assert_false(ret);
-	ret = fu_strtoull_full("", &val, 120, 123, NULL);
+	ret = fu_strtoull("", &val, 120, 123, NULL);
 	g_assert_false(ret);
-	ret = fu_strtoull_full("124", &val, 120, 123, NULL);
+	ret = fu_strtoull("124", &val, 120, 123, NULL);
 	g_assert_false(ret);
-	ret = fu_strtoull_full("119", &val, 120, 123, NULL);
+	ret = fu_strtoull("119", &val, 120, 123, NULL);
 	g_assert_false(ret);
 }
 

@@ -1899,7 +1899,7 @@ fu_genesys_scaler_device_set_quirk_kv(FuDevice *device,
 	guint64 tmp;
 
 	if (g_strcmp0(key, "GenesysScalerDeviceTransferSize") == 0) {
-		if (!fu_strtoull_full(value, &tmp, 0, G_MAXUINT32, error))
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT32, error))
 			return FALSE;
 		self->transfer_size = tmp;
 
@@ -1907,7 +1907,7 @@ fu_genesys_scaler_device_set_quirk_kv(FuDevice *device,
 		return TRUE;
 	}
 	if (g_strcmp0(key, "GenesysScalerGpioOutputRegister") == 0) {
-		if (!fu_strtoull_full(value, &tmp, 0, G_MAXUINT16, error))
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT16, error))
 			return FALSE;
 		self->gpio_out_reg = tmp;
 
@@ -1915,7 +1915,7 @@ fu_genesys_scaler_device_set_quirk_kv(FuDevice *device,
 		return TRUE;
 	}
 	if (g_strcmp0(key, "GenesysScalerGpioEnableRegister") == 0) {
-		if (!fu_strtoull_full(value, &tmp, 0, G_MAXUINT16, error))
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT16, error))
 			return FALSE;
 		self->gpio_en_reg = tmp;
 
@@ -1923,7 +1923,7 @@ fu_genesys_scaler_device_set_quirk_kv(FuDevice *device,
 		return TRUE;
 	}
 	if (g_strcmp0(key, "GenesysScalerGpioValue") == 0) {
-		if (!fu_strtoull_full(value, &tmp, 0, G_MAXUINT16, error))
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT16, error))
 			return FALSE;
 		self->gpio_val = tmp;
 
@@ -1931,7 +1931,7 @@ fu_genesys_scaler_device_set_quirk_kv(FuDevice *device,
 		return TRUE;
 	}
 	if (g_strcmp0(key, "GenesysScalerCfiFlashId") == 0) {
-		if (!fu_strtoull_full(value, &tmp, 0, 0x00ffffffU, error))
+		if (!fu_strtoull(value, &tmp, 0, 0x00ffffffU, error))
 			return FALSE;
 		self->cfi_flash_id = tmp;
 

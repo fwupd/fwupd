@@ -162,7 +162,7 @@ fu_rts54hid_module_set_quirk_kv(FuDevice *device,
 
 	/* load target address from quirks */
 	if (g_strcmp0(key, "Rts54TargetAddr") == 0) {
-		if (!fu_strtoull_full(value, &tmp, 0, G_MAXUINT8, error))
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT8, error))
 			return FALSE;
 		self->target_addr = tmp;
 		return TRUE;
@@ -170,7 +170,7 @@ fu_rts54hid_module_set_quirk_kv(FuDevice *device,
 
 	/* load i2c speed from quirks */
 	if (g_strcmp0(key, "Rts54I2cSpeed") == 0) {
-		if (!fu_strtoull_full(value, &tmp, 0, FU_RTS54HID_I2C_SPEED_LAST - 1, error))
+		if (!fu_strtoull(value, &tmp, 0, FU_RTS54HID_I2C_SPEED_LAST - 1, error))
 			return FALSE;
 		self->i2c_speed = tmp;
 		return TRUE;
@@ -178,7 +178,7 @@ fu_rts54hid_module_set_quirk_kv(FuDevice *device,
 
 	/* load register address length from quirks */
 	if (g_strcmp0(key, "Rts54RegisterAddrLen") == 0) {
-		if (!fu_strtoull_full(value, &tmp, 0, G_MAXUINT8, error))
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT8, error))
 			return FALSE;
 		self->register_addr_len = tmp;
 		return TRUE;

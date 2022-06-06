@@ -283,7 +283,7 @@ fu_cpu_device_set_quirk_kv(FuDevice *device, const gchar *key, const gchar *valu
 {
 	if (g_strcmp0(key, "PciBcrAddr") == 0) {
 		guint64 tmp = 0;
-		if (!fu_strtoull_full(value, &tmp, 0, G_MAXUINT32, error))
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT32, error))
 			return FALSE;
 		fu_device_set_metadata_integer(device, "PciBcrAddr", tmp);
 		return TRUE;

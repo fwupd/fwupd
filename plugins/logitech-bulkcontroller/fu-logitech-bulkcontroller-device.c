@@ -423,6 +423,7 @@ fu_logitech_bulkcontroller_device_sync_cb(GObject *source_object,
 	FuLogitechBulkcontrollerDevice *self = helper->self;
 	guint32 cmd_tmp = 0x0;
 	guint64 cmd_tmp_64 = 0x0;
+	guint64 cmd_res = 0x0;
 	guint32 response_length = 0;
 	guint8 ack_payload[SYNC_ACK_PAYLOAD_LENGTH] = {0};
 	g_autoptr(GByteArray) buf_ack = g_byte_array_new();
@@ -482,7 +483,18 @@ fu_logitech_bulkcontroller_device_sync_cb(GObject *source_object,
 		g_debug("Received 0x%x message on sync interface", cmd_tmp);
 	switch (cmd_tmp) {
 	case CMD_ACK:
-		if (CMD_BUFFER_WRITE == fu_strtoull((const char *)ack_payload)) {
+		if (!fu_strtoull((const char *)ack_payload,
+				 &cmd_res,
+				 0,
+				 G_MAXUINT32,
+				 &error_local)) {
+			g_propagate_prefixed_error(&helper->error,
+						   g_steal_pointer(&error_local),
+						   "failed to parse ack payload cmd: ");
+			g_main_loop_quit(helper->loop);
+			return;
+		}
+		if (cmd_res == CMD_BUFFER_WRITE) {
 			if (!fu_logitech_bulkcontroller_device_send_sync_cmd(self,
 									     CMD_UNINIT_BUFFER,
 									     NULL,
@@ -494,7 +506,7 @@ fu_logitech_bulkcontroller_device_sync_cb(GObject *source_object,
 				g_main_loop_quit(helper->loop);
 				return;
 			}
-		} else if (CMD_UNINIT_BUFFER != fu_strtoull((const char *)ack_payload)) {
+		} else if (cmd_res != CMD_UNINIT_BUFFER) {
 			g_set_error(&helper->error,
 				    G_IO_ERROR,
 				    G_IO_ERROR_INVALID_DATA,

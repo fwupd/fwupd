@@ -516,7 +516,7 @@ fu_plugin_redfish_cleanup(FuPlugin *self,
 	/* read the config file to work out how long to wait */
 	restart_timeout_str = fu_plugin_get_config_value(self, "ManagerResetTimeout");
 	if (restart_timeout_str != NULL)
-		fu_strtoull_full(restart_timeout_str, &reset_timeout, 1, 86400, NULL);
+		fu_strtoull(restart_timeout_str, &reset_timeout, 1, 86400, NULL);
 	if (reset_timeout == 0) {
 		g_warning("no valid ManagerResetTimeout, falling back to default");
 		reset_timeout = 1800;
