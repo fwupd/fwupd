@@ -926,41 +926,6 @@ fu_common_kernel_lockdown_func(void)
 	g_assert_false(ret);
 }
 
-static void
-fu_common_firmware_builder_func(void)
-{
-	const gchar *data;
-	g_autofree gchar *archive_fn = NULL;
-	g_autoptr(GBytes) archive_blob = NULL;
-	g_autoptr(GBytes) firmware_blob = NULL;
-	g_autoptr(GError) error = NULL;
-
-	/* get test file */
-	archive_fn = g_test_build_filename(G_TEST_BUILT, "tests", "builder", "firmware.tar", NULL);
-	archive_blob = fu_bytes_get_contents(archive_fn, &error);
-	g_assert_no_error(error);
-	g_assert_nonnull(archive_blob);
-
-	/* generate the firmware */
-	firmware_blob =
-	    fu_common_firmware_builder(archive_blob, "startup.sh", "firmware.bin", &error);
-	if (firmware_blob == NULL) {
-		if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_PERMISSION_DENIED)) {
-			g_test_skip("Missing permissions to create namespace in container");
-			return;
-		}
-		if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
-			g_test_skip("User namespaces not supported in container");
-			return;
-		}
-		g_assert_no_error(error);
-	}
-
-	/* check it */
-	data = g_bytes_get_data(firmware_blob, NULL);
-	g_assert_cmpstr(data, ==, "xobdnas eht ni gninnur");
-}
-
 static gboolean
 _open_cb(GObject *device, GError **error)
 {
@@ -4011,7 +3976,6 @@ main(int argc, char **argv)
 			fu_common_store_cab_error_missing_file_func);
 	g_test_add_func("/fwupd/common{cab-error-size}", fu_common_store_cab_error_size_func);
 	g_test_add_func("/fwupd/common{bytes-get-data}", fu_common_bytes_get_data_func);
-	g_test_add_func("/fwupd/common{firmware-builder}", fu_common_firmware_builder_func);
 	g_test_add_func("/fwupd/common{kernel-lockdown}", fu_common_kernel_lockdown_func);
 	g_test_add_func("/fwupd/common{strsafe}", fu_strsafe_func);
 	g_test_add_func("/fwupd/common{uri-scheme}", fu_common_uri_scheme_func);

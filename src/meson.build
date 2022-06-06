@@ -45,6 +45,7 @@ daemon_src = [
   'fu-plugin-list.c',
   'fu-remote-list.c',
   'fu-security-attr.c',
+  'fu-firmware-builder.c',
 ] + systemd_src
 
 if gudev.found()
@@ -173,6 +174,7 @@ fwupdtool = executable(
     libfwupd_deps,
     libxmlb,
     libgcab,
+    libarchive,
     client_dep,
     valgrind,
   ],

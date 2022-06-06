@@ -30,6 +30,7 @@
 #include "fu-debug.h"
 #include "fu-device-private.h"
 #include "fu-engine.h"
+#include "fu-firmware-builder.h"
 #include "fu-history.h"
 #include "fu-hwids.h"
 #include "fu-plugin-private.h"
@@ -2088,7 +2089,7 @@ fu_util_firmware_builder(FuUtilPrivate *priv, gchar **values, GError **error)
 		script_fn = values[2];
 	if (g_strv_length(values) > 3)
 		output_fn = values[3];
-	firmware_blob = fu_common_firmware_builder(archive_blob, script_fn, output_fn, error);
+	firmware_blob = fu_firmware_builder_process(archive_blob, script_fn, output_fn, error);
 	if (firmware_blob == NULL)
 		return FALSE;
 	return fu_bytes_set_contents(values[1], firmware_blob, error);
