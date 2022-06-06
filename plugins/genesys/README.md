@@ -37,8 +37,8 @@ Additionally, some customized instance IDs are added. e.g.
 
 These devices also use custom GUID values for the Scaler, e.g.
 
-* HP M24fd USB-C Monitor: `GENESYS_SCALER\MSTAR_TSUM_G&PUBKEY_B335BDCE-7073-5D0E-9BD3-9B69C1A6899F`
-* HP M27fd USB-C Monitor: `GENESYS_SCALER\MSTAR_TSUM_G&PUBKEY_847A3650-8648-586B-83C8-8B53714F37E3`
+* HP M24fd USB-C Monitor: `GENESYS_SCALER\MSTAR_TSUM_G&PUBKEY_B335BDCE-7073-5D0E-9BD3-9B69C1A6899F&PANELREV_RIM101`
+* HP M27fd USB-C Monitor: `GENESYS_SCALER\MSTAR_TSUM_G&PUBKEY_847A3650-8648-586B-83C8-8B53714F37E3&PANELREV_RIM101`
 
 The Public Key is product-specific and is required to identify the product.
 

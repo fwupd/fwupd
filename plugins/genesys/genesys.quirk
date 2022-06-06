@@ -43,6 +43,14 @@ GenesysScalerGpioEnableRegister = 0x0428
 GenesysScalerGpioValue = 0x01
 GenesysScalerCfiFlashId = 0xC22016
 
+[GENESYS_SCALER\MSTAR_TSUM_G&PUBKEY_847A3650-8648-586B-83C8-8B53714F37E3&PANELREV_AIM101]
+Name = HP M27fd USB-C Monitor
+Flags = use-i2c-ch0
+GenesysScalerGpioOutputRegister = 0x0426
+GenesysScalerGpioEnableRegister = 0x0428
+GenesysScalerGpioValue = 0x01
+GenesysScalerCfiFlashId = 0xC84016
+
 [GENESYS_SCALER\MSTAR_TSUM_G&PUBKEY_847A3650-8648-586B-83C8-8B53714F37E3&PANELREV_RIM101]
 Name = HP M27fd USB-C Monitor
 Flags = use-i2c-ch0
