@@ -14,12 +14,12 @@
 #include "fwupd-common.h"
 #include "fwupd-device-private.h"
 
-#include "fu-common-version.h"
 #include "fu-common.h"
 #include "fu-device-private.h"
 #include "fu-mutex.h"
 #include "fu-quirks.h"
 #include "fu-string.h"
+#include "fu-version-common.h"
 
 #define FU_DEVICE_RETRY_OPEN_COUNT 5
 #define FU_DEVICE_RETRY_OPEN_DELAY 500 /* ms */
@@ -2531,8 +2531,7 @@ fu_device_set_version(FuDevice *self, const gchar *version)
 	/* sanitize if required */
 	if (fu_device_has_internal_flag(self, FU_DEVICE_INTERNAL_FLAG_ENSURE_SEMVER)) {
 		version_safe =
-		    fu_common_version_ensure_semver_full(version,
-							 fu_device_get_version_format(self));
+		    fu_version_ensure_semver(version, fu_device_get_version_format(self));
 		if (g_strcmp0(version, version_safe) != 0)
 			g_debug("converted '%s' to '%s'", version, version_safe);
 	} else {
@@ -2541,9 +2540,7 @@ fu_device_set_version(FuDevice *self, const gchar *version)
 
 	/* print a console warning for an invalid version, if semver */
 	if (version_safe != NULL &&
-	    !fu_common_version_verify_format(version_safe,
-					     fu_device_get_version_format(self),
-					     &error))
+	    !fu_version_verify_format(version_safe, fu_device_get_version_format(self), &error))
 		g_warning("%s", error->message);
 
 	/* if different */
@@ -2577,7 +2574,8 @@ fu_device_set_version_lowest(FuDevice *self, const gchar *version)
 
 	/* sanitize if required */
 	if (fu_device_has_internal_flag(self, FU_DEVICE_INTERNAL_FLAG_ENSURE_SEMVER)) {
-		version_safe = fu_common_version_ensure_semver(version);
+		version_safe =
+		    fu_version_ensure_semver(version, fu_device_get_version_format(self));
 		if (g_strcmp0(version, version_safe) != 0)
 			g_debug("converted '%s' to '%s'", version, version_safe);
 	} else {
@@ -2586,9 +2584,7 @@ fu_device_set_version_lowest(FuDevice *self, const gchar *version)
 
 	/* print a console warning for an invalid version, if semver */
 	if (version_safe != NULL &&
-	    !fu_common_version_verify_format(version_safe,
-					     fu_device_get_version_format(self),
-					     &error))
+	    !fu_version_verify_format(version_safe, fu_device_get_version_format(self), &error))
 		g_warning("%s", error->message);
 
 	/* if different */
@@ -2622,7 +2618,8 @@ fu_device_set_version_bootloader(FuDevice *self, const gchar *version)
 
 	/* sanitize if required */
 	if (fu_device_has_internal_flag(self, FU_DEVICE_INTERNAL_FLAG_ENSURE_SEMVER)) {
-		version_safe = fu_common_version_ensure_semver(version);
+		version_safe =
+		    fu_version_ensure_semver(version, fu_device_get_version_format(self));
 		if (g_strcmp0(version, version_safe) != 0)
 			g_debug("converted '%s' to '%s'", version, version_safe);
 	} else {
@@ -2631,9 +2628,7 @@ fu_device_set_version_bootloader(FuDevice *self, const gchar *version)
 
 	/* print a console warning for an invalid version, if semver */
 	if (version_safe != NULL &&
-	    !fu_common_version_verify_format(version_safe,
-					     fu_device_get_version_format(self),
-					     &error))
+	    !fu_version_verify_format(version_safe, fu_device_get_version_format(self), &error))
 		g_warning("%s", error->message);
 
 	/* if different */

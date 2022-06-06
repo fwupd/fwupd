@@ -88,7 +88,7 @@ fu_cfu_module_setup(FuCfuModule *self, const guint8 *buf, gsize bufsz, gsize off
 	if (!fu_memread_uint32_safe(buf, bufsz, offset, &version_raw, G_LITTLE_ENDIAN, error))
 		return FALSE;
 	fu_device_set_version_raw(device, version_raw);
-	version = fu_common_version_from_uint32(version_raw, fu_device_get_version_format(device));
+	version = fu_version_from_uint32(version_raw, fu_device_get_version_format(device));
 	fu_device_set_version(device, version);
 
 	/* logical ID */

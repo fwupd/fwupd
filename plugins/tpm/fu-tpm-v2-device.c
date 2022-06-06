@@ -323,7 +323,7 @@ fu_tpm_v2_device_setup(FuDevice *device, GError **error)
 
 	/* this has to be done after _add_instance_id() sets the quirks */
 	verfmt = fu_device_get_version_format(device);
-	version = fu_common_version_from_uint64(version_raw, verfmt);
+	version = fu_version_from_uint64(version_raw, verfmt);
 	fu_device_set_version_format(device, verfmt);
 	fu_device_set_version(device, version);
 

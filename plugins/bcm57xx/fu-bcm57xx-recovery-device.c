@@ -689,8 +689,8 @@ fu_bcm57xx_recovery_device_setup(FuDevice *device, GError **error)
 		g_autofree gchar *fwversion_str = NULL;
 
 		/* this is only set on the OSS firmware */
-		fwversion_str = fu_common_version_from_uint32(GUINT32_FROM_BE(fwversion),
-							      FWUPD_VERSION_FORMAT_TRIPLET);
+		fwversion_str = fu_version_from_uint32(GUINT32_FROM_BE(fwversion),
+						       FWUPD_VERSION_FORMAT_TRIPLET);
 		fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_TRIPLET);
 		fu_device_set_version(device, fwversion_str);
 		fu_device_set_version_raw(device, fwversion);

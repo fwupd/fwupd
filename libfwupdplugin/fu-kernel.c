@@ -14,10 +14,10 @@
 #include <sys/utsname.h>
 #endif
 
-#include "fu-common-version.h"
 #include "fu-common.h"
 #include "fu-kernel.h"
 #include "fu-path.h"
+#include "fu-version-common.h"
 
 /**
  * fu_kernel_locked_down:
@@ -79,7 +79,7 @@ fu_kernel_check_version(const gchar *minimum_kernel, GError **error)
 				    "failed to read kernel version");
 		return FALSE;
 	}
-	if (fu_common_vercmp_full(name_tmp.release, minimum_kernel, FWUPD_VERSION_FORMAT_TRIPLET) <
+	if (fu_version_compare(name_tmp.release, minimum_kernel, FWUPD_VERSION_FORMAT_TRIPLET) <
 	    0) {
 		g_set_error(error,
 			    FWUPD_ERROR,

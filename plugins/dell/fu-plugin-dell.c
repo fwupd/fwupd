@@ -410,8 +410,8 @@ fu_plugin_dell_backend_device_added(FuPlugin *plugin, FuDevice *device, GError *
 			continue;
 		}
 
-		fw_str = fu_common_version_from_uint32(dock_info->components[i].fw_version,
-						       version_format);
+		fw_str =
+		    fu_version_from_uint32(dock_info->components[i].fw_version, version_format);
 		if (!fu_plugin_dock_node(plugin,
 					 platform,
 					 buf.record->dock_info_header.dock_type,
@@ -431,7 +431,7 @@ fu_plugin_dell_backend_device_added(FuPlugin *plugin, FuDevice *device, GError *
 	/* if an old EC or invalid EC version found, create updatable parent */
 	if (old_ec)
 		flash_ver_str =
-		    fu_common_version_from_uint32(dock_info->flash_pkg_version, version_format);
+		    fu_version_from_uint32(dock_info->flash_pkg_version, version_format);
 	if (!fu_plugin_dock_node(plugin,
 				 platform,
 				 buf.record->dock_info_header.dock_type,
@@ -750,7 +750,7 @@ fu_plugin_dell_detect_tpm(FuPlugin *plugin, GError **error)
 	g_debug("Creating primary TPM GUID %s and secondary TPM GUID %s",
 		tpm_guid_raw,
 		tpm_guid_raw_alt);
-	version_str = fu_common_version_from_uint32(out->fw_version, FWUPD_VERSION_FORMAT_QUAD);
+	version_str = fu_version_from_uint32(out->fw_version, FWUPD_VERSION_FORMAT_QUAD);
 
 	/* make it clear that the TPM is a discrete device of the product */
 	pretty_tpm_name = g_strdup_printf("TPM %s", tpm_mode);

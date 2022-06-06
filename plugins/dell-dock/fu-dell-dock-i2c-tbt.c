@@ -198,7 +198,7 @@ fu_dell_dock_tbt_setup(FuDevice *device, GError **error)
 
 	/* minimum version of NVM that supports this feature */
 	if (version == NULL ||
-	    fu_common_vercmp_full(version, MIN_NVM, FWUPD_VERSION_FORMAT_PAIR) < 0) {
+	    fu_version_compare(version, MIN_NVM, FWUPD_VERSION_FORMAT_PAIR) < 0) {
 		fu_device_set_update_error(
 		    device,
 		    "Updates over I2C are disabled due to insuffient NVM version");
@@ -206,9 +206,8 @@ fu_dell_dock_tbt_setup(FuDevice *device, GError **error)
 	}
 	/* minimum Hub2 version that supports this feature */
 	hub_version = fu_device_get_version(fu_device_get_proxy(device));
-	if (fu_common_vercmp_full(hub_version,
-				  self->hub_minimum_version,
-				  FWUPD_VERSION_FORMAT_PAIR) < 0) {
+	if (fu_version_compare(hub_version, self->hub_minimum_version, FWUPD_VERSION_FORMAT_PAIR) <
+	    0) {
 		fu_device_set_update_error(
 		    device,
 		    "Updates over I2C are disabled due to insufficient USB 3.1 G2 hub version");

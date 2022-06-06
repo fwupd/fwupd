@@ -200,20 +200,18 @@ fu_string_append_func(void)
 }
 
 static void
-fu_common_version_guess_format_func(void)
+fu_version_guess_format_func(void)
 {
-	g_assert_cmpint(fu_common_version_guess_format(NULL), ==, FWUPD_VERSION_FORMAT_UNKNOWN);
-	g_assert_cmpint(fu_common_version_guess_format(""), ==, FWUPD_VERSION_FORMAT_UNKNOWN);
-	g_assert_cmpint(fu_common_version_guess_format("1234ac"), ==, FWUPD_VERSION_FORMAT_PLAIN);
-	g_assert_cmpint(fu_common_version_guess_format("1.2"), ==, FWUPD_VERSION_FORMAT_PAIR);
-	g_assert_cmpint(fu_common_version_guess_format("1.2.3"), ==, FWUPD_VERSION_FORMAT_TRIPLET);
-	g_assert_cmpint(fu_common_version_guess_format("1.2.3.4"), ==, FWUPD_VERSION_FORMAT_QUAD);
-	g_assert_cmpint(fu_common_version_guess_format("1.2.3.4.5"),
-			==,
-			FWUPD_VERSION_FORMAT_UNKNOWN);
-	g_assert_cmpint(fu_common_version_guess_format("1a.2b.3"), ==, FWUPD_VERSION_FORMAT_PLAIN);
-	g_assert_cmpint(fu_common_version_guess_format("1"), ==, FWUPD_VERSION_FORMAT_NUMBER);
-	g_assert_cmpint(fu_common_version_guess_format("0x10201"), ==, FWUPD_VERSION_FORMAT_NUMBER);
+	g_assert_cmpint(fu_version_guess_format(NULL), ==, FWUPD_VERSION_FORMAT_UNKNOWN);
+	g_assert_cmpint(fu_version_guess_format(""), ==, FWUPD_VERSION_FORMAT_UNKNOWN);
+	g_assert_cmpint(fu_version_guess_format("1234ac"), ==, FWUPD_VERSION_FORMAT_PLAIN);
+	g_assert_cmpint(fu_version_guess_format("1.2"), ==, FWUPD_VERSION_FORMAT_PAIR);
+	g_assert_cmpint(fu_version_guess_format("1.2.3"), ==, FWUPD_VERSION_FORMAT_TRIPLET);
+	g_assert_cmpint(fu_version_guess_format("1.2.3.4"), ==, FWUPD_VERSION_FORMAT_QUAD);
+	g_assert_cmpint(fu_version_guess_format("1.2.3.4.5"), ==, FWUPD_VERSION_FORMAT_UNKNOWN);
+	g_assert_cmpint(fu_version_guess_format("1a.2b.3"), ==, FWUPD_VERSION_FORMAT_PLAIN);
+	g_assert_cmpint(fu_version_guess_format("1"), ==, FWUPD_VERSION_FORMAT_NUMBER);
+	g_assert_cmpint(fu_version_guess_format("0x10201"), ==, FWUPD_VERSION_FORMAT_NUMBER);
 }
 
 static void
@@ -2106,34 +2104,7 @@ fu_strstrip_func(void)
 }
 
 static void
-fu_common_version_semver_func(void)
-{
-	struct {
-		const gchar *old;
-		const gchar *new;
-	} map[] = {{"1.2.3", "1.2.3"},
-		   {"1.2-3", "1.2.3"},
-		   {"1~2-3", "1.2.3"},
-		   {".1.2", "1.2"},
-		   {"1.2.", "1.2"},
-		   {"1..2", "1.2"},
-		   {"CBET1.2.3", "1.2.3"},
-		   {"1.2.3alpha", "1.2.3"},
-		   {"5", "5"},
-		   {"\t5\n", "5"},
-		   {"0x123456", "0.18.13398"},
-		   {"coreboot-unknown", NULL},
-		   {"", NULL},
-		   {" ", NULL},
-		   {NULL, NULL}};
-	for (guint i = 0; map[i].old != NULL; i++) {
-		g_autofree gchar *tmp = fu_common_version_ensure_semver(map[i].old);
-		g_assert_cmpstr(tmp, ==, map[i].new);
-	}
-}
-
-static void
-fu_common_version_semver_full_func(void)
+fu_version_semver_func(void)
 {
 	struct {
 		const gchar *old;
@@ -2148,8 +2119,7 @@ fu_common_version_semver_full_func(void)
 		   {"4.11-1190-g12d8072e6b-dirty", "4.11", FWUPD_VERSION_FORMAT_PAIR},
 		   {NULL, NULL}};
 	for (guint i = 0; map[i].old != NULL; i++) {
-		g_autofree gchar *tmp =
-		    fu_common_version_ensure_semver_full(map[i].old, map[i].fmt);
+		g_autofree gchar *tmp = fu_version_ensure_semver(map[i].old, map[i].fmt);
 		g_assert_cmpstr(tmp, ==, map[i].new);
 	}
 }
@@ -2254,28 +2224,28 @@ fu_common_version_func(void)
 	/* check version conversion */
 	for (i = 0; version_from_uint64[i].ver != NULL; i++) {
 		g_autofree gchar *ver = NULL;
-		ver = fu_common_version_from_uint64(version_from_uint64[i].val,
-						    version_from_uint64[i].flags);
+		ver = fu_version_from_uint64(version_from_uint64[i].val,
+					     version_from_uint64[i].flags);
 		g_assert_cmpstr(ver, ==, version_from_uint64[i].ver);
 	}
 	for (i = 0; version_from_uint32[i].ver != NULL; i++) {
 		g_autofree gchar *ver = NULL;
-		ver = fu_common_version_from_uint32(version_from_uint32[i].val,
-						    version_from_uint32[i].flags);
+		ver = fu_version_from_uint32(version_from_uint32[i].val,
+					     version_from_uint32[i].flags);
 		g_assert_cmpstr(ver, ==, version_from_uint32[i].ver);
 	}
 	for (i = 0; version_from_uint16[i].ver != NULL; i++) {
 		g_autofree gchar *ver = NULL;
-		ver = fu_common_version_from_uint16(version_from_uint16[i].val,
-						    version_from_uint16[i].flags);
+		ver = fu_version_from_uint16(version_from_uint16[i].val,
+					     version_from_uint16[i].flags);
 		g_assert_cmpstr(ver, ==, version_from_uint16[i].ver);
 	}
 
 	/* check version parsing */
 	for (i = 0; version_parse[i].old != NULL; i++) {
 		g_autofree gchar *ver = NULL;
-		ver = fu_common_version_parse_from_format(version_parse[i].old,
-							  FWUPD_VERSION_FORMAT_TRIPLET);
+		ver = fu_version_parse_from_format(version_parse[i].old,
+						   FWUPD_VERSION_FORMAT_TRIPLET);
 		g_assert_cmpstr(ver, ==, version_parse[i].new);
 	}
 }
@@ -2284,104 +2254,70 @@ static void
 fu_common_vercmp_func(void)
 {
 	/* same */
-	g_assert_cmpint(fu_common_vercmp_full("1.2.3", "1.2.3", FWUPD_VERSION_FORMAT_UNKNOWN),
-			==,
-			0);
+	g_assert_cmpint(fu_version_compare("1.2.3", "1.2.3", FWUPD_VERSION_FORMAT_UNKNOWN), ==, 0);
 	g_assert_cmpint(
-	    fu_common_vercmp_full("001.002.003", "001.002.003", FWUPD_VERSION_FORMAT_UNKNOWN),
+	    fu_version_compare("001.002.003", "001.002.003", FWUPD_VERSION_FORMAT_UNKNOWN),
 	    ==,
 	    0);
-	g_assert_cmpint(fu_common_vercmp_full("0x00000002", "0x2", FWUPD_VERSION_FORMAT_HEX),
-			==,
-			0);
+	g_assert_cmpint(fu_version_compare("0x00000002", "0x2", FWUPD_VERSION_FORMAT_HEX), ==, 0);
 
 	/* upgrade and downgrade */
-	g_assert_cmpint(fu_common_vercmp_full("1.2.3", "1.2.4", FWUPD_VERSION_FORMAT_UNKNOWN),
-			<,
-			0);
+	g_assert_cmpint(fu_version_compare("1.2.3", "1.2.4", FWUPD_VERSION_FORMAT_UNKNOWN), <, 0);
 	g_assert_cmpint(
-	    fu_common_vercmp_full("001.002.000", "001.002.009", FWUPD_VERSION_FORMAT_UNKNOWN),
+	    fu_version_compare("001.002.000", "001.002.009", FWUPD_VERSION_FORMAT_UNKNOWN),
 	    <,
 	    0);
-	g_assert_cmpint(fu_common_vercmp_full("1.2.3", "1.2.2", FWUPD_VERSION_FORMAT_UNKNOWN),
-			>,
-			0);
+	g_assert_cmpint(fu_version_compare("1.2.3", "1.2.2", FWUPD_VERSION_FORMAT_UNKNOWN), >, 0);
 	g_assert_cmpint(
-	    fu_common_vercmp_full("001.002.009", "001.002.000", FWUPD_VERSION_FORMAT_UNKNOWN),
+	    fu_version_compare("001.002.009", "001.002.000", FWUPD_VERSION_FORMAT_UNKNOWN),
 	    >,
 	    0);
 
 	/* unequal depth */
-	g_assert_cmpint(fu_common_vercmp_full("1.2.3", "1.2.3.1", FWUPD_VERSION_FORMAT_UNKNOWN),
-			<,
-			0);
-	g_assert_cmpint(fu_common_vercmp_full("1.2.3.1", "1.2.4", FWUPD_VERSION_FORMAT_UNKNOWN),
-			<,
-			0);
+	g_assert_cmpint(fu_version_compare("1.2.3", "1.2.3.1", FWUPD_VERSION_FORMAT_UNKNOWN), <, 0);
+	g_assert_cmpint(fu_version_compare("1.2.3.1", "1.2.4", FWUPD_VERSION_FORMAT_UNKNOWN), <, 0);
 
 	/* mixed-alpha-numeric */
-	g_assert_cmpint(fu_common_vercmp_full("1.2.3a", "1.2.3a", FWUPD_VERSION_FORMAT_UNKNOWN),
+	g_assert_cmpint(fu_version_compare("1.2.3a", "1.2.3a", FWUPD_VERSION_FORMAT_UNKNOWN),
 			==,
 			0);
-	g_assert_cmpint(fu_common_vercmp_full("1.2.3a", "1.2.3b", FWUPD_VERSION_FORMAT_UNKNOWN),
-			<,
-			0);
-	g_assert_cmpint(fu_common_vercmp_full("1.2.3b", "1.2.3a", FWUPD_VERSION_FORMAT_UNKNOWN),
-			>,
-			0);
+	g_assert_cmpint(fu_version_compare("1.2.3a", "1.2.3b", FWUPD_VERSION_FORMAT_UNKNOWN), <, 0);
+	g_assert_cmpint(fu_version_compare("1.2.3b", "1.2.3a", FWUPD_VERSION_FORMAT_UNKNOWN), >, 0);
 
 	/* alpha version append */
-	g_assert_cmpint(fu_common_vercmp_full("1.2.3", "1.2.3a", FWUPD_VERSION_FORMAT_UNKNOWN),
-			<,
-			0);
-	g_assert_cmpint(fu_common_vercmp_full("1.2.3a", "1.2.3", FWUPD_VERSION_FORMAT_UNKNOWN),
-			>,
-			0);
+	g_assert_cmpint(fu_version_compare("1.2.3", "1.2.3a", FWUPD_VERSION_FORMAT_UNKNOWN), <, 0);
+	g_assert_cmpint(fu_version_compare("1.2.3a", "1.2.3", FWUPD_VERSION_FORMAT_UNKNOWN), >, 0);
 
 	/* alpha only */
-	g_assert_cmpint(fu_common_vercmp_full("alpha", "alpha", FWUPD_VERSION_FORMAT_UNKNOWN),
-			==,
-			0);
-	g_assert_cmpint(fu_common_vercmp_full("alpha", "beta", FWUPD_VERSION_FORMAT_UNKNOWN), <, 0);
-	g_assert_cmpint(fu_common_vercmp_full("beta", "alpha", FWUPD_VERSION_FORMAT_UNKNOWN), >, 0);
+	g_assert_cmpint(fu_version_compare("alpha", "alpha", FWUPD_VERSION_FORMAT_UNKNOWN), ==, 0);
+	g_assert_cmpint(fu_version_compare("alpha", "beta", FWUPD_VERSION_FORMAT_UNKNOWN), <, 0);
+	g_assert_cmpint(fu_version_compare("beta", "alpha", FWUPD_VERSION_FORMAT_UNKNOWN), >, 0);
 
 	/* alpha-compare */
-	g_assert_cmpint(fu_common_vercmp_full("1.2a.3", "1.2a.3", FWUPD_VERSION_FORMAT_UNKNOWN),
+	g_assert_cmpint(fu_version_compare("1.2a.3", "1.2a.3", FWUPD_VERSION_FORMAT_UNKNOWN),
 			==,
 			0);
-	g_assert_cmpint(fu_common_vercmp_full("1.2a.3", "1.2b.3", FWUPD_VERSION_FORMAT_UNKNOWN),
-			<,
-			0);
-	g_assert_cmpint(fu_common_vercmp_full("1.2b.3", "1.2a.3", FWUPD_VERSION_FORMAT_UNKNOWN),
-			>,
-			0);
+	g_assert_cmpint(fu_version_compare("1.2a.3", "1.2b.3", FWUPD_VERSION_FORMAT_UNKNOWN), <, 0);
+	g_assert_cmpint(fu_version_compare("1.2b.3", "1.2a.3", FWUPD_VERSION_FORMAT_UNKNOWN), >, 0);
 
 	/* tilde is all-powerful */
-	g_assert_cmpint(
-	    fu_common_vercmp_full("1.2.3~rc1", "1.2.3~rc1", FWUPD_VERSION_FORMAT_UNKNOWN),
-	    ==,
-	    0);
-	g_assert_cmpint(fu_common_vercmp_full("1.2.3~rc1", "1.2.3", FWUPD_VERSION_FORMAT_UNKNOWN),
+	g_assert_cmpint(fu_version_compare("1.2.3~rc1", "1.2.3~rc1", FWUPD_VERSION_FORMAT_UNKNOWN),
+			==,
+			0);
+	g_assert_cmpint(fu_version_compare("1.2.3~rc1", "1.2.3", FWUPD_VERSION_FORMAT_UNKNOWN),
 			<,
 			0);
-	g_assert_cmpint(fu_common_vercmp_full("1.2.3", "1.2.3~rc1", FWUPD_VERSION_FORMAT_UNKNOWN),
+	g_assert_cmpint(fu_version_compare("1.2.3", "1.2.3~rc1", FWUPD_VERSION_FORMAT_UNKNOWN),
 			>,
 			0);
-	g_assert_cmpint(
-	    fu_common_vercmp_full("1.2.3~rc2", "1.2.3~rc1", FWUPD_VERSION_FORMAT_UNKNOWN),
-	    >,
-	    0);
+	g_assert_cmpint(fu_version_compare("1.2.3~rc2", "1.2.3~rc1", FWUPD_VERSION_FORMAT_UNKNOWN),
+			>,
+			0);
 
 	/* invalid */
-	g_assert_cmpint(fu_common_vercmp_full("1", NULL, FWUPD_VERSION_FORMAT_UNKNOWN),
-			==,
-			G_MAXINT);
-	g_assert_cmpint(fu_common_vercmp_full(NULL, "1", FWUPD_VERSION_FORMAT_UNKNOWN),
-			==,
-			G_MAXINT);
-	g_assert_cmpint(fu_common_vercmp_full(NULL, NULL, FWUPD_VERSION_FORMAT_UNKNOWN),
-			==,
-			G_MAXINT);
+	g_assert_cmpint(fu_version_compare("1", NULL, FWUPD_VERSION_FORMAT_UNKNOWN), ==, G_MAXINT);
+	g_assert_cmpint(fu_version_compare(NULL, "1", FWUPD_VERSION_FORMAT_UNKNOWN), ==, G_MAXINT);
+	g_assert_cmpint(fu_version_compare(NULL, NULL, FWUPD_VERSION_FORMAT_UNKNOWN), ==, G_MAXINT);
 }
 
 static void
@@ -3947,11 +3883,10 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/common{byte-array}", fu_common_byte_array_func);
 	g_test_add_func("/fwupd/common{crc}", fu_common_crc_func);
 	g_test_add_func("/fwupd/common{string-append-kv}", fu_string_append_func);
-	g_test_add_func("/fwupd/common{version-guess-format}", fu_common_version_guess_format_func);
+	g_test_add_func("/fwupd/common{version-guess-format}", fu_version_guess_format_func);
 	g_test_add_func("/fwupd/common{strtoull}", fu_strtoull_func);
 	g_test_add_func("/fwupd/common{version}", fu_common_version_func);
-	g_test_add_func("/fwupd/common{version-semver}", fu_common_version_semver_func);
-	g_test_add_func("/fwupd/common{version-semver-full}", fu_common_version_semver_full_func);
+	g_test_add_func("/fwupd/common{version-semver}", fu_version_semver_func);
 	g_test_add_func("/fwupd/common{vercmp}", fu_common_vercmp_func);
 	g_test_add_func("/fwupd/common{strstrip}", fu_strstrip_func);
 	g_test_add_func("/fwupd/common{endian}", fu_common_endian_func);

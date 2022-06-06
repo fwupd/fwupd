@@ -1651,9 +1651,9 @@ fu_util_reinstall(FuUtilPrivate *priv, gchar **values, GError **error)
 
 	for (guint j = 0; j < rels->len; j++) {
 		FwupdRelease *rel_tmp = g_ptr_array_index(rels, j);
-		if (fu_common_vercmp_full(fwupd_release_get_version(rel_tmp),
-					  fu_device_get_version(dev),
-					  fu_device_get_version_format(dev)) == 0) {
+		if (fu_version_compare(fwupd_release_get_version(rel_tmp),
+				       fu_device_get_version(dev),
+				       fu_device_get_version_format(dev)) == 0) {
 			rel = g_object_ref(rel_tmp);
 			break;
 		}

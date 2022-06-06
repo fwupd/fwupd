@@ -242,7 +242,7 @@ fu_release_get_release_version(FuRelease *self, const gchar *version, GError **e
 		return g_strdup(version);
 
 	/* convert to dotted decimal */
-	return fu_common_version_from_uint32((guint32)ver_uint32, fmt);
+	return fu_version_from_uint32((guint32)ver_uint32, fmt);
 }
 
 static gboolean
@@ -553,9 +553,9 @@ fu_release_check_requirements(FuRelease *self,
 	/* compare to the lowest supported version, if it exists */
 	version_lowest = fu_device_get_version_lowest(self->device);
 	if (version_lowest != NULL &&
-	    fu_common_vercmp_full(version_lowest,
-				  fu_release_get_version(self),
-				  fu_device_get_version_format(self->device)) > 0 &&
+	    fu_version_compare(version_lowest,
+			       fu_release_get_version(self),
+			       fu_device_get_version_format(self->device)) > 0 &&
 	    (install_flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -568,9 +568,9 @@ fu_release_check_requirements(FuRelease *self,
 	}
 
 	/* is this a downgrade or re-install */
-	vercmp = fu_common_vercmp_full(version,
-				       fu_release_get_version(self),
-				       fu_device_get_version_format(self->device));
+	vercmp = fu_version_compare(version,
+				    fu_release_get_version(self),
+				    fu_device_get_version_format(self->device));
 	if (fu_device_has_flag(self->device, FWUPD_DEVICE_FLAG_ONLY_VERSION_UPGRADE) &&
 	    vercmp >= 0) {
 		g_set_error(error,

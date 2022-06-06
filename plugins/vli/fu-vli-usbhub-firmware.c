@@ -121,7 +121,7 @@ fu_vli_usbhub_firmware_parse(FuFirmware *firmware,
 	/* version is set */
 	if (version != 0x0) {
 		g_autofree gchar *version_str = NULL;
-		version_str = fu_common_version_from_uint16(version, FWUPD_VERSION_FORMAT_BCD);
+		version_str = fu_version_from_uint16(version, FWUPD_VERSION_FORMAT_BCD);
 		fu_firmware_set_version(firmware, version_str);
 		fu_firmware_set_version_raw(firmware, version);
 	}

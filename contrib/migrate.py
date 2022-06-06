@@ -113,6 +113,14 @@ if __name__ == "__main__":
             "fu_common_find_program_in_path": "fu_path_find_program",
             "fu_common_cpuid": "fu_cpuid",
             "fu_common_get_cpu_vendor": "fu_cpu_get_vendor",
+            "fu_common_vercmp_full": "fu_version_compare",
+            "fu_common_version_ensure_semver_full": "fu_version_ensure_semver",
+            "fu_common_version_from_uint16": "fu_version_from_uint16",
+            "fu_common_version_from_uint32": "fu_version_from_uint32",
+            "fu_common_version_from_uint64": "fu_version_from_uint64",
+            "fu_common_version_guess_format": "fu_version_guess_format",
+            "fu_common_version_parse_from_format": "fu_version_parse_from_format",
+            "fu_common_version_verify_format": "fu_version_verify_format",
         }.items():
             if buf.find(old) == -1:
                 continue

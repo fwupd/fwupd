@@ -45,7 +45,7 @@ fu_wacom_emr_device_setup(FuDevice *device, GError **error)
 					    error))
 			return FALSE;
 		fu_device_remove_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
-		version = fu_common_version_from_uint16(fw_ver, FWUPD_VERSION_FORMAT_PAIR);
+		version = fu_version_from_uint16(fw_ver, FWUPD_VERSION_FORMAT_PAIR);
 		fu_device_set_version(device, version);
 		fu_device_set_version_raw(device, fw_ver);
 	}

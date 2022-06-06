@@ -220,9 +220,9 @@ main(int argc, char *argv[])
 			continue;
 
 		/* tell the user what's going to happen */
-		vercmp = fu_common_vercmp_full(fwupd_device_get_version(dev),
-					       fwupd_release_get_version(rel),
-					       fwupd_device_get_version_format(dev));
+		vercmp = fu_version_compare(fwupd_device_get_version(dev),
+					    fwupd_release_get_version(rel),
+					    fwupd_device_get_version_format(dev));
 		if (vercmp == 0) {
 			/* TRANSLATORS: the first replacement is a display name
 			 * e.g. "ColorHugALS" and the second is a version number

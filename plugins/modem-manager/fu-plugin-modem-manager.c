@@ -325,7 +325,7 @@ fu_plugin_mm_setup_manager(FuPlugin *plugin)
 	const gchar *version = mm_manager_get_version(priv->manager);
 	GList *list;
 
-	if (fu_common_vercmp_full(version, MM_REQUIRED_VERSION, FWUPD_VERSION_FORMAT_TRIPLET) < 0) {
+	if (fu_version_compare(version, MM_REQUIRED_VERSION, FWUPD_VERSION_FORMAT_TRIPLET) < 0) {
 		g_warning("ModemManager %s is available, but need at least %s",
 			  version,
 			  MM_REQUIRED_VERSION);

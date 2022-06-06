@@ -351,7 +351,7 @@ fu_vli_pd_device_setup(FuDevice *device, GError **error)
 	if (!fu_memread_uint32_safe(verbuf, sizeof(verbuf), 0x0, &version_raw, G_BIG_ENDIAN, error))
 		return FALSE;
 	fu_device_set_version_raw(FU_DEVICE(self), version_raw);
-	version_str = fu_common_version_from_uint32(version_raw, FWUPD_VERSION_FORMAT_QUAD);
+	version_str = fu_version_from_uint32(version_raw, FWUPD_VERSION_FORMAT_QUAD);
 	fu_device_set_version(FU_DEVICE(self), version_str);
 
 	/* get device kind if not already in ROM mode */

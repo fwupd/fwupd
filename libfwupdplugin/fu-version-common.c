@@ -13,12 +13,15 @@
 #include "fwupd-enums.h"
 #include "fwupd-error.h"
 
-#include "fu-common-version.h"
+#include "fu-version-common.h"
 
 #define FU_COMMON_VERSION_DECODE_BCD(val) ((((val) >> 4) & 0x0f) * 10 + ((val)&0x0f))
 
+gchar *
+fu_common_version_ensure_semver(const gchar *version);
+
 /**
- * fu_common_version_from_uint64:
+ * fu_version_from_uint64:
  * @val: a raw version number
  * @kind: version kind used for formatting, e.g. %FWUPD_VERSION_FORMAT_QUAD
  *
@@ -26,10 +29,10 @@
  *
  * Returns: a version number, e.g. `1.2.3.4`, or %NULL if not supported
  *
- * Since: 1.3.6
+ * Since: 1.8.2
  **/
 gchar *
-fu_common_version_from_uint64(guint64 val, FwupdVersionFormat kind)
+fu_version_from_uint64(guint64 val, FwupdVersionFormat kind)
 {
 	if (kind == FWUPD_VERSION_FORMAT_QUAD) {
 		/* AABB.CCDD.EEFF.GGHH */
@@ -65,7 +68,7 @@ fu_common_version_from_uint64(guint64 val, FwupdVersionFormat kind)
 }
 
 /**
- * fu_common_version_from_uint32:
+ * fu_version_from_uint32:
  * @val: a uint32le version number
  * @kind: version kind used for formatting, e.g. %FWUPD_VERSION_FORMAT_TRIPLET
  *
@@ -73,10 +76,10 @@ fu_common_version_from_uint64(guint64 val, FwupdVersionFormat kind)
  *
  * Returns: a version number, e.g. `1.0.3`, or %NULL if not supported
  *
- * Since: 1.2.0
+ * Since: 1.8.2
  **/
 gchar *
-fu_common_version_from_uint32(guint32 val, FwupdVersionFormat kind)
+fu_version_from_uint32(guint32 val, FwupdVersionFormat kind)
 {
 	if (kind == FWUPD_VERSION_FORMAT_QUAD) {
 		/* AA.BB.CC.DD */
@@ -157,7 +160,7 @@ fu_common_version_from_uint32(guint32 val, FwupdVersionFormat kind)
 }
 
 /**
- * fu_common_version_from_uint16:
+ * fu_version_from_uint16:
  * @val: a uint16le version number
  * @kind: version kind used for formatting, e.g. %FWUPD_VERSION_FORMAT_TRIPLET
  *
@@ -165,10 +168,10 @@ fu_common_version_from_uint32(guint32 val, FwupdVersionFormat kind)
  *
  * Returns: a version number, e.g. `1.3`, or %NULL if not supported
  *
- * Since: 1.2.0
+ * Since: 1.8.2
  **/
 gchar *
-fu_common_version_from_uint16(guint16 val, FwupdVersionFormat kind)
+fu_version_from_uint16(guint16 val, FwupdVersionFormat kind)
 {
 	if (kind == FWUPD_VERSION_FORMAT_BCD) {
 		return g_strdup_printf("%i.%i",
@@ -192,7 +195,7 @@ fu_common_version_from_uint16(guint16 val, FwupdVersionFormat kind)
 }
 
 static gint
-fu_common_vercmp_char(gchar chr1, gchar chr2)
+fu_version_compare_char(gchar chr1, gchar chr2)
 {
 	if (chr1 == chr2)
 		return 0;
@@ -204,7 +207,7 @@ fu_common_vercmp_char(gchar chr1, gchar chr2)
 }
 
 static gint
-fu_common_vercmp_chunk(const gchar *str1, const gchar *str2)
+fu_version_compare_chunk(const gchar *str1, const gchar *str2)
 {
 	guint i;
 
@@ -218,11 +221,11 @@ fu_common_vercmp_chunk(const gchar *str1, const gchar *str2)
 
 	/* check each char of the chunk */
 	for (i = 0; str1[i] != '\0' && str2[i] != '\0'; i++) {
-		gint rc = fu_common_vercmp_char(str1[i], str2[i]);
+		gint rc = fu_version_compare_char(str1[i], str2[i]);
 		if (rc != 0)
 			return rc;
 	}
-	return fu_common_vercmp_char(str1[i], str2[i]);
+	return fu_version_compare_char(str1[i], str2[i]);
 }
 
 static gboolean
@@ -237,7 +240,7 @@ _g_ascii_is_digits(const gchar *str)
 }
 
 static guint
-fwupd_version_format_number_sections(FwupdVersionFormat fmt)
+fu_version_format_number_sections(FwupdVersionFormat fmt)
 {
 	if (fmt == FWUPD_VERSION_FORMAT_PLAIN || fmt == FWUPD_VERSION_FORMAT_NUMBER ||
 	    fmt == FWUPD_VERSION_FORMAT_HEX)
@@ -254,7 +257,7 @@ fwupd_version_format_number_sections(FwupdVersionFormat fmt)
 }
 
 /**
- * fu_common_version_ensure_semver_full:
+ * fu_version_ensure_semver:
  * @version: (nullable): a version number, e.g. ` V1.2.3 `
  * @fmt: a version format, e.g. %FWUPD_VERSION_FORMAT_TRIPLET
  *
@@ -263,13 +266,13 @@ fwupd_version_format_number_sections(FwupdVersionFormat fmt)
  *
  * Returns: a version number, e.g. `1.2.3`, or %NULL if the version was not valid
  *
- * Since: 1.7.6
+ * Since: 1.8.2
  */
 gchar *
-fu_common_version_ensure_semver_full(const gchar *version, FwupdVersionFormat fmt)
+fu_version_ensure_semver(const gchar *version, FwupdVersionFormat fmt)
 {
 	guint sections_actual;
-	guint sections_expected = fwupd_version_format_number_sections(fmt);
+	guint sections_expected = fu_version_format_number_sections(fmt);
 	g_autofree gchar *tmp = NULL;
 	g_auto(GStrv) split = NULL;
 	g_autoptr(GString) str = g_string_new(NULL);
@@ -310,8 +313,6 @@ fu_common_version_ensure_semver_full(const gchar *version, FwupdVersionFormat fm
  * Builds a semver from the possibly crazy version number.
  *
  * Returns: a version number, e.g. `1.2.3`, or %NULL if the version was not valid
- *
- * Since: 1.2.9
  */
 gchar *
 fu_common_version_ensure_semver(const gchar *version)
@@ -326,7 +327,7 @@ fu_common_version_ensure_semver(const gchar *version)
 
 	/* hex prefix */
 	if (g_str_has_prefix(version, "0x")) {
-		return fu_common_version_parse_from_format(version, FWUPD_VERSION_FORMAT_TRIPLET);
+		return fu_version_parse_from_format(version, FWUPD_VERSION_FORMAT_TRIPLET);
 	}
 
 	/* make sane */
@@ -360,7 +361,7 @@ fu_common_version_ensure_semver(const gchar *version)
 }
 
 /**
- * fu_common_version_parse_from_format
+ * fu_version_parse_from_format
  * @version: (nullable): a version number
  * @fmt: a version format, e.g. %FWUPD_VERSION_FORMAT_TRIPLET
  *
@@ -377,10 +378,10 @@ fu_common_version_ensure_semver(const gchar *version)
  *
  * Returns: a version number, e.g. `1.0.3`, or %NULL on error
  *
- * Since: 1.3.3
+ * Since: 1.8.2
  */
 gchar *
-fu_common_version_parse_from_format(const gchar *version, FwupdVersionFormat fmt)
+fu_version_parse_from_format(const gchar *version, FwupdVersionFormat fmt)
 {
 	const gchar *version_noprefix = version;
 	gchar *endptr = NULL;
@@ -416,11 +417,11 @@ fu_common_version_parse_from_format(const gchar *version, FwupdVersionFormat fmt
 		return g_strdup(version);
 	if (tmp == 0)
 		return g_strdup(version);
-	return fu_common_version_from_uint32((guint32)tmp, fmt);
+	return fu_version_from_uint32((guint32)tmp, fmt);
 }
 
 /**
- * fu_common_version_guess_format:
+ * fu_version_guess_format:
  * @version: (nullable): a version number, e.g. `1.2.3`
  *
  * Guesses the version format from the version number. This is only a heuristic
@@ -432,10 +433,10 @@ fu_common_version_parse_from_format(const gchar *version, FwupdVersionFormat fmt
  *
  * Returns: a version format, e.g. %FWUPD_VERSION_FORMAT_QUAD
  *
- * Since: 1.2.0
+ * Since: 1.8.2
  */
 FwupdVersionFormat
-fu_common_version_guess_format(const gchar *version)
+fu_version_guess_format(const gchar *version)
 {
 	guint sz;
 	g_auto(GStrv) split = NULL;
@@ -473,7 +474,7 @@ fu_common_version_guess_format(const gchar *version)
 }
 
 static FwupdVersionFormat
-fu_common_version_convert_base(FwupdVersionFormat fmt)
+fu_version_format_convert_base(FwupdVersionFormat fmt)
 {
 	if (fmt == FWUPD_VERSION_FORMAT_INTEL_ME || fmt == FWUPD_VERSION_FORMAT_INTEL_ME2)
 		return FWUPD_VERSION_FORMAT_QUAD;
@@ -487,7 +488,7 @@ fu_common_version_convert_base(FwupdVersionFormat fmt)
 }
 
 /**
- * fu_common_version_verify_format:
+ * fu_version_verify_format:
  * @version: (not nullable): a string, e.g. `0x1234`
  * @fmt: a version format
  * @error: (nullable): optional return location for an error
@@ -496,12 +497,12 @@ fu_common_version_convert_base(FwupdVersionFormat fmt)
  *
  * Returns: TRUE or FALSE
  *
- * Since: 1.2.9
+ * Since: 1.8.2
  **/
 gboolean
-fu_common_version_verify_format(const gchar *version, FwupdVersionFormat fmt, GError **error)
+fu_version_verify_format(const gchar *version, FwupdVersionFormat fmt, GError **error)
 {
-	FwupdVersionFormat fmt_base = fu_common_version_convert_base(fmt);
+	FwupdVersionFormat fmt_base = fu_version_format_convert_base(fmt);
 	FwupdVersionFormat fmt_guess;
 
 	g_return_val_if_fail(version != NULL, FALSE);
@@ -516,7 +517,7 @@ fu_common_version_verify_format(const gchar *version, FwupdVersionFormat fmt, GE
 		return TRUE;
 
 	/* check the base format */
-	fmt_guess = fu_common_version_guess_format(version);
+	fmt_guess = fu_version_guess_format(version);
 	if (fmt_guess != fmt_base) {
 		g_set_error(error,
 			    G_IO_ERROR,
@@ -531,7 +532,7 @@ fu_common_version_verify_format(const gchar *version, FwupdVersionFormat fmt, GE
 }
 
 static gint
-fu_common_vercmp_safe(const gchar *version_a, const gchar *version_b)
+fu_version_compare_safe(const gchar *version_a, const gchar *version_b)
 {
 	guint longest_split;
 	g_auto(GStrv) split_a = NULL;
@@ -572,7 +573,7 @@ fu_common_vercmp_safe(const gchar *version_a, const gchar *version_b)
 		/* compare strings */
 		if ((endptr_a != NULL && endptr_a[0] != '\0') ||
 		    (endptr_b != NULL && endptr_b[0] != '\0')) {
-			gint rc = fu_common_vercmp_chunk(endptr_a, endptr_b);
+			gint rc = fu_version_compare_chunk(endptr_a, endptr_b);
 			if (rc < 0)
 				return -1;
 			if (rc > 0)
@@ -585,7 +586,7 @@ fu_common_vercmp_safe(const gchar *version_a, const gchar *version_b)
 }
 
 /**
- * fu_common_vercmp_full:
+ * fu_version_compare:
  * @version_a: (nullable): the semver release version, e.g. `1.2.3`
  * @version_b: (nullable): the semver release version, e.g. `1.2.3.1`
  * @fmt: a version format, e.g. %FWUPD_VERSION_FORMAT_PLAIN
@@ -595,19 +596,19 @@ fu_common_vercmp_safe(const gchar *version_a, const gchar *version_b)
  *
  * Returns: -1 if a < b, +1 if a > b, 0 if they are equal, and %G_MAXINT on error
  *
- * Since: 1.3.9
+ * Since: 1.8.2
  */
 gint
-fu_common_vercmp_full(const gchar *version_a, const gchar *version_b, FwupdVersionFormat fmt)
+fu_version_compare(const gchar *version_a, const gchar *version_b, FwupdVersionFormat fmt)
 {
 	if (fmt == FWUPD_VERSION_FORMAT_PLAIN)
 		return g_strcmp0(version_a, version_b);
 	if (fmt == FWUPD_VERSION_FORMAT_HEX) {
 		g_autofree gchar *hex_a = NULL;
 		g_autofree gchar *hex_b = NULL;
-		hex_a = fu_common_version_parse_from_format(version_a, fmt);
-		hex_b = fu_common_version_parse_from_format(version_b, fmt);
-		return fu_common_vercmp_safe(hex_a, hex_b);
+		hex_a = fu_version_parse_from_format(version_a, fmt);
+		hex_b = fu_version_parse_from_format(version_b, fmt);
+		return fu_version_compare_safe(hex_a, hex_b);
 	}
-	return fu_common_vercmp_safe(version_a, version_b);
+	return fu_version_compare_safe(version_a, version_b);
 }
