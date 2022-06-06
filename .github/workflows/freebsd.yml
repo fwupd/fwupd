@@ -13,7 +13,7 @@ jobs:
       uses: actions/checkout@v2
     - name: Find tag
       id: tagger
-      uses: jimschubert/query-tag-action@v1
+      uses: jimschubert/query-tag-action@v2
     - name: Build
       id: test
       uses: vmactions/freebsd-vm@v0.1.6
