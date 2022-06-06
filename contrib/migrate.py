@@ -98,6 +98,7 @@ if __name__ == "__main__":
             "fu_common_set_firmware_search_path": "fu_kernel_set_firmware_search_path",
             "fu_common_reset_firmware_search_path": "fu_kernel_reset_firmware_search_path",
             "fu_common_firmware_builder": "fu_firmware_builder_process",
+            "fu_common_uri_get_scheme": "fu_release_uri_get_scheme",
         }.items():
             if buf.find(old) == -1:
                 continue

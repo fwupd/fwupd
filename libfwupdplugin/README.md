@@ -80,3 +80,4 @@ Remember: Plugins should be upstream!
 * `fu_common_reset_firmware_search_path()`: Use `fu_kernel_reset_firmware_search_path` instead.
 * `fu_common_firmware_builder()`: You should not be using this.
 * `fu_common_realpath()`: You should not be using this.
+* `fu_common_uri_get_scheme()`: You should not be using this.

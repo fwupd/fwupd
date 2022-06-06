@@ -1268,29 +1268,6 @@ fu_common_reverse_uint8(guint8 value)
 }
 
 /**
- * fu_common_uri_get_scheme:
- * @uri: valid URI, e.g. `https://foo.bar/baz`
- *
- * Returns the USI scheme for the given URI.
- *
- * Returns: scheme value, or %NULL if invalid, e.g. `https`
- *
- * Since: 1.5.6
- **/
-gchar *
-fu_common_uri_get_scheme(const gchar *uri)
-{
-	gchar *tmp;
-
-	g_return_val_if_fail(uri != NULL, NULL);
-
-	tmp = g_strstr_len(uri, -1, ":");
-	if (tmp == NULL || tmp[0] == '\0')
-		return NULL;
-	return g_utf8_strdown(uri, tmp - uri);
-}
-
-/**
  * fu_common_align_up:
  * @value: value to align
  * @alignment: align to this power of 2, where 0x1F is the maximum value of 2GB
