@@ -211,7 +211,7 @@ fu_hid_device_close(FuDevice *device, GError **error)
 /**
  * fu_hid_device_set_interface:
  * @self: a #FuHidDevice
- * @interface: an interface number, e.g. `0x03`
+ * @interface_number: an interface number, e.g. `0x03`
  *
  * Sets the HID USB interface number.
  *
@@ -222,11 +222,11 @@ fu_hid_device_close(FuDevice *device, GError **error)
  * Since: 1.4.0
  **/
 void
-fu_hid_device_set_interface(FuHidDevice *self, guint8 interface)
+fu_hid_device_set_interface(FuHidDevice *self, guint8 interface_number)
 {
 	FuHidDevicePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FU_HID_DEVICE(self));
-	priv->interface = interface;
+	priv->interface = interface_number;
 	priv->interface_autodetect = FALSE;
 }
 

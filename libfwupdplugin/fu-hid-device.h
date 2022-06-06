@@ -47,7 +47,7 @@ fu_hid_device_new(GUsbDevice *usb_device);
 void
 fu_hid_device_add_flag(FuHidDevice *self, FuHidDeviceFlags flag);
 void
-fu_hid_device_set_interface(FuHidDevice *self, guint8 interface);
+fu_hid_device_set_interface(FuHidDevice *self, guint8 interface_number);
 guint8
 fu_hid_device_get_interface(FuHidDevice *self);
 gboolean
