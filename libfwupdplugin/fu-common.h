@@ -171,8 +171,6 @@ typedef enum {
 
 gchar *
 fu_common_get_path(FuPathKind path_kind);
-gchar *
-fu_common_realpath(const gchar *filename, GError **error) G_GNUC_WARN_UNUSED_RESULT;
 GPtrArray *
 fu_common_filename_glob(const gchar *directory,
 			const gchar *pattern,
