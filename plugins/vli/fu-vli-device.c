@@ -639,13 +639,13 @@ fu_vli_device_set_quirk_kv(FuDevice *device, const gchar *key, const gchar *valu
 	guint64 tmp = 0;
 
 	if (g_strcmp0(key, "CfiDeviceCmdReadIdSz") == 0) {
-		if (!fu_strtoull_full(value, &tmp, 0, G_MAXUINT8, error))
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT8, error))
 			return FALSE;
 		priv->spi_cmd_read_id_sz = tmp;
 		return TRUE;
 	}
 	if (g_strcmp0(key, "VliSpiAutoDetect") == 0) {
-		if (!fu_strtoull_full(value, &tmp, 0, G_MAXUINT8, error))
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT8, error))
 			return FALSE;
 		priv->spi_auto_detect = tmp > 0;
 		return TRUE;

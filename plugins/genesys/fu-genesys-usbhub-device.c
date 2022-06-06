@@ -743,6 +743,7 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 	gsize bufsz;
 	guint32 block_size;
 	guint32 sector_size;
+	guint64 revision_tmp = 0;
 	guint16 version_raw;
 	guint8 static_idx = 0;
 	guint8 dynamic_idx = 0;
@@ -821,7 +822,12 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 		return FALSE;
 	}
 	memcpy(rev, &self->static_ts.mask_project_ic_type[4], 2);
-	self->chip.revision = fu_strtoull(rev);
+
+	if (!fu_strtoull(rev, &revision_tmp, 0, G_MAXINT32, error)) {
+		g_prefix_error(error, "failed to parse %s: ", rev);
+		return FALSE;
+	}
+	self->chip.revision = revision_tmp;
 
 	dynamic_buf =
 	    g_usb_device_get_string_descriptor_bytes_full(usb_device,
@@ -1487,7 +1493,7 @@ fu_genesys_usbhub_device_set_quirk_kv(FuDevice *device,
 	guint64 tmp;
 
 	if (g_strcmp0(key, "GenesysUsbhubDeviceTransferSize") == 0) {
-		if (!fu_strtoull_full(value, &tmp, 0, G_MAXUINT32, error))
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT32, error))
 			return FALSE;
 		self->flash_rw_size = tmp;
 
@@ -1495,7 +1501,7 @@ fu_genesys_usbhub_device_set_quirk_kv(FuDevice *device,
 		return TRUE;
 	}
 	if (g_strcmp0(key, "GenesysUsbhubSwitchRequest") == 0) {
-		if (!fu_strtoull_full(value, &tmp, 0, G_MAXUINT8, error))
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT8, error))
 			return FALSE;
 		self->vcs.req_switch = tmp;
 
@@ -1503,7 +1509,7 @@ fu_genesys_usbhub_device_set_quirk_kv(FuDevice *device,
 		return TRUE;
 	}
 	if (g_strcmp0(key, "GenesysUsbhubReadRequest") == 0) {
-		if (!fu_strtoull_full(value, &tmp, 0, G_MAXUINT8, error))
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT8, error))
 			return FALSE;
 		self->vcs.req_read = tmp;
 
@@ -1511,7 +1517,7 @@ fu_genesys_usbhub_device_set_quirk_kv(FuDevice *device,
 		return TRUE;
 	}
 	if (g_strcmp0(key, "GenesysUsbhubWriteRequest") == 0) {
-		if (!fu_strtoull_full(value, &tmp, 0, G_MAXUINT8, error))
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT8, error))
 			return FALSE;
 		self->vcs.req_write = tmp;
 

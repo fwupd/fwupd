@@ -35,6 +35,7 @@ fu_plugin_pci_psp_get_attr(FwupdSecurityAttr *attr,
 			   gboolean *out,
 			   GError **error)
 {
+	guint64 val = 0;
 	g_autofree gchar *fn = g_build_filename(path, file, NULL);
 	g_autofree gchar *buf = NULL;
 	gsize bufsz = 0;
@@ -44,8 +45,9 @@ fu_plugin_pci_psp_get_attr(FwupdSecurityAttr *attr,
 		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA);
 		return FALSE;
 	}
-	*out = fu_strtoull(buf) ? TRUE : FALSE;
-
+	if (!fu_strtoull(buf, &val, 0, G_MAXUINT32, error))
+		return FALSE;
+	*out = val ? TRUE : FALSE;
 	return TRUE;
 }
 

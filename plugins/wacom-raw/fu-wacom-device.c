@@ -326,19 +326,19 @@ fu_wacom_device_set_quirk_kv(FuDevice *device, const gchar *key, const gchar *va
 	guint64 tmp = 0;
 
 	if (g_strcmp0(key, "WacomI2cFlashBlockSize") == 0) {
-		if (!fu_strtoull_full(value, &tmp, 0, G_MAXSIZE, error))
+		if (!fu_strtoull(value, &tmp, 0, G_MAXSIZE, error))
 			return FALSE;
 		priv->flash_block_size = tmp;
 		return TRUE;
 	}
 	if (g_strcmp0(key, "WacomI2cFlashBaseAddr") == 0) {
-		if (!fu_strtoull_full(value, &tmp, 0, G_MAXUINT32, error))
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT32, error))
 			return FALSE;
 		priv->flash_base_addr = tmp;
 		return TRUE;
 	}
 	if (g_strcmp0(key, "WacomI2cFlashSize") == 0) {
-		if (!fu_strtoull_full(value, &tmp, 0, G_MAXUINT32, error))
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT32, error))
 			return FALSE;
 		priv->flash_size = tmp;
 		return TRUE;

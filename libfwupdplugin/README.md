@@ -88,3 +88,4 @@ Remember: Plugins should be upstream!
 * `fu_common_vercmp_full()`: Use `fu_version_compare()` instead.
 * `fu_common_version_ensure_semver()`: Use `fu_version_ensure_semver()` instead.
 * `fu_common_version_from_uint*()`: Use `fu_version_from_uint*()` instead.
+* `fu_common_strtoull()`: Use `fu_strtoull()` instead -- as the latter always specifies the error.

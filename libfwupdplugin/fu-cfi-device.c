@@ -368,79 +368,79 @@ fu_cfi_device_set_quirk_kv(FuDevice *device, const gchar *key, const gchar *valu
 	guint64 tmp;
 
 	if (g_strcmp0(key, FU_QUIRKS_CFI_DEVICE_CMD_READ_ID) == 0) {
-		if (!fu_strtoull_full(value, &tmp, 0, G_MAXUINT8, error))
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT8, error))
 			return FALSE;
 		priv->cmds[FU_CFI_DEVICE_CMD_READ_ID] = tmp;
 		return TRUE;
 	}
 	if (g_strcmp0(key, FU_QUIRKS_CFI_DEVICE_CMD_READ_ID_SZ) == 0) {
-		if (!fu_strtoull_full(value, &tmp, 0, G_MAXUINT8, error))
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT8, error))
 			return FALSE;
 		priv->cmd_read_id_sz = tmp;
 		return TRUE;
 	}
 	if (g_strcmp0(key, FU_QUIRKS_CFI_DEVICE_CMD_CHIP_ERASE) == 0) {
-		if (!fu_strtoull_full(value, &tmp, 0, G_MAXUINT8, error))
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT8, error))
 			return FALSE;
 		priv->cmds[FU_CFI_DEVICE_CMD_CHIP_ERASE] = tmp;
 		return TRUE;
 	}
 	if (g_strcmp0(key, FU_QUIRKS_CFI_DEVICE_CMD_BLOCK_ERASE) == 0) {
-		if (!fu_strtoull_full(value, &tmp, 0, G_MAXUINT8, error))
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT8, error))
 			return FALSE;
 		priv->cmds[FU_CFI_DEVICE_CMD_BLOCK_ERASE] = tmp;
 		return TRUE;
 	}
 	if (g_strcmp0(key, FU_QUIRKS_CFI_DEVICE_CMD_SECTOR_ERASE) == 0) {
-		if (!fu_strtoull_full(value, &tmp, 0, G_MAXUINT8, error))
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT8, error))
 			return FALSE;
 		priv->cmds[FU_CFI_DEVICE_CMD_SECTOR_ERASE] = tmp;
 		return TRUE;
 	}
 	if (g_strcmp0(key, FU_QUIRKS_CFI_DEVICE_CMD_WRITE_STATUS) == 0) {
-		if (!fu_strtoull_full(value, &tmp, 0, G_MAXUINT8, error))
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT8, error))
 			return FALSE;
 		priv->cmds[FU_CFI_DEVICE_CMD_WRITE_STATUS] = tmp;
 		return TRUE;
 	}
 	if (g_strcmp0(key, FU_QUIRKS_CFI_DEVICE_CMD_PAGE_PROG) == 0) {
-		if (!fu_strtoull_full(value, &tmp, 0, G_MAXUINT8, error))
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT8, error))
 			return FALSE;
 		priv->cmds[FU_CFI_DEVICE_CMD_PAGE_PROG] = tmp;
 		return TRUE;
 	}
 	if (g_strcmp0(key, FU_QUIRKS_CFI_DEVICE_CMD_READ_DATA) == 0) {
-		if (!fu_strtoull_full(value, &tmp, 0, G_MAXUINT8, error))
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT8, error))
 			return FALSE;
 		priv->cmds[FU_CFI_DEVICE_CMD_READ_DATA] = tmp;
 		return TRUE;
 	}
 	if (g_strcmp0(key, FU_QUIRKS_CFI_DEVICE_CMD_READ_STATUS) == 0) {
-		if (!fu_strtoull_full(value, &tmp, 0, G_MAXUINT8, error))
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT8, error))
 			return FALSE;
 		priv->cmds[FU_CFI_DEVICE_CMD_READ_STATUS] = tmp;
 		return TRUE;
 	}
 	if (g_strcmp0(key, FU_QUIRKS_CFI_DEVICE_CMD_WRITE_EN) == 0) {
-		if (!fu_strtoull_full(value, &tmp, 0, G_MAXUINT8, error))
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT8, error))
 			return FALSE;
 		priv->cmds[FU_CFI_DEVICE_CMD_WRITE_EN] = tmp;
 		return TRUE;
 	}
 	if (g_strcmp0(key, FU_QUIRKS_CFI_DEVICE_PAGE_SIZE) == 0) {
-		if (!fu_strtoull_full(value, &tmp, 0, G_MAXUINT32, error))
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT32, error))
 			return FALSE;
 		priv->page_size = tmp;
 		return TRUE;
 	}
 	if (g_strcmp0(key, FU_QUIRKS_CFI_DEVICE_SECTOR_SIZE) == 0) {
-		if (!fu_strtoull_full(value, &tmp, 0, G_MAXUINT32, error))
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT32, error))
 			return FALSE;
 		priv->sector_size = tmp;
 		return TRUE;
 	}
 	if (g_strcmp0(key, FU_QUIRKS_CFI_DEVICE_BLOCK_SIZE) == 0) {
-		if (!fu_strtoull_full(value, &tmp, 0, G_MAXUINT32, error))
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT32, error))
 			return FALSE;
 		priv->block_size = tmp;
 		return TRUE;

@@ -62,7 +62,7 @@ if __name__ == "__main__":
             "fu_common_strwidth": "fu_strwidth",
             "fu_common_strstrip": "fu_strstrip",
             "fu_common_strtoull": "fu_strtoull",
-            "fu_common_strtoull_full": "fu_strtoull_full",
+            "fu_common_strtoull_full": "fu_strtoull",
             "FuCommonStrsplitFunc": "FuStrsplitFunc",
             "fu_common_bytes_pad": "fu_bytes_pad",
             "fu_common_bytes_new_offset": "fu_bytes_new_offset",

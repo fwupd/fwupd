@@ -481,7 +481,7 @@ fu_intel_spi_device_set_quirk_kv(FuDevice *device,
 	FuIntelSpiDevice *self = FU_INTEL_SPI_DEVICE(device);
 	if (g_strcmp0(key, "IntelSpiBar") == 0) {
 		guint64 tmp = 0;
-		if (!fu_strtoull_full(value, &tmp, 0, G_MAXUINT32, error))
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT32, error))
 			return FALSE;
 		self->phys_spibar = tmp;
 		return TRUE;

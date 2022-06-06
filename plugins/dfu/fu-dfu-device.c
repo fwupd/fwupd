@@ -1612,13 +1612,13 @@ fu_dfu_device_set_quirk_kv(FuDevice *device, const gchar *key, const gchar *valu
 		return FALSE;
 	}
 	if (g_strcmp0(key, "DfuForceTimeout") == 0) {
-		if (!fu_strtoull_full(value, &tmp, 0, G_MAXUINT, error))
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT, error))
 			return FALSE;
 		priv->timeout_ms = tmp;
 		return TRUE;
 	}
 	if (g_strcmp0(key, "DfuForceTransferSize") == 0) {
-		if (!fu_strtoull_full(value, &tmp, 0, G_MAXUINT16, error))
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT16, error))
 			return FALSE;
 		priv->force_transfer_size = tmp;
 		return TRUE;

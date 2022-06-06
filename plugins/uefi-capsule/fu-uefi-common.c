@@ -267,11 +267,18 @@ fu_uefi_get_esp_path_for_os(FuDevice *device, const gchar *base)
 guint64
 fu_uefi_read_file_as_uint64(const gchar *path, const gchar *attr_name)
 {
+	guint64 tmp = 0;
 	g_autofree gchar *data = NULL;
 	g_autofree gchar *fn = g_build_filename(path, attr_name, NULL);
+	g_autoptr(GError) error_local = NULL;
+
 	if (!g_file_get_contents(fn, &data, NULL, NULL))
 		return 0x0;
-	return fu_strtoull(data);
+	if (!fu_strtoull(data, &tmp, 0, G_MAXUINT64, &error_local)) {
+		g_warning("invalid string specified: %s", error_local->message);
+		return G_MAXUINT64;
+	}
+	return tmp;
 }
 
 gboolean

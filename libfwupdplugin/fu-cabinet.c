@@ -292,7 +292,9 @@ fu_cabinet_parse_release(FuCabinet *self, XbNode *release, GError **error)
 	/* set as metadata if unset, but error if specified and incorrect */
 	nsize = xb_node_query_first(release, "size[@type='installed']", NULL);
 	if (nsize != NULL) {
-		guint64 size = fu_strtoull(xb_node_get_text(nsize));
+		guint64 size = 0;
+		if (!fu_strtoull(xb_node_get_text(nsize), &size, 0, G_MAXSIZE, error))
+			return FALSE;
 		if (size != g_bytes_get_size(blob)) {
 			g_set_error(error,
 				    FWUPD_ERROR,

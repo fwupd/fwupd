@@ -571,13 +571,13 @@ fu_elantp_hid_device_set_quirk_kv(FuDevice *device,
 	guint64 tmp = 0;
 
 	if (g_strcmp0(key, "ElantpIcPageCount") == 0) {
-		if (!fu_strtoull_full(value, &tmp, 0, G_MAXUINT16, error))
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT16, error))
 			return FALSE;
 		self->ic_page_count = (guint16)tmp;
 		return TRUE;
 	}
 	if (g_strcmp0(key, "ElantpIapPassword") == 0) {
-		if (!fu_strtoull_full(value, &tmp, 0, G_MAXUINT16, error))
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT16, error))
 			return FALSE;
 		self->iap_password = (guint16)tmp;
 		return TRUE;

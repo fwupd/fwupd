@@ -847,7 +847,7 @@ fu_ata_device_set_quirk_kv(FuDevice *device, const gchar *key, const gchar *valu
 	guint64 tmp = 0;
 
 	if (g_strcmp0(key, "AtaTransferMode") == 0) {
-		if (!fu_strtoull_full(value, &tmp, 0, G_MAXUINT8, error))
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT8, error))
 			return FALSE;
 		if (tmp != ATA_SUBCMD_MICROCODE_DOWNLOAD_CHUNKS_ACTIVATE &&
 		    tmp != ATA_SUBCMD_MICROCODE_DOWNLOAD_CHUNKS &&
@@ -863,7 +863,7 @@ fu_ata_device_set_quirk_kv(FuDevice *device, const gchar *key, const gchar *valu
 		return TRUE;
 	}
 	if (g_strcmp0(key, "AtaTransferBlocks") == 0) {
-		if (!fu_strtoull_full(value, &tmp, 0, G_MAXUINT16, error))
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT16, error))
 			return FALSE;
 		self->transfer_blocks = (guint16)tmp;
 		return TRUE;
