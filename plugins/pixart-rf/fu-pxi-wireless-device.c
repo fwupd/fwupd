@@ -119,7 +119,7 @@ fu_pxi_wireless_device_get_cmd_response(FuPxiWirelessDevice *device,
 		if (!fu_pxi_wireless_device_get_feature(FU_DEVICE(parent), buf, bufsz, error))
 			return FALSE;
 
-		if (!fu_common_read_uint8_safe(buf, bufsz, 0x4, &sn, error))
+		if (!fu_memread_uint8_safe(buf, bufsz, 0x4, &sn, error))
 			return FALSE;
 
 		if (device->sn != sn)
@@ -138,7 +138,7 @@ fu_pxi_wireless_device_get_cmd_response(FuPxiWirelessDevice *device,
 		}
 
 		/*if wireless device not reply to receiver, keep to wait */
-		if (!fu_common_read_uint8_safe(buf, bufsz, 0x5, &status, error))
+		if (!fu_memread_uint8_safe(buf, bufsz, 0x5, &status, error))
 			return FALSE;
 		if (status == OTA_RSP_NOT_READY) {
 			retry = 0x0;
@@ -190,14 +190,14 @@ fu_pxi_wireless_device_check_crc(FuDevice *device, guint16 checksum, GError **er
 	if (g_getenv("FWUPD_PIXART_RF_VERBOSE") != NULL)
 		fu_common_dump_raw(G_LOG_DOMAIN, "crc buf", buf, sizeof(buf));
 
-	if (!fu_common_read_uint8_safe(buf, sizeof(buf), 0x5, &status, error))
+	if (!fu_memread_uint8_safe(buf, sizeof(buf), 0x5, &status, error))
 		return FALSE;
-	if (!fu_common_read_uint16_safe(buf,
-					sizeof(buf),
-					0x6,
-					&checksum_device,
-					G_LITTLE_ENDIAN,
-					error))
+	if (!fu_memread_uint16_safe(buf,
+				    sizeof(buf),
+				    0x6,
+				    &checksum_device,
+				    G_LITTLE_ENDIAN,
+				    error))
 		return FALSE;
 	if (status == OTA_RSP_CODE_ERROR) {
 		g_set_error(error,
@@ -304,7 +304,7 @@ fu_pxi_wireless_device_write_payload(FuDevice *device, FuChunk *chk, GError **er
 
 	if (!fu_pxi_wireless_device_get_cmd_response(self, buf, sizeof(buf), error))
 		return FALSE;
-	if (!fu_common_read_uint8_safe(buf, sizeof(buf), 0x5, &status, error))
+	if (!fu_memread_uint8_safe(buf, sizeof(buf), 0x5, &status, error))
 		return FALSE;
 	if (status != OTA_RSP_OK) {
 		g_set_error(error,
@@ -442,7 +442,7 @@ fu_pxi_wireless_device_fw_ota_ini_new_check(FuDevice *device, GError **error)
 
 	if (!fu_pxi_wireless_device_get_cmd_response(self, buf, sizeof(buf), error))
 		return FALSE;
-	if (!fu_common_read_uint8_safe(buf, sizeof(buf), 0x5, &status, error))
+	if (!fu_memread_uint8_safe(buf, sizeof(buf), 0x5, &status, error))
 		return FALSE;
 	if (status != OTA_RSP_OK) {
 		g_set_error(error,

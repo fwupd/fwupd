@@ -13,6 +13,7 @@
 #include "fu-chunk-private.h"
 #include "fu-common.h"
 #include "fu-firmware.h"
+#include "fu-mem.h"
 #include "fu-string.h"
 
 /**

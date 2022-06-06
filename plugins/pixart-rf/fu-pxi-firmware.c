@@ -86,11 +86,11 @@ fu_pxi_firmware_parse(FuFirmware *firmware,
 	/* check the tag from fw header is correct */
 	for (guint32 i = 0x0; i < sizeof(tag); i++) {
 		guint8 tmp = 0;
-		if (!fu_common_read_uint8_safe(fw_header,
-					       sizeof(fw_header),
-					       i + PIXART_RF_FW_HEADER_TAG_OFFSET,
-					       &tmp,
-					       error))
+		if (!fu_memread_uint8_safe(fw_header,
+					   sizeof(fw_header),
+					   i + PIXART_RF_FW_HEADER_TAG_OFFSET,
+					   &tmp,
+					   error))
 			return FALSE;
 		if (tmp != tag[i]) {
 			g_set_error(error, G_IO_ERROR, G_IO_ERROR_FAILED, "Fw tag is incorrect");

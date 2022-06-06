@@ -15,6 +15,7 @@
 #include "fu-common.h"
 #include "fu-firmware-common.h"
 #include "fu-ihex-firmware.h"
+#include "fu-mem.h"
 #include "fu-string.h"
 
 /**
@@ -362,33 +363,33 @@ fu_ihex_firmware_parse(FuFirmware *firmware,
 			got_eof = TRUE;
 			break;
 		case FU_IHEX_FIRMWARE_RECORD_TYPE_EXTENDED_LINEAR:
-			if (!fu_common_read_uint16_safe(rcd->data->data,
-							rcd->data->len,
-							0x0,
-							&addr16,
-							G_BIG_ENDIAN,
-							error))
+			if (!fu_memread_uint16_safe(rcd->data->data,
+						    rcd->data->len,
+						    0x0,
+						    &addr16,
+						    G_BIG_ENDIAN,
+						    error))
 				return FALSE;
 			abs_addr = (guint32)addr16 << 16;
 			g_debug("  abs_addr:\t0x%02x on line %u", abs_addr, rcd->ln);
 			break;
 		case FU_IHEX_FIRMWARE_RECORD_TYPE_START_LINEAR:
-			if (!fu_common_read_uint32_safe(rcd->data->data,
-							rcd->data->len,
-							0x0,
-							&abs_addr,
-							G_BIG_ENDIAN,
-							error))
+			if (!fu_memread_uint32_safe(rcd->data->data,
+						    rcd->data->len,
+						    0x0,
+						    &abs_addr,
+						    G_BIG_ENDIAN,
+						    error))
 				return FALSE;
 			g_debug("  abs_addr:\t0x%08x on line %u", abs_addr, rcd->ln);
 			break;
 		case FU_IHEX_FIRMWARE_RECORD_TYPE_EXTENDED_SEGMENT:
-			if (!fu_common_read_uint16_safe(rcd->data->data,
-							rcd->data->len,
-							0x0,
-							&addr16,
-							G_BIG_ENDIAN,
-							error))
+			if (!fu_memread_uint16_safe(rcd->data->data,
+						    rcd->data->len,
+						    0x0,
+						    &addr16,
+						    G_BIG_ENDIAN,
+						    error))
 				return FALSE;
 			/* segment base address, so ~1Mb addressable */
 			seg_addr = (guint32)addr16 * 16;
@@ -396,12 +397,12 @@ fu_ihex_firmware_parse(FuFirmware *firmware,
 			break;
 		case FU_IHEX_FIRMWARE_RECORD_TYPE_START_SEGMENT:
 			/* initial content of the CS:IP registers */
-			if (!fu_common_read_uint32_safe(rcd->data->data,
-							rcd->data->len,
-							0x0,
-							&seg_addr,
-							G_BIG_ENDIAN,
-							error))
+			if (!fu_memread_uint32_safe(rcd->data->data,
+						    rcd->data->len,
+						    0x0,
+						    &seg_addr,
+						    G_BIG_ENDIAN,
+						    error))
 				return FALSE;
 			g_debug("  seg_addr:\t0x%02x on line %u", seg_addr, rcd->ln);
 			break;
@@ -497,7 +498,7 @@ fu_ihex_firmware_image_to_string(GBytes *bytes,
 		/* need to offset */
 		if (address_offset != address_offset_last) {
 			guint8 buf[2];
-			fu_common_write_uint16(buf, address_offset, G_BIG_ENDIAN);
+			fu_memwrite_uint16(buf, address_offset, G_BIG_ENDIAN);
 			fu_ihex_firmware_emit_chunk(str,
 						    0x0,
 						    FU_IHEX_FIRMWARE_RECORD_TYPE_EXTENDED_LINEAR,

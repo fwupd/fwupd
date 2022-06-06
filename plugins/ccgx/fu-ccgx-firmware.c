@@ -265,12 +265,12 @@ fu_ccgx_firmware_parse_md_block(FuCcgxFirmware *self, FwupdInstallFlags flags, G
 					    "metadata record had zero size");
 			return FALSE;
 		}
-		if (!fu_common_read_uint32_safe(buf,
-						bufsz,
-						CCGX_APP_VERSION_OFFSET % bufsz,
-						&version,
-						G_LITTLE_ENDIAN,
-						error))
+		if (!fu_memread_uint32_safe(buf,
+					    bufsz,
+					    CCGX_APP_VERSION_OFFSET % bufsz,
+					    &version,
+					    G_LITTLE_ENDIAN,
+					    error))
 			return FALSE;
 		self->app_type = version & 0xffff;
 		version_str = fu_ccgx_version_to_string(version);

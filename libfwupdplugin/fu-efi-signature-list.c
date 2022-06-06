@@ -13,6 +13,7 @@
 #include "fu-common.h"
 #include "fu-efi-signature-list.h"
 #include "fu-efi-signature-private.h"
+#include "fu-mem.h"
 
 /**
  * FuEfiSignatureList:
@@ -122,12 +123,12 @@ fu_efi_signature_list_parse_list(FuEfiSignatureList *self,
 	} else if (g_strcmp0(sig_type, "a5c059a1-94e4-4aa7-87b5-ab155c2bf072") == 0) {
 		sig_kind = FU_EFI_SIGNATURE_KIND_X509;
 	}
-	if (!fu_common_read_uint32_safe(buf,
-					bufsz,
-					*offset + 0x10,
-					&sig_list_size,
-					G_LITTLE_ENDIAN,
-					error))
+	if (!fu_memread_uint32_safe(buf,
+				    bufsz,
+				    *offset + 0x10,
+				    &sig_list_size,
+				    G_LITTLE_ENDIAN,
+				    error))
 		return FALSE;
 	if (sig_list_size < 0x1c || sig_list_size > 1024 * 1024) {
 		g_set_error(error,
@@ -137,12 +138,12 @@ fu_efi_signature_list_parse_list(FuEfiSignatureList *self,
 			    sig_list_size);
 		return FALSE;
 	}
-	if (!fu_common_read_uint32_safe(buf,
-					bufsz,
-					*offset + 0x14,
-					&sig_header_size,
-					G_LITTLE_ENDIAN,
-					error))
+	if (!fu_memread_uint32_safe(buf,
+				    bufsz,
+				    *offset + 0x14,
+				    &sig_header_size,
+				    G_LITTLE_ENDIAN,
+				    error))
 		return FALSE;
 	if (sig_header_size > 1024 * 1024) {
 		g_set_error(error,
@@ -152,12 +153,7 @@ fu_efi_signature_list_parse_list(FuEfiSignatureList *self,
 			    sig_size);
 		return FALSE;
 	}
-	if (!fu_common_read_uint32_safe(buf,
-					bufsz,
-					*offset + 0x18,
-					&sig_size,
-					G_LITTLE_ENDIAN,
-					error))
+	if (!fu_memread_uint32_safe(buf, bufsz, *offset + 0x18, &sig_size, G_LITTLE_ENDIAN, error))
 		return FALSE;
 	if (sig_size < sizeof(fwupd_guid_t) || sig_size > 1024 * 1024) {
 		g_set_error(error,

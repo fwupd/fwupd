@@ -49,7 +49,7 @@ fu_cfu_module_setup(FuCfuModule *self, const guint8 *buf, gsize bufsz, gsize off
 	g_autofree gchar *version = NULL;
 
 	/* component ID */
-	if (!fu_common_read_uint8_safe(buf, bufsz, offset + 0x5, &self->component_id, error))
+	if (!fu_memread_uint8_safe(buf, bufsz, offset + 0x5, &self->component_id, error))
 		return FALSE;
 
 	/* these GUIDs may cause the name or version-format to be overwritten */
@@ -60,7 +60,7 @@ fu_cfu_module_setup(FuCfuModule *self, const guint8 *buf, gsize bufsz, gsize off
 		return FALSE;
 
 	/* bank */
-	if (!fu_common_read_uint8_safe(buf, bufsz, offset + 0x4, &tmp, error))
+	if (!fu_memread_uint8_safe(buf, bufsz, offset + 0x4, &tmp, error))
 		return FALSE;
 	self->bank = tmp & 0b11;
 	fu_device_add_instance_u4(device, "BANK", self->bank);
@@ -85,7 +85,7 @@ fu_cfu_module_setup(FuCfuModule *self, const guint8 *buf, gsize bufsz, gsize off
 	}
 
 	/* version */
-	if (!fu_common_read_uint32_safe(buf, bufsz, offset, &version_raw, G_LITTLE_ENDIAN, error))
+	if (!fu_memread_uint32_safe(buf, bufsz, offset, &version_raw, G_LITTLE_ENDIAN, error))
 		return FALSE;
 	fu_device_set_version_raw(device, version_raw);
 	version = fu_common_version_from_uint32(version_raw, fu_device_get_version_format(device));

@@ -11,6 +11,7 @@
 #include "fu-byte-array.h"
 #include "fu-cfu-offer.h"
 #include "fu-common.h"
+#include "fu-mem.h"
 
 /**
  * FuCfuOffer:
@@ -429,33 +430,33 @@ fu_cfu_offer_parse(FuFirmware *firmware,
 	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
 
 	/* component info */
-	if (!fu_common_read_uint8_safe(buf, bufsz, 0x0, &priv->segment_number, error))
+	if (!fu_memread_uint8_safe(buf, bufsz, 0x0, &priv->segment_number, error))
 		return FALSE;
-	if (!fu_common_read_uint8_safe(buf, bufsz, 0x1, &tmp, error))
+	if (!fu_memread_uint8_safe(buf, bufsz, 0x1, &tmp, error))
 		return FALSE;
 	priv->force_ignore_version = (tmp & 0b1) > 0;
 	priv->force_immediate_reset = (tmp & 0b10) > 0;
-	if (!fu_common_read_uint8_safe(buf, bufsz, 0x2, &priv->component_id, error))
+	if (!fu_memread_uint8_safe(buf, bufsz, 0x2, &priv->component_id, error))
 		return FALSE;
-	if (!fu_common_read_uint8_safe(buf, bufsz, 0x3, &priv->token, error))
+	if (!fu_memread_uint8_safe(buf, bufsz, 0x3, &priv->token, error))
 		return FALSE;
 
 	/* version */
-	if (!fu_common_read_uint32_safe(buf, bufsz, 0x4, &tmp32, G_LITTLE_ENDIAN, error))
+	if (!fu_memread_uint32_safe(buf, bufsz, 0x4, &tmp32, G_LITTLE_ENDIAN, error))
 		return FALSE;
 	fu_firmware_set_version_raw(firmware, tmp32);
-	if (!fu_common_read_uint32_safe(buf, bufsz, 0x8, &priv->hw_variant, G_LITTLE_ENDIAN, error))
+	if (!fu_memread_uint32_safe(buf, bufsz, 0x8, &priv->hw_variant, G_LITTLE_ENDIAN, error))
 		return FALSE;
 
 	/* product info */
-	if (!fu_common_read_uint8_safe(buf, bufsz, 0xC, &tmp, error))
+	if (!fu_memread_uint8_safe(buf, bufsz, 0xC, &tmp, error))
 		return FALSE;
 	priv->protocol_revision = (tmp >> 4) & 0b1111;
 	priv->bank = (tmp >> 2) & 0b11;
-	if (!fu_common_read_uint8_safe(buf, bufsz, 0xD, &tmp, error))
+	if (!fu_memread_uint8_safe(buf, bufsz, 0xD, &tmp, error))
 		return FALSE;
 	priv->milestone = (tmp >> 5) & 0b111;
-	if (!fu_common_read_uint16_safe(buf, bufsz, 0xE, &priv->product_id, G_LITTLE_ENDIAN, error))
+	if (!fu_memread_uint16_safe(buf, bufsz, 0xE, &priv->product_id, G_LITTLE_ENDIAN, error))
 		return FALSE;
 
 	/* success */

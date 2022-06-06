@@ -265,7 +265,7 @@ fu_dfu_target_avr32_select_memory_page(FuDfuTarget *target,
 	buf[0] = DFU_AVR32_GROUP_SELECT;
 	buf[1] = DFU_AVR32_CMD_SELECT_MEMORY;
 	buf[2] = DFU_AVR32_MEMORY_PAGE;
-	fu_common_write_uint16(&buf[3], memory_page, G_BIG_ENDIAN);
+	fu_memwrite_uint16(&buf[3], memory_page, G_BIG_ENDIAN);
 	data_in = g_bytes_new_static(buf, sizeof(buf));
 	g_debug("selecting memory page 0x%02x", (guint)memory_page);
 	if (!fu_dfu_target_download_chunk(target, 0, data_in, progress, error)) {
@@ -299,8 +299,8 @@ fu_dfu_target_avr_read_memory(FuDfuTarget *target,
 	/* format buffer */
 	buf[0] = DFU_AVR32_GROUP_UPLOAD;
 	buf[1] = DFU_AVR32_CMD_READ_MEMORY;
-	fu_common_write_uint16(&buf[2], addr_start, G_BIG_ENDIAN);
-	fu_common_write_uint16(&buf[4], addr_end, G_BIG_ENDIAN);
+	fu_memwrite_uint16(&buf[2], addr_start, G_BIG_ENDIAN);
+	fu_memwrite_uint16(&buf[4], addr_end, G_BIG_ENDIAN);
 	data_in = g_bytes_new_static(buf, sizeof(buf));
 	g_debug("reading memory from 0x%04x to 0x%04x", (guint)addr_start, (guint)addr_end);
 	if (!fu_dfu_target_download_chunk(target, 0, data_in, progress, error)) {
@@ -629,10 +629,10 @@ fu_dfu_target_avr_download_element_chunks(FuDfuTarget *target,
 		buf = g_malloc0(fu_chunk_get_data_sz(chk) + header_sz + sizeof(footer));
 		buf[0] = DFU_AVR32_GROUP_DOWNLOAD;
 		buf[1] = DFU_AVR32_CMD_PROGRAM_START;
-		fu_common_write_uint16(&buf[2], fu_chunk_get_address(chk), G_BIG_ENDIAN);
-		fu_common_write_uint16(&buf[4],
-				       fu_chunk_get_address(chk) + fu_chunk_get_data_sz(chk) - 1,
-				       G_BIG_ENDIAN);
+		fu_memwrite_uint16(&buf[2], fu_chunk_get_address(chk), G_BIG_ENDIAN);
+		fu_memwrite_uint16(&buf[4],
+				   fu_chunk_get_address(chk) + fu_chunk_get_data_sz(chk) - 1,
+				   G_BIG_ENDIAN);
 		memcpy(&buf[header_sz], fu_chunk_get_data(chk), fu_chunk_get_data_sz(chk));
 		memcpy(&buf[header_sz + fu_chunk_get_data_sz(chk)], footer, sizeof(footer));
 

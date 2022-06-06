@@ -64,50 +64,46 @@ fu_pxi_ota_fw_state_parse(struct ota_fw_state *fwstate,
 			  gsize offset,
 			  GError **error)
 {
-	if (!fu_common_read_uint8_safe(buf, bufsz, offset + 0x00, &fwstate->status, error))
+	if (!fu_memread_uint8_safe(buf, bufsz, offset + 0x00, &fwstate->status, error))
 		return FALSE;
-	if (!fu_common_read_uint8_safe(buf, bufsz, offset + 0x01, &fwstate->new_flow, error))
+	if (!fu_memread_uint8_safe(buf, bufsz, offset + 0x01, &fwstate->new_flow, error))
 		return FALSE;
-	if (!fu_common_read_uint16_safe(buf,
-					bufsz,
-					offset + 0x2,
-					&fwstate->offset,
-					G_LITTLE_ENDIAN,
-					error))
+	if (!fu_memread_uint16_safe(buf,
+				    bufsz,
+				    offset + 0x2,
+				    &fwstate->offset,
+				    G_LITTLE_ENDIAN,
+				    error))
 		return FALSE;
-	if (!fu_common_read_uint16_safe(buf,
-					bufsz,
-					offset + 0x4,
-					&fwstate->checksum,
-					G_LITTLE_ENDIAN,
-					error))
+	if (!fu_memread_uint16_safe(buf,
+				    bufsz,
+				    offset + 0x4,
+				    &fwstate->checksum,
+				    G_LITTLE_ENDIAN,
+				    error))
 		return FALSE;
-	if (!fu_common_read_uint32_safe(buf,
-					bufsz,
-					offset + 0x06,
-					&fwstate->max_object_size,
-					G_LITTLE_ENDIAN,
-					error))
+	if (!fu_memread_uint32_safe(buf,
+				    bufsz,
+				    offset + 0x06,
+				    &fwstate->max_object_size,
+				    G_LITTLE_ENDIAN,
+				    error))
 		return FALSE;
-	if (!fu_common_read_uint16_safe(buf,
-					bufsz,
-					offset + 0x0A,
-					&fwstate->mtu_size,
-					G_LITTLE_ENDIAN,
-					error))
+	if (!fu_memread_uint16_safe(buf,
+				    bufsz,
+				    offset + 0x0A,
+				    &fwstate->mtu_size,
+				    G_LITTLE_ENDIAN,
+				    error))
 		return FALSE;
-	if (!fu_common_read_uint16_safe(buf,
-					bufsz,
-					offset + 0x0C,
-					&fwstate->prn_threshold,
-					G_LITTLE_ENDIAN,
-					error))
+	if (!fu_memread_uint16_safe(buf,
+				    bufsz,
+				    offset + 0x0C,
+				    &fwstate->prn_threshold,
+				    G_LITTLE_ENDIAN,
+				    error))
 		return FALSE;
-	if (!fu_common_read_uint8_safe(buf,
-				       bufsz,
-				       offset + 0x0E,
-				       &fwstate->spec_check_result,
-				       error))
+	if (!fu_memread_uint8_safe(buf, bufsz, offset + 0x0E, &fwstate->spec_check_result, error))
 		return FALSE;
 
 	/* success */

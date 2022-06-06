@@ -10,6 +10,7 @@
 
 #include "fu-byte-array.h"
 #include "fu-common.h"
+#include "fu-mem.h"
 
 /**
  * fu_byte_array_append_uint8:
@@ -40,7 +41,7 @@ void
 fu_byte_array_append_uint16(GByteArray *array, guint16 data, FuEndianType endian)
 {
 	guint8 buf[2];
-	fu_common_write_uint16(buf, data, endian);
+	fu_memwrite_uint16(buf, data, endian);
 	g_byte_array_append(array, buf, sizeof(buf));
 }
 
@@ -58,7 +59,7 @@ void
 fu_byte_array_append_uint32(GByteArray *array, guint32 data, FuEndianType endian)
 {
 	guint8 buf[4];
-	fu_common_write_uint32(buf, data, endian);
+	fu_memwrite_uint32(buf, data, endian);
 	g_byte_array_append(array, buf, sizeof(buf));
 }
 
@@ -76,7 +77,7 @@ void
 fu_byte_array_append_uint64(GByteArray *array, guint64 data, FuEndianType endian)
 {
 	guint8 buf[8];
-	fu_common_write_uint64(buf, data, endian);
+	fu_memwrite_uint64(buf, data, endian);
 	g_byte_array_append(array, buf, sizeof(buf));
 }
 
@@ -164,5 +165,5 @@ fu_byte_array_compare(GByteArray *buf1, GByteArray *buf2, GError **error)
 	g_return_val_if_fail(buf1 != NULL, FALSE);
 	g_return_val_if_fail(buf2 != NULL, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
-	return fu_common_bytes_compare_raw(buf1->data, buf1->len, buf2->data, buf2->len, error);
+	return fu_memcmp_safe(buf1->data, buf1->len, buf2->data, buf2->len, error);
 }

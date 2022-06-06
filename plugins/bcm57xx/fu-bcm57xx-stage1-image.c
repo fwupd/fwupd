@@ -37,12 +37,12 @@ fu_bcm57xx_stage1_image_parse(FuFirmware *image,
 	}
 
 	/* get version number */
-	if (!fu_common_read_uint32_safe(buf,
-					bufsz,
-					BCM_NVRAM_STAGE1_VERSION,
-					&fwversion,
-					G_BIG_ENDIAN,
-					error))
+	if (!fu_memread_uint32_safe(buf,
+				    bufsz,
+				    BCM_NVRAM_STAGE1_VERSION,
+				    &fwversion,
+				    G_BIG_ENDIAN,
+				    error))
 		return FALSE;
 	if (fwversion != 0x0) {
 		g_autofree gchar *tmp = NULL;
@@ -53,12 +53,12 @@ fu_bcm57xx_stage1_image_parse(FuFirmware *image,
 		guint32 veraddr = 0x0;
 
 		/* fall back to the optional string, e.g. '5719-v1.43' */
-		if (!fu_common_read_uint32_safe(buf,
-						bufsz,
-						BCM_NVRAM_STAGE1_VERADDR,
-						&veraddr,
-						G_BIG_ENDIAN,
-						error))
+		if (!fu_memread_uint32_safe(buf,
+					    bufsz,
+					    BCM_NVRAM_STAGE1_VERADDR,
+					    &veraddr,
+					    G_BIG_ENDIAN,
+					    error))
 			return FALSE;
 		if (veraddr != 0x0) {
 			guint32 bufver[4] = {'\0'};
@@ -124,12 +124,12 @@ fu_bcm57xx_stage1_image_write(FuFirmware *firmware, GError **error)
 	fu_byte_array_append_bytes(buf, fw_nocrc);
 
 	/* update version */
-	if (!fu_common_write_uint32_safe(buf->data,
-					 buf->len,
-					 BCM_NVRAM_STAGE1_VERSION,
-					 fu_firmware_get_version_raw(firmware),
-					 G_BIG_ENDIAN,
-					 error))
+	if (!fu_memwrite_uint32_safe(buf->data,
+				     buf->len,
+				     BCM_NVRAM_STAGE1_VERSION,
+				     fu_firmware_get_version_raw(firmware),
+				     G_BIG_ENDIAN,
+				     error))
 		return NULL;
 
 	/* align */

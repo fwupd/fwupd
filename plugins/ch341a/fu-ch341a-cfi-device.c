@@ -207,7 +207,7 @@ fu_ch341a_cfi_device_write_page(FuCh341aCfiDevice *self, FuChunk *page, GError *
 		return FALSE;
 
 	/* cmd, then 24 bit starting address */
-	fu_common_write_uint32(buf, fu_chunk_get_address(page), G_BIG_ENDIAN);
+	fu_memwrite_uint32(buf, fu_chunk_get_address(page), G_BIG_ENDIAN);
 	if (!fu_cfi_device_get_cmd(FU_CFI_DEVICE(self),
 				   FU_CFI_DEVICE_CMD_PAGE_PROG,
 				   &buf[0],
@@ -287,7 +287,7 @@ fu_ch341a_cfi_device_read_firmware(FuCh341aCfiDevice *self,
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_READ);
 
 	/* cmd, then 24 bit starting address */
-	fu_common_write_uint32(buf, 0x0, G_BIG_ENDIAN);
+	fu_memwrite_uint32(buf, 0x0, G_BIG_ENDIAN);
 	if (!fu_cfi_device_get_cmd(FU_CFI_DEVICE(self),
 				   FU_CFI_DEVICE_CMD_READ_DATA,
 				   &buf[0],

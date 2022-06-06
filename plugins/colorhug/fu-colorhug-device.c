@@ -290,8 +290,8 @@ fu_colorhug_device_erase(FuColorhugDevice *self, guint16 addr, gsize sz, GError 
 	guint8 buf[4];
 	g_autoptr(GError) error_local = NULL;
 
-	fu_common_write_uint16(buf + 0, addr, G_LITTLE_ENDIAN);
-	fu_common_write_uint16(buf + 2, sz, G_LITTLE_ENDIAN);
+	fu_memwrite_uint16(buf + 0, addr, G_LITTLE_ENDIAN);
+	fu_memwrite_uint16(buf + 2, sz, G_LITTLE_ENDIAN);
 	if (!fu_colorhug_device_msg(self,
 				    CH_CMD_ERASE_FLASH,
 				    buf,
@@ -323,9 +323,9 @@ fu_colorhug_device_get_version(FuColorhugDevice *self, GError **error)
 		return NULL;
 	}
 	return g_strdup_printf("%i.%i.%i",
-			       fu_common_read_uint16(buf + 0, G_LITTLE_ENDIAN),
-			       fu_common_read_uint16(buf + 2, G_LITTLE_ENDIAN),
-			       fu_common_read_uint16(buf + 4, G_LITTLE_ENDIAN));
+			       fu_memread_uint16(buf + 0, G_LITTLE_ENDIAN),
+			       fu_memread_uint16(buf + 2, G_LITTLE_ENDIAN),
+			       fu_memread_uint16(buf + 4, G_LITTLE_ENDIAN));
 }
 
 static gboolean
@@ -431,7 +431,7 @@ fu_colorhug_device_write_blocks(FuColorhugDevice *self,
 		g_autoptr(GError) error_local = NULL;
 
 		/* set address, length, checksum, data */
-		fu_common_write_uint16(buf + 0, fu_chunk_get_address(chk), G_LITTLE_ENDIAN);
+		fu_memwrite_uint16(buf + 0, fu_chunk_get_address(chk), G_LITTLE_ENDIAN);
 		buf[2] = fu_chunk_get_data_sz(chk);
 		buf[3] = ch_colorhug_device_calculate_checksum(fu_chunk_get_data(chk),
 							       fu_chunk_get_data_sz(chk));
@@ -483,7 +483,7 @@ fu_colorhug_device_verify_blocks(FuColorhugDevice *self,
 		g_autoptr(GError) error_local = NULL;
 
 		/* set address */
-		fu_common_write_uint16(buf + 0, fu_chunk_get_address(chk), G_LITTLE_ENDIAN);
+		fu_memwrite_uint16(buf + 0, fu_chunk_get_address(chk), G_LITTLE_ENDIAN);
 		buf[2] = fu_chunk_get_data_sz(chk);
 		if (!fu_colorhug_device_msg(self,
 					    CH_CMD_READ_FLASH,

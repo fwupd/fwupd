@@ -9,6 +9,7 @@
 #include "config.h"
 
 #include "fu-device-private.h"
+#include "fu-mem.h"
 #include "fu-string.h"
 #include "fu-usb-device-private.h"
 
@@ -208,7 +209,7 @@ fu_usb_device_query_hub(FuUsbDevice *self, GError **error)
 		guint8 numbytes = fu_common_align_up(data[2] + 1, 0x03) / 8;
 		for (guint i = 0; i < numbytes; i++) {
 			guint8 tmp = 0x0;
-			if (!fu_common_read_uint8_safe(data, sz, 7 + i, &tmp, error))
+			if (!fu_memread_uint8_safe(data, sz, 7 + i, &tmp, error))
 				return FALSE;
 			g_string_append_printf(hub, "%02X", tmp);
 		}

@@ -136,12 +136,12 @@ fu_wacom_aes_device_setup(FuDevice *device, GError **error)
 
 		if (!fu_wacom_device_get_feature(FU_WACOM_DEVICE(self), data, sizeof(data), error))
 			return FALSE;
-		if (!fu_common_read_uint16_safe(data,
-						sizeof(data),
-						11,
-						&fw_ver,
-						G_LITTLE_ENDIAN,
-						error))
+		if (!fu_memread_uint16_safe(data,
+					    sizeof(data),
+					    11,
+					    &fw_ver,
+					    G_LITTLE_ENDIAN,
+					    error))
 			return FALSE;
 		version = g_strdup_printf("%04x.%02x", fw_ver, data[13]);
 		fu_device_set_version(device, version);

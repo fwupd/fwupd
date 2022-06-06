@@ -524,7 +524,7 @@ fu_rts54hub_device_prepare_firmware(FuDevice *device,
 	guint8 tmp = 0;
 	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
 
-	if (!fu_common_read_uint8_safe(buf, bufsz, 0x7ef3, &tmp, error))
+	if (!fu_memread_uint8_safe(buf, bufsz, 0x7ef3, &tmp, error))
 		return NULL;
 	if ((tmp & 0xf0) != 0x80) {
 		g_set_error_literal(error,

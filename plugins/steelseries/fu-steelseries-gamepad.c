@@ -68,12 +68,12 @@ fu_steelseries_gamepad_setup(FuDevice *device, GError **error)
 				       error))
 		return FALSE;
 
-	if (!fu_common_read_uint16_safe(data, sizeof(data), 0x01, &fw_ver, G_LITTLE_ENDIAN, error))
+	if (!fu_memread_uint16_safe(data, sizeof(data), 0x01, &fw_ver, G_LITTLE_ENDIAN, error))
 		return FALSE;
 	version = fu_common_version_from_uint16(fw_ver, FWUPD_VERSION_FORMAT_BCD);
 	fu_device_set_version(FU_DEVICE(device), version);
 
-	if (!fu_common_read_uint16_safe(data, sizeof(data), 0x03, &fw_ver, G_LITTLE_ENDIAN, error))
+	if (!fu_memread_uint16_safe(data, sizeof(data), 0x03, &fw_ver, G_LITTLE_ENDIAN, error))
 		return FALSE;
 	bootloader_version = fu_common_version_from_uint16(fw_ver, FWUPD_VERSION_FORMAT_BCD);
 	fu_device_set_version_bootloader(device, bootloader_version);
@@ -145,12 +145,12 @@ fu_steelseries_gamepad_write_firmware_chunks(FuDevice *device,
 		guint8 data[STEELSERIES_BUFFER_CONTROL_SIZE] = {0xA3};
 
 		/* block ID */
-		if (!fu_common_write_uint16_safe(data,
-						 STEELSERIES_BUFFER_CONTROL_SIZE,
-						 0x01,
-						 (guint16)id,
-						 G_LITTLE_ENDIAN,
-						 error))
+		if (!fu_memwrite_uint16_safe(data,
+					     STEELSERIES_BUFFER_CONTROL_SIZE,
+					     0x01,
+					     (guint16)id,
+					     G_LITTLE_ENDIAN,
+					     error))
 			return FALSE;
 		/* 32B of data only */
 		if (!fu_memcpy_safe(data,
@@ -166,12 +166,12 @@ fu_steelseries_gamepad_write_firmware_chunks(FuDevice *device,
 		/* block checksum */
 		/* probably not necessary */
 		chunk_checksum = fu_sum16(data + 3, STEELSERIES_BUFFER_TRANSFER_SIZE);
-		if (!fu_common_write_uint16_safe(data,
-						 STEELSERIES_BUFFER_CONTROL_SIZE,
-						 0x03 + STEELSERIES_BUFFER_TRANSFER_SIZE,
-						 chunk_checksum,
-						 G_LITTLE_ENDIAN,
-						 error))
+		if (!fu_memwrite_uint16_safe(data,
+					     STEELSERIES_BUFFER_CONTROL_SIZE,
+					     0x03 + STEELSERIES_BUFFER_TRANSFER_SIZE,
+					     chunk_checksum,
+					     G_LITTLE_ENDIAN,
+					     error))
 			return FALSE;
 
 		*checksum += (guint32)chunk_checksum;
@@ -198,12 +198,12 @@ fu_steelseries_gamepad_write_checksum(FuDevice *device, guint32 checksum, GError
 	/* write checksum */
 	guint8 data[STEELSERIES_BUFFER_CONTROL_SIZE] = {0xA5, 0xAA, 0x55};
 
-	if (!fu_common_write_uint32_safe(data,
-					 STEELSERIES_BUFFER_CONTROL_SIZE,
-					 0x03,
-					 checksum,
-					 G_LITTLE_ENDIAN,
-					 error))
+	if (!fu_memwrite_uint32_safe(data,
+				     STEELSERIES_BUFFER_CONTROL_SIZE,
+				     0x03,
+				     checksum,
+				     G_LITTLE_ENDIAN,
+				     error))
 		return FALSE;
 
 	if (!fu_steelseries_device_cmd(FU_STEELSERIES_DEVICE(device),

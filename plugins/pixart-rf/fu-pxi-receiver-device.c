@@ -195,7 +195,7 @@ fu_pxi_receiver_device_get_cmd_response(FuPxiReceiverDevice *device,
 		if (!fu_pxi_receiver_device_get_feature(device, buf, bufsz, error))
 			return FALSE;
 
-		if (!fu_common_read_uint8_safe(buf, bufsz, 0x4, &sn, error))
+		if (!fu_memread_uint8_safe(buf, bufsz, 0x4, &sn, error))
 			return FALSE;
 
 		if (device->sn != sn)
@@ -252,7 +252,7 @@ fu_pxi_receiver_device_check_crc(FuDevice *device, guint16 checksum, GError **er
 	if (!fu_pxi_receiver_device_get_cmd_response(self, buf, sizeof(buf), error))
 		return FALSE;
 
-	if (!fu_common_read_uint8_safe(buf, sizeof(buf), 0x5, &status, error))
+	if (!fu_memread_uint8_safe(buf, sizeof(buf), 0x5, &status, error))
 		return FALSE;
 
 	if (status == OTA_RSP_CODE_ERROR) {
@@ -303,7 +303,7 @@ fu_pxi_receiver_device_fw_object_create(FuDevice *device, FuChunk *chk, GError *
 	if (!fu_pxi_receiver_device_get_cmd_response(self, buf, sizeof(buf), error))
 		return FALSE;
 
-	if (!fu_common_read_uint8_safe(buf, sizeof(buf), 0x5, &status, error))
+	if (!fu_memread_uint8_safe(buf, sizeof(buf), 0x5, &status, error))
 		return FALSE;
 
 	if (status != OTA_RSP_OK) {
@@ -355,7 +355,7 @@ fu_pxi_receiver_device_write_payload(FuDevice *device, FuChunk *chk, GError **er
 	if (!fu_pxi_receiver_device_get_cmd_response(self, buf, sizeof(buf), error))
 		return FALSE;
 
-	if (!fu_common_read_uint8_safe(buf, sizeof(buf), 0x5, &status, error))
+	if (!fu_memread_uint8_safe(buf, sizeof(buf), 0x5, &status, error))
 		return FALSE;
 
 	if (status != OTA_RSP_OK) {
@@ -489,7 +489,7 @@ fu_pxi_receiver_device_fw_upgrade(FuDevice *device,
 	if (!fu_pxi_receiver_device_get_cmd_response(self, res, sizeof(res), error))
 		return FALSE;
 
-	if (!fu_common_read_uint8_safe(res, sizeof(res), 0x5, &result, error))
+	if (!fu_memread_uint8_safe(res, sizeof(res), 0x5, &result, error))
 		return FALSE;
 	if (result != OTA_RSP_OK) {
 		g_set_error(error,
@@ -640,7 +640,7 @@ fu_pxi_receiver_device_get_peripheral_info(FuPxiReceiverDevice *device,
 	if (g_getenv("FWUPD_PIXART_RF_VERBOSE") != NULL)
 		fu_common_dump_raw(G_LOG_DOMAIN, "model_info", buf, sizeof(buf));
 
-	if (!fu_common_read_uint8_safe(buf, sizeof(buf), 0x9, &model->status, error))
+	if (!fu_memread_uint8_safe(buf, sizeof(buf), 0x9, &model->status, error))
 		return FALSE;
 
 	if (!fu_memcpy_safe(model->name,
@@ -653,9 +653,9 @@ fu_pxi_receiver_device_get_peripheral_info(FuPxiReceiverDevice *device,
 			    error))
 		return FALSE;
 
-	if (!fu_common_read_uint8_safe(buf, sizeof(buf), 0x16, &model->type, error))
+	if (!fu_memread_uint8_safe(buf, sizeof(buf), 0x16, &model->type, error))
 		return FALSE;
-	if (!fu_common_read_uint8_safe(buf, sizeof(buf), 0x17, &model->target, error))
+	if (!fu_memread_uint8_safe(buf, sizeof(buf), 0x17, &model->target, error))
 		return FALSE;
 
 	if (!fu_memcpy_safe(model->version,
@@ -668,7 +668,7 @@ fu_pxi_receiver_device_get_peripheral_info(FuPxiReceiverDevice *device,
 			    error))
 		return FALSE;
 
-	if (!fu_common_read_uint16_safe(buf, sizeof(buf), 0x1D, &checksum, G_LITTLE_ENDIAN, error))
+	if (!fu_memread_uint16_safe(buf, sizeof(buf), 0x1D, &checksum, G_LITTLE_ENDIAN, error))
 
 		return FALSE;
 
@@ -720,7 +720,7 @@ fu_pxi_receiver_device_get_peripheral_num(FuPxiReceiverDevice *device,
 	if (g_getenv("FWUPD_PIXART_RF_VERBOSE") != NULL) {
 		fu_common_dump_raw(G_LOG_DOMAIN, "buf from get model num", buf, sizeof(buf));
 	}
-	if (!fu_common_read_uint8_safe(buf, sizeof(buf), 0xA, num_of_models, error))
+	if (!fu_memread_uint8_safe(buf, sizeof(buf), 0xA, num_of_models, error))
 		return FALSE;
 
 	/* success */

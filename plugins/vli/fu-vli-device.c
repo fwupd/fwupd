@@ -273,7 +273,7 @@ fu_vli_device_spi_write_block(FuVliDevice *self,
 		g_prefix_error(error, "SPI data read failed: ");
 		return FALSE;
 	}
-	return fu_common_bytes_compare_raw(buf, bufsz, buf_tmp, bufsz, error);
+	return fu_memcmp_safe(buf, bufsz, buf_tmp, bufsz, error);
 }
 
 gboolean
@@ -561,21 +561,21 @@ fu_vli_device_spi_read_flash_id(FuVliDevice *self, GError **error)
 	if (g_getenv("FWUPD_VLI_USBHUB_VERBOSE") != NULL)
 		fu_common_dump_raw(G_LOG_DOMAIN, "SpiCmdReadId", buf, sizeof(buf));
 	if (priv->spi_cmd_read_id_sz == 4) {
-		if (!fu_common_read_uint32_safe(buf,
-						sizeof(buf),
-						0x0,
-						&priv->flash_id,
-						G_BIG_ENDIAN,
-						error))
+		if (!fu_memread_uint32_safe(buf,
+					    sizeof(buf),
+					    0x0,
+					    &priv->flash_id,
+					    G_BIG_ENDIAN,
+					    error))
 			return FALSE;
 	} else if (priv->spi_cmd_read_id_sz == 2) {
 		guint16 tmp = 0;
-		if (!fu_common_read_uint16_safe(buf, sizeof(buf), 0x0, &tmp, G_BIG_ENDIAN, error))
+		if (!fu_memread_uint16_safe(buf, sizeof(buf), 0x0, &tmp, G_BIG_ENDIAN, error))
 			return FALSE;
 		priv->flash_id = tmp;
 	} else if (priv->spi_cmd_read_id_sz == 1) {
 		guint8 tmp = 0;
-		if (!fu_common_read_uint8_safe(buf, sizeof(buf), 0x0, &tmp, error))
+		if (!fu_memread_uint8_safe(buf, sizeof(buf), 0x0, &tmp, error))
 			return FALSE;
 		priv->flash_id = tmp;
 	}

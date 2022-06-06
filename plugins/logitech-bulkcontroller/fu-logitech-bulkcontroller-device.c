@@ -275,23 +275,23 @@ fu_logitech_bulkcontroller_device_send_upd_cmd(FuLogitechBulkcontrollerDevice *s
 						    error))
 		return FALSE;
 
-	if (!fu_common_read_uint32_safe(buf_ack->data,
-					buf_ack->len,
-					COMMAND_OFFSET,
-					&cmd_tmp,
-					G_LITTLE_ENDIAN,
-					error))
+	if (!fu_memread_uint32_safe(buf_ack->data,
+				    buf_ack->len,
+				    COMMAND_OFFSET,
+				    &cmd_tmp,
+				    G_LITTLE_ENDIAN,
+				    error))
 		return FALSE;
 	if (cmd_tmp != CMD_ACK) {
 		g_set_error(error, G_IO_ERROR, G_IO_ERROR_FAILED, "not CMD_ACK, got %x", cmd);
 		return FALSE;
 	}
-	if (!fu_common_read_uint32_safe(buf_ack->data,
-					buf_ack->len,
-					UPD_PACKET_HEADER_SIZE,
-					&cmd_tmp,
-					G_LITTLE_ENDIAN,
-					error))
+	if (!fu_memread_uint32_safe(buf_ack->data,
+				    buf_ack->len,
+				    UPD_PACKET_HEADER_SIZE,
+				    &cmd_tmp,
+				    G_LITTLE_ENDIAN,
+				    error))
 		return FALSE;
 	if (cmd_tmp != cmd) {
 		g_set_error(error,
@@ -435,32 +435,32 @@ fu_logitech_bulkcontroller_device_sync_cb(GObject *source_object,
 		g_main_loop_quit(helper->loop);
 		return;
 	}
-	if (!fu_common_read_uint32_safe(helper->buf_pkt->data,
-					helper->buf_pkt->len,
-					COMMAND_OFFSET,
-					&cmd_tmp,
-					G_LITTLE_ENDIAN,
-					&helper->error)) {
+	if (!fu_memread_uint32_safe(helper->buf_pkt->data,
+				    helper->buf_pkt->len,
+				    COMMAND_OFFSET,
+				    &cmd_tmp,
+				    G_LITTLE_ENDIAN,
+				    &helper->error)) {
 		g_prefix_error(&helper->error, "failed to retrieve payload command: ");
 		g_main_loop_quit(helper->loop);
 		return;
 	}
-	if (!fu_common_read_uint32_safe(helper->buf_pkt->data,
-					helper->buf_pkt->len,
-					LENGTH_OFFSET,
-					&response_length,
-					G_LITTLE_ENDIAN,
-					&helper->error)) {
+	if (!fu_memread_uint32_safe(helper->buf_pkt->data,
+				    helper->buf_pkt->len,
+				    LENGTH_OFFSET,
+				    &response_length,
+				    G_LITTLE_ENDIAN,
+				    &helper->error)) {
 		g_prefix_error(&helper->error, "failed to retrieve payload length: ");
 		g_main_loop_quit(helper->loop);
 		return;
 	}
-	if (!fu_common_read_uint64_safe(helper->buf_pkt->data,
-					helper->buf_pkt->len,
-					SYNC_PACKET_HEADER_SIZE,
-					&cmd_tmp_64,
-					G_LITTLE_ENDIAN,
-					&helper->error)) {
+	if (!fu_memread_uint64_safe(helper->buf_pkt->data,
+				    helper->buf_pkt->len,
+				    SYNC_PACKET_HEADER_SIZE,
+				    &cmd_tmp_64,
+				    G_LITTLE_ENDIAN,
+				    &helper->error)) {
 		g_prefix_error(&helper->error, "failed to retrieve payload data: ");
 		g_main_loop_quit(helper->loop);
 		return;
@@ -1099,21 +1099,21 @@ fu_logitech_bulkcontroller_device_setup(FuDevice *device, GError **error)
 				    "incorrect response for transition mode request");
 		return FALSE;
 	}
-	if (!fu_common_read_uint32_safe(decoded_pkt->data,
-					decoded_pkt->len,
-					COMMAND_OFFSET,
-					&success,
-					G_LITTLE_ENDIAN,
-					error)) {
+	if (!fu_memread_uint32_safe(decoded_pkt->data,
+				    decoded_pkt->len,
+				    COMMAND_OFFSET,
+				    &success,
+				    G_LITTLE_ENDIAN,
+				    error)) {
 		g_prefix_error(error, "failed to retrieve result for transition mode request: ");
 		return FALSE;
 	}
-	if (!fu_common_read_uint32_safe(decoded_pkt->data,
-					decoded_pkt->len,
-					LENGTH_OFFSET,
-					&error_code,
-					G_LITTLE_ENDIAN,
-					error)) {
+	if (!fu_memread_uint32_safe(decoded_pkt->data,
+				    decoded_pkt->len,
+				    LENGTH_OFFSET,
+				    &error_code,
+				    G_LITTLE_ENDIAN,
+				    error)) {
 		g_prefix_error(error,
 			       "failed to retrieve error code for transition mode request: ");
 		return FALSE;

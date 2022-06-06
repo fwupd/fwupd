@@ -124,21 +124,21 @@ fu_cfu_device_write_payload(FuCfuDevice *self,
 		databuf[1] = fu_chunk_get_data_sz(chk);
 
 		/* sequence number */
-		if (!fu_common_write_uint16_safe(databuf,
-						 sizeof(databuf),
-						 0x2,
-						 i + 1,
-						 G_LITTLE_ENDIAN,
-						 error))
+		if (!fu_memwrite_uint16_safe(databuf,
+					     sizeof(databuf),
+					     0x2,
+					     i + 1,
+					     G_LITTLE_ENDIAN,
+					     error))
 			return FALSE;
 
 		/* address */
-		if (!fu_common_write_uint32_safe(databuf,
-						 sizeof(databuf),
-						 0x4,
-						 fu_chunk_get_address(chk),
-						 G_LITTLE_ENDIAN,
-						 error))
+		if (!fu_memwrite_uint32_safe(databuf,
+					     sizeof(databuf),
+					     0x4,
+					     fu_chunk_get_address(chk),
+					     G_LITTLE_ENDIAN,
+					     error))
 			return FALSE;
 
 		/* data */
@@ -237,9 +237,9 @@ fu_cfu_device_setup(FuDevice *device, GError **error)
 				      error)) {
 		return FALSE;
 	}
-	if (!fu_common_read_uint8_safe(buf, sizeof(buf), 0x0, &component_cnt, error))
+	if (!fu_memread_uint8_safe(buf, sizeof(buf), 0x0, &component_cnt, error))
 		return FALSE;
-	if (!fu_common_read_uint8_safe(buf, sizeof(buf), 0x3, &tmp, error))
+	if (!fu_memread_uint8_safe(buf, sizeof(buf), 0x3, &tmp, error))
 		return FALSE;
 	self->protocol_version = tmp & 0b1111;
 

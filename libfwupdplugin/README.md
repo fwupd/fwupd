@@ -67,3 +67,6 @@ Remember: Plugins should be upstream!
 * `fu_common_bytes*`: Use `fu_bytes` prefix, i.e. remove the `_common`
 * `fu_common_set_contents_bytes()`: Use `fu_bytes_set_contents()` instead
 * `fu_common_get_contents_bytes()`: Use `fu_bytes_get_contents()` instead
+* `fu_common_read*`: Use `fu_memread` prefix, i.e. replace the `_common` with `_mem`
+* `fu_common_write*`: Use `fu_memwrite` prefix, i.e. replace the `_common` with `_mem`
+* `fu_common_bytes_compare_raw()`: Use `fu_memcmp_safe()` instead

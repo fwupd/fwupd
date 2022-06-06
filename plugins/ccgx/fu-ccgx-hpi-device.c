@@ -253,12 +253,12 @@ fu_ccgx_hpi_device_wait_for_notify(FuCcgxHpiDevice *self, guint16 *bytes_pending
 	/* @bytes_pending available on failure */
 	if (buf[0] & CY_I2C_ERROR_BIT) {
 		if (bytes_pending != NULL) {
-			if (!fu_common_read_uint16_safe(buf,
-							sizeof(buf),
-							0x01,
-							bytes_pending,
-							G_LITTLE_ENDIAN,
-							error))
+			if (!fu_memread_uint16_safe(buf,
+						    sizeof(buf),
+						    0x01,
+						    bytes_pending,
+						    G_LITTLE_ENDIAN,
+						    error))
 				return FALSE;
 		}
 		if (buf[0] & 0x80) {
@@ -1340,12 +1340,12 @@ fu_ccgx_hpi_device_ensure_silicon_id(FuCcgxHpiDevice *self, GError **error)
 		g_prefix_error(error, "get silicon id error: ");
 		return FALSE;
 	}
-	if (!fu_common_read_uint16_safe(buf,
-					sizeof(buf),
-					0x0,
-					&self->silicon_id,
-					G_LITTLE_ENDIAN,
-					error))
+	if (!fu_memread_uint16_safe(buf,
+				    sizeof(buf),
+				    0x0,
+				    &self->silicon_id,
+				    G_LITTLE_ENDIAN,
+				    error))
 		return FALSE;
 
 	/* add quirks */
@@ -1430,21 +1430,21 @@ fu_ccgx_hpi_device_setup(FuDevice *device, GError **error)
 		}
 
 		/* fw1 */
-		if (!fu_common_read_uint32_safe(bufver,
-						sizeof(bufver),
-						0x0c,
-						&versions[FW_MODE_FW1],
-						G_LITTLE_ENDIAN,
-						error))
+		if (!fu_memread_uint32_safe(bufver,
+					    sizeof(bufver),
+					    0x0c,
+					    &versions[FW_MODE_FW1],
+					    G_LITTLE_ENDIAN,
+					    error))
 			return FALSE;
 
 		/* fw2 */
-		if (!fu_common_read_uint32_safe(bufver,
-						sizeof(bufver),
-						0x14,
-						&versions[FW_MODE_FW2],
-						G_LITTLE_ENDIAN,
-						error))
+		if (!fu_memread_uint32_safe(bufver,
+					    sizeof(bufver),
+					    0x14,
+					    &versions[FW_MODE_FW2],
+					    G_LITTLE_ENDIAN,
+					    error))
 			return FALSE;
 
 		/* add GUIDs that are specific to the firmware app type */

@@ -104,7 +104,7 @@ fu_dfu_csr_device_get_status(FuDfuCsrDevice *self, GError **error)
 	}
 
 	self->dfu_state = buf[5];
-	self->dnload_timeout = fu_common_read_uint24(&buf[2], G_LITTLE_ENDIAN);
+	self->dnload_timeout = fu_memread_uint24(&buf[2], G_LITTLE_ENDIAN);
 	g_debug("timeout=%" G_GUINT32_FORMAT, self->dnload_timeout);
 	g_debug("state=%s", fu_dfu_state_to_string(self->dfu_state));
 	g_debug("status=%s", fu_dfu_status_to_string(buf[6]));
@@ -164,7 +164,7 @@ fu_dfu_csr_device_upload_chunk(FuDfuCsrDevice *self, GError **error)
 	}
 
 	/* check the length */
-	data_sz = fu_common_read_uint16(&buf[1], G_LITTLE_ENDIAN);
+	data_sz = fu_memread_uint16(&buf[1], G_LITTLE_ENDIAN);
 	if (data_sz + FU_DFU_CSR_COMMAND_HEADER_SIZE != (guint16)sizeof(buf)) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -207,12 +207,12 @@ fu_dfu_csr_device_upload(FuDevice *device, FuProgress *progress, GError **error)
 			if (memcmp(buf, "DFU_CSR-dfu", 7) == 0) {
 				guint16 hdr_ver;
 				guint16 hdr_len;
-				if (!fu_common_read_uint16_safe(buf,
-								chunk_sz,
-								8,
-								&hdr_ver,
-								G_LITTLE_ENDIAN,
-								error))
+				if (!fu_memread_uint16_safe(buf,
+							    chunk_sz,
+							    8,
+							    &hdr_ver,
+							    G_LITTLE_ENDIAN,
+							    error))
 					return NULL;
 				if (hdr_ver != 0x03) {
 					g_set_error(error,
@@ -223,12 +223,12 @@ fu_dfu_csr_device_upload(FuDevice *device, FuProgress *progress, GError **error)
 						    hdr_ver);
 					return NULL;
 				}
-				if (!fu_common_read_uint32_safe(buf,
-								chunk_sz,
-								10,
-								&total_sz,
-								G_LITTLE_ENDIAN,
-								error))
+				if (!fu_memread_uint32_safe(buf,
+							    chunk_sz,
+							    10,
+							    &total_sz,
+							    G_LITTLE_ENDIAN,
+							    error))
 					return NULL;
 				if (total_sz == 0) {
 					g_set_error(error,
@@ -239,12 +239,12 @@ fu_dfu_csr_device_upload(FuDevice *device, FuProgress *progress, GError **error)
 						    total_sz);
 					return NULL;
 				}
-				if (!fu_common_read_uint16_safe(buf,
-								chunk_sz,
-								14,
-								&hdr_len,
-								G_LITTLE_ENDIAN,
-								error))
+				if (!fu_memread_uint16_safe(buf,
+							    chunk_sz,
+							    14,
+							    &hdr_len,
+							    G_LITTLE_ENDIAN,
+							    error))
 					return NULL;
 				g_debug("DFU_CSR header length: %" G_GUINT16_FORMAT, hdr_len);
 			}
@@ -286,8 +286,8 @@ fu_dfu_csr_device_download_chunk(FuDfuCsrDevice *self, guint16 idx, GBytes *chun
 	/* create packet */
 	buf[0] = FU_DFU_CSR_REPORT_ID_COMMAND;
 	buf[1] = FU_DFU_CSR_COMMAND_UPGRADE;
-	fu_common_write_uint16(&buf[2], idx, G_LITTLE_ENDIAN);
-	fu_common_write_uint16(&buf[4], chunk_sz, G_LITTLE_ENDIAN);
+	fu_memwrite_uint16(&buf[2], idx, G_LITTLE_ENDIAN);
+	fu_memwrite_uint16(&buf[4], chunk_sz, G_LITTLE_ENDIAN);
 	if (!fu_memcpy_safe(buf,
 			    sizeof(buf),
 			    FU_DFU_CSR_COMMAND_HEADER_SIZE, /* dst */

@@ -56,25 +56,25 @@ fu_steelseries_fizz_hid_get_version(FuDevice *device, GError **error)
 	const guint8 cmd = STEELSERIES_HID_VERSION_COMMAND;
 	const guint8 mode = 0U; /* string */
 
-	if (!fu_common_write_uint8_safe(data,
-					sizeof(data),
-					STEELSERIES_HID_VERSION_REPORT_ID_OFFSET,
-					report_id,
-					error))
+	if (!fu_memwrite_uint8_safe(data,
+				    sizeof(data),
+				    STEELSERIES_HID_VERSION_REPORT_ID_OFFSET,
+				    report_id,
+				    error))
 		return NULL;
 
-	if (!fu_common_write_uint8_safe(data,
-					sizeof(data),
-					STEELSERIES_HID_VERSION_COMMAND_OFFSET,
-					cmd,
-					error))
+	if (!fu_memwrite_uint8_safe(data,
+				    sizeof(data),
+				    STEELSERIES_HID_VERSION_COMMAND_OFFSET,
+				    cmd,
+				    error))
 		return NULL;
 
-	if (!fu_common_write_uint8_safe(data,
-					sizeof(data),
-					STEELSERIES_HID_VERSION_MODE_OFFSET,
-					mode,
-					error))
+	if (!fu_memwrite_uint8_safe(data,
+				    sizeof(data),
+				    STEELSERIES_HID_VERSION_MODE_OFFSET,
+				    mode,
+				    error))
 		return NULL;
 
 	if (g_getenv("FWUPD_STEELSERIES_HID_VERBOSE") != NULL)

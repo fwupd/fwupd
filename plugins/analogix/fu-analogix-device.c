@@ -166,7 +166,7 @@ fu_analogix_device_setup(FuDevice *device, GError **error)
 		return FALSE;
 	if (!fu_analogix_device_receive(self, ANX_BB_RQT_READ_FW_RVER, 0, 0, &buf_fw[0], 1, error))
 		return FALSE;
-	self->ocm_version = fu_common_read_uint16(buf_fw, G_LITTLE_ENDIAN);
+	self->ocm_version = fu_memread_uint16(buf_fw, G_LITTLE_ENDIAN);
 
 	/*  get custom version */
 	if (!fu_analogix_device_receive(self,
@@ -185,7 +185,7 @@ fu_analogix_device_setup(FuDevice *device, GError **error)
 					1,
 					error))
 		return FALSE;
-	self->custom_version = fu_common_read_uint16(buf_custom, G_LITTLE_ENDIAN);
+	self->custom_version = fu_memread_uint16(buf_custom, G_LITTLE_ENDIAN);
 
 	/* device version is both versions as a pair */
 	version = g_strdup_printf("%04x.%04x", self->custom_version, self->ocm_version);
@@ -269,7 +269,7 @@ fu_analogix_device_write_image(FuAnalogixDevice *self,
 		return FALSE;
 
 	/* initialization */
-	fu_common_write_uint32(buf_init, g_bytes_get_size(block_bytes), G_LITTLE_ENDIAN);
+	fu_memwrite_uint32(buf_init, g_bytes_get_size(block_bytes), G_LITTLE_ENDIAN);
 	if (!fu_analogix_device_send(self,
 				     ANX_BB_RQT_SEND_UPDATE_DATA,
 				     req_val,

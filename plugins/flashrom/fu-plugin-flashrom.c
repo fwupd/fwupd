@@ -124,14 +124,14 @@ fu_plugin_flashrom_device_set_bios_info(FuPlugin *plugin, FuDevice *device)
 	buf = g_bytes_get_data(bios_table, &bufsz);
 	if (fu_device_get_firmware_size_max(device) == 0) {
 		guint8 bios_sz = 0x0;
-		if (fu_common_read_uint8_safe(buf, bufsz, 0x9, &bios_sz, NULL)) {
+		if (fu_memread_uint8_safe(buf, bufsz, 0x9, &bios_sz, NULL)) {
 			guint64 firmware_size = (bios_sz + 1) * 64 * 1024;
 			fu_device_set_firmware_size_max(device, firmware_size);
 		}
 	}
 
 	/* BIOS characteristics */
-	if (fu_common_read_uint32_safe(buf, bufsz, 0xa, &bios_char, G_LITTLE_ENDIAN, NULL)) {
+	if (fu_memread_uint32_safe(buf, bufsz, 0xa, &bios_char, G_LITTLE_ENDIAN, NULL)) {
 		if ((bios_char & (1 << 11)) == 0) {
 			fu_device_inhibit(device,
 					  "bios-characteristics",

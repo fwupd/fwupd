@@ -34,17 +34,17 @@ fu_synaptics_rmi_v6_device_setup(FuSynapticsRmiDevice *self, GError **error)
 		g_prefix_error(error, "failed to read bootloader ID: ");
 		return FALSE;
 	}
-	if (!fu_common_read_uint8_safe(f34_data0->data,
-				       f34_data0->len,
-				       0x0,
-				       &flash->bootloader_id[0],
-				       error))
+	if (!fu_memread_uint8_safe(f34_data0->data,
+				   f34_data0->len,
+				   0x0,
+				   &flash->bootloader_id[0],
+				   error))
 		return FALSE;
-	if (!fu_common_read_uint8_safe(f34_data0->data,
-				       f34_data0->len,
-				       0x1,
-				       &flash->bootloader_id[1],
-				       error))
+	if (!fu_memread_uint8_safe(f34_data0->data,
+				   f34_data0->len,
+				   0x1,
+				   &flash->bootloader_id[1],
+				   error))
 		return FALSE;
 
 	/* get flash properties */
@@ -52,29 +52,29 @@ fu_synaptics_rmi_v6_device_setup(FuSynapticsRmiDevice *self, GError **error)
 	if (f34_data2 == NULL)
 		return FALSE;
 
-	if (!fu_common_read_uint16_safe(f34_data2->data,
-					f34_data2->len,
-					0x0,
-					&flash->block_size,
-					G_LITTLE_ENDIAN,
-					error))
+	if (!fu_memread_uint16_safe(f34_data2->data,
+				    f34_data2->len,
+				    0x0,
+				    &flash->block_size,
+				    G_LITTLE_ENDIAN,
+				    error))
 		return FALSE;
 	f34_data3 = fu_synaptics_rmi_device_read(self, f34->query_base + 0x03, 8, error);
 	if (f34_data3 == NULL)
 		return FALSE;
-	if (!fu_common_read_uint16_safe(f34_data3->data,
-					f34_data3->len,
-					0x0,
-					&flash->block_count_fw,
-					G_LITTLE_ENDIAN,
-					error))
+	if (!fu_memread_uint16_safe(f34_data3->data,
+				    f34_data3->len,
+				    0x0,
+				    &flash->block_count_fw,
+				    G_LITTLE_ENDIAN,
+				    error))
 		return FALSE;
-	if (!fu_common_read_uint16_safe(f34_data3->data,
-					f34_data3->len,
-					RMI_F34_CONFIG_BLOCKS_OFFSET,
-					&flash->block_count_cfg,
-					G_LITTLE_ENDIAN,
-					error))
+	if (!fu_memread_uint16_safe(f34_data3->data,
+				    f34_data3->len,
+				    RMI_F34_CONFIG_BLOCKS_OFFSET,
+				    &flash->block_count_cfg,
+				    G_LITTLE_ENDIAN,
+				    error))
 		return FALSE;
 	flash->status_addr = f34->data_base + 2;
 	return TRUE;

@@ -134,10 +134,6 @@ LIBFWUPDPLUGIN_1.0.2 {
 
 LIBFWUPDPLUGIN_1.0.3 {
   global:
-    fu_common_read_uint16;
-    fu_common_read_uint32;
-    fu_common_write_uint16;
-    fu_common_write_uint32;
     fu_usb_device_is_open;
   local: *;
 } LIBFWUPDPLUGIN_1.0.2;
@@ -337,14 +333,12 @@ LIBFWUPDPLUGIN_1.3.1 {
     fu_firmware_write;
     fu_ihex_firmware_get_type;
     fu_ihex_firmware_new;
-    fu_memcpy_safe;
     fu_udev_device_get_device_file;
   local: *;
 } LIBFWUPDPLUGIN_1.2.9;
 
 LIBFWUPDPLUGIN_1.3.2 {
   global:
-    fu_common_bytes_compare_raw;
     fu_firmware_tokenize;
     fu_io_channel_read_byte_array;
     fu_io_channel_write_byte_array;
@@ -358,9 +352,6 @@ LIBFWUPDPLUGIN_1.3.2 {
 
 LIBFWUPDPLUGIN_1.3.3 {
   global:
-    fu_common_read_uint16_safe;
-    fu_common_read_uint32_safe;
-    fu_common_read_uint8_safe;
     fu_common_version_parse_from_format;
     fu_device_cleanup;
     fu_device_get_possible_plugins;
@@ -609,7 +600,6 @@ LIBFWUPDPLUGIN_1.5.6 {
     fu_firmware_strparse_uint8_safe;
     fu_hwids_add_smbios_override;
     fu_hwids_get_keys;
-    fu_memdup_safe;
     fu_plugin_get_devices;
     fu_plugin_runner_backend_device_added;
     fu_plugin_runner_backend_device_changed;
@@ -633,13 +623,6 @@ LIBFWUPDPLUGIN_1.5.8 {
     fu_bluez_device_notify_stop;
     fu_byte_array_append_bytes;
     fu_byte_array_append_uint64;
-    fu_common_read_uint64;
-    fu_common_read_uint64_safe;
-    fu_common_write_uint16_safe;
-    fu_common_write_uint32_safe;
-    fu_common_write_uint64;
-    fu_common_write_uint64_safe;
-    fu_common_write_uint8_safe;
     fu_device_get_backend_id;
     fu_device_get_battery_level;
     fu_device_set_backend_id;
@@ -926,7 +909,6 @@ LIBFWUPDPLUGIN_1.7.4 {
     fu_firmware_add_patch;
     fu_firmware_get_bytes_with_patches;
     fu_lid_state_to_string;
-    fu_memmem_safe;
     fu_plugin_set_secure_config_value;
     fu_usb_device_add_interface;
     fu_usb_device_set_configuration;
@@ -961,9 +943,7 @@ LIBFWUPDPLUGIN_1.8.0 {
     fu_byte_array_compare;
     fu_cfi_device_chip_select;
     fu_cfi_device_chip_select_locker_new;
-    fu_common_read_uint24;
     fu_common_reverse_uint8;
-    fu_common_write_uint24;
     fu_coswid_firmware_get_type;
     fu_coswid_firmware_new;
     fu_device_has_inhibit;
@@ -1010,6 +990,26 @@ LIBFWUPDPLUGIN_1.8.2 {
     fu_crc8_full;
     fu_device_new;
     fu_efivar_secure_boot_enabled;
+    fu_memcmp_safe;
+    fu_memcpy_safe;
+    fu_memdup_safe;
+    fu_memmem_safe;
+    fu_memread_uint16;
+    fu_memread_uint16_safe;
+    fu_memread_uint24;
+    fu_memread_uint32;
+    fu_memread_uint32_safe;
+    fu_memread_uint64;
+    fu_memread_uint64_safe;
+    fu_memread_uint8_safe;
+    fu_memwrite_uint16;
+    fu_memwrite_uint16_safe;
+    fu_memwrite_uint24;
+    fu_memwrite_uint32;
+    fu_memwrite_uint32_safe;
+    fu_memwrite_uint64;
+    fu_memwrite_uint64_safe;
+    fu_memwrite_uint8_safe;
     fu_progress_add_step;
     fu_progress_get_name;
     fu_progress_set_name;

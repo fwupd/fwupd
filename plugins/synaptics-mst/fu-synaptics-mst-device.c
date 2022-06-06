@@ -540,12 +540,12 @@ fu_synaptics_mst_device_update_panamera_firmware(FuSynapticsMstDevice *self,
 	g_debug("bank to update:%x", bank_to_update);
 
 	/* get firmware size */
-	if (!fu_common_read_uint32_safe(payload_data,
-					payload_len,
-					0x400,
-					&fw_size,
-					G_LITTLE_ENDIAN,
-					error))
+	if (!fu_memread_uint32_safe(payload_data,
+				    payload_len,
+				    0x400,
+				    &fw_size,
+				    G_LITTLE_ENDIAN,
+				    error))
 		return FALSE;
 	fw_size += 0x410;
 
@@ -1375,7 +1375,7 @@ fu_synaptics_mst_device_rescan(FuDevice *device, GError **error)
 	/* read board ID */
 	if (!fu_synaptics_mst_device_read_board_id(self, connection, buf_ver, error))
 		return FALSE;
-	self->board_id = fu_common_read_uint16(buf_ver, G_BIG_ENDIAN);
+	self->board_id = fu_memread_uint16(buf_ver, G_BIG_ENDIAN);
 
 	/* recursively look for cascade devices */
 	if (!fu_device_locker_close(locker, error)) {

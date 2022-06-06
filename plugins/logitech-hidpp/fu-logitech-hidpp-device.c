@@ -1112,12 +1112,12 @@ fu_logitech_hidpp_device_write_firmware_pkt(FuLogitechHidPpDevice *self,
 	}
 
 	/* check error */
-	if (!fu_common_read_uint32_safe(msg->data,
-					sizeof(msg->data),
-					0x0,
-					&packet_cnt,
-					G_BIG_ENDIAN,
-					error))
+	if (!fu_memread_uint32_safe(msg->data,
+				    sizeof(msg->data),
+				    0x0,
+				    &packet_cnt,
+				    G_BIG_ENDIAN,
+				    error))
 		return FALSE;
 	if (g_getenv("FWUPD_LOGITECH_HIDPP_VERBOSE") != NULL)
 		g_debug("packet_cnt=0x%04x", packet_cnt);

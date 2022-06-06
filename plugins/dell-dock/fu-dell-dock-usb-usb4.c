@@ -319,7 +319,7 @@ fu_dell_dock_usb4_hub_nvm_read(FuDevice *device,
 		}
 
 		/* set nvm read offset in dwords */
-		fu_common_write_uint32(metadata, NVM_OFFSET_TO_METADATA(nvm_addr), G_LITTLE_ENDIAN);
+		fu_memwrite_uint32(metadata, NVM_OFFSET_TO_METADATA(nvm_addr), G_LITTLE_ENDIAN);
 
 		/* and length field in dwords, note 0 means 16 dwords */
 		metadata[3] = (padded_len / 4) & 0xf;
@@ -382,7 +382,7 @@ fu_dell_dock_usb4_hub_nvm_write(FuDevice *device,
 	}
 
 	/* 1. Set initial offset, must be DW aligned */
-	fu_common_write_uint32(metadata, NVM_OFFSET_TO_METADATA(nvm_addr), G_LITTLE_ENDIAN);
+	fu_memwrite_uint32(metadata, NVM_OFFSET_TO_METADATA(nvm_addr), G_LITTLE_ENDIAN);
 
 	if (!fu_dell_dock_usb4_hub_operation(device, OP_NVM_SET_OFFSET, metadata, error)) {
 		g_prefix_error(error, "hub NVM set offset error: ");

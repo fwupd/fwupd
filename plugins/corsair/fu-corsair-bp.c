@@ -165,12 +165,12 @@ fu_corsair_bp_write_first_chunk(FuCorsairBp *self,
 		return FALSE;
 	}
 
-	if (!fu_common_write_uint32_safe(write_cmd,
-					 sizeof(write_cmd),
-					 CORSAIR_OFFSET_CMD_FIRMWARE_SIZE,
-					 firmware_size,
-					 G_LITTLE_ENDIAN,
-					 error)) {
+	if (!fu_memwrite_uint32_safe(write_cmd,
+				     sizeof(write_cmd),
+				     CORSAIR_OFFSET_CMD_FIRMWARE_SIZE,
+				     firmware_size,
+				     G_LITTLE_ENDIAN,
+				     error)) {
 		g_prefix_error(error, "cannot serialize firmware size: ");
 		return FALSE;
 	}
@@ -242,14 +242,14 @@ fu_corsair_bp_get_property(FuCorsairBp *self,
 {
 	guint8 data[FU_CORSAIR_MAX_CMD_SIZE] = {0x08, 0x02};
 
-	fu_common_write_uint16(&data[CORSAIR_OFFSET_CMD_PROPERTY_ID],
-			       (guint16)property,
-			       G_LITTLE_ENDIAN);
+	fu_memwrite_uint16(&data[CORSAIR_OFFSET_CMD_PROPERTY_ID],
+			   (guint16)property,
+			   G_LITTLE_ENDIAN);
 
 	if (!fu_corsair_bp_command(self, data, CORSAIR_TRANSACTION_TIMEOUT, TRUE, error))
 		return FALSE;
 
-	*value = fu_common_read_uint32(&data[CORSAIR_OFFSET_CMD_PROPERTY_VALUE], G_LITTLE_ENDIAN);
+	*value = fu_memread_uint32(&data[CORSAIR_OFFSET_CMD_PROPERTY_VALUE], G_LITTLE_ENDIAN);
 
 	return TRUE;
 }
@@ -394,7 +394,7 @@ fu_corsair_bp_activate_firmware(FuCorsairBp *self, FuFirmware *firmware, GError 
 	}
 
 	crc = fu_corsair_calculate_crc(firmware_raw, firmware_size);
-	fu_common_write_uint32(&cmd[CORSAIR_OFFSET_CMD_CRC], crc, G_LITTLE_ENDIAN);
+	fu_memwrite_uint32(&cmd[CORSAIR_OFFSET_CMD_CRC], crc, G_LITTLE_ENDIAN);
 
 	return fu_corsair_bp_command(self, cmd, CORSAIR_ACTIVATION_TIMEOUT, TRUE, error);
 }

@@ -163,7 +163,7 @@ fu_steelseries_fizz_command_and_check_error(FuDevice *device,
 	if (!fu_steelseries_device_cmd(FU_STEELSERIES_DEVICE(device), data, datasz, TRUE, error))
 		return FALSE;
 
-	if (!fu_common_read_uint8_safe(data, datasz, STEELSERIES_FIZZ_COMMAND_OFFSET, &cmd, error))
+	if (!fu_memread_uint8_safe(data, datasz, STEELSERIES_FIZZ_COMMAND_OFFSET, &cmd, error))
 		return FALSE;
 
 	if (cmd != command) {
@@ -176,7 +176,7 @@ fu_steelseries_fizz_command_and_check_error(FuDevice *device,
 		return FALSE;
 	}
 
-	if (!fu_common_read_uint8_safe(data, datasz, STEELSERIES_FIZZ_ERROR_OFFSET, &err, error))
+	if (!fu_memread_uint8_safe(data, datasz, STEELSERIES_FIZZ_ERROR_OFFSET, &err, error))
 		return FALSE;
 
 	return fu_steelseries_fizz_command_error_to_error(cmd, err, error);
@@ -192,18 +192,18 @@ fu_steelseries_fizz_get_version(FuDevice *device, gboolean tunnel, GError **erro
 	if (tunnel)
 		cmd |= STEELSERIES_FIZZ_COMMAND_TUNNEL_BIT;
 
-	if (!fu_common_write_uint8_safe(data,
-					sizeof(data),
-					STEELSERIES_FIZZ_VERSION_COMMAND_OFFSET,
-					cmd,
-					error))
+	if (!fu_memwrite_uint8_safe(data,
+				    sizeof(data),
+				    STEELSERIES_FIZZ_VERSION_COMMAND_OFFSET,
+				    cmd,
+				    error))
 		return NULL;
 
-	if (!fu_common_write_uint8_safe(data,
-					sizeof(data),
-					STEELSERIES_FIZZ_VERSION_MODE_OFFSET,
-					mode,
-					error))
+	if (!fu_memwrite_uint8_safe(data,
+				    sizeof(data),
+				    STEELSERIES_FIZZ_VERSION_MODE_OFFSET,
+				    mode,
+				    error))
 		return NULL;
 
 	if (g_getenv("FWUPD_STEELSERIES_FIZZ_VERBOSE") != NULL)
@@ -246,42 +246,41 @@ fu_steelseries_fizz_write_fs(FuDevice *device,
 		const guint16 size = fu_chunk_get_data_sz(chk);
 		const guint32 offset = fu_chunk_get_address(chk);
 
-		if (!fu_common_write_uint8_safe(data,
-						sizeof(data),
-						STEELSERIES_FIZZ_WRITE_ACCESS_FILE_COMMAND_OFFSET,
-						cmd,
-						error))
+		if (!fu_memwrite_uint8_safe(data,
+					    sizeof(data),
+					    STEELSERIES_FIZZ_WRITE_ACCESS_FILE_COMMAND_OFFSET,
+					    cmd,
+					    error))
 			return FALSE;
 
-		if (!fu_common_write_uint8_safe(
-			data,
-			sizeof(data),
-			STEELSERIES_FIZZ_WRITE_ACCESS_FILE_FILESYSTEM_OFFSET,
-			fs,
-			error))
+		if (!fu_memwrite_uint8_safe(data,
+					    sizeof(data),
+					    STEELSERIES_FIZZ_WRITE_ACCESS_FILE_FILESYSTEM_OFFSET,
+					    fs,
+					    error))
 			return FALSE;
 
-		if (!fu_common_write_uint8_safe(data,
-						sizeof(data),
-						STEELSERIES_FIZZ_WRITE_ACCESS_FILE_ID_OFFSET,
-						id,
-						error))
+		if (!fu_memwrite_uint8_safe(data,
+					    sizeof(data),
+					    STEELSERIES_FIZZ_WRITE_ACCESS_FILE_ID_OFFSET,
+					    id,
+					    error))
 			return FALSE;
 
-		if (!fu_common_write_uint16_safe(data,
-						 sizeof(data),
-						 STEELSERIES_FIZZ_WRITE_ACCESS_FILE_SIZE_OFFSET,
-						 size,
-						 G_LITTLE_ENDIAN,
-						 error))
+		if (!fu_memwrite_uint16_safe(data,
+					     sizeof(data),
+					     STEELSERIES_FIZZ_WRITE_ACCESS_FILE_SIZE_OFFSET,
+					     size,
+					     G_LITTLE_ENDIAN,
+					     error))
 			return FALSE;
 
-		if (!fu_common_write_uint32_safe(data,
-						 sizeof(data),
-						 STEELSERIES_FIZZ_WRITE_ACCESS_FILE_OFFSET_OFFSET,
-						 offset,
-						 G_LITTLE_ENDIAN,
-						 error))
+		if (!fu_memwrite_uint32_safe(data,
+					     sizeof(data),
+					     STEELSERIES_FIZZ_WRITE_ACCESS_FILE_OFFSET_OFFSET,
+					     offset,
+					     G_LITTLE_ENDIAN,
+					     error))
 			return FALSE;
 
 		if (!fu_memcpy_safe(data,
@@ -321,25 +320,25 @@ fu_steelseries_fizz_erase_fs(FuDevice *device,
 	if (tunnel)
 		cmd |= STEELSERIES_FIZZ_COMMAND_TUNNEL_BIT;
 
-	if (!fu_common_write_uint8_safe(data,
-					sizeof(data),
-					STEELSERIES_FIZZ_ERASE_FILE_COMMAND_OFFSET,
-					cmd,
-					error))
+	if (!fu_memwrite_uint8_safe(data,
+				    sizeof(data),
+				    STEELSERIES_FIZZ_ERASE_FILE_COMMAND_OFFSET,
+				    cmd,
+				    error))
 		return FALSE;
 
-	if (!fu_common_write_uint8_safe(data,
-					sizeof(data),
-					STEELSERIES_FIZZ_ERASE_FILE_FILESYSTEM_OFFSET,
-					fs,
-					error))
+	if (!fu_memwrite_uint8_safe(data,
+				    sizeof(data),
+				    STEELSERIES_FIZZ_ERASE_FILE_FILESYSTEM_OFFSET,
+				    fs,
+				    error))
 		return FALSE;
 
-	if (!fu_common_write_uint8_safe(data,
-					sizeof(data),
-					STEELSERIES_FIZZ_ERASE_FILE_ID_OFFSET,
-					id,
-					error))
+	if (!fu_memwrite_uint8_safe(data,
+				    sizeof(data),
+				    STEELSERIES_FIZZ_ERASE_FILE_ID_OFFSET,
+				    id,
+				    error))
 		return FALSE;
 
 	if (g_getenv("FWUPD_STEELSERIES_FIZZ_VERBOSE") != NULL)
@@ -362,18 +361,18 @@ fu_steelseries_fizz_reset(FuDevice *device, gboolean tunnel, guint8 mode, GError
 	if (tunnel)
 		cmd |= STEELSERIES_FIZZ_COMMAND_TUNNEL_BIT;
 
-	if (!fu_common_write_uint8_safe(data,
-					sizeof(data),
-					STEELSERIES_FIZZ_RESET_COMMAND_OFFSET,
-					cmd,
-					error))
+	if (!fu_memwrite_uint8_safe(data,
+				    sizeof(data),
+				    STEELSERIES_FIZZ_RESET_COMMAND_OFFSET,
+				    cmd,
+				    error))
 		return FALSE;
 
-	if (!fu_common_write_uint8_safe(data,
-					sizeof(data),
-					STEELSERIES_FIZZ_RESET_MODE_OFFSET,
-					mode,
-					error))
+	if (!fu_memwrite_uint8_safe(data,
+				    sizeof(data),
+				    STEELSERIES_FIZZ_RESET_MODE_OFFSET,
+				    mode,
+				    error))
 		return FALSE;
 
 	if (g_getenv("FWUPD_STEELSERIES_FIZZ_VERBOSE") != NULL)
@@ -404,25 +403,25 @@ fu_steelseries_fizz_get_crc32_fs(FuDevice *device,
 	if (tunnel)
 		cmd |= STEELSERIES_FIZZ_COMMAND_TUNNEL_BIT;
 
-	if (!fu_common_write_uint8_safe(data,
-					sizeof(data),
-					STEELSERIES_FIZZ_FILE_CRC32_COMMAND_OFFSET,
-					cmd,
-					error))
+	if (!fu_memwrite_uint8_safe(data,
+				    sizeof(data),
+				    STEELSERIES_FIZZ_FILE_CRC32_COMMAND_OFFSET,
+				    cmd,
+				    error))
 		return FALSE;
 
-	if (!fu_common_write_uint8_safe(data,
-					sizeof(data),
-					STEELSERIES_FIZZ_FILE_CRC32_FILESYSTEM_OFFSET,
-					fs,
-					error))
+	if (!fu_memwrite_uint8_safe(data,
+				    sizeof(data),
+				    STEELSERIES_FIZZ_FILE_CRC32_FILESYSTEM_OFFSET,
+				    fs,
+				    error))
 		return FALSE;
 
-	if (!fu_common_write_uint8_safe(data,
-					sizeof(data),
-					STEELSERIES_FIZZ_FILE_CRC32_ID_OFFSET,
-					id,
-					error))
+	if (!fu_memwrite_uint8_safe(data,
+				    sizeof(data),
+				    STEELSERIES_FIZZ_FILE_CRC32_ID_OFFSET,
+				    id,
+				    error))
 
 		return FALSE;
 
@@ -433,20 +432,20 @@ fu_steelseries_fizz_get_crc32_fs(FuDevice *device,
 	if (g_getenv("FWUPD_STEELSERIES_FIZZ_VERBOSE") != NULL)
 		fu_common_dump_raw(G_LOG_DOMAIN, "FileCRC32", data, sizeof(data));
 
-	if (!fu_common_read_uint32_safe(data,
-					sizeof(data),
-					STEELSERIES_FIZZ_FILE_CRC32_CALCULATED_CRC_OFFSET,
-					calculated_crc,
-					G_LITTLE_ENDIAN,
-					error))
+	if (!fu_memread_uint32_safe(data,
+				    sizeof(data),
+				    STEELSERIES_FIZZ_FILE_CRC32_CALCULATED_CRC_OFFSET,
+				    calculated_crc,
+				    G_LITTLE_ENDIAN,
+				    error))
 		return FALSE;
 
-	if (!fu_common_read_uint32_safe(data,
-					sizeof(data),
-					STEELSERIES_FIZZ_FILE_CRC32_STORED_CRC_OFFSET,
-					stored_crc,
-					G_LITTLE_ENDIAN,
-					error))
+	if (!fu_memread_uint32_safe(data,
+				    sizeof(data),
+				    STEELSERIES_FIZZ_FILE_CRC32_STORED_CRC_OFFSET,
+				    stored_crc,
+				    G_LITTLE_ENDIAN,
+				    error))
 		return FALSE;
 
 	/* success */
@@ -479,41 +478,41 @@ fu_steelseries_fizz_read_fs(FuDevice *device,
 		const guint16 size = fu_chunk_get_data_sz(chk);
 		const guint32 offset = fu_chunk_get_address(chk);
 
-		if (!fu_common_write_uint8_safe(data,
-						sizeof(data),
-						STEELSERIES_FIZZ_READ_ACCESS_FILE_COMMAND_OFFSET,
-						cmd,
-						error))
+		if (!fu_memwrite_uint8_safe(data,
+					    sizeof(data),
+					    STEELSERIES_FIZZ_READ_ACCESS_FILE_COMMAND_OFFSET,
+					    cmd,
+					    error))
 			return FALSE;
 
-		if (!fu_common_write_uint8_safe(data,
-						sizeof(data),
-						STEELSERIES_FIZZ_READ_ACCESS_FILE_FILESYSTEM_OFFSET,
-						fs,
-						error))
+		if (!fu_memwrite_uint8_safe(data,
+					    sizeof(data),
+					    STEELSERIES_FIZZ_READ_ACCESS_FILE_FILESYSTEM_OFFSET,
+					    fs,
+					    error))
 			return FALSE;
 
-		if (!fu_common_write_uint8_safe(data,
-						sizeof(data),
-						STEELSERIES_FIZZ_READ_ACCESS_FILE_ID_OFFSET,
-						id,
-						error))
+		if (!fu_memwrite_uint8_safe(data,
+					    sizeof(data),
+					    STEELSERIES_FIZZ_READ_ACCESS_FILE_ID_OFFSET,
+					    id,
+					    error))
 			return FALSE;
 
-		if (!fu_common_write_uint16_safe(data,
-						 sizeof(data),
-						 STEELSERIES_FIZZ_READ_ACCESS_FILE_SIZE_OFFSET,
-						 size,
-						 G_LITTLE_ENDIAN,
-						 error))
+		if (!fu_memwrite_uint16_safe(data,
+					     sizeof(data),
+					     STEELSERIES_FIZZ_READ_ACCESS_FILE_SIZE_OFFSET,
+					     size,
+					     G_LITTLE_ENDIAN,
+					     error))
 			return FALSE;
 
-		if (!fu_common_write_uint32_safe(data,
-						 sizeof(data),
-						 STEELSERIES_FIZZ_READ_ACCESS_FILE_OFFSET_OFFSET,
-						 offset,
-						 G_LITTLE_ENDIAN,
-						 error))
+		if (!fu_memwrite_uint32_safe(data,
+					     sizeof(data),
+					     STEELSERIES_FIZZ_READ_ACCESS_FILE_OFFSET_OFFSET,
+					     offset,
+					     G_LITTLE_ENDIAN,
+					     error))
 			return FALSE;
 
 		if (g_getenv("FWUPD_STEELSERIES_FIZZ_VERBOSE") != NULL)
@@ -552,11 +551,11 @@ fu_steelseries_fizz_get_battery_level(FuDevice *device,
 	if (tunnel)
 		cmd |= STEELSERIES_FIZZ_COMMAND_TUNNEL_BIT;
 
-	if (!fu_common_write_uint8_safe(data,
-					sizeof(data),
-					STEELSERIES_FIZZ_BATTERY_LEVEL_COMMAND_OFFSET,
-					cmd,
-					error))
+	if (!fu_memwrite_uint8_safe(data,
+				    sizeof(data),
+				    STEELSERIES_FIZZ_BATTERY_LEVEL_COMMAND_OFFSET,
+				    cmd,
+				    error))
 		return FALSE;
 
 	if (g_getenv("FWUPD_STEELSERIES_FIZZ_VERBOSE") != NULL)
@@ -570,11 +569,11 @@ fu_steelseries_fizz_get_battery_level(FuDevice *device,
 	if (g_getenv("FWUPD_STEELSERIES_FIZZ_VERBOSE") != NULL)
 		fu_common_dump_raw(G_LOG_DOMAIN, "BatteryLevel", data, sizeof(data));
 
-	if (!fu_common_read_uint8_safe(data,
-				       sizeof(data),
-				       STEELSERIES_FIZZ_BATTERY_LEVEL_LEVEL_OFFSET,
-				       level,
-				       error))
+	if (!fu_memread_uint8_safe(data,
+				   sizeof(data),
+				   STEELSERIES_FIZZ_BATTERY_LEVEL_LEVEL_OFFSET,
+				   level,
+				   error))
 		return FALSE;
 
 	/* success */
@@ -587,11 +586,11 @@ fu_steelseries_fizz_get_paired_status(FuDevice *device, guint8 *status, GError *
 	guint8 data[STEELSERIES_BUFFER_CONTROL_SIZE] = {0};
 	const guint8 cmd = STEELSERIES_FIZZ_PAIRED_STATUS_COMMAND;
 
-	if (!fu_common_write_uint8_safe(data,
-					sizeof(data),
-					STEELSERIES_FIZZ_PAIRED_STATUS_COMMAND_OFFSET,
-					cmd,
-					error))
+	if (!fu_memwrite_uint8_safe(data,
+				    sizeof(data),
+				    STEELSERIES_FIZZ_PAIRED_STATUS_COMMAND_OFFSET,
+				    cmd,
+				    error))
 		return FALSE;
 
 	if (g_getenv("FWUPD_STEELSERIES_FIZZ_VERBOSE") != NULL)
@@ -605,11 +604,11 @@ fu_steelseries_fizz_get_paired_status(FuDevice *device, guint8 *status, GError *
 	if (g_getenv("FWUPD_STEELSERIES_FIZZ_VERBOSE") != NULL)
 		fu_common_dump_raw(G_LOG_DOMAIN, "PairedStatus", data, sizeof(data));
 
-	if (!fu_common_read_uint8_safe(data,
-				       sizeof(data),
-				       STEELSERIES_FIZZ_PAIRED_STATUS_STATUS_OFFSET,
-				       status,
-				       error))
+	if (!fu_memread_uint8_safe(data,
+				   sizeof(data),
+				   STEELSERIES_FIZZ_PAIRED_STATUS_STATUS_OFFSET,
+				   status,
+				   error))
 		return FALSE;
 
 	/* success */
@@ -622,11 +621,11 @@ fu_steelseries_fizz_get_connection_status(FuDevice *device, guint8 *status, GErr
 	guint8 data[STEELSERIES_BUFFER_CONTROL_SIZE] = {0};
 	const guint8 cmd = STEELSERIES_FIZZ_CONNECTION_STATUS_COMMAND;
 
-	if (!fu_common_write_uint8_safe(data,
-					sizeof(data),
-					STEELSERIES_FIZZ_CONNECTION_STATUS_COMMAND_OFFSET,
-					cmd,
-					error))
+	if (!fu_memwrite_uint8_safe(data,
+				    sizeof(data),
+				    STEELSERIES_FIZZ_CONNECTION_STATUS_COMMAND_OFFSET,
+				    cmd,
+				    error))
 		return FALSE;
 
 	if (g_getenv("FWUPD_STEELSERIES_FIZZ_VERBOSE") != NULL)
@@ -640,11 +639,11 @@ fu_steelseries_fizz_get_connection_status(FuDevice *device, guint8 *status, GErr
 	if (g_getenv("FWUPD_STEELSERIES_FIZZ_VERBOSE") != NULL)
 		fu_common_dump_raw(G_LOG_DOMAIN, "ConnectionStatus", data, sizeof(data));
 
-	if (!fu_common_read_uint8_safe(data,
-				       sizeof(data),
-				       STEELSERIES_FIZZ_CONNECTION_STATUS_STATUS_OFFSET,
-				       status,
-				       error))
+	if (!fu_memread_uint8_safe(data,
+				   sizeof(data),
+				   STEELSERIES_FIZZ_CONNECTION_STATUS_STATUS_OFFSET,
+				   status,
+				   error))
 		return FALSE;
 
 	/* success */

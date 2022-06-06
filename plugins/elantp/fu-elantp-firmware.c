@@ -61,12 +61,12 @@ fu_elantp_firmware_parse(FuFirmware *firmware,
 	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
 
 	/* presumably in words */
-	if (!fu_common_read_uint16_safe(buf,
-					bufsz,
-					ETP_IAP_START_ADDR_WRDS * 2,
-					&iap_addr_wrds,
-					G_LITTLE_ENDIAN,
-					error))
+	if (!fu_memread_uint16_safe(buf,
+				    bufsz,
+				    ETP_IAP_START_ADDR_WRDS * 2,
+				    &iap_addr_wrds,
+				    G_LITTLE_ENDIAN,
+				    error))
 		return FALSE;
 	if (iap_addr_wrds < ETP_IAP_START_ADDR_WRDS || iap_addr_wrds > 0x7FFF) {
 		g_set_error(error,
@@ -79,12 +79,12 @@ fu_elantp_firmware_parse(FuFirmware *firmware,
 	self->iap_addr = iap_addr_wrds * 2;
 
 	/* read module ID */
-	if (!fu_common_read_uint16_safe(buf,
-					bufsz,
-					self->iap_addr,
-					&module_id_wrds,
-					G_LITTLE_ENDIAN,
-					error))
+	if (!fu_memread_uint16_safe(buf,
+				    bufsz,
+				    self->iap_addr,
+				    &module_id_wrds,
+				    G_LITTLE_ENDIAN,
+				    error))
 		return FALSE;
 	if (module_id_wrds > 0x7FFF) {
 		g_set_error(error,
@@ -94,12 +94,12 @@ fu_elantp_firmware_parse(FuFirmware *firmware,
 			    module_id_wrds);
 		return FALSE;
 	}
-	if (!fu_common_read_uint16_safe(buf,
-					bufsz,
-					module_id_wrds * 2,
-					&self->module_id,
-					G_LITTLE_ENDIAN,
-					error))
+	if (!fu_memread_uint16_safe(buf,
+				    bufsz,
+				    module_id_wrds * 2,
+				    &self->module_id,
+				    G_LITTLE_ENDIAN,
+				    error))
 		return FALSE;
 
 	/* check signature */
@@ -107,7 +107,7 @@ fu_elantp_firmware_parse(FuFirmware *firmware,
 		gsize offset = bufsz - sizeof(elantp_signature);
 		for (gsize i = 0; i < sizeof(elantp_signature); i++) {
 			guint8 tmp = 0x0;
-			if (!fu_common_read_uint8_safe(buf, bufsz, offset + i, &tmp, error))
+			if (!fu_memread_uint8_safe(buf, bufsz, offset + i, &tmp, error))
 				return FALSE;
 			if (tmp != elantp_signature[i]) {
 				g_set_error(error,
@@ -167,26 +167,26 @@ fu_elantp_firmware_write(FuFirmware *firmware, GError **error)
 	 * ------
 	 */
 	fu_byte_array_set_size(buf, self->iap_addr + 0x2 + 0x2);
-	if (!fu_common_write_uint16_safe(buf->data,
-					 buf->len,
-					 ETP_IAP_START_ADDR_WRDS * 2,
-					 self->iap_addr / 2,
-					 G_LITTLE_ENDIAN,
-					 error))
+	if (!fu_memwrite_uint16_safe(buf->data,
+				     buf->len,
+				     ETP_IAP_START_ADDR_WRDS * 2,
+				     self->iap_addr / 2,
+				     G_LITTLE_ENDIAN,
+				     error))
 		return NULL;
-	if (!fu_common_write_uint16_safe(buf->data,
-					 buf->len,
-					 self->iap_addr,
-					 (self->iap_addr + 2) / 2,
-					 G_LITTLE_ENDIAN,
-					 error))
+	if (!fu_memwrite_uint16_safe(buf->data,
+				     buf->len,
+				     self->iap_addr,
+				     (self->iap_addr + 2) / 2,
+				     G_LITTLE_ENDIAN,
+				     error))
 		return NULL;
-	if (!fu_common_write_uint16_safe(buf->data,
-					 buf->len,
-					 self->iap_addr + 0x2,
-					 self->module_id,
-					 G_LITTLE_ENDIAN,
-					 error))
+	if (!fu_memwrite_uint16_safe(buf->data,
+				     buf->len,
+				     self->iap_addr + 0x2,
+				     self->module_id,
+				     G_LITTLE_ENDIAN,
+				     error))
 		return NULL;
 	fu_byte_array_append_bytes(buf, blob);
 	g_byte_array_append(buf, elantp_signature, sizeof(elantp_signature));

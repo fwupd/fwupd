@@ -44,14 +44,14 @@ fu_acpi_phat_record_parse(FuFirmware *firmware,
 	g_autoptr(FuFirmware) firmware_rcd = NULL;
 
 	/* common header */
-	if (!fu_common_read_uint16_safe(buf, bufsz, *offset, &record_type, G_LITTLE_ENDIAN, error))
+	if (!fu_memread_uint16_safe(buf, bufsz, *offset, &record_type, G_LITTLE_ENDIAN, error))
 		return FALSE;
-	if (!fu_common_read_uint16_safe(buf,
-					bufsz,
-					*offset + 2,
-					&record_length,
-					G_LITTLE_ENDIAN,
-					error))
+	if (!fu_memread_uint16_safe(buf,
+				    bufsz,
+				    *offset + 2,
+				    &record_length,
+				    G_LITTLE_ENDIAN,
+				    error))
 		return FALSE;
 	if (record_length < 5) {
 		g_set_error(error,
@@ -61,7 +61,7 @@ fu_acpi_phat_record_parse(FuFirmware *firmware,
 			    record_length);
 		return FALSE;
 	}
-	if (!fu_common_read_uint8_safe(buf, bufsz, *offset + 4, &revision, error))
+	if (!fu_memread_uint8_safe(buf, bufsz, *offset + 4, &revision, error))
 		return FALSE;
 
 	/* firmware version data record */
@@ -133,7 +133,7 @@ fu_acpi_phat_parse(FuFirmware *firmware,
 			    signature);
 		return FALSE;
 	}
-	if (!fu_common_read_uint32_safe(buf, bufsz, 4, &length, G_LITTLE_ENDIAN, error))
+	if (!fu_memread_uint32_safe(buf, bufsz, 4, &length, G_LITTLE_ENDIAN, error))
 		return FALSE;
 	if (bufsz < length) {
 		g_set_error(error,
@@ -148,7 +148,7 @@ fu_acpi_phat_parse(FuFirmware *firmware,
 	/* spec revision */
 	if ((flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {
 		guint8 revision = 0;
-		if (!fu_common_read_uint8_safe(buf, bufsz, 8, &revision, error))
+		if (!fu_memread_uint8_safe(buf, bufsz, 8, &revision, error))
 			return FALSE;
 		if (revision != FU_ACPI_PHAT_REVISION) {
 			g_set_error(error,
@@ -199,7 +199,7 @@ fu_acpi_phat_parse(FuFirmware *firmware,
 		return FALSE;
 	oem_table_id_safe = fu_strsafe((const gchar *)oem_table_id, sizeof(oem_table_id));
 	fu_firmware_set_id(firmware, oem_table_id_safe);
-	if (!fu_common_read_uint32_safe(buf, bufsz, 24, &oem_revision, G_LITTLE_ENDIAN, error))
+	if (!fu_memread_uint32_safe(buf, bufsz, 24, &oem_revision, G_LITTLE_ENDIAN, error))
 		return FALSE;
 	fu_firmware_set_version_raw(firmware, oem_revision);
 

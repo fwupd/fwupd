@@ -35,7 +35,7 @@ nitrokey_execute_cmd_cb(FuDevice *device, gpointer user_data, GError **error)
 	if (req->buf_in != NULL)
 		memcpy(&buf[1], req->buf_in, req->buf_in_sz);
 	crc_tmp = fu_nitrokey_perform_crc32(buf, sizeof(buf) - 4);
-	fu_common_write_uint32(&buf[NITROKEY_REQUEST_DATA_LENGTH + 1], crc_tmp, G_LITTLE_ENDIAN);
+	fu_memwrite_uint32(&buf[NITROKEY_REQUEST_DATA_LENGTH + 1], crc_tmp, G_LITTLE_ENDIAN);
 
 	/* send request */
 	if (!fu_hid_device_set_report(FU_HID_DEVICE(device),

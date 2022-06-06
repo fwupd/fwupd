@@ -292,9 +292,9 @@ fu_logitech_hidpp_bootloader_setup(FuDevice *device, GError **error)
 	}
 
 	/* parse values */
-	priv->flash_addr_lo = fu_common_read_uint16(req->data + 0, G_BIG_ENDIAN);
-	priv->flash_addr_hi = fu_common_read_uint16(req->data + 2, G_BIG_ENDIAN);
-	priv->flash_blocksize = fu_common_read_uint16(req->data + 4, G_BIG_ENDIAN);
+	priv->flash_addr_lo = fu_memread_uint16(req->data + 0, G_BIG_ENDIAN);
+	priv->flash_addr_hi = fu_memread_uint16(req->data + 2, G_BIG_ENDIAN);
+	priv->flash_blocksize = fu_memread_uint16(req->data + 4, G_BIG_ENDIAN);
 
 	/* get bootloader version */
 	return fu_logitech_hidpp_bootloader_set_bl_version(self, error);

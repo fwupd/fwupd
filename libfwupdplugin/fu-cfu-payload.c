@@ -12,6 +12,7 @@
 #include "fu-bytes.h"
 #include "fu-cfu-payload.h"
 #include "fu-common.h"
+#include "fu-mem.h"
 
 /**
  * FuCfuPayload:
@@ -47,14 +48,14 @@ fu_cfu_payload_parse(FuFirmware *firmware,
 		g_autoptr(GBytes) blob = NULL;
 
 		/* read chunk header */
-		if (!fu_common_read_uint32_safe(buf,
-						bufsz,
-						offset,
-						&chunk_addr,
-						G_LITTLE_ENDIAN,
-						error))
+		if (!fu_memread_uint32_safe(buf,
+					    bufsz,
+					    offset,
+					    &chunk_addr,
+					    G_LITTLE_ENDIAN,
+					    error))
 			return FALSE;
-		if (!fu_common_read_uint8_safe(buf, bufsz, offset + 0x4, &chunk_size, error))
+		if (!fu_memread_uint8_safe(buf, bufsz, offset + 0x4, &chunk_size, error))
 			return FALSE;
 		offset += 0x5;
 		blob = fu_bytes_new_offset(fw, offset, chunk_size, error);

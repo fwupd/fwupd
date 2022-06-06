@@ -85,12 +85,12 @@ fu_genesys_usbhub_firmware_verify(const guint8 *buf, gsize bufsz, guint16 code_s
 	}
 
 	/* get checksum */
-	if (!fu_common_read_uint16_safe(buf,
-					bufsz,
-					code_size - sizeof(checksum),
-					&fw_checksum,
-					G_BIG_ENDIAN,
-					error))
+	if (!fu_memread_uint16_safe(buf,
+				    bufsz,
+				    code_size - sizeof(checksum),
+				    &fw_checksum,
+				    G_BIG_ENDIAN,
+				    error))
 		return FALSE;
 
 	/* calculate checksum */
@@ -184,11 +184,11 @@ fu_genesys_usbhub_firmware_parse(FuFirmware *firmware,
 		if (self->chip.revision == 50) {
 			guint8 kbs = 0;
 
-			if (!fu_common_read_uint8_safe(buf,
-						       bufsz,
-						       GENESYS_USBHUB_CODE_SIZE_OFFSET,
-						       &kbs,
-						       error))
+			if (!fu_memread_uint8_safe(buf,
+						   bufsz,
+						   GENESYS_USBHUB_CODE_SIZE_OFFSET,
+						   &kbs,
+						   error))
 				return FALSE;
 			code_size = 1024 * kbs;
 		}
@@ -196,11 +196,11 @@ fu_genesys_usbhub_firmware_parse(FuFirmware *firmware,
 	}
 	case ISP_MODEL_HUB_GL3590: {
 		guint8 kbs = 0;
-		if (!fu_common_read_uint8_safe(buf,
-					       bufsz,
-					       GENESYS_USBHUB_CODE_SIZE_OFFSET,
-					       &kbs,
-					       error))
+		if (!fu_memread_uint8_safe(buf,
+					   bufsz,
+					   GENESYS_USBHUB_CODE_SIZE_OFFSET,
+					   &kbs,
+					   error))
 			return FALSE;
 		code_size = 1024 * kbs;
 		break;
@@ -216,12 +216,12 @@ fu_genesys_usbhub_firmware_parse(FuFirmware *firmware,
 			return FALSE;
 
 	/* get firmware version */
-	if (!fu_common_read_uint16_safe(buf,
-					bufsz,
-					GENESYS_USBHUB_VERSION_OFFSET,
-					&version_raw,
-					G_LITTLE_ENDIAN,
-					error))
+	if (!fu_memread_uint16_safe(buf,
+				    bufsz,
+				    GENESYS_USBHUB_VERSION_OFFSET,
+				    &version_raw,
+				    G_LITTLE_ENDIAN,
+				    error))
 		return FALSE;
 	fu_firmware_set_version_raw(firmware, version_raw);
 	version =
@@ -267,21 +267,21 @@ fu_genesys_usbhub_firmware_write(FuFirmware *firmware, GError **error)
 
 	/* checksum */
 	checksum = fu_sum16(buf->data, code_size - sizeof(checksum));
-	if (!fu_common_write_uint16_safe(buf->data,
-					 buf->len,
-					 code_size - sizeof(guint16),
-					 checksum,
-					 G_BIG_ENDIAN,
-					 error))
+	if (!fu_memwrite_uint16_safe(buf->data,
+				     buf->len,
+				     code_size - sizeof(guint16),
+				     checksum,
+				     G_BIG_ENDIAN,
+				     error))
 		return NULL;
 
 	/* version */
-	if (!fu_common_write_uint16_safe(buf->data,
-					 buf->len,
-					 GENESYS_USBHUB_VERSION_OFFSET,
-					 0x1234, // TODO: parse from firmware version string
-					 G_BIG_ENDIAN,
-					 error))
+	if (!fu_memwrite_uint16_safe(buf->data,
+				     buf->len,
+				     GENESYS_USBHUB_VERSION_OFFSET,
+				     0x1234, // TODO: parse from firmware version string
+				     G_BIG_ENDIAN,
+				     error))
 		return NULL;
 
 	/* success */
