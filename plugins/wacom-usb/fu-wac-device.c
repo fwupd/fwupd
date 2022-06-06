@@ -540,7 +540,7 @@ fu_wac_device_write_firmware(FuDevice *device,
 		blob_tmp = fu_firmware_write_chunk(img, fd->start_addr, fd->block_sz, NULL);
 		if (blob_tmp == NULL)
 			break;
-		blob_block = fu_common_bytes_pad(blob_tmp, fd->block_sz);
+		blob_block = fu_bytes_pad(blob_tmp, fd->block_sz);
 		g_hash_table_insert(fd_blobs, fd, blob_block);
 	}
 
@@ -564,7 +564,7 @@ fu_wac_device_write_firmware(FuDevice *device,
 			break;
 
 		/* ignore empty blocks */
-		if (fu_common_bytes_is_empty(blob_block)) {
+		if (fu_bytes_is_empty(blob_block)) {
 			g_debug("empty block, ignoring");
 			fu_progress_set_percentage_full(fu_progress_get_child(progress),
 							blocks_done++,
@@ -636,7 +636,7 @@ fu_wac_device_write_firmware(FuDevice *device,
 		blob_block = g_hash_table_lookup(fd_blobs, fd);
 		if (blob_block == NULL)
 			continue;
-		if (fu_common_bytes_is_empty(blob_block))
+		if (fu_bytes_is_empty(blob_block))
 			continue;
 
 		/* check checksum matches */

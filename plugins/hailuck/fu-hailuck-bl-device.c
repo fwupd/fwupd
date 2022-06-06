@@ -278,7 +278,7 @@ fu_hailuck_bl_device_write_firmware(FuDevice *device,
 	/* verify */
 	fw_new = fu_hailuck_bl_device_dump_firmware(device, fu_progress_get_child(progress), error);
 	fu_progress_step_done(progress);
-	return fu_common_bytes_compare(fw, fw_new, error);
+	return fu_bytes_compare(fw, fw_new, error);
 }
 
 static void

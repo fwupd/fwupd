@@ -10,6 +10,7 @@
 #include <lzma.h>
 #endif
 
+#include "fu-bytes.h"
 #include "fu-common.h"
 #include "fu-efi-firmware-common.h"
 #include "fu-efi-firmware-section.h"
@@ -41,7 +42,7 @@ fu_efi_firmware_parse_sections(FuFirmware *firmware,
 		g_autoptr(GBytes) blob = NULL;
 
 		/* maximum payload */
-		blob = fu_common_bytes_new_offset(fw, offset, bufsz - offset, error);
+		blob = fu_bytes_new_offset(fw, offset, bufsz - offset, error);
 		if (blob == NULL)
 			return FALSE;
 

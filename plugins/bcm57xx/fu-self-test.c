@@ -70,7 +70,7 @@ fu_bcm57xx_firmware_talos_func(void)
 		g_test_skip("missing file");
 		return;
 	}
-	blob = fu_common_get_contents_bytes(fn, &error);
+	blob = fu_bytes_get_contents(fn, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(blob);
 	ret = fu_firmware_parse(firmware, blob, FWUPD_INSTALL_FLAG_NONE, &error);
@@ -83,10 +83,10 @@ fu_bcm57xx_firmware_talos_func(void)
 	g_assert_no_error(error);
 	g_assert_nonnull(blob_out);
 	fn_out = g_test_build_filename(G_TEST_BUILT, "tests", "Bcm5719_talos.bin", NULL);
-	ret = fu_common_set_contents_bytes(fn_out, blob_out, &error);
+	ret = fu_bytes_set_contents(fn_out, blob_out, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	ret = fu_common_bytes_compare(blob, blob_out, &error);
+	ret = fu_bytes_compare(blob, blob_out, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 }

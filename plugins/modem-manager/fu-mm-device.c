@@ -1465,7 +1465,7 @@ fu_mm_copy_firehose_prog(FuMmDevice *self, GBytes *prog, GError **error)
 
 	firehose_file_path = g_build_filename(qcom_fw_dir, "prog_firehose_sdx24.mbn", NULL);
 
-	if (!fu_common_set_contents_bytes(firehose_file_path, prog, error))
+	if (!fu_bytes_set_contents(firehose_file_path, prog, error))
 		return FALSE;
 
 	return TRUE;

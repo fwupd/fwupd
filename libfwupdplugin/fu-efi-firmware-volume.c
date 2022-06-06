@@ -7,6 +7,7 @@
 #include "config.h"
 
 #include "fu-byte-array.h"
+#include "fu-bytes.h"
 #include "fu-efi-common.h"
 #include "fu-efi-firmware-filesystem.h"
 #include "fu-efi-firmware-volume.h"
@@ -233,7 +234,7 @@ fu_efi_firmware_volume_parse(FuFirmware *firmware,
 	}
 
 	/* add image */
-	blob = fu_common_bytes_new_offset(fw, offset + hdr_length, fv_length - hdr_length, error);
+	blob = fu_bytes_new_offset(fw, offset + hdr_length, fv_length - hdr_length, error);
 	if (blob == NULL)
 		return FALSE;
 	fu_firmware_set_offset(firmware, offset);

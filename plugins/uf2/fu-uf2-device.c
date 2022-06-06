@@ -172,7 +172,7 @@ fu_block_device_dump_firmware(FuDevice *device, FuProgress *progress, GError **e
 		return NULL;
 
 	/* read all in one big chunk */
-	return fu_common_get_contents_stream(istr, G_MAXUINT32, error);
+	return fu_bytes_get_contents_stream(istr, G_MAXUINT32, error);
 }
 
 static FuFirmware *
@@ -297,7 +297,7 @@ fu_uf2_device_setup(FuDevice *device, GError **error)
 
 	/* this might exist */
 	fn2 = fu_block_device_get_full_path(self, "CURRENT.UF2", error);
-	fw = fu_common_get_contents_bytes(fn2, NULL);
+	fw = fu_bytes_get_contents(fn2, NULL);
 	if (fw != NULL) {
 		if (!fu_uf2_device_probe_current_fw(device, fw, error))
 			return FALSE;

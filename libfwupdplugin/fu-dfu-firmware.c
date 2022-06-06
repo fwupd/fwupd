@@ -11,6 +11,7 @@
 #include <string.h>
 
 #include "fu-byte-array.h"
+#include "fu-bytes.h"
 #include "fu-common.h"
 #include "fu-crc.h"
 #include "fu-dfu-firmware-private.h"
@@ -299,7 +300,7 @@ fu_dfu_firmware_parse(FuFirmware *firmware,
 		return FALSE;
 
 	/* trim footer off */
-	contents = fu_common_bytes_new_offset(fw, 0, len - priv->footer_len, error);
+	contents = fu_bytes_new_offset(fw, 0, len - priv->footer_len, error);
 	if (contents == NULL)
 		return FALSE;
 	fu_firmware_set_bytes(firmware, contents);

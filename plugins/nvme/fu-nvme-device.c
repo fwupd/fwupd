@@ -379,7 +379,7 @@ fu_nvme_device_write_firmware(FuDevice *device,
 	/* some vendors provide firmware files whose sizes are not multiples
 	 * of blksz *and* the device won't accept blocks of different sizes */
 	if (fu_device_has_private_flag(device, FU_NVME_DEVICE_FLAG_FORCE_ALIGN)) {
-		fw2 = fu_common_bytes_align(fw, block_size, 0xff);
+		fw2 = fu_bytes_align(fw, block_size, 0xff);
 	} else {
 		fw2 = g_bytes_ref(fw);
 	}

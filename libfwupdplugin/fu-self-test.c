@@ -77,7 +77,7 @@ fu_archive_invalid_func(void)
 #endif
 
 	filename = g_test_build_filename(G_TEST_DIST, "tests", "metadata.xml", NULL);
-	data = fu_common_get_contents_bytes(filename, &error);
+	data = fu_bytes_get_contents(filename, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(data);
 
@@ -107,7 +107,7 @@ fu_archive_cab_func(void)
 					 "colorhug",
 					 "colorhug-als-3.0.2.cab",
 					 NULL);
-	data = fu_common_get_contents_bytes(filename, &error);
+	data = fu_bytes_get_contents(filename, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(data);
 
@@ -924,7 +924,7 @@ fu_common_firmware_builder_func(void)
 
 	/* get test file */
 	archive_fn = g_test_build_filename(G_TEST_BUILT, "tests", "builder", "firmware.tar", NULL);
-	archive_blob = fu_common_get_contents_bytes(archive_fn, &error);
+	archive_blob = fu_bytes_get_contents(archive_fn, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(archive_blob);
 
@@ -1598,7 +1598,7 @@ fu_common_bytes_get_data_func(void)
 	g_assert_true(ret);
 
 	/* check we got zero sized data */
-	bytes1 = fu_common_get_contents_bytes(fn, &error);
+	bytes1 = fu_bytes_get_contents(fn, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(bytes1);
 	g_assert_cmpint(g_bytes_get_size(bytes1), ==, 0);
@@ -2522,7 +2522,7 @@ fu_firmware_ihex_func(void)
 
 	/* load a Intel hex32 file */
 	filename_hex = g_test_build_filename(G_TEST_DIST, "tests", "firmware.hex", NULL);
-	data_file = fu_common_get_contents_bytes(filename_hex, &error);
+	data_file = fu_bytes_get_contents(filename_hex, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(data_file);
 	ret = fu_firmware_parse(firmware, data_file, FWUPD_INSTALL_FLAG_NONE, &error);
@@ -2535,10 +2535,10 @@ fu_firmware_ihex_func(void)
 
 	/* did we match the reference file? */
 	filename_ref = g_test_build_filename(G_TEST_DIST, "tests", "firmware.bin", NULL);
-	data_ref = fu_common_get_contents_bytes(filename_ref, &error);
+	data_ref = fu_bytes_get_contents(filename_ref, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(data_ref);
-	ret = fu_common_bytes_compare(data_fw, data_ref, &error);
+	ret = fu_bytes_compare(data_fw, data_ref, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -2578,7 +2578,7 @@ fu_firmware_ihex_signed_func(void)
 
 	/* load a signed Intel hex32 file */
 	filename_shex = g_test_build_filename(G_TEST_DIST, "tests", "firmware.shex", NULL);
-	data_file = fu_common_get_contents_bytes(filename_shex, &error);
+	data_file = fu_bytes_get_contents(filename_shex, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(data_file);
 	ret = fu_firmware_parse(firmware, data_file, FWUPD_INSTALL_FLAG_NONE, &error);
@@ -2652,7 +2652,7 @@ fu_firmware_srec_func(void)
 	g_autoptr(GError) error = NULL;
 
 	filename_srec = g_test_build_filename(G_TEST_DIST, "tests", "firmware.srec", NULL);
-	data_srec = fu_common_get_contents_bytes(filename_srec, &error);
+	data_srec = fu_bytes_get_contents(filename_srec, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(data_srec);
 	ret = fu_firmware_parse(firmware, data_srec, FWUPD_INSTALL_FLAG_NONE, &error);
@@ -2665,10 +2665,10 @@ fu_firmware_srec_func(void)
 
 	/* did we match the reference file? */
 	filename_ref = g_test_build_filename(G_TEST_DIST, "tests", "firmware.bin", NULL);
-	data_ref = fu_common_get_contents_bytes(filename_ref, &error);
+	data_ref = fu_bytes_get_contents(filename_ref, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(data_ref);
-	ret = fu_common_bytes_compare(data_bin, data_ref, &error);
+	ret = fu_bytes_compare(data_bin, data_ref, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 }
@@ -2810,7 +2810,7 @@ fu_firmware_dfuse_func(void)
 	/* load a DfuSe firmware */
 	filename = g_test_build_filename(G_TEST_DIST, "tests", "firmware.dfuse", NULL);
 	g_assert_nonnull(filename);
-	roundtrip_orig = fu_common_get_contents_bytes(filename, &error);
+	roundtrip_orig = fu_bytes_get_contents(filename, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(roundtrip_orig);
 	ret = fu_firmware_parse(firmware, roundtrip_orig, FWUPD_INSTALL_FLAG_NONE, &error);
@@ -2825,7 +2825,7 @@ fu_firmware_dfuse_func(void)
 	roundtrip = fu_firmware_write(firmware, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(roundtrip);
-	ret = fu_common_bytes_compare(roundtrip, roundtrip_orig, &error);
+	ret = fu_bytes_compare(roundtrip, roundtrip_orig, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 }
@@ -2852,7 +2852,7 @@ fu_firmware_fmap_func(void)
 	/* load firmware */
 	filename = g_test_build_filename(G_TEST_DIST, "tests", "fmap-offset.bin", NULL);
 	g_assert_nonnull(filename);
-	roundtrip_orig = fu_common_get_contents_bytes(filename, &error);
+	roundtrip_orig = fu_bytes_get_contents(filename, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(roundtrip_orig);
 	ret = fu_firmware_parse(firmware, roundtrip_orig, FWUPD_INSTALL_FLAG_NONE, &error);
@@ -2878,7 +2878,7 @@ fu_firmware_fmap_func(void)
 	roundtrip = fu_firmware_write(firmware, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(roundtrip);
-	ret = fu_common_bytes_compare(roundtrip, roundtrip_orig, &error);
+	ret = fu_bytes_compare(roundtrip, roundtrip_orig, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 }
@@ -2894,7 +2894,7 @@ fu_firmware_new_from_gtypes_func(void)
 	g_autoptr(GError) error = NULL;
 
 	fn = g_test_build_filename(G_TEST_DIST, "tests", "firmware.dfu", NULL);
-	blob = fu_common_get_contents_bytes(fn, &error);
+	blob = fu_bytes_get_contents(fn, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(blob);
 
@@ -2944,7 +2944,7 @@ fu_firmware_dfu_func(void)
 	g_autoptr(GError) error = NULL;
 
 	filename_dfu = g_test_build_filename(G_TEST_DIST, "tests", "firmware.dfu", NULL);
-	data_dfu = fu_common_get_contents_bytes(filename_dfu, &error);
+	data_dfu = fu_bytes_get_contents(filename_dfu, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(data_dfu);
 	ret = fu_firmware_parse(firmware, data_dfu, FWUPD_INSTALL_FLAG_NONE, &error);
@@ -2960,10 +2960,10 @@ fu_firmware_dfu_func(void)
 
 	/* did we match the reference file? */
 	filename_ref = g_test_build_filename(G_TEST_DIST, "tests", "firmware.bin", NULL);
-	data_ref = fu_common_get_contents_bytes(filename_ref, &error);
+	data_ref = fu_bytes_get_contents(filename_ref, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(data_ref);
-	ret = fu_common_bytes_compare(data_bin, data_ref, &error);
+	ret = fu_bytes_compare(data_bin, data_ref, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 }
@@ -2982,7 +2982,7 @@ fu_firmware_dfu_patch_func(void)
 	g_autoptr(GError) error = NULL;
 
 	filename_dfu = g_test_build_filename(G_TEST_DIST, "tests", "firmware.dfu", NULL);
-	data_dfu = fu_common_get_contents_bytes(filename_dfu, &error);
+	data_dfu = fu_bytes_get_contents(filename_dfu, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(data_dfu);
 	ret = fu_firmware_parse(firmware, data_dfu, FWUPD_INSTALL_FLAG_NONE, &error);

@@ -24,7 +24,7 @@ fu_acpi_facp_s2i_disabled_func(void)
 		g_test_skip("Missing FACP");
 		return;
 	}
-	blob = fu_common_get_contents_bytes(fn, &error);
+	blob = fu_bytes_get_contents(fn, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(blob);
 	facp = fu_acpi_facp_new(blob, &error);
@@ -47,7 +47,7 @@ fu_acpi_facp_s2i_enabled_func(void)
 		g_test_skip("Missing FACP-S2I");
 		return;
 	}
-	blob = fu_common_get_contents_bytes(fn, &error);
+	blob = fu_bytes_get_contents(fn, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(blob);
 	facp = fu_acpi_facp_new(blob, &error);

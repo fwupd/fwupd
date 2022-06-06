@@ -9,6 +9,7 @@
 #include "config.h"
 
 #include "fu-byte-array.h"
+#include "fu-bytes.h"
 #include "fu-cfu-payload.h"
 #include "fu-common.h"
 
@@ -56,7 +57,7 @@ fu_cfu_payload_parse(FuFirmware *firmware,
 		if (!fu_common_read_uint8_safe(buf, bufsz, offset + 0x4, &chunk_size, error))
 			return FALSE;
 		offset += 0x5;
-		blob = fu_common_bytes_new_offset(fw, offset, chunk_size, error);
+		blob = fu_bytes_new_offset(fw, offset, chunk_size, error);
 		if (blob == NULL)
 			return FALSE;
 		chk = fu_chunk_bytes_new(blob);

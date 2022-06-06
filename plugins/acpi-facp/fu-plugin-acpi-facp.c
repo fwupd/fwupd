@@ -29,7 +29,7 @@ fu_plugin_acpi_facp_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 	/* load FACP table */
 	path = fu_common_get_path(FU_PATH_KIND_ACPI_TABLES);
 	fn = g_build_filename(path, "FACP", NULL);
-	blob = fu_common_get_contents_bytes(fn, &error_local);
+	blob = fu_bytes_get_contents(fn, &error_local);
 	if (blob == NULL) {
 		g_warning("failed to load %s: %s", fn, error_local->message);
 		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);

@@ -76,7 +76,7 @@ fu_test_mtd_device_func(void)
 	g_assert_nonnull(fw2);
 
 	/* verify */
-	ret = fu_common_bytes_compare(fw, fw2, &error);
+	ret = fu_bytes_compare(fw, fw2, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 #else

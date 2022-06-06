@@ -1087,7 +1087,7 @@ fu_dfu_target_download_element_dfu(FuDfuTarget *self,
 			length = g_bytes_get_size(bytes) - offset;
 			if (length > transfer_size)
 				length = transfer_size;
-			bytes_tmp = fu_common_bytes_new_offset(bytes, offset, length, error);
+			bytes_tmp = fu_bytes_new_offset(bytes, offset, length, error);
 			if (bytes_tmp == NULL)
 				return FALSE;
 		} else {

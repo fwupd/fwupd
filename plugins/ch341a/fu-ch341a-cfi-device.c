@@ -378,7 +378,7 @@ fu_ch341a_cfi_device_write_firmware(FuDevice *device,
 		g_prefix_error(error, "failed to verify blocks: ");
 		return FALSE;
 	}
-	if (!fu_common_bytes_compare(fw, fw_verify, error))
+	if (!fu_bytes_compare(fw, fw_verify, error))
 		return FALSE;
 	fu_progress_step_done(progress);
 

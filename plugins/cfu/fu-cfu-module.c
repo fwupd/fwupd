@@ -117,7 +117,7 @@ fu_cfu_module_prepare_firmware(FuDevice *device,
 	fu_firmware_add_image(firmware, offer);
 
 	/* payload */
-	fw_offset = fu_common_bytes_new_offset(fw, 0x10, g_bytes_get_size(fw) - 0x10, error);
+	fw_offset = fu_bytes_new_offset(fw, 0x10, g_bytes_get_size(fw) - 0x10, error);
 	if (fw_offset == NULL)
 		return NULL;
 	if (!fu_firmware_parse(payload, fw_offset, flags, error))

@@ -86,7 +86,7 @@ fu_uefi_nvram_device_write_firmware(FuDevice *device,
 	fixed_fw = fu_uefi_device_fixup_firmware(self, fw, error);
 	if (fixed_fw == NULL)
 		return FALSE;
-	if (!fu_common_set_contents_bytes(fn, fixed_fw, error))
+	if (!fu_bytes_set_contents(fn, fixed_fw, error))
 		return FALSE;
 
 	/* delete the logs to save space; use fwupdate to debug the EFI binary */

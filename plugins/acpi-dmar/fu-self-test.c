@@ -24,7 +24,7 @@ fu_acpi_dmar_opt_in_func(void)
 		g_test_skip("Missing DMAR");
 		return;
 	}
-	blob = fu_common_get_contents_bytes(fn, &error);
+	blob = fu_bytes_get_contents(fn, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(blob);
 	dmar = fu_acpi_dmar_new(blob, &error);
@@ -47,7 +47,7 @@ fu_acpi_dmar_opt_out_func(void)
 		g_test_skip("Missing DMAR-OPTOUT");
 		return;
 	}
-	blob = fu_common_get_contents_bytes(fn, &error);
+	blob = fu_bytes_get_contents(fn, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(blob);
 	dmar = fu_acpi_dmar_new(blob, &error);

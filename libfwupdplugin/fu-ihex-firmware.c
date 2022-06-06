@@ -11,6 +11,7 @@
 #include <string.h>
 
 #include "fu-byte-array.h"
+#include "fu-bytes.h"
 #include "fu-common.h"
 #include "fu-firmware-common.h"
 #include "fu-ihex-firmware.h"
@@ -63,7 +64,7 @@ fu_ihex_firmware_get_records(FuIhexFirmware *self)
  * Set the padding value to fill incomplete address ranges.
  *
  * The default value of zero can be changed to `0xff` if functions like
- * fu_common_bytes_is_empty() are going to be used on subsections of the data.
+ * fu_bytes_is_empty() are going to be used on subsections of the data.
  *
  * Since: 1.6.0
  **/

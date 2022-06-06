@@ -33,7 +33,7 @@ fu_plugin_acpi_phat_coldplug(FuPlugin *plugin, FuProgress *progress, GError **er
 
 	path = fu_common_get_path(FU_PATH_KIND_ACPI_TABLES);
 	fn = g_build_filename(path, "PHAT", NULL);
-	blob = fu_common_get_contents_bytes(fn, error);
+	blob = fu_bytes_get_contents(fn, error);
 	if (blob == NULL)
 		return FALSE;
 	if (!fu_firmware_parse(phat, blob, FWUPD_INSTALL_FLAG_NONE, error))

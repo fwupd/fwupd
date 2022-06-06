@@ -46,7 +46,7 @@ fu_dbxtool_get_siglist_local(const gchar *filename, GError **error)
 {
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(FuFirmware) siglist = fu_efi_signature_list_new();
-	blob = fu_common_get_contents_bytes(filename, error);
+	blob = fu_bytes_get_contents(filename, error);
 	if (blob == NULL)
 		return NULL;
 	if (!fu_firmware_parse(siglist, blob, FWUPD_INSTALL_FLAG_NONE, error))
@@ -253,7 +253,7 @@ main(int argc, char *argv[])
 
 		/* TRANSLATORS: reading new dbx from the update */
 		g_print("%s\n", _("Parsing dbx update…"));
-		blob = fu_common_get_contents_bytes(dbxfile, &error);
+		blob = fu_bytes_get_contents(dbxfile, &error);
 		if (blob == NULL) {
 			/* TRANSLATORS: could not read file */
 			g_printerr("%s: %s\n", _("Failed to load local dbx"), error->message);

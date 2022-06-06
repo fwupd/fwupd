@@ -339,7 +339,7 @@ fu_ccgx_dmc_firmware_parse(FuFirmware *firmware,
 	}
 
 	/* read fwct data */
-	self->fwct_blob = fu_common_bytes_new_offset(fw, 0x0, hdr_size, error);
+	self->fwct_blob = fu_bytes_new_offset(fw, 0x0, hdr_size, error);
 	if (self->fwct_blob == NULL)
 		return FALSE;
 
@@ -349,8 +349,7 @@ fu_ccgx_dmc_firmware_parse(FuFirmware *firmware,
 		return FALSE;
 	}
 	if (mdbufsz > 0) {
-		self->custom_meta_blob =
-		    fu_common_bytes_new_offset(fw, hdr_size + 2, mdbufsz, error);
+		self->custom_meta_blob = fu_bytes_new_offset(fw, hdr_size + 2, mdbufsz, error);
 		if (self->custom_meta_blob == NULL)
 			return FALSE;
 	}
@@ -462,7 +461,7 @@ fu_ccgx_dmc_firmware_write(FuFirmware *firmware, GError **error)
 		if (img_bytes == NULL)
 			return NULL;
 		chunks = fu_chunk_array_new_from_bytes(img_bytes, 0x0, 0x0, 64);
-		img_padded = fu_common_bytes_pad(img_bytes, MAX(chunks->len, 1) * 64);
+		img_padded = fu_bytes_pad(img_bytes, MAX(chunks->len, 1) * 64);
 		fu_byte_array_append_bytes(buf, img_padded);
 		g_checksum_update(csum,
 				  (const guchar *)g_bytes_get_data(img_padded, NULL),

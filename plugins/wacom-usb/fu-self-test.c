@@ -31,7 +31,7 @@ fu_wac_firmware_parse_func(void)
 		g_test_skip("no data file found");
 		return;
 	}
-	bytes = fu_common_get_contents_bytes(fn, &error);
+	bytes = fu_bytes_get_contents(fn, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(bytes);
 	ret = fu_firmware_parse(firmware, bytes, FWUPD_INSTALL_FLAG_NONE, &error);

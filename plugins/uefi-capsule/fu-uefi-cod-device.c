@@ -174,7 +174,7 @@ fu_uefi_cod_device_write_firmware(FuDevice *device,
 	cod_path = g_build_filename(esp_path, "EFI", "UpdateCapsule", basename, NULL);
 	if (!fu_common_mkdir_parent(cod_path, error))
 		return FALSE;
-	if (!fu_common_set_contents_bytes(cod_path, fw, error))
+	if (!fu_bytes_set_contents(cod_path, fw, error))
 		return FALSE;
 
 	/*

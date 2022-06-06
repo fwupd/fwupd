@@ -7,6 +7,7 @@
 #include "config.h"
 
 #include "fu-byte-array.h"
+#include "fu-bytes.h"
 #include "fu-common.h"
 #include "fu-fmap-firmware.h"
 
@@ -105,10 +106,10 @@ fu_fmap_firmware_parse(FuFirmware *firmware,
 		if (area.size == 0)
 			continue;
 
-		bytes = fu_common_bytes_new_offset(fw,
-						   (gsize)GUINT32_FROM_LE(area.offset),
-						   (gsize)GUINT32_FROM_LE(area.size),
-						   error);
+		bytes = fu_bytes_new_offset(fw,
+					    (gsize)GUINT32_FROM_LE(area.offset),
+					    (gsize)GUINT32_FROM_LE(area.size),
+					    error);
 		if (bytes == NULL)
 			return FALSE;
 		area_name = g_strndup((const gchar *)area.name, FU_FMAP_FIRMWARE_STRLEN);

@@ -346,10 +346,8 @@ fu_corsair_bp_write_firmware(FuDevice *device,
 	}
 
 	firstChunk = fu_chunk_new(0, 0, 0, g_bytes_get_data(blob, NULL), first_chunk_size);
-	rest_of_firmware = fu_common_bytes_new_offset(blob,
-						      first_chunk_size,
-						      firmware_size - first_chunk_size,
-						      error);
+	rest_of_firmware =
+	    fu_bytes_new_offset(blob, first_chunk_size, firmware_size - first_chunk_size, error);
 	if (rest_of_firmware == NULL) {
 		g_prefix_error(error, "cannot get firmware past first chunk: ");
 		return FALSE;

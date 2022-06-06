@@ -201,7 +201,7 @@ fu_plugin_uefi_capsule_get_splash_data(guint width, guint height, GError **error
 	/* load archive */
 	datadir_pkg = fu_common_get_path(FU_PATH_KIND_DATADIR_PKG);
 	filename_archive = g_build_filename(datadir_pkg, "uefi-capsule-ux.tar.xz", NULL);
-	blob_archive = fu_common_get_contents_bytes(filename_archive, error);
+	blob_archive = fu_bytes_get_contents(filename_archive, error);
 	if (blob_archive == NULL)
 		return NULL;
 	archive = fu_archive_new(blob_archive, FU_ARCHIVE_FLAG_NONE, error);

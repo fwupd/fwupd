@@ -355,7 +355,7 @@ fu_superio_it55_device_write_attempt(FuDevice *device,
 		g_prefix_error(error, "failed to read erased firmware");
 		return FALSE;
 	}
-	if (!fu_common_bytes_is_empty(erased_fw)) {
+	if (!fu_bytes_is_empty(erased_fw)) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_READ,
@@ -424,7 +424,7 @@ fu_superio_it55_device_write_attempt(FuDevice *device,
 		g_prefix_error(error, "failed to read firmware");
 		return FALSE;
 	}
-	if (!fu_common_bytes_compare(written_fw, firmware, error)) {
+	if (!fu_bytes_compare(written_fw, firmware, error)) {
 		g_prefix_error(error, "firmware verification");
 		return FALSE;
 	}

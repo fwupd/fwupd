@@ -74,7 +74,7 @@ fu_acpi_phat_record_parse(FuFirmware *firmware,
 	/* supported record type */
 	if (firmware_rcd != NULL) {
 		g_autoptr(GBytes) fw_tmp = NULL;
-		fw_tmp = fu_common_bytes_new_offset(fw, *offset, record_length, error);
+		fw_tmp = fu_bytes_new_offset(fw, *offset, record_length, error);
 		if (fw_tmp == NULL)
 			return FALSE;
 		fu_firmware_set_size(firmware_rcd, record_length);

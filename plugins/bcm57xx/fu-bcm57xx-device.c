@@ -525,7 +525,7 @@ fu_bcm57xx_device_write_firmware(FuDevice *device,
 	    fu_bcm57xx_device_dump_firmware(device, fu_progress_get_child(progress), error);
 	if (blob_verify == NULL)
 		return FALSE;
-	if (!fu_common_bytes_compare(blob, blob_verify, error))
+	if (!fu_bytes_compare(blob, blob_verify, error))
 		return FALSE;
 	fu_progress_step_done(progress);
 

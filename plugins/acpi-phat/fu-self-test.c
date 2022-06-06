@@ -25,7 +25,7 @@ fu_acpi_phat_parse_func(void)
 		g_test_skip("missing PHAT");
 		return;
 	}
-	blob = fu_common_get_contents_bytes(fn, &error);
+	blob = fu_bytes_get_contents(fn, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(blob);
 	ret = fu_firmware_parse(phat, blob, FWUPD_INSTALL_FLAG_FORCE, &error);

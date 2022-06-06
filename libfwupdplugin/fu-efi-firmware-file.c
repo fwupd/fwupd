@@ -7,6 +7,7 @@
 #include "config.h"
 
 #include "fu-byte-array.h"
+#include "fu-bytes.h"
 #include "fu-efi-common.h"
 #include "fu-efi-firmware-common.h"
 #include "fu-efi-firmware-file.h"
@@ -236,10 +237,10 @@ fu_efi_firmware_file_parse(FuFirmware *firmware,
 	}
 
 	/* add simple blob */
-	blob = fu_common_bytes_new_offset(fw,
-					  FU_EFI_FIRMWARE_FILE_SIZE,
-					  size - FU_EFI_FIRMWARE_FILE_SIZE,
-					  error);
+	blob = fu_bytes_new_offset(fw,
+				   FU_EFI_FIRMWARE_FILE_SIZE,
+				   size - FU_EFI_FIRMWARE_FILE_SIZE,
+				   error);
 	if (blob == NULL)
 		return FALSE;
 

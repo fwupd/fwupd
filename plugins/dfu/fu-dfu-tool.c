@@ -643,7 +643,7 @@ fu_dfu_tool_write(FuDfuTool *self, gchar **values, GError **error)
 	}
 
 	/* open file */
-	fw = fu_common_get_contents_bytes(values[0], error);
+	fw = fu_bytes_get_contents(values[0], error);
 	if (fw == NULL)
 		return FALSE;
 

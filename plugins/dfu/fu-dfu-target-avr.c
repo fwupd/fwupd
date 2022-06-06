@@ -835,7 +835,7 @@ fu_dfu_target_avr_upload_element_chunks(FuDfuTarget *target,
 		g_ptr_array_add(blobs, blob_tmp);
 
 		/* this page has valid data */
-		if (!fu_common_bytes_is_empty(blob_tmp)) {
+		if (!fu_bytes_is_empty(blob_tmp)) {
 			g_debug("chunk %u has data (page %" G_GUINT32_FORMAT ")",
 				i,
 				fu_chunk_get_page(chk));

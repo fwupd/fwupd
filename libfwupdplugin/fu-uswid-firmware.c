@@ -9,6 +9,7 @@
 #include "config.h"
 
 #include "fu-byte-array.h"
+#include "fu-bytes.h"
 #include "fu-common.h"
 #include "fu-coswid-firmware.h"
 #include "fu-uswid-firmware.h"
@@ -140,18 +141,18 @@ fu_uswid_firmware_parse(FuFirmware *firmware,
 		g_autoptr(GInputStream) istream1 = NULL;
 		g_autoptr(GInputStream) istream2 = NULL;
 
-		payload_tmp = fu_common_bytes_new_offset(fw, hdrsz, payloadsz, error);
+		payload_tmp = fu_bytes_new_offset(fw, hdrsz, payloadsz, error);
 		if (payload_tmp == NULL)
 			return FALSE;
 		istream1 = g_memory_input_stream_new_from_bytes(payload_tmp);
 		conv = G_CONVERTER(g_zlib_decompressor_new(G_ZLIB_COMPRESSOR_FORMAT_ZLIB));
 		istream2 = g_converter_input_stream_new(istream1, conv);
-		payload = fu_common_get_contents_stream(istream2, G_MAXSIZE, error);
+		payload = fu_bytes_get_contents_stream(istream2, G_MAXSIZE, error);
 		if (payload == NULL)
 			return FALSE;
 		payloadsz = g_bytes_get_size(payload);
 	} else {
-		payload = fu_common_bytes_new_offset(fw, hdrsz, payloadsz, error);
+		payload = fu_bytes_new_offset(fw, hdrsz, payloadsz, error);
 		if (payload == NULL)
 			return FALSE;
 	}
@@ -162,7 +163,7 @@ fu_uswid_firmware_parse(FuFirmware *firmware,
 		g_autoptr(GBytes) fw2 = NULL;
 
 		/* CBOR parse */
-		fw2 = fu_common_bytes_new_offset(payload, offset, payloadsz - offset, error);
+		fw2 = fu_bytes_new_offset(payload, offset, payloadsz - offset, error);
 		if (fw2 == NULL)
 			return FALSE;
 		if (!fu_firmware_parse(firmware_coswid, fw2, flags, error))

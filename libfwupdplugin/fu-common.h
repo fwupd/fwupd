@@ -205,18 +205,6 @@ fu_common_mkdir(const gchar *dirname, GError **error) G_GNUC_WARN_UNUSED_RESULT;
 gboolean
 fu_common_mkdir_parent(const gchar *filename, GError **error) G_GNUC_WARN_UNUSED_RESULT;
 gboolean
-fu_common_set_contents_bytes(const gchar *filename,
-			     GBytes *bytes,
-			     GError **error) G_GNUC_WARN_UNUSED_RESULT;
-GBytes *
-fu_common_get_contents_bytes(const gchar *filename, GError **error) G_GNUC_WARN_UNUSED_RESULT;
-GBytes *
-fu_common_get_contents_stream(GInputStream *stream,
-			      gsize count,
-			      GError **error) G_GNUC_WARN_UNUSED_RESULT;
-GBytes *
-fu_common_get_contents_fd(gint fd, gsize count, GError **error) G_GNUC_WARN_UNUSED_RESULT;
-gboolean
 fu_common_extract_archive(GBytes *blob, const gchar *dir, GError **error) G_GNUC_WARN_UNUSED_RESULT;
 GBytes *
 fu_common_firmware_builder(GBytes *bytes,
@@ -238,25 +226,12 @@ fu_common_dump_full(const gchar *log_domain,
 		    FuDumpFlags flags);
 void
 fu_common_dump_bytes(const gchar *log_domain, const gchar *title, GBytes *bytes);
-GBytes *
-fu_common_bytes_align(GBytes *bytes, gsize blksz, gchar padval);
-const guint8 *
-fu_bytes_get_data_safe(GBytes *bytes, gsize *bufsz, GError **error);
-gboolean
-fu_common_bytes_is_empty(GBytes *bytes);
-gboolean
-fu_common_bytes_compare(GBytes *bytes1, GBytes *bytes2, GError **error) G_GNUC_WARN_UNUSED_RESULT;
 gboolean
 fu_common_bytes_compare_raw(const guint8 *buf1,
 			    gsize bufsz1,
 			    const guint8 *buf2,
 			    gsize bufsz2,
 			    GError **error) G_GNUC_WARN_UNUSED_RESULT;
-GBytes *
-fu_common_bytes_pad(GBytes *bytes, gsize sz);
-GBytes *
-fu_common_bytes_new_offset(GBytes *bytes, gsize offset, gsize length, GError **error)
-    G_GNUC_WARN_UNUSED_RESULT;
 guint8 *
 fu_memdup_safe(const guint8 *src, gsize n, GError **error) G_GNUC_WARN_UNUSED_RESULT;
 gboolean

@@ -28,6 +28,7 @@
 #include "fwupd-release-private.h"
 #include "fwupd-remote-private.h"
 
+#include "fu-bytes.h"
 #include "fu-plugin-private.h"
 #include "fu-polkit-agent.h"
 #include "fu-progressbar.h"
@@ -665,7 +666,7 @@ fu_util_download_if_required(FuUtilPrivate *priv, const gchar *perhapsfn, GError
 		return NULL;
 
 	/* save file to cache */
-	if (!fu_common_set_contents_bytes(filename, blob, error))
+	if (!fu_bytes_set_contents(filename, blob, error))
 		return NULL;
 	return g_steal_pointer(&filename);
 }

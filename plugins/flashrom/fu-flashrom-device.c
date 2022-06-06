@@ -177,7 +177,7 @@ fu_flashrom_device_prepare(FuDevice *device,
 			g_prefix_error(error, "failed to back up original firmware: ");
 			return FALSE;
 		}
-		if (!fu_common_set_contents_bytes(firmware_orig, buf, error))
+		if (!fu_bytes_set_contents(firmware_orig, buf, error))
 			return FALSE;
 	}
 

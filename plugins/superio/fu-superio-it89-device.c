@@ -486,7 +486,7 @@ fu_superio_it89_device_check_eflash(FuSuperioDevice *self, FuProgress *progress,
 	}
 
 	/* cannot flash here without keyboard programmer */
-	if (!fu_common_bytes_is_empty(fw)) {
+	if (!fu_bytes_is_empty(fw)) {
 		gsize sz = 0;
 		const guint8 *buf = g_bytes_get_data(fw, &sz);
 		g_autoptr(GString) str = g_string_new(NULL);
@@ -544,7 +544,7 @@ fu_superio_it89_device_write_chunk(FuSuperioDevice *self,
 			       (guint)fu_chunk_get_address(chk));
 		return FALSE;
 	}
-	if (!fu_common_bytes_is_empty(fw1)) {
+	if (!fu_bytes_is_empty(fw1)) {
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_READ, "sector was not erased");
 		return FALSE;
 	}
@@ -552,7 +552,7 @@ fu_superio_it89_device_write_chunk(FuSuperioDevice *self,
 
 	/* skip empty page */
 	fw2 = g_bytes_new_static(fu_chunk_get_data(chk), fu_chunk_get_data_sz(chk));
-	if (fu_common_bytes_is_empty(fw2)) {
+	if (fu_bytes_is_empty(fw2)) {
 		fu_progress_finished(progress);
 		return TRUE;
 	}
@@ -579,7 +579,7 @@ fu_superio_it89_device_write_chunk(FuSuperioDevice *self,
 			       (guint)fu_chunk_get_address(chk));
 		return FALSE;
 	}
-	if (!fu_common_bytes_compare(fw2, fw3, error)) {
+	if (!fu_bytes_compare(fw2, fw3, error)) {
 		g_prefix_error(error,
 			       "failed to verify @0x%04x: ",
 			       (guint)fu_chunk_get_address(chk));

@@ -6,6 +6,7 @@
 
 #include "config.h"
 
+#include "fu-bytes.h"
 #include "fu-common.h"
 #include "fu-efi-firmware-volume.h"
 #include "fu-ifd-bios.h"
@@ -56,7 +57,7 @@ fu_ifd_bios_parse(FuFirmware *firmware,
 			break;
 
 		/* FV */
-		fw_offset = fu_common_bytes_new_offset(fw, offset, bufsz - offset, error);
+		fw_offset = fu_bytes_new_offset(fw, offset, bufsz - offset, error);
 		if (fw_offset == NULL)
 			return FALSE;
 		firmware_tmp = fu_firmware_new_from_gtypes(fw_offset,

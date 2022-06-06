@@ -9,6 +9,7 @@
 #include "config.h"
 
 #include "fu-byte-array.h"
+#include "fu-bytes.h"
 #include "fu-chunk-private.h"
 #include "fu-common.h"
 #include "fu-firmware.h"
@@ -917,7 +918,7 @@ fu_firmware_build(FuFirmware *self, XbNode *n, GError **error)
 	tmp = xb_node_query_text(n, "filename", NULL);
 	if (tmp != NULL) {
 		g_autoptr(GBytes) blob = NULL;
-		blob = fu_common_get_contents_bytes(tmp, error);
+		blob = fu_bytes_get_contents(tmp, error);
 		if (blob == NULL)
 			return FALSE;
 		fu_firmware_set_bytes(self, blob);
@@ -942,7 +943,7 @@ fu_firmware_build(FuFirmware *self, XbNode *n, GError **error)
 		if (sz == 0 || sz == G_MAXUINT64) {
 			fu_firmware_set_bytes(self, blob);
 		} else {
-			g_autoptr(GBytes) blob_padded = fu_common_bytes_pad(blob, (gsize)sz);
+			g_autoptr(GBytes) blob_padded = fu_bytes_pad(blob, (gsize)sz);
 			fu_firmware_set_bytes(self, blob_padded);
 		}
 	}
@@ -1184,7 +1185,7 @@ fu_firmware_add_patch(FuFirmware *self, gsize offset, GBytes *blob)
  *
  * Gets a block of data from the image. If the contents of the image is
  * smaller than the requested chunk size then the #GBytes will be smaller
- * than @chunk_sz_max. Use fu_common_bytes_pad() if padding is required.
+ * than @chunk_sz_max. Use fu_bytes_pad() if padding is required.
  *
  * If the @address is larger than the size of the image then an error is returned.
  *
@@ -1228,11 +1229,11 @@ fu_firmware_write_chunk(FuFirmware *self, guint64 address, guint64 chunk_sz_max,
 	/* if we have less data than requested */
 	chunk_left = g_bytes_get_size(priv->bytes) - offset;
 	if (chunk_sz_max > chunk_left) {
-		return fu_common_bytes_new_offset(priv->bytes, offset, chunk_left, error);
+		return fu_bytes_new_offset(priv->bytes, offset, chunk_left, error);
 	}
 
 	/* check chunk */
-	return fu_common_bytes_new_offset(priv->bytes, offset, chunk_sz_max, error);
+	return fu_bytes_new_offset(priv->bytes, offset, chunk_sz_max, error);
 }
 
 /**

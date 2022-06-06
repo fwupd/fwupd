@@ -7,6 +7,7 @@
 #include "config.h"
 
 #include "fu-byte-array.h"
+#include "fu-bytes.h"
 #include "fu-efi-firmware-file.h"
 #include "fu-efi-firmware-filesystem.h"
 
@@ -47,7 +48,7 @@ fu_efi_firmware_filesystem_parse(FuFirmware *firmware,
 		if (is_freespace)
 			break;
 
-		fw_tmp = fu_common_bytes_new_offset(fw, offset, bufsz - offset, error);
+		fw_tmp = fu_bytes_new_offset(fw, offset, bufsz - offset, error);
 		if (fw_tmp == NULL)
 			return FALSE;
 		if (!fu_firmware_parse(img, fw_tmp, flags, error)) {
