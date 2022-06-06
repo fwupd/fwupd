@@ -758,7 +758,7 @@ information.
 
 ### Inspecting raw binary data
 
-The `fu_common_dump_full` and `fu_common_dump_raw` functions implement the
+The `fu_dump_full` and `fu_dump_raw` functions implement the
 printing of a binary buffer to the console as a stream of bytes in
 hexadecimal. See `libfwupdplugin/fu-common.c` for their definitions, you
 can find many examples of how to use them in the plugins code.

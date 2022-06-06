@@ -138,7 +138,7 @@ fu_pxi_ble_device_set_feature(FuPxiBleDevice *self, GByteArray *req, GError **er
 {
 #ifdef HAVE_HIDRAW_H
 	if (g_getenv("FWUPD_PIXART_RF_VERBOSE") != NULL) {
-		fu_common_dump_raw(G_LOG_DOMAIN, "SetFeature", req->data, req->len);
+		fu_dump_raw(G_LOG_DOMAIN, "SetFeature", req->data, req->len);
 	}
 	return fu_device_retry(FU_DEVICE(self),
 			       fu_pxi_ble_device_set_feature_cb,
@@ -167,7 +167,7 @@ fu_pxi_ble_device_get_feature(FuPxiBleDevice *self, guint8 *buf, guint bufsz, GE
 		return FALSE;
 	}
 	if (g_getenv("FWUPD_PIXART_RF_VERBOSE") != NULL)
-		fu_common_dump_raw(G_LOG_DOMAIN, "GetFeature", buf, bufsz);
+		fu_dump_raw(G_LOG_DOMAIN, "GetFeature", buf, bufsz);
 
 	/* prepend the report-id and cmd for versions of bluez that do not have
 	 * https://github.com/bluez/bluez/commit/35a2c50437cca4d26ac6537ce3a964bb509c9b62 */
@@ -197,7 +197,7 @@ fu_pxi_ble_device_search_hid_usage_page(guint8 *report_descriptor,
 	gint pos = 0;
 
 	if (g_getenv("FWUPD_PIXART_RF_VERBOSE") != NULL) {
-		fu_common_dump_raw(G_LOG_DOMAIN, "target usage_page", usage_page, usage_page_sz);
+		fu_dump_raw(G_LOG_DOMAIN, "target usage_page", usage_page, usage_page_sz);
 	}
 
 	while (pos < size) {
@@ -218,10 +218,7 @@ fu_pxi_ble_device_search_hid_usage_page(guint8 *report_descriptor,
 		if (memcmp(usage_page, usage_page_tmp, usage_page_sz) == 0) {
 			if (g_getenv("FWUPD_PIXART_RF_VERBOSE") != NULL) {
 				g_debug("hit item: %x  ", item);
-				fu_common_dump_raw(G_LOG_DOMAIN,
-						   "usage_page",
-						   usage_page,
-						   report_size);
+				fu_dump_raw(G_LOG_DOMAIN, "usage_page", usage_page, report_size);
 				g_debug("hit pos %d", pos);
 			}
 			return TRUE; /* finished processing */
@@ -259,7 +256,7 @@ fu_pxi_ble_device_check_support_report_id(FuPxiBleDevice *self, GError **error)
 				  error))
 		return FALSE;
 	if (g_getenv("FWUPD_PIXART_RF_VERBOSE") != NULL)
-		fu_common_dump_raw(G_LOG_DOMAIN, "HID descriptor", rpt_desc.value, rpt_desc.size);
+		fu_dump_raw(G_LOG_DOMAIN, "HID descriptor", rpt_desc.value, rpt_desc.size);
 
 	/* check ota retransmit feature report usage page exist or not */
 	fu_byte_array_append_uint16(req, PXI_HID_DEV_OTA_RETRANSMIT_USAGE_PAGE, G_LITTLE_ENDIAN);
@@ -620,7 +617,7 @@ fu_pxi_ble_device_fw_upgrade(FuPxiBleDevice *self,
 		return FALSE;
 
 	if (g_getenv("FWUPD_PIXART_RF_VERBOSE") != NULL)
-		fu_common_dump_raw(G_LOG_DOMAIN, "fw upgrade", req->data, req->len);
+		fu_dump_raw(G_LOG_DOMAIN, "fw upgrade", req->data, req->len);
 
 	/* wait fw upgrade command result */
 	if (!fu_pxi_ble_device_wait_notify(self, 0x1, &opcode, NULL, error)) {

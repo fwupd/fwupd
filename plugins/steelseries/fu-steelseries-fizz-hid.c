@@ -78,11 +78,11 @@ fu_steelseries_fizz_hid_get_version(FuDevice *device, GError **error)
 		return NULL;
 
 	if (g_getenv("FWUPD_STEELSERIES_HID_VERBOSE") != NULL)
-		fu_common_dump_raw(G_LOG_DOMAIN, "Version", data, sizeof(data));
+		fu_dump_raw(G_LOG_DOMAIN, "Version", data, sizeof(data));
 	if (!fu_steelseries_fizz_hid_command(device, data, sizeof(data), error))
 		return NULL;
 	if (g_getenv("FWUPD_STEELSERIES_HID_VERBOSE") != NULL)
-		fu_common_dump_raw(G_LOG_DOMAIN, "Version", data, sizeof(data));
+		fu_dump_raw(G_LOG_DOMAIN, "Version", data, sizeof(data));
 
 	/* success */
 	return fu_strsafe((const gchar *)&data[1], sizeof(data) - 1);

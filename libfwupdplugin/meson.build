@@ -22,6 +22,7 @@ fwupdplugin_src = [
   'fu-string.c',            # fuzzing
   'fu-bytes.c',             # fuzzing
   'fu-kernel.c',            # fuzzing
+  'fu-dump.c',              # fuzzing
   'fu-common-cab.c',
   'fu-common-guid.c',
   'fu-common-version.c',    # fuzzing
@@ -99,6 +100,7 @@ fwupdplugin_headers = [
   'fu-sum.h',
   'fu-crc.h',
   'fu-mem.h',
+  'fu-dump.h',
   'fu-bytes.h',
   'fu-kernel.h',
   'fu-common-cab.h',

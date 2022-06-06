@@ -99,7 +99,7 @@ fu_ch341a_device_write(FuCh341aDevice *self, guint8 *buf, gsize bufsz, GError **
 
 	/* debug */
 	if (g_getenv("FWUPD_CH341A_VERBOSE") != NULL)
-		fu_common_dump_raw(G_LOG_DOMAIN, "write", buf, bufsz);
+		fu_dump_raw(G_LOG_DOMAIN, "write", buf, bufsz);
 
 	if (!g_usb_device_bulk_transfer(usb_device,
 					CH341A_EP_OUT,
@@ -155,7 +155,7 @@ fu_ch341a_device_read(FuCh341aDevice *self, guint8 *buf, gsize bufsz, GError **e
 
 	/* debug */
 	if (g_getenv("FWUPD_CH341A_VERBOSE") != NULL)
-		fu_common_dump_raw(G_LOG_DOMAIN, "read", buf, bufsz);
+		fu_dump_raw(G_LOG_DOMAIN, "read", buf, bufsz);
 
 	/* success */
 	return TRUE;
@@ -174,7 +174,7 @@ fu_ch341a_device_spi_transfer(FuCh341aDevice *self, guint8 *buf, gsize bufsz, GE
 
 	/* debug */
 	if (g_getenv("FWUPD_CH341A_VERBOSE") != NULL)
-		fu_common_dump_raw(G_LOG_DOMAIN, "SPIwrite", buf, bufsz);
+		fu_dump_raw(G_LOG_DOMAIN, "SPIwrite", buf, bufsz);
 	if (!fu_ch341a_device_write(self, buf2, buf2sz, error))
 		return FALSE;
 
@@ -187,7 +187,7 @@ fu_ch341a_device_spi_transfer(FuCh341aDevice *self, guint8 *buf, gsize bufsz, GE
 
 	/* debug */
 	if (g_getenv("FWUPD_CH341A_VERBOSE") != NULL)
-		fu_common_dump_raw(G_LOG_DOMAIN, "SPIread", buf, bufsz);
+		fu_dump_raw(G_LOG_DOMAIN, "SPIread", buf, bufsz);
 
 	/* success */
 	return TRUE;

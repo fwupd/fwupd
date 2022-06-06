@@ -64,5 +64,5 @@ fu_wac_buffer_dump(const gchar *title, guint8 cmd, const guint8 *buf, gsize sz)
 			      title,
 			      fu_wac_report_id_to_string(cmd),
 			      sz);
-	fu_common_dump_raw(G_LOG_DOMAIN, tmp, buf, sz);
+	fu_dump_raw(G_LOG_DOMAIN, tmp, buf, sz);
 }

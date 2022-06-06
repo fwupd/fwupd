@@ -83,7 +83,7 @@ fu_elantp_i2c_device_send_cmd(FuElantpI2cDevice *self,
 			      GError **error)
 {
 	if (g_getenv("FWUPD_ELANTP_VERBOSE") != NULL)
-		fu_common_dump_raw(G_LOG_DOMAIN, "Write", tx, txsz);
+		fu_dump_raw(G_LOG_DOMAIN, "Write", tx, txsz);
 	if (!fu_udev_device_pwrite(FU_UDEV_DEVICE(self), 0, tx, txsz, error))
 		return FALSE;
 	if (rxsz == 0)
@@ -91,7 +91,7 @@ fu_elantp_i2c_device_send_cmd(FuElantpI2cDevice *self,
 	if (!fu_udev_device_pread(FU_UDEV_DEVICE(self), 0, rx, rxsz, error))
 		return FALSE;
 	if (g_getenv("FWUPD_ELANTP_VERBOSE") != NULL)
-		fu_common_dump_raw(G_LOG_DOMAIN, "Read", rx, rxsz);
+		fu_dump_raw(G_LOG_DOMAIN, "Read", rx, rxsz);
 	return TRUE;
 }
 

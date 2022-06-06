@@ -67,12 +67,12 @@ goodixmoc_device_cmd_send(FuGoodixMocDevice *self,
 		return FALSE;
 	}
 	if (g_getenv("FWUPD_GOODIXFP_VERBOSE") != NULL) {
-		fu_common_dump_full(G_LOG_DOMAIN,
-				    "REQST",
-				    buf->data,
-				    buf->len,
-				    16,
-				    FU_DUMP_FLAGS_SHOW_ADDRESSES);
+		fu_dump_full(G_LOG_DOMAIN,
+			     "REQST",
+			     buf->data,
+			     buf->len,
+			     16,
+			     FU_DUMP_FLAGS_SHOW_ADDRESSES);
 	}
 
 	/* send data */
@@ -135,12 +135,12 @@ goodixmoc_device_cmd_recv(FuGoodixMocDevice *self,
 		if (actual_len == 0)
 			continue;
 		if (g_getenv("FWUPD_GOODIXFP_VERBOSE") != NULL) {
-			fu_common_dump_full(G_LOG_DOMAIN,
-					    "REPLY",
-					    reply->data,
-					    actual_len,
-					    16,
-					    FU_DUMP_FLAGS_SHOW_ADDRESSES);
+			fu_dump_full(G_LOG_DOMAIN,
+				     "REPLY",
+				     reply->data,
+				     actual_len,
+				     16,
+				     FU_DUMP_FLAGS_SHOW_ADDRESSES);
 		}
 
 		/* parse package header */

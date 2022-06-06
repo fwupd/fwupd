@@ -509,12 +509,12 @@ fu_synaptics_rmi_device_read_flash_config_v7(FuSynapticsRmiDevice *self, GError 
 
 	/* debugging */
 	if (g_getenv("FWUPD_SYNAPTICS_RMI_VERBOSE") != NULL) {
-		fu_common_dump_full(G_LOG_DOMAIN,
-				    "FlashConfig",
-				    res->data,
-				    res->len,
-				    80,
-				    FU_DUMP_FLAGS_NONE);
+		fu_dump_full(G_LOG_DOMAIN,
+			     "FlashConfig",
+			     res->data,
+			     res->len,
+			     80,
+			     FU_DUMP_FLAGS_NONE);
 	}
 
 	/* parse the config length */

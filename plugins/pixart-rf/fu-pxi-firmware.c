@@ -80,7 +80,7 @@ fu_pxi_firmware_parse(FuFirmware *firmware,
 		return FALSE;
 	}
 	if (g_getenv("FWUPD_PIXART_RF_VERBOSE") != NULL) {
-		fu_common_dump_raw(G_LOG_DOMAIN, "fw header", fw_header, sizeof(fw_header));
+		fu_dump_raw(G_LOG_DOMAIN, "fw header", fw_header, sizeof(fw_header));
 	}
 
 	/* check the tag from fw header is correct */

@@ -553,9 +553,9 @@ fu_ata_device_command(FuAtaDevice *self,
 	cdb[8] = tf->dev;
 	cdb[9] = tf->command;
 	if (g_getenv("FWUPD_ATA_VERBOSE") != NULL) {
-		fu_common_dump_raw(G_LOG_DOMAIN, "CDB", cdb, sizeof(cdb));
+		fu_dump_raw(G_LOG_DOMAIN, "CDB", cdb, sizeof(cdb));
 		if (dxfer_direction == SG_DXFER_TO_DEV && dxferp != NULL) {
-			fu_common_dump_raw(G_LOG_DOMAIN, "outgoing_data", dxferp, dxfer_len);
+			fu_dump_raw(G_LOG_DOMAIN, "outgoing_data", dxferp, dxfer_len);
 		}
 	}
 
@@ -583,7 +583,7 @@ fu_ata_device_command(FuAtaDevice *self,
 			io_hdr.status,
 			io_hdr.host_status,
 			io_hdr.driver_status);
-		fu_common_dump_raw(G_LOG_DOMAIN, "SB", sb, sizeof(sb));
+		fu_dump_raw(G_LOG_DOMAIN, "SB", sb, sizeof(sb));
 	}
 
 	/* error check */
@@ -665,7 +665,7 @@ fu_ata_device_setup(FuDevice *device, GError **error)
 		return FALSE;
 	}
 	if (g_getenv("FWUPD_ATA_VERBOSE") != NULL)
-		fu_common_dump_raw(G_LOG_DOMAIN, "IDENTIFY", id, sizeof(id));
+		fu_dump_raw(G_LOG_DOMAIN, "IDENTIFY", id, sizeof(id));
 	if (!fu_ata_device_parse_id(self, id, sizeof(id), error))
 		return FALSE;
 

@@ -381,7 +381,7 @@ fu_uefi_device_build_dp_buf(const gchar *path, gsize *bufsz, GError **error)
 	/* parse what we got back from efivar */
 	dps = fu_uefi_devpath_parse(dp_buf, (gsize)sz, FU_UEFI_DEVPATH_PARSE_FLAG_NONE, error);
 	if (dps == NULL) {
-		fu_common_dump_raw(G_LOG_DOMAIN, "dp_buf", dp_buf, (gsize)sz);
+		fu_dump_raw(G_LOG_DOMAIN, "dp_buf", dp_buf, (gsize)sz);
 		return NULL;
 	}
 

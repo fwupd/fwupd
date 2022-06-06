@@ -88,7 +88,7 @@ fu_elantp_hid_device_send_cmd(FuElantpHidDevice *self,
 	gsize bufsz = rxsz + 3;
 
 	if (g_getenv("FWUPD_ELANTP_VERBOSE") != NULL)
-		fu_common_dump_raw(G_LOG_DOMAIN, "SetReport", tx, txsz);
+		fu_dump_raw(G_LOG_DOMAIN, "SetReport", tx, txsz);
 	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
 				  HIDIOCSFEATURE(txsz),
 				  tx,
@@ -110,7 +110,7 @@ fu_elantp_hid_device_send_cmd(FuElantpHidDevice *self,
 				  error))
 		return FALSE;
 	if (g_getenv("FWUPD_ELANTP_VERBOSE") != NULL)
-		fu_common_dump_raw(G_LOG_DOMAIN, "GetReport", buf, bufsz);
+		fu_dump_raw(G_LOG_DOMAIN, "GetReport", buf, bufsz);
 
 	/* success */
 	return fu_memcpy_safe(rx,

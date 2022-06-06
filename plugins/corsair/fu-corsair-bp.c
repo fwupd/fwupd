@@ -61,7 +61,7 @@ fu_corsair_bp_command(FuCorsairBp *self,
 
 	data[CORSAIR_OFFSET_CMD_DESTINATION] = self->destination;
 
-	fu_common_dump_raw(G_LOG_DOMAIN, "corsair: command", data, self->cmd_write_size);
+	fu_dump_raw(G_LOG_DOMAIN, "corsair: command", data, self->cmd_write_size);
 
 	ret = g_usb_device_interrupt_transfer(usb_device,
 					      self->epout,
@@ -110,7 +110,7 @@ fu_corsair_bp_command(FuCorsairBp *self,
 		return FALSE;
 	}
 
-	fu_common_dump_raw(G_LOG_DOMAIN, "corsair: response", data, self->cmd_write_size);
+	fu_dump_raw(G_LOG_DOMAIN, "corsair: response", data, self->cmd_write_size);
 
 	if (data[CORSAIR_OFFSET_CMD_STATUS] != 0) {
 		g_set_error(error,

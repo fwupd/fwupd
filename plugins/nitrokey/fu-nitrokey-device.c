@@ -134,7 +134,7 @@ fu_nitrokey_device_setup(FuDevice *device, GError **error)
 		return FALSE;
 	}
 	if (g_getenv("FWUPD_NITROKEY_VERBOSE") != NULL)
-		fu_common_dump_raw(G_LOG_DOMAIN, "payload", buf_reply, sizeof(buf_reply));
+		fu_dump_raw(G_LOG_DOMAIN, "payload", buf_reply, sizeof(buf_reply));
 	memcpy(&payload, buf_reply, sizeof(payload));
 	version = g_strdup_printf("%u.%u", payload.VersionMajor, payload.VersionMinor);
 	fu_device_set_version(FU_DEVICE(device), version);

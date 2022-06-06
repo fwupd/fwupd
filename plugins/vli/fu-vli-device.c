@@ -559,7 +559,7 @@ fu_vli_device_spi_read_flash_id(FuVliDevice *self, GError **error)
 		return FALSE;
 	}
 	if (g_getenv("FWUPD_VLI_USBHUB_VERBOSE") != NULL)
-		fu_common_dump_raw(G_LOG_DOMAIN, "SpiCmdReadId", buf, sizeof(buf));
+		fu_dump_raw(G_LOG_DOMAIN, "SpiCmdReadId", buf, sizeof(buf));
 	if (priv->spi_cmd_read_id_sz == 4) {
 		if (!fu_memread_uint32_safe(buf,
 					    sizeof(buf),

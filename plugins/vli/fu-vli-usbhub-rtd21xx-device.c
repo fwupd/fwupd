@@ -72,7 +72,7 @@ fu_vli_usbhub_device_i2c_write(FuVliUsbhubDevice *self,
 			    error))
 		return FALSE;
 	if (g_getenv("FWUPD_VLI_USBHUB_VERBOSE") != NULL)
-		fu_common_dump_raw(G_LOG_DOMAIN, "I2cWriteData", buf, datasz + 2);
+		fu_dump_raw(G_LOG_DOMAIN, "I2cWriteData", buf, datasz + 2);
 	if (!g_usb_device_control_transfer(usb_device,
 					   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
 					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
@@ -119,7 +119,7 @@ fu_vli_usbhub_device_i2c_read(FuVliUsbhubDevice *self,
 		return FALSE;
 	}
 	if (g_getenv("FWUPD_VLI_USBHUB_VERBOSE") != NULL)
-		fu_common_dump_raw(G_LOG_DOMAIN, "I2cReadData", data, datasz);
+		fu_dump_raw(G_LOG_DOMAIN, "I2cReadData", data, datasz);
 	return TRUE;
 }
 

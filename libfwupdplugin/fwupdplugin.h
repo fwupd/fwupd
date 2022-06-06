@@ -30,6 +30,7 @@
 #include <libfwupdplugin/fu-device.h>
 #include <libfwupdplugin/fu-dfu-firmware.h>
 #include <libfwupdplugin/fu-dfuse-firmware.h>
+#include <libfwupdplugin/fu-dump.h>
 #include <libfwupdplugin/fu-efi-signature-list.h>
 #include <libfwupdplugin/fu-efi-signature.h>
 #include <libfwupdplugin/fu-efivar.h>

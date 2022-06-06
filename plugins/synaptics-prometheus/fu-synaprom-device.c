@@ -82,12 +82,12 @@ fu_synaprom_device_cmd_send(FuSynapromDevice *device,
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 75, NULL);
 
 	if (g_getenv("FWUPD_SYNAPROM_VERBOSE") != NULL) {
-		fu_common_dump_full(G_LOG_DOMAIN,
-				    "REQST",
-				    request->data,
-				    request->len,
-				    16,
-				    FU_DUMP_FLAGS_SHOW_ADDRESSES);
+		fu_dump_full(G_LOG_DOMAIN,
+			     "REQST",
+			     request->data,
+			     request->len,
+			     16,
+			     FU_DUMP_FLAGS_SHOW_ADDRESSES);
 	}
 	ret = g_usb_device_bulk_transfer(usb_device,
 					 FU_SYNAPROM_USB_REQUEST_EP,
@@ -125,12 +125,12 @@ fu_synaprom_device_cmd_send(FuSynapromDevice *device,
 		return FALSE;
 	}
 	if (g_getenv("FWUPD_SYNAPROM_VERBOSE") != NULL) {
-		fu_common_dump_full(G_LOG_DOMAIN,
-				    "REPLY",
-				    reply->data,
-				    actual_len,
-				    16,
-				    FU_DUMP_FLAGS_SHOW_ADDRESSES);
+		fu_dump_full(G_LOG_DOMAIN,
+			     "REPLY",
+			     reply->data,
+			     actual_len,
+			     16,
+			     FU_DUMP_FLAGS_SHOW_ADDRESSES);
 	}
 	fu_progress_step_done(progress);
 

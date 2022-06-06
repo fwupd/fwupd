@@ -328,7 +328,7 @@ fu_sahara_loader_send_packet(FuSaharaLoader *self, GByteArray *pkt, GError **err
 	g_return_val_if_fail(pkt != NULL, FALSE);
 
 	if (g_getenv("FWUPD_MODEM_MANAGER_VERBOSE") != NULL)
-		fu_common_dump_raw(G_LOG_DOMAIN, "tx packet", pkt->data, pkt->len);
+		fu_dump_raw(G_LOG_DOMAIN, "tx packet", pkt->data, pkt->len);
 	return fu_sahara_loader_qdl_write(self, data, sz, error);
 }
 
@@ -441,7 +441,7 @@ fu_sahara_loader_wait_hello_rsp(FuSaharaLoader *self, GError **error)
 	g_return_val_if_fail(rx_packet != NULL, FALSE);
 
 	if (g_getenv("FWUPD_MODEM_MANAGER_VERBOSE") != NULL)
-		fu_common_dump_raw(G_LOG_DOMAIN, "rx packet", rx_packet->data, rx_packet->len);
+		fu_dump_raw(G_LOG_DOMAIN, "rx packet", rx_packet->data, rx_packet->len);
 
 	if (sahara_packet_get_command_id(rx_packet) != SAHARA_HELLO_ID) {
 		g_set_error(error,
@@ -489,10 +489,7 @@ fu_sahara_loader_run(FuSaharaLoader *self, GBytes *prog, GError **error)
 		}
 
 		if (g_getenv("FWUPD_MODEM_MANAGER_VERBOSE") != NULL) {
-			fu_common_dump_raw(G_LOG_DOMAIN,
-					   "rx_packet",
-					   rx_packet->data,
-					   rx_packet->len);
+			fu_dump_raw(G_LOG_DOMAIN, "rx_packet", rx_packet->data, rx_packet->len);
 		}
 
 		command_id = sahara_packet_get_command_id(rx_packet);
