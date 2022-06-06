@@ -52,3 +52,13 @@ gboolean
 fu_volume_is_internal(FuVolume *self);
 gchar *
 fu_volume_get_id_type(FuVolume *self);
+GPtrArray *
+fu_volume_new_by_kind(const gchar *kind, GError **error) G_GNUC_WARN_UNUSED_RESULT;
+FuVolume *
+fu_volume_new_by_device(const gchar *device, GError **error) G_GNUC_WARN_UNUSED_RESULT;
+FuVolume *
+fu_volume_new_by_devnum(guint32 devnum, GError **error) G_GNUC_WARN_UNUSED_RESULT;
+FuVolume *
+fu_volume_new_esp_for_path(const gchar *esp_path, GError **error) G_GNUC_WARN_UNUSED_RESULT;
+FuVolume *
+fu_volume_new_esp_default(GError **error) G_GNUC_WARN_UNUSED_RESULT;

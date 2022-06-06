@@ -3056,11 +3056,11 @@ fu_util_prompt_for_volume(GError **error)
 	g_autoptr(GError) error_local = NULL;
 
 	/* exactly one */
-	volumes = fu_common_get_volumes_by_kind(FU_VOLUME_KIND_ESP, &error_local);
+	volumes = fu_volume_new_by_kind(FU_VOLUME_KIND_ESP, &error_local);
 	if (volumes == NULL) {
 		is_fallback = TRUE;
 		g_debug("%s, falling back to %s", error_local->message, FU_VOLUME_KIND_BDP);
-		volumes = fu_common_get_volumes_by_kind(FU_VOLUME_KIND_BDP, error);
+		volumes = fu_volume_new_by_kind(FU_VOLUME_KIND_BDP, error);
 		if (volumes == NULL) {
 			g_prefix_error(error, "%s: ", error_local->message);
 			return NULL;

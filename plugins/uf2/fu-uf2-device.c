@@ -96,7 +96,7 @@ fu_block_device_get_full_path(FuUf2Device *self, const gchar *filename, GError *
 	}
 
 	/* find volume */
-	volume = fu_common_get_volume_by_device(devfile, error);
+	volume = fu_volume_new_by_device(devfile, error);
 	if (volume == NULL)
 		return NULL;
 
@@ -196,7 +196,7 @@ fu_uf2_device_volume_mount(FuUf2Device *self, GError **error)
 	const gchar *devfile = fu_udev_device_get_device_file(FU_UDEV_DEVICE(self));
 
 	/* mount volume if required */
-	self->volume = fu_common_get_volume_by_device(devfile, error);
+	self->volume = fu_volume_new_by_device(devfile, error);
 	if (self->volume == NULL)
 		return FALSE;
 	return fu_volume_mount(self->volume, error);
@@ -209,7 +209,7 @@ fu_uf2_device_check_volume_mounted_cb(FuDevice *self, gpointer user_data, GError
 	g_autoptr(FuVolume) volume = NULL;
 
 	/* mount volume if required */
-	volume = fu_common_get_volume_by_device(devfile, error);
+	volume = fu_volume_new_by_device(devfile, error);
 	if (volume == NULL)
 		return FALSE;
 	if (!fu_volume_is_mounted(volume)) {
