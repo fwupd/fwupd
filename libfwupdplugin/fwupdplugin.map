@@ -240,9 +240,6 @@ LIBFWUPDPLUGIN_1.1.2 {
 LIBFWUPDPLUGIN_1.2.0 {
   global:
     fu_common_cab_build_silo;
-    fu_common_version_from_uint16;
-    fu_common_version_from_uint32;
-    fu_common_version_guess_format;
   local: *;
 } LIBFWUPDPLUGIN_1.1.2;
 
@@ -292,8 +289,6 @@ LIBFWUPDPLUGIN_1.2.6 {
 
 LIBFWUPDPLUGIN_1.2.9 {
   global:
-    fu_common_version_ensure_semver;
-    fu_common_version_verify_format;
     fu_device_add_instance_id_full;
     fu_device_set_version;
   local: *;
@@ -339,7 +334,6 @@ LIBFWUPDPLUGIN_1.3.2 {
 
 LIBFWUPDPLUGIN_1.3.3 {
   global:
-    fu_common_version_parse_from_format;
     fu_device_cleanup;
     fu_device_get_possible_plugins;
     fu_device_get_specialized_gtype;
@@ -384,16 +378,9 @@ LIBFWUPDPLUGIN_1.3.5 {
 
 LIBFWUPDPLUGIN_1.3.6 {
   global:
-    fu_common_version_from_uint64;
     fu_udev_device_set_flags;
   local: *;
 } LIBFWUPDPLUGIN_1.3.5;
-
-LIBFWUPDPLUGIN_1.3.9 {
-  global:
-    fu_common_vercmp_full;
-  local: *;
-} LIBFWUPDPLUGIN_1.3.6;
 
 LIBFWUPDPLUGIN_1.4.0 {
   global:
@@ -426,7 +413,7 @@ LIBFWUPDPLUGIN_1.4.0 {
     fu_plugin_get_config_value_boolean;
     fu_plugin_runner_device_created;
   local: *;
-} LIBFWUPDPLUGIN_1.3.9;
+} LIBFWUPDPLUGIN_1.3.6;
 
 LIBFWUPDPLUGIN_1.4.1 {
   global:
@@ -886,7 +873,6 @@ LIBFWUPDPLUGIN_1.7.4 {
 
 LIBFWUPDPLUGIN_1.7.6 {
   global:
-    fu_common_version_ensure_semver_full;
     fu_udev_device_get_parent_with_subsystem;
   local: *;
 } LIBFWUPDPLUGIN_1.7.4;
@@ -1027,5 +1013,13 @@ LIBFWUPDPLUGIN_1.8.2 {
     fu_udev_device_pread;
     fu_udev_device_pwrite;
     fu_usb_device_new;
+    fu_version_compare;
+    fu_version_ensure_semver;
+    fu_version_from_uint16;
+    fu_version_from_uint32;
+    fu_version_from_uint64;
+    fu_version_guess_format;
+    fu_version_parse_from_format;
+    fu_version_verify_format;
   local: *;
 } LIBFWUPDPLUGIN_1.8.1;

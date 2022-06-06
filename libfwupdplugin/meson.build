@@ -26,7 +26,7 @@ fwupdplugin_src = [
   'fu-path.c',              # fuzzing
   'fu-common-cab.c',
   'fu-common-guid.c',
-  'fu-common-version.c',    # fuzzing
+  'fu-version-common.c',    # fuzzing
   'fu-context.c',           # fuzzing
   'fu-device-locker.c',     # fuzzing
   'fu-device.c',            # fuzzing
@@ -107,7 +107,7 @@ fwupdplugin_headers = [
   'fu-kernel.h',
   'fu-common-cab.h',
   'fu-common-guid.h',
-  'fu-common-version.h',
+  'fu-version-common.h',
   'fu-context.h',
   'fu-deprecated.h',
   'fu-device.h',

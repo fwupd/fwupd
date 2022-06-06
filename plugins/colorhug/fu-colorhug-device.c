@@ -372,7 +372,7 @@ fu_colorhug_device_setup(FuDevice *device, GError **error)
 		 * provided the extra data it's because the BCD type was not
 		 * suitable -- and INTEL_ME is not relevant here */
 		if (tmp != NULL) {
-			fu_device_set_version_format(device, fu_common_version_guess_format(tmp));
+			fu_device_set_version_format(device, fu_version_guess_format(tmp));
 			fu_device_set_version(device, tmp);
 		}
 	}

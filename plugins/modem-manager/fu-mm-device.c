@@ -217,9 +217,9 @@ fu_mm_device_probe_quectel_flags(FuMmDevice *self)
 	name = g_strndup(version, 6);
 	for (guint i = 0; secboot[i].name != NULL; i++) {
 		if (g_strcmp0(name, secboot[i].name) == 0) {
-			if (fu_common_vercmp_full(version,
-						  secboot[i].version,
-						  FWUPD_VERSION_FORMAT_PLAIN) >= 0) {
+			if (fu_version_compare(version,
+					       secboot[i].version,
+					       FWUPD_VERSION_FORMAT_PLAIN) >= 0) {
 				fu_device_add_flag(FU_DEVICE(self),
 						   FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 			} else {

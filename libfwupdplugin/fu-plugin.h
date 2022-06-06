@@ -13,7 +13,6 @@
 
 #include "fu-bluez-device.h"
 #include "fu-common-guid.h"
-#include "fu-common-version.h"
 #include "fu-common.h"
 #include "fu-context.h"
 #include "fu-device-locker.h"
@@ -23,6 +22,7 @@
 #include "fu-quirks.h"
 #include "fu-security-attrs.h"
 #include "fu-usb-device.h"
+#include "fu-version-common.h"
 //#include "fu-hid-device.h"
 #ifdef HAVE_GUDEV
 #include "fu-udev-device.h"

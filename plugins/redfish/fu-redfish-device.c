@@ -262,7 +262,7 @@ fu_redfish_device_set_version_lenovo(FuRedfishDevice *self, const gchar *version
 	}
 	priv->build = g_strndup(out_build + 2, 1);
 	fu_device_set_version(FU_DEVICE(self), out_version);
-	fu_device_set_version_format(FU_DEVICE(self), fu_common_version_guess_format(out_version));
+	fu_device_set_version_format(FU_DEVICE(self), fu_version_guess_format(out_version));
 	return TRUE;
 }
 
@@ -282,8 +282,7 @@ fu_redfish_device_set_version(FuRedfishDevice *self, const gchar *tmp)
 		g_autofree gchar *ver = fu_redfish_common_fix_version(tmp);
 		if (ver != NULL) {
 			fu_device_set_version(FU_DEVICE(self), ver);
-			fu_device_set_version_format(FU_DEVICE(self),
-						     fu_common_version_guess_format(ver));
+			fu_device_set_version_format(FU_DEVICE(self), fu_version_guess_format(ver));
 		}
 	}
 }

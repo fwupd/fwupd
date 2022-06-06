@@ -455,7 +455,7 @@ fu_usb_device_probe(FuDevice *device, GError **error)
 	if (release != 0x0 &&
 	    fu_device_get_version_format(device) == FWUPD_VERSION_FORMAT_UNKNOWN) {
 		g_autofree gchar *version = NULL;
-		version = fu_common_version_from_uint16(release, FWUPD_VERSION_FORMAT_BCD);
+		version = fu_version_from_uint16(release, FWUPD_VERSION_FORMAT_BCD);
 		fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_BCD);
 		fu_device_set_version(device, version);
 	}

@@ -503,7 +503,7 @@ fu_dell_dock_ec_get_dock_info(FuDevice *device, GError **error)
 
 	/* Determine if the passive flow should be used when flashing */
 	hub_version = fu_device_get_version(fu_device_get_proxy(device));
-	if (fu_common_vercmp_full(hub_version, "1.42", FWUPD_VERSION_FORMAT_PAIR) < 0) {
+	if (fu_version_compare(hub_version, "1.42", FWUPD_VERSION_FORMAT_PAIR) < 0) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
@@ -817,9 +817,9 @@ fu_dell_dock_ec_write_fw(FuDevice *device,
 
 	/* meet the minimum EC version */
 	if ((flags & FWUPD_INSTALL_FLAG_FORCE) == 0 &&
-	    (fu_common_vercmp_full(dynamic_version,
-				   self->ec_minimum_version,
-				   FWUPD_VERSION_FORMAT_QUAD) < 0)) {
+	    (fu_version_compare(dynamic_version,
+				self->ec_minimum_version,
+				FWUPD_VERSION_FORMAT_QUAD) < 0)) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,

@@ -695,7 +695,7 @@ fu_wac_device_add_modules_bluetooth(FuWacDevice *self, GError **error)
 			break;
 		g_usleep(G_USEC_PER_SEC);
 	}
-	version = fu_common_version_from_uint16(fw_ver, FWUPD_VERSION_FORMAT_BCD);
+	version = fu_version_from_uint16(fw_ver, FWUPD_VERSION_FORMAT_BCD);
 
 	/* Success! But legacy bluetooth can't tell us which module the device needs.
 	 * Initialize both and rely on the firmware update containing the appropriate
@@ -769,7 +769,7 @@ fu_wac_device_add_modules(FuWacDevice *self, GError **error)
 	/* bootloader version */
 	if (!fu_memread_uint16_safe(buf, sizeof(buf), 1, &boot_ver, G_BIG_ENDIAN, error))
 		return FALSE;
-	version_bootloader = fu_common_version_from_uint16(boot_ver, FWUPD_VERSION_FORMAT_BCD);
+	version_bootloader = fu_version_from_uint16(boot_ver, FWUPD_VERSION_FORMAT_BCD);
 	fu_device_set_version_bootloader(FU_DEVICE(self), version_bootloader);
 	fu_device_set_version_bootloader_raw(FU_DEVICE(self), boot_ver);
 
@@ -788,7 +788,7 @@ fu_wac_device_add_modules(FuWacDevice *self, GError **error)
 					    G_BIG_ENDIAN,
 					    error))
 			return FALSE;
-		version = fu_common_version_from_uint16(ver, FWUPD_VERSION_FORMAT_BCD);
+		version = fu_version_from_uint16(ver, FWUPD_VERSION_FORMAT_BCD);
 
 		switch (fw_type) {
 		case FU_WAC_MODULE_FW_TYPE_TOUCH:

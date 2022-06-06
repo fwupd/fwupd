@@ -8,11 +8,11 @@
 
 #include <fwupd.h>
 
-#include "fu-common-version.h"
 #include "fu-context.h"
 #include "fu-firmware.h"
 #include "fu-progress.h"
 #include "fu-security-attrs.h"
+#include "fu-version-common.h"
 
 #define FU_TYPE_DEVICE (fu_device_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuDevice, fu_device, FU, DEVICE, FwupdDevice)

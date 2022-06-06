@@ -192,7 +192,7 @@ fu_elantp_hid_device_setup(FuDevice *device, GError **error)
 	fwver = fu_memread_uint16(buf, G_LITTLE_ENDIAN);
 	if (fwver == 0xFFFF || fwver == ETP_CMD_I2C_FW_VERSION)
 		fwver = 0;
-	version = fu_common_version_from_uint16(fwver, FWUPD_VERSION_FORMAT_HEX);
+	version = fu_version_from_uint16(fwver, FWUPD_VERSION_FORMAT_HEX);
 	fu_device_set_version(device, version);
 
 	/* get IAP firmware version */
@@ -210,7 +210,7 @@ fu_elantp_hid_device_setup(FuDevice *device, GError **error)
 	} else {
 		iap_ver = fu_memread_uint16(buf, G_LITTLE_ENDIAN);
 	}
-	version_bl = fu_common_version_from_uint16(iap_ver, FWUPD_VERSION_FORMAT_HEX);
+	version_bl = fu_version_from_uint16(iap_ver, FWUPD_VERSION_FORMAT_HEX);
 	fu_device_set_version_bootloader(device, version_bl);
 
 	/* get module ID */

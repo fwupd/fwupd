@@ -8,6 +8,6 @@
 int
 main(void)
 {
-	assert(fu_common_vercmp_full("1.0", "2.1", FWUPD_VERSION_FORMAT_NUMBER) < 0);
+	assert(fu_version_compare("1.0", "2.1", FWUPD_VERSION_FORMAT_NUMBER) < 0);
 	return 0;
 }

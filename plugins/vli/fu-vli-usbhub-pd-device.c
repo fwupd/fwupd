@@ -97,7 +97,7 @@ fu_vli_usbhub_pd_device_setup(FuDevice *device, GError **error)
 
 	/* use header to populate device info */
 	fu_device_set_version_raw(device, fwver);
-	fwver_str = fu_common_version_from_uint32(fwver, FWUPD_VERSION_FORMAT_QUAD);
+	fwver_str = fu_version_from_uint32(fwver, FWUPD_VERSION_FORMAT_QUAD);
 	fu_device_set_version(device, fwver_str);
 
 	/* add standard GUIDs in order of priority */

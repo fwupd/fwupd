@@ -428,9 +428,9 @@ fu_util_prompt_warning(FwupdDevice *device,
 	g_autoptr(GString) str = g_string_new(NULL);
 
 	/* up, down, or re-install */
-	vercmp = fu_common_vercmp_full(fwupd_release_get_version(release),
-				       fu_device_get_version(device),
-				       fwupd_device_get_version_format(device));
+	vercmp = fu_version_compare(fwupd_release_get_version(release),
+				    fu_device_get_version(device),
+				    fwupd_device_get_version_format(device));
 	if (vercmp < 0) {
 		g_string_append_printf(
 		    title,

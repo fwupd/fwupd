@@ -195,7 +195,7 @@ fu_plugin_test_get_version(GBytes *blob_fw)
 	val = fu_strtoull(str);
 	if (val == 0x0)
 		return NULL;
-	return fu_common_version_from_uint32(val, FWUPD_VERSION_FORMAT_TRIPLET);
+	return fu_version_from_uint32(val, FWUPD_VERSION_FORMAT_TRIPLET);
 }
 
 static gboolean

@@ -128,7 +128,7 @@ fu_vli_pd_firmware_parse(FuFirmware *firmware,
 			    fwver);
 		return FALSE;
 	}
-	fwver_str = fu_common_version_from_uint32(fwver, FWUPD_VERSION_FORMAT_QUAD);
+	fwver_str = fu_version_from_uint32(fwver, FWUPD_VERSION_FORMAT_QUAD);
 	fu_firmware_set_version(firmware, fwver_str);
 	fu_firmware_set_version_raw(firmware, fwver);
 

@@ -206,7 +206,7 @@ fu_plugin_msr_backend_device_added(FuPlugin *plugin, FuDevice *device, GError **
 		if (ver_raw != 0 && ver_raw != G_MAXUINT32) {
 			FwupdVersionFormat verfmt = fu_device_get_version_format(device_cpu);
 			g_autofree gchar *ver_str = NULL;
-			ver_str = fu_common_version_from_uint32(ver_raw, verfmt);
+			ver_str = fu_version_from_uint32(ver_raw, verfmt);
 			g_debug("setting microcode version to %s", ver_str);
 			fu_device_set_version(device_cpu, ver_str);
 			fu_device_set_version_raw(device_cpu, ver_raw);

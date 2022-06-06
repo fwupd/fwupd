@@ -1493,9 +1493,9 @@ fu_util_get_release_for_device_version(FuUtilPrivate *priv,
 	/* find using vercmp */
 	for (guint j = 0; j < releases->len; j++) {
 		FwupdRelease *release = g_ptr_array_index(releases, j);
-		if (fu_common_vercmp_full(fwupd_release_get_version(release),
-					  version,
-					  fwupd_device_get_version_format(device)) == 0) {
+		if (fu_version_compare(fwupd_release_get_version(release),
+				       version,
+				       fwupd_device_get_version_format(device)) == 0) {
 			return g_object_ref(release);
 		}
 	}

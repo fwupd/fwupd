@@ -70,12 +70,12 @@ fu_steelseries_gamepad_setup(FuDevice *device, GError **error)
 
 	if (!fu_memread_uint16_safe(data, sizeof(data), 0x01, &fw_ver, G_LITTLE_ENDIAN, error))
 		return FALSE;
-	version = fu_common_version_from_uint16(fw_ver, FWUPD_VERSION_FORMAT_BCD);
+	version = fu_version_from_uint16(fw_ver, FWUPD_VERSION_FORMAT_BCD);
 	fu_device_set_version(FU_DEVICE(device), version);
 
 	if (!fu_memread_uint16_safe(data, sizeof(data), 0x03, &fw_ver, G_LITTLE_ENDIAN, error))
 		return FALSE;
-	bootloader_version = fu_common_version_from_uint16(fw_ver, FWUPD_VERSION_FORMAT_BCD);
+	bootloader_version = fu_version_from_uint16(fw_ver, FWUPD_VERSION_FORMAT_BCD);
 	fu_device_set_version_bootloader(device, bootloader_version);
 
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);

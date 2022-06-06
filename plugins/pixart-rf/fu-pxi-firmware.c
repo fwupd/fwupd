@@ -102,7 +102,7 @@ fu_pxi_firmware_parse(FuFirmware *firmware,
 	version_raw = (((guint32)(fw_header[0] - '0')) << 16) +
 		      (((guint32)(fw_header[2] - '0')) << 8) + (guint32)(fw_header[4] - '0');
 	fu_firmware_set_version_raw(firmware, version_raw);
-	version = fu_common_version_from_uint32(version_raw, FWUPD_VERSION_FORMAT_DELL_BIOS);
+	version = fu_version_from_uint32(version_raw, FWUPD_VERSION_FORMAT_DELL_BIOS);
 	fu_firmware_set_version(firmware, version);
 
 	/* set fw model name */

@@ -683,7 +683,7 @@ fu_ccgx_dmc_device_setup(FuDevice *device, GError **error)
 
 	/* set composite version */
 	version_raw = dock_status.composite_version;
-	version = fu_common_version_from_uint32(version_raw, FWUPD_VERSION_FORMAT_QUAD);
+	version = fu_version_from_uint32(version_raw, FWUPD_VERSION_FORMAT_QUAD);
 	fu_device_set_version(FU_DEVICE(self), version);
 	fu_device_set_version_raw(FU_DEVICE(self), version_raw);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
