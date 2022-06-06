@@ -2,7 +2,7 @@ version: 2
 jobs:
   build-ubuntu-x86_64:
     machine:
-      image: circleci/classic:latest
+      image: ubuntu-2204:edge
     steps:
       - checkout
       - run:
@@ -60,7 +60,7 @@ jobs:
 
   publish-docs:
     machine:
-      image: circleci/classic:latest
+      image: ubuntu-2204:edge
     steps:
       - attach_workspace:
           at: .
