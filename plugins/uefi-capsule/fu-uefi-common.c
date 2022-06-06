@@ -189,7 +189,7 @@ fu_uefi_get_bitmap_size(const guint8 *buf,
 	}
 
 	/* starting address */
-	if (!fu_common_read_uint32_safe(buf, bufsz, 10, &ui32, G_LITTLE_ENDIAN, error))
+	if (!fu_memread_uint32_safe(buf, bufsz, 10, &ui32, G_LITTLE_ENDIAN, error))
 		return FALSE;
 	if (ui32 < 26) {
 		g_set_error(error,
@@ -201,7 +201,7 @@ fu_uefi_get_bitmap_size(const guint8 *buf,
 	}
 
 	/* BITMAPINFOHEADER header */
-	if (!fu_common_read_uint32_safe(buf, bufsz, 14, &ui32, G_LITTLE_ENDIAN, error))
+	if (!fu_memread_uint32_safe(buf, bufsz, 14, &ui32, G_LITTLE_ENDIAN, error))
 		return FALSE;
 	if (ui32 < 26 - 14) {
 		g_set_error(error,
@@ -214,11 +214,11 @@ fu_uefi_get_bitmap_size(const guint8 *buf,
 
 	/* dimensions */
 	if (width != NULL) {
-		if (!fu_common_read_uint32_safe(buf, bufsz, 18, width, G_LITTLE_ENDIAN, error))
+		if (!fu_memread_uint32_safe(buf, bufsz, 18, width, G_LITTLE_ENDIAN, error))
 			return FALSE;
 	}
 	if (height != NULL) {
-		if (!fu_common_read_uint32_safe(buf, bufsz, 22, height, G_LITTLE_ENDIAN, error))
+		if (!fu_memread_uint32_safe(buf, bufsz, 22, height, G_LITTLE_ENDIAN, error))
 			return FALSE;
 	}
 	return TRUE;

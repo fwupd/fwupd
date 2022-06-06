@@ -733,7 +733,7 @@ fu_parade_lspcon_device_write_firmware(FuDevice *device,
 					 fu_progress_get_child(progress),
 					 error))
 		return FALSE;
-	if (!fu_common_bytes_compare_raw(buf, bufsz, readback_buf, bufsz, error)) {
+	if (!fu_memcmp_safe(buf, bufsz, readback_buf, bufsz, error)) {
 		g_prefix_error(error, "flash contents do not match: ");
 		return FALSE;
 	}
@@ -762,11 +762,11 @@ fu_parade_lspcon_device_write_firmware(FuDevice *device,
 					 fu_progress_get_child(progress),
 					 error))
 		return FALSE;
-	if (!fu_common_bytes_compare_raw(flag_data,
-					 sizeof(flag_data),
-					 readback_buf,
-					 MIN(sizeof(flag_data), bufsz),
-					 error)) {
+	if (!fu_memcmp_safe(flag_data,
+			    sizeof(flag_data),
+			    readback_buf,
+			    MIN(sizeof(flag_data), bufsz),
+			    error)) {
 		g_prefix_error(error, "flag partition contents do not match: ");
 		return FALSE;
 	}

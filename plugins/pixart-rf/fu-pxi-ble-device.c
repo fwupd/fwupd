@@ -377,11 +377,11 @@ fu_pxi_ble_device_wait_notify(FuPxiBleDevice *self,
 	/* get the opcode if status is not null */
 	if (status != NULL) {
 		guint8 status_tmp = 0x0;
-		if (!fu_common_read_uint8_safe(res, sizeof(res), 0x1, &status_tmp, error))
+		if (!fu_memread_uint8_safe(res, sizeof(res), 0x1, &status_tmp, error))
 			return FALSE;
 		/* need check command result if command is fw upgrade */
 		if (status_tmp == FU_PXI_DEVICE_CMD_FW_UPGRADE) {
-			if (!fu_common_read_uint8_safe(res, sizeof(res), 0x2, &cmd_status, error))
+			if (!fu_memread_uint8_safe(res, sizeof(res), 0x2, &cmd_status, error))
 				return FALSE;
 			if (cmd_status != ERR_COMMAND_SUCCESS) {
 				g_set_error(error,
@@ -397,12 +397,12 @@ fu_pxi_ble_device_wait_notify(FuPxiBleDevice *self,
 		*status = status_tmp;
 	}
 	if (checksum != NULL) {
-		if (!fu_common_read_uint16_safe(res,
-						sizeof(res),
-						0x3,
-						checksum,
-						G_LITTLE_ENDIAN,
-						error))
+		if (!fu_memread_uint16_safe(res,
+					    sizeof(res),
+					    0x3,
+					    checksum,
+					    G_LITTLE_ENDIAN,
+					    error))
 			return FALSE;
 	}
 
@@ -741,7 +741,7 @@ fu_pxi_ble_device_fw_get_info(FuPxiBleDevice *self, GError **error)
 
 	if (!fu_pxi_ble_device_get_feature(self, res, FU_PXI_BLE_DEVICE_FW_INFO_RET_LEN + 3, error))
 		return FALSE;
-	if (!fu_common_read_uint8_safe(res, sizeof(res), 0x4, &opcode, error))
+	if (!fu_memread_uint8_safe(res, sizeof(res), 0x4, &opcode, error))
 		return FALSE;
 	if (opcode != FU_PXI_DEVICE_CMD_FW_GET_INFO) {
 		g_set_error(error,
@@ -756,7 +756,7 @@ fu_pxi_ble_device_fw_get_info(FuPxiBleDevice *self, GError **error)
 	fu_device_set_version(FU_DEVICE(self), version_str);
 
 	/* add current checksum */
-	if (!fu_common_read_uint16_safe(res, sizeof(res), 0xb, &checksum, G_LITTLE_ENDIAN, error))
+	if (!fu_memread_uint16_safe(res, sizeof(res), 0xb, &checksum, G_LITTLE_ENDIAN, error))
 		return FALSE;
 
 	/* success */
@@ -783,7 +783,7 @@ fu_pxi_ble_device_get_model_info(FuPxiBleDevice *self, GError **error)
 	res[0] = PXI_HID_DEV_OTA_FEATURE_REPORT_ID;
 	if (!fu_pxi_ble_device_get_feature(self, res, sizeof(res), error))
 		return FALSE;
-	if (!fu_common_read_uint8_safe(res, sizeof(res), 0x4, &opcode, error))
+	if (!fu_memread_uint8_safe(res, sizeof(res), 0x4, &opcode, error))
 		return FALSE;
 
 	/* old firmware */

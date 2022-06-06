@@ -47,7 +47,7 @@ fu_synaptics_rmi_generate_checksum(const guint8 *data, gsize len)
 	guint32 lsw = 0xffff;
 	guint32 msw = 0xffff;
 	for (gsize i = 0; i < len / 2; i++) {
-		lsw += fu_common_read_uint16(&data[i * 2], G_LITTLE_ENDIAN);
+		lsw += fu_memread_uint16(&data[i * 2], G_LITTLE_ENDIAN);
 		msw += lsw;
 		lsw = (lsw & 0xffff) + (lsw >> 16);
 		msw = (msw & 0xffff) + (msw >> 16);

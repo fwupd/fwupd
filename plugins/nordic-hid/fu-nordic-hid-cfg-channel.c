@@ -710,26 +710,21 @@ fu_nordic_hid_cfg_channel_dfu_fwinfo(FuNordicHidCfgChannel *self, GError **error
 	if (g_strcmp0(self->bl_name, "MCUBOOT") == 0)
 		self->flash_area_id = 0;
 
-	if (!fu_common_read_uint32_safe(res->data,
-					REPORT_SIZE,
-					0x01,
-					&self->flashed_image_len,
-					G_LITTLE_ENDIAN,
-					error))
+	if (!fu_memread_uint32_safe(res->data,
+				    REPORT_SIZE,
+				    0x01,
+				    &self->flashed_image_len,
+				    G_LITTLE_ENDIAN,
+				    error))
 		return FALSE;
-	if (!fu_common_read_uint16_safe(res->data,
-					REPORT_SIZE,
-					0x07,
-					&ver_rev,
-					G_LITTLE_ENDIAN,
-					error))
+	if (!fu_memread_uint16_safe(res->data, REPORT_SIZE, 0x07, &ver_rev, G_LITTLE_ENDIAN, error))
 		return FALSE;
-	if (!fu_common_read_uint32_safe(res->data,
-					REPORT_SIZE,
-					0x09,
-					&ver_build_nr,
-					G_LITTLE_ENDIAN,
-					error))
+	if (!fu_memread_uint32_safe(res->data,
+				    REPORT_SIZE,
+				    0x09,
+				    &ver_build_nr,
+				    G_LITTLE_ENDIAN,
+				    error))
 		return FALSE;
 	version = g_strdup_printf("%u.%u.%u.%u", res->data[4], res->data[5], ver_rev, ver_build_nr);
 	fu_device_set_version(FU_DEVICE(self), version);
@@ -848,33 +843,33 @@ fu_nordic_hid_cfg_channel_dfu_sync(FuNordicHidCfgChannel *self,
 		return FALSE;
 	}
 	dfu_info->dfu_state = res->data[0];
-	if (!fu_common_read_uint32_safe(res->data,
-					REPORT_SIZE,
-					0x01,
-					&dfu_info->img_length,
-					G_LITTLE_ENDIAN,
-					error))
+	if (!fu_memread_uint32_safe(res->data,
+				    REPORT_SIZE,
+				    0x01,
+				    &dfu_info->img_length,
+				    G_LITTLE_ENDIAN,
+				    error))
 		return FALSE;
-	if (!fu_common_read_uint32_safe(res->data,
-					REPORT_SIZE,
-					0x05,
-					&dfu_info->img_csum,
-					G_LITTLE_ENDIAN,
-					error))
+	if (!fu_memread_uint32_safe(res->data,
+				    REPORT_SIZE,
+				    0x05,
+				    &dfu_info->img_csum,
+				    G_LITTLE_ENDIAN,
+				    error))
 		return FALSE;
-	if (!fu_common_read_uint32_safe(res->data,
-					REPORT_SIZE,
-					0x09,
-					&dfu_info->offset,
-					G_LITTLE_ENDIAN,
-					error))
+	if (!fu_memread_uint32_safe(res->data,
+				    REPORT_SIZE,
+				    0x09,
+				    &dfu_info->offset,
+				    G_LITTLE_ENDIAN,
+				    error))
 		return FALSE;
-	if (!fu_common_read_uint16_safe(res->data,
-					REPORT_SIZE,
-					0x0D,
-					&dfu_info->sync_buffer_size,
-					G_LITTLE_ENDIAN,
-					error))
+	if (!fu_memread_uint16_safe(res->data,
+				    REPORT_SIZE,
+				    0x0D,
+				    &dfu_info->sync_buffer_size,
+				    G_LITTLE_ENDIAN,
+				    error))
 		return FALSE;
 
 	return TRUE;
@@ -899,26 +894,26 @@ fu_nordic_hid_cfg_channel_dfu_start(FuNordicHidCfgChannel *self,
 		return FALSE;
 	}
 
-	if (!fu_common_write_uint32_safe(data,
-					 REPORT_DATA_MAX_LEN,
-					 0x00,
-					 (guint32)img_length,
-					 G_LITTLE_ENDIAN,
-					 error))
+	if (!fu_memwrite_uint32_safe(data,
+				     REPORT_DATA_MAX_LEN,
+				     0x00,
+				     (guint32)img_length,
+				     G_LITTLE_ENDIAN,
+				     error))
 		return FALSE;
-	if (!fu_common_write_uint32_safe(data,
-					 REPORT_DATA_MAX_LEN,
-					 0x04,
-					 img_crc,
-					 G_LITTLE_ENDIAN,
-					 error))
+	if (!fu_memwrite_uint32_safe(data,
+				     REPORT_DATA_MAX_LEN,
+				     0x04,
+				     img_crc,
+				     G_LITTLE_ENDIAN,
+				     error))
 		return FALSE;
-	if (!fu_common_write_uint32_safe(data,
-					 REPORT_DATA_MAX_LEN,
-					 0x08,
-					 offset,
-					 G_LITTLE_ENDIAN,
-					 error))
+	if (!fu_memwrite_uint32_safe(data,
+				     REPORT_DATA_MAX_LEN,
+				     0x08,
+				     offset,
+				     G_LITTLE_ENDIAN,
+				     error))
 		return FALSE;
 
 	if (!fu_nordic_hid_cfg_channel_cmd_send(self,

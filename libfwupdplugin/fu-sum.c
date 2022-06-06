@@ -8,7 +8,7 @@
 
 #include "config.h"
 
-#include "fu-common.h"
+#include "fu-mem.h"
 #include "fu-sum.h"
 
 /**
@@ -109,7 +109,7 @@ fu_sum16w(const guint8 *buf, gsize bufsz, FuEndianType endian)
 	g_return_val_if_fail(buf != NULL, G_MAXUINT16);
 	g_return_val_if_fail(bufsz % 2 == 0, G_MAXUINT16);
 	for (gsize i = 0; i < bufsz; i += 2)
-		checksum += fu_common_read_uint16(&buf[i], endian);
+		checksum += fu_memread_uint16(&buf[i], endian);
 	return checksum;
 }
 
@@ -190,7 +190,7 @@ fu_sum32w(const guint8 *buf, gsize bufsz, FuEndianType endian)
 	g_return_val_if_fail(buf != NULL, G_MAXUINT32);
 	g_return_val_if_fail(bufsz % 4 == 0, G_MAXUINT32);
 	for (gsize i = 0; i < bufsz; i += 4)
-		checksum += fu_common_read_uint32(&buf[i], endian);
+		checksum += fu_memread_uint32(&buf[i], endian);
 	return checksum;
 }
 

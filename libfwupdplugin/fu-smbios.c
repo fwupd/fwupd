@@ -21,6 +21,7 @@
 #include "fu-byte-array.h"
 #include "fu-common.h"
 #include "fu-kenv.h"
+#include "fu-mem.h"
 #include "fu-smbios-private.h"
 #include "fu-string.h"
 
@@ -358,16 +359,11 @@ fu_smbios_setup_from_data(FuSmbios *self, const guint8 *buf, gsize sz, GError **
 		guint8 str_type = 0;
 
 		/* le */
-		if (!fu_common_read_uint8_safe(buf, sz, i + 0x0, &str_type, error))
+		if (!fu_memread_uint8_safe(buf, sz, i + 0x0, &str_type, error))
 			return FALSE;
-		if (!fu_common_read_uint8_safe(buf, sz, i + 0x1, &str_len, error))
+		if (!fu_memread_uint8_safe(buf, sz, i + 0x1, &str_len, error))
 			return FALSE;
-		if (!fu_common_read_uint16_safe(buf,
-						sz,
-						i + 0x2,
-						&str_handle,
-						G_LITTLE_ENDIAN,
-						error))
+		if (!fu_memread_uint16_safe(buf, sz, i + 0x2, &str_handle, G_LITTLE_ENDIAN, error))
 			return FALSE;
 
 		/* invalid */

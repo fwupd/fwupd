@@ -58,7 +58,7 @@ fu_hailuck_bl_device_read_block_start(FuHailuckBlDevice *self, guint32 length, G
 	    FU_HAILUCK_REPORT_ID_SHORT,
 	    FU_HAILUCK_CMD_READ_BLOCK_START,
 	};
-	fu_common_write_uint16(buf + 4, length, G_LITTLE_ENDIAN);
+	fu_memwrite_uint16(buf + 4, length, G_LITTLE_ENDIAN);
 	return fu_hid_device_set_report(FU_HID_DEVICE(self),
 					buf[0],
 					buf,
@@ -159,7 +159,7 @@ fu_hailuck_bl_device_write_block_start(FuHailuckBlDevice *self, guint32 length, 
 	    FU_HAILUCK_REPORT_ID_SHORT,
 	    FU_HAILUCK_CMD_WRITE_BLOCK_START,
 	};
-	fu_common_write_uint16(buf + 4, length, G_LITTLE_ENDIAN);
+	fu_memwrite_uint16(buf + 4, length, G_LITTLE_ENDIAN);
 	return fu_hid_device_set_report(FU_HID_DEVICE(self),
 					buf[0],
 					buf,

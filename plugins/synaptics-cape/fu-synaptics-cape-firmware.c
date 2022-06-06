@@ -96,47 +96,47 @@ fu_synaptics_cape_firmware_parse_header(FuSynapticsCapeFirmware *self,
 		return FALSE;
 	}
 
-	if (!fu_common_read_uint16_safe(buf,
-					bufsz,
-					FW_CAPE_HID_HEADER_OFFSET_VID,
-					&self->vid,
-					G_LITTLE_ENDIAN,
-					error))
+	if (!fu_memread_uint16_safe(buf,
+				    bufsz,
+				    FW_CAPE_HID_HEADER_OFFSET_VID,
+				    &self->vid,
+				    G_LITTLE_ENDIAN,
+				    error))
 		return FALSE;
-	if (!fu_common_read_uint16_safe(buf,
-					bufsz,
-					FW_CAPE_HID_HEADER_OFFSET_PID,
-					&self->pid,
-					G_LITTLE_ENDIAN,
-					error))
+	if (!fu_memread_uint16_safe(buf,
+				    bufsz,
+				    FW_CAPE_HID_HEADER_OFFSET_PID,
+				    &self->pid,
+				    G_LITTLE_ENDIAN,
+				    error))
 		return FALSE;
-	if (!fu_common_read_uint16_safe(buf,
-					bufsz,
-					FW_CAPE_HID_HEADER_OFFSET_VER_W,
-					&version_w,
-					G_LITTLE_ENDIAN,
-					error))
+	if (!fu_memread_uint16_safe(buf,
+				    bufsz,
+				    FW_CAPE_HID_HEADER_OFFSET_VER_W,
+				    &version_w,
+				    G_LITTLE_ENDIAN,
+				    error))
 		return FALSE;
-	if (!fu_common_read_uint16_safe(buf,
-					bufsz,
-					FW_CAPE_HID_HEADER_OFFSET_VER_X,
-					&version_x,
-					G_LITTLE_ENDIAN,
-					error))
+	if (!fu_memread_uint16_safe(buf,
+				    bufsz,
+				    FW_CAPE_HID_HEADER_OFFSET_VER_X,
+				    &version_x,
+				    G_LITTLE_ENDIAN,
+				    error))
 		return FALSE;
-	if (!fu_common_read_uint16_safe(buf,
-					bufsz,
-					FW_CAPE_HID_HEADER_OFFSET_VER_Y,
-					&version_y,
-					G_LITTLE_ENDIAN,
-					error))
+	if (!fu_memread_uint16_safe(buf,
+				    bufsz,
+				    FW_CAPE_HID_HEADER_OFFSET_VER_Y,
+				    &version_y,
+				    G_LITTLE_ENDIAN,
+				    error))
 		return FALSE;
-	if (!fu_common_read_uint16_safe(buf,
-					bufsz,
-					FW_CAPE_HID_HEADER_OFFSET_VER_Z,
-					&version_z,
-					G_LITTLE_ENDIAN,
-					error))
+	if (!fu_memread_uint16_safe(buf,
+				    bufsz,
+				    FW_CAPE_HID_HEADER_OFFSET_VER_Z,
+				    &version_z,
+				    G_LITTLE_ENDIAN,
+				    error))
 		return FALSE;
 
 	version_str = g_strdup_printf("%u.%u.%u.%u", version_z, version_y, version_x, version_w);

@@ -348,12 +348,7 @@ fu_vli_pd_device_setup(FuDevice *device, GError **error)
 		g_prefix_error(error, "failed to get version: ");
 		return FALSE;
 	}
-	if (!fu_common_read_uint32_safe(verbuf,
-					sizeof(verbuf),
-					0x0,
-					&version_raw,
-					G_BIG_ENDIAN,
-					error))
+	if (!fu_memread_uint32_safe(verbuf, sizeof(verbuf), 0x0, &version_raw, G_BIG_ENDIAN, error))
 		return FALSE;
 	fu_device_set_version_raw(FU_DEVICE(self), version_raw);
 	version_str = fu_common_version_from_uint32(version_raw, FWUPD_VERSION_FORMAT_QUAD);
@@ -515,12 +510,7 @@ fu_vli_pd_device_write_dual_firmware(FuVliPdDevice *self,
 	sbuf = g_bytes_get_data(spi_fw, &sbufsz);
 	if (sbufsz != 0x8000)
 		sec_addr = 0x30000;
-	if (!fu_common_read_uint16_safe(sbuf,
-					sbufsz,
-					sbufsz - 2,
-					&crc_file,
-					G_LITTLE_ENDIAN,
-					error)) {
+	if (!fu_memread_uint16_safe(sbuf, sbufsz, sbufsz - 2, &crc_file, G_LITTLE_ENDIAN, error)) {
 		g_prefix_error(error, "failed to read file CRC: ");
 		return FALSE;
 	}

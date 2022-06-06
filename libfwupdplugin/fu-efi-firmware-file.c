@@ -12,6 +12,7 @@
 #include "fu-efi-firmware-common.h"
 #include "fu-efi-firmware-file.h"
 #include "fu-efi-firmware-section.h"
+#include "fu-mem.h"
 #include "fu-sum.h"
 
 typedef struct {
@@ -164,11 +165,11 @@ fu_efi_firmware_file_parse(FuFirmware *firmware,
 		return FALSE;
 	guid_str = fwupd_guid_to_string(&guid, FWUPD_GUID_FLAG_MIXED_ENDIAN);
 	fu_firmware_set_id(firmware, guid_str);
-	if (!fu_common_read_uint8_safe(buf,
-				       bufsz,
-				       FU_EFI_FIRMWARE_FILE_OFFSET_STATE,
-				       &img_state,
-				       error))
+	if (!fu_memread_uint8_safe(buf,
+				   bufsz,
+				   FU_EFI_FIRMWARE_FILE_OFFSET_STATE,
+				   &img_state,
+				   error))
 		return FALSE;
 	if (img_state != 0xF8) {
 		g_set_error(error,
@@ -179,36 +180,36 @@ fu_efi_firmware_file_parse(FuFirmware *firmware,
 			    (guint)0xF8);
 		return FALSE;
 	}
-	if (!fu_common_read_uint8_safe(buf,
-				       bufsz,
-				       FU_EFI_FIRMWARE_FILE_OFFSET_HDR_CHECKSUM,
-				       &hdr_checksum,
-				       error))
+	if (!fu_memread_uint8_safe(buf,
+				   bufsz,
+				   FU_EFI_FIRMWARE_FILE_OFFSET_HDR_CHECKSUM,
+				   &hdr_checksum,
+				   error))
 		return FALSE;
-	if (!fu_common_read_uint8_safe(buf,
-				       bufsz,
-				       FU_EFI_FIRMWARE_FILE_OFFSET_DATA_CHECKSUM,
-				       &data_checksum,
-				       error))
+	if (!fu_memread_uint8_safe(buf,
+				   bufsz,
+				   FU_EFI_FIRMWARE_FILE_OFFSET_DATA_CHECKSUM,
+				   &data_checksum,
+				   error))
 		return FALSE;
-	if (!fu_common_read_uint8_safe(buf,
-				       bufsz,
-				       FU_EFI_FIRMWARE_FILE_OFFSET_TYPE,
-				       &priv->type,
-				       error))
+	if (!fu_memread_uint8_safe(buf,
+				   bufsz,
+				   FU_EFI_FIRMWARE_FILE_OFFSET_TYPE,
+				   &priv->type,
+				   error))
 		return FALSE;
-	if (!fu_common_read_uint8_safe(buf,
-				       bufsz,
-				       FU_EFI_FIRMWARE_FILE_OFFSET_ATTRS,
-				       &priv->attrib,
-				       error))
+	if (!fu_memread_uint8_safe(buf,
+				   bufsz,
+				   FU_EFI_FIRMWARE_FILE_OFFSET_ATTRS,
+				   &priv->attrib,
+				   error))
 		return FALSE;
-	if (!fu_common_read_uint32_safe(buf,
-					bufsz, /* uint24_t! */
-					FU_EFI_FIRMWARE_FILE_OFFSET_SIZE,
-					&size,
-					G_LITTLE_ENDIAN,
-					error))
+	if (!fu_memread_uint32_safe(buf,
+				    bufsz, /* uint24_t! */
+				    FU_EFI_FIRMWARE_FILE_OFFSET_SIZE,
+				    &size,
+				    G_LITTLE_ENDIAN,
+				    error))
 		return FALSE;
 	size &= 0xFFFFFF;
 	if (size < FU_EFI_FIRMWARE_FILE_SIZE) {

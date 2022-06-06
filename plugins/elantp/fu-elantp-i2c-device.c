@@ -99,8 +99,8 @@ static gboolean
 fu_elantp_i2c_device_write_cmd(FuElantpI2cDevice *self, guint16 reg, guint16 cmd, GError **error)
 {
 	guint8 buf[4];
-	fu_common_write_uint16(buf + 0x0, reg, G_LITTLE_ENDIAN);
-	fu_common_write_uint16(buf + 0x2, cmd, G_LITTLE_ENDIAN);
+	fu_memwrite_uint16(buf + 0x0, reg, G_LITTLE_ENDIAN);
+	fu_memwrite_uint16(buf + 0x2, cmd, G_LITTLE_ENDIAN);
 	return fu_elantp_i2c_device_send_cmd(self, buf, sizeof(buf), NULL, 0, error);
 }
 
@@ -112,7 +112,7 @@ fu_elantp_i2c_device_read_cmd(FuElantpI2cDevice *self,
 			      GError **error)
 {
 	guint8 buf[2];
-	fu_common_write_uint16(buf + 0x0, reg, G_LITTLE_ENDIAN);
+	fu_memwrite_uint16(buf + 0x0, reg, G_LITTLE_ENDIAN);
 	return fu_elantp_i2c_device_send_cmd(self, buf, sizeof(buf), rx, rxsz, error);
 }
 
@@ -124,12 +124,7 @@ fu_elantp_i2c_device_ensure_iap_ctrl(FuElantpI2cDevice *self, GError **error)
 		g_prefix_error(error, "failed to read IAPControl: ");
 		return FALSE;
 	}
-	if (!fu_common_read_uint16_safe(buf,
-					sizeof(buf),
-					0x0,
-					&self->iap_ctrl,
-					G_LITTLE_ENDIAN,
-					error))
+	if (!fu_memread_uint16_safe(buf, sizeof(buf), 0x0, &self->iap_ctrl, G_LITTLE_ENDIAN, error))
 		return FALSE;
 
 	/* in bootloader mode? */
@@ -164,9 +159,9 @@ fu_elantp_i2c_device_setup(FuDevice *device, GError **error)
 		g_prefix_error(error, "failed to get HID descriptor: ");
 		return FALSE;
 	}
-	if (!fu_common_read_uint16_safe(buf, sizeof(buf), 20, &vid, G_LITTLE_ENDIAN, error))
+	if (!fu_memread_uint16_safe(buf, sizeof(buf), 20, &vid, G_LITTLE_ENDIAN, error))
 		return FALSE;
-	if (!fu_common_read_uint16_safe(buf, sizeof(buf), 22, &pid, G_LITTLE_ENDIAN, error))
+	if (!fu_memread_uint16_safe(buf, sizeof(buf), 22, &pid, G_LITTLE_ENDIAN, error))
 		return FALSE;
 
 	/* set the vendor ID */
@@ -187,7 +182,7 @@ fu_elantp_i2c_device_setup(FuDevice *device, GError **error)
 		g_prefix_error(error, "failed to read I2C ID: ");
 		return FALSE;
 	}
-	if (!fu_common_read_uint16_safe(buf, sizeof(buf), 0x0, &tmp, G_LITTLE_ENDIAN, error))
+	if (!fu_memread_uint16_safe(buf, sizeof(buf), 0x0, &tmp, G_LITTLE_ENDIAN, error))
 		return FALSE;
 	self->pattern = tmp != 0xffff ? (tmp & 0xff00) >> 8 : 0;
 
@@ -196,7 +191,7 @@ fu_elantp_i2c_device_setup(FuDevice *device, GError **error)
 		g_prefix_error(error, "failed to read fw version: ");
 		return FALSE;
 	}
-	if (!fu_common_read_uint16_safe(buf, sizeof(buf), 0x0, &fwver, G_LITTLE_ENDIAN, error))
+	if (!fu_memread_uint16_safe(buf, sizeof(buf), 0x0, &fwver, G_LITTLE_ENDIAN, error))
 		return FALSE;
 	if (fwver == 0xFFFF || fwver == ETP_CMD_I2C_FW_VERSION)
 		fwver = 0;
@@ -216,12 +211,12 @@ fu_elantp_i2c_device_setup(FuDevice *device, GError **error)
 	if (self->pattern >= 1) {
 		iap_ver = buf[1];
 	} else {
-		if (!fu_common_read_uint16_safe(buf,
-						sizeof(buf),
-						0x0,
-						&iap_ver,
-						G_LITTLE_ENDIAN,
-						error))
+		if (!fu_memread_uint16_safe(buf,
+					    sizeof(buf),
+					    0x0,
+					    &iap_ver,
+					    G_LITTLE_ENDIAN,
+					    error))
 			return FALSE;
 	}
 	version_bl = fu_common_version_from_uint16(iap_ver, FWUPD_VERSION_FORMAT_HEX);
@@ -232,12 +227,12 @@ fu_elantp_i2c_device_setup(FuDevice *device, GError **error)
 		g_prefix_error(error, "failed to read module ID: ");
 		return FALSE;
 	}
-	if (!fu_common_read_uint16_safe(buf,
-					sizeof(buf),
-					0x0,
-					&self->module_id,
-					G_LITTLE_ENDIAN,
-					error))
+	if (!fu_memread_uint16_safe(buf,
+				    sizeof(buf),
+				    0x0,
+				    &self->module_id,
+				    G_LITTLE_ENDIAN,
+				    error))
 		return FALSE;
 	fu_device_add_instance_u16(device, "MOD", self->module_id);
 
@@ -257,7 +252,7 @@ fu_elantp_i2c_device_setup(FuDevice *device, GError **error)
 		g_prefix_error(error, "failed to read OSM version: ");
 		return FALSE;
 	}
-	if (!fu_common_read_uint16_safe(buf, sizeof(buf), 0x0, &tmp, G_LITTLE_ENDIAN, error))
+	if (!fu_memread_uint16_safe(buf, sizeof(buf), 0x0, &tmp, G_LITTLE_ENDIAN, error))
 		return FALSE;
 	if (tmp == ETP_CMD_I2C_OSM_VERSION || tmp == 0xFFFF) {
 		if (!fu_elantp_i2c_device_read_cmd(self,
@@ -268,12 +263,7 @@ fu_elantp_i2c_device_setup(FuDevice *device, GError **error)
 			g_prefix_error(error, "failed to read IC body: ");
 			return FALSE;
 		}
-		if (!fu_common_read_uint16_safe(buf,
-						sizeof(buf),
-						0x0,
-						&tmp,
-						G_LITTLE_ENDIAN,
-						error))
+		if (!fu_memread_uint16_safe(buf, sizeof(buf), 0x0, &tmp, G_LITTLE_ENDIAN, error))
 			return FALSE;
 		ic_type = tmp & 0xFF;
 	} else {
@@ -427,9 +417,7 @@ fu_elantp_i2c_device_write_firmware(FuDevice *device,
 				    error))
 			return FALSE;
 
-		fu_common_write_uint16(blk + fu_chunk_get_data_sz(chk) + 2,
-				       csum_tmp,
-				       G_LITTLE_ENDIAN);
+		fu_memwrite_uint16(blk + fu_chunk_get_data_sz(chk) + 2, csum_tmp, G_LITTLE_ENDIAN);
 
 		if (!fu_elantp_i2c_device_send_cmd(self, blk, blksz, NULL, 0, error))
 			return FALSE;
@@ -462,12 +450,12 @@ fu_elantp_i2c_device_write_firmware(FuDevice *device,
 					   sizeof(csum_buf),
 					   error))
 		return FALSE;
-	if (!fu_common_read_uint16_safe(csum_buf,
-					sizeof(csum_buf),
-					0x0,
-					&checksum_device,
-					G_LITTLE_ENDIAN,
-					error))
+	if (!fu_memread_uint16_safe(csum_buf,
+				    sizeof(csum_buf),
+				    0x0,
+				    &checksum_device,
+				    G_LITTLE_ENDIAN,
+				    error))
 		return FALSE;
 	if (checksum != checksum_device) {
 		g_set_error(error,
@@ -514,7 +502,7 @@ fu_elantp_i2c_device_detach(FuDevice *device, FuProgress *progress, GError **err
 		g_prefix_error(error, "failed to read OSM version: ");
 		return FALSE;
 	}
-	if (!fu_common_read_uint16_safe(buf, sizeof(buf), 0x0, &tmp, G_LITTLE_ENDIAN, error))
+	if (!fu_memread_uint16_safe(buf, sizeof(buf), 0x0, &tmp, G_LITTLE_ENDIAN, error))
 		return FALSE;
 	if (tmp == ETP_CMD_I2C_OSM_VERSION || tmp == 0xFFFF) {
 		if (!fu_elantp_i2c_device_read_cmd(self,
@@ -525,12 +513,12 @@ fu_elantp_i2c_device_detach(FuDevice *device, FuProgress *progress, GError **err
 			g_prefix_error(error, "failed to read IC body: ");
 			return FALSE;
 		}
-		if (!fu_common_read_uint16_safe(buf,
-						sizeof(buf),
-						0x0,
-						&ic_type,
-						G_LITTLE_ENDIAN,
-						error))
+		if (!fu_memread_uint16_safe(buf,
+					    sizeof(buf),
+					    0x0,
+					    &ic_type,
+					    G_LITTLE_ENDIAN,
+					    error))
 			return FALSE;
 	} else {
 		ic_type = (tmp >> 8) & 0xFF;
@@ -549,12 +537,12 @@ fu_elantp_i2c_device_detach(FuDevice *device, FuProgress *progress, GError **err
 	if (self->pattern >= 1) {
 		iap_ver = buf[1];
 	} else {
-		if (!fu_common_read_uint16_safe(buf,
-						sizeof(buf),
-						0x0,
-						&iap_ver,
-						G_LITTLE_ENDIAN,
-						error))
+		if (!fu_memread_uint16_safe(buf,
+					    sizeof(buf),
+					    0x0,
+					    &iap_ver,
+					    G_LITTLE_ENDIAN,
+					    error))
 			return FALSE;
 	}
 
@@ -581,12 +569,12 @@ fu_elantp_i2c_device_detach(FuDevice *device, FuProgress *progress, GError **err
 				g_prefix_error(error, "failed to read IAP type: ");
 				return FALSE;
 			}
-			if (!fu_common_read_uint16_safe(buf,
-							sizeof(buf),
-							0x0,
-							&self->iap_type,
-							G_LITTLE_ENDIAN,
-							error))
+			if (!fu_memread_uint16_safe(buf,
+						    sizeof(buf),
+						    0x0,
+						    &self->iap_type,
+						    G_LITTLE_ENDIAN,
+						    error))
 				return FALSE;
 			if (self->iap_type != self->fw_page_size / 2) {
 				g_set_error_literal(error,

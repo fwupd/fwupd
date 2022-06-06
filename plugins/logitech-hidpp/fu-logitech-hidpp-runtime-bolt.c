@@ -375,12 +375,12 @@ fu_logitech_hidpp_runtime_bolt_setup_internal(FuDevice *device, GError **error)
 		switch (msg->data[0]) {
 		case 0:
 			/* main application */
-			if (!fu_common_read_uint16_safe(msg->data,
-							sizeof(msg->data),
-							0x03,
-							&version_raw,
-							G_BIG_ENDIAN,
-							error))
+			if (!fu_memread_uint16_safe(msg->data,
+						    sizeof(msg->data),
+						    0x03,
+						    &version_raw,
+						    G_BIG_ENDIAN,
+						    error))
 				return FALSE;
 			version = fu_logitech_hidpp_format_version("MPR",
 								   msg->data[1],
@@ -390,12 +390,12 @@ fu_logitech_hidpp_runtime_bolt_setup_internal(FuDevice *device, GError **error)
 			break;
 		case 1:
 			/* bootloader */
-			if (!fu_common_read_uint16_safe(msg->data,
-							sizeof(msg->data),
-							0x03,
-							&version_raw,
-							G_BIG_ENDIAN,
-							error))
+			if (!fu_memread_uint16_safe(msg->data,
+						    sizeof(msg->data),
+						    0x03,
+						    &version_raw,
+						    G_BIG_ENDIAN,
+						    error))
 				return FALSE;
 			version = fu_logitech_hidpp_format_version("BOT",
 								   msg->data[1],
@@ -427,12 +427,12 @@ fu_logitech_hidpp_runtime_bolt_setup_internal(FuDevice *device, GError **error)
 							 "ENT",
 							 NULL))
 				return FALSE;
-			if (!fu_common_read_uint16_safe(msg->data,
-							sizeof(msg->data),
-							0x03,
-							&version_raw,
-							G_BIG_ENDIAN,
-							error))
+			if (!fu_memread_uint16_safe(msg->data,
+						    sizeof(msg->data),
+						    0x03,
+						    &version_raw,
+						    G_BIG_ENDIAN,
+						    error))
 				return FALSE;
 			g_string_append_printf(radio_version, "0x%.4x", version_raw);
 			fu_device_set_version(FU_DEVICE(radio), radio_version->str);

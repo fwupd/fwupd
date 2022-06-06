@@ -63,17 +63,17 @@ fu_analogix_firmware_parse(FuFirmware *firmware,
 
 		/* get OCM version */
 		buf = g_bytes_get_data(blob_ocm, &bufsz);
-		if (!fu_common_read_uint8_safe(buf,
-					       bufsz,
-					       OCM_FW_VERSION_ADDR - FLASH_OCM_ADDR + 8,
-					       &version_hi,
-					       error))
+		if (!fu_memread_uint8_safe(buf,
+					   bufsz,
+					   OCM_FW_VERSION_ADDR - FLASH_OCM_ADDR + 8,
+					   &version_hi,
+					   error))
 			return FALSE;
-		if (!fu_common_read_uint8_safe(buf,
-					       bufsz,
-					       OCM_FW_VERSION_ADDR - FLASH_OCM_ADDR + 12,
-					       &version_lo,
-					       error))
+		if (!fu_memread_uint8_safe(buf,
+					   bufsz,
+					   OCM_FW_VERSION_ADDR - FLASH_OCM_ADDR + 12,
+					   &version_lo,
+					   error))
 			return FALSE;
 		ocm_version = ((guint16)version_hi) << 8 | version_lo;
 		fu_firmware_set_version_raw(fw_ocm, ocm_version);

@@ -12,6 +12,7 @@
 #include "fu-bytes.h"
 #include "fu-common.h"
 #include "fu-coswid-firmware.h"
+#include "fu-mem.h"
 #include "fu-uswid-firmware.h"
 
 /**
@@ -92,7 +93,7 @@ fu_uswid_firmware_parse(FuFirmware *firmware,
 	offset += sizeof(USWID_HEADER_MAGIC);
 
 	/* hdrver */
-	if (!fu_common_read_uint8_safe(buf, bufsz, offset, &priv->hdrver, error))
+	if (!fu_memread_uint8_safe(buf, bufsz, offset, &priv->hdrver, error))
 		return FALSE;
 	if (priv->hdrver < USWID_HEADER_VERSION_V1) {
 		g_set_error_literal(error,
@@ -104,7 +105,7 @@ fu_uswid_firmware_parse(FuFirmware *firmware,
 	offset += sizeof(guint8);
 
 	/* hdrsz */
-	if (!fu_common_read_uint16_safe(buf, bufsz, offset, &hdrsz, G_LITTLE_ENDIAN, error))
+	if (!fu_memread_uint16_safe(buf, bufsz, offset, &hdrsz, G_LITTLE_ENDIAN, error))
 		return FALSE;
 	if (hdrsz < USWID_HEADER_SIZE_V1) {
 		g_set_error_literal(error,
@@ -116,7 +117,7 @@ fu_uswid_firmware_parse(FuFirmware *firmware,
 	offset += sizeof(guint16);
 
 	/* payloadsz */
-	if (!fu_common_read_uint32_safe(buf, bufsz, offset, &payloadsz, G_LITTLE_ENDIAN, error))
+	if (!fu_memread_uint32_safe(buf, bufsz, offset, &payloadsz, G_LITTLE_ENDIAN, error))
 		return FALSE;
 	if (payloadsz == 0x0) {
 		g_set_error_literal(error,
@@ -129,7 +130,7 @@ fu_uswid_firmware_parse(FuFirmware *firmware,
 
 	/* flags */
 	if (priv->hdrver >= 0x02) {
-		if (!fu_common_read_uint8_safe(buf, bufsz, offset, &uswid_flags, error))
+		if (!fu_memread_uint8_safe(buf, bufsz, offset, &uswid_flags, error))
 			return FALSE;
 		priv->compressed = (uswid_flags & USWID_HEADER_FLAG_COMPRESSED) > 0;
 	}

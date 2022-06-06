@@ -10,6 +10,7 @@
 #include "fu-common.h"
 #include "fu-efi-firmware-volume.h"
 #include "fu-ifd-bios.h"
+#include "fu-mem.h"
 
 /**
  * FuIfdBios:
@@ -47,7 +48,7 @@ fu_ifd_bios_parse(FuFirmware *firmware,
 		g_autoptr(GBytes) fw_offset = NULL;
 
 		/* ignore _FIT_ as EOF */
-		if (!fu_common_read_uint32_safe(buf, bufsz, offset, &sig, G_LITTLE_ENDIAN, error)) {
+		if (!fu_memread_uint32_safe(buf, bufsz, offset, &sig, G_LITTLE_ENDIAN, error)) {
 			g_prefix_error(error, "failed to read start signature: ");
 			return FALSE;
 		}

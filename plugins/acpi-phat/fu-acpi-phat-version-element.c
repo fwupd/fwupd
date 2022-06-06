@@ -61,7 +61,7 @@ fu_acpi_phat_version_element_parse(FuFirmware *firmware,
 		return FALSE;
 	self->guid = fwupd_guid_to_string(&component_id, FWUPD_GUID_FLAG_MIXED_ENDIAN);
 
-	if (!fu_common_read_uint64_safe(buf, bufsz, 16, &version_value, G_LITTLE_ENDIAN, error))
+	if (!fu_memread_uint64_safe(buf, bufsz, 16, &version_value, G_LITTLE_ENDIAN, error))
 		return FALSE;
 	fu_firmware_set_version_raw(firmware, version_value);
 	if (!fu_memcpy_safe((guint8 *)producer_id,

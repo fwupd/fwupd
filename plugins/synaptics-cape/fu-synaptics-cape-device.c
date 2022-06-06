@@ -327,8 +327,7 @@ fu_synaptics_cape_device_sendcmd_ex(FuSynapticsCapeDevice *self,
 
 	/* copies returned data if it is GET command */
 	if (is_get) {
-		req->data_len =
-		    (gint16)fu_common_read_uint16((guint8 *)&report.cmd, G_LITTLE_ENDIAN);
+		req->data_len = (gint16)fu_memread_uint16((guint8 *)&report.cmd, G_LITTLE_ENDIAN);
 
 		for (int i = 0; i < FU_SYNAPTICS_CAPE_CMD_MAX_DATA_LEN; i++)
 			req->data[i] = GUINT32_FROM_LE(report.cmd.data[i]);

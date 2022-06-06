@@ -1374,7 +1374,7 @@ fu_genesys_usbhub_device_write_recovery(FuGenesysUsbhubDevice *self,
 						 fu_progress_get_child(progress),
 						 error))
 		return FALSE;
-	if (!fu_common_bytes_compare_raw(buf_verify, bufsz, buf, bufsz, error))
+	if (!fu_memcmp_safe(buf_verify, bufsz, buf, bufsz, error))
 		return FALSE;
 	fu_progress_step_done(progress);
 
@@ -1446,11 +1446,11 @@ fu_genesys_usbhub_device_write_firmware(FuDevice *device,
 						 fu_progress_get_child(progress),
 						 error))
 		return FALSE;
-	if (!fu_common_bytes_compare_raw(buf_verify,
-					 g_bytes_get_size(blob),
-					 g_bytes_get_data(blob, NULL),
-					 g_bytes_get_size(blob),
-					 error))
+	if (!fu_memcmp_safe(buf_verify,
+			    g_bytes_get_size(blob),
+			    g_bytes_get_data(blob, NULL),
+			    g_bytes_get_size(blob),
+			    error))
 		return FALSE;
 	fu_progress_step_done(progress);
 

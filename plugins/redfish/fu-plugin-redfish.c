@@ -132,7 +132,7 @@ fu_redfish_plugin_discover_uefi_credentials(FuPlugin *plugin, GError **error)
 				NULL,
 				error))
 		return FALSE;
-	if (!fu_common_read_uint32_safe(buf, bufsz, 0x0, &indications, G_LITTLE_ENDIAN, error))
+	if (!fu_memread_uint32_safe(buf, bufsz, 0x0, &indications, G_LITTLE_ENDIAN, error))
 		return FALSE;
 	if ((indications & REDFISH_EFI_INDICATIONS_OS_CREDENTIALS) == 0) {
 		g_set_error_literal(error,

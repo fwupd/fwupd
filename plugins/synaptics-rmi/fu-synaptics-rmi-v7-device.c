@@ -571,45 +571,45 @@ fu_synaptics_rmi_v7_device_setup(FuSynapticsRmiDevice *self, GError **error)
 	f34_dataX = fu_synaptics_rmi_device_read(self, f34->query_base + offset, 21, error);
 	if (f34_dataX == NULL)
 		return FALSE;
-	if (!fu_common_read_uint8_safe(f34_dataX->data,
-				       f34_dataX->len,
-				       0x0,
-				       &flash->bootloader_id[0],
-				       error))
+	if (!fu_memread_uint8_safe(f34_dataX->data,
+				   f34_dataX->len,
+				   0x0,
+				   &flash->bootloader_id[0],
+				   error))
 		return FALSE;
-	if (!fu_common_read_uint8_safe(f34_dataX->data,
-				       f34_dataX->len,
-				       0x1,
-				       &flash->bootloader_id[1],
-				       error))
+	if (!fu_memread_uint8_safe(f34_dataX->data,
+				   f34_dataX->len,
+				   0x1,
+				   &flash->bootloader_id[1],
+				   error))
 		return FALSE;
-	if (!fu_common_read_uint16_safe(f34_dataX->data,
-					f34_dataX->len,
-					0x07,
-					&flash->block_size,
-					G_LITTLE_ENDIAN,
-					error))
+	if (!fu_memread_uint16_safe(f34_dataX->data,
+				    f34_dataX->len,
+				    0x07,
+				    &flash->block_size,
+				    G_LITTLE_ENDIAN,
+				    error))
 		return FALSE;
-	if (!fu_common_read_uint16_safe(f34_dataX->data,
-					f34_dataX->len,
-					0x0d,
-					&flash->config_length,
-					G_LITTLE_ENDIAN,
-					error))
+	if (!fu_memread_uint16_safe(f34_dataX->data,
+				    f34_dataX->len,
+				    0x0d,
+				    &flash->config_length,
+				    G_LITTLE_ENDIAN,
+				    error))
 		return FALSE;
-	if (!fu_common_read_uint16_safe(f34_dataX->data,
-					f34_dataX->len,
-					0x0f,
-					&flash->payload_length,
-					G_LITTLE_ENDIAN,
-					error))
+	if (!fu_memread_uint16_safe(f34_dataX->data,
+				    f34_dataX->len,
+				    0x0f,
+				    &flash->payload_length,
+				    G_LITTLE_ENDIAN,
+				    error))
 		return FALSE;
-	if (!fu_common_read_uint32_safe(f34_dataX->data,
-					f34_dataX->len,
-					0x02,
-					&flash->build_id,
-					G_LITTLE_ENDIAN,
-					error))
+	if (!fu_memread_uint32_safe(f34_dataX->data,
+				    f34_dataX->len,
+				    0x02,
+				    &flash->build_id,
+				    G_LITTLE_ENDIAN,
+				    error))
 		return FALSE;
 
 	/* sanity check */

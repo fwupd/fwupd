@@ -791,7 +791,7 @@ fu_plugin_uefi_capsule_check_cod_support(GError **error)
 		g_prefix_error(error, "failed to read EFI variable: ");
 		return FALSE;
 	}
-	if (!fu_common_read_uint64_safe(buf, bufsz, 0x0, &value, G_LITTLE_ENDIAN, error))
+	if (!fu_memread_uint64_safe(buf, bufsz, 0x0, &value, G_LITTLE_ENDIAN, error))
 		return FALSE;
 	if ((value & EFI_OS_INDICATIONS_FILE_CAPSULE_DELIVERY_SUPPORTED) == 0) {
 		g_set_error_literal(error,

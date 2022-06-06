@@ -76,18 +76,13 @@ fu_vli_usbhub_firmware_parse(FuFirmware *firmware,
 	switch (GUINT16_FROM_BE(self->hdr.dev_id)) {
 	case 0x0d12:
 		/* VL81x */
-		if (!fu_common_read_uint16_safe(buf,
-						bufsz,
-						0x1f4c,
-						&version,
-						G_LITTLE_ENDIAN,
-						error)) {
+		if (!fu_memread_uint16_safe(buf, bufsz, 0x1f4c, &version, G_LITTLE_ENDIAN, error)) {
 			g_prefix_error(error, "failed to get version: ");
 			return FALSE;
 		}
 		version |= (self->hdr.strapping1 >> 4) & 0x07;
 		if ((version & 0x0f) == 0x04) {
-			if (!fu_common_read_uint8_safe(buf, bufsz, 0x700d, &tmp, error)) {
+			if (!fu_memread_uint8_safe(buf, bufsz, 0x700d, &tmp, error)) {
 				g_prefix_error(error, "failed to get version increment: ");
 				return FALSE;
 			}
@@ -97,12 +92,7 @@ fu_vli_usbhub_firmware_parse(FuFirmware *firmware,
 		break;
 	case 0x0507:
 		/* VL210 */
-		if (!fu_common_read_uint16_safe(buf,
-						bufsz,
-						0x8f0c,
-						&version,
-						G_LITTLE_ENDIAN,
-						error)) {
+		if (!fu_memread_uint16_safe(buf, bufsz, 0x8f0c, &version, G_LITTLE_ENDIAN, error)) {
 			g_prefix_error(error, "failed to get version: ");
 			return FALSE;
 		}
@@ -112,21 +102,16 @@ fu_vli_usbhub_firmware_parse(FuFirmware *firmware,
 		break;
 	default:
 		/* U3ID_Address_In_FW_Zone */
-		if (!fu_common_read_uint16_safe(buf,
-						bufsz,
-						0x8000,
-						&adr_ofs,
-						G_BIG_ENDIAN,
-						error)) {
+		if (!fu_memread_uint16_safe(buf, bufsz, 0x8000, &adr_ofs, G_BIG_ENDIAN, error)) {
 			g_prefix_error(error, "failed to get offset addr: ");
 			return FALSE;
 		}
-		if (!fu_common_read_uint16_safe(buf,
-						bufsz,
-						adr_ofs + 0x2000 + 0x04, /* U3-M? */
-						&version,
-						G_LITTLE_ENDIAN,
-						error)) {
+		if (!fu_memread_uint16_safe(buf,
+					    bufsz,
+					    adr_ofs + 0x2000 + 0x04, /* U3-M? */
+					    &version,
+					    G_LITTLE_ENDIAN,
+					    error)) {
 			g_prefix_error(error, "failed to get offset version: ");
 			return FALSE;
 		}
@@ -148,21 +133,21 @@ fu_vli_usbhub_firmware_parse(FuFirmware *firmware,
 		guint16 binver2 = 0x0;
 		guint16 usb2_fw_addr = GUINT16_FROM_BE(self->hdr.usb2_fw_addr) + 0x1ff1;
 		guint16 usb3_fw_addr = GUINT16_FROM_BE(self->hdr.usb3_fw_addr) + 0x1ffa;
-		if (!fu_common_read_uint16_safe(buf,
-						bufsz,
-						usb2_fw_addr,
-						&binver1,
-						G_LITTLE_ENDIAN,
-						error)) {
+		if (!fu_memread_uint16_safe(buf,
+					    bufsz,
+					    usb2_fw_addr,
+					    &binver1,
+					    G_LITTLE_ENDIAN,
+					    error)) {
 			g_prefix_error(error, "failed to get binver1: ");
 			return FALSE;
 		}
-		if (!fu_common_read_uint16_safe(buf,
-						bufsz,
-						usb3_fw_addr,
-						&binver2,
-						G_LITTLE_ENDIAN,
-						error)) {
+		if (!fu_memread_uint16_safe(buf,
+					    bufsz,
+					    usb3_fw_addr,
+					    &binver2,
+					    G_LITTLE_ENDIAN,
+					    error)) {
 			g_prefix_error(error, "failed to get binver2: ");
 			return FALSE;
 		}
@@ -204,23 +189,18 @@ fu_vli_usbhub_firmware_parse(FuFirmware *firmware,
 		break;
 	case 0x0518:
 		/* VL819~VL822 == VT3518 */
-		if (!fu_common_read_uint8_safe(buf, bufsz, 0x8021, &tmp, error)) {
+		if (!fu_memread_uint8_safe(buf, bufsz, 0x8021, &tmp, error)) {
 			g_prefix_error(error, "failed to get 820/822 byte: ");
 			return FALSE;
 		}
 		/* Q5/Q7/Q8 requires searching two addresses for offset value */
-		if (!fu_common_read_uint16_safe(buf,
-						bufsz,
-						0x8018,
-						&adr_ofs,
-						G_BIG_ENDIAN,
-						error)) {
+		if (!fu_memread_uint16_safe(buf, bufsz, 0x8018, &adr_ofs, G_BIG_ENDIAN, error)) {
 			g_prefix_error(error, "failed to get Q7/Q8 offset mapping: ");
 			return FALSE;
 		}
 		/* VL819, VL821, VL822 */
 		if (tmp == 0xF0) {
-			if (!fu_common_read_uint8_safe(buf, bufsz, adr_ofs + 0x2000, &tmp, error)) {
+			if (!fu_memread_uint8_safe(buf, bufsz, adr_ofs + 0x2000, &tmp, error)) {
 				g_prefix_error(error, "failed to get offset version: ");
 				return FALSE;
 			}
@@ -258,7 +238,7 @@ fu_vli_usbhub_firmware_parse(FuFirmware *firmware,
 			}
 			/* VL820 */
 		} else {
-			if (!fu_common_read_uint8_safe(buf, bufsz, 0xf000, &tmp, error)) {
+			if (!fu_memread_uint8_safe(buf, bufsz, 0xf000, &tmp, error)) {
 				g_prefix_error(error, "failed to get Q7/Q8 difference: ");
 				return FALSE;
 			}

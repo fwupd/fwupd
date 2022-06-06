@@ -10,6 +10,7 @@
 #include "fu-bytes.h"
 #include "fu-common.h"
 #include "fu-fmap-firmware.h"
+#include "fu-mem.h"
 
 /**
  * FuFmapFirmware:

@@ -93,11 +93,11 @@ fu_steelseries_sonic_wireless_status(FuDevice *device,
 	const guint16 opcode = 0xE8U; /* USB receiver */
 	guint8 value;
 
-	if (!fu_common_write_uint8_safe(data,
-					sizeof(data),
-					STEELSERIES_SONIC_WIRELESS_STATUS_OPCODE_OFFSET,
-					opcode,
-					error))
+	if (!fu_memwrite_uint8_safe(data,
+				    sizeof(data),
+				    STEELSERIES_SONIC_WIRELESS_STATUS_OPCODE_OFFSET,
+				    opcode,
+				    error))
 		return FALSE;
 
 	if (g_getenv("FWUPD_STEELSERIES_SONIC_VERBOSE") != NULL)
@@ -111,11 +111,11 @@ fu_steelseries_sonic_wireless_status(FuDevice *device,
 
 	if (g_getenv("FWUPD_STEELSERIES_SONIC_VERBOSE") != NULL)
 		fu_common_dump_raw(G_LOG_DOMAIN, "WirelessStatus", data, sizeof(data));
-	if (!fu_common_read_uint8_safe(data,
-				       sizeof(data),
-				       STEELSERIES_SONIC_WIRELESS_STATUS_VALUE_OFFSET,
-				       &value,
-				       error))
+	if (!fu_memread_uint8_safe(data,
+				   sizeof(data),
+				   STEELSERIES_SONIC_WIRELESS_STATUS_VALUE_OFFSET,
+				   &value,
+				   error))
 		return FALSE;
 	*status = value;
 
@@ -130,18 +130,18 @@ fu_steelseries_sonic_battery_state(FuDevice *device, guint16 *value, GError **er
 	const guint16 opcode = 0xAAU;
 	const guint8 bat_mode = 0x01U; /* percentage */
 
-	if (!fu_common_write_uint8_safe(data,
-					sizeof(data),
-					STEELSERIES_SONIC_BATTERY_OPCODE_OFFSET,
-					opcode,
-					error))
+	if (!fu_memwrite_uint8_safe(data,
+				    sizeof(data),
+				    STEELSERIES_SONIC_BATTERY_OPCODE_OFFSET,
+				    opcode,
+				    error))
 		return FALSE;
 
-	if (!fu_common_write_uint8_safe(data,
-					sizeof(data),
-					STEELSERIES_SONIC_BATTERY_BAT_MODE_OFFSET,
-					bat_mode,
-					error))
+	if (!fu_memwrite_uint8_safe(data,
+				    sizeof(data),
+				    STEELSERIES_SONIC_BATTERY_BAT_MODE_OFFSET,
+				    bat_mode,
+				    error))
 		return FALSE;
 
 	if (g_getenv("FWUPD_STEELSERIES_SONIC_VERBOSE") != NULL)
@@ -155,12 +155,12 @@ fu_steelseries_sonic_battery_state(FuDevice *device, guint16 *value, GError **er
 
 	if (g_getenv("FWUPD_STEELSERIES_SONIC_VERBOSE") != NULL)
 		fu_common_dump_raw(G_LOG_DOMAIN, "BatteryState", data, sizeof(data));
-	if (!fu_common_read_uint16_safe(data,
-					sizeof(data),
-					STEELSERIES_SONIC_BATTERY_VALUE_OFFSET,
-					value,
-					G_LITTLE_ENDIAN,
-					error))
+	if (!fu_memread_uint16_safe(data,
+				    sizeof(data),
+				    STEELSERIES_SONIC_BATTERY_VALUE_OFFSET,
+				    value,
+				    G_LITTLE_ENDIAN,
+				    error))
 		return FALSE;
 
 	/* success */
@@ -189,28 +189,28 @@ fu_steelseries_sonic_read_from_ram(FuDevice *device,
 		const guint16 offset = fu_chunk_get_address(chk);
 		const guint16 size = fu_chunk_get_data_sz(chk);
 
-		if (!fu_common_write_uint16_safe(data,
-						 sizeof(data),
-						 STEELSERIES_SONIC_READ_FROM_RAM_OPCODE_OFFSET,
-						 opcode,
-						 G_LITTLE_ENDIAN,
-						 error))
+		if (!fu_memwrite_uint16_safe(data,
+					     sizeof(data),
+					     STEELSERIES_SONIC_READ_FROM_RAM_OPCODE_OFFSET,
+					     opcode,
+					     G_LITTLE_ENDIAN,
+					     error))
 			return FALSE;
 
-		if (!fu_common_write_uint16_safe(data,
-						 sizeof(data),
-						 STEELSERIES_SONIC_READ_FROM_RAM_OFFSET_OFFSET,
-						 offset,
-						 G_LITTLE_ENDIAN,
-						 error))
+		if (!fu_memwrite_uint16_safe(data,
+					     sizeof(data),
+					     STEELSERIES_SONIC_READ_FROM_RAM_OFFSET_OFFSET,
+					     offset,
+					     G_LITTLE_ENDIAN,
+					     error))
 			return FALSE;
 
-		if (!fu_common_write_uint16_safe(data,
-						 sizeof(data),
-						 STEELSERIES_SONIC_READ_FROM_RAM_SIZE_OFFSET,
-						 size,
-						 G_LITTLE_ENDIAN,
-						 error))
+		if (!fu_memwrite_uint16_safe(data,
+					     sizeof(data),
+					     STEELSERIES_SONIC_READ_FROM_RAM_SIZE_OFFSET,
+					     size,
+					     G_LITTLE_ENDIAN,
+					     error))
 			return FALSE;
 
 		if (!fu_steelseries_device_cmd(FU_STEELSERIES_DEVICE(device),
@@ -265,36 +265,36 @@ fu_steelseries_sonic_read_from_flash(FuDevice *device,
 		const guint32 offset = fu_chunk_get_address(chk);
 		const guint16 size = fu_chunk_get_data_sz(chk);
 
-		if (!fu_common_write_uint16_safe(data,
-						 sizeof(data),
-						 STEELSERIES_SONIC_READ_FROM_FLASH_OPCODE_OFFSET,
-						 opcode,
-						 G_LITTLE_ENDIAN,
-						 error))
+		if (!fu_memwrite_uint16_safe(data,
+					     sizeof(data),
+					     STEELSERIES_SONIC_READ_FROM_FLASH_OPCODE_OFFSET,
+					     opcode,
+					     G_LITTLE_ENDIAN,
+					     error))
 			return FALSE;
 
-		if (!fu_common_write_uint16_safe(data,
-						 sizeof(data),
-						 STEELSERIES_SONIC_READ_FROM_FLASH_CHIPID_OFFSET,
-						 chipid,
-						 G_LITTLE_ENDIAN,
-						 error))
+		if (!fu_memwrite_uint16_safe(data,
+					     sizeof(data),
+					     STEELSERIES_SONIC_READ_FROM_FLASH_CHIPID_OFFSET,
+					     chipid,
+					     G_LITTLE_ENDIAN,
+					     error))
 			return FALSE;
 
-		if (!fu_common_write_uint32_safe(data,
-						 sizeof(data),
-						 STEELSERIES_SONIC_READ_FROM_FLASH_OFFSET_OFFSET,
-						 offset,
-						 G_LITTLE_ENDIAN,
-						 error))
+		if (!fu_memwrite_uint32_safe(data,
+					     sizeof(data),
+					     STEELSERIES_SONIC_READ_FROM_FLASH_OFFSET_OFFSET,
+					     offset,
+					     G_LITTLE_ENDIAN,
+					     error))
 			return FALSE;
 
-		if (!fu_common_write_uint16_safe(data,
-						 sizeof(data),
-						 STEELSERIES_SONIC_READ_FROM_FLASH_SIZE_OFFSET,
-						 size,
-						 G_LITTLE_ENDIAN,
-						 error))
+		if (!fu_memwrite_uint16_safe(data,
+					     sizeof(data),
+					     STEELSERIES_SONIC_READ_FROM_FLASH_SIZE_OFFSET,
+					     size,
+					     G_LITTLE_ENDIAN,
+					     error))
 			return FALSE;
 
 		if (!fu_steelseries_device_cmd(FU_STEELSERIES_DEVICE(device),
@@ -347,28 +347,28 @@ fu_steelseries_sonic_write_to_ram(FuDevice *device,
 		const guint16 offset = fu_chunk_get_address(chk);
 		const guint16 size = fu_chunk_get_data_sz(chk);
 
-		if (!fu_common_write_uint16_safe(data,
-						 sizeof(data),
-						 STEELSERIES_SONIC_WRITE_TO_RAM_OPCODE_OFFSET,
-						 opcode,
-						 G_LITTLE_ENDIAN,
-						 error))
+		if (!fu_memwrite_uint16_safe(data,
+					     sizeof(data),
+					     STEELSERIES_SONIC_WRITE_TO_RAM_OPCODE_OFFSET,
+					     opcode,
+					     G_LITTLE_ENDIAN,
+					     error))
 			return FALSE;
 
-		if (!fu_common_write_uint16_safe(data,
-						 sizeof(data),
-						 STEELSERIES_SONIC_WRITE_TO_RAM_OFFSET_OFFSET,
-						 offset,
-						 G_LITTLE_ENDIAN,
-						 error))
+		if (!fu_memwrite_uint16_safe(data,
+					     sizeof(data),
+					     STEELSERIES_SONIC_WRITE_TO_RAM_OFFSET_OFFSET,
+					     offset,
+					     G_LITTLE_ENDIAN,
+					     error))
 			return FALSE;
 
-		if (!fu_common_write_uint16_safe(data,
-						 sizeof(data),
-						 STEELSERIES_SONIC_WRITE_TO_RAM_SIZE_OFFSET,
-						 size,
-						 G_LITTLE_ENDIAN,
-						 error))
+		if (!fu_memwrite_uint16_safe(data,
+					     sizeof(data),
+					     STEELSERIES_SONIC_WRITE_TO_RAM_SIZE_OFFSET,
+					     size,
+					     G_LITTLE_ENDIAN,
+					     error))
 			return FALSE;
 
 		if (!fu_memcpy_safe(data,
@@ -432,36 +432,36 @@ fu_steelseries_sonic_write_to_flash(FuDevice *device,
 						       error))
 			return FALSE;
 
-		if (!fu_common_write_uint16_safe(data,
-						 sizeof(data),
-						 STEELSERIES_SONIC_WRITE_TO_FLASH_OPCODE_OFFSET,
-						 opcode,
-						 G_LITTLE_ENDIAN,
-						 error))
+		if (!fu_memwrite_uint16_safe(data,
+					     sizeof(data),
+					     STEELSERIES_SONIC_WRITE_TO_FLASH_OPCODE_OFFSET,
+					     opcode,
+					     G_LITTLE_ENDIAN,
+					     error))
 			return FALSE;
 
-		if (!fu_common_write_uint16_safe(data,
-						 sizeof(data),
-						 STEELSERIES_SONIC_WRITE_TO_FLASH_CHIPID_OFFSET,
-						 chipid,
-						 G_LITTLE_ENDIAN,
-						 error))
+		if (!fu_memwrite_uint16_safe(data,
+					     sizeof(data),
+					     STEELSERIES_SONIC_WRITE_TO_FLASH_CHIPID_OFFSET,
+					     chipid,
+					     G_LITTLE_ENDIAN,
+					     error))
 			return FALSE;
 
-		if (!fu_common_write_uint32_safe(data,
-						 sizeof(data),
-						 STEELSERIES_SONIC_WRITE_TO_FLASH_OFFSET_OFFSET,
-						 offset,
-						 G_LITTLE_ENDIAN,
-						 error))
+		if (!fu_memwrite_uint32_safe(data,
+					     sizeof(data),
+					     STEELSERIES_SONIC_WRITE_TO_FLASH_OFFSET_OFFSET,
+					     offset,
+					     G_LITTLE_ENDIAN,
+					     error))
 			return FALSE;
 
-		if (!fu_common_write_uint16_safe(data,
-						 sizeof(data),
-						 STEELSERIES_SONIC_WRITE_TO_FLASH_SIZE_OFFSET,
-						 size,
-						 G_LITTLE_ENDIAN,
-						 error))
+		if (!fu_memwrite_uint16_safe(data,
+					     sizeof(data),
+					     STEELSERIES_SONIC_WRITE_TO_FLASH_SIZE_OFFSET,
+					     size,
+					     G_LITTLE_ENDIAN,
+					     error))
 			return FALSE;
 
 		if (g_getenv("FWUPD_STEELSERIES_SONIC_VERBOSE") != NULL)
@@ -497,20 +497,20 @@ fu_steelseries_sonic_erase(FuDevice *device,
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_ERASE);
 	fu_progress_set_steps(progress, 1);
 
-	if (!fu_common_write_uint16_safe(data,
-					 sizeof(data),
-					 STEELSERIES_SONIC_ERASE_OPCODE_OFFSET,
-					 opcode,
-					 G_LITTLE_ENDIAN,
-					 error))
+	if (!fu_memwrite_uint16_safe(data,
+				     sizeof(data),
+				     STEELSERIES_SONIC_ERASE_OPCODE_OFFSET,
+				     opcode,
+				     G_LITTLE_ENDIAN,
+				     error))
 		return FALSE;
 
-	if (!fu_common_write_uint16_safe(data,
-					 sizeof(data),
-					 STEELSERIES_SONIC_ERASE_CHIPID_OFFSET,
-					 chipid,
-					 G_LITTLE_ENDIAN,
-					 error))
+	if (!fu_memwrite_uint16_safe(data,
+				     sizeof(data),
+				     STEELSERIES_SONIC_ERASE_CHIPID_OFFSET,
+				     chipid,
+				     G_LITTLE_ENDIAN,
+				     error))
 		return FALSE;
 
 	if (g_getenv("FWUPD_STEELSERIES_SONIC_VERBOSE") != NULL)
@@ -544,12 +544,12 @@ fu_steelseries_sonic_restart(FuDevice *device,
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_RESTART);
 	fu_progress_set_steps(progress, 1);
 
-	if (!fu_common_write_uint16_safe(data,
-					 sizeof(data),
-					 STEELSERIES_SONIC_RESTART_CHIPID_OFFSET,
-					 opcode,
-					 G_LITTLE_ENDIAN,
-					 error))
+	if (!fu_memwrite_uint16_safe(data,
+				     sizeof(data),
+				     STEELSERIES_SONIC_RESTART_CHIPID_OFFSET,
+				     opcode,
+				     G_LITTLE_ENDIAN,
+				     error))
 		return FALSE;
 
 	if (g_getenv("FWUPD_STEELSERIES_SONIC_VERBOSE") != NULL)
@@ -976,12 +976,12 @@ fu_steelseries_sonic_parse_firmware(FuFirmware *firmware, FwupdInstallFlags flag
 	if (blob == NULL)
 		return FALSE;
 
-	if (!fu_common_read_uint32_safe(g_bytes_get_data(blob, NULL),
-					g_bytes_get_size(blob),
-					g_bytes_get_size(blob) - sizeof(checksum),
-					&checksum,
-					G_LITTLE_ENDIAN,
-					error))
+	if (!fu_memread_uint32_safe(g_bytes_get_data(blob, NULL),
+				    g_bytes_get_size(blob),
+				    g_bytes_get_size(blob) - sizeof(checksum),
+				    &checksum,
+				    G_LITTLE_ENDIAN,
+				    error))
 		return FALSE;
 	checksum_tmp =
 	    fu_crc32(g_bytes_get_data(blob, NULL), g_bytes_get_size(blob) - sizeof(checksum_tmp));

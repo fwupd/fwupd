@@ -303,7 +303,7 @@ fu_rts54hub_rtd21xx_foreground_write_firmware(FuDevice *device,
 	}
 
 	/* verify project ID */
-	project_addr = fu_common_read_uint32(read_buf + 1, G_BIG_ENDIAN);
+	project_addr = fu_memread_uint32(read_buf + 1, G_BIG_ENDIAN);
 	project_id_count = read_buf[5];
 	write_buf[0] = ISP_CMD_SYNC_IDENTIFY_CODE;
 	if (!fu_memcpy_safe(write_buf,
@@ -331,7 +331,7 @@ fu_rts54hub_rtd21xx_foreground_write_firmware(FuDevice *device,
 
 	/* foreground FW update start command */
 	write_buf[0] = ISP_CMD_FW_UPDATE_START;
-	fu_common_write_uint16(write_buf + 1, ISP_DATA_BLOCKSIZE, G_BIG_ENDIAN);
+	fu_memwrite_uint16(write_buf + 1, ISP_DATA_BLOCKSIZE, G_BIG_ENDIAN);
 	if (!fu_rts54hub_rtd21xx_device_i2c_write(FU_RTS54HUB_RTD21XX_DEVICE(self),
 						  UC_ISP_TARGET_ADDR,
 						  UC_FOREGROUND_OPCODE,

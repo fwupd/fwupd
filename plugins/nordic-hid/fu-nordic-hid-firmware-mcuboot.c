@@ -75,7 +75,7 @@ fu_nordic_hid_firmware_mcuboot_validate(FuFirmware *firmware,
 	guint16 magic_tlv;
 	g_autofree gchar *version = NULL;
 
-	if (!fu_common_read_uint32_safe(buf, bufsz, 0, &magic, G_LITTLE_ENDIAN, error))
+	if (!fu_memread_uint32_safe(buf, bufsz, 0, &magic, G_LITTLE_ENDIAN, error))
 		return FALSE;
 	if (magic != IMAGE_MAGIC) {
 		g_set_error_literal(error,
@@ -85,21 +85,21 @@ fu_nordic_hid_firmware_mcuboot_validate(FuFirmware *firmware,
 		return FALSE;
 	}
 	/* ignore load_addr */
-	if (!fu_common_read_uint16_safe(buf, bufsz, 8, &hdr_size, G_LITTLE_ENDIAN, error))
+	if (!fu_memread_uint16_safe(buf, bufsz, 8, &hdr_size, G_LITTLE_ENDIAN, error))
 		return FALSE;
 	/* ignore protect_tlv_size */
-	if (!fu_common_read_uint32_safe(buf, bufsz, 12, &img_size, G_LITTLE_ENDIAN, error))
+	if (!fu_memread_uint32_safe(buf, bufsz, 12, &img_size, G_LITTLE_ENDIAN, error))
 		return FALSE;
 
 	/* ignore TLVs themselves
 	 * https://developer.nordicsemi.com/nRF_Connect_SDK/doc/latest/mcuboot/design.html#protected-tlvs
 	 * check the magic values only */
-	if (!fu_common_read_uint16_safe(buf,
-					bufsz,
-					hdr_size + img_size,
-					&magic_tlv,
-					G_LITTLE_ENDIAN,
-					error))
+	if (!fu_memread_uint16_safe(buf,
+				    bufsz,
+				    hdr_size + img_size,
+				    &magic_tlv,
+				    G_LITTLE_ENDIAN,
+				    error))
 		return FALSE;
 	if (magic_tlv != IMAGE_TLV_INFO_MAGIC && magic_tlv != IMAGE_TLV_PROT_INFO_MAGIC) {
 		g_set_error_literal(error,
@@ -110,13 +110,13 @@ fu_nordic_hid_firmware_mcuboot_validate(FuFirmware *firmware,
 	}
 
 	/* version */
-	if (!fu_common_read_uint8_safe(buf, bufsz, 0x14, &ver_major, error))
+	if (!fu_memread_uint8_safe(buf, bufsz, 0x14, &ver_major, error))
 		return FALSE;
-	if (!fu_common_read_uint8_safe(buf, bufsz, 0x15, &ver_minor, error))
+	if (!fu_memread_uint8_safe(buf, bufsz, 0x15, &ver_minor, error))
 		return FALSE;
-	if (!fu_common_read_uint16_safe(buf, bufsz, 0x16, &ver_rev, G_LITTLE_ENDIAN, error))
+	if (!fu_memread_uint16_safe(buf, bufsz, 0x16, &ver_rev, G_LITTLE_ENDIAN, error))
 		return FALSE;
-	if (!fu_common_read_uint32_safe(buf, bufsz, 0x18, &ver_build_nr, G_LITTLE_ENDIAN, error))
+	if (!fu_memread_uint32_safe(buf, bufsz, 0x18, &ver_build_nr, G_LITTLE_ENDIAN, error))
 		return FALSE;
 	version = g_strdup_printf("%u.%u.%u.%u", ver_major, ver_minor, ver_rev, ver_build_nr);
 

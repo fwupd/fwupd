@@ -155,7 +155,7 @@ fu_synaptics_cxaudio_device_operation(FuSynapticsCxaudioDevice *self,
 		if (fu_chunk_get_address(chk) >= 64 * 1024)
 			outbuf[1] |= 1 << 4;
 		outbuf[2] = fu_chunk_get_data_sz(chk);
-		fu_common_write_uint16(outbuf + 3, fu_chunk_get_address(chk), G_BIG_ENDIAN);
+		fu_memwrite_uint16(outbuf + 3, fu_chunk_get_address(chk), G_BIG_ENDIAN);
 
 		/* set memtype */
 		if (mem_kind == FU_SYNAPTICS_CXAUDIO_MEM_KIND_EEPROM)
@@ -199,11 +199,11 @@ fu_synaptics_cxaudio_device_operation(FuSynapticsCxaudioDevice *self,
 		}
 		if (operation == FU_SYNAPTICS_CXAUDIO_OPERATION_WRITE &&
 		    flags & FU_SYNAPTICS_CXAUDIO_OPERATION_FLAG_VERIFY) {
-			if (!fu_common_bytes_compare_raw(outbuf + idx_write,
-							 payload_max,
-							 inbuf + idx_read,
-							 payload_max,
-							 error)) {
+			if (!fu_memcmp_safe(outbuf + idx_write,
+					    payload_max,
+					    inbuf + idx_read,
+					    payload_max,
+					    error)) {
 				g_prefix_error(error,
 					       "failed to verify on packet %u @0x%x: ",
 					       fu_chunk_get_idx(chk),
@@ -479,7 +479,7 @@ fu_synaptics_cxaudio_device_setup(FuDevice *device, GError **error)
 		g_prefix_error(error, "failed to read EEPROM signature bytes: ");
 		return FALSE;
 	}
-	self->eeprom_storage_sz = fu_common_read_uint16(sigbuf, G_LITTLE_ENDIAN);
+	self->eeprom_storage_sz = fu_memread_uint16(sigbuf, G_LITTLE_ENDIAN);
 	if (self->eeprom_storage_sz <
 	    self->eeprom_sz - FU_SYNAPTICS_CXAUDIO_EEPROM_STORAGE_PADDING_SIZE) {
 		self->eeprom_storage_address = self->eeprom_sz - self->eeprom_storage_sz -

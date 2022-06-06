@@ -33,12 +33,7 @@ fu_acpi_phat_version_record_parse(FuFirmware *firmware,
 	guint32 record_count = 0;
 	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
 
-	if (!fu_common_read_uint32_safe(buf,
-					bufsz,
-					offset + 8,
-					&record_count,
-					G_LITTLE_ENDIAN,
-					error))
+	if (!fu_memread_uint32_safe(buf, bufsz, offset + 8, &record_count, G_LITTLE_ENDIAN, error))
 		return FALSE;
 	for (guint32 i = 0; i < record_count; i++) {
 		g_autoptr(FuFirmware) firmware_tmp = fu_acpi_phat_version_element_new();

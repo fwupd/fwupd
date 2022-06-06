@@ -29,12 +29,12 @@ fu_steelseries_firmware_parse(FuFirmware *firmware,
 	guint32 checksum_tmp;
 	guint32 checksum;
 
-	if (!fu_common_read_uint32_safe(g_bytes_get_data(fw, NULL),
-					g_bytes_get_size(fw),
-					g_bytes_get_size(fw) - sizeof(checksum),
-					&checksum,
-					G_LITTLE_ENDIAN,
-					error))
+	if (!fu_memread_uint32_safe(g_bytes_get_data(fw, NULL),
+				    g_bytes_get_size(fw),
+				    g_bytes_get_size(fw) - sizeof(checksum),
+				    &checksum,
+				    G_LITTLE_ENDIAN,
+				    error))
 		return FALSE;
 	checksum_tmp =
 	    fu_crc32(g_bytes_get_data(fw, NULL), g_bytes_get_size(fw) - sizeof(checksum_tmp));

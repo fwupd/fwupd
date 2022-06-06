@@ -144,23 +144,23 @@ goodixmoc_device_cmd_recv(FuGoodixMocDevice *self,
 		}
 
 		/* parse package header */
-		if (!fu_common_read_uint8_safe(reply->data, reply->len, 0x0, &header_cmd0, error))
+		if (!fu_memread_uint8_safe(reply->data, reply->len, 0x0, &header_cmd0, error))
 			return FALSE;
-		if (!fu_common_read_uint16_safe(reply->data,
-						reply->len,
-						0x4,
-						&header_len,
-						G_LITTLE_ENDIAN,
-						error))
+		if (!fu_memread_uint16_safe(reply->data,
+					    reply->len,
+					    0x4,
+					    &header_len,
+					    G_LITTLE_ENDIAN,
+					    error))
 			return FALSE;
 		offset = sizeof(GxfpPkgHeader) + header_len - GX_SIZE_CRC32;
 		crc_actual = fu_crc32(reply->data, offset);
-		if (!fu_common_read_uint32_safe(reply->data,
-						reply->len,
-						offset,
-						&crc_calculated,
-						G_LITTLE_ENDIAN,
-						error))
+		if (!fu_memread_uint32_safe(reply->data,
+					    reply->len,
+					    offset,
+					    &crc_calculated,
+					    G_LITTLE_ENDIAN,
+					    error))
 			return FALSE;
 		if (crc_actual != crc_calculated) {
 			g_set_error(error,
@@ -173,11 +173,11 @@ goodixmoc_device_cmd_recv(FuGoodixMocDevice *self,
 		}
 
 		/* parse package data */
-		if (!fu_common_read_uint8_safe(reply->data,
-					       reply->len,
-					       sizeof(GxfpPkgHeader) + 0x00,
-					       &presponse->result,
-					       error))
+		if (!fu_memread_uint8_safe(reply->data,
+					   reply->len,
+					   sizeof(GxfpPkgHeader) + 0x00,
+					   &presponse->result,
+					   error))
 			return FALSE;
 		if (header_cmd0 == GX_CMD_ACK) {
 			if (header_len == 0) {
@@ -187,11 +187,11 @@ goodixmoc_device_cmd_recv(FuGoodixMocDevice *self,
 						    "invalid bufsz");
 				return FALSE;
 			}
-			if (!fu_common_read_uint8_safe(reply->data,
-						       reply->len,
-						       sizeof(GxfpPkgHeader) + 0x01,
-						       &presponse->ack_msg.cmd,
-						       error))
+			if (!fu_memread_uint8_safe(reply->data,
+						   reply->len,
+						   sizeof(GxfpPkgHeader) + 0x01,
+						   &presponse->ack_msg.cmd,
+						   error))
 				return FALSE;
 		} else if (header_cmd0 == GX_CMD_VERSION) {
 			if (!fu_memcpy_safe((guint8 *)&presponse->version_info,

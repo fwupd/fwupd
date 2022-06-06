@@ -110,21 +110,21 @@ fu_ccgx_dmc_firmware_parse_segment(FuFirmware *firmware,
 
 		/* read segment info  */
 		seg_rcd = g_new0(FuCcgxDmcFirmwareSegmentRecord, 1);
-		if (!fu_common_read_uint16_safe(
-			buf,
-			bufsz,
-			*seg_off + G_STRUCT_OFFSET(FwctSegmentationInfo, start_row),
-			&seg_rcd->start_row,
-			G_LITTLE_ENDIAN,
-			error))
+		if (!fu_memread_uint16_safe(buf,
+					    bufsz,
+					    *seg_off +
+						G_STRUCT_OFFSET(FwctSegmentationInfo, start_row),
+					    &seg_rcd->start_row,
+					    G_LITTLE_ENDIAN,
+					    error))
 			return FALSE;
-		if (!fu_common_read_uint16_safe(buf,
-						bufsz,
-						*seg_off +
-						    G_STRUCT_OFFSET(FwctSegmentationInfo, num_rows),
-						&seg_rcd->num_rows,
-						G_LITTLE_ENDIAN,
-						error))
+		if (!fu_memread_uint16_safe(buf,
+					    bufsz,
+					    *seg_off +
+						G_STRUCT_OFFSET(FwctSegmentationInfo, num_rows),
+					    &seg_rcd->num_rows,
+					    G_LITTLE_ENDIAN,
+					    error))
 			return FALSE;
 
 		/* calculate actual row size */
@@ -206,11 +206,11 @@ fu_ccgx_dmc_firmware_parse_image(FuFirmware *firmware,
 
 		/* read image info */
 		img_rcd = g_new0(FuCcgxDmcFirmwareRecord, 1);
-		if (!fu_common_read_uint8_safe(buf,
-					       bufsz,
-					       img_off + G_STRUCT_OFFSET(FwctImageInfo, row_size),
-					       &img_rcd->row_size,
-					       error))
+		if (!fu_memread_uint8_safe(buf,
+					   bufsz,
+					   img_off + G_STRUCT_OFFSET(FwctImageInfo, row_size),
+					   &img_rcd->row_size,
+					   error))
 			return FALSE;
 		if (img_rcd->row_size == 0) {
 			g_set_error(error,
@@ -220,20 +220,19 @@ fu_ccgx_dmc_firmware_parse_image(FuFirmware *firmware,
 				    img_rcd->row_size);
 			return FALSE;
 		}
-		if (!fu_common_read_uint32_safe(buf,
-						bufsz,
-						img_off +
-						    G_STRUCT_OFFSET(FwctImageInfo, img_offset),
-						&img_rcd->img_offset,
-						G_LITTLE_ENDIAN,
-						error))
+		if (!fu_memread_uint32_safe(buf,
+					    bufsz,
+					    img_off + G_STRUCT_OFFSET(FwctImageInfo, img_offset),
+					    &img_rcd->img_offset,
+					    G_LITTLE_ENDIAN,
+					    error))
 			return FALSE;
-		if (!fu_common_read_uint8_safe(buf,
-					       bufsz,
-					       img_off +
-						   G_STRUCT_OFFSET(FwctImageInfo, num_img_segments),
-					       &img_rcd->num_img_segments,
-					       error))
+		if (!fu_memread_uint8_safe(buf,
+					   bufsz,
+					   img_off +
+					       G_STRUCT_OFFSET(FwctImageInfo, num_img_segments),
+					   &img_rcd->num_img_segments,
+					   error))
 			return FALSE;
 		if (img_rcd->num_img_segments == 0) {
 			g_set_error(error,
@@ -292,7 +291,7 @@ fu_ccgx_dmc_firmware_parse(FuFirmware *firmware,
 	g_autoptr(FuFirmware) img = fu_firmware_new_from_bytes(fw);
 
 	/* check for 'F' 'W' 'C' 'T' in signature */
-	if (!fu_common_read_uint32_safe(buf, bufsz, 0x0, &hdr_signature, G_LITTLE_ENDIAN, error))
+	if (!fu_memread_uint32_safe(buf, bufsz, 0x0, &hdr_signature, G_LITTLE_ENDIAN, error))
 		return FALSE;
 	if (hdr_signature != DMC_FWCT_SIGN) {
 		g_set_error(error,
@@ -305,12 +304,12 @@ fu_ccgx_dmc_firmware_parse(FuFirmware *firmware,
 	}
 
 	/* check fwct size */
-	if (!fu_common_read_uint16_safe(buf,
-					bufsz,
-					G_STRUCT_OFFSET(FwctInfo, size),
-					&hdr_size,
-					G_LITTLE_ENDIAN,
-					error))
+	if (!fu_memread_uint16_safe(buf,
+				    bufsz,
+				    G_STRUCT_OFFSET(FwctInfo, size),
+				    &hdr_size,
+				    G_LITTLE_ENDIAN,
+				    error))
 		return FALSE;
 	if (hdr_size > DMC_FWCT_MAX_SIZE || hdr_size == 0) {
 		g_set_error(error,
@@ -323,12 +322,12 @@ fu_ccgx_dmc_firmware_parse(FuFirmware *firmware,
 	}
 
 	/* set version */
-	if (!fu_common_read_uint32_safe(buf,
-					bufsz,
-					G_STRUCT_OFFSET(FwctInfo, composite_version),
-					&hdr_composite_version,
-					G_LITTLE_ENDIAN,
-					error))
+	if (!fu_memread_uint32_safe(buf,
+				    bufsz,
+				    G_STRUCT_OFFSET(FwctInfo, composite_version),
+				    &hdr_composite_version,
+				    G_LITTLE_ENDIAN,
+				    error))
 		return FALSE;
 	if (hdr_composite_version != 0) {
 		g_autofree gchar *ver = NULL;
@@ -344,7 +343,7 @@ fu_ccgx_dmc_firmware_parse(FuFirmware *firmware,
 		return FALSE;
 
 	/* create custom meta binary */
-	if (!fu_common_read_uint16_safe(buf, bufsz, hdr_size, &mdbufsz, G_LITTLE_ENDIAN, error)) {
+	if (!fu_memread_uint16_safe(buf, bufsz, hdr_size, &mdbufsz, G_LITTLE_ENDIAN, error)) {
 		g_prefix_error(error, "failed to read metadata size: ");
 		return FALSE;
 	}
@@ -359,11 +358,11 @@ fu_ccgx_dmc_firmware_parse(FuFirmware *firmware,
 	self->fw_data_size = bufsz - self->row_data_offset_start;
 
 	/* parse image */
-	if (!fu_common_read_uint8_safe(buf,
-				       bufsz,
-				       G_STRUCT_OFFSET(FwctInfo, image_count),
-				       &hdr_image_count,
-				       error))
+	if (!fu_memread_uint8_safe(buf,
+				   bufsz,
+				   G_STRUCT_OFFSET(FwctInfo, image_count),
+				   &hdr_image_count,
+				   error))
 		return FALSE;
 	if (!fu_ccgx_dmc_firmware_parse_image(firmware, hdr_image_count, buf, bufsz, flags, error))
 		return FALSE;

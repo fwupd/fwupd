@@ -203,7 +203,7 @@ fu_elanfp_device_setup(FuDevice *device, GError **error)
 		g_prefix_error(error, "failed to device setup: ");
 		return FALSE;
 	}
-	fw_ver = fu_common_read_uint16(usb_buf, G_BIG_ENDIAN);
+	fw_ver = fu_memread_uint16(usb_buf, G_BIG_ENDIAN);
 	fw_ver_str = g_strdup_printf("%04x", fw_ver);
 	fu_device_set_version(device, fw_ver_str);
 
@@ -240,21 +240,21 @@ fu_elanfp_device_write_payload(FuElanfpDevice *self,
 		databuf[1] = fu_chunk_get_data_sz(chk);
 
 		/* sequence number */
-		if (!fu_common_write_uint16_safe(databuf,
-						 sizeof(databuf),
-						 0x2,
-						 i + 1,
-						 G_LITTLE_ENDIAN,
-						 error))
+		if (!fu_memwrite_uint16_safe(databuf,
+					     sizeof(databuf),
+					     0x2,
+					     i + 1,
+					     G_LITTLE_ENDIAN,
+					     error))
 			return FALSE;
 
 		/* address */
-		if (!fu_common_write_uint32_safe(databuf,
-						 sizeof(databuf),
-						 0x4,
-						 fu_chunk_get_address(chk),
-						 G_LITTLE_ENDIAN,
-						 error))
+		if (!fu_memwrite_uint32_safe(databuf,
+					     sizeof(databuf),
+					     0x4,
+					     fu_chunk_get_address(chk),
+					     G_LITTLE_ENDIAN,
+					     error))
 			return FALSE;
 
 		/* data */

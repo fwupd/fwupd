@@ -68,7 +68,7 @@ fu_wac_module_touch_write_firmware(FuDevice *device,
 		memset(buf, 0xff, sizeof(buf));
 		buf[0] = 0x01; /* writing */
 		buf[1] = fu_chunk_get_idx(chk) + 1;
-		fu_common_write_uint32(&buf[2], fu_chunk_get_address(chk), G_LITTLE_ENDIAN);
+		fu_memwrite_uint32(&buf[2], fu_chunk_get_address(chk), G_LITTLE_ENDIAN);
 		buf[6] = 0x10; /* no idea! */
 		if (!fu_memcpy_safe(buf,
 				    sizeof(buf),

@@ -129,12 +129,12 @@ fu_plugin_msr_backend_device_added(FuPlugin *plugin, FuDevice *device, GError **
 			g_prefix_error(error, "could not read IA32_DEBUG_INTERFACE: ");
 			return FALSE;
 		}
-		if (!fu_common_read_uint32_safe(buf,
-						sizeof(buf),
-						0x0,
-						&priv->ia32_debug.data,
-						G_LITTLE_ENDIAN,
-						error))
+		if (!fu_memread_uint32_safe(buf,
+					    sizeof(buf),
+					    0x0,
+					    &priv->ia32_debug.data,
+					    G_LITTLE_ENDIAN,
+					    error))
 			return FALSE;
 		g_debug("IA32_DEBUG_INTERFACE: enabled=%i, locked=%i, debug_occurred=%i",
 			priv->ia32_debug.fields.enabled,
@@ -152,12 +152,12 @@ fu_plugin_msr_backend_device_added(FuPlugin *plugin, FuDevice *device, GError **
 			g_prefix_error(error, "could not read PCI_MSR_AMD64_SYSCFG: ");
 			return FALSE;
 		}
-		if (!fu_common_read_uint32_safe(buf,
-						sizeof(buf),
-						0x0,
-						&priv->amd64_syscfg.data,
-						G_LITTLE_ENDIAN,
-						error))
+		if (!fu_memread_uint32_safe(buf,
+					    sizeof(buf),
+					    0x0,
+					    &priv->amd64_syscfg.data,
+					    G_LITTLE_ENDIAN,
+					    error))
 			return FALSE;
 		g_debug("PCI_MSR_AMD64_SYSCFG: 0%x, sme_is_enabled=%i",
 			priv->amd64_syscfg.data,
@@ -172,12 +172,12 @@ fu_plugin_msr_backend_device_added(FuPlugin *plugin, FuDevice *device, GError **
 			g_prefix_error(error, "could not read PCI_MSR_AMD64_SEV: ");
 			return FALSE;
 		}
-		if (!fu_common_read_uint32_safe(buf,
-						sizeof(buf),
-						0x0,
-						&priv->amd64_sev.data,
-						G_LITTLE_ENDIAN,
-						error))
+		if (!fu_memread_uint32_safe(buf,
+					    sizeof(buf),
+					    0x0,
+					    &priv->amd64_sev.data,
+					    G_LITTLE_ENDIAN,
+					    error))
 			return FALSE;
 		g_debug("PCI_MSR_AMD64_SEV: 0%x, sev_is_enabled=%i",
 			priv->amd64_sev.data,
@@ -196,12 +196,12 @@ fu_plugin_msr_backend_device_added(FuPlugin *plugin, FuDevice *device, GError **
 			return FALSE;
 		}
 		fu_common_dump_raw(G_LOG_DOMAIN, "IA32_BIOS_SIGN_ID", buf, sizeof(buf));
-		if (!fu_common_read_uint32_safe(buf,
-						sizeof(buf),
-						0x4,
-						&ver_raw,
-						G_LITTLE_ENDIAN,
-						error))
+		if (!fu_memread_uint32_safe(buf,
+					    sizeof(buf),
+					    0x4,
+					    &ver_raw,
+					    G_LITTLE_ENDIAN,
+					    error))
 			return FALSE;
 		if (ver_raw != 0 && ver_raw != G_MAXUINT32) {
 			FwupdVersionFormat verfmt = fu_device_get_version_format(device_cpu);

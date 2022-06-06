@@ -1522,7 +1522,7 @@ fu_genesys_scaler_device_get_firmware_packet_version(FuGenesysScalerDevice *self
 
 		buf[0] = 0x50; /* drifted value */
 		checksum = fu_genesys_scaler_device_calculate_checksum(buf, len + 3);
-		if (!fu_common_read_uint8_safe(buf, sizeof(buf), len + 3, &checksum_tmp, error))
+		if (!fu_memread_uint8_safe(buf, sizeof(buf), len + 3, &checksum_tmp, error))
 			return FALSE;
 		if (checksum_tmp != checksum) {
 			g_set_error(error,
@@ -1810,7 +1810,7 @@ fu_genesys_scaler_device_write_firmware(FuDevice *device,
 						 fu_progress_get_child(progress),
 						 error))
 		return FALSE;
-	if (!fu_common_bytes_compare_raw(buf, size, data, size, error))
+	if (!fu_memcmp_safe(buf, size, data, size, error))
 		return FALSE;
 	fu_progress_step_done(progress);
 

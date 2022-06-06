@@ -381,12 +381,12 @@ fu_vli_usbhub_rtd21xx_device_write_firmware(FuDevice *device,
 	}
 
 	/* verify project ID */
-	if (!fu_common_read_uint32_safe(read_buf,
-					sizeof(read_buf),
-					0x1,
-					&project_addr,
-					G_BIG_ENDIAN,
-					error))
+	if (!fu_memread_uint32_safe(read_buf,
+				    sizeof(read_buf),
+				    0x1,
+				    &project_addr,
+				    G_BIG_ENDIAN,
+				    error))
 		return FALSE;
 	project_id_count = read_buf[5];
 	write_buf[0] = ISP_CMD_SYNC_IDENTIFY_CODE;
@@ -415,7 +415,7 @@ fu_vli_usbhub_rtd21xx_device_write_firmware(FuDevice *device,
 
 	/* background FW update start command */
 	write_buf[0] = ISP_CMD_FW_UPDATE_START;
-	fu_common_write_uint16(write_buf + 1, ISP_DATA_BLOCKSIZE, G_BIG_ENDIAN);
+	fu_memwrite_uint16(write_buf + 1, ISP_DATA_BLOCKSIZE, G_BIG_ENDIAN);
 	if (!fu_vli_usbhub_device_i2c_write(parent,
 					    UC_FOREGROUND_TARGET_ADDR,
 					    UC_FOREGROUND_OPCODE,

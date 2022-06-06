@@ -44,7 +44,7 @@ fu_uefi_cod_device_get_results_for_idx(FuDevice *device, guint idx, GError **err
 	}
 
 	/* sanity check */
-	if (!fu_common_read_uint32_safe(buf, bufsz, 0x00, &total_size, G_LITTLE_ENDIAN, error))
+	if (!fu_memread_uint32_safe(buf, bufsz, 0x00, &total_size, G_LITTLE_ENDIAN, error))
 		return FALSE;
 	if (total_size < 0x3A) {
 		g_set_error_literal(error,
@@ -76,7 +76,7 @@ fu_uefi_cod_device_get_results_for_idx(FuDevice *device, guint idx, GError **err
 	}
 
 	/* get status */
-	if (!fu_common_read_uint32_safe(buf, bufsz, 0x28, &status, G_LITTLE_ENDIAN, error))
+	if (!fu_memread_uint32_safe(buf, bufsz, 0x28, &status, G_LITTLE_ENDIAN, error))
 		return FALSE;
 	fu_uefi_device_set_status(device_uefi, status);
 	return TRUE;
@@ -198,12 +198,12 @@ fu_uefi_cod_device_write_firmware(FuDevice *device,
 					&error_local)) {
 			g_debug("failed to read EFI variable: %s", error_local->message);
 		} else {
-			if (!fu_common_read_uint64_safe(buf,
-							bufsz,
-							0x0,
-							&os_indications,
-							G_LITTLE_ENDIAN,
-							error))
+			if (!fu_memread_uint64_safe(buf,
+						    bufsz,
+						    0x0,
+						    &os_indications,
+						    G_LITTLE_ENDIAN,
+						    error))
 				return FALSE;
 		}
 		os_indications |= EFI_OS_INDICATIONS_FILE_CAPSULE_DELIVERY_SUPPORTED;

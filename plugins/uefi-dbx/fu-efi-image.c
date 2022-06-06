@@ -114,12 +114,12 @@ fu_efi_image_new(GBytes *data, GError **error)
 	buf = fu_bytes_get_data_safe(data, &bufsz, error);
 	if (buf == NULL)
 		return NULL;
-	if (!fu_common_read_uint16_safe(buf,
-					bufsz,
-					_DOS_OFFSET_SIGNATURE,
-					&dos_sig,
-					G_LITTLE_ENDIAN,
-					error))
+	if (!fu_memread_uint16_safe(buf,
+				    bufsz,
+				    _DOS_OFFSET_SIGNATURE,
+				    &dos_sig,
+				    G_LITTLE_ENDIAN,
+				    error))
 		return NULL;
 	if (dos_sig != 0x5a4d) {
 		g_set_error(error,
@@ -131,19 +131,19 @@ fu_efi_image_new(GBytes *data, GError **error)
 	}
 
 	/* verify the PE signature */
-	if (!fu_common_read_uint32_safe(buf,
-					bufsz,
-					_DOS_OFFSET_TO_PE_HEADER,
-					&baseaddr,
-					G_LITTLE_ENDIAN,
-					error))
+	if (!fu_memread_uint32_safe(buf,
+				    bufsz,
+				    _DOS_OFFSET_TO_PE_HEADER,
+				    &baseaddr,
+				    G_LITTLE_ENDIAN,
+				    error))
 		return NULL;
-	if (!fu_common_read_uint32_safe(buf,
-					bufsz,
-					baseaddr + _PEI_OFFSET_SIGNATURE,
-					&nt_sig,
-					G_LITTLE_ENDIAN,
-					error))
+	if (!fu_memread_uint32_safe(buf,
+				    bufsz,
+				    baseaddr + _PEI_OFFSET_SIGNATURE,
+				    &nt_sig,
+				    G_LITTLE_ENDIAN,
+				    error))
 		return NULL;
 	if (nt_sig != 0x4550) {
 		g_set_error(error,
@@ -155,21 +155,21 @@ fu_efi_image_new(GBytes *data, GError **error)
 	}
 
 	/* which machine type are we reading */
-	if (!fu_common_read_uint16_safe(buf,
-					bufsz,
-					baseaddr + _PEI_OFFSET_MACHINE,
-					&machine,
-					G_LITTLE_ENDIAN,
-					error))
+	if (!fu_memread_uint16_safe(buf,
+				    bufsz,
+				    baseaddr + _PEI_OFFSET_MACHINE,
+				    &machine,
+				    G_LITTLE_ENDIAN,
+				    error))
 		return NULL;
 	if (machine == IMAGE_FILE_MACHINE_AMD64 || machine == IMAGE_FILE_MACHINE_AARCH64) {
 		/* a.out header directly follows PE header */
-		if (!fu_common_read_uint16_safe(buf,
-						bufsz,
-						baseaddr + _PEI_HEADER_SIZE,
-						&machine,
-						G_LITTLE_ENDIAN,
-						error))
+		if (!fu_memread_uint16_safe(buf,
+					    bufsz,
+					    baseaddr + _PEI_HEADER_SIZE,
+					    &machine,
+					    G_LITTLE_ENDIAN,
+					    error))
 			return NULL;
 		if (machine != 0x020b) {
 			g_set_error(error,
@@ -179,12 +179,12 @@ fu_efi_image_new(GBytes *data, GError **error)
 				    machine);
 			return NULL;
 		}
-		if (!fu_common_read_uint32_safe(buf,
-						bufsz,
-						baseaddr + _PEP_OFFSET_SIZE_OF_HEADERS,
-						&header_size,
-						G_LITTLE_ENDIAN,
-						error))
+		if (!fu_memread_uint32_safe(buf,
+					    bufsz,
+					    baseaddr + _PEP_OFFSET_SIZE_OF_HEADERS,
+					    &header_size,
+					    G_LITTLE_ENDIAN,
+					    error))
 			return NULL;
 
 		checksum_offset = baseaddr + _PEP_OFFSET_CHECKSUM;
@@ -196,12 +196,12 @@ fu_efi_image_new(GBytes *data, GError **error)
 
 	} else if (machine == IMAGE_FILE_MACHINE_I386 || machine == IMAGE_FILE_MACHINE_THUMB) {
 		/* a.out header directly follows PE header */
-		if (!fu_common_read_uint16_safe(buf,
-						bufsz,
-						baseaddr + _PEI_HEADER_SIZE,
-						&machine,
-						G_LITTLE_ENDIAN,
-						error))
+		if (!fu_memread_uint16_safe(buf,
+					    bufsz,
+					    baseaddr + _PEI_HEADER_SIZE,
+					    &machine,
+					    G_LITTLE_ENDIAN,
+					    error))
 			return NULL;
 		if (machine != 0x010b) {
 			g_set_error(error,
@@ -211,12 +211,12 @@ fu_efi_image_new(GBytes *data, GError **error)
 				    machine);
 			return NULL;
 		}
-		if (!fu_common_read_uint32_safe(buf,
-						bufsz,
-						baseaddr + _PE_OFFSET_SIZE_OF_HEADERS,
-						&header_size,
-						G_LITTLE_ENDIAN,
-						error))
+		if (!fu_memread_uint32_safe(buf,
+					    bufsz,
+					    baseaddr + _PE_OFFSET_SIZE_OF_HEADERS,
+					    &header_size,
+					    G_LITTLE_ENDIAN,
+					    error))
 			return NULL;
 
 		checksum_offset = baseaddr + _PE_OFFSET_CHECKSUM;
@@ -232,29 +232,29 @@ fu_efi_image_new(GBytes *data, GError **error)
 	}
 
 	/* get sections */
-	if (!fu_common_read_uint32_safe(buf,
-					bufsz,
-					data_dir_debug_offset + sizeof(guint32),
-					&cert_table_size,
-					G_LITTLE_ENDIAN,
-					error))
+	if (!fu_memread_uint32_safe(buf,
+				    bufsz,
+				    data_dir_debug_offset + sizeof(guint32),
+				    &cert_table_size,
+				    G_LITTLE_ENDIAN,
+				    error))
 		return NULL;
-	if (!fu_common_read_uint16_safe(buf,
-					bufsz,
-					baseaddr + _PEI_OFFSET_NUMBER_OF_SECTIONS,
-					&sections,
-					G_LITTLE_ENDIAN,
-					error))
+	if (!fu_memread_uint16_safe(buf,
+				    bufsz,
+				    baseaddr + _PEI_OFFSET_NUMBER_OF_SECTIONS,
+				    &sections,
+				    G_LITTLE_ENDIAN,
+				    error))
 		return NULL;
 	g_debug("number_of_sections: %u", sections);
 
 	/* get header size */
-	if (!fu_common_read_uint16_safe(buf,
-					bufsz,
-					baseaddr + _PEI_OFFSET_OPTIONAL_HEADER_SIZE,
-					&opthdrsz,
-					G_LITTLE_ENDIAN,
-					error))
+	if (!fu_memread_uint16_safe(buf,
+				    bufsz,
+				    baseaddr + _PEI_OFFSET_OPTIONAL_HEADER_SIZE,
+				    &opthdrsz,
+				    G_LITTLE_ENDIAN,
+				    error))
 		return NULL;
 	g_debug("optional_header_size: 0x%x", opthdrsz);
 
@@ -284,19 +284,19 @@ fu_efi_image_new(GBytes *data, GError **error)
 		guint32 file_size = 0;
 		gchar name[9] = {'\0'};
 
-		if (!fu_common_read_uint32_safe(buf,
-						bufsz,
-						offset_tmp + _SECTION_HEADER_OFFSET_PTR,
-						&file_offset,
-						G_LITTLE_ENDIAN,
-						error))
+		if (!fu_memread_uint32_safe(buf,
+					    bufsz,
+					    offset_tmp + _SECTION_HEADER_OFFSET_PTR,
+					    &file_offset,
+					    G_LITTLE_ENDIAN,
+					    error))
 			return NULL;
-		if (!fu_common_read_uint32_safe(buf,
-						bufsz,
-						offset_tmp + _SECTION_HEADER_OFFSET_SIZE,
-						&file_size,
-						G_LITTLE_ENDIAN,
-						error))
+		if (!fu_memread_uint32_safe(buf,
+					    bufsz,
+					    offset_tmp + _SECTION_HEADER_OFFSET_SIZE,
+					    &file_size,
+					    G_LITTLE_ENDIAN,
+					    error))
 			return NULL;
 		if (file_size == 0)
 			continue;

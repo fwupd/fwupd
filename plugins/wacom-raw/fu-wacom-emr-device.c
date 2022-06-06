@@ -38,12 +38,12 @@ fu_wacom_emr_device_setup(FuDevice *device, GError **error)
 		g_autofree gchar *version = NULL;
 		if (!fu_wacom_device_get_feature(FU_WACOM_DEVICE(self), data, sizeof(data), error))
 			return FALSE;
-		if (!fu_common_read_uint16_safe(data,
-						sizeof(data),
-						11,
-						&fw_ver,
-						G_LITTLE_ENDIAN,
-						error))
+		if (!fu_memread_uint16_safe(data,
+					    sizeof(data),
+					    11,
+					    &fw_ver,
+					    G_LITTLE_ENDIAN,
+					    error))
 			return FALSE;
 		fu_device_remove_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 		version = fu_common_version_from_uint16(fw_ver, FWUPD_VERSION_FORMAT_PAIR);

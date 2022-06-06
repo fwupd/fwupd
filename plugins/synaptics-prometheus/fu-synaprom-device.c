@@ -344,12 +344,7 @@ fu_synaprom_device_write_fw(FuSynapromDevice *self,
 		g_autoptr(GByteArray) chunk = g_byte_array_new();
 
 		/* get chunk size */
-		if (!fu_common_read_uint32_safe(buf,
-						bufsz,
-						offset,
-						&chunksz,
-						G_LITTLE_ENDIAN,
-						error))
+		if (!fu_memread_uint32_safe(buf, bufsz, offset, &chunksz, G_LITTLE_ENDIAN, error))
 			return FALSE;
 		offset += sizeof(guint32);
 

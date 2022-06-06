@@ -56,7 +56,7 @@ fu_elanfp_firmware_parse(FuFirmware *firmware,
 
 	/* check the tag */
 	buf = g_bytes_get_data(fw, &bufsz);
-	if (!fu_common_read_uint32_safe(buf, bufsz, offset + 0x0, &tag, G_LITTLE_ENDIAN, error))
+	if (!fu_memread_uint32_safe(buf, bufsz, offset + 0x0, &tag, G_LITTLE_ENDIAN, error))
 		return FALSE;
 	if (tag != 0x46325354) {
 		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA, "tag is not valid");
@@ -64,12 +64,12 @@ fu_elanfp_firmware_parse(FuFirmware *firmware,
 	}
 
 	/* file format version */
-	if (!fu_common_read_uint32_safe(buf,
-					bufsz,
-					offset + 0x4,
-					&self->format_version,
-					G_LITTLE_ENDIAN,
-					error))
+	if (!fu_memread_uint32_safe(buf,
+				    bufsz,
+				    offset + 0x4,
+				    &self->format_version,
+				    G_LITTLE_ENDIAN,
+				    error))
 		return FALSE;
 
 	/* read indexes */
@@ -91,12 +91,12 @@ fu_elanfp_firmware_parse(FuFirmware *firmware,
 		}
 
 		/* type, reserved, start-addr, len */
-		if (!fu_common_read_uint32_safe(buf,
-						bufsz,
-						offset + 0x0,
-						&fwtype,
-						G_LITTLE_ENDIAN,
-						error))
+		if (!fu_memread_uint32_safe(buf,
+					    bufsz,
+					    offset + 0x0,
+					    &fwtype,
+					    G_LITTLE_ENDIAN,
+					    error))
 			return FALSE;
 
 		/* check not already added */
@@ -127,20 +127,20 @@ fu_elanfp_firmware_parse(FuFirmware *firmware,
 			break;
 		}
 		fu_firmware_set_idx(img, fwtype);
-		if (!fu_common_read_uint32_safe(buf,
-						bufsz,
-						offset + 0x8,
-						&start_addr,
-						G_LITTLE_ENDIAN,
-						error))
+		if (!fu_memread_uint32_safe(buf,
+					    bufsz,
+					    offset + 0x8,
+					    &start_addr,
+					    G_LITTLE_ENDIAN,
+					    error))
 			return FALSE;
 		fu_firmware_set_addr(img, start_addr);
-		if (!fu_common_read_uint32_safe(buf,
-						bufsz,
-						offset + 0xC,
-						&length,
-						G_LITTLE_ENDIAN,
-						error))
+		if (!fu_memread_uint32_safe(buf,
+					    bufsz,
+					    offset + 0xC,
+					    &length,
+					    G_LITTLE_ENDIAN,
+					    error))
 			return FALSE;
 		if (length == 0) {
 			g_set_error(error,

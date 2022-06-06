@@ -15,6 +15,7 @@
 #include "fu-common.h"
 #include "fu-crc.h"
 #include "fu-dfu-firmware-private.h"
+#include "fu-mem.h"
 
 /**
  * FuDfuFirmware:

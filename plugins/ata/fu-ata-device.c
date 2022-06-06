@@ -352,7 +352,7 @@ fu_ata_device_parse_id(FuAtaDevice *self, const guint8 *buf, gsize sz, GError **
 
 	/* read LE buffer */
 	for (guint i = 0; i < sz / 2; i++)
-		id[i] = fu_common_read_uint16(buf + (i * 2), G_LITTLE_ENDIAN);
+		id[i] = fu_memread_uint16(buf + (i * 2), G_LITTLE_ENDIAN);
 
 	/* verify drive correctly supports DOWNLOAD_MICROCODE */
 	if (!(id[83] & 1 && id[86] & 1)) {

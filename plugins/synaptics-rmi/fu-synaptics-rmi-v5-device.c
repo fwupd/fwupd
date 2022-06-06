@@ -494,11 +494,11 @@ fu_synaptics_rmi_v5_device_setup(FuSynapticsRmiDevice *self, GError **error)
 		g_prefix_error(error, "failed to read Flash Properties 2: ");
 		return FALSE;
 	}
-	if (!fu_common_read_uint8_safe(buf_flash_properties2->data,
-				       buf_flash_properties2->len,
-				       0x0, /* offset */
-				       &flash_properties2,
-				       error)) {
+	if (!fu_memread_uint8_safe(buf_flash_properties2->data,
+				   buf_flash_properties2->len,
+				   0x0, /* offset */
+				   &flash_properties2,
+				   error)) {
 		g_prefix_error(error, "failed to parse Flash Properties 2: ");
 		return FALSE;
 	}
@@ -511,12 +511,12 @@ fu_synaptics_rmi_v5_device_setup(FuSynapticsRmiDevice *self, GError **error)
 			g_prefix_error(error, "failed to read RSA key length: ");
 			return FALSE;
 		}
-		if (!fu_common_read_uint16_safe(buf_rsa_key->data,
-						buf_rsa_key->len,
-						0x0, /* offset */
-						&sig_size,
-						G_LITTLE_ENDIAN,
-						error)) {
+		if (!fu_memread_uint16_safe(buf_rsa_key->data,
+					    buf_rsa_key->len,
+					    0x0, /* offset */
+					    &sig_size,
+					    G_LITTLE_ENDIAN,
+					    error)) {
 			g_prefix_error(error, "failed to parse RSA key length: ");
 			return FALSE;
 		}
@@ -530,26 +530,26 @@ fu_synaptics_rmi_v5_device_setup(FuSynapticsRmiDevice *self, GError **error)
 	f34_data2 = fu_synaptics_rmi_device_read(self, f34->query_base + 0x2, 0x7, error);
 	if (f34_data2 == NULL)
 		return FALSE;
-	if (!fu_common_read_uint16_safe(f34_data2->data,
-					f34_data2->len,
-					RMI_F34_BLOCK_SIZE_OFFSET,
-					&flash->block_size,
-					G_LITTLE_ENDIAN,
-					error))
+	if (!fu_memread_uint16_safe(f34_data2->data,
+				    f34_data2->len,
+				    RMI_F34_BLOCK_SIZE_OFFSET,
+				    &flash->block_size,
+				    G_LITTLE_ENDIAN,
+				    error))
 		return FALSE;
-	if (!fu_common_read_uint16_safe(f34_data2->data,
-					f34_data2->len,
-					RMI_F34_FW_BLOCKS_OFFSET,
-					&flash->block_count_fw,
-					G_LITTLE_ENDIAN,
-					error))
+	if (!fu_memread_uint16_safe(f34_data2->data,
+				    f34_data2->len,
+				    RMI_F34_FW_BLOCKS_OFFSET,
+				    &flash->block_count_fw,
+				    G_LITTLE_ENDIAN,
+				    error))
 		return FALSE;
-	if (!fu_common_read_uint16_safe(f34_data2->data,
-					f34_data2->len,
-					RMI_F34_CONFIG_BLOCKS_OFFSET,
-					&flash->block_count_cfg,
-					G_LITTLE_ENDIAN,
-					error))
+	if (!fu_memread_uint16_safe(f34_data2->data,
+				    f34_data2->len,
+				    RMI_F34_CONFIG_BLOCKS_OFFSET,
+				    &flash->block_count_cfg,
+				    G_LITTLE_ENDIAN,
+				    error))
 		return FALSE;
 	flash->status_addr = f34->data_base + RMI_F34_BLOCK_DATA_OFFSET + flash->block_size;
 	return TRUE;
