@@ -199,9 +199,6 @@ fu_common_get_esp_default(GError **error) G_GNUC_WARN_UNUSED_RESULT;
 gboolean
 fu_common_check_full_disk_encryption(GError **error);
 
-guint8
-fu_common_reverse_uint8(guint8 value);
-
 gsize
 fu_common_align_up(gsize value, guint8 alignment);
 const gchar *
