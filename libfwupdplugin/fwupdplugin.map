@@ -74,7 +74,6 @@ LIBFWUPDPLUGIN_0.9.7 {
     fu_common_firmware_builder;
     fu_common_mkdir_parent;
     fu_common_rmtree;
-    fu_common_spawn_sync;
     fu_device_get_metadata_boolean;
     fu_device_get_metadata_integer;
     fu_device_set_metadata_boolean;

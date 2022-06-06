@@ -169,23 +169,6 @@ typedef enum {
 	FU_LID_STATE_LAST
 } FuLidState;
 
-/**
- * FuOutputHandler:
- * @line: text data
- * @user_data: user data
- *
- * The process spawn iteration callback.
- */
-typedef void (*FuOutputHandler)(const gchar *line, gpointer user_data);
-
-gboolean
-fu_common_spawn_sync(const gchar *const *argv,
-		     FuOutputHandler handler_cb,
-		     gpointer handler_user_data,
-		     guint timeout_ms,
-		     GCancellable *cancellable,
-		     GError **error) G_GNUC_WARN_UNUSED_RESULT;
-
 gchar *
 fu_common_get_path(FuPathKind path_kind);
 gchar *

@@ -90,6 +90,8 @@ if __name__ == "__main__":
             "fu_common_read_uint32": "fu_memread_uint32",
             "fu_common_read_uint64": "fu_memread_uint64",
             "fu_common_bytes_compare_raw": "fu_memcmp_safe",
+            "FuOutputHandler": "FuSpawnOutputHandler",
+            "fu_common_spawn_sync": "fu_spawn_sync",
         }.items():
             if buf.find(old) == -1:
                 continue

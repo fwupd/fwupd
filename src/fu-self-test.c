@@ -29,6 +29,7 @@
 #include "fu-progressbar.h"
 #include "fu-security-attr.h"
 #include "fu-smbios-private.h"
+#include "fu-spawn.h"
 
 typedef struct {
 	FuPlugin *plugin;
@@ -3803,6 +3804,58 @@ fu_release_compare_func_cb(gconstpointer a, gconstpointer b)
 }
 
 static void
+fu_spawn_stdout_cb(const gchar *line, gpointer user_data)
+{
+	guint *lines = (guint *)user_data;
+	g_debug("got '%s'", line);
+	(*lines)++;
+}
+
+static void
+fu_spawn_func(void)
+{
+	gboolean ret;
+	guint lines = 0;
+	g_autoptr(GError) error = NULL;
+	g_autofree gchar *fn = NULL;
+	const gchar *argv[4] = {"/bin/sh", "replace", "test", NULL};
+
+#ifdef _WIN32
+	g_test_skip("Known failures on Windows right now, skipping spawn func test");
+	return;
+#endif
+
+	fn = g_test_build_filename(G_TEST_DIST, "tests", "spawn.sh", NULL);
+	argv[1] = fn;
+	ret = fu_spawn_sync(argv, fu_spawn_stdout_cb, &lines, 0, NULL, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(lines, ==, 6);
+}
+
+static void
+fu_spawn_timeout_func(void)
+{
+	gboolean ret;
+	guint lines = 0;
+	g_autoptr(GError) error = NULL;
+	g_autofree gchar *fn = NULL;
+	const gchar *argv[4] = {"/bin/sh", "replace", "test", NULL};
+
+#ifdef _WIN32
+	g_test_skip("Known failures on Windows right now, skipping spawn timeout test");
+	return;
+#endif
+
+	fn = g_test_build_filename(G_TEST_DIST, "tests", "spawn.sh", NULL);
+	argv[1] = fn;
+	ret = fu_spawn_sync(argv, fu_spawn_stdout_cb, &lines, 500, NULL, &error);
+	g_assert_error(error, G_IO_ERROR, G_IO_ERROR_CANCELLED);
+	g_assert_false(ret);
+	g_assert_cmpint(lines, ==, 1);
+}
+
+static void
 fu_release_compare_func(gconstpointer user_data)
 {
 	FuDevice *device_tmp;
@@ -3994,5 +4047,7 @@ main(int argc, char **argv)
 	g_test_add_data_func("/fwupd/history{migrate}", self, fu_history_migrate_func);
 	g_test_add_data_func("/fwupd/plugin-list", self, fu_plugin_list_func);
 	g_test_add_data_func("/fwupd/plugin-list{depsolve}", self, fu_plugin_list_depsolve_func);
+	g_test_add_func("/fwupd/spawn", fu_spawn_func);
+	g_test_add_func("/fwupd/spawn-timeou)", fu_spawn_timeout_func);
 	return g_test_run();
 }
