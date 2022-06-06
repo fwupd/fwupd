@@ -13,6 +13,7 @@
 #include <gio/gunixinputstream.h>
 #endif
 #include <glib-object.h>
+#include <stdlib.h>
 #include <string.h>
 #ifdef HAVE_UTSNAME_H
 #include <sys/utsname.h>
@@ -2096,6 +2097,39 @@ fu_engine_is_running_offline(FuEngine *self)
 #endif
 }
 
+#ifdef HAVE_GIO_UNIX
+static gchar *
+fu_realpath(const gchar *filename, GError **error)
+{
+	char full_tmp[PATH_MAX];
+
+	g_return_val_if_fail(filename != NULL, NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+#ifdef HAVE_REALPATH
+	if (realpath(filename, full_tmp) == NULL) {
+#else
+	if (_fullpath(full_tmp, filename, sizeof(full_tmp)) == NULL) {
+#endif
+		g_set_error(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_INVALID_DATA,
+			    "cannot resolve path: %s",
+			    strerror(errno));
+		return NULL;
+	}
+	if (!g_file_test(full_tmp, G_FILE_TEST_EXISTS)) {
+		g_set_error(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_INVALID_DATA,
+			    "cannot find path: %s",
+			    full_tmp);
+		return NULL;
+	}
+	return g_strdup(full_tmp);
+}
+#endif
+
 static gboolean
 fu_engine_offline_setup(GError **error)
 {
@@ -2108,7 +2142,7 @@ fu_engine_offline_setup(GError **error)
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* does already exist */
-	filename = fu_common_realpath(trigger, NULL);
+	filename = fu_realpath(trigger, NULL);
 	if (g_strcmp0(filename, symlink_target) == 0) {
 		g_debug("%s already points to %s, skipping creation", trigger, symlink_target);
 		return TRUE;

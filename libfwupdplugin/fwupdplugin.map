@@ -291,7 +291,6 @@ LIBFWUPDPLUGIN_1.2.5 {
 
 LIBFWUPDPLUGIN_1.2.6 {
   global:
-    fu_common_realpath;
     fu_device_activate;
     fu_device_get_firmware_size_max;
     fu_device_get_firmware_size_min;
