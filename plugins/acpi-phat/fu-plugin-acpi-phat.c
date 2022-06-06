@@ -31,7 +31,7 @@ fu_plugin_acpi_phat_coldplug(FuPlugin *plugin, FuProgress *progress, GError **er
 	g_autoptr(FuFirmware) phat = fu_acpi_phat_new();
 	g_autoptr(GBytes) blob = NULL;
 
-	path = fu_common_get_path(FU_PATH_KIND_ACPI_TABLES);
+	path = fu_path_from_kind(FU_PATH_KIND_ACPI_TABLES);
 	fn = g_build_filename(path, "PHAT", NULL);
 	blob = fu_bytes_get_contents(fn, error);
 	if (blob == NULL)

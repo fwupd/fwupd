@@ -29,6 +29,7 @@
 #include "fwupd-remote-private.h"
 
 #include "fu-bytes.h"
+#include "fu-path.h"
 #include "fu-plugin-private.h"
 #include "fu-polkit-agent.h"
 #include "fu-progressbar.h"
@@ -655,7 +656,7 @@ fu_util_download_if_required(FuUtilPrivate *priv, const gchar *perhapsfn, GError
 	filename = fu_util_get_user_cache_path(perhapsfn);
 	if (g_file_test(filename, G_FILE_TEST_EXISTS))
 		return g_steal_pointer(&filename);
-	if (!fu_common_mkdir_parent(filename, error))
+	if (!fu_path_mkdir_parent(filename, error))
 		return NULL;
 	blob = fwupd_client_download_bytes(priv->client,
 					   perhapsfn,
@@ -3538,7 +3539,7 @@ static gboolean
 fu_util_check_polkit_actions(GError **error)
 {
 #ifdef HAVE_POLKIT
-	g_autofree gchar *directory = fu_common_get_path(FU_PATH_KIND_POLKIT_ACTIONS);
+	g_autofree gchar *directory = fu_path_from_kind(FU_PATH_KIND_POLKIT_ACTIONS);
 	g_autofree gchar *filename =
 	    g_build_filename(directory, "org.freedesktop.fwupd.policy", NULL);
 	if (!g_file_test(filename, G_FILE_TEST_IS_REGULAR)) {

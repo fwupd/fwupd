@@ -43,7 +43,7 @@ fu_uefi_dbx_signature_list_validate_volume(FuEfiSignatureList *siglist,
 	esp_path = fu_volume_get_mount_point(esp);
 	if (esp_path == NULL)
 		return TRUE;
-	files = fu_common_get_files_recursive(esp_path, error);
+	files = fu_path_get_files(esp_path, error);
 	if (files == NULL)
 		return FALSE;
 

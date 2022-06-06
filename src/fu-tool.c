@@ -139,7 +139,7 @@ fu_util_save_current_state(FuUtilPrivate *priv, GError **error)
 	state = json_generator_to_data(json_generator, NULL);
 	if (state == NULL)
 		return FALSE;
-	dirname = fu_common_get_path(FU_PATH_KIND_LOCALSTATEDIR_PKG);
+	dirname = fu_path_from_kind(FU_PATH_KIND_LOCALSTATEDIR_PKG);
 	filename = g_build_filename(dirname, "state.json", NULL);
 	return g_file_set_contents(filename, state, -1, error);
 }
@@ -212,10 +212,10 @@ fu_util_lock(FuUtilPrivate *priv, GError **error)
 	if (use_user) {
 		lockfn = fu_util_get_user_cache_path("fwupdtool");
 	} else {
-		g_autofree gchar *lockdir = fu_common_get_path(FU_PATH_KIND_LOCKDIR);
+		g_autofree gchar *lockdir = fu_path_from_kind(FU_PATH_KIND_LOCKDIR);
 		lockfn = g_build_filename(lockdir, "fwupdtool", NULL);
 	}
-	if (!fu_common_mkdir_parent(lockfn, error))
+	if (!fu_path_mkdir_parent(lockfn, error))
 		return FALSE;
 	priv->lock_fd = g_open(lockfn, O_RDWR | O_CREAT, S_IRWXU);
 	if (priv->lock_fd < 0) {
@@ -1255,7 +1255,7 @@ fu_util_download_if_required(FuUtilPrivate *priv, const gchar *perhapsfn, GError
 
 	/* download the firmware to a cachedir */
 	filename = fu_util_get_user_cache_path(perhapsfn);
-	if (!fu_common_mkdir_parent(filename, error))
+	if (!fu_path_mkdir_parent(filename, error))
 		return NULL;
 	file = g_file_new_for_path(filename);
 	if (!fwupd_client_download_file(priv->client,
@@ -3139,7 +3139,7 @@ fu_util_esp_list(FuUtilPrivate *priv, gchar **values, GError **error)
 	if (locker == NULL)
 		return FALSE;
 	mount_point = fu_volume_get_mount_point(volume);
-	files = fu_common_get_files_recursive(mount_point, error);
+	files = fu_path_get_files(mount_point, error);
 	if (files == NULL)
 		return FALSE;
 	for (guint i = 0; i < files->len; i++) {

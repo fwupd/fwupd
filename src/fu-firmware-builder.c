@@ -204,7 +204,7 @@ fu_firmware_builder_process(GBytes *bytes,
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
 	/* find bwrap in the path */
-	bwrap_fn = fu_common_find_program_in_path("bwrap", error);
+	bwrap_fn = fu_path_find_program("bwrap", error);
 	if (bwrap_fn == NULL)
 		return NULL;
 
@@ -220,7 +220,7 @@ fu_firmware_builder_process(GBytes *bytes,
 		return NULL;
 
 	/* this is shared with the plugins */
-	localstatedir = fu_common_get_path(FU_PATH_KIND_LOCALSTATEDIR_PKG);
+	localstatedir = fu_path_from_kind(FU_PATH_KIND_LOCALSTATEDIR_PKG);
 	localstatebuilderdir = g_build_filename(localstatedir, "builder", NULL);
 
 	/* launch bubblewrap and generate firmware */
@@ -277,7 +277,7 @@ fu_firmware_builder_process(GBytes *bytes,
 		return NULL;
 
 	/* cleanup temp directory */
-	if (!fu_common_rmtree(tmpdir, error))
+	if (!fu_path_rmtree(tmpdir, error))
 		return NULL;
 
 	/* success */

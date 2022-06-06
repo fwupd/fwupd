@@ -536,13 +536,13 @@ fu_uefi_device_cleanup_esp(FuDevice *device, GError **error)
 		return TRUE;
 
 	/* delete any files matching the glob in the ESP */
-	files = fu_common_get_files_recursive(esp_path, error);
+	files = fu_path_get_files(esp_path, error);
 	if (files == NULL)
 		return FALSE;
 	pattern = g_build_filename(esp_path, "EFI/*/fw/fwupd*.cap", NULL);
 	for (guint i = 0; i < files->len; i++) {
 		const gchar *fn = g_ptr_array_index(files, i);
-		if (fu_common_fnmatch(pattern, fn)) {
+		if (fu_path_fnmatch(pattern, fn)) {
 			g_autoptr(GFile) file = g_file_new_for_path(fn);
 			g_debug("deleting %s", fn);
 			if (!g_file_delete(file, NULL, error))

@@ -103,6 +103,14 @@ if __name__ == "__main__":
             "fu_common_dump_full": "fu_dump_full",
             "fu_common_dump_bytes": "fu_dump_bytes",
             "fu_common_error_array_get_best": "fu_engine_error_array_get_best",
+            "fu_common_get_path": "fu_path_from_kind",
+            "fu_common_filename_glob": "fu_path_glob",
+            "fu_common_fnmatch": "fu_path_fnmatch",
+            "fu_common_rmtree": "fu_path_rmtree",
+            "fu_common_get_files_recursive": "fu_path_get_files",
+            "fu_common_mkdir": "fu_path_mkdir",
+            "fu_common_mkdir_parent": "fu_path_mkdir_parent",
+            "fu_common_find_program_in_path": "fu_path_find_program",
         }.items():
             if buf.find(old) == -1:
                 continue

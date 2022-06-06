@@ -172,7 +172,7 @@ fu_uefi_cod_device_write_firmware(FuDevice *device,
 		return FALSE;
 	basename = g_strdup_printf("fwupd-%s.cap", fu_uefi_device_get_guid(self));
 	cod_path = g_build_filename(esp_path, "EFI", "UpdateCapsule", basename, NULL);
-	if (!fu_common_mkdir_parent(cod_path, error))
+	if (!fu_path_mkdir_parent(cod_path, error))
 		return FALSE;
 	if (!fu_bytes_set_contents(cod_path, fw, error))
 		return FALSE;

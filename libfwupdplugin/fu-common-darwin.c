@@ -20,7 +20,7 @@ fu_common_get_block_devices(GError **error)
 }
 
 gboolean
-fu_common_fnmatch_impl(const gchar *pattern, const gchar *str)
+fu_path_fnmatch_impl(const gchar *pattern, const gchar *str)
 {
 	return fnmatch(pattern, str, FNM_NOESCAPE) == 0;
 }

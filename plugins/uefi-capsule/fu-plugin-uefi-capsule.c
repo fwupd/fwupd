@@ -199,7 +199,7 @@ fu_plugin_uefi_capsule_get_splash_data(guint width, guint height, GError **error
 	g_autoptr(GBytes) blob_archive = NULL;
 
 	/* load archive */
-	datadir_pkg = fu_common_get_path(FU_PATH_KIND_DATADIR_PKG);
+	datadir_pkg = fu_path_from_kind(FU_PATH_KIND_DATADIR_PKG);
 	filename_archive = g_build_filename(datadir_pkg, "uefi-capsule-ux.tar.xz", NULL);
 	blob_archive = fu_bytes_get_contents(filename_archive, error);
 	if (blob_archive == NULL)
@@ -276,7 +276,7 @@ fu_plugin_uefi_capsule_write_splash_data(FuPlugin *plugin,
 	directory = fu_uefi_get_esp_path_for_os(device, esp_path);
 	basename = g_strdup_printf("fwupd-%s.cap", FU_EFIVAR_GUID_UX_CAPSULE);
 	fn = g_build_filename(directory, "fw", basename, NULL);
-	if (!fu_common_mkdir_parent(fn, error))
+	if (!fu_path_mkdir_parent(fn, error))
 		return FALSE;
 	ofile = g_file_new_for_path(fn);
 	ostream =

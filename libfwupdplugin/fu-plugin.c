@@ -20,6 +20,7 @@
 #include "fu-device-private.h"
 #include "fu-kernel.h"
 #include "fu-mutex.h"
+#include "fu-path.h"
 #include "fu-plugin-private.h"
 #include "fu-string.h"
 
@@ -428,7 +429,7 @@ fu_plugin_config_monitor_changed_cb(GFileMonitor *monitor,
 static gchar *
 fu_plugin_get_config_filename(FuPlugin *self)
 {
-	g_autofree gchar *conf_dir = fu_common_get_path(FU_PATH_KIND_SYSCONFDIR_PKG);
+	g_autofree gchar *conf_dir = fu_path_from_kind(FU_PATH_KIND_SYSCONFDIR_PKG);
 	g_autofree gchar *conf_file = g_strdup_printf("%s.conf", fu_plugin_get_name(self));
 	return g_build_filename(conf_dir, conf_file, NULL);
 }
@@ -682,7 +683,7 @@ fu_plugin_device_write_firmware(FuPlugin *self,
 			g_prefix_error(error, "failed to backup old firmware: ");
 			return FALSE;
 		}
-		localstatedir = fu_common_get_path(FU_PATH_KIND_LOCALSTATEDIR_PKG);
+		localstatedir = fu_path_from_kind(FU_PATH_KIND_LOCALSTATEDIR_PKG);
 		fn = g_strdup_printf("%s.bin", fu_device_get_version(device));
 		path = g_build_filename(
 		    localstatedir,

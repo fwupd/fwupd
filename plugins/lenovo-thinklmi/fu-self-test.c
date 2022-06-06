@@ -154,7 +154,7 @@ main(int argc, char **argv)
 	(void)g_setenv("FWUPD_SYSFSFWDIR", testdatadir, TRUE);
 
 	/* change behavior of UEFI plugin for test mode */
-	sysfsdir = fu_common_get_path(FU_PATH_KIND_SYSFSDIR_FW);
+	sysfsdir = fu_path_from_kind(FU_PATH_KIND_SYSFSDIR_FW);
 	(void)g_setenv("FWUPD_UEFI_ESP_PATH", sysfsdir, TRUE);
 	(void)g_setenv("FWUPD_UEFI_TEST", "1", TRUE);
 

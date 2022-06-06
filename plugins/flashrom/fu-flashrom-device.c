@@ -166,9 +166,9 @@ fu_flashrom_device_prepare(FuDevice *device,
 
 	/* if the original firmware doesn't exist, grab it now */
 	basename = g_strdup_printf("flashrom-%s.bin", fu_device_get_id(device));
-	localstatedir = fu_common_get_path(FU_PATH_KIND_LOCALSTATEDIR_PKG);
+	localstatedir = fu_path_from_kind(FU_PATH_KIND_LOCALSTATEDIR_PKG);
 	firmware_orig = g_build_filename(localstatedir, "builder", basename, NULL);
-	if (!fu_common_mkdir_parent(firmware_orig, error))
+	if (!fu_path_mkdir_parent(firmware_orig, error))
 		return FALSE;
 	if (!g_file_test(firmware_orig, G_FILE_TEST_EXISTS)) {
 		g_autoptr(GBytes) buf = NULL;

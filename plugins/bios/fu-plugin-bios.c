@@ -40,7 +40,7 @@ fu_plugin_bios_coldplug(FuPlugin *plugin, FuProgress *progress, GError **error)
 #endif
 
 	/* get the directory of ESRT entries */
-	sysfsfwdir = fu_common_get_path(FU_PATH_KIND_SYSFSDIR_FW);
+	sysfsfwdir = fu_path_from_kind(FU_PATH_KIND_SYSFSDIR_FW);
 	esrt_path = g_build_filename(sysfsfwdir, "efi", "esrt", NULL);
 	if (!g_file_test(esrt_path, G_FILE_TEST_IS_DIR)) {
 		fu_plugin_add_flag(plugin, FWUPD_PLUGIN_FLAG_CAPSULES_UNSUPPORTED);

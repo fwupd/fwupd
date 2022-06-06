@@ -22,6 +22,7 @@
 #include "fu-common.h"
 #include "fu-kenv.h"
 #include "fu-mem.h"
+#include "fu-path.h"
 #include "fu-smbios-private.h"
 #include "fu-string.h"
 
@@ -857,7 +858,7 @@ fu_smbios_setup(FuSmbios *self, GError **error)
 	g_return_val_if_fail(FU_IS_SMBIOS(self), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
-	sysfsfwdir = fu_common_get_path(FU_PATH_KIND_SYSFSDIR_FW);
+	sysfsfwdir = fu_path_from_kind(FU_PATH_KIND_SYSFSDIR_FW);
 
 	/* DMI */
 	path = g_build_filename(sysfsfwdir, "dmi", "tables", NULL);

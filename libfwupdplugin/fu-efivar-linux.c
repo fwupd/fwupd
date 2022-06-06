@@ -19,11 +19,12 @@
 
 #include "fu-common.h"
 #include "fu-efivar-impl.h"
+#include "fu-path.h"
 
 static gchar *
 fu_efivar_get_path(void)
 {
-	g_autofree gchar *sysfsfwdir = fu_common_get_path(FU_PATH_KIND_SYSFSDIR_FW);
+	g_autofree gchar *sysfsfwdir = fu_path_from_kind(FU_PATH_KIND_SYSFSDIR_FW);
 	return g_build_filename(sysfsfwdir, "efi", "efivars", NULL);
 }
 
@@ -159,7 +160,7 @@ fu_efivar_delete_with_glob_impl(const gchar *guid, const gchar *name_glob, GErro
 		return FALSE;
 	nameguid_glob = g_strdup_printf("%s-%s", name_glob, guid);
 	while ((fn = g_dir_read_name(dir)) != NULL) {
-		if (fu_common_fnmatch(nameguid_glob, fn)) {
+		if (fu_path_fnmatch(nameguid_glob, fn)) {
 			g_autofree gchar *keyfn = g_build_filename(efivardir, fn, NULL);
 			g_autoptr(GFile) file = g_file_new_for_path(keyfn);
 			if (!fu_efivar_set_immutable(keyfn, FALSE, NULL, error)) {

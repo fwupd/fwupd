@@ -83,7 +83,7 @@ fu_bcm57xx_device_probe(FuDevice *device, GError **error)
 		g_debug("waiting for net devices to appear");
 		g_usleep(50 * 1000);
 	}
-	ifaces = fu_common_filename_glob(fn, "en*", NULL);
+	ifaces = fu_path_glob(fn, "en*", NULL);
 	if (ifaces == NULL || ifaces->len == 0) {
 		fu_device_add_child(FU_DEVICE(self), FU_DEVICE(self->recovery));
 	} else {

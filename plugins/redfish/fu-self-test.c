@@ -49,7 +49,7 @@ fu_test_self_init(FuTest *self)
 
 	/* running as an installed test */
 	if (fu_test_is_installed_test()) {
-		g_autofree gchar *plugindir = fu_common_get_path(FU_PATH_KIND_PLUGINDIR_PKG);
+		g_autofree gchar *plugindir = fu_path_from_kind(FU_PATH_KIND_PLUGINDIR_PKG);
 		pluginfn =
 		    g_build_filename(plugindir, "libfu_plugin_redfish." G_MODULE_SUFFIX, NULL);
 	} else {

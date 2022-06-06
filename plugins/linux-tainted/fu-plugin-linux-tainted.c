@@ -50,7 +50,7 @@ fu_plugin_linux_tainted_startup(FuPlugin *plugin, FuProgress *progress, GError *
 	g_autofree gchar *fn = NULL;
 	g_autofree gchar *procfs = NULL;
 
-	procfs = fu_common_get_path(FU_PATH_KIND_PROCFS);
+	procfs = fu_path_from_kind(FU_PATH_KIND_PROCFS);
 	fn = g_build_filename(procfs, "sys", "kernel", "tainted", NULL);
 	data->file = g_file_new_for_path(fn);
 	data->monitor = g_file_monitor(data->file, G_FILE_MONITOR_NONE, NULL, error);

@@ -13,6 +13,7 @@
 #include <stdlib.h>
 
 #include "fu-history.h"
+#include "fu-path.h"
 #include "fu-plugin-private.h"
 #include "fu-spawn.h"
 #include "fu-util-common.h"
@@ -141,8 +142,8 @@ main(int argc, char *argv[])
 	gint vercmp;
 	guint cnt = 0;
 	g_autofree gchar *link = NULL;
-	g_autofree gchar *target = fu_common_get_path(FU_PATH_KIND_LOCALSTATEDIR_PKG);
-	g_autofree gchar *trigger = fu_common_get_path(FU_PATH_KIND_OFFLINE_TRIGGER);
+	g_autofree gchar *target = fu_path_from_kind(FU_PATH_KIND_LOCALSTATEDIR_PKG);
+	g_autofree gchar *trigger = fu_path_from_kind(FU_PATH_KIND_OFFLINE_TRIGGER);
 	g_autoptr(FuHistory) history = NULL;
 	g_autoptr(FwupdClient) client = NULL;
 	g_autoptr(GError) error = NULL;
