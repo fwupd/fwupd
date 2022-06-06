@@ -274,6 +274,7 @@ fu_util_start_engine(FuUtilPrivate *priv,
 			g_debug("Failed to stop daemon: %s", error_local->message);
 	}
 #endif
+	flags |= FU_ENGINE_LOAD_FLAG_NO_IDLE_SOURCES;
 	if (!fu_engine_load(priv->engine, flags, progress, error))
 		return FALSE;
 	if (fu_engine_get_tainted(priv->engine)) {
@@ -3921,7 +3922,7 @@ main(int argc, char *argv[])
 		priv->flags |= FWUPD_INSTALL_FLAG_IGNORE_VID_PID;
 
 	/* load engine */
-	priv->engine = fu_engine_new(FU_APP_FLAGS_NO_IDLE_SOURCES);
+	priv->engine = fu_engine_new();
 	g_signal_connect(FU_ENGINE(priv->engine),
 			 "device-request",
 			 G_CALLBACK(fu_util_update_device_request_cb),

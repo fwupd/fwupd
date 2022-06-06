@@ -2157,7 +2157,7 @@ fu_daemon_setup(FuDaemon *self, const gchar *socket_address, GError **error)
 	}
 
 	/* load engine */
-	self->engine = fu_engine_new(FU_APP_FLAGS_NONE);
+	self->engine = fu_engine_new();
 	g_signal_connect(FU_ENGINE(self->engine),
 			 "changed",
 			 G_CALLBACK(fu_daemon_engine_changed_cb),

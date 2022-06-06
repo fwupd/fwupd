@@ -12,20 +12,6 @@
 #include "fu-volume.h"
 
 /**
- * FuAppFlags:
- * @FU_APP_FLAGS_NONE:			No flags set
- * @FU_APP_FLAGS_NO_IDLE_SOURCES:	Disallow idle sources
- *
- * The flags to use when loading an application.
- **/
-typedef enum {
-	FU_APP_FLAGS_NONE = 0,
-	FU_APP_FLAGS_NO_IDLE_SOURCES = 1 << 0,
-	/*< private >*/
-	FU_APP_FLAGS_LAST
-} FuAppFlags;
-
-/**
  * FuEndianType:
  *
  * The endian type, e.g. %G_LITTLE_ENDIAN
