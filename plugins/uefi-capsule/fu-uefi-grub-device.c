@@ -70,7 +70,7 @@ fu_uefi_grub_device_mkconfig(FuDevice *device,
 
 	/* replace ESP info in conf with what we detected */
 	g_string_append_printf(str, "EFI_PATH=%s\n", target_app);
-	fu_common_string_replace(str, esp_path, "");
+	fu_string_replace(str, esp_path, "");
 	g_string_append_printf(str, "ESP=%s\n", esp_path);
 	grub_target = g_build_filename(localstatedir, "uefi_capsule.conf", NULL);
 	if (!g_file_set_contents(grub_target, str->str, -1, error))

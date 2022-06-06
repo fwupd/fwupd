@@ -124,11 +124,11 @@ fu_superio_device_to_string(FuDevice *device, guint idt, GString *str)
 	/* FuUdevDevice->to_string */
 	FU_DEVICE_CLASS(fu_superio_device_parent_class)->to_string(device, idt, str);
 
-	fu_common_string_append_kv(str, idt, "Chipset", priv->chipset);
-	fu_common_string_append_kx(str, idt, "Id", priv->id);
-	fu_common_string_append_kx(str, idt, "Port", priv->port);
-	fu_common_string_append_kx(str, idt, "DataPort", priv->data_port);
-	fu_common_string_append_kx(str, idt, "ControlPort", priv->control_port);
+	fu_string_append(str, idt, "Chipset", priv->chipset);
+	fu_string_append_kx(str, idt, "Id", priv->id);
+	fu_string_append_kx(str, idt, "Port", priv->port);
+	fu_string_append_kx(str, idt, "DataPort", priv->data_port);
+	fu_string_append_kx(str, idt, "ControlPort", priv->control_port);
 }
 
 static gboolean
@@ -431,31 +431,31 @@ fu_superio_device_set_quirk_kv(FuDevice *device,
 	if (g_strcmp0(key, "SuperioAutoloadAction") == 0)
 		return TRUE;
 	if (g_strcmp0(key, "SuperioId") == 0) {
-		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT16, error))
+		if (!fu_strtoull_full(value, &tmp, 0, G_MAXUINT16, error))
 			return FALSE;
 		priv->id = tmp;
 		return TRUE;
 	}
 	if (g_strcmp0(key, "SuperioPort") == 0) {
-		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT16, error))
+		if (!fu_strtoull_full(value, &tmp, 0, G_MAXUINT16, error))
 			return FALSE;
 		priv->port = tmp;
 		return TRUE;
 	}
 	if (g_strcmp0(key, "SuperioControlPort") == 0) {
-		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT16, error))
+		if (!fu_strtoull_full(value, &tmp, 0, G_MAXUINT16, error))
 			return FALSE;
 		priv->control_port = tmp;
 		return TRUE;
 	}
 	if (g_strcmp0(key, "SuperioDataPort") == 0) {
-		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT16, error))
+		if (!fu_strtoull_full(value, &tmp, 0, G_MAXUINT16, error))
 			return FALSE;
 		priv->data_port = tmp;
 		return TRUE;
 	}
 	if (g_strcmp0(key, "SuperioTimeout") == 0) {
-		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT, error))
+		if (!fu_strtoull_full(value, &tmp, 0, G_MAXUINT, error))
 			return FALSE;
 		priv->timeout_ms = tmp;
 		return TRUE;

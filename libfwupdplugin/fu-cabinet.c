@@ -17,6 +17,7 @@
 
 #include "fu-cabinet.h"
 #include "fu-common.h"
+#include "fu-string.h"
 
 /**
  * FuCabinet:
@@ -291,7 +292,7 @@ fu_cabinet_parse_release(FuCabinet *self, XbNode *release, GError **error)
 	/* set as metadata if unset, but error if specified and incorrect */
 	nsize = xb_node_query_first(release, "size[@type='installed']", NULL);
 	if (nsize != NULL) {
-		guint64 size = fu_common_strtoull(xb_node_get_text(nsize));
+		guint64 size = fu_strtoull(xb_node_get_text(nsize));
 		if (size != g_bytes_get_size(blob)) {
 			g_set_error(error,
 				    FWUPD_ERROR,

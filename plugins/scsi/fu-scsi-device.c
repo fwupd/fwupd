@@ -35,7 +35,7 @@ fu_scsi_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuScsiDevice *self = FU_SCSI_DEVICE(device);
 	FU_DEVICE_CLASS(fu_scsi_device_parent_class)->to_string(device, idt, str);
-	fu_common_string_append_kx(str, idt, "FfuTimeout", self->ffu_timeout);
+	fu_string_append_kx(str, idt, "FfuTimeout", self->ffu_timeout);
 }
 
 static gboolean

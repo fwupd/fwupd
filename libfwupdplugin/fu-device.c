@@ -20,6 +20,7 @@
 #include "fu-device-private.h"
 #include "fu-mutex.h"
 #include "fu-quirks.h"
+#include "fu-string.h"
 
 #define FU_DEVICE_RETRY_OPEN_COUNT 5
 #define FU_DEVICE_RETRY_OPEN_DELAY 500 /* ms */
@@ -1694,43 +1695,43 @@ fu_device_set_quirk_kv(FuDevice *self, const gchar *key, const gchar *value, GEr
 		return TRUE;
 	}
 	if (g_strcmp0(key, FU_QUIRKS_FIRMWARE_SIZE_MIN) == 0) {
-		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT64, error))
+		if (!fu_strtoull_full(value, &tmp, 0, G_MAXUINT64, error))
 			return FALSE;
 		fu_device_set_firmware_size_min(self, tmp);
 		return TRUE;
 	}
 	if (g_strcmp0(key, FU_QUIRKS_FIRMWARE_SIZE_MAX) == 0) {
-		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT64, error))
+		if (!fu_strtoull_full(value, &tmp, 0, G_MAXUINT64, error))
 			return FALSE;
 		fu_device_set_firmware_size_max(self, tmp);
 		return TRUE;
 	}
 	if (g_strcmp0(key, FU_QUIRKS_FIRMWARE_SIZE) == 0) {
-		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT64, error))
+		if (!fu_strtoull_full(value, &tmp, 0, G_MAXUINT64, error))
 			return FALSE;
 		fu_device_set_firmware_size(self, tmp);
 		return TRUE;
 	}
 	if (g_strcmp0(key, FU_QUIRKS_INSTALL_DURATION) == 0) {
-		if (!fu_common_strtoull_full(value, &tmp, 0, 60 * 60 * 24, error))
+		if (!fu_strtoull_full(value, &tmp, 0, 60 * 60 * 24, error))
 			return FALSE;
 		fu_device_set_install_duration(self, tmp);
 		return TRUE;
 	}
 	if (g_strcmp0(key, FU_QUIRKS_PRIORITY) == 0) {
-		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT8, error))
+		if (!fu_strtoull_full(value, &tmp, 0, G_MAXUINT8, error))
 			return FALSE;
 		fu_device_set_priority(self, tmp);
 		return TRUE;
 	}
 	if (g_strcmp0(key, FU_QUIRKS_BATTERY_THRESHOLD) == 0) {
-		if (!fu_common_strtoull_full(value, &tmp, 0, 100, error))
+		if (!fu_strtoull_full(value, &tmp, 0, 100, error))
 			return FALSE;
 		fu_device_set_battery_threshold(self, tmp);
 		return TRUE;
 	}
 	if (g_strcmp0(key, FU_QUIRKS_REMOVE_DELAY) == 0) {
-		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT, error))
+		if (!fu_strtoull_full(value, &tmp, 0, G_MAXUINT, error))
 			return FALSE;
 		fu_device_set_remove_delay(self, tmp);
 		return TRUE;
@@ -2339,7 +2340,7 @@ fu_device_fixup_vendor_name(FuDevice *self)
 		if (g_str_has_prefix(name_up, vendor_up)) {
 			gsize vendor_len = strlen(vendor);
 			g_autofree gchar *name1 = g_strdup(name + vendor_len);
-			g_autofree gchar *name2 = fu_common_strstrip(name1);
+			g_autofree gchar *name2 = fu_strstrip(name1);
 			g_debug("removing vendor prefix of '%s' from '%s'", vendor, name);
 			fwupd_device_set_name(FWUPD_DEVICE(self), name2);
 		}
@@ -2362,7 +2363,7 @@ fu_device_set_vendor(FuDevice *self, const gchar *vendor)
 
 	/* trim any leading and trailing spaces */
 	if (vendor != NULL)
-		vendor_safe = fu_common_strstrip(vendor);
+		vendor_safe = fu_strstrip(vendor);
 
 	/* proxy */
 	fwupd_device_set_vendor(FWUPD_DEVICE(self), vendor_safe);
@@ -2395,8 +2396,8 @@ fu_device_sanitize_name(const gchar *value)
 		}
 	}
 	g_string_truncate(new, last_non_space);
-	fu_common_string_replace(new, "(TM)", "™");
-	fu_common_string_replace(new, "(R)", "");
+	fu_string_replace(new, "(TM)", "™");
+	fu_string_replace(new, "(R)", "");
 	if (new->len == 0)
 		return NULL;
 	return g_string_free(g_steal_pointer(&new), FALSE);
@@ -2686,7 +2687,7 @@ fu_device_ensure_inhibits(FuDevice *self)
 			g_ptr_array_add(reasons, inhibit->reason);
 			problems |= inhibit->problem;
 		}
-		reasons_str = fu_common_strjoin_array(", ", reasons);
+		reasons_str = fu_strjoin(", ", reasons);
 		fu_device_set_update_error(self, reasons_str);
 	} else {
 		if (fu_device_has_flag(self, FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN)) {
@@ -3606,58 +3607,55 @@ fu_device_add_string(FuDevice *self, guint idt, GString *str)
 	if (tmp != NULL && tmp[0] != '\0')
 		g_string_append(str, tmp);
 	if (priv->alternate_id != NULL)
-		fu_common_string_append_kv(str, idt + 1, "AlternateId", priv->alternate_id);
+		fu_string_append(str, idt + 1, "AlternateId", priv->alternate_id);
 	if (priv->equivalent_id != NULL)
-		fu_common_string_append_kv(str, idt + 1, "EquivalentId", priv->equivalent_id);
+		fu_string_append(str, idt + 1, "EquivalentId", priv->equivalent_id);
 	if (priv->physical_id != NULL)
-		fu_common_string_append_kv(str, idt + 1, "PhysicalId", priv->physical_id);
+		fu_string_append(str, idt + 1, "PhysicalId", priv->physical_id);
 	if (priv->logical_id != NULL)
-		fu_common_string_append_kv(str, idt + 1, "LogicalId", priv->logical_id);
+		fu_string_append(str, idt + 1, "LogicalId", priv->logical_id);
 	if (priv->backend_id != NULL)
-		fu_common_string_append_kv(str, idt + 1, "BackendId", priv->backend_id);
+		fu_string_append(str, idt + 1, "BackendId", priv->backend_id);
 	if (priv->proxy != NULL)
-		fu_common_string_append_kv(str, idt + 1, "ProxyId", fu_device_get_id(priv->proxy));
+		fu_string_append(str, idt + 1, "ProxyId", fu_device_get_id(priv->proxy));
 	if (priv->proxy_guid != NULL)
-		fu_common_string_append_kv(str, idt + 1, "ProxyGuid", priv->proxy_guid);
+		fu_string_append(str, idt + 1, "ProxyGuid", priv->proxy_guid);
 	if (priv->remove_delay != 0)
-		fu_common_string_append_ku(str, idt + 1, "RemoveDelay", priv->remove_delay);
+		fu_string_append_ku(str, idt + 1, "RemoveDelay", priv->remove_delay);
 	if (priv->custom_flags != NULL)
-		fu_common_string_append_kv(str, idt + 1, "CustomFlags", priv->custom_flags);
+		fu_string_append(str, idt + 1, "CustomFlags", priv->custom_flags);
 	if (priv->firmware_gtype != G_TYPE_INVALID) {
-		fu_common_string_append_kv(str,
-					   idt + 1,
-					   "FirmwareGType",
-					   g_type_name(priv->firmware_gtype));
+		fu_string_append(str, idt + 1, "FirmwareGType", g_type_name(priv->firmware_gtype));
 	}
 	if (priv->size_min > 0) {
 		g_autofree gchar *sz = g_strdup_printf("%" G_GUINT64_FORMAT, priv->size_min);
-		fu_common_string_append_kv(str, idt + 1, "FirmwareSizeMin", sz);
+		fu_string_append(str, idt + 1, "FirmwareSizeMin", sz);
 	}
 	if (priv->size_max > 0) {
 		g_autofree gchar *sz = g_strdup_printf("%" G_GUINT64_FORMAT, priv->size_max);
-		fu_common_string_append_kv(str, idt + 1, "FirmwareSizeMax", sz);
+		fu_string_append(str, idt + 1, "FirmwareSizeMax", sz);
 	}
 	if (priv->order != G_MAXINT) {
 		g_autofree gchar *order = g_strdup_printf("%i", priv->order);
-		fu_common_string_append_kv(str, idt + 1, "Order", order);
+		fu_string_append(str, idt + 1, "Order", order);
 	}
 	if (priv->priority > 0)
-		fu_common_string_append_ku(str, idt + 1, "Priority", priv->priority);
+		fu_string_append_ku(str, idt + 1, "Priority", priv->priority);
 	if (priv->metadata != NULL) {
 		g_autoptr(GList) keys = g_hash_table_get_keys(priv->metadata);
 		for (GList *l = keys; l != NULL; l = l->next) {
 			const gchar *key = l->data;
 			const gchar *value = g_hash_table_lookup(priv->metadata, key);
-			fu_common_string_append_kv(str, idt + 1, key, value);
+			fu_string_append(str, idt + 1, key, value);
 		}
 	}
 	for (guint i = 0; i < priv->possible_plugins->len; i++) {
 		const gchar *name = g_ptr_array_index(priv->possible_plugins, i);
-		fu_common_string_append_kv(str, idt + 1, "PossiblePlugin", name);
+		fu_string_append(str, idt + 1, "PossiblePlugin", name);
 	}
 	if (priv->parent_physical_ids != NULL && priv->parent_physical_ids->len > 0) {
-		g_autofree gchar *flags = fu_common_strjoin_array(",", priv->parent_physical_ids);
-		fu_common_string_append_kv(str, idt + 1, "ParentPhysicalIds", flags);
+		g_autofree gchar *flags = fu_strjoin(",", priv->parent_physical_ids);
+		fu_string_append(str, idt + 1, "ParentPhysicalIds", flags);
 	}
 	if (priv->internal_flags != FU_DEVICE_INTERNAL_FLAG_NONE) {
 		g_autoptr(GString) tmp2 = g_string_new("");
@@ -3670,7 +3668,7 @@ fu_device_add_string(FuDevice *self, guint idt, GString *str)
 		}
 		if (tmp2->len > 0)
 			g_string_truncate(tmp2, tmp2->len - 1);
-		fu_common_string_append_kv(str, idt + 1, "InternalFlags", tmp2->str);
+		fu_string_append(str, idt + 1, "InternalFlags", tmp2->str);
 	}
 	if (priv->private_flags > 0) {
 		g_autoptr(GPtrArray) tmpv = g_ptr_array_new();
@@ -3685,8 +3683,8 @@ fu_device_add_string(FuDevice *self, guint idt, GString *str)
 				continue;
 			g_ptr_array_add(tmpv, item->value_str);
 		}
-		tmps = fu_common_strjoin_array(",", tmpv);
-		fu_common_string_append_kv(str, idt + 1, "PrivateFlags", tmps);
+		tmps = fu_strjoin(",", tmpv);
+		fu_string_append(str, idt + 1, "PrivateFlags", tmps);
 	}
 	if (priv->inhibits != NULL) {
 		g_autoptr(GList) values = g_hash_table_get_values(priv->inhibits);
@@ -3694,7 +3692,7 @@ fu_device_add_string(FuDevice *self, guint idt, GString *str)
 			FuDeviceInhibit *inhibit = (FuDeviceInhibit *)l->data;
 			g_autofree gchar *val =
 			    g_strdup_printf("[%s] %s", inhibit->inhibit_id, inhibit->reason);
-			fu_common_string_append_kv(str, idt + 1, "Inhibit", val);
+			fu_string_append(str, idt + 1, "Inhibit", val);
 		}
 	}
 

@@ -72,13 +72,10 @@ fu_thunderbolt_controller_to_string(FuDevice *device, guint idt, GString *str)
 	/* FuThunderboltDevice->to_string */
 	FU_DEVICE_CLASS(fu_thunderbolt_controller_parent_class)->to_string(device, idt, str);
 
-	fu_common_string_append_kv(str,
-				   idt,
-				   "Device Type",
-				   fu_thunderbolt_controller_kind_to_string(self));
-	fu_common_string_append_kb(str, idt, "Safe Mode", self->safe_mode);
-	fu_common_string_append_kb(str, idt, "Native mode", self->is_native);
-	fu_common_string_append_ku(str, idt, "Generation", self->gen);
+	fu_string_append(str, idt, "Device Type", fu_thunderbolt_controller_kind_to_string(self));
+	fu_string_append_kb(str, idt, "Safe Mode", self->safe_mode);
+	fu_string_append_kb(str, idt, "Native mode", self->is_native);
+	fu_string_append_ku(str, idt, "Generation", self->gen);
 }
 
 static gboolean

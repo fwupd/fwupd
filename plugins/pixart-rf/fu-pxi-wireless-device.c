@@ -34,9 +34,9 @@ fu_pxi_wireless_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuPxiWirelessDevice *self = FU_PXI_WIRELESS_DEVICE(device);
 	fu_pxi_ota_fw_state_to_string(&self->fwstate, idt, str);
-	fu_common_string_append_kv(str, idt, "ModelName", (gchar *)self->model.name);
-	fu_common_string_append_kx(str, idt, "ModelType", self->model.type);
-	fu_common_string_append_kx(str, idt, "ModelTarget", self->model.target);
+	fu_string_append(str, idt, "ModelName", (gchar *)self->model.name);
+	fu_string_append_kx(str, idt, "ModelType", self->model.type);
+	fu_string_append_kx(str, idt, "ModelTarget", self->model.target);
 }
 
 static gboolean

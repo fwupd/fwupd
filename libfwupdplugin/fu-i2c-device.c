@@ -17,6 +17,7 @@
 #endif
 
 #include "fu-i2c-device.h"
+#include "fu-string.h"
 
 /**
  * FuI2cDevice
@@ -41,7 +42,7 @@ fu_i2c_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuI2cDevice *self = FU_I2C_DEVICE(device);
 	FuI2cDevicePrivate *priv = GET_PRIVATE(self);
-	fu_common_string_append_kx(str, idt, "BusNumber", priv->bus_number);
+	fu_string_append_kx(str, idt, "BusNumber", priv->bus_number);
 }
 
 static void

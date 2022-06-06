@@ -162,7 +162,7 @@ fu_thunderbolt_device_to_string(FuDevice *device, guint idt, GString *str)
 	/* FuUdevDevice->to_string */
 	FU_DEVICE_CLASS(fu_thunderbolt_device_parent_class)->to_string(device, idt, str);
 
-	fu_common_string_append_kv(str, idt, "AuthMethod", priv->auth_method);
+	fu_string_append(str, idt, "AuthMethod", priv->auth_method);
 }
 
 void

@@ -14,6 +14,7 @@
 #include "fu-common.h"
 #include "fu-firmware-common.h"
 #include "fu-srec-firmware.h"
+#include "fu-string.h"
 
 /**
  * FuSrecFirmware:
@@ -157,7 +158,7 @@ fu_srec_firmware_tokenize_cb(GString *token, guint token_idx, gpointer user_data
 
 	/* check starting token */
 	if (token->str[0] != 'S' || token->len < 3) {
-		g_autofree gchar *strsafe = fu_common_strsafe(token->str, 3);
+		g_autofree gchar *strsafe = fu_strsafe(token->str, 3);
 		if (strsafe != NULL) {
 			g_set_error(error,
 				    FWUPD_ERROR,
@@ -331,12 +332,12 @@ fu_srec_firmware_tokenize(FuFirmware *firmware, GBytes *fw, FwupdInstallFlags fl
 	FuSrecFirmwareTokenHelper helper = {.self = self, .flags = flags, .got_eof = FALSE};
 
 	/* parse records */
-	if (!fu_common_strnsplit_full(g_bytes_get_data(fw, NULL),
-				      g_bytes_get_size(fw),
-				      "\n",
-				      fu_srec_firmware_tokenize_cb,
-				      &helper,
-				      error))
+	if (!fu_strsplit_full(g_bytes_get_data(fw, NULL),
+			      g_bytes_get_size(fw),
+			      "\n",
+			      fu_srec_firmware_tokenize_cb,
+			      &helper,
+			      error))
 		return FALSE;
 
 	/* no EOF */

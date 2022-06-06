@@ -49,6 +49,20 @@ if __name__ == "__main__":
             "fu_common_crc16_full": "fu_crc16_full",
             "fu_common_crc32": "fu_crc32",
             "fu_common_crc32_full": "fu_crc32_full",
+            "fu_common_string_replace": "fu_string_replace",
+            "fu_common_string_append_kv": "fu_string_append",
+            "fu_common_string_append_ku": "fu_string_append_ku",
+            "fu_common_string_append_kx": "fu_string_append_kx",
+            "fu_common_string_append_kb": "fu_string_append_kb",
+            "fu_common_strnsplit": "fu_strsplit",
+            "fu_common_strnsplit_full": "fu_strsplit_full",
+            "fu_common_strjoin_array": "fu_strjoin",
+            "fu_common_strsafe": "fu_strsafe",
+            "fu_common_strwidth": "fu_strwidth",
+            "fu_common_strstrip": "fu_strstrip",
+            "fu_common_strtoull": "fu_strtoull",
+            "fu_common_strtoull_full": "fu_strtoull_full",
+            "FuCommonStrsplitFunc": "FuStrsplitFunc",
         }.items():
             if buf.find(old) == -1:
                 continue

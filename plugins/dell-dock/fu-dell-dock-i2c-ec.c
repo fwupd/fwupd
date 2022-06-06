@@ -597,27 +597,21 @@ fu_dell_dock_ec_to_string(FuDevice *device, guint idt, GString *str)
 	FuDellDockEc *self = FU_DELL_DOCK_EC(device);
 	gchar service_tag[8] = {0x00};
 
-	fu_common_string_append_ku(str, idt, "BaseType", self->base_type);
-	fu_common_string_append_ku(str, idt, "BoardId", self->data->board_id);
-	fu_common_string_append_ku(str, idt, "PowerSupply", self->data->power_supply_wattage);
-	fu_common_string_append_kx(str, idt, "StatusPort0", self->data->port0_dock_status);
-	fu_common_string_append_kx(str, idt, "StatusPort1", self->data->port1_dock_status);
+	fu_string_append_ku(str, idt, "BaseType", self->base_type);
+	fu_string_append_ku(str, idt, "BoardId", self->data->board_id);
+	fu_string_append_ku(str, idt, "PowerSupply", self->data->power_supply_wattage);
+	fu_string_append_kx(str, idt, "StatusPort0", self->data->port0_dock_status);
+	fu_string_append_kx(str, idt, "StatusPort1", self->data->port1_dock_status);
 	memcpy(service_tag, self->data->service_tag, 7);
-	fu_common_string_append_kv(str, idt, "ServiceTag", service_tag);
-	fu_common_string_append_ku(str, idt, "Configuration", self->data->dock_configuration);
-	fu_common_string_append_kx(str,
-				   idt,
-				   "PackageFirmwareVersion",
-				   self->data->dock_firmware_pkg_ver);
-	fu_common_string_append_ku(str, idt, "ModuleSerial", self->data->module_serial);
-	fu_common_string_append_ku(str,
-				   idt,
-				   "OriginalModuleSerial",
-				   self->data->original_module_serial);
-	fu_common_string_append_ku(str, idt, "Type", self->data->dock_type);
-	fu_common_string_append_kx(str, idt, "ModuleType", self->data->module_type);
-	fu_common_string_append_kv(str, idt, "MinimumEc", self->ec_minimum_version);
-	fu_common_string_append_ku(str, idt, "PassiveFlow", self->passive_flow);
+	fu_string_append(str, idt, "ServiceTag", service_tag);
+	fu_string_append_ku(str, idt, "Configuration", self->data->dock_configuration);
+	fu_string_append_kx(str, idt, "PackageFirmwareVersion", self->data->dock_firmware_pkg_ver);
+	fu_string_append_ku(str, idt, "ModuleSerial", self->data->module_serial);
+	fu_string_append_ku(str, idt, "OriginalModuleSerial", self->data->original_module_serial);
+	fu_string_append_ku(str, idt, "Type", self->data->dock_type);
+	fu_string_append_kx(str, idt, "ModuleType", self->data->module_type);
+	fu_string_append(str, idt, "MinimumEc", self->ec_minimum_version);
+	fu_string_append_ku(str, idt, "PassiveFlow", self->passive_flow);
 }
 
 gboolean
@@ -888,13 +882,13 @@ fu_dell_dock_ec_set_quirk_kv(FuDevice *device, const gchar *key, const gchar *va
 	guint64 tmp = 0;
 
 	if (g_strcmp0(key, "DellDockUnlockTarget") == 0) {
-		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT8, error))
+		if (!fu_strtoull_full(value, &tmp, 0, G_MAXUINT8, error))
 			return FALSE;
 		self->unlock_target = tmp;
 		return TRUE;
 	}
 	if (g_strcmp0(key, "DellDockBoardMin") == 0) {
-		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT8, error))
+		if (!fu_strtoull_full(value, &tmp, 0, G_MAXUINT8, error))
 			return FALSE;
 		self->board_min = tmp;
 		return TRUE;
@@ -908,7 +902,7 @@ fu_dell_dock_ec_set_quirk_kv(FuDevice *device, const gchar *key, const gchar *va
 		return TRUE;
 	}
 	if (g_strcmp0(key, "DellDockBlobVersionOffset") == 0) {
-		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT32, error))
+		if (!fu_strtoull_full(value, &tmp, 0, G_MAXUINT32, error))
 			return FALSE;
 		self->blob_version_offset = tmp;
 		return TRUE;

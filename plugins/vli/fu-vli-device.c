@@ -519,15 +519,15 @@ fu_vli_device_to_string(FuDevice *device, guint idt, GString *str)
 	FU_DEVICE_CLASS(fu_vli_device_parent_class)->to_string(device, idt, str);
 
 	if (priv->kind != FU_VLI_DEVICE_KIND_UNKNOWN) {
-		fu_common_string_append_kv(str,
-					   idt,
-					   "DeviceKind",
-					   fu_vli_common_device_kind_to_string(priv->kind));
+		fu_string_append(str,
+				 idt,
+				 "DeviceKind",
+				 fu_vli_common_device_kind_to_string(priv->kind));
 	}
-	fu_common_string_append_kb(str, idt, "SpiAutoDetect", priv->spi_auto_detect);
+	fu_string_append_kb(str, idt, "SpiAutoDetect", priv->spi_auto_detect);
 	if (priv->flash_id != 0x0) {
 		g_autofree gchar *tmp = fu_vli_device_get_flash_id_str(self);
-		fu_common_string_append_kv(str, idt, "FlashId", tmp);
+		fu_string_append(str, idt, "FlashId", tmp);
 	}
 	fu_device_add_string(FU_DEVICE(priv->cfi_device), idt + 1, str);
 }
@@ -639,13 +639,13 @@ fu_vli_device_set_quirk_kv(FuDevice *device, const gchar *key, const gchar *valu
 	guint64 tmp = 0;
 
 	if (g_strcmp0(key, "CfiDeviceCmdReadIdSz") == 0) {
-		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT8, error))
+		if (!fu_strtoull_full(value, &tmp, 0, G_MAXUINT8, error))
 			return FALSE;
 		priv->spi_cmd_read_id_sz = tmp;
 		return TRUE;
 	}
 	if (g_strcmp0(key, "VliSpiAutoDetect") == 0) {
-		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT8, error))
+		if (!fu_strtoull_full(value, &tmp, 0, G_MAXUINT8, error))
 			return FALSE;
 		priv->spi_auto_detect = tmp > 0;
 		return TRUE;

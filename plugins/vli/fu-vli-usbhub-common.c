@@ -57,5 +57,5 @@ fu_vli_usbhub_header_to_string(FuVliUsbhubHeader *hdr, guint idt, GString *str)
 #endif
 					 XB_NODE_EXPORT_FLAG_FORMAT_INDENT,
 				     NULL);
-	fu_common_string_append_kv(str, idt, "xml", xml);
+	fu_string_append(str, idt, "xml", xml);
 }

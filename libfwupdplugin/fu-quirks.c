@@ -20,6 +20,7 @@
 #include "fu-common.h"
 #include "fu-mutex.h"
 #include "fu-quirks.h"
+#include "fu-string.h"
 
 /**
  * FuQuirks:
@@ -336,7 +337,7 @@ fu_quirks_check_silo(FuQuirks *self, GError **error)
 	if (self->invalid_keys->len > 0) {
 		g_autofree gchar *str = NULL;
 		g_ptr_array_sort(self->invalid_keys, fu_quirks_strcasecmp_cb);
-		str = fu_common_strjoin_array(",", self->invalid_keys);
+		str = fu_strjoin(",", self->invalid_keys);
 		g_debug("invalid key names: %s", str);
 	}
 

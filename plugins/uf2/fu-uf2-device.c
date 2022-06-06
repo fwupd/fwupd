@@ -285,7 +285,7 @@ fu_uf2_device_setup(FuDevice *device, GError **error)
 		return FALSE;
 	if (!g_file_get_contents(fn1, &buf, &bufsz, error))
 		return FALSE;
-	lines = fu_common_strnsplit(buf, bufsz, "\n", -1);
+	lines = fu_strsplit(buf, bufsz, "\n", -1);
 	for (guint i = 0; lines[i] != NULL; i++) {
 		if (g_str_has_prefix(lines[i], "Model: ")) {
 			fu_device_set_name(device, lines[i] + 7);
@@ -401,7 +401,7 @@ fu_uf2_device_to_string(FuDevice *device, guint idt, GString *str)
 	FuUf2Device *self = FU_UF2_DEVICE(device);
 	FU_DEVICE_CLASS(fu_uf2_device_parent_class)->to_string(device, idt, str);
 	if (self->family_id > 0)
-		fu_common_string_append_kx(str, idt, "FamilyId", self->family_id);
+		fu_string_append_kx(str, idt, "FamilyId", self->family_id);
 }
 
 static void

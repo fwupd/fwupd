@@ -70,25 +70,25 @@ static void
 fu_intel_spi_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuIntelSpiDevice *self = FU_INTEL_SPI_DEVICE(device);
-	fu_common_string_append_kv(str, idt, "Kind", fu_intel_spi_kind_to_string(self->kind));
-	fu_common_string_append_kx(str, idt, "SPIBAR", self->phys_spibar);
-	fu_common_string_append_kx(str, idt, "HSFS", self->hsfs);
-	fu_common_string_append_kx(str, idt, "FRAP", self->frap);
+	fu_string_append(str, idt, "Kind", fu_intel_spi_kind_to_string(self->kind));
+	fu_string_append_kx(str, idt, "SPIBAR", self->phys_spibar);
+	fu_string_append_kx(str, idt, "HSFS", self->hsfs);
+	fu_string_append_kx(str, idt, "FRAP", self->frap);
 	for (guint i = 0; i < 4; i++) {
 		g_autofree gchar *title = g_strdup_printf("FREG%u", i);
-		fu_common_string_append_kx(str, idt, title, self->freg[i]);
+		fu_string_append_kx(str, idt, title, self->freg[i]);
 	}
 	for (guint i = 0; i < 4; i++) {
 		g_autofree gchar *title = g_strdup_printf("FLMSTR%u", i);
-		fu_common_string_append_kx(str, idt, title, self->flash_master[i]);
+		fu_string_append_kx(str, idt, title, self->flash_master[i]);
 	}
-	fu_common_string_append_kx(str, idt, "FLVALSIG", self->flvalsig);
-	fu_common_string_append_kx(str, idt, "FLMAP0", self->descriptor_map0);
-	fu_common_string_append_kx(str, idt, "FLMAP1", self->descriptor_map1);
-	fu_common_string_append_kx(str, idt, "FLMAP2", self->descriptor_map2);
-	fu_common_string_append_kx(str, idt, "FLCOMP", self->components_rcd);
-	fu_common_string_append_kx(str, idt, "FLILL", self->illegal_jedec);
-	fu_common_string_append_kx(str, idt, "FLPB", self->flpb);
+	fu_string_append_kx(str, idt, "FLVALSIG", self->flvalsig);
+	fu_string_append_kx(str, idt, "FLMAP0", self->descriptor_map0);
+	fu_string_append_kx(str, idt, "FLMAP1", self->descriptor_map1);
+	fu_string_append_kx(str, idt, "FLMAP2", self->descriptor_map2);
+	fu_string_append_kx(str, idt, "FLCOMP", self->components_rcd);
+	fu_string_append_kx(str, idt, "FLILL", self->illegal_jedec);
+	fu_string_append_kx(str, idt, "FLPB", self->flpb);
 
 	/* PRx */
 	for (guint i = 0; i < 4; i++) {
@@ -114,7 +114,7 @@ fu_intel_spi_device_to_string(FuDevice *device, guint idt, GString *str)
 				      base,
 				      limit,
 				      self->protected_range[i]);
-		fu_common_string_append_kv(str, idt, title, tmp);
+		fu_string_append(str, idt, title, tmp);
 	}
 }
 
@@ -481,7 +481,7 @@ fu_intel_spi_device_set_quirk_kv(FuDevice *device,
 	FuIntelSpiDevice *self = FU_INTEL_SPI_DEVICE(device);
 	if (g_strcmp0(key, "IntelSpiBar") == 0) {
 		guint64 tmp = 0;
-		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT32, error))
+		if (!fu_strtoull_full(value, &tmp, 0, G_MAXUINT32, error))
 			return FALSE;
 		self->phys_spibar = tmp;
 		return TRUE;

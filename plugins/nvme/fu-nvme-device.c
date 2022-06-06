@@ -38,7 +38,7 @@ fu_nvme_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuNvmeDevice *self = FU_NVME_DEVICE(device);
 	FU_DEVICE_CLASS(fu_nvme_device_parent_class)->to_string(device, idt, str);
-	fu_common_string_append_ku(str, idt, "PciDepth", self->pci_depth);
+	fu_string_append_ku(str, idt, "PciDepth", self->pci_depth);
 }
 
 /* @addr_start and @addr_end are *inclusive* to match the NMVe specification */
@@ -426,7 +426,7 @@ fu_nvme_device_set_quirk_kv(FuDevice *device, const gchar *key, const gchar *val
 	FuNvmeDevice *self = FU_NVME_DEVICE(device);
 	if (g_strcmp0(key, "NvmeBlockSize") == 0) {
 		guint64 tmp = 0;
-		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT32, error))
+		if (!fu_strtoull_full(value, &tmp, 0, G_MAXUINT32, error))
 			return FALSE;
 		self->write_block_size = tmp;
 		return TRUE;

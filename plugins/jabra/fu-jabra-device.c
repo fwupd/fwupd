@@ -23,7 +23,7 @@ static void
 fu_jabra_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuJabraDevice *self = FU_JABRA_DEVICE(device);
-	fu_common_string_append_kv(str, idt, "Magic", self->magic);
+	fu_string_append(str, idt, "Magic", self->magic);
 }
 
 static guint8

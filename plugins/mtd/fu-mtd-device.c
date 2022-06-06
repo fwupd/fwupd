@@ -26,7 +26,7 @@ fu_mtd_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuMtdDevice *self = FU_MTD_DEVICE(device);
 	if (self->erasesize > 0)
-		fu_common_string_append_kx(str, idt, "EraseSize", self->erasesize);
+		fu_string_append_kx(str, idt, "EraseSize", self->erasesize);
 }
 
 static gboolean

@@ -79,13 +79,13 @@ fu_vli_usbhub_device_to_string(FuDevice *device, guint idt, GString *str)
 	/* parent */
 	FU_DEVICE_CLASS(fu_vli_usbhub_device_parent_class)->to_string(device, idt, str);
 
-	fu_common_string_append_kb(str, idt, "DisablePowersave", self->disable_powersave);
-	fu_common_string_append_kx(str, idt, "UpdateProtocol", self->update_protocol);
+	fu_string_append_kb(str, idt, "DisablePowersave", self->disable_powersave);
+	fu_string_append_kx(str, idt, "UpdateProtocol", self->update_protocol);
 	if (self->update_protocol >= 0x2) {
-		fu_common_string_append_kv(str, idt, "H1Hdr@0x0", NULL);
+		fu_string_append(str, idt, "H1Hdr@0x0", NULL);
 		fu_vli_usbhub_header_to_string(&self->hd1_hdr, idt + 1, str);
 		if (self->hd2_hdr.dev_id != 0xffff) {
-			fu_common_string_append_kv(str, idt, "H2Hdr@0x1000", NULL);
+			fu_string_append(str, idt, "H2Hdr@0x1000", NULL);
 			fu_vli_usbhub_header_to_string(&self->hd2_hdr, idt + 1, str);
 		}
 	}

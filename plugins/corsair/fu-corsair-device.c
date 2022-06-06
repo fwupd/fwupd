@@ -423,10 +423,10 @@ fu_corsair_device_to_string(FuDevice *device, guint idt, GString *str)
 
 	FU_DEVICE_CLASS(fu_corsair_device_parent_class)->to_string(device, idt, str);
 
-	fu_common_string_append_kv(str,
-				   idt,
-				   "DeviceKind",
-				   fu_corsair_device_type_to_string(self->device_kind));
+	fu_string_append(str,
+			 idt,
+			 "DeviceKind",
+			 fu_corsair_device_type_to_string(self->device_kind));
 
 	fu_device_add_string(FU_DEVICE(self->bp), idt, str);
 }
@@ -458,7 +458,7 @@ fu_corsair_set_quirk_kv(FuDevice *device, const gchar *key, const gchar *value, 
 		return FALSE;
 	} else if (g_strcmp0(key, "CorsairVendorInterfaceId") == 0) {
 		/* clapped to uint8 because bNumInterfaces is 8 bits long */
-		if (!fu_common_strtoull_full(value, &vendor_interface, 0, 255, error)) {
+		if (!fu_strtoull_full(value, &vendor_interface, 0, 255, error)) {
 			g_prefix_error(error, "cannot parse CorsairVendorInterface: ");
 			return FALSE;
 		}

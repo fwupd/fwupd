@@ -107,9 +107,9 @@ fu_pci_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuPciDevice *self = FU_PCI_DEVICE(device);
 	FuPciDevicePrivate *priv = GET_PRIVATE(self);
-	fu_common_string_append_kx(str, idt, "Bus", priv->bus);
-	fu_common_string_append_kx(str, idt, "Dev", priv->dev);
-	fu_common_string_append_kx(str, idt, "Fun", priv->fun);
+	fu_string_append_kx(str, idt, "Bus", priv->bus);
+	fu_string_append_kx(str, idt, "Dev", priv->dev);
+	fu_string_append_kx(str, idt, "Fun", priv->fun);
 }
 
 static gboolean

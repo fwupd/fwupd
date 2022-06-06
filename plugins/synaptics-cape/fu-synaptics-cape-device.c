@@ -377,7 +377,7 @@ fu_synaptics_cape_device_to_string(FuDevice *device, guint idt, GString *str)
 
 	g_return_if_fail(FU_IS_SYNAPTICS_CAPE_DEVICE(self));
 
-	fu_common_string_append_ku(str, idt, "ActivePartition", self->active_partition);
+	fu_string_append_ku(str, idt, "ActivePartition", self->active_partition);
 }
 
 /* resets device */

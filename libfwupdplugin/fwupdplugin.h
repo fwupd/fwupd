@@ -46,6 +46,7 @@
 #include <libfwupdplugin/fu-progress.h>
 #include <libfwupdplugin/fu-security-attrs.h>
 #include <libfwupdplugin/fu-srec-firmware.h>
+#include <libfwupdplugin/fu-string.h>
 #include <libfwupdplugin/fu-sum.h>
 #include <libfwupdplugin/fu-udev-device.h>
 #include <libfwupdplugin/fu-usb-device.h>

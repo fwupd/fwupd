@@ -82,10 +82,10 @@ fu_wav_device_flash_descriptor_is_wp(const FuWacFlashDescriptor *fd)
 static void
 fu_wac_device_flash_descriptor_to_string(FuWacFlashDescriptor *fd, guint idt, GString *str)
 {
-	fu_common_string_append_kx(str, idt, "StartAddr", fd->start_addr);
-	fu_common_string_append_kx(str, idt, "BlockSize", fd->block_sz);
-	fu_common_string_append_kx(str, idt, "WriteSize", fd->write_sz & ~0x8000);
-	fu_common_string_append_kb(str, idt, "Protected", fu_wav_device_flash_descriptor_is_wp(fd));
+	fu_string_append_kx(str, idt, "StartAddr", fd->start_addr);
+	fu_string_append_kx(str, idt, "BlockSize", fd->block_sz);
+	fu_string_append_kx(str, idt, "WriteSize", fd->write_sz & ~0x8000);
+	fu_string_append_kb(str, idt, "Protected", fu_wav_device_flash_descriptor_is_wp(fd));
 }
 
 static void
@@ -96,42 +96,42 @@ fu_wac_device_to_string(FuDevice *device, guint idt, GString *str)
 
 	if (self->firmware_index != 0xffff) {
 		g_autofree gchar *tmp = g_strdup_printf("0x%04x", self->firmware_index);
-		fu_common_string_append_kv(str, idt, "FwIndex", tmp);
+		fu_string_append(str, idt, "FwIndex", tmp);
 	}
 	if (self->loader_ver > 0) {
 		g_autofree gchar *tmp = g_strdup_printf("0x%04x", (guint)self->loader_ver);
-		fu_common_string_append_kv(str, idt, "LoaderVer", tmp);
+		fu_string_append(str, idt, "LoaderVer", tmp);
 	}
 	if (self->read_data_sz > 0) {
 		g_autofree gchar *tmp = g_strdup_printf("0x%04x", (guint)self->read_data_sz);
-		fu_common_string_append_kv(str, idt, "ReadDataSize", tmp);
+		fu_string_append(str, idt, "ReadDataSize", tmp);
 	}
 	if (self->write_word_sz > 0) {
 		g_autofree gchar *tmp = g_strdup_printf("0x%04x", (guint)self->write_word_sz);
-		fu_common_string_append_kv(str, idt, "WriteWordSize", tmp);
+		fu_string_append(str, idt, "WriteWordSize", tmp);
 	}
 	if (self->write_block_sz > 0) {
 		g_autofree gchar *tmp = g_strdup_printf("0x%04x", (guint)self->write_block_sz);
-		fu_common_string_append_kv(str, idt, "WriteBlockSize", tmp);
+		fu_string_append(str, idt, "WriteBlockSize", tmp);
 	}
 	if (self->nr_flash_blocks > 0) {
 		g_autofree gchar *tmp = g_strdup_printf("0x%04x", (guint)self->nr_flash_blocks);
-		fu_common_string_append_kv(str, idt, "NrFlashBlocks", tmp);
+		fu_string_append(str, idt, "NrFlashBlocks", tmp);
 	}
 	if (self->configuration != 0xffff) {
 		g_autofree gchar *tmp = g_strdup_printf("0x%04x", (guint)self->configuration);
-		fu_common_string_append_kv(str, idt, "Configuration", tmp);
+		fu_string_append(str, idt, "Configuration", tmp);
 	}
 	if (g_getenv("FWUPD_WACOM_USB_VERBOSE") != NULL) {
 		for (guint i = 0; i < self->flash_descriptors->len; i++) {
 			FuWacFlashDescriptor *fd = g_ptr_array_index(self->flash_descriptors, i);
 			g_autofree gchar *title = g_strdup_printf("FlashDescriptor%02u", i);
-			fu_common_string_append_kv(str, idt, title, NULL);
+			fu_string_append(str, idt, title, NULL);
 			fu_wac_device_flash_descriptor_to_string(fd, idt + 1, str);
 		}
 	}
 	status_str = fu_wac_device_status_to_string(self->status_word);
-	fu_common_string_append_kv(str, idt, "Status", status_str->str);
+	fu_string_append(str, idt, "Status", status_str->str);
 }
 
 gboolean

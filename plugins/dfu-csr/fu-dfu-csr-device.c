@@ -53,8 +53,8 @@ static void
 fu_dfu_csr_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuDfuCsrDevice *self = FU_DFU_CSR_DEVICE(device);
-	fu_common_string_append_kv(str, idt, "State", fu_dfu_state_to_string(self->dfu_state));
-	fu_common_string_append_ku(str, idt, "DownloadTimeout", self->dnload_timeout);
+	fu_string_append(str, idt, "State", fu_dfu_state_to_string(self->dfu_state));
+	fu_string_append_ku(str, idt, "DownloadTimeout", self->dnload_timeout);
 }
 
 static gboolean

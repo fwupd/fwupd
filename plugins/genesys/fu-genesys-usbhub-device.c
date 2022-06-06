@@ -869,8 +869,8 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 	} else if (memcmp(self->static_ts.mask_project_ic_type, "3590", 4) == 0) {
 		self->chip.model = ISP_MODEL_HUB_GL3590;
 	} else {
-		ic_type = fu_common_strsafe((const gchar *)&self->static_ts.mask_project_ic_type,
-					    sizeof(self->static_ts.mask_project_ic_type));
+		ic_type = fu_strsafe((const gchar *)&self->static_ts.mask_project_ic_type,
+				     sizeof(self->static_ts.mask_project_ic_type));
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
@@ -879,7 +879,7 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 		return FALSE;
 	}
 	memcpy(rev, &self->static_ts.mask_project_ic_type[4], 2);
-	self->chip.revision = fu_common_strtoull(rev);
+	self->chip.revision = fu_strtoull(rev);
 
 	dynamic_buf =
 	    g_usb_device_get_string_descriptor_bytes_full(usb_device,
@@ -1120,8 +1120,8 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 	}
 
 	/* add specific product info */
-	ic_type = fu_common_strsafe((const gchar *)self->static_ts.mask_project_ic_type,
-				    sizeof(self->static_ts.mask_project_ic_type));
+	ic_type = fu_strsafe((const gchar *)self->static_ts.mask_project_ic_type,
+			     sizeof(self->static_ts.mask_project_ic_type));
 	fu_device_add_instance_str(device, "IC", ic_type);
 
 	if (self->running_bank != BANK_MASK_CODE) {
@@ -1175,20 +1175,20 @@ static void
 fu_genesys_usbhub_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuGenesysUsbhubDevice *self = FU_GENESYS_USBHUB_DEVICE(device);
-	fu_common_string_append_kx(str, idt, "FlashEraseDelay", self->flash_erase_delay);
-	fu_common_string_append_kx(str, idt, "FlashWriteDelay", self->flash_write_delay);
-	fu_common_string_append_kx(str, idt, "FlashBlockSize", self->flash_block_size);
-	fu_common_string_append_kx(str, idt, "FlashSectorSize", self->flash_sector_size);
-	fu_common_string_append_kx(str, idt, "FlashRwSize", self->flash_rw_size);
-	fu_common_string_append_kx(str, idt, "FwBank0Addr", self->fw_bank_addr[0]);
-	fu_common_string_append_kx(str, idt, "FwBank0Vers", self->fw_bank_vers[0]);
+	fu_string_append_kx(str, idt, "FlashEraseDelay", self->flash_erase_delay);
+	fu_string_append_kx(str, idt, "FlashWriteDelay", self->flash_write_delay);
+	fu_string_append_kx(str, idt, "FlashBlockSize", self->flash_block_size);
+	fu_string_append_kx(str, idt, "FlashSectorSize", self->flash_sector_size);
+	fu_string_append_kx(str, idt, "FlashRwSize", self->flash_rw_size);
+	fu_string_append_kx(str, idt, "FwBank0Addr", self->fw_bank_addr[0]);
+	fu_string_append_kx(str, idt, "FwBank0Vers", self->fw_bank_vers[0]);
 	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_DUAL_IMAGE)) {
-		fu_common_string_append_kx(str, idt, "FwBank1Addr", self->fw_bank_addr[1]);
-		fu_common_string_append_kx(str, idt, "FwBank1Vers", self->fw_bank_vers[1]);
+		fu_string_append_kx(str, idt, "FwBank1Addr", self->fw_bank_addr[1]);
+		fu_string_append_kx(str, idt, "FwBank1Vers", self->fw_bank_vers[1]);
 	}
-	fu_common_string_append_kx(str, idt, "CodeSize", self->code_size);
-	fu_common_string_append_kx(str, idt, "FwDataTotalCount", self->fw_data_total_count);
-	fu_common_string_append_kx(str, idt, "ExtendSize", self->extend_size);
+	fu_string_append_kx(str, idt, "CodeSize", self->code_size);
+	fu_string_append_kx(str, idt, "FwDataTotalCount", self->fw_data_total_count);
+	fu_string_append_kx(str, idt, "ExtendSize", self->extend_size);
 }
 
 static FuFirmware *
@@ -1545,7 +1545,7 @@ fu_genesys_usbhub_device_set_quirk_kv(FuDevice *device,
 	guint64 tmp;
 
 	if (g_strcmp0(key, "GenesysUsbhubDeviceTransferSize") == 0) {
-		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT32, error))
+		if (!fu_strtoull_full(value, &tmp, 0, G_MAXUINT32, error))
 			return FALSE;
 		self->flash_rw_size = tmp;
 
@@ -1553,7 +1553,7 @@ fu_genesys_usbhub_device_set_quirk_kv(FuDevice *device,
 		return TRUE;
 	}
 	if (g_strcmp0(key, "GenesysUsbhubSwitchRequest") == 0) {
-		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT8, error))
+		if (!fu_strtoull_full(value, &tmp, 0, G_MAXUINT8, error))
 			return FALSE;
 		self->vcs.req_switch = tmp;
 
@@ -1561,7 +1561,7 @@ fu_genesys_usbhub_device_set_quirk_kv(FuDevice *device,
 		return TRUE;
 	}
 	if (g_strcmp0(key, "GenesysUsbhubReadRequest") == 0) {
-		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT8, error))
+		if (!fu_strtoull_full(value, &tmp, 0, G_MAXUINT8, error))
 			return FALSE;
 		self->vcs.req_read = tmp;
 
@@ -1569,7 +1569,7 @@ fu_genesys_usbhub_device_set_quirk_kv(FuDevice *device,
 		return TRUE;
 	}
 	if (g_strcmp0(key, "GenesysUsbhubWriteRequest") == 0) {
-		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT8, error))
+		if (!fu_strtoull_full(value, &tmp, 0, G_MAXUINT8, error))
 			return FALSE;
 		self->vcs.req_write = tmp;
 

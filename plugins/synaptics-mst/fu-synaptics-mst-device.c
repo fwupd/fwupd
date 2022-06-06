@@ -104,21 +104,18 @@ fu_synaptics_mst_device_to_string(FuDevice *device, guint idt, GString *str)
 	/* FuUdevDevice->to_string */
 	FU_DEVICE_CLASS(fu_synaptics_mst_device_parent_class)->to_string(device, idt, str);
 
-	fu_common_string_append_kv(str, idt, "DeviceKind", self->device_kind);
+	fu_string_append(str, idt, "DeviceKind", self->device_kind);
 	if (self->mode != FU_SYNAPTICS_MST_MODE_UNKNOWN) {
-		fu_common_string_append_kv(str,
-					   idt,
-					   "Mode",
-					   fu_synaptics_mst_mode_to_string(self->mode));
+		fu_string_append(str, idt, "Mode", fu_synaptics_mst_mode_to_string(self->mode));
 	}
 	if (self->family == FU_SYNAPTICS_MST_FAMILY_PANAMERA)
-		fu_common_string_append_kx(str, idt, "ActiveBank", self->active_bank);
-	fu_common_string_append_kx(str, idt, "Layer", self->layer);
-	fu_common_string_append_kx(str, idt, "Rad", self->rad);
+		fu_string_append_kx(str, idt, "ActiveBank", self->active_bank);
+	fu_string_append_kx(str, idt, "Layer", self->layer);
+	fu_string_append_kx(str, idt, "Rad", self->rad);
 	if (self->board_id != 0x0)
-		fu_common_string_append_ku(str, idt, "BoardId", self->board_id);
+		fu_string_append_ku(str, idt, "BoardId", self->board_id);
 	if (self->chip_id != 0x0)
-		fu_common_string_append_kx(str, idt, "ChipId", self->chip_id);
+		fu_string_append_kx(str, idt, "ChipId", self->chip_id);
 }
 
 static gboolean

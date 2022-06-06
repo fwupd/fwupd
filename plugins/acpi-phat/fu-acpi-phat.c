@@ -184,7 +184,7 @@ fu_acpi_phat_parse(FuFirmware *firmware,
 			    sizeof(oem_id),
 			    error))
 		return FALSE;
-	oem_id_safe = fu_common_strsafe((const gchar *)oem_id, sizeof(oem_id));
+	oem_id_safe = fu_strsafe((const gchar *)oem_id, sizeof(oem_id));
 	fu_acpi_phat_set_oem_id(self, oem_id_safe);
 
 	/* OEM Table ID */
@@ -197,7 +197,7 @@ fu_acpi_phat_parse(FuFirmware *firmware,
 			    sizeof(oem_table_id),
 			    error))
 		return FALSE;
-	oem_table_id_safe = fu_common_strsafe((const gchar *)oem_table_id, sizeof(oem_table_id));
+	oem_table_id_safe = fu_strsafe((const gchar *)oem_table_id, sizeof(oem_table_id));
 	fu_firmware_set_id(firmware, oem_table_id_safe);
 	if (!fu_common_read_uint32_safe(buf, bufsz, 24, &oem_revision, G_LITTLE_ENDIAN, error))
 		return FALSE;

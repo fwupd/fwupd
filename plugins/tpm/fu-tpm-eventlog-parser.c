@@ -53,23 +53,23 @@ fu_tpm_eventlog_item_to_string(FuTpmEventlogItem *item, guint idt, GString *str)
 	const gchar *tmp;
 	g_autofree gchar *pcrstr =
 	    g_strdup_printf("%s (%u)", fu_tpm_eventlog_pcr_to_string(item->pcr), item->pcr);
-	fu_common_string_append_kv(str, idt, "PCR", pcrstr);
-	fu_common_string_append_kx(str, idt, "Type", item->kind);
+	fu_string_append(str, idt, "PCR", pcrstr);
+	fu_string_append_kx(str, idt, "Type", item->kind);
 	tmp = fu_tpm_eventlog_item_kind_to_string(item->kind);
 	if (tmp != NULL)
-		fu_common_string_append_kv(str, idt, "Description", tmp);
+		fu_string_append(str, idt, "Description", tmp);
 	if (item->checksum_sha1 != NULL) {
 		g_autofree gchar *csum = fu_tpm_eventlog_strhex(item->checksum_sha1);
-		fu_common_string_append_kv(str, idt, "ChecksumSha1", csum);
+		fu_string_append(str, idt, "ChecksumSha1", csum);
 	}
 	if (item->checksum_sha256 != NULL) {
 		g_autofree gchar *csum = fu_tpm_eventlog_strhex(item->checksum_sha256);
-		fu_common_string_append_kv(str, idt, "ChecksumSha256", csum);
+		fu_string_append(str, idt, "ChecksumSha256", csum);
 	}
 	if (item->blob != NULL) {
 		g_autofree gchar *blobstr = fu_tpm_eventlog_blobstr(item->blob);
 		if (blobstr != NULL)
-			fu_common_string_append_kv(str, idt, "BlobStr", blobstr);
+			fu_string_append(str, idt, "BlobStr", blobstr);
 	}
 }
 

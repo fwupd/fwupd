@@ -36,14 +36,14 @@ static void
 fu_synaptics_cxaudio_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuSynapticsCxaudioDevice *self = FU_SYNAPTICS_CXAUDIO_DEVICE(device);
-	fu_common_string_append_ku(str, idt, "ChipIdBase", self->chip_id_base);
-	fu_common_string_append_ku(str, idt, "ChipId", self->chip_id);
-	fu_common_string_append_kx(str, idt, "EepromLayoutVersion", self->eeprom_layout_version);
-	fu_common_string_append_kx(str, idt, "EepromStorageAddress", self->eeprom_storage_address);
-	fu_common_string_append_kx(str, idt, "EepromStorageSz", self->eeprom_storage_sz);
-	fu_common_string_append_kx(str, idt, "EepromSz", self->eeprom_sz);
-	fu_common_string_append_kb(str, idt, "SwResetSupported", self->sw_reset_supported);
-	fu_common_string_append_kb(str, idt, "SerialNumberSet", self->serial_number_set);
+	fu_string_append_ku(str, idt, "ChipIdBase", self->chip_id_base);
+	fu_string_append_ku(str, idt, "ChipId", self->chip_id);
+	fu_string_append_kx(str, idt, "EepromLayoutVersion", self->eeprom_layout_version);
+	fu_string_append_kx(str, idt, "EepromStorageAddress", self->eeprom_storage_address);
+	fu_string_append_kx(str, idt, "EepromStorageSz", self->eeprom_storage_sz);
+	fu_string_append_kx(str, idt, "EepromSz", self->eeprom_sz);
+	fu_string_append_kb(str, idt, "SwResetSupported", self->sw_reset_supported);
+	fu_string_append_kb(str, idt, "SerialNumberSet", self->serial_number_set);
 }
 
 static gboolean
@@ -814,25 +814,25 @@ fu_synaptics_cxaudio_device_set_quirk_kv(FuDevice *device,
 	guint64 tmp = 0;
 
 	if (g_strcmp0(key, "CxaudioChipIdBase") == 0) {
-		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT32, error))
+		if (!fu_strtoull_full(value, &tmp, 0, G_MAXUINT32, error))
 			return FALSE;
 		self->chip_id_base = tmp;
 		return TRUE;
 	}
 	if (g_strcmp0(key, "CxaudioSoftwareReset") == 0) {
-		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT32, error))
+		if (!fu_strtoull_full(value, &tmp, 0, G_MAXUINT32, error))
 			return FALSE;
 		self->sw_reset_supported = tmp;
 		return TRUE;
 	}
 	if (g_strcmp0(key, "CxaudioPatch1ValidAddr") == 0) {
-		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT32, error))
+		if (!fu_strtoull_full(value, &tmp, 0, G_MAXUINT32, error))
 			return FALSE;
 		self->eeprom_patch_valid_addr = tmp;
 		return TRUE;
 	}
 	if (g_strcmp0(key, "CxaudioPatch2ValidAddr") == 0) {
-		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT32, error))
+		if (!fu_strtoull_full(value, &tmp, 0, G_MAXUINT32, error))
 			return FALSE;
 		self->eeprom_patch2_valid_addr = tmp;
 		return TRUE;

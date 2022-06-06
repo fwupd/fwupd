@@ -2675,7 +2675,7 @@ fu_util_firmware_patch(FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 
 	/* parse offset */
-	if (!fu_common_strtoull_full(values[1], &offset, 0x0, G_MAXUINT32, error)) {
+	if (!fu_strtoull_full(values[1], &offset, 0x0, G_MAXUINT32, error)) {
 		g_prefix_error(error, "failed to parse offset: ");
 		return FALSE;
 	}

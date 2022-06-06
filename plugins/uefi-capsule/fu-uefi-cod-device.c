@@ -117,7 +117,7 @@ fu_uefi_cod_device_get_variable_idx(const gchar *name, guint *value, GError **er
 		return FALSE;
 	}
 	if (value != NULL)
-		*value = fu_common_strtoull(str + strlen("Capsule"));
+		*value = fu_strtoull(str + strlen("Capsule"));
 	return TRUE;
 }
 

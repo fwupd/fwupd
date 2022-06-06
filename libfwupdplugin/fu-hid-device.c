@@ -9,6 +9,7 @@
 #include "config.h"
 
 #include "fu-hid-device.h"
+#include "fu-string.h"
 
 #define FU_HID_REPORT_GET 0x01
 #define FU_HID_REPORT_SET 0x09
@@ -46,12 +47,12 @@ fu_hid_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuHidDevice *self = FU_HID_DEVICE(device);
 	FuHidDevicePrivate *priv = GET_PRIVATE(self);
-	fu_common_string_append_kb(str, idt, "InterfaceAutodetect", priv->interface_autodetect);
-	fu_common_string_append_kx(str, idt, "Interface", priv->interface);
+	fu_string_append_kb(str, idt, "InterfaceAutodetect", priv->interface_autodetect);
+	fu_string_append_kx(str, idt, "Interface", priv->interface);
 	if (priv->ep_addr_in != 0)
-		fu_common_string_append_kx(str, idt, "EpAddrIn", priv->ep_addr_in);
+		fu_string_append_kx(str, idt, "EpAddrIn", priv->ep_addr_in);
 	if (priv->ep_addr_out != 0)
-		fu_common_string_append_kx(str, idt, "EpAddrOut", priv->ep_addr_out);
+		fu_string_append_kx(str, idt, "EpAddrOut", priv->ep_addr_out);
 }
 
 static void

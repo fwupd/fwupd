@@ -226,8 +226,6 @@ LIBFWUPDPLUGIN_1.1.2 {
     fu_chunk_new;
     fu_chunk_to_string;
     fu_common_find_program_in_path;
-    fu_common_strstrip;
-    fu_common_strtoull;
     fu_device_add_counterpart_guid;
     fu_device_close;
     fu_device_ensure_id;
@@ -263,7 +261,6 @@ LIBFWUPDPLUGIN_1.1.2 {
 LIBFWUPDPLUGIN_1.2.0 {
   global:
     fu_common_cab_build_silo;
-    fu_common_string_replace;
     fu_common_version_from_uint16;
     fu_common_version_from_uint32;
     fu_common_version_guess_format;
@@ -294,10 +291,6 @@ LIBFWUPDPLUGIN_1.2.4 {
   global:
     fu_common_bytes_align;
     fu_common_dump_full;
-    fu_common_string_append_kb;
-    fu_common_string_append_ku;
-    fu_common_string_append_kv;
-    fu_common_string_append_kx;
     fu_device_incorporate_from_component;
     fu_plugin_get_build_hash;
     fu_udev_device_get_slot_depth;
@@ -340,7 +333,6 @@ LIBFWUPDPLUGIN_1.3.1 {
     fu_byte_array_append_uint32;
     fu_byte_array_append_uint8;
     fu_common_bytes_pad;
-    fu_common_strnsplit;
     fu_device_rescan;
     fu_firmware_add_image;
     fu_firmware_get_image_by_id;
@@ -365,7 +357,6 @@ LIBFWUPDPLUGIN_1.3.1 {
 LIBFWUPDPLUGIN_1.3.2 {
   global:
     fu_common_bytes_compare_raw;
-    fu_common_strwidth;
     fu_firmware_tokenize;
     fu_io_channel_read_byte_array;
     fu_io_channel_write_byte_array;
@@ -591,7 +582,6 @@ LIBFWUPDPLUGIN_1.5.4 {
 LIBFWUPDPLUGIN_1.5.5 {
   global:
     fu_common_get_cpu_vendor;
-    fu_common_strsafe;
     fu_device_add_internal_flag;
     fu_device_has_internal_flag;
     fu_device_internal_flag_from_string;
@@ -626,7 +616,6 @@ LIBFWUPDPLUGIN_1.5.6 {
     fu_chunk_set_idx;
     fu_chunk_set_page;
     fu_common_get_memory_size;
-    fu_common_strjoin_array;
     fu_common_uri_get_scheme;
     fu_dfuse_firmware_get_type;
     fu_dfuse_firmware_new;
@@ -868,7 +857,6 @@ LIBFWUPDPLUGIN_1.7.0 {
     fu_cfu_offer_set_token;
     fu_cfu_payload_get_type;
     fu_cfu_payload_new;
-    fu_common_strnsplit_full;
     fu_device_attach_full;
     fu_device_detach_full;
     fu_device_set_progress;
@@ -943,7 +931,6 @@ LIBFWUPDPLUGIN_1.7.3 {
     fu_cfi_device_get_sector_size;
     fu_cfi_device_set_page_size;
     fu_cfi_device_set_sector_size;
-    fu_common_strtoull_full;
   local: *;
 } LIBFWUPDPLUGIN_1.7.2;
 
@@ -1036,6 +1023,19 @@ LIBFWUPDPLUGIN_1.8.2 {
     fu_progress_add_step;
     fu_progress_get_name;
     fu_progress_set_name;
+    fu_string_append;
+    fu_string_append_kb;
+    fu_string_append_ku;
+    fu_string_append_kx;
+    fu_string_replace;
+    fu_strjoin;
+    fu_strsafe;
+    fu_strsplit;
+    fu_strsplit_full;
+    fu_strstrip;
+    fu_strtoull;
+    fu_strtoull_full;
+    fu_strwidth;
     fu_sum16;
     fu_sum16_bytes;
     fu_sum16w;

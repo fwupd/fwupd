@@ -63,23 +63,23 @@ static void
 fu_ccgx_hpi_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuCcgxHpiDevice *self = FU_CCGX_HPI_DEVICE(device);
-	fu_common_string_append_kx(str, idt, "ScbIndex", self->scb_index);
-	fu_common_string_append_kx(str, idt, "SiliconId", self->silicon_id);
-	fu_common_string_append_kx(str, idt, "FwAppType", self->fw_app_type);
-	fu_common_string_append_kx(str, idt, "HpiAddrsz", self->hpi_addrsz);
-	fu_common_string_append_kx(str, idt, "NumPorts", self->num_ports);
-	fu_common_string_append_kv(str, idt, "FWMode", fu_ccgx_fw_mode_to_string(self->fw_mode));
-	fu_common_string_append_kv(str,
-				   idt,
-				   "FwImageType",
-				   fu_ccgx_fw_image_type_to_string(self->fw_image_type));
-	fu_common_string_append_kx(str, idt, "EpBulkIn", self->ep_bulk_in);
-	fu_common_string_append_kx(str, idt, "EpBulkOut", self->ep_bulk_out);
-	fu_common_string_append_kx(str, idt, "EpIntrIn", self->ep_intr_in);
+	fu_string_append_kx(str, idt, "ScbIndex", self->scb_index);
+	fu_string_append_kx(str, idt, "SiliconId", self->silicon_id);
+	fu_string_append_kx(str, idt, "FwAppType", self->fw_app_type);
+	fu_string_append_kx(str, idt, "HpiAddrsz", self->hpi_addrsz);
+	fu_string_append_kx(str, idt, "NumPorts", self->num_ports);
+	fu_string_append(str, idt, "FWMode", fu_ccgx_fw_mode_to_string(self->fw_mode));
+	fu_string_append(str,
+			 idt,
+			 "FwImageType",
+			 fu_ccgx_fw_image_type_to_string(self->fw_image_type));
+	fu_string_append_kx(str, idt, "EpBulkIn", self->ep_bulk_in);
+	fu_string_append_kx(str, idt, "EpBulkOut", self->ep_bulk_out);
+	fu_string_append_kx(str, idt, "EpIntrIn", self->ep_intr_in);
 	if (self->flash_row_size > 0)
-		fu_common_string_append_kx(str, idt, "CcgxFlashRowSize", self->flash_row_size);
+		fu_string_append_kx(str, idt, "CcgxFlashRowSize", self->flash_row_size);
 	if (self->flash_size > 0)
-		fu_common_string_append_kx(str, idt, "CcgxFlashSize", self->flash_size);
+		fu_string_append_kx(str, idt, "CcgxFlashSize", self->flash_size);
 }
 
 typedef struct {
@@ -1500,19 +1500,19 @@ fu_ccgx_hpi_device_set_quirk_kv(FuDevice *device,
 	guint64 tmp = 0;
 
 	if (g_strcmp0(key, "SiliconId") == 0) {
-		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT16, error))
+		if (!fu_strtoull_full(value, &tmp, 0, G_MAXUINT16, error))
 			return FALSE;
 		self->silicon_id = tmp;
 		return TRUE;
 	}
 	if (g_strcmp0(key, "CcgxFlashRowSize") == 0) {
-		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT32, error))
+		if (!fu_strtoull_full(value, &tmp, 0, G_MAXUINT32, error))
 			return FALSE;
 		self->flash_row_size = tmp;
 		return TRUE;
 	}
 	if (g_strcmp0(key, "CcgxFlashSize") == 0) {
-		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT32, error))
+		if (!fu_strtoull_full(value, &tmp, 0, G_MAXUINT32, error))
 			return FALSE;
 		self->flash_size = tmp;
 		return TRUE;

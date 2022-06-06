@@ -34,9 +34,9 @@ fu_logitech_hidpp_bootloader_to_string(FuDevice *device, guint idt, GString *str
 {
 	FuLogitechHidPpBootloader *self = FU_UNIFYING_BOOTLOADER(device);
 	FuLogitechHidPpBootloaderPrivate *priv = GET_PRIVATE(self);
-	fu_common_string_append_kx(str, idt, "FlashAddrHigh", priv->flash_addr_hi);
-	fu_common_string_append_kx(str, idt, "FlashAddrLow", priv->flash_addr_lo);
-	fu_common_string_append_kx(str, idt, "FlashBlockSize", priv->flash_blocksize);
+	fu_string_append_kx(str, idt, "FlashAddrHigh", priv->flash_addr_hi);
+	fu_string_append_kx(str, idt, "FlashAddrLow", priv->flash_addr_lo);
+	fu_string_append_kx(str, idt, "FlashBlockSize", priv->flash_blocksize);
 }
 
 FuLogitechHidPpBootloaderRequest *

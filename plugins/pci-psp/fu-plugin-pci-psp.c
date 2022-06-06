@@ -44,7 +44,7 @@ fu_plugin_pci_psp_get_attr(FwupdSecurityAttr *attr,
 		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA);
 		return FALSE;
 	}
-	*out = fu_common_strtoull(buf) ? TRUE : FALSE;
+	*out = fu_strtoull(buf) ? TRUE : FALSE;
 
 	return TRUE;
 }

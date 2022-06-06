@@ -119,23 +119,23 @@ fu_uefi_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuUefiDevice *self = FU_UEFI_DEVICE(device);
 	FuUefiDevicePrivate *priv = GET_PRIVATE(self);
-	fu_common_string_append_kv(str, idt, "Kind", fu_uefi_device_kind_to_string(priv->kind));
-	fu_common_string_append_kv(str, idt, "FwClass", priv->fw_class);
-	fu_common_string_append_kx(str, idt, "CapsuleFlags", priv->capsule_flags);
-	fu_common_string_append_kx(str, idt, "FwVersion", priv->fw_version);
-	fu_common_string_append_kx(str, idt, "FwVersionLowest", priv->fw_version_lowest);
-	fu_common_string_append_kv(str,
-				   idt,
-				   "LastAttemptStatus",
-				   fu_uefi_device_status_to_string(priv->last_attempt_status));
-	fu_common_string_append_kx(str, idt, "LastAttemptVersion", priv->last_attempt_version);
+	fu_string_append(str, idt, "Kind", fu_uefi_device_kind_to_string(priv->kind));
+	fu_string_append(str, idt, "FwClass", priv->fw_class);
+	fu_string_append_kx(str, idt, "CapsuleFlags", priv->capsule_flags);
+	fu_string_append_kx(str, idt, "FwVersion", priv->fw_version);
+	fu_string_append_kx(str, idt, "FwVersionLowest", priv->fw_version_lowest);
+	fu_string_append(str,
+			 idt,
+			 "LastAttemptStatus",
+			 fu_uefi_device_status_to_string(priv->last_attempt_status));
+	fu_string_append_kx(str, idt, "LastAttemptVersion", priv->last_attempt_version);
 	if (priv->esp != NULL) {
-		fu_common_string_append_kv(str, idt, "EspId", fu_volume_get_id(priv->esp));
+		fu_string_append(str, idt, "EspId", fu_volume_get_id(priv->esp));
 	}
-	fu_common_string_append_ku(str,
-				   idt,
-				   "RequireESPFreeSpace",
-				   fu_device_get_metadata_integer(device, "RequireESPFreeSpace"));
+	fu_string_append_ku(str,
+			    idt,
+			    "RequireESPFreeSpace",
+			    fu_device_get_metadata_integer(device, "RequireESPFreeSpace"));
 }
 
 static void

@@ -32,7 +32,7 @@ fu_cfu_device_to_string(FuDevice *device, guint idt, GString *str)
 	/* FuUdevDevice->to_string */
 	FU_DEVICE_CLASS(fu_cfu_device_parent_class)->to_string(device, idt, str);
 
-	fu_common_string_append_kx(str, idt, "ProtocolVersion", self->protocol_version);
+	fu_string_append_kx(str, idt, "ProtocolVersion", self->protocol_version);
 }
 
 static gboolean

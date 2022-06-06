@@ -51,7 +51,7 @@ fu_plugin_flashrom_debug_cb(enum flashrom_log_level lvl, const char *fmt, va_lis
 #pragma clang diagnostic ignored "-Wformat-nonliteral"
 	g_autofree gchar *tmp = g_strdup_vprintf(fmt, args);
 #pragma clang diagnostic pop
-	g_autofree gchar *str = fu_common_strstrip(tmp);
+	g_autofree gchar *str = fu_strstrip(tmp);
 	if (g_strcmp0(str, "OK.") == 0 || g_strcmp0(str, ".") == 0)
 		return 0;
 	switch (lvl) {

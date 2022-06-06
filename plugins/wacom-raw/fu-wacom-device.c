@@ -35,9 +35,9 @@ fu_wacom_device_to_string(FuDevice *device, guint idt, GString *str)
 	/* FuUdevDevice->to_string */
 	FU_DEVICE_CLASS(fu_wacom_device_parent_class)->to_string(device, idt, str);
 
-	fu_common_string_append_kx(str, idt, "FlashBlockSize", priv->flash_block_size);
-	fu_common_string_append_kx(str, idt, "FlashBaseAddr", priv->flash_base_addr);
-	fu_common_string_append_kx(str, idt, "FlashSize", priv->flash_size);
+	fu_string_append_kx(str, idt, "FlashBlockSize", priv->flash_block_size);
+	fu_string_append_kx(str, idt, "FlashBaseAddr", priv->flash_base_addr);
+	fu_string_append_kx(str, idt, "FlashSize", priv->flash_size);
 }
 
 gsize
@@ -326,19 +326,19 @@ fu_wacom_device_set_quirk_kv(FuDevice *device, const gchar *key, const gchar *va
 	guint64 tmp = 0;
 
 	if (g_strcmp0(key, "WacomI2cFlashBlockSize") == 0) {
-		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXSIZE, error))
+		if (!fu_strtoull_full(value, &tmp, 0, G_MAXSIZE, error))
 			return FALSE;
 		priv->flash_block_size = tmp;
 		return TRUE;
 	}
 	if (g_strcmp0(key, "WacomI2cFlashBaseAddr") == 0) {
-		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT32, error))
+		if (!fu_strtoull_full(value, &tmp, 0, G_MAXUINT32, error))
 			return FALSE;
 		priv->flash_base_addr = tmp;
 		return TRUE;
 	}
 	if (g_strcmp0(key, "WacomI2cFlashSize") == 0) {
-		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT32, error))
+		if (!fu_strtoull_full(value, &tmp, 0, G_MAXUINT32, error))
 			return FALSE;
 		priv->flash_size = tmp;
 		return TRUE;

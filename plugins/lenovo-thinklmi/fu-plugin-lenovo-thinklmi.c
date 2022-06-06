@@ -45,7 +45,7 @@ fu_plugin_lenovo_firmware_pending_change(gboolean *result, GError **error)
 		g_prefix_error(error, "failed to get %s: ", pending);
 		return FALSE;
 	}
-	*result = fu_common_strtoull(buf) > 0;
+	*result = fu_strtoull(buf) > 0;
 
 	return TRUE;
 }
