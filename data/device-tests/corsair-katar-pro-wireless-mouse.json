@@ -1,0 +1,30 @@
+{
+  "name": "KATAR PRO WIRELESS Mouse",
+  "interactive": false,
+  "steps": [
+    {
+      "url": "https://fwupd.org/downloads/713ec6eace214d6646c788fdbaa24b24c1077dc52d8e9e404bf545db63940d00-corsair-mandarin-mouse-2.5.32.cab",
+      "components": [
+        {
+          "version": "2.5.32",
+          "protocol": "com.corsair.bp",
+          "guids": [
+            "7235bc76-2e5a-5312-b848-882871503152"
+          ]
+        }
+      ]
+    },
+    {
+      "url": "https://fwupd.org/downloads/7cccf09f717ae6eb8d5d23fb089aa07f8279edc63ec1dfff9bf2f74d46e498fc-corsair-mandarin-mouse-2.5.33.cab",
+      "components": [
+        {
+          "version": "2.5.33",
+          "protocol": "com.corsair.bp",
+          "guids": [
+            "7235bc76-2e5a-5312-b848-882871503152"
+          ]
+        }
+      ]
+    }
+  ]
+}

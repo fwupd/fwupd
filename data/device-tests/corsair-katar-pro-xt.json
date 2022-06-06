@@ -1,0 +1,30 @@
+{
+  "name": "Corsair KATAR PRO XT Gaming Mouse",
+  "interactive": false,
+  "steps": [
+    {
+      "url": "https://fwupd.org/downloads/3bfde46a20bffd123ea4efd8eb7b59fb50d473ec9176735538e139a4e6b6e12c-corsair-bora-1.6.25.cab",
+      "components": [
+        {
+          "version": "1.6.25",
+          "protocol": "com.corsair.bp",
+          "guids": [
+            "b7b0728e-94e9-5ad5-999f-c6a359a9ddd4"
+          ]
+        }
+      ]
+    },
+    {
+      "url": "https://fwupd.org/downloads/7598356dbb3c40f16bc4cd314497ad0b983303e52311f95afc1d9aa8661a154d-corsair-bora-1.6.26.cab",
+      "components": [
+        {
+          "version": "1.6.26",
+          "protocol": "com.corsair.bp",
+          "guids": [
+            "b7b0728e-94e9-5ad5-999f-c6a359a9ddd4"
+          ]
+        }
+      ]
+    }
+  ]
+}
