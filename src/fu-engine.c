@@ -109,7 +109,6 @@ fu_engine_ensure_security_attrs(FuEngine *self);
 
 struct _FuEngine {
 	GObject parent_instance;
-	FuAppFlags app_flags;
 	GPtrArray *backends;
 	FuConfig *config;
 	FuRemoteList *remote_list;
@@ -7198,7 +7197,7 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 	fu_progress_step_done(progress);
 
 	/* set up idle exit */
-	if ((self->app_flags & FU_APP_FLAGS_NO_IDLE_SOURCES) == 0)
+	if ((flags & FU_ENGINE_LOAD_FLAG_NO_IDLE_SOURCES) == 0)
 		fu_idle_set_timeout(self->idle, fu_config_get_idle_timeout(self->config));
 
 	/* on a read-only filesystem don't care about the cache GUID */
@@ -7462,13 +7461,6 @@ fu_engine_add_runtime_version(FuEngine *self, const gchar *component_id, const g
 	fu_context_add_runtime_version(self->ctx, component_id, version);
 }
 
-void
-fu_engine_add_app_flag(FuEngine *self, FuAppFlags app_flags)
-{
-	g_return_if_fail(FU_IS_ENGINE(self));
-	self->app_flags |= app_flags;
-}
-
 static void
 fu_engine_context_battery_changed_cb(FuContext *ctx, GParamSpec *pspec, FuEngine *self)
 {
@@ -7657,10 +7649,9 @@ fu_engine_finalize(GObject *obj)
 }
 
 FuEngine *
-fu_engine_new(FuAppFlags app_flags)
+fu_engine_new(void)
 {
 	FuEngine *self;
 	self = g_object_new(FU_TYPE_ENGINE, NULL);
-	self->app_flags = app_flags;
 	return FU_ENGINE(self);
 }

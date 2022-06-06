@@ -41,14 +41,13 @@ typedef enum {
 	FU_ENGINE_LOAD_FLAG_REMOTES = 1 << 2,
 	FU_ENGINE_LOAD_FLAG_HWINFO = 1 << 3,
 	FU_ENGINE_LOAD_FLAG_NO_CACHE = 1 << 4,
+	FU_ENGINE_LOAD_FLAG_NO_IDLE_SOURCES = 1 << 5,
 	/*< private >*/
 	FU_ENGINE_LOAD_FLAG_LAST
 } FuEngineLoadFlags;
 
 FuEngine *
-fu_engine_new(FuAppFlags app_flags);
-void
-fu_engine_add_app_flag(FuEngine *self, FuAppFlags app_flags);
+fu_engine_new(void);
 void
 fu_engine_add_plugin_filter(FuEngine *self, const gchar *plugin_glob);
 void
