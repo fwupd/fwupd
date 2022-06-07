@@ -19,6 +19,7 @@
 #define CORSAIR_SUBDEVICE_REBOOT_DELAY	    (4 * G_USEC_PER_SEC)
 #define CORSAIR_SUBDEVICE_RECONNECT_RETRIES 30
 #define CORSAIR_SUBDEVICE_RECONNECT_PERIOD  1000
+#define CORSAIR_SUBDEVICE_FIRST_POLL_DELAY  (2 * G_USEC_PER_SEC)
 
 struct _FuCorsairDevice {
 	FuUsbDevice parent_instance;
@@ -198,8 +199,7 @@ fu_corsair_device_setup(FuDevice *device, GError **error)
 	g_autofree gchar *version = NULL;
 	FuCorsairDevice *self = FU_CORSAIR_DEVICE(device);
 
-	if (!fu_device_has_private_flag(device, FU_CORSAIR_DEVICE_FLAG_IS_SUBDEVICE))
-		fu_corsair_bp_flush_input_reports(self->bp);
+	fu_corsair_bp_flush_input_reports(self->bp);
 
 	if (!fu_corsair_bp_get_property(self->bp, FU_CORSAIR_BP_PROPERTY_MODE, &mode, error))
 		return FALSE;
@@ -238,12 +238,19 @@ fu_corsair_device_setup(FuDevice *device, GError **error)
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
 
 	/* check for a subdevice */
-	if (self->subdevice_id != NULL) {
+	if (self->subdevice_id != NULL &&
+	    !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
 		gboolean subdevice_added = FALSE;
 		g_autoptr(GError) local_error = NULL;
+
+		/* Give some time to a subdevice to get connected to the receiver.
+		 * Without this delay a subdevice may be not present even if it is
+		 * turned on. */
+		g_usleep(CORSAIR_SUBDEVICE_FIRST_POLL_DELAY);
 		if (!fu_corsair_poll_subdevice(device, &subdevice_added, &local_error)) {
 			g_warning("error polling subdevice: %s", local_error->message);
 		} else {
+			/* start polling if a subdevice was not added */
 			if (!subdevice_added)
 				fu_device_set_poll_interval(device, CORSAIR_SUBDEVICE_POLL_PERIOD);
 		}
