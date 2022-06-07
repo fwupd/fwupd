@@ -382,10 +382,6 @@ fu_udev_device_probe(FuDevice *device, GError **error)
 		}
 	}
 
-	/* no instance IDs are going to match */
-	if (priv->vendor == 0x0000 || priv->model == 0x0000)
-		return TRUE;
-
 	/* set the version if the revision has been set */
 	if (fu_device_get_version(device) == NULL &&
 	    fu_device_get_version_format(device) == FWUPD_VERSION_FORMAT_UNKNOWN) {
@@ -453,16 +449,18 @@ fu_udev_device_probe(FuDevice *device, GError **error)
 
 	/* set vendor ID */
 	subsystem = g_ascii_strup(g_udev_device_get_subsystem(priv->udev_device), -1);
-	if (subsystem != NULL) {
+	if (subsystem != NULL && priv->vendor != 0x0000) {
 		g_autofree gchar *vendor_id = NULL;
 		vendor_id = g_strdup_printf("%s:0x%04X", subsystem, (guint)priv->vendor);
 		fu_device_add_vendor_id(device, vendor_id);
 	}
 
 	/* add GUIDs in order of priority */
-	fu_device_add_instance_u16(device, "VEN", priv->vendor);
-	fu_device_add_instance_u16(device, "DEV", priv->model);
-	if (priv->subsystem_vendor != 0x0000) {
+	if (priv->vendor != 0x0000)
+		fu_device_add_instance_u16(device, "VEN", priv->vendor);
+	if (priv->model != 0x0000)
+		fu_device_add_instance_u16(device, "DEV", priv->model);
+	if (priv->subsystem_vendor != 0x0000 && priv->subsystem_model != 0x0000) {
 		g_autofree gchar *subsys =
 		    g_strdup_printf("%04X%04X", priv->subsystem_vendor, priv->subsystem_model);
 		fu_device_add_instance_str(device, "SUBSYS", subsys);
