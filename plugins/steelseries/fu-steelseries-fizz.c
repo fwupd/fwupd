@@ -192,7 +192,7 @@ gchar *
 fu_steelseries_fizz_get_version(FuDevice *device, gboolean tunnel, GError **error)
 {
 	guint8 data[STEELSERIES_BUFFER_CONTROL_SIZE] = {0};
-	guint16 cmd = STEELSERIES_FIZZ_VERSION_COMMAND;
+	guint8 cmd = STEELSERIES_FIZZ_VERSION_COMMAND;
 	const guint8 mode = 0U; /* string */
 
 	if (tunnel)
@@ -233,8 +233,8 @@ fu_steelseries_fizz_write_fs(FuDevice *device,
 			     FuProgress *progress,
 			     GError **error)
 {
-	guint16 cmd = STEELSERIES_FIZZ_WRITE_ACCESS_FILE_COMMAND;
 	guint8 data[STEELSERIES_BUFFER_CONTROL_SIZE] = {0};
+	guint8 cmd = STEELSERIES_FIZZ_WRITE_ACCESS_FILE_COMMAND;
 	g_autoptr(GPtrArray) chunks = NULL;
 
 	if (tunnel)
@@ -318,7 +318,7 @@ fu_steelseries_fizz_erase_fs(FuDevice *device,
 			     GError **error)
 {
 	guint8 data[STEELSERIES_BUFFER_CONTROL_SIZE] = {0};
-	guint16 cmd = STEELSERIES_FIZZ_ERASE_FILE_COMMAND;
+	guint8 cmd = STEELSERIES_FIZZ_ERASE_FILE_COMMAND;
 
 	if (tunnel)
 		cmd |= STEELSERIES_FIZZ_COMMAND_TUNNEL_BIT;
@@ -359,7 +359,7 @@ gboolean
 fu_steelseries_fizz_reset(FuDevice *device, gboolean tunnel, guint8 mode, GError **error)
 {
 	guint8 data[STEELSERIES_BUFFER_CONTROL_SIZE] = {0};
-	guint16 cmd = STEELSERIES_FIZZ_RESET_COMMAND;
+	guint8 cmd = STEELSERIES_FIZZ_RESET_COMMAND;
 
 	if (tunnel)
 		cmd |= STEELSERIES_FIZZ_COMMAND_TUNNEL_BIT;
@@ -397,7 +397,7 @@ fu_steelseries_fizz_get_crc32_fs(FuDevice *device,
 				 GError **error)
 {
 	guint8 data[STEELSERIES_BUFFER_CONTROL_SIZE] = {0};
-	guint16 cmd = STEELSERIES_FIZZ_FILE_CRC32_COMMAND;
+	guint8 cmd = STEELSERIES_FIZZ_FILE_CRC32_COMMAND;
 
 	if (tunnel)
 		cmd |= STEELSERIES_FIZZ_COMMAND_TUNNEL_BIT;
@@ -461,8 +461,8 @@ fu_steelseries_fizz_read_fs(FuDevice *device,
 			    FuProgress *progress,
 			    GError **error)
 {
-	guint16 cmd = STEELSERIES_FIZZ_READ_ACCESS_FILE_COMMAND;
 	guint8 data[STEELSERIES_BUFFER_CONTROL_SIZE] = {0};
+	guint8 cmd = STEELSERIES_FIZZ_READ_ACCESS_FILE_COMMAND;
 	g_autoptr(GPtrArray) chunks = NULL;
 
 	if (tunnel)
@@ -545,7 +545,7 @@ fu_steelseries_fizz_get_battery_level(FuDevice *device,
 				      GError **error)
 {
 	guint8 data[STEELSERIES_BUFFER_CONTROL_SIZE] = {0};
-	guint16 cmd = STEELSERIES_FIZZ_BATTERY_LEVEL_COMMAND;
+	guint8 cmd = STEELSERIES_FIZZ_BATTERY_LEVEL_COMMAND;
 
 	if (tunnel)
 		cmd |= STEELSERIES_FIZZ_COMMAND_TUNNEL_BIT;
@@ -579,7 +579,7 @@ gboolean
 fu_steelseries_fizz_get_paired_status(FuDevice *device, guint8 *status, GError **error)
 {
 	guint8 data[STEELSERIES_BUFFER_CONTROL_SIZE] = {0};
-	const guint16 cmd = STEELSERIES_FIZZ_PAIRED_STATUS_COMMAND;
+	const guint8 cmd = STEELSERIES_FIZZ_PAIRED_STATUS_COMMAND;
 
 	if (!fu_common_write_uint8_safe(data,
 					sizeof(data),
@@ -610,7 +610,7 @@ gboolean
 fu_steelseries_fizz_get_connection_status(FuDevice *device, guint8 *status, GError **error)
 {
 	guint8 data[STEELSERIES_BUFFER_CONTROL_SIZE] = {0};
-	const guint16 cmd = STEELSERIES_FIZZ_CONNECTION_STATUS_COMMAND;
+	const guint8 cmd = STEELSERIES_FIZZ_CONNECTION_STATUS_COMMAND;
 
 	if (!fu_common_write_uint8_safe(data,
 					sizeof(data),
