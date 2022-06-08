@@ -303,7 +303,7 @@ fu_daemon_device_array_to_variant(FuDaemon *self,
 	g_variant_builder_init(&builder, G_VARIANT_TYPE_ARRAY);
 
 	/* override when required */
-	if (fu_engine_get_show_device_private(self->engine))
+	if (fu_config_get_show_device_private(fu_engine_get_config(self->engine)))
 		flags |= FWUPD_DEVICE_FLAG_TRUSTED;
 	for (guint i = 0; i < devices->len; i++) {
 		FuDevice *device = g_ptr_array_index(devices, i);
@@ -1858,7 +1858,8 @@ fu_daemon_daemon_method_call(GDBusConnection *connection,
 		/* parse the cab file before authenticating so we can work out
 		 * what action ID to use, for instance, if this is trusted --
 		 * this will also close the fd when done */
-		archive_size_max = fu_engine_get_archive_size_max(self->engine);
+		archive_size_max =
+		    fu_config_get_archive_size_max(fu_engine_get_config(self->engine));
 		helper->blob_cab = fu_common_get_contents_fd(fd, archive_size_max, &error);
 		if (helper->blob_cab == NULL) {
 			g_dbus_method_invocation_return_gerror(invocation, error);
@@ -1997,8 +1998,10 @@ fu_daemon_daemon_get_property(GDBusConnection *connection_,
 	if (g_strcmp0(property_name, "Interactive") == 0)
 		return g_variant_new_boolean(isatty(fileno(stdout)) != 0);
 
-	if (g_strcmp0(property_name, "OnlyTrusted") == 0)
-		return g_variant_new_boolean(fu_engine_get_only_trusted(self->engine));
+	if (g_strcmp0(property_name, "OnlyTrusted") == 0) {
+		return g_variant_new_boolean(
+		    fu_config_get_only_trusted(fu_engine_get_config(self->engine)));
+	}
 
 	/* return an error */
 	g_set_error(error,
