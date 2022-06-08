@@ -39,7 +39,6 @@
 #include "fu-cfu-payload.h"
 #include "fu-common-cab.h"
 #include "fu-common.h"
-#include "fu-config.h"
 #include "fu-context-private.h"
 #include "fu-coswid-firmware.h"
 #include "fu-debug.h"
@@ -4073,7 +4072,7 @@ fu_engine_get_silo_from_blob(FuEngine *self, GBytes *blob_cab, GError **error)
 
 	/* load file */
 	fu_engine_set_status(self, FWUPD_STATUS_DECOMPRESSING);
-	fu_cabinet_set_size_max(cabinet, fu_engine_get_archive_size_max(self));
+	fu_cabinet_set_size_max(cabinet, fu_config_get_archive_size_max(self->config));
 	fu_cabinet_set_jcat_context(cabinet, self->jcat_context);
 	if (!fu_cabinet_parse(cabinet, blob_cab, FU_CABINET_PARSE_FLAG_NONE, error))
 		return NULL;
@@ -4264,7 +4263,7 @@ fu_engine_get_details(FuEngine *self, FuEngineRequest *request, gint fd, GError 
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
 	/* get all components */
-	blob = fu_common_get_contents_fd(fd, fu_engine_get_archive_size_max(self), error);
+	blob = fu_common_get_contents_fd(fd, fu_config_get_archive_size_max(self->config), error);
 	if (blob == NULL)
 		return NULL;
 	silo = fu_engine_get_silo_from_blob(self, blob, error);
@@ -5917,18 +5916,11 @@ fu_engine_get_tainted(FuEngine *self)
 	return self->tainted;
 }
 
-gboolean
-fu_engine_get_only_trusted(FuEngine *self)
+FuConfig *
+fu_engine_get_config(FuEngine *self)
 {
-	g_return_val_if_fail(FU_IS_ENGINE(self), FALSE);
-	return fu_config_get_only_trusted(self->config);
-}
-
-gboolean
-fu_engine_get_show_device_private(FuEngine *self)
-{
-	g_return_val_if_fail(FU_IS_ENGINE(self), FALSE);
-	return fu_config_get_show_device_private(self->config);
+	g_return_val_if_fail(FU_IS_ENGINE(self), NULL);
+	return self->config;
 }
 
 const gchar *
@@ -6305,12 +6297,6 @@ fu_engine_cleanup_state(GError **error)
 		}
 	}
 	return TRUE;
-}
-
-guint64
-fu_engine_get_archive_size_max(FuEngine *self)
-{
-	return fu_config_get_archive_size_max(self->config);
 }
 
 static void

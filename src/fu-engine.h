@@ -14,6 +14,7 @@
 #include "fwupd-enums.h"
 
 #include "fu-common.h"
+#include "fu-config.h"
 #include "fu-context.h"
 #include "fu-plugin.h"
 #include "fu-release.h"
@@ -56,10 +57,6 @@ gboolean
 fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GError **error);
 gboolean
 fu_engine_get_tainted(FuEngine *self);
-gboolean
-fu_engine_get_only_trusted(FuEngine *self);
-gboolean
-fu_engine_get_show_device_private(FuEngine *self);
 const gchar *
 fu_engine_get_host_product(FuEngine *self);
 const gchar *
@@ -72,8 +69,8 @@ const gchar *
 fu_engine_get_host_security_id(FuEngine *self);
 XbSilo *
 fu_engine_get_silo_from_blob(FuEngine *self, GBytes *blob_cab, GError **error);
-guint64
-fu_engine_get_archive_size_max(FuEngine *self);
+FuConfig *
+fu_engine_get_config(FuEngine *self);
 GPtrArray *
 fu_engine_get_plugins(FuEngine *self);
 GPtrArray *
