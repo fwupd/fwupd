@@ -10,13 +10,6 @@ fi
 # install deps
 ./contrib/ci/fwupd_setup_helpers.py --yes -o fedora -v mingw64 install-dependencies
 
-# update things that are not yet in Fedora updates-testing
-if [ "$(id -u)" -eq 0 ]; then
-    dnf install -y  \
-        https://kojipkgs.fedoraproject.org//packages/msitools/0.101.32/5.fc36/x86_64/msitools-0.101.32-5.fc36.x86_64.rpm \
-        https://kojipkgs.fedoraproject.org//packages/msitools/0.101.32/5.fc36/x86_64/libmsi1-0.101.32-5.fc36.x86_64.rpm
-fi
-
 #prep
 export LC_ALL=C.UTF-8
 root=$(pwd)

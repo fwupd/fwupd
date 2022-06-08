@@ -1667,4 +1667,10 @@
       <package variant="mingw64">wine</package>
     </distro>
   </dependency>
+  <dependency type="build" id="msitools">
+    <distro id="fedora">
+      <!-- for building the MSI package -->
+      <package variant="mingw64">msitools</package>
+    </distro>
+  </dependency>
 </dependencies>
