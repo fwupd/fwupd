@@ -1610,7 +1610,9 @@ fu_device_set_quirk_kv(FuDevice *self, const gchar *key, const gchar *value, GEr
 	guint64 tmp;
 
 	if (g_strcmp0(key, FU_QUIRKS_PLUGIN) == 0) {
-		fu_device_add_possible_plugin(self, value);
+		g_auto(GStrv) sections = g_strsplit(value, ",", -1);
+		for (guint i = 0; sections[i] != NULL; i++)
+			fu_device_add_possible_plugin(self, sections[i]);
 		return TRUE;
 	}
 	if (g_strcmp0(key, FU_QUIRKS_FLAGS) == 0) {
@@ -1634,7 +1636,9 @@ fu_device_set_quirk_kv(FuDevice *self, const gchar *key, const gchar *value, GEr
 		return TRUE;
 	}
 	if (g_strcmp0(key, FU_QUIRKS_VENDOR_ID) == 0) {
-		fu_device_add_vendor_id(self, value);
+		g_auto(GStrv) sections = g_strsplit(value, ",", -1);
+		for (guint i = 0; sections[i] != NULL; i++)
+			fu_device_add_vendor_id(self, sections[i]);
 		return TRUE;
 	}
 	if (g_strcmp0(key, FU_QUIRKS_PROTOCOL) == 0) {
@@ -1662,19 +1666,27 @@ fu_device_set_quirk_kv(FuDevice *self, const gchar *key, const gchar *value, GEr
 		return TRUE;
 	}
 	if (g_strcmp0(key, FU_QUIRKS_ICON) == 0) {
-		fu_device_add_icon(self, value);
+		g_auto(GStrv) sections = g_strsplit(value, ",", -1);
+		for (guint i = 0; sections[i] != NULL; i++)
+			fu_device_add_icon(self, sections[i]);
 		return TRUE;
 	}
 	if (g_strcmp0(key, FU_QUIRKS_GUID) == 0) {
-		fu_device_add_guid(self, value);
+		g_auto(GStrv) sections = g_strsplit(value, ",", -1);
+		for (guint i = 0; sections[i] != NULL; i++)
+			fu_device_add_guid(self, sections[i]);
 		return TRUE;
 	}
 	if (g_strcmp0(key, FU_QUIRKS_COUNTERPART_GUID) == 0) {
-		fu_device_add_counterpart_guid(self, value);
+		g_auto(GStrv) sections = g_strsplit(value, ",", -1);
+		for (guint i = 0; sections[i] != NULL; i++)
+			fu_device_add_counterpart_guid(self, sections[i]);
 		return TRUE;
 	}
 	if (g_strcmp0(key, FU_QUIRKS_PARENT_GUID) == 0) {
-		fu_device_add_parent_guid(self, value);
+		g_auto(GStrv) sections = g_strsplit(value, ",", -1);
+		for (guint i = 0; sections[i] != NULL; i++)
+			fu_device_add_parent_guid(self, sections[i]);
 		return TRUE;
 	}
 	if (g_strcmp0(key, FU_QUIRKS_PROXY_GUID) == 0) {
