@@ -1,3 +1,2 @@
 [binaries]
-exe_wrapper = '/usr/bin/wine'
 windmc = '/usr/bin/x86_64-w64-mingw32-windmc'
