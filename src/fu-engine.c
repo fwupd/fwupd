@@ -6163,13 +6163,65 @@ fu_engine_get_host_security_events(FuEngine *self, guint limit, GError **error)
 	return g_steal_pointer(&events);
 }
 
+static void
+fu_engine_load_plugins_filename(FuEngine *self, const gchar *filename, FuProgress *progress)
+{
+	g_autofree gchar *name = NULL;
+	g_autoptr(FuPlugin) plugin = NULL;
+	g_autoptr(GError) error_local = NULL;
+
+	/* progress */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_set_name(progress, filename);
+	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_NO_PROFILE);
+	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 97, "add");
+	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 3, "open");
+
+	/* sanity check */
+	name = fu_plugin_guess_name_from_fn(filename);
+	if (name == NULL) {
+		fu_progress_finished(progress);
+		return;
+	}
+
+	/* open module */
+	plugin = fu_plugin_new(self->ctx);
+	fu_plugin_set_name(plugin, name);
+	fu_engine_add_plugin(self, plugin);
+	fu_progress_step_done(progress);
+
+	/* open the plugin and call ->load() */
+	if (!fu_plugin_open(plugin, filename, &error_local))
+		g_warning("cannot load: %s", error_local->message);
+	fu_progress_step_done(progress);
+}
+
+static void
+fu_engine_load_plugins_filenames(FuEngine *self, GPtrArray *filenames, FuProgress *progress)
+{
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_set_steps(progress, filenames->len);
+	for (guint i = 0; i < filenames->len; i++) {
+		const gchar *filename = g_ptr_array_index(filenames, i);
+		fu_engine_load_plugins_filename(self, filename, fu_progress_get_child(progress));
+		fu_progress_step_done(progress);
+	}
+}
+
 static gboolean
-fu_engine_load_plugins(FuEngine *self, GError **error)
+fu_engine_load_plugins(FuEngine *self, FuProgress *progress, GError **error)
 {
 	const gchar *fn;
 	g_autoptr(GDir) dir = NULL;
+	g_autoptr(GPtrArray) filenames = g_ptr_array_new_with_free_func(g_free);
 	g_autofree gchar *plugin_path = NULL;
 	g_autofree gchar *suffix = g_strdup_printf(".%s", G_MODULE_SUFFIX);
+
+	/* progress */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_NO_PROFILE);
+	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 13, "search");
+	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 87, "load");
 
 	/* search */
 	plugin_path = fu_common_get_path(FU_PATH_KIND_PLUGINDIR_PKG);
@@ -6177,30 +6229,16 @@ fu_engine_load_plugins(FuEngine *self, GError **error)
 	if (dir == NULL)
 		return FALSE;
 	while ((fn = g_dir_read_name(dir)) != NULL) {
-		g_autofree gchar *filename = NULL;
-		g_autofree gchar *name = NULL;
-		g_autoptr(FuPlugin) plugin = NULL;
-		g_autoptr(GError) error_local = NULL;
-
 		/* ignore non-plugins */
 		if (!g_str_has_suffix(fn, suffix))
 			continue;
-		name = fu_plugin_guess_name_from_fn(fn);
-		if (name == NULL)
-			continue;
-
-		/* open module */
-		filename = g_build_filename(plugin_path, fn, NULL);
-		plugin = fu_plugin_new(self->ctx);
-		fu_plugin_set_name(plugin, name);
-		fu_engine_add_plugin(self, plugin);
-
-		/* open the plugin and call ->load() */
-		if (!fu_plugin_open(plugin, filename, &error_local)) {
-			g_warning("cannot load: %s", error_local->message);
-			continue;
-		}
+		g_ptr_array_add(filenames, g_build_filename(plugin_path, fn, NULL));
 	}
+	fu_progress_step_done(progress);
+
+	/* load */
+	fu_engine_load_plugins_filenames(self, filenames, fu_progress_get_child(progress));
+	fu_progress_step_done(progress);
 
 	/* success */
 	return TRUE;
@@ -6804,6 +6842,7 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_NO_PROFILE);
 	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "read-config");
 	if (flags & FU_ENGINE_LOAD_FLAG_REMOTES)
 		fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "read-remotes");
@@ -6917,7 +6956,7 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 	fu_progress_step_done(progress);
 
 	/* load plugins early, as we have to call ->load() *before* building quirk silo */
-	if (!fu_engine_load_plugins(self, error)) {
+	if (!fu_engine_load_plugins(self, fu_progress_get_child(progress), error)) {
 		g_prefix_error(error, "Failed to load plugins: ");
 		return FALSE;
 	}
