@@ -317,10 +317,6 @@ fu_uf2_device_probe(FuDevice *device, GError **error)
 	guint64 vid = 0;
 	guint64 pid = 0;
 
-	/* FuUdevDevice->probe */
-	if (!FU_DEVICE_CLASS(fu_uf2_device_parent_class)->probe(device, error))
-		return FALSE;
-
 	/* check is valid */
 	tmp = g_udev_device_get_property(udev_device, "ID_BUS");
 	if (g_strcmp0(tmp, "usb") != 0) {
@@ -340,6 +336,10 @@ fu_uf2_device_probe(FuDevice *device, GError **error)
 			    tmp);
 		return FALSE;
 	}
+
+	/* FuUdevDevice->probe */
+	if (!FU_DEVICE_CLASS(fu_uf2_device_parent_class)->probe(device, error))
+		return FALSE;
 
 	/* set the physical ID */
 	if (!fu_udev_device_set_physical_id(FU_UDEV_DEVICE(device), "block", error))

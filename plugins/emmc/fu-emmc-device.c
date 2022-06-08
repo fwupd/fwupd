@@ -144,10 +144,6 @@ fu_emmc_device_probe(FuDevice *device, GError **error)
 	g_autofree gchar *vendor_id = NULL;
 	g_autoptr(GRegex) dev_regex = NULL;
 
-	/* FuUdevDevice->probe */
-	if (!FU_DEVICE_CLASS(fu_emmc_device_parent_class)->probe(device, error))
-		return FALSE;
-
 	udev_parent = g_udev_device_get_parent_with_subsystem(udev_device, "mmc", NULL);
 	if (udev_parent == NULL) {
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no MMC parent");
@@ -163,6 +159,10 @@ fu_emmc_device_probe(FuDevice *device, GError **error)
 			    g_udev_device_get_devtype(udev_device));
 		return FALSE;
 	}
+
+	/* FuUdevDevice->probe */
+	if (!FU_DEVICE_CLASS(fu_emmc_device_parent_class)->probe(device, error))
+		return FALSE;
 
 	/* ignore *rpmb and *boot* mmc block devices */
 	dev_regex = g_regex_new("mmcblk\\d$", 0, 0, NULL);
