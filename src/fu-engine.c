@@ -6370,16 +6370,91 @@ fu_engine_backend_device_removed_cb(FuBackend *backend, FuDevice *device, FuEngi
 	}
 }
 
+static gboolean
+fu_engine_backend_device_added_run_plugin(FuEngine *self,
+					  FuDevice *device,
+					  const gchar *plugin_name,
+					  FuProgress *progress,
+					  GError **error)
+{
+	FuPlugin *plugin;
+
+	/* find plugin */
+	fu_progress_set_name(progress, plugin_name);
+	plugin = fu_plugin_list_find_by_name(self->plugin_list, plugin_name, error);
+	if (plugin == NULL)
+		return FALSE;
+
+	/* run the ->probe() then ->setup() vfuncs */
+	if (!fu_plugin_runner_backend_device_added(plugin, device, error)) {
+#ifdef SUPPORTED_BUILD
+		/* sanity check */
+		if (*error == NULL) {
+			g_set_error(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_INVALID_ARGUMENT,
+				    "%s failed but no error set",
+				    fu_device_get_backend_id(device));
+			return FALSE;
+		}
+#endif
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
 static void
-fu_engine_backend_device_added_cb(FuBackend *backend, FuDevice *device, FuEngine *self)
+fu_engine_backend_device_added_run_plugins(FuEngine *self, FuDevice *device, FuProgress *progress)
+{
+	g_autoptr(GPtrArray) possible_plugins = fu_device_get_possible_plugins(device);
+
+	/* progress */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_set_steps(progress, possible_plugins->len);
+	for (guint i = 0; i < possible_plugins->len; i++) {
+		const gchar *plugin_name = g_ptr_array_index(possible_plugins, i);
+		g_autoptr(GError) error_local = NULL;
+		if (!fu_engine_backend_device_added_run_plugin(self,
+							       device,
+							       plugin_name,
+							       fu_progress_get_child(progress),
+							       &error_local)) {
+			if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
+				if (g_getenv("FWUPD_PROBE_VERBOSE") != NULL) {
+					g_debug("%s ignoring: %s",
+						plugin_name,
+						error_local->message);
+				}
+			} else {
+				g_warning("failed to add device %s: %s",
+					  fu_device_get_backend_id(device),
+					  error_local->message);
+			}
+			fu_progress_step_done(progress);
+			continue;
+		}
+		fu_progress_step_done(progress);
+	}
+}
+
+static void
+fu_engine_backend_device_added(FuEngine *self, FuDevice *device, FuProgress *progress)
 {
 	g_autoptr(GError) error_local = NULL;
-	g_autoptr(GPtrArray) possible_plugins = NULL;
+
+	/* progress */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_NO_PROFILE);
+	fu_progress_set_name(progress, fu_device_get_backend_id(device));
+	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 50, "probe-baseclass");
+	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 50, "query-possible-plugins");
 
 	/* super useful for plugin development */
 	if (g_getenv("FWUPD_PROBE_VERBOSE") != NULL) {
 		g_autofree gchar *str = fu_device_to_string(FU_DEVICE(device));
-		g_debug("%s added %s", fu_backend_get_name(backend), str);
+		g_debug("%s added %s", fu_device_get_backend_id(device), str);
 	}
 
 	/* add any extra quirks */
@@ -6394,48 +6469,27 @@ fu_engine_backend_device_added_cb(FuBackend *backend, FuDevice *device, FuEngine
 				fu_device_get_backend_id(device),
 				error_local->message);
 		}
+		fu_progress_finished(progress);
 		return;
 	}
+	fu_progress_step_done(progress);
 
 	/* super useful for plugin development */
 	if (g_getenv("FWUPD_PROBE_VERBOSE") != NULL) {
 		g_autofree gchar *str = fu_device_to_string(FU_DEVICE(device));
-		g_debug("%s added %s", fu_backend_get_name(backend), str);
+		g_debug("%s added %s", fu_device_get_backend_id(device), str);
 	}
 
 	/* can be specified using a quirk */
-	possible_plugins = fu_device_get_possible_plugins(device);
-	for (guint i = 0; i < possible_plugins->len; i++) {
-		FuPlugin *plugin;
-		const gchar *plugin_name = g_ptr_array_index(possible_plugins, i);
-		g_autoptr(GError) error = NULL;
+	fu_engine_backend_device_added_run_plugins(self, device, fu_progress_get_child(progress));
+	fu_progress_step_done(progress);
+}
 
-		plugin = fu_plugin_list_find_by_name(self->plugin_list, plugin_name, NULL);
-		if (plugin == NULL)
-			continue;
-		if (!fu_plugin_runner_backend_device_added(plugin, device, &error)) {
-#ifdef SUPPORTED_BUILD
-			/* sanity check */
-			if (error == NULL) {
-				g_critical("failed to add device %s: exec failed but no error set!",
-					   fu_device_get_backend_id(device));
-				continue;
-			}
-#endif
-			if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
-				if (g_getenv("FWUPD_PROBE_VERBOSE") != NULL) {
-					g_debug("%s ignoring: %s",
-						fu_plugin_get_name(plugin),
-						error->message);
-				}
-				continue;
-			}
-			g_warning("failed to add device %s: %s",
-				  fu_device_get_backend_id(device),
-				  error->message);
-			continue;
-		}
-	}
+static void
+fu_engine_backend_device_added_cb(FuBackend *backend, FuDevice *device, FuEngine *self)
+{
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	fu_engine_backend_device_added(self, device, progress);
 }
 
 static void
@@ -6774,6 +6828,68 @@ fu_common_win32_registry_get_string(HKEY hkey,
 }
 #endif
 
+static gboolean
+fu_engine_backends_coldplug_backend_add_devices(FuEngine *self,
+						FuBackend *backend,
+						FuProgress *progress,
+						GError **error)
+{
+	g_autoptr(GPtrArray) devices = fu_backend_get_devices(backend);
+
+	/* progress */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_set_steps(progress, devices->len);
+	for (guint i = 0; i < devices->len; i++) {
+		FuDevice *device = g_ptr_array_index(devices, i);
+		fu_engine_backend_device_added(self, device, fu_progress_get_child(progress));
+		fu_progress_step_done(progress);
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_engine_backends_coldplug_backend(FuEngine *self,
+				    FuBackend *backend,
+				    FuProgress *progress,
+				    GError **error)
+{
+	/* progress */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_NO_PROFILE);
+	fu_progress_set_name(progress, fu_backend_get_name(backend));
+	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "coldplug");
+	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 99, "add-devices");
+
+	/* coldplug */
+	if (!fu_backend_coldplug(backend, fu_progress_get_child(progress), error))
+		return FALSE;
+	fu_progress_step_done(progress);
+
+	/* add */
+	fu_engine_backends_coldplug_backend_add_devices(self,
+							backend,
+							fu_progress_get_child(progress),
+							error);
+	fu_progress_step_done(progress);
+
+	/* success */
+	g_signal_connect(FU_BACKEND(backend),
+			 "device-added",
+			 G_CALLBACK(fu_engine_backend_device_added_cb),
+			 self);
+	g_signal_connect(FU_BACKEND(backend),
+			 "device-removed",
+			 G_CALLBACK(fu_engine_backend_device_removed_cb),
+			 self);
+	g_signal_connect(FU_BACKEND(backend),
+			 "device-changed",
+			 G_CALLBACK(fu_engine_backend_device_changed_cb),
+			 self);
+	return TRUE;
+}
+
 static void
 fu_engine_backends_coldplug(FuEngine *self, FuProgress *progress)
 {
@@ -6781,30 +6897,20 @@ fu_engine_backends_coldplug(FuEngine *self, FuProgress *progress)
 	fu_progress_set_steps(progress, self->backends->len);
 	for (guint i = 0; i < self->backends->len; i++) {
 		FuBackend *backend = g_ptr_array_index(self->backends, i);
-		FuProgress *progress_child = fu_progress_get_child(progress);
 		g_autoptr(GError) error_backend = NULL;
 
 		if (!fu_backend_get_enabled(backend)) {
 			fu_progress_step_done(progress);
 			continue;
 		}
-		g_signal_connect(FU_BACKEND(backend),
-				 "device-added",
-				 G_CALLBACK(fu_engine_backend_device_added_cb),
-				 self);
-		g_signal_connect(FU_BACKEND(backend),
-				 "device-removed",
-				 G_CALLBACK(fu_engine_backend_device_removed_cb),
-				 self);
-		g_signal_connect(FU_BACKEND(backend),
-				 "device-changed",
-				 G_CALLBACK(fu_engine_backend_device_changed_cb),
-				 self);
-		fu_progress_set_name(progress_child, fu_backend_get_name(backend));
-		if (!fu_backend_coldplug(backend, progress_child, &error_backend)) {
+		if (!fu_engine_backends_coldplug_backend(self,
+							 backend,
+							 fu_progress_get_child(progress),
+							 &error_backend)) {
 			g_warning("failed to coldplug backend %s: %s",
 				  fu_backend_get_name(backend),
 				  error_backend->message);
+			fu_progress_step_done(progress);
 			continue;
 		}
 		fu_progress_step_done(progress);
