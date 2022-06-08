@@ -588,14 +588,19 @@ fu_quirks_init(FuQuirks *self)
 	fu_quirks_add_possible_key(self, FU_QUIRKS_VENDOR_ID);
 	fu_quirks_add_possible_key(self, FU_QUIRKS_VERSION);
 	fu_quirks_add_possible_key(self, FU_QUIRKS_VERSION_FORMAT);
-	fu_quirks_add_possible_key(self, "CfiDeviceCmdBlockErase");
-	fu_quirks_add_possible_key(self, "CfiDeviceCmdReadId");
-	fu_quirks_add_possible_key(self, "CfiDeviceCmdReadIdSz");
-	fu_quirks_add_possible_key(self, "CfiDeviceCmdChipErase");
-	fu_quirks_add_possible_key(self, "CfiDeviceCmdSectorErase");
-	fu_quirks_add_possible_key(self, "CfiDeviceBlockSize");
-	fu_quirks_add_possible_key(self, "CfiDevicePageSize");
-	fu_quirks_add_possible_key(self, "CfiDeviceSectorSize");
+	fu_quirks_add_possible_key(self, FU_QUIRKS_CFI_DEVICE_CMD_READ_ID);
+	fu_quirks_add_possible_key(self, FU_QUIRKS_CFI_DEVICE_CMD_READ_ID_SZ);
+	fu_quirks_add_possible_key(self, FU_QUIRKS_CFI_DEVICE_CMD_CHIP_ERASE);
+	fu_quirks_add_possible_key(self, FU_QUIRKS_CFI_DEVICE_CMD_BLOCK_ERASE);
+	fu_quirks_add_possible_key(self, FU_QUIRKS_CFI_DEVICE_CMD_SECTOR_ERASE);
+	fu_quirks_add_possible_key(self, FU_QUIRKS_CFI_DEVICE_CMD_WRITE_STATUS);
+	fu_quirks_add_possible_key(self, FU_QUIRKS_CFI_DEVICE_CMD_PAGE_PROG);
+	fu_quirks_add_possible_key(self, FU_QUIRKS_CFI_DEVICE_CMD_READ_DATA);
+	fu_quirks_add_possible_key(self, FU_QUIRKS_CFI_DEVICE_CMD_READ_STATUS);
+	fu_quirks_add_possible_key(self, FU_QUIRKS_CFI_DEVICE_CMD_WRITE_EN);
+	fu_quirks_add_possible_key(self, FU_QUIRKS_CFI_DEVICE_PAGE_SIZE);
+	fu_quirks_add_possible_key(self, FU_QUIRKS_CFI_DEVICE_SECTOR_SIZE);
+	fu_quirks_add_possible_key(self, FU_QUIRKS_CFI_DEVICE_BLOCK_SIZE);
 }
 
 static void

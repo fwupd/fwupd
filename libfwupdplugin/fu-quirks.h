@@ -292,3 +292,107 @@ fu_quirks_add_possible_key(FuQuirks *self, const gchar *possible_key);
  * Since: 1.7.6
  **/
 #define FU_QUIRKS_ISSUE "Issue"
+/**
+ * FU_QUIRKS_CFI_DEVICE_CMD_READ_ID
+ *
+ * The quirk key to set the CFI read ID command.
+ *
+ * Since: 1.8.2
+ **/
+#define FU_QUIRKS_CFI_DEVICE_CMD_READ_ID "CfiDeviceCmdReadId"
+/**
+ * FU_QUIRKS_CFI_DEVICE_CMD_READ_ID_SZ
+ *
+ * The quirk key to set the CFI read ID size.
+ *
+ * Since: 1.8.2
+ **/
+#define FU_QUIRKS_CFI_DEVICE_CMD_READ_ID_SZ "CfiDeviceCmdReadIdSz"
+/**
+ * FU_QUIRKS_CFI_DEVICE_CMD_CHIP_ERASE
+ *
+ * The quirk key to set the CFI chip erase command.
+ *
+ * Since: 1.8.2
+ **/
+#define FU_QUIRKS_CFI_DEVICE_CMD_CHIP_ERASE "CfiDeviceCmdChipErase"
+/**
+ * FU_QUIRKS_CFI_DEVICE_CMD_BLOCK_ERASE
+ *
+ * The quirk key to set the CFI block erase command.
+ *
+ * Since: 1.8.2
+ **/
+#define FU_QUIRKS_CFI_DEVICE_CMD_BLOCK_ERASE "CfiDeviceCmdBlockErase"
+/**
+ * FU_QUIRKS_CFI_DEVICE_CMD_SECTOR_ERASE
+ *
+ * The quirk key to set the CFI sector erase command.
+ *
+ * Since: 1.8.2
+ **/
+#define FU_QUIRKS_CFI_DEVICE_CMD_SECTOR_ERASE "CfiDeviceCmdSectorErase"
+/**
+ * FU_QUIRKS_CFI_DEVICE_CMD_WRITE_STATUS
+ *
+ * The quirk key to set the CFI write status command.
+ *
+ * Since: 1.8.2
+ **/
+#define FU_QUIRKS_CFI_DEVICE_CMD_WRITE_STATUS "CfiDeviceCmdWriteStatus"
+/**
+ * FU_QUIRKS_CFI_DEVICE_CMD_PAGE_PROG
+ *
+ * The quirk key to set the CFI page program command.
+ *
+ * Since: 1.8.2
+ **/
+#define FU_QUIRKS_CFI_DEVICE_CMD_PAGE_PROG "CfiDeviceCmdPageProg"
+/**
+ * FU_QUIRKS_CFI_DEVICE_CMD_READ_DATA
+ *
+ * The quirk key to set the CFI read data command.
+ *
+ * Since: 1.8.2
+ **/
+#define FU_QUIRKS_CFI_DEVICE_CMD_READ_DATA "CfiDeviceCmdReadData"
+/**
+ * FU_QUIRKS_CFI_DEVICE_CMD_READ_STATUS
+ *
+ * The quirk key to set the CFI read status command.
+ *
+ * Since: 1.8.2
+ **/
+#define FU_QUIRKS_CFI_DEVICE_CMD_READ_STATUS "CfiDeviceCmdReadStatus"
+/**
+ * FU_QUIRKS_CFI_DEVICE_CMD_WRITE_EN
+ *
+ * The quirk key to set the CFI write en command.
+ *
+ * Since: 1.8.2
+ **/
+#define FU_QUIRKS_CFI_DEVICE_CMD_WRITE_EN "CfiDeviceCmdWriteEn"
+/**
+ * FU_QUIRKS_CFI_DEVICE_PAGE_SIZE
+ *
+ * The quirk key to set the CFI page size.
+ *
+ * Since: 1.8.2
+ **/
+#define FU_QUIRKS_CFI_DEVICE_PAGE_SIZE "CfiDevicePageSize"
+/**
+ * FU_QUIRKS_CFI_DEVICE_SECTOR_SIZE
+ *
+ * The quirk key to set the CFI sector size.
+ *
+ * Since: 1.8.2
+ **/
+#define FU_QUIRKS_CFI_DEVICE_SECTOR_SIZE "CfiDeviceSectorSize"
+/**
+ * FU_QUIRKS_CFI_DEVICE_BLOCK_SIZE
+ *
+ * The quirk key to set the CFI block size.
+ *
+ * Since: 1.8.2
+ **/
+#define FU_QUIRKS_CFI_DEVICE_BLOCK_SIZE "CfiDeviceBlockSize"
