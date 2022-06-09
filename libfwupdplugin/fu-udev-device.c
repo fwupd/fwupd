@@ -780,6 +780,7 @@ fu_udev_device_incorporate(FuDevice *self, FuDevice *donor)
 	FuUdevDevice *uself = FU_UDEV_DEVICE(self);
 	FuUdevDevice *udonor = FU_UDEV_DEVICE(donor);
 	FuUdevDevicePrivate *priv = GET_PRIVATE(uself);
+	FuUdevDevicePrivate *priv_donor = GET_PRIVATE(udonor);
 
 	g_return_if_fail(FU_IS_UDEV_DEVICE(self));
 	g_return_if_fail(FU_IS_UDEV_DEVICE(donor));
@@ -789,7 +790,18 @@ fu_udev_device_incorporate(FuDevice *self, FuDevice *donor)
 		fu_udev_device_set_subsystem(uself, fu_udev_device_get_subsystem(udonor));
 		fu_udev_device_set_bind_id(uself, fu_udev_device_get_bind_id(udonor));
 		fu_udev_device_set_device_file(uself, fu_udev_device_get_device_file(udonor));
+		fu_udev_device_set_driver(uself, fu_udev_device_get_driver(udonor));
 	}
+	if (priv->vendor == 0x0 && priv_donor->vendor != 0x0)
+		priv->vendor = priv_donor->vendor;
+	if (priv->model == 0x0 && priv_donor->model != 0x0)
+		priv->model = priv_donor->model;
+	if (priv->subsystem_vendor == 0x0 && priv_donor->subsystem_vendor != 0x0)
+		priv->subsystem_vendor = priv_donor->subsystem_vendor;
+	if (priv->subsystem_model == 0x0 && priv_donor->subsystem_model != 0x0)
+		priv->subsystem_model = priv_donor->subsystem_model;
+	if (priv->revision == 0x0 && priv_donor->revision != 0x0)
+		priv->revision = priv_donor->revision;
 }
 
 /**
