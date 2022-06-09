@@ -33,7 +33,11 @@ fu_steelseries_gamepad_cmd_erase(FuDevice *device, GError **error)
 		data[13] = 0x02;
 	}
 
-	if (!fu_steelseries_device_cmd(FU_STEELSERIES_DEVICE(device), data, FALSE, error)) {
+	if (!fu_steelseries_device_cmd(FU_STEELSERIES_DEVICE(device),
+				       data,
+				       sizeof(data),
+				       FALSE,
+				       error)) {
 		g_prefix_error(error, "unable erase flash block: ");
 		return FALSE;
 	}
@@ -57,7 +61,11 @@ fu_steelseries_gamepad_setup(FuDevice *device, GError **error)
 
 	/* get version of FW and bootloader */
 	data[0] = 0x12;
-	if (!fu_steelseries_device_cmd(FU_STEELSERIES_DEVICE(device), data, TRUE, error))
+	if (!fu_steelseries_device_cmd(FU_STEELSERIES_DEVICE(device),
+				       data,
+				       sizeof(data),
+				       TRUE,
+				       error))
 		return FALSE;
 
 	if (!fu_common_read_uint16_safe(data, sizeof(data), 0x01, &fw_ver, G_LITTLE_ENDIAN, error))
@@ -86,7 +94,11 @@ fu_steelseries_gamepad_attach(FuDevice *device, FuProgress *progress, GError **e
 		return TRUE;
 
 	/* switch to runtime mode */
-	if (!fu_steelseries_device_cmd(FU_STEELSERIES_DEVICE(device), data, FALSE, &error_local))
+	if (!fu_steelseries_device_cmd(FU_STEELSERIES_DEVICE(device),
+				       data,
+				       sizeof(data),
+				       FALSE,
+				       &error_local))
 		g_debug("ignoring error on reset: %s", error_local->message);
 
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
@@ -104,7 +116,11 @@ fu_steelseries_gamepad_detach(FuDevice *device, FuProgress *progress, GError **e
 		return TRUE;
 
 	/* switch to bootloader mode */
-	if (!fu_steelseries_device_cmd(FU_STEELSERIES_DEVICE(device), data, FALSE, &error_local))
+	if (!fu_steelseries_device_cmd(FU_STEELSERIES_DEVICE(device),
+				       data,
+				       sizeof(data),
+				       FALSE,
+				       &error_local))
 		g_debug("ignoring error on reset: %s", error_local->message);
 
 	/* controller will be renumbered after switching to bootloader mode */
@@ -160,7 +176,11 @@ fu_steelseries_gamepad_write_firmware_chunks(FuDevice *device,
 
 		*checksum += (guint32)chunk_checksum;
 
-		if (!fu_steelseries_device_cmd(FU_STEELSERIES_DEVICE(device), data, FALSE, error)) {
+		if (!fu_steelseries_device_cmd(FU_STEELSERIES_DEVICE(device),
+					       data,
+					       sizeof(data),
+					       FALSE,
+					       error)) {
 			g_prefix_error(error, "unable to flash block %u: ", id);
 			return FALSE;
 		}
@@ -186,7 +206,11 @@ fu_steelseries_gamepad_write_checksum(FuDevice *device, guint32 checksum, GError
 					 error))
 		return FALSE;
 
-	if (!fu_steelseries_device_cmd(FU_STEELSERIES_DEVICE(device), data, TRUE, error)) {
+	if (!fu_steelseries_device_cmd(FU_STEELSERIES_DEVICE(device),
+				       data,
+				       sizeof(data),
+				       TRUE,
+				       error)) {
 		g_prefix_error(error, "unable to write checksum: ");
 		return FALSE;
 	}

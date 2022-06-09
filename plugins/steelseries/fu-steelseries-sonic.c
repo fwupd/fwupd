@@ -102,7 +102,11 @@ fu_steelseries_sonic_wireless_status(FuDevice *device,
 
 	if (g_getenv("FWUPD_STEELSERIES_SONIC_VERBOSE") != NULL)
 		fu_common_dump_raw(G_LOG_DOMAIN, "WirelessStatus", data, sizeof(data));
-	if (!fu_steelseries_device_cmd(FU_STEELSERIES_DEVICE(device), data, TRUE, error))
+	if (!fu_steelseries_device_cmd(FU_STEELSERIES_DEVICE(device),
+				       data,
+				       sizeof(data),
+				       TRUE,
+				       error))
 		return FALSE;
 
 	if (g_getenv("FWUPD_STEELSERIES_SONIC_VERBOSE") != NULL)
@@ -142,7 +146,11 @@ fu_steelseries_sonic_battery_state(FuDevice *device, guint16 *value, GError **er
 
 	if (g_getenv("FWUPD_STEELSERIES_SONIC_VERBOSE") != NULL)
 		fu_common_dump_raw(G_LOG_DOMAIN, "BatteryState", data, sizeof(data));
-	if (!fu_steelseries_device_cmd(FU_STEELSERIES_DEVICE(device), data, TRUE, error))
+	if (!fu_steelseries_device_cmd(FU_STEELSERIES_DEVICE(device),
+				       data,
+				       sizeof(data),
+				       TRUE,
+				       error))
 		return FALSE;
 
 	if (g_getenv("FWUPD_STEELSERIES_SONIC_VERBOSE") != NULL)
@@ -205,7 +213,11 @@ fu_steelseries_sonic_read_from_ram(FuDevice *device,
 						 error))
 			return FALSE;
 
-		if (!fu_steelseries_device_cmd(FU_STEELSERIES_DEVICE(device), data, TRUE, error))
+		if (!fu_steelseries_device_cmd(FU_STEELSERIES_DEVICE(device),
+					       data,
+					       sizeof(data),
+					       TRUE,
+					       error))
 			return FALSE;
 		if (g_getenv("FWUPD_STEELSERIES_SONIC_VERBOSE") != NULL)
 			fu_common_dump_raw(G_LOG_DOMAIN, "ReadFromRAM", data, sizeof(data));
@@ -285,7 +297,11 @@ fu_steelseries_sonic_read_from_flash(FuDevice *device,
 						 error))
 			return FALSE;
 
-		if (!fu_steelseries_device_cmd(FU_STEELSERIES_DEVICE(device), data, FALSE, error))
+		if (!fu_steelseries_device_cmd(FU_STEELSERIES_DEVICE(device),
+					       data,
+					       sizeof(data),
+					       FALSE,
+					       error))
 			return FALSE;
 		if (g_getenv("FWUPD_STEELSERIES_SONIC_VERBOSE") != NULL)
 			fu_common_dump_raw(G_LOG_DOMAIN, "ReadFromFlash", data, sizeof(data));
@@ -367,7 +383,11 @@ fu_steelseries_sonic_write_to_ram(FuDevice *device,
 
 		if (g_getenv("FWUPD_STEELSERIES_SONIC_VERBOSE") != NULL)
 			fu_common_dump_raw(G_LOG_DOMAIN, "WriteToRAM", data, sizeof(data));
-		if (!fu_steelseries_device_cmd(FU_STEELSERIES_DEVICE(device), data, FALSE, error))
+		if (!fu_steelseries_device_cmd(FU_STEELSERIES_DEVICE(device),
+					       data,
+					       sizeof(data),
+					       FALSE,
+					       error))
 			return FALSE;
 
 		/* timeout to give some time to write to ram */
@@ -446,7 +466,11 @@ fu_steelseries_sonic_write_to_flash(FuDevice *device,
 
 		if (g_getenv("FWUPD_STEELSERIES_SONIC_VERBOSE") != NULL)
 			fu_common_dump_raw(G_LOG_DOMAIN, "WriteToFlash", data, sizeof(data));
-		if (!fu_steelseries_device_cmd(FU_STEELSERIES_DEVICE(device), data, FALSE, error))
+		if (!fu_steelseries_device_cmd(FU_STEELSERIES_DEVICE(device),
+					       data,
+					       sizeof(data),
+					       FALSE,
+					       error))
 			return FALSE;
 
 		/* timeout to give some time to write from ram to flash */
@@ -491,7 +515,11 @@ fu_steelseries_sonic_erase(FuDevice *device,
 
 	if (g_getenv("FWUPD_STEELSERIES_SONIC_VERBOSE") != NULL)
 		fu_common_dump_raw(G_LOG_DOMAIN, "Erase", data, sizeof(data));
-	if (!fu_steelseries_device_cmd(FU_STEELSERIES_DEVICE(device), data, FALSE, error))
+	if (!fu_steelseries_device_cmd(FU_STEELSERIES_DEVICE(device),
+				       data,
+				       sizeof(data),
+				       FALSE,
+				       error))
 		return FALSE;
 
 	/* timeout to give some time to erase flash */
@@ -526,7 +554,11 @@ fu_steelseries_sonic_restart(FuDevice *device,
 
 	if (g_getenv("FWUPD_STEELSERIES_SONIC_VERBOSE") != NULL)
 		fu_common_dump_raw(G_LOG_DOMAIN, "Restart", data, sizeof(data));
-	if (!fu_steelseries_device_cmd(FU_STEELSERIES_DEVICE(device), data, FALSE, error))
+	if (!fu_steelseries_device_cmd(FU_STEELSERIES_DEVICE(device),
+				       data,
+				       sizeof(data),
+				       FALSE,
+				       error))
 		return FALSE;
 
 	/* timeout to give some time to restart chip */
