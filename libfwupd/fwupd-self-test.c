@@ -6,6 +6,7 @@
 
 #include "config.h"
 
+#include <locale.h>
 #include <string.h>
 #ifdef HAVE_FNMATCH_H
 #include <fnmatch.h>
@@ -397,6 +398,7 @@ fwupd_device_func(void)
 	g_autofree gchar *data = NULL;
 	g_autofree gchar *str = NULL;
 	g_autoptr(FwupdDevice) dev = NULL;
+	g_autoptr(FwupdDevice) dev_new = fwupd_device_new();
 	g_autoptr(FwupdRelease) rel = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GString) str_ascii = NULL;
@@ -414,8 +416,11 @@ fwupd_device_func(void)
 	fwupd_device_set_name(dev, "ColorHug2");
 	fwupd_device_add_guid(dev, "2082b5e0-7a64-478a-b1b2-e3404fab6dad");
 	fwupd_device_add_guid(dev, "00000000-0000-0000-0000-000000000000");
+	fwupd_device_add_instance_id(dev, "USB\\VID_1234&PID_0001");
 	fwupd_device_add_icon(dev, "input-gaming");
 	fwupd_device_add_icon(dev, "input-mouse");
+	fwupd_device_add_vendor_id(dev, "USB:0x1234");
+	fwupd_device_add_vendor_id(dev, "PCI:0x5678");
 	fwupd_device_add_flag(dev, FWUPD_DEVICE_FLAG_UPDATABLE | FWUPD_DEVICE_FLAG_REQUIRE_AC);
 	g_assert_true(fwupd_device_has_flag(dev, FWUPD_DEVICE_FLAG_REQUIRE_AC));
 	g_assert_true(fwupd_device_has_flag(dev, FWUPD_DEVICE_FLAG_UPDATABLE));
@@ -449,10 +454,14 @@ fwupd_device_func(void)
 				    "FwupdDevice:\n"
 				    "  DeviceId:             USB:foo\n"
 				    "  Name:                 ColorHug2\n"
+				    "  Guid:                 18f514d2-c12e-581f-a696-cc6d6c271699 "
+				    "← USB\\VID_1234&PID_0001 ⚠\n"
 				    "  Guid:                 2082b5e0-7a64-478a-b1b2-e3404fab6dad\n"
 				    "  Guid:                 00000000-0000-0000-0000-000000000000\n"
 				    "  Flags:                updatable|require-ac\n"
 				    "  Checksum:             SHA1(beefdead)\n"
+				    "  VendorId:             USB:0x1234\n"
+				    "  VendorId:             PCI:0x5678\n"
 				    "  Icon:                 input-gaming,input-mouse\n"
 				    "  Created:              1970-01-01\n"
 				    "  Modified:             1970-01-02\n"
@@ -488,6 +497,9 @@ fwupd_device_func(void)
 				    "{\n"
 				    "  \"Name\" : \"ColorHug2\",\n"
 				    "  \"DeviceId\" : \"USB:foo\",\n"
+				    "  \"InstanceIds\" : [\n"
+				    "    \"USB\\\\VID_1234&PID_0001\"\n"
+				    "  ],\n"
 				    "  \"Guid\" : [\n"
 				    "    \"2082b5e0-7a64-478a-b1b2-e3404fab6dad\",\n"
 				    "    \"00000000-0000-0000-0000-000000000000\"\n"
@@ -498,6 +510,11 @@ fwupd_device_func(void)
 				    "  ],\n"
 				    "  \"Checksums\" : [\n"
 				    "    \"beefdead\"\n"
+				    "  ],\n"
+				    "  \"VendorId\" : \"USB:0x1234|PCI:0x5678\",\n"
+				    "  \"VendorIds\" : [\n"
+				    "    \"USB:0x1234\",\n"
+				    "    \"PCI:0x5678\"\n"
 				    "  ],\n"
 				    "  \"Icons\" : [\n"
 				    "    \"input-gaming\",\n"
@@ -533,6 +550,12 @@ fwupd_device_func(void)
 				    &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
+
+	/* incorporate */
+	fwupd_device_incorporate(dev_new, dev);
+	g_assert_true(fwupd_device_has_vendor_id(dev_new, "USB:0x1234"));
+	g_assert_true(fwupd_device_has_vendor_id(dev_new, "PCI:0x5678"));
+	g_assert_true(fwupd_device_has_instance_id(dev_new, "USB\\VID_1234&PID_0001"));
 }
 
 static void
@@ -917,6 +940,7 @@ fwupd_security_attr_func(void)
 int
 main(int argc, char **argv)
 {
+	setlocale(LC_ALL, "");
 	g_test_init(&argc, &argv, NULL);
 
 	/* only critical and error are fatal */
