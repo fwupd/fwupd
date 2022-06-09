@@ -64,6 +64,15 @@ typedef guint64 FuProgressFlags;
  */
 #define FU_PROGRESS_FLAG_NO_PROFILE (1ull << 1)
 
+/**
+ * FU_PROGRESS_FLAG_CHILD_FINISHED:
+ *
+ * The child completed all the expected steps.
+ *
+ * Since: 1.8.2
+ */
+#define FU_PROGRESS_FLAG_CHILD_FINISHED (1ull << 2)
+
 FuProgress *
 fu_progress_new(const gchar *id);
 const gchar *

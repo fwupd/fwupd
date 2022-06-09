@@ -3985,6 +3985,25 @@ fu_progress_finish_func(void)
 	fu_progress_step_done(progress);
 }
 
+static void
+fu_progress_child_finished(void)
+{
+	FuProgress *child;
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+
+	/* check straight finish */
+	fu_progress_set_steps(progress, 3);
+
+	child = fu_progress_get_child(progress);
+	fu_progress_set_id(child, G_STRLOC);
+	fu_progress_set_steps(child, 3);
+	/* some imaginary igorable error */
+
+	/* parent step done after child finish */
+	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_CHILD_FINISHED);
+	fu_progress_step_done(progress);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -4008,6 +4027,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/common{memmem}", fu_common_memmem_func);
 	g_test_add_func("/fwupd/progress", fu_progress_func);
 	g_test_add_func("/fwupd/progress{child}", fu_progress_child_func);
+	g_test_add_func("/fwupd/progress{child-finished}", fu_progress_child_finished);
 	g_test_add_func("/fwupd/progress{parent-1-step}", fu_progress_parent_one_step_proxy_func);
 	g_test_add_func("/fwupd/progress{no-equal}", fu_progress_non_equal_steps_func);
 	g_test_add_func("/fwupd/progress{finish}", fu_progress_finish_func);
