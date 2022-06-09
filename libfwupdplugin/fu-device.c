@@ -4797,6 +4797,13 @@ fu_device_unbind_driver(FuDevice *self, GError **error)
 	return klass->unbind_driver(self, error);
 }
 
+static const gchar *
+fu_device_instance_lookup(FuDevice *self, const gchar *key)
+{
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+	return g_hash_table_lookup(priv->instance_hash, key);
+}
+
 /**
  * fu_device_incorporate:
  * @self: a #FuDevice
@@ -4859,6 +4866,13 @@ fu_device_incorporate(FuDevice *self, FuDevice *donor)
 		}
 	}
 	g_rw_lock_reader_unlock(&priv_donor->metadata_mutex);
+
+	/* copy all instance ID keys if not already set */
+	g_hash_table_iter_init(&iter, priv_donor->instance_hash);
+	while (g_hash_table_iter_next(&iter, &key, &value)) {
+		if (fu_device_instance_lookup(self, key) == NULL)
+			fu_device_add_instance_str(self, key, value);
+	}
 
 	/* now the base class, where all the interesting bits are */
 	fwupd_device_incorporate(FWUPD_DEVICE(self), FWUPD_DEVICE(donor));
@@ -5167,13 +5181,6 @@ fu_device_add_instance_u32(FuDevice *self, const gchar *key, guint32 value)
 	g_return_if_fail(FU_IS_DEVICE(self));
 	g_return_if_fail(key != NULL);
 	g_hash_table_insert(priv->instance_hash, g_strdup(key), g_strdup_printf("%08X", value));
-}
-
-static const gchar *
-fu_device_instance_lookup(FuDevice *self, const gchar *key)
-{
-	FuDevicePrivate *priv = GET_PRIVATE(self);
-	return g_hash_table_lookup(priv->instance_hash, key);
 }
 
 /**

@@ -1382,14 +1382,18 @@ fu_device_parent_func(void)
 static void
 fu_device_incorporate_func(void)
 {
-	g_autoptr(FuDevice) device = fu_device_new(NULL);
-	g_autoptr(FuDevice) donor = fu_device_new(NULL);
+	gboolean ret;
+	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuDevice) device = fu_device_new(ctx);
+	g_autoptr(FuDevice) donor = fu_device_new(ctx);
+	g_autoptr(GError) error = NULL;
 
 	/* set up donor device */
 	fu_device_set_alternate_id(donor, "alt-id");
 	fu_device_set_equivalent_id(donor, "equiv-id");
 	fu_device_set_metadata(donor, "test", "me");
 	fu_device_set_metadata(donor, "test2", "me");
+	fu_device_add_instance_str(donor, "VID", "1234");
 
 	/* base properties */
 	fu_device_add_flag(donor, FWUPD_DEVICE_FLAG_REQUIRE_AC);
@@ -1412,6 +1416,10 @@ fu_device_incorporate_func(void)
 	g_assert_cmpint(fu_device_get_created(device), ==, 123);
 	g_assert_cmpint(fu_device_get_modified(device), ==, 789);
 	g_assert_cmpint(fu_device_get_icons(device)->len, ==, 1);
+	ret = fu_device_build_instance_id(device, &error, "SUBSYS", "VID", NULL);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_true(fu_device_has_instance_id(device, "SUBSYS\\VID_1234"));
 }
 
 static void
