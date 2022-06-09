@@ -18,13 +18,10 @@ static gboolean
 fu_optionrom_device_probe(FuDevice *device, GError **error)
 {
 	g_autofree gchar *fn = NULL;
-
-	/* FuUdevDevice->probe */
-	if (!FU_DEVICE_CLASS(fu_optionrom_device_parent_class)->probe(device, error))
-		return FALSE;
+	GUdevDevice *udev_device = fu_udev_device_get_dev(FU_UDEV_DEVICE(device));
 
 	/* does the device even have ROM? */
-	fn = g_build_filename(fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(device)), "rom", NULL);
+	fn = g_build_filename(g_udev_device_get_sysfs_path(udev_device), "rom", NULL);
 	if (!g_file_test(fn, G_FILE_TEST_EXISTS)) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -32,6 +29,10 @@ fu_optionrom_device_probe(FuDevice *device, GError **error)
 				    "Unable to read firmware from device");
 		return FALSE;
 	}
+
+	/* FuUdevDevice->probe -- needed by FU_UDEV_DEVICE_FLAG_VENDOR_FROM_PARENT */
+	if (!FU_DEVICE_CLASS(fu_optionrom_device_parent_class)->probe(device, error))
+		return FALSE;
 
 	/* set the physical ID */
 	return fu_udev_device_set_physical_id(FU_UDEV_DEVICE(device), "pci", error);
