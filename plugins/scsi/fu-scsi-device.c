@@ -100,6 +100,8 @@ fu_scsi_device_probe(FuDevice *device, GError **error)
 			/* least significant bit specifies FFU capability */
 			if (ufs_features & 0x1) {
 				fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
+				fu_device_add_internal_flag(FU_DEVICE(self),
+							    FU_DEVICE_INTERNAL_FLAG_MD_SET_SIGNED);
 				fu_device_add_protocol(device, "org.jedec.ufs");
 			}
 			if (!fu_udev_device_get_sysfs_attr_uint64(ufshci_parent,
