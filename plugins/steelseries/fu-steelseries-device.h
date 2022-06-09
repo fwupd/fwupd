@@ -35,7 +35,9 @@ struct _FuSteelseriesDeviceClass {
 
 void
 fu_steelseries_device_set_iface_idx_offset(FuSteelseriesDevice *self, gint iface_idx_offset);
-gsize
-fu_steelseries_device_get_transfer_size(FuSteelseriesDevice *self);
 gboolean
-fu_steelseries_device_cmd(FuSteelseriesDevice *self, guint8 *data, gboolean answer, GError **error);
+fu_steelseries_device_cmd(FuSteelseriesDevice *self,
+			  guint8 *data,
+			  gsize datasz,
+			  gboolean answer,
+			  GError **error);

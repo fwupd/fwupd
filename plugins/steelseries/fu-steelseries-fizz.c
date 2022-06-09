@@ -79,7 +79,7 @@ struct _FuSteelseriesFizz {
 G_DEFINE_TYPE(FuSteelseriesFizz, fu_steelseries_fizz, FU_TYPE_STEELSERIES_DEVICE)
 
 static gboolean
-fu_steelseries_device_command_error_to_error(guint8 cmd, guint8 err, GError **error)
+fu_steelseries_fizz_command_error_to_error(guint8 cmd, guint8 err, GError **error)
 {
 	/* success */
 	if (err == STEELSERIES_FIZZ_COMMAND_ERROR_SUCCESS)
@@ -150,22 +150,20 @@ fu_steelseries_device_command_error_to_error(guint8 cmd, guint8 err, GError **er
 }
 
 static gboolean
-fu_steelseries_device_command_and_check_error(FuDevice *device, guint8 *data, GError **error)
+fu_steelseries_fizz_command_and_check_error(FuDevice *device,
+					    guint8 *data,
+					    gsize datasz,
+					    GError **error)
 {
 	gint gerr = G_FILE_ERROR_FAILED;
 	const guint8 command = data[0];
 	guint8 err;
 	guint8 cmd;
-	gsize transfer_sz = fu_steelseries_device_get_transfer_size(FU_STEELSERIES_DEVICE(device));
 
-	if (!fu_steelseries_device_cmd(FU_STEELSERIES_DEVICE(device), data, TRUE, error))
+	if (!fu_steelseries_device_cmd(FU_STEELSERIES_DEVICE(device), data, datasz, TRUE, error))
 		return FALSE;
 
-	if (!fu_common_read_uint8_safe(data,
-				       transfer_sz,
-				       STEELSERIES_FIZZ_COMMAND_OFFSET,
-				       &cmd,
-				       error))
+	if (!fu_common_read_uint8_safe(data, datasz, STEELSERIES_FIZZ_COMMAND_OFFSET, &cmd, error))
 		return FALSE;
 
 	if (cmd != command) {
@@ -178,14 +176,10 @@ fu_steelseries_device_command_and_check_error(FuDevice *device, guint8 *data, GE
 		return FALSE;
 	}
 
-	if (!fu_common_read_uint8_safe(data,
-				       transfer_sz,
-				       STEELSERIES_FIZZ_ERROR_OFFSET,
-				       &err,
-				       error))
+	if (!fu_common_read_uint8_safe(data, datasz, STEELSERIES_FIZZ_ERROR_OFFSET, &err, error))
 		return FALSE;
 
-	return fu_steelseries_device_command_error_to_error(cmd, err, error);
+	return fu_steelseries_fizz_command_error_to_error(cmd, err, error);
 }
 
 gchar *
@@ -214,7 +208,11 @@ fu_steelseries_fizz_get_version(FuDevice *device, gboolean tunnel, GError **erro
 
 	if (g_getenv("FWUPD_STEELSERIES_FIZZ_VERBOSE") != NULL)
 		fu_common_dump_raw(G_LOG_DOMAIN, "Version", data, sizeof(data));
-	if (!fu_steelseries_device_cmd(FU_STEELSERIES_DEVICE(device), data, TRUE, error))
+	if (!fu_steelseries_device_cmd(FU_STEELSERIES_DEVICE(device),
+				       data,
+				       sizeof(data),
+				       TRUE,
+				       error))
 		return NULL;
 	if (g_getenv("FWUPD_STEELSERIES_FIZZ_VERBOSE") != NULL)
 		fu_common_dump_raw(G_LOG_DOMAIN, "Version", data, sizeof(data));
@@ -298,7 +296,7 @@ fu_steelseries_fizz_write_fs(FuDevice *device,
 
 		if (g_getenv("FWUPD_STEELSERIES_FIZZ_VERBOSE") != NULL)
 			fu_common_dump_raw(G_LOG_DOMAIN, "AccessFile", data, sizeof(data));
-		if (!fu_steelseries_device_command_and_check_error(device, data, error))
+		if (!fu_steelseries_fizz_command_and_check_error(device, data, sizeof(data), error))
 			return FALSE;
 		if (g_getenv("FWUPD_STEELSERIES_FIZZ_VERBOSE") != NULL)
 			fu_common_dump_raw(G_LOG_DOMAIN, "AccessFile", data, sizeof(data));
@@ -346,7 +344,7 @@ fu_steelseries_fizz_erase_fs(FuDevice *device,
 
 	if (g_getenv("FWUPD_STEELSERIES_FIZZ_VERBOSE") != NULL)
 		fu_common_dump_raw(G_LOG_DOMAIN, "EraseFile", data, sizeof(data));
-	if (!fu_steelseries_device_command_and_check_error(device, data, error))
+	if (!fu_steelseries_fizz_command_and_check_error(device, data, sizeof(data), error))
 		return FALSE;
 	if (g_getenv("FWUPD_STEELSERIES_FIZZ_VERBOSE") != NULL)
 		fu_common_dump_raw(G_LOG_DOMAIN, "EraseFile", data, sizeof(data));
@@ -380,7 +378,11 @@ fu_steelseries_fizz_reset(FuDevice *device, gboolean tunnel, guint8 mode, GError
 
 	if (g_getenv("FWUPD_STEELSERIES_FIZZ_VERBOSE") != NULL)
 		fu_common_dump_raw(G_LOG_DOMAIN, "Reset", data, sizeof(data));
-	if (!fu_steelseries_device_cmd(FU_STEELSERIES_DEVICE(device), data, FALSE, error))
+	if (!fu_steelseries_device_cmd(FU_STEELSERIES_DEVICE(device),
+				       data,
+				       sizeof(data),
+				       FALSE,
+				       error))
 		return FALSE;
 
 	/* success */
@@ -426,7 +428,7 @@ fu_steelseries_fizz_get_crc32_fs(FuDevice *device,
 
 	if (g_getenv("FWUPD_STEELSERIES_FIZZ_VERBOSE") != NULL)
 		fu_common_dump_raw(G_LOG_DOMAIN, "FileCRC32", data, sizeof(data));
-	if (!fu_steelseries_device_command_and_check_error(device, data, error))
+	if (!fu_steelseries_fizz_command_and_check_error(device, data, sizeof(data), error))
 		return FALSE;
 	if (g_getenv("FWUPD_STEELSERIES_FIZZ_VERBOSE") != NULL)
 		fu_common_dump_raw(G_LOG_DOMAIN, "FileCRC32", data, sizeof(data));
@@ -516,7 +518,7 @@ fu_steelseries_fizz_read_fs(FuDevice *device,
 
 		if (g_getenv("FWUPD_STEELSERIES_FIZZ_VERBOSE") != NULL)
 			fu_common_dump_raw(G_LOG_DOMAIN, "AccessFile", data, sizeof(data));
-		if (!fu_steelseries_device_command_and_check_error(device, data, error))
+		if (!fu_steelseries_fizz_command_and_check_error(device, data, sizeof(data), error))
 			return FALSE;
 		if (g_getenv("FWUPD_STEELSERIES_FIZZ_VERBOSE") != NULL)
 			fu_common_dump_raw(G_LOG_DOMAIN, "AccessFile", data, sizeof(data));
@@ -559,7 +561,11 @@ fu_steelseries_fizz_get_battery_level(FuDevice *device,
 
 	if (g_getenv("FWUPD_STEELSERIES_FIZZ_VERBOSE") != NULL)
 		fu_common_dump_raw(G_LOG_DOMAIN, "BatteryLevel", data, sizeof(data));
-	if (!fu_steelseries_device_cmd(FU_STEELSERIES_DEVICE(device), data, TRUE, error))
+	if (!fu_steelseries_device_cmd(FU_STEELSERIES_DEVICE(device),
+				       data,
+				       sizeof(data),
+				       TRUE,
+				       error))
 		return FALSE;
 	if (g_getenv("FWUPD_STEELSERIES_FIZZ_VERBOSE") != NULL)
 		fu_common_dump_raw(G_LOG_DOMAIN, "BatteryLevel", data, sizeof(data));
@@ -590,7 +596,11 @@ fu_steelseries_fizz_get_paired_status(FuDevice *device, guint8 *status, GError *
 
 	if (g_getenv("FWUPD_STEELSERIES_FIZZ_VERBOSE") != NULL)
 		fu_common_dump_raw(G_LOG_DOMAIN, "PairedStatus", data, sizeof(data));
-	if (!fu_steelseries_device_cmd(FU_STEELSERIES_DEVICE(device), data, TRUE, error))
+	if (!fu_steelseries_device_cmd(FU_STEELSERIES_DEVICE(device),
+				       data,
+				       sizeof(data),
+				       TRUE,
+				       error))
 		return FALSE;
 	if (g_getenv("FWUPD_STEELSERIES_FIZZ_VERBOSE") != NULL)
 		fu_common_dump_raw(G_LOG_DOMAIN, "PairedStatus", data, sizeof(data));
@@ -621,7 +631,11 @@ fu_steelseries_fizz_get_connection_status(FuDevice *device, guint8 *status, GErr
 
 	if (g_getenv("FWUPD_STEELSERIES_FIZZ_VERBOSE") != NULL)
 		fu_common_dump_raw(G_LOG_DOMAIN, "ConnectionStatus", data, sizeof(data));
-	if (!fu_steelseries_device_cmd(FU_STEELSERIES_DEVICE(device), data, TRUE, error))
+	if (!fu_steelseries_device_cmd(FU_STEELSERIES_DEVICE(device),
+				       data,
+				       sizeof(data),
+				       TRUE,
+				       error))
 		return FALSE;
 	if (g_getenv("FWUPD_STEELSERIES_FIZZ_VERBOSE") != NULL)
 		fu_common_dump_raw(G_LOG_DOMAIN, "ConnectionStatus", data, sizeof(data));
