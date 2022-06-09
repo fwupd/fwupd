@@ -178,10 +178,6 @@ fu_logitech_hidpp_runtime_probe(FuDevice *device, GError **error)
 	g_autoptr(GUdevDevice) udev_parent = NULL;
 	g_autoptr(GUdevDevice) udev_parent_usb_interface = NULL;
 
-	/* FuUdevDevice->probe */
-	if (!FU_DEVICE_CLASS(fu_logitech_hidpp_runtime_parent_class)->probe(device, error))
-		return FALSE;
-
 	/* set the physical ID */
 	if (!fu_udev_device_set_physical_id(FU_UDEV_DEVICE(device), "usb", error))
 		return FALSE;

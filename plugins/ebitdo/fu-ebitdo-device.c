@@ -631,10 +631,6 @@ fu_ebitdo_device_attach(FuDevice *device, FuProgress *progress, GError **error)
 static gboolean
 fu_ebitdo_device_probe(FuDevice *device, GError **error)
 {
-	/* FuUsbDevice->probe */
-	if (!FU_DEVICE_CLASS(fu_ebitdo_device_parent_class)->probe(device, error))
-		return FALSE;
-
 	/* allowed, but requires manual bootloader step */
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_set_remove_delay(device, FU_DEVICE_REMOVE_DELAY_USER_REPLUG);

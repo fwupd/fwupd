@@ -782,10 +782,6 @@ fu_synaptics_rmi_ps2_device_write_bus_select(FuSynapticsRmiDevice *rmi_device,
 static gboolean
 fu_synaptics_rmi_ps2_device_probe(FuDevice *device, GError **error)
 {
-	/* FuUdevDevice->probe */
-	if (!FU_DEVICE_CLASS(fu_synaptics_rmi_ps2_device_parent_class)->probe(device, error))
-		return FALSE;
-
 	/* psmouse is the usual mode, but serio is needed for update */
 	if (g_strcmp0(fu_udev_device_get_driver(FU_UDEV_DEVICE(device)), "serio_raw") == 0) {
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);

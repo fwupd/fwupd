@@ -468,10 +468,6 @@ fu_ata_device_probe(FuDevice *device, GError **error)
 	FuAtaDevice *self = FU_ATA_DEVICE(device);
 	GUdevDevice *udev_device = fu_udev_device_get_dev(FU_UDEV_DEVICE(device));
 
-	/* FuUdevDevice->probe */
-	if (!FU_DEVICE_CLASS(fu_ata_device_parent_class)->probe(device, error))
-		return FALSE;
-
 	/* check is valid */
 	if (g_strcmp0(g_udev_device_get_devtype(udev_device), "disk") != 0) {
 		g_set_error(error,

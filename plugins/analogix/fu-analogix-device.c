@@ -233,9 +233,6 @@ fu_analogix_device_find_interface(FuUsbDevice *device, GError **error)
 static gboolean
 fu_analogix_device_probe(FuDevice *device, GError **error)
 {
-	/* FuUsbDevice->probe */
-	if (!FU_DEVICE_CLASS(fu_analogix_device_parent_class)->probe(device, error))
-		return FALSE;
 	if (!fu_analogix_device_find_interface(FU_USB_DEVICE(device), error)) {
 		g_prefix_error(error, "failed to find update interface: ");
 		return FALSE;

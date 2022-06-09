@@ -628,10 +628,6 @@ fu_vli_usbhub_device_probe(FuDevice *device, GError **error)
 {
 	guint16 usbver = fu_usb_device_get_spec(FU_USB_DEVICE(device));
 
-	/* FuUsbDevice->probe */
-	if (!FU_DEVICE_CLASS(fu_vli_usbhub_device_parent_class)->probe(device, error))
-		return FALSE;
-
 	/* quirks now applied... */
 	if (usbver > 0x0300 || fu_device_has_private_flag(device, FU_VLI_USBHUB_DEVICE_FLAG_USB3)) {
 		fu_device_set_summary(device, "USB 3.x hub");

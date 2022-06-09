@@ -494,9 +494,6 @@ fu_synaptics_rmi_hid_device_set_page(FuSynapticsRmiDevice *self, guint8 page, GE
 static gboolean
 fu_synaptics_rmi_hid_device_probe(FuDevice *device, GError **error)
 {
-	/* FuUdevDevice->probe */
-	if (!FU_DEVICE_CLASS(fu_synaptics_rmi_hid_device_parent_class)->probe(device, error))
-		return FALSE;
 	return fu_udev_device_set_physical_id(FU_UDEV_DEVICE(device), "hid", error);
 }
 

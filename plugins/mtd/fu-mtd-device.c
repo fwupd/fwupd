@@ -113,10 +113,6 @@ fu_mtd_device_probe(FuDevice *device, GError **error)
 	guint64 size = 0;
 	g_autoptr(GError) error_local = NULL;
 
-	/* FuUdevDevice->probe */
-	if (!FU_DEVICE_CLASS(fu_mtd_device_parent_class)->probe(device, error))
-		return FALSE;
-
 	/* set physical ID */
 	if (!fu_udev_device_set_physical_id(FU_UDEV_DEVICE(device), "mtd", error))
 		return FALSE;

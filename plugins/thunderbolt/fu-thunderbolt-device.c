@@ -449,10 +449,6 @@ fu_thunderbolt_device_probe(FuDevice *device, GError **error)
 {
 	g_autoptr(FuUdevDevice) udev_parent = NULL;
 
-	/* FuUdevDevice->probe */
-	if (!FU_DEVICE_CLASS(fu_thunderbolt_device_parent_class)->probe(device, error))
-		return FALSE;
-
 	/* if the PCI ID is Intel then it's signed, no idea otherwise */
 	udev_parent = fu_udev_device_get_parent_with_subsystem(FU_UDEV_DEVICE(device), "pci");
 	if (udev_parent != NULL) {

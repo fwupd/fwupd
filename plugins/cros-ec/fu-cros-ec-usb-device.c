@@ -154,10 +154,6 @@ fu_cros_ec_usb_device_probe(FuDevice *device, GError **error)
 {
 	FuCrosEcUsbDevice *self = FU_CROS_EC_USB_DEVICE(device);
 
-	/* FuUsbDevice->probe */
-	if (!FU_DEVICE_CLASS(fu_cros_ec_usb_device_parent_class)->probe(device, error))
-		return FALSE;
-
 	/* very much like usb_updater2's usb_findit() */
 
 	if (!fu_cros_ec_usb_device_find_interface(FU_USB_DEVICE(device), error)) {
