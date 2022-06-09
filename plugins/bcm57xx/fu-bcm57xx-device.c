@@ -58,10 +58,6 @@ fu_bcm57xx_device_probe(FuDevice *device, GError **error)
 	g_autofree gchar *fn = NULL;
 	g_autoptr(GPtrArray) ifaces = NULL;
 
-	/* FuUdevDevice->probe */
-	if (!FU_DEVICE_CLASS(fu_bcm57xx_device_parent_class)->probe(device, error))
-		return FALSE;
-
 	/* only enumerate number 0 */
 	if (fu_udev_device_get_number(FU_UDEV_DEVICE(device)) != 0) {
 		g_set_error_literal(error,

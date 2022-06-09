@@ -687,16 +687,6 @@ fu_logitech_hidpp_device_probe(FuDevice *device, GError **error)
 	FuLogitechHidPpDevice *self = FU_HIDPP_DEVICE(device);
 	FuLogitechHidPpDevicePrivate *priv = GET_PRIVATE(self);
 
-	/*
-	 * FuUdevDevice->probe except for paired devices. We don't want
-	 * paired devices to inherit the logical ids of the receiver.
-	 */
-	if (priv->device_idx == HIDPP_DEVICE_IDX_UNSET ||
-	    priv->device_idx == HIDPP_DEVICE_IDX_BLE) {
-		if (!FU_DEVICE_CLASS(fu_logitech_hidpp_device_parent_class)->probe(device, error))
-			return FALSE;
-	}
-
 	/* set the physical ID */
 	if (!fu_udev_device_set_physical_id(FU_UDEV_DEVICE(device), "hid", error))
 		return FALSE;

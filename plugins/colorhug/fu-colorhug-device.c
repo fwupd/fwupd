@@ -333,10 +333,6 @@ fu_colorhug_device_probe(FuDevice *device, GError **error)
 {
 	FuColorhugDevice *self = FU_COLORHUG_DEVICE(device);
 
-	/* FuUsbDevice->probe */
-	if (!FU_DEVICE_CLASS(fu_colorhug_device_parent_class)->probe(device, error))
-		return FALSE;
-
 	/* compact memory layout */
 	if (fu_device_has_private_flag(device, FU_COLORHUG_DEVICE_FLAG_HALFSIZE))
 		self->start_addr = CH_EEPROM_ADDR_RUNCODE_ALS;

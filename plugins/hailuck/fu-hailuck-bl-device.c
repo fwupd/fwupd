@@ -42,10 +42,6 @@ fu_hailuck_bl_device_attach(FuDevice *device, FuProgress *progress, GError **err
 static gboolean
 fu_hailuck_bl_device_probe(FuDevice *device, GError **error)
 {
-	/* FuUsbDevice->probe */
-	if (!FU_DEVICE_CLASS(fu_hailuck_bl_device_parent_class)->probe(device, error))
-		return FALSE;
-
 	/* add instance ID */
 	fu_device_add_instance_str(device, "MODE", "KBD");
 	return fu_device_build_instance_id(device, error, "USB", "VID", "PID", "MODE", NULL);

@@ -48,10 +48,6 @@ fu_scsi_device_probe(FuDevice *device, GError **error)
 	g_autoptr(FuUdevDevice) ufshci_parent = NULL;
 	const gchar *subsystem_parents[] = {"pci", "platform", NULL};
 
-	/* FuUdevDevice->probe */
-	if (!FU_DEVICE_CLASS(fu_scsi_device_parent_class)->probe(device, error))
-		return FALSE;
-
 	/* check is valid */
 	if (g_strcmp0(g_udev_device_get_devtype(udev_device), "disk") != 0) {
 		g_set_error(error,

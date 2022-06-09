@@ -68,10 +68,6 @@ fu_tpm_v1_device_probe(FuDevice *device, GError **error)
 	g_auto(GStrv) lines = NULL;
 	g_autofree gchar *buf_pcrs = NULL;
 
-	/* FuUdevDevice->probe */
-	if (!FU_DEVICE_CLASS(fu_tpm_v1_device_parent_class)->probe(device, error))
-		return FALSE;
-
 	/* get entire contents */
 	if (!g_file_get_contents(fu_udev_device_get_device_file(FU_UDEV_DEVICE(device)),
 				 &buf_pcrs,

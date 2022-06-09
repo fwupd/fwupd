@@ -1144,10 +1144,6 @@ fu_dfu_device_probe(FuDevice *device, GError **error)
 	FuDfuDevice *self = FU_DFU_DEVICE(device);
 	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(device));
 
-	/* FuUsbDevice->probe */
-	if (!FU_DEVICE_CLASS(fu_dfu_device_parent_class)->probe(device, error))
-		return FALSE;
-
 	/* add all the targets */
 	if (!fu_dfu_device_add_targets(self, error)) {
 		g_prefix_error(error,

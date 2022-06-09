@@ -930,10 +930,6 @@ fu_nordic_hid_cfg_channel_dfu_start(FuNordicHidCfgChannel *self,
 static gboolean
 fu_nordic_hid_cfg_channel_probe(FuDevice *device, GError **error)
 {
-	/* FuUdevDevice->probe */
-	if (!FU_DEVICE_CLASS(fu_nordic_hid_cfg_channel_parent_class)->probe(device, error))
-		return FALSE;
-
 	return fu_udev_device_set_physical_id(FU_UDEV_DEVICE(device), "hid", error);
 }
 

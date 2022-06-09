@@ -49,10 +49,6 @@ fu_elantp_i2c_device_to_string(FuDevice *device, guint idt, GString *str)
 static gboolean
 fu_elantp_i2c_device_probe(FuDevice *device, GError **error)
 {
-	/* FuUdevDevice->probe */
-	if (!FU_DEVICE_CLASS(fu_elantp_i2c_device_parent_class)->probe(device, error))
-		return FALSE;
-
 	/* check is valid */
 	if (g_strcmp0(fu_udev_device_get_subsystem(FU_UDEV_DEVICE(device)), "i2c-dev") != 0) {
 		g_set_error(error,

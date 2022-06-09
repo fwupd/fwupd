@@ -110,10 +110,6 @@ fu_steelseries_device_probe(FuDevice *device, GError **error)
 	g_autoptr(GPtrArray) ifaces = NULL;
 	g_autoptr(GPtrArray) endpoints = NULL;
 
-	/* FuUsbDevice->probe */
-	if (!FU_DEVICE_CLASS(fu_steelseries_device_parent_class)->probe(device, error))
-		return FALSE;
-
 	ifaces = g_usb_device_get_interfaces(usb_device, error);
 	if (ifaces == NULL)
 		return FALSE;

@@ -398,20 +398,6 @@ fu_dfu_csr_device_download(FuDevice *device,
 }
 
 static gboolean
-fu_dfu_csr_device_probe(FuDevice *device, GError **error)
-{
-	/* FuUsbDevice->probe */
-	if (!FU_DEVICE_CLASS(fu_dfu_csr_device_parent_class)->probe(device, error))
-		return FALSE;
-
-	/* hardcoded */
-	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
-
-	/* success */
-	return TRUE;
-}
-
-static gboolean
 fu_dfu_csr_device_setup(FuDevice *device, GError **error)
 {
 	FuDfuCsrDevice *self = FU_DFU_CSR_DEVICE(device);
@@ -443,6 +429,7 @@ fu_dfu_csr_device_init(FuDfuCsrDevice *self)
 {
 	fu_device_add_protocol(FU_DEVICE(self), "com.qualcomm.dfu");
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID);
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_DFU_FIRMWARE);
 	fu_device_register_private_flag(FU_DEVICE(self),
@@ -459,6 +446,5 @@ fu_dfu_csr_device_class_init(FuDfuCsrDeviceClass *klass)
 	klass_device->dump_firmware = fu_dfu_csr_device_upload;
 	klass_device->attach = fu_dfu_csr_device_attach;
 	klass_device->setup = fu_dfu_csr_device_setup;
-	klass_device->probe = fu_dfu_csr_device_probe;
 	klass_device->set_progress = fu_dfu_csr_device_set_progress;
 }

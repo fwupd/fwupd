@@ -37,10 +37,6 @@ fu_hailuck_kbd_device_probe(FuDevice *device, GError **error)
 {
 	g_autoptr(FuHailuckTpDevice) tp_device = fu_hailuck_tp_device_new(FU_DEVICE(device));
 
-	/* FuUsbDevice->probe */
-	if (!FU_DEVICE_CLASS(fu_hailuck_kbd_device_parent_class)->probe(device, error))
-		return FALSE;
-
 	/* add extra keyboard-specific GUID */
 	fu_device_add_instance_str(device, "MODE", "KBD");
 	if (!fu_device_build_instance_id(device, error, "USB", "VID", "PID", "MODE", NULL))

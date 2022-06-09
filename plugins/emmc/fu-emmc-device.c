@@ -144,10 +144,6 @@ fu_emmc_device_probe(FuDevice *device, GError **error)
 	g_autofree gchar *vendor_id = NULL;
 	g_autoptr(GRegex) dev_regex = NULL;
 
-	/* FuUdevDevice->probe */
-	if (!FU_DEVICE_CLASS(fu_emmc_device_parent_class)->probe(device, error))
-		return FALSE;
-
 	udev_parent = g_udev_device_get_parent_with_subsystem(udev_device, "mmc", NULL);
 	if (udev_parent == NULL) {
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no MMC parent");

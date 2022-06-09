@@ -26,9 +26,6 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC(ESYS_CONTEXT, Esys_Finalize_autoptr_cleanup)
 static gboolean
 fu_tpm_v2_device_probe(FuDevice *device, GError **error)
 {
-	/* FuUdevDevice->probe */
-	if (!FU_DEVICE_CLASS(fu_tpm_v2_device_parent_class)->probe(device, error))
-		return FALSE;
 	return fu_udev_device_set_physical_id(FU_UDEV_DEVICE(device), "tpm", error);
 }
 

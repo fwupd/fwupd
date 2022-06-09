@@ -58,10 +58,6 @@ fu_flashrom_device_probe(FuDevice *device, GError **error)
 	const gchar *dev_name = NULL;
 	const gchar *sysfs_path = NULL;
 
-	/* FuUdevDevice->probe */
-	if (!FU_DEVICE_CLASS(fu_flashrom_device_parent_class)->probe(device, error))
-		return FALSE;
-
 	sysfs_path = fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(device));
 	if (sysfs_path != NULL) {
 		g_autofree gchar *physical_id = NULL;

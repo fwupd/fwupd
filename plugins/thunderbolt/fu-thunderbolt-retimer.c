@@ -79,10 +79,6 @@ fu_thunderbolt_retimer_probe(FuDevice *device, GError **error)
 	const gchar *devpath = fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(device));
 	g_autofree gchar *physical_id = g_path_get_basename(devpath);
 
-	/* FuUdevDevice->probe */
-	if (!FU_DEVICE_CLASS(fu_thunderbolt_retimer_parent_class)->probe(device, error))
-		return FALSE;
-
 	/* device */
 	if (physical_id != NULL)
 		fu_device_set_physical_id(device, physical_id);

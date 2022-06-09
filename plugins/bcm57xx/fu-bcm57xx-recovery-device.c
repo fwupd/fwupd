@@ -878,9 +878,6 @@ fu_bcm57xx_recovery_device_init(FuBcm57xxRecoveryDevice *self)
 static gboolean
 fu_bcm57xx_recovery_device_probe(FuDevice *device, GError **error)
 {
-	/* FuUdevDevice->probe */
-	if (!FU_DEVICE_CLASS(fu_bcm57xx_recovery_device_parent_class)->probe(device, error))
-		return FALSE;
 	return fu_udev_device_set_physical_id(FU_UDEV_DEVICE(device), "pci", error);
 }
 
