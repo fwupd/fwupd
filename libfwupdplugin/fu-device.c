@@ -4867,6 +4867,12 @@ fu_device_incorporate(FuDevice *self, FuDevice *donor)
 	}
 	g_rw_lock_reader_unlock(&priv_donor->metadata_mutex);
 
+	/* probably not required, but seems safer */
+	for (guint i = 0; i < priv_donor->possible_plugins->len; i++) {
+		const gchar *possible_plugin = g_ptr_array_index(priv_donor->possible_plugins, i);
+		fu_device_add_possible_plugin(self, possible_plugin);
+	}
+
 	/* copy all instance ID keys if not already set */
 	g_hash_table_iter_init(&iter, priv_donor->instance_hash);
 	while (g_hash_table_iter_next(&iter, &key, &value)) {
