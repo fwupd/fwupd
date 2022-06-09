@@ -4815,6 +4815,8 @@ fu_device_incorporate(FuDevice *self, FuDevice *donor)
 	GPtrArray *instance_ids = fu_device_get_instance_ids(donor);
 	GPtrArray *parent_guids = fu_device_get_parent_guids(donor);
 	GPtrArray *parent_physical_ids = fu_device_get_parent_physical_ids(donor);
+	GHashTableIter iter;
+	gpointer key, value;
 
 	g_return_if_fail(FU_IS_DEVICE(self));
 	g_return_if_fail(FU_IS_DEVICE(donor));
@@ -4850,13 +4852,10 @@ fu_device_incorporate(FuDevice *self, FuDevice *donor)
 	}
 	g_rw_lock_reader_lock(&priv_donor->metadata_mutex);
 	if (priv->metadata != NULL) {
-		g_autoptr(GList) keys = g_hash_table_get_keys(priv_donor->metadata);
-		for (GList *l = keys; l != NULL; l = l->next) {
-			const gchar *key = l->data;
-			if (g_hash_table_lookup(priv->metadata, key) == NULL) {
-				const gchar *value = g_hash_table_lookup(priv_donor->metadata, key);
+		g_hash_table_iter_init(&iter, priv_donor->metadata);
+		while (g_hash_table_iter_next(&iter, &key, &value)) {
+			if (fu_device_get_metadata(self, key) == NULL)
 				fu_device_set_metadata(self, key, value);
-			}
 		}
 	}
 	g_rw_lock_reader_unlock(&priv_donor->metadata_mutex);
