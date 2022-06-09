@@ -853,9 +853,14 @@ fu_logitech_bulkcontroller_device_write_firmware(FuDevice *device,
 			g_usleep(G_USEC_PER_SEC);
 			continue;
 		}
-		fu_progress_set_percentage_full(fu_progress_get_child(progress),
-						self->update_progress,
-						100);
+
+		/* only update the child if the percentage is bigger -- which means the progressbar
+		 * may stall, but will never go backwards */
+		if (self->update_progress >
+		    fu_progress_get_percentage(fu_progress_get_child(progress))) {
+			fu_progress_set_percentage(fu_progress_get_child(progress),
+						   self->update_progress);
+		}
 	} while (max_wait--);
 	if (max_wait <= 0) {
 		g_set_error_literal(error,
