@@ -1005,17 +1005,53 @@ fu_udev_device_get_parent_subsystems(FuUdevDevice *self)
 		g_string_truncate(str, str->len - 1);
 	return g_string_free(str, FALSE);
 }
+
+static gboolean
+fu_udev_device_match_subsystem_devtype(GUdevDevice *udev_device,
+				       const gchar *subsystem,
+				       const gchar *devtype)
+{
+	if (subsystem != NULL) {
+		if (g_strcmp0(g_udev_device_get_subsystem(udev_device), subsystem) != 0)
+			return FALSE;
+	}
+	if (devtype != NULL) {
+		if (g_strcmp0(g_udev_device_get_devtype(udev_device), devtype) != 0)
+			return FALSE;
+	}
+	return TRUE;
+}
+
+static GUdevDevice *
+fu_udev_device_get_parent_with_subsystem_devtype(GUdevDevice *udev_device,
+						 const gchar *subsystem,
+						 const gchar *devtype)
+{
+	g_autoptr(GUdevDevice) udev_device_tmp = g_object_ref(udev_device);
+	while (udev_device_tmp != NULL) {
+		g_autoptr(GUdevDevice) parent = NULL;
+		if (fu_udev_device_match_subsystem_devtype(udev_device_tmp, subsystem, devtype))
+			return g_object_ref(udev_device_tmp);
+		parent = g_udev_device_get_parent(udev_device_tmp);
+		g_set_object(&udev_device_tmp, parent);
+	}
+	return NULL;
+}
 #endif
 
 /**
  * fu_udev_device_set_physical_id:
  * @self: a #FuUdevDevice
- * @subsystems: a subsystem string, e.g. `pci,usb`
+ * @subsystems: a subsystem string, e.g. `pci,usb,scsi:scsi_target`
  * @error: (nullable): optional return location for an error
  *
  * Sets the physical ID from the device subsystem. Plugins should choose the
  * subsystem that is "deepest" in the udev tree, for instance choosing `usb`
  * over `pci` for a mouse device.
+ *
+ * The devtype can also be specified for a specific device, which is useful when the
+ * subsystem alone is not enough to identify the physical device. e.g. ignoring the
+ * specific LUNs for a SCSI device.
  *
  * Returns: %TRUE if the physical device was set.
  *
@@ -1026,9 +1062,9 @@ fu_udev_device_set_physical_id(FuUdevDevice *self, const gchar *subsystems, GErr
 {
 #ifdef HAVE_GUDEV
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
-	const gchar *subsystem = NULL;
 	const gchar *tmp;
 	g_autofree gchar *physical_id = NULL;
+	g_autofree gchar *subsystem = NULL;
 	g_auto(GStrv) split = NULL;
 	g_autoptr(GUdevDevice) udev_device = NULL;
 
@@ -1040,18 +1076,19 @@ fu_udev_device_set_physical_id(FuUdevDevice *self, const gchar *subsystems, GErr
 	if (priv->udev_device == NULL)
 		return TRUE;
 
-	/* look for each subsystem in turn */
+	/* look for each subsystem[:devtype] in turn */
 	split = g_strsplit(subsystems, ",", -1);
 	for (guint i = 0; split[i] != NULL; i++) {
-		subsystem = split[i];
-		if (g_strcmp0(priv->subsystem, subsystem) == 0) {
-			udev_device = g_object_ref(priv->udev_device);
+		g_auto(GStrv) subsys_devtype = g_strsplit(split[i], ":", 2);
+
+		/* matching on devtype is optional */
+		udev_device = fu_udev_device_get_parent_with_subsystem_devtype(priv->udev_device,
+									       subsys_devtype[0],
+									       subsys_devtype[1]);
+		if (udev_device != NULL) {
+			subsystem = g_strdup(subsys_devtype[0]);
 			break;
 		}
-		udev_device =
-		    g_udev_device_get_parent_with_subsystem(priv->udev_device, subsystem, NULL);
-		if (udev_device != NULL)
-			break;
 	}
 	if (udev_device == NULL) {
 		g_autofree gchar *str = fu_udev_device_get_parent_subsystems(self);

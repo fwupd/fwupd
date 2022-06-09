@@ -133,7 +133,7 @@ fu_scsi_device_probe(FuDevice *device, GError **error)
 	}
 
 	/* set the physical ID */
-	return fu_udev_device_set_physical_id(FU_UDEV_DEVICE(device), "scsi", error);
+	return fu_udev_device_set_physical_id(FU_UDEV_DEVICE(device), "scsi:scsi_target", error);
 }
 
 static FuFirmware *
