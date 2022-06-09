@@ -5383,15 +5383,13 @@ fu_engine_plugins_setup(FuEngine *self, FuProgress *progress)
 	for (guint i = 0; i < plugins->len; i++) {
 		g_autoptr(GError) error = NULL;
 		FuPlugin *plugin = g_ptr_array_index(plugins, i);
-		FuProgress *progress_child = fu_progress_get_child(progress);
-		fu_progress_set_name(progress_child, fu_plugin_get_name(plugin));
-		if (!fu_plugin_runner_startup(plugin, progress_child, &error)) {
+		if (!fu_plugin_runner_startup(plugin, fu_progress_get_child(progress), &error)) {
 			fu_plugin_add_flag(plugin, FWUPD_PLUGIN_FLAG_DISABLED);
 			if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
 				fu_plugin_add_flag(plugin, FWUPD_PLUGIN_FLAG_NO_HARDWARE);
 			}
-			fu_progress_finished(progress_child);
 			g_message("disabling plugin because: %s", error->message);
+			fu_progress_add_flag(progress, FU_PROGRESS_FLAG_CHILD_FINISHED);
 		}
 		fu_progress_step_done(progress);
 	}
@@ -5410,11 +5408,10 @@ fu_engine_plugins_coldplug(FuEngine *self, FuProgress *progress)
 	for (guint i = 0; i < plugins->len; i++) {
 		g_autoptr(GError) error = NULL;
 		FuPlugin *plugin = g_ptr_array_index(plugins, i);
-		FuProgress *progress_child = fu_progress_get_child(progress);
-		fu_progress_set_name(progress_child, fu_plugin_get_name(plugin));
-		if (!fu_plugin_runner_coldplug(plugin, progress_child, &error)) {
+		if (!fu_plugin_runner_coldplug(plugin, fu_progress_get_child(progress), &error)) {
 			fu_plugin_add_flag(plugin, FWUPD_PLUGIN_FLAG_DISABLED);
 			g_message("disabling plugin because: %s", error->message);
+			fu_progress_add_flag(progress, FU_PROGRESS_FLAG_CHILD_FINISHED);
 		}
 		fu_progress_step_done(progress);
 	}

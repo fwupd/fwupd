@@ -848,7 +848,7 @@ fu_progress_step_done(FuProgress *self)
 	}
 
 	/* is child not at 100%? */
-	if (priv->child != NULL) {
+	if (!fu_progress_has_flag(self, FU_PROGRESS_FLAG_CHILD_FINISHED) && priv->child != NULL) {
 		FuProgressPrivate *child_priv = GET_PRIVATE(priv->child);
 		if (child_priv->step_now != child_priv->step_max) {
 			g_autoptr(GString) str = g_string_new(NULL);
