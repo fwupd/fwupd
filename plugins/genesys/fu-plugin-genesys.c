@@ -15,6 +15,7 @@
 static void
 fu_plugin_genesys_load(FuContext *ctx)
 {
+	fu_context_add_quirk_key(ctx, "GenesysScalerCfiFlashId");
 	fu_context_add_quirk_key(ctx, "GenesysScalerGpioOutputRegister");
 	fu_context_add_quirk_key(ctx, "GenesysScalerGpioEnableRegister");
 	fu_context_add_quirk_key(ctx, "GenesysScalerGpioValue");
