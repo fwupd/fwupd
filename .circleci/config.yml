@@ -31,6 +31,7 @@ jobs:
                                   git
                                   gcc
                                   gcab
+                                  gettext
                                   ca-certificates
                                   mingw32-nsis
                                   mingw64-brotli
