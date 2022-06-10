@@ -16,6 +16,38 @@ struct _FuRedfishNetworkDevice {
 
 G_DEFINE_TYPE(FuRedfishNetworkDevice, fu_redfish_network_device, G_TYPE_OBJECT)
 
+const gchar *
+fu_redfish_network_device_state_to_string(FuRedfishNetworkDeviceState state)
+{
+	if (state == FU_REDFISH_NETWORK_DEVICE_STATE_UNKNOWN)
+		return "unknown";
+	if (state == FU_REDFISH_NETWORK_DEVICE_STATE_UNMANAGED)
+		return "unmanaged";
+	if (state == FU_REDFISH_NETWORK_DEVICE_STATE_UNAVAILABLE)
+		return "unavailable";
+	if (state == FU_REDFISH_NETWORK_DEVICE_STATE_DISCONNECTED)
+		return "disconnected";
+	if (state == FU_REDFISH_NETWORK_DEVICE_STATE_PREPARE)
+		return "prepare";
+	if (state == FU_REDFISH_NETWORK_DEVICE_STATE_CONFIG)
+		return "config";
+	if (state == FU_REDFISH_NETWORK_DEVICE_STATE_NEED_AUTH)
+		return "need-auth";
+	if (state == FU_REDFISH_NETWORK_DEVICE_STATE_IP_CONFIG)
+		return "ip-config";
+	if (state == FU_REDFISH_NETWORK_DEVICE_STATE_IP_CHECK)
+		return "ip-check";
+	if (state == FU_REDFISH_NETWORK_DEVICE_STATE_SECONDARIES)
+		return "secondaries";
+	if (state == FU_REDFISH_NETWORK_DEVICE_STATE_ACTIVATED)
+		return "activated";
+	if (state == FU_REDFISH_NETWORK_DEVICE_STATE_DEACTIVATING)
+		return "deactivating";
+	if (state == FU_REDFISH_NETWORK_DEVICE_STATE_FAILED)
+		return "failed";
+	return NULL;
+}
+
 gboolean
 fu_redfish_network_device_get_state(FuRedfishNetworkDevice *self,
 				    FuRedfishNetworkDeviceState *state,
@@ -90,9 +122,12 @@ fu_redfish_network_device_connect(FuRedfishNetworkDevice *self, GError **error)
 		if (!fu_redfish_network_device_get_state(self, &state, error))
 			return FALSE;
 		if (g_getenv("FWUPD_REDFISH_VERBOSE") != NULL) {
-			g_debug("%s device state is now %u", self->object_path, state);
+			g_debug("%s device state is now %s [%u]",
+				self->object_path,
+				fu_redfish_network_device_state_to_string(state),
+				state);
 		}
-		if (state == FU_REDFISH_NETWORK_DEVICE_STATE_CONNECTED)
+		if (state == FU_REDFISH_NETWORK_DEVICE_STATE_ACTIVATED)
 			return TRUE;
 		g_usleep(50 * 1000);
 	} while (g_timer_elapsed(timer, NULL) < 5.f);
