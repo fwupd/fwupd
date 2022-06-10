@@ -687,6 +687,33 @@ fu_logitech_bulkcontroller_device_send_upd_init_cmd_cb(FuDevice *device,
 }
 
 static gboolean
+fu_logitech_bulkcontroller_device_write_fw(FuLogitechBulkcontrollerDevice *self,
+					   GBytes *fw,
+					   FuProgress *progress,
+					   GError **error)
+{
+	g_autoptr(GPtrArray) chunks = NULL;
+
+	chunks = fu_chunk_array_new_from_bytes(fw, 0x0, 0x0, PAYLOAD_SIZE);
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_set_steps(progress, chunks->len);
+	for (guint i = 0; i < chunks->len; i++) {
+		FuChunk *chk = g_ptr_array_index(chunks, i);
+		g_autoptr(GByteArray) data_pkt = g_byte_array_new();
+		g_byte_array_append(data_pkt, fu_chunk_get_data(chk), fu_chunk_get_data_sz(chk));
+		if (!fu_logitech_bulkcontroller_device_send_upd_cmd(self,
+								    CMD_DATA_TRANSFER,
+								    data_pkt,
+								    error)) {
+			g_prefix_error(error, "failed to send data packet 0x%x: ", i);
+			return FALSE;
+		}
+		fu_progress_step_done(progress);
+	}
+	return TRUE;
+}
+
+static gboolean
 fu_logitech_bulkcontroller_device_write_firmware(FuDevice *device,
 						 FuFirmware *firmware,
 						 FuProgress *progress,
@@ -702,7 +729,6 @@ fu_logitech_bulkcontroller_device_write_firmware(FuDevice *device,
 	g_autoptr(GByteArray) end_pkt = g_byte_array_new();
 	g_autoptr(GByteArray) start_pkt = g_byte_array_new();
 	g_autoptr(GBytes) fw = NULL;
-	g_autoptr(GPtrArray) chunks = NULL;
 	g_autofree gchar *old_firmware_version = NULL;
 
 	/* progress */
@@ -740,22 +766,11 @@ fu_logitech_bulkcontroller_device_write_firmware(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/* push each block to device */
-	chunks = fu_chunk_array_new_from_bytes(fw, 0x0, 0x0, PAYLOAD_SIZE);
-	for (guint i = 0; i < chunks->len; i++) {
-		FuChunk *chk = g_ptr_array_index(chunks, i);
-		g_autoptr(GByteArray) data_pkt = g_byte_array_new();
-		g_byte_array_append(data_pkt, fu_chunk_get_data(chk), fu_chunk_get_data_sz(chk));
-		if (!fu_logitech_bulkcontroller_device_send_upd_cmd(self,
-								    CMD_DATA_TRANSFER,
-								    data_pkt,
-								    error)) {
-			g_prefix_error(error, "failed to send data packet 0x%x: ", i);
-			return FALSE;
-		}
-		fu_progress_set_percentage_full(fu_progress_get_child(progress),
-						i + 1,
-						chunks->len);
-	}
+	if (!fu_logitech_bulkcontroller_device_write_fw(self,
+							fw,
+							fu_progress_get_child(progress),
+							error))
+		return FALSE;
 	fu_progress_step_done(progress);
 
 	/* sending end transfer */
