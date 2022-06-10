@@ -466,17 +466,6 @@ fu_genesys_usbhub_device_authenticate(FuGenesysUsbhubDevice *self, GError **erro
 }
 
 static gboolean
-fu_genesys_usbhub_device_probe(FuDevice *device, GError **error)
-{
-	/* FuUsbDevice->probe */
-	if (!FU_DEVICE_CLASS(fu_genesys_usbhub_device_parent_class)->probe(device, error))
-		return FALSE;
-
-	/* success */
-	return TRUE;
-}
-
-static gboolean
 fu_genesys_usbhub_device_open(FuDevice *device, GError **error)
 {
 	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(device));
@@ -1352,7 +1341,6 @@ static void
 fu_genesys_usbhub_device_class_init(FuGenesysUsbhubDeviceClass *klass)
 {
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
-	klass_device->probe = fu_genesys_usbhub_device_probe;
 	klass_device->open = fu_genesys_usbhub_device_open;
 	klass_device->close = fu_genesys_usbhub_device_close;
 	klass_device->setup = fu_genesys_usbhub_device_setup;
