@@ -451,6 +451,8 @@ fu_plugin_redfish_cleanup_coldplug_cb(FuDevice *device, gpointer user_data, GErr
 {
 	FuPlugin *self = FU_PLUGIN(user_data);
 	FuProgress *progress = fu_progress_new(G_STRLOC);
+	if (!fu_redfish_plugin_autoconnect_network_device(self, error))
+		return FALSE;
 	return fu_plugin_redfish_coldplug(self, progress, error);
 }
 
