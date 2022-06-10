@@ -734,8 +734,9 @@ fu_logitech_bulkcontroller_device_write_firmware(FuDevice *device,
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1, "init");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 49, NULL);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1, NULL);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 48, "device-write-blocks");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1, "end-transfer");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1, "uninit");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 49, NULL);
 
 	/* get default image */
@@ -786,6 +787,7 @@ fu_logitech_bulkcontroller_device_write_firmware(FuDevice *device,
 		g_prefix_error(error, "failed to write end transfer transfer packet: ");
 		return FALSE;
 	}
+	fu_progress_step_done(progress);
 
 	/* send uninit */
 	if (!fu_logitech_bulkcontroller_device_send_upd_cmd(self, CMD_UNINIT, NULL, error)) {
