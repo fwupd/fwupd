@@ -254,7 +254,10 @@ fu_util_lock(FuUtilPrivate *priv, GError **error)
 }
 
 static gboolean
-fu_util_start_engine(FuUtilPrivate *priv, FuEngineLoadFlags flags, GError **error)
+fu_util_start_engine(FuUtilPrivate *priv,
+		     FuEngineLoadFlags flags,
+		     FuProgress *progress,
+		     GError **error)
 {
 	if (!fu_util_lock(priv, error)) {
 		/* TRANSLATORS: another fwupdtool instance is already running */
@@ -270,7 +273,7 @@ fu_util_start_engine(FuUtilPrivate *priv, FuEngineLoadFlags flags, GError **erro
 			g_debug("Failed to stop daemon: %s", error_local->message);
 	}
 #endif
-	if (!fu_engine_load(priv->engine, flags, priv->progress, error))
+	if (!fu_engine_load(priv->engine, flags, progress, error))
 		return FALSE;
 	if (fu_engine_get_tainted(priv->engine)) {
 		g_autofree gchar *fmt = NULL;
@@ -463,7 +466,7 @@ fu_util_progress_status_changed_cb(FuProgress *progress, FwupdStatus status, FuU
 static gboolean
 fu_util_watch(FuUtilPrivate *priv, gchar **values, GError **error)
 {
-	if (!fu_util_start_engine(priv, FU_ENGINE_LOAD_FLAG_COLDPLUG, error))
+	if (!fu_util_start_engine(priv, FU_ENGINE_LOAD_FLAG_COLDPLUG, priv->progress, error))
 		return FALSE;
 	g_main_loop_run(priv->loop);
 	return TRUE;
@@ -500,7 +503,7 @@ fu_util_get_plugins(FuUtilPrivate *priv, gchar **values, GError **error)
 	GPtrArray *plugins;
 
 	/* load engine */
-	if (!fu_util_start_engine(priv, FU_ENGINE_LOAD_FLAG_HWINFO, error))
+	if (!fu_util_start_engine(priv, FU_ENGINE_LOAD_FLAG_HWINFO, priv->progress, error))
 		return FALSE;
 
 	/* print */
@@ -648,6 +651,7 @@ fu_util_get_updates(FuUtilPrivate *priv, gchar **values, GError **error)
 	if (!fu_util_start_engine(priv,
 				  FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_HWINFO |
 				      FU_ENGINE_LOAD_FLAG_REMOTES,
+				  priv->progress,
 				  error))
 		return FALSE;
 
@@ -756,6 +760,7 @@ fu_util_get_details(FuUtilPrivate *priv, gchar **values, GError **error)
 	if (!fu_util_start_engine(priv,
 				  FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_HWINFO |
 				      FU_ENGINE_LOAD_FLAG_REMOTES,
+				  priv->progress,
 				  error))
 		return FALSE;
 
@@ -850,6 +855,7 @@ fu_util_get_devices(FuUtilPrivate *priv, gchar **values, GError **error)
 	if (!fu_util_start_engine(priv,
 				  FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_HWINFO |
 				      FU_ENGINE_LOAD_FLAG_REMOTES,
+				  priv->progress,
 				  error))
 		return FALSE;
 
@@ -937,6 +943,12 @@ fu_util_install_blob(FuUtilPrivate *priv, gchar **values, GError **error)
 	g_autoptr(FuDevice) device = NULL;
 	g_autoptr(GBytes) blob_fw = NULL;
 
+	/* progress */
+	fu_progress_set_id(priv->progress, G_STRLOC);
+	fu_progress_add_step(priv->progress, FWUPD_STATUS_LOADING, 2, "parse");
+	fu_progress_add_step(priv->progress, FWUPD_STATUS_LOADING, 30, "start-engine");
+	fu_progress_add_step(priv->progress, FWUPD_STATUS_DEVICE_WRITE, 68, NULL);
+
 	/* invalid args */
 	if (g_strv_length(values) == 0) {
 		g_set_error_literal(error,
@@ -952,13 +964,16 @@ fu_util_install_blob(FuUtilPrivate *priv, gchar **values, GError **error)
 		fu_util_maybe_prefix_sandbox_error(values[0], error);
 		return FALSE;
 	}
+	fu_progress_step_done(priv->progress);
 
 	/* load engine */
 	if (!fu_util_start_engine(priv,
 				  FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_HWINFO |
 				      FU_ENGINE_LOAD_FLAG_REMOTES,
+				  fu_progress_get_child(priv->progress),
 				  error))
 		return FALSE;
+	fu_progress_step_done(priv->progress);
 
 	/* get device */
 	priv->filter_include |= FWUPD_DEVICE_FLAG_UPDATABLE;
@@ -992,11 +1007,14 @@ fu_util_install_blob(FuUtilPrivate *priv, gchar **values, GError **error)
 	if (!fu_engine_install_blob(priv->engine,
 				    device,
 				    blob_fw,
-				    priv->progress,
+				    fu_progress_get_child(priv->progress),
 				    priv->flags,
 				    fu_engine_request_get_feature_flags(priv->request),
 				    error))
 		return FALSE;
+	fu_progress_step_done(priv->progress);
+
+	/* cleanup */
 	if (priv->cleanup_blob) {
 		g_autoptr(FuDevice) device_new = NULL;
 		g_autoptr(GError) error_local = NULL;
@@ -1070,6 +1088,11 @@ fu_util_firmware_dump(FuUtilPrivate *priv, gchar **values, GError **error)
 	g_autoptr(GBytes) blob_empty = g_bytes_new(NULL, 0);
 	g_autoptr(GBytes) blob_fw = NULL;
 
+	/* progress */
+	fu_progress_set_id(priv->progress, G_STRLOC);
+	fu_progress_add_step(priv->progress, FWUPD_STATUS_LOADING, 95, "start-engine");
+	fu_progress_add_step(priv->progress, FWUPD_STATUS_DEVICE_READ, 5, NULL);
+
 	/* invalid args */
 	if (g_strv_length(values) == 0) {
 		g_set_error_literal(error,
@@ -1097,8 +1120,10 @@ fu_util_firmware_dump(FuUtilPrivate *priv, gchar **values, GError **error)
 	/* load engine */
 	if (!fu_util_start_engine(priv,
 				  FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_HWINFO,
+				  fu_progress_get_child(priv->progress),
 				  error))
 		return FALSE;
+	fu_progress_step_done(priv->progress);
 
 	/* get device */
 	priv->filter_include |= FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE;
@@ -1118,9 +1143,14 @@ fu_util_firmware_dump(FuUtilPrivate *priv, gchar **values, GError **error)
 			 priv);
 
 	/* dump firmware */
-	blob_fw = fu_engine_firmware_dump(priv->engine, device, priv->progress, priv->flags, error);
+	blob_fw = fu_engine_firmware_dump(priv->engine,
+					  device,
+					  fu_progress_get_child(priv->progress),
+					  priv->flags,
+					  error);
 	if (blob_fw == NULL)
 		return FALSE;
+	fu_progress_step_done(priv->progress);
 	return fu_common_set_contents_bytes(values[0], blob_fw, error);
 }
 
@@ -1131,6 +1161,11 @@ fu_util_firmware_read(FuUtilPrivate *priv, gchar **values, GError **error)
 	g_autoptr(FuFirmware) fw = NULL;
 	g_autoptr(GBytes) blob_empty = g_bytes_new(NULL, 0);
 	g_autoptr(GBytes) blob_fw = NULL;
+
+	/* progress */
+	fu_progress_set_id(priv->progress, G_STRLOC);
+	fu_progress_add_step(priv->progress, FWUPD_STATUS_LOADING, 95, "start-engine");
+	fu_progress_add_step(priv->progress, FWUPD_STATUS_DEVICE_READ, 5, NULL);
 
 	/* invalid args */
 	if (g_strv_length(values) == 0) {
@@ -1159,8 +1194,10 @@ fu_util_firmware_read(FuUtilPrivate *priv, gchar **values, GError **error)
 	/* load engine */
 	if (!fu_util_start_engine(priv,
 				  FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_HWINFO,
+				  fu_progress_get_child(priv->progress),
 				  error))
 		return FALSE;
+	fu_progress_step_done(priv->progress);
 
 	/* get device */
 	priv->filter_include |= FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE;
@@ -1180,12 +1217,17 @@ fu_util_firmware_read(FuUtilPrivate *priv, gchar **values, GError **error)
 			 priv);
 
 	/* read firmware into the container format */
-	fw = fu_engine_firmware_read(priv->engine, device, priv->progress, priv->flags, error);
+	fw = fu_engine_firmware_read(priv->engine,
+				     device,
+				     fu_progress_get_child(priv->progress),
+				     priv->flags,
+				     error);
 	if (fw == NULL)
 		return FALSE;
 	blob_fw = fu_firmware_write(fw, error);
 	if (blob_fw == NULL)
 		return FALSE;
+	fu_progress_step_done(priv->progress);
 	return fu_common_set_contents_bytes(values[0], blob_fw, error);
 }
 
@@ -1235,12 +1277,19 @@ fu_util_install(FuUtilPrivate *priv, gchar **values, GError **error)
 	g_autoptr(GPtrArray) releases = NULL;
 	g_autoptr(XbSilo) silo = NULL;
 
+	/* progress */
+	fu_progress_set_id(priv->progress, G_STRLOC);
+	fu_progress_add_step(priv->progress, FWUPD_STATUS_LOADING, 50, "start-engine");
+	fu_progress_add_step(priv->progress, FWUPD_STATUS_DEVICE_WRITE, 50, NULL);
+
 	/* load engine */
 	if (!fu_util_start_engine(priv,
 				  FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_HWINFO |
 				      FU_ENGINE_LOAD_FLAG_REMOTES,
+				  fu_progress_get_child(priv->progress),
 				  error))
 		return FALSE;
+	fu_progress_step_done(priv->progress);
 
 	/* handle both forms */
 	if (g_strv_length(values) == 1) {
@@ -1362,10 +1411,11 @@ fu_util_install(FuUtilPrivate *priv, gchar **values, GError **error)
 					priv->request,
 					releases,
 					blob_cab,
-					priv->progress,
+					fu_progress_get_child(priv->progress),
 					priv->flags,
 					error))
 		return FALSE;
+	fu_progress_step_done(priv->progress);
 
 	fu_util_display_current_message(priv);
 
@@ -1457,6 +1507,7 @@ fu_util_update(FuUtilPrivate *priv, gchar **values, GError **error)
 	if (!fu_util_start_engine(priv,
 				  FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_HWINFO |
 				      FU_ENGINE_LOAD_FLAG_REMOTES,
+				  priv->progress,
 				  error))
 		return FALSE;
 
@@ -1583,6 +1634,7 @@ fu_util_reinstall(FuUtilPrivate *priv, gchar **values, GError **error)
 	if (!fu_util_start_engine(priv,
 				  FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_HWINFO |
 				      FU_ENGINE_LOAD_FLAG_REMOTES,
+				  priv->progress,
 				  error))
 		return FALSE;
 
@@ -1644,12 +1696,19 @@ fu_util_detach(FuUtilPrivate *priv, gchar **values, GError **error)
 	g_autoptr(FuDevice) device = NULL;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
+	/* progress */
+	fu_progress_set_id(priv->progress, G_STRLOC);
+	fu_progress_add_step(priv->progress, FWUPD_STATUS_LOADING, 95, "start-engine");
+	fu_progress_add_step(priv->progress, FWUPD_STATUS_DEVICE_BUSY, 5, NULL);
+
 	/* load engine */
 	if (!fu_util_start_engine(priv,
 				  FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_HWINFO |
 				      FU_ENGINE_LOAD_FLAG_REMOTES,
+				  fu_progress_get_child(priv->progress),
 				  error))
 		return FALSE;
+	fu_progress_step_done(priv->progress);
 
 	/* get device */
 	priv->filter_exclude |= FWUPD_DEVICE_FLAG_IS_BOOTLOADER;
@@ -1667,7 +1726,10 @@ fu_util_detach(FuUtilPrivate *priv, gchar **values, GError **error)
 	locker = fu_device_locker_new(device, error);
 	if (locker == NULL)
 		return FALSE;
-	return fu_device_detach_full(device, priv->progress, error);
+	if (!fu_device_detach_full(device, fu_progress_get_child(priv->progress), error))
+		return FALSE;
+	fu_progress_step_done(priv->progress);
+	return TRUE;
 }
 
 static gboolean
@@ -1680,6 +1742,7 @@ fu_util_unbind_driver(FuUtilPrivate *priv, gchar **values, GError **error)
 	if (!fu_util_start_engine(priv,
 				  FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_HWINFO |
 				      FU_ENGINE_LOAD_FLAG_REMOTES,
+				  priv->progress,
 				  error))
 		return FALSE;
 
@@ -1709,6 +1772,7 @@ fu_util_bind_driver(FuUtilPrivate *priv, gchar **values, GError **error)
 	if (!fu_util_start_engine(priv,
 				  FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_HWINFO |
 				      FU_ENGINE_LOAD_FLAG_REMOTES,
+				  priv->progress,
 				  error))
 		return FALSE;
 
@@ -1742,12 +1806,19 @@ fu_util_attach(FuUtilPrivate *priv, gchar **values, GError **error)
 	g_autoptr(FuDevice) device = NULL;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
+	/* progress */
+	fu_progress_set_id(priv->progress, G_STRLOC);
+	fu_progress_add_step(priv->progress, FWUPD_STATUS_LOADING, 95, "start-engine");
+	fu_progress_add_step(priv->progress, FWUPD_STATUS_DEVICE_BUSY, 5, NULL);
+
 	/* load engine */
 	if (!fu_util_start_engine(priv,
 				  FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_HWINFO |
 				      FU_ENGINE_LOAD_FLAG_REMOTES,
+				  fu_progress_get_child(priv->progress),
 				  error))
 		return FALSE;
+	fu_progress_step_done(priv->progress);
 
 	/* get device */
 	priv->filter_include |= FWUPD_DEVICE_FLAG_IS_BOOTLOADER;
@@ -1765,7 +1836,12 @@ fu_util_attach(FuUtilPrivate *priv, gchar **values, GError **error)
 	locker = fu_device_locker_new(device, error);
 	if (locker == NULL)
 		return FALSE;
-	return fu_device_attach_full(device, priv->progress, error);
+	if (!fu_device_attach_full(device, fu_progress_get_child(priv->progress), error))
+		return FALSE;
+	fu_progress_step_done(priv->progress);
+
+	/* success */
+	return TRUE;
 }
 
 static gboolean
@@ -1807,12 +1883,19 @@ fu_util_activate(FuUtilPrivate *priv, gchar **values, GError **error)
 	if (!fu_util_check_activation_needed(priv, error))
 		return FALSE;
 
+	/* progress */
+	fu_progress_set_id(priv->progress, G_STRLOC);
+	fu_progress_add_step(priv->progress, FWUPD_STATUS_LOADING, 95, "start-engine");
+	fu_progress_add_step(priv->progress, FWUPD_STATUS_DEVICE_BUSY, 5, NULL);
+
 	/* load engine */
 	if (!fu_util_start_engine(priv,
 				  FU_ENGINE_LOAD_FLAG_READONLY | FU_ENGINE_LOAD_FLAG_COLDPLUG |
 				      FU_ENGINE_LOAD_FLAG_REMOTES | FU_ENGINE_LOAD_FLAG_HWINFO,
+				  fu_progress_get_child(priv->progress),
 				  error))
 		return FALSE;
+	fu_progress_step_done(priv->progress);
 
 	/* parse arguments */
 	if (g_strv_length(values) == 0) {
@@ -1848,10 +1931,11 @@ fu_util_activate(FuUtilPrivate *priv, gchar **values, GError **error)
 		g_print("%s %s…\n", _("Activating firmware update"), fu_device_get_name(device));
 		if (!fu_engine_activate(priv->engine,
 					fu_device_get_id(device),
-					priv->progress,
+					fu_progress_get_child(priv->progress),
 					error))
 			return FALSE;
 	}
+	fu_progress_step_done(priv->progress);
 
 	if (!has_pending) {
 		g_set_error_literal(error,
@@ -2025,7 +2109,7 @@ fu_util_self_sign(FuUtilPrivate *priv, gchar **values, GError **error)
 	}
 
 	/* start engine */
-	if (!fu_util_start_engine(priv, FU_ENGINE_LOAD_FLAG_NONE, error))
+	if (!fu_util_start_engine(priv, FU_ENGINE_LOAD_FLAG_NONE, priv->progress, error))
 		return FALSE;
 	sig = fu_engine_self_sign(priv->engine,
 				  values[0],
@@ -2649,12 +2733,19 @@ fu_util_verify_update(FuUtilPrivate *priv, gchar **values, GError **error)
 	g_autofree gchar *str = NULL;
 	g_autoptr(FuDevice) dev = NULL;
 
+	/* progress */
+	fu_progress_set_id(priv->progress, G_STRLOC);
+	fu_progress_add_step(priv->progress, FWUPD_STATUS_LOADING, 50, "start-engine");
+	fu_progress_add_step(priv->progress, FWUPD_STATUS_DEVICE_VERIFY, 50, "verify-update");
+
 	/* load engine */
 	if (!fu_util_start_engine(priv,
 				  FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_HWINFO |
 				      FU_ENGINE_LOAD_FLAG_REMOTES,
+				  fu_progress_get_child(priv->progress),
 				  error))
 		return FALSE;
+	fu_progress_step_done(priv->progress);
 
 	/* get device */
 	priv->filter_include |= FWUPD_DEVICE_FLAG_UPDATABLE;
@@ -2669,8 +2760,12 @@ fu_util_verify_update(FuUtilPrivate *priv, gchar **values, GError **error)
 	}
 
 	/* add checksums */
-	if (!fu_engine_verify_update(priv->engine, fu_device_get_id(dev), priv->progress, error))
+	if (!fu_engine_verify_update(priv->engine,
+				     fu_device_get_id(dev),
+				     fu_progress_get_child(priv->progress),
+				     error))
 		return FALSE;
+	fu_progress_step_done(priv->progress);
 
 	/* show checksums */
 	str = fu_device_to_string(dev);
@@ -2688,6 +2783,7 @@ fu_util_get_history(FuUtilPrivate *priv, gchar **values, GError **error)
 	if (!fu_util_start_engine(priv,
 				  FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_HWINFO |
 				      FU_ENGINE_LOAD_FLAG_REMOTES,
+				  priv->progress,
 				  error))
 		return FALSE;
 
@@ -2814,6 +2910,7 @@ fu_util_refresh(FuUtilPrivate *priv, gchar **values, GError **error)
 	if (!fu_util_start_engine(priv,
 				  FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_HWINFO |
 				      FU_ENGINE_LOAD_FLAG_REMOTES,
+				  priv->progress,
 				  error))
 		return FALSE;
 
@@ -2840,7 +2937,7 @@ fu_util_get_remotes(FuUtilPrivate *priv, gchar **values, GError **error)
 	g_autoptr(GPtrArray) remotes = NULL;
 
 	/* load engine */
-	if (!fu_util_start_engine(priv, FU_ENGINE_LOAD_FLAG_REMOTES, error))
+	if (!fu_util_start_engine(priv, FU_ENGINE_LOAD_FLAG_REMOTES, priv->progress, error))
 		return FALSE;
 
 	/* list remotes */
@@ -2877,6 +2974,7 @@ fu_util_security(FuUtilPrivate *priv, gchar **values, GError **error)
 	if (!fu_util_start_engine(priv,
 				  FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_HWINFO |
 				      FU_ENGINE_LOAD_FLAG_REMOTES,
+				  priv->progress,
 				  error))
 		return FALSE;
 
@@ -3068,6 +3166,7 @@ fu_util_switch_branch(FuUtilPrivate *priv, gchar **values, GError **error)
 	if (!fu_util_start_engine(priv,
 				  FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_HWINFO |
 				      FU_ENGINE_LOAD_FLAG_REMOTES,
+				  priv->progress,
 				  error))
 		return FALSE;
 
@@ -3192,7 +3291,7 @@ fu_util_version(FuUtilPrivate *priv, GError **error)
 	g_autofree gchar *str = NULL;
 
 	/* load engine */
-	if (!fu_util_start_engine(priv, FU_ENGINE_LOAD_FLAG_READONLY, error))
+	if (!fu_util_start_engine(priv, FU_ENGINE_LOAD_FLAG_READONLY, priv->progress, error))
 		return FALSE;
 
 	/* get metadata */
