@@ -237,7 +237,9 @@ fu_redfish_plugin_autoconnect_network_device(FuPlugin *plugin, GError **error)
 		if (!fu_redfish_network_device_get_state(device, &state, error))
 			return FALSE;
 		if (g_getenv("FWUPD_REDFISH_VERBOSE") != NULL) {
-			g_debug("device state is now %u", state);
+			g_debug("device state is now %s [%u]",
+				fu_redfish_network_device_state_to_string(state),
+				state);
 		}
 		if (state == FU_REDFISH_NETWORK_DEVICE_STATE_DISCONNECTED) {
 			if (!fu_redfish_network_device_connect(device, error))
