@@ -22,6 +22,7 @@
 
 struct FuPluginData {
 	FuRedfishBackend *backend;
+	FuRedfishSmbios *smbios; /* nullable */
 };
 
 static gchar *
@@ -171,9 +172,7 @@ fu_redfish_plugin_discover_smbios_table(FuPlugin *plugin, GError **error)
 	FuPluginData *data = fu_plugin_get_data(plugin);
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	const gchar *smbios_data_fn;
-	g_autofree gchar *hostname = NULL;
-	g_autoptr(FuRedfishNetworkDevice) device = NULL;
-	g_autoptr(FuRedfishSmbios) redfish_smbios = fu_redfish_smbios_new();
+	g_autoptr(FuRedfishSmbios) smbios = fu_redfish_smbios_new();
 	g_autoptr(GBytes) smbios_data = NULL;
 
 	/* is optional if not in self tests */
@@ -187,20 +186,33 @@ fu_redfish_plugin_discover_smbios_table(FuPlugin *plugin, GError **error)
 		if (smbios_data == NULL)
 			return TRUE;
 	}
-	if (!fu_firmware_parse(FU_FIRMWARE(redfish_smbios),
-			       smbios_data,
-			       FWUPD_INSTALL_FLAG_NONE,
-			       error)) {
+	if (!fu_firmware_parse(FU_FIRMWARE(smbios), smbios_data, FWUPD_INSTALL_FLAG_NONE, error)) {
 		g_prefix_error(error, "failed to parse SMBIOS table entry type 42: ");
 		return FALSE;
 	}
 
+	/* success */
+	g_set_object(&data->smbios, smbios);
+	return TRUE;
+}
+
+static gboolean
+fu_redfish_plugin_autoconnect_network_device(FuPlugin *plugin, GError **error)
+{
+	FuPluginData *data = fu_plugin_get_data(plugin);
+	g_autofree gchar *hostname = NULL;
+	g_autoptr(FuRedfishNetworkDevice) device = NULL;
+
+	/* we have no data */
+	if (data->smbios == NULL)
+		return TRUE;
+
 	/* get IP, falling back to hostname, then MAC, then VID:PID */
-	hostname = g_strdup(fu_redfish_smbios_get_ip_addr(redfish_smbios));
+	hostname = g_strdup(fu_redfish_smbios_get_ip_addr(data->smbios));
 	if (hostname == NULL)
-		hostname = g_strdup(fu_redfish_smbios_get_hostname(redfish_smbios));
+		hostname = g_strdup(fu_redfish_smbios_get_hostname(data->smbios));
 	if (device == NULL) {
-		const gchar *mac_addr = fu_redfish_smbios_get_mac_addr(redfish_smbios);
+		const gchar *mac_addr = fu_redfish_smbios_get_mac_addr(data->smbios);
 		if (mac_addr != NULL) {
 			g_autoptr(GError) error_network = NULL;
 			device = fu_redfish_network_device_for_mac_addr(mac_addr, &error_network);
@@ -209,8 +221,8 @@ fu_redfish_plugin_discover_smbios_table(FuPlugin *plugin, GError **error)
 		}
 	}
 	if (device == NULL) {
-		guint16 vid = fu_redfish_smbios_get_vid(redfish_smbios);
-		guint16 pid = fu_redfish_smbios_get_pid(redfish_smbios);
+		guint16 vid = fu_redfish_smbios_get_vid(data->smbios);
+		guint16 pid = fu_redfish_smbios_get_pid(data->smbios);
 		if (vid != 0x0 && pid != 0x0) {
 			g_autoptr(GError) error_network = NULL;
 			device = fu_redfish_network_device_for_vid_pid(vid, pid, &error_network);
@@ -225,7 +237,9 @@ fu_redfish_plugin_discover_smbios_table(FuPlugin *plugin, GError **error)
 		if (!fu_redfish_network_device_get_state(device, &state, error))
 			return FALSE;
 		if (g_getenv("FWUPD_REDFISH_VERBOSE") != NULL) {
-			g_debug("device state is now %u", state);
+			g_debug("device state is now %s [%u]",
+				fu_redfish_network_device_state_to_string(state),
+				state);
 		}
 		if (state == FU_REDFISH_NETWORK_DEVICE_STATE_DISCONNECTED) {
 			if (!fu_redfish_network_device_connect(device, error))
@@ -242,7 +256,7 @@ fu_redfish_plugin_discover_smbios_table(FuPlugin *plugin, GError **error)
 		return FALSE;
 	}
 	fu_redfish_backend_set_hostname(data->backend, hostname);
-	fu_redfish_backend_set_port(data->backend, fu_redfish_smbios_get_port(redfish_smbios));
+	fu_redfish_backend_set_port(data->backend, fu_redfish_smbios_get_port(data->smbios));
 	return TRUE;
 }
 
@@ -348,6 +362,8 @@ fu_plugin_redfish_startup(FuPlugin *plugin, GError **error)
 	/* optional */
 	if (!fu_redfish_plugin_discover_smbios_table(plugin, error))
 		return FALSE;
+	if (!fu_redfish_plugin_autoconnect_network_device(plugin, error))
+		return FALSE;
 	if (!fu_redfish_plugin_discover_uefi_credentials(plugin, &error_uefi)) {
 		g_debug("failed to get username and password automatically: %s",
 			error_uefi->message);
@@ -422,6 +438,10 @@ fu_plugin_redfish_cleanup_setup_cb(FuDevice *device, gpointer user_data, GError 
 {
 	FuPlugin *self = FU_PLUGIN(user_data);
 	FuPluginData *data = fu_plugin_get_data(self);
+
+	/* the network adaptor might not autoconnect when coming back */
+	if (!fu_redfish_plugin_autoconnect_network_device(self, error))
+		return FALSE;
 	return fu_backend_setup(FU_BACKEND(data->backend), error);
 }
 
@@ -429,6 +449,8 @@ static gboolean
 fu_plugin_redfish_cleanup_coldplug_cb(FuDevice *device, gpointer user_data, GError **error)
 {
 	FuPlugin *self = FU_PLUGIN(user_data);
+	if (!fu_redfish_plugin_autoconnect_network_device(self, error))
+		return FALSE;
 	return fu_plugin_redfish_coldplug(self, error);
 }
 
@@ -541,6 +563,8 @@ static void
 fu_plugin_redfish_destroy(FuPlugin *plugin)
 {
 	FuPluginData *data = fu_plugin_get_data(plugin);
+	if (data->smbios != NULL)
+		g_object_unref(data->smbios);
 	g_object_unref(data->backend);
 }
 
