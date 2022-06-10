@@ -833,6 +833,7 @@ fu_logitech_bulkcontroller_device_write_firmware(FuDevice *device,
 								&error_local)) {
 			no_response_count++;
 			g_debug("no response for device info request %u", no_response_count);
+			fu_progress_reset(fu_progress_get_child(progress));
 			continue;
 		}
 
@@ -868,6 +869,7 @@ fu_logitech_bulkcontroller_device_write_firmware(FuDevice *device,
 			 * explicitly now
 			 */
 			g_usleep(G_USEC_PER_SEC);
+			fu_progress_reset(fu_progress_get_child(progress));
 			continue;
 		}
 
