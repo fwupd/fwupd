@@ -128,8 +128,8 @@ fu_backend_registered(FuBackend *self, FuDevice *device)
  * fu_backend_invalidate:
  * @self: a #FuBackend
  *
- * Normally when calling fu_backend_setup() multiple times it is only actually done once.
- * Calling this method causes the next requests to fu_backend_setup() to actually probe the
+ * Normally when calling [method@FuBackend.setup] multiple times it is only actually done once.
+ * Calling this method causes the next requests to [method@FuBackend.setup] to actually probe the
  * hardware.
  *
  * Only subclassed backends setting `can-invalidate=TRUE` at construction time can use this
@@ -197,7 +197,7 @@ fu_backend_setup(FuBackend *self, FuProgress *progress, GError **error)
  * @progress: a #FuProgress
  * @error: (nullable): optional return location for an error
  *
- * Adds devices using the subclassed backend. If fu_backend_setup() has not
+ * Adds devices using the subclassed backend. If [method@FuBackend.setup] has not
  * already been called then it is run before this function automatically.
  *
  * Returns: %TRUE for success

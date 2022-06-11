@@ -27,7 +27,7 @@
  * so that as the sub-module progresses, so does the parent.
  * The child can be reused for each section, and chains can be deep.
  *
- * To get a child object, you should use fu_progress_get_child() and then
+ * To get a child object, you should use [method@FuProgress.get_child]. and then
  * use the result in any sub-process. You should ensure that the child
  * is not re-used without calling fu_progress_step_done().
  *

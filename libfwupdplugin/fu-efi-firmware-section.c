@@ -14,6 +14,14 @@
 #include "fu-efi-firmware-volume.h"
 #include "fu-mem.h"
 
+/**
+ * FuEfiFirmwareSection:
+ *
+ * A UEFI firmware section.
+ *
+ * See also: [class@FuFirmware]
+ */
+
 typedef struct {
 	guint8 type;
 } FuEfiFirmwareSectionPrivate;

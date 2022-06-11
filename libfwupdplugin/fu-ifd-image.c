@@ -9,6 +9,14 @@
 #include "fu-byte-array.h"
 #include "fu-ifd-image.h"
 
+/**
+ * FuIfdImage:
+ *
+ * An Intel Flash Descriptor image, e.g. BIOS.
+ *
+ * See also: [class@FuFirmware]
+ */
+
 typedef struct {
 	FuIfdAccess access[FU_IFD_REGION_MAX];
 } FuIfdImagePrivate;

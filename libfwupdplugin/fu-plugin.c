@@ -506,8 +506,8 @@ fu_plugin_device_add(FuPlugin *self, FuDevice *device)
  * fu_plugin_get_devices:
  * @self: a #FuPlugin
  *
- * Returns all devices added by the plugin using fu_plugin_device_add() and
- * not yet removed with fu_plugin_device_remove().
+ * Returns all devices added by the plugin using [method@FuPlugin.device_add] and
+ * not yet removed with [method@FuPlugin.device_remove].
  *
  * Returns: (transfer none) (element-type FuDevice): devices
  *
@@ -530,7 +530,7 @@ fu_plugin_get_devices(FuPlugin *self)
  * Registers the device with other plugins so they can set metadata.
  *
  * Plugins do not have to call this manually as this is done automatically
- * when using fu_plugin_device_add(). They may wish to use this manually
+ * when using [method@FuPlugin.device_add]. They may wish to use this manually
  * if for instance the coldplug should be ignored based on the metadata
  * set from other plugins.
  *
