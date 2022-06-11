@@ -15,6 +15,14 @@
 #include "fu-mem.h"
 #include "fu-sum.h"
 
+/**
+ * FuEfiFirmwareFile:
+ *
+ * A UEFI file.
+ *
+ * See also: [class@FuFirmware]
+ */
+
 typedef struct {
 	guint8 type;
 	guint8 attrib;

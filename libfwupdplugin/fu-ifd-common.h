@@ -8,6 +8,22 @@
 
 #include <gio/gio.h>
 
+/**
+ * FuIfdRegion:
+ * @FU_IFD_REGION_DESC:		IFD descriptor
+ * @FU_IFD_REGION_BIOS:		BIOS
+ * @FU_IFD_REGION_ME:		ME
+ * @FU_IFD_REGION_GBE:		GBE
+ * @FU_IFD_REGION_PLATFORM:	Platform
+ * @FU_IFD_REGION_DEVEXP:	Developer
+ * @FU_IFD_REGION_BIOS2:	BIOS Backup
+ * @FU_IFD_REGION_EC:		Embedded Controller
+ * @FU_IFD_REGION_IE:		IE
+ * @FU_IFD_REGION_10GBE:	10GBE
+ * @FU_IFD_REGION_MAX:		Maximum value
+ *
+ * The IFD region.
+ **/
 typedef enum {
 	FU_IFD_REGION_DESC = 0x00,
 	FU_IFD_REGION_BIOS = 0x01,
@@ -22,6 +38,14 @@ typedef enum {
 	FU_IFD_REGION_MAX = 0x0F,
 } FuIfdRegion;
 
+/**
+ * FuIfdAccess:
+ * @FU_IFD_ACCESS_NONE:		None
+ * @FU_IFD_ACCESS_READ:		Readable
+ * @FU_IFD_ACCESS_WRITE:	Writable
+ *
+ * The flags to use for IFD access permissions.
+ **/
 typedef enum {
 	FU_IFD_ACCESS_NONE = 0,
 	FU_IFD_ACCESS_READ = 1 << 0,
