@@ -8,11 +8,11 @@
 
 #include "config.h"
 
+#include "fu-cabinet-common.h"
 #include "fu-cabinet.h"
-#include "fu-common-cab.h"
 
 /**
- * fu_common_cab_build_silo: (skip):
+ * fu_cabinet_build_silo: (skip):
  * @blob: A readable blob
  * @size_max: the maximum size of the archive
  * @error: A #FuEndianType, e.g. %G_LITTLE_ENDIAN
@@ -24,7 +24,7 @@
  * Since: 1.2.0
  **/
 XbSilo *
-fu_common_cab_build_silo(GBytes *blob, guint64 size_max, GError **error)
+fu_cabinet_build_silo(GBytes *blob, guint64 size_max, GError **error)
 {
 	g_autoptr(FuCabinet) cabinet = fu_cabinet_new();
 

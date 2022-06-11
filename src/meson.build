@@ -32,6 +32,7 @@ if polkit.found()
 endif
 
 daemon_src = [
+  'fu-cabinet-common.c',
   'fu-config.c',
   'fu-debug.c',
   'fu-device-list.c',
