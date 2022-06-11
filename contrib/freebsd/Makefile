@@ -11,7 +11,7 @@ COMMENT=	Update firmware automatically, safely, and reliably
 
 LICENSE=	LGPL21
 
-BUILD_DEPENDS=	gtkdoc-scan:textproc/gtk-doc \
+BUILD_DEPENDS=	gi-docgen:textproc/gi-docgen \
 		help2man:misc/help2man \
 		vala:lang/vala \
 		${LOCALBASE}/libexec/fwupd/efi/fwupdx64.efi:sysutils/fwupd-efi \
@@ -47,7 +47,7 @@ MESON_ARGS=	-Dgudev=disabled \
 		-Dsystemd=disabled \
 		-Doffline=false \
 		-Dtests=false \
-		-Ddocs=gtkdoc \
+		-Ddocs=true \
 		-Defi_binary=false
 
 .include <bsd.port.mk>

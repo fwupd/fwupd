@@ -596,27 +596,6 @@
       <package variant="x86_64" />
     </distro>
   </dependency>
-  <!-- TODO: Drop build dependency after switching to gidoc-gen -->
-  <dependency type="build" id="gtk-doc-tools">
-    <distro id="arch">
-      <package variant="x86_64">gtk-doc</package>
-    </distro>
-    <distro id="centos">
-      <package variant="x86_64">gtk-doc</package>
-    </distro>
-    <distro id="fedora">
-      <package variant="x86_64">gtk-doc</package>
-    </distro>
-    <distro id="debian">
-      <control />
-      <package variant="x86_64" />
-      <package variant="i386" />
-    </distro>
-    <distro id="ubuntu">
-      <control />
-      <package variant="x86_64" />
-    </distro>
-  </dependency>
   <dependency type="build" id="jq">
     <distro id="centos">
       <package variant="x86_64" />
@@ -1247,6 +1226,24 @@
       <package variant="x86_64" />
     </distro>
     <distro id="fedora">
+      <package variant="x86_64" />
+    </distro>
+    <distro id="arch">
+      <package variant="x86_64" />
+    </distro>
+    <distro id="centos">
+      <package variant="x86_64" />
+    </distro>
+    <distro id="fedora">
+      <package variant="x86_64" />
+    </distro>
+    <distro id="debian">
+      <control />
+      <package variant="x86_64" />
+      <package variant="i386" />
+    </distro>
+    <distro id="ubuntu">
+      <control />
       <package variant="x86_64" />
     </distro>
   </dependency>

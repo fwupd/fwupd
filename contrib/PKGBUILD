@@ -9,7 +9,7 @@ arch=('i686' 'x86_64')
 url='https://github.com/fwupd/fwupd'
 license=('GPL2')
 depends=('libgusb' 'modemmanager' 'tpm2-tss')
-makedepends=('meson' 'valgrind' 'gobject-introspection' 'gtk-doc' 'git'
+makedepends=('meson' 'valgrind' 'gobject-introspection' 'gi-docgen' 'git'
              'python-cairo' 'noto-fonts' 'noto-fonts-cjk' 'python-gobject' 'vala'
              'curl' 'polkit' 'gcab' 'xz')
 
@@ -30,7 +30,7 @@ build() {
     arch-meson -D b_lto=false $CI ../build \
         -Dplugin_intel_spi=true \
         -Dplugin_powerd=disabled \
-        -Ddocs=gtkdoc \
+        -Ddocs=true \
         -Defi_binary=false \
         -Dsupported_build=enabled
 

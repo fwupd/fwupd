@@ -1,4 +1,4 @@
-if get_option('docs') == 'docgen'
+if get_option('docs')
   toml_conf = configuration_data()
   docgen_version = source_version
   if git.found() and source_version != fwupd_version
@@ -40,7 +40,7 @@ if get_option('docs') == 'docgen'
     ],
     build_by_default: true,
     install: true,
-    install_dir: join_paths(datadir, 'doc', 'fwupd'),
+    install_dir: join_paths(datadir, 'doc'),
   )
 
   custom_target('doc-fwupdplugin',
@@ -66,30 +66,12 @@ if get_option('docs') == 'docgen'
     ],
     build_by_default: true,
     install: true,
-    install_dir: join_paths(datadir, 'doc', 'fwupd'),
-  )
-
- install_data(['index.html', 'hsi.html'],
-    install_dir : join_paths(datadir, 'doc', 'fwupd')
+    install_dir: join_paths(datadir, 'doc'),
   )
  install_data(['urlmap_fwupd.js'],
-    install_dir : join_paths(datadir, 'doc', 'fwupd', 'libfwupd')
+    install_dir : join_paths(datadir, 'doc', 'libfwupd')
   )
  install_data(['urlmap_fwupdplugin.js'],
-    install_dir : join_paths(datadir, 'doc', 'fwupd', 'libfwupdplugin')
-  )
-
-elif get_option('docs') == 'gtkdoc'
-  gnome.gtkdoc(
-    'fwupd',
-    src_dir : [
-      join_paths(meson.project_source_root(), 'libfwupd'),
-      join_paths(meson.project_source_root(), 'libfwupdplugin'),
-      join_paths(meson.build_root(), 'libfwupd'),
-      join_paths(meson.build_root(), 'libfwupdplugin'),
-      join_paths(meson.current_source_dir()),
-    ],
-    main_xml : 'fwupd-docs.xml',
-    install : true
+    install_dir : join_paths(datadir, 'doc', 'libfwupdplugin')
   )
 endif
