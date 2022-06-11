@@ -361,7 +361,7 @@ fu_smbios_func(void)
 	ret = fu_smbios_setup(smbios, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	dump = fu_smbios_to_string(smbios);
+	dump = fu_firmware_to_string(FU_FIRMWARE(smbios));
 	if (g_getenv("FWUPD_VERBOSE") != NULL)
 		g_debug("%s", dump);
 
@@ -398,7 +398,7 @@ fu_smbios3_func(void)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	if (g_getenv("FWUPD_VERBOSE") != NULL) {
-		g_autofree gchar *dump = fu_smbios_to_string(smbios);
+		g_autofree gchar *dump = fu_firmware_to_string(FU_FIRMWARE(smbios));
 		g_debug("%s", dump);
 	}
 
@@ -423,7 +423,7 @@ fu_smbios_dt_func(void)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	if (g_getenv("FWUPD_VERBOSE") != NULL) {
-		g_autofree gchar *dump = fu_smbios_to_string(smbios);
+		g_autofree gchar *dump = fu_firmware_to_string(FU_FIRMWARE(smbios));
 		g_debug("%s", dump);
 	}
 
@@ -447,7 +447,7 @@ fu_smbios_dt_fallback_func(void)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	if (g_getenv("FWUPD_VERBOSE") != NULL) {
-		g_autofree gchar *dump = fu_smbios_to_string(smbios);
+		g_autofree gchar *dump = fu_firmware_to_string(FU_FIRMWARE(smbios));
 		g_debug("%s", dump);
 	}
 
@@ -476,7 +476,7 @@ fu_smbios_class_func(void)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	if (g_getenv("FWUPD_VERBOSE") != NULL) {
-		g_autofree gchar *dump = fu_smbios_to_string(smbios);
+		g_autofree gchar *dump = fu_firmware_to_string(FU_FIRMWARE(smbios));
 		g_debug("%s", dump);
 	}
 

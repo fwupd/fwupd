@@ -340,7 +340,7 @@ fu_util_smbios_dump(FuUtilPrivate *priv, gchar **values, GError **error)
 	smbios = fu_smbios_new();
 	if (!fu_smbios_setup_from_file(smbios, values[0], error))
 		return FALSE;
-	tmp = fu_smbios_to_string(smbios);
+	tmp = fu_firmware_to_string(FU_FIRMWARE(smbios));
 	g_print("%s\n", tmp);
 	return TRUE;
 }

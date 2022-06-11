@@ -103,7 +103,6 @@ LIBFWUPDPLUGIN_1.0.0 {
     fu_smbios_setup;
     fu_smbios_setup_from_file;
     fu_smbios_setup_from_path;
-    fu_smbios_to_string;
   local: *;
 } LIBFWUPDPLUGIN_0.9.8;
 

@@ -918,23 +918,6 @@ fu_smbios_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNod
 	}
 }
 
-/**
- * fu_smbios_to_string:
- * @self: a #FuSmbios
- *
- * Dumps the parsed SMBIOS data to a string.
- *
- * Returns: a UTF-8 string
- *
- * Since: 1.0.0
- **/
-gchar *
-fu_smbios_to_string(FuSmbios *self)
-{
-	g_return_val_if_fail(FU_IS_SMBIOS(self), NULL);
-	return fu_firmware_to_string(FU_FIRMWARE(self));
-}
-
 static FuSmbiosItem *
 fu_smbios_get_item_for_type(FuSmbios *self, guint8 type)
 {
