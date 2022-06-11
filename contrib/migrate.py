@@ -126,6 +126,7 @@ if __name__ == "__main__":
             "fu_common_get_volume_by_devnum": "fu_volume_new_by_devnum",
             "fu_common_get_esp_for_path": "fu_volume_new_esp_for_path",
             "fu_common_get_esp_default": "fu_volume_new_esp_default",
+            "fu_smbios_to_string": "fu_firmware_to_string",
         }.items():
             if buf.find(old) == -1:
                 continue
