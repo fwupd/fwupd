@@ -5,7 +5,7 @@ set -x
 mkdir -p build-macos && cd build-macos
 meson .. \
     -Dbuild=standalone \
-    -Ddocs=none \
+    -Ddocs=false \
     -Dhsi=false \
     -Dsoup_session_compat=false \
     -Dgusb:docs=false \

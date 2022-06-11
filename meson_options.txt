@@ -2,7 +2,7 @@ option('build', type : 'combo', choices : ['all', 'standalone', 'library'], valu
 option('consolekit', type : 'feature', description : 'ConsoleKit support', deprecated: {'true': 'enabled', 'false': 'disabled'})
 option('static_analysis', type : 'boolean', value : false, description : 'enable GCC static analysis support')
 option('firmware-packager', type : 'boolean', value : true, description : 'enable firmware-packager installation')
-option('docs', type : 'combo', choices : ['none', 'gtkdoc', 'docgen'], value : 'docgen', description : 'developer documentation type')
+option('docs', type : 'boolean', value : true, description : 'Build developer documentation', deprecated: {'docgen': 'true', 'none': 'false'})
 option('introspection', type : 'feature', description : 'generate GObject Introspection data', deprecated: {'true': 'enabled', 'false': 'disabled'})
 option('lvfs', type : 'combo', choices : ['true', 'false', 'disabled'], value : 'true', description : 'install LVFS remotes')
 option('man', type : 'boolean', value : true, description : 'enable man pages')

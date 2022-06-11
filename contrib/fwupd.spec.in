@@ -76,7 +76,7 @@ BuildRequires: gcab
 BuildRequires: valgrind
 BuildRequires: valgrind-devel
 %endif
-BuildRequires: gtk-doc
+BuildRequires: gi-docgen
 BuildRequires: gnutls-devel
 BuildRequires: gnutls-utils
 BuildRequires: meson
@@ -236,7 +236,7 @@ fwupd wrapper for Qubes OS
 %if 0%{?enable_ci}
     --werror \
 %endif
-    -Ddocs=gtkdoc \
+    -Ddocs=true \
 %if 0%{?enable_tests}
     -Dtests=true \
 %else
@@ -530,7 +530,8 @@ done
 %files devel
 %{_datadir}/gir-1.0/Fwupd-2.0.gir
 %{_datadir}/gir-1.0/FwupdPlugin-1.0.gir
-%{_datadir}/gtk-doc/html/fwupd
+%{_datadir}/doc/libfwupdplugin
+%{_datadir}/doc/libfwupd
 %{_datadir}/vala/vapi
 %{_includedir}/fwupd-1
 %{_libdir}/libfwupd*.so

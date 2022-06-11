@@ -534,9 +534,7 @@ protoc = find_program('protoc', 'protoc-c', required: get_option('plugin_logitec
 root_incdir = include_directories('.')
 
 introspection = get_option('introspection').disable_auto_if(host_machine.system() != 'linux')
-if get_option('docs') == 'gtkdoc'
-  gtkdocscan = find_program('gtkdoc-scan')
-elif get_option('docs') == 'docgen'
+if get_option('docs')
   r = run_command([python3, 'docs/test-deps.py'])
   if r.returncode() != 0
     error(r.stdout())
