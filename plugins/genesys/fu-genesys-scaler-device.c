@@ -30,7 +30,7 @@
 
 #define GENESYS_SCALER_INFO 0xA4
 
-#define GENESYS_SCALER_USB_TIMEOUT 5000 /* ms */
+#define GENESYS_SCALER_USB_TIMEOUT 5000 /* 5s */
 
 /**
  * FU_SCALER_FLAG_PAUSE_R2_CPU:
@@ -102,7 +102,7 @@ fu_genesys_scaler_device_enter_serial_debug_mode(FuGenesysScalerDevice *self, GE
 		return FALSE;
 	}
 
-	g_usleep(1000); /* 1 ms */
+	g_usleep(1000); /* 1ms */
 
 	/* success */
 	return TRUE;
@@ -1953,7 +1953,7 @@ fu_genesys_scaler_device_init(FuGenesysScalerDevice *self)
 	fu_device_set_vendor(FU_DEVICE(self), "MStar Semiconductor");
 	fu_device_set_name(FU_DEVICE(self), "TSUMG");
 	fu_device_add_protocol(FU_DEVICE(self), "com.mstarsemi.scaler");
-	fu_device_retry_set_delay(FU_DEVICE(self), 10); /* ms */
+	fu_device_retry_set_delay(FU_DEVICE(self), 10); /* 10ms */
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_DUAL_IMAGE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
@@ -1961,7 +1961,7 @@ fu_genesys_scaler_device_init(FuGenesysScalerDevice *self)
 					FU_SCALER_FLAG_PAUSE_R2_CPU,
 					"pause-r2-cpu");
 	fu_device_register_private_flag(FU_DEVICE(self), FU_SCALER_FLAG_USE_I2C_CH0, "use-i2c-ch0");
-	fu_device_set_install_duration(FU_DEVICE(self), 730); /* 12 min 10 s */
+	fu_device_set_install_duration(FU_DEVICE(self), 730); /* 12min 10s */
 
 	self->sector_size = 0x1000;						/* 4KB */
 	self->page_size = 0x100;						/* 256B */
