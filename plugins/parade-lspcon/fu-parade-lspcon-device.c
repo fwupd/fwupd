@@ -229,10 +229,7 @@ fu_parade_lspcon_write_register(FuParadeLspconDevice *self,
 				GError **error)
 {
 	guint8 transaction[] = {register_addr, value};
-	return fu_i2c_device_write_full(FU_I2C_DEVICE(self),
-					transaction,
-					sizeof(transaction),
-					error);
+	return fu_i2c_device_write(FU_I2C_DEVICE(self), transaction, sizeof(transaction), error);
 }
 
 static gboolean
@@ -242,9 +239,9 @@ fu_parade_lspcon_read_register(FuParadeLspconDevice *self,
 			       GError **error)
 {
 	FuI2cDevice *i2c_device = FU_I2C_DEVICE(self);
-	if (!fu_i2c_device_write(i2c_device, register_addr, error))
+	if (!fu_i2c_device_write(i2c_device, &register_addr, 0x1, error))
 		return FALSE;
-	return fu_i2c_device_read(i2c_device, value, error);
+	return fu_i2c_device_read(i2c_device, value, 0x1, error);
 }
 
 /* map the page containing the given address into page 7 */
@@ -311,7 +308,7 @@ fu_parade_lspcon_flash_read(FuParadeLspconDevice *self,
 		guard = fu_parade_lspcon_i2c_address_guard_new(self, I2C_ADDR_PAGE7, error);
 		if (guard == NULL)
 			return FALSE;
-		if (!fu_i2c_device_read_full(i2c_device, page_data, 256, error))
+		if (!fu_i2c_device_read(i2c_device, page_data, 256, error))
 			return FALSE;
 
 		if (!fu_memcpy_safe(data,
@@ -481,7 +478,7 @@ fu_parade_lspcon_flash_write(FuParadeLspconDevice *self,
 				    error))
 			return FALSE;
 
-		if (!fu_i2c_device_write_full(i2c_device, write_data, chunk_size + 1, error))
+		if (!fu_i2c_device_write(i2c_device, write_data, chunk_size + 1, error))
 			return FALSE;
 
 		fu_progress_set_percentage_full(progress, address - base_address, data_len);

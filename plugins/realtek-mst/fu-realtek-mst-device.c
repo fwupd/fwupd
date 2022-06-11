@@ -267,7 +267,7 @@ static gboolean
 mst_write_register(FuRealtekMstDevice *self, guint8 address, guint8 value, GError **error)
 {
 	const guint8 command[] = {address, value};
-	return fu_i2c_device_write_full(FU_I2C_DEVICE(self), command, sizeof(command), error);
+	return fu_i2c_device_write(FU_I2C_DEVICE(self), command, sizeof(command), error);
 }
 
 static gboolean
@@ -280,16 +280,16 @@ mst_write_register_multi(FuRealtekMstDevice *self,
 	g_autofree guint8 *command = g_malloc0(count + 1);
 	memcpy(command + 1, data, count);
 	command[0] = address;
-	return fu_i2c_device_write_full(FU_I2C_DEVICE(self), command, count + 1, error);
+	return fu_i2c_device_write(FU_I2C_DEVICE(self), command, count + 1, error);
 }
 
 /** Read a register from the device */
 static gboolean
 mst_read_register(FuRealtekMstDevice *self, guint8 address, guint8 *value, GError **error)
 {
-	if (!fu_i2c_device_write(FU_I2C_DEVICE(self), address, error))
+	if (!fu_i2c_device_write(FU_I2C_DEVICE(self), &address, 0x1, error))
 		return FALSE;
-	return fu_i2c_device_read(FU_I2C_DEVICE(self), value, error);
+	return fu_i2c_device_read(FU_I2C_DEVICE(self), value, 0x1, error);
 }
 
 static gboolean
@@ -441,6 +441,7 @@ fu_realtek_mst_device_get_dual_bank_info(FuRealtekMstDevice *self,
 					 struct dual_bank_info *info,
 					 GError **error)
 {
+	const guint8 request[] = {0x01};
 	guint8 response[11] = {0x0};
 
 	if (!mst_ensure_device_address(self, I2C_ADDR_DEBUG, error))
@@ -454,9 +455,9 @@ fu_realtek_mst_device_get_dual_bank_info(FuRealtekMstDevice *self,
 	g_usleep(200 * G_TIME_SPAN_MILLISECOND);
 
 	/* request dual bank state and read back */
-	if (!fu_i2c_device_write(FU_I2C_DEVICE(self), 0x01, error))
+	if (!fu_i2c_device_write(FU_I2C_DEVICE(self), request, sizeof(request), error))
 		return FALSE;
-	if (!fu_i2c_device_read_full(FU_I2C_DEVICE(self), response, sizeof(response), error))
+	if (!fu_i2c_device_read(FU_I2C_DEVICE(self), response, sizeof(response), error))
 		return FALSE;
 
 	if (response[0] != 0xca || response[1] != 9) {
@@ -558,6 +559,7 @@ flash_iface_read(FuRealtekMstDevice *self,
 {
 	gsize bytes_read = 0;
 	guint8 byte;
+	const guint8 req[] = {0x70};
 
 	g_return_val_if_fail(address < FLASH_SIZE, FALSE);
 	g_return_val_if_fail(buf_size <= FLASH_SIZE, FALSE);
@@ -577,9 +579,9 @@ flash_iface_read(FuRealtekMstDevice *self,
 		return FALSE;
 
 	/* ignore first byte of data */
-	if (!fu_i2c_device_write(FU_I2C_DEVICE(self), 0x70, error))
+	if (!fu_i2c_device_write(FU_I2C_DEVICE(self), req, sizeof(req), error))
 		return FALSE;
-	if (!fu_i2c_device_read(FU_I2C_DEVICE(self), &byte, error))
+	if (!fu_i2c_device_read(FU_I2C_DEVICE(self), &byte, 0x1, error))
 		return FALSE;
 
 	while (bytes_read < buf_size) {
@@ -588,10 +590,7 @@ flash_iface_read(FuRealtekMstDevice *self,
 		if (read_len > 256)
 			read_len = 256;
 
-		if (!fu_i2c_device_read_full(FU_I2C_DEVICE(self),
-					     buf + bytes_read,
-					     read_len,
-					     error))
+		if (!fu_i2c_device_read(FU_I2C_DEVICE(self), buf + bytes_read, read_len, error))
 			return FALSE;
 
 		bytes_read += read_len;

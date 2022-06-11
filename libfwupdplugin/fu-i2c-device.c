@@ -185,42 +185,6 @@ fu_i2c_device_set_bus_number(FuI2cDevice *self, guint bus_number)
 /**
  * fu_i2c_device_write:
  * @self: a #FuI2cDevice
- * @data: value
- * @error: (nullable): optional return location for an error
- *
- * Write a single byte to the I²C device.
- *
- * Returns: %TRUE for success
- *
- * Since: 1.6.1
- **/
-gboolean
-fu_i2c_device_write(FuI2cDevice *self, guint8 data, GError **error)
-{
-	return fu_udev_device_pwrite(FU_UDEV_DEVICE(self), 0x0, &data, 0x01, error);
-}
-
-/**
- * fu_i2c_device_read:
- * @self: a #FuI2cDevice
- * @data: (out): value
- * @error: (nullable): optional return location for an error
- *
- * Read a single byte from the I²C device.
- *
- * Returns: %TRUE for success
- *
- * Since: 1.6.1
- **/
-gboolean
-fu_i2c_device_read(FuI2cDevice *self, guint8 *data, GError **error)
-{
-	return fu_udev_device_pread(FU_UDEV_DEVICE(self), 0x0, data, 0x1, error);
-}
-
-/**
- * fu_i2c_device_write_full:
- * @self: a #FuI2cDevice
  * @buf: (out): data
  * @bufsz: size of @data
  * @error: (nullable): optional return location for an error
@@ -229,16 +193,16 @@ fu_i2c_device_read(FuI2cDevice *self, guint8 *data, GError **error)
  *
  * Returns: %TRUE for success
  *
- * Since: 1.6.2
+ * Since: 1.8.2
  **/
 gboolean
-fu_i2c_device_write_full(FuI2cDevice *self, const guint8 *buf, gsize bufsz, GError **error)
+fu_i2c_device_write(FuI2cDevice *self, const guint8 *buf, gsize bufsz, GError **error)
 {
 	return fu_udev_device_pwrite(FU_UDEV_DEVICE(self), 0x0, buf, bufsz, error);
 }
 
 /**
- * fu_i2c_device_read_full:
+ * fu_i2c_device_read:
  * @self: a #FuI2cDevice
  * @buf: (out): data
  * @bufsz: size of @data
@@ -248,10 +212,10 @@ fu_i2c_device_write_full(FuI2cDevice *self, const guint8 *buf, gsize bufsz, GErr
  *
  * Returns: %TRUE for success
  *
- * Since: 1.6.2
+ * Since: 1.8.2
  **/
 gboolean
-fu_i2c_device_read_full(FuI2cDevice *self, guint8 *buf, gsize bufsz, GError **error)
+fu_i2c_device_read(FuI2cDevice *self, guint8 *buf, gsize bufsz, GError **error)
 {
 	return fu_udev_device_pread(FU_UDEV_DEVICE(self), 0x0, buf, bufsz, error);
 }
