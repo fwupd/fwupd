@@ -465,51 +465,6 @@ fu_genesys_usbhub_device_authenticate(FuGenesysUsbhubDevice *self, GError **erro
 	return TRUE;
 }
 
-static gboolean
-fu_genesys_usbhub_device_open(FuDevice *device, GError **error)
-{
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(device));
-
-	/* FuUsbDevice->open */
-	if (!FU_DEVICE_CLASS(fu_genesys_usbhub_device_parent_class)->open(device, error)) {
-		g_prefix_error(error, "error opening device: ");
-		return FALSE;
-	}
-
-	if (!g_usb_device_claim_interface(usb_device,
-					  0,
-					  G_USB_DEVICE_CLAIM_INTERFACE_BIND_KERNEL_DRIVER,
-					  error)) {
-		g_prefix_error(error, "error claiming interface: ");
-		return FALSE;
-	}
-
-	/* success */
-	return TRUE;
-}
-
-static gboolean
-fu_genesys_usbhub_device_close(FuDevice *device, GError **error)
-{
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(device));
-
-	if (!g_usb_device_release_interface(usb_device,
-					    0,
-					    G_USB_DEVICE_CLAIM_INTERFACE_BIND_KERNEL_DRIVER,
-					    error)) {
-		return FALSE;
-	}
-
-	/* FuUsbDevice->close */
-	if (!FU_DEVICE_CLASS(fu_genesys_usbhub_device_parent_class)->close(device, error)) {
-		g_prefix_error(error, "error closing device: ");
-		return FALSE;
-	}
-
-	/* success */
-	return TRUE;
-}
-
 #if G_USB_CHECK_VERSION(0, 3, 8)
 static gboolean
 fu_genesys_usbhub_device_get_descriptor_data(GBytes *desc_bytes,
@@ -1341,8 +1296,6 @@ static void
 fu_genesys_usbhub_device_class_init(FuGenesysUsbhubDeviceClass *klass)
 {
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
-	klass_device->open = fu_genesys_usbhub_device_open;
-	klass_device->close = fu_genesys_usbhub_device_close;
 	klass_device->setup = fu_genesys_usbhub_device_setup;
 	klass_device->dump_firmware = fu_genesys_usbhub_device_dump_firmware;
 	klass_device->prepare_firmware = fu_genesys_usbhub_device_prepare_firmware;
