@@ -236,12 +236,6 @@ LIBFWUPDPLUGIN_1.1.2 {
   local: *;
 } LIBFWUPDPLUGIN_1.1.1;
 
-LIBFWUPDPLUGIN_1.2.0 {
-  global:
-    fu_common_cab_build_silo;
-  local: *;
-} LIBFWUPDPLUGIN_1.1.2;
-
 LIBFWUPDPLUGIN_1.2.2 {
   global:
     fu_archive_get_type;
@@ -258,7 +252,7 @@ LIBFWUPDPLUGIN_1.2.2 {
     fu_io_channel_write_bytes;
     fu_io_channel_write_raw;
   local: *;
-} LIBFWUPDPLUGIN_1.2.0;
+} LIBFWUPDPLUGIN_1.1.2;
 
 LIBFWUPDPLUGIN_1.2.4 {
   global:

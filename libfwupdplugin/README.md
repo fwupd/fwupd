@@ -90,3 +90,4 @@ Remember: Plugins should be upstream!
 * `fu_common_version_from_uint*()`: Use `fu_version_from_uint*()` instead.
 * `fu_common_strtoull()`: Use `fu_strtoull()` instead -- as the latter always specifies the error.
 * `fu_smbios_to_string()`: Use `fu_firmware_to_string()` instead -- as `FuSmbios` is a `FuFirmware` superclass.
+* `fu_common_cab_build_silo()`: You should not be using this.

@@ -15,6 +15,7 @@
 
 #include "fwupd-security-attr-private.h"
 
+#include "fu-cabinet-common.h"
 #include "fu-config.h"
 #include "fu-context-private.h"
 #include "fu-device-list.h"
@@ -3473,7 +3474,7 @@ fu_plugin_composite_func(gconstpointer user_data)
 	    "firmware.bin",
 	    "world",
 	    NULL);
-	silo = fu_common_cab_build_silo(blob, 10240, &error);
+	silo = fu_cabinet_build_silo(blob, 10240, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(silo);
 	components = xb_silo_query(silo, "components/component", 0, &error);
@@ -3942,6 +3943,460 @@ fu_release_uri_scheme_func(void)
 	}
 }
 
+static void
+fu_common_store_cab_func(void)
+{
+	GBytes *blob_tmp;
+	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(XbNode) component = NULL;
+	g_autoptr(XbNode) csum = NULL;
+	g_autoptr(XbNode) rel = NULL;
+	g_autoptr(XbNode) req = NULL;
+	g_autoptr(XbSilo) silo = NULL;
+#if LIBXMLB_CHECK_VERSION(0, 2, 0)
+	g_autoptr(XbQuery) query = NULL;
+#endif
+
+	/* create silo */
+	blob = _build_cab(
+	    GCAB_COMPRESSION_NONE,
+	    "acme.metainfo.xml",
+	    "<component type=\"firmware\">\n"
+	    "  <id>com.acme.example.firmware</id>\n"
+	    "  <name>ACME Firmware</name>\n"
+	    "  <provides>\n"
+	    "    <firmware type=\"flashed\">ae56e3fb-6528-5bc4-8b03-012f124075d7</firmware>\n"
+	    "  </provides>\n"
+	    "  <releases>\n"
+	    "    <release version=\"1.2.3\" date=\"2017-09-06\">\n"
+	    "      <size type=\"installed\">5</size>\n"
+	    "      <checksum filename=\"firmware.dfu\" target=\"content\" "
+	    "type=\"sha1\">7c211433f02071597741e6ff5a8ea34789abbf43</checksum>\n"
+	    "      <description><p>We fixed things</p></description>\n"
+	    "    </release>\n"
+	    "  </releases>\n"
+	    "  <requires>\n"
+	    "    <id compare=\"ge\" version=\"1.0.1\">org.freedesktop.fwupd</id>\n"
+	    "  </requires>\n"
+	    "</component>",
+	    "firmware.dfu",
+	    "world",
+	    "firmware.dfu.asc",
+	    "signature",
+	    NULL);
+	silo = fu_cabinet_build_silo(blob, 10240, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(silo);
+
+	/* verify */
+	component =
+	    xb_silo_query_first(silo,
+				"components/component/id[text()='com.acme.example.firmware']/..",
+				&error);
+	g_assert_no_error(error);
+	g_assert_nonnull(component);
+#if LIBXMLB_CHECK_VERSION(0, 2, 0)
+	query = xb_query_new_full(xb_node_get_silo(component),
+				  "releases/release",
+				  XB_QUERY_FLAG_FORCE_NODE_CACHE,
+				  &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(query);
+	rel = xb_node_query_first_full(component, query, &error);
+#else
+	rel = xb_node_query_first(component, "releases/release", &error);
+#endif
+	g_assert_no_error(error);
+	g_assert_nonnull(rel);
+	g_assert_cmpstr(xb_node_get_attr(rel, "version"), ==, "1.2.3");
+	csum = xb_node_query_first(rel, "checksum[@target='content']", &error);
+	g_assert_nonnull(csum);
+	g_assert_cmpstr(xb_node_get_text(csum), ==, "7c211433f02071597741e6ff5a8ea34789abbf43");
+	blob_tmp = xb_node_get_data(rel, "fwupd::FirmwareBlob");
+	g_assert_nonnull(blob_tmp);
+	req = xb_node_query_first(component, "requires/id", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(req);
+}
+
+static void
+fu_common_store_cab_artifact_func(void)
+{
+	g_autoptr(GBytes) blob1 = NULL;
+	g_autoptr(GBytes) blob2 = NULL;
+	g_autoptr(GBytes) blob3 = NULL;
+	g_autoptr(GBytes) blob4 = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(XbSilo) silo = NULL;
+
+	/* create silo (sha256, using artifacts object) */
+	blob1 = _build_cab(
+	    GCAB_COMPRESSION_NONE,
+	    "acme.metainfo.xml",
+	    "<component type=\"firmware\">\n"
+	    "  <id>com.acme.example.firmware</id>\n"
+	    "  <releases>\n"
+	    "    <release version=\"1.2.3\" date=\"2017-09-06\">\n"
+	    "      <artifacts>\n"
+	    "        <artifact type=\"binary\">\n"
+	    "          <filename>firmware.dfu</filename>\n"
+	    "          <checksum "
+	    "type=\"sha256\">486EA46224D1BB4FB680F34F7C9AD96A8F24EC88BE73EA8E5A6C65260E9CB8A7</"
+	    "checksum>\n"
+	    "        </artifact>\n"
+	    "      </artifacts>\n"
+	    "    </release>\n"
+	    "  </releases>\n"
+	    "</component>",
+	    "firmware.dfu",
+	    "world",
+	    "firmware.dfu.asc",
+	    "signature",
+	    NULL);
+	silo = fu_cabinet_build_silo(blob1, 10240, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(silo);
+	g_clear_object(&silo);
+
+	/* create silo (sha1, using artifacts object; mixed case) */
+	blob2 = _build_cab(GCAB_COMPRESSION_NONE,
+			   "acme.metainfo.xml",
+			   "<component type=\"firmware\">\n"
+			   "  <id>com.acme.example.firmware</id>\n"
+			   "  <releases>\n"
+			   "    <release version=\"1.2.3\" date=\"2017-09-06\">\n"
+			   "      <artifacts>\n"
+			   "        <artifact type=\"binary\">\n"
+			   "          <filename>firmware.dfu</filename>\n"
+			   "          <checksum "
+			   "type=\"sha1\">7c211433f02071597741e6ff5a8ea34789abbF43</"
+			   "checksum>\n"
+			   "        </artifact>\n"
+			   "      </artifacts>\n"
+			   "    </release>\n"
+			   "  </releases>\n"
+			   "</component>",
+			   "firmware.dfu",
+			   "world",
+			   "firmware.dfu.asc",
+			   "signature",
+			   NULL);
+	silo = fu_cabinet_build_silo(blob2, 10240, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(silo);
+	g_clear_object(&silo);
+
+	/* create silo (sha512, using artifacts object; lower case) */
+	blob3 =
+	    _build_cab(GCAB_COMPRESSION_NONE,
+		       "acme.metainfo.xml",
+		       "<component type=\"firmware\">\n"
+		       "  <id>com.acme.example.firmware</id>\n"
+		       "  <releases>\n"
+		       "    <release version=\"1.2.3\" date=\"2017-09-06\">\n"
+		       "      <artifacts>\n"
+		       "        <artifact type=\"binary\">\n"
+		       "          <filename>firmware.dfu</filename>\n"
+		       "          <checksum "
+		       "type=\"sha512\">"
+		       "11853df40f4b2b919d3815f64792e58d08663767a494bcbb38c0b2389d9140bbb170281b"
+		       "4a847be7757bde12c9cd0054ce3652d0ad3a1a0c92babb69798246ee</"
+		       "checksum>\n"
+		       "        </artifact>\n"
+		       "      </artifacts>\n"
+		       "    </release>\n"
+		       "  </releases>\n"
+		       "</component>",
+		       "firmware.dfu",
+		       "world",
+		       "firmware.dfu.asc",
+		       "signature",
+		       NULL);
+	silo = fu_cabinet_build_silo(blob3, 10240, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(silo);
+	g_clear_object(&silo);
+
+	/* create silo (legacy release object) */
+	blob4 = _build_cab(GCAB_COMPRESSION_NONE,
+			   "acme.metainfo.xml",
+			   "<component type=\"firmware\">\n"
+			   "  <id>com.acme.example.firmware</id>\n"
+			   "  <releases>\n"
+			   "    <release version=\"1.2.3\" date=\"2017-09-06\">\n"
+			   "        <checksum "
+			   "target=\"content\" "
+			   "filename=\"firmware.dfu\">"
+			   "486EA46224D1BB4FB680F34F7C9AD96A8F24EC88BE73EA8E5A6C65260E9CB8A7</"
+			   "checksum>\n"
+			   "    </release>\n"
+			   "  </releases>\n"
+			   "</component>",
+			   "firmware.dfu",
+			   "world",
+			   "firmware.dfu.asc",
+			   "signature",
+			   NULL);
+	silo = fu_cabinet_build_silo(blob4, 10240, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(silo);
+}
+
+static void
+fu_common_store_cab_unsigned_func(void)
+{
+	GBytes *blob_tmp;
+	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(XbNode) component = NULL;
+	g_autoptr(XbNode) csum = NULL;
+	g_autoptr(XbNode) rel = NULL;
+	g_autoptr(XbSilo) silo = NULL;
+#if LIBXMLB_CHECK_VERSION(0, 2, 0)
+	g_autoptr(XbQuery) query = NULL;
+#endif
+
+	/* create silo */
+	blob = _build_cab(GCAB_COMPRESSION_NONE,
+			  "acme.metainfo.xml",
+			  "<component type=\"firmware\">\n"
+			  "  <id>com.acme.example.firmware</id>\n"
+			  "  <releases>\n"
+			  "    <release version=\"1.2.3\"/>\n"
+			  "  </releases>\n"
+			  "</component>",
+			  "firmware.bin",
+			  "world",
+			  NULL);
+	silo = fu_cabinet_build_silo(blob, 10240, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(silo);
+
+	/* verify */
+	component =
+	    xb_silo_query_first(silo,
+				"components/component/id[text()='com.acme.example.firmware']/..",
+				&error);
+	g_assert_no_error(error);
+	g_assert_nonnull(component);
+#if LIBXMLB_CHECK_VERSION(0, 2, 0)
+	query = xb_query_new_full(xb_node_get_silo(component),
+				  "releases/release",
+				  XB_QUERY_FLAG_FORCE_NODE_CACHE,
+				  &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(query);
+	rel = xb_node_query_first_full(component, query, &error);
+#else
+	rel = xb_node_query_first(component, "releases/release", &error);
+#endif
+	g_assert_no_error(error);
+	g_assert_nonnull(rel);
+	g_assert_cmpstr(xb_node_get_attr(rel, "version"), ==, "1.2.3");
+	csum = xb_node_query_first(rel, "checksum[@target='content']", &error);
+	g_assert_null(csum);
+	blob_tmp = xb_node_get_data(rel, "fwupd::FirmwareBlob");
+	g_assert_nonnull(blob_tmp);
+}
+
+static void
+fu_common_store_cab_sha256_func(void)
+{
+	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(XbSilo) silo = NULL;
+
+	/* create silo */
+	blob = _build_cab(
+	    GCAB_COMPRESSION_NONE,
+	    "acme.metainfo.xml",
+	    "<component type=\"firmware\">\n"
+	    "  <id>com.acme.example.firmware</id>\n"
+	    "  <releases>\n"
+	    "    <release version=\"1.2.3\" date=\"2017-09-06\">\n"
+	    "      <checksum target=\"content\" "
+	    "type=\"sha256\">486ea46224d1bb4fb680f34f7c9ad96a8f24ec88be73ea8e5a6c65260e9cb8a7</"
+	    "checksum>\n"
+	    "    </release>\n"
+	    "  </releases>\n"
+	    "</component>",
+	    "firmware.bin",
+	    "world",
+	    NULL);
+	silo = fu_cabinet_build_silo(blob, 10240, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(silo);
+}
+
+static void
+fu_common_store_cab_folder_func(void)
+{
+	GBytes *blob_tmp;
+	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(XbNode) component = NULL;
+	g_autoptr(XbNode) rel = NULL;
+	g_autoptr(XbSilo) silo = NULL;
+#if LIBXMLB_CHECK_VERSION(0, 2, 0)
+	g_autoptr(XbQuery) query = NULL;
+#endif
+
+	/* create silo */
+	blob = _build_cab(GCAB_COMPRESSION_NONE,
+			  "lvfs\\acme.metainfo.xml",
+			  "<component type=\"firmware\">\n"
+			  "  <id>com.acme.example.firmware</id>\n"
+			  "  <releases>\n"
+			  "    <release version=\"1.2.3\"/>\n"
+			  "  </releases>\n"
+			  "</component>",
+			  "lvfs\\firmware.bin",
+			  "world",
+			  NULL);
+	silo = fu_cabinet_build_silo(blob, 10240, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(silo);
+
+	/* verify */
+	component =
+	    xb_silo_query_first(silo,
+				"components/component/id[text()='com.acme.example.firmware']/..",
+				&error);
+	g_assert_no_error(error);
+	g_assert_nonnull(component);
+#if LIBXMLB_CHECK_VERSION(0, 2, 0)
+	query = xb_query_new_full(xb_node_get_silo(component),
+				  "releases/release",
+				  XB_QUERY_FLAG_FORCE_NODE_CACHE,
+				  &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(query);
+	rel = xb_node_query_first_full(component, query, &error);
+#else
+	rel = xb_node_query_first(component, "releases/release", &error);
+#endif
+	g_assert_no_error(error);
+	g_assert_nonnull(rel);
+	g_assert_cmpstr(xb_node_get_attr(rel, "version"), ==, "1.2.3");
+	blob_tmp = xb_node_get_data(rel, "fwupd::FirmwareBlob");
+	g_assert_nonnull(blob_tmp);
+}
+
+static void
+fu_common_store_cab_error_no_metadata_func(void)
+{
+	g_autoptr(XbSilo) silo = NULL;
+	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GError) error = NULL;
+
+	blob = _build_cab(GCAB_COMPRESSION_NONE, "foo.txt", "hello", "bar.txt", "world", NULL);
+	silo = fu_cabinet_build_silo(blob, 10240, &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
+	g_assert_null(silo);
+}
+
+static void
+fu_common_store_cab_error_wrong_size_func(void)
+{
+	g_autoptr(XbSilo) silo = NULL;
+	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GError) error = NULL;
+
+	blob = _build_cab(GCAB_COMPRESSION_NONE,
+			  "acme.metainfo.xml",
+			  "<component type=\"firmware\">\n"
+			  "  <id>com.acme.example.firmware</id>\n"
+			  "  <releases>\n"
+			  "    <release version=\"1.2.3\">\n"
+			  "      <size type=\"installed\">7004701</size>\n"
+			  "      <checksum filename=\"firmware.bin\" target=\"content\" "
+			  "type=\"sha1\">deadbeef</checksum>\n"
+			  "    </release>\n"
+			  "  </releases>\n"
+			  "</component>",
+			  "firmware.bin",
+			  "world",
+			  NULL);
+	silo = fu_cabinet_build_silo(blob, 10240, &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
+	g_assert_null(silo);
+}
+
+static void
+fu_common_store_cab_error_missing_file_func(void)
+{
+	g_autoptr(XbSilo) silo = NULL;
+	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GError) error = NULL;
+
+	blob = _build_cab(GCAB_COMPRESSION_NONE,
+			  "acme.metainfo.xml",
+			  "<component type=\"firmware\">\n"
+			  "  <id>com.acme.example.firmware</id>\n"
+			  "  <releases>\n"
+			  "    <release version=\"1.2.3\">\n"
+			  "      <checksum filename=\"firmware.dfu\" target=\"content\"/>\n"
+			  "    </release>\n"
+			  "  </releases>\n"
+			  "</component>",
+			  "firmware.bin",
+			  "world",
+			  NULL);
+	silo = fu_cabinet_build_silo(blob, 10240, &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
+	g_assert_null(silo);
+}
+
+static void
+fu_common_store_cab_error_size_func(void)
+{
+	g_autoptr(XbSilo) silo = NULL;
+	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GError) error = NULL;
+
+	blob = _build_cab(GCAB_COMPRESSION_NONE,
+			  "acme.metainfo.xml",
+			  "<component type=\"firmware\">\n"
+			  "  <id>com.acme.example.firmware</id>\n"
+			  "  <releases>\n"
+			  "    <release version=\"1.2.3\"/>\n"
+			  "  </releases>\n"
+			  "</component>",
+			  "firmware.bin",
+			  "world",
+			  NULL);
+	silo = fu_cabinet_build_silo(blob, 123, &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
+	g_assert_null(silo);
+}
+
+static void
+fu_common_store_cab_error_wrong_checksum_func(void)
+{
+	g_autoptr(XbSilo) silo = NULL;
+	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GError) error = NULL;
+
+	blob = _build_cab(GCAB_COMPRESSION_NONE,
+			  "acme.metainfo.xml",
+			  "<component type=\"firmware\">\n"
+			  "  <id>com.acme.example.firmware</id>\n"
+			  "  <releases>\n"
+			  "    <release version=\"1.2.3\">\n"
+			  "      <checksum filename=\"firmware.bin\" target=\"content\" "
+			  "type=\"sha1\">deadbeef</checksum>\n"
+			  "    </release>\n"
+			  "  </releases>\n"
+			  "</component>",
+			  "firmware.bin",
+			  "world",
+			  NULL);
+	silo = fu_cabinet_build_silo(blob, 10240, &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
+	g_assert_null(silo);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -4105,5 +4560,19 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/spawn", fu_spawn_func);
 	g_test_add_func("/fwupd/spawn-timeou)", fu_spawn_timeout_func);
 	g_test_add_func("/fwupd/firmware-builder", fu_firmware_builder_process_func);
+	g_test_add_func("/fwupd/common{cab-success}", fu_common_store_cab_func);
+	g_test_add_func("/fwupd/common{cab-success-artifact}", fu_common_store_cab_artifact_func);
+	g_test_add_func("/fwupd/common{cab-success-unsigned}", fu_common_store_cab_unsigned_func);
+	g_test_add_func("/fwupd/common{cab-success-folder}", fu_common_store_cab_folder_func);
+	g_test_add_func("/fwupd/common{cab-success-sha256}", fu_common_store_cab_sha256_func);
+	g_test_add_func("/fwupd/common{cab-error-no-metadata}",
+			fu_common_store_cab_error_no_metadata_func);
+	g_test_add_func("/fwupd/common{cab-error-wrong-size}",
+			fu_common_store_cab_error_wrong_size_func);
+	g_test_add_func("/fwupd/common{cab-error-wrong-checksum}",
+			fu_common_store_cab_error_wrong_checksum_func);
+	g_test_add_func("/fwupd/common{cab-error-missing-file}",
+			fu_common_store_cab_error_missing_file_func);
+	g_test_add_func("/fwupd/common{cab-error-size}", fu_common_store_cab_error_size_func);
 	return g_test_run();
 }

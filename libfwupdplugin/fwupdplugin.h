@@ -20,7 +20,6 @@
 #include <libfwupdplugin/fu-cfu-offer.h>
 #include <libfwupdplugin/fu-cfu-payload.h>
 #include <libfwupdplugin/fu-chunk.h>
-#include <libfwupdplugin/fu-common-cab.h>
 #include <libfwupdplugin/fu-common-guid.h>
 #include <libfwupdplugin/fu-common.h>
 #include <libfwupdplugin/fu-context.h>
