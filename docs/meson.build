@@ -1,4 +1,4 @@
-if get_option('docs')
+if introspection.allowed() and get_option('docs')
   toml_conf = configuration_data()
   docgen_version = source_version
   if git.found() and source_version != fwupd_version
