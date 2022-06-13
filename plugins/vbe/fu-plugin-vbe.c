@@ -16,6 +16,7 @@
 
 #include "fu-plugin-vbe.h"
 #include "fu-vbe-device.h"
+#include "fu-vbe-simple-device.h"
 
 /* Kernel device tree, used for system information */
 #define KERNEL_DT "/sys/firmware/fdt"
@@ -61,7 +62,13 @@ struct VbeDriver {
 
 /** List of available VBE drivers */
 const struct VbeDriver driver_list[] = {
-	{ NULL },
+    {"simple",
+     "U-Boot",
+     "VBE:U-Boot",
+     "0.0.1",
+     fu_vbe_simple_device_new,
+     "bb3b05a8-ebef-11ec-be98-d3a15278be95"},
+    {NULL},
 };
 
 /** Information about an update method with an associated device
