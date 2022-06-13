@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright 2017 Richard Hughes <richard@hughsie.com> -->
+<component type="firmware">
+  <id>com.Vbe.Laptop.firmware</id>
+  <name>VBE BoardFirmware</name>
+  <summary>System firmware for a board, for use with VBE</summary>
+  <description>
+    <p>
+      The board can be updated using Verified Boot for Embedded (VBE).
+    </p>
+  </description>
+  <provides>
+    <!-- this is a suitable HWID, found using `fwupdmgr hwids` -->
+    <firmware type="flashed">bb3b05a8-ebef-11ec-be98-d3a15278be95</firmware>
+  </provides>
+  <url type="homepage">http://www.TBD.com/</url>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>Proprietary</project_license> <!-- FIXME? -->
+  <developer_name>Vbe</developer_name>
+  <releases>
+    <release urgency="high" version="1.2.4" date="2017-08-15">
+      <checksum filename="firmware.fit" target="content"/>
+      <description>
+        <p>
+          This release updates firmware to version 1.2.3 which includes support
+          for a mythical new feature.
+        </p>
+      </description>
+    </release>
+  </releases>
+
+  <!-- only newer versions of fwupd know how to write to this hardware -->
+  <requires>
+    <id compare="ge" version="1.8.2">org.freedesktop.fwupd</id>
+  </requires>
+
+</component>
