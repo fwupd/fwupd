@@ -1637,7 +1637,7 @@ fu_util_plugin_to_string(FwupdPlugin *plugin, guint idt)
 	/* TRANSLATORS: description of plugin state, e.g. disabled */
 	hdr = _("Flags");
 	if (flags == 0x0) {
-		const gchar *tmp = fu_util_plugin_flag_to_cli_text(flags);
+		g_autofree gchar *tmp = fu_util_plugin_flag_to_cli_text(flags);
 		g_autofree gchar *li = g_strdup_printf("• %s", tmp);
 		fu_common_string_append_kv(str, idt + 1, hdr, li);
 	} else {
