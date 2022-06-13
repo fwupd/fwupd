@@ -1,0 +1,24 @@
+/dts-v1/;
+
+/*
+ * This file can be used to try our a VBE simple update on ROCKPro64 using
+ * Debian or some other distribution.
+ */
+
+/ {
+	compatible = "pine64,rockpro64-v2.1";
+
+	chosen {
+		fwupd {
+			firmware {
+				compatible = "fwupd,vbe-simple";
+				cur-version = "1.2.3";
+				bootloader-version = "2022.01";
+				storage = "mmc1";
+				area-start = <0x0>;
+				area-size = <0x1000000>;
+				skip-offset = <0x8000>;
+			};
+		};
+	};
+};

@@ -1,0 +1,27 @@
+/dts-v1/;
+
+/*
+ * This file is suitable for testing on the host device as it uses a local
+ * file. To set it up:
+ *
+ */
+
+/ {
+	compatible = "pine64,rockpro64-v2.1";
+
+	chosen {
+		fwupd {
+			firmware {
+				compatible = "fwupd,vbe-simple";
+				cur-version = "1.2.3";
+				bootloader-version = "2022.01";
+				storage = "/tmp/testfw";
+				area-start = <0x100000>;
+				area-size = <0x100000>;
+				skip-offset = <0x8000>;
+				part-uuid = "62db0ccf-03";
+				part-id = "3";
+			};
+		};
+	};
+};
