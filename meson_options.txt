@@ -51,6 +51,7 @@ option('plugin_intel_spi', type : 'boolean', value : false, description : 'enabl
 option('plugin_uf2', type : 'feature', description : 'support for UF2', deprecated: {'true': 'enabled', 'false': 'disabled'})
 option('plugin_upower', type : 'feature', description : 'support for UPower', deprecated: {'true': 'enabled', 'false': 'disabled'})
 option('plugin_powerd', type : 'feature', description : 'support for powerd', deprecated: {'true': 'enabled', 'false': 'disabled'})
+option('plugin_vbe', type : 'feature', description : 'VBE (Verified Boot for Embedded) support')
 option('qubes', type : 'boolean', value : false, description : 'build packages for Qubes OS')
 option('supported_build', type : 'feature', description: 'distribution package with upstream support', deprecated: {'true': 'enabled', 'false': 'disabled'})
 option('systemd', type : 'feature', description : 'systemd support', deprecated: {'true': 'enabled', 'false': 'disabled'})

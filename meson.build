@@ -459,6 +459,9 @@ if build_standalone
                             required: get_option('plugin_flashrom').disable_auto_if(host_machine.system() != 'linux'))
 endif
 
+libfdt = cc.find_library('fdt', required: get_option('plugin_vbe'))
+libz = dependency('zlib', required: get_option('plugin_vbe'))
+
 if libsystemd.found()
   systemd = dependency('systemd', version: '>= 211', required: get_option('systemd'))
   conf.set('HAVE_SYSTEMD' , '1')

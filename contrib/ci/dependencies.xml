@@ -150,6 +150,21 @@
       <package variant="x86_64" />
     </distro>
   </dependency>
+  <dependency type="build" id="libfdt-dev">
+    <distro id="centos">
+      <package variant="x86_64">libfdt-devel</package>
+    </distro>
+    <distro id="fedora">
+      <package variant="x86_64">libfdt-devel</package>
+    </distro>
+    <distro id="debian">
+      <package variant="x86_64" />
+      <package variant="i386" />
+    </distro>
+    <distro id="ubuntu">
+      <package variant="x86_64" />
+    </distro>
+  </dependency>
   <dependency type="build" id="libjson-glib-dev">
     <distro id="arch">
       <package variant="x86_64">json-glib</package>
@@ -217,6 +232,15 @@
     </distro>
     <distro id="ubuntu">
       <control />
+      <package variant="x86_64" />
+    </distro>
+  </dependency>
+  <dependency type="build" id="zlib1g-dev">
+    <distro id="debian">
+      <package variant="x86_64" />
+      <package variant="i386" />
+    </distro>
+    <distro id="ubuntu">
       <package variant="x86_64" />
     </distro>
   </dependency>
