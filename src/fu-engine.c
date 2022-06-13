@@ -6344,21 +6344,28 @@ fu_engine_load_plugins(FuEngine *self, FuProgress *progress, GError **error)
 }
 
 static gboolean
-fu_engine_plugins_init(FuEngine *self, GError **error)
+fu_engine_plugins_init(FuEngine *self, FuProgress *progress, GError **error)
 {
 	GPtrArray *plugins = fu_plugin_list_get_all(self->plugin_list);
 	g_autoptr(GPtrArray) plugins_disabled = g_ptr_array_new_with_free_func(g_free);
 	g_autoptr(GPtrArray) plugins_disabled_rt = g_ptr_array_new_with_free_func(g_free);
 
+	/* progress */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_set_steps(progress, plugins->len);
 	for (guint i = 0; i < plugins->len; i++) {
 		FuPlugin *plugin = g_ptr_array_index(plugins, i);
 		const gchar *name = fu_plugin_get_name(plugin);
+
+		/* progress */
+		fu_progress_set_name(fu_progress_get_child(progress), name);
 
 		/* is disabled */
 		if (fu_engine_is_plugin_name_disabled(self, name) ||
 		    !fu_engine_is_plugin_name_enabled(self, name)) {
 			g_ptr_array_add(plugins_disabled, g_strdup(name));
 			fu_plugin_add_flag(plugin, FWUPD_PLUGIN_FLAG_DISABLED);
+			fu_progress_step_done(progress);
 			continue;
 		}
 
@@ -6368,6 +6375,7 @@ fu_engine_plugins_init(FuEngine *self, GError **error)
 		/* runtime disabled */
 		if (fu_plugin_has_flag(plugin, FWUPD_PLUGIN_FLAG_DISABLED)) {
 			g_ptr_array_add(plugins_disabled_rt, g_strdup(name));
+			fu_progress_step_done(progress);
 			continue;
 		}
 
@@ -6396,6 +6404,7 @@ fu_engine_plugins_init(FuEngine *self, GError **error)
 				 "config-changed",
 				 G_CALLBACK(fu_engine_plugin_config_changed_cb),
 				 self);
+		fu_progress_step_done(progress);
 	}
 
 	/* show list */
@@ -7255,7 +7264,7 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 	}
 
 	/* init plugins, adding device and firmware GTypes */
-	if (!fu_engine_plugins_init(self, error)) {
+	if (!fu_engine_plugins_init(self, fu_progress_get_child(progress), error)) {
 		g_prefix_error(error, "failed to init plugins: ");
 		return FALSE;
 	}
