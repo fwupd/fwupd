@@ -23,7 +23,7 @@ jobs:
           OS: ${{ matrix.os }}
         run: ./contrib/ci/generate_docker.py
       - name: Push to GitHub Packages
-        uses: docker/build-push-action@v1
+        uses: docker/build-push-action@v3
         with:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
