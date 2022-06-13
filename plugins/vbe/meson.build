@@ -6,6 +6,7 @@ shared_module('fu_plugin_vbe',
   fu_hash,
   sources : [
     'fit.c',
+    'fu-plugin-vbe.c',
   ],
   include_directories : [
     root_incdir,
