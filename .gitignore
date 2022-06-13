@@ -36,3 +36,6 @@ plugins/uefi-dbx/tests/
 .buildconfig
 .ossfuzz
 *.rej
+*.cab
+*.tar
+.ctags
