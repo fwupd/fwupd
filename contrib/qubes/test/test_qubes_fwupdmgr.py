@@ -218,34 +218,29 @@ class TestQubesFwupdmgr(unittest.TestCase):
     @unittest.skipUnless("qubes" in platform.release(), "Requires Qubes OS")
     def test_download_firmware_updates(self):
         self.q._download_firmware_updates(
-            "https://fwupd.org/downloads/0a29848de74d26348bc5a6e24fc9f03778eddf0e-hughski-colorhug2-2.0.7.cab",
-            "32c4a2c9be787cdf1d757c489d6455bd7bb14053425180b6d331c37e1ccc1cda",
+            "https://fwupd.org/downloads/e5ad222bdbd3d3d48d8613e67c7e0a0e194f"
+            "8cd828e33c554d9f05d933e482c7-hughski-colorhug2-2.0.7.cab",
+            "e5ad222bdbd3d3d48d8613e67c7e0a0e194f8cd828e33c554d9f05d933e482c7",
         )
         update_path = os.path.join(
             FWUPD_DOM0_UPDATES_DIR,
-            "0a29848de74d26348bc5a6e24fc9f03778eddf0e-hughski-colorhug2-2.0.7",
+            "e5ad222bdbd3d3d48d8613e67c7e0a0e194f8cd828e33c554d9f05d933e482c7"
+            "-hughski-colorhug2-2.0.7.cab",
         )
-        self.assertTrue(os.path.exists(update_path))
-
-    @unittest.skipUnless("qubes" in platform.release(), "Requires Qubes OS")
-    def test_download_firmware_special_char(self):
-        self.q._download_firmware_updates(
-            "https://fwupd.org/downloads/bc334d8b098f2e91603c5f7dfdc837fb01797bbe-Dell%20XPS%2015%209560&Precision%205520%20System%20BIOS_Ver.1.18.0.cab",
-            "86d9e5e35b0b264be1bb1e49ec16ccd1330390423bfe962267a58c27be7712b8",
-        )
-        update_path = os.path.join(FWUPD_DOM0_UPDATES_DIR, "trusted")
         self.assertTrue(os.path.exists(update_path))
 
     @unittest.skipUnless(check_whonix_updatevm(), "Requires sys-whonix")
     def test_download_firmware_updates_whonix(self):
         self.q._download_firmware_updates(
-            "https://fwupd.org/downloads/0a29848de74d26348bc5a6e24fc9f03778eddf0e-hughski-colorhug2-2.0.7.cab",
-            "32c4a2c9be787cdf1d757c489d6455bd7bb14053425180b6d331c37e1ccc1cda",
+            "https://fwupd.org/downloads/e5ad222bdbd3d3d48d8613e67c7e0a0e194f"
+            "8cd828e33c554d9f05d933e482c7-hughski-colorhug2-2.0.7.cab",
+            "e5ad222bdbd3d3d48d8613e67c7e0a0e194f8cd828e33c554d9f05d933e482c7",
             whonix=True,
         )
         update_path = os.path.join(
             FWUPD_DOM0_UPDATES_DIR,
-            "0a29848de74d26348bc5a6e24fc9f03778eddf0e-hughski-colorhug2-2.0.7",
+            "e5ad222bdbd3d3d48d8613e67c7e0a0e194f8cd828e33c554d9f05d933e482c7"
+            "-hughski-colorhug2-2.0.7.cab",
         )
         self.assertTrue(os.path.exists(update_path))
 
@@ -825,8 +820,11 @@ class TestQubesFwupdmgr(unittest.TestCase):
 
     @unittest.skipUnless(check_usbvm(), REQUIRED_USBVM)
     def test_validate_usbvm_archive(self):
-        url = "https://fwupd.org/downloads/0a29848de74d26348bc5a6e24fc9f03778eddf0e-hughski-colorhug2-2.0.7.cab"
-        sha = "32c4a2c9be787cdf1d757c489d6455bd7bb14053425180b6d331c37e1ccc1cda"
+        url = (
+            "https://fwupd.org/downloads/e5ad222bdbd3d3d48d8613e67c7e0a0e1"
+            "94f8cd828e33c554d9f05d933e482c7-hughski-colorhug2-2.0.7.cab"
+        )
+        sha = "e5ad222bdbd3d3d48d8613e67c7e0a0e194f8cd828e33c554d9f05d933e482c7"
         name = url.replace("https://fwupd.org/downloads/", "")
         self.q._clean_usbvm()
         self.q._validate_usbvm_dirs()
