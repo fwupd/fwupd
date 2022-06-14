@@ -36,6 +36,8 @@ G_DEFINE_TYPE_WITH_PRIVATE(FuUefiDevice, fu_uefi_device, FU_TYPE_DEVICE)
 
 #define GET_PRIVATE(o) (fu_uefi_device_get_instance_private(o))
 
+#define FU_EFI_FMP_CAPSULE_GUID "6dcbd5ed-e82d-4c44-bda1-7194199ad92a"
+
 enum {
 	PROP_0,
 	PROP_FW_CLASS,
@@ -415,7 +417,8 @@ fu_uefi_device_fixup_firmware(FuUefiDevice *self, GBytes *fw, GError **error)
 	if (g_strcmp0(fu_uefi_device_get_guid(self), guid_new) == 0) {
 		g_debug("ESRT matches payload GUID");
 		return g_bytes_ref(fw);
-	} else if (fu_device_has_private_flag(FU_DEVICE(self),
+	} else if (g_strcmp0(guid_new, FU_EFI_FMP_CAPSULE_GUID) == 0 ||
+		   fu_device_has_private_flag(FU_DEVICE(self),
 					      FU_UEFI_DEVICE_FLAG_NO_CAPSULE_HEADER_FIXUP)) {
 		return g_bytes_ref(fw);
 	} else {
