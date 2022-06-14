@@ -71,6 +71,32 @@ jobs:
           echo $GITHUB_WORKSPACE
           docker run --privileged -e CI=true -t -v $GITHUB_WORKSPACE:/github/workspace docker.pkg.github.com/fwupd/fwupd/fwupd-${{matrix.os}}:latest
 
+  qubes-os:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [fedora, debian-x86_64]
+    steps:
+      - uses: actions/checkout@v2
+      - name: Docker login
+        run: docker login docker.pkg.github.com -u $GITHUB_ACTOR -p $GITHUB_TOKEN
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+      - name: Build in container
+        env:
+          CI_NETWORK: true
+          CI: true
+        run: |
+          echo $GITHUB_WORKSPACE
+          docker run --privileged -e CI=true -e QUBES=true -t -v $GITHUB_WORKSPACE:/github/workspace docker.pkg.github.com/fwupd/fwupd/fwupd-${{matrix.os}}:latest
+      - name: Upload fwupd binary artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: Binary package
+          path: |
+            dist/fwupd-qubes-*.rpm
+            fwupd-qubes-*.deb
+
   macos:
     strategy:
       matrix:
