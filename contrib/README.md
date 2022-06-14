@@ -27,7 +27,7 @@ To build additional RPM packages for Qubes OS (fwupd-qubes-dom0 and
 fwupd-qubes-vm) add `QUBES=true` environment variable:
 
 ```shell
-docker run --privileged -e QUBES=true  -t -v `pwd`:/github/workspace fwupd-fedora
+docker run --privileged -e QUBES=true -t -v `pwd`:/github/workspace fwupd-fedora
 ```
 
 ## DEB packages
@@ -56,7 +56,7 @@ To build additional DEB package for Qubes OS (fwupd-qubes-vm-whonix)
 add `QUBES=true` environment variable:
 
 ```shell
-docker run --privileged -t -v `pwd`:/github/workspace fwupd-debian-x86_64-qubes
+docker run --privileged -e QUBES=true -t -v `pwd`:/github/workspace fwupd-debian-x86_64
 ```
 
 ## PKG packages
