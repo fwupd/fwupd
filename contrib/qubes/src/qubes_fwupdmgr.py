@@ -906,7 +906,6 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
         whonix -- Flag enforces downloading the metadata updates via Tor
         metadata_url -- Use custom metadata from the url
         """
-        self._check_fwupdtool_version()
         if metadata_url:
             custom_metadata_name = metadata_url.replace(FWUPD_DOWNLOAD_PREFIX, "")
             self.metadata_file = os.path.join(
@@ -988,7 +987,7 @@ def main():
                 print("Exiting...")
                 exit(1)
         if "--device=" in arg:
-            device = arg.replace("--board=", "")
+            device = arg.replace("--device=", "")
 
     if sys.argv[1] == "get-updates":
         q.get_updates_qubes(usbvm=sys_usb)
