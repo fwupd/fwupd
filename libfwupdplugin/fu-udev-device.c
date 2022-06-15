@@ -461,23 +461,25 @@ fu_udev_device_probe(FuDevice *device, GError **error)
 
 	/* set vendor ID */
 	subsystem = g_ascii_strup(g_udev_device_get_subsystem(priv->udev_device), -1);
-	if (subsystem != NULL && priv->vendor != 0x0000) {
+	if (subsystem != NULL && priv->vendor != 0x0000 && priv->vendor != 0xFFFF) {
 		g_autofree gchar *vendor_id = NULL;
 		vendor_id = g_strdup_printf("%s:0x%04X", subsystem, (guint)priv->vendor);
 		fu_device_add_vendor_id(device, vendor_id);
 	}
 
 	/* add GUIDs in order of priority */
-	if (priv->vendor != 0x0000)
+	if (priv->vendor != 0x0000 && priv->vendor != 0xFFFF)
 		fu_device_add_instance_u16(device, "VEN", priv->vendor);
-	if (priv->model != 0x0000)
+	if (priv->model != 0x0000 && priv->model != 0xFFFF)
 		fu_device_add_instance_u16(device, "DEV", priv->model);
-	if (priv->subsystem_vendor != 0x0000 && priv->subsystem_model != 0x0000) {
+	if (priv->subsystem_vendor != 0x0000 && priv->subsystem_vendor != 0xFFFF &&
+	    priv->subsystem_model != 0x0000 && priv->subsystem_model != 0xFFFF) {
 		g_autofree gchar *subsys =
 		    g_strdup_printf("%04X%04X", priv->subsystem_vendor, priv->subsystem_model);
 		fu_device_add_instance_str(device, "SUBSYS", subsys);
 	}
-	fu_device_add_instance_u8(device, "REV", priv->revision);
+	if (priv->revision != 0xFF)
+		fu_device_add_instance_u8(device, "REV", priv->revision);
 
 	fu_device_build_instance_id_quirk(device, NULL, subsystem, "VEN", NULL);
 	fu_device_build_instance_id(device, NULL, subsystem, "VEN", "DEV", NULL);
