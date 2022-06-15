@@ -36,10 +36,10 @@
 
 typedef struct {
 	GUdevDevice *udev_device;
-	guint32 vendor;
-	guint32 model;
-	guint32 subsystem_vendor;
-	guint32 subsystem_model;
+	guint16 vendor;
+	guint16 model;
+	guint16 subsystem_vendor;
+	guint16 subsystem_model;
 	guint8 revision;
 	gchar *subsystem;
 	gchar *bind_id;
@@ -87,7 +87,7 @@ fu_udev_device_emit_changed(FuUdevDevice *self)
 }
 
 static guint32
-fu_udev_device_get_sysfs_attr_as_uint32(GUdevDevice *udev_device, const gchar *name)
+fu_udev_device_get_sysfs_attr_as_uint16(GUdevDevice *udev_device, const gchar *name)
 {
 #ifdef HAVE_GUDEV
 	const gchar *tmp;
@@ -96,14 +96,14 @@ fu_udev_device_get_sysfs_attr_as_uint32(GUdevDevice *udev_device, const gchar *n
 
 	tmp = g_udev_device_get_sysfs_attr(udev_device, name);
 	if (tmp == NULL)
-		return G_MAXUINT32;
+		return G_MAXUINT16;
 	if (!fu_strtoull(tmp, &tmp64, 0, G_MAXUINT32, &error_local)) {
 		g_warning("reading %s for %s was invalid: %s", name, tmp, error_local->message);
-		return G_MAXUINT32;
+		return G_MAXUINT16;
 	}
 	return tmp64;
 #else
-	return G_MAXUINT32;
+	return G_MAXUINT16;
 #endif
 }
 
@@ -340,26 +340,26 @@ fu_udev_device_probe(FuDevice *device, GError **error)
 		return TRUE;
 
 	/* set ven:dev:rev */
-	priv->vendor = fu_udev_device_get_sysfs_attr_as_uint32(priv->udev_device, "vendor");
-	priv->model = fu_udev_device_get_sysfs_attr_as_uint32(priv->udev_device, "device");
+	priv->vendor = fu_udev_device_get_sysfs_attr_as_uint16(priv->udev_device, "vendor");
+	priv->model = fu_udev_device_get_sysfs_attr_as_uint16(priv->udev_device, "device");
 	priv->revision = fu_udev_device_get_sysfs_attr_as_uint8(priv->udev_device, "revision");
 	priv->subsystem_vendor =
-	    fu_udev_device_get_sysfs_attr_as_uint32(priv->udev_device, "subsystem_vendor");
+	    fu_udev_device_get_sysfs_attr_as_uint16(priv->udev_device, "subsystem_vendor");
 	priv->subsystem_model =
-	    fu_udev_device_get_sysfs_attr_as_uint32(priv->udev_device, "subsystem_device");
+	    fu_udev_device_get_sysfs_attr_as_uint16(priv->udev_device, "subsystem_device");
 
 #ifdef HAVE_GUDEV
 	/* fallback to the parent */
 	udev_parent = g_udev_device_get_parent(priv->udev_device);
 	if (udev_parent != NULL && priv->flags & FU_UDEV_DEVICE_FLAG_VENDOR_FROM_PARENT &&
 	    priv->vendor == 0x0 && priv->model == 0x0 && priv->revision == 0x0) {
-		priv->vendor = fu_udev_device_get_sysfs_attr_as_uint32(udev_parent, "vendor");
-		priv->model = fu_udev_device_get_sysfs_attr_as_uint32(udev_parent, "device");
+		priv->vendor = fu_udev_device_get_sysfs_attr_as_uint16(udev_parent, "vendor");
+		priv->model = fu_udev_device_get_sysfs_attr_as_uint16(udev_parent, "device");
 		priv->revision = fu_udev_device_get_sysfs_attr_as_uint8(udev_parent, "revision");
 		priv->subsystem_vendor =
-		    fu_udev_device_get_sysfs_attr_as_uint32(udev_parent, "subsystem_vendor");
+		    fu_udev_device_get_sysfs_attr_as_uint16(udev_parent, "subsystem_vendor");
 		priv->subsystem_model =
-		    fu_udev_device_get_sysfs_attr_as_uint32(udev_parent, "subsystem_device");
+		    fu_udev_device_get_sysfs_attr_as_uint16(udev_parent, "subsystem_device");
 	}
 
 	/* hidraw helpfully encodes the information in a different place */
@@ -370,7 +370,7 @@ fu_udev_device_probe(FuDevice *device, GError **error)
 			g_auto(GStrv) split = g_strsplit(tmp, ":", -1);
 			if (g_strv_length(split) == 3) {
 				guint64 val = g_ascii_strtoull(split[1], NULL, 16);
-				if (val > G_MAXUINT32) {
+				if (val > G_MAXUINT16) {
 					g_warning("reading %s for %s overflowed",
 						  split[1],
 						  g_udev_device_get_sysfs_path(priv->udev_device));
