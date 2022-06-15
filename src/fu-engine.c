@@ -6540,6 +6540,7 @@ fu_engine_backend_device_added_run_plugins(FuEngine *self, FuDevice *device, FuP
 					  fu_device_get_backend_id(device),
 					  error_local->message);
 			}
+			fu_progress_add_flag(progress, FU_PROGRESS_FLAG_CHILD_FINISHED);
 			fu_progress_step_done(progress);
 			continue;
 		}
