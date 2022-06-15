@@ -34,6 +34,29 @@
     <binary>fwupdagent</binary>
   </provides>
   <releases>
+    <release version="1.7.8" date="2022-06-15">
+      <description>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Add the bootloader VID/PID used for the first batch of ColorHug devices</li>
+          <li>Also check for os-release in SYSCONFDIR</li>
+          <li>Export the version lowest raw value correctly</li>
+          <li>Fix a Wacom timeout when parsing very corrupt firmware</li>
+          <li>Fix Genesys device enumeration failure by not claiming the interface</li>
+          <li>Hardcode the Redfish filedata name to firmware.bin</li>
+          <li>Install D-Bus introspection data even if introspection is disabled</li>
+          <li>Only set the flashrom BIOS size if not already quirked</li>
+          <li>Read the SynapticsMST firmware size in a more safe way</li>
+          <li>Restart the BMC after installing BCM updates</li>
+        </ul>
+        <p>This release adds support for the following hardware:</p>
+        <ul>
+          <li>More pixart-rf devices</li>
+          <li>More SPIT pccam devices</li>
+          <li>Some FlatFrog devices</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.7.7" date="2022-04-05">
       <description>
         <p>
