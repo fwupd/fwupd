@@ -57,6 +57,7 @@ struct _FuDaemon {
 	PolkitAuthority *authority;
 #endif
 	FwupdStatus status; /* last emitted */
+	guint percentage;   /* last emitted */
 	guint owner_id;
 	guint process_quit_id;
 	FuEngine *engine;
@@ -628,6 +629,11 @@ fu_daemon_modify_config_cb(GObject *source, GAsyncResult *res, gpointer user_dat
 static void
 fu_daemon_progress_percentage_changed_cb(FuProgress *progress, guint percentage, FuDaemon *self)
 {
+	/* sanity check */
+	if (self->percentage == percentage)
+		return;
+	self->percentage = percentage;
+
 	g_debug("Emitting PropertyChanged('Percentage'='%u%%')", percentage);
 	fu_daemon_emit_property_changed(self, "Percentage", g_variant_new_uint32(percentage));
 }
@@ -1953,6 +1959,9 @@ fu_daemon_daemon_get_property(GDBusConnection *connection_,
 
 	if (g_strcmp0(property_name, "Status") == 0)
 		return g_variant_new_uint32(self->status);
+
+	if (g_strcmp0(property_name, "Percentage") == 0)
+		return g_variant_new_uint32(self->percentage);
 
 	if (g_strcmp0(property_name, FWUPD_RESULT_KEY_BATTERY_LEVEL) == 0) {
 		FuContext *ctx = fu_engine_get_context(self->engine);
