@@ -912,7 +912,7 @@ fu_progress_step_done(FuProgress *self)
 		if (fu_progress_get_status(child_tmp) != FWUPD_STATUS_UNKNOWN)
 			fu_progress_set_status(self, fu_progress_get_status(child_tmp));
 	} else if (priv->parent != NULL) {
-		fu_progress_set_status(self, fu_progress_get_percentage(priv->parent));
+		fu_progress_set_status(self, fu_progress_get_status(priv->parent));
 	} else {
 		fu_progress_set_status(self, FWUPD_STATUS_UNKNOWN);
 	}
