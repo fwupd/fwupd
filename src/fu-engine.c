@@ -3124,6 +3124,13 @@ fu_engine_install_blob(FuEngine *self,
 			fu_progress_add_step(progress_local, FWUPD_STATUS_DEVICE_WRITE, 94, NULL);
 			fu_progress_add_step(progress_local, FWUPD_STATUS_DEVICE_RESTART, 2, NULL);
 			fu_progress_add_step(progress_local, FWUPD_STATUS_DEVICE_BUSY, 2, NULL);
+		} else if (fu_progress_get_steps(progress_local) != 4) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INTERNAL,
+					    "FuDevice->set_progress did not set "
+					    "detach,write,attach,reload steps");
+			return FALSE;
 		}
 
 		/* detach to bootloader mode */

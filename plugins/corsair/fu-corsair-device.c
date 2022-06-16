@@ -438,6 +438,7 @@ fu_corsair_device_set_progress(FuDevice *self, FuProgress *progress)
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 4, "detach");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 92, "write");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 4, "attach");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1, "reload");
 }
 
 static gboolean
