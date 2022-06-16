@@ -2052,6 +2052,7 @@ fu_engine_install_releases(FuEngine *self,
 	}
 
 	/* all authenticated, so install all the things */
+	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, releases->len);
 	for (guint i = 0; i < releases->len; i++) {
 		FuRelease *release = g_ptr_array_index(releases, i);
