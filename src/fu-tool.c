@@ -96,54 +96,6 @@ fu_util_client_notify_cb(GObject *object, GParamSpec *pspec, FuUtilPrivate *priv
 			      fwupd_client_get_percentage(priv->client));
 }
 
-static gboolean
-fu_util_save_current_state(FuUtilPrivate *priv, GError **error)
-{
-	g_autoptr(JsonBuilder) builder = NULL;
-	g_autoptr(JsonGenerator) json_generator = NULL;
-	g_autoptr(JsonNode) json_root = NULL;
-	g_autoptr(GPtrArray) devices = NULL;
-	g_autofree gchar *state = NULL;
-	g_autofree gchar *dirname = NULL;
-	g_autofree gchar *filename = NULL;
-
-	if (!priv->enable_json_state)
-		return TRUE;
-
-	devices = fu_engine_get_devices(priv->engine, error);
-	if (devices == NULL)
-		return FALSE;
-	fwupd_device_array_ensure_parents(devices);
-
-	/* create header */
-	builder = json_builder_new();
-	json_builder_begin_object(builder);
-
-	/* add each device */
-	json_builder_set_member_name(builder, "Devices");
-	json_builder_begin_array(builder);
-	for (guint i = 0; i < devices->len; i++) {
-		FwupdDevice *dev = g_ptr_array_index(devices, i);
-		json_builder_begin_object(builder);
-		fwupd_device_to_json(dev, builder);
-		json_builder_end_object(builder);
-	}
-	json_builder_end_array(builder);
-	json_builder_end_object(builder);
-
-	/* export as a string */
-	json_root = json_builder_get_root(builder);
-	json_generator = json_generator_new();
-	json_generator_set_pretty(json_generator, TRUE);
-	json_generator_set_root(json_generator, json_root);
-	state = json_generator_to_data(json_generator, NULL);
-	if (state == NULL)
-		return FALSE;
-	dirname = fu_path_from_kind(FU_PATH_KIND_LOCALSTATEDIR_PKG);
-	filename = g_build_filename(dirname, "state.json", NULL);
-	return g_file_set_contents(filename, state, -1, error);
-}
-
 static void
 fu_util_show_plugin_warnings(FuUtilPrivate *priv)
 {
@@ -734,10 +686,6 @@ fu_util_get_updates(FuUtilPrivate *priv, gchar **values, GError **error)
 		}
 	}
 
-	/* save the device state for other applications to see */
-	if (!fu_util_save_current_state(priv, error))
-		return FALSE;
-
 	/* updates */
 	if (g_node_n_nodes(root, G_TRAVERSE_ALL) <= 1) {
 		g_set_error_literal(error,
@@ -878,8 +826,7 @@ fu_util_get_devices(FuUtilPrivate *priv, gchar **values, GError **error)
 	}
 	fu_util_print_tree(priv->client, root);
 
-	/* save the device state for other applications to see */
-	return fu_util_save_current_state(priv, error);
+	return TRUE;
 }
 
 static void
@@ -1427,10 +1374,6 @@ fu_util_install(FuUtilPrivate *priv, gchar **values, GError **error)
 		return TRUE;
 	}
 
-	/* save the device state for other applications to see */
-	if (!fu_util_save_current_state(priv, error))
-		return FALSE;
-
 	/* success */
 	return fu_util_prompt_complete(priv->completion_flags, TRUE, error);
 }
@@ -1611,10 +1554,6 @@ fu_util_update(FuUtilPrivate *priv, gchar **values, GError **error)
 		return TRUE;
 	}
 
-	/* save the device state for other applications to see */
-	if (!fu_util_save_current_state(priv, error))
-		return FALSE;
-
 	return fu_util_prompt_complete(priv->completion_flags, TRUE, error);
 }
 
@@ -1684,10 +1623,6 @@ fu_util_reinstall(FuUtilPrivate *priv, gchar **values, GError **error)
 		g_debug("skipping reboot check");
 		return TRUE;
 	}
-
-	/* save the device state for other applications to see */
-	if (!fu_util_save_current_state(priv, error))
-		return FALSE;
 
 	return fu_util_prompt_complete(priv->completion_flags, TRUE, error);
 }
@@ -3472,14 +3407,6 @@ main(int argc, char *argv[])
 	     &priv->cleanup_blob,
 	     /* TRANSLATORS: command line option */
 	     N_("Run the plugin composite cleanup routine when using install-blob"),
-	     NULL},
-	    {"enable-json-state",
-	     '\0',
-	     0,
-	     G_OPTION_ARG_NONE,
-	     &priv->enable_json_state,
-	     /* TRANSLATORS: command line option */
-	     N_("Save device state into a JSON file between executions"),
 	     NULL},
 	    {"disable-ssl-strict",
 	     '\0',
