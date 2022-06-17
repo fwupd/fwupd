@@ -1,9 +1,7 @@
 if gusb.found()
 cargs = ['-DG_LOG_DOMAIN="FuPluginSynapticsCxaudio"']
 
-install_data(['synaptics-cxaudio.quirk'],
-  install_dir: join_paths(datadir, 'fwupd', 'quirks.d')
-)
+plugin_quirks += join_paths(meson.current_source_dir(), 'synaptics-cxaudio.quirk')
 
 shared_module('fu_plugin_synaptics_cxaudio',
   fu_hash,

@@ -2,9 +2,7 @@ if get_option('plugin_realtek_mst').require(gudev.found(),
     error_message: 'gudev is needed for plugin_realtek_mst').allowed()
 cargs = ['-DG_LOG_DOMAIN="FuPluginRealtekMst"']
 
-install_data(['realtek-mst.quirk'],
-  install_dir: join_paths(get_option('datadir'), 'fwupd', 'quirks.d')
-)
+plugin_quirks += join_paths(meson.current_source_dir(), 'realtek-mst.quirk')
 
 shared_module('fu_plugin_realtek_mst',
   fu_hash,

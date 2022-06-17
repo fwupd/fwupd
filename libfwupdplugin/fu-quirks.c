@@ -15,6 +15,7 @@
 #include "fwupd-error.h"
 #include "fwupd-remote-private.h"
 
+#include "fu-bytes.h"
 #include "fu-common.h"
 #include "fu-mutex.h"
 #include "fu-path.h"
@@ -299,6 +300,70 @@ fu_quirks_strcasecmp_cb(gconstpointer a, gconstpointer b)
 }
 
 static gboolean
+fu_quirks_add_quirks_for_resource(FuQuirks *self,
+				  XbBuilder *builder,
+				  const gchar *path,
+				  GError **error)
+{
+	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GBytes) blob_xml = NULL;
+	g_autoptr(XbBuilderSource) source = xb_builder_source_new();
+
+	/* load from keyfile */
+	blob = g_resources_lookup_data(path, G_RESOURCE_LOOKUP_FLAGS_NONE, error);
+	if (blob == NULL)
+		return FALSE;
+	blob_xml = fu_quirks_convert_keyfile_to_xml(self, blob, error);
+	if (blob_xml == NULL)
+		return FALSE;
+	if (!xb_builder_source_load_bytes(source, blob_xml, XB_BUILDER_SOURCE_FLAG_NONE, error)) {
+		g_prefix_error(error, "failed to load %s: ", path);
+		return FALSE;
+	}
+	xb_builder_import_source(builder, source);
+	return TRUE;
+}
+
+static gboolean
+fu_quirks_add_quirks_for_resources(FuQuirks *self,
+				   XbBuilder *builder,
+				   const gchar *path,
+				   GError **error)
+{
+	g_autofree gchar *hash_self = NULL;
+	g_auto(GStrv) children = NULL;
+	g_autoptr(GBytes) blob_self = NULL;
+	g_autoptr(GError) error_local = NULL;
+
+	children = g_resources_enumerate_children(path, G_RESOURCE_LOOKUP_FLAGS_NONE, &error_local);
+	if (children == NULL) {
+		if (g_error_matches(error_local, G_RESOURCE_ERROR, G_RESOURCE_ERROR_NOT_FOUND)) {
+			g_debug("ignoring: %s", error_local->message);
+			return TRUE;
+		}
+		g_propagate_error(error, g_steal_pointer(&error_local));
+		return FALSE;
+	}
+	for (guint i = 0; children[i] != NULL; i++) {
+		g_autofree gchar *fn = g_build_filename(path, children[i], NULL);
+		if (!g_str_has_suffix(children[i], ".quirk"))
+			continue;
+		if (!fu_quirks_add_quirks_for_resource(self, builder, fn, error))
+			return FALSE;
+	}
+
+	/* add the hash of the current binary to verify it has not changed */
+	blob_self = fu_bytes_get_contents("/proc/self/exe", error);
+	if (blob_self == NULL)
+		return FALSE;
+	hash_self = g_compute_checksum_for_bytes(G_CHECKSUM_SHA1, blob_self);
+	xb_builder_append_guid(builder, hash_self);
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_quirks_check_silo(FuQuirks *self, GError **error)
 {
 	XbBuilderCompileFlags compile_flags = XB_BUILDER_COMPILE_FLAG_WATCH_BLOB;
@@ -312,8 +377,12 @@ fu_quirks_check_silo(FuQuirks *self, GError **error)
 	if (self->silo != NULL && xb_silo_is_valid(self->silo))
 		return TRUE;
 
-	/* system datadir */
+	/* built-in quirks */
 	builder = xb_builder_new();
+	if (!fu_quirks_add_quirks_for_resources(self, builder, "/org/freedesktop/fwupd", error))
+		return FALSE;
+
+	/* system datadir */
 	datadir = fu_path_from_kind(FU_PATH_KIND_DATADIR_QUIRKS);
 	if (!fu_quirks_add_quirks_for_path(self, builder, datadir, error))
 		return FALSE;

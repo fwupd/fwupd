@@ -1,9 +1,7 @@
 if gusb.found()
 cargs = ['-DG_LOG_DOMAIN="FuPluginCrosEc"']
 
-install_data(['cros-ec.quirk'],
-  install_dir: join_paths(datadir, 'fwupd', 'quirks.d')
-)
+plugin_quirks += join_paths(meson.current_source_dir(), 'cros-ec.quirk')
 
 shared_module('fu_plugin_cros_ec',
   fu_hash,

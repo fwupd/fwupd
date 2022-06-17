@@ -1,11 +1,9 @@
 if get_option('plugin_thunderbolt').require(gudev.found(),
     error_message: 'gudev is needed for plugin_thunderbolt').allowed()
 cargs = ['-DG_LOG_DOMAIN="FuPluginThunderbolt"']
-install_data([
-  'thunderbolt.quirk',
-  ],
-  install_dir: join_paths(datadir, 'fwupd', 'quirks.d')
-)
+
+plugin_quirks += join_paths(meson.current_source_dir(), 'thunderbolt.quirk')
+
 fu_plugin_thunderbolt = shared_module('fu_plugin_thunderbolt',
   fu_hash,
   sources: [

@@ -1,11 +1,7 @@
 if gusb.found()
 cargs = ['-DG_LOG_DOMAIN="FuPluginNovatek"']
 
-install_data([
-  'hailuck.quirk',
-  ],
-  install_dir: join_paths(datadir, 'fwupd', 'quirks.d')
-)
+plugin_quirks += join_paths(meson.current_source_dir(), 'hailuck.quirk')
 
 shared_module('fu_plugin_hailuck',
   fu_hash,

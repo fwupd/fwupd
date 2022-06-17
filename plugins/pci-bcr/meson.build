@@ -1,9 +1,7 @@
 if get_option('hsi') and host_machine.system() == 'linux'
 cargs = ['-DG_LOG_DOMAIN="FuPluginPciBcr"']
 
-install_data(['pci-bcr.quirk'],
-  install_dir: join_paths(datadir, 'fwupd', 'quirks.d')
-)
+plugin_quirks += join_paths(meson.current_source_dir(), 'pci-bcr.quirk')
 
 shared_module('fu_plugin_pci_bcr',
   fu_hash,

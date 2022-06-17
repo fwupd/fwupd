@@ -5,11 +5,7 @@ if nvme_header and \
     error_message: 'gudev is needed for plugin_nvme').allowed()
 cargs = ['-DG_LOG_DOMAIN="FuPluginNvme"']
 
-install_data([
-  'nvme.quirk',
-  ],
-  install_dir: join_paths(datadir, 'fwupd', 'quirks.d')
-)
+plugin_quirks += join_paths(meson.current_source_dir(), 'nvme.quirk')
 
 shared_module('fu_plugin_nvme',
   fu_hash,

@@ -7,9 +7,7 @@ if not lzma.found() or \
 endif
 cargs = ['-DG_LOG_DOMAIN="FuPluginIntelSpi"']
 
-install_data(['intel-spi.quirk'],
-  install_dir: join_paths(datadir, 'fwupd', 'quirks.d')
-)
+plugin_quirks += join_paths(meson.current_source_dir(), 'intel-spi.quirk')
 
 shared_module('fu_plugin_intel_spi',
   fu_hash,

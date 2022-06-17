@@ -1,9 +1,7 @@
 if gusb.found()
 cargs = ['-DG_LOG_DOMAIN="FuPluginFrescoPd"']
 
-install_data(['fresco-pd.quirk'],
-  install_dir: join_paths(datadir, 'fwupd', 'quirks.d')
-)
+plugin_quirks += join_paths(meson.current_source_dir(), 'fresco-pd.quirk')
 
 shared_module('fu_plugin_fresco_pd',
   fu_hash,

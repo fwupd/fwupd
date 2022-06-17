@@ -1,11 +1,7 @@
 if gusb.found()
 cargs = ['-DG_LOG_DOMAIN="FuPluginColorHug"']
 
-install_data([
-  'colorhug.quirk',
-  ],
-  install_dir: join_paths(datadir, 'fwupd', 'quirks.d')
-)
+plugin_quirks += join_paths(meson.current_source_dir(), 'colorhug.quirk')
 
 shared_module('fu_plugin_colorhug',
   fu_hash,

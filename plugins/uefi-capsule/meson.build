@@ -7,8 +7,7 @@ if efi_os_dir != ''
   cargs += '-DEFI_OS_DIR="' + efi_os_dir + '"'
 endif
 
-install_data(['uefi-capsule.quirk'],
-  install_dir: join_paths(datadir, 'fwupd', 'quirks.d'))
+plugin_quirks += join_paths(meson.current_source_dir(), 'uefi-capsule.quirk')
 
 backend_srcs = ['fu-uefi-backend.c']
 if host_machine.system() == 'linux'

@@ -1,9 +1,7 @@
 if get_option('plugin_pixart_rf').disable_auto_if(host_machine.system() != 'linux').allowed()
 cargs = ['-DG_LOG_DOMAIN="FuPluginPixartRf"']
 
-install_data(['pixart-rf.quirk'],
-  install_dir: join_paths(datadir, 'fwupd', 'quirks.d')
-)
+plugin_quirks += join_paths(meson.current_source_dir(), 'pixart-rf.quirk')
 
 shared_module('fu_plugin_pixart_rf',
   fu_hash,

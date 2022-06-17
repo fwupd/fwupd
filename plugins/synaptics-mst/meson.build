@@ -2,9 +2,7 @@ if get_option('plugin_synaptics_mst').require(gudev.found(),
     error_message: 'gudev is needed for plugin_synaptics_mst').allowed()
 cargs = ['-DG_LOG_DOMAIN="FuPluginSynapticsMST"']
 
-install_data(['synaptics-mst.quirk'],
-  install_dir: join_paths(datadir, 'fwupd', 'quirks.d')
-)
+plugin_quirks += join_paths(meson.current_source_dir(), 'synaptics-mst.quirk')
 
 shared_module('fu_plugin_synaptics_mst',
   fu_hash,

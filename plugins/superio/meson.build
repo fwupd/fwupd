@@ -1,9 +1,7 @@
 if gudev.found()
 cargs = ['-DG_LOG_DOMAIN="FuPluginSuperio"']
 
-install_data(['superio.quirk'],
-  install_dir: join_paths(datadir, 'fwupd', 'quirks.d')
-)
+plugin_quirks += join_paths(meson.current_source_dir(), 'superio.quirk')
 
 shared_module('fu_plugin_superio',
   fu_hash,

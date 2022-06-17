@@ -1,9 +1,7 @@
 if gusb.found()
 cargs = ['-DG_LOG_DOMAIN="FuPluginDfuCsr"']
 
-install_data(['dfu-csr.quirk'],
-  install_dir: join_paths(datadir, 'fwupd', 'quirks.d')
-)
+plugin_quirks += join_paths(meson.current_source_dir(), 'dfu-csr.quirk')
 
 shared_module('fu_plugin_dfu_csr',
   fu_hash,

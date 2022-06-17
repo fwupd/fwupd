@@ -1,11 +1,7 @@
 if get_option('hsi') and host_machine.system() == 'linux'
 cargs = ['-DG_LOG_DOMAIN="FuPluginIommu"']
 
-install_data([
-  'iommu.quirk',
-  ],
-  install_dir: join_paths(datadir, 'fwupd', 'quirks.d')
-)
+plugin_quirks += join_paths(meson.current_source_dir(), 'iommu.quirk')
 
 shared_module('fu_plugin_iommu',
   fu_hash,

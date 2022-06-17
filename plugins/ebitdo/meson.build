@@ -1,9 +1,7 @@
 if gusb.found()
 cargs = ['-DG_LOG_DOMAIN="FuPluginEbitdo"']
 
-install_data(['ebitdo.quirk'],
-  install_dir: join_paths(datadir, 'fwupd', 'quirks.d')
-)
+plugin_quirks += join_paths(meson.current_source_dir(), 'ebitdo.quirk')
 
 shared_module('fu_plugin_ebitdo',
   fu_hash,

@@ -1,9 +1,7 @@
 if gusb.found()
 cargs = ['-DG_LOG_DOMAIN="FuPluginSteelSeries"']
 
-install_data(['steelseries.quirk'],
-  install_dir: join_paths(datadir, 'fwupd', 'quirks.d')
-)
+plugin_quirks += join_paths(meson.current_source_dir(), 'steelseries.quirk')
 
 shared_module('fu_plugin_steelseries',
   fu_hash,

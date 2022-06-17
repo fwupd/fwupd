@@ -1,9 +1,7 @@
 if gusb.found()
 cargs = ['-DG_LOG_DOMAIN="FuPluginUsiDock"']
 
-install_data(['usi-dock.quirk'],
-  install_dir: join_paths(datadir, 'fwupd', 'quirks.d')
-)
+plugin_quirks += join_paths(meson.current_source_dir(), 'usi-dock.quirk')
 
 shared_module('fu_plugin_usi_dock',
   fu_hash,

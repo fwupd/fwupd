@@ -1,9 +1,7 @@
 if gusb.found()
 cargs = ['-DG_LOG_DOMAIN="FuPluginWacomUsb"']
 
-install_data(['wacom-usb.quirk'],
-  install_dir: join_paths(datadir, 'fwupd', 'quirks.d')
-)
+plugin_quirks += join_paths(meson.current_source_dir(), 'wacom-usb.quirk')
 
 shared_module('fu_plugin_wacom_usb',
   fu_hash,

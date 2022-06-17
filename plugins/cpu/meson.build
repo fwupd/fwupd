@@ -2,9 +2,7 @@ if get_option('plugin_cpu').disable_auto_if(host_machine.system() != 'linux').re
     error_message: 'plugin_cpu needs hsi to be set').allowed()
 cargs = ['-DG_LOG_DOMAIN="FuPluginCpu"']
 
-install_data(['cpu.quirk'],
-  install_dir: join_paths(datadir, 'fwupd', 'quirks.d')
-)
+plugin_quirks += join_paths(meson.current_source_dir(), 'cpu.quirk')
 
 shared_module('fu_plugin_cpu',
   fu_hash,
