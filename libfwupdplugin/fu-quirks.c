@@ -118,24 +118,16 @@ fu_quirks_validate_flags(const gchar *value, GError **error)
 	return TRUE;
 }
 
-static GInputStream *
-fu_quirks_convert_quirk_to_xml_cb(XbBuilderSource *source,
-				  XbBuilderSourceCtx *ctx,
-				  gpointer user_data,
-				  GCancellable *cancellable,
-				  GError **error)
+static GBytes *
+fu_quirks_convert_keyfile_to_xml(FuQuirks *self, GBytes *bytes, GError **error)
 {
-	FuQuirks *self = FU_QUIRKS(user_data);
+	gsize xmlsz;
 	g_autofree gchar *xml = NULL;
 	g_auto(GStrv) groups = NULL;
-	g_autoptr(GBytes) bytes = NULL;
 	g_autoptr(GKeyFile) kf = g_key_file_new();
 	g_autoptr(XbBuilderNode) root = xb_builder_node_new("quirk");
 
 	/* parse keyfile */
-	bytes = xb_builder_source_ctx_get_bytes(ctx, cancellable, error);
-	if (bytes == NULL)
-		return NULL;
 	if (!g_key_file_load_from_data(kf,
 				       g_bytes_get_data(bytes, NULL),
 				       g_bytes_get_size(bytes),
@@ -197,11 +189,32 @@ fu_quirks_convert_quirk_to_xml_cb(XbBuilderSource *source,
 		}
 	}
 
-	/* export as XML */
+	/* export as XML blob */
 	xml = xb_builder_node_export(root, XB_NODE_EXPORT_FLAG_ADD_HEADER, error);
 	if (xml == NULL)
 		return NULL;
-	return g_memory_input_stream_new_from_data(g_steal_pointer(&xml), -1, g_free);
+	xmlsz = strlen(xml);
+	return g_bytes_new_take(g_steal_pointer(&xml), xmlsz);
+}
+
+static GInputStream *
+fu_quirks_convert_quirk_to_xml_cb(XbBuilderSource *source,
+				  XbBuilderSourceCtx *ctx,
+				  gpointer user_data,
+				  GCancellable *cancellable,
+				  GError **error)
+{
+	FuQuirks *self = FU_QUIRKS(user_data);
+	g_autoptr(GBytes) bytes = NULL;
+	g_autoptr(GBytes) bytes_xml = NULL;
+
+	bytes = xb_builder_source_ctx_get_bytes(ctx, cancellable, error);
+	if (bytes == NULL)
+		return NULL;
+	bytes_xml = fu_quirks_convert_keyfile_to_xml(self, bytes, error);
+	if (bytes_xml == NULL)
+		return NULL;
+	return g_memory_input_stream_new_from_bytes(bytes_xml);
 }
 
 static gint
