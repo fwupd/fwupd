@@ -388,7 +388,7 @@ fu_udev_device_probe(FuDevice *device, GError **error)
 	/* set the version if the revision has been set */
 	if (fu_device_get_version(device) == NULL &&
 	    fu_device_get_version_format(device) == FWUPD_VERSION_FORMAT_UNKNOWN) {
-		if (priv->revision != 0x00) {
+		if (priv->revision != 0x00 && priv->revision != 0xFF) {
 			g_autofree gchar *version = g_strdup_printf("%02x", priv->revision);
 			fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_PLAIN);
 			fu_device_set_version(device, version);
