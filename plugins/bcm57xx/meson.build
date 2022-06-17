@@ -7,7 +7,7 @@ install_data(['bcm57xx.quirk'],
 )
 shared_module('fu_plugin_bcm57xx',
   fu_hash,
-  sources : [
+  sources: [
     'fu-plugin-bcm57xx.c',
     'fu-bcm57xx-common.c',          # fuzzing
     'fu-bcm57xx-device.c',
@@ -17,19 +17,19 @@ shared_module('fu_plugin_bcm57xx',
     'fu-bcm57xx-stage1-image.c',    # fuzzing
     'fu-bcm57xx-stage2-image.c',    # fuzzing
   ],
-  include_directories : [
+  include_directories: [
     root_incdir,
     fwupd_incdir,
     fwupdplugin_incdir,
   ],
-  install : true,
+  install: true,
   install_dir: plugin_dir,
-  link_with : [
+  link_with: [
     fwupd,
     fwupdplugin,
   ],
-  c_args : cargs,
-  dependencies : [
+  c_args: cargs,
+  dependencies: [
     plugin_deps,
     valgrind,
   ],
@@ -44,7 +44,7 @@ if get_option('tests')
   e = executable(
     'bcm57xx-self-test',
     fu_hash,
-    sources : [
+    sources: [
       'fu-self-test.c',
       'fu-bcm57xx-common.c',
       'fu-bcm57xx-dict-image.c',
@@ -52,21 +52,21 @@ if get_option('tests')
       'fu-bcm57xx-stage1-image.c',
       'fu-bcm57xx-stage2-image.c',
     ],
-    include_directories : [
+    include_directories: [
       root_incdir,
       fwupd_incdir,
       fwupdplugin_incdir,
     ],
-    dependencies : [
+    dependencies: [
       plugin_deps,
     ],
-    link_with : [
+    link_with: [
       fwupd,
       fwupdplugin,
     ],
-    install : true,
-    install_dir : installed_test_bindir,
+    install: true,
+    install_dir: installed_test_bindir,
   )
-  test('bcm57xx-self-test', e, env : env)
+  test('bcm57xx-self-test', e, env: env)
 endif
 endif

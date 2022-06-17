@@ -69,9 +69,9 @@ if introspection.allowed() and get_option('docs')
     install_dir: join_paths(datadir, 'doc'),
   )
  install_data(['urlmap_fwupd.js'],
-    install_dir : join_paths(datadir, 'doc', 'libfwupd')
+    install_dir: join_paths(datadir, 'doc', 'libfwupd')
   )
  install_data(['urlmap_fwupdplugin.js'],
-    install_dir : join_paths(datadir, 'doc', 'libfwupdplugin')
+    install_dir: join_paths(datadir, 'doc', 'libfwupdplugin')
   )
 endif

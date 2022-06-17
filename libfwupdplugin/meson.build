@@ -3,9 +3,9 @@ subdir('tests')
 endif
 
 fwupdplugin_version_h = configure_file(
-  input : 'fu-version.h.in',
-  output : 'fu-version.h',
-  configuration : conf
+  input: 'fu-version.h.in',
+  output: 'fu-version.h',
+  configuration: conf
 )
 
 fwupdplugin_src = [
@@ -154,17 +154,17 @@ fwupdplugin_headers = [
 ]
 install_headers(
   'fwupdplugin.h',
-  subdir : 'fwupd-1',
+  subdir: 'fwupd-1',
 )
 install_headers([fwupdplugin_headers, 'fu-plugin-vfuncs.h'],
-  subdir : 'fwupd-1/libfwupdplugin',
+  subdir: 'fwupd-1/libfwupdplugin',
 )
 
 fu_hash = custom_target(
   'fu-hash.h',
-  input : fwupdplugin_src,
-  output : 'fu-hash.h',
-  command : [python3.full_path(),
+  input: fwupdplugin_src,
+  output: 'fu-hash.h',
+  command: [python3.full_path(),
              join_paths(meson.current_source_dir(), 'fu-hash.py'),
              '@OUTPUT@', '@INPUT@']
 )
@@ -219,37 +219,37 @@ fwupdplugin_mapfile = 'fwupdplugin.map'
 vflag = '-Wl,--version-script,@0@/@1@'.format(meson.current_source_dir(), fwupdplugin_mapfile)
 fwupdplugin = library(
   'fwupdplugin',
-  sources : [
+  sources: [
     fwupdplugin_src,
     fwupdplugin_headers,
     fwupdplugin_headers_private,
   ],
-  soversion : libfwupdplugin_lt_current,
-  version : libfwupdplugin_lt_version,
-  include_directories : [
+  soversion: libfwupdplugin_lt_current,
+  version: libfwupdplugin_lt_version,
+  include_directories: [
     root_incdir,
     fwupd_incdir,
   ],
-  dependencies : [
+  dependencies: [
     library_deps
   ],
-  link_with : [
+  link_with: [
     fwupd,
   ],
-  link_args : cc.get_supported_link_arguments([vflag]),
-  link_depends : fwupdplugin_mapfile,
-  install : true
+  link_args: cc.get_supported_link_arguments([vflag]),
+  link_depends: fwupdplugin_mapfile,
+  install: true
 )
 
 fwupdplugin_pkgg = import('pkgconfig')
 fwupdplugin_pkgg.generate(
-  libraries : fwupdplugin,
-  requires : pkgg_requires,
-  subdirs : 'fwupd-1',
-  version : meson.project_version(),
-  name : 'fwupdplugin',
-  filebase : 'fwupdplugin',
-  description : 'library for plugins to use to interact with fwupd daemon',
+  libraries: fwupdplugin,
+  requires: pkgg_requires,
+  subdirs: 'fwupd-1',
+  version: meson.project_version(),
+  name: 'fwupdplugin',
+  filebase: 'fwupdplugin',
+  description: 'library for plugins to use to interact with fwupd daemon',
 )
 
 if introspection.allowed()
@@ -270,35 +270,35 @@ if introspection.allowed()
     girtargets += 'Xmlb-2.0'
   endif
   fwupdplugin_gir = gnome.generate_gir(fwupd,
-    sources : [
+    sources: [
       fwupdplugin_src,
       fwupdplugin_headers,
       fwupdplugin_headers_private,
     ],
-    nsversion : '1.0',
-    namespace : 'FwupdPlugin',
-    symbol_prefix : 'fu',
-    identifier_prefix : 'Fu',
-    export_packages : 'fwupdplugin',
-    extra_args : extra_args,
-    include_directories : [
+    nsversion: '1.0',
+    namespace: 'FwupdPlugin',
+    symbol_prefix: 'fu',
+    identifier_prefix: 'Fu',
+    export_packages: 'fwupdplugin',
+    extra_args: extra_args,
+    include_directories: [
       fwupd_incdir,
     ],
-    header : 'fwupdplugin.h',
-    dependencies : [
+    header: 'fwupdplugin.h',
+    dependencies: [
       gir_dep,
       introspection_deps
     ],
-    link_with : [
+    link_with: [
       fwupdplugin,
     ],
-    includes : [
+    includes: [
       'Gio-2.0',
       'GObject-2.0',
       girtargets,
       fwupd_gir[0],
     ],
-    install : true
+    install: true
   )
 
   # Verify the map file is correct -- note we can't actually use the generated
@@ -324,7 +324,7 @@ if introspection.allowed()
   )
 
   test('fwupdplugin-exported-api', diffcmd,
-       args : [
+       args: [
         '-urNp',
         join_paths(meson.current_source_dir(), 'fwupdplugin.map'),
         fwupdplugin_mapfile_target,
@@ -342,25 +342,25 @@ if get_option('tests')
   e = executable(
     'fwupdplugin-self-test',
     test_deps,
-    sources : [
+    sources: [
       fwupdplugin_src,
       'fu-self-test.c'
     ],
-    include_directories : [
+    include_directories: [
       root_incdir,
       fwupd_incdir,
     ],
-    dependencies : [
+    dependencies: [
       library_deps
     ],
-    link_with : [
+    link_with: [
       fwupd,
       fwupdplugin
     ],
-    c_args : [
+    c_args: [
     ],
   )
-  test('fwupdplugin-self-test', e, is_parallel:false, timeout:180, env : env)
+  test('fwupdplugin-self-test', e, is_parallel: false, timeout: 180, env: env)
 endif
 
 fwupdplugin_incdir = include_directories('.')

@@ -1,12 +1,12 @@
 if get_option('tests')
   tar = find_program('gtar', 'tar')
   builder_test_firmware = custom_target('builder-test-firmware',
-    input : [
+    input: [
       'source.bin',
       'startup.sh',
     ],
-    output : 'firmware.tar',
-    command : [
+    output: 'firmware.tar',
+    command: [
       tar, '--xform', 's,.*/,,',
            '--absolute-names', '--create', '--file', '@OUTPUT@', '@INPUT@',
     ],

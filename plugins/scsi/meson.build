@@ -10,26 +10,26 @@ install_data([
 
 shared_module('fu_plugin_scsi',
   fu_hash,
-  sources : [
+  sources: [
     'fu-plugin-scsi.c',
     'fu-scsi-device.c',
   ],
-  include_directories : [
+  include_directories: [
     root_incdir,
     fwupd_incdir,
     fwupdplugin_incdir,
   ],
-  install : true,
+  install: true,
   install_dir: plugin_dir,
-  c_args : [
+  c_args: [
     cargs,
     '-DLOCALSTATEDIR="' + localstatedir + '"',
   ],
-  link_with : [
+  link_with: [
     fwupd,
     fwupdplugin,
   ],
-  dependencies : [
+  dependencies: [
     plugin_deps,
   ],
 )

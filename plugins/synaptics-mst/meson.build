@@ -8,28 +8,28 @@ install_data(['synaptics-mst.quirk'],
 
 shared_module('fu_plugin_synaptics_mst',
   fu_hash,
-  sources : [
+  sources: [
     'fu-plugin-synaptics-mst.c',
     'fu-synaptics-mst-common.c',
     'fu-synaptics-mst-connection.c',
     'fu-synaptics-mst-device.c',
     'fu-synaptics-mst-firmware.c',      # fuzzing
   ],
-  include_directories : [
+  include_directories: [
     root_incdir,
     fwupd_incdir,
     fwupdplugin_incdir,
   ],
-  install : true,
+  install: true,
   install_dir: plugin_dir,
-  c_args : [
+  c_args: [
     cargs,
   ],
-  link_with : [
+  link_with: [
     fwupd,
     fwupdplugin,
   ],
-  dependencies : [
+  dependencies: [
     plugin_deps,
   ],
 )
@@ -45,31 +45,31 @@ if get_option('tests')
   e = executable(
     'synaptics-mst-self-test',
     fu_hash,
-    sources : [
+    sources: [
       'fu-self-test.c',
       'fu-synaptics-mst-common.c',
       'fu-synaptics-mst-connection.c',
       'fu-synaptics-mst-device.c',
       'fu-synaptics-mst-firmware.c',
     ],
-    include_directories : [
+    include_directories: [
       root_incdir,
       fwupd_incdir,
       fwupdplugin_incdir,
     ],
-    dependencies : [
+    dependencies: [
       plugin_deps,
       valgrind,
     ],
-    link_with : [
+    link_with: [
       fwupd,
       fwupdplugin,
     ],
-    c_args : [
+    c_args: [
       cargs,
     ],
-    install : true,
-    install_dir : installed_test_bindir,
+    install: true,
+    install_dir: installed_test_bindir,
   )
   test('synaptics-mst-self-test', e, env: env)
 endif

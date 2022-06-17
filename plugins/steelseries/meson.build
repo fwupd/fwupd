@@ -7,7 +7,7 @@ install_data(['steelseries.quirk'],
 
 shared_module('fu_plugin_steelseries',
   fu_hash,
-  sources : [
+  sources: [
     'fu-plugin-steelseries.c',
     'fu-steelseries-device.c',
     'fu-steelseries-firmware.c',
@@ -18,19 +18,19 @@ shared_module('fu_plugin_steelseries',
     'fu-steelseries-gamepad.c',
     'fu-steelseries-sonic.c',
   ],
-  include_directories : [
+  include_directories: [
     root_incdir,
     fwupd_incdir,
     fwupdplugin_incdir,
   ],
-  install : true,
+  install: true,
   install_dir: plugin_dir,
-  link_with : [
+  link_with: [
     fwupd,
     fwupdplugin,
   ],
-  c_args : cargs,
-  dependencies : [
+  c_args: cargs,
+  dependencies: [
     plugin_deps,
   ],
 )

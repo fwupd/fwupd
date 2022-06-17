@@ -9,25 +9,25 @@ install_data([
 
 shared_module('fu_plugin_ep963x',
   fu_hash,
-  sources : [
+  sources: [
     'fu-ep963x-common.c',
     'fu-ep963x-device.c',
     'fu-ep963x-firmware.c',
     'fu-plugin-ep963x.c',
   ],
-  include_directories : [
+  include_directories: [
     root_incdir,
     fwupd_incdir,
     fwupdplugin_incdir,
   ],
-  install : true,
+  install: true,
   install_dir: plugin_dir,
-  link_with : [
+  link_with: [
     fwupd,
     fwupdplugin,
   ],
-  c_args : cargs,
-  dependencies : [
+  c_args: cargs,
+  dependencies: [
     plugin_deps,
   ],
 )

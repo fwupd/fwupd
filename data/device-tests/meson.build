@@ -45,5 +45,5 @@ install_data([
     'wacom-intuos-bt-m-main.json',
     'wacom-intuos-bt-s.json',
   ],
-  install_dir : join_paths(datadir, 'fwupd', 'device-tests'),
+  install_dir: join_paths(datadir, 'fwupd', 'device-tests'),
 )

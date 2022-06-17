@@ -8,7 +8,7 @@ install_data(['dfu.quirk'],
 dfu = static_library(
   'dfu',
   fu_hash,
-  sources : [
+  sources: [
     'fu-dfu-common.c',
     'fu-dfu-device.c',
     'fu-dfu-sector.c',
@@ -16,16 +16,16 @@ dfu = static_library(
     'fu-dfu-target-stm.c',
     'fu-dfu-target-avr.c',
   ],
-  dependencies : [
+  dependencies: [
     plugin_deps,
     libm,
   ],
-  link_with : [
+  link_with: [
     fwupd,
     fwupdplugin,
   ],
-  c_args : cargs,
-  include_directories : [
+  c_args: cargs,
+  include_directories: [
     root_incdir,
     fwupd_incdir,
     fwupdplugin_incdir,
@@ -34,22 +34,22 @@ dfu = static_library(
 
 shared_module('fu_plugin_dfu',
   fu_hash,
-  sources : [
+  sources: [
     'fu-plugin-dfu.c',
   ],
-  include_directories : [
+  include_directories: [
     root_incdir,
     fwupd_incdir,
     fwupdplugin_incdir,
   ],
-  install : true,
+  install: true,
   install_dir: plugin_dir,
-  c_args : cargs,
-  dependencies : [
+  c_args: cargs,
+  dependencies: [
     plugin_deps,
     libm,
   ],
-  link_with : [
+  link_with: [
     fwupd,
     fwupdplugin,
     dfu,
@@ -60,33 +60,33 @@ if get_option('compat_cli')
 fu_dfu_tool = executable(
   'dfu-tool',
   fu_hash,
-  sources : [
+  sources: [
     'fu-dfu-tool.c',
   ],
-  include_directories : [
+  include_directories: [
     root_incdir,
     fwupd_incdir,
     fwupdplugin_incdir,
   ],
-  dependencies : [
+  dependencies: [
     plugin_deps,
   ],
-  link_with : [
+  link_with: [
     dfu,
     fwupd,
     fwupdplugin,
   ],
-  c_args : cargs,
-  install : true,
-  install_dir : bindir
+  c_args: cargs,
+  install: true,
+  install_dir: bindir
 )
 endif
 
 if get_option('compat_cli') and get_option('man')
   configure_file(
-    input : 'dfu-tool.1',
-    output : 'dfu-tool.1',
-    configuration : conf,
+    input: 'dfu-tool.1',
+    output: 'dfu-tool.1',
+    configuration: conf,
     install: true,
     install_dir: join_paths(mandir, 'man1'),
   )
@@ -99,27 +99,27 @@ if get_option('tests')
   e = executable(
     'fu-dfu-self-test',
     fu_hash,
-    sources : [
+    sources: [
       'fu-dfu-self-test.c'
     ],
-    include_directories : [
+    include_directories: [
       root_incdir,
       fwupd_incdir,
       fwupdplugin_incdir,
     ],
-    dependencies : [
+    dependencies: [
       plugin_deps,
       libm,
     ],
-    link_with : [
+    link_with: [
       dfu,
       fwupd,
       fwupdplugin,
     ],
-    install : true,
-    install_dir : installed_test_bindir,
+    install: true,
+    install_dir: installed_test_bindir,
   )
-  test('fu-dfu-self-test', e, env : env)  # added to installed-tests
+  test('fu-dfu-self-test', e, env: env)  # added to installed-tests
 endif
 
 plugindfu_incdir = include_directories('.')

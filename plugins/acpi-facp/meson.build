@@ -3,23 +3,23 @@ cargs = ['-DG_LOG_DOMAIN="FuPluginAcpiFacp"']
 
 shared_module('fu_plugin_acpi_facp',
   fu_hash,
-  sources : [
+  sources: [
     'fu-plugin-acpi-facp.c',
     'fu-acpi-facp.c',
   ],
-  include_directories : [
+  include_directories: [
     root_incdir,
     fwupd_incdir,
     fwupdplugin_incdir,
   ],
-  install : true,
+  install: true,
   install_dir: plugin_dir,
-  link_with : [
+  link_with: [
     fwupd,
     fwupdplugin,
   ],
-  c_args : cargs,
-  dependencies : [
+  c_args: cargs,
+  dependencies: [
     plugin_deps,
   ],
 )
@@ -31,25 +31,25 @@ if get_option('tests')
   e = executable(
     'acpi-facp-self-test',
     fu_hash,
-    sources : [
+    sources: [
       'fu-self-test.c',
       'fu-acpi-facp.c',
     ],
-    include_directories : [
+    include_directories: [
       root_incdir,
       fwupd_incdir,
       fwupdplugin_incdir,
     ],
-    dependencies : [
+    dependencies: [
       plugin_deps,
     ],
-    link_with : [
+    link_with: [
       fwupd,
       fwupdplugin,
     ],
-    install : true,
-    install_dir : installed_test_bindir,
+    install: true,
+    install_dir: installed_test_bindir,
   )
-  test('acpi-facp-self-test', e, env : env)  # added to installed-tests
+  test('acpi-facp-self-test', e, env: env)  # added to installed-tests
 endif
 endif

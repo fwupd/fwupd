@@ -9,22 +9,22 @@ install_data([
 
 shared_module('fu_plugin_iommu',
   fu_hash,
-  sources : [
+  sources: [
     'fu-plugin-iommu.c',
   ],
-  include_directories : [
+  include_directories: [
     root_incdir,
     fwupd_incdir,
     fwupdplugin_incdir,
   ],
-  install : true,
+  install: true,
   install_dir: plugin_dir,
-  link_with : [
+  link_with: [
     fwupdplugin,
     fwupd,
   ],
-  c_args : cargs,
-  dependencies : [
+  c_args: cargs,
+  dependencies: [
     plugin_deps,
   ],
 )

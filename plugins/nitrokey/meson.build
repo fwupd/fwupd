@@ -7,24 +7,24 @@ install_data(['nitrokey.quirk'],
 
 shared_module('fu_plugin_nitrokey',
   fu_hash,
-  sources : [
+  sources: [
     'fu-nitrokey-device.c',
     'fu-nitrokey-common.c',
     'fu-plugin-nitrokey.c',
   ],
-  include_directories : [
+  include_directories: [
     root_incdir,
     fwupd_incdir,
     fwupdplugin_incdir,
   ],
-  install : true,
+  install: true,
   install_dir: plugin_dir,
-  link_with : [
+  link_with: [
     fwupd,
     fwupdplugin,
   ],
-  c_args : cargs,
-  dependencies : [
+  c_args: cargs,
+  dependencies: [
     plugin_deps,
   ],
 )
@@ -33,24 +33,24 @@ if get_option('tests')
   e = executable(
     'nitrokey-self-test',
     fu_hash,
-    sources : [
+    sources: [
       'fu-nitrokey-common.c',
       'fu-self-test.c',
     ],
-    include_directories : [
+    include_directories: [
       root_incdir,
       fwupd_incdir,
       fwupdplugin_incdir,
     ],
-    dependencies : [
+    dependencies: [
       plugin_deps,
       valgrind,
     ],
-    link_with : [
+    link_with: [
       fwupdplugin,
     ],
-    install : true,
-    install_dir : installed_test_bindir,
+    install: true,
+    install_dir: installed_test_bindir,
   )
   test('nitrokey-self-test', e)  # added to installed-tests
 endif

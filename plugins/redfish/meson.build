@@ -13,7 +13,7 @@ endif
 
 shared_module('fu_plugin_redfish',
   fu_hash,
-  sources : [
+  sources: [
     'fu-plugin-redfish.c',
     'fu-redfish-backend.c',
     'fu-redfish-common.c',     # fuzzing
@@ -26,26 +26,26 @@ shared_module('fu_plugin_redfish',
     'fu-redfish-smbios.c',     # fuzzing
     ipmi_src,
   ],
-  include_directories : [
+  include_directories: [
     root_incdir,
     fwupd_incdir,
     fwupdplugin_incdir,
   ],
-  install : true,
+  install: true,
   install_dir: plugin_dir,
-  link_with : [
+  link_with: [
     fwupd,
     fwupdplugin,
   ],
-  c_args : cargs,
-  dependencies : [
+  c_args: cargs,
+  dependencies: [
     plugin_deps,
     libcurl,
   ],
 )
 
 install_data(['redfish.conf'],
-  install_dir:  join_paths(sysconfdir, 'fwupd'),
+  install_dir: join_paths(sysconfdir, 'fwupd'),
 )
 
 if get_option('tests')
@@ -64,7 +64,7 @@ if get_option('tests')
   e = executable(
     'redfish-self-test',
     fu_hash,
-    sources : [
+    sources: [
       'fu-self-test.c',
       'fu-redfish-backend.c',
       'fu-redfish-common.c',
@@ -77,23 +77,23 @@ if get_option('tests')
       'fu-redfish-smbios.c',
       ipmi_src,
     ],
-    include_directories : [
+    include_directories: [
       root_incdir,
       fwupd_incdir,
       fwupdplugin_incdir,
     ],
-    c_args : cargs,
-    dependencies : [
+    c_args: cargs,
+    dependencies: [
       plugin_deps,
       libcurl,
     ],
-    link_with : [
+    link_with: [
       fwupd,
       fwupdplugin,
     ],
-    install : true,
-    install_dir : installed_test_bindir,
+    install: true,
+    install_dir: installed_test_bindir,
   )
-  test('redfish-self-test', e, env : env)  # added to installed-tests
+  test('redfish-self-test', e, env: env)  # added to installed-tests
 endif
 endif

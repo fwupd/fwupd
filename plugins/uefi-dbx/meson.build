@@ -7,25 +7,25 @@ install_data(['uefi-dbx.quirk'],
 
 shared_module('fu_plugin_uefi_dbx',
   fu_hash,
-  sources : [
+  sources: [
     'fu-plugin-uefi-dbx.c',
     'fu-uefi-dbx-common.c',
     'fu-uefi-dbx-device.c',
     'fu-efi-image.c',
   ],
-  include_directories : [
+  include_directories: [
     root_incdir,
     fwupd_incdir,
     fwupdplugin_incdir,
   ],
-  install : true,
+  install: true,
   install_dir: plugin_dir,
-  link_with : [
+  link_with: [
     fwupd,
     fwupdplugin,
   ],
-  c_args : cargs,
-  dependencies : [
+  c_args: cargs,
+  dependencies: [
     plugin_deps,
   ],
 )
@@ -37,60 +37,60 @@ if get_option('tests')
   e = executable(
     'uefi-dbx-self-test',
     fu_hash,
-    sources : [
+    sources: [
       'fu-self-test.c',
       'fu-uefi-dbx-common.c',
       'fu-efi-image.c',
     ],
-    include_directories : [
+    include_directories: [
       root_incdir,
       fwupd_incdir,
       fwupdplugin_incdir,
     ],
-    dependencies : [
+    dependencies: [
       plugin_deps,
     ],
-    link_with : [
+    link_with: [
       fwupd,
       fwupdplugin,
     ],
-    c_args : cargs,
-    install : true,
-    install_dir : installed_test_bindir,
+    c_args: cargs,
+    install: true,
+    install_dir: installed_test_bindir,
   )
-  test('uefi-dbx-self-test', e, env : env)  # added to installed-tests
+  test('uefi-dbx-self-test', e, env: env)  # added to installed-tests
 endif
 
 dbxtool = executable(
   'dbxtool',
   fu_hash,
-  sources : [
+  sources: [
     'fu-dbxtool.c',
     'fu-uefi-dbx-common.c',
     'fu-efi-image.c',
   ],
-  include_directories : [
+  include_directories: [
     root_incdir,
     fwupd_incdir,
     fwupdplugin_incdir,
   ],
-  dependencies : [
+  dependencies: [
     plugin_deps,
   ],
-  link_with : [
+  link_with: [
     fwupd,
     fwupdplugin,
   ],
-  install : true,
-  install_dir : bindir,
-  c_args : cargs,
+  install: true,
+  install_dir: bindir,
+  c_args: cargs,
 )
 
 if get_option('man')
   configure_file(
-    input : 'dbxtool.1',
-    output : 'dbxtool.1',
-    configuration : conf,
+    input: 'dbxtool.1',
+    output: 'dbxtool.1',
+    configuration: conf,
     install: true,
     install_dir: join_paths(mandir, 'man1'),
   )

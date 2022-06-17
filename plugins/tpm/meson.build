@@ -1,4 +1,4 @@
-tpm2tss_tpm = dependency('tss2-esys', version : '>= 2.0', required: get_option('plugin_tpm'))
+tpm2tss_tpm = dependency('tss2-esys', version: '>= 2.0', required: get_option('plugin_tpm'))
 
 if get_option('hsi') and \
    tpm2tss_tpm.found() and \
@@ -14,7 +14,7 @@ install_data([
 
 plugin_tpm = shared_module('fu_plugin_tpm',
   fu_hash,
-  sources : [
+  sources: [
     'fu-plugin-tpm.c',
     'fu-tpm-device.c',
     'fu-tpm-v1-device.c',
@@ -22,19 +22,19 @@ plugin_tpm = shared_module('fu_plugin_tpm',
     'fu-tpm-eventlog-common.c',
     'fu-tpm-eventlog-parser.c',
   ],
-  include_directories : [
+  include_directories: [
     root_incdir,
     fwupd_incdir,
     fwupdplugin_incdir,
   ],
-  install : true,
+  install: true,
   install_dir: plugin_dir,
-  link_with : [
+  link_with: [
     fwupdplugin,
     fwupd,
   ],
-  c_args : cargs,
-  dependencies : [
+  c_args: cargs,
+  dependencies: [
     plugin_deps,
     tpm2tss_tpm,
   ],
@@ -48,7 +48,7 @@ if get_option('tests')
   e = executable(
     'tpm-self-test',
     fu_hash,
-    sources : [
+    sources: [
       'fu-self-test.c',
       'fu-tpm-device.c',
       'fu-tpm-v1-device.c',
@@ -56,20 +56,20 @@ if get_option('tests')
       'fu-tpm-eventlog-common.c',
       'fu-tpm-eventlog-parser.c',
     ],
-    include_directories : [
+    include_directories: [
       root_incdir,
       fwupd_incdir,
       fwupdplugin_incdir,
     ],
-    dependencies : [
+    dependencies: [
       plugin_deps,
       tpm2tss_tpm,
     ],
-    link_with : [
+    link_with: [
       fwupd,
       fwupdplugin,
     ],
-    c_args : cargs
+    c_args: cargs
   )
   test('tpm-self-test', e, env: env)
 endif
@@ -77,21 +77,21 @@ endif
 executable(
   'fwupdtpmevlog',
   fu_hash,
-  sources : [
+  sources: [
     'fu-tpm-eventlog.c',
     'fu-tpm-eventlog-common.c',
     'fu-tpm-eventlog-parser.c',
   ],
-  include_directories : [
+  include_directories: [
     root_incdir,
     fwupd_incdir,
     fwupdplugin_incdir,
   ],
-  dependencies : [
+  dependencies: [
       plugin_deps,
       tpm2tss_tpm,
   ],
-  link_with : [
+  link_with: [
     fwupd,
     fwupdplugin,
   ],

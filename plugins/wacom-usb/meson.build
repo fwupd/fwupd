@@ -7,7 +7,7 @@ install_data(['wacom-usb.quirk'],
 
 shared_module('fu_plugin_wacom_usb',
   fu_hash,
-  sources : [
+  sources: [
     'fu-wac-common.c',
     'fu-wac-android-device.c',
     'fu-wac-device.c',
@@ -18,18 +18,18 @@ shared_module('fu_plugin_wacom_usb',
     'fu-wac-module-touch.c',
     'fu-plugin-wacom-usb.c',
   ],
-  include_directories : [
+  include_directories: [
     root_incdir,
     fwupd_incdir,
     fwupdplugin_incdir,
   ],
-  install : true,
+  install: true,
   install_dir: plugin_dir,
-  c_args : cargs,
-  dependencies : [
+  c_args: cargs,
+  dependencies: [
     plugin_deps,
   ],
-  link_with : [
+  link_with: [
     fwupd,
     fwupdplugin,
   ],
@@ -44,27 +44,27 @@ if get_option('tests')
   e = executable(
     'wacom-usb-self-test',
     fu_hash,
-    sources : [
+    sources: [
       'fu-self-test.c',
       'fu-wac-common.c',
       'fu-wac-firmware.c',
     ],
-    include_directories : [
+    include_directories: [
       root_incdir,
       fwupd_incdir,
       fwupdplugin_incdir,
     ],
-    dependencies : [
+    dependencies: [
       plugin_deps,
     ],
-    link_with : [
+    link_with: [
       fwupd,
       fwupdplugin,
     ],
-    c_args : cargs,
-    install : true,
-    install_dir : installed_test_bindir,
+    c_args: cargs,
+    install: true,
+    install_dir: installed_test_bindir,
   )
-  test('wacom-usb-self-test', e, env : env)  # added to installed-tests
+  test('wacom-usb-self-test', e, env: env)  # added to installed-tests
 endif
 endif

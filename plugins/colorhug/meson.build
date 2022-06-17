@@ -9,24 +9,24 @@ install_data([
 
 shared_module('fu_plugin_colorhug',
   fu_hash,
-  sources : [
+  sources: [
     'fu-colorhug-common.c',
     'fu-colorhug-device.c',
     'fu-plugin-colorhug.c',
   ],
-  include_directories : [
+  include_directories: [
     root_incdir,
     fwupd_incdir,
     fwupdplugin_incdir,
   ],
-  install : true,
+  install: true,
   install_dir: plugin_dir,
-  link_with : [
+  link_with: [
     fwupd,
     fwupdplugin,
   ],
-  c_args : cargs,
-  dependencies : [
+  c_args: cargs,
+  dependencies: [
     plugin_deps,
   ],
 )

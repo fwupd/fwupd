@@ -9,26 +9,26 @@ install_data(['parade-lspcon.quirk'],
 
 shared_module('fu_plugin_parade_lspcon',
   fu_hash,
-  sources : [
+  sources: [
     'fu-parade-lspcon-device.c',
     'fu-plugin-parade-lspcon.c',
   ],
-  include_directories : [
+  include_directories: [
     root_incdir,
     fwupd_incdir,
     fwupdplugin_incdir,
   ],
-  install : true,
+  install: true,
   install_dir: plugin_dir,
-  link_with : [
+  link_with: [
     fwupd,
     fwupdplugin,
   ],
-  c_args : [
+  c_args: [
     cargs,
     '-DLOCALSTATEDIR="' + localstatedir + '"',
   ],
-  dependencies : [
+  dependencies: [
     plugin_deps,
   ],
 )

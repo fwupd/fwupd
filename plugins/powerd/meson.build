@@ -4,22 +4,22 @@ if get_option('plugin_powerd').disable_auto_if(host_machine.system() != 'linux')
 
 shared_module('fu_plugin_powerd',
   fu_hash,
-  sources : [
+  sources: [
     'fu-plugin-powerd.c',
   ],
-  include_directories : [
+  include_directories: [
     root_incdir,
     fwupd_incdir,
     fwupdplugin_incdir,
   ],
-  install : true,
+  install: true,
   install_dir: plugin_dir,
-  link_with : [
+  link_with: [
     fwupd,
     fwupdplugin,
   ],
-  c_args : cargs,
-  dependencies : [
+  c_args: cargs,
+  dependencies: [
     plugin_deps,
   ],
 )
