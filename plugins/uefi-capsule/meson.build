@@ -67,7 +67,6 @@ shared_module('fu_plugin_uefi_capsule',
 if get_option('compat_cli')
 fwupdate = executable(
   'fwupdate',
-  resources_src,
   fu_hash,
   sources : [
     'fu-uefi-tool.c',
