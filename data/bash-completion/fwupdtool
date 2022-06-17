@@ -123,7 +123,7 @@ _fwupdtool()
 	esac
 
 	case $command in
-	get-details|install|install-blob|firmware-dump)
+	get-details|install|install-blob|firmware-dump|firmware-read)
 		#find files
 		if [[ "$args" = "2" ]]; then
 			_filedir
