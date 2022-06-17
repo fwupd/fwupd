@@ -1,8 +1,8 @@
 project('fwupd', 'c',
-  version : '1.8.2',
-  license : 'LGPL-2.1+',
-  meson_version : '>=0.60.0',
-  default_options : ['warning_level=2', 'c_std=c99'],
+  version: '1.8.2',
+  license: 'LGPL-2.1+',
+  meson_version: '>=0.60.0',
+  default_options: ['warning_level=2', 'c_std=c99'],
 )
 
 fwupd_version = meson.project_version()
@@ -18,7 +18,7 @@ conf.set('MICRO_VERSION', fwupd_micro_version)
 conf.set_quoted('PACKAGE_VERSION', fwupd_version)
 
 # get source version, falling back to package version
-git = find_program('git', required : false)
+git = find_program('git', required: false)
 tag = false
 if git.found()
   source_version = run_command(git, 'describe').stdout().strip()
@@ -115,10 +115,10 @@ if get_option('static_analysis') and host_machine.system() != 'windows'
   warning_flags += ['-fanalyzer', '-Wno-analyzer-null-dereference']
 endif
 cc = meson.get_compiler('c')
-add_project_arguments(cc.get_supported_arguments(warning_flags), language : 'c')
+add_project_arguments(cc.get_supported_arguments(warning_flags), language: 'c')
 
 if not meson.is_cross_build()
-  add_project_arguments('-fstack-protector-strong', language : 'c')
+  add_project_arguments('-fstack-protector-strong', language: 'c')
 endif
 
 # enable full RELRO where possible
@@ -140,24 +140,24 @@ add_project_link_arguments(
   language: 'c'
 )
 
-add_project_arguments('-DFWUPD_COMPILATION', language : 'c')
+add_project_arguments('-DFWUPD_COMPILATION', language: 'c')
 
 # Needed for realpath(), syscall(), cfmakeraw(), etc.
-add_project_arguments('-D_DEFAULT_SOURCE', language : 'c')
+add_project_arguments('-D_DEFAULT_SOURCE', language: 'c')
 
 # do not use deprecated symbols or defines internally
-add_project_arguments('-DFWUPD_DISABLE_DEPRECATED', language : 'c')
+add_project_arguments('-DFWUPD_DISABLE_DEPRECATED', language: 'c')
 
 # needed for symlink() and BYTE_ORDER
-add_project_arguments('-D_BSD_SOURCE', language : 'c')
-add_project_arguments('-D__BSD_VISIBLE', language : 'c')
-add_project_arguments('-D_XOPEN_SOURCE=700', language : 'c')
+add_project_arguments('-D_BSD_SOURCE', language: 'c')
+add_project_arguments('-D__BSD_VISIBLE', language: 'c')
+add_project_arguments('-D_XOPEN_SOURCE=700', language: 'c')
 
 # needed for memfd_create()
-add_project_arguments('-D_GNU_SOURCE', language : 'c')
+add_project_arguments('-D_GNU_SOURCE', language: 'c')
 
 # needed for memmem()
-add_project_arguments('-D_DARWIN_C_SOURCE=900000', language : 'c')
+add_project_arguments('-D_DARWIN_C_SOURCE=900000', language: 'c')
 
 # sanity check
 if get_option('build') == 'all'
@@ -196,8 +196,8 @@ mandir = join_paths(prefix, get_option('mandir'))
 localedir = join_paths(prefix, get_option('localedir'))
 
 diffcmd = find_program('diff')
-gio = dependency('gio-2.0', version : '>= 2.45.8')
-giounix = dependency('gio-unix-2.0', version : '>= 2.45.8', required: false)
+gio = dependency('gio-2.0', version: '>= 2.45.8')
+giounix = dependency('gio-unix-2.0', version: '>= 2.45.8', required: false)
 if giounix.found()
   conf.set('HAVE_GIO_UNIX', '1')
 endif
@@ -206,7 +206,7 @@ if gio.version().version_compare ('>= 2.55.0')
 endif
 gmodule = dependency('gmodule-2.0')
 if build_standalone
-gudev = dependency('gudev-1.0', version : '>= 232',
+gudev = dependency('gudev-1.0', version: '>= 232',
                     required: get_option('gudev').disable_auto_if(host_machine.system() != 'linux'))
 if gudev.found()
   conf.set('HAVE_GUDEV', '1')
@@ -218,8 +218,8 @@ endif
 if get_option('hsi')
   conf.set('HAVE_HSI', '1')
 endif
-libxmlb = dependency('xmlb', version : '>= 0.1.13', fallback : ['libxmlb', 'libxmlb_dep'])
-gusb = dependency('gusb', version : '>= 0.3.0', fallback : ['gusb', 'gusb_dep'], required: get_option('gusb'))
+libxmlb = dependency('xmlb', version: '>= 0.1.13', fallback: ['libxmlb', 'libxmlb_dep'])
+gusb = dependency('gusb', version: '>= 0.3.0', fallback: ['gusb', 'gusb_dep'], required: get_option('gusb'))
 if gusb.found()
   conf.set('HAVE_GUSB', '1')
 endif
@@ -235,24 +235,24 @@ if libarchive.found()
   endif
 endif
 endif
-libjcat = dependency('jcat', version : '>= 0.1.4', fallback : ['libjcat', 'libjcat_dep'])
-libjsonglib = dependency('json-glib-1.0', version : '>= 1.1.1')
+libjcat = dependency('jcat', version: '>= 0.1.4', fallback: ['libjcat', 'libjcat_dep'])
+libjsonglib = dependency('json-glib-1.0', version: '>= 1.1.1')
 valgrind = dependency('valgrind', required: false)
-libcurl = dependency('libcurl', version : '>= 7.56.0', required: get_option('curl'))
+libcurl = dependency('libcurl', version: '>= 7.56.0', required: get_option('curl'))
 if libcurl.found()
   conf.set('HAVE_LIBCURL', '1')
   if libcurl.version().version_compare('>= 7.62.0')
     conf.set('HAVE_LIBCURL_7_62_0', '1')
   endif
 endif
-polkit = dependency('polkit-gobject-1', version : '>= 0.103',
+polkit = dependency('polkit-gobject-1', version: '>= 0.103',
          required: get_option('polkit').disable_auto_if(host_machine.system() != 'linux'))
 if polkit.found()
   conf.set('HAVE_POLKIT', '1')
   if polkit.version().version_compare('>= 0.114')
     conf.set('HAVE_POLKIT_0_114', '1')
   endif
-  conf.set_quoted ('POLKIT_ACTIONDIR', polkit.get_variable(pkgconfig : 'actiondir'))
+  conf.set_quoted ('POLKIT_ACTIONDIR', polkit.get_variable(pkgconfig: 'actiondir'))
 endif
 if build_daemon
   if not polkit.found()
@@ -261,11 +261,11 @@ if build_daemon
   udevdir = get_option('udevdir')
   if udevdir == '' and host_machine.system() == 'linux'
     udev = dependency('udev')
-    udevdir = udev.get_variable(pkgconfig : 'udevdir')
+    udevdir = udev.get_variable(pkgconfig: 'udevdir')
   endif
 endif
 libm = cc.find_library('m', required: false)
-libgcab = dependency('libgcab-1.0', version : '>= 1.0', fallback : ['gcab', 'gcab_dep'])
+libgcab = dependency('libgcab-1.0', version: '>= 1.0', fallback: ['gcab', 'gcab_dep'])
 if libgcab.type_name() == 'pkgconfig' and cc.has_function('gcab_file_set_bytes', dependencies: libgcab)
   conf.set('HAVE_GCAB_FILE_SET_BYTES', '1')
 endif
@@ -277,7 +277,7 @@ else
   python3 = find_program('python3.8', 'python3', 'python3.9')
 endif
 
-gnutls = dependency('gnutls', version : '>= 3.6.0', required: get_option('gnutls'))
+gnutls = dependency('gnutls', version: '>= 3.6.0', required: get_option('gnutls'))
 if gnutls.found()
   conf.set('HAVE_GNUTLS', '1')
 endif
@@ -287,7 +287,7 @@ if lzma.found()
   conf.set('HAVE_LZMA', '1')
 endif
 
-cbor = dependency('libcbor', version : '>= 0.7.0', required: get_option('cbor'))
+cbor = dependency('libcbor', version: '>= 0.7.0', required: get_option('cbor'))
 if cbor.found()
   conf.set('HAVE_CBOR', '1')
 endif
@@ -395,7 +395,7 @@ endif
 if cc.has_header_symbol('fcntl.h', 'F_OFD_SETLK')
   conf.set('HAVE_OFD', '1')
 endif
-if cc.has_function('pwrite', args : '-D_XOPEN_SOURCE')
+if cc.has_function('pwrite', args: '-D_XOPEN_SOURCE')
   conf.set('HAVE_PWRITE', '1')
 endif
 
@@ -409,7 +409,7 @@ efiboot = dependency('efiboot', required: get_option('plugin_uefi_capsule'))
 efivar = dependency('efivar', required: get_option('plugin_uefi_capsule'))
 if build_standalone and efiboot.found() and efivar.found()
 
-  if cc.has_header_symbol('efivar/efivar-types.h', 'efi_time_t', dependencies : efivar)
+  if cc.has_header_symbol('efivar/efivar-types.h', 'efi_time_t', dependencies: efivar)
     conf.set('HAVE_EFI_TIME_T', '1')
   endif
 
@@ -449,29 +449,29 @@ umockdev = dependency('umockdev-1.0', required: false)
 
 if build_standalone
   libflashrom = dependency('flashrom', 
-                            fallback : ['flashrom', 'flashrom_dep'], 
+                            fallback: ['flashrom', 'flashrom_dep'], 
                             required: get_option('plugin_flashrom').disable_auto_if(host_machine.system() != 'linux'))
 endif
 
 if libsystemd.found()
-  systemd = dependency('systemd', version : '>= 211', required: get_option('systemd'))
+  systemd = dependency('systemd', version: '>= 211', required: get_option('systemd'))
   conf.set('HAVE_SYSTEMD' , '1')
   conf.set('HAVE_LOGIND' , '1')
   systemd_root_prefix = get_option('systemd_root_prefix')
   if systemd_root_prefix == ''
-    systemdunitdir = systemd.get_variable(pkgconfig : 'systemdsystemunitdir')
-    systemdsystempresetdir = systemd.get_variable(pkgconfig : 'systemdsystempresetdir')
-    systemd_shutdown_dir = systemd.get_variable(pkgconfig : 'systemdshutdowndir')
-    systemd_modules_load_dir = systemd.get_variable(pkgconfig : 'modulesloaddir')
+    systemdunitdir = systemd.get_variable(pkgconfig: 'systemdsystemunitdir')
+    systemdsystempresetdir = systemd.get_variable(pkgconfig: 'systemdsystempresetdir')
+    systemd_shutdown_dir = systemd.get_variable(pkgconfig: 'systemdshutdowndir')
+    systemd_modules_load_dir = systemd.get_variable(pkgconfig: 'modulesloaddir')
   else
-    systemdunitdir = systemd.get_variable(pkgconfig : 'systemdsystemunitdir', pkgconfig_define: ['rootprefix', systemd_root_prefix])
-    systemdsystempresetdir = systemd.get_variable(pkgconfig : 'systemdsystempresetdir', pkgconfig_define: ['rootprefix', systemd_root_prefix])
+    systemdunitdir = systemd.get_variable(pkgconfig: 'systemdsystemunitdir', pkgconfig_define: ['rootprefix', systemd_root_prefix])
+    systemdsystempresetdir = systemd.get_variable(pkgconfig: 'systemdsystempresetdir', pkgconfig_define: ['rootprefix', systemd_root_prefix])
     systemd_root_prefix_varname = 'root_prefix'
     if systemd.version().version_compare('< 246')
       systemd_root_prefix_varname = 'rootprefix'
     endif
-    systemd_shutdown_dir = systemd.get_variable(pkgconfig : 'systemdshutdowndir', pkgconfig_define: [systemd_root_prefix_varname, systemd_root_prefix])
-    systemd_modules_load_dir = systemd.get_variable(pkgconfig : 'modulesloaddir', pkgconfig_define: [systemd_root_prefix_varname, systemd_root_prefix])
+    systemd_shutdown_dir = systemd.get_variable(pkgconfig: 'systemdshutdowndir', pkgconfig_define: [systemd_root_prefix_varname, systemd_root_prefix])
+    systemd_modules_load_dir = systemd.get_variable(pkgconfig: 'modulesloaddir', pkgconfig_define: [systemd_root_prefix_varname, systemd_root_prefix])
   endif
 endif
 
@@ -524,8 +524,8 @@ conf.set_quoted('MOTD_FILE', motd_file)
 conf.set_quoted('MOTD_DIR', motd_dir)
 
 configure_file(
-  output : 'config.h',
-  configuration : conf
+  output: 'config.h',
+  configuration: conf
 )
 
 protobufc = dependency('libprotobuf-c', required: get_option('plugin_logitech_bulkcontroller'))
@@ -560,7 +560,7 @@ if polkit.found()
   subdir('policy')
 endif
 if build_standalone
-  gcab = find_program('gcab', required : get_option('tests'))
+  gcab = find_program('gcab', required: get_option('tests'))
   subdir('data')
   subdir('po')
   subdir('libfwupdplugin')

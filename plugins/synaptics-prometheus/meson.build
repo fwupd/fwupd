@@ -7,26 +7,26 @@ install_data(['synaptics-prometheus.quirk'],
 
 shared_module('fu_plugin_synaptics_prometheus',
   fu_hash,
-  sources : [
+  sources: [
     'fu-plugin-synaptics-prometheus.c',
     'fu-synaprom-common.c',
     'fu-synaprom-config.c',
     'fu-synaprom-device.c',
     'fu-synaprom-firmware.c',       # fuzzing
   ],
-  include_directories : [
+  include_directories: [
     root_incdir,
     fwupd_incdir,
     fwupdplugin_incdir,
   ],
-  install : true,
+  install: true,
   install_dir: plugin_dir,
-  link_with : [
+  link_with: [
     fwupd,
     fwupdplugin,
   ],
-  c_args : cargs,
-  dependencies : [
+  c_args: cargs,
+  dependencies: [
     plugin_deps,
   ],
 )
@@ -40,29 +40,29 @@ if get_option('tests')
   e = executable(
     'synaptics-prometheus-self-test',
     fu_hash,
-    sources : [
+    sources: [
       'fu-self-test.c',
       'fu-synaprom-common.c',
       'fu-synaprom-config.c',
       'fu-synaprom-device.c',
       'fu-synaprom-firmware.c',
     ],
-    include_directories : [
+    include_directories: [
       root_incdir,
       fwupd_incdir,
       fwupdplugin_incdir,
     ],
-    dependencies : [
+    dependencies: [
       plugin_deps,
     ],
-    link_with : [
+    link_with: [
       fwupd,
       fwupdplugin,
     ],
-    c_args : cargs,
-    install : true,
-    install_dir : installed_test_bindir,
+    c_args: cargs,
+    install: true,
+    install_dir: installed_test_bindir,
   )
-  test('synaptics-prometheus-self-test', e, env : env)  # added to installed-tests
+  test('synaptics-prometheus-self-test', e, env: env)  # added to installed-tests
 endif
 endif

@@ -26,7 +26,7 @@ endif
 
 if build_standalone
   install_data(['daemon.conf'],
-    install_dir : join_paths(sysconfdir, 'fwupd')
+    install_dir: join_paths(sysconfdir, 'fwupd')
   )
   install_data(['power.quirk', 'cfi.quirk'],
     install_dir: join_paths(datadir, 'fwupd', 'quirks.d'))
@@ -37,18 +37,18 @@ if get_option('metainfo')
     install_dir: join_paths(datadir, 'metainfo')
   )
   install_data(['org.freedesktop.fwupd.svg'],
-    install_dir : join_paths(datadir, 'icons', 'hicolor', 'scalable', 'apps')
+    install_dir: join_paths(datadir, 'icons', 'hicolor', 'scalable', 'apps')
   )
 endif
 
 if build_daemon
   install_data(['org.freedesktop.fwupd.conf'],
-    install_dir : join_paths(datadir, 'dbus-1', 'system.d')
+    install_dir: join_paths(datadir, 'dbus-1', 'system.d')
   )
 
   if gudev.found()
     install_data(['90-fwupd-devices.rules'],
-      install_dir : join_paths(udevdir, 'rules.d')
+      install_dir: join_paths(udevdir, 'rules.d')
     )
   endif
 
@@ -92,9 +92,9 @@ if build_daemon
     # replace @bindir@
     if offline.allowed()
       configure_file(
-        input : 'fwupd-offline-update.service.in',
-        output : 'fwupd-offline-update.service',
-        configuration : con2,
+        input: 'fwupd-offline-update.service.in',
+        output: 'fwupd-offline-update.service',
+        configuration: con2,
         install: true,
         install_dir: systemdunitdir,
       )
@@ -102,18 +102,18 @@ if build_daemon
 
     # replace @dynamic_options@
     configure_file(
-      input : 'fwupd.service.in',
-      output : 'fwupd.service',
-      configuration : con2,
+      input: 'fwupd.service.in',
+      output: 'fwupd.service',
+      configuration: con2,
       install: true,
       install_dir: systemdunitdir,
     )
 
     # for activation
     configure_file(
-      input : 'fwupd.shutdown.in',
-      output : 'fwupd.shutdown',
-      configuration : con2,
+      input: 'fwupd.shutdown.in',
+      output: 'fwupd.shutdown',
+      configuration: con2,
       install: true,
       install_dir: systemd_shutdown_dir,
     )
@@ -125,9 +125,9 @@ if build_daemon
 
     # replace @libexecdir@
     configure_file(
-      input : 'org.freedesktop.fwupd.service.in',
-      output : 'org.freedesktop.fwupd.service',
-      configuration : con2,
+      input: 'org.freedesktop.fwupd.service.in',
+      output: 'org.freedesktop.fwupd.service',
+      configuration: con2,
       install: true,
       install_dir: join_paths(datadir,
                               'dbus-1',

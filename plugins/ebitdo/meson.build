@@ -7,25 +7,25 @@ install_data(['ebitdo.quirk'],
 
 shared_module('fu_plugin_ebitdo',
   fu_hash,
-  sources : [
+  sources: [
     'fu-plugin-ebitdo.c',
     'fu-ebitdo-common.c',
     'fu-ebitdo-device.c',
     'fu-ebitdo-firmware.c',     # fuzzing
   ],
-  include_directories : [
+  include_directories: [
     root_incdir,
     fwupd_incdir,
     fwupdplugin_incdir,
   ],
-  install : true,
+  install: true,
   install_dir: plugin_dir,
-  link_with : [
+  link_with: [
     fwupd,
     fwupdplugin,
   ],
-  c_args : cargs,
-  dependencies : [
+  c_args: cargs,
+  dependencies: [
     plugin_deps,
   ],
 )

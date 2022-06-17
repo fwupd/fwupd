@@ -1,7 +1,7 @@
 
 gen = generator(protoc, \
-  output    : ['@BASENAME@.pb-c.c', '@BASENAME@.pb-c.h'],
-  arguments : ['--proto_path=@CURRENT_SOURCE_DIR@', '--c_out=@BUILD_DIR@', '@INPUT@'])
+  output: ['@BASENAME@.pb-c.c', '@BASENAME@.pb-c.h'],
+  arguments: ['--proto_path=@CURRENT_SOURCE_DIR@', '--c_out=@BUILD_DIR@', '@INPUT@'])
 
 src = [
        'antiflicker.proto',

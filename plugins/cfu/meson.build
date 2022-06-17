@@ -10,24 +10,24 @@ install_data([
 
 shared_module('fu_plugin_cfu',
   fu_hash,
-  sources : [
+  sources: [
     'fu-cfu-device.c',
     'fu-cfu-module.c',
     'fu-plugin-cfu.c',
   ],
-  include_directories : [
+  include_directories: [
     root_incdir,
     fwupd_incdir,
     fwupdplugin_incdir,
   ],
-  install : true,
+  install: true,
   install_dir: plugin_dir,
-  link_with : [
+  link_with: [
     fwupd,
     fwupdplugin,
   ],
-  c_args : cargs,
-  dependencies : [
+  c_args: cargs,
+  dependencies: [
     plugin_deps,
   ],
 )

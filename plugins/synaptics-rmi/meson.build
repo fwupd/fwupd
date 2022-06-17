@@ -10,7 +10,7 @@ install_data(['synaptics-rmi.quirk'],
 
 shared_module('fu_plugin_synaptics_rmi',
   fu_hash,
-  sources : [
+  sources: [
     'fu-plugin-synaptics-rmi.c',
     'fu-synaptics-rmi-common.c',      # fuzzing
     'fu-synaptics-rmi-device.c',
@@ -21,18 +21,18 @@ shared_module('fu_plugin_synaptics_rmi',
     'fu-synaptics-rmi-v7-device.c',
     'fu-synaptics-rmi-firmware.c',    # fuzzing
   ],
-  include_directories : [
+  include_directories: [
     root_incdir,
     fwupd_incdir,
     fwupdplugin_incdir,
   ],
-  install : true,
+  install: true,
   install_dir: plugin_dir,
-  c_args : cargs,
-  dependencies : [
+  c_args: cargs,
+  dependencies: [
     plugin_deps,
   ],
-  link_with : [
+  link_with: [
     fwupd,
     fwupdplugin,
   ],
@@ -47,26 +47,26 @@ if get_option('tests')
   e = executable(
     'synaptics-rmi-self-test',
     fu_hash,
-    sources : [
+    sources: [
       'fu-self-test.c',
       'fu-synaptics-rmi-common.c',
       'fu-synaptics-rmi-firmware.c',
     ],
-    include_directories : [
+    include_directories: [
       root_incdir,
       fwupd_incdir,
       fwupdplugin_incdir,
     ],
-    dependencies : [
+    dependencies: [
       plugin_deps,
     ],
-    link_with : [
+    link_with: [
       fwupd,
       fwupdplugin,
     ],
-    install : true,
-    install_dir : installed_test_bindir,
+    install: true,
+    install_dir: installed_test_bindir,
   )
-  test('synaptics-rmi-self-test', e, env : env)
+  test('synaptics-rmi-self-test', e, env: env)
 endif
 endif

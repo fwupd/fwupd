@@ -4,24 +4,24 @@ cargs = ['-DG_LOG_DOMAIN="FuPluginLenovoThinkLmi"']
 
 shared_module('fu_plugin_lenovo_thinklmi',
   fu_hash,
-  sources : [
+  sources: [
     'fu-plugin-lenovo-thinklmi.c',
   ],
-  include_directories : [
+  include_directories: [
     root_incdir,
     fwupd_incdir,
     fwupdplugin_incdir,
   ],
-  install : true,
+  install: true,
   install_dir: plugin_dir,
-  c_args : [
+  c_args: [
     cargs,
   ],
-  link_with : [
+  link_with: [
     fwupd,
     fwupdplugin,
   ],
-  dependencies : [
+  dependencies: [
     plugin_deps,
   ],
 )
@@ -34,25 +34,25 @@ if get_option('tests')
   e = executable(
     'lenovo-thinklmi-self-test',
     fu_hash,
-    sources : [
+    sources: [
       'fu-self-test.c',
     ],
-    include_directories : [
+    include_directories: [
       root_incdir,
       fwupd_incdir,
       fwupdplugin_incdir,
     ],
-    dependencies : [
+    dependencies: [
       plugin_deps,
     ],
-    link_with : [
+    link_with: [
       fwupd,
       fwupdplugin,
     ],
-    c_args : [
+    c_args: [
       cargs,
     ],
   )
-  test('lenovo-thinklmi-self-test', e, env : env)
+  test('lenovo-thinklmi-self-test', e, env: env)
 endif
 endif

@@ -1,7 +1,7 @@
 project('qt5-thread-test', 'cpp',
-  license : 'LGPL-2.1+',
+  license: 'LGPL-2.1+',
 )
-add_project_arguments('-fPIC', language : 'cpp')
+add_project_arguments('-fPIC', language: 'cpp')
 qt5core = dependency('Qt5Core')
 qt5concurrent = dependency('Qt5Concurrent')
 glib2 = dependency('glib-2.0')
@@ -11,10 +11,10 @@ env = environment()
 env.set('G_DEBUG', 'fatal-criticals')
 e = executable(
   'qt-thread-test',
-  sources : [
+  sources: [
     'qt-thread-test.cpp'
   ],
-  dependencies : [
+  dependencies: [
     qt5core,
     qt5concurrent,
     glib2,

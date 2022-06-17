@@ -7,24 +7,24 @@ install_data(['uefi-recovery.quirk'],
 
 shared_module('fu_plugin_uefi_recovery',
   fu_hash,
-  sources : [
+  sources: [
     'fu-plugin-uefi-recovery.c',
   ],
-  include_directories : [
+  include_directories: [
     root_incdir,
     fwupd_incdir,
     fwupdplugin_incdir,
   ],
-  install : true,
+  install: true,
   install_dir: plugin_dir,
-  link_with : [
+  link_with: [
     fwupd,
     fwupdplugin,
   ],
-  c_args : [
+  c_args: [
     cargs,
   ],
-  dependencies : [
+  dependencies: [
     plugin_deps,
   ],
 )

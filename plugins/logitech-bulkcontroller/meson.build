@@ -8,25 +8,25 @@ install_data(['logitech-bulkcontroller.quirk'],
 subdir('proto')
 shared_module('fu_plugin_logitech_bulkcontroller',
   fu_hash,
-  sources : [
+  sources: [
     generated,
     'fu-logitech-bulkcontroller-common.c',
     'fu-logitech-bulkcontroller-device.c',
     'fu-plugin-logitech-bulkcontroller.c',
   ],
-  include_directories : [
+  include_directories: [
     root_incdir,
     fwupd_incdir,
     fwupdplugin_incdir,
   ],
-  install : true,
+  install: true,
   install_dir: plugin_dir,
-  link_with : [
+  link_with: [
     fwupd,
     fwupdplugin,
   ],
-  c_args : cargs,
-  dependencies : [
+  c_args: cargs,
+  dependencies: [
     plugin_deps,
   ],
 )

@@ -13,26 +13,26 @@ install_data(['intel-spi.quirk'],
 
 shared_module('fu_plugin_intel_spi',
   fu_hash,
-  sources : [
+  sources: [
     'fu-ifd-device.c',
     'fu-intel-spi-common.c',
     'fu-intel-spi-device.c',
     'fu-pci-device.c',
     'fu-plugin-intel-spi.c',
   ],
-  include_directories : [
+  include_directories: [
     root_incdir,
     fwupd_incdir,
     fwupdplugin_incdir,
   ],
-  install : true,
+  install: true,
   install_dir: plugin_dir,
-  link_with : [
+  link_with: [
     fwupd,
     fwupdplugin,
   ],
-  c_args : cargs,
-  dependencies : [
+  c_args: cargs,
+  dependencies: [
     plugin_deps,
   ],
 )

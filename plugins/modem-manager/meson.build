@@ -1,6 +1,6 @@
-libmm_glib = dependency('mm-glib', version : '>= 1.10.0', required: get_option('plugin_modem_manager'))
-libqmi_glib = dependency('qmi-glib', version : '>= 1.23.1', required: get_option('plugin_modem_manager'))
-libmbim_glib = dependency('mbim-glib', version : '>= 1.22.0', required: get_option('plugin_modem_manager'))
+libmm_glib = dependency('mm-glib', version: '>= 1.10.0', required: get_option('plugin_modem_manager'))
+libqmi_glib = dependency('qmi-glib', version: '>= 1.23.1', required: get_option('plugin_modem_manager'))
+libmbim_glib = dependency('mbim-glib', version: '>= 1.22.0', required: get_option('plugin_modem_manager'))
 
 if libmm_glib.found() and \
    libqmi_glib.found() and \
@@ -17,7 +17,7 @@ install_data(['modem-manager.quirk'],
 
 shared_module('fu_plugin_modem_manager',
   fu_hash,
-  sources : [
+  sources: [
     'fu-plugin-modem-manager.c',
     'fu-mm-device.c',
     'fu-qmi-pdc-updater.c',
@@ -26,21 +26,21 @@ shared_module('fu_plugin_modem_manager',
     'fu-sahara-loader.c',
     'fu-mm-utils.c'
   ],
-  include_directories : [
+  include_directories: [
     root_incdir,
     fwupd_incdir,
     fwupdplugin_incdir,
   ],
-  install : true,
+  install: true,
   install_dir: plugin_dir,
-  c_args : [
+  c_args: [
     cargs,
   ],
-  link_with : [
+  link_with: [
     fwupd,
     fwupdplugin,
   ],
-  dependencies : [
+  dependencies: [
     plugin_deps,
     libmm_glib,
     libqmi_glib,

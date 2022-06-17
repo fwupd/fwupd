@@ -9,7 +9,7 @@ install_data([
 
 shared_module('fu_plugin_hailuck',
   fu_hash,
-  sources : [
+  sources: [
     'fu-hailuck-common.c',
     'fu-hailuck-bl-device.c',
     'fu-hailuck-kbd-device.c',
@@ -17,19 +17,19 @@ shared_module('fu_plugin_hailuck',
     'fu-hailuck-tp-device.c',
     'fu-plugin-hailuck.c',
   ],
-  include_directories : [
+  include_directories: [
     root_incdir,
     fwupd_incdir,
     fwupdplugin_incdir,
   ],
-  install : true,
+  install: true,
   install_dir: plugin_dir,
-  link_with : [
+  link_with: [
     fwupd,
     fwupdplugin,
   ],
-  c_args : cargs,
-  dependencies : [
+  c_args: cargs,
+  dependencies: [
     plugin_deps,
   ],
 )

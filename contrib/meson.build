@@ -8,9 +8,9 @@ con2.set('FWUPD_VERSION', fwupd_version)
 con2.set('FWUPD_PLUGINVER', libfwupdplugin_lt_current)
 
 configure_file(
-  input : 'fwupd.spec.in',
-  output : 'fwupd.spec.in',
-  configuration : con2,
+  input: 'fwupd.spec.in',
+  output: 'fwupd.spec.in',
+  configuration: con2,
 )
 
 if host_machine.system() == 'windows'

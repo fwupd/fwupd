@@ -1,5 +1,5 @@
   project('out-of-tree-link', 'c',
-  license : 'LGPL-2.1+',
+  license: 'LGPL-2.1+',
 )
 fwupd = dependency('fwupd')
 fwupdplugin = dependency('fwupdplugin')
@@ -7,20 +7,20 @@ env = environment()
 env.set('G_DEBUG', 'fatal-criticals')
 e = executable(
   'fwupd',
-  sources : [
+  sources: [
     'fwupd.c'
   ],
-  dependencies : [
+  dependencies: [
     fwupd
   ],
   )
 test('fwupd', e, timeout: 60, env: env)
 e = executable(
   'fwupdplugin',
-  sources : [
+  sources: [
     'fwupdplugin.c'
   ],
-  dependencies : [
+  dependencies: [
     fwupdplugin
   ],
   )

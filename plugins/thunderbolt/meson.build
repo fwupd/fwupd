@@ -8,7 +8,7 @@ install_data([
 )
 fu_plugin_thunderbolt = shared_module('fu_plugin_thunderbolt',
   fu_hash,
-  sources : [
+  sources: [
     'fu-plugin-thunderbolt.c',
     'fu-thunderbolt-common.c',
     'fu-thunderbolt-device.c',
@@ -17,25 +17,25 @@ fu_plugin_thunderbolt = shared_module('fu_plugin_thunderbolt',
     'fu-thunderbolt-firmware.c',
     'fu-thunderbolt-firmware-update.c',
   ],
-  include_directories : [
+  include_directories: [
     root_incdir,
     fwupd_incdir,
     fwupdplugin_incdir,
   ],
-  install : true,
+  install: true,
   install_dir: plugin_dir,
-  link_with : [
+  link_with: [
     fwupd,
     fwupdplugin,
   ],
-  c_args : cargs,
-  dependencies : [
+  c_args: cargs,
+  dependencies: [
     plugin_deps,
   ],
 )
 
 install_data(['thunderbolt.conf'],
-  install_dir:  join_paths(sysconfdir, 'fwupd')
+  install_dir: join_paths(sysconfdir, 'fwupd')
 )
 # we use functions from 2.52 in the tests
 if get_option('tests') and run_sanitize_unsafe_tests and umockdev.found() and gio.version().version_compare('>= 2.52')
@@ -47,7 +47,7 @@ if get_option('tests') and run_sanitize_unsafe_tests and umockdev.found() and gi
   e = executable(
     'thunderbolt-self-test',
     fu_hash,
-    sources : [
+    sources: [
       'fu-self-test.c',
       'fu-plugin-thunderbolt.c',
       'fu-thunderbolt-common.c',
@@ -57,27 +57,27 @@ if get_option('tests') and run_sanitize_unsafe_tests and umockdev.found() and gi
       'fu-thunderbolt-firmware.c',
       'fu-thunderbolt-firmware-update.c',
     ],
-    include_directories : [
+    include_directories: [
       root_incdir,
       fwupd_incdir,
       fwupdplugin_incdir,
     ],
-    dependencies : [
+    dependencies: [
       gudev,
       plugin_deps,
       umockdev,
     ],
-    link_with : [
+    link_with: [
       fwupd,
       fwupdplugin,
     ],
-    c_args : cargs
+    c_args: cargs
   )
   if get_option('b_sanitize') == 'address'
-    env.prepend('LD_PRELOAD', 'libasan.so.5', 'libumockdev-preload.so.0', separator : ' ')
+    env.prepend('LD_PRELOAD', 'libasan.so.5', 'libumockdev-preload.so.0', separator: ' ')
   else
     env.prepend('LD_PRELOAD', 'libumockdev-preload.so.0')
   endif
-  test('thunderbolt-self-test', e, env: env, timeout : 120)
+  test('thunderbolt-self-test', e, env: env, timeout: 120)
 endif
 endif

@@ -26,9 +26,9 @@ if libsystemd.found()
   endif
 
   configure_file(
-    input : 'fwupd-refresh.service.in',
-    output : 'fwupd-refresh.service',
-    configuration : con2,
+    input: 'fwupd-refresh.service.in',
+    output: 'fwupd-refresh.service',
+    configuration: con2,
     install: true,
     install_dir: systemdunitdir,
   )
@@ -38,8 +38,8 @@ endif
 # of sourcing /run/motd.d/*
 # See https://bugs.launchpad.net/ubuntu/+source/pam/+bug/399071
 configure_file(
-  input : '85-fwupd.motd.in',
-  output : motd_file,
-  configuration : con2,
+  input: '85-fwupd.motd.in',
+  output: motd_file,
+  configuration: con2,
   install: false,
 )

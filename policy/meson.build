@@ -1,5 +1,5 @@
 install_data('org.freedesktop.fwupd.rules',
-             install_dir : join_paths(datadir, 'polkit-1', 'rules.d'))
+             install_dir: join_paths(datadir, 'polkit-1', 'rules.d'))
 
 #newer polkit has the ITS rules included
 if polkit.version().version_compare('>0.113')
