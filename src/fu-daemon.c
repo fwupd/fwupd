@@ -24,7 +24,6 @@
 #include "fwupd-release-private.h"
 #include "fwupd-remote-private.h"
 #include "fwupd-request-private.h"
-#include "fwupd-resources.h"
 #include "fwupd-security-attr-private.h"
 
 #include "fu-daemon.h"
@@ -2115,7 +2114,7 @@ fu_daemon_load_introspection(const gchar *filename, GError **error)
 
 	/* lookup data */
 	path = g_build_filename("/org/freedesktop/fwupd", filename, NULL);
-	data = g_resource_lookup_data(fu_get_resource(), path, G_RESOURCE_LOOKUP_FLAGS_NONE, error);
+	data = g_resources_lookup_data(path, G_RESOURCE_LOOKUP_FLAGS_NONE, error);
 	if (data == NULL)
 		return NULL;
 

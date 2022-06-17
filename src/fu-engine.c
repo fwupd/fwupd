@@ -7596,6 +7596,9 @@ fu_engine_init(FuEngine *self)
 					    JCAT_MAJOR_VERSION,
 					    JCAT_MINOR_VERSION,
 					    JCAT_MICRO_VERSION));
+
+	/* register /org/freedesktop/fwupd globally */
+	g_resources_register(fu_get_resource());
 }
 
 static void
