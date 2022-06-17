@@ -1,12 +1,8 @@
 if gusb.found()
 cargs = ['-DG_LOG_DOMAIN="FuPluginCcgx"']
 
-install_data([
-  'ccgx-ids.quirk',
-  'ccgx.quirk',
-  ],
-  install_dir: join_paths(datadir, 'fwupd', 'quirks.d')
-)
+plugin_quirks += join_paths(meson.current_source_dir(), 'ccgx-ids.quirk')
+plugin_quirks += join_paths(meson.current_source_dir(), 'ccgx.quirk')
 
 shared_module('fu_plugin_ccgx',
   fu_hash,

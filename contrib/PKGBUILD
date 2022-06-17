@@ -30,6 +30,7 @@ build() {
     arch-meson -D b_lto=false $CI ../build \
         -Dplugin_intel_spi=true \
         -Dplugin_powerd=disabled \
+        -Dgresource_quirks=disabled \
         -Ddocs=true \
         -Defi_binary=false \
         -Dsupported_build=enabled

@@ -7,9 +7,7 @@ if tpm2tss_dell.found() and libsmbios_c.found() and \
 
 cargs = ['-DG_LOG_DOMAIN="FuPluginDell"']
 
-install_data(['dell.quirk'],
-  install_dir: join_paths(datadir, 'fwupd', 'quirks.d')
-)
+plugin_quirks += join_paths(meson.current_source_dir(), 'dell.quirk')
 
 shared_module('fu_plugin_dell',
   fu_hash,

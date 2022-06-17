@@ -149,12 +149,35 @@ fwupdoffline = executable(
 )
 endif
 
-resources_src = gnome.compile_resources(
-  'fwupd-resources',
-  'fwupd.gresource.xml',
-  source_dir: '.',
-  c_name: 'fu'
-)
+# this requires a new enough meson version
+if get_option('gresource_quirks').require(meson.version().version_compare('>=0.63.0'),
+    error_message: 'meson >= 0.63.0 is needed for -Dgresource_quirks=enabled').allowed()
+  fwupd_gresource_xml = custom_target('fwupd-resources-xml',
+    input : [
+      'org.freedesktop.fwupd.xml',
+    ] + plugin_quirks,
+    output : 'fwupd.gresource.xml',
+    command : [
+      join_paths(meson.project_source_root(), 'contrib', 'generate-gresource-xml.py'), '@OUTPUT@', '@INPUT@',
+    ],
+  )
+  resources_src = gnome.compile_resources(
+    'fwupd-resources',
+    fwupd_gresource_xml,
+    source_dir: '.',
+    c_name: 'fu'
+  )
+else
+  install_data(plugin_quirks,
+    install_dir: join_paths(datadir, 'fwupd', 'quirks.d')
+  )
+  resources_src = gnome.compile_resources(
+    'fwupd-resources',
+    'fwupd.gresource.xml',
+    source_dir: '.',
+    c_name: 'fu'
+  )
+endif
 
 fwupdtool = executable(
   'fwupdtool',

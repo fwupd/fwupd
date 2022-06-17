@@ -1,11 +1,7 @@
 if gusb.found()
 cargs = ['-DG_LOG_DOMAIN="FuPluginRts54Hid"']
 
-install_data([
-  'rts54hid.quirk',
-  ],
-  install_dir: join_paths(datadir, 'fwupd', 'quirks.d')
-)
+plugin_quirks += join_paths(meson.current_source_dir(), 'rts54hid.quirk')
 
 shared_module('fu_plugin_rts54hid',
   fu_hash,

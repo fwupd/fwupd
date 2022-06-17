@@ -566,13 +566,19 @@ if polkit.found()
   subdir('policy')
 endif
 if build_standalone
+  plugin_quirks = []
   gcab = find_program('gcab', required: get_option('tests'))
   subdir('data')
   subdir('po')
   subdir('libfwupdplugin')
-  subdir('src')
-  subdir('plugins')
   subdir('contrib')
+
+  # the plugins each add the gresource files into an array, and then in src:
+  # * for -Dgresource_quirks=enabled, they get built into ./src/fwupd and the files are ignored
+  # * for -Dgresource_quirks=disabled, the files get installed into quirks.d
+  subdir('plugins')
+  subdir('src')
+
 endif
 subdir('docs')
 

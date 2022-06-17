@@ -2,9 +2,7 @@ if get_option('plugin_flashrom').enabled() or \
    (get_option('plugin_flashrom').auto() and libflashrom.found())
 cargs = ['-DG_LOG_DOMAIN="FuPluginFlashrom"']
 
-install_data(['flashrom.quirk'],
-  install_dir: join_paths(get_option('datadir'), 'fwupd', 'quirks.d')
-)
+plugin_quirks += join_paths(meson.current_source_dir(), 'flashrom.quirk')
 
 shared_module('fu_plugin_flashrom',
   fu_hash,

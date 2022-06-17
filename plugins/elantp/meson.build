@@ -1,11 +1,7 @@
 if gudev.found()
 cargs = ['-DG_LOG_DOMAIN="FuPluginElantp"']
 
-install_data([
-  'elantp.quirk',
-  ],
-  install_dir: join_paths(datadir, 'fwupd', 'quirks.d')
-)
+plugin_quirks += join_paths(meson.current_source_dir(), 'elantp.quirk')
 
 shared_module('fu_plugin_elantp',
   fu_hash,

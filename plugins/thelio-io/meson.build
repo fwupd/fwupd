@@ -1,9 +1,7 @@
 if gudev.found()
 cargs = ['-DG_LOG_DOMAIN="FuPluginThelioIo"']
 
-install_data(['thelio-io.quirk'],
-  install_dir: join_paths(datadir, 'fwupd', 'quirks.d')
-)
+plugin_quirks += join_paths(meson.current_source_dir(), 'thelio-io.quirk')
 
 shared_module('fu_plugin_thelio_io',
   fu_hash,

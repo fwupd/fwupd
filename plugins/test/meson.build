@@ -6,9 +6,7 @@ if get_option('plugin_dummy')
 endif
 
 if bluez.allowed()
-install_data(['test-ble.quirk'],
-  install_dir: join_paths(datadir, 'fwupd', 'quirks.d')
-)
+  plugin_quirks += join_paths(meson.current_source_dir(), 'test-ble.quirk')
 endif
 
 shared_module('fu_plugin_test',

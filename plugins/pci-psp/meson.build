@@ -3,9 +3,7 @@ if get_option('hsi') and \
   host_cpu == 'x86_64'
 cargs = ['-DG_LOG_DOMAIN="FuPluginPciPsp"']
 
-install_data(['pci-psp.quirk'],
-  install_dir: join_paths(datadir, 'fwupd', 'quirks.d')
-)
+plugin_quirks += join_paths(meson.current_source_dir(), 'pci-psp.quirk')
 
 shared_module('fu_plugin_pci_psp',
   fu_hash,

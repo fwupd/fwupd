@@ -3,9 +3,8 @@ if get_option('plugin_emmc').require(gudev.found(),
 
 cargs = ['-DG_LOG_DOMAIN="FuPluginEmmc"']
 
-install_data(['emmc.quirk'],
-  install_dir: join_paths(datadir, 'fwupd', 'quirks.d')
-)
+plugin_quirks += join_paths(meson.current_source_dir(), 'emmc.quirk')
+
 shared_module('fu_plugin_emmc',
   fu_hash,
   sources: [

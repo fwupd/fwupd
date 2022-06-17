@@ -1,11 +1,7 @@
 if gusb.found()
 cargs = ['-DG_LOG_DOMAIN="FuPluginCh341a"']
 
-install_data([
-  'ch341a.quirk',
-  ],
-  install_dir: join_paths(datadir, 'fwupd', 'quirks.d')
-)
+plugin_quirks += join_paths(meson.current_source_dir(), 'ch341a.quirk')
 
 shared_module('fu_plugin_ch341a',
   fu_hash,

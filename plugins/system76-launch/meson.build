@@ -1,9 +1,7 @@
 if gusb.found()
 cargs = ['-DG_LOG_DOMAIN="FuPluginSystem76Launch"']
 
-install_data(['system76-launch.quirk'],
-  install_dir: join_paths(datadir, 'fwupd', 'quirks.d')
-)
+plugin_quirks += join_paths(meson.current_source_dir(), 'system76-launch.quirk')
 
 shared_module('fu_plugin_system76_launch',
   fu_hash,

@@ -2,9 +2,8 @@ if get_option('plugin_bcm57xx').require(gudev.found(),
     error_message: 'gudev is needed for plugin_bcm57xx').allowed()
 cargs = ['-DG_LOG_DOMAIN="FuPluginBcm57xx"']
 
-install_data(['bcm57xx.quirk'],
-  install_dir: join_paths(datadir, 'fwupd', 'quirks.d')
-)
+plugin_quirks += join_paths(meson.current_source_dir(), 'bcm57xx.quirk')
+
 shared_module('fu_plugin_bcm57xx',
   fu_hash,
   sources: [

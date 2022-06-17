@@ -1,9 +1,7 @@
 if gudev.found()
 cargs = ['-DG_LOG_DOMAIN="FuPluginOptionrom"']
 
-install_data(['optionrom.quirk'],
-  install_dir: join_paths(datadir, 'fwupd', 'quirks.d')
-)
+plugin_quirks += join_paths(meson.current_source_dir(), 'optionrom.quirk')
 
 shared_module('fu_plugin_optionrom',
   fu_hash,

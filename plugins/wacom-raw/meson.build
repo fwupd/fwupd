@@ -1,9 +1,7 @@
 if gudev.found()
 cargs = ['-DG_LOG_DOMAIN="FuPluginWacomRaw"']
 
-install_data(['wacom-raw.quirk'],
-  install_dir: join_paths(datadir, 'fwupd', 'quirks.d')
-)
+plugin_quirks += join_paths(meson.current_source_dir(), 'wacom-raw.quirk')
 
 shared_module('fu_plugin_wacom_raw',
   fu_hash,

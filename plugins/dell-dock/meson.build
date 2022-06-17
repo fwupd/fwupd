@@ -1,9 +1,7 @@
 if gusb.found()
 cargs = ['-DG_LOG_DOMAIN="FuPluginDellDock"']
 
-install_data(['dell-dock.quirk'],
-  install_dir: join_paths(datadir, 'fwupd', 'quirks.d')
-)
+plugin_quirks += join_paths(meson.current_source_dir(), 'dell-dock.quirk')
 
 shared_module('fu_plugin_dell_dock',
   fu_hash,

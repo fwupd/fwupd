@@ -2,11 +2,7 @@ if get_option('plugin_cfu').require(gudev.found(),
     error_message: 'gudev is needed for plugin_cfu').allowed()
 cargs = ['-DG_LOG_DOMAIN="FuPluginCfu"']
 
-install_data([
-  'cfu.quirk',
-  ],
-  install_dir: join_paths(datadir, 'fwupd', 'quirks.d')
-)
+plugin_quirks += join_paths(meson.current_source_dir(), 'cfu.quirk')
 
 shared_module('fu_plugin_cfu',
   fu_hash,

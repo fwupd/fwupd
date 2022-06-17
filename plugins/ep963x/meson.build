@@ -1,11 +1,7 @@
 if get_option('plugin_ep963x').disable_auto_if(host_machine.system() != 'linux').allowed()
 cargs = ['-DG_LOG_DOMAIN="FuPluginEp963x"']
 
-install_data([
-  'ep963x.quirk',
-  ],
-  install_dir: join_paths(datadir, 'fwupd', 'quirks.d')
-)
+plugin_quirks += join_paths(meson.current_source_dir(), 'ep963x.quirk')
 
 shared_module('fu_plugin_ep963x',
   fu_hash,

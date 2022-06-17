@@ -1,9 +1,7 @@
 if get_option('hsi') and has_cpuid
 cargs = ['-DG_LOG_DOMAIN="FuPluginMsr"']
 
-install_data(['msr.quirk'],
-  install_dir: join_paths(datadir, 'fwupd', 'quirks.d')
-)
+plugin_quirks += join_paths(meson.current_source_dir(), 'msr.quirk')
 
 if libsystemd.found()
 install_data(['fwupd-msr.conf'],

@@ -1,9 +1,7 @@
 if efiboot.found() and efivar.found()
 cargs = ['-DG_LOG_DOMAIN="FuPluginUefiDbx"']
 
-install_data(['uefi-dbx.quirk'],
-  install_dir: join_paths(datadir, 'fwupd', 'quirks.d')
-)
+plugin_quirks += join_paths(meson.current_source_dir(), 'uefi-dbx.quirk')
 
 shared_module('fu_plugin_uefi_dbx',
   fu_hash,
