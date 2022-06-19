@@ -7,6 +7,7 @@ shared_module('fu_plugin_vbe',
   sources : [
     'fit.c',
     'fu-plugin-vbe.c',
+    'fu-vbe-device.c',
   ],
   include_directories : [
     root_incdir,
