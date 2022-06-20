@@ -331,11 +331,17 @@ endif
 if cc.has_header('sys/socket.h')
   conf.set('HAVE_SOCKET_H', '1')
 endif
+if cc.has_header('sys/select.h')
+  conf.set('HAVE_SELECT_H', '1')
+endif
 if cc.has_header('sys/io.h') and cc.has_function('outb', prefix: '#include <sys/io.h>')
   conf.set('HAVE_IO_H', '1')
 endif
 if cc.has_header('linux/ethtool.h')
   conf.set('HAVE_ETHTOOL_H', '1')
+endif
+if cc.has_header('linux/mei.h')
+  conf.set('HAVE_MEI_H', '1')
 endif
 if cc.has_header('mtd/mtd-user.h')
   conf.set('HAVE_MTD_USER_H', '1')
