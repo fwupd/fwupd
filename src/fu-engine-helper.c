@@ -141,6 +141,7 @@ fu_engine_update_motd(FuEngine *self, GError **error)
 gboolean
 fu_engine_update_devices_file(FuEngine *self, GError **error)
 {
+	FwupdDeviceFlags flags = FWUPD_DEVICE_FLAG_NONE;
 	gsize len;
 	g_autoptr(JsonBuilder) builder = NULL;
 	g_autoptr(JsonGenerator) generator = NULL;
@@ -149,6 +150,9 @@ fu_engine_update_devices_file(FuEngine *self, GError **error)
 	g_autofree gchar *data = NULL;
 	g_autofree gchar *directory = NULL;
 	g_autofree gchar *target = NULL;
+
+	if (fu_config_get_show_device_private(fu_engine_get_config(self)))
+		flags |= FWUPD_DEVICE_FLAG_TRUSTED;
 
 	builder = json_builder_new();
 	json_builder_begin_object(builder);
@@ -159,7 +163,7 @@ fu_engine_update_devices_file(FuEngine *self, GError **error)
 		for (guint i = 0; i < devices->len; i++) {
 			FwupdDevice *dev = g_ptr_array_index(devices, i);
 			json_builder_begin_object(builder);
-			fwupd_device_to_json(dev, builder);
+			fwupd_device_to_json_full(dev, builder, flags);
 			json_builder_end_object(builder);
 		}
 	}
