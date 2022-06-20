@@ -2887,16 +2887,18 @@ fwupd_pad_kv_ups(GString *str, const gchar *key, FwupdUpdateState value)
 }
 
 /**
- * fwupd_device_to_json:
+ * fwupd_device_to_json_full:
  * @self: a #FwupdDevice
  * @builder: (not nullable): a JSON builder
+ * @flags: device flags
  *
  * Adds a fwupd device to a JSON builder
+ * Optionally provides additional data based upon flags
  *
- * Since: 1.2.6
+ * Since: 1.8.2
  **/
 void
-fwupd_device_to_json(FwupdDevice *self, JsonBuilder *builder)
+fwupd_device_to_json_full(FwupdDevice *self, JsonBuilder *builder, FwupdDeviceFlags flags)
 {
 	FwupdDevicePrivate *priv = GET_PRIVATE(self);
 
@@ -2907,7 +2909,7 @@ fwupd_device_to_json(FwupdDevice *self, JsonBuilder *builder)
 	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_DEVICE_ID, priv->id);
 	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_PARENT_DEVICE_ID, priv->parent_id);
 	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_COMPOSITE_ID, priv->composite_id);
-	if (priv->instance_ids->len > 0) {
+	if (flags & FWUPD_DEVICE_FLAG_TRUSTED && priv->instance_ids->len > 0) {
 		json_builder_set_member_name(builder, FWUPD_RESULT_KEY_INSTANCE_IDS);
 		json_builder_begin_array(builder);
 		for (guint i = 0; i < priv->instance_ids->len; i++) {
@@ -2925,7 +2927,8 @@ fwupd_device_to_json(FwupdDevice *self, JsonBuilder *builder)
 		}
 		json_builder_end_array(builder);
 	}
-	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_SERIAL, priv->serial);
+	if (flags & FWUPD_DEVICE_FLAG_TRUSTED)
+		fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_SERIAL, priv->serial);
 	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_SUMMARY, priv->summary);
 	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_DESCRIPTION, priv->description);
 	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_BRANCH, priv->branch);
@@ -3071,6 +3074,21 @@ fwupd_device_to_json(FwupdDevice *self, JsonBuilder *builder)
 		}
 		json_builder_end_array(builder);
 	}
+}
+
+/**
+ * fwupd_device_to_json:
+ * @self: a #FwupdDevice
+ * @builder: (not nullable): a JSON builder
+ *
+ * Adds a fwupd device to a JSON builder
+ *
+ * Since: 1.2.6
+ **/
+void
+fwupd_device_to_json(FwupdDevice *self, JsonBuilder *builder)
+{
+	return fwupd_device_to_json_full(self, builder, FWUPD_DEVICE_FLAG_NONE);
 }
 
 static gchar *

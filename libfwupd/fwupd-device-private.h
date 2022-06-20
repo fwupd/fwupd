@@ -20,5 +20,7 @@ void
 fwupd_device_incorporate(FwupdDevice *self, FwupdDevice *donor);
 void
 fwupd_device_to_json(FwupdDevice *self, JsonBuilder *builder);
+void
+fwupd_device_to_json_full(FwupdDevice *self, JsonBuilder *builder, FwupdDeviceFlags flags);
 
 G_END_DECLS

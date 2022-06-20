@@ -780,3 +780,9 @@ LIBFWUPD_1.8.1 {
     fwupd_device_set_problems;
   local: *;
 } LIBFWUPD_1.8.0;
+
+LIBFWUPD_1.8.2 {
+  global:
+    fwupd_device_to_json_full;
+  local: *;
+} LIBFWUPD_1.8.1;

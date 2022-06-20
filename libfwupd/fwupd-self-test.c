@@ -485,7 +485,7 @@ fwupd_device_func(void)
 	/* export to json */
 	builder = json_builder_new();
 	json_builder_begin_object(builder);
-	fwupd_device_to_json(dev, builder);
+	fwupd_device_to_json_full(dev, builder, FWUPD_DEVICE_FLAG_TRUSTED);
 	json_builder_end_object(builder);
 	json_root = json_builder_get_root(builder);
 	json_generator = json_generator_new();
