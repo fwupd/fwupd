@@ -985,7 +985,6 @@ fu_progress_traceback_cb(FuProgress *self,
 /**
  * fu_progress_traceback:
  * @self: A #FuProgress
- * @threshold_ms: value in ms, or 0 for everything
  *
  * Create a traceback used for profiling startup.
  *
