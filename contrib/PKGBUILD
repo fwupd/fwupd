@@ -17,7 +17,7 @@ pkgver() {
     cd ${pkgname}
 
     VERSION=$(git describe | sed 's/-/.r/;s/-/./')
-    [ -z $VERSION ] && VERSION=$(head meson.build | grep ' version :' | cut -d \' -f2)
+    [ -z $VERSION ] && VERSION=$(head meson.build | grep ' version:' | cut -d \' -f2)
 
     echo $VERSION
 }
