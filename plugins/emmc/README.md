@@ -14,8 +14,11 @@ eMMC devices support the `org.jedec.mmc` protocol.
 These devices use the following instance values:
 
 * `EMMC\%NAME%`
+* `EMMC\%NAME%&%REV%`
 * `EMMC\%MANFID%&%OEMID%`
 * `EMMC\%MANFID%&%OEMID%&%NAME%`
+* `EMMC\%MANFID%&%NAME%&%REV%`
+* `EMMC\%MANFID%&%OEMID%&%NAME%&%REV%`
 
 ## Update Behavior
 

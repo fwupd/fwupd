@@ -224,6 +224,7 @@ fu_emmc_device_probe(FuDevice *device, GError **error)
 	fu_device_build_instance_id(device, NULL, "EMMC", "MAN", "OEM", NULL);
 	fu_device_build_instance_id(device, NULL, "EMMC", "MAN", "OEM", "NAME", NULL);
 	fu_device_build_instance_id(device, NULL, "EMMC", "MAN", "NAME", "REV", NULL);
+	fu_device_build_instance_id(device, NULL, "EMMC", "MAN", "OEM", "NAME", "REV", NULL);
 
 	/* set the vendor */
 	tmp = g_udev_device_get_sysfs_attr(udev_parent, "manfid");
