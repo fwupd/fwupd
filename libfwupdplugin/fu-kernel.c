@@ -54,7 +54,7 @@ fu_kernel_locked_down(void)
 }
 
 /**
- * fu_kernel_check_version :
+ * fu_kernel_check_version:
  * @minimum_kernel: (not nullable): The minimum kernel version to check against
  * @error: (nullable): optional return location for an error
  *
