@@ -13,6 +13,7 @@ These devices use the standard USB DeviceInstanceId values, e.g.
 
 * `USB\VID_3384&PID_0001&REV_0001`
 * `USB\VID_3384&PID_0005&REV_0001`
+* `USB\VID_3384&PID_0006&REV_0001`
 
 ## Update Behavior
 
