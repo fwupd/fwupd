@@ -107,6 +107,7 @@ for dirname in plugins:
         "synaptics-prometheus": "synaprom",
         "wacom-usb": "wac",
         "goodix-moc": "goodixmoc",
+        "intel-gsc": "igsc",
     }.get(basename, basename)
 
     newfnc = os.path.join(basename, "fu-{}-plugin.c".format(plugin_namespace))
