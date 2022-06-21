@@ -26,6 +26,7 @@ option('plugin_emmc', type : 'feature', description : 'eMMC support', deprecated
 option('plugin_ep963x', type : 'feature', description : 'EP963x support', deprecated: {'true': 'enabled', 'false': 'disabled'})
 option('plugin_fastboot', type : 'feature', description : 'Fastboot support', deprecated: {'true': 'enabled', 'false': 'disabled'})
 option('plugin_gpio', type : 'feature', description : 'Linux GPIO support', deprecated: {'true': 'enabled', 'false': 'disabled'})
+option('plugin_igsc', type : 'feature', description : 'Intel Graphics System Controller support')
 option('plugin_logitech_bulkcontroller', type : 'feature', description : 'Logitech bulk controller support', deprecated: {'true': 'enabled', 'false': 'disabled'})
 option('plugin_parade_lspcon', type : 'feature', description : 'Parade LSPCON support', deprecated: {'true': 'enabled', 'false': 'disabled'})
 option('plugin_pixart_rf', type : 'feature', description : 'PixartRF support', deprecated: {'true': 'enabled', 'false': 'disabled'})

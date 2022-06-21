@@ -1,0 +1,123 @@
+[87d90ca5-3495-4559-8105-3fbfa37b8b79]
+Plugin = igsc
+
+[MEI\VEN_8086&DEV_4905]
+Name = DG1
+[MEI\VEN_8086&DEV_4906]
+Name = DG1
+[MEI\VEN_8086&DEV_4907]
+Name = DG1
+[MEI\VEN_8086&DEV_4908]
+Name = DG1
+
+[MEI\VEN_8086&DEV_0201]
+Name = Xe_HP SDV
+[MEI\VEN_8086&DEV_0202]
+Name = Xe_HP SDV
+[MEI\VEN_8086&DEV_0203]
+Name = Xe_HP SDV
+[MEI\VEN_8086&DEV_0204]
+Name = Xe_HP SDV
+[MEI\VEN_8086&DEV_0205]
+Name = Xe_HP SDV
+[MEI\VEN_8086&DEV_0206]
+Name = Xe_HP SDV
+[MEI\VEN_8086&DEV_0207]
+Name = Xe_HP SDV
+[MEI\VEN_8086&DEV_0208]
+Name = Xe_HP SDV
+[MEI\VEN_8086&DEV_0209]
+Name = Xe_HP SDV
+[MEI\VEN_8086&DEV_020A]
+Name = Xe_HP SDV
+[MEI\VEN_8086&DEV_020B]
+Name = Xe_HP SDV
+[MEI\VEN_8086&DEV_020C]
+Name = Xe_HP SDV
+[MEI\VEN_8086&DEV_020D]
+Name = Xe_HP SDV
+[MEI\VEN_8086&DEV_020E]
+Name = Xe_HP SDV
+[MEI\VEN_8086&DEV_020F]
+Name = Xe_HP SDV
+[MEI\VEN_8086&DEV_0210]
+Name = Xe_HP SDV
+[MEI\VEN_8086&DEV_FF25]
+Name = Xe_HP SDV
+
+[MEI\VEN_8086&DEV_4F80]
+Name = DG2_SOC1
+Flags = has-aux,has-oprom
+[MEI\VEN_8086&DEV_4F81]
+Name = DG2_SOC1
+Flags = has-aux,has-oprom
+[MEI\VEN_8086&DEV_4F82]
+Name = DG2_SOC1
+Flags = has-aux,has-oprom
+[MEI\VEN_8086&DEV_4F83]
+Name = DG2_SOC1
+Flags = has-aux,has-oprom
+[MEI\VEN_8086&DEV_4F84]
+Name = DG2_SOC1
+Flags = has-aux,has-oprom
+[MEI\VEN_8086&DEV_5690]
+Name = DG2_SOC1
+Flags = has-aux,has-oprom
+[MEI\VEN_8086&DEV_5691]
+Name = DG2_SOC1
+Flags = has-aux,has-oprom
+[MEI\VEN_8086&DEV_5692]
+Name = DG2_SOC1
+Flags = has-aux,has-oprom
+[MEI\VEN_8086&DEV_56A0]
+Name = DG2_SOC1
+Flags = has-aux,has-oprom
+[MEI\VEN_8086&DEV_56A1]
+Name = DG2_SOC1
+Flags = has-aux,has-oprom
+[MEI\VEN_8086&DEV_56A2]
+Name = DG2_SOC1
+Flags = has-aux,has-oprom
+[MEI\VEN_8086&DEV_56C0]
+Name = DG2_SOC1
+Flags = has-aux,has-oprom
+
+[MEI\VEN_8086&DEV_4F87]
+Name = DG2_SOC2
+Flags = has-aux,has-oprom
+[MEI\VEN_8086&DEV_4F88]
+Name = DG2_SOC2
+Flags = has-aux,has-oprom
+[MEI\VEN_8086&DEV_5693]
+Name = DG2_SOC2
+Flags = has-aux,has-oprom
+[MEI\VEN_8086&DEV_5694]
+Name = DG2_SOC2
+Flags = has-aux,has-oprom
+[MEI\VEN_8086&DEV_5695]
+Name = DG2_SOC2
+Flags = has-aux,has-oprom
+[MEI\VEN_8086&DEV_56A5]
+Name = DG2_SOC2
+Flags = has-aux,has-oprom
+[MEI\VEN_8086&DEV_56A6]
+Name = DG2_SOC2
+Flags = has-aux,has-oprom
+[MEI\VEN_8086&DEV_56A7]
+Name = DG2_SOC2
+Flags = has-aux,has-oprom
+[MEI\VEN_8086&DEV_56A8]
+Name = DG2_SOC2
+Flags = has-aux,has-oprom
+[MEI\VEN_8086&DEV_56A9]
+Name = DG2_SOC2
+Flags = has-aux,has-oprom
+
+[MEI\VEN_8086&DEV_0BD0]
+Name = PVC
+[MEI\VEN_8086&DEV_0BD5]
+Name = PVC
+
+[MEI\VEN_8086&DEV_56C1]
+Name = ATS-M3
+Flags = has-aux,has-oprom
