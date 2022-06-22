@@ -205,6 +205,15 @@ fu_emmc_device_probe(FuDevice *device, GError **error)
 	fu_device_build_instance_id(device, NULL, "EMMC", "NAME", NULL);
 	fu_device_set_name(device, tmp);
 
+	/* firmware version */
+	tmp = g_udev_device_get_sysfs_attr(udev_parent, "fwrev");
+	if (tmp != NULL) {
+		fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_NUMBER);
+		fu_device_set_version(device, tmp);
+	}
+	fu_device_add_instance_strsafe(device, "REV", tmp);
+	fu_device_build_instance_id(device, NULL, "EMMC", "NAME", "REV", NULL);
+
 	/* manfid + oemid, manfid + oemid + name */
 	if (!fu_emmc_device_get_sysattr_guint64(udev_parent, "manfid", &manfid, error))
 		return FALSE;
@@ -214,6 +223,8 @@ fu_emmc_device_probe(FuDevice *device, GError **error)
 	fu_device_add_instance_u16(device, "OEM", oemid);
 	fu_device_build_instance_id(device, NULL, "EMMC", "MAN", "OEM", NULL);
 	fu_device_build_instance_id(device, NULL, "EMMC", "MAN", "OEM", "NAME", NULL);
+	fu_device_build_instance_id(device, NULL, "EMMC", "MAN", "NAME", "REV", NULL);
+	fu_device_build_instance_id(device, NULL, "EMMC", "MAN", "OEM", "NAME", "REV", NULL);
 
 	/* set the vendor */
 	tmp = g_udev_device_get_sysfs_attr(udev_parent, "manfid");
@@ -230,13 +241,6 @@ fu_emmc_device_probe(FuDevice *device, GError **error)
 		return FALSE;
 	if (flag == 0)
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_INTERNAL);
-
-	/* firmware version */
-	tmp = g_udev_device_get_sysfs_attr(udev_parent, "fwrev");
-	if (tmp != NULL) {
-		fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_NUMBER);
-		fu_device_set_version(device, tmp);
-	}
 
 	return TRUE;
 }
