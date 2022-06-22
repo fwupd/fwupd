@@ -1645,6 +1645,9 @@
     </distro>
   </dependency>
   <dependency type="build" id="sudo">
+    <distro id="debian">
+      <package variant="i386" />
+    </distro>
     <distro id="ubuntu">
       <package variant="x86_64" />
     </distro>
