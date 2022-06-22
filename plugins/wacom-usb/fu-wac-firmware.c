@@ -18,7 +18,7 @@ struct _FuWacFirmware {
 
 G_DEFINE_TYPE(FuWacFirmware, fu_wac_firmware, FU_TYPE_FIRMWARE)
 
-#define FU_WAC_FIRMWARE_TOKENS_MAX 100000 /* lines */
+#define FU_WAC_FIRMWARE_TOKENS_MAX   100000 /* lines */
 #define FU_WAC_FIRMWARE_SECTIONS_MAX 10
 
 typedef struct {

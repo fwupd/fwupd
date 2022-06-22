@@ -7,14 +7,14 @@
 
 #include "config.h"
 
+#include <fwupdplugin.h>
+
 #include <fcntl.h>
 #include <glib/gstdio.h>
 #include <smbios_c/system_info.h>
 #include <string.h>
-#include <unistd.h>
-
 #include <tss2/tss2_esys.h>
-#include <fwupdplugin.h>
+#include <unistd.h>
 
 #include "fu-plugin-dell.h"
 

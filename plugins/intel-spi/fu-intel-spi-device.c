@@ -487,7 +487,6 @@ fu_intel_spi_device_set_quirk_kv(FuDevice *device,
 		return TRUE;
 	}
 	if (g_strcmp0(key, "IntelSpiKind") == 0) {
-
 		/* validate */
 		self->kind = fu_intel_spi_kind_from_string(value);
 		if (self->kind == FU_INTEL_SPI_KIND_UNKNOWN) {
