@@ -45,3 +45,10 @@ GType = FuCorsairDevice
 Name = SABRE PRO Gaming Mouse
 CorsairDeviceKind = mouse
 Flags = legacy-attach,no-version-in-bl
+
+[USB\VID_1B1C&PID_1B5E]
+Plugin = corsair
+GType = FuCorsairDevice
+Name = HARPOON RGB WIRELESS Gaming Mouse
+CorsairDeviceKind = mouse
+Flags = legacy-attach

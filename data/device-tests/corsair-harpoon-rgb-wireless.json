@@ -1,0 +1,30 @@
+{
+  "name": "Corsair HARPOON RGB WIRELESS Gaming Mouse",
+  "interactive": false,
+  "steps": [
+    {
+      "url": "https://fwupd.org/downloads/4865c619fafd6b60d9e57378e51a5d8fff97856be9a08a57e1e8886d812e2969-corsair-mysterio-5.1.132.cab",
+      "components": [
+        {
+          "version": "5.1.132",
+          "protocol": "com.corsair.bp",
+          "guids": [
+            "e6c56fae-0368-5b19-a3f4-b1017abec183"
+          ]
+        }
+      ]
+    },
+    {
+      "url": "https://fwupd.org/downloads/4787d6b940e56e04549704f6e061eaaa6d24fec3c45cdb551845a2ffa651fb42-corsair-mysterio-5.1.133.cab",
+      "components": [
+        {
+          "version": "5.1.133",
+          "protocol": "com.corsair.bp",
+          "guids": [
+            "e6c56fae-0368-5b19-a3f4-b1017abec183"
+          ]
+        }
+      ]
+    }
+  ]
+}

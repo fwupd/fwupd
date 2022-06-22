@@ -4,6 +4,7 @@ install_data([
     '8bitdo-sfc30.json',
     'aiaiai-h05.json',
     'bizlink-no-sku-vli.json',
+    'corsair-harpoon-rgb-wireless.json',
     'corsair-katar-pro-wireless.json',
     'corsair-katar-pro-xt.json',
     'corsair-sabre-pro.json',
