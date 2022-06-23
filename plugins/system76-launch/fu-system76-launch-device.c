@@ -133,8 +133,10 @@ fu_system76_launch_device_detach(FuDevice *device, FuProgress *progress, GError 
 		return FALSE;
 
 	/* unlikely, but already unlocked */
-	if (rc == 0)
+	if (rc == 0) {
+		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 		return TRUE;
+	}
 
 	/* generate a message if not already set */
 	if (fu_device_get_update_message(device) == NULL) {
