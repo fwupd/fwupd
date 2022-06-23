@@ -488,7 +488,10 @@ fu_cfi_device_chip_select(FuCfiDevice *self, gboolean value, GError **error)
 	g_return_val_if_fail(FU_IS_CFI_DEVICE(self), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 	if (klass->chip_select == NULL) {
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "not supported");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "chip select is not implemented on this device");
 		return FALSE;
 	}
 	return klass->chip_select(self, value, error);

@@ -155,7 +155,11 @@ fu_vli_pd_parade_device_read_fw_ver(FuVliPdParadeDevice *self, GError **error)
 	if (!fu_vli_pd_parade_device_i2c_read(self, self->page7, 0x02, buf, 0x1, error))
 		return FALSE;
 	if (buf[0] != 0x01 && buf[0] != 0x02) {
-		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "not supported");
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "not supported on this device: buffer was 0x%02x",
+			    buf[0]);
 		return FALSE;
 	}
 

@@ -18,7 +18,10 @@
 GPtrArray *
 fu_common_get_block_devices(GError **error)
 {
-	g_set_error(error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED, "not supported");
+	g_set_error(error,
+		    G_IO_ERROR,
+		    G_IO_ERROR_NOT_SUPPORTED,
+		    "getting block devices is not supported on Windows");
 	return NULL;
 }
 
