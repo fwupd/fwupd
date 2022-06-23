@@ -45,6 +45,7 @@
 #include <libfwupdplugin/fu-ifd-bios.h>
 #include <libfwupdplugin/fu-ifd-firmware.h>
 #include <libfwupdplugin/fu-ifd-image.h>
+#include <libfwupdplugin/fu-ifwi-cpd-firmware.h>
 #include <libfwupdplugin/fu-ihex-firmware.h>
 #include <libfwupdplugin/fu-io-channel.h>
 #include <libfwupdplugin/fu-kernel.h>

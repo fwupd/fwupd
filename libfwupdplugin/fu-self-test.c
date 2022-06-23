@@ -2309,6 +2309,44 @@ fu_firmware_dfu_func(void)
 }
 
 static void
+fu_firmware_ifwi_cpd_func(void)
+{
+	gboolean ret;
+	g_autofree gchar *filename_ifwi_cpd = NULL;
+	g_autoptr(FuFirmware) firmware = fu_ifwi_cpd_firmware_new();
+	g_autoptr(FuFirmware) img1 = NULL;
+	g_autoptr(FuFirmware) img2 = NULL;
+	g_autoptr(GBytes) data_bin = NULL;
+	g_autoptr(GBytes) data_ifwi_cpd = NULL;
+	g_autoptr(GError) error = NULL;
+
+	filename_ifwi_cpd = g_test_build_filename(G_TEST_DIST, "tests", "ifwi-cpd.bin", NULL);
+	data_ifwi_cpd = fu_bytes_get_contents(filename_ifwi_cpd, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(data_ifwi_cpd);
+	ret = fu_firmware_parse(firmware, data_ifwi_cpd, FWUPD_INSTALL_FLAG_NONE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(fu_firmware_get_idx(firmware), ==, 0x1234);
+	data_bin = fu_firmware_write(firmware, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(data_bin);
+	g_assert_cmpint(g_bytes_get_size(data_bin), ==, 90);
+
+	img1 = fu_firmware_get_image_by_id(firmware, "one", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(img1);
+	g_assert_cmpint(fu_firmware_get_offset(img1), ==, 68);
+	g_assert_cmpint(fu_firmware_get_size(img1), ==, 11);
+
+	img2 = fu_firmware_get_image_by_id(firmware, "two", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(img2);
+	g_assert_cmpint(fu_firmware_get_offset(img2), ==, 79);
+	g_assert_cmpint(fu_firmware_get_size(img2), ==, 11);
+}
+
+static void
 fu_firmware_dfu_patch_func(void)
 {
 	gboolean ret;
@@ -3426,6 +3464,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/firmware{srec-tokenization}", fu_firmware_srec_tokenization_func);
 	g_test_add_func("/fwupd/firmware{srec}", fu_firmware_srec_func);
 	g_test_add_func("/fwupd/firmware{srec-xml}", fu_firmware_srec_xml_func);
+	g_test_add_func("/fwupd/firmware{ifwi-cpd}", fu_firmware_ifwi_cpd_func);
 	g_test_add_func("/fwupd/firmware{dfu}", fu_firmware_dfu_func);
 	g_test_add_func("/fwupd/firmware{dfu-patch}", fu_firmware_dfu_patch_func);
 	g_test_add_func("/fwupd/firmware{dfuse}", fu_firmware_dfuse_func);
