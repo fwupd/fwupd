@@ -86,7 +86,7 @@ fu_plugin_mm_udev_device_ports_timeout(gpointer user_data)
 	dev = fu_plugin_cache_lookup(plugin, priv->inhibited->physical_id);
 	if (dev != NULL) {
 		if (!fu_device_probe(FU_DEVICE(dev), &error)) {
-			g_warning("failed to probe MM device: %s", error->message);
+			g_debug("failed to probe MM device: %s", error->message);
 		} else {
 			fu_plugin_device_add(plugin, FU_DEVICE(dev));
 		}
