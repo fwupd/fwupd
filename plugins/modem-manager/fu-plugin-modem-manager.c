@@ -99,7 +99,7 @@ fu_plugin_mm_udev_device_ports_timeout(gpointer user_data)
 				     fu_device_get_physical_id(FU_DEVICE(priv->shadow_device)));
 	if (dev != NULL) {
 		if (!fu_device_probe(FU_DEVICE(dev), &error)) {
-			g_warning("failed to probe MM device: %s", error->message);
+			g_debug("failed to probe MM device: %s", error->message);
 		} else {
 			fu_plugin_device_add(plugin, FU_DEVICE(dev));
 		}
