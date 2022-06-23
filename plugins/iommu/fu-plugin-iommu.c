@@ -46,6 +46,11 @@ fu_plugin_iommu_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 	fwupd_security_attr_set_plugin(attr, fu_plugin_get_name(plugin));
 	fu_security_attrs_append(attrs, attr);
 
+	if (!data) {
+		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_MISSING_DATA);
+		return;
+	}
+
 	if (!data->has_iommu) {
 		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_FOUND);
 		return;

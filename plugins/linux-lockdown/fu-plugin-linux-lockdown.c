@@ -133,7 +133,7 @@ fu_plugin_linux_lockdown_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *a
 	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ISSUE);
 	fu_security_attrs_append(attrs, attr);
 
-	if (data->lockdown == FU_PLUGIN_LINUX_LOCKDOWN_UNKNOWN) {
+	if (!data || data->lockdown == FU_PLUGIN_LINUX_LOCKDOWN_UNKNOWN) {
 		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA);
 		return;
 	}

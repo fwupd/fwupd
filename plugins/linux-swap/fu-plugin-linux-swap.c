@@ -82,7 +82,7 @@ fu_plugin_linux_swap_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
 	g_autoptr(GError) error_local = NULL;
 
-	if (data->file == NULL)
+	if (!data || data->file == NULL)
 		return;
 
 	/* create attr */
