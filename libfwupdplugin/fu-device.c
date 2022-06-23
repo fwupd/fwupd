@@ -3819,7 +3819,10 @@ fu_device_get_results(FuDevice *self, GError **error)
 
 	/* no plugin-specific method */
 	if (klass->get_results == NULL) {
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "not supported");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "getting results not supported by device");
 		return FALSE;
 	}
 
@@ -3859,7 +3862,10 @@ fu_device_write_firmware(FuDevice *self,
 
 	/* no plugin-specific method */
 	if (klass->write_firmware == NULL) {
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "not supported");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "writing firmware not supported by device");
 		return FALSE;
 	}
 
@@ -3994,7 +4000,10 @@ fu_device_read_firmware(FuDevice *self, FuProgress *progress, GError **error)
 
 	/* device does not support reading for verification CRCs */
 	if (!fu_device_has_flag(self, FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE)) {
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "not supported");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "reading firmware is not supported by device");
 		return NULL;
 	}
 
@@ -4035,7 +4044,10 @@ fu_device_dump_firmware(FuDevice *self, FuProgress *progress, GError **error)
 
 	/* use the default FuFirmware when only ->dump_firmware is provided */
 	if (klass->dump_firmware == NULL) {
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "not supported");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "dumping firmware is not supported by device");
 		return NULL;
 	}
 
@@ -4756,7 +4768,10 @@ fu_device_bind_driver(FuDevice *self, const gchar *subsystem, const gchar *drive
 
 	/* not implemented */
 	if (klass->bind_driver == NULL) {
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "not supported");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "binding drivers is not supported by device");
 		return FALSE;
 	}
 
@@ -4789,7 +4804,10 @@ fu_device_unbind_driver(FuDevice *self, GError **error)
 
 	/* not implemented */
 	if (klass->unbind_driver == NULL) {
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "not supported");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "unbinding drivers is not supported by device");
 		return FALSE;
 	}
 

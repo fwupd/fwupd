@@ -1759,7 +1759,10 @@ fu_udev_device_get_sysfs_attr(FuUdevDevice *self, const gchar *attr, GError **er
 
 	return result;
 #else
-	g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_FAILED, "not supported");
+	g_set_error_literal(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_FAILED,
+			    "getting attributes is not supported as no GUdev support");
 	return NULL;
 #endif
 }
