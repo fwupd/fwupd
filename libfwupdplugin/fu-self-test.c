@@ -2272,6 +2272,43 @@ fu_firmware_new_from_gtypes_func(void)
 }
 
 static void
+fu_firmware_linear_func(void)
+{
+	gboolean ret;
+	g_autoptr(FuFirmware) firmware1 = fu_linear_firmware_new(FU_TYPE_OPROM_FIRMWARE);
+	g_autoptr(FuFirmware) firmware2 = fu_linear_firmware_new(FU_TYPE_OPROM_FIRMWARE);
+	g_autoptr(GBytes) blob1 = g_bytes_new_static("XXXX", 4);
+	g_autoptr(GBytes) blob2 = g_bytes_new_static("HELO", 4);
+	g_autoptr(GBytes) blob3 = NULL;
+	g_autoptr(FuFirmware) img1 = fu_oprom_firmware_new();
+	g_autoptr(FuFirmware) img2 = fu_oprom_firmware_new();
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GPtrArray) imgs = NULL;
+	g_autofree gchar *str = NULL;
+
+	/* add images then parse */
+	fu_firmware_set_bytes(img1, blob1);
+	fu_firmware_add_image(firmware1, img1);
+	fu_firmware_set_bytes(img2, blob2);
+	fu_firmware_add_image(firmware1, img2);
+	blob3 = fu_firmware_write(firmware1, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(blob3);
+	g_assert_cmpint(g_bytes_get_size(blob3), ==, 1024);
+
+	/* parse them back */
+	ret = fu_firmware_parse(firmware2, blob3, FWUPD_INSTALL_FLAG_NONE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	str = fu_firmware_to_string(firmware2);
+	g_debug("\n%s", str);
+
+	/* verify we got both images */
+	imgs = fu_firmware_get_images(firmware2);
+	g_assert_cmpint(imgs->len, ==, 2);
+}
+
+static void
 fu_firmware_dfu_func(void)
 {
 	gboolean ret;
@@ -3485,6 +3522,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/smbios{class}", fu_smbios_class_func);
 	g_test_add_func("/fwupd/firmware", fu_firmware_func);
 	g_test_add_func("/fwupd/firmware{common}", fu_firmware_common_func);
+	g_test_add_func("/fwupd/firmware{linear}", fu_firmware_linear_func);
 	g_test_add_func("/fwupd/firmware{dedupe}", fu_firmware_dedupe_func);
 	g_test_add_func("/fwupd/firmware{build}", fu_firmware_build_func);
 	g_test_add_func("/fwupd/firmware{raw-aligned}", fu_firmware_raw_aligned_func);

@@ -72,6 +72,7 @@ fwupdplugin_src = [
   'fu-usb-device.c',
   'fu-cfi-device.c',
   'fu-hid-device.c',
+  'fu-linear-firmware.c',
   'fu-version.c',
 ]
 
@@ -131,6 +132,7 @@ fwupdplugin_headers = [
   'fu-uswid-firmware.h',
   'fu-coswid-firmware.h',
   'fu-ifd-image.h',
+  'fu-linear-firmware.h',
   'fu-volume.h',
   'fu-firmware.h',
   'fu-firmware-common.h',
