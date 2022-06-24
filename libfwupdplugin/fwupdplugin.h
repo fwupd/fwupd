@@ -49,6 +49,7 @@
 #include <libfwupdplugin/fu-ihex-firmware.h>
 #include <libfwupdplugin/fu-io-channel.h>
 #include <libfwupdplugin/fu-kernel.h>
+#include <libfwupdplugin/fu-linear-firmware.h>
 #include <libfwupdplugin/fu-mei-device.h>
 #include <libfwupdplugin/fu-mem.h>
 #include <libfwupdplugin/fu-oprom-firmware.h>
