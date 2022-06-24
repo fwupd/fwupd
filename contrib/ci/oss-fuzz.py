@@ -351,6 +351,7 @@ def _build(bld: Builder) -> None:
         Fuzzer("ihex"),
         Fuzzer("srec"),
         Fuzzer("ifwi-cpd"),
+        Fuzzer("oprom"),
         Fuzzer("uswid"),
         Fuzzer("efi-firmware-filesystem", pattern="efi-firmware-filesystem"),
         Fuzzer("efi-firmware-volume", pattern="efi-firmware-volume"),
