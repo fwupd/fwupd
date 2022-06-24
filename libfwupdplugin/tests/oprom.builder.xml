@@ -1,0 +1,10 @@
+<firmware gtype="FuOpromFirmware">
+  <machine_type>0x1</machine_type>
+  <compression_type>0x0</compression_type>
+  <idx>0x1</idx>
+  <data>aGVsbG8gd29ybGQ=</data>
+  <firmware gtype="FuFirmware">
+    <id>cpd</id>
+    <data>aGVsbG8gd29ybGQ=</data>
+  </firmware>
+</firmware>

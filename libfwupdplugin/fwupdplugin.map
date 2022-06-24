@@ -968,6 +968,11 @@ LIBFWUPDPLUGIN_1.8.2 {
     fu_memwrite_uint64;
     fu_memwrite_uint64_safe;
     fu_memwrite_uint8_safe;
+    fu_oprom_firmware_get_compression_type;
+    fu_oprom_firmware_get_machine_type;
+    fu_oprom_firmware_get_subsystem;
+    fu_oprom_firmware_get_type;
+    fu_oprom_firmware_new;
     fu_path_find_program;
     fu_path_fnmatch;
     fu_path_from_kind;

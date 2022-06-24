@@ -2347,6 +2347,37 @@ fu_firmware_ifwi_cpd_func(void)
 }
 
 static void
+fu_firmware_oprom_func(void)
+{
+	gboolean ret;
+	g_autofree gchar *filename_oprom = NULL;
+	g_autoptr(FuFirmware) firmware = fu_oprom_firmware_new();
+	g_autoptr(FuFirmware) img1 = NULL;
+	g_autoptr(GBytes) data_bin = NULL;
+	g_autoptr(GBytes) data_oprom = NULL;
+	g_autoptr(GError) error = NULL;
+
+	filename_oprom = g_test_build_filename(G_TEST_DIST, "tests", "oprom.bin", NULL);
+	data_oprom = fu_bytes_get_contents(filename_oprom, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(data_oprom);
+	ret = fu_firmware_parse(firmware, data_oprom, FWUPD_INSTALL_FLAG_NONE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(fu_firmware_get_idx(firmware), ==, 0x1);
+	data_bin = fu_firmware_write(firmware, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(data_bin);
+	g_assert_cmpint(g_bytes_get_size(data_bin), ==, 1024);
+
+	img1 = fu_firmware_get_image_by_id(firmware, "cpd", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(img1);
+	g_assert_cmpint(fu_firmware_get_offset(img1), ==, 512);
+	g_assert_cmpint(fu_firmware_get_size(img1), ==, 512);
+}
+
+static void
 fu_firmware_dfu_patch_func(void)
 {
 	gboolean ret;
@@ -3465,6 +3496,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/firmware{srec}", fu_firmware_srec_func);
 	g_test_add_func("/fwupd/firmware{srec-xml}", fu_firmware_srec_xml_func);
 	g_test_add_func("/fwupd/firmware{ifwi-cpd}", fu_firmware_ifwi_cpd_func);
+	g_test_add_func("/fwupd/firmware{oprom}", fu_firmware_oprom_func);
 	g_test_add_func("/fwupd/firmware{dfu}", fu_firmware_dfu_func);
 	g_test_add_func("/fwupd/firmware{dfu-patch}", fu_firmware_dfu_patch_func);
 	g_test_add_func("/fwupd/firmware{dfuse}", fu_firmware_dfuse_func);
