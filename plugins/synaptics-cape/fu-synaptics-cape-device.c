@@ -250,7 +250,7 @@ fu_synaptics_cape_device_sendcmd_ex(FuSynapticsCapeDevice *self,
 		report.cmd.data_len = GINT16_TO_LE(report.cmd.data_len);
 	}
 
-	report.cmd.cmd_id = GUINT32_TO_LE(report.cmd.cmd_id);
+	report.cmd.cmd_id = GUINT16_TO_LE(report.cmd.cmd_id);
 	report.cmd.module_id = GUINT32_TO_LE(report.cmd.module_id);
 
 	if (!fu_synaptics_cape_device_set_report(self, &report, error)) {
@@ -351,8 +351,8 @@ fu_synaptics_cape_device_sendcmd(FuSynapticsCapeDevice *self,
 
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
-	cmd.cmd_id = cmd_id;
-	cmd.module_id = module_id;
+	cmd.cmd_id = GUINT16_TO_LE(cmd_id);
+	cmd.module_id = GUINT32_TO_LE(module_id);
 
 	if (data_len != 0 && data != NULL) {
 		cmd.data_len = data_len;
@@ -459,9 +459,9 @@ fu_synaptics_cape_device_setup_version(FuSynapticsCapeDevice *self, GError **err
 	FuCapCmd cmd = {0};
 	g_autofree gchar *version_str = NULL;
 
-	cmd.cmd_id = GUINT32_TO_LE(FU_SYNAPTICS_CMD_GET_VERSION);
-	cmd.module_id = FU_SYNAPTICS_CAPE_CMD_APP_ID_CTRL;
-	cmd.data_len = 4;
+	cmd.cmd_id = GUINT16_TO_LE(FU_SYNAPTICS_CMD_GET_VERSION);
+	cmd.module_id = GUINT32_TO_LE(FU_SYNAPTICS_CAPE_CMD_APP_ID_CTRL);
+	cmd.data_len = GUINT16_TO_LE(4);
 
 	g_return_val_if_fail(FU_IS_SYNAPTICS_CAPE_DEVICE(self), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
