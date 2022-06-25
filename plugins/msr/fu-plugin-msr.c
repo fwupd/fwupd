@@ -344,6 +344,11 @@ fu_plugin_add_security_attr_amd_sme_enabled(FuPlugin *plugin, FuSecurityAttrs *a
 		fwupd_security_attr_add_guids(attr, fu_device_get_guids(device));
 	fu_security_attrs_append(attrs, attr);
 
+	if (priv == NULL) {
+		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA);
+		return;
+	}
+
 	/* check fields */
 	if (!priv->amd64_syscfg_supported) {
 		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
