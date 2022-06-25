@@ -27,8 +27,8 @@ _plugin_device_added_cb(FuPlugin *plugin, FuDevice *device, gpointer user_data)
 	*dev = device;
 }
 
-static void
-fu_test_self_init(FuTest *self)
+static gboolean
+fu_test_self_init(FuTest *self, GError **error_global)
 {
 	gboolean ret;
 	g_autoptr(FuContext) ctx = fu_context_new();
@@ -48,6 +48,14 @@ fu_test_self_init(FuTest *self)
 					      "uefi-capsule",
 					      "libfu_plugin_uefi_capsule." G_MODULE_SUFFIX,
 					      NULL);
+	if (!g_file_test(pluginfn_uefi, G_FILE_TEST_EXISTS)) {
+		g_set_error(error_global,
+			    G_IO_ERROR,
+			    G_IO_ERROR_NOT_FOUND,
+			    "%s was not found",
+			    pluginfn_uefi);
+		return FALSE;
+	}
 	ret = fu_plugin_open(self->plugin_uefi_capsule, pluginfn_uefi, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -65,6 +73,7 @@ fu_test_self_init(FuTest *self)
 	ret = fu_plugin_runner_startup(self->plugin_lenovo_thinklmi, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
+	return TRUE;
 }
 
 static FuDevice *
@@ -139,6 +148,7 @@ main(int argc, char **argv)
 	g_autofree gchar *testdatadir = NULL;
 	g_autofree gchar *test_dir = NULL;
 	g_autoptr(FuTest) self = g_new0(FuTest, 1);
+	g_autoptr(GError) error = NULL;
 
 	g_test_init(&argc, &argv, NULL);
 
@@ -162,7 +172,10 @@ main(int argc, char **argv)
 	g_assert_cmpint(g_mkdir_with_parents("/tmp/fwupd-self-test/var/lib/fwupd", 0755), ==, 0);
 
 	/* tests go here */
-	fu_test_self_init(self);
+	if (!fu_test_self_init(self, &error)) {
+		g_test_skip(error->message);
+		return 0;
+	}
 	g_test_add_data_func("/fwupd/plugin{lenovo-think-lmi:bootorder-locked}",
 			     self,
 			     fu_plugin_lenovo_thinklmi_bootorder_locked);
