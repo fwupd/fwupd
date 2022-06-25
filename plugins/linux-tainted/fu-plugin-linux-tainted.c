@@ -22,12 +22,12 @@ fu_plugin_linux_tainted_init(FuPlugin *plugin)
 static void
 fu_plugin_linux_tainted_destroy(FuPlugin *plugin)
 {
-	FuPluginData *data = fu_plugin_get_data(plugin);
-	if (data->file != NULL)
-		g_object_unref(data->file);
-	if (data->monitor != NULL) {
-		g_file_monitor_cancel(data->monitor);
-		g_object_unref(data->monitor);
+	FuPluginData *priv = fu_plugin_get_data(plugin);
+	if (priv->file != NULL)
+		g_object_unref(priv->file);
+	if (priv->monitor != NULL) {
+		g_file_monitor_cancel(priv->monitor);
+		g_object_unref(priv->monitor);
 	}
 }
 
@@ -46,17 +46,17 @@ fu_plugin_linux_tainted_changed_cb(GFileMonitor *monitor,
 static gboolean
 fu_plugin_linux_tainted_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 {
-	FuPluginData *data = fu_plugin_get_data(plugin);
+	FuPluginData *priv = fu_plugin_get_data(plugin);
 	g_autofree gchar *fn = NULL;
 	g_autofree gchar *procfs = NULL;
 
 	procfs = fu_path_from_kind(FU_PATH_KIND_PROCFS);
 	fn = g_build_filename(procfs, "sys", "kernel", "tainted", NULL);
-	data->file = g_file_new_for_path(fn);
-	data->monitor = g_file_monitor(data->file, G_FILE_MONITOR_NONE, NULL, error);
-	if (data->monitor == NULL)
+	priv->file = g_file_new_for_path(fn);
+	priv->monitor = g_file_monitor(priv->file, G_FILE_MONITOR_NONE, NULL, error);
+	if (priv->monitor == NULL)
 		return FALSE;
-	g_signal_connect(G_FILE_MONITOR(data->monitor),
+	g_signal_connect(G_FILE_MONITOR(priv->monitor),
 			 "changed",
 			 G_CALLBACK(fu_plugin_linux_tainted_changed_cb),
 			 plugin);
@@ -66,7 +66,7 @@ fu_plugin_linux_tainted_startup(FuPlugin *plugin, FuProgress *progress, GError *
 static void
 fu_plugin_linux_tainted_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
-	FuPluginData *data = fu_plugin_get_data(plugin);
+	FuPluginData *priv = fu_plugin_get_data(plugin);
 	gsize bufsz = 0;
 	g_autofree gchar *buf = NULL;
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
@@ -79,8 +79,8 @@ fu_plugin_linux_tainted_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *at
 	fu_security_attrs_append(attrs, attr);
 
 	/* load file */
-	if (!g_file_load_contents(data->file, NULL, &buf, &bufsz, NULL, &error_local)) {
-		g_autofree gchar *fn = g_file_get_path(data->file);
+	if (!g_file_load_contents(priv->file, NULL, &buf, &bufsz, NULL, &error_local)) {
+		g_autofree gchar *fn = g_file_get_path(priv->file);
 		g_warning("could not open %s: %s", fn, error_local->message);
 		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
 		return;

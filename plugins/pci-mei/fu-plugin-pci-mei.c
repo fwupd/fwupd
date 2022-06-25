@@ -58,9 +58,9 @@ fu_plugin_pci_mei_init(FuPlugin *plugin)
 static void
 fu_plugin_pci_mei_destroy(FuPlugin *plugin)
 {
-	FuPluginData *data = fu_plugin_get_data(plugin);
-	if (data->pci_device != NULL)
-		g_object_unref(data->pci_device);
+	FuPluginData *priv = fu_plugin_get_data(plugin);
+	if (priv->pci_device != NULL)
+		g_object_unref(priv->pci_device);
 }
 
 static FuMeiFamily

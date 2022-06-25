@@ -23,8 +23,8 @@ fu_plugin_gpio_load(FuContext *ctx)
 static void
 fu_plugin_gpio_init(FuPlugin *plugin)
 {
-	FuPluginData *data = fu_plugin_alloc_data(plugin, sizeof(FuPluginData));
-	data->current_logical_ids = g_ptr_array_new_with_free_func(g_free);
+	FuPluginData *priv = fu_plugin_alloc_data(plugin, sizeof(FuPluginData));
+	priv->current_logical_ids = g_ptr_array_new_with_free_func(g_free);
 	fu_plugin_add_udev_subsystem(plugin, "gpio");
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_GPIO_DEVICE);
 }
@@ -32,8 +32,8 @@ fu_plugin_gpio_init(FuPlugin *plugin)
 static void
 fu_plugin_gpio_destroy(FuPlugin *plugin)
 {
-	FuPluginData *data = fu_plugin_get_data(plugin);
-	g_ptr_array_unref(data->current_logical_ids);
+	FuPluginData *priv = fu_plugin_get_data(plugin);
+	g_ptr_array_unref(priv->current_logical_ids);
 }
 
 static gboolean
@@ -58,7 +58,7 @@ fu_plugin_gpio_parse_level(const gchar *str, gboolean *ret, GError **error)
 static gboolean
 fu_plugin_gpio_process_quirk(FuPlugin *self, const gchar *str, GError **error)
 {
-	FuPluginData *data = fu_plugin_get_data(self);
+	FuPluginData *priv = fu_plugin_get_data(self);
 	gboolean value = FALSE;
 	FuDevice *device_tmp;
 	g_auto(GStrv) split = g_strsplit(str, ",", -1);
@@ -93,7 +93,7 @@ fu_plugin_gpio_process_quirk(FuPlugin *self, const gchar *str, GError **error)
 	}
 
 	/* success */
-	g_ptr_array_add(data->current_logical_ids, g_strdup(fu_device_get_logical_id(device_tmp)));
+	g_ptr_array_add(priv->current_logical_ids, g_strdup(fu_device_get_logical_id(device_tmp)));
 	return TRUE;
 }
 
@@ -126,13 +126,13 @@ fu_plugin_gpio_cleanup(FuPlugin *self,
 		       FwupdInstallFlags flags,
 		       GError **error)
 {
-	FuPluginData *data = fu_plugin_get_data(self);
+	FuPluginData *priv = fu_plugin_get_data(self);
 	g_autoptr(GPtrArray) current_logical_ids = NULL;
 
 	/* deep copy to local to clear transaction array */
 	current_logical_ids =
-	    g_ptr_array_copy(data->current_logical_ids, (GCopyFunc)g_strdup, NULL);
-	g_ptr_array_set_size(data->current_logical_ids, 0);
+	    g_ptr_array_copy(priv->current_logical_ids, (GCopyFunc)g_strdup, NULL);
+	g_ptr_array_set_size(priv->current_logical_ids, 0);
 
 	/* close the fds we opened during ->prepare */
 	for (guint i = 0; i < current_logical_ids->len; i++) {

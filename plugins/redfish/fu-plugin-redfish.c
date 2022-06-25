@@ -42,7 +42,7 @@ fu_common_generate_password(guint length)
 static gboolean
 fu_plugin_redfish_change_expired(FuPlugin *plugin, GError **error)
 {
-	FuPluginData *data = fu_plugin_get_data(plugin);
+	FuPluginData *priv = fu_plugin_get_data(plugin);
 	g_autofree gchar *password_new = fu_common_generate_password(15);
 	g_autofree gchar *uri = NULL;
 	g_autoptr(FuRedfishRequest) request = NULL;
@@ -57,7 +57,7 @@ fu_plugin_redfish_change_expired(FuPlugin *plugin, GError **error)
 	}
 
 	/* now use Redfish to change the temporary password to the actual password */
-	request = fu_redfish_backend_request_new(data->backend);
+	request = fu_redfish_backend_request_new(priv->backend);
 	json_builder_begin_object(builder);
 	json_builder_set_member_name(builder, "Password");
 	json_builder_add_string_value(builder, password_new);
@@ -69,7 +69,7 @@ fu_plugin_redfish_change_expired(FuPlugin *plugin, GError **error)
 					     FU_REDFISH_REQUEST_PERFORM_FLAG_LOAD_JSON,
 					     error))
 		return FALSE;
-	fu_redfish_backend_set_password(data->backend, password_new);
+	fu_redfish_backend_set_password(priv->backend, password_new);
 
 	/* success */
 	return fu_plugin_set_secure_config_value(plugin, "Password", password_new, error);
@@ -78,17 +78,17 @@ fu_plugin_redfish_change_expired(FuPlugin *plugin, GError **error)
 static gboolean
 fu_plugin_redfish_coldplug(FuPlugin *plugin, FuProgress *progress, GError **error)
 {
-	FuPluginData *data = fu_plugin_get_data(plugin);
+	FuPluginData *priv = fu_plugin_get_data(plugin);
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(GError) error_local = NULL;
 
 	/* get the list of devices */
-	if (!fu_backend_coldplug(FU_BACKEND(data->backend), progress, &error_local)) {
+	if (!fu_backend_coldplug(FU_BACKEND(priv->backend), progress, &error_local)) {
 		/* did the user password expire? */
 		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_AUTH_EXPIRED)) {
 			if (!fu_plugin_redfish_change_expired(plugin, error))
 				return FALSE;
-			if (!fu_backend_coldplug(FU_BACKEND(data->backend), progress, error)) {
+			if (!fu_backend_coldplug(FU_BACKEND(priv->backend), progress, error)) {
 				fu_plugin_add_flag(plugin, FWUPD_PLUGIN_FLAG_AUTH_REQUIRED);
 				return FALSE;
 			}
@@ -97,7 +97,7 @@ fu_plugin_redfish_coldplug(FuPlugin *plugin, FuProgress *progress, GError **erro
 			return FALSE;
 		}
 	}
-	devices = fu_backend_get_devices(FU_BACKEND(data->backend));
+	devices = fu_backend_get_devices(FU_BACKEND(priv->backend));
 	for (guint i = 0; i < devices->len; i++) {
 		FuDevice *device = g_ptr_array_index(devices, i);
 		if (fu_context_has_hwid_flag(fu_plugin_get_context(plugin), "reset-required"))
@@ -116,7 +116,7 @@ fu_plugin_redfish_coldplug(FuPlugin *plugin, FuProgress *progress, GError **erro
 static gboolean
 fu_redfish_plugin_discover_uefi_credentials(FuPlugin *plugin, GError **error)
 {
-	FuPluginData *data = fu_plugin_get_data(plugin);
+	FuPluginData *priv = fu_plugin_get_data(plugin);
 	gsize bufsz = 0;
 	guint32 indications = 0x0;
 	g_autofree gchar *userpass_safe = NULL;
@@ -161,15 +161,15 @@ fu_redfish_plugin_discover_uefi_credentials(FuPlugin *plugin, GError **error)
 			    userpass_safe);
 		return FALSE;
 	}
-	fu_redfish_backend_set_username(data->backend, split[0]);
-	fu_redfish_backend_set_password(data->backend, split[1]);
+	fu_redfish_backend_set_username(priv->backend, split[0]);
+	fu_redfish_backend_set_password(priv->backend, split[1]);
 	return TRUE;
 }
 
 static gboolean
 fu_redfish_plugin_discover_smbios_table(FuPlugin *plugin, GError **error)
 {
-	FuPluginData *data = fu_plugin_get_data(plugin);
+	FuPluginData *priv = fu_plugin_get_data(plugin);
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	const gchar *smbios_data_fn;
 	g_autoptr(FuRedfishSmbios) smbios = fu_redfish_smbios_new();
@@ -192,27 +192,27 @@ fu_redfish_plugin_discover_smbios_table(FuPlugin *plugin, GError **error)
 	}
 
 	/* success */
-	g_set_object(&data->smbios, smbios);
+	g_set_object(&priv->smbios, smbios);
 	return TRUE;
 }
 
 static gboolean
 fu_redfish_plugin_autoconnect_network_device(FuPlugin *plugin, GError **error)
 {
-	FuPluginData *data = fu_plugin_get_data(plugin);
+	FuPluginData *priv = fu_plugin_get_data(plugin);
 	g_autofree gchar *hostname = NULL;
 	g_autoptr(FuRedfishNetworkDevice) device = NULL;
 
 	/* we have no data */
-	if (data->smbios == NULL)
+	if (priv->smbios == NULL)
 		return TRUE;
 
 	/* get IP, falling back to hostname, then MAC, then VID:PID */
-	hostname = g_strdup(fu_redfish_smbios_get_ip_addr(data->smbios));
+	hostname = g_strdup(fu_redfish_smbios_get_ip_addr(priv->smbios));
 	if (hostname == NULL)
-		hostname = g_strdup(fu_redfish_smbios_get_hostname(data->smbios));
+		hostname = g_strdup(fu_redfish_smbios_get_hostname(priv->smbios));
 	if (device == NULL) {
-		const gchar *mac_addr = fu_redfish_smbios_get_mac_addr(data->smbios);
+		const gchar *mac_addr = fu_redfish_smbios_get_mac_addr(priv->smbios);
 		if (mac_addr != NULL) {
 			g_autoptr(GError) error_network = NULL;
 			device = fu_redfish_network_device_for_mac_addr(mac_addr, &error_network);
@@ -221,8 +221,8 @@ fu_redfish_plugin_autoconnect_network_device(FuPlugin *plugin, GError **error)
 		}
 	}
 	if (device == NULL) {
-		guint16 vid = fu_redfish_smbios_get_vid(data->smbios);
-		guint16 pid = fu_redfish_smbios_get_pid(data->smbios);
+		guint16 vid = fu_redfish_smbios_get_vid(priv->smbios);
+		guint16 pid = fu_redfish_smbios_get_pid(priv->smbios);
 		if (vid != 0x0 && pid != 0x0) {
 			g_autoptr(GError) error_network = NULL;
 			device = fu_redfish_network_device_for_vid_pid(vid, pid, &error_network);
@@ -255,8 +255,8 @@ fu_redfish_plugin_autoconnect_network_device(FuPlugin *plugin, GError **error)
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE, "no hostname");
 		return FALSE;
 	}
-	fu_redfish_backend_set_hostname(data->backend, hostname);
-	fu_redfish_backend_set_port(data->backend, fu_redfish_smbios_get_port(data->smbios));
+	fu_redfish_backend_set_hostname(priv->backend, hostname);
+	fu_redfish_backend_set_port(priv->backend, fu_redfish_smbios_get_port(priv->smbios));
 	return TRUE;
 }
 
@@ -265,7 +265,7 @@ fu_redfish_plugin_autoconnect_network_device(FuPlugin *plugin, GError **error)
 static gboolean
 fu_redfish_plugin_ipmi_create_user(FuPlugin *plugin, GError **error)
 {
-	FuPluginData *data = fu_plugin_get_data(plugin);
+	FuPluginData *priv = fu_plugin_get_data(plugin);
 	const gchar *username_fwupd = "fwupd";
 	guint8 user_id = G_MAXUINT8;
 	g_autofree gchar *password_new = fu_common_generate_password(15);
@@ -315,14 +315,14 @@ fu_redfish_plugin_ipmi_create_user(FuPlugin *plugin, GError **error)
 		return FALSE;
 	if (!fu_ipmi_device_set_user_password(device, user_id, password_tmp, error))
 		return FALSE;
-	fu_redfish_backend_set_username(data->backend, username_fwupd);
-	fu_redfish_backend_set_password(data->backend, password_tmp);
+	fu_redfish_backend_set_username(priv->backend, username_fwupd);
+	fu_redfish_backend_set_password(priv->backend, password_tmp);
 
 	/* wait for Redfish to sync */
 	g_usleep(2 * G_USEC_PER_SEC);
 
 	/* now use Redfish to change the temporary password to the actual password */
-	request = fu_redfish_backend_request_new(data->backend);
+	request = fu_redfish_backend_request_new(priv->backend);
 	uri = g_strdup_printf("/redfish/v1/AccountService/Accounts/%u", (guint)user_id - 1);
 	json_builder_begin_object(builder);
 	json_builder_set_member_name(builder, "Password");
@@ -335,7 +335,7 @@ fu_redfish_plugin_ipmi_create_user(FuPlugin *plugin, GError **error)
 					     FU_REDFISH_REQUEST_PERFORM_FLAG_LOAD_JSON,
 					     error))
 		return FALSE;
-	fu_redfish_backend_set_password(data->backend, password_new);
+	fu_redfish_backend_set_password(priv->backend, password_new);
 
 	/* success */
 	if (!fu_plugin_set_secure_config_value(plugin, "UserUri", uri, error))
@@ -352,7 +352,7 @@ fu_redfish_plugin_ipmi_create_user(FuPlugin *plugin, GError **error)
 static gboolean
 fu_plugin_redfish_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 {
-	FuPluginData *data = fu_plugin_get_data(plugin);
+	FuPluginData *priv = fu_plugin_get_data(plugin);
 	g_autofree gchar *ca_check_str = NULL;
 	g_autofree gchar *password = NULL;
 	g_autofree gchar *redfish_uri = NULL;
@@ -377,11 +377,11 @@ fu_plugin_redfish_startup(FuPlugin *plugin, FuProgress *progress, GError **error
 		guint64 port = 0;
 
 		if (g_str_has_prefix(redfish_uri, "https://")) {
-			fu_redfish_backend_set_https(data->backend, TRUE);
+			fu_redfish_backend_set_https(priv->backend, TRUE);
 			ip_str = redfish_uri + strlen("https://");
 			port = 443;
 		} else if (g_str_has_prefix(redfish_uri, "http://")) {
-			fu_redfish_backend_set_https(data->backend, FALSE);
+			fu_redfish_backend_set_https(priv->backend, FALSE);
 			ip_str = redfish_uri + strlen("http://");
 			port = 80;
 		} else {
@@ -393,7 +393,7 @@ fu_plugin_redfish_startup(FuPlugin *plugin, FuProgress *progress, GError **error
 		}
 
 		split = g_strsplit(ip_str, ":", 2);
-		fu_redfish_backend_set_hostname(data->backend, split[0]);
+		fu_redfish_backend_set_hostname(priv->backend, split[0]);
 		if (g_strv_length(split) > 1)
 			port = g_ascii_strtoull(split[1], NULL, 10);
 		if (port == 0 || port == G_MAXUINT64) {
@@ -403,25 +403,25 @@ fu_plugin_redfish_startup(FuPlugin *plugin, FuProgress *progress, GError **error
 					    "no valid port specified");
 			return FALSE;
 		}
-		fu_redfish_backend_set_port(data->backend, port);
+		fu_redfish_backend_set_port(priv->backend, port);
 	}
 	username = fu_plugin_get_config_value(plugin, "Username");
 	if (username != NULL)
-		fu_redfish_backend_set_username(data->backend, username);
+		fu_redfish_backend_set_username(priv->backend, username);
 	password = fu_plugin_get_config_value(plugin, "Password");
 	if (password != NULL)
-		fu_redfish_backend_set_password(data->backend, password);
+		fu_redfish_backend_set_password(priv->backend, password);
 	ca_check_str = fu_plugin_get_config_value(plugin, "CACheck");
 	if (ca_check_str != NULL) {
 		gboolean ca_check = fu_plugin_get_config_value_boolean(plugin, "CACheck");
-		fu_redfish_backend_set_cacheck(data->backend, ca_check);
+		fu_redfish_backend_set_cacheck(priv->backend, ca_check);
 	}
 	if (fu_context_has_hwid_flag(fu_plugin_get_context(plugin), "wildcard-targets"))
-		fu_redfish_backend_set_wildcard_targets(data->backend, TRUE);
+		fu_redfish_backend_set_wildcard_targets(priv->backend, TRUE);
 
 #ifdef HAVE_LINUX_IPMI_H
 	/* we got neither a type 42 entry or config value, lets try IPMI */
-	if (fu_redfish_backend_get_username(data->backend) == NULL) {
+	if (fu_redfish_backend_get_username(priv->backend) == NULL) {
 		if (!fu_plugin_get_config_value_boolean(plugin, "IpmiDisableCreateUser")) {
 			g_debug("attempting to create user using IPMI");
 			if (!fu_redfish_plugin_ipmi_create_user(plugin, error))
@@ -430,20 +430,20 @@ fu_plugin_redfish_startup(FuPlugin *plugin, FuProgress *progress, GError **error
 	}
 #endif
 
-	return fu_backend_setup(FU_BACKEND(data->backend), progress, error);
+	return fu_backend_setup(FU_BACKEND(priv->backend), progress, error);
 }
 
 static gboolean
 fu_plugin_redfish_cleanup_setup_cb(FuDevice *device, gpointer user_data, GError **error)
 {
 	FuPlugin *self = FU_PLUGIN(user_data);
-	FuPluginData *data = fu_plugin_get_data(self);
+	FuPluginData *priv = fu_plugin_get_data(self);
 	FuProgress *progress = fu_progress_new(G_STRLOC);
 
 	/* the network adaptor might not autoconnect when coming back */
 	if (!fu_redfish_plugin_autoconnect_network_device(self, error))
 		return FALSE;
-	return fu_backend_setup(FU_BACKEND(data->backend), progress, error);
+	return fu_backend_setup(FU_BACKEND(priv->backend), progress, error);
 }
 
 static gboolean
@@ -463,10 +463,10 @@ fu_plugin_redfish_cleanup(FuPlugin *self,
 			  FwupdInstallFlags flags,
 			  GError **error)
 {
-	FuPluginData *data = fu_plugin_get_data(self);
+	FuPluginData *priv = fu_plugin_get_data(self);
 	guint64 reset_timeout = 0;
 	g_autofree gchar *restart_timeout_str = NULL;
-	g_autoptr(FuRedfishRequest) request = fu_redfish_backend_request_new(data->backend);
+	g_autoptr(FuRedfishRequest) request = fu_redfish_backend_request_new(priv->backend);
 	g_autoptr(JsonBuilder) builder = json_builder_new();
 	g_autoptr(GPtrArray) devices = NULL;
 
@@ -499,14 +499,14 @@ fu_plugin_redfish_cleanup(FuPlugin *self,
 	fu_progress_step_done(progress);
 
 	/* remove all the devices */
-	devices = fu_backend_get_devices(FU_BACKEND(data->backend));
+	devices = fu_backend_get_devices(FU_BACKEND(priv->backend));
 	for (guint i = 0; i < devices->len; i++) {
 		FuDevice *device_tmp = g_ptr_array_index(devices, i);
-		fu_backend_device_removed(FU_BACKEND(data->backend), device_tmp);
+		fu_backend_device_removed(FU_BACKEND(priv->backend), device_tmp);
 	}
 
 	/* work around manager bugs... */
-	fu_backend_invalidate(FU_BACKEND(data->backend));
+	fu_backend_invalidate(FU_BACKEND(priv->backend));
 	if (fu_redfish_device_get_reset_pre_delay(FU_REDFISH_DEVICE(device)) > 0) {
 		fu_progress_sleep(fu_progress_get_child(progress),
 				  fu_redfish_device_get_reset_pre_delay(FU_REDFISH_DEVICE(device)));
@@ -569,18 +569,18 @@ static void
 fu_plugin_redfish_init(FuPlugin *plugin)
 {
 	FuContext *ctx = fu_plugin_get_context(plugin);
-	FuPluginData *data = fu_plugin_alloc_data(plugin, sizeof(FuPluginData));
-	data->backend = fu_redfish_backend_new(ctx);
+	FuPluginData *priv = fu_plugin_alloc_data(plugin, sizeof(FuPluginData));
+	priv->backend = fu_redfish_backend_new(ctx);
 	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_REDFISH_SMBIOS);
 }
 
 static void
 fu_plugin_redfish_destroy(FuPlugin *plugin)
 {
-	FuPluginData *data = fu_plugin_get_data(plugin);
-	if (data->smbios != NULL)
-		g_object_unref(data->smbios);
-	g_object_unref(data->backend);
+	FuPluginData *priv = fu_plugin_get_data(plugin);
+	if (priv->smbios != NULL)
+		g_object_unref(priv->smbios);
+	g_object_unref(priv->backend);
 }
 
 void

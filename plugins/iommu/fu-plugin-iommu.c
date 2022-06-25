@@ -37,7 +37,7 @@ fu_plugin_iommu_backend_device_added(FuPlugin *plugin, FuDevice *device, GError 
 static void
 fu_plugin_iommu_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
-	FuPluginData *data = fu_plugin_get_data(plugin);
+	FuPluginData *priv = fu_plugin_get_data(plugin);
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
 
 	/* create attr */
@@ -46,7 +46,7 @@ fu_plugin_iommu_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 	fwupd_security_attr_set_plugin(attr, fu_plugin_get_name(plugin));
 	fu_security_attrs_append(attrs, attr);
 
-	if (!data->has_iommu) {
+	if (!priv->has_iommu) {
 		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_FOUND);
 		return;
 	}
