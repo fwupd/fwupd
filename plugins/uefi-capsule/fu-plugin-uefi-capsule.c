@@ -30,7 +30,7 @@ struct FuPluginData {
 static gboolean
 fu_plugin_uefi_capsule_fwupd_efi_parse(FuPlugin *plugin, GError **error)
 {
-	FuPluginData *data = fu_plugin_get_data(plugin);
+	FuPluginData *priv = fu_plugin_get_data(plugin);
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	const guint8 needle[] = "f\0w\0u\0p\0d\0-\0e\0f\0i\0 \0v\0e\0r\0s\0i\0o\0n\0 ";
 	gsize bufsz = 0;
@@ -40,10 +40,10 @@ fu_plugin_uefi_capsule_fwupd_efi_parse(FuPlugin *plugin, GError **error)
 	g_autofree gchar *version = NULL;
 
 	/* find the UTF-16 version string */
-	if (!g_file_load_contents(data->fwupd_efi_file, NULL, &buf, &bufsz, NULL, error))
+	if (!g_file_load_contents(priv->fwupd_efi_file, NULL, &buf, &bufsz, NULL, error))
 		return FALSE;
 	if (!fu_memmem_safe((const guint8 *)buf, bufsz, needle, sizeof(needle), &offset, error)) {
-		g_autofree gchar *fn = g_file_get_path(data->fwupd_efi_file);
+		g_autofree gchar *fn = g_file_get_path(priv->fwupd_efi_file);
 		g_prefix_error(error, "searching %s: ", fn);
 		return FALSE;
 	}
@@ -62,7 +62,7 @@ fu_plugin_uefi_capsule_fwupd_efi_parse(FuPlugin *plugin, GError **error)
 	/* convert to UTF-8 */
 	version = g_utf16_to_utf8(version_tmp, -1, NULL, NULL, error);
 	if (version == NULL) {
-		g_autofree gchar *fn = g_file_get_path(data->fwupd_efi_file);
+		g_autofree gchar *fn = g_file_get_path(priv->fwupd_efi_file);
 		g_prefix_error(error, "converting %s: ", fn);
 		return FALSE;
 	}
@@ -93,7 +93,7 @@ fu_plugin_uefi_capsule_fwupd_efi_changed_cb(GFileMonitor *monitor,
 static gboolean
 fu_plugin_uefi_capsule_fwupd_efi_probe(FuPlugin *plugin, GError **error)
 {
-	FuPluginData *data = fu_plugin_get_data(plugin);
+	FuPluginData *priv = fu_plugin_get_data(plugin);
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	g_autofree gchar *fn = NULL;
 
@@ -101,12 +101,12 @@ fu_plugin_uefi_capsule_fwupd_efi_probe(FuPlugin *plugin, GError **error)
 	fn = fu_uefi_get_built_app_path(error);
 	if (fn == NULL)
 		return FALSE;
-	data->fwupd_efi_file = g_file_new_for_path(fn);
-	data->fwupd_efi_monitor =
-	    g_file_monitor_file(data->fwupd_efi_file, G_FILE_MONITOR_NONE, NULL, error);
-	if (data->fwupd_efi_monitor == NULL)
+	priv->fwupd_efi_file = g_file_new_for_path(fn);
+	priv->fwupd_efi_monitor =
+	    g_file_monitor_file(priv->fwupd_efi_file, G_FILE_MONITOR_NONE, NULL, error);
+	if (priv->fwupd_efi_monitor == NULL)
 		return FALSE;
-	g_signal_connect(G_FILE_MONITOR(data->fwupd_efi_monitor),
+	g_signal_connect(G_FILE_MONITOR(priv->fwupd_efi_monitor),
 			 "changed",
 			 G_CALLBACK(fu_plugin_uefi_capsule_fwupd_efi_changed_cb),
 			 plugin);
@@ -121,11 +121,11 @@ static void
 fu_plugin_uefi_capsule_init(FuPlugin *plugin)
 {
 	FuContext *ctx = fu_plugin_get_context(plugin);
-	FuPluginData *data = fu_plugin_alloc_data(plugin, sizeof(FuPluginData));
+	FuPluginData *priv = fu_plugin_alloc_data(plugin, sizeof(FuPluginData));
 	g_autoptr(GError) error_local = NULL;
 
-	data->backend = fu_uefi_backend_new(ctx);
-	data->bgrt = fu_uefi_bgrt_new();
+	priv->backend = fu_uefi_backend_new(ctx);
+	priv->bgrt = fu_uefi_bgrt_new();
 	fu_plugin_add_rule(plugin, FU_PLUGIN_RULE_RUN_AFTER, "upower");
 	fu_plugin_add_rule(plugin, FU_PLUGIN_RULE_METADATA_SOURCE, "tpm");
 	fu_plugin_add_rule(plugin, FU_PLUGIN_RULE_METADATA_SOURCE, "dell");
@@ -141,17 +141,17 @@ fu_plugin_uefi_capsule_init(FuPlugin *plugin)
 static void
 fu_plugin_uefi_capsule_destroy(FuPlugin *plugin)
 {
-	FuPluginData *data = fu_plugin_get_data(plugin);
-	if (data->esp != NULL)
-		g_object_unref(data->esp);
-	if (data->fwupd_efi_file != NULL)
-		g_object_unref(data->fwupd_efi_file);
-	if (data->fwupd_efi_monitor != NULL) {
-		g_file_monitor_cancel(data->fwupd_efi_monitor);
-		g_object_unref(data->fwupd_efi_monitor);
+	FuPluginData *priv = fu_plugin_get_data(plugin);
+	if (priv->esp != NULL)
+		g_object_unref(priv->esp);
+	if (priv->fwupd_efi_file != NULL)
+		g_object_unref(priv->fwupd_efi_file);
+	if (priv->fwupd_efi_monitor != NULL) {
+		g_file_monitor_cancel(priv->fwupd_efi_monitor);
+		g_object_unref(priv->fwupd_efi_monitor);
 	}
-	g_object_unref(data->backend);
-	g_object_unref(data->bgrt);
+	g_object_unref(priv->backend);
+	g_object_unref(priv->bgrt);
 }
 
 static gboolean
@@ -240,7 +240,7 @@ fu_plugin_uefi_capsule_write_splash_data(FuPlugin *plugin,
 					 GBytes *blob,
 					 GError **error)
 {
-	FuPluginData *data = fu_plugin_get_data(plugin);
+	FuPluginData *priv = fu_plugin_get_data(plugin);
 	guint32 screen_x, screen_y;
 	gsize buf_size = g_bytes_get_size(blob);
 	gssize size;
@@ -272,7 +272,7 @@ fu_plugin_uefi_capsule_write_splash_data(FuPlugin *plugin,
 	}
 
 	/* save to a predicatable filename */
-	esp_path = fu_volume_get_mount_point(data->esp);
+	esp_path = fu_volume_get_mount_point(priv->esp);
 	directory = fu_uefi_get_esp_path_for_os(device, esp_path);
 	basename = g_strdup_printf("fwupd-%s.cap", FU_EFIVAR_GUID_UX_CAPSULE);
 	fn = g_build_filename(directory, "fw", basename, NULL);
@@ -296,11 +296,11 @@ fu_plugin_uefi_capsule_write_splash_data(FuPlugin *plugin,
 	header.image_type = 0;
 	header.reserved = 0;
 	header.x_offset = (screen_x / 2) - (width / 2);
-	if (screen_y == fu_uefi_bgrt_get_height(data->bgrt)) {
+	if (screen_y == fu_uefi_bgrt_get_height(priv->bgrt)) {
 		header.y_offset = (gdouble)screen_y * 0.8f;
 	} else {
 		header.y_offset =
-		    fu_uefi_bgrt_get_yoffset(data->bgrt) + fu_uefi_bgrt_get_height(data->bgrt);
+		    fu_uefi_bgrt_get_yoffset(priv->bgrt) + fu_uefi_bgrt_get_height(priv->bgrt);
 	};
 
 	/* header, payload and image has to add to zero */
@@ -335,7 +335,7 @@ fu_plugin_uefi_capsule_write_splash_data(FuPlugin *plugin,
 static gboolean
 fu_plugin_uefi_capsule_update_splash(FuPlugin *plugin, FuDevice *device, GError **error)
 {
-	FuPluginData *data = fu_plugin_get_data(plugin);
+	FuPluginData *priv = fu_plugin_get_data(plugin);
 	guint best_idx = G_MAXUINT;
 	guint32 lowest_border_pixels = G_MAXUINT;
 	guint32 screen_height = 768;
@@ -362,7 +362,7 @@ fu_plugin_uefi_capsule_update_splash(FuPlugin *plugin, FuDevice *device, GError 
 	}
 
 	/* get the boot graphics resource table data */
-	if (!fu_uefi_bgrt_get_supported(data->bgrt)) {
+	if (!fu_uefi_bgrt_get_supported(priv->bgrt)) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
@@ -489,19 +489,19 @@ fu_plugin_uefi_capsule_load_config(FuPlugin *plugin, FuDevice *device)
 static void
 fu_plugin_uefi_capsule_register_proxy_device(FuPlugin *plugin, FuDevice *device)
 {
-	FuPluginData *data = fu_plugin_get_data(plugin);
+	FuPluginData *priv = fu_plugin_get_data(plugin);
 	g_autoptr(FuUefiDevice) dev = NULL;
 	g_autoptr(GError) error_local = NULL;
 
 	/* load all configuration variables */
-	dev = fu_uefi_backend_device_new_from_dev(FU_UEFI_BACKEND(data->backend), device);
+	dev = fu_uefi_backend_device_new_from_dev(FU_UEFI_BACKEND(priv->backend), device);
 	fu_plugin_uefi_capsule_load_config(plugin, FU_DEVICE(dev));
-	if (data->esp == NULL)
-		data->esp = fu_volume_new_esp_default(&error_local);
-	if (data->esp == NULL) {
+	if (priv->esp == NULL)
+		priv->esp = fu_volume_new_esp_default(&error_local);
+	if (priv->esp == NULL) {
 		fu_device_inhibit(device, "no-esp", error_local->message);
 	} else {
-		fu_uefi_device_set_esp(dev, data->esp);
+		fu_uefi_device_set_esp(dev, priv->esp);
 		fu_device_uninhibit(device, "no-esp");
 	}
 	fu_plugin_device_add(plugin, FU_DEVICE(dev));
@@ -621,7 +621,7 @@ static gboolean
 fu_plugin_uefi_capsule_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 {
 	FuContext *ctx = fu_plugin_get_context(plugin);
-	FuPluginData *data = fu_plugin_get_data(plugin);
+	FuPluginData *priv = fu_plugin_get_data(plugin);
 	guint64 nvram_total;
 	g_autofree gchar *esp_path = NULL;
 	g_autofree gchar *nvram_total_str = NULL;
@@ -641,12 +641,12 @@ fu_plugin_uefi_capsule_startup(FuPlugin *plugin, FuProgress *progress, GError **
 
 	/* use GRUB to load updates */
 	if (fu_plugin_get_config_value_boolean(plugin, "EnableGrubChainLoad")) {
-		fu_uefi_backend_set_device_gtype(FU_UEFI_BACKEND(data->backend),
+		fu_uefi_backend_set_device_gtype(FU_UEFI_BACKEND(priv->backend),
 						 FU_TYPE_UEFI_GRUB_DEVICE);
 	}
 
 	/* check we can use this backend */
-	if (!fu_backend_setup(data->backend, progress, &error_local)) {
+	if (!fu_backend_setup(priv->backend, progress, &error_local)) {
 		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_WRITE)) {
 			fu_plugin_add_flag(plugin, FWUPD_PLUGIN_FLAG_EFIVAR_NOT_MOUNTED);
 			fu_plugin_add_flag(plugin, FWUPD_PLUGIN_FLAG_CLEAR_UPDATABLE);
@@ -668,8 +668,8 @@ fu_plugin_uefi_capsule_startup(FuPlugin *plugin, FuProgress *progress, GError **
 	/* override the default ESP path */
 	esp_path = fu_plugin_get_config_value(plugin, "OverrideESPMountPoint");
 	if (esp_path != NULL) {
-		data->esp = fu_volume_new_esp_for_path(esp_path, error);
-		if (data->esp == NULL) {
+		priv->esp = fu_volume_new_esp_for_path(esp_path, error);
+		if (priv->esp == NULL) {
 			g_prefix_error(error,
 				       "invalid OverrideESPMountPoint=%s "
 				       "specified in config: ",
@@ -812,7 +812,7 @@ fu_plugin_uefi_capsule_check_cod_support(GError **error)
 static gboolean
 fu_plugin_uefi_capsule_coldplug(FuPlugin *plugin, FuProgress *progress, GError **error)
 {
-	FuPluginData *data = fu_plugin_get_data(plugin);
+	FuPluginData *priv = fu_plugin_get_data(plugin);
 	const gchar *str;
 	gboolean has_fde = FALSE;
 	g_autoptr(GError) error_udisks2 = NULL;
@@ -829,9 +829,9 @@ fu_plugin_uefi_capsule_coldplug(FuPlugin *plugin, FuProgress *progress, GError *
 	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 26, "add-devices");
 	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "setup-bgrt");
 
-	if (data->esp == NULL) {
-		data->esp = fu_volume_new_esp_default(&error_udisks2);
-		if (data->esp == NULL) {
+	if (priv->esp == NULL) {
+		priv->esp = fu_volume_new_esp_default(&error_udisks2);
+		if (priv->esp == NULL) {
 			fu_plugin_add_flag(plugin, FWUPD_PLUGIN_FLAG_ESP_NOT_FOUND);
 			fu_plugin_add_flag(plugin, FWUPD_PLUGIN_FLAG_CLEAR_UPDATABLE);
 			fu_plugin_add_flag(plugin, FWUPD_PLUGIN_FLAG_USER_WARNING);
@@ -846,7 +846,7 @@ fu_plugin_uefi_capsule_coldplug(FuPlugin *plugin, FuProgress *progress, GError *
 		if (!fu_plugin_uefi_capsule_check_cod_support(&error_cod)) {
 			g_debug("not using CapsuleOnDisk support: %s", error_cod->message);
 		} else {
-			fu_uefi_backend_set_device_gtype(FU_UEFI_BACKEND(data->backend),
+			fu_uefi_backend_set_device_gtype(FU_UEFI_BACKEND(priv->backend),
 							 FU_TYPE_UEFI_COD_DEVICE);
 		}
 	}
@@ -860,16 +860,16 @@ fu_plugin_uefi_capsule_coldplug(FuPlugin *plugin, FuProgress *progress, GError *
 	fu_progress_step_done(progress);
 
 	/* add each device */
-	if (!fu_backend_coldplug(data->backend, fu_progress_get_child(progress), error))
+	if (!fu_backend_coldplug(priv->backend, fu_progress_get_child(progress), error))
 		return FALSE;
 	fu_progress_step_done(progress);
-	devices = fu_backend_get_devices(data->backend);
+	devices = fu_backend_get_devices(priv->backend);
 	for (guint i = 0; i < devices->len; i++) {
 		FuUefiDevice *dev = g_ptr_array_index(devices, i);
 		g_autoptr(GError) error_device = NULL;
 
-		if (data->esp != NULL)
-			fu_uefi_device_set_esp(dev, data->esp);
+		if (priv->esp != NULL)
+			fu_uefi_device_set_esp(dev, priv->esp);
 		if (!fu_plugin_uefi_capsule_coldplug_device(plugin, dev, &error_device)) {
 			if (g_error_matches(error_device, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
 				g_warning("skipping device that failed coldplug: %s",
@@ -901,9 +901,9 @@ fu_plugin_uefi_capsule_coldplug(FuPlugin *plugin, FuProgress *progress, GError *
 
 	/* for debugging problems later */
 	fu_plugin_uefi_capsule_test_secure_boot(plugin);
-	if (!fu_uefi_bgrt_setup(data->bgrt, &error_local))
+	if (!fu_uefi_bgrt_setup(priv->bgrt, &error_local))
 		g_debug("BGRT setup failed: %s", error_local->message);
-	str = fu_uefi_bgrt_get_supported(data->bgrt) ? "Enabled" : "Disabled";
+	str = fu_uefi_bgrt_get_supported(priv->bgrt) ? "Enabled" : "Disabled";
 	g_debug("UX Capsule support : %s", str);
 	fu_plugin_add_report_metadata(plugin, "UEFIUXCapsule", str);
 	fu_progress_step_done(progress);

@@ -31,12 +31,12 @@ fu_plugin_linux_lockdown_init(FuPlugin *plugin)
 static void
 fu_plugin_linux_lockdown_destroy(FuPlugin *plugin)
 {
-	FuPluginData *data = fu_plugin_get_data(plugin);
-	if (data->file != NULL)
-		g_object_unref(data->file);
-	if (data->monitor != NULL) {
-		g_file_monitor_cancel(data->monitor);
-		g_object_unref(data->monitor);
+	FuPluginData *priv = fu_plugin_get_data(plugin);
+	if (priv->file != NULL)
+		g_object_unref(priv->file);
+	if (priv->monitor != NULL) {
+		g_file_monitor_cancel(priv->monitor);
+		g_object_unref(priv->monitor);
 	}
 }
 
@@ -57,27 +57,27 @@ fu_plugin_linux_lockdown_to_string(FuPluginLinuxLockdown lockdown)
 static void
 fu_plugin_linux_lockdown_rescan(FuPlugin *plugin)
 {
-	FuPluginData *data = fu_plugin_get_data(plugin);
+	FuPluginData *priv = fu_plugin_get_data(plugin);
 	gsize bufsz = 0;
 	g_autofree gchar *buf = NULL;
 
 	/* load file */
-	if (!g_file_load_contents(data->file, NULL, &buf, &bufsz, NULL, NULL)) {
-		data->lockdown = FU_PLUGIN_LINUX_LOCKDOWN_INVALID;
+	if (!g_file_load_contents(priv->file, NULL, &buf, &bufsz, NULL, NULL)) {
+		priv->lockdown = FU_PLUGIN_LINUX_LOCKDOWN_INVALID;
 	} else if (g_strstr_len(buf, bufsz, "[none]") != NULL) {
-		data->lockdown = FU_PLUGIN_LINUX_LOCKDOWN_NONE;
+		priv->lockdown = FU_PLUGIN_LINUX_LOCKDOWN_NONE;
 	} else if (g_strstr_len(buf, bufsz, "[integrity]") != NULL) {
-		data->lockdown = FU_PLUGIN_LINUX_LOCKDOWN_INTEGRITY;
+		priv->lockdown = FU_PLUGIN_LINUX_LOCKDOWN_INTEGRITY;
 	} else if (g_strstr_len(buf, bufsz, "[confidentiality]") != NULL) {
-		data->lockdown = FU_PLUGIN_LINUX_LOCKDOWN_CONFIDENTIALITY;
+		priv->lockdown = FU_PLUGIN_LINUX_LOCKDOWN_CONFIDENTIALITY;
 	} else {
-		data->lockdown = FU_PLUGIN_LINUX_LOCKDOWN_UNKNOWN;
+		priv->lockdown = FU_PLUGIN_LINUX_LOCKDOWN_UNKNOWN;
 	}
 
 	/* update metadata */
 	fu_plugin_add_report_metadata(plugin,
 				      "LinuxLockdown",
-				      fu_plugin_linux_lockdown_to_string(data->lockdown));
+				      fu_plugin_linux_lockdown_to_string(priv->lockdown));
 }
 
 static void
@@ -96,7 +96,7 @@ fu_plugin_linux_lockdown_changed_cb(GFileMonitor *monitor,
 static gboolean
 fu_plugin_linux_lockdown_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 {
-	FuPluginData *data = fu_plugin_get_data(plugin);
+	FuPluginData *priv = fu_plugin_get_data(plugin);
 	g_autofree gchar *path = NULL;
 	g_autofree gchar *fn = NULL;
 
@@ -109,11 +109,11 @@ fu_plugin_linux_lockdown_startup(FuPlugin *plugin, FuProgress *progress, GError 
 				    "Kernel doesn't offer lockdown support.");
 		return FALSE;
 	}
-	data->file = g_file_new_for_path(fn);
-	data->monitor = g_file_monitor(data->file, G_FILE_MONITOR_NONE, NULL, error);
-	if (data->monitor == NULL)
+	priv->file = g_file_new_for_path(fn);
+	priv->monitor = g_file_monitor(priv->file, G_FILE_MONITOR_NONE, NULL, error);
+	if (priv->monitor == NULL)
 		return FALSE;
-	g_signal_connect(G_FILE_MONITOR(data->monitor),
+	g_signal_connect(G_FILE_MONITOR(priv->monitor),
 			 "changed",
 			 G_CALLBACK(fu_plugin_linux_lockdown_changed_cb),
 			 plugin);
@@ -124,7 +124,7 @@ fu_plugin_linux_lockdown_startup(FuPlugin *plugin, FuProgress *progress, GError 
 static void
 fu_plugin_linux_lockdown_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
-	FuPluginData *data = fu_plugin_get_data(plugin);
+	FuPluginData *priv = fu_plugin_get_data(plugin);
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
 
 	/* create attr */
@@ -133,17 +133,17 @@ fu_plugin_linux_lockdown_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *a
 	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ISSUE);
 	fu_security_attrs_append(attrs, attr);
 
-	if (data->lockdown == FU_PLUGIN_LINUX_LOCKDOWN_UNKNOWN) {
+	if (priv->lockdown == FU_PLUGIN_LINUX_LOCKDOWN_UNKNOWN) {
 		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA);
 		return;
 	}
 
 	/* load file */
-	if (data->lockdown == FU_PLUGIN_LINUX_LOCKDOWN_INVALID) {
+	if (priv->lockdown == FU_PLUGIN_LINUX_LOCKDOWN_INVALID) {
 		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
 		return;
 	}
-	if (data->lockdown == FU_PLUGIN_LINUX_LOCKDOWN_NONE) {
+	if (priv->lockdown == FU_PLUGIN_LINUX_LOCKDOWN_NONE) {
 		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
 		return;
 	}

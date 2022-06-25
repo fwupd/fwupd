@@ -113,13 +113,13 @@ static guint16
 fu_dell_get_system_id(FuPlugin *plugin)
 {
 	FuContext *ctx = fu_plugin_get_context(plugin);
-	FuPluginData *data = fu_plugin_get_data(plugin);
+	FuPluginData *priv = fu_plugin_get_data(plugin);
 	const gchar *system_id_str = NULL;
 	guint16 system_id = 0;
 	gchar *endptr = NULL;
 
 	/* don't care for test suite */
-	if (data->smi_obj->fake_smbios)
+	if (priv->smi_obj->fake_smbios)
 		return 0;
 
 	system_id_str = fu_context_get_hwid_value(ctx, FU_HWIDS_KEY_PRODUCT_SKU);
@@ -214,24 +214,24 @@ fu_plugin_dell_inject_fake_data(FuPlugin *plugin,
 				guint8 *buf,
 				gboolean can_switch_modes)
 {
-	FuPluginData *data = fu_plugin_get_data(plugin);
+	FuPluginData *priv = fu_plugin_get_data(plugin);
 
-	if (!data->smi_obj->fake_smbios)
+	if (!priv->smi_obj->fake_smbios)
 		return;
 	for (guint i = 0; i < 4; i++)
-		data->smi_obj->output[i] = output[i];
-	data->fake_vid = vid;
-	data->fake_pid = pid;
-	data->smi_obj->fake_buffer = buf;
-	data->can_switch_modes = TRUE;
+		priv->smi_obj->output[i] = output[i];
+	priv->fake_vid = vid;
+	priv->fake_pid = pid;
+	priv->smi_obj->fake_buffer = buf;
+	priv->can_switch_modes = TRUE;
 }
 
 static gboolean
 fu_plugin_dell_capsule_supported(FuPlugin *plugin)
 {
-	FuPluginData *data = fu_plugin_get_data(plugin);
+	FuPluginData *priv = fu_plugin_get_data(plugin);
 
-	return data->smi_obj->fake_smbios || data->capsule_supported;
+	return priv->smi_obj->fake_smbios || priv->capsule_supported;
 }
 
 static gboolean
@@ -291,7 +291,7 @@ fu_plugin_dock_node(FuPlugin *plugin,
 gboolean
 fu_plugin_dell_backend_device_added(FuPlugin *plugin, FuDevice *device, GError **error)
 {
-	FuPluginData *data = fu_plugin_get_data(plugin);
+	FuPluginData *priv = fu_plugin_get_data(plugin);
 	FwupdVersionFormat version_format = FWUPD_VERSION_FORMAT_DELL_BIOS;
 	guint16 pid;
 	guint16 vid;
@@ -315,13 +315,13 @@ fu_plugin_dell_backend_device_added(FuPlugin *plugin, FuDevice *device, GError *
 
 	/* don't look up immediately if a dock is connected as that would
 	   mean a SMI on every USB device that showed up on the system */
-	if (!data->smi_obj->fake_smbios) {
+	if (!priv->smi_obj->fake_smbios) {
 		vid = fu_usb_device_get_vid(FU_USB_DEVICE(device));
 		pid = fu_usb_device_get_pid(FU_USB_DEVICE(device));
 		platform = fu_device_get_physical_id(FU_DEVICE(device));
 	} else {
-		vid = data->fake_vid;
-		pid = data->fake_pid;
+		vid = priv->fake_vid;
+		pid = priv->fake_pid;
 		platform = "fake";
 	}
 
@@ -337,7 +337,7 @@ fu_plugin_dell_backend_device_added(FuPlugin *plugin, FuDevice *device, GError *
 	}
 
 	buf.buf = NULL;
-	if (!fu_dell_query_dock(data->smi_obj, &buf)) {
+	if (!fu_dell_query_dock(priv->smi_obj, &buf)) {
 		g_debug("no dock detected");
 		return TRUE;
 	}
@@ -670,7 +670,7 @@ gboolean
 fu_plugin_dell_detect_tpm(FuPlugin *plugin, GError **error)
 {
 	FuContext *ctx = fu_plugin_get_context(plugin);
-	FuPluginData *data = fu_plugin_get_data(plugin);
+	FuPluginData *priv = fu_plugin_get_data(plugin);
 	const gchar *tpm_mode;
 	const gchar *tpm_mode_alt;
 	guint16 system_id = 0;
@@ -688,12 +688,12 @@ fu_plugin_dell_detect_tpm(FuPlugin *plugin, GError **error)
 	g_autoptr(FuDevice) dev = NULL;
 	g_autoptr(GError) error_tss = NULL;
 
-	fu_dell_clear_smi(data->smi_obj);
-	out = (struct tpm_status *)data->smi_obj->output;
+	fu_dell_clear_smi(priv->smi_obj);
+	out = (struct tpm_status *)priv->smi_obj->output;
 
 	/* execute TPM Status Query */
-	data->smi_obj->input[0] = DACI_FLASH_ARG_TPM;
-	if (!fu_dell_execute_simple_smi(data->smi_obj,
+	priv->smi_obj->input[0] = DACI_FLASH_ARG_TPM;
+	if (!fu_dell_execute_simple_smi(priv->smi_obj,
 					DACI_FLASH_INTERFACE_CLASS,
 					DACI_FLASH_INTERFACE_SELECT))
 		return FALSE;
@@ -707,7 +707,7 @@ fu_plugin_dell_detect_tpm(FuPlugin *plugin, GError **error)
 	/* HW version is output in second /input/ arg
 	 * it may be relevant as next gen TPM is enabled
 	 */
-	g_debug("TPM HW version: 0x%x", data->smi_obj->input[1]);
+	g_debug("TPM HW version: 0x%x", priv->smi_obj->input[1]);
 	g_debug("TPM Status: 0x%x", out->status);
 
 	/* test TPM enabled (Bit 0) */
@@ -729,8 +729,8 @@ fu_plugin_dell_detect_tpm(FuPlugin *plugin, GError **error)
 	}
 
 	system_id = fu_dell_get_system_id(plugin);
-	if (data->smi_obj->fake_smbios)
-		can_switch_modes = data->can_switch_modes;
+	if (priv->smi_obj->fake_smbios)
+		can_switch_modes = priv->can_switch_modes;
 	else if (system_id == 0)
 		return FALSE;
 
@@ -871,18 +871,18 @@ fu_plugin_dell_load(FuContext *ctx)
 static void
 fu_plugin_dell_init(FuPlugin *plugin)
 {
-	FuPluginData *data = fu_plugin_alloc_data(plugin, sizeof(FuPluginData));
+	FuPluginData *priv = fu_plugin_alloc_data(plugin, sizeof(FuPluginData));
 
-	data->smi_obj = g_malloc0(sizeof(FuDellSmiObj));
+	priv->smi_obj = g_malloc0(sizeof(FuDellSmiObj));
 	if (g_getenv("FWUPD_DELL_VERBOSE") != NULL)
 		(void)g_setenv("LIBSMBIOS_C_DEBUG_OUTPUT_ALL", "1", TRUE);
 	else
 		(void)g_setenv("TSS2_LOG", "esys+none,tcti+none", FALSE);
 	if (fu_dell_supported(plugin))
-		data->smi_obj->smi = dell_smi_factory(DELL_SMI_DEFAULTS);
-	data->smi_obj->fake_smbios = FALSE;
+		priv->smi_obj->smi = dell_smi_factory(DELL_SMI_DEFAULTS);
+	priv->smi_obj->fake_smbios = FALSE;
 	if (g_getenv("FWUPD_DELL_FAKE_SMBIOS") != NULL)
-		data->smi_obj->fake_smbios = TRUE;
+		priv->smi_obj->fake_smbios = TRUE;
 
 	/* make sure that UEFI plugin is ready to receive devices */
 	fu_plugin_add_rule(plugin, FU_PLUGIN_RULE_RUN_AFTER, "uefi_capsule");
@@ -894,20 +894,20 @@ fu_plugin_dell_init(FuPlugin *plugin)
 static void
 fu_plugin_dell_destroy(FuPlugin *plugin)
 {
-	FuPluginData *data = fu_plugin_get_data(plugin);
-	if (data->smi_obj->smi)
-		dell_smi_obj_free(data->smi_obj->smi);
-	g_free(data->smi_obj);
+	FuPluginData *priv = fu_plugin_get_data(plugin);
+	if (priv->smi_obj->smi)
+		dell_smi_obj_free(priv->smi_obj->smi);
+	g_free(priv->smi_obj);
 }
 
 static gboolean
 fu_plugin_dell_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 {
-	FuPluginData *data = fu_plugin_get_data(plugin);
+	FuPluginData *priv = fu_plugin_get_data(plugin);
 	g_autofree gchar *sysfsfwdir = NULL;
 	g_autofree gchar *esrtdir = NULL;
 
-	if (data->smi_obj->fake_smbios) {
+	if (priv->smi_obj->fake_smbios) {
 		g_debug("Called with fake SMBIOS implementation. "
 			"We're ignoring test for SBMIOS table and ESRT. "
 			"Individual calls will need to be properly staged.");
@@ -922,7 +922,7 @@ fu_plugin_dell_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 		return FALSE;
 	}
 
-	if (data->smi_obj->smi == NULL) {
+	if (priv->smi_obj->smi == NULL) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
@@ -938,7 +938,7 @@ fu_plugin_dell_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 	sysfsfwdir = fu_path_from_kind(FU_PATH_KIND_SYSFSDIR_FW);
 	esrtdir = g_build_filename(sysfsfwdir, "efi", "esrt", NULL);
 	if (g_file_test(esrtdir, G_FILE_TEST_EXISTS))
-		data->capsule_supported = TRUE;
+		priv->capsule_supported = TRUE;
 
 	/* capsules not supported */
 	if (!fu_plugin_dell_capsule_supported(plugin)) {

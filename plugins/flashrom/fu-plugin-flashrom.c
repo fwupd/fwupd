@@ -35,12 +35,12 @@ fu_plugin_flashrom_init(FuPlugin *plugin)
 static void
 fu_plugin_flashrom_destroy(FuPlugin *plugin)
 {
-	FuPluginData *data = fu_plugin_get_data(plugin);
-	if (data->flashctx != NULL)
-		flashrom_flash_release(data->flashctx);
-	if (data->flashprog != NULL)
-		flashrom_programmer_shutdown(data->flashprog);
-	g_free(data->guid);
+	FuPluginData *priv = fu_plugin_get_data(plugin);
+	if (priv->flashctx != NULL)
+		flashrom_flash_release(priv->flashctx);
+	if (priv->flashprog != NULL)
+		flashrom_programmer_shutdown(priv->flashprog);
+	g_free(priv->guid);
 }
 
 static int
@@ -169,13 +169,13 @@ fu_plugin_flashrom_add_device(FuPlugin *plugin,
 			      GError **error)
 {
 	FuContext *ctx = fu_plugin_get_context(plugin);
-	FuPluginData *data = fu_plugin_get_data(plugin);
+	FuPluginData *priv = fu_plugin_get_data(plugin);
 	const gchar *dmi_vendor;
 	const gchar *product = fu_context_get_hwid_value(ctx, FU_HWIDS_KEY_PRODUCT_NAME);
 	const gchar *vendor = fu_context_get_hwid_value(ctx, FU_HWIDS_KEY_MANUFACTURER);
 	const gchar *region_str = fu_ifd_region_to_string(region);
 	g_autofree gchar *name = g_strdup_printf("%s (%s)", product, region_str);
-	g_autoptr(FuDevice) device = fu_flashrom_device_new(ctx, data->flashctx, region);
+	g_autoptr(FuDevice) device = fu_flashrom_device_new(ctx, priv->flashctx, region);
 
 	fu_device_set_name(device, name);
 	fu_device_set_vendor(device, vendor);
@@ -218,7 +218,7 @@ static void
 fu_plugin_flashrom_device_registered(FuPlugin *plugin, FuDevice *device)
 {
 	g_autoptr(FuDevice) me_device = NULL;
-	FuPluginData *data = fu_plugin_get_data(plugin);
+	FuPluginData *priv = fu_plugin_get_data(plugin);
 	const gchar *me_region_str = fu_ifd_region_to_string(FU_IFD_REGION_ME);
 
 	/* we're only interested in a device from intel-spi plugin that corresponds to ME
@@ -228,7 +228,7 @@ fu_plugin_flashrom_device_registered(FuPlugin *plugin, FuDevice *device)
 	if (g_strcmp0(fu_device_get_logical_id(device), me_region_str) != 0)
 		return;
 
-	me_device = fu_plugin_flashrom_add_device(plugin, data->guid, FU_IFD_REGION_ME, NULL);
+	me_device = fu_plugin_flashrom_add_device(plugin, priv->guid, FU_IFD_REGION_ME, NULL);
 	if (me_device == NULL)
 		return;
 
@@ -240,9 +240,9 @@ fu_plugin_flashrom_device_registered(FuPlugin *plugin, FuDevice *device)
 static gboolean
 fu_plugin_flashrom_coldplug(FuPlugin *plugin, FuProgress *progress, GError **error)
 {
-	FuPluginData *data = fu_plugin_get_data(plugin);
+	FuPluginData *priv = fu_plugin_get_data(plugin);
 	g_autoptr(FuDevice) device =
-	    fu_plugin_flashrom_add_device(plugin, data->guid, FU_IFD_REGION_BIOS, error);
+	    fu_plugin_flashrom_add_device(plugin, priv->guid, FU_IFD_REGION_BIOS, error);
 	return (device != NULL);
 }
 
@@ -270,7 +270,7 @@ fu_plugin_flashrom_startup(FuPlugin *plugin, FuProgress *progress, GError **erro
 {
 	gint rc;
 	const gchar *guid;
-	FuPluginData *data = fu_plugin_get_data(plugin);
+	FuPluginData *priv = fu_plugin_get_data(plugin);
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
@@ -283,7 +283,7 @@ fu_plugin_flashrom_startup(FuPlugin *plugin, FuProgress *progress, GError **erro
 		return FALSE;
 	fu_progress_step_done(progress);
 
-	data->guid = g_strdup(guid);
+	priv->guid = g_strdup(guid);
 
 	if (flashrom_init(SELFCHECK_TRUE)) {
 		g_set_error_literal(error,
@@ -295,7 +295,7 @@ fu_plugin_flashrom_startup(FuPlugin *plugin, FuProgress *progress, GError **erro
 	flashrom_set_log_callback(fu_plugin_flashrom_debug_cb);
 	fu_progress_step_done(progress);
 
-	if (flashrom_programmer_init(&data->flashprog, "internal", NULL)) {
+	if (flashrom_programmer_init(&priv->flashprog, "internal", NULL)) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
@@ -303,7 +303,7 @@ fu_plugin_flashrom_startup(FuPlugin *plugin, FuProgress *progress, GError **erro
 		return FALSE;
 	}
 
-	rc = flashrom_flash_probe(&data->flashctx, data->flashprog, NULL);
+	rc = flashrom_flash_probe(&priv->flashctx, priv->flashprog, NULL);
 	if (rc == 3) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,

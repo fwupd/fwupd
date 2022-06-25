@@ -24,14 +24,14 @@ fu_plugin_test_init(FuPlugin *plugin)
 static void
 fu_plugin_test_destroy(FuPlugin *plugin)
 {
-	// FuPluginData *data = fu_plugin_get_data (plugin);
+	// FuPluginData *priv = fu_plugin_get_data (plugin);
 	g_debug("destroy");
 }
 
 static gboolean
 fu_plugin_test_load_xml(FuPlugin *plugin, const gchar *xml, GError **error)
 {
-	FuPluginData *data = fu_plugin_get_data(plugin);
+	FuPluginData *priv = fu_plugin_get_data(plugin);
 	g_autoptr(XbBuilder) builder = xb_builder_new();
 	g_autoptr(XbBuilderSource) source = xb_builder_source_new();
 	g_autoptr(XbNode) delay_decompress_ms = NULL;
@@ -50,13 +50,13 @@ fu_plugin_test_load_xml(FuPlugin *plugin, const gchar *xml, GError **error)
 	/* parse markup */
 	delay_decompress_ms = xb_silo_query_first(silo, "config/delay_decompress_ms", NULL);
 	if (delay_decompress_ms != NULL)
-		data->delay_decompress_ms = xb_node_get_text_as_uint(delay_decompress_ms);
+		priv->delay_decompress_ms = xb_node_get_text_as_uint(delay_decompress_ms);
 	delay_write_ms = xb_silo_query_first(silo, "config/delay_write_ms", NULL);
 	if (delay_write_ms != NULL)
-		data->delay_write_ms = xb_node_get_text_as_uint(delay_write_ms);
+		priv->delay_write_ms = xb_node_get_text_as_uint(delay_write_ms);
 	delay_verify_ms = xb_silo_query_first(silo, "config/delay_verify_ms", NULL);
 	if (delay_verify_ms != NULL)
-		data->delay_verify_ms = xb_node_get_text_as_uint(delay_verify_ms);
+		priv->delay_verify_ms = xb_node_get_text_as_uint(delay_verify_ms);
 
 	/* success */
 	return TRUE;
@@ -211,7 +211,7 @@ fu_plugin_test_write_firmware(FuPlugin *plugin,
 			      FwupdInstallFlags flags,
 			      GError **error)
 {
-	FuPluginData *data = fu_plugin_get_data(plugin);
+	FuPluginData *priv = fu_plugin_get_data(plugin);
 	const gchar *test = g_getenv("FWUPD_PLUGIN_TEST");
 	gboolean requires_activation = g_strcmp0(test, "requires-activation") == 0;
 	gboolean requires_reboot = g_strcmp0(test, "requires-reboot") == 0;
@@ -223,19 +223,19 @@ fu_plugin_test_write_firmware(FuPlugin *plugin,
 		return FALSE;
 	}
 	fu_progress_set_status(progress, FWUPD_STATUS_DECOMPRESSING);
-	for (guint i = 0; i <= data->delay_decompress_ms; i++) {
+	for (guint i = 0; i <= priv->delay_decompress_ms; i++) {
 		g_usleep(1000);
-		fu_progress_set_percentage_full(progress, i, data->delay_decompress_ms);
+		fu_progress_set_percentage_full(progress, i, priv->delay_decompress_ms);
 	}
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_WRITE);
-	for (guint i = 0; i <= data->delay_write_ms; i++) {
+	for (guint i = 0; i <= priv->delay_write_ms; i++) {
 		g_usleep(1000);
-		fu_progress_set_percentage_full(progress, i, data->delay_write_ms);
+		fu_progress_set_percentage_full(progress, i, priv->delay_write_ms);
 	}
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_VERIFY);
-	for (guint i = 0; i <= data->delay_verify_ms; i++) {
+	for (guint i = 0; i <= priv->delay_verify_ms; i++) {
 		g_usleep(1000);
-		fu_progress_set_percentage_full(progress, i, data->delay_verify_ms);
+		fu_progress_set_percentage_full(progress, i, priv->delay_verify_ms);
 	}
 
 	/* composite test, upgrade composite devices */

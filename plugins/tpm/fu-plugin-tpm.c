@@ -30,44 +30,44 @@ fu_plugin_tpm_init(FuPlugin *plugin)
 static void
 fu_plugin_tpm_destroy(FuPlugin *plugin)
 {
-	FuPluginData *data = fu_plugin_get_data(plugin);
-	if (data->tpm_device != NULL)
-		g_object_unref(data->tpm_device);
-	if (data->bios_device != NULL)
-		g_object_unref(data->bios_device);
-	if (data->ev_items != NULL)
-		g_ptr_array_unref(data->ev_items);
+	FuPluginData *priv = fu_plugin_get_data(plugin);
+	if (priv->tpm_device != NULL)
+		g_object_unref(priv->tpm_device);
+	if (priv->bios_device != NULL)
+		g_object_unref(priv->bios_device);
+	if (priv->ev_items != NULL)
+		g_ptr_array_unref(priv->ev_items);
 }
 
 static void
 fu_plugin_tpm_set_bios_pcr0s(FuPlugin *plugin)
 {
-	FuPluginData *data = fu_plugin_get_data(plugin);
+	FuPluginData *priv = fu_plugin_get_data(plugin);
 	g_autoptr(GPtrArray) pcr0s = NULL;
 
-	if (data->tpm_device == NULL)
+	if (priv->tpm_device == NULL)
 		return;
-	if (data->bios_device == NULL)
+	if (priv->bios_device == NULL)
 		return;
 
 	/* add all the PCR0s */
-	pcr0s = fu_tpm_device_get_checksums(data->tpm_device, 0);
+	pcr0s = fu_tpm_device_get_checksums(priv->tpm_device, 0);
 	if (pcr0s->len == 0)
 		return;
 	for (guint i = 0; i < pcr0s->len; i++) {
 		const gchar *checksum = g_ptr_array_index(pcr0s, i);
-		fu_device_add_checksum(data->bios_device, checksum);
+		fu_device_add_checksum(priv->bios_device, checksum);
 	}
-	fu_device_add_flag(data->bios_device, FWUPD_DEVICE_FLAG_CAN_VERIFY);
+	fu_device_add_flag(priv->bios_device, FWUPD_DEVICE_FLAG_CAN_VERIFY);
 }
 
 /* set the PCR0 as the device checksum */
 static void
 fu_plugin_tpm_device_registered(FuPlugin *plugin, FuDevice *device)
 {
-	FuPluginData *data = fu_plugin_get_data(plugin);
+	FuPluginData *priv = fu_plugin_get_data(plugin);
 	if (fu_device_has_instance_id(device, "main-system-firmware")) {
-		g_set_object(&data->bios_device, device);
+		g_set_object(&priv->bios_device, device);
 		fu_plugin_tpm_set_bios_pcr0s(plugin);
 	}
 }
@@ -75,10 +75,10 @@ fu_plugin_tpm_device_registered(FuPlugin *plugin, FuDevice *device)
 static void
 fu_plugin_tpm_device_added(FuPlugin *plugin, FuDevice *dev)
 {
-	FuPluginData *data = fu_plugin_get_data(plugin);
+	FuPluginData *priv = fu_plugin_get_data(plugin);
 	g_autoptr(GPtrArray) pcr0s = NULL;
 
-	g_set_object(&data->tpm_device, FU_TPM_DEVICE(dev));
+	g_set_object(&priv->tpm_device, FU_TPM_DEVICE(dev));
 	fu_plugin_add_report_metadata(plugin,
 				      "TpmFamily",
 				      fu_tpm_device_get_family(FU_TPM_DEVICE(dev)));
@@ -87,7 +87,7 @@ fu_plugin_tpm_device_added(FuPlugin *plugin, FuDevice *dev)
 	fu_plugin_tpm_set_bios_pcr0s(plugin);
 
 	/* add extra plugin metadata */
-	pcr0s = fu_tpm_device_get_checksums(data->tpm_device, 0);
+	pcr0s = fu_tpm_device_get_checksums(priv->tpm_device, 0);
 	for (guint i = 0; i < pcr0s->len; i++) {
 		const gchar *csum = g_ptr_array_index(pcr0s, i);
 		GChecksumType csum_type = fwupd_checksum_guess_kind(csum);
@@ -105,7 +105,7 @@ fu_plugin_tpm_device_added(FuPlugin *plugin, FuDevice *dev)
 static void
 fu_plugin_tpm_add_security_attr_version(FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
-	FuPluginData *data = fu_plugin_get_data(plugin);
+	FuPluginData *priv = fu_plugin_get_data(plugin);
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
 
 	/* create attr */
@@ -115,17 +115,17 @@ fu_plugin_tpm_add_security_attr_version(FuPlugin *plugin, FuSecurityAttrs *attrs
 	fu_security_attrs_append(attrs, attr);
 
 	/* check exists, and in v2.0 mode */
-	if (data->tpm_device == NULL) {
+	if (priv->tpm_device == NULL) {
 		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_FOUND);
 		return;
 	}
-	if (g_strcmp0(fu_tpm_device_get_family(data->tpm_device), "2.0") != 0) {
+	if (g_strcmp0(fu_tpm_device_get_family(priv->tpm_device), "2.0") != 0) {
 		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
 		return;
 	}
 
 	/* success */
-	fwupd_security_attr_add_guids(attr, fu_device_get_guids(FU_DEVICE(data->tpm_device)));
+	fwupd_security_attr_add_guids(attr, fu_device_get_guids(FU_DEVICE(priv->tpm_device)));
 	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 	fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_FOUND);
 }
@@ -133,7 +133,7 @@ fu_plugin_tpm_add_security_attr_version(FuPlugin *plugin, FuSecurityAttrs *attrs
 static void
 fu_plugin_tpm_add_security_attr_eventlog(FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
-	FuPluginData *data = fu_plugin_get_data(plugin);
+	FuPluginData *priv = fu_plugin_get_data(plugin);
 	gboolean reconstructed = TRUE;
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
 	g_autoptr(GError) error = NULL;
@@ -141,24 +141,24 @@ fu_plugin_tpm_add_security_attr_eventlog(FuPlugin *plugin, FuSecurityAttrs *attr
 	g_autoptr(GPtrArray) pcr0s_real = NULL;
 
 	/* no TPM device */
-	if (data->tpm_device == NULL)
+	if (priv->tpm_device == NULL)
 		return;
 
 	/* create attr */
 	attr = fwupd_security_attr_new(FWUPD_SECURITY_ATTR_ID_TPM_RECONSTRUCTION_PCR0);
 	fwupd_security_attr_set_plugin(attr, fu_plugin_get_name(plugin));
 	fwupd_security_attr_set_level(attr, FWUPD_SECURITY_ATTR_LEVEL_IMPORTANT);
-	fwupd_security_attr_add_guids(attr, fu_device_get_guids(data->tpm_device));
+	fwupd_security_attr_add_guids(attr, fu_device_get_guids(priv->tpm_device));
 	fu_security_attrs_append(attrs, attr);
 
 	/* check reconstructed to PCR0 */
-	if (data->ev_items == NULL || data->bios_device == NULL) {
+	if (priv->ev_items == NULL || priv->bios_device == NULL) {
 		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_FOUND);
 		return;
 	}
 
 	/* calculate from the eventlog */
-	pcr0s_calc = fu_tpm_eventlog_calc_checksums(data->ev_items, 0, &error);
+	pcr0s_calc = fu_tpm_eventlog_calc_checksums(priv->ev_items, 0, &error);
 	if (pcr0s_calc == NULL) {
 		g_warning("failed to get eventlog reconstruction: %s", error->message);
 		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
@@ -166,7 +166,7 @@ fu_plugin_tpm_add_security_attr_eventlog(FuPlugin *plugin, FuSecurityAttrs *attr
 	}
 
 	/* compare against the real PCR0s */
-	pcr0s_real = fu_tpm_device_get_checksums(data->tpm_device, 0);
+	pcr0s_real = fu_tpm_device_get_checksums(priv->tpm_device, 0);
 	for (guint i = 0; i < pcr0s_real->len; i++) {
 		const gchar *checksum = g_ptr_array_index(pcr0s_real, i);
 		reconstructed = FALSE;
@@ -198,23 +198,23 @@ fu_plugin_tpm_add_security_attr_eventlog(FuPlugin *plugin, FuSecurityAttrs *attr
 static void
 fu_plugin_tpm_add_security_attr_empty(FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
-	FuPluginData *data = fu_plugin_get_data(plugin);
+	FuPluginData *priv = fu_plugin_get_data(plugin);
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
 
 	/* no TPM device */
-	if (data->tpm_device == NULL)
+	if (priv->tpm_device == NULL)
 		return;
 
 	/* add attributes */
 	attr = fwupd_security_attr_new(FWUPD_SECURITY_ATTR_ID_TPM_EMPTY_PCR);
 	fwupd_security_attr_set_plugin(attr, fu_plugin_get_name(plugin));
 	fwupd_security_attr_set_level(attr, FWUPD_SECURITY_ATTR_LEVEL_CRITICAL);
-	fwupd_security_attr_add_guids(attr, fu_device_get_guids(data->tpm_device));
+	fwupd_security_attr_add_guids(attr, fu_device_get_guids(priv->tpm_device));
 	fu_security_attrs_append(attrs, attr);
 
 	/* check PCRs 0 through 7 for empty checksums */
 	for (guint pcr = 0; pcr <= 7; pcr++) {
-		g_autoptr(GPtrArray) checksums = fu_tpm_device_get_checksums(data->tpm_device, pcr);
+		g_autoptr(GPtrArray) checksums = fu_tpm_device_get_checksums(priv->tpm_device, pcr);
 		for (guint i = 0; i < checksums->len; i++) {
 			const gchar *checksum = g_ptr_array_index(checksums, i);
 			gboolean empty = TRUE;
@@ -253,12 +253,12 @@ fu_plugin_tpm_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 static gchar *
 fu_plugin_tpm_eventlog_report_metadata(FuPlugin *plugin)
 {
-	FuPluginData *data = fu_plugin_get_data(plugin);
+	FuPluginData *priv = fu_plugin_get_data(plugin);
 	GString *str = g_string_new("");
 	g_autoptr(GPtrArray) pcrs = NULL;
 
-	for (guint i = 0; i < data->ev_items->len; i++) {
-		FuTpmEventlogItem *item = g_ptr_array_index(data->ev_items, i);
+	for (guint i = 0; i < priv->ev_items->len; i++) {
+		FuTpmEventlogItem *item = g_ptr_array_index(priv->ev_items, i);
 		g_autofree gchar *blobstr = NULL;
 		g_autofree gchar *checksum = NULL;
 
@@ -276,7 +276,7 @@ fu_plugin_tpm_eventlog_report_metadata(FuPlugin *plugin)
 			g_string_append_printf(str, " [%s]", blobstr);
 		g_string_append(str, "\n");
 	}
-	pcrs = fu_tpm_eventlog_calc_checksums(data->ev_items, 0, NULL);
+	pcrs = fu_tpm_eventlog_calc_checksums(priv->ev_items, 0, NULL);
 	if (pcrs != NULL) {
 		for (guint j = 0; j < pcrs->len; j++) {
 			const gchar *csum = g_ptr_array_index(pcrs, j);
@@ -291,7 +291,7 @@ fu_plugin_tpm_eventlog_report_metadata(FuPlugin *plugin)
 static gboolean
 fu_plugin_tpm_coldplug_eventlog(FuPlugin *plugin, GError **error)
 {
-	FuPluginData *data = fu_plugin_get_data(plugin);
+	FuPluginData *priv = fu_plugin_get_data(plugin);
 	gsize bufsz = 0;
 	const gchar *fn = "/sys/kernel/security/tpm0/binary_bios_measurements";
 	g_autofree gchar *str = NULL;
@@ -312,9 +312,9 @@ fu_plugin_tpm_coldplug_eventlog(FuPlugin *plugin, GError **error)
 			    fn);
 		return FALSE;
 	}
-	data->ev_items =
+	priv->ev_items =
 	    fu_tpm_eventlog_parser_new(buf, bufsz, FU_TPM_EVENTLOG_PARSER_FLAG_NONE, error);
-	if (data->ev_items == NULL)
+	if (priv->ev_items == NULL)
 		return FALSE;
 
 	/* add optional report metadata */
@@ -339,7 +339,7 @@ fu_plugin_tpm_coldplug(FuPlugin *plugin, FuProgress *progress, GError **error)
 static gboolean
 fu_plugin_tpm_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 {
-	FuPluginData *data = fu_plugin_get_data(plugin);
+	FuPluginData *priv = fu_plugin_get_data(plugin);
 	g_autofree gchar *sysfstpmdir = NULL;
 	g_autofree gchar *fn_pcrs = NULL;
 
@@ -347,12 +347,12 @@ fu_plugin_tpm_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 	sysfstpmdir = fu_path_from_kind(FU_PATH_KIND_SYSFSDIR_TPM);
 	fn_pcrs = g_build_filename(sysfstpmdir, "tpm0", "pcrs", NULL);
 	if (g_file_test(fn_pcrs, G_FILE_TEST_EXISTS) && g_getenv("FWUPD_FORCE_TPM2") == NULL) {
-		data->tpm_device = fu_tpm_v1_device_new(fu_plugin_get_context(plugin));
-		g_object_set(data->tpm_device, "device-file", fn_pcrs, NULL);
-		fu_device_set_physical_id(FU_DEVICE(data->tpm_device), "tpm");
-		if (!fu_device_probe(FU_DEVICE(data->tpm_device), error))
+		priv->tpm_device = fu_tpm_v1_device_new(fu_plugin_get_context(plugin));
+		g_object_set(priv->tpm_device, "device-file", fn_pcrs, NULL);
+		fu_device_set_physical_id(FU_DEVICE(priv->tpm_device), "tpm");
+		if (!fu_device_probe(FU_DEVICE(priv->tpm_device), error))
 			return FALSE;
-		fu_plugin_device_add(plugin, FU_DEVICE(data->tpm_device));
+		fu_plugin_device_add(plugin, FU_DEVICE(priv->tpm_device));
 	}
 
 	/* success */
