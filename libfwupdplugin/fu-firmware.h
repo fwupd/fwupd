@@ -114,6 +114,14 @@ struct _FuFirmwareClass {
  * Since: 1.7.3
  **/
 #define FU_FIRMWARE_FLAG_DONE_PARSE (1u << 4)
+/**
+ * FU_FIRMWARE_FLAG_HAS_STORED_SIZE:
+ *
+ * Encodes the image size in the firmware.
+ *
+ * Since: 1.8.2
+ **/
+#define FU_FIRMWARE_FLAG_HAS_STORED_SIZE (1u << 5)
 
 /**
  * FuFirmwareFlags:
