@@ -28,7 +28,7 @@ struct _FuUdevDeviceClass {
  * @FU_UDEV_DEVICE_FLAG_NONE:			No flags set
  * @FU_UDEV_DEVICE_FLAG_OPEN_READ:		Open the device read-only
  * @FU_UDEV_DEVICE_FLAG_OPEN_WRITE:		Open the device write-only
- * @FU_UDEV_DEVICE_FLAG_VENDOR_FROM_PARENT:	Get the vendor ID fallback from the parent
+ * @FU_UDEV_DEVICE_FLAG_VENDOR_FROM_PARENT:	Get the vendor ID from a parent or grandparent
  * @FU_UDEV_DEVICE_FLAG_USE_CONFIG:		Read and write from the device config
  * @FU_UDEV_DEVICE_FLAG_OPEN_NONBLOCK:		Open nonblocking, e.g. O_NONBLOCK
  * @FU_UDEV_DEVICE_FLAG_OPEN_SYNC:		Open sync, e.g. O_SYNC
