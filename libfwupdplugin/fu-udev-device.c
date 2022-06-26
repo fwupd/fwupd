@@ -321,6 +321,35 @@ fu_udev_device_probe_serio(FuUdevDevice *self, GError **error)
 	}
 	return TRUE;
 }
+
+static void
+fu_udev_device_set_vendor_from_udev_device(FuUdevDevice *self, GUdevDevice *udev_device)
+{
+	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
+	priv->vendor = fu_udev_device_get_sysfs_attr_as_uint16(udev_device, "vendor");
+	priv->model = fu_udev_device_get_sysfs_attr_as_uint16(udev_device, "device");
+	priv->revision = fu_udev_device_get_sysfs_attr_as_uint8(udev_device, "revision");
+	priv->subsystem_vendor =
+	    fu_udev_device_get_sysfs_attr_as_uint16(udev_device, "subsystem_vendor");
+	priv->subsystem_model =
+	    fu_udev_device_get_sysfs_attr_as_uint16(udev_device, "subsystem_device");
+}
+
+static void
+fu_udev_device_set_vendor_from_parent(FuUdevDevice *self)
+{
+	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
+	g_autoptr(GUdevDevice) udev_device = g_object_ref(priv->udev_device);
+	while (TRUE) {
+		g_autoptr(GUdevDevice) parent = g_udev_device_get_parent(udev_device);
+		if (parent == NULL)
+			break;
+		fu_udev_device_set_vendor_from_udev_device(self, parent);
+		if (priv->vendor != 0x0 || priv->model != 0x0 || priv->revision != 0x0)
+			break;
+		g_set_object(&udev_device, g_steal_pointer(&parent));
+	}
+}
 #endif
 
 static gboolean
@@ -339,28 +368,11 @@ fu_udev_device_probe(FuDevice *device, GError **error)
 	if (priv->udev_device == NULL)
 		return TRUE;
 
-	/* set ven:dev:rev */
-	priv->vendor = fu_udev_device_get_sysfs_attr_as_uint16(priv->udev_device, "vendor");
-	priv->model = fu_udev_device_get_sysfs_attr_as_uint16(priv->udev_device, "device");
-	priv->revision = fu_udev_device_get_sysfs_attr_as_uint8(priv->udev_device, "revision");
-	priv->subsystem_vendor =
-	    fu_udev_device_get_sysfs_attr_as_uint16(priv->udev_device, "subsystem_vendor");
-	priv->subsystem_model =
-	    fu_udev_device_get_sysfs_attr_as_uint16(priv->udev_device, "subsystem_device");
-
 #ifdef HAVE_GUDEV
-	/* fallback to the parent */
-	udev_parent = g_udev_device_get_parent(priv->udev_device);
-	if (udev_parent != NULL && priv->flags & FU_UDEV_DEVICE_FLAG_VENDOR_FROM_PARENT &&
-	    priv->vendor == 0x0 && priv->model == 0x0 && priv->revision == 0x0) {
-		priv->vendor = fu_udev_device_get_sysfs_attr_as_uint16(udev_parent, "vendor");
-		priv->model = fu_udev_device_get_sysfs_attr_as_uint16(udev_parent, "device");
-		priv->revision = fu_udev_device_get_sysfs_attr_as_uint8(udev_parent, "revision");
-		priv->subsystem_vendor =
-		    fu_udev_device_get_sysfs_attr_as_uint16(udev_parent, "subsystem_vendor");
-		priv->subsystem_model =
-		    fu_udev_device_get_sysfs_attr_as_uint16(udev_parent, "subsystem_device");
-	}
+	/* get IDs, but fallback to the parent, grandparent, great-grandparent, etc */
+	fu_udev_device_set_vendor_from_udev_device(self, priv->udev_device);
+	if (priv->flags & FU_UDEV_DEVICE_FLAG_VENDOR_FROM_PARENT)
+		fu_udev_device_set_vendor_from_parent(self);
 
 	/* hidraw helpfully encodes the information in a different place */
 	if (udev_parent != NULL && priv->vendor == 0x0 && priv->model == 0x0 &&
