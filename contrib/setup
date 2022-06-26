@@ -56,6 +56,7 @@ setup_unsafe_polkit_rules()
 {
     read -p "Install developer-friendly **unsafe** PolicyKit rules into /etc/polkit-1/rules.d? (y/N) " question
     if [ "$question" = "y" ]; then
+        sudo mkdir -p /etc/polkit-1/rules.d
         sudo cp ./policy/org.freedesktop.fwupd-unsafe.rules /etc/polkit-1/rules.d/
     fi
 }
@@ -111,9 +112,12 @@ setup_prepush()
 
 check_markdown()
 {
-    if ! python3 $HELPER test-markdown; then
-        install_pip markdown --upgrade
-    fi
+    python3 $HELPER test-markdown
+}
+
+check_meson()
+{
+    python3 $HELPER test-meson
 }
 
 detect_os()
@@ -173,6 +177,7 @@ if [ -t 2 ]; then
     esac
     setup_unsafe_polkit_rules
     check_markdown
+    check_meson
     setup_vscode
     rename_branch
     setup_prepush
