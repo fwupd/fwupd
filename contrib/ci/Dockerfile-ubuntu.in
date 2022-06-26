@@ -2,8 +2,9 @@ FROM ubuntu:20.04
 %%%OS%%%
 ENV CI_NETWORK true
 ENV CC clang
+ENV DEBIAN_FRONTEND noninteractive
 RUN echo fubar > /etc/machine-id
 %%%ARCH_SPECIFIC_COMMAND%%%
-%%%INSTALL_DEPENDENCIES_COMMAND%%%
+RUN apt update -qq && apt install -yq --no-install-recommends python3-apt
 WORKDIR /github/workspace
 CMD ["./contrib/ci/ubuntu.sh"]
