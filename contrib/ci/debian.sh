@@ -34,6 +34,7 @@ sed s/quilt/native/ debian/source/format -i
 #check if we have all deps available
 #if some are missing, we're going to use subproject instead and
 #packaging CI will fail
+apt update -qq && apt install python3-apt -y
 ./contrib/ci/fwupd_setup_helpers.py install-dependencies -o debian --yes || true
 if ! dpkg-checkbuilddeps; then
 	./contrib/ci/ubuntu.sh
