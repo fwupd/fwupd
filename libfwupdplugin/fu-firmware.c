@@ -69,6 +69,8 @@ fu_firmware_flag_to_string(FuFirmwareFlags flag)
 		return "has-vid-pid";
 	if (flag == FU_FIRMWARE_FLAG_DONE_PARSE)
 		return "done-parse";
+	if (flag == FU_FIRMWARE_FLAG_HAS_STORED_SIZE)
+		return "has-stored-size";
 	return NULL;
 }
 
@@ -95,6 +97,8 @@ fu_firmware_flag_from_string(const gchar *flag)
 		return FU_FIRMWARE_FLAG_HAS_VID_PID;
 	if (g_strcmp0(flag, "done-parse") == 0)
 		return FU_FIRMWARE_FLAG_DONE_PARSE;
+	if (g_strcmp0(flag, "has-stored-size") == 0)
+		return FU_FIRMWARE_FLAG_HAS_STORED_SIZE;
 	return FU_FIRMWARE_FLAG_NONE;
 }
 

@@ -2219,9 +2219,25 @@ fu_util_firmware_parse(FuUtilPrivate *priv, gchar **values, GError **error)
 			    firmware_type);
 		return FALSE;
 	}
+
+	/* does firmware specify an internal size */
 	firmware = g_object_new(gtype, NULL);
-	if (!fu_firmware_parse(firmware, blob, priv->flags, error))
-		return FALSE;
+	if (fu_firmware_has_flag(firmware, FU_FIRMWARE_FLAG_HAS_STORED_SIZE)) {
+		g_autoptr(FuFirmware) firmware_linear = fu_linear_firmware_new(gtype);
+		g_autoptr(GPtrArray) imgs = NULL;
+		if (!fu_firmware_parse(firmware_linear, blob, priv->flags, error))
+			return FALSE;
+		imgs = fu_firmware_get_images(firmware_linear);
+		if (imgs->len == 1) {
+			g_set_object(&firmware, g_ptr_array_index(imgs, 0));
+		} else {
+			g_set_object(&firmware, firmware_linear);
+		}
+	} else {
+		if (!fu_firmware_parse(firmware, blob, priv->flags, error))
+			return FALSE;
+	}
+
 	str = fu_firmware_to_string(firmware);
 	g_print("%s", str);
 	return TRUE;

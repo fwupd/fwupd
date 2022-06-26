@@ -125,6 +125,7 @@ fu_uswid_firmware_parse(FuFirmware *firmware,
 				    "payload size is invalid");
 		return FALSE;
 	}
+	fu_firmware_set_size(firmware, hdrsz + payloadsz);
 	offset += sizeof(guint32);
 
 	/* flags */
@@ -254,6 +255,7 @@ fu_uswid_firmware_init(FuUswidFirmware *self)
 	FuUswidFirmwarePrivate *priv = GET_PRIVATE(self);
 	priv->hdrver = USWID_HEADER_VERSION_V1;
 	priv->compressed = FALSE;
+	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_STORED_SIZE);
 }
 
 static void
