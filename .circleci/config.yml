@@ -2,7 +2,7 @@ version: 2
 jobs:
   build-ubuntu-x86_64:
     machine:
-      image: ubuntu-2204:edge
+      image: ubuntu-2004:edge
     steps:
       - checkout
       - run:
