@@ -2,11 +2,11 @@
 set -e
 set -x
 
-#clone test firmware if necessary
-. ./contrib/ci/get_test_firmware.sh
-
 #check for and install missing dependencies
 ./contrib/ci/fwupd_setup_helpers.py install-dependencies --yes -o ubuntu
+
+#clone test firmware if necessary
+. ./contrib/ci/get_test_firmware.sh
 
 #evaluate using Ubuntu's buildflags
 #evaluate using Debian/Ubuntu's buildflags
