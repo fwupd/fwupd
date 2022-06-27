@@ -1396,7 +1396,7 @@
       <package variant="x86_64" />
     </distro>
   </dependency>
-  <dependency type="build" id="systemd">
+  <dependency type="build" id="libsystemd-dev">
     <distro id="centos">
       <package variant="x86_64">systemd-devel</package>
     </distro>
