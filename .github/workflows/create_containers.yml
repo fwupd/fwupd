@@ -6,7 +6,7 @@ on:
 
 permissions:
   contents: read
-  packages: write
+  packages: read|write
 
 jobs:
   push_to_registry:
@@ -35,3 +35,5 @@ jobs:
           context: .
           push: true
           tags: fwupd/fwupd/fwupd-${{matrix.os}}:latest
+          secrets: |
+            "github_token=${{ secrets.GITHUB_TOKEN }}"
