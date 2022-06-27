@@ -42,8 +42,9 @@
 #define ATOMIC_HUB1_PID			    0x541A
 #define DELL_VID			    0x413C
 
-#define WD19_BASE   0x04
-#define ATOMIC_BASE 0x05
+#define DOCK_BASE_TYPE_UNKNOWN 0x0
+#define DOCK_BASE_TYPE_SALOMON 0x04
+#define DOCK_BASE_TYPE_ATOMIC  0x05
 
 gboolean
 fu_dell_dock_set_power(FuDevice *device, guint8 target, gboolean enabled, GError **error);
