@@ -354,8 +354,7 @@ fu_srec_firmware_tokenize(FuFirmware *firmware, GBytes *fw, FwupdInstallFlags fl
 static gboolean
 fu_srec_firmware_parse(FuFirmware *firmware,
 		       GBytes *fw,
-		       guint64 addr_start,
-		       guint64 addr_end,
+		       gsize offset,
 		       FwupdInstallFlags flags,
 		       GError **error)
 {
@@ -440,11 +439,11 @@ fu_srec_firmware_parse(FuFirmware *firmware,
 					    rcd->ln);
 				return FALSE;
 			}
-			if (rcd->addr < addr_start) {
+			if (rcd->addr < offset) {
 				g_debug(
 				    "ignoring data at 0x%x as before start address 0x%x at line %u",
 				    (guint)rcd->addr,
-				    (guint)addr_start,
+				    (guint)offset,
 				    rcd->ln);
 			} else {
 				guint32 len_hole = rcd->addr - addr32_last;

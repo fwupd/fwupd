@@ -39,8 +39,7 @@ fu_acpi_phat_health_record_export(FuFirmware *firmware,
 static gboolean
 fu_acpi_phat_health_record_parse(FuFirmware *firmware,
 				 GBytes *fw,
-				 guint64 addr_start,
-				 guint64 addr_end,
+				 gsize offset,
 				 FwupdInstallFlags flags,
 				 GError **error)
 {

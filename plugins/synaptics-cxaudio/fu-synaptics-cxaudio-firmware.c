@@ -146,8 +146,7 @@ fu_synaptics_cxaudio_firmware_avoid_badblocks(GPtrArray *badblocks, GPtrArray *r
 static gboolean
 fu_synaptics_cxaudio_firmware_parse(FuFirmware *firmware,
 				    GBytes *fw,
-				    guint64 addr_start,
-				    guint64 addr_end,
+				    gsize offset,
 				    FwupdInstallFlags flags,
 				    GError **error)
 {

@@ -60,14 +60,12 @@ fu_synaprom_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, X
 static gboolean
 fu_synaprom_firmware_parse(FuFirmware *firmware,
 			   GBytes *fw,
-			   guint64 addr_start,
-			   guint64 addr_end,
+			   gsize offset,
 			   FwupdInstallFlags flags,
 			   GError **error)
 {
 	const guint8 *buf;
 	gsize bufsz = 0;
-	gsize offset = 0;
 	guint img_cnt = 0;
 
 	g_return_val_if_fail(fw != NULL, FALSE);

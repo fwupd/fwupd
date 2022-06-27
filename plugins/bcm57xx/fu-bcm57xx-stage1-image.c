@@ -20,8 +20,7 @@ G_DEFINE_TYPE(FuBcm57xxStage1Image, fu_bcm57xx_stage1_image, FU_TYPE_FIRMWARE)
 static gboolean
 fu_bcm57xx_stage1_image_parse(FuFirmware *image,
 			      GBytes *fw,
-			      guint64 addr_start,
-			      guint64 addr_end,
+			      gsize offset,
 			      FwupdInstallFlags flags,
 			      GError **error)
 {

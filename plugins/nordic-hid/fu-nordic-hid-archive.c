@@ -23,8 +23,7 @@ G_DEFINE_TYPE(FuNordicHidArchive, fu_nordic_hid_archive, FU_TYPE_FIRMWARE)
 static gboolean
 fu_nordic_hid_archive_parse(FuFirmware *firmware,
 			    GBytes *fw,
-			    guint64 addr_start,
-			    guint64 addr_end,
+			    gsize offset,
 			    FwupdInstallFlags flags,
 			    GError **error)
 {

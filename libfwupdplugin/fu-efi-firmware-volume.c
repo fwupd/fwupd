@@ -60,8 +60,7 @@ fu_ifd_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuil
 static gboolean
 fu_efi_firmware_volume_parse(FuFirmware *firmware,
 			     GBytes *fw,
-			     guint64 addr_start,
-			     guint64 addr_end,
+			     gsize offset,
 			     FwupdInstallFlags flags,
 			     GError **error)
 {
@@ -70,7 +69,6 @@ fu_efi_firmware_volume_parse(FuFirmware *firmware,
 	fwupd_guid_t guid = {0x0};
 	gsize blockmap_sz = 0;
 	gsize bufsz = 0;
-	gsize offset = 0;
 	guint16 checksum = 0;
 	guint16 ext_hdr = 0;
 	guint16 hdr_length = 0;

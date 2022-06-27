@@ -51,8 +51,7 @@ struct _FuFirmwareClass {
 	GObjectClass parent_class;
 	gboolean (*parse)(FuFirmware *self,
 			  GBytes *fw,
-			  guint64 addr_start,
-			  guint64 addr_end,
+			  gsize offset,
 			  FwupdInstallFlags flags,
 			  GError **error) G_GNUC_WARN_UNUSED_RESULT;
 	GBytes *(*write)(FuFirmware *self, GError **error)G_GNUC_WARN_UNUSED_RESULT;
@@ -268,8 +267,7 @@ fu_firmware_parse_file(FuFirmware *self, GFile *file, FwupdInstallFlags flags, G
 gboolean
 fu_firmware_parse_full(FuFirmware *self,
 		       GBytes *fw,
-		       guint64 addr_start,
-		       guint64 addr_end,
+		       gsize offset,
 		       FwupdInstallFlags flags,
 		       GError **error) G_GNUC_WARN_UNUSED_RESULT;
 GBytes *

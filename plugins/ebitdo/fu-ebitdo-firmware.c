@@ -27,8 +27,7 @@ typedef struct __attribute__((packed)) {
 static gboolean
 fu_ebitdo_firmware_parse(FuFirmware *firmware,
 			 GBytes *fw,
-			 guint64 addr_start,
-			 guint64 addr_end,
+			 gsize offset,
 			 FwupdInstallFlags flags,
 			 GError **error)
 {

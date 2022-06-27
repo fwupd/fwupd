@@ -233,12 +233,7 @@ fu_wac_firmware_tokenize_cb(GString *token, guint token_idx, gpointer user_data,
 
 		/* parse SREC file and add as image */
 		blob = g_bytes_new(helper->image_buffer->str, helper->image_buffer->len);
-		if (!fu_firmware_parse_full(firmware_srec,
-					    blob,
-					    hdr->addr,
-					    0x0,
-					    helper->flags,
-					    error))
+		if (!fu_firmware_parse_full(firmware_srec, blob, hdr->addr, helper->flags, error))
 			return FALSE;
 		fw_srec = fu_firmware_get_bytes(firmware_srec, error);
 		if (fw_srec == NULL)
@@ -260,8 +255,7 @@ fu_wac_firmware_tokenize_cb(GString *token, guint token_idx, gpointer user_data,
 static gboolean
 fu_wac_firmware_parse(FuFirmware *firmware,
 		      GBytes *fw,
-		      guint64 addr_start,
-		      guint64 addr_end,
+		      gsize offset,
 		      FwupdInstallFlags flags,
 		      GError **error)
 {

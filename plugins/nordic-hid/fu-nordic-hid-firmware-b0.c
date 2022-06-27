@@ -117,8 +117,7 @@ fu_nordic_hid_firmware_b0_read_fwinfo(FuFirmware *firmware,
 static gboolean
 fu_nordic_hid_firmware_b0_parse(FuFirmware *firmware,
 				GBytes *fw,
-				guint64 addr_start,
-				guint64 addr_end,
+				gsize offset,
 				FwupdInstallFlags flags,
 				GError **error)
 {
@@ -126,7 +125,7 @@ fu_nordic_hid_firmware_b0_parse(FuFirmware *firmware,
 	gsize bufsz = 0;
 
 	if (!FU_FIRMWARE_CLASS(fu_nordic_hid_firmware_b0_parent_class)
-		 ->parse(firmware, fw, addr_start, addr_end, flags, error))
+		 ->parse(firmware, fw, offset, flags, error))
 		return FALSE;
 
 	buf = g_bytes_get_data(fw, &bufsz);

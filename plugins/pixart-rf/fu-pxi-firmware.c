@@ -37,8 +37,7 @@ fu_pxi_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuil
 static gboolean
 fu_pxi_firmware_parse(FuFirmware *firmware,
 		      GBytes *fw,
-		      guint64 addr_start,
-		      guint64 addr_end,
+		      gsize offset,
 		      FwupdInstallFlags flags,
 		      GError **error)
 {

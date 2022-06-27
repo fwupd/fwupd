@@ -31,12 +31,10 @@ G_DEFINE_TYPE(FuCfuPayload, fu_cfu_payload, FU_TYPE_FIRMWARE)
 static gboolean
 fu_cfu_payload_parse(FuFirmware *firmware,
 		     GBytes *fw,
-		     guint64 addr_start,
-		     guint64 addr_end,
+		     gsize offset,
 		     FwupdInstallFlags flags,
 		     GError **error)
 {
-	guint32 offset = 0;
 	gsize bufsz = 0;
 	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
 

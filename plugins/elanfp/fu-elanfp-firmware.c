@@ -42,8 +42,7 @@ fu_elanfp_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
 static gboolean
 fu_elanfp_firmware_parse(FuFirmware *firmware,
 			 GBytes *fw,
-			 guint64 addr_start,
-			 guint64 addr_end,
+			 gsize offset,
 			 FwupdInstallFlags flags,
 			 GError **error)
 {
@@ -51,7 +50,6 @@ fu_elanfp_firmware_parse(FuFirmware *firmware,
 	const guint8 *buf;
 	gsize bufsz;
 	guint32 tag = 0;
-	gsize offset = 0x00;
 	guint img_cnt = 0;
 
 	/* check the tag */

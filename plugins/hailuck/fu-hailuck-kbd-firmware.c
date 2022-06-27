@@ -19,8 +19,7 @@ G_DEFINE_TYPE(FuHailuckKbdFirmware, fu_hailuck_kbd_firmware, FU_TYPE_IHEX_FIRMWA
 static gboolean
 fu_hailuck_kbd_firmware_parse(FuFirmware *firmware,
 			      GBytes *fw,
-			      guint64 addr_start,
-			      guint64 addr_end,
+			      gsize offset,
 			      FwupdInstallFlags flags,
 			      GError **error)
 {

@@ -204,39 +204,30 @@ fu_efi_signature_list_get_version(FuEfiSignatureList *self)
 static gboolean
 fu_efi_signature_list_parse(FuFirmware *firmware,
 			    GBytes *fw,
-			    guint64 addr_start,
-			    guint64 addr_end,
+			    gsize offset,
 			    FwupdInstallFlags flags,
 			    GError **error)
 {
 	FuEfiSignatureList *self = FU_EFI_SIGNATURE_LIST(firmware);
 	gsize bufsz = 0;
-	gsize offset_fs = 0;
 	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
 	g_autofree gchar *version_str = NULL;
 
 	/* this allows us to skip the efi permissions uint32_t or even the
 	 * Microsoft PKCS-7 signature */
 	if ((flags & FWUPD_INSTALL_FLAG_NO_SEARCH) == 0) {
-		if (bufsz < 5) {
-			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_FAILED,
-				    "signature invalid: 0x%x",
-				    (guint)bufsz);
+		if (!fu_memmem_safe(buf,
+				    bufsz,
+				    (const guint8 *)"\x26\x16\xc4\xc1\x4c",
+				    5,
+				    &offset,
+				    error))
 			return FALSE;
-		}
-		for (gsize i = 0; i < bufsz - 5; i++) {
-			if (memcmp(buf + i, "\x26\x16\xc4\xc1\x4c", 5) == 0) {
-				g_debug("found EFI_SIGNATURE_LIST @0x%x", (guint)i);
-				offset_fs = i;
-				break;
-			}
-		}
+		fu_firmware_set_offset(firmware, offset);
 	}
 
 	/* parse each EFI_SIGNATURE_LIST */
-	for (gsize offset = offset_fs; offset < bufsz;) {
+	while (offset < bufsz) {
 		if (!fu_efi_signature_list_parse_list(self, buf, bufsz, &offset, error))
 			return FALSE;
 	}

@@ -355,8 +355,7 @@ fu_ccgx_firmware_tokenize_cb(GString *token, guint token_idx, gpointer user_data
 static gboolean
 fu_ccgx_firmware_parse(FuFirmware *firmware,
 		       GBytes *fw,
-		       guint64 addr_start,
-		       guint64 addr_end,
+		       gsize offset,
 		       FwupdInstallFlags flags,
 		       GError **error)
 {

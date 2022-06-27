@@ -18,8 +18,7 @@ struct _FuFmapFirmwareClass {
 	FuFirmwareClass parent_class;
 	gboolean (*parse)(FuFirmware *self,
 			  GBytes *fw,
-			  guint64 addr_start,
-			  guint64 addr_end,
+			  gsize offset,
 			  FwupdInstallFlags flags,
 			  GError **error);
 	/*< private >*/

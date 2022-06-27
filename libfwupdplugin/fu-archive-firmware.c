@@ -57,8 +57,7 @@ fu_archive_firmware_parse_cb(FuArchive *self,
 static gboolean
 fu_archive_firmware_parse(FuFirmware *firmware,
 			  GBytes *fw,
-			  guint64 addr_start,
-			  guint64 addr_end,
+			  gsize offset,
 			  FwupdInstallFlags flags,
 			  GError **error)
 {

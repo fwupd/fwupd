@@ -66,8 +66,7 @@ fu_uswid_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBu
 static gboolean
 fu_uswid_firmware_parse(FuFirmware *firmware,
 			GBytes *fw,
-			guint64 addr_start,
-			guint64 addr_end,
+			gsize offset_ignored,
 			FwupdInstallFlags flags,
 			GError **error)
 {

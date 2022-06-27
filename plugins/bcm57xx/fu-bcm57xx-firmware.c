@@ -304,8 +304,7 @@ fu_bcm57xx_firmware_parse_dict(FuBcm57xxFirmware *self,
 static gboolean
 fu_bcm57xx_firmware_parse(FuFirmware *firmware,
 			  GBytes *fw,
-			  guint64 addr_start,
-			  guint64 addr_end,
+			  gsize offset,
 			  FwupdInstallFlags flags,
 			  GError **error)
 {

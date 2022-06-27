@@ -232,8 +232,7 @@ fu_uf2_firmware_parse_chunk(FuUf2Firmware *self, FuChunk *chk, GByteArray *tmp, 
 static gboolean
 fu_uf2_firmware_parse(FuFirmware *firmware,
 		      GBytes *fw,
-		      guint64 addr_start,
-		      guint64 addr_end,
+		      gsize offset,
 		      FwupdInstallFlags flags,
 		      GError **error)
 {

@@ -727,8 +727,7 @@ fu_firmware_tokenize(FuFirmware *self, GBytes *fw, FwupdInstallFlags flags, GErr
  * fu_firmware_parse_full:
  * @self: a #FuFirmware
  * @fw: firmware blob
- * @addr_start: start address, useful for ignoring a bootloader
- * @addr_end: end address, useful for ignoring config bytes
+ * @offset: start offset, useful for ignoring a bootloader
  * @flags: install flags, e.g. %FWUPD_INSTALL_FLAG_FORCE
  * @error: (nullable): optional return location for an error
  *
@@ -736,13 +735,12 @@ fu_firmware_tokenize(FuFirmware *self, GBytes *fw, FwupdInstallFlags flags, GErr
  *
  * Returns: %TRUE for success
  *
- * Since: 1.3.1
+ * Since: 1.8.2
  **/
 gboolean
 fu_firmware_parse_full(FuFirmware *self,
 		       GBytes *fw,
-		       guint64 addr_start,
-		       guint64 addr_end,
+		       gsize offset,
 		       FwupdInstallFlags flags,
 		       GError **error)
 {
@@ -779,7 +777,7 @@ fu_firmware_parse_full(FuFirmware *self,
 			return FALSE;
 	}
 	if (klass->parse != NULL)
-		return klass->parse(self, fw, addr_start, addr_end, flags, error);
+		return klass->parse(self, fw, offset, flags, error);
 
 	/* verify alignment */
 	if (g_bytes_get_size(fw) % (1ull << priv->alignment) != 0) {
@@ -816,7 +814,7 @@ fu_firmware_parse_full(FuFirmware *self,
 gboolean
 fu_firmware_parse(FuFirmware *self, GBytes *fw, FwupdInstallFlags flags, GError **error)
 {
-	return fu_firmware_parse_full(self, fw, 0x0, 0x0, flags, error);
+	return fu_firmware_parse_full(self, fw, 0x0, flags, error);
 }
 
 /**

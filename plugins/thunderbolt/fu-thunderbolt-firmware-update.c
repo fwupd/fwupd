@@ -81,8 +81,7 @@ fu_thunderbolt_firmware_read_farb_pointer(FuThunderboltFirmwareUpdate *self, GEr
 static gboolean
 fu_thunderbolt_firmware_update_parse(FuFirmware *firmware,
 				     GBytes *fw,
-				     guint64 addr_start,
-				     guint64 addr_end,
+				     gsize offset_ignored,
 				     FwupdInstallFlags flags,
 				     GError **error)
 {

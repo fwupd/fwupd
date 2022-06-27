@@ -302,14 +302,12 @@ fu_redfish_smbios_parse_over_ip(FuRedfishSmbios *self, GBytes *fw, gsize offset,
 static gboolean
 fu_redfish_smbios_parse(FuFirmware *firmware,
 			GBytes *fw,
-			guint64 addr_start,
-			guint64 addr_end,
+			gsize offset,
 			FwupdInstallFlags flags,
 			GError **error)
 {
 	FuRedfishSmbios *self = FU_REDFISH_SMBIOS(firmware);
 	gsize bufsz = 0;
-	gsize offset = 0;
 	guint8 protocol_rcds = 0;
 	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
 
