@@ -23,11 +23,15 @@ jobs:
         env:
           OS: ${{ matrix.os }}
         run: ./contrib/ci/generate_docker.py
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       - name: Push to GitHub Packages
         uses: docker/build-push-action@v3
         with:
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-          registry: docker.pkg.github.com
-          repository: fwupd/fwupd/fwupd-${{matrix.os}}
-          tags: latest
+          context: .
+          push: true
+          tags: fwupd/fwupd/fwupd-${{matrix.os}}:latest
