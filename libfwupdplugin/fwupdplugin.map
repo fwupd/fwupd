@@ -937,6 +937,8 @@ LIBFWUPDPLUGIN_1.8.2 {
     fu_i2c_device_write;
     fu_ifwi_cpd_firmware_get_type;
     fu_ifwi_cpd_firmware_new;
+    fu_ifwi_fpt_firmware_get_type;
+    fu_ifwi_fpt_firmware_new;
     fu_kernel_check_version;
     fu_kernel_get_firmware_search_path;
     fu_kernel_locked_down;
