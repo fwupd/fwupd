@@ -28,13 +28,11 @@ G_DEFINE_TYPE(FuIfdBios, fu_ifd_bios, FU_TYPE_IFD_IMAGE)
 static gboolean
 fu_ifd_bios_parse(FuFirmware *firmware,
 		  GBytes *fw,
-		  guint64 addr_start,
-		  guint64 addr_end,
+		  gsize offset,
 		  FwupdInstallFlags flags,
 		  GError **error)
 {
 	gsize bufsz = 0;
-	gsize offset = 0x0;
 	guint32 sig;
 	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
 

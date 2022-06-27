@@ -23,13 +23,11 @@ G_DEFINE_TYPE(FuAcpiPhatVersionRecord, fu_acpi_phat_version_record, FU_TYPE_FIRM
 static gboolean
 fu_acpi_phat_version_record_parse(FuFirmware *firmware,
 				  GBytes *fw,
-				  guint64 addr_start,
-				  guint64 addr_end,
+				  gsize offset,
 				  FwupdInstallFlags flags,
 				  GError **error)
 {
 	gsize bufsz = 0;
-	gsize offset = 0;
 	guint32 record_count = 0;
 	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
 

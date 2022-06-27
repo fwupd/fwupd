@@ -417,8 +417,7 @@ fu_cfu_offer_set_product_id(FuCfuOffer *self, guint16 product_id)
 static gboolean
 fu_cfu_offer_parse(FuFirmware *firmware,
 		   GBytes *fw,
-		   guint64 addr_start,
-		   guint64 addr_end,
+		   gsize offset,
 		   FwupdInstallFlags flags,
 		   GError **error)
 {

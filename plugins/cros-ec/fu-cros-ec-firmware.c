@@ -76,8 +76,7 @@ fu_cros_ec_firmware_get_needed_sections(FuCrosEcFirmware *self, GError **error)
 static gboolean
 fu_cros_ec_firmware_parse(FuFirmware *firmware,
 			  GBytes *fw,
-			  guint64 addr_start,
-			  guint64 addr_end,
+			  gsize offset,
 			  FwupdInstallFlags flags,
 			  GError **error)
 {

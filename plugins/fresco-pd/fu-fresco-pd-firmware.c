@@ -33,8 +33,7 @@ fu_fresco_pd_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, 
 static gboolean
 fu_fresco_pd_firmware_parse(FuFirmware *firmware,
 			    GBytes *fw,
-			    guint64 addr_start,
-			    guint64 addr_end,
+			    gsize offset,
 			    FwupdInstallFlags flags,
 			    GError **error)
 {

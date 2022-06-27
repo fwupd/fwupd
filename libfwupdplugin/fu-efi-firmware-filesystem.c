@@ -24,12 +24,10 @@ G_DEFINE_TYPE(FuEfiFirmwareFilesystem, fu_efi_firmware_filesystem, FU_TYPE_FIRMW
 static gboolean
 fu_efi_firmware_filesystem_parse(FuFirmware *firmware,
 				 GBytes *fw,
-				 guint64 addr_start,
-				 guint64 addr_end,
+				 gsize offset,
 				 FwupdInstallFlags flags,
 				 GError **error)
 {
-	gsize offset = 0;
 	gsize bufsz = 0x0;
 	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
 

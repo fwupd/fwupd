@@ -98,8 +98,7 @@ fu_coswid_firmware_strndup(cbor_item_t *item)
 static gboolean
 fu_coswid_firmware_parse(FuFirmware *firmware,
 			 GBytes *fw,
-			 guint64 addr_start,
-			 guint64 addr_end,
+			 gsize offset,
 			 FwupdInstallFlags flags,
 			 GError **error)
 {

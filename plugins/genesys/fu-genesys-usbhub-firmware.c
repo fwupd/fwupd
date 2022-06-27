@@ -111,8 +111,7 @@ fu_genesys_usbhub_firmware_verify(const guint8 *buf, gsize bufsz, guint16 code_s
 static gboolean
 fu_genesys_usbhub_firmware_parse(FuFirmware *firmware,
 				 GBytes *fw,
-				 guint64 addr_start,
-				 guint64 addr_end,
+				 gsize offset,
 				 FwupdInstallFlags flags,
 				 GError **error)
 {

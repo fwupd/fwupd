@@ -157,8 +157,7 @@ fu_synaptics_cape_firmware_parse_header(FuSynapticsCapeFirmware *self,
 static gboolean
 fu_synaptics_cape_firmware_parse(FuFirmware *firmware,
 				 GBytes *fw,
-				 guint64 addr_start,
-				 guint64 addr_end,
+				 gsize offset,
 				 FwupdInstallFlags flags,
 				 GError **error)
 {

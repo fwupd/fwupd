@@ -22,8 +22,7 @@ G_DEFINE_TYPE(FuEp963xFirmware, fu_ep963x_firmware, FU_TYPE_FIRMWARE)
 static gboolean
 fu_ep963x_firmware_parse(FuFirmware *firmware,
 			 GBytes *fw,
-			 guint64 addr_start,
-			 guint64 addr_end,
+			 gsize offset,
 			 FwupdInstallFlags flags,
 			 GError **error)
 {

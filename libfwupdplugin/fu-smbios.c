@@ -494,9 +494,9 @@ fu_smbios_encode_byte_from_kernel(FuSmbios *self,
  * the textual version of the field back into the raw SMBIOS table
  * representation.
  */
-#define SYSFS_DMI_FIELD(_name, _type, _offset, kind)                                               \
+#define SYSFS_DMI_FIELD(_name, _type, offset_ignored, kind)                                        \
 	{                                                                                          \
-		.name = _name, .type = _type, .offset = _offset,                                   \
+		.name = _name, .type = _type, .offset = offset_ignored,                            \
 		.encode = fu_smbios_encode_##kind##_from_kernel                                    \
 	}
 const struct kernel_dmi_field {
@@ -753,8 +753,7 @@ fu_smbios_setup_from_path_dmi(FuSmbios *self, const gchar *path, GError **error)
 static gboolean
 fu_smbios_parse(FuFirmware *firmware,
 		GBytes *fw,
-		guint64 addr_start,
-		guint64 addr_end,
+		gsize offset,
 		FwupdInstallFlags flags,
 		GError **error)
 {

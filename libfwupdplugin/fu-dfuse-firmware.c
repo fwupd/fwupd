@@ -150,15 +150,13 @@ fu_dfuse_firmware_image_parse(FuDfuseFirmware *self, GBytes *bytes, gsize *offse
 static gboolean
 fu_dfuse_firmware_parse(FuFirmware *firmware,
 			GBytes *fw,
-			guint64 addr_start,
-			guint64 addr_end,
+			gsize offset,
 			FwupdInstallFlags flags,
 			GError **error)
 {
 	FuDfuFirmware *dfu_firmware = FU_DFU_FIRMWARE(firmware);
 	DfuSeHdr hdr = {0x0};
 	gsize bufsz = 0;
-	gsize offset = 0;
 	const guint8 *buf;
 
 	/* DFU footer first */

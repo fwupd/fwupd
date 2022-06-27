@@ -275,8 +275,7 @@ fu_ccgx_dmc_firmware_parse_image(FuFirmware *firmware,
 static gboolean
 fu_ccgx_dmc_firmware_parse(FuFirmware *firmware,
 			   GBytes *fw,
-			   guint64 addr_start,
-			   guint64 addr_end,
+			   gsize offset,
 			   FwupdInstallFlags flags,
 			   GError **error)
 {

@@ -144,8 +144,7 @@ fu_efi_firmware_file_hdr_checksum8(GBytes *blob)
 static gboolean
 fu_efi_firmware_file_parse(FuFirmware *firmware,
 			   GBytes *fw,
-			   guint64 addr_start,
-			   guint64 addr_end,
+			   gsize offset,
 			   FwupdInstallFlags flags,
 			   GError **error)
 {

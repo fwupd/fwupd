@@ -53,8 +53,7 @@ fu_nordic_hid_firmware_crc32(const guint8 *buf, gsize bufsz)
 static gboolean
 fu_nordic_hid_firmware_parse(FuFirmware *firmware,
 			     GBytes *fw,
-			     guint64 addr_start,
-			     guint64 addr_end,
+			     gsize offset,
 			     FwupdInstallFlags flags,
 			     GError **error)
 {

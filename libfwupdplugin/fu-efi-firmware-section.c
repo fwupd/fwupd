@@ -110,8 +110,7 @@ fu_efi_firmware_section_export(FuFirmware *firmware, FuFirmwareExportFlags flags
 static gboolean
 fu_efi_firmware_section_parse(FuFirmware *firmware,
 			      GBytes *fw,
-			      guint64 addr_start,
-			      guint64 addr_end,
+			      gsize offset_ignored,
 			      FwupdInstallFlags flags,
 			      GError **error)
 {

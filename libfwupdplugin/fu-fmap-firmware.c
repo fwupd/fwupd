@@ -28,15 +28,13 @@ G_DEFINE_TYPE(FuFmapFirmware, fu_fmap_firmware, FU_TYPE_FIRMWARE)
 static gboolean
 fu_fmap_firmware_parse(FuFirmware *firmware,
 		       GBytes *fw,
-		       guint64 addr_start,
-		       guint64 addr_end,
+		       gsize offset,
 		       FwupdInstallFlags flags,
 		       GError **error)
 {
 	FuFmapFirmwareClass *klass_firmware = FU_FMAP_FIRMWARE_GET_CLASS(firmware);
 	gsize bufsz;
 	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
-	gsize offset = 0;
 	FuFmap fmap;
 
 	/* corrupt */
@@ -130,7 +128,7 @@ fu_fmap_firmware_parse(FuFirmware *firmware,
 
 	/* subclassed */
 	if (klass_firmware->parse != NULL) {
-		if (!klass_firmware->parse(firmware, fw, addr_start, addr_end, flags, error))
+		if (!klass_firmware->parse(firmware, fw, offset, flags, error))
 			return FALSE;
 	}
 

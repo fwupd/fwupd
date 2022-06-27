@@ -245,8 +245,7 @@ fu_ihex_firmware_tokenize(FuFirmware *firmware, GBytes *fw, FwupdInstallFlags fl
 static gboolean
 fu_ihex_firmware_parse(FuFirmware *firmware,
 		       GBytes *fw,
-		       guint64 addr_start,
-		       guint64 addr_end,
+		       gsize offset,
 		       FwupdInstallFlags flags,
 		       GError **error)
 {
