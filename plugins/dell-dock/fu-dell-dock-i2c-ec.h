@@ -48,4 +48,4 @@ fu_dell_dock_ec_commit_package(FuDevice *device, GBytes *blob_fw, GError **error
 gboolean
 fu_dell_dock_module_is_usb4(FuDevice *device);
 guint8
-fu_dell_dock_get_ec_type(FuDevice *device);
+fu_dell_dock_get_dock_type(FuDevice *device);

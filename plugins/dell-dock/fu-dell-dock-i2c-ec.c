@@ -183,7 +183,7 @@ fu_dell_dock_module_is_usb4(FuDevice *device)
 }
 
 guint8
-fu_dell_dock_get_ec_type(FuDevice *device)
+fu_dell_dock_get_dock_type(FuDevice *device)
 {
 	FuDellDockEc *self = FU_DELL_DOCK_EC(device);
 	return self->base_type;
@@ -347,10 +347,10 @@ fu_dell_dock_is_valid_dock(FuDevice *device, GError **error)
 	self->base_type = result[0];
 
 	/* this will trigger setting up all the quirks */
-	if (self->base_type == WD19_BASE) {
+	if (self->base_type == DOCK_BASE_TYPE_SALOMON) {
 		fu_device_add_instance_id(device, DELL_DOCK_EC_INSTANCE_ID);
 		return TRUE;
-	} else if (self->base_type == ATOMIC_BASE) {
+	} else if (self->base_type == DOCK_BASE_TYPE_ATOMIC) {
 		fu_device_add_instance_id(device, DELL_DOCK_ATOMIC_EC_INSTANCE_ID);
 		return TRUE;
 	}
