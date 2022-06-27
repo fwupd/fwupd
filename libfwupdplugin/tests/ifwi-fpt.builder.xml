@@ -1,0 +1,10 @@
+<firmware gtype="FuIfwiFptFirmware">
+  <firmware gtype="FuFirmware">
+    <idx>0x4f464e49</idx>
+    <data>aGVsbG8gd29ybGQ=</data>
+  </firmware>
+  <firmware gtype="FuFirmware">
+    <idx>0x4d495746</idx>
+    <data>aGVsbG8gd29ybGQ=</data>
+  </firmware>
+</firmware>

@@ -2384,6 +2384,43 @@ fu_firmware_ifwi_cpd_func(void)
 }
 
 static void
+fu_firmware_ifwi_fpt_func(void)
+{
+	gboolean ret;
+	g_autofree gchar *filename_ifwi_fpt = NULL;
+	g_autoptr(FuFirmware) firmware = fu_ifwi_fpt_firmware_new();
+	g_autoptr(FuFirmware) img1 = NULL;
+	g_autoptr(FuFirmware) img2 = NULL;
+	g_autoptr(GBytes) data_bin = NULL;
+	g_autoptr(GBytes) data_ifwi_fpt = NULL;
+	g_autoptr(GError) error = NULL;
+
+	filename_ifwi_fpt = g_test_build_filename(G_TEST_DIST, "tests", "ifwi-fpt.bin", NULL);
+	data_ifwi_fpt = fu_bytes_get_contents(filename_ifwi_fpt, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(data_ifwi_fpt);
+	ret = fu_firmware_parse(firmware, data_ifwi_fpt, FWUPD_INSTALL_FLAG_NONE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	data_bin = fu_firmware_write(firmware, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(data_bin);
+	g_assert_cmpint(g_bytes_get_size(data_bin), ==, 118);
+
+	img1 = fu_firmware_get_image_by_idx(firmware, 0x4f464e49, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(img1);
+	g_assert_cmpint(fu_firmware_get_offset(img1), ==, 96);
+	g_assert_cmpint(fu_firmware_get_size(img1), ==, 11);
+
+	img2 = fu_firmware_get_image_by_idx(firmware, 0x4d495746, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(img2);
+	g_assert_cmpint(fu_firmware_get_offset(img2), ==, 107);
+	g_assert_cmpint(fu_firmware_get_size(img2), ==, 11);
+}
+
+static void
 fu_firmware_oprom_func(void)
 {
 	gboolean ret;
@@ -3534,6 +3571,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/firmware{srec}", fu_firmware_srec_func);
 	g_test_add_func("/fwupd/firmware{srec-xml}", fu_firmware_srec_xml_func);
 	g_test_add_func("/fwupd/firmware{ifwi-cpd}", fu_firmware_ifwi_cpd_func);
+	g_test_add_func("/fwupd/firmware{ifwi-fpt}", fu_firmware_ifwi_fpt_func);
 	g_test_add_func("/fwupd/firmware{oprom}", fu_firmware_oprom_func);
 	g_test_add_func("/fwupd/firmware{dfu}", fu_firmware_dfu_func);
 	g_test_add_func("/fwupd/firmware{dfu-patch}", fu_firmware_dfu_patch_func);
