@@ -36,6 +36,7 @@ enum WacModuleFwType {
     Scaler        = 0x04,
     BluetoothId6  = 0x06,
     TouchId7      = 0x07,
+    BluetoothId9  = 0x09,
     Main          = 0x3F,
 }
 #[derive(ToString)]
@@ -71,4 +72,25 @@ enum WacDeviceStatus {
     ErrorWrite = 1 << 2,
     ErrorErase = 1 << 3,
     WriteProtected = 1 << 4,
+}
+
+#[derive(New)]
+struct Id9UnknownCmd {
+    unknown1: u16be: const=0x7050,
+    unknown2: u32be: const=0,
+    size: u16be,                  // Size of payload to be transferred
+}
+#[derive(New)]
+struct Id9SpiCmd {
+    command: u8: const=0x91,
+    start_addr: u32be: const=0,
+    size: u16be,                  // sizeof(data) + size of payload
+    data: Id9UnknownCmd,
+}
+#[derive(New, Validate)]
+struct Id9LoaderCmd {
+    command: u8,
+    size: u16be,                  // sizeof(data) + size of payload
+    crc: u32be,                   // CRC(concat(data, payload))
+    data: Id9SpiCmd,
 }
