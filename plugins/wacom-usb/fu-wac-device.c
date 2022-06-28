@@ -12,6 +12,7 @@
 #include "fu-wac-device.h"
 #include "fu-wac-firmware.h"
 #include "fu-wac-module-bluetooth-id6.h"
+#include "fu-wac-module-bluetooth-id9.h"
 #include "fu-wac-module-bluetooth.h"
 #include "fu-wac-module-scaler.h"
 #include "fu-wac-module-touch-id7.h"
@@ -784,6 +785,15 @@ fu_wac_device_add_modules(FuWacDevice *self, GError **error)
 					       fu_device_get_name(FU_DEVICE(self)));
 			fu_device_add_child(FU_DEVICE(self), FU_DEVICE(module));
 			fu_device_set_name(FU_DEVICE(module), name);
+			fu_device_set_version_from_uint16(FU_DEVICE(module), ver);
+			break;
+		case FU_WAC_MODULE_FW_TYPE_BLUETOOTH_ID9:
+			module = fu_wac_module_bluetooth_id9_new(FU_DEVICE(self));
+			name = g_strdup_printf("%s [Bluetooth Module]",
+					       fu_device_get_name(FU_DEVICE(self)));
+			fu_device_add_child(FU_DEVICE(self), FU_DEVICE(module));
+			fu_device_set_name(FU_DEVICE(module), name);
+			fu_device_set_summary(FU_DEVICE(module), "ID9");
 			fu_device_set_version_from_uint16(FU_DEVICE(module), ver);
 			break;
 		case FU_WAC_MODULE_FW_TYPE_MAIN:
