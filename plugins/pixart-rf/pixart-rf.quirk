@@ -98,8 +98,13 @@ GType = FuPxiBleDevice
 Plugin = pixart_rf
 GType = FuPxiBleDevice
 
-# AKR123 Bluetooth Keyboard
+# AKR123 Bluetooth Keyboard US
 [HIDRAW\VEN_04F2&DEV_2199]
+Plugin = pixart_rf
+GType = FuPxiBleDevice
+
+# AKR123 Bluetooth Keyboard UK
+[HIDRAW\VEN_04F2&DEV_2174]
 Plugin = pixart_rf
 GType = FuPxiBleDevice
 
