@@ -101,3 +101,25 @@ GType = FuWacDevice
 [USB\VID_056A&PID_03CE]
 Plugin = wacom_usb
 GType = FuWacDevice
+
+# Wacom One Pen tablet small (USB) [CTC4110WL]
+[USB\VID_0531&PID_0100]
+Plugin = wacom_usb
+GType = FuWacDevice
+Flags = no-serial-number
+
+# Wacom One Pen tablet small (USB) [CTC4110WL - Android Mode]
+[USB\VID_0531&PID_0104]
+Plugin = wacom_usb
+GType = FuWacDevice
+
+# Wacom One Pen tablet medium (USB) [CTC6110WL]
+[USB\VID_0531&PID_0102]
+Plugin = wacom_usb
+GType = FuWacDevice
+Flags = no-serial-number
+
+# Wacom One Pen tablet medium (USB) [CTC6110WL - Android Mode]
+[USB\VID_0531&PID_0105]
+Plugin = wacom_usb
+GType = FuWacDevice
