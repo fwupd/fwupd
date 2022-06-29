@@ -262,6 +262,7 @@ fu_synaptics_rmi_v5_device_write_firmware(FuDevice *device,
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 10, "enter-iep");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 10, NULL);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 90, NULL);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 5, "write-signature");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 10, "cfg-image");
 
 	/* we should be in bootloader mode now, but check anyway */
@@ -395,6 +396,7 @@ fu_synaptics_rmi_v5_device_write_firmware(FuDevice *device,
 
 	/* payload signature */
 	if (signature_bin != NULL && fu_synaptics_rmi_device_get_sig_size(self) != 0) {
+		FuProgress *progress_child = fu_progress_get_child(progress);
 		g_autoptr(GPtrArray) chunks_sig = NULL;
 		chunks_sig = fu_chunk_array_new_from_bytes(signature_bin,
 							   0x00, /* start addr */
@@ -408,7 +410,8 @@ fu_synaptics_rmi_v5_device_write_firmware(FuDevice *device,
 			g_prefix_error(error, "failed to write 1st address zero: ");
 			return FALSE;
 		}
-		fu_progress_set_steps(progress, chunks_sig->len);
+		fu_progress_set_id(progress_child, G_STRLOC);
+		fu_progress_set_steps(progress_child, chunks_sig->len);
 		for (guint i = 0; i < chunks_sig->len; i++) {
 			FuChunk *chk = g_ptr_array_index(chunks_sig, i);
 			if (!fu_synaptics_rmi_v5_device_write_block(self,
@@ -422,10 +425,11 @@ fu_synaptics_rmi_v5_device_write_firmware(FuDevice *device,
 					       fu_chunk_get_idx(chk));
 				return FALSE;
 			}
-			fu_progress_step_done(progress);
+			fu_progress_step_done(progress_child);
 		}
 		g_usleep(1000 * 1000);
 	}
+	fu_progress_step_done(progress);
 
 	if (!fu_synaptics_rmi_device_enter_iep_mode(self,
 						    FU_SYNAPTICS_RMI_DEVICE_FLAG_FORCE,
