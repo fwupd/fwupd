@@ -345,6 +345,7 @@ fu_synaptics_mst_device_update_esm(FuSynapticsMstDevice *self,
 		g_usleep(FLASH_SETTLE_TIME);
 
 		/* write firmware */
+		fu_progress_set_id(progress, G_STRLOC);
 		fu_progress_set_steps(progress, write_loops);
 		for (guint32 i = 0; i < write_loops; i++) {
 			g_autoptr(GError) error_local = NULL;

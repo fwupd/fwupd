@@ -344,6 +344,7 @@ fu_bcm57xx_recovery_device_nvram_read(FuBcm57xxRecoveryDevice *self,
 				      FuProgress *progress,
 				      GError **error)
 {
+	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, bufsz);
 	for (guint i = 0; i < bufsz; i++) {
 		BcmRegNVMCommand tmp = {0};
@@ -406,6 +407,7 @@ fu_bcm57xx_recovery_device_nvram_write(FuBcm57xxRecoveryDevice *self,
 		return FALSE;
 	}
 
+	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, bufsz_dwrds);
 	for (guint i = 0; i < bufsz_dwrds; i++) {
 		BcmRegNVMCommand tmp = {0};

@@ -288,6 +288,7 @@ fu_fastboot_device_download(FuDevice *device, GBytes *fw, FuProgress *progress, 
 					       0x00, /* start addr */
 					       0x00, /* page_sz */
 					       self->blocksz);
+	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, chunks->len);
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index(chunks, i);

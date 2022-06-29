@@ -816,6 +816,7 @@ fu_ata_device_write_firmware(FuDevice *device,
 	/* write each block */
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_WRITE);
 	chunks = fu_chunk_array_new_from_bytes(fw, 0x00, 0x00, chunksz);
+	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, chunks->len);
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index(chunks, i);
