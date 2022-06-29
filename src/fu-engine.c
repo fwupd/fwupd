@@ -4331,7 +4331,12 @@ fu_engine_get_result_from_component(FuEngine *self,
 	fu_release_set_request(release, request);
 	fu_release_set_device(release, dev);
 	fwupd_release_set_flags(FWUPD_RELEASE(release), release_flags);
-	if (!fu_engine_load_release(self, release, component, rel, FWUPD_INSTALL_FLAG_NONE, error))
+	if (!fu_engine_load_release(self,
+				    release,
+				    component,
+				    rel,
+				    FWUPD_INSTALL_FLAG_NO_REQUIREMENTS,
+				    error))
 		return NULL;
 	fu_device_add_release(dev, FWUPD_RELEASE(release));
 	return g_steal_pointer(&dev);

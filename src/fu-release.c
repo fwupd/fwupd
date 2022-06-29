@@ -942,6 +942,7 @@ fu_release_load(FuRelease *self,
 
 	/* check requirements for device */
 	if (self->device != NULL && self->request != NULL &&
+	    (install_flags & FWUPD_INSTALL_FLAG_NO_REQUIREMENTS) == 0 &&
 	    fu_engine_request_get_kind(self->request) == FU_ENGINE_REQUEST_KIND_ACTIVE) {
 		if (!fu_release_check_requirements(self, component, rel, install_flags, error))
 			return FALSE;
