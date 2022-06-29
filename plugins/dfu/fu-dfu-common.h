@@ -254,6 +254,12 @@ typedef enum {
  * Allows the zero bwPollTimeout from GetStatus in dfuDNLOAD-SYNC state.
  */
 #define FU_DFU_DEVICE_FLAG_ALLOW_ZERO_POLLTIMEOUT (1ull << (8 + 18))
+/**
+ * FU_DFU_DEVICE_FLAG_INDEX_FORCE_DETACH:
+ *
+ * Requires Force Detach in wIndex to bypass status checking.
+ */
+#define FU_DFU_DEVICE_FLAG_INDEX_FORCE_DETACH (1ull << (8 + 19))
 
 const gchar *
 fu_dfu_state_to_string(FuDfuState state);
