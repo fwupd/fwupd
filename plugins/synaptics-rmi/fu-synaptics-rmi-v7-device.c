@@ -294,6 +294,7 @@ fu_synaptics_rmi_v7_device_write_partition(FuSynapticsRmiDevice *self,
 					  0x00, /* start addr */
 					  0x00, /* page_sz */
 					  (gsize)flash->payload_length * (gsize)flash->block_size);
+	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, chunks->len);
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index(chunks, i);

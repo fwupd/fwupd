@@ -254,6 +254,7 @@ fu_superio_it89_device_read_addr(FuSuperioDevice *self,
 
 	/* read out data */
 	buf = g_malloc0(size);
+	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, size);
 	for (guint i = 0; i < size; i++) {
 		if (!fu_superio_device_ec_write_cmd(self, SIO_EC_PMC_PM1DI, error))

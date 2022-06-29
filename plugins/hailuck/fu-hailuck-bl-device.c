@@ -114,6 +114,7 @@ fu_hailuck_bl_device_dump_firmware(FuDevice *device, FuProgress *progress, GErro
 	/* receive data back */
 	fu_byte_array_set_size(fwbuf, fwsz, 0x00);
 	chunks = fu_chunk_array_mutable_new(fwbuf->data, fwbuf->len, 0x0, 0x0, 2048);
+	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, chunks->len);
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index(chunks, i);

@@ -379,6 +379,7 @@ fu_dfu_csr_device_download(FuDevice *device,
 	}
 
 	/* send to hardware */
+	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, chunks->len);
 	for (idx = 0; idx < chunks->len; idx++) {
 		FuChunk *chk = g_ptr_array_index(chunks, idx);

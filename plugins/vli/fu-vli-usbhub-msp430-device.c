@@ -226,6 +226,7 @@ fu_vli_usbhub_msp430_device_write_firmware(FuDevice *device,
 		return FALSE;
 
 	/* transfer by I²C write, and check status by I²C read */
+	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_WRITE);
 	fu_progress_set_steps(progress, records->len);
 	for (guint j = 0; j < records->len; j++) {

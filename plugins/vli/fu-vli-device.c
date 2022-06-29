@@ -217,6 +217,7 @@ fu_vli_device_spi_read(FuVliDevice *self,
 
 	/* get data from hardware */
 	chunks = fu_chunk_array_mutable_new(buf, bufsz, address, 0x0, FU_VLI_DEVICE_TXSIZE);
+	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, chunks->len);
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index(chunks, i);
@@ -385,6 +386,7 @@ fu_vli_device_spi_erase(FuVliDevice *self,
 {
 	g_autoptr(GPtrArray) chunks = fu_chunk_array_new(NULL, sz, addr, 0x0, 0x1000);
 	g_debug("erasing 0x%x bytes @0x%x", (guint)sz, addr);
+	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, chunks->len);
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index(chunks, i);
