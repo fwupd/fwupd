@@ -804,7 +804,11 @@ fu_dfu_device_request_detach(FuDfuDevice *self, FuProgress *progress, GError **e
 	FuDfuDevicePrivate *priv = GET_PRIVATE(self);
 	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
 	const guint16 timeout_reset_ms = 1000;
+	guint16 ctrl_setup_index = priv->iface_number;
 	g_autoptr(GError) error_local = NULL;
+
+	if (fu_device_has_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_INDEX_FORCE_DETACH))
+		ctrl_setup_index |= 0x01u << 8;
 
 	if (!g_usb_device_control_transfer(usb_device,
 					   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
@@ -812,7 +816,7 @@ fu_dfu_device_request_detach(FuDfuDevice *self, FuProgress *progress, GError **e
 					   G_USB_DEVICE_RECIPIENT_INTERFACE,
 					   FU_DFU_REQUEST_DETACH,
 					   timeout_reset_ms,
-					   priv->iface_number,
+					   ctrl_setup_index,
 					   NULL,
 					   0,
 					   NULL,
@@ -1759,4 +1763,7 @@ fu_dfu_device_init(FuDfuDevice *self)
 	fu_device_register_private_flag(FU_DEVICE(self),
 					FU_DFU_DEVICE_FLAG_ALLOW_ZERO_POLLTIMEOUT,
 					"allow-zero-polltimeout");
+	fu_device_register_private_flag(FU_DEVICE(self),
+					FU_DFU_DEVICE_FLAG_INDEX_FORCE_DETACH,
+					"index-force-detach");
 }

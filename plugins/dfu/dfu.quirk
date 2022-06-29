@@ -340,10 +340,10 @@ Plugin = dfu
 DfuForceVersion = 011a
 DfuForceTimeout = 5000
 
-# Poly Studio
+# Poly Studio USB
 [USB\VID_095D&PID_9217]
 Plugin = dfu
-Flags = manifest-poll,no-bus-reset-attach,allow-zero-polltimeout,signed-payload
+Flags = manifest-poll,no-bus-reset-attach,allow-zero-polltimeout,signed-payload,index-force-detach
 RemoveDelay = 60000
 [USB\VID_095D&PID_9218]
 Plugin = dfu
@@ -363,7 +363,7 @@ RemoveDelay = 30000
 # Poly Studio P15
 [USB\VID_095D&PID_9290]
 Plugin = dfu
-Flags = manifest-poll,allow-zero-polltimeout,signed-payload
+Flags = manifest-poll,allow-zero-polltimeout,signed-payload,index-force-detach
 RemoveDelay = 60000
 [USB\VID_095D&PID_9291]
 Plugin = dfu
@@ -373,7 +373,7 @@ RemoveDelay = 60000
 # Poly ULCC
 [USB\VID_095D&PID_9160]
 Plugin = dfu
-Flags = manifest-poll,no-bus-reset-attach,allow-zero-polltimeout,signed-payload
+Flags = manifest-poll,no-bus-reset-attach,allow-zero-polltimeout,signed-payload,index-force-detach
 RemoveDelay = 60000
 [USB\VID_095D&PID_927B]
 Plugin = dfu
@@ -393,11 +393,15 @@ RemoveDelay = 9000
 # Poly Studio R30
 [USB\VID_095D&PID_92B2]
 Plugin = dfu
-Flags = manifest-poll,allow-zero-polltimeout,signed-payload
+Flags = manifest-poll,allow-zero-polltimeout,signed-payload,index-force-detach
 RemoveDelay = 60000
 [USB\VID_095D&PID_92B3]
 Plugin = dfu
 Flags = manifest-poll,allow-zero-polltimeout,signed-payload
+RemoveDelay = 60000
+[USB\VID_095D&PID_92B4]
+Plugin = dfu
+Flags = manifest-poll,allow-zero-polltimeout,signed-payload,index-force-detach
 RemoveDelay = 60000
 
 # Poly Studio P5
@@ -413,7 +417,7 @@ RemoveDelay = 9000
 # Poly Studio E70
 [USB\VID_095D&PID_92A1]
 Plugin = dfu
-Flags = manifest-poll,allow-zero-polltimeout,signed-payload
+Flags = manifest-poll,allow-zero-polltimeout,signed-payload,index-force-detach
 RemoveDelay = 90000
 [USB\VID_095D&PID_92A2]
 Plugin = dfu
