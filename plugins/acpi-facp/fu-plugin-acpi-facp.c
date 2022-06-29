@@ -31,7 +31,7 @@ fu_plugin_acpi_facp_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 	fn = g_build_filename(path, "FACP", NULL);
 	blob = fu_bytes_get_contents(fn, &error_local);
 	if (blob == NULL) {
-		g_warning("failed to load %s: %s", fn, error_local->message);
+		g_debug("failed to load %s: %s", fn, error_local->message);
 		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
 		return;
 	}
