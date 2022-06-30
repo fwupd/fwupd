@@ -777,6 +777,12 @@ fwupd_security_attr_to_variant(FwupdSecurityAttr *self)
 				      FWUPD_RESULT_KEY_NAME,
 				      g_variant_new_string(priv->name));
 	}
+	if (priv->plugin != NULL) {
+		g_variant_builder_add(&builder,
+				      "{sv}",
+				      FWUPD_RESULT_KEY_PLUGIN,
+				      g_variant_new_string(priv->plugin));
+	}
 	if (priv->url != NULL) {
 		g_variant_builder_add(&builder,
 				      "{sv}",
