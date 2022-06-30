@@ -185,5 +185,5 @@ fu_engine_update_devices_file(FuEngine *self, GError **error)
 
 	directory = fu_path_from_kind(FU_PATH_KIND_CACHEDIR_PKG);
 	target = g_build_filename(directory, "devices.json", NULL);
-	return fu_bytes_set_contents(target, g_bytes_new_take(g_steal_pointer(&data), len), error);
+	return g_file_set_contents(target, data, (gssize)len, error);
 }
