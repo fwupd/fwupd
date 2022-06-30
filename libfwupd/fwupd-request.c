@@ -26,7 +26,7 @@ typedef struct {
 	gchar *image;
 } FwupdRequestPrivate;
 
-enum { PROP_0, PROP_ID, PROP_KIND, PROP_MESSAGE, PROP_IMAGE, PROP_LAST };
+enum { PROP_0, PROP_ID, PROP_KIND, PROP_MESSAGE, PROP_IMAGE, PROP_DEVICE_ID, PROP_LAST };
 
 G_DEFINE_TYPE_WITH_PRIVATE(FwupdRequest, fwupd_request, G_TYPE_OBJECT)
 #define GET_PRIVATE(o) (fwupd_request_get_instance_private(o))
@@ -475,6 +475,9 @@ fwupd_request_get_property(GObject *object, guint prop_id, GValue *value, GParam
 	case PROP_IMAGE:
 		g_value_set_string(value, priv->image);
 		break;
+	case PROP_DEVICE_ID:
+		g_value_set_string(value, priv->device_id);
+		break;
 	case PROP_KIND:
 		g_value_set_uint(value, priv->kind);
 		break;
@@ -497,6 +500,9 @@ fwupd_request_set_property(GObject *object, guint prop_id, const GValue *value, 
 		break;
 	case PROP_IMAGE:
 		fwupd_request_set_image(self, g_value_get_string(value));
+		break;
+	case PROP_DEVICE_ID:
+		fwupd_request_set_device_id(self, g_value_get_string(value));
 		break;
 	case PROP_KIND:
 		fwupd_request_set_kind(self, g_value_get_uint(value));
@@ -589,6 +595,20 @@ fwupd_request_class_init(FwupdRequestClass *klass)
 	pspec =
 	    g_param_spec_string("image", NULL, NULL, NULL, G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_IMAGE, pspec);
+
+	/**
+	 * FwupdRequest:device-id:
+	 *
+	 * The device ID for the request.
+	 *
+	 * Since: 1.8.2
+	 */
+	pspec = g_param_spec_string("device-id",
+				    NULL,
+				    NULL,
+				    NULL,
+				    G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
+	g_object_class_install_property(object_class, PROP_DEVICE_ID, pspec);
 }
 
 static void
