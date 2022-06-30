@@ -804,10 +804,13 @@ fwupd_security_attr_func(void)
 	gboolean ret;
 	g_autofree gchar *str1 = NULL;
 	g_autofree gchar *str2 = NULL;
+	g_autofree gchar *str3 = NULL;
 	g_autofree gchar *json = NULL;
 	g_autoptr(FwupdSecurityAttr) attr1 = fwupd_security_attr_new("org.fwupd.hsi.bar");
 	g_autoptr(FwupdSecurityAttr) attr2 = fwupd_security_attr_new(NULL);
+	g_autoptr(FwupdSecurityAttr) attr3 = NULL;
 	g_autoptr(GError) error = NULL;
+	g_autoptr(GVariant) data = NULL;
 	g_autoptr(JsonParser) parser = json_parser_new();
 
 	for (guint i = 1; i < FWUPD_SECURITY_ATTR_RESULT_LAST; i++) {
@@ -855,6 +858,25 @@ fwupd_security_attr_func(void)
 
 	str1 = fwupd_security_attr_to_string(attr1);
 	ret = fu_test_compare_lines(str1,
+				    "  AppstreamId:          org.fwupd.hsi.baz\n"
+				    "  HsiLevel:             2\n"
+				    "  HsiResult:            enabled\n"
+				    "  Flags:                success\n"
+				    "  Name:                 DCI\n"
+				    "  Plugin:               uefi-capsule\n"
+				    "  Uri:                  https://foo.bar\n"
+				    "  Guid:                 af3fc12c-d090-5783-8a67-845b90d3cfec\n"
+				    "  KEY:                  VALUE\n",
+				    &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* roundtrip GVariant */
+	data = fwupd_security_attr_to_variant(attr1);
+	attr3 = fwupd_security_attr_from_variant(data);
+	fwupd_security_attr_set_created(attr3, 0);
+	str3 = fwupd_security_attr_to_string(attr3);
+	ret = fu_test_compare_lines(str3,
 				    "  AppstreamId:          org.fwupd.hsi.baz\n"
 				    "  HsiLevel:             2\n"
 				    "  HsiResult:            enabled\n"
