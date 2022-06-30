@@ -217,6 +217,23 @@ fu_i2c_device_read(FuI2cDevice *self, guint8 *buf, gsize bufsz, GError **error)
 }
 
 static void
+fu_i2c_device_incorporate(FuDevice *device, FuDevice *donor)
+{
+	FuI2cDevice *self = FU_I2C_DEVICE(device);
+	FuI2cDevicePrivate *priv = GET_PRIVATE(self);
+	FuI2cDevicePrivate *priv_donor = GET_PRIVATE(FU_I2C_DEVICE(donor));
+
+	g_return_if_fail(FU_IS_I2C_DEVICE(self));
+	g_return_if_fail(FU_IS_I2C_DEVICE(donor));
+
+	/* FuUdevDevice->incorporate */
+	FU_DEVICE_CLASS(fu_i2c_device_parent_class)->incorporate(device, donor);
+
+	/* copy private instance data */
+	priv->bus_number = priv_donor->bus_number;
+}
+
+static void
 fu_i2c_device_init(FuI2cDevice *self)
 {
 }
@@ -233,6 +250,7 @@ fu_i2c_device_class_init(FuI2cDeviceClass *klass)
 	klass_device->open = fu_i2c_device_open;
 	klass_device->probe = fu_i2c_device_probe;
 	klass_device->to_string = fu_i2c_device_to_string;
+	klass_device->incorporate = fu_i2c_device_incorporate;
 
 	/**
 	 * FuI2cDevice:bus-number:
