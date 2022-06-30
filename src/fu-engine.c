@@ -4274,6 +4274,7 @@ fu_engine_get_result_from_component(FuEngine *self,
 
 	/* check we can install it */
 	release = fu_release_new();
+	fu_release_set_device(release, dev);
 	fu_release_set_request(release, request);
 	if (!fu_engine_load_release(self,
 				    release,
@@ -4314,6 +4315,7 @@ fu_engine_get_result_from_component(FuEngine *self,
 			return NULL;
 		}
 	}
+	fwupd_release_set_flags(FWUPD_RELEASE(release), release_flags);
 
 	/* create a result with all the metadata in */
 	description_xpath = fu_engine_request_get_localized_xpath(request, "description");
@@ -4328,12 +4330,7 @@ fu_engine_get_result_from_component(FuEngine *self,
 	/* refresh the device to the new version format too */
 	fu_engine_md_refresh_device_from_component(self, dev, component);
 
-	release = fu_release_new();
-	fu_release_set_request(release, request);
-	fu_release_set_device(release, dev);
-	fwupd_release_set_flags(FWUPD_RELEASE(release), release_flags);
-	if (!fu_engine_load_release(self, release, component, rel, FWUPD_INSTALL_FLAG_NONE, error))
-		return NULL;
+	/* success */
 	fu_device_add_release(dev, FWUPD_RELEASE(release));
 	return g_steal_pointer(&dev);
 }
@@ -4352,38 +4349,20 @@ fu_engine_get_details_sort_cb(gconstpointer a, gconstpointer b)
 	return 0;
 }
 
-/**
- * fu_engine_get_details:
- * @self: a #FuEngine
- * @request: a #FuEngineRequest
- * @fd: a file descriptor
- * @error: (nullable): optional return location for an error
- *
- * Gets the details about a local file.
- *
- * Note: this will close the fd when done
- *
- * Returns: (transfer container) (element-type FuDevice): results
- **/
+/* for self tests */
 GPtrArray *
-fu_engine_get_details(FuEngine *self, FuEngineRequest *request, gint fd, GError **error)
+fu_engine_get_details_for_bytes(FuEngine *self,
+				FuEngineRequest *request,
+				GBytes *blob,
+				GError **error)
 {
 	const gchar *remote_id;
 	g_autofree gchar *csum = NULL;
-	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GPtrArray) components = NULL;
 	g_autoptr(GPtrArray) details = NULL;
 	g_autoptr(XbSilo) silo = NULL;
 
-	g_return_val_if_fail(FU_IS_ENGINE(self), NULL);
-	g_return_val_if_fail(fd > 0, NULL);
-	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
-
-	/* get all components */
-	blob = fu_bytes_get_contents_fd(fd, fu_config_get_archive_size_max(self->config), error);
-	if (blob == NULL)
-		return NULL;
 	silo = fu_engine_get_silo_from_blob(self, blob, error);
 	if (silo == NULL)
 		return NULL;
@@ -4465,6 +4444,35 @@ fu_engine_get_details(FuEngine *self, FuEngineRequest *request, gint fd, GError 
 	g_ptr_array_sort(details, fu_engine_get_details_sort_cb);
 
 	return g_steal_pointer(&details);
+}
+
+/**
+ * fu_engine_get_details:
+ * @self: a #FuEngine
+ * @request: a #FuEngineRequest
+ * @fd: a file descriptor
+ * @error: (nullable): optional return location for an error
+ *
+ * Gets the details about a local file.
+ *
+ * Note: this will close the fd when done
+ *
+ * Returns: (transfer container) (element-type FuDevice): results
+ **/
+GPtrArray *
+fu_engine_get_details(FuEngine *self, FuEngineRequest *request, gint fd, GError **error)
+{
+	g_autoptr(GBytes) blob = NULL;
+
+	g_return_val_if_fail(FU_IS_ENGINE(self), NULL);
+	g_return_val_if_fail(fd > 0, NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	/* get all components */
+	blob = fu_bytes_get_contents_fd(fd, fu_config_get_archive_size_max(self->config), error);
+	if (blob == NULL)
+		return NULL;
+	return fu_engine_get_details_for_bytes(self, request, blob, error);
 }
 
 static gint
