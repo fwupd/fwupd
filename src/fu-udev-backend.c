@@ -8,10 +8,11 @@
 
 #include "config.h"
 
+#include <fwupdplugin.h>
+
 #include <gudev/gudev.h>
 
 #include "fu-udev-backend.h"
-#include "fu-udev-device.h"
 
 struct _FuUdevBackend {
 	FuBackend parent_instance;
@@ -25,10 +26,32 @@ G_DEFINE_TYPE(FuUdevBackend, fu_udev_backend, FU_TYPE_BACKEND)
 static void
 fu_udev_backend_device_add(FuUdevBackend *self, GUdevDevice *udev_device)
 {
+	GType gtype = FU_TYPE_UDEV_DEVICE;
 	g_autoptr(FuUdevDevice) device = NULL;
+	struct {
+		const gchar *subsystem;
+		GType gtype;
+	} subsystem_gtype_map[] = {{"mei", FU_TYPE_MEI_DEVICE},
+				   {"i2c", FU_TYPE_I2C_DEVICE},
+				   {"i2c-dev", FU_TYPE_I2C_DEVICE},
+				   {NULL, G_TYPE_INVALID}};
+
+	/* create the correct object depending on the subsystem */
+	for (guint i = 0; subsystem_gtype_map[i].gtype != G_TYPE_INVALID; i++) {
+		if (g_strcmp0(g_udev_device_get_subsystem(udev_device),
+			      subsystem_gtype_map[i].subsystem) == 0) {
+			gtype = subsystem_gtype_map[i].gtype;
+			break;
+		}
+	}
 
 	/* success */
-	device = fu_udev_device_new(fu_backend_get_context(FU_BACKEND(self)), udev_device);
+	device = g_object_new(gtype,
+			      "context",
+			      fu_backend_get_context(FU_BACKEND(self)),
+			      "udev-device",
+			      udev_device,
+			      NULL);
 	fu_backend_device_added(FU_BACKEND(self), FU_DEVICE(device));
 }
 

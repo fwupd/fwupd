@@ -354,7 +354,6 @@ fu_amt_device_setup(FuDevice *device, GError **error)
 static void
 fu_amt_device_init(FuAmtDevice *self)
 {
-	fu_device_set_vendor(FU_DEVICE(self), "Intel");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_INTEL_ME);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_device_add_icon(FU_DEVICE(self), "computer");

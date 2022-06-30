@@ -2243,16 +2243,5 @@ fu_udev_device_class_init(FuUdevDeviceClass *klass)
 FuUdevDevice *
 fu_udev_device_new(FuContext *ctx, GUdevDevice *udev_device)
 {
-#ifdef HAVE_GUDEV
-	/* create the correct object depending on the subsystem */
-	if (g_strcmp0(g_udev_device_get_subsystem(udev_device), "i2c-dev") == 0) {
-		return g_object_new(FU_TYPE_I2C_DEVICE,
-				    "context",
-				    ctx,
-				    "udev-device",
-				    udev_device,
-				    NULL);
-	}
-#endif
 	return g_object_new(FU_TYPE_UDEV_DEVICE, "context", ctx, "udev-device", udev_device, NULL);
 }

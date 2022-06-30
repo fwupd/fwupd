@@ -70,6 +70,10 @@ fu_mei_device_probe(FuDevice *device, GError **error)
 		return FALSE;
 	}
 
+	/* FuUdevDevice->probe */
+	if (!FU_DEVICE_CLASS(fu_mei_device_parent_class)->probe(device, error))
+		return FALSE;
+
 	/* set the physical ID */
 	return fu_udev_device_set_physical_id(FU_UDEV_DEVICE(device), "pci", error);
 }
@@ -324,6 +328,9 @@ fu_mei_device_incorporate(FuDevice *device, FuDevice *donor)
 static void
 fu_mei_device_init(FuMeiDevice *self)
 {
+	fu_udev_device_set_flags(FU_UDEV_DEVICE(self),
+				 FU_UDEV_DEVICE_FLAG_OPEN_READ | FU_UDEV_DEVICE_FLAG_OPEN_WRITE |
+				     FU_UDEV_DEVICE_FLAG_VENDOR_FROM_PARENT);
 }
 
 static void
