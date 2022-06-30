@@ -165,10 +165,10 @@ fu_udev_device_to_string(FuDevice *device, guint idt, GString *str)
 		fu_string_append_kx(str, idt, "Vendor", priv->vendor);
 	if (priv->model != 0x0)
 		fu_string_append_kx(str, idt, "Model", priv->model);
-	if (priv->subsystem_vendor != 0x0)
+	if (priv->subsystem_vendor != 0x0 || priv->subsystem_model != 0x0) {
 		fu_string_append_kx(str, idt, "SubsystemVendor", priv->subsystem_vendor);
-	if (priv->subsystem_model != 0x0)
 		fu_string_append_kx(str, idt, "SubsystemModel", priv->subsystem_model);
+	}
 	if (priv->revision != 0x0)
 		fu_string_append_kx(str, idt, "Revision", priv->revision);
 	if (priv->subsystem != NULL)
@@ -496,7 +496,7 @@ fu_udev_device_probe(FuDevice *device, GError **error)
 		fu_device_add_instance_u16(device, "VEN", priv->vendor);
 	if (priv->model != 0x0000)
 		fu_device_add_instance_u16(device, "DEV", priv->model);
-	if (priv->subsystem_vendor != 0x0000 && priv->subsystem_model != 0x0000) {
+	if (priv->subsystem_vendor != 0x0000 || priv->subsystem_model != 0x0000) {
 		g_autofree gchar *subsys =
 		    g_strdup_printf("%04X%04X", priv->subsystem_vendor, priv->subsystem_model);
 		fu_device_add_instance_str(device, "SUBSYS", subsys);
