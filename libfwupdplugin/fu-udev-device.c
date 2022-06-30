@@ -86,7 +86,7 @@ fu_udev_device_emit_changed(FuUdevDevice *self)
 	g_signal_emit(self, signals[SIGNAL_CHANGED], 0);
 }
 
-static guint32
+static guint16
 fu_udev_device_get_sysfs_attr_as_uint16(GUdevDevice *udev_device, const gchar *name)
 {
 #ifdef HAVE_GUDEV
@@ -97,7 +97,7 @@ fu_udev_device_get_sysfs_attr_as_uint16(GUdevDevice *udev_device, const gchar *n
 	tmp = g_udev_device_get_sysfs_attr(udev_device, name);
 	if (tmp == NULL)
 		return G_MAXUINT16;
-	if (!fu_strtoull(tmp, &tmp64, 0, G_MAXUINT32, &error_local)) {
+	if (!fu_strtoull(tmp, &tmp64, 0, G_MAXUINT16, &error_local)) {
 		g_warning("reading %s for %s was invalid: %s", name, tmp, error_local->message);
 		return G_MAXUINT16;
 	}
@@ -950,7 +950,7 @@ fu_udev_device_get_number(FuUdevDevice *self)
  *
  * Since: 1.1.2
  **/
-guint32
+guint16
 fu_udev_device_get_vendor(FuUdevDevice *self)
 {
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
@@ -968,7 +968,7 @@ fu_udev_device_get_vendor(FuUdevDevice *self)
  *
  * Since: 1.1.2
  **/
-guint32
+guint16
 fu_udev_device_get_model(FuUdevDevice *self)
 {
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
@@ -986,7 +986,7 @@ fu_udev_device_get_model(FuUdevDevice *self)
  *
  * Since: 1.5.0
  **/
-guint32
+guint16
 fu_udev_device_get_subsystem_vendor(FuUdevDevice *self)
 {
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
@@ -1004,7 +1004,7 @@ fu_udev_device_get_subsystem_vendor(FuUdevDevice *self)
  *
  * Since: 1.5.0
  **/
-guint32
+guint16
 fu_udev_device_get_subsystem_model(FuUdevDevice *self)
 {
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
