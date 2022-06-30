@@ -96,14 +96,14 @@ fu_udev_device_get_sysfs_attr_as_uint16(GUdevDevice *udev_device, const gchar *n
 
 	tmp = g_udev_device_get_sysfs_attr(udev_device, name);
 	if (tmp == NULL)
-		return G_MAXUINT16;
-	if (!fu_strtoull(tmp, &tmp64, 0, G_MAXUINT16, &error_local)) {
+		return 0x0;
+	if (!fu_strtoull(tmp, &tmp64, 0, G_MAXUINT16 - 1, &error_local)) {
 		g_warning("reading %s for %s was invalid: %s", name, tmp, error_local->message);
-		return G_MAXUINT16;
+		return 0x0;
 	}
 	return tmp64;
 #else
-	return G_MAXUINT16;
+	return 0x0;
 #endif
 }
 
@@ -117,17 +117,17 @@ fu_udev_device_get_sysfs_attr_as_uint8(GUdevDevice *udev_device, const gchar *na
 
 	tmp = g_udev_device_get_sysfs_attr(udev_device, name);
 	if (tmp == NULL)
-		return G_MAXUINT8;
-	if (!fu_strtoull(tmp, &tmp64, 0, G_MAXUINT8, &error_local)) {
+		return 0x0;
+	if (!fu_strtoull(tmp, &tmp64, 0, G_MAXUINT8 - 1, &error_local)) {
 		g_warning("reading %s for %s was invalid: %s",
 			  name,
 			  g_udev_device_get_sysfs_path(udev_device),
 			  error_local->message);
-		return G_MAXUINT8;
+		return 0x0;
 	}
 	return tmp64;
 #else
-	return G_MAXUINT8;
+	return 0x0;
 #endif
 }
 
@@ -473,19 +473,18 @@ fu_udev_device_probe(FuDevice *device, GError **error)
 
 	/* set vendor ID */
 	subsystem = g_ascii_strup(g_udev_device_get_subsystem(priv->udev_device), -1);
-	if (subsystem != NULL && priv->vendor != 0x0000 && priv->vendor != 0xFFFF) {
+	if (subsystem != NULL && priv->vendor != 0x0000) {
 		g_autofree gchar *vendor_id = NULL;
 		vendor_id = g_strdup_printf("%s:0x%04X", subsystem, (guint)priv->vendor);
 		fu_device_add_vendor_id(device, vendor_id);
 	}
 
 	/* add GUIDs in order of priority */
-	if (priv->vendor != 0x0000 && priv->vendor != 0xFFFF)
+	if (priv->vendor != 0x0000)
 		fu_device_add_instance_u16(device, "VEN", priv->vendor);
-	if (priv->model != 0x0000 && priv->model != 0xFFFF)
+	if (priv->model != 0x0000)
 		fu_device_add_instance_u16(device, "DEV", priv->model);
-	if (priv->subsystem_vendor != 0x0000 && priv->subsystem_vendor != 0xFFFF &&
-	    priv->subsystem_model != 0x0000 && priv->subsystem_model != 0xFFFF) {
+	if (priv->subsystem_vendor != 0x0000 && priv->subsystem_model != 0x0000) {
 		g_autofree gchar *subsys =
 		    g_strdup_printf("%04X%04X", priv->subsystem_vendor, priv->subsystem_model);
 		fu_device_add_instance_str(device, "SUBSYS", subsys);
