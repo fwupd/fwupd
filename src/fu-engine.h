@@ -216,6 +216,11 @@ void
 fu_engine_add_plugin(FuEngine *self, FuPlugin *plugin);
 void
 fu_engine_add_runtime_version(FuEngine *self, const gchar *component_id, const gchar *version);
+GPtrArray *
+fu_engine_get_details_for_bytes(FuEngine *self,
+				FuEngineRequest *request,
+				GBytes *blob,
+				GError **error);
 gboolean
 fu_engine_check_trust(FuEngine *self, FuRelease *task, GError **error);
 gboolean

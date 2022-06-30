@@ -1562,6 +1562,112 @@ fu_engine_require_hwid_func(gconstpointer user_data)
 }
 
 static void
+fu_engine_get_details_added_func(gconstpointer user_data)
+{
+	FuTest *self = (FuTest *)user_data;
+	FuDevice *device_tmp;
+	FwupdRelease *release;
+	gboolean ret;
+	g_autofree gchar *filename = NULL;
+	g_autoptr(FuDevice) device = fu_device_new(self->ctx);
+	g_autoptr(FuEngine) engine = fu_engine_new();
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new(FU_ENGINE_REQUEST_KIND_ACTIVE);
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(GBytes) blob_cab = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GPtrArray) devices = NULL;
+	g_autoptr(XbSilo) silo_empty = xb_silo_new();
+
+#if defined(__s390x__)
+	/* See https://github.com/fwupd/fwupd/issues/318 for more information */
+	g_test_skip("Skipping HWID test on s390x due to known problem with gcab");
+	return;
+#endif
+
+	/* no metadata in daemon */
+	fu_engine_set_silo(engine, silo_empty);
+
+	/* load engine to get FuConfig set up */
+	ret = fu_engine_load(engine, FU_ENGINE_LOAD_FLAG_NO_CACHE, progress, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* add a dummy device */
+	fu_device_set_id(device, "test_device");
+	fu_device_set_name(device, "test device");
+	fu_device_add_vendor_id(device, "USB:FFFF");
+	fu_device_add_protocol(device, "com.acme");
+	fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_TRIPLET);
+	fu_device_set_version(device, "1.2.2");
+	fu_device_add_guid(device, "12345678-1234-1234-1234-123456789012");
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
+	fu_engine_add_device(engine, device);
+
+	/* get details */
+	filename =
+	    g_test_build_filename(G_TEST_BUILT, "tests", "missing-hwid", "hwid-1.2.3.cab", NULL);
+	blob_cab = fu_bytes_get_contents(filename, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(blob_cab);
+	devices = fu_engine_get_details_for_bytes(engine, request, blob_cab, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(devices);
+	g_assert_cmpint(devices->len, ==, 1);
+	device_tmp = g_ptr_array_index(devices, 0);
+	g_assert_cmpstr(fu_device_get_name(device_tmp), ==, "test device");
+	release = fu_device_get_release_default(device_tmp);
+	g_assert_nonnull(release);
+	g_assert_cmpstr(fwupd_release_get_version(release), ==, "1.2.3");
+}
+
+static void
+fu_engine_get_details_missing_func(gconstpointer user_data)
+{
+	FuDevice *device_tmp;
+	FwupdRelease *release;
+	gboolean ret;
+	g_autofree gchar *filename = NULL;
+	g_autoptr(FuEngine) engine = fu_engine_new();
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new(FU_ENGINE_REQUEST_KIND_ACTIVE);
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(GBytes) blob_cab = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GPtrArray) devices = NULL;
+	g_autoptr(XbSilo) silo_empty = xb_silo_new();
+
+#if defined(__s390x__)
+	/* See https://github.com/fwupd/fwupd/issues/318 for more information */
+	g_test_skip("Skipping HWID test on s390x due to known problem with gcab");
+	return;
+#endif
+
+	/* no metadata in daemon */
+	fu_engine_set_silo(engine, silo_empty);
+
+	/* load engine to get FuConfig set up */
+	ret = fu_engine_load(engine, FU_ENGINE_LOAD_FLAG_NO_CACHE, progress, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* get details */
+	filename =
+	    g_test_build_filename(G_TEST_BUILT, "tests", "missing-hwid", "hwid-1.2.3.cab", NULL);
+	blob_cab = fu_bytes_get_contents(filename, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(blob_cab);
+	devices = fu_engine_get_details_for_bytes(engine, request, blob_cab, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(devices);
+	g_assert_cmpint(devices->len, ==, 1);
+	device_tmp = g_ptr_array_index(devices, 0);
+	g_assert_cmpstr(fu_device_get_name(device_tmp), ==, NULL);
+	release = fu_device_get_release_default(device_tmp);
+	g_assert_nonnull(release);
+	g_assert_cmpstr(fwupd_release_get_version(release), ==, "1.2.3");
+}
+
+static void
 fu_engine_downgrade_func(gconstpointer user_data)
 {
 	FuTest *self = (FuTest *)user_data;
@@ -4464,6 +4570,12 @@ main(int argc, char **argv)
 			     fu_device_list_remove_chain_func);
 	g_test_add_data_func("/fwupd/release{compare}", self, fu_release_compare_func);
 	g_test_add_func("/fwupd/release{uri-scheme}", fu_release_uri_scheme_func);
+	g_test_add_data_func("/fwupd/engine{get-details-added}",
+			     self,
+			     fu_engine_get_details_added_func);
+	g_test_add_data_func("/fwupd/engine{get-details-missing}",
+			     self,
+			     fu_engine_get_details_missing_func);
 	g_test_add_data_func("/fwupd/engine{device-unlock}", self, fu_engine_device_unlock_func);
 	g_test_add_data_func("/fwupd/engine{multiple-releases}",
 			     self,
