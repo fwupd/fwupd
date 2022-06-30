@@ -371,7 +371,8 @@ fu_udev_device_probe(FuDevice *device, GError **error)
 #ifdef HAVE_GUDEV
 	/* get IDs, but fallback to the parent, grandparent, great-grandparent, etc */
 	fu_udev_device_set_vendor_from_udev_device(self, priv->udev_device);
-	if (priv->flags & FU_UDEV_DEVICE_FLAG_VENDOR_FROM_PARENT)
+	udev_parent = g_udev_device_get_parent(priv->udev_device);
+	if (udev_parent != NULL && priv->flags & FU_UDEV_DEVICE_FLAG_VENDOR_FROM_PARENT)
 		fu_udev_device_set_vendor_from_parent(self);
 
 	/* hidraw helpfully encodes the information in a different place */
