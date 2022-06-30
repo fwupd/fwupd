@@ -380,6 +380,7 @@ fwupd_request_func(void)
 	fwupd_request_set_id(request, FWUPD_REQUEST_ID_REMOVE_REPLUG);
 	fwupd_request_set_message(request, "foo");
 	fwupd_request_set_image(request, "bar");
+	fwupd_request_set_device_id(request, "950da62d4c753a26e64f7f7d687104ce38e32ca5");
 	str = fwupd_request_to_string(request);
 	g_debug("%s", str);
 
@@ -394,6 +395,9 @@ fwupd_request_func(void)
 	g_assert_cmpstr(fwupd_request_get_id(request2), ==, FWUPD_REQUEST_ID_REMOVE_REPLUG);
 	g_assert_cmpstr(fwupd_request_get_message(request2), ==, "foo");
 	g_assert_cmpstr(fwupd_request_get_image(request2), ==, "bar");
+	g_assert_cmpstr(fwupd_request_get_device_id(request2),
+			==,
+			"950da62d4c753a26e64f7f7d687104ce38e32ca5");
 }
 
 static void
