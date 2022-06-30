@@ -31,7 +31,7 @@ build() {
         -Dplugin_intel_spi=true \
         -Dplugin_powerd=disabled \
         -Dgresource_quirks=disabled \
-        -Ddocs=true \
+        -Ddocs=enabled \
         -Defi_binary=false \
         -Dsupported_build=enabled
 

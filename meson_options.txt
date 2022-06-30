@@ -3,7 +3,7 @@ option('consolekit', type : 'feature', description : 'ConsoleKit support', depre
 option('static_analysis', type : 'boolean', value : false, description : 'enable GCC static analysis support')
 option('gresource_quirks', type : 'feature', description : 'compile the quirk files into the fwupd binary')
 option('firmware-packager', type : 'boolean', value : true, description : 'enable firmware-packager installation')
-option('docs', type : 'boolean', value : true, description : 'Build developer documentation', deprecated: {'docgen': 'true', 'none': 'false'})
+option('docs', type : 'feature', description : 'Build developer documentation', deprecated: {'docgen': 'enabled', 'none': 'disabled'})
 option('introspection', type : 'feature', description : 'generate GObject Introspection data', deprecated: {'true': 'enabled', 'false': 'disabled'})
 option('lvfs', type : 'combo', choices : ['true', 'false', 'disabled'], value : 'true', description : 'install LVFS remotes')
 option('man', type : 'boolean', value : true, description : 'enable man pages')

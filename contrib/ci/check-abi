@@ -87,8 +87,8 @@ def build_install(revision):
                 "--prefix=/usr",
                 "--libdir=lib",
                 "-Dauto_features=disabled",
-                "-Db_coverage=false",
                 "-Ddocs=none",
+                "-Db_coverage=false",
                 "-Dgusb:docs=false",
                 "-Dtests=false",
             ]
