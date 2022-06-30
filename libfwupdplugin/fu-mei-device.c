@@ -304,6 +304,24 @@ fu_mei_device_write(FuMeiDevice *self,
 }
 
 static void
+fu_mei_device_incorporate(FuDevice *device, FuDevice *donor)
+{
+	FuMeiDevice *self = FU_MEI_DEVICE(device);
+	FuMeiDevicePrivate *priv = GET_PRIVATE(self);
+	FuMeiDevicePrivate *priv_donor = GET_PRIVATE(FU_MEI_DEVICE(donor));
+
+	g_return_if_fail(FU_IS_MEI_DEVICE(self));
+	g_return_if_fail(FU_IS_MEI_DEVICE(donor));
+
+	/* FuUdevDevice->incorporate */
+	FU_DEVICE_CLASS(fu_mei_device_parent_class)->incorporate(device, donor);
+
+	/* copy private instance data */
+	priv->max_msg_length = priv_donor->max_msg_length;
+	priv->protocol_version = priv_donor->protocol_version;
+}
+
+static void
 fu_mei_device_init(FuMeiDevice *self)
 {
 }
@@ -314,4 +332,5 @@ fu_mei_device_class_init(FuMeiDeviceClass *klass)
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
 	klass_device->probe = fu_mei_device_probe;
 	klass_device->to_string = fu_mei_device_to_string;
+	klass_device->incorporate = fu_mei_device_incorporate;
 }
