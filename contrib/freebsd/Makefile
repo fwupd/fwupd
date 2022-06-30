@@ -47,7 +47,7 @@ MESON_ARGS=	-Dgudev=disabled \
 		-Dsystemd=disabled \
 		-Doffline=false \
 		-Dtests=false \
-		-Ddocs=true \
+		-Ddocs=enabled \
 		-Defi_binary=false
 
 .include <bsd.port.mk>

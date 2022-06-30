@@ -39,7 +39,7 @@ jobs:
       run: |
         mkdir -p $GITHUB_WORKSPACE/build
         cd $GITHUB_WORKSPACE/build
-        meson .. -Dman=false -Ddocs=false  -Defi_binary=false -Dplugin_uefi_capsule_splash=false --prefix=$GITHUB_WORKSPACE/dist
+        meson .. -Dman=false -Defi_binary=false -Dplugin_uefi_capsule_splash=false --prefix=$GITHUB_WORKSPACE/dist
         ninja
 
     - name: Perform CodeQL Analysis

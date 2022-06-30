@@ -1,4 +1,4 @@
-if introspection.allowed() and get_option('docs')
+if gidocgen_dep.found() and docs_python_deps.allowed() and gidocgen_app.found() and introspection.allowed()
   toml_conf = configuration_data()
   docgen_version = source_version
   if git.found() and source_version != fwupd_version
@@ -25,7 +25,7 @@ if introspection.allowed() and get_option('docs')
     ],
     output: 'libfwupd',
     command: [
-      gidocgen,
+      gidocgen_app,
       'generate',
       '--quiet',
       '--add-include-path=@0@'.format(meson.current_build_dir() / '../libfwupd'),
@@ -50,7 +50,7 @@ if introspection.allowed() and get_option('docs')
     ],
     output: 'libfwupdplugin',
     command: [
-      gidocgen,
+      gidocgen_app,
       'generate',
       '--quiet',
       '--add-include-path=@0@'.format(meson.current_build_dir() / '../libfwupd'),

@@ -186,7 +186,6 @@ parts:
     meson-parameters: [--prefix=/,
                        -Dtests=false,
                        -Dbuild=all,
-                       -Ddocs=false,
                        -Dintrospection=disabled,
                        -Dman=false,
                        -Dplugin_powerd=disabled,

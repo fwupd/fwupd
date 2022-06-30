@@ -236,7 +236,7 @@ fwupd wrapper for Qubes OS
 %if 0%{?enable_ci}
     --werror \
 %endif
-    -Ddocs=true \
+    -Ddocs=enabled \
 %if 0%{?enable_tests}
     -Dtests=true \
 %else

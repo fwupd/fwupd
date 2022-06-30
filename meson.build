@@ -539,19 +539,17 @@ protoc = find_program('protoc', 'protoc-c', required: get_option('plugin_logitec
 
 root_incdir = include_directories('.')
 
+fwupd_gir = []
 introspection = get_option('introspection').disable_auto_if(host_machine.system() != 'linux')
-if get_option('docs')
-  r = run_command([python3, 'docs/test-deps.py'])
-  if r.returncode() != 0
-    error(r.stdout())
-  endif
-  gidocgen_dep = dependency('gi-docgen',
-    version: '>= 2021.1',
-    native: true,
-    fallback: ['gi-docgen', 'dummy_dep'],
-  )
-  gidocgen = find_program('gi-docgen', required: introspection)
-endif
+r = run_command([python3, 'docs/test-deps.py'])
+docs_python_deps = get_option('docs').require(r.returncode() == 0, error_message: r.stdout())
+gidocgen_dep = dependency('gi-docgen',
+  version: '>= 2021.1',
+  native: true,
+  fallback: ['gi-docgen', 'dummy_dep'],
+  required: docs_python_deps,
+)
+gidocgen_app = find_program('gi-docgen', required: get_option('docs'))
 
 # using "meson configure -Db_sanitize=address,undefined" is super useful in finding corruption,
 # but it does not work with our GMainContext-abuse tests...
