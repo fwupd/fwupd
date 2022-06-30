@@ -4281,7 +4281,8 @@ fu_engine_get_result_from_component(FuEngine *self,
 				    NULL,
 				    FWUPD_INSTALL_FLAG_IGNORE_VID_PID,
 				    &error_reqs)) {
-		fu_device_inhibit(dev, "failed-reqs", error_reqs->message);
+		if (!fu_device_has_inhibit(dev, "not-found"))
+			fu_device_inhibit(dev, "failed-reqs", error_reqs->message);
 		/* continue */
 	}
 
