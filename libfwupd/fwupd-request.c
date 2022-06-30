@@ -227,7 +227,7 @@ fwupd_request_to_variant(FwupdRequest *self)
 	if (priv->device_id != NULL) {
 		g_variant_builder_add(&builder,
 				      "{sv}",
-				      FWUPD_RESULT_KEY_PLUGIN,
+				      FWUPD_RESULT_KEY_DEVICE_ID,
 				      g_variant_new_string(priv->device_id));
 	}
 	if (priv->message != NULL) {
