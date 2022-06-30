@@ -54,6 +54,27 @@ These devices use several different generation schemes, e.g.
 
 All devices will be updated the next time the usb-c plug from the dock is unplugged from the host.
 
+### USB4 Controller
+
+This device will be probed by `dell-dock` plugin over the USB interface, additionally will be probed by `thunderbolt` plugin if thunderbolt hardware is enabled at the host. The primary plugin has been chosen to `dell-dock` for broader supoprt, the device introduced by `thunderbolt` plugin will be default inhibited, in this case `Update Error` will be seen which is expected.
+
+```shell
+USB4 controller in Dell dock:
+    Device ID:        ce501f4b2e03e819c525bb9354aa88c03db4f11e
+    Summary:          USB4 controller
+    Current version:  36.00
+    Vendor:           Dell Inc. (THUNDERBOLT:0x00D4, TBT:0x00D4)
+    Install Duration: 46 seconds
+    Update Error:     firmware update inhibited by [dell_dock] plugin
+    GUIDs:            4fb9d92e-2b96-51a7-9ed5-3db156dfcf12 ← THUNDERBOLT\VEN_00D4&DEV_B071
+                      bd79ce60-525b-5f39-a3f6-c98c495039ff ← TBT-00d4b071
+                      03f008d5-d06a-5d2e-89ca-61f12a8dbf73 ← TBT-00d4b071-controller0-3
+    Device Flags:     • System requires external power source
+                      • Device stages updates
+                      • Updatable
+                      • Signed Payload
+```
+
 ## Vendor ID Security
 
 The vendor ID is set from the USB vendor, in this instance set to `USB:0x413C`
