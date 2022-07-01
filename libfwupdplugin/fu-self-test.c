@@ -3063,7 +3063,7 @@ fu_progress_func(void)
 
 	g_assert_cmpint(helper.last_percentage, ==, 100);
 	g_assert_cmpint(helper.updates, ==, 6);
-	g_assert_cmpfloat_with_epsilon(fu_progress_get_duration(progress), 0.1f, 0.01);
+	g_assert_cmpfloat_with_epsilon(fu_progress_get_duration(progress), 0.1f, 0.05);
 	g_debug("\n%s", fu_progress_traceback(progress));
 }
 
