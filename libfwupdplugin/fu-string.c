@@ -91,6 +91,51 @@ fu_strtoull(const gchar *str, guint64 *value, guint64 min, guint64 max, GError *
 }
 
 /**
+ * fu_strtobool:
+ * @str: a string, e.g. `true`
+ * @value: (out) (nullable): parsed value
+ * @error: (nullable): optional return location for an error
+ *
+ * Converts a string value to a boolean. Only `true` and `false` are accepted values.
+ *
+ * Returns: %TRUE if the value was parsed correctly, or %FALSE for error
+ *
+ * Since: 1.8.2
+ **/
+gboolean
+fu_strtobool(const gchar *str, gboolean *value, GError **error)
+{
+	/* sanity check */
+	if (str == NULL) {
+		g_set_error_literal(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_INVALID_DATA,
+				    "cannot parse NULL");
+		return FALSE;
+	}
+
+	/* be super strict */
+	if (g_strcmp0(str, "true") == 0) {
+		if (value != NULL)
+			*value = TRUE;
+		return TRUE;
+	}
+	if (g_strcmp0(str, "false") == 0) {
+		if (value != NULL)
+			*value = FALSE;
+		return TRUE;
+	}
+
+	/* invalid */
+	g_set_error(error,
+		    G_IO_ERROR,
+		    G_IO_ERROR_INVALID_DATA,
+		    "cannot parse %s as boolean, expected true|false",
+		    str);
+	return FALSE;
+}
+
+/**
  * fu_strstrip:
  * @str: a string, e.g. ` test `
  *

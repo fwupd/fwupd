@@ -1,7 +1,7 @@
 <firmware gtype="FuCfuOffer">
   <segment_number>0x42</segment_number>
-  <force_immediate_reset>1</force_immediate_reset>
-  <force_ignore_version>1</force_ignore_version>
+  <force_immediate_reset>true</force_immediate_reset>
+  <force_ignore_version>true</force_ignore_version>
   <component_id>0xAB</component_id>
   <token>0xCD</token>
   <version_raw>0x4567</version_raw>

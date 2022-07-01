@@ -1002,6 +1002,7 @@ LIBFWUPDPLUGIN_1.8.2 {
     fu_strsplit;
     fu_strsplit_full;
     fu_strstrip;
+    fu_strtobool;
     fu_strtoull;
     fu_strwidth;
     fu_sum16;

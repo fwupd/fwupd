@@ -12,6 +12,7 @@
 #include "fu-cfu-offer.h"
 #include "fu-common.h"
 #include "fu-mem.h"
+#include "fu-string.h"
 
 /**
  * FuCfuOffer:
@@ -495,17 +496,22 @@ fu_cfu_offer_build(FuFirmware *firmware, XbNode *n, GError **error)
 	FuCfuOffer *self = FU_CFU_OFFER(firmware);
 	FuCfuOfferPrivate *priv = GET_PRIVATE(self);
 	guint64 tmp;
+	const gchar *tmpb;
 
 	/* optional properties */
 	tmp = xb_node_query_text_as_uint(n, "segment_number", NULL);
 	if (tmp != G_MAXUINT64 && tmp <= G_MAXUINT8)
 		priv->segment_number = tmp;
-	tmp = xb_node_query_text_as_uint(n, "force_immediate_reset", NULL);
-	if (tmp != G_MAXUINT64 && tmp <= G_MAXUINT8)
-		priv->force_immediate_reset = tmp;
-	tmp = xb_node_query_text_as_uint(n, "force_ignore_version", NULL);
-	if (tmp != G_MAXUINT64 && tmp <= G_MAXUINT8)
-		priv->force_ignore_version = tmp;
+	tmpb = xb_node_query_text(n, "force_immediate_reset", NULL);
+	if (tmpb != NULL) {
+		if (!fu_strtobool(tmpb, &priv->force_immediate_reset, error))
+			return FALSE;
+	}
+	tmpb = xb_node_query_text(n, "force_ignore_version", NULL);
+	if (tmpb != NULL) {
+		if (!fu_strtobool(tmpb, &priv->force_ignore_version, error))
+			return FALSE;
+	}
 	tmp = xb_node_query_text_as_uint(n, "component_id", NULL);
 	if (tmp != G_MAXUINT64 && tmp <= G_MAXUINT8)
 		priv->component_id = tmp;
