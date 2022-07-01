@@ -24,6 +24,10 @@ fwupd_remote_set_priority(FwupdRemote *self, gint priority);
 void
 fwupd_remote_set_agreement(FwupdRemote *self, const gchar *agreement);
 void
+fwupd_remote_set_checksum(FwupdRemote *self, const gchar *checksum);
+void
+fwupd_remote_set_filename_cache(FwupdRemote *self, const gchar *filename);
+void
 fwupd_remote_set_mtime(FwupdRemote *self, guint64 mtime);
 gchar **
 fwupd_remote_get_order_after(FwupdRemote *self);

@@ -242,6 +242,8 @@ fwupd_remote_baseuri_func(void)
 	g_assert_cmpint(fwupd_remote_get_keyring_kind(remote), ==, FWUPD_KEYRING_KIND_JCAT);
 	g_assert_cmpint(fwupd_remote_get_priority(remote), ==, 0);
 	g_assert_true(fwupd_remote_get_enabled(remote));
+	g_assert_cmpstr(fwupd_remote_get_firmware_base_uri(remote), ==, "https://my.fancy.cdn/");
+	g_assert_cmpstr(fwupd_remote_get_agreement(remote), ==, NULL);
 	g_assert_cmpstr(fwupd_remote_get_checksum(remote), ==, NULL);
 	g_assert_cmpstr(fwupd_remote_get_metadata_uri(remote),
 			==,
@@ -253,6 +255,136 @@ fwupd_remote_baseuri_func(void)
 	    fwupd_remote_build_firmware_uri(remote, "http://bbc.co.uk/firmware.cab", &error);
 	g_assert_no_error(error);
 	g_assert_cmpstr(firmware_uri, ==, "https://my.fancy.cdn/firmware.cab");
+}
+
+static gchar *
+fwupd_remote_to_json_string(FwupdRemote *remote, GError **error)
+{
+	g_autofree gchar *data = NULL;
+	g_autoptr(JsonGenerator) json_generator = NULL;
+	g_autoptr(JsonBuilder) builder = json_builder_new();
+	g_autoptr(JsonNode) json_root = NULL;
+	json_builder_begin_object(builder);
+	fwupd_remote_to_json(remote, builder);
+	json_builder_end_object(builder);
+	json_root = json_builder_get_root(builder);
+	json_generator = json_generator_new();
+	json_generator_set_pretty(json_generator, TRUE);
+	json_generator_set_root(json_generator, json_root);
+	data = json_generator_to_data(json_generator, NULL);
+	if (data == NULL) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "Failed to convert remote to json.");
+		return NULL;
+	}
+	return g_steal_pointer(&data);
+}
+
+static void
+fwupd_remote_auth_func(void)
+{
+	gboolean ret;
+	gchar **order;
+	g_autofree gchar *fn = NULL;
+	g_autofree gchar *remotes_dir = NULL;
+	g_autofree gchar *json = NULL;
+	g_autoptr(FwupdRemote) remote = fwupd_remote_new();
+	g_autoptr(FwupdRemote) remote2 = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GVariant) data = NULL;
+
+	remotes_dir = g_test_build_filename(G_TEST_BUILT, "tests", NULL);
+	fwupd_remote_set_remotes_dir(remote, remotes_dir);
+
+	fn = g_test_build_filename(G_TEST_DIST, "tests", "auth.conf", NULL);
+	ret = fwupd_remote_load_from_filename(remote, fn, NULL, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpstr(fwupd_remote_get_username(remote), ==, "user");
+	g_assert_cmpstr(fwupd_remote_get_password(remote), ==, "pass");
+	g_assert_cmpstr(fwupd_remote_get_security_report_uri(remote),
+			==,
+			"https://fwupd.org/lvfs/hsireports/upload");
+	g_assert_false(fwupd_remote_get_approval_required(remote));
+	g_assert_false(fwupd_remote_get_automatic_reports(remote));
+	g_assert_true(fwupd_remote_get_automatic_security_reports(remote));
+
+	g_assert_true(
+	    g_str_has_suffix(fwupd_remote_get_filename_source(remote), "tests/auth.conf"));
+	g_assert_true(g_str_has_suffix(fwupd_remote_get_remotes_dir(remote), "/libfwupd/tests"));
+	g_assert_cmpint(fwupd_remote_get_age(remote), >, 1000000);
+
+	ret = fwupd_remote_setup(remote, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	order = fwupd_remote_get_order_before(remote);
+	g_assert_nonnull(order);
+	g_assert_cmpint(g_strv_length(order), ==, 1);
+	g_assert_cmpstr(order[0], ==, "before");
+	order = fwupd_remote_get_order_after(remote);
+	g_assert_nonnull(order);
+	g_assert_cmpint(g_strv_length(order), ==, 1);
+	g_assert_cmpstr(order[0], ==, "after");
+
+	/* to/from GVariant */
+	fwupd_remote_set_priority(remote, 999);
+	data = fwupd_remote_to_variant(remote);
+	remote2 = fwupd_remote_from_variant(data);
+	g_assert_cmpstr(fwupd_remote_get_username(remote2), ==, "user");
+	g_assert_cmpint(fwupd_remote_get_priority(remote2), ==, 999);
+
+	/* jcat-tool is not a hard dep, and the tests create an empty file if unfound */
+	ret = fwupd_remote_load_signature(remote,
+					  fwupd_remote_get_filename_cache_sig(remote),
+					  &error);
+	if (!ret) {
+		if (g_error_matches(error, G_IO_ERROR, G_IO_ERROR_PARTIAL_INPUT)) {
+			g_test_skip("no jcat-tool, so skipping test");
+			return;
+		}
+	}
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* to JSON */
+	fwupd_remote_set_filename_source(remote2, NULL);
+	fwupd_remote_set_checksum(
+	    remote2,
+	    "dd1b4fd2a59bb0e4d9ea760c658ac3cf9336c7b6729357bab443485b5cf071b2");
+	fwupd_remote_set_filename_cache(remote2, "./libfwupd/tests/auth/metadata.xml.gz");
+	json = fwupd_remote_to_json_string(remote2, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(json);
+	ret = fu_test_compare_lines(
+	    json,
+	    "{\n"
+	    "  \"Id\" : \"auth\",\n"
+	    "  \"Kind\" : \"download\",\n"
+	    "  \"KeyringKind\" : \"jcat\",\n"
+	    "  \"FirmwareBaseUri\" : \"https://my.fancy.cdn/\",\n"
+	    "  \"ReportUri\" : \"https://fwupd.org/lvfs/firmware/report\",\n"
+	    "  \"SecurityReportUri\" : \"https://fwupd.org/lvfs/hsireports/upload\",\n"
+	    "  \"MetadataUri\" : \"https://cdn.fwupd.org/downloads/firmware.xml.gz\",\n"
+	    "  \"MetadataUriSig\" : \"https://cdn.fwupd.org/downloads/firmware.xml.gz.jcat\",\n"
+	    "  \"Username\" : \"user\",\n"
+	    "  \"Password\" : \"pass\",\n"
+	    "  \"Checksum\" : "
+	    "\"dd1b4fd2a59bb0e4d9ea760c658ac3cf9336c7b6729357bab443485b5cf071b2\",\n"
+	    "  \"FilenameCache\" : \"./libfwupd/tests/auth/metadata.xml.gz\",\n"
+	    "  \"FilenameCacheSig\" : \"./libfwupd/tests/auth/metadata.xml.gz.jcat\",\n"
+	    "  \"Enabled\" : \"true\",\n"
+	    "  \"ApprovalRequired\" : \"false\",\n"
+	    "  \"AutomaticReports\" : \"false\",\n"
+	    "  \"AutomaticSecurityReports\" : \"true\",\n"
+	    "  \"Priority\" : 999,\n"
+	    "  \"Mtime\" : 0\n"
+	    "}",
+	    &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
 }
 
 static void
@@ -328,8 +460,11 @@ fwupd_remote_local_func(void)
 {
 	gboolean ret;
 	g_autofree gchar *fn = NULL;
+	g_autofree gchar *json = NULL;
 	g_autoptr(FwupdRemote) remote = NULL;
+	g_autoptr(FwupdRemote) remote2 = NULL;
 	g_autoptr(GError) error = NULL;
+	g_autoptr(GVariant) data = NULL;
 
 	remote = fwupd_remote_new();
 	fn = g_test_build_filename(G_TEST_DIST, "tests", "dell-esrt.conf", NULL);
@@ -350,6 +485,35 @@ fwupd_remote_local_func(void)
 			"@datadir@/fwupd/remotes.d/dell-esrt/metadata.xml");
 	g_assert_cmpstr(fwupd_remote_get_filename_cache_sig(remote), ==, NULL);
 	g_assert_cmpstr(fwupd_remote_get_checksum(remote), ==, NULL);
+
+	/* to/from GVariant */
+	data = fwupd_remote_to_variant(remote);
+	remote2 = fwupd_remote_from_variant(data);
+	g_assert_null(fwupd_remote_get_metadata_uri(remote));
+
+	/* to JSON */
+	fwupd_remote_set_filename_source(remote2, NULL);
+	json = fwupd_remote_to_json_string(remote2, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(json);
+	ret = fu_test_compare_lines(
+	    json,
+	    "{\n"
+	    "  \"Id\" : \"dell-esrt\",\n"
+	    "  \"Kind\" : \"local\",\n"
+	    "  \"KeyringKind\" : \"none\",\n"
+	    "  \"Title\" : \"Enable UEFI capsule updates on Dell systems\",\n"
+	    "  \"FilenameCache\" : \"@datadir@/fwupd/remotes.d/dell-esrt/metadata.xml\",\n"
+	    "  \"Enabled\" : \"true\",\n"
+	    "  \"ApprovalRequired\" : \"false\",\n"
+	    "  \"AutomaticReports\" : \"false\",\n"
+	    "  \"AutomaticSecurityReports\" : \"false\",\n"
+	    "  \"Priority\" : 0,\n"
+	    "  \"Mtime\" : 0\n"
+	    "}",
+	    &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
 }
 
 static void
@@ -1031,6 +1195,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/remote{no-path}", fwupd_remote_nopath_func);
 	g_test_add_func("/fwupd/remote{local}", fwupd_remote_local_func);
 	g_test_add_func("/fwupd/remote{duplicate}", fwupd_remote_duplicate_func);
+	g_test_add_func("/fwupd/remote{auth}", fwupd_remote_auth_func);
 	if (fwupd_has_system_bus()) {
 		g_test_add_func("/fwupd/client{remotes}", fwupd_client_remotes_func);
 		g_test_add_func("/fwupd/client{devices}", fwupd_client_devices_func);

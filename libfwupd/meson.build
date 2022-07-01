@@ -1,3 +1,7 @@
+if get_option('tests')
+subdir('tests')
+endif
+
 fwupd_version_h = configure_file(
   input: 'fwupd-version.h.in',
   output: 'fwupd-version.h',
@@ -180,6 +184,7 @@ if get_option('tests')
   env.set('G_TEST_BUILDDIR', meson.current_build_dir())
   e = executable(
     'fwupd-self-test',
+    metadata_xml_gz_jcat,
     sources: [
       'fwupd-self-test.c'
     ],
