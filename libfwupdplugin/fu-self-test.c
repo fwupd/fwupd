@@ -3039,6 +3039,7 @@ fu_progress_func(void)
 {
 	FuProgressHelper helper = {0};
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autofree gchar *str = NULL;
 
 	g_signal_connect(FU_PROGRESS(progress),
 			 "percentage-changed",
@@ -3064,7 +3065,8 @@ fu_progress_func(void)
 	g_assert_cmpint(helper.last_percentage, ==, 100);
 	g_assert_cmpint(helper.updates, ==, 6);
 	g_assert_cmpfloat_with_epsilon(fu_progress_get_duration(progress), 0.1f, 0.05);
-	g_debug("\n%s", fu_progress_traceback(progress));
+	str = fu_progress_traceback(progress);
+	g_debug("\n%s", str);
 }
 
 static void
