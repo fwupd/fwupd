@@ -155,23 +155,47 @@ fwupd_enums_func(void)
 	}
 
 	/* bitfield */
-	for (guint64 i = 1; i < FWUPD_DEVICE_FLAG_UNKNOWN; i *= 2) {
+	for (guint64 i = 1; i <= FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD; i *= 2) {
 		const gchar *tmp = fwupd_device_flag_to_string(i);
 		if (tmp == NULL)
-			break;
+			g_warning("missing device flag 0x%x", (guint)i);
+		g_assert_cmpstr(tmp, !=, NULL);
 		g_assert_cmpint(fwupd_device_flag_from_string(tmp), ==, i);
 	}
-	for (guint64 i = 1; i < FWUPD_DEVICE_PROBLEM_UNKNOWN; i *= 2) {
+	for (guint64 i = 1; i <= FWUPD_DEVICE_PROBLEM_LID_IS_CLOSED; i *= 2) {
 		const gchar *tmp = fwupd_device_problem_to_string(i);
 		if (tmp == NULL)
-			break;
+			g_warning("missing device problem 0x%x", (guint)i);
+		g_assert_cmpstr(tmp, !=, NULL);
 		g_assert_cmpint(fwupd_device_problem_from_string(tmp), ==, i);
 	}
-	for (guint64 i = 1; i < FWUPD_PLUGIN_FLAG_UNKNOWN; i *= 2) {
+	for (guint64 i = 1; i <= FWUPD_PLUGIN_FLAG_AUTH_REQUIRED; i *= 2) {
 		const gchar *tmp = fwupd_plugin_flag_to_string(i);
 		if (tmp == NULL)
-			break;
+			g_warning("missing plugin flag 0x%x", (guint)i);
+		g_assert_cmpstr(tmp, !=, NULL);
 		g_assert_cmpint(fwupd_plugin_flag_from_string(tmp), ==, i);
+	}
+	for (guint64 i = 1; i <= FWUPD_FEATURE_FLAG_SHOW_PROBLEMS; i *= 2) {
+		const gchar *tmp = fwupd_feature_flag_to_string(i);
+		if (tmp == NULL)
+			g_warning("missing feature flag 0x%x", (guint)i);
+		g_assert_cmpstr(tmp, !=, NULL);
+		g_assert_cmpint(fwupd_feature_flag_from_string(tmp), ==, i);
+	}
+	for (guint64 i = 1; i <= FWUPD_RELEASE_FLAG_IS_COMMUNITY; i *= 2) {
+		const gchar *tmp = fwupd_release_flag_to_string(i);
+		if (tmp == NULL)
+			g_warning("missing release flag 0x%x", (guint)i);
+		g_assert_cmpstr(tmp, !=, NULL);
+		g_assert_cmpint(fwupd_release_flag_from_string(tmp), ==, i);
+	}
+	for (guint i = 1; i < FWUPD_KEYRING_KIND_LAST; i++) {
+		const gchar *tmp = fwupd_keyring_kind_to_string(i);
+		if (tmp == NULL)
+			g_warning("missing keyring kind 0x%x", (guint)i);
+		g_assert_cmpstr(tmp, !=, NULL);
+		g_assert_cmpint(fwupd_keyring_kind_from_string(tmp), ==, i);
 	}
 }
 
