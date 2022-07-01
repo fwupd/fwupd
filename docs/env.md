@@ -39,6 +39,7 @@ with a non-standard filesystem layout.
 * `FU_SREC_FIRMWARE_VERBOSE` shows more information about parsing
 * `FU_UDEV_DEVICE_DEBUG` shows more information about UDEV devices, including parents
 * `FU_USB_DEVICE_DEBUG` shows more information about USB devices
+* `FU_MEI_DEVICE_DEBUG` shows MEI reads and writes
 * `FWUPD_DEVICE_LIST_VERBOSE` display devices being added and removed from the list
 * `FWUPD_PROBE_VERBOSE` dump the detected devices to the console, even if not supported by fwupd
 * `FWUPD_BIOS_SETTING_VERBOSE` be verbose while parsing BIOS settings
