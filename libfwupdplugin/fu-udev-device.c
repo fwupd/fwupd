@@ -358,7 +358,7 @@ fu_udev_device_set_vendor_from_parent(FuUdevDevice *self)
 		fu_udev_device_set_vendor_from_udev_device(self, parent);
 		if (priv->vendor != 0x0 || priv->model != 0x0 || priv->revision != 0x0)
 			break;
-		g_set_object(&udev_device, g_steal_pointer(&parent));
+		g_set_object(&udev_device, parent);
 	}
 }
 #endif
