@@ -188,7 +188,16 @@ fwupd_remote_set_agreement(FwupdRemote *self, const gchar *agreement)
 	priv->agreement = g_strdup(agreement);
 }
 
-static void
+/**
+ * fwupd_remote_set_checksum:
+ * @self: a #FwupdRemote
+ * @checksum: (nullable): checksum string
+ *
+ * Sets the remote checksum, typically only useful in the self tests.
+ *
+ * Since: 1.8.2
+ **/
+void
 fwupd_remote_set_checksum(FwupdRemote *self, const gchar *checksum)
 {
 	FwupdRemotePrivate *priv = GET_PRIVATE(self);
@@ -462,7 +471,16 @@ fwupd_remote_kind_to_string(FwupdRemoteKind kind)
 	return NULL;
 }
 
-static void
+/**
+ * fwupd_remote_set_filename_cache:
+ * @self: a #FwupdRemote
+ * @filename: (nullable): filename string
+ *
+ * Sets the remote filename cache filename, typically only useful in the self tests.
+ *
+ * Since: 1.8.2
+ **/
+void
 fwupd_remote_set_filename_cache(FwupdRemote *self, const gchar *filename)
 {
 	FwupdRemotePrivate *priv = GET_PRIVATE(self);
