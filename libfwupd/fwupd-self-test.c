@@ -18,6 +18,7 @@
 #include "fwupd-device-private.h"
 #include "fwupd-enums.h"
 #include "fwupd-error.h"
+#include "fwupd-plugin-private.h"
 #include "fwupd-release-private.h"
 #include "fwupd-remote-private.h"
 #include "fwupd-request-private.h"
@@ -365,6 +366,43 @@ fwupd_release_func(void)
 	release2 = fwupd_release_from_variant(data);
 	g_assert_cmpstr(fwupd_release_get_metadata_item(release2, "foo"), ==, "bar");
 	g_assert_cmpstr(fwupd_release_get_metadata_item(release2, "baz"), ==, "bam");
+}
+
+static void
+fwupd_plugin_func(void)
+{
+	gboolean ret;
+	g_autofree gchar *str = NULL;
+	g_autoptr(FwupdPlugin) plugin1 = NULL;
+	g_autoptr(FwupdPlugin) plugin2 = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GVariant) data = NULL;
+
+	plugin1 = fwupd_plugin_new();
+	fwupd_plugin_set_name(plugin1, "foo");
+	fwupd_plugin_set_flags(plugin1, FWUPD_PLUGIN_FLAG_USER_WARNING);
+	fwupd_plugin_add_flag(plugin1, FWUPD_PLUGIN_FLAG_CLEAR_UPDATABLE);
+	fwupd_plugin_add_flag(plugin1, FWUPD_PLUGIN_FLAG_CLEAR_UPDATABLE);
+	fwupd_plugin_add_flag(plugin1, FWUPD_PLUGIN_FLAG_NO_HARDWARE);
+	fwupd_plugin_remove_flag(plugin1, FWUPD_PLUGIN_FLAG_NO_HARDWARE);
+	fwupd_plugin_remove_flag(plugin1, FWUPD_PLUGIN_FLAG_NO_HARDWARE);
+	data = fwupd_plugin_to_variant(plugin1);
+	plugin2 = fwupd_plugin_from_variant(data);
+	g_assert_cmpstr(fwupd_plugin_get_name(plugin2), ==, "foo");
+	g_assert_cmpint(fwupd_plugin_get_flags(plugin2),
+			==,
+			FWUPD_PLUGIN_FLAG_USER_WARNING | FWUPD_PLUGIN_FLAG_CLEAR_UPDATABLE);
+	g_assert_true(fwupd_plugin_has_flag(plugin2, FWUPD_PLUGIN_FLAG_USER_WARNING));
+	g_assert_true(fwupd_plugin_has_flag(plugin2, FWUPD_PLUGIN_FLAG_CLEAR_UPDATABLE));
+	g_assert_false(fwupd_plugin_has_flag(plugin2, FWUPD_PLUGIN_FLAG_NO_HARDWARE));
+
+	str = fwupd_plugin_to_string(plugin2);
+	ret = fu_test_compare_lines(str,
+				    "  Name:                 foo\n"
+				    "  Flags:                user-warning|clear-updatable\n",
+				    &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
 }
 
 static void
@@ -984,6 +1022,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/common{device-id}", fwupd_common_device_id_func);
 	g_test_add_func("/fwupd/common{guid}", fwupd_common_guid_func);
 	g_test_add_func("/fwupd/release", fwupd_release_func);
+	g_test_add_func("/fwupd/plugin", fwupd_plugin_func);
 	g_test_add_func("/fwupd/request", fwupd_request_func);
 	g_test_add_func("/fwupd/device", fwupd_device_func);
 	g_test_add_func("/fwupd/security-attr", fwupd_security_attr_func);
