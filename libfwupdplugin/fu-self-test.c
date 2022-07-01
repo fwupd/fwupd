@@ -17,6 +17,7 @@
 #include "fu-cabinet.h"
 #include "fu-common-private.h"
 #include "fu-context-private.h"
+#include "fu-coswid-firmware.h"
 #include "fu-device-private.h"
 #include "fu-plugin-private.h"
 #include "fu-security-attrs-private.h"
@@ -2926,322 +2927,98 @@ fu_security_attrs_hsi_func(void)
 	g_clear_object(&attr);
 }
 static void
-fu_firmware_dfuse_xml_func(void)
+fu_firmware_builder_round_trip_func(void)
 {
-	gboolean ret;
-	g_autofree gchar *filename = NULL;
-	g_autofree gchar *csum1 = NULL;
-	g_autofree gchar *csum2 = NULL;
-	g_autofree gchar *xml_out = NULL;
-	g_autofree gchar *xml_src = NULL;
-	g_autoptr(FuFirmware) firmware1 = fu_dfuse_firmware_new();
-	g_autoptr(FuFirmware) firmware2 = fu_dfuse_firmware_new();
-	g_autoptr(GError) error = NULL;
+	struct {
+		GType gtype;
+		const gchar *xml_fn;
+		const gchar *checksum;
+	} map[] = {
+	    {FU_TYPE_DFUSE_FIRMWARE,
+	     "dfuse.builder.xml",
+	     "c1ff429f0e381c8fe8e1b2ee41a5a9a79e2f2ff7"},
+	    {FU_TYPE_SREC_FIRMWARE, "srec.builder.xml", "2aae6c35c94fcfb415dbe95f408b9ce91ee846ed"},
+	    {FU_TYPE_IHEX_FIRMWARE, "ihex.builder.xml", "a8d74f767f3fc992b413e5ba801cedc80a4cf013"},
+	    {FU_TYPE_FMAP_FIRMWARE, "fmap.builder.xml", "a0b9ffc10a586d217edf9e9bae7c1fe7c564ea01"},
+	    {FU_TYPE_EFI_FIRMWARE_SECTION,
+	     "efi-firmware-section.builder.xml",
+	     "2aae6c35c94fcfb415dbe95f408b9ce91ee846ed"},
+	    {FU_TYPE_EFI_FIRMWARE_SECTION,
+	     "efi-firmware-section.builder.xml",
+	     "2aae6c35c94fcfb415dbe95f408b9ce91ee846ed"},
+	    {FU_TYPE_EFI_FIRMWARE_FILE,
+	     "efi-firmware-file.builder.xml",
+	     "1002c14b29a76069f3b7e35c50a55d2b0d197441"},
+	    {FU_TYPE_EFI_FIRMWARE_FILESYSTEM,
+	     "efi-firmware-filesystem.builder.xml",
+	     "d6fbadc1c303a3b4eede9db7fb0ddb353efffc86"},
+	    {FU_TYPE_EFI_FIRMWARE_VOLUME,
+	     "efi-firmware-volume.builder.xml",
+	     "2aae6c35c94fcfb415dbe95f408b9ce91ee846ed"},
+	    {FU_TYPE_IFD_FIRMWARE, "ifd.builder.xml", "0805c742e0deec12db2d8f9a86158a7cf610869b"},
+	    {FU_TYPE_CFU_OFFER,
+	     "cfu-offer.builder.xml",
+	     "acc572d03a129081921c36118b527dab34a077ad"},
+	    {FU_TYPE_CFU_PAYLOAD,
+	     "cfu-payload.builder.xml",
+	     "5da829f5fd15a28970aed98ebb26ebf2f88ed6f2"},
+	    {FU_TYPE_IFWI_CPD_FIRMWARE,
+	     "ifwi-cpd.builder.xml",
+	     "91e348d17cb91ef7a528e85beb39d15a0532dca5"},
+	    {FU_TYPE_IFWI_FPT_FIRMWARE,
+	     "ifwi-fpt.builder.xml",
+	     "d1f0fb2c2a7a99441bf4a825d060642315a94d91"},
+	    {FU_TYPE_OPROM_FIRMWARE,
+	     "oprom.builder.xml",
+	     "2aae6c35c94fcfb415dbe95f408b9ce91ee846ed"},
+	    {FU_TYPE_USWID_FIRMWARE,
+	     "uswid.builder.xml",
+	     "cae8660d5acd5bb614d0410bc53dedaa1899aee1"},
+	    {G_TYPE_INVALID, NULL, NULL}};
+	g_type_ensure(FU_TYPE_COSWID_FIRMWARE);
+	for (guint i = 0; map[i].gtype != G_TYPE_INVALID; i++) {
+		gboolean ret;
+		g_autofree gchar *csum1 = NULL;
+		g_autofree gchar *csum2 = NULL;
+		g_autofree gchar *filename = NULL;
+		g_autofree gchar *xml1 = NULL;
+		g_autofree gchar *xml2 = NULL;
+		g_autoptr(FuFirmware) firmware1 = g_object_new(map[i].gtype, NULL);
+		g_autoptr(FuFirmware) firmware2 = g_object_new(map[i].gtype, NULL);
+		g_autoptr(FuFirmware) firmware3 = g_object_new(map[i].gtype, NULL);
+		g_autoptr(GError) error = NULL;
+		g_autoptr(GBytes) blob = NULL;
 
-	/* build and write */
-	filename = g_test_build_filename(G_TEST_DIST, "tests", "dfuse.builder.xml", NULL);
-	ret = g_file_get_contents(filename, &xml_src, NULL, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
-	ret = fu_firmware_build_from_xml(firmware1, xml_src, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
-	csum1 = fu_firmware_get_checksum(firmware1, G_CHECKSUM_SHA1, &error);
-	g_assert_no_error(error);
-	g_assert_cmpstr(csum1, ==, "c1ff429f0e381c8fe8e1b2ee41a5a9a79e2f2ff7");
+		/* build and write */
+		filename = g_test_build_filename(G_TEST_DIST, "tests", map[i].xml_fn, NULL);
+		ret = g_file_get_contents(filename, &xml1, NULL, &error);
+		g_assert_no_error(error);
+		g_assert_true(ret);
+		ret = fu_firmware_build_from_xml(firmware1, xml1, &error);
+		g_assert_no_error(error);
+		g_assert_true(ret);
+		csum1 = fu_firmware_get_checksum(firmware1, G_CHECKSUM_SHA1, &error);
+		g_assert_no_error(error);
+		g_assert_cmpstr(csum1, ==, map[i].checksum);
 
-	/* ensure we can round-trip */
-	xml_out = fu_firmware_export_to_xml(firmware1, FU_FIRMWARE_EXPORT_FLAG_NONE, &error);
+		/* ensure we can write and then parse what we just wrote */
+		blob = fu_firmware_write(firmware1, &error);
+		g_assert_no_error(error);
+		g_assert_nonnull(blob);
+		ret = fu_firmware_parse(firmware3, blob, FWUPD_INSTALL_FLAG_NONE, &error);
+		g_assert_no_error(error);
+		g_assert_true(ret);
 
-	g_assert_no_error(error);
-	ret = fu_firmware_build_from_xml(firmware2, xml_out, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
-	csum2 = fu_firmware_get_checksum(firmware2, G_CHECKSUM_SHA1, &error);
-	g_assert_cmpstr(csum1, ==, csum2);
-}
-static void
-fu_firmware_srec_xml_func(void)
-{
-	gboolean ret;
-	g_autofree gchar *filename = NULL;
-	g_autofree gchar *csum1 = NULL;
-	g_autofree gchar *csum2 = NULL;
-	g_autofree gchar *xml_out = NULL;
-	g_autofree gchar *xml_src = NULL;
-	g_autoptr(FuFirmware) firmware1 = fu_srec_firmware_new();
-	g_autoptr(FuFirmware) firmware2 = fu_srec_firmware_new();
-	g_autoptr(GError) error = NULL;
-
-	/* build and write */
-	filename = g_test_build_filename(G_TEST_DIST, "tests", "srec.builder.xml", NULL);
-	ret = g_file_get_contents(filename, &xml_src, NULL, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
-	ret = fu_firmware_build_from_xml(firmware1, xml_src, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
-	csum1 = fu_firmware_get_checksum(firmware1, G_CHECKSUM_SHA1, &error);
-	g_assert_no_error(error);
-	g_assert_cmpstr(csum1, ==, "2aae6c35c94fcfb415dbe95f408b9ce91ee846ed");
-
-	/* ensure we can round-trip */
-	xml_out = fu_firmware_export_to_xml(firmware1, FU_FIRMWARE_EXPORT_FLAG_NONE, &error);
-	g_assert_no_error(error);
-	ret = fu_firmware_build_from_xml(firmware2, xml_out, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
-	csum2 = fu_firmware_get_checksum(firmware2, G_CHECKSUM_SHA1, &error);
-	g_assert_cmpstr(csum1, ==, csum2);
-}
-static void
-fu_firmware_ihex_xml_func(void)
-{
-	gboolean ret;
-	g_autofree gchar *filename = NULL;
-	g_autofree gchar *csum1 = NULL;
-	g_autofree gchar *csum2 = NULL;
-	g_autofree gchar *xml_out = NULL;
-	g_autofree gchar *xml_src = NULL;
-	g_autoptr(FuFirmware) firmware1 = fu_ihex_firmware_new();
-	g_autoptr(FuFirmware) firmware2 = fu_ihex_firmware_new();
-	g_autoptr(GError) error = NULL;
-
-	/* build and write */
-	filename = g_test_build_filename(G_TEST_DIST, "tests", "ihex.builder.xml", NULL);
-	ret = g_file_get_contents(filename, &xml_src, NULL, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
-	ret = fu_firmware_build_from_xml(firmware1, xml_src, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
-	csum1 = fu_firmware_get_checksum(firmware1, G_CHECKSUM_SHA1, &error);
-	g_assert_no_error(error);
-	g_assert_cmpstr(csum1, ==, "a8d74f767f3fc992b413e5ba801cedc80a4cf013");
-
-	/* ensure we can round-trip */
-	xml_out = fu_firmware_export_to_xml(firmware1, FU_FIRMWARE_EXPORT_FLAG_NONE, &error);
-	g_assert_no_error(error);
-	ret = fu_firmware_build_from_xml(firmware2, xml_out, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
-	csum2 = fu_firmware_get_checksum(firmware2, G_CHECKSUM_SHA1, &error);
-	g_assert_cmpstr(csum1, ==, csum2);
-}
-static void
-fu_firmware_fmap_xml_func(void)
-{
-	gboolean ret;
-	g_autofree gchar *filename = NULL;
-	g_autofree gchar *csum1 = NULL;
-	g_autofree gchar *csum2 = NULL;
-	g_autofree gchar *xml_out = NULL;
-	g_autofree gchar *xml_src = NULL;
-	g_autoptr(FuFirmware) firmware1 = fu_fmap_firmware_new();
-	g_autoptr(FuFirmware) firmware2 = fu_fmap_firmware_new();
-	g_autoptr(GError) error = NULL;
-
-	/* build and write */
-	filename = g_test_build_filename(G_TEST_DIST, "tests", "fmap.builder.xml", NULL);
-	ret = g_file_get_contents(filename, &xml_src, NULL, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
-	ret = fu_firmware_build_from_xml(firmware1, xml_src, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
-	csum1 = fu_firmware_get_checksum(firmware1, G_CHECKSUM_SHA1, &error);
-	g_assert_no_error(error);
-	g_assert_cmpstr(csum1, ==, "a0b9ffc10a586d217edf9e9bae7c1fe7c564ea01");
-
-	/* ensure we can round-trip */
-	xml_out = fu_firmware_export_to_xml(firmware1, FU_FIRMWARE_EXPORT_FLAG_NONE, &error);
-	g_assert_no_error(error);
-	ret = fu_firmware_build_from_xml(firmware2, xml_out, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
-	csum2 = fu_firmware_get_checksum(firmware2, G_CHECKSUM_SHA1, &error);
-	g_assert_cmpstr(csum1, ==, csum2);
-}
-
-static void
-fu_efi_firmware_section_xml_func(void)
-{
-	gboolean ret;
-	g_autofree gchar *filename = NULL;
-	g_autofree gchar *csum1 = NULL;
-	g_autofree gchar *csum2 = NULL;
-	g_autofree gchar *xml_out = NULL;
-	g_autofree gchar *xml_src = NULL;
-	g_autoptr(FuFirmware) firmware1 = fu_efi_firmware_section_new();
-	g_autoptr(FuFirmware) firmware2 = fu_efi_firmware_section_new();
-	g_autoptr(GError) error = NULL;
-
-	/* build and write */
-	filename =
-	    g_test_build_filename(G_TEST_DIST, "tests", "efi-firmware-section.builder.xml", NULL);
-	ret = g_file_get_contents(filename, &xml_src, NULL, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
-	ret = fu_firmware_build_from_xml(firmware1, xml_src, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
-	csum1 = fu_firmware_get_checksum(firmware1, G_CHECKSUM_SHA1, &error);
-	g_assert_no_error(error);
-	g_assert_cmpstr(csum1, ==, "2aae6c35c94fcfb415dbe95f408b9ce91ee846ed");
-
-	/* ensure we can round-trip */
-	xml_out = fu_firmware_export_to_xml(firmware1, FU_FIRMWARE_EXPORT_FLAG_NONE, &error);
-	g_assert_no_error(error);
-	ret = fu_firmware_build_from_xml(firmware2, xml_out, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
-	csum2 = fu_firmware_get_checksum(firmware2, G_CHECKSUM_SHA1, &error);
-	g_assert_cmpstr(csum1, ==, csum2);
-}
-
-static void
-fu_efi_firmware_file_xml_func(void)
-{
-	gboolean ret;
-	g_autofree gchar *filename = NULL;
-	g_autofree gchar *csum1 = NULL;
-	g_autofree gchar *csum2 = NULL;
-	g_autofree gchar *xml_out = NULL;
-	g_autofree gchar *xml_src = NULL;
-	g_autoptr(FuFirmware) firmware1 = fu_efi_firmware_file_new();
-	g_autoptr(FuFirmware) firmware2 = fu_efi_firmware_file_new();
-	g_autoptr(GError) error = NULL;
-
-	/* build and write */
-	filename =
-	    g_test_build_filename(G_TEST_DIST, "tests", "efi-firmware-file.builder.xml", NULL);
-	ret = g_file_get_contents(filename, &xml_src, NULL, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
-	ret = fu_firmware_build_from_xml(firmware1, xml_src, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
-	csum1 = fu_firmware_get_checksum(firmware1, G_CHECKSUM_SHA1, &error);
-	g_assert_no_error(error);
-	g_assert_cmpstr(csum1, ==, "1002c14b29a76069f3b7e35c50a55d2b0d197441");
-
-	/* ensure we can round-trip */
-	xml_out = fu_firmware_export_to_xml(firmware1, FU_FIRMWARE_EXPORT_FLAG_NONE, &error);
-	g_assert_no_error(error);
-	ret = fu_firmware_build_from_xml(firmware2, xml_out, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
-	csum2 = fu_firmware_get_checksum(firmware2, G_CHECKSUM_SHA1, &error);
-	g_assert_cmpstr(csum1, ==, csum2);
-}
-
-static void
-fu_efi_firmware_filesystem_xml_func(void)
-{
-	gboolean ret;
-	g_autofree gchar *filename = NULL;
-	g_autofree gchar *csum1 = NULL;
-	g_autofree gchar *csum2 = NULL;
-	g_autofree gchar *xml_out = NULL;
-	g_autofree gchar *xml_src = NULL;
-	g_autoptr(FuFirmware) firmware1 = fu_efi_firmware_filesystem_new();
-	g_autoptr(FuFirmware) firmware2 = fu_efi_firmware_filesystem_new();
-	g_autoptr(GError) error = NULL;
-
-	/* build and write */
-	filename = g_test_build_filename(G_TEST_DIST,
-					 "tests",
-					 "efi-firmware-filesystem.builder.xml",
-					 NULL);
-	ret = g_file_get_contents(filename, &xml_src, NULL, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
-	ret = fu_firmware_build_from_xml(firmware1, xml_src, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
-	csum1 = fu_firmware_get_checksum(firmware1, G_CHECKSUM_SHA1, &error);
-	g_assert_no_error(error);
-	g_assert_cmpstr(csum1, ==, "d6fbadc1c303a3b4eede9db7fb0ddb353efffc86");
-
-	/* ensure we can round-trip */
-	xml_out = fu_firmware_export_to_xml(firmware1, FU_FIRMWARE_EXPORT_FLAG_NONE, &error);
-	g_assert_no_error(error);
-	ret = fu_firmware_build_from_xml(firmware2, xml_out, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
-	csum2 = fu_firmware_get_checksum(firmware2, G_CHECKSUM_SHA1, &error);
-	g_assert_cmpstr(csum1, ==, csum2);
-}
-
-static void
-fu_efi_firmware_volume_xml_func(void)
-{
-	gboolean ret;
-	g_autofree gchar *filename = NULL;
-	g_autofree gchar *csum1 = NULL;
-	g_autofree gchar *csum2 = NULL;
-	g_autofree gchar *xml_out = NULL;
-	g_autofree gchar *xml_src = NULL;
-	g_autoptr(FuFirmware) firmware1 = fu_efi_firmware_volume_new();
-	g_autoptr(FuFirmware) firmware2 = fu_efi_firmware_volume_new();
-	g_autoptr(GError) error = NULL;
-
-	/* build and write */
-	filename =
-	    g_test_build_filename(G_TEST_DIST, "tests", "efi-firmware-volume.builder.xml", NULL);
-	ret = g_file_get_contents(filename, &xml_src, NULL, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
-	ret = fu_firmware_build_from_xml(firmware1, xml_src, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
-	csum1 = fu_firmware_get_checksum(firmware1, G_CHECKSUM_SHA1, &error);
-	g_assert_no_error(error);
-	g_assert_cmpstr(csum1, ==, "2aae6c35c94fcfb415dbe95f408b9ce91ee846ed");
-
-	/* ensure we can round-trip */
-	xml_out = fu_firmware_export_to_xml(firmware1, FU_FIRMWARE_EXPORT_FLAG_NONE, &error);
-	g_assert_no_error(error);
-	ret = fu_firmware_build_from_xml(firmware2, xml_out, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
-	csum2 = fu_firmware_get_checksum(firmware2, G_CHECKSUM_SHA1, &error);
-	g_assert_cmpstr(csum1, ==, csum2);
-}
-
-static void
-fu_ifd_image_xml_func(void)
-{
-	gboolean ret;
-	g_autofree gchar *filename = NULL;
-	g_autofree gchar *csum1 = NULL;
-	g_autofree gchar *csum2 = NULL;
-	g_autofree gchar *xml_out = NULL;
-	g_autofree gchar *xml_src = NULL;
-	g_autoptr(FuFirmware) firmware1 = fu_ifd_image_new();
-	g_autoptr(FuFirmware) firmware2 = fu_ifd_image_new();
-	g_autoptr(GError) error = NULL;
-
-	/* build and write */
-	filename = g_test_build_filename(G_TEST_DIST, "tests", "ifd.builder.xml", NULL);
-	ret = g_file_get_contents(filename, &xml_src, NULL, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
-	ret = fu_firmware_build_from_xml(firmware1, xml_src, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
-	csum1 = fu_firmware_get_checksum(firmware1, G_CHECKSUM_SHA1, &error);
-	g_assert_no_error(error);
-	g_assert_cmpstr(csum1, ==, "aebfb3845c9bc638de30360f5ece156958918ca2");
-
-	/* ensure we can round-trip */
-	xml_out = fu_firmware_export_to_xml(firmware1, FU_FIRMWARE_EXPORT_FLAG_NONE, &error);
-	g_assert_no_error(error);
-	ret = fu_firmware_build_from_xml(firmware2, xml_out, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
-	csum2 = fu_firmware_get_checksum(firmware2, G_CHECKSUM_SHA1, &error);
-	g_assert_cmpstr(csum1, ==, csum2);
+		/* ensure we can round-trip */
+		xml2 = fu_firmware_export_to_xml(firmware1, FU_FIRMWARE_EXPORT_FLAG_NONE, &error);
+		g_assert_no_error(error);
+		ret = fu_firmware_build_from_xml(firmware2, xml2, &error);
+		g_assert_no_error(error);
+		g_assert_true(ret);
+		csum2 = fu_firmware_get_checksum(firmware2, G_CHECKSUM_SHA1, &error);
+		g_assert_no_error(error);
+		g_assert_cmpstr(csum2, ==, map[i].checksum);
+	}
 }
 
 typedef struct {
@@ -3564,21 +3341,18 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/firmware{build}", fu_firmware_build_func);
 	g_test_add_func("/fwupd/firmware{raw-aligned}", fu_firmware_raw_aligned_func);
 	g_test_add_func("/fwupd/firmware{ihex}", fu_firmware_ihex_func);
-	g_test_add_func("/fwupd/firmware{ihex-xml}", fu_firmware_ihex_xml_func);
 	g_test_add_func("/fwupd/firmware{ihex-offset}", fu_firmware_ihex_offset_func);
 	g_test_add_func("/fwupd/firmware{ihex-signed}", fu_firmware_ihex_signed_func);
 	g_test_add_func("/fwupd/firmware{srec-tokenization}", fu_firmware_srec_tokenization_func);
 	g_test_add_func("/fwupd/firmware{srec}", fu_firmware_srec_func);
-	g_test_add_func("/fwupd/firmware{srec-xml}", fu_firmware_srec_xml_func);
 	g_test_add_func("/fwupd/firmware{ifwi-cpd}", fu_firmware_ifwi_cpd_func);
 	g_test_add_func("/fwupd/firmware{ifwi-fpt}", fu_firmware_ifwi_fpt_func);
 	g_test_add_func("/fwupd/firmware{oprom}", fu_firmware_oprom_func);
 	g_test_add_func("/fwupd/firmware{dfu}", fu_firmware_dfu_func);
 	g_test_add_func("/fwupd/firmware{dfu-patch}", fu_firmware_dfu_patch_func);
 	g_test_add_func("/fwupd/firmware{dfuse}", fu_firmware_dfuse_func);
-	g_test_add_func("/fwupd/firmware{dfuse-xml}", fu_firmware_dfuse_xml_func);
+	g_test_add_func("/fwupd/firmware{builder-round-trip}", fu_firmware_builder_round_trip_func);
 	g_test_add_func("/fwupd/firmware{fmap}", fu_firmware_fmap_func);
-	g_test_add_func("/fwupd/firmware{fmap-xml}", fu_firmware_fmap_xml_func);
 	g_test_add_func("/fwupd/firmware{gtypes}", fu_firmware_new_from_gtypes_func);
 	g_test_add_func("/fwupd/archive{invalid}", fu_archive_invalid_func);
 	g_test_add_func("/fwupd/archive{cab}", fu_archive_cab_func);
@@ -3604,10 +3378,5 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/device{retry-failed}", fu_device_retry_failed_func);
 	g_test_add_func("/fwupd/device{retry-hardware}", fu_device_retry_hardware_func);
 	g_test_add_func("/fwupd/device{cfi-device}", fu_device_cfi_device_func);
-	g_test_add_func("/efi/firmware-section{xml}", fu_efi_firmware_section_xml_func);
-	g_test_add_func("/efi/firmware-file{xml}", fu_efi_firmware_file_xml_func);
-	g_test_add_func("/efi/firmware-filesystem{xml}", fu_efi_firmware_filesystem_xml_func);
-	g_test_add_func("/efi/firmware-volume{xml}", fu_efi_firmware_volume_xml_func);
-	g_test_add_func("/ifd/image{xml}", fu_ifd_image_xml_func);
 	return g_test_run();
 }
