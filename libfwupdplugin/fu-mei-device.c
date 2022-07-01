@@ -27,6 +27,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
+#include "fu-dump.h"
 #include "fu-mei-device.h"
 #include "fu-string.h"
 
@@ -216,6 +217,8 @@ fu_mei_device_read(FuMeiDevice *self,
 			    strerror(errno));
 		return FALSE;
 	}
+	if (g_getenv("FU_MEI_DEVICE_DEBUG") != NULL)
+		fu_dump_raw(G_LOG_DOMAIN, "read", buf, rc);
 	if (bytes_read != NULL)
 		*bytes_read = (gsize)rc;
 	return TRUE;
@@ -256,6 +259,8 @@ fu_mei_device_write(FuMeiDevice *self,
 	tv.tv_sec = timeout_ms / 1000;
 	tv.tv_usec = (timeout_ms % 1000) * 1000000;
 
+	if (g_getenv("FU_MEI_DEVICE_DEBUG") != NULL)
+		fu_dump_raw(G_LOG_DOMAIN, "write", buf, bufsz);
 	written = write(fd, buf, bufsz);
 	if (written < 0) {
 		g_set_error(error,
