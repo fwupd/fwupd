@@ -263,7 +263,7 @@ fu_oprom_firmware_parse(FuFirmware *firmware,
 		error))
 		return FALSE;
 	if (expansion_header_offset != 0x0) {
-		g_autoptr(FuFirmware) img = fu_firmware_new();
+		g_autoptr(FuFirmware) img = NULL;
 		g_autoptr(GBytes) blob = NULL;
 
 		blob = fu_bytes_new_offset(fw,
