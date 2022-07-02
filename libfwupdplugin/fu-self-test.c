@@ -2015,6 +2015,57 @@ fu_firmware_srec_func(void)
 }
 
 static void
+fu_firmware_fdt_func(void)
+{
+	gboolean ret;
+	guint32 val32 = 0;
+	guint64 val64 = 0;
+	g_autofree gchar *filename = NULL;
+	g_autofree gchar *val = NULL;
+	g_autofree gchar *str = NULL;
+	g_autoptr(FuFirmware) firmware = fu_fdt_firmware_new();
+	g_autoptr(FuFirmware) img1 = NULL;
+	g_autoptr(FuFdtImage) img2 = NULL;
+	g_autoptr(GBytes) data = NULL;
+	g_autoptr(GError) error = NULL;
+
+	filename = g_test_build_filename(G_TEST_DIST, "tests", "fdt.bin", NULL);
+	data = fu_bytes_get_contents(filename, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(data);
+	ret = fu_firmware_parse(firmware, data, FWUPD_INSTALL_FLAG_NONE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(fu_fdt_firmware_get_cpuid(FU_FDT_FIRMWARE(firmware)), ==, 0x0);
+	str = fu_firmware_to_string(firmware);
+	g_debug("%s", str);
+
+	img1 = fu_firmware_get_image_by_id(firmware, NULL, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(img1);
+	ret = fu_fdt_image_get_attr_str(FU_FDT_IMAGE(img1), "key", &val, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpstr(val, ==, "hello world");
+
+	/* get image, and get the uint32 attr */
+	img2 = fu_fdt_firmware_get_image_by_path(FU_FDT_FIRMWARE(firmware),
+						 "/images/firmware-1",
+						 &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(img2);
+	ret = fu_fdt_image_get_attr_u32(FU_FDT_IMAGE(img2), "key", &val32, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(val32, ==, 0x123);
+
+	/* wrong type */
+	ret = fu_fdt_image_get_attr_u64(img2, "key", &val64, &error);
+	g_assert_error(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA);
+	g_assert_false(ret);
+}
+
+static void
 fu_firmware_srec_tokenization_func(void)
 {
 	FuSrecFirmwareRecord *rcd;
@@ -2938,6 +2989,7 @@ fu_firmware_builder_round_trip_func(void)
 	    {FU_TYPE_DFUSE_FIRMWARE,
 	     "dfuse.builder.xml",
 	     "c1ff429f0e381c8fe8e1b2ee41a5a9a79e2f2ff7"},
+	    {FU_TYPE_FDT_FIRMWARE, "fdt.builder.xml", "40f7fbaff684a6bcf67c81b3079422c2529741e1"},
 	    {FU_TYPE_SREC_FIRMWARE, "srec.builder.xml", "2aae6c35c94fcfb415dbe95f408b9ce91ee846ed"},
 	    {FU_TYPE_IHEX_FIRMWARE, "ihex.builder.xml", "a8d74f767f3fc992b413e5ba801cedc80a4cf013"},
 	    {FU_TYPE_FMAP_FIRMWARE, "fmap.builder.xml", "a0b9ffc10a586d217edf9e9bae7c1fe7c564ea01"},
@@ -3350,6 +3402,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/firmware{ihex-signed}", fu_firmware_ihex_signed_func);
 	g_test_add_func("/fwupd/firmware{srec-tokenization}", fu_firmware_srec_tokenization_func);
 	g_test_add_func("/fwupd/firmware{srec}", fu_firmware_srec_func);
+	g_test_add_func("/fwupd/firmware{fdt}", fu_firmware_fdt_func);
 	g_test_add_func("/fwupd/firmware{ifwi-cpd}", fu_firmware_ifwi_cpd_func);
 	g_test_add_func("/fwupd/firmware{ifwi-fpt}", fu_firmware_ifwi_fpt_func);
 	g_test_add_func("/fwupd/firmware{oprom}", fu_firmware_oprom_func);

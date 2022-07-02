@@ -37,6 +37,8 @@
 #include <libfwupdplugin/fu-efi-signature-list.h>
 #include <libfwupdplugin/fu-efi-signature.h>
 #include <libfwupdplugin/fu-efivar.h>
+#include <libfwupdplugin/fu-fdt-firmware.h>
+#include <libfwupdplugin/fu-fdt-image.h>
 #include <libfwupdplugin/fu-firmware-common.h>
 #include <libfwupdplugin/fu-firmware.h>
 #include <libfwupdplugin/fu-fmap-firmware.h>
