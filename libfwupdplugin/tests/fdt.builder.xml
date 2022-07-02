@@ -1,0 +1,26 @@
+<firmware gtype="FuFdtFirmware">
+  <version_raw>0x11</version_raw>
+  <firmware gtype="FuFdtImage">
+    <offset>0x5</offset>
+    <metadata key="key" format="str">hello world</metadata>
+    <firmware gtype="FuFdtImage">
+      <id>images</id>
+      <firmware gtype="FuFdtImage">
+        <id>firmware-1</id>
+        <metadata key="key" format="uint32">0x123</metadata>
+        <firmware gtype="FuFdtImage">
+          <id>hash-1</id>
+          <metadata key="key" format="data">aGVsbG8gd29ybGQ</metadata>
+        </firmware>
+      </firmware>
+    </firmware>
+    <firmware gtype="FuFdtImage">
+      <id>configurations</id>
+      <metadata key="key" format="str">conf-1</metadata>
+      <firmware gtype="FuFdtImage">
+        <id>conf-1</id>
+        <metadata key="key" format="data">aGVsbG8gd29ybGQ</metadata>
+      </firmware>
+    </firmware>
+  </firmware>
+</firmware>
