@@ -124,11 +124,11 @@ fu_vbe_device_get_dir(FuVbeDevice *self)
 static void
 fu_vbe_device_init(FuVbeDevice *self)
 {
-	fu_device_add_flag(FU_DEVICE(self),
-			   FWUPD_DEVICE_FLAG_INTERNAL | FWUPD_DEVICE_FLAG_UPDATABLE |
-			       FWUPD_DEVICE_FLAG_NEEDS_REBOOT | FWUPD_DEVICE_FLAG_CAN_VERIFY |
-			       FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
-
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INTERNAL);
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_VERIFY);
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
 	fu_device_add_protocol(FU_DEVICE(self), "org.vbe");
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_ENSURE_SEMVER);
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_MD_SET_SIGNED);
