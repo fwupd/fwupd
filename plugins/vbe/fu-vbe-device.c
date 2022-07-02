@@ -138,20 +138,19 @@ fu_vbe_device_init(FuVbeDevice *self)
 }
 
 static gboolean
-fu_vbe_device_probe(FuDevice *fud, GError **error)
+fu_vbe_device_probe(FuDevice *device, GError **error)
 {
-	FuVbeDevicePrivate *priv;
-	FuVbeDevice *self;
+	FuVbeDevice *self = FU_VBE_DEVICE(device);
+	FuVbeDevicePrivate *priv = GET_PRIVATE(self);
 	const gchar *compat;
 	GList *clist = NULL;
-	gint len, i;
+	gint len;
 
-	g_return_val_if_fail(FU_IS_VBE_DEVICE(fud), FALSE);
-	self = FU_VBE_DEVICE(fud);
-	priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_VBE_DEVICE(device), FALSE);
 
-	/* Get a list of compatible strings */
-	for (i = 0; compat = fdt_stringlist_get(priv->fdt, 0, "compatible", i, &len), compat; i++)
+	/* get a list of compatible strings */
+	for (gint i = 0; compat = fdt_stringlist_get(priv->fdt, 0, "compatible", i, &len), compat;
+	     i++)
 		clist = g_list_append(clist, g_strdup(compat));
 	g_list_free_full(priv->compat_list, g_free);
 	priv->compat_list = clist;
@@ -208,8 +207,7 @@ fu_vbe_device_set_property(GObject *obj, guint prop_id, const GValue *value, GPa
 		priv->node = g_value_get_int(value);
 		break;
 	case PROP_VBE_DIR:
-		if (priv->vbe_dir)
-			g_free(priv->vbe_dir);
+		g_free(priv->vbe_dir);
 		priv->vbe_dir = g_strdup(g_value_get_string(value));
 		break;
 	default:
@@ -223,8 +221,6 @@ fu_vbe_device_finalize(GObject *obj)
 {
 	FuVbeDevice *self = FU_VBE_DEVICE(obj);
 	FuVbeDevicePrivate *priv = GET_PRIVATE(self);
-	if (priv->vbe_method)
-		g_free(priv->vbe_method);
 	g_list_free_full(priv->compat_list, g_free);
 
 	G_OBJECT_CLASS(fu_vbe_device_parent_class)->finalize(obj);

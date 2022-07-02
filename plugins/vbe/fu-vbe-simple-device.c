@@ -43,7 +43,7 @@ struct vbe_simple_state {
 };
 
 /**
- * struct _FuVbeSimpleDevice - Information for the 'simple' VBE device
+ * FuVbeSimpleDevice - Information for the 'simple' VBE device
  *
  * @parent_instance: FuVbeDevice parent device
  * @storage: Storage device name (e.g. "mmc1")
@@ -113,25 +113,26 @@ trailing_strtoln_end(const gchar *str, const gchar *end, gchar const **endp)
 }
 
 static gboolean
-fu_vbe_simple_device_probe(FuDevice *self, GError **error)
+fu_vbe_simple_device_probe(FuDevice *device, GError **error)
 {
-	struct _FuVbeSimpleDevice *dev = FU_VBE_SIMPLE_DEVICE(self);
-	FuVbeDevice *vdev;
+	FuVbeSimpleDevice *self = FU_VBE_SIMPLE_DEVICE(device);
 	const void *fdt;
 	gint devnum, len;
 	gint node;
 
 	g_return_val_if_fail(FU_IS_VBE_DEVICE(self), FALSE);
-	vdev = FU_VBE_DEVICE(self);
 
-	if (!FU_DEVICE_CLASS(fu_vbe_simple_device_parent_class)->probe(self, error))
+	if (!FU_DEVICE_CLASS(fu_vbe_simple_device_parent_class)->probe(device, error))
 		return FALSE;
 
-	fdt = fu_vbe_device_get_fdt(vdev);
-	node = fu_vbe_device_get_node(vdev);
-	g_debug("Probing device %s, fdt=%p, node=%d", fu_vbe_device_get_method(vdev), fdt, node);
-	dev->storage = fdt_getprop(fdt, node, "storage", &len);
-	if (!dev->storage) {
+	fdt = fu_vbe_device_get_fdt(FU_VBE_DEVICE(self));
+	node = fu_vbe_device_get_node(FU_VBE_DEVICE(self));
+	g_debug("Probing device %s, fdt=%p, node=%d",
+		fu_vbe_device_get_method(FU_VBE_DEVICE(self)),
+		fdt,
+		node);
+	self->storage = fdt_getprop(fdt, node, "storage", &len);
+	if (!self->storage) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
@@ -149,43 +150,43 @@ fu_vbe_simple_device_probe(FuDevice *self, GError **error)
 	}
 
 	/* if this is an absolute path, use it */
-	if (*dev->storage == '/') {
-		dev->devname = g_strdup(dev->storage);
+	if (*self->storage == '/') {
+		self->devname = g_strdup(self->storage);
 	} else {
 		const gchar *end;
 
 		/* obtain the 1 from "mmc1" */
-		devnum = trailing_strtoln_end(dev->storage, NULL, &end);
+		devnum = trailing_strtoln_end(self->storage, NULL, &end);
 		if (devnum == -1) {
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "Cannot parse 'storage' property '%s' - expect <dev><num>",
-				    dev->storage);
+				    self->storage);
 			return FALSE;
 		}
-		len = end - dev->storage;
+		len = end - self->storage;
 
-		if (!strncmp("mmc", dev->storage, len)) {
-			dev->devname = g_strdup_printf("/dev/mmcblk%d", devnum);
+		if (!strncmp("mmc", self->storage, len)) {
+			self->devname = g_strdup_printf("/dev/mmcblk%d", devnum);
 		} else {
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "Unsupported 'storage' media '%s'",
-				    dev->storage);
+				    self->storage);
 			return FALSE;
 		}
 	}
-	dev->area_start = fit_get_u32(fdt, node, "area-start");
-	dev->area_size = fit_get_u32(fdt, node, "area-size");
-	if (dev->area_start < 0 || dev->area_size < 0) {
+	self->area_start = fit_get_u32(fdt, node, "area-start");
+	self->area_size = fit_get_u32(fdt, node, "area-size");
+	if (self->area_start < 0 || self->area_size < 0) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "Invalid/missing area start / size (%#jx / %#jx)",
-			    (uintmax_t)dev->area_start,
-			    (uintmax_t)dev->area_size);
+			    (uintmax_t)self->area_start,
+			    (uintmax_t)self->area_size);
 		return FALSE;
 	}
 
@@ -193,23 +194,23 @@ fu_vbe_simple_device_probe(FuDevice *self, GError **error)
 	 * We allow the skip offset to skip everything, which could be useful
 	 * for testing
 	 */
-	dev->skip_offset = fit_get_u32(fdt, node, "skip-offset");
-	if (dev->skip_offset > dev->area_size) {
+	self->skip_offset = fit_get_u32(fdt, node, "skip-offset");
+	if (self->skip_offset > self->area_size) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "Store offset %#x is larger than size (%jx)",
-			    (guint)dev->skip_offset,
-			    (uintmax_t)dev->area_size);
+			    (guint)self->skip_offset,
+			    (uintmax_t)self->area_size);
 		return FALSE;
-	} else if (dev->skip_offset < 0) {
-		dev->skip_offset = 0;
+	} else if (self->skip_offset < 0) {
+		self->skip_offset = 0;
 	}
 
 	g_debug("Selected device '%s', start %#jx, size %#jx",
-		dev->devname,
-		(uintmax_t)dev->area_start,
-		(uintmax_t)dev->area_size);
+		self->devname,
+		(uintmax_t)self->area_start,
+		(uintmax_t)self->area_size);
 
 	return TRUE;
 }
@@ -217,23 +218,23 @@ fu_vbe_simple_device_probe(FuDevice *self, GError **error)
 static gboolean
 fu_vbe_simple_device_open(FuDevice *device, GError **error)
 {
-	struct _FuVbeSimpleDevice *dev = FU_VBE_SIMPLE_DEVICE(device);
-	struct vbe_simple_state *state = &dev->state;
+	FuVbeSimpleDevice *self = FU_VBE_SIMPLE_DEVICE(device);
+	struct vbe_simple_state *state = &self->state;
 	g_autofree gchar *buf = NULL;
 	gsize len;
 
-	dev->fd = open(dev->devname, O_RDWR);
-	if (dev->fd == -1) {
+	self->fd = open(self->devname, O_RDWR);
+	if (self->fd == -1) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "Cannot open file '%s' (%s)",
-			    dev->devname,
+			    self->devname,
 			    strerror(errno));
 		return FALSE;
 	}
 
-	if (g_file_get_contents(dev->vbe_fname, &buf, &len, NULL)) {
+	if (g_file_get_contents(self->vbe_fname, &buf, &len, NULL)) {
 		gint node;
 
 		node = fdt_subnode_offset(buf, 0, "last-update");
@@ -241,7 +242,7 @@ fu_vbe_simple_device_open(FuDevice *device, GError **error)
 		state->cur_version = g_strdup(fdt_getprop(buf, node, "cur-version", NULL));
 		state->status = g_strdup(fdt_getprop(buf, node, "status", NULL));
 	} else {
-		g_debug("No state file '%s' - will create", dev->vbe_fname);
+		g_debug("No state file '%s' - will create", self->vbe_fname);
 		memset(state, '\0', sizeof(*state));
 	}
 
@@ -251,13 +252,13 @@ fu_vbe_simple_device_open(FuDevice *device, GError **error)
 static gboolean
 fu_vbe_simple_device_close(FuDevice *device, GError **error)
 {
-	struct _FuVbeSimpleDevice *dev = FU_VBE_SIMPLE_DEVICE(device);
-	struct vbe_simple_state *state = &dev->state;
+	FuVbeSimpleDevice *self = FU_VBE_SIMPLE_DEVICE(device);
+	struct vbe_simple_state *state = &self->state;
 	g_autofree gchar *buf = NULL;
 	const gint size = 1024;
 
-	close(dev->fd);
-	dev->fd = -1;
+	close(self->fd);
+	self->fd = -1;
 
 	buf = g_malloc(size);
 	fdt_create(buf, size);
@@ -287,7 +288,7 @@ fu_vbe_simple_device_close(FuDevice *device, GError **error)
 		return FALSE;
 	}
 
-	if (!g_file_set_contents(dev->vbe_fname, buf, size, error)) {
+	if (!g_file_set_contents(self->vbe_fname, buf, size, error)) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_BROKEN_SYSTEM,
@@ -347,12 +348,12 @@ check_config_match(struct fit_info *fit, gint cfg, GList *compat_list)
  *
  * @fit: FIT to write
  * @img: FIT offset of image to write
- * @dev: Device to use
+ * @self: Device to use
  * @error: Returns error information if this function returns FALSE
  * Returns: TRUE on success, FALSE on failure
  */
 static gboolean
-process_image(struct fit_info *fit, gint img, struct _FuVbeSimpleDevice *dev, GError **error)
+process_image(FuVbeSimpleDevice *self, struct fit_info *fit, gint img, GError **error)
 {
 	guint store_offset = 0;
 	const gchar *buf;
@@ -374,7 +375,7 @@ process_image(struct fit_info *fit, gint img, struct _FuVbeSimpleDevice *dev, GE
 	}
 
 	buf = fit_img_data(fit, img, &size);
-	if (!buf) {
+	if (buf == NULL) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_WRITE,
@@ -384,7 +385,7 @@ process_image(struct fit_info *fit, gint img, struct _FuVbeSimpleDevice *dev, GE
 		return FALSE;
 	}
 
-	if (store_offset + size > dev->area_size) {
+	if (store_offset + size > self->area_size) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_WRITE,
@@ -392,11 +393,11 @@ process_image(struct fit_info *fit, gint img, struct _FuVbeSimpleDevice *dev, GE
 			    fit_img_name(fit, img),
 			    (guint)store_offset,
 			    (guint)size,
-			    (uintmax_t)dev->area_size);
+			    (uintmax_t)self->area_size);
 		return FALSE;
 	}
 
-	if (dev->skip_offset >= size) {
+	if (self->skip_offset >= size) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_WRITE,
@@ -404,38 +405,38 @@ process_image(struct fit_info *fit, gint img, struct _FuVbeSimpleDevice *dev, GE
 			    fit_img_name(fit, img),
 			    (guint)store_offset,
 			    (guint)size,
-			    (uintmax_t)dev->area_size);
+			    (uintmax_t)self->area_size);
 		return FALSE;
 	}
 
-	seek_to = dev->area_start + store_offset + dev->skip_offset;
-	g_debug("Writing image '%s' size %x (skipping %x) to store_offset %x, seek %jx\n",
+	seek_to = self->area_start + store_offset + self->skip_offset;
+	g_debug("Writing image '%s' size 0x%x (skipping 0x%x) to store_offset 0x%x, seek %jx\n",
 		fit_img_name(fit, img),
 		(guint)size,
-		(guint)dev->skip_offset,
+		(guint)self->skip_offset,
 		store_offset,
 		(uintmax_t)seek_to);
 
-	ret = lseek(dev->fd, seek_to, SEEK_SET);
+	ret = lseek(self->fd, seek_to, SEEK_SET);
 	if (ret < 0) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_WRITE,
 			    "Cannot seek file '%s' (%d) to %#jx (%s)",
-			    dev->devname,
-			    dev->fd,
+			    self->devname,
+			    self->fd,
 			    (uintmax_t)seek_to,
 			    strerror(errno));
 		return FALSE;
 	}
 
-	ret = write(dev->fd, buf + dev->skip_offset, size - dev->skip_offset);
+	ret = write(self->fd, buf + self->skip_offset, size - self->skip_offset);
 	if (ret < 0) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_WRITE,
 			    "Cannot write file '%s' (%s)",
-			    dev->devname,
+			    self->devname,
 			    strerror(errno));
 		return FALSE;
 	}
@@ -449,18 +450,18 @@ process_image(struct fit_info *fit, gint img, struct _FuVbeSimpleDevice *dev, GE
  * Look up all the images in a configuration and write them one by one to
  * the device.
  *
+ * @self: Device to use
  * @fit: FIT to write
  * @cfg: FIT offset of configuration to write
- * @dev: Device to use
  * @progress: Progress information to update (this is simplistic and assumes
  * that each image takes the same time to write)
  * @error: Returns error information if this function returns FALSE
  * Returns: TRUE on success, FALSE on failure
  */
 static gboolean
-process_config(struct fit_info *fit,
+process_config(FuVbeSimpleDevice *self,
+	       struct fit_info *fit,
 	       gint cfg,
-	       struct _FuVbeSimpleDevice *dev,
 	       FuProgress *progress,
 	       GError **error)
 {
@@ -484,7 +485,7 @@ process_config(struct fit_info *fit,
 		}
 		fu_progress_set_percentage_full(progress, i, count);
 
-		if (!process_image(fit, image, dev, error))
+		if (!process_image(self, fit, image, error))
 			return FALSE;
 	}
 	fu_progress_set_percentage_full(progress, i, count);
@@ -500,7 +501,7 @@ process_config(struct fit_info *fit,
  * to the device.
  *
  * @fit: FIT to write
- * @dev: Device to use
+ * @self: Device to use
  * @compat_list: List of compatible properties for this model, if any
  * @progress: Progress information to update (this is simplistic and assumes
  * that each image takes the same time to write)
@@ -508,13 +509,13 @@ process_config(struct fit_info *fit,
  * Returns: TRUE on success, FALSE on failure
  */
 static gboolean
-process_fit(struct fit_info *fit,
-	    struct _FuVbeSimpleDevice *dev,
+process_fit(FuVbeSimpleDevice *self,
+	    struct fit_info *fit,
 	    GList *compat_list,
 	    FuProgress *progress,
 	    GError **error)
 {
-	struct vbe_simple_state *state = &dev->state;
+	struct vbe_simple_state *state = &self->state;
 	gint best_prio = INT_MAX;
 	const gchar *cfg_name;
 	const gchar *version;
@@ -559,7 +560,7 @@ process_fit(struct fit_info *fit,
 
 	g_debug("Best configuration: '%s', priority %d, version %s", cfg_name, best_prio, version);
 
-	if (!process_config(fit, best_cfg, dev, progress, error))
+	if (!process_config(self, fit, best_cfg, progress, error))
 		return FALSE;
 
 	g_free(state->cur_version);
@@ -572,13 +573,13 @@ process_fit(struct fit_info *fit,
 }
 
 static gboolean
-fu_vbe_simple_device_write_firmware(FuDevice *self,
+fu_vbe_simple_device_write_firmware(FuDevice *device,
 				    FuFirmware *firmware,
 				    FuProgress *progress,
 				    FwupdInstallFlags flags,
 				    GError **error)
 {
-	struct _FuVbeSimpleDevice *dev = FU_VBE_SIMPLE_DEVICE(self);
+	FuVbeSimpleDevice *self = FU_VBE_SIMPLE_DEVICE(device);
 	g_autoptr(GBytes) bytes = NULL;
 	struct fit_info fit;
 	GList *compat_list;
@@ -608,7 +609,7 @@ fu_vbe_simple_device_write_firmware(FuDevice *self,
 		return FALSE;
 	}
 
-	if (!process_fit(&fit, dev, compat_list, progress, error))
+	if (!process_fit(self, &fit, compat_list, progress, error))
 		return FALSE;
 
 	/* success */
@@ -616,9 +617,9 @@ fu_vbe_simple_device_write_firmware(FuDevice *self,
 }
 
 static GBytes *
-fu_vbe_simple_device_upload(FuDevice *self, FuProgress *progress, GError **error)
+fu_vbe_simple_device_upload(FuDevice *device, FuProgress *progress, GError **error)
 {
-	struct _FuVbeSimpleDevice *dev = FU_VBE_SIMPLE_DEVICE(self);
+	FuVbeSimpleDevice *self = FU_VBE_SIMPLE_DEVICE(device);
 	g_autoptr(GPtrArray) chunks = NULL;
 	gsize blksize = 0x100000;
 	gpointer buf;
@@ -630,37 +631,37 @@ fu_vbe_simple_device_upload(FuDevice *self, FuProgress *progress, GError **error
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_READ);
 
-	ret = lseek(dev->fd, dev->area_start, SEEK_SET);
+	ret = lseek(self->fd, self->area_start, SEEK_SET);
 	if (ret < 0) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_READ,
 			    "Cannot seek file '%s' (%d) to %#jx (%s)",
-			    dev->devname,
-			    dev->fd,
-			    (uintmax_t)dev->area_start,
+			    self->devname,
+			    self->fd,
+			    (uintmax_t)self->area_start,
 			    strerror(errno));
 		return NULL;
 	}
 
 	chunks = g_ptr_array_new_with_free_func((GDestroyNotify)g_bytes_unref);
 
-	for (offset = 0; offset < dev->area_size; offset += blksize) {
+	for (offset = 0; offset < self->area_size; offset += blksize) {
 		g_autoptr(GBytes) chunk = NULL;
 		gsize toread;
 
 		buf = g_malloc(blksize);
 		toread = blksize;
-		if ((off_t)toread + offset > dev->area_size)
-			toread = dev->area_size - offset;
+		if ((off_t)toread + offset > self->area_size)
+			toread = self->area_size - offset;
 		g_debug("read %zx", toread);
-		ret = read(dev->fd, buf, toread);
+		ret = read(self->fd, buf, toread);
 		if (ret < 0) {
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_READ,
 				    "Cannot read file '%s' (%s)",
-				    dev->devname,
+				    self->devname,
 				    strerror(errno));
 			g_free(buf);
 			return NULL;
@@ -720,15 +721,9 @@ fu_vbe_simple_device_new(FuContext *ctx,
 static void
 fu_vbe_simple_device_constructed(GObject *obj)
 {
-	struct _FuVbeSimpleDevice *dev = FU_VBE_SIMPLE_DEVICE(obj);
-	g_autofree gchar *vbe_fname = NULL;
-	FuVbeDevice *vdev;
-
-	g_return_if_fail(FU_IS_VBE_DEVICE(dev));
-	vdev = FU_VBE_DEVICE(dev);
-
-	vbe_fname = g_build_filename(fu_vbe_device_get_dir(vdev), "simple.dtb", NULL);
-	dev->vbe_fname = g_steal_pointer(&vbe_fname);
+	FuVbeSimpleDevice *self = FU_VBE_SIMPLE_DEVICE(obj);
+	self->vbe_fname =
+	    g_build_filename(fu_vbe_device_get_dir(FU_VBE_DEVICE(self)), "simple.dtb", NULL);
 }
 
 static void
@@ -799,12 +794,12 @@ fu_vbe_simple_device_class_init(FuVbeSimpleDeviceClass *klass)
 	/**
 	 * FuVbeSimpleDevice:devname:
 	 *
-	 * device that contains firmware (e.g. '/dev/mmcblk1')
+	 * device that contains firmware (e.g. '/self/mmcblk1')
 	 */
 	pspec =
 	    g_param_spec_string("devname",
 				NULL,
-				"Device that contains firmware (e.g. '/dev/mmcblk1')",
+				"Device that contains firmware (e.g. '/self/mmcblk1')",
 				NULL,
 				G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_DEVNAME, pspec);
