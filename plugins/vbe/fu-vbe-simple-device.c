@@ -8,9 +8,6 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#undef G_LOG_DOMAIN
-#define G_LOG_DOMAIN "FuPluginVbeSimple"
-
 #include "config.h"
 
 #include <ctype.h>
