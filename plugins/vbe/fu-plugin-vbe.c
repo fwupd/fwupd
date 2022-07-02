@@ -17,13 +17,13 @@
 #include "fu-vbe-device.h"
 #include "fu-vbe-simple-device.h"
 
-/* Kernel device tree, used for system information */
+/* kernel device tree, used for system information */
 #define KERNEL_DT "/sys/firmware/fdt"
 
-/* File to use for system information where the system has no device tree */
+/* file to use for system information where the system has no device tree */
 #define SYSTEM_DT "system.dtb"
 
-/* Path to the method subnodes in the system info */
+/* path to the method subnodes in the system info */
 #define NODE_PATH "/chosen/fwupd"
 
 /**
@@ -123,7 +123,7 @@ vbe_locate_method(gchar *fdt, gint node, struct FuVbeMethod **methp, GError **er
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_FILE,
-			    "Missing update mechanism (%s)",
+			    "missing update mechanism (%s)",
 			    fdt_strerror(len));
 		return FALSE;
 	}
@@ -132,7 +132,7 @@ vbe_locate_method(gchar *fdt, gint node, struct FuVbeMethod **methp, GError **er
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_FILE,
-			    "Update mechanism is missing manufacturer (%s)",
+			    "update mechanism is missing manufacturer: %s",
 			    compat);
 		return FALSE;
 	}
@@ -193,7 +193,7 @@ process_system(FuPluginData *priv, gchar *fdt, gsize fdt_len, GError **error)
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_FILE,
-			    "System DT is corrupt (%s)",
+			    "system DT is corrupt (%s)",
 			    fdt_strerror(rc));
 		return FALSE;
 	}
@@ -201,7 +201,7 @@ process_system(FuPluginData *priv, gchar *fdt, gsize fdt_len, GError **error)
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_FILE,
-			    "System DT size mismatch (header=%x, file=%zx)",
+			    "system DT size mismatch (header=0x%x, file=0x%zx)",
 			    fdt_totalsize(fdt),
 			    fdt_len);
 		return FALSE;
@@ -211,7 +211,7 @@ process_system(FuPluginData *priv, gchar *fdt, gsize fdt_len, GError **error)
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_FILE,
-			    "Missing node '%s' (%s)",
+			    "missing node '%s' (%s)",
 			    NODE_PATH,
 			    fdt_strerror(rc));
 		return FALSE;
@@ -240,10 +240,11 @@ process_system(FuPluginData *priv, gchar *fdt, gsize fdt_len, GError **error)
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "No valid VBE update mechanism found");
+			    "no valid VBE update mechanism found");
 		return FALSE;
 	}
 
+	g_debug("VBE update methods: %d", found);
 	return TRUE;
 }
 
