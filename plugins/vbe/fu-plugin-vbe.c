@@ -108,18 +108,19 @@ fu_plugin_vbe_destroy(FuPlugin *plugin)
  * Returns: True on success, False on failure
  */
 static gboolean
-vbe_locate_method(gchar *fdt, gint node, struct FuVbeMethod **methp, GError **error)
+fu_plugin_vbe_locate_method(gchar *fdt, gint node, struct FuVbeMethod **methp, GError **error)
 {
 	struct FuVbeMethod *meth = NULL;
 	const struct VbeDriver *driver;
 	const gchar *method_name;
-	const gchar *compat, *p;
+	const gchar *compat;
 	gint len;
+	g_auto(GStrv) split = NULL;
 
 	/* we expect 'fwupd,vbe-<driver>' */
 	*methp = NULL;
 	compat = fdt_getprop(fdt, node, "compatible", &len);
-	if (!compat) {
+	if (compat == NULL) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_FILE,
@@ -127,8 +128,8 @@ vbe_locate_method(gchar *fdt, gint node, struct FuVbeMethod **methp, GError **er
 			    fdt_strerror(len));
 		return FALSE;
 	}
-	p = strchr(compat, ',');
-	if (!p) {
+	split = g_strsplit(compat, ",", 2);
+	if (g_strv_length(split) != 2) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_FILE,
@@ -136,35 +137,31 @@ vbe_locate_method(gchar *fdt, gint node, struct FuVbeMethod **methp, GError **er
 			    compat);
 		return FALSE;
 	}
-
-	if (strncmp(compat, "fwupd,", p - compat)) {
+	if (g_strcmp0(split[0], "fwupd") == 0) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_FILE,
-			    "Update mechanism should have manufacturer of 'fwupd' (%s)",
-			    compat);
-		return FALSE;
-	}
-
-	/* skip past the manufacturer ('fwupd,') */
-	p++;
-	if (strncmp(p, "vbe-", 4)) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_FILE,
-			    "Update mechanism is missing 'vbe-' prefix (%s)",
-			    compat);
+			    "update mechanism should have manufacturer of fwupd: %s",
+			    split[0]);
 		return FALSE;
 	}
 
 	/* skip past 'vbe-' */
-	method_name = p + 4;
+	if (!g_str_has_prefix(split[1], "vbe-")) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "update mechanism is missing vbe prefix: %s",
+			    split[1]);
+		return FALSE;
+	}
+	method_name = split[1] + 4;
 
 	/* find this update mechanism */
 	for (driver = driver_list; driver->name; driver++) {
 		if (!strcmp(method_name, driver->name)) {
 			meth = g_malloc(sizeof(struct FuVbeMethod));
-			meth->vbe_method = p;
+			meth->vbe_method = method_name;
 			meth->node = node;
 			meth->driver = driver;
 			g_debug("Update mechanism: %s", meth->vbe_method);
@@ -172,12 +169,13 @@ vbe_locate_method(gchar *fdt, gint node, struct FuVbeMethod **methp, GError **er
 			return TRUE;
 		}
 	}
+
+	/* failed */
 	g_set_error(error,
 		    FWUPD_ERROR,
 		    FWUPD_ERROR_INVALID_FILE,
-		    "No driver for VBE method '%s'",
+		    "no driver for VBE method '%s'",
 		    method_name);
-
 	return FALSE;
 }
 
