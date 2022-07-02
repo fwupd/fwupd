@@ -96,7 +96,7 @@ fu_plugin_vbe_destroy(FuPlugin *plugin)
 }
 
 /**
- * vbe_locate_method() - Locate the method to use for a particular node
+ * fu_plugin_vbe_locate_method() - Locate the method to use for a particular node
  *
  * This checks the compatible string in the format fwupd,vbe-xxx and finds the
  * driver called xxx.
@@ -180,9 +180,8 @@ fu_plugin_vbe_locate_method(gchar *fdt, gint node, struct FuVbeMethod **methp, G
 }
 
 static gboolean
-process_system(FuPluginData *priv, gchar *fdt, gsize fdt_len, GError **error)
+fu_plugin_vbe_process_system(FuPluginData *priv, gchar *fdt, gsize fdt_len, GError **error)
 {
-	g_autofree GError *local_error = NULL;
 	gint rc, parent, node;
 	gint found;
 
@@ -219,22 +218,19 @@ process_system(FuPluginData *priv, gchar *fdt, gsize fdt_len, GError **error)
 	found = 0;
 	for (node = fdt_first_subnode(fdt, parent); node > 0; node = fdt_next_subnode(fdt, node)) {
 		struct FuVbeMethod *meth;
+		g_autoptr(GError) error_local = NULL;
 
-		if (vbe_locate_method(fdt, node, &meth, &local_error)) {
+		if (fu_plugin_vbe_locate_method(fdt, node, &meth, &error_local)) {
 			found++;
 		} else {
 			g_debug("Cannot locate device for node '%s': %s",
 				fdt_get_name(fdt, node, NULL),
-				local_error->message);
-			g_error_free(local_error);
-			local_error = NULL;
+				error_local->message);
 		}
 		priv->methods = g_list_append(priv->methods, meth);
 	}
 
-	if (found) {
-		g_debug("VBE update methods: %d", found);
-	} else {
+	if (!found) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
@@ -250,10 +246,9 @@ static gboolean
 fu_plugin_vbe_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 {
 	FuPluginData *priv = fu_plugin_get_data(plugin);
-	g_autofree gchar *vbe_dir = NULL;
 	g_autofree gchar *state_dir = NULL;
 	g_autofree gchar *bfname = NULL;
-	GError *local = NULL;
+	g_autoptr(GError) error_local = NULL;
 	gchar *buf = NULL;
 	gsize len;
 
@@ -261,14 +256,11 @@ fu_plugin_vbe_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 
 	/* get the VBE directory */
 	state_dir = fu_path_from_kind(FU_PATH_KIND_LOCALSTATEDIR_PKG);
-	vbe_dir = g_build_filename(state_dir, "vbe", NULL);
-	priv->vbe_dir = g_steal_pointer(&vbe_dir);
-
+	priv->vbe_dir = g_build_filename(state_dir, "vbe", NULL);
 	bfname = g_build_filename(priv->vbe_dir, SYSTEM_DT, NULL);
-	if (!g_file_get_contents(bfname, &buf, &len, &local)) {
-		g_error_free(local);
+	if (!g_file_get_contents(bfname, &buf, &len, &error_local)) {
 		/* check if we have a kernel device tree */
-		g_debug("Cannot find system DT '%s'", bfname);
+		g_debug("Cannot find system DT '%s': %s", bfname, error_local->message);
 
 		/* free the filename so we can reuse it */
 		g_free(bfname);
@@ -282,9 +274,8 @@ fu_plugin_vbe_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 	}
 	g_debug("Processing system DT '%s'", bfname);
 	priv->fdt = buf;
-	if (!process_system(priv, buf, len, error)) {
-		g_debug("Failed: %s", (*error)->message);
-		/* error is set by process_system() */
+	if (!fu_plugin_vbe_process_system(priv, buf, len, error)) {
+		g_prefix_error(error, "failed to parse: ");
 		return FALSE;
 	}
 
