@@ -14,7 +14,6 @@
 
 #include <libfdt.h>
 
-#include "fu-plugin-vbe.h"
 #include "fu-vbe-device.h"
 #include "fu-vbe-simple-device.h"
 

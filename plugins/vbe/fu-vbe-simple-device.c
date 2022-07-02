@@ -20,7 +20,6 @@
 
 #include "fit.h"
 #include "fu-dfu-common.h"
-#include "fu-plugin-vbe.h"
 #include "fu-vbe-simple-device.h"
 
 /* G_OBJECT properties associated with the plugin */
