@@ -688,17 +688,12 @@ fu_vbe_simple_device_set_progress(FuDevice *self, FuProgress *progress)
 static void
 fu_vbe_simple_device_init(FuVbeSimpleDevice *self)
 {
-	fu_device_add_flag(FU_DEVICE(self),
-			   FWUPD_DEVICE_FLAG_INTERNAL | FWUPD_DEVICE_FLAG_UPDATABLE |
-			       FWUPD_DEVICE_FLAG_NEEDS_REBOOT | FWUPD_DEVICE_FLAG_CAN_VERIFY |
-			       FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
-
-	fu_device_add_protocol(FU_DEVICE(self), "org.vbe");
-	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_ENSURE_SEMVER);
-	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_MD_SET_SIGNED);
-	fu_device_set_physical_id(FU_DEVICE(self), "vbe");
-	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PAIR);
-	fu_device_add_icon(FU_DEVICE(self), "computer");
+	fu_device_set_name(FU_DEVICE(self), "simple");
+	fu_device_add_guid(FU_DEVICE(self), "bb3b05a8-ebef-11ec-be98-d3a15278be95");
+	fu_device_set_vendor(FU_DEVICE(self), "U-Boot");
+	fu_device_add_vendor_id(FU_DEVICE(self), "VBE:U-Boot");
+	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_TRIPLET);
+	fu_device_set_version_lowest(FU_DEVICE(self), "0.0.1");
 }
 
 FuDevice *

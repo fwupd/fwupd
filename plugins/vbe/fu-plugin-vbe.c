@@ -43,30 +43,16 @@ struct FuPluginData {
  *
  * @name: Name of driver (for compatible string "fwupd,vbe-simple" this is
  * "simple")
- * @vendor: Vendor name
- * @vendor_id: Vendor ID, with have a "VBE:" prefix
- * @version: Version of this driver in x.y.z numeric notation
- * @version_lowest: Lowest version of firmware this device can accept
  * @new_func: Function to call to create the device
- * @guid: GUID to use to identify this device and updates intended for it
  */
 struct VbeDriver {
 	const gchar *name;
-	const gchar *vendor;
-	const gchar *vendor_id;
-	const gchar *version_lowest;
 	vbe_device_new_func new_func;
-	const gchar *guid;
 };
 
 /** List of available VBE drivers */
 const struct VbeDriver driver_list[] = {
-    {"simple",
-     "U-Boot",
-     "VBE:U-Boot",
-     "0.0.1",
-     fu_vbe_simple_device_new,
-     "bb3b05a8-ebef-11ec-be98-d3a15278be95"},
+    {"simple", fu_vbe_simple_device_new},
     {NULL},
 };
 
@@ -300,22 +286,11 @@ fu_plugin_vbe_coldplug(FuPlugin *plugin, FuProgress *progress, GError **error)
 		driver = meth->driver;
 		dev = driver->new_func(ctx, meth->vbe_method, priv->fdt, meth->node, priv->vbe_dir);
 
-		fu_device_set_id(dev, meth->vbe_method);
-
-		fu_device_set_name(dev, driver->name);
-		fu_device_set_vendor(dev, driver->vendor);
-		fu_device_add_guid(dev, driver->guid);
-
-		fu_device_add_vendor_id(FU_DEVICE(dev), driver->vendor_id);
-		fu_device_set_version_format(dev, FWUPD_VERSION_FORMAT_TRIPLET);
-		fu_device_set_version_lowest(dev, driver->version_lowest);
-
 		version = fdt_getprop(priv->fdt, meth->node, "cur-version", NULL);
 		fu_device_set_version(dev, version);
 
 		version = fdt_getprop(priv->fdt, meth->node, "bootloader-version", NULL);
 		fu_device_set_version_bootloader(dev, version);
-		fu_device_add_icon(dev, "computer");
 		fu_device_add_flag(dev, FWUPD_DEVICE_FLAG_UPDATABLE);
 
 		/* this takes a ref on the device */
