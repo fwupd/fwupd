@@ -2607,6 +2607,7 @@ fu_firmware_dedupe_func(void)
 	fu_firmware_set_idx(img1_old, 13);
 	fu_firmware_set_id(img1_old, "DAVE");
 	fu_firmware_add_image(firmware, img1_old);
+	g_assert_true(fu_firmware_get_parent(img1_old) == firmware);
 
 	fu_firmware_set_idx(img1, 13);
 	fu_firmware_set_id(img1, "primary");

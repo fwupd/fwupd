@@ -256,6 +256,10 @@ void
 fu_firmware_add_chunk(FuFirmware *self, FuChunk *chk);
 GPtrArray *
 fu_firmware_get_chunks(FuFirmware *self, GError **error);
+FuFirmware *
+fu_firmware_get_parent(FuFirmware *self);
+void
+fu_firmware_set_parent(FuFirmware *self, FuFirmware *parent);
 
 gboolean
 fu_firmware_tokenize(FuFirmware *self, GBytes *fw, FwupdInstallFlags flags, GError **error)
