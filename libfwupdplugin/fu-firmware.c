@@ -26,6 +26,7 @@
 
 typedef struct {
 	FuFirmwareFlags flags;
+	FuFirmware *parent; /* noref */
 	GPtrArray *images; /* FuFirmware */
 	gchar *version;
 	guint64 version_raw;
@@ -43,6 +44,8 @@ typedef struct {
 
 G_DEFINE_TYPE_WITH_PRIVATE(FuFirmware, fu_firmware, G_TYPE_OBJECT)
 #define GET_PRIVATE(o) (fu_firmware_get_instance_private(o))
+
+enum { PROP_0, PROP_PARENT, PROP_LAST };
 
 /**
  * fu_firmware_flag_to_string:
@@ -378,6 +381,46 @@ fu_firmware_get_offset(FuFirmware *self)
 	FuFirmwarePrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FU_IS_FIRMWARE(self), G_MAXUINT64);
 	return priv->offset;
+}
+
+/**
+ * fu_firmware_get_parent:
+ * @self: a #FuFirmware
+ *
+ * Gets the parent.
+ *
+ * Returns: (transfer none): the parent firmware, or %NULL if unset
+ *
+ * Since: 1.8.2
+ **/
+FuFirmware *
+fu_firmware_get_parent(FuFirmware *self)
+{
+	FuFirmwarePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_FIRMWARE(self), NULL);
+	return priv->parent;
+}
+
+/**
+ * fu_firmware_set_parent:
+ * @self: a #FuFirmware
+ * @parent: (nullable): another #FuFirmware
+ *
+ * Sets the parent. Only used internally.
+ *
+ * Since: 1.8.2
+ **/
+void
+fu_firmware_set_parent(FuFirmware *self, FuFirmware *parent)
+{
+	FuFirmwarePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_FIRMWARE(self));
+
+	if (priv->parent != NULL)
+		g_object_remove_weak_pointer(G_OBJECT(priv->parent), (gpointer *)&priv->parent);
+	if (parent != NULL)
+		g_object_add_weak_pointer(G_OBJECT(parent), (gpointer *)&priv->parent);
+	priv->parent = parent;
 }
 
 /**
@@ -1311,6 +1354,9 @@ fu_firmware_add_image(FuFirmware *self, FuFirmware *img)
 	}
 
 	g_ptr_array_add(priv->images, g_object_ref(img));
+
+	/* set the other way around */
+	fu_firmware_set_parent(img, self);
 }
 
 /**
@@ -1727,6 +1773,35 @@ fu_firmware_to_string(FuFirmware *self)
 }
 
 static void
+fu_firmware_get_property(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
+{
+	FuFirmware *self = FU_FIRMWARE(object);
+	FuFirmwarePrivate *priv = GET_PRIVATE(self);
+	switch (prop_id) {
+	case PROP_PARENT:
+		g_value_set_object(value, priv->parent);
+		break;
+	default:
+		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
+		break;
+	}
+}
+
+static void
+fu_firmware_set_property(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
+{
+	FuFirmware *self = FU_FIRMWARE(object);
+	switch (prop_id) {
+	case PROP_PARENT:
+		fu_firmware_set_parent(self, g_value_get_object(value));
+		break;
+	default:
+		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
+		break;
+	}
+}
+
+static void
 fu_firmware_init(FuFirmware *self)
 {
 	FuFirmwarePrivate *priv = GET_PRIVATE(self);
@@ -1747,6 +1822,8 @@ fu_firmware_finalize(GObject *object)
 		g_ptr_array_unref(priv->chunks);
 	if (priv->patches != NULL)
 		g_ptr_array_unref(priv->patches);
+	if (priv->parent != NULL)
+		g_object_remove_weak_pointer(G_OBJECT(priv->parent), (gpointer *)&priv->parent);
 	g_ptr_array_unref(priv->images);
 	G_OBJECT_CLASS(fu_firmware_parent_class)->finalize(object);
 }
@@ -1755,7 +1832,25 @@ static void
 fu_firmware_class_init(FuFirmwareClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
+	GParamSpec *pspec;
+
 	object_class->finalize = fu_firmware_finalize;
+	object_class->get_property = fu_firmware_get_property;
+	object_class->set_property = fu_firmware_set_property;
+
+	/**
+	 * FuFirmware:parent:
+	 *
+	 * The firmware parent.
+	 *
+	 * Since: 1.8.2
+	 */
+	pspec = g_param_spec_object("parent",
+				    NULL,
+				    NULL,
+				    FU_TYPE_FIRMWARE,
+				    G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_NAME);
+	g_object_class_install_property(object_class, PROP_PARENT, pspec);
 }
 
 /**
