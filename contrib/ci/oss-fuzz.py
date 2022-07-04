@@ -348,6 +348,7 @@ def _build(bld: Builder) -> None:
     for fzr in [
         Fuzzer("dfuse"),
         Fuzzer("fdt"),
+        Fuzzer("fit"),
         Fuzzer("fmap"),
         Fuzzer("ihex"),
         Fuzzer("srec"),

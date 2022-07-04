@@ -953,6 +953,10 @@ LIBFWUPDPLUGIN_1.8.2 {
     fu_firmware_get_parent;
     fu_firmware_parse_full;
     fu_firmware_set_parent;
+    fu_fit_firmware_get_timestamp;
+    fu_fit_firmware_get_type;
+    fu_fit_firmware_new;
+    fu_fit_firmware_set_timestamp;
     fu_i2c_device_read;
     fu_i2c_device_write;
     fu_ifwi_cpd_firmware_get_type;

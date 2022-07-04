@@ -32,6 +32,7 @@ fwupdplugin_src = [
   'fu-dfu-firmware.c',      # fuzzing
   'fu-fdt-firmware.c',      # fuzzing
   'fu-fdt-image.c',         # fuzzing
+  'fu-fit-firmware.c',      # fuzzing
   'fu-ifwi-cpd-firmware.c', # fuzzing
   'fu-ifwi-fpt-firmware.c', # fuzzing
   'fu-oprom-firmware.c',    # fuzzing
@@ -121,6 +122,7 @@ fwupdplugin_headers = [
   'fu-dfu-firmware.h',
   'fu-fdt-firmware.h',
   'fu-fdt-image.h',
+  'fu-fit-firmware.h',
   'fu-ifwi-cpd-firmware.h',
   'fu-ifwi-fpt-firmware.h',
   'fu-oprom-firmware.h',
