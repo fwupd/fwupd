@@ -794,12 +794,12 @@ fu_vbe_simple_device_class_init(FuVbeSimpleDeviceClass *klass)
 	/**
 	 * FuVbeSimpleDevice:devname:
 	 *
-	 * device that contains firmware (e.g. '/self/mmcblk1')
+	 * device that contains firmware (e.g. '/dev/mmcblk1')
 	 */
 	pspec =
 	    g_param_spec_string("devname",
 				NULL,
-				"Device that contains firmware (e.g. '/self/mmcblk1')",
+				"Device that contains firmware (e.g. '/dev/mmcblk1')",
 				NULL,
 				G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_DEVNAME, pspec);
