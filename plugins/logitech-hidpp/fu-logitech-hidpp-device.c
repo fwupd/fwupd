@@ -706,7 +706,14 @@ fu_logitech_hidpp_device_probe(FuDevice *device, GError **error)
 		fu_device_set_logical_id(device, id_str->str);
 	}
 
-	return TRUE;
+	/* this is a non-standard extension */
+	fu_device_add_instance_u16(FU_DEVICE(self),
+				   "VID",
+				   fu_udev_device_get_vendor(FU_UDEV_DEVICE(device)));
+	fu_device_add_instance_u16(FU_DEVICE(self),
+				   "PID",
+				   fu_udev_device_get_model(FU_UDEV_DEVICE(device)));
+	return fu_device_build_instance_id(FU_DEVICE(self), error, "UFY", "VID", "PID", NULL);
 }
 
 static gboolean
