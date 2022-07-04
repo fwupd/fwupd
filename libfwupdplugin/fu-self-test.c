@@ -2066,6 +2066,47 @@ fu_firmware_fdt_func(void)
 }
 
 static void
+fu_firmware_fit_func(void)
+{
+	gboolean ret;
+	g_autofree gchar *filename = NULL;
+	g_autofree gchar *str = NULL;
+	g_auto(GStrv) val = NULL;
+	g_autoptr(FuFdtImage) img1 = NULL;
+	g_autoptr(FuFirmware) firmware = fu_fit_firmware_new();
+	g_autoptr(GBytes) data = NULL;
+	g_autoptr(GError) error = NULL;
+
+	filename = g_test_build_filename(G_TEST_DIST, "tests", "fit.bin", NULL);
+	data = fu_bytes_get_contents(filename, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(data);
+	ret = fu_firmware_parse(firmware, data, FWUPD_INSTALL_FLAG_NONE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(fu_fit_firmware_get_timestamp(FU_FIT_FIRMWARE(firmware)), ==, 0x629D4ABD);
+	str = fu_firmware_to_string(firmware);
+	g_debug("%s", str);
+
+	img1 = fu_fdt_firmware_get_image_by_path(FU_FDT_FIRMWARE(firmware),
+						 "/configurations/conf-1",
+						 &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(img1);
+	ret = fu_fdt_image_get_attr_strlist(FU_FDT_IMAGE(img1),
+					    FU_FIT_FIRMWARE_ATTR_COMPATIBLE,
+					    &val,
+					    &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_nonnull(val);
+	g_assert_cmpstr(val[0], ==, "alice");
+	g_assert_cmpstr(val[1], ==, "bob");
+	g_assert_cmpstr(val[2], ==, "clara");
+	g_assert_cmpstr(val[3], ==, NULL);
+}
+
+static void
 fu_firmware_srec_tokenization_func(void)
 {
 	FuSrecFirmwareRecord *rcd;
@@ -2990,6 +3031,7 @@ fu_firmware_builder_round_trip_func(void)
 	     "dfuse.builder.xml",
 	     "c1ff429f0e381c8fe8e1b2ee41a5a9a79e2f2ff7"},
 	    {FU_TYPE_FDT_FIRMWARE, "fdt.builder.xml", "40f7fbaff684a6bcf67c81b3079422c2529741e1"},
+	    {FU_TYPE_FIT_FIRMWARE, "fit.builder.xml", "293ce07351bb7d76631c4e2ba47243db1e150f3c"},
 	    {FU_TYPE_SREC_FIRMWARE, "srec.builder.xml", "2aae6c35c94fcfb415dbe95f408b9ce91ee846ed"},
 	    {FU_TYPE_IHEX_FIRMWARE, "ihex.builder.xml", "a8d74f767f3fc992b413e5ba801cedc80a4cf013"},
 	    {FU_TYPE_FMAP_FIRMWARE, "fmap.builder.xml", "a0b9ffc10a586d217edf9e9bae7c1fe7c564ea01"},
@@ -3403,6 +3445,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/firmware{srec-tokenization}", fu_firmware_srec_tokenization_func);
 	g_test_add_func("/fwupd/firmware{srec}", fu_firmware_srec_func);
 	g_test_add_func("/fwupd/firmware{fdt}", fu_firmware_fdt_func);
+	g_test_add_func("/fwupd/firmware{fit}", fu_firmware_fit_func);
 	g_test_add_func("/fwupd/firmware{ifwi-cpd}", fu_firmware_ifwi_cpd_func);
 	g_test_add_func("/fwupd/firmware{ifwi-fpt}", fu_firmware_ifwi_fpt_func);
 	g_test_add_func("/fwupd/firmware{oprom}", fu_firmware_oprom_func);

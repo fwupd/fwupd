@@ -1,0 +1,36 @@
+<firmware gtype="FuFitFirmware">
+  <version_raw>0x11</version_raw>
+  <firmware gtype="FuFdtImage">
+    <metadata key="creator" format="str">FIT test</metadata>
+    <metadata key="description" format="str">FIT description</metadata>
+    <metadata key="timestamp" format="uint32">0x629d4abd</metadata>
+    <firmware gtype="FuFdtImage">
+      <id>images</id>
+      <firmware gtype="FuFdtImage">
+        <id>firmware-1</id>
+        <metadata key="entry" format="str"></metadata>
+        <metadata key="os" format="str">u-boot</metadata>
+        <metadata key="data" format="data">YWJj</metadata> <!-- abc -->
+        <metadata key="load" format="data">AAABAA==</metadata>
+        <metadata key="arch" format="str">arm64</metadata>
+        <metadata key="type" format="str">firmware</metadata>
+        <metadata key="compression" format="str">none</metadata>
+        <metadata key="description" format="str">v1.2.4</metadata>
+        <firmware gtype="FuFdtImage">
+          <id>hash-1</id>
+          <metadata key="algo" format="str">crc32</metadata>
+          <metadata key="value" format="uint32">0x352441C2</metadata>
+        </firmware>
+      </firmware>
+    </firmware>
+    <firmware gtype="FuFdtImage">
+      <id>configurations</id>
+      <metadata key="default" format="str">conf-1</metadata>
+      <firmware gtype="FuFdtImage">
+        <id>conf-1</id>
+        <metadata key="compatible" format="strlist">alice:bob:clara</metadata>
+        <metadata key="firmware" format="str">firmware-1</metadata>
+      </firmware>
+    </firmware>
+  </firmware>
+</firmware>
