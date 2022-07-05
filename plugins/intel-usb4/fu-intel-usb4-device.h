@@ -1,4 +1,5 @@
 /*
+ * Copyright (C) 2022 Richard Hughes <richard@hughsie.com>
  * Copyright (C) 2021 Intel Corporation.
  * Copyright (C) 2021 Dell Inc.
  * All rights reserved.
@@ -20,8 +21,5 @@
 
 #include <fwupdplugin.h>
 
-#define FU_TYPE_DELL_DOCK_USB4 (fu_dell_dock_usb4_get_type())
-G_DECLARE_FINAL_TYPE(FuDellDockUsb4, fu_dell_dock_usb4, FU, DELL_DOCK_USB4, FuUsbDevice)
-
-FuDellDockUsb4 *
-fu_dell_dock_usb4_new(FuUsbDevice *device);
+#define FU_TYPE_INTEL_USB4_DEVICE (fu_intel_usb4_device_get_type())
+G_DECLARE_FINAL_TYPE(FuIntelUsb4Device, fu_intel_usb4_device, FU, INTEL_USB4_DEVICE, FuUsbDevice)
