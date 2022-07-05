@@ -24,7 +24,6 @@ meson .. \
     -Dplugin_dummy=true \
     -Dplugin_flashrom=enabled \
     -Dplugin_modem_manager=disabled \
-    -Dplugin_thunderbolt=enabled \
     -Dplugin_uefi_capsule=enabled \
     -Dplugin_dell=enabled \
     -Dplugin_synaptics_mst=enabled $@

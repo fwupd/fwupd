@@ -1,5 +1,4 @@
-if get_option('plugin_thunderbolt').require(gudev.found(),
-    error_message: 'gudev is needed for plugin_thunderbolt').allowed()
+if gudev.found()
 cargs = ['-DG_LOG_DOMAIN="FuPluginThunderbolt"']
 
 plugin_quirks += join_paths(meson.current_source_dir(), 'thunderbolt.quirk')
