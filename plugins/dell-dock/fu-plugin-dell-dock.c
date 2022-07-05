@@ -148,31 +148,11 @@ fu_plugin_dell_dock_backend_device_added(FuPlugin *plugin, FuDevice *device, GEr
 	GPtrArray *devices;
 	FuDevice *ec_device;
 	FuDevice *hub_dev;
-	guint device_vid;
-	guint device_pid;
 	guint8 dock_type;
 
 	/* not interesting */
 	if (!FU_IS_USB_DEVICE(device))
 		return TRUE;
-
-	device_vid = (guint)fu_usb_device_get_vid(FU_USB_DEVICE(device));
-	device_pid = (guint)fu_usb_device_get_pid(FU_USB_DEVICE(device));
-	g_debug("%s: processing usb device, vid: 0x%x, pid: 0x%x",
-		fu_plugin_get_name(plugin),
-		device_vid,
-		device_pid);
-
-	/* GR controller internal USB HUB */
-	if (device_vid == GR_USB_VID && device_pid == GR_USB_PID) {
-		g_autoptr(FuDellDockUsb4) usb4_dev = NULL;
-		usb4_dev = fu_dell_dock_usb4_new(FU_USB_DEVICE(device));
-		locker = fu_device_locker_new(FU_DEVICE(usb4_dev), error);
-		if (locker == NULL)
-			return FALSE;
-		fu_plugin_device_add(plugin, FU_DEVICE(usb4_dev));
-		return TRUE;
-	}
 
 	hub = fu_dell_dock_hub_new(FU_USB_DEVICE(device));
 	locker = fu_device_locker_new(FU_DEVICE(hub), error);
@@ -226,7 +206,7 @@ fu_plugin_dell_dock_separate_activation(FuPlugin *plugin)
 		FuDevice *device_tmp = g_ptr_array_index(devices, i);
 		if (FU_IS_DELL_DOCK_EC(device_tmp))
 			device_ec = device_tmp;
-		else if (FU_IS_DELL_DOCK_USB4(device_tmp))
+		else if (g_strcmp0(fu_device_get_plugin(device_tmp), "intel_usb4") == 0)
 			device_usb4 = device_tmp;
 	}
 	/* both usb4 and ec device are found */
@@ -261,7 +241,8 @@ fu_plugin_dell_dock_device_registered(FuPlugin *plugin, FuDevice *device)
 
 	/* online activation is mutually exclusive between usb4 and ec */
 	if (g_strcmp0(fu_device_get_plugin(device), "dell_dock") == 0 &&
-	    (FU_IS_DELL_DOCK_EC(device) || FU_IS_DELL_DOCK_USB4(device)))
+	    (FU_IS_DELL_DOCK_EC(device) ||
+	     g_strcmp0(fu_device_get_plugin(device), "intel_usb4") == 0))
 		fu_plugin_dell_dock_separate_activation(plugin);
 }
 
@@ -317,6 +298,7 @@ fu_plugin_dell_dock_composite_cleanup(FuPlugin *plugin, GPtrArray *devices, GErr
 	for (guint i = 0; i < devices->len; i++) {
 		dev = g_ptr_array_index(devices, i);
 		if ((g_strcmp0(fu_device_get_plugin(dev), "thunderbolt") == 0 ||
+		     g_strcmp0(fu_device_get_plugin(dev), "intel_usb4") == 0 ||
 		     g_strcmp0(fu_device_get_plugin(dev), "dell_dock") == 0) &&
 		    fu_device_has_flag(dev, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION)) {
 			/* the kernel and/or thunderbolt plugin have been configured to let HW

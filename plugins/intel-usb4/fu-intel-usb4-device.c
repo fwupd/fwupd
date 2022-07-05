@@ -1,4 +1,5 @@
 /*
+ * Copyright (C) 2022 Richard Hughes <richard@hughsie.com>
  * Copyright (C) 2021 Intel Corporation.
  * Copyright (C) 2021 Dell Inc.
  * All rights reserved.
@@ -16,7 +17,9 @@
 
 #include "config.h"
 
-#include "fu-dell-dock-common.h"
+#include "fu-intel-usb4-device.h"
+#include "fu-intel-usb4-firmware.h"
+#include "fu-intel-usb4-nvm.h"
 
 #define GR_USB_INTERFACE_NUMBER 0x0
 #define GR_USB_BLOCK_SIZE	64
@@ -58,32 +61,26 @@
 /* Default length for NVM READ */
 #define NVM_READ_LENGTH 0x224
 
-/* NVM offset */
-#define NVM_VER_OFFSET_MAJOR 0xa
-#define NVM_VER_OFFSET_MINOR 0x9
-#define NVM_VID_OFFSET_MAJOR 0x221
-#define NVM_VID_OFFSET_MINOR 0x220
-#define NVM_PID_OFFSET_MAJOR 0x223
-#define NVM_PID_OFFSET_MINOR 0x222
-
 struct mbox_regx {
 	guint16 opcode;
 	guint8 rsvd;
 	guint8 status;
 } __attribute__((packed));
 
-struct _FuDellDockUsb4 {
+struct _FuIntelUsb4Device {
 	FuUsbDevice parent_instance;
 	guint blocksz;
 	guint8 intf_nr;
+	guint16 nvm_product_id;
+	guint16 nvm_vendor_id;
 };
 
-G_DEFINE_TYPE(FuDellDockUsb4, fu_dell_dock_usb4, FU_TYPE_USB_DEVICE)
+G_DEFINE_TYPE(FuIntelUsb4Device, fu_intel_usb4_device, FU_TYPE_USB_DEVICE)
 
 /* wIndex contains the hub register offset, value BIT[10] is "access to
  * mailbox", rest of values are vendor specific or rsvd  */
 static gboolean
-fu_dell_dock_usb4_hub_get_mmio(FuDevice *device, guint16 mbox_reg, guchar *buf, GError **error)
+fu_intel_usb4_device_get_mmio(FuDevice *device, guint16 mbox_reg, guint8 *buf, GError **error)
 {
 	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(device));
 	struct mbox_regx *regx;
@@ -95,7 +92,7 @@ fu_dell_dock_usb4_hub_get_mmio(FuDevice *device, guint16 mbox_reg, guchar *buf, 
 					   REQ_HUB_GET_MMIO, /* request */
 					   MBOX_ACCESS,	     /* value */
 					   mbox_reg,	     /* index */
-					   (guchar *)buf,    /* data */
+					   (guint8 *)buf,    /* data */
 					   4,		     /* length */
 					   NULL,	     /* actual length */
 					   MBOX_TIMEOUT,
@@ -136,7 +133,7 @@ fu_dell_dock_usb4_hub_get_mmio(FuDevice *device, guint16 mbox_reg, guchar *buf, 
 }
 
 static gboolean
-fu_dell_dock_usb4_hub_set_mmio(FuDevice *device, guint16 mbox_reg, guchar *buf, GError **error)
+fu_intel_usb4_device_set_mmio(FuDevice *device, guint16 mbox_reg, guint8 *buf, GError **error)
 {
 	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(device));
 
@@ -147,7 +144,7 @@ fu_dell_dock_usb4_hub_set_mmio(FuDevice *device, guint16 mbox_reg, guchar *buf, 
 					   REQ_HUB_SET_MMIO, /* request */
 					   MBOX_ACCESS,	     /* value */
 					   mbox_reg,	     /* index */
-					   (guchar *)buf,    /* data */
+					   (guint8 *)buf,    /* data */
 					   4,		     /* length */
 					   NULL,	     /* actual length */
 					   MBOX_TIMEOUT,
@@ -166,9 +163,9 @@ fu_dell_dock_usb4_hub_set_mmio(FuDevice *device, guint16 mbox_reg, guchar *buf, 
  * read operation before reading the mbox data registers.
  */
 static gboolean
-fu_dell_dock_usb4_mbox_data_read(FuDevice *device, guchar *data, guint8 length, GError **error)
+fu_intel_usb4_device_mbox_data_read(FuDevice *device, guint8 *data, guint8 length, GError **error)
 {
-	guchar *ptr = data;
+	guint8 *ptr = data;
 
 	if (length > 64 || length % 4) {
 		g_set_error(error,
@@ -180,7 +177,7 @@ fu_dell_dock_usb4_mbox_data_read(FuDevice *device, guchar *data, guint8 length, 
 	}
 	/* read 4 bytes per iteration */
 	for (gint i = 0; i < length / 4; i++) {
-		if (!fu_dell_dock_usb4_hub_get_mmio(device, i, ptr, error)) {
+		if (!fu_intel_usb4_device_get_mmio(device, i, ptr, error)) {
 			g_prefix_error(error, "failed to read mbox data registers: ");
 			return FALSE;
 		}
@@ -195,12 +192,12 @@ fu_dell_dock_usb4_mbox_data_read(FuDevice *device, guchar *data, guint8 length, 
  * at the set offset
  */
 static gboolean
-fu_dell_dock_usb4_mbox_data_write(FuDevice *device,
-				  const guchar *data,
-				  guint8 length,
-				  GError **error)
+fu_intel_usb4_device_mbox_data_write(FuDevice *device,
+				     const guint8 *data,
+				     guint8 length,
+				     GError **error)
 {
-	guchar *ptr = (guchar *)data;
+	guint8 *ptr = (guint8 *)data;
 
 	if (length > 64 || length % 4) {
 		g_set_error(error,
@@ -213,7 +210,7 @@ fu_dell_dock_usb4_mbox_data_write(FuDevice *device,
 
 	/* writes 4 bytes per iteration */
 	for (gint i = 0; i < length / 4; i++) {
-		if (!fu_dell_dock_usb4_hub_set_mmio(device, i, ptr, error))
+		if (!fu_intel_usb4_device_set_mmio(device, i, ptr, error))
 			return FALSE;
 		ptr += 4;
 	}
@@ -221,11 +218,11 @@ fu_dell_dock_usb4_mbox_data_write(FuDevice *device,
 }
 
 static gboolean
-fu_dell_dock_usb4_hub_operation(FuDevice *device, guint16 opcode, guchar *metadata, GError **error)
+fu_intel_usb4_device_operation(FuDevice *device, guint16 opcode, guint8 *metadata, GError **error)
 {
 	struct mbox_regx *regx;
 	gint max_tries = 100;
-	guchar buf[4] = {0x0};
+	guint8 buf[4] = {0x0};
 
 	regx = (struct mbox_regx *)buf;
 	regx->opcode = GUINT16_TO_LE(opcode);
@@ -247,7 +244,7 @@ fu_dell_dock_usb4_hub_operation(FuDevice *device, guint16 opcode, guchar *metada
 				    opcode);
 			return FALSE;
 		}
-		if (!fu_dell_dock_usb4_hub_set_mmio(device, MBOX_REG_METADATA, metadata, error)) {
+		if (!fu_intel_usb4_device_set_mmio(device, MBOX_REG_METADATA, metadata, error)) {
 			g_prefix_error(error, "failed to write metadata %s: ", metadata);
 			return FALSE;
 		}
@@ -262,7 +259,7 @@ fu_dell_dock_usb4_hub_operation(FuDevice *device, guint16 opcode, guchar *metada
 	}
 
 	/* write the operation and poll completion or error */
-	if (!fu_dell_dock_usb4_hub_set_mmio(device, MBOX_REG, buf, error))
+	if (!fu_intel_usb4_device_set_mmio(device, MBOX_REG, buf, error))
 		return FALSE;
 
 	/* leave early as successful USB4 AUTH resets the device immediately */
@@ -271,7 +268,7 @@ fu_dell_dock_usb4_hub_operation(FuDevice *device, guint16 opcode, guchar *metada
 
 	for (gint i = 0; i <= max_tries; i++) {
 		g_autoptr(GError) error_local = NULL;
-		if (fu_dell_dock_usb4_hub_get_mmio(device, MBOX_REG, buf, &error_local))
+		if (fu_intel_usb4_device_get_mmio(device, MBOX_REG, buf, &error_local))
 			return TRUE;
 		if (i == max_tries) {
 			g_propagate_prefixed_error(error,
@@ -283,22 +280,12 @@ fu_dell_dock_usb4_hub_operation(FuDevice *device, guint16 opcode, guchar *metada
 	return FALSE;
 }
 
-/**
- * fu_dell_dock_usb4_hub_nvm_read:
- * @device: a #FuDevice
- * @buf: array of bytes to store the read from registers
- * @length: length of buf array
- * @nvm_addr: nvm read offset, e.g. `0`
- * @error: (nullable): optional return location for an error
- *
- * Read NVM over USB interface
- **/
 static gboolean
-fu_dell_dock_usb4_hub_nvm_read(FuDevice *device,
-			       guint8 *buf,
-			       guint32 length,
-			       guint32 nvm_addr,
-			       GError **error)
+fu_intel_usb4_device_nvm_read(FuDevice *device,
+			      guint8 *buf,
+			      guint32 length,
+			      guint32 nvm_addr,
+			      GError **error)
 {
 	guint8 tmpbuf[64] = {0x0};
 
@@ -327,12 +314,12 @@ fu_dell_dock_usb4_hub_nvm_read(FuDevice *device,
 		metadata[3] = (padded_len / 4) & 0xf;
 
 		/* ask hub to read up to 64 bytes from NVM to mbox data regs */
-		if (!fu_dell_dock_usb4_hub_operation(device, OP_NVM_READ, metadata, error)) {
+		if (!fu_intel_usb4_device_operation(device, OP_NVM_READ, metadata, error)) {
 			g_prefix_error(error, "hub NVM read error: ");
 			return FALSE;
 		}
 		/* read the data from mbox data regs into our buffer */
-		if (!fu_dell_dock_usb4_mbox_data_read(device, tmpbuf, padded_len, error)) {
+		if (!fu_intel_usb4_device_mbox_data_read(device, tmpbuf, padded_len, error)) {
 			g_prefix_error(error, "hub firmware mbox data read error: ");
 			return FALSE;
 		}
@@ -355,18 +342,16 @@ fu_dell_dock_usb4_hub_nvm_read(FuDevice *device,
 }
 
 static gboolean
-fu_dell_dock_usb4_hub_nvm_write(FuDevice *device,
-				const guint8 *buf,
-				guint32 length,
-				guint32 nvm_addr,
-				FuProgress *progress,
-				GError **error)
+fu_intel_usb4_device_nvm_write(FuDevice *device,
+			       GBytes *blob,
+			       guint32 nvm_addr,
+			       FuProgress *progress,
+			       GError **error)
 {
 	guint8 metadata[4];
-	guint32 bytes_done = 0;
-	guint32 bytes_total = length;
+	g_autoptr(GPtrArray) chunks = NULL;
 
-	if (nvm_addr % 4) {
+	if (nvm_addr % 4 != 0) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_FILE,
@@ -374,53 +359,61 @@ fu_dell_dock_usb4_hub_nvm_write(FuDevice *device,
 			    nvm_addr);
 		return FALSE;
 	}
-	if (length < 64 || length % 64) {
+	if (g_bytes_get_size(blob) < 64 || g_bytes_get_size(blob) % 64) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_FILE,
 			    "Invalid NVM length 0x%x, must be 64 byte aligned: ",
-			    length);
+			    (guint)g_bytes_get_size(blob));
 		return FALSE;
 	}
 
-	/* 1. Set initial offset, must be DW aligned */
+	/* set initial offset, must be DW aligned */
 	fu_memwrite_uint32(metadata, NVM_OFFSET_TO_METADATA(nvm_addr), G_LITTLE_ENDIAN);
-
-	if (!fu_dell_dock_usb4_hub_operation(device, OP_NVM_SET_OFFSET, metadata, error)) {
+	if (!fu_intel_usb4_device_operation(device, OP_NVM_SET_OFFSET, metadata, error)) {
 		g_prefix_error(error, "hub NVM set offset error: ");
 		return FALSE;
 	}
 
-	/* 2 Write data in 64 byte blocks */
-	fu_progress_set_percentage_full(progress, bytes_done, bytes_total);
+	/* write data in 64 byte blocks */
+	chunks = fu_chunk_array_new_from_bytes(blob, 0x0, 0x0, 64);
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_set_steps(progress, chunks->len);
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_WRITE);
-	while (length > 0) {
+	for (guint i = 0; i < chunks->len; i++) {
+		FuChunk *chk = g_ptr_array_index(chunks, i);
+
 		/* write data to mbox data regs */
-		if (!fu_dell_dock_usb4_mbox_data_write(device, buf, 64, error)) {
+		if (!fu_intel_usb4_device_mbox_data_write(device,
+							  fu_chunk_get_data(chk),
+							  fu_chunk_get_data_sz(chk),
+							  error)) {
 			g_prefix_error(error, "hub mbox data write error: ");
 			return FALSE;
 		}
 		/* ask hub to write 64 bytes from data regs to NVM */
-		if (!fu_dell_dock_usb4_hub_operation(device, OP_NVM_WRITE, NULL, error)) {
+		if (!fu_intel_usb4_device_operation(device, OP_NVM_WRITE, NULL, error)) {
 			g_prefix_error(error, "hub NVM write operation error: ");
 			return FALSE;
 		}
-		buf += 64;
-		length -= 64;
-		fu_progress_set_percentage_full(progress, bytes_done += 64, bytes_total);
+
+		/* done */
+		fu_progress_step_done(progress);
 	}
+
+	/* success */
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_BUSY);
 	return TRUE;
 }
 
 static gboolean
-fu_dell_dock_usb4_activate(FuDevice *device, FuProgress *progress, GError **error)
+fu_intel_usb4_device_activate(FuDevice *device, FuProgress *progress, GError **error)
 {
 	g_autoptr(FuDeviceLocker) locker = fu_device_locker_new(device, error);
 	if (locker == NULL)
 		return FALSE;
 
-	if (!fu_dell_dock_usb4_hub_operation(device, OP_NVM_AUTH_WRITE, NULL, error)) {
+	if (!fu_intel_usb4_device_operation(device, OP_NVM_AUTH_WRITE, NULL, error)) {
 		g_prefix_error(error, "NVM authenticate failed: ");
 		fu_device_set_update_state(device, FWUPD_UPDATE_STATE_FAILED);
 		return FALSE;
@@ -429,196 +422,130 @@ fu_dell_dock_usb4_activate(FuDevice *device, FuProgress *progress, GError **erro
 	return TRUE;
 }
 
-static gboolean
-fu_dell_dock_usb4_write_fw(FuDevice *device,
-			   FuFirmware *firmware,
-			   FuProgress *progress,
-			   FwupdInstallFlags flags,
-			   GError **error)
+static FuFirmware *
+fu_intel_usb4_device_prepare_firmware(FuDevice *device,
+				      GBytes *fw,
+				      FwupdInstallFlags flags,
+				      GError **error)
 {
-	const guint8 *fw_buf;
-	gsize fw_blob_size = 0;
-	guchar nvm_buf[NVM_READ_LENGTH] = {0x0};
-	guint32 fw_header_offset = 0;
-	guint8 *tmp_header = NULL;
-	g_autofree gchar *fw_product_id = NULL;
-	g_autofree gchar *fw_vendor_id = NULL;
-	g_autofree gchar *fw_version = NULL;
-	g_autofree gchar *nvm_product_id = NULL;
-	g_autofree gchar *nvm_vendor_id = NULL;
+	FuIntelUsb4Device *self = FU_INTEL_USB4_DEVICE(device);
+	guint16 fw_vendor_id;
+	guint16 fw_product_id;
+	g_autoptr(FuFirmware) firmware = fu_intel_usb4_firmware_new();
+
+	/* get vid:pid:rev */
+	if (!fu_firmware_parse(firmware, fw, flags, error))
+		return NULL;
+
+	/* check is compatible */
+	fw_vendor_id = fu_intel_usb4_nvm_get_vendor_id(FU_INTEL_USB4_NVM(firmware));
+	fw_product_id = fu_intel_usb4_nvm_get_product_id(FU_INTEL_USB4_NVM(firmware));
+	if (self->nvm_vendor_id != fw_vendor_id || self->nvm_product_id != fw_product_id) {
+		if ((flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "firmware 0x%04x:0x%04x does not match device 0x%04x:0x%04x",
+				    fw_vendor_id,
+				    fw_product_id,
+				    self->nvm_vendor_id,
+				    self->nvm_product_id);
+			return NULL;
+		}
+		g_warning("firmware 0x%04x:0x%04x does not match device 0x%04x:0x%04x",
+			  fw_vendor_id,
+			  fw_product_id,
+			  self->nvm_vendor_id,
+			  self->nvm_product_id);
+	}
+
+	/* success */
+	return g_steal_pointer(&firmware);
+}
+
+static gboolean
+fu_intel_usb4_device_write_firmware(FuDevice *device,
+				    FuFirmware *firmware,
+				    FuProgress *progress,
+				    FwupdInstallFlags flags,
+				    GError **error)
+{
 	g_autoptr(GBytes) fw_image = NULL;
 
 	g_return_val_if_fail(device != NULL, FALSE);
 	g_return_val_if_fail(FU_IS_FIRMWARE(firmware), FALSE);
 
-	/* get default image */
-	fw_image = fu_firmware_get_bytes(firmware, error);
+	/* get payload */
+	fw_image = fu_firmware_get_image_by_id_bytes(firmware, FU_FIRMWARE_ID_PAYLOAD, error);
 	if (fw_image == NULL)
 		return FALSE;
 
-	fw_buf = g_bytes_get_data(fw_image, &fw_blob_size);
-	g_debug("total image size: %" G_GSIZE_FORMAT, fw_blob_size);
-
-	/* get header offset */
-	tmp_header = (guint8 *)&fw_header_offset;
-	if (!fu_memcpy_safe(tmp_header,
-			    sizeof(guint32),
-			    0x0,
-			    fw_buf,
-			    fw_blob_size,
-			    0x0,
-			    sizeof(guint32),
-			    error))
-		return FALSE;
-
-	g_debug("image header size: %" G_GUINT32_FORMAT, fw_header_offset);
-	if (fw_header_offset > fw_blob_size) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_FILE,
-			    "image header is too big: %" G_GUINT32_FORMAT,
-			    fw_header_offset);
-		return FALSE;
-	}
-
-	/* get firmware version, vendor-id, product-id */
-	fw_version = g_strdup_printf("%02x.%02x",
-				     fw_buf[fw_header_offset + NVM_VER_OFFSET_MAJOR],
-				     fw_buf[fw_header_offset + NVM_VER_OFFSET_MINOR]);
-	fw_vendor_id = g_strdup_printf("%02x%02x",
-				       fw_buf[fw_header_offset + NVM_VID_OFFSET_MAJOR],
-				       fw_buf[fw_header_offset + NVM_VID_OFFSET_MINOR]);
-	fw_product_id = g_strdup_printf("%02x%02x",
-					fw_buf[fw_header_offset + NVM_PID_OFFSET_MAJOR],
-					fw_buf[fw_header_offset + NVM_PID_OFFSET_MINOR]);
-
-	g_debug("writing Thunderbolt firmware version %s", fw_version);
-	g_debug("writing Thunderbolt product-id %s", fw_product_id);
-	g_debug("writing Thunderbolt vendor-id %s", fw_vendor_id);
-
-	/* compare vendor-id, product-id between firmware blob and NVM */
-	if (!fu_dell_dock_usb4_hub_nvm_read(device, nvm_buf, NVM_READ_LENGTH, 0, error)) {
-		g_prefix_error(error, "NVM READ error: ");
-		return FALSE;
-	}
-	nvm_vendor_id = g_strdup_printf("%02x%02x",
-					nvm_buf[NVM_VID_OFFSET_MAJOR],
-					nvm_buf[NVM_VID_OFFSET_MINOR]);
-	nvm_product_id = g_strdup_printf("%02x%02x",
-					 nvm_buf[NVM_PID_OFFSET_MAJOR],
-					 nvm_buf[NVM_PID_OFFSET_MINOR]);
-
-	if (((flags & FWUPD_INSTALL_FLAG_FORCE) == 0) &&
-	    (g_strcmp0(nvm_vendor_id, fw_vendor_id) != 0 ||
-	     g_strcmp0(nvm_product_id, fw_product_id) != 0)) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "Thunderbolt firmware vendor_id %s, product_id %s"
-			    "doesn't match NVM vendor_id %s, product_id %s",
-			    fw_vendor_id,
-			    fw_product_id,
-			    nvm_vendor_id,
-			    nvm_product_id);
-		return FALSE;
-	}
-
 	/* firmware install */
-	fw_buf += fw_header_offset;
-	fw_blob_size -= fw_header_offset;
-	if (!fu_dell_dock_usb4_hub_nvm_write(device, fw_buf, fw_blob_size, 0, progress, error))
+	if (!fu_intel_usb4_device_nvm_write(device, fw_image, 0, progress, error))
 		return FALSE;
 
+	/* success */
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
-	fu_device_set_version(device, fw_version);
+	fu_device_set_version(device, fu_firmware_get_version(firmware));
 	return TRUE;
 }
 
 static gboolean
-fu_dell_dock_usb4_setup(FuDevice *device, GError **error)
+fu_intel_usb4_device_setup(FuDevice *device, GError **error)
 {
-	guchar buf[NVM_READ_LENGTH] = {0x0};
+	FuIntelUsb4Device *self = FU_INTEL_USB4_DEVICE(device);
+	guint8 buf[NVM_READ_LENGTH] = {0x0};
 	g_autofree gchar *name = NULL;
-	g_autofree gchar *nvm_product_id = NULL;
-	g_autofree gchar *nvm_vendor_id = NULL;
-	g_autofree gchar *nvm_version = NULL;
+	g_autoptr(FuFirmware) fw = fu_intel_usb4_nvm_new();
+	g_autoptr(GBytes) blob = NULL;
 
-	if (!fu_dell_dock_usb4_hub_nvm_read(device, buf, NVM_READ_LENGTH, 0, error)) {
-		g_prefix_error(error, "NVM READ error: ");
+	/* read from device and parse firmware */
+	if (!fu_intel_usb4_device_nvm_read(device, buf, sizeof(buf), 0, error)) {
+		g_prefix_error(error, "NVM read error: ");
 		return FALSE;
 	}
-	nvm_version =
-	    g_strdup_printf("%02x.%02x", buf[NVM_VER_OFFSET_MAJOR], buf[NVM_VER_OFFSET_MINOR]),
-	nvm_vendor_id =
-	    g_strdup_printf("%02x%02x", buf[NVM_VID_OFFSET_MAJOR], buf[NVM_VID_OFFSET_MINOR]);
-	nvm_product_id =
-	    g_strdup_printf("%02x%02x", buf[NVM_PID_OFFSET_MAJOR], buf[NVM_PID_OFFSET_MINOR]);
-
-	/* only add known supported thunderbolt devices */
-	name = g_strdup_printf("TBT-%s%s", nvm_vendor_id, nvm_product_id);
-	if (g_strcmp0(name, DELL_DOCK_USB4_INSTANCE_ID) != 0) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "no supported device found");
+	blob = g_bytes_new(buf, sizeof(buf));
+	if (!fu_firmware_parse(fw, blob, FWUPD_INSTALL_FLAG_NONE, error)) {
+		g_prefix_error(error, "NVM parse error: ");
 		return FALSE;
 	}
+	self->nvm_vendor_id = fu_intel_usb4_nvm_get_vendor_id(FU_INTEL_USB4_NVM(fw));
+	self->nvm_product_id = fu_intel_usb4_nvm_get_product_id(FU_INTEL_USB4_NVM(fw));
+
+	name = g_strdup_printf("TBT-%04x%04x", self->nvm_vendor_id, self->nvm_product_id);
 	fu_device_add_instance_id(device, name);
-	fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_PAIR);
-	fu_device_set_version(device, nvm_version);
+	fu_device_set_version(device, fu_firmware_get_version(fw));
 	return TRUE;
 }
 
-static gboolean
-fu_dell_dock_usb4_probe(FuDevice *device, GError **error)
+static void
+fu_intel_usb4_device_to_string(FuDevice *device, guint idt, GString *str)
 {
-	FuDellDockUsb4 *self = FU_DELL_DOCK_USB4(device);
+	FuIntelUsb4Device *self = FU_INTEL_USB4_DEVICE(device);
+	fu_string_append_kx(str, idt, "NvmVendorId", self->nvm_vendor_id);
+	fu_string_append_kx(str, idt, "NvmProductId", self->nvm_product_id);
+}
 
+static void
+fu_intel_usb4_device_init(FuIntelUsb4Device *self)
+{
 	self->intf_nr = GR_USB_INTERFACE_NUMBER;
 	self->blocksz = GR_USB_BLOCK_SIZE;
-	fu_device_set_logical_id(FU_DEVICE(device), "usb4");
-	return TRUE;
-}
-
-static void
-fu_dell_dock_usb4_finalize(GObject *object)
-{
-	G_OBJECT_CLASS(fu_dell_dock_usb4_parent_class)->finalize(object);
-}
-
-static void
-fu_dell_dock_usb4_init(FuDellDockUsb4 *self)
-{
 	fu_device_add_protocol(FU_DEVICE(self), "com.intel.thunderbolt");
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
+	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PAIR);
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_INHERIT_ACTIVATION);
 }
 
 static void
-fu_dell_dock_usb4_class_init(FuDellDockUsb4Class *klass)
+fu_intel_usb4_device_class_init(FuIntelUsb4DeviceClass *klass)
 {
-	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
-	object_class->finalize = fu_dell_dock_usb4_finalize;
-	klass_device->probe = fu_dell_dock_usb4_probe;
-	klass_device->setup = fu_dell_dock_usb4_setup;
-	klass_device->write_firmware = fu_dell_dock_usb4_write_fw;
-	klass_device->activate = fu_dell_dock_usb4_activate;
-}
-
-/**
- * fu_dell_dock_usb4_new:
- *
- * Creates a new USB4 device object.
- *
- * Returns: a new #FuDellDockUsb4
- **/
-FuDellDockUsb4 *
-fu_dell_dock_usb4_new(FuUsbDevice *device)
-{
-	FuDellDockUsb4 *self = g_object_new(FU_TYPE_DELL_DOCK_USB4, NULL);
-	fu_device_incorporate(FU_DEVICE(self), FU_DEVICE(device));
-	return FU_DELL_DOCK_USB4(self);
+	klass_device->to_string = fu_intel_usb4_device_to_string;
+	klass_device->setup = fu_intel_usb4_device_setup;
+	klass_device->prepare_firmware = fu_intel_usb4_device_prepare_firmware;
+	klass_device->write_firmware = fu_intel_usb4_device_write_firmware;
+	klass_device->activate = fu_intel_usb4_device_activate;
 }
