@@ -255,7 +255,7 @@ fu_plugin_dell_dock_device_registered(FuPlugin *plugin, FuDevice *device)
 		g_autofree gchar *msg = NULL;
 		msg = g_strdup_printf("firmware update inhibited by [%s] plugin",
 				      fu_plugin_get_name(plugin));
-		fu_device_inhibit(device, "usb4-blocked", msg);
+		fu_device_inhibit(device, "hidden", msg);
 		return;
 	}
 

@@ -215,6 +215,8 @@ fu_device_list_get_active(FuDeviceList *self)
 		FuDeviceItem *item = g_ptr_array_index(self->devices, i);
 		if (fu_device_has_inhibit(item->device, "unconnected"))
 			continue;
+		if (fu_device_has_inhibit(item->device, "hidden"))
+			continue;
 		g_ptr_array_add(devices, g_object_ref(item->device));
 	}
 	g_rw_lock_reader_unlock(&self->devices_mutex);
