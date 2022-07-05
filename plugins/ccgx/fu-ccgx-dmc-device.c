@@ -310,10 +310,12 @@ fu_ccgx_dmc_device_to_string(FuDevice *device, guint idt, GString *str)
 			 idt,
 			 "UpdateModel",
 			 fu_ccgx_dmc_update_model_type_to_string(self->update_model));
-	fu_string_append(str,
-			 idt,
-			 "FwImageType",
-			 fu_ccgx_fw_image_type_to_string(self->fw_image_type));
+	if (self->fw_image_type != FW_IMAGE_TYPE_UNKNOWN) {
+		fu_string_append(str,
+				 idt,
+				 "FwImageType",
+				 fu_ccgx_fw_image_type_to_string(self->fw_image_type));
+	}
 	fu_string_append_kx(str, idt, "EpBulkOut", self->ep_bulk_out);
 	fu_string_append_kx(str, idt, "EpIntrIn", self->ep_intr_in);
 	fu_string_append_kx(str, idt, "TriggerCode", self->trigger_code);
