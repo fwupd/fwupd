@@ -35,7 +35,6 @@ option('plugin_synaptics_mst', type: 'feature', description : 'Synaptics MST hub
 option('plugin_synaptics_rmi', type: 'feature', description : 'Synaptics RMI support', deprecated: {'true': 'enabled', 'false': 'disabled'})
 option('plugin_scsi', type: 'feature', description : 'SCSI support', deprecated: {'true': 'enabled', 'false': 'disabled'})
 option('plugin_tpm', type : 'feature', description : 'TPM support', deprecated: {'true': 'enabled', 'false': 'disabled'})
-option('plugin_thunderbolt', type : 'feature', description : 'Thunderbolt support', deprecated: {'true': 'enabled', 'false': 'disabled'})
 option('plugin_redfish', type : 'feature' , description : 'Redfish support', deprecated: {'true': 'enabled', 'false': 'disabled'})
 option('plugin_uefi_capsule', type : 'feature', description : 'UEFI capsule support', deprecated: {'true': 'enabled', 'false': 'disabled'})
 option('plugin_uefi_capsule_splash', type : 'boolean', value : true, description : 'enable UEFI capsule splash support')

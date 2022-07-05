@@ -257,7 +257,6 @@ fwupd wrapper for Qubes OS
 %else
     -Dplugin_msr=disabled \
 %endif
-    -Dplugin_thunderbolt=enabled \
 %if 0%{?have_uefi}
     -Dplugin_uefi_capsule=enabled \
     -Dplugin_uefi_pk=enabled \
