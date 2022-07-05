@@ -2971,9 +2971,11 @@ fu_firmware_builder_round_trip_func(void)
 	    {FU_TYPE_OPROM_FIRMWARE,
 	     "oprom.builder.xml",
 	     "2aae6c35c94fcfb415dbe95f408b9ce91ee846ed"},
+#ifdef HAVE_CBOR
 	    {FU_TYPE_USWID_FIRMWARE,
 	     "uswid.builder.xml",
 	     "cae8660d5acd5bb614d0410bc53dedaa1899aee1"},
+#endif
 	    {G_TYPE_INVALID, NULL, NULL}};
 	g_type_ensure(FU_TYPE_COSWID_FIRMWARE);
 	for (guint i = 0; map[i].gtype != G_TYPE_INVALID; i++) {
