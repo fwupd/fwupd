@@ -14,7 +14,6 @@ shared_module('fu_plugin_dell_dock',
     'fu-dell-dock-hub.c',
     'fu-dell-dock-i2c-tbt.c',
     'fu-dell-dock-i2c-mst.c',
-    'fu-dell-dock-usb-usb4.c'
   ],
   include_directories: [
     root_incdir,

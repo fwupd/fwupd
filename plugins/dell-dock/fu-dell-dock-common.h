@@ -25,7 +25,6 @@
 #include "fu-dell-dock-i2c-mst.h"
 #include "fu-dell-dock-i2c-tbt.h"
 #include "fu-dell-dock-status.h"
-#include "fu-dell-dock-usb-usb4.h"
 
 #define DELL_DOCK_DOCK1_INSTANCE_ID	    "USB\\VID_413C&PID_B06E&hub&status"
 #define DELL_DOCK_DOCK2_INSTANCE_ID	    "USB\\VID_413C&PID_B06E&hub&salomon_mlk_status"

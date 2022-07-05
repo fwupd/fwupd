@@ -21,9 +21,6 @@ Plugin = dell_dock
 Name = Unprobed Dell accessory endpoint
 Plugin = dell_dock
 Flags = has-bridge
-[USB\VID_8087&PID_0B40]
-Name = Unprobed USB3 endpoint for USB4 hub
-Plugin = dell_dock
 
 # USB hub1
 [USB\VID_413C&PID_B06F&hub]
