@@ -7,12 +7,8 @@ platform to be updated from user space.
 
 ## Firmware Format
 
-Firmware updates are held within a CAB file, a Windows format which allows
-files to be collected and compressed, similar to a tar file. The CAB file can be
-created using the `gcab` tool, as shown in the VBE `example` directory.
-
 Inside the CAB file is the firmware itself, in Flat Image Tree (FIT) format.
-This is typically called `firmware.fit` and can be creatd by the `mkimage` tool,
+This is typically called `firmware.fit` and can be created by the `mkimage` tool,
 or using device tree tools such as `dtc` and `fdtput`.
 
 The FIT supports multiple configuration, each of which is intended to update a
@@ -93,7 +89,7 @@ VBE requires the board firmware to provide information about the firmware within
 the device tree passed to the Operating System.
 
 For systems without device tree, currently the only option is to install a file
-for use by fwupd, typically in `/var/local/lib/fwupd/vbe/system.dtb`.
+for use by fwupd, typically in `/var/lib/fwupd/vbe/system.dtb`.
 
 In either case, there must be one or more nodes with the required information.
 The format depends on which VBE method is used, but the information must be in
@@ -144,9 +140,9 @@ common to all:
 
 Here are some useful files, with their typical paths:
 
-* `/var/local/lib/fwupd/vbe/<method>.dtb` - this file holds the state for each
+* `/var/lib/fwupd/vbe/<method>.dtb` - this file holds the state for each
   VBE method
-* `/var/local/lib/fwupd/vbe/system.dtb` - this file holds the system
+* `/var/lib/fwupd/vbe/system.dtb` - this file holds the system
   information. It overrides the system device tree if any, meaning that the
   system device tree is ignored if this file is preset. For systems that don't
   support device tree (e.g ACPI systems), this file is needed for VBE to work
@@ -157,7 +153,7 @@ VBE stores its state in a file with the same name as the VBE method, with a
 `.dtb` extension. You can used the `fdtdump` utility to check the current state:
 
 ```bash
-fdtdump /var/local/lib/fwupd/vbe/simple.dtb
+fdtdump /var/lib/fwupd/vbe/simple.dtb
 ```
 
 ## Available VBE methods
@@ -195,7 +191,7 @@ Properties for this method are:
    used by fwupd at present but may allow the bootloader to check the fwupd
    state on boot
 
-State is typically stored in /var/local/lib/fwupd/vbe/simple.dtb in device tree
+State is typically stored in /var/lib/fwupd/vbe/simple.dtb in device tree
 format:
 
 ```devicetree
@@ -259,30 +255,13 @@ The following documents may help in understanding VBE:
 
 For development you may find the following useful.
 
-To create a link to the VBE plugin for development:
-
-```bash
-    cd /usr/local/lib/x86_64-linux-gnu
-    ln -s /path/to/fwupd/build/plugins/vbe/ fwupd-plugins-6
-```
-
 To set up the vbe directory:
 
 ```bash
-    mkdir /var/local/lib/fwupd/vbe
-    chmod a+rwx /var/local/lib/fwupd/vbe
+    mkdir /var/lib/fwupd/vbe
+    chmod a+rwx /var/lib/fwupd/vbe
     dtc /path/to/fwupd/plugins/vbe/example/test.dts -o \
-       /var/local/lib/fwupd/vbe/system.dtb
-```
-
-Some things you might need to install:
-
-```bash
-
-   pip3 install meson
-   mkdir build
-   meson build
-   ./contrib/setup
+       /var/lib/fwupd/vbe/system.dtb
 ```
 
 To build the example:
@@ -292,16 +271,6 @@ To build the example:
    cd /path/to/fwupd/plugins/vbe/example
    dd if=/dev/zero of=update.bin bs=1M count=1
    ./build.sh
-```
-
-To install the cab on your development computer:
-
-```bash
-   # Set up the test file
-   dd if=/dev/zero of=/tmp/testfw bs=1M count=3
-
-   sudo build/src/fwupdtool install plugins/vbe/example/Vbe-Board-1.2.4.cab \
-      bb3b05a8-ebef-11ec-be98-d3a15278be95
 ```
 
 To dump out the firmware:
