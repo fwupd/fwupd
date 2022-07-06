@@ -7,7 +7,7 @@ on:
 
 jobs:
   pre-commit:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
         with:
@@ -23,7 +23,7 @@ jobs:
           sed -i "/no-commit-to-branch/,+1d" .pre-commit-config.yaml
           pre-commit run --hook-stage commit --all-files
   abi:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
         with:
@@ -38,7 +38,7 @@ jobs:
         run: ./contrib/ci/check-abi $(git describe --abbrev=0 --tags) $(git rev-parse HEAD)
 
   openbmc:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
       - name: Refresh dependencies
