@@ -741,7 +741,7 @@ fu_kinetic_dp_puma_aux_isp_parse_app_fw(FuKineticDpFirmware *firmware,
 	guint8 cmdb_sig[PUMA_FW_CMDB_SIG_SIZE] = {0};
 	guint8 i, crc = 0;
 	const guint8 *cmdb_buf;
-	guint8 checksum;
+	guint32 checksum;
 
 	if (fw_bin_size < SIZE_512KB) {
 		g_set_error(error,
