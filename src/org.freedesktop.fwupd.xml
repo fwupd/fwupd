@@ -35,6 +35,17 @@
     </property>
 
     <!--***********************************************************-->
+    <property name='HostVendor' type='s' access='read'>
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            The vendor name string for the host.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
+    </property>
+
+    <!--***********************************************************-->
     <property name='HostProduct' type='s' access='read'>
       <doc:doc>
         <doc:description>

@@ -1972,6 +1972,9 @@ fu_daemon_daemon_get_property(GDBusConnection *connection_,
 		return g_variant_new_uint32(fu_context_get_battery_threshold(ctx));
 	}
 
+	if (g_strcmp0(property_name, "HostVendor") == 0)
+		return g_variant_new_string(fu_engine_get_host_vendor(self->engine));
+
 	if (g_strcmp0(property_name, "HostProduct") == 0)
 		return g_variant_new_string(fu_engine_get_host_product(self->engine));
 

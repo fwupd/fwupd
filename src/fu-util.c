@@ -2277,7 +2277,10 @@ fu_util_prompt_warning_composite(FuUtilPrivate *priv,
 		for (guint j = 0; j < rels->len; j++) {
 			FwupdRelease *rel_tmp = g_ptr_array_index(rels, j);
 			if (fwupd_release_has_checksum(rel_tmp, rel_csum)) {
-				const gchar *title = fwupd_client_get_host_product(priv->client);
+				g_autofree gchar *title =
+				    g_strdup_printf("%s %s",
+						    fwupd_client_get_host_product(priv->client),
+						    fwupd_client_get_host_product(priv->client));
 				if (!fu_util_prompt_warning(dev_tmp, rel_tmp, title, error))
 					return FALSE;
 				break;
