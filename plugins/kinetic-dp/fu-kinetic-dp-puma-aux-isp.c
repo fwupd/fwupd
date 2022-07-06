@@ -773,10 +773,14 @@ fu_kinetic_dp_puma_aux_isp_parse_app_fw(FuKineticDpFirmware *firmware,
 	guint8 i, crc = 0;
 	const guint8 *cmdb_buf;
 <<<<<<< HEAD
+<<<<<<< HEAD
 	guint32 checksum;
 =======
 	guint8 checksum;
 >>>>>>> kinetic-dp: Add a plugin to update Kinetic's DisplayPort converter
+=======
+	guint32 checksum;
+>>>>>>> kinetic-dp: Fix a -Wstringop-overflow warning
 
 	if (fw_bin_size < SIZE_512KB) {
 		g_set_error(error,
