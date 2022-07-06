@@ -95,8 +95,12 @@ fu_kinetic_dp_connection_write(FuKineticDpConnection *self,
 >>>>>>> fixup
 			       GError **error)
 {
+<<<<<<< HEAD
 	guint32 bytes_wrote;
 >>>>>>> kinetic-dp: Add a plugin to update Kinetic's DisplayPort converter
+=======
+	gssize bytes_wrote;
+>>>>>>> fixup
 	g_return_val_if_fail(self != NULL, FALSE);
 
 	if (lseek(self->fd, offset, SEEK_SET) != offset) {
