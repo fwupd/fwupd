@@ -783,6 +783,7 @@ LIBFWUPD_1.8.1 {
 
 LIBFWUPD_1.8.2 {
   global:
+    fwupd_client_get_host_vendor;
     fwupd_device_to_json_full;
     fwupd_remote_set_checksum;
     fwupd_remote_set_filename_cache;

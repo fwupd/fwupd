@@ -65,6 +65,7 @@ typedef struct {
 	gchar *daemon_version;
 	gchar *host_bkc;
 	gchar *host_product;
+	gchar *host_vendor;
 	gchar *host_machine_id;
 	gchar *host_security_id;
 	gboolean only_trusted;
@@ -106,6 +107,7 @@ enum {
 	PROP_TAINTED,
 	PROP_SOUP_SESSION, /* compat ABI, do not use! */
 	PROP_HOST_PRODUCT,
+	PROP_HOST_VENDOR,
 	PROP_HOST_MACHINE_ID,
 	PROP_HOST_SECURITY_ID,
 	PROP_HOST_BKC,
@@ -261,6 +263,20 @@ fwupd_client_signal_emit_object(FwupdClient *self, guint signal_id, GObject *pay
 	helper->signal_id = signal_id;
 	helper->payload = g_object_ref(payload);
 	fwupd_client_context_helper(self, helper);
+}
+
+static void
+fwupd_client_set_host_vendor(FwupdClient *self, const gchar *host_vendor)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE(self);
+
+	/* not changed */
+	if (g_strcmp0(priv->host_vendor, host_vendor) == 0)
+		return;
+
+	g_free(priv->host_vendor);
+	priv->host_vendor = g_strdup(host_vendor);
+	fwupd_client_object_notify(self, "host-vendor");
 }
 
 static void
@@ -439,6 +455,12 @@ fwupd_client_properties_changed_cb(GDBusProxy *proxy,
 		g_autoptr(GVariant) val = g_dbus_proxy_get_cached_property(proxy, "HostBkc");
 		if (val != NULL)
 			fwupd_client_set_host_bkc(self, g_variant_get_string(val, NULL));
+	}
+	if (g_variant_dict_contains(dict, "HostVendor")) {
+		g_autoptr(GVariant) val = NULL;
+		val = g_dbus_proxy_get_cached_property(proxy, "HostVendor");
+		if (val != NULL)
+			fwupd_client_set_host_vendor(self, g_variant_get_string(val, NULL));
 	}
 	if (g_variant_dict_contains(dict, "HostProduct")) {
 		g_autoptr(GVariant) val = NULL;
@@ -719,6 +741,7 @@ fwupd_client_connect_get_proxy_cb(GObject *source, GAsyncResult *res, gpointer u
 	g_autoptr(GVariant) val7 = NULL;
 	g_autoptr(GVariant) val8 = NULL;
 	g_autoptr(GVariant) val9 = NULL;
+	g_autoptr(GVariant) val10 = NULL;
 	g_autoptr(GMutexLocker) locker = NULL;
 
 	proxy = g_dbus_proxy_new_finish(res, &error);
@@ -759,6 +782,9 @@ fwupd_client_connect_get_proxy_cb(GObject *source, GAsyncResult *res, gpointer u
 	val5 = g_dbus_proxy_get_cached_property(priv->proxy, "HostProduct");
 	if (val5 != NULL)
 		fwupd_client_set_host_product(self, g_variant_get_string(val5, NULL));
+	val10 = g_dbus_proxy_get_cached_property(priv->proxy, "HostVendor");
+	if (val10 != NULL)
+		fwupd_client_set_host_vendor(self, g_variant_get_string(val10, NULL));
 	val6 = g_dbus_proxy_get_cached_property(priv->proxy, "HostMachineId");
 	if (val6 != NULL)
 		fwupd_client_set_host_machine_id(self, g_variant_get_string(val6, NULL));
@@ -3316,6 +3342,24 @@ fwupd_client_get_host_product(FwupdClient *self)
 }
 
 /**
+ * fwupd_client_get_host_vendor:
+ * @self: a #FwupdClient
+ *
+ * Gets the string that represents the vendor of the host running fwupd
+ *
+ * Returns: a string, or %NULL for unknown.
+ *
+ * Since: 1.8.2
+ **/
+const gchar *
+fwupd_client_get_host_vendor(FwupdClient *self)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_CLIENT(self), NULL);
+	return priv->host_vendor;
+}
+
+/**
  * fwupd_client_get_host_machine_id:
  * @self: a #FwupdClient
  *
@@ -5268,6 +5312,9 @@ fwupd_client_get_property(GObject *object, guint prop_id, GValue *value, GParamS
 	case PROP_HOST_BKC:
 		g_value_set_string(value, priv->host_bkc);
 		break;
+	case PROP_HOST_VENDOR:
+		g_value_set_string(value, priv->host_vendor);
+		break;
 	case PROP_HOST_PRODUCT:
 		g_value_set_string(value, priv->host_product);
 		break;
@@ -5316,6 +5363,9 @@ fwupd_client_set_property(GObject *object, guint prop_id, const GValue *value, G
 		break;
 	case PROP_HOST_BKC:
 		fwupd_client_set_host_bkc(self, g_value_get_string(value));
+		break;
+	case PROP_HOST_VENDOR:
+		fwupd_client_set_host_vendor(self, g_value_get_string(value));
 		break;
 	case PROP_HOST_PRODUCT:
 		fwupd_client_set_host_product(self, g_value_get_string(value));
@@ -5572,6 +5622,20 @@ fwupd_client_class_init(FwupdClientClass *klass)
 	g_object_class_install_property(object_class, PROP_SOUP_SESSION, pspec);
 
 	/**
+	 * FwupdClient:host-vendor:
+	 *
+	 * The host vendor string
+	 *
+	 * Since: 1.8.2
+	 */
+	pspec = g_param_spec_string("host-vendor",
+				    NULL,
+				    NULL,
+				    NULL,
+				    G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
+	g_object_class_install_property(object_class, PROP_HOST_VENDOR, pspec);
+
+	/**
 	 * FwupdClient:host-product:
 	 *
 	 * The host product string
@@ -5687,6 +5751,7 @@ fwupd_client_finalize(GObject *object)
 	g_free(priv->user_agent);
 	g_free(priv->daemon_version);
 	g_free(priv->host_bkc);
+	g_free(priv->host_vendor);
 	g_free(priv->host_product);
 	g_free(priv->host_machine_id);
 	g_free(priv->host_security_id);

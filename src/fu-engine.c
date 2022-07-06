@@ -6046,6 +6046,15 @@ fu_engine_get_config(FuEngine *self)
 }
 
 const gchar *
+fu_engine_get_host_vendor(FuEngine *self)
+{
+	const gchar *result = NULL;
+	g_return_val_if_fail(FU_IS_ENGINE(self), NULL);
+	result = fu_context_get_hwid_value(self->ctx, FU_HWIDS_KEY_MANUFACTURER);
+	return result != NULL ? result : "Unknown Vendor";
+}
+
+const gchar *
 fu_engine_get_host_product(FuEngine *self)
 {
 	const gchar *result = NULL;

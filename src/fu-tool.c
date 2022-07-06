@@ -243,6 +243,8 @@ fu_util_start_engine(FuUtilPrivate *priv,
 
 	/* copy properties from engine to client */
 	g_object_set(priv->client,
+		     "host-vendor",
+		     fu_engine_get_host_vendor(priv->engine),
 		     "host-product",
 		     fu_engine_get_host_product(priv->engine),
 		     "battery-level",
@@ -1534,7 +1536,10 @@ fu_util_update(FuUtilPrivate *priv, gchar **values, GError **error)
 
 		rel = g_ptr_array_index(rels, 0);
 		if (!priv->no_safety_check) {
-			const gchar *title = fu_engine_get_host_product(priv->engine);
+			g_autofree gchar *title =
+			    g_strdup_printf("%s %s",
+					    fu_engine_get_host_vendor(priv->engine),
+					    fu_engine_get_host_product(priv->engine));
 			if (!fu_util_prompt_warning(dev, rel, title, error))
 				return FALSE;
 			if (!fu_util_prompt_warning_fde(dev, error))
