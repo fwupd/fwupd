@@ -17,12 +17,6 @@
 #include "fu-vbe-device.h"
 #include "fu-vbe-simple-device.h"
 
-/* kernel device tree, used for system information */
-#define KERNEL_DT "/sys/firmware/fdt"
-
-/* file to use for system information where the system has no device tree */
-#define SYSTEM_DT "system.dtb"
-
 /* path to the method subnodes in the system info */
 #define NODE_PATH "/chosen/fwupd"
 
@@ -228,37 +222,43 @@ fu_plugin_vbe_process_system(FuPluginData *priv, gchar *fdt, gsize fdt_len, GErr
 	return TRUE;
 }
 
+static gchar *
+fu_plugin_vbe_get_bfname(FuPlugin *plugin)
+{
+	FuPluginData *priv = fu_plugin_get_data(plugin);
+	g_autofree gchar *bfname_local = NULL;
+	g_autofree gchar *sysfsdir = NULL;
+
+	/* look for override first, fall back to system value */
+	bfname_local = g_build_filename(priv->vbe_dir, "system.dtb", NULL);
+	if (g_file_test(bfname_local, G_FILE_TEST_EXISTS))
+		return g_steal_pointer(&bfname_local);
+
+	/* actual hardware value */
+	sysfsdir = fu_path_from_kind(FU_PATH_KIND_SYSFSDIR_FW);
+	return g_build_filename(sysfsdir, "fdt", NULL);
+}
+
 static gboolean
 fu_plugin_vbe_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 {
 	FuPluginData *priv = fu_plugin_get_data(plugin);
-	g_autofree gchar *state_dir = NULL;
+	g_autofree gchar *localstatedir_pkg = NULL;
 	g_autofree gchar *bfname = NULL;
-	g_autoptr(GError) error_local = NULL;
 	gchar *buf = NULL;
 	gsize len;
 
-	fu_progress_set_id(progress, G_STRLOC);
+	/* where we can store the override and also image state */
+	localstatedir_pkg = fu_path_from_kind(FU_PATH_KIND_LOCALSTATEDIR_PKG);
+	priv->vbe_dir = g_build_filename(localstatedir_pkg, "vbe", NULL);
 
-	/* get the VBE directory */
-	state_dir = fu_path_from_kind(FU_PATH_KIND_LOCALSTATEDIR_PKG);
-	priv->vbe_dir = g_build_filename(state_dir, "vbe", NULL);
-	bfname = g_build_filename(priv->vbe_dir, SYSTEM_DT, NULL);
-	if (!g_file_get_contents(bfname, &buf, &len, &error_local)) {
-		/* check if we have a kernel device tree */
-		g_debug("Cannot find system DT '%s': %s", bfname, error_local->message);
-
-		/* free the filename so we can reuse it */
-		g_free(bfname);
-
-		/* read in the system info */
-		bfname = g_build_filename(KERNEL_DT, NULL);
-		if (!g_file_get_contents(bfname, &buf, &len, error)) {
-			g_prefix_error(error, "No kernel device tree '%s': ", bfname);
-			return FALSE;
-		}
+	/* look for override first, fall back to system value */
+	bfname = fu_plugin_vbe_get_bfname(plugin);
+	if (!g_file_get_contents(bfname, &buf, &len, error)) {
+		g_prefix_error(error, "failed to load device tree %s: ", bfname);
+		return FALSE;
 	}
-	g_debug("Processing system DT '%s'", bfname);
+
 	priv->fdt = buf;
 	if (!fu_plugin_vbe_process_system(priv, buf, len, error)) {
 		g_prefix_error(error, "failed to parse: ");
