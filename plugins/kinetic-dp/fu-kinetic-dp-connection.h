@@ -26,11 +26,11 @@ gboolean
 fu_kinetic_dp_connection_read(FuKineticDpConnection *self,
 			      guint32 offset,
 			      guint8 *buf,
-			      guint32 length,
+			      gssize length,
 			      GError **error);
 gboolean
 fu_kinetic_dp_connection_write(FuKineticDpConnection *self,
 			       guint32 offset,
 			       const guint8 *buf,
-			       guint32 length,
+			       gssize length,
 			       GError **error);
