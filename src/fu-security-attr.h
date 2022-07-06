@@ -15,6 +15,10 @@
 gchar *
 fu_security_attr_get_name(FwupdSecurityAttr *attr);
 const gchar *
+fu_security_attr_get_title(FwupdSecurityAttr *attr);
+const gchar *
+fu_security_attr_get_description(FwupdSecurityAttr *attr);
+const gchar *
 fu_security_attr_get_result(FwupdSecurityAttr *attr);
 void
 fu_security_attrs_to_json(FuSecurityAttrs *attrs, JsonBuilder *builder);
