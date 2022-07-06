@@ -45,7 +45,7 @@ gboolean
 fu_kinetic_dp_connection_read(FuKineticDpConnection *self,
 			      guint32 offset,
 			      guint8 *buf,
-			      guint32 length,
+			      gssize length,
 			      GError **error)
 {
 	g_return_val_if_fail(self != NULL, FALSE);
@@ -74,7 +74,7 @@ gboolean
 fu_kinetic_dp_connection_write(FuKineticDpConnection *self,
 			       guint32 offset,
 			       const guint8 *buf,
-			       guint32 length,
+			       gssize length,
 			       GError **error)
 {
 	guint32 bytes_wrote;
