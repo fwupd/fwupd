@@ -45,7 +45,11 @@ gboolean
 fu_kinetic_dp_connection_read(FuKineticDpConnection *self,
 			      guint32 offset,
 			      guint8 *buf,
+<<<<<<< HEAD
 			      gssize length,
+=======
+			      guint32 length,
+>>>>>>> kinetic-dp: Add a plugin to update Kinetic's DisplayPort converter
 			      GError **error)
 {
 	g_return_val_if_fail(self != NULL, FALSE);
@@ -74,10 +78,17 @@ gboolean
 fu_kinetic_dp_connection_write(FuKineticDpConnection *self,
 			       guint32 offset,
 			       const guint8 *buf,
+<<<<<<< HEAD
 			       gssize length,
 			       GError **error)
 {
 	gssize bytes_wrote;
+=======
+			       guint32 length,
+			       GError **error)
+{
+	guint32 bytes_wrote;
+>>>>>>> kinetic-dp: Add a plugin to update Kinetic's DisplayPort converter
 	g_return_val_if_fail(self != NULL, FALSE);
 
 	if (lseek(self->fd, offset, SEEK_SET) != offset) {

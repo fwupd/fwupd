@@ -220,7 +220,26 @@ fu_kinetic_dp_device_rescan(FuDevice *device, GError **error)
 
 	/* detect chip family */
 	self->family = fu_kinetic_dp_chip_id_to_family(dp_dev_info->chip_id);
+<<<<<<< HEAD
 	/* TO DO set max firmware size base upon family if we need it */
+=======
+	switch (self->family) {
+	case FU_KINETIC_DP_FAMILY_JAGUAR:
+		/* TODO: set max firmware size for Jaguar */
+		g_debug("device family is Jaguar");
+		break;
+	case FU_KINETIC_DP_FAMILY_MUSTANG:
+		/* TODO: determine max firmware size for Mustang */
+		g_debug("device family is Mustang");
+		break;
+	case FU_KINETIC_DP_FAMILY_PUMA:
+		/* TODO: determine max firmware size for Puma */
+		g_debug("device family is Puma");
+	default:
+		break;
+	}
+
+>>>>>>> kinetic-dp: Add a plugin to update Kinetic's DisplayPort converter
 	/* add instance ID to generate GUIDs */
 	guid = g_strdup_printf("KT-DP-%s", chip_id);
 	g_debug("device generated instance id is %s", guid);

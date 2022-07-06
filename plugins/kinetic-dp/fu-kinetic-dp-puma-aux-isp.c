@@ -163,21 +163,35 @@ fu_kinetic_dp_puma_aux_isp_enter_code_loading_mode(FuKineticDpConnection *connec
 static gboolean
 fu_kinetic_dp_puma_aux_isp_send_payload(FuKineticDpPumaAuxIspPrivate *priv,
 					FuKineticDpConnection *connection,
+<<<<<<< HEAD
 					const guint8 *buf,
 					const guint32 bufsz,
+=======
+					const guint8 *payload,
+					const guint32 payload_size,
+>>>>>>> kinetic-dp: Add a plugin to update Kinetic's DisplayPort converter
 					FuProgress *progress,
 					guint32 wait_time_ms,
 					GError **error,
 					gboolean ignore_error)
 {
+<<<<<<< HEAD
 	guint8 *remain_payload = (guint8 *)buf;
 	guint32 remain_payload_len = bufsz;
+=======
+	guint8 *remain_payload = (guint8 *)payload;
+	guint32 remain_payload_len = payload_size;
+>>>>>>> kinetic-dp: Add a plugin to update Kinetic's DisplayPort converter
 	guint32 chunk_len;
 	guint32 chunk_remain_len;
 	guint32 chunk_offset;
 	guint8 status;
 	guint32 write_size;
+<<<<<<< HEAD
 	gboolean show_message = FALSE;
+=======
+	gboolean show_message;
+>>>>>>> kinetic-dp: Add a plugin to update Kinetic's DisplayPort converter
 
 	while (remain_payload_len > 0) {
 		chunk_len = (remain_payload_len >= PUMA_DPCD_DATA_SIZE) ? PUMA_DPCD_DATA_SIZE
@@ -196,7 +210,11 @@ fu_kinetic_dp_puma_aux_isp_send_payload(FuKineticDpPumaAuxIspPrivate *priv,
 							    error)) {
 				g_prefix_error(error,
 					       "failed to AUX write at payload 0x%x: ",
+<<<<<<< HEAD
 					       (guint)((remain_payload + chunk_offset) - buf));
+=======
+					       (guint)((remain_payload + chunk_offset) - payload));
+>>>>>>> kinetic-dp: Add a plugin to update Kinetic's DisplayPort converter
 				return FALSE;
 			}
 			/* adjust and write the next 16 bytes */
@@ -539,7 +557,11 @@ fu_kinetic_dp_puma_aux_isp_wait_fw_validate(FuKineticDpConnection *connection, G
 		}
 		if (status == PUMA_FW_UPDATE_DONE) {
 			g_debug("Firmware Update Done");
+<<<<<<< HEAD
 			return TRUE;
+=======
+			break;
+>>>>>>> kinetic-dp: Add a plugin to update Kinetic's DisplayPort converter
 		} else {
 			/* wait interval before check the status again */
 			g_usleep(interval_ms * 1000);
@@ -549,12 +571,25 @@ fu_kinetic_dp_puma_aux_isp_wait_fw_validate(FuKineticDpConnection *connection, G
 				max_time_ms = 0;
 		}
 	}
+<<<<<<< HEAD
 	/* if get here mean it is time out */
 	g_set_error_literal(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
 			    "waiting for PUMA_FW_UPDATE_READY failed.");
 	return FALSE;
+=======
+	/* time out */
+	if (max_time_ms == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "waiting for PUMA_FW_UPDATE_READY failed.");
+		return FALSE;
+	} else {
+		return TRUE;
+	}
+>>>>>>> kinetic-dp: Add a plugin to update Kinetic's DisplayPort converter
 }
 
 static gboolean
@@ -737,7 +772,11 @@ fu_kinetic_dp_puma_aux_isp_parse_app_fw(FuKineticDpFirmware *firmware,
 	guint8 cmdb_sig[PUMA_FW_CMDB_SIG_SIZE] = {0};
 	guint8 i, crc = 0;
 	const guint8 *cmdb_buf;
+<<<<<<< HEAD
 	guint32 checksum;
+=======
+	guint8 checksum;
+>>>>>>> kinetic-dp: Add a plugin to update Kinetic's DisplayPort converter
 
 	if (fw_bin_size < SIZE_512KB) {
 		g_set_error(error,

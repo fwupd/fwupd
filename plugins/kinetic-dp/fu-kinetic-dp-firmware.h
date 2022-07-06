@@ -73,4 +73,8 @@ fu_kinetic_dp_firmware_set_customer_project_id(FuKineticDpFirmware *self,
 guint8
 fu_kinetic_dp_firmware_get_customer_project_id(FuKineticDpFirmware *self);
 guint32
+<<<<<<< HEAD
 fu_kinetic_dp_firmware_get_valid_payload_size(const guint8 *buf, const guint32 bufsz);
+=======
+fu_kinetic_dp_firmware_get_valid_payload_size(const guint8 *payload_data, const guint32 data_size);
+>>>>>>> kinetic-dp: Add a plugin to update Kinetic's DisplayPort converter
