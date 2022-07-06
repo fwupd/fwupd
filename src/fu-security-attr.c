@@ -208,6 +208,315 @@ fu_security_attr_get_name(FwupdSecurityAttr *attr)
 }
 
 const gchar *
+fu_security_attr_get_title(FwupdSecurityAttr *attr)
+{
+	const gchar *appstream_id = fwupd_security_attr_get_appstream_id(attr);
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_SPI_BIOSWE) == 0) {
+		/* TRANSLATORS: Title: firmware refers to the flash chip in the computer */
+		return _("Firmware Write Protection");
+	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_SPI_BLE) == 0) {
+		/* TRANSLATORS: Title: firmware refers to the flash chip in the computer */
+		return _("Firmware Write Protection Lock");
+	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_SPI_SMM_BWP) == 0) {
+		/* TRANSLATORS: Title: SPI refers to the flash chip in the computer */
+		return _("Firmware BIOS Region");
+	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_SPI_DESCRIPTOR) == 0) {
+		/* TRANSLATORS: Title: firmware refers to the flash chip in the computer */
+		return _("Firmware BIOS Descriptor");
+	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_PREBOOT_DMA_PROTECTION) == 0) {
+		/* TRANSLATORS: Title: DMA as in https://en.wikipedia.org/wiki/DMA_attack  */
+		return _("Pre-boot DMA Protection");
+	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_ENABLED) == 0) {
+		/* TRANSLATORS: Title: BootGuard is a trademark from Intel */
+		return _("Intel BootGuard");
+	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_VERIFIED) == 0) {
+		/* TRANSLATORS: Title: BootGuard is a trademark from Intel,
+		 * verified boot refers to the way the boot process is verified */
+		return _("Intel BootGuard Verified Boot");
+	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_ACM) == 0) {
+		/* TRANSLATORS: Title: BootGuard is a trademark from Intel,
+		 * ACM means to verify the integrity of Initial Boot Block */
+		return _("Intel BootGuard ACM Protected");
+	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_POLICY) == 0) {
+		/* TRANSLATORS: Title: BootGuard is a trademark from Intel,
+		 * error policy is what to do on failure */
+		return _("Intel BootGuard Error Policy");
+	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_OTP) == 0) {
+		/* TRANSLATORS: Title: BootGuard is a trademark from Intel */
+		return _("Intel BootGuard Fuse");
+	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_INTEL_CET_ENABLED) == 0) {
+		/* TRANSLATORS: Title: CET = Control-flow Enforcement Technology,
+		 * enabled means supported by the processor */
+		return _("Intel CET Enabled");
+	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_INTEL_CET_ACTIVE) == 0) {
+		/* TRANSLATORS: Title: CET = Control-flow Enforcement Technology,
+		 * active means being used by the OS */
+		return _("Intel CET Active");
+	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_INTEL_SMAP) == 0) {
+		/* TRANSLATORS: Title: SMAP = Supervisor Mode Access Prevention */
+		return _("Intel SMAP");
+	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_ENCRYPTED_RAM) == 0) {
+		/* TRANSLATORS: Title: Memory contents are encrypted, e.g. Intel TME */
+		return _("Encrypted RAM");
+	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_IOMMU) == 0) {
+		/* TRANSLATORS: Title:
+		 * https://en.wikipedia.org/wiki/Input%E2%80%93output_memory_management_unit */
+		return _("IOMMU Protection");
+	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_KERNEL_LOCKDOWN) == 0) {
+		/* TRANSLATORS: Title: lockdown is a security mode of the kernel */
+		return _("Linux Kernel Lockdown");
+	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_KERNEL_TAINTED) == 0) {
+		/* TRANSLATORS: Title: if it's tainted or not */
+		return _("Linux Kernel Verification");
+	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_KERNEL_SWAP) == 0) {
+		/* TRANSLATORS: Title: swap space or swap partition */
+		return _("Linux Swap");
+	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_SUSPEND_TO_RAM) == 0) {
+		/* TRANSLATORS: Title: sleep state */
+		return _("Suspend To RAM");
+	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_SUSPEND_TO_IDLE) == 0) {
+		/* TRANSLATORS: Title: a better sleep state */
+		return _("Suspend To Idle");
+	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_UEFI_PK) == 0) {
+		/* TRANSLATORS: Title: PK is the 'platform key' for the machine */
+		return _("UEFI Platform Key");
+	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_UEFI_SECUREBOOT) == 0) {
+		/* TRANSLATORS: Title: SB is a way of locking down UEFI */
+		return _("UEFI Secure Boot");
+	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_TPM_EMPTY_PCR) == 0) {
+		/* TRANSLATORS: Title: PCRs (Platform Configuration Registers) shouldn't be empty */
+		return _("TPM Platform Configuration");
+	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_TPM_RECONSTRUCTION_PCR0) == 0) {
+		/* TRANSLATORS: Title: the PCR is rebuilt from the TPM event log */
+		return _("TPM Reconstruction");
+	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_TPM_VERSION_20) == 0) {
+		/* TRANSLATORS: Title: TPM = Trusted Platform Module */
+		return _("TPM v2.0");
+	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_MEI_MANUFACTURING_MODE) == 0) {
+		/* TRANSLATORS: Title: MEI = Intel Management Engine */
+		return _("Intel Management Engine Manufacturing Mode");
+	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_MEI_OVERRIDE_STRAP) == 0) {
+		/* TRANSLATORS: Title: MEI = Intel Management Engine, and the "override" is enabled
+		 * with a jumper -- luckily it is probably not accessible to end users on consumer
+		 * boards */
+		return _("Intel Management Engine Override");
+	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_MEI_VERSION) == 0) {
+		/* TRANSLATORS: Title: MEI = Intel Management Engine */
+		return _("Intel Management Engine Version");
+	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_FWUPD_UPDATES) == 0) {
+		/* TRANSLATORS: Title: if firmware updates are available */
+		return _("Firmware Updates");
+	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_FWUPD_ATTESTATION) == 0) {
+		/* TRANSLATORS: Title: if we can verify the firmware checksums */
+		return _("Firmware Attestation");
+	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_FWUPD_PLUGINS) == 0) {
+		/* TRANSLATORS: Title: if the fwupd plugins are all present and correct */
+		return _("Firmware Updater Verification");
+	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_PLATFORM_DEBUG_ENABLED) == 0 ||
+	    g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_PLATFORM_DEBUG_LOCKED) == 0) {
+		/* TRANSLATORS: Title: Allows debugging of parts using proprietary hardware */
+		return _("Platform Debugging");
+	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_SUPPORTED_CPU) == 0) {
+		/* TRANSLATORS: Title: if fwupd supports HSI on this chip */
+		return _("Processor Security Checks");
+	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_AMD_ROLLBACK_PROTECTION) == 0) {
+		/* TRANSLATORS: Title: if firmware enforces rollback protection */
+		return _("AMD Rollback Protection");
+	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_AMD_SPI_REPLAY_PROTECTION) == 0) {
+		/* TRANSLATORS: Title: if hardware enforces control of SPI replays */
+		return _("AMD Firmware Replay Protection");
+	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_AMD_SPI_WRITE_PROTECTION) == 0) {
+		/* TRANSLATORS: Title: if hardware enforces control of SPI writes */
+		return _("AMD Firmware Write Protection");
+	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_PLATFORM_FUSED) == 0) {
+		/* TRANSLATORS: Title: if the part has been fused */
+		return _("Fused Platform");
+	}
+	return NULL;
+}
+
+/* one line describing the attribute */
+const gchar *
+fu_security_attr_get_description(FwupdSecurityAttr *attr)
+{
+	const gchar *appstream_id = fwupd_security_attr_get_appstream_id(attr);
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_SPI_BIOSWE) == 0 &&
+	    g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_SPI_BLE) == 0 &&
+	    g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_SPI_SMM_BWP) == 0 &&
+	    g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_SPI_DESCRIPTOR) == 0 &&
+	    g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_AMD_SPI_WRITE_PROTECTION) == 0) {
+		/* TRANSLATORS: longer description */
+		return _("Firmware Write Protection protects device firmware memory from being "
+			 "accessed and tampered with.");
+	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_PREBOOT_DMA_PROTECTION) == 0) {
+		/* TRANSLATORS: longer description */
+		return _("Pre-boot DMA protection prevents devices from being connected to the "
+			 "computer and accessing system memory.");
+	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_ENABLED) == 0 ||
+	    g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_ACM) == 0 ||
+	    g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_OTP) == 0 ||
+	    g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_VERIFIED) == 0) {
+		/* TRANSLATORS: longer description */
+		return _("Intel BootGuard prevents unauthorized device software from operating "
+			 "when the device is started.");
+	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_POLICY) == 0) {
+		/* TRANSLATORS: longer description */
+		return _(
+		    "Intel BootGuard Error Policy ensures the device does not continue to start if "
+		    "its device software has been tampered with.");
+	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_INTEL_CET_ENABLED) == 0 ||
+	    g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_INTEL_CET_ACTIVE) == 0) {
+		/* TRANSLATORS: longer description */
+		return _("Intel Control-Flow Enforcement Technology detects and prevents certain "
+			 "methods for running malicious software on the device.");
+	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_INTEL_SMAP) == 0) {
+		/* TRANSLATORS: longer description */
+		return _("Intel Supervisor Mode Access Prevention ensures critical parts of "
+			 "device memory are not accessed by less secure programs.");
+	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_ENCRYPTED_RAM) == 0) {
+		/* TRANSLATORS: longer description */
+		return _(
+		    "Encrypted RAM makes it impossible for information that is stored in device "
+		    "memory to be read, if the memory chip is removed and accessed.");
+	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_IOMMU) == 0) {
+		/* TRANSLATORS: longer description */
+		return _("IOMMU Protection prevents connected devices from accessing unauthorized "
+			 "parts of system memory.");
+	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_KERNEL_LOCKDOWN) == 0) {
+		/* TRANSLATORS: longer description */
+		return _("Linux Kernel Lockdown mode prevents administrator (root) accounts from "
+			 "accessing and changing critical parts of system software.");
+	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_KERNEL_TAINTED) == 0) {
+		/* TRANSLATORS: longer description */
+		return _(
+		    "Linux Kernel Verification makes sure that critical system software has "
+		    "not been tampered with. Using device drivers which are not provided with the "
+		    "system can prevent this security feature from working correctly.");
+	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_KERNEL_SWAP) == 0) {
+		/* TRANSLATORS: longer description */
+		return _(
+		    "Linux Kernel Swap temporarily saves information to disk as you work. If the "
+		    "information is not protected, it could be accessed by someone if they "
+		    "obtained the disk.");
+	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_SUSPEND_TO_RAM) == 0 ||
+	    g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_SUSPEND_TO_IDLE) == 0) {
+		/* TRANSLATORS: longer description */
+		return _(
+		    "During system sleep the device’s memory chip could be removed, allowing the "
+		    "information that is saved on it to be accessed. "
+		    "Using Suspend-to-Idle provides more protection than Suspend-to-Disk.");
+	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_UEFI_PK) == 0 ||
+	    g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_UEFI_SECUREBOOT) == 0) {
+		/* TRANSLATORS: longer description */
+		return _("UEFI Secure Boot prevents malicious software from being loaded when the "
+			 "device starts.");
+	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_TPM_EMPTY_PCR) == 0 ||
+	    g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_TPM_RECONSTRUCTION_PCR0) == 0 ||
+	    g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_TPM_VERSION_20) == 0) {
+		/* TRANSLATORS: longer description */
+		return _("TPM (Trusted Platform Module) is a computer chip that detects when some "
+			 "hardware components have been tampered with.");
+	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_MEI_MANUFACTURING_MODE) == 0 ||
+	    g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_PLATFORM_FUSED) == 0) {
+		/* TRANSLATORS: longer description */
+		return _("The device is in a mode that is used during manufacturer assembly where "
+			 "security features are not yet enabled.");
+	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_MEI_OVERRIDE_STRAP) == 0) {
+		/* TRANSLATORS: longer description */
+		return _("Intel Management Engine Override disables checks for device software "
+			 "tampering.");
+	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_MEI_VERSION) == 0) {
+		/* TRANSLATORS: longer description */
+		return _("The Intel Management Engine controls other device components and needs "
+			 "to have a recent version to avoid security issues.");
+	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_FWUPD_UPDATES) == 0) {
+		/* TRANSLATORS: longer description */
+		return _("Device software updates are provided for this device.");
+	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_FWUPD_ATTESTATION) == 0) {
+		/* TRANSLATORS: longer description */
+		return _("Firmware Attestation checks device software using a reference copy, to "
+			 "make sure that it has not been changed.");
+	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_FWUPD_PLUGINS) == 0) {
+		/* TRANSLATORS: longer description */
+		return _(
+		    "Firmware Updater Verification checks that software used for updating has not "
+		    "been tampered with.");
+	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_PLATFORM_DEBUG_ENABLED) == 0 ||
+	    g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_PLATFORM_DEBUG_LOCKED) == 0) {
+		/* TRANSLATORS: longer description */
+		return _("Platform Debugging allows device security features to be disabled. "
+			 "This should only be used by hardware manufacturers.");
+	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_SUPPORTED_CPU) == 0) {
+		/* TRANSLATORS: longer description */
+		return _("Each system should have tests to ensure firmware security.");
+	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_AMD_ROLLBACK_PROTECTION) == 0 ||
+	    g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_AMD_SPI_REPLAY_PROTECTION) == 0) {
+		/* TRANSLATORS: longer description */
+		return _("AMD Rollback Protection prevents device software from being downgraded "
+			 "to an older version that has security problems.");
+	}
+	return NULL;
+}
+
+const gchar *
 fu_security_attr_result_to_string(FwupdSecurityAttrResult result)
 {
 	if (result == FWUPD_SECURITY_ATTR_RESULT_VALID) {
