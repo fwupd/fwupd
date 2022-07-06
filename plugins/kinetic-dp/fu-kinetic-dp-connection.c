@@ -77,7 +77,7 @@ fu_kinetic_dp_connection_write(FuKineticDpConnection *self,
 			       gssize length,
 			       GError **error)
 {
-	guint32 bytes_wrote;
+	gssize bytes_wrote;
 	g_return_val_if_fail(self != NULL, FALSE);
 
 	if (lseek(self->fd, offset, SEEK_SET) != offset) {
