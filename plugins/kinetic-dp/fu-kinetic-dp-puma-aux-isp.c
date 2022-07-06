@@ -188,10 +188,14 @@ fu_kinetic_dp_puma_aux_isp_send_payload(FuKineticDpPumaAuxIspPrivate *priv,
 	guint8 status;
 	guint32 write_size;
 <<<<<<< HEAD
+<<<<<<< HEAD
 	gboolean show_message = FALSE;
 =======
 	gboolean show_message;
 >>>>>>> kinetic-dp: Add a plugin to update Kinetic's DisplayPort converter
+=======
+	gboolean show_message = FALSE;
+>>>>>>> fixup
 
 	while (remain_payload_len > 0) {
 		chunk_len = (remain_payload_len >= PUMA_DPCD_DATA_SIZE) ? PUMA_DPCD_DATA_SIZE
