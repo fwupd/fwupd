@@ -38,6 +38,7 @@ G_DEFINE_TYPE_WITH_PRIVATE(FuIfwiCpdFirmware, fu_ifwi_cpd_firmware, FU_TYPE_FIRM
 #define GET_PRIVATE(o) (fu_ifwi_cpd_firmware_get_instance_private(o))
 
 #define FU_IFWI_CPD_FIRMWARE_HEADER_MARKER 0x44504324
+#define FU_IFWI_CPD_FIRMWARE_ENTRIES_MAX   1024
 
 typedef struct __attribute__((packed)) {
 	guint32 header_marker;
@@ -258,6 +259,15 @@ fu_ifwi_cpd_firmware_parse(FuFirmware *firmware,
 				    G_LITTLE_ENDIAN,
 				    error))
 		return FALSE;
+	if (num_of_entries > FU_IFWI_CPD_FIRMWARE_ENTRIES_MAX) {
+		g_set_error(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_INVALID_DATA,
+			    "too many entries 0x%x, expected <= 0x%x",
+			    num_of_entries,
+			    (guint)FU_IFWI_CPD_FIRMWARE_ENTRIES_MAX);
+		return FALSE;
+	}
 	offset += header_length;
 	for (guint32 i = 0; i < num_of_entries; i++) {
 		gchar name[12] = {0x0};
