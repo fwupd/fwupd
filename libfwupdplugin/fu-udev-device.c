@@ -1534,11 +1534,19 @@ fu_udev_device_ioctl(FuUdevDevice *self,
 					    "permission denied");
 			return FALSE;
 		}
+		if (errno == ENOTTY) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
+					    "permission denied");
+			return FALSE;
+		}
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
-			    "ioctl error: %s",
-			    strerror(errno));
+			    "ioctl error: %s [%i]",
+			    strerror(errno),
+			    errno);
 #else
 		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "unspecified ioctl error");
 #endif
