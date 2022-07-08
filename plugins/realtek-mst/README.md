@@ -29,11 +29,9 @@ This plugin supports the following protocol ID:
 
 ## GUID Generation
 
-Devices use custom DeviceInstanceId values derived from device names
-provided by system firmware and read from sysfs, like:
+Devices use an extra instance ID derived from SMBIOS, e.g.
 
-* REALTEK-MST\NAME_10EC2142:00
-* REALTEK-MST\NAME_10EC2142:00&FAMILY_Google_Hatch
+* `I2C\NAME_10EC2142:00&FAMILY_Google_Hatch`
 
 ## Quirk Use
 
