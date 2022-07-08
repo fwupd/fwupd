@@ -26,11 +26,9 @@ This plugin supports the following protocol ID:
 
 ## GUID Generation
 
-The plugin uses a custom DeviceInstanceId value derived from the device name
-provided by system firmware and read from sysfs, such as:
+Devices use an extra instance ID derived from SMBIOS, e.g.
 
-* `PARADE-LSPCON\NAME_1AF80175:00`
-* `PARADE-LSPCON\NAME_1AF80175:00&FAMILY_Google_Hatch`
+* `I2C\NAME_1AF80175:00:00&FAMILY_Google_Hatch`
 
 ## Quirk Use
 
