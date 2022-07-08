@@ -385,32 +385,19 @@ fu_realtek_mst_device_probe(FuDevice *device, GError **error)
 {
 	FuRealtekMstDevice *self = FU_REALTEK_MST_DEVICE(device);
 	FuContext *context = fu_device_get_context(device);
-	const gchar *quirk_name = NULL;
 
-	/* set custom instance ID and load matching quirks */
-	fu_device_add_instance_str(
-	    device,
-	    "NAME",
-	    fu_udev_device_get_sysfs_attr(FU_UDEV_DEVICE(device), "name", NULL));
-	if (!fu_device_build_instance_id(device, error, "REALTEK-MST", "NAME", NULL))
+	/* FuI2cDevice->probe */
+	if (!FU_DEVICE_CLASS(fu_realtek_mst_device_parent_class)->probe(device, error))
 		return FALSE;
 
+	/* add custom instance ID and load matching quirks */
 	fu_device_add_instance_str(device,
 				   "FAMILY",
 				   fu_context_get_hwid_value(context, FU_HWIDS_KEY_FAMILY));
-	fu_device_build_instance_id_quirk(device, NULL, "REALTEK-MST", "NAME", "FAMILY", NULL);
+	if (!fu_device_build_instance_id_quirk(device, error, "I2C", "NAME", "FAMILY", NULL))
+		return FALSE;
 
 	/* having loaded quirks, check this device is supported */
-	quirk_name = fu_device_get_name(device);
-	if (g_strcmp0(quirk_name, "RTD2142") != 0 && g_strcmp0(quirk_name, "RTD2141B") != 0) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "device name %s is not supported",
-			    quirk_name);
-		return FALSE;
-	}
-
 	if (self->dp_aux_dev_name != NULL) {
 		if (!fu_realtek_mst_device_use_aux_dev(self, error))
 			return FALSE;
@@ -427,10 +414,6 @@ fu_realtek_mst_device_probe(FuDevice *device, GError **error)
 	}
 
 	/* locate its sibling i2c device and use that instead */
-
-	/* FuI2cDevice */
-	if (!FU_DEVICE_CLASS(fu_realtek_mst_device_parent_class)->probe(device, error))
-		return FALSE;
 
 	/* success */
 	return TRUE;
