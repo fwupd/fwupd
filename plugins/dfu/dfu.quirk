@@ -99,15 +99,19 @@ Flags = no-pid-change,ignore-upload,attach-extra-reset
 [USB\VID_03EB&PID_2FF7]
 Plugin = dfu
 Flags = use-any-interface,legacy-protocol,force-dfu-mode
+DfuForceVersion = ff01
 [USB\VID_03EB&PID_2FF9]
 Plugin = dfu
 Flags = use-any-interface,legacy-protocol,force-dfu-mode
+DfuForceVersion = ff01
 [USB\VID_03EB&PID_2FFA]
 Plugin = dfu
 Flags = use-any-interface,legacy-protocol,force-dfu-mode
+DfuForceVersion = ff01
 [USB\VID_03EB&PID_2FFB]
 Plugin = dfu
 Flags = use-any-interface,legacy-protocol,force-dfu-mode
+DfuForceVersion = ff01
 
 # Atmel ATMEGA Bootloader
 [USB\VID_03EB&PID_2FEE]
@@ -133,16 +137,12 @@ Flags = use-any-interface,legacy-protocol,force-dfu-mode
 [USB\VID_03EB&PID_2FE2]
 Plugin = dfu
 Flags = use-any-interface,force-dfu-mode
+DfuForceVersion = ff01
 
 # Leaflabs Maple3
 [USB\VID_1EAF&PID_0003&REV_0200]
 Plugin = dfu
 DfuForceVersion = 0110
-
-# Atmel FLIP Bootloader
-[USB\VID_03EB]
-Plugin = dfu
-DfuForceVersion = ff01
 
 # AT32UC3B1256	[BLDR][USER]	USER@0x2000, BLDR+USER=0x40000
 [DFU_AVR\CID_0x58200203]
