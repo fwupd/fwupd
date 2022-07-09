@@ -284,13 +284,13 @@ fu_kinetic_dp_firmware_get_customer_project_id(FuKineticDpFirmware *self)
 }
 
 guint32
-fu_kinetic_dp_firmware_get_valid_payload_size(const guint8 *payload_data, const guint32 data_size)
+fu_kinetic_dp_firmware_get_valid_payload_size(const guint8 *buf, const guint32 bufsz)
 {
 	guint32 i = 0;
-	payload_data += data_size - 1; /* start searching from the end of payload */
-	while ((*(payload_data - i) == 0xFF) && (i < data_size))
+	buf += bufsz - 1; /* start searching from the end of payload */
+	while ((*(buf - i) == 0xFF) && (i < bufsz))
 		i++;
-	return (data_size - i);
+	return (bufsz - i);
 }
 
 static gboolean
@@ -322,16 +322,22 @@ fu_kinetic_dp_firmware_parse(FuFirmware *self,
 	    g_bytes_get_size(fw_bytes) - HEADER_LEN_ISP_DRV_SIZE - priv->isp_drv_size;
 
 	/* add ISP driver as a new image into firmware */
+	// isp_drv_payload = g_bytes_new_from_bytes(fw_bytes, HEADER_LEN_ISP_DRV_SIZE,
+	// priv->isp_drv_size);
 	isp_drv_payload =
-	    g_bytes_new_from_bytes(fw_bytes, HEADER_LEN_ISP_DRV_SIZE, priv->isp_drv_size);
+	    fu_bytes_new_offset(fw_bytes, HEADER_LEN_ISP_DRV_SIZE, priv->isp_drv_size, error);
 	isp_drv_img = fu_firmware_new_from_bytes(isp_drv_payload);
 	fu_firmware_set_idx(isp_drv_img, FU_KT_FW_IMG_IDX_ISP_DRV);
 	fu_firmware_add_image(self, isp_drv_img);
 
 	/* add App FW as a new image into firmware */
-	app_fw_payload = g_bytes_new_from_bytes(fw_bytes,
-						HEADER_LEN_ISP_DRV_SIZE + priv->isp_drv_size,
-						app_fw_payload_size);
+	// app_fw_payload = g_bytes_new_from_bytes(fw_bytes,
+	//					HEADER_LEN_ISP_DRV_SIZE + priv->isp_drv_size,
+	//					app_fw_payload_size);
+	app_fw_payload = fu_bytes_new_offset(fw_bytes,
+					     HEADER_LEN_ISP_DRV_SIZE + priv->isp_drv_size,
+					     app_fw_payload_size,
+					     error);
 
 	/* figure out which chip App FW it is for */
 	buf = g_bytes_get_data(app_fw_payload, &bufsz);
