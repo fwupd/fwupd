@@ -475,7 +475,10 @@ fu_fastboot_device_write_motorola_part(FuDevice *device,
 		struct {
 			GChecksumType kind;
 			const gchar *str;
-		} csum_kinds[] = {{G_CHECKSUM_MD5, "MD5"}, {G_CHECKSUM_SHA1, "SHA1"}, {0, NULL}};
+		} csum_kinds[] = {{G_CHECKSUM_MD5, "MD5"},
+				  {G_CHECKSUM_SHA1, "SHA1"},
+				  {G_CHECKSUM_SHA256, "SHA256"},
+				  {0, NULL}};
 
 		/* check required args */
 		if (partition == NULL || filename == NULL) {
