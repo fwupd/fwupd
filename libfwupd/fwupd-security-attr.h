@@ -137,6 +137,14 @@ fwupd_security_attr_get_name(FwupdSecurityAttr *self);
 void
 fwupd_security_attr_set_name(FwupdSecurityAttr *self, const gchar *name);
 const gchar *
+fwupd_security_attr_get_title(FwupdSecurityAttr *self);
+void
+fwupd_security_attr_set_title(FwupdSecurityAttr *self, const gchar *title);
+const gchar *
+fwupd_security_attr_get_description(FwupdSecurityAttr *self);
+void
+fwupd_security_attr_set_description(FwupdSecurityAttr *self, const gchar *description);
+const gchar *
 fwupd_security_attr_get_plugin(FwupdSecurityAttr *self);
 void
 fwupd_security_attr_set_plugin(FwupdSecurityAttr *self, const gchar *plugin);

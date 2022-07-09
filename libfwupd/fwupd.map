@@ -787,5 +787,9 @@ LIBFWUPD_1.8.2 {
     fwupd_device_to_json_full;
     fwupd_remote_set_checksum;
     fwupd_remote_set_filename_cache;
+    fwupd_security_attr_get_description;
+    fwupd_security_attr_get_title;
+    fwupd_security_attr_set_description;
+    fwupd_security_attr_set_title;
   local: *;
 } LIBFWUPD_1.8.1;

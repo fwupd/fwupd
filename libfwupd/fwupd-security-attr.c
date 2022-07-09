@@ -29,6 +29,8 @@ typedef struct {
 	GPtrArray *guids;
 	GHashTable *metadata; /* (nullable) */
 	gchar *name;
+	gchar *title;
+	gchar *description;
 	gchar *plugin;
 	gchar *url;
 	guint64 created;
@@ -446,6 +448,52 @@ fwupd_security_attr_set_name(FwupdSecurityAttr *self, const gchar *name)
 }
 
 /**
+ * fwupd_security_attr_set_title:
+ * @self: a #FwupdSecurityAttr
+ * @title: (nullable): the attribute title
+ *
+ * Sets the attribute title.
+ *
+ * Since: 1.8.2
+ **/
+void
+fwupd_security_attr_set_title(FwupdSecurityAttr *self, const gchar *title)
+{
+	FwupdSecurityAttrPrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FWUPD_IS_SECURITY_ATTR(self));
+
+	/* not changed */
+	if (g_strcmp0(priv->title, title) == 0)
+		return;
+
+	g_free(priv->title);
+	priv->title = g_strdup(title);
+}
+
+/**
+ * fwupd_security_attr_set_description:
+ * @self: a #FwupdSecurityAttr
+ * @description: (nullable): the attribute description
+ *
+ * Sets the attribute description.
+ *
+ * Since: 1.8.2
+ **/
+void
+fwupd_security_attr_set_description(FwupdSecurityAttr *self, const gchar *description)
+{
+	FwupdSecurityAttrPrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FWUPD_IS_SECURITY_ATTR(self));
+
+	/* not changed */
+	if (g_strcmp0(priv->description, description) == 0)
+		return;
+
+	g_free(priv->description);
+	priv->description = g_strdup(description);
+}
+
+/**
  * fwupd_security_attr_set_plugin:
  * @self: a #FwupdSecurityAttr
  * @plugin: (nullable): the plugin name
@@ -541,6 +589,52 @@ fwupd_security_attr_get_name(FwupdSecurityAttr *self)
 	FwupdSecurityAttrPrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FWUPD_IS_SECURITY_ATTR(self), NULL);
 	return priv->name;
+}
+
+/**
+ * fwupd_security_attr_get_title:
+ * @self: a #FwupdSecurityAttr
+ *
+ * Gets the attribute title, which is typically a two word title.
+ *
+ * The fwupd client program may be able to get translations for this value using a method call
+ * like `dgettext("fwupd",str)`.
+ *
+ * Returns: the attribute title, or %NULL if unset
+ *
+ * Since: 1.8.2
+ **/
+const gchar *
+fwupd_security_attr_get_title(FwupdSecurityAttr *self)
+{
+	FwupdSecurityAttrPrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_SECURITY_ATTR(self), NULL);
+	return priv->title;
+}
+
+/**
+ * fwupd_security_attr_get_description:
+ * @self: a #FwupdSecurityAttr
+ *
+ * Gets the attribute description which is a few lines of prose that normal users will understand.
+ *
+ * The fwupd client program may be able to get translations for this value using a method call
+ * like `dgettext("fwupd",str)`.
+ *
+ * NOTE: The returned string may contain placeholders such as `$HostVendor$` or `$HostProduct$`
+ * and these should be replaced with the values from [method@FwupdClient.get_host_vendor] and
+ * [method@FwupdClient.get_host_product].
+ *
+ * Returns: the attribute description, or %NULL if unset
+ *
+ * Since: 1.8.2
+ **/
+const gchar *
+fwupd_security_attr_get_description(FwupdSecurityAttr *self)
+{
+	FwupdSecurityAttrPrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_SECURITY_ATTR(self), NULL);
+	return priv->description;
 }
 
 /**
@@ -777,6 +871,18 @@ fwupd_security_attr_to_variant(FwupdSecurityAttr *self)
 				      FWUPD_RESULT_KEY_NAME,
 				      g_variant_new_string(priv->name));
 	}
+	if (priv->title != NULL) {
+		g_variant_builder_add(&builder,
+				      "{sv}",
+				      FWUPD_RESULT_KEY_SUMMARY,
+				      g_variant_new_string(priv->title));
+	}
+	if (priv->description != NULL) {
+		g_variant_builder_add(&builder,
+				      "{sv}",
+				      FWUPD_RESULT_KEY_DESCRIPTION,
+				      g_variant_new_string(priv->description));
+	}
 	if (priv->plugin != NULL) {
 		g_variant_builder_add(&builder,
 				      "{sv}",
@@ -905,6 +1011,14 @@ fwupd_security_attr_from_key_value(FwupdSecurityAttr *self, const gchar *key, GV
 		fwupd_security_attr_set_name(self, g_variant_get_string(value, NULL));
 		return;
 	}
+	if (g_strcmp0(key, FWUPD_RESULT_KEY_SUMMARY) == 0) {
+		fwupd_security_attr_set_title(self, g_variant_get_string(value, NULL));
+		return;
+	}
+	if (g_strcmp0(key, FWUPD_RESULT_KEY_DESCRIPTION) == 0) {
+		fwupd_security_attr_set_description(self, g_variant_get_string(value, NULL));
+		return;
+	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_PLUGIN) == 0) {
 		fwupd_security_attr_set_plugin(self, g_variant_get_string(value, NULL));
 		return;
@@ -1028,6 +1142,12 @@ fwupd_security_attr_from_json(FwupdSecurityAttr *self, JsonNode *json_node, GErr
 	fwupd_security_attr_set_name(
 	    self,
 	    json_object_get_string_member_with_default(obj, FWUPD_RESULT_KEY_NAME, NULL));
+	fwupd_security_attr_set_title(
+	    self,
+	    json_object_get_string_member_with_default(obj, FWUPD_RESULT_KEY_SUMMARY, NULL));
+	fwupd_security_attr_set_description(
+	    self,
+	    json_object_get_string_member_with_default(obj, FWUPD_RESULT_KEY_DESCRIPTION, NULL));
 	fwupd_security_attr_set_plugin(
 	    self,
 	    json_object_get_string_member_with_default(obj, FWUPD_RESULT_KEY_PLUGIN, NULL));
@@ -1114,6 +1234,8 @@ fwupd_security_attr_to_json(FwupdSecurityAttr *self, JsonBuilder *builder)
 				     FWUPD_RESULT_KEY_HSI_RESULT_FALLBACK,
 				     fwupd_security_attr_result_to_string(priv->result_fallback));
 	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_NAME, priv->name);
+	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_SUMMARY, priv->title);
+	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_DESCRIPTION, priv->description);
 	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_PLUGIN, priv->plugin);
 	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_URI, priv->url);
 	if (priv->flags != FWUPD_SECURITY_ATTR_FLAG_NONE) {
@@ -1194,6 +1316,8 @@ fwupd_security_attr_to_string(FwupdSecurityAttr *self)
 	if (priv->flags != FWUPD_SECURITY_ATTR_FLAG_NONE)
 		fwupd_pad_kv_tfl(str, FWUPD_RESULT_KEY_FLAGS, priv->flags);
 	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_NAME, priv->name);
+	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_SUMMARY, priv->title);
+	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_DESCRIPTION, priv->description);
 	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_PLUGIN, priv->plugin);
 	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_URI, priv->url);
 	for (guint i = 0; i < priv->obsoletes->len; i++) {
@@ -1242,6 +1366,8 @@ fwupd_security_attr_finalize(GObject *object)
 		g_hash_table_unref(priv->metadata);
 	g_free(priv->appstream_id);
 	g_free(priv->name);
+	g_free(priv->title);
+	g_free(priv->description);
 	g_free(priv->plugin);
 	g_free(priv->url);
 	g_ptr_array_unref(priv->obsoletes);
@@ -1348,6 +1474,8 @@ fwupd_security_attr_copy(FwupdSecurityAttr *self)
 
 	fwupd_security_attr_set_appstream_id(new, priv->appstream_id);
 	fwupd_security_attr_set_name(new, priv->name);
+	fwupd_security_attr_set_title(new, priv->title);
+	fwupd_security_attr_set_description(new, priv->description);
 	fwupd_security_attr_set_plugin(new, priv->plugin);
 	fwupd_security_attr_set_url(new, priv->url);
 	fwupd_security_attr_set_level(new, priv->level);
