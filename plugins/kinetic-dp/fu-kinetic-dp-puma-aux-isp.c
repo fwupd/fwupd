@@ -164,17 +164,23 @@ static gboolean
 fu_kinetic_dp_puma_aux_isp_send_payload(FuKineticDpPumaAuxIspPrivate *priv,
 					FuKineticDpConnection *connection,
 <<<<<<< HEAD
+<<<<<<< HEAD
 					const guint8 *buf,
 					const guint32 bufsz,
 =======
 					const guint8 *payload,
 					const guint32 payload_size,
 >>>>>>> kinetic-dp: Add a plugin to update Kinetic's DisplayPort converter
+=======
+					const guint8 *buf,
+					const guint32 bufsz,
+>>>>>>> fix minor issues found in review
 					FuProgress *progress,
 					guint32 wait_time_ms,
 					GError **error,
 					gboolean ignore_error)
 {
+<<<<<<< HEAD
 <<<<<<< HEAD
 	guint8 *remain_payload = (guint8 *)buf;
 	guint32 remain_payload_len = bufsz;
@@ -182,6 +188,10 @@ fu_kinetic_dp_puma_aux_isp_send_payload(FuKineticDpPumaAuxIspPrivate *priv,
 	guint8 *remain_payload = (guint8 *)payload;
 	guint32 remain_payload_len = payload_size;
 >>>>>>> kinetic-dp: Add a plugin to update Kinetic's DisplayPort converter
+=======
+	guint8 *remain_payload = (guint8 *)buf;
+	guint32 remain_payload_len = bufsz;
+>>>>>>> fix minor issues found in review
 	guint32 chunk_len;
 	guint32 chunk_remain_len;
 	guint32 chunk_offset;
@@ -215,10 +225,14 @@ fu_kinetic_dp_puma_aux_isp_send_payload(FuKineticDpPumaAuxIspPrivate *priv,
 				g_prefix_error(error,
 					       "failed to AUX write at payload 0x%x: ",
 <<<<<<< HEAD
+<<<<<<< HEAD
 					       (guint)((remain_payload + chunk_offset) - buf));
 =======
 					       (guint)((remain_payload + chunk_offset) - payload));
 >>>>>>> kinetic-dp: Add a plugin to update Kinetic's DisplayPort converter
+=======
+					       (guint)((remain_payload + chunk_offset) - buf));
+>>>>>>> fix minor issues found in review
 				return FALSE;
 			}
 			/* adjust and write the next 16 bytes */
@@ -562,10 +576,14 @@ fu_kinetic_dp_puma_aux_isp_wait_fw_validate(FuKineticDpConnection *connection, G
 		if (status == PUMA_FW_UPDATE_DONE) {
 			g_debug("Firmware Update Done");
 <<<<<<< HEAD
+<<<<<<< HEAD
 			return TRUE;
 =======
 			break;
 >>>>>>> kinetic-dp: Add a plugin to update Kinetic's DisplayPort converter
+=======
+			return TRUE;
+>>>>>>> fix minor issues found in review
 		} else {
 			/* wait interval before check the status again */
 			g_usleep(interval_ms * 1000);
@@ -576,12 +594,16 @@ fu_kinetic_dp_puma_aux_isp_wait_fw_validate(FuKineticDpConnection *connection, G
 		}
 	}
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> fix minor issues found in review
 	/* if get here mean it is time out */
 	g_set_error_literal(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
 			    "waiting for PUMA_FW_UPDATE_READY failed.");
 	return FALSE;
+<<<<<<< HEAD
 =======
 	/* time out */
 	if (max_time_ms == 0) {
@@ -594,6 +616,8 @@ fu_kinetic_dp_puma_aux_isp_wait_fw_validate(FuKineticDpConnection *connection, G
 		return TRUE;
 	}
 >>>>>>> kinetic-dp: Add a plugin to update Kinetic's DisplayPort converter
+=======
+>>>>>>> fix minor issues found in review
 }
 
 static gboolean
