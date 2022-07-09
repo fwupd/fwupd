@@ -429,14 +429,20 @@ static void
 fwupd_build_history_report_json_device(JsonBuilder *builder, FwupdDevice *dev)
 {
 	FwupdRelease *rel = fwupd_device_get_release_default(dev);
+	GChecksumType checksum_types[] = {G_CHECKSUM_SHA256, G_CHECKSUM_SHA1, 0};
 	GPtrArray *checksums;
 	GPtrArray *guids;
 
 	/* identify the firmware used */
-	json_builder_set_member_name(builder, "Checksum");
 	checksums = fwupd_release_get_checksums(rel);
-	json_builder_add_string_value(builder,
-				      fwupd_checksum_get_by_kind(checksums, G_CHECKSUM_SHA1));
+	for (guint i = 0; checksum_types[i] != 0; i++) {
+		const gchar *checksum = fwupd_checksum_get_by_kind(checksums, checksum_types[i]);
+		if (checksum != NULL) {
+			json_builder_set_member_name(builder, "Checksum");
+			json_builder_add_string_value(builder, checksum);
+			break;
+		}
+	}
 
 	/* identify the firmware written */
 	checksums = fwupd_device_get_checksums(dev);
