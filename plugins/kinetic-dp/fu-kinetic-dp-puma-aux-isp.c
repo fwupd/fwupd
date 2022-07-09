@@ -163,15 +163,15 @@ fu_kinetic_dp_puma_aux_isp_enter_code_loading_mode(FuKineticDpConnection *connec
 static gboolean
 fu_kinetic_dp_puma_aux_isp_send_payload(FuKineticDpPumaAuxIspPrivate *priv,
 					FuKineticDpConnection *connection,
-					const guint8 *payload,
-					const guint32 payload_size,
+					const guint8 *buf,
+					const guint32 bufsz,
 					FuProgress *progress,
 					guint32 wait_time_ms,
 					GError **error,
 					gboolean ignore_error)
 {
-	guint8 *remain_payload = (guint8 *)payload;
-	guint32 remain_payload_len = payload_size;
+	guint8 *remain_payload = (guint8 *)buf;
+	guint32 remain_payload_len = bufsz;
 	guint32 chunk_len;
 	guint32 chunk_remain_len;
 	guint32 chunk_offset;
@@ -196,7 +196,7 @@ fu_kinetic_dp_puma_aux_isp_send_payload(FuKineticDpPumaAuxIspPrivate *priv,
 							    error)) {
 				g_prefix_error(error,
 					       "failed to AUX write at payload 0x%x: ",
-					       (guint)((remain_payload + chunk_offset) - payload));
+					       (guint)((remain_payload + chunk_offset) - buf));
 				return FALSE;
 			}
 			/* adjust and write the next 16 bytes */
@@ -539,7 +539,7 @@ fu_kinetic_dp_puma_aux_isp_wait_fw_validate(FuKineticDpConnection *connection, G
 		}
 		if (status == PUMA_FW_UPDATE_DONE) {
 			g_debug("Firmware Update Done");
-			break;
+			return TRUE;
 		} else {
 			/* wait interval before check the status again */
 			g_usleep(interval_ms * 1000);
@@ -549,16 +549,12 @@ fu_kinetic_dp_puma_aux_isp_wait_fw_validate(FuKineticDpConnection *connection, G
 				max_time_ms = 0;
 		}
 	}
-	/* time out */
-	if (max_time_ms == 0) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INTERNAL,
-				    "waiting for PUMA_FW_UPDATE_READY failed.");
-		return FALSE;
-	} else {
-		return TRUE;
-	}
+	/* if get here mean it is time out */
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "waiting for PUMA_FW_UPDATE_READY failed.");
+	return FALSE;
 }
 
 static gboolean
