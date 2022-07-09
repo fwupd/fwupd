@@ -356,7 +356,7 @@ fu_quirks_add_quirks_for_resources(FuQuirks *self,
 	blob_self = fu_bytes_get_contents("/proc/self/exe", error);
 	if (blob_self == NULL)
 		return FALSE;
-	hash_self = g_compute_checksum_for_bytes(G_CHECKSUM_SHA1, blob_self);
+	hash_self = g_compute_checksum_for_bytes(G_CHECKSUM_SHA256, blob_self);
 	xb_builder_append_guid(builder, hash_self);
 
 	/* success */
