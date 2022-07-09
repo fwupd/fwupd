@@ -4357,7 +4357,7 @@ fu_engine_get_details_for_bytes(FuEngine *self,
 				GError **error)
 {
 	const gchar *remote_id;
-	g_autofree gchar *csum = NULL;
+	GChecksumType checksum_types[] = {G_CHECKSUM_SHA256, G_CHECKSUM_SHA1, 0};
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GPtrArray) components = NULL;
 	g_autoptr(GPtrArray) details = NULL;
@@ -4389,8 +4389,12 @@ fu_engine_get_details_for_bytes(FuEngine *self,
 		return NULL;
 
 	/* does this exist in any enabled remote */
-	csum = g_compute_checksum_for_bytes(G_CHECKSUM_SHA1, blob);
-	remote_id = fu_engine_get_remote_id_for_checksum(self, csum);
+	for (guint i = 0; checksum_types[i] != 0; i++) {
+		g_autofree gchar *csum = g_compute_checksum_for_bytes(checksum_types[i], blob);
+		remote_id = fu_engine_get_remote_id_for_checksum(self, csum);
+		if (remote_id != NULL)
+			break;
+	}
 
 	/* create results with all the metadata in */
 	details = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
