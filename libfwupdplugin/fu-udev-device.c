@@ -86,10 +86,10 @@ fu_udev_device_emit_changed(FuUdevDevice *self)
 	g_signal_emit(self, signals[SIGNAL_CHANGED], 0);
 }
 
+#ifdef HAVE_GUDEV
 static guint16
 fu_udev_device_get_sysfs_attr_as_uint16(GUdevDevice *udev_device, const gchar *name)
 {
-#ifdef HAVE_GUDEV
 	const gchar *tmp;
 	guint64 tmp64 = 0;
 	g_autoptr(GError) error_local = NULL;
@@ -102,15 +102,11 @@ fu_udev_device_get_sysfs_attr_as_uint16(GUdevDevice *udev_device, const gchar *n
 		return 0x0;
 	}
 	return tmp64;
-#else
-	return 0x0;
-#endif
 }
 
 static guint8
 fu_udev_device_get_sysfs_attr_as_uint8(GUdevDevice *udev_device, const gchar *name)
 {
-#ifdef HAVE_GUDEV
 	const gchar *tmp;
 	guint64 tmp64 = 0;
 	g_autoptr(GError) error_local = NULL;
@@ -126,12 +122,8 @@ fu_udev_device_get_sysfs_attr_as_uint8(GUdevDevice *udev_device, const gchar *na
 		return 0x0;
 	}
 	return tmp64;
-#else
-	return 0x0;
-#endif
 }
 
-#ifdef HAVE_GUDEV
 static void
 fu_udev_device_to_string_raw(GUdevDevice *udev_device, guint idt, GString *str)
 {
