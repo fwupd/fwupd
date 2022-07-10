@@ -303,6 +303,7 @@ fu_uefi_bootmgr_bootnext(FuDevice *device,
 			if (fu_device_has_private_flag(
 				device,
 				FU_UEFI_DEVICE_FLAG_FALLBACK_TO_REMOVABLE_PATH)) {
+				g_free(shim_app);
 				shim_app =
 				    fu_uefi_get_fallback_app_path(device, esp_path, "boot", error);
 				if (shim_app == NULL)
