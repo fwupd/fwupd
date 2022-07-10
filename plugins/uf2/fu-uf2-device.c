@@ -66,7 +66,7 @@ fu_uf2_device_probe_current_fw(FuDevice *device, GBytes *fw, GError **error)
 					   "FAMILY",
 					   (guint32)fu_firmware_get_idx(firmware));
 	}
-	fu_device_build_instance_id_quirk(device, NULL, "UF2", "FAMILY", NULL);
+	(void)fu_device_build_instance_id_quirk(device, NULL, "UF2", "FAMILY", NULL);
 
 	/* add device checksum */
 	fw_raw = fu_firmware_get_bytes(firmware, error);
