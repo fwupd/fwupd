@@ -508,6 +508,8 @@ fu_corsair_device_finalize(GObject *object)
 
 	g_free(self->subdevice_id);
 	g_object_unref(self->bp);
+
+	G_OBJECT_CLASS(fu_corsair_device_parent_class)->finalize(object);
 }
 
 static void
