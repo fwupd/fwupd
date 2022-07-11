@@ -40,7 +40,6 @@ fu_corsair_device_probe(FuDevice *device, GError **error)
 	GUsbEndpoint *ep2 = NULL;
 	g_autoptr(GPtrArray) ifaces = NULL;
 	g_autoptr(GPtrArray) endpoints = NULL;
-	g_autoptr(FuCorsairBp) bp = NULL;
 	guint16 cmd_write_size;
 	guint16 cmd_read_size;
 	guint8 epin;
