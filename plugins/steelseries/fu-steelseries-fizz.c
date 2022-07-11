@@ -674,7 +674,6 @@ fu_steelseries_fizz_setup(FuDevice *device, GError **error)
 	guint32 stored_crc;
 	guint8 fs = STEELSERIES_FIZZ_FILESYSTEM_MOUSE;
 	guint8 id = STEELSERIES_FIZZ_MOUSE_FILESYSTEM_BACKUP_APP_ID;
-	g_autoptr(GError) error_local = NULL;
 	g_autofree gchar *version = NULL;
 
 	/* in bootloader mode */
