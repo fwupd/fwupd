@@ -270,10 +270,8 @@ fwupd wrapper for Qubes OS
 %endif
 %if 0%{?have_dell}
     -Dplugin_dell=enabled \
-    -Dplugin_synaptics_mst=enabled \
 %else
     -Dplugin_dell=disabled \
-    -Dplugin_synaptics_mst=disabled \
 %endif
 %if 0%{?have_modem_manager}
     -Dplugin_modem_manager=enabled \
