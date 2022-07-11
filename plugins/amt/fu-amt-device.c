@@ -275,7 +275,6 @@ fu_amt_device_setup(FuDevice *device, GError **error)
 	FuAmtDevice *self = FU_AMT_DEVICE(device);
 	guint8 state;
 	struct amt_code_versions ver;
-	g_autofree gchar *guid_buf = NULL;
 	g_autofree struct amt_host_if_resp_header *response = NULL;
 	g_autoptr(GString) version_bl = g_string_new(NULL);
 	g_autoptr(GString) version_fw = g_string_new(NULL);
