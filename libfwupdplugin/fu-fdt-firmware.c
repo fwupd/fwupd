@@ -192,16 +192,6 @@ fu_fdt_firmware_parse_dt_struct(FuFdtFirmware *self, GBytes *fw, GHashTable *str
 			g_debug("token: 0x%x", token);
 		offset += sizeof(guint32);
 
-		/* sanity check */
-		if (has_end) {
-			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
-				    "cannot process token 0x%x as already seen END",
-				    token);
-			return FALSE;
-		}
-
 		/* nothing to do */
 		if (token == FDT_NOP)
 			continue;
