@@ -94,6 +94,7 @@ static void
 fu_logitech_hidpp_radio_init(FuLogitechHidPpRadio *self)
 {
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 	fu_device_set_vendor(FU_DEVICE(self), "Logitech");
 	fu_device_set_name(FU_DEVICE(self), "Radio");
 	fu_device_set_install_duration(FU_DEVICE(self), 270);
