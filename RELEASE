@@ -10,7 +10,7 @@ To make sure it's done right, you can reference commit 433e809318c68c9ab6d4ae50e
 
 Write release entries:
 
-git log --format="%s" --cherry-pick --right-only 1.8.1... | grep -i -v trivial | grep -v Merge | sort | uniq
+git log --format="%s" --cherry-pick --right-only 1.8.2... | grep -i -v trivial | grep -v Merge | sort | uniq
 Add any user visible changes into ../data/org.freedesktop.fwupd.metainfo.xml
 appstream-util appdata-to-news ../data/org.freedesktop.fwupd.metainfo.xml > NEWS
 
@@ -25,7 +25,7 @@ git add ../po/*.po
 2. Commit changes to git:
 
 # MAKE SURE THIS IS CORRECT
-export release_ver="1.8.2"
+export release_ver="1.8.3"
 
 git commit -a -m "Release fwupd ${release_ver}" --no-verify
 git tag -s -f -m "Release fwupd ${release_ver}" "${release_ver}"
