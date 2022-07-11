@@ -87,11 +87,21 @@ msgstr "Aktualizace pro zařízení %s"
 msgid "%s Display Update"
 msgstr "Aktualizace pro displej %s"
 
+#. TRANSLATORS: drive refers to a storage device, e.g. SATA disk
+#, c-format
+msgid "%s Drive Update"
+msgstr "%s aktualizace disku"
+
 #. TRANSLATORS: the EC is typically the keyboard controller chip,
 #. * the first %s is the device name, e.g. 'ThinkPad P50`
 #, c-format
 msgid "%s Embedded Controller Update"
 msgstr "Aktualizace vestavěného řadiče (EC) v %s"
+
+#. TRANSLATORS: flash refers to solid state storage, e.g. UFS or eMMC
+#, c-format
+msgid "%s Flash Drive Update"
+msgstr "%s aktualizace flash disku"
 
 #. TRANSLATORS: Keyboard refers to an input device for typing
 #, c-format
@@ -114,6 +124,12 @@ msgstr "Aktualizace pro myš %s"
 #, c-format
 msgid "%s Network Interface Update"
 msgstr "Aktualizace síťové karty %s"
+
+#. TRANSLATORS: SSD refers to a Solid State Drive, e.g. non-rotating
+#. * SATA or NVMe disk
+#, c-format
+msgid "%s SSD Update"
+msgstr "%s aktualizace SSD"
 
 #. TRANSLATORS: Storage Controller is typically a RAID or SAS adapter
 #, c-format
@@ -142,6 +158,12 @@ msgstr "Aktualizace pro řadič Thunderbolt v %s"
 #, c-format
 msgid "%s Touchpad Update"
 msgstr "Aktualizace pro touchpad %s"
+
+#. TRANSLATORS: Receiver refers to a radio device, e.g. a tiny Bluetooth
+#. * device that stays in the USB port so the wireless peripheral works
+#, c-format
+msgid "%s USB Receiver Update"
+msgstr "Aktualizace USB přijímače %s"
 
 #. TRANSLATORS: this is the fallback where we don't know if the release
 #. * is updating the system, the device, or a device class, or something else
@@ -1940,10 +1962,6 @@ msgstr "PODSYSTÉM OVLADAČ [IDENTIF-ZAŘÍZENÍ|GUID]"
 #. TRANSLATORS: command description
 msgid "Save a file that allows generation of hardware IDs"
 msgstr "Uložit soubor který umožňuje vytváření identifikátorů hardware"
-
-#. TRANSLATORS: command line option
-msgid "Save device state into a JSON file between executions"
-msgstr "Mezi vykonáními uložit stav zařízení do JSON souboru"
 
 #. TRANSLATORS: command line option
 msgid "Schedule installation for next reboot when possible"

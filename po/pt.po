@@ -1668,10 +1668,6 @@ msgid "Save a file that allows generation of hardware IDs"
 msgstr "Guardar um ficheiro que permite a geração de IDs de hardware"
 
 #. TRANSLATORS: command line option
-msgid "Save device state into a JSON file between executions"
-msgstr "Guarda o estado do dispositivo em um ficheiro JSON entre execuções"
-
-#. TRANSLATORS: command line option
 msgid "Schedule installation for next reboot when possible"
 msgstr "Agenda instalação para próxima reinicialização quando possível"
 

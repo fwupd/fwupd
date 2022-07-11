@@ -1664,10 +1664,6 @@ msgid "Save a file that allows generation of hardware IDs"
 msgstr "保存允许生成硬件 ID 的文件"
 
 #. TRANSLATORS: command line option
-msgid "Save device state into a JSON file between executions"
-msgstr "在执行之间保存设备状态到 JSON 文件"
-
-#. TRANSLATORS: command line option
 msgid "Schedule installation for next reboot when possible"
 msgstr "如有可能，安排安装到下次重启"
 

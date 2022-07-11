@@ -136,12 +136,18 @@ msgstr "%s TPM nadopuna"
 #. * the first %s is the system name, e.g. 'ThinkPad P50`
 #, c-format
 msgid "%s Thunderbolt Controller Update"
-msgstr "%s nadopuna Thunderbolt upravljača"
+msgstr "%s nadopuna Thunderbolt kontrolera"
 
 #. TRANSLATORS: TouchPad refers to a flat input device
 #, c-format
 msgid "%s Touchpad Update"
 msgstr "%s touchpad nadopuna"
+
+#. TRANSLATORS: Receiver refers to a radio device, e.g. a tiny Bluetooth
+#. * device that stays in the USB port so the wireless peripheral works
+#, c-format
+msgid "%s USB Receiver Update"
+msgstr "%s nadopuna USB prijemnika"
 
 #. TRANSLATORS: this is the fallback where we don't know if the release
 #. * is updating the system, the device, or a device class, or something else
@@ -175,6 +181,12 @@ msgstr "%s promijenjen: %s → %s"
 #, c-format
 msgid "%s disappeared: %s"
 msgstr "%s nestao: %s"
+
+#. TRANSLATORS: the device has a reason it can't update, e.g. laptop lid
+#. closed
+#, c-format
+msgid "%s is not currently updatable"
+msgstr "%s trenutno nije nadopunjiv"
 
 #. TRANSLATORS: Title: %s is ME kind, e.g. CSME/TXT
 #, c-format
@@ -263,6 +275,12 @@ msgid_plural "%u seconds"
 msgstr[0] "%u sekunda"
 msgstr[1] "%u sekunde"
 msgstr[2] "%u sekundi"
+
+#. TRANSLATORS: first percentage is current value, 2nd percentage is the
+#. * lowest limit the firmware update is allowed for the update to happen
+#, c-format
+msgid "%u%% (threshold %u%%)"
+msgstr "%u%% (najmanja inačica %u%%)"
 
 #. TRANSLATORS: this is shown as a suffix for obsoleted tests
 msgid "(obsoleted)"
@@ -449,9 +467,13 @@ msgstr "IZGRADITELJ-XML NAZIV DATOTEKE-DST"
 msgid "BYTES"
 msgstr "BAJTA"
 
+#. TRANSLATORS: refers to the battery inside the peripheral device
+msgid "Battery"
+msgstr "Baterija"
+
 #. TRANSLATORS: command description
 msgid "Bind new kernel driver"
-msgstr "Spoji novi pogon jezgre"
+msgstr "Poveži novi kernel upravljački program"
 
 #. TRANSLATORS: there follows a list of hashes
 msgid "Blocked firmware files:"
@@ -612,9 +634,23 @@ msgstr "ID uređaja"
 msgid "Device added:"
 msgstr "Uređaj dodan:"
 
+#. TRANSLATORS: for example the batteries *inside* the Bluetooth mouse
+#, c-format
+msgid "Device battery power is too low"
+msgstr "Energija baterije uređaja je preniska"
+
+#. TRANSLATORS: for example the batteries *inside* the Bluetooth mouse
+#, c-format
+msgid "Device battery power is too low (%u%%, requires %u%%)"
+msgstr "energija baterije uređaja je preniska (%u%%, zahtijeva %u%%)"
+
 #. TRANSLATORS: Device supports a safety mechanism for flashing
 msgid "Device can recover flash failures"
 msgstr "Uređaj se može oporaviti od neuspjelog zapisivanja frimvera"
+
+#. TRANSLATORS: lid means "laptop top cover"
+msgid "Device cannot be used while the lid is closed"
+msgstr "Uređaj se ne može koristiti dok je poklopac zaslona zatvoren"
 
 #. TRANSLATORS: this is when a device has been updated
 msgid "Device changed:"
@@ -638,13 +674,25 @@ msgstr "Uređaj je potreban za instalaciju svih dostupnih izdanja"
 msgid "Device is unreachable"
 msgstr "Uređaj je nedostupan"
 
+#. TRANSLATORS: for example, a Bluetooth mouse that is in powersave mode
+msgid "Device is unreachable, or out of wireless range"
+msgstr "Uređaj je nedostupan ili je izvan dometa bežične mreže"
+
 #. TRANSLATORS: Device remains usable during update
 msgid "Device is usable for the duration of the update"
 msgstr "Uređaj se može koristiti tijekom trajanja nadopune"
 
+#. TRANSLATORS: usually this is when we're waiting for a reboot
+msgid "Device is waiting for the update to be applied"
+msgstr "Uređaj čeka na primjenu nadopune"
+
 #. TRANSLATORS: this is when a device is hotplugged
 msgid "Device removed:"
 msgstr "Uređaj uklonjen:"
+
+#. TRANSLATORS: as in, wired mains power for a laptop
+msgid "Device requires AC power to be connected"
+msgstr "Uređaj zahtijeva vanjski izvor energije"
 
 #. TRANSLATORS: Device supports a safety mechanism for flashing
 msgid "Device stages updates"
@@ -1109,6 +1157,10 @@ msgstr "Potpuno šifriranje diska je otkriveno"
 msgid "Full disk encryption secrets may be invalidated when updating"
 msgstr "Tajne potpunog šifriranja diska mogu biti poništene pri nadopuni"
 
+#. TRANSLATORS: Title: if the part has been fused
+msgid "Fused platform"
+msgstr "Pregorjela platforma"
+
 #. TRANSLATORS: global ID common to all similar hardware
 msgid "GUID"
 msgid_plural "GUIDs"
@@ -1233,6 +1285,10 @@ msgstr "Instaliraj blob firmvera na uređaj"
 #. TRANSLATORS: command description
 msgid "Install a firmware file on this hardware"
 msgstr "Instaliraj datoteku firmvera na ovaj uređaj"
+
+#. TRANSLATORS: command description
+msgid "Install a specific firmware version on a device"
+msgstr "Instalacija određene inačice firmvera na uređaj"
 
 msgid "Install old version of signed system firmware"
 msgstr "Instaliraj staru inačicu potpisanog frimvera sustava"
@@ -1410,7 +1466,7 @@ msgstr "Prikaži dostupne vrste firmvera"
 
 #. TRANSLATORS: command description
 msgid "Lists files on the ESP"
-msgstr "Nabraja datoteke na ESP-u"
+msgstr "Prikazuje datoteke na ESP-u"
 
 #. TRANSLATORS: parsing the firmware information
 msgid "Loading…"
@@ -1638,6 +1694,10 @@ msgstr "Postotak završetka"
 msgid "Perform operation?"
 msgstr "Obavi radnju?"
 
+#. TRANSLATORS: Title: Allows debugging of parts using proprietary hardware
+msgid "Platform Debugging"
+msgstr "Otklanjanje grešaka platforme"
+
 #. TRANSLATORS: 'recovery key' here refers to a code, rather than a physical
 #. metal thing
 msgid "Please ensure you have the volume recovery key before continuing."
@@ -1678,6 +1738,10 @@ msgstr "Zapisuj opširniji izvještaj otklanjanja grešaka"
 msgid "Priority"
 msgstr "Prioritet"
 
+#. TRANSLATORS: reasons the device is not updatable
+msgid "Problems"
+msgstr "Problemi"
+
 msgid "Proceed with upload?"
 msgstr "Nastavi sa slanjem?"
 
@@ -1699,7 +1763,11 @@ msgstr "VRIJEDNOST KLJUČA ID-UDALJENE_LOKACIJE"
 
 #. TRANSLATORS: command description
 msgid "Read a firmware blob from a device"
-msgstr "Očitaj blob firmvera sa uređaja"
+msgstr "Očitaj blob firmvera s uređaja"
+
+#. TRANSLATORS: command description
+msgid "Read a firmware from a device"
+msgstr "Očitaj firmver s uređaja"
 
 #. TRANSLATORS: command description
 msgid "Read firmware from device into a file"
@@ -1808,6 +1876,10 @@ msgstr "Ponovno pokretanje uređaja…"
 msgid "Return all the hardware IDs for the machine"
 msgstr "Vrati sve ID-ove hardvera za uređaj"
 
+#. TRANSLATORS: Title: if firmware enforces rollback protection
+msgid "Rollback protection"
+msgstr "Zaštita od vraćanja na stariju inačicu"
+
 #. TRANSLATORS: this is shown in the MOTD
 msgid "Run `fwupdmgr get-upgrades` for more information."
 msgstr "Pokrenite `fwupdmgr get-upgrades` za više informacija."
@@ -1844,9 +1916,17 @@ msgstr "SPI BIOS područje"
 msgid "SPI lock"
 msgstr "SPI zaključavanje"
 
+#. TRANSLATORS: Title: if hardware enforces control of SPI replays
+msgid "SPI replay protection"
+msgstr "Zaštita od SPI ponavljanja"
+
 #. TRANSLATORS: Title: SPI refers to the flash chip in the computer
 msgid "SPI write"
 msgstr "SPI zapisivanje"
+
+#. TRANSLATORS: Title: if hardware enforces control of SPI writes
+msgid "SPI write protection"
+msgstr "Zaštita od SPI zapisivanja"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "SUBSYSTEM DRIVER [DEVICE-ID|GUID]"
@@ -1855,10 +1935,6 @@ msgstr "UPRAVLJAČKI PROGRAM PODSUSTAVA [UREĐAJ-ID|GUID]"
 #. TRANSLATORS: command description
 msgid "Save a file that allows generation of hardware IDs"
 msgstr "Spremi datoteku koja omogućuje stvaranje ID-ova hardvera"
-
-#. TRANSLATORS: command line option
-msgid "Save device state into a JSON file between executions"
-msgstr "Spremi stanje uređaja u JSON datoteku između izvršavanja"
 
 #. TRANSLATORS: command line option
 msgid "Schedule installation for next reboot when possible"
@@ -2074,6 +2150,10 @@ msgstr "Sažetak"
 msgid "Supported"
 msgstr "Podržano"
 
+#. TRANSLATORS: Title: if fwupd supports HSI on this chip
+msgid "Supported CPU"
+msgstr "Podržan je CPU"
+
 #. TRANSLATORS: Is found in current metadata
 msgid "Supported on remote server"
 msgstr "Podržano na udaljenom poslužitelju"
@@ -2099,6 +2179,15 @@ msgstr "Zamijeni ogranak firmvera na uređaju"
 #. TRANSLATORS: command description
 msgid "Sync firmware versions to the host best known configuration"
 msgstr "Uskladi inačicu firmvera s najbolje poznatim podešavanjem na poslužitelju"
+
+#. TRANSLATORS: as in laptop battery power
+msgid "System power is too low to perform the update"
+msgstr "Energija sustava je preniska za obavljanje nadopune"
+
+#. TRANSLATORS: as in laptop battery power
+#, c-format
+msgid "System power is too low to perform the update (%u%%, requires %u%%)"
+msgstr "energija sustava je preniska za obavljanje nadopune (%u%%, zahtijeva %u%%)"
 
 #. TRANSLATORS: Must be plugged in to an outlet
 msgid "System requires external power source"
@@ -2168,7 +2257,7 @@ msgstr "Inačica uređaja se ne podudara: dobivena %s, očekivana %s"
 #. TRANSLATORS: %1 is the firmware vendor, %2 is the device vendor name
 #, c-format
 msgid "The firmware from %s is not supplied by %s, the hardware vendor."
-msgstr "Firmver od %s se ne isporučuje od %s, dobavljač hardvera."
+msgstr "%s firmver nije isporučen od strane %s dobavljača hardvera."
 
 #. TRANSLATORS: try to help
 msgid "The system clock has not been set correctly and downloading files may fail."
@@ -2294,7 +2383,7 @@ msgstr "Neuspjelo povezivanje s udaljenom uslugom"
 
 #. TRANSLATORS: command description
 msgid "Unbind current driver"
-msgstr "Odspoji trenutačni pogon"
+msgstr "Prekini povezivanje s trenutnim upravljačkim programom"
 
 #. TRANSLATORS: we will now offer this firmware to the user
 msgid "Unblocking firmware:"
@@ -2520,7 +2609,7 @@ msgstr "Vaš hardver se može oštetiti upotrebom ovog firmvera, instalacija ovo
 #. * of firmware that works together
 #, c-format
 msgid "Your system is set up to the BKC of %s."
-msgstr "Tvoj je sustav postavljen na BKC od %s."
+msgstr "Vaš sustav je postavljen na BKC od %s."
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[CHECKSUM]"
@@ -2533,6 +2622,10 @@ msgstr "[UREĐAJ-ID|GUID]"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[DEVICE-ID|GUID] [BRANCH]"
 msgstr "[UREĐAJ-ID|GUID] [OGRANAK]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[DEVICE-ID|GUID] [VERSION]"
+msgstr "[ID|GUID-UREĐAJA] [INAČICA]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[FILE FILE_SIG REMOTE-ID]"
@@ -2548,7 +2641,7 @@ msgstr "[SMBIOS-DATOTEKA|HWIDS-DATOTEKA]"
 
 #. TRANSLATORS: this is the default branch name when unset
 msgid "default"
-msgstr "standardno"
+msgstr "zadano"
 
 #. TRANSLATORS: program name
 msgid "fwupd TPM event log utility"

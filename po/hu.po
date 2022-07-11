@@ -952,10 +952,6 @@ msgid "Run the plugin composite prepare routine when using install-blob"
 msgstr "A bővítmény összetett előkészítési rutinjának futtatása az install-blob használatakor"
 
 #. TRANSLATORS: command line option
-msgid "Save device state into a JSON file between executions"
-msgstr "Eszköz állapotának mentése JSON fájlba a végrehajtások között"
-
-#. TRANSLATORS: command line option
 msgid "Schedule installation for next reboot when possible"
 msgstr "Telepítés ütemezése a következő újraindításkor, ha lehetséges"
 

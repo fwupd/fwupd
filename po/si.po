@@ -3,7 +3,7 @@
 # This file is distributed under the same license as the fwupd package.
 #
 # Translators:
-# හෙළබස, 2021
+# හෙළබස සමූහය, 2021-2022
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
@@ -15,19 +15,354 @@ msgstr ""
 "Language: si\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
+#. TRANSLATORS: more than a minute
+#, c-format
+msgid "%.0f minute remaining"
+msgid_plural "%.0f minutes remaining"
+msgstr[0] "විනාඩි %.0f ක් ඉතිරියි"
+msgstr[1] "විනාඩි %.0f ක් ඉතිරියි"
+
+#. TRANSLATORS: BMC refers to baseboard management controller which
+#. * is the device that updates all the other firmware on the system
+#, c-format
+msgid "%s BMC Update"
+msgstr "%s BMC යාවත්කාලීන කිරීම"
+
+#. TRANSLATORS: battery refers to the system power source
+#, c-format
+msgid "%s Battery Update"
+msgstr "%s බැටරි යාවත්කාලීන කිරීම"
+
+#. TRANSLATORS: the CPU microcode is firmware loaded onto the CPU
+#. * at system bootup
+#, c-format
+msgid "%s CPU Microcode Update"
+msgstr "%s CPU මයික්‍රොකෝඩ් යාවත්කාලීන කිරීම"
+
+#. TRANSLATORS: camera can refer to the laptop internal
+#. * camera in the bezel or external USB webcam
+#, c-format
+msgid "%s Camera Update"
+msgstr "%s කැමරා යාවත්කාලීන කිරීම"
+
+#. TRANSLATORS: a specific part of hardware,
+#. * the first %s is the device name, e.g. 'Secure Boot`
+#, c-format
+msgid "%s Configuration Update"
+msgstr "%s වින්‍යාස යාවත්කාලීන කිරීම"
+
+#. TRANSLATORS: ME stands for Management Engine, where
+#. * the first %s is the device name, e.g. 'ThinkPad P50`
+#, c-format
+msgid "%s Consumer ME Update"
+msgstr "%s පාරිභෝගික ME යාවත්කාලීන කිරීම"
+
+#. TRANSLATORS: the controller is a device that has other devices
+#. * plugged into it, for example ThunderBolt, FireWire or USB,
+#. * the first %s is the device name, e.g. 'Intel ThunderBolt`
+#, c-format
+msgid "%s Controller Update"
+msgstr "%s පාලක යාවත්කාලීන කිරීම"
+
+#. TRANSLATORS: ME stands for Management Engine (with Intel AMT),
+#. * where the first %s is the device name, e.g. 'ThinkPad P50`
+#, c-format
+msgid "%s Corporate ME Update"
+msgstr "%s ආයතනික ME යාවත්කාලීන කිරීම"
+
+#. TRANSLATORS: a specific part of hardware,
+#. * the first %s is the device name, e.g. 'Unifying Receiver`
+#, c-format
+msgid "%s Device Update"
+msgstr "%s උපාංග යාවත්කාලීන කිරීම"
+
+#. TRANSLATORS: Video Display refers to the laptop internal display or
+#. * external monitor
+#, c-format
+msgid "%s Display Update"
+msgstr "%s සංදර්ශක යාවත්කාලීන කිරීම"
+
+#. TRANSLATORS: the EC is typically the keyboard controller chip,
+#. * the first %s is the device name, e.g. 'ThinkPad P50`
+#, c-format
+msgid "%s Embedded Controller Update"
+msgstr "%s Embedded Controller Update"
+
+#. TRANSLATORS: Keyboard refers to an input device for typing
+#, c-format
+msgid "%s Keyboard Update"
+msgstr "%s යතුරුපුවරු යාවත්කාලීන කිරීම"
+
+#. TRANSLATORS: ME stands for Management Engine, the Intel AMT thing,
+#. * the first %s is the device name, e.g. 'ThinkPad P50`
+#, c-format
+msgid "%s ME Update"
+msgstr "%s ME යාවත්කාලීන කිරීම"
+
+#. TRANSLATORS: Mouse refers to a handheld input device
+#, c-format
+msgid "%s Mouse Update"
+msgstr "%s මූසික යාවත්කාලීන කිරීම"
+
+#. TRANSLATORS: Network Interface refers to the physical
+#. * PCI card, not the logical wired connection
+#, c-format
+msgid "%s Network Interface Update"
+msgstr "%s ජාල අතුරුමුහුණත යාවත්කාලීන කිරීම"
+
+#. TRANSLATORS: Storage Controller is typically a RAID or SAS adapter
+#, c-format
+msgid "%s Storage Controller Update"
+msgstr "%s ගබඩා පාලක යාවත්කාලීන කිරීම"
+
+#. TRANSLATORS: the entire system, e.g. all internal devices,
+#. * the first %s is the device name, e.g. 'ThinkPad P50`
+#, c-format
+msgid "%s System Update"
+msgstr "%s පද්ධති යාවත්කාලීන කිරීම"
+
+#. TRANSLATORS: TPM refers to a Trusted Platform Module
+#, c-format
+msgid "%s TPM Update"
+msgstr "%s TPM යාවත්කාලීන"
+
+#. TRANSLATORS: the Thunderbolt controller is a device that
+#. * has other high speed Thunderbolt devices plugged into it;
+#. * the first %s is the system name, e.g. 'ThinkPad P50`
+#, c-format
+msgid "%s Thunderbolt Controller Update"
+msgstr "%s Thunderbolt Controller යාවත්කාලීන කිරීම"
+
+#. TRANSLATORS: TouchPad refers to a flat input device
+#, c-format
+msgid "%s Touchpad Update"
+msgstr "%s Touchpad යාවත්කාලීන කිරීම"
+
+#. TRANSLATORS: Receiver refers to a radio device, e.g. a tiny Bluetooth
+#. * device that stays in the USB port so the wireless peripheral works
+#, c-format
+msgid "%s USB Receiver Update"
+msgstr "%s USB ග්‍රාහකයා යාවත්කාලීන කිරීම"
+
+#. TRANSLATORS: this is the fallback where we don't know if the release
+#. * is updating the system, the device, or a device class, or something else
+#. --
+#. * the first %s is the device name, e.g. 'ThinkPad P50`
+#, c-format
+msgid "%s Update"
+msgstr "%s යාවත්කාලීන කරන්න"
+
+#. TRANSLATORS: warn the user before updating, %1 is a device name
+#, c-format
+msgid "%s and all connected devices may not be usable while updating."
+msgstr "%s සහ සියලුම සම්බන්ධිත උපාංග යාවත්කාලීන කිරීමේදී භාවිත කළ නොහැක."
+
+#. TRANSLATORS: %1 refers to some kind of security test, e.g. "Encrypted RAM".
+#. %2 refers to a result value, e.g. "Invalid"
+#, c-format
+msgid "%s appeared: %s"
+msgstr "%s පෙනී සිටියේය: %s"
+
+#. TRANSLATORS: %1 refers to some kind of security test, e.g. "UEFI platform
+#. key".
+#. * %2 and %3 refer to results value, e.g. "Valid" and "Invalid"
+#, c-format
+msgid "%s changed: %s → %s"
+msgstr "%s වෙනස් විය: %s → %s"
+
+#. TRANSLATORS: %1 refers to some kind of security test, e.g. "SPI BIOS
+#. region".
+#. %2 refers to a result value, e.g. "Invalid"
+#, c-format
+msgid "%s disappeared: %s"
+msgstr "%s අතුරුදහන් විය: %s"
+
+#. TRANSLATORS: the device has a reason it can't update, e.g. laptop lid
+#. closed
+#, c-format
+msgid "%s is not currently updatable"
+msgstr "%s දැනට යාවත්කාලීන කළ නොහැක"
+
+#. TRANSLATORS: Title: %s is ME kind, e.g. CSME/TXT
+#, c-format
+msgid "%s manufacturing mode"
+msgstr "%s නිෂ්පාදන මාදිලිය"
+
+#. TRANSLATORS: warn the user before
+#. * updating, %1 is a device name
+#, c-format
+msgid "%s must remain connected for the duration of the update to avoid damage."
+msgstr "හානිය වළක්වා ගැනීම සඳහා යාවත්කාලීන කාලය සඳහා %s සම්බන්ධව තිබිය යුතුය."
+
+#. TRANSLATORS: warn the user before updating, %1 is a machine
+#. * name
+#, c-format
+msgid "%s must remain plugged into a power source for the duration of the update to avoid damage."
+msgstr "හානිය වළක්වා ගැනීම සඳහා යාවත්කාලීන කාලසීමාව සඳහා %s බල ප්‍රභවයකට සම්බන්ධ කළ යුතුය."
+
+#. TRANSLATORS: Title: %s is ME kind, e.g. CSME/TXT
+#, c-format
+msgid "%s override"
+msgstr "%s අභිබවා යයි"
+
+#. TRANSLATORS: Title: %1 is ME kind, e.g. CSME/TXT, %2 is a version number
+#, c-format
+msgid "%s v%s"
+msgstr "%s v%s"
+
 #. TRANSLATORS: Title: %s is ME kind, e.g. CSME/TXT
 #, c-format
 msgid "%s version"
 msgstr "අනුවාදය %s"
+
+#. TRANSLATORS: duration in days!
+#, c-format
+msgid "%u day"
+msgid_plural "%u days"
+msgstr[0] "දින %u යි"
+msgstr[1] "දින %u යි"
+
+#. TRANSLATORS: this is shown in the MOTD
+#, c-format
+msgid "%u device has a firmware upgrade available."
+msgid_plural "%u devices have a firmware upgrade available."
+msgstr[0] "%u උපාංගයේ ස්ථිරාංග උත්ශ්‍රේණිගත කිරීමක් ඇත."
+msgstr[1] "%u උපාංග සඳහා ස්ථිරාංග උත්ශ්‍රේණිගත කිරීමක් ඇත."
+
+#. TRANSLATORS: this is shown in the MOTD
+#, c-format
+msgid "%u device is not the best known configuration."
+msgid_plural "%u devices are not the best known configuration."
+msgstr[0] "%u උපාංගය හොඳම දන්නා වින්‍යාසය නොවේ."
+msgstr[1] "%u උපාංග හොඳම දන්නා වින්‍යාසය නොවේ."
+
+#. TRANSLATORS: duration in minutes
+#, c-format
+msgid "%u hour"
+msgid_plural "%u hours"
+msgstr[0] "පැය %u යි"
+msgstr[1] "පැය %u යි"
+
+#. TRANSLATORS: how many local devices can expect updates now
+#, c-format
+msgid "%u local device supported"
+msgid_plural "%u local devices supported"
+msgstr[0] "%u දේශීය උපාංග සඳහා සහය දක්වයි"
+msgstr[1] "%u දේශීය උපාංග සඳහා සහය දක්වයි"
+
+#. TRANSLATORS: duration in minutes
+#, c-format
+msgid "%u minute"
+msgid_plural "%u minutes"
+msgstr[0] "විනාඩි %u"
+msgstr[1] "විනාඩි %u"
+
+#. TRANSLATORS: duration in seconds
+#, c-format
+msgid "%u second"
+msgid_plural "%u seconds"
+msgstr[0] "තත්පර %u"
+msgstr[1] "තත්පර %u"
+
+#. TRANSLATORS: first percentage is current value, 2nd percentage is the
+#. * lowest limit the firmware update is allowed for the update to happen
+#, c-format
+msgid "%u%% (threshold %u%%)"
+msgstr "%u%% (ඉන්පසුව %u%%)"
+
+#. TRANSLATORS: this is shown as a suffix for obsoleted tests
+msgid "(obsoleted)"
+msgstr "(යල් පැන ගිය)"
+
+#. TRANSLATORS: HSI event title
+msgid "A TPM PCR is now an invalid value"
+msgstr "TPM PCR දැන් වලංගු නොවන අගයකි"
+
+#. TRANSLATORS: the user needs to do something, e.g. remove the device
+msgid "Action Required:"
+msgstr "අවශ්‍ය ක්‍රියාමාර්ග:"
+
+#. TRANSLATORS: command description
+msgid "Activate devices"
+msgstr "උපාංග සක්රිය කරන්න"
+
+#. TRANSLATORS: command description
+msgid "Activate pending devices"
+msgstr "පොරොත්තු උපාංග සක්‍රිය කරන්න"
+
+msgid "Activate the new firmware on the device"
+msgstr "උපාංගයේ නව ස්ථිරාංග සක්රිය කරන්න"
+
+#. TRANSLATORS: shown when shutting down to switch to the new version
+msgid "Activating firmware update"
+msgstr "ස්ථිරාංග යාවත්කාලීන කිරීම සක්රිය කිරීම"
+
+#. TRANSLATORS: shown when shutting down to switch to the new version
+msgid "Activating firmware update for"
+msgstr "සඳහා ස්ථිරාංග යාවත්කාලීන කිරීම සක්රිය කිරීම"
+
+#. TRANSLATORS: the age of the metadata
+msgid "Age"
+msgstr "වයස"
+
+#. TRANSLATORS: should the remote still be enabled
+msgid "Agree and enable the remote?"
+msgstr "එකඟ වී දුරස්ථ පාලකය සබල කරන්නද?"
 
 #. TRANSLATORS: this is a command alias, e.g. 'get-devices'
 #, c-format
 msgid "Alias to %s"
 msgstr "%s ට අපනාමය"
 
+#. TRANSLATORS: HSI event title
+msgid "All TPM PCRs are now valid"
+msgstr "සියලුම TPM PCRs දැන් වලංගු වේ"
+
+#. TRANSLATORS: HSI event title
+msgid "All TPM PCRs are valid"
+msgstr "සියලුම TPM PCR වලංගු වේ"
+
+#. TRANSLATORS: on some systems certain devices have to have matching
+#. versions,
+#. * e.g. the EFI driver for a given network card cannot be different
+msgid "All devices of the same type will be updated at the same time"
+msgstr "එකම වර්ගයේ සියලුම උපාංග එකම අවස්ථාවේදීම යාවත්කාලීන වේ"
+
+#. TRANSLATORS: command line option
+msgid "Allow downgrading firmware versions"
+msgstr "ස්ථිරාංග අනුවාද පහත හෙලීමට ඉඩ දෙන්න"
+
+#. TRANSLATORS: command line option
+msgid "Allow reinstalling existing firmware versions"
+msgstr "පවතින ස්ථිරාංග අනුවාද නැවත ස්ථාපනය කිරීමට ඉඩ දෙන්න"
+
+#. TRANSLATORS: command line option
+msgid "Allow switching firmware branch"
+msgstr "ස්ථිරාංග ශාඛාව මාරු කිරීමට ඉඩ දෙන්න"
+
+#. TRANSLATORS: is not the main firmware stream
+msgid "Alternate branch"
+msgstr "විකල්ප ශාඛාව"
+
+#. TRANSLATORS: explain why we want to reboot
+msgid "An update requires a reboot to complete."
+msgstr "යාවත්කාලීනයක් සම්පූර්ණ කිරීමට නැවත පණගැන්වීමක් අවශ්‍ය වේ."
+
+#. TRANSLATORS: explain why we want to shutdown
+msgid "An update requires the system to shutdown to complete."
+msgstr "යාවත්කාලීනයක් සම්පූර්ණ කිරීමට පද්ධතිය වසා දැමීම අවශ්‍ය වේ."
+
+#. TRANSLATORS: command line option
+msgid "Answer yes to all questions"
+msgstr "සියලුම ප්‍රශ්න වලට ඔව් පිළිතුරු දෙන්න"
+
 #. TRANSLATORS: command line option
 msgid "Apply firmware updates"
-msgstr "ස්ථිරාංගයේ අනුවාද යොදන්න"
+msgstr "ස්ථිරාංගයේ යාවත්කාල යොදන්න"
+
+#. TRANSLATORS: command line option
+msgid "Apply update even when not advised"
+msgstr "උපදෙස් නොදෙන විට පවා යාවත්කාලීන කරන්න"
 
 #. TRANSLATORS: command line option
 msgid "Apply update files"
@@ -37,8 +372,127 @@ msgstr "යාවත්කාල ගොනු යොදන්න"
 msgid "Applying update…"
 msgstr "යාවත්කාලය යොදමින්…"
 
+#. TRANSLATORS: approved firmware has been checked by
+#. * the domain administrator
+msgid "Approved firmware:"
+msgid_plural "Approved firmware:"
+msgstr[0] "අනුමත ස්ථිරාංග:"
+msgstr[1] "අනුමත ස්ථිරාංග:"
+
+#. TRANSLATORS: stop nagging the user
+msgid "Ask again next time?"
+msgstr "ඊළඟ වතාවේ නැවත අසන්න?"
+
+#. TRANSLATORS: command description
+msgid "Attach to firmware mode"
+msgstr "ස්ථිරාංග මාදිලියට අමුණන්න"
+
+#. TRANSLATORS: waiting for user to authenticate
+msgid "Authenticating…"
+msgstr "…සත්‍යාපනය කිරීම"
+
+#. TRANSLATORS: user needs to run a command
+msgid "Authentication details are required"
+msgstr "සත්‍යාපන විස්තර අවශ්‍යයි"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to downgrade the firmware on a removable device"
+msgstr "ඉවත් කළ හැකි උපාංගයක ස්ථිරාංග පහත හෙලීමට සත්‍යාපනය අවශ්‍ය වේ"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to downgrade the firmware on this machine"
+msgstr "මෙම යන්ත්‍රයේ ස්ථිරාංග පහත හෙලීමට සත්‍යාපනය අවශ්‍ය වේ"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to modify a configured remote used for firmware updates"
+msgstr "ස්ථිරාංග යාවත්කාලීන කිරීම් සඳහා භාවිතා කරන වින්‍යාස කළ දුරස්ථ පාලකයක් වෙනස් කිරීමට සත්‍යාපනය අවශ්‍ය වේ"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to modify daemon configuration"
+msgstr "ඩීමන් වින්‍යාසය වෙනස් කිරීමට සත්‍යාපනය අවශ්‍ය වේ"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to set the list of approved firmware"
+msgstr "අනුමත ස්ථිරාංග ලැයිස්තුව සැකසීමට සත්‍යාපනය අවශ්‍ය වේ"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to sign data using the client certificate"
+msgstr "සේවාදායක සහතිකය භාවිතයෙන් දත්ත අත්සන් කිරීමට සත්‍යාපනය අවශ්‍ය වේ"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to switch to the new firmware version"
+msgstr "නව ස්ථිරාංග අනුවාදය වෙත මාරු වීමට සත්‍යාපනය අවශ්‍ය වේ"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to unlock a device"
+msgstr "උපාංගයක් අගුලු හැරීමට සත්‍යාපනය අවශ්‍ය වේ"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to update the firmware on a removable device"
+msgstr "ඉවත් කළ හැකි උපාංගයක ස්ථිරාංග යාවත්කාලීන කිරීමට සත්‍යාපනය අවශ්‍ය වේ"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to update the firmware on this machine"
+msgstr "මෙම යන්ත්‍රයේ ස්ථිරාංග යාවත්කාලීන කිරීමට සත්‍යාපනය අවශ්‍ය වේ"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to update the stored checksums for the device"
+msgstr "උපාංගය සඳහා ගබඩා කර ඇති චෙක්සම් යාවත්කාලීන කිරීමට සත්‍යාපනය අවශ්‍ය වේ"
+
+#. TRANSLATORS: Boolean value to automatically send reports
+msgid "Automatic Reporting"
+msgstr "ස්වයංක්‍රීය වාර්තාකරණය"
+
+#. TRANSLATORS: can we JFDI?
+msgid "Automatically upload every time?"
+msgstr "සෑම විටම ස්වයංක්‍රීයව උඩුගත කරන්නද?"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "BUILDER-XML FILENAME-DST"
+msgstr "BUILDER-XML ගොනු නාමය-DST"
+
 msgid "BYTES"
 msgstr "බයිට"
+
+#. TRANSLATORS: refers to the battery inside the peripheral device
+msgid "Battery"
+msgstr "බැටරි"
+
+#. TRANSLATORS: command description
+msgid "Bind new kernel driver"
+msgstr "නව කර්නල් ධාවකය බැඳන්න"
+
+#. TRANSLATORS: there follows a list of hashes
+msgid "Blocked firmware files:"
+msgstr "අවහිර කළ ස්ථිරාංග ගොනු:"
+
+#. TRANSLATORS: version cannot be installed due to policy
+msgid "Blocked version"
+msgstr "අවහිර කළ අනුවාදය"
+
+#. TRANSLATORS: we will not offer this firmware to the user
+msgid "Blocking firmware:"
+msgstr "ස්ථිරාංග අවහිර කිරීම:"
+
+#. TRANSLATORS: command description
+msgid "Blocks a specific firmware from being installed"
+msgstr "නිශ්චිත ස්ථිරාංග ස්ථාපනය කිරීම අවහිර කරයි"
+
+#. TRANSLATORS: firmware version of bootloader
+msgid "Bootloader Version"
+msgstr "Bootloader අනුවාදය"
+
+#. TRANSLATORS: the stream of firmware, e.g. nonfree or open-source
+msgid "Branch"
+msgstr "ශාඛාව"
+
+#. TRANSLATORS: command description
+msgid "Build a firmware file"
+msgstr "ස්ථිරාංග ගොනුවක් සාදන්න"
+
+#. TRANSLATORS: command description
+msgid "Build firmware using a sandbox"
+msgstr "වැලිපිල්ලක් භාවිතයෙන් ස්ථිරාංග සාදන්න"
 
 #. TRANSLATORS: this is to abort the interactive prompt
 msgid "Cancel"
@@ -48,18 +502,367 @@ msgstr "අවලංගු කරන්න"
 msgid "Cancelled"
 msgstr "අවලංගු කෙරිණි"
 
+#. TRANSLATORS: same or newer update already applied
+msgid "Cannot apply as dbx update has already been applied."
+msgstr "dbx යාවත්කාලීනය දැනටමත් යොදවා ඇති බැවින් අයදුම් කළ නොහැක."
+
+#. TRANSLATORS: the user is using a LiveCD or LiveUSB install disk
+msgid "Cannot apply updates on live media"
+msgstr "සජීවී මාධ්‍යවල යාවත්කාලීන යෙදිය නොහැක"
+
 #. TRANSLATORS: this is when the daemon state changes
 msgid "Changed"
 msgstr "වෙනස් විය"
+
+#. TRANSLATORS: command description
+msgid "Checks cryptographic hash matches firmware"
+msgstr "ගුප්ත ලේඛන හැෂ් ගැලපීම් ස්ථිරාංග පරීක්ෂා කරයි"
+
+#. TRANSLATORS: remote checksum
+msgid "Checksum"
+msgstr "චෙක්සම්"
+
+#. TRANSLATORS: get interactive prompt, where branch is the
+#. * supplier of the firmware, e.g. "non-free" or "free"
+msgid "Choose a branch:"
+msgstr "ශාඛාවක් තෝරන්න:"
+
+#. TRANSLATORS: get interactive prompt
+msgid "Choose a device:"
+msgstr "උපාංගයක් තෝරන්න:"
+
+#. TRANSLATORS: get interactive prompt
+msgid "Choose a firmware type:"
+msgstr "ස්ථිරාංග වර්ගයක් තෝරන්න:"
+
+#. TRANSLATORS: get interactive prompt
+msgid "Choose a release:"
+msgstr "නිකුතුවක් තෝරන්න:"
+
+#. TRANSLATORS: get interactive prompt
+msgid "Choose a volume:"
+msgstr "පරිමාවක් තෝරන්න:"
+
+#. TRANSLATORS: command description
+msgid "Clears the results from the last update"
+msgstr "අවසාන යාවත්කාලීනයෙන් ප්‍රතිඵල හිස් කරයි"
+
+#. TRANSLATORS: error message
+msgid "Command not found"
+msgstr "විධානය සොයාගත නොහැකි"
+
+#. TRANSLATORS: is not supported by the vendor
+msgid "Community supported"
+msgstr "ප්‍රජාවගේ සහාය"
+
+#. TRANSLATORS: command description
+msgid "Convert a firmware file"
+msgstr "ස්ථිරාංග ගොනුවක් පරිවර්තනය කරන්න"
+
+#. TRANSLATORS: when the update was built
+msgid "Created"
+msgstr "නිර්මාණය කළා"
+
+#. TRANSLATORS: the release urgency
+msgid "Critical"
+msgstr "විවේචනාත්මක"
+
+#. TRANSLATORS: Device supports some form of checksum verification
+msgid "Cryptographic hash verification is available"
+msgstr "ගුප්ත ලේඛන හැෂ් සත්‍යාපනය ලබා ගත හැකිය"
+
+#. TRANSLATORS: version number of current firmware
+msgid "Current version"
+msgstr "වත්මන් අනුවාදය"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "DEVICE-ID|GUID"
+msgstr "DEVICE-ID|මාර්ගෝපදේශය"
+
+#. TRANSLATORS: DFU stands for device firmware update
+msgid "DFU Utility"
+msgstr "DFU උපයෝගිතා"
+
+#. TRANSLATORS: for the --verbose arg
+msgid "Debugging Options"
+msgstr "දෝශ නිරාකරණ විකල්ප"
+
+#. TRANSLATORS: decompressing the firmware file
+msgid "Decompressing…"
+msgstr "විසංයෝජනය…"
+
+#. TRANSLATORS: multiline description of device
+msgid "Description"
+msgstr "විස්තර"
+
+#. TRANSLATORS: command description
+msgid "Detach to bootloader mode"
+msgstr "ඇරඹුම් කාරක මාදිලියට වෙන් කරන්න"
+
+#. TRANSLATORS: more details about the update link
+msgid "Details"
+msgstr "විස්තර"
+
+#. TRANSLATORS: the best known configuration is a set of software that we know
+#. works well
+#. * together. In the OEM and ODM industries it is often called a BKC
+msgid "Deviate from the best known configuration?"
+msgstr "හොඳින්ම දන්නා වින්‍යාසයෙන් බැහැර වන්නද?"
+
+#. TRANSLATORS: description of device ability
+msgid "Device Flags"
+msgstr "උපාංග කොඩි"
+
+#. TRANSLATORS: ID for hardware, typically a SHA1 sum
+msgid "Device ID"
+msgstr "උපාංග හැඳුනුම්පත"
+
+#. TRANSLATORS: this is when a device is hotplugged
+msgid "Device added:"
+msgstr "උපාංගය එකතු කළේ:"
+
+#. TRANSLATORS: for example the batteries *inside* the Bluetooth mouse
+#, c-format
+msgid "Device battery power is too low"
+msgstr "උපාංගයේ බැටරි බලය ඉතා අඩුය"
+
+#. TRANSLATORS: for example the batteries *inside* the Bluetooth mouse
+#, c-format
+msgid "Device battery power is too low (%u%%, requires %u%%)"
+msgstr "උපාංග බැටරි බලය ඉතා අඩුයි (%u%%, %u%% අවශ්‍යයි)"
+
+#. TRANSLATORS: Device supports a safety mechanism for flashing
+msgid "Device can recover flash failures"
+msgstr "උපාංගයට ෆ්ලෑෂ් අසමත්වීම් නැවත ලබා ගත හැක"
+
+#. TRANSLATORS: lid means "laptop top cover"
+msgid "Device cannot be used while the lid is closed"
+msgstr "පියන වසා ඇති විට උපාංගය භාවිතා කළ නොහැක"
+
+#. TRANSLATORS: this is when a device has been updated
+msgid "Device changed:"
+msgstr "උපාංගය වෙනස් විය:"
+
+#. TRANSLATORS: a version check is required for all firmware
+msgid "Device firmware is required to have a version check"
+msgstr "අනුවාද පරීක්ෂාවක් කිරීමට උපාංග ස්ථිරාංග අවශ්‍ය වේ"
+
+#. TRANSLATORS: Is locked and can be unlocked
+msgid "Device is locked"
+msgstr "උපාංගය අගුලු දමා ඇත"
+
+#. TRANSLATORS: the device cannot update from A->C and has to go A->B->C
+msgid "Device is required to install all provided releases"
+msgstr "සපයා ඇති සියලුම නිකුතු ස්ථාපනය කිරීමට උපාංගය අවශ්‍ය වේ"
+
+#. TRANSLATORS: currently unreachable, perhaps because it is in a lower power
+#. state
+#. * or is out of wireless range
+msgid "Device is unreachable"
+msgstr "උපාංගය ළඟා විය නොහැක"
+
+#. TRANSLATORS: for example, a Bluetooth mouse that is in powersave mode
+msgid "Device is unreachable, or out of wireless range"
+msgstr "උපාංගය වෙත ළඟා විය නොහැක, නැතහොත් රැහැන් රහිත පරාසයෙන් පිටත"
+
+#. TRANSLATORS: Device remains usable during update
+msgid "Device is usable for the duration of the update"
+msgstr "යාවත්කාලීන කාලය සඳහා උපාංගය භාවිතා කළ හැකිය"
+
+#. TRANSLATORS: usually this is when we're waiting for a reboot
+msgid "Device is waiting for the update to be applied"
+msgstr "උපාංගය යාවත්කාලීනය යෙදෙන තෙක් බලා සිටී"
+
+#. TRANSLATORS: this is when a device is hotplugged
+msgid "Device removed:"
+msgstr "උපාංගය ඉවත් කරන ලදී:"
+
+#. TRANSLATORS: as in, wired mains power for a laptop
+msgid "Device requires AC power to be connected"
+msgstr "උපාංගයට සම්බන්ධ වීමට AC බලය අවශ්‍යයි"
+
+#. TRANSLATORS: Device supports a safety mechanism for flashing
+msgid "Device stages updates"
+msgstr "උපාංග අදියර යාවත්කාලීන කිරීම්"
+
+#. TRANSLATORS: there is more than one supplier of the firmware
+msgid "Device supports switching to a different branch of firmware"
+msgstr "ස්ථිරාංගයේ වෙනත් ශාඛාවකට මාරු වීමට උපාංගය සහාය දක්වයි"
+
+#. TRANSLATORS: command line option
+msgid "Device update method"
+msgstr "උපාංග යාවත්කාලීන ක්‍රමය"
+
+#. TRANSLATORS: Device update needs to be separately activated
+msgid "Device update needs activation"
+msgstr "උපාංග යාවත්කාලීන කිරීම සක්‍රිය කිරීම අවශ්‍යයි"
+
+#. TRANSLATORS: save the old firmware to disk before installing the new one
+msgid "Device will backup firmware before installing"
+msgstr "උපාංගය ස්ථාපනය කිරීමට පෙර ස්ථිරාංග උපස්ථ කරයි"
+
+#. TRANSLATORS: Device will not return after update completes
+msgid "Device will not re-appear after update completes"
+msgstr "යාවත්කාලීනය සම්පූර්ණ වූ පසු උපාංගය නැවත දිස් නොවනු ඇත"
+
+#. TRANSLATORS: a list of successful updates
+msgid "Devices that have been updated successfully:"
+msgstr "සාර්ථකව යාවත්කාලීන කරන ලද උපාංග:"
+
+#. TRANSLATORS: a list of failed updates
+msgid "Devices that were not updated correctly:"
+msgstr "නිවැරදිව යාවත්කාලීන නොකළ උපාංග:"
+
+#. TRANSLATORS: message letting the user know no device upgrade
+#. * available due to missing on LVFS
+#. TRANSLATORS: message letting the user know no device
+#. * upgrade available due to missing on LVFS
+#. TRANSLATORS: message letting the user know no device upgrade
+#. * available due to missing on LVFS
+#. TRANSLATORS: message letting the user know no device
+#. * upgrade available due to missing on LVFS
+msgid "Devices with no available firmware updates: "
+msgstr "පවතින ස්ථිරාංග යාවත්කාලීන නොමැති උපාංග: "
+
+#. TRANSLATORS: message letting the user know no device upgrade available
+#. TRANSLATORS: message letting the user know no device upgrade
+#. * available
+#. TRANSLATORS: message letting the user know no device upgrade available
+#. TRANSLATORS: message letting the user know no device upgrade
+#. * available
+msgid "Devices with the latest available firmware version:"
+msgstr "පවතින නවතම ස්ථිරාංග අනුවාදය සහිත උපාංග:"
+
+#. TRANSLATORS: this is for the device tests
+msgid "Did not find any devices with matching GUIDs"
+msgstr "ගැළපෙන GUID සහිත උපාංග කිසිවක් සොයා ගත්තේ නැත"
 
 #. TRANSLATORS: Suffix: the HSI result
 #. TRANSLATORS: Plugin is inactive and not used
 msgid "Disabled"
 msgstr "අබල කර ඇත"
 
+msgid "Disabled fwupdate debugging"
+msgstr "fwupdate නිදොස්කරණය අක්‍රීය කර ඇත"
+
+#. TRANSLATORS: command description
+msgid "Disables a given remote"
+msgstr "ලබා දී ඇති දුරස්ථ පාලකයක් අබල කරයි"
+
+#. TRANSLATORS: command line option
+msgid "Display version"
+msgstr "සංදර්ශක අනුවාදය"
+
+#. TRANSLATORS: command line option
+msgid "Do not check for old metadata"
+msgstr "පැරණි පාරදත්ත සඳහා පරීක්ෂා නොකරන්න"
+
+#. TRANSLATORS: command line option
+msgid "Do not check for unreported history"
+msgstr "වාර්තා නොකළ ඉතිහාසය පරීක්ෂා නොකරන්න"
+
+#. TRANSLATORS: command line option
+msgid "Do not check if download remotes should be enabled"
+msgstr "බාගැනීම් දුරස්ථ සක්‍රීය කළ යුතුදැයි පරීක්ෂා නොකරන්න"
+
+#. TRANSLATORS: command line option
+msgid "Do not check or prompt for reboot after update"
+msgstr "යාවත්කාලීන කිරීමෙන් පසු නැවත පණගැන්වීම සඳහා පරීක්ෂා නොකරන්න"
+
+#. TRANSLATORS: turn on all debugging
+msgid "Do not include log domain prefix"
+msgstr "ලොග් වසම් උපසර්ගය ඇතුළත් නොකරන්න"
+
+#. TRANSLATORS: turn on all debugging
+msgid "Do not include timestamp prefix"
+msgstr "වේලා මුද්දර උපසර්ගය ඇතුළත් නොකරන්න"
+
+#. TRANSLATORS: command line option
+msgid "Do not perform device safety checks"
+msgstr "උපාංග ආරක්ෂණ පරීක්ෂාවන් සිදු නොකරන්න"
+
+#. TRANSLATORS: command line option
+msgid "Do not prompt for devices"
+msgstr "උපාංග සඳහා විමසන්න එපා"
+
+#. TRANSLATORS: command line option
+msgid "Do not write to the history database"
+msgstr "ඉතිහාස දත්ත ගබඩාවට ලියන්න එපා"
+
+#. TRANSLATORS: should the branch be changed
+msgid "Do you understand the consequences of changing the firmware branch?"
+msgstr "ස්ථිරාංග ශාඛාව වෙනස් කිරීමේ ප්රතිවිපාක ඔබට තේරෙනවාද?"
+
+#. TRANSLATORS: offer to disable this nag
+msgid "Do you want to disable this feature for future updates?"
+msgstr "ඔබට අනාගත යාවත්කාලීන සඳහා මෙම විශේෂාංගය අබල කිරීමට අවශ්‍යද?"
+
+#. TRANSLATORS: ask the user if we can update the metadata
+msgid "Do you want to refresh this remote now?"
+msgstr "ඔබට දැන් මෙම දුරස්ථ පාලකය නැවුම් කිරීමට අවශ්‍යද?"
+
+#. TRANSLATORS: offer to stop asking the question
+msgid "Do you want to upload reports automatically for future updates?"
+msgstr "ඔබට අනාගත යාවත්කාලීන සඳහා වාර්තා ස්වයංක්‍රීයව උඩුගත කිරීමට අවශ්‍යද?"
+
+#. TRANSLATORS: success
+#. success
+msgid "Done!"
+msgstr "අහවරයි!"
+
+#. TRANSLATORS: message letting the user know an downgrade is available
+#. * %1 is the device name and %2 and %3 are version strings
+#, c-format
+msgid "Downgrade %s from %s to %s?"
+msgstr "%s %s සිට %sදක්වා පහත් කරන්නද?"
+
+#. TRANSLATORS: command description
+msgid "Downgrades the firmware on a device"
+msgstr "උපාංගයක ස්ථිරාංග පහත හෙළයි"
+
+#. TRANSLATORS: the first replacement is a display name
+#. * e.g. "ColorHugALS" and the second and third are
+#. * version numbers e.g. "1.2.3"
+#, c-format
+msgid "Downgrading %s from %s to %s... "
+msgstr "%s %s සිට %sදක්වා පහත හෙලීම ... "
+
+#. TRANSLATORS: %1 is a device name
+#, c-format
+msgid "Downgrading %s…"
+msgstr "පහත හෙලීම %s…"
+
+#. TRANSLATORS: command description
+msgid "Download a file"
+msgstr "ගොනුවක් බාගන්න"
+
 #. TRANSLATORS: downloading from a remote server
 msgid "Downloading…"
 msgstr "බාගත වෙමින්…"
+
+#. TRANSLATORS: command description
+msgid "Dump SMBIOS data from a file"
+msgstr "ගොනුවකින් SMBIOS දත්ත ඩම්ප් කරන්න"
+
+#. TRANSLATORS: length of time the update takes to apply
+msgid "Duration"
+msgstr "කාල සීමාව"
+
+#. TRANSLATORS: ESP is EFI System Partition
+msgid "ESP specified was not valid"
+msgstr "නිශ්චිතව දක්වා ඇති ESP වලංගු නැත"
+
+#. TRANSLATORS: command line option
+msgid "Enable firmware update support on supported systems"
+msgstr "සහාය දක්වන පද්ධති මත ස්ථිරාංග යාවත්කාලීන සහාය සබල කරන්න"
+
+#. TRANSLATORS: a remote here is like a 'repo' or software source
+msgid "Enable new remote?"
+msgstr "නව දුරස්ථ පාලකය සබල කරන්නද?"
+
+#. TRANSLATORS: Turn on the remote
+msgid "Enable this remote?"
+msgstr "මෙම දුරස්ථ පාලකය සබල කරන්නද?"
 
 #. TRANSLATORS: Suffix: the HSI result
 #. TRANSLATORS: Plugin is active and in use
@@ -67,13 +870,111 @@ msgstr "බාගත වෙමින්…"
 msgid "Enabled"
 msgstr "සබල කර ඇත"
 
+msgid "Enabled fwupdate debugging"
+msgstr "fwupdate නිදොස්කරණය සබල කර ඇත"
+
+#. TRANSLATORS: Plugin is active only if hardware is found
+msgid "Enabled if hardware matches"
+msgstr "දෘඪාංග ගැලපෙන්නේ නම් සබල කර ඇත"
+
+#. TRANSLATORS: command description
+msgid "Enables a given remote"
+msgstr "දී ඇති දුරස්ථ පාලකයක් සබල කරයි"
+
+msgid "Enabling this functionality is done at your own risk, which means you have to contact your original equipment manufacturer regarding any problems caused by these updates. Only problems with the update process itself should be filed at $OS_RELEASE:BUG_REPORT_URL$."
+msgstr "මෙම ක්‍රියාකාරීත්වය සක්‍රීය කිරීම ඔබගේම අවදානමකින් සිදු කෙරේ, එයින් අදහස් වන්නේ මෙම යාවත්කාලීනයන් නිසා ඇති වන ගැටළු සම්බන්ධයෙන් ඔබ ඔබේ මුල් උපකරණ නිෂ්පාදකයා හා සම්බන්ධ විය යුතු බවයි. $OS_RELEASE:BUG_REPORT_URL$ හි ගොනු කළ යුත්තේ යාවත්කාලීන ක්‍රියාවලියේ ඇති ගැටලු පමණි."
+
+#. TRANSLATORS: show the user a warning
+msgid "Enabling this remote is done at your own risk."
+msgstr "මෙම දුරස්ථ පාලකය සබල කිරීම ඔබගේම අවදානමකින් සිදු කෙරේ."
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Encrypted"
+msgstr "සංකේතිතයි"
+
+#. TRANSLATORS: Title: Memory contents are encrypted, e.g. Intel TME
+msgid "Encrypted RAM"
+msgstr "සංකේතනය කළ RAM"
+
+#. TRANSLATORS: the vendor is no longer supporting the device
+msgid "End of life"
+msgstr "ජීවිතයේ අවසානය"
+
+#. TRANSLATORS: command description
+msgid "Erase all firmware update history"
+msgstr "සියලුම ස්ථිරාංග යාවත්කාලීන ඉතිහාසය මකන්න"
+
 #. TRANSLATORS: erasing contents of the flash chips
 msgid "Erasing…"
-msgstr "මකා දැමෙමින්…"
+msgstr "මැකෙමින්…"
+
+#. TRANSLATORS: exit after we've started up, used for user profiling
+msgid "Exit after a small delay"
+msgstr "කුඩා ප්‍රමාදයකින් පසු පිටවන්න"
+
+#. TRANSLATORS: exit straight away, used for automatic profiling
+msgid "Exit after the engine has loaded"
+msgstr "එන්ජිම පූරණය වූ පසු පිටවන්න"
+
+#. TRANSLATORS: command description
+msgid "Export a firmware file structure to XML"
+msgstr "ස්ථිරාංග ගොනු ව්‍යුහයක් XML වෙත අපනයනය කරන්න"
+
+#. TRANSLATORS: command description
+msgid "Extract a firmware blob to images"
+msgstr "පින්තූර වෙත ස්ථිරාංග බ්ලොබ් උපුටා ගන්න"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILE"
+msgstr "ගොනුව"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILE [DEVICE-ID|GUID]"
+msgstr "ගොනුව [උපාංගය-ID|මාර්ගෝපදේශය]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILE-IN FILE-OUT [SCRIPT] [OUTPUT]"
+msgstr "FILE-IN FILE-out [SCRIPT] [OUTPUT]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME"
-msgstr "ගොනුවේනම"
+msgstr "ගොනුවේ නම"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME CERTIFICATE PRIVATE-KEY"
+msgstr "ගොනු නාම සහතිකය පුද්ගලික යතුර"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME DEVICE-ALT-NAME|DEVICE-ALT-ID"
+msgstr "FILENAME DEVICE-ALT-NAME|DEVICE-ALT-ID"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME DEVICE-ALT-NAME|DEVICE-ALT-ID [IMAGE-ALT-NAME|IMAGE-ALT-ID]"
+msgstr "FILENAME DEVICE-ALT-NAME|DEVICE-ALT-ID [IMAGE-ALT-NAME|IMAGE-ALT-ID]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME DEVICE-ID"
+msgstr "FILENAME උපාංගය-ID"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME OFFSET DATA [FIRMWARE-TYPE]"
+msgstr "FILENAME OFFSET දත්ත [FIRMWARE-TYPE]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME [DEVICE-ID|GUID]"
+msgstr "ගොනු නාමය [DEVICE-ID|GUID]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME [FIRMWARE-TYPE]"
+msgstr "FILENAME [FIRMWARE-TYPE]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME-SRC FILENAME-DST [FIRMWARE-TYPE-SRC] [FIRMWARE-TYPE-DST]"
+msgstr "FILENAME-SRC FILENAME-DST [FIRMWARE-TYPE-SRC] [FIRMWARE-TYPE-DST]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME|CHECKSUM1[,CHECKSUM2][,CHECKSUM3]"
+msgstr "FILENAME|CHECKSUM1[,CHECKSUM2][,CHECKSUM3]"
 
 #. TRANSLATORS: Suffix: the fallback HSI result
 #. TRANSLATORS: the update state of the specific device
@@ -84,13 +985,317 @@ msgstr "අසමත් විය"
 msgid "Failed to apply update"
 msgstr "යාවත්කාලය යෙදීමට අසමත් විය"
 
+#. TRANSLATORS: we could not talk to the fwupd daemon
+msgid "Failed to connect to daemon"
+msgstr "ඩීමන් වෙත සම්බන්ධ වීමට අසමත් විය"
+
+#. TRANSLATORS: we could not get the devices to update offline
+msgid "Failed to get pending devices"
+msgstr "පොරොත්තු උපාංග ලබා ගැනීමට අසමත් විය"
+
+#. TRANSLATORS: we could not install for some reason
+msgid "Failed to install firmware update"
+msgstr "ස්ථිරාංග යාවත්කාලීන ස්ථාපනය කිරීමට අසමත් විය"
+
+#. TRANSLATORS: could not read existing system data
+#. TRANSLATORS: could not read file
+msgid "Failed to load local dbx"
+msgstr "දේශීය dbx පූරණය කිරීමට අසමත් විය"
+
+#. TRANSLATORS: quirks are device-specific workarounds
+msgid "Failed to load quirks"
+msgstr "විචක්ෂණ පූරණය කිරීමට අසමත් විය"
+
+#. TRANSLATORS: could not read existing system data
+msgid "Failed to load system dbx"
+msgstr "පද්ධතිය dbx පූරණය කිරීමට අසමත් විය"
+
 #. TRANSLATORS: another fwupdtool instance is already running
 msgid "Failed to lock"
 msgstr "අගුළු ලෑමට අසමත් විය"
 
+#. TRANSLATORS: the user didn't read the man page
+msgid "Failed to parse arguments"
+msgstr "තර්ක විග්‍රහ කිරීමට අසමත් විය"
+
+#. TRANSLATORS: failed to read measurements file
+msgid "Failed to parse file"
+msgstr "ගොනුව විග්‍රහ කිරීමට අසමත් විය"
+
+#. TRANSLATORS: the user didn't read the man page
+msgid "Failed to parse flags for --filter"
+msgstr "--ෆිල්ටර් සඳහා කොඩි විග්‍රහ කිරීමට අසමත් විය"
+
+#. TRANSLATORS: could not parse file
+msgid "Failed to parse local dbx"
+msgstr "දේශීය dbx විග්‍රහ කිරීමට අසමත් විය"
+
 #. TRANSLATORS: we could not reboot for some reason
 msgid "Failed to reboot"
-msgstr "නැවත ඇරඹීමට අසමත් විය"
+msgstr "යළි ඇරඹීමට අසමත් විය"
+
+#. TRANSLATORS: we could not talk to plymouth
+msgid "Failed to set splash mode"
+msgstr "විදින මාදිලිය සැකසීමට අසමත් විය"
+
+#. TRANSLATORS: something with a blocked hash exists
+#. * in the users ESP -- which would be bad!
+msgid "Failed to validate ESP contents"
+msgstr "ESP අන්තර්ගතයන් වලංගු කිරීමට අසමත් විය"
+
+#. TRANSLATORS: filename of the local file
+msgid "Filename"
+msgstr "ගොනුවේ නම"
+
+#. TRANSLATORS: filename of the local file
+msgid "Filename Signature"
+msgstr "ගොනු නාමය අත්සන"
+
+#. TRANSLATORS: full path of the remote.conf file
+msgid "Filename Source"
+msgstr "ගොනු නාමය මූලාශ්රය"
+
+#. TRANSLATORS: user did not include a filename parameter
+msgid "Filename required"
+msgstr "ගොනුවේ නම අවශ්‍යයි"
+
+#. TRANSLATORS: command line option
+msgid "Filter with a set of device flags using a ~ prefix to exclude, e.g. 'internal,~needs-reboot'"
+msgstr "බැහැර කිරීමට ~ උපසර්ගයක් භාවිතා කරමින් උපාංග ධජ කට්ටලයක් සමඟ පෙරහන් කරන්න, උදා 'අභ්‍යන්තර,~needs-reboot'"
+
+#. TRANSLATORS: remote URI
+msgid "Firmware Base URI"
+msgstr "ස්ථිරාංග පදනම URI"
+
+#. TRANSLATORS: program summary
+msgid "Firmware Update D-Bus Service"
+msgstr "ස්ථිරාංග යාවත්කාලීන D-බස් සේවාව"
+
+#. TRANSLATORS: program name
+msgid "Firmware Update Daemon"
+msgstr "ස්ථිරාංග යාවත්කාලීන Daemon"
+
+#. TRANSLATORS: program name
+msgid "Firmware Utility"
+msgstr "ස්ථිරාංග උපයෝගිතා"
+
+#. TRANSLATORS: Title: if we can verify the firmware checksums
+msgid "Firmware attestation"
+msgstr "ස්ථිරාංග සහතික කිරීම"
+
+#. TRANSLATORS: user selected something not possible
+msgid "Firmware is already blocked"
+msgstr "ස්ථිරාංග දැනටමත් අවහිර කර ඇත"
+
+#. TRANSLATORS: user selected something not possible
+msgid "Firmware is not already blocked"
+msgstr "ස්ථිරාංග දැනටමත් අවහිර කර නැත"
+
+#. TRANSLATORS: the metadata is very out of date; %u is a number > 1
+#, c-format
+msgid "Firmware metadata has not been updated for %u day and may not be up to date."
+msgid_plural "Firmware metadata has not been updated for %u days and may not be up to date."
+msgstr[0] "ස්ථිරාංග පාරදත්ත දින %u ක් සඳහා යාවත්කාලීන කර නොමැති අතර යාවත්කාලීන නොවිය හැක."
+msgstr[1] "ස්ථිරාංග පාරදත්ත දින %u ක් සඳහා යාවත්කාලීන කර නොමැති අතර යාවත්කාලීන නොවිය හැක."
+
+#. TRANSLATORS: error message for a user who ran fwupdmgr
+#. refresh recently %1 is an already translated timestamp such
+#. as 6 hours or 15 seconds
+#, c-format
+msgid "Firmware metadata last refresh: %s ago. Use --force to refresh again."
+msgstr "ස්ථිරාංග පාරදත්ත අවසන් වරට නැවුම් කළේ: %s පෙර. නැවත නැවුම් කිරීමට --force භාවිතා කරන්න."
+
+#. TRANSLATORS: Title: if firmware updates are available
+msgid "Firmware updates"
+msgstr "ස්ථිරාංග යාවත්කාල"
+
+msgid "Firmware updates are not supported on this machine."
+msgstr "මෙම යන්ත්‍රයේ ස්ථිරාංග යාවත්කාලීන කිරීම් සඳහා සහය නොදක්වයි."
+
+msgid "Firmware updates are supported on this machine."
+msgstr "මෙම යන්ත්‍රයේ ස්ථිරාංග යාවත්කාලීන කිරීම් සඳහා සහය දක්වයි."
+
+#. TRANSLATORS: user needs to run a command
+msgid "Firmware updates disabled; run 'fwupdmgr unlock' to enable"
+msgstr "ස්ථිරාංග යාවත්කාලීන කිරීම් අක්‍රීය කර ඇත; සබල කිරීමට 'fwupdmgr unlock' ධාවනය කරන්න"
+
+#. TRANSLATORS: description of plugin state, e.g. disabled
+msgid "Flags"
+msgstr "කොඩි"
+
+#. TRANSLATORS: command line option
+msgid "Force the action by relaxing some runtime checks"
+msgstr "සමහර ධාවන කාල චෙක්පත් ලිහිල් කිරීමෙන් ක්‍රියාව බල කරන්න"
+
+msgid "Force the action ignoring all warnings"
+msgstr "සියලුම අනතුරු ඇඟවීම් නොසලකා හරිමින් ක්‍රියාව බල කරන්න"
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Found"
+msgstr "හමු විය"
+
+#. TRANSLATORS: title text, shown as a warning
+msgid "Full Disk Encryption Detected"
+msgstr "සම්පූර්ණ තැටි සංකේතනය අනාවරණය විය"
+
+#. TRANSLATORS: we might ask the user the recovery key when next booting
+#. Windows
+msgid "Full disk encryption secrets may be invalidated when updating"
+msgstr "යාවත්කාලීන කිරීමේදී සම්පූර්ණ තැටි සංකේතාංකන රහස් අවලංගු විය හැක"
+
+#. TRANSLATORS: Title: if the part has been fused
+msgid "Fused platform"
+msgstr "විලයන වේදිකාව"
+
+#. TRANSLATORS: global ID common to all similar hardware
+msgid "GUID"
+msgid_plural "GUIDs"
+msgstr[0] "මාර්ගෝපදේශය"
+msgstr[1] "GUIDs"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgctxt "A single GUID"
+msgid "GUID"
+msgstr "මාර්ගෝපදේශය"
+
+#. TRANSLATORS: command description
+msgid "Get all device flags supported by fwupd"
+msgstr "fwupd මගින් සහය දක්වන සියලුම උපාංග කොඩි ලබා ගන්න"
+
+#. TRANSLATORS: command description
+msgid "Get all devices that support firmware updates"
+msgstr "ස්ථිරාංග යාවත්කාලීන කිරීම් සඳහා සහය දක්වන සියලුම උපාංග ලබා ගන්න"
+
+#. TRANSLATORS: command description
+msgid "Get all enabled plugins registered with the system"
+msgstr "සියලුම සක්‍රීය ප්ලගීන පද්ධතිය සමඟ ලියාපදිංචි කර ගන්න"
+
+#. TRANSLATORS: command description
+msgid "Gets details about a firmware file"
+msgstr "ස්ථිරාංග ගොනුවක් පිළිබඳ විස්තර ලබා ගනී"
+
+#. TRANSLATORS: command description
+msgid "Gets the configured remotes"
+msgstr "වින්‍යාසගත දුරස්ථයන් ලබා ගනී"
+
+#. TRANSLATORS: command description
+msgid "Gets the host security attributes"
+msgstr "සත්කාරක ආරක්ෂක ගුණාංග ලබා ගනී"
+
+#. TRANSLATORS: firmware approved by the admin
+msgid "Gets the list of approved firmware"
+msgstr "අනුමත ස්ථිරාංග ලැයිස්තුව ලබා ගනී"
+
+#. TRANSLATORS: command description
+msgid "Gets the list of blocked firmware"
+msgstr "අවහිර කළ ස්ථිරාංග ලැයිස්තුව ලබා ගනී"
+
+#. TRANSLATORS: command description
+msgid "Gets the list of updates for connected hardware"
+msgstr "සම්බන්ධිත දෘඩාංග සඳහා යාවත්කාලීන ලැයිස්තුව ලබා ගනී"
+
+#. TRANSLATORS: command description
+msgid "Gets the releases for a device"
+msgstr "උපාංගයක් සඳහා නිකුත් කිරීම් ලබා ගනී"
+
+#. TRANSLATORS: command description
+msgid "Gets the results from the last update"
+msgstr "අවසාන යාවත්කාලීනයෙන් ප්‍රතිඵල ලබා ගනී"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "HWIDS-FILE"
+msgstr "HWIDS-FILE"
+
+#. TRANSLATORS: the hardware is waiting to be replugged
+msgid "Hardware is waiting to be replugged"
+msgstr "දෘඪාංග නැවත පිරවීමට බලා සිටී"
+
+#. TRANSLATORS: the release urgency
+msgid "High"
+msgstr "ඉහළ"
+
+#. TRANSLATORS: title for host security events
+msgid "Host Security Events"
+msgstr "සත්කාරක ආරක්ෂක සිදුවීම්"
+
+#. TRANSLATORS: this is a string like 'HSI:2-U'
+msgid "Host Security ID:"
+msgstr "සත්කාරක ආරක්ෂක ID:"
+
+#. TRANSLATORS: Title:
+#. * https://en.wikipedia.org/wiki/Input%E2%80%93output_memory_management_unit
+msgid "IOMMU"
+msgstr "IOMMU"
+
+#. TRANSLATORS: HSI event title
+msgid "IOMMU device protection disabled"
+msgstr "IOMMU උපාංග ආරක්ෂණය අබල කර ඇත"
+
+#. TRANSLATORS: HSI event title
+msgid "IOMMU device protection enabled"
+msgstr "IOMMU උපාංග ආරක්ෂණය සබල කර ඇත"
+
+#. TRANSLATORS: daemon is inactive
+msgid "Idle…"
+msgstr "නිෂ්ක්‍රීය…"
+
+#. TRANSLATORS: command line option
+msgid "Ignore SSL strict checks when downloading files"
+msgstr "ගොනු බාගත කිරීමේදී SSL දැඩි චෙක්පත් නොසලකා හරින්න"
+
+#. TRANSLATORS: command line option
+msgid "Ignore firmware checksum failures"
+msgstr "ස්ථිරාංග චෙක්සම් අසමත්වීම් නොසලකා හරින්න"
+
+#. TRANSLATORS: command line option
+msgid "Ignore firmware hardware mismatch failures"
+msgstr "ස්ථිරාංග දෘඪාංග නොගැලපීම අසාර්ථක වීම නොසලකා හරින්න"
+
+#. TRANSLATORS: Ignore validation safety checks when flashing this device
+msgid "Ignore validation safety checks"
+msgstr "වලංගු කිරීමේ ආරක්ෂණ පරීක්ෂාවන් නොසලකා හරින්න"
+
+#. TRANSLATORS: try to help
+msgid "Ignoring SSL strict checks, to do this automatically in the future export DISABLE_SSL_STRICT in your environment"
+msgstr "SSL දැඩි චෙක්පත් නොසලකා හැරීම, අනාගතයේදී මෙය ස්වයංක්‍රීයව සිදු කිරීම සඳහා ඔබේ පරිසරය තුළ DISABLE_SSL_STRICT අපනයනය කරන්න"
+
+#. TRANSLATORS: length of time the update takes to apply
+msgid "Install Duration"
+msgstr "ස්ථාපන කාලය"
+
+#. TRANSLATORS: command description
+msgid "Install a firmware blob on a device"
+msgstr "උපාංගයක ස්ථිරාංග බ්ලොබ් එකක් ස්ථාපනය කරන්න"
+
+#. TRANSLATORS: command description
+msgid "Install a firmware file on this hardware"
+msgstr "මෙම දෘඪාංගයේ ස්ථිරාංග ගොනුවක් ස්ථාපනය කරන්න"
+
+#. TRANSLATORS: command description
+msgid "Install a specific firmware version on a device"
+msgstr "උපාංගයක නිශ්චිත ස්ථිරාංග අනුවාදයක් ස්ථාපනය කරන්න"
+
+msgid "Install old version of signed system firmware"
+msgstr "අත්සන් කළ පද්ධති ස්ථිරාංගයේ පැරණි අනුවාදය ස්ථාපනය කරන්න"
+
+msgid "Install old version of unsigned system firmware"
+msgstr "අත්සන් නොකළ පද්ධති ස්ථිරාංගයේ පැරණි අනුවාදය ස්ථාපනය කරන්න"
+
+msgid "Install signed device firmware"
+msgstr "අත්සන් කරන ලද උපාංග ස්ථිරාංග ස්ථාපනය කරන්න"
+
+msgid "Install signed system firmware"
+msgstr "අත්සන් කළ පද්ධති ස්ථිරාංග ස්ථාපනය කරන්න"
+
+#. TRANSLATORS: Install composite firmware on the parent before the child
+msgid "Install to parent device first"
+msgstr "පළමුව මාපිය උපාංගයට ස්ථාපනය කරන්න"
+
+msgid "Install unsigned device firmware"
+msgstr "අත්සන් නොකළ උපාංග ස්ථිරාංග ස්ථාපනය කරන්න"
+
+msgid "Install unsigned system firmware"
+msgstr "අත්සන් නොකළ පද්ධති ස්ථිරාංග ස්ථාපනය කරන්න"
 
 #. TRANSLATORS: console message when no Plymouth is installed
 msgid "Installing Firmware…"
@@ -100,9 +1305,152 @@ msgstr "ස්ථිරාංගය ස්ථාපනය වෙමින්…"
 msgid "Installing firmware update…"
 msgstr "ස්ථිරාංගයේ අනුවාදය ස්ථාපනය වෙමින්…"
 
+#. TRANSLATORS: %1 is a device name
+#, c-format
+msgid "Installing on %s…"
+msgstr "…මත %sකිරීම"
+
+#. TRANSLATORS: if it breaks, you get to keep both pieces
+msgid "Installing this update may also void any device warranty."
+msgstr "මෙම යාවත්කාලීනය ස්ථාපනය කිරීමෙන් ඕනෑම උපාංග වගකීමක් ද අවලංගු විය හැක."
+
+#. TRANSLATORS: Title: BootGuard is a trademark from Intel
+msgid "Intel BootGuard"
+msgstr "Intel BootGuard"
+
+#. TRANSLATORS: Title: BootGuard is a trademark from Intel,
+#. * ACM means to verify the integrity of Initial Boot Block
+msgid "Intel BootGuard ACM protected"
+msgstr "Intel BootGuard ACM ආරක්ෂිතයි"
+
+#. TRANSLATORS: Title: BootGuard is a trademark from Intel,
+#. * OTP = one time programmable
+msgid "Intel BootGuard OTP fuse"
+msgstr "Intel BootGuard OTP ෆියුස්"
+
+#. TRANSLATORS: Title: BootGuard is a trademark from Intel,
+#. * error policy is what to do on failure
+msgid "Intel BootGuard error policy"
+msgstr "Intel BootGuard දෝෂ ප්‍රතිපත්තිය"
+
+#. TRANSLATORS: Title: BootGuard is a trademark from Intel,
+#. * verified boot refers to the way the boot process is verified
+msgid "Intel BootGuard verified boot"
+msgstr "Intel BootGuard සත්‍යාපනය කළ ඇරඹුම"
+
+#. TRANSLATORS: Title: CET = Control-flow Enforcement Technology,
+#. * active means being used by the OS
+msgid "Intel CET Active"
+msgstr "Intel CET Active"
+
+#. TRANSLATORS: Title: CET = Control-flow Enforcement Technology,
+#. * enabled means supported by the processor
+msgid "Intel CET Enabled"
+msgstr "Intel CET සබල කර ඇත"
+
+#. TRANSLATORS: Title: SMAP = Supervisor Mode Access Prevention
+msgid "Intel SMAP"
+msgstr "Intel SMAP"
+
+#. TRANSLATORS: Device cannot be removed easily
+msgid "Internal device"
+msgstr "අභ්යන්තර උපාංගය"
+
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Invalid"
 msgstr "වලංගු නොවේ"
+
+#. TRANSLATORS: version is older
+msgid "Is downgrade"
+msgstr "පහත හෙලනු ලැබේ"
+
+#. TRANSLATORS: Is currently in bootloader mode
+msgid "Is in bootloader mode"
+msgstr "බූට්ලෝඩර් මාදිලියේ ඇත"
+
+#. TRANSLATORS: version is newer
+msgid "Is upgrade"
+msgstr "වැඩිදියුණු වේ"
+
+#. TRANSLATORS: issue fixed with the release, e.g. CVE
+msgid "Issue"
+msgid_plural "Issues"
+msgstr[0] "නිකුත් කිරීම"
+msgstr[1] "ගැටලු"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "KEY,VALUE"
+msgstr "යතුර, අගය"
+
+#. TRANSLATORS: HSI event title
+msgid "Kernel is no longer tainted"
+msgstr "කර්නලය තවදුරටත් අපිරිසිදු නොවේ"
+
+#. TRANSLATORS: HSI event title
+msgid "Kernel is tainted"
+msgstr "කර්නලය අපිරිසිදු වේ"
+
+#. TRANSLATORS: HSI event title
+msgid "Kernel lockdown disabled"
+msgstr "කර්නලය අගුලු දැමීම අබල කර ඇත"
+
+#. TRANSLATORS: HSI event title
+msgid "Kernel lockdown enabled"
+msgstr "කර්නල් අගුලු දැමීම සබල කර ඇත"
+
+#. TRANSLATORS: keyring type, e.g. GPG or PKCS7
+msgid "Keyring"
+msgstr "ප්රධාන මුදුව"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "LOCATION"
+msgstr "ස්ථානය"
+
+#. TRANSLATORS: the original time/date the device was modified
+msgid "Last modified"
+msgstr "අවසන් වරට වෙනස් කරන ලදී"
+
+#. TRANSLATORS: time remaining for completing firmware flash
+msgid "Less than one minute remaining"
+msgstr "මිනිත්තුවකට වඩා අඩු කාලයක් ඉතිරිව ඇත"
+
+#. TRANSLATORS: e.g. GPLv2+, Proprietary etc
+msgid "License"
+msgstr "බලපත්රය"
+
+msgid "Linux Vendor Firmware Service (stable firmware)"
+msgstr "Linux Vendor Firmware Service (ස්ථාවර ස්ථිරාංග)"
+
+msgid "Linux Vendor Firmware Service (testing firmware)"
+msgstr "Linux Vendor Firmware Service (ස්ථිරාංග පරීක්ෂා කිරීම)"
+
+#. TRANSLATORS: Title: if it's tainted or not
+msgid "Linux kernel"
+msgstr "ලිනක්ස් කර්නලය"
+
+#. TRANSLATORS: Title: lockdown is a security mode of the kernel
+msgid "Linux kernel lockdown"
+msgstr "ලිනක්ස් කර්නලය අගුලු දැමීම"
+
+#. TRANSLATORS: Title: swap space or swap partition
+msgid "Linux swap"
+msgstr "ලිනක්ස් හුවමාරුව"
+
+#. TRANSLATORS: command line option
+msgid "List entries in dbx"
+msgstr "dbx හි ඇතුළත් කිරීම් ලැයිස්තුගත කරන්න"
+
+#. TRANSLATORS: command line option
+msgid "List supported firmware updates"
+msgstr "සහාය දක්වන ස්ථිරාංග යාවත්කාලීන ලැයිස්තුගත කරන්න"
+
+#. TRANSLATORS: command description
+msgid "List the available firmware types"
+msgstr "පවතින ස්ථිරාංග වර්ග ලැයිස්තුගත කරන්න"
+
+#. TRANSLATORS: command description
+msgid "Lists files on the ESP"
+msgstr "ESP මත ගොනු ලැයිස්තුගත කරයි"
 
 #. TRANSLATORS: parsing the firmware information
 msgid "Loading…"
@@ -112,6 +1460,152 @@ msgstr "පූරණය වෙමින්…"
 msgid "Locked"
 msgstr "අගුළු ලා ඇත"
 
+#. TRANSLATORS: the release urgency
+msgid "Low"
+msgstr "අඩු"
+
+#. TRANSLATORS: Title: MEI = Intel Management Engine
+msgid "MEI manufacturing mode"
+msgstr "MEI නිෂ්පාදන මාදිලිය"
+
+#. TRANSLATORS: Title: MEI = Intel Management Engine, and the
+#. * "override" is the physical PIN that can be driven to
+#. * logic high -- luckily it is probably not accessible to
+#. * end users on consumer boards
+msgid "MEI override"
+msgstr "MEI අභිබවා යයි"
+
+msgid "MEI version"
+msgstr "MEI අනුවාදය"
+
+#. TRANSLATORS: command line option
+msgid "Manually enable specific plugins"
+msgstr "විශේෂිත ප්ලගීන අතින් සක්‍රීය කරන්න"
+
+#. TRANSLATORS: the release urgency
+msgid "Medium"
+msgstr "මධ්යම"
+
+#. TRANSLATORS: remote URI
+msgid "Metadata Signature"
+msgstr "පාරදත්ත අත්සන"
+
+#. TRANSLATORS: remote URI
+msgid "Metadata URI"
+msgstr "පාරදත්ත URI"
+
+#. TRANSLATORS: explain why no metadata available
+msgid "Metadata can be obtained from the Linux Vendor Firmware Service."
+msgstr "පාරදත්ත Linux Vendor Firmware Service වෙතින් ලබාගත හැක."
+
+#. TRANSLATORS: smallest version number installable on device
+msgid "Minimum Version"
+msgstr "අවම අනුවාදය"
+
+#. TRANSLATORS: error message
+#, c-format
+msgid "Mismatched daemon and client, use %s instead"
+msgstr "නොගැලපෙන ඩීමන් සහ සේවාදායකයා, ඒ වෙනුවට %s භාවිතා කරන්න"
+
+#. TRANSLATORS: sets something in daemon.conf
+msgid "Modifies a daemon configuration value"
+msgstr "ඩීමන් වින්‍යාස අගයක් වෙනස් කරයි"
+
+#. TRANSLATORS: command description
+msgid "Modifies a given remote"
+msgstr "දී ඇති දුරස්ථ පාලකයක් වෙනස් කරයි"
+
+msgid "Modify a configured remote"
+msgstr "වින්‍යාසගත දුරස්ථ පාලකයක් වෙනස් කරන්න"
+
+msgid "Modify daemon configuration"
+msgstr "ඩීමන් වින්‍යාසය වෙනස් කරන්න"
+
+#. TRANSLATORS: command description
+msgid "Monitor the daemon for events"
+msgstr "සිදුවීම් සඳහා ඩීමන් නිරීක්ෂණය කරන්න"
+
+#. TRANSLATORS: command description
+msgid "Mounts the ESP"
+msgstr "ESP සවි කරයි"
+
+#. TRANSLATORS: we're poking around as a power user
+msgid "NOTE: This program may only work correctly as root"
+msgstr "සටහන: මෙම වැඩසටහන නිවැරදිව ක්‍රියා කළ හැක්කේ root ලෙස පමණි"
+
+#. TRANSLATORS: Requires a reboot to apply firmware or to reload hardware
+msgid "Needs a reboot after installation"
+msgstr "ස්ථාපනය කිරීමෙන් පසු නැවත ආරම්භ කිරීම අවශ්ය වේ"
+
+#. TRANSLATORS: the update state of the specific device
+msgid "Needs reboot"
+msgstr "නැවත පණගැන්වීම අවශ්‍යයි"
+
+#. TRANSLATORS: Requires system shutdown to apply firmware
+msgid "Needs shutdown after installation"
+msgstr "ස්ථාපනය කිරීමෙන් පසු වසා දැමීම අවශ්ය වේ"
+
+#. TRANSLATORS: version number of new firmware
+msgid "New version"
+msgstr "නව අනුවාදය"
+
+#. TRANSLATORS: user did not tell the tool what to do
+msgid "No action specified!"
+msgstr "ක්‍රියාවක් සඳහන් කර නැත!"
+
+#. TRANSLATORS: message letting the user know no device downgrade available
+#. * %1 is the device name
+#, c-format
+msgid "No downgrades for %s"
+msgstr "%sසඳහා පහත් කිරීම් නොමැත"
+
+#. TRANSLATORS: nothing found
+msgid "No firmware IDs found"
+msgstr "ස්ථිරාංග හැඳුනුම් කිසිවක් හමු නොවීය"
+
+#. TRANSLATORS: nothing attached that can be upgraded
+msgid "No hardware detected with firmware update capability"
+msgstr "ස්ථිරාංග යාවත්කාලීන කිරීමේ හැකියාව ඇති දෘඪාංග අනාවරණය කර ගෙන නොමැත"
+
+#. TRANSLATORS: nothing found
+msgid "No plugins found"
+msgstr "ප්ලගින කිසිවක් හමු නොවීය"
+
+#. TRANSLATORS: no repositories to download from
+msgid "No releases available"
+msgstr "නිකුත් කිරීම් නොමැත"
+
+#. TRANSLATORS: explain why no metadata available
+msgid "No remotes are currently enabled so no metadata is available."
+msgstr "කිසිදු දුරස්ථ පාලකයක් දැනට සබල කර නොමැති නිසා පාරදත්ත නොමැත."
+
+#. TRANSLATORS: no repositories to download from
+msgid "No remotes available"
+msgstr "දුරස්ථ නැත"
+
+#. TRANSLATORS: this is an error string
+msgid "No updatable devices"
+msgstr "යාවත්කාලීන කළ හැකි උපාංග නොමැත"
+
+#. TRANSLATORS: this is an error string
+msgid "No updates available"
+msgstr "යාවත්කාලීන නොමැත"
+
+msgid "No updates available for remaining devices"
+msgstr "ඉතිරි උපාංග සඳහා යාවත්කාලීන නොමැත"
+
+#. TRANSLATORS: nothing was updated offline
+msgid "No updates were applied"
+msgstr "යාවත්කාලීන කිසිවක් යොදන ලදී"
+
+#. TRANSLATORS: version cannot be installed due to policy
+msgid "Not approved"
+msgstr "අනුමත කර නැත"
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Not found"
+msgstr "හමු නොවිණි"
+
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Not supported"
 msgstr "සහාය නොදක්වයි"
@@ -119,6 +1613,153 @@ msgstr "සහාය නොදක්වයි"
 #. TRANSLATORS: Suffix: the HSI result
 msgid "OK"
 msgstr "හරි"
+
+#. TRANSLATORS: this is for the device tests
+msgid "OK!"
+msgstr "හරි!"
+
+#. TRANSLATORS: command line option
+msgid "Only show single PCR value"
+msgstr "තනි PCR අගය පමණක් පෙන්වන්න"
+
+#. TRANSLATORS: command line option
+msgid "Only use IPFS when downloading files"
+msgstr "ගොනු බාගත කිරීමේදී පමණක් IPFS භාවිතා කරන්න"
+
+#. TRANSLATORS: some devices can only be updated to a new semver and cannot
+#. * be downgraded or reinstalled with the existing version
+msgid "Only version upgrades are allowed"
+msgstr "අනුවාද උත්ශ්‍රේණි කිරීමට පමණක් අවසර ඇත"
+
+#. TRANSLATORS: command line option
+msgid "Output in JSON format"
+msgstr "JSON ආකෘතියෙන් ප්‍රතිදානය"
+
+#. TRANSLATORS: command line option
+msgid "Override the default ESP path"
+msgstr "පෙරනිමි ESP මාර්ගය අභිබවා යන්න"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "PATH"
+msgstr "මාර්ගය"
+
+#. TRANSLATORS: command description
+msgid "Parse and show details about a firmware file"
+msgstr "ස්ථිරාංග ගොනුවක් පිළිබඳ විස්තර විග්‍රහ කර පෙන්වන්න"
+
+#. TRANSLATORS: reading new dbx from the update
+msgid "Parsing dbx update…"
+msgstr "dbx යාවත්කාලීන…විග්‍රහ කිරීම"
+
+#. TRANSLATORS: reading existing dbx from the system
+msgid "Parsing system dbx…"
+msgstr "විග්‍රහ කිරීමේ පද්ධතිය dbx…"
+
+#. TRANSLATORS: remote filename base
+msgid "Password"
+msgstr "මුරපදය"
+
+#. TRANSLATORS: command description
+msgid "Patch a firmware blob at a known offset"
+msgstr "දන්නා ඕෆ්සෙට් එකක ස්ථිරාංග බ්ලොබ් එකක් පැච් කරන්න"
+
+msgid "Payload"
+msgstr "ගෙවීම"
+
+#. TRANSLATORS: the update state of the specific device
+msgid "Pending"
+msgstr "පොරොත්තුවෙන්"
+
+#. TRANSLATORS: console message when not using plymouth
+msgid "Percentage complete"
+msgstr "ප්‍රතිශතය සම්පූර්ණයි"
+
+#. TRANSLATORS: prompt to apply the update
+msgid "Perform operation?"
+msgstr "මෙහෙයුම සිදු කරන්නද?"
+
+#. TRANSLATORS: Title: Allows debugging of parts using proprietary hardware
+msgid "Platform Debugging"
+msgstr "වේදිකා නිදොස්කරණය"
+
+#. TRANSLATORS: 'recovery key' here refers to a code, rather than a physical
+#. metal thing
+msgid "Please ensure you have the volume recovery key before continuing."
+msgstr "කරුණාකර දිගටම කරගෙන යාමට පෙර ඔබ සතුව ශබ්ද ප්‍රතිසාධන යතුර ඇති බවට සහතික වන්න."
+
+#. TRANSLATORS: the user isn't reading the question
+#, c-format
+msgid "Please enter a number from 0 to %u: "
+msgstr "කරුණාකර 0 සිට %uදක්වා අංකයක් ඇතුළු කරන්න: "
+
+#. TRANSLATORS: Failed to open plugin, hey Arch users
+msgid "Plugin dependencies missing"
+msgstr "ප්ලගින පරායත්තතා අතුරුදහන්"
+
+#. TRANSLATORS: Title: DMA as in https://en.wikipedia.org/wiki/DMA_attack
+msgid "Pre-boot DMA protection"
+msgstr "පෙර-ආරම්භක DMA ආරක්ෂාව"
+
+#. TRANSLATORS: HSI event title
+msgid "Pre-boot DMA protection is disabled"
+msgstr "පෙර-ආරම්භක DMA ආරක්ෂාව අක්‍රීය කර ඇත"
+
+#. TRANSLATORS: HSI event title
+msgid "Pre-boot DMA protection is enabled"
+msgstr "පෙර-ආරම්භක DMA ආරක්ෂාව සබල කර ඇත"
+
+#. TRANSLATORS: version number of previous firmware
+msgid "Previous version"
+msgstr "පෙර අනුවාදය"
+
+msgid "Print the version number"
+msgstr "අනුවාද අංකය මුද්‍රණය කරන්න"
+
+msgid "Print verbose debug statements"
+msgstr "වාචික දෝශ නිරාකරණ ප්‍රකාශ මුද්‍රණය කරන්න"
+
+#. TRANSLATORS: the numeric priority
+msgid "Priority"
+msgstr "ප්රමුඛත්වය"
+
+#. TRANSLATORS: reasons the device is not updatable
+msgid "Problems"
+msgstr "ගැටලු"
+
+msgid "Proceed with upload?"
+msgstr "උඩුගත කිරීම සමඟ ඉදිරියට යන්නද?"
+
+#. TRANSLATORS: a non-free software license
+msgid "Proprietary"
+msgstr "හිමිකාර"
+
+#. TRANSLATORS: command line option
+msgid "Query for firmware update support"
+msgstr "ස්ථිරාංග යාවත්කාලීන සහාය සඳහා විමසුම"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "REMOTE-ID"
+msgstr "දුරස්ථ-ID"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "REMOTE-ID KEY VALUE"
+msgstr "දුරස්ථ-ID යතුරු අගය"
+
+#. TRANSLATORS: command description
+msgid "Read a firmware blob from a device"
+msgstr "උපාංගයකින් ස්ථිරාංග බ්ලොබ් කියවන්න"
+
+#. TRANSLATORS: command description
+msgid "Read a firmware from a device"
+msgstr "උපාංගයකින් ස්ථිරාංග කියවන්න"
+
+#. TRANSLATORS: command description
+msgid "Read firmware from device into a file"
+msgstr "උපාංගයෙන් ස්ථිරාංග ගොනුවකට කියවන්න"
+
+#. TRANSLATORS: command description
+msgid "Read firmware from one partition into a file"
+msgstr "ස්ථිරාංග එක් කොටසකින් ගොනුවකට කියවන්න"
 
 #. TRANSLATORS: %1 is a device name
 #, c-format
@@ -133,24 +1774,610 @@ msgstr "කියවෙමින්…"
 msgid "Rebooting…"
 msgstr "නැවත ඇරඹෙමින්…"
 
+#. TRANSLATORS: command description
+msgid "Refresh metadata from remote server"
+msgstr "දුරස්ථ සේවාදායකයෙන් පාර-දත්ත නැවුම් කරන්න"
+
+#. TRANSLATORS: message letting the user know an upgrade is available
+#. * %1 is the device name and %2 is a version string
+#, c-format
+msgid "Reinstall %s to %s?"
+msgstr "%s සිට %sදක්වා නැවත ස්ථාපනය කරන්නද?"
+
+#. TRANSLATORS: command description
+msgid "Reinstall current firmware on the device"
+msgstr "උපාංගයේ වත්මන් ස්ථිරාංග නැවත ස්ථාපනය කරන්න"
+
+#. TRANSLATORS: command description
+msgid "Reinstall firmware on a device"
+msgstr "උපාංගයක ස්ථිරාංග නැවත ස්ථාපනය කරන්න"
+
 #. TRANSLATORS: the first replacement is a display name
 #. * e.g. "ColorHugALS" and the second is a version number
 #. * e.g. "1.2.3"
 #, c-format
 msgid "Reinstalling %s with %s... "
-msgstr "%s සමඟ %s නැවත ස්ථාපනය වෙමින්... "
+msgstr "%s සමඟ %s යළි ස්ථාපනය වෙමින්... "
+
+#. TRANSLATORS: the stream of firmware, e.g. nonfree or open-source
+msgid "Release Branch"
+msgstr "නිදහස් ශාඛාව"
+
+#. TRANSLATORS: release attributes
+msgid "Release Flags"
+msgstr "කොඩි නිකුත් කරන්න"
+
+#. TRANSLATORS: the exact component on the server
+msgid "Release ID"
+msgstr "නිදහස් හැඳුනුම්පත"
+
+#. TRANSLATORS: the server the file is coming from
+#. TRANSLATORS: remote identifier, e.g. lvfs-testing
+msgid "Remote ID"
+msgstr "දුරස්ථ හැඳුනුම්පත"
+
+#. TRANSLATORS: command description
+msgid "Replace data in an existing firmware file"
+msgstr "පවතින ස්ථිරාංග ගොනුවක දත්ත ප්‍රතිස්ථාපනය කරන්න"
+
+#. TRANSLATORS: URI to send success/failure reports
+msgid "Report URI"
+msgstr "URI වාර්තා කරන්න"
+
+#. TRANSLATORS: Has been reported to a metadata server
+msgid "Reported to remote server"
+msgstr "දුරස්ථ සේවාදායකය වෙත වාර්තා කරන ලදී"
+
+#. TRANSLATORS: the user is using Gentoo/Arch and has screwed something up
+msgid "Required efivarfs filesystem was not found"
+msgstr "අවශ්‍ය efivarfs ගොනු පද්ධතිය සොයාගත නොහැකි විය"
+
+#. TRANSLATORS: not required for this system
+msgid "Required hardware was not found"
+msgstr "අවශ්‍ය දෘඩාංග හමු නොවීය"
+
+#. TRANSLATORS: Requires a bootloader mode to be manually enabled by the user
+msgid "Requires a bootloader"
+msgstr "ඇරඹුම් කාරකයක් අවශ්‍ය වේ"
+
+#. TRANSLATORS: metadata is downloaded from the Internet
+msgid "Requires internet connection"
+msgstr "අන්තර්ජාල සම්බන්ධතාව අවශ්‍යයි"
+
+#. TRANSLATORS: reboot to apply the update
+msgid "Restart now?"
+msgstr "දැන් නැවත ආරම්භ කරන්නද?"
+
+#. TRANSLATORS: configuration changes only take effect on restart
+msgid "Restart the daemon to make the change effective?"
+msgstr "වෙනස් කිරීම ඵලදායී කිරීමට ඩීමන් නැවත ආරම්භ කරන්නද?"
 
 #. TRANSLATORS: restarting the device to pick up new F/W
 msgid "Restarting device…"
-msgstr "උපාංගය නැවත ඇරඹෙමින්…"
+msgstr "උපාංගය යළි ඇරඹෙමින්…"
+
+#. TRANSLATORS: command description
+msgid "Return all the hardware IDs for the machine"
+msgstr "යන්ත්‍රය සඳහා සියලුම දෘඪාංග හැඳුනුම්පත් ආපසු දෙන්න"
+
+#. TRANSLATORS: Title: if firmware enforces rollback protection
+msgid "Rollback protection"
+msgstr "ආපසු හැරවීමේ ආරක්ෂාව"
+
+#. TRANSLATORS: this is shown in the MOTD
+msgid "Run `fwupdmgr get-upgrades` for more information."
+msgstr "වැඩි විස්තර සඳහා `fwupdmgr get-upgrades` ධාවනය කරන්න."
+
+#. TRANSLATORS: this is shown in the MOTD
+msgid "Run `fwupdmgr sync-bkc` to complete this action."
+msgstr "මෙම ක්‍රියාව සම්පූර්ණ කිරීමට `fwupdmgr sync-bkc` ධාවනය කරන්න."
+
+#. TRANSLATORS: command line option
+msgid "Run the plugin composite cleanup routine when using install-blob"
+msgstr "Install-blob භාවිතා කරන විට ප්ලගින සංයුක්ත පිරිසිදු කිරීමේ පුරුද්ද ක්‍රියාත්මක කරන්න"
+
+#. TRANSLATORS: command line option
+msgid "Run the plugin composite prepare routine when using install-blob"
+msgstr "ස්ථාපනය-බ්ලොබ් භාවිතා කරන විට ප්ලගින සංයුක්ත සූදානම් කිරීමේ දින චර්යාව ධාවනය කරන්න"
+
+#. TRANSLATORS: The kernel does not support this plugin
+msgid "Running kernel is too old"
+msgstr "ධාවන කර්නලය පරණ වැඩියි"
+
+#. TRANSLATORS:  this is the HSI suffix
+msgid "Runtime Suffix"
+msgstr "ධාවන කාල උපසර්ගය"
+
+#. TRANSLATORS: Title: SPI refers to the flash chip in the computer
+msgid "SPI BIOS Descriptor"
+msgstr "SPI BIOS විස්තරකය"
+
+#. TRANSLATORS: Title: SPI refers to the flash chip in the computer
+msgid "SPI BIOS region"
+msgstr "SPI BIOS කලාපය"
+
+#. TRANSLATORS: Title: SPI refers to the flash chip in the computer
+msgid "SPI lock"
+msgstr "SPI අගුල"
+
+#. TRANSLATORS: Title: if hardware enforces control of SPI replays
+msgid "SPI replay protection"
+msgstr "SPI නැවත ධාවනය ආරක්ෂාව"
+
+#. TRANSLATORS: Title: SPI refers to the flash chip in the computer
+msgid "SPI write"
+msgstr "SPI ලියන්න"
+
+#. TRANSLATORS: Title: if hardware enforces control of SPI writes
+msgid "SPI write protection"
+msgstr "SPI ලිවීමේ ආරක්ෂාව"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "SUBSYSTEM DRIVER [DEVICE-ID|GUID]"
+msgstr "උප පද්ධති ධාවකය [උපාංගය-ID|මාර්ගෝපදේශය]"
+
+#. TRANSLATORS: command description
+msgid "Save a file that allows generation of hardware IDs"
+msgstr "දෘඪාංග හැඳුනුම්පත් ජනනය කිරීමට ඉඩ දෙන ගොනුවක් සුරකින්න"
+
+#. TRANSLATORS: command line option
+msgid "Schedule installation for next reboot when possible"
+msgstr "හැකි විට ඊළඟ නැවත පණගැන්වීම සඳහා ස්ථාපනය කාලසටහන්ගත කරන්න"
+
+#. TRANSLATORS: scheduling an update to be done on the next boot
+msgid "Scheduling…"
+msgstr "උපලේඛනගත කිරීම…"
+
+#. TRANSLATORS: HSI event title
+msgid "Secure Boot disabled"
+msgstr "ආරක්ෂිත ඇරඹුම් අක්‍රීය කර ඇත"
+
+#. TRANSLATORS: HSI event title
+msgid "Secure Boot enabled"
+msgstr "ආරක්ෂිත ඇරඹුම් සක්රිය කර ඇත"
+
+#. TRANSLATORS: the %1 is a URL to a wiki page
+#, c-format
+msgid "See %s for more details."
+msgstr "වැඩි විස්තර සඳහා %s බලන්න."
+
+#. TRANSLATORS: %s is a link to a website
+#, c-format
+msgid "See %s for more information."
+msgstr "තව තොරතුරු සඳහා %s බලන්න."
+
+#. TRANSLATORS: device has been chosen by the daemon for the user
+msgid "Selected device"
+msgstr "තෝරාගත් උපාංගය"
+
+#. TRANSLATORS: Volume has been chosen by the user
+msgid "Selected volume"
+msgstr "තෝරාගත් පරිමාව"
+
+#. TRANSLATORS: serial number of hardware
+msgid "Serial Number"
+msgstr "අන්රක්රමික අංකය"
+
+#. TRANSLATORS: command line option
+msgid "Set the debugging flag during update"
+msgstr "යාවත්කාලීන කිරීමේදී දෝශ නිරාකරණ ධජය සකසන්න"
+
+#. TRANSLATORS: firmware approved by the admin
+msgid "Sets the list of approved firmware"
+msgstr "අනුමත ස්ථිරාංග ලැයිස්තුව සකසයි"
+
+#. TRANSLATORS: command description
+msgid "Share firmware history with the developers"
+msgstr "ස්ථිරාංග ඉතිහාසය සංවර්ධකයින් සමඟ බෙදා ගන්න"
 
 #. TRANSLATORS: command line option
 msgid "Show all results"
 msgstr "සියළුම ප්‍රතිඵල පෙන්වන්න"
 
+#. TRANSLATORS: command line option
+msgid "Show client and daemon versions"
+msgstr "සේවාදායක සහ ඩීමන් අනුවාද පෙන්වන්න"
+
+#. TRANSLATORS: this is for daemon development
+msgid "Show daemon verbose information for a particular domain"
+msgstr "විශේෂිත වසමක් සඳහා ඩේමන් වාචික තොරතුරු පෙන්වන්න"
+
+#. TRANSLATORS: turn on all debugging
+msgid "Show debugging information for all domains"
+msgstr "සියලුම වසම් සඳහා නිදොස් කිරීමේ තොරතුරු පෙන්වන්න"
+
+#. TRANSLATORS: for the --verbose arg
+msgid "Show debugging options"
+msgstr "නිදොස් කිරීමේ විකල්ප පෙන්වන්න"
+
+#. TRANSLATORS: command line option
+msgid "Show devices that are not updatable"
+msgstr "යාවත්කාලීන කළ නොහැකි උපාංග පෙන්වන්න"
+
+#. TRANSLATORS: command line option
+msgid "Show extra debugging information"
+msgstr "අමතර දෝශ නිරාකරණ තොරතුරු පෙන්වන්න"
+
+#. TRANSLATORS: command description
+msgid "Show history of firmware updates"
+msgstr "ස්ථිරාංග යාවත්කාලීන ඉතිහාසය පෙන්වන්න"
+
+#. TRANSLATORS: this is for plugin development
+msgid "Show plugin verbose information"
+msgstr "ප්ලගින වාචික තොරතුරු පෙන්වන්න"
+
+#. TRANSLATORS: command line option
+msgid "Show the calculated version of the dbx"
+msgstr "dbx හි ගණනය කළ අනුවාදය පෙන්වන්න"
+
+#. TRANSLATORS: command line option
+msgid "Show the debug log from the last attempted update"
+msgstr "අවසන් වරට උත්සාහ කළ යාවත්කාලීනයේ දෝශ නිරාකරණ ලොගය පෙන්වන්න"
+
+#. TRANSLATORS: command line option
+msgid "Show the information of firmware update status"
+msgstr "ස්ථිරාංග යාවත්කාලීන තත්ත්වය පිළිබඳ තොරතුරු පෙන්වන්න"
+
+#. TRANSLATORS: shutdown to apply the update
+msgid "Shutdown now?"
+msgstr "දැන් වසා දමන්නද?"
+
+#. TRANSLATORS: command description
+msgid "Sign a firmware with a new key"
+msgstr "නව යතුරක් සමඟ ස්ථිරාංගයක් අත්සන් කරන්න"
+
+msgid "Sign data using the client certificate"
+msgstr "සේවාදායක සහතිකය භාවිතයෙන් දත්ත අත්සන් කරන්න"
+
+#. TRANSLATORS: command description
+msgctxt "command-description"
+msgid "Sign data using the client certificate"
+msgstr "සේවාදායක සහතිකය භාවිතයෙන් දත්ත අත්සන් කරන්න"
+
+#. TRANSLATORS: command line option
+msgid "Sign the uploaded data with the client certificate"
+msgstr "උඩුගත කළ දත්ත සේවාදායක සහතිකය සමඟ අත්සන් කරන්න"
+
+msgid "Signature"
+msgstr "අත්සන"
+
+#. TRANSLATORS: firmware is verified on-device the payload using strong crypto
+msgid "Signed Payload"
+msgstr "අත්සන් කළ පේලෝඩ්"
+
+#. TRANSLATORS: file size of the download
+msgid "Size"
+msgstr "ප්රමාණය"
+
+#. TRANSLATORS: the platform secret is stored in the PCRx registers on the TPM
+msgid "Some of the platform secrets may be invalidated when updating this firmware."
+msgstr "මෙම ස්ථිරාංග යාවත්කාලීන කිරීමේදී සමහර වේදිකා රහස් අවලංගු විය හැක."
+
+#. TRANSLATORS: source (as in code) link
+msgid "Source"
+msgstr "මූලාශ්රය"
+
+msgid "Specify Vendor/Product ID(s) of DFU device"
+msgstr "DFU උපාංගයේ විකුණුම්කරු/නිෂ්පාදන ID(s) සඳහන් කරන්න"
+
+#. TRANSLATORS: command line option
+msgid "Specify the dbx database file"
+msgstr "dbx දත්ත සමුදා ගොනුව සඳහන් කරන්න"
+
+msgid "Specify the number of bytes per USB transfer"
+msgstr "USB හුවමාරුවකට බයිට් ගණන සඳහන් කරන්න"
+
+#. TRANSLATORS: the update state of the specific device
+msgid "Success"
+msgstr "සාර්ථකත්වය"
+
+#. TRANSLATORS: success message -- where activation is making the new
+#. * firmware take effect, usually after updating offline
+msgid "Successfully activated all devices"
+msgstr "සියලුම උපාංග සාර්ථකව සක්‍රිය කර ඇත"
+
+#. TRANSLATORS: success message
+msgid "Successfully disabled remote"
+msgstr "දුරස්ථ පාලකය සාර්ථකව අබල කරන ලදී"
+
+#. TRANSLATORS: success message -- where 'metadata' is information
+#. * about available firmware on the remote server
+msgid "Successfully downloaded new metadata: "
+msgstr "නව පාරදත්ත සාර්ථකව බාගන්නා ලදී: "
+
+#. TRANSLATORS: success message
+msgid "Successfully enabled and refreshed remote"
+msgstr "දුරස්ථ පාලකය සාර්ථකව සබල කර නැවුම් කරන ලදී"
+
+#. TRANSLATORS: success message
+msgid "Successfully enabled remote"
+msgstr "දුරස්ථ පාලකය සාර්ථකව සබල කර ඇත"
+
+#. TRANSLATORS: success message
+msgid "Successfully installed firmware"
+msgstr "ස්ථිරාංග සාර්ථකව ස්ථාපනය කර ඇත"
+
+#. TRANSLATORS: success message -- a per-system setting value
+msgid "Successfully modified configuration value"
+msgstr "වින්‍යාස අගය සාර්ථකව වෙනස් කරන ලදී"
+
+#. TRANSLATORS: success message for a per-remote setting change
+msgid "Successfully modified remote"
+msgstr "දුරස්ථ පාලකය සාර්ථකව වෙනස් කරන ලදී"
+
+#. TRANSLATORS: success message -- the user can do this by-hand too
+msgid "Successfully refreshed metadata manually"
+msgstr "පාරදත්ත අතින් සාර්ථකව නැවුම් කරන ලදී"
+
+#. TRANSLATORS: success message when user refreshes device checksums
+msgid "Successfully updated device checksums"
+msgstr "උපාංග චෙක්සම් සාර්ථකව යාවත්කාලීන කරන ලදී"
+
+#. TRANSLATORS: success message -- where the user has uploaded
+#. * success and/or failure reports to the remote server
+#, c-format
+msgid "Successfully uploaded %u report"
+msgid_plural "Successfully uploaded %u reports"
+msgstr[0] "වාර්තාව %u ක් සාර්ථකව උඩුගත කරන ලදී"
+msgstr[1] "වාර්තා %u ක් සාර්ථකව උඩුගත කරන ලදී"
+
+#. TRANSLATORS: success message when user verified device checksums
+msgid "Successfully verified device checksums"
+msgstr "උපාංග චෙක්සම් සාර්ථකව සත්‍යාපනය කරන ලදී"
+
+#. TRANSLATORS: one line summary of device
+msgid "Summary"
+msgstr "සාරාංශය"
+
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Supported"
 msgstr "සහාය දක්වයි"
+
+#. TRANSLATORS: Title: if fwupd supports HSI on this chip
+msgid "Supported CPU"
+msgstr "සහය දක්වන CPU"
+
+#. TRANSLATORS: Is found in current metadata
+msgid "Supported on remote server"
+msgstr "දුරස්ථ සේවාදායකයේ සහය දක්වයි"
+
+#. TRANSLATORS: Title: a better sleep state
+msgid "Suspend-to-idle"
+msgstr "අත්හිටුවීම-නිෂ්ක්රීය කිරීම"
+
+#. TRANSLATORS: Title: sleep state
+msgid "Suspend-to-ram"
+msgstr "සස්පෙන්ඩ්-ට-රැම්"
+
+#. TRANSLATORS: show and ask user to confirm --
+#. * %1 is the old branch name, %2 is the new branch name
+#, c-format
+msgid "Switch branch from %s to %s?"
+msgstr "ශාඛාව %s සිට %sදක්වා මාරු කරන්නද?"
+
+#. TRANSLATORS: command description
+msgid "Switch the firmware branch on the device"
+msgstr "උපාංගයේ ස්ථිරාංග ශාඛාව මාරු කරන්න"
+
+#. TRANSLATORS: command description
+msgid "Sync firmware versions to the host best known configuration"
+msgstr "ස්ථිරාංග අනුවාද ධාරක වඩාත් දන්නා වින්‍යාසය වෙත සමමුහුර්ත කරන්න"
+
+#. TRANSLATORS: as in laptop battery power
+msgid "System power is too low to perform the update"
+msgstr "යාවත්කාලීන කිරීම සිදු කිරීමට පද්ධතියේ බලය ඉතා අඩුය"
+
+#. TRANSLATORS: as in laptop battery power
+#, c-format
+msgid "System power is too low to perform the update (%u%%, requires %u%%)"
+msgstr "යාවත්කාලීන කිරීම සිදු කිරීමට පද්ධතියේ බලය ඉතා අඩුය (%u%%, අවශ්‍ය වන්නේ %u%%)"
+
+#. TRANSLATORS: Must be plugged in to an outlet
+msgid "System requires external power source"
+msgstr "පද්ධතියට බාහිර බලශක්ති ප්රභවයක් අවශ්ය වේ"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "TEXT"
+msgstr "පෙළ"
+
+#. TRANSLATORS: Title: the PCR is rebuilt from the TPM event log
+msgid "TPM PCR0 reconstruction"
+msgstr "TPM PCR0 ප්‍රතිසංස්කරණය"
+
+#. TRANSLATORS: HSI event title
+msgid "TPM PCR0 reconstruction is invalid"
+msgstr "TPM PCR0 ප්‍රතිනිර්මාණය වලංගු නැත"
+
+#. TRANSLATORS: HSI event title
+msgid "TPM PCR0 reconstruction is now valid"
+msgstr "TPM PCR0 ප්‍රතිනිර්මාණය දැන් වලංගුයි"
+
+#. TRANSLATORS: Title: PCRs (Platform Configuration Registers) shouldn't be
+#. empty
+msgid "TPM empty PCRs"
+msgstr "TPM හිස් PCRs"
+
+#. TRANSLATORS: Title: TPM = Trusted Platform Module
+msgid "TPM v2.0"
+msgstr "TPM අනු:2.0"
+
+#. TRANSLATORS: release tag set for release, e.g. lenovo-2021q3
+msgid "Tag"
+msgid_plural "Tags"
+msgstr[0] "ටැග් කරන්න"
+msgstr[1] "ටැග්"
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Tainted"
+msgstr "කිලිටි වෙලා"
+
+msgid "Target"
+msgstr "ඉලක්කය"
+
+#. TRANSLATORS: command description
+msgid "Test a device using a JSON manifest"
+msgstr "JSON මැනිෆෙස්ටයක් භාවිතයෙන් උපාංගයක් පරීක්ෂා කරන්න"
+
+#. TRANSLATORS: do not translate the variables marked using $
+msgid "The LVFS is a free service that operates as an independent legal entity and has no connection with $OS_RELEASE:NAME$. Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices. All firmware is provided only by the original equipment manufacturer."
+msgstr "LVFS යනු ස්වාධීන නෛතික ආයතනයක් ලෙස ක්‍රියාත්මක වන නිදහස් සේවාවක් වන අතර $OS_RELEASE:NAME$ සමඟ කිසිදු සම්බන්ධයක් නොමැත. ඔබේ බෙදාහරින්නා ඔබේ පද්ධතිය හෝ සම්බන්ධිත උපාංග සමඟ ගැළපීම සඳහා ස්ථිරාංග යාවත්කාලීන කිසිවක් සත්‍යාපනය කර නොතිබිය හැකිය. සියලුම ස්ථිරාංග සපයනු ලබන්නේ මුල් උපකරණ නිෂ්පාදකයා විසින් පමණි."
+
+#. TRANSLATORS: this is more background on a security measurement problem
+msgid "The TPM PCR0 differs from reconstruction."
+msgstr "TPM PCR0 ප්‍රතිසංස්කරණයෙන් වෙනස් වේ."
+
+#. TRANSLATORS: the user is SOL for support...
+msgid "The daemon has loaded 3rd party code and is no longer supported by the upstream developers!"
+msgstr "ඩීමන් 3වන පාර්ශ්ව කේතය පූරණය කර ඇති අතර උඩුගං බලා සංවර්ධකයින් විසින් තවදුරටත් සහාය නොදක්වයි!"
+
+#. TRANSLATORS: this is for the device tests, %1 is the device
+#. * version, %2 is what we expected
+#, c-format
+msgid "The device version did not match: got %s, expected %s"
+msgstr "උපාංග අනුවාදය නොගැලපේ: ලැබුණේ %s, අපේක්ෂිත %s"
+
+#. TRANSLATORS: %1 is the firmware vendor, %2 is the device vendor name
+#, c-format
+msgid "The firmware from %s is not supplied by %s, the hardware vendor."
+msgstr "%s සිට ස්ථිරාංග සපයනු ලබන්නේ දෘඪාංග වෙළෙන්දා වන %sවිසිනි."
+
+#. TRANSLATORS: try to help
+msgid "The system clock has not been set correctly and downloading files may fail."
+msgstr "පද්ධති ඔරලෝසුව නිවැරදිව සකසා නොමැති අතර ගොනු බාගත කිරීම අසාර්ථක විය හැක."
+
+#. TRANSLATORS: naughty vendor
+msgid "The vendor did not supply any release notes."
+msgstr "වෙළෙන්දා නිකුත් කිරීමේ සටහන් කිසිවක් සපයා නැත."
+
+#. TRANSLATORS: now list devices with unfixed high-priority issues
+msgid "There are devices with issues:"
+msgstr "ගැටළු සහිත උපාංග තිබේ:"
+
+#. TRANSLATORS: nothing to show
+msgid "There are no blocked firmware files"
+msgstr "අවහිර කළ ස්ථිරාංග ගොනු නොමැත"
+
+#. TRANSLATORS: approved firmware has been checked by
+#. * the domain administrator
+msgid "There is no approved firmware."
+msgstr "අනුමත ස්ථිරාංග නොමැත."
+
+#. TRANSLATORS: %1 is the current device version number, and %2 is the
+#. command name, e.g. `fwupdmgr sync-bkc`
+#, c-format
+msgid "This device will be reverted back to %s when the %s command is performed."
+msgstr "%s විධානය ක්‍රියාත්මක කරන විට මෙම උපාංගය නැවත %s වෙත ප්‍රතිවර්තනය වේ."
+
+#. TRANSLATORS: the vendor did not upload this
+msgid "This firmware is provided by LVFS community members and is not provided (or supported) by the original hardware vendor."
+msgstr "මෙම ස්ථිරාංග සපයනු ලබන්නේ LVFS ප්‍රජා සාමාජිකයින් විසින් වන අතර මුල් දෘඪාංග වෙළෙන්දා විසින් සපයනු නොලැබේ (හෝ සහාය නොදක්වයි)."
+
+#. TRANSLATORS: unsupported build of the package
+msgid "This package has not been validated, it may not work properly."
+msgstr "මෙම පැකේජය වලංගු කර නැත, එය නිවැරදිව ක්‍රියා නොකරනු ඇත."
+
+#. TRANSLATORS: we're poking around as a power user
+msgid "This program may only work correctly as root"
+msgstr "මෙම වැඩසටහන නිවැරදිව ක්‍රියා කළ හැක්කේ root ලෙස පමණි"
+
+msgid "This remote contains firmware which is not embargoed, but is still being tested by the hardware vendor. You should ensure you have a way to manually downgrade the firmware if the firmware update fails."
+msgstr "මෙම දුරස්ථ පාලකයේ සම්බාධක නොමැති ස්ථිරාංග අඩංගු නමුත් දෘඪාංග වෙළෙන්දා විසින් තවමත් පරීක්ෂා කරනු ලැබේ. ස්ථිරාංග යාවත්කාලීන කිරීම අසාර්ථක වුවහොත් ස්ථිරාංග හස්තීයව පහත හෙළීමට ඔබට ක්‍රමයක් ඇති බව ඔබ සහතික විය යුතුය."
+
+#. TRANSLATORS: this is instructions on how to improve the HSI suffix
+msgid "This system has HSI runtime issues."
+msgstr "මෙම පද්ධතියට HSI ධාවන කාල ගැටළු ඇත."
+
+#. TRANSLATORS: this is instructions on how to improve the HSI security level
+msgid "This system has a low HSI security level."
+msgstr "මෙම පද්ධතියට අඩු HSI ආරක්ෂක මට්ටමක් ඇත."
+
+#. TRANSLATORS: description of dbxtool
+msgid "This tool allows an administrator to apply UEFI dbx updates."
+msgstr "මෙම මෙවලම පරිපාලකයෙකුට UEFI dbx යාවත්කාලීන යෙදීමට ඉඩ සලසයි."
+
+#. TRANSLATORS: CLI description
+msgid "This tool allows an administrator to debug UpdateCapsule operation."
+msgstr "මෙම මෙවලම පරිපාලකයෙකුට UpdateCapsule මෙහෙයුම නිදොස් කිරීමට ඉඩ දෙයි."
+
+#. TRANSLATORS: CLI description
+msgid "This tool allows an administrator to query and control the fwupd daemon, allowing them to perform actions such as installing or downgrading firmware."
+msgstr "මෙම මෙවලම පරිපාලකයෙකුට fwupd daemon විමසා පාලනය කිරීමට ඉඩ සලසයි, ස්ථිරාංග ස්ථාපනය කිරීම හෝ පහත හෙලීම වැනි ක්‍රියා සිදු කිරීමට ඔවුන්ට ඉඩ සලසයි."
+
+#. TRANSLATORS: CLI description
+msgid "This tool allows an administrator to use the fwupd plugins without being installed on the host system."
+msgstr "මෙම මෙවලම පරිපාලකයෙකුට ධාරක පද්ධතියේ ස්ථාපනය නොකර fwupd ප්ලගීන භාවිතා කිරීමට ඉඩ සලසයි."
+
+#. TRANSLATORS: the user needs to stop playing with stuff
+msgid "This tool can only be used by the root user"
+msgstr "මෙම මෙවලම භාවිතා කළ හැක්කේ root පරිශීලකයාට පමණි"
+
+#. TRANSLATORS: CLI description
+msgid "This tool will read and parse the TPM event log from the system firmware."
+msgstr "මෙම මෙවලම පද්ධති ස්ථිරාංගයෙන් TPM සිදුවීම් ලොගය කියවා විග්‍රහ කරයි."
+
+#. TRANSLATORS: the update state of the specific device
+msgid "Transient failure"
+msgstr "තාවකාලික අසාර්ථකත්වය"
+
+#. TRANSLATORS: We verified the meatdata against the server
+msgid "Trusted metadata"
+msgstr "විශ්වාසදායක පාරදත්ත"
+
+#. TRANSLATORS: We verified the payload against the server
+msgid "Trusted payload"
+msgstr "විශ්වාසනීය ගෙවීම"
+
+#. TRANSLATORS: remote type, e.g. remote or local
+msgid "Type"
+msgstr "ටයිප් කරන්න"
+
+#. TRANSLATORS: partition refers to something on disk, again, hey Arch users
+msgid "UEFI ESP partition not detected or configured"
+msgstr "UEFI ESP කොටස අනාවරණය කර හෝ වින්‍යාස කර නොමැත"
+
+#. TRANSLATORS: program name
+msgid "UEFI Firmware Utility"
+msgstr "UEFI ස්ථිරාංග උපයෝගිතා"
+
+#. TRANSLATORS: capsule updates are an optional BIOS feature
+msgid "UEFI capsule updates not available or enabled in firmware setup"
+msgstr "UEFI කැප්සියුල යාවත්කාලීන ලබා ගත නොහැක හෝ ස්ථිරාංග සැකසුම තුළ සබල කර ඇත"
+
+#. TRANSLATORS: program name
+msgid "UEFI dbx Utility"
+msgstr "UEFI dbx උපයෝගිතා"
+
+#. TRANSLATORS: system is not booted in UEFI mode
+msgid "UEFI firmware can not be updated in legacy BIOS mode"
+msgstr "UEFI ස්ථිරාංග පැරණි BIOS ආකාරයෙන් යාවත්කාලීන කළ නොහැක"
+
+#. TRANSLATORS: Title: PK is the 'platform key' for the machine
+msgid "UEFI platform key"
+msgstr "UEFI වේදිකා යතුර"
+
+#. TRANSLATORS: Title: SB is a way of locking down UEFI
+msgid "UEFI secure boot"
+msgstr "UEFI ආරක්ෂිත ඇරඹුම"
+
+#. TRANSLATORS: error message
+msgid "Unable to connect to service"
+msgstr "සේවාවට සම්බන්ධ විය නොහැක"
+
+#. TRANSLATORS: command description
+msgid "Unbind current driver"
+msgstr "වත්මන් ධාවකය ඉවත් කරන්න"
+
+#. TRANSLATORS: we will now offer this firmware to the user
+msgid "Unblocking firmware:"
+msgstr "ස්ථිරාංග අවහිර කිරීම ඉවත් කිරීම:"
+
+#. TRANSLATORS: command description
+msgid "Unblocks a specific firmware from being installed"
+msgstr "නිශ්චිත ස්ථිරාංගයක් ස්ථාපනය කිරීමෙන් අවහිර කිරීම ඉවත් කරයි"
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Unencrypted"
+msgstr "විසංකේතිතයි"
 
 #. TRANSLATORS: current daemon status is unknown
 #. TRANSLATORS: we don't know the license of the update
@@ -158,13 +2385,165 @@ msgstr "සහාය දක්වයි"
 msgid "Unknown"
 msgstr "නොදනී"
 
+#. TRANSLATORS: Name of hardware
+msgid "Unknown Device"
+msgstr "හඳුනානොගත් උපකරණය"
+
+msgid "Unlock the device to allow access"
+msgstr "ප්‍රවේශයට ඉඩ දීමට උපාංගය අගුළු හරින්න"
+
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Unlocked"
 msgstr "අගුළු හැර ඇත"
 
+#. TRANSLATORS: command description
+msgid "Unlocks the device for firmware access"
+msgstr "ස්ථිරාංග ප්‍රවේශය සඳහා උපාංගය අගුළු හරියි"
+
+#. TRANSLATORS: command description
+msgid "Unmounts the ESP"
+msgstr "ESP ගලවයි"
+
+#. TRANSLATORS: command line option
+msgid "Unset the debugging flag during update"
+msgstr "යාවත්කාලීන කිරීමේදී දෝශ නිරාකරණ ධජය නොසකසන්න"
+
+#. TRANSLATORS: firmware payload is unsigned and it is possible to modify it
+msgid "Unsigned Payload"
+msgstr "අත්සන් නොකළ ගෙවීම"
+
+#. TRANSLATORS: error message
+#, c-format
+msgid "Unsupported daemon version %s, client version is %s"
+msgstr "සහාය නොදක්වන ඩීමන් අනුවාදය %s, සේවාදායක අනුවාදය %sවේ"
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Untainted"
+msgstr "අපිරිසිදු"
+
+#. TRANSLATORS: Device is updatable in this or any other mode
+msgid "Updatable"
+msgstr "යාවත්කාලීන කළ හැකි"
+
+#. TRANSLATORS: error message from last update attempt
+msgid "Update Error"
+msgstr "යාවත්කාලීන දෝෂයකි"
+
+#. TRANSLATORS: helpful image for the update
+msgid "Update Image"
+msgstr "රූපය යාවත්කාලීන කරන්න"
+
+#. TRANSLATORS: helpful messages from last update
+#. TRANSLATORS: helpful messages for the update
+msgid "Update Message"
+msgstr "පණිවිඩය යාවත්කාලීන කරන්න"
+
+#. TRANSLATORS: hardware state, e.g. "pending"
+msgid "Update State"
+msgstr "තත්වය යාවත්කාලීන කරන්න"
+
+#. TRANSLATORS: the server sent the user a small message
+msgid "Update failure is a known issue, visit this URL for more information:"
+msgstr "යාවත්කාලීන අසාර්ථක වීම දන්නා ගැටළුවකි, වැඩිදුර තොරතුරු සඳහා මෙම URL වෙත පිවිසෙන්න:"
+
+#. TRANSLATORS: ask the user if we can update the metadata
+msgid "Update now?"
+msgstr "දැන් යාවත්කාලීන කරන්න?"
+
+#. TRANSLATORS: Update can only be done from offline mode
+msgid "Update requires a reboot"
+msgstr "යාවත්කාලීන කිරීමට නැවත පණගැන්වීමක් අවශ්‍ය වේ"
+
+#. TRANSLATORS: command description
+msgid "Update the stored cryptographic hash with current ROM contents"
+msgstr "ගබඩා කර ඇති ගුප්ත ලේඛන හැෂ් වත්මන් ROM අන්තර්ගතය සමඟ යාවත්කාලීන කරන්න"
+
+msgid "Update the stored device verification information"
+msgstr "ගබඩා කර ඇති උපාංග සත්‍යාපන තොරතුරු යාවත්කාලීන කරන්න"
+
+#. TRANSLATORS: command description
+msgid "Update the stored metadata with current contents"
+msgstr "ගබඩා කර ඇති පාරදත්ත වත්මන් අන්තර්ගතය සමඟ යාවත්කාලීන කරන්න"
+
+#. TRANSLATORS: command description
+msgid "Updates all specified devices to latest firmware version, or all devices if unspecified"
+msgstr "සියලුම නිශ්චිත උපාංග නවතම ස්ථිරාංග අනුවාදය වෙත යාවත්කාලීන කරයි, හෝ නිශ්චිතව දක්වා නොමැති නම් සියලුම උපාංග"
+
+msgid "Updating"
+msgstr "යාවත්කාලීන කිරීම"
+
+#. TRANSLATORS: the first replacement is a display name
+#. * e.g. "ColorHugALS" and the second and third are
+#. * version numbers e.g. "1.2.3"
+#, c-format
+msgid "Updating %s from %s to %s... "
+msgstr "%s %s සිට %sදක්වා යාවත්කාලීන කරමින් ... "
+
+#. TRANSLATORS: %1 is a device name
+#, c-format
+msgid "Updating %s…"
+msgstr "%s යාවත්කාල වෙමින්…"
+
+#. TRANSLATORS: message letting the user know an upgrade is available
+#. * %1 is the device name and %2 and %3 are version strings
+#, c-format
+msgid "Upgrade %s from %s to %s?"
+msgstr "%s %s සිට %sදක්වා උත්ශ්‍රේණි කරන්නද?"
+
+#. TRANSLATORS: ask the user to upload
+msgid "Upload report now?"
+msgstr "වාර්තාව දැන් උඩුගත කරන්නද?"
+
+#. TRANSLATORS: explain why we want to upload
+msgid "Uploading firmware reports helps hardware vendors to quickly identify failing and successful updates on real devices."
+msgstr "ස්ථිරාංග වාර්තා උඩුගත කිරීම සැබෑ උපාංගවල අසාර්ථක සහ සාර්ථක යාවත්කාලීන ඉක්මනින් හඳුනා ගැනීමට දෘඪාංග වෙළෙන්දන්ට උපකාර කරයි."
+
+#. TRANSLATORS: how important the release is
+msgid "Urgency"
+msgstr "හදිසිය"
+
+#. TRANSLATORS: error message explaining command on how to get help
+msgid "Use fwupdmgr --help for help"
+msgstr "උදව් සඳහා fwupdmgr --help භාවිතා කරන්න"
+
+#. TRANSLATORS: error message explaining command on how to get help
+msgid "Use fwupdtool --help for help"
+msgstr "උදව් සඳහා fwupdtool --help භාවිතා කරන්න"
+
+#. TRANSLATORS: command line option
+msgid "Use quirk flags when installing firmware"
+msgstr "ස්ථිරාංග ස්ථාපනය කිරීමේදී quirk flags භාවිතා කරන්න"
+
+#. TRANSLATORS: User has been notified
+msgid "User has been notified"
+msgstr "පරිශීලකයාට දැනුම් දී ඇත"
+
+#. TRANSLATORS: remote filename base
+msgid "Username"
+msgstr "පරිශීලක නාමය"
+
+msgid "VID:PID"
+msgstr "VID:PID"
+
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Valid"
 msgstr "වලංගුයි"
+
+#. TRANSLATORS: ESP refers to the EFI System Partition
+msgid "Validating ESP contents…"
+msgstr "ESP අන්තර්ගතයන් වලංගු කිරීම…"
+
+#. TRANSLATORS: one line variant of release (e.g. 'Prerelease' or 'China')
+msgid "Variant"
+msgstr "ප්රභේදය"
+
+#. TRANSLATORS: manufacturer of hardware
+msgid "Vendor"
+msgstr "වෙළෙන්දා"
+
+#. TRANSLATORS: verifying we wrote the firmware correctly
+msgid "Verifying…"
+msgstr "සත්‍යාපනය…"
 
 #. TRANSLATORS: the detected version number of the dbx
 msgid "Version"
@@ -178,6 +2557,78 @@ msgstr "අවවාදය:"
 msgid "Waiting…"
 msgstr "රැඳෙමින්…"
 
+#. TRANSLATORS: command description
+msgid "Watch for hardware changes"
+msgstr "දෘඪාංග වෙනස්කම් සඳහා නරඹන්න"
+
+#. TRANSLATORS: command description
+msgid "Write firmware from file into device"
+msgstr "ගොනුවේ සිට උපාංගයට ස්ථිරාංග ලියන්න"
+
+#. TRANSLATORS: command description
+msgid "Write firmware from file into one partition"
+msgstr "ගොනුවකින් ස්ථිරාංග එක් කොටසකට ලියන්න"
+
+#. TRANSLATORS: decompressing images from a container firmware
+msgid "Writing file:"
+msgstr "ලිපිගොනු ලිවීම:"
+
 #. TRANSLATORS: writing to the flash chips
 msgid "Writing…"
 msgstr "ලියවෙමින්…"
+
+#. TRANSLATORS: show the user a warning
+msgid "Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices."
+msgstr "ඔබේ බෙදාහරින්නා ඔබේ පද්ධතිය හෝ සම්බන්ධිත උපාංග සමඟ ගැළපීම සඳහා ස්ථිරාංග යාවත්කාලීන කිසිවක් සත්‍යාපනය කර නොතිබිය හැකිය."
+
+#. TRANSLATORS: %1 is the device vendor name
+#, c-format
+msgid "Your hardware may be damaged using this firmware, and installing this release may void any warranty with %s."
+msgstr "මෙම ස්ථිරාංග භාවිතයෙන් ඔබේ දෘඪාංගයට හානි සිදු විය හැකි අතර, මෙම නිකුතුව ස්ථාපනය කිරීමෙන් %sසමඟ ඇති ඕනෑම වගකීමක් අවලංගු විය හැක."
+
+#. TRANSLATORS: BKC is the industry name for the best known configuration and
+#. is a set
+#. * of firmware that works together
+#, c-format
+msgid "Your system is set up to the BKC of %s."
+msgstr "ඔබේ පද්ධතිය %sහි BKC ලෙස සකසා ඇත."
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[CHECKSUM]"
+msgstr "[CHECKSUM]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[DEVICE-ID|GUID]"
+msgstr "[DEVICE-ID|මාර්ගෝපදේශය]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[DEVICE-ID|GUID] [BRANCH]"
+msgstr "[DEVICE-ID|GUID] [BRANCH]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[DEVICE-ID|GUID] [VERSION]"
+msgstr "[DEVICE-ID|GUID] [VERSION]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[FILE FILE_SIG REMOTE-ID]"
+msgstr "[FILE FILE_SIG දුරස්ථ-ID]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[FILENAME1] [FILENAME2]"
+msgstr "[FILENAME1] [FILENAME2]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[SMBIOS-FILE|HWIDS-FILE]"
+msgstr "[SMBIOS-FILE|HWIDS-FILE]"
+
+#. TRANSLATORS: this is the default branch name when unset
+msgid "default"
+msgstr "පෙරනිමිය"
+
+#. TRANSLATORS: program name
+msgid "fwupd TPM event log utility"
+msgstr "fwupd TPM සිදුවීම් ලොග් උපයෝගීතාව"
+
+#. TRANSLATORS: Title: if the fwupd plugins are all present and correct
+msgid "fwupd plugins"
+msgstr "fwupd ප්ලගීන"

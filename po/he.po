@@ -1293,10 +1293,6 @@ msgstr "נעילת SPI"
 msgid "SPI write"
 msgstr "כתיבת SPI"
 
-#. TRANSLATORS: command line option
-msgid "Save device state into a JSON file between executions"
-msgstr "לשמור את מצב ההתקנים לקובץ JSON בין ההפעלות"
-
 #. TRANSLATORS: scheduling an update to be done on the next boot
 msgid "Scheduling…"
 msgstr "מתבצע תזמון…"

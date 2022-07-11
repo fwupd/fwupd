@@ -1068,10 +1068,6 @@ msgid "Run the plugin composite prepare routine when using install-blob"
 msgstr "Paleisti sudėtinę įskiepio paruošimo programą, naudojant install-blob"
 
 #. TRANSLATORS: command line option
-msgid "Save device state into a JSON file between executions"
-msgstr "Įrašyti įrenginio būseną tarp paleidimų į JSON failą"
-
-#. TRANSLATORS: command line option
 msgid "Schedule installation for next reboot when possible"
 msgstr "Kai įmanoma, suplanuoti įdiegimą kitam paleidimui iš naujo"
 

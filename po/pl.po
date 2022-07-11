@@ -84,11 +84,21 @@ msgstr "Aktualizacja urządzenia %s"
 msgid "%s Display Update"
 msgstr "Aktualizacja ekranu %s"
 
+#. TRANSLATORS: drive refers to a storage device, e.g. SATA disk
+#, c-format
+msgid "%s Drive Update"
+msgstr "Aktualizacja dysku %s"
+
 #. TRANSLATORS: the EC is typically the keyboard controller chip,
 #. * the first %s is the device name, e.g. 'ThinkPad P50`
 #, c-format
 msgid "%s Embedded Controller Update"
 msgstr "Aktualizacja wbudowanego kontrolera %s"
+
+#. TRANSLATORS: flash refers to solid state storage, e.g. UFS or eMMC
+#, c-format
+msgid "%s Flash Drive Update"
+msgstr "Aktualizacja dysku półprzewodnikowego %s"
 
 #. TRANSLATORS: Keyboard refers to an input device for typing
 #, c-format
@@ -111,6 +121,12 @@ msgstr "Aktualizacja myszy %s"
 #, c-format
 msgid "%s Network Interface Update"
 msgstr "Aktualizacja interfejsu sieciowego %s"
+
+#. TRANSLATORS: SSD refers to a Solid State Drive, e.g. non-rotating
+#. * SATA or NVMe disk
+#, c-format
+msgid "%s SSD Update"
+msgstr "Aktualizacja dysku SSD %s"
 
 #. TRANSLATORS: Storage Controller is typically a RAID or SAS adapter
 #, c-format
@@ -139,6 +155,12 @@ msgstr "Aktualizacja kontrolera Thunderbolt %s"
 #, c-format
 msgid "%s Touchpad Update"
 msgstr "Aktualizacja panelu dotykowego %s"
+
+#. TRANSLATORS: Receiver refers to a radio device, e.g. a tiny Bluetooth
+#. * device that stays in the USB port so the wireless peripheral works
+#, c-format
+msgid "%s USB Receiver Update"
+msgstr "Aktualizacja odbiornika USB %s"
 
 #. TRANSLATORS: this is the fallback where we don't know if the release
 #. * is updating the system, the device, or a device class, or something else
@@ -1937,10 +1959,6 @@ msgstr "PODSYSTEM STEROWNIK [IDENTYFIKATOR-URZĄDZENIA|GUID]"
 #. TRANSLATORS: command description
 msgid "Save a file that allows generation of hardware IDs"
 msgstr "Zapisuje plik umożliwiający utworzenie identyfikatorów sprzętu"
-
-#. TRANSLATORS: command line option
-msgid "Save device state into a JSON file between executions"
-msgstr "Zapisuje stan urządzenia do pliku JSON między wykonaniami"
 
 #. TRANSLATORS: command line option
 msgid "Schedule installation for next reboot when possible"

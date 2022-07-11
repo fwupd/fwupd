@@ -1706,10 +1706,6 @@ msgid "Save a file that allows generation of hardware IDs"
 msgstr "Menyimpan berkas yang memungkinkan pembuatan ID perangkat keras"
 
 #. TRANSLATORS: command line option
-msgid "Save device state into a JSON file between executions"
-msgstr "Simpan status perangkat ke berkas JSON di antara eksekusi"
-
-#. TRANSLATORS: command line option
 msgid "Schedule installation for next reboot when possible"
 msgstr "Menjadwalkan instalasi untuk boot ulang selanjutnya bila mungkin"
 

@@ -1806,10 +1806,6 @@ msgid "Save a file that allows generation of hardware IDs"
 msgstr "Tallenna tiedosto, joka mahdollistaa laitetunnusten luomisen"
 
 #. TRANSLATORS: command line option
-msgid "Save device state into a JSON file between executions"
-msgstr "Tallenna laitteen tila JSON-tiedostoon suoritusten välillä"
-
-#. TRANSLATORS: command line option
 msgid "Schedule installation for next reboot when possible"
 msgstr "Ajasta asennus uudelleenkäynnistykselle mahdollisuuksien mukaan"
 

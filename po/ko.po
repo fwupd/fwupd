@@ -1634,10 +1634,6 @@ msgid "Save a file that allows generation of hardware IDs"
 msgstr "하드웨어 ID를 생성할 수 있는 파일 저장"
 
 #. TRANSLATORS: command line option
-msgid "Save device state into a JSON file between executions"
-msgstr "실행하는 동안의 장치 상태를 JSON 파일로 저장"
-
-#. TRANSLATORS: command line option
 msgid "Schedule installation for next reboot when possible"
 msgstr "가능하다면 다음에 다시 시작할 때 설치 예약"
 

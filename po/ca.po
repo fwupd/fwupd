@@ -83,11 +83,21 @@ msgstr "Actualització del dispositiu %s"
 msgid "%s Display Update"
 msgstr "Actualitza la pantalla %s"
 
+#. TRANSLATORS: drive refers to a storage device, e.g. SATA disk
+#, c-format
+msgid "%s Drive Update"
+msgstr "Actualització del controlador %s"
+
 #. TRANSLATORS: the EC is typically the keyboard controller chip,
 #. * the first %s is the device name, e.g. 'ThinkPad P50`
 #, c-format
 msgid "%s Embedded Controller Update"
 msgstr "Actualització del controlador incorporat %s"
+
+#. TRANSLATORS: flash refers to solid state storage, e.g. UFS or eMMC
+#, c-format
+msgid "%s Flash Drive Update"
+msgstr "Actualització de la unitat flaix %s"
 
 #. TRANSLATORS: Keyboard refers to an input device for typing
 #, c-format
@@ -110,6 +120,12 @@ msgstr "%s Actualització del ratolí"
 #, c-format
 msgid "%s Network Interface Update"
 msgstr "Actualització del controlador de xarxa %s"
+
+#. TRANSLATORS: SSD refers to a Solid State Drive, e.g. non-rotating
+#. * SATA or NVMe disk
+#, c-format
+msgid "%s SSD Update"
+msgstr "Actualització de l'SSD %s"
 
 #. TRANSLATORS: Storage Controller is typically a RAID or SAS adapter
 #, c-format
@@ -138,6 +154,12 @@ msgstr "Actualització del controlador Thunderbolt %s"
 #, c-format
 msgid "%s Touchpad Update"
 msgstr "%s Actualització del ratolí tàctil"
+
+#. TRANSLATORS: Receiver refers to a radio device, e.g. a tiny Bluetooth
+#. * device that stays in the USB port so the wireless peripheral works
+#, c-format
+msgid "%s USB Receiver Update"
+msgstr "%s actualització del receptor USB"
 
 #. TRANSLATORS: this is the fallback where we don't know if the release
 #. * is updating the system, the device, or a device class, or something else
@@ -171,6 +193,12 @@ msgstr "%s ha canviat: %s → %s"
 #, c-format
 msgid "%s disappeared: %s"
 msgstr "%s ha desaparegut: %s"
+
+#. TRANSLATORS: the device has a reason it can't update, e.g. laptop lid
+#. closed
+#, c-format
+msgid "%s is not currently updatable"
+msgstr "%s actualment no es pot actualitzar"
 
 #. TRANSLATORS: Title: %s is ME kind, e.g. CSME/TXT
 #, c-format
@@ -252,6 +280,12 @@ msgid "%u second"
 msgid_plural "%u seconds"
 msgstr[0] "%u segon"
 msgstr[1] "%u segons"
+
+#. TRANSLATORS: first percentage is current value, 2nd percentage is the
+#. * lowest limit the firmware update is allowed for the update to happen
+#, c-format
+msgid "%u%% (threshold %u%%)"
+msgstr "%u%% (llindar %u%%)"
 
 #. TRANSLATORS: this is shown as a suffix for obsoleted tests
 msgid "(obsoleted)"
@@ -437,6 +471,10 @@ msgstr "CONSTRUCTOR_XML NOM_FITXER_DEST"
 msgid "BYTES"
 msgstr "BYTES"
 
+#. TRANSLATORS: refers to the battery inside the peripheral device
+msgid "Battery"
+msgstr "Bateria"
+
 #. TRANSLATORS: command description
 msgid "Bind new kernel driver"
 msgstr "Vincula el controlador actual."
@@ -600,9 +638,23 @@ msgstr "ID del dispositiu"
 msgid "Device added:"
 msgstr "S'ha afegit el dispositiu:"
 
+#. TRANSLATORS: for example the batteries *inside* the Bluetooth mouse
+#, c-format
+msgid "Device battery power is too low"
+msgstr "L’alimentació de la bateria del dispositiu és massa baixa"
+
+#. TRANSLATORS: for example the batteries *inside* the Bluetooth mouse
+#, c-format
+msgid "Device battery power is too low (%u%%, requires %u%%)"
+msgstr " L'energia de la bateria és massa baixa (%u%%,, requereix %u%%)"
+
 #. TRANSLATORS: Device supports a safety mechanism for flashing
 msgid "Device can recover flash failures"
 msgstr "El dispositiu pot recuperar fallades de flaix"
+
+#. TRANSLATORS: lid means "laptop top cover"
+msgid "Device cannot be used while the lid is closed"
+msgstr "El dispositiu no es pot emprar mentre la tapa està tancada"
 
 #. TRANSLATORS: this is when a device has been updated
 msgid "Device changed:"
@@ -626,13 +678,25 @@ msgstr "El dispositiu és necessari per a instal·lar totes les versions submini
 msgid "Device is unreachable"
 msgstr "El dispositiu és inabastable"
 
+#. TRANSLATORS: for example, a Bluetooth mouse that is in powersave mode
+msgid "Device is unreachable, or out of wireless range"
+msgstr "El dispositiu no és accessible o es troba fora de l'abast"
+
 #. TRANSLATORS: Device remains usable during update
 msgid "Device is usable for the duration of the update"
 msgstr "El dispositiu es podrà usar durant tota l'actualització"
 
+#. TRANSLATORS: usually this is when we're waiting for a reboot
+msgid "Device is waiting for the update to be applied"
+msgstr "El dispositiu està esperant que s'apliqui l'actualització"
+
 #. TRANSLATORS: this is when a device is hotplugged
 msgid "Device removed:"
 msgstr "S'ha eliminat el dispositiu:"
+
+#. TRANSLATORS: as in, wired mains power for a laptop
+msgid "Device requires AC power to be connected"
+msgstr "El dispositiu requereix que es connecti l'alimentació"
 
 #. TRANSLATORS: Device supports a safety mechanism for flashing
 msgid "Device stages updates"
@@ -1675,6 +1739,10 @@ msgstr "Imprimeix les sentències detallades de la depuració"
 msgid "Priority"
 msgstr "Prioritat"
 
+#. TRANSLATORS: reasons the device is not updatable
+msgid "Problems"
+msgstr "Problemes"
+
 msgid "Proceed with upload?"
 msgstr "Continuo amb l'enviament?"
 
@@ -1697,6 +1765,10 @@ msgstr "ID_REMOT CLAU VALOR"
 #. TRANSLATORS: command description
 msgid "Read a firmware blob from a device"
 msgstr "Llegeix un blob de microprogramari des d'un dispositiu."
+
+#. TRANSLATORS: command description
+msgid "Read a firmware from a device"
+msgstr "Llegeix un nicroprogramari des d'un dispositiu"
 
 #. TRANSLATORS: command description
 msgid "Read firmware from device into a file"
@@ -1864,10 +1936,6 @@ msgstr "SUBSISTEMA CONTROLADOR [ID_DISPOSITIU|GUID]"
 #. TRANSLATORS: command description
 msgid "Save a file that allows generation of hardware IDs"
 msgstr "Desa un fitxer que permet la generació dels ID de maquinari"
-
-#. TRANSLATORS: command line option
-msgid "Save device state into a JSON file between executions"
-msgstr "Desa l'estat del dispositiu en un fitxer JSON entre les execucions"
 
 #. TRANSLATORS: command line option
 msgid "Schedule installation for next reboot when possible"
@@ -2111,6 +2179,15 @@ msgstr "Canvia la branca de microprogramari en el dispositiu."
 #. TRANSLATORS: command description
 msgid "Sync firmware versions to the host best known configuration"
 msgstr "Sincronitza les versions de microprogramari a la millor configuració coneguda de l'amfitrió"
+
+#. TRANSLATORS: as in laptop battery power
+msgid "System power is too low to perform the update"
+msgstr "L'energia del sistema és massa baixa per a realitzar l’actualització"
+
+#. TRANSLATORS: as in laptop battery power
+#, c-format
+msgid "System power is too low to perform the update (%u%%, requires %u%%)"
+msgstr " L'energia del sistema és massa baixa per a realitzar l'actualització (%u%%, requereix %u%%)"
 
 #. TRANSLATORS: Must be plugged in to an outlet
 msgid "System requires external power source"

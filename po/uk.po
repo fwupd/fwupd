@@ -84,11 +84,21 @@ msgstr "Оновлення для пристрою %s"
 msgid "%s Display Update"
 msgstr "Оновлення дисплея %s"
 
+#. TRANSLATORS: drive refers to a storage device, e.g. SATA disk
+#, c-format
+msgid "%s Drive Update"
+msgstr "Оновлення для диска %s"
+
 #. TRANSLATORS: the EC is typically the keyboard controller chip,
 #. * the first %s is the device name, e.g. 'ThinkPad P50`
 #, c-format
 msgid "%s Embedded Controller Update"
 msgstr "Оновлення для вбудованого контролера %s"
+
+#. TRANSLATORS: flash refers to solid state storage, e.g. UFS or eMMC
+#, c-format
+msgid "%s Flash Drive Update"
+msgstr "Оновлення для флеш-диска %s"
 
 #. TRANSLATORS: Keyboard refers to an input device for typing
 #, c-format
@@ -111,6 +121,12 @@ msgstr "Оновлення для миші %s"
 #, c-format
 msgid "%s Network Interface Update"
 msgstr "Оновлення інтерфейсу мережі %s"
+
+#. TRANSLATORS: SSD refers to a Solid State Drive, e.g. non-rotating
+#. * SATA or NVMe disk
+#, c-format
+msgid "%s SSD Update"
+msgstr "Оновлення для SSD %s"
 
 #. TRANSLATORS: Storage Controller is typically a RAID or SAS adapter
 #, c-format
@@ -139,6 +155,12 @@ msgstr "Оновлення контролера Thunderbolt %s"
 #, c-format
 msgid "%s Touchpad Update"
 msgstr "Оновлення для сенсорної панелі %s"
+
+#. TRANSLATORS: Receiver refers to a radio device, e.g. a tiny Bluetooth
+#. * device that stays in the USB port so the wireless peripheral works
+#, c-format
+msgid "%s USB Receiver Update"
+msgstr "Оновлення USB-приймача %s"
 
 #. TRANSLATORS: this is the fallback where we don't know if the release
 #. * is updating the system, the device, or a device class, or something else
@@ -1937,10 +1959,6 @@ msgstr "ПІДСИСТЕМА ДРАЙВЕР [ІД_ПРИСТРОЮ|GUID]"
 #. TRANSLATORS: command description
 msgid "Save a file that allows generation of hardware IDs"
 msgstr "Зберегти файл, за допомогою якого можна буде створити апаратні ідентифікатори"
-
-#. TRANSLATORS: command line option
-msgid "Save device state into a JSON file between executions"
-msgstr "Зберігати стан пристрою до файла JSON між виконаннями"
 
 #. TRANSLATORS: command line option
 msgid "Schedule installation for next reboot when possible"

@@ -34,6 +34,53 @@
     <binary>fwupdagent</binary>
   </provides>
   <releases>
+    <release version="1.8.2" date="2022-07-11">
+      <description>
+        <p>
+          This release adds the following features:
+        </p>
+        <ul>
+          <li>Add startup profiling which allowed us to speed up daemon startup considerably</li>
+          <li>Add support for OptionROM, CPD and FPT firmware formats for future hardware</li>
+          <li>Add the HostVendor to the D-Bus interface</li>
+          <li>Break some internal ABI and add a conversion helper for out-of-tree plugins</li>
+          <li>Optionally build the quirk files into the daemon binary to reduce installed size</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Allow front-end clients to read the percentage property</li>
+          <li>Allow more quirk entries to add multiple items</li>
+          <li>Allow to force install Genesys firmware even if the public-key does not match</li>
+          <li>Allow UFS disks to define the signed status in metadata</li>
+          <li>Autoconnect the Redfish network device when rebooting the BMC</li>
+          <li>Copy the instance ID strings when incorporating devices</li>
+          <li>Do not generate a capsule header for the FMP GUID</li>
+          <li>Ensure more firmware formats can round-trip to and from XML</li>
+          <li>Fix a regression for devices using the Atmel FLIP Bootloader</li>
+          <li>Fix running fwupdtool security with a user-specified plugin allowlist</li>
+          <li>Handle ENOTTY with the correct error code for ioctl calls</li>
+          <li>Increase the self tests coverage substantially</li>
+          <li>Modernize the AMT plugin and split out common MEI functionality</li>
+          <li>Only move the logitech-bulkcontroller progressbar forwards when writing</li>
+          <li>Set the device ID on the FwupdRequest to allow better UX</li>
+          <li>Show the get-details output when the device requirements fail</li>
+          <li>Simply quirk matching for i2c devices to speed up daemon startup</li>
+          <li>Support SHA256 fastboot hashes if specified</li>
+          <li>Use force-detach to bypass the DFU streaming check for camera devices</li>
+          <li>Use the SCSI target to correctly set the physical ID</li>
+          <li>Wait for the System76 launch device to re-enumerate if already unlocked</li>
+        </ul>
+        <p>This release adds support for the following hardware:</p>
+        <ul>
+          <li>Corsair HARPOON RGB Wireless mouse</li>
+          <li>U-Boot devices writing simple FIT images</li>
+          <li>Genesys M27fd AIM101</li>
+          <li>More PixArt wireless devices</li>
+          <li>More Steelseries HID, Sonic and Fizz devices</li>
+          <li>System76 launch_2</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.8.1" date="2022-05-27">
       <description>
         <p>
