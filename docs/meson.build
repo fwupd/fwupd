@@ -68,6 +68,9 @@ if gidocgen_dep.found() and docs_python_deps.allowed() and gidocgen_app.found() 
     install: true,
     install_dir: join_paths(datadir, 'doc'),
   )
+ install_data(['index.html', 'hsi.html'],
+    install_dir : join_paths(datadir, 'doc', 'fwupd')
+  )
  install_data(['urlmap_fwupd.js'],
     install_dir: join_paths(datadir, 'doc', 'libfwupd')
   )

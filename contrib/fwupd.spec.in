@@ -413,6 +413,7 @@ done
 %dir %{_datadir}/fwupd/quirks.d
 %{_datadir}/fwupd/quirks.d/*.quirk
 %{_datadir}/doc/fwupd/builder/README.md
+%{_datadir}/doc/fwupd/*.html
 %if 0%{?have_uefi}
 %{_sysconfdir}/grub.d/35_fwupd
 %endif
