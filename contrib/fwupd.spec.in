@@ -23,6 +23,11 @@
 %global have_uefi 1
 %endif
 
+# gpio.h is only available on these arches
+%ifarch x86_64 aarch64
+%global have_gpio 1
+%endif
+
 # flashrom is only available on these arches
 %ifarch i686 x86_64 armv7hl aarch64 ppc64le
 %global have_flashrom 1
@@ -257,11 +262,15 @@ fwupd wrapper for Qubes OS
 %else
     -Dplugin_msr=disabled \
 %endif
+%if 0%{?have_gpio}
+    -Dplugin_gpio=enabled \
+%else
+    -Dplugin_gpio=disabled \
+%endif
 %if 0%{?have_uefi}
     -Dplugin_uefi_capsule=enabled \
     -Dplugin_uefi_pk=enabled \
     -Dplugin_tpm=enabled \
-    -Dplugin_gpio=enabled \
     -Defi_binary=false \
 %else
     -Dplugin_uefi_capsule=disabled \
@@ -442,7 +451,9 @@ done
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_fastboot.so
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_fresco_pd.so
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_genesys.so
+%if 0%{?have_gpio}
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_gpio.so
+%endif
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_hailuck.so
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_iommu.so
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_jabra.so
