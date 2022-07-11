@@ -116,7 +116,7 @@ fu_corsair_bp_command(FuCorsairBp *self,
 		g_set_error(error,
 			    G_IO_ERROR,
 			    G_IO_ERROR_FAILED,
-			    "device replied with error: %" G_GSIZE_FORMAT,
+			    "device replied with error: 0x%02x",
 			    data[CORSAIR_OFFSET_CMD_STATUS]);
 		return FALSE;
 	}
