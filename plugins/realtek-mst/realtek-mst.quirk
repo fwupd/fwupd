@@ -1,10 +1,12 @@
 [I2C\NAME_10EC2142:00]
+Plugin = realtek_mst
 Name = RTD2142
 
 [I2C\NAME_10EC2142:00&FAMILY_Google_Hatch]
 RealtekMstDpAuxName = DPDDC-C
 
 [I2C\NAME_10EC2141:00]
+Plugin = realtek_mst
 Name = RTD2141B
 
 [I2C\NAME_10EC2141:00&FAMILY_Google_Zork]
