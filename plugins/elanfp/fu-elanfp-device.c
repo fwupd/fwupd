@@ -28,20 +28,14 @@
 #define REQTYPE_GET_VERSION 0xC1
 #define REQTYPE_COMMAND	    0x41
 
-#define TAG_SEND_COMMAND	0xFA
+#define TAG_SEND_COMMAND 0xFA
 
-/**
- * FU_ELAN_FP_DEVICE_FLAG_USB_CONTROL_TRANSFER:
- *
- * Use usb control transfer.
- */
-#define FU_ELAN_FP_DEVICE_FLAG_USB_CONTROL_TRANSFER (1 << 0)
 /**
  * FU_ELAN_FP_DEVICE_FLAG_USB_BULK_TRANSFER:
  *
  * Use usb bulk transfer.
  */
-#define FU_ELAN_FP_DEVICE_FLAG_USB_BULK_TRANSFER (1 << 1)
+#define FU_ELAN_FP_DEVICE_FLAG_USB_BULK_TRANSFER (1 << 0)
 
 struct _FuElanfpDevice {
 	FuUsbDevice parent_instance;
@@ -63,14 +57,10 @@ fu_elanfp_iap_send_command(FuElanfpDevice *self,
 	gsize sendsz = bufsz + 1;
 	guint8 start_index = 0x01;
 	guint8 buftmp[64] = {request, 0};
-	gboolean is_bulk_transfer = FALSE;
-
-	if (fu_device_has_private_flag(FU_DEVICE(self), FU_ELAN_FP_DEVICE_FLAG_USB_BULK_TRANSFER)) {
-		is_bulk_transfer = TRUE;
-	}
 
 	if (buf != NULL) {
-		if (is_bulk_transfer) {
+		if (fu_device_has_private_flag(FU_DEVICE(self),
+					       FU_ELAN_FP_DEVICE_FLAG_USB_BULK_TRANSFER)) {
 			buftmp[0] = TAG_SEND_COMMAND;
 			buftmp[1] = rspsz;
 			buftmp[2] = bufsz + 1;
@@ -89,7 +79,7 @@ fu_elanfp_iap_send_command(FuElanfpDevice *self,
 			return FALSE;
 	}
 
-	if (is_bulk_transfer) {
+	if (fu_device_has_private_flag(FU_DEVICE(self), FU_ELAN_FP_DEVICE_FLAG_USB_BULK_TRANSFER)) {
 		if (!g_usb_device_bulk_transfer(usb_device,
 						ELAN_EP_CMD_OUT,
 						buftmp,
@@ -103,18 +93,18 @@ fu_elanfp_iap_send_command(FuElanfpDevice *self,
 		}
 	} else {
 		if (!g_usb_device_control_transfer(usb_device,
-					   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					   G_USB_DEVICE_RECIPIENT_INTERFACE,
-					   request, /* request */
-					   0x00,    /* value */
-					   0x00,    /* index */
-					   buftmp,
-					   sendsz,
-					   &actual,
-					   CTRL_SEND_TIMEOUT_MS,
-					   NULL,
-					   error)) {
+						   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
+						   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
+						   G_USB_DEVICE_RECIPIENT_INTERFACE,
+						   request, /* request */
+						   0x00,    /* value */
+						   0x00,    /* index */
+						   buftmp,
+						   sendsz,
+						   &actual,
+						   CTRL_SEND_TIMEOUT_MS,
+						   NULL,
+						   error)) {
 			g_prefix_error(error, "failed to send command (ctrl transfer): ");
 			return FALSE;
 		}
@@ -446,9 +436,6 @@ fu_elanfp_device_init(FuElanfpDevice *device)
 	fu_device_set_firmware_size_max(FU_DEVICE(self), 0x90000);
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_ELANFP_FIRMWARE);
 	fu_usb_device_add_interface(FU_USB_DEVICE(self), ELANFP_USB_INTERFACE);
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_ELAN_FP_DEVICE_FLAG_USB_CONTROL_TRANSFER,
-					"usb-control-transfer");
 	fu_device_register_private_flag(FU_DEVICE(self),
 					FU_ELAN_FP_DEVICE_FLAG_USB_BULK_TRANSFER,
 					"usb-bulk-transfer");
