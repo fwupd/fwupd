@@ -390,6 +390,34 @@ fu_fdt_firmware_parse_mem_rsvmap(FuFdtFirmware *self,
 }
 
 static gboolean
+fu_fdt_firmware_check_magic(FuFirmware *firmware, GBytes *fw, gsize offset, GError **error)
+{
+	guint32 magic = 0;
+
+	if (!fu_memread_uint32_safe(g_bytes_get_data(fw, NULL),
+				    g_bytes_get_size(fw),
+				    offset + G_STRUCT_OFFSET(FuFdtHeader, magic),
+				    &magic,
+				    G_BIG_ENDIAN,
+				    error)) {
+		g_prefix_error(error, "failed to read magic: ");
+		return FALSE;
+	}
+	if (magic != FDT_MAGIC) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "invalid magic 0x%x, expected 0x%x",
+			    magic,
+			    (guint)FDT_MAGIC);
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_fdt_firmware_parse(FuFirmware *firmware,
 		      GBytes *fw,
 		      gsize offset,
@@ -398,7 +426,6 @@ fu_fdt_firmware_parse(FuFirmware *firmware,
 {
 	FuFdtFirmware *self = FU_FDT_FIRMWARE(firmware);
 	FuFdtFirmwarePrivate *priv = GET_PRIVATE(self);
-	guint32 magic = 0;
 	guint32 totalsize = 0;
 	gsize bufsz = 0;
 	guint32 off_dt_struct = 0;
@@ -414,23 +441,7 @@ fu_fdt_firmware_parse(FuFirmware *firmware,
 	/* sanity check */
 	if (!fu_memread_uint32_safe(buf,
 				    bufsz,
-				    G_STRUCT_OFFSET(FuFdtHeader, magic),
-				    &magic,
-				    G_BIG_ENDIAN,
-				    error))
-		return FALSE;
-	if (magic != FDT_MAGIC) {
-		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
-			    "invalid magic 0x%x, expected 0x%x",
-			    magic,
-			    (guint)FDT_MAGIC);
-		return FALSE;
-	}
-	if (!fu_memread_uint32_safe(buf,
-				    bufsz,
-				    G_STRUCT_OFFSET(FuFdtHeader, totalsize),
+				    offset + G_STRUCT_OFFSET(FuFdtHeader, totalsize),
 				    &totalsize,
 				    G_BIG_ENDIAN,
 				    error))
@@ -450,21 +461,22 @@ fu_fdt_firmware_parse(FuFirmware *firmware,
 	strtab = g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL, g_free);
 	if (!fu_memread_uint32_safe(buf,
 				    bufsz,
-				    G_STRUCT_OFFSET(FuFdtHeader, off_dt_strings),
+				    offset + G_STRUCT_OFFSET(FuFdtHeader, off_dt_strings),
 				    &off_dt_strings,
 				    G_BIG_ENDIAN,
 				    error))
 		return FALSE;
 	if (!fu_memread_uint32_safe(buf,
 				    bufsz,
-				    G_STRUCT_OFFSET(FuFdtHeader, size_dt_strings),
+				    offset + G_STRUCT_OFFSET(FuFdtHeader, size_dt_strings),
 				    &size_dt_strings,
 				    G_BIG_ENDIAN,
 				    error))
 		return FALSE;
 	if (size_dt_strings != 0x0) {
 		g_autoptr(GBytes) dt_strings = NULL;
-		dt_strings = fu_bytes_new_offset(fw, off_dt_strings, size_dt_strings, error);
+		dt_strings =
+		    fu_bytes_new_offset(fw, offset + off_dt_strings, size_dt_strings, error);
 		if (dt_strings == NULL)
 			return FALSE;
 		if (!fu_fdt_firmware_parse_dt_strings(self, dt_strings, strtab, error))
@@ -474,21 +486,21 @@ fu_fdt_firmware_parse(FuFirmware *firmware,
 	/* read out DT struct */
 	if (!fu_memread_uint32_safe(buf,
 				    bufsz,
-				    G_STRUCT_OFFSET(FuFdtHeader, off_dt_struct),
+				    offset + G_STRUCT_OFFSET(FuFdtHeader, off_dt_struct),
 				    &off_dt_struct,
 				    G_BIG_ENDIAN,
 				    error))
 		return FALSE;
 	if (!fu_memread_uint32_safe(buf,
 				    bufsz,
-				    G_STRUCT_OFFSET(FuFdtHeader, size_dt_struct),
+				    offset + G_STRUCT_OFFSET(FuFdtHeader, size_dt_struct),
 				    &size_dt_struct,
 				    G_BIG_ENDIAN,
 				    error))
 		return FALSE;
 	if (size_dt_struct != 0x0) {
 		g_autoptr(GBytes) dt_struct = NULL;
-		dt_struct = fu_bytes_new_offset(fw, off_dt_struct, size_dt_struct, error);
+		dt_struct = fu_bytes_new_offset(fw, offset + off_dt_struct, size_dt_struct, error);
 		if (dt_struct == NULL)
 			return FALSE;
 		if (!fu_fdt_firmware_parse_dt_struct(self, dt_struct, strtab, error))
@@ -498,20 +510,24 @@ fu_fdt_firmware_parse(FuFirmware *firmware,
 	/* read out reserved map */
 	if (!fu_memread_uint32_safe(buf,
 				    bufsz,
-				    G_STRUCT_OFFSET(FuFdtHeader, off_mem_rsvmap),
+				    offset + G_STRUCT_OFFSET(FuFdtHeader, off_mem_rsvmap),
 				    &off_mem_rsvmap,
 				    G_BIG_ENDIAN,
 				    error))
 		return FALSE;
 	if (off_mem_rsvmap != 0x0) {
-		if (!fu_fdt_firmware_parse_mem_rsvmap(self, buf, bufsz, off_mem_rsvmap, error))
+		if (!fu_fdt_firmware_parse_mem_rsvmap(self,
+						      buf,
+						      bufsz,
+						      offset + off_mem_rsvmap,
+						      error))
 			return FALSE;
 	}
 
 	/* read in CPUID */
 	if (!fu_memread_uint32_safe(buf,
 				    bufsz,
-				    G_STRUCT_OFFSET(FuFdtHeader, boot_cpuid_phys),
+				    offset + G_STRUCT_OFFSET(FuFdtHeader, boot_cpuid_phys),
 				    &priv->cpuid,
 				    G_BIG_ENDIAN,
 				    error))
@@ -520,7 +536,7 @@ fu_fdt_firmware_parse(FuFirmware *firmware,
 	/* header version */
 	if (!fu_memread_uint32_safe(buf,
 				    bufsz,
-				    G_STRUCT_OFFSET(FuFdtHeader, last_comp_version),
+				    offset + G_STRUCT_OFFSET(FuFdtHeader, last_comp_version),
 				    &last_comp_version,
 				    G_BIG_ENDIAN,
 				    error))
@@ -536,7 +552,7 @@ fu_fdt_firmware_parse(FuFirmware *firmware,
 	}
 	if (!fu_memread_uint32_safe(buf,
 				    bufsz,
-				    G_STRUCT_OFFSET(FuFdtHeader, version),
+				    offset + G_STRUCT_OFFSET(FuFdtHeader, version),
 				    &version,
 				    G_BIG_ENDIAN,
 				    error))
@@ -728,6 +744,7 @@ static void
 fu_fdt_firmware_class_init(FuFdtFirmwareClass *klass)
 {
 	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
+	klass_firmware->check_magic = fu_fdt_firmware_check_magic;
 	klass_firmware->export = fu_fdt_firmware_export;
 	klass_firmware->parse = fu_fdt_firmware_parse;
 	klass_firmware->write = fu_fdt_firmware_write;

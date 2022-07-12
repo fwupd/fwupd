@@ -135,6 +135,36 @@ fu_oprom_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBu
 }
 
 static gboolean
+fu_oprom_firmware_check_magic(FuFirmware *firmware, GBytes *fw, gsize offset, GError **error)
+{
+	gsize bufsz = 0;
+	guint16 signature = 0;
+	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
+
+	if (!fu_memread_uint16_safe(buf,
+				    bufsz,
+				    offset + G_STRUCT_OFFSET(FuOpromFirmwareHeader2, signature),
+				    &signature,
+				    G_LITTLE_ENDIAN,
+				    error)) {
+		g_prefix_error(error, "failed to read magic: ");
+		return FALSE;
+	}
+	if (signature != FU_OPROM_HEADER_SIGNATURE) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "invalid ROM signature, got 0x%x, expected 0x%x",
+			    signature,
+			    (guint)FU_OPROM_HEADER_SIGNATURE);
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_oprom_firmware_parse(FuFirmware *firmware,
 			GBytes *fw,
 			gsize offset,
@@ -143,7 +173,6 @@ fu_oprom_firmware_parse(FuFirmware *firmware,
 {
 	FuOpromFirmware *self = FU_OPROM_FIRMWARE(firmware);
 	FuOpromFirmwarePrivate *priv = GET_PRIVATE(self);
-	guint16 signature = 0;
 	guint16 expansion_header_offset = 0;
 	guint16 pci_header_offset = 0;
 	gsize bufsz = 0;
@@ -151,24 +180,6 @@ fu_oprom_firmware_parse(FuFirmware *firmware,
 	guint16 image_length = 0;
 	guint32 pci_signature = 0;
 	guint8 code_type = 0;
-
-	/* check signature */
-	if (!fu_memread_uint16_safe(buf,
-				    bufsz,
-				    offset + G_STRUCT_OFFSET(FuOpromFirmwareHeader2, signature),
-				    &signature,
-				    G_LITTLE_ENDIAN,
-				    error))
-		return FALSE;
-	if (signature != FU_OPROM_HEADER_SIGNATURE) {
-		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
-			    "invalid ROM signature, got 0x%x, expected 0x%x",
-			    signature,
-			    (guint)FU_OPROM_HEADER_SIGNATURE);
-		return FALSE;
-	}
 
 	/* parse header */
 	if (!fu_memread_uint16_safe(buf,
@@ -399,6 +410,7 @@ static void
 fu_oprom_firmware_class_init(FuOpromFirmwareClass *klass)
 {
 	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
+	klass_firmware->check_magic = fu_oprom_firmware_check_magic;
 	klass_firmware->export = fu_oprom_firmware_export;
 	klass_firmware->parse = fu_oprom_firmware_parse;
 	klass_firmware->write = fu_oprom_firmware_write;

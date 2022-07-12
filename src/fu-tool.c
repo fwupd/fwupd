@@ -3864,6 +3864,8 @@ main(int argc, char *argv[])
 		priv->flags |= FWUPD_INSTALL_FLAG_ALLOW_BRANCH_SWITCH;
 	if (force)
 		priv->flags |= FWUPD_INSTALL_FLAG_FORCE;
+	else
+		priv->flags |= FWUPD_INSTALL_FLAG_NO_SEARCH;
 	if (ignore_checksum)
 		priv->flags |= FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM;
 	if (ignore_vid_pid)

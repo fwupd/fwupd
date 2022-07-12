@@ -3277,7 +3277,7 @@ fu_plugin_module_func(gconstpointer user_data)
 				     device,
 				     blob_cab,
 				     progress,
-				     FWUPD_INSTALL_FLAG_NONE,
+				     FWUPD_INSTALL_FLAG_NO_SEARCH,
 				     FWUPD_FEATURE_FLAG_NONE,
 				     &error);
 	g_assert_no_error(error);

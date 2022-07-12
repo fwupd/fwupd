@@ -47,9 +47,39 @@ fu_elantp_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbB
 }
 
 static gboolean
+fu_elantp_firmware_check_magic(FuFirmware *firmware, GBytes *fw, gsize offset, GError **error)
+{
+	gsize bufsz = g_bytes_get_size(fw);
+	const guint8 *buf = g_bytes_get_data(fw, NULL);
+
+	for (gsize i = 0; i < sizeof(elantp_signature); i++) {
+		guint8 tmp = 0x0;
+		if (!fu_memread_uint8_safe(buf,
+					   bufsz,
+					   bufsz - sizeof(elantp_signature) + i,
+					   &tmp,
+					   error))
+			return FALSE;
+		if (tmp != elantp_signature[i]) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "signature[%u] invalid: got 0x%2x, expected 0x%02x",
+				    (guint)i,
+				    tmp,
+				    elantp_signature[i]);
+			return FALSE;
+		}
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_elantp_firmware_parse(FuFirmware *firmware,
 			 GBytes *fw,
-			 gsize offset_ignored,
+			 gsize offset,
 			 FwupdInstallFlags flags,
 			 GError **error)
 {
@@ -62,7 +92,7 @@ fu_elantp_firmware_parse(FuFirmware *firmware,
 	/* presumably in words */
 	if (!fu_memread_uint16_safe(buf,
 				    bufsz,
-				    ETP_IAP_START_ADDR_WRDS * 2,
+				    offset + ETP_IAP_START_ADDR_WRDS * 2,
 				    &iap_addr_wrds,
 				    G_LITTLE_ENDIAN,
 				    error))
@@ -80,7 +110,7 @@ fu_elantp_firmware_parse(FuFirmware *firmware,
 	/* read module ID */
 	if (!fu_memread_uint16_safe(buf,
 				    bufsz,
-				    self->iap_addr,
+				    offset + self->iap_addr,
 				    &module_id_wrds,
 				    G_LITTLE_ENDIAN,
 				    error))
@@ -95,31 +125,11 @@ fu_elantp_firmware_parse(FuFirmware *firmware,
 	}
 	if (!fu_memread_uint16_safe(buf,
 				    bufsz,
-				    module_id_wrds * 2,
+				    offset + module_id_wrds * 2,
 				    &self->module_id,
 				    G_LITTLE_ENDIAN,
 				    error))
 		return FALSE;
-
-	/* check signature */
-	if ((flags & FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM) == 0) {
-		gsize offset = bufsz - sizeof(elantp_signature);
-		for (gsize i = 0; i < sizeof(elantp_signature); i++) {
-			guint8 tmp = 0x0;
-			if (!fu_memread_uint8_safe(buf, bufsz, offset + i, &tmp, error))
-				return FALSE;
-			if (tmp != elantp_signature[i]) {
-				g_set_error(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_INVALID_FILE,
-					    "signature[%u] invalid: got 0x%2x, expected 0x%02x",
-					    (guint)i,
-					    tmp,
-					    elantp_signature[i]);
-				return FALSE;
-			}
-		}
-	}
 
 	/* whole image */
 	fu_firmware_set_bytes(firmware, fw);
@@ -201,6 +211,7 @@ static void
 fu_elantp_firmware_class_init(FuElantpFirmwareClass *klass)
 {
 	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
+	klass_firmware->check_magic = fu_elantp_firmware_check_magic;
 	klass_firmware->parse = fu_elantp_firmware_parse;
 	klass_firmware->build = fu_elantp_firmware_build;
 	klass_firmware->write = fu_elantp_firmware_write;

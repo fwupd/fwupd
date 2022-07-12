@@ -97,6 +97,34 @@ fu_acpi_phat_set_oem_id(FuAcpiPhat *self, const gchar *oem_id)
 }
 
 static gboolean
+fu_acpi_phat_check_magic(FuFirmware *firmware, GBytes *fw, gsize offset, GError **error)
+{
+	gchar magic[4] = {'\0'};
+
+	if (!fu_memcpy_safe((guint8 *)magic,
+			    sizeof(magic),
+			    0x0, /* dst */
+			    g_bytes_get_data(fw, NULL),
+			    g_bytes_get_size(fw),
+			    offset, /* src */
+			    sizeof(magic),
+			    error)) {
+		g_prefix_error(error, "failed to read magic: ");
+		return FALSE;
+	}
+	if (memcmp(magic, "PHAT", sizeof(magic)) != 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "invalid magic signature, expected PHAT");
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_acpi_phat_parse(FuFirmware *firmware,
 		   GBytes *fw,
 		   gsize offset,
@@ -106,7 +134,6 @@ fu_acpi_phat_parse(FuFirmware *firmware,
 	FuAcpiPhat *self = FU_ACPI_PHAT(firmware);
 	gchar oem_id[6] = {'\0'};
 	gchar oem_table_id[8] = {'\0'};
-	gchar signature[4] = {'\0'};
 	gsize bufsz = 0;
 	guint32 length = 0;
 	guint32 oem_revision = 0;
@@ -115,23 +142,6 @@ fu_acpi_phat_parse(FuFirmware *firmware,
 	g_autofree gchar *oem_table_id_safe = NULL;
 
 	/* parse table */
-	if (!fu_memcpy_safe((guint8 *)signature,
-			    sizeof(signature),
-			    0x0, /* dst */
-			    buf,
-			    bufsz,
-			    offset + 0, /* src */
-			    sizeof(signature),
-			    error))
-		return FALSE;
-	if (memcmp(signature, "PHAT", 4) != 0) {
-		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
-			    "Not a PHAT table, got %s",
-			    signature);
-		return FALSE;
-	}
 	if (!fu_memread_uint32_safe(buf, bufsz, offset + 4, &length, G_LITTLE_ENDIAN, error))
 		return FALSE;
 	if (bufsz < length) {
@@ -340,6 +350,7 @@ fu_acpi_phat_class_init(FuAcpiPhatClass *klass)
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
 	object_class->finalize = fu_acpi_phat_finalize;
+	klass_firmware->check_magic = fu_acpi_phat_check_magic;
 	klass_firmware->parse = fu_acpi_phat_parse;
 	klass_firmware->write = fu_acpi_phat_write;
 	klass_firmware->export = fu_acpi_phat_export;

@@ -109,6 +109,38 @@ fu_genesys_usbhub_firmware_verify(const guint8 *buf, gsize bufsz, guint16 code_s
 }
 
 static gboolean
+fu_genesys_usbhub_firmware_check_magic(FuFirmware *firmware,
+				       GBytes *fw,
+				       gsize offset,
+				       GError **error)
+{
+	guint8 magic[4] = {0x0};
+
+	if (!fu_memcpy_safe(magic,
+			    sizeof(magic),
+			    0, /* dst */
+			    g_bytes_get_data(fw, NULL),
+			    g_bytes_get_size(fw),
+			    offset + GENESYS_USBHUB_FW_SIG_OFFSET,
+			    sizeof(magic),
+			    error)) {
+		g_prefix_error(error, "failed to read magic: ");
+		return FALSE;
+	}
+	if (memcmp(magic, GENESYS_USBHUB_FW_SIG_TEXT_HUB, sizeof(magic)) != 0 &&
+	    memcmp(magic, GENESYS_USBHUB_FW_SIG_TEXT_HUB_SIGN, sizeof(magic)) != 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "signature not supported");
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_genesys_usbhub_firmware_parse(FuFirmware *firmware,
 				 GBytes *fw,
 				 gsize offset,
@@ -118,31 +150,10 @@ fu_genesys_usbhub_firmware_parse(FuFirmware *firmware,
 	FuGenesysUsbhubFirmware *self = FU_GENESYS_USBHUB_FIRMWARE(firmware);
 	gsize bufsz = 0;
 	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
-	guint8 sign[4];
 	guint32 code_size = 0;
 	guint32 static_ts_offset = 0;
 	guint16 version_raw = 0;
 	g_autofree gchar *version = NULL;
-
-	/* check signature */
-	if (!fu_memcpy_safe(sign,
-			    sizeof(sign),
-			    0, /* dst */
-			    buf,
-			    bufsz,
-			    GENESYS_USBHUB_FW_SIG_OFFSET,
-			    sizeof(sign),
-			    error))
-		return FALSE;
-
-	if (memcmp(sign, GENESYS_USBHUB_FW_SIG_TEXT_HUB, sizeof(sign)) != 0 &&
-	    memcmp(sign, GENESYS_USBHUB_FW_SIG_TEXT_HUB_SIGN, sizeof(sign)) != 0) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "signature not supported");
-		return FALSE;
-	}
 
 	/* get chip */
 	if (!fu_genesys_usbhub_firmware_get_chip(self, buf, bufsz, error))
@@ -434,6 +445,7 @@ static void
 fu_genesys_usbhub_firmware_class_init(FuGenesysUsbhubFirmwareClass *klass)
 {
 	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
+	klass_firmware->check_magic = fu_genesys_usbhub_firmware_check_magic;
 	klass_firmware->parse = fu_genesys_usbhub_firmware_parse;
 	klass_firmware->export = fu_genesys_usbhub_firmware_export;
 	klass_firmware->build = fu_genesys_usbhub_firmware_build;

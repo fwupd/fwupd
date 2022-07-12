@@ -36,7 +36,7 @@ fu_plugin_acpi_phat_coldplug(FuPlugin *plugin, FuProgress *progress, GError **er
 	blob = fu_bytes_get_contents(fn, error);
 	if (blob == NULL)
 		return FALSE;
-	if (!fu_firmware_parse(phat, blob, FWUPD_INSTALL_FLAG_NONE, error))
+	if (!fu_firmware_parse(phat, blob, FWUPD_INSTALL_FLAG_NO_SEARCH, error))
 		return FALSE;
 	str = fu_acpi_phat_to_report_string(FU_ACPI_PHAT(phat));
 	fu_plugin_add_report_metadata(plugin, "PHAT", str);

@@ -190,6 +190,34 @@ fu_ifwi_cpd_firmware_parse_manifest(FuFirmware *firmware, GBytes *fw, GError **e
 }
 
 static gboolean
+fu_ifwi_cpd_firmware_check_magic(FuFirmware *firmware, GBytes *fw, gsize offset, GError **error)
+{
+	guint32 magic = 0;
+
+	if (!fu_memread_uint32_safe(g_bytes_get_data(fw, NULL),
+				    g_bytes_get_size(fw),
+				    offset + G_STRUCT_OFFSET(FuIfwiCpdHeader, header_marker),
+				    &magic,
+				    G_LITTLE_ENDIAN,
+				    error)) {
+		g_prefix_error(error, "failed to read magic: ");
+		return FALSE;
+	}
+	if (magic != FU_IFWI_CPD_FIRMWARE_HEADER_MARKER) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "invalid CPD header marker 0x%x, expected 0x%x",
+			    magic,
+			    (guint)FU_IFWI_CPD_FIRMWARE_HEADER_MARKER);
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_ifwi_cpd_firmware_parse(FuFirmware *firmware,
 			   GBytes *fw,
 			   gsize offset,
@@ -199,29 +227,10 @@ fu_ifwi_cpd_firmware_parse(FuFirmware *firmware,
 	FuIfwiCpdFirmware *self = FU_IFWI_CPD_FIRMWARE(firmware);
 	FuIfwiCpdFirmwarePrivate *priv = GET_PRIVATE(self);
 	gsize bufsz = 0;
-	guint32 header_marker = 0;
 	guint32 num_of_entries = 0;
 	guint32 partition_name = 0;
 	guint8 header_length = 0;
 	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
-
-	/* verify header marker */
-	if (!fu_memread_uint32_safe(buf,
-				    bufsz,
-				    offset + G_STRUCT_OFFSET(FuIfwiCpdHeader, header_marker),
-				    &header_marker,
-				    G_LITTLE_ENDIAN,
-				    error))
-		return FALSE;
-	if (header_marker != FU_IFWI_CPD_FIRMWARE_HEADER_MARKER) {
-		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
-			    "invalid CPD header marker 0x%x, expected 0x%x",
-			    header_marker,
-			    (guint)FU_IFWI_CPD_FIRMWARE_HEADER_MARKER);
-		return FALSE;
-	}
 
 	/* other header fields */
 	if (!fu_memread_uint8_safe(buf,
@@ -452,6 +461,7 @@ static void
 fu_ifwi_cpd_firmware_class_init(FuIfwiCpdFirmwareClass *klass)
 {
 	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
+	klass_firmware->check_magic = fu_ifwi_cpd_firmware_check_magic;
 	klass_firmware->export = fu_ifwi_cpd_firmware_export;
 	klass_firmware->parse = fu_ifwi_cpd_firmware_parse;
 	klass_firmware->write = fu_ifwi_cpd_firmware_write;

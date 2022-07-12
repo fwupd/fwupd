@@ -150,7 +150,7 @@ fu_plugin_vbe_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 
 	/* look for override first, fall back to system value */
 	file = fu_plugin_vbe_get_bfname(plugin);
-	if (!fu_firmware_parse_file(priv->fdt, file, FWUPD_INSTALL_FLAG_NONE, error)) {
+	if (!fu_firmware_parse_file(priv->fdt, file, FWUPD_INSTALL_FLAG_NO_SEARCH, error)) {
 		g_prefix_error(error, "failed to parse FDT: ");
 		return FALSE;
 	}

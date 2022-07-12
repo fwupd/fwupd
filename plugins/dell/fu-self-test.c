@@ -241,19 +241,20 @@ fu_plugin_dell_tpm_func(gconstpointer user_data)
 					      device_v20,
 					      blob_fw,
 					      progress,
-					      FWUPD_INSTALL_FLAG_NONE,
+					      FWUPD_INSTALL_FLAG_NO_SEARCH,
 					      &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
 	g_assert_false(ret);
 	g_clear_error(&error);
 
 	/* test override */
-	ret = fu_plugin_runner_write_firmware(self->plugin_uefi_capsule,
-					      device_v20,
-					      blob_fw,
-					      progress,
-					      FWUPD_INSTALL_FLAG_FORCE,
-					      &error);
+	ret =
+	    fu_plugin_runner_write_firmware(self->plugin_uefi_capsule,
+					    device_v20,
+					    blob_fw,
+					    progress,
+					    FWUPD_INSTALL_FLAG_NO_SEARCH | FWUPD_INSTALL_FLAG_FORCE,
+					    &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 

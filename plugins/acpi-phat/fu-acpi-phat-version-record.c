@@ -40,7 +40,10 @@ fu_acpi_phat_version_record_parse(FuFirmware *firmware,
 		if (fw_tmp == NULL)
 			return FALSE;
 		fu_firmware_set_offset(firmware_tmp, offset + 12);
-		if (!fu_firmware_parse(firmware_tmp, fw_tmp, flags, error))
+		if (!fu_firmware_parse(firmware_tmp,
+				       fw_tmp,
+				       flags | FWUPD_INSTALL_FLAG_NO_SEARCH,
+				       error))
 			return FALSE;
 		fu_firmware_add_image(firmware, firmware_tmp);
 		offset += fu_firmware_get_size(firmware_tmp);

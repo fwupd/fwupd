@@ -195,7 +195,7 @@ fu_efi_firmware_section_parse(FuFirmware *firmware,
 	/* nested volume */
 	if (priv->type == FU_EFI_FIRMWARE_SECTION_TYPE_VOLUME_IMAGE) {
 		g_autoptr(FuFirmware) img = fu_efi_firmware_volume_new();
-		if (!fu_firmware_parse(img, blob, flags, error))
+		if (!fu_firmware_parse(img, blob, flags | FWUPD_INSTALL_FLAG_NO_SEARCH, error))
 			return FALSE;
 		fu_firmware_add_image(firmware, img);
 
