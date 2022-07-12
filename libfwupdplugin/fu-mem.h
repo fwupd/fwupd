@@ -42,6 +42,13 @@ fu_memread_uint16_safe(const guint8 *buf,
 		       FuEndianType endian,
 		       GError **error) G_GNUC_WARN_UNUSED_RESULT;
 gboolean
+fu_memread_uint24_safe(const guint8 *buf,
+		       gsize bufsz,
+		       gsize offset,
+		       guint32 *value,
+		       FuEndianType endian,
+		       GError **error) G_GNUC_WARN_UNUSED_RESULT;
+gboolean
 fu_memread_uint32_safe(const guint8 *buf,
 		       gsize bufsz,
 		       gsize offset,

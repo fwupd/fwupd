@@ -1059,3 +1059,9 @@ LIBFWUPDPLUGIN_1.8.2 {
     fu_volume_new_esp_for_path;
   local: *;
 } LIBFWUPDPLUGIN_1.8.1;
+
+LIBFWUPDPLUGIN_1.8.3 {
+  global:
+    fu_memread_uint24_safe;
+  local: *;
+} LIBFWUPDPLUGIN_1.8.2;
