@@ -196,41 +196,6 @@ validate_firmware_update_method(MMModemFirmwareUpdateMethod methods, GError **er
 	return FALSE;
 }
 
-static void
-fu_mm_device_probe_quectel_flags(FuMmDevice *self)
-{
-	const gchar *version = fu_device_get_version(FU_DEVICE(self));
-	g_autofree gchar *name = NULL;
-	struct {
-		const gchar *name;
-		const gchar *version;
-	} secboot[] = {{"EM05GF", "EM05GFAR07A07M1G_01.005.01.005"},
-		       {"EM05CE", "EM05CEFCR08A16M1G_LNV"},
-		       {"EM120G", "EM120RGLAPR02A07M4G_18.018.18.018"},
-		       {"EM160G", "EM160RGLAPR02A07M4G_18.018.18.018"},
-		       {"EG25GG", "EG25GGBR07A07M2G_OCPU_30.001.30.001"},
-		       {NULL, NULL}};
-
-	/* find model name and compare with table from Quectel */
-	if (version == NULL)
-		return;
-	name = g_strndup(version, 6);
-	for (guint i = 0; secboot[i].name != NULL; i++) {
-		if (g_strcmp0(name, secboot[i].name) == 0) {
-			if (fu_version_compare(version,
-					       secboot[i].version,
-					       FWUPD_VERSION_FORMAT_PLAIN) >= 0) {
-				fu_device_add_flag(FU_DEVICE(self),
-						   FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
-			} else {
-				fu_device_add_flag(FU_DEVICE(self),
-						   FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
-			}
-			return;
-		}
-	}
-}
-
 static gboolean
 fu_mm_device_probe_default(FuDevice *device, GError **error)
 {
@@ -347,6 +312,9 @@ fu_mm_device_probe_default(FuDevice *device, GError **error)
 				self->port_qcdm = g_strdup_printf("/dev/%s", ports[i].name);
 			else if (ports[i].type == MM_MODEM_PORT_TYPE_MBIM)
 				self->port_mbim = g_strdup_printf("/dev/%s", ports[i].name);
+			/* to read secboot status */
+			else if (ports[i].type == MM_MODEM_PORT_TYPE_AT)
+				self->port_at = g_strdup_printf("/dev/%s", ports[i].name);
 		}
 		fu_device_add_protocol(device, "com.qualcomm.firehose");
 	}
@@ -554,12 +522,6 @@ fu_mm_device_probe_default(FuDevice *device, GError **error)
 	if (g_strcmp0(fu_device_get_vendor(device), "QUALCOMM INCORPORATED") == 0)
 		fu_device_set_vendor(device, "Qualcomm");
 
-	/* Quectel secboot enabled */
-	if (fu_device_get_name(device) != NULL &&
-	    g_str_has_prefix(fu_device_get_name(device), "QUECTEL")) {
-		fu_mm_device_probe_quectel_flags(self);
-	}
-
 	/* success */
 	return TRUE;
 }
@@ -757,6 +719,58 @@ fu_mm_device_at_cmd_cb(FuDevice *device, gpointer user_data, GError **error)
 				/* Set branch */
 				fu_device_set_branch(FU_DEVICE(self), parts[j]);
 				g_debug("Firmware branch reported as '%s'", parts[j]);
+				break;
+			}
+		}
+	}
+
+	if (g_strcmp0(helper->cmd, "AT+QSECBOOT=\"status\"") == 0) {
+		/*
+		 * example AT+QSECBOOT="status" response:
+		 *
+		 * \r\n+QSECBOOT: "STATUS",1\r\n\r\nOK\r\n
+		 *
+		 * Secure boot status:
+		 * 1 - enabled
+		 * 0 - disabled
+		 */
+		g_auto(GStrv) parts = g_strsplit(buf, "\r\n", -1);
+
+		for (int j = 0; parts[j] != NULL; j++) {
+			if (g_strcmp0(parts[j], "+QSECBOOT: \"status\",1") == 0) {
+				fu_device_add_flag(FU_DEVICE(self),
+						   FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
+				break;
+			}
+			if (g_strcmp0(parts[j], "+QSECBOOT: \"status\",0") == 0) {
+				fu_device_add_flag(FU_DEVICE(self),
+						   FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
+				break;
+			}
+		}
+	}
+
+	if (g_strcmp0(helper->cmd, "AT+QCFG=\"secbootstat\"") == 0) {
+		/*
+		 * example AT+QSECBOOT="status" response:
+		 *
+		 * \r\n+QSECBOOT: "STATUS",1\r\n\r\nOK\r\n
+		 *
+		 * Secure boot status:
+		 * 1 - enabled
+		 * 0 - disabled
+		 */
+		g_auto(GStrv) parts = g_strsplit(buf, "\r\n", -1);
+
+		for (int j = 0; parts[j] != NULL; j++) {
+			if (g_strcmp0(parts[j], "+QCFG: \"secbootstat\",1") == 0) {
+				fu_device_add_flag(FU_DEVICE(self),
+						   FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
+				break;
+			}
+			if (g_strcmp0(parts[j], "+QCFG: \"secbootstat\",0") == 0) {
+				fu_device_add_flag(FU_DEVICE(self),
+						   FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 				break;
 			}
 		}
@@ -1747,6 +1761,19 @@ fu_mm_device_setup_branch_at(FuMmDevice *self, GError **error)
 {
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
+	/* nothing to do if there is no AT port available or
+	 * ModemManagerBranchAtCommand quirk is not set */
+	if (self->port_at == NULL || self->branch_at == NULL)
+		return TRUE;
+
+	if (fu_device_has_flag(self, FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD)) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "Firmware branches are not supported if the devices is signed");
+		return FALSE;
+	}
+
 	/* Create IO channel to send AT commands to the modem */
 	locker = fu_device_locker_new_full(self,
 					   (FuDeviceLockerFunc)fu_mm_device_io_open,
@@ -1755,31 +1782,97 @@ fu_mm_device_setup_branch_at(FuMmDevice *self, GError **error)
 	if (locker == NULL)
 		return FALSE;
 
-	/* firmware branch AT command may fail if not implemented,
-	 * clear error if not supported */
-	if (self->branch_at != NULL) {
-		g_autoptr(GError) error_branch = NULL;
-		if (!fu_mm_device_at_cmd(self, self->branch_at, TRUE, &error_branch))
-			g_debug("unable to get firmware branch: %s", error_branch->message);
+	if (!fu_mm_device_at_cmd(self, self->branch_at, TRUE, error))
+		return FALSE;
+
+	if (fu_device_get_branch(self) != NULL)
+		g_debug("using firmware branch: %s", fu_device_get_branch(self));
+	else
+		g_debug("using firmware branch: default");
+
+	return TRUE;
+}
+
+static void
+fu_mm_device_setup_secboot_status_quectel(FuMmDevice *self)
+{
+	const gchar *version = fu_device_get_version(FU_DEVICE(self));
+	g_autofree gchar *name = NULL;
+
+	const gchar *at_cmd[] = {"AT+QSECBOOT=\"status\"", "AT+QCFG=\"secbootstat\"", NULL};
+
+	struct {
+		const gchar *name;
+		const gchar *version;
+	} secboot[] = {{"EM05GF", "EM05GFAR07A07M1G_01.005.01.005"},
+		       {"EM05CE", "EM05CEFCR08A16M1G_LNV"},
+		       {NULL, NULL}};
+
+	if (self->port_at != NULL) {
+		g_autoptr(FuDeviceLocker) locker = NULL;
+		g_autoptr(GError) error_local = NULL;
+
+		/* Create IO channel to send AT commands to the modem */
+		locker = fu_device_locker_new_full(self,
+						   (FuDeviceLockerFunc)fu_mm_device_io_open,
+						   (FuDeviceLockerFunc)fu_mm_device_io_close,
+						   &error_local);
+		if (locker == NULL) {
+			g_debug("failed to open AT port: %s", error_local->message);
+			return;
+		}
+
+		/* Try to query sec boot status with AT commands */
+		for (guint i = 0; at_cmd[i] != NULL; i++) {
+			if (!fu_mm_device_at_cmd(self, at_cmd[i], TRUE, &error_local))
+				g_debug("AT command failed (%s): %s",
+					at_cmd[i],
+					error_local->message);
+			else
+				return;
+		}
 	}
 
-	/* success */
-	return TRUE;
+	/* find model name and compare with table from Quectel */
+	if (version == NULL)
+		return;
+	name = g_strndup(version, 6);
+	for (guint i = 0; secboot[i].name != NULL; i++) {
+		if (g_strcmp0(name, secboot[i].name) == 0) {
+			if (fu_version_compare(version,
+					       secboot[i].version,
+					       FWUPD_VERSION_FORMAT_PLAIN) >= 0) {
+				fu_device_add_flag(FU_DEVICE(self),
+						   FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
+			} else {
+				fu_device_add_flag(FU_DEVICE(self),
+						   FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
+			}
+			return;
+		}
+	}
+}
+
+static void
+fu_mm_device_setup_secboot_status(FuDevice *device)
+{
+	FuMmDevice *self = FU_MM_DEVICE(device);
+
+	if (fu_device_has_vendor_id(device, "USB:0x2C7C") ||
+	    fu_device_has_vendor_id(device, "PCI:0x1EAC"))
+		fu_mm_device_setup_secboot_status_quectel(self);
 }
 
 static gboolean
 fu_mm_device_setup(FuDevice *device, GError **error)
 {
 	FuMmDevice *self = FU_MM_DEVICE(device);
+	g_autoptr(GError) error_local = NULL;
 
-	if (self->port_at != NULL) {
-		if (!fu_mm_device_setup_branch_at(self, error))
-			return FALSE;
-	}
-	if (fu_device_get_branch(device) != NULL)
-		g_debug("using firmware branch: %s", fu_device_get_branch(device));
-	else
-		g_debug("using firmware branch: default");
+	fu_mm_device_setup_secboot_status(device);
+
+	if (!fu_mm_device_setup_branch_at(self, &error_local))
+		g_warning("Failed to set firmware branch: %s", error_local->message);
 
 	return TRUE;
 }
