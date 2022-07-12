@@ -273,6 +273,34 @@ fu_ccgx_dmc_firmware_parse_image(FuFirmware *firmware,
 }
 
 static gboolean
+fu_ccgx_dmc_firmware_check_magic(FuFirmware *firmware, GBytes *fw, gsize offset, GError **error)
+{
+	guint32 magic = 0;
+
+	if (!fu_memread_uint32_safe(g_bytes_get_data(fw, NULL),
+				    g_bytes_get_size(fw),
+				    offset,
+				    &magic,
+				    G_LITTLE_ENDIAN,
+				    error)) {
+		g_prefix_error(error, "failed to read magic: ");
+		return FALSE;
+	}
+	if (magic != DMC_FWCT_SIGN) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "invalid signature, expected 0x%04X got 0x%04X",
+			    (guint32)DMC_FWCT_SIGN,
+			    (guint32)magic);
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_ccgx_dmc_firmware_parse(FuFirmware *firmware,
 			   GBytes *fw,
 			   gsize offset,
@@ -284,28 +312,14 @@ fu_ccgx_dmc_firmware_parse(FuFirmware *firmware,
 	guint16 hdr_size = 0;
 	guint16 mdbufsz = 0;
 	guint32 hdr_composite_version = 0;
-	guint32 hdr_signature = 0;
 	guint8 hdr_image_count = 0;
 	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
 	g_autoptr(FuFirmware) img = fu_firmware_new_from_bytes(fw);
 
-	/* check for 'F' 'W' 'C' 'T' in signature */
-	if (!fu_memread_uint32_safe(buf, bufsz, 0x0, &hdr_signature, G_LITTLE_ENDIAN, error))
-		return FALSE;
-	if (hdr_signature != DMC_FWCT_SIGN) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "invalid dmc signature, expected 0x%04X got 0x%04X",
-			    (guint32)DMC_FWCT_SIGN,
-			    (guint32)hdr_signature);
-		return FALSE;
-	}
-
 	/* check fwct size */
 	if (!fu_memread_uint16_safe(buf,
 				    bufsz,
-				    G_STRUCT_OFFSET(FwctInfo, size),
+				    offset + G_STRUCT_OFFSET(FwctInfo, size),
 				    &hdr_size,
 				    G_LITTLE_ENDIAN,
 				    error))
@@ -323,7 +337,7 @@ fu_ccgx_dmc_firmware_parse(FuFirmware *firmware,
 	/* set version */
 	if (!fu_memread_uint32_safe(buf,
 				    bufsz,
-				    G_STRUCT_OFFSET(FwctInfo, composite_version),
+				    offset + G_STRUCT_OFFSET(FwctInfo, composite_version),
 				    &hdr_composite_version,
 				    G_LITTLE_ENDIAN,
 				    error))
@@ -336,17 +350,23 @@ fu_ccgx_dmc_firmware_parse(FuFirmware *firmware,
 	}
 
 	/* read fwct data */
-	self->fwct_blob = fu_bytes_new_offset(fw, 0x0, hdr_size, error);
+	self->fwct_blob = fu_bytes_new_offset(fw, offset, hdr_size, error);
 	if (self->fwct_blob == NULL)
 		return FALSE;
 
 	/* create custom meta binary */
-	if (!fu_memread_uint16_safe(buf, bufsz, hdr_size, &mdbufsz, G_LITTLE_ENDIAN, error)) {
+	if (!fu_memread_uint16_safe(buf,
+				    bufsz,
+				    offset + hdr_size,
+				    &mdbufsz,
+				    G_LITTLE_ENDIAN,
+				    error)) {
 		g_prefix_error(error, "failed to read metadata size: ");
 		return FALSE;
 	}
 	if (mdbufsz > 0) {
-		self->custom_meta_blob = fu_bytes_new_offset(fw, hdr_size + 2, mdbufsz, error);
+		self->custom_meta_blob =
+		    fu_bytes_new_offset(fw, offset + hdr_size + 2, mdbufsz, error);
 		if (self->custom_meta_blob == NULL)
 			return FALSE;
 	}
@@ -358,7 +378,7 @@ fu_ccgx_dmc_firmware_parse(FuFirmware *firmware,
 	/* parse image */
 	if (!fu_memread_uint8_safe(buf,
 				   bufsz,
-				   G_STRUCT_OFFSET(FwctInfo, image_count),
+				   offset + G_STRUCT_OFFSET(FwctInfo, image_count),
 				   &hdr_image_count,
 				   error))
 		return FALSE;
@@ -509,6 +529,7 @@ fu_ccgx_dmc_firmware_class_init(FuCcgxDmcFirmwareClass *klass)
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
 	object_class->finalize = fu_ccgx_dmc_firmware_finalize;
+	klass_firmware->check_magic = fu_ccgx_dmc_firmware_check_magic;
 	klass_firmware->parse = fu_ccgx_dmc_firmware_parse;
 	klass_firmware->write = fu_ccgx_dmc_firmware_write;
 	klass_firmware->export = fu_ccgx_dmc_firmware_export;

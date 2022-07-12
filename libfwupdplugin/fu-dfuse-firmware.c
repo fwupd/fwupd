@@ -148,6 +148,34 @@ fu_dfuse_firmware_image_parse(FuDfuseFirmware *self, GBytes *bytes, gsize *offse
 }
 
 static gboolean
+fu_dfuse_firmware_check_magic(FuFirmware *firmware, GBytes *fw, gsize offset, GError **error)
+{
+	guint8 magic[5] = {0x0};
+
+	if (!fu_memcpy_safe(magic,
+			    sizeof(magic),
+			    0x0, /* dst */
+			    g_bytes_get_data(fw, NULL),
+			    g_bytes_get_size(fw),
+			    offset, /* src */
+			    sizeof(magic),
+			    error)) {
+		g_prefix_error(error, "failed to read magic: ");
+		return FALSE;
+	}
+	if (memcmp(magic, "DfuSe", sizeof(magic)) != 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "invalid DfuSe prefix");
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_dfuse_firmware_parse(FuFirmware *firmware,
 			GBytes *fw,
 			gsize offset,
@@ -155,60 +183,61 @@ fu_dfuse_firmware_parse(FuFirmware *firmware,
 			GError **error)
 {
 	FuDfuFirmware *dfu_firmware = FU_DFU_FIRMWARE(firmware);
-	DfuSeHdr hdr = {0x0};
 	gsize bufsz = 0;
-	const guint8 *buf;
+	guint32 image_size = 0;
+	guint8 targets = 0;
+	guint8 ver = 0;
+	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
 
 	/* DFU footer first */
 	if (!fu_dfu_firmware_parse_footer(dfu_firmware, fw, flags, error))
 		return FALSE;
 
-	/* check the prefix */
-	buf = (const guint8 *)g_bytes_get_data(fw, &bufsz);
-	if (!fu_memcpy_safe((guint8 *)&hdr,
-			    sizeof(hdr),
-			    0x0, /* dst */
-			    buf,
-			    bufsz,
-			    offset, /* src */
-			    sizeof(hdr),
-			    error))
-		return FALSE;
-	if (memcmp(hdr.sig, "DfuSe", sizeof(hdr.sig)) != 0) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INTERNAL,
-				    "invalid DfuSe prefix");
-		return FALSE;
-	}
-
 	/* check the version */
-	if (hdr.ver != 0x01) {
+	if (!fu_memread_uint8_safe(buf,
+				   bufsz,
+				   offset + G_STRUCT_OFFSET(DfuSeHdr, ver),
+				   &ver,
+				   error))
+		return FALSE;
+	if (ver != 0x01) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
 			    "invalid DfuSe version, got %02x",
-			    hdr.ver);
+			    ver);
 		return FALSE;
 	}
 
 	/* check image size */
-	if (GUINT32_FROM_LE(hdr.image_size) !=
-	    bufsz - fu_dfu_firmware_get_footer_len(dfu_firmware)) {
+	if (!fu_memread_uint32_safe(buf,
+				    bufsz,
+				    offset + G_STRUCT_OFFSET(DfuSeHdr, image_size),
+				    &image_size,
+				    G_LITTLE_ENDIAN,
+				    error))
+		return FALSE;
+	if (image_size != bufsz - fu_dfu_firmware_get_footer_len(dfu_firmware)) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
 			    "invalid DfuSe image size, "
 			    "got %" G_GUINT32_FORMAT ", "
 			    "expected %" G_GSIZE_FORMAT,
-			    GUINT32_FROM_LE(hdr.image_size),
+			    image_size,
 			    bufsz - fu_dfu_firmware_get_footer_len(dfu_firmware));
 		return FALSE;
 	}
 
 	/* parse the image targets */
-	offset += sizeof(hdr);
-	for (guint i = 0; i < hdr.targets; i++) {
+	if (!fu_memread_uint8_safe(buf,
+				   bufsz,
+				   offset + G_STRUCT_OFFSET(DfuSeHdr, targets),
+				   &targets,
+				   error))
+		return FALSE;
+	offset += sizeof(DfuSeHdr);
+	for (guint i = 0; i < targets; i++) {
 		g_autoptr(FuFirmware) image = NULL;
 		image =
 		    fu_dfuse_firmware_image_parse(FU_DFUSE_FIRMWARE(firmware), fw, &offset, error);
@@ -340,6 +369,7 @@ static void
 fu_dfuse_firmware_class_init(FuDfuseFirmwareClass *klass)
 {
 	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
+	klass_firmware->check_magic = fu_dfuse_firmware_check_magic;
 	klass_firmware->parse = fu_dfuse_firmware_parse;
 	klass_firmware->write = fu_dfuse_firmware_write;
 }

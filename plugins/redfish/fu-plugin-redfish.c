@@ -186,7 +186,10 @@ fu_redfish_plugin_discover_smbios_table(FuPlugin *plugin, GError **error)
 		if (smbios_data == NULL)
 			return TRUE;
 	}
-	if (!fu_firmware_parse(FU_FIRMWARE(smbios), smbios_data, FWUPD_INSTALL_FLAG_NONE, error)) {
+	if (!fu_firmware_parse(FU_FIRMWARE(smbios),
+			       smbios_data,
+			       FWUPD_INSTALL_FLAG_NO_SEARCH,
+			       error)) {
 		g_prefix_error(error, "failed to parse SMBIOS table entry type 42: ");
 		return FALSE;
 	}

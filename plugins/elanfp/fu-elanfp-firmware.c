@@ -17,6 +17,8 @@ struct _FuElanfpFirmware {
 
 G_DEFINE_TYPE(FuElanfpFirmware, fu_elanfp_firmware, FU_TYPE_FIRMWARE)
 
+#define FU_ELANFP_FIRMWARE_HEADER_MAGIC 0x46325354
+
 static void
 fu_elanfp_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
 {
@@ -40,6 +42,34 @@ fu_elanfp_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
 }
 
 static gboolean
+fu_elanfp_firmware_check_magic(FuFirmware *firmware, GBytes *fw, gsize offset, GError **error)
+{
+	guint32 magic = 0;
+
+	if (!fu_memread_uint32_safe(g_bytes_get_data(fw, NULL),
+				    g_bytes_get_size(fw),
+				    offset,
+				    &magic,
+				    G_LITTLE_ENDIAN,
+				    error)) {
+		g_prefix_error(error, "failed to read magic: ");
+		return FALSE;
+	}
+	if (magic != FU_ELANFP_FIRMWARE_HEADER_MAGIC) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "invalid magic, expected 0x%04X got 0x%04X",
+			    (guint32)FU_ELANFP_FIRMWARE_HEADER_MAGIC,
+			    magic);
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_elanfp_firmware_parse(FuFirmware *firmware,
 			 GBytes *fw,
 			 gsize offset,
@@ -49,19 +79,10 @@ fu_elanfp_firmware_parse(FuFirmware *firmware,
 	FuElanfpFirmware *self = FU_ELANFP_FIRMWARE(firmware);
 	const guint8 *buf;
 	gsize bufsz;
-	guint32 tag = 0;
 	guint img_cnt = 0;
 
-	/* check the tag */
-	buf = g_bytes_get_data(fw, &bufsz);
-	if (!fu_memread_uint32_safe(buf, bufsz, offset + 0x0, &tag, G_LITTLE_ENDIAN, error))
-		return FALSE;
-	if (tag != 0x46325354) {
-		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA, "tag is not valid");
-		return FALSE;
-	}
-
 	/* file format version */
+	buf = g_bytes_get_data(fw, &bufsz);
 	if (!fu_memread_uint32_safe(buf,
 				    bufsz,
 				    offset + 0x4,
@@ -151,7 +172,7 @@ fu_elanfp_firmware_parse(FuFirmware *firmware,
 		blob = fu_bytes_new_offset(fw, start_addr, length, error);
 		if (blob == NULL)
 			return FALSE;
-		if (!fu_firmware_parse(img, blob, flags, error))
+		if (!fu_firmware_parse(img, blob, flags | FWUPD_INSTALL_FLAG_NO_SEARCH, error))
 			return FALSE;
 		fu_firmware_add_image(firmware, img);
 
@@ -218,6 +239,7 @@ static void
 fu_elanfp_firmware_class_init(FuElanfpFirmwareClass *klass)
 {
 	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
+	klass_firmware->check_magic = fu_elanfp_firmware_check_magic;
 	klass_firmware->parse = fu_elanfp_firmware_parse;
 	klass_firmware->write = fu_elanfp_firmware_write;
 	klass_firmware->export = fu_elanfp_firmware_export;

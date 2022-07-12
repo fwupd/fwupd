@@ -58,6 +58,34 @@ fu_ifd_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuil
 }
 
 static gboolean
+fu_efi_firmware_volume_check_magic(FuFirmware *firmware, GBytes *fw, gsize offset, GError **error)
+{
+	guint32 magic = 0;
+
+	if (!fu_memread_uint32_safe(g_bytes_get_data(fw, NULL),
+				    g_bytes_get_size(fw),
+				    offset + FU_EFI_FIRMWARE_VOLUME_OFFSET_SIGNATURE,
+				    &magic,
+				    G_LITTLE_ENDIAN,
+				    error)) {
+		g_prefix_error(error, "failed to read magic: ");
+		return FALSE;
+	}
+	if (magic != FU_EFI_FIRMWARE_VOLUME_SIGNATURE) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "EFI FV signature invalid, got 0x%x, expected 0x%x",
+			    magic,
+			    (guint)FU_EFI_FIRMWARE_VOLUME_SIGNATURE);
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_efi_firmware_volume_parse(FuFirmware *firmware,
 			     GBytes *fw,
 			     gsize offset,
@@ -73,33 +101,12 @@ fu_efi_firmware_volume_parse(FuFirmware *firmware,
 	guint16 ext_hdr = 0;
 	guint16 hdr_length = 0;
 	guint32 attrs = 0;
-	guint32 sig = 0;
 	guint64 fv_length = 0;
 	guint8 alignment;
 	guint8 revision = 0;
 	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
 	g_autofree gchar *guid_str = NULL;
 	g_autoptr(GBytes) blob = NULL;
-
-	/* sanity check */
-	if (!fu_memread_uint32_safe(buf,
-				    bufsz,
-				    offset + FU_EFI_FIRMWARE_VOLUME_OFFSET_SIGNATURE,
-				    &sig,
-				    G_LITTLE_ENDIAN,
-				    error)) {
-		g_prefix_error(error, "failed to read signature: ");
-		return FALSE;
-	}
-	if (sig != FU_EFI_FIRMWARE_VOLUME_SIGNATURE) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INTERNAL,
-			    "EFI FV signature invalid, got 0x%x, expected 0x%x",
-			    sig,
-			    (guint)FU_EFI_FIRMWARE_VOLUME_SIGNATURE);
-		return FALSE;
-	}
 
 	/* guid */
 	if (!fu_memcpy_safe((guint8 *)&guid,
@@ -244,7 +251,7 @@ fu_efi_firmware_volume_parse(FuFirmware *firmware,
 	if (g_strcmp0(guid_str, FU_EFI_FIRMWARE_VOLUME_GUID_FFS2) == 0) {
 		g_autoptr(FuFirmware) img = fu_efi_firmware_filesystem_new();
 		fu_firmware_set_alignment(img, fu_firmware_get_alignment(firmware));
-		if (!fu_firmware_parse(img, blob, flags, error))
+		if (!fu_firmware_parse(img, blob, flags | FWUPD_INSTALL_FLAG_NO_SEARCH, error))
 			return FALSE;
 		fu_firmware_add_image(firmware, img);
 	} else {
@@ -414,6 +421,7 @@ static void
 fu_efi_firmware_volume_class_init(FuEfiFirmwareVolumeClass *klass)
 {
 	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
+	klass_firmware->check_magic = fu_efi_firmware_volume_check_magic;
 	klass_firmware->parse = fu_efi_firmware_volume_parse;
 	klass_firmware->write = fu_efi_firmware_volume_write;
 	klass_firmware->export = fu_ifd_firmware_export;

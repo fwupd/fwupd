@@ -63,6 +63,34 @@ typedef struct __attribute__((packed)) {
 } FuIfwiFptEntry;
 
 static gboolean
+fu_ifwi_fpt_firmware_check_magic(FuFirmware *firmware, GBytes *fw, gsize offset, GError **error)
+{
+	guint32 magic = 0;
+
+	if (!fu_memread_uint32_safe(g_bytes_get_data(fw, NULL),
+				    g_bytes_get_size(fw),
+				    offset + G_STRUCT_OFFSET(FuIfwiFptHeader, header_marker),
+				    &magic,
+				    G_LITTLE_ENDIAN,
+				    error)) {
+		g_prefix_error(error, "failed to read magic: ");
+		return FALSE;
+	}
+	if (magic != FU_IFWI_FPT_HEADER_MARKER) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "invalid FPT header marker 0x%x, expected 0x%x",
+			    magic,
+			    (guint)FU_IFWI_FPT_HEADER_MARKER);
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_ifwi_fpt_firmware_parse(FuFirmware *firmware,
 			   GBytes *fw,
 			   gsize offset,
@@ -70,30 +98,11 @@ fu_ifwi_fpt_firmware_parse(FuFirmware *firmware,
 			   GError **error)
 {
 	gsize bufsz = 0;
-	guint32 header_marker = 0;
 	guint32 num_of_entries = 0;
 	guint8 header_length = 0;
 	guint8 header_version = 0;
 	guint8 entry_version = 0;
 	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
-
-	/* verify header marker */
-	if (!fu_memread_uint32_safe(buf,
-				    bufsz,
-				    offset + G_STRUCT_OFFSET(FuIfwiFptHeader, header_marker),
-				    &header_marker,
-				    G_LITTLE_ENDIAN,
-				    error))
-		return FALSE;
-	if (header_marker != FU_IFWI_FPT_HEADER_MARKER) {
-		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
-			    "invalid FPT header marker 0x%x, expected 0x%x",
-			    header_marker,
-			    (guint)FU_IFWI_FPT_HEADER_MARKER);
-		return FALSE;
-	}
 
 	/* sanity check */
 	if (!fu_memread_uint32_safe(buf,
@@ -283,6 +292,7 @@ static void
 fu_ifwi_fpt_firmware_class_init(FuIfwiFptFirmwareClass *klass)
 {
 	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
+	klass_firmware->check_magic = fu_ifwi_fpt_firmware_check_magic;
 	klass_firmware->parse = fu_ifwi_fpt_firmware_parse;
 	klass_firmware->write = fu_ifwi_fpt_firmware_write;
 }

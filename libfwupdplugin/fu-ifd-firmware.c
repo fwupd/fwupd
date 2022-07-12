@@ -98,6 +98,34 @@ fu_ifd_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuil
 }
 
 static gboolean
+fu_ifd_firmware_check_magic(FuFirmware *firmware, GBytes *fw, gsize offset, GError **error)
+{
+	guint32 magic = 0;
+
+	if (!fu_memread_uint32_safe(g_bytes_get_data(fw, NULL),
+				    g_bytes_get_size(fw),
+				    offset + FU_IFD_FDBAR_SIGNATURE,
+				    &magic,
+				    G_LITTLE_ENDIAN,
+				    error)) {
+		g_prefix_error(error, "failed to read magic: ");
+		return FALSE;
+	}
+	if (magic != FU_IFD_SIGNATURE) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "signature invalid, got 0x%x, expected 0x%x",
+			    magic,
+			    (guint)FU_IFD_SIGNATURE);
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_ifd_firmware_parse(FuFirmware *firmware,
 		      GBytes *fw,
 		      gsize offset,
@@ -107,7 +135,6 @@ fu_ifd_firmware_parse(FuFirmware *firmware,
 	FuIfdFirmware *self = FU_IFD_FIRMWARE(firmware);
 	FuIfdFirmwarePrivate *priv = GET_PRIVATE(self);
 	gsize bufsz = 0;
-	guint32 sig;
 	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
 
 	/* check size */
@@ -117,30 +144,6 @@ fu_ifd_firmware_parse(FuFirmware *firmware,
 			    FWUPD_ERROR_INTERNAL,
 			    "file is too small, expected bufsz >= 0x%x",
 			    (guint)FU_IFD_SIZE);
-		return FALSE;
-	}
-
-	/* check reserved section */
-	for (guint i = 0; i < 0x10; i++) {
-		if (buf[FU_IFD_FDBAR_RESERVED + i] != 0xff) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INTERNAL,
-				    "reserved section invalid @0x%x",
-				    FU_IFD_FDBAR_RESERVED + i);
-			return FALSE;
-		}
-	}
-
-	/* check signature */
-	sig = fu_memread_uint32(buf + FU_IFD_FDBAR_SIGNATURE, G_LITTLE_ENDIAN);
-	if (sig != FU_IFD_SIGNATURE) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INTERNAL,
-			    "signature invalid, got 0x%x, expected 0x%x",
-			    sig,
-			    (guint)FU_IFD_SIGNATURE);
 		return FALSE;
 	}
 
@@ -240,7 +243,7 @@ fu_ifd_firmware_parse(FuFirmware *firmware,
 		} else {
 			img = fu_ifd_image_new();
 		}
-		if (!fu_firmware_parse(img, contents, flags, error))
+		if (!fu_firmware_parse(img, contents, flags | FWUPD_INSTALL_FLAG_NO_SEARCH, error))
 			return FALSE;
 		fu_firmware_set_addr(img, freg_base);
 		fu_firmware_set_idx(img, i);
@@ -490,6 +493,7 @@ fu_ifd_firmware_class_init(FuIfdFirmwareClass *klass)
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
 	object_class->finalize = fu_ifd_firmware_finalize;
+	klass_firmware->check_magic = fu_ifd_firmware_check_magic;
 	klass_firmware->export = fu_ifd_firmware_export;
 	klass_firmware->parse = fu_ifd_firmware_parse;
 	klass_firmware->write = fu_ifd_firmware_write;

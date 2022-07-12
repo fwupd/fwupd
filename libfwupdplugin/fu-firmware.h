@@ -62,8 +62,9 @@ struct _FuFirmwareClass {
 	gchar *(*get_checksum)(FuFirmware *self,
 			       GChecksumType csum_kind,
 			       GError **error)G_GNUC_WARN_UNUSED_RESULT;
+	gboolean (*check_magic)(FuFirmware *self, GBytes *fw, gsize offset, GError **error);
 	/*< private >*/
-	gpointer padding[26];
+	gpointer padding[25];
 };
 
 /**

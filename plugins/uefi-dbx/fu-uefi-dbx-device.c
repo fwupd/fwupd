@@ -105,7 +105,7 @@ fu_uefi_dbx_device_probe(FuDevice *device, GError **error)
 	kek_blob = fu_efivar_get_data_bytes(FU_EFIVAR_GUID_EFI_GLOBAL, "KEK", NULL, error);
 	if (kek_blob == NULL)
 		return FALSE;
-	if (!fu_firmware_parse(kek, kek_blob, FWUPD_INSTALL_FLAG_NO_SEARCH, error))
+	if (!fu_firmware_parse(kek, kek_blob, FWUPD_INSTALL_FLAG_NONE, error))
 		return FALSE;
 	fu_device_add_instance_strup(device, "ARCH", EFI_MACHINE_TYPE_NAME);
 

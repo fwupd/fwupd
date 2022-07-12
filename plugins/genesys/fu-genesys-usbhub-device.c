@@ -983,7 +983,7 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 		return FALSE;
 	blob = g_bytes_new_take(g_steal_pointer(&buf), bufsz);
 	firmware = fu_genesys_usbhub_firmware_new();
-	if (!fu_firmware_parse(firmware, blob, FWUPD_INSTALL_FLAG_NONE, &error_local)) {
+	if (!fu_firmware_parse(firmware, blob, FWUPD_INSTALL_FLAG_NO_SEARCH, &error_local)) {
 		g_debug("ignoring firmware: %s", error_local->message);
 		self->fw_bank_vers[0] = 0;
 	} else {
@@ -1014,7 +1014,7 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 		firmware_dual = fu_genesys_usbhub_firmware_new();
 		if (!fu_firmware_parse(firmware_dual,
 				       blob_dual,
-				       FWUPD_INSTALL_FLAG_NONE,
+				       FWUPD_INSTALL_FLAG_NO_SEARCH,
 				       &error_local_dual)) {
 			g_debug("ignoring recovery firmware: %s", error_local_dual->message);
 			self->fw_bank_vers[1] = 0;

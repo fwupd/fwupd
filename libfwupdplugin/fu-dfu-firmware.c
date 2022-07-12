@@ -206,6 +206,33 @@ typedef struct __attribute__((packed)) {
 	guint32 crc;
 } FuDfuFirmwareFooter;
 
+static gboolean
+fu_dfu_firmware_check_magic(FuFirmware *firmware, GBytes *fw, gsize offset, GError **error)
+{
+	guint8 magic[3] = {0x0};
+
+	/* is a footer */
+	if (!fu_memcpy_safe(magic,
+			    sizeof(magic),
+			    0x0, /* dst */
+			    g_bytes_get_data(fw, NULL),
+			    g_bytes_get_size(fw),
+			    g_bytes_get_size(fw) - G_STRUCT_OFFSET(FuDfuFirmwareFooter, sig),
+			    sizeof(magic),
+			    error))
+		return FALSE;
+	if (memcmp(magic, "UFD", sizeof(magic)) != 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "no DFU signature");
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
 gboolean
 fu_dfu_firmware_parse_footer(FuDfuFirmware *self,
 			     GBytes *fw,
@@ -217,25 +244,7 @@ fu_dfu_firmware_parse_footer(FuDfuFirmware *self,
 	gsize len;
 	guint32 crc;
 	guint32 crc_new;
-	guint8 *data;
-
-	/* check data size */
-	data = (guint8 *)g_bytes_get_data(fw, &len);
-	if (len < sizeof(FuDfuFirmwareFooter)) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INTERNAL,
-				    "size check failed, too small");
-		return FALSE;
-	}
-
-	/* check for DFU signature */
-	if (memcmp(&data[len - G_STRUCT_OFFSET(FuDfuFirmwareFooter, sig)],
-		   "UFD",
-		   sizeof(ftr.sig)) != 0) {
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "no DFU signature");
-		return FALSE;
-	}
+	const guint8 *data = g_bytes_get_data(fw, &len);
 
 	/* verify the checksum */
 	if (!fu_memcpy_safe((guint8 *)&ftr,
@@ -245,8 +254,10 @@ fu_dfu_firmware_parse_footer(FuDfuFirmware *self,
 			    len,
 			    len - sizeof(FuDfuFirmwareFooter), /* src */
 			    sizeof(FuDfuFirmwareFooter),
-			    error))
+			    error)) {
+		g_prefix_error(error, "failed to read magic: ");
 		return FALSE;
+	}
 	crc = GUINT32_FROM_LE(ftr.crc);
 	if ((flags & FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM) == 0) {
 		crc_new = ~fu_crc32(data, len - 4);
@@ -394,6 +405,7 @@ static void
 fu_dfu_firmware_class_init(FuDfuFirmwareClass *klass)
 {
 	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
+	klass_firmware->check_magic = fu_dfu_firmware_check_magic;
 	klass_firmware->export = fu_dfu_firmware_export;
 	klass_firmware->parse = fu_dfu_firmware_parse;
 	klass_firmware->write = fu_dfu_firmware_write;

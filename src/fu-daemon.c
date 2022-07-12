@@ -1232,6 +1232,7 @@ fu_daemon_daemon_method_call(GDBusConnection *connection,
 		fu_daemon_set_status(self, FWUPD_STATUS_WAITING_FOR_AUTH);
 		helper = g_new0(FuMainAuthHelper, 1);
 		helper->self = self;
+		helper->flags = FWUPD_INSTALL_FLAG_NO_SEARCH;
 		helper->request = g_steal_pointer(&request);
 		helper->invocation = g_object_ref(invocation);
 		helper->checksums = g_ptr_array_new_with_free_func(g_free);

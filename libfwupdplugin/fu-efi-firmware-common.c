@@ -47,7 +47,7 @@ fu_efi_firmware_parse_sections(FuFirmware *firmware,
 			return FALSE;
 
 		/* parse section */
-		if (!fu_firmware_parse(img, blob, flags, error))
+		if (!fu_firmware_parse(img, blob, flags | FWUPD_INSTALL_FLAG_NO_SEARCH, error))
 			return FALSE;
 		fu_firmware_set_offset(img, offset);
 		fu_firmware_add_image(firmware, img);

@@ -49,7 +49,7 @@ fu_efi_firmware_filesystem_parse(FuFirmware *firmware,
 		fw_tmp = fu_bytes_new_offset(fw, offset, bufsz - offset, error);
 		if (fw_tmp == NULL)
 			return FALSE;
-		if (!fu_firmware_parse(img, fw_tmp, flags, error)) {
+		if (!fu_firmware_parse(img, fw_tmp, flags | FWUPD_INSTALL_FLAG_NO_SEARCH, error)) {
 			g_prefix_error(error, "failed to parse EFI file at 0x%x: ", (guint)offset);
 			return FALSE;
 		}

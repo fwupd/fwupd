@@ -124,7 +124,7 @@ fu_thunderbolt_controller_read_status_block(FuThunderboltController *self, GErro
 		return FALSE;
 	if (!fu_firmware_parse(FU_FIRMWARE(firmware),
 			       controller_fw,
-			       FWUPD_INSTALL_FLAG_NONE,
+			       FWUPD_INSTALL_FLAG_NO_SEARCH,
 			       error))
 		return FALSE;
 	self->is_native = fu_thunderbolt_firmware_is_native(firmware);

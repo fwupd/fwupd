@@ -103,7 +103,7 @@ fu_ifd_device_read_firmware(FuDevice *device, FuProgress *progress, GError **err
 		firmware = fu_ifd_bios_new();
 	else
 		firmware = fu_ifd_image_new();
-	if (!fu_firmware_parse(firmware, blob, FWUPD_INSTALL_FLAG_NONE, error))
+	if (!fu_firmware_parse(firmware, blob, FWUPD_INSTALL_FLAG_NO_SEARCH, error))
 		return NULL;
 	return g_steal_pointer(&firmware);
 }

@@ -40,7 +40,7 @@ fu_test_synaprom_firmware_func(void)
 	g_assert_cmpint(sz, ==, 294);
 	g_assert_cmpint(buf[0], ==, 0x01);
 	g_assert_cmpint(buf[1], ==, 0x00);
-	ret = fu_firmware_parse(firmware, fw, 0, &error);
+	ret = fu_firmware_parse(firmware, fw, FWUPD_INSTALL_FLAG_NO_SEARCH, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 

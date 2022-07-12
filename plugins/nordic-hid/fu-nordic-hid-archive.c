@@ -154,7 +154,7 @@ fu_nordic_hid_archive_parse(FuFirmware *firmware,
 		 * <board>_<bl>_<bank>N, i.e "nrf52840dk_B0_bank0".
 		 * For MCUBoot bootloader only the single image is available */
 		image_id = g_strdup_printf("%s_%s_bank%01u", board_split[0], bootloader_name, i);
-		if (!fu_firmware_parse(image, blob, flags, error))
+		if (!fu_firmware_parse(image, blob, flags | FWUPD_INSTALL_FLAG_NO_SEARCH, error))
 			return FALSE;
 
 		fu_firmware_set_id(image, image_id);

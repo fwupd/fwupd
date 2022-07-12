@@ -627,7 +627,7 @@ fu_dfu_tool_write_alt(FuDfuTool *self, gchar **values, GError **error)
 static gboolean
 fu_dfu_tool_write(FuDfuTool *self, gchar **values, GError **error)
 {
-	FwupdInstallFlags flags = FWUPD_INSTALL_FLAG_NONE;
+	FwupdInstallFlags flags = FWUPD_INSTALL_FLAG_NO_SEARCH;
 	g_autoptr(FuDfuDevice) device = NULL;
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(FuDeviceLocker) locker = NULL;

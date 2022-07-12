@@ -366,7 +366,7 @@ fu_bcm57xx_device_read_firmware(FuDevice *device, FuProgress *progress, GError *
 	fw = fu_bcm57xx_device_dump_firmware(device, progress, error);
 	if (fw == NULL)
 		return NULL;
-	if (!fu_firmware_parse(firmware, fw, FWUPD_INSTALL_FLAG_NONE, error))
+	if (!fu_firmware_parse(firmware, fw, FWUPD_INSTALL_FLAG_NO_SEARCH, error))
 		return NULL;
 
 	/* remove images that will contain user-data */
@@ -425,7 +425,7 @@ fu_bcm57xx_device_prepare_firmware(FuDevice *device,
 	fw_old = fu_bcm57xx_device_dump_firmware(device, progress, error);
 	if (fw_old == NULL)
 		return NULL;
-	if (!fu_firmware_parse(firmware, fw_old, flags, error)) {
+	if (!fu_firmware_parse(firmware, fw_old, FWUPD_INSTALL_FLAG_NO_SEARCH, error)) {
 		g_prefix_error(error, "failed to parse existing firmware: ");
 		return NULL;
 	}

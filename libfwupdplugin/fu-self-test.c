@@ -1834,13 +1834,13 @@ fu_firmware_raw_aligned_func(void)
 	g_autoptr(GBytes) blob = g_bytes_new_static("hello", 5);
 
 	/* no alignment */
-	ret = fu_firmware_parse(firmware1, blob, FWUPD_INSTALL_FLAG_NONE, &error);
+	ret = fu_firmware_parse(firmware1, blob, FWUPD_INSTALL_FLAG_NO_SEARCH, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
 	/* invalid alignment */
 	fu_firmware_set_alignment(firmware2, FU_FIRMWARE_ALIGNMENT_4K);
-	ret = fu_firmware_parse(firmware2, blob, FWUPD_INSTALL_FLAG_NONE, &error);
+	ret = fu_firmware_parse(firmware2, blob, FWUPD_INSTALL_FLAG_NO_SEARCH, &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
 	g_assert_false(ret);
 }
@@ -1866,7 +1866,7 @@ fu_firmware_ihex_func(void)
 	data_file = fu_bytes_get_contents(filename_hex, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(data_file);
-	ret = fu_firmware_parse(firmware, data_file, FWUPD_INSTALL_FLAG_NONE, &error);
+	ret = fu_firmware_parse(firmware, data_file, FWUPD_INSTALL_FLAG_NO_SEARCH, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	data_fw = fu_firmware_get_bytes(firmware, &error);
@@ -1922,7 +1922,7 @@ fu_firmware_ihex_signed_func(void)
 	data_file = fu_bytes_get_contents(filename_shex, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(data_file);
-	ret = fu_firmware_parse(firmware, data_file, FWUPD_INSTALL_FLAG_NONE, &error);
+	ret = fu_firmware_parse(firmware, data_file, FWUPD_INSTALL_FLAG_NO_SEARCH, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	data_fw = fu_firmware_get_bytes(firmware, &error);
@@ -1970,7 +1970,7 @@ fu_firmware_ihex_offset_func(void)
 			":00000001FF\n");
 
 	/* check we can load it too */
-	ret = fu_firmware_parse(firmware_verify, data_bin, FWUPD_INSTALL_FLAG_NONE, &error);
+	ret = fu_firmware_parse(firmware_verify, data_bin, FWUPD_INSTALL_FLAG_NO_SEARCH, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	g_assert_cmpint(fu_firmware_get_addr(firmware_verify), ==, 0x80000000);
@@ -1996,7 +1996,7 @@ fu_firmware_srec_func(void)
 	data_srec = fu_bytes_get_contents(filename_srec, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(data_srec);
-	ret = fu_firmware_parse(firmware, data_srec, FWUPD_INSTALL_FLAG_NONE, &error);
+	ret = fu_firmware_parse(firmware, data_srec, FWUPD_INSTALL_FLAG_NO_SEARCH, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	data_bin = fu_firmware_get_bytes(firmware, &error);
@@ -2033,7 +2033,7 @@ fu_firmware_fdt_func(void)
 	data = fu_bytes_get_contents(filename, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(data);
-	ret = fu_firmware_parse(firmware, data, FWUPD_INSTALL_FLAG_NONE, &error);
+	ret = fu_firmware_parse(firmware, data, FWUPD_INSTALL_FLAG_NO_SEARCH, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	g_assert_cmpint(fu_fdt_firmware_get_cpuid(FU_FDT_FIRMWARE(firmware)), ==, 0x0);
@@ -2081,7 +2081,7 @@ fu_firmware_fit_func(void)
 	data = fu_bytes_get_contents(filename, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(data);
-	ret = fu_firmware_parse(firmware, data, FWUPD_INSTALL_FLAG_NONE, &error);
+	ret = fu_firmware_parse(firmware, data, FWUPD_INSTALL_FLAG_NO_SEARCH, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	g_assert_cmpint(fu_fit_firmware_get_timestamp(FU_FIT_FIRMWARE(firmware)), ==, 0x629D4ABD);
@@ -2246,7 +2246,7 @@ fu_firmware_dfuse_func(void)
 	roundtrip_orig = fu_bytes_get_contents(filename, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(roundtrip_orig);
-	ret = fu_firmware_parse(firmware, roundtrip_orig, FWUPD_INSTALL_FLAG_NONE, &error);
+	ret = fu_firmware_parse(firmware, roundtrip_orig, FWUPD_INSTALL_FLAG_NO_SEARCH, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	g_assert_cmpint(fu_dfu_firmware_get_vid(FU_DFU_FIRMWARE(firmware)), ==, 0x1234);
@@ -2390,7 +2390,7 @@ fu_firmware_linear_func(void)
 	g_assert_cmpint(g_bytes_get_size(blob3), ==, 1024);
 
 	/* parse them back */
-	ret = fu_firmware_parse(firmware2, blob3, FWUPD_INSTALL_FLAG_NONE, &error);
+	ret = fu_firmware_parse(firmware2, blob3, FWUPD_INSTALL_FLAG_NO_SEARCH, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	str = fu_firmware_to_string(firmware2);
@@ -2417,7 +2417,7 @@ fu_firmware_dfu_func(void)
 	data_dfu = fu_bytes_get_contents(filename_dfu, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(data_dfu);
-	ret = fu_firmware_parse(firmware, data_dfu, FWUPD_INSTALL_FLAG_NONE, &error);
+	ret = fu_firmware_parse(firmware, data_dfu, FWUPD_INSTALL_FLAG_NO_SEARCH, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	g_assert_cmpint(fu_dfu_firmware_get_vid(FU_DFU_FIRMWARE(firmware)), ==, 0x1234);
@@ -2454,7 +2454,7 @@ fu_firmware_ifwi_cpd_func(void)
 	data_ifwi_cpd = fu_bytes_get_contents(filename_ifwi_cpd, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(data_ifwi_cpd);
-	ret = fu_firmware_parse(firmware, data_ifwi_cpd, FWUPD_INSTALL_FLAG_NONE, &error);
+	ret = fu_firmware_parse(firmware, data_ifwi_cpd, FWUPD_INSTALL_FLAG_NO_SEARCH, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	g_assert_cmpint(fu_firmware_get_idx(firmware), ==, 0x1234);
@@ -2492,7 +2492,7 @@ fu_firmware_ifwi_fpt_func(void)
 	data_ifwi_fpt = fu_bytes_get_contents(filename_ifwi_fpt, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(data_ifwi_fpt);
-	ret = fu_firmware_parse(firmware, data_ifwi_fpt, FWUPD_INSTALL_FLAG_NONE, &error);
+	ret = fu_firmware_parse(firmware, data_ifwi_fpt, FWUPD_INSTALL_FLAG_NO_SEARCH, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	data_bin = fu_firmware_write(firmware, &error);
@@ -2528,7 +2528,7 @@ fu_firmware_oprom_func(void)
 	data_oprom = fu_bytes_get_contents(filename_oprom, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(data_oprom);
-	ret = fu_firmware_parse(firmware, data_oprom, FWUPD_INSTALL_FLAG_NONE, &error);
+	ret = fu_firmware_parse(firmware, data_oprom, FWUPD_INSTALL_FLAG_NO_SEARCH, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	g_assert_cmpint(fu_firmware_get_idx(firmware), ==, 0x1);
@@ -2561,7 +2561,7 @@ fu_firmware_dfu_patch_func(void)
 	data_dfu = fu_bytes_get_contents(filename_dfu, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(data_dfu);
-	ret = fu_firmware_parse(firmware, data_dfu, FWUPD_INSTALL_FLAG_NONE, &error);
+	ret = fu_firmware_parse(firmware, data_dfu, FWUPD_INSTALL_FLAG_NO_SEARCH, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -3102,7 +3102,9 @@ fu_firmware_builder_round_trip_func(void)
 		blob = fu_firmware_write(firmware1, &error);
 		g_assert_no_error(error);
 		g_assert_nonnull(blob);
-		ret = fu_firmware_parse(firmware3, blob, FWUPD_INSTALL_FLAG_NONE, &error);
+		ret = fu_firmware_parse(firmware3, blob, FWUPD_INSTALL_FLAG_NO_SEARCH, &error);
+		if (!ret)
+			g_prefix_error(&error, "%s: ", map[i].xml_fn);
 		g_assert_no_error(error);
 		g_assert_true(ret);
 

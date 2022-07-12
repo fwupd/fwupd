@@ -1143,8 +1143,10 @@ test_image_validation(ThunderboltTest *tt, gconstpointer user_data)
 	g_assert_nonnull(ctl_data);
 
 	/* parse controller image */
-	ret =
-	    fu_firmware_parse(FU_FIRMWARE(firmware_ctl), ctl_data, FWUPD_INSTALL_FLAG_NONE, &error);
+	ret = fu_firmware_parse(FU_FIRMWARE(firmware_ctl),
+				ctl_data,
+				FWUPD_INSTALL_FLAG_NO_SEARCH,
+				&error);
 	g_assert_true(ret);
 	g_assert_no_error(error);
 
@@ -1158,8 +1160,10 @@ test_image_validation(ThunderboltTest *tt, gconstpointer user_data)
 	g_assert_nonnull(fwi_data);
 
 	/* parse */
-	ret =
-	    fu_firmware_parse(FU_FIRMWARE(firmware_fwi), fwi_data, FWUPD_INSTALL_FLAG_NONE, &error);
+	ret = fu_firmware_parse(FU_FIRMWARE(firmware_fwi),
+				fwi_data,
+				FWUPD_INSTALL_FLAG_NO_SEARCH,
+				&error);
 	g_assert_true(ret);
 	g_assert_no_error(error);
 
@@ -1173,8 +1177,10 @@ test_image_validation(ThunderboltTest *tt, gconstpointer user_data)
 	g_assert_nonnull(bad_data);
 
 	/* parse; should fail, bad image */
-	ret =
-	    fu_firmware_parse(FU_FIRMWARE(firmware_bad), bad_data, FWUPD_INSTALL_FLAG_NONE, &error);
+	ret = fu_firmware_parse(FU_FIRMWARE(firmware_bad),
+				bad_data,
+				FWUPD_INSTALL_FLAG_NO_SEARCH,
+				&error);
 	g_assert_false(ret);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_READ);
 	g_debug("expected image validation error [ctl]: %s", error->message);
@@ -1234,8 +1240,12 @@ test_update_working(ThunderboltTest *tt, gconstpointer user_data)
 	 * after the time in the last parameter (given in ms) */
 	up_ctx = mock_tree_prepare_for_update(tree, plugin, "42.23", fw_data, 1000);
 	g_assert_nonnull(up_ctx);
-	ret =
-	    fu_plugin_runner_write_firmware(plugin, tree->fu_device, fw_data, progress, 0, &error);
+	ret = fu_plugin_runner_write_firmware(plugin,
+					      tree->fu_device,
+					      fw_data,
+					      progress,
+					      FWUPD_INSTALL_FLAG_NO_SEARCH,
+					      &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -1284,8 +1294,12 @@ test_update_wd19(ThunderboltTest *tt, gconstpointer user_data)
 	fu_device_add_flag(tree->fu_device, FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE);
 	version_before = fu_device_get_version(tree->fu_device);
 
-	ret =
-	    fu_plugin_runner_write_firmware(plugin, tree->fu_device, fw_data, progress, 0, &error);
+	ret = fu_plugin_runner_write_firmware(plugin,
+					      tree->fu_device,
+					      fw_data,
+					      progress,
+					      FWUPD_INSTALL_FLAG_NO_SEARCH,
+					      &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -1318,8 +1332,12 @@ test_update_fail(ThunderboltTest *tt, gconstpointer user_data)
 	up_ctx = mock_tree_prepare_for_update(tree, plugin, "42.23", fw_data, 1000);
 	up_ctx->result = UPDATE_FAIL_DEVICE_INTERNAL;
 
-	ret =
-	    fu_plugin_runner_write_firmware(plugin, tree->fu_device, fw_data, progress, 0, &error);
+	ret = fu_plugin_runner_write_firmware(plugin,
+					      tree->fu_device,
+					      fw_data,
+					      progress,
+					      FWUPD_INSTALL_FLAG_NO_SEARCH,
+					      &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -1367,8 +1385,12 @@ test_update_fail_nowshow(ThunderboltTest *tt, gconstpointer user_data)
 	up_ctx = mock_tree_prepare_for_update(tree, plugin, "42.23", fw_data, 1000);
 	up_ctx->result = UPDATE_FAIL_DEVICE_NOSHOW;
 
-	ret =
-	    fu_plugin_runner_write_firmware(plugin, tree->fu_device, fw_data, progress, 0, &error);
+	ret = fu_plugin_runner_write_firmware(plugin,
+					      tree->fu_device,
+					      fw_data,
+					      progress,
+					      FWUPD_INSTALL_FLAG_NO_SEARCH,
+					      &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
