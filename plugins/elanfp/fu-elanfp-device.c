@@ -30,6 +30,19 @@
 
 #define TAG_SEND_COMMAND	0xFA
 
+/**
+ * FU_ELAN_FP_DEVICE_FLAG_USB_CONTROL_TRANSFER:
+ *
+ * Use usb control transfer.
+ */
+#define FU_ELAN_FP_DEVICE_FLAG_USB_CONTROL_TRANSFER (1 << 0)
+/**
+ * FU_ELAN_FP_DEVICE_FLAG_USB_BULK_TRANSFER:
+ *
+ * Use usb bulk transfer.
+ */
+#define FU_ELAN_FP_DEVICE_FLAG_USB_BULK_TRANSFER (1 << 1)
+
 struct _FuElanfpDevice {
 	FuUsbDevice parent_instance;
 };
@@ -46,26 +59,24 @@ fu_elanfp_iap_send_command(FuElanfpDevice *self,
 			   GError **error)
 {
 	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
-	guint16 pid = (guint)fu_usb_device_get_pid(FU_USB_DEVICE(self));
 	gsize actual = 0;
 	gsize sendsz = bufsz + 1;
 	guint8 start_index = 0x01;
 	guint8 buftmp[64] = {request, 0};
-	gboolean is_new_protocol = FALSE;
+	gboolean is_bulk_transfer = FALSE;
 
-
-	if ((pid != 0x0C7E) && (pid != 0x0C82)) {
-					is_new_protocol = TRUE;
+	if (fu_device_has_private_flag(FU_DEVICE(self), FU_ELAN_FP_DEVICE_FLAG_USB_BULK_TRANSFER)) {
+		is_bulk_transfer = TRUE;
 	}
 
 	if (buf != NULL) {
-		if (is_new_protocol) {
-					buftmp[0] = TAG_SEND_COMMAND;
-					buftmp[1] = rspsz;
-					buftmp[2] = bufsz + 1;
-					buftmp[3] = request;
-					start_index = 0x04;
-					sendsz = bufsz + 1 + 3;
+		if (is_bulk_transfer) {
+			buftmp[0] = TAG_SEND_COMMAND;
+			buftmp[1] = rspsz;
+			buftmp[2] = bufsz + 1;
+			buftmp[3] = request;
+			start_index = 0x04;
+			sendsz = bufsz + 1 + 3;
 		}
 		if (!fu_memcpy_safe(buftmp,
 				    sizeof(buftmp),
@@ -78,20 +89,19 @@ fu_elanfp_iap_send_command(FuElanfpDevice *self,
 			return FALSE;
 	}
 
-	if (is_new_protocol) {
+	if (is_bulk_transfer) {
 		if (!g_usb_device_bulk_transfer(usb_device,
-					ELAN_EP_CMD_OUT,
-					buftmp,
-					sendsz,
-					&actual,
-					BULK_SEND_TIMEOUT_MS,
-					NULL,
-					error)) {
-		g_prefix_error(error, "failed to send command (bulk): ");
-		return FALSE;
+						ELAN_EP_CMD_OUT,
+						buftmp,
+						sendsz,
+						&actual,
+						BULK_SEND_TIMEOUT_MS,
+						NULL,
+						error)) {
+			g_prefix_error(error, "failed to send command (bulk): ");
+			return FALSE;
 		}
-	}
-	else {
+	} else {
 		if (!g_usb_device_control_transfer(usb_device,
 					   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
 					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
@@ -105,8 +115,8 @@ fu_elanfp_iap_send_command(FuElanfpDevice *self,
 					   CTRL_SEND_TIMEOUT_MS,
 					   NULL,
 					   error)) {
-		g_prefix_error(error, "failed to send command (ctrl transfer): ");
-		return FALSE;
+			g_prefix_error(error, "failed to send command (ctrl transfer): ");
+			return FALSE;
 		}
 	}
 
@@ -127,18 +137,11 @@ static gboolean
 fu_elanfp_iap_recv_status(FuElanfpDevice *self, guint8 *buf, gsize bufsz, GError **error)
 {
 	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
-	guint16 pid = (guint)fu_usb_device_get_pid(FU_USB_DEVICE(self));
 	guint8 endpoint = ELAN_EP_CMD_IN;
 	gsize actual = 0;
-	gboolean is_new_protocol = FALSE;
 
-
-	if ((pid != 0x0C7E) && (pid != 0x0C82)) {
-					is_new_protocol = TRUE;
-	}
-
-	if (is_new_protocol) {
-					endpoint = ELAN_EP_IMG_IN;
+	if (fu_device_has_private_flag(FU_DEVICE(self), FU_ELAN_FP_DEVICE_FLAG_USB_BULK_TRANSFER)) {
+		endpoint = ELAN_EP_IMG_IN;
 	}
 
 	if (!g_usb_device_bulk_transfer(usb_device,
@@ -443,6 +446,12 @@ fu_elanfp_device_init(FuElanfpDevice *device)
 	fu_device_set_firmware_size_max(FU_DEVICE(self), 0x90000);
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_ELANFP_FIRMWARE);
 	fu_usb_device_add_interface(FU_USB_DEVICE(self), ELANFP_USB_INTERFACE);
+	fu_device_register_private_flag(FU_DEVICE(self),
+					FU_ELAN_FP_DEVICE_FLAG_USB_CONTROL_TRANSFER,
+					"usb-control-transfer");
+	fu_device_register_private_flag(FU_DEVICE(self),
+					FU_ELAN_FP_DEVICE_FLAG_USB_BULK_TRANSFER,
+					"usb-bulk-transfer");
 }
 
 static void
