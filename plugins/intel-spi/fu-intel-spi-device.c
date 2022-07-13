@@ -234,12 +234,14 @@ fu_intel_spi_device_add_security_attrs(FuDevice *device, FuSecurityAttrs *attrs)
 	/* any region can write to the flash descriptor */
 	if (access_global & FU_IFD_ACCESS_WRITE) {
 		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
+		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM);
 		return;
 	}
 
 	/* FLOCKDN is unset */
 	if ((self->hsfs >> 15 & 0b1) == 0) {
 		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_LOCKED);
+		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM);
 		return;
 	}
 

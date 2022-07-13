@@ -92,6 +92,7 @@ fu_plugin_linux_tainted_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *at
 	}
 	if (g_strcmp0(buf, "0\n") != 0) {
 		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_TAINTED);
+		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_OS);
 		return;
 	}
 

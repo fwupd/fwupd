@@ -116,6 +116,7 @@ fu_plugin_linux_swap_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs
 	/* add security attribute */
 	if (!fu_linux_swap_get_encrypted(swap)) {
 		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENCRYPTED);
+		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_OS);
 		return;
 	}
 

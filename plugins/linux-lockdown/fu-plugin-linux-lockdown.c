@@ -145,6 +145,7 @@ fu_plugin_linux_lockdown_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *a
 	}
 	if (priv->lockdown == FU_PLUGIN_LINUX_LOCKDOWN_NONE) {
 		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
+		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_OS);
 		return;
 	}
 

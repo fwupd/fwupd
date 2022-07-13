@@ -67,6 +67,7 @@ fu_plugin_bios_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 	fu_security_attrs_append(attrs, attr);
 
 	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ISSUE);
+	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_FW);
 	fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
 }
 
