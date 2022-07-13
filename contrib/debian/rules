@@ -44,11 +44,6 @@ ifneq ($(QUBES_OPTION),)
 	CONFARGS += -Dqubes=true
 endif
 
-#Needs a MIR
-ifeq (yes,$(shell dpkg-vendor --derives-from Ubuntu && echo yes))
-       CONFARGS += -Dplugin_logitech_bulkcontroller=disabled
-endif
-
 CONFARGS += -Dplugin_dummy=true -Dplugin_powerd=disabled -Dsupported_build=enabled -Dplugin_modem_manager=enabled -Dsystemd_unit_user=fwupd-refresh
 
 %:
