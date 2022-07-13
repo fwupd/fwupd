@@ -46,9 +46,14 @@ This plugin supports the following protocol ID:
 Described in  [UEFI specification](https://www.uefi.org/sites/default/files/resources/UEFI%20Spec%202_6.pdf)
 § 8.5.5 - Delivery of Capsules via file on Mass Storage device.
 
-If the firmware supports this, it will be the preferred method of updating. You
-can explicitly disable it by by modifying *DisableCapsuleUpdateOnDisk* in
-`/etc/fwupd/uefi_capsule.conf`.
+If the firmware supports this, it will be the preferred method of updating on
+aarch64 platforms. You can explicitly disable it by by modifying
+*DisableCapsuleUpdateOnDisk* in `/etc/fwupd/uefi_capsule.conf`.
+
+Several models with Insyde firmware have been released where `OsIndications`
+advertises support for CoD, but it simply *does not work*. For this reasons
+the CoD support is only available by opt-in for x86_64 devices, and can be
+specified using the `uefi-allow-cod` plugin flag for the appropriate HwID.
 
 The spec expects runtime *SetVariable* to be available in order to enable this
 feature, we need to set `EFI_OS_INDICATIONS_FILE_CAPSULE_DELIVERY_SUPPORTED`
