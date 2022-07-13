@@ -16,3 +16,5 @@ void
 fu_security_attrs_append(FuSecurityAttrs *self, FwupdSecurityAttr *attr);
 void
 fu_security_attrs_remove_all(FuSecurityAttrs *self);
+FwupdSecurityAttr *
+fu_security_attrs_get_by_appstream_id(FuSecurityAttrs *self, const gchar *appstream_id);

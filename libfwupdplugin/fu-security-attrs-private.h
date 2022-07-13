@@ -34,5 +34,3 @@ GPtrArray *
 fu_security_attrs_get_all(FuSecurityAttrs *self);
 void
 fu_security_attrs_append_internal(FuSecurityAttrs *self, FwupdSecurityAttr *attr);
-FwupdSecurityAttr *
-fu_security_attrs_get_by_appstream_id(FuSecurityAttrs *self, const gchar *appstream_id);
