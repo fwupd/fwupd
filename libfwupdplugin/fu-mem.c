@@ -342,7 +342,7 @@ fu_memcpy_safe(guint8 *dst,
 			    (guint)src_sz);
 		return FALSE;
 	}
-	if (n + src_offset > src_sz) {
+	if (src_offset > src_sz || n + src_offset > src_sz) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_READ,
@@ -361,7 +361,7 @@ fu_memcpy_safe(guint8 *dst,
 			    (guint)dst_sz);
 		return FALSE;
 	}
-	if (n + dst_offset > dst_sz) {
+	if (dst_offset > dst_sz || n + dst_offset > dst_sz) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_WRITE,
