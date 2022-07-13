@@ -92,6 +92,7 @@ fu_plugin_add_security_attr_bioswe(FuPlugin *plugin, FuSecurityAttrs *attrs)
 	/* load file */
 	if ((priv->bcr & BCR_WPD) == 1) {
 		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_ENABLED);
+		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM);
 		return;
 	}
 

@@ -46,6 +46,8 @@ fu_plugin_acpi_dmar_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 		return;
 	}
 	if (!fu_acpi_dmar_get_opt_in(dmar)) {
+		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM);
+		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_FW);
 		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
 		return;
 	}
