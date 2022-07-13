@@ -2584,10 +2584,8 @@ fu_engine_get_device(FuEngine *self, const gchar *device_id, GError **error)
 
 	/* get the new device */
 	device = fu_device_list_get_by_id(self->device_list, device_id, error);
-	if (device == NULL) {
-		g_prefix_error(error, "failed to get device after replug: ");
+	if (device == NULL)
 		return NULL;
-	}
 
 	/* success */
 	return g_steal_pointer(&device);
