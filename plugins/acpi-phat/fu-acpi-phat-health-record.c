@@ -103,7 +103,7 @@ fu_acpi_phat_health_record_parse(FuFirmware *firmware,
 		}
 
 		/* check this is an even number of bytes */
-		if (ubufsz % 2 != 0) {
+		if (ubufsz == 0 || ubufsz % 2 != 0) {
 			g_set_error(error,
 				    G_IO_ERROR,
 				    G_IO_ERROR_INVALID_DATA,
