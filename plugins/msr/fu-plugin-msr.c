@@ -21,6 +21,22 @@ typedef union {
 } FuMsrIa32Debug;
 
 typedef union {
+	guint64 data;
+	struct {
+		guint32 lock_ro : 1;
+		guint32 enable : 1;
+		guint32 key_select : 1;
+		guint32 save_key_for_standby : 1;
+		guint32 policy_encryption_algo : 4;
+		guint32 reserved1 : 23;
+		guint32 bypass_enable : 1;
+		guint32 mk_tme_keyid_bits : 4;
+		guint32 reserved2 : 12;
+		guint32 mk_tme_crypto_algs : 16;
+	} __attribute__((packed)) fields;
+} FuMsrIa32TmeActivation;
+
+typedef union {
 	guint32 data;
 	struct {
 		guint32 unknown0 : 23; /* 0 -> 22 inc */
@@ -39,7 +55,9 @@ typedef union {
 
 struct FuPluginData {
 	gboolean ia32_debug_supported;
+	gboolean ia32_tme_supported;
 	FuMsrIa32Debug ia32_debug;
+	FuMsrIa32TmeActivation ia32_tme_activation;
 	gboolean amd64_syscfg_supported;
 	gboolean amd64_sev_supported;
 	FuMsrAMD64Syscfg amd64_syscfg;
@@ -47,6 +65,7 @@ struct FuPluginData {
 };
 
 #define PCI_MSR_IA32_DEBUG_INTERFACE 0xc80
+#define PCI_MSR_IA32_TME_ACTIVATION  0x982
 #define PCI_MSR_IA32_BIOS_SIGN_ID    0x8b
 #define PCI_MSR_AMD64_SYSCFG	     0xC0010010
 #define PCI_MSR_AMD64_SEV	     0xC0010131
@@ -79,6 +98,9 @@ fu_plugin_msr_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 		if (!fu_cpuid(0x01, NULL, NULL, &ecx, NULL, error))
 			return FALSE;
 		priv->ia32_debug_supported = ((ecx >> 11) & 0x1) > 0;
+		if (!fu_cpuid(0x07, NULL, NULL, &ecx, NULL, error))
+			return FALSE;
+		priv->ia32_tme_supported = ((ecx >> 13) & 0x1) > 0;
 	}
 
 	/* indicates support for SME and SEV */
@@ -140,6 +162,27 @@ fu_plugin_msr_backend_device_added(FuPlugin *plugin, FuDevice *device, GError **
 			priv->ia32_debug.fields.enabled,
 			priv->ia32_debug.fields.locked,
 			priv->ia32_debug.fields.debug_occurred);
+	}
+	if (priv->ia32_tme_supported) {
+		if (!fu_udev_device_pread(FU_UDEV_DEVICE(device),
+					  PCI_MSR_IA32_TME_ACTIVATION,
+					  buf,
+					  sizeof(buf),
+					  error)) {
+			g_prefix_error(error, "could not read IA32_DEBUG_INTERFACE: ");
+			return FALSE;
+		}
+		if (!fu_memread_uint64_safe(buf,
+					    sizeof(buf),
+					    0x0,
+					    &priv->ia32_tme_activation.data,
+					    G_LITTLE_ENDIAN,
+					    error))
+			return FALSE;
+		g_debug("IA32_TME_ACTIVATE: lock_ro=%i enable=%i, bypass_enable=%i",
+			priv->ia32_tme_activation.fields.lock_ro,
+			priv->ia32_tme_activation.fields.enable,
+			priv->ia32_tme_activation.fields.bypass_enable);
 	}
 
 	/* grab AMD MSRs */
@@ -265,6 +308,55 @@ fu_plugin_add_security_attr_dci_enabled(FuPlugin *plugin, FuSecurityAttrs *attrs
 	/* success */
 	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 	fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
+}
+
+static void
+fu_plugin_add_security_attr_intel_tme_enabled(FuPlugin *plugin, FuSecurityAttrs *attrs)
+{
+	FuPluginData *priv = fu_plugin_get_data(plugin);
+	g_autoptr(FwupdSecurityAttr) attr = NULL;
+
+	/* this MSR is only valid for a subset of Intel CPUs */
+	if (fu_cpu_get_vendor() != FU_CPU_VENDOR_INTEL)
+		return;
+
+	/* create attr (which should already have been created in the cpu plugin) */
+	attr = fu_security_attrs_get_by_appstream_id(attrs, FWUPD_SECURITY_ATTR_ID_ENCRYPTED_RAM);
+	if (attr == NULL) {
+		attr = fwupd_security_attr_new(FWUPD_SECURITY_ATTR_ID_ENCRYPTED_RAM);
+		fwupd_security_attr_set_plugin(attr, fu_plugin_get_name(plugin));
+		fu_security_attrs_append(attrs, attr);
+	}
+
+	/* not enabled */
+	if (priv == NULL) {
+		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA);
+		return;
+	}
+
+	/* check fields */
+	if (!priv->ia32_tme_supported) {
+		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
+		return;
+	}
+	if (!priv->ia32_tme_activation.fields.enable) {
+		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
+		fwupd_security_attr_remove_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_FW);
+		return;
+	}
+	if (priv->ia32_tme_activation.fields.bypass_enable) {
+		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENCRYPTED);
+		fwupd_security_attr_remove_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_FW);
+		return;
+	}
+	if (!priv->ia32_tme_activation.fields.lock_ro) {
+		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_LOCKED);
+		fwupd_security_attr_remove_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM);
+		return;
+	}
 }
 
 static void
@@ -405,6 +497,7 @@ fu_plugin_msr_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 	fu_plugin_add_security_attr_dci_enabled(plugin, attrs);
 	fu_plugin_add_security_attr_dci_locked(plugin, attrs);
 	fu_plugin_add_security_attr_amd_sme_enabled(plugin, attrs);
+	fu_plugin_add_security_attr_intel_tme_enabled(plugin, attrs);
 }
 
 void
