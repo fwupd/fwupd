@@ -228,7 +228,7 @@ fu_fdt_firmware_parse_dt_struct(FuFdtFirmware *self, GBytes *fw, GHashTable *str
 
 		/* END NODE */
 		if (token == FDT_END_NODE) {
-			if (firmware_current == NULL) {
+			if (firmware_current == FU_FIRMWARE(self)) {
 				g_set_error_literal(error,
 						    G_IO_ERROR,
 						    G_IO_ERROR_INVALID_DATA,
@@ -247,13 +247,6 @@ fu_fdt_firmware_parse_dt_struct(FuFdtFirmware *self, GBytes *fw, GHashTable *str
 			g_autoptr(GBytes) blob = NULL;
 
 			/* sanity check */
-			if (firmware_current == NULL) {
-				g_set_error_literal(error,
-						    G_IO_ERROR,
-						    G_IO_ERROR_INVALID_DATA,
-						    "got PROP with no node");
-				return FALSE;
-			}
 			if (firmware_current == FU_FIRMWARE(self)) {
 				g_set_error_literal(error,
 						    G_IO_ERROR,
