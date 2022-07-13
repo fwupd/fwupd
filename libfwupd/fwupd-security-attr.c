@@ -720,6 +720,23 @@ fwupd_security_attr_add_flag(FwupdSecurityAttr *self, FwupdSecurityAttrFlags fla
 }
 
 /**
+ * fwupd_security_attr_remove_flag:
+ * @self: a #FwupdSecurityAttr
+ * @flag: the #FwupdSecurityAttrFlags, e.g. %FWUPD_SECURITY_ATTR_FLAG_OBSOLETED
+ *
+ * Removes a specific attribute flag from the attribute.
+ *
+ * Since: 1.8.3
+ **/
+void
+fwupd_security_attr_remove_flag(FwupdSecurityAttr *self, FwupdSecurityAttrFlags flag)
+{
+	FwupdSecurityAttrPrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FWUPD_IS_SECURITY_ATTR(self));
+	priv->flags &= ~flag;
+}
+
+/**
  * fwupd_security_attr_has_flag:
  * @self: a #FwupdSecurityAttr
  * @flag: the attribute flag, e.g. %FWUPD_SECURITY_ATTR_FLAG_OBSOLETED

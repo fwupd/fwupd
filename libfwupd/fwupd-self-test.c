@@ -1243,7 +1243,10 @@ fwupd_security_attr_func(void)
 			FWUPD_SECURITY_ATTR_RESULT_ENABLED);
 
 	fwupd_security_attr_add_flag(attr1, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+	fwupd_security_attr_add_flag(attr1, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA);
+	fwupd_security_attr_remove_flag(attr1, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA);
 	g_assert_true(fwupd_security_attr_has_flag(attr1, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
+	g_assert_false(fwupd_security_attr_has_flag(attr1, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA));
 	g_assert_false(fwupd_security_attr_has_flag(attr1, FWUPD_SECURITY_ATTR_FLAG_OBSOLETED));
 
 	fwupd_security_attr_set_name(attr1, "DCI");

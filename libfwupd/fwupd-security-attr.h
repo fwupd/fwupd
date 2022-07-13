@@ -186,6 +186,8 @@ void
 fwupd_security_attr_set_flags(FwupdSecurityAttr *self, FwupdSecurityAttrFlags flags);
 void
 fwupd_security_attr_add_flag(FwupdSecurityAttr *self, FwupdSecurityAttrFlags flag);
+void
+fwupd_security_attr_remove_flag(FwupdSecurityAttr *self, FwupdSecurityAttrFlags flag);
 gboolean
 fwupd_security_attr_has_flag(FwupdSecurityAttr *self, FwupdSecurityAttrFlags flag);
 const gchar *

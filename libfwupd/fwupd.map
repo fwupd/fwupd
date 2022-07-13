@@ -793,3 +793,9 @@ LIBFWUPD_1.8.2 {
     fwupd_security_attr_set_title;
   local: *;
 } LIBFWUPD_1.8.1;
+
+LIBFWUPD_1.8.3 {
+  global:
+    fwupd_security_attr_remove_flag;
+  local: *;
+} LIBFWUPD_1.8.2;
