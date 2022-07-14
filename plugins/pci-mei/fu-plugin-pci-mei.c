@@ -253,12 +253,24 @@ fu_plugin_add_security_attrs_manufacturing_mode(FuPlugin *plugin, FuSecurityAttr
 	attr = fwupd_security_attr_new(FWUPD_SECURITY_ATTR_ID_MEI_MANUFACTURING_MODE);
 	fwupd_security_attr_set_plugin(attr, fu_plugin_get_name(plugin));
 	fwupd_security_attr_set_level(attr, FWUPD_SECURITY_ATTR_LEVEL_CRITICAL);
+	fu_security_attrs_append(attrs, attr);
+
+	/* not enabled */
+	if (priv == NULL) {
+		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA);
+		return;
+	}
+
+	/* no device */
+	if (priv->pci_device == NULL) {
+		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_FOUND);
+		return;
+	}
+
+	/* Manufacturing Mode */
 	fwupd_security_attr_add_metadata(attr,
 					 "kind",
 					 fu_mei_common_family_to_string(priv->family));
-	fu_security_attrs_append(attrs, attr);
-
-	/* Manufacturing Mode */
 	if (priv->hfsts1.fields.mfg_mode) {
 		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_LOCKED);
 		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM);
@@ -280,12 +292,24 @@ fu_plugin_add_security_attrs_override_strap(FuPlugin *plugin, FuSecurityAttrs *a
 	attr = fwupd_security_attr_new(FWUPD_SECURITY_ATTR_ID_MEI_OVERRIDE_STRAP);
 	fwupd_security_attr_set_plugin(attr, fu_plugin_get_name(plugin));
 	fwupd_security_attr_set_level(attr, FWUPD_SECURITY_ATTR_LEVEL_CRITICAL);
+	fu_security_attrs_append(attrs, attr);
+
+	/* not enabled */
+	if (priv == NULL) {
+		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA);
+		return;
+	}
+
+	/* no device */
+	if (priv->pci_device == NULL) {
+		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_FOUND);
+		return;
+	}
+
+	/* Flash Descriptor Security Override Strap */
 	fwupd_security_attr_add_metadata(attr,
 					 "kind",
 					 fu_mei_common_family_to_string(priv->family));
-	fu_security_attrs_append(attrs, attr);
-
-	/* Flash Descriptor Security Override Strap */
 	if (priv->hfsts1.fields.operation_mode == ME_HFS_MODE_OVER_JMPR) {
 		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_LOCKED);
 		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM);
@@ -303,15 +327,29 @@ fu_plugin_add_security_attrs_bootguard_enabled(FuPlugin *plugin, FuSecurityAttrs
 	FuPluginData *priv = fu_plugin_get_data(plugin);
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
 
-	/* not supported */
-	if (priv->family == FU_MEI_FAMILY_TXE)
-		return;
-
 	/* create attr */
 	attr = fwupd_security_attr_new(FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_ENABLED);
 	fwupd_security_attr_set_plugin(attr, fu_plugin_get_name(plugin));
 	fwupd_security_attr_set_level(attr, FWUPD_SECURITY_ATTR_LEVEL_IMPORTANT);
 	fu_security_attrs_append(attrs, attr);
+
+	/* not enabled */
+	if (priv == NULL) {
+		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA);
+		return;
+	}
+
+	/* no device */
+	if (priv->pci_device == NULL) {
+		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_FOUND);
+		return;
+	}
+
+	/* not supported */
+	if (priv->family == FU_MEI_FAMILY_TXE) {
+		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
+		return;
+	}
 
 	/* disabled at runtime? */
 	if (priv->hfsts6.fields.boot_guard_disable) {
@@ -331,19 +369,35 @@ fu_plugin_add_security_attrs_bootguard_verified(FuPlugin *plugin, FuSecurityAttr
 	FuPluginData *priv = fu_plugin_get_data(plugin);
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
 
-	/* not supported */
-	if (priv->family == FU_MEI_FAMILY_TXE)
-		return;
-
-	/* disabled */
-	if (priv->hfsts6.fields.boot_guard_disable)
-		return;
-
 	/* create attr */
 	attr = fwupd_security_attr_new(FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_VERIFIED);
 	fwupd_security_attr_set_plugin(attr, fu_plugin_get_name(plugin));
 	fwupd_security_attr_set_level(attr, FWUPD_SECURITY_ATTR_LEVEL_IMPORTANT);
 	fu_security_attrs_append(attrs, attr);
+
+	/* not enabled */
+	if (priv == NULL) {
+		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA);
+		return;
+	}
+
+	/* no device */
+	if (priv->pci_device == NULL) {
+		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_FOUND);
+		return;
+	}
+
+	/* not supported */
+	if (priv->family == FU_MEI_FAMILY_TXE) {
+		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
+		return;
+	}
+
+	/* actively disabled */
+	if (priv->hfsts6.fields.boot_guard_disable) {
+		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
+		return;
+	}
 
 	/* measured boot is not sufficient, verified is required */
 	if (!priv->hfsts6.fields.verified_boot) {
@@ -363,19 +417,35 @@ fu_plugin_add_security_attrs_bootguard_acm(FuPlugin *plugin, FuSecurityAttrs *at
 	FuPluginData *priv = fu_plugin_get_data(plugin);
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
 
-	/* not supported */
-	if (priv->family == FU_MEI_FAMILY_TXE)
-		return;
-
-	/* disabled */
-	if (priv->hfsts6.fields.boot_guard_disable)
-		return;
-
 	/* create attr */
 	attr = fwupd_security_attr_new(FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_ACM);
 	fwupd_security_attr_set_plugin(attr, fu_plugin_get_name(plugin));
 	fwupd_security_attr_set_level(attr, FWUPD_SECURITY_ATTR_LEVEL_IMPORTANT);
 	fu_security_attrs_append(attrs, attr);
+
+	/* not enabled */
+	if (priv == NULL) {
+		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA);
+		return;
+	}
+
+	/* no device */
+	if (priv->pci_device == NULL) {
+		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_FOUND);
+		return;
+	}
+
+	/* not supported */
+	if (priv->family == FU_MEI_FAMILY_TXE) {
+		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
+		return;
+	}
+
+	/* actively disabled */
+	if (priv->hfsts6.fields.boot_guard_disable) {
+		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
+		return;
+	}
 
 	/* ACM protection required */
 	if (!priv->hfsts6.fields.force_boot_guard_acm) {
@@ -395,19 +465,35 @@ fu_plugin_add_security_attrs_bootguard_policy(FuPlugin *plugin, FuSecurityAttrs 
 	FuPluginData *priv = fu_plugin_get_data(plugin);
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
 
-	/* not supported */
-	if (priv->family == FU_MEI_FAMILY_TXE)
-		return;
-
-	/* disabled */
-	if (priv->hfsts6.fields.boot_guard_disable)
-		return;
-
 	/* create attr */
 	attr = fwupd_security_attr_new(FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_POLICY);
 	fwupd_security_attr_set_plugin(attr, fu_plugin_get_name(plugin));
 	fwupd_security_attr_set_level(attr, FWUPD_SECURITY_ATTR_LEVEL_THEORETICAL);
 	fu_security_attrs_append(attrs, attr);
+
+	/* not enabled */
+	if (priv == NULL) {
+		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA);
+		return;
+	}
+
+	/* no device */
+	if (priv->pci_device == NULL) {
+		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_FOUND);
+		return;
+	}
+
+	/* not supported */
+	if (priv->family == FU_MEI_FAMILY_TXE) {
+		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
+		return;
+	}
+
+	/* actively disabled */
+	if (priv->hfsts6.fields.boot_guard_disable) {
+		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
+		return;
+	}
 
 	/* policy must be to immediately shutdown */
 	if (priv->hfsts6.fields.error_enforce_policy != ME_HFS_ENFORCEMENT_POLICY_SHUTDOWN_NOW) {
@@ -427,19 +513,35 @@ fu_plugin_add_security_attrs_bootguard_otp(FuPlugin *plugin, FuSecurityAttrs *at
 	FuPluginData *priv = fu_plugin_get_data(plugin);
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
 
-	/* not supported */
-	if (priv->family == FU_MEI_FAMILY_TXE)
-		return;
-
-	/* disabled */
-	if (priv->hfsts6.fields.boot_guard_disable)
-		return;
-
 	/* create attr */
 	attr = fwupd_security_attr_new(FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_OTP);
 	fwupd_security_attr_set_plugin(attr, fu_plugin_get_name(plugin));
 	fwupd_security_attr_set_level(attr, FWUPD_SECURITY_ATTR_LEVEL_IMPORTANT);
 	fu_security_attrs_append(attrs, attr);
+
+	/* not enabled */
+	if (priv == NULL) {
+		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA);
+		return;
+	}
+
+	/* no device */
+	if (priv->pci_device == NULL) {
+		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_FOUND);
+		return;
+	}
+
+	/* not supported */
+	if (priv->family == FU_MEI_FAMILY_TXE) {
+		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
+		return;
+	}
+
+	/* actively disabled */
+	if (priv->hfsts6.fields.boot_guard_disable) {
+		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
+		return;
+	}
 
 	/* ensure vendor set the FPF OTP fuse */
 	if (!priv->hfsts6.fields.fpf_soc_lock) {
@@ -470,6 +572,18 @@ fu_plugin_add_security_attrs_mei_version(FuPlugin *plugin, FuSecurityAttrs *attr
 	g_autofree gchar *version = NULL;
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
 
+	/* create attr */
+	attr = fwupd_security_attr_new(FWUPD_SECURITY_ATTR_ID_MEI_VERSION);
+	fwupd_security_attr_set_plugin(attr, fu_plugin_get_name(plugin));
+	fwupd_security_attr_set_level(attr, FWUPD_SECURITY_ATTR_LEVEL_CRITICAL);
+	fu_security_attrs_append(attrs, attr);
+
+	/* not enabled */
+	if (priv == NULL || priv->pci_device == NULL) {
+		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA);
+		return;
+	}
+
 	/* format version as string */
 	version = g_strdup_printf("%u:%u.%u.%u.%u",
 				  priv->vers.platform,
@@ -481,16 +595,10 @@ fu_plugin_add_security_attrs_mei_version(FuPlugin *plugin, FuSecurityAttrs *attr
 		g_warning("ME family not supported for %s", version);
 		return;
 	}
-
-	/* create attr */
-	attr = fwupd_security_attr_new(FWUPD_SECURITY_ATTR_ID_MEI_VERSION);
-	fwupd_security_attr_set_plugin(attr, fu_plugin_get_name(plugin));
-	fwupd_security_attr_set_level(attr, FWUPD_SECURITY_ATTR_LEVEL_CRITICAL);
+	fwupd_security_attr_add_metadata(attr, "version", version);
 	fwupd_security_attr_add_metadata(attr,
 					 "kind",
 					 fu_mei_common_family_to_string(priv->family));
-	fwupd_security_attr_add_metadata(attr, "version", version);
-	fu_security_attrs_append(attrs, attr);
 
 	/* Flash Descriptor Security Override Strap */
 	if (priv->issue == FU_MEI_ISSUE_VULNERABLE) {
@@ -507,12 +615,8 @@ fu_plugin_add_security_attrs_mei_version(FuPlugin *plugin, FuSecurityAttrs *attr
 static void
 fu_plugin_pci_mei_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
-	FuPluginData *priv = fu_plugin_get_data(plugin);
-
 	/* only Intel */
 	if (fu_cpu_get_vendor() != FU_CPU_VENDOR_INTEL)
-		return;
-	if (priv->pci_device == NULL)
 		return;
 
 	fu_plugin_add_security_attrs_manufacturing_mode(plugin, attrs);
