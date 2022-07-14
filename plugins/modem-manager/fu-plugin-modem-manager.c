@@ -259,7 +259,7 @@ fu_plugin_mm_device_add(FuPlugin *plugin, MMObject *modem)
 	}
 	dev = fu_mm_device_new(fu_plugin_get_context(plugin), priv->manager, modem);
 	if (!fu_device_setup(FU_DEVICE(dev), &error)) {
-		g_warning("failed to probe MM device: %s", error->message);
+		g_debug("failed to probe MM device: %s", error->message);
 		return;
 	}
 	fu_plugin_mm_ensure_modem_power_inhibit(plugin, FU_DEVICE(dev));
