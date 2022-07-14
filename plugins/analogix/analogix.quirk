@@ -13,3 +13,10 @@ Plugin = analogix
 # ACER
 [USB\VID_0502&PID_04C4]
 Plugin = analogix
+
+# Startech
+[USB\VID_14B0&PID_01D0]
+Plugin = analogix
+
+[USB\VID_14B0&PID_01D1]
+Plugin = analogix

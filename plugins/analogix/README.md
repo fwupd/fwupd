@@ -25,6 +25,8 @@ These devices use the standard USB DeviceInstanceId values, e.g.
 * `USB\VID_050D&PID_008B`
 * `USB\VID_047D&PID_80C8`
 * `USB\VID_0502&PID_04C4`
+* `USB\VID_14B0&PID_01D0`
+* `USB\VID_14B0&PID_01D1`
 
 ## Update Behavior
 
@@ -38,6 +40,7 @@ The vendor ID is set from the USB vendor. The list of USB VIDs used is:
 * `USB:0x050D`
 * `USB:0x047D`
 * `USB:0x0502`
+* `USB:0x14B0`
 
 ## External Interface Access
 
