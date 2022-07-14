@@ -56,7 +56,7 @@ All devices will be updated the next time the usb-c plug from the dock is unplug
 
 ### USB4 Controller
 
-This device will be probed by `dell-dock` plugin over the USB interface, additionally will be probed by `thunderbolt` plugin if thunderbolt hardware is enabled at the host. The primary plugin has been chosen to `dell-dock` for broader supoprt, the device introduced by `thunderbolt` plugin will be default inhibited, in this case `Update Error` will be seen which is expected.
+This device will be probed by `dell-dock` plugin over the USB interface, additionally will be probed by `thunderbolt` plugin if thunderbolt hardware is enabled at the host. The primary plugin has been chosen to `dell-dock` for broader supoprt, the device introduced by `thunderbolt` plugin will be default inhibited, before fwupd version 1.8.2 (include), `Update Error` will be seen which is expected.
 
 ```shell
 USB4 controller in Dell dock:
@@ -74,6 +74,8 @@ USB4 controller in Dell dock:
                       • Updatable
                       • Signed Payload
 ```
+
+After version 1.8.2, the device introduced by `thunderbolt` plugin will be default hidden, so only the primary plugin will be seen on the device view.
 
 ## Vendor ID Security
 
