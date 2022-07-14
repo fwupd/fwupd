@@ -73,7 +73,7 @@ fwupd_security_attr_flag_to_string(FwupdSecurityAttrFlags flag)
 	if (flag == FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM)
 		return "action-contact-oem";
 	if (flag == FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_FW)
-		return "action-contact-oem";
+		return "action-config-fw";
 	if (flag == FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_OS)
 		return "action-config-os";
 	return NULL;
@@ -106,7 +106,7 @@ fwupd_security_attr_flag_from_string(const gchar *flag)
 		return FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ISSUE;
 	if (g_strcmp0(flag, "action-contact-oem") == 0)
 		return FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM;
-	if (g_strcmp0(flag, "action-contact-oem") == 0)
+	if (g_strcmp0(flag, "action-config-fw") == 0)
 		return FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_FW;
 	if (g_strcmp0(flag, "action-config-os") == 0)
 		return FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_OS;
