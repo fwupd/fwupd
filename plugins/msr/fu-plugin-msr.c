@@ -236,8 +236,6 @@ fu_plugin_add_security_attr_dci_enabled(FuPlugin *plugin, FuSecurityAttrs *attrs
 	/* this MSR is only valid for a subset of Intel CPUs */
 	if (fu_cpu_get_vendor() != FU_CPU_VENDOR_INTEL)
 		return;
-	if (!priv->ia32_debug_supported)
-		return;
 
 	/* create attr */
 	attr = fwupd_security_attr_new(FWUPD_SECURITY_ATTR_ID_PLATFORM_DEBUG_ENABLED);
@@ -247,7 +245,18 @@ fu_plugin_add_security_attr_dci_enabled(FuPlugin *plugin, FuSecurityAttrs *attrs
 		fwupd_security_attr_add_guids(attr, fu_device_get_guids(device));
 	fu_security_attrs_append(attrs, attr);
 
+	/* not enabled */
+	if (priv == NULL) {
+		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA);
+		return;
+	}
+
 	/* check fields */
+	if (!priv->ia32_debug_supported) {
+		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
+		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+		return;
+	}
 	if (priv->ia32_debug.fields.enabled) {
 		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_ENABLED);
 		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM);
@@ -269,8 +278,6 @@ fu_plugin_add_security_attr_dci_locked(FuPlugin *plugin, FuSecurityAttrs *attrs)
 	/* this MSR is only valid for a subset of Intel CPUs */
 	if (fu_cpu_get_vendor() != FU_CPU_VENDOR_INTEL)
 		return;
-	if (!priv->ia32_debug_supported)
-		return;
 
 	/* create attr */
 	attr = fwupd_security_attr_new(FWUPD_SECURITY_ATTR_ID_PLATFORM_DEBUG_LOCKED);
@@ -280,7 +287,18 @@ fu_plugin_add_security_attr_dci_locked(FuPlugin *plugin, FuSecurityAttrs *attrs)
 		fwupd_security_attr_add_guids(attr, fu_device_get_guids(device));
 	fu_security_attrs_append(attrs, attr);
 
+	/* not enabled */
+	if (priv == NULL) {
+		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA);
+		return;
+	}
+
 	/* check fields */
+	if (!priv->ia32_debug_supported) {
+		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
+		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+		return;
+	}
 	if (!priv->ia32_debug.fields.locked) {
 		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_LOCKED);
 		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM);
@@ -346,6 +364,7 @@ fu_plugin_add_security_attr_amd_sme_enabled(FuPlugin *plugin, FuSecurityAttrs *a
 		fwupd_security_attr_add_guids(attr, fu_device_get_guids(device));
 	fu_security_attrs_append(attrs, attr);
 
+	/* not enabled */
 	if (priv == NULL) {
 		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA);
 		return;
