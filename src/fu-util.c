@@ -3251,7 +3251,7 @@ fu_util_security_as_json(FuUtilPrivate *priv,
 	json_builder_begin_object(builder);
 
 	/* attrs */
-	json_builder_set_member_name(builder, "HostSecurityAttributes");
+	json_builder_set_member_name(builder, "SecurityAttributes");
 	json_builder_begin_array(builder);
 	for (guint i = 0; i < attrs->len; i++) {
 		FwupdSecurityAttr *attr = g_ptr_array_index(attrs, i);
@@ -3263,7 +3263,7 @@ fu_util_security_as_json(FuUtilPrivate *priv,
 
 	/* events */
 	if (events != NULL && events->len > 0) {
-		json_builder_set_member_name(builder, "HostSecurityEvents");
+		json_builder_set_member_name(builder, "SecurityEvents");
 		json_builder_begin_array(builder);
 		for (guint i = 0; i < attrs->len; i++) {
 			FwupdSecurityAttr *attr = g_ptr_array_index(attrs, i);

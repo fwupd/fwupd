@@ -6196,12 +6196,38 @@ fu_engine_record_security_attrs(FuEngine *self, GError **error)
 }
 #endif
 
+#ifdef HAVE_HSI
+static gboolean
+fu_engine_ensure_security_attrs_from_test_profile(FuEngine *self, const gchar *fn, GError **error)
+{
+	g_autoptr(JsonParser) parser = json_parser_new();
+	g_autoptr(GFile) file = g_file_new_for_path(fn);
+	g_autoptr(GInputStream) istream_json = NULL;
+	g_autoptr(GInputStream) istream_raw = NULL;
+
+	istream_raw = G_INPUT_STREAM(g_file_read(file, NULL, error));
+	if (istream_raw == NULL)
+		return FALSE;
+	if (g_str_has_suffix(fn, ".gz")) {
+		g_autoptr(GConverter) conv =
+		    G_CONVERTER(g_zlib_decompressor_new(G_ZLIB_COMPRESSOR_FORMAT_GZIP));
+		istream_json = g_converter_input_stream_new(istream_raw, conv);
+	} else {
+		istream_json = g_object_ref(istream_raw);
+	}
+	if (!json_parser_load_from_stream(parser, istream_json, NULL, error))
+		return FALSE;
+	return fu_security_attrs_from_json(self->host_security_attrs,
+					   json_parser_get_root(parser),
+					   error);
+}
+#endif
+
 static void
 fu_engine_ensure_security_attrs(FuEngine *self)
 {
 #ifdef HAVE_HSI
-	GPtrArray *plugins = fu_plugin_list_get_all(self->plugin_list);
-	g_autoptr(GPtrArray) devices = fu_device_list_get_all(self->device_list);
+	const gchar *test_profile = g_getenv("FWUPD_TEST_PROFILE");
 	g_autoptr(GPtrArray) items = NULL;
 	g_autoptr(GError) error = NULL;
 
@@ -6212,19 +6238,39 @@ fu_engine_ensure_security_attrs(FuEngine *self)
 	/* clear old values */
 	fu_security_attrs_remove_all(self->host_security_attrs);
 
-	/* built in */
-	fu_engine_ensure_security_attrs_tainted(self);
+	/* the user specified a profile to load */
+	if (test_profile != NULL) {
+		g_autofree gchar *fn = NULL;
 
-	/* call into devices */
-	for (guint i = 0; i < devices->len; i++) {
-		FuDevice *device = g_ptr_array_index(devices, i);
-		fu_device_add_security_attrs(device, self->host_security_attrs);
-	}
+		/* did the user specify an absolue path */
+		if (g_file_test(test_profile, G_FILE_TEST_EXISTS)) {
+			fn = g_strdup(test_profile);
+		} else {
+			g_autofree gchar *datadir = fu_path_from_kind(FU_PATH_KIND_DATADIR_PKG);
+			fn = g_build_filename(datadir, "test-profile.d", test_profile, NULL);
+		}
+		if (!fu_engine_ensure_security_attrs_from_test_profile(self, fn, &error)) {
+			g_warning("failed to load test profile: %s", error->message);
+			return;
+		}
+	} else {
+		GPtrArray *plugins = fu_plugin_list_get_all(self->plugin_list);
+		g_autoptr(GPtrArray) devices = fu_device_list_get_all(self->device_list);
 
-	/* call into plugins */
-	for (guint j = 0; j < plugins->len; j++) {
-		FuPlugin *plugin_tmp = g_ptr_array_index(plugins, j);
-		fu_plugin_runner_add_security_attrs(plugin_tmp, self->host_security_attrs);
+		/* built in */
+		fu_engine_ensure_security_attrs_tainted(self);
+
+		/* call into devices */
+		for (guint i = 0; i < devices->len; i++) {
+			FuDevice *device = g_ptr_array_index(devices, i);
+			fu_device_add_security_attrs(device, self->host_security_attrs);
+		}
+
+		/* call into plugins */
+		for (guint i = 0; i < plugins->len; i++) {
+			FuPlugin *plugin_tmp = g_ptr_array_index(plugins, i);
+			fu_plugin_runner_add_security_attrs(plugin_tmp, self->host_security_attrs);
+		}
 	}
 
 	/* set the fallback names for clients without native translations */
@@ -6250,7 +6296,7 @@ fu_engine_ensure_security_attrs(FuEngine *self)
 	self->host_security_id = fu_engine_attrs_calculate_hsi_for_chassis(self);
 
 	/* record into the database (best effort) */
-	if (!fu_engine_record_security_attrs(self, &error))
+	if (test_profile == NULL && !fu_engine_record_security_attrs(self, &error))
 		g_warning("failed to record HSI attributes: %s", error->message);
 #endif
 }

@@ -1,0 +1,272 @@
+{
+  "SecurityAttributes" : [
+    {
+      "AppstreamId" : "org.fwupd.hsi.Kernel.Tainted",
+      "HsiLevel" : 0,
+      "HsiResult" : "not-tainted",
+      "Plugin" : "linux_tainted",
+      "Flags" : [
+        "success",
+        "runtime-issue"
+      ]
+    },
+    {
+      "AppstreamId" : "org.fwupd.hsi.Kernel.Lockdown",
+      "HsiLevel" : 0,
+      "HsiResult" : "enabled",
+      "Plugin" : "linux_lockdown",
+      "Flags" : [
+        "success",
+        "runtime-issue"
+      ]
+    },
+    {
+      "AppstreamId" : "org.fwupd.hsi.Kernel.Swap",
+      "HsiLevel" : 0,
+      "HsiResult" : "encrypted",
+      "Plugin" : "linux_swap",
+      "Flags" : [
+        "success",
+        "runtime-issue"
+      ]
+    },
+    {
+      "AppstreamId" : "org.fwupd.hsi.Uefi.SecureBoot",
+      "HsiLevel" : 0,
+      "HsiResult" : "enabled",
+      "Plugin" : "uefi_capsule",
+      "Flags" : [
+        "success"
+      ]
+    },
+    {
+      "AppstreamId" : "org.fwupd.hsi.Fwupd.Plugins",
+      "HsiLevel" : 0,
+      "HsiResult" : "not-tainted",
+      "Plugin" : "core",
+      "Flags" : [
+        "success",
+        "runtime-issue"
+      ]
+    },
+    {
+      "AppstreamId" : "org.fwupd.hsi.Mei.ManufacturingMode",
+      "HsiLevel" : 1,
+      "HsiResult" : "locked",
+      "Plugin" : "pci_mei",
+      "Flags" : [
+        "success"
+      ]
+    },
+    {
+      "AppstreamId" : "org.fwupd.hsi.Mei.OverrideStrap",
+      "HsiLevel" : 1,
+      "HsiResult" : "locked",
+      "Plugin" : "pci_mei",
+      "Flags" : [
+        "success"
+      ]
+    },
+    {
+      "AppstreamId" : "org.fwupd.hsi.Mei.Version",
+      "HsiLevel" : 1,
+      "HsiResult" : "valid",
+      "Plugin" : "pci_mei",
+      "Flags" : [
+        "success"
+      ]
+    },
+    {
+      "AppstreamId" : "org.fwupd.hsi.PlatformDebugEnabled",
+      "HsiLevel" : 1,
+      "HsiResult" : "not-enabled",
+      "Plugin" : "msr",
+      "Flags" : [
+        "success"
+      ]
+    },
+    {
+      "AppstreamId" : "org.fwupd.hsi.Spi.SmmBwp",
+      "HsiLevel" : 1,
+      "HsiResult" : "locked",
+      "Plugin" : "pci_bcr",
+      "Flags" : [
+        "success"
+      ]
+    },
+    {
+      "AppstreamId" : "org.fwupd.hsi.Spi.Ble",
+      "HsiLevel" : 1,
+      "HsiResult" : "enabled",
+      "Plugin" : "pci_bcr",
+      "Flags" : [
+        "success"
+      ]
+    },
+    {
+      "AppstreamId" : "org.fwupd.hsi.Spi.Bioswe",
+      "HsiLevel" : 1,
+      "HsiResult" : "not-enabled",
+      "Plugin" : "pci_bcr",
+      "Flags" : [
+        "success"
+      ]
+    },
+    {
+      "AppstreamId" : "org.fwupd.hsi.SupportedCpu",
+      "HsiLevel" : 1,
+      "HsiResult" : "valid",
+      "Plugin" : "cpu",
+      "Flags" : [
+        "success"
+      ]
+    },
+    {
+      "AppstreamId" : "org.fwupd.hsi.Tpm.EmptyPcr",
+      "HsiLevel" : 1,
+      "HsiResult" : "valid",
+      "Plugin" : "tpm",
+      "Flags" : [
+        "success"
+      ]
+    },
+    {
+      "AppstreamId" : "org.fwupd.hsi.Tpm.Version20",
+      "HsiLevel" : 1,
+      "HsiResult" : "found",
+      "Plugin" : "tpm",
+      "Flags" : [
+        "success"
+      ]
+    },
+    {
+      "AppstreamId" : "org.fwupd.hsi.Uefi.Pk",
+      "HsiLevel" : 1,
+      "HsiResult" : "valid",
+      "Plugin" : "uefi_pk",
+      "Flags" : [
+        "success"
+      ]
+    },
+    {
+      "AppstreamId" : "org.fwupd.hsi.IntelBootguard.Enabled",
+      "HsiLevel" : 2,
+      "HsiResult" : "enabled",
+      "Plugin" : "pci_mei",
+      "Flags" : [
+        "success"
+      ]
+    },
+    {
+      "AppstreamId" : "org.fwupd.hsi.IntelBootguard.Acm",
+      "HsiLevel" : 2,
+      "HsiResult" : "valid",
+      "Plugin" : "pci_mei",
+      "Flags" : [
+        "success"
+      ]
+    },
+    {
+      "AppstreamId" : "org.fwupd.hsi.IntelBootguard.Otp",
+      "HsiLevel" : 2,
+      "HsiResult" : "valid",
+      "Plugin" : "pci_mei",
+      "Flags" : [
+        "success"
+      ]
+    },
+    {
+      "AppstreamId" : "org.fwupd.hsi.IntelBootguard.Verified",
+      "HsiLevel" : 2,
+      "HsiResult" : "valid",
+      "Plugin" : "pci_mei",
+      "Flags" : [
+        "success"
+      ]
+    },
+    {
+      "AppstreamId" : "org.fwupd.hsi.PlatformDebugLocked",
+      "HsiLevel" : 2,
+      "HsiResult" : "locked",
+      "Plugin" : "msr",
+      "Flags" : [
+        "success"
+      ]
+    },
+    {
+      "AppstreamId" : "org.fwupd.hsi.Tpm.ReconstructionPcr0",
+      "HsiLevel" : 2,
+      "HsiResult" : "valid",
+      "Plugin" : "tpm",
+      "Flags" : [
+        "success"
+      ]
+    },
+    {
+      "AppstreamId" : "org.fwupd.hsi.Iommu",
+      "HsiLevel" : 2,
+      "HsiResult" : "not-found",
+      "Plugin" : "iommu"
+    },
+    {
+      "AppstreamId" : "org.fwupd.hsi.IntelBootguard.Policy",
+      "HsiLevel" : 3,
+      "HsiResult" : "valid",
+      "Plugin" : "pci_mei",
+      "Flags" : [
+        "success"
+      ]
+    },
+    {
+      "AppstreamId" : "org.fwupd.hsi.IntelCet.Enabled",
+      "HsiLevel" : 3,
+      "HsiResult" : "not-supported",
+      "Plugin" : "cpu"
+    },
+    {
+      "AppstreamId" : "org.fwupd.hsi.PrebootDma",
+      "HsiLevel" : 3,
+      "HsiResult" : "not-enabled",
+      "Plugin" : "acpi_dmar",
+      "Flags" : [
+        "action-contact-oem",
+        "action-config-fw"
+      ]
+    },
+    {
+      "AppstreamId" : "org.fwupd.hsi.SuspendToIdle",
+      "HsiLevel" : 3,
+      "HsiResult" : "not-enabled",
+      "Plugin" : "acpi_facp",
+      "Flags" : [
+        "action-config-fw",
+        "action-config-os"
+      ]
+    },
+    {
+      "AppstreamId" : "org.fwupd.hsi.SuspendToRam",
+      "HsiLevel" : 3,
+      "HsiResult" : "enabled",
+      "Plugin" : "linux_sleep",
+      "Flags" : [
+        "action-config-fw",
+        "action-config-os"
+      ]
+    },
+    {
+      "AppstreamId" : "org.fwupd.hsi.IntelSmap",
+      "HsiLevel" : 4,
+      "HsiResult" : "enabled",
+      "Plugin" : "cpu",
+      "Flags" : [
+        "success"
+      ]
+    },
+    {
+      "AppstreamId" : "org.fwupd.hsi.EncryptedRam",
+      "HsiLevel" : 4,
+      "HsiResult" : "not-supported",
+      "Plugin" : "cpu"
+    }
+  ]
+}
