@@ -325,6 +325,14 @@ G_BEGIN_DECLS
  * Since: 1.8.0
  **/
 #define FWUPD_SECURITY_ATTR_ID_AMD_SPI_REPLAY_PROTECTION "org.fwupd.hsi.Amd.SpiReplayProtection"
+/**
+ * FWUPD_SECURITY_ATTR_ID_HOST_EMULATION
+ *
+ * Host Security ID attribute for host emulation
+ *
+ * Since: 1.8.3
+ **/
+#define FWUPD_SECURITY_ATTR_ID_HOST_EMULATION "org.fwupd.hsi.HostEmulation"
 
 GVariant *
 fwupd_security_attr_to_variant(FwupdSecurityAttr *self);

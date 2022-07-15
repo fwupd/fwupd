@@ -24,6 +24,7 @@ with a non-standard filesystem layout.
 ## daemon
 
 * `FWUPD_MACHINE_KIND` can be used to override the detected machine type, e.g. `physical`, `virtual`, or `container`
+* `FWUPD_HOST_EMULATE` can be used to load test data from `/usr/share/fwupd/host-emulate.d`, e.g. `thinkpad-p1-no-iommu.json.gz`
 
 ## Self Tests
 

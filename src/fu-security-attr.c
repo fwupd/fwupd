@@ -198,6 +198,10 @@ fu_security_attr_get_name(FwupdSecurityAttr *attr)
 		/* TRANSLATORS: Title: if the part has been fused */
 		return g_strdup(_("Fused platform"));
 	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_HOST_EMULATION) == 0) {
+		/* TRANSLATORS: Title: if we are emulating a different host */
+		return g_strdup(_("Emulated host"));
+	}
 
 	/* we should not get here */
 	return g_strdup(fwupd_security_attr_get_name(attr));

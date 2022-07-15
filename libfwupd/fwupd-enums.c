@@ -358,6 +358,8 @@ fwupd_device_problem_to_string(FwupdDeviceProblem device_problem)
 		return "require-ac-power";
 	if (device_problem == FWUPD_DEVICE_PROBLEM_LID_IS_CLOSED)
 		return "lid-is-closed";
+	if (device_problem == FWUPD_DEVICE_PROBLEM_IS_EMULATED)
+		return "is-emulated";
 	if (device_problem == FWUPD_DEVICE_PROBLEM_UNKNOWN)
 		return "unknown";
 	return NULL;
@@ -390,6 +392,8 @@ fwupd_device_problem_from_string(const gchar *device_problem)
 		return FWUPD_DEVICE_PROBLEM_REQUIRE_AC_POWER;
 	if (g_strcmp0(device_problem, "lid-is-closed") == 0)
 		return FWUPD_DEVICE_PROBLEM_LID_IS_CLOSED;
+	if (g_strcmp0(device_problem, "is-emulated") == 0)
+		return FWUPD_DEVICE_PROBLEM_IS_EMULATED;
 	return FWUPD_DEVICE_PROBLEM_UNKNOWN;
 }
 

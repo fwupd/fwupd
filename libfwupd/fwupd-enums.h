@@ -598,6 +598,14 @@ typedef guint64 FwupdDeviceFlags;
  */
 #define FWUPD_DEVICE_PROBLEM_LID_IS_CLOSED (1u << 5)
 /**
+ * FWUPD_DEVICE_PROBLEM_IS_EMULATED:
+ *
+ * The device is emulated from a different host.
+ *
+ * Since 1.8.3
+ */
+#define FWUPD_DEVICE_PROBLEM_IS_EMULATED (1u << 6)
+/**
  * FWUPD_DEVICE_PROBLEM_UNKNOWN:
  *
  * This problem is not defined, this typically will happen from mismatched
