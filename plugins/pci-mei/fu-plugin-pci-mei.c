@@ -252,7 +252,6 @@ fu_plugin_add_security_attrs_manufacturing_mode(FuPlugin *plugin, FuSecurityAttr
 	/* create attr */
 	attr = fwupd_security_attr_new(FWUPD_SECURITY_ATTR_ID_MEI_MANUFACTURING_MODE);
 	fwupd_security_attr_set_plugin(attr, fu_plugin_get_name(plugin));
-	fwupd_security_attr_set_level(attr, FWUPD_SECURITY_ATTR_LEVEL_CRITICAL);
 	fu_security_attrs_append(attrs, attr);
 
 	/* not enabled */
@@ -291,7 +290,6 @@ fu_plugin_add_security_attrs_override_strap(FuPlugin *plugin, FuSecurityAttrs *a
 	/* create attr */
 	attr = fwupd_security_attr_new(FWUPD_SECURITY_ATTR_ID_MEI_OVERRIDE_STRAP);
 	fwupd_security_attr_set_plugin(attr, fu_plugin_get_name(plugin));
-	fwupd_security_attr_set_level(attr, FWUPD_SECURITY_ATTR_LEVEL_CRITICAL);
 	fu_security_attrs_append(attrs, attr);
 
 	/* not enabled */
@@ -330,7 +328,6 @@ fu_plugin_add_security_attrs_bootguard_enabled(FuPlugin *plugin, FuSecurityAttrs
 	/* create attr */
 	attr = fwupd_security_attr_new(FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_ENABLED);
 	fwupd_security_attr_set_plugin(attr, fu_plugin_get_name(plugin));
-	fwupd_security_attr_set_level(attr, FWUPD_SECURITY_ATTR_LEVEL_IMPORTANT);
 	fu_security_attrs_append(attrs, attr);
 
 	/* not enabled */
@@ -372,7 +369,6 @@ fu_plugin_add_security_attrs_bootguard_verified(FuPlugin *plugin, FuSecurityAttr
 	/* create attr */
 	attr = fwupd_security_attr_new(FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_VERIFIED);
 	fwupd_security_attr_set_plugin(attr, fu_plugin_get_name(plugin));
-	fwupd_security_attr_set_level(attr, FWUPD_SECURITY_ATTR_LEVEL_IMPORTANT);
 	fu_security_attrs_append(attrs, attr);
 
 	/* not enabled */
@@ -420,7 +416,6 @@ fu_plugin_add_security_attrs_bootguard_acm(FuPlugin *plugin, FuSecurityAttrs *at
 	/* create attr */
 	attr = fwupd_security_attr_new(FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_ACM);
 	fwupd_security_attr_set_plugin(attr, fu_plugin_get_name(plugin));
-	fwupd_security_attr_set_level(attr, FWUPD_SECURITY_ATTR_LEVEL_IMPORTANT);
 	fu_security_attrs_append(attrs, attr);
 
 	/* not enabled */
@@ -468,7 +463,6 @@ fu_plugin_add_security_attrs_bootguard_policy(FuPlugin *plugin, FuSecurityAttrs 
 	/* create attr */
 	attr = fwupd_security_attr_new(FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_POLICY);
 	fwupd_security_attr_set_plugin(attr, fu_plugin_get_name(plugin));
-	fwupd_security_attr_set_level(attr, FWUPD_SECURITY_ATTR_LEVEL_THEORETICAL);
 	fu_security_attrs_append(attrs, attr);
 
 	/* not enabled */
@@ -516,7 +510,6 @@ fu_plugin_add_security_attrs_bootguard_otp(FuPlugin *plugin, FuSecurityAttrs *at
 	/* create attr */
 	attr = fwupd_security_attr_new(FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_OTP);
 	fwupd_security_attr_set_plugin(attr, fu_plugin_get_name(plugin));
-	fwupd_security_attr_set_level(attr, FWUPD_SECURITY_ATTR_LEVEL_IMPORTANT);
 	fu_security_attrs_append(attrs, attr);
 
 	/* not enabled */
@@ -575,7 +568,6 @@ fu_plugin_add_security_attrs_mei_version(FuPlugin *plugin, FuSecurityAttrs *attr
 	/* create attr */
 	attr = fwupd_security_attr_new(FWUPD_SECURITY_ATTR_ID_MEI_VERSION);
 	fwupd_security_attr_set_plugin(attr, fu_plugin_get_name(plugin));
-	fwupd_security_attr_set_level(attr, FWUPD_SECURITY_ATTR_LEVEL_CRITICAL);
 	fu_security_attrs_append(attrs, attr);
 
 	/* not enabled */

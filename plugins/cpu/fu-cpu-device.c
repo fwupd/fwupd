@@ -300,7 +300,6 @@ fu_cpu_device_add_security_attrs_intel_cet_enabled(FuCpuDevice *self, FuSecurity
 	/* create attr */
 	attr = fwupd_security_attr_new(FWUPD_SECURITY_ATTR_ID_INTEL_CET_ENABLED);
 	fwupd_security_attr_set_plugin(attr, fu_device_get_plugin(FU_DEVICE(self)));
-	fwupd_security_attr_set_level(attr, FWUPD_SECURITY_ATTR_LEVEL_THEORETICAL);
 	fwupd_security_attr_add_guids(attr, fu_device_get_guids(FU_DEVICE(self)));
 	fu_security_attrs_append(attrs, attr);
 
@@ -332,7 +331,6 @@ fu_cpu_device_add_security_attrs_intel_cet_active(FuCpuDevice *self, FuSecurityA
 	/* create attr */
 	attr = fwupd_security_attr_new(FWUPD_SECURITY_ATTR_ID_INTEL_CET_ACTIVE);
 	fwupd_security_attr_set_plugin(attr, fu_device_get_plugin(FU_DEVICE(self)));
-	fwupd_security_attr_set_level(attr, FWUPD_SECURITY_ATTR_LEVEL_THEORETICAL);
 	fwupd_security_attr_add_guids(attr, fu_device_get_guids(FU_DEVICE(self)));
 	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ISSUE);
 	fu_security_attrs_append(attrs, attr);
@@ -365,7 +363,6 @@ fu_cpu_device_add_security_attrs_intel_tme(FuCpuDevice *self, FuSecurityAttrs *a
 	/* create attr */
 	attr = fwupd_security_attr_new(FWUPD_SECURITY_ATTR_ID_ENCRYPTED_RAM);
 	fwupd_security_attr_set_plugin(attr, fu_device_get_plugin(FU_DEVICE(self)));
-	fwupd_security_attr_set_level(attr, FWUPD_SECURITY_ATTR_LEVEL_SYSTEM_PROTECTION);
 	fwupd_security_attr_add_guids(attr, fu_device_get_guids(FU_DEVICE(self)));
 	fu_security_attrs_append(attrs, attr);
 
@@ -388,7 +385,6 @@ fu_cpu_device_add_security_attrs_intel_smap(FuCpuDevice *self, FuSecurityAttrs *
 	/* create attr */
 	attr = fwupd_security_attr_new(FWUPD_SECURITY_ATTR_ID_INTEL_SMAP);
 	fwupd_security_attr_set_plugin(attr, fu_device_get_plugin(FU_DEVICE(self)));
-	fwupd_security_attr_set_level(attr, FWUPD_SECURITY_ATTR_LEVEL_SYSTEM_PROTECTION);
 	fwupd_security_attr_add_guids(attr, fu_device_get_guids(FU_DEVICE(self)));
 	fu_security_attrs_append(attrs, attr);
 
@@ -410,7 +406,6 @@ fu_cpu_device_add_supported_cpu_attribute(FuCpuDevice *self, FuSecurityAttrs *at
 
 	attr = fwupd_security_attr_new(FWUPD_SECURITY_ATTR_ID_SUPPORTED_CPU);
 	fwupd_security_attr_set_plugin(attr, fu_device_get_plugin(FU_DEVICE(self)));
-	fwupd_security_attr_set_level(attr, FWUPD_SECURITY_ATTR_LEVEL_CRITICAL);
 	fwupd_security_attr_add_guids(attr, fu_device_get_guids(FU_DEVICE(self)));
 
 	switch (fu_cpu_get_vendor()) {
