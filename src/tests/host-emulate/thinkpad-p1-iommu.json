@@ -1,0 +1,714 @@
+{
+	"SecurityAttributes": [
+		{
+			"AppstreamId": "org.fwupd.hsi.Kernel.Tainted",
+			"HsiResult": "not-tainted",
+			"Plugin": "linux_tainted",
+			"Flags": [
+				"success",
+				"runtime-issue"
+			]
+		},
+		{
+			"AppstreamId": "org.fwupd.hsi.Kernel.Lockdown",
+			"HsiResult": "enabled",
+			"Plugin": "linux_lockdown",
+			"Flags": [
+				"success",
+				"runtime-issue"
+			]
+		},
+		{
+			"AppstreamId": "org.fwupd.hsi.Kernel.Swap",
+			"HsiResult": "encrypted",
+			"Plugin": "linux_swap",
+			"Flags": [
+				"success",
+				"runtime-issue"
+			]
+		},
+		{
+			"AppstreamId": "org.fwupd.hsi.Uefi.SecureBoot",
+			"HsiResult": "enabled",
+			"Plugin": "uefi_capsule",
+			"Flags": [
+				"success"
+			]
+		},
+		{
+			"AppstreamId": "org.fwupd.hsi.Fwupd.Plugins",
+			"HsiResult": "not-tainted",
+			"Plugin": "core",
+			"Flags": [
+				"success",
+				"runtime-issue"
+			]
+		},
+		{
+			"AppstreamId": "org.fwupd.hsi.Mei.ManufacturingMode",
+			"HsiResult": "locked",
+			"Plugin": "pci_mei",
+			"Flags": [
+				"success"
+			]
+		},
+		{
+			"AppstreamId": "org.fwupd.hsi.Mei.OverrideStrap",
+			"HsiResult": "locked",
+			"Plugin": "pci_mei",
+			"Flags": [
+				"success"
+			]
+		},
+		{
+			"AppstreamId": "org.fwupd.hsi.Mei.Version",
+			"HsiResult": "valid",
+			"Plugin": "pci_mei",
+			"Flags": [
+				"success"
+			]
+		},
+		{
+			"AppstreamId": "org.fwupd.hsi.PlatformDebugEnabled",
+			"HsiResult": "not-enabled",
+			"Plugin": "msr",
+			"Flags": [
+				"success"
+			]
+		},
+		{
+			"AppstreamId": "org.fwupd.hsi.Spi.SmmBwp",
+			"HsiResult": "locked",
+			"Plugin": "pci_bcr",
+			"Flags": [
+				"success"
+			]
+		},
+		{
+			"AppstreamId": "org.fwupd.hsi.Spi.Ble",
+			"HsiResult": "enabled",
+			"Plugin": "pci_bcr",
+			"Flags": [
+				"success"
+			]
+		},
+		{
+			"AppstreamId": "org.fwupd.hsi.Spi.Bioswe",
+			"HsiResult": "not-enabled",
+			"Plugin": "pci_bcr",
+			"Flags": [
+				"success"
+			]
+		},
+		{
+			"AppstreamId": "org.fwupd.hsi.SupportedCpu",
+			"HsiResult": "valid",
+			"Plugin": "cpu",
+			"Flags": [
+				"success"
+			]
+		},
+		{
+			"AppstreamId": "org.fwupd.hsi.Tpm.EmptyPcr",
+			"HsiResult": "valid",
+			"Plugin": "tpm",
+			"Flags": [
+				"success"
+			]
+		},
+		{
+			"AppstreamId": "org.fwupd.hsi.Tpm.Version20",
+			"HsiResult": "found",
+			"Plugin": "tpm",
+			"Flags": [
+				"success"
+			]
+		},
+		{
+			"AppstreamId": "org.fwupd.hsi.Uefi.Pk",
+			"HsiResult": "valid",
+			"Plugin": "uefi_pk",
+			"Flags": [
+				"success"
+			]
+		},
+		{
+			"AppstreamId": "org.fwupd.hsi.IntelBootguard.Enabled",
+			"HsiResult": "enabled",
+			"Plugin": "pci_mei",
+			"Flags": [
+				"success"
+			]
+		},
+		{
+			"AppstreamId": "org.fwupd.hsi.IntelBootguard.Acm",
+			"HsiResult": "valid",
+			"Plugin": "pci_mei",
+			"Flags": [
+				"success"
+			]
+		},
+		{
+			"AppstreamId": "org.fwupd.hsi.IntelBootguard.Otp",
+			"HsiResult": "valid",
+			"Plugin": "pci_mei",
+			"Flags": [
+				"success"
+			]
+		},
+		{
+			"AppstreamId": "org.fwupd.hsi.IntelBootguard.Verified",
+			"HsiResult": "valid",
+			"Plugin": "pci_mei",
+			"Flags": [
+				"success"
+			]
+		},
+		{
+			"AppstreamId": "org.fwupd.hsi.PlatformDebugLocked",
+			"HsiResult": "locked",
+			"Plugin": "msr",
+			"Flags": [
+				"success"
+			]
+		},
+		{
+			"AppstreamId": "org.fwupd.hsi.Tpm.ReconstructionPcr0",
+			"HsiResult": "valid",
+			"Plugin": "tpm",
+			"Flags": [
+				"success"
+			]
+		},
+		{
+			"AppstreamId": "org.fwupd.hsi.Iommu",
+			"HsiResult": "found",
+			"Plugin": "iommu",
+			"Flags": [
+				"success"
+			]
+		},
+		{
+			"AppstreamId": "org.fwupd.hsi.IntelBootguard.Policy",
+			"HsiResult": "valid",
+			"Plugin": "pci_mei",
+			"Flags": [
+				"success"
+			]
+		},
+		{
+			"AppstreamId": "org.fwupd.hsi.IntelCet.Enabled",
+			"HsiResult": "not-supported",
+			"Plugin": "cpu"
+		},
+		{
+			"AppstreamId": "org.fwupd.hsi.PrebootDma",
+			"HsiResult": "not-enabled",
+			"Plugin": "acpi_dmar",
+			"Flags": [
+				"action-contact-oem",
+				"action-config-fw"
+			]
+		},
+		{
+			"AppstreamId": "org.fwupd.hsi.SuspendToIdle",
+			"HsiResult": "not-enabled",
+			"Plugin": "acpi_facp",
+			"Flags": [
+				"action-config-fw",
+				"action-config-os"
+			]
+		},
+		{
+			"AppstreamId": "org.fwupd.hsi.SuspendToRam",
+			"HsiResult": "enabled",
+			"Plugin": "linux_sleep",
+			"Flags": [
+				"action-config-fw",
+				"action-config-os"
+			]
+		},
+		{
+			"AppstreamId": "org.fwupd.hsi.IntelSmap",
+			"HsiResult": "enabled",
+			"Plugin": "cpu",
+			"Flags": [
+				"success"
+			]
+		},
+		{
+			"AppstreamId": "org.fwupd.hsi.EncryptedRam",
+			"HsiResult": "not-supported",
+			"Plugin": "cpu"
+		}
+	],
+	"Devices": [
+		{
+			"DeviceId": "4a4907dbb1b96c6a1177dfd1b95eb41c781d1265",
+			"InstanceIds": [
+				"GPIO\\ID_INT3450:00"
+			],
+			"Guid": [
+				"1199a818-4c52-5137-b536-d59e2e2cada9"
+			],
+			"Flags": [
+				"registered"
+			]
+		},
+		{
+			"Name": "AMT [unprovisioned]",
+			"DeviceId": "5fed1486be004d67ea79838d2e83aaa11bb72645",
+			"ParentDeviceId": "a45df35ac0e948ee180fe216a5f703f32dda163f",
+			"CompositeId": "a45df35ac0e948ee180fe216a5f703f32dda163f",
+			"InstanceIds": [
+				"MEI\\VEN_8086&DEV_06E0",
+				"MEI\\VEN_8086&DEV_06E0&REV_00",
+				"MEI\\VEN_8086&DEV_06E0&SUBSYS_17AA22C2",
+				"MEI\\VEN_8086&DEV_06E0&SUBSYS_17AA22C2&REV_00"
+			],
+			"Guid": [
+				"2800f812-b7b4-2d4b-aca8-46e0ff65814c",
+				"15c7ef4d-12fc-5e25-aba6-49b30f5ab130",
+				"a65d125e-0c76-5876-bad3-6956a2f25e5e",
+				"a8f5ca2d-e46c-5c9b-819b-d64c73c9e48d",
+				"45bcbef5-0630-5121-a4d9-881054b2916f"
+			],
+			"Summary":
+			    "Hardware and firmware technology for remote out-of-band management",
+			"Flags": [
+				"internal",
+				"registered"
+			],
+			"Vendor": "Intel Corporation",
+			"VendorId": "MEI:0x8086",
+			"Version": "14.1.53.1649",
+			"VersionBootloader": "14.1.53.1649",
+			"VersionFormat": "intel-me",
+			"Icons": [
+				"computer"
+			]
+		},
+		{
+			"Name": "CometLake-H GT2 [UHD Graphics]",
+			"DeviceId": "5792b48846ce271fab11c4a545f7a3df0d36e00a",
+			"InstanceIds": [
+				"PCI\\VEN_8086&DEV_9BC4",
+				"PCI\\VEN_8086&DEV_9BC4&REV_05",
+				"PCI\\VEN_8086&DEV_9BC4&SUBSYS_17AA22C2",
+				"PCI\\VEN_8086&DEV_9BC4&SUBSYS_17AA22C2&REV_05",
+				"PCI\\VEN_8086&DEV_9BC4&REV_00",
+				"PCI\\VEN_8086&DEV_9BC4&SUBSYS_17AA22C2&REV_00"
+			],
+			"Guid": [
+				"3777783a-3f83-56a5-95f4-533eb6a2bd19",
+				"6c3dbf6c-4e6f-5309-9954-c5ab7aca617e",
+				"5fde5d20-db24-5f21-afdd-247c1bf1efa1",
+				"07168636-0f3b-565c-8fe1-0f0a77d82cd8",
+				"7ffe1cb7-395a-52a9-a172-70ec6caaf310",
+				"b813dc18-ddf2-508d-a7eb-0e2fc8752b03"
+			],
+			"Flags": [
+				"internal",
+				"registered",
+				"can-verify",
+				"can-verify-image"
+			],
+			"Vendor": "Intel Corporation",
+			"VendorId": "PCI:0x8086",
+			"Version": "05",
+			"VersionFormat": "plain"
+		},
+		{
+			"Name": "Core\u2122 i7-10850H CPU @ 2.70GHz",
+			"DeviceId": "4bde70ba4e39b28f9eab1628f9dd6e6244c03027",
+			"InstanceIds": [
+				"cpu",
+				"CPUID\\PRO_0&FAM_06",
+				"CPUID\\PRO_0&FAM_06&MOD_A5",
+				"CPUID\\PRO_0&FAM_06&MOD_A5&STP_2"
+			],
+			"Guid": [
+				"b9a2dd81-159e-5537-a7db-e7101d164d3f",
+				"30249f37-d140-5d3e-9319-186b1bd5cac3",
+				"a45b0522-5722-54bd-b802-86cd044262df",
+				"7b9b6e8c-226c-5db6-86cb-ea3187578013"
+			],
+			"Flags": [
+				"internal",
+				"registered"
+			],
+			"Vendor": "Intel",
+			"Version": "0x000000f0",
+			"VersionFormat": "hex",
+			"VersionRaw": 240,
+			"Icons": [
+				"computer"
+			]
+		},
+		{
+			"Name": "Embedded Controller",
+			"DeviceId": "2292ae5236790b47884e37cf162dcf23bfcd1c60",
+			"Guid": [
+				"b616d3d6-cca9-40bd-964e-b86ffb62744d"
+			],
+			"Summary": "UEFI ESRT device",
+			"Protocol": "org.uefi.capsule",
+			"Flags": [
+				"internal",
+				"updatable",
+				"require-ac",
+				"supported",
+				"registered",
+				"needs-reboot",
+				"usable-during-update"
+			],
+			"Vendor": "Lenovo",
+			"VendorId": "DMI:LENOVO",
+			"Version": "0.1.11",
+			"VersionLowest": "0.1.11",
+			"VersionFormat": "triplet",
+			"VersionRaw": 65547,
+			"VersionLowestRaw": 65547,
+			"UpdateState": 2
+		},
+		{
+			"Name": "Integrated Camera",
+			"DeviceId": "0fef0a0c55f6442bffaebd774ae771341c89571b",
+			"InstanceIds": [
+				"USB\\VID_13D3&PID_5405",
+				"USB\\VID_13D3&PID_5405&REV_6004"
+			],
+			"Guid": [
+				"9284c551-0b4c-51ee-905a-168b8787290c",
+				"6f7c4f56-0085-5aa6-b443-823852a1cdbc"
+			],
+			"Serial": "0000",
+			"Protocol": "org.usb.dfu",
+			"Flags": [
+				"updatable",
+				"registered",
+				"add-counterpart-guids"
+			],
+			"Vendor": "Azurewave",
+			"VendorId": "USB:0x13D3",
+			"Version": "60.4",
+			"VersionFormat": "bcd",
+			"Icons": [
+				"camera-web"
+			]
+		},
+		{
+			"Name": "Intel Management Engine",
+			"DeviceId": "349bb341230b1a86e5effe7dfe4337e1590227bd",
+			"Guid": [
+				"5695cc48-4f4f-4677-8ffb-9f496d3ad9d3"
+			],
+			"Summary": "UEFI ESRT device",
+			"Protocol": "org.uefi.capsule",
+			"Flags": [
+				"internal",
+				"updatable",
+				"require-ac",
+				"supported",
+				"registered",
+				"needs-reboot",
+				"usable-during-update"
+			],
+			"Vendor": "Lenovo",
+			"VendorId": "DMI:LENOVO",
+			"Version": "225.53.1649",
+			"VersionLowest": "0.0.1",
+			"VersionFormat": "triplet",
+			"VersionRaw": 3778348657,
+			"VersionLowestRaw": 1,
+			"UpdateState": 2
+		},
+		{
+			"Name": "System Firmware",
+			"DeviceId": "a45df35ac0e948ee180fe216a5f703f32dda163f",
+			"InstanceIds": [
+				"main-system-firmware"
+			],
+			"Guid": [
+				"6e58e73d-8061-44e4-8949-33b7f0d5c726",
+				"230c8b18-8d9b-53ec-838b-6cfc0383493a"
+			],
+			"Summary": "UEFI ESRT device",
+			"Protocol": "org.uefi.capsule",
+			"Flags": [
+				"internal",
+				"updatable",
+				"require-ac",
+				"supported",
+				"registered",
+				"needs-reboot",
+				"can-verify",
+				"usable-during-update"
+			],
+			"Checksums": [
+				"73319eae91b5838c5a587c54ffb625b58746238b",
+				"6d244e0fadc7cc866e902517b4fe24505e52d1023934d487b039641c726abc46"
+			],
+			"Vendor": "Lenovo",
+			"VendorId": "DMI:LENOVO",
+			"Version": "0.1.23",
+			"VersionLowest": "0.1.11",
+			"VersionFormat": "triplet",
+			"VersionRaw": 65559,
+			"VersionLowestRaw": 65547,
+			"Icons": [
+				"computer"
+			],
+			"UpdateState": 2
+		},
+		{
+			"Name": "THNSN5512GPU7 TOSHIBA",
+			"DeviceId": "03281da317dccd2b18de2bd1cc70a782df40ed7e",
+			"InstanceIds": [
+				"NVME\\VEN_1179&DEV_010F",
+				"NVME\\VEN_1179&DEV_010F&REV_01",
+				"NVME\\VEN_1179&DEV_010F&SUBSYS_11790001",
+				"NVME\\VEN_1179&DEV_010F&SUBSYS_11790001&REV_01",
+				"THNSN5512GPU7 TOSHIBA"
+			],
+			"Guid": [
+				"83991323-9951-5adf-b743-d93e882a41e1",
+				"e22c4520-43dc-5bb3-8245-5787fead9b63",
+				"87178ed9-f82b-5895-bcb0-09713abc842c",
+				"2060b01b-f6aa-5fea-9acd-804de1765920",
+				"e1409b09-50cf-5aef-8ad8-760b9022f88d"
+			],
+			"Serial": "37RS11EATAHT",
+			"Summary": "NVM Express solid state drive",
+			"Protocol": "org.nvmexpress",
+			"Flags": [
+				"internal",
+				"updatable",
+				"require-ac",
+				"registered",
+				"needs-reboot",
+				"usable-during-update",
+				"signed-payload"
+			],
+			"Vendor": "Toshiba Corporation",
+			"VendorId": "NVME:0x1179",
+			"Version": "410557LA",
+			"VersionFormat": "plain",
+			"Icons": [
+				"drive-harddisk"
+			]
+		},
+		{
+			"Name": "TPM",
+			"DeviceId": "c6a80ac3a22083423992a3cb15018989f37834d6",
+			"InstanceIds": [
+				"system-tpm",
+				"TPM\\VEN_STM&DEV_0001",
+				"TPM\\VEN_STM&MOD_",
+				"TPM\\VEN_STM&DEV_0001&VER_2.0",
+				"TPM\\VEN_STM&MOD_&VER_2.0"
+			],
+			"Guid": [
+				"ff71992e-52f7-5eea-94ef-883e56e034c6",
+				"84df3581-f896-54d2-bd1a-372602f04c32",
+				"bfaed10a-bbc1-525b-a329-35da2f63e918",
+				"70b7b833-7e1a-550a-a291-b94a12d0f319",
+				"06f005e9-cb62-5d1a-82d9-13c534c53c48"
+			],
+			"Flags": [
+				"internal",
+				"registered"
+			],
+			"Vendor": "ST Microelectronics",
+			"VendorId": "TPM:STM",
+			"Version": "1.258.0.0",
+			"VersionFormat": "quad",
+			"VersionRaw": 282583078273024,
+			"Icons": [
+				"computer"
+			]
+		},
+		{
+			"Name": "Thunderbolt host controller",
+			"DeviceId": "2cff15412fb2877637de2c23a10f841bca114e03",
+			"InstanceIds": [
+				"THUNDERBOLT\\VEN_0109&DEV_1913",
+				"THUNDERBOLT\\VEN_0109&DEV_1913&REV_00",
+				"TBT-01091913-native",
+				"TBT-01091913-native-controller0-0"
+			],
+			"Guid": [
+				"b510dc43-dc5d-5449-9ccc-5edd80338954",
+				"b595a681-7c5b-5842-bba7-1d448c261a6e",
+				"10216d57-c796-5f3c-83d3-21baf70bfc54",
+				"f8543f13-e164-5332-8681-4d5ef3ffbff0"
+			],
+			"Summary": "Unmatched performance for high-speed I/O",
+			"Protocol": "com.intel.thunderbolt",
+			"Flags": [
+				"internal",
+				"updatable",
+				"require-ac",
+				"registered",
+				"dual-image",
+				"signed-payload"
+			],
+			"Vendor": "Lenovo",
+			"VendorId": "THUNDERBOLT:0x0109|TBT:0x0109",
+			"VendorIds": [
+				"THUNDERBOLT:0x0109",
+				"TBT:0x0109"
+			],
+			"Version": "62.00",
+			"VersionFormat": "pair",
+			"Icons": [
+				"thunderbolt"
+			]
+		},
+		{
+			"Name": "UEFI Device Firmware",
+			"DeviceId": "f95c9218acd12697af946874bfe4239587209232",
+			"Guid": [
+				"439d54f4-5548-4698-a8b0-46a047c0e66e"
+			],
+			"Summary": "UEFI ESRT device",
+			"Protocol": "org.uefi.capsule",
+			"Flags": [
+				"internal",
+				"updatable",
+				"require-ac",
+				"registered",
+				"needs-reboot",
+				"usable-during-update"
+			],
+			"VendorId": "DMI:LENOVO",
+			"Version": "16842759",
+			"VersionLowest": "1",
+			"VersionFormat": "number",
+			"VersionRaw": 16842759,
+			"VersionLowestRaw": 1,
+			"UpdateState": 2
+		},
+		{
+			"Name": "UEFI Device Firmware",
+			"DeviceId": "d96de5c124b60ed6241ebcb6bb2c839cb5580786",
+			"Guid": [
+				"3fb9a55d-d7f1-4d1b-b216-74e328e28f51"
+			],
+			"Summary": "UEFI ESRT device",
+			"Protocol": "org.uefi.capsule",
+			"Flags": [
+				"internal",
+				"updatable",
+				"require-ac",
+				"registered",
+				"needs-reboot",
+				"usable-during-update"
+			],
+			"VendorId": "DMI:LENOVO",
+			"Version": "65794",
+			"VersionLowest": "65794",
+			"VersionFormat": "number",
+			"VersionRaw": 65794,
+			"VersionLowestRaw": 65794,
+			"UpdateState": 2
+		},
+		{
+			"Name": "UEFI Device Firmware",
+			"DeviceId": "f37fb01122dd62c773f4e84ec89737e059712d59",
+			"Guid": [
+				"33967546-da89-4c51-9c95-5242bcb854e8"
+			],
+			"Summary": "UEFI ESRT device",
+			"Protocol": "org.uefi.capsule",
+			"Flags": [
+				"internal",
+				"updatable",
+				"require-ac",
+				"registered",
+				"needs-reboot",
+				"usable-during-update"
+			],
+			"VendorId": "DMI:LENOVO",
+			"Version": "24580",
+			"VersionLowest": "1",
+			"VersionFormat": "number",
+			"VersionRaw": 24580,
+			"VersionLowestRaw": 1,
+			"UpdateState": 2
+		},
+		{
+			"Name": "UEFI dbx",
+			"DeviceId": "362301da643102b9f38477387e2193e57abaa590",
+			"ParentDeviceId": "a45df35ac0e948ee180fe216a5f703f32dda163f",
+			"CompositeId": "a45df35ac0e948ee180fe216a5f703f32dda163f",
+			"InstanceIds": [
+				"UEFI\\CRT_A9087D1044AD18F7A94916D284CBC01827CF23CD8F60B79072C9CAA1FEF4D649",
+				"UEFI\\CRT_A9087D1044AD18F7A94916D284CBC01827CF23CD8F60B79072C9CAA1FEF4D649&ARCH_X64",
+				"UEFI\\CRT_A1117F516A32CEFCBA3F2D1ACE10A87972FD6BBE8FE0D0B996E09E65D802A503",
+				"UEFI\\CRT_A1117F516A32CEFCBA3F2D1ACE10A87972FD6BBE8FE0D0B996E09E65D802A503&ARCH_X64"
+			],
+			"Guid": [
+				"14503b3d-73ce-5d06-8137-77c68972a341",
+				"5971a208-da00-5fce-b5f5-1234342f9cf7",
+				"c6682ade-b5ec-57c4-b687-676351208742",
+				"f8ba2887-9411-5c36-9cee-88995bb39731"
+			],
+			"Summary": "UEFI revocation database",
+			"Protocol": "org.uefi.dbx",
+			"Flags": [
+				"internal",
+				"updatable",
+				"registered",
+				"needs-reboot",
+				"only-version-upgrade",
+				"signed-payload"
+			],
+			"VendorId": "UEFI:Linux Foundation",
+			"Version": "238",
+			"VersionLowest": "238",
+			"VersionFormat": "number",
+			"Icons": [
+				"computer"
+			],
+			"InstallDuration": 1
+		},
+		{
+			"Name": "WDC PC SN720 SDAQNTW-256G-1001",
+			"DeviceId": "08e1798bf5d9cb56a0290b552cab6c1a371b5089",
+			"InstanceIds": [
+				"NVME\\VEN_15B7&DEV_5002",
+				"NVME\\VEN_15B7&DEV_5002&REV_00",
+				"NVME\\VEN_15B7&DEV_5002&SUBSYS_15B75002",
+				"NVME\\VEN_15B7&DEV_5002&SUBSYS_15B75002&REV_00",
+				"WDC PC SN720 SDAQNTW-256G-1001"
+			],
+			"Guid": [
+				"ff2112dc-038c-596d-90ca-d43c5077c6ec",
+				"137520ce-3603-53e6-9165-56694ed744e7",
+				"c528df4b-7972-5880-8cb1-330415e2dc6a",
+				"06a6f1f7-4ce0-57ef-8154-0705d936e4a6",
+				"237776ee-0bcd-5fe9-8dc8-6984a2d36ba0"
+			],
+			"Serial": "183985804591",
+			"Summary": "NVM Express solid state drive",
+			"Protocol": "org.nvmexpress",
+			"Flags": [
+				"internal",
+				"updatable",
+				"require-ac",
+				"supported",
+				"registered",
+				"needs-reboot",
+				"usable-during-update"
+			],
+			"Vendor": "Sandisk Corp",
+			"VendorId": "NVME:0x15B7",
+			"Version": "10190101",
+			"VersionFormat": "plain",
+			"Icons": [
+				"drive-harddisk"
+			]
+		}
+	]
+}
