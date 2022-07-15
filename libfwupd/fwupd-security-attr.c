@@ -76,6 +76,8 @@ fwupd_security_attr_flag_to_string(FwupdSecurityAttrFlags flag)
 		return "action-config-fw";
 	if (flag == FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_OS)
 		return "action-config-os";
+	if (flag == FWUPD_SECURITY_ATTR_FLAG_EMULATED)
+		return "emulated";
 	return NULL;
 }
 
@@ -110,6 +112,8 @@ fwupd_security_attr_flag_from_string(const gchar *flag)
 		return FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_FW;
 	if (g_strcmp0(flag, "action-config-os") == 0)
 		return FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_OS;
+	if (g_strcmp0(flag, "emulated") == 0)
+		return FWUPD_SECURITY_ATTR_FLAG_EMULATED;
 	return FWUPD_SECURITY_ATTR_FLAG_NONE;
 }
 

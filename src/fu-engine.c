@@ -6200,6 +6200,7 @@ fu_engine_record_security_attrs(FuEngine *self, GError **error)
 static gboolean
 fu_engine_ensure_security_attrs_from_test_profile(FuEngine *self, const gchar *fn, GError **error)
 {
+	g_autoptr(GPtrArray) vals = NULL;
 	g_autoptr(JsonParser) parser = json_parser_new();
 	g_autoptr(GFile) file = g_file_new_for_path(fn);
 	g_autoptr(GInputStream) istream_json = NULL;
@@ -6217,9 +6218,19 @@ fu_engine_ensure_security_attrs_from_test_profile(FuEngine *self, const gchar *f
 	}
 	if (!json_parser_load_from_stream(parser, istream_json, NULL, error))
 		return FALSE;
-	return fu_security_attrs_from_json(self->host_security_attrs,
-					   json_parser_get_root(parser),
-					   error);
+	if (!fu_security_attrs_from_json(self->host_security_attrs,
+					 json_parser_get_root(parser),
+					 error))
+		return FALSE;
+
+	/* add emulated tag */
+	vals = fu_security_attrs_get_all(self->host_security_attrs);
+	for (guint i = 0; i < vals->len; i++) {
+		FwupdSecurityAttr *attr = g_ptr_array_index(vals, i);
+		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_EMULATED);
+	}
+
+	return TRUE;
 }
 #endif
 

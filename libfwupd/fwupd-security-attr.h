@@ -39,6 +39,8 @@ struct _FwupdSecurityAttrClass {
  * @FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM:	Contact the firmware vendor for a update
  * @FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_FW:		Failure may be fixed by changing FW config
  * @FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_OS:		Failure may be fixed by changing OS config
+ * @FWUPD_SECURITY_ATTR_FLAG_EMULATED			This attribute has been emulated for
+ *simulating GUI behavior
  *
  * The flags available for HSI attributes.
  **/
@@ -53,6 +55,7 @@ typedef enum {
 	FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM = 1 << 11,
 	FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_FW = 1 << 12,
 	FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_OS = 1 << 13,
+	FWUPD_SECURITY_ATTR_FLAG_EMULATED = 1 << 14,
 } FwupdSecurityAttrFlags;
 
 /**
