@@ -2959,11 +2959,6 @@ fu_util_security(FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 	}
 
-	g_print("%s \033[1m%s\033[0m\n",
-		/* TRANSLATORS: this is a string like 'HSI:2-U' */
-		_("Host Security ID:"),
-		fu_engine_get_host_security_id(priv->engine));
-
 	/* print the "why" */
 	if (priv->as_json) {
 		str = fu_security_attrs_to_json_string(attrs, error);
@@ -2972,6 +2967,11 @@ fu_util_security(FuUtilPrivate *priv, gchar **values, GError **error)
 		g_print("%s\n", str);
 		return TRUE;
 	}
+
+	g_print("%s \033[1m%s\033[0m\n",
+		/* TRANSLATORS: this is a string like 'HSI:2-U' */
+		_("Host Security ID:"),
+		fu_engine_get_host_security_id(priv->engine));
 
 	str = fu_util_security_attrs_to_string(items, flags);
 	g_print("%s\n", str);
