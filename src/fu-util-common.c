@@ -1374,6 +1374,10 @@ fu_util_device_problem_to_string(FwupdClient *client, FwupdDevice *dev, FwupdDev
 		/* TRANSLATORS: emulated means we are pretending to be a different model */
 		return g_strdup(_("Device is emulated"));
 	}
+	if (problem == FWUPD_DEVICE_PROBLEM_MISSING_LICENSE) {
+		/* TRANSLATORS: the update function is an add-on feature sold separately" */
+		return g_strdup(_("Device requires a software license to update"));
+	}
 	return NULL;
 }
 

@@ -608,6 +608,14 @@ typedef guint64 FwupdDeviceFlags;
  */
 #define FWUPD_DEVICE_PROBLEM_IS_EMULATED (1u << 6)
 /**
+ * FWUPD_DEVICE_PROBLEM_MISSING_LICENSE:
+ *
+ * The device cannot be updated due to missing vendor's license.
+ *
+ * Since 1.8.5
+ */
+#define FWUPD_DEVICE_PROBLEM_MISSING_LICENSE (1u << 7)
+/**
  * FWUPD_DEVICE_PROBLEM_UNKNOWN:
  *
  * This problem is not defined, this typically will happen from mismatched

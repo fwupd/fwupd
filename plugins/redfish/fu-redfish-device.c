@@ -360,6 +360,25 @@ fu_redfish_device_set_vendor(FuRedfishDevice *self, const gchar *vendor)
 	fu_device_add_vendor_id(FU_DEVICE(self), vendor_id);
 }
 
+static void
+fu_redfish_backend_smc_license_check(FuDevice *device)
+{
+	FuRedfishDevice *self = FU_REDFISH_DEVICE(device);
+	FuRedfishBackend *backend = fu_redfish_device_get_backend(self);
+	g_autoptr(FuRedfishRequest) request = fu_redfish_backend_request_new(backend);
+	g_autoptr(GError) error_local = NULL;
+
+	/* see if we don't get an license error */
+	if (!fu_redfish_request_perform(request,
+					fu_redfish_backend_get_push_uri_path(backend),
+					FU_REDFISH_REQUEST_PERFORM_FLAG_LOAD_JSON,
+					&error_local))
+		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED))
+			fu_device_add_problem(device, FWUPD_DEVICE_PROBLEM_MISSING_LICENSE);
+
+	return;
+}
+
 static gboolean
 fu_redfish_device_probe(FuDevice *dev, GError **error)
 {
@@ -498,11 +517,22 @@ fu_redfish_device_probe(FuDevice *dev, GError **error)
 			if (json_object_has_member(related_item, "@odata.id")) {
 				const gchar *id =
 				    json_object_get_string_member(related_item, "@odata.id");
-				if (!fu_redfish_device_probe_related_item(self, id, error))
-					return FALSE;
+				g_autoptr(GError) error_local = NULL;
+				if (!fu_redfish_device_probe_related_item(self, id, &error_local)) {
+					if (!g_error_matches(error_local,
+							     FWUPD_ERROR,
+							     FWUPD_ERROR_NOT_SUPPORTED)) {
+						*error = g_error_copy(error_local);
+						return FALSE;
+					}
+					fu_device_set_logical_id(dev, id);
+				}
 			}
 		}
 	}
+
+	/* for Supermicro check whether we have a proper Redfish license installed */
+	fu_redfish_backend_smc_license_check(dev);
 
 	/* success */
 	return TRUE;

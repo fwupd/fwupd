@@ -16,6 +16,7 @@
 #include "fu-redfish-multipart-device.h"
 #include "fu-redfish-request.h"
 #include "fu-redfish-smbios.h"
+#include "fu-redfish-smc-device.h"
 
 struct _FuRedfishBackend {
 	FuBackend parent_instance;
@@ -221,6 +222,22 @@ fu_redfish_backend_set_push_uri_path(FuRedfishBackend *self, const gchar *push_u
 	self->push_uri_path = g_strdup(push_uri_path);
 }
 
+static const gchar *
+fu_redfish_backend_get_smc_update_path(JsonObject *update_svc)
+{
+	JsonObject *tmp_obj;
+
+	if (!json_object_has_member(update_svc, "Actions"))
+		return NULL;
+	tmp_obj = json_object_get_object_member(update_svc, "Actions");
+	if (tmp_obj == NULL || !json_object_has_member(tmp_obj, "#UpdateService.SimpleUpdate"))
+		return NULL;
+	tmp_obj = json_object_get_object_member(tmp_obj, "#UpdateService.SimpleUpdate");
+	if (tmp_obj == NULL || !json_object_has_member(tmp_obj, "target"))
+		return NULL;
+	return json_object_get_string_member(tmp_obj, "target");
+}
+
 static gboolean
 fu_redfish_backend_coldplug(FuBackend *backend, FuProgress *progress, GError **error)
 {
@@ -250,7 +267,15 @@ fu_redfish_backend_coldplug(FuBackend *backend, FuProgress *progress, GError **e
 			return FALSE;
 		}
 	}
-	if (json_object_has_member(json_obj, "MultipartHttpPushUri")) {
+	if (self->push_uri_path == NULL) {
+		const gchar *tmp = fu_redfish_backend_get_smc_update_path(json_obj);
+		if (tmp != NULL) {
+			self->device_gtype = FU_TYPE_REDFISH_SMC_DEVICE;
+			fu_redfish_backend_set_push_uri_path(self, tmp);
+		}
+	}
+	if (self->push_uri_path == NULL &&
+	    json_object_has_member(json_obj, "MultipartHttpPushUri")) {
 		const gchar *tmp = json_object_get_string_member(json_obj, "MultipartHttpPushUri");
 		if (tmp != NULL) {
 			self->device_gtype = FU_TYPE_REDFISH_MULTIPART_DEVICE;
