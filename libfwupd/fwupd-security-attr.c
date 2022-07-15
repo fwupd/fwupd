@@ -1380,6 +1380,7 @@ static void
 fwupd_security_attr_init(FwupdSecurityAttr *self)
 {
 	FwupdSecurityAttrPrivate *priv = GET_PRIVATE(self);
+	priv->level = FWUPD_SECURITY_ATTR_LEVEL_NONE;
 	priv->obsoletes = g_ptr_array_new_with_free_func(g_free);
 	priv->guids = g_ptr_array_new_with_free_func(g_free);
 	priv->created = (guint64)g_get_real_time() / G_USEC_PER_SEC;

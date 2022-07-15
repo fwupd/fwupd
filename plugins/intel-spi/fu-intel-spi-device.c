@@ -216,7 +216,6 @@ fu_intel_spi_device_add_security_attrs(FuDevice *device, FuSecurityAttrs *attrs)
 	/* create attr */
 	attr = fwupd_security_attr_new(FWUPD_SECURITY_ATTR_ID_SPI_DESCRIPTOR);
 	fwupd_security_attr_set_plugin(attr, fu_device_get_plugin(FU_DEVICE(self)));
-	fwupd_security_attr_set_level(attr, FWUPD_SECURITY_ATTR_LEVEL_CRITICAL);
 	fwupd_security_attr_add_guids(attr, fu_device_get_guids(device));
 	fu_security_attrs_append(attrs, attr);
 
