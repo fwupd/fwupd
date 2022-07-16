@@ -22,5 +22,7 @@ void
 fwupd_device_to_json(FwupdDevice *self, JsonBuilder *builder);
 void
 fwupd_device_to_json_full(FwupdDevice *self, JsonBuilder *builder, FwupdDeviceFlags flags);
+gboolean
+fwupd_device_from_json(FwupdDevice *self, JsonNode *json_node, GError **error);
 
 G_END_DECLS

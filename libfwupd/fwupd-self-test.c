@@ -783,6 +783,7 @@ fwupd_device_func(void)
 	g_autofree gchar *data = NULL;
 	g_autofree gchar *str = NULL;
 	g_autoptr(FwupdDevice) dev = NULL;
+	g_autoptr(FwupdDevice) dev2 = fwupd_device_new();
 	g_autoptr(FwupdDevice) dev_new = fwupd_device_new();
 	g_autoptr(FwupdRelease) rel = NULL;
 	g_autoptr(GError) error = NULL;
@@ -790,6 +791,7 @@ fwupd_device_func(void)
 	g_autoptr(JsonBuilder) builder = NULL;
 	g_autoptr(JsonGenerator) json_generator = NULL;
 	g_autoptr(JsonNode) json_root = NULL;
+	g_autoptr(JsonParser) parser = json_parser_new();
 
 	/* create dummy object */
 	dev = fwupd_device_new();
@@ -941,6 +943,22 @@ fwupd_device_func(void)
 	g_assert_true(fwupd_device_has_vendor_id(dev_new, "USB:0x1234"));
 	g_assert_true(fwupd_device_has_vendor_id(dev_new, "PCI:0x5678"));
 	g_assert_true(fwupd_device_has_instance_id(dev_new, "USB\\VID_1234&PID_0001"));
+
+	/* from JSON */
+	ret = json_parser_load_from_data(parser, data, -1, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = fwupd_device_from_json(dev2, json_parser_get_root(parser), &error);
+	if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
+		g_test_skip(error->message);
+		return;
+	}
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_true(fwupd_device_has_vendor_id(dev2, "USB:0x1234"));
+	g_assert_true(fwupd_device_has_instance_id(dev2, "USB\\VID_1234&PID_0001"));
+	g_assert_true(fwupd_device_has_flag(dev2, FWUPD_DEVICE_FLAG_UPDATABLE));
+	g_assert_false(fwupd_device_has_flag(dev2, FWUPD_DEVICE_FLAG_LOCKED));
 }
 
 static void

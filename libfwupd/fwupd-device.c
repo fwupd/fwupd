@@ -3077,6 +3077,294 @@ fwupd_device_to_json_full(FwupdDevice *self, JsonBuilder *builder, FwupdDeviceFl
 }
 
 /**
+ * fwupd_device_from_json:
+ * @self: a #FwupdDevice
+ * @json_node: a JSON node
+ * @error: (nullable): optional return location for an error
+ *
+ * Loads a fwupd security attribute from a JSON node.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.8.3
+ **/
+gboolean
+fwupd_device_from_json(FwupdDevice *self, JsonNode *json_node, GError **error)
+{
+#if JSON_CHECK_VERSION(1, 6, 0)
+	JsonObject *obj;
+
+	g_return_val_if_fail(FWUPD_IS_DEVICE(self), FALSE);
+
+	/* sanity check */
+	if (!JSON_NODE_HOLDS_OBJECT(json_node)) {
+		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA, "not JSON object");
+		return FALSE;
+	}
+	obj = json_node_get_object(json_node);
+
+	/* this has to exist */
+	if (!json_object_has_member(obj, FWUPD_RESULT_KEY_DEVICE_ID)) {
+		g_set_error(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_INVALID_DATA,
+			    "no %s property in object",
+			    FWUPD_RESULT_KEY_DEVICE_ID);
+		return FALSE;
+	}
+	fwupd_device_set_id(self, json_object_get_string_member(obj, FWUPD_RESULT_KEY_DEVICE_ID));
+
+	/* also optional */
+	if (json_object_has_member(obj, FWUPD_RESULT_KEY_NAME)) {
+		const gchar *tmp =
+		    json_object_get_string_member_with_default(obj, FWUPD_RESULT_KEY_NAME, NULL);
+		fwupd_device_set_name(self, tmp);
+	}
+	if (json_object_has_member(obj, FWUPD_RESULT_KEY_PARENT_DEVICE_ID)) {
+		const gchar *tmp =
+		    json_object_get_string_member_with_default(obj,
+							       FWUPD_RESULT_KEY_PARENT_DEVICE_ID,
+							       NULL);
+		fwupd_device_set_parent_id(self, tmp);
+	}
+	if (json_object_has_member(obj, FWUPD_RESULT_KEY_COMPOSITE_ID)) {
+		const gchar *tmp =
+		    json_object_get_string_member_with_default(obj,
+							       FWUPD_RESULT_KEY_COMPOSITE_ID,
+							       NULL);
+		fwupd_device_set_composite_id(self, tmp);
+	}
+	if (json_object_has_member(obj, FWUPD_RESULT_KEY_PROTOCOL)) {
+		const gchar *tmp =
+		    json_object_get_string_member_with_default(obj,
+							       FWUPD_RESULT_KEY_PROTOCOL,
+							       NULL);
+		fwupd_device_add_protocol(self, tmp);
+	}
+	if (json_object_has_member(obj, FWUPD_RESULT_KEY_SERIAL)) {
+		const gchar *tmp =
+		    json_object_get_string_member_with_default(obj, FWUPD_RESULT_KEY_SERIAL, NULL);
+		fwupd_device_set_serial(self, tmp);
+	}
+	if (json_object_has_member(obj, FWUPD_RESULT_KEY_SUMMARY)) {
+		const gchar *tmp =
+		    json_object_get_string_member_with_default(obj, FWUPD_RESULT_KEY_SUMMARY, NULL);
+		fwupd_device_set_summary(self, tmp);
+	}
+	if (json_object_has_member(obj, FWUPD_RESULT_KEY_DESCRIPTION)) {
+		const gchar *tmp =
+		    json_object_get_string_member_with_default(obj,
+							       FWUPD_RESULT_KEY_DESCRIPTION,
+							       NULL);
+		fwupd_device_set_description(self, tmp);
+	}
+	if (json_object_has_member(obj, FWUPD_RESULT_KEY_BRANCH)) {
+		const gchar *tmp =
+		    json_object_get_string_member_with_default(obj, FWUPD_RESULT_KEY_BRANCH, NULL);
+		fwupd_device_set_branch(self, tmp);
+	}
+	if (json_object_has_member(obj, FWUPD_RESULT_KEY_PLUGIN)) {
+		const gchar *tmp =
+		    json_object_get_string_member_with_default(obj, FWUPD_RESULT_KEY_PLUGIN, NULL);
+		fwupd_device_set_plugin(self, tmp);
+	}
+	if (json_object_has_member(obj, FWUPD_RESULT_KEY_VENDOR)) {
+		const gchar *tmp =
+		    json_object_get_string_member_with_default(obj, FWUPD_RESULT_KEY_VENDOR, NULL);
+		fwupd_device_set_vendor(self, tmp);
+	}
+	if (json_object_has_member(obj, FWUPD_RESULT_KEY_VENDOR_ID)) {
+		const gchar *tmp =
+		    json_object_get_string_member_with_default(obj,
+							       FWUPD_RESULT_KEY_VENDOR_ID,
+							       NULL);
+		if (tmp != NULL) {
+			g_auto(GStrv) split = g_strsplit(tmp, "|", -1);
+			for (guint i = 0; split[i] != NULL; i++)
+				fwupd_device_add_vendor_id(self, split[i]);
+		}
+	}
+	if (json_object_has_member(obj, FWUPD_RESULT_KEY_VERSION)) {
+		const gchar *tmp =
+		    json_object_get_string_member_with_default(obj, FWUPD_RESULT_KEY_VERSION, NULL);
+		fwupd_device_set_version(self, tmp);
+	}
+	if (json_object_has_member(obj, FWUPD_RESULT_KEY_VERSION_LOWEST)) {
+		const gchar *tmp =
+		    json_object_get_string_member_with_default(obj,
+							       FWUPD_RESULT_KEY_VERSION_LOWEST,
+							       NULL);
+		fwupd_device_set_version_lowest(self, tmp);
+	}
+	if (json_object_has_member(obj, FWUPD_RESULT_KEY_VERSION_BOOTLOADER)) {
+		const gchar *tmp =
+		    json_object_get_string_member_with_default(obj,
+							       FWUPD_RESULT_KEY_VERSION_BOOTLOADER,
+							       NULL);
+		fwupd_device_set_version_bootloader(self, tmp);
+	}
+	if (json_object_has_member(obj, FWUPD_RESULT_KEY_VERSION_FORMAT)) {
+		const gchar *tmp =
+		    json_object_get_string_member_with_default(obj,
+							       FWUPD_RESULT_KEY_VERSION_FORMAT,
+							       NULL);
+		fwupd_device_set_version_format(self, fwupd_version_format_from_string(tmp));
+	}
+	if (json_object_has_member(obj, FWUPD_RESULT_KEY_FLASHES_LEFT)) {
+		gint64 tmp =
+		    json_object_get_int_member_with_default(obj, FWUPD_RESULT_KEY_FLASHES_LEFT, 0);
+		fwupd_device_set_flashes_left(self, tmp);
+	}
+	if (json_object_has_member(obj, FWUPD_RESULT_KEY_BATTERY_LEVEL)) {
+		gint64 tmp =
+		    json_object_get_int_member_with_default(obj, FWUPD_RESULT_KEY_BATTERY_LEVEL, 0);
+		fwupd_device_set_battery_level(self, tmp);
+	}
+	if (json_object_has_member(obj, FWUPD_RESULT_KEY_BATTERY_THRESHOLD)) {
+		gint64 tmp =
+		    json_object_get_int_member_with_default(obj,
+							    FWUPD_RESULT_KEY_BATTERY_THRESHOLD,
+							    0);
+		fwupd_device_set_battery_threshold(self, tmp);
+	}
+	if (json_object_has_member(obj, FWUPD_RESULT_KEY_VERSION_RAW)) {
+		gint64 tmp =
+		    json_object_get_int_member_with_default(obj, FWUPD_RESULT_KEY_VERSION_RAW, 0);
+		fwupd_device_set_version_raw(self, tmp);
+	}
+	if (json_object_has_member(obj, FWUPD_RESULT_KEY_VERSION_LOWEST_RAW)) {
+		gint64 tmp =
+		    json_object_get_int_member_with_default(obj,
+							    FWUPD_RESULT_KEY_VERSION_LOWEST_RAW,
+							    0);
+		fwupd_device_set_version_lowest_raw(self, tmp);
+	}
+	if (json_object_has_member(obj, FWUPD_RESULT_KEY_VERSION_BOOTLOADER_RAW)) {
+		gint64 tmp =
+		    json_object_get_int_member_with_default(obj,
+							    FWUPD_RESULT_KEY_VERSION_BOOTLOADER_RAW,
+							    0);
+		fwupd_device_set_version_bootloader_raw(self, tmp);
+	}
+	if (json_object_has_member(obj, FWUPD_RESULT_KEY_VERSION_BUILD_DATE)) {
+		gint64 tmp =
+		    json_object_get_int_member_with_default(obj,
+							    FWUPD_RESULT_KEY_VERSION_BUILD_DATE,
+							    0);
+		fwupd_device_set_version_build_date(self, tmp);
+	}
+	if (json_object_has_member(obj, FWUPD_RESULT_KEY_INSTALL_DURATION)) {
+		gint64 tmp =
+		    json_object_get_int_member_with_default(obj,
+							    FWUPD_RESULT_KEY_INSTALL_DURATION,
+							    0);
+		fwupd_device_set_install_duration(self, tmp);
+	}
+	if (json_object_has_member(obj, FWUPD_RESULT_KEY_CREATED)) {
+		gint64 tmp =
+		    json_object_get_int_member_with_default(obj, FWUPD_RESULT_KEY_CREATED, 0);
+		fwupd_device_set_created(self, tmp);
+	}
+	if (json_object_has_member(obj, FWUPD_RESULT_KEY_MODIFIED)) {
+		gint64 tmp =
+		    json_object_get_int_member_with_default(obj, FWUPD_RESULT_KEY_MODIFIED, 0);
+		fwupd_device_set_modified(self, tmp);
+	}
+	if (json_object_has_member(obj, FWUPD_RESULT_KEY_UPDATE_STATE)) {
+		const gchar *tmp =
+		    json_object_get_string_member_with_default(obj,
+							       FWUPD_RESULT_KEY_UPDATE_STATE,
+							       NULL);
+		fwupd_device_set_update_state(self, fwupd_update_state_from_string(tmp));
+	}
+	if (json_object_has_member(obj, FWUPD_RESULT_KEY_STATUS)) {
+		const gchar *tmp =
+		    json_object_get_string_member_with_default(obj, FWUPD_RESULT_KEY_STATUS, NULL);
+		fwupd_device_set_status(self, fwupd_status_from_string(tmp));
+	}
+	if (json_object_has_member(obj, FWUPD_RESULT_KEY_UPDATE_ERROR)) {
+		const gchar *tmp =
+		    json_object_get_string_member_with_default(obj,
+							       FWUPD_RESULT_KEY_UPDATE_ERROR,
+							       NULL);
+		fwupd_device_set_update_error(self, tmp);
+	}
+	if (json_object_has_member(obj, FWUPD_RESULT_KEY_UPDATE_MESSAGE)) {
+		const gchar *tmp =
+		    json_object_get_string_member_with_default(obj,
+							       FWUPD_RESULT_KEY_UPDATE_MESSAGE,
+							       NULL);
+		fwupd_device_set_update_message(self, tmp);
+	}
+	if (json_object_has_member(obj, FWUPD_RESULT_KEY_UPDATE_IMAGE)) {
+		const gchar *tmp =
+		    json_object_get_string_member_with_default(obj,
+							       FWUPD_RESULT_KEY_UPDATE_IMAGE,
+							       NULL);
+		fwupd_device_set_update_image(self, tmp);
+	}
+	if (json_object_has_member(obj, FWUPD_RESULT_KEY_INSTANCE_IDS)) {
+		JsonArray *array = json_object_get_array_member(obj, FWUPD_RESULT_KEY_INSTANCE_IDS);
+		for (guint i = 0; i < json_array_get_length(array); i++)
+			fwupd_device_add_instance_id(self, json_array_get_string_element(array, i));
+	}
+	if (json_object_has_member(obj, FWUPD_RESULT_KEY_GUID)) {
+		JsonArray *array = json_object_get_array_member(obj, FWUPD_RESULT_KEY_GUID);
+		for (guint i = 0; i < json_array_get_length(array); i++)
+			fwupd_device_add_guid(self, json_array_get_string_element(array, i));
+	}
+	if (json_object_has_member(obj, FWUPD_RESULT_KEY_ISSUES)) {
+		JsonArray *array = json_object_get_array_member(obj, FWUPD_RESULT_KEY_ISSUES);
+		for (guint i = 0; i < json_array_get_length(array); i++)
+			fwupd_device_add_issue(self, json_array_get_string_element(array, i));
+	}
+	if (json_object_has_member(obj, FWUPD_RESULT_KEY_FLAGS)) {
+		JsonArray *array = json_object_get_array_member(obj, FWUPD_RESULT_KEY_FLAGS);
+		for (guint i = 0; i < json_array_get_length(array); i++) {
+			const gchar *tmp = json_array_get_string_element(array, i);
+			fwupd_device_add_flag(self, fwupd_device_flag_from_string(tmp));
+		}
+	}
+	if (json_object_has_member(obj, FWUPD_RESULT_KEY_PROBLEMS)) {
+		JsonArray *array = json_object_get_array_member(obj, FWUPD_RESULT_KEY_PROBLEMS);
+		for (guint i = 0; i < json_array_get_length(array); i++) {
+			const gchar *tmp = json_array_get_string_element(array, i);
+			fwupd_device_add_problem(self, fwupd_device_flag_from_string(tmp));
+		}
+	}
+	if (json_object_has_member(obj, "VendorIds")) {
+		JsonArray *array = json_object_get_array_member(obj, "VendorIds");
+		for (guint i = 0; i < json_array_get_length(array); i++)
+			fwupd_device_add_vendor_id(self, json_array_get_string_element(array, i));
+	}
+	if (json_object_has_member(obj, "Protocols")) {
+		JsonArray *array = json_object_get_array_member(obj, "Protocols");
+		for (guint i = 0; i < json_array_get_length(array); i++)
+			fwupd_device_add_protocol(self, json_array_get_string_element(array, i));
+	}
+	if (json_object_has_member(obj, "Icons")) {
+		JsonArray *array = json_object_get_array_member(obj, "Icons");
+		for (guint i = 0; i < json_array_get_length(array); i++)
+			fwupd_device_add_icon(self, json_array_get_string_element(array, i));
+	}
+	if (json_object_has_member(obj, "Checksums")) {
+		JsonArray *array = json_object_get_array_member(obj, "Checksums");
+		for (guint i = 0; i < json_array_get_length(array); i++)
+			fwupd_device_add_checksum(self, json_array_get_string_element(array, i));
+	}
+
+	/* success */
+	return TRUE;
+#else
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "json-glib version too old");
+	return FALSE;
+#endif
+}
+
+/**
  * fwupd_device_to_json:
  * @self: a #FwupdDevice
  * @builder: (not nullable): a JSON builder
