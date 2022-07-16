@@ -2935,7 +2935,7 @@ fwupd_device_to_json_full(FwupdDevice *self, JsonBuilder *builder, FwupdDeviceFl
 	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_PLUGIN, priv->plugin);
 	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_PROTOCOL, priv->protocol);
 	if (priv->protocols->len > 1) { /* --> 0 when bumping API */
-		json_builder_set_member_name(builder, "VendorIds");
+		json_builder_set_member_name(builder, "Protocols");
 		json_builder_begin_array(builder);
 		for (guint i = 0; i < priv->protocols->len; i++) {
 			const gchar *tmp = g_ptr_array_index(priv->protocols, i);
