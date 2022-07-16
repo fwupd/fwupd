@@ -796,6 +796,7 @@ LIBFWUPD_1.8.2 {
 
 LIBFWUPD_1.8.3 {
   global:
+    fwupd_device_from_json;
     fwupd_security_attr_remove_flag;
   local: *;
 } LIBFWUPD_1.8.2;
