@@ -3276,7 +3276,7 @@ fu_util_security_as_json(FuUtilPrivate *priv,
 
 	/* devices */
 	devices_issues = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
-	for (guint i = 0; i < devices->len; i++) {
+	for (guint i = 0; devices != NULL && i < devices->len; i++) {
 		FwupdDevice *device = g_ptr_array_index(devices, i);
 		GPtrArray *issues = fwupd_device_get_issues(device);
 		if (issues->len == 0)
@@ -3419,9 +3419,13 @@ fu_util_security(FuUtilPrivate *priv, gchar **values, GError **error)
 	}
 
 	/* the "also" */
-	devices = fwupd_client_get_devices(priv->client, priv->cancellable, error);
-	if (devices == NULL)
-		return FALSE;
+	devices = fwupd_client_get_devices(priv->client, priv->cancellable, &error_local);
+	if (devices == NULL) {
+		if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO)) {
+			g_propagate_error(error, g_steal_pointer(&error_local));
+			return FALSE;
+		}
+	}
 
 	/* not for human consumption */
 	if (priv->as_json)
@@ -3448,7 +3452,7 @@ fu_util_security(FuUtilPrivate *priv, gchar **values, GError **error)
 	}
 
 	/* known CVEs */
-	if (devices->len > 0) {
+	if (devices != NULL && devices->len > 0) {
 		g_autofree gchar *estr = fu_util_security_issues_to_string(devices);
 		if (estr != NULL)
 			g_print("%s", estr);
