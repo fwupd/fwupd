@@ -7096,23 +7096,18 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_NO_PROFILE);
 	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "read-config");
-	if (flags & FU_ENGINE_LOAD_FLAG_REMOTES)
-		fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "read-remotes");
+	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "read-remotes");
 	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "ensure-client-cert");
 	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "write-db");
 	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "load-plugins");
 	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "load-quirks");
-	if (flags & FU_ENGINE_LOAD_FLAG_HWINFO)
-		fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "load-hwinfo");
+	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "load-hwinfo");
 	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "load-appstream");
-	if (flags & FU_ENGINE_LOAD_FLAG_COLDPLUG)
-		fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "backend-setup");
+	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "backend-setup");
 	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "plugins-init");
 	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "hwid-quirks");
-	if (flags & FU_ENGINE_LOAD_FLAG_COLDPLUG) {
-		fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "plugins-setup");
-		fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 3, "plugins-coldplug");
-	}
+	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "plugins-setup");
+	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 3, "plugins-coldplug");
 	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 90, "backend-coldplug");
 	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "update-history-db");
 
@@ -7171,8 +7166,8 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 			g_prefix_error(error, "Failed to load remotes: ");
 			return FALSE;
 		}
-		fu_progress_step_done(progress);
 	}
+	fu_progress_step_done(progress);
 
 	/* create client certificate */
 	fu_engine_ensure_client_certificate(self);
@@ -7228,10 +7223,9 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 	fu_progress_step_done(progress);
 
 	/* load SMBIOS and the hwids */
-	if (flags & FU_ENGINE_LOAD_FLAG_HWINFO) {
+	if (flags & FU_ENGINE_LOAD_FLAG_HWINFO)
 		fu_context_load_hwinfo(self->ctx, NULL);
-		fu_progress_step_done(progress);
-	}
+	fu_progress_step_done(progress);
 
 	/* load AppStream metadata */
 	if (!fu_engine_load_metadata_store(self, flags, error)) {
@@ -7297,8 +7291,8 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 					    "all backends failed setup");
 			return FALSE;
 		}
-		fu_progress_step_done(progress);
 	}
+	fu_progress_step_done(progress);
 
 	/* delete old data files */
 	if (!fu_engine_cleanup_state(error)) {
@@ -7345,13 +7339,15 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 		fu_progress_step_done(progress);
 		fu_engine_plugins_coldplug(self, fu_progress_get_child(progress));
 		fu_progress_step_done(progress);
+	} else {
+		fu_progress_step_done(progress);
+		fu_progress_step_done(progress);
 	}
 
 	/* coldplug backends */
-	if (flags & FU_ENGINE_LOAD_FLAG_COLDPLUG) {
+	if (flags & FU_ENGINE_LOAD_FLAG_COLDPLUG)
 		fu_engine_backends_coldplug(self, fu_progress_get_child(progress));
-		fu_progress_step_done(progress);
-	}
+	fu_progress_step_done(progress);
 
 	/* update the db for devices that were updated during the reboot */
 	if (!fu_engine_update_history_database(self, error))
