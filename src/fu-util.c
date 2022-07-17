@@ -550,7 +550,7 @@ fu_util_get_devices_as_json(FuUtilPrivate *priv, GPtrArray *devs, GError **error
 
 		/* add to builder */
 		json_builder_begin_object(builder);
-		fwupd_device_to_json(dev, builder);
+		fwupd_device_to_json_full(dev, builder, FWUPD_DEVICE_FLAG_TRUSTED);
 		json_builder_end_object(builder);
 	}
 	json_builder_end_array(builder);
@@ -1135,7 +1135,7 @@ fu_util_get_details_as_json(FuUtilPrivate *priv, GPtrArray *devs, GError **error
 	for (guint i = 0; i < devs->len; i++) {
 		FwupdDevice *dev = g_ptr_array_index(devs, i);
 		json_builder_begin_object(builder);
-		fwupd_device_to_json(dev, builder);
+		fwupd_device_to_json_full(dev, builder, FWUPD_DEVICE_FLAG_TRUSTED);
 		json_builder_end_object(builder);
 	}
 	json_builder_end_array(builder);
@@ -1727,7 +1727,7 @@ fu_util_get_results_as_json(FuUtilPrivate *priv, FwupdDevice *res, GError **erro
 {
 	g_autoptr(JsonBuilder) builder = json_builder_new();
 	json_builder_begin_object(builder);
-	fwupd_device_to_json(res, builder);
+	fwupd_device_to_json_full(res, builder, FWUPD_DEVICE_FLAG_TRUSTED);
 	json_builder_end_object(builder);
 	return fu_util_print_builder(builder, error);
 }
@@ -1962,7 +1962,7 @@ fu_util_get_updates_as_json(FuUtilPrivate *priv, GPtrArray *devices, GError **er
 
 		/* add to builder */
 		json_builder_begin_object(builder);
-		fwupd_device_to_json(dev, builder);
+		fwupd_device_to_json_full(dev, builder, FWUPD_DEVICE_FLAG_TRUSTED);
 		json_builder_end_object(builder);
 	}
 	json_builder_end_array(builder);
@@ -3289,7 +3289,7 @@ fu_util_security_as_json(FuUtilPrivate *priv,
 		for (guint i = 0; i < devices_issues->len; i++) {
 			FwupdDevice *device = g_ptr_array_index(devices_issues, i);
 			json_builder_begin_object(builder);
-			fwupd_device_to_json(device, builder);
+			fwupd_device_to_json_full(device, builder, FWUPD_DEVICE_FLAG_TRUSTED);
 			json_builder_end_object(builder);
 		}
 		json_builder_end_array(builder);
