@@ -16,7 +16,7 @@ jobs:
       uses: jimschubert/query-tag-action@v2
     - name: Build
       id: test
-      uses: vmactions/freebsd-vm@v0.1.6
+      uses: vmactions/freebsd-vm@v0.2.0
       with:
         usesh: true
         mem: 8192
