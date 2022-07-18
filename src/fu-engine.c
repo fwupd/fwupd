@@ -2410,6 +2410,16 @@ fu_engine_install_release(FuEngine *self,
 	if (request != NULL)
 		feature_flags = fu_engine_request_get_feature_flags(request);
 
+	/* add the checksum of the container blob if not already set */
+	if (fwupd_release_get_checksums(FWUPD_RELEASE(release))->len == 0) {
+		GChecksumType checksum_types[] = {G_CHECKSUM_SHA256, G_CHECKSUM_SHA1, 0};
+		for (guint i = 0; checksum_types[i] != 0; i++) {
+			g_autofree gchar *checksum =
+			    g_compute_checksum_for_bytes(checksum_types[i], blob_cab);
+			fwupd_release_add_checksum(FWUPD_RELEASE(release), checksum);
+		}
+	}
+
 	/* not in bootloader mode */
 	device = g_object_ref(fu_release_get_device(release));
 	if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
