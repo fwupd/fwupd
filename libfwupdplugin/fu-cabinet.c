@@ -249,7 +249,7 @@ fu_cabinet_parse_release(FuCabinet *self, XbNode *release, GError **error)
 		release_flags |= FWUPD_RELEASE_FLAG_TRUSTED_METADATA;
 
 	/* look for source artifact first */
-	artifact = xb_node_query_first(release, "artifacts/artifact[@type='binary']", NULL);
+	artifact = xb_node_query_first(release, "artifacts/artifact[@type='source']", NULL);
 	if (artifact != NULL) {
 		csum_filename = xb_node_query_text(artifact, "filename", NULL);
 		csum_tmp = xb_node_query_first(artifact, "checksum[@type='sha256']", NULL);
