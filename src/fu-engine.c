@@ -4359,6 +4359,7 @@ fu_engine_get_details_for_bytes(FuEngine *self,
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GPtrArray) components = NULL;
 	g_autoptr(GPtrArray) details = NULL;
+	g_autoptr(GPtrArray) checksums = g_ptr_array_new_with_free_func(g_free);
 	g_autoptr(XbSilo) silo = NULL;
 
 	silo = fu_engine_get_silo_from_blob(self, blob, error);
@@ -4386,9 +4387,13 @@ fu_engine_get_details_for_bytes(FuEngine *self,
 				       error))
 		return NULL;
 
+	/* calculate the checksums of the blob */
+	for (guint i = 0; checksum_types[i] != 0; i++)
+		g_ptr_array_add(checksums, g_compute_checksum_for_bytes(checksum_types[i], blob));
+
 	/* does this exist in any enabled remote */
-	for (guint i = 0; checksum_types[i] != 0; i++) {
-		g_autofree gchar *csum = g_compute_checksum_for_bytes(checksum_types[i], blob);
+	for (guint i = 0; i < checksums->len; i++) {
+		const gchar *csum = g_ptr_array_index(checksums, i);
 		remote_id = fu_engine_get_remote_id_for_checksum(self, csum);
 		if (remote_id != NULL)
 			break;
@@ -4399,16 +4404,23 @@ fu_engine_get_details_for_bytes(FuEngine *self,
 	for (guint i = 0; i < components->len; i++) {
 		XbNode *component = g_ptr_array_index(components, i);
 		FuDevice *dev;
+		FwupdRelease *rel;
 		dev = fu_engine_get_result_from_component(self, request, component, error);
 		if (dev == NULL)
 			return NULL;
+		rel = fu_device_get_release_default(dev);
 		if (remote_id != NULL) {
-			FwupdRelease *rel = fu_device_get_release_default(dev);
 			fwupd_release_set_remote_id(rel, remote_id);
 			fu_device_add_flag(dev, FWUPD_DEVICE_FLAG_SUPPORTED);
 		}
 		if (fu_device_has_internal_flag(dev, FU_DEVICE_INTERNAL_FLAG_MD_SET_VERFMT))
 			fu_engine_md_refresh_device_verfmt(self, dev, component);
+
+		/* add the checksum of the container blob */
+		for (guint j = 0; j < checksums->len; j++) {
+			const gchar *csum = g_ptr_array_index(checksums, j);
+			fwupd_release_add_checksum(rel, csum);
+		}
 
 		/* if this matched a device on the system, ensure all the
 		 * requirements passed before setting UPDATABLE */
