@@ -22,7 +22,7 @@
 #include "fu-mutex.h"
 #include "fu-security-attr.h"
 
-#define FU_HISTORY_CURRENT_SCHEMA_VERSION 7
+#define FU_HISTORY_CURRENT_SCHEMA_VERSION 8
 
 static void
 fu_history_finalize(GObject *object);
@@ -131,6 +131,11 @@ fu_history_device_from_stmt(sqlite3_stmt *stmt)
 	tmp = (const gchar *)sqlite3_column_text(stmt, 15);
 	if (tmp != NULL)
 		fwupd_release_set_protocol(release, tmp);
+
+	/* release_id */
+	tmp = (const gchar *)sqlite3_column_text(stmt, 16);
+	if (tmp != NULL)
+		fwupd_release_set_id(release, tmp);
 	return device;
 }
 
@@ -183,7 +188,8 @@ fu_history_create_database(FuHistory *self, GError **error)
 			  "version_old TEXT,"
 			  "version_new TEXT,"
 			  "checksum_device TEXT DEFAULT NULL,"
-			  "protocol TEXT DEFAULT NULL);"
+			  "protocol TEXT DEFAULT NULL,"
+			  "release_id TEXT DEFAULT NULL);"
 			  "CREATE TABLE IF NOT EXISTS approved_firmware ("
 			  "checksum TEXT);"
 			  "CREATE TABLE IF NOT EXISTS blocked_firmware ("
@@ -230,7 +236,7 @@ fu_history_migrate_database_v1(FuHistory *self, GError **error)
 			  "device_id, update_state, update_error, filename, "
 			  "display_name, plugin, device_created, device_modified, "
 			  "checksum, flags, metadata, guid_default, version_old, "
-			  "version_new, NULL, NULL FROM history_old;"
+			  "version_new, NULL, NULL, NULL FROM history_old;"
 			  "DROP TABLE history_old;",
 			  NULL,
 			  NULL,
@@ -339,6 +345,20 @@ fu_history_migrate_database_v6(FuHistory *self, GError **error)
 	return TRUE;
 }
 
+static gboolean
+fu_history_migrate_database_v7(FuHistory *self, GError **error)
+{
+	gint rc;
+	rc = sqlite3_exec(self->db,
+			  "ALTER TABLE history ADD COLUMN release_id TEXT DEFAULT NULL;",
+			  NULL,
+			  NULL,
+			  NULL);
+	if (rc != SQLITE_OK)
+		g_debug("ignoring database error: %s", sqlite3_errmsg(self->db));
+	return TRUE;
+}
+
 /* returns 0 if database is not initialized */
 static guint
 fu_history_get_schema_version(FuHistory *self)
@@ -398,6 +418,10 @@ fu_history_create_or_migrate(FuHistory *self, guint schema_ver, GError **error)
 	/* fall through */
 	case 6:
 		if (!fu_history_migrate_database_v6(self, error))
+			return FALSE;
+	/* fall through */
+	case 7:
+		if (!fu_history_migrate_database_v7(self, error))
 			return FALSE;
 		break;
 	default:
@@ -993,7 +1017,8 @@ fu_history_get_devices(FuHistory *self, GError **error)
 				"version_new, "
 				"version_old, "
 				"checksum_device, "
-				"protocol FROM history "
+				"protocol, "
+				"release_id FROM history "
 				"ORDER BY device_modified ASC;",
 				-1,
 				&stmt,
