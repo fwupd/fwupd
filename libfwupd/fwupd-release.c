@@ -429,7 +429,7 @@ fwupd_release_has_category(FwupdRelease *self, const gchar *category)
  * fwupd_release_get_checksums:
  * @self: a #FwupdRelease
  *
- * Gets the release checksums.
+ * Gets the release container checksums.
  *
  * Returns: (element-type utf8) (transfer none): the checksums, which may be empty
  *
@@ -446,7 +446,7 @@ fwupd_release_get_checksums(FwupdRelease *self)
 /**
  * fwupd_release_add_checksum:
  * @self: a #FwupdRelease
- * @checksum: (not nullable): the update checksum
+ * @checksum: (not nullable): the update container checksum
  *
  * Sets the update checksum.
  *
@@ -471,7 +471,7 @@ fwupd_release_add_checksum(FwupdRelease *self, const gchar *checksum)
  * @self: a #FwupdRelease
  * @checksum: (not nullable): the update checksum
  *
- * Finds out if the release has the update checksum.
+ * Finds out if the release has the update container checksum.
  *
  * Returns: %TRUE if the release matches
  *
