@@ -257,6 +257,12 @@ fu_release_load_artifact(FuRelease *self, XbNode *artifact, GError **error)
 
 	/* filename */
 	filename = xb_node_query_text(artifact, "filename", NULL);
+	if (!g_str_has_suffix(filename, ".cab")) {
+		/* some firmware archives was signed with <artifact type="binary"> where the
+		 * checksums were the *content* checksums, not the *container* checksum */
+		g_debug("ignoring non-binary artifact entry: %s", filename);
+		return TRUE;
+	}
 	if (filename != NULL)
 		fwupd_release_set_filename(FWUPD_RELEASE(self), filename);
 
@@ -742,7 +748,7 @@ fu_release_load(FuRelease *self,
 		fwupd_release_add_flag(FWUPD_RELEASE(self), FWUPD_RELEASE_FLAG_IS_COMMUNITY);
 
 	/* this is the more modern way to do this */
-	artifact = xb_node_query_first(rel, "artifacts/artifact", NULL);
+	artifact = xb_node_query_first(rel, "artifacts/artifact[@type='binary']", NULL);
 	if (artifact != NULL) {
 		if (!fu_release_load_artifact(self, artifact, error))
 			return FALSE;
