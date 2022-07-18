@@ -1568,6 +1568,7 @@ fu_engine_get_details_added_func(gconstpointer user_data)
 	FuDevice *device_tmp;
 	FwupdRelease *release;
 	gboolean ret;
+	g_autofree gchar *checksum_sha256 = NULL;
 	g_autofree gchar *filename = NULL;
 	g_autoptr(FuDevice) device = fu_device_new(self->ctx);
 	g_autoptr(FuEngine) engine = fu_engine_new();
@@ -1610,6 +1611,7 @@ fu_engine_get_details_added_func(gconstpointer user_data)
 	blob_cab = fu_bytes_get_contents(filename, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(blob_cab);
+	checksum_sha256 = g_compute_checksum_for_bytes(G_CHECKSUM_SHA256, blob_cab);
 	devices = fu_engine_get_details_for_bytes(engine, request, blob_cab, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(devices);
@@ -1619,6 +1621,7 @@ fu_engine_get_details_added_func(gconstpointer user_data)
 	release = fu_device_get_release_default(device_tmp);
 	g_assert_nonnull(release);
 	g_assert_cmpstr(fwupd_release_get_version(release), ==, "1.2.3");
+	g_assert_true(fwupd_release_has_checksum(release, checksum_sha256));
 }
 
 static void
