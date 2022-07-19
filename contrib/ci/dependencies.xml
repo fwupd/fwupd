@@ -1374,6 +1374,24 @@
       <package variant="x86_64" />
     </distro>
   </dependency>
+  <dependency type="build" id="python3-packaging">
+    <distro id="fedora">
+      <package variant="x86_64" />
+      <package variant="aarch64" />
+    </distro>
+    <distro id="arch">
+      <package variant="x86_64">python-packaging</package>
+    </distro>
+    <distro id="debian">
+      <control />
+      <package variant="x86_64" />
+      <package variant="i386" />
+    </distro>
+    <distro id="ubuntu">
+      <control />
+      <package variant="x86_64" />
+    </distro>
+  </dependency>
   <dependency type="build" id="python3-requests">
     <distro id="debian">
       <package variant="s390x">qemu-user</package>
