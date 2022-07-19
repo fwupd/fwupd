@@ -3223,6 +3223,20 @@ fu_device_add_flag(FuDevice *self, FwupdDeviceFlags flag)
 	/* do not let devices be updated until back in range */
 	if (flag & FWUPD_DEVICE_FLAG_UNREACHABLE)
 		fu_device_add_problem(self, FWUPD_DEVICE_PROBLEM_UNREACHABLE);
+
+	/* if the parent device is being detached (so it re-enumerates) then also wait for the
+	 * children to reappear if the child is using the parent node */
+	if (flag & FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG) {
+		GPtrArray *children = fu_device_get_children(self);
+		for (guint i = 0; i < children->len; i++) {
+			FuDevice *child_tmp = g_ptr_array_index(children, i);
+			if (fu_device_has_internal_flag(
+				child_tmp,
+				FU_DEVICE_INTERNAL_FLAG_USE_PARENT_FOR_OPEN)) {
+				fu_device_add_flag(child_tmp, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+			}
+		}
+	}
 }
 
 typedef struct {
