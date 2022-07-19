@@ -11,7 +11,7 @@ import subprocess
 import os
 import shutil
 import xml.etree.ElementTree as ET
-from distutils.version import LooseVersion as l_ver
+from packaging.version import Version
 
 FWUPDTOOL = "/bin/fwupdtool"
 
@@ -74,10 +74,10 @@ class FwupdHeads:
             return EXIT_CODES["NOTHING_TO_DO"]
         for release in heads_metadata_info.find("releases").findall("release"):
             release_ver = release.get("version")
-            if self.heads_version == "heads" or l_ver(release_ver) > l_ver(
+            if self.heads_version == "heads" or Version(release_ver) > Version(
                 self.heads_version
             ):
-                if not self.heads_update_version or l_ver(release_ver) > l_ver(
+                if not self.heads_update_version or Version(release_ver) > Version(
                     self.heads_update_version
                 ):
                     self.heads_update_url = release.find("location").text

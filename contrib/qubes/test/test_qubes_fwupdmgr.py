@@ -15,7 +15,7 @@ import sys
 import imp
 import io
 import platform
-from distutils.version import LooseVersion as l_ver
+from packaging.version import Version
 from pathlib import Path
 from test.fwupd_logs import UPDATE_INFO, GET_DEVICES, DMI_DECODE
 from test.fwupd_logs import GET_DEVICES_NO_UPDATES, GET_DEVICES_NO_VERSION
@@ -439,7 +439,7 @@ class TestQubesFwupdmgr(unittest.TestCase):
         self.q._get_dom0_devices()
         downgrades = self.q._parse_downgrades(self.q.dom0_devices_info)
         new_version = downgrades[number]["Version"]
-        self.assertGreater(l_ver(old_version), l_ver(new_version))
+        self.assertGreater(Version(old_version), Version(new_version))
 
     @unittest.skipUnless(
         check_whonix_updatevm() and device_connected_usbvm(), REQUIRED_DEV
@@ -469,7 +469,7 @@ class TestQubesFwupdmgr(unittest.TestCase):
             raw = usbvm_device_info.read()
             downgrades = self.q._parse_downgrades(raw)
         new_version = downgrades[number]["Version"]
-        self.assertGreater(l_ver(old_version), l_ver(new_version))
+        self.assertGreater(Version(old_version), Version(new_version))
         old_version = None
         new_version = None
         self.q._get_dom0_updates()
@@ -501,7 +501,7 @@ class TestQubesFwupdmgr(unittest.TestCase):
                 break
         if new_version is None:
             self.fail("Test device not found")
-        self.assertLess(l_ver(old_version), l_ver(new_version))
+        self.assertLess(Version(old_version), Version(new_version))
 
     @unittest.skipUnless(device_connected_usbvm(), REQUIRED_DEV)
     def test_downgrade_firmware_usbvm(self):
@@ -528,7 +528,7 @@ class TestQubesFwupdmgr(unittest.TestCase):
             raw = usbvm_device_info.read()
             downgrades = self.q._parse_downgrades(raw)
         new_version = downgrades[number]["Version"]
-        self.assertGreater(l_ver(old_version), l_ver(new_version))
+        self.assertGreater(Version(old_version), Version(new_version))
 
     def test_parse_downgrades(self):
         downgrades = self.q._parse_downgrades(GET_DEVICES)
@@ -617,7 +617,7 @@ class TestQubesFwupdmgr(unittest.TestCase):
                 break
         if new_version is None:
             self.fail("Test device not found")
-        self.assertLess(l_ver(old_version), l_ver(new_version))
+        self.assertLess(Version(old_version), Version(new_version))
 
     @unittest.skipUnless(device_connected_usbvm(), REQUIRED_DEV)
     def test_update_firmware_usbvm(self):
@@ -652,7 +652,7 @@ class TestQubesFwupdmgr(unittest.TestCase):
                 break
         if new_version is None:
             self.fail("Test device not found")
-        self.assertLess(l_ver(old_version), l_ver(new_version))
+        self.assertLess(Version(old_version), Version(new_version))
 
     @unittest.skipUnless(check_usbvm(), REQUIRED_USBVM)
     def test_get_usbvm_devices(self):

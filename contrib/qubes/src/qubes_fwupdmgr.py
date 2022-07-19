@@ -16,7 +16,7 @@ import sys
 import xml.etree.ElementTree as ET
 
 from pathlib import Path
-from distutils.version import LooseVersion as l_ver
+from packaging.version import Version
 
 FWUPD_QUBES_DIR = "/usr/share/qubes-fwupd"
 
@@ -492,7 +492,7 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
         self.name = updates_dict[vm_name][choice]["Name"]
         self.version = updates_dict[vm_name][choice]["Releases"][0]["Version"]
         for ver_check in updates_dict[vm_name][choice]["Releases"]:
-            if l_ver(ver_check["Version"]) >= l_ver(self.version):
+            if Version(ver_check["Version"]) >= Version(self.version):
                 self.version = ver_check["Version"]
                 self.url = ver_check["Url"]
                 self.sha = ver_check["Checksum"]
@@ -539,7 +539,7 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
             raise ValueError("No vendor information in firmware metainfo.")
         if vendor not in dmi_info:
             raise ValueError("Wrong firmware provider.")
-        if not downgrade and l_ver(version) <= l_ver(self.dmi_version):
+        if not downgrade and Version(version) <= Version(self.dmi_version):
             raise ValueError(f"{version} < {self.dmi_version} Downgrade not allowed")
 
     def _get_dom0_devices(self):
@@ -587,7 +587,7 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
                 )
                 current_version = device["Version"]
                 for update in device["Releases"]:
-                    if l_ver(update["Version"]) > current_version:
+                    if Version(update["Version"]) > current_version:
                         self.usbvm_updates_list[-1]["Releases"].append(
                             {
                                 "Version": update["Version"],
@@ -666,7 +666,7 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
                                 "Checksum": downgrade["Checksum"][-1],
                             }
                             for downgrade in device["Releases"]
-                            if l_ver(downgrade["Version"]) < l_ver(version)
+                            if Version(downgrade["Version"]) < Version(version)
                         ],
                     }
                 )
