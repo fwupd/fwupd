@@ -684,6 +684,7 @@ fu_util_display_current_message(FuUtilPrivate *priv)
 typedef struct {
 	guint nr_success;
 	guint nr_failed;
+	guint nr_missing;
 	JsonBuilder *builder;
 	const gchar *name;
 } FuUtilDeviceTestHelper;
@@ -856,6 +857,7 @@ fu_util_device_test_step(FuUtilPrivate *priv,
 		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
 			json_builder_set_member_name(helper->builder, "info");
 			json_builder_add_string_value(helper->builder, error_local->message);
+			helper->nr_missing++;
 			return TRUE;
 		}
 		if (!priv->as_json) {
@@ -1022,6 +1024,15 @@ fu_util_device_test(FuUtilPrivate *priv, gchar **values, GError **error)
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "Some of the tests failed");
+		return FALSE;
+	}
+	if (helper.nr_missing > 0) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "%u devices required for %u tests were not found",
+			    helper.nr_missing,
+			    g_strv_length(values));
 		return FALSE;
 	}
 	if (helper.nr_success == 0) {
