@@ -622,7 +622,10 @@ static gboolean
 fu_plugin_device_attach(FuPlugin *self, FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuDevice *proxy = fu_device_get_proxy_with_fallback(device);
+	FuDeviceClass *proxy_klass = FU_DEVICE_GET_CLASS(proxy);
 	g_autoptr(FuDeviceLocker) locker = NULL;
+	if (proxy_klass->attach == NULL)
+		return TRUE;
 	locker = fu_device_locker_new(proxy, error);
 	if (locker == NULL)
 		return FALSE;
@@ -633,7 +636,10 @@ static gboolean
 fu_plugin_device_detach(FuPlugin *self, FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuDevice *proxy = fu_device_get_proxy_with_fallback(device);
+	FuDeviceClass *proxy_klass = FU_DEVICE_GET_CLASS(proxy);
 	g_autoptr(FuDeviceLocker) locker = NULL;
+	if (proxy_klass->detach == NULL)
+		return TRUE;
 	locker = fu_device_locker_new(proxy, error);
 	if (locker == NULL)
 		return FALSE;
@@ -644,7 +650,10 @@ static gboolean
 fu_plugin_device_activate(FuPlugin *self, FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuDevice *proxy = fu_device_get_proxy_with_fallback(device);
+	FuDeviceClass *proxy_klass = FU_DEVICE_GET_CLASS(proxy);
 	g_autoptr(FuDeviceLocker) locker = NULL;
+	if (proxy_klass->activate == NULL)
+		return TRUE;
 	locker = fu_device_locker_new(proxy, error);
 	if (locker == NULL)
 		return FALSE;
