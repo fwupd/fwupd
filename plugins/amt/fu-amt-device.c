@@ -270,6 +270,15 @@ fu_amt_device_get_provisioning_state(FuAmtDevice *self, guint8 *state, GError **
 }
 
 static gboolean
+fu_amt_device_open(FuDevice *device, GError **error)
+{
+	/* open then create context */
+	if (!FU_DEVICE_CLASS(fu_amt_device_parent_class)->open(device, error))
+		return FALSE;
+	return fu_mei_device_connect(FU_MEI_DEVICE(device), FU_AMT_DEVICE_MEI_IAMTHIF, 0, error);
+}
+
+static gboolean
 fu_amt_device_setup(FuDevice *device, GError **error)
 {
 	FuAmtDevice *self = FU_AMT_DEVICE(device);
@@ -278,10 +287,6 @@ fu_amt_device_setup(FuDevice *device, GError **error)
 	g_autofree struct amt_host_if_resp_header *response = NULL;
 	g_autoptr(GString) version_bl = g_string_new(NULL);
 	g_autoptr(GString) version_fw = g_string_new(NULL);
-
-	/* create context */
-	if (!fu_mei_device_connect(FU_MEI_DEVICE(self), FU_AMT_DEVICE_MEI_IAMTHIF, 0, error))
-		return FALSE;
 
 	/* check version */
 	if (!fu_amt_device_host_if_call(self,
@@ -365,5 +370,6 @@ static void
 fu_amt_device_class_init(FuAmtDeviceClass *klass)
 {
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
+	klass_device->open = fu_amt_device_open;
 	klass_device->setup = fu_amt_device_setup;
 }
