@@ -382,7 +382,7 @@ fu_corsair_device_write_firmware(FuDevice *device,
 	g_autoptr(GBytes) firmware_bytes = fu_firmware_get_bytes(firmware, error);
 
 	if (firmware_bytes == NULL) {
-		g_prefix_error(error, "cannot get firmware data");
+		g_prefix_error(error, "cannot get firmware data: ");
 		return FALSE;
 	}
 
@@ -395,7 +395,7 @@ fu_corsair_device_write_firmware(FuDevice *device,
 				      fu_progress_get_child(progress),
 				      flags,
 				      error)) {
-		g_prefix_error(error, "cannot write firmware");
+		g_prefix_error(error, "cannot write firmware: ");
 		return FALSE;
 	}
 
