@@ -106,11 +106,11 @@ fu_corsair_device_probe(FuDevice *device, GError **error)
 static gboolean
 fu_corsair_poll_subdevice(FuDevice *device, gboolean *subdevice_added, GError **error)
 {
+	FuCorsairDevice *self = FU_CORSAIR_DEVICE(device);
+	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(device));
 	guint32 subdevices;
 	g_autoptr(FuCorsairDevice) child = NULL;
-	FuCorsairDevice *self = FU_CORSAIR_DEVICE(device);
 	g_autoptr(FuCorsairBp) child_bp = NULL;
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(device));
 
 	if (!fu_corsair_bp_get_property(self->bp,
 					FU_CORSAIR_BP_PROPERTY_SUBDEVICES,
