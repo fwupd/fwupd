@@ -2194,6 +2194,7 @@ fu_engine_multiple_rels_func(gconstpointer user_data)
 
 	/* install them */
 	fu_progress_reset(progress);
+	fu_engine_set_system_acquiesce_delay(engine, 0);
 	ret = fu_engine_install_releases(engine,
 					 request,
 					 releases,
@@ -3658,6 +3659,7 @@ fu_plugin_composite_func(gconstpointer user_data)
 	g_assert_cmpint(releases->len, ==, 3);
 
 	/* install the cab */
+	fu_engine_set_system_acquiesce_delay(engine, 0);
 	ret = fu_engine_install_releases(engine,
 					 request,
 					 releases,
