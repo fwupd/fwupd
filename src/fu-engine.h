@@ -213,6 +213,8 @@ fu_engine_get_releases_for_device(FuEngine *self,
 
 /* for the self tests */
 void
+fu_engine_set_system_acquiesce_delay(FuEngine *self, guint system_acquiesce_delay);
+void
 fu_engine_add_device(FuEngine *self, FuDevice *device);
 void
 fu_engine_add_plugin(FuEngine *self, FuPlugin *plugin);

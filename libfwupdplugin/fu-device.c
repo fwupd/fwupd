@@ -235,6 +235,8 @@ fu_device_internal_flag_to_string(FuDeviceInternalFlags flag)
 		return "auto-pause-polling";
 	if (flag == FU_DEVICE_INTERNAL_FLAG_ONLY_WAIT_FOR_REPLUG)
 		return "only-wait-for-replug";
+	if (flag == FU_DEVICE_INTERNAL_FLAG_REQUIRES_ACQUIESCE)
+		return "requires-acquiesce";
 	return NULL;
 }
 
@@ -303,6 +305,8 @@ fu_device_internal_flag_from_string(const gchar *flag)
 		return FU_DEVICE_INTERNAL_AUTO_PAUSE_POLLING;
 	if (g_strcmp0(flag, "only-wait-for-replug") == 0)
 		return FU_DEVICE_INTERNAL_FLAG_ONLY_WAIT_FOR_REPLUG;
+	if (g_strcmp0(flag, "requires-acquiesce") == 0)
+		return FU_DEVICE_INTERNAL_FLAG_REQUIRES_ACQUIESCE;
 	return FU_DEVICE_INTERNAL_FLAG_UNKNOWN;
 }
 

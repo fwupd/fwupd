@@ -89,6 +89,7 @@ fu_usb_device_init(FuUsbDevice *device)
 {
 	FuUsbDevicePrivate *priv = GET_PRIVATE(device);
 	priv->configuration = -1;
+	fu_device_add_internal_flag(FU_DEVICE(device), FU_DEVICE_INTERNAL_FLAG_REQUIRES_ACQUIESCE);
 #ifdef HAVE_GUSB
 	fu_device_retry_add_recovery(FU_DEVICE(device),
 				     G_USB_DEVICE_ERROR,
