@@ -869,7 +869,8 @@ fu_smbios_setup(FuSmbios *self, GError **error)
 				return FALSE;
 			}
 			g_debug("ignoring %s", error_local->message);
-		}
+		} else
+			return TRUE;
 	}
 
 	/* the values the kernel parsed; these are world-readable */
