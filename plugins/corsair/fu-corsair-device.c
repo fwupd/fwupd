@@ -130,7 +130,6 @@ fu_corsair_poll_subdevice(FuDevice *device, gboolean *subdevice_added, GError **
 
 	child = fu_corsair_device_new(self, child_bp);
 	fu_device_add_instance_id(FU_DEVICE(child), self->subdevice_id);
-	fu_device_set_physical_id(FU_DEVICE(child), fu_device_get_physical_id(device));
 	fu_device_set_logical_id(FU_DEVICE(child), "subdevice");
 	fu_device_add_internal_flag(FU_DEVICE(child), FU_DEVICE_INTERNAL_FLAG_USE_PARENT_FOR_OPEN);
 
