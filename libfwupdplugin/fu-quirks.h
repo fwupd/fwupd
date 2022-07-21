@@ -277,6 +277,14 @@ fu_quirks_add_possible_key(FuQuirks *self, const gchar *possible_key);
  **/
 #define FU_QUIRKS_REMOVE_DELAY "RemoveDelay"
 /**
+ * FU_QUIRKS_ACQUIESCE_DELAY:
+ *
+ * The quirk key for the device removal delay in milliseconds.
+ *
+ * Since: 1.8.3
+ **/
+#define FU_QUIRKS_ACQUIESCE_DELAY "AcquiesceDelay"
+/**
  * FU_QUIRKS_INHIBIT:
  *
  * The quirk key to inhibit the UPDATABLE flag and to set an update error.

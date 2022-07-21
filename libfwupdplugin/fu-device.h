@@ -466,15 +466,6 @@ typedef guint64 FuDeviceInternalFlags;
  */
 #define FU_DEVICE_INTERNAL_FLAG_ONLY_WAIT_FOR_REPLUG (1ull << 25)
 
-/**
- * FU_DEVICE_INTERNAL_FLAG_REQUIRES_ACQUIESCE:
- *
- * Wait for the system to return to idle with no hotplug events pending.
- *
- * Since: 1.8.3
- */
-#define FU_DEVICE_INTERNAL_FLAG_REQUIRES_ACQUIESCE (1ull << 26)
-
 /* accessors */
 gchar *
 fu_device_to_string(FuDevice *self);
@@ -594,6 +585,10 @@ guint
 fu_device_get_remove_delay(FuDevice *self);
 void
 fu_device_set_remove_delay(FuDevice *self, guint remove_delay);
+guint
+fu_device_get_acquiesce_delay(FuDevice *self);
+void
+fu_device_set_acquiesce_delay(FuDevice *self, guint acquiesce_delay);
 void
 fu_device_set_firmware_size(FuDevice *self, guint64 size);
 void

@@ -1062,6 +1062,8 @@ LIBFWUPDPLUGIN_1.8.2 {
 
 LIBFWUPDPLUGIN_1.8.3 {
   global:
+    fu_device_get_acquiesce_delay;
+    fu_device_set_acquiesce_delay;
     fu_memread_uint24_safe;
   local: *;
 } LIBFWUPDPLUGIN_1.8.2;
