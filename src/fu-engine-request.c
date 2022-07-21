@@ -101,8 +101,18 @@ fu_engine_request_init(FuEngineRequest *self)
 }
 
 static void
+fu_engine_request_finalize(GObject *obj)
+{
+	FuEngineRequest *self = FU_ENGINE_REQUEST(obj);
+	g_free(self->locale);
+	G_OBJECT_CLASS(fu_engine_request_parent_class)->finalize(obj);
+}
+
+static void
 fu_engine_request_class_init(FuEngineRequestClass *klass)
 {
+	GObjectClass *object_class = G_OBJECT_CLASS(klass);
+	object_class->finalize = fu_engine_request_finalize;
 }
 
 FuEngineRequest *
