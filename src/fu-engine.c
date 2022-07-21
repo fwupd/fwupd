@@ -114,6 +114,7 @@ struct _FuEngine {
 	GPtrArray *local_monitors; /* (element-type GFileMonitor) */
 	GMainLoop *acquiesce_loop;
 	guint acquiesce_id;
+	guint acquiesce_delay;
 };
 
 enum {
@@ -387,7 +388,7 @@ static gboolean
 fu_engine_acquiesce_timeout_cb(gpointer user_data)
 {
 	FuEngine *self = FU_ENGINE(user_data);
-	g_debug("system acquiesced");
+	g_debug("system acquiesced after %ums", self->acquiesce_delay);
 	g_main_loop_quit(self->acquiesce_loop);
 	self->acquiesce_id = 0;
 	return G_SOURCE_REMOVE;
@@ -401,6 +402,8 @@ fu_engine_acquiesce_reset(FuEngine *self)
 	g_debug("resetting system acquiesce timeout");
 	if (self->acquiesce_id != 0)
 		g_source_remove(self->acquiesce_id);
+	self->acquiesce_id =
+	    g_timeout_add(self->acquiesce_delay, fu_engine_acquiesce_timeout_cb, self);
 }
 
 static void
@@ -408,6 +411,7 @@ fu_engine_wait_for_acquiesce(FuEngine *self, guint acquiesce_delay)
 {
 	if (acquiesce_delay == 0)
 		return;
+	self->acquiesce_delay = acquiesce_delay;
 	self->acquiesce_id = g_timeout_add(acquiesce_delay, fu_engine_acquiesce_timeout_cb, self);
 	g_main_loop_run(self->acquiesce_loop);
 }
@@ -2585,7 +2589,7 @@ fu_engine_install_release(FuEngine *self,
 		fu_device_set_update_state(device, FWUPD_UPDATE_STATE_SUCCESS);
 
 	/* wait for the system to acquiesce if required */
-	if (fu_device_get_acquiesce_delay(device_orig)) {
+	if (fu_device_get_acquiesce_delay(device_orig) > 0) {
 		fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_BUSY);
 		fu_engine_wait_for_acquiesce(self, fu_device_get_acquiesce_delay(device_orig));
 	}
