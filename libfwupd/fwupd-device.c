@@ -1284,7 +1284,7 @@ guint32
 fwupd_device_get_battery_level(FwupdDevice *self)
 {
 	FwupdDevicePrivate *priv = GET_PRIVATE(self);
-	g_return_val_if_fail(FWUPD_IS_DEVICE(self), FWUPD_BATTERY_LEVEL_INVALID);
+	g_return_val_if_fail(FWUPD_IS_DEVICE(self), G_MAXUINT);
 	return priv->battery_level;
 }
 
