@@ -412,6 +412,17 @@ fu_engine_set_system_acquiesce_delay(FuEngine *self, guint system_acquiesce_dela
 }
 
 static void
+fu_engine_wait_for_system_acquiesce(FuEngine *self)
+{
+	if (self->system_acquiesce_delay == 0)
+		return;
+	self->system_acquiesce_id = g_timeout_add(self->system_acquiesce_delay,
+						  fu_engine_system_acquiesce_timeout_cb,
+						  self);
+	g_main_loop_run(self->system_acquiesce_loop);
+}
+
+static void
 fu_engine_device_added_cb(FuDeviceList *device_list, FuDevice *device, FuEngine *self)
 {
 	fu_engine_watch_device(self, device);
@@ -2067,7 +2078,6 @@ fu_engine_install_releases(FuEngine *self,
 			   FwupdInstallFlags flags,
 			   GError **error)
 {
-	gboolean requires_acquiesce = FALSE;
 	g_autoptr(FuIdleLocker) locker = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(GPtrArray) devices_new = NULL;
@@ -2091,17 +2101,6 @@ fu_engine_install_releases(FuEngine *self,
 	if (!fu_engine_composite_prepare(self, devices, error)) {
 		g_prefix_error(error, "failed to prepare composite action: ");
 		return FALSE;
-	}
-
-	/* does anything require us to wait for the system to become idle */
-	for (guint i = 0; i < releases->len; i++) {
-		FuRelease *release = g_ptr_array_index(releases, i);
-		FuDevice *device = fu_release_get_device(release);
-		if (fu_device_has_internal_flag(device,
-						FU_DEVICE_INTERNAL_FLAG_REQUIRES_ACQUIESCE)) {
-			requires_acquiesce = TRUE;
-			break;
-		}
 	}
 
 	/* all authenticated, so install all the things */
@@ -2153,15 +2152,6 @@ fu_engine_install_releases(FuEngine *self,
 	if (!fu_engine_composite_cleanup(self, devices_new, error)) {
 		g_prefix_error(error, "failed to cleanup composite action: ");
 		return FALSE;
-	}
-
-	/* wait for the system to acquiesce if not in self tests */
-	if (requires_acquiesce && self->system_acquiesce_delay > 0) {
-		fu_engine_set_status(self, FWUPD_STATUS_DEVICE_BUSY);
-		self->system_acquiesce_id = g_timeout_add(self->system_acquiesce_delay,
-							  fu_engine_system_acquiesce_timeout_cb,
-							  self);
-		g_main_loop_run(self->system_acquiesce_loop);
 	}
 
 	/* success */
@@ -2603,6 +2593,13 @@ fu_engine_install_release(FuEngine *self,
 	/* mark success unless needs a reboot */
 	if (fu_device_get_update_state(device) != FWUPD_UPDATE_STATE_NEEDS_REBOOT)
 		fu_device_set_update_state(device, FWUPD_UPDATE_STATE_SUCCESS);
+
+	/* wait for the system to acquiesce if not in self tests */
+	if (fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_REQUIRES_ACQUIESCE) ||
+	    fu_device_has_internal_flag(device_orig, FU_DEVICE_INTERNAL_FLAG_REQUIRES_ACQUIESCE)) {
+		fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_BUSY);
+		fu_engine_wait_for_system_acquiesce(self);
+	}
 
 	/* make the UI update */
 	fu_engine_emit_changed(self);
