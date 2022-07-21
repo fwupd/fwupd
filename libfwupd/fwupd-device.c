@@ -495,6 +495,7 @@ fwupd_device_set_parent(FwupdDevice *self, FwupdDevice *parent)
 {
 	FwupdDevicePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FWUPD_IS_DEVICE(self));
+	g_return_if_fail(self != parent);
 
 	if (priv->parent != NULL)
 		g_object_remove_weak_pointer(G_OBJECT(priv->parent), (gpointer *)&priv->parent);
@@ -533,6 +534,9 @@ void
 fwupd_device_add_child(FwupdDevice *self, FwupdDevice *child)
 {
 	FwupdDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FWUPD_IS_DEVICE(self));
+	g_return_if_fail(FWUPD_IS_DEVICE(child));
+	g_return_if_fail(self != child);
 
 	/* add if the child does not already exist */
 	for (guint i = 0; i < priv->children->len; i++) {
