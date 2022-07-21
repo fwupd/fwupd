@@ -3558,7 +3558,7 @@ fu_device_ensure_battery_inhibit(FuDevice *self)
 guint
 fu_device_get_battery_level(FuDevice *self)
 {
-	g_return_val_if_fail(FU_IS_DEVICE(self), FWUPD_BATTERY_LEVEL_INVALID);
+	g_return_val_if_fail(FU_IS_DEVICE(self), G_MAXUINT);
 
 	/* use the parent if the child is unset */
 	if (fu_device_has_internal_flag(self, FU_DEVICE_INTERNAL_FLAG_USE_PARENT_FOR_BATTERY) &&
