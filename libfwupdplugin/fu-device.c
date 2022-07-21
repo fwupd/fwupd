@@ -3562,7 +3562,7 @@ fu_device_get_battery_level(FuDevice *self)
 
 	/* use the parent if the child is unset */
 	if (fu_device_has_internal_flag(self, FU_DEVICE_INTERNAL_FLAG_USE_PARENT_FOR_BATTERY) &&
-	    fu_device_get_battery_level(self) == FWUPD_BATTERY_LEVEL_INVALID) {
+	    fwupd_device_get_battery_level(FWUPD_DEVICE(self)) == FWUPD_BATTERY_LEVEL_INVALID) {
 		FuDevice *parent = fu_device_get_parent(self);
 		if (parent != NULL)
 			return fu_device_get_battery_level(parent);
