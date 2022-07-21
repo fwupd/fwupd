@@ -58,9 +58,20 @@ def test_markdown(debug):
 
 
 def test_meson(debug):
-    from importlib.metadata import version
+    from importlib.metadata import version, PackageNotFoundError
 
-    new_enough = version("meson") >= MINIMUM_MESON
+    try:
+        new_enough = version("meson") >= MINIMUM_MESON
+    except PackageNotFoundError:
+        import subprocess
+
+        try:
+            ver = (
+                subprocess.check_output(["meson", "--version"]).strip().decode("utf-8")
+            )
+            new_enough = ver >= MINIMUM_MESON
+        except FileNotFoundError:
+            new_enough = False
     if not new_enough:
         print("meson must be installed/upgraded")
         pip_install_package(debug, "meson")
