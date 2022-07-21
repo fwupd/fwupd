@@ -1184,7 +1184,7 @@ fu_logitech_hidpp_device_write_firmware(FuDevice *device,
 	/* flash hardware -- the first data byte is the fw entity */
 	data = g_bytes_get_data(fw, &sz);
 	if (priv->cached_fw_entity != data[0]) {
-		g_warning("updating cached entity 0x%x with 0x%x", priv->cached_fw_entity, data[0]);
+		g_debug("updating cached entity 0x%x with 0x%x", priv->cached_fw_entity, data[0]);
 		priv->cached_fw_entity = data[0];
 	}
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_WRITE);
