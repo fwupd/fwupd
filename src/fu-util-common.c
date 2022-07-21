@@ -2204,6 +2204,7 @@ fu_security_attr_append_str(FwupdSecurityAttr *attr,
 static gchar *
 fu_util_security_event_to_string(FwupdSecurityAttr *attr)
 {
+	g_autofree gchar *name = NULL;
 	struct {
 		const gchar *appstream_id;
 		FwupdSecurityAttrResult result_old;
@@ -2323,31 +2324,34 @@ fu_util_security_event_to_string(FwupdSecurityAttr *attr)
 
 	/* disappeared */
 	if (fwupd_security_attr_get_result(attr) == FWUPD_SECURITY_ATTR_RESULT_UNKNOWN) {
+		name = fu_security_attr_get_name(attr);
 		return g_strdup_printf(
 		    /* TRANSLATORS: %1 refers to some kind of security test, e.g. "SPI BIOS region".
 		       %2 refers to a result value, e.g. "Invalid" */
 		    _("%s disappeared: %s"),
-		    fu_security_attr_get_name(attr),
+		    name,
 		    fu_security_attr_result_to_string(
 			fwupd_security_attr_get_result_fallback(attr)));
 	}
 
 	/* appeared */
 	if (fwupd_security_attr_get_result_fallback(attr) == FWUPD_SECURITY_ATTR_RESULT_UNKNOWN) {
+		name = fu_security_attr_get_name(attr);
 		return g_strdup_printf(
 		    /* TRANSLATORS: %1 refers to some kind of security test, e.g. "Encrypted RAM".
 		       %2 refers to a result value, e.g. "Invalid" */
 		    _("%s appeared: %s"),
-		    fu_security_attr_get_name(attr),
+		    name,
 		    fu_security_attr_result_to_string(fwupd_security_attr_get_result(attr)));
 	}
 
 	/* fall back to something sensible */
+	name = fu_security_attr_get_name(attr);
 	return g_strdup_printf(
 	    /* TRANSLATORS: %1 refers to some kind of security test, e.g. "UEFI platform key".
 	     * %2 and %3 refer to results value, e.g. "Valid" and "Invalid" */
 	    _("%s changed: %s → %s"),
-	    fu_security_attr_get_name(attr),
+	    name,
 	    fu_security_attr_result_to_string(fwupd_security_attr_get_result_fallback(attr)),
 	    fu_security_attr_result_to_string(fwupd_security_attr_get_result(attr)));
 }
