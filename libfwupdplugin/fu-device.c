@@ -57,6 +57,7 @@ typedef struct {
 	GRWLock parent_guids_mutex;
 	GPtrArray *parent_physical_ids; /* (nullable) */
 	guint remove_delay;		/* ms */
+	guint acquiesce_delay;		/* ms */
 	guint request_cnts[FWUPD_REQUEST_KIND_LAST];
 	gint order;
 	guint priority;
@@ -235,8 +236,6 @@ fu_device_internal_flag_to_string(FuDeviceInternalFlags flag)
 		return "auto-pause-polling";
 	if (flag == FU_DEVICE_INTERNAL_FLAG_ONLY_WAIT_FOR_REPLUG)
 		return "only-wait-for-replug";
-	if (flag == FU_DEVICE_INTERNAL_FLAG_REQUIRES_ACQUIESCE)
-		return "requires-acquiesce";
 	return NULL;
 }
 
@@ -305,8 +304,6 @@ fu_device_internal_flag_from_string(const gchar *flag)
 		return FU_DEVICE_INTERNAL_AUTO_PAUSE_POLLING;
 	if (g_strcmp0(flag, "only-wait-for-replug") == 0)
 		return FU_DEVICE_INTERNAL_FLAG_ONLY_WAIT_FOR_REPLUG;
-	if (g_strcmp0(flag, "requires-acquiesce") == 0)
-		return FU_DEVICE_INTERNAL_FLAG_REQUIRES_ACQUIESCE;
 	return FU_DEVICE_INTERNAL_FLAG_UNKNOWN;
 }
 
@@ -1296,6 +1293,19 @@ fu_device_add_child(FuDevice *self, FuDevice *child)
 		}
 	}
 
+	/* ensure the parent has the MAX() of the children's acquiesce delay  */
+	children = fu_device_get_children(self);
+	for (guint i = 0; i < children->len; i++) {
+		FuDevice *child_tmp = g_ptr_array_index(children, i);
+		guint acquiesce_delay = fu_device_get_acquiesce_delay(child_tmp);
+		if (acquiesce_delay > priv->acquiesce_delay) {
+			g_debug("setting acquiesce delay to %ums as child is greater than %ums",
+				acquiesce_delay,
+				priv->acquiesce_delay);
+			priv->acquiesce_delay = acquiesce_delay;
+		}
+	}
+
 	/* copy from main device if unset */
 	if (fu_device_get_physical_id(child) == NULL && fu_device_get_physical_id(self) != NULL)
 		fu_device_set_physical_id(child, fu_device_get_physical_id(self));
@@ -1307,6 +1317,8 @@ fu_device_add_child(FuDevice *self, FuDevice *child)
 		fu_device_set_vendor(child, fu_device_get_vendor(self));
 	if (priv_child->remove_delay == 0 && priv->remove_delay != 0)
 		fu_device_set_remove_delay(child, priv->remove_delay);
+	if (priv_child->acquiesce_delay == 0 && priv->acquiesce_delay != 0)
+		fu_device_set_acquiesce_delay(child, priv->acquiesce_delay);
 	if (fu_device_get_vendor_ids(child)->len == 0) {
 		GPtrArray *vendor_ids = fu_device_get_vendor_ids(self);
 		for (guint i = 0; i < vendor_ids->len; i++) {
@@ -1737,6 +1749,12 @@ fu_device_set_quirk_kv(FuDevice *self, const gchar *key, const gchar *value, GEr
 		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT, error))
 			return FALSE;
 		fu_device_set_remove_delay(self, tmp);
+		return TRUE;
+	}
+	if (g_strcmp0(key, FU_QUIRKS_ACQUIESCE_DELAY) == 0) {
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT, error))
+			return FALSE;
+		fu_device_set_acquiesce_delay(self, tmp);
 		return TRUE;
 	}
 	if (g_strcmp0(key, FU_QUIRKS_VERSION_FORMAT) == 0) {
@@ -3456,6 +3474,47 @@ fu_device_set_remove_delay(FuDevice *self, guint remove_delay)
 }
 
 /**
+ * fu_device_get_acquiesce_delay:
+ * @self: a #FuDevice
+ *
+ * Returns the time the daemon should wait for devices to finish hotplugging
+ * after the update has completed.
+ *
+ * Returns: time in milliseconds
+ *
+ * Since: 1.8.3
+ **/
+guint
+fu_device_get_acquiesce_delay(FuDevice *self)
+{
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_DEVICE(self), 0);
+	return priv->acquiesce_delay;
+}
+
+/**
+ * fu_device_set_acquiesce_delay:
+ * @self: a #FuDevice
+ * @acquiesce_delay: the value in milliseconds
+ *
+ * Sets the time the daemon should wait for devices to finish hotplugging
+ * after the update has completed.
+ *
+ * Devices subclassing from [class@FuUsbDevice] and [class@FuUdevDevice] use
+ * a value of 2,500ms, and other devices use 50ms by default. This can be also
+ * be set using `AcquiesceDelay=` in a quirk file.
+ *
+ * Since: 1.8.3
+ **/
+void
+fu_device_set_acquiesce_delay(FuDevice *self, guint acquiesce_delay)
+{
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_DEVICE(self));
+	priv->acquiesce_delay = acquiesce_delay;
+}
+
+/**
  * fu_device_set_update_state:
  * @self: a #FuDevice
  * @update_state: the state, e.g. %FWUPD_UPDATE_STATE_PENDING
@@ -3622,6 +3681,8 @@ fu_device_add_string(FuDevice *self, guint idt, GString *str)
 		fu_string_append(str, idt + 1, "ProxyGuid", priv->proxy_guid);
 	if (priv->remove_delay != 0)
 		fu_string_append_ku(str, idt + 1, "RemoveDelay", priv->remove_delay);
+	if (priv->acquiesce_delay != 0)
+		fu_string_append_ku(str, idt + 1, "AcquiesceDelay", priv->acquiesce_delay);
 	if (priv->custom_flags != NULL)
 		fu_string_append(str, idt + 1, "CustomFlags", priv->custom_flags);
 	if (priv->firmware_gtype != G_TYPE_INVALID) {
@@ -5496,6 +5557,7 @@ fu_device_init(FuDevice *self)
 	priv->possible_plugins = g_ptr_array_new_with_free_func(g_free);
 	priv->retry_recs = g_ptr_array_new_with_free_func(g_free);
 	priv->instance_hash = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
+	priv->acquiesce_delay = 50; /* ms */
 	g_rw_lock_init(&priv->parent_guids_mutex);
 	g_rw_lock_init(&priv->metadata_mutex);
 	priv->notify_flags_handler_id = g_signal_connect(FWUPD_DEVICE(self),

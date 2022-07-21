@@ -1273,6 +1273,7 @@ fu_device_private_flags_func(void)
 			==,
 			"FuDevice:\n"
 			"  Flags:                none\n"
+			"  AcquiesceDelay:       50\n"
 			"  CustomFlags:          baz\n"
 			"  PrivateFlags:         foo\n");
 }

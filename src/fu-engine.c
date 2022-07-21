@@ -112,9 +112,8 @@ struct _FuEngine {
 	gchar *host_security_id;
 	FuSecurityAttrs *host_security_attrs;
 	GPtrArray *local_monitors; /* (element-type GFileMonitor) */
-	GMainLoop *system_acquiesce_loop;
-	guint system_acquiesce_id;
-	guint system_acquiesce_delay;
+	GMainLoop *acquiesce_loop;
+	guint acquiesce_id;
 };
 
 enum {
@@ -385,41 +384,32 @@ fu_engine_ensure_device_lid_inhibit(FuEngine *self, FuDevice *device)
 }
 
 static gboolean
-fu_engine_system_acquiesce_timeout_cb(gpointer user_data)
+fu_engine_acquiesce_timeout_cb(gpointer user_data)
 {
 	FuEngine *self = FU_ENGINE(user_data);
-	g_debug("system acquiesced after %ums", self->system_acquiesce_delay);
-	g_main_loop_quit(self->system_acquiesce_loop);
-	self->system_acquiesce_id = 0;
+	g_debug("system acquiesced");
+	g_main_loop_quit(self->acquiesce_loop);
+	self->acquiesce_id = 0;
 	return G_SOURCE_REMOVE;
 }
 
 static void
-fu_engine_system_acquiesce_reset(FuEngine *self)
+fu_engine_acquiesce_reset(FuEngine *self)
 {
-	if (!g_main_loop_is_running(self->system_acquiesce_loop))
+	if (!g_main_loop_is_running(self->acquiesce_loop))
 		return;
 	g_debug("resetting system acquiesce timeout");
-	if (self->system_acquiesce_id != 0)
-		g_source_remove(self->system_acquiesce_id);
-}
-
-void
-fu_engine_set_system_acquiesce_delay(FuEngine *self, guint system_acquiesce_delay)
-{
-	self->system_acquiesce_delay = system_acquiesce_delay;
-	fu_engine_system_acquiesce_reset(self);
+	if (self->acquiesce_id != 0)
+		g_source_remove(self->acquiesce_id);
 }
 
 static void
-fu_engine_wait_for_system_acquiesce(FuEngine *self)
+fu_engine_wait_for_acquiesce(FuEngine *self, guint acquiesce_delay)
 {
-	if (self->system_acquiesce_delay == 0)
+	if (acquiesce_delay == 0)
 		return;
-	self->system_acquiesce_id = g_timeout_add(self->system_acquiesce_delay,
-						  fu_engine_system_acquiesce_timeout_cb,
-						  self);
-	g_main_loop_run(self->system_acquiesce_loop);
+	self->acquiesce_id = g_timeout_add(acquiesce_delay, fu_engine_acquiesce_timeout_cb, self);
+	g_main_loop_run(self->acquiesce_loop);
 }
 
 static void
@@ -428,7 +418,7 @@ fu_engine_device_added_cb(FuDeviceList *device_list, FuDevice *device, FuEngine 
 	fu_engine_watch_device(self, device);
 	fu_engine_ensure_device_battery_inhibit(self, device);
 	fu_engine_ensure_device_lid_inhibit(self, device);
-	fu_engine_system_acquiesce_reset(self);
+	fu_engine_acquiesce_reset(self);
 	g_signal_emit(self, signals[SIGNAL_DEVICE_ADDED], 0, device);
 }
 
@@ -446,7 +436,7 @@ static void
 fu_engine_device_removed_cb(FuDeviceList *device_list, FuDevice *device, FuEngine *self)
 {
 	fu_engine_device_runner_device_removed(self, device);
-	fu_engine_system_acquiesce_reset(self);
+	fu_engine_acquiesce_reset(self);
 	g_signal_handlers_disconnect_by_data(device, self);
 	g_signal_emit(self, signals[SIGNAL_DEVICE_REMOVED], 0, device);
 }
@@ -456,7 +446,7 @@ fu_engine_device_changed_cb(FuDeviceList *device_list, FuDevice *device, FuEngin
 {
 	fu_engine_watch_device(self, device);
 	fu_engine_emit_device_changed(self, fu_device_get_id(device));
-	fu_engine_system_acquiesce_reset(self);
+	fu_engine_acquiesce_reset(self);
 }
 
 static gchar *
@@ -2594,11 +2584,10 @@ fu_engine_install_release(FuEngine *self,
 	if (fu_device_get_update_state(device) != FWUPD_UPDATE_STATE_NEEDS_REBOOT)
 		fu_device_set_update_state(device, FWUPD_UPDATE_STATE_SUCCESS);
 
-	/* wait for the system to acquiesce if not in self tests */
-	if (fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_REQUIRES_ACQUIESCE) ||
-	    fu_device_has_internal_flag(device_orig, FU_DEVICE_INTERNAL_FLAG_REQUIRES_ACQUIESCE)) {
+	/* wait for the system to acquiesce if required */
+	if (fu_device_get_acquiesce_delay(device_orig)) {
 		fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_BUSY);
-		fu_engine_wait_for_system_acquiesce(self);
+		fu_engine_wait_for_acquiesce(self, fu_device_get_acquiesce_delay(device_orig));
 	}
 
 	/* make the UI update */
@@ -7730,8 +7719,7 @@ fu_engine_init(FuEngine *self)
 	self->local_monitors = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 	self->runtime_versions = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
 	self->compile_versions = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
-	self->system_acquiesce_loop = g_main_loop_new(NULL, FALSE);
-	self->system_acquiesce_delay = 2500; /* ms */
+	self->acquiesce_loop = g_main_loop_new(NULL, FALSE);
 
 	fu_context_set_runtime_versions(self->ctx, self->runtime_versions);
 	fu_context_set_compile_versions(self->ctx, self->compile_versions);
@@ -7856,9 +7844,9 @@ fu_engine_finalize(GObject *obj)
 		g_hash_table_unref(self->approved_firmware);
 	if (self->blocked_firmware != NULL)
 		g_hash_table_unref(self->blocked_firmware);
-	if (self->system_acquiesce_id != 0)
-		g_source_remove(self->system_acquiesce_id);
-	g_main_loop_unref(self->system_acquiesce_loop);
+	if (self->acquiesce_id != 0)
+		g_source_remove(self->acquiesce_id);
+	g_main_loop_unref(self->acquiesce_loop);
 
 	g_free(self->host_machine_id);
 	g_free(self->host_security_id);
