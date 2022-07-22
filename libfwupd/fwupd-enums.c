@@ -145,6 +145,8 @@ fwupd_device_flag_to_string(FwupdDeviceFlags device_flag)
 		return "wait-for-replug";
 	if (device_flag == FWUPD_DEVICE_FLAG_IGNORE_VALIDATION)
 		return "ignore-validation";
+	if (device_flag == FWUPD_DEVICE_FLAG_TRUSTED)
+		return "trusted";
 	if (device_flag == FWUPD_DEVICE_FLAG_ANOTHER_WRITE_REQUIRED)
 		return "another-write-required";
 	if (device_flag == FWUPD_DEVICE_FLAG_NO_AUTO_INSTANCE_IDS)
@@ -262,6 +264,8 @@ fwupd_device_flag_from_string(const gchar *device_flag)
 		return FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG;
 	if (g_strcmp0(device_flag, "ignore-validation") == 0)
 		return FWUPD_DEVICE_FLAG_IGNORE_VALIDATION;
+	if (g_strcmp0(device_flag, "trusted") == 0)
+		return FWUPD_DEVICE_FLAG_TRUSTED;
 	if (g_strcmp0(device_flag, "another-write-required") == 0)
 		return FWUPD_DEVICE_FLAG_ANOTHER_WRITE_REQUIRED;
 	if (g_strcmp0(device_flag, "no-auto-instance-ids") == 0)
