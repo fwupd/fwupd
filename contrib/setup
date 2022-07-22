@@ -158,12 +158,6 @@ detect_os "$@"
 
 detect_selinux
 
-#always setup pre-commit
-setup_precommit
-
-#always setup git environment
-setup_git
-
 #if interactive install build deps and prepare environment
 if [ -t 2 ]; then
     case $OS in
@@ -176,9 +170,15 @@ if [ -t 2 ]; then
             ;;
     esac
     setup_unsafe_polkit_rules
-    check_markdown
-    check_meson
-    setup_vscode
     rename_branch
+fi
+check_markdown
+setup_vscode
+setup_git
+check_meson
+setup_precommit
+
+#needs to be after pre-commit is sourced
+if [ -t 2 ]; then
     setup_prepush
 fi
