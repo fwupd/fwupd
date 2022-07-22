@@ -1,0 +1,575 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the fwupd package.
+#
+# Translators:
+msgid ""
+msgstr ""
+"Project-Id-Version: fwupd\n"
+"Report-Msgid-Bugs-To: \n"
+"Language-Team: Georgian (http://www.transifex.com/freedesktop/fwupd/language/ka/)\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: ka\n"
+"Plural-Forms: nplurals=2; plural=(n!=1);\n"
+
+#. TRANSLATORS: duration in seconds
+#, c-format
+msgid "%u second"
+msgid_plural "%u seconds"
+msgstr[0] "%u წამი"
+msgstr[1] "%u წამი"
+
+#. TRANSLATORS: the age of the metadata
+msgid "Age"
+msgstr "ასაკი"
+
+#. TRANSLATORS: on some systems certain devices have to have matching
+#. versions,
+#. * e.g. the EFI driver for a given network card cannot be different
+msgid "All devices of the same type will be updated at the same time"
+msgstr "ერთი ტიპის მოწყობილობების ერთდროულად განახლდება"
+
+#. TRANSLATORS: is not the main firmware stream
+msgid "Alternate branch"
+msgstr "ალტერნატიული ბრენჩი"
+
+#. TRANSLATORS: waiting for user to authenticate
+msgid "Authenticating…"
+msgstr "ავთენტიკაცია…"
+
+#. TRANSLATORS: refers to the battery inside the peripheral device
+msgid "Battery"
+msgstr "ელემენტი"
+
+#. TRANSLATORS: version cannot be installed due to policy
+msgid "Blocked version"
+msgstr "დაბლოკილი ვერსია"
+
+#. TRANSLATORS: firmware version of bootloader
+msgid "Bootloader Version"
+msgstr "ჩამტვირთავი კოდის ვერსია"
+
+#. TRANSLATORS: the stream of firmware, e.g. nonfree or open-source
+msgid "Branch"
+msgstr "ბრენჩი"
+
+#. TRANSLATORS: this is to abort the interactive prompt
+msgid "Cancel"
+msgstr "გაუქმება"
+
+#. TRANSLATORS: this is when a device ctrl+c's a watch
+msgid "Cancelled"
+msgstr "შეწყვეტილია"
+
+#. TRANSLATORS: this is when the daemon state changes
+msgid "Changed"
+msgstr "შეცვლილია"
+
+#. TRANSLATORS: remote checksum
+msgid "Checksum"
+msgstr "საკონტროლო რიცხვი"
+
+#. TRANSLATORS: error message
+msgid "Command not found"
+msgstr "ბრძანება ვერ ვიპოვე"
+
+#. TRANSLATORS: is not supported by the vendor
+msgid "Community supported"
+msgstr "საზგადოების მიერ მხარდაჭერილი"
+
+#. TRANSLATORS: when the update was built
+msgid "Created"
+msgstr "შექმნილია"
+
+#. TRANSLATORS: the release urgency
+msgid "Critical"
+msgstr "კრიტიკული"
+
+#. TRANSLATORS: Device supports some form of checksum verification
+msgid "Cryptographic hash verification is available"
+msgstr "ხელმისაწვდომია ჰეშის კრიპტოგრაფიული შემოწმება"
+
+#. TRANSLATORS: version number of current firmware
+msgid "Current version"
+msgstr "მიმდინარე ვერსია"
+
+#. TRANSLATORS: for the --verbose arg
+msgid "Debugging Options"
+msgstr "გამართვის პარამეტრები"
+
+#. TRANSLATORS: decompressing the firmware file
+msgid "Decompressing…"
+msgstr "გაშლა…"
+
+#. TRANSLATORS: multiline description of device
+msgid "Description"
+msgstr "აღწერილობა"
+
+#. TRANSLATORS: more details about the update link
+msgid "Details"
+msgstr "დეტალები"
+
+#. TRANSLATORS: ID for hardware, typically a SHA1 sum
+msgid "Device ID"
+msgstr "მოწყობილობის ID"
+
+#. TRANSLATORS: Device supports a safety mechanism for flashing
+msgid "Device can recover flash failures"
+msgstr "მოწყობილობას შეუძლია ფლეშის ავარიის გადატანა"
+
+#. TRANSLATORS: Is locked and can be unlocked
+msgid "Device is locked"
+msgstr "მოწყობილობა ჩაკეტილია"
+
+#. TRANSLATORS: Device remains usable during update
+msgid "Device is usable for the duration of the update"
+msgstr "მოწყობილობა განახლების დროსაც გამოყენებადია"
+
+#. TRANSLATORS: Device supports a safety mechanism for flashing
+msgid "Device stages updates"
+msgstr "მოწყობილობის დონის განახლება"
+
+#. TRANSLATORS: Device update needs to be separately activated
+msgid "Device update needs activation"
+msgstr "მოწყობილობის განახლებას აქტივაცია ესაჭიროება"
+
+#. TRANSLATORS: Device will not return after update completes
+msgid "Device will not re-appear after update completes"
+msgstr "განახლების დასრულების შემდეგ მოწყობილობა აღარ გამოჩნდება"
+
+#. TRANSLATORS: Suffix: the HSI result
+#. TRANSLATORS: Plugin is inactive and not used
+msgid "Disabled"
+msgstr "გამორთულია"
+
+#. TRANSLATORS: downloading from a remote server
+msgid "Downloading…"
+msgstr "გადმოწერა…"
+
+#. TRANSLATORS: length of time the update takes to apply
+msgid "Duration"
+msgstr "ხანგრძლოვობა"
+
+#. TRANSLATORS: Suffix: the HSI result
+#. TRANSLATORS: Plugin is active and in use
+#. TRANSLATORS: if the remote is enabled
+msgid "Enabled"
+msgstr "ჩართულია"
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Encrypted"
+msgstr "დაშიფრული"
+
+#. TRANSLATORS: Title: Memory contents are encrypted, e.g. Intel TME
+msgid "Encrypted RAM"
+msgstr "დაშიფრული RAM"
+
+#. TRANSLATORS: erasing contents of the flash chips
+msgid "Erasing…"
+msgstr "წაშლა…"
+
+#. TRANSLATORS: exit after we've started up, used for user profiling
+msgid "Exit after a small delay"
+msgstr "გამოსვლამდე მცირე დაყოვნება"
+
+#. TRANSLATORS: exit straight away, used for automatic profiling
+msgid "Exit after the engine has loaded"
+msgstr "გამოსვლა ძრავის ჩატვირთვის შემდეგ"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME"
+msgstr "ფაილის სახელი"
+
+#. TRANSLATORS: Suffix: the fallback HSI result
+#. TRANSLATORS: the update state of the specific device
+msgid "Failed"
+msgstr "შეცდომა"
+
+#. TRANSLATORS: the user didn't read the man page
+msgid "Failed to parse arguments"
+msgstr "არგუმენტების დამუშავების შეცდომა"
+
+#. TRANSLATORS: filename of the local file
+msgid "Filename"
+msgstr "ფაილის სახელი"
+
+#. TRANSLATORS: Title: if we can verify the firmware checksums
+msgid "Firmware attestation"
+msgstr "მიკროკოდის ატესტაცია"
+
+#. TRANSLATORS: Title: if firmware updates are available
+msgid "Firmware updates"
+msgstr "მიკროკოდის განახლებები"
+
+#. TRANSLATORS: description of plugin state, e.g. disabled
+msgid "Flags"
+msgstr "ალმები"
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Found"
+msgstr "ნაპოვნი"
+
+#. TRANSLATORS: global ID common to all similar hardware
+msgid "GUID"
+msgid_plural "GUIDs"
+msgstr[0] "GUID"
+msgstr[1] "GUIDs"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgctxt "A single GUID"
+msgid "GUID"
+msgstr "GUID"
+
+#. TRANSLATORS: the hardware is waiting to be replugged
+msgid "Hardware is waiting to be replugged"
+msgstr "აპარატურა თავიდან შეერთებას ელოდება"
+
+#. TRANSLATORS: the release urgency
+msgid "High"
+msgstr "მაღალი"
+
+#. TRANSLATORS: daemon is inactive
+msgid "Idle…"
+msgstr "უქმე…"
+
+#. TRANSLATORS: Ignore validation safety checks when flashing this device
+msgid "Ignore validation safety checks"
+msgstr "დადასტურების შემოწმების ტესტების იგნორი"
+
+#. TRANSLATORS: length of time the update takes to apply
+msgid "Install Duration"
+msgstr "დაყენების დრო"
+
+#. TRANSLATORS: Install composite firmware on the parent before the child
+msgid "Install to parent device first"
+msgstr "ჯერ მშობელ მოწყობილობაზე დაყენება"
+
+#. TRANSLATORS: Title: CET = Control-flow Enforcement Technology,
+#. * active means being used by the OS
+msgid "Intel CET Active"
+msgstr "Intel CET ჩართულია"
+
+#. TRANSLATORS: Title: SMAP = Supervisor Mode Access Prevention
+msgid "Intel SMAP"
+msgstr "Intel SMAP"
+
+#. TRANSLATORS: Device cannot be removed easily
+msgid "Internal device"
+msgstr "შიდა მოწყობილობა"
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Invalid"
+msgstr "არასწორი"
+
+#. TRANSLATORS: version is older
+msgid "Is downgrade"
+msgstr "ვერსია ჩამოიწევა"
+
+#. TRANSLATORS: Is currently in bootloader mode
+msgid "Is in bootloader mode"
+msgstr "ჩამტვირთავი კოდის რეჟიმშია"
+
+#. TRANSLATORS: version is newer
+msgid "Is upgrade"
+msgstr "გაუმჯობესდება"
+
+#. TRANSLATORS: issue fixed with the release, e.g. CVE
+msgid "Issue"
+msgid_plural "Issues"
+msgstr[0] "Პრობლემა"
+msgstr[1] "საკითხები"
+
+#. TRANSLATORS: the original time/date the device was modified
+msgid "Last modified"
+msgstr "ბოლო ცვლილება"
+
+#. TRANSLATORS: e.g. GPLv2+, Proprietary etc
+msgid "License"
+msgstr "ლიცენზია"
+
+#. TRANSLATORS: Title: swap space or swap partition
+msgid "Linux swap"
+msgstr "Linux Swap"
+
+#. TRANSLATORS: parsing the firmware information
+msgid "Loading…"
+msgstr "ჩატვირთვა…"
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Locked"
+msgstr "დაბლოკილი"
+
+#. TRANSLATORS: the release urgency
+msgid "Low"
+msgstr "დაბალი"
+
+#. TRANSLATORS: Title: MEI = Intel Management Engine
+msgid "MEI manufacturing mode"
+msgstr "MEI მწარმოებლის რეჟიმი"
+
+msgid "MEI version"
+msgstr "MEI-ის ვერსია"
+
+#. TRANSLATORS: the release urgency
+msgid "Medium"
+msgstr "საშუალო"
+
+#. TRANSLATORS: smallest version number installable on device
+msgid "Minimum Version"
+msgstr "მინიმალური ვერსია"
+
+#. TRANSLATORS: Requires a reboot to apply firmware or to reload hardware
+msgid "Needs a reboot after installation"
+msgstr "დაყენების შემდეგ საჭიროებს გადატვირთვას"
+
+#. TRANSLATORS: Requires system shutdown to apply firmware
+msgid "Needs shutdown after installation"
+msgstr "დაყენების შემდეგ საჭიროებს გამორთვას"
+
+#. TRANSLATORS: nothing found
+msgid "No plugins found"
+msgstr "დამატებები ნაპოვნი არაა"
+
+#. TRANSLATORS: version cannot be installed due to policy
+msgid "Not approved"
+msgstr "ნებადაურთველი"
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Not found"
+msgstr "ნაპოვნი არაა"
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Not supported"
+msgstr "მხარდაუჭერელია"
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "OK"
+msgstr "OK"
+
+#. TRANSLATORS: some devices can only be updated to a new semver and cannot
+#. * be downgraded or reinstalled with the existing version
+msgid "Only version upgrades are allowed"
+msgstr "დაშვებულია მხოლოდ ვერსიების განახლება"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "PATH"
+msgstr "ბილიკი"
+
+#. TRANSLATORS: the update state of the specific device
+msgid "Pending"
+msgstr "დარჩენილი"
+
+#. TRANSLATORS: 'recovery key' here refers to a code, rather than a physical
+#. metal thing
+msgid "Please ensure you have the volume recovery key before continuing."
+msgstr "გაგრძელების წინ დარწმუნდით, რომ ტომის აღდგენის გასაღები ნამდვილად გაქვთ."
+
+#. TRANSLATORS: the numeric priority
+msgid "Priority"
+msgstr "პრიორიტეტი"
+
+#. TRANSLATORS: reasons the device is not updatable
+msgid "Problems"
+msgstr "პრობლემები"
+
+#. TRANSLATORS: a non-free software license
+msgid "Proprietary"
+msgstr "დახურული კოდი"
+
+#. TRANSLATORS: reading from the flash chips
+msgid "Reading…"
+msgstr "წაკითხვა…"
+
+#. TRANSLATORS: the server the file is coming from
+#. TRANSLATORS: remote identifier, e.g. lvfs-testing
+msgid "Remote ID"
+msgstr "დაშორებულის ID"
+
+#. TRANSLATORS: Requires a bootloader mode to be manually enabled by the user
+msgid "Requires a bootloader"
+msgstr "საჭიროებს ჩამტვირთავ კოდს"
+
+#. TRANSLATORS: reboot to apply the update
+msgid "Restart now?"
+msgstr "გადავტვირთო ახლა?"
+
+#. TRANSLATORS: restarting the device to pick up new F/W
+msgid "Restarting device…"
+msgstr "მოწყობილობის გადატვირთვა…"
+
+#. TRANSLATORS: Title: SPI refers to the flash chip in the computer
+msgid "SPI BIOS Descriptor"
+msgstr "SPI BIOS-ის დესკრიპტორი"
+
+#. TRANSLATORS: Title: SPI refers to the flash chip in the computer
+msgid "SPI BIOS region"
+msgstr "SPI BIOS-ის რეგიონი"
+
+#. TRANSLATORS: Title: SPI refers to the flash chip in the computer
+msgid "SPI lock"
+msgstr "SPI ბლოკი"
+
+#. TRANSLATORS: Title: SPI refers to the flash chip in the computer
+msgid "SPI write"
+msgstr "SPI ჩაწერა"
+
+#. TRANSLATORS: scheduling an update to be done on the next boot
+msgid "Scheduling…"
+msgstr "რიგში ჩაყენება…"
+
+#. TRANSLATORS: HSI event title
+msgid "Secure Boot disabled"
+msgstr "დაცული ჩატვირთვა გამორთულია"
+
+#. TRANSLATORS: serial number of hardware
+msgid "Serial Number"
+msgstr "სერიული ნომერი"
+
+#. TRANSLATORS: command line option
+msgid "Show extra debugging information"
+msgstr "გამართვის დამატებითი ინფორმაციის ჩვენება"
+
+msgid "Signature"
+msgstr "ხელმოწერა"
+
+#. TRANSLATORS: file size of the download
+msgid "Size"
+msgstr "ზომა"
+
+#. TRANSLATORS: the platform secret is stored in the PCRx registers on the TPM
+msgid "Some of the platform secrets may be invalidated when updating this firmware."
+msgstr "ამ მიკროკოდის განახლებისას შეილება პლატფორმის ზოგიერი საიდუმლო დაიკარგოს."
+
+#. TRANSLATORS: source (as in code) link
+msgid "Source"
+msgstr "წყარო"
+
+#. TRANSLATORS: the update state of the specific device
+msgid "Success"
+msgstr "წარმატება"
+
+#. TRANSLATORS: one line summary of device
+msgid "Summary"
+msgstr "შეჯამება"
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Supported"
+msgstr "მხარდაჭერილი"
+
+#. TRANSLATORS: Title: if fwupd supports HSI on this chip
+msgid "Supported CPU"
+msgstr "მხარდაჭერილი CPU"
+
+#. TRANSLATORS: Title: a better sleep state
+msgid "Suspend-to-idle"
+msgstr "შეჩერება"
+
+#. TRANSLATORS: Title: sleep state
+msgid "Suspend-to-ram"
+msgstr "RAM-ში შეჩერება"
+
+#. TRANSLATORS: Must be plugged in to an outlet
+msgid "System requires external power source"
+msgstr "სისტემას კვების გარე წყარო ესაჭიროება"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "TEXT"
+msgstr "ტექსტი"
+
+#. TRANSLATORS: release tag set for release, e.g. lenovo-2021q3
+msgid "Tag"
+msgid_plural "Tags"
+msgstr[0] "იარლიყი"
+msgstr[1] "ჭდეები"
+
+msgid "Target"
+msgstr "სამიზნე წერტილი"
+
+#. TRANSLATORS: We verified the meatdata against the server
+msgid "Trusted metadata"
+msgstr "სანდო მეტამონაცემები"
+
+#. TRANSLATORS: We verified the payload against the server
+msgid "Trusted payload"
+msgstr "სანდო დატვირთვა"
+
+#. TRANSLATORS: remote type, e.g. remote or local
+msgid "Type"
+msgstr "ტიპით"
+
+#. TRANSLATORS: Title: PK is the 'platform key' for the machine
+msgid "UEFI platform key"
+msgstr "UEFI პლატფორმის გასაღები"
+
+#. TRANSLATORS: current daemon status is unknown
+#. TRANSLATORS: we don't know the license of the update
+#. TRANSLATORS: unknown release urgency
+msgid "Unknown"
+msgstr "უცნობია"
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Unlocked"
+msgstr "განბლოკილი"
+
+#. TRANSLATORS: Device is updatable in this or any other mode
+msgid "Updatable"
+msgstr "განახლებადი"
+
+#. TRANSLATORS: error message from last update attempt
+msgid "Update Error"
+msgstr "განახლების შეცდომა"
+
+#. TRANSLATORS: helpful messages from last update
+#. TRANSLATORS: helpful messages for the update
+msgid "Update Message"
+msgstr "განახლების შეტყობინება"
+
+#. TRANSLATORS: Update can only be done from offline mode
+msgid "Update requires a reboot"
+msgstr "განახლება გადატვირთვას საჭიროებს"
+
+msgid "Updating"
+msgstr "განახლება"
+
+#. TRANSLATORS: User has been notified
+msgid "User has been notified"
+msgstr "მომხმარებელი გაფრთხილებულია"
+
+#. TRANSLATORS: remote filename base
+msgid "Username"
+msgstr "მომხმარებელი"
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Valid"
+msgstr "სწორი"
+
+#. TRANSLATORS: one line variant of release (e.g. 'Prerelease' or 'China')
+msgid "Variant"
+msgstr "ვარიანტი"
+
+#. TRANSLATORS: manufacturer of hardware
+msgid "Vendor"
+msgstr "მომწოდებელი"
+
+#. TRANSLATORS: verifying we wrote the firmware correctly
+msgid "Verifying…"
+msgstr "შემოწმება…"
+
+#. TRANSLATORS: the detected version number of the dbx
+msgid "Version"
+msgstr "ვერსია"
+
+#. TRANSLATORS: waiting for device to do something
+msgid "Waiting…"
+msgstr "მოლოდინი…"
+
+#. TRANSLATORS: writing to the flash chips
+msgid "Writing…"
+msgstr "ჩაწერა…"
+
+#. TRANSLATORS: %1 is the device vendor name
+#, c-format
+msgid "Your hardware may be damaged using this firmware, and installing this release may void any warranty with %s."
+msgstr "ამ მიკროკოდით თქვენი აპარატურა შეიძლება დაზიანდეს. ამავე დროს ამ რელიზის დაყენებამ შეიძლება %s-ზე გარანტია მოგიხსნათ."

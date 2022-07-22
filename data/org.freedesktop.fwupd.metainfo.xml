@@ -34,6 +34,35 @@
     <binary>fwupdagent</binary>
   </provides>
   <releases>
+    <release version="1.8.3" date="2022-07-22">
+      <description>
+        <p>
+          This release adds the following features:
+        </p>
+        <ul>
+          <li>Add resolution flags to each security attribute failures for the user</li>
+          <li>Allow loading in emulated host profiles for debugging</li>
+          <li>Check if Intel TME has been disabled by the firmware or platform</li>
+          <li>Wait for the system to acquiesce after doing each update</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Do not use CoD even when advertized on non-aarch64 platforms</li>
+          <li>Fix a crash when updating the Logitech Bolt radio device</li>
+          <li>Fix a critical warning when parsing an invalid PHAT record</li>
+          <li>Fix a critical warning when parsing invalid FDT firmware</li>
+          <li>Fix fwupdmgr security when plugins are added to the blocklist</li>
+          <li>Fix parsing SMBIOS data to correct the device hardware IDs</li>
+          <li>Fix uploading signed reports by sending the correct checksum</li>
+          <li>Use the correct protocol attribute name when exporting to JSON</li>
+        </ul>
+        <p>This release adds support for the following hardware:</p>
+        <ul>
+          <li>Additional Startech devices</li>
+          <li>Additional Elan fingerprint readers</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.8.2" date="2022-07-11">
       <description>
         <p>
