@@ -182,44 +182,53 @@ fu_plugin_dell_dock_backend_device_added(FuPlugin *plugin, FuDevice *device, GEr
 			    "can't read base dock type from EC");
 		return FALSE;
 	}
+	fu_device_add_child(ec_device, FU_DEVICE(hub));
 	fu_dell_dock_hub_add_instance(FU_DEVICE(hub), dock_type);
 	fu_plugin_device_add(plugin, FU_DEVICE(hub));
 
 	/* add hub instance id for the cached device */
 	hub_dev = fu_plugin_cache_lookup(plugin, hub_cache_key);
 	if (hub_dev != NULL) {
+		fu_device_add_child(ec_device, FU_DEVICE(hub_dev));
 		fu_dell_dock_hub_add_instance(FU_DEVICE(hub_dev), dock_type);
 		fu_plugin_device_add(plugin, FU_DEVICE(hub_dev));
 		fu_plugin_cache_remove(plugin, hub_cache_key);
 	}
 	return TRUE;
 }
-
-static void
-fu_plugin_dell_dock_separate_activation(FuPlugin *plugin)
+static gboolean
+is_usb4_device(FuDevice *device)
 {
-	GPtrArray *devices = fu_plugin_get_devices(plugin);
-	FuDevice *device_ec = NULL;
-	FuDevice *device_usb4 = NULL;
+	g_return_val_if_fail(device != NULL, FALSE);
+	if (!FU_IS_USB_DEVICE(device))
+		return FALSE;
 
-	for (guint i = 0; i < devices->len; i++) {
-		FuDevice *device_tmp = g_ptr_array_index(devices, i);
-		if (FU_IS_DELL_DOCK_EC(device_tmp))
-			device_ec = device_tmp;
-		else if (g_strcmp0(fu_device_get_plugin(device_tmp), "intel_usb4") == 0)
-			device_usb4 = device_tmp;
+	return ((guint)fu_usb_device_get_vid(FU_USB_DEVICE(device)) == GR_USB_VID &&
+		(guint)fu_usb_device_get_pid(FU_USB_DEVICE(device)) == GR_USB_PID);
+}
+static void
+fu_plugin_dell_dock_usb4_reorder_activation(FuDevice *device)
+{
+	FuDevice *parent = NULL;
+	g_return_if_fail(device != NULL);
+
+	/* interesting device? */
+	if (g_strcmp0(fu_device_get_plugin(device), "intel_usb4") != 0)
+		return;
+	if (!is_usb4_device(device))
+		return;
+	if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION))
+		return;
+
+	/* parent device must be ec */
+	parent = fu_device_get_parent(device);
+	if (parent != NULL && fu_device_has_flag(parent, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION)) {
+		fu_device_remove_flag(FU_DEVICE(parent), FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
+		g_debug("activation for %s removed by %s",
+			fu_device_get_name(parent),
+			fu_device_get_name(device));
 	}
-	/* both usb4 and ec device are found */
-	if (device_usb4 && device_ec) {
-		if (fu_device_has_flag(device_usb4, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION) &&
-		    fu_device_has_flag(device_ec, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION)) {
-			fu_device_remove_flag(FU_DEVICE(device_ec),
-					      FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
-			g_debug("activate for %s is inhibited by %s",
-				fu_device_get_name(device_ec),
-				fu_device_get_name(device_usb4));
-		}
-	}
+	return;
 }
 
 static void
@@ -229,7 +238,7 @@ fu_plugin_dell_dock_device_registered(FuPlugin *plugin, FuDevice *device)
 	if (fu_device_has_guid(device, DELL_DOCK_TBT_INSTANCE_ID))
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_SKIPS_RESTART);
 
-	/* usb4 device from thunderbolt plugin */
+	/* inhibit the usb4 device that comes from thunderbolt plugin */
 	if (g_strcmp0(fu_device_get_plugin(device), "thunderbolt") == 0 &&
 	    fu_device_has_guid(device, DELL_DOCK_USB4_INSTANCE_ID)) {
 		g_autofree gchar *msg = NULL;
@@ -239,11 +248,9 @@ fu_plugin_dell_dock_device_registered(FuPlugin *plugin, FuDevice *device)
 		return;
 	}
 
-	/* online activation is mutually exclusive between usb4 and ec */
-	if (g_strcmp0(fu_device_get_plugin(device), "dell_dock") == 0 &&
-	    (FU_IS_DELL_DOCK_EC(device) ||
-	     g_strcmp0(fu_device_get_plugin(device), "intel_usb4") == 0))
-		fu_plugin_dell_dock_separate_activation(plugin);
+	/* activate usb4 device prior than ec if both devices pending activation */
+	if (g_strcmp0(fu_device_get_plugin(device), "intel_usb4") == 0)
+		fu_plugin_dell_dock_usb4_reorder_activation(device);
 }
 
 static gboolean
@@ -289,31 +296,26 @@ fu_plugin_dell_dock_composite_cleanup(FuPlugin *plugin, GPtrArray *devices, GErr
 	FuDevice *parent = fu_plugin_dell_dock_get_ec(devices);
 	FuDevice *dev = NULL;
 	g_autoptr(FuDeviceLocker) locker = NULL;
-	gboolean needs_activation = FALSE;
+	gboolean immediate_update = FALSE;
 
 	if (parent == NULL)
 		return TRUE;
-
-	/* if thunderbolt is in the transaction it needs to be activated separately */
 	for (guint i = 0; i < devices->len; i++) {
 		dev = g_ptr_array_index(devices, i);
-		if ((g_strcmp0(fu_device_get_plugin(dev), "thunderbolt") == 0 ||
-		     g_strcmp0(fu_device_get_plugin(dev), "intel_usb4") == 0 ||
-		     g_strcmp0(fu_device_get_plugin(dev), "dell_dock") == 0) &&
-		    fu_device_has_flag(dev, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION)) {
-			/* the kernel and/or thunderbolt plugin have been configured to let HW
-			 * finish the update */
-			if (fu_device_has_flag(dev, FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE)) {
+		if (!fu_device_has_flag(dev, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION))
+			continue;
+		if (FU_IS_DELL_DOCK_TBT(dev) || is_usb4_device(dev)) {
+			if (fu_device_has_flag(dev, FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE))
 				fu_dell_dock_ec_tbt_passive(parent);
-				/* run the update immediately - no kernel support */
-			} else {
-				needs_activation = TRUE;
-				break;
+			else {
+				immediate_update = TRUE;
+				g_debug("device (%s) needs connected update",
+					fu_device_get_name(dev));
 			}
+			fu_plugin_dell_dock_usb4_reorder_activation(dev);
+			break;
 		}
 	}
-	/* separate activation flag between usb4 and ec device */
-	fu_plugin_dell_dock_separate_activation(plugin);
 
 	locker = fu_device_locker_new(parent, error);
 	if (locker == NULL)
@@ -326,12 +328,12 @@ fu_plugin_dell_dock_composite_cleanup(FuPlugin *plugin, GPtrArray *devices, GErr
 	if (!fu_device_locker_close(locker, error))
 		return FALSE;
 
-	if (needs_activation && dev != NULL) {
+	if (immediate_update && dev != NULL) {
 		g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 		if (!fu_device_activate(dev, progress, error))
 			return FALSE;
+		fu_device_remove_flag(dev, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
 	}
-
 	return TRUE;
 }
 
