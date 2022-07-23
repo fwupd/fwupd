@@ -6,6 +6,9 @@ shopt -s extglob
 #clone test firmware if necessary
 . ./contrib/ci/get_test_firmware.sh
 
+#refresh package cache and update image
+pacman -Syu --noconfirm
+
 #install anything missing from the container
 ./contrib/ci/fwupd_setup_helpers.py install-dependencies -o arch
 
@@ -19,11 +22,11 @@ popd
 chown nobody . -R
 
 # install and run the custom redfish simulator
-pacman -Syu --noconfirm python-flask
+pacman -S --noconfirm python-flask
 ../plugins/redfish/tests/redfish.py &
 
 # install and run TPM simulator necessary for plugins/uefi-capsule/uefi-self-test
-pacman -Syu --noconfirm swtpm tpm2-tools
+pacman -S --noconfirm swtpm tpm2-tools
 swtpm socket --tpm2 --server port=2321 --ctrl type=tcp,port=2322 --flags not-need-init --tpmstate "dir=$PWD" &
 trap 'kill $!' EXIT
 # extend a PCR0 value for test suite
@@ -37,7 +40,7 @@ sudo -E -u nobody PKGEXT='.pkg.tar' makepkg -e --noconfirm
 pacman -U --noconfirm *.pkg.*
 
 #run the CI tests for Qt5
-pacman -Syu --noconfirm qt5-base
+pacman -S --noconfirm qt5-base
 meson qt5-thread-test ../contrib/ci/qt5-thread-test
 ninja -C qt5-thread-test test
 
