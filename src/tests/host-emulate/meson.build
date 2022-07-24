@@ -7,7 +7,7 @@ if build_standalone
       input: input_file,
       output: '@0@.gz'.format(input_file),
       capture: true,
-      command: [gzip, '--keep', '--stdout', '@INPUT@'],
+      command: [gzip, '-k', '--stdout', '@INPUT@'],
       install: true,
       install_dir: join_paths(datadir, 'fwupd', 'host-emulate.d'),
     )
