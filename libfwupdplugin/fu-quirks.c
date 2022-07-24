@@ -22,6 +22,11 @@
 #include "fu-quirks.h"
 #include "fu-string.h"
 
+#ifdef _WIN32
+#include <fwupd-windows.h>
+#include <windows.h>
+#endif
+
 /**
  * FuQuirks:
  *
@@ -334,6 +339,12 @@ fu_quirks_add_quirks_for_resources(FuQuirks *self,
 	g_auto(GStrv) children = NULL;
 	g_autoptr(GBytes) blob_self = NULL;
 	g_autoptr(GError) error_local = NULL;
+#ifdef _WIN32
+	gchar self_exe[MAX_PATH];
+	GetModuleFileNameA(NULL, self_exe, MAX_PATH);
+#else
+	const gchar *self_exe = "/proc/self/exe";
+#endif
 
 	children = g_resources_enumerate_children(path, G_RESOURCE_LOOKUP_FLAGS_NONE, &error_local);
 	if (children == NULL) {
@@ -353,7 +364,7 @@ fu_quirks_add_quirks_for_resources(FuQuirks *self,
 	}
 
 	/* add the hash of the current binary to verify it has not changed */
-	blob_self = fu_bytes_get_contents("/proc/self/exe", error);
+	blob_self = fu_bytes_get_contents(self_exe, error);
 	if (blob_self == NULL)
 		return FALSE;
 	hash_self = g_compute_checksum_for_bytes(G_CHECKSUM_SHA256, blob_self);
