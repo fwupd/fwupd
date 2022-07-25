@@ -184,11 +184,15 @@ fu_synaptics_cape_firmware_parse(FuFirmware *firmware,
 		return FALSE;
 	}
 
-	fw_header = g_bytes_new_from_bytes(fw, 0x0, headsz);
+	fw_header = fu_bytes_new_offset(fw, 0x0, headsz, error);
+	if (fw_header == NULL)
+		return FALSE;
 	if (!fu_synaptics_cape_firmware_parse_header(self, firmware, fw_header, error))
 		return FALSE;
 
-	fw_body = g_bytes_new_from_bytes(fw, headsz, bufsz - headsz);
+	fw_body = fu_bytes_new_offset(fw, headsz, bufsz - headsz, error);
+	if (fw_body == NULL)
+		return FALSE;
 	fu_firmware_set_id(firmware, FU_FIRMWARE_ID_PAYLOAD);
 	fu_firmware_set_bytes(firmware, fw_body);
 	return TRUE;

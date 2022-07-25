@@ -317,7 +317,9 @@ fu_synaptics_rmi_v5_device_write_firmware(FuDevice *device,
 		return FALSE;
 
 	/* verify signature if set */
-	firmware_bin = g_bytes_new_from_bytes(bytes_bin, 0, firmware_length);
+	firmware_bin = fu_bytes_new_offset(bytes_bin, 0, firmware_length, error);
+	if (firmware_bin == NULL)
+		return FALSE;
 	signature_bin = fu_firmware_get_image_by_id_bytes(firmware, "sig", NULL);
 	if (signature_bin != NULL) {
 		if (!fu_synaptics_rmi_v5_device_secure_check(device,
