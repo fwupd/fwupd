@@ -198,7 +198,8 @@ fu_uf2_firmware_parse_chunk(FuUf2Firmware *self, FuChunk *chk, GByteArray *tmp, 
 					return FALSE;
 				fu_firmware_set_id(FU_FIRMWARE(self), utf8buf);
 			} else {
-				g_warning("unknown tag 0x%06x", tag);
+				if (g_getenv("FWUPD_FUZZER_RUNNING") == NULL)
+					g_warning("unknown tag 0x%06x", tag);
 			}
 
 			/* next! */

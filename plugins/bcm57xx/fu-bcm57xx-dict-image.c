@@ -117,7 +117,8 @@ fu_bcm57xx_dict_image_ensure_id(FuBcm57xxDictImage *self)
 		}
 	}
 	id = g_strdup_printf("dict-%02x-%02x", self->target, self->kind);
-	g_warning("falling back to %s, please report", id);
+	if (g_getenv("FWUPD_FUZZER_RUNNING") == NULL)
+		g_warning("falling back to %s, please report", id);
 	fu_firmware_set_id(FU_FIRMWARE(self), id);
 }
 
