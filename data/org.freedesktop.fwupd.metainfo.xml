@@ -34,6 +34,27 @@
     <binary>fwupdagent</binary>
   </provides>
   <releases>
+    <release version="1.7.9" date="2022-07-25">
+      <description>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Do not generate a capsule header for the FMP GUID</li>
+          <li>Do not use CoD even when advertized on non-aarch64 platforms</li>
+          <li>Fix a critical warning when parsing an invalid PHAT record</li>
+          <li>Fix a regression for devices using the Atmel FLIP Bootloader</li>
+          <li>Fix parsing SMBIOS data</li>
+          <li>Set the device ID on the FwupdRequest</li>
+          <li>Use the correct protocol member when converting to JSON</li>
+          <li>Wait for the system76-launch device to re-enumerate if unlocked and reset</li>
+        </ul>
+        <p>This release adds support for the following hardware:</p>
+        <ul>
+          <li>More pixart-rf hardware</li>
+          <li>System76 launch_2</li>
+          <li>Two new Startech devices</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.7.8" date="2022-06-15">
       <description>
         <p>This release fixes the following bugs:</p>
