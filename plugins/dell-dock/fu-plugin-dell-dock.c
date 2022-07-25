@@ -196,16 +196,18 @@ fu_plugin_dell_dock_backend_device_added(FuPlugin *plugin, FuDevice *device, GEr
 	}
 	return TRUE;
 }
+
 static gboolean
-is_usb4_device(FuDevice *device)
+fu_plugin_dell_dock_is_usb4_device(FuDevice *device)
 {
 	g_return_val_if_fail(device != NULL, FALSE);
+
 	if (!FU_IS_USB_DEVICE(device))
 		return FALSE;
-
-	return ((guint)fu_usb_device_get_vid(FU_USB_DEVICE(device)) == GR_USB_VID &&
-		(guint)fu_usb_device_get_pid(FU_USB_DEVICE(device)) == GR_USB_PID);
+	return fu_usb_device_get_vid(FU_USB_DEVICE(device)) == (guint16)GR_USB_VID &&
+	       fu_usb_device_get_pid(FU_USB_DEVICE(device)) == (guint16)GR_USB_PID;
 }
+
 static void
 fu_plugin_dell_dock_usb4_reorder_activation(FuDevice *device)
 {
@@ -215,7 +217,7 @@ fu_plugin_dell_dock_usb4_reorder_activation(FuDevice *device)
 	/* interesting device? */
 	if (g_strcmp0(fu_device_get_plugin(device), "intel_usb4") != 0)
 		return;
-	if (!is_usb4_device(device))
+	if (!fu_plugin_dell_dock_is_usb4_device(device))
 		return;
 	if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION))
 		return;
@@ -295,8 +297,8 @@ fu_plugin_dell_dock_composite_cleanup(FuPlugin *plugin, GPtrArray *devices, GErr
 {
 	FuDevice *parent = fu_plugin_dell_dock_get_ec(devices);
 	FuDevice *dev = NULL;
-	g_autoptr(FuDeviceLocker) locker = NULL;
 	gboolean immediate_update = FALSE;
+	g_autoptr(FuDeviceLocker) locker = NULL;
 
 	if (parent == NULL)
 		return TRUE;
@@ -304,10 +306,10 @@ fu_plugin_dell_dock_composite_cleanup(FuPlugin *plugin, GPtrArray *devices, GErr
 		dev = g_ptr_array_index(devices, i);
 		if (!fu_device_has_flag(dev, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION))
 			continue;
-		if (FU_IS_DELL_DOCK_TBT(dev) || is_usb4_device(dev)) {
-			if (fu_device_has_flag(dev, FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE))
+		if (FU_IS_DELL_DOCK_TBT(dev) || fu_plugin_dell_dock_is_usb4_device(dev)) {
+			if (fu_device_has_flag(dev, FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE)) {
 				fu_dell_dock_ec_tbt_passive(parent);
-			else {
+			} else {
 				immediate_update = TRUE;
 				g_debug("device (%s) needs connected update",
 					fu_device_get_name(dev));
