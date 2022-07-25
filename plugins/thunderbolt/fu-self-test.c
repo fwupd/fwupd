@@ -22,8 +22,6 @@
 
 #include "fu-context-private.h"
 #include "fu-plugin-private.h"
-#include "fu-thunderbolt-firmware-update.h"
-#include "fu-thunderbolt-firmware.h"
 #include "fu-udev-device-private.h"
 
 static gchar *
@@ -1051,70 +1049,6 @@ test_tree(ThunderboltTest *tt, gconstpointer user_data)
 	g_assert_true(ret);
 }
 
-static gboolean
-_compare_images(FuThunderboltFirmware *firmware_old,
-		FuThunderboltFirmware *firmware,
-		GError **error)
-{
-	if (fu_thunderbolt_firmware_is_host(firmware) !=
-	    fu_thunderbolt_firmware_is_host(firmware_old)) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_FILE,
-			    "incorrect firmware mode, got %s, expected %s",
-			    fu_thunderbolt_firmware_is_host(firmware) ? "host" : "device",
-			    fu_thunderbolt_firmware_is_host(firmware_old) ? "host" : "device");
-		return FALSE;
-	}
-	if (fu_thunderbolt_firmware_get_vendor_id(firmware) !=
-	    fu_thunderbolt_firmware_get_vendor_id(firmware_old)) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_FILE,
-			    "incorrect device vendor, got 0x%04x, expected 0x%04x",
-			    fu_thunderbolt_firmware_get_vendor_id(firmware),
-			    fu_thunderbolt_firmware_get_vendor_id(firmware_old));
-		return FALSE;
-	}
-	if (fu_thunderbolt_firmware_get_device_id(firmware) !=
-	    fu_thunderbolt_firmware_get_device_id(firmware_old)) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_FILE,
-			    "incorrect device type, got 0x%04x, expected 0x%04x",
-			    fu_thunderbolt_firmware_get_device_id(firmware),
-			    fu_thunderbolt_firmware_get_device_id(firmware_old));
-		return FALSE;
-	}
-	if (fu_thunderbolt_firmware_get_model_id(firmware) !=
-	    fu_thunderbolt_firmware_get_model_id(firmware_old)) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_FILE,
-			    "incorrect device model, got 0x%04x, expected 0x%04x",
-			    fu_thunderbolt_firmware_get_model_id(firmware),
-			    fu_thunderbolt_firmware_get_model_id(firmware_old));
-		return FALSE;
-	}
-	if (fu_thunderbolt_firmware_get_has_pd(firmware_old) &&
-	    !fu_thunderbolt_firmware_get_has_pd(firmware)) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_FILE,
-				    "new firmware is missing PD");
-		return FALSE;
-	}
-	if (fu_thunderbolt_firmware_get_flash_size(firmware) !=
-	    fu_thunderbolt_firmware_get_flash_size(firmware_old)) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_FILE,
-				    "incorrect flash size");
-		return FALSE;
-	}
-	return TRUE;
-}
-
 static void
 test_image_validation(ThunderboltTest *tt, gconstpointer user_data)
 {
@@ -1129,9 +1063,9 @@ test_image_validation(ThunderboltTest *tt, gconstpointer user_data)
 	g_autoptr(GBytes) ctl_data = NULL;
 	g_autoptr(GBytes) bad_data = NULL;
 	g_autoptr(GError) error = NULL;
-	g_autoptr(FuThunderboltFirmwareUpdate) firmware_fwi = fu_thunderbolt_firmware_update_new();
-	g_autoptr(FuThunderboltFirmware) firmware_ctl = fu_thunderbolt_firmware_new();
-	g_autoptr(FuThunderboltFirmware) firmware_bad = fu_thunderbolt_firmware_new();
+	g_autoptr(FuFirmware) firmware_fwi = fu_intel_thunderbolt_firmware_new();
+	g_autoptr(FuFirmware) firmware_ctl = fu_intel_thunderbolt_nvm_new();
+	g_autoptr(FuFirmware) firmware_bad = fu_intel_thunderbolt_nvm_new();
 
 	/* image as if read from the controller (i.e. no headers) */
 	ctl_path = g_test_build_filename(G_TEST_DIST, "tests", "minimal-fw-controller.bin", NULL);
@@ -1143,10 +1077,7 @@ test_image_validation(ThunderboltTest *tt, gconstpointer user_data)
 	g_assert_nonnull(ctl_data);
 
 	/* parse controller image */
-	ret = fu_firmware_parse(FU_FIRMWARE(firmware_ctl),
-				ctl_data,
-				FWUPD_INSTALL_FLAG_NO_SEARCH,
-				&error);
+	ret = fu_firmware_parse(firmware_ctl, ctl_data, FWUPD_INSTALL_FLAG_NO_SEARCH, &error);
 	g_assert_true(ret);
 	g_assert_no_error(error);
 
@@ -1160,10 +1091,7 @@ test_image_validation(ThunderboltTest *tt, gconstpointer user_data)
 	g_assert_nonnull(fwi_data);
 
 	/* parse */
-	ret = fu_firmware_parse(FU_FIRMWARE(firmware_fwi),
-				fwi_data,
-				FWUPD_INSTALL_FLAG_NO_SEARCH,
-				&error);
+	ret = fu_firmware_parse(firmware_fwi, fwi_data, FWUPD_INSTALL_FLAG_NO_SEARCH, &error);
 	g_assert_true(ret);
 	g_assert_no_error(error);
 
@@ -1177,17 +1105,17 @@ test_image_validation(ThunderboltTest *tt, gconstpointer user_data)
 	g_assert_nonnull(bad_data);
 
 	/* parse; should fail, bad image */
-	ret = fu_firmware_parse(FU_FIRMWARE(firmware_bad),
-				bad_data,
-				FWUPD_INSTALL_FLAG_NO_SEARCH,
-				&error);
+	ret = fu_firmware_parse(firmware_bad, bad_data, FWUPD_INSTALL_FLAG_NO_SEARCH, &error);
 	g_assert_false(ret);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_READ);
 	g_debug("expected image validation error [ctl]: %s", error->message);
 	g_clear_error(&error);
 
 	/* now for some testing ... this should work */
-	ret = _compare_images(firmware_ctl, FU_THUNDERBOLT_FIRMWARE(firmware_fwi), &error);
+	ret = fu_firmware_check_compatible(firmware_ctl,
+					   firmware_fwi,
+					   FWUPD_INSTALL_FLAG_NONE,
+					   &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 }

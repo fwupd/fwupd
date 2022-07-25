@@ -1,0 +1,11 @@
+<firmware gtype="FuIntelNvmFirmware">
+  <offset>0x10</offset>
+  <vendor_id>0xd4</vendor_id>
+  <device_id>0x15ef</device_id>
+  <model_id>0xb070</model_id>
+  <family>titan-ridge</family>
+  <flash_size>0x3</flash_size>
+  <is_host>false</is_host>
+  <is_native>false</is_native>
+  <version_raw>0x6000</version_raw>
+</firmware>

@@ -352,6 +352,7 @@ def _build(bld: Builder) -> None:
         Fuzzer("fmap"),
         Fuzzer("ihex"),
         Fuzzer("srec"),
+        Fuzzer("intel-thunderbolt"),
         Fuzzer("ifwi-cpd"),
         Fuzzer("ifwi-fpt"),
         Fuzzer("oprom"),

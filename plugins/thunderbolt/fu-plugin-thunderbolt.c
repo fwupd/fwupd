@@ -10,8 +10,6 @@
 
 #include "fu-thunderbolt-common.h"
 #include "fu-thunderbolt-controller.h"
-#include "fu-thunderbolt-firmware-update.h"
-#include "fu-thunderbolt-firmware.h"
 #include "fu-thunderbolt-retimer.h"
 
 /*5 seconds sleep until retimer is available                                       \
@@ -64,8 +62,6 @@ fu_plugin_thunderbolt_init(FuPlugin *plugin)
 	fu_plugin_add_udev_subsystem(plugin, "thunderbolt");
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_THUNDERBOLT_CONTROLLER);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_THUNDERBOLT_RETIMER);
-	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_THUNDERBOLT_FIRMWARE);
-	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_THUNDERBOLT_FIRMWARE_UPDATE);
 }
 
 static gboolean

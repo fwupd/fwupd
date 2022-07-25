@@ -17,7 +17,6 @@
 #include <unistd.h>
 
 #include "fu-thunderbolt-device.h"
-#include "fu-thunderbolt-firmware-update.h"
 
 typedef struct {
 	const gchar *auth_method;
@@ -305,13 +304,19 @@ fu_thunderbolt_device_prepare_firmware(FuDevice *device,
 				       GError **error)
 {
 	FuThunderboltDevice *self = FU_THUNDERBOLT_DEVICE(device);
-	g_autoptr(FuThunderboltFirmwareUpdate) firmware = fu_thunderbolt_firmware_update_new();
-	g_autoptr(FuThunderboltFirmware) firmware_old = fu_thunderbolt_firmware_new();
+	g_autoptr(FuFirmware) firmware = NULL;
+	g_autoptr(FuFirmware) firmware_old = NULL;
 	g_autoptr(GBytes) controller_fw = NULL;
 	g_autoptr(GFile) nvmem = NULL;
 
 	/* parse */
-	if (!fu_firmware_parse(FU_FIRMWARE(firmware), fw, flags, error))
+	firmware = fu_firmware_new_from_gtypes(fw,
+					       flags,
+					       error,
+					       FU_TYPE_INTEL_THUNDERBOLT_FIRMWARE,
+					       FU_TYPE_FIRMWARE,
+					       G_TYPE_INVALID);
+	if (firmware == NULL)
 		return NULL;
 
 	/* get current NVMEM */
@@ -321,75 +326,19 @@ fu_thunderbolt_device_prepare_firmware(FuDevice *device,
 	controller_fw = g_file_load_bytes(nvmem, NULL, NULL, error);
 	if (controller_fw == NULL)
 		return NULL;
-	if (!fu_firmware_parse(FU_FIRMWARE(firmware_old), controller_fw, flags, error))
+	firmware_old = fu_firmware_new_from_gtypes(controller_fw,
+						   flags,
+						   error,
+						   FU_TYPE_INTEL_THUNDERBOLT_NVM,
+						   FU_TYPE_FIRMWARE,
+						   G_TYPE_INVALID);
+	if (firmware_old == NULL)
 		return NULL;
-	if (fu_thunderbolt_firmware_is_host(FU_THUNDERBOLT_FIRMWARE(firmware)) !=
-	    fu_thunderbolt_firmware_is_host(firmware_old)) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_FILE,
-			    "incorrect firmware mode, got %s, expected %s",
-			    fu_thunderbolt_firmware_is_host(FU_THUNDERBOLT_FIRMWARE(firmware))
-				? "host"
-				: "device",
-			    fu_thunderbolt_firmware_is_host(firmware_old) ? "host" : "device");
+	if (!fu_firmware_check_compatible(firmware_old, firmware, flags, error))
 		return NULL;
-	}
-	if (fu_thunderbolt_firmware_get_vendor_id(FU_THUNDERBOLT_FIRMWARE(firmware)) !=
-	    fu_thunderbolt_firmware_get_vendor_id(firmware_old)) {
-		g_set_error(
-		    error,
-		    FWUPD_ERROR,
-		    FWUPD_ERROR_INVALID_FILE,
-		    "incorrect device vendor, got 0x%04x, expected 0x%04x",
-		    fu_thunderbolt_firmware_get_vendor_id(FU_THUNDERBOLT_FIRMWARE(firmware)),
-		    fu_thunderbolt_firmware_get_vendor_id(firmware_old));
-		return NULL;
-	}
-	if (fu_thunderbolt_firmware_get_device_id(FU_THUNDERBOLT_FIRMWARE(firmware)) !=
-	    fu_thunderbolt_firmware_get_device_id(firmware_old)) {
-		g_set_error(
-		    error,
-		    FWUPD_ERROR,
-		    FWUPD_ERROR_INVALID_FILE,
-		    "incorrect device type, got 0x%04x, expected 0x%04x",
-		    fu_thunderbolt_firmware_get_device_id(FU_THUNDERBOLT_FIRMWARE(firmware)),
-		    fu_thunderbolt_firmware_get_device_id(firmware_old));
-		return NULL;
-	}
-	if ((flags & FWUPD_INSTALL_FLAG_IGNORE_VID_PID) == 0) {
-		if (fu_thunderbolt_firmware_get_model_id(FU_THUNDERBOLT_FIRMWARE(firmware)) !=
-		    fu_thunderbolt_firmware_get_model_id(firmware_old)) {
-			g_set_error(
-			    error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_FILE,
-			    "incorrect device model, got 0x%04x, expected 0x%04x",
-			    fu_thunderbolt_firmware_get_model_id(FU_THUNDERBOLT_FIRMWARE(firmware)),
-			    fu_thunderbolt_firmware_get_model_id(firmware_old));
-			return NULL;
-		}
-		/* old firmware has PD but new doesn't (we don't care about other way around) */
-		if (fu_thunderbolt_firmware_get_has_pd(firmware_old) &&
-		    !fu_thunderbolt_firmware_get_has_pd(FU_THUNDERBOLT_FIRMWARE(firmware))) {
-			g_set_error_literal(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_INVALID_FILE,
-					    "incorrect PD section");
-			return NULL;
-		}
-		if (fu_thunderbolt_firmware_get_flash_size(FU_THUNDERBOLT_FIRMWARE(firmware)) !=
-		    fu_thunderbolt_firmware_get_flash_size(firmware_old)) {
-			g_set_error_literal(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_INVALID_FILE,
-					    "incorrect flash size");
-			return NULL;
-		}
-	}
 
 	/* success */
-	return FU_FIRMWARE(g_steal_pointer(&firmware));
+	return g_steal_pointer(&firmware);
 }
 
 static gboolean
