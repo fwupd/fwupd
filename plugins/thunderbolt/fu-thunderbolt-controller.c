@@ -12,7 +12,6 @@
 
 #include "fu-thunderbolt-common.h"
 #include "fu-thunderbolt-controller.h"
-#include "fu-thunderbolt-firmware.h"
 
 typedef enum {
 	FU_THUNDERBOLT_CONTROLLER_KIND_DEVICE,
@@ -29,6 +28,10 @@ struct _FuThunderboltController {
 };
 
 G_DEFINE_TYPE(FuThunderboltController, fu_thunderbolt_controller, FU_TYPE_THUNDERBOLT_DEVICE)
+
+/* byte offsets in firmware image */
+#define FU_TBT_OFFSET_NATIVE 0x7B
+#define FU_TBT_CHUNK_SZ	     0x40
 
 static void
 fu_thunderbolt_controller_check_safe_mode(FuThunderboltController *self)
@@ -108,7 +111,7 @@ fu_thunderbolt_controller_read_status_block(FuThunderboltController *self, GErro
 	g_autoptr(GFile) nvmem = NULL;
 	g_autoptr(GBytes) controller_fw = NULL;
 	g_autoptr(GInputStream) istr = NULL;
-	g_autoptr(FuThunderboltFirmware) firmware = fu_thunderbolt_firmware_new();
+	g_autoptr(FuFirmware) firmware = NULL;
 
 	nvmem = fu_thunderbolt_device_find_nvmem(FU_THUNDERBOLT_DEVICE(self), TRUE, error);
 	if (nvmem == NULL)
@@ -122,12 +125,18 @@ fu_thunderbolt_controller_read_status_block(FuThunderboltController *self, GErro
 	controller_fw = g_input_stream_read_bytes(istr, nr_chunks * FU_TBT_CHUNK_SZ, NULL, error);
 	if (controller_fw == NULL)
 		return FALSE;
-	if (!fu_firmware_parse(FU_FIRMWARE(firmware),
-			       controller_fw,
-			       FWUPD_INSTALL_FLAG_NO_SEARCH,
-			       error))
+	firmware = fu_firmware_new_from_gtypes(controller_fw,
+					       FWUPD_INSTALL_FLAG_NO_SEARCH,
+					       error,
+					       FU_TYPE_INTEL_THUNDERBOLT_NVM,
+					       FU_TYPE_FIRMWARE,
+					       G_TYPE_INVALID);
+	if (firmware == NULL)
 		return FALSE;
-	self->is_native = fu_thunderbolt_firmware_is_native(firmware);
+	if (FU_IS_INTEL_THUNDERBOLT_FIRMWARE(firmware)) {
+		self->is_native =
+		    fu_intel_thunderbolt_nvm_is_native(FU_INTEL_THUNDERBOLT_NVM(firmware));
+	}
 	return TRUE;
 }
 

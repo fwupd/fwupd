@@ -7746,6 +7746,9 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 	fu_context_add_firmware_gtype(self->ctx, "cfu-payload", FU_TYPE_CFU_PAYLOAD);
 	fu_context_add_firmware_gtype(self->ctx, "uswid", FU_TYPE_USWID_FIRMWARE);
 	fu_context_add_firmware_gtype(self->ctx, "coswid", FU_TYPE_COSWID_FIRMWARE);
+	fu_context_add_firmware_gtype(self->ctx,
+				      "intel-thunderbolt",
+				      FU_TYPE_INTEL_THUNDERBOLT_FIRMWARE);
 
 	/* we are emulating a different host */
 	if (host_emulate != NULL) {

@@ -1095,3 +1095,19 @@ LIBFWUPDPLUGIN_1.8.4 {
     fu_security_attr_new;
   local: *;
 } LIBFWUPDPLUGIN_1.8.3;
+
+LIBFWUPDPLUGIN_1.8.5 {
+  global:
+    fu_intel_thunderbolt_firmware_get_type;
+    fu_intel_thunderbolt_firmware_new;
+    fu_intel_thunderbolt_nvm_get_device_id;
+    fu_intel_thunderbolt_nvm_get_flash_size;
+    fu_intel_thunderbolt_nvm_get_model_id;
+    fu_intel_thunderbolt_nvm_get_type;
+    fu_intel_thunderbolt_nvm_get_vendor_id;
+    fu_intel_thunderbolt_nvm_has_pd;
+    fu_intel_thunderbolt_nvm_is_host;
+    fu_intel_thunderbolt_nvm_is_native;
+    fu_intel_thunderbolt_nvm_new;
+  local: *;
+} LIBFWUPDPLUGIN_1.8.4;

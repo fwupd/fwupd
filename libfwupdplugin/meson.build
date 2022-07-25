@@ -36,6 +36,8 @@ fwupdplugin_src = [
   'fu-ifwi-cpd-firmware.c', # fuzzing
   'fu-ifwi-fpt-firmware.c', # fuzzing
   'fu-oprom-firmware.c',    # fuzzing
+  'fu-intel-thunderbolt-nvm.c',         # fuzzing
+  'fu-intel-thunderbolt-firmware.c', # fuzzing
   'fu-cfu-common.c',        # fuzzing
   'fu-cfu-offer.c',         # fuzzing
   'fu-cfu-payload.c',       # fuzzing
@@ -128,6 +130,8 @@ fwupdplugin_headers = [
   'fu-ifwi-cpd-firmware.h',
   'fu-ifwi-fpt-firmware.h',
   'fu-oprom-firmware.h',
+  'fu-intel-thunderbolt-firmware.h',
+  'fu-intel-thunderbolt-nvm.h',
   'fu-cfu-common.h',
   'fu-cfu-offer.h',
   'fu-cfu-payload.h',

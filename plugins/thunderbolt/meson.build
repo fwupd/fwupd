@@ -11,8 +11,6 @@ fu_plugin_thunderbolt = shared_module('fu_plugin_thunderbolt',
     'fu-thunderbolt-device.c',
     'fu-thunderbolt-retimer.c',
     'fu-thunderbolt-controller.c',
-    'fu-thunderbolt-firmware.c',
-    'fu-thunderbolt-firmware-update.c',
   ],
   include_directories: [
     root_incdir,
@@ -51,8 +49,6 @@ if get_option('tests') and run_sanitize_unsafe_tests and umockdev.found() and gi
       'fu-thunderbolt-device.c',
       'fu-thunderbolt-retimer.c',
       'fu-thunderbolt-controller.c',
-      'fu-thunderbolt-firmware.c',
-      'fu-thunderbolt-firmware-update.c',
     ],
     include_directories: [
       root_incdir,
