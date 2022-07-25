@@ -28,11 +28,7 @@ LLVMFuzzerTestOneInput(const guint8 *data, gsize size)
 					NULL);
 	}
 	if (ret) {
-		g_autofree gchar *str = fu_firmware_to_string(firmware);
 		g_autoptr(GBytes) fw2 = fu_firmware_write(firmware, NULL);
-		g_print("%s", str);
-		if (fw2 != NULL)
-			g_print("[%" G_GSIZE_FORMAT " bytes]\n", g_bytes_get_size(fw2));
 	}
 	return 0;
 }
