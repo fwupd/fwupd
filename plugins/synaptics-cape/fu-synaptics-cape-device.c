@@ -553,8 +553,9 @@ fu_synaptics_cape_device_prepare_firmware(FuDevice *device,
 	if (self->active_partition == 1)
 		offset = bufsz / 2;
 
-	new_fw = g_bytes_new_from_bytes(fw, offset, bufsz / 2);
-
+	new_fw = fu_bytes_new_offset(fw, offset, bufsz / 2, error);
+	if (new_fw == NULL)
+		return NULL;
 	if (!fu_firmware_parse(firmware, new_fw, flags, error))
 		return NULL;
 

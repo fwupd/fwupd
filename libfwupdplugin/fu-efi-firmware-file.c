@@ -230,9 +230,13 @@ fu_efi_firmware_file_parse(FuFirmware *firmware,
 
 	/* verify header checksum */
 	if ((flags & FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM) == 0) {
-		g_autoptr(GBytes) hdr_blob =
-		    g_bytes_new_from_bytes(fw, 0x0, FU_EFI_FIRMWARE_FILE_SIZE);
-		guint8 hdr_checksum_verify = fu_efi_firmware_file_hdr_checksum8(hdr_blob);
+		guint8 hdr_checksum_verify;
+		g_autoptr(GBytes) hdr_blob = NULL;
+
+		hdr_blob = fu_bytes_new_offset(fw, 0x0, FU_EFI_FIRMWARE_FILE_SIZE, error);
+		if (hdr_blob == NULL)
+			return FALSE;
+		hdr_checksum_verify = fu_efi_firmware_file_hdr_checksum8(hdr_blob);
 		if (hdr_checksum_verify != hdr_checksum) {
 			g_set_error(error,
 				    FWUPD_ERROR,
