@@ -18,6 +18,7 @@ with a non-standard filesystem layout.
 * `FWUPD_DBUS_SOCKET` is used to set the socket filename if running without a dbus-daemon
 * `FWUPD_DOWNLOAD_VERBOSE` can be used to show wget or curl output
 * `FWUPD_PROFILE` can be used to set the profile traceback threshold value in ms
+* `FWUPD_FUZZER_RUNNING` if the firmware format is being fuzzed
 * standard glibc variables like `LANG` are also honored for CLI tools that are translated
 * libcurl respects the session proxy, e.g. `http_proxy`, `all_proxy`, `sftp_proxy` and `no_proxy`
 
