@@ -11,11 +11,13 @@
 #include <glib/gstdio.h>
 #include <stdlib.h>
 
+#include "fu-bios-attrs-private.h"
 #include "fu-context-private.h"
 #include "fu-device-private.h"
 #include "fu-plugin-private.h"
 
 typedef struct {
+	FuContext *ctx;
 	FuPlugin *plugin_uefi_capsule;
 	FuPlugin *plugin_lenovo_thinklmi;
 } FuTest;
@@ -37,11 +39,20 @@ fu_test_self_init(FuTest *self, GError **error_global)
 	g_autofree gchar *pluginfn_uefi = NULL;
 	g_autofree gchar *pluginfn_lenovo = NULL;
 
+	g_test_expect_message("FuBiosAttrs", G_LOG_LEVEL_WARNING, "*KERNEL*BUG*");
+
 	ret = fu_context_load_quirks(ctx,
 				     FU_QUIRKS_LOAD_FLAG_NO_CACHE | FU_QUIRKS_LOAD_FLAG_NO_VERIFY,
 				     &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
+	ret = fu_context_load_hwinfo(ctx, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = fu_context_reload_bios_attrs(ctx, &error);
+	g_assert_true(ret);
+	g_assert_no_error(error);
+	g_test_assert_expected_messages();
 
 	self->plugin_uefi_capsule = fu_plugin_new(ctx);
 	pluginfn_uefi = g_test_build_filename(G_TEST_BUILT,
@@ -74,6 +85,7 @@ fu_test_self_init(FuTest *self, GError **error_global)
 	ret = fu_plugin_runner_startup(self->plugin_lenovo_thinklmi, progress, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
+	self->ctx = fu_plugin_get_context(self->plugin_lenovo_thinklmi);
 	return TRUE;
 }
 
@@ -104,10 +116,16 @@ static void
 fu_plugin_lenovo_thinklmi_bootorder_locked(gconstpointer user_data)
 {
 	FuTest *self = (FuTest *)user_data;
+	gboolean ret;
 	g_autoptr(FuDevice) dev = NULL;
+	g_autoptr(GError) error = NULL;
 	g_autofree gchar *test_dir =
 	    g_test_build_filename(G_TEST_DIST, "tests", "firmware-attributes", "locked", NULL);
 	(void)g_setenv("FWUPD_SYSFSFWATTRIBDIR", test_dir, TRUE);
+
+	ret = fu_context_reload_bios_attrs(self->ctx, &error);
+	g_assert_true(ret);
+	g_assert_no_error(error);
 
 	dev = fu_test_probe_fake_esrt(self);
 	fu_plugin_runner_device_register(self->plugin_lenovo_thinklmi, dev);
@@ -118,14 +136,41 @@ static void
 fu_plugin_lenovo_thinklmi_bootorder_unlocked(gconstpointer user_data)
 {
 	FuTest *self = (FuTest *)user_data;
+	gboolean ret;
 	g_autoptr(FuDevice) dev = NULL;
+	g_autoptr(GError) error = NULL;
 	g_autofree gchar *test_dir =
 	    g_test_build_filename(G_TEST_DIST, "tests", "firmware-attributes", "unlocked", NULL);
 	(void)g_setenv("FWUPD_SYSFSFWATTRIBDIR", test_dir, TRUE);
 
+	ret = fu_context_reload_bios_attrs(self->ctx, &error);
+	g_assert_true(ret);
+	g_assert_no_error(error);
 	dev = fu_test_probe_fake_esrt(self);
 	fu_plugin_runner_device_register(self->plugin_lenovo_thinklmi, dev);
 	g_assert_true(fu_device_has_flag(dev, FWUPD_DEVICE_FLAG_UPDATABLE));
+}
+
+static void
+fu_plugin_lenovo_thinklmi_reboot_pending(gconstpointer user_data)
+{
+	FuTest *self = (FuTest *)user_data;
+	gboolean ret;
+	g_autoptr(FuDevice) dev = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autofree gchar *test_dir = g_test_build_filename(G_TEST_DIST,
+							   "tests",
+							   "firmware-attributes",
+							   "reboot-pending",
+							   NULL);
+	(void)g_setenv("FWUPD_SYSFSFWATTRIBDIR", test_dir, TRUE);
+
+	ret = fu_context_reload_bios_attrs(self->ctx, &error);
+	g_assert_true(ret);
+	g_assert_no_error(error);
+	dev = fu_test_probe_fake_esrt(self);
+	fu_plugin_runner_device_register(self->plugin_lenovo_thinklmi, dev);
+	g_assert_true(fu_device_has_flag(dev, FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN));
 }
 
 static void
@@ -184,5 +229,8 @@ main(int argc, char **argv)
 	g_test_add_data_func("/fwupd/plugin{lenovo-think-lmi:bootorder-unlocked}",
 			     self,
 			     fu_plugin_lenovo_thinklmi_bootorder_unlocked);
+	g_test_add_data_func("/fwupd/plugin{lenovo-think-lmi:reboot-pending}",
+			     self,
+			     fu_plugin_lenovo_thinklmi_reboot_pending);
 	return g_test_run();
 }
