@@ -6471,6 +6471,15 @@ fu_engine_get_host_security_events(FuEngine *self, guint limit, GError **error)
 		g_autoptr(GPtrArray) diffs = fu_security_attrs_compare(attrs_old, attrs_new);
 		for (guint j = 0; j < diffs->len; j++) {
 			FwupdSecurityAttr *attr = g_ptr_array_index(diffs, j);
+			if (fwupd_security_attr_get_title(attr) == NULL) {
+				fwupd_security_attr_set_title(attr,
+							      fu_security_attr_get_title(attr));
+			}
+			if (fwupd_security_attr_get_description(attr) == NULL) {
+				fwupd_security_attr_set_description(
+				    attr,
+				    fu_security_attr_get_description(attr));
+			}
 			fu_security_attrs_append_internal(events, attr);
 		}
 	}
