@@ -12,6 +12,7 @@
 #include <libfwupdplugin/fu-archive-firmware.h>
 #include <libfwupdplugin/fu-archive.h>
 #include <libfwupdplugin/fu-backend.h>
+#include <libfwupdplugin/fu-bios-attrs.h>
 #include <libfwupdplugin/fu-bluez-device.h>
 #include <libfwupdplugin/fu-byte-array.h>
 #include <libfwupdplugin/fu-bytes.h>

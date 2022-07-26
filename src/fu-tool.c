@@ -21,10 +21,12 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#include "fwupd-bios-attr-private.h"
 #include "fwupd-common-private.h"
 #include "fwupd-device-private.h"
 #include "fwupd-plugin-private.h"
 
+#include "fu-bios-attrs-private.h"
 #include "fu-cabinet.h"
 #include "fu-context-private.h"
 #include "fu-debug.h"
@@ -38,6 +40,7 @@
 #include "fu-security-attr.h"
 #include "fu-security-attrs-private.h"
 #include "fu-smbios-private.h"
+#include "fu-util-bios-attr.h"
 #include "fu-util-common.h"
 
 #ifdef HAVE_SYSTEMD
@@ -3243,6 +3246,92 @@ fu_util_switch_branch(FuUtilPrivate *priv, gchar **values, GError **error)
 }
 
 static gboolean
+fu_util_set_bios_attr(FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	if (g_strv_length(values) < 2) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_ARGS,
+				    /* TRANSLATORS: error message */
+				    _("Invalid arguments"));
+		return FALSE;
+	}
+
+	/* load engine */
+	if (!fu_util_start_engine(priv,
+				  FU_ENGINE_LOAD_FLAG_HWINFO | FU_ENGINE_LOAD_FLAG_COLDPLUG,
+				  priv->progress,
+				  error))
+		return FALSE;
+
+	if (!fu_engine_modify_bios_attr(priv->engine, values[0], values[1], error))
+		return FALSE;
+
+	if (!priv->as_json) {
+		g_autofree gchar *msg =
+		    g_strdup_printf(_("Set BIOS attribute '%s' to '%s'."), values[0], values[1]);
+		/* TRANSLATORS: Configured a BIOS setting to a value */
+		g_print("\n%s\n", msg);
+	}
+	priv->completion_flags |= FWUPD_DEVICE_FLAG_NEEDS_REBOOT;
+
+	if (priv->no_reboot_check) {
+		g_debug("skipping reboot check");
+		return TRUE;
+	}
+
+	return fu_util_prompt_complete(priv->completion_flags, TRUE, error);
+}
+
+static gboolean
+fu_util_get_bios_attr(FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	g_autoptr(FuBiosAttrs) attrs = NULL;
+	g_autoptr(GPtrArray) items = NULL;
+	FuContext *ctx = fu_engine_get_context(priv->engine);
+	gboolean found = FALSE;
+
+	/* load engine */
+	if (!fu_util_start_engine(priv,
+				  FU_ENGINE_LOAD_FLAG_HWINFO | FU_ENGINE_LOAD_FLAG_COLDPLUG,
+				  priv->progress,
+				  error))
+		return FALSE;
+
+	attrs = fu_context_get_bios_attrs(ctx);
+	items = fu_bios_attrs_get_all(attrs);
+	if (priv->as_json)
+		return fu_util_get_bios_attr_as_json(values, items, error);
+
+	for (guint i = 0; i < items->len; i++) {
+		FwupdBiosAttr *attr = g_ptr_array_index(items, i);
+		if (fu_util_bios_attr_matches_args(attr, values)) {
+			g_autofree gchar *tmp = fu_util_bios_attr_to_string(attr, 0);
+			g_print("%s\n", tmp);
+			found = TRUE;
+		}
+	}
+	if (items->len == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOTHING_TO_DO,
+				    /* TRANSLATORS: error message */
+				    _("This system doesn't support firmware settings"));
+		return FALSE;
+	}
+	if (!found) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_ARGS,
+			    /* TRANSLATORS: error message */
+			    "Unable to find attribute '%s'",
+			    values[0]);
+		return FALSE;
+	}
+	return TRUE;
+}
+
+static gboolean
 fu_util_version(FuUtilPrivate *priv, GError **error)
 {
 	g_autoptr(GHashTable) metadata = NULL;
@@ -3775,6 +3864,21 @@ main(int argc, char *argv[])
 			      /* TRANSLATORS: command description */
 			      _("Erase all firmware update history"),
 			      fu_util_clear_history);
+	fu_util_cmd_array_add(
+	    cmd_array,
+	    "get-bios-settings,get-bios-setting",
+	    /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+	    _("[SETTING1] [ SETTING2]..."),
+	    /* TRANSLATORS: command description */
+	    _("Retrieve BIOS settings.  If no arguments are passed all settings are returned"),
+	    fu_util_get_bios_attr);
+	fu_util_cmd_array_add(cmd_array,
+			      "set-bios-setting",
+			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			      _("SETTING VALUE"),
+			      /* TRANSLATORS: command description */
+			      _("Set a BIOS setting"),
+			      fu_util_set_bios_attr);
 
 	/* do stuff on ctrl+c */
 	priv->cancellable = g_cancellable_new();

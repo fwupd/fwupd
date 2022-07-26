@@ -86,6 +86,7 @@ fwupdmgr = executable(
     'fu-history.c',
     'fu-progressbar.c',
     'fu-security-attr.c',
+    'fu-util-bios-attr.c',
     'fu-util-common.c',
     client_src,
     systemd_src
@@ -188,6 +189,7 @@ fwupdtool = executable(
     'fu-tool.c',
     'fu-progressbar.c',
     'fu-util-common.c',
+    'fu-util-bios-attr.c',
     daemon_src,
   ],
   include_directories: [

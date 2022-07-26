@@ -15,6 +15,7 @@
 
 #include "fwupd-security-attr-private.h"
 
+#include "fu-bios-attrs-private.h"
 #include "fu-cabinet-common.h"
 #include "fu-config.h"
 #include "fu-context-private.h"
@@ -4508,6 +4509,109 @@ fu_common_store_cab_error_wrong_checksum_func(void)
 	g_assert_null(silo);
 }
 
+static void
+fu_engine_modify_bios_attrs_func(void)
+{
+	gboolean ret;
+	const gchar *current;
+	FwupdBiosAttr *attr1;
+	FwupdBiosAttr *attr2;
+	FwupdBiosAttr *attr3;
+	FwupdBiosAttr *attr4;
+	g_autofree gchar *test_dir = NULL;
+	g_autoptr(FuEngine) engine = fu_engine_new();
+	g_autoptr(GError) error = NULL;
+	g_autoptr(FuBiosAttrs) attrs = NULL;
+	g_autoptr(GPtrArray) items = NULL;
+
+	/* Load contrived attributes */
+	test_dir = g_test_build_filename(G_TEST_DIST, "tests", "bios-attrs", NULL);
+	(void)g_setenv("FWUPD_SYSFSFWATTRIBDIR", test_dir, TRUE);
+
+	ret = fu_context_reload_bios_attrs(fu_engine_get_context(engine), &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	attrs = fu_context_get_bios_attrs(fu_engine_get_context(engine));
+	items = fu_bios_attrs_get_all(attrs);
+	g_assert_cmpint(items->len, ==, 4);
+
+	/* enumeration */
+	attr1 = fu_context_get_bios_attr(fu_engine_get_context(engine), "Absolute");
+	g_assert_nonnull(attr1);
+
+	current = fwupd_bios_attr_get_current_value(attr1);
+	g_assert_nonnull(current);
+
+	ret = fu_engine_modify_bios_attr(engine, "Absolute", "Disabled", &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	ret = fu_engine_modify_bios_attr(engine, "Absolute", "Disable", &error);
+	g_assert_false(ret);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
+	g_clear_error(&error);
+
+	ret = fu_engine_modify_bios_attr(engine, "Absolute", current, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* string */
+	attr2 = fu_context_get_bios_attr(fu_engine_get_context(engine), "Asset");
+	g_assert_nonnull(attr2);
+
+	current = fwupd_bios_attr_get_current_value(attr2);
+	g_assert_nonnull(current);
+
+	ret = fu_engine_modify_bios_attr(engine, "Asset", "1", &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	ret = fu_engine_modify_bios_attr(
+	    engine,
+	    "Absolute",
+	    "1234567891123456789112345678911234567891123456789112345678911111",
+	    &error);
+	g_assert_false(ret);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
+	g_clear_error(&error);
+
+	/* integer */
+	attr3 = fu_context_get_bios_attr(fu_engine_get_context(engine), "CustomChargeStop");
+	g_assert_nonnull(attr3);
+
+	current = fwupd_bios_attr_get_current_value(attr3);
+	g_assert_nonnull(current);
+
+	ret = fu_engine_modify_bios_attr(engine, "CustomChargeStop", "70", &error);
+	g_assert_true(ret);
+
+	ret = fu_engine_modify_bios_attr(engine, "CustomChargeStop", "110", &error);
+	g_assert_false(ret);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
+	g_clear_error(&error);
+
+	ret = fu_engine_modify_bios_attr(engine, "CustomChargeStop", "1", &error);
+	g_assert_false(ret);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
+	g_clear_error(&error);
+
+	ret = fu_engine_modify_bios_attr(engine, "CustomChargeStop", current, &error);
+	g_assert_true(ret);
+	g_assert_no_error(error);
+
+	/* Read Only */
+	attr4 = fu_context_get_bios_attr(fu_engine_get_context(engine), "pending_reboot");
+	g_assert_nonnull(attr4);
+
+	current = fwupd_bios_attr_get_current_value(attr4);
+	g_assert_nonnull(current);
+
+	ret = fu_engine_modify_bios_attr(engine, "pending_reboot", "foo", &error);
+	g_assert_false(ret);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -4692,5 +4796,6 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/common{cab-error-missing-file}",
 			fu_common_store_cab_error_missing_file_func);
 	g_test_add_func("/fwupd/common{cab-error-size}", fu_common_store_cab_error_size_func);
+	g_test_add_func("/fwupd/write-bios-attrs", fu_engine_modify_bios_attrs_func);
 	return g_test_run();
 }

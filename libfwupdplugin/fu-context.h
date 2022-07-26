@@ -8,6 +8,7 @@
 
 #include <gio/gio.h>
 
+#include "fu-bios-attrs.h"
 #include "fu-common.h"
 
 #define FU_TYPE_CONTEXT (fu_context_get_type())
@@ -85,3 +86,10 @@ guint
 fu_context_get_battery_threshold(FuContext *self);
 void
 fu_context_set_battery_threshold(FuContext *self, guint battery_threshold);
+
+FuBiosAttrs *
+fu_context_get_bios_attrs(FuContext *self);
+gboolean
+fu_context_get_bios_attr_pending_reboot(FuContext *self);
+FwupdBiosAttr *
+fu_context_get_bios_attr(FuContext *self, const gchar *name);

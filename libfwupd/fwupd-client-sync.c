@@ -888,6 +888,113 @@ fwupd_client_get_results(FwupdClient *self,
 }
 
 static void
+fwupd_client_modify_bios_attr_cb(GObject *source, GAsyncResult *res, gpointer user_data)
+{
+	FwupdClientHelper *helper = (FwupdClientHelper *)user_data;
+	helper->ret =
+	    fwupd_client_modify_bios_attr_finish(FWUPD_CLIENT(source), res, &helper->error);
+	g_main_loop_quit(helper->loop);
+}
+
+/**
+ * fwupd_client_modify_bios_attr
+ * @self: a #FwupdClient
+ * @key: the name of the BIOS attribute, e.g. `SleepMode`
+ * @value: the value to set, e.g. 'S3'
+ * @cancellable: (nullable): optional #GCancellable
+ * @error: (nullable): optional return location for an error
+ *
+ * Modifies a BIOS attribute using kernel API.
+ * The daemon will only respond to this request with proper permissions.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.8.4
+ **/
+gboolean
+fwupd_client_modify_bios_attr(FwupdClient *self,
+			      const gchar *key,
+			      const gchar *value,
+			      GCancellable *cancellable,
+			      GError **error)
+{
+	g_autoptr(FwupdClientHelper) helper = NULL;
+
+	g_return_val_if_fail(FWUPD_IS_CLIENT(self), FALSE);
+	g_return_val_if_fail(key != NULL, FALSE);
+	g_return_val_if_fail(value != NULL, FALSE);
+	g_return_val_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	/* connect */
+	if (!fwupd_client_connect(self, cancellable, error))
+		return FALSE;
+
+	/* call async version and run loop until complete */
+	helper = fwupd_client_helper_new(self);
+	fwupd_client_modify_bios_attr_async(self,
+					    key,
+					    value,
+					    cancellable,
+					    fwupd_client_modify_bios_attr_cb,
+					    helper);
+	g_main_loop_run(helper->loop);
+	if (!helper->ret) {
+		g_propagate_error(error, g_steal_pointer(&helper->error));
+		return FALSE;
+	}
+	return TRUE;
+}
+
+static void
+fwupd_client_get_bios_attrs_cb(GObject *source, GAsyncResult *res, gpointer user_data)
+{
+	FwupdClientHelper *helper = (FwupdClientHelper *)user_data;
+	helper->array =
+	    fwupd_client_get_bios_attrs_finish(FWUPD_CLIENT(source), res, &helper->error);
+	g_main_loop_quit(helper->loop);
+}
+
+/**
+ * fwupd_client_get_bios_attrs:
+ * @self: a #FwupdClient
+ * @cancellable: (nullable): optional #GCancellable
+ * @error: (nullable): optional return location for an error
+ *
+ * Gets all the BIOS attributes from the daemon.
+ *
+ * Returns: (element-type FwupdBiosAttr) (transfer container): attributes
+ *
+ * Since: 1.8.4
+ **/
+GPtrArray *
+fwupd_client_get_bios_attrs(FwupdClient *self, GCancellable *cancellable, GError **error)
+{
+	g_autoptr(FwupdClientHelper) helper = NULL;
+
+	g_return_val_if_fail(FWUPD_IS_CLIENT(self), NULL);
+	g_return_val_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	/* connect */
+	if (!fwupd_client_connect(self, cancellable, error))
+		return NULL;
+
+	/* call async version and run loop until complete */
+	helper = fwupd_client_helper_new(self);
+	fwupd_client_get_bios_attrs_async(self,
+					  cancellable,
+					  fwupd_client_get_bios_attrs_cb,
+					  helper);
+	g_main_loop_run(helper->loop);
+	if (helper->array == NULL) {
+		g_propagate_error(error, g_steal_pointer(&helper->error));
+		return NULL;
+	}
+	return g_steal_pointer(&helper->array);
+}
+
+static void
 fwupd_client_get_host_security_attrs_cb(GObject *source, GAsyncResult *res, gpointer user_data)
 {
 	FwupdClientHelper *helper = (FwupdClientHelper *)user_data;

@@ -13,6 +13,8 @@
 FuContext *
 fu_context_new(void);
 gboolean
+fu_context_reload_bios_attrs(FuContext *self, GError **error);
+gboolean
 fu_context_load_hwinfo(FuContext *self, GError **error);
 gboolean
 fu_context_load_quirks(FuContext *self, FuQuirksLoadFlags flags, GError **error);

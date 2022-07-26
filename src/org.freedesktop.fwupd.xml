@@ -866,6 +866,52 @@
     </method>
 
     <!--***********************************************************-->
+    <method name='SetBiosAttr'>
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Modify BIOS attribute
+          </doc:para>
+        </doc:description>
+      </doc:doc>
+      <arg type='s' name='key' direction='in'>
+        <doc:doc>
+          <doc:summary>
+            <doc:para>
+              The BIOS attribute, e.g. 'CustomChargeStop'.
+            </doc:para>
+          </doc:summary>
+        </doc:doc>
+      </arg>
+      <arg type='s' name='value' direction='in'>
+        <doc:doc>
+          <doc:summary>
+            <doc:para>
+              The value to set the BIOS attribute to
+            </doc:para>
+          </doc:summary>
+        </doc:doc>
+      </arg>
+    </method>
+
+    <method name='GetBiosAttrs'>
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Gets a list of all the BIOS attributes.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
+      <arg type='aa{sv}' name='attrs' direction='out'>
+        <doc:doc>
+          <doc:summary>
+            <doc:para>An array of BIOS attributes, with any properties set on each.</doc:para>
+          </doc:summary>
+        </doc:doc>
+      </arg>
+    </method>
+
+    <!--***********************************************************-->
     <method name='Quit'>
       <doc:doc>
         <doc:description>
