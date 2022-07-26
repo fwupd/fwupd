@@ -87,10 +87,15 @@ fu_ata_oui_func(void)
 int
 main(int argc, char **argv)
 {
+	g_autofree gchar *testdatadir = NULL;
 	g_test_init(&argc, &argv, NULL);
 
 	/* only critical and error are fatal */
 	g_log_set_fatal_mask(NULL, G_LOG_LEVEL_ERROR | G_LOG_LEVEL_CRITICAL);
+	(void)g_setenv("G_MESSAGES_DEBUG", "all", TRUE);
+
+	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
+	(void)g_setenv("FWUPD_SYSFSFWATTRIBDIR", testdatadir, TRUE);
 
 	/* tests go here */
 	g_test_add_func("/fwupd/ata/id", fu_ata_id_func);

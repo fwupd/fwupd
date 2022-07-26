@@ -152,13 +152,17 @@ fu_dfu_target_dfuse_func(void)
 int
 main(int argc, char **argv)
 {
+	g_autofree gchar *testdatadir = NULL;
+
 	g_test_init(&argc, &argv, NULL);
 
 	/* only critical and error are fatal */
 	g_log_set_fatal_mask(NULL, G_LOG_LEVEL_ERROR | G_LOG_LEVEL_CRITICAL);
-
-	/* log everything */
 	(void)g_setenv("G_MESSAGES_DEBUG", "all", FALSE);
+
+	/* environment */
+	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
+	(void)g_setenv("FWUPD_SYSFSFWATTRIBDIR", testdatadir, TRUE);
 
 	/* tests go here */
 	g_test_add_func("/dfu/enums", fu_dfu_enums_func);

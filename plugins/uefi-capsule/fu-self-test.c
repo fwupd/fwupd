@@ -291,6 +291,7 @@ main(int argc, char **argv)
 	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
 	(void)g_setenv("FWUPD_SYSFSFWDIR", testdatadir, TRUE);
 	(void)g_setenv("FWUPD_SYSFSDRIVERDIR", testdatadir, TRUE);
+	(void)g_setenv("FWUPD_SYSFSFWATTRIBDIR", testdatadir, TRUE);
 	(void)g_setenv("FWUPD_UEFI_TEST", "1", TRUE);
 
 	/* only critical and error are fatal */

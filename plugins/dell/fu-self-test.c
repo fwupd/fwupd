@@ -568,6 +568,7 @@ main(int argc, char **argv)
 	/* change path */
 	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
 	(void)g_setenv("FWUPD_SYSFSFWDIR", testdatadir, TRUE);
+	(void)g_setenv("FWUPD_SYSFSFWATTRIBDIR", testdatadir, TRUE);
 
 	/* change behavior */
 	sysfsdir = fu_path_from_kind(FU_PATH_KIND_SYSFSDIR_FW);

@@ -87,8 +87,12 @@ fu_test_mtd_device_func(void)
 int
 main(int argc, char **argv)
 {
+	g_autofree gchar *testdatadir = NULL;
 	g_test_init(&argc, &argv, NULL);
 	(void)g_setenv("FWUPD_MTD_VERBOSE", "1", TRUE);
+	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
+	(void)g_setenv("FWUPD_SYSFSFWATTRIBDIR", testdatadir, TRUE);
+
 	g_log_set_fatal_mask(NULL, G_LOG_LEVEL_ERROR | G_LOG_LEVEL_CRITICAL);
 	g_test_add_func("/mtd/device", fu_test_mtd_device_func);
 	return g_test_run();
