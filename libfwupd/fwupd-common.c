@@ -1220,3 +1220,51 @@ fwupd_common_json_add_stringv(JsonBuilder *builder, const gchar *key, gchar **va
 		json_builder_add_string_value(builder, value[i]);
 	json_builder_end_array(builder);
 }
+
+/**
+ * fwupd_pad_kv_str: (skip):
+ **/
+void
+fwupd_pad_kv_str(GString *str, const gchar *key, const gchar *value)
+{
+	/* ignore */
+	if (key == NULL || value == NULL)
+		return;
+	g_string_append_printf(str, "  %s: ", key);
+	for (gsize i = strlen(key); i < 20; i++)
+		g_string_append(str, " ");
+	g_string_append_printf(str, "%s\n", value);
+}
+
+/**
+ * fwupd_pad_kv_unx: (skip):
+ **/
+void
+fwupd_pad_kv_unx(GString *str, const gchar *key, guint64 value)
+{
+	g_autoptr(GDateTime) date = NULL;
+	g_autofree gchar *tmp = NULL;
+
+	/* ignore */
+	if (value == 0)
+		return;
+
+	date = g_date_time_new_from_unix_utc((gint64)value);
+	tmp = g_date_time_format(date, "%F");
+	fwupd_pad_kv_str(str, key, tmp);
+}
+
+/**
+ * fwupd_pad_kv_int: (skip):
+ **/
+void
+fwupd_pad_kv_int(GString *str, const gchar *key, guint32 value)
+{
+	g_autofree gchar *tmp = NULL;
+
+	/* ignore */
+	if (value == 0)
+		return;
+	tmp = g_strdup_printf("%" G_GUINT32_FORMAT, value);
+	fwupd_pad_kv_str(str, key, tmp);
+}

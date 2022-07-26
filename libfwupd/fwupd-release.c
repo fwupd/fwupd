@@ -1943,33 +1943,6 @@ fwupd_release_from_key_value(FwupdRelease *self, const gchar *key, GVariant *val
 }
 
 static void
-fwupd_pad_kv_str(GString *str, const gchar *key, const gchar *value)
-{
-	/* ignore */
-	if (key == NULL || value == NULL)
-		return;
-	g_string_append_printf(str, "  %s: ", key);
-	for (gsize i = strlen(key); i < 20; i++)
-		g_string_append(str, " ");
-	g_string_append_printf(str, "%s\n", value);
-}
-
-static void
-fwupd_pad_kv_unx(GString *str, const gchar *key, guint64 value)
-{
-	g_autoptr(GDateTime) date = NULL;
-	g_autofree gchar *tmp = NULL;
-
-	/* ignore */
-	if (value == 0)
-		return;
-
-	date = g_date_time_new_from_unix_utc((gint64)value);
-	tmp = g_date_time_format(date, "%F");
-	fwupd_pad_kv_str(str, key, tmp);
-}
-
-static void
 fwupd_pad_kv_siz(GString *str, const gchar *key, guint64 value)
 {
 	g_autofree gchar *tmp = NULL;
@@ -1996,18 +1969,6 @@ fwupd_pad_kv_tfl(GString *str, const gchar *key, FwupdReleaseFlags release_flags
 		g_string_truncate(tmp, tmp->len - 1);
 	}
 	fwupd_pad_kv_str(str, key, tmp->str);
-}
-
-static void
-fwupd_pad_kv_int(GString *str, const gchar *key, guint32 value)
-{
-	g_autofree gchar *tmp = NULL;
-
-	/* ignore */
-	if (value == 0)
-		return;
-	tmp = g_strdup_printf("%" G_GUINT32_FORMAT, value);
-	fwupd_pad_kv_str(str, key, tmp);
 }
 
 /**

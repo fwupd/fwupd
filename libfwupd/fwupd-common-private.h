@@ -51,4 +51,11 @@ GUnixInputStream *
 fwupd_unix_input_stream_from_fn(const gchar *fn, GError **error) G_GNUC_WARN_UNUSED_RESULT;
 #endif
 
+void
+fwupd_pad_kv_unx(GString *str, const gchar *key, guint64 value);
+void
+fwupd_pad_kv_str(GString *str, const gchar *key, const gchar *value);
+void
+fwupd_pad_kv_int(GString *str, const gchar *key, guint32 value);
+
 G_END_DECLS

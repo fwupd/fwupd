@@ -6,6 +6,7 @@
 
 #include "config.h"
 
+#include "fwupd-common-private.h"
 #include "fwupd-enums-private.h"
 #include "fwupd-request-private.h"
 
@@ -278,33 +279,6 @@ fwupd_request_from_key_value(FwupdRequest *self, const gchar *key, GVariant *val
 		fwupd_request_set_kind(self, g_variant_get_uint32(value));
 		return;
 	}
-}
-
-static void
-fwupd_pad_kv_str(GString *str, const gchar *key, const gchar *value)
-{
-	/* ignore */
-	if (key == NULL || value == NULL)
-		return;
-	g_string_append_printf(str, "  %s: ", key);
-	for (gsize i = strlen(key); i < 20; i++)
-		g_string_append(str, " ");
-	g_string_append_printf(str, "%s\n", value);
-}
-
-static void
-fwupd_pad_kv_unx(GString *str, const gchar *key, guint64 value)
-{
-	g_autoptr(GDateTime) date = NULL;
-	g_autofree gchar *tmp = NULL;
-
-	/* ignore */
-	if (value == 0)
-		return;
-
-	date = g_date_time_new_from_unix_utc((gint64)value);
-	tmp = g_date_time_format(date, "%F");
-	fwupd_pad_kv_str(str, key, tmp);
 }
 
 /**

@@ -226,18 +226,6 @@ fwupd_plugin_from_key_value(FwupdPlugin *self, const gchar *key, GVariant *value
 }
 
 static void
-fwupd_pad_kv_str(GString *str, const gchar *key, const gchar *value)
-{
-	/* ignore */
-	if (key == NULL || value == NULL)
-		return;
-	g_string_append_printf(str, "  %s: ", key);
-	for (gsize i = strlen(key); i < 20; i++)
-		g_string_append(str, " ");
-	g_string_append_printf(str, "%s\n", value);
-}
-
-static void
 fwupd_pad_kv_dfl(GString *str, const gchar *key, guint64 plugin_flags)
 {
 	g_autoptr(GString) tmp = g_string_new("");
