@@ -8,6 +8,8 @@
 
 #include "config.h"
 
+#include <fcntl.h>
+
 #ifdef HAVE_GIO_UNIX
 #include <gio/gunixinputstream.h>
 #endif
@@ -26,6 +28,7 @@
 
 #include <fwupdplugin.h>
 
+#include "fwupd-bios-attr-private.h"
 #include "fwupd-common-private.h"
 #include "fwupd-device-private.h"
 #include "fwupd-enums-private.h"
@@ -722,6 +725,168 @@ fu_engine_modify_remote(FuEngine *self,
 		return FALSE;
 	}
 	return fu_remote_list_set_key_value(self->remote_list, remote_id, key, value, error);
+}
+
+static gboolean
+fu_engine_update_bios_attr(FwupdBiosAttr *attr, const gchar *value, GError **error)
+{
+	int fd;
+	g_autofree gchar *fn =
+	    g_build_filename(fwupd_bios_attr_get_path(attr), "current_value", NULL);
+	g_autoptr(FuIOChannel) io = NULL;
+
+	fd = open(fn, O_WRONLY);
+	if (fd < 0) {
+		g_set_error(error,
+			    G_IO_ERROR,
+#ifdef HAVE_ERRNO_H
+			    g_io_error_from_errno(errno),
+#else
+			    G_IO_ERROR_FAILED,
+#endif
+			    "could not open %s: %s",
+			    fn,
+			    g_strerror(errno));
+		return FALSE;
+	}
+	io = fu_io_channel_unix_new(fd);
+	if (!fu_io_channel_write_raw(io,
+				     (const guint8 *)value,
+				     strlen(value),
+				     1000,
+				     FU_IO_CHANNEL_FLAG_NONE,
+				     error))
+		return FALSE;
+	fwupd_bios_attr_set_current_value(attr, value);
+
+	return TRUE;
+}
+
+/*
+ * This is also done by the kernel or firmware, doing it here too allows for cleaner
+ * error messages
+ */
+static gboolean
+fu_engine_validate_bios_attr_input(FwupdBiosAttr *attr, const gchar *value, GError **error)
+{
+	guint64 tmp = 0;
+
+	if (attr == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_FOUND,
+				    "attribute not found");
+		return FALSE;
+	}
+	if (fwupd_bios_attr_get_read_only(attr)) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "%s is read only",
+			    fwupd_bios_attr_get_name(attr));
+		return FALSE;
+	} else if (fwupd_bios_attr_get_kind(attr) == FWUPD_BIOS_ATTR_KIND_INTEGER) {
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT64, error))
+			return FALSE;
+		if (tmp < fwupd_bios_attr_get_lower_bound(attr)) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "%s is too small (%" G_GUINT64_FORMAT
+				    "); expected at least %" G_GUINT64_FORMAT,
+				    value,
+				    tmp,
+				    fwupd_bios_attr_get_lower_bound(attr));
+			return FALSE;
+		}
+		if (tmp > fwupd_bios_attr_get_upper_bound(attr)) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "%s is too big (%" G_GUINT64_FORMAT
+				    "); expected no more than %" G_GUINT64_FORMAT,
+				    value,
+				    tmp,
+				    fwupd_bios_attr_get_upper_bound(attr));
+			return FALSE;
+		}
+	} else if (fwupd_bios_attr_get_kind(attr) == FWUPD_BIOS_ATTR_KIND_STRING) {
+		tmp = strlen(value);
+		if (tmp < fwupd_bios_attr_get_lower_bound(attr)) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "%s is too short (%" G_GUINT64_FORMAT
+				    "); expected at least %" G_GUINT64_FORMAT,
+				    value,
+				    tmp,
+				    fwupd_bios_attr_get_lower_bound(attr));
+			return FALSE;
+		}
+		if (tmp > fwupd_bios_attr_get_upper_bound(attr)) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "%s is too long (%" G_GUINT64_FORMAT
+				    "); expected no more than %" G_GUINT64_FORMAT,
+				    value,
+				    tmp,
+				    fwupd_bios_attr_get_upper_bound(attr));
+			return FALSE;
+		}
+	} else if (fwupd_bios_attr_get_kind(attr) == FWUPD_BIOS_ATTR_KIND_ENUMERATION) {
+		if (!fwupd_bios_attr_has_possible_value(attr, value)) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "%s is not a supported possible attribute value",
+				    value);
+			return FALSE;
+		}
+	} else {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "unknown attribute type");
+		return FALSE;
+	}
+	return TRUE;
+}
+
+/**
+ * fu_engine_modify_bios_attr:
+ * @self: a #FuEngine
+ * @key: the name of the BIOS attribute, e.g. `SleepMode`
+ * @value: the value to set, e.g. 'S3'
+ * @error: (nullable): optional return location for an error
+ *
+ * Use the kernel API to set a BIOS attribute.
+ *
+ * Returns: %TRUE for success
+ **/
+gboolean
+fu_engine_modify_bios_attr(FuEngine *self, const gchar *key, const gchar *value, GError **error)
+{
+	FwupdBiosAttr *attr = fu_context_get_bios_attr(self->ctx, key);
+	FwupdBiosAttr *pending;
+
+	if (!fu_engine_validate_bios_attr_input(attr, value, error))
+		return FALSE;
+
+	if (!fu_engine_update_bios_attr(attr, value, error))
+		return FALSE;
+
+	pending = fu_context_get_bios_attr(self->ctx, FWUPD_BIOS_ATTR_PENDING_REBOOT);
+	if (pending == NULL) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_FOUND,
+			    "attribute %s not found",
+			    FWUPD_BIOS_ATTR_PENDING_REBOOT);
+		return FALSE;
+	}
+	fwupd_bios_attr_set_current_value(pending, "1");
+	return TRUE;
 }
 
 /**
@@ -6673,9 +6838,27 @@ fu_engine_cleanup_state(GError **error)
 }
 
 static void
+fu_engine_check_firmware_attributes(FuEngine *self, FuDevice *device)
+{
+	const gchar *subsystem;
+
+	if (!FU_IS_UDEV_DEVICE(device))
+		return;
+	subsystem = fu_udev_device_get_subsystem(FU_UDEV_DEVICE(device));
+	if (g_strcmp0(subsystem, "firmware-attributes") == 0) {
+		g_autoptr(GError) error = NULL;
+		if (!fu_context_reload_bios_attrs(self->ctx, &error))
+			g_debug("%s", error->message);
+	}
+}
+
+static void
 fu_engine_backend_device_removed_cb(FuBackend *backend, FuDevice *device, FuEngine *self)
 {
 	g_autoptr(GPtrArray) devices = NULL;
+
+	/* if this is for firmware attributes, reload that part of the daemon */
+	fu_engine_check_firmware_attributes(self, device);
 
 	/* debug */
 	if (g_getenv("FWUPD_PROBE_VERBOSE") != NULL) {
@@ -6816,6 +6999,9 @@ fu_engine_backend_device_added(FuEngine *self, FuDevice *device, FuProgress *pro
 		g_autofree gchar *str = fu_device_to_string(FU_DEVICE(device));
 		g_debug("%s added %s", fu_device_get_backend_id(device), str);
 	}
+
+	/* if this is for firmware attributes, reload that part of the daemon */
+	fu_engine_check_firmware_attributes(self, device);
 
 	/* can be specified using a quirk */
 	fu_engine_backend_device_added_run_plugins(self, device, fu_progress_get_child(progress));

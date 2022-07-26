@@ -800,3 +800,43 @@ LIBFWUPD_1.8.3 {
     fwupd_security_attr_remove_flag;
   local: *;
 } LIBFWUPD_1.8.2;
+
+LIBFWUPD_1.8.4 {
+  global:
+    fwupd_bios_attr_add_possible_value;
+    fwupd_bios_attr_array_from_variant;
+    fwupd_bios_attr_from_json;
+    fwupd_bios_attr_from_variant;
+    fwupd_bios_attr_get_current_value;
+    fwupd_bios_attr_get_description;
+    fwupd_bios_attr_get_kind;
+    fwupd_bios_attr_get_lower_bound;
+    fwupd_bios_attr_get_name;
+    fwupd_bios_attr_get_path;
+    fwupd_bios_attr_get_possible_values;
+    fwupd_bios_attr_get_read_only;
+    fwupd_bios_attr_get_scalar_increment;
+    fwupd_bios_attr_get_type;
+    fwupd_bios_attr_get_upper_bound;
+    fwupd_bios_attr_has_possible_value;
+    fwupd_bios_attr_new;
+    fwupd_bios_attr_set_current_value;
+    fwupd_bios_attr_set_description;
+    fwupd_bios_attr_set_kind;
+    fwupd_bios_attr_set_lower_bound;
+    fwupd_bios_attr_set_name;
+    fwupd_bios_attr_set_path;
+    fwupd_bios_attr_set_read_only;
+    fwupd_bios_attr_set_scalar_increment;
+    fwupd_bios_attr_set_upper_bound;
+    fwupd_bios_attr_to_json;
+    fwupd_bios_attr_to_string;
+    fwupd_bios_attr_to_variant;
+    fwupd_client_get_bios_attrs;
+    fwupd_client_get_bios_attrs_async;
+    fwupd_client_get_bios_attrs_finish;
+    fwupd_client_modify_bios_attr;
+    fwupd_client_modify_bios_attr_async;
+    fwupd_client_modify_bios_attr_finish;
+  local: *;
+} LIBFWUPD_1.8.3;

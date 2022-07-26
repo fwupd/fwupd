@@ -30,6 +30,7 @@
 #include "fu-plugin-private.h"
 #include "fu-polkit-agent.h"
 #include "fu-progressbar.h"
+#include "fu-util-bios-attr.h"
 #include "fu-util-common.h"
 
 #ifdef HAVE_SYSTEMD
@@ -3794,6 +3795,79 @@ fu_util_show_plugin_warnings(FuUtilPrivate *priv)
 }
 
 static gboolean
+fu_util_set_bios_attr(FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	if (g_strv_length(values) < 2) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_ARGS,
+				    /* TRANSLATORS: error message */
+				    _("Invalid arguments"));
+		return FALSE;
+	}
+	if (!fwupd_client_modify_bios_attr(priv->client,
+					   values[0],
+					   values[1],
+					   priv->cancellable,
+					   error))
+		return FALSE;
+
+	if (!priv->as_json) {
+		g_autofree gchar *msg =
+		    g_strdup_printf(_("Set BIOS attribute '%s' to '%s'."), values[0], values[1]);
+		/* TRANSLATORS: Configured a BIOS setting to a value */
+		g_print("\n%s\n", msg);
+	}
+	priv->completion_flags |= FWUPD_DEVICE_FLAG_NEEDS_REBOOT;
+
+	if (priv->no_reboot_check) {
+		g_debug("skipping reboot check");
+		return TRUE;
+	}
+
+	return fu_util_prompt_complete(priv->completion_flags, TRUE, error);
+}
+
+static gboolean
+fu_util_get_bios_attr(FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	g_autoptr(GPtrArray) attrs = NULL;
+	gboolean found = FALSE;
+
+	attrs = fwupd_client_get_bios_attrs(priv->client, priv->cancellable, error);
+	if (attrs == NULL)
+		return FALSE;
+	if (priv->as_json)
+		return fu_util_get_bios_attr_as_json(values, attrs, error);
+
+	for (guint i = 0; i < attrs->len; i++) {
+		FwupdBiosAttr *attr = g_ptr_array_index(attrs, i);
+		if (fu_util_bios_attr_matches_args(attr, values)) {
+			g_autofree gchar *tmp = fu_util_bios_attr_to_string(attr, 0);
+			g_print("\n%s\n", tmp);
+			found = TRUE;
+		}
+	}
+	if (attrs->len == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOTHING_TO_DO,
+				    /* TRANSLATORS: error message */
+				    _("This system doesn't support firmware settings"));
+		return FALSE;
+	}
+	if (!found) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_ARGS,
+			    /* TRANSLATORS: error message */
+			    _("Unable to find attribute"));
+		return FALSE;
+	}
+	return TRUE;
+}
+
+static gboolean
 fu_util_version(FuUtilPrivate *priv, GError **error)
 {
 	g_autoptr(GHashTable) metadata = NULL;
@@ -4280,6 +4354,21 @@ main(int argc, char *argv[])
 			      /* TRANSLATORS: command description */
 			      _("Test a device using a JSON manifest"),
 			      fu_util_device_test);
+	fu_util_cmd_array_add(
+	    cmd_array,
+	    "get-bios-settings,get-bios-setting",
+	    /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+	    _("[SETTING1] [SETTING2]"),
+	    /* TRANSLATORS: command description */
+	    _("Retrieve BIOS settings.  If no arguments are passed all settings are returned"),
+	    fu_util_get_bios_attr);
+	fu_util_cmd_array_add(cmd_array,
+			      "set-bios-setting",
+			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			      _("SETTING VALUE"),
+			      /* TRANSLATORS: command description */
+			      _("Set a BIOS setting"),
+			      fu_util_set_bios_attr);
 
 	/* do stuff on ctrl+c */
 	priv->cancellable = g_cancellable_new();

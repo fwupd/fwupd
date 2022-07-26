@@ -18,6 +18,7 @@
 #endif
 #include <jcat.h>
 
+#include "fwupd-bios-attr-private.h"
 #include "fwupd-device-private.h"
 #include "fwupd-enums-private.h"
 #include "fwupd-plugin-private.h"
@@ -26,6 +27,7 @@
 #include "fwupd-request-private.h"
 #include "fwupd-security-attr-private.h"
 
+#include "fu-bios-attrs-private.h"
 #include "fu-daemon.h"
 #include "fu-device-private.h"
 #include "fu-engine.h"
@@ -500,6 +502,67 @@ fu_daemon_authorize_unlock_cb(GObject *source, GAsyncResult *res, gpointer user_
 		return;
 	}
 
+	/* success */
+	g_dbus_method_invocation_return_value(helper->invocation, NULL);
+}
+
+static void
+fu_daemon_authorize_get_bios_attrs_cb(GObject *source, GAsyncResult *res, gpointer user_data)
+{
+	g_autoptr(FuMainAuthHelper) helper = (FuMainAuthHelper *)user_data;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(FuBiosAttrs) attrs = NULL;
+	FuContext *ctx;
+	GVariant *val = NULL;
+#ifdef HAVE_POLKIT
+	g_autoptr(PolkitAuthorizationResult) auth = NULL;
+
+	/* get result */
+	auth = polkit_authority_check_authorization_finish(POLKIT_AUTHORITY(source), res, &error);
+	if (!fu_daemon_authorization_is_valid(auth, &error)) {
+		g_dbus_method_invocation_return_gerror(helper->invocation, error);
+		return;
+	}
+#else
+	if (!fu_daemon_authorization_is_trusted(helper->request, &error)) {
+		g_dbus_method_invocation_return_gerror(helper->invocation, error);
+		return;
+	}
+#endif /* HAVE_POLKIT */
+
+	/* authenticated */
+	ctx = fu_engine_get_context(helper->self->engine);
+	attrs = fu_context_get_bios_attrs(ctx);
+	val = fu_bios_attrs_to_variant(attrs);
+	g_dbus_method_invocation_return_value(helper->invocation, val);
+}
+
+static void
+fu_daemon_authorize_set_bios_attr_cb(GObject *source, GAsyncResult *res, gpointer user_data)
+{
+	g_autoptr(FuMainAuthHelper) helper = (FuMainAuthHelper *)user_data;
+	g_autoptr(GError) error = NULL;
+#ifdef HAVE_POLKIT
+	g_autoptr(PolkitAuthorizationResult) auth = NULL;
+
+	/* get result */
+	auth = polkit_authority_check_authorization_finish(POLKIT_AUTHORITY(source), res, &error);
+	if (!fu_daemon_authorization_is_valid(auth, &error)) {
+		g_dbus_method_invocation_return_gerror(helper->invocation, error);
+		return;
+	}
+#else
+	if (!fu_daemon_authorization_is_trusted(helper->request, &error)) {
+		g_dbus_method_invocation_return_gerror(helper->invocation, error);
+		return;
+	}
+#endif /* HAVE_POLKIT */
+
+	/* authenticated */
+	if (!fu_engine_modify_bios_attr(helper->self->engine, helper->key, helper->value, &error)) {
+		g_dbus_method_invocation_return_gerror(helper->invocation, error);
+		return;
+	}
 	/* success */
 	g_dbus_method_invocation_return_value(helper->invocation, NULL);
 }
@@ -1924,6 +1987,71 @@ fu_daemon_daemon_method_call(GDBusConnection *connection,
 		g_set_error(&error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "unsupported feature");
 		g_dbus_method_invocation_return_gerror(invocation, error);
 #endif /* HAVE_GIO_UNIX */
+		return;
+	}
+	if (g_strcmp0(method_name, "GetBiosAttrs") == 0) {
+		g_autoptr(FuMainAuthHelper) helper = NULL;
+#ifdef HAVE_POLKIT
+		g_autoptr(PolkitSubject) subject = NULL;
+#endif
+		g_debug("Called %s()", method_name);
+
+		/* authenticate */
+		fu_daemon_set_status(self, FWUPD_STATUS_WAITING_FOR_AUTH);
+		helper = g_new0(FuMainAuthHelper, 1);
+		helper->self = self;
+		helper->request = g_steal_pointer(&request);
+		helper->invocation = g_object_ref(invocation);
+#ifdef HAVE_POLKIT
+		subject = polkit_system_bus_name_new(sender);
+		polkit_authority_check_authorization(
+		    self->authority,
+		    subject,
+		    "org.freedesktop.fwupd.get-bios-attributes",
+		    NULL,
+		    POLKIT_CHECK_AUTHORIZATION_FLAGS_ALLOW_USER_INTERACTION,
+		    NULL,
+		    fu_daemon_authorize_get_bios_attrs_cb,
+		    g_steal_pointer(&helper));
+#else
+		fu_daemon_authorize_get_bios_attrs_cb(NULL, NULL, g_steal_pointer(&helper));
+#endif /* HAVE_POLKIT */
+
+		return;
+	}
+	if (g_strcmp0(method_name, "SetBiosAttr") == 0) {
+		g_autoptr(FuMainAuthHelper) helper = NULL;
+#ifdef HAVE_POLKIT
+		g_autoptr(PolkitSubject) subject = NULL;
+#endif
+		const gchar *key = NULL;
+		const gchar *value = NULL;
+		g_variant_get(parameters, "(&s&s)", &key, &value);
+		g_debug("Called %s(%s=%s)", method_name, key, value);
+
+		/* authenticate */
+		fu_daemon_set_status(self, FWUPD_STATUS_WAITING_FOR_AUTH);
+		helper = g_new0(FuMainAuthHelper, 1);
+		helper->self = self;
+		helper->request = g_steal_pointer(&request);
+		helper->invocation = g_object_ref(invocation);
+		helper->key = g_strdup(key);
+		helper->value = g_strdup(value);
+#ifdef HAVE_POLKIT
+		subject = polkit_system_bus_name_new(sender);
+		polkit_authority_check_authorization(
+		    self->authority,
+		    subject,
+		    "org.freedesktop.fwupd.set-bios-attribute",
+		    NULL,
+		    POLKIT_CHECK_AUTHORIZATION_FLAGS_ALLOW_USER_INTERACTION,
+		    NULL,
+		    fu_daemon_authorize_set_bios_attr_cb,
+		    g_steal_pointer(&helper));
+#else
+		fu_daemon_authorize_set_bios_attr_cb(NULL, NULL, g_steal_pointer(&helper));
+#endif /* HAVE_POLKIT */
+
 		return;
 	}
 	g_set_error(&error,

@@ -184,4 +184,27 @@
     </defaults>
   </action>
 
+  <action id="org.freedesktop.fwupd.get-bios-attributes">
+    <description>Get BIOS attributes</description>
+    <!-- TRANSLATORS: this is the PolicyKit modal dialog -->
+    <message>Authentication is required to read BIOS attributes</message>
+    <defaults>
+      <allow_any>auth_admin</allow_any>
+      <allow_inactive>no</allow_inactive>
+      <allow_active>auth_admin_keep</allow_active>
+    </defaults>
+  </action>
+
+  <action id="org.freedesktop.fwupd.set-bios-attribute">
+    <description>Set a BIOS attribute</description>
+    <!-- TRANSLATORS: this is the PolicyKit modal dialog -->
+    <message>Authentication is required to modify BIOS settings</message>
+    <defaults>
+      <allow_any>auth_admin</allow_any>
+      <allow_inactive>no</allow_inactive>
+      <allow_active>auth_admin</allow_active>
+    </defaults>
+    <annotate key="org.freedesktop.policykit.imply">org.freedesktop.fwupd.get-bios-attributes</annotate>
+  </action>
+
 </policyconfig>

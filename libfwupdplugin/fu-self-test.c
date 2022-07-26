@@ -12,8 +12,10 @@
 #include <libgcab.h>
 #include <string.h>
 
+#include "fwupd-bios-attr-private.h"
 #include "fwupd-security-attr-private.h"
 
+#include "fu-bios-attrs-private.h"
 #include "fu-cabinet.h"
 #include "fu-common-private.h"
 #include "fu-context-private.h"
@@ -2909,6 +2911,174 @@ fu_device_retry_hardware_func(void)
 }
 
 static void
+fu_bios_attrs_load_func(void)
+{
+	gboolean ret;
+	gint integer;
+	const gchar *tmp;
+	GPtrArray *values;
+	FwupdBiosAttr *attr;
+	FwupdBiosAttrKind kind;
+	g_autofree gchar *test_dir = NULL;
+	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(GError) error = NULL;
+	g_autoptr(FuBiosAttrs) p620_attrs = NULL;
+	g_autoptr(FuBiosAttrs) p14s_attrs = NULL;
+	g_autoptr(FuBiosAttrs) xps9310_attrs = NULL;
+	g_autoptr(GPtrArray) p14s_items = NULL;
+	g_autoptr(GPtrArray) p620_items = NULL;
+	g_autoptr(GPtrArray) xps9310_items = NULL;
+
+	/* Load attrs from a Lenovo P620 (with thinklmi driver problems) */
+	test_dir = g_test_build_filename(G_TEST_DIST, "tests", "bios-attrs", "lenovo-p620", NULL);
+	(void)g_setenv("FWUPD_SYSFSFWATTRIBDIR", test_dir, TRUE);
+
+	g_test_expect_message("FuBiosAttrs", G_LOG_LEVEL_WARNING, "*BUG*");
+	ret = fu_context_reload_bios_attrs(ctx, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_test_assert_expected_messages();
+
+	p620_attrs = fu_context_get_bios_attrs(ctx);
+	p620_items = fu_bios_attrs_get_all(p620_attrs);
+	g_assert_cmpint(p620_items->len, ==, 128);
+
+	/* make sure nothing pending */
+	ret = fu_context_get_bios_attr_pending_reboot(ctx);
+	g_assert_false(ret);
+
+	/* check an attribute reads from kernel as expected by fwupd today */
+	attr = fu_context_get_bios_attr(ctx, "AMDMemoryGuard");
+	g_assert_nonnull(attr);
+	tmp = fwupd_bios_attr_get_name(attr);
+	g_assert_cmpstr(tmp, ==, "AMDMemoryGuard");
+	tmp = fwupd_bios_attr_get_description(attr);
+	g_assert_cmpstr(tmp, ==, "AMDMemoryGuard");
+	tmp = fwupd_bios_attr_get_current_value(attr);
+	g_assert_cmpstr(tmp, ==, "Disable");
+	values = fwupd_bios_attr_get_possible_values(attr);
+	for (guint i = 0; i < values->len; i++) {
+		const gchar *possible = g_ptr_array_index(values, i);
+		if (i == 0)
+			g_assert_cmpstr(possible, ==, "Disable");
+		if (i == 1)
+			g_assert_cmpstr(possible, ==, "Enable");
+	}
+
+	/* try to read an attribute known to have ][Status] to make sure we worked
+	 * around the thinklmi bug sufficiently
+	 */
+	attr = fu_context_get_bios_attr(ctx, "StartupSequence");
+	g_assert_nonnull(attr);
+	tmp = fwupd_bios_attr_get_current_value(attr);
+	g_assert_cmpstr(tmp, ==, "Primary");
+	values = fwupd_bios_attr_get_possible_values(attr);
+	for (guint i = 0; i < values->len; i++) {
+		const gchar *possible = g_ptr_array_index(values, i);
+		if (i == 0)
+			g_assert_cmpstr(possible, ==, "Primary");
+		if (i == 1)
+			g_assert_cmpstr(possible, ==, "Automatic");
+	}
+
+	/* check no attributes have [Status in them */
+	for (guint i = 0; i < p620_items->len; i++) {
+		attr = g_ptr_array_index(p620_items, i);
+		tmp = fwupd_bios_attr_get_current_value(attr);
+		g_debug("%s", tmp);
+		g_assert_null(g_strrstr(tmp, "[Status"));
+	}
+
+	g_free(test_dir);
+
+	/* Load attrs from a Lenovo P14s Gen1 */
+	test_dir =
+	    g_test_build_filename(G_TEST_DIST, "tests", "bios-attrs", "lenovo-p14s-gen1", NULL);
+	(void)g_setenv("FWUPD_SYSFSFWATTRIBDIR", test_dir, TRUE);
+	ret = fu_context_reload_bios_attrs(ctx, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	p14s_attrs = fu_context_get_bios_attrs(ctx);
+	p14s_items = fu_bios_attrs_get_all(p14s_attrs);
+	g_assert_cmpint(p14s_items->len, ==, 75);
+
+	/* reboot should be pending on this one */
+	ret = fu_context_get_bios_attr_pending_reboot(ctx);
+	g_assert_true(ret);
+
+	/* look for an enumeration attribute with a space */
+	attr = fu_context_get_bios_attr(ctx, "SleepState");
+	g_assert_nonnull(attr);
+	tmp = fwupd_bios_attr_get_name(attr);
+	g_assert_cmpstr(tmp, ==, "SleepState");
+	tmp = fwupd_bios_attr_get_description(attr);
+	g_assert_cmpstr(tmp, ==, "SleepState");
+	values = fwupd_bios_attr_get_possible_values(attr);
+	for (guint i = 0; i < values->len; i++) {
+		const gchar *possible = g_ptr_array_index(values, i);
+		if (i == 0)
+			g_assert_cmpstr(possible, ==, "Linux");
+		if (i == 1)
+			g_assert_cmpstr(possible, ==, "Windows 10");
+	}
+
+	g_free(test_dir);
+
+	/* load attrs from a Dell XPS 9310 */
+	test_dir =
+	    g_test_build_filename(G_TEST_DIST, "tests", "bios-attrs", "dell-xps13-9310", NULL);
+	(void)g_setenv("FWUPD_SYSFSFWATTRIBDIR", test_dir, TRUE);
+	ret = fu_context_reload_bios_attrs(ctx, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	xps9310_attrs = fu_context_get_bios_attrs(ctx);
+	xps9310_items = fu_bios_attrs_get_all(xps9310_attrs);
+	g_assert_cmpint(xps9310_items->len, ==, 109);
+
+	/* make sure that we DIDN'T parse reset_bios attribute */
+	attr = fu_context_get_bios_attr(ctx, FWUPD_BIOS_ATTR_RESET_BIOS);
+	g_assert_null(attr);
+
+	/* look at a integer attribute */
+	attr = fu_context_get_bios_attr(ctx, "CustomChargeStop");
+	g_assert_nonnull(attr);
+	kind = fwupd_bios_attr_get_kind(attr);
+	g_assert_cmpint(kind, ==, FWUPD_BIOS_ATTR_KIND_INTEGER);
+	integer = fwupd_bios_attr_get_lower_bound(attr);
+	g_assert_cmpint(integer, ==, 55);
+	integer = fwupd_bios_attr_get_upper_bound(attr);
+	g_assert_cmpint(integer, ==, 100);
+	integer = fwupd_bios_attr_get_scalar_increment(attr);
+	g_assert_cmpint(integer, ==, 1);
+
+	/* look at a string attribute */
+	attr = fu_context_get_bios_attr(ctx, "Asset");
+	g_assert_nonnull(attr);
+	integer = fwupd_bios_attr_get_lower_bound(attr);
+	g_assert_cmpint(integer, ==, 1);
+	integer = fwupd_bios_attr_get_upper_bound(attr);
+	g_assert_cmpint(integer, ==, 64);
+	tmp = fwupd_bios_attr_get_description(attr);
+	g_assert_cmpstr(tmp, ==, "Asset Tag");
+
+	/* look at a enumeration attribute */
+	attr = fu_context_get_bios_attr(ctx, "BiosRcvrFrmHdd");
+	g_assert_nonnull(attr);
+	kind = fwupd_bios_attr_get_kind(attr);
+	g_assert_cmpint(kind, ==, FWUPD_BIOS_ATTR_KIND_ENUMERATION);
+	values = fwupd_bios_attr_get_possible_values(attr);
+	for (guint i = 0; i < values->len; i++) {
+		const gchar *possible = g_ptr_array_index(values, i);
+		if (i == 0)
+			g_assert_cmpstr(possible, ==, "Disabled");
+		if (i == 1)
+			g_assert_cmpstr(possible, ==, "Enabled");
+	}
+}
+
+static void
 fu_security_attrs_hsi_func(void)
 {
 	g_autofree gchar *hsi1 = NULL;
@@ -3391,6 +3561,7 @@ main(int argc, char **argv)
 	(void)g_setenv("FWUPD_DATADIR", testdatadir, TRUE);
 	(void)g_setenv("FWUPD_PLUGINDIR", testdatadir, TRUE);
 	(void)g_setenv("FWUPD_SYSCONFDIR", testdatadir, TRUE);
+	(void)g_setenv("FWUPD_SYSFSFWATTRIBDIR", testdatadir, TRUE);
 	(void)g_setenv("FWUPD_OFFLINE_TRIGGER", "/tmp/fwupd-self-test/system-update", TRUE);
 	(void)g_setenv("FWUPD_LOCALSTATEDIR", "/tmp/fwupd-self-test/var", TRUE);
 	(void)g_setenv("FWUPD_PROFILE", "1", TRUE);
@@ -3403,6 +3574,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/progress{parent-1-step}", fu_progress_parent_one_step_proxy_func);
 	g_test_add_func("/fwupd/progress{no-equal}", fu_progress_non_equal_steps_func);
 	g_test_add_func("/fwupd/progress{finish}", fu_progress_finish_func);
+	g_test_add_func("/fwupd/bios-attrs{load}", fu_bios_attrs_load_func);
 	g_test_add_func("/fwupd/security-attrs{hsi}", fu_security_attrs_hsi_func);
 	g_test_add_func("/fwupd/plugin{devices}", fu_plugin_devices_func);
 	g_test_add_func("/fwupd/plugin{device-inhibit-children}",

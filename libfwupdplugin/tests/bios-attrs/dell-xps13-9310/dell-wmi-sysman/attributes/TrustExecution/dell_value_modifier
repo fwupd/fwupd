@@ -1,0 +1,1 @@
+Disabled[ForceIf:TpmSecurity=Disabled][ForceIf:Virtualization=Disabled][ForceIf:VtForDirectIo=Disabled][ForceIfNot:CpuCore=CoresAll];

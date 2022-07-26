@@ -10,6 +10,7 @@
 
 #include <json-glib/json-glib.h>
 
+#include "fwupd-bios-attr-private.h"
 #include "fwupd-security-attr-private.h"
 
 /* this is only valid for tools */
