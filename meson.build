@@ -553,7 +553,7 @@ gidocgen_app = find_program('gi-docgen', required: get_option('docs'))
 
 # using "meson configure -Db_sanitize=address,undefined" is super useful in finding corruption,
 # but it does not work with our GMainContext-abuse tests...
-if get_option('b_sanitize').contains('address')
+if get_option('b_sanitize') in ['address,undefined', 'address', 'undefined', 'leak']
   run_sanitize_unsafe_tests = false
 else
   run_sanitize_unsafe_tests = true
