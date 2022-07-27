@@ -22,3 +22,8 @@ Summary = Gingerbread Reference Board
 [USB\VID_050D&PID_003F]
 Plugin = cros_ec
 Summary = Belkin Reference Board
+
+# Prism
+[USB\VID_18D1&PID_5022]
+Plugin = cros_ec
+Summary = Prism Board
