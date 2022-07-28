@@ -35,6 +35,15 @@ fu_plugin_pci_bcr_init(FuPlugin *plugin)
 }
 
 static void
+fu_plugin_pci_bcr_to_string(FuPlugin *plugin, guint idt, GString *str)
+{
+	FuPluginData *priv = fu_plugin_get_data(plugin);
+	fu_string_append_kb(str, idt, "HasDevice", priv->has_device);
+	fu_string_append_kx(str, idt, "BcrAddr", priv->bcr_addr);
+	fu_string_append_kx(str, idt, "Bcr", priv->bcr);
+}
+
+static void
 fu_plugin_pci_bcr_set_updatable(FuPlugin *plugin, FuDevice *dev)
 {
 	FuPluginData *priv = fu_plugin_get_data(plugin);
@@ -245,6 +254,7 @@ fu_plugin_init_vfuncs(FuPluginVfuncs *vfuncs)
 	vfuncs->build_hash = FU_BUILD_HASH;
 	vfuncs->load = fu_plugin_pci_bcr_load;
 	vfuncs->init = fu_plugin_pci_bcr_init;
+	vfuncs->to_string = fu_plugin_pci_bcr_to_string;
 	vfuncs->add_security_attrs = fu_plugin_pci_bcr_add_security_attrs;
 	vfuncs->device_registered = fu_plugin_pci_bcr_device_registered;
 	vfuncs->backend_device_added = fu_plugin_pci_bcr_backend_device_added;

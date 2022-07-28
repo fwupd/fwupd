@@ -892,6 +892,14 @@ fu_plugin_dell_init(FuPlugin *plugin)
 }
 
 static void
+fu_plugin_dell_to_string(FuPlugin *plugin, guint idt, GString *str)
+{
+	FuPluginData *priv = fu_plugin_get_data(plugin);
+	fu_string_append_kb(str, idt, "CanSwitchModes", priv->can_switch_modes);
+	fu_string_append_kb(str, idt, "CapsuleSupported", priv->capsule_supported);
+}
+
+static void
 fu_plugin_dell_destroy(FuPlugin *plugin)
 {
 	FuPluginData *priv = fu_plugin_get_data(plugin);
@@ -966,6 +974,7 @@ fu_plugin_init_vfuncs(FuPluginVfuncs *vfuncs)
 	vfuncs->load = fu_plugin_dell_load;
 	vfuncs->init = fu_plugin_dell_init;
 	vfuncs->destroy = fu_plugin_dell_destroy;
+	vfuncs->to_string = fu_plugin_dell_to_string;
 	vfuncs->startup = fu_plugin_dell_startup;
 	vfuncs->coldplug = fu_plugin_dell_coldplug;
 	vfuncs->backend_device_added = fu_plugin_dell_backend_device_added;

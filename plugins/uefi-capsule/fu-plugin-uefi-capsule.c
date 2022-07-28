@@ -27,6 +27,19 @@ struct FuPluginData {
 	GFileMonitor *fwupd_efi_monitor;
 };
 
+static void
+fu_plugin_uefi_capsule_to_string(FuPlugin *plugin, guint idt, GString *str)
+{
+	FuPluginData *priv = fu_plugin_get_data(plugin);
+	fu_backend_add_string(priv->backend, idt, str);
+	if (priv->bgrt != NULL) {
+		fu_string_append_kb(str,
+				    idt,
+				    "BgrtSupported",
+				    fu_uefi_bgrt_get_supported(priv->bgrt));
+	}
+}
+
 static gboolean
 fu_plugin_uefi_capsule_fwupd_efi_parse(FuPlugin *plugin, GError **error)
 {
@@ -934,6 +947,7 @@ fu_plugin_init_vfuncs(FuPluginVfuncs *vfuncs)
 	vfuncs->build_hash = FU_BUILD_HASH;
 	vfuncs->init = fu_plugin_uefi_capsule_init;
 	vfuncs->destroy = fu_plugin_uefi_capsule_destroy;
+	vfuncs->to_string = fu_plugin_uefi_capsule_to_string;
 	vfuncs->clear_results = fu_plugin_uefi_capsule_clear_results;
 	vfuncs->add_security_attrs = fu_plugin_uefi_capsule_add_security_attrs;
 	vfuncs->device_registered = fu_plugin_uefi_capsule_device_registered;

@@ -382,8 +382,17 @@ typedef struct {
 	 * Since: 1.8.1
 	 **/
 	void (*load)(FuContext *ctx);
+	/**
+	 * to_string:
+	 * @self: A #FuPlugin
+	 *
+	 * Prints plugin private data to the console.
+	 *
+	 * Since: 1.8.4
+	 **/
+	void (*to_string)(FuPlugin *self, guint idt, GString *str);
 	/*< private >*/
-	gpointer padding[8];
+	gpointer padding[7];
 } FuPluginVfuncs;
 
 /**

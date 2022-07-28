@@ -43,6 +43,14 @@ fu_plugin_flashrom_destroy(FuPlugin *plugin)
 	g_free(priv->guid);
 }
 
+static void
+fu_plugin_flashrom_to_string(FuPlugin *plugin, guint idt, GString *str)
+{
+	FuPluginData *priv = fu_plugin_get_data(plugin);
+	if (priv->guid != NULL)
+		fu_string_append(str, idt, "Guid", priv->guid);
+}
+
 static int
 fu_plugin_flashrom_debug_cb(enum flashrom_log_level lvl, const char *fmt, va_list args)
 {
@@ -342,6 +350,7 @@ fu_plugin_init_vfuncs(FuPluginVfuncs *vfuncs)
 	vfuncs->build_hash = FU_BUILD_HASH;
 	vfuncs->init = fu_plugin_flashrom_init;
 	vfuncs->destroy = fu_plugin_flashrom_destroy;
+	vfuncs->to_string = fu_plugin_flashrom_to_string;
 	vfuncs->device_registered = fu_plugin_flashrom_device_registered;
 	vfuncs->startup = fu_plugin_flashrom_startup;
 	vfuncs->coldplug = fu_plugin_flashrom_coldplug;

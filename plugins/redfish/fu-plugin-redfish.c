@@ -25,6 +25,17 @@ struct FuPluginData {
 	FuRedfishSmbios *smbios; /* nullable */
 };
 
+static void
+fu_plugin_redfish_to_string(FuPlugin *plugin, guint idt, GString *str)
+{
+	FuPluginData *priv = fu_plugin_get_data(plugin);
+	fu_backend_add_string(FU_BACKEND(priv->backend), idt, str);
+	if (priv->smbios != NULL) {
+		g_autofree gchar *smbios = fu_firmware_to_string(FU_FIRMWARE(priv->smbios));
+		fu_string_append(str, idt, "Smbios", smbios);
+	}
+}
+
 static gchar *
 fu_common_generate_password(guint length)
 {
@@ -593,6 +604,7 @@ fu_plugin_init_vfuncs(FuPluginVfuncs *vfuncs)
 	vfuncs->load = fu_plugin_redfish_load;
 	vfuncs->init = fu_plugin_redfish_init;
 	vfuncs->destroy = fu_plugin_redfish_destroy;
+	vfuncs->to_string = fu_plugin_redfish_to_string;
 	vfuncs->startup = fu_plugin_redfish_startup;
 	vfuncs->coldplug = fu_plugin_redfish_coldplug;
 	vfuncs->cleanup = fu_plugin_redfish_cleanup;

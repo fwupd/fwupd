@@ -31,6 +31,14 @@ fu_uefi_backend_get_device_gtype(FuUefiBackend *self)
 	return priv->device_gtype;
 }
 
+static void
+fu_uefi_backend_to_string(FuBackend *backend, guint idt, GString *str)
+{
+	FuUefiBackend *self = FU_UEFI_BACKEND(backend);
+	FuUefiBackendPrivate *priv = GET_PRIVATE(self);
+	fu_string_append(str, idt, "DeviceGType", g_type_name(priv->device_gtype));
+}
+
 /* create virtual object not backed by an ESRT entry */
 FuUefiDevice *
 fu_uefi_backend_device_new_from_dev(FuUefiBackend *self, FuDevice *dev)
@@ -80,4 +88,6 @@ fu_uefi_backend_init(FuUefiBackend *self)
 static void
 fu_uefi_backend_class_init(FuUefiBackendClass *klass)
 {
+	FuBackendClass *klass_backend = FU_BACKEND_CLASS(klass);
+	klass_backend->to_string = fu_uefi_backend_to_string;
 }

@@ -32,6 +32,13 @@ fu_plugin_logind_destroy(FuPlugin *plugin)
 		g_object_unref(priv->logind_proxy);
 }
 
+static void
+fu_plugin_logind_to_string(FuPlugin *plugin, guint idt, GString *str)
+{
+	FuPluginData *priv = fu_plugin_get_data(plugin);
+	fu_string_append_kx(str, idt, "LogindFd", priv->logind_fd);
+}
+
 static gboolean
 fu_plugin_logind_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 {
@@ -136,6 +143,7 @@ fu_plugin_init_vfuncs(FuPluginVfuncs *vfuncs)
 	vfuncs->build_hash = FU_BUILD_HASH;
 	vfuncs->init = fu_plugin_logind_init;
 	vfuncs->destroy = fu_plugin_logind_destroy;
+	vfuncs->to_string = fu_plugin_logind_to_string;
 	vfuncs->startup = fu_plugin_logind_startup;
 	vfuncs->cleanup = fu_plugin_logind_cleanup;
 	vfuncs->prepare = fu_plugin_logind_prepare;

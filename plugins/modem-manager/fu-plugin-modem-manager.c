@@ -35,6 +35,15 @@ struct FuPluginData {
 };
 
 static void
+fu_plugin_mm_to_string(FuPlugin *plugin, guint idt, GString *str)
+{
+	FuPluginData *priv = fu_plugin_get_data(plugin);
+	fu_string_append_kb(str, idt, "ManagerReady", priv->manager_ready);
+	if (priv->shadow_device != NULL)
+		fu_string_append(str, idt, "ShadowDevice", fu_device_get_id(priv->shadow_device));
+}
+
+static void
 fu_plugin_mm_load(FuContext *ctx)
 {
 	fu_context_add_quirk_key(ctx, "ModemManagerBranchAtCommand");
@@ -543,6 +552,7 @@ fu_plugin_init_vfuncs(FuPluginVfuncs *vfuncs)
 	vfuncs->load = fu_plugin_mm_load;
 	vfuncs->init = fu_plugin_mm_init;
 	vfuncs->destroy = fu_plugin_mm_destroy;
+	vfuncs->to_string = fu_plugin_mm_to_string;
 	vfuncs->startup = fu_plugin_mm_startup;
 	vfuncs->coldplug = fu_plugin_mm_coldplug;
 	vfuncs->attach = fu_plugin_mm_attach;
