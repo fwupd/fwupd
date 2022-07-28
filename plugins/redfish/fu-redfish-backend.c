@@ -426,6 +426,23 @@ fu_redfish_backend_get_push_uri_path(FuRedfishBackend *self)
 }
 
 static void
+fu_redfish_backend_to_string(FuBackend *backend, guint idt, GString *str)
+{
+	FuRedfishBackend *self = FU_REDFISH_BACKEND(backend);
+	fu_string_append(str, idt, "Hostname", self->hostname);
+	fu_string_append(str, idt, "Username", self->username);
+	fu_string_append_kb(str, idt, "Password", self->password != NULL);
+	fu_string_append_ku(str, idt, "Port", self->port);
+	fu_string_append(str, idt, "UpdateUriPath", self->update_uri_path);
+	fu_string_append(str, idt, "PushUriPath", self->push_uri_path);
+	fu_string_append_kb(str, idt, "UseHttps", self->use_https);
+	fu_string_append_kb(str, idt, "Cacheck", self->cacheck);
+	fu_string_append_kb(str, idt, "WildcardTargets", self->wildcard_targets);
+	fu_string_append_kx(str, idt, "MaxImageSize", self->max_image_size);
+	fu_string_append(str, idt, "DeviceGType", g_type_name(self->device_gtype));
+}
+
+static void
 fu_redfish_backend_finalize(GObject *object)
 {
 	FuRedfishBackend *self = FU_REDFISH_BACKEND(object);
@@ -447,6 +464,7 @@ fu_redfish_backend_class_init(FuRedfishBackendClass *klass)
 	klass_backend->coldplug = fu_redfish_backend_coldplug;
 	klass_backend->setup = fu_redfish_backend_setup;
 	klass_backend->invalidate = fu_redfish_backend_invalidate;
+	klass_backend->to_string = fu_redfish_backend_to_string;
 	object_class->finalize = fu_redfish_backend_finalize;
 }
 

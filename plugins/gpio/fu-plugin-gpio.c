@@ -36,6 +36,17 @@ fu_plugin_gpio_destroy(FuPlugin *plugin)
 	g_ptr_array_unref(priv->current_logical_ids);
 }
 
+static void
+fu_plugin_gpio_to_string(FuPlugin *plugin, guint idt, GString *str)
+{
+	FuPluginData *priv = fu_plugin_get_data(plugin);
+	for (guint i = 0; i < priv->current_logical_ids->len; i++) {
+		const gchar *current_logical_id = g_ptr_array_index(priv->current_logical_ids, i);
+		g_autofree gchar *title = g_strdup_printf("CurrentLogicalId[0x%02x]", i);
+		fu_string_append(str, idt, title, current_logical_id);
+	}
+}
+
 static gboolean
 fu_plugin_gpio_parse_level(const gchar *str, gboolean *ret, GError **error)
 {
@@ -171,6 +182,7 @@ fu_plugin_init_vfuncs(FuPluginVfuncs *vfuncs)
 	vfuncs->load = fu_plugin_gpio_load;
 	vfuncs->init = fu_plugin_gpio_init;
 	vfuncs->destroy = fu_plugin_gpio_destroy;
+	vfuncs->to_string = fu_plugin_gpio_to_string;
 	vfuncs->prepare = fu_plugin_gpio_prepare;
 	vfuncs->cleanup = fu_plugin_gpio_cleanup;
 	vfuncs->device_added = fu_plugin_gpio_device_added;

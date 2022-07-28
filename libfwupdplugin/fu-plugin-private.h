@@ -24,6 +24,10 @@ void
 fu_plugin_set_priority(FuPlugin *self, guint priority);
 void
 fu_plugin_set_name(FuPlugin *self, const gchar *name);
+gchar *
+fu_plugin_to_string(FuPlugin *self);
+void
+fu_plugin_add_string(FuPlugin *self, guint idt, GString *str);
 const gchar *
 fu_plugin_get_build_hash(FuPlugin *self);
 GPtrArray *

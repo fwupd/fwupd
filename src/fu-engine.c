@@ -7562,6 +7562,25 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 		fu_engine_backends_coldplug(self, fu_progress_get_child(progress));
 	fu_progress_step_done(progress);
 
+	/* dump plugin information to the console */
+	if (g_getenv("FWUPD_BACKEND_VERBOSE") != NULL) {
+		GPtrArray *plugins = fu_plugin_list_get_all(self->plugin_list);
+		g_autoptr(GString) str = g_string_new(NULL);
+		for (guint i = 0; i < self->backends->len; i++) {
+			FuBackend *backend = g_ptr_array_index(self->backends, i);
+			fu_backend_add_string(backend, 0, str);
+		}
+		if (str->len > 0)
+			g_string_append_c(str, '\n');
+		for (guint i = 0; i < plugins->len; i++) {
+			FuPlugin *plugin = g_ptr_array_index(plugins, i);
+			if (fu_plugin_has_flag(plugin, FWUPD_PLUGIN_FLAG_DISABLED))
+				continue;
+			fu_plugin_add_string(plugin, 0, str);
+		}
+		g_debug("\n%s", str->str);
+	}
+
 	/* update the db for devices that were updated during the reboot */
 	if (!fu_engine_update_history_database(self, error))
 		return FALSE;

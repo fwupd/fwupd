@@ -15,6 +15,13 @@ struct FuPluginData {
 	gboolean has_pk_test_key;
 };
 
+static void
+fu_plugin_uefi_pk_to_string(FuPlugin *plugin, guint idt, GString *str)
+{
+	FuPluginData *priv = fu_plugin_get_data(plugin);
+	fu_string_append_kb(str, idt, "HasPkTestKey", priv->has_pk_test_key);
+}
+
 #define FU_UEFI_PK_CHECKSUM_AMI_TEST_KEY "a773113bafaf5129aa83fd0912e95da4fa555f91"
 
 static void
@@ -134,10 +141,8 @@ fu_plugin_uefi_pk_coldplug(FuPlugin *plugin, FuProgress *progress, GError **erro
 
 	/* by checksum */
 	img = fu_firmware_get_image_by_checksum(pk, FU_UEFI_PK_CHECKSUM_AMI_TEST_KEY, NULL);
-	if (img != NULL) {
-		g_debug("detected AMI test certificate");
+	if (img != NULL)
 		priv->has_pk_test_key = TRUE;
-	}
 
 	/* by text */
 	sigs = fu_firmware_get_images(pk);
@@ -202,6 +207,7 @@ fu_plugin_init_vfuncs(FuPluginVfuncs *vfuncs)
 {
 	vfuncs->build_hash = FU_BUILD_HASH;
 	vfuncs->init = fu_plugin_uefi_pk_init;
+	vfuncs->to_string = fu_plugin_uefi_pk_to_string;
 	vfuncs->add_security_attrs = fu_plugin_uefi_pk_add_security_attrs;
 	vfuncs->device_registered = fu_plugin_uefi_pk_device_registered;
 	vfuncs->coldplug = fu_plugin_uefi_pk_coldplug;

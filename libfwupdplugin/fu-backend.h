@@ -23,8 +23,9 @@ struct _FuBackendClass {
 			     GError **error) G_GNUC_WARN_UNUSED_RESULT;
 	void (*registered)(FuBackend *self, FuDevice *device);
 	void (*invalidate)(FuBackend *self);
+	void (*to_string)(FuBackend *self, guint indent, GString *str);
 	/*< private >*/
-	gpointer padding[27];
+	gpointer padding[26];
 };
 
 const gchar *
@@ -55,3 +56,5 @@ void
 fu_backend_registered(FuBackend *self, FuDevice *device);
 void
 fu_backend_invalidate(FuBackend *self);
+void
+fu_backend_add_string(FuBackend *self, guint idt, GString *str);

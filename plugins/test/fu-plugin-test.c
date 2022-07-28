@@ -28,6 +28,15 @@ fu_plugin_test_destroy(FuPlugin *plugin)
 	g_debug("destroy");
 }
 
+static void
+fu_plugin_test_to_string(FuPlugin *plugin, guint idt, GString *str)
+{
+	FuPluginData *priv = fu_plugin_get_data(plugin);
+	fu_string_append_ku(str, idt, "DelayDecompressMs", priv->delay_decompress_ms);
+	fu_string_append_ku(str, idt, "DelayWriteMs", priv->delay_write_ms);
+	fu_string_append_ku(str, idt, "DelayVerifyMs", priv->delay_verify_ms);
+}
+
 static gboolean
 fu_plugin_test_load_xml(FuPlugin *plugin, const gchar *xml, GError **error)
 {
@@ -329,6 +338,7 @@ fu_plugin_init_vfuncs(FuPluginVfuncs *vfuncs)
 	vfuncs->build_hash = FU_BUILD_HASH;
 	vfuncs->init = fu_plugin_test_init;
 	vfuncs->destroy = fu_plugin_test_destroy;
+	vfuncs->to_string = fu_plugin_test_to_string;
 	vfuncs->composite_cleanup = fu_plugin_test_composite_cleanup;
 	vfuncs->composite_prepare = fu_plugin_test_composite_prepare;
 	vfuncs->get_results = fu_plugin_test_get_results;

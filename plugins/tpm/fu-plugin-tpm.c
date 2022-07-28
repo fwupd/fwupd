@@ -40,6 +40,16 @@ fu_plugin_tpm_destroy(FuPlugin *plugin)
 }
 
 static void
+fu_plugin_tpm_to_string(FuPlugin *plugin, guint idt, GString *str)
+{
+	FuPluginData *priv = fu_plugin_get_data(plugin);
+	if (priv->tpm_device != NULL)
+		fu_string_append(str, idt, "TpmDevice", fu_device_get_id(priv->tpm_device));
+	if (priv->bios_device != NULL)
+		fu_string_append(str, idt, "BiosDevice", fu_device_get_id(priv->bios_device));
+}
+
+static void
 fu_plugin_tpm_set_bios_pcr0s(FuPlugin *plugin)
 {
 	FuPluginData *priv = fu_plugin_get_data(plugin);
@@ -365,6 +375,7 @@ fu_plugin_init_vfuncs(FuPluginVfuncs *vfuncs)
 	vfuncs->build_hash = FU_BUILD_HASH;
 	vfuncs->init = fu_plugin_tpm_init;
 	vfuncs->destroy = fu_plugin_tpm_destroy;
+	vfuncs->to_string = fu_plugin_tpm_to_string;
 	vfuncs->startup = fu_plugin_tpm_startup;
 	vfuncs->coldplug = fu_plugin_tpm_coldplug;
 	vfuncs->device_added = fu_plugin_tpm_device_added;

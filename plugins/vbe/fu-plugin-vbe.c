@@ -179,12 +179,20 @@ fu_plugin_vbe_destroy(FuPlugin *plugin)
 	g_object_unref(priv->fdt);
 }
 
+static void
+fu_plugin_vbe_to_string(FuPlugin *plugin, guint idt, GString *str)
+{
+	FuPluginData *priv = fu_plugin_get_data(plugin);
+	fu_string_append(str, idt, "VbeDir", priv->vbe_dir);
+}
+
 void
 fu_plugin_init_vfuncs(FuPluginVfuncs *vfuncs)
 {
 	vfuncs->build_hash = FU_BUILD_HASH;
 	vfuncs->init = fu_plugin_vbe_init;
 	vfuncs->destroy = fu_plugin_vbe_destroy;
+	vfuncs->to_string = fu_plugin_vbe_to_string;
 	vfuncs->startup = fu_plugin_vbe_startup;
 	vfuncs->coldplug = fu_plugin_vbe_coldplug;
 }

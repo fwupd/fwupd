@@ -19,6 +19,13 @@ fu_plugin_iommu_init(FuPlugin *plugin)
 	fu_plugin_add_udev_subsystem(plugin, "iommu");
 }
 
+static void
+fu_plugin_iommu_to_string(FuPlugin *plugin, guint idt, GString *str)
+{
+	FuPluginData *priv = fu_plugin_get_data(plugin);
+	fu_string_append_kb(str, idt, "HasIommu", priv->has_iommu);
+}
+
 static gboolean
 fu_plugin_iommu_backend_device_added(FuPlugin *plugin, FuDevice *device, GError **error)
 {
@@ -64,6 +71,7 @@ fu_plugin_init_vfuncs(FuPluginVfuncs *vfuncs)
 {
 	vfuncs->build_hash = FU_BUILD_HASH;
 	vfuncs->init = fu_plugin_iommu_init;
+	vfuncs->to_string = fu_plugin_iommu_to_string;
 	vfuncs->backend_device_added = fu_plugin_iommu_backend_device_added;
 	vfuncs->add_security_attrs = fu_plugin_iommu_add_security_attrs;
 }

@@ -9,6 +9,7 @@
 #include "config.h"
 
 #include "fu-backend.h"
+#include "fu-string.h"
 
 /**
  * FuBackend:
@@ -155,6 +156,34 @@ fu_backend_invalidate(FuBackend *self)
 	priv->done_setup = FALSE;
 	if (klass->invalidate != NULL)
 		klass->invalidate(self);
+}
+
+/**
+ * fu_backend_add_string:
+ * @self: a #FuBackend
+ * @idt: indent level
+ * @str: a string to append to
+ *
+ * Add backend-specific device metadata to an existing string.
+ *
+ * Since: 1.8.4
+ **/
+void
+fu_backend_add_string(FuBackend *self, guint idt, GString *str)
+{
+	FuBackendClass *klass = FU_BACKEND_GET_CLASS(self);
+	FuBackendPrivate *priv = GET_PRIVATE(self);
+
+	fu_string_append(str, idt, G_OBJECT_TYPE_NAME(self), "");
+	if (priv->name != NULL)
+		fu_string_append(str, idt + 1, "Name", priv->name);
+	fu_string_append_kb(str, idt + 1, "Enabled", priv->enabled);
+	fu_string_append_kb(str, idt + 1, "DoneSetup", priv->done_setup);
+	fu_string_append_kb(str, idt + 1, "CanInvalidate", priv->can_invalidate);
+
+	/* subclassed */
+	if (klass->to_string != NULL)
+		klass->to_string(self, idt, str);
 }
 
 /**

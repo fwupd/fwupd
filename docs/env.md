@@ -14,6 +14,7 @@ with a non-standard filesystem layout.
 * `FWUPD_DEVICE_TESTS_BASE_URI` sets the base URI when downloading firmware for the device-tests
 * `FWUPD_SUPPORTED` overrides the `-Dsupported_build` meson option at runtime
 * `FWUPD_VERBOSE` is set when running `--verbose`
+* `FWUPD_BACKEND_VERBOSE` can be used to show detailed plugin and backend debugging
 * `FWUPD_XMLB_VERBOSE` can be set to show Xmlb silo regeneration and quirk matches
 * `FWUPD_DBUS_SOCKET` is used to set the socket filename if running without a dbus-daemon
 * `FWUPD_DOWNLOAD_VERBOSE` can be used to show wget or curl output

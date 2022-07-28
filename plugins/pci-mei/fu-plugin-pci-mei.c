@@ -31,7 +31,7 @@ struct FuPluginData {
 #define PCI_CFG_HFS_6 0x6c
 
 static void
-fu_mei_hfsts_to_string(FuPlugin *plugin, guint idt, GString *str)
+fu_plugin_pci_mei_to_string(FuPlugin *plugin, guint idt, GString *str)
 {
 	FuPluginData *priv = fu_plugin_get_data(plugin);
 	fu_string_append(str, idt, "HFSTS1", NULL);
@@ -224,13 +224,6 @@ fu_plugin_pci_mei_backend_device_added(FuPlugin *plugin, FuDevice *device, GErro
 	}
 	priv->hfsts6.data = fu_memread_uint32(buf, G_LITTLE_ENDIAN);
 	g_set_object(&priv->pci_device, device);
-
-	/* dump to console */
-	if (g_getenv("FWUPD_PCI_MEI_VERBOSE") != NULL) {
-		g_autoptr(GString) str = g_string_new(NULL);
-		fu_mei_hfsts_to_string(plugin, 0, str);
-		g_debug("\n%s", str->str);
-	}
 
 	/* check firmware version */
 	fwvers = fu_udev_device_get_sysfs_attr(FU_UDEV_DEVICE(device), "mei/mei0/fw_ver", NULL);
@@ -623,6 +616,7 @@ fu_plugin_init_vfuncs(FuPluginVfuncs *vfuncs)
 	vfuncs->build_hash = FU_BUILD_HASH;
 	vfuncs->init = fu_plugin_pci_mei_init;
 	vfuncs->destroy = fu_plugin_pci_mei_destroy;
+	vfuncs->to_string = fu_plugin_pci_mei_to_string;
 	vfuncs->add_security_attrs = fu_plugin_pci_mei_add_security_attrs;
 	vfuncs->backend_device_added = fu_plugin_pci_mei_backend_device_added;
 }

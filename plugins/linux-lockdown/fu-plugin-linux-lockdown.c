@@ -154,12 +154,20 @@ fu_plugin_linux_lockdown_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *a
 	fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_ENABLED);
 }
 
+static void
+fu_plugin_linux_lockdown_to_string2(FuPlugin *plugin, guint idt, GString *str)
+{
+	FuPluginData *priv = fu_plugin_get_data(plugin);
+	fu_string_append(str, idt, "Lockdown", fu_plugin_linux_lockdown_to_string(priv->lockdown));
+}
+
 void
 fu_plugin_init_vfuncs(FuPluginVfuncs *vfuncs)
 {
 	vfuncs->build_hash = FU_BUILD_HASH;
 	vfuncs->init = fu_plugin_linux_lockdown_init;
 	vfuncs->destroy = fu_plugin_linux_lockdown_destroy;
+	vfuncs->to_string = fu_plugin_linux_lockdown_to_string2;
 	vfuncs->startup = fu_plugin_linux_lockdown_startup;
 	vfuncs->add_security_attrs = fu_plugin_linux_lockdown_add_security_attrs;
 }

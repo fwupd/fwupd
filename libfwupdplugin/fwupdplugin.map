@@ -1067,3 +1067,11 @@ LIBFWUPDPLUGIN_1.8.3 {
     fu_memread_uint24_safe;
   local: *;
 } LIBFWUPDPLUGIN_1.8.2;
+
+LIBFWUPDPLUGIN_1.8.4 {
+  global:
+    fu_backend_add_string;
+    fu_plugin_add_string;
+    fu_plugin_to_string;
+  local: *;
+} LIBFWUPDPLUGIN_1.8.3;
