@@ -58,6 +58,8 @@ fu_plugin_iommu_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 	}
 	if (!priv->has_iommu) {
 		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_FOUND);
+		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM);
+		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_FW);
 		return;
 	}
 
