@@ -38,6 +38,7 @@ typedef struct {
 	FwupdSecurityAttrResult result;
 	FwupdSecurityAttrResult result_fallback;
 	FwupdSecurityAttrFlags flags;
+	gchar *bios_attr;
 } FwupdSecurityAttrPrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE(FwupdSecurityAttr, fwupd_security_attr, G_TYPE_OBJECT)
@@ -221,6 +222,46 @@ fwupd_security_attr_flag_to_suffix(FwupdSecurityAttrFlags flag)
 	if (flag == FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ISSUE)
 		return "!";
 	return NULL;
+}
+
+/**
+ * fwupd_security_attr_get_bios_id:
+ * @self: a #FwupdSecurityAttr
+ *
+ * Gets the #FwupdBiosAttr that can be used to improve this
+ * #FwupdSecurityAttr.
+ *
+ * Returns: The unique ID used for #FwupdBiosAttr or NULL
+ *
+ * Since: 1.8.4
+ **/
+const gchar *
+fwupd_security_attr_get_bios_id(FwupdSecurityAttr *self)
+{
+	FwupdSecurityAttrPrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_SECURITY_ATTR(self), NULL);
+	return priv->bios_attr;
+}
+
+/**
+ * fwupd_security_attr_set_bios_attr_id:
+ * @self: a #FwupdSecurityAttr
+ * @id: Unique identifier used for #FwupdBiosAttr
+ *
+ * Sets the #FwupdBiosAttr that can be used to improve this
+ * #FwupdSecurityAttr.
+ *
+ * Since: 1.8.4
+ **/
+void
+fwupd_security_attr_set_bios_attr_id(FwupdSecurityAttr *self, const gchar *id)
+{
+	FwupdSecurityAttrPrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FWUPD_IS_SECURITY_ATTR(self));
+	if (priv->bios_attr == id)
+		return;
+	g_free(priv->bios_attr);
+	priv->bios_attr = g_strdup(id);
 }
 
 /**
@@ -972,6 +1013,12 @@ fwupd_security_attr_to_variant(FwupdSecurityAttr *self)
 				      FWUPD_RESULT_KEY_METADATA,
 				      fwupd_hash_kv_to_variant(priv->metadata));
 	}
+	if (priv->bios_attr != NULL) {
+		g_variant_builder_add(&builder,
+				      "{sv}",
+				      FWUPD_RESULT_KEY_BIOS_ATTR_ID,
+				      g_variant_new_string(priv->bios_attr));
+	}
 	return g_variant_new("a{sv}", &builder);
 }
 
@@ -1084,6 +1131,10 @@ fwupd_security_attr_from_key_value(FwupdSecurityAttr *self, const gchar *key, GV
 		priv->metadata = fwupd_variant_to_hash_kv(value);
 		return;
 	}
+	if (g_strcmp0(key, FWUPD_RESULT_KEY_BIOS_ATTR_ID) == 0) {
+		fwupd_security_attr_set_bios_attr_id(self, g_variant_get_string(value, NULL));
+		return;
+	}
 }
 
 static void
@@ -1165,6 +1216,9 @@ fwupd_security_attr_from_json(FwupdSecurityAttr *self, JsonNode *json_node, GErr
 	fwupd_security_attr_set_created(
 	    self,
 	    json_object_get_int_member_with_default(obj, FWUPD_RESULT_KEY_CREATED, 0));
+	fwupd_security_attr_set_bios_attr_id(
+	    self,
+	    json_object_get_string_member_with_default(obj, FWUPD_RESULT_KEY_BIOS_ATTR_ID, NULL));
 
 	/* also optional */
 	if (json_object_has_member(obj, FWUPD_RESULT_KEY_HSI_RESULT)) {
@@ -1243,6 +1297,8 @@ fwupd_security_attr_to_json(FwupdSecurityAttr *self, JsonBuilder *builder)
 	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_DESCRIPTION, priv->description);
 	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_PLUGIN, priv->plugin);
 	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_URI, priv->url);
+	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_BIOS_ATTR_ID, priv->bios_attr);
+
 	if (priv->flags != FWUPD_SECURITY_ATTR_FLAG_NONE) {
 		json_builder_set_member_name(builder, FWUPD_RESULT_KEY_FLAGS);
 		json_builder_begin_array(builder);
@@ -1310,6 +1366,8 @@ fwupd_security_attr_to_string(FwupdSecurityAttr *self)
 	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_DESCRIPTION, priv->description);
 	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_PLUGIN, priv->plugin);
 	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_URI, priv->url);
+	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_BIOS_ATTR_ID, priv->bios_attr);
+
 	for (guint i = 0; i < priv->obsoletes->len; i++) {
 		const gchar *appstream_id = g_ptr_array_index(priv->obsoletes, i);
 		fwupd_pad_kv_str(str, "Obsolete", appstream_id);
@@ -1355,6 +1413,7 @@ fwupd_security_attr_finalize(GObject *object)
 
 	if (priv->metadata != NULL)
 		g_hash_table_unref(priv->metadata);
+	g_free(priv->bios_attr);
 	g_free(priv->appstream_id);
 	g_free(priv->name);
 	g_free(priv->title);
@@ -1473,6 +1532,8 @@ fwupd_security_attr_copy(FwupdSecurityAttr *self)
 	fwupd_security_attr_set_flags(new, priv->flags);
 	fwupd_security_attr_set_result(new, priv->result);
 	fwupd_security_attr_set_created(new, priv->created);
+	fwupd_security_attr_set_bios_attr_id(new, priv->bios_attr);
+
 	for (guint i = 0; i < priv->guids->len; i++) {
 		const gchar *guid = g_ptr_array_index(priv->guids, i);
 		fwupd_security_attr_add_guid(new, guid);
