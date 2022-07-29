@@ -20,6 +20,7 @@ meson .. \
     -Ddocs=disabled \
     -Dman=true \
     -Dtests=true \
+    -Db_sanitize=address,undefined \
     -Dgusb:tests=false \
     -Dplugin_dummy=true \
     -Dplugin_flashrom=enabled \

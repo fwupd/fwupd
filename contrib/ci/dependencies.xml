@@ -1741,6 +1741,18 @@
       <package variant="x86_64" />
     </distro>
   </dependency>
+  <dependency type="build" id="libasan">
+    <distro id="fedora">
+      <!-- for running with -Db_sanitize=address -->
+      <package variant="x86_64" />
+    </distro>
+  </dependency>
+  <dependency type="build" id="libubsan">
+    <distro id="fedora">
+      <!-- for running with -Db_sanitize=undefined -->
+      <package variant="x86_64" />
+    </distro>
+  </dependency>
   <dependency type="build" id="wine">
     <distro id="fedora">
       <!-- for running the self tests -->
