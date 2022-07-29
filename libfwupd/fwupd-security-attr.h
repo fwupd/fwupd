@@ -127,6 +127,11 @@ gchar *
 fwupd_security_attr_to_string(FwupdSecurityAttr *self);
 
 const gchar *
+fwupd_security_attr_get_bios_id(FwupdSecurityAttr *self);
+void
+fwupd_security_attr_set_bios_attr_id(FwupdSecurityAttr *self, const gchar *id);
+
+const gchar *
 fwupd_security_attr_get_appstream_id(FwupdSecurityAttr *self);
 void
 fwupd_security_attr_set_appstream_id(FwupdSecurityAttr *self, const gchar *appstream_id);
