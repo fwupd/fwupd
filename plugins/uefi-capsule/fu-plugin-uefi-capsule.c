@@ -187,10 +187,15 @@ fu_plugin_uefi_capsule_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *att
 
 	/* SB not available or disabled */
 	if (!fu_efivar_secure_boot_enabled(&error)) {
+		FwupdBiosAttr *bios_attr;
 		if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
 			fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_FOUND);
 			return;
 		}
+		bios_attr = fu_context_get_bios_attr(fu_plugin_get_context(plugin), "SecureBoot");
+		if (bios_attr != NULL)
+			fwupd_security_attr_set_bios_attr_id(attr,
+							     fwupd_bios_attr_get_id(bios_attr));
 		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ISSUE);
 		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_FW);
 		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
