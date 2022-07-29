@@ -368,8 +368,8 @@ fu_string_append_kb(GString *str, guint idt, const gchar *key, gboolean value)
 
 /**
  * fu_strsplit:
- * @str: a string to split
- * @sz: size of @str
+ * @str: (not nullable): a string to split
+ * @sz: size of @str, which must be more than 0
  * @delimiter: a string which specifies the places at which to split the string
  * @max_tokens: the maximum number of pieces to split @str into
  *
@@ -384,6 +384,8 @@ fu_string_append_kb(GString *str, guint idt, const gchar *key, gboolean value)
 gchar **
 fu_strsplit(const gchar *str, gsize sz, const gchar *delimiter, gint max_tokens)
 {
+	g_return_val_if_fail(str != NULL, NULL);
+	g_return_val_if_fail(sz > 0, NULL);
 	if (str[sz - 1] != '\0') {
 		g_autofree gchar *str2 = g_strndup(str, sz);
 		return g_strsplit(str2, delimiter, max_tokens);
