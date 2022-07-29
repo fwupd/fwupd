@@ -175,6 +175,10 @@ fu_bios_attr_fixup_lenovo_thinklmi_bug(FwupdBiosAttr *attr, GError **error)
 		str = g_string_new(current_value);
 	}
 
+	/* empty string */
+	if (str->len == 0)
+		return TRUE;
+
 	/* split into left and right */
 	vals = fu_strsplit(str->str, str->len, ";", 2);
 
