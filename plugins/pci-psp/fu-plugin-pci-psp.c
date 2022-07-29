@@ -52,8 +52,9 @@ fu_plugin_pci_psp_get_attr(FwupdSecurityAttr *attr,
 }
 
 static void
-fu_plugin_add_security_attrs_tsme(const gchar *path, FuSecurityAttrs *attrs)
+fu_plugin_add_security_attrs_tsme(FuPlugin *plugin, const gchar *path, FuSecurityAttrs *attrs)
 {
+	FwupdBiosAttr *bios_attr;
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
 	g_autoptr(GError) error_local = NULL;
 	gboolean val;
@@ -65,6 +66,13 @@ fu_plugin_add_security_attrs_tsme(const gchar *path, FuSecurityAttrs *attrs)
 	if (!fu_plugin_pci_psp_get_attr(attr, path, "tsme_status", &val, &error_local)) {
 		g_debug("%s", error_local->message);
 		return;
+	}
+
+	/* BIOS knob used on Lenovo systems */
+	bios_attr = fu_context_get_bios_attr(fu_plugin_get_context(plugin), "com.thinklmi.TSME");
+	if (bios_attr != NULL) {
+		fwupd_security_attr_set_bios_attr_id(attr, fwupd_bios_attr_get_id(bios_attr));
+		fu_bios_attr_set_preferred_value(bios_attr, "enable");
 	}
 
 	if (!val) {
@@ -267,7 +275,7 @@ fu_plugin_pci_psp_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 		return;
 	}
 
-	fu_plugin_add_security_attrs_tsme(sysfs_path, attrs);
+	fu_plugin_add_security_attrs_tsme(plugin, sysfs_path, attrs);
 	fu_plugin_add_security_attrs_fused_part(sysfs_path, attrs);
 	fu_plugin_add_security_attrs_debug_locked_part(sysfs_path, attrs);
 	fu_plugin_add_security_attrs_rollback_protection(sysfs_path, attrs);
