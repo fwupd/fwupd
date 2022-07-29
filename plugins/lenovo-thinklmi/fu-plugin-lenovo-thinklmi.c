@@ -8,7 +8,7 @@
 
 #include <fwupdplugin.h>
 
-#define BOOT_ORDER_LOCK "BootOrderLock"
+#define BOOT_ORDER_LOCK "com.thinklmi.BootOrderLock"
 
 static gboolean
 fu_plugin_lenovo_thinklmi_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
