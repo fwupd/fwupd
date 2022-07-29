@@ -22,10 +22,12 @@ fwupd_bios_attr_finalize(GObject *object);
 
 typedef struct {
 	FwupdBiosAttrKind kind;
+	gchar *id;
 	gchar *name;
 	gchar *description;
 	gchar *path;
 	gchar *current_value;
+	gchar *preferred_value;
 	guint64 lower_bound;
 	guint64 upper_bound;
 	guint64 scalar_increment;
@@ -35,6 +37,46 @@ typedef struct {
 
 G_DEFINE_TYPE_WITH_PRIVATE(FwupdBiosAttr, fwupd_bios_attr, G_TYPE_OBJECT)
 #define GET_PRIVATE(o) (fwupd_bios_attr_get_instance_private(o))
+
+/**
+ * fwupd_bios_attr_get_id
+ * @self: a #FwupdBiosAttr
+ *
+ * Gets the unique attribute identifier for this attribute/driver
+ *
+ * Returns: attribute ID if set otherwise NULL
+ *
+ * Since: 1.8.4
+ **/
+const gchar *
+fwupd_bios_attr_get_id(FwupdBiosAttr *self)
+{
+	FwupdBiosAttrPrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_BIOS_ATTR(self), NULL);
+	return priv->id;
+}
+
+/**
+ * fwupd_bios_attr_set_id
+ * @self: a #FwupdBiosAttr
+ *
+ * Sets the unique attribute identifier for this attribute
+ *
+ * Since: 1.8.4
+ **/
+void
+fwupd_bios_attr_set_id(FwupdBiosAttr *self, const gchar *id)
+{
+	FwupdBiosAttrPrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FWUPD_IS_BIOS_ATTR(self));
+
+	/* not changed */
+	if (g_strcmp0(priv->id, id) == 0)
+		return;
+
+	g_free(priv->id);
+	priv->id = g_strdup(id);
+}
 
 /**
  * fwupd_bios_attr_get_read_only:
@@ -412,6 +454,47 @@ fwupd_bios_attr_get_description(FwupdBiosAttr *self)
 }
 
 /**
+ * fwupd_bios_attr_get_preferred_value:
+ * @self: a #FwupdBiosAttr
+ *
+ * Gets the value that when written to an attribute would activate it or satisfy
+ * a security requirement.
+ *
+ * Returns: the preferred value of the attribute.
+ *
+ * Since: 1.8.4
+ **/
+const gchar *
+fwupd_bios_attr_get_preferred_value(FwupdBiosAttr *self)
+{
+	FwupdBiosAttrPrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_BIOS_ATTR(self), NULL);
+	return priv->preferred_value;
+}
+
+/**
+ * fwupd_bios_attr_set_preferred_value:
+ * @self: a #FwupdBiosAttr
+ * @value: The string to set preferred value to
+ *
+ * Sets the string used for the preferred value of an attribute.
+ *
+ * Since: 1.8.4
+ **/
+void
+fwupd_bios_attr_set_preferred_value(FwupdBiosAttr *self, const gchar *value)
+{
+	FwupdBiosAttrPrivate *priv = GET_PRIVATE(self);
+
+	/* not changed */
+	if (g_strcmp0(priv->preferred_value, value) == 0)
+		return;
+
+	g_free(priv->preferred_value);
+	priv->preferred_value = g_strdup(value);
+}
+
+/**
  * fwupd_bios_attr_get_current_value:
  * @self: a #FwupdBiosAttr
  *
@@ -477,6 +560,12 @@ fwupd_bios_attr_to_variant(FwupdBiosAttr *self)
 			      "{sv}",
 			      FWUPD_RESULT_KEY_BIOS_ATTR_TYPE,
 			      g_variant_new_uint64(priv->kind));
+	if (priv->id != NULL) {
+		g_variant_builder_add(&builder,
+				      "{sv}",
+				      FWUPD_RESULT_KEY_BIOS_ATTR_ID,
+				      g_variant_new_string(priv->id));
+	}
 	if (priv->name != NULL) {
 		g_variant_builder_add(&builder,
 				      "{sv}",
@@ -494,6 +583,12 @@ fwupd_bios_attr_to_variant(FwupdBiosAttr *self)
 				      "{sv}",
 				      FWUPD_RESULT_KEY_DESCRIPTION,
 				      g_variant_new_string(priv->description));
+	}
+	if (priv->preferred_value != NULL) {
+		g_variant_builder_add(&builder,
+				      "{sv}",
+				      FWUPD_RESULT_KEY_BIOS_ATTR_PREFERRED_VALUE,
+				      g_variant_new_string(priv->preferred_value));
 	}
 	g_variant_builder_add(&builder,
 			      "{sv}",
@@ -538,12 +633,20 @@ fwupd_bios_attr_from_key_value(FwupdBiosAttr *self, const gchar *key, GVariant *
 		fwupd_bios_attr_set_kind(self, g_variant_get_uint64(value));
 		return;
 	}
+	if (g_strcmp0(key, FWUPD_RESULT_KEY_BIOS_ATTR_ID) == 0) {
+		fwupd_bios_attr_set_id(self, g_variant_get_string(value, NULL));
+		return;
+	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_NAME) == 0) {
 		fwupd_bios_attr_set_name(self, g_variant_get_string(value, NULL));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_FILENAME) == 0) {
 		fwupd_bios_attr_set_path(self, g_variant_get_string(value, NULL));
+		return;
+	}
+	if (g_strcmp0(key, FWUPD_RESULT_KEY_BIOS_ATTR_PREFERRED_VALUE) == 0) {
+		fwupd_bios_attr_set_preferred_value(self, g_variant_get_string(value, NULL));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_BIOS_ATTR_CURRENT_VALUE) == 0) {
@@ -606,6 +709,10 @@ fwupd_bios_attr_from_json(FwupdBiosAttr *self, JsonNode *json_node, GError **err
 	fwupd_bios_attr_set_kind(
 	    self,
 	    json_object_get_int_member_with_default(obj, FWUPD_RESULT_KEY_BIOS_ATTR_TYPE, 0));
+	fwupd_bios_attr_set_id(
+	    self,
+	    json_object_get_string_member_with_default(obj, FWUPD_RESULT_KEY_BIOS_ATTR_ID, NULL));
+
 	fwupd_bios_attr_set_name(
 	    self,
 	    json_object_get_string_member_with_default(obj, FWUPD_RESULT_KEY_NAME, NULL));
@@ -619,6 +726,11 @@ fwupd_bios_attr_from_json(FwupdBiosAttr *self, JsonNode *json_node, GError **err
 	    self,
 	    json_object_get_string_member_with_default(obj,
 						       FWUPD_RESULT_KEY_BIOS_ATTR_CURRENT_VALUE,
+						       NULL));
+	fwupd_bios_attr_set_preferred_value(
+	    self,
+	    json_object_get_string_member_with_default(obj,
+						       FWUPD_RESULT_KEY_BIOS_ATTR_PREFERRED_VALUE,
 						       NULL));
 
 	if (json_object_has_member(obj, FWUPD_RESULT_KEY_BIOS_ATTR_POSSIBLE_VALUES)) {
@@ -679,12 +791,16 @@ fwupd_bios_attr_to_json(FwupdBiosAttr *self, JsonBuilder *builder)
 				      FWUPD_RESULT_KEY_BIOS_ATTR_READ_ONLY,
 				      priv->read_only);
 	fwupd_common_json_add_int(builder, FWUPD_RESULT_KEY_BIOS_ATTR_TYPE, priv->kind);
+	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_BIOS_ATTR_ID, priv->id);
 	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_NAME, priv->name);
 	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_DESCRIPTION, priv->description);
 	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_FILENAME, priv->path);
 	fwupd_common_json_add_string(builder,
 				     FWUPD_RESULT_KEY_BIOS_ATTR_CURRENT_VALUE,
 				     priv->current_value);
+	fwupd_common_json_add_string(builder,
+				     FWUPD_RESULT_KEY_BIOS_ATTR_PREFERRED_VALUE,
+				     priv->preferred_value);
 	if (priv->kind == FWUPD_BIOS_ATTR_KIND_ENUMERATION) {
 		if (priv->possible_values->len > 0) {
 			json_builder_set_member_name(builder,
@@ -733,10 +849,12 @@ fwupd_bios_attr_to_string(FwupdBiosAttr *self)
 
 	str = g_string_new(NULL);
 	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_NAME, priv->name);
+	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_BIOS_ATTR_ID, priv->id);
 	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_DESCRIPTION, priv->description);
 	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_FILENAME, priv->path);
 	fwupd_pad_kv_int(str, FWUPD_RESULT_KEY_BIOS_ATTR_TYPE, priv->kind);
 	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_BIOS_ATTR_CURRENT_VALUE, priv->current_value);
+	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_BIOS_ATTR_PREFERRED_VALUE, priv->preferred_value);
 	fwupd_pad_kv_str(str,
 			 FWUPD_RESULT_KEY_BIOS_ATTR_READ_ONLY,
 			 priv->read_only ? "True" : "False");
@@ -781,7 +899,9 @@ fwupd_bios_attr_finalize(GObject *object)
 	FwupdBiosAttr *self = FWUPD_BIOS_ATTR(object);
 	FwupdBiosAttrPrivate *priv = GET_PRIVATE(self);
 
+	g_free(priv->preferred_value);
 	g_free(priv->current_value);
+	g_free(priv->id);
 	g_free(priv->name);
 	g_free(priv->description);
 	g_free(priv->path);

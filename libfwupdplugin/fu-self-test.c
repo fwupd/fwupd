@@ -2948,7 +2948,7 @@ fu_bios_attrs_load_func(void)
 	g_assert_false(ret);
 
 	/* check an attribute reads from kernel as expected by fwupd today */
-	attr = fu_context_get_bios_attr(ctx, "AMDMemoryGuard");
+	attr = fu_context_get_bios_attr(ctx, "com.thinklmi.AMDMemoryGuard");
 	g_assert_nonnull(attr);
 	tmp = fwupd_bios_attr_get_name(attr);
 	g_assert_cmpstr(tmp, ==, "AMDMemoryGuard");
@@ -2968,7 +2968,7 @@ fu_bios_attrs_load_func(void)
 	/* try to read an attribute known to have ][Status] to make sure we worked
 	 * around the thinklmi bug sufficiently
 	 */
-	attr = fu_context_get_bios_attr(ctx, "StartupSequence");
+	attr = fu_context_get_bios_attr(ctx, "com.thinklmi.StartupSequence");
 	g_assert_nonnull(attr);
 	tmp = fwupd_bios_attr_get_current_value(attr);
 	g_assert_cmpstr(tmp, ==, "Primary");
@@ -3008,7 +3008,7 @@ fu_bios_attrs_load_func(void)
 	g_assert_true(ret);
 
 	/* look for an enumeration attribute with a space */
-	attr = fu_context_get_bios_attr(ctx, "SleepState");
+	attr = fu_context_get_bios_attr(ctx, "com.thinklmi.SleepState");
 	g_assert_nonnull(attr);
 	tmp = fwupd_bios_attr_get_name(attr);
 	g_assert_cmpstr(tmp, ==, "SleepState");
@@ -3042,7 +3042,7 @@ fu_bios_attrs_load_func(void)
 	g_assert_null(attr);
 
 	/* look at a integer attribute */
-	attr = fu_context_get_bios_attr(ctx, "CustomChargeStop");
+	attr = fu_context_get_bios_attr(ctx, "com.dell-wmi-sysman.CustomChargeStop");
 	g_assert_nonnull(attr);
 	kind = fwupd_bios_attr_get_kind(attr);
 	g_assert_cmpint(kind, ==, FWUPD_BIOS_ATTR_KIND_INTEGER);
@@ -3054,7 +3054,7 @@ fu_bios_attrs_load_func(void)
 	g_assert_cmpint(integer, ==, 1);
 
 	/* look at a string attribute */
-	attr = fu_context_get_bios_attr(ctx, "Asset");
+	attr = fu_context_get_bios_attr(ctx, "com.dell-wmi-sysman.Asset");
 	g_assert_nonnull(attr);
 	integer = fwupd_bios_attr_get_lower_bound(attr);
 	g_assert_cmpint(integer, ==, 1);
@@ -3064,7 +3064,7 @@ fu_bios_attrs_load_func(void)
 	g_assert_cmpstr(tmp, ==, "Asset Tag");
 
 	/* look at a enumeration attribute */
-	attr = fu_context_get_bios_attr(ctx, "BiosRcvrFrmHdd");
+	attr = fu_context_get_bios_attr(ctx, "com.dell-wmi-sysman.BiosRcvrFrmHdd");
 	g_assert_nonnull(attr);
 	kind = fwupd_bios_attr_get_kind(attr);
 	g_assert_cmpint(kind, ==, FWUPD_BIOS_ATTR_KIND_ENUMERATION);

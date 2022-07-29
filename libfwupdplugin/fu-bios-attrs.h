@@ -18,4 +18,6 @@ fu_bios_attrs_new(void);
 gboolean
 fu_bios_attrs_get_pending_reboot(FuBiosAttrs *self, gboolean *result, GError **error);
 FwupdBiosAttr *
-fu_bios_attrs_get_attr(FuBiosAttrs *self, const gchar *name);
+fu_bios_attrs_get_attr(FuBiosAttrs *self, const gchar *val);
+void
+fu_bios_attr_set_preferred_value(FwupdBiosAttr *attr, const gchar *needle);

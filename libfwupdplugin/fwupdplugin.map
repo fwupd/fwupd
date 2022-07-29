@@ -1071,6 +1071,7 @@ LIBFWUPDPLUGIN_1.8.3 {
 LIBFWUPDPLUGIN_1.8.4 {
   global:
     fu_backend_add_string;
+    fu_bios_attr_set_preferred_value;
     fu_bios_attrs_get_all;
     fu_bios_attrs_get_attr;
     fu_bios_attrs_get_pending_reboot;
