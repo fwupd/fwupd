@@ -45,6 +45,7 @@ static void
 fu_plugin_iommu_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
 	FuPluginData *priv = fu_plugin_get_data(plugin);
+	const gchar *iommu_attributes[] = {"AmdVt", "IOMMU", "VtForDirectIo", NULL};
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
 
 	/* create attr */
@@ -55,6 +56,17 @@ fu_plugin_iommu_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 	if (priv == NULL) {
 		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA);
 		return;
+	}
+
+	for (guint i = 0; iommu_attributes[i] != NULL; i++) {
+		FwupdBiosAttr *bios_attr =
+		    fu_context_get_bios_attr(fu_plugin_get_context(plugin), iommu_attributes[i]);
+		if (bios_attr != NULL) {
+			fwupd_security_attr_set_bios_attr_id(attr,
+							     fwupd_bios_attr_get_id(bios_attr));
+			fu_bios_attr_set_preferred_value(bios_attr, "enable");
+			break;
+		}
 	}
 	if (!priv->has_iommu) {
 		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_FOUND);
