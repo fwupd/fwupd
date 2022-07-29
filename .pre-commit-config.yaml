@@ -41,6 +41,10 @@ repos:
       name: check for null / false return mistmatch
       language: script
       entry: ./contrib/ci/check-null-false-returns.py
+    - id: check-potfiles
+      name: check for missing translated files from potfiles
+      language: script
+      entry: ./contrib/ci/check-potfiles.py
     - id: check-finalizers
       name: check for missing GObject parent finalize
       language: script
