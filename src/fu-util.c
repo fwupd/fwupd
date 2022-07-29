@@ -3390,6 +3390,8 @@ static gboolean
 fu_util_security(FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	FuSecurityAttrToStringFlags flags = FU_SECURITY_ATTR_TO_STRING_FLAG_NONE;
+	g_autoptr(GPtrArray) bios_attrs = NULL;
+	g_autoptr(GString) fixable_security_attrs = g_string_new(NULL);
 	g_autoptr(GPtrArray) attrs = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(GPtrArray) events = NULL;
@@ -3485,7 +3487,69 @@ fu_util_security(FuUtilPrivate *priv, gchar **values, GError **error)
 		return TRUE;
 
 	/* upload, with confirmation */
-	return fu_util_upload_security(priv, attrs, error);
+	if (!fu_util_upload_security(priv, attrs, error))
+		return FALSE;
+
+	/* Do we support BIOS attrs? */
+	bios_attrs = fwupd_client_get_bios_attrs(priv->client, priv->cancellable, error);
+	if (bios_attrs == NULL)
+		return FALSE;
+	if (bios_attrs->len == 0)
+		return TRUE;
+
+	/* try to improve things */
+	for (guint i = 0; i < attrs->len; i++) {
+		FwupdSecurityAttr *attr = g_ptr_array_index(attrs, i);
+		if (!fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA))
+			continue;
+		if (!fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_FW))
+			continue;
+		if (fwupd_security_attr_get_bios_attr_id(attr) == NULL)
+			continue;
+		for (guint j = 0; j < bios_attrs->len; j++) {
+			FwupdBiosAttr *bios_attr = g_ptr_array_index(bios_attrs, j);
+			g_autofree gchar *transition = NULL;
+			const gchar *tmp;
+			/* does it match */
+			if (g_strcmp0(fwupd_bios_attr_get_id(bios_attr),
+				      fwupd_security_attr_get_bios_attr_id(attr)) != 0)
+				continue;
+			/* does it have a preferred value */
+			if (fwupd_bios_attr_get_preferred_value(bios_attr) == NULL)
+				continue;
+			/* is it the preferred value already */
+			if (g_strcmp0(fwupd_bios_attr_get_preferred_value(bios_attr),
+				      fwupd_bios_attr_get_current_value(bios_attr)) == 0)
+				continue;
+			tmp = fwupd_bios_attr_get_name(bios_attr);
+			fu_string_append(fixable_security_attrs, 0, tmp, NULL);
+			transition =
+			    g_strdup_printf("%s -> %s",
+					    fwupd_bios_attr_get_current_value(bios_attr),
+					    fwupd_bios_attr_get_preferred_value(bios_attr));
+			/* TRANSLATORS: description of BIOS setting to modify */
+			fu_string_append(fixable_security_attrs, 1, _("Change"), transition);
+		}
+	}
+	if (fixable_security_attrs->len > 0) {
+		g_autofree gchar *warning_msg = NULL;
+		/* TRANSLATORS: Show a warning message */
+		fu_util_term_format(
+		    _("WARNING: This will should improve your security score it may cause problems"
+		      "with the operation of your system. Please be prepared to enter your firmware"
+		      "setup to change settings back if any of these cause a problem for you."),
+		    FU_UTIL_TERM_COLOR_RED);
+		g_print("\n%s\n\n%s\n%s\n%s [Y|n]:\n",
+			/* TRANSLATORS: explain that we can fix security for you */
+			_("fwupd could change some BIOS settings for you for the following items:"),
+			fixable_security_attrs->str,
+			warning_msg,
+			/* TRANSLATORS: ask the user */
+			_("Apply new BIOS settings?"));
+		if (!fu_util_prompt_for_boolean(TRUE))
+			return TRUE;
+	}
+	return TRUE;
 }
 
 static void
