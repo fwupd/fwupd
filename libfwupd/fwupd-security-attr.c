@@ -225,7 +225,7 @@ fwupd_security_attr_flag_to_suffix(FwupdSecurityAttrFlags flag)
 }
 
 /**
- * fwupd_security_attr_get_bios_id:
+ * fwupd_security_attr_get_bios_attr_id:
  * @self: a #FwupdSecurityAttr
  *
  * Gets the #FwupdBiosAttr that can be used to improve this
@@ -236,7 +236,7 @@ fwupd_security_attr_flag_to_suffix(FwupdSecurityAttrFlags flag)
  * Since: 1.8.4
  **/
 const gchar *
-fwupd_security_attr_get_bios_id(FwupdSecurityAttr *self)
+fwupd_security_attr_get_bios_attr_id(FwupdSecurityAttr *self)
 {
 	FwupdSecurityAttrPrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FWUPD_IS_SECURITY_ATTR(self), NULL);
