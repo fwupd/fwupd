@@ -30,10 +30,6 @@ GBytes *
 fu_release_get_fw_blob(FuRelease *self);
 FuEngineRequest *
 fu_release_get_request(FuRelease *self);
-const gchar *
-fu_release_get_builder_script(FuRelease *self);
-const gchar *
-fu_release_get_builder_output(FuRelease *self);
 GPtrArray *
 fu_release_get_soft_reqs(FuRelease *self);
 GPtrArray *

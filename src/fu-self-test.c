@@ -22,7 +22,6 @@
 #include "fu-device-list.h"
 #include "fu-device-private.h"
 #include "fu-engine.h"
-#include "fu-firmware-builder.h"
 #include "fu-hash.h"
 #include "fu-history.h"
 #include "fu-plugin-list.h"
@@ -3969,41 +3968,6 @@ fu_spawn_timeout_func(void)
 }
 
 static void
-fu_firmware_builder_process_func(void)
-{
-	const gchar *data;
-	g_autofree gchar *archive_fn = NULL;
-	g_autoptr(GBytes) archive_blob = NULL;
-	g_autoptr(GBytes) firmware_blob = NULL;
-	g_autoptr(GError) error = NULL;
-
-	/* get test file */
-	archive_fn = g_test_build_filename(G_TEST_BUILT, "tests", "builder", "firmware.tar", NULL);
-	archive_blob = fu_bytes_get_contents(archive_fn, &error);
-	g_assert_no_error(error);
-	g_assert_nonnull(archive_blob);
-
-	/* generate the firmware */
-	firmware_blob =
-	    fu_firmware_builder_process(archive_blob, "startup.sh", "firmware.bin", &error);
-	if (firmware_blob == NULL) {
-		if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_PERMISSION_DENIED)) {
-			g_test_skip("Missing permissions to create namespace in container");
-			return;
-		}
-		if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
-			g_test_skip("User namespaces not supported in container");
-			return;
-		}
-		g_assert_no_error(error);
-	}
-
-	/* check it */
-	data = g_bytes_get_data(firmware_blob, NULL);
-	g_assert_cmpstr(data, ==, "xobdnas eht ni gninnur");
-}
-
-static void
 fu_release_compare_func(gconstpointer user_data)
 {
 	FuDevice *device_tmp;
@@ -4781,7 +4745,6 @@ main(int argc, char **argv)
 	g_test_add_data_func("/fwupd/plugin-list{depsolve}", self, fu_plugin_list_depsolve_func);
 	g_test_add_func("/fwupd/spawn", fu_spawn_func);
 	g_test_add_func("/fwupd/spawn-timeou)", fu_spawn_timeout_func);
-	g_test_add_func("/fwupd/firmware-builder", fu_firmware_builder_process_func);
 	g_test_add_func("/fwupd/common{cab-success}", fu_common_store_cab_func);
 	g_test_add_func("/fwupd/common{cab-success-artifact}", fu_common_store_cab_artifact_func);
 	g_test_add_func("/fwupd/common{cab-success-unsigned}", fu_common_store_cab_unsigned_func);

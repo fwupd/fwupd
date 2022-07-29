@@ -1,4 +1,3 @@
-subdir('builder')
 subdir('pki')
 subdir('remotes.d')
 

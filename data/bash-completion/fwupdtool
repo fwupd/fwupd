@@ -138,21 +138,6 @@ _fwupdtool()
 			_show_device_ids
 		fi
 		;;
-	build-firmware)
-		#file in
-		if [[ "$args" = "2" ]]; then
-			_filedir
-		#file out
-		elif [[ "$args" = "3" ]]; then
-			_filedir
-		#script
-		elif [[ "$args" = "4" ]]; then
-			_filedir
-		#output
-		elif [[ "$args" = "5" ]]; then
-			_filedir
-		fi
-		;;
 	firmware-parse|firmware-patch)
 		#find files
 		if [[ "$args" = "2" ]]; then
