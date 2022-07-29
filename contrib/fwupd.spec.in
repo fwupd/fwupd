@@ -122,7 +122,6 @@ Requires(postun): systemd
 Requires: glib2%{?_isa} >= %{glib2_version}
 Requires: libxmlb%{?_isa} >= %{libxmlb_version}
 Requires: libgusb%{?_isa} >= %{libgusb_version}
-Requires: bubblewrap
 Requires: shared-mime-info
 
 %if 0%{?rhel} > 7 || 0%{?fedora} > 28
@@ -412,7 +411,6 @@ done
 %dir %{_localstatedir}/cache/fwupd
 %dir %{_datadir}/fwupd/quirks.d
 %{_datadir}/fwupd/quirks.d/*.quirk
-%{_datadir}/doc/fwupd/builder/README.md
 %{_datadir}/doc/fwupd/*.html
 %{_datadir}/fwupd/host-emulate.d/*.json.gz
 %if 0%{?have_uefi}

@@ -47,7 +47,6 @@ daemon_src = [
   'fu-plugin-list.c',
   'fu-remote-list.c',
   'fu-security-attr.c',
-  'fu-firmware-builder.c',
 ] + systemd_src
 
 if gudev.found()
@@ -287,7 +286,6 @@ if get_option('tests')
   test_deps += hwid_test_firmware
   test_deps += multiple_rels_test_firmware
   test_deps += noreqs_test_firmware
-  test_deps += builder_test_firmware
   env = environment()
   env.set('G_TEST_SRCDIR', meson.current_source_dir())
   env.set('G_TEST_BUILDDIR', meson.current_build_dir())
