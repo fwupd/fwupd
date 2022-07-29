@@ -247,7 +247,6 @@ fwupd_bios_attr_get_kind(FwupdBiosAttr *self)
  * @type: a bios attribute type, e.g. %FWUPD_BIOS_ATTR_KIND_ENUMERATION
  *
  * Sets the BIOS attribute type used by the kernel interface.
- * Setting a @type of %FWUPD_BIOS_ATTR_KIND_UNKNOWN is not supported.
  *
  * Since: 1.8.4
  **/
@@ -256,7 +255,6 @@ fwupd_bios_attr_set_kind(FwupdBiosAttr *self, FwupdBiosAttrKind type)
 {
 	FwupdBiosAttrPrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FWUPD_IS_BIOS_ATTR(self));
-	g_return_if_fail(type != FWUPD_BIOS_ATTR_KIND_UNKNOWN);
 	priv->kind = type;
 }
 
