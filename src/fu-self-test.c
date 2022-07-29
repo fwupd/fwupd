@@ -4537,7 +4537,8 @@ fu_engine_modify_bios_attrs_func(void)
 	g_assert_cmpint(items->len, ==, 4);
 
 	/* enumeration */
-	attr1 = fu_context_get_bios_attr(fu_engine_get_context(engine), "Absolute");
+	attr1 =
+	    fu_context_get_bios_attr(fu_engine_get_context(engine), "com.fwupd-internal.Absolute");
 	g_assert_nonnull(attr1);
 
 	current = fwupd_bios_attr_get_current_value(attr1);
@@ -4552,12 +4553,13 @@ fu_engine_modify_bios_attrs_func(void)
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
 	g_clear_error(&error);
 
-	ret = fu_engine_modify_bios_attr(engine, "Absolute", current, &error);
+	/* use BiosAttrId instead */
+	ret = fu_engine_modify_bios_attr(engine, "com.fwupd-internal.Absolute", current, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
 	/* string */
-	attr2 = fu_context_get_bios_attr(fu_engine_get_context(engine), "Asset");
+	attr2 = fu_context_get_bios_attr(fu_engine_get_context(engine), "com.fwupd-internal.Asset");
 	g_assert_nonnull(attr2);
 
 	current = fwupd_bios_attr_get_current_value(attr2);
@@ -4577,7 +4579,8 @@ fu_engine_modify_bios_attrs_func(void)
 	g_clear_error(&error);
 
 	/* integer */
-	attr3 = fu_context_get_bios_attr(fu_engine_get_context(engine), "CustomChargeStop");
+	attr3 = fu_context_get_bios_attr(fu_engine_get_context(engine),
+					 "com.fwupd-internal.CustomChargeStop");
 	g_assert_nonnull(attr3);
 
 	current = fwupd_bios_attr_get_current_value(attr3);
@@ -4601,7 +4604,8 @@ fu_engine_modify_bios_attrs_func(void)
 	g_assert_no_error(error);
 
 	/* Read Only */
-	attr4 = fu_context_get_bios_attr(fu_engine_get_context(engine), "pending_reboot");
+	attr4 = fu_context_get_bios_attr(fu_engine_get_context(engine),
+					 "com.fwupd-internal.pending_reboot");
 	g_assert_nonnull(attr4);
 
 	current = fwupd_bios_attr_get_current_value(attr4);

@@ -809,11 +809,13 @@ LIBFWUPD_1.8.4 {
     fwupd_bios_attr_from_variant;
     fwupd_bios_attr_get_current_value;
     fwupd_bios_attr_get_description;
+    fwupd_bios_attr_get_id;
     fwupd_bios_attr_get_kind;
     fwupd_bios_attr_get_lower_bound;
     fwupd_bios_attr_get_name;
     fwupd_bios_attr_get_path;
     fwupd_bios_attr_get_possible_values;
+    fwupd_bios_attr_get_preferred_value;
     fwupd_bios_attr_get_read_only;
     fwupd_bios_attr_get_scalar_increment;
     fwupd_bios_attr_get_type;
@@ -822,10 +824,12 @@ LIBFWUPD_1.8.4 {
     fwupd_bios_attr_new;
     fwupd_bios_attr_set_current_value;
     fwupd_bios_attr_set_description;
+    fwupd_bios_attr_set_id;
     fwupd_bios_attr_set_kind;
     fwupd_bios_attr_set_lower_bound;
     fwupd_bios_attr_set_name;
     fwupd_bios_attr_set_path;
+    fwupd_bios_attr_set_preferred_value;
     fwupd_bios_attr_set_read_only;
     fwupd_bios_attr_set_scalar_increment;
     fwupd_bios_attr_set_upper_bound;

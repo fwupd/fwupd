@@ -509,10 +509,25 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_RESULT_KEY_BATTERY_THRESHOLD "BatteryThreshold"
 /**
+ * FWUPD_RESULT_KEY_BIOS_ATTR_ID:
+ *
+ * Result key to represent the unique identifier of the BIOS attribute.
+ *
+ * The D-Bus type signature string is 's' i.e. a string.
+ **/
+#define FWUPD_RESULT_KEY_BIOS_ATTR_ID "BiosAttrId"
+/**
+ * FWUPD_RESULT_KEY_BIOS_ATTR_PREFERRED_VALUE:
+ *
+ * Result key to represent the value that would enable this attribute.
+ *
+ * The D-Bus type signature string is 's' i.e. a string.
+ **/
+#define FWUPD_RESULT_KEY_BIOS_ATTR_PREFERRED_VALUE "BiosAttrPreferredValue"
+/**
  * FWUPD_RESULT_KEY_BIOS_ATTR_CURRENT_VALUE:
  *
- * Result key to represent the type of BIOS attribute.
- * 0 is invalid, 1+ represent an attribute type
+ * Result key to represent the current value of BIOS attribute.
  *
  * The D-Bus type signature string is 's' i.e. a string.
  **/
@@ -567,4 +582,5 @@ G_BEGIN_DECLS
  * The D-Bus type signature string is 'b' i.e. a boolean.
  **/
 #define FWUPD_RESULT_KEY_BIOS_ATTR_READ_ONLY "BiosAttrReadOnly"
+
 G_END_DECLS

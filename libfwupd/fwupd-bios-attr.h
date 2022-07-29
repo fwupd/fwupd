@@ -108,4 +108,13 @@ fwupd_bios_attr_get_current_value(FwupdBiosAttr *self);
 void
 fwupd_bios_attr_set_current_value(FwupdBiosAttr *self, const gchar *value);
 
+const gchar *
+fwupd_bios_attr_get_id(FwupdBiosAttr *self);
+void
+fwupd_bios_attr_set_id(FwupdBiosAttr *self, const gchar *id);
+
+const gchar *
+fwupd_bios_attr_get_preferred_value(FwupdBiosAttr *self);
+void
+fwupd_bios_attr_set_preferred_value(FwupdBiosAttr *self, const gchar *value);
 G_END_DECLS

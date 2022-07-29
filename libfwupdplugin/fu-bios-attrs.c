@@ -257,7 +257,7 @@ fu_bios_attr_set_type(FuBiosAttrs *self, FwupdBiosAttr *attr, const gchar *drive
 static gboolean
 fu_bios_attr_set_file_attributes(FwupdBiosAttr *attr, GError **error)
 {
-	g_autofree gchar *str = NULL;
+	g_autofree gchar *value = NULL;
 
 	if (g_strcmp0(fwupd_bios_attr_get_name(attr), FWUPD_BIOS_ATTR_PENDING_REBOOT) != 0) {
 		g_set_error(error,
@@ -267,12 +267,40 @@ fu_bios_attr_set_file_attributes(FwupdBiosAttr *attr, GError **error)
 			    fwupd_bios_attr_get_name(attr));
 		return FALSE;
 	}
-	if (!fu_bios_attr_get_key(attr, NULL, &str, error))
+	if (!fu_bios_attr_get_key(attr, NULL, &value, error))
 		return FALSE;
-	fwupd_bios_attr_set_current_value(attr, str);
+	fwupd_bios_attr_set_current_value(attr, value);
 	fwupd_bios_attr_set_read_only(attr, TRUE);
 
 	return TRUE;
+}
+
+/**
+ * fu_bios_attr_set_preferred_value:
+ * @attr: a #FwupdBiosAttr
+ * @needle: The substring of a preferred value
+ *
+ * Checks all configured possible values of an enumeration attribute and
+ * if any match @needle then set as the preferred value.
+ *
+ * Since: 1.8.4
+ **/
+void
+fu_bios_attr_set_preferred_value(FwupdBiosAttr *attr, const gchar *needle)
+{
+	GPtrArray *values;
+
+	if (fwupd_bios_attr_get_kind(attr) != FWUPD_BIOS_ATTR_KIND_ENUMERATION)
+		return;
+	values = fwupd_bios_attr_get_possible_values(attr);
+	for (guint i = 0; i < values->len; i++) {
+		const gchar *possible = g_ptr_array_index(values, i);
+		g_autofree gchar *lower = g_utf8_strdown(possible, -1);
+		if (g_strrstr(lower, needle)) {
+			fwupd_bios_attr_set_preferred_value(attr, possible);
+			return;
+		}
+	}
 }
 
 static gboolean
@@ -304,6 +332,7 @@ fu_bios_attrs_populate_attribute(FuBiosAttrs *self,
 				 GError **error)
 {
 	g_autoptr(FwupdBiosAttr) attr = NULL;
+	g_autofree gchar *id = NULL;
 
 	g_return_val_if_fail(FU_IS_BIOS_ATTRS(self), FALSE);
 	g_return_val_if_fail(name != NULL, FALSE);
@@ -319,6 +348,10 @@ fu_bios_attrs_populate_attribute(FuBiosAttrs *self,
 		if (!fu_bios_attr_set_file_attributes(attr, error))
 			return FALSE;
 	}
+
+	id = g_strdup_printf("com.%s.%s", driver, name);
+	fwupd_bios_attr_set_id(attr, id);
+
 	g_ptr_array_add(self->attrs, g_object_ref(attr));
 
 	return TRUE;
@@ -398,22 +431,23 @@ fu_bios_attrs_init(FuBiosAttrs *self)
 /**
  * fu_bios_attrs_get_attr:
  * @self: a #FuBiosAttrs
- * @name: the attribute "name" to check for
+ * @val: the attribute ID or name to check for
  *
- * Returns: (transfer none): the attribute with the given name or NULL if it doesn't exist.
+ * Returns: (transfer none): the attribute with the given ID or name or NULL if it doesn't exist.
  *
  * Since: 1.8.4
  **/
 FwupdBiosAttr *
-fu_bios_attrs_get_attr(FuBiosAttrs *self, const gchar *name)
+fu_bios_attrs_get_attr(FuBiosAttrs *self, const gchar *val)
 {
 	g_return_val_if_fail(FU_IS_BIOS_ATTRS(self), NULL);
-	g_return_val_if_fail(name != NULL, NULL);
+	g_return_val_if_fail(val != NULL, NULL);
 
 	for (guint i = 0; i < self->attrs->len; i++) {
 		FwupdBiosAttr *attr = g_ptr_array_index(self->attrs, i);
-		const gchar *tmp = fwupd_bios_attr_get_name(attr);
-		if (g_strcmp0(tmp, name) == 0)
+		const gchar *tmp_id = fwupd_bios_attr_get_id(attr);
+		const gchar *tmp_name = fwupd_bios_attr_get_name(attr);
+		if (g_strcmp0(val, tmp_id) == 0 || g_strcmp0(val, tmp_name) == 0)
 			return attr;
 	}
 	return NULL;
