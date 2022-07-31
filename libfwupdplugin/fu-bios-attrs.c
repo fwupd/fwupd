@@ -279,34 +279,6 @@ fu_bios_attr_set_file_attributes(FwupdBiosAttr *attr, GError **error)
 	return TRUE;
 }
 
-/**
- * fu_bios_attr_set_preferred_value:
- * @attr: a #FwupdBiosAttr
- * @needle: The substring of a preferred value
- *
- * Checks all configured possible values of an enumeration attribute and
- * if any match @needle then set as the preferred value.
- *
- * Since: 1.8.4
- **/
-void
-fu_bios_attr_set_preferred_value(FwupdBiosAttr *attr, const gchar *needle)
-{
-	GPtrArray *values;
-
-	if (fwupd_bios_attr_get_kind(attr) != FWUPD_BIOS_ATTR_KIND_ENUMERATION)
-		return;
-	values = fwupd_bios_attr_get_possible_values(attr);
-	for (guint i = 0; i < values->len; i++) {
-		const gchar *possible = g_ptr_array_index(values, i);
-		g_autofree gchar *lower = g_utf8_strdown(possible, -1);
-		if (g_strrstr(lower, needle)) {
-			fwupd_bios_attr_set_preferred_value(attr, possible);
-			return;
-		}
-	}
-}
-
 static gboolean
 fu_bios_attrs_set_folder_attributes(FuBiosAttrs *self,
 				    FwupdBiosAttr *attr,

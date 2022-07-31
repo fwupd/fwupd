@@ -11,7 +11,7 @@
 
 #include "fwupd-security-attr-private.h"
 
-#include "fu-security-attr.h"
+#include "fu-security-attr-common.h"
 #include "fu-security-attrs-private.h"
 
 gchar *

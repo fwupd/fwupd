@@ -26,8 +26,7 @@ fu_plugin_acpi_ivrs_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 		return;
 
 	/* create attr */
-	attr = fwupd_security_attr_new(FWUPD_SECURITY_ATTR_ID_PREBOOT_DMA_PROTECTION);
-	fwupd_security_attr_set_plugin(attr, fu_plugin_get_name(plugin));
+	attr = fu_plugin_security_attr_new(plugin, FWUPD_SECURITY_ATTR_ID_PREBOOT_DMA_PROTECTION);
 	fu_security_attrs_append(attrs, attr);
 
 	/* load IVRS table */

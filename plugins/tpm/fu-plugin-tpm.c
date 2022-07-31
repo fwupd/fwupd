@@ -119,8 +119,7 @@ fu_plugin_tpm_add_security_attr_version(FuPlugin *plugin, FuSecurityAttrs *attrs
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
 
 	/* create attr */
-	attr = fwupd_security_attr_new(FWUPD_SECURITY_ATTR_ID_TPM_VERSION_20);
-	fwupd_security_attr_set_plugin(attr, fu_plugin_get_name(plugin));
+	attr = fu_plugin_security_attr_new(plugin, FWUPD_SECURITY_ATTR_ID_TPM_VERSION_20);
 	fu_security_attrs_append(attrs, attr);
 
 	/* check exists, and in v2.0 mode */
@@ -155,8 +154,7 @@ fu_plugin_tpm_add_security_attr_eventlog(FuPlugin *plugin, FuSecurityAttrs *attr
 		return;
 
 	/* create attr */
-	attr = fwupd_security_attr_new(FWUPD_SECURITY_ATTR_ID_TPM_RECONSTRUCTION_PCR0);
-	fwupd_security_attr_set_plugin(attr, fu_plugin_get_name(plugin));
+	attr = fu_plugin_security_attr_new(plugin, FWUPD_SECURITY_ATTR_ID_TPM_RECONSTRUCTION_PCR0);
 	fwupd_security_attr_add_guids(attr, fu_device_get_guids(priv->tpm_device));
 	fu_security_attrs_append(attrs, attr);
 
@@ -217,8 +215,7 @@ fu_plugin_tpm_add_security_attr_empty(FuPlugin *plugin, FuSecurityAttrs *attrs)
 		return;
 
 	/* add attributes */
-	attr = fwupd_security_attr_new(FWUPD_SECURITY_ATTR_ID_TPM_EMPTY_PCR);
-	fwupd_security_attr_set_plugin(attr, fu_plugin_get_name(plugin));
+	attr = fu_plugin_security_attr_new(plugin, FWUPD_SECURITY_ATTR_ID_TPM_EMPTY_PCR);
 	fwupd_security_attr_add_guids(attr, fu_device_get_guids(priv->tpm_device));
 	fu_security_attrs_append(attrs, attr);
 

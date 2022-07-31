@@ -298,9 +298,8 @@ fu_cpu_device_add_security_attrs_intel_cet_enabled(FuCpuDevice *self, FuSecurity
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
 
 	/* create attr */
-	attr = fwupd_security_attr_new(FWUPD_SECURITY_ATTR_ID_INTEL_CET_ENABLED);
-	fwupd_security_attr_set_plugin(attr, fu_device_get_plugin(FU_DEVICE(self)));
-	fwupd_security_attr_add_guids(attr, fu_device_get_guids(FU_DEVICE(self)));
+	attr =
+	    fu_device_security_attr_new(FU_DEVICE(self), FWUPD_SECURITY_ATTR_ID_INTEL_CET_ENABLED);
 	fu_security_attrs_append(attrs, attr);
 
 	/* check for CET */
@@ -329,9 +328,8 @@ fu_cpu_device_add_security_attrs_intel_cet_active(FuCpuDevice *self, FuSecurityA
 		return;
 
 	/* create attr */
-	attr = fwupd_security_attr_new(FWUPD_SECURITY_ATTR_ID_INTEL_CET_ACTIVE);
-	fwupd_security_attr_set_plugin(attr, fu_device_get_plugin(FU_DEVICE(self)));
-	fwupd_security_attr_add_guids(attr, fu_device_get_guids(FU_DEVICE(self)));
+	attr =
+	    fu_device_security_attr_new(FU_DEVICE(self), FWUPD_SECURITY_ATTR_ID_INTEL_CET_ACTIVE);
 	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ISSUE);
 	fu_security_attrs_append(attrs, attr);
 
@@ -361,9 +359,7 @@ fu_cpu_device_add_security_attrs_intel_tme(FuCpuDevice *self, FuSecurityAttrs *a
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
 
 	/* create attr */
-	attr = fwupd_security_attr_new(FWUPD_SECURITY_ATTR_ID_ENCRYPTED_RAM);
-	fwupd_security_attr_set_plugin(attr, fu_device_get_plugin(FU_DEVICE(self)));
-	fwupd_security_attr_add_guids(attr, fu_device_get_guids(FU_DEVICE(self)));
+	attr = fu_device_security_attr_new(FU_DEVICE(self), FWUPD_SECURITY_ATTR_ID_ENCRYPTED_RAM);
 	fu_security_attrs_append(attrs, attr);
 
 	/* check for TME */
@@ -383,9 +379,7 @@ fu_cpu_device_add_security_attrs_intel_smap(FuCpuDevice *self, FuSecurityAttrs *
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
 
 	/* create attr */
-	attr = fwupd_security_attr_new(FWUPD_SECURITY_ATTR_ID_INTEL_SMAP);
-	fwupd_security_attr_set_plugin(attr, fu_device_get_plugin(FU_DEVICE(self)));
-	fwupd_security_attr_add_guids(attr, fu_device_get_guids(FU_DEVICE(self)));
+	attr = fu_device_security_attr_new(FU_DEVICE(self), FWUPD_SECURITY_ATTR_ID_INTEL_SMAP);
 	fu_security_attrs_append(attrs, attr);
 
 	/* check for SMEP and SMAP */
@@ -404,10 +398,7 @@ fu_cpu_device_add_supported_cpu_attribute(FuCpuDevice *self, FuSecurityAttrs *at
 {
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
 
-	attr = fwupd_security_attr_new(FWUPD_SECURITY_ATTR_ID_SUPPORTED_CPU);
-	fwupd_security_attr_set_plugin(attr, fu_device_get_plugin(FU_DEVICE(self)));
-	fwupd_security_attr_add_guids(attr, fu_device_get_guids(FU_DEVICE(self)));
-
+	attr = fu_device_security_attr_new(FU_DEVICE(self), FWUPD_SECURITY_ATTR_ID_SUPPORTED_CPU);
 	switch (fu_cpu_get_vendor()) {
 	case FU_CPU_VENDOR_INTEL:
 	case FU_CPU_VENDOR_AMD:

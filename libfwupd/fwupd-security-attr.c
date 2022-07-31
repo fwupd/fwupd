@@ -38,7 +38,8 @@ typedef struct {
 	FwupdSecurityAttrResult result;
 	FwupdSecurityAttrResult result_fallback;
 	FwupdSecurityAttrFlags flags;
-	gchar *bios_attr;
+	gchar *bios_attr_id;
+	gchar *bios_attr_value;
 } FwupdSecurityAttrPrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE(FwupdSecurityAttr, fwupd_security_attr, G_TYPE_OBJECT)
@@ -240,7 +241,7 @@ fwupd_security_attr_get_bios_attr_id(FwupdSecurityAttr *self)
 {
 	FwupdSecurityAttrPrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FWUPD_IS_SECURITY_ATTR(self), NULL);
-	return priv->bios_attr;
+	return priv->bios_attr_id;
 }
 
 /**
@@ -258,10 +259,10 @@ fwupd_security_attr_set_bios_attr_id(FwupdSecurityAttr *self, const gchar *id)
 {
 	FwupdSecurityAttrPrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FWUPD_IS_SECURITY_ATTR(self));
-	if (priv->bios_attr == id)
+	if (priv->bios_attr_id == id)
 		return;
-	g_free(priv->bios_attr);
-	priv->bios_attr = g_strdup(id);
+	g_free(priv->bios_attr_id);
+	priv->bios_attr_id = g_strdup(id);
 }
 
 /**
@@ -498,6 +499,47 @@ fwupd_security_attr_set_name(FwupdSecurityAttr *self, const gchar *name)
 
 	g_free(priv->name);
 	priv->name = g_strdup(name);
+}
+
+/**
+ * fwupd_security_attr_get_bios_attr_value:
+ * @self: a #FwupdSecurityAttr
+ *
+ * Gets the value that when written to an attribute would activate it or satisfy
+ * a security requirement.
+ *
+ * Returns: the target value of the attribute.
+ *
+ * Since: 1.8.4
+ **/
+const gchar *
+fwupd_security_attr_get_bios_attr_value(FwupdSecurityAttr *self)
+{
+	FwupdSecurityAttrPrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_SECURITY_ATTR(self), NULL);
+	return priv->bios_attr_value;
+}
+
+/**
+ * fwupd_security_attr_set_bios_attr_value:
+ * @self: a #FwupdSecurityAttr
+ * @value: The string to set target value to
+ *
+ * Sets the string used for the target value of an attribute.
+ *
+ * Since: 1.8.4
+ **/
+void
+fwupd_security_attr_set_bios_attr_value(FwupdSecurityAttr *self, const gchar *value)
+{
+	FwupdSecurityAttrPrivate *priv = GET_PRIVATE(self);
+
+	/* not changed */
+	if (g_strcmp0(priv->bios_attr_value, value) == 0)
+		return;
+
+	g_free(priv->bios_attr_value);
+	priv->bios_attr_value = g_strdup(value);
 }
 
 /**
@@ -1013,11 +1055,17 @@ fwupd_security_attr_to_variant(FwupdSecurityAttr *self)
 				      FWUPD_RESULT_KEY_METADATA,
 				      fwupd_hash_kv_to_variant(priv->metadata));
 	}
-	if (priv->bios_attr != NULL) {
+	if (priv->bios_attr_id != NULL) {
 		g_variant_builder_add(&builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_BIOS_ATTR_ID,
-				      g_variant_new_string(priv->bios_attr));
+				      g_variant_new_string(priv->bios_attr_id));
+	}
+	if (priv->bios_attr_value != NULL) {
+		g_variant_builder_add(&builder,
+				      "{sv}",
+				      FWUPD_RESULT_KEY_BIOS_ATTR_TARGET_VALUE,
+				      g_variant_new_string(priv->bios_attr_value));
 	}
 	return g_variant_new("a{sv}", &builder);
 }
@@ -1135,6 +1183,10 @@ fwupd_security_attr_from_key_value(FwupdSecurityAttr *self, const gchar *key, GV
 		fwupd_security_attr_set_bios_attr_id(self, g_variant_get_string(value, NULL));
 		return;
 	}
+	if (g_strcmp0(key, FWUPD_RESULT_KEY_BIOS_ATTR_TARGET_VALUE) == 0) {
+		fwupd_security_attr_set_bios_attr_value(self, g_variant_get_string(value, NULL));
+		return;
+	}
 }
 
 static void
@@ -1219,6 +1271,11 @@ fwupd_security_attr_from_json(FwupdSecurityAttr *self, JsonNode *json_node, GErr
 	fwupd_security_attr_set_bios_attr_id(
 	    self,
 	    json_object_get_string_member_with_default(obj, FWUPD_RESULT_KEY_BIOS_ATTR_ID, NULL));
+	fwupd_security_attr_set_bios_attr_value(
+	    self,
+	    json_object_get_string_member_with_default(obj,
+						       FWUPD_RESULT_KEY_BIOS_ATTR_TARGET_VALUE,
+						       NULL));
 
 	/* also optional */
 	if (json_object_has_member(obj, FWUPD_RESULT_KEY_HSI_RESULT)) {
@@ -1297,7 +1354,10 @@ fwupd_security_attr_to_json(FwupdSecurityAttr *self, JsonBuilder *builder)
 	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_DESCRIPTION, priv->description);
 	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_PLUGIN, priv->plugin);
 	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_URI, priv->url);
-	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_BIOS_ATTR_ID, priv->bios_attr);
+	fwupd_common_json_add_string(builder,
+				     FWUPD_RESULT_KEY_BIOS_ATTR_TARGET_VALUE,
+				     priv->bios_attr_value);
+	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_BIOS_ATTR_ID, priv->bios_attr_id);
 
 	if (priv->flags != FWUPD_SECURITY_ATTR_FLAG_NONE) {
 		json_builder_set_member_name(builder, FWUPD_RESULT_KEY_FLAGS);
@@ -1366,7 +1426,8 @@ fwupd_security_attr_to_string(FwupdSecurityAttr *self)
 	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_DESCRIPTION, priv->description);
 	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_PLUGIN, priv->plugin);
 	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_URI, priv->url);
-	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_BIOS_ATTR_ID, priv->bios_attr);
+	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_BIOS_ATTR_ID, priv->bios_attr_id);
+	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_BIOS_ATTR_TARGET_VALUE, priv->bios_attr_value);
 
 	for (guint i = 0; i < priv->obsoletes->len; i++) {
 		const gchar *appstream_id = g_ptr_array_index(priv->obsoletes, i);
@@ -1413,7 +1474,8 @@ fwupd_security_attr_finalize(GObject *object)
 
 	if (priv->metadata != NULL)
 		g_hash_table_unref(priv->metadata);
-	g_free(priv->bios_attr);
+	g_free(priv->bios_attr_id);
+	g_free(priv->bios_attr_value);
 	g_free(priv->appstream_id);
 	g_free(priv->name);
 	g_free(priv->title);
@@ -1532,7 +1594,7 @@ fwupd_security_attr_copy(FwupdSecurityAttr *self)
 	fwupd_security_attr_set_flags(new, priv->flags);
 	fwupd_security_attr_set_result(new, priv->result);
 	fwupd_security_attr_set_created(new, priv->created);
-	fwupd_security_attr_set_bios_attr_id(new, priv->bios_attr);
+	fwupd_security_attr_set_bios_attr_id(new, priv->bios_attr_id);
 
 	for (guint i = 0; i < priv->guids->len; i++) {
 		const gchar *guid = g_ptr_array_index(priv->guids, i);
@@ -1560,6 +1622,9 @@ fwupd_security_attr_copy(FwupdSecurityAttr *self)
  * @appstream_id: (nullable): the AppStream component ID, e.g. `com.intel.BiosGuard`
  *
  * Creates a new security attribute.
+ *
+ * Plugins should not use this method, and should instead use `fu_plugin_security_attr_new()` or
+ * `fu_security_attr_new()`.
  *
  * Returns: a new #FwupdSecurityAttr
  *

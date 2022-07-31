@@ -48,7 +48,7 @@ libfwupd_src = [
   'fwupd-enums.c',          # fuzzing
   'fwupd-error.c',          # fuzzing
   'fwupd-bios-attr.c',      # fuzzing
-  'fwupd-security-attr.c',
+  'fwupd-security-attr.c',  # fuzzing
   'fwupd-release.c',        # fuzzing
   'fwupd-plugin.c',
   'fwupd-remote.c',

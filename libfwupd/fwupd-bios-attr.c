@@ -27,7 +27,6 @@ typedef struct {
 	gchar *description;
 	gchar *path;
 	gchar *current_value;
-	gchar *preferred_value;
 	guint64 lower_bound;
 	guint64 upper_bound;
 	guint64 scalar_increment;
@@ -452,47 +451,6 @@ fwupd_bios_attr_get_description(FwupdBiosAttr *self)
 }
 
 /**
- * fwupd_bios_attr_get_preferred_value:
- * @self: a #FwupdBiosAttr
- *
- * Gets the value that when written to an attribute would activate it or satisfy
- * a security requirement.
- *
- * Returns: the preferred value of the attribute.
- *
- * Since: 1.8.4
- **/
-const gchar *
-fwupd_bios_attr_get_preferred_value(FwupdBiosAttr *self)
-{
-	FwupdBiosAttrPrivate *priv = GET_PRIVATE(self);
-	g_return_val_if_fail(FWUPD_IS_BIOS_ATTR(self), NULL);
-	return priv->preferred_value;
-}
-
-/**
- * fwupd_bios_attr_set_preferred_value:
- * @self: a #FwupdBiosAttr
- * @value: The string to set preferred value to
- *
- * Sets the string used for the preferred value of an attribute.
- *
- * Since: 1.8.4
- **/
-void
-fwupd_bios_attr_set_preferred_value(FwupdBiosAttr *self, const gchar *value)
-{
-	FwupdBiosAttrPrivate *priv = GET_PRIVATE(self);
-
-	/* not changed */
-	if (g_strcmp0(priv->preferred_value, value) == 0)
-		return;
-
-	g_free(priv->preferred_value);
-	priv->preferred_value = g_strdup(value);
-}
-
-/**
  * fwupd_bios_attr_get_current_value:
  * @self: a #FwupdBiosAttr
  *
@@ -582,12 +540,6 @@ fwupd_bios_attr_to_variant(FwupdBiosAttr *self)
 				      FWUPD_RESULT_KEY_DESCRIPTION,
 				      g_variant_new_string(priv->description));
 	}
-	if (priv->preferred_value != NULL) {
-		g_variant_builder_add(&builder,
-				      "{sv}",
-				      FWUPD_RESULT_KEY_BIOS_ATTR_PREFERRED_VALUE,
-				      g_variant_new_string(priv->preferred_value));
-	}
 	g_variant_builder_add(&builder,
 			      "{sv}",
 			      FWUPD_RESULT_KEY_BIOS_ATTR_CURRENT_VALUE,
@@ -641,10 +593,6 @@ fwupd_bios_attr_from_key_value(FwupdBiosAttr *self, const gchar *key, GVariant *
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_FILENAME) == 0) {
 		fwupd_bios_attr_set_path(self, g_variant_get_string(value, NULL));
-		return;
-	}
-	if (g_strcmp0(key, FWUPD_RESULT_KEY_BIOS_ATTR_PREFERRED_VALUE) == 0) {
-		fwupd_bios_attr_set_preferred_value(self, g_variant_get_string(value, NULL));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_BIOS_ATTR_CURRENT_VALUE) == 0) {
@@ -725,12 +673,6 @@ fwupd_bios_attr_from_json(FwupdBiosAttr *self, JsonNode *json_node, GError **err
 	    json_object_get_string_member_with_default(obj,
 						       FWUPD_RESULT_KEY_BIOS_ATTR_CURRENT_VALUE,
 						       NULL));
-	fwupd_bios_attr_set_preferred_value(
-	    self,
-	    json_object_get_string_member_with_default(obj,
-						       FWUPD_RESULT_KEY_BIOS_ATTR_PREFERRED_VALUE,
-						       NULL));
-
 	if (json_object_has_member(obj, FWUPD_RESULT_KEY_BIOS_ATTR_POSSIBLE_VALUES)) {
 		JsonArray *array =
 		    json_object_get_array_member(obj, FWUPD_RESULT_KEY_BIOS_ATTR_POSSIBLE_VALUES);
@@ -796,9 +738,6 @@ fwupd_bios_attr_to_json(FwupdBiosAttr *self, JsonBuilder *builder)
 	fwupd_common_json_add_string(builder,
 				     FWUPD_RESULT_KEY_BIOS_ATTR_CURRENT_VALUE,
 				     priv->current_value);
-	fwupd_common_json_add_string(builder,
-				     FWUPD_RESULT_KEY_BIOS_ATTR_PREFERRED_VALUE,
-				     priv->preferred_value);
 	if (priv->kind == FWUPD_BIOS_ATTR_KIND_ENUMERATION) {
 		if (priv->possible_values->len > 0) {
 			json_builder_set_member_name(builder,
@@ -852,7 +791,6 @@ fwupd_bios_attr_to_string(FwupdBiosAttr *self)
 	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_FILENAME, priv->path);
 	fwupd_pad_kv_int(str, FWUPD_RESULT_KEY_BIOS_ATTR_TYPE, priv->kind);
 	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_BIOS_ATTR_CURRENT_VALUE, priv->current_value);
-	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_BIOS_ATTR_PREFERRED_VALUE, priv->preferred_value);
 	fwupd_pad_kv_str(str,
 			 FWUPD_RESULT_KEY_BIOS_ATTR_READ_ONLY,
 			 priv->read_only ? "True" : "False");
@@ -897,7 +835,6 @@ fwupd_bios_attr_finalize(GObject *object)
 	FwupdBiosAttr *self = FWUPD_BIOS_ATTR(object);
 	FwupdBiosAttrPrivate *priv = GET_PRIVATE(self);
 
-	g_free(priv->preferred_value);
 	g_free(priv->current_value);
 	g_free(priv->id);
 	g_free(priv->name);

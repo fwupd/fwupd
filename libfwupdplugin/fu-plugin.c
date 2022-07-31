@@ -22,6 +22,7 @@
 #include "fu-mutex.h"
 #include "fu-path.h"
 #include "fu-plugin-private.h"
+#include "fu-security-attr.h"
 #include "fu-string.h"
 
 /**
@@ -2351,6 +2352,31 @@ fu_plugin_get_config_value(FuPlugin *self, const gchar *key)
 	if (!g_key_file_load_from_file(keyfile, conf_path, G_KEY_FILE_NONE, NULL))
 		return NULL;
 	return g_key_file_get_string(keyfile, fu_plugin_get_name(self), key, NULL);
+}
+
+/**
+ * fu_plugin_security_attr_new:
+ * @self: a #FuPlugin
+ * @appstream_id: (nullable): the AppStream component ID, e.g. `com.intel.BiosGuard`
+ *
+ * Creates a new #FwupdSecurityAttr for this specific plugin.
+ *
+ * Returns: (transfer full): a #FwupdSecurityAttr
+ *
+ * Since: 1.8.4
+ **/
+FwupdSecurityAttr *
+fu_plugin_security_attr_new(FuPlugin *self, const gchar *appstream_id)
+{
+	FuPluginPrivate *priv = fu_plugin_get_instance_private(self);
+	g_autoptr(FwupdSecurityAttr) attr = NULL;
+
+	g_return_val_if_fail(FU_IS_PLUGIN(self), NULL);
+	g_return_val_if_fail(appstream_id != NULL, NULL);
+
+	attr = fu_security_attr_new(priv->ctx, appstream_id);
+	fwupd_security_attr_set_plugin(attr, fu_plugin_get_name(self));
+	return g_steal_pointer(&attr);
 }
 
 /**

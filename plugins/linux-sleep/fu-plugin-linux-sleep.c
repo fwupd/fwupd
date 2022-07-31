@@ -18,8 +18,7 @@ fu_plugin_linux_sleep_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attr
 	g_autoptr(GFile) file = g_file_new_for_path("/sys/power/mem_sleep");
 
 	/* create attr */
-	attr = fwupd_security_attr_new(FWUPD_SECURITY_ATTR_ID_SUSPEND_TO_RAM);
-	fwupd_security_attr_set_plugin(attr, fu_plugin_get_name(plugin));
+	attr = fu_plugin_security_attr_new(plugin, FWUPD_SECURITY_ATTR_ID_SUSPEND_TO_RAM);
 	fu_security_attrs_append(attrs, attr);
 
 	/* load file */

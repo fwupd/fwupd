@@ -26,7 +26,7 @@
 #endif
 
 #include "fu-device-private.h"
-#include "fu-security-attr.h"
+#include "fu-security-attr-common.h"
 #include "fu-util-common.h"
 
 #ifdef HAVE_SYSTEMD

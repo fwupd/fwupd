@@ -177,8 +177,7 @@ fu_plugin_uefi_pk_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
 
 	/* create attr */
-	attr = fwupd_security_attr_new(FWUPD_SECURITY_ATTR_ID_UEFI_PK);
-	fwupd_security_attr_set_plugin(attr, fu_plugin_get_name(plugin));
+	attr = fu_plugin_security_attr_new(plugin, FWUPD_SECURITY_ATTR_ID_UEFI_PK);
 	if (msf_device != NULL)
 		fwupd_security_attr_add_guids(attr, fu_device_get_guids(msf_device));
 	fu_security_attrs_append(attrs, attr);

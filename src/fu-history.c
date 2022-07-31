@@ -20,7 +20,7 @@
 #include "fu-device-private.h"
 #include "fu-history.h"
 #include "fu-mutex.h"
-#include "fu-security-attr.h"
+#include "fu-security-attr-common.h"
 
 #define FU_HISTORY_CURRENT_SCHEMA_VERSION 8
 

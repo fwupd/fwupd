@@ -36,7 +36,7 @@
 #include "fu-hwids.h"
 #include "fu-plugin-private.h"
 #include "fu-progressbar.h"
-#include "fu-security-attr.h"
+#include "fu-security-attr-common.h"
 #include "fu-security-attrs-private.h"
 #include "fu-smbios-private.h"
 #include "fu-util-bios-attr.h"
