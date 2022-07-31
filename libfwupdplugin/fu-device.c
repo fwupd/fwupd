@@ -18,6 +18,7 @@
 #include "fu-device-private.h"
 #include "fu-mutex.h"
 #include "fu-quirks.h"
+#include "fu-security-attr.h"
 #include "fu-string.h"
 #include "fu-version-common.h"
 
@@ -5394,6 +5395,32 @@ fu_device_build_instance_id_quirk(FuDevice *self, GError **error, const gchar *s
 	/* success */
 	fu_device_add_instance_id_full(self, str->str, FU_DEVICE_INSTANCE_FLAG_ONLY_QUIRKS);
 	return TRUE;
+}
+
+/**
+ * fu_device_security_attr_new:
+ * @self: a #FuDevice
+ * @appstream_id: (nullable): the AppStream component ID, e.g. `com.intel.BiosGuard`
+ *
+ * Creates a new #FwupdSecurityAttr for this specific device.
+ *
+ * Returns: (transfer full): a #FwupdSecurityAttr
+ *
+ * Since: 1.8.4
+ **/
+FwupdSecurityAttr *
+fu_device_security_attr_new(FuDevice *self, const gchar *appstream_id)
+{
+	FuDevicePrivate *priv = fu_device_get_instance_private(self);
+	g_autoptr(FwupdSecurityAttr) attr = NULL;
+
+	g_return_val_if_fail(FU_IS_DEVICE(self), NULL);
+	g_return_val_if_fail(appstream_id != NULL, NULL);
+
+	attr = fu_security_attr_new(priv->ctx, appstream_id);
+	fwupd_security_attr_set_plugin(attr, fu_device_get_plugin(FU_DEVICE(self)));
+	fwupd_security_attr_add_guids(attr, fu_device_get_guids(FU_DEVICE(self)));
+	return g_steal_pointer(&attr);
 }
 
 static void

@@ -13,7 +13,6 @@
 static void
 fu_plugin_acpi_facp_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
-	FwupdBiosAttr *bios_attr;
 	g_autofree gchar *fn = NULL;
 	g_autofree gchar *path = NULL;
 	g_autoptr(FuAcpiFacp) facp = NULL;
@@ -22,8 +21,7 @@ fu_plugin_acpi_facp_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 	g_autoptr(GError) error_local = NULL;
 
 	/* create attr */
-	attr = fwupd_security_attr_new(FWUPD_SECURITY_ATTR_ID_SUSPEND_TO_IDLE);
-	fwupd_security_attr_set_plugin(attr, fu_plugin_get_name(plugin));
+	attr = fu_plugin_security_attr_new(plugin, FWUPD_SECURITY_ATTR_ID_SUSPEND_TO_IDLE);
 	fu_security_attrs_append(attrs, attr);
 
 	/* load FACP table */
@@ -42,14 +40,8 @@ fu_plugin_acpi_facp_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 		return;
 	}
 
-	/* BIOS knob used on Lenovo systems */
-	bios_attr =
-	    fu_context_get_bios_attr(fu_plugin_get_context(plugin), "com.thinklmi.SleepState");
-	if (bios_attr != NULL) {
-		fwupd_security_attr_set_bios_attr_id(attr, fwupd_bios_attr_get_id(bios_attr));
-		/* options are usually "Linux" (S3) or "Windows" (s2idle) */
-		fu_bios_attr_set_preferred_value(bios_attr, "windows");
-	}
+	/* options are usually "Linux" (S3) or "Windows" (s2idle) */
+	fu_security_attr_add_bios_target_value(attr, "com.thinklmi.SleepState", "windows");
 
 	if (!fu_acpi_facp_get_s2i(facp)) {
 		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);

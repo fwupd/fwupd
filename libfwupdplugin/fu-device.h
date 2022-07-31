@@ -726,6 +726,8 @@ gboolean
 fu_device_has_private_flag(FuDevice *self, guint64 flag);
 void
 fu_device_emit_request(FuDevice *self, FwupdRequest *request);
+FwupdSecurityAttr *
+fu_device_security_attr_new(FuDevice *self, const gchar *appstream_id);
 
 void
 fu_device_add_instance_str(FuDevice *self, const gchar *key, const gchar *value);

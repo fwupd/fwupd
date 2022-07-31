@@ -46,7 +46,7 @@ daemon_src = [
   'fu-keyring-utils.c',
   'fu-plugin-list.c',
   'fu-remote-list.c',
-  'fu-security-attr.c',
+  'fu-security-attr-common.c',
 ] + systemd_src
 
 if gudev.found()
@@ -84,7 +84,7 @@ fwupdmgr = executable(
     'fu-util.c',
     'fu-history.c',
     'fu-progressbar.c',
-    'fu-security-attr.c',
+    'fu-security-attr-common.c',
     'fu-util-bios-attr.c',
     'fu-util-common.c',
     client_src,
@@ -126,7 +126,7 @@ fwupdoffline = executable(
     'fu-history.c',
     'fu-offline.c',
     'fu-spawn.c',
-    'fu-security-attr.c',
+    'fu-security-attr-common.c',
     'fu-util-common.c',
     systemd_src
   ],

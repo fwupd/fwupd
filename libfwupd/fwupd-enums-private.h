@@ -517,13 +517,13 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_RESULT_KEY_BIOS_ATTR_ID "BiosAttrId"
 /**
- * FWUPD_RESULT_KEY_BIOS_ATTR_PREFERRED_VALUE:
+ * FWUPD_RESULT_KEY_BIOS_ATTR_TARGET_VALUE:
  *
  * Result key to represent the value that would enable this attribute.
  *
  * The D-Bus type signature string is 's' i.e. a string.
  **/
-#define FWUPD_RESULT_KEY_BIOS_ATTR_PREFERRED_VALUE "BiosAttrPreferredValue"
+#define FWUPD_RESULT_KEY_BIOS_ATTR_TARGET_VALUE "BiosAttrTargetValue"
 /**
  * FWUPD_RESULT_KEY_BIOS_ATTR_CURRENT_VALUE:
  *

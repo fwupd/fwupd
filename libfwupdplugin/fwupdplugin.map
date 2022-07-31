@@ -1071,7 +1071,6 @@ LIBFWUPDPLUGIN_1.8.3 {
 LIBFWUPDPLUGIN_1.8.4 {
   global:
     fu_backend_add_string;
-    fu_bios_attr_set_preferred_value;
     fu_bios_attrs_get_all;
     fu_bios_attrs_get_attr;
     fu_bios_attrs_get_pending_reboot;
@@ -1083,7 +1082,12 @@ LIBFWUPDPLUGIN_1.8.4 {
     fu_context_get_bios_attr_pending_reboot;
     fu_context_get_bios_attrs;
     fu_context_reload_bios_attrs;
+    fu_device_security_attr_new;
     fu_plugin_add_string;
+    fu_plugin_security_attr_new;
     fu_plugin_to_string;
+    fu_security_attr_add_bios_target_value;
+    fu_security_attr_get_type;
+    fu_security_attr_new;
   local: *;
 } LIBFWUPDPLUGIN_1.8.3;

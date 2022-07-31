@@ -54,13 +54,11 @@ fu_plugin_pci_psp_get_attr(FwupdSecurityAttr *attr,
 static void
 fu_plugin_add_security_attrs_tsme(FuPlugin *plugin, const gchar *path, FuSecurityAttrs *attrs)
 {
-	FwupdBiosAttr *bios_attr;
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
 	g_autoptr(GError) error_local = NULL;
 	gboolean val;
 
-	attr = fwupd_security_attr_new(FWUPD_SECURITY_ATTR_ID_ENCRYPTED_RAM);
-	fwupd_security_attr_set_plugin(attr, "pci_psp");
+	attr = fu_plugin_security_attr_new(plugin, FWUPD_SECURITY_ATTR_ID_ENCRYPTED_RAM);
 	fu_security_attrs_append(attrs, attr);
 
 	if (!fu_plugin_pci_psp_get_attr(attr, path, "tsme_status", &val, &error_local)) {
@@ -69,11 +67,7 @@ fu_plugin_add_security_attrs_tsme(FuPlugin *plugin, const gchar *path, FuSecurit
 	}
 
 	/* BIOS knob used on Lenovo systems */
-	bios_attr = fu_context_get_bios_attr(fu_plugin_get_context(plugin), "com.thinklmi.TSME");
-	if (bios_attr != NULL) {
-		fwupd_security_attr_set_bios_attr_id(attr, fwupd_bios_attr_get_id(bios_attr));
-		fu_bios_attr_set_preferred_value(bios_attr, "enable");
-	}
+	fu_security_attr_add_bios_target_value(attr, "com.thinklmi.TSME", "enable");
 
 	if (!val) {
 		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENCRYPTED);
@@ -87,14 +81,13 @@ fu_plugin_add_security_attrs_tsme(FuPlugin *plugin, const gchar *path, FuSecurit
 }
 
 static void
-fu_plugin_add_security_attrs_fused_part(const gchar *path, FuSecurityAttrs *attrs)
+fu_plugin_add_security_attrs_fused_part(FuPlugin *plugin, const gchar *path, FuSecurityAttrs *attrs)
 {
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
 	g_autoptr(GError) error_local = NULL;
 	gboolean val;
 
-	attr = fwupd_security_attr_new(FWUPD_SECURITY_ATTR_ID_PLATFORM_FUSED);
-	fwupd_security_attr_set_plugin(attr, "pci_psp");
+	attr = fu_plugin_security_attr_new(plugin, FWUPD_SECURITY_ATTR_ID_PLATFORM_FUSED);
 	fu_security_attrs_append(attrs, attr);
 
 	if (!fu_plugin_pci_psp_get_attr(attr, path, "fused_part", &val, &error_local)) {
@@ -115,14 +108,15 @@ fu_plugin_add_security_attrs_fused_part(const gchar *path, FuSecurityAttrs *attr
 }
 
 static void
-fu_plugin_add_security_attrs_debug_locked_part(const gchar *path, FuSecurityAttrs *attrs)
+fu_plugin_add_security_attrs_debug_locked_part(FuPlugin *plugin,
+					       const gchar *path,
+					       FuSecurityAttrs *attrs)
 {
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
 	g_autoptr(GError) error_local = NULL;
 	gboolean val;
 
-	attr = fwupd_security_attr_new(FWUPD_SECURITY_ATTR_ID_PLATFORM_DEBUG_LOCKED);
-	fwupd_security_attr_set_plugin(attr, "pci_psp");
+	attr = fu_plugin_security_attr_new(plugin, FWUPD_SECURITY_ATTR_ID_PLATFORM_DEBUG_LOCKED);
 	fu_security_attrs_append(attrs, attr);
 
 	if (!fu_plugin_pci_psp_get_attr(attr, path, "debug_lock_on", &val, &error_local)) {
@@ -143,14 +137,15 @@ fu_plugin_add_security_attrs_debug_locked_part(const gchar *path, FuSecurityAttr
 }
 
 static void
-fu_plugin_add_security_attrs_rollback_protection(const gchar *path, FuSecurityAttrs *attrs)
+fu_plugin_add_security_attrs_rollback_protection(FuPlugin *plugin,
+						 const gchar *path,
+						 FuSecurityAttrs *attrs)
 {
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
 	g_autoptr(GError) error_local = NULL;
 	gboolean val;
 
-	attr = fwupd_security_attr_new(FWUPD_SECURITY_ATTR_ID_AMD_ROLLBACK_PROTECTION);
-	fwupd_security_attr_set_plugin(attr, "pci_psp");
+	attr = fu_plugin_security_attr_new(plugin, FWUPD_SECURITY_ATTR_ID_AMD_ROLLBACK_PROTECTION);
 	fu_security_attrs_append(attrs, attr);
 
 	if (!fu_plugin_pci_psp_get_attr(attr, path, "anti_rollback_status", &val, &error_local)) {
@@ -170,15 +165,14 @@ fu_plugin_add_security_attrs_rollback_protection(const gchar *path, FuSecurityAt
 }
 
 static void
-fu_plugin_add_security_attrs_rom_armor(const gchar *path, FuSecurityAttrs *attrs)
+fu_plugin_add_security_attrs_rom_armor(FuPlugin *plugin, const gchar *path, FuSecurityAttrs *attrs)
 {
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
 	g_autoptr(GError) error_local = NULL;
 	gboolean val;
 
 	/* create attr */
-	attr = fwupd_security_attr_new(FWUPD_SECURITY_ATTR_ID_AMD_SPI_WRITE_PROTECTION);
-	fwupd_security_attr_set_plugin(attr, "pci_psp");
+	attr = fu_plugin_security_attr_new(plugin, FWUPD_SECURITY_ATTR_ID_AMD_SPI_WRITE_PROTECTION);
 	fu_security_attrs_append(attrs, attr);
 
 	if (!fu_plugin_pci_psp_get_attr(attr, path, "rom_armor_enforced", &val, &error_local)) {
@@ -199,15 +193,15 @@ fu_plugin_add_security_attrs_rom_armor(const gchar *path, FuSecurityAttrs *attrs
 }
 
 static void
-fu_plugin_add_security_attrs_rpmc(const gchar *path, FuSecurityAttrs *attrs)
+fu_plugin_add_security_attrs_rpmc(FuPlugin *plugin, const gchar *path, FuSecurityAttrs *attrs)
 {
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
 	g_autoptr(GError) error_local = NULL;
 	gboolean val;
 
 	/* create attr */
-	attr = fwupd_security_attr_new(FWUPD_SECURITY_ATTR_ID_AMD_SPI_REPLAY_PROTECTION);
-	fwupd_security_attr_set_plugin(attr, "pci_psp");
+	attr =
+	    fu_plugin_security_attr_new(plugin, FWUPD_SECURITY_ATTR_ID_AMD_SPI_REPLAY_PROTECTION);
 	fu_security_attrs_append(attrs, attr);
 
 	if (!fu_plugin_pci_psp_get_attr(attr, path, "rpmc_spirom_available", &val, &error_local)) {
@@ -242,12 +236,11 @@ fu_plugin_add_security_attrs_rpmc(const gchar *path, FuSecurityAttrs *attrs)
 }
 
 static void
-fu_plugin_pci_psp_set_missing_data(FuSecurityAttrs *attrs)
+fu_plugin_pci_psp_set_missing_data(FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
 
-	attr = fwupd_security_attr_new(FWUPD_SECURITY_ATTR_ID_SUPPORTED_CPU);
-	fwupd_security_attr_set_plugin(attr, "pci_psp");
+	attr = fu_plugin_security_attr_new(plugin, FWUPD_SECURITY_ATTR_ID_SUPPORTED_CPU);
 	fwupd_security_attr_add_obsolete(attr, "cpu");
 	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA);
 	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM);
@@ -271,16 +264,16 @@ fu_plugin_pci_psp_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 		test_file = g_build_filename(sysfs_path, "tsme_status", NULL);
 	}
 	if (sysfs_path == NULL || !g_file_test(test_file, G_FILE_TEST_EXISTS)) {
-		fu_plugin_pci_psp_set_missing_data(attrs);
+		fu_plugin_pci_psp_set_missing_data(plugin, attrs);
 		return;
 	}
 
 	fu_plugin_add_security_attrs_tsme(plugin, sysfs_path, attrs);
-	fu_plugin_add_security_attrs_fused_part(sysfs_path, attrs);
-	fu_plugin_add_security_attrs_debug_locked_part(sysfs_path, attrs);
-	fu_plugin_add_security_attrs_rollback_protection(sysfs_path, attrs);
-	fu_plugin_add_security_attrs_rpmc(sysfs_path, attrs);
-	fu_plugin_add_security_attrs_rom_armor(sysfs_path, attrs);
+	fu_plugin_add_security_attrs_fused_part(plugin, sysfs_path, attrs);
+	fu_plugin_add_security_attrs_debug_locked_part(plugin, sysfs_path, attrs);
+	fu_plugin_add_security_attrs_rollback_protection(plugin, sysfs_path, attrs);
+	fu_plugin_add_security_attrs_rpmc(plugin, sysfs_path, attrs);
+	fu_plugin_add_security_attrs_rom_armor(plugin, sysfs_path, attrs);
 }
 
 void

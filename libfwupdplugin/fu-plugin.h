@@ -469,3 +469,5 @@ gboolean
 fu_plugin_get_config_value_boolean(FuPlugin *self, const gchar *key);
 gboolean
 fu_plugin_set_config_value(FuPlugin *self, const gchar *key, const gchar *value, GError **error);
+FwupdSecurityAttr *
+fu_plugin_security_attr_new(FuPlugin *self, const gchar *appstream_id);

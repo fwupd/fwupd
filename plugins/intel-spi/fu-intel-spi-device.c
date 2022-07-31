@@ -214,9 +214,7 @@ fu_intel_spi_device_add_security_attrs(FuDevice *device, FuSecurityAttrs *attrs)
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
 
 	/* create attr */
-	attr = fwupd_security_attr_new(FWUPD_SECURITY_ATTR_ID_SPI_DESCRIPTOR);
-	fwupd_security_attr_set_plugin(attr, fu_device_get_plugin(FU_DEVICE(self)));
-	fwupd_security_attr_add_guids(attr, fu_device_get_guids(device));
+	attr = fu_device_security_attr_new(device, FWUPD_SECURITY_ATTR_ID_SPI_DESCRIPTOR);
 	fu_security_attrs_append(attrs, attr);
 
 	/* check for read access from other regions */

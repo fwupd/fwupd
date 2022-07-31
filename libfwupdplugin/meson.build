@@ -51,6 +51,7 @@ fwupdplugin_src = [
   'fu-plugin.c',
   'fu-quirks.c',            # fuzzing
   'fu-progress.c',          # fuzzing
+  'fu-security-attr.c',     # fuzzing
   'fu-security-attrs.c',
   'fu-smbios.c',            # fuzzing
   'fu-srec-firmware.c',     # fuzzing
@@ -153,6 +154,7 @@ fwupdplugin_headers = [
   'fu-io-channel.h',
   'fu-plugin.h',
   'fu-quirks.h',
+  'fu-security-attr.h',
   'fu-security-attrs.h',
   'fu-progress.h',
   'fu-smbios.h',

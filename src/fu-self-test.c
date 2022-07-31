@@ -28,7 +28,7 @@
 #include "fu-plugin-private.h"
 #include "fu-progressbar.h"
 #include "fu-release-common.h"
-#include "fu-security-attr.h"
+#include "fu-security-attr-common.h"
 #include "fu-smbios-private.h"
 #include "fu-spawn.h"
 

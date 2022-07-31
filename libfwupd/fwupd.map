@@ -815,7 +815,6 @@ LIBFWUPD_1.8.4 {
     fwupd_bios_attr_get_name;
     fwupd_bios_attr_get_path;
     fwupd_bios_attr_get_possible_values;
-    fwupd_bios_attr_get_preferred_value;
     fwupd_bios_attr_get_read_only;
     fwupd_bios_attr_get_scalar_increment;
     fwupd_bios_attr_get_type;
@@ -829,7 +828,6 @@ LIBFWUPD_1.8.4 {
     fwupd_bios_attr_set_lower_bound;
     fwupd_bios_attr_set_name;
     fwupd_bios_attr_set_path;
-    fwupd_bios_attr_set_preferred_value;
     fwupd_bios_attr_set_read_only;
     fwupd_bios_attr_set_scalar_increment;
     fwupd_bios_attr_set_upper_bound;
@@ -843,6 +841,8 @@ LIBFWUPD_1.8.4 {
     fwupd_client_modify_bios_attr_async;
     fwupd_client_modify_bios_attr_finish;
     fwupd_security_attr_get_bios_attr_id;
+    fwupd_security_attr_get_bios_attr_value;
     fwupd_security_attr_set_bios_attr_id;
+    fwupd_security_attr_set_bios_attr_value;
   local: *;
 } LIBFWUPD_1.8.3;
