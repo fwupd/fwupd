@@ -503,7 +503,7 @@ fu_security_attr_get_description(FwupdSecurityAttr *attr)
 	}
 	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_MEI_VERSION) == 0) {
 		/* TRANSLATORS: longer description */
-		return _("The Intel Management Engine controls other device components and needs "
+		return _("The Intel Management Engine controls device components and needs "
 			 "to have a recent version to avoid security issues.");
 	}
 	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_FWUPD_UPDATES) == 0) {
