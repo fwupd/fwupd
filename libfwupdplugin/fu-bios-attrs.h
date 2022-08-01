@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <glib.h>
 #include <libfwupd/fwupd-bios-attr.h>
 
 #define FU_TYPE_FIRMWARE_ATTRS (fu_bios_attrs_get_type())
