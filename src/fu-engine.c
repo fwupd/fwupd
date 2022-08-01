@@ -37,6 +37,7 @@
 #include "fwupd-resources.h"
 #include "fwupd-security-attr-private.h"
 
+#include "fu-bios-attrs-private.h"
 #include "fu-cabinet.h"
 #include "fu-context-private.h"
 #include "fu-coswid-firmware.h"
@@ -6471,6 +6472,29 @@ fu_engine_security_attrs_from_json(FuEngine *self, JsonNode *json_node, GError *
 }
 
 static gboolean
+fu_engine_bios_attrs_from_json(FuEngine *self, JsonNode *json_node, GError **error)
+{
+	JsonObject *obj;
+	g_autoptr(FuBiosAttrs) bios_attrs = fu_context_get_bios_attrs(self->ctx);
+
+	/* sanity check */
+	if (!JSON_NODE_HOLDS_OBJECT(json_node)) {
+		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA, "not JSON object");
+		return FALSE;
+	}
+
+	/* not supplied */
+	obj = json_node_get_object(json_node);
+	if (!json_object_has_member(obj, "BiosAttributes"))
+		return TRUE;
+	if (!fu_bios_attrs_from_json(bios_attrs, json_node, error))
+		return FALSE;
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_engine_devices_from_json(FuEngine *self, JsonNode *json_node, GError **error)
 {
 	JsonArray *array;
@@ -6537,6 +6561,8 @@ fu_engine_load_host_emulation(FuEngine *self, const gchar *fn, GError **error)
 	if (!fu_engine_devices_from_json(self, json_parser_get_root(parser), error))
 		return FALSE;
 	if (!fu_engine_security_attrs_from_json(self, json_parser_get_root(parser), error))
+		return FALSE;
+	if (!fu_engine_bios_attrs_from_json(self, json_parser_get_root(parser), error))
 		return FALSE;
 
 #ifdef HAVE_HSI
@@ -6828,6 +6854,8 @@ fu_engine_check_firmware_attributes(FuEngine *self, FuDevice *device)
 	const gchar *subsystem;
 
 	if (!FU_IS_UDEV_DEVICE(device))
+		return;
+	if (self->host_emulation)
 		return;
 	subsystem = fu_udev_device_get_subsystem(FU_UDEV_DEVICE(device));
 	if (g_strcmp0(subsystem, "firmware-attributes") == 0) {

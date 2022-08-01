@@ -520,6 +520,50 @@ fu_bios_attrs_to_variant(FuBiosAttrs *self)
 }
 
 /**
+ * fu_bios_attrs_from_json:
+ * @self: a #FuBiosAttrs
+ *
+ * Loads #FwupdBiosAttr objects from a JSON node.
+ *
+ * Returns: TRUE if the objects were imported
+ *
+ * Since: 1.8.4
+ **/
+gboolean
+fu_bios_attrs_from_json(FuBiosAttrs *self, JsonNode *json_node, GError **error)
+{
+	JsonArray *array;
+	JsonObject *obj;
+
+	/* sanity check */
+	if (!JSON_NODE_HOLDS_OBJECT(json_node)) {
+		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA, "not JSON object");
+		return FALSE;
+	}
+	obj = json_node_get_object(json_node);
+
+	/* this has to exist */
+	if (!json_object_has_member(obj, "BiosAttributes")) {
+		g_set_error_literal(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_INVALID_DATA,
+				    "no BiosAttributes property in object");
+		return FALSE;
+	}
+	array = json_object_get_array_member(obj, "BiosAttributes");
+	for (guint i = 0; i < json_array_get_length(array); i++) {
+		JsonNode *node_tmp = json_array_get_element(array, i);
+		g_autoptr(FwupdBiosAttr) attr = fwupd_bios_attr_new(NULL, NULL);
+		if (!fwupd_bios_attr_from_json(attr, node_tmp, error))
+			return FALSE;
+		g_ptr_array_add(self->attrs, g_steal_pointer(&attr));
+	}
+
+	/* success */
+	return TRUE;
+}
+
+/**
  * fu_bios_attrs_new:
  *
  * Returns: #FuBiosAttrs

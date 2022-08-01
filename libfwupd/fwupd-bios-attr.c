@@ -939,12 +939,11 @@ fwupd_bios_attr_new(const gchar *name, const gchar *path)
 {
 	FwupdBiosAttr *self;
 
-	g_return_val_if_fail(name != NULL, NULL);
-	g_return_val_if_fail(path != NULL, NULL);
-
 	self = g_object_new(FWUPD_TYPE_BIOS_ATTR, NULL);
-	fwupd_bios_attr_set_name(self, name);
-	fwupd_bios_attr_set_path(self, path);
+	if (name != NULL)
+		fwupd_bios_attr_set_name(self, name);
+	if (path != NULL)
+		fwupd_bios_attr_set_path(self, path);
 
 	return FWUPD_BIOS_ATTR(self);
 }

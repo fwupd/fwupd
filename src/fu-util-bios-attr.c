@@ -83,7 +83,7 @@ fu_util_get_bios_attr_as_json(gchar **values, GPtrArray *attrs, GError **error)
 	g_autoptr(JsonBuilder) builder = json_builder_new();
 	json_builder_begin_object(builder);
 
-	json_builder_set_member_name(builder, "BIOS Attributes");
+	json_builder_set_member_name(builder, "BiosAttributes");
 	json_builder_begin_array(builder);
 	for (guint i = 0; i < attrs->len; i++) {
 		FwupdBiosAttr *attr = g_ptr_array_index(attrs, i);
