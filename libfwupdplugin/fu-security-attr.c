@@ -20,7 +20,6 @@ G_DEFINE_TYPE_WITH_PRIVATE(FuSecurityAttr, fu_security_attr, FWUPD_TYPE_SECURITY
 
 /**
  * fu_security_attr_add_bios_target_value:
- * @ctx: a #FuContext
  * @attr: a #FwupdSecurityAttr
  * @id: a #FwupdBiosAttr ID or name
  * @needle: The substring of a target value
