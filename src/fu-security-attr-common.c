@@ -463,7 +463,7 @@ fu_security_attr_get_description(FwupdSecurityAttr *attr)
 	    g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_TPM_RECONSTRUCTION_PCR0) == 0 ||
 	    g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_TPM_VERSION_20) == 0) {
 		/* TRANSLATORS: longer description */
-		return _("TPM (Trusted Platform Module) is a computer chip that detects when some "
+		return _("TPM (Trusted Platform Module) is a computer chip that detects when "
 			 "hardware components have been tampered with.");
 	}
 	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_MEI_MANUFACTURING_MODE) == 0 ||
