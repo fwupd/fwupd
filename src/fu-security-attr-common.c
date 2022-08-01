@@ -383,7 +383,7 @@ fu_security_attr_get_description(FwupdSecurityAttr *attr)
 	    g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_AMD_SPI_WRITE_PROTECTION) == 0) {
 		/* TRANSLATORS: longer description */
 		return _("Firmware Write Protection protects device firmware memory from being "
-			 "accessed and tampered with.");
+			 "tampered with.");
 	}
 	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_PREBOOT_DMA_PROTECTION) == 0) {
 		/* TRANSLATORS: longer description */
