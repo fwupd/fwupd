@@ -840,9 +840,11 @@ LIBFWUPD_1.8.4 {
     fwupd_client_modify_bios_attr;
     fwupd_client_modify_bios_attr_async;
     fwupd_client_modify_bios_attr_finish;
+    fwupd_security_attr_get_bios_attr_current_value;
     fwupd_security_attr_get_bios_attr_id;
-    fwupd_security_attr_get_bios_attr_value;
+    fwupd_security_attr_get_bios_attr_target_value;
+    fwupd_security_attr_set_bios_attr_current_value;
     fwupd_security_attr_set_bios_attr_id;
-    fwupd_security_attr_set_bios_attr_value;
+    fwupd_security_attr_set_bios_attr_target_value;
   local: *;
 } LIBFWUPD_1.8.3;
