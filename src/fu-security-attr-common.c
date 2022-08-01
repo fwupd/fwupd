@@ -469,7 +469,7 @@ fu_security_attr_get_description(FwupdSecurityAttr *attr)
 	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_MEI_MANUFACTURING_MODE) == 0 ||
 	    g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_PLATFORM_FUSED) == 0) {
 		/* TRANSLATORS: longer description */
-		return _("The device is in a mode that is used during manufacturer assembly where "
+		return _("Manufacturing Mode is used when the device is manufactured and "
 			 "security features are not yet enabled.");
 	}
 	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_MEI_OVERRIDE_STRAP) == 0) {
