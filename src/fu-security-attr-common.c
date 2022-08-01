@@ -378,12 +378,20 @@ fu_security_attr_get_description(FwupdSecurityAttr *attr)
 	const gchar *appstream_id = fwupd_security_attr_get_appstream_id(attr);
 	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_SPI_BIOSWE) == 0 ||
 	    g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_SPI_BLE) == 0 ||
-	    g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_SPI_SMM_BWP) == 0 ||
-	    g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_SPI_DESCRIPTOR) == 0 ||
 	    g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_AMD_SPI_WRITE_PROTECTION) == 0) {
 		/* TRANSLATORS: longer description */
 		return _("Firmware Write Protection protects device firmware memory from being "
-			 "accessed and tampered with.");
+			 "tampered with.");
+	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_SPI_SMM_BWP) == 0) {
+		/* TRANSLATORS: longer description */
+		return _("Firmware BIOS Region protects device firmware memory from being "
+			 "tampered with.");
+	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_SPI_DESCRIPTOR) == 0) {
+		/* TRANSLATORS: longer description */
+		return _("Firmware BIOS Descriptor protects device firmware memory from being "
+			 "tampered with.");
 	}
 	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_PREBOOT_DMA_PROTECTION) == 0) {
 		/* TRANSLATORS: longer description */
@@ -419,7 +427,7 @@ fu_security_attr_get_description(FwupdSecurityAttr *attr)
 		/* TRANSLATORS: longer description */
 		return _(
 		    "Encrypted RAM makes it impossible for information that is stored in device "
-		    "memory to be read, if the memory chip is removed and accessed.");
+		    "memory to be read if the memory chip is removed and accessed.");
 	}
 	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_IOMMU) == 0) {
 		/* TRANSLATORS: longer description */
@@ -445,31 +453,47 @@ fu_security_attr_get_description(FwupdSecurityAttr *attr)
 		    "information is not protected, it could be accessed by someone if they "
 		    "obtained the disk.");
 	}
-	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_SUSPEND_TO_RAM) == 0 ||
-	    g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_SUSPEND_TO_IDLE) == 0) {
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_SUSPEND_TO_RAM) == 0) {
 		/* TRANSLATORS: longer description */
-		return _(
-		    "During system sleep the device’s memory chip could be removed, allowing the "
-		    "information that is saved on it to be accessed. "
-		    "Using Suspend-to-Idle provides more protection than Suspend-to-Disk.");
+		return _("Suspend to RAM allows the device to quickly go to sleep in order to save "
+			 "power. While the device has been suspended, its memory could be "
+			 "physically removed and its information accessed.");
 	}
-	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_UEFI_PK) == 0 ||
-	    g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_UEFI_SECUREBOOT) == 0) {
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_SUSPEND_TO_IDLE) == 0) {
+		/* TRANSLATORS: longer description */
+		return _("Suspend to Idle allows the device to quickly go to sleep in order to "
+			 "save power. While the device has been suspended, its memory could be "
+			 "physically removed and its information accessed.");
+	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_UEFI_PK) == 0) {
+		/* TRANSLATORS: longer description */
+		return _("The UEFI Platform Key is used to determine if device software comes from "
+			 "a trusted source.");
+	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_UEFI_SECUREBOOT) == 0) {
 		/* TRANSLATORS: longer description */
 		return _("UEFI Secure Boot prevents malicious software from being loaded when the "
 			 "device starts.");
 	}
-	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_TPM_EMPTY_PCR) == 0 ||
-	    g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_TPM_RECONSTRUCTION_PCR0) == 0 ||
-	    g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_TPM_VERSION_20) == 0) {
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_TPM_EMPTY_PCR) == 0) {
 		/* TRANSLATORS: longer description */
-		return _("TPM (Trusted Platform Module) is a computer chip that detects when some "
+		return _("The TPM (Trusted Platform Module) Platform Configuration is used to "
+			 "check whether the device start process has been modified.");
+	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_TPM_RECONSTRUCTION_PCR0) == 0) {
+		/* TRANSLATORS: longer description */
+		return _("The TPM (Trusted Platform Module) Reconstruction is used to check "
+			 "whether the device start process has been modified.");
+	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_TPM_VERSION_20) == 0) {
+		/* TRANSLATORS: longer description */
+		return _("TPM (Trusted Platform Module) is a computer chip that detects when "
 			 "hardware components have been tampered with.");
 	}
 	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_MEI_MANUFACTURING_MODE) == 0 ||
 	    g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_PLATFORM_FUSED) == 0) {
 		/* TRANSLATORS: longer description */
-		return _("The device is in a mode that is used during manufacturer assembly where "
+		return _("Manufacturing Mode is used when the device is manufactured and "
 			 "security features are not yet enabled.");
 	}
 	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_MEI_OVERRIDE_STRAP) == 0) {
@@ -479,7 +503,7 @@ fu_security_attr_get_description(FwupdSecurityAttr *attr)
 	}
 	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_MEI_VERSION) == 0) {
 		/* TRANSLATORS: longer description */
-		return _("The Intel Management Engine controls other device components and needs "
+		return _("The Intel Management Engine controls device components and needs "
 			 "to have a recent version to avoid security issues.");
 	}
 	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_FWUPD_UPDATES) == 0) {
