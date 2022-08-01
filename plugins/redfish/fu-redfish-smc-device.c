@@ -99,10 +99,11 @@ fu_redfish_smc_device_start_update(FuDevice *device, FuProgress *progress, GErro
 	curl = fu_redfish_request_get_curl(request);
 	(void)curl_easy_setopt(curl, CURLOPT_POSTFIELDS, "");
 
-	if (!fu_redfish_request_perform(request,
-					fu_redfish_backend_get_push_uri_path(backend),
-					FU_REDFISH_REQUEST_PERFORM_FLAG_LOAD_JSON,
-					error))
+	if (!fu_redfish_request_perform(
+		request,
+		"/redfish/v1/UpdateService/Actions/UpdateService.StartUpdate",
+		FU_REDFISH_REQUEST_PERFORM_FLAG_LOAD_JSON,
+		error))
 		return FALSE;
 	json_obj = fu_redfish_request_get_json_object(request);
 
