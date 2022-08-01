@@ -372,9 +372,10 @@ fu_redfish_backend_smc_license_check(FuDevice *device)
 	if (!fu_redfish_request_perform(request,
 					fu_redfish_backend_get_push_uri_path(backend),
 					FU_REDFISH_REQUEST_PERFORM_FLAG_LOAD_JSON,
-					&error_local))
+					&error_local)) {
 		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED))
 			fu_device_add_problem(device, FWUPD_DEVICE_PROBLEM_MISSING_LICENSE);
+	}
 
 	return;
 }
@@ -522,7 +523,8 @@ fu_redfish_device_probe(FuDevice *dev, GError **error)
 					if (!g_error_matches(error_local,
 							     FWUPD_ERROR,
 							     FWUPD_ERROR_NOT_SUPPORTED)) {
-						*error = g_error_copy(error_local);
+						g_propagate_error(error,
+								  g_steal_pointer(&error_local));
 						return FALSE;
 					}
 					fu_device_set_logical_id(dev, id);
