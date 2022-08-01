@@ -6,7 +6,7 @@
 
 #include "fu-redfish-backend.h"
 #include "fu-redfish-common.h"
-#include "fu-redfish-smc.h"
+#include "fu-redfish-smc-device.h"
 
 struct _FuRedfishSmcDevice {
 	FuRedfishDevice parent_instance;
