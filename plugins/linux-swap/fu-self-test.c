@@ -43,6 +43,10 @@ fu_linux_swap_plain_func(void)
 		g_test_skip(error->message);
 		return;
 	}
+	if (g_error_matches(error, G_IO_ERROR, G_IO_ERROR_CONNECTION_REFUSED)) {
+		g_test_skip(error->message);
+		return;
+	}
 	g_assert_no_error(error);
 	g_assert_nonnull(swap);
 }
