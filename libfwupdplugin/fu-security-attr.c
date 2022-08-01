@@ -44,6 +44,9 @@ fu_security_attr_add_bios_target_value(FwupdSecurityAttr *attr,
 	if (bios_attr == NULL)
 		return;
 	fwupd_security_attr_set_bios_attr_id(attr, fwupd_bios_attr_get_id(bios_attr));
+	fwupd_security_attr_set_bios_attr_current_value(
+	    attr,
+	    fwupd_bios_attr_get_current_value(bios_attr));
 	if (fwupd_bios_attr_get_kind(bios_attr) != FWUPD_BIOS_ATTR_KIND_ENUMERATION)
 		return;
 	values = fwupd_bios_attr_get_possible_values(bios_attr);
@@ -51,7 +54,7 @@ fu_security_attr_add_bios_target_value(FwupdSecurityAttr *attr,
 		const gchar *possible = g_ptr_array_index(values, i);
 		g_autofree gchar *lower = g_utf8_strdown(possible, -1);
 		if (g_strrstr(lower, needle)) {
-			fwupd_security_attr_set_bios_attr_value(attr, possible);
+			fwupd_security_attr_set_bios_attr_target_value(attr, possible);
 			return;
 		}
 	}
