@@ -3387,6 +3387,55 @@ fu_util_sync_bkc(FuUtilPrivate *priv, gchar **values, GError **error)
 }
 
 static gboolean
+fu_util_security_modify_bios_attr(FuUtilPrivate *priv, FwupdSecurityAttr *attr, GError **error)
+{
+	g_autoptr(GString) body = g_string_new(NULL);
+	g_autoptr(GString) title = g_string_new(NULL);
+
+	g_string_append_printf(title,
+			       "%s: %s",
+			       /* TRANSLATORS: title prefix for the BIOS settings dialog */
+			       _("Configuration Change Suggested"),
+			       fwupd_security_attr_get_title(attr));
+
+	g_string_append(body, fwupd_security_attr_get_description(attr));
+	g_string_append(body, "\n\n");
+	g_string_append_printf(body,
+			       /* TRANSLATORS: the %1 is a BIOS setting name.  %2 and %3 are the
+				  values, e.g. "True" or "Windows10" */
+			       _("This tool can change the BIOS setting '%s' from '%s' to '%s' "
+				 "automatically, but it will only be active after restarting the "
+				 "computer."),
+			       fwupd_security_attr_get_bios_attr_id(attr),
+			       fwupd_security_attr_get_bios_attr_current_value(attr),
+			       fwupd_security_attr_get_bios_attr_target_value(attr));
+	g_string_append(body, "\n\n");
+	g_string_append_printf(body,
+			       /* TRANSLATORS: the user has to manually recover; we can't do it */
+			       _("You should ensure you are comfortable restoring the setting from "
+				 "the system firmware setup, as this change may cause the system "
+				 "to not boot into Linux or cause other system instability."));
+	fu_util_warning_box(title->str, body->str, 80);
+
+	/* ask for confirmation */
+	g_print("\n%s [y|N]: ",
+		/* TRANSLATORS: prompt to apply the update */
+		_("Perform operation?"));
+	if (!fu_util_prompt_for_boolean(FALSE))
+		return TRUE;
+	if (!fwupd_client_modify_bios_attr(priv->client,
+					   fwupd_security_attr_get_bios_attr_id(attr),
+					   fwupd_security_attr_get_bios_attr_target_value(attr),
+					   priv->cancellable,
+					   error))
+		return FALSE;
+
+	/* do not offer to upload the report */
+	priv->completion_flags |= FWUPD_DEVICE_FLAG_NEEDS_REBOOT;
+	return TRUE;
+}
+
+static gboolean
 fu_util_security(FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	FuSecurityAttrToStringFlags flags = FU_SECURITY_ATTR_TO_STRING_FLAG_NONE;
@@ -3480,12 +3529,33 @@ fu_util_security(FuUtilPrivate *priv, gchar **values, GError **error)
 		}
 	}
 
-	/* opted-out */
-	if (priv->no_unreported_check)
-		return TRUE;
+	/* any things we can fix? */
+	for (guint j = 0; j < attrs->len; j++) {
+		FwupdSecurityAttr *attr = g_ptr_array_index(attrs, j);
+		if (!fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS) &&
+		    fwupd_security_attr_get_bios_attr_id(attr) != NULL &&
+		    fwupd_security_attr_get_bios_attr_current_value(attr) != NULL &&
+		    fwupd_security_attr_get_bios_attr_target_value(attr) != NULL) {
+			if (!fu_util_security_modify_bios_attr(priv, attr, error))
+				return FALSE;
+		}
+	}
 
 	/* upload, with confirmation */
-	return fu_util_upload_security(priv, attrs, error);
+	if (!priv->no_unreported_check) {
+		if (!fu_util_upload_security(priv, attrs, error))
+			return FALSE;
+	}
+
+	/* reboot is required? */
+	if (!priv->no_reboot_check &&
+	    (priv->completion_flags & FWUPD_DEVICE_FLAG_NEEDS_REBOOT) > 0) {
+		if (!fu_util_prompt_complete(priv->completion_flags, TRUE, error))
+			return FALSE;
+	}
+
+	/* success */
+	return TRUE;
 }
 
 static void
