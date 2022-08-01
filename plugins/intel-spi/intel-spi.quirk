@@ -404,7 +404,7 @@ IntelSpiKind = pch400
 
 
 [INTEL_SPI_CHIPSET\ID_APL]
-IntelSpiBarProxy = 00:1f.0
+IntelSpiBarProxy = 00:0d.2
 IntelSpiBiosCntl = 0xDC
 Flags = ich
 

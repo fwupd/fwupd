@@ -24,7 +24,7 @@ if __name__ == "__main__":
         sys.exit(1)
 
     chipsets = {
-        "apl": Chipset(flags="ich", bios_cntl=0xDC, spibar_proxy="00:1f.0"),
+        "apl": Chipset(flags="ich", bios_cntl=0xDC, spibar_proxy="00:0d.2"),
         "c620": Chipset(flags="pch", bios_cntl=0xDC, spibar_proxy="00:1f.5"),
         "ich0": Chipset(flags="ich", bios_cntl=0x4E),
         "ich2345": Chipset(flags="ich", bios_cntl=0x4E),
