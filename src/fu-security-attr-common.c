@@ -419,7 +419,7 @@ fu_security_attr_get_description(FwupdSecurityAttr *attr)
 		/* TRANSLATORS: longer description */
 		return _(
 		    "Encrypted RAM makes it impossible for information that is stored in device "
-		    "memory to be read, if the memory chip is removed and accessed.");
+		    "memory to be read if the memory chip is removed and accessed.");
 	}
 	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_IOMMU) == 0) {
 		/* TRANSLATORS: longer description */
