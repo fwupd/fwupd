@@ -155,6 +155,31 @@ fu_bios_attr_set_current_value(FwupdBiosAttr *attr, GError **error)
 #define LENOVO_READ_ONLY_NEEDLE "[Status:ShowOnly]"
 #define LENOVO_EXCLUDED		"[Excluded from boot order:"
 
+static void
+fu_bios_attr_fixup_read_only(FwupdBiosAttr *attr)
+{
+	if (fwupd_bios_attr_get_kind(attr) == FWUPD_BIOS_ATTR_KIND_ENUMERATION) {
+		struct {
+			const gchar *id;
+			const gchar *value;
+		} read_only_map[] = {{"com.thinklmi.SecureBoot", "Enable"},
+				     {"com.dell-wmi-sysman.SecureBoot", "Enabled"},
+				     {NULL, NULL}};
+		const gchar *id = fwupd_bios_attr_get_id(attr);
+		const gchar *tmp = fwupd_bios_attr_get_current_value(attr);
+		for (guint i = 0; read_only_map[i].id != NULL; i++) {
+			if (g_strcmp0(id, read_only_map[i].id) != 0)
+				continue;
+
+			if (read_only_map[i].value == NULL ||
+			    g_strcmp0(tmp, read_only_map[i].value) == 0) {
+				fwupd_bios_attr_set_read_only(attr, TRUE);
+				return;
+			}
+		}
+	}
+}
+
 static gboolean
 fu_bios_attr_fixup_lenovo_thinklmi_bug(FwupdBiosAttr *attr, GError **error)
 {
@@ -327,6 +352,7 @@ fu_bios_attrs_populate_attribute(FuBiosAttrs *self,
 
 	id = g_strdup_printf("com.%s.%s", driver, name);
 	fwupd_bios_attr_set_id(attr, id);
+	fu_bios_attr_fixup_read_only(attr);
 
 	g_ptr_array_add(self->attrs, g_object_ref(attr));
 

@@ -3023,6 +3023,12 @@ fu_bios_attrs_load_func(void)
 			g_assert_cmpstr(possible, ==, "Windows 10");
 	}
 
+	/* make sure we defaulted UEFI Secure boot to read only if enabled */
+	attr = fu_context_get_bios_attr(ctx, "com.thinklmi.SecureBoot");
+	g_assert_nonnull(attr);
+	ret = fwupd_bios_attr_get_read_only(attr);
+	g_assert_true(ret);
+
 	g_free(test_dir);
 
 	/* load attrs from a Dell XPS 9310 */
@@ -3076,6 +3082,12 @@ fu_bios_attrs_load_func(void)
 		if (i == 1)
 			g_assert_cmpstr(possible, ==, "Enabled");
 	}
+
+	/* make sure we defaulted UEFI Secure boot to read only if enabled */
+	attr = fu_context_get_bios_attr(ctx, "com.dell-wmi-sysman.SecureBoot");
+	g_assert_nonnull(attr);
+	ret = fwupd_bios_attr_get_read_only(attr);
+	g_assert_true(ret);
 }
 
 static void
