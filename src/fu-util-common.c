@@ -827,7 +827,7 @@ static GPtrArray *
 fu_util_strsplit_words(const gchar *text, guint line_len)
 {
 	g_auto(GStrv) tokens = NULL;
-	g_autoptr(GPtrArray) lines = g_ptr_array_new();
+	g_autoptr(GPtrArray) lines = g_ptr_array_new_with_free_func(g_free);
 	g_autoptr(GString) curline = g_string_new(NULL);
 
 	/* sanity check */
