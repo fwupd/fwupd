@@ -22,6 +22,7 @@ def test_files():
         + glob.glob("plugins/*/*.c")
         + glob.glob("policy/*.policy.in")
         + glob.glob("data/*/*.xml")
+        + glob.glob("libfwupdplugin/tests/bios-attrs/*/*.txt")
     ):
         if (
             fn.startswith("dist/")
