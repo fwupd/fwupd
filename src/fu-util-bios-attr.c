@@ -36,6 +36,9 @@ fu_util_bios_attr_update_description(FwupdBiosAttr *attr)
 			/* TRANSLATORS: description of a BIOS setting */
 			new = _("BIOS updates delivered via LVFS or Windows Update");
 		}
+	} else {
+		/* try to look it up from translations */
+		new = gettext(old);
 	}
 	if (new != NULL)
 		fwupd_bios_attr_set_description(attr, new);

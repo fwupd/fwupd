@@ -1,0 +1,321 @@
+#TRANSLATORS: Description of BIOS setting
+Service Tag
+
+#TRANSLATORS: Description of BIOS setting
+Keyboard Illumination
+
+#TRANSLATORS: Description of BIOS setting
+Intel Speed Shift Technology
+
+#TRANSLATORS: Description of BIOS setting
+BIOS Recovery from Hard Drive
+
+#TRANSLATORS: Description of BIOS setting
+Enable Thunderbolt (and PCIe behind TBT) pre-boot modules
+
+#TRANSLATORS: Description of BIOS setting
+BIOSConnect
+
+#TRANSLATORS: Description of BIOS setting
+Control WLAN radio
+
+#TRANSLATORS: Description of BIOS setting
+FOTA
+
+#TRANSLATORS: Description of BIOS setting
+TPM State
+
+#TRANSLATORS: Description of BIOS setting
+Battery Threshold [15% to 100%]
+
+#TRANSLATORS: Description of BIOS setting
+Special Character
+
+#TRANSLATORS: Description of BIOS setting
+Clear Thermal Event Log
+
+#TRANSLATORS: Description of BIOS setting
+Enable Numlock
+
+#TRANSLATORS: Description of BIOS setting
+Sunday
+
+#TRANSLATORS: Description of BIOS setting
+Enable Advanced Battery Charge Configuration
+
+#TRANSLATORS: Description of BIOS setting
+Secure Boot Mode
+
+#TRANSLATORS: Description of BIOS setting
+Enable External USB Ports
+
+#TRANSLATORS: Description of BIOS setting
+Master Password Lockout
+
+#TRANSLATORS: Description of BIOS setting
+Enable Non-Admin Password Changes
+
+#TRANSLATORS: Description of BIOS setting
+M.2 PCIe SSD
+
+#TRANSLATORS: Description of BIOS setting
+Battery Configuration
+
+#TRANSLATORS: Description of BIOS setting
+Enable Intel Hyper-Threading Technology
+
+#TRANSLATORS: Description of BIOS setting
+Lower Case Letter
+
+#TRANSLATORS: Description of BIOS setting
+Enable Intel Virtualization Technology (VT)
+
+#TRANSLATORS: Description of BIOS setting
+Thermal Management
+
+#TRANSLATORS: Description of BIOS setting
+DellCoreService
+
+#TRANSLATORS: Description of BIOS setting
+Keyboard Backlight Timeout on AC
+
+#TRANSLATORS: Description of BIOS setting
+Mouse/Touchpad
+
+#TRANSLATORS: Description of BIOS setting
+Enable Microphone
+
+#TRANSLATORS: Description of BIOS setting
+Enable UEFI Network Stack
+
+#TRANSLATORS: Description of BIOS setting
+SMM Security Mitigation
+
+#TRANSLATORS: Description of BIOS setting
+Enable USB Boot Support
+
+#TRANSLATORS: Description of BIOS setting
+Allow BIOS Downgrade
+
+#TRANSLATORS: Description of BIOS setting
+Lock Mode
+
+#TRANSLATORS: Description of BIOS setting
+Clear Bios Event Log
+
+#TRANSLATORS: Description of BIOS setting
+Wake on Dell USB-C Dock
+
+#TRANSLATORS: Description of BIOS setting
+Enable Secure Digital (SD) Card Boot
+
+#TRANSLATORS: Description of BIOS setting
+Enable Adapter Warnings
+
+#TRANSLATORS: Description of BIOS setting
+Saturday
+
+#TRANSLATORS: Description of BIOS setting
+Custom Charge Start
+
+#TRANSLATORS: Description of BIOS setting
+Enable Admin Setup Lockout
+
+#TRANSLATORS: Description of BIOS setting
+Wake on LAN
+
+#TRANSLATORS: Description of BIOS setting
+Fastboot
+
+#TRANSLATORS: Description of BIOS setting
+Enable SMART Reporting
+
+#TRANSLATORS: Description of BIOS setting
+Early Keyboard Backlight
+
+#TRANSLATORS: Description of BIOS setting
+Intel@ GNA Accelerator
+
+#TRANSLATORS: Description of BIOS setting
+Power On Lid Open
+
+#TRANSLATORS: Description of BIOS setting
+Touchscreen
+
+#TRANSLATORS: Description of BIOS setting
+Auto On Time
+
+#TRANSLATORS: Description of BIOS setting
+Asset Tag
+
+#TRANSLATORS: Description of BIOS setting
+Block Sleep
+
+#TRANSLATORS: Description of BIOS setting
+Thursday
+
+#TRANSLATORS: Description of BIOS setting
+MAC Address Pass-Through
+
+#TRANSLATORS: Description of BIOS setting
+Enable Intel SpeedStep Technology
+
+#TRANSLATORS: Description of BIOS setting
+Enable Intel Turbo Boost Technology
+
+#TRANSLATORS: Description of BIOS setting
+Enable Peak Shift
+
+#TRANSLATORS: Description of BIOS setting
+Wake on AC
+
+#TRANSLATORS: Description of BIOS setting
+Bluetooth
+
+#TRANSLATORS: Description of BIOS setting
+PPI Bypass for Clear Commands
+
+#TRANSLATORS: Description of BIOS setting
+Absolute
+
+#TRANSLATORS: Description of BIOS setting
+Clear POWER Event Log
+
+#TRANSLATORS: Description of BIOS setting
+SATA/NVMe Opeartion
+
+#TRANSLATORS: Description of BIOS setting
+Active Cores
+
+#TRANSLATORS: Description of BIOS setting
+UEFI Boot Path Security
+
+#TRANSLATORS: Description of BIOS setting
+Dell Auto OS Recovery Threshold
+
+#TRANSLATORS: Description of BIOS setting
+SHA-256
+
+#TRANSLATORS: Description of BIOS setting
+PPI Bypass for Enable Commands
+
+#TRANSLATORS: Description of BIOS setting
+Friday
+
+#TRANSLATORS: Description of BIOS setting
+Enable Internal Speaker
+
+#TRANSLATORS: Description of BIOS setting
+Minimum Characters
+
+#TRANSLATORS: Description of BIOS setting
+Enable Intel VT for Direct I/O
+
+#TRANSLATORS: Description of BIOS setting
+Enable C-State Control
+
+#TRANSLATORS: Description of BIOS setting
+TPM 2.0 Security On
+
+#TRANSLATORS: Description of BIOS setting
+Enable Lid Switch
+
+#TRANSLATORS: Description of BIOS setting
+Enable Audio
+
+#TRANSLATORS: Description of BIOS setting
+Enable Thunderbolt Boot Support
+
+#TRANSLATORS: Description of BIOS setting
+Enable Fingerprint Reader Single Sign On
+
+#TRANSLATORS: Description of BIOS setting
+PPI Bypass for Disable Commands
+
+#TRANSLATORS: Description of BIOS setting
+Keyboard Backlight Timeout on Battery
+
+#TRANSLATORS: Description of BIOS setting
+Telemetry Access Level
+
+#TRANSLATORS: Description of BIOS setting
+Tuesday
+
+#TRANSLATORS: Description of BIOS setting
+Warnings and Errors
+
+#TRANSLATORS: Description of BIOS setting
+BIOS Setup Advanced Mode
+
+#TRANSLATORS: Description of BIOS setting
+Digit
+
+#TRANSLATORS: Description of BIOS setting
+Full Screen Logo
+
+#TRANSLATORS: Description of BIOS setting
+Upper Case Letter
+
+#TRANSLATORS: Description of BIOS setting
+Fn Lock Options
+
+#TRANSLATORS: Description of BIOS setting
+Enable Fingerprint Reader Device
+
+#TRANSLATORS: Description of BIOS setting
+SupportAssist OS Recovery
+
+#TRANSLATORS: Description of BIOS setting
+Enable UEFI Capsule Firmware Updates
+
+#TRANSLATORS: Description of BIOS setting
+Minutes (MM)
+
+#TRANSLATORS: Description of BIOS setting
+Hours (HH)
+
+#TRANSLATORS: Description of BIOS setting
+Enable Dock Warning Messages
+
+#TRANSLATORS: Description of BIOS setting
+Enable Strong Passwords
+
+#TRANSLATORS: Description of BIOS setting
+Enable Secure Boot
+
+#TRANSLATORS: Description of BIOS setting
+Extend BIOS POST Time
+
+#TRANSLATORS: Description of BIOS setting
+Password Bypass
+
+#TRANSLATORS: Description of BIOS setting
+Wednesday
+
+#TRANSLATORS: Description of BIOS setting
+WLAN
+
+#TRANSLATORS: Description of BIOS setting
+Secure Digital (SD) Card Read-Only Mode
+
+#TRANSLATORS: Description of BIOS setting
+Monday
+
+#TRANSLATORS: Description of BIOS setting
+Enable Camera
+
+#TRANSLATORS: Description of BIOS setting
+Secure Digital (SD) Card
+
+#TRANSLATORS: Description of BIOS setting
+Enable Dynamic Tuning:Machine Learning
+
+#TRANSLATORS: Description of BIOS setting
+Early Logo Display
+
+#TRANSLATORS: Description of BIOS setting
+Enable Intel Trusted Execution Technology (TXT)
+
+#TRANSLATORS: Description of BIOS setting
+Custom Charge Stop
+
