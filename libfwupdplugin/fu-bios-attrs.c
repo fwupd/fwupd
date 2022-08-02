@@ -368,6 +368,10 @@ fu_bios_attrs_setup(FuBiosAttrs *self, GError **error)
 		if (driver == NULL)
 			break;
 		path = g_build_filename(sysfsfwdir, driver, "attributes", NULL);
+		if (!g_file_test(path, G_FILE_TEST_IS_DIR)) {
+			g_debug("Skipping non-directory %s", path);
+			continue;
+		}
 		driver_dir = g_dir_open(path, 0, error);
 		if (driver_dir == NULL)
 			return FALSE;
