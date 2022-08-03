@@ -118,6 +118,9 @@ struct _FuEngine {
 	GMainLoop *acquiesce_loop;
 	guint acquiesce_id;
 	guint acquiesce_delay;
+
+	gchar *machine_kind_str_mockup;
+	FuSmbiosChassisKind chassis_type_mockup;
 };
 
 enum {
@@ -6344,6 +6347,10 @@ fu_engine_attrs_calculate_hsi_for_chassis(FuEngine *self)
 	guint val =
 	    fu_context_get_smbios_integer(self->ctx, FU_SMBIOS_STRUCTURE_TYPE_CHASSIS, 0x05);
 
+	if (g_getenv("FWUPD_HOST_EMULATE") != NULL) {
+		val = self->chassis_type_mockup;
+	}
+
 	switch (val) {
 	case FU_SMBIOS_CHASSIS_KIND_DESKTOP:
 	case FU_SMBIOS_CHASSIS_KIND_LOW_PROFILE_DESKTOP:
@@ -6495,6 +6502,59 @@ fu_engine_bios_attrs_from_json(FuEngine *self, JsonNode *json_node, GError **err
 }
 
 static gboolean
+fu_engine_machine_kind_from_json(FuEngine *self, JsonNode *json_node, GError **error)
+{
+	JsonObject *obj;
+	const gchar *machine_kind_str;
+	g_autoptr(FuBiosAttrs) bios_attrs = fu_context_get_bios_attrs(self->ctx);
+
+	/* sanity check */
+	if (!JSON_NODE_HOLDS_OBJECT(json_node)) {
+		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA, "not JSON object");
+		return FALSE;
+	}
+
+	/* not supplied */
+	obj = json_node_get_object(json_node);
+	if (!json_object_has_member(obj, "MachineKind"))
+		return TRUE;
+	machine_kind_str = json_object_get_string_member(obj, "MachineKind");
+
+	self->machine_kind_str_mockup = g_strdup(machine_kind_str);
+
+	/* success */
+	return TRUE;
+}
+
+gchar *
+fu_engine_get_mockup_machine_kind(FuEngine *self)
+{
+	return self->machine_kind_str_mockup;
+}
+
+static gboolean
+fu_engine_chassis_kind_from_json(FuEngine *self, JsonNode *json_node, GError **error)
+{
+	JsonObject *obj;
+	g_autoptr(FuBiosAttrs) bios_attrs = fu_context_get_bios_attrs(self->ctx);
+
+	/* sanity check */
+	if (!JSON_NODE_HOLDS_OBJECT(json_node)) {
+		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA, "not JSON object");
+		return FALSE;
+	}
+
+	/* not supplied */
+	obj = json_node_get_object(json_node);
+	if (!json_object_has_member(obj, "ChassisType"))
+		return TRUE;
+	self->chassis_type_mockup = (guint)json_object_get_int_member(obj, "ChassisType");
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_engine_devices_from_json(FuEngine *self, JsonNode *json_node, GError **error)
 {
 	JsonArray *array;
@@ -6563,6 +6623,10 @@ fu_engine_load_host_emulation(FuEngine *self, const gchar *fn, GError **error)
 	if (!fu_engine_security_attrs_from_json(self, json_parser_get_root(parser), error))
 		return FALSE;
 	if (!fu_engine_bios_attrs_from_json(self, json_parser_get_root(parser), error))
+		return FALSE;
+	if (!fu_engine_machine_kind_from_json(self, json_parser_get_root(parser), error))
+		return FALSE;
+	if (!fu_engine_chassis_kind_from_json(self, json_parser_get_root(parser), error))
 		return FALSE;
 
 #ifdef HAVE_HSI

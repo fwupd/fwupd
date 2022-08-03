@@ -245,3 +245,6 @@ GError *
 fu_engine_error_array_get_best(GPtrArray *errors);
 gboolean
 fu_engine_modify_bios_attr(FuEngine *self, const gchar *key, const gchar *value, GError **error);
+
+gchar *
+fu_engine_get_mockup_machine_kind(FuEngine *self);

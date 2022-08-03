@@ -1478,6 +1478,7 @@ fu_daemon_daemon_method_call(GDBusConnection *connection,
 		return;
 	}
 	if (g_strcmp0(method_name, "GetHostSecurityAttrs") == 0) {
+		FuDaemonMachineKind kind;
 		g_autoptr(FuSecurityAttrs) attrs = NULL;
 		g_debug("Called %s()", method_name);
 #ifndef HAVE_HSI
@@ -1486,7 +1487,13 @@ fu_daemon_daemon_method_call(GDBusConnection *connection,
 							      FWUPD_ERROR_NOT_SUPPORTED,
 							      "HSI support not enabled");
 #else
-		if (self->machine_kind != FU_DAEMON_MACHINE_KIND_PHYSICAL) {
+		kind = self->machine_kind;
+		if (g_getenv("FWUPD_HOST_EMULATE") != NULL) {
+			kind = fu_daemon_machine_kind_from_string(
+			    fu_engine_get_mockup_machine_kind(self->engine));
+		}
+
+		if (kind != FU_DAEMON_MACHINE_KIND_PHYSICAL) {
 			g_dbus_method_invocation_return_error_literal(
 			    invocation,
 			    FWUPD_ERROR,
