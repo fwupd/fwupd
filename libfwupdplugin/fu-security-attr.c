@@ -48,6 +48,8 @@ fu_security_attr_add_bios_target_value(FwupdSecurityAttr *attr,
 	    fwupd_bios_attr_get_current_value(bios_attr));
 	if (fwupd_bios_attr_get_kind(bios_attr) != FWUPD_BIOS_ATTR_KIND_ENUMERATION)
 		return;
+	if (fwupd_bios_attr_get_read_only(bios_attr))
+		return;
 	values = fwupd_bios_attr_get_possible_values(bios_attr);
 	for (guint i = 0; i < values->len; i++) {
 		const gchar *possible = g_ptr_array_index(values, i);
