@@ -4,5 +4,6 @@ ENV CI_NETWORK true
 RUN echo fubar > /etc/machine-id
 %%%ARCH_SPECIFIC_COMMAND%%%
 %%%INSTALL_DEPENDENCIES_COMMAND%%%
+RUN apt install -yq --no-install-recommends python3-apt
 WORKDIR /github/workspace
 CMD ["./contrib/ci/debian.sh"]
