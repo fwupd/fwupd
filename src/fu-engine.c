@@ -6344,6 +6344,11 @@ fu_engine_attrs_calculate_hsi_for_chassis(FuEngine *self)
 	guint val =
 	    fu_context_get_smbios_integer(self->ctx, FU_SMBIOS_STRUCTURE_TYPE_CHASSIS, 0x05);
 
+	if (g_getenv("FWUPD_HOST_EMULATE") != NULL) {
+		return fu_security_attrs_calculate_hsi(self->host_security_attrs,
+						       FU_SECURITY_ATTRS_FLAG_ADD_VERSION);
+	}
+
 	switch (val) {
 	case FU_SMBIOS_CHASSIS_KIND_DESKTOP:
 	case FU_SMBIOS_CHASSIS_KIND_LOW_PROFILE_DESKTOP:
