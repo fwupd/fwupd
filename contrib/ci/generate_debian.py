@@ -6,14 +6,12 @@
 #
 import os
 import sys
-import xml.etree.ElementTree as etree
+from fwupd_setup_helpers import get_build_dependencies
 
 
 def parse_control_dependencies(requested_type):
     TARGET = os.getenv("OS")
     QUBES = os.getenv("QUBES")
-    deps = []
-    dep = ""
 
     if TARGET == "":
         print("Missing OS environment variable")
@@ -33,56 +31,7 @@ def parse_control_dependencies(requested_type):
 
         SUBOS = platform.machine()
 
-    tree = etree.parse(os.path.join(os.path.dirname(sys.argv[0]), "dependencies.xml"))
-    root = tree.getroot()
-    for child in root:
-        if not "type" in child.attrib or not "id" in child.attrib:
-            continue
-        for distro in child:
-            if not "id" in distro.attrib:
-                continue
-            if distro.attrib["id"] != OS:
-                continue
-            control = distro.find("control")
-            if control is None:
-                continue
-            packages = distro.findall("package")
-            for package in packages:
-                if SUBOS:
-                    if not "variant" in package.attrib:
-                        continue
-                    if package.attrib["variant"] != SUBOS:
-                        continue
-                if package.text:
-                    dep = package.text
-                else:
-                    dep = child.attrib["id"]
-                if child.attrib["type"] == requested_type and dep:
-                    version = control.find("version")
-                    if version is not None:
-                        dep = "%s %s" % (dep, version.text)
-                    inclusions = control.findall("inclusive")
-                    if inclusions:
-                        for i in range(0, len(inclusions)):
-                            prefix = ""
-                            suffix = " "
-                            if i == 0:
-                                prefix = " ["
-                            if i == len(inclusions) - 1:
-                                suffix = "]"
-                            dep = "%s%s%s%s" % (dep, prefix, inclusions[i].text, suffix)
-                    exclusions = control.findall("exclusive")
-                    if exclusions:
-                        for i in range(0, len(exclusions)):
-                            prefix = "!"
-                            suffix = " "
-                            if i == 0:
-                                prefix = " [!"
-                            if i == len(exclusions) - 1:
-                                suffix = "]"
-                            dep = "%s%s%s%s" % (dep, prefix, exclusions[i].text, suffix)
-                    deps.append(dep)
-    return deps, QUBES
+    return get_build_dependencies(OS, SUBOS), QUBES
 
 
 def update_debian_control(target):
