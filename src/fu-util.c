@@ -3809,13 +3809,15 @@ fu_util_set_bios_attr(FuUtilPrivate *priv, gchar **values, GError **error)
 					   values[0],
 					   values[1],
 					   priv->cancellable,
-					   error))
+					   error)) {
+		g_prefix_error(error, "failed to set '%s' using '%s': ", values[0], values[1]);
 		return FALSE;
+	}
 
 	if (!priv->as_json) {
-		g_autofree gchar *msg =
-		    g_strdup_printf(_("Set BIOS attribute '%s' to '%s'."), values[0], values[1]);
 		/* TRANSLATORS: Configured a BIOS setting to a value */
+		g_autofree gchar *msg =
+		    g_strdup_printf(_("Set BIOS attribute '%s' using '%s'."), values[0], values[1]);
 		g_print("\n%s\n", msg);
 	}
 	priv->completion_flags |= FWUPD_DEVICE_FLAG_NEEDS_REBOOT;

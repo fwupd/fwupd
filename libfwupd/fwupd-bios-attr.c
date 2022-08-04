@@ -326,6 +326,100 @@ fwupd_bios_attr_set_description(FwupdBiosAttr *self, const gchar *description)
 	priv->description = g_strdup(description);
 }
 
+/* determine if key is supposed to be positive */
+static gboolean
+fu_bios_attr_key_is_positive(const gchar *key)
+{
+	if (g_strrstr(key, "enable"))
+		return TRUE;
+	if (g_strcmp0(key, "true") == 0)
+		return TRUE;
+	if (g_strcmp0(key, "1") == 0)
+		return TRUE;
+	if (g_strcmp0(key, "on") == 0)
+		return TRUE;
+	return FALSE;
+}
+
+/* determine if key is supposed to be negative */
+static gboolean
+fu_bios_attr_key_is_negative(const gchar *key)
+{
+	if (g_strrstr(key, "disable"))
+		return TRUE;
+	if (g_strcmp0(key, "false") == 0)
+		return TRUE;
+	if (g_strcmp0(key, "0") == 0)
+		return TRUE;
+	if (g_strcmp0(key, "off") == 0)
+		return TRUE;
+	return FALSE;
+}
+
+/**
+ * fwupd_bios_attr_map_possible_value:
+ * @self: a #FwupdBiosAttr
+ * @key: the string to try to map
+ * @error: (nullable): optional return location for an error
+ *
+ * Attempts to map a user provided string into strings that a #FwupdBiosAttr can
+ * support.  The following heuristics are used:
+ * - Ignore case sensitivity
+ * - Map obviously "positive" phrases into a value that turns on the #FwupdBiosAttr
+ * - Map obviously "negative" phrases into a value that turns off the #FwupdBiosAttr
+ *
+ * Returns: (transfer none): the possible value that maps or NULL if none if found
+ *
+ * Since: 1.8.4
+ **/
+const gchar *
+fwupd_bios_attr_map_possible_value(FwupdBiosAttr *self, const gchar *key, GError **error)
+{
+	FwupdBiosAttrPrivate *priv = GET_PRIVATE(self);
+	gboolean positive_key = FALSE;
+	gboolean negative_key = FALSE;
+	g_autofree gchar *result = NULL;
+	g_autofree gchar *lower_key = NULL;
+
+	g_return_val_if_fail(FWUPD_IS_BIOS_ATTR(self), NULL);
+	g_return_val_if_fail(priv->kind == FWUPD_BIOS_ATTR_KIND_ENUMERATION, NULL);
+
+	if (priv->possible_values->len == 0) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "%s doesn't contain any possible values",
+			    priv->name);
+		return NULL;
+	}
+
+	lower_key = g_utf8_strdown(key, -1);
+	positive_key = fu_bios_attr_key_is_positive(lower_key);
+	negative_key = fu_bios_attr_key_is_negative(lower_key);
+	for (guint i = 0; i < priv->possible_values->len; i++) {
+		const gchar *possible = g_ptr_array_index(priv->possible_values, i);
+		g_autofree gchar *lower_possible = g_utf8_strdown(possible, -1);
+		gboolean positive_possible;
+		gboolean negative_possible;
+
+		/* perfect match */
+		if (g_strcmp0(lower_possible, lower_key) == 0)
+			return possible;
+		/* fuzzy match */
+		positive_possible = fu_bios_attr_key_is_positive(lower_possible);
+		negative_possible = fu_bios_attr_key_is_negative(lower_possible);
+		if ((positive_possible && positive_key) || (negative_possible && negative_key))
+			return possible;
+	}
+	g_set_error(error,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_NOT_SUPPORTED,
+		    "%s doesn't map to any possible values for %s",
+		    key,
+		    priv->name);
+	return NULL;
+}
+
 /**
  * fwupd_bios_attr_has_possible_value:
  * @self: a #FwupdBiosAttr

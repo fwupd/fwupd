@@ -3236,13 +3236,15 @@ fu_util_set_bios_attr(FuUtilPrivate *priv, gchar **values, GError **error)
 				  error))
 		return FALSE;
 
-	if (!fu_engine_modify_bios_attr(priv->engine, values[0], values[1], error))
+	if (!fu_engine_modify_bios_attr(priv->engine, values[0], values[1], error)) {
+		g_prefix_error(error, "failed to set '%s' using '%s': ", values[0], values[1]);
 		return FALSE;
+	}
 
 	if (!priv->as_json) {
-		g_autofree gchar *msg =
-		    g_strdup_printf(_("Set BIOS attribute '%s' to '%s'."), values[0], values[1]);
 		/* TRANSLATORS: Configured a BIOS setting to a value */
+		g_autofree gchar *msg =
+		    g_strdup_printf(_("Set BIOS attribute '%s' using '%s'."), values[0], values[1]);
 		g_print("\n%s\n", msg);
 	}
 	priv->completion_flags |= FWUPD_DEVICE_FLAG_NEEDS_REBOOT;

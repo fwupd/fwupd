@@ -4512,7 +4512,11 @@ fu_engine_modify_bios_attrs_func(void)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
-	ret = fu_engine_modify_bios_attr(engine, "Absolute", "Disable", &error);
+	ret = fu_engine_modify_bios_attr(engine, "Absolute", "off", &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	ret = fu_engine_modify_bios_attr(engine, "Absolute", "FOO", &error);
 	g_assert_false(ret);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
 	g_clear_error(&error);

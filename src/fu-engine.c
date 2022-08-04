@@ -767,9 +767,12 @@ fu_engine_update_bios_attr(FwupdBiosAttr *attr, const gchar *value, GError **err
  * error messages
  */
 static gboolean
-fu_engine_validate_bios_attr_input(FwupdBiosAttr *attr, const gchar *value, GError **error)
+fu_engine_validate_bios_attr_input(FwupdBiosAttr *attr, const gchar **value, GError **error)
 {
 	guint64 tmp = 0;
+
+	g_return_val_if_fail(*value != NULL, FALSE);
+	g_return_val_if_fail(value != NULL, FALSE);
 
 	if (attr == NULL) {
 		g_set_error_literal(error,
@@ -786,7 +789,7 @@ fu_engine_validate_bios_attr_input(FwupdBiosAttr *attr, const gchar *value, GErr
 			    fwupd_bios_attr_get_name(attr));
 		return FALSE;
 	} else if (fwupd_bios_attr_get_kind(attr) == FWUPD_BIOS_ATTR_KIND_INTEGER) {
-		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT64, error))
+		if (!fu_strtoull(*value, &tmp, 0, G_MAXUINT64, error))
 			return FALSE;
 		if (tmp < fwupd_bios_attr_get_lower_bound(attr)) {
 			g_set_error(error,
@@ -794,7 +797,7 @@ fu_engine_validate_bios_attr_input(FwupdBiosAttr *attr, const gchar *value, GErr
 				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "%s is too small (%" G_GUINT64_FORMAT
 				    "); expected at least %" G_GUINT64_FORMAT,
-				    value,
+				    *value,
 				    tmp,
 				    fwupd_bios_attr_get_lower_bound(attr));
 			return FALSE;
@@ -805,20 +808,20 @@ fu_engine_validate_bios_attr_input(FwupdBiosAttr *attr, const gchar *value, GErr
 				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "%s is too big (%" G_GUINT64_FORMAT
 				    "); expected no more than %" G_GUINT64_FORMAT,
-				    value,
+				    *value,
 				    tmp,
 				    fwupd_bios_attr_get_upper_bound(attr));
 			return FALSE;
 		}
 	} else if (fwupd_bios_attr_get_kind(attr) == FWUPD_BIOS_ATTR_KIND_STRING) {
-		tmp = strlen(value);
+		tmp = strlen(*value);
 		if (tmp < fwupd_bios_attr_get_lower_bound(attr)) {
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "%s is too short (%" G_GUINT64_FORMAT
 				    "); expected at least %" G_GUINT64_FORMAT,
-				    value,
+				    *value,
 				    tmp,
 				    fwupd_bios_attr_get_lower_bound(attr));
 			return FALSE;
@@ -829,20 +832,16 @@ fu_engine_validate_bios_attr_input(FwupdBiosAttr *attr, const gchar *value, GErr
 				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "%s is too long (%" G_GUINT64_FORMAT
 				    "); expected no more than %" G_GUINT64_FORMAT,
-				    value,
+				    *value,
 				    tmp,
 				    fwupd_bios_attr_get_upper_bound(attr));
 			return FALSE;
 		}
 	} else if (fwupd_bios_attr_get_kind(attr) == FWUPD_BIOS_ATTR_KIND_ENUMERATION) {
-		if (!fwupd_bios_attr_has_possible_value(attr, value)) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "%s is not a supported possible attribute value",
-				    value);
+		const gchar *result = fwupd_bios_attr_map_possible_value(attr, *value, error);
+		if (result == NULL)
 			return FALSE;
-		}
+		*value = result;
 	} else {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -869,11 +868,12 @@ fu_engine_modify_bios_attr(FuEngine *self, const gchar *key, const gchar *value,
 {
 	FwupdBiosAttr *attr = fu_context_get_bios_attr(self->ctx, key);
 	FwupdBiosAttr *pending;
+	const gchar *tmp = value;
 
-	if (!fu_engine_validate_bios_attr_input(attr, value, error))
+	if (!fu_engine_validate_bios_attr_input(attr, &tmp, error))
 		return FALSE;
 
-	if (!fu_engine_update_bios_attr(attr, value, error))
+	if (!fu_engine_update_bios_attr(attr, tmp, error))
 		return FALSE;
 
 	pending = fu_context_get_bios_attr(self->ctx, FWUPD_BIOS_ATTR_PENDING_REBOOT);
