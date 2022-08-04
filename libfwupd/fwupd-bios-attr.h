@@ -91,6 +91,8 @@ const gchar *
 fwupd_bios_attr_get_path(FwupdBiosAttr *self);
 const gchar *
 fwupd_bios_attr_get_description(FwupdBiosAttr *self);
+const gchar *
+fwupd_bios_attr_map_possible_value(FwupdBiosAttr *self, const gchar *key, GError **error);
 gboolean
 fwupd_bios_attr_has_possible_value(FwupdBiosAttr *self, const gchar *val);
 void

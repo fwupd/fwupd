@@ -820,6 +820,7 @@ LIBFWUPD_1.8.4 {
     fwupd_bios_attr_get_type;
     fwupd_bios_attr_get_upper_bound;
     fwupd_bios_attr_has_possible_value;
+    fwupd_bios_attr_map_possible_value;
     fwupd_bios_attr_new;
     fwupd_bios_attr_set_current_value;
     fwupd_bios_attr_set_description;
