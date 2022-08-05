@@ -17,6 +17,6 @@ GPtrArray *
 fu_bios_attrs_get_all(FuBiosAttrs *self);
 
 GVariant *
-fu_bios_attrs_to_variant(FuBiosAttrs *self);
+fu_bios_attrs_to_variant(FuBiosAttrs *self, gboolean trusted);
 gboolean
 fu_bios_attrs_from_json(FuBiosAttrs *self, JsonNode *json_node, GError **error);

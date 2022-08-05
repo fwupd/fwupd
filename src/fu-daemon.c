@@ -533,7 +533,7 @@ fu_daemon_authorize_get_bios_attrs_cb(GObject *source, GAsyncResult *res, gpoint
 	/* authenticated */
 	ctx = fu_engine_get_context(helper->self->engine);
 	attrs = fu_context_get_bios_attrs(ctx);
-	val = fu_bios_attrs_to_variant(attrs);
+	val = fu_bios_attrs_to_variant(attrs, TRUE);
 	g_dbus_method_invocation_return_value(helper->invocation, val);
 }
 
@@ -1990,33 +1990,43 @@ fu_daemon_daemon_method_call(GDBusConnection *connection,
 		return;
 	}
 	if (g_strcmp0(method_name, "GetBiosAttrs") == 0) {
-		g_autoptr(FuMainAuthHelper) helper = NULL;
+		gboolean authenticate = fu_engine_request_get_feature_flags(request) &
+					FWUPD_FEATURE_FLAG_ALLOW_AUTHENTICATION;
+
+		g_debug("Called %s", method_name);
+		if (!authenticate) {
+			g_autoptr(FuBiosAttrs) attrs =
+			    fu_context_get_bios_attrs(fu_engine_get_context(self->engine));
+			val = fu_bios_attrs_to_variant(attrs,
+						       fu_engine_request_get_device_flags(request) &
+							   FWUPD_DEVICE_FLAG_TRUSTED);
+			g_dbus_method_invocation_return_value(invocation, val);
+		} else {
+			g_autoptr(FuMainAuthHelper) helper = NULL;
 #ifdef HAVE_POLKIT
-		g_autoptr(PolkitSubject) subject = NULL;
+			g_autoptr(PolkitSubject) subject = NULL;
 #endif
-		g_debug("Called %s()", method_name);
-
-		/* authenticate */
-		fu_daemon_set_status(self, FWUPD_STATUS_WAITING_FOR_AUTH);
-		helper = g_new0(FuMainAuthHelper, 1);
-		helper->self = self;
-		helper->request = g_steal_pointer(&request);
-		helper->invocation = g_object_ref(invocation);
+			/* authenticate */
+			fu_daemon_set_status(self, FWUPD_STATUS_WAITING_FOR_AUTH);
+			helper = g_new0(FuMainAuthHelper, 1);
+			helper->self = self;
+			helper->request = g_steal_pointer(&request);
+			helper->invocation = g_object_ref(invocation);
 #ifdef HAVE_POLKIT
-		subject = polkit_system_bus_name_new(sender);
-		polkit_authority_check_authorization(
-		    self->authority,
-		    subject,
-		    "org.freedesktop.fwupd.get-bios-attributes",
-		    NULL,
-		    POLKIT_CHECK_AUTHORIZATION_FLAGS_ALLOW_USER_INTERACTION,
-		    NULL,
-		    fu_daemon_authorize_get_bios_attrs_cb,
-		    g_steal_pointer(&helper));
+			subject = polkit_system_bus_name_new(sender);
+			polkit_authority_check_authorization(
+			    self->authority,
+			    subject,
+			    "org.freedesktop.fwupd.get-bios-attributes",
+			    NULL,
+			    POLKIT_CHECK_AUTHORIZATION_FLAGS_ALLOW_USER_INTERACTION,
+			    NULL,
+			    fu_daemon_authorize_get_bios_attrs_cb,
+			    g_steal_pointer(&helper));
 #else
-		fu_daemon_authorize_get_bios_attrs_cb(NULL, NULL, g_steal_pointer(&helper));
+			fu_daemon_authorize_get_bios_attrs_cb(NULL, NULL, g_steal_pointer(&helper));
 #endif /* HAVE_POLKIT */
-
+		}
 		return;
 	}
 	if (g_strcmp0(method_name, "SetBiosAttr") == 0) {

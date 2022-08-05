@@ -11,7 +11,7 @@
 #pragma once
 
 GVariant *
-fwupd_bios_attr_to_variant(FwupdBiosAttr *self);
+fwupd_bios_attr_to_variant(FwupdBiosAttr *self, gboolean trusted);
 void
 fwupd_bios_attr_to_json(FwupdBiosAttr *self, JsonBuilder *builder);
 gboolean

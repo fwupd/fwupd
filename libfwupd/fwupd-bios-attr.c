@@ -587,9 +587,22 @@ fwupd_bios_attr_set_current_value(FwupdBiosAttr *self, const gchar *value)
 	priv->current_value = g_strdup(value);
 }
 
+static gboolean
+fwupd_bios_attr_trusted(FwupdBiosAttr *self, gboolean trusted)
+{
+	g_return_val_if_fail(FWUPD_IS_BIOS_ATTR(self), FALSE);
+
+	if (trusted)
+		return TRUE;
+	if (g_strcmp0(fwupd_bios_attr_get_name(self), "pending_reboot") == 0)
+		return TRUE;
+	return FALSE;
+}
+
 /**
  * fwupd_bios_attr_to_variant:
  * @self: a #FwupdBiosAttr
+ * @trusted: whether the caller should receive trusted values
  *
  * Serialize the bios attribute.
  *
@@ -598,7 +611,7 @@ fwupd_bios_attr_set_current_value(FwupdBiosAttr *self, const gchar *value)
  * Since: 1.8.4
  **/
 GVariant *
-fwupd_bios_attr_to_variant(FwupdBiosAttr *self)
+fwupd_bios_attr_to_variant(FwupdBiosAttr *self, gboolean trusted)
 {
 	FwupdBiosAttrPrivate *priv = GET_PRIVATE(self);
 	GVariantBuilder builder;
@@ -638,10 +651,12 @@ fwupd_bios_attr_to_variant(FwupdBiosAttr *self)
 			      "{sv}",
 			      FWUPD_RESULT_KEY_BIOS_ATTR_READ_ONLY,
 			      g_variant_new_boolean(priv->read_only));
-	g_variant_builder_add(&builder,
-			      "{sv}",
-			      FWUPD_RESULT_KEY_BIOS_ATTR_CURRENT_VALUE,
-			      g_variant_new_string(priv->current_value));
+	if (fwupd_bios_attr_trusted(self, trusted)) {
+		g_variant_builder_add(&builder,
+				      "{sv}",
+				      FWUPD_RESULT_KEY_BIOS_ATTR_CURRENT_VALUE,
+				      g_variant_new_string(priv->current_value));
+	}
 	if (priv->kind == FWUPD_BIOS_ATTR_KIND_INTEGER ||
 	    priv->kind == FWUPD_BIOS_ATTR_KIND_STRING) {
 		g_variant_builder_add(&builder,

@@ -526,6 +526,7 @@ fu_bios_attrs_get_pending_reboot(FuBiosAttrs *self, gboolean *result, GError **e
 /**
  * fu_bios_attrs_to_variant:
  * @self: a #FuBiosAttrs
+ * @trusted: whether the caller should receive trusted values
  *
  * Serializes the #FwupdBiosAttr objects.
  *
@@ -534,7 +535,7 @@ fu_bios_attrs_get_pending_reboot(FuBiosAttrs *self, gboolean *result, GError **e
  * Since: 1.8.4
  **/
 GVariant *
-fu_bios_attrs_to_variant(FuBiosAttrs *self)
+fu_bios_attrs_to_variant(FuBiosAttrs *self, gboolean trusted)
 {
 	GVariantBuilder builder;
 
@@ -543,8 +544,8 @@ fu_bios_attrs_to_variant(FuBiosAttrs *self)
 	g_variant_builder_init(&builder, G_VARIANT_TYPE("aa{sv}"));
 	for (guint i = 0; i < self->attrs->len; i++) {
 		FwupdBiosAttr *bios_attr = g_ptr_array_index(self->attrs, i);
-		GVariant *tmp = fwupd_bios_attr_to_variant(bios_attr);
-		g_variant_builder_add_value(&builder, tmp);
+		g_variant_builder_add_value(&builder,
+					    fwupd_bios_attr_to_variant(bios_attr, trusted));
 	}
 	return g_variant_new("(aa{sv})", &builder);
 }
