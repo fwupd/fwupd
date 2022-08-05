@@ -71,7 +71,7 @@ with open("Dockerfile", "w") as wfd:
                 if i < len(deps) - 1:
                     wfd.write("\t%s \\\n" % deps[i])
                 else:
-                    wfd.write("\t%s \n" % deps[i])
+                    wfd.write("\t%s || true\n" % deps[i])
         elif line == "%%%ARCH_SPECIFIC_COMMAND%%%\n":
             if OS == "debian" and SUBOS == "s390x":
                 # add sources
