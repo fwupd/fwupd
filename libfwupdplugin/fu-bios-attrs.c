@@ -205,8 +205,8 @@ fu_bios_attr_fixup_lenovo_thinklmi_bug(FwupdBiosAttr *attr, GError **error)
 			/* last string */
 			if (possible_vals[i + 1] == NULL &&
 			    g_strrstr(possible_vals[i], "]") != NULL) {
-				g_auto(GStrv) stripped_vals = fu_strsplit(possible_vals[1],
-									  strlen(possible_vals[1]),
+				g_auto(GStrv) stripped_vals = fu_strsplit(possible_vals[i],
+									  strlen(possible_vals[i]),
 									  "]",
 									  -1);
 				fwupd_bios_attr_add_possible_value(attr, stripped_vals[0]);
