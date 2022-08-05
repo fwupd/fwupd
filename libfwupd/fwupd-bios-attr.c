@@ -542,6 +542,10 @@ fwupd_bios_attr_to_variant(FwupdBiosAttr *self)
 	}
 	g_variant_builder_add(&builder,
 			      "{sv}",
+			      FWUPD_RESULT_KEY_BIOS_ATTR_READ_ONLY,
+			      g_variant_new_boolean(priv->read_only));
+	g_variant_builder_add(&builder,
+			      "{sv}",
 			      FWUPD_RESULT_KEY_BIOS_ATTR_CURRENT_VALUE,
 			      g_variant_new_string(priv->current_value));
 	if (priv->kind == FWUPD_BIOS_ATTR_KIND_INTEGER ||
