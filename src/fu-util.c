@@ -3908,6 +3908,7 @@ main(int argc, char *argv[])
 	gboolean enable_ipfs = FALSE;
 	gboolean is_interactive = FALSE;
 	gboolean no_history = FALSE;
+	gboolean no_authenticate = FALSE;
 	gboolean offline = FALSE;
 	gboolean ret;
 	gboolean verbose = FALSE;
@@ -3919,184 +3920,193 @@ main(int argc, char *argv[])
 	g_autoptr(GPtrArray) cmd_array = fu_util_cmd_array_new();
 	g_autofree gchar *cmd_descriptions = NULL;
 	g_autofree gchar *filter = NULL;
-	const GOptionEntry options[] = {{"verbose",
-					 'v',
-					 0,
-					 G_OPTION_ARG_NONE,
-					 &verbose,
-					 /* TRANSLATORS: command line option */
-					 N_("Show extra debugging information"),
-					 NULL},
-					{"version",
-					 '\0',
-					 0,
-					 G_OPTION_ARG_NONE,
-					 &version,
-					 /* TRANSLATORS: command line option */
-					 N_("Show client and daemon versions"),
-					 NULL},
-					{"offline",
-					 '\0',
-					 0,
-					 G_OPTION_ARG_NONE,
-					 &offline,
-					 /* TRANSLATORS: command line option */
-					 N_("Schedule installation for next reboot when possible"),
-					 NULL},
-					{"allow-reinstall",
-					 '\0',
-					 0,
-					 G_OPTION_ARG_NONE,
-					 &allow_reinstall,
-					 /* TRANSLATORS: command line option */
-					 N_("Allow reinstalling existing firmware versions"),
-					 NULL},
-					{"allow-older",
-					 '\0',
-					 0,
-					 G_OPTION_ARG_NONE,
-					 &allow_older,
-					 /* TRANSLATORS: command line option */
-					 N_("Allow downgrading firmware versions"),
-					 NULL},
-					{"allow-branch-switch",
-					 '\0',
-					 0,
-					 G_OPTION_ARG_NONE,
-					 &allow_branch_switch,
-					 /* TRANSLATORS: command line option */
-					 N_("Allow switching firmware branch"),
-					 NULL},
-					{"force",
-					 '\0',
-					 0,
-					 G_OPTION_ARG_NONE,
-					 &force,
-					 /* TRANSLATORS: command line option */
-					 N_("Force the action by relaxing some runtime checks"),
-					 NULL},
-					{"assume-yes",
-					 'y',
-					 0,
-					 G_OPTION_ARG_NONE,
-					 &priv->assume_yes,
-					 /* TRANSLATORS: command line option */
-					 N_("Answer yes to all questions"),
-					 NULL},
-					{"sign",
-					 '\0',
-					 0,
-					 G_OPTION_ARG_NONE,
-					 &priv->sign,
-					 /* TRANSLATORS: command line option */
-					 N_("Sign the uploaded data with the client certificate"),
-					 NULL},
-					{"no-unreported-check",
-					 '\0',
-					 0,
-					 G_OPTION_ARG_NONE,
-					 &priv->no_unreported_check,
-					 /* TRANSLATORS: command line option */
-					 N_("Do not check for unreported history"),
-					 NULL},
-					{"no-metadata-check",
-					 '\0',
-					 0,
-					 G_OPTION_ARG_NONE,
-					 &priv->no_metadata_check,
-					 /* TRANSLATORS: command line option */
-					 N_("Do not check for old metadata"),
-					 NULL},
-					{"no-remote-check",
-					 '\0',
-					 0,
-					 G_OPTION_ARG_NONE,
-					 &priv->no_remote_check,
-					 /* TRANSLATORS: command line option */
-					 N_("Do not check if download remotes should be enabled"),
-					 NULL},
-					{"no-reboot-check",
-					 '\0',
-					 0,
-					 G_OPTION_ARG_NONE,
-					 &priv->no_reboot_check,
-					 /* TRANSLATORS: command line option */
-					 N_("Do not check or prompt for reboot after update"),
-					 NULL},
-					{"no-safety-check",
-					 '\0',
-					 0,
-					 G_OPTION_ARG_NONE,
-					 &priv->no_safety_check,
-					 /* TRANSLATORS: command line option */
-					 N_("Do not perform device safety checks"),
-					 NULL},
-					{"no-device-prompt",
-					 '\0',
-					 0,
-					 G_OPTION_ARG_NONE,
-					 &priv->no_device_prompt,
-					 /* TRANSLATORS: command line option */
-					 N_("Do not prompt for devices"),
-					 NULL},
-					{"no-history",
-					 '\0',
-					 0,
-					 G_OPTION_ARG_NONE,
-					 &no_history,
-					 /* TRANSLATORS: command line option */
-					 N_("Do not write to the history database"),
-					 NULL},
-					{"show-all",
-					 '\0',
-					 0,
-					 G_OPTION_ARG_NONE,
-					 &priv->show_all,
-					 /* TRANSLATORS: command line option */
-					 N_("Show all results"),
-					 NULL},
-					{"show-all-devices",
-					 '\0',
-					 G_OPTION_FLAG_HIDDEN,
-					 G_OPTION_ARG_NONE,
-					 &priv->show_all,
-					 /* TRANSLATORS: command line option */
-					 N_("Show devices that are not updatable"),
-					 NULL},
-					{"disable-ssl-strict",
-					 '\0',
-					 0,
-					 G_OPTION_ARG_NONE,
-					 &priv->disable_ssl_strict,
-					 /* TRANSLATORS: command line option */
-					 N_("Ignore SSL strict checks when downloading files"),
-					 NULL},
-					{"ipfs",
-					 '\0',
-					 0,
-					 G_OPTION_ARG_NONE,
-					 &enable_ipfs,
-					 /* TRANSLATORS: command line option */
-					 N_("Only use IPFS when downloading files"),
-					 NULL},
-					{"filter",
-					 '\0',
-					 0,
-					 G_OPTION_ARG_STRING,
-					 &filter,
-					 /* TRANSLATORS: command line option */
-					 N_("Filter with a set of device flags using a ~ prefix to "
-					    "exclude, e.g. 'internal,~needs-reboot'"),
-					 NULL},
-					{"json",
-					 '\0',
-					 0,
-					 G_OPTION_ARG_NONE,
-					 &priv->as_json,
-					 /* TRANSLATORS: command line option */
-					 N_("Output in JSON format"),
-					 NULL},
-					{NULL}};
+	const GOptionEntry options[] = {
+	    {"verbose",
+	     'v',
+	     0,
+	     G_OPTION_ARG_NONE,
+	     &verbose,
+	     /* TRANSLATORS: command line option */
+	     N_("Show extra debugging information"),
+	     NULL},
+	    {"version",
+	     '\0',
+	     0,
+	     G_OPTION_ARG_NONE,
+	     &version,
+	     /* TRANSLATORS: command line option */
+	     N_("Show client and daemon versions"),
+	     NULL},
+	    {"offline",
+	     '\0',
+	     0,
+	     G_OPTION_ARG_NONE,
+	     &offline,
+	     /* TRANSLATORS: command line option */
+	     N_("Schedule installation for next reboot when possible"),
+	     NULL},
+	    {"allow-reinstall",
+	     '\0',
+	     0,
+	     G_OPTION_ARG_NONE,
+	     &allow_reinstall,
+	     /* TRANSLATORS: command line option */
+	     N_("Allow reinstalling existing firmware versions"),
+	     NULL},
+	    {"allow-older",
+	     '\0',
+	     0,
+	     G_OPTION_ARG_NONE,
+	     &allow_older,
+	     /* TRANSLATORS: command line option */
+	     N_("Allow downgrading firmware versions"),
+	     NULL},
+	    {"allow-branch-switch",
+	     '\0',
+	     0,
+	     G_OPTION_ARG_NONE,
+	     &allow_branch_switch,
+	     /* TRANSLATORS: command line option */
+	     N_("Allow switching firmware branch"),
+	     NULL},
+	    {"force",
+	     '\0',
+	     0,
+	     G_OPTION_ARG_NONE,
+	     &force,
+	     /* TRANSLATORS: command line option */
+	     N_("Force the action by relaxing some runtime checks"),
+	     NULL},
+	    {"assume-yes",
+	     'y',
+	     0,
+	     G_OPTION_ARG_NONE,
+	     &priv->assume_yes,
+	     /* TRANSLATORS: command line option */
+	     N_("Answer yes to all questions"),
+	     NULL},
+	    {"sign",
+	     '\0',
+	     0,
+	     G_OPTION_ARG_NONE,
+	     &priv->sign,
+	     /* TRANSLATORS: command line option */
+	     N_("Sign the uploaded data with the client certificate"),
+	     NULL},
+	    {"no-unreported-check",
+	     '\0',
+	     0,
+	     G_OPTION_ARG_NONE,
+	     &priv->no_unreported_check,
+	     /* TRANSLATORS: command line option */
+	     N_("Do not check for unreported history"),
+	     NULL},
+	    {"no-metadata-check",
+	     '\0',
+	     0,
+	     G_OPTION_ARG_NONE,
+	     &priv->no_metadata_check,
+	     /* TRANSLATORS: command line option */
+	     N_("Do not check for old metadata"),
+	     NULL},
+	    {"no-remote-check",
+	     '\0',
+	     0,
+	     G_OPTION_ARG_NONE,
+	     &priv->no_remote_check,
+	     /* TRANSLATORS: command line option */
+	     N_("Do not check if download remotes should be enabled"),
+	     NULL},
+	    {"no-reboot-check",
+	     '\0',
+	     0,
+	     G_OPTION_ARG_NONE,
+	     &priv->no_reboot_check,
+	     /* TRANSLATORS: command line option */
+	     N_("Do not check or prompt for reboot after update"),
+	     NULL},
+	    {"no-safety-check",
+	     '\0',
+	     0,
+	     G_OPTION_ARG_NONE,
+	     &priv->no_safety_check,
+	     /* TRANSLATORS: command line option */
+	     N_("Do not perform device safety checks"),
+	     NULL},
+	    {"no-device-prompt",
+	     '\0',
+	     0,
+	     G_OPTION_ARG_NONE,
+	     &priv->no_device_prompt,
+	     /* TRANSLATORS: command line option */
+	     N_("Do not prompt for devices"),
+	     NULL},
+	    {"no-history",
+	     '\0',
+	     0,
+	     G_OPTION_ARG_NONE,
+	     &no_history,
+	     /* TRANSLATORS: command line option */
+	     N_("Do not write to the history database"),
+	     NULL},
+	    {"show-all",
+	     '\0',
+	     0,
+	     G_OPTION_ARG_NONE,
+	     &priv->show_all,
+	     /* TRANSLATORS: command line option */
+	     N_("Show all results"),
+	     NULL},
+	    {"show-all-devices",
+	     '\0',
+	     G_OPTION_FLAG_HIDDEN,
+	     G_OPTION_ARG_NONE,
+	     &priv->show_all,
+	     /* TRANSLATORS: command line option */
+	     N_("Show devices that are not updatable"),
+	     NULL},
+	    {"disable-ssl-strict",
+	     '\0',
+	     0,
+	     G_OPTION_ARG_NONE,
+	     &priv->disable_ssl_strict,
+	     /* TRANSLATORS: command line option */
+	     N_("Ignore SSL strict checks when downloading files"),
+	     NULL},
+	    {"ipfs",
+	     '\0',
+	     0,
+	     G_OPTION_ARG_NONE,
+	     &enable_ipfs,
+	     /* TRANSLATORS: command line option */
+	     N_("Only use IPFS when downloading files"),
+	     NULL},
+	    {"filter",
+	     '\0',
+	     0,
+	     G_OPTION_ARG_STRING,
+	     &filter,
+	     /* TRANSLATORS: command line option */
+	     N_("Filter with a set of device flags using a ~ prefix to "
+		"exclude, e.g. 'internal,~needs-reboot'"),
+	     NULL},
+	    {"json",
+	     '\0',
+	     0,
+	     G_OPTION_ARG_NONE,
+	     &priv->as_json,
+	     /* TRANSLATORS: command line option */
+	     N_("Output in JSON format"),
+	     NULL},
+	    {"no-authenticate",
+	     '\0',
+	     0,
+	     G_OPTION_ARG_NONE,
+	     &no_authenticate,
+	     /* TRANSLATORS: command line option */
+	     N_("Don't prompt for authentication (less details may be shown)"),
+	     NULL},
+	    {NULL}};
 
 #ifdef _WIN32
 	/* workaround Windows setting the codepage to 1252 */
@@ -4360,7 +4370,7 @@ main(int argc, char *argv[])
 	    cmd_array,
 	    "get-bios-settings,get-bios-setting",
 	    /* TRANSLATORS: command argument: uppercase, spaces->dashes */
-	    _("[SETTING1] [SETTING2]"),
+	    _("[SETTING1] [SETTING2] [--no-authenticate]"),
 	    /* TRANSLATORS: command description */
 	    _("Retrieve BIOS settings.  If no arguments are passed all settings are returned"),
 	    fu_util_get_bios_attr);
@@ -4570,14 +4580,17 @@ main(int argc, char *argv[])
 
 	/* send our implemented feature set */
 	if (is_interactive) {
-		if (!fwupd_client_set_feature_flags(
-			priv->client,
-			FWUPD_FEATURE_FLAG_CAN_REPORT | FWUPD_FEATURE_FLAG_SWITCH_BRANCH |
-			    FWUPD_FEATURE_FLAG_REQUESTS | FWUPD_FEATURE_FLAG_UPDATE_ACTION |
-			    FWUPD_FEATURE_FLAG_FDE_WARNING | FWUPD_FEATURE_FLAG_DETACH_ACTION |
-			    FWUPD_FEATURE_FLAG_COMMUNITY_TEXT | FWUPD_FEATURE_FLAG_SHOW_PROBLEMS,
-			priv->cancellable,
-			&error)) {
+		FwupdFeatureFlags flags =
+		    FWUPD_FEATURE_FLAG_CAN_REPORT | FWUPD_FEATURE_FLAG_SWITCH_BRANCH |
+		    FWUPD_FEATURE_FLAG_REQUESTS | FWUPD_FEATURE_FLAG_UPDATE_ACTION |
+		    FWUPD_FEATURE_FLAG_FDE_WARNING | FWUPD_FEATURE_FLAG_DETACH_ACTION |
+		    FWUPD_FEATURE_FLAG_COMMUNITY_TEXT | FWUPD_FEATURE_FLAG_SHOW_PROBLEMS;
+		if (!no_authenticate)
+			flags |= FWUPD_FEATURE_FLAG_ALLOW_AUTHENTICATION;
+		if (!fwupd_client_set_feature_flags(priv->client,
+						    flags,
+						    priv->cancellable,
+						    &error)) {
 			g_printerr("Failed to set front-end features: %s\n", error->message);
 			return EXIT_FAILURE;
 		}

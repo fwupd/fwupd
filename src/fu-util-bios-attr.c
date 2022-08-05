@@ -107,6 +107,7 @@ fu_util_bios_attr_to_string(FwupdBiosAttr *attr, guint idt)
 {
 	const gchar *tmp;
 	FwupdBiosAttrKind type;
+	g_autofree gchar *current_value = NULL;
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GString) str = g_string_new(NULL);
 
@@ -128,9 +129,13 @@ fu_util_bios_attr_to_string(FwupdBiosAttr *attr, guint idt)
 
 	tmp = fwupd_bios_attr_get_current_value(attr);
 	if (tmp != NULL) {
-		/* TRANSLATORS: current value of a BIOS setting */
-		fu_string_append(str, idt + 1, _("Current Value"), tmp);
+		current_value = g_strdup(tmp);
+	} else {
+		/* TRANSLATORS: tell a user how to get information */
+		current_value = g_strdup_printf(_("Run without '%s' to see"), "--no-authenticate");
 	}
+	/* TRANSLATORS: current value of a BIOS setting */
+	fu_string_append(str, idt + 1, _("Current Value"), current_value);
 
 	fu_util_bios_attr_update_description(attr);
 	tmp = fwupd_bios_attr_get_description(attr);
