@@ -765,6 +765,29 @@ fu_cros_ec_usb_device_jump_to_rw(FuDevice *device)
 }
 
 static gboolean
+fu_cros_ec_usb_device_stay_in_ro(FuDevice *device, GError **error)
+{
+	gsize response_size = 1;
+	guint8 response;
+	guint16 subcommand = UPDATE_EXTRA_CMD_STAY_IN_RO;
+	guint8 command_body[2]; /* Max command body size. */
+	gsize command_body_size = 0;
+
+	if (!fu_cros_ec_usb_device_send_subcommand(device,
+						   subcommand,
+						   command_body,
+						   command_body_size,
+						   &response,
+						   &response_size,
+						   FALSE,
+						   error)) {
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+static gboolean
 fu_cros_ec_usb_device_write_firmware(FuDevice *device,
 				     FuFirmware *firmware,
 				     FuProgress *progress,
@@ -778,22 +801,10 @@ fu_cros_ec_usb_device_write_firmware(FuDevice *device,
 	fu_device_remove_private_flag(device, FU_CROS_EC_USB_DEVICE_FLAG_SPECIAL);
 
 	if (fu_device_has_private_flag(device, FU_CROS_EC_USB_DEVICE_FLAG_REBOOTING_TO_RO)) {
-		gsize response_size = 1;
-		guint8 response;
-		guint16 subcommand = UPDATE_EXTRA_CMD_STAY_IN_RO;
-		guint8 command_body[2]; /* Max command body size. */
-		gsize command_body_size = 0;
 		START_RESP start_resp;
 
 		fu_device_remove_private_flag(device, FU_CROS_EC_USB_DEVICE_FLAG_REBOOTING_TO_RO);
-		if (!fu_cros_ec_usb_device_send_subcommand(device,
-							   subcommand,
-							   command_body,
-							   command_body_size,
-							   &response,
-							   &response_size,
-							   FALSE,
-							   error)) {
+		if (!fu_cros_ec_usb_device_stay_in_ro(device, error)) {
 			g_prefix_error(error, "failed to send stay-in-ro subcommand: ");
 			return FALSE;
 		}
@@ -960,6 +971,8 @@ fu_cros_ec_usb_device_detach(FuDevice *device, FuProgress *progress, GError **er
 		return TRUE;
 
 	if (self->in_bootloader) {
+		/* If EC just rebooted - prevent jumping to RW during the update */
+		fu_device_add_private_flag(device, FU_CROS_EC_USB_DEVICE_FLAG_REBOOTING_TO_RO);
 		g_debug("skipping immediate reboot in case of already in bootloader");
 		/* in RO so skip reboot */
 		return TRUE;
