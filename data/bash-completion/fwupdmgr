@@ -63,6 +63,27 @@ _fwupdmgr_opts=(
 	'--json'
 )
 
+bios_get_opts=(
+	'--no-authenticate'
+	'--json'
+	'--verbose'
+)
+
+bios_set_opts=(
+	'--no-reboot-check'
+	'--verbose'
+)
+
+_show_bios_get_modifiers()
+{
+	COMPREPLY+=( $(compgen -W '${bios_get_opts[@]}' -- "$cur") )
+}
+
+_show_bios_set_modifiers()
+{
+	COMPREPLY+=( $(compgen -W '${bios_set_opts[@]}' -- "$cur") )
+}
+
 _show_filters()
 {
 	local flags
@@ -73,6 +94,26 @@ _show_filters()
 _show_modifiers()
 {
 	COMPREPLY+=( $(compgen -W '${_fwupdmgr_opts[@]}' -- "$cur") )
+}
+
+_show_bios_attrs()
+{
+	if ! command -v jq &> /dev/null; then
+		return 0
+	fi
+	local attr
+	attr="$(command fwupdmgr get-bios-setting --json --no-authenticate 2>/dev/null | jq '.BiosAttributes | .[] | .Name')"
+	COMPREPLY+=( $(compgen -W "${attr}" -- "$cur") )
+}
+
+_show_bios_attrs_possible()
+{
+	if ! command -v jq &> /dev/null; then
+		return 0
+	fi
+	local attr
+	attr="$(command fwupdmgr get-bios-setting "$1" --json --no-authenticate 2>/dev/null | jq '.BiosAttributes | .[] | .BiosAttrPossibleValues | .[]')"
+	COMPREPLY+=( $(compgen -W "${attr}" -- "$cur") )
 }
 
 _show_device_ids()
@@ -123,6 +164,25 @@ _fwupdmgr()
 		if [[ "$args" = "2" ]]; then
 			_show_device_ids
 		fi
+		;;
+	get-bios-settings|get-bios-setting)
+		#bios attrs (no limit)
+		_show_bios_attrs
+		_show_bios_get_modifiers
+		return 0
+		;;
+	set-bios-setting)
+		#allow setting a single bios attr at a time
+		if [[ "$args" = "2" ]]; then
+			_show_bios_attrs
+		fi
+		#possible values (only works for enumeration though)
+		if [[ "$args" = "3" ]]; then
+			_show_bios_attrs_possible "$prev"
+			return 0
+		fi
+		_show_bios_set_modifiers
+		return 0
 		;;
 	get-details)
 		#find files
