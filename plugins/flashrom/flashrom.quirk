@@ -23,8 +23,12 @@ Plugin = flashrom
 [0fc25c8c-ffa8-54ad-a216-d13cfe75bee4]
 Plugin = flashrom
 
-# StarLabTop Mk III (HwId)
+# StarLabTop Mk III (HwId - AMI)
 [013b60e5-1023-5bee-8ae5-14cae21377b7]
+Plugin = flashrom
+
+# StarLabTop Mk III (HwId - coreboot)
+[8f8ca82b-30e1-5907-bc9d-4257a49898d4]
 Plugin = flashrom
 
 # StarLabTop Mk IV (HwId)
