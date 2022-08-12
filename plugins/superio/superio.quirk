@@ -12,10 +12,19 @@ SuperioGType = FuSuperioIt85Device
 SuperioId = 0x8587
 SuperioPort = 0x2e
 
-# Star LabTop Mk III (HwId)
+# Star LabTop Mk III (HwId - AMI)
 [013b60e5-1023-5bee-8ae5-14cae21377b7]
 SuperioGType = FuSuperioIt89Device
 [SUPERIO\GUID_013b60e5-1023-5bee-8ae5-14cae21377b7]
+SuperioId = 0x8987
+SuperioPort = 0x4e
+InstallDuration = 20
+Flags = unsigned-payload
+
+# Star LabTop MK III (HwId - coreboot)
+[8f8ca82b-30e1-5907-bc9d-4257a49898d4]
+SuperioGType = FuSuperioIt89Device
+[SUPERIO\GUID_8f8ca82b-30e1-5907-bc9d-4257a49898d4]
 SuperioId = 0x8987
 SuperioPort = 0x4e
 InstallDuration = 20
