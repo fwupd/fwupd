@@ -41,6 +41,7 @@ with a non-standard filesystem layout.
 * `FU_USB_DEVICE_DEBUG` shows more information about USB devices
 * `FWUPD_DEVICE_LIST_VERBOSE` display devices being added and removed from the list
 * `FWUPD_PROBE_VERBOSE` dump the detected devices to the console, even if not supported by fwupd
+* `FWUPD_BIOS_SETTING_VERBOSE` be verbose while parsing BIOS settings
 
 ## Plugins
 
