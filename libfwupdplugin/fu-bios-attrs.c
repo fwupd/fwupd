@@ -17,7 +17,6 @@
 
 struct _FuBiosAttrs {
 	GObject parent_instance;
-	gboolean kernel_bug_shown;
 	GPtrArray *attrs;
 };
 
@@ -97,6 +96,8 @@ fu_bios_attr_set_enumeration_attrs(FwupdBiosAttr *attr, GError **error)
 		if (g_strrstr(str, delimiters[j]) == NULL)
 			continue;
 		vals = fu_strsplit(str, strlen(str), delimiters[j], -1);
+		if (vals[0] != NULL)
+			fwupd_bios_attr_set_kind(attr, FWUPD_BIOS_ATTR_KIND_ENUMERATION);
 		for (guint i = 0; vals[i] != NULL && vals[i][0] != '\0'; i++)
 			fwupd_bios_attr_add_possible_value(attr, vals[i]);
 	}
@@ -116,6 +117,7 @@ fu_bios_attr_set_string_attrs(FwupdBiosAttr *attr, GError **error)
 	if (tmp == G_MAXUINT64)
 		return FALSE;
 	fwupd_bios_attr_set_upper_bound(attr, tmp);
+	fwupd_bios_attr_set_kind(attr, FWUPD_BIOS_ATTR_KIND_STRING);
 	return TRUE;
 }
 
@@ -136,7 +138,7 @@ fu_bios_attr_set_integer_attrs(FwupdBiosAttr *attr, GError **error)
 	if (tmp == G_MAXUINT64)
 		return FALSE;
 	fwupd_bios_attr_set_scalar_increment(attr, tmp);
-
+	fwupd_bios_attr_set_kind(attr, FWUPD_BIOS_ATTR_KIND_INTEGER);
 	return TRUE;
 }
 
@@ -189,7 +191,11 @@ fu_bios_attr_fixup_lenovo_thinklmi_bug(FwupdBiosAttr *attr, GError **error)
 	g_autoptr(GString) right_str = NULL;
 	g_auto(GStrv) vals = NULL;
 
-	g_debug("Processing %s", fwupd_bios_attr_get_current_value(attr));
+	if (g_getenv("FWUPD_BIOS_SETTING_VERBOSE") != NULL) {
+		g_debug("Processing %s: (%s)",
+			fwupd_bios_attr_get_name(attr),
+			fwupd_bios_attr_get_current_value(attr));
+	}
 
 	/* We have read only */
 	tmp = g_strrstr(current_value, LENOVO_READ_ONLY_NEEDLE);
@@ -226,6 +232,8 @@ fu_bios_attr_fixup_lenovo_thinklmi_bug(FwupdBiosAttr *attr, GError **error)
 		g_auto(GStrv) possible_vals = NULL;
 		g_string_erase(right_str, 0, strlen(LENOVO_POSSIBLE_NEEDLE));
 		possible_vals = fu_strsplit(right_str->str, right_str->len, ",", -1);
+		if (possible_vals[0] != NULL)
+			fwupd_bios_attr_set_kind(attr, FWUPD_BIOS_ATTR_KIND_ENUMERATION);
 		for (guint i = 0; possible_vals[i] != NULL && possible_vals[i][0] != '\0'; i++) {
 			/* last string */
 			if (possible_vals[i + 1] == NULL &&
@@ -244,38 +252,51 @@ fu_bios_attr_fixup_lenovo_thinklmi_bug(FwupdBiosAttr *attr, GError **error)
 }
 
 static gboolean
-fu_bios_attr_set_type(FuBiosAttrs *self, FwupdBiosAttr *attr, const gchar *driver, GError **error)
+fu_bios_attrs_run_folder_fixups(FwupdBiosAttr *attr, GError **error)
 {
+	if (fwupd_bios_attr_get_kind(attr) == FWUPD_BIOS_ATTR_KIND_UNKNOWN)
+		return fu_bios_attr_fixup_lenovo_thinklmi_bug(attr, error);
+	return TRUE;
+}
+
+static gboolean
+fu_bios_attr_set_type(FuBiosAttrs *self, FwupdBiosAttr *attr, GError **error)
+{
+	gboolean kernel_bug = FALSE;
 	g_autofree gchar *data = NULL;
 	g_autoptr(GError) error_key = NULL;
 	g_autoptr(GError) error_local = NULL;
 
 	g_return_val_if_fail(FU_IS_BIOS_ATTRS(self), FALSE);
 	g_return_val_if_fail(FWUPD_IS_BIOS_ATTR(attr), FALSE);
-	g_return_val_if_fail(driver != NULL, FALSE);
 
 	/* lenovo thinklmi seems to be missing it even though it's mandatory :/ */
 	if (!fu_bios_attr_get_key(attr, "type", &data, &error_key)) {
-		g_debug("%s", error_key->message);
-		if (!self->kernel_bug_shown) {
-			g_warning("KERNEL BUG: %s doesn't export a 'type' attribute", driver);
-			self->kernel_bug_shown = TRUE;
-		}
-		data = g_strdup("enumeration");
+#if GLIB_CHECK_VERSION(2, 64, 0)
+		g_warning_once("KERNEL BUG: 'type' attribute not exported: (%s)",
+			       error_key->message);
+#else
+		g_debug("KERNEL BUG: 'type' attribute not exported: (%s)", error_key->message);
+#endif
+		kernel_bug = TRUE;
 	}
 
-	if (g_strcmp0(data, "enumeration") == 0) {
-		fwupd_bios_attr_set_kind(attr, FWUPD_BIOS_ATTR_KIND_ENUMERATION);
-		if (!fu_bios_attr_set_enumeration_attrs(attr, &error_local))
-			g_debug("failed to add enumeration attrs: %s", error_local->message);
+	if (g_strcmp0(data, "enumeration") == 0 || kernel_bug) {
+		if (!fu_bios_attr_set_enumeration_attrs(attr, &error_local)) {
+			if (g_getenv("FWUPD_BIOS_SETTING_VERBOSE") != NULL)
+				g_debug("failed to add enumeration attrs: %s",
+					error_local->message);
+		}
 	} else if (g_strcmp0(data, "integer") == 0) {
-		fwupd_bios_attr_set_kind(attr, FWUPD_BIOS_ATTR_KIND_INTEGER);
-		if (!fu_bios_attr_set_integer_attrs(attr, &error_local))
-			g_debug("failed to add integer attrs: %s", error_local->message);
+		if (!fu_bios_attr_set_integer_attrs(attr, &error_local)) {
+			if (g_getenv("FWUPD_BIOS_SETTING_VERBOSE") != NULL)
+				g_debug("failed to add integer attrs: %s", error_local->message);
+		}
 	} else if (g_strcmp0(data, "string") == 0) {
-		fwupd_bios_attr_set_kind(attr, FWUPD_BIOS_ATTR_KIND_STRING);
-		if (!fu_bios_attr_set_string_attrs(attr, &error_local))
-			g_debug("failed to add string attrs: %s", error_local->message);
+		if (!fu_bios_attr_set_string_attrs(attr, &error_local)) {
+			if (g_getenv("FWUPD_BIOS_SETTING_VERBOSE") != NULL)
+				g_debug("failed to add string attrs: %s", error_local->message);
+		}
 	}
 	return TRUE;
 }
@@ -305,23 +326,18 @@ fu_bios_attr_set_file_attributes(FwupdBiosAttr *attr, GError **error)
 }
 
 static gboolean
-fu_bios_attrs_set_folder_attributes(FuBiosAttrs *self,
-				    FwupdBiosAttr *attr,
-				    const gchar *driver,
-				    GError **error)
+fu_bios_attrs_set_folder_attributes(FuBiosAttrs *self, FwupdBiosAttr *attr, GError **error)
 {
 	g_autoptr(GError) error_local = NULL;
 
-	if (!fu_bios_attr_set_type(self, attr, driver, error))
+	if (!fu_bios_attr_set_type(self, attr, error))
 		return FALSE;
 	if (!fu_bios_attr_set_current_value(attr, error))
 		return FALSE;
 	if (!fu_bios_attr_set_description(attr, &error_local))
 		g_debug("%s", error_local->message);
-	if (self->kernel_bug_shown) {
-		if (!fu_bios_attr_fixup_lenovo_thinklmi_bug(attr, error))
-			return FALSE;
-	}
+	if (!fu_bios_attrs_run_folder_fixups(attr, error))
+		return FALSE;
 	return TRUE;
 }
 
@@ -343,7 +359,7 @@ fu_bios_attrs_populate_attribute(FuBiosAttrs *self,
 	attr = fwupd_bios_attr_new(name, path);
 
 	if (g_file_test(path, G_FILE_TEST_IS_DIR)) {
-		if (!fu_bios_attrs_set_folder_attributes(self, attr, driver, error))
+		if (!fu_bios_attrs_set_folder_attributes(self, attr, error))
 			return FALSE;
 	} else {
 		if (!fu_bios_attr_set_file_attributes(attr, error))
