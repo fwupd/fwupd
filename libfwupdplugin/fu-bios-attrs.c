@@ -388,6 +388,7 @@ fu_bios_attrs_populate_attribute(FuBiosAttrs *self,
 gboolean
 fu_bios_attrs_setup(FuBiosAttrs *self, GError **error)
 {
+	guint count = 0;
 	g_autofree gchar *sysfsfwdir = NULL;
 	g_autoptr(GDir) class_dir = NULL;
 
@@ -438,8 +439,9 @@ fu_bios_attrs_setup(FuBiosAttrs *self, GError **error)
 				g_propagate_error(error, g_steal_pointer(&error_local));
 				return FALSE;
 			}
-		} while (TRUE);
+		} while (++count);
 	} while (TRUE);
+	g_debug("loaded %u BIOS settings", count);
 
 	return TRUE;
 }
