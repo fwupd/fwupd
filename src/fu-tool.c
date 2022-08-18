@@ -1258,7 +1258,13 @@ fu_util_install(FuUtilPrivate *priv, gchar **values, GError **error)
 			if (!fu_util_prompt_warning_fde(FWUPD_DEVICE(device), error))
 				return FALSE;
 		}
-		devices_possible = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
+		devices_possible =
+		    fu_engine_get_devices_by_composite_id(priv->engine,
+							  fu_device_get_composite_id(device),
+							  error);
+		if (devices_possible == NULL)
+			return FALSE;
+
 		g_ptr_array_add(devices_possible, device);
 	} else {
 		g_set_error_literal(error,
@@ -3626,7 +3632,8 @@ main(int argc, char *argv[])
 			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
 			      _("FILE [DEVICE-ID|GUID]"),
 			      /* TRANSLATORS: command description */
-			      _("Install a firmware file on this hardware"),
+			      _("Install a specific firmware on a device, all possible devices"
+				" will also be installed once the CAB matches"),
 			      fu_util_install);
 	fu_util_cmd_array_add(cmd_array,
 			      "reinstall",
