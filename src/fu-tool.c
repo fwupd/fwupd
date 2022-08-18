@@ -3224,34 +3224,37 @@ fu_util_switch_branch(FuUtilPrivate *priv, gchar **values, GError **error)
 }
 
 static gboolean
-fu_util_set_bios_attr(FuUtilPrivate *priv, gchar **values, GError **error)
+fu_util_set_bios_attr(FuUtilPrivate *priv, gchar **input, GError **error)
 {
-	if (g_strv_length(values) < 2) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_ARGS,
-				    /* TRANSLATORS: error message */
-				    _("Invalid arguments"));
-		return FALSE;
-	}
+	g_autoptr(GHashTable) settings = fu_util_bios_attrs_parse_argv(input, error);
 
-	/* load engine */
+	if (settings == NULL)
+		return FALSE;
+
 	if (!fu_util_start_engine(priv,
 				  FU_ENGINE_LOAD_FLAG_HWINFO | FU_ENGINE_LOAD_FLAG_COLDPLUG,
 				  priv->progress,
 				  error))
 		return FALSE;
 
-	if (!fu_engine_modify_bios_attr(priv->engine, values[0], values[1], error)) {
-		g_prefix_error(error, "failed to set '%s' using '%s': ", values[0], values[1]);
+	if (!fu_engine_modify_bios_attrs(priv->engine, settings, error)) {
+		g_prefix_error(error, "failed to set BIOS attribute: ");
 		return FALSE;
 	}
 
 	if (!priv->as_json) {
-		/* TRANSLATORS: Configured a BIOS setting to a value */
-		g_autofree gchar *msg =
-		    g_strdup_printf(_("Set BIOS attribute '%s' using '%s'."), values[0], values[1]);
-		g_print("\n%s\n", msg);
+		gpointer key, value;
+		GHashTableIter iter;
+
+		g_hash_table_iter_init(&iter, settings);
+		while (g_hash_table_iter_next(&iter, &key, &value)) {
+			g_autofree gchar *msg =
+			    /* TRANSLATORS: Configured a BIOS setting to a value */
+			    g_strdup_printf(_("Set BIOS attribute '%s' using '%s'."),
+					    (const gchar *)key,
+					    (const gchar *)value);
+			g_print("\n%s\n", msg);
+		}
 	}
 	priv->completion_flags |= FWUPD_DEVICE_FLAG_NEEDS_REBOOT;
 

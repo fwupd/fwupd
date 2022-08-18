@@ -899,8 +899,7 @@ fwupd_client_modify_bios_attr_cb(GObject *source, GAsyncResult *res, gpointer us
 /**
  * fwupd_client_modify_bios_attr
  * @self: a #FwupdClient
- * @key: the name of the BIOS attribute, e.g. `SleepMode`
- * @value: the value to set, e.g. 'S3'
+ * @settings: (transfer container): BIOS settings
  * @cancellable: (nullable): optional #GCancellable
  * @error: (nullable): optional return location for an error
  *
@@ -913,16 +912,14 @@ fwupd_client_modify_bios_attr_cb(GObject *source, GAsyncResult *res, gpointer us
  **/
 gboolean
 fwupd_client_modify_bios_attr(FwupdClient *self,
-			      const gchar *key,
-			      const gchar *value,
+			      GHashTable *settings,
 			      GCancellable *cancellable,
 			      GError **error)
 {
 	g_autoptr(FwupdClientHelper) helper = NULL;
 
 	g_return_val_if_fail(FWUPD_IS_CLIENT(self), FALSE);
-	g_return_val_if_fail(key != NULL, FALSE);
-	g_return_val_if_fail(value != NULL, FALSE);
+	g_return_val_if_fail(settings != NULL, FALSE);
 	g_return_val_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
@@ -933,8 +930,7 @@ fwupd_client_modify_bios_attr(FwupdClient *self,
 	/* call async version and run loop until complete */
 	helper = fwupd_client_helper_new(self);
 	fwupd_client_modify_bios_attr_async(self,
-					    key,
-					    value,
+					    settings,
 					    cancellable,
 					    fwupd_client_modify_bios_attr_cb,
 					    helper);

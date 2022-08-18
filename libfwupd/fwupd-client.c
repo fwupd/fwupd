@@ -1106,8 +1106,7 @@ fwupd_client_modify_bios_attr_cb(GObject *source, GAsyncResult *res, gpointer us
 /**
  * fwupd_client_modify_bios_attr_async:
  * @self: a #FwupdClient
- * @key: the name of the BIOS attribute, e.g. `SleepMode`
- * @value: the value to set, e.g. 'S3'
+ * @settings: (transfer container): BIOS settings
  * @cancellable: (nullable): optional #GCancellable
  * @callback: the function to run on completion
  * @callback_data: the data to pass to @callback
@@ -1119,26 +1118,35 @@ fwupd_client_modify_bios_attr_cb(GObject *source, GAsyncResult *res, gpointer us
  **/
 void
 fwupd_client_modify_bios_attr_async(FwupdClient *self,
-				    const gchar *key,
-				    const gchar *value,
+				    GHashTable *settings,
 				    GCancellable *cancellable,
 				    GAsyncReadyCallback callback,
 				    gpointer callback_data)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE(self);
+	GVariantBuilder builder;
+	GHashTableIter iter;
+	gpointer key, value;
 	g_autoptr(GTask) task = NULL;
 
 	g_return_if_fail(FWUPD_IS_CLIENT(self));
-	g_return_if_fail(key != NULL);
-	g_return_if_fail(value != NULL);
+	g_return_if_fail(settings != NULL);
+	g_return_if_fail(g_hash_table_size(settings) > 0);
 	g_return_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable));
 	g_return_if_fail(priv->proxy != NULL);
 
 	/* call into daemon */
 	task = g_task_new(self, cancellable, callback, callback_data);
+	g_variant_builder_init(&builder, G_VARIANT_TYPE("a{ss}"));
+	g_hash_table_iter_init(&iter, settings);
+	while (g_hash_table_iter_next(&iter, &key, &value)) {
+		if (value == NULL)
+			continue;
+		g_variant_builder_add(&builder, "{ss}", (const gchar *)key, (const gchar *)value);
+	}
 	g_dbus_proxy_call(priv->proxy,
-			  "SetBiosAttr",
-			  g_variant_new("(ss)", key, value),
+			  "SetBiosAttrs",
+			  g_variant_new("(a{ss})", &builder),
 			  G_DBUS_CALL_FLAGS_NONE,
 			  FWUPD_CLIENT_DBUS_PROXY_TIMEOUT,
 			  cancellable,

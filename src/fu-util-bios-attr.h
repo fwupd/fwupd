@@ -16,3 +16,5 @@ gboolean
 fu_util_bios_attr_matches_args(FwupdBiosAttr *attr, gchar **values);
 gboolean
 fu_util_get_bios_attr_as_json(gchar **values, GPtrArray *attrs, GError **error);
+GHashTable *
+fu_util_bios_attrs_parse_argv(gchar **input, GError **error);
