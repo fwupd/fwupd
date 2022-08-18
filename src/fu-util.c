@@ -4229,7 +4229,8 @@ main(int argc, char *argv[])
 			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
 			      _("[DEVICE-ID|GUID] [VERSION]"),
 			      /* TRANSLATORS: command description */
-			      _("Install a specific firmware version on a device"),
+			      _("Install a specific firmware on a device, all possible devices"
+				" will also be installed once the CAB matches"),
 			      fu_util_install);
 	fu_util_cmd_array_add(cmd_array,
 			      "local-install",
