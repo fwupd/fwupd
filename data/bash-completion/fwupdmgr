@@ -71,8 +71,16 @@ bios_get_opts=(
 
 bios_set_opts=(
 	'--no-reboot-check'
+	'--json'
 	'--verbose'
 )
+
+_show_file_in_dir()
+{
+	local files
+	files="$(ls 2>/dev/null)"
+	COMPREPLY+=( $(compgen -W "${files}" -- "$cur") )
+}
 
 _show_bios_get_modifiers()
 {
@@ -172,12 +180,17 @@ _fwupdmgr()
 		return 0
 		;;
 	set-bios-setting)
+		if [[ "$prev" = "--json" ]]; then
+			_show_file_in_dir "$prev"
+			return 0
+		fi
+		count=$(($((args)) % 2))
 		#allow setting a single bios attr at a time
-		if [[ "$args" = "2" ]]; then
+		if [[ $count == 0 ]]; then
 			_show_bios_attrs
 		fi
 		#possible values (only works for enumeration though)
-		if [[ "$args" = "3" ]]; then
+		if [[ $count == 1 ]]; then
 			_show_bios_attrs_possible "$prev"
 			return 0
 		fi

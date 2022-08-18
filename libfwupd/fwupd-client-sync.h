@@ -89,8 +89,7 @@ fwupd_client_get_results(FwupdClient *self,
 			 GError **error) G_GNUC_WARN_UNUSED_RESULT;
 gboolean
 fwupd_client_modify_bios_attr(FwupdClient *self,
-			      const gchar *key,
-			      const gchar *value,
+			      GHashTable *settings,
 			      GCancellable *cancellable,
 			      GError **error);
 GPtrArray *

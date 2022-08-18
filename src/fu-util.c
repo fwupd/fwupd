@@ -3391,6 +3391,8 @@ fu_util_security_modify_bios_attr(FuUtilPrivate *priv, FwupdSecurityAttr *attr, 
 {
 	g_autoptr(GString) body = g_string_new(NULL);
 	g_autoptr(GString) title = g_string_new(NULL);
+	g_autoptr(GHashTable) bios_settings =
+	    g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
 
 	g_string_append_printf(title,
 			       "%s: %s",
@@ -3423,11 +3425,10 @@ fu_util_security_modify_bios_attr(FuUtilPrivate *priv, FwupdSecurityAttr *attr, 
 		_("Perform operation?"));
 	if (!fu_util_prompt_for_boolean(FALSE))
 		return TRUE;
-	if (!fwupd_client_modify_bios_attr(priv->client,
-					   fwupd_security_attr_get_bios_attr_id(attr),
-					   fwupd_security_attr_get_bios_attr_target_value(attr),
-					   priv->cancellable,
-					   error))
+	g_hash_table_insert(bios_settings,
+			    g_strdup(fwupd_security_attr_get_bios_attr_id(attr)),
+			    g_strdup(fwupd_security_attr_get_bios_attr_target_value(attr)));
+	if (!fwupd_client_modify_bios_attr(priv->client, bios_settings, priv->cancellable, error))
 		return FALSE;
 
 	/* do not offer to upload the report */
@@ -3865,30 +3866,31 @@ fu_util_show_plugin_warnings(FuUtilPrivate *priv)
 }
 
 static gboolean
-fu_util_set_bios_attr(FuUtilPrivate *priv, gchar **values, GError **error)
+fu_util_set_bios_attr(FuUtilPrivate *priv, gchar **input, GError **error)
 {
-	if (g_strv_length(values) < 2) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_ARGS,
-				    /* TRANSLATORS: error message */
-				    _("Invalid arguments"));
+	g_autoptr(GHashTable) settings = fu_util_bios_attrs_parse_argv(input, error);
+
+	if (settings == NULL)
 		return FALSE;
-	}
-	if (!fwupd_client_modify_bios_attr(priv->client,
-					   values[0],
-					   values[1],
-					   priv->cancellable,
-					   error)) {
-		g_prefix_error(error, "failed to set '%s' using '%s': ", values[0], values[1]);
+
+	if (!fwupd_client_modify_bios_attr(priv->client, settings, priv->cancellable, error)) {
+		g_prefix_error(error, "failed to set BIOS attribute: ");
 		return FALSE;
 	}
 
 	if (!priv->as_json) {
-		/* TRANSLATORS: Configured a BIOS setting to a value */
-		g_autofree gchar *msg =
-		    g_strdup_printf(_("Set BIOS attribute '%s' using '%s'."), values[0], values[1]);
-		g_print("\n%s\n", msg);
+		gpointer key, value;
+		GHashTableIter iter;
+
+		g_hash_table_iter_init(&iter, settings);
+		while (g_hash_table_iter_next(&iter, &key, &value)) {
+			g_autofree gchar *msg =
+			    /* TRANSLATORS: Configured a BIOS setting to a value */
+			    g_strdup_printf(_("Set BIOS attribute '%s' using '%s'."),
+					    (const gchar *)key,
+					    (const gchar *)value);
+			g_print("\n%s\n", msg);
+		}
 	}
 	priv->completion_flags |= FWUPD_DEVICE_FLAG_NEEDS_REBOOT;
 
@@ -4448,9 +4450,9 @@ main(int argc, char *argv[])
 	fu_util_cmd_array_add(cmd_array,
 			      "set-bios-setting",
 			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
-			      _("SETTING VALUE"),
+			      _("SETTING1 VALUE1 [SETTING2] [VALUE2]"),
 			      /* TRANSLATORS: command description */
-			      _("Set a BIOS setting"),
+			      _("Sets one or more BIOS settings"),
 			      fu_util_set_bios_attr);
 
 	/* do stuff on ctrl+c */

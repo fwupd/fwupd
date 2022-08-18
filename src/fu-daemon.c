@@ -386,6 +386,7 @@ typedef struct {
 	gchar *key;
 	gchar *value;
 	XbSilo *silo;
+	GHashTable *bios_settings; /* str:str */
 } FuMainAuthHelper;
 
 static void
@@ -417,6 +418,8 @@ fu_daemon_auth_helper_free(FuMainAuthHelper *helper)
 	g_free(helper->key);
 	g_free(helper->value);
 	g_object_unref(helper->invocation);
+	if (helper->bios_settings != NULL)
+		g_hash_table_unref(helper->bios_settings);
 	g_free(helper);
 }
 
@@ -533,7 +536,7 @@ fu_daemon_authorize_get_bios_attrs_cb(GObject *source, GAsyncResult *res, gpoint
 }
 
 static void
-fu_daemon_authorize_set_bios_attr_cb(GObject *source, GAsyncResult *res, gpointer user_data)
+fu_daemon_authorize_set_bios_attrs_cb(GObject *source, GAsyncResult *res, gpointer user_data)
 {
 	g_autoptr(FuMainAuthHelper) helper = (FuMainAuthHelper *)user_data;
 	g_autoptr(GError) error = NULL;
@@ -554,7 +557,7 @@ fu_daemon_authorize_set_bios_attr_cb(GObject *source, GAsyncResult *res, gpointe
 #endif /* HAVE_POLKIT */
 
 	/* authenticated */
-	if (!fu_engine_modify_bios_attr(helper->self->engine, helper->key, helper->value, &error)) {
+	if (!fu_engine_modify_bios_attrs(helper->self->engine, helper->bios_settings, &error)) {
 		g_dbus_method_invocation_return_gerror(helper->invocation, error);
 		return;
 	}
@@ -2024,15 +2027,17 @@ fu_daemon_daemon_method_call(GDBusConnection *connection,
 		}
 		return;
 	}
-	if (g_strcmp0(method_name, "SetBiosAttr") == 0) {
+	if (g_strcmp0(method_name, "SetBiosAttrs") == 0) {
 		g_autoptr(FuMainAuthHelper) helper = NULL;
+		const gchar *key;
+		const gchar *value;
+		g_autoptr(GVariantIter) iter = NULL;
 #ifdef HAVE_POLKIT
 		g_autoptr(PolkitSubject) subject = NULL;
 #endif
-		const gchar *key = NULL;
-		const gchar *value = NULL;
-		g_variant_get(parameters, "(&s&s)", &key, &value);
-		g_debug("Called %s(%s=%s)", method_name, key, value);
+
+		g_variant_get(parameters, "(a{ss})", &iter);
+		g_debug("Called %s()", method_name);
 
 		/* authenticate */
 		fu_daemon_set_status(self, FWUPD_STATUS_WAITING_FOR_AUTH);
@@ -2040,8 +2045,12 @@ fu_daemon_daemon_method_call(GDBusConnection *connection,
 		helper->self = self;
 		helper->request = g_steal_pointer(&request);
 		helper->invocation = g_object_ref(invocation);
-		helper->key = g_strdup(key);
-		helper->value = g_strdup(value);
+		helper->bios_settings =
+		    g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
+		while (g_variant_iter_next(iter, "{&s&s}", &key, &value)) {
+			g_debug("got setting %s=%s", key, value);
+			g_hash_table_insert(helper->bios_settings, g_strdup(key), g_strdup(value));
+		}
 #ifdef HAVE_POLKIT
 		subject = polkit_system_bus_name_new(sender);
 		polkit_authority_check_authorization(
@@ -2051,10 +2060,10 @@ fu_daemon_daemon_method_call(GDBusConnection *connection,
 		    NULL,
 		    POLKIT_CHECK_AUTHORIZATION_FLAGS_ALLOW_USER_INTERACTION,
 		    NULL,
-		    fu_daemon_authorize_set_bios_attr_cb,
+		    fu_daemon_authorize_set_bios_attrs_cb,
 		    g_steal_pointer(&helper));
 #else
-		fu_daemon_authorize_set_bios_attr_cb(NULL, NULL, g_steal_pointer(&helper));
+		fu_daemon_authorize_set_bios_attrs_cb(NULL, NULL, g_steal_pointer(&helper));
 #endif /* HAVE_POLKIT */
 
 		return;

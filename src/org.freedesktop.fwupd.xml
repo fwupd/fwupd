@@ -866,7 +866,7 @@
     </method>
 
     <!--***********************************************************-->
-    <method name='SetBiosAttr'>
+    <method name='SetBiosAttrs'>
       <doc:doc>
         <doc:description>
           <doc:para>
@@ -874,21 +874,10 @@
           </doc:para>
         </doc:description>
       </doc:doc>
-      <arg type='s' name='key' direction='in'>
+      <arg type='a{ss}' name='settings' direction='in'>
         <doc:doc>
           <doc:summary>
-            <doc:para>
-              The BIOS attribute, e.g. 'CustomChargeStop'.
-            </doc:para>
-          </doc:summary>
-        </doc:doc>
-      </arg>
-      <arg type='s' name='value' direction='in'>
-        <doc:doc>
-          <doc:summary>
-            <doc:para>
-              The value to set the BIOS attribute to
-            </doc:para>
+            <doc:para>An array of BIOS attributes and their new values.</doc:para>
           </doc:summary>
         </doc:doc>
       </arg>

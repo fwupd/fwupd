@@ -221,8 +221,7 @@ fwupd_client_get_results_finish(FwupdClient *self,
 				GError **error) G_GNUC_WARN_UNUSED_RESULT;
 void
 fwupd_client_modify_bios_attr_async(FwupdClient *self,
-				    const gchar *key,
-				    const gchar *value,
+				    GHashTable *settings,
 				    GCancellable *cancellable,
 				    GAsyncReadyCallback callback,
 				    gpointer callback_data);

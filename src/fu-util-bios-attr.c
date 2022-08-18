@@ -10,6 +10,7 @@
 
 #include <glib/gi18n.h>
 
+#include "fu-bios-attrs-private.h"
 #include "fu-util-bios-attr.h"
 #include "fu-util-common.h"
 
@@ -198,4 +199,52 @@ fu_util_bios_attr_to_string(FwupdBiosAttr *attr, guint idt)
 		}
 	}
 	return g_string_free(g_steal_pointer(&str), FALSE);
+}
+
+GHashTable *
+fu_util_bios_attrs_parse_argv(gchar **input, GError **error)
+{
+	g_autoptr(GHashTable) bios_settings =
+	    g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
+
+	if (g_strv_length(input) == 0 || g_strv_length(input) % 2) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_ARGS,
+				    /* TRANSLATORS: error message */
+				    _("Invalid arguments"));
+		return NULL;
+	}
+
+	/* json input */
+	if (g_strv_length(input) == 1) {
+		g_autofree gchar *data = NULL;
+		g_autoptr(JsonParser) parser = json_parser_new();
+		g_autoptr(FuBiosAttrs) new_bios_attrs = fu_bios_attrs_new();
+		g_autoptr(GPtrArray) new_items = NULL;
+
+		if (!g_file_get_contents(input[0], &data, NULL, error))
+			return NULL;
+		if (!json_parser_load_from_data(parser, data, -1, error)) {
+			g_prefix_error(error, "%s doesn't look like JSON data: ", input[0]);
+			return NULL;
+		}
+
+		if (!fu_bios_attrs_from_json(new_bios_attrs, json_parser_get_root(parser), error))
+			return NULL;
+
+		new_items = fu_bios_attrs_get_all(new_bios_attrs);
+		for (guint i = 0; i < new_items->len; i++) {
+			FwupdBiosAttr *item_attr = g_ptr_array_index(new_items, i);
+			g_hash_table_insert(bios_settings,
+					    g_strdup(fwupd_bios_attr_get_id(item_attr)),
+					    g_strdup(fwupd_bios_attr_get_current_value(item_attr)));
+		}
+	} else {
+		for (guint i = 0; i < g_strv_length(input); i += 2)
+			g_hash_table_insert(bios_settings,
+					    g_strdup(input[i]),
+					    g_strdup(input[i + 1]));
+	}
+	return g_steal_pointer(&bios_settings);
 }

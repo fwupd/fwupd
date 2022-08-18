@@ -735,6 +735,11 @@ fu_engine_update_bios_attr(FwupdBiosAttr *attr, const gchar *value, GError **err
 	    g_build_filename(fwupd_bios_attr_get_path(attr), "current_value", NULL);
 	g_autoptr(FuIOChannel) io = NULL;
 
+	if (g_strcmp0(fwupd_bios_attr_get_current_value(attr), value) == 0) {
+		g_debug("%s is already set to %s", fwupd_bios_attr_get_id(attr), value);
+		return TRUE;
+	}
+
 	fd = open(fn, O_WRONLY);
 	if (fd < 0) {
 		g_set_error(error,
@@ -758,6 +763,8 @@ fu_engine_update_bios_attr(FwupdBiosAttr *attr, const gchar *value, GError **err
 				     error))
 		return FALSE;
 	fwupd_bios_attr_set_current_value(attr, value);
+
+	g_debug("set %s to %s", fwupd_bios_attr_get_id(attr), value);
 
 	return TRUE;
 }
@@ -852,29 +859,55 @@ fu_engine_validate_bios_attr_input(FwupdBiosAttr *attr, const gchar **value, GEr
 	return TRUE;
 }
 
-/**
- * fu_engine_modify_bios_attr:
- * @self: a #FuEngine
- * @key: the name of the BIOS attribute, e.g. `SleepMode`
- * @value: the value to set, e.g. 'S3'
- * @error: (nullable): optional return location for an error
- *
- * Use the kernel API to set a BIOS attribute.
- *
- * Returns: %TRUE for success
- **/
-gboolean
-fu_engine_modify_bios_attr(FuEngine *self, const gchar *key, const gchar *value, GError **error)
+static gboolean
+fu_engine_modify_single_bios_attr(FuEngine *self,
+				  const gchar *key,
+				  const gchar *value,
+				  GError **error)
 {
 	FwupdBiosAttr *attr = fu_context_get_bios_attr(self->ctx, key);
-	FwupdBiosAttr *pending;
 	const gchar *tmp = value;
 
 	if (!fu_engine_validate_bios_attr_input(attr, &tmp, error))
 		return FALSE;
 
-	if (!fu_engine_update_bios_attr(attr, tmp, error))
-		return FALSE;
+	return fu_engine_update_bios_attr(attr, tmp, error);
+}
+
+/**
+ * fu_engine_modify_bios_attrs:
+ * @self: a #FuEngine
+ * @settings: Hashtable of settings/values to configure
+ * @error: (nullable): optional return location for an error
+ *
+ * Use the kernel API to set one or more BIOS attributes.
+ *
+ * Returns: %TRUE for success
+ **/
+gboolean
+fu_engine_modify_bios_attrs(FuEngine *self, GHashTable *settings, GError **error)
+{
+	FwupdBiosAttr *pending;
+	GHashTableIter iter;
+	gpointer key, value;
+
+	g_return_val_if_fail(FU_IS_ENGINE(self), FALSE);
+	g_return_val_if_fail(settings != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	g_hash_table_iter_init(&iter, settings);
+	while (g_hash_table_iter_next(&iter, &key, &value)) {
+		if (value == NULL) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_FOUND,
+				    "attribute %s missing value",
+				    (const gchar *)key);
+			return FALSE;
+		}
+		if (!fu_engine_modify_single_bios_attr(self, key, value, error))
+			return FALSE;
+	}
 
 	pending = fu_context_get_bios_attr(self->ctx, FWUPD_BIOS_ATTR_PENDING_REBOOT);
 	if (pending == NULL) {
