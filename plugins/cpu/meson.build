@@ -1,4 +1,4 @@
-if get_option('plugin_cpu').disable_auto_if(host_machine.system() != 'linux').require(get_option('hsi'),
+if get_option('plugin_cpu').disable_auto_if(host_machine.system() != 'linux').require(hsi,
     error_message: 'plugin_cpu needs hsi to be set').allowed()
 cargs = ['-DG_LOG_DOMAIN="FuPluginCpu"']
 

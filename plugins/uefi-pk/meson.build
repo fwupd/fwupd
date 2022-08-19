@@ -1,4 +1,4 @@
-if get_option('hsi') and \
+if hsi and \
    get_option('plugin_uefi_pk').require(gnutls.found(),
    error_message: 'gnutls is needed for plugin_uefi_pk').allowed()
 cargs = ['-DG_LOG_DOMAIN="FuPluginUefiPk"']

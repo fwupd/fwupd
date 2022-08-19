@@ -215,7 +215,9 @@ bluez = get_option('bluez').disable_auto_if(host_machine.system() != 'linux')
 if bluez.allowed()
   conf.set('HAVE_BLUEZ', '1')
 endif
-if get_option('hsi')
+host_cpu = host_machine.cpu_family()
+hsi = get_option('hsi').disable_auto_if(host_machine.system() != 'linux').disable_auto_if(host_cpu != 'x86' and host_cpu != 'x86_64').allowed()
+if hsi
   conf.set('HAVE_HSI', '1')
 endif
 libxmlb = dependency('xmlb', version: '>= 0.1.13', fallback: ['libxmlb', 'libxmlb_dep'])
@@ -313,8 +315,6 @@ offline = get_option('offline').require(libsystemd.found(),
 if offline.allowed()
   conf.set('HAVE_FWUPDOFFLINE', '1')
 endif
-
-host_cpu = host_machine.cpu_family()
 
 if cc.has_header('sys/utsname.h')
   conf.set('HAVE_UTSNAME_H', '1')

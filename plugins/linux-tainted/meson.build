@@ -1,4 +1,4 @@
-if get_option('hsi') and host_machine.system() == 'linux'
+if hsi
 cargs = ['-DG_LOG_DOMAIN="FuPluginLinuxTainted"']
 
 shared_module('fu_plugin_linux_tainted',

@@ -1,6 +1,6 @@
 tpm2tss_tpm = dependency('tss2-esys', version: '>= 2.0', required: get_option('plugin_tpm'))
 
-if get_option('hsi') and \
+if hsi and \
    tpm2tss_tpm.found() and \
    get_option('plugin_tpm').require(gudev.found(),
     error_message: 'gudev is needed for plugin_tpm').allowed()

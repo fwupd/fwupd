@@ -6,7 +6,7 @@ meson ../ \
     -Dcompat_cli=false \
     -Dfish_completion=false \
     -Dfirmware-packager=false \
-    -Dhsi=false \
+    -Dhsi=disabled \
     -Dman=false \
     -Dmetainfo=false \
     -Dtests=false \
