@@ -26,6 +26,16 @@ Flags = elantp-recovery
 [513cde3d-d939-59bd-a634-5c1645ebb93b]
 Flags = elantp-recovery
 
+[I2C\MODALIAS_acpi:ELAN0000:]
+Plugin = elantp
+GType = FuElantpI2cDevice
+ElantpI2cTargetAddress = 0x15
+
+[I2C\MODALIAS_of:NtrackpadT(null)Celan,ekth3000]
+Plugin = elantp
+GType = FuElantpI2cDevice
+ElantpI2cTargetAddress = 0x15
+
 # recovery device
 [I2C\NAME_Synopsys-DesignWare-I2C-adapter]
 Plugin = elantp
