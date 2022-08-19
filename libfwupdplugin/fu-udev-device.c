@@ -517,6 +517,12 @@ fu_udev_device_probe(FuDevice *device, GError **error)
 	fu_device_add_instance_str(device, "DRIVER", priv->driver);
 	fu_device_build_instance_id_quirk(device, NULL, subsystem, "DRIVER", NULL);
 
+	/* add the modalias */
+	fu_device_add_instance_strsafe(device,
+				       "MODALIAS",
+				       g_udev_device_get_property(priv->udev_device, "MODALIAS"));
+	fu_device_build_instance_id_quirk(device, NULL, subsystem, "MODALIAS", NULL);
+
 	/* add subsystem to match in plugins */
 	if (subsystem != NULL) {
 		fu_device_add_instance_id_full(device,
