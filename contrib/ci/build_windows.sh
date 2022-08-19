@@ -41,7 +41,6 @@ meson .. \
     --libexecdir="bin" \
     --bindir="bin" \
     -Dbuild=all \
-    -Dhsi=false \
     -Dman=false \
     -Dfish_completion=false \
     -Dbash_completion=false \

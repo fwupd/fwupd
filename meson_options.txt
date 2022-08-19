@@ -67,4 +67,4 @@ option('bash_completion', type: 'boolean', value : true, description : 'enable b
 option('fish_completion', type: 'boolean', value : true, description : 'enable fish completion')
 option('offline', type: 'feature', description : 'Allow installing firmware using a pre-boot systemd target', deprecated: {'true': 'enabled', 'false': 'disabled'})
 option('compat_cli', type: 'boolean', value : true, description : 'enable legacy commands: fwupdagent,dfu-tool,fwupdate')
-option('hsi', type: 'boolean', value : true, description : 'enable plugins used just for HSI')
+option('hsi', type: 'feature', description : ' Host Security Information', deprecated: {'true': 'enabled', 'false': 'disabled'})

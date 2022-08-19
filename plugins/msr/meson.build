@@ -1,4 +1,4 @@
-if get_option('hsi') and has_cpuid
+if hsi and has_cpuid
 cargs = ['-DG_LOG_DOMAIN="FuPluginMsr"']
 
 plugin_quirks += join_paths(meson.current_source_dir(), 'msr.quirk')

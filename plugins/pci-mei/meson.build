@@ -1,4 +1,4 @@
-if get_option('hsi') and host_machine.system() == 'linux'
+if hsi
 cargs = ['-DG_LOG_DOMAIN="FuPluginPciMei"']
 
 plugin_quirks += join_paths(meson.current_source_dir(), 'pci-mei.quirk')
