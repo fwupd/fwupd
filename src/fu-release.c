@@ -833,7 +833,7 @@ fu_release_load(FuRelease *self,
 			fwupd_release_add_tag(FWUPD_RELEASE(self), xb_node_get_text(tag));
 		}
 	}
-	issues = xb_node_query(component, "issues/issue", 0, NULL);
+	issues = xb_node_query(rel, "issues/issue", 0, NULL);
 	if (issues != NULL) {
 		for (guint i = 0; i < issues->len; i++) {
 			XbNode *n = g_ptr_array_index(issues, i);
