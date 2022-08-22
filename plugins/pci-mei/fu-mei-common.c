@@ -49,15 +49,27 @@ fu_mei_common_cmp_version(FuMeiVersion *vers1, FuMeiVersion *vers2)
 FuMeiIssue
 fu_mei_common_is_csme_vulnerable(FuMeiVersion *vers)
 {
-	if (vers->major == 11 && (vers->minor == 8 || vers->minor == 11 || vers->minor == 22)) {
-		return vers->hotfix >= 70 ? FU_MEI_ISSUE_PATCHED : FU_MEI_ISSUE_VULNERABLE;
-	} else if (vers->major == 12 && vers->minor == 0) {
-		return (vers->hotfix == 49 || vers->hotfix >= 56) ? FU_MEI_ISSUE_PATCHED
-								  : FU_MEI_ISSUE_VULNERABLE;
-	} else if (vers->major == 13 && vers->minor == 0) {
-		return vers->hotfix >= 21 ? FU_MEI_ISSUE_PATCHED : FU_MEI_ISSUE_VULNERABLE;
-	} else if (vers->major == 14 && vers->minor == 0) {
-		return vers->hotfix >= 11 ? FU_MEI_ISSUE_PATCHED : FU_MEI_ISSUE_VULNERABLE;
+	struct {
+		guint8 major_eq;
+		guint8 minor_eq;
+		guint8 hotfix_ge;
+	} verdata[] = {{11, 8, 92},
+		       {11, 12, 92},
+		       {11, 22, 92},
+		       {12, 0, 90},
+		       {13, 0, 60},
+		       {13, 30, 30},
+		       {13, 50, 20},
+		       {14, 1, 65},
+		       {14, 5, 45},
+		       {15, 0, 40},
+		       {15, 40, 20},
+		       {0, 0, 0}};
+	for (guint i = 0; verdata[i].major_eq != 0; i++) {
+		if (vers->major == verdata[i].major_eq && vers->minor == verdata[i].minor_eq) {
+			return vers->hotfix >= verdata[i].hotfix_ge ? FU_MEI_ISSUE_PATCHED
+								    : FU_MEI_ISSUE_VULNERABLE;
+		}
 	}
 	return FU_MEI_ISSUE_NOT_VULNERABLE;
 }
@@ -65,10 +77,17 @@ fu_mei_common_is_csme_vulnerable(FuMeiVersion *vers)
 FuMeiIssue
 fu_mei_common_is_txe_vulnerable(FuMeiVersion *vers)
 {
-	if (vers->major == 3 && vers->minor == 1)
-		return vers->hotfix >= 70 ? FU_MEI_ISSUE_PATCHED : FU_MEI_ISSUE_VULNERABLE;
-	if (vers->major == 4 && vers->minor == 0)
-		return vers->hotfix >= 20 ? FU_MEI_ISSUE_PATCHED : FU_MEI_ISSUE_VULNERABLE;
+	struct {
+		guint8 major_eq;
+		guint8 minor_eq;
+		guint8 hotfix_ge;
+	} verdata[] = {{3, 1, 92}, {4, 0, 45}, {0, 0, 0}};
+	for (guint i = 0; verdata[i].major_eq != 0; i++) {
+		if (vers->major == verdata[i].major_eq && vers->minor == verdata[i].minor_eq) {
+			return vers->hotfix >= verdata[i].hotfix_ge ? FU_MEI_ISSUE_PATCHED
+								    : FU_MEI_ISSUE_VULNERABLE;
+		}
+	}
 	return FU_MEI_ISSUE_NOT_VULNERABLE;
 }
 
