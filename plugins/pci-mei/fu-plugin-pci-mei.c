@@ -78,7 +78,7 @@ fu_mei_detect_family(FuPlugin *plugin)
 		return FU_MEI_FAMILY_TXE;
 	if (ver == 6 || ver == 7 || ver == 8 || ver == 9 || ver == 10)
 		return FU_MEI_FAMILY_ME;
-	if (ver == 11 || ver == 12 || ver == 13 || ver == 14 || ver == 15)
+	if (ver == 11 || ver == 12 || ver == 13 || ver == 14 || ver == 15 || ver == 16)
 		return FU_MEI_FAMILY_CSME;
 	return FU_MEI_FAMILY_UNKNOWN;
 }
