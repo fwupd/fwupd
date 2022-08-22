@@ -317,10 +317,7 @@ static GVariant *
 fu_daemon_plugin_array_to_variant(GPtrArray *plugins)
 {
 	GVariantBuilder builder;
-
-	g_return_val_if_fail(plugins->len > 0, NULL);
-	g_variant_builder_init(&builder, G_VARIANT_TYPE_ARRAY);
-
+	g_variant_builder_init(&builder, G_VARIANT_TYPE("aa{sv}"));
 	for (guint i = 0; i < plugins->len; i++) {
 		FuDevice *plugin = g_ptr_array_index(plugins, i);
 		GVariant *tmp = fwupd_plugin_to_variant(FWUPD_PLUGIN(plugin));
@@ -333,8 +330,7 @@ static GVariant *
 fu_daemon_release_array_to_variant(GPtrArray *results)
 {
 	GVariantBuilder builder;
-	g_return_val_if_fail(results->len > 0, NULL);
-	g_variant_builder_init(&builder, G_VARIANT_TYPE_ARRAY);
+	g_variant_builder_init(&builder, G_VARIANT_TYPE("aa{sv}"));
 	for (guint i = 0; i < results->len; i++) {
 		FwupdRelease *rel = g_ptr_array_index(results, i);
 		GVariant *tmp = fwupd_release_to_variant(rel);
@@ -347,8 +343,7 @@ static GVariant *
 fu_daemon_remote_array_to_variant(GPtrArray *remotes)
 {
 	GVariantBuilder builder;
-	g_return_val_if_fail(remotes->len > 0, NULL);
-	g_variant_builder_init(&builder, G_VARIANT_TYPE_ARRAY);
+	g_variant_builder_init(&builder, G_VARIANT_TYPE("aa{sv}"));
 	for (guint i = 0; i < remotes->len; i++) {
 		FwupdRemote *remote = g_ptr_array_index(remotes, i);
 		GVariant *tmp = fwupd_remote_to_variant(remote);
