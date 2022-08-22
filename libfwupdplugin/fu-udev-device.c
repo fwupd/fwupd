@@ -325,6 +325,21 @@ fu_udev_device_probe_serio(FuUdevDevice *self, GError **error)
 	return TRUE;
 }
 
+static guint16
+fu_udev_device_get_property_as_uint16(GUdevDevice *udev_device, const gchar *key)
+{
+	const gchar *tmp = g_udev_device_get_property(udev_device, key);
+	guint64 value = 0;
+	g_autofree gchar *str = NULL;
+
+	if (tmp == NULL)
+		return 0x0;
+	str = g_strdup_printf("0x%s", tmp);
+	if (!fu_strtoull(str, &value, 0x0, G_MAXUINT16, NULL))
+		return 0x0;
+	return (guint16)value;
+}
+
 static void
 fu_udev_device_set_vendor_from_udev_device(FuUdevDevice *self, GUdevDevice *udev_device)
 {
@@ -336,6 +351,14 @@ fu_udev_device_set_vendor_from_udev_device(FuUdevDevice *self, GUdevDevice *udev
 	    fu_udev_device_get_sysfs_attr_as_uint16(udev_device, "subsystem_vendor");
 	priv->subsystem_model =
 	    fu_udev_device_get_sysfs_attr_as_uint16(udev_device, "subsystem_device");
+
+	/* fallback to properties as udev might be using a subsystem-specific prober */
+	if (priv->vendor == 0x0)
+		priv->vendor = fu_udev_device_get_property_as_uint16(udev_device, "ID_VENDOR_ID");
+	if (priv->model == 0x0)
+		priv->model = fu_udev_device_get_property_as_uint16(udev_device, "ID_MODEL_ID");
+	if (priv->revision == 0x0)
+		priv->revision = fu_udev_device_get_property_as_uint16(udev_device, "ID_REVISION");
 }
 
 static void
