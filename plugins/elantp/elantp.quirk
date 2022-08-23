@@ -26,15 +26,19 @@ Flags = elantp-recovery
 [513cde3d-d939-59bd-a634-5c1645ebb93b]
 Flags = elantp-recovery
 
+# absolute report device on ACPI
 [I2C\MODALIAS_acpi:ELAN0000:]
 Plugin = elantp
 GType = FuElantpI2cDevice
 ElantpI2cTargetAddress = 0x15
+Flags = elantp-absolute
 
+# absolute report device on Device Tree
 [I2C\MODALIAS_of:NtrackpadT(null)Celan,ekth3000]
 Plugin = elantp
 GType = FuElantpI2cDevice
 ElantpI2cTargetAddress = 0x15
+Flags = elantp-absolute
 
 # recovery device
 [I2C\NAME_Synopsys-DesignWare-I2C-adapter]

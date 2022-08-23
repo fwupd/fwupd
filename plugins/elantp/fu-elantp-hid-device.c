@@ -247,10 +247,12 @@ fu_elantp_hid_device_setup(FuDevice *device, GError **error)
 		ic_type = (tmp >> 8) & 0xFF;
 	}
 
-	/* define the extra instance IDs (ic_type + module_id) */
+	/* define the extra instance IDs (ic_type + module_id + driver) */
 	fu_device_add_instance_u8(device, "ICTYPE", ic_type);
 	fu_device_build_instance_id(device, NULL, "ELANTP", "ICTYPE", NULL);
 	fu_device_build_instance_id(device, NULL, "ELANTP", "ICTYPE", "MOD", NULL);
+	fu_device_add_instance_str(device, "DRIVER", "HID");
+	fu_device_build_instance_id(device, NULL, "ELANTP", "ICTYPE", "MOD", "DRIVER", NULL);
 
 	/* no quirk entry */
 	if (self->ic_page_count == 0x0) {

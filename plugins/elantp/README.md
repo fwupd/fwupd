@@ -3,7 +3,8 @@
 ## Introduction
 
 This plugin allows updating Touchpad devices from Elan. Devices are enumerated
-using HID and raw I²C nodes. The I²C mode is used for firmware recovery.
+using HID and raw I²C nodes. The I²C mode is used for ABS devices and firmware
+recovery of HID devices.
 
 ## Firmware Format
 
@@ -32,16 +33,24 @@ These devices also use custom GUID values for the IC configuration, e.g.
 
 * `ELANTP\ICTYPE_09&MOD_1234`
 
+ Additionally another instance ID is added which corresponds to the IC Type & module ID and Driver in order to distinguish HID/ABS devices:
+
+* `ELANTP\ICTYPE_09&MOD_1234&DRIVER_HID` -> HID Device
+* `ELANTP\ICTYPE_09&MOD_1234&DRIVER_ELAN_I2C` -> ABS Device
+
 ## Update Behavior
 
-The device usually presents in HID mode, and the firmware is written to the
+The device usually presents in HID/ABS mode, and the firmware is written to the
 device by switching to a IAP mode where the touchpad is nonfunctional.
 Once complete the device is reset to get out of IAP mode and to load the new
 firmware version.
 
-On flash failure the device is nonfunctional, but is recoverable by writing
-to the i2c device. This is typically much slower than updating the device
-using HID and also requires a model-specific HWID quirk to match.
+For HID devices, on flash failure the device is nonfunctional, but is recoverable
+by writing to the i2c device. This is typically much slower than updating the
+device using HID and also requires a model-specific HWID quirk to match.
+
+For ABS devices, on flash failure the device is nonfunctional, but it could be
+recovered by the same i2c device.
 
 ## Vendor ID Security
 
