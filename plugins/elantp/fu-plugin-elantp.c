@@ -16,7 +16,8 @@ static gboolean
 fu_plugin_elantp_device_created(FuPlugin *plugin, FuDevice *dev, GError **error)
 {
 	if (fu_device_get_specialized_gtype(dev) == FU_TYPE_ELANTP_I2C_DEVICE &&
-	    !fu_context_has_hwid_flag(fu_plugin_get_context(plugin), "elantp-recovery")) {
+	    !fu_context_has_hwid_flag(fu_plugin_get_context(plugin), "elantp-recovery") &&
+	    !fu_device_has_private_flag(dev, FU_ELANTP_I2C_DEVICE_ABSOLUTE)) {
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "not required");
 		return FALSE;
 	}
@@ -34,6 +35,7 @@ fu_plugin_elantp_load(FuContext *ctx)
 static void
 fu_plugin_elantp_init(FuPlugin *plugin)
 {
+	fu_plugin_add_udev_subsystem(plugin, "i2c");
 	fu_plugin_add_udev_subsystem(plugin, "i2c-dev");
 	fu_plugin_add_udev_subsystem(plugin, "hidraw");
 	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_ELANTP_FIRMWARE);

@@ -8,6 +8,7 @@
 
 #include <fwupdplugin.h>
 
+#include <fcntl.h>
 #include <linux/i2c-dev.h>
 
 #include "fu-elantp-common.h"
@@ -24,6 +25,8 @@ struct _FuElantpI2cDevice {
 	guint16 module_id;
 	guint16 fw_page_size;
 	guint8 pattern;
+	gchar *bind_path;
+	gchar *bind_id;
 };
 
 G_DEFINE_TYPE(FuElantpI2cDevice, fu_elantp_i2c_device, FU_TYPE_UDEV_DEVICE)
@@ -44,12 +47,106 @@ fu_elantp_i2c_device_to_string(FuDevice *device, guint idt, GString *str)
 	fu_string_append_kx(str, idt, "IcPageCount", self->ic_page_count);
 	fu_string_append_kx(str, idt, "IapType", self->iap_type);
 	fu_string_append_kx(str, idt, "IapCtrl", self->iap_ctrl);
+	fu_string_append(str, idt, "BindPath", self->bind_path);
+	fu_string_append(str, idt, "BindId", self->bind_id);
+}
+
+static gboolean
+fu_elantp_i2c_device_writeln(const gchar *fn, const gchar *buf, GError **error)
+{
+	int fd;
+	g_autoptr(FuIOChannel) io = NULL;
+
+	if (!g_file_test(fn, G_FILE_TEST_EXISTS)) {
+		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE, "%s does not exist", fn);
+		return FALSE;
+	}
+
+	fd = open(fn, O_WRONLY);
+	if (fd < 0) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_PERMISSION_DENIED,
+			    "could not open %s",
+			    fn);
+		return FALSE;
+	}
+
+	io = fu_io_channel_unix_new(fd);
+	return fu_io_channel_write_raw(io,
+				       (const guint8 *)buf,
+				       strlen(buf),
+				       1000,
+				       FU_IO_CHANNEL_FLAG_NONE,
+				       error);
+}
+
+static gboolean
+fu_elantp_i2c_device_rebind_driver(FuElantpI2cDevice *self, GError **error)
+{
+	if (self->bind_path == NULL || self->bind_id == NULL) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "no Path or ID for rebind driver");
+		return FALSE;
+	}
+
+	if (!fu_elantp_i2c_device_writeln(g_build_filename(self->bind_path, "unbind", NULL),
+					  self->bind_id,
+					  error))
+		return FALSE;
+	if (!fu_elantp_i2c_device_writeln(g_build_filename(self->bind_path, "bind", NULL),
+					  self->bind_id,
+					  error))
+		return FALSE;
+
+	g_debug("rebind driver of %s", self->bind_id);
+	return TRUE;
 }
 
 static gboolean
 fu_elantp_i2c_device_probe(FuDevice *device, GError **error)
 {
+	FuElantpI2cDevice *self = FU_ELANTP_I2C_DEVICE(device);
+
 	/* check is valid */
+	if (g_strcmp0(fu_udev_device_get_subsystem(FU_UDEV_DEVICE(device)), "i2c") == 0) {
+		g_autoptr(GPtrArray) i2c_buses = NULL;
+		FuUdevDevice *i2c_device =
+		    fu_udev_device_get_parent_with_subsystem(FU_UDEV_DEVICE(device), "i2c");
+		if (i2c_device == NULL) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "did not find the i2c parent for device");
+			return FALSE;
+		}
+
+		i2c_buses = fu_udev_device_get_children_with_subsystem(i2c_device, "i2c-dev");
+		if (i2c_buses->len == 1) {
+			FuUdevDevice *bus_device = g_object_ref(g_ptr_array_index(i2c_buses, 0));
+			if (bus_device == NULL) {
+				g_set_error(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
+					    "did not find the i2c-dev children for device");
+				return FALSE;
+			}
+
+			g_debug("Found I2C bus at %s, using this device",
+				fu_udev_device_get_sysfs_path(bus_device));
+			self->bind_path =
+			    g_build_filename("/sys/bus/i2c/drivers",
+					     fu_udev_device_get_driver(FU_UDEV_DEVICE(device)),
+					     NULL);
+			self->bind_id = g_path_get_basename(
+			    fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(device)));
+			fu_udev_device_set_dev(FU_UDEV_DEVICE(device),
+					       fu_udev_device_get_dev(bus_device));
+		}
+	}
+
 	if (g_strcmp0(fu_udev_device_get_subsystem(FU_UDEV_DEVICE(device)), "i2c-dev") != 0) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -266,10 +363,17 @@ fu_elantp_i2c_device_setup(FuDevice *device, GError **error)
 		ic_type = (tmp >> 8) & 0xFF;
 	}
 
-	/* define the extra instance IDs (ic_type + module_id) */
+	/* define the extra instance IDs (ic_type + module_id + driver) */
 	fu_device_add_instance_u8(device, "ICTYPE", ic_type);
 	fu_device_build_instance_id(device, NULL, "ELANTP", "ICTYPE", NULL);
 	fu_device_build_instance_id(device, NULL, "ELANTP", "ICTYPE", "MOD", NULL);
+	if (fu_device_has_private_flag(device, FU_ELANTP_I2C_DEVICE_ABSOLUTE)) {
+		fu_device_add_instance_str(device, "DRIVER", "ELAN_I2C");
+	} else {
+		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
+		fu_device_add_instance_str(device, "DRIVER", "HID");
+	}
+	fu_device_build_instance_id(device, NULL, "ELANTP", "ICTYPE", "MOD", "DRIVER", NULL);
 
 	/* no quirk entry */
 	if (self->ic_page_count == 0x0) {
@@ -620,12 +724,34 @@ fu_elantp_i2c_device_attach(FuDevice *device, FuProgress *progress, GError **err
 		g_prefix_error(error, "cannot enable TP report: ");
 		return FALSE;
 	}
-	if (!fu_elantp_i2c_device_write_cmd(self, 0x0306, 0x003, error)) {
-		g_prefix_error(error, "cannot switch to TP PTP mode: ");
-		return FALSE;
-	}
+
 	if (!fu_elantp_i2c_device_ensure_iap_ctrl(self, error))
 		return FALSE;
+
+	if (fu_device_has_private_flag(device, FU_ELANTP_I2C_DEVICE_ABSOLUTE)) {
+		g_autoptr(GError) error_local = NULL;
+
+		if (!fu_elantp_i2c_device_write_cmd(self, 0x0300, 0x001, error)) {
+			g_prefix_error(error, "cannot switch to TP ABS mode: ");
+			return FALSE;
+		}
+
+		if (!fu_elantp_i2c_device_rebind_driver(self, &error_local)) {
+			if (g_error_matches(error_local,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_PERMISSION_DENIED)) {
+				g_debug("%s", error_local->message);
+			} else {
+				g_propagate_error(error, g_steal_pointer(&error_local));
+				return FALSE;
+			}
+		}
+	} else {
+		if (!fu_elantp_i2c_device_write_cmd(self, 0x0306, 0x003, error)) {
+			g_prefix_error(error, "cannot switch to TP PTP mode: ");
+			return FALSE;
+		}
+	}
 
 	/* success */
 	return TRUE;
@@ -678,18 +804,23 @@ fu_elantp_i2c_device_init(FuElantpI2cDevice *self)
 {
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
-	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
-	fu_device_set_summary(FU_DEVICE(self), "Touchpad (I²C recovery)");
+	fu_device_set_summary(FU_DEVICE(self), "Touchpad (I²C)");
 	fu_device_add_icon(FU_DEVICE(self), "input-touchpad");
 	fu_device_add_protocol(FU_DEVICE(self), "tw.com.emc.elantp");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_HEX);
 	fu_udev_device_set_flags(FU_UDEV_DEVICE(self),
 				 FU_UDEV_DEVICE_FLAG_OPEN_READ | FU_UDEV_DEVICE_FLAG_OPEN_WRITE);
+	fu_device_register_private_flag(FU_DEVICE(self),
+					FU_ELANTP_I2C_DEVICE_ABSOLUTE,
+					"elantp-absolute");
 }
 
 static void
 fu_elantp_i2c_device_finalize(GObject *object)
 {
+	FuElantpI2cDevice *self = FU_ELANTP_I2C_DEVICE(object);
+	g_free(self->bind_path);
+	g_free(self->bind_id);
 	G_OBJECT_CLASS(fu_elantp_i2c_device_parent_class)->finalize(object);
 }
 
