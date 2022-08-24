@@ -64,11 +64,18 @@ def parse_args():
     )
     parser.add_argument(
         "command",
-        choices=["get-devices", "get-details", "install", "refresh"],
+        choices=[
+            "get-devices",
+            "get-details",
+            "install",
+            "refresh",
+            "get-bios-setting",
+        ],
         help="What to do",
     )
     parser.add_argument("cab", nargs="?", help="CAB file")
     parser.add_argument("deviceid", nargs="?", help="DeviceID to operate on(optional)")
+    parser.add_argument("--setting", help="BIOS setting to operate on(optional)")
     args = parser.parse_args()
     return args
 
@@ -97,6 +104,14 @@ def get_details(client, cab):
     devices = client.get_details(cab, None)
     for device in devices:
         print(device.to_string())
+
+
+def get_bios_settings(client, setting):
+    """Use fwupd client to get BIOS settings"""
+    settings = client.get_bios_settings()
+    for i in settings:
+        if not setting or setting == i.get_name() or setting == i.get_id():
+            print(i.to_string())
 
 
 def status_changed(client, spec, progress):  # pylint: disable=unused-argument
@@ -188,3 +203,5 @@ if __name__ == "__main__":
     elif ARGS.command == "install":
         check_exists(ARGS.cab)
         install(CLIENT, ARGS.cab, ARGS.deviceid, ARGS.allow_older, ARGS.allow_reinstall)
+    elif ARGS.command == "get-bios-setting":
+        get_bios_settings(CLIENT, ARGS.setting)
