@@ -892,7 +892,7 @@ fu_engine_modify_single_bios_setting(FuEngine *self,
 gboolean
 fu_engine_modify_bios_settings(FuEngine *self, GHashTable *settings, GError **error)
 {
-	FwupdBiosSetting *pending;
+	g_autoptr(FuBiosSettings) bios_settings = fu_context_get_bios_settings(self->ctx);
 	gboolean changed = FALSE;
 	GHashTableIter iter;
 	gpointer key, value;
@@ -931,16 +931,9 @@ fu_engine_modify_bios_settings(FuEngine *self, GHashTable *settings, GError **er
 		return FALSE;
 	}
 
-	pending = fu_context_get_bios_setting(self->ctx, FWUPD_BIOS_SETTING_PENDING_REBOOT);
-	if (pending == NULL) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_FOUND,
-			    "attribute %s not found",
-			    FWUPD_BIOS_SETTING_PENDING_REBOOT);
+	if (!fu_bios_settings_get_pending_reboot(bios_settings, &changed, error))
 		return FALSE;
-	}
-	fwupd_bios_setting_set_current_value(pending, "1");
+	g_debug("pending_reboot is now %d", changed);
 	return TRUE;
 }
 
