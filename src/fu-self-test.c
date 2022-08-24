@@ -4512,26 +4512,26 @@ fu_engine_modify_bios_settings_func(void)
 	g_assert_nonnull(current);
 
 	g_hash_table_insert(bios_settings, g_strdup("Absolute"), g_strdup("Disabled"));
-	ret = fu_engine_modify_bios_settings(engine, bios_settings, &error);
+	ret = fu_engine_modify_bios_settings(engine, bios_settings, FALSE, &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO);
 	g_assert_false(ret);
 	g_clear_error(&error);
 
 	g_hash_table_remove_all(bios_settings);
 	g_hash_table_insert(bios_settings, g_strdup("Absolute"), g_strdup("Enabled"));
-	ret = fu_engine_modify_bios_settings(engine, bios_settings, &error);
+	ret = fu_engine_modify_bios_settings(engine, bios_settings, FALSE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
 	g_hash_table_remove_all(bios_settings);
 	g_hash_table_insert(bios_settings, g_strdup("Absolute"), g_strdup("off"));
-	ret = fu_engine_modify_bios_settings(engine, bios_settings, &error);
+	ret = fu_engine_modify_bios_settings(engine, bios_settings, FALSE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
 	g_hash_table_remove_all(bios_settings);
 	g_hash_table_insert(bios_settings, g_strdup("Absolute"), g_strdup("FOO"));
-	ret = fu_engine_modify_bios_settings(engine, bios_settings, &error);
+	ret = fu_engine_modify_bios_settings(engine, bios_settings, FALSE, &error);
 	g_assert_false(ret);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
 	g_clear_error(&error);
@@ -4539,7 +4539,7 @@ fu_engine_modify_bios_settings_func(void)
 	/* use BiosSettingId instead */
 	g_hash_table_remove_all(bios_settings);
 	g_hash_table_insert(bios_settings, g_strdup("com.fwupd-internal.Absolute"), g_strdup("on"));
-	ret = fu_engine_modify_bios_settings(engine, bios_settings, &error);
+	ret = fu_engine_modify_bios_settings(engine, bios_settings, FALSE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -4547,7 +4547,7 @@ fu_engine_modify_bios_settings_func(void)
 	g_hash_table_insert(bios_settings,
 			    g_strdup("com.fwupd-internal.Absolute"),
 			    g_strdup("off"));
-	ret = fu_engine_modify_bios_settings(engine, bios_settings, &error);
+	ret = fu_engine_modify_bios_settings(engine, bios_settings, FALSE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -4561,13 +4561,13 @@ fu_engine_modify_bios_settings_func(void)
 
 	g_hash_table_remove_all(bios_settings);
 	g_hash_table_insert(bios_settings, g_strdup("Asset"), g_strdup("0"));
-	ret = fu_engine_modify_bios_settings(engine, bios_settings, &error);
+	ret = fu_engine_modify_bios_settings(engine, bios_settings, FALSE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
 	g_hash_table_remove_all(bios_settings);
 	g_hash_table_insert(bios_settings, g_strdup("Asset"), g_strdup("1"));
-	ret = fu_engine_modify_bios_settings(engine, bios_settings, &error);
+	ret = fu_engine_modify_bios_settings(engine, bios_settings, FALSE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -4576,7 +4576,7 @@ fu_engine_modify_bios_settings_func(void)
 	    bios_settings,
 	    g_strdup("Absolute"),
 	    g_strdup("1234567891123456789112345678911234567891123456789112345678911111"));
-	ret = fu_engine_modify_bios_settings(engine, bios_settings, &error);
+	ret = fu_engine_modify_bios_settings(engine, bios_settings, FALSE, &error);
 	g_assert_false(ret);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
 	g_clear_error(&error);
@@ -4591,26 +4591,27 @@ fu_engine_modify_bios_settings_func(void)
 
 	g_hash_table_remove_all(bios_settings);
 	g_hash_table_insert(bios_settings, g_strdup("CustomChargeStop"), g_strdup("75"));
-	ret = fu_engine_modify_bios_settings(engine, bios_settings, &error);
+	ret = fu_engine_modify_bios_settings(engine, bios_settings, FALSE, &error);
 	g_assert_true(ret);
 
 	g_hash_table_remove_all(bios_settings);
 	g_hash_table_insert(bios_settings, g_strdup("CustomChargeStop"), g_strdup("110"));
-	ret = fu_engine_modify_bios_settings(engine, bios_settings, &error);
+	ret = fu_engine_modify_bios_settings(engine, bios_settings, FALSE, &error);
 	g_assert_false(ret);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
 	g_clear_error(&error);
 
 	g_hash_table_remove_all(bios_settings);
 	g_hash_table_insert(bios_settings, g_strdup("CustomChargeStop"), g_strdup("1"));
-	ret = fu_engine_modify_bios_settings(engine, bios_settings, &error);
+	ret = fu_engine_modify_bios_settings(engine, bios_settings, FALSE, &error);
 	g_assert_false(ret);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
 	g_clear_error(&error);
 
+	/* force it to read only */
 	g_hash_table_remove_all(bios_settings);
 	g_hash_table_insert(bios_settings, g_strdup("CustomChargeStop"), g_strdup("70"));
-	ret = fu_engine_modify_bios_settings(engine, bios_settings, &error);
+	ret = fu_engine_modify_bios_settings(engine, bios_settings, TRUE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -4624,7 +4625,14 @@ fu_engine_modify_bios_settings_func(void)
 
 	g_hash_table_remove_all(bios_settings);
 	g_hash_table_insert(bios_settings, g_strdup("pending_reboot"), g_strdup("foo"));
-	ret = fu_engine_modify_bios_settings(engine, bios_settings, &error);
+	ret = fu_engine_modify_bios_settings(engine, bios_settings, FALSE, &error);
+	g_assert_false(ret);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
+	g_clear_error(&error);
+
+	g_hash_table_remove_all(bios_settings);
+	g_hash_table_insert(bios_settings, g_strdup("CustomChargeStop"), g_strdup("80"));
+	ret = fu_engine_modify_bios_settings(engine, bios_settings, FALSE, &error);
 	g_assert_false(ret);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
 	g_clear_error(&error);

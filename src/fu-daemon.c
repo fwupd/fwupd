@@ -557,7 +557,10 @@ fu_daemon_authorize_set_bios_settings_cb(GObject *source, GAsyncResult *res, gpo
 #endif /* HAVE_POLKIT */
 
 	/* authenticated */
-	if (!fu_engine_modify_bios_settings(helper->self->engine, helper->bios_settings, &error)) {
+	if (!fu_engine_modify_bios_settings(helper->self->engine,
+					    helper->bios_settings,
+					    FALSE,
+					    &error)) {
 		g_dbus_method_invocation_return_gerror(helper->invocation, error);
 		return;
 	}

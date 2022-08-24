@@ -728,12 +728,18 @@ fu_engine_modify_remote(FuEngine *self,
 }
 
 static gboolean
-fu_engine_update_bios_setting(FwupdBiosSetting *attr, const gchar *value, GError **error)
+fu_engine_update_bios_setting(FwupdBiosSetting *attr,
+			      const gchar *value,
+			      gboolean force_ro,
+			      GError **error)
 {
 	int fd;
 	g_autofree gchar *fn =
 	    g_build_filename(fwupd_bios_setting_get_path(attr), "current_value", NULL);
 	g_autoptr(FuIOChannel) io = NULL;
+
+	if (force_ro)
+		fwupd_bios_setting_set_read_only(attr, TRUE);
 
 	if (g_strcmp0(fwupd_bios_setting_get_current_value(attr), value) == 0) {
 		g_set_error(error,
@@ -868,6 +874,7 @@ static gboolean
 fu_engine_modify_single_bios_setting(FuEngine *self,
 				     const gchar *key,
 				     const gchar *value,
+				     gboolean force_ro,
 				     GError **error)
 {
 	FwupdBiosSetting *attr = fu_context_get_bios_setting(self->ctx, key);
@@ -876,13 +883,14 @@ fu_engine_modify_single_bios_setting(FuEngine *self,
 	if (!fu_engine_validate_bios_setting_input(attr, &tmp, error))
 		return FALSE;
 
-	return fu_engine_update_bios_setting(attr, tmp, error);
+	return fu_engine_update_bios_setting(attr, tmp, force_ro, error);
 }
 
 /**
  * fu_engine_modify_bios_settings:
  * @self: a #FuEngine
  * @settings: Hashtable of settings/values to configure
+ * @force_ro: a #gboolean indicating if BIOS settings should also be made read-only
  * @error: (nullable): optional return location for an error
  *
  * Use the kernel API to set one or more BIOS settings.
@@ -890,7 +898,10 @@ fu_engine_modify_single_bios_setting(FuEngine *self,
  * Returns: %TRUE for success
  **/
 gboolean
-fu_engine_modify_bios_settings(FuEngine *self, GHashTable *settings, GError **error)
+fu_engine_modify_bios_settings(FuEngine *self,
+			       GHashTable *settings,
+			       gboolean force_ro,
+			       GError **error)
 {
 	g_autoptr(FuBiosSettings) bios_settings = fu_context_get_bios_settings(self->ctx);
 	gboolean changed = FALSE;
@@ -912,7 +923,11 @@ fu_engine_modify_bios_settings(FuEngine *self, GHashTable *settings, GError **er
 				    (const gchar *)key);
 			return FALSE;
 		}
-		if (!fu_engine_modify_single_bios_setting(self, key, value, &error_local)) {
+		if (!fu_engine_modify_single_bios_setting(self,
+							  key,
+							  value,
+							  force_ro,
+							  &error_local)) {
 			if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO)) {
 				g_debug("%s", error_local->message);
 				continue;
@@ -6520,29 +6535,6 @@ fu_engine_security_attrs_from_json(FuEngine *self, JsonNode *json_node, GError *
 }
 
 static gboolean
-fu_engine_bios_settings_from_json(FuEngine *self, JsonNode *json_node, GError **error)
-{
-	JsonObject *obj;
-	g_autoptr(FuBiosSettings) bios_settings = fu_context_get_bios_settings(self->ctx);
-
-	/* sanity check */
-	if (!JSON_NODE_HOLDS_OBJECT(json_node)) {
-		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA, "not JSON object");
-		return FALSE;
-	}
-
-	/* not supplied */
-	obj = json_node_get_object(json_node);
-	if (!json_object_has_member(obj, "BiosSettings"))
-		return TRUE;
-	if (!fu_bios_settings_from_json(bios_settings, json_node, error))
-		return FALSE;
-
-	/* success */
-	return TRUE;
-}
-
-static gboolean
 fu_engine_devices_from_json(FuEngine *self, JsonNode *json_node, GError **error)
 {
 	JsonArray *array;
@@ -6585,6 +6577,7 @@ fu_engine_load_host_emulation(FuEngine *self, const gchar *fn, GError **error)
 	g_autoptr(GInputStream) istream_json = NULL;
 	g_autoptr(GInputStream) istream_raw = NULL;
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FuBiosSettings) bios_settings = fu_context_get_bios_settings(self->ctx);
 
 	/* add an attr so we know this is emulated and do not offer to upload results */
 	attr = fwupd_security_attr_new(FWUPD_SECURITY_ATTR_ID_HOST_EMULATION);
@@ -6610,7 +6603,7 @@ fu_engine_load_host_emulation(FuEngine *self, const gchar *fn, GError **error)
 		return FALSE;
 	if (!fu_engine_security_attrs_from_json(self, json_parser_get_root(parser), error))
 		return FALSE;
-	if (!fu_engine_bios_settings_from_json(self, json_parser_get_root(parser), error))
+	if (!fu_bios_settings_from_json(bios_settings, json_parser_get_root(parser), error))
 		return FALSE;
 
 #ifdef HAVE_HSI
@@ -6896,6 +6889,34 @@ fu_engine_cleanup_state(GError **error)
 	return TRUE;
 }
 
+static gboolean
+fu_engine_apply_default_bios_settings_policy(FuEngine *self, GError **error)
+{
+	const gchar *tmp;
+	g_autofree gchar *base = fu_path_from_kind(FU_PATH_KIND_SYSCONFDIR_PKG);
+	g_autofree gchar *dirname = g_build_filename(base, "bios-settings.d", NULL);
+	g_autofree gchar *data = NULL;
+	g_autoptr(FuBiosSettings) new_bios_settings = fu_bios_settings_new();
+	g_autoptr(GHashTable) hashtable = NULL;
+	g_autoptr(GDir) dir = NULL;
+
+	if (!g_file_test(dirname, G_FILE_TEST_EXISTS))
+		return TRUE;
+
+	dir = g_dir_open(dirname, 0, error);
+	while ((tmp = g_dir_read_name(dir)) != NULL) {
+		g_autofree gchar *fn = NULL;
+		if (g_strcmp0(tmp, "README.md") == 0)
+			continue;
+		fn = g_build_filename(dirname, tmp, NULL);
+		g_debug("Loading default BIOS settings policy from %s", fn);
+		if (!fu_bios_settings_from_json_file(new_bios_settings, fn, error))
+			return FALSE;
+	}
+	hashtable = fu_bios_settings_to_hash_kv(new_bios_settings);
+	return fu_engine_modify_bios_settings(self, hashtable, TRUE, error);
+}
+
 static void
 fu_engine_check_firmware_attributes(FuEngine *self, FuDevice *device)
 {
@@ -6908,8 +6929,14 @@ fu_engine_check_firmware_attributes(FuEngine *self, FuDevice *device)
 	subsystem = fu_udev_device_get_subsystem(FU_UDEV_DEVICE(device));
 	if (g_strcmp0(subsystem, "firmware-attributes") == 0) {
 		g_autoptr(GError) error = NULL;
-		if (!fu_context_reload_bios_settings(self->ctx, &error))
+		if (!fu_context_reload_bios_settings(self->ctx, &error)) {
 			g_debug("%s", error->message);
+			return;
+		}
+		if (!fu_engine_apply_default_bios_settings_policy(self, &error)) {
+			g_warning("Failed to apply BIOS settings policy: %s", error->message);
+			return;
+		}
 	}
 }
 
