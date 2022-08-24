@@ -45,6 +45,7 @@ content_files = [
   "env.md",
   "tutorial.md",
   "hsi.md",
+  "bios-settings.md",
 ]
 content_images = [
   "architecture-plan.svg",
