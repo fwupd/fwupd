@@ -206,8 +206,7 @@ fu_util_bios_setting_to_string(FwupdBiosSetting *setting, guint idt)
 GHashTable *
 fu_util_bios_settings_parse_argv(gchar **input, GError **error)
 {
-	g_autoptr(GHashTable) bios_settings =
-	    g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
+	GHashTable *bios_settings;
 
 	if (g_strv_length(input) == 0 || g_strv_length(input) % 2) {
 		g_set_error_literal(error,
@@ -220,36 +219,17 @@ fu_util_bios_settings_parse_argv(gchar **input, GError **error)
 
 	/* json input */
 	if (g_strv_length(input) == 1) {
-		g_autofree gchar *data = NULL;
-		g_autoptr(JsonParser) parser = json_parser_new();
 		g_autoptr(FuBiosSettings) new_bios_settings = fu_bios_settings_new();
-		g_autoptr(GPtrArray) new_items = NULL;
 
-		if (!g_file_get_contents(input[0], &data, NULL, error))
-			return NULL;
-		if (!json_parser_load_from_data(parser, data, -1, error)) {
-			g_prefix_error(error, "%s doesn't look like JSON data: ", input[0]);
-			return NULL;
-		}
-
-		if (!fu_bios_settings_from_json(new_bios_settings,
-						json_parser_get_root(parser),
-						error))
+		if (!fu_bios_settings_from_json_file(new_bios_settings, input[0], error))
 			return NULL;
 
-		new_items = fu_bios_settings_get_all(new_bios_settings);
-		for (guint i = 0; i < new_items->len; i++) {
-			FwupdBiosSetting *item_setting = g_ptr_array_index(new_items, i);
-			g_hash_table_insert(
-			    bios_settings,
-			    g_strdup(fwupd_bios_setting_get_id(item_setting)),
-			    g_strdup(fwupd_bios_setting_get_current_value(item_setting)));
-		}
-	} else {
-		for (guint i = 0; i < g_strv_length(input); i += 2)
-			g_hash_table_insert(bios_settings,
-					    g_strdup(input[i]),
-					    g_strdup(input[i + 1]));
+		return fu_bios_settings_to_hash_kv(new_bios_settings);
 	}
-	return g_steal_pointer(&bios_settings);
+
+	bios_settings = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
+	for (guint i = 0; i < g_strv_length(input); i += 2)
+		g_hash_table_insert(bios_settings, g_strdup(input[i]), g_strdup(input[i + 1]));
+
+	return bios_settings;
 }

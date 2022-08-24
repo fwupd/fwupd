@@ -20,3 +20,7 @@ GVariant *
 fu_bios_settings_to_variant(FuBiosSettings *self, gboolean trusted);
 gboolean
 fu_bios_settings_from_json(FuBiosSettings *self, JsonNode *json_node, GError **error);
+gboolean
+fu_bios_settings_from_json_file(FuBiosSettings *self, const gchar *fn, GError **error);
+GHashTable *
+fu_bios_settings_to_hash_kv(FuBiosSettings *self);

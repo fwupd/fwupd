@@ -1072,12 +1072,14 @@ LIBFWUPDPLUGIN_1.8.4 {
   global:
     fu_backend_add_string;
     fu_bios_settings_from_json;
+    fu_bios_settings_from_json_file;
     fu_bios_settings_get_all;
     fu_bios_settings_get_attr;
     fu_bios_settings_get_pending_reboot;
     fu_bios_settings_get_type;
     fu_bios_settings_new;
     fu_bios_settings_setup;
+    fu_bios_settings_to_hash_kv;
     fu_bios_settings_to_variant;
     fu_context_get_bios_setting;
     fu_context_get_bios_setting_pending_reboot;

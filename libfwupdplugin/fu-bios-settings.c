@@ -574,6 +574,8 @@ fu_bios_settings_to_variant(FuBiosSettings *self, gboolean trusted)
 /**
  * fu_bios_settings_from_json:
  * @self: a #FuBiosSettings
+ * @json_node: a Json node to parse from
+ * @error: (nullable): optional return location for an error
  *
  * Loads #FwupdBiosSetting objects from a JSON node.
  *
@@ -613,6 +615,60 @@ fu_bios_settings_from_json(FuBiosSettings *self, JsonNode *json_node, GError **e
 
 	/* success */
 	return TRUE;
+}
+
+/**
+ * fu_bios_settings_from_json_file:
+ * @self: A #FuBiosSettings
+ * @fn: a path to a JSON file
+ * @error: (nullable): optional return location for an error
+ *
+ * Adds all BIOS attributes from a JSON filename
+ *
+ * Returns: TRUE for success, FALSE for failure
+ *
+ * Since: 1.8.4
+ **/
+gboolean
+fu_bios_settings_from_json_file(FuBiosSettings *self, const gchar *fn, GError **error)
+{
+	g_autofree gchar *data = NULL;
+	g_autoptr(JsonParser) parser = json_parser_new();
+
+	if (!g_file_get_contents(fn, &data, NULL, error))
+		return FALSE;
+	if (!json_parser_load_from_data(parser, data, -1, error)) {
+		g_prefix_error(error, "%s doesn't look like JSON data: ", fn);
+		return FALSE;
+	}
+	return fu_bios_settings_from_json(self, json_parser_get_root(parser), error);
+}
+
+/**
+ * fu_bios_settings_to_hash_kv:
+ * @self: A #FuBiosSettings
+ *
+ * Creates a #GHashTable with the name and current value of
+ * all BIOS settings.
+ *
+ * Returns: (transfer full): name/value pairs
+ * Since: 1.8.4
+ **/
+GHashTable *
+fu_bios_settings_to_hash_kv(FuBiosSettings *self)
+{
+	GHashTable *bios_settings = NULL;
+
+	g_return_val_if_fail(self != NULL, NULL);
+
+	bios_settings = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
+	for (guint i = 0; i < self->attrs->len; i++) {
+		FwupdBiosSetting *item_setting = g_ptr_array_index(self->attrs, i);
+		g_hash_table_insert(bios_settings,
+				    g_strdup(fwupd_bios_setting_get_id(item_setting)),
+				    g_strdup(fwupd_bios_setting_get_current_value(item_setting)));
+	}
+	return bios_settings;
 }
 
 /**
