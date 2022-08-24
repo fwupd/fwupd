@@ -13,6 +13,26 @@ struct FuPluginData {
 	GFileMonitor *monitor;
 };
 
+#define KERNEL_TAINT_FLAG_PROPRIETARY_MODULE	      (1 << 0)
+#define KERNEL_TAINT_FLAG_MODULE_FORCE_LOAD	      (1 << 1)
+#define KERNEL_TAINT_FLAG_KERNEL_OUT_OF_SPEC	      (1 << 2)
+#define KERNEL_TAINT_FLAG_MODULE_FORCE_UNLOAD	      (1 << 3)
+#define KERNEL_TAINT_FLAG_PROCESSOR_MCE		      (1 << 4)
+#define KERNEL_TAINT_FLAG_BAD_PAGE		      (1 << 5)
+#define KERNEL_TAINT_FLAG_REQUESTED_BY_USERSPACE      (1 << 6)
+#define KERNEL_TAINT_FLAG_KERNEL_DIED		      (1 << 7)
+#define KERNEL_TAINT_FLAG_ACPI_OVERRIDDEN	      (1 << 8)
+#define KERNEL_TAINT_FLAG_KERNEL_ISSUED_WARNING	      (1 << 9)
+#define KERNEL_TAINT_FLAG_STAGING_DRIVER_LOADED	      (1 << 10)
+#define KERNEL_TAINT_FLAG_FIRMWARE_WORKAROUND_APPLIED (1 << 11)
+#define KERNEL_TAINT_FLAG_EXTERNAL_MODULE_LOADED      (1 << 12)
+#define KERNEL_TAINT_FLAG_UNSIGNED_MODULE_LOADED      (1 << 13)
+#define KERNEL_TAINT_FLAG_SOFT_LOCKUP_OCCURRED	      (1 << 14)
+#define KERNEL_TAINT_FLAG_KERNEL_LIVE_PATCHED	      (1 << 15)
+#define KERNEL_TAINT_FLAG_AUXILIARY_TAINT	      (1 << 16)
+#define KERNEL_TAINT_FLAG_STRUCT_RANDOMIZATION_PLUGIN (1 << 17)
+#define KERNEL_TAINT_FLAG_IN_KERNEL_TEST	      (1 << 18)
+
 static void
 fu_plugin_linux_tainted_init(FuPlugin *plugin)
 {
@@ -68,7 +88,9 @@ fu_plugin_linux_tainted_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *at
 {
 	FuPluginData *priv = fu_plugin_get_data(plugin);
 	gsize bufsz = 0;
+	guint64 value = 0;
 	g_autofree gchar *buf = NULL;
+	g_autofree gchar *str = NULL;
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
 	g_autoptr(GError) error_local = NULL;
 
@@ -89,7 +111,24 @@ fu_plugin_linux_tainted_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *at
 		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
 		return;
 	}
-	if (g_strcmp0(buf, "0\n") != 0) {
+
+	/* do not assume NUL terminated */
+	str = g_strndup(buf, bufsz);
+	if (!fu_strtoull(str, &value, 0, G_MAXUINT64, &error_local)) {
+		g_warning("could not parse %s: %s", str, error_local->message);
+		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
+		return;
+	}
+
+	/* only some taint flags are important */
+	if ((value & KERNEL_TAINT_FLAG_PROPRIETARY_MODULE) > 0 ||
+	    (value & KERNEL_TAINT_FLAG_MODULE_FORCE_LOAD) > 0 ||
+	    (value & KERNEL_TAINT_FLAG_MODULE_FORCE_UNLOAD) > 0 ||
+	    (value & KERNEL_TAINT_FLAG_STAGING_DRIVER_LOADED) > 0 ||
+	    (value & KERNEL_TAINT_FLAG_EXTERNAL_MODULE_LOADED) > 0 ||
+	    (value & KERNEL_TAINT_FLAG_UNSIGNED_MODULE_LOADED) > 0 ||
+	    (value & KERNEL_TAINT_FLAG_ACPI_OVERRIDDEN) > 0 ||
+	    (value & KERNEL_TAINT_FLAG_AUXILIARY_TAINT) > 0) {
 		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_TAINTED);
 		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_OS);
 		return;
