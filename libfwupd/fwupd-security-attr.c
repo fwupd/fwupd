@@ -679,6 +679,13 @@ fwupd_security_attr_set_result(FwupdSecurityAttr *self, FwupdSecurityAttrResult 
 {
 	FwupdSecurityAttrPrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FWUPD_IS_SECURITY_ATTR(self));
+
+	/* fixup any legacy attributes to the 'modern' value */
+	if (g_strcmp0(priv->appstream_id, FWUPD_SECURITY_ATTR_ID_ENCRYPTED_RAM) == 0 &&
+	    result == FWUPD_SECURITY_ATTR_RESULT_NOT_ENCRYPTED) {
+		result = FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED;
+	}
+
 	priv->result = result;
 }
 
