@@ -21,7 +21,7 @@ G_DEFINE_TYPE_WITH_PRIVATE(FuSecurityAttr, fu_security_attr, FWUPD_TYPE_SECURITY
 /**
  * fu_security_attr_add_bios_target_value:
  * @attr: a #FwupdSecurityAttr
- * @id: a #FwupdBiosAttr ID or name
+ * @id: a #FwupdBiosSetting ID or name
  * @needle: The substring of a target value
  *
  * Checks all configured possible values of an enumeration attribute and
@@ -36,26 +36,26 @@ fu_security_attr_add_bios_target_value(FwupdSecurityAttr *attr,
 {
 	FuSecurityAttr *self = FU_SECURITY_ATTR(attr);
 	FuSecurityAttrPrivate *priv = GET_PRIVATE(self);
-	FwupdBiosAttr *bios_attr;
+	FwupdBiosSetting *bios_setting;
 	GPtrArray *values;
 
-	bios_attr = fu_context_get_bios_attr(priv->ctx, id);
-	if (bios_attr == NULL)
+	bios_setting = fu_context_get_bios_setting(priv->ctx, id);
+	if (bios_setting == NULL)
 		return;
-	fwupd_security_attr_set_bios_attr_id(attr, fwupd_bios_attr_get_id(bios_attr));
-	fwupd_security_attr_set_bios_attr_current_value(
+	fwupd_security_attr_set_bios_setting_id(attr, fwupd_bios_setting_get_id(bios_setting));
+	fwupd_security_attr_set_bios_setting_current_value(
 	    attr,
-	    fwupd_bios_attr_get_current_value(bios_attr));
-	if (fwupd_bios_attr_get_kind(bios_attr) != FWUPD_BIOS_ATTR_KIND_ENUMERATION)
+	    fwupd_bios_setting_get_current_value(bios_setting));
+	if (fwupd_bios_setting_get_kind(bios_setting) != FWUPD_BIOS_SETTING_KIND_ENUMERATION)
 		return;
-	if (fwupd_bios_attr_get_read_only(bios_attr))
+	if (fwupd_bios_setting_get_read_only(bios_setting))
 		return;
-	values = fwupd_bios_attr_get_possible_values(bios_attr);
+	values = fwupd_bios_setting_get_possible_values(bios_setting);
 	for (guint i = 0; i < values->len; i++) {
 		const gchar *possible = g_ptr_array_index(values, i);
 		g_autofree gchar *lower = g_utf8_strdown(possible, -1);
 		if (g_strrstr(lower, needle)) {
-			fwupd_security_attr_set_bios_attr_target_value(attr, possible);
+			fwupd_security_attr_set_bios_setting_target_value(attr, possible);
 			return;
 		}
 	}

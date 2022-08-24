@@ -23,7 +23,7 @@ install_headers([
     'fwupd-error.h',
     'fwupd-remote.h',
     'fwupd-request.h',
-    'fwupd-bios-attr.h',
+    'fwupd-bios-setting.h',
     'fwupd-security-attr.h',
     'fwupd-release.h',
     'fwupd-plugin.h',
@@ -47,7 +47,7 @@ libfwupd_src = [
   'fwupd-device.c',         # fuzzing
   'fwupd-enums.c',          # fuzzing
   'fwupd-error.c',          # fuzzing
-  'fwupd-bios-attr.c',      # fuzzing
+  'fwupd-bios-setting.c',      # fuzzing
   'fwupd-security-attr.c',  # fuzzing
   'fwupd-release.c',        # fuzzing
   'fwupd-plugin.c',
@@ -113,9 +113,9 @@ if introspection.allowed()
       'fwupd-enums-private.h',
       'fwupd-error.c',
       'fwupd-error.h',
-      'fwupd-bios-attr.c',
-      'fwupd-bios-attr.h',
-      'fwupd-bios-attr-private.h',
+      'fwupd-bios-setting.c',
+      'fwupd-bios-setting.h',
+      'fwupd-bios-setting-private.h',
       'fwupd-security-attr.c',
       'fwupd-security-attr.h',
       'fwupd-security-attr-private.h',

@@ -30,7 +30,7 @@
 #include "fu-plugin-private.h"
 #include "fu-polkit-agent.h"
 #include "fu-progressbar.h"
-#include "fu-util-bios-attr.h"
+#include "fu-util-bios-setting.h"
 #include "fu-util-common.h"
 
 #ifdef HAVE_SYSTEMD
@@ -3387,7 +3387,7 @@ fu_util_sync_bkc(FuUtilPrivate *priv, gchar **values, GError **error)
 }
 
 static gboolean
-fu_util_security_modify_bios_attr(FuUtilPrivate *priv, FwupdSecurityAttr *attr, GError **error)
+fu_util_security_modify_bios_setting(FuUtilPrivate *priv, FwupdSecurityAttr *attr, GError **error)
 {
 	g_autoptr(GString) body = g_string_new(NULL);
 	g_autoptr(GString) title = g_string_new(NULL);
@@ -3408,9 +3408,9 @@ fu_util_security_modify_bios_attr(FuUtilPrivate *priv, FwupdSecurityAttr *attr, 
 			       _("This tool can change the BIOS setting '%s' from '%s' to '%s' "
 				 "automatically, but it will only be active after restarting the "
 				 "computer."),
-			       fwupd_security_attr_get_bios_attr_id(attr),
-			       fwupd_security_attr_get_bios_attr_current_value(attr),
-			       fwupd_security_attr_get_bios_attr_target_value(attr));
+			       fwupd_security_attr_get_bios_setting_id(attr),
+			       fwupd_security_attr_get_bios_setting_current_value(attr),
+			       fwupd_security_attr_get_bios_setting_target_value(attr));
 	g_string_append(body, "\n\n");
 	g_string_append_printf(body,
 			       /* TRANSLATORS: the user has to manually recover; we can't do it */
@@ -3426,9 +3426,12 @@ fu_util_security_modify_bios_attr(FuUtilPrivate *priv, FwupdSecurityAttr *attr, 
 	if (!fu_util_prompt_for_boolean(FALSE))
 		return TRUE;
 	g_hash_table_insert(bios_settings,
-			    g_strdup(fwupd_security_attr_get_bios_attr_id(attr)),
-			    g_strdup(fwupd_security_attr_get_bios_attr_target_value(attr)));
-	if (!fwupd_client_modify_bios_attr(priv->client, bios_settings, priv->cancellable, error))
+			    g_strdup(fwupd_security_attr_get_bios_setting_id(attr)),
+			    g_strdup(fwupd_security_attr_get_bios_setting_target_value(attr)));
+	if (!fwupd_client_modify_bios_setting(priv->client,
+					      bios_settings,
+					      priv->cancellable,
+					      error))
 		return FALSE;
 
 	/* do not offer to upload the report */
@@ -3534,10 +3537,10 @@ fu_util_security(FuUtilPrivate *priv, gchar **values, GError **error)
 	for (guint j = 0; j < attrs->len; j++) {
 		FwupdSecurityAttr *attr = g_ptr_array_index(attrs, j);
 		if (!fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS) &&
-		    fwupd_security_attr_get_bios_attr_id(attr) != NULL &&
-		    fwupd_security_attr_get_bios_attr_current_value(attr) != NULL &&
-		    fwupd_security_attr_get_bios_attr_target_value(attr) != NULL) {
-			if (!fu_util_security_modify_bios_attr(priv, attr, error))
+		    fwupd_security_attr_get_bios_setting_id(attr) != NULL &&
+		    fwupd_security_attr_get_bios_setting_current_value(attr) != NULL &&
+		    fwupd_security_attr_get_bios_setting_target_value(attr) != NULL) {
+			if (!fu_util_security_modify_bios_setting(priv, attr, error))
 				return FALSE;
 		}
 	}
@@ -3866,15 +3869,15 @@ fu_util_show_plugin_warnings(FuUtilPrivate *priv)
 }
 
 static gboolean
-fu_util_set_bios_attr(FuUtilPrivate *priv, gchar **input, GError **error)
+fu_util_set_bios_setting(FuUtilPrivate *priv, gchar **input, GError **error)
 {
-	g_autoptr(GHashTable) settings = fu_util_bios_attrs_parse_argv(input, error);
+	g_autoptr(GHashTable) settings = fu_util_bios_settings_parse_argv(input, error);
 
 	if (settings == NULL)
 		return FALSE;
 
-	if (!fwupd_client_modify_bios_attr(priv->client, settings, priv->cancellable, error)) {
-		g_prefix_error(error, "failed to set BIOS attribute: ");
+	if (!fwupd_client_modify_bios_setting(priv->client, settings, priv->cancellable, error)) {
+		g_prefix_error(error, "failed to set BIOS setting: ");
 		return FALSE;
 	}
 
@@ -3886,7 +3889,7 @@ fu_util_set_bios_attr(FuUtilPrivate *priv, gchar **input, GError **error)
 		while (g_hash_table_iter_next(&iter, &key, &value)) {
 			g_autofree gchar *msg =
 			    /* TRANSLATORS: Configured a BIOS setting to a value */
-			    g_strdup_printf(_("Set BIOS attribute '%s' using '%s'."),
+			    g_strdup_printf(_("Set BIOS setting '%s' using '%s'."),
 					    (const gchar *)key,
 					    (const gchar *)value);
 			g_print("\n%s\n", msg);
@@ -3903,21 +3906,21 @@ fu_util_set_bios_attr(FuUtilPrivate *priv, gchar **input, GError **error)
 }
 
 static gboolean
-fu_util_get_bios_attr(FuUtilPrivate *priv, gchar **values, GError **error)
+fu_util_get_bios_setting(FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(GPtrArray) attrs = NULL;
 	gboolean found = FALSE;
 
-	attrs = fwupd_client_get_bios_attrs(priv->client, priv->cancellable, error);
+	attrs = fwupd_client_get_bios_settings(priv->client, priv->cancellable, error);
 	if (attrs == NULL)
 		return FALSE;
 	if (priv->as_json)
-		return fu_util_get_bios_attr_as_json(values, attrs, error);
+		return fu_util_get_bios_setting_as_json(values, attrs, error);
 
 	for (guint i = 0; i < attrs->len; i++) {
-		FwupdBiosAttr *attr = g_ptr_array_index(attrs, i);
-		if (fu_util_bios_attr_matches_args(attr, values)) {
-			g_autofree gchar *tmp = fu_util_bios_attr_to_string(attr, 0);
+		FwupdBiosSetting *attr = g_ptr_array_index(attrs, i);
+		if (fu_util_bios_setting_matches_args(attr, values)) {
+			g_autofree gchar *tmp = fu_util_bios_setting_to_string(attr, 0);
 			g_print("\n%s\n", tmp);
 			found = TRUE;
 		}
@@ -4446,14 +4449,14 @@ main(int argc, char *argv[])
 	    _("[SETTING1] [SETTING2] [--no-authenticate]"),
 	    /* TRANSLATORS: command description */
 	    _("Retrieve BIOS settings.  If no arguments are passed all settings are returned"),
-	    fu_util_get_bios_attr);
+	    fu_util_get_bios_setting);
 	fu_util_cmd_array_add(cmd_array,
 			      "set-bios-setting",
 			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
 			      _("SETTING1 VALUE1 [SETTING2] [VALUE2]"),
 			      /* TRANSLATORS: command description */
 			      _("Sets one or more BIOS settings"),
-			      fu_util_set_bios_attr);
+			      fu_util_set_bios_setting);
 
 	/* do stuff on ctrl+c */
 	priv->cancellable = g_cancellable_new();

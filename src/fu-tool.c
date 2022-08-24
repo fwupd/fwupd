@@ -21,12 +21,12 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#include "fwupd-bios-attr-private.h"
+#include "fwupd-bios-setting-private.h"
 #include "fwupd-common-private.h"
 #include "fwupd-device-private.h"
 #include "fwupd-plugin-private.h"
 
-#include "fu-bios-attrs-private.h"
+#include "fu-bios-settings-private.h"
 #include "fu-cabinet.h"
 #include "fu-context-private.h"
 #include "fu-debug.h"
@@ -39,7 +39,7 @@
 #include "fu-security-attr-common.h"
 #include "fu-security-attrs-private.h"
 #include "fu-smbios-private.h"
-#include "fu-util-bios-attr.h"
+#include "fu-util-bios-setting.h"
 #include "fu-util-common.h"
 
 #ifdef HAVE_SYSTEMD
@@ -3224,9 +3224,9 @@ fu_util_switch_branch(FuUtilPrivate *priv, gchar **values, GError **error)
 }
 
 static gboolean
-fu_util_set_bios_attr(FuUtilPrivate *priv, gchar **input, GError **error)
+fu_util_set_bios_setting(FuUtilPrivate *priv, gchar **input, GError **error)
 {
-	g_autoptr(GHashTable) settings = fu_util_bios_attrs_parse_argv(input, error);
+	g_autoptr(GHashTable) settings = fu_util_bios_settings_parse_argv(input, error);
 
 	if (settings == NULL)
 		return FALSE;
@@ -3237,8 +3237,8 @@ fu_util_set_bios_attr(FuUtilPrivate *priv, gchar **input, GError **error)
 				  error))
 		return FALSE;
 
-	if (!fu_engine_modify_bios_attrs(priv->engine, settings, error)) {
-		g_prefix_error(error, "failed to set BIOS attribute: ");
+	if (!fu_engine_modify_bios_settings(priv->engine, settings, error)) {
+		g_prefix_error(error, "failed to set BIOS setting: ");
 		return FALSE;
 	}
 
@@ -3250,7 +3250,7 @@ fu_util_set_bios_attr(FuUtilPrivate *priv, gchar **input, GError **error)
 		while (g_hash_table_iter_next(&iter, &key, &value)) {
 			g_autofree gchar *msg =
 			    /* TRANSLATORS: Configured a BIOS setting to a value */
-			    g_strdup_printf(_("Set BIOS attribute '%s' using '%s'."),
+			    g_strdup_printf(_("Set BIOS setting '%s' using '%s'."),
 					    (const gchar *)key,
 					    (const gchar *)value);
 			g_print("\n%s\n", msg);
@@ -3267,9 +3267,9 @@ fu_util_set_bios_attr(FuUtilPrivate *priv, gchar **input, GError **error)
 }
 
 static gboolean
-fu_util_get_bios_attr(FuUtilPrivate *priv, gchar **values, GError **error)
+fu_util_get_bios_setting(FuUtilPrivate *priv, gchar **values, GError **error)
 {
-	g_autoptr(FuBiosAttrs) attrs = NULL;
+	g_autoptr(FuBiosSettings) attrs = NULL;
 	g_autoptr(GPtrArray) items = NULL;
 	FuContext *ctx = fu_engine_get_context(priv->engine);
 	gboolean found = FALSE;
@@ -3281,15 +3281,15 @@ fu_util_get_bios_attr(FuUtilPrivate *priv, gchar **values, GError **error)
 				  error))
 		return FALSE;
 
-	attrs = fu_context_get_bios_attrs(ctx);
-	items = fu_bios_attrs_get_all(attrs);
+	attrs = fu_context_get_bios_settings(ctx);
+	items = fu_bios_settings_get_all(attrs);
 	if (priv->as_json)
-		return fu_util_get_bios_attr_as_json(values, items, error);
+		return fu_util_get_bios_setting_as_json(values, items, error);
 
 	for (guint i = 0; i < items->len; i++) {
-		FwupdBiosAttr *attr = g_ptr_array_index(items, i);
-		if (fu_util_bios_attr_matches_args(attr, values)) {
-			g_autofree gchar *tmp = fu_util_bios_attr_to_string(attr, 0);
+		FwupdBiosSetting *attr = g_ptr_array_index(items, i);
+		if (fu_util_bios_setting_matches_args(attr, values)) {
+			g_autofree gchar *tmp = fu_util_bios_setting_to_string(attr, 0);
 			g_print("%s\n", tmp);
 			found = TRUE;
 		}
@@ -3848,14 +3848,14 @@ main(int argc, char *argv[])
 	    _("[SETTING1] [ SETTING2]..."),
 	    /* TRANSLATORS: command description */
 	    _("Retrieve BIOS settings.  If no arguments are passed all settings are returned"),
-	    fu_util_get_bios_attr);
+	    fu_util_get_bios_setting);
 	fu_util_cmd_array_add(cmd_array,
 			      "set-bios-setting",
 			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
 			      _("SETTING VALUE"),
 			      /* TRANSLATORS: command description */
 			      _("Set a BIOS setting"),
-			      fu_util_set_bios_attr);
+			      fu_util_set_bios_setting);
 
 	/* do stuff on ctrl+c */
 	priv->cancellable = g_cancellable_new();

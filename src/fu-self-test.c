@@ -13,10 +13,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "fwupd-bios-attr-private.h"
+#include "fwupd-bios-setting-private.h"
 #include "fwupd-security-attr-private.h"
 
-#include "fu-bios-attrs-private.h"
+#include "fu-bios-settings-private.h"
 #include "fu-cabinet-common.h"
 #include "fu-config.h"
 #include "fu-context-private.h"
@@ -4475,18 +4475,18 @@ fu_common_store_cab_error_wrong_checksum_func(void)
 }
 
 static void
-fu_engine_modify_bios_attrs_func(void)
+fu_engine_modify_bios_settings_func(void)
 {
 	gboolean ret;
 	const gchar *current;
-	FwupdBiosAttr *attr1;
-	FwupdBiosAttr *attr2;
-	FwupdBiosAttr *attr3;
-	FwupdBiosAttr *attr4;
+	FwupdBiosSetting *attr1;
+	FwupdBiosSetting *attr2;
+	FwupdBiosSetting *attr3;
+	FwupdBiosSetting *attr4;
 	g_autofree gchar *test_dir = NULL;
 	g_autoptr(FuEngine) engine = fu_engine_new();
 	g_autoptr(GError) error = NULL;
-	g_autoptr(FuBiosAttrs) attrs = NULL;
+	g_autoptr(FuBiosSettings) attrs = NULL;
 	g_autoptr(GPtrArray) items = NULL;
 	g_autoptr(GHashTable) bios_settings =
 	    g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
@@ -4495,59 +4495,60 @@ fu_engine_modify_bios_attrs_func(void)
 	test_dir = g_test_build_filename(G_TEST_DIST, "tests", "bios-attrs", NULL);
 	(void)g_setenv("FWUPD_SYSFSFWATTRIBDIR", test_dir, TRUE);
 
-	ret = fu_context_reload_bios_attrs(fu_engine_get_context(engine), &error);
+	ret = fu_context_reload_bios_settings(fu_engine_get_context(engine), &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
-	attrs = fu_context_get_bios_attrs(fu_engine_get_context(engine));
-	items = fu_bios_attrs_get_all(attrs);
+	attrs = fu_context_get_bios_settings(fu_engine_get_context(engine));
+	items = fu_bios_settings_get_all(attrs);
 	g_assert_cmpint(items->len, ==, 4);
 
 	/* enumeration */
-	attr1 =
-	    fu_context_get_bios_attr(fu_engine_get_context(engine), "com.fwupd-internal.Absolute");
+	attr1 = fu_context_get_bios_setting(fu_engine_get_context(engine),
+					    "com.fwupd-internal.Absolute");
 	g_assert_nonnull(attr1);
 
-	current = fwupd_bios_attr_get_current_value(attr1);
+	current = fwupd_bios_setting_get_current_value(attr1);
 	g_assert_nonnull(current);
 
 	g_hash_table_insert(bios_settings, g_strdup("Absolute"), g_strdup("Disabled"));
-	ret = fu_engine_modify_bios_attrs(engine, bios_settings, &error);
+	ret = fu_engine_modify_bios_settings(engine, bios_settings, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
 	g_hash_table_remove_all(bios_settings);
 	g_hash_table_insert(bios_settings, g_strdup("Absolute"), g_strdup("off"));
-	ret = fu_engine_modify_bios_attrs(engine, bios_settings, &error);
+	ret = fu_engine_modify_bios_settings(engine, bios_settings, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
 	g_hash_table_remove_all(bios_settings);
 	g_hash_table_insert(bios_settings, g_strdup("Absolute"), g_strdup("FOO"));
-	ret = fu_engine_modify_bios_attrs(engine, bios_settings, &error);
+	ret = fu_engine_modify_bios_settings(engine, bios_settings, &error);
 	g_assert_false(ret);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
 	g_clear_error(&error);
 
-	/* use BiosAttrId instead */
+	/* use BiosSettingId instead */
 	g_hash_table_remove_all(bios_settings);
 	g_hash_table_insert(bios_settings,
 			    g_strdup("com.fwupd-internal.Absolute"),
 			    g_strdup(current));
-	ret = fu_engine_modify_bios_attrs(engine, bios_settings, &error);
+	ret = fu_engine_modify_bios_settings(engine, bios_settings, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
 	/* string */
-	attr2 = fu_context_get_bios_attr(fu_engine_get_context(engine), "com.fwupd-internal.Asset");
+	attr2 =
+	    fu_context_get_bios_setting(fu_engine_get_context(engine), "com.fwupd-internal.Asset");
 	g_assert_nonnull(attr2);
 
-	current = fwupd_bios_attr_get_current_value(attr2);
+	current = fwupd_bios_setting_get_current_value(attr2);
 	g_assert_nonnull(current);
 
 	g_hash_table_remove_all(bios_settings);
 	g_hash_table_insert(bios_settings, g_strdup("Asset"), g_strdup("1"));
-	ret = fu_engine_modify_bios_attrs(engine, bios_settings, &error);
+	ret = fu_engine_modify_bios_settings(engine, bios_settings, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -4556,55 +4557,55 @@ fu_engine_modify_bios_attrs_func(void)
 	    bios_settings,
 	    g_strdup("Absolute"),
 	    g_strdup("1234567891123456789112345678911234567891123456789112345678911111"));
-	ret = fu_engine_modify_bios_attrs(engine, bios_settings, &error);
+	ret = fu_engine_modify_bios_settings(engine, bios_settings, &error);
 	g_assert_false(ret);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
 	g_clear_error(&error);
 
 	/* integer */
-	attr3 = fu_context_get_bios_attr(fu_engine_get_context(engine),
-					 "com.fwupd-internal.CustomChargeStop");
+	attr3 = fu_context_get_bios_setting(fu_engine_get_context(engine),
+					    "com.fwupd-internal.CustomChargeStop");
 	g_assert_nonnull(attr3);
 
-	current = fwupd_bios_attr_get_current_value(attr3);
+	current = fwupd_bios_setting_get_current_value(attr3);
 	g_assert_nonnull(current);
 
 	g_hash_table_remove_all(bios_settings);
 	g_hash_table_insert(bios_settings, g_strdup("CustomChargeStop"), g_strdup("70"));
-	ret = fu_engine_modify_bios_attrs(engine, bios_settings, &error);
+	ret = fu_engine_modify_bios_settings(engine, bios_settings, &error);
 	g_assert_true(ret);
 
 	g_hash_table_remove_all(bios_settings);
 	g_hash_table_insert(bios_settings, g_strdup("CustomChargeStop"), g_strdup("110"));
-	ret = fu_engine_modify_bios_attrs(engine, bios_settings, &error);
+	ret = fu_engine_modify_bios_settings(engine, bios_settings, &error);
 	g_assert_false(ret);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
 	g_clear_error(&error);
 
 	g_hash_table_remove_all(bios_settings);
 	g_hash_table_insert(bios_settings, g_strdup("CustomChargeStop"), g_strdup("1"));
-	ret = fu_engine_modify_bios_attrs(engine, bios_settings, &error);
+	ret = fu_engine_modify_bios_settings(engine, bios_settings, &error);
 	g_assert_false(ret);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
 	g_clear_error(&error);
 
 	g_hash_table_remove_all(bios_settings);
 	g_hash_table_insert(bios_settings, g_strdup("CustomChargeStop"), g_strdup(current));
-	ret = fu_engine_modify_bios_attrs(engine, bios_settings, &error);
+	ret = fu_engine_modify_bios_settings(engine, bios_settings, &error);
 	g_assert_true(ret);
 	g_assert_no_error(error);
 
 	/* Read Only */
-	attr4 = fu_context_get_bios_attr(fu_engine_get_context(engine),
-					 "com.fwupd-internal.pending_reboot");
+	attr4 = fu_context_get_bios_setting(fu_engine_get_context(engine),
+					    "com.fwupd-internal.pending_reboot");
 	g_assert_nonnull(attr4);
 
-	current = fwupd_bios_attr_get_current_value(attr4);
+	current = fwupd_bios_setting_get_current_value(attr4);
 	g_assert_nonnull(current);
 
 	g_hash_table_remove_all(bios_settings);
 	g_hash_table_insert(bios_settings, g_strdup("pending_reboot"), g_strdup("foo"));
-	ret = fu_engine_modify_bios_attrs(engine, bios_settings, &error);
+	ret = fu_engine_modify_bios_settings(engine, bios_settings, &error);
 	g_assert_false(ret);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
 	g_clear_error(&error);
@@ -4793,6 +4794,6 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/common{cab-error-missing-file}",
 			fu_common_store_cab_error_missing_file_func);
 	g_test_add_func("/fwupd/common{cab-error-size}", fu_common_store_cab_error_size_func);
-	g_test_add_func("/fwupd/write-bios-attrs", fu_engine_modify_bios_attrs_func);
+	g_test_add_func("/fwupd/write-bios-attrs", fu_engine_modify_bios_settings_func);
 	return g_test_run();
 }

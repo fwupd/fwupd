@@ -509,78 +509,78 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_RESULT_KEY_BATTERY_THRESHOLD "BatteryThreshold"
 /**
- * FWUPD_RESULT_KEY_BIOS_ATTR_ID:
+ * FWUPD_RESULT_KEY_BIOS_SETTING_ID:
  *
- * Result key to represent the unique identifier of the BIOS attribute.
+ * Result key to represent the unique identifier of the BIOS setting.
  *
  * The D-Bus type signature string is 's' i.e. a string.
  **/
-#define FWUPD_RESULT_KEY_BIOS_ATTR_ID "BiosAttrId"
+#define FWUPD_RESULT_KEY_BIOS_SETTING_ID "BiosSettingId"
 /**
- * FWUPD_RESULT_KEY_BIOS_ATTR_TARGET_VALUE:
+ * FWUPD_RESULT_KEY_BIOS_SETTING_TARGET_VALUE:
  *
  * Result key to represent the value that would enable this attribute.
  *
  * The D-Bus type signature string is 's' i.e. a string.
  **/
-#define FWUPD_RESULT_KEY_BIOS_ATTR_TARGET_VALUE "BiosAttrTargetValue"
+#define FWUPD_RESULT_KEY_BIOS_SETTING_TARGET_VALUE "BiosSettingTargetValue"
 /**
- * FWUPD_RESULT_KEY_BIOS_ATTR_CURRENT_VALUE:
+ * FWUPD_RESULT_KEY_BIOS_SETTING_CURRENT_VALUE:
  *
- * Result key to represent the current value of BIOS attribute.
+ * Result key to represent the current value of BIOS setting.
  *
  * The D-Bus type signature string is 's' i.e. a string.
  **/
-#define FWUPD_RESULT_KEY_BIOS_ATTR_CURRENT_VALUE "BiosAttrCurrentValue"
+#define FWUPD_RESULT_KEY_BIOS_SETTING_CURRENT_VALUE "BiosSettingCurrentValue"
 /**
- * FWUPD_RESULT_KEY_BIOS_ATTR_TYPE:
+ * FWUPD_RESULT_KEY_BIOS_SETTING_TYPE:
  *
- * Result key to represent the type of BIOS attribute.
+ * Result key to represent the type of BIOS setting.
  * 0 is invalid, 1+ represent an attribute type
  *
  * The D-Bus type signature string is 't' i.e. a unsigned 64 bit integer.
  **/
-#define FWUPD_RESULT_KEY_BIOS_ATTR_TYPE "BiosAttrType"
+#define FWUPD_RESULT_KEY_BIOS_SETTING_TYPE "BiosSettingType"
 /**
- * FWUPD_RESULT_KEY_BIOS_ATTR_POSSIBLE_VALUES:
+ * FWUPD_RESULT_KEY_BIOS_SETTING_POSSIBLE_VALUES:
  *
  * Result key to represent possible values
  *
  * The D-Bus type signature string is 'as' i.e. an array of strings.
  **/
-#define FWUPD_RESULT_KEY_BIOS_ATTR_POSSIBLE_VALUES "BiosAttrPossibleValues"
+#define FWUPD_RESULT_KEY_BIOS_SETTING_POSSIBLE_VALUES "BiosSettingPossibleValues"
 /**
- * FWUPD_RESULT_KEY_BIOS_ATTR_LOWER_BOUND:
+ * FWUPD_RESULT_KEY_BIOS_SETTING_LOWER_BOUND:
  *
- * Result key to represent the upper bound for an integer BIOS attribute.
- * or minimum length for string BIOS attribute.
+ * Result key to represent the upper bound for an integer BIOS setting.
+ * or minimum length for string BIOS setting.
  * The D-Bus type signature string is 't' i.e. a unsigned 64 bit integer.
  **/
-#define FWUPD_RESULT_KEY_BIOS_ATTR_LOWER_BOUND "BiosAttrLowerBound"
+#define FWUPD_RESULT_KEY_BIOS_SETTING_LOWER_BOUND "BiosSettingLowerBound"
 /**
- * FWUPD_RESULT_KEY_BIOS_ATTR_UPPER_BOUND:
+ * FWUPD_RESULT_KEY_BIOS_SETTING_UPPER_BOUND:
  *
- * Result key to represent the lower bound for an integer BIOS attribute
- * or maximum length for string BIOS attribute.
- *
- * The D-Bus type signature string is 't' i.e. a unsigned 64 bit integer.
- **/
-#define FWUPD_RESULT_KEY_BIOS_ATTR_UPPER_BOUND "BiosAttrUpperBound"
-/**
- * FWUPD_RESULT_KEY_BIOS_ATTR_SCALAR_INCREMENT:
- *
- * Result key to represent the scalar increment for an integer BIOS attribute.
+ * Result key to represent the lower bound for an integer BIOS setting
+ * or maximum length for string BIOS setting.
  *
  * The D-Bus type signature string is 't' i.e. a unsigned 64 bit integer.
  **/
-#define FWUPD_RESULT_KEY_BIOS_ATTR_SCALAR_INCREMENT "BiosAttrScalarIncrement"
+#define FWUPD_RESULT_KEY_BIOS_SETTING_UPPER_BOUND "BiosSettingUpperBound"
 /**
- * FWUPD_RESULT_KEY_BIOS_ATTR_READ_ONLY:
+ * FWUPD_RESULT_KEY_BIOS_SETTING_SCALAR_INCREMENT:
  *
- * Result key to represent whether BIOS attribute is read only
+ * Result key to represent the scalar increment for an integer BIOS setting.
+ *
+ * The D-Bus type signature string is 't' i.e. a unsigned 64 bit integer.
+ **/
+#define FWUPD_RESULT_KEY_BIOS_SETTING_SCALAR_INCREMENT "BiosSettingScalarIncrement"
+/**
+ * FWUPD_RESULT_KEY_BIOS_SETTING_READ_ONLY:
+ *
+ * Result key to represent whether BIOS setting is read only
  *
  * The D-Bus type signature string is 'b' i.e. a boolean.
  **/
-#define FWUPD_RESULT_KEY_BIOS_ATTR_READ_ONLY "BiosAttrReadOnly"
+#define FWUPD_RESULT_KEY_BIOS_SETTING_READ_ONLY "BiosSettingReadOnly"
 
 G_END_DECLS

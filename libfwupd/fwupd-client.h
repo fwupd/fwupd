@@ -220,22 +220,22 @@ fwupd_client_get_results_finish(FwupdClient *self,
 				GAsyncResult *res,
 				GError **error) G_GNUC_WARN_UNUSED_RESULT;
 void
-fwupd_client_modify_bios_attr_async(FwupdClient *self,
-				    GHashTable *settings,
-				    GCancellable *cancellable,
-				    GAsyncReadyCallback callback,
-				    gpointer callback_data);
+fwupd_client_modify_bios_setting_async(FwupdClient *self,
+				       GHashTable *settings,
+				       GCancellable *cancellable,
+				       GAsyncReadyCallback callback,
+				       gpointer callback_data);
 gboolean
-fwupd_client_modify_bios_attr_finish(FwupdClient *self, GAsyncResult *res, GError **error);
+fwupd_client_modify_bios_setting_finish(FwupdClient *self, GAsyncResult *res, GError **error);
 void
-fwupd_client_get_bios_attrs_async(FwupdClient *self,
-				  GCancellable *cancellable,
-				  GAsyncReadyCallback callback,
-				  gpointer callback_data);
+fwupd_client_get_bios_settings_async(FwupdClient *self,
+				     GCancellable *cancellable,
+				     GAsyncReadyCallback callback,
+				     gpointer callback_data);
 GPtrArray *
-fwupd_client_get_bios_attrs_finish(FwupdClient *self,
-				   GAsyncResult *res,
-				   GError **error) G_GNUC_WARN_UNUSED_RESULT;
+fwupd_client_get_bios_settings_finish(FwupdClient *self,
+				      GAsyncResult *res,
+				      GError **error) G_GNUC_WARN_UNUSED_RESULT;
 void
 fwupd_client_get_host_security_attrs_async(FwupdClient *self,
 					   GCancellable *cancellable,

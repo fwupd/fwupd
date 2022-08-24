@@ -38,9 +38,9 @@ typedef struct {
 	FwupdSecurityAttrResult result;
 	FwupdSecurityAttrResult result_fallback;
 	FwupdSecurityAttrFlags flags;
-	gchar *bios_attr_id;
-	gchar *bios_attr_target_value;
-	gchar *bios_attr_current_value;
+	gchar *bios_setting_id;
+	gchar *bios_setting_target_value;
+	gchar *bios_setting_current_value;
 } FwupdSecurityAttrPrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE(FwupdSecurityAttr, fwupd_security_attr, G_TYPE_OBJECT)
@@ -227,43 +227,43 @@ fwupd_security_attr_flag_to_suffix(FwupdSecurityAttrFlags flag)
 }
 
 /**
- * fwupd_security_attr_get_bios_attr_id:
+ * fwupd_security_attr_get_bios_setting_id:
  * @self: a #FwupdSecurityAttr
  *
- * Gets the #FwupdBiosAttr that can be used to improve this
+ * Gets the #FwupdBiosSetting that can be used to improve this
  * #FwupdSecurityAttr.
  *
- * Returns: The unique ID used for #FwupdBiosAttr or NULL
+ * Returns: The unique ID used for #FwupdBiosSetting or NULL
  *
  * Since: 1.8.4
  **/
 const gchar *
-fwupd_security_attr_get_bios_attr_id(FwupdSecurityAttr *self)
+fwupd_security_attr_get_bios_setting_id(FwupdSecurityAttr *self)
 {
 	FwupdSecurityAttrPrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FWUPD_IS_SECURITY_ATTR(self), NULL);
-	return priv->bios_attr_id;
+	return priv->bios_setting_id;
 }
 
 /**
- * fwupd_security_attr_set_bios_attr_id:
+ * fwupd_security_attr_set_bios_setting_id:
  * @self: a #FwupdSecurityAttr
- * @id: Unique identifier used for #FwupdBiosAttr
+ * @id: Unique identifier used for #FwupdBiosSetting
  *
- * Sets the #FwupdBiosAttr that can be used to improve this
+ * Sets the #FwupdBiosSetting that can be used to improve this
  * #FwupdSecurityAttr.
  *
  * Since: 1.8.4
  **/
 void
-fwupd_security_attr_set_bios_attr_id(FwupdSecurityAttr *self, const gchar *id)
+fwupd_security_attr_set_bios_setting_id(FwupdSecurityAttr *self, const gchar *id)
 {
 	FwupdSecurityAttrPrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FWUPD_IS_SECURITY_ATTR(self));
-	if (priv->bios_attr_id == id)
+	if (priv->bios_setting_id == id)
 		return;
-	g_free(priv->bios_attr_id);
-	priv->bios_attr_id = g_strdup(id);
+	g_free(priv->bios_setting_id);
+	priv->bios_setting_id = g_strdup(id);
 }
 
 /**
@@ -503,7 +503,7 @@ fwupd_security_attr_set_name(FwupdSecurityAttr *self, const gchar *name)
 }
 
 /**
- * fwupd_security_attr_get_bios_attr_target_value:
+ * fwupd_security_attr_get_bios_setting_target_value:
  * @self: a #FwupdSecurityAttr
  *
  * Gets the value that when written to an attribute would activate it or satisfy
@@ -514,15 +514,15 @@ fwupd_security_attr_set_name(FwupdSecurityAttr *self, const gchar *name)
  * Since: 1.8.4
  **/
 const gchar *
-fwupd_security_attr_get_bios_attr_target_value(FwupdSecurityAttr *self)
+fwupd_security_attr_get_bios_setting_target_value(FwupdSecurityAttr *self)
 {
 	FwupdSecurityAttrPrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FWUPD_IS_SECURITY_ATTR(self), NULL);
-	return priv->bios_attr_target_value;
+	return priv->bios_setting_target_value;
 }
 
 /**
- * fwupd_security_attr_set_bios_attr_target_value:
+ * fwupd_security_attr_set_bios_setting_target_value:
  * @self: a #FwupdSecurityAttr
  * @value: The string to set target value to
  *
@@ -531,56 +531,56 @@ fwupd_security_attr_get_bios_attr_target_value(FwupdSecurityAttr *self)
  * Since: 1.8.4
  **/
 void
-fwupd_security_attr_set_bios_attr_target_value(FwupdSecurityAttr *self, const gchar *value)
+fwupd_security_attr_set_bios_setting_target_value(FwupdSecurityAttr *self, const gchar *value)
 {
 	FwupdSecurityAttrPrivate *priv = GET_PRIVATE(self);
 
 	/* not changed */
-	if (g_strcmp0(priv->bios_attr_target_value, value) == 0)
+	if (g_strcmp0(priv->bios_setting_target_value, value) == 0)
 		return;
 
-	g_free(priv->bios_attr_target_value);
-	priv->bios_attr_target_value = g_strdup(value);
+	g_free(priv->bios_setting_target_value);
+	priv->bios_setting_target_value = g_strdup(value);
 }
 
 /**
- * fwupd_security_attr_get_bios_attr_current_value:
+ * fwupd_security_attr_get_bios_setting_current_value:
  * @self: a #FwupdSecurityAttr
  *
- * Gets the current value of the BIOS attribute that can be changed.
+ * Gets the current value of the BIOS setting that can be changed.
  *
  * Returns: the current value of the attribute.
  *
  * Since: 1.8.4
  **/
 const gchar *
-fwupd_security_attr_get_bios_attr_current_value(FwupdSecurityAttr *self)
+fwupd_security_attr_get_bios_setting_current_value(FwupdSecurityAttr *self)
 {
 	FwupdSecurityAttrPrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FWUPD_IS_SECURITY_ATTR(self), NULL);
-	return priv->bios_attr_current_value;
+	return priv->bios_setting_current_value;
 }
 
 /**
- * fwupd_security_attr_set_bios_attr_current_value:
+ * fwupd_security_attr_set_bios_setting_current_value:
  * @self: a #FwupdSecurityAttr
  * @value: The string to set current value to
  *
- * Sets the current value of the BIOS attribute that can be changed.
+ * Sets the current value of the BIOS setting that can be changed.
  *
  * Since: 1.8.4
  **/
 void
-fwupd_security_attr_set_bios_attr_current_value(FwupdSecurityAttr *self, const gchar *value)
+fwupd_security_attr_set_bios_setting_current_value(FwupdSecurityAttr *self, const gchar *value)
 {
 	FwupdSecurityAttrPrivate *priv = GET_PRIVATE(self);
 
 	/* not changed */
-	if (g_strcmp0(priv->bios_attr_current_value, value) == 0)
+	if (g_strcmp0(priv->bios_setting_current_value, value) == 0)
 		return;
 
-	g_free(priv->bios_attr_current_value);
-	priv->bios_attr_current_value = g_strdup(value);
+	g_free(priv->bios_setting_current_value);
+	priv->bios_setting_current_value = g_strdup(value);
 }
 
 /**
@@ -1096,23 +1096,23 @@ fwupd_security_attr_to_variant(FwupdSecurityAttr *self)
 				      FWUPD_RESULT_KEY_METADATA,
 				      fwupd_hash_kv_to_variant(priv->metadata));
 	}
-	if (priv->bios_attr_id != NULL) {
+	if (priv->bios_setting_id != NULL) {
 		g_variant_builder_add(&builder,
 				      "{sv}",
-				      FWUPD_RESULT_KEY_BIOS_ATTR_ID,
-				      g_variant_new_string(priv->bios_attr_id));
+				      FWUPD_RESULT_KEY_BIOS_SETTING_ID,
+				      g_variant_new_string(priv->bios_setting_id));
 	}
-	if (priv->bios_attr_target_value != NULL) {
+	if (priv->bios_setting_target_value != NULL) {
 		g_variant_builder_add(&builder,
 				      "{sv}",
-				      FWUPD_RESULT_KEY_BIOS_ATTR_TARGET_VALUE,
-				      g_variant_new_string(priv->bios_attr_target_value));
+				      FWUPD_RESULT_KEY_BIOS_SETTING_TARGET_VALUE,
+				      g_variant_new_string(priv->bios_setting_target_value));
 	}
-	if (priv->bios_attr_current_value != NULL) {
+	if (priv->bios_setting_current_value != NULL) {
 		g_variant_builder_add(&builder,
 				      "{sv}",
-				      FWUPD_RESULT_KEY_BIOS_ATTR_CURRENT_VALUE,
-				      g_variant_new_string(priv->bios_attr_current_value));
+				      FWUPD_RESULT_KEY_BIOS_SETTING_CURRENT_VALUE,
+				      g_variant_new_string(priv->bios_setting_current_value));
 	}
 	return g_variant_new("a{sv}", &builder);
 }
@@ -1226,18 +1226,20 @@ fwupd_security_attr_from_key_value(FwupdSecurityAttr *self, const gchar *key, GV
 		priv->metadata = fwupd_variant_to_hash_kv(value);
 		return;
 	}
-	if (g_strcmp0(key, FWUPD_RESULT_KEY_BIOS_ATTR_ID) == 0) {
-		fwupd_security_attr_set_bios_attr_id(self, g_variant_get_string(value, NULL));
+	if (g_strcmp0(key, FWUPD_RESULT_KEY_BIOS_SETTING_ID) == 0) {
+		fwupd_security_attr_set_bios_setting_id(self, g_variant_get_string(value, NULL));
 		return;
 	}
-	if (g_strcmp0(key, FWUPD_RESULT_KEY_BIOS_ATTR_TARGET_VALUE) == 0) {
-		fwupd_security_attr_set_bios_attr_target_value(self,
-							       g_variant_get_string(value, NULL));
+	if (g_strcmp0(key, FWUPD_RESULT_KEY_BIOS_SETTING_TARGET_VALUE) == 0) {
+		fwupd_security_attr_set_bios_setting_target_value(
+		    self,
+		    g_variant_get_string(value, NULL));
 		return;
 	}
-	if (g_strcmp0(key, FWUPD_RESULT_KEY_BIOS_ATTR_CURRENT_VALUE) == 0) {
-		fwupd_security_attr_set_bios_attr_current_value(self,
-								g_variant_get_string(value, NULL));
+	if (g_strcmp0(key, FWUPD_RESULT_KEY_BIOS_SETTING_CURRENT_VALUE) == 0) {
+		fwupd_security_attr_set_bios_setting_current_value(
+		    self,
+		    g_variant_get_string(value, NULL));
 		return;
 	}
 }
@@ -1321,18 +1323,20 @@ fwupd_security_attr_from_json(FwupdSecurityAttr *self, JsonNode *json_node, GErr
 	fwupd_security_attr_set_created(
 	    self,
 	    json_object_get_int_member_with_default(obj, FWUPD_RESULT_KEY_CREATED, 0));
-	fwupd_security_attr_set_bios_attr_id(
-	    self,
-	    json_object_get_string_member_with_default(obj, FWUPD_RESULT_KEY_BIOS_ATTR_ID, NULL));
-	fwupd_security_attr_set_bios_attr_target_value(
+	fwupd_security_attr_set_bios_setting_id(
 	    self,
 	    json_object_get_string_member_with_default(obj,
-						       FWUPD_RESULT_KEY_BIOS_ATTR_TARGET_VALUE,
+						       FWUPD_RESULT_KEY_BIOS_SETTING_ID,
 						       NULL));
-	fwupd_security_attr_set_bios_attr_current_value(
+	fwupd_security_attr_set_bios_setting_target_value(
 	    self,
 	    json_object_get_string_member_with_default(obj,
-						       FWUPD_RESULT_KEY_BIOS_ATTR_CURRENT_VALUE,
+						       FWUPD_RESULT_KEY_BIOS_SETTING_TARGET_VALUE,
+						       NULL));
+	fwupd_security_attr_set_bios_setting_current_value(
+	    self,
+	    json_object_get_string_member_with_default(obj,
+						       FWUPD_RESULT_KEY_BIOS_SETTING_CURRENT_VALUE,
 						       NULL));
 
 	/* also optional */
@@ -1413,12 +1417,14 @@ fwupd_security_attr_to_json(FwupdSecurityAttr *self, JsonBuilder *builder)
 	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_PLUGIN, priv->plugin);
 	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_URI, priv->url);
 	fwupd_common_json_add_string(builder,
-				     FWUPD_RESULT_KEY_BIOS_ATTR_TARGET_VALUE,
-				     priv->bios_attr_target_value);
+				     FWUPD_RESULT_KEY_BIOS_SETTING_TARGET_VALUE,
+				     priv->bios_setting_target_value);
 	fwupd_common_json_add_string(builder,
-				     FWUPD_RESULT_KEY_BIOS_ATTR_CURRENT_VALUE,
-				     priv->bios_attr_current_value);
-	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_BIOS_ATTR_ID, priv->bios_attr_id);
+				     FWUPD_RESULT_KEY_BIOS_SETTING_CURRENT_VALUE,
+				     priv->bios_setting_current_value);
+	fwupd_common_json_add_string(builder,
+				     FWUPD_RESULT_KEY_BIOS_SETTING_ID,
+				     priv->bios_setting_id);
 
 	if (priv->flags != FWUPD_SECURITY_ATTR_FLAG_NONE) {
 		json_builder_set_member_name(builder, FWUPD_RESULT_KEY_FLAGS);
@@ -1487,13 +1493,13 @@ fwupd_security_attr_to_string(FwupdSecurityAttr *self)
 	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_DESCRIPTION, priv->description);
 	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_PLUGIN, priv->plugin);
 	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_URI, priv->url);
-	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_BIOS_ATTR_ID, priv->bios_attr_id);
+	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_BIOS_SETTING_ID, priv->bios_setting_id);
 	fwupd_pad_kv_str(str,
-			 FWUPD_RESULT_KEY_BIOS_ATTR_TARGET_VALUE,
-			 priv->bios_attr_target_value);
+			 FWUPD_RESULT_KEY_BIOS_SETTING_TARGET_VALUE,
+			 priv->bios_setting_target_value);
 	fwupd_pad_kv_str(str,
-			 FWUPD_RESULT_KEY_BIOS_ATTR_CURRENT_VALUE,
-			 priv->bios_attr_current_value);
+			 FWUPD_RESULT_KEY_BIOS_SETTING_CURRENT_VALUE,
+			 priv->bios_setting_current_value);
 
 	for (guint i = 0; i < priv->obsoletes->len; i++) {
 		const gchar *appstream_id = g_ptr_array_index(priv->obsoletes, i);
@@ -1540,9 +1546,9 @@ fwupd_security_attr_finalize(GObject *object)
 
 	if (priv->metadata != NULL)
 		g_hash_table_unref(priv->metadata);
-	g_free(priv->bios_attr_id);
-	g_free(priv->bios_attr_target_value);
-	g_free(priv->bios_attr_current_value);
+	g_free(priv->bios_setting_id);
+	g_free(priv->bios_setting_target_value);
+	g_free(priv->bios_setting_current_value);
 	g_free(priv->appstream_id);
 	g_free(priv->name);
 	g_free(priv->title);
@@ -1661,7 +1667,7 @@ fwupd_security_attr_copy(FwupdSecurityAttr *self)
 	fwupd_security_attr_set_flags(new, priv->flags);
 	fwupd_security_attr_set_result(new, priv->result);
 	fwupd_security_attr_set_created(new, priv->created);
-	fwupd_security_attr_set_bios_attr_id(new, priv->bios_attr_id);
+	fwupd_security_attr_set_bios_setting_id(new, priv->bios_setting_id);
 
 	for (guint i = 0; i < priv->guids->len; i++) {
 		const gchar *guid = g_ptr_array_index(priv->guids, i);

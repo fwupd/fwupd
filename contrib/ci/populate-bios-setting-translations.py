@@ -32,6 +32,6 @@ def populate_translations(path):
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
-        print("path to bios attributes directory required")
+        print("path to bios settings directory required")
         sys.exit(1)
     populate_translations(sys.argv[1])

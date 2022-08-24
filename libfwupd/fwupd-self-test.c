@@ -12,7 +12,7 @@
 #include <fnmatch.h>
 #endif
 
-#include "fwupd-bios-attr-private.h"
+#include "fwupd-bios-setting-private.h"
 #include "fwupd-client-sync.h"
 #include "fwupd-client.h"
 #include "fwupd-common.h"
@@ -1218,8 +1218,8 @@ fwupd_attr_to_json_string(GObject *attr, GError **error)
 	json_builder_begin_object(builder);
 	if (FWUPD_IS_SECURITY_ATTR(attr))
 		fwupd_security_attr_to_json(FWUPD_SECURITY_ATTR(attr), builder);
-	else if (FWUPD_IS_BIOS_ATTR(attr))
-		fwupd_bios_attr_to_json(FWUPD_BIOS_ATTR(attr), builder);
+	else if (FWUPD_IS_BIOS_SETTING(attr))
+		fwupd_bios_setting_to_json(FWUPD_BIOS_SETTING(attr), builder);
 	json_builder_end_object(builder);
 	json_root = json_builder_get_root(builder);
 	json_generator = json_generator_new();
@@ -1377,7 +1377,7 @@ fwupd_security_attr_func(void)
 }
 
 static void
-fwupd_bios_attrs_func(void)
+fwupd_bios_settings_func(void)
 {
 	gboolean ret;
 	g_autofree gchar *str1 = NULL;
@@ -1385,57 +1385,59 @@ fwupd_bios_attrs_func(void)
 	g_autofree gchar *str3 = NULL;
 	g_autofree gchar *json1 = NULL;
 	g_autofree gchar *json2 = NULL;
-	g_autoptr(FwupdBiosAttr) attr1 = fwupd_bios_attr_new("foo", "/path/to/bar");
-	g_autoptr(FwupdBiosAttr) attr2 = NULL;
+	g_autoptr(FwupdBiosSetting) attr1 = fwupd_bios_setting_new("foo", "/path/to/bar");
+	g_autoptr(FwupdBiosSetting) attr2 = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GVariant) data1 = NULL;
 	g_autoptr(GVariant) data2 = NULL;
 	g_autoptr(JsonParser) parser = json_parser_new();
 
-	g_assert_cmpstr(fwupd_bios_attr_get_name(attr1), ==, "foo");
-	fwupd_bios_attr_set_name(attr1, "UEFISecureBoot");
-	g_assert_cmpstr(fwupd_bios_attr_get_name(attr1), ==, "UEFISecureBoot");
+	g_assert_cmpstr(fwupd_bios_setting_get_name(attr1), ==, "foo");
+	fwupd_bios_setting_set_name(attr1, "UEFISecureBoot");
+	g_assert_cmpstr(fwupd_bios_setting_get_name(attr1), ==, "UEFISecureBoot");
 
-	fwupd_bios_attr_set_kind(attr1, FWUPD_BIOS_ATTR_KIND_ENUMERATION);
-	g_assert_cmpint(fwupd_bios_attr_get_kind(attr1), ==, FWUPD_BIOS_ATTR_KIND_ENUMERATION);
+	fwupd_bios_setting_set_kind(attr1, FWUPD_BIOS_SETTING_KIND_ENUMERATION);
+	g_assert_cmpint(fwupd_bios_setting_get_kind(attr1),
+			==,
+			FWUPD_BIOS_SETTING_KIND_ENUMERATION);
 
-	fwupd_bios_attr_set_description(attr1, "Controls Secure boot");
-	g_assert_cmpstr(fwupd_bios_attr_get_description(attr1), ==, "Controls Secure boot");
-	fwupd_bios_attr_set_current_value(attr1, "Disabled");
-	g_assert_cmpstr(fwupd_bios_attr_get_current_value(attr1), ==, "Disabled");
+	fwupd_bios_setting_set_description(attr1, "Controls Secure boot");
+	g_assert_cmpstr(fwupd_bios_setting_get_description(attr1), ==, "Controls Secure boot");
+	fwupd_bios_setting_set_current_value(attr1, "Disabled");
+	g_assert_cmpstr(fwupd_bios_setting_get_current_value(attr1), ==, "Disabled");
 
-	fwupd_bios_attr_add_possible_value(attr1, "Disabled");
-	fwupd_bios_attr_add_possible_value(attr1, "Enabled");
-	g_assert_true(fwupd_bios_attr_has_possible_value(attr1, "Disabled"));
-	g_assert_false(fwupd_bios_attr_has_possible_value(attr1, "NOT_GOING_TO_EXIST"));
+	fwupd_bios_setting_add_possible_value(attr1, "Disabled");
+	fwupd_bios_setting_add_possible_value(attr1, "Enabled");
+	g_assert_true(fwupd_bios_setting_has_possible_value(attr1, "Disabled"));
+	g_assert_false(fwupd_bios_setting_has_possible_value(attr1, "NOT_GOING_TO_EXIST"));
 
-	str1 = fwupd_bios_attr_to_string(attr1);
+	str1 = fwupd_bios_setting_to_string(attr1);
 	ret = fu_test_compare_lines(str1,
 				    "  Name:                 UEFISecureBoot\n"
 				    "  Description:          Controls Secure boot\n"
 				    "  Filename:             /path/to/bar\n"
-				    "  BiosAttrType:         1\n"
-				    "  BiosAttrCurrentValue: Disabled\n"
-				    "  BiosAttrReadOnly:     False\n"
-				    "  BiosAttrPossibleValues: Disabled\n"
-				    "  BiosAttrPossibleValues: Enabled\n",
+				    "  BiosSettingType:      1\n"
+				    "  BiosSettingCurrentValue: Disabled\n"
+				    "  BiosSettingReadOnly:  False\n"
+				    "  BiosSettingPossibleValues: Disabled\n"
+				    "  BiosSettingPossibleValues: Enabled\n",
 				    &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
 	/* roundtrip GVariant */
-	data1 = fwupd_bios_attr_to_variant(attr1, TRUE);
-	attr2 = fwupd_bios_attr_from_variant(data1);
-	str2 = fwupd_bios_attr_to_string(attr2);
+	data1 = fwupd_bios_setting_to_variant(attr1, TRUE);
+	attr2 = fwupd_bios_setting_from_variant(data1);
+	str2 = fwupd_bios_setting_to_string(attr2);
 	ret = fu_test_compare_lines(str2,
 				    "  Name:                 UEFISecureBoot\n"
 				    "  Description:          Controls Secure boot\n"
 				    "  Filename:             /path/to/bar\n"
-				    "  BiosAttrType:         1\n"
-				    "  BiosAttrCurrentValue: Disabled\n"
-				    "  BiosAttrReadOnly:     False\n"
-				    "  BiosAttrPossibleValues: Disabled\n"
-				    "  BiosAttrPossibleValues: Enabled\n",
+				    "  BiosSettingType:      1\n"
+				    "  BiosSettingCurrentValue: Disabled\n"
+				    "  BiosSettingReadOnly:  False\n"
+				    "  BiosSettingPossibleValues: Disabled\n"
+				    "  BiosSettingPossibleValues: Enabled\n",
 				    &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -1446,13 +1448,13 @@ fwupd_bios_attrs_func(void)
 	g_assert_nonnull(json1);
 	ret = fu_test_compare_lines(json1,
 				    "{\n"
-				    "  \"BiosAttrReadOnly\" : \"false\",\n"
-				    "  \"BiosAttrType\" : 1,\n"
+				    "  \"BiosSettingReadOnly\" : \"false\",\n"
+				    "  \"BiosSettingType\" : 1,\n"
 				    "  \"Name\" : \"UEFISecureBoot\",\n"
 				    "  \"Description\" : \"Controls Secure boot\",\n"
 				    "  \"Filename\" : \"/path/to/bar\",\n"
-				    "  \"BiosAttrCurrentValue\" : \"Disabled\",\n"
-				    "  \"BiosAttrPossibleValues\" : [\n"
+				    "  \"BiosSettingCurrentValue\" : \"Disabled\",\n"
+				    "  \"BiosSettingPossibleValues\" : [\n"
 				    "    \"Disabled\",\n"
 				    "    \"Enabled\"\n"
 				    "  ]\n"
@@ -1465,7 +1467,7 @@ fwupd_bios_attrs_func(void)
 	ret = json_parser_load_from_data(parser, json1, -1, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	ret = fwupd_bios_attr_from_json(attr2, json_parser_get_root(parser), &error);
+	ret = fwupd_bios_setting_from_json(attr2, json_parser_get_root(parser), &error);
 	if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
 		g_test_skip(error->message);
 		return;
@@ -1473,24 +1475,24 @@ fwupd_bios_attrs_func(void)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
-	str3 = fwupd_bios_attr_to_string(attr2);
+	str3 = fwupd_bios_setting_to_string(attr2);
 	ret = fu_test_compare_lines(str3, str1, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
 	/* make sure we filter CurrentValue if not trusted */
-	data2 = fwupd_bios_attr_to_variant(attr1, TRUE);
+	data2 = fwupd_bios_setting_to_variant(attr1, TRUE);
 	json2 = fwupd_attr_to_json_string(G_OBJECT(attr1), &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(json2);
 	ret = fu_test_compare_lines(json2,
 				    "{\n"
-				    "  \"BiosAttrReadOnly\" : \"false\",\n"
-				    "  \"BiosAttrType\" : 1,\n"
+				    "  \"BiosSettingReadOnly\" : \"false\",\n"
+				    "  \"BiosSettingType\" : 1,\n"
 				    "  \"Name\" : \"UEFISecureBoot\",\n"
 				    "  \"Description\" : \"Controls Secure boot\",\n"
 				    "  \"Filename\" : \"/path/to/bar\",\n"
-				    "  \"BiosAttrPossibleValues\" : [\n"
+				    "  \"BiosSettingPossibleValues\" : [\n"
 				    "    \"Disabled\",\n"
 				    "    \"Enabled\"\n"
 				    "  ]\n"
@@ -1524,7 +1526,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/remote{local}", fwupd_remote_local_func);
 	g_test_add_func("/fwupd/remote{duplicate}", fwupd_remote_duplicate_func);
 	g_test_add_func("/fwupd/remote{auth}", fwupd_remote_auth_func);
-	g_test_add_func("/fwupd/bios-attrs", fwupd_bios_attrs_func);
+	g_test_add_func("/fwupd/bios-attrs", fwupd_bios_settings_func);
 	if (fwupd_has_system_bus()) {
 		g_test_add_func("/fwupd/client{remotes}", fwupd_client_remotes_func);
 		g_test_add_func("/fwupd/client{devices}", fwupd_client_devices_func);
