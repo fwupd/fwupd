@@ -342,9 +342,5 @@ gboolean
 fwupd_security_attr_from_json(FwupdSecurityAttr *self, JsonNode *json_node, GError **error);
 FwupdSecurityAttr *
 fwupd_security_attr_copy(FwupdSecurityAttr *self);
-FwupdSecurityAttrResult
-fwupd_security_attr_get_result_fallback(FwupdSecurityAttr *self);
-void
-fwupd_security_attr_set_result_fallback(FwupdSecurityAttr *self, FwupdSecurityAttrResult result);
 
 G_END_DECLS
