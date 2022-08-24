@@ -6402,7 +6402,7 @@ fu_engine_attrs_calculate_hsi_for_chassis(FuEngine *self)
 		break;
 	}
 
-	return g_strdup_printf("HSI-INVALID:chassis[0x%02x]", val);
+	return g_strdup_printf("HSI:INVALID:chassis[0x%02x]", val);
 }
 
 static gboolean
