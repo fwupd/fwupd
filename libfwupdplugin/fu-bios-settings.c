@@ -508,7 +508,7 @@ gboolean
 fu_bios_settings_get_pending_reboot(FuBiosSettings *self, gboolean *result, GError **error)
 {
 	FwupdBiosSetting *attr;
-	const gchar *data;
+	g_autofree gchar *data = NULL;
 	guint64 val = 0;
 
 	g_return_val_if_fail(result != NULL, FALSE);
@@ -532,7 +532,10 @@ fu_bios_settings_get_pending_reboot(FuBiosSettings *self, gboolean *result, GErr
 		return FALSE;
 	}
 
-	data = fwupd_bios_setting_get_current_value(attr);
+	/* refresh/re-read */
+	if (!fu_bios_setting_get_key(attr, NULL, &data, error))
+		return FALSE;
+	fwupd_bios_setting_set_current_value(attr, data);
 	if (!fu_strtoull(data, &val, 0, G_MAXUINT32, error))
 		return FALSE;
 
