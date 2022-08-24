@@ -736,8 +736,13 @@ fu_engine_update_bios_setting(FwupdBiosSetting *attr, const gchar *value, GError
 	g_autoptr(FuIOChannel) io = NULL;
 
 	if (g_strcmp0(fwupd_bios_setting_get_current_value(attr), value) == 0) {
-		g_debug("%s is already set to %s", fwupd_bios_setting_get_id(attr), value);
-		return TRUE;
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOTHING_TO_DO,
+			    "%s is already set to %s",
+			    fwupd_bios_setting_get_id(attr),
+			    value);
+		return FALSE;
 	}
 
 	fd = open(fn, O_WRONLY);
@@ -888,6 +893,7 @@ gboolean
 fu_engine_modify_bios_settings(FuEngine *self, GHashTable *settings, GError **error)
 {
 	FwupdBiosSetting *pending;
+	gboolean changed = FALSE;
 	GHashTableIter iter;
 	gpointer key, value;
 
@@ -897,6 +903,7 @@ fu_engine_modify_bios_settings(FuEngine *self, GHashTable *settings, GError **er
 
 	g_hash_table_iter_init(&iter, settings);
 	while (g_hash_table_iter_next(&iter, &key, &value)) {
+		g_autoptr(GError) error_local = NULL;
 		if (value == NULL) {
 			g_set_error(error,
 				    FWUPD_ERROR,
@@ -905,8 +912,23 @@ fu_engine_modify_bios_settings(FuEngine *self, GHashTable *settings, GError **er
 				    (const gchar *)key);
 			return FALSE;
 		}
-		if (!fu_engine_modify_single_bios_setting(self, key, value, error))
+		if (!fu_engine_modify_single_bios_setting(self, key, value, &error_local)) {
+			if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO)) {
+				g_debug("%s", error_local->message);
+				continue;
+			}
+			g_propagate_error(error, g_steal_pointer(&error_local));
 			return FALSE;
+		}
+		changed = TRUE;
+	}
+
+	if (!changed) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOTHING_TO_DO,
+				    "no BIOS settings needed to be changed");
+		return FALSE;
 	}
 
 	pending = fu_context_get_bios_setting(self->ctx, FWUPD_BIOS_SETTING_PENDING_REBOOT);

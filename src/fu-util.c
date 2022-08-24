@@ -3877,7 +3877,8 @@ fu_util_set_bios_setting(FuUtilPrivate *priv, gchar **input, GError **error)
 		return FALSE;
 
 	if (!fwupd_client_modify_bios_setting(priv->client, settings, priv->cancellable, error)) {
-		g_prefix_error(error, "failed to set BIOS setting: ");
+		if (!g_error_matches(*error, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO))
+			g_prefix_error(error, "failed to set BIOS setting: ");
 		return FALSE;
 	}
 
