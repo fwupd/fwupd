@@ -11,7 +11,7 @@
 #include <glib/gstdio.h>
 #include <stdlib.h>
 
-#include "fu-bios-attrs-private.h"
+#include "fu-bios-settings-private.h"
 #include "fu-context-private.h"
 #include "fu-device-private.h"
 #include "fu-plugin-private.h"
@@ -39,7 +39,7 @@ fu_test_self_init(FuTest *self, GError **error_global)
 	g_autofree gchar *pluginfn_uefi = NULL;
 	g_autofree gchar *pluginfn_lenovo = NULL;
 
-	g_test_expect_message("FuBiosAttrs", G_LOG_LEVEL_WARNING, "*KERNEL*BUG*");
+	g_test_expect_message("FuBiosSettings", G_LOG_LEVEL_WARNING, "*KERNEL*BUG*");
 
 	ret = fu_context_load_quirks(ctx,
 				     FU_QUIRKS_LOAD_FLAG_NO_CACHE | FU_QUIRKS_LOAD_FLAG_NO_VERIFY,
@@ -49,7 +49,7 @@ fu_test_self_init(FuTest *self, GError **error_global)
 	ret = fu_context_load_hwinfo(ctx, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	ret = fu_context_reload_bios_attrs(ctx, &error);
+	ret = fu_context_reload_bios_settings(ctx, &error);
 	g_assert_true(ret);
 	g_assert_no_error(error);
 	g_test_assert_expected_messages();
@@ -123,7 +123,7 @@ fu_plugin_lenovo_thinklmi_bootorder_locked(gconstpointer user_data)
 	    g_test_build_filename(G_TEST_DIST, "tests", "firmware-attributes", "locked", NULL);
 	(void)g_setenv("FWUPD_SYSFSFWATTRIBDIR", test_dir, TRUE);
 
-	ret = fu_context_reload_bios_attrs(self->ctx, &error);
+	ret = fu_context_reload_bios_settings(self->ctx, &error);
 	g_assert_true(ret);
 	g_assert_no_error(error);
 
@@ -143,7 +143,7 @@ fu_plugin_lenovo_thinklmi_bootorder_unlocked(gconstpointer user_data)
 	    g_test_build_filename(G_TEST_DIST, "tests", "firmware-attributes", "unlocked", NULL);
 	(void)g_setenv("FWUPD_SYSFSFWATTRIBDIR", test_dir, TRUE);
 
-	ret = fu_context_reload_bios_attrs(self->ctx, &error);
+	ret = fu_context_reload_bios_settings(self->ctx, &error);
 	g_assert_true(ret);
 	g_assert_no_error(error);
 	dev = fu_test_probe_fake_esrt(self);
@@ -165,7 +165,7 @@ fu_plugin_lenovo_thinklmi_reboot_pending(gconstpointer user_data)
 							   NULL);
 	(void)g_setenv("FWUPD_SYSFSFWATTRIBDIR", test_dir, TRUE);
 
-	ret = fu_context_reload_bios_attrs(self->ctx, &error);
+	ret = fu_context_reload_bios_settings(self->ctx, &error);
 	g_assert_true(ret);
 	g_assert_no_error(error);
 	dev = fu_test_probe_fake_esrt(self);

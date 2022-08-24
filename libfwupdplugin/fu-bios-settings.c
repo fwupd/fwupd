@@ -4,48 +4,48 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#define G_LOG_DOMAIN "FuBiosAttrs"
+#define G_LOG_DOMAIN "FuBiosSettings"
 
 #include "config.h"
 
-#include "fwupd-bios-attr-private.h"
+#include "fwupd-bios-setting-private.h"
 #include "fwupd-error.h"
 
-#include "fu-bios-attrs-private.h"
+#include "fu-bios-settings-private.h"
 #include "fu-path.h"
 #include "fu-string.h"
 
-struct _FuBiosAttrs {
+struct _FuBiosSettings {
 	GObject parent_instance;
 	GPtrArray *attrs;
 };
 
-G_DEFINE_TYPE(FuBiosAttrs, fu_bios_attrs, G_TYPE_OBJECT)
+G_DEFINE_TYPE(FuBiosSettings, fu_bios_settings, G_TYPE_OBJECT)
 
 static void
-fu_bios_attrs_finalize(GObject *obj)
+fu_bios_settings_finalize(GObject *obj)
 {
-	FuBiosAttrs *self = FU_BIOS_ATTRS(obj);
+	FuBiosSettings *self = FU_BIOS_SETTINGS(obj);
 	g_ptr_array_unref(self->attrs);
-	G_OBJECT_CLASS(fu_bios_attrs_parent_class)->finalize(obj);
+	G_OBJECT_CLASS(fu_bios_settings_parent_class)->finalize(obj);
 }
 
 static void
-fu_bios_attrs_class_init(FuBiosAttrsClass *klass)
+fu_bios_settings_class_init(FuBiosSettingsClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
-	object_class->finalize = fu_bios_attrs_finalize;
+	object_class->finalize = fu_bios_settings_finalize;
 }
 
 static gboolean
-fu_bios_attr_get_key(FwupdBiosAttr *attr, const gchar *key, gchar **value_out, GError **error)
+fu_bios_setting_get_key(FwupdBiosSetting *attr, const gchar *key, gchar **value_out, GError **error)
 {
 	g_autofree gchar *tmp = NULL;
 
-	g_return_val_if_fail(FWUPD_IS_BIOS_ATTR(attr), FALSE);
+	g_return_val_if_fail(FWUPD_IS_BIOS_SETTING(attr), FALSE);
 	g_return_val_if_fail(&value_out != NULL, FALSE);
 
-	tmp = g_build_filename(fwupd_bios_attr_get_path(attr), key, NULL);
+	tmp = g_build_filename(fwupd_bios_setting_get_path(attr), key, NULL);
 	if (!g_file_get_contents(tmp, value_out, NULL, error)) {
 		g_prefix_error(error, "failed to load %s: ", key);
 		return FALSE;
@@ -55,26 +55,26 @@ fu_bios_attr_get_key(FwupdBiosAttr *attr, const gchar *key, gchar **value_out, G
 }
 
 static gboolean
-fu_bios_attr_set_description(FwupdBiosAttr *attr, GError **error)
+fu_bios_setting_set_description(FwupdBiosSetting *attr, GError **error)
 {
 	g_autofree gchar *data = NULL;
 
-	g_return_val_if_fail(FWUPD_IS_BIOS_ATTR(attr), FALSE);
+	g_return_val_if_fail(FWUPD_IS_BIOS_SETTING(attr), FALSE);
 
-	if (!fu_bios_attr_get_key(attr, "display_name", &data, error))
+	if (!fu_bios_setting_get_key(attr, "display_name", &data, error))
 		return FALSE;
-	fwupd_bios_attr_set_description(attr, data);
+	fwupd_bios_setting_set_description(attr, data);
 
 	return TRUE;
 }
 
 static guint64
-fu_bios_attr_get_key_as_integer(FwupdBiosAttr *attr, const gchar *key, GError **error)
+fu_bios_setting_get_key_as_integer(FwupdBiosSetting *attr, const gchar *key, GError **error)
 {
 	g_autofree gchar *str = NULL;
 	guint64 tmp;
 
-	if (!fu_bios_attr_get_key(attr, key, &str, error))
+	if (!fu_bios_setting_get_key(attr, key, &str, error))
 		return G_MAXUINT64;
 	if (!fu_strtoull(str, &tmp, 0, G_MAXUINT64, error)) {
 		g_prefix_error(error, "failed to convert %s to integer: ", key);
@@ -84,12 +84,12 @@ fu_bios_attr_get_key_as_integer(FwupdBiosAttr *attr, const gchar *key, GError **
 }
 
 static gboolean
-fu_bios_attr_set_enumeration_attrs(FwupdBiosAttr *attr, GError **error)
+fu_bios_setting_set_enumeration_attrs(FwupdBiosSetting *attr, GError **error)
 {
 	const gchar *delimiters[] = {",", ";", NULL};
 	g_autofree gchar *str = NULL;
 
-	if (!fu_bios_attr_get_key(attr, "possible_values", &str, error))
+	if (!fu_bios_setting_get_key(attr, "possible_values", &str, error))
 		return FALSE;
 	for (guint j = 0; delimiters[j] != NULL; j++) {
 		g_auto(GStrv) vals = NULL;
@@ -97,59 +97,59 @@ fu_bios_attr_set_enumeration_attrs(FwupdBiosAttr *attr, GError **error)
 			continue;
 		vals = fu_strsplit(str, strlen(str), delimiters[j], -1);
 		if (vals[0] != NULL)
-			fwupd_bios_attr_set_kind(attr, FWUPD_BIOS_ATTR_KIND_ENUMERATION);
+			fwupd_bios_setting_set_kind(attr, FWUPD_BIOS_SETTING_KIND_ENUMERATION);
 		for (guint i = 0; vals[i] != NULL && vals[i][0] != '\0'; i++)
-			fwupd_bios_attr_add_possible_value(attr, vals[i]);
+			fwupd_bios_setting_add_possible_value(attr, vals[i]);
 	}
 	return TRUE;
 }
 
 static gboolean
-fu_bios_attr_set_string_attrs(FwupdBiosAttr *attr, GError **error)
+fu_bios_setting_set_string_attrs(FwupdBiosSetting *attr, GError **error)
 {
 	guint64 tmp;
 
-	tmp = fu_bios_attr_get_key_as_integer(attr, "min_length", error);
+	tmp = fu_bios_setting_get_key_as_integer(attr, "min_length", error);
 	if (tmp == G_MAXUINT64)
 		return FALSE;
-	fwupd_bios_attr_set_lower_bound(attr, tmp);
-	tmp = fu_bios_attr_get_key_as_integer(attr, "max_length", error);
+	fwupd_bios_setting_set_lower_bound(attr, tmp);
+	tmp = fu_bios_setting_get_key_as_integer(attr, "max_length", error);
 	if (tmp == G_MAXUINT64)
 		return FALSE;
-	fwupd_bios_attr_set_upper_bound(attr, tmp);
-	fwupd_bios_attr_set_kind(attr, FWUPD_BIOS_ATTR_KIND_STRING);
+	fwupd_bios_setting_set_upper_bound(attr, tmp);
+	fwupd_bios_setting_set_kind(attr, FWUPD_BIOS_SETTING_KIND_STRING);
 	return TRUE;
 }
 
 static gboolean
-fu_bios_attr_set_integer_attrs(FwupdBiosAttr *attr, GError **error)
+fu_bios_setting_set_integer_attrs(FwupdBiosSetting *attr, GError **error)
 {
 	guint64 tmp;
 
-	tmp = fu_bios_attr_get_key_as_integer(attr, "min_value", error);
+	tmp = fu_bios_setting_get_key_as_integer(attr, "min_value", error);
 	if (tmp == G_MAXUINT64)
 		return FALSE;
-	fwupd_bios_attr_set_lower_bound(attr, tmp);
-	tmp = fu_bios_attr_get_key_as_integer(attr, "max_value", error);
+	fwupd_bios_setting_set_lower_bound(attr, tmp);
+	tmp = fu_bios_setting_get_key_as_integer(attr, "max_value", error);
 	if (tmp == G_MAXUINT64)
 		return FALSE;
-	fwupd_bios_attr_set_upper_bound(attr, tmp);
-	tmp = fu_bios_attr_get_key_as_integer(attr, "scalar_increment", error);
+	fwupd_bios_setting_set_upper_bound(attr, tmp);
+	tmp = fu_bios_setting_get_key_as_integer(attr, "scalar_increment", error);
 	if (tmp == G_MAXUINT64)
 		return FALSE;
-	fwupd_bios_attr_set_scalar_increment(attr, tmp);
-	fwupd_bios_attr_set_kind(attr, FWUPD_BIOS_ATTR_KIND_INTEGER);
+	fwupd_bios_setting_set_scalar_increment(attr, tmp);
+	fwupd_bios_setting_set_kind(attr, FWUPD_BIOS_SETTING_KIND_INTEGER);
 	return TRUE;
 }
 
 static gboolean
-fu_bios_attr_set_current_value(FwupdBiosAttr *attr, GError **error)
+fu_bios_setting_set_current_value(FwupdBiosSetting *attr, GError **error)
 {
 	g_autofree gchar *str = NULL;
 
-	if (!fu_bios_attr_get_key(attr, "current_value", &str, error))
+	if (!fu_bios_setting_get_key(attr, "current_value", &str, error))
 		return FALSE;
-	fwupd_bios_attr_set_current_value(attr, str);
+	fwupd_bios_setting_set_current_value(attr, str);
 	return TRUE;
 }
 
@@ -158,24 +158,24 @@ fu_bios_attr_set_current_value(FwupdBiosAttr *attr, GError **error)
 #define LENOVO_EXCLUDED		"[Excluded from boot order:"
 
 static void
-fu_bios_attr_fixup_read_only(FwupdBiosAttr *attr)
+fu_bios_setting_fixup_read_only(FwupdBiosSetting *attr)
 {
-	if (fwupd_bios_attr_get_kind(attr) == FWUPD_BIOS_ATTR_KIND_ENUMERATION) {
+	if (fwupd_bios_setting_get_kind(attr) == FWUPD_BIOS_SETTING_KIND_ENUMERATION) {
 		struct {
 			const gchar *id;
 			const gchar *value;
 		} read_only_map[] = {{"com.thinklmi.SecureBoot", "Enable"},
 				     {"com.dell-wmi-sysman.SecureBoot", "Enabled"},
 				     {NULL, NULL}};
-		const gchar *id = fwupd_bios_attr_get_id(attr);
-		const gchar *tmp = fwupd_bios_attr_get_current_value(attr);
+		const gchar *id = fwupd_bios_setting_get_id(attr);
+		const gchar *tmp = fwupd_bios_setting_get_current_value(attr);
 		for (guint i = 0; read_only_map[i].id != NULL; i++) {
 			if (g_strcmp0(id, read_only_map[i].id) != 0)
 				continue;
 
 			if (read_only_map[i].value == NULL ||
 			    g_strcmp0(tmp, read_only_map[i].value) == 0) {
-				fwupd_bios_attr_set_read_only(attr, TRUE);
+				fwupd_bios_setting_set_read_only(attr, TRUE);
 				return;
 			}
 		}
@@ -183,9 +183,9 @@ fu_bios_attr_fixup_read_only(FwupdBiosAttr *attr)
 }
 
 static gboolean
-fu_bios_attr_fixup_lenovo_thinklmi_bug(FwupdBiosAttr *attr, GError **error)
+fu_bios_setting_fixup_lenovo_thinklmi_bug(FwupdBiosSetting *attr, GError **error)
 {
-	const gchar *current_value = fwupd_bios_attr_get_current_value(attr);
+	const gchar *current_value = fwupd_bios_setting_get_current_value(attr);
 	const gchar *tmp;
 	g_autoptr(GString) str = NULL;
 	g_autoptr(GString) right_str = NULL;
@@ -193,14 +193,14 @@ fu_bios_attr_fixup_lenovo_thinklmi_bug(FwupdBiosAttr *attr, GError **error)
 
 	if (g_getenv("FWUPD_BIOS_SETTING_VERBOSE") != NULL) {
 		g_debug("Processing %s: (%s)",
-			fwupd_bios_attr_get_name(attr),
-			fwupd_bios_attr_get_current_value(attr));
+			fwupd_bios_setting_get_name(attr),
+			fwupd_bios_setting_get_current_value(attr));
 	}
 
 	/* We have read only */
 	tmp = g_strrstr(current_value, LENOVO_READ_ONLY_NEEDLE);
 	if (tmp != NULL) {
-		fwupd_bios_attr_set_read_only(attr, TRUE);
+		fwupd_bios_setting_set_read_only(attr, TRUE);
 		str = g_string_new_len(current_value, tmp - current_value);
 	} else {
 		str = g_string_new(current_value);
@@ -214,7 +214,7 @@ fu_bios_attr_fixup_lenovo_thinklmi_bug(FwupdBiosAttr *attr, GError **error)
 	vals = fu_strsplit(str->str, str->len, ";", 2);
 
 	/* use left half for current value */
-	fwupd_bios_attr_set_current_value(attr, vals[0]);
+	fwupd_bios_setting_set_current_value(attr, vals[0]);
 	if (vals[1] == NULL)
 		return TRUE;
 
@@ -233,7 +233,7 @@ fu_bios_attr_fixup_lenovo_thinklmi_bug(FwupdBiosAttr *attr, GError **error)
 		g_string_erase(right_str, 0, strlen(LENOVO_POSSIBLE_NEEDLE));
 		possible_vals = fu_strsplit(right_str->str, right_str->len, ",", -1);
 		if (possible_vals[0] != NULL)
-			fwupd_bios_attr_set_kind(attr, FWUPD_BIOS_ATTR_KIND_ENUMERATION);
+			fwupd_bios_setting_set_kind(attr, FWUPD_BIOS_SETTING_KIND_ENUMERATION);
 		for (guint i = 0; possible_vals[i] != NULL && possible_vals[i][0] != '\0'; i++) {
 			/* last string */
 			if (possible_vals[i + 1] == NULL &&
@@ -242,36 +242,36 @@ fu_bios_attr_fixup_lenovo_thinklmi_bug(FwupdBiosAttr *attr, GError **error)
 									  strlen(possible_vals[i]),
 									  "]",
 									  -1);
-				fwupd_bios_attr_add_possible_value(attr, stripped_vals[0]);
+				fwupd_bios_setting_add_possible_value(attr, stripped_vals[0]);
 				continue;
 			}
-			fwupd_bios_attr_add_possible_value(attr, possible_vals[i]);
+			fwupd_bios_setting_add_possible_value(attr, possible_vals[i]);
 		}
 	}
 	return TRUE;
 }
 
 static gboolean
-fu_bios_attrs_run_folder_fixups(FwupdBiosAttr *attr, GError **error)
+fu_bios_settings_run_folder_fixups(FwupdBiosSetting *attr, GError **error)
 {
-	if (fwupd_bios_attr_get_kind(attr) == FWUPD_BIOS_ATTR_KIND_UNKNOWN)
-		return fu_bios_attr_fixup_lenovo_thinklmi_bug(attr, error);
+	if (fwupd_bios_setting_get_kind(attr) == FWUPD_BIOS_SETTING_KIND_UNKNOWN)
+		return fu_bios_setting_fixup_lenovo_thinklmi_bug(attr, error);
 	return TRUE;
 }
 
 static gboolean
-fu_bios_attr_set_type(FuBiosAttrs *self, FwupdBiosAttr *attr, GError **error)
+fu_bios_setting_set_type(FuBiosSettings *self, FwupdBiosSetting *attr, GError **error)
 {
 	gboolean kernel_bug = FALSE;
 	g_autofree gchar *data = NULL;
 	g_autoptr(GError) error_key = NULL;
 	g_autoptr(GError) error_local = NULL;
 
-	g_return_val_if_fail(FU_IS_BIOS_ATTRS(self), FALSE);
-	g_return_val_if_fail(FWUPD_IS_BIOS_ATTR(attr), FALSE);
+	g_return_val_if_fail(FU_IS_BIOS_SETTINGS(self), FALSE);
+	g_return_val_if_fail(FWUPD_IS_BIOS_SETTING(attr), FALSE);
 
 	/* lenovo thinklmi seems to be missing it even though it's mandatory :/ */
-	if (!fu_bios_attr_get_key(attr, "type", &data, &error_key)) {
+	if (!fu_bios_setting_get_key(attr, "type", &data, &error_key)) {
 #if GLIB_CHECK_VERSION(2, 64, 0)
 		g_warning_once("KERNEL BUG: 'type' attribute not exported: (%s)",
 			       error_key->message);
@@ -282,18 +282,18 @@ fu_bios_attr_set_type(FuBiosAttrs *self, FwupdBiosAttr *attr, GError **error)
 	}
 
 	if (g_strcmp0(data, "enumeration") == 0 || kernel_bug) {
-		if (!fu_bios_attr_set_enumeration_attrs(attr, &error_local)) {
+		if (!fu_bios_setting_set_enumeration_attrs(attr, &error_local)) {
 			if (g_getenv("FWUPD_BIOS_SETTING_VERBOSE") != NULL)
 				g_debug("failed to add enumeration attrs: %s",
 					error_local->message);
 		}
 	} else if (g_strcmp0(data, "integer") == 0) {
-		if (!fu_bios_attr_set_integer_attrs(attr, &error_local)) {
+		if (!fu_bios_setting_set_integer_attrs(attr, &error_local)) {
 			if (g_getenv("FWUPD_BIOS_SETTING_VERBOSE") != NULL)
 				g_debug("failed to add integer attrs: %s", error_local->message);
 		}
 	} else if (g_strcmp0(data, "string") == 0) {
-		if (!fu_bios_attr_set_string_attrs(attr, &error_local)) {
+		if (!fu_bios_setting_set_string_attrs(attr, &error_local)) {
 			if (g_getenv("FWUPD_BIOS_SETTING_VERBOSE") != NULL)
 				g_debug("failed to add string attrs: %s", error_local->message);
 		}
@@ -305,70 +305,70 @@ fu_bios_attr_set_type(FuBiosAttrs *self, FwupdBiosAttr *attr, GError **error)
  * https://github.com/torvalds/linux/blob/v5.18/Documentation/ABI/testing/sysfs-class-firmware-attributes#L300
  */
 static gboolean
-fu_bios_attr_set_file_attributes(FwupdBiosAttr *attr, GError **error)
+fu_bios_setting_set_file_attributes(FwupdBiosSetting *attr, GError **error)
 {
 	g_autofree gchar *value = NULL;
 
-	if (g_strcmp0(fwupd_bios_attr_get_name(attr), FWUPD_BIOS_ATTR_PENDING_REBOOT) != 0) {
+	if (g_strcmp0(fwupd_bios_setting_get_name(attr), FWUPD_BIOS_SETTING_PENDING_REBOOT) != 0) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "%s attribute is not supported",
-			    fwupd_bios_attr_get_name(attr));
+			    fwupd_bios_setting_get_name(attr));
 		return FALSE;
 	}
-	if (!fu_bios_attr_get_key(attr, NULL, &value, error))
+	if (!fu_bios_setting_get_key(attr, NULL, &value, error))
 		return FALSE;
-	fwupd_bios_attr_set_current_value(attr, value);
-	fwupd_bios_attr_set_read_only(attr, TRUE);
+	fwupd_bios_setting_set_current_value(attr, value);
+	fwupd_bios_setting_set_read_only(attr, TRUE);
 
 	return TRUE;
 }
 
 static gboolean
-fu_bios_attrs_set_folder_attributes(FuBiosAttrs *self, FwupdBiosAttr *attr, GError **error)
+fu_bios_settings_set_folder_attributes(FuBiosSettings *self, FwupdBiosSetting *attr, GError **error)
 {
 	g_autoptr(GError) error_local = NULL;
 
-	if (!fu_bios_attr_set_type(self, attr, error))
+	if (!fu_bios_setting_set_type(self, attr, error))
 		return FALSE;
-	if (!fu_bios_attr_set_current_value(attr, error))
+	if (!fu_bios_setting_set_current_value(attr, error))
 		return FALSE;
-	if (!fu_bios_attr_set_description(attr, &error_local))
+	if (!fu_bios_setting_set_description(attr, &error_local))
 		g_debug("%s", error_local->message);
-	if (!fu_bios_attrs_run_folder_fixups(attr, error))
+	if (!fu_bios_settings_run_folder_fixups(attr, error))
 		return FALSE;
 	return TRUE;
 }
 
 static gboolean
-fu_bios_attrs_populate_attribute(FuBiosAttrs *self,
-				 const gchar *driver,
-				 const gchar *path,
-				 const gchar *name,
-				 GError **error)
+fu_bios_settings_populate_attribute(FuBiosSettings *self,
+				    const gchar *driver,
+				    const gchar *path,
+				    const gchar *name,
+				    GError **error)
 {
-	g_autoptr(FwupdBiosAttr) attr = NULL;
+	g_autoptr(FwupdBiosSetting) attr = NULL;
 	g_autofree gchar *id = NULL;
 
-	g_return_val_if_fail(FU_IS_BIOS_ATTRS(self), FALSE);
+	g_return_val_if_fail(FU_IS_BIOS_SETTINGS(self), FALSE);
 	g_return_val_if_fail(name != NULL, FALSE);
 	g_return_val_if_fail(path != NULL, FALSE);
 	g_return_val_if_fail(driver != NULL, FALSE);
 
-	attr = fwupd_bios_attr_new(name, path);
+	attr = fwupd_bios_setting_new(name, path);
 
 	if (g_file_test(path, G_FILE_TEST_IS_DIR)) {
-		if (!fu_bios_attrs_set_folder_attributes(self, attr, error))
+		if (!fu_bios_settings_set_folder_attributes(self, attr, error))
 			return FALSE;
 	} else {
-		if (!fu_bios_attr_set_file_attributes(attr, error))
+		if (!fu_bios_setting_set_file_attributes(attr, error))
 			return FALSE;
 	}
 
 	id = g_strdup_printf("com.%s.%s", driver, name);
-	fwupd_bios_attr_set_id(attr, id);
-	fu_bios_attr_fixup_read_only(attr);
+	fwupd_bios_setting_set_id(attr, id);
+	fu_bios_setting_fixup_read_only(attr);
 
 	g_ptr_array_add(self->attrs, g_object_ref(attr));
 
@@ -376,8 +376,8 @@ fu_bios_attrs_populate_attribute(FuBiosAttrs *self,
 }
 
 /**
- * fu_bios_attrs_setup:
- * @self: a #FuBiosAttrs
+ * fu_bios_settings_setup:
+ * @self: a #FuBiosSettings
  *
  * Clears all attributes and re-initializes them.
  * Mostly used for the test suite, but could potentially be connected to udev
@@ -386,13 +386,13 @@ fu_bios_attrs_populate_attribute(FuBiosAttrs *self,
  * Since: 1.8.4
  **/
 gboolean
-fu_bios_attrs_setup(FuBiosAttrs *self, GError **error)
+fu_bios_settings_setup(FuBiosSettings *self, GError **error)
 {
 	guint count = 0;
 	g_autofree gchar *sysfsfwdir = NULL;
 	g_autoptr(GDir) class_dir = NULL;
 
-	g_return_val_if_fail(FU_IS_BIOS_ATTRS(self), FALSE);
+	g_return_val_if_fail(FU_IS_BIOS_SETTINGS(self), FALSE);
 
 	if (self->attrs->len > 0) {
 		g_debug("re-initializing attributes");
@@ -425,11 +425,11 @@ fu_bios_attrs_setup(FuBiosAttrs *self, GError **error)
 			if (name == NULL)
 				break;
 			full_path = g_build_filename(path, name, NULL);
-			if (!fu_bios_attrs_populate_attribute(self,
-							      driver,
-							      full_path,
-							      name,
-							      &error_local)) {
+			if (!fu_bios_settings_populate_attribute(self,
+								 driver,
+								 full_path,
+								 name,
+								 &error_local)) {
 				if (g_error_matches(error_local,
 						    FWUPD_ERROR,
 						    FWUPD_ERROR_NOT_SUPPORTED)) {
@@ -447,30 +447,30 @@ fu_bios_attrs_setup(FuBiosAttrs *self, GError **error)
 }
 
 static void
-fu_bios_attrs_init(FuBiosAttrs *self)
+fu_bios_settings_init(FuBiosSettings *self)
 {
 	self->attrs = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 }
 
 /**
- * fu_bios_attrs_get_attr:
- * @self: a #FuBiosAttrs
+ * fu_bios_settings_get_attr:
+ * @self: a #FuBiosSettings
  * @val: the attribute ID or name to check for
  *
  * Returns: (transfer none): the attribute with the given ID or name or NULL if it doesn't exist.
  *
  * Since: 1.8.4
  **/
-FwupdBiosAttr *
-fu_bios_attrs_get_attr(FuBiosAttrs *self, const gchar *val)
+FwupdBiosSetting *
+fu_bios_settings_get_attr(FuBiosSettings *self, const gchar *val)
 {
-	g_return_val_if_fail(FU_IS_BIOS_ATTRS(self), NULL);
+	g_return_val_if_fail(FU_IS_BIOS_SETTINGS(self), NULL);
 	g_return_val_if_fail(val != NULL, NULL);
 
 	for (guint i = 0; i < self->attrs->len; i++) {
-		FwupdBiosAttr *attr = g_ptr_array_index(self->attrs, i);
-		const gchar *tmp_id = fwupd_bios_attr_get_id(attr);
-		const gchar *tmp_name = fwupd_bios_attr_get_name(attr);
+		FwupdBiosSetting *attr = g_ptr_array_index(self->attrs, i);
+		const gchar *tmp_id = fwupd_bios_setting_get_id(attr);
+		const gchar *tmp_name = fwupd_bios_setting_get_name(attr);
 		if (g_strcmp0(val, tmp_id) == 0 || g_strcmp0(val, tmp_name) == 0)
 			return attr;
 	}
@@ -478,25 +478,25 @@ fu_bios_attrs_get_attr(FuBiosAttrs *self, const gchar *val)
 }
 
 /**
- * fu_bios_attrs_get_all:
- * @self: a #FuBiosAttrs
+ * fu_bios_settings_get_all:
+ * @self: a #FuBiosSettings
  *
  * Gets all the attributes in the object.
  *
- * Returns: (transfer container) (element-type FwupdBiosAttr): attributes
+ * Returns: (transfer container) (element-type FwupdBiosSetting): attributes
  *
  * Since: 1.8.4
  **/
 GPtrArray *
-fu_bios_attrs_get_all(FuBiosAttrs *self)
+fu_bios_settings_get_all(FuBiosSettings *self)
 {
-	g_return_val_if_fail(FU_IS_BIOS_ATTRS(self), NULL);
+	g_return_val_if_fail(FU_IS_BIOS_SETTINGS(self), NULL);
 	return g_ptr_array_ref(self->attrs);
 }
 
 /**
- * fu_bios_attrs_get_pending_reboot:
- * @self: a #FuBiosAttrs
+ * fu_bios_settings_get_pending_reboot:
+ * @self: a #FuBiosSettings
  * @result: (out): Whether a reboot is pending
  * @error: (nullable): optional return location for an error
  *
@@ -505,21 +505,21 @@ fu_bios_attrs_get_all(FuBiosAttrs *self)
  * Since: 1.8.4
  **/
 gboolean
-fu_bios_attrs_get_pending_reboot(FuBiosAttrs *self, gboolean *result, GError **error)
+fu_bios_settings_get_pending_reboot(FuBiosSettings *self, gboolean *result, GError **error)
 {
-	FwupdBiosAttr *attr;
+	FwupdBiosSetting *attr;
 	const gchar *data;
 	guint64 val = 0;
 
 	g_return_val_if_fail(result != NULL, FALSE);
-	g_return_val_if_fail(FU_IS_BIOS_ATTRS(self), FALSE);
+	g_return_val_if_fail(FU_IS_BIOS_SETTINGS(self), FALSE);
 
 	for (guint i = 0; i < self->attrs->len; i++) {
 		const gchar *tmp;
 
 		attr = g_ptr_array_index(self->attrs, i);
-		tmp = fwupd_bios_attr_get_name(attr);
-		if (g_strcmp0(tmp, FWUPD_BIOS_ATTR_PENDING_REBOOT) == 0)
+		tmp = fwupd_bios_setting_get_name(attr);
+		if (g_strcmp0(tmp, FWUPD_BIOS_SETTING_PENDING_REBOOT) == 0)
 			break;
 		attr = NULL;
 	}
@@ -532,7 +532,7 @@ fu_bios_attrs_get_pending_reboot(FuBiosAttrs *self, gboolean *result, GError **e
 		return FALSE;
 	}
 
-	data = fwupd_bios_attr_get_current_value(attr);
+	data = fwupd_bios_setting_get_current_value(attr);
 	if (!fu_strtoull(data, &val, 0, G_MAXUINT32, error))
 		return FALSE;
 
@@ -542,44 +542,44 @@ fu_bios_attrs_get_pending_reboot(FuBiosAttrs *self, gboolean *result, GError **e
 }
 
 /**
- * fu_bios_attrs_to_variant:
- * @self: a #FuBiosAttrs
+ * fu_bios_settings_to_variant:
+ * @self: a #FuBiosSettings
  * @trusted: whether the caller should receive trusted values
  *
- * Serializes the #FwupdBiosAttr objects.
+ * Serializes the #FwupdBiosSetting objects.
  *
  * Returns: a #GVariant or %NULL
  *
  * Since: 1.8.4
  **/
 GVariant *
-fu_bios_attrs_to_variant(FuBiosAttrs *self, gboolean trusted)
+fu_bios_settings_to_variant(FuBiosSettings *self, gboolean trusted)
 {
 	GVariantBuilder builder;
 
-	g_return_val_if_fail(FU_IS_BIOS_ATTRS(self), NULL);
+	g_return_val_if_fail(FU_IS_BIOS_SETTINGS(self), NULL);
 
 	g_variant_builder_init(&builder, G_VARIANT_TYPE("aa{sv}"));
 	for (guint i = 0; i < self->attrs->len; i++) {
-		FwupdBiosAttr *bios_attr = g_ptr_array_index(self->attrs, i);
+		FwupdBiosSetting *bios_setting = g_ptr_array_index(self->attrs, i);
 		g_variant_builder_add_value(&builder,
-					    fwupd_bios_attr_to_variant(bios_attr, trusted));
+					    fwupd_bios_setting_to_variant(bios_setting, trusted));
 	}
 	return g_variant_new("(aa{sv})", &builder);
 }
 
 /**
- * fu_bios_attrs_from_json:
- * @self: a #FuBiosAttrs
+ * fu_bios_settings_from_json:
+ * @self: a #FuBiosSettings
  *
- * Loads #FwupdBiosAttr objects from a JSON node.
+ * Loads #FwupdBiosSetting objects from a JSON node.
  *
  * Returns: TRUE if the objects were imported
  *
  * Since: 1.8.4
  **/
 gboolean
-fu_bios_attrs_from_json(FuBiosAttrs *self, JsonNode *json_node, GError **error)
+fu_bios_settings_from_json(FuBiosSettings *self, JsonNode *json_node, GError **error)
 {
 	JsonArray *array;
 	JsonObject *obj;
@@ -592,18 +592,18 @@ fu_bios_attrs_from_json(FuBiosAttrs *self, JsonNode *json_node, GError **error)
 	obj = json_node_get_object(json_node);
 
 	/* this has to exist */
-	if (!json_object_has_member(obj, "BiosAttributes")) {
+	if (!json_object_has_member(obj, "BiosSettings")) {
 		g_set_error_literal(error,
 				    G_IO_ERROR,
 				    G_IO_ERROR_INVALID_DATA,
-				    "no BiosAttributes property in object");
+				    "no BiosSettings property in object");
 		return FALSE;
 	}
-	array = json_object_get_array_member(obj, "BiosAttributes");
+	array = json_object_get_array_member(obj, "BiosSettings");
 	for (guint i = 0; i < json_array_get_length(array); i++) {
 		JsonNode *node_tmp = json_array_get_element(array, i);
-		g_autoptr(FwupdBiosAttr) attr = fwupd_bios_attr_new(NULL, NULL);
-		if (!fwupd_bios_attr_from_json(attr, node_tmp, error))
+		g_autoptr(FwupdBiosSetting) attr = fwupd_bios_setting_new(NULL, NULL);
+		if (!fwupd_bios_setting_from_json(attr, node_tmp, error))
 			return FALSE;
 		g_ptr_array_add(self->attrs, g_steal_pointer(&attr));
 	}
@@ -613,14 +613,14 @@ fu_bios_attrs_from_json(FuBiosAttrs *self, JsonNode *json_node, GError **error)
 }
 
 /**
- * fu_bios_attrs_new:
+ * fu_bios_settings_new:
  *
- * Returns: #FuBiosAttrs
+ * Returns: #FuBiosSettings
  *
  * Since: 1.8.4
  **/
-FuBiosAttrs *
-fu_bios_attrs_new(void)
+FuBiosSettings *
+fu_bios_settings_new(void)
 {
 	return g_object_new(FU_TYPE_FIRMWARE_ATTRS, NULL);
 }

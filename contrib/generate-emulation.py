@@ -25,7 +25,7 @@ def _minimize_json(json_str: str) -> str:
     nodes = json.loads(json_str)
     new_attrs: List[Dict[str, Any]] = []
     new_devices: List[Dict[str, Any]] = []
-    new_bios_attrs: List[Dict[str, Any]] = []
+    new_bios_settings: List[Dict[str, Any]] = []
     try:
         for attr in nodes["SecurityAttributes"]:
             new_attr: Dict[str, Any] = {}
@@ -45,19 +45,19 @@ def _minimize_json(json_str: str) -> str:
     except KeyError:
         pass
     try:
-        for device in nodes["BiosAttributes"]:
+        for device in nodes["BiosSettings"]:
             new_attr: Dict[str, Any] = {}
             for key in device:
                 if key not in ["Filename"]:
                     new_attr[key] = device[key]
-            new_bios_attrs.append(new_attr)
+            new_bios_settings.append(new_attr)
     except KeyError:
         pass
     return json.dumps(
         {
             "SecurityAttributes": new_attrs,
             "Devices": new_devices,
-            "BiosAttributes": new_bios_attrs,
+            "BiosSettings": new_bios_settings,
         },
         indent=2,
         separators=(",", " : "),
@@ -99,13 +99,13 @@ def _get_host_devices_and_attrs() -> str:
             builder.end_object()
         builder.end_array()
 
-    # add BIOS attributes
+    # add BIOS settings
     try:
-        attrs = client.get_bios_attrs()
+        attrs = client.get_bios_settings()
     except GLib.GError as e:
         print("ignoring {}".format(e))
     else:
-        builder.set_member_name("BiosAttributes")
+        builder.set_member_name("BiosSettings")
         builder.begin_array()
         for attr in attrs:
             builder.begin_object()

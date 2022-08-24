@@ -1071,18 +1071,18 @@ LIBFWUPDPLUGIN_1.8.3 {
 LIBFWUPDPLUGIN_1.8.4 {
   global:
     fu_backend_add_string;
-    fu_bios_attrs_from_json;
-    fu_bios_attrs_get_all;
-    fu_bios_attrs_get_attr;
-    fu_bios_attrs_get_pending_reboot;
-    fu_bios_attrs_get_type;
-    fu_bios_attrs_new;
-    fu_bios_attrs_setup;
-    fu_bios_attrs_to_variant;
-    fu_context_get_bios_attr;
-    fu_context_get_bios_attr_pending_reboot;
-    fu_context_get_bios_attrs;
-    fu_context_reload_bios_attrs;
+    fu_bios_settings_from_json;
+    fu_bios_settings_get_all;
+    fu_bios_settings_get_attr;
+    fu_bios_settings_get_pending_reboot;
+    fu_bios_settings_get_type;
+    fu_bios_settings_new;
+    fu_bios_settings_setup;
+    fu_bios_settings_to_variant;
+    fu_context_get_bios_setting;
+    fu_context_get_bios_setting_pending_reboot;
+    fu_context_get_bios_settings;
+    fu_context_reload_bios_settings;
     fu_device_security_attr_new;
     fu_plugin_add_string;
     fu_plugin_security_attr_new;

@@ -28,7 +28,7 @@
 
 #include <fwupdplugin.h>
 
-#include "fwupd-bios-attr-private.h"
+#include "fwupd-bios-setting-private.h"
 #include "fwupd-common-private.h"
 #include "fwupd-device-private.h"
 #include "fwupd-enums-private.h"
@@ -37,7 +37,7 @@
 #include "fwupd-resources.h"
 #include "fwupd-security-attr-private.h"
 
-#include "fu-bios-attrs-private.h"
+#include "fu-bios-settings-private.h"
 #include "fu-cabinet.h"
 #include "fu-context-private.h"
 #include "fu-coswid-firmware.h"
@@ -728,15 +728,15 @@ fu_engine_modify_remote(FuEngine *self,
 }
 
 static gboolean
-fu_engine_update_bios_attr(FwupdBiosAttr *attr, const gchar *value, GError **error)
+fu_engine_update_bios_setting(FwupdBiosSetting *attr, const gchar *value, GError **error)
 {
 	int fd;
 	g_autofree gchar *fn =
-	    g_build_filename(fwupd_bios_attr_get_path(attr), "current_value", NULL);
+	    g_build_filename(fwupd_bios_setting_get_path(attr), "current_value", NULL);
 	g_autoptr(FuIOChannel) io = NULL;
 
-	if (g_strcmp0(fwupd_bios_attr_get_current_value(attr), value) == 0) {
-		g_debug("%s is already set to %s", fwupd_bios_attr_get_id(attr), value);
+	if (g_strcmp0(fwupd_bios_setting_get_current_value(attr), value) == 0) {
+		g_debug("%s is already set to %s", fwupd_bios_setting_get_id(attr), value);
 		return TRUE;
 	}
 
@@ -762,9 +762,9 @@ fu_engine_update_bios_attr(FwupdBiosAttr *attr, const gchar *value, GError **err
 				     FU_IO_CHANNEL_FLAG_NONE,
 				     error))
 		return FALSE;
-	fwupd_bios_attr_set_current_value(attr, value);
+	fwupd_bios_setting_set_current_value(attr, value);
 
-	g_debug("set %s to %s", fwupd_bios_attr_get_id(attr), value);
+	g_debug("set %s to %s", fwupd_bios_setting_get_id(attr), value);
 
 	return TRUE;
 }
@@ -774,7 +774,7 @@ fu_engine_update_bios_attr(FwupdBiosAttr *attr, const gchar *value, GError **err
  * error messages
  */
 static gboolean
-fu_engine_validate_bios_attr_input(FwupdBiosAttr *attr, const gchar **value, GError **error)
+fu_engine_validate_bios_setting_input(FwupdBiosSetting *attr, const gchar **value, GError **error)
 {
 	guint64 tmp = 0;
 
@@ -788,17 +788,17 @@ fu_engine_validate_bios_attr_input(FwupdBiosAttr *attr, const gchar **value, GEr
 				    "attribute not found");
 		return FALSE;
 	}
-	if (fwupd_bios_attr_get_read_only(attr)) {
+	if (fwupd_bios_setting_get_read_only(attr)) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "%s is read only",
-			    fwupd_bios_attr_get_name(attr));
+			    fwupd_bios_setting_get_name(attr));
 		return FALSE;
-	} else if (fwupd_bios_attr_get_kind(attr) == FWUPD_BIOS_ATTR_KIND_INTEGER) {
+	} else if (fwupd_bios_setting_get_kind(attr) == FWUPD_BIOS_SETTING_KIND_INTEGER) {
 		if (!fu_strtoull(*value, &tmp, 0, G_MAXUINT64, error))
 			return FALSE;
-		if (tmp < fwupd_bios_attr_get_lower_bound(attr)) {
+		if (tmp < fwupd_bios_setting_get_lower_bound(attr)) {
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
@@ -806,10 +806,10 @@ fu_engine_validate_bios_attr_input(FwupdBiosAttr *attr, const gchar **value, GEr
 				    "); expected at least %" G_GUINT64_FORMAT,
 				    *value,
 				    tmp,
-				    fwupd_bios_attr_get_lower_bound(attr));
+				    fwupd_bios_setting_get_lower_bound(attr));
 			return FALSE;
 		}
-		if (tmp > fwupd_bios_attr_get_upper_bound(attr)) {
+		if (tmp > fwupd_bios_setting_get_upper_bound(attr)) {
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
@@ -817,12 +817,12 @@ fu_engine_validate_bios_attr_input(FwupdBiosAttr *attr, const gchar **value, GEr
 				    "); expected no more than %" G_GUINT64_FORMAT,
 				    *value,
 				    tmp,
-				    fwupd_bios_attr_get_upper_bound(attr));
+				    fwupd_bios_setting_get_upper_bound(attr));
 			return FALSE;
 		}
-	} else if (fwupd_bios_attr_get_kind(attr) == FWUPD_BIOS_ATTR_KIND_STRING) {
+	} else if (fwupd_bios_setting_get_kind(attr) == FWUPD_BIOS_SETTING_KIND_STRING) {
 		tmp = strlen(*value);
-		if (tmp < fwupd_bios_attr_get_lower_bound(attr)) {
+		if (tmp < fwupd_bios_setting_get_lower_bound(attr)) {
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
@@ -830,10 +830,10 @@ fu_engine_validate_bios_attr_input(FwupdBiosAttr *attr, const gchar **value, GEr
 				    "); expected at least %" G_GUINT64_FORMAT,
 				    *value,
 				    tmp,
-				    fwupd_bios_attr_get_lower_bound(attr));
+				    fwupd_bios_setting_get_lower_bound(attr));
 			return FALSE;
 		}
-		if (tmp > fwupd_bios_attr_get_upper_bound(attr)) {
+		if (tmp > fwupd_bios_setting_get_upper_bound(attr)) {
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
@@ -841,11 +841,11 @@ fu_engine_validate_bios_attr_input(FwupdBiosAttr *attr, const gchar **value, GEr
 				    "); expected no more than %" G_GUINT64_FORMAT,
 				    *value,
 				    tmp,
-				    fwupd_bios_attr_get_upper_bound(attr));
+				    fwupd_bios_setting_get_upper_bound(attr));
 			return FALSE;
 		}
-	} else if (fwupd_bios_attr_get_kind(attr) == FWUPD_BIOS_ATTR_KIND_ENUMERATION) {
-		const gchar *result = fwupd_bios_attr_map_possible_value(attr, *value, error);
+	} else if (fwupd_bios_setting_get_kind(attr) == FWUPD_BIOS_SETTING_KIND_ENUMERATION) {
+		const gchar *result = fwupd_bios_setting_map_possible_value(attr, *value, error);
 		if (result == NULL)
 			return FALSE;
 		*value = result;
@@ -860,34 +860,34 @@ fu_engine_validate_bios_attr_input(FwupdBiosAttr *attr, const gchar **value, GEr
 }
 
 static gboolean
-fu_engine_modify_single_bios_attr(FuEngine *self,
-				  const gchar *key,
-				  const gchar *value,
-				  GError **error)
+fu_engine_modify_single_bios_setting(FuEngine *self,
+				     const gchar *key,
+				     const gchar *value,
+				     GError **error)
 {
-	FwupdBiosAttr *attr = fu_context_get_bios_attr(self->ctx, key);
+	FwupdBiosSetting *attr = fu_context_get_bios_setting(self->ctx, key);
 	const gchar *tmp = value;
 
-	if (!fu_engine_validate_bios_attr_input(attr, &tmp, error))
+	if (!fu_engine_validate_bios_setting_input(attr, &tmp, error))
 		return FALSE;
 
-	return fu_engine_update_bios_attr(attr, tmp, error);
+	return fu_engine_update_bios_setting(attr, tmp, error);
 }
 
 /**
- * fu_engine_modify_bios_attrs:
+ * fu_engine_modify_bios_settings:
  * @self: a #FuEngine
  * @settings: Hashtable of settings/values to configure
  * @error: (nullable): optional return location for an error
  *
- * Use the kernel API to set one or more BIOS attributes.
+ * Use the kernel API to set one or more BIOS settings.
  *
  * Returns: %TRUE for success
  **/
 gboolean
-fu_engine_modify_bios_attrs(FuEngine *self, GHashTable *settings, GError **error)
+fu_engine_modify_bios_settings(FuEngine *self, GHashTable *settings, GError **error)
 {
-	FwupdBiosAttr *pending;
+	FwupdBiosSetting *pending;
 	GHashTableIter iter;
 	gpointer key, value;
 
@@ -905,20 +905,20 @@ fu_engine_modify_bios_attrs(FuEngine *self, GHashTable *settings, GError **error
 				    (const gchar *)key);
 			return FALSE;
 		}
-		if (!fu_engine_modify_single_bios_attr(self, key, value, error))
+		if (!fu_engine_modify_single_bios_setting(self, key, value, error))
 			return FALSE;
 	}
 
-	pending = fu_context_get_bios_attr(self->ctx, FWUPD_BIOS_ATTR_PENDING_REBOOT);
+	pending = fu_context_get_bios_setting(self->ctx, FWUPD_BIOS_SETTING_PENDING_REBOOT);
 	if (pending == NULL) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_FOUND,
 			    "attribute %s not found",
-			    FWUPD_BIOS_ATTR_PENDING_REBOOT);
+			    FWUPD_BIOS_SETTING_PENDING_REBOOT);
 		return FALSE;
 	}
-	fwupd_bios_attr_set_current_value(pending, "1");
+	fwupd_bios_setting_set_current_value(pending, "1");
 	return TRUE;
 }
 
@@ -6505,10 +6505,10 @@ fu_engine_security_attrs_from_json(FuEngine *self, JsonNode *json_node, GError *
 }
 
 static gboolean
-fu_engine_bios_attrs_from_json(FuEngine *self, JsonNode *json_node, GError **error)
+fu_engine_bios_settings_from_json(FuEngine *self, JsonNode *json_node, GError **error)
 {
 	JsonObject *obj;
-	g_autoptr(FuBiosAttrs) bios_attrs = fu_context_get_bios_attrs(self->ctx);
+	g_autoptr(FuBiosSettings) bios_settings = fu_context_get_bios_settings(self->ctx);
 
 	/* sanity check */
 	if (!JSON_NODE_HOLDS_OBJECT(json_node)) {
@@ -6518,9 +6518,9 @@ fu_engine_bios_attrs_from_json(FuEngine *self, JsonNode *json_node, GError **err
 
 	/* not supplied */
 	obj = json_node_get_object(json_node);
-	if (!json_object_has_member(obj, "BiosAttributes"))
+	if (!json_object_has_member(obj, "BiosSettings"))
 		return TRUE;
-	if (!fu_bios_attrs_from_json(bios_attrs, json_node, error))
+	if (!fu_bios_settings_from_json(bios_settings, json_node, error))
 		return FALSE;
 
 	/* success */
@@ -6595,7 +6595,7 @@ fu_engine_load_host_emulation(FuEngine *self, const gchar *fn, GError **error)
 		return FALSE;
 	if (!fu_engine_security_attrs_from_json(self, json_parser_get_root(parser), error))
 		return FALSE;
-	if (!fu_engine_bios_attrs_from_json(self, json_parser_get_root(parser), error))
+	if (!fu_engine_bios_settings_from_json(self, json_parser_get_root(parser), error))
 		return FALSE;
 
 #ifdef HAVE_HSI
@@ -6893,7 +6893,7 @@ fu_engine_check_firmware_attributes(FuEngine *self, FuDevice *device)
 	subsystem = fu_udev_device_get_subsystem(FU_UDEV_DEVICE(device));
 	if (g_strcmp0(subsystem, "firmware-attributes") == 0) {
 		g_autoptr(GError) error = NULL;
-		if (!fu_context_reload_bios_attrs(self->ctx, &error))
+		if (!fu_context_reload_bios_settings(self->ctx, &error))
 			g_debug("%s", error->message);
 	}
 }

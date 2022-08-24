@@ -10,29 +10,29 @@
 
 #include <glib/gi18n.h>
 
-#include "fu-bios-attrs-private.h"
-#include "fu-util-bios-attr.h"
+#include "fu-bios-settings-private.h"
+#include "fu-util-bios-setting.h"
 #include "fu-util-common.h"
 
 static gboolean
-fu_util_bios_attr_dup_fields(const gchar *name, const gchar *desc)
+fu_util_bios_setting_dup_fields(const gchar *name, const gchar *desc)
 {
 	return g_strcmp0(name, desc) == 0;
 }
 
 static void
-fu_util_bios_attr_update_description(FwupdBiosAttr *attr)
+fu_util_bios_setting_update_description(FwupdBiosSetting *setting)
 {
-	const gchar *name = fwupd_bios_attr_get_name(attr);
-	const gchar *old = fwupd_bios_attr_get_description(attr);
+	const gchar *name = fwupd_bios_setting_get_name(setting);
+	const gchar *old = fwupd_bios_setting_get_description(setting);
 	const gchar *new = NULL;
 
-	if (g_strcmp0(name, FWUPD_BIOS_ATTR_PENDING_REBOOT) == 0) {
+	if (g_strcmp0(name, FWUPD_BIOS_SETTING_PENDING_REBOOT) == 0) {
 		/* TRANSLATORS: Settings refers to BIOS settings in this context */
 		new = _("Settings will apply after system reboots");
 	}
 	/* For providing a better description on a number of Lenovo systems */
-	if (fu_util_bios_attr_dup_fields(name, old)) {
+	if (fu_util_bios_setting_dup_fields(name, old)) {
 		if (g_strcmp0(old, "WindowsUEFIFirmwareUpdate") == 0) {
 			/* TRANSLATORS: description of a BIOS setting */
 			new = _("BIOS updates delivered via LVFS or Windows Update");
@@ -42,21 +42,21 @@ fu_util_bios_attr_update_description(FwupdBiosAttr *attr)
 		new = gettext(old);
 	}
 	if (new != NULL)
-		fwupd_bios_attr_set_description(attr, new);
+		fwupd_bios_setting_set_description(setting, new);
 }
 
 static const gchar *
-fu_util_bios_attr_kind_to_string(FwupdBiosAttrKind kind)
+fu_util_bios_setting_kind_to_string(FwupdBiosSettingKind kind)
 {
-	if (kind == FWUPD_BIOS_ATTR_KIND_ENUMERATION) {
+	if (kind == FWUPD_BIOS_SETTING_KIND_ENUMERATION) {
 		/* TRANSLATORS: The BIOS setting can only be changed to fixed values */
 		return _("Enumeration");
 	}
-	if (kind == FWUPD_BIOS_ATTR_KIND_INTEGER) {
+	if (kind == FWUPD_BIOS_SETTING_KIND_INTEGER) {
 		/* TRANSLATORS: The BIOS setting only accepts integers in a fixed range */
 		return _("Integer");
 	}
-	if (kind == FWUPD_BIOS_ATTR_KIND_STRING) {
+	if (kind == FWUPD_BIOS_SETTING_KIND_STRING) {
 		/* TRANSLATORS: The BIOS setting accepts strings */
 		return _("String");
 	}
@@ -64,14 +64,14 @@ fu_util_bios_attr_kind_to_string(FwupdBiosAttrKind kind)
 }
 
 gboolean
-fu_util_bios_attr_matches_args(FwupdBiosAttr *attr, gchar **values)
+fu_util_bios_setting_matches_args(FwupdBiosSetting *setting, gchar **values)
 {
 	const gchar *name;
 
 	/* no arguments set */
 	if (g_strv_length(values) == 0)
 		return TRUE;
-	name = fwupd_bios_attr_get_name(attr);
+	name = fwupd_bios_setting_get_name(setting);
 
 	/* check all arguments */
 	for (guint j = 0; j < g_strv_length(values); j++) {
@@ -82,19 +82,19 @@ fu_util_bios_attr_matches_args(FwupdBiosAttr *attr, gchar **values)
 }
 
 gboolean
-fu_util_get_bios_attr_as_json(gchar **values, GPtrArray *attrs, GError **error)
+fu_util_get_bios_setting_as_json(gchar **values, GPtrArray *settings, GError **error)
 {
 	g_autoptr(JsonBuilder) builder = json_builder_new();
 	json_builder_begin_object(builder);
 
-	json_builder_set_member_name(builder, "BiosAttributes");
+	json_builder_set_member_name(builder, "BiosSettings");
 	json_builder_begin_array(builder);
-	for (guint i = 0; i < attrs->len; i++) {
-		FwupdBiosAttr *attr = g_ptr_array_index(attrs, i);
-		if (fu_util_bios_attr_matches_args(attr, values)) {
-			fu_util_bios_attr_update_description(attr);
+	for (guint i = 0; i < settings->len; i++) {
+		FwupdBiosSetting *setting = g_ptr_array_index(settings, i);
+		if (fu_util_bios_setting_matches_args(setting, values)) {
+			fu_util_bios_setting_update_description(setting);
 			json_builder_begin_object(builder);
-			fwupd_bios_attr_to_json(attr, builder);
+			fwupd_bios_setting_to_json(setting, builder);
 			json_builder_end_object(builder);
 		}
 	}
@@ -104,31 +104,31 @@ fu_util_get_bios_attr_as_json(gchar **values, GPtrArray *attrs, GError **error)
 }
 
 gchar *
-fu_util_bios_attr_to_string(FwupdBiosAttr *attr, guint idt)
+fu_util_bios_setting_to_string(FwupdBiosSetting *setting, guint idt)
 {
 	const gchar *tmp;
-	FwupdBiosAttrKind type;
+	FwupdBiosSettingKind type;
 	g_autofree gchar *current_value = NULL;
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GString) str = g_string_new(NULL);
 
 	if (g_getenv("FWUPD_VERBOSE") != NULL) {
 		g_autofree gchar *debug_str = NULL;
-		debug_str = fwupd_bios_attr_to_string(attr);
+		debug_str = fwupd_bios_setting_to_string(setting);
 		g_debug("%s", debug_str);
 		return NULL;
 	}
-	tmp = fwupd_bios_attr_get_name(attr);
+	tmp = fwupd_bios_setting_get_name(setting);
 	fu_string_append(str, idt, tmp, NULL);
 
-	type = fwupd_bios_attr_get_kind(attr);
-	tmp = fu_util_bios_attr_kind_to_string(type);
+	type = fwupd_bios_setting_get_kind(setting);
+	tmp = fu_util_bios_setting_kind_to_string(type);
 	if (tmp != NULL) {
 		/* TRANSLATORS: type of BIOS setting */
 		fu_string_append(str, idt + 1, _("Setting type"), tmp);
 	}
 
-	tmp = fwupd_bios_attr_get_current_value(attr);
+	tmp = fwupd_bios_setting_get_current_value(setting);
 	if (tmp != NULL) {
 		current_value = g_strdup(tmp);
 	} else {
@@ -138,14 +138,14 @@ fu_util_bios_attr_to_string(FwupdBiosAttr *attr, guint idt)
 	/* TRANSLATORS: current value of a BIOS setting */
 	fu_string_append(str, idt + 1, _("Current Value"), current_value);
 
-	fu_util_bios_attr_update_description(attr);
-	tmp = fwupd_bios_attr_get_description(attr);
+	fu_util_bios_setting_update_description(setting);
+	tmp = fwupd_bios_setting_get_description(setting);
 	if (tmp != NULL) {
 		/* TRANSLATORS: description of BIOS setting */
 		fu_string_append(str, idt + 1, _("Description"), tmp);
 	}
 
-	if (fwupd_bios_attr_get_read_only(attr)) {
+	if (fwupd_bios_setting_get_read_only(setting)) {
 		/* TRANSLATORS: item is TRUE */
 		tmp = _("True");
 	} else {
@@ -155,15 +155,17 @@ fu_util_bios_attr_to_string(FwupdBiosAttr *attr, guint idt)
 	/* TRANSLATORS: BIOS setting is read only */
 	fu_string_append(str, idt + 1, _("Read Only"), tmp);
 
-	if (type == FWUPD_BIOS_ATTR_KIND_INTEGER || type == FWUPD_BIOS_ATTR_KIND_STRING) {
+	if (type == FWUPD_BIOS_SETTING_KIND_INTEGER || type == FWUPD_BIOS_SETTING_KIND_STRING) {
 		g_autofree gchar *lower =
-		    g_strdup_printf("%" G_GUINT64_FORMAT, fwupd_bios_attr_get_lower_bound(attr));
+		    g_strdup_printf("%" G_GUINT64_FORMAT,
+				    fwupd_bios_setting_get_lower_bound(setting));
 		g_autofree gchar *upper =
-		    g_strdup_printf("%" G_GUINT64_FORMAT, fwupd_bios_attr_get_upper_bound(attr));
-		if (type == FWUPD_BIOS_ATTR_KIND_INTEGER) {
+		    g_strdup_printf("%" G_GUINT64_FORMAT,
+				    fwupd_bios_setting_get_upper_bound(setting));
+		if (type == FWUPD_BIOS_SETTING_KIND_INTEGER) {
 			g_autofree gchar *scalar =
 			    g_strdup_printf("%" G_GUINT64_FORMAT,
-					    fwupd_bios_attr_get_scalar_increment(attr));
+					    fwupd_bios_setting_get_scalar_increment(setting));
 			if (lower != NULL) {
 				/* TRANSLATORS: Lowest valid integer for BIOS setting */
 				fu_string_append(str, idt + 1, _("Minimum value"), lower);
@@ -186,8 +188,8 @@ fu_util_bios_attr_to_string(FwupdBiosAttr *attr, guint idt)
 				fu_string_append(str, idt + 1, _("Maximum length"), upper);
 			}
 		}
-	} else if (type == FWUPD_BIOS_ATTR_KIND_ENUMERATION) {
-		GPtrArray *values = fwupd_bios_attr_get_possible_values(attr);
+	} else if (type == FWUPD_BIOS_SETTING_KIND_ENUMERATION) {
+		GPtrArray *values = fwupd_bios_setting_get_possible_values(setting);
 		if (values != NULL && values->len > 0) {
 			/* TRANSLATORS: Possible values for a bios setting */
 			fu_string_append(str, idt + 1, _("Possible Values"), NULL);
@@ -202,7 +204,7 @@ fu_util_bios_attr_to_string(FwupdBiosAttr *attr, guint idt)
 }
 
 GHashTable *
-fu_util_bios_attrs_parse_argv(gchar **input, GError **error)
+fu_util_bios_settings_parse_argv(gchar **input, GError **error)
 {
 	g_autoptr(GHashTable) bios_settings =
 	    g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
@@ -220,7 +222,7 @@ fu_util_bios_attrs_parse_argv(gchar **input, GError **error)
 	if (g_strv_length(input) == 1) {
 		g_autofree gchar *data = NULL;
 		g_autoptr(JsonParser) parser = json_parser_new();
-		g_autoptr(FuBiosAttrs) new_bios_attrs = fu_bios_attrs_new();
+		g_autoptr(FuBiosSettings) new_bios_settings = fu_bios_settings_new();
 		g_autoptr(GPtrArray) new_items = NULL;
 
 		if (!g_file_get_contents(input[0], &data, NULL, error))
@@ -230,15 +232,18 @@ fu_util_bios_attrs_parse_argv(gchar **input, GError **error)
 			return NULL;
 		}
 
-		if (!fu_bios_attrs_from_json(new_bios_attrs, json_parser_get_root(parser), error))
+		if (!fu_bios_settings_from_json(new_bios_settings,
+						json_parser_get_root(parser),
+						error))
 			return NULL;
 
-		new_items = fu_bios_attrs_get_all(new_bios_attrs);
+		new_items = fu_bios_settings_get_all(new_bios_settings);
 		for (guint i = 0; i < new_items->len; i++) {
-			FwupdBiosAttr *item_attr = g_ptr_array_index(new_items, i);
-			g_hash_table_insert(bios_settings,
-					    g_strdup(fwupd_bios_attr_get_id(item_attr)),
-					    g_strdup(fwupd_bios_attr_get_current_value(item_attr)));
+			FwupdBiosSetting *item_setting = g_ptr_array_index(new_items, i);
+			g_hash_table_insert(
+			    bios_settings,
+			    g_strdup(fwupd_bios_setting_get_id(item_setting)),
+			    g_strdup(fwupd_bios_setting_get_current_value(item_setting)));
 		}
 	} else {
 		for (guint i = 0; i < g_strv_length(input); i += 2)

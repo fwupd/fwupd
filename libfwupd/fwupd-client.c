@@ -20,7 +20,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
-#include "fwupd-bios-attr-private.h"
+#include "fwupd-bios-setting-private.h"
 #include "fwupd-client-private.h"
 #include "fwupd-client-sync.h"
 #include "fwupd-common-private.h"
@@ -1086,7 +1086,7 @@ fwupd_client_get_host_security_attrs_finish(FwupdClient *self, GAsyncResult *res
 }
 
 static void
-fwupd_client_modify_bios_attr_cb(GObject *source, GAsyncResult *res, gpointer user_data)
+fwupd_client_modify_bios_setting_cb(GObject *source, GAsyncResult *res, gpointer user_data)
 {
 	g_autoptr(GTask) task = G_TASK(user_data);
 	g_autoptr(GError) error = NULL;
@@ -1104,24 +1104,24 @@ fwupd_client_modify_bios_attr_cb(GObject *source, GAsyncResult *res, gpointer us
 }
 
 /**
- * fwupd_client_modify_bios_attr_async:
+ * fwupd_client_modify_bios_setting_async:
  * @self: a #FwupdClient
  * @settings: (transfer container): BIOS settings
  * @cancellable: (nullable): optional #GCancellable
  * @callback: the function to run on completion
  * @callback_data: the data to pass to @callback
  *
- * Modifies a BIOS attribute using kernel API.
+ * Modifies a BIOS setting using kernel API.
  * The daemon will only respond to this request with proper permissions.
  *
  * Since: 1.8.4
  **/
 void
-fwupd_client_modify_bios_attr_async(FwupdClient *self,
-				    GHashTable *settings,
-				    GCancellable *cancellable,
-				    GAsyncReadyCallback callback,
-				    gpointer callback_data)
+fwupd_client_modify_bios_setting_async(FwupdClient *self,
+				       GHashTable *settings,
+				       GCancellable *cancellable,
+				       GAsyncReadyCallback callback,
+				       gpointer callback_data)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE(self);
 	GVariantBuilder builder;
@@ -1145,29 +1145,29 @@ fwupd_client_modify_bios_attr_async(FwupdClient *self,
 		g_variant_builder_add(&builder, "{ss}", (const gchar *)key, (const gchar *)value);
 	}
 	g_dbus_proxy_call(priv->proxy,
-			  "SetBiosAttrs",
+			  "SetBiosSettings",
 			  g_variant_new("(a{ss})", &builder),
 			  G_DBUS_CALL_FLAGS_NONE,
 			  FWUPD_CLIENT_DBUS_PROXY_TIMEOUT,
 			  cancellable,
-			  fwupd_client_modify_bios_attr_cb,
+			  fwupd_client_modify_bios_setting_cb,
 			  g_steal_pointer(&task));
 }
 
 /**
- * fwupd_client_modify_bios_attr_finish:
+ * fwupd_client_modify_bios_setting_finish:
  * @self: a #FwupdClient
  * @res: the asynchronous result
  * @error: (nullable): optional return location for an error
  *
- * Gets the result of [method@FwupdClient.modify_bios_attr_async].
+ * Gets the result of [method@FwupdClient.modify_bios_setting_async].
  *
  * Returns: %TRUE for success
  *
  * Since: 1.8.4
  **/
 gboolean
-fwupd_client_modify_bios_attr_finish(FwupdClient *self, GAsyncResult *res, GError **error)
+fwupd_client_modify_bios_setting_finish(FwupdClient *self, GAsyncResult *res, GError **error)
 {
 	g_return_val_if_fail(FWUPD_IS_CLIENT(self), FALSE);
 	g_return_val_if_fail(g_task_is_valid(res, self), FALSE);
@@ -1176,7 +1176,7 @@ fwupd_client_modify_bios_attr_finish(FwupdClient *self, GAsyncResult *res, GErro
 }
 
 static void
-fwupd_client_get_bios_attrs_cb(GObject *source, GAsyncResult *res, gpointer user_data)
+fwupd_client_get_bios_settings_cb(GObject *source, GAsyncResult *res, gpointer user_data)
 {
 	g_autoptr(GTask) task = G_TASK(user_data);
 	g_autoptr(GError) error = NULL;
@@ -1191,12 +1191,12 @@ fwupd_client_get_bios_attrs_cb(GObject *source, GAsyncResult *res, gpointer user
 
 	/* success */
 	g_task_return_pointer(task,
-			      fwupd_bios_attr_array_from_variant(val),
+			      fwupd_bios_setting_array_from_variant(val),
 			      (GDestroyNotify)g_ptr_array_unref);
 }
 
 /**
- * fwupd_client_get_bios_attrs_async:
+ * fwupd_client_get_bios_settings_async:
  * @self: a #FwupdClient
  * @cancellable: (nullable): optional #GCancellable
  * @callback: the function to run on completion
@@ -1210,10 +1210,10 @@ fwupd_client_get_bios_attrs_cb(GObject *source, GAsyncResult *res, gpointer user
  * Since: 1.8.4
  **/
 void
-fwupd_client_get_bios_attrs_async(FwupdClient *self,
-				  GCancellable *cancellable,
-				  GAsyncReadyCallback callback,
-				  gpointer callback_data)
+fwupd_client_get_bios_settings_async(FwupdClient *self,
+				     GCancellable *cancellable,
+				     GAsyncReadyCallback callback,
+				     gpointer callback_data)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE(self);
 	g_autoptr(GTask) task = NULL;
@@ -1225,29 +1225,29 @@ fwupd_client_get_bios_attrs_async(FwupdClient *self,
 	/* call into daemon */
 	task = g_task_new(self, cancellable, callback, callback_data);
 	g_dbus_proxy_call(priv->proxy,
-			  "GetBiosAttrs",
+			  "GetBiosSettings",
 			  NULL,
 			  G_DBUS_CALL_FLAGS_NONE,
 			  FWUPD_CLIENT_DBUS_PROXY_TIMEOUT,
 			  cancellable,
-			  fwupd_client_get_bios_attrs_cb,
+			  fwupd_client_get_bios_settings_cb,
 			  g_steal_pointer(&task));
 }
 
 /**
- * fwupd_client_get_bios_attrs_finish:
+ * fwupd_client_get_bios_settings_finish:
  * @self: a #FwupdClient
  * @res: the asynchronous result
  * @error: (nullable): optional return location for an error
  *
- * Gets the result of [method@FwupdClient.get_bios_attrs_async].
+ * Gets the result of [method@FwupdClient.get_bios_settings_async].
  *
- * Returns: (element-type FwupdBiosAttr) (transfer container): attributes
+ * Returns: (element-type FwupdBiosSetting) (transfer container): attributes
  *
  * Since: 1.8.4
  **/
 GPtrArray *
-fwupd_client_get_bios_attrs_finish(FwupdClient *self, GAsyncResult *res, GError **error)
+fwupd_client_get_bios_settings_finish(FwupdClient *self, GAsyncResult *res, GError **error)
 {
 	g_return_val_if_fail(FWUPD_IS_CLIENT(self), NULL);
 	g_return_val_if_fail(g_task_is_valid(res, self), NULL);

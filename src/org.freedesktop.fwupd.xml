@@ -866,35 +866,35 @@
     </method>
 
     <!--***********************************************************-->
-    <method name='SetBiosAttrs'>
+    <method name='SetBiosSettings'>
       <doc:doc>
         <doc:description>
           <doc:para>
-            Modify BIOS attribute
+            Modify BIOS setting
           </doc:para>
         </doc:description>
       </doc:doc>
       <arg type='a{ss}' name='settings' direction='in'>
         <doc:doc>
           <doc:summary>
-            <doc:para>An array of BIOS attributes and their new values.</doc:para>
+            <doc:para>An array of BIOS settings and their new values.</doc:para>
           </doc:summary>
         </doc:doc>
       </arg>
     </method>
 
-    <method name='GetBiosAttrs'>
+    <method name='GetBiosSettings'>
       <doc:doc>
         <doc:description>
           <doc:para>
-            Gets a list of all the BIOS attributes.
+            Gets a list of all the BIOS settings.
           </doc:para>
         </doc:description>
       </doc:doc>
       <arg type='aa{sv}' name='attrs' direction='out'>
         <doc:doc>
           <doc:summary>
-            <doc:para>An array of BIOS attributes, with any properties set on each.</doc:para>
+            <doc:para>An array of BIOS settings, with any properties set on each.</doc:para>
           </doc:summary>
         </doc:doc>
       </arg>

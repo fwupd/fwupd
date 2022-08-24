@@ -104,23 +104,23 @@ _show_modifiers()
 	COMPREPLY+=( $(compgen -W '${_fwupdmgr_opts[@]}' -- "$cur") )
 }
 
-_show_bios_attrs()
+_show_bios_settings()
 {
 	if ! command -v jq &> /dev/null; then
 		return 0
 	fi
 	local attr
-	attr="$(command fwupdmgr get-bios-setting --json --no-authenticate 2>/dev/null | jq '.BiosAttributes | .[] | .Name')"
+	attr="$(command fwupdmgr get-bios-setting --json --no-authenticate 2>/dev/null | jq '.BiosSettings | .[] | .Name')"
 	COMPREPLY+=( $(compgen -W "${attr}" -- "$cur") )
 }
 
-_show_bios_attrs_possible()
+_show_bios_settings_possible()
 {
 	if ! command -v jq &> /dev/null; then
 		return 0
 	fi
 	local attr
-	attr="$(command fwupdmgr get-bios-setting "$1" --json --no-authenticate 2>/dev/null | jq '.BiosAttributes | .[] | .BiosAttrPossibleValues | .[]')"
+	attr="$(command fwupdmgr get-bios-setting "$1" --json --no-authenticate 2>/dev/null | jq '.BiosSettings | .[] | .BiosSettingPossibleValues | .[]')"
 	COMPREPLY+=( $(compgen -W "${attr}" -- "$cur") )
 }
 
@@ -174,8 +174,8 @@ _fwupdmgr()
 		fi
 		;;
 	get-bios-settings|get-bios-setting)
-		#bios attrs (no limit)
-		_show_bios_attrs
+		#bios settings (no limit)
+		_show_bios_settings
 		_show_bios_get_modifiers
 		return 0
 		;;
@@ -185,13 +185,13 @@ _fwupdmgr()
 			return 0
 		fi
 		count=$(($((args)) % 2))
-		#allow setting a single bios attr at a time
+		#allow setting a single bios setting at a time
 		if [[ $count == 0 ]]; then
-			_show_bios_attrs
+			_show_bios_settings
 		fi
 		#possible values (only works for enumeration though)
 		if [[ $count == 1 ]]; then
-			_show_bios_attrs_possible "$prev"
+			_show_bios_settings_possible "$prev"
 			return 0
 		fi
 		_show_bios_set_modifiers

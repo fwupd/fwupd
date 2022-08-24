@@ -888,22 +888,22 @@ fwupd_client_get_results(FwupdClient *self,
 }
 
 static void
-fwupd_client_modify_bios_attr_cb(GObject *source, GAsyncResult *res, gpointer user_data)
+fwupd_client_modify_bios_setting_cb(GObject *source, GAsyncResult *res, gpointer user_data)
 {
 	FwupdClientHelper *helper = (FwupdClientHelper *)user_data;
 	helper->ret =
-	    fwupd_client_modify_bios_attr_finish(FWUPD_CLIENT(source), res, &helper->error);
+	    fwupd_client_modify_bios_setting_finish(FWUPD_CLIENT(source), res, &helper->error);
 	g_main_loop_quit(helper->loop);
 }
 
 /**
- * fwupd_client_modify_bios_attr
+ * fwupd_client_modify_bios_setting
  * @self: a #FwupdClient
  * @settings: (transfer container): BIOS settings
  * @cancellable: (nullable): optional #GCancellable
  * @error: (nullable): optional return location for an error
  *
- * Modifies a BIOS attribute using kernel API.
+ * Modifies a BIOS setting using kernel API.
  * The daemon will only respond to this request with proper permissions.
  *
  * Returns: %TRUE for success
@@ -911,10 +911,10 @@ fwupd_client_modify_bios_attr_cb(GObject *source, GAsyncResult *res, gpointer us
  * Since: 1.8.4
  **/
 gboolean
-fwupd_client_modify_bios_attr(FwupdClient *self,
-			      GHashTable *settings,
-			      GCancellable *cancellable,
-			      GError **error)
+fwupd_client_modify_bios_setting(FwupdClient *self,
+				 GHashTable *settings,
+				 GCancellable *cancellable,
+				 GError **error)
 {
 	g_autoptr(FwupdClientHelper) helper = NULL;
 
@@ -929,11 +929,11 @@ fwupd_client_modify_bios_attr(FwupdClient *self,
 
 	/* call async version and run loop until complete */
 	helper = fwupd_client_helper_new(self);
-	fwupd_client_modify_bios_attr_async(self,
-					    settings,
-					    cancellable,
-					    fwupd_client_modify_bios_attr_cb,
-					    helper);
+	fwupd_client_modify_bios_setting_async(self,
+					       settings,
+					       cancellable,
+					       fwupd_client_modify_bios_setting_cb,
+					       helper);
 	g_main_loop_run(helper->loop);
 	if (!helper->ret) {
 		g_propagate_error(error, g_steal_pointer(&helper->error));
@@ -943,28 +943,28 @@ fwupd_client_modify_bios_attr(FwupdClient *self,
 }
 
 static void
-fwupd_client_get_bios_attrs_cb(GObject *source, GAsyncResult *res, gpointer user_data)
+fwupd_client_get_bios_settings_cb(GObject *source, GAsyncResult *res, gpointer user_data)
 {
 	FwupdClientHelper *helper = (FwupdClientHelper *)user_data;
 	helper->array =
-	    fwupd_client_get_bios_attrs_finish(FWUPD_CLIENT(source), res, &helper->error);
+	    fwupd_client_get_bios_settings_finish(FWUPD_CLIENT(source), res, &helper->error);
 	g_main_loop_quit(helper->loop);
 }
 
 /**
- * fwupd_client_get_bios_attrs:
+ * fwupd_client_get_bios_settings:
  * @self: a #FwupdClient
  * @cancellable: (nullable): optional #GCancellable
  * @error: (nullable): optional return location for an error
  *
- * Gets all the BIOS attributes from the daemon.
+ * Gets all the BIOS settings from the daemon.
  *
- * Returns: (element-type FwupdBiosAttr) (transfer container): attributes
+ * Returns: (element-type FwupdBiosSetting) (transfer container): attributes
  *
  * Since: 1.8.4
  **/
 GPtrArray *
-fwupd_client_get_bios_attrs(FwupdClient *self, GCancellable *cancellable, GError **error)
+fwupd_client_get_bios_settings(FwupdClient *self, GCancellable *cancellable, GError **error)
 {
 	g_autoptr(FwupdClientHelper) helper = NULL;
 
@@ -978,10 +978,10 @@ fwupd_client_get_bios_attrs(FwupdClient *self, GCancellable *cancellable, GError
 
 	/* call async version and run loop until complete */
 	helper = fwupd_client_helper_new(self);
-	fwupd_client_get_bios_attrs_async(self,
-					  cancellable,
-					  fwupd_client_get_bios_attrs_cb,
-					  helper);
+	fwupd_client_get_bios_settings_async(self,
+					     cancellable,
+					     fwupd_client_get_bios_settings_cb,
+					     helper);
 	g_main_loop_run(helper->loop);
 	if (helper->array == NULL) {
 		g_propagate_error(error, g_steal_pointer(&helper->error));

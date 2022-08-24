@@ -16,5 +16,5 @@ src/fu-remote-list.c
 src/fu-security-attr-common.c
 src/fu-tool.c
 src/fu-util.c
-src/fu-util-bios-attr.c
+src/fu-util-bios-setting.c
 src/fu-util-common.c

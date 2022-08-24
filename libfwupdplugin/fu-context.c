@@ -8,7 +8,7 @@
 
 #include "config.h"
 
-#include "fu-bios-attrs-private.h"
+#include "fu-bios-settings-private.h"
 #include "fu-context-private.h"
 #include "fu-hwids.h"
 #include "fu-smbios-private.h"
@@ -33,7 +33,7 @@ typedef struct {
 	FuLidState lid_state;
 	guint battery_level;
 	guint battery_threshold;
-	FuBiosAttrs *host_bios_attrs;
+	FuBiosSettings *host_bios_settings;
 } FuContextPrivate;
 
 enum { SIGNAL_SECURITY_CHANGED, SIGNAL_LAST };
@@ -119,7 +119,7 @@ fu_context_get_smbios_integer(FuContext *self, guint8 type, guint8 offset)
 }
 
 /**
- * fu_context_reload_bios_attrs:
+ * fu_context_reload_bios_settings:
  * @self: a #FuContext
  * @error: (nullable): optional return location for an error
  *
@@ -128,68 +128,68 @@ fu_context_get_smbios_integer(FuContext *self, guint8 type, guint8 offset)
  * Since: 1.8.4
  **/
 gboolean
-fu_context_reload_bios_attrs(FuContext *self, GError **error)
+fu_context_reload_bios_settings(FuContext *self, GError **error)
 {
 	FuContextPrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FU_IS_CONTEXT(self), FALSE);
-	return fu_bios_attrs_setup(priv->host_bios_attrs, error);
+	return fu_bios_settings_setup(priv->host_bios_settings, error);
 }
 
 /**
- * fu_context_get_bios_attrs:
+ * fu_context_get_bios_settings:
  * @self: a #FuContext
  *
  * Returns all the firmware attributes defined in the system.
  *
- * Returns: (transfer full): A #FuBiosAttrs
+ * Returns: (transfer full): A #FuBiosSettings
  *
  * Since: 1.8.4
  **/
-FuBiosAttrs *
-fu_context_get_bios_attrs(FuContext *self)
+FuBiosSettings *
+fu_context_get_bios_settings(FuContext *self)
 {
 	FuContextPrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FU_IS_CONTEXT(self), NULL);
-	return g_object_ref(priv->host_bios_attrs);
+	return g_object_ref(priv->host_bios_settings);
 }
 
 /**
- * fu_context_get_bios_attr:
+ * fu_context_get_bios_setting:
  * @self: a #FuContext
- * @name: a BIOS attribute title, e.g. `BootOrderLock`
+ * @name: a BIOS setting title, e.g. `BootOrderLock`
  *
- * Finds out if a system supports a given BIOS attribute.
+ * Finds out if a system supports a given BIOS setting.
  *
- * Returns: (transfer none): #FwupdBiosAttr if the attr exists.
+ * Returns: (transfer none): #FwupdBiosSetting if the attr exists.
  *
  * Since: 1.8.4
  **/
-FwupdBiosAttr *
-fu_context_get_bios_attr(FuContext *self, const gchar *name)
+FwupdBiosSetting *
+fu_context_get_bios_setting(FuContext *self, const gchar *name)
 {
 	FuContextPrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FU_IS_CONTEXT(self), NULL);
 	g_return_val_if_fail(name != NULL, NULL);
-	return fu_bios_attrs_get_attr(priv->host_bios_attrs, name);
+	return fu_bios_settings_get_attr(priv->host_bios_settings, name);
 }
 
 /**
- * fu_context_get_bios_attr_pending_reboot:
+ * fu_context_get_bios_setting_pending_reboot:
  * @self: a #FuContext
  *
- * Determine if updates to BIOS attributes are pending until next boot.
+ * Determine if updates to BIOS settings are pending until next boot.
  *
  * Returns: %TRUE if updates are pending.
  *
  * Since: 1.8.4
  **/
 gboolean
-fu_context_get_bios_attr_pending_reboot(FuContext *self)
+fu_context_get_bios_setting_pending_reboot(FuContext *self)
 {
 	FuContextPrivate *priv = GET_PRIVATE(self);
 	gboolean ret;
 	g_return_val_if_fail(FU_IS_CONTEXT(self), FALSE);
-	fu_bios_attrs_get_pending_reboot(priv->host_bios_attrs, &ret, NULL);
+	fu_bios_settings_get_pending_reboot(priv->host_bios_settings, &ret, NULL);
 	return ret;
 }
 
@@ -889,7 +889,7 @@ fu_context_finalize(GObject *object)
 	g_hash_table_unref(priv->hwid_flags);
 	g_object_unref(priv->quirks);
 	g_object_unref(priv->smbios);
-	g_object_unref(priv->host_bios_attrs);
+	g_object_unref(priv->host_bios_settings);
 	g_hash_table_unref(priv->firmware_gtypes);
 	g_ptr_array_unref(priv->udev_subsystems);
 
@@ -1004,7 +1004,7 @@ fu_context_init(FuContext *self)
 	priv->udev_subsystems = g_ptr_array_new_with_free_func(g_free);
 	priv->firmware_gtypes = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
 	priv->quirks = fu_quirks_new();
-	priv->host_bios_attrs = fu_bios_attrs_new();
+	priv->host_bios_settings = fu_bios_settings_new();
 }
 
 /**
