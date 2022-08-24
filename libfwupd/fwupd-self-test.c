@@ -1448,12 +1448,12 @@ fwupd_bios_settings_func(void)
 	g_assert_nonnull(json1);
 	ret = fu_test_compare_lines(json1,
 				    "{\n"
-				    "  \"BiosSettingReadOnly\" : \"false\",\n"
-				    "  \"BiosSettingType\" : 1,\n"
 				    "  \"Name\" : \"UEFISecureBoot\",\n"
 				    "  \"Description\" : \"Controls Secure boot\",\n"
 				    "  \"Filename\" : \"/path/to/bar\",\n"
 				    "  \"BiosSettingCurrentValue\" : \"Disabled\",\n"
+				    "  \"BiosSettingReadOnly\" : \"false\",\n"
+				    "  \"BiosSettingType\" : 1,\n"
 				    "  \"BiosSettingPossibleValues\" : [\n"
 				    "    \"Disabled\",\n"
 				    "    \"Enabled\"\n"

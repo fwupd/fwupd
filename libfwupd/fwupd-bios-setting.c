@@ -845,17 +845,17 @@ fwupd_bios_setting_to_json(FwupdBiosSetting *self, JsonBuilder *builder)
 	g_return_if_fail(FWUPD_IS_BIOS_SETTING(self));
 	g_return_if_fail(builder != NULL);
 
+	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_NAME, priv->name);
+	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_DESCRIPTION, priv->description);
+	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_FILENAME, priv->path);
+	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_BIOS_SETTING_ID, priv->id);
+	fwupd_common_json_add_string(builder,
+				     FWUPD_RESULT_KEY_BIOS_SETTING_CURRENT_VALUE,
+				     priv->current_value);
 	fwupd_common_json_add_boolean(builder,
 				      FWUPD_RESULT_KEY_BIOS_SETTING_READ_ONLY,
 				      priv->read_only);
 	fwupd_common_json_add_int(builder, FWUPD_RESULT_KEY_BIOS_SETTING_TYPE, priv->kind);
-	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_BIOS_SETTING_ID, priv->id);
-	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_NAME, priv->name);
-	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_DESCRIPTION, priv->description);
-	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_FILENAME, priv->path);
-	fwupd_common_json_add_string(builder,
-				     FWUPD_RESULT_KEY_BIOS_SETTING_CURRENT_VALUE,
-				     priv->current_value);
 	if (priv->kind == FWUPD_BIOS_SETTING_KIND_ENUMERATION) {
 		if (priv->possible_values->len > 0) {
 			json_builder_set_member_name(builder,
