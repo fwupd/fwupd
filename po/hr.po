@@ -306,6 +306,22 @@ msgstr "(zastarjelo)"
 msgid "A TPM PCR is now an invalid value"
 msgstr "TPM PCR je sada nevaljana vrijednost"
 
+#. TRANSLATORS: Title: if hardware enforces control of SPI replays
+msgid "AMD Firmware Replay Protection"
+msgstr "AMD firmver zaštita ponavljanja"
+
+#. TRANSLATORS: Title: if hardware enforces control of SPI writes
+msgid "AMD Firmware Write Protection"
+msgstr "AMD firmver zaštita zpisivanja"
+
+#. TRANSLATORS: Title: if firmware enforces rollback protection
+msgid "AMD Rollback Protection"
+msgstr "AMD zaštita od vraćanja na stariju inačicu"
+
+#. TRANSLATORS: longer description
+msgid "AMD Rollback Protection prevents device software from being downgraded to an older version that has security problems."
+msgstr "AMD zaštita od vraćanja na stariju inačicu sprječava nadogradnju softvera uređaja na stariju inačicu koja ima sigurnosne probleme."
+
 #. TRANSLATORS: the user needs to do something, e.g. remove the device
 msgid "Action Required:"
 msgstr "Radnja je potrebna:"
@@ -433,6 +449,10 @@ msgid "Authentication is required to downgrade the firmware on this machine"
 msgstr "Potrebna je ovjera za vraćanje starije inačicu firmvera na ovom računalu"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to modify BIOS settings"
+msgstr "Potrebna je ovjera za promjenu BIOS postavki"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify a configured remote used for firmware updates"
 msgstr "Potrebna je ovjera za promjenu udaljene lokacije koja se koristi za nadopunu firmvera"
 
@@ -476,6 +496,10 @@ msgstr "Automatsko izvještavanje"
 msgid "Automatically upload every time?"
 msgstr "Automatski pošalji svaki put?"
 
+#. TRANSLATORS: description of a BIOS setting
+msgid "BIOS updates delivered via LVFS or Windows Update"
+msgstr "BIOS nadopune isporučene putem LVFS-a ili Windows ažuriranja"
+
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "BUILDER-XML FILENAME-DST"
 msgstr "IZGRADITELJ-XML NAZIV DATOTEKE-DST"
@@ -518,10 +542,6 @@ msgstr "Ogranak"
 #. TRANSLATORS: command description
 msgid "Build a firmware file"
 msgstr "Izgradi datoteku firmvera"
-
-#. TRANSLATORS: command description
-msgid "Build firmware using a sandbox"
-msgstr "Izgradi firmver u osiguranom okruženju"
 
 #. TRANSLATORS: this is to abort the interactive prompt
 msgid "Cancel"
@@ -600,6 +620,10 @@ msgstr "Kritična"
 msgid "Cryptographic hash verification is available"
 msgstr "Provjera kriptografske jedinstvene vrijednosti je dostupna"
 
+#. TRANSLATORS: current value of a BIOS setting
+msgid "Current Value"
+msgstr "Trenutna vrijednost"
+
 #. TRANSLATORS: version number of current firmware
 msgid "Current version"
 msgstr "Trenutna inačica"
@@ -620,6 +644,7 @@ msgstr "Mogućnosti otklanjanja greške"
 msgid "Decompressing…"
 msgstr "Raspakiravanje…"
 
+#. TRANSLATORS: description of BIOS setting
 #. TRANSLATORS: multiline description of device
 msgid "Description"
 msgstr "Opis"
@@ -676,6 +701,10 @@ msgstr "Uređaj promijenjen:"
 msgid "Device firmware is required to have a version check"
 msgstr "Potreban je firmver uređaja za provjeru inačice"
 
+#. TRANSLATORS: emulated means we are pretending to be a different model
+msgid "Device is emulated"
+msgstr "Uređaj je emuliran"
+
 #. TRANSLATORS: Is locked and can be unlocked
 msgid "Device is locked"
 msgstr "Uređaj je zaključan"
@@ -709,6 +738,10 @@ msgstr "Uređaj uklonjen:"
 #. TRANSLATORS: as in, wired mains power for a laptop
 msgid "Device requires AC power to be connected"
 msgstr "Uređaj zahtijeva vanjski izvor energije"
+
+#. TRANSLATORS: longer description
+msgid "Device software updates are provided for this device."
+msgstr "Nadopune softvera uređaja su isporučene za ovaj uređaj."
 
 #. TRANSLATORS: Device supports a safety mechanism for flashing
 msgid "Device stages updates"
@@ -881,6 +914,14 @@ msgstr "Trajanje"
 msgid "ESP specified was not valid"
 msgstr "Određeni ESP nije ispravan"
 
+#. TRANSLATORS: longer description
+msgid "Each system should have tests to ensure firmware security."
+msgstr "Svaki uređaj bi se trebao testirati firmver, kako bi se osigurala sigurnost firmvera."
+
+#. TRANSLATORS: Title: if we are emulating a different host
+msgid "Emulated host"
+msgstr "Emulirani poslužitelj"
+
 #. TRANSLATORS: command line option
 msgid "Enable firmware update support on supported systems"
 msgstr "Omogući podršku nadopune firmvera na podržanim sustavima"
@@ -925,9 +966,16 @@ msgstr "Šifrirano"
 msgid "Encrypted RAM"
 msgstr "Šifrirani RAM"
 
+msgid "Encrypted RAM makes it impossible for information that is stored in device memory to be read if the memory chip is removed and accessed."
+msgstr "Šifrirani RAM čini nemogućim čitanje informacija spremljenih u memoriji uređaja ako je memorijski čip uklonjen i može mu se pristupiti."
+
 #. TRANSLATORS: the vendor is no longer supporting the device
 msgid "End of life"
 msgstr "Kraj podrške"
+
+#. TRANSLATORS: The BIOS setting can only be changed to fixed values
+msgid "Enumeration"
+msgstr "Nabrajanje"
 
 #. TRANSLATORS: command description
 msgid "Erase all firmware update history"
@@ -960,10 +1008,6 @@ msgstr "DATOTEKA"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILE [DEVICE-ID|GUID]"
 msgstr "DATOTEKA [UREĐAJ-ID|GUID]"
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "FILE-IN FILE-OUT [SCRIPT] [OUTPUT]"
-msgstr "ULAZNA-DATOTEKA IZLAZNA-DATOTEKA [SKRIPTA] [IZLAZ]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME"
@@ -1072,6 +1116,10 @@ msgstr "Neuspjelo postavljanje splash načina"
 msgid "Failed to validate ESP contents"
 msgstr "Neuspjela provjera ESP sadržaja"
 
+#. TRANSLATORS: item is FALSE
+msgid "False"
+msgstr "Laž"
+
 #. TRANSLATORS: filename of the local file
 msgid "Filename"
 msgstr "Naziv datoteke"
@@ -1092,6 +1140,30 @@ msgstr "Potreban je naziv datoteke"
 msgid "Filter with a set of device flags using a ~ prefix to exclude, e.g. 'internal,~needs-reboot'"
 msgstr "Filtar sa skupom oznaka uređaja koji koristi ~ prefiks za izuzimanje, npr. 'internal,~needs-reboot'"
 
+#. TRANSLATORS: Title: if we can verify the firmware checksums
+msgid "Firmware Attestation"
+msgstr "Frimver provjera"
+
+#. TRANSLATORS: longer description
+msgid "Firmware Attestation checks device software using a reference copy, to make sure that it has not been changed."
+msgstr "Frimver provjera provjerava softver uređaja koristeći izvornu kopiju, kako bi se osiguralo da nije mijenjan."
+
+#. TRANSLATORS: Title: firmware refers to the flash chip in the computer
+msgid "Firmware BIOS Descriptor"
+msgstr "Frimver BIOS opisnik"
+
+#. TRANSLATORS: longer description
+msgid "Firmware BIOS Descriptor protects device firmware memory from being tampered with."
+msgstr "Frimver BIOS opisnik štiti memoriju frimvera uređaja od neovlaštenog mijenjanja."
+
+#. TRANSLATORS: Title: SPI refers to the flash chip in the computer
+msgid "Firmware BIOS Region"
+msgstr "Firmver BIOS područje"
+
+#. TRANSLATORS: longer description
+msgid "Firmware BIOS Region protects device firmware memory from being tampered with."
+msgstr "Firmver BIOS područje štiti memoriju firmvera uređaja od nevlaštenog mijenjanja."
+
 #. TRANSLATORS: remote URI
 msgid "Firmware Base URI"
 msgstr "Osnovni URI firmvera"
@@ -1104,9 +1176,32 @@ msgstr "Firmver nadopuna D-Bus usluge"
 msgid "Firmware Update Daemon"
 msgstr "Pozadinski program nadopune firmvera"
 
+#. TRANSLATORS: Title: if the fwupd plugins are all present and correct
+msgid "Firmware Updater Verification"
+msgstr "Provjera firmver nadopunitelja"
+
+msgid "Firmware Updater Verification checks that software used for updating has not been tampered with."
+msgstr "Provjera firmver nadopunitelja provjerava je li softver za nadopunu neovlašteno mijenjan."
+
+#. TRANSLATORS: Title: if firmware updates are available
+msgid "Firmware Updates"
+msgstr "Nadopune frimvera"
+
 #. TRANSLATORS: program name
 msgid "Firmware Utility"
 msgstr "Firmver pomagalo"
+
+#. TRANSLATORS: Title: firmware refers to the flash chip in the computer
+msgid "Firmware Write Protection"
+msgstr "Firmver zaštita zapisivanja"
+
+#. TRANSLATORS: Title: firmware refers to the flash chip in the computer
+msgid "Firmware Write Protection Lock"
+msgstr "Frimver zaključana zaštita zapisivanja"
+
+#. TRANSLATORS: longer description
+msgid "Firmware Write Protection protects device firmware memory from being tampered with."
+msgstr "Firmver zaštita zapisivanja štiti memoriju firmvera uređaja od nevlaštenog mijenjanja."
 
 #. TRANSLATORS: Title: if we can verify the firmware checksums
 msgid "Firmware attestation"
@@ -1172,6 +1267,10 @@ msgstr "Potpuno šifriranje diska je otkriveno"
 #. Windows
 msgid "Full disk encryption secrets may be invalidated when updating"
 msgstr "Tajne potpunog šifriranja diska mogu biti poništene pri nadopuni"
+
+#. TRANSLATORS: Title: if the part has been fused
+msgid "Fused Platform"
+msgstr "Pregorjela platforma"
 
 #. TRANSLATORS: Title: if the part has been fused
 msgid "Fused platform"
@@ -1258,6 +1357,15 @@ msgstr "Sigurnosni ID poslužitelja:"
 msgid "IOMMU"
 msgstr "IOMMU"
 
+#. TRANSLATORS: Title:
+#. * https://en.wikipedia.org/wiki/Input%E2%80%93output_memory_management_unit
+msgid "IOMMU Protection"
+msgstr "IOMMU zaštita"
+
+#. TRANSLATORS: longer description
+msgid "IOMMU Protection prevents connected devices from accessing unauthorized parts of system memory."
+msgstr "IOMMU zaštita sprječava pristup povezanih urađaja neovlaštenim dijelovima memorije."
+
 #. TRANSLATORS: HSI event title
 msgid "IOMMU device protection disabled"
 msgstr "Onemogućena zaštita IOMMU uređaja"
@@ -1302,10 +1410,6 @@ msgstr "Instaliraj blob firmvera na uređaj"
 msgid "Install a firmware file on this hardware"
 msgstr "Instaliraj datoteku firmvera na ovaj uređaj"
 
-#. TRANSLATORS: command description
-msgid "Install a specific firmware version on a device"
-msgstr "Instalacija određene inačice firmvera na uređaj"
-
 msgid "Install old version of signed system firmware"
 msgstr "Instaliraj staru inačicu potpisanog frimvera sustava"
 
@@ -1345,9 +1449,18 @@ msgstr "Instaliram na %s…"
 msgid "Installing this update may also void any device warranty."
 msgstr "Instaliranje ove nadopune može poništiti svako jamstvo uređaja."
 
+#. TRANSLATORS: The BIOS setting only accepts integers in a fixed range
+msgid "Integer"
+msgstr "Cijeli broj"
+
 #. TRANSLATORS: Title: BootGuard is a trademark from Intel
 msgid "Intel BootGuard"
 msgstr "Intel BootGuard"
+
+#. TRANSLATORS: Title: BootGuard is a trademark from Intel,
+#. * ACM means to verify the integrity of Initial Boot Block
+msgid "Intel BootGuard ACM Protected"
+msgstr "Intel BootGuard ACM zaštićen"
 
 #. TRANSLATORS: Title: BootGuard is a trademark from Intel,
 #. * ACM means to verify the integrity of Initial Boot Block
@@ -1355,19 +1468,44 @@ msgid "Intel BootGuard ACM protected"
 msgstr "Intel BootGuard ACM zaštićen"
 
 #. TRANSLATORS: Title: BootGuard is a trademark from Intel,
+#. * error policy is what to do on failure
+msgid "Intel BootGuard Error Policy"
+msgstr "Intel BootGuard pravilo greške"
+
+msgid "Intel BootGuard Error Policy ensures the device does not continue to start if its device software has been tampered with."
+msgstr "Intel BootGuard pravilo greške osigurava da se uređaj ne nastavlja pokretati ako je njegov softver uređaja neovlašteno mijenjan."
+
+#. TRANSLATORS: Title: BootGuard is a trademark from Intel
+msgid "Intel BootGuard Fuse"
+msgstr "Intel BootGuard OTP osigurač"
+
+#. TRANSLATORS: Title: BootGuard is a trademark from Intel,
 #. * OTP = one time programmable
 msgid "Intel BootGuard OTP fuse"
 msgstr "Intel BootGuard OTP osigurač"
+
+#. TRANSLATORS: Title: BootGuard is a trademark from Intel,
+#. * verified boot refers to the way the boot process is verified
+msgid "Intel BootGuard Verified Boot"
+msgstr "Intel BootGuard provjereno pokretanje"
 
 #. TRANSLATORS: Title: BootGuard is a trademark from Intel,
 #. * error policy is what to do on failure
 msgid "Intel BootGuard error policy"
 msgstr "Intel BootGuard pravilo greške"
 
+#. TRANSLATORS: longer description
+msgid "Intel BootGuard prevents unauthorized device software from operating when the device is started."
+msgstr "Intel BootGuard sprječava pristup neovlaštenog softvera uređaja iz operativnog sustava kada se uređaj pokrene."
+
 #. TRANSLATORS: Title: BootGuard is a trademark from Intel,
 #. * verified boot refers to the way the boot process is verified
 msgid "Intel BootGuard verified boot"
 msgstr "Intel BootGuard provjereno pokretanje"
+
+#. TRANSLATORS: Title: CET = Control-flow Enforcement Technology
+msgid "Intel CET"
+msgstr "Intel CET"
 
 #. TRANSLATORS: Title: CET = Control-flow Enforcement Technology,
 #. * active means being used by the OS
@@ -1379,9 +1517,37 @@ msgstr "Intel CET aktivan"
 msgid "Intel CET Enabled"
 msgstr "Intel CET omogućen"
 
+#. TRANSLATORS: longer description
+msgid "Intel Control-Flow Enforcement Technology detects and prevents certain methods for running malicious software on the device."
+msgstr "Intel Control-Flow Enforcement Technology otkriva i sprječava određene načine pokretanja zlonamjernog softvera na uređaju."
+
+#. TRANSLATORS: Title: MEI = Intel Management Engine
+msgid "Intel Management Engine Manufacturing Mode"
+msgstr "Način rada Intel pogona upravljanja"
+
+#. TRANSLATORS: Title: MEI = Intel Management Engine, and the "override" is
+#. enabled
+#. * with a jumper -- luckily it is probably not accessible to end users on
+#. consumer
+#. * boards
+msgid "Intel Management Engine Override"
+msgstr "Zaobilaženje Intel pogona upravljanja"
+
+#. TRANSLATORS: longer description
+msgid "Intel Management Engine Override disables checks for device software tampering."
+msgstr "Zaobilaženje Intel pogona upravljanja (Intel Management Engine) onemogućava provjere za neovlaštni softver uređaja."
+
+#. TRANSLATORS: Title: MEI = Intel Management Engine
+msgid "Intel Management Engine Version"
+msgstr "Inačica Intel pogona upravljanja"
+
 #. TRANSLATORS: Title: SMAP = Supervisor Mode Access Prevention
 msgid "Intel SMAP"
 msgstr "Intel SMAP"
+
+#. TRANSLATORS: longer description
+msgid "Intel Supervisor Mode Access Prevention ensures critical parts of device memory are not accessed by less secure programs."
+msgstr "Intel Supervisor Mode Access Prevention osigurava da manje sigurni programi ne pristupaju ključnim dijelovima memorije uređaja."
 
 #. TRANSLATORS: Device cannot be removed easily
 msgid "Internal device"
@@ -1390,6 +1556,10 @@ msgstr "Unutrašnji uređaj"
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Invalid"
 msgstr "Nevaljano"
+
+#. TRANSLATORS: error message
+msgid "Invalid arguments"
+msgstr "Nevaljani argumenti"
 
 #. TRANSLATORS: version is older
 msgid "Is downgrade"
@@ -1449,6 +1619,28 @@ msgstr "Preostalo je manje od minute"
 #. TRANSLATORS: e.g. GPLv2+, Proprietary etc
 msgid "License"
 msgstr "Licenca"
+
+#. TRANSLATORS: Title: lockdown is a security mode of the kernel
+msgid "Linux Kernel Lockdown"
+msgstr "Linux kernel zaključavanje"
+
+#. TRANSLATORS: longer description
+msgid "Linux Kernel Lockdown mode prevents administrator (root) accounts from accessing and changing critical parts of system software."
+msgstr "Linux Kernel zaključavanje sprječava administratorske (korijenske) račune da pristupe i mijenjaju ključne dijelove softvera sustava."
+
+msgid "Linux Kernel Swap temporarily saves information to disk as you work. If the information is not protected, it could be accessed by someone if they obtained the disk."
+msgstr "Linux Kernel Swap privremeno sprema informacije na disk dok radite. Ako informacije nisu zaštićene, netko im može pristupiti ako je u posjedu diska."
+
+#. TRANSLATORS: Title: if it's tainted or not
+msgid "Linux Kernel Verification"
+msgstr "Linux Kernel provjera"
+
+msgid "Linux Kernel Verification makes sure that critical system software has not been tampered with. Using device drivers which are not provided with the system can prevent this security feature from working correctly."
+msgstr "Linux Kernel provjera osigurava da ključni softver sustava nije mijenjan. Korištenje upravljačkih progrma uređaja koji se ne isporučuju sustavom može sprječiti ispravan rad ove značajke."
+
+#. TRANSLATORS: Title: swap space or swap partition
+msgid "Linux Swap"
+msgstr "Linux swap"
 
 msgid "Linux Vendor Firmware Service (stable firmware)"
 msgstr "Firmver Usluga Linux Proizvođača (LVFS) (stabilni firmver)"
@@ -1514,6 +1706,18 @@ msgstr "MEI inačica"
 msgid "Manually enable specific plugins"
 msgstr "Ručno omogući određene priključke"
 
+#. TRANSLATORS: longer description
+msgid "Manufacturing Mode is used when the device is manufactured and security features are not yet enabled."
+msgstr "Način rada za proizvođače se koristi kada je uređaj proizveden i sigurnosne značajke još nisu omogućene."
+
+#. TRANSLATORS: Longest valid string for BIOS setting
+msgid "Maximum length"
+msgstr "Najveća duljina"
+
+#. TRANSLATORS: Highest valid integer for BIOS setting
+msgid "Maximum value"
+msgstr "Najviša vrijednost"
+
 #. TRANSLATORS: the release urgency
 msgid "Medium"
 msgstr "Srednja"
@@ -1533,6 +1737,14 @@ msgstr "Metapodaci se mogu dobiti od Firmver Usluge Linux Proizvođača (LVFS)."
 #. TRANSLATORS: smallest version number installable on device
 msgid "Minimum Version"
 msgstr "Najmanja inačica"
+
+#. TRANSLATORS: Shortest valid string for BIOS setting
+msgid "Minimum length"
+msgstr "Najmanja duljina"
+
+#. TRANSLATORS: Lowest valid integer for BIOS setting
+msgid "Minimum value"
+msgstr "Najmanja vrijednost"
 
 #. TRANSLATORS: error message
 #, c-format
@@ -1714,6 +1926,10 @@ msgstr "Obavi radnju?"
 msgid "Platform Debugging"
 msgstr "Otklanjanje grešaka platforme"
 
+#. TRANSLATORS: longer description
+msgid "Platform Debugging allows device security features to be disabled. This should only be used by hardware manufacturers."
+msgstr "Otklanjanje grešaka platforme dopušta onemogućavanje sigurnosnih značajki uređaja. Ovo bi trebali koristit samo proizvođači hardvera."
+
 #. TRANSLATORS: 'recovery key' here refers to a code, rather than a physical
 #. metal thing
 msgid "Please ensure you have the volume recovery key before continuing."
@@ -1728,6 +1944,14 @@ msgstr "Odaberite broj od 0 do %u: "
 msgid "Plugin dependencies missing"
 msgstr "Zavisnosti priključka nedostaju"
 
+#. TRANSLATORS: Possible values for a bios setting
+msgid "Possible Values"
+msgstr "Moguće vrijednosti"
+
+#. TRANSLATORS: Title: DMA as in https://en.wikipedia.org/wiki/DMA_attack
+msgid "Pre-boot DMA Protection"
+msgstr "DMA zaštita predpokretanja"
+
 #. TRANSLATORS: Title: DMA as in https://en.wikipedia.org/wiki/DMA_attack
 msgid "Pre-boot DMA protection"
 msgstr "DMA zaštita predpokretanja"
@@ -1739,6 +1963,10 @@ msgstr "DMA zaštita prije pokretanja je onemogućena"
 #. TRANSLATORS: HSI event title
 msgid "Pre-boot DMA protection is enabled"
 msgstr "DMA zaštita prije pokretanja je omogućena"
+
+#. TRANSLATORS: longer description
+msgid "Pre-boot DMA protection prevents devices from being connected to the computer and accessing system memory."
+msgstr "DMA zaštita predpokretanja sprječava povezivanje uređaja s računalom i pristup memoriji sustava."
 
 #. TRANSLATORS: version number of previous firmware
 msgid "Previous version"
@@ -1761,6 +1989,10 @@ msgstr "Problemi"
 msgid "Proceed with upload?"
 msgstr "Nastavi sa slanjem?"
 
+#. TRANSLATORS: Title: if fwupd supports HSI on this chip
+msgid "Processor Security Checks"
+msgstr "Sigurnosna provjera procesora"
+
 #. TRANSLATORS: a non-free software license
 msgid "Proprietary"
 msgstr "Vlasnički"
@@ -1776,6 +2008,10 @@ msgstr "UDALJENA_LOKACIJA"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "REMOTE-ID KEY VALUE"
 msgstr "VRIJEDNOST KLJUČA ID-UDALJENE_LOKACIJE"
+
+#. TRANSLATORS: BIOS setting is read only
+msgid "Read Only"
+msgstr "Dozvola čitanja"
 
 #. TRANSLATORS: command description
 msgid "Read a firmware blob from a device"
@@ -1889,6 +2125,10 @@ msgid "Restarting device…"
 msgstr "Ponovno pokretanje uređaja…"
 
 #. TRANSLATORS: command description
+msgid "Retrieve BIOS settings.  If no arguments are passed all settings are returned"
+msgstr "Preuzmi BIOS postavke.  Ako se argumenati ne proslijede, postavke su nepromijenjene"
+
+#. TRANSLATORS: command description
 msgid "Return all the hardware IDs for the machine"
 msgstr "Vrati sve ID-ove hardvera za uređaj"
 
@@ -1919,6 +2159,10 @@ msgstr "Pokrenuti kernel je prestar"
 #. TRANSLATORS:  this is the HSI suffix
 msgid "Runtime Suffix"
 msgstr "Sufiks vremenskog izvršavanja"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "SETTING VALUE"
+msgstr "VRIJEDNOST POSTAVKE"
 
 #. TRANSLATORS: Title: SPI refers to the flash chip in the computer
 msgid "SPI BIOS Descriptor"
@@ -1951,6 +2195,10 @@ msgstr "UPRAVLJAČKI PROGRAM PODSUSTAVA [UREĐAJ-ID|GUID]"
 #. TRANSLATORS: command description
 msgid "Save a file that allows generation of hardware IDs"
 msgstr "Spremi datoteku koja omogućuje stvaranje ID-ova hardvera"
+
+#. TRANSLATORS: Scalar increment for integer BIOS setting
+msgid "Scalar Increment"
+msgstr "Skalarni umnožak"
 
 #. TRANSLATORS: command line option
 msgid "Schedule installation for next reboot when possible"
@@ -1990,6 +2238,10 @@ msgstr "Odabrani uređaj"
 msgid "Serial Number"
 msgstr "Serijski broj"
 
+#. TRANSLATORS: command description
+msgid "Set a BIOS setting"
+msgstr "Postavi BIOS postavku"
+
 #. TRANSLATORS: command line option
 msgid "Set the debugging flag during update"
 msgstr "Postavi oznaku otklanjanja grešaka tijekom nadopune"
@@ -1997,6 +2249,14 @@ msgstr "Postavi oznaku otklanjanja grešaka tijekom nadopune"
 #. TRANSLATORS: firmware approved by the admin
 msgid "Sets the list of approved firmware"
 msgstr "Postavlja popis odobrenih firmvera"
+
+#. TRANSLATORS: type of BIOS setting
+msgid "Setting type"
+msgstr "Vrsta postavke"
+
+#. TRANSLATORS: Settings refers to BIOS settings in this context
+msgid "Settings will apply after system reboots"
+msgstr "Postavke će se primijeniti nakon ponovnog pokretanja sustava"
 
 #. TRANSLATORS: command description
 msgid "Share firmware history with the developers"
@@ -2099,6 +2359,10 @@ msgstr "Odredi datoteku dbx baze podataka"
 msgid "Specify the number of bytes per USB transfer"
 msgstr "Odredi broj bajtova po USB prijenosu"
 
+#. TRANSLATORS: The BIOS setting accepts strings
+msgid "String"
+msgstr "Izraz"
+
 #. TRANSLATORS: the update state of the specific device
 msgid "Success"
 msgstr "Uspješno"
@@ -2175,12 +2439,28 @@ msgid "Supported on remote server"
 msgstr "Podržano na udaljenom poslužitelju"
 
 #. TRANSLATORS: Title: a better sleep state
+msgid "Suspend To Idle"
+msgstr "Suspendiraj u mirovanje"
+
+#. TRANSLATORS: Title: sleep state
+msgid "Suspend To RAM"
+msgstr "Suspendiraj u RAM"
+
+#. TRANSLATORS: longer description
+msgid "Suspend to Idle allows the device to quickly go to sleep in order to save power. While the device has been suspended, its memory could be physically removed and its information accessed."
+msgstr "Suspendiraj u mirovanje omogućuje uređaju brz odlazak na spavanje u svrhu štednje energije. Dok je uređaj suspendiran, njegova se memorija može fizički ukloniti i na taj način pristupiti informacijama."
+
+#. TRANSLATORS: longer description
+msgid "Suspend to RAM allows the device to quickly go to sleep in order to save power. While the device has been suspended, its memory could be physically removed and its information accessed."
+msgstr "Suspendiraj u RAM omogućuje uređaju brz odlazak na spavanje u svrhu štednje energije. Dok je uređaj suspendiran, njegova se memorija može fizički ukloniti i na taj način pristupiti informacijama."
+
+#. TRANSLATORS: Title: a better sleep state
 msgid "Suspend-to-idle"
-msgstr "Suspendiraju-u-mirovanje"
+msgstr "Suspendiraj-u-mirovanje"
 
 #. TRANSLATORS: Title: sleep state
 msgid "Suspend-to-ram"
-msgstr "Suspendiraju-u-ram"
+msgstr "Suspendiraj-u-ram"
 
 #. TRANSLATORS: show and ask user to confirm --
 #. * %1 is the old branch name, %2 is the new branch name
@@ -2213,6 +2493,10 @@ msgstr "Sustav zahtijeva vanjski izvor energije"
 msgid "TEXT"
 msgstr "TEKST"
 
+#. TRANSLATORS: longer description
+msgid "TPM (Trusted Platform Module) is a computer chip that detects when hardware components have been tampered with."
+msgstr "TPM (Pouzdani Modul Platforme) je računalni čip koji otkriva neovlaštene promjene hardverskih komponenta."
+
 #. TRANSLATORS: Title: the PCR is rebuilt from the TPM event log
 msgid "TPM PCR0 reconstruction"
 msgstr "TPM PCR0 rekonstrukcija"
@@ -2224,6 +2508,15 @@ msgstr "TPM PCR0 rekonstrukcija je nevaljana"
 #. TRANSLATORS: HSI event title
 msgid "TPM PCR0 reconstruction is now valid"
 msgstr "TPM PCR0 rekonstrukcija je sada valjana"
+
+#. TRANSLATORS: Title: PCRs (Platform Configuration Registers) shouldn't be
+#. empty
+msgid "TPM Platform Configuration"
+msgstr "Podešavanje TPM platforme"
+
+#. TRANSLATORS: Title: the PCR is rebuilt from the TPM event log
+msgid "TPM Reconstruction"
+msgstr "TPM rekonstrukcija"
 
 #. TRANSLATORS: Title: PCRs (Platform Configuration Registers) shouldn't be
 #. empty
@@ -2252,13 +2545,29 @@ msgstr "Odredište"
 msgid "Test a device using a JSON manifest"
 msgstr "Testiraj uređaj koristeći JSON manifest"
 
+#. TRANSLATORS: longer description
+msgid "The Intel Management Engine controls device components and needs to have a recent version to avoid security issues."
+msgstr "Intel pogon upravljanja (Intel Management Engine) upravlja komponentama uređaja i mora biti najnovije inačice kako bi se izbjegli sigurnosni problemi."
+
 #. TRANSLATORS: do not translate the variables marked using $
 msgid "The LVFS is a free service that operates as an independent legal entity and has no connection with $OS_RELEASE:NAME$. Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices. All firmware is provided only by the original equipment manufacturer."
 msgstr "LVFS (Firmver Usluga Linux Proizvođača) je besplatna usluga koja djeluje kao neovisna pravna osoba i nema veze sa $OS_RELEASE:NAME$. Vaš distributer možda nije provjerio nadopune firmvera za kompatibilnost s vašim sustavom ili priključenim uređajima. Svi firmveri su pružani od strane izvornih proizvođača opreme."
 
+#. TRANSLATORS: longer description
+msgid "The TPM (Trusted Platform Module) Platform Configuration is used to check whether the device start process has been modified."
+msgstr "Podešavanje TPM (Pouzdani Modul Platforme) platforme se koristi za provjeru je li proces pokretanja uređaja mijenjan."
+
+#. TRANSLATORS: longer description
+msgid "The TPM (Trusted Platform Module) Reconstruction is used to check whether the device start process has been modified."
+msgstr "TPM (Pouzdani Modul Platforme) rekonstrukcija se koristi za provjeru je li proces pokretanja uređaja mijenjan."
+
 #. TRANSLATORS: this is more background on a security measurement problem
 msgid "The TPM PCR0 differs from reconstruction."
 msgstr "TPM PCR0 razlikuje se od rekonstrukcije."
+
+#. TRANSLATORS: longer description
+msgid "The UEFI Platform Key is used to determine if device software comes from a trusted source."
+msgstr "UEFI ključ platforme se koristi za otkrivanje dolazi li softver uređaja iz pouzdanih izvora."
 
 #. TRANSLATORS: the user is SOL for support...
 msgid "The daemon has loaded 3rd party code and is no longer supported by the upstream developers!"
@@ -2317,6 +2626,10 @@ msgstr "Ovaj program možda radi ispravno samo ako je pokrenut kao korijenski ko
 msgid "This remote contains firmware which is not embargoed, but is still being tested by the hardware vendor. You should ensure you have a way to manually downgrade the firmware if the firmware update fails."
 msgstr "Ova udaljena lokacija sadrži firmver koji nije zabranjen, ali se još uvijek testira od strane proizvođača hardvera. Provjerite da imate način na ručno vraćanje starije inačice firmvera ako nadopuna firmvera ne uspije."
 
+#. TRANSLATORS: error message
+msgid "This system doesn't support firmware settings"
+msgstr "Ovaj sustav ne podržava postavke firmvera"
+
 #. TRANSLATORS: this is instructions on how to improve the HSI suffix
 msgid "This system has HSI runtime issues."
 msgstr "Ovaj sustav ima HSI probleme s vremenskim izvršavanjem."
@@ -2353,13 +2666,17 @@ msgstr "Ovo pomagalo će očitati i obraditi TPM zapis događaja iz frimvera sus
 msgid "Transient failure"
 msgstr "Privremeni kvar"
 
+#. TRANSLATORS: item is TRUE
+msgid "True"
+msgstr "Istina"
+
 #. TRANSLATORS: We verified the meatdata against the server
 msgid "Trusted metadata"
-msgstr "Provjereni metapodaci"
+msgstr "Pouzdani metapodaci"
 
 #. TRANSLATORS: We verified the payload against the server
 msgid "Trusted payload"
-msgstr "Provjereni sadržaj prijenosa"
+msgstr "Pouzdan sadržaj prijenosa"
 
 #. TRANSLATORS: remote type, e.g. remote or local
 msgid "Type"
@@ -2372,6 +2689,18 @@ msgstr "UEFI ESP particija nije otkrivena ili podešena"
 #. TRANSLATORS: program name
 msgid "UEFI Firmware Utility"
 msgstr "UEFI firmver pomagalo"
+
+#. TRANSLATORS: Title: PK is the 'platform key' for the machine
+msgid "UEFI Platform Key"
+msgstr "UEFI ključ platforme"
+
+#. TRANSLATORS: Title: SB is a way of locking down UEFI
+msgid "UEFI Secure Boot"
+msgstr "UEFI sigurno pokretanje (SecureBoot)"
+
+#. TRANSLATORS: longer description
+msgid "UEFI Secure Boot prevents malicious software from being loaded when the device starts."
+msgstr "UEFI sigurno pokretanje (SecureBoot) sprječava učitavanje zlonamjernog softvera pri pokretanju uređaja."
 
 #. TRANSLATORS: capsule updates are an optional BIOS feature
 msgid "UEFI capsule updates not available or enabled in firmware setup"
@@ -2396,6 +2725,11 @@ msgstr "UEFI sigurno pokretanje (SecureBoot)"
 #. TRANSLATORS: error message
 msgid "Unable to connect to service"
 msgstr "Neuspjelo povezivanje s udaljenom uslugom"
+
+#. TRANSLATORS: error message
+#, c-format
+msgid "Unable to find attribute"
+msgstr "Nemoguć pronalazak svojstva"
 
 #. TRANSLATORS: command description
 msgid "Unbind current driver"
@@ -2650,6 +2984,10 @@ msgstr "[DATOTEKA POTPIS_DATOTEKE ID-UDALJENE_LOKACIJE]"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[FILENAME1] [FILENAME2]"
 msgstr "[NAZIV DATOTEKE1] [NAZIV DATOTEKE2]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[SETTING1] [ SETTING2]..."
+msgstr "[POSTAVKA1] [POSTAVKAG2]..."
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[SMBIOS-FILE|HWIDS-FILE]"

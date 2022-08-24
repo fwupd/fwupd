@@ -70,10 +70,6 @@ msgstr "Потребна је пријава за ажурирање фирмв�
 msgid "Authentication is required to update the stored checksums for the device"
 msgstr "Потребна је пријава за ажурирање причуваних сума провере за уређај"
 
-#. TRANSLATORS: command description
-msgid "Build firmware using a sandbox"
-msgstr "Изгради фирмвер унутар кутије"
-
 #. TRANSLATORS: this is when a device ctrl+c's a watch
 msgid "Cancelled"
 msgstr "Отказао"
@@ -114,6 +110,7 @@ msgstr "Опције отклањања проблема"
 msgid "Decompressing…"
 msgstr "Распакујем…"
 
+#. TRANSLATORS: description of BIOS setting
 #. TRANSLATORS: multiline description of device
 msgid "Description"
 msgstr "Опис"

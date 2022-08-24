@@ -14,6 +14,189 @@ msgstr ""
 "Language: ka\n"
 "Plural-Forms: nplurals=2; plural=(n!=1);\n"
 
+#. TRANSLATORS: BMC refers to baseboard management controller which
+#. * is the device that updates all the other firmware on the system
+#, c-format
+msgid "%s BMC Update"
+msgstr "%s BMC -ის განახლება"
+
+#. TRANSLATORS: battery refers to the system power source
+#, c-format
+msgid "%s Battery Update"
+msgstr "%s ელემენტის განახლება"
+
+#. TRANSLATORS: the CPU microcode is firmware loaded onto the CPU
+#. * at system bootup
+#, c-format
+msgid "%s CPU Microcode Update"
+msgstr "%s CPU მიკროკოდის განახლება"
+
+#. TRANSLATORS: camera can refer to the laptop internal
+#. * camera in the bezel or external USB webcam
+#, c-format
+msgid "%s Camera Update"
+msgstr "%s კამერის განახლება"
+
+#. TRANSLATORS: a specific part of hardware,
+#. * the first %s is the device name, e.g. 'Secure Boot`
+#, c-format
+msgid "%s Configuration Update"
+msgstr "%s კონფიგურაციის განახლება"
+
+#. TRANSLATORS: ME stands for Management Engine, where
+#. * the first %s is the device name, e.g. 'ThinkPad P50`
+#, c-format
+msgid "%s Consumer ME Update"
+msgstr "%s მომხმარებლის ME-ის განახლება"
+
+#. TRANSLATORS: the controller is a device that has other devices
+#. * plugged into it, for example ThunderBolt, FireWire or USB,
+#. * the first %s is the device name, e.g. 'Intel ThunderBolt`
+#, c-format
+msgid "%s Controller Update"
+msgstr "%s კონტროლერის განახლება"
+
+#. TRANSLATORS: ME stands for Management Engine (with Intel AMT),
+#. * where the first %s is the device name, e.g. 'ThinkPad P50`
+#, c-format
+msgid "%s Corporate ME Update"
+msgstr "%s კორპორატიული ME-ის განახლება"
+
+#. TRANSLATORS: a specific part of hardware,
+#. * the first %s is the device name, e.g. 'Unifying Receiver`
+#, c-format
+msgid "%s Device Update"
+msgstr "%s მოწყობილობის განახლება"
+
+#. TRANSLATORS: Video Display refers to the laptop internal display or
+#. * external monitor
+#, c-format
+msgid "%s Display Update"
+msgstr "%s ეკრანის განახლება"
+
+#. TRANSLATORS: drive refers to a storage device, e.g. SATA disk
+#, c-format
+msgid "%s Drive Update"
+msgstr "%s დისკის განახლება"
+
+#. TRANSLATORS: the EC is typically the keyboard controller chip,
+#. * the first %s is the device name, e.g. 'ThinkPad P50`
+#, c-format
+msgid "%s Embedded Controller Update"
+msgstr "%s ჩადგმული კონტროლერის განახლება"
+
+#. TRANSLATORS: flash refers to solid state storage, e.g. UFS or eMMC
+#, c-format
+msgid "%s Flash Drive Update"
+msgstr "%s Flash დისკის განახლება"
+
+#. TRANSLATORS: Keyboard refers to an input device for typing
+#, c-format
+msgid "%s Keyboard Update"
+msgstr "%s კლავიატურის განახლება"
+
+#. TRANSLATORS: ME stands for Management Engine, the Intel AMT thing,
+#. * the first %s is the device name, e.g. 'ThinkPad P50`
+#, c-format
+msgid "%s ME Update"
+msgstr "%s ME-ის განახლება"
+
+#. TRANSLATORS: Mouse refers to a handheld input device
+#, c-format
+msgid "%s Mouse Update"
+msgstr "%s თაგუნას განახლება"
+
+#. TRANSLATORS: Network Interface refers to the physical
+#. * PCI card, not the logical wired connection
+#, c-format
+msgid "%s Network Interface Update"
+msgstr "%s ქსელის ინტერფეისის განახლება"
+
+#. TRANSLATORS: SSD refers to a Solid State Drive, e.g. non-rotating
+#. * SATA or NVMe disk
+#, c-format
+msgid "%s SSD Update"
+msgstr "%s SSD -ის განახლება"
+
+#. TRANSLATORS: Storage Controller is typically a RAID or SAS adapter
+#, c-format
+msgid "%s Storage Controller Update"
+msgstr "%s საცავის კონტროლერის განახლება"
+
+#. TRANSLATORS: the entire system, e.g. all internal devices,
+#. * the first %s is the device name, e.g. 'ThinkPad P50`
+#, c-format
+msgid "%s System Update"
+msgstr "%s სისტემის განახლება"
+
+#. TRANSLATORS: TPM refers to a Trusted Platform Module
+#, c-format
+msgid "%s TPM Update"
+msgstr "%s TPM განახლება"
+
+#. TRANSLATORS: the Thunderbolt controller is a device that
+#. * has other high speed Thunderbolt devices plugged into it;
+#. * the first %s is the system name, e.g. 'ThinkPad P50`
+#, c-format
+msgid "%s Thunderbolt Controller Update"
+msgstr "%s Thunderbolt კონტროლერის განახლება"
+
+#. TRANSLATORS: TouchPad refers to a flat input device
+#, c-format
+msgid "%s Touchpad Update"
+msgstr "%s თაჩპედის განახლება"
+
+#. TRANSLATORS: Receiver refers to a radio device, e.g. a tiny Bluetooth
+#. * device that stays in the USB port so the wireless peripheral works
+#, c-format
+msgid "%s USB Receiver Update"
+msgstr "%s USB მიმღების განახლება"
+
+#. TRANSLATORS: this is the fallback where we don't know if the release
+#. * is updating the system, the device, or a device class, or something else
+#. --
+#. * the first %s is the device name, e.g. 'ThinkPad P50`
+#, c-format
+msgid "%s Update"
+msgstr "%s განახლება"
+
+#. TRANSLATORS: the device has a reason it can't update, e.g. laptop lid
+#. closed
+#, c-format
+msgid "%s is not currently updatable"
+msgstr "%s ამჟამად განახლებადი არაა"
+
+#. TRANSLATORS: Title: %1 is ME kind, e.g. CSME/TXT, %2 is a version number
+#, c-format
+msgid "%s v%s"
+msgstr "%s v%s"
+
+#. TRANSLATORS: Title: %s is ME kind, e.g. CSME/TXT
+#, c-format
+msgid "%s version"
+msgstr "%s ვერსია"
+
+#. TRANSLATORS: duration in days!
+#, c-format
+msgid "%u day"
+msgid_plural "%u days"
+msgstr[0] "%u დღე"
+msgstr[1] "%u დღე"
+
+#. TRANSLATORS: duration in minutes
+#, c-format
+msgid "%u hour"
+msgid_plural "%u hours"
+msgstr[0] "%u საათი"
+msgstr[1] "%u საათი"
+
+#. TRANSLATORS: duration in minutes
+#, c-format
+msgid "%u minute"
+msgid_plural "%u minutes"
+msgstr[0] "%u minute"
+msgstr[1] "%u minutes"
+
 #. TRANSLATORS: duration in seconds
 #, c-format
 msgid "%u second"
@@ -21,9 +204,30 @@ msgid_plural "%u seconds"
 msgstr[0] "%u წამი"
 msgstr[1] "%u წამი"
 
+#. TRANSLATORS: this is shown as a suffix for obsoleted tests
+msgid "(obsoleted)"
+msgstr "(მოძველებული)"
+
+#. TRANSLATORS: Title: if hardware enforces control of SPI replays
+msgid "AMD Firmware Replay Protection"
+msgstr "AMD-ის მიკროკოდის თავიდან ჩაწერისგან დაცვა"
+
+#. TRANSLATORS: Title: if hardware enforces control of SPI writes
+msgid "AMD Firmware Write Protection"
+msgstr "AMD-ის მიკროკოდში ჩაწერისგან დაცვა"
+
+#. TRANSLATORS: Title: if firmware enforces rollback protection
+msgid "AMD Rollback Protection"
+msgstr "AMD-ის მიკროკოდის ვერსიის ჩამოწევისგან დაცვა"
+
 #. TRANSLATORS: the age of the metadata
 msgid "Age"
 msgstr "ასაკი"
+
+#. TRANSLATORS: this is a command alias, e.g. 'get-devices'
+#, c-format
+msgid "Alias to %s"
+msgstr "%s-ის მეტსახელი"
 
 #. TRANSLATORS: on some systems certain devices have to have matching
 #. versions,
@@ -34,6 +238,14 @@ msgstr "ერთი ტიპის მოწყობილობების 
 #. TRANSLATORS: is not the main firmware stream
 msgid "Alternate branch"
 msgstr "ალტერნატიული ბრენჩი"
+
+#. TRANSLATORS: command line option
+msgid "Apply firmware updates"
+msgstr "მიკროკოდის განახლებების გადატარება"
+
+#. TRANSLATORS: command line option
+msgid "Apply update files"
+msgstr "განახლების ფალების გადატარება"
 
 #. TRANSLATORS: waiting for user to authenticate
 msgid "Authenticating…"
@@ -71,6 +283,19 @@ msgstr "შეცვლილია"
 msgid "Checksum"
 msgstr "საკონტროლო რიცხვი"
 
+#. TRANSLATORS: get interactive prompt, where branch is the
+#. * supplier of the firmware, e.g. "non-free" or "free"
+msgid "Choose a branch:"
+msgstr "აირჩიეთ ბრენჩი:"
+
+#. TRANSLATORS: get interactive prompt
+msgid "Choose a firmware type:"
+msgstr "აირჩიეთ მიკროკოდის ტიპი:"
+
+#. TRANSLATORS: get interactive prompt
+msgid "Choose a volume:"
+msgstr "აირჩიეთ ტომი:"
+
 #. TRANSLATORS: error message
 msgid "Command not found"
 msgstr "ბრძანება ვერ ვიპოვე"
@@ -91,6 +316,10 @@ msgstr "კრიტიკული"
 msgid "Cryptographic hash verification is available"
 msgstr "ხელმისაწვდომია ჰეშის კრიპტოგრაფიული შემოწმება"
 
+#. TRANSLATORS: current value of a BIOS setting
+msgid "Current Value"
+msgstr "მიმდინარე მნიშვნელობა"
+
 #. TRANSLATORS: version number of current firmware
 msgid "Current version"
 msgstr "მიმდინარე ვერსია"
@@ -103,6 +332,7 @@ msgstr "გამართვის პარამეტრები"
 msgid "Decompressing…"
 msgstr "გაშლა…"
 
+#. TRANSLATORS: description of BIOS setting
 #. TRANSLATORS: multiline description of device
 msgid "Description"
 msgstr "აღწერილობა"
@@ -115,21 +345,51 @@ msgstr "დეტალები"
 msgid "Device ID"
 msgstr "მოწყობილობის ID"
 
+#. TRANSLATORS: for example the batteries *inside* the Bluetooth mouse
+#, c-format
+msgid "Device battery power is too low"
+msgstr "მოწყობილობის ელემენტის სიმძლავრე მეტისმეტად დაბალია"
+
+#. TRANSLATORS: for example the batteries *inside* the Bluetooth mouse
+#, c-format
+msgid "Device battery power is too low (%u%%, requires %u%%)"
+msgstr "მოწყობილობის ელემენტის სიმძლავრე მეტისმეტად დაბალია(%u%%, საჭიროა %u%%)"
+
 #. TRANSLATORS: Device supports a safety mechanism for flashing
 msgid "Device can recover flash failures"
 msgstr "მოწყობილობას შეუძლია ფლეშის ავარიის გადატანა"
+
+#. TRANSLATORS: lid means "laptop top cover"
+msgid "Device cannot be used while the lid is closed"
+msgstr "მოწყობილობას ვერ გამოიყენებთ, თუ ის დახურულია"
 
 #. TRANSLATORS: Is locked and can be unlocked
 msgid "Device is locked"
 msgstr "მოწყობილობა ჩაკეტილია"
 
+#. TRANSLATORS: for example, a Bluetooth mouse that is in powersave mode
+msgid "Device is unreachable, or out of wireless range"
+msgstr "მოწყობილობა მიუწვდომელია ან გასულია უსადენო ინტერნეტის წვდომის არეალიდან"
+
 #. TRANSLATORS: Device remains usable during update
 msgid "Device is usable for the duration of the update"
 msgstr "მოწყობილობა განახლების დროსაც გამოყენებადია"
 
+#. TRANSLATORS: usually this is when we're waiting for a reboot
+msgid "Device is waiting for the update to be applied"
+msgstr "მოწყობილობა განახლების დასრულებას ელოდება"
+
+#. TRANSLATORS: as in, wired mains power for a laptop
+msgid "Device requires AC power to be connected"
+msgstr "მოწყობილობას ესაჭიროება 220V კვება"
+
 #. TRANSLATORS: Device supports a safety mechanism for flashing
 msgid "Device stages updates"
 msgstr "მოწყობილობის დონის განახლება"
+
+#. TRANSLATORS: command line option
+msgid "Device update method"
+msgstr "მოწყობილობის განახლების მეთოდი"
 
 #. TRANSLATORS: Device update needs to be separately activated
 msgid "Device update needs activation"
@@ -144,6 +404,19 @@ msgstr "განახლების დასრულების შემ�
 msgid "Disabled"
 msgstr "გამორთულია"
 
+#. TRANSLATORS: command line option
+msgid "Display version"
+msgstr "ვერსის ჩვენება"
+
+#. TRANSLATORS: ask the user if we can update the metadata
+msgid "Do you want to refresh this remote now?"
+msgstr "გნებავთ ეს დაშორებული ახლა განაახლოთ?"
+
+#. TRANSLATORS: success
+#. success
+msgid "Done!"
+msgstr "მზადაა!"
+
 #. TRANSLATORS: downloading from a remote server
 msgid "Downloading…"
 msgstr "გადმოწერა…"
@@ -151,6 +424,10 @@ msgstr "გადმოწერა…"
 #. TRANSLATORS: length of time the update takes to apply
 msgid "Duration"
 msgstr "ხანგრძლოვობა"
+
+#. TRANSLATORS: Title: if we are emulating a different host
+msgid "Emulated host"
+msgstr "ემულირებული ჰოსტი"
 
 #. TRANSLATORS: Suffix: the HSI result
 #. TRANSLATORS: Plugin is active and in use
@@ -165,6 +442,10 @@ msgstr "დაშიფრული"
 #. TRANSLATORS: Title: Memory contents are encrypted, e.g. Intel TME
 msgid "Encrypted RAM"
 msgstr "დაშიფრული RAM"
+
+#. TRANSLATORS: the vendor is no longer supporting the device
+msgid "End of life"
+msgstr "ძალიან ძველი"
 
 #. TRANSLATORS: erasing contents of the flash chips
 msgid "Erasing…"
@@ -191,9 +472,49 @@ msgstr "შეცდომა"
 msgid "Failed to parse arguments"
 msgstr "არგუმენტების დამუშავების შეცდომა"
 
+#. TRANSLATORS: item is FALSE
+msgid "False"
+msgstr "მცდარი"
+
 #. TRANSLATORS: filename of the local file
 msgid "Filename"
 msgstr "ფაილის სახელი"
+
+#. TRANSLATORS: filename of the local file
+msgid "Filename Signature"
+msgstr "ფაილის სახელის ხელმოწერა"
+
+#. TRANSLATORS: full path of the remote.conf file
+msgid "Filename Source"
+msgstr "ფაილის სახელის წყარო"
+
+#. TRANSLATORS: Title: if we can verify the firmware checksums
+msgid "Firmware Attestation"
+msgstr "მიკროკოდის ატესტაცია"
+
+#. TRANSLATORS: Title: firmware refers to the flash chip in the computer
+msgid "Firmware BIOS Descriptor"
+msgstr "მიკროკოდის BIOS-ის დესკრიპტორი"
+
+#. TRANSLATORS: Title: SPI refers to the flash chip in the computer
+msgid "Firmware BIOS Region"
+msgstr "მიკროკოდის BIOS-ის რეგიონი"
+
+#. TRANSLATORS: Title: if the fwupd plugins are all present and correct
+msgid "Firmware Updater Verification"
+msgstr "მიკროკოდის გამნახლებლის შემოწმება"
+
+#. TRANSLATORS: Title: if firmware updates are available
+msgid "Firmware Updates"
+msgstr "მიკროკოდის განახლებები"
+
+#. TRANSLATORS: Title: firmware refers to the flash chip in the computer
+msgid "Firmware Write Protection"
+msgstr "მიკროკოდის ჩაწერის დაცვა"
+
+#. TRANSLATORS: Title: firmware refers to the flash chip in the computer
+msgid "Firmware Write Protection Lock"
+msgstr "მიკროკოდის ჩაწერის დაცვის დაბლოკვა"
 
 #. TRANSLATORS: Title: if we can verify the firmware checksums
 msgid "Firmware attestation"
@@ -230,6 +551,28 @@ msgstr "აპარატურა თავიდან შეერთებ�
 msgid "High"
 msgstr "მაღალი"
 
+#. TRANSLATORS: this is a string like 'HSI:2-U'
+msgid "Host Security ID:"
+msgstr "ჰოსტის უსაფრთხოების ID:"
+
+#. TRANSLATORS: Title:
+#. * https://en.wikipedia.org/wiki/Input%E2%80%93output_memory_management_unit
+msgid "IOMMU"
+msgstr "IOMMU"
+
+#. TRANSLATORS: Title:
+#. * https://en.wikipedia.org/wiki/Input%E2%80%93output_memory_management_unit
+msgid "IOMMU Protection"
+msgstr "IOMMU უსაფრთხოება"
+
+#. TRANSLATORS: HSI event title
+msgid "IOMMU device protection disabled"
+msgstr "IOMMU მოწყობილობის უსაფრთხოება გამორთულია"
+
+#. TRANSLATORS: HSI event title
+msgid "IOMMU device protection enabled"
+msgstr "IOMMU მოწყობილობის უსაფრთხოება ჩართულია"
+
 #. TRANSLATORS: daemon is inactive
 msgid "Idle…"
 msgstr "უქმე…"
@@ -246,10 +589,47 @@ msgstr "დაყენების დრო"
 msgid "Install to parent device first"
 msgstr "ჯერ მშობელ მოწყობილობაზე დაყენება"
 
+#. TRANSLATORS: console message when no Plymouth is installed
+msgid "Installing Firmware…"
+msgstr "მიკროკოდის დაყენება…"
+
+#. TRANSLATORS: this is shown when updating the firmware after the reboot
+msgid "Installing firmware update…"
+msgstr "მიკროკოდის განახლების დაყენება…"
+
+#. TRANSLATORS: The BIOS setting only accepts integers in a fixed range
+msgid "Integer"
+msgstr "მთელი რიცხვი"
+
+#. TRANSLATORS: Title: BootGuard is a trademark from Intel
+msgid "Intel BootGuard"
+msgstr "Intel BootGuard"
+
 #. TRANSLATORS: Title: CET = Control-flow Enforcement Technology,
 #. * active means being used by the OS
 msgid "Intel CET Active"
 msgstr "Intel CET ჩართულია"
+
+#. TRANSLATORS: Title: CET = Control-flow Enforcement Technology,
+#. * enabled means supported by the processor
+msgid "Intel CET Enabled"
+msgstr "Intel CET ჩართულია"
+
+#. TRANSLATORS: Title: MEI = Intel Management Engine
+msgid "Intel Management Engine Manufacturing Mode"
+msgstr "Intel Management Engine -ის მწარმოებლის რეჟიმი"
+
+#. TRANSLATORS: Title: MEI = Intel Management Engine, and the "override" is
+#. enabled
+#. * with a jumper -- luckily it is probably not accessible to end users on
+#. consumer
+#. * boards
+msgid "Intel Management Engine Override"
+msgstr "Intel Management Engine -ის გადაფარვა"
+
+#. TRANSLATORS: Title: MEI = Intel Management Engine
+msgid "Intel Management Engine Version"
+msgstr "Intel Management Engine -ის ვერსია"
 
 #. TRANSLATORS: Title: SMAP = Supervisor Mode Access Prevention
 msgid "Intel SMAP"
@@ -262,6 +642,10 @@ msgstr "შიდა მოწყობილობა"
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Invalid"
 msgstr "არასწორი"
+
+#. TRANSLATORS: error message
+msgid "Invalid arguments"
+msgstr "არასწორი არგუმენტები"
 
 #. TRANSLATORS: version is older
 msgid "Is downgrade"
@@ -281,6 +665,10 @@ msgid_plural "Issues"
 msgstr[0] "Პრობლემა"
 msgstr[1] "საკითხები"
 
+#. TRANSLATORS: keyring type, e.g. GPG or PKCS7
+msgid "Keyring"
+msgstr "ბრელოკი"
+
 #. TRANSLATORS: the original time/date the device was modified
 msgid "Last modified"
 msgstr "ბოლო ცვლილება"
@@ -289,9 +677,29 @@ msgstr "ბოლო ცვლილება"
 msgid "License"
 msgstr "ლიცენზია"
 
+#. TRANSLATORS: Title: lockdown is a security mode of the kernel
+msgid "Linux Kernel Lockdown"
+msgstr "Linux-ის ბირთვი დაბლოკილია"
+
+#. TRANSLATORS: Title: if it's tainted or not
+msgid "Linux Kernel Verification"
+msgstr "Linux-ის ბირთვის შემოწმება"
+
+#. TRANSLATORS: Title: swap space or swap partition
+msgid "Linux Swap"
+msgstr "Linux Swap"
+
+#. TRANSLATORS: Title: if it's tainted or not
+msgid "Linux kernel"
+msgstr "Linux kernel"
+
 #. TRANSLATORS: Title: swap space or swap partition
 msgid "Linux swap"
 msgstr "Linux Swap"
+
+#. TRANSLATORS: command line option
+msgid "List supported firmware updates"
+msgstr "მიკროკოდის მხარდაჭერილი განახლებების სია"
 
 #. TRANSLATORS: parsing the firmware information
 msgid "Loading…"
@@ -316,6 +724,14 @@ msgstr "MEI-ის ვერსია"
 msgid "Medium"
 msgstr "საშუალო"
 
+#. TRANSLATORS: remote URI
+msgid "Metadata Signature"
+msgstr "მეტამონაცემების ხელმოწერა"
+
+#. TRANSLATORS: remote URI
+msgid "Metadata URI"
+msgstr "მეტამონაცემების URI"
+
 #. TRANSLATORS: smallest version number installable on device
 msgid "Minimum Version"
 msgstr "მინიმალური ვერსია"
@@ -327,6 +743,14 @@ msgstr "დაყენების შემდეგ საჭიროებ�
 #. TRANSLATORS: Requires system shutdown to apply firmware
 msgid "Needs shutdown after installation"
 msgstr "დაყენების შემდეგ საჭიროებს გამორთვას"
+
+#. TRANSLATORS: version number of new firmware
+msgid "New version"
+msgstr "ახალი ვერსია"
+
+#. TRANSLATORS: nothing found
+msgid "No firmware IDs found"
+msgstr "მიკროკოდის ID-ები ვერ ვიპოვე"
 
 #. TRANSLATORS: nothing found
 msgid "No plugins found"
@@ -357,14 +781,29 @@ msgstr "დაშვებულია მხოლოდ ვერსიებ�
 msgid "PATH"
 msgstr "ბილიკი"
 
+#. TRANSLATORS: remote filename base
+msgid "Password"
+msgstr "Password"
+
+msgid "Payload"
+msgstr "შემცველობა"
+
 #. TRANSLATORS: the update state of the specific device
 msgid "Pending"
 msgstr "დარჩენილი"
+
+#. TRANSLATORS: prompt to apply the update
+msgid "Perform operation?"
+msgstr "შევასრულო ოპერაცია?"
 
 #. TRANSLATORS: 'recovery key' here refers to a code, rather than a physical
 #. metal thing
 msgid "Please ensure you have the volume recovery key before continuing."
 msgstr "გაგრძელების წინ დარწმუნდით, რომ ტომის აღდგენის გასაღები ნამდვილად გაქვთ."
+
+#. TRANSLATORS: Title: DMA as in https://en.wikipedia.org/wiki/DMA_attack
+msgid "Pre-boot DMA Protection"
+msgstr "ჩატვირთვამდელი DMA-ის დაცვა"
 
 #. TRANSLATORS: the numeric priority
 msgid "Priority"
@@ -374,18 +813,42 @@ msgstr "პრიორიტეტი"
 msgid "Problems"
 msgstr "პრობლემები"
 
+#. TRANSLATORS: Title: if fwupd supports HSI on this chip
+msgid "Processor Security Checks"
+msgstr "პროცესორის უსაფრთხოების შემოწმება"
+
 #. TRANSLATORS: a non-free software license
 msgid "Proprietary"
 msgstr "დახურული კოდი"
+
+#. TRANSLATORS: BIOS setting is read only
+msgid "Read Only"
+msgstr "მხოლოდ კითხვისთვის"
 
 #. TRANSLATORS: reading from the flash chips
 msgid "Reading…"
 msgstr "წაკითხვა…"
 
+#. TRANSLATORS: console message when not using plymouth
+msgid "Rebooting…"
+msgstr "გადატვირთვა…"
+
+#. TRANSLATORS: release attributes
+msgid "Release Flags"
+msgstr "რელიზის ალმები"
+
+#. TRANSLATORS: the exact component on the server
+msgid "Release ID"
+msgstr "რელიზის ID"
+
 #. TRANSLATORS: the server the file is coming from
 #. TRANSLATORS: remote identifier, e.g. lvfs-testing
 msgid "Remote ID"
 msgstr "დაშორებულის ID"
+
+#. TRANSLATORS: URI to send success/failure reports
+msgid "Report URI"
+msgstr "ანგარიშის URI"
 
 #. TRANSLATORS: Requires a bootloader mode to be manually enabled by the user
 msgid "Requires a bootloader"
@@ -423,13 +886,25 @@ msgstr "რიგში ჩაყენება…"
 msgid "Secure Boot disabled"
 msgstr "დაცული ჩატვირთვა გამორთულია"
 
+#. TRANSLATORS: Volume has been chosen by the user
+msgid "Selected volume"
+msgstr "არჩეული ტომი"
+
 #. TRANSLATORS: serial number of hardware
 msgid "Serial Number"
 msgstr "სერიული ნომერი"
 
 #. TRANSLATORS: command line option
+msgid "Show all results"
+msgstr "ყველა შედეგის ჩვენება"
+
+#. TRANSLATORS: command line option
 msgid "Show extra debugging information"
 msgstr "გამართვის დამატებითი ინფორმაციის ჩვენება"
+
+#. TRANSLATORS: shutdown to apply the update
+msgid "Shutdown now?"
+msgstr "გამოვრთო ახლა?"
 
 msgid "Signature"
 msgstr "ხელმოწერა"
@@ -446,9 +921,29 @@ msgstr "ამ მიკროკოდის განახლებისა�
 msgid "Source"
 msgstr "წყარო"
 
+#. TRANSLATORS: The BIOS setting accepts strings
+msgid "String"
+msgstr "სტრიქონი"
+
 #. TRANSLATORS: the update state of the specific device
 msgid "Success"
 msgstr "წარმატება"
+
+#. TRANSLATORS: success message
+msgid "Successfully disabled remote"
+msgstr "დაშორებული წარმატებით გამოირთო"
+
+#. TRANSLATORS: success message
+msgid "Successfully enabled and refreshed remote"
+msgstr "დაშორებული წარმატებით ჩაირთო და განახლდა"
+
+#. TRANSLATORS: success message
+msgid "Successfully enabled remote"
+msgstr "დაშორებული წარმატებით ჩაირთო"
+
+#. TRANSLATORS: success message for a per-remote setting change
+msgid "Successfully modified remote"
+msgstr "დაშორებული წარმატებით შეიცვალა"
 
 #. TRANSLATORS: one line summary of device
 msgid "Summary"
@@ -463,12 +958,29 @@ msgid "Supported CPU"
 msgstr "მხარდაჭერილი CPU"
 
 #. TRANSLATORS: Title: a better sleep state
+msgid "Suspend To Idle"
+msgstr "უქმობამდე შეჩერება"
+
+#. TRANSLATORS: Title: sleep state
+msgid "Suspend To RAM"
+msgstr "RAM-ში შეჩერება"
+
+#. TRANSLATORS: Title: a better sleep state
 msgid "Suspend-to-idle"
 msgstr "შეჩერება"
 
 #. TRANSLATORS: Title: sleep state
 msgid "Suspend-to-ram"
 msgstr "RAM-ში შეჩერება"
+
+#. TRANSLATORS: as in laptop battery power
+msgid "System power is too low to perform the update"
+msgstr "სისტემის კვების სიმძლავრე განახლებისთვის მეტისმეტად დაბალია"
+
+#. TRANSLATORS: as in laptop battery power
+#, c-format
+msgid "System power is too low to perform the update (%u%%, requires %u%%)"
+msgstr "სისტემის კვების სიმძლავრე განახლებისთვის მეტისმეტად დაბალია(%u%%, საჭიროა %u%%)"
 
 #. TRANSLATORS: Must be plugged in to an outlet
 msgid "System requires external power source"
@@ -478,6 +990,19 @@ msgstr "სისტემას კვების გარე წყარო
 msgid "TEXT"
 msgstr "ტექსტი"
 
+#. TRANSLATORS: Title: PCRs (Platform Configuration Registers) shouldn't be
+#. empty
+msgid "TPM Platform Configuration"
+msgstr "TPM პლატფორმის მორგება"
+
+#. TRANSLATORS: Title: the PCR is rebuilt from the TPM event log
+msgid "TPM Reconstruction"
+msgstr "TPM -ის რემონტი"
+
+#. TRANSLATORS: Title: TPM = Trusted Platform Module
+msgid "TPM v2.0"
+msgstr "TPM v2.0"
+
 #. TRANSLATORS: release tag set for release, e.g. lenovo-2021q3
 msgid "Tag"
 msgid_plural "Tags"
@@ -486,6 +1011,10 @@ msgstr[1] "ჭდეები"
 
 msgid "Target"
 msgstr "სამიზნე წერტილი"
+
+#. TRANSLATORS: item is TRUE
+msgid "True"
+msgstr "ჭეშმარიტი"
 
 #. TRANSLATORS: We verified the meatdata against the server
 msgid "Trusted metadata"
@@ -498,6 +1027,14 @@ msgstr "სანდო დატვირთვა"
 #. TRANSLATORS: remote type, e.g. remote or local
 msgid "Type"
 msgstr "ტიპით"
+
+#. TRANSLATORS: Title: PK is the 'platform key' for the machine
+msgid "UEFI Platform Key"
+msgstr "UEFI პლატფორმის გასაღები"
+
+#. TRANSLATORS: Title: SB is a way of locking down UEFI
+msgid "UEFI Secure Boot"
+msgstr "UEFI უსაფრთხო ჩატვირთვა"
 
 #. TRANSLATORS: Title: PK is the 'platform key' for the machine
 msgid "UEFI platform key"
@@ -520,6 +1057,10 @@ msgstr "განახლებადი"
 #. TRANSLATORS: error message from last update attempt
 msgid "Update Error"
 msgstr "განახლების შეცდომა"
+
+#. TRANSLATORS: helpful image for the update
+msgid "Update Image"
+msgstr "ასლის განახლება"
 
 #. TRANSLATORS: helpful messages from last update
 #. TRANSLATORS: helpful messages for the update
@@ -565,6 +1106,10 @@ msgstr "ვერსია"
 msgid "Waiting…"
 msgstr "მოლოდინი…"
 
+#. TRANSLATORS: decompressing images from a container firmware
+msgid "Writing file:"
+msgstr "ფაილის ჩაწერა:"
+
 #. TRANSLATORS: writing to the flash chips
 msgid "Writing…"
 msgstr "ჩაწერა…"
@@ -573,3 +1118,11 @@ msgstr "ჩაწერა…"
 #, c-format
 msgid "Your hardware may be damaged using this firmware, and installing this release may void any warranty with %s."
 msgstr "ამ მიკროკოდით თქვენი აპარატურა შეიძლება დაზიანდეს. ამავე დროს ამ რელიზის დაყენებამ შეიძლება %s-ზე გარანტია მოგიხსნათ."
+
+#. TRANSLATORS: this is the default branch name when unset
+msgid "default"
+msgstr "ნაგულისხმები"
+
+#. TRANSLATORS: Title: if the fwupd plugins are all present and correct
+msgid "fwupd plugins"
+msgstr "fwupd დამატებები"

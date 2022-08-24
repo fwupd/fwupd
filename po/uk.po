@@ -310,6 +310,22 @@ msgstr "(є застарілим)"
 msgid "A TPM PCR is now an invalid value"
 msgstr "PCR TPM тепер має некоректне значення"
 
+#. TRANSLATORS: Title: if hardware enforces control of SPI replays
+msgid "AMD Firmware Replay Protection"
+msgstr "Захист відтворення мікропрограми AMD"
+
+#. TRANSLATORS: Title: if hardware enforces control of SPI writes
+msgid "AMD Firmware Write Protection"
+msgstr "Захист від запису мікропрограми AMD"
+
+#. TRANSLATORS: Title: if firmware enforces rollback protection
+msgid "AMD Rollback Protection"
+msgstr "Захист відновлення попередніх станів AMD"
+
+#. TRANSLATORS: longer description
+msgid "AMD Rollback Protection prevents device software from being downgraded to an older version that has security problems."
+msgstr "Захист від відновлення попередніх версій AMD запобігає зниженню версій програмного забезпечення до тих, у яких виявлено проблеми із захистом."
+
 #. TRANSLATORS: the user needs to do something, e.g. remove the device
 msgid "Action Required:"
 msgstr "Потрібна дія:"
@@ -438,6 +454,10 @@ msgid "Authentication is required to downgrade the firmware on this machine"
 msgstr "Для встановлення застарілої версії мікропрограми на цей комп’ютер слід пройти розпізнавання"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to modify BIOS settings"
+msgstr "Для внесення змін до атрибутів BIOS слід пройти розпізнавання"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify a configured remote used for firmware updates"
 msgstr "Для внесення змін до записів налаштованих віддалених пристроїв, які використовуються для оновлення мікропрограм, слід пройти розпізнавання"
 
@@ -481,6 +501,10 @@ msgstr "Автоматичне звітування"
 msgid "Automatically upload every time?"
 msgstr "Автоматично вивантажувати кожного разу?"
 
+#. TRANSLATORS: description of a BIOS setting
+msgid "BIOS updates delivered via LVFS or Windows Update"
+msgstr "Оновлення BIOS, які надано за допомогою LVFS або Windows Update"
+
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "BUILDER-XML FILENAME-DST"
 msgstr "XML-ЗБИРАННЯ НАЗВА-ФАЙЛА-ДЖ"
@@ -523,10 +547,6 @@ msgstr "Гілка"
 #. TRANSLATORS: command description
 msgid "Build a firmware file"
 msgstr "Зібрати файл мікропрограми"
-
-#. TRANSLATORS: command description
-msgid "Build firmware using a sandbox"
-msgstr "Зібрати мікропрограму за допомогою пісочниці"
 
 #. TRANSLATORS: this is to abort the interactive prompt
 msgid "Cancel"
@@ -605,6 +625,10 @@ msgstr "Критичний"
 msgid "Cryptographic hash verification is available"
 msgstr "Доступна перевірка криптографічної хеш-суми"
 
+#. TRANSLATORS: current value of a BIOS setting
+msgid "Current Value"
+msgstr "Поточне значення"
+
 #. TRANSLATORS: version number of current firmware
 msgid "Current version"
 msgstr "Поточна версія"
@@ -625,6 +649,7 @@ msgstr "Параметри діагностики"
 msgid "Decompressing…"
 msgstr "Розпаковування…"
 
+#. TRANSLATORS: description of BIOS setting
 #. TRANSLATORS: multiline description of device
 msgid "Description"
 msgstr "Опис"
@@ -681,6 +706,10 @@ msgstr "Змінено пристрій:"
 msgid "Device firmware is required to have a version check"
 msgstr "Для перевірки версії потрібна мікропрограма пристрою"
 
+#. TRANSLATORS: emulated means we are pretending to be a different model
+msgid "Device is emulated"
+msgstr "Емульований пристрій"
+
 #. TRANSLATORS: Is locked and can be unlocked
 msgid "Device is locked"
 msgstr "Пристрій заблоковано"
@@ -714,6 +743,10 @@ msgstr "Вилучено пристрій:"
 #. TRANSLATORS: as in, wired mains power for a laptop
 msgid "Device requires AC power to be connected"
 msgstr "Пристрій потребує з'єднання із джерелом змінного струму"
+
+#. TRANSLATORS: longer description
+msgid "Device software updates are provided for this device."
+msgstr "Для цього пристрою надаватимуться оновлення програмного забезпечення."
 
 #. TRANSLATORS: Device supports a safety mechanism for flashing
 msgid "Device stages updates"
@@ -886,6 +919,14 @@ msgstr "Тривалість"
 msgid "ESP specified was not valid"
 msgstr "Вказаний ESP є некоректним"
 
+#. TRANSLATORS: longer description
+msgid "Each system should have tests to ensure firmware security."
+msgstr "У кожній системі мають бути перевірки, які забезпечують захист мікропрограми."
+
+#. TRANSLATORS: Title: if we are emulating a different host
+msgid "Emulated host"
+msgstr "Емульований вузол"
+
 #. TRANSLATORS: command line option
 msgid "Enable firmware update support on supported systems"
 msgstr "Увімкнути підтримку оновлення мікропрограми на підтримуваних системах"
@@ -930,9 +971,16 @@ msgstr "Зашировано"
 msgid "Encrypted RAM"
 msgstr "Шифрована пам'ять"
 
+msgid "Encrypted RAM makes it impossible for information that is stored in device memory to be read if the memory chip is removed and accessed."
+msgstr "Шифрування оперативної пам'яті робить неможливим читання інформації, яка зберігається у пам'яті пристрою, якщо чіп пам'яті вилучено з пристрою і піддано обробці з метою отримання доступу до даних."
+
 #. TRANSLATORS: the vendor is no longer supporting the device
 msgid "End of life"
 msgstr "Кінець строку дії"
+
+#. TRANSLATORS: The BIOS setting can only be changed to fixed values
+msgid "Enumeration"
+msgstr "Перелік"
 
 #. TRANSLATORS: command description
 msgid "Erase all firmware update history"
@@ -965,10 +1013,6 @@ msgstr "ФАЙЛ"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILE [DEVICE-ID|GUID]"
 msgstr "ФАЙЛ [ІД_ПРИСТРОЮ|GUID]"
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "FILE-IN FILE-OUT [SCRIPT] [OUTPUT]"
-msgstr "ВХІДНИЙ_ФАЙЛ ВИХІДНИЙ_ФАЙЛ [СКРИПТ] [ВИВЕДЕННЯ]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME"
@@ -1077,6 +1121,10 @@ msgstr "Не вдалося встановити режим вітання"
 msgid "Failed to validate ESP contents"
 msgstr "Не вдалося встановити чинність даних ESP"
 
+#. TRANSLATORS: item is FALSE
+msgid "False"
+msgstr "Ні"
+
 #. TRANSLATORS: filename of the local file
 msgid "Filename"
 msgstr "Назва файла"
@@ -1097,6 +1145,30 @@ msgstr "Слід вказати назву файла"
 msgid "Filter with a set of device flags using a ~ prefix to exclude, e.g. 'internal,~needs-reboot'"
 msgstr "Фільтрувати за набором прапорців пристроїв за допомогою префікса виключення ~, наприклад «internal,~needs-reboot»"
 
+#. TRANSLATORS: Title: if we can verify the firmware checksums
+msgid "Firmware Attestation"
+msgstr "Атестація мікропрограми"
+
+#. TRANSLATORS: longer description
+msgid "Firmware Attestation checks device software using a reference copy, to make sure that it has not been changed."
+msgstr "Атестація мікропрограми перевіряє програмне забезпечення пристрою за еталонною копією, щоб переконатися, що до нього не було внесено змін."
+
+#. TRANSLATORS: Title: firmware refers to the flash chip in the computer
+msgid "Firmware BIOS Descriptor"
+msgstr "Дескриптор BIOS мікропрограми"
+
+#. TRANSLATORS: longer description
+msgid "Firmware BIOS Descriptor protects device firmware memory from being tampered with."
+msgstr "Захист lдескриптора BIOS захищає пам'ять мікропрограми пристрою від внесення змін."
+
+#. TRANSLATORS: Title: SPI refers to the flash chip in the computer
+msgid "Firmware BIOS Region"
+msgstr "Регіон BIOS мікропрограми"
+
+#. TRANSLATORS: longer description
+msgid "Firmware BIOS Region protects device firmware memory from being tampered with."
+msgstr "Захист регіону BIOS захищає пам'ять мікропрограми пристрою від внесення змін."
+
 #. TRANSLATORS: remote URI
 msgid "Firmware Base URI"
 msgstr "Основна адреса мікропрограми"
@@ -1109,9 +1181,32 @@ msgstr "Служба D-Bus оновлення мікропрограми"
 msgid "Firmware Update Daemon"
 msgstr "Служба оновлення мікропрограми"
 
+#. TRANSLATORS: Title: if the fwupd plugins are all present and correct
+msgid "Firmware Updater Verification"
+msgstr "Перевірка засобу оновлення мікропрограми"
+
+msgid "Firmware Updater Verification checks that software used for updating has not been tampered with."
+msgstr "Перевірка засобу оновлення мікропрограми перевіряє, чи не було внесено зміни до програмного забезпечення для оновлення мікропрограми."
+
+#. TRANSLATORS: Title: if firmware updates are available
+msgid "Firmware Updates"
+msgstr "Оновлення мікропрограми"
+
 #. TRANSLATORS: program name
 msgid "Firmware Utility"
 msgstr "Засіб роботи з мікропрограмами"
+
+#. TRANSLATORS: Title: firmware refers to the flash chip in the computer
+msgid "Firmware Write Protection"
+msgstr "Захист мікропрограми від запису"
+
+#. TRANSLATORS: Title: firmware refers to the flash chip in the computer
+msgid "Firmware Write Protection Lock"
+msgstr "Блокування захисту від запису мікропрограми"
+
+#. TRANSLATORS: longer description
+msgid "Firmware Write Protection protects device firmware memory from being tampered with."
+msgstr "Захист від запису мікропрограми захищає пам'ять мікропрограми пристрою від внесення змін."
 
 #. TRANSLATORS: Title: if we can verify the firmware checksums
 msgid "Firmware attestation"
@@ -1178,6 +1273,10 @@ msgstr "Виявлено повне шифрування диска"
 #. Windows
 msgid "Full disk encryption secrets may be invalidated when updating"
 msgstr "Ключі шифрування усього диска можуть втрати чинність при оновленні"
+
+#. TRANSLATORS: Title: if the part has been fused
+msgid "Fused Platform"
+msgstr "Злита платформа"
 
 #. TRANSLATORS: Title: if the part has been fused
 msgid "Fused platform"
@@ -1265,6 +1364,15 @@ msgstr "Ід. захисту основної системи:"
 msgid "IOMMU"
 msgstr "IOMMU"
 
+#. TRANSLATORS: Title:
+#. * https://en.wikipedia.org/wiki/Input%E2%80%93output_memory_management_unit
+msgid "IOMMU Protection"
+msgstr "Захист IOMMU"
+
+#. TRANSLATORS: longer description
+msgid "IOMMU Protection prevents connected devices from accessing unauthorized parts of system memory."
+msgstr "Захист IOMMU забороняє з'єднаним пристроям доступ до неуповноважених частин пам'яті системи."
+
 #. TRANSLATORS: HSI event title
 msgid "IOMMU device protection disabled"
 msgstr "Вимкнено захист пристрою IOMMU"
@@ -1309,10 +1417,6 @@ msgstr "Встановити бінарну мікропрограму на пр
 msgid "Install a firmware file on this hardware"
 msgstr "Встановити файл мікропрограми на це обладнання"
 
-#. TRANSLATORS: command description
-msgid "Install a specific firmware version on a device"
-msgstr "Встановити на пристрій вказану версію мікропрограми"
-
 msgid "Install old version of signed system firmware"
 msgstr "Встановити стару версію підписаної мікропрограми системи"
 
@@ -1352,9 +1456,18 @@ msgstr "Встановлюємо на %s…"
 msgid "Installing this update may also void any device warranty."
 msgstr "Встановлення цього оновлення може призвести до припинення будь-яких гарантійних зобов'язань щодо пристрою."
 
+#. TRANSLATORS: The BIOS setting only accepts integers in a fixed range
+msgid "Integer"
+msgstr "Ціле число"
+
 #. TRANSLATORS: Title: BootGuard is a trademark from Intel
 msgid "Intel BootGuard"
 msgstr "Intel BootGuard"
+
+#. TRANSLATORS: Title: BootGuard is a trademark from Intel,
+#. * ACM means to verify the integrity of Initial Boot Block
+msgid "Intel BootGuard ACM Protected"
+msgstr "Захист ACM Intel BootGuard"
 
 #. TRANSLATORS: Title: BootGuard is a trademark from Intel,
 #. * ACM means to verify the integrity of Initial Boot Block
@@ -1362,19 +1475,44 @@ msgid "Intel BootGuard ACM protected"
 msgstr "Intel BootGuard захищено ACM"
 
 #. TRANSLATORS: Title: BootGuard is a trademark from Intel,
+#. * error policy is what to do on failure
+msgid "Intel BootGuard Error Policy"
+msgstr "Правила обробки помилок Intel BootGuard"
+
+msgid "Intel BootGuard Error Policy ensures the device does not continue to start if its device software has been tampered with."
+msgstr "Правила обробки помилок Intel BootGuard запобігають продовженню запуску пристрою, якщо до програмного забезпечення пристрою було внесено зміни."
+
+#. TRANSLATORS: Title: BootGuard is a trademark from Intel
+msgid "Intel BootGuard Fuse"
+msgstr "Intel BootGuard Fuse"
+
+#. TRANSLATORS: Title: BootGuard is a trademark from Intel,
 #. * OTP = one time programmable
 msgid "Intel BootGuard OTP fuse"
 msgstr "OTP FUSE Intel BootGuard"
+
+#. TRANSLATORS: Title: BootGuard is a trademark from Intel,
+#. * verified boot refers to the way the boot process is verified
+msgid "Intel BootGuard Verified Boot"
+msgstr "Перевірене завантаження Intel BootGuard"
 
 #. TRANSLATORS: Title: BootGuard is a trademark from Intel,
 #. * error policy is what to do on failure
 msgid "Intel BootGuard error policy"
 msgstr "Правила обробки помилок Intel BootGuard"
 
+#. TRANSLATORS: longer description
+msgid "Intel BootGuard prevents unauthorized device software from operating when the device is started."
+msgstr "Intel BootGuard запобігає роботі неуповноваженого програмного забезпечення на пристрої після його запуску."
+
 #. TRANSLATORS: Title: BootGuard is a trademark from Intel,
 #. * verified boot refers to the way the boot process is verified
 msgid "Intel BootGuard verified boot"
 msgstr "Перевірене завантаження Intel BootGuard"
+
+#. TRANSLATORS: Title: CET = Control-flow Enforcement Technology
+msgid "Intel CET"
+msgstr "Intel CET"
 
 #. TRANSLATORS: Title: CET = Control-flow Enforcement Technology,
 #. * active means being used by the OS
@@ -1386,9 +1524,37 @@ msgstr "Активна Intel CET"
 msgid "Intel CET Enabled"
 msgstr "Увімкнено Intel CET"
 
+#. TRANSLATORS: longer description
+msgid "Intel Control-Flow Enforcement Technology detects and prevents certain methods for running malicious software on the device."
+msgstr "Технологія Intel Control-Flow Enforcement виявляє і запобігає певним методам запуску зловмисниками програмного забезпечення на пристрої."
+
+#. TRANSLATORS: Title: MEI = Intel Management Engine
+msgid "Intel Management Engine Manufacturing Mode"
+msgstr "Режим виробництва Intel Management Engine"
+
+#. TRANSLATORS: Title: MEI = Intel Management Engine, and the "override" is
+#. enabled
+#. * with a jumper -- luckily it is probably not accessible to end users on
+#. consumer
+#. * boards
+msgid "Intel Management Engine Override"
+msgstr "Перевизначення Intel Management Engine"
+
+#. TRANSLATORS: longer description
+msgid "Intel Management Engine Override disables checks for device software tampering."
+msgstr "Перевизначення Intel Management Engine вимикає перевірки щодо внесення змін до програмного забезпечення пристрою."
+
+#. TRANSLATORS: Title: MEI = Intel Management Engine
+msgid "Intel Management Engine Version"
+msgstr "Версія Intel Management Engine"
+
 #. TRANSLATORS: Title: SMAP = Supervisor Mode Access Prevention
 msgid "Intel SMAP"
 msgstr "Intel SMAP"
+
+#. TRANSLATORS: longer description
+msgid "Intel Supervisor Mode Access Prevention ensures critical parts of device memory are not accessed by less secure programs."
+msgstr "Intel Supervisor Mode Access Prevention забороняє малобезпечним програмам доступ до пам'яті пристрою."
 
 #. TRANSLATORS: Device cannot be removed easily
 msgid "Internal device"
@@ -1397,6 +1563,10 @@ msgstr "Внутрішній пристрій"
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Invalid"
 msgstr "Некоректна"
+
+#. TRANSLATORS: error message
+msgid "Invalid arguments"
+msgstr "Некоректні аргументи"
 
 #. TRANSLATORS: version is older
 msgid "Is downgrade"
@@ -1457,6 +1627,28 @@ msgstr "Лишилося менше за хвилину"
 #. TRANSLATORS: e.g. GPLv2+, Proprietary etc
 msgid "License"
 msgstr "Ліцензування"
+
+#. TRANSLATORS: Title: lockdown is a security mode of the kernel
+msgid "Linux Kernel Lockdown"
+msgstr "Блокування ядра Linux"
+
+#. TRANSLATORS: longer description
+msgid "Linux Kernel Lockdown mode prevents administrator (root) accounts from accessing and changing critical parts of system software."
+msgstr "Режим блокування ядра Linux забороняє адміністративним обліковим записам (root) доступ до критичних частин системи і внесення до них змін."
+
+msgid "Linux Kernel Swap temporarily saves information to disk as you work. If the information is not protected, it could be accessed by someone if they obtained the disk."
+msgstr "Резервна пам'ять ядра Linux зберігає на диску дані під час роботи системи. Якщо дані не захищено, хтось, хто отримає диск, може отримати до них доступ."
+
+#. TRANSLATORS: Title: if it's tainted or not
+msgid "Linux Kernel Verification"
+msgstr "Перевірка ядра Linux"
+
+msgid "Linux Kernel Verification makes sure that critical system software has not been tampered with. Using device drivers which are not provided with the system can prevent this security feature from working correctly."
+msgstr "Перевірка ядра Linux захищає критичне програмне забезпечення системи від внесення змін. Використання драйверів пристроїв, які не є частиною системи, може заважати належній роботі цієї можливості захисту."
+
+#. TRANSLATORS: Title: swap space or swap partition
+msgid "Linux Swap"
+msgstr "Резервна пам'ять Linux"
 
 msgid "Linux Vendor Firmware Service (stable firmware)"
 msgstr "Служба надання мікропрограм для Linux від виробника (стабільна мікропрограма)"
@@ -1522,6 +1714,18 @@ msgstr "Версія MEI"
 msgid "Manually enable specific plugins"
 msgstr "Увімкнути певні додатки вручну"
 
+#. TRANSLATORS: longer description
+msgid "Manufacturing Mode is used when the device is manufactured and security features are not yet enabled."
+msgstr "Режим виробництва використовують після вироблення пристрою, коли можливості захисту ще не увімкнено."
+
+#. TRANSLATORS: Longest valid string for BIOS setting
+msgid "Maximum length"
+msgstr "Максимальна довжина"
+
+#. TRANSLATORS: Highest valid integer for BIOS setting
+msgid "Maximum value"
+msgstr "Максимальне значення"
+
 #. TRANSLATORS: the release urgency
 msgid "Medium"
 msgstr "Середній"
@@ -1541,6 +1745,14 @@ msgstr "Метадані можна отримати від служби над�
 #. TRANSLATORS: smallest version number installable on device
 msgid "Minimum Version"
 msgstr "Мінімальна версія"
+
+#. TRANSLATORS: Shortest valid string for BIOS setting
+msgid "Minimum length"
+msgstr "Мінімальна довжина"
+
+#. TRANSLATORS: Lowest valid integer for BIOS setting
+msgid "Minimum value"
+msgstr "Мінімальне значення"
 
 #. TRANSLATORS: error message
 #, c-format
@@ -1722,6 +1934,10 @@ msgstr "Виконати дію?"
 msgid "Platform Debugging"
 msgstr "Діагностика платформи"
 
+#. TRANSLATORS: longer description
+msgid "Platform Debugging allows device security features to be disabled. This should only be used by hardware manufacturers."
+msgstr "Діагностика платформи надає змогу вимикати можливості захисту пристрою. Цією можливістю мають користуватися лише виробники обладнання."
+
 #. TRANSLATORS: 'recovery key' here refers to a code, rather than a physical
 #. metal thing
 msgid "Please ensure you have the volume recovery key before continuing."
@@ -1736,6 +1952,14 @@ msgstr "Будь ласка, введіть число від 0 до %u: "
 msgid "Plugin dependencies missing"
 msgstr "Не встановлено залежності додатка"
 
+#. TRANSLATORS: Possible values for a bios setting
+msgid "Possible Values"
+msgstr "Можливі значення"
+
+#. TRANSLATORS: Title: DMA as in https://en.wikipedia.org/wiki/DMA_attack
+msgid "Pre-boot DMA Protection"
+msgstr "Захист DMA до завантаження"
+
 #. TRANSLATORS: Title: DMA as in https://en.wikipedia.org/wiki/DMA_attack
 msgid "Pre-boot DMA protection"
 msgstr "Захист DMA до завантаження"
@@ -1747,6 +1971,10 @@ msgstr "Захист DMA перед завантаженням вимкнено"
 #. TRANSLATORS: HSI event title
 msgid "Pre-boot DMA protection is enabled"
 msgstr "Захист DMA перед завантаженням увімкнено"
+
+#. TRANSLATORS: longer description
+msgid "Pre-boot DMA protection prevents devices from being connected to the computer and accessing system memory."
+msgstr "Захист перед завантаженням DMA запобігає можливості з'єднання пристроїв із комп'ютером і доступу до пам'яті системи."
 
 #. TRANSLATORS: version number of previous firmware
 msgid "Previous version"
@@ -1769,6 +1997,10 @@ msgstr "Проблеми"
 msgid "Proceed with upload?"
 msgstr "Продовжити вивантаження?"
 
+#. TRANSLATORS: Title: if fwupd supports HSI on this chip
+msgid "Processor Security Checks"
+msgstr "Перевірки захисту процесора"
+
 #. TRANSLATORS: a non-free software license
 msgid "Proprietary"
 msgstr "Пропрієтарна"
@@ -1784,6 +2016,10 @@ msgstr "ВІДДАЛ-ІД"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "REMOTE-ID KEY VALUE"
 msgstr "ВІДДАЛ-ІД КЛЮЧ ЗНАЧЕННЯ"
+
+#. TRANSLATORS: BIOS setting is read only
+msgid "Read Only"
+msgstr "Лише читання"
 
 #. TRANSLATORS: command description
 msgid "Read a firmware blob from a device"
@@ -1897,6 +2133,10 @@ msgid "Restarting device…"
 msgstr "Перезапускаємо пристрій…"
 
 #. TRANSLATORS: command description
+msgid "Retrieve BIOS settings.  If no arguments are passed all settings are returned"
+msgstr "Отримати параметри BIOS. Якщо аргументів не передано, буде повернуто усі параметри"
+
+#. TRANSLATORS: command description
 msgid "Return all the hardware IDs for the machine"
 msgstr "Повернути усі ідентифікатори апаратного забезпечення комп’ютера"
 
@@ -1927,6 +2167,10 @@ msgstr "Поточне ядро є надто застарілим"
 #. TRANSLATORS:  this is the HSI suffix
 msgid "Runtime Suffix"
 msgstr "Динамічний суфікс"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "SETTING VALUE"
+msgstr "ПАРАМЕТР ЗНАЧЕННЯ"
 
 #. TRANSLATORS: Title: SPI refers to the flash chip in the computer
 msgid "SPI BIOS Descriptor"
@@ -1959,6 +2203,10 @@ msgstr "ПІДСИСТЕМА ДРАЙВЕР [ІД_ПРИСТРОЮ|GUID]"
 #. TRANSLATORS: command description
 msgid "Save a file that allows generation of hardware IDs"
 msgstr "Зберегти файл, за допомогою якого можна буде створити апаратні ідентифікатори"
+
+#. TRANSLATORS: Scalar increment for integer BIOS setting
+msgid "Scalar Increment"
+msgstr "Скалярний крок"
 
 #. TRANSLATORS: command line option
 msgid "Schedule installation for next reboot when possible"
@@ -1998,6 +2246,10 @@ msgstr "Вибраний том"
 msgid "Serial Number"
 msgstr "Серійний номер"
 
+#. TRANSLATORS: command description
+msgid "Set a BIOS setting"
+msgstr "Встановити параметр BIOS"
+
 #. TRANSLATORS: command line option
 msgid "Set the debugging flag during update"
 msgstr "Встановити під час оновлення прапорець діагностики"
@@ -2005,6 +2257,14 @@ msgstr "Встановити під час оновлення прапорець
 #. TRANSLATORS: firmware approved by the admin
 msgid "Sets the list of approved firmware"
 msgstr "Встановлення списку схвалених мікропрограм"
+
+#. TRANSLATORS: type of BIOS setting
+msgid "Setting type"
+msgstr "Тип параметра"
+
+#. TRANSLATORS: Settings refers to BIOS settings in this context
+msgid "Settings will apply after system reboots"
+msgstr "Параметри буде застосовано після перезавантаження системи"
 
 #. TRANSLATORS: command description
 msgid "Share firmware history with the developers"
@@ -2107,6 +2367,10 @@ msgstr "Вказати файл бази даних dbx"
 msgid "Specify the number of bytes per USB transfer"
 msgstr "Вказати кількість байтів на один пакет передавання даних USB"
 
+#. TRANSLATORS: The BIOS setting accepts strings
+msgid "String"
+msgstr "Рядок"
+
 #. TRANSLATORS: the update state of the specific device
 msgid "Success"
 msgstr "Успіх"
@@ -2184,6 +2448,22 @@ msgid "Supported on remote server"
 msgstr "Підтримуваний на віддаленому сервері"
 
 #. TRANSLATORS: Title: a better sleep state
+msgid "Suspend To Idle"
+msgstr "Присипляння бездіяльності"
+
+#. TRANSLATORS: Title: sleep state
+msgid "Suspend To RAM"
+msgstr "Призупинення до RAM"
+
+#. TRANSLATORS: longer description
+msgid "Suspend to Idle allows the device to quickly go to sleep in order to save power. While the device has been suspended, its memory could be physically removed and its information accessed."
+msgstr "Призупинення до стану бездіяльності надає змогу пристрою швидко перейти у стан сну для заощадження електроенергії. Доки пристрій перебуває у стані призупинення, його пам'ять може бути фізично видалено із отриманням доступу до даних у пам'яті."
+
+#. TRANSLATORS: longer description
+msgid "Suspend to RAM allows the device to quickly go to sleep in order to save power. While the device has been suspended, its memory could be physically removed and its information accessed."
+msgstr "Призупинення із записом до оперативної пам'яті надає змогу пристрою швидко перейти у стан сну для заощадження електроенергії. Доки пристрій перебуває у стані призупинення, його пам'ять може бути фізично видалено із отриманням доступу до даних у пам'яті."
+
+#. TRANSLATORS: Title: a better sleep state
 msgid "Suspend-to-idle"
 msgstr "Присипляння бездіяльності"
 
@@ -2222,6 +2502,10 @@ msgstr "Система потребує зовнішнього джерела ж
 msgid "TEXT"
 msgstr "ТЕКСТ"
 
+#. TRANSLATORS: longer description
+msgid "TPM (Trusted Platform Module) is a computer chip that detects when hardware components have been tampered with."
+msgstr "TPM (Trusted Platform Module або довірений модуль платформи) є комп'ютерним чіпом, який виявляє зміни в апаратних компонентах."
+
 #. TRANSLATORS: Title: the PCR is rebuilt from the TPM event log
 msgid "TPM PCR0 reconstruction"
 msgstr "Відновлення PCR0 TPM"
@@ -2233,6 +2517,15 @@ msgstr "Відновлення PCR0 TPM є некоректним"
 #. TRANSLATORS: HSI event title
 msgid "TPM PCR0 reconstruction is now valid"
 msgstr "Відновлення PCR0 TPM тепер є коректним"
+
+#. TRANSLATORS: Title: PCRs (Platform Configuration Registers) shouldn't be
+#. empty
+msgid "TPM Platform Configuration"
+msgstr "Налаштування платформи TPM"
+
+#. TRANSLATORS: Title: the PCR is rebuilt from the TPM event log
+msgid "TPM Reconstruction"
+msgstr "Відновлення TPM"
 
 #. TRANSLATORS: Title: PCRs (Platform Configuration Registers) shouldn't be
 #. empty
@@ -2262,13 +2555,29 @@ msgstr "Ціль"
 msgid "Test a device using a JSON manifest"
 msgstr "Перевірити пристрій за допомогою маніфесту JSON"
 
+#. TRANSLATORS: longer description
+msgid "The Intel Management Engine controls device components and needs to have a recent version to avoid security issues."
+msgstr "Intel Management Engine керує компонентами пристроїв і потребує оновлення до найсвіжішої версії, щоб уникнути проблем із захистом."
+
 #. TRANSLATORS: do not translate the variables marked using $
 msgid "The LVFS is a free service that operates as an independent legal entity and has no connection with $OS_RELEASE:NAME$. Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices. All firmware is provided only by the original equipment manufacturer."
 msgstr "LVFS є безкоштовною службою, яка працює як незалежна юридична одиниця і не має зв'язку з $OS_RELEASE:NAME$. Розробники вашої операційної системи, можливо, не перевіряли жодні з цих оновлень на сумісність із системою або з'єднаними із комп'ютером пристроями. Усі мікропрограми надаються лише самими виробниками обладнання."
 
+#. TRANSLATORS: longer description
+msgid "The TPM (Trusted Platform Module) Platform Configuration is used to check whether the device start process has been modified."
+msgstr "Налаштування платформи TPM (Trusted Platform Module або довірений модуль платформи) використовують для перевірки, чи не було внесено змін до процедури запуску пристрою."
+
+#. TRANSLATORS: longer description
+msgid "The TPM (Trusted Platform Module) Reconstruction is used to check whether the device start process has been modified."
+msgstr "Відтворення TPM (Trusted Platform Module або довірений модуль платформи) використовують для перевірки, чи не було внесено змін до процедури запуску пристрою."
+
 #. TRANSLATORS: this is more background on a security measurement problem
 msgid "The TPM PCR0 differs from reconstruction."
 msgstr "PCR0 TPM відрізняється від реконструкції."
+
+#. TRANSLATORS: longer description
+msgid "The UEFI Platform Key is used to determine if device software comes from a trusted source."
+msgstr "Ключ платформи UEFI використовують для визначення, чи походить програмне забезпечення пристрою із надійного джерела."
 
 #. TRANSLATORS: the user is SOL for support...
 msgid "The daemon has loaded 3rd party code and is no longer supported by the upstream developers!"
@@ -2327,6 +2636,10 @@ msgstr "Програма зможе працювати належними чин
 msgid "This remote contains firmware which is not embargoed, but is still being tested by the hardware vendor. You should ensure you have a way to manually downgrade the firmware if the firmware update fails."
 msgstr "У цьому сховищі міститься мікропрограма, встановлювати яку не заборонено, але яка усе ще перебуває у процесі тестування виробником обладнання. Вам слід переконатися, що ви зможете встановити стабільну версію мікропрограми, якщо процедура оновлення зазнає невдачі."
 
+#. TRANSLATORS: error message
+msgid "This system doesn't support firmware settings"
+msgstr "У цій системі не передбачено підтримки параметрів мікропрограми"
+
 #. TRANSLATORS: this is instructions on how to improve the HSI suffix
 msgid "This system has HSI runtime issues."
 msgstr "Ця система має вади у роботі HSI."
@@ -2363,6 +2676,10 @@ msgstr "Цей інструмент читає і обробляє журнал 
 msgid "Transient failure"
 msgstr "Проміжна помилка"
 
+#. TRANSLATORS: item is TRUE
+msgid "True"
+msgstr "Так"
+
 #. TRANSLATORS: We verified the meatdata against the server
 msgid "Trusted metadata"
 msgstr "Надійні метадані"
@@ -2382,6 +2699,18 @@ msgstr "Розділ ESP UEFI не виявлено або не налаштов
 #. TRANSLATORS: program name
 msgid "UEFI Firmware Utility"
 msgstr "Засіб роботи із мікропрограмами UEFI"
+
+#. TRANSLATORS: Title: PK is the 'platform key' for the machine
+msgid "UEFI Platform Key"
+msgstr "Ключ платформи UEFI"
+
+#. TRANSLATORS: Title: SB is a way of locking down UEFI
+msgid "UEFI Secure Boot"
+msgstr "Secure Boot UEFI"
+
+#. TRANSLATORS: longer description
+msgid "UEFI Secure Boot prevents malicious software from being loaded when the device starts."
+msgstr "Secure Boot UEFI запобігає завантаженню програмного забезпечення зловмисників при запуску пристрою."
 
 #. TRANSLATORS: capsule updates are an optional BIOS feature
 msgid "UEFI capsule updates not available or enabled in firmware setup"
@@ -2406,6 +2735,11 @@ msgstr "UEFI secure boot"
 #. TRANSLATORS: error message
 msgid "Unable to connect to service"
 msgstr "Не вдалося встановити з'єднання зі службою"
+
+#. TRANSLATORS: error message
+#, c-format
+msgid "Unable to find attribute"
+msgstr "Не вдалося знайти атрибут"
 
 #. TRANSLATORS: command description
 msgid "Unbind current driver"
@@ -2660,6 +2994,10 @@ msgstr "[ФАЙЛ ПІДПИС_ФАЙЛА ВІДДАЛ-ІД]"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[FILENAME1] [FILENAME2]"
 msgstr "[НАЗВАФАЙЛА1] [НАЗВАФАЙЛА2]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[SETTING1] [ SETTING2]..."
+msgstr "[ПАРАМЕТР1] [ПАРАМЕТР2]..."
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[SMBIOS-FILE|HWIDS-FILE]"

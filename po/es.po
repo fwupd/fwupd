@@ -462,10 +462,6 @@ msgstr "Rama"
 msgid "Build a firmware file"
 msgstr "Compila un archivo firmware"
 
-#. TRANSLATORS: command description
-msgid "Build firmware using a sandbox"
-msgstr "Compilación del firmware utilizando una caja de pruebas"
-
 #. TRANSLATORS: this is to abort the interactive prompt
 msgid "Cancel"
 msgstr "Cancelar"
@@ -563,6 +559,7 @@ msgstr "Opciones de depuración"
 msgid "Decompressing…"
 msgstr "Descomprimiendo…"
 
+#. TRANSLATORS: description of BIOS setting
 #. TRANSLATORS: multiline description of device
 msgid "Description"
 msgstr "Descripción"
@@ -905,10 +902,6 @@ msgid "FILE [DEVICE-ID|GUID]"
 msgstr "ARCHIVO [ID-DISPOSITIVO|GUID]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "FILE-IN FILE-OUT [SCRIPT] [OUTPUT]"
-msgstr "ARCHIVO-ENTRADA ARCHIVO-SALIDA [SCRIPT] [SALIDA]"
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME"
 msgstr "NOMBRE-DE-ARCHIVO"
 
@@ -1237,10 +1230,6 @@ msgstr "Instala una gota del firmware en un dispositivo"
 #. TRANSLATORS: command description
 msgid "Install a firmware file on this hardware"
 msgstr "Instala un archivo de firmware en este hardware"
-
-#. TRANSLATORS: command description
-msgid "Install a specific firmware version on a device"
-msgstr "Instala una versión del firmware específica en un dispositivo"
 
 msgid "Install old version of signed system firmware"
 msgstr "Instala versión antigua de firmware del sistema firmado"

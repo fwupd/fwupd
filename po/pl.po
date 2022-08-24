@@ -438,6 +438,10 @@ msgid "Authentication is required to downgrade the firmware on this machine"
 msgstr "Wymagane jest uwierzytelnienie, aby zainstalować poprzednią wersję oprogramowania sprzętowego tego komputera"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to modify BIOS settings"
+msgstr "Wymagane jest uwierzytelnienie, aby zmodyfikować ustawienia BIOS-u"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify a configured remote used for firmware updates"
 msgstr "Wymagane jest uwierzytelnienie, aby zmodyfikować skonfigurowane repozytorium używane do aktualizacji oprogramowania sprzętowego"
 
@@ -481,6 +485,10 @@ msgstr "Automatyczne zgłaszanie"
 msgid "Automatically upload every time?"
 msgstr "Automatycznie wysyłać za każdym razem?"
 
+#. TRANSLATORS: description of a BIOS setting
+msgid "BIOS updates delivered via LVFS or Windows Update"
+msgstr "Aktualizacje BIOS-u dostarczane przez usługę LVFS lub Windows Update"
+
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "BUILDER-XML FILENAME-DST"
 msgstr "BUILDER-XML NAZWA-PLIKU-DOCELOWEGO"
@@ -523,10 +531,6 @@ msgstr "Gałąź"
 #. TRANSLATORS: command description
 msgid "Build a firmware file"
 msgstr "Buduje plik oprogramowania sprzętowego"
-
-#. TRANSLATORS: command description
-msgid "Build firmware using a sandbox"
-msgstr "Buduje oprogramowanie sprzętowe za pomocą piaskownicy"
 
 #. TRANSLATORS: this is to abort the interactive prompt
 msgid "Cancel"
@@ -605,6 +609,10 @@ msgstr "Krytyczna"
 msgid "Cryptographic hash verification is available"
 msgstr "Dostępne jest sprawdzenie poprawności kryptograficznej sumy kontrolnej"
 
+#. TRANSLATORS: current value of a BIOS setting
+msgid "Current Value"
+msgstr "Obecna wartość"
+
 #. TRANSLATORS: version number of current firmware
 msgid "Current version"
 msgstr "Obecna wersja"
@@ -625,6 +633,7 @@ msgstr "Opcje debugowania"
 msgid "Decompressing…"
 msgstr "Dekompresowanie…"
 
+#. TRANSLATORS: description of BIOS setting
 #. TRANSLATORS: multiline description of device
 msgid "Description"
 msgstr "Opis"
@@ -680,6 +689,10 @@ msgstr "Zmieniono urządzenie:"
 #. TRANSLATORS: a version check is required for all firmware
 msgid "Device firmware is required to have a version check"
 msgstr "Oprogramowanie sprzętowe urządzenia musi mieć test wersji"
+
+#. TRANSLATORS: emulated means we are pretending to be a different model
+msgid "Device is emulated"
+msgstr "Urządzenie jest emulowane"
 
 #. TRANSLATORS: Is locked and can be unlocked
 msgid "Device is locked"
@@ -886,6 +899,10 @@ msgstr "Czas trwania"
 msgid "ESP specified was not valid"
 msgstr "Podana partycja ESP nie jest prawidłowa"
 
+#. TRANSLATORS: Title: if we are emulating a different host
+msgid "Emulated host"
+msgstr "Emulowany komputer"
+
 #. TRANSLATORS: command line option
 msgid "Enable firmware update support on supported systems"
 msgstr "Włącza obsługę aktualizacji oprogramowania sprzętowego na obsługiwanych systemach"
@@ -934,6 +951,10 @@ msgstr "Zaszyfrowana pamięć RAM"
 msgid "End of life"
 msgstr "Niewspierane"
 
+#. TRANSLATORS: The BIOS setting can only be changed to fixed values
+msgid "Enumeration"
+msgstr "Wyliczenie"
+
 #. TRANSLATORS: command description
 msgid "Erase all firmware update history"
 msgstr "Usuwa całą historię aktualizacji oprogramowania sprzętowego"
@@ -965,10 +986,6 @@ msgstr "PLIK"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILE [DEVICE-ID|GUID]"
 msgstr "PLIK [IDENTYFIKATOR-URZĄDZENIA|GUID]"
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "FILE-IN FILE-OUT [SCRIPT] [OUTPUT]"
-msgstr "PLIK-WEJŚCIOWY PLIK-WYJŚCIOWY [SKRYPT] [WYJŚCIE]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME"
@@ -1076,6 +1093,10 @@ msgstr "Ustawienie trybu ekranu wczytywania się nie powiodło"
 #. * in the users ESP -- which would be bad!
 msgid "Failed to validate ESP contents"
 msgstr "Sprawdzenie poprawności zawartości ESP się nie powiodło"
+
+#. TRANSLATORS: item is FALSE
+msgid "False"
+msgstr "Fałsz"
 
 #. TRANSLATORS: filename of the local file
 msgid "Filename"
@@ -1309,10 +1330,6 @@ msgstr "Instaluje zamknięte oprogramowanie sprzętowe na urządzeniu"
 msgid "Install a firmware file on this hardware"
 msgstr "Instaluje plik oprogramowania sprzętowego na tym sprzęcie"
 
-#. TRANSLATORS: command description
-msgid "Install a specific firmware version on a device"
-msgstr "Instaluje podaną wersję oprogramowania sprzętowego na urządzeniu"
-
 msgid "Install old version of signed system firmware"
 msgstr "Instalacja poprzedniej wersji podpisanego oprogramowania sprzętowego komputera"
 
@@ -1352,6 +1369,10 @@ msgstr "Instalowanie na urządzeniu %s…"
 msgid "Installing this update may also void any device warranty."
 msgstr "Zainstalowanie tej aktualizacji może także spowodować utratę wszelkiej gwarancji na urządzenie."
 
+#. TRANSLATORS: The BIOS setting only accepts integers in a fixed range
+msgid "Integer"
+msgstr "Liczba stała"
+
 #. TRANSLATORS: Title: BootGuard is a trademark from Intel
 msgid "Intel BootGuard"
 msgstr "Intel BootGuard"
@@ -1376,6 +1397,10 @@ msgstr "Błąd zasad postępowania Intel BootGuard w przypadku błędów"
 msgid "Intel BootGuard verified boot"
 msgstr "Uruchamianie zweryfikowane przez Intel BootGuard"
 
+#. TRANSLATORS: Title: CET = Control-flow Enforcement Technology
+msgid "Intel CET"
+msgstr "Intel CET"
+
 #. TRANSLATORS: Title: CET = Control-flow Enforcement Technology,
 #. * active means being used by the OS
 msgid "Intel CET Active"
@@ -1397,6 +1422,10 @@ msgstr "Wewnętrzne urządzenie"
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Invalid"
 msgstr "Nieprawidłowe"
+
+#. TRANSLATORS: error message
+msgid "Invalid arguments"
+msgstr "Nieprawidłowe parametry"
 
 #. TRANSLATORS: version is older
 msgid "Is downgrade"
@@ -1522,6 +1551,14 @@ msgstr "Wersja MEI"
 msgid "Manually enable specific plugins"
 msgstr "Ręcznie włącza podane wtyczki"
 
+#. TRANSLATORS: Longest valid string for BIOS setting
+msgid "Maximum length"
+msgstr "Maksymalna długość"
+
+#. TRANSLATORS: Highest valid integer for BIOS setting
+msgid "Maximum value"
+msgstr "Maksymalna wartość"
+
 #. TRANSLATORS: the release urgency
 msgid "Medium"
 msgstr "Średnia"
@@ -1541,6 +1578,14 @@ msgstr "Metadane można uzyskać z serwisu Linux Vendor Firmware Service."
 #. TRANSLATORS: smallest version number installable on device
 msgid "Minimum Version"
 msgstr "Minimalna wersja"
+
+#. TRANSLATORS: Shortest valid string for BIOS setting
+msgid "Minimum length"
+msgstr "Minimalna długość"
+
+#. TRANSLATORS: Lowest valid integer for BIOS setting
+msgid "Minimum value"
+msgstr "Minimalna wartość"
 
 #. TRANSLATORS: error message
 #, c-format
@@ -1736,6 +1781,10 @@ msgstr "Proszę podać liczbę od 0 do %u: "
 msgid "Plugin dependencies missing"
 msgstr "Brak zależności wtyczki"
 
+#. TRANSLATORS: Possible values for a bios setting
+msgid "Possible Values"
+msgstr "Możliwe wartości"
+
 #. TRANSLATORS: Title: DMA as in https://en.wikipedia.org/wiki/DMA_attack
 msgid "Pre-boot DMA protection"
 msgstr "Ochrona DMA przed uruchomieniem"
@@ -1784,6 +1833,10 @@ msgstr "IDENTYFIKATOR-REPOZYTORIUM"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "REMOTE-ID KEY VALUE"
 msgstr "IDENTYFIKATOR-REPOZYTORIUM KLUCZ WARTOŚĆ"
+
+#. TRANSLATORS: BIOS setting is read only
+msgid "Read Only"
+msgstr "Tylko do odczytu"
 
 #. TRANSLATORS: command description
 msgid "Read a firmware blob from a device"
@@ -1897,6 +1950,10 @@ msgid "Restarting device…"
 msgstr "Ponowne uruchamianie urządzenia…"
 
 #. TRANSLATORS: command description
+msgid "Retrieve BIOS settings.  If no arguments are passed all settings are returned"
+msgstr "Pobiera ustawienia BIOS-u. Jeśli żadne parametry nie zostaną przekazane, zwracane są wszystkie ustawienia"
+
+#. TRANSLATORS: command description
 msgid "Return all the hardware IDs for the machine"
 msgstr "Zwraca wszystkie identyfikatory sprzętu dla komputera"
 
@@ -1927,6 +1984,10 @@ msgstr "Działające jądro jest za stare"
 #. TRANSLATORS:  this is the HSI suffix
 msgid "Runtime Suffix"
 msgstr "Przyrostek uruchamiania"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "SETTING VALUE"
+msgstr "USTAWIENIE WARTOŚĆ"
 
 #. TRANSLATORS: Title: SPI refers to the flash chip in the computer
 msgid "SPI BIOS Descriptor"
@@ -1959,6 +2020,10 @@ msgstr "PODSYSTEM STEROWNIK [IDENTYFIKATOR-URZĄDZENIA|GUID]"
 #. TRANSLATORS: command description
 msgid "Save a file that allows generation of hardware IDs"
 msgstr "Zapisuje plik umożliwiający utworzenie identyfikatorów sprzętu"
+
+#. TRANSLATORS: Scalar increment for integer BIOS setting
+msgid "Scalar Increment"
+msgstr "Przyrost skalarny"
 
 #. TRANSLATORS: command line option
 msgid "Schedule installation for next reboot when possible"
@@ -1998,6 +2063,10 @@ msgstr "Wybrany wolumin"
 msgid "Serial Number"
 msgstr "Numer seryjny"
 
+#. TRANSLATORS: command description
+msgid "Set a BIOS setting"
+msgstr "Ustawia ustawienie BIOS-u"
+
 #. TRANSLATORS: command line option
 msgid "Set the debugging flag during update"
 msgstr "Ustawia flagę debugowania podczas aktualizacji"
@@ -2005,6 +2074,14 @@ msgstr "Ustawia flagę debugowania podczas aktualizacji"
 #. TRANSLATORS: firmware approved by the admin
 msgid "Sets the list of approved firmware"
 msgstr "Ustawienie listy zatwierdzonego oprogramowania sprzętowego"
+
+#. TRANSLATORS: type of BIOS setting
+msgid "Setting type"
+msgstr "Typ ustawienia"
+
+#. TRANSLATORS: Settings refers to BIOS settings in this context
+msgid "Settings will apply after system reboots"
+msgstr "Ustawienia zostaną zastosowane po ponownym uruchomieniu komputera"
 
 #. TRANSLATORS: command description
 msgid "Share firmware history with the developers"
@@ -2106,6 +2183,10 @@ msgstr "Podaje plik bazy dbx"
 
 msgid "Specify the number of bytes per USB transfer"
 msgstr "Podaje liczbę bajtów na przesyłanie USB"
+
+#. TRANSLATORS: The BIOS setting accepts strings
+msgid "String"
+msgstr "Ciąg"
 
 #. TRANSLATORS: the update state of the specific device
 msgid "Success"
@@ -2327,6 +2408,10 @@ msgstr "Ten program może działać poprawnie tylko jako root"
 msgid "This remote contains firmware which is not embargoed, but is still being tested by the hardware vendor. You should ensure you have a way to manually downgrade the firmware if the firmware update fails."
 msgstr "To repozytorium zawiera oprogramowanie sprzętowe nieobjęte embargo, ale nadal testowane przez dostawcę sprzętu. Należy upewnić się, że istnieje możliwość ręcznego zainstalowania poprzedniej wersji oprogramowania sprzętowego w razie niepowodzenia aktualizacji."
 
+#. TRANSLATORS: error message
+msgid "This system doesn't support firmware settings"
+msgstr "Ten komputer nie obsługuje ustawień oprogramowania sprzętowego"
+
 #. TRANSLATORS: this is instructions on how to improve the HSI suffix
 msgid "This system has HSI runtime issues."
 msgstr "Ten komputer ma problemy HSI uruchamiania."
@@ -2362,6 +2447,10 @@ msgstr "To narzędzie odczyta i przetworzy dziennik zdarzeń TPM z oprogramowa
 #. TRANSLATORS: the update state of the specific device
 msgid "Transient failure"
 msgstr "Przejściowe niepowodzenie"
+
+#. TRANSLATORS: item is TRUE
+msgid "True"
+msgstr "Prawda"
 
 #. TRANSLATORS: We verified the meatdata against the server
 msgid "Trusted metadata"
@@ -2406,6 +2495,11 @@ msgstr "Zabezpieczone uruchamianie UEFI"
 #. TRANSLATORS: error message
 msgid "Unable to connect to service"
 msgstr "Nie można połączyć się z usługą"
+
+#. TRANSLATORS: error message
+#, c-format
+msgid "Unable to find attribute"
+msgstr "Nie można odnaleźć atrybutu"
 
 #. TRANSLATORS: command description
 msgid "Unbind current driver"
@@ -2660,6 +2754,10 @@ msgstr "[PLIK PODPIS_PLIKU IDENTYFIKATOR-REPOZYTORIUM]"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[FILENAME1] [FILENAME2]"
 msgstr "[NAZWA-PLIKU1] [NAZWA-PLIKU2]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[SETTING1] [ SETTING2]..."
+msgstr "[USTAWIENIE1] [USTAWIENIE2]…"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[SMBIOS-FILE|HWIDS-FILE]"

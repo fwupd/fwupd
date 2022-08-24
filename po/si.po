@@ -490,10 +490,6 @@ msgstr "ශාඛාව"
 msgid "Build a firmware file"
 msgstr "ස්ථිරාංග ගොනුවක් සාදන්න"
 
-#. TRANSLATORS: command description
-msgid "Build firmware using a sandbox"
-msgstr "වැලිපිල්ලක් භාවිතයෙන් ස්ථිරාංග සාදන්න"
-
 #. TRANSLATORS: this is to abort the interactive prompt
 msgid "Cancel"
 msgstr "අවලංගු කරන්න"
@@ -591,6 +587,7 @@ msgstr "දෝශ නිරාකරණ විකල්ප"
 msgid "Decompressing…"
 msgstr "විසංයෝජනය…"
 
+#. TRANSLATORS: description of BIOS setting
 #. TRANSLATORS: multiline description of device
 msgid "Description"
 msgstr "විස්තර"
@@ -933,10 +930,6 @@ msgid "FILE [DEVICE-ID|GUID]"
 msgstr "ගොනුව [උපාංගය-ID|මාර්ගෝපදේශය]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "FILE-IN FILE-OUT [SCRIPT] [OUTPUT]"
-msgstr "FILE-IN FILE-out [SCRIPT] [OUTPUT]"
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME"
 msgstr "ගොනුවේ නම"
 
@@ -1270,10 +1263,6 @@ msgstr "උපාංගයක ස්ථිරාංග බ්ලොබ් එක
 #. TRANSLATORS: command description
 msgid "Install a firmware file on this hardware"
 msgstr "මෙම දෘඪාංගයේ ස්ථිරාංග ගොනුවක් ස්ථාපනය කරන්න"
-
-#. TRANSLATORS: command description
-msgid "Install a specific firmware version on a device"
-msgstr "උපාංගයක නිශ්චිත ස්ථිරාංග අනුවාදයක් ස්ථාපනය කරන්න"
 
 msgid "Install old version of signed system firmware"
 msgstr "අත්සන් කළ පද්ධති ස්ථිරාංගයේ පැරණි අනුවාදය ස්ථාපනය කරන්න"

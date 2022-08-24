@@ -258,10 +258,6 @@ msgstr "Automatikus jelentés"
 msgid "Bootloader Version"
 msgstr "Rendszerbetöltő verziója"
 
-#. TRANSLATORS: command description
-msgid "Build firmware using a sandbox"
-msgstr "Firmware összeállítása egy homokozóban"
-
 #. TRANSLATORS: this is to abort the interactive prompt
 msgid "Cancel"
 msgstr "Mégse"
@@ -322,6 +318,7 @@ msgstr "Hibakeresési beállítások"
 msgid "Decompressing…"
 msgstr "Kibontás…"
 
+#. TRANSLATORS: description of BIOS setting
 #. TRANSLATORS: multiline description of device
 msgid "Description"
 msgstr "Leírás"

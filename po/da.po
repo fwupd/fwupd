@@ -410,10 +410,6 @@ msgstr "Gren"
 msgid "Build a firmware file"
 msgstr "Byg en firmwarefil"
 
-#. TRANSLATORS: command description
-msgid "Build firmware using a sandbox"
-msgstr "Byg firmware med en sandkasse"
-
 #. TRANSLATORS: this is to abort the interactive prompt
 msgid "Cancel"
 msgstr "Annuller"
@@ -507,6 +503,7 @@ msgstr "Fejlsøgningsindstillinger"
 msgid "Decompressing…"
 msgstr "Udpakker …"
 
+#. TRANSLATORS: description of BIOS setting
 #. TRANSLATORS: multiline description of device
 msgid "Description"
 msgstr "Beskrivelse"
@@ -799,10 +796,6 @@ msgstr "FIL"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILE [DEVICE-ID|GUID]"
 msgstr "FIL [ENHEDS-ID|GUID]"
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "FILE-IN FILE-OUT [SCRIPT] [OUTPUT]"
-msgstr "FIL-IND FIL-UD [SCRIPT] [OUTPUT]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME"
@@ -1158,6 +1151,10 @@ msgstr "Intel BootGuard regler om fejl"
 #. * verified boot refers to the way the boot process is verified
 msgid "Intel BootGuard verified boot"
 msgstr "Intel BootGuard bekræftet start"
+
+#. TRANSLATORS: Title: CET = Control-flow Enforcement Technology
+msgid "Intel CET"
+msgstr "Intel CET"
 
 #. TRANSLATORS: Title: CET = Control-flow Enforcement Technology,
 #. * active means being used by the OS

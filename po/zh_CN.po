@@ -406,10 +406,6 @@ msgstr "分支"
 msgid "Build a firmware file"
 msgstr "生成固件文件"
 
-#. TRANSLATORS: command description
-msgid "Build firmware using a sandbox"
-msgstr "使用沙箱生成固件"
-
 #. TRANSLATORS: this is to abort the interactive prompt
 msgid "Cancel"
 msgstr "取消"
@@ -503,6 +499,7 @@ msgstr "调试选项"
 msgid "Decompressing…"
 msgstr "正在解压缩…"
 
+#. TRANSLATORS: description of BIOS setting
 #. TRANSLATORS: multiline description of device
 msgid "Description"
 msgstr "描述"
@@ -795,10 +792,6 @@ msgstr "文件"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILE [DEVICE-ID|GUID]"
 msgstr "文件 [设备ID|GUID]"
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "FILE-IN FILE-OUT [SCRIPT] [OUTPUT]"
-msgstr "输入文件 输出文件 [脚本] [输出]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME"

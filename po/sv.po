@@ -300,6 +300,22 @@ msgstr "(föråldrad)"
 msgid "A TPM PCR is now an invalid value"
 msgstr "Ett TPM PCR har nu ett ogiltigt värde"
 
+#. TRANSLATORS: Title: if hardware enforces control of SPI replays
+msgid "AMD Firmware Replay Protection"
+msgstr "Återuppspelningsskydd för AMD:s fasta programvara"
+
+#. TRANSLATORS: Title: if hardware enforces control of SPI writes
+msgid "AMD Firmware Write Protection"
+msgstr "Skrivskydd för AMD:s fasta programvara"
+
+#. TRANSLATORS: Title: if firmware enforces rollback protection
+msgid "AMD Rollback Protection"
+msgstr "AMD-tillbakarullningsskydd"
+
+#. TRANSLATORS: longer description
+msgid "AMD Rollback Protection prevents device software from being downgraded to an older version that has security problems."
+msgstr "AMD-tillbakarullningsskydd förhindrar enhetsprogramvara från att nedgraderas till en äldre version som har säkerhetsproblem."
+
 #. TRANSLATORS: the user needs to do something, e.g. remove the device
 msgid "Action Required:"
 msgstr "Åtgärd krävs:"
@@ -426,6 +442,10 @@ msgid "Authentication is required to downgrade the firmware on this machine"
 msgstr "Autentisering krävs för att nedgradera den fasta programvaran på denna maskin"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to modify BIOS settings"
+msgstr "Autentisering krävs för att ändra BIOS-inställningar"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify a configured remote used for firmware updates"
 msgstr "Autentisering krävs för att ändra en konfigurerad fjärrkälla som används för uppdateringar av fast programvara"
 
@@ -469,6 +489,10 @@ msgstr "Automatisk rapportering"
 msgid "Automatically upload every time?"
 msgstr "Skicka automatiskt varje gång?"
 
+#. TRANSLATORS: description of a BIOS setting
+msgid "BIOS updates delivered via LVFS or Windows Update"
+msgstr "BIOS-uppdateringar levererade via LVFS eller Windows Update"
+
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "BUILDER-XML FILENAME-DST"
 msgstr "BYGGAR-XML FILNAMN-MÅL"
@@ -511,10 +535,6 @@ msgstr "Gren"
 #. TRANSLATORS: command description
 msgid "Build a firmware file"
 msgstr "Bygg en fast programvarufil"
-
-#. TRANSLATORS: command description
-msgid "Build firmware using a sandbox"
-msgstr "Bygg fast programvara med en sandlåda"
 
 #. TRANSLATORS: this is to abort the interactive prompt
 msgid "Cancel"
@@ -593,6 +613,10 @@ msgstr "Kritisk"
 msgid "Cryptographic hash verification is available"
 msgstr "Kryptografisk hashverifiering är tillgänglig"
 
+#. TRANSLATORS: current value of a BIOS setting
+msgid "Current Value"
+msgstr "Aktuellt värde"
+
 #. TRANSLATORS: version number of current firmware
 msgid "Current version"
 msgstr "Aktuell version"
@@ -613,6 +637,7 @@ msgstr "Felsökningsalternativ"
 msgid "Decompressing…"
 msgstr "Dekomprimerar…"
 
+#. TRANSLATORS: description of BIOS setting
 #. TRANSLATORS: multiline description of device
 msgid "Description"
 msgstr "Beskrivning"
@@ -669,6 +694,10 @@ msgstr "Enhet ändrad:"
 msgid "Device firmware is required to have a version check"
 msgstr "Fast programvara för enhet krävs för att ha en versionskontroll"
 
+#. TRANSLATORS: emulated means we are pretending to be a different model
+msgid "Device is emulated"
+msgstr "Enheten är emulerad"
+
 #. TRANSLATORS: Is locked and can be unlocked
 msgid "Device is locked"
 msgstr "Enhet är låst"
@@ -702,6 +731,10 @@ msgstr "Enhet borttagen:"
 #. TRANSLATORS: as in, wired mains power for a laptop
 msgid "Device requires AC power to be connected"
 msgstr "Enheten behöver vara ansluten till nätspänning"
+
+#. TRANSLATORS: longer description
+msgid "Device software updates are provided for this device."
+msgstr "Enhetsprogramuppdateringar tillhandahålls för denna enhet."
 
 #. TRANSLATORS: Device supports a safety mechanism for flashing
 msgid "Device stages updates"
@@ -874,6 +907,14 @@ msgstr "Tid"
 msgid "ESP specified was not valid"
 msgstr "Angiven ESP var inte giltig"
 
+#. TRANSLATORS: longer description
+msgid "Each system should have tests to ensure firmware security."
+msgstr "Varje system bör ha test för att säkerställa den fasta progamvarans säkerhet."
+
+#. TRANSLATORS: Title: if we are emulating a different host
+msgid "Emulated host"
+msgstr "Emulerad värd"
+
 #. TRANSLATORS: command line option
 msgid "Enable firmware update support on supported systems"
 msgstr "Aktivera stöd för uppdatering av fast programvara på system som stöds"
@@ -918,9 +959,16 @@ msgstr "Krypterad"
 msgid "Encrypted RAM"
 msgstr "Krypterat RAM"
 
+msgid "Encrypted RAM makes it impossible for information that is stored in device memory to be read if the memory chip is removed and accessed."
+msgstr "Krypterad RAM gör det omöjligt för information som är lagrad på enhetsminnet att läsas om minneschipet tas bort och koms åt."
+
 #. TRANSLATORS: the vendor is no longer supporting the device
 msgid "End of life"
 msgstr "Har nått slutet på sin livstid"
+
+#. TRANSLATORS: The BIOS setting can only be changed to fixed values
+msgid "Enumeration"
+msgstr "Uppräkning"
 
 #. TRANSLATORS: command description
 msgid "Erase all firmware update history"
@@ -953,10 +1001,6 @@ msgstr "FIL"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILE [DEVICE-ID|GUID]"
 msgstr "FIL [ENHETS-ID|GUID]"
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "FILE-IN FILE-OUT [SCRIPT] [OUTPUT]"
-msgstr "INFIL UTFIL [SKRIPT] [UTMATNING]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME"
@@ -1065,6 +1109,10 @@ msgstr "Misslyckades med att sätta uppstartsläge"
 msgid "Failed to validate ESP contents"
 msgstr "Misslyckades med att validera ESP-innehåll"
 
+#. TRANSLATORS: item is FALSE
+msgid "False"
+msgstr "Falskt"
+
 #. TRANSLATORS: filename of the local file
 msgid "Filename"
 msgstr "Filnamn"
@@ -1085,6 +1133,30 @@ msgstr "Filnamn krävs"
 msgid "Filter with a set of device flags using a ~ prefix to exclude, e.g. 'internal,~needs-reboot'"
 msgstr "Filtrera via en uppsättning av enhetsflaggor genom att använda ett ~-prefix för att exkludera, t.ex. ”internal,~needs-reboot”"
 
+#. TRANSLATORS: Title: if we can verify the firmware checksums
+msgid "Firmware Attestation"
+msgstr "Attestering av fast programvara"
+
+#. TRANSLATORS: longer description
+msgid "Firmware Attestation checks device software using a reference copy, to make sure that it has not been changed."
+msgstr "Attestering av fast programvara kontrollerar enhetsprogramvara med en referenskopia för att se att den inte har ändrats."
+
+#. TRANSLATORS: Title: firmware refers to the flash chip in the computer
+msgid "Firmware BIOS Descriptor"
+msgstr "BIOS-beskrivare för fast programvara"
+
+#. TRANSLATORS: longer description
+msgid "Firmware BIOS Descriptor protects device firmware memory from being tampered with."
+msgstr "BIOS-beskrivare för fast programvara skyddar enhetens minne för fast programvara från att mixtras med."
+
+#. TRANSLATORS: Title: SPI refers to the flash chip in the computer
+msgid "Firmware BIOS Region"
+msgstr "BIOS-region för fast programvara"
+
+#. TRANSLATORS: longer description
+msgid "Firmware BIOS Region protects device firmware memory from being tampered with."
+msgstr "BIOS-region för fast programvara skyddar enhetens minne för fast programvara från att mixtras med."
+
 #. TRANSLATORS: remote URI
 msgid "Firmware Base URI"
 msgstr "Fast programvara bas-URI"
@@ -1097,9 +1169,32 @@ msgstr "D-Bus-tjänst för uppdatering av fast programvara"
 msgid "Firmware Update Daemon"
 msgstr "Uppdateringsdemon för fast programvara"
 
+#. TRANSLATORS: Title: if the fwupd plugins are all present and correct
+msgid "Firmware Updater Verification"
+msgstr "Verifiering av uppdateraren av fast programvara"
+
+msgid "Firmware Updater Verification checks that software used for updating has not been tampered with."
+msgstr "Verifiering av uppdateraren av fast programvara kontrollerar att programvaran som används för uppdatering inte har mixtrats med."
+
+#. TRANSLATORS: Title: if firmware updates are available
+msgid "Firmware Updates"
+msgstr "Uppdateringar för fast programvara"
+
 #. TRANSLATORS: program name
 msgid "Firmware Utility"
 msgstr "Fast programvaruverktyg"
+
+#. TRANSLATORS: Title: firmware refers to the flash chip in the computer
+msgid "Firmware Write Protection"
+msgstr "Skrivskydd för fast programvara"
+
+#. TRANSLATORS: Title: firmware refers to the flash chip in the computer
+msgid "Firmware Write Protection Lock"
+msgstr "Skrivskyddslås för fast programvara"
+
+#. TRANSLATORS: longer description
+msgid "Firmware Write Protection protects device firmware memory from being tampered with."
+msgstr "Skrivskydd för fast programvara skyddar enhetens minne för fast programvara från att mixtras med."
 
 #. TRANSLATORS: Title: if we can verify the firmware checksums
 msgid "Firmware attestation"
@@ -1164,6 +1259,10 @@ msgstr "Full diskkryptering upptäckt"
 #. Windows
 msgid "Full disk encryption secrets may be invalidated when updating"
 msgstr "Krypteringshemligheter för hel disk kan göras ogiltiga vid uppdatering"
+
+#. TRANSLATORS: Title: if the part has been fused
+msgid "Fused Platform"
+msgstr "Plattform med säkring"
 
 #. TRANSLATORS: Title: if the part has been fused
 msgid "Fused platform"
@@ -1249,6 +1348,15 @@ msgstr "Säkerhets-ID för värd:"
 msgid "IOMMU"
 msgstr "IOMMU"
 
+#. TRANSLATORS: Title:
+#. * https://en.wikipedia.org/wiki/Input%E2%80%93output_memory_management_unit
+msgid "IOMMU Protection"
+msgstr "IOMMU-skydd"
+
+#. TRANSLATORS: longer description
+msgid "IOMMU Protection prevents connected devices from accessing unauthorized parts of system memory."
+msgstr "IOMMU-skydd förhindrar anslutna enheter från att komma åt ej auktoriserade delar av systemminnet."
+
 #. TRANSLATORS: HSI event title
 msgid "IOMMU device protection disabled"
 msgstr "IOMMU-enhetsskydd inaktiverat"
@@ -1293,10 +1401,6 @@ msgstr "Installera en fast programvaru-blob på en enhet"
 msgid "Install a firmware file on this hardware"
 msgstr "Installera en fast programvarufil på denna hårdvara"
 
-#. TRANSLATORS: command description
-msgid "Install a specific firmware version on a device"
-msgstr "Installera en specifik version av fast programvara på en enhet"
-
 msgid "Install old version of signed system firmware"
 msgstr "Installera en gammal version av signerad fast programvara för systemet"
 
@@ -1336,9 +1440,18 @@ msgstr "Installerar på %s…"
 msgid "Installing this update may also void any device warranty."
 msgstr "Installation av denna uppdatering kan också ogiltigförklara eventuell garanti för enheten."
 
+#. TRANSLATORS: The BIOS setting only accepts integers in a fixed range
+msgid "Integer"
+msgstr "Heltal"
+
 #. TRANSLATORS: Title: BootGuard is a trademark from Intel
 msgid "Intel BootGuard"
 msgstr "Intel BootGuard"
+
+#. TRANSLATORS: Title: BootGuard is a trademark from Intel,
+#. * ACM means to verify the integrity of Initial Boot Block
+msgid "Intel BootGuard ACM Protected"
+msgstr "Intel BootGuard ACM-skyddad"
 
 #. TRANSLATORS: Title: BootGuard is a trademark from Intel,
 #. * ACM means to verify the integrity of Initial Boot Block
@@ -1346,14 +1459,35 @@ msgid "Intel BootGuard ACM protected"
 msgstr "Intel BootGuard ACM-skyddad"
 
 #. TRANSLATORS: Title: BootGuard is a trademark from Intel,
+#. * error policy is what to do on failure
+msgid "Intel BootGuard Error Policy"
+msgstr "Intel BootGuards felpolicy"
+
+msgid "Intel BootGuard Error Policy ensures the device does not continue to start if its device software has been tampered with."
+msgstr "Intel BootGuards felpolicy säkerställer att enheten inte fortsätter starta om dess enhetsprogramvara har mixtrats med."
+
+#. TRANSLATORS: Title: BootGuard is a trademark from Intel
+msgid "Intel BootGuard Fuse"
+msgstr "Intel BootGuard-säkring"
+
+#. TRANSLATORS: Title: BootGuard is a trademark from Intel,
 #. * OTP = one time programmable
 msgid "Intel BootGuard OTP fuse"
 msgstr "Intel BootGuard OTP-säkring"
 
 #. TRANSLATORS: Title: BootGuard is a trademark from Intel,
+#. * verified boot refers to the way the boot process is verified
+msgid "Intel BootGuard Verified Boot"
+msgstr "Intel BootGuard verifierad uppstart"
+
+#. TRANSLATORS: Title: BootGuard is a trademark from Intel,
 #. * error policy is what to do on failure
 msgid "Intel BootGuard error policy"
 msgstr "Intel BootGuard-felpolicy"
+
+#. TRANSLATORS: longer description
+msgid "Intel BootGuard prevents unauthorized device software from operating when the device is started."
+msgstr "Intel BootGuard förhindrar ej auktoriserad enhetsprogramvara från att  köras då enheten startas."
 
 #. TRANSLATORS: Title: BootGuard is a trademark from Intel,
 #. * verified boot refers to the way the boot process is verified
@@ -1370,9 +1504,37 @@ msgstr "Intel CET aktiv"
 msgid "Intel CET Enabled"
 msgstr "Intel CET aktiverad"
 
+#. TRANSLATORS: longer description
+msgid "Intel Control-Flow Enforcement Technology detects and prevents certain methods for running malicious software on the device."
+msgstr "Intel Control-Flow Enforcement Technology upptäcker och förhindrar vissa metoder för att köra skadlig programvara på enheten."
+
+#. TRANSLATORS: Title: MEI = Intel Management Engine
+msgid "Intel Management Engine Manufacturing Mode"
+msgstr "Intel Management Engine-tillverkningsläge"
+
+#. TRANSLATORS: Title: MEI = Intel Management Engine, and the "override" is
+#. enabled
+#. * with a jumper -- luckily it is probably not accessible to end users on
+#. consumer
+#. * boards
+msgid "Intel Management Engine Override"
+msgstr "Intel Management Engine-åsidosättning"
+
+#. TRANSLATORS: longer description
+msgid "Intel Management Engine Override disables checks for device software tampering."
+msgstr "Intel Management Engine-åsidosättning inaktiverar kontroller om enhetens programvara mixtrats med."
+
+#. TRANSLATORS: Title: MEI = Intel Management Engine
+msgid "Intel Management Engine Version"
+msgstr "Intel Management Engine-version"
+
 #. TRANSLATORS: Title: SMAP = Supervisor Mode Access Prevention
 msgid "Intel SMAP"
 msgstr "Intel SMAP"
+
+#. TRANSLATORS: longer description
+msgid "Intel Supervisor Mode Access Prevention ensures critical parts of device memory are not accessed by less secure programs."
+msgstr "Intel Supervisor Mode Access Prevention säkerställer att kritiska delar av enhetsminnet inte koms åt av mindre säkra program."
 
 #. TRANSLATORS: Device cannot be removed easily
 msgid "Internal device"
@@ -1381,6 +1543,10 @@ msgstr "Intern enhet"
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Invalid"
 msgstr "Ogiltig"
+
+#. TRANSLATORS: error message
+msgid "Invalid arguments"
+msgstr "Ogiltiga argument"
 
 #. TRANSLATORS: version is older
 msgid "Is downgrade"
@@ -1439,6 +1605,28 @@ msgstr "Mindre än en minut kvarstår"
 #. TRANSLATORS: e.g. GPLv2+, Proprietary etc
 msgid "License"
 msgstr "Licens"
+
+#. TRANSLATORS: Title: lockdown is a security mode of the kernel
+msgid "Linux Kernel Lockdown"
+msgstr "Lockdown för Linux-kärnan"
+
+#. TRANSLATORS: longer description
+msgid "Linux Kernel Lockdown mode prevents administrator (root) accounts from accessing and changing critical parts of system software."
+msgstr "Lockdown-läge för Linux-kärnan förhindrar administratörskonton (root) från att komma åt och ändra kritiska delar av systemprogramvara."
+
+msgid "Linux Kernel Swap temporarily saves information to disk as you work. If the information is not protected, it could be accessed by someone if they obtained the disk."
+msgstr "Linux-kärnans växlingsutrymme sparar tillfälligt information på disk under tiden du arbetar. Om informationen inte är skyddad skulle det vara möjligt för någon att komma åt den om de fick tag på disken."
+
+#. TRANSLATORS: Title: if it's tainted or not
+msgid "Linux Kernel Verification"
+msgstr "Verifiering av Linux-kärnan"
+
+msgid "Linux Kernel Verification makes sure that critical system software has not been tampered with. Using device drivers which are not provided with the system can prevent this security feature from working correctly."
+msgstr "Verifiering av Linux-kärnan säkerställer att kritisk systemprogramvara inte har mixtrats med. Att använda enhetsdrivrutiner som inte tillhandahålls med systemet kan förhindra denna säkerhetsfunktion att fungera som den ska."
+
+#. TRANSLATORS: Title: swap space or swap partition
+msgid "Linux Swap"
+msgstr "Linux-växlingsutrymme"
 
 msgid "Linux Vendor Firmware Service (stable firmware)"
 msgstr "Linux Vendor Firmware Service (stabil fast programvara)"
@@ -1504,6 +1692,18 @@ msgstr "MEI-version"
 msgid "Manually enable specific plugins"
 msgstr "Aktivera manuellt specifika insticksmoduler"
 
+#. TRANSLATORS: longer description
+msgid "Manufacturing Mode is used when the device is manufactured and security features are not yet enabled."
+msgstr "Tillverkningsläge används när enheten tillverkas och säkerhetsfunktioner ännu inte aktiverats."
+
+#. TRANSLATORS: Longest valid string for BIOS setting
+msgid "Maximum length"
+msgstr "Största längd"
+
+#. TRANSLATORS: Highest valid integer for BIOS setting
+msgid "Maximum value"
+msgstr "Högsta värde"
+
 #. TRANSLATORS: the release urgency
 msgid "Medium"
 msgstr "Medel"
@@ -1523,6 +1723,14 @@ msgstr "Metadata kan hämtas från Linux Vendor Firmware Service."
 #. TRANSLATORS: smallest version number installable on device
 msgid "Minimum Version"
 msgstr "Minimiversion"
+
+#. TRANSLATORS: Shortest valid string for BIOS setting
+msgid "Minimum length"
+msgstr "Minsta längd"
+
+#. TRANSLATORS: Lowest valid integer for BIOS setting
+msgid "Minimum value"
+msgstr "Lägsta värde"
 
 #. TRANSLATORS: error message
 #, c-format
@@ -1704,6 +1912,10 @@ msgstr "Utför operationen?"
 msgid "Platform Debugging"
 msgstr "Plattformsfelsökning"
 
+#. TRANSLATORS: longer description
+msgid "Platform Debugging allows device security features to be disabled. This should only be used by hardware manufacturers."
+msgstr "Plattformsfelsökning tillåter att enhetens säkerhetsfunktioner inaktiveras. Detta bör endast göras av hårdvarutillverkare."
+
 #. TRANSLATORS: 'recovery key' here refers to a code, rather than a physical
 #. metal thing
 msgid "Please ensure you have the volume recovery key before continuing."
@@ -1718,6 +1930,14 @@ msgstr "Ange en siffra mellan 0 och %u: "
 msgid "Plugin dependencies missing"
 msgstr "Beroenden för insticksmodul saknas"
 
+#. TRANSLATORS: Possible values for a bios setting
+msgid "Possible Values"
+msgstr "Möjliga värden"
+
+#. TRANSLATORS: Title: DMA as in https://en.wikipedia.org/wiki/DMA_attack
+msgid "Pre-boot DMA Protection"
+msgstr "DMA-skydd före uppstart"
+
 #. TRANSLATORS: Title: DMA as in https://en.wikipedia.org/wiki/DMA_attack
 msgid "Pre-boot DMA protection"
 msgstr "DMA-skydd före uppstart"
@@ -1729,6 +1949,10 @@ msgstr "DMA-skydd före uppstart är inaktiverat"
 #. TRANSLATORS: HSI event title
 msgid "Pre-boot DMA protection is enabled"
 msgstr "DMA-skydd före uppstart är aktiverat"
+
+#. TRANSLATORS: longer description
+msgid "Pre-boot DMA protection prevents devices from being connected to the computer and accessing system memory."
+msgstr "DMA-skydd före uppstart förhindrar enheter från att anslutas till datorn och att komma åt systemminne."
 
 #. TRANSLATORS: version number of previous firmware
 msgid "Previous version"
@@ -1751,6 +1975,10 @@ msgstr "Problem"
 msgid "Proceed with upload?"
 msgstr "Fortsätt med att skicka upp?"
 
+#. TRANSLATORS: Title: if fwupd supports HSI on this chip
+msgid "Processor Security Checks"
+msgstr "Processorsäkerhetskontroller"
+
 #. TRANSLATORS: a non-free software license
 msgid "Proprietary"
 msgstr "Proprietär"
@@ -1766,6 +1994,10 @@ msgstr "FJÄRR-ID"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "REMOTE-ID KEY VALUE"
 msgstr "FJÄRR-ID NYCKEL VÄRDE"
+
+#. TRANSLATORS: BIOS setting is read only
+msgid "Read Only"
+msgstr "Skrivskyddad"
 
 #. TRANSLATORS: command description
 msgid "Read a firmware blob from a device"
@@ -1879,6 +2111,10 @@ msgid "Restarting device…"
 msgstr "Startar om enhet…"
 
 #. TRANSLATORS: command description
+msgid "Retrieve BIOS settings.  If no arguments are passed all settings are returned"
+msgstr "Erhåll BIOS-inställningar. Om inga argument skickas med returneras alla inställningar"
+
+#. TRANSLATORS: command description
 msgid "Return all the hardware IDs for the machine"
 msgstr "Returnera alla hårdvaru-ID:n för maskinen"
 
@@ -1909,6 +2145,10 @@ msgstr "Kärnan som körs är för gammal"
 #. TRANSLATORS:  this is the HSI suffix
 msgid "Runtime Suffix"
 msgstr "Exekveringssuffix"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "SETTING VALUE"
+msgstr "INSTÄLLNING VÄRDE"
 
 #. TRANSLATORS: Title: SPI refers to the flash chip in the computer
 msgid "SPI BIOS Descriptor"
@@ -1941,6 +2181,10 @@ msgstr "UNDERSYSTEM DRIVRUTIN [ENHETS-ID|GUID]"
 #. TRANSLATORS: command description
 msgid "Save a file that allows generation of hardware IDs"
 msgstr "Spara en fil som möjliggör generering av hårdvaru-ID:n"
+
+#. TRANSLATORS: Scalar increment for integer BIOS setting
+msgid "Scalar Increment"
+msgstr "Skalär ökning"
 
 #. TRANSLATORS: command line option
 msgid "Schedule installation for next reboot when possible"
@@ -1980,6 +2224,10 @@ msgstr "Vald volym"
 msgid "Serial Number"
 msgstr "Serienummer"
 
+#. TRANSLATORS: command description
+msgid "Set a BIOS setting"
+msgstr "Ställ in en BIOS-inställning"
+
 #. TRANSLATORS: command line option
 msgid "Set the debugging flag during update"
 msgstr "Ställ in felsökningsflaggan under uppdatering"
@@ -1987,6 +2235,14 @@ msgstr "Ställ in felsökningsflaggan under uppdatering"
 #. TRANSLATORS: firmware approved by the admin
 msgid "Sets the list of approved firmware"
 msgstr "Sätter listan av godkänd fast programvara"
+
+#. TRANSLATORS: type of BIOS setting
+msgid "Setting type"
+msgstr "Inställningstyp"
+
+#. TRANSLATORS: Settings refers to BIOS settings in this context
+msgid "Settings will apply after system reboots"
+msgstr "Inställningar kommer börja gälla efter systemet startats om"
 
 #. TRANSLATORS: command description
 msgid "Share firmware history with the developers"
@@ -2089,6 +2345,10 @@ msgstr "Ange dbx-databasfilen"
 msgid "Specify the number of bytes per USB transfer"
 msgstr "Ange antalet byte per USB-överföring"
 
+#. TRANSLATORS: The BIOS setting accepts strings
+msgid "String"
+msgstr "Sträng"
+
 #. TRANSLATORS: the update state of the specific device
 msgid "Success"
 msgstr "Slutfördes"
@@ -2164,6 +2424,22 @@ msgid "Supported on remote server"
 msgstr "Stöds på fjärrserver"
 
 #. TRANSLATORS: Title: a better sleep state
+msgid "Suspend To Idle"
+msgstr "Gå till inaktivt läge"
+
+#. TRANSLATORS: Title: sleep state
+msgid "Suspend To RAM"
+msgstr "Gå till vänteläge i RAM"
+
+#. TRANSLATORS: longer description
+msgid "Suspend to Idle allows the device to quickly go to sleep in order to save power. While the device has been suspended, its memory could be physically removed and its information accessed."
+msgstr "Gå till inaktivt läge låter enheten snabbt sova för att spara ström. När enheten är i vänteläge skulle dess minne fysiskt kunna plockas bort och dess information kommas åt."
+
+#. TRANSLATORS: longer description
+msgid "Suspend to RAM allows the device to quickly go to sleep in order to save power. While the device has been suspended, its memory could be physically removed and its information accessed."
+msgstr "Gå till vänteläge i RAM låter enheten snabbt sova för att spara ström. När enheten är i vänteläge skulle dess minne fysiskt kunna plockas bort och dess information kommas åt."
+
+#. TRANSLATORS: Title: a better sleep state
 msgid "Suspend-to-idle"
 msgstr "Gå-till-inaktivt-läge"
 
@@ -2202,6 +2478,10 @@ msgstr "Systemet kräver extern strömkälla"
 msgid "TEXT"
 msgstr "TEXT"
 
+#. TRANSLATORS: longer description
+msgid "TPM (Trusted Platform Module) is a computer chip that detects when hardware components have been tampered with."
+msgstr "TPM (Trusted Platform Module) är ett datorchip som upptäcker när hårdvarukomponenter har mixtrats med."
+
 #. TRANSLATORS: Title: the PCR is rebuilt from the TPM event log
 msgid "TPM PCR0 reconstruction"
 msgstr "TPM PCR0-rekonstruktion"
@@ -2213,6 +2493,15 @@ msgstr "TPM PCR0-rekonstruktion är ogiltig"
 #. TRANSLATORS: HSI event title
 msgid "TPM PCR0 reconstruction is now valid"
 msgstr "TPM PCR0-rekonstruktion är nu giltig"
+
+#. TRANSLATORS: Title: PCRs (Platform Configuration Registers) shouldn't be
+#. empty
+msgid "TPM Platform Configuration"
+msgstr "TPM-plattformskonfiguration"
+
+#. TRANSLATORS: Title: the PCR is rebuilt from the TPM event log
+msgid "TPM Reconstruction"
+msgstr "TPM-rekonstruktion"
 
 #. TRANSLATORS: Title: PCRs (Platform Configuration Registers) shouldn't be
 #. empty
@@ -2240,13 +2529,29 @@ msgstr "Mål"
 msgid "Test a device using a JSON manifest"
 msgstr "Testa en enhet med ett JSON-manifest"
 
+#. TRANSLATORS: longer description
+msgid "The Intel Management Engine controls device components and needs to have a recent version to avoid security issues."
+msgstr "Intel Management Engine kontrollerar enhetskomponenter och behöver ha en tillräckligt ny version för att undvika säkerhetsproblem."
+
 #. TRANSLATORS: do not translate the variables marked using $
 msgid "The LVFS is a free service that operates as an independent legal entity and has no connection with $OS_RELEASE:NAME$. Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices. All firmware is provided only by the original equipment manufacturer."
 msgstr "LVFS är en fri tjänst som fungerar som en oberoende juridisk person och har ingen koppling till $OS_RELEASE:NAME$. Din distributör kanske inte har bekräftat att någon av uppdateringarna för fast programvara är kompatibla med ditt system eller anslutna enheter. All fast programvara tillhandahålls endast av den ursprungliga tillverkaren av utrustning."
 
+#. TRANSLATORS: longer description
+msgid "The TPM (Trusted Platform Module) Platform Configuration is used to check whether the device start process has been modified."
+msgstr "Plattformskonfigurationen för TPM (Trusted Platform Module) används för att kontrollera om enhetens startprocess har ändrats."
+
+#. TRANSLATORS: longer description
+msgid "The TPM (Trusted Platform Module) Reconstruction is used to check whether the device start process has been modified."
+msgstr "Rekonstruktionen för TPM (Trusted Platform Module) används för att kontrollera om enhetens startprocess har ändrats."
+
 #. TRANSLATORS: this is more background on a security measurement problem
 msgid "The TPM PCR0 differs from reconstruction."
 msgstr "TPM PCR0 skiljer sig från rekonstruktion."
+
+#. TRANSLATORS: longer description
+msgid "The UEFI Platform Key is used to determine if device software comes from a trusted source."
+msgstr "UEFI-plattformsnyckeln används för att avgöra om enhetsprogramvara kommer från en betrodd källa."
 
 #. TRANSLATORS: the user is SOL for support...
 msgid "The daemon has loaded 3rd party code and is no longer supported by the upstream developers!"
@@ -2305,6 +2610,10 @@ msgstr "Detta program kommer endast fungera korrekt som root"
 msgid "This remote contains firmware which is not embargoed, but is still being tested by the hardware vendor. You should ensure you have a way to manually downgrade the firmware if the firmware update fails."
 msgstr "Denna fjärrkälla innehåller fast programvara som inte är under embargo, men fortfarande testas av hårdvarutillverkare. Du bör säkerställa att du har ett sätt att manuellt nedgradera den fasta programvaran om uppdateringen misslyckas."
 
+#. TRANSLATORS: error message
+msgid "This system doesn't support firmware settings"
+msgstr "Detta system stöder inte inställningar för fast programvara"
+
 #. TRANSLATORS: this is instructions on how to improve the HSI suffix
 msgid "This system has HSI runtime issues."
 msgstr "Detta system har problem med HSI-exekvering."
@@ -2341,6 +2650,10 @@ msgstr "Detta verktyg läser och analyserar TPM-händelseloggen från systemets 
 msgid "Transient failure"
 msgstr "Tillfälligt misslyckande"
 
+#. TRANSLATORS: item is TRUE
+msgid "True"
+msgstr "Sant"
+
 #. TRANSLATORS: We verified the meatdata against the server
 msgid "Trusted metadata"
 msgstr "Betrodda metadata"
@@ -2360,6 +2673,18 @@ msgstr "UEFI ESP-partition upptäcktes inte eller är inte konfigurerad"
 #. TRANSLATORS: program name
 msgid "UEFI Firmware Utility"
 msgstr "Verktyg för fast UEFI-programvara"
+
+#. TRANSLATORS: Title: PK is the 'platform key' for the machine
+msgid "UEFI Platform Key"
+msgstr "UEFI-plattformsnyckel"
+
+#. TRANSLATORS: Title: SB is a way of locking down UEFI
+msgid "UEFI Secure Boot"
+msgstr "UEFI säkerhetsstart"
+
+#. TRANSLATORS: longer description
+msgid "UEFI Secure Boot prevents malicious software from being loaded when the device starts."
+msgstr "UEFI säkerhetsstart förhindrar skadlig programvara från att läsas in när enheten startas."
 
 #. TRANSLATORS: capsule updates are an optional BIOS feature
 msgid "UEFI capsule updates not available or enabled in firmware setup"
@@ -2383,7 +2708,12 @@ msgstr "UEFI säkerhetsstart"
 
 #. TRANSLATORS: error message
 msgid "Unable to connect to service"
-msgstr "Misslyckades med att ansluta till tjänst"
+msgstr "Kunde inte ansluta till tjänst"
+
+#. TRANSLATORS: error message
+#, c-format
+msgid "Unable to find attribute"
+msgstr "Kunde inte hitta attribut"
 
 #. TRANSLATORS: command description
 msgid "Unbind current driver"
@@ -2638,6 +2968,10 @@ msgstr "[FIL FILSIG FJÄRR-ID]"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[FILENAME1] [FILENAME2]"
 msgstr "[FILNAMN1] [FILNAMN2]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[SETTING1] [ SETTING2]..."
+msgstr "[INSTÄLLNING1] [ INSTÄLLNING2]…"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[SMBIOS-FILE|HWIDS-FILE]"

@@ -478,10 +478,6 @@ msgstr "Ramo"
 msgid "Build a firmware file"
 msgstr "Compila una file firmware"
 
-#. TRANSLATORS: command description
-msgid "Build firmware using a sandbox"
-msgstr "Compila il firmware utilizzando una sandbox"
-
 #. TRANSLATORS: this is to abort the interactive prompt
 msgid "Cancel"
 msgstr "Annulla"
@@ -579,6 +575,7 @@ msgstr "Opzioni di debug"
 msgid "Decompressing…"
 msgstr "Estrazione…"
 
+#. TRANSLATORS: description of BIOS setting
 #. TRANSLATORS: multiline description of device
 msgid "Description"
 msgstr "Descrizione"
@@ -893,10 +890,6 @@ msgstr "FILE"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILE [DEVICE-ID|GUID]"
 msgstr "FILE [ID-DISPOSITIVO|GUID]"
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "FILE-IN FILE-OUT [SCRIPT] [OUTPUT]"
-msgstr "FILE-IN FILE-OUT [SCRIPT] [OUTPUT]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME"
@@ -1293,6 +1286,10 @@ msgstr "Regole di errore Intel BootGuard"
 #. * verified boot refers to the way the boot process is verified
 msgid "Intel BootGuard verified boot"
 msgstr "Avvio verificato da Intel BootGuard"
+
+#. TRANSLATORS: Title: CET = Control-flow Enforcement Technology
+msgid "Intel CET"
+msgstr "Intel CET"
 
 #. TRANSLATORS: Title: CET = Control-flow Enforcement Technology,
 #. * active means being used by the OS

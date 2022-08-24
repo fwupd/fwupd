@@ -418,10 +418,6 @@ msgstr "Ramificação"
 msgid "Build a firmware file"
 msgstr "Compila um ficheiro de firmware"
 
-#. TRANSLATORS: command description
-msgid "Build firmware using a sandbox"
-msgstr "Compila o firmware usando uma sandbox"
-
 #. TRANSLATORS: this is to abort the interactive prompt
 msgid "Cancel"
 msgstr "Cancelar"
@@ -515,6 +511,7 @@ msgstr "Opções de depuração"
 msgid "Decompressing…"
 msgstr "A descomprimir…"
 
+#. TRANSLATORS: description of BIOS setting
 #. TRANSLATORS: multiline description of device
 msgid "Description"
 msgstr "Descrição"
@@ -807,10 +804,6 @@ msgstr "FICHEIRO"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILE [DEVICE-ID|GUID]"
 msgstr "FICHEIRO [ID-DISPOSITIVO|GUID]"
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "FILE-IN FILE-OUT [SCRIPT] [OUTPUT]"
-msgstr "FICHEIRO-ENTRADA FICHEIRO-SAÍDA [SCRIPT] [SAÍDA]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME"

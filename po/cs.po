@@ -313,6 +313,22 @@ msgstr "(zastaralé)"
 msgid "A TPM PCR is now an invalid value"
 msgstr "PCR registr v TPM má nyní neplatnou hodnotu"
 
+#. TRANSLATORS: Title: if hardware enforces control of SPI replays
+msgid "AMD Firmware Replay Protection"
+msgstr "AMD – zamezení znovupoužití dříve použitého"
+
+#. TRANSLATORS: Title: if hardware enforces control of SPI writes
+msgid "AMD Firmware Write Protection"
+msgstr "AMD – zamezení zápisu firmware"
+
+#. TRANSLATORS: Title: if firmware enforces rollback protection
+msgid "AMD Rollback Protection"
+msgstr "AMD – zamezení instalace starší verze"
+
+#. TRANSLATORS: longer description
+msgid "AMD Rollback Protection prevents device software from being downgraded to an older version that has security problems."
+msgstr "AMD – zamezení instalace starší verze brání přechodu na starší verzi software zařízení (mohly by obsahovat už známé problémy v zabezpečení)."
+
 #. TRANSLATORS: the user needs to do something, e.g. remove the device
 msgid "Action Required:"
 msgstr "Vyžadovaná akce:"
@@ -441,6 +457,10 @@ msgid "Authentication is required to downgrade the firmware on this machine"
 msgstr "K návratu na starší verzi firmwaru na tomto počítači je vyžadováno ověření se"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to modify BIOS settings"
+msgstr "Pro změnu BIOS nastavení je třeba se ověřit"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify a configured remote used for firmware updates"
 msgstr "Ke změně nastaveného vzdáleného zdroje, který se používá pro aktualizace firmwarů, je vyžadováno ověření se"
 
@@ -484,6 +504,10 @@ msgstr "Automatické odesílání hlášení"
 msgid "Automatically upload every time?"
 msgstr "Pokaždé automaticky odeslat?"
 
+#. TRANSLATORS: description of a BIOS setting
+msgid "BIOS updates delivered via LVFS or Windows Update"
+msgstr "Aktualizace BIOS doručené prostřednictvím LVFS nebo Windows Update"
+
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "BUILDER-XML FILENAME-DST"
 msgstr "XML-PRO-SESTAVENÍ CÍLOVÝ-SOUBOR"
@@ -526,10 +550,6 @@ msgstr "Větev"
 #. TRANSLATORS: command description
 msgid "Build a firmware file"
 msgstr "Sestavit soubor s firmware"
-
-#. TRANSLATORS: command description
-msgid "Build firmware using a sandbox"
-msgstr "Sestavit firmware za použití izolovaného prostředí"
 
 #. TRANSLATORS: this is to abort the interactive prompt
 msgid "Cancel"
@@ -608,6 +628,10 @@ msgstr "Kritická"
 msgid "Cryptographic hash verification is available"
 msgstr "Je k dispozici kryptografické ověření otisku dat"
 
+#. TRANSLATORS: current value of a BIOS setting
+msgid "Current Value"
+msgstr "Stávající hodnota"
+
 #. TRANSLATORS: version number of current firmware
 msgid "Current version"
 msgstr "Stávající verze"
@@ -628,6 +652,7 @@ msgstr "Předvolby ladění"
 msgid "Decompressing…"
 msgstr "Rozbalování…"
 
+#. TRANSLATORS: description of BIOS setting
 #. TRANSLATORS: multiline description of device
 msgid "Description"
 msgstr "Popis"
@@ -684,6 +709,10 @@ msgstr "Změněno zařízení:"
 msgid "Device firmware is required to have a version check"
 msgstr "Je třeba, aby firmware zařízení měl kontrolu verze"
 
+#. TRANSLATORS: emulated means we are pretending to be a different model
+msgid "Device is emulated"
+msgstr "Zařízení je emulováno"
+
 #. TRANSLATORS: Is locked and can be unlocked
 msgid "Device is locked"
 msgstr "Zařízení je uzamčeno"
@@ -717,6 +746,10 @@ msgstr "Odebráno zařízení:"
 #. TRANSLATORS: as in, wired mains power for a laptop
 msgid "Device requires AC power to be connected"
 msgstr "Zařízení vyžaduje, aby bylo připojeno napájení z elektrické zásuvky"
+
+#. TRANSLATORS: longer description
+msgid "Device software updates are provided for this device."
+msgstr "Pro toto zařízení jsou poskytovány aktualizace softwaru."
 
 #. TRANSLATORS: Device supports a safety mechanism for flashing
 msgid "Device stages updates"
@@ -889,6 +922,14 @@ msgstr "Délka instalace"
 msgid "ESP specified was not valid"
 msgstr "Určený ESP oddíl není platný"
 
+#. TRANSLATORS: longer description
+msgid "Each system should have tests to ensure firmware security."
+msgstr "Každý systém by měl mít testy pro zajištění zabezpečení firmware."
+
+#. TRANSLATORS: Title: if we are emulating a different host
+msgid "Emulated host"
+msgstr "Emulovaný stroj"
+
 #. TRANSLATORS: command line option
 msgid "Enable firmware update support on supported systems"
 msgstr "Povolit podporu aktualizace firmwaru na podporovaných systémech"
@@ -933,9 +974,16 @@ msgstr "Šifrováno"
 msgid "Encrypted RAM"
 msgstr "Šifrovaná RAM"
 
+msgid "Encrypted RAM makes it impossible for information that is stored in device memory to be read if the memory chip is removed and accessed."
+msgstr "Šifrovaná operační paměť znemožňuje čtení informací z paměti zařízení v případě, že je z něj paměťový modul vyjmut a pokoušeno se z něho číst."
+
 #. TRANSLATORS: the vendor is no longer supporting the device
 msgid "End of life"
 msgstr "Podpora od výrobce skončila"
+
+#. TRANSLATORS: The BIOS setting can only be changed to fixed values
+msgid "Enumeration"
+msgstr "Výčet"
 
 #. TRANSLATORS: command description
 msgid "Erase all firmware update history"
@@ -968,10 +1016,6 @@ msgstr "SOUBOR"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILE [DEVICE-ID|GUID]"
 msgstr "SOUBOR [IDENTIF-ZAŘÍZENÍ|GUID]"
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "FILE-IN FILE-OUT [SCRIPT] [OUTPUT]"
-msgstr "VSTUPNÍ-SOUBOR VÝSTUPNÍ-SOUBOR [SCRIPT] [VÝSTUP]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME"
@@ -1080,6 +1124,10 @@ msgstr "Nepodařilo se nastavit režim startovací obrazovky systému"
 msgid "Failed to validate ESP contents"
 msgstr "Nepodařilo se ověřit obsah ESP oddílu"
 
+#. TRANSLATORS: item is FALSE
+msgid "False"
+msgstr "Nepravda"
+
 #. TRANSLATORS: filename of the local file
 msgid "Filename"
 msgstr "Soubor"
@@ -1100,6 +1148,30 @@ msgstr "Je zapotřebí zadat název souboru"
 msgid "Filter with a set of device flags using a ~ prefix to exclude, e.g. 'internal,~needs-reboot'"
 msgstr "Filtrovat podle sady příznaků zařízení (s tím, že předpona ~ slouží pro vynechání), např. 'internal,~needs-reboot' (vestavěné, nevyžadující restart)"
 
+#. TRANSLATORS: Title: if we can verify the firmware checksums
+msgid "Firmware Attestation"
+msgstr "Atestace firmware"
+
+#. TRANSLATORS: longer description
+msgid "Firmware Attestation checks device software using a reference copy, to make sure that it has not been changed."
+msgstr "Atestace firmware kontroluje software zařízení pomocí referenční kopie, aby bylo jisté, že nebyl změněn."
+
+#. TRANSLATORS: Title: firmware refers to the flash chip in the computer
+msgid "Firmware BIOS Descriptor"
+msgstr "BIOS popisovač firmware"
+
+#. TRANSLATORS: longer description
+msgid "Firmware BIOS Descriptor protects device firmware memory from being tampered with."
+msgstr "Firmware BIOS Descriptor chrání paměť firmware zařízení proti úpravám."
+
+#. TRANSLATORS: Title: SPI refers to the flash chip in the computer
+msgid "Firmware BIOS Region"
+msgstr "BIOS oblast firmware"
+
+#. TRANSLATORS: longer description
+msgid "Firmware BIOS Region protects device firmware memory from being tampered with."
+msgstr "Firmware BIOS Region chrání paměť firmware zařízení proti úpravám."
+
 #. TRANSLATORS: remote URI
 msgid "Firmware Base URI"
 msgstr "Základ URI pro firmware"
@@ -1112,9 +1184,32 @@ msgstr "Služba D-Bus pro aktualizaci firmwaru"
 msgid "Firmware Update Daemon"
 msgstr "Proces služby pro aktualizaci firmwaru"
 
+#. TRANSLATORS: Title: if the fwupd plugins are all present and correct
+msgid "Firmware Updater Verification"
+msgstr "Ověřování nástroje pro aktualizaci firmware"
+
+msgid "Firmware Updater Verification checks that software used for updating has not been tampered with."
+msgstr "Ověřování nástroje pro aktualizaci firmware kontroluje, že se software, použitým pro aktualizaci, nebylo manipulováno."
+
+#. TRANSLATORS: Title: if firmware updates are available
+msgid "Firmware Updates"
+msgstr "Aktualizace firmware"
+
 #. TRANSLATORS: program name
 msgid "Firmware Utility"
 msgstr "Nástroj pro práci s firmwary"
+
+#. TRANSLATORS: Title: firmware refers to the flash chip in the computer
+msgid "Firmware Write Protection"
+msgstr "Ochrana firmware vůči přepsání"
+
+#. TRANSLATORS: Title: firmware refers to the flash chip in the computer
+msgid "Firmware Write Protection Lock"
+msgstr "Zámek ochrany firmware vůči přepsání"
+
+#. TRANSLATORS: longer description
+msgid "Firmware Write Protection protects device firmware memory from being tampered with."
+msgstr "Zamezení zápisu firmware chrání paměť firmware zařízení proti úpravám."
 
 #. TRANSLATORS: Title: if we can verify the firmware checksums
 msgid "Firmware attestation"
@@ -1181,6 +1276,10 @@ msgstr "Zjištěno celodiskové šifrování"
 #. Windows
 msgid "Full disk encryption secrets may be invalidated when updating"
 msgstr "Při aktualizaci mohou být zneplatněna tajemství pro celodiskové šifrování"
+
+#. TRANSLATORS: Title: if the part has been fused
+msgid "Fused Platform"
+msgstr "Platforma s jednorázovým nastavením (fuse)"
 
 #. TRANSLATORS: Title: if the part has been fused
 msgid "Fused platform"
@@ -1268,6 +1367,15 @@ msgstr "Identifikátor zabezpečení hostitele:"
 msgid "IOMMU"
 msgstr "IOMMU"
 
+#. TRANSLATORS: Title:
+#. * https://en.wikipedia.org/wiki/Input%E2%80%93output_memory_management_unit
+msgid "IOMMU Protection"
+msgstr "Ochrana IOMMU"
+
+#. TRANSLATORS: longer description
+msgid "IOMMU Protection prevents connected devices from accessing unauthorized parts of system memory."
+msgstr "Ochrana IOMMU brání připojeným zařízení v přístupu k částem systémové paměti, ke kterým nejsou pověřené k přístupu."
+
 #. TRANSLATORS: HSI event title
 msgid "IOMMU device protection disabled"
 msgstr "ochrana IOMMU zařízení vypnuta"
@@ -1312,10 +1420,6 @@ msgstr "Nainstalovat na zařízení binární soubor s firmwarem"
 msgid "Install a firmware file on this hardware"
 msgstr "Nainstalovat soubor s firmwarem na tento hardware"
 
-#. TRANSLATORS: command description
-msgid "Install a specific firmware version on a device"
-msgstr "Nainstalovat konkrétní verzi firmware na zařízení"
-
 msgid "Install old version of signed system firmware"
 msgstr "Instalace starší verze podepsaného systémového firmware"
 
@@ -1355,9 +1459,18 @@ msgstr "Instalace na %s…"
 msgid "Installing this update may also void any device warranty."
 msgstr "Instalace této aktualizace také může zneplatnit jakékoli záruky na zařízení."
 
+#. TRANSLATORS: The BIOS setting only accepts integers in a fixed range
+msgid "Integer"
+msgstr "Celé číslo"
+
 #. TRANSLATORS: Title: BootGuard is a trademark from Intel
 msgid "Intel BootGuard"
 msgstr "Intel BootGuard"
+
+#. TRANSLATORS: Title: BootGuard is a trademark from Intel,
+#. * ACM means to verify the integrity of Initial Boot Block
+msgid "Intel BootGuard ACM Protected"
+msgstr "Chráněno Intel BootGuard ACM"
 
 #. TRANSLATORS: Title: BootGuard is a trademark from Intel,
 #. * ACM means to verify the integrity of Initial Boot Block
@@ -1365,14 +1478,35 @@ msgid "Intel BootGuard ACM protected"
 msgstr "Chráněno Intel BootGuard ACM"
 
 #. TRANSLATORS: Title: BootGuard is a trademark from Intel,
+#. * error policy is what to do on failure
+msgid "Intel BootGuard Error Policy"
+msgstr "Co Intel BootGuard udělá v případě chyb"
+
+msgid "Intel BootGuard Error Policy ensures the device does not continue to start if its device software has been tampered with."
+msgstr "Zásada chyb Intel BootGuard zajišťuje, že zařízení nebude pokračovat ve startu, pokud se software zařízení bylo manipulováno."
+
+#. TRANSLATORS: Title: BootGuard is a trademark from Intel
+msgid "Intel BootGuard Fuse"
+msgstr "Jednoráz. trvalé přepnutí (fuse) pro Intel BootGuard"
+
+#. TRANSLATORS: Title: BootGuard is a trademark from Intel,
 #. * OTP = one time programmable
 msgid "Intel BootGuard OTP fuse"
 msgstr "Jednorázové trvalé přepnutí (OTP fuse) pro Intel BootGuard"
 
 #. TRANSLATORS: Title: BootGuard is a trademark from Intel,
+#. * verified boot refers to the way the boot process is verified
+msgid "Intel BootGuard Verified Boot"
+msgstr "Ověřované zavádění s Intel BootGuard"
+
+#. TRANSLATORS: Title: BootGuard is a trademark from Intel,
 #. * error policy is what to do on failure
 msgid "Intel BootGuard error policy"
 msgstr "Co Intel BootGuard udělá v případě chyb"
+
+#. TRANSLATORS: longer description
+msgid "Intel BootGuard prevents unauthorized device software from operating when the device is started."
+msgstr "Intel BootGuard brání fungování neověřeného software zařízení, když je zařízení spouštěno."
 
 #. TRANSLATORS: Title: BootGuard is a trademark from Intel,
 #. * verified boot refers to the way the boot process is verified
@@ -1389,9 +1523,37 @@ msgstr "Intel CET aktivní"
 msgid "Intel CET Enabled"
 msgstr "Intel CET podporováno"
 
+#. TRANSLATORS: longer description
+msgid "Intel Control-Flow Enforcement Technology detects and prevents certain methods for running malicious software on the device."
+msgstr "Technologie Intel Control-Flow Enforcement (vynucování řízení toku) zjišťuje a brání určitým metodám spouštění škodlivého software na zařízení."
+
+#. TRANSLATORS: Title: MEI = Intel Management Engine
+msgid "Intel Management Engine Manufacturing Mode"
+msgstr "Intel Management Engine – režim pro výrobce"
+
+#. TRANSLATORS: Title: MEI = Intel Management Engine, and the "override" is
+#. enabled
+#. * with a jumper -- luckily it is probably not accessible to end users on
+#. consumer
+#. * boards
+msgid "Intel Management Engine Override"
+msgstr "Intel Management Engine –  přebití"
+
+#. TRANSLATORS: longer description
+msgid "Intel Management Engine Override disables checks for device software tampering."
+msgstr "Přebití Intel Management Engine vypíná kontroly manipulace se software zařízení."
+
+#. TRANSLATORS: Title: MEI = Intel Management Engine
+msgid "Intel Management Engine Version"
+msgstr "Verze Intel Management Engine"
+
 #. TRANSLATORS: Title: SMAP = Supervisor Mode Access Prevention
 msgid "Intel SMAP"
 msgstr "Intel SMAP"
+
+#. TRANSLATORS: longer description
+msgid "Intel Supervisor Mode Access Prevention ensures critical parts of device memory are not accessed by less secure programs."
+msgstr "Intel Supervisor Mode Access Prevention zajišťuje, že kritické části paměti zařízení nejsou přístupné méně bezpečným programům."
 
 #. TRANSLATORS: Device cannot be removed easily
 msgid "Internal device"
@@ -1400,6 +1562,10 @@ msgstr "Vestavěné zařízení"
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Invalid"
 msgstr "Neplatné"
+
+#. TRANSLATORS: error message
+msgid "Invalid arguments"
+msgstr "Neplatné argumenty"
 
 #. TRANSLATORS: version is older
 msgid "Is downgrade"
@@ -1460,6 +1626,28 @@ msgstr "Zbývá méně než jedna minuta"
 #. TRANSLATORS: e.g. GPLv2+, Proprietary etc
 msgid "License"
 msgstr "Licence"
+
+#. TRANSLATORS: Title: lockdown is a security mode of the kernel
+msgid "Linux Kernel Lockdown"
+msgstr "Uzamčení linuxového jádra"
+
+#. TRANSLATORS: longer description
+msgid "Linux Kernel Lockdown mode prevents administrator (root) accounts from accessing and changing critical parts of system software."
+msgstr "Uzamčený režim linuxového jádra brání účtům s právy správy (root) v přístupu a změnám kritických částí systémového software."
+
+msgid "Linux Kernel Swap temporarily saves information to disk as you work. If the information is not protected, it could be accessed by someone if they obtained the disk."
+msgstr "Odkládací prostor (swap) linuxového jádra za provozu dočasně ukládá informace na disk. Pokud tyto nejsou chráněny, může se k nim někdo dostat, pokud získá přístup k disku."
+
+#. TRANSLATORS: Title: if it's tainted or not
+msgid "Linux Kernel Verification"
+msgstr "Ověření linuxového jádra"
+
+msgid "Linux Kernel Verification makes sure that critical system software has not been tampered with. Using device drivers which are not provided with the system can prevent this security feature from working correctly."
+msgstr "Ověřování neporučenosti linuxového jádra zajišťuje, že s kritickým systémovým software nebylo manipulováno. Použití ovladačů zařízení, které nejsou poskytovány systémem, mohou této bezpečnostní funkci bránit ve správném fungování."
+
+#. TRANSLATORS: Title: swap space or swap partition
+msgid "Linux Swap"
+msgstr "Linuxový odkládací prostor"
 
 msgid "Linux Vendor Firmware Service (stable firmware)"
 msgstr "Linux Vendor Firmware Service (stabilní firmware)"
@@ -1525,6 +1713,18 @@ msgstr "Verze MEI"
 msgid "Manually enable specific plugins"
 msgstr "Ručně zapnout konkrétní zásuvné moduly"
 
+#. TRANSLATORS: longer description
+msgid "Manufacturing Mode is used when the device is manufactured and security features are not yet enabled."
+msgstr "Režim pro výrobce je používán při výrobě zařízení a funkce pro zabezpečení ještě nejsou zapnuté."
+
+#. TRANSLATORS: Longest valid string for BIOS setting
+msgid "Maximum length"
+msgstr "Nejdelší platná délka"
+
+#. TRANSLATORS: Highest valid integer for BIOS setting
+msgid "Maximum value"
+msgstr "Nejvyšší platná hodnota"
+
 #. TRANSLATORS: the release urgency
 msgid "Medium"
 msgstr "Střední"
@@ -1544,6 +1744,14 @@ msgstr "Metadata lze získat ze služby Linux Vendor Firmware Service."
 #. TRANSLATORS: smallest version number installable on device
 msgid "Minimum Version"
 msgstr "Nejstarší použitelná verze"
+
+#. TRANSLATORS: Shortest valid string for BIOS setting
+msgid "Minimum length"
+msgstr "Nejkratší platné délka"
+
+#. TRANSLATORS: Lowest valid integer for BIOS setting
+msgid "Minimum value"
+msgstr "Nejnižší platná hodnota"
 
 #. TRANSLATORS: error message
 #, c-format
@@ -1725,6 +1933,10 @@ msgstr "Provést operaci"
 msgid "Platform Debugging"
 msgstr "Ladění platformy"
 
+#. TRANSLATORS: longer description
+msgid "Platform Debugging allows device security features to be disabled. This should only be used by hardware manufacturers."
+msgstr "Ladění platformy umožňuje vypínat funkce zabezpečení zařízení. Mělo by být používáno pouze výrobci zařízení."
+
 #. TRANSLATORS: 'recovery key' here refers to a code, rather than a physical
 #. metal thing
 msgid "Please ensure you have the volume recovery key before continuing."
@@ -1739,6 +1951,14 @@ msgstr "Zadejte prosím číslo od 0 do %u:"
 msgid "Plugin dependencies missing"
 msgstr "Chybí komponenty, na kterých zásuvný modul závisí"
 
+#. TRANSLATORS: Possible values for a bios setting
+msgid "Possible Values"
+msgstr "Možné hodnoty"
+
+#. TRANSLATORS: Title: DMA as in https://en.wikipedia.org/wiki/DMA_attack
+msgid "Pre-boot DMA Protection"
+msgstr "Ochrana přímého přístupu do paměti před startem operačního systému"
+
 #. TRANSLATORS: Title: DMA as in https://en.wikipedia.org/wiki/DMA_attack
 msgid "Pre-boot DMA protection"
 msgstr "Ochrana přímého přístupu do paměti před startem operačního systému"
@@ -1750,6 +1970,10 @@ msgstr "Ochrana přímého přístupu do paměti před startem operačního syst
 #. TRANSLATORS: HSI event title
 msgid "Pre-boot DMA protection is enabled"
 msgstr "Ochrana přímého přístupu do paměti před startem operačního systému je zapnuta"
+
+#. TRANSLATORS: longer description
+msgid "Pre-boot DMA protection prevents devices from being connected to the computer and accessing system memory."
+msgstr "Ochrana přímého přístupu do paměti před startem operačního systému brání před připojováním zařízení k počítači a přístupu k paměti systému."
 
 #. TRANSLATORS: version number of previous firmware
 msgid "Previous version"
@@ -1772,6 +1996,10 @@ msgstr "Problémy"
 msgid "Proceed with upload?"
 msgstr "Pokračovat v nahrávání?"
 
+#. TRANSLATORS: Title: if fwupd supports HSI on this chip
+msgid "Processor Security Checks"
+msgstr "Kontroly zabezpečení procesoru"
+
 #. TRANSLATORS: a non-free software license
 msgid "Proprietary"
 msgstr "Proprietární"
@@ -1787,6 +2015,10 @@ msgstr "IDENTIFIKÁTOR-VZDÁLENÉHO-ZDROJE"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "REMOTE-ID KEY VALUE"
 msgstr "HODNOTA KLÍČE IDENTIF-VZDÁLENÉHO-ZDROJE"
+
+#. TRANSLATORS: BIOS setting is read only
+msgid "Read Only"
+msgstr "Pouze pro čtení"
 
 #. TRANSLATORS: command description
 msgid "Read a firmware blob from a device"
@@ -1900,6 +2132,10 @@ msgid "Restarting device…"
 msgstr "Restartování zařízení…"
 
 #. TRANSLATORS: command description
+msgid "Retrieve BIOS settings.  If no arguments are passed all settings are returned"
+msgstr "Získává nastavení z BIOS. Pokud nejsou uvedeny žádné argumenty, jsou vypsána veškerá nastavení"
+
+#. TRANSLATORS: command description
 msgid "Return all the hardware IDs for the machine"
 msgstr "Vypsat všechny identifikátory hardwaru počítače"
 
@@ -1930,6 +2166,10 @@ msgstr "Provozované jádro systému je příliš staré"
 #. TRANSLATORS:  this is the HSI suffix
 msgid "Runtime Suffix"
 msgstr "Přípona běhového prostředí"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "SETTING VALUE"
+msgstr "HODNOTA NASTAVENI"
 
 #. TRANSLATORS: Title: SPI refers to the flash chip in the computer
 msgid "SPI BIOS Descriptor"
@@ -1962,6 +2202,10 @@ msgstr "PODSYSTÉM OVLADAČ [IDENTIF-ZAŘÍZENÍ|GUID]"
 #. TRANSLATORS: command description
 msgid "Save a file that allows generation of hardware IDs"
 msgstr "Uložit soubor který umožňuje vytváření identifikátorů hardware"
+
+#. TRANSLATORS: Scalar increment for integer BIOS setting
+msgid "Scalar Increment"
+msgstr "Skalární přírůstek"
 
 #. TRANSLATORS: command line option
 msgid "Schedule installation for next reboot when possible"
@@ -2001,6 +2245,10 @@ msgstr "Vybraný svazek"
 msgid "Serial Number"
 msgstr "Sériové číslo"
 
+#. TRANSLATORS: command description
+msgid "Set a BIOS setting"
+msgstr "Provést nastavení v BIOS"
+
 #. TRANSLATORS: command line option
 msgid "Set the debugging flag during update"
 msgstr "Během aktualizace nastavit příznak ladění"
@@ -2008,6 +2256,14 @@ msgstr "Během aktualizace nastavit příznak ladění"
 #. TRANSLATORS: firmware approved by the admin
 msgid "Sets the list of approved firmware"
 msgstr "Nastavuje seznam schválených firmwarů"
+
+#. TRANSLATORS: type of BIOS setting
+msgid "Setting type"
+msgstr "Typ nastavení"
+
+#. TRANSLATORS: Settings refers to BIOS settings in this context
+msgid "Settings will apply after system reboots"
+msgstr "Nastavení se projeví po restartu stroje"
 
 #. TRANSLATORS: command description
 msgid "Share firmware history with the developers"
@@ -2110,6 +2366,10 @@ msgstr "Zadejte soubor dbx databáze"
 msgid "Specify the number of bytes per USB transfer"
 msgstr "Zadejte počet bajtů pro jednotlivé přenosy přes USB sběrnici"
 
+#. TRANSLATORS: The BIOS setting accepts strings
+msgid "String"
+msgstr "Řetězec"
+
 #. TRANSLATORS: the update state of the specific device
 msgid "Success"
 msgstr "Úspěch"
@@ -2187,6 +2447,22 @@ msgid "Supported on remote server"
 msgstr "Podporováno na vzdáleném serveru"
 
 #. TRANSLATORS: Title: a better sleep state
+msgid "Suspend To Idle"
+msgstr "Uspat do nečinnosti"
+
+#. TRANSLATORS: Title: sleep state
+msgid "Suspend To RAM"
+msgstr "Uspat do paměti"
+
+#. TRANSLATORS: longer description
+msgid "Suspend to Idle allows the device to quickly go to sleep in order to save power. While the device has been suspended, its memory could be physically removed and its information accessed."
+msgstr "Uspání do nečinnosti umožňuje zařízení rychlé přejít do režimu spánku a šetřit tak energií. V době, kdy je zařízení uspané, je možné z něho fyzicky vyjmout operační paměť a číst z ní informace."
+
+#. TRANSLATORS: longer description
+msgid "Suspend to RAM allows the device to quickly go to sleep in order to save power. While the device has been suspended, its memory could be physically removed and its information accessed."
+msgstr "Uspání do paměti umožňuje zařízení rychlé přejít do režimu spánku a šetřit tak energií. V době, kdy je zařízení uspané, je možné z něho fyzicky vyjmout operační paměť a číst z ní informace."
+
+#. TRANSLATORS: Title: a better sleep state
 msgid "Suspend-to-idle"
 msgstr "Uspat do nečinnosti"
 
@@ -2225,6 +2501,10 @@ msgstr "Počítač vyžaduje externí napájení"
 msgid "TEXT"
 msgstr "TEXT"
 
+#. TRANSLATORS: longer description
+msgid "TPM (Trusted Platform Module) is a computer chip that detects when hardware components have been tampered with."
+msgstr "TPM (Trusted Platform Module) je počítačový čip, který zjišťuje zda bylo s hardwarovými součástmi manipulováno."
+
 #. TRANSLATORS: Title: the PCR is rebuilt from the TPM event log
 msgid "TPM PCR0 reconstruction"
 msgstr "Rekonstrukce TPM PCR0"
@@ -2236,6 +2516,15 @@ msgstr "Rekonstrukce TPM PCR0 není platná"
 #. TRANSLATORS: HSI event title
 msgid "TPM PCR0 reconstruction is now valid"
 msgstr "Rekonstrukce TPM PCR0 je nyní platná"
+
+#. TRANSLATORS: Title: PCRs (Platform Configuration Registers) shouldn't be
+#. empty
+msgid "TPM Platform Configuration"
+msgstr "Nastavení TPM platformy"
+
+#. TRANSLATORS: Title: the PCR is rebuilt from the TPM event log
+msgid "TPM Reconstruction"
+msgstr "Rekonstrukce TPM"
 
 #. TRANSLATORS: Title: PCRs (Platform Configuration Registers) shouldn't be
 #. empty
@@ -2265,13 +2554,29 @@ msgstr "Cíl"
 msgid "Test a device using a JSON manifest"
 msgstr "Vyzkoušet zařízení pomocí JSON manifestu"
 
+#. TRANSLATORS: longer description
+msgid "The Intel Management Engine controls device components and needs to have a recent version to avoid security issues."
+msgstr "Intel Management Engine ovládá součásti zařízení a aby bylo zamezeno problémům se zabezpečením, je třeba mít jeho nejnovější verzi."
+
 #. TRANSLATORS: do not translate the variables marked using $
 msgid "The LVFS is a free service that operates as an independent legal entity and has no connection with $OS_RELEASE:NAME$. Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices. All firmware is provided only by the original equipment manufacturer."
 msgstr "LVFS je bezplatná služba, které funguje jako nezávislý právní subjekt a nemá žádné vazby na systém $OS_RELEASE:NAME$. Kompatibilita aktualizací firmware s připojenými zařízeními, či vámi používaným systémem, nemusí být poskytovatelem vámi používané distribuce ověřována. Veškerý firmware je poskytován pouze přímo od výrobců daného vybavení."
 
+#. TRANSLATORS: longer description
+msgid "The TPM (Trusted Platform Module) Platform Configuration is used to check whether the device start process has been modified."
+msgstr "Nastavení TPM (Trusted Platform Module) platformy slouží k ověření, zda nebylo s procesem startu zařízení manipulováno."
+
+#. TRANSLATORS: longer description
+msgid "The TPM (Trusted Platform Module) Reconstruction is used to check whether the device start process has been modified."
+msgstr "TPM (Trusted Platform Module) Reconstruction slouží k ověření, zda nebylo s procesem startu zařízení manipulováno."
+
 #. TRANSLATORS: this is more background on a security measurement problem
 msgid "The TPM PCR0 differs from reconstruction."
 msgstr "PCR0 v TPM se liší od rekonstrukce."
+
+#. TRANSLATORS: longer description
+msgid "The UEFI Platform Key is used to determine if device software comes from a trusted source."
+msgstr "UEFI Platform Key slouží ke ověřování zda software na zařízení pochází z důvěryhodného zdroje."
 
 #. TRANSLATORS: the user is SOL for support...
 msgid "The daemon has loaded 3rd party code and is no longer supported by the upstream developers!"
@@ -2330,6 +2635,10 @@ msgstr "Tento program může správně fungovat jen pod uživatelem root"
 msgid "This remote contains firmware which is not embargoed, but is still being tested by the hardware vendor. You should ensure you have a way to manually downgrade the firmware if the firmware update fails."
 msgstr "Tento vzdálený zdroj obsahuje firmware, který už sice je možné šířit, ale zatím je u výrobce stále ještě ve stádiu testování. Měli byste si zajistit, že znáte způsob, jak se ručně vrátit ke starší verzi firmwaru, kdyby při aktualizaci došlo k nezdaru."
 
+#. TRANSLATORS: error message
+msgid "This system doesn't support firmware settings"
+msgstr "Tento systém nepodporuje nastavování firmware"
+
 #. TRANSLATORS: this is instructions on how to improve the HSI suffix
 msgid "This system has HSI runtime issues."
 msgstr "Tento systém má problémy s běhovým prostředím HSI."
@@ -2366,6 +2675,10 @@ msgstr "Tento nástroj vyčte ze systémového firmwaru záznam událostí v TPM
 msgid "Transient failure"
 msgstr "Přechodný nezdar"
 
+#. TRANSLATORS: item is TRUE
+msgid "True"
+msgstr "Pravda"
+
 #. TRANSLATORS: We verified the meatdata against the server
 msgid "Trusted metadata"
 msgstr "Důvěryhodná metadata"
@@ -2385,6 +2698,18 @@ msgstr "Nezjištěn (či nenastaven) UEFI ESP oddíl"
 #. TRANSLATORS: program name
 msgid "UEFI Firmware Utility"
 msgstr "Nástroj pro práci s UEFI firmwarem"
+
+#. TRANSLATORS: Title: PK is the 'platform key' for the machine
+msgid "UEFI Platform Key"
+msgstr "Klíč platformy v UEFI"
+
+#. TRANSLATORS: Title: SB is a way of locking down UEFI
+msgid "UEFI Secure Boot"
+msgstr "UEFI Secure Boot"
+
+#. TRANSLATORS: longer description
+msgid "UEFI Secure Boot prevents malicious software from being loaded when the device starts."
+msgstr "UEFI Secure Boot brání načtení záškodnickému softwaru při spouštění zařízení."
 
 #. TRANSLATORS: capsule updates are an optional BIOS feature
 msgid "UEFI capsule updates not available or enabled in firmware setup"
@@ -2409,6 +2734,11 @@ msgstr "UEFI secure boot"
 #. TRANSLATORS: error message
 msgid "Unable to connect to service"
 msgstr "Nedaří se připojit ke službě"
+
+#. TRANSLATORS: error message
+#, c-format
+msgid "Unable to find attribute"
+msgstr "Atribut se nedaří nalézt"
 
 #. TRANSLATORS: command description
 msgid "Unbind current driver"
@@ -2663,6 +2993,10 @@ msgstr "[SOUBOR PODPIS_SOUBORU IDENTIF-VZDÁLENÉHO-ZDROJE]"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[FILENAME1] [FILENAME2]"
 msgstr "[SOUBOR1] [SOUBOR2]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[SETTING1] [ SETTING2]..."
+msgstr "[NASTAVENi1] [NASTAVENI2]…"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[SMBIOS-FILE|HWIDS-FILE]"

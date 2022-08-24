@@ -403,10 +403,6 @@ msgstr "Zweig"
 msgid "Build a firmware file"
 msgstr "Eine Firmware-Datei bauen"
 
-#. TRANSLATORS: command description
-msgid "Build firmware using a sandbox"
-msgstr "Firmware mit Hilfe einer Sandbox erstellen"
-
 #. TRANSLATORS: this is to abort the interactive prompt
 msgid "Cancel"
 msgstr "Abbrechen"
@@ -496,6 +492,7 @@ msgstr "Debug Optionen"
 msgid "Decompressing…"
 msgstr "Entpacken …"
 
+#. TRANSLATORS: description of BIOS setting
 #. TRANSLATORS: multiline description of device
 msgid "Description"
 msgstr "Beschreibung"
@@ -748,10 +745,6 @@ msgstr "DATEI"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILE [DEVICE-ID|GUID]"
 msgstr "DATEI [GERÄTEKENNUNG|GUID]"
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "FILE-IN FILE-OUT [SCRIPT] [OUTPUT]"
-msgstr "DATEIEINGANG DATEIAUSGANG [SKRIPT] [AUSGABE]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME"

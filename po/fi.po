@@ -459,10 +459,6 @@ msgstr "Haara"
 msgid "Build a firmware file"
 msgstr "Luo laiteohjelmistotiedosto"
 
-#. TRANSLATORS: command description
-msgid "Build firmware using a sandbox"
-msgstr "Rakenna laiteohjelmisto hiekkalaatikon avulla"
-
 #. TRANSLATORS: this is to abort the interactive prompt
 msgid "Cancel"
 msgstr "Peru"
@@ -560,6 +556,7 @@ msgstr "Vianjäljitysvalinnat"
 msgid "Decompressing…"
 msgstr "Puretaan…"
 
+#. TRANSLATORS: description of BIOS setting
 #. TRANSLATORS: multiline description of device
 msgid "Description"
 msgstr "Kuvaus"
@@ -868,10 +865,6 @@ msgstr "TIEDOSTO"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILE [DEVICE-ID|GUID]"
 msgstr "TIEDOSTO [LAITETUNNUS|GUID]"
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "FILE-IN FILE-OUT [SCRIPT] [OUTPUT]"
-msgstr "SYÖTETIEDOSTO TULOSTIEDOSTO [SKRIPTI] [TULOSTE]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME"
@@ -1258,6 +1251,10 @@ msgstr "Intel BootGuard -virhekäytäntö"
 #. * verified boot refers to the way the boot process is verified
 msgid "Intel BootGuard verified boot"
 msgstr "Intel BootGuardilla vahvistettu käynnistys"
+
+#. TRANSLATORS: Title: CET = Control-flow Enforcement Technology
+msgid "Intel CET"
+msgstr "Intel CET"
 
 #. TRANSLATORS: Title: CET = Control-flow Enforcement Technology,
 #. * active means being used by the OS

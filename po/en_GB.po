@@ -3,7 +3,7 @@
 # This file is distributed under the same license as the fwupd package.
 #
 # Translators:
-# Andi Chandler <andi@gowling.com>, 2019-2020
+# Andi Chandler <andi@gowling.com>, 2019-2020,2022
 # Richard Hughes <richard@hughsie.com>, 2015,2017-2022
 msgid ""
 msgstr ""
@@ -421,6 +421,10 @@ msgid "Authentication is required to downgrade the firmware on this machine"
 msgstr "Authentication is required to downgrade the firmware on this machine"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to modify BIOS settings"
+msgstr "Authentication is required to modify BIOS settings"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify a configured remote used for firmware updates"
 msgstr "Authentication is required to modify a configured remote used for firmware updates"
 
@@ -506,10 +510,6 @@ msgstr "Branch"
 #. TRANSLATORS: command description
 msgid "Build a firmware file"
 msgstr "Build a firmware file"
-
-#. TRANSLATORS: command description
-msgid "Build firmware using a sandbox"
-msgstr "Build firmware using a sandbox"
 
 #. TRANSLATORS: this is to abort the interactive prompt
 msgid "Cancel"
@@ -608,6 +608,7 @@ msgstr "Debugging Options"
 msgid "Decompressing…"
 msgstr "Decompressing…"
 
+#. TRANSLATORS: description of BIOS setting
 #. TRANSLATORS: multiline description of device
 msgid "Description"
 msgstr "Description"
@@ -869,6 +870,10 @@ msgstr "Duration"
 msgid "ESP specified was not valid"
 msgstr "ESP specified was not valid"
 
+#. TRANSLATORS: Title: if we are emulating a different host
+msgid "Emulated host"
+msgstr "Emulated host"
+
 #. TRANSLATORS: command line option
 msgid "Enable firmware update support on supported systems"
 msgstr "Enable firmware update support on supported systems"
@@ -948,10 +953,6 @@ msgstr "FILE"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILE [DEVICE-ID|GUID]"
 msgstr "FILE [DEVICE-ID|GUID]"
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "FILE-IN FILE-OUT [SCRIPT] [OUTPUT]"
-msgstr "FILE-IN FILE-OUT [SCRIPT] [OUTPUT]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME"
@@ -1080,6 +1081,18 @@ msgstr "Filename required"
 msgid "Filter with a set of device flags using a ~ prefix to exclude, e.g. 'internal,~needs-reboot'"
 msgstr "Filter with a set of device flags using a ~ prefix to exclude, e.g. 'internal,~needs-reboot'"
 
+#. TRANSLATORS: Title: if we can verify the firmware checksums
+msgid "Firmware Attestation"
+msgstr "Firmware Attestation"
+
+#. TRANSLATORS: Title: firmware refers to the flash chip in the computer
+msgid "Firmware BIOS Descriptor"
+msgstr "Firmware BIOS Descriptor"
+
+#. TRANSLATORS: Title: SPI refers to the flash chip in the computer
+msgid "Firmware BIOS Region"
+msgstr "Firmware BIOS Region"
+
 #. TRANSLATORS: remote URI
 msgid "Firmware Base URI"
 msgstr "Firmware Base URI"
@@ -1092,9 +1105,25 @@ msgstr "Firmware Update D-Bus Service"
 msgid "Firmware Update Daemon"
 msgstr "Firmware Update Daemon"
 
+#. TRANSLATORS: Title: if the fwupd plugins are all present and correct
+msgid "Firmware Updater Verification"
+msgstr "Firmware Updater Verification"
+
+#. TRANSLATORS: Title: if firmware updates are available
+msgid "Firmware Updates"
+msgstr "Firmware Updates"
+
 #. TRANSLATORS: program name
 msgid "Firmware Utility"
 msgstr "Firmware Utility"
+
+#. TRANSLATORS: Title: firmware refers to the flash chip in the computer
+msgid "Firmware Write Protection"
+msgstr "Firmware Write Protection"
+
+#. TRANSLATORS: Title: firmware refers to the flash chip in the computer
+msgid "Firmware Write Protection Lock"
+msgstr "Firmware Write Protection Lock"
 
 #. TRANSLATORS: Title: if we can verify the firmware checksums
 msgid "Firmware attestation"
@@ -1244,6 +1273,11 @@ msgstr "Host Security ID:"
 msgid "IOMMU"
 msgstr "IOMMU"
 
+#. TRANSLATORS: Title:
+#. * https://en.wikipedia.org/wiki/Input%E2%80%93output_memory_management_unit
+msgid "IOMMU Protection"
+msgstr "IOMMU Protection"
+
 #. TRANSLATORS: HSI event title
 msgid "IOMMU device protection disabled"
 msgstr "IOMMU device protection disabled"
@@ -1287,10 +1321,6 @@ msgstr "Install a firmware blob on a device"
 #. TRANSLATORS: command description
 msgid "Install a firmware file on this hardware"
 msgstr "Install a firmware file on this hardware"
-
-#. TRANSLATORS: command description
-msgid "Install a specific firmware version on a device"
-msgstr "Install a specific firmware version on a device"
 
 msgid "Install old version of signed system firmware"
 msgstr "Install old version of signed system firmware"
@@ -1337,13 +1367,32 @@ msgstr "Intel BootGuard"
 
 #. TRANSLATORS: Title: BootGuard is a trademark from Intel,
 #. * ACM means to verify the integrity of Initial Boot Block
+msgid "Intel BootGuard ACM Protected"
+msgstr "Intel BootGuard ACM Protected"
+
+#. TRANSLATORS: Title: BootGuard is a trademark from Intel,
+#. * ACM means to verify the integrity of Initial Boot Block
 msgid "Intel BootGuard ACM protected"
 msgstr "Intel BootGuard ACM protected"
+
+#. TRANSLATORS: Title: BootGuard is a trademark from Intel,
+#. * error policy is what to do on failure
+msgid "Intel BootGuard Error Policy"
+msgstr "Intel BootGuard Error Policy"
+
+#. TRANSLATORS: Title: BootGuard is a trademark from Intel
+msgid "Intel BootGuard Fuse"
+msgstr "Intel BootGuard Fuse"
 
 #. TRANSLATORS: Title: BootGuard is a trademark from Intel,
 #. * OTP = one time programmable
 msgid "Intel BootGuard OTP fuse"
 msgstr "Intel BootGuard OTP fuse"
+
+#. TRANSLATORS: Title: BootGuard is a trademark from Intel,
+#. * verified boot refers to the way the boot process is verified
+msgid "Intel BootGuard Verified Boot"
+msgstr "Intel BootGuard Verified Boot"
 
 #. TRANSLATORS: Title: BootGuard is a trademark from Intel,
 #. * error policy is what to do on failure
@@ -1355,6 +1404,10 @@ msgstr "Intel BootGuard error policy"
 msgid "Intel BootGuard verified boot"
 msgstr "Intel BootGuard verified boot"
 
+#. TRANSLATORS: Title: CET = Control-flow Enforcement Technology
+msgid "Intel CET"
+msgstr "Intel CET"
+
 #. TRANSLATORS: Title: CET = Control-flow Enforcement Technology,
 #. * active means being used by the OS
 msgid "Intel CET Active"
@@ -1364,6 +1417,22 @@ msgstr "Intel CET Active"
 #. * enabled means supported by the processor
 msgid "Intel CET Enabled"
 msgstr "Intel CET Enabled"
+
+#. TRANSLATORS: Title: MEI = Intel Management Engine
+msgid "Intel Management Engine Manufacturing Mode"
+msgstr "Intel Management Engine Manufacturing Mode"
+
+#. TRANSLATORS: Title: MEI = Intel Management Engine, and the "override" is
+#. enabled
+#. * with a jumper -- luckily it is probably not accessible to end users on
+#. consumer
+#. * boards
+msgid "Intel Management Engine Override"
+msgstr "Intel Management Engine Override"
+
+#. TRANSLATORS: Title: MEI = Intel Management Engine
+msgid "Intel Management Engine Version"
+msgstr "Intel Management Engine Version"
 
 #. TRANSLATORS: Title: SMAP = Supervisor Mode Access Prevention
 msgid "Intel SMAP"
@@ -1434,6 +1503,18 @@ msgstr "Less than one minute remaining"
 #. TRANSLATORS: e.g. GPLv2+, Proprietary etc
 msgid "License"
 msgstr "Licence"
+
+#. TRANSLATORS: Title: lockdown is a security mode of the kernel
+msgid "Linux Kernel Lockdown"
+msgstr "Linux Kernel Lockdown"
+
+#. TRANSLATORS: Title: if it's tainted or not
+msgid "Linux Kernel Verification"
+msgstr "Linux Kernel Verification"
+
+#. TRANSLATORS: Title: swap space or swap partition
+msgid "Linux Swap"
+msgstr "Linux Swap"
 
 msgid "Linux Vendor Firmware Service (stable firmware)"
 msgstr "Linux Vendor Firmware Service (stable firmware)"
@@ -1712,6 +1793,10 @@ msgstr "Please enter a number from 0 to %u: "
 #. TRANSLATORS: Failed to open plugin, hey Arch users
 msgid "Plugin dependencies missing"
 msgstr "Plugin dependencies missing"
+
+#. TRANSLATORS: Title: DMA as in https://en.wikipedia.org/wiki/DMA_attack
+msgid "Pre-boot DMA Protection"
+msgstr "Pre-boot DMA Protection"
 
 #. TRANSLATORS: Title: DMA as in https://en.wikipedia.org/wiki/DMA_attack
 msgid "Pre-boot DMA protection"
@@ -2159,6 +2244,14 @@ msgid "Supported on remote server"
 msgstr "Supported on remote server"
 
 #. TRANSLATORS: Title: a better sleep state
+msgid "Suspend To Idle"
+msgstr "Suspend To Idle"
+
+#. TRANSLATORS: Title: sleep state
+msgid "Suspend To RAM"
+msgstr "Suspend To RAM"
+
+#. TRANSLATORS: Title: a better sleep state
 msgid "Suspend-to-idle"
 msgstr "Suspend-to-idle"
 
@@ -2208,6 +2301,15 @@ msgstr "TPM PCR0 reconstruction is invalid"
 #. TRANSLATORS: HSI event title
 msgid "TPM PCR0 reconstruction is now valid"
 msgstr "TPM PCR0 reconstruction is now valid"
+
+#. TRANSLATORS: Title: PCRs (Platform Configuration Registers) shouldn't be
+#. empty
+msgid "TPM Platform Configuration"
+msgstr "TPM Platform Configuration"
+
+#. TRANSLATORS: Title: the PCR is rebuilt from the TPM event log
+msgid "TPM Reconstruction"
+msgstr "TPM Reconstruction"
 
 #. TRANSLATORS: Title: PCRs (Platform Configuration Registers) shouldn't be
 #. empty
@@ -2355,6 +2457,10 @@ msgstr "UEFI ESP partition not detected or configured"
 #. TRANSLATORS: program name
 msgid "UEFI Firmware Utility"
 msgstr "UEFI Firmware Utility"
+
+#. TRANSLATORS: Title: SB is a way of locking down UEFI
+msgid "UEFI Secure Boot"
+msgstr "UEFI Secure Boot"
 
 #. TRANSLATORS: capsule updates are an optional BIOS feature
 msgid "UEFI capsule updates not available or enabled in firmware setup"

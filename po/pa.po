@@ -97,6 +97,7 @@ msgstr "ਬਣਾਇਆ"
 msgid "Critical"
 msgstr "ਗੰਭੀਰ"
 
+#. TRANSLATORS: description of BIOS setting
 #. TRANSLATORS: multiline description of device
 msgid "Description"
 msgstr "ਵਰਣਨ"

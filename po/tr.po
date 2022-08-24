@@ -141,11 +141,11 @@ msgid "Activate devices"
 msgstr "Etkin aygıtlar"
 
 msgid "Activate the new firmware on the device"
-msgstr "Aygıttaki yeni ürün yazılımını etkinleştirin"
+msgstr "Aygıttaki yeni donanım yazılımını etkinleştir"
 
 #. TRANSLATORS: shown when shutting down to switch to the new version
 msgid "Activating firmware update"
-msgstr "Ürün yazılımı güncellemesini etkinleştir"
+msgstr "Donanım yazılımı güncellemesini etkinleştir"
 
 #. TRANSLATORS: the age of the metadata
 msgid "Age"
@@ -158,11 +158,11 @@ msgstr "Takma ad %s"
 
 #. TRANSLATORS: command line option
 msgid "Allow downgrading firmware versions"
-msgstr "Ürün yazılımı sürümünün düşürülmesine izin ver"
+msgstr "Donanım yazılımı sürümünün düşürülmesine izin ver"
 
 #. TRANSLATORS: command line option
 msgid "Allow reinstalling existing firmware versions"
-msgstr "Varolan ürün yazılımı sürümlerinin yeniden kurulumuna izin ver"
+msgstr "Varolan donanım yazılımı sürümlerinin yeniden kurulumuna izin ver"
 
 #. TRANSLATORS: command line option
 msgid "Allow switching firmware branch"
@@ -182,7 +182,7 @@ msgstr "Tüm sorulara evet yanıtı ver"
 
 #. TRANSLATORS: command line option
 msgid "Apply firmware updates"
-msgstr "Ürün yazılımı güncellemelerini uygula"
+msgstr "Donanım yazılımı güncellemelerini uygula"
 
 #. TRANSLATORS: command line option
 msgid "Apply update files"
@@ -193,7 +193,7 @@ msgstr "Güncelleme dosyalarını uygula"
 msgid "Approved firmware:"
 msgid_plural "Approved firmware:"
 msgstr[0] "Onaylı ürün yazılımı:"
-msgstr[1] "Onaylı ürün yazılımı:"
+msgstr[1] "Onaylı donanım yazılımı:"
 
 #. TRANSLATORS: waiting for user to authenticate
 msgid "Authenticating…"
@@ -201,15 +201,15 @@ msgstr "Kimlik doğrulanıyor…"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to downgrade the firmware on a removable device"
-msgstr "Çıkarılabilir aygıt üzerindeki ürün yazılımının sürümünü düşürmek için kimlik doğrulama gerekir"
+msgstr "Çıkarılabilir aygıt üzerindeki donanım yazılımının sürümünü düşürmek için kimlik doğrulama gerekir"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to downgrade the firmware on this machine"
-msgstr "Bu makine üzerindeki ürün yazılımının sürümünü indirmek için kimlik doğrulama gerekir"
+msgstr "Bu makine üzerindeki donanım yazılımının sürümünü düşürmek için kimlik doğrulama gerekir"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify a configured remote used for firmware updates"
-msgstr "Ürün yazılımı güncellemeleri için kullanılan uzak yapılandırmayı değiştirmek için kimlik doğrulama gerekir"
+msgstr "Donanım yazılımı güncellemeleri için kullanılan uzak yapılandırmayı değiştirmek için kimlik doğrulama gerekir"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify daemon configuration"
@@ -217,7 +217,7 @@ msgstr "Artalan süreci yapılandırmasını değiştirmek için kimlik doğrula
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to set the list of approved firmware"
-msgstr "Onaylı ürün yazılımı listesini ayarlamak için kimlik doğrulama gerekir"
+msgstr "Onaylı donanım yazılımı listesini ayarlamak için kimlik doğrulama gerekir"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to sign data using the client certificate"
@@ -225,7 +225,7 @@ msgstr "İstemci sertifikasını kullanarak veri imzası için kimlik doğrulama
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to switch to the new firmware version"
-msgstr "Bu makine üzerindeki ürün yazılımını güncellemek için kimlik doğrulama gerekir"
+msgstr "Bu makine üzerindeki donanım yazılımını güncellemek için kimlik doğrulama gerekir"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to unlock a device"
@@ -233,11 +233,11 @@ msgstr "Bir aygıtın kilidini açmak için kimlik doğrulama gerekir"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to update the firmware on a removable device"
-msgstr "Çıkarılabilir aygıt üzerindeki ürün yazılımını güncellemek için kimlik doğrulama gerekir"
+msgstr "Çıkarılabilir aygıt üzerindeki donanım yazılımını güncellemek için kimlik doğrulama gerekir"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to update the firmware on this machine"
-msgstr "Bu makine üzerindeki ürün yazılımını güncellemek için kimlik doğrulama gerekir"
+msgstr "Bu makine üzerindeki donanım yazılımını güncellemek için kimlik doğrulama gerekir"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to update the stored checksums for the device"
@@ -253,10 +253,6 @@ msgstr "BYTES"
 #. TRANSLATORS: firmware version of bootloader
 msgid "Bootloader Version"
 msgstr "Önyükleyici Sürümü"
-
-#. TRANSLATORS: command description
-msgid "Build firmware using a sandbox"
-msgstr "Ürün yazılımını korumalı alan kullanarak oluştur"
 
 #. TRANSLATORS: this is to abort the interactive prompt
 msgid "Cancel"
@@ -285,7 +281,7 @@ msgstr "Bir aygıt seç:"
 
 #. TRANSLATORS: get interactive prompt
 msgid "Choose a firmware type:"
-msgstr "Bir ürün yazılımı türü seç:"
+msgstr "Bir donanım yazılımı türü seç:"
 
 #. TRANSLATORS: get interactive prompt
 msgid "Choose a release:"
@@ -323,6 +319,7 @@ msgstr "Hata Ayıklama Seçenekleri"
 msgid "Decompressing…"
 msgstr "Açılıyor…"
 
+#. TRANSLATORS: description of BIOS setting
 #. TRANSLATORS: multiline description of device
 msgid "Description"
 msgstr "Açıklama"
@@ -450,7 +447,7 @@ msgstr "Belirtilen ESP geçerli değil"
 
 #. TRANSLATORS: command line option
 msgid "Enable firmware update support on supported systems"
-msgstr "Desteklenen sistemlerde ürün yazılımı güncelleme desteğini etkinleştir"
+msgstr "Desteklenen sistemlerde donanım yazılımı güncelleme desteğini etkinleştir"
 
 #. TRANSLATORS: Turn on the remote
 msgid "Enable this remote?"
@@ -475,7 +472,7 @@ msgstr "Şifrelenmiş"
 
 #. TRANSLATORS: command description
 msgid "Erase all firmware update history"
-msgstr "Tüm ürün yazılımı güncelleme geçmişini sil"
+msgstr "Tüm donanım yazılımı güncelleme geçmişini sil"
 
 #. TRANSLATORS: erasing contents of the flash chips
 msgid "Erasing…"
@@ -488,10 +485,6 @@ msgstr "Küçük bir gecikme sonrası çık"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILE"
 msgstr "FILE"
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "FILE-IN FILE-OUT [SCRIPT] [OUTPUT]"
-msgstr "FILE-IN FILE-OUT [SCRIPT] [OUTPUT]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME"
@@ -512,7 +505,7 @@ msgstr "Bekleyen aygıtlar alınamadı"
 
 #. TRANSLATORS: we could not install for some reason
 msgid "Failed to install firmware update"
-msgstr "Ürün yazılımı güncellemesi yüklenemedi"
+msgstr "Donanım yazılımı güncellemesi yüklenemedi"
 
 #. TRANSLATORS: quirks are device-specific workarounds
 msgid "Failed to load quirks"
@@ -548,25 +541,25 @@ msgstr "Dosya Adı İmzası"
 
 #. TRANSLATORS: remote URI
 msgid "Firmware Base URI"
-msgstr "Ürün Yazılımı Temel URI"
+msgstr "Donanım Yazılımı Temel URI"
 
 #. TRANSLATORS: program summary
 msgid "Firmware Update D-Bus Service"
-msgstr "Ürün Yazılımı Güncelleme D-Bus Hizmeti"
+msgstr "Donanım Yazılımı Güncelleme D-Bus Hizmeti"
 
 #. TRANSLATORS: program name
 msgid "Firmware Update Daemon"
-msgstr "Ürün Yazılımı Güncelleme Artalan Süreci"
+msgstr "Donanım Yazılımı Güncelleme Artalan Süreci"
 
 #. TRANSLATORS: program name
 msgid "Firmware Utility"
-msgstr "Ürün Yazılımı Yardımcı Programı"
+msgstr "Donanım Yazılımı Yardımcı Programı"
 
 msgid "Firmware updates are not supported on this machine."
-msgstr "Ürün yazılımı güncellemeleri bu makinede desteklenmiyor."
+msgstr "Donanım yazılımı güncellemeleri bu makinede desteklenmiyor."
 
 msgid "Firmware updates are supported on this machine."
-msgstr "Ürün yazılımı güncellemeleri bu makinede destekleniyor."
+msgstr "Donanım yazılımı güncellemeleri bu makinede destekleniyor."
 
 #. TRANSLATORS: description of plugin state, e.g. disabled
 msgid "Flags"
@@ -600,7 +593,7 @@ msgstr "Etkinleştirilmiş tüm eklentileri sisteme kaydettir"
 
 #. TRANSLATORS: command description
 msgid "Gets details about a firmware file"
-msgstr "Ürün yazılımı dosyasıyla ilgili ayrıntıları al"
+msgstr "Donanım yazılımı dosyasıyla ilgili ayrıntıları al"
 
 #. TRANSLATORS: command description
 msgid "Gets the list of updates for connected hardware"
@@ -648,24 +641,24 @@ msgid "Install Duration"
 msgstr "Kurulum Süresi"
 
 msgid "Install signed device firmware"
-msgstr "İmzalı aygıt ürün yazılımını yükle"
+msgstr "İmzalı aygıt donanım yazılımını yükle"
 
 msgid "Install signed system firmware"
-msgstr "İmzalı sistem ürün yazılımını yükle"
+msgstr "İmzalı sistem donanım yazılımını yükle"
 
 msgid "Install unsigned device firmware"
-msgstr "İmzasız aygıt ürün yazılımını yükle"
+msgstr "İmzasız aygıt donanım yazılımını yükle"
 
 msgid "Install unsigned system firmware"
-msgstr "İmzasız sistem ürün yazılımını yükle"
+msgstr "İmzasız sistem donanım yazılımını yükle"
 
 #. TRANSLATORS: console message when no Plymouth is installed
 msgid "Installing Firmware…"
-msgstr "Ürün Yazılımı Kuruluyor…"
+msgstr "Donanım Yazılımı Kuruluyor…"
 
 #. TRANSLATORS: this is shown when updating the firmware after the reboot
 msgid "Installing firmware update…"
-msgstr "Ürün yazılımını güncellemesi kuruluyor…"
+msgstr "Donanım yazılımını güncellemesi kuruluyor…"
 
 #. TRANSLATORS: %1 is a device name
 #, c-format
@@ -715,10 +708,10 @@ msgid "License"
 msgstr "Lisans"
 
 msgid "Linux Vendor Firmware Service (stable firmware)"
-msgstr "Linux Tedarikçi Ürün Yazılımı Hizmeti (kararlı ürün yazılımı)"
+msgstr "Linux Tedarikçi Donanım Yazılımı Hizmeti (kararlı donanım yazılımı)"
 
 msgid "Linux Vendor Firmware Service (testing firmware)"
-msgstr "Linux Tedarikçi Ürün Yazılımı Hizmeti (test ürün yazılımı)"
+msgstr "Linux Tedarikçi Donanım Yazılımı Hizmeti (test donanım yazılımı)"
 
 #. TRANSLATORS: Title: if it's tainted or not
 msgid "Linux kernel"
@@ -734,11 +727,11 @@ msgstr "Linux swap"
 
 #. TRANSLATORS: command line option
 msgid "List supported firmware updates"
-msgstr "Desteklenen ürün yazılımı güncellemelerini listele"
+msgstr "Desteklenen donanım yazılımı güncellemelerini listele"
 
 #. TRANSLATORS: command description
 msgid "List the available firmware types"
-msgstr "Kullanılabilir ürün yazılımı türlerini listele"
+msgstr "Kullanılabilir donanım yazılımı türlerini listele"
 
 #. TRANSLATORS: parsing the firmware information
 msgid "Loading…"
@@ -769,7 +762,7 @@ msgstr "Üstveri URI"
 
 #. TRANSLATORS: explain why no metadata available
 msgid "Metadata can be obtained from the Linux Vendor Firmware Service."
-msgstr "Üstveri Linux Tedarikçi Ürün Yazılımı Hizmetinden edinilebilir"
+msgstr "Üstveri Linux Tedarikçi Donanım Yazılımı Hizmetinden edinilebilir"
 
 #. TRANSLATORS: smallest version number installable on device
 msgid "Minimum Version"
@@ -800,11 +793,11 @@ msgstr "Eylem belirtilmedi!"
 
 #. TRANSLATORS: nothing found
 msgid "No firmware IDs found"
-msgstr "Ürün yazılımı kimlik bilgisi bulunamadı"
+msgstr "Donanım yazılımı kimlik bilgisi bulunamadı"
 
 #. TRANSLATORS: nothing attached that can be upgraded
 msgid "No hardware detected with firmware update capability"
-msgstr "Ürün yazılımı güncelleme yeteneğine sahip donanım saptanamadı"
+msgstr "Donanım yazılımı güncelleme yeteneğine sahip donanım saptanamadı"
 
 #. TRANSLATORS: nothing found
 msgid "No plugins found"
@@ -859,7 +852,7 @@ msgstr "YOL"
 
 #. TRANSLATORS: command description
 msgid "Parse and show details about a firmware file"
-msgstr "Ürün yazılımı dosyası hakkındaki ayrıntıları ayrıştır ve göster"
+msgstr "Donanım yazılımı dosyası hakkındaki ayrıntıları ayrıştır ve göster"
 
 #. TRANSLATORS: remote filename base
 msgid "Password"
@@ -897,11 +890,11 @@ msgstr "REMOTE-ID"
 
 #. TRANSLATORS: command description
 msgid "Read firmware from device into a file"
-msgstr "Ürün yazılımını aygıttan dosyaya oku"
+msgstr "Donanım yazılımını aygıttan dosyaya oku"
 
 #. TRANSLATORS: command description
 msgid "Read firmware from one partition into a file"
-msgstr "Ürün yazılımını bölümden dosyaya oku"
+msgstr "Donanım yazılımını bölümden dosyaya oku"
 
 #. TRANSLATORS: %1 is a device name
 #, c-format
@@ -988,11 +981,11 @@ msgstr "Güncelleme sırasında hata ayıklama bayrağını ayarla"
 
 #. TRANSLATORS: firmware approved by the admin
 msgid "Sets the list of approved firmware"
-msgstr "Onaylı ürün yazılımı listesini ayarlar"
+msgstr "Onaylı donanım yazılımı listesini ayarlar"
 
 #. TRANSLATORS: command description
 msgid "Share firmware history with the developers"
-msgstr "Ürün yazılım geçmişini geliştiricilerle paylaş"
+msgstr "Donanım yazılım geçmişini geliştiricilerle paylaş"
 
 #. TRANSLATORS: command line option
 msgid "Show all results"
@@ -1024,7 +1017,7 @@ msgstr "Ek hata ayıklama bilgilerini göster"
 
 #. TRANSLATORS: command description
 msgid "Show history of firmware updates"
-msgstr "Ürün yazılımı güncellemelerinin geçmişini göster"
+msgstr "Donanım yazılımı güncellemelerinin geçmişini göster"
 
 #. TRANSLATORS: this is for plugin development
 msgid "Show plugin verbose information"
@@ -1036,7 +1029,7 @@ msgstr "Son denenen güncellemedeki hata ayıklama günlüğünü göster"
 
 #. TRANSLATORS: command line option
 msgid "Show the information of firmware update status"
-msgstr "Ürün yazılımı güncelleme durumu bilgilerini göster"
+msgstr "Donanım yazılımı güncelleme durumu bilgilerini göster"
 
 #. TRANSLATORS: shutdown to apply the update
 msgid "Shutdown now?"
@@ -1083,7 +1076,7 @@ msgstr "Yeni üstveri başarıyla indirildi:"
 
 #. TRANSLATORS: success message
 msgid "Successfully installed firmware"
-msgstr "Ürün yazılımı başarıyla kuruldu"
+msgstr "Donanım yazılımı başarıyla kuruldu"
 
 #. TRANSLATORS: success message -- a per-system setting value
 msgid "Successfully modified configuration value"
@@ -1139,14 +1132,14 @@ msgstr "Hedef"
 #. TRANSLATORS: approved firmware has been checked by
 #. * the domain administrator
 msgid "There is no approved firmware."
-msgstr "Onaylı ürün yazılımı yok."
+msgstr "Onaylı donanım yazılımı yok."
 
 #. TRANSLATORS: we're poking around as a power user
 msgid "This program may only work correctly as root"
 msgstr "Bu program yalnızca kök erişimi ile düzgün çalışabilir"
 
 msgid "This remote contains firmware which is not embargoed, but is still being tested by the hardware vendor. You should ensure you have a way to manually downgrade the firmware if the firmware update fails."
-msgstr "Bu yazılım ambargo edilmemiş, ancak donanım satıcısı tarafından test edilmekte olan bir ürün yazılımı içerir. Bellenim güncellemesi başarısız olursa, bellenimi elle düşürmenin bir yoluna sahip olmanız gerekir."
+msgstr "Bu yazılım ambargo edilmemiş, ancak donanım satıcısı tarafından test edilmekte olan bir donanım yazılımı içerir. Donanım yazılımı güncellemesi başarısız olursa, donanım yazılımını elle düşürmenin bir yoluna sahip olmanız gerekir."
 
 #. TRANSLATORS: the user needs to stop playing with stuff
 msgid "This tool can only be used by the root user"
@@ -1158,7 +1151,7 @@ msgstr "Tür"
 
 #. TRANSLATORS: program name
 msgid "UEFI Firmware Utility"
-msgstr "UEFI Ürün Yazılımı Yardımcı Programı"
+msgstr "UEFI Donanım Yazılımı Yardımcı Programı"
 
 #. TRANSLATORS: program name
 msgid "UEFI dbx Utility"
@@ -1249,7 +1242,7 @@ msgstr "Rapor şimdi karşıya yüklensin mi?"
 
 #. TRANSLATORS: command line option
 msgid "Use quirk flags when installing firmware"
-msgstr "Ürün yazılımı kurulurken quirk bayraklarını kullan"
+msgstr "Donanım yazılımı kurulurken quirk bayraklarını kullan"
 
 #. TRANSLATORS: User has been notified
 msgid "User has been notified"
@@ -1296,11 +1289,11 @@ msgstr "Donanım değişikliklerini izle"
 
 #. TRANSLATORS: command description
 msgid "Write firmware from file into device"
-msgstr "Ürün yazılımını dosyadan aygıta yaz"
+msgstr "Donanım yazılımını dosyadan aygıta yaz"
 
 #. TRANSLATORS: command description
 msgid "Write firmware from file into one partition"
-msgstr "Ürün yazılımını dosyadan bölüme yaz"
+msgstr "Donanım yazılımını dosyadan bölüme yaz"
 
 #. TRANSLATORS: decompressing images from a container firmware
 msgid "Writing file:"
@@ -1312,7 +1305,7 @@ msgstr "Yazılıyor…"
 
 #. TRANSLATORS: show the user a warning
 msgid "Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices."
-msgstr "Hizmet sağlayıcınız, sisteminizle veya bağlı aygıtlarla uyumluluk için herhangi bir ürün yazılımı güncellemesini doğrulamamış olabilir."
+msgstr "Hizmet sağlayıcınız, sisteminizle veya bağlı aygıtlarla uyumluluk için herhangi bir donanım yazılımı güncellemesini doğrulamamış olabilir."
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[DEVICE-ID|GUID]"

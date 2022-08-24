@@ -135,10 +135,6 @@ msgstr "La autenticazion e je necessarie par inzornâ il firmware su cheste mach
 msgid "Authentication is required to update the stored checksums for the device"
 msgstr "La autenticazion e je necessarie par inzornâ i checksum archiviâts pal dispositîf"
 
-#. TRANSLATORS: command description
-msgid "Build firmware using a sandbox"
-msgstr "Costruìs il firmware doprant une ambient isolât - sandbox"
-
 #. TRANSLATORS: this is to abort the interactive prompt
 msgid "Cancel"
 msgstr "Anule"
@@ -187,6 +183,7 @@ msgstr "Opzions di debug"
 msgid "Decompressing…"
 msgstr "Daûr a decomprimi…"
 
+#. TRANSLATORS: description of BIOS setting
 #. TRANSLATORS: multiline description of device
 msgid "Description"
 msgstr "Descrizion"

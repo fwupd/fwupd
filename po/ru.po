@@ -372,10 +372,6 @@ msgstr "Ветка"
 msgid "Build a firmware file"
 msgstr "Собрать файл прошивки"
 
-#. TRANSLATORS: command description
-msgid "Build firmware using a sandbox"
-msgstr "Собрать прошивку, используя песочницу"
-
 #. TRANSLATORS: this is to abort the interactive prompt
 msgid "Cancel"
 msgstr "Отменить"
@@ -461,6 +457,7 @@ msgstr "Параметры отладки"
 msgid "Decompressing…"
 msgstr "Распаковка…"
 
+#. TRANSLATORS: description of BIOS setting
 #. TRANSLATORS: multiline description of device
 msgid "Description"
 msgstr "Описание"

@@ -250,6 +250,7 @@ msgstr "Options de débogage"
 msgid "Decompressing…"
 msgstr "Décompression…"
 
+#. TRANSLATORS: description of BIOS setting
 #. TRANSLATORS: multiline description of device
 msgid "Description"
 msgstr "Description"

@@ -72,6 +72,7 @@ msgstr "Nástroj pre DFU"
 msgid "Debugging Options"
 msgstr "Voľby ladenia"
 
+#. TRANSLATORS: description of BIOS setting
 #. TRANSLATORS: multiline description of device
 msgid "Description"
 msgstr "Popis"

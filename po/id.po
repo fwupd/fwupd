@@ -422,10 +422,6 @@ msgstr "Cabang"
 msgid "Build a firmware file"
 msgstr "Build berkas firmware"
 
-#. TRANSLATORS: command description
-msgid "Build firmware using a sandbox"
-msgstr "Bangun firmware memakai suatu sandbox"
-
 #. TRANSLATORS: this is to abort the interactive prompt
 msgid "Cancel"
 msgstr "Batal"
@@ -519,6 +515,7 @@ msgstr "Opsi Pengawakutuan"
 msgid "Decompressing…"
 msgstr "Mendekompresi…"
 
+#. TRANSLATORS: description of BIOS setting
 #. TRANSLATORS: multiline description of device
 msgid "Description"
 msgstr "Deskripsi"
@@ -815,10 +812,6 @@ msgstr "BERKAS"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILE [DEVICE-ID|GUID]"
 msgstr "BERKAS [ID-PERANTI|GUID]"
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "FILE-IN FILE-OUT [SCRIPT] [OUTPUT]"
-msgstr "BERKAS-MASUK BERKAS-KELUAR [SKRIP] [KELUARAN]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME"

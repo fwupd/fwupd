@@ -402,10 +402,6 @@ msgstr "브랜치"
 msgid "Build a firmware file"
 msgstr "펌웨어 파일 빌드"
 
-#. TRANSLATORS: command description
-msgid "Build firmware using a sandbox"
-msgstr "샌드박스에서 펌웨어 빌드"
-
 #. TRANSLATORS: this is to abort the interactive prompt
 msgid "Cancel"
 msgstr "취소"
@@ -499,6 +495,7 @@ msgstr "디버깅 옵션"
 msgid "Decompressing…"
 msgstr "압축 해제 중…"
 
+#. TRANSLATORS: description of BIOS setting
 #. TRANSLATORS: multiline description of device
 msgid "Description"
 msgstr "설명"
@@ -791,10 +788,6 @@ msgstr "FILE"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILE [DEVICE-ID|GUID]"
 msgstr "FILE [DEVICE-ID|GUID]"
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "FILE-IN FILE-OUT [SCRIPT] [OUTPUT]"
-msgstr "FILE-IN FILE-OUT [SCRIPT] [OUTPUT]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME"

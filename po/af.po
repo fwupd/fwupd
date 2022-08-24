@@ -94,6 +94,7 @@ msgstr "Opdrag nie gevind nie"
 msgid "Decompressing…"
 msgstr "Pak tans uit…"
 
+#. TRANSLATORS: description of BIOS setting
 #. TRANSLATORS: multiline description of device
 msgid "Description"
 msgstr "Beskrywing"

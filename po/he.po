@@ -348,10 +348,6 @@ msgstr "ענף"
 msgid "Build a firmware file"
 msgstr "בניית קובץ קושחה"
 
-#. TRANSLATORS: command description
-msgid "Build firmware using a sandbox"
-msgstr "בניית קושחה בסביבה מבודדת"
-
 #. TRANSLATORS: this is to abort the interactive prompt
 msgid "Cancel"
 msgstr "ביטול"
@@ -425,6 +421,7 @@ msgstr "אפשרויות ניפוי שגיאות"
 msgid "Decompressing…"
 msgstr "מתבצעת פריסה…"
 
+#. TRANSLATORS: description of BIOS setting
 #. TRANSLATORS: multiline description of device
 msgid "Description"
 msgstr "תיאור"

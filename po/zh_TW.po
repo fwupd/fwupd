@@ -86,10 +86,6 @@ msgstr "必須先通過身份核對才能更新這臺機器上的韌體"
 msgid "Authentication is required to update the stored checksums for the device"
 msgstr "必須先通過身份核對才能更新裝置的儲存校驗計算碼"
 
-#. TRANSLATORS: command description
-msgid "Build firmware using a sandbox"
-msgstr "使用沙箱建置韌體"
-
 #. TRANSLATORS: this is to abort the interactive prompt
 msgid "Cancel"
 msgstr "取消"
@@ -134,6 +130,7 @@ msgstr "除錯選項"
 msgid "Decompressing…"
 msgstr "解壓縮中…"
 
+#. TRANSLATORS: description of BIOS setting
 #. TRANSLATORS: multiline description of device
 msgid "Description"
 msgstr "描述說明"

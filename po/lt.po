@@ -297,10 +297,6 @@ msgstr "Norint atnaujinti įrenginiui saugomas kontrolines sumas, reikalingas ta
 msgid "Bind new kernel driver"
 msgstr "Susieti naują branduolio tvarkyklę"
 
-#. TRANSLATORS: command description
-msgid "Build firmware using a sandbox"
-msgstr "Sukurti programinę aparatinę įrangą, naudojant smėliadėžę"
-
 #. TRANSLATORS: this is to abort the interactive prompt
 msgid "Cancel"
 msgstr "Atsisakyti"
@@ -365,6 +361,7 @@ msgstr "Derinimo parametrai"
 msgid "Decompressing…"
 msgstr "Išskleidžiama…"
 
+#. TRANSLATORS: description of BIOS setting
 #. TRANSLATORS: multiline description of device
 msgid "Description"
 msgstr "Aprašas"
