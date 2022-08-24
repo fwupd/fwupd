@@ -424,7 +424,9 @@ done
 /usr/lib/udev/rules.d/*.rules
 /usr/lib/systemd/system-shutdown/fwupd.shutdown
 %dir %{_libdir}/fwupd-plugins-%{fwupdplugin_version}
+%ifarch i686 x86_64
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_acpi_facp.so
+%endif
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_acpi_phat.so
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_amt.so
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_analogix.so
@@ -456,13 +458,17 @@ done
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_gpio.so
 %endif
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_hailuck.so
+%ifarch i686 x86_64
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_iommu.so
+%endif
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_jabra.so
 %if 0%{?have_uefi}
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_lenovo_thinklmi.so
 %endif
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_linux_lockdown.so
+%ifarch i686 x86_64
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_linux_sleep.so
+%endif
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_linux_swap.so
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_linux_tainted.so
 %if 0%{?have_msr}
