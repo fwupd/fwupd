@@ -4683,14 +4683,15 @@ main(int argc, char *argv[])
 			return EXIT_FAILURE;
 		}
 #endif
-		g_printerr("%s\n", error->message);
+		if (priv->as_json)
+			g_debug("%s\n", error->message);
+		else
+			g_printerr("%s\n", error->message);
 		if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_ARGS)) {
 			/* TRANSLATORS: error message explaining command on how to get help */
 			g_printerr("\n%s\n", _("Use fwupdmgr --help for help"));
-		} else if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO)) {
-			g_debug("%s\n", error->message);
+		} else if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO))
 			return EXIT_NOTHING_TO_DO;
-		}
 		return EXIT_FAILURE;
 	}
 
