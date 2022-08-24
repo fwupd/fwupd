@@ -208,15 +208,6 @@ fu_util_bios_settings_parse_argv(gchar **input, GError **error)
 {
 	GHashTable *bios_settings;
 
-	if (g_strv_length(input) == 0 || g_strv_length(input) % 2) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_ARGS,
-				    /* TRANSLATORS: error message */
-				    _("Invalid arguments"));
-		return NULL;
-	}
-
 	/* json input */
 	if (g_strv_length(input) == 1) {
 		g_autoptr(FuBiosSettings) new_bios_settings = fu_bios_settings_new();
@@ -225,6 +216,15 @@ fu_util_bios_settings_parse_argv(gchar **input, GError **error)
 			return NULL;
 
 		return fu_bios_settings_to_hash_kv(new_bios_settings);
+	}
+
+	if (g_strv_length(input) == 0 || g_strv_length(input) % 2) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_ARGS,
+				    /* TRANSLATORS: error message */
+				    _("Invalid arguments"));
+		return NULL;
 	}
 
 	bios_settings = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
