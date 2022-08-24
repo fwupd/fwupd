@@ -2258,6 +2258,12 @@ fu_util_security_events_to_string(GPtrArray *events, FuSecurityAttrToStringFlags
 		g_autofree gchar *check = NULL;
 		g_autofree gchar *eventstr = NULL;
 
+		/* skip events that have either been added or removed with no prior value */
+		if (fwupd_security_attr_get_result(attr) == FWUPD_SECURITY_ATTR_RESULT_UNKNOWN ||
+		    fwupd_security_attr_get_result_fallback(attr) ==
+			FWUPD_SECURITY_ATTR_RESULT_UNKNOWN)
+			continue;
+
 		date = g_date_time_new_from_unix_utc((gint64)fwupd_security_attr_get_created(attr));
 		dtstr = g_date_time_format(date, "%F %T");
 		eventstr = fu_util_security_event_to_string(attr);
