@@ -6942,7 +6942,11 @@ fu_engine_check_firmware_attributes(FuEngine *self, FuDevice *device)
 			return;
 		}
 		if (!fu_engine_apply_default_bios_settings_policy(self, &error)) {
-			g_warning("Failed to apply BIOS settings policy: %s", error->message);
+			if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO))
+				g_debug("%s", error->message);
+			else
+				g_warning("Failed to apply BIOS settings policy: %s",
+					  error->message);
 			return;
 		}
 	}
