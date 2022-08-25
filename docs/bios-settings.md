@@ -162,7 +162,7 @@ An important return code to know for programmatic usage is that *2* means nothin
 
 `fwupd` has the ability to enforce the BIOS settings policy of a system administrator.  To use this feature, create a json payload using `fwupdmgr get-bios-setting --json` that reflects the settings you would like to see enforced.
 
-Then copy this payload into `/etc/fwupd/bios-settings.d`.  The next time that the fwupd daemon is started (such as a system bootup) it will ensure that all BIOS settings are programed to your desired values.  It will also mark those settings as read-only so no fwupd clients will be able to modify them.
+Then copy this payload into `/etc/fwupd/bios-settings.d` with a filename ending in `.json`.  The next time that the fwupd daemon is started (such as a system bootup) it will ensure that all BIOS settings are programed to your desired values.  It will also mark those settings as read-only so no fwupd clients will be able to modify them.
 
 This *does not* stop the kernel firmware-attributes API from working.  So a determined user with appropriate permissions would be able to modify settings from the kernel API directly, but they would be changed again on fwupd daemon startup.
 
