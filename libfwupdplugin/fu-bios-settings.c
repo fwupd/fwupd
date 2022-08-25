@@ -8,6 +8,8 @@
 
 #include "config.h"
 
+#include <glib/gi18n.h>
+
 #include "fwupd-bios-setting-private.h"
 #include "fwupd-error.h"
 
@@ -17,6 +19,7 @@
 
 struct _FuBiosSettings {
 	GObject parent_instance;
+	GHashTable *descriptions;
 	GPtrArray *attrs;
 };
 
@@ -27,6 +30,7 @@ fu_bios_settings_finalize(GObject *obj)
 {
 	FuBiosSettings *self = FU_BIOS_SETTINGS(obj);
 	g_ptr_array_unref(self->attrs);
+	g_hash_table_unref(self->descriptions);
 	G_OBJECT_CLASS(fu_bios_settings_parent_class)->finalize(obj);
 }
 
@@ -55,12 +59,24 @@ fu_bios_setting_get_key(FwupdBiosSetting *attr, const gchar *key, gchar **value_
 }
 
 static gboolean
-fu_bios_setting_set_description(FwupdBiosSetting *attr, GError **error)
+fu_bios_setting_set_description(FuBiosSettings *self, FwupdBiosSetting *attr, GError **error)
 {
 	g_autofree gchar *data = NULL;
+	const gchar *value;
 
 	g_return_val_if_fail(FWUPD_IS_BIOS_SETTING(attr), FALSE);
 
+	/* Try ID, then name, and then key */
+	value = g_hash_table_lookup(self->descriptions, fwupd_bios_setting_get_id(attr));
+	if (value != NULL) {
+		fwupd_bios_setting_set_description(attr, value);
+		return TRUE;
+	}
+	value = g_hash_table_lookup(self->descriptions, fwupd_bios_setting_get_name(attr));
+	if (value != NULL) {
+		fwupd_bios_setting_set_description(attr, value);
+		return TRUE;
+	}
 	if (!fu_bios_setting_get_key(attr, "display_name", &data, error))
 		return FALSE;
 	fwupd_bios_setting_set_description(attr, data);
@@ -305,7 +321,7 @@ fu_bios_setting_set_type(FuBiosSettings *self, FwupdBiosSetting *attr, GError **
  * https://github.com/torvalds/linux/blob/v5.18/Documentation/ABI/testing/sysfs-class-firmware-attributes#L300
  */
 static gboolean
-fu_bios_setting_set_file_attributes(FwupdBiosSetting *attr, GError **error)
+fu_bios_setting_set_file_attributes(FuBiosSettings *self, FwupdBiosSetting *attr, GError **error)
 {
 	g_autofree gchar *value = NULL;
 
@@ -317,6 +333,8 @@ fu_bios_setting_set_file_attributes(FwupdBiosSetting *attr, GError **error)
 			    fwupd_bios_setting_get_name(attr));
 		return FALSE;
 	}
+	if (!fu_bios_setting_set_description(self, attr, error))
+		return FALSE;
 	if (!fu_bios_setting_get_key(attr, NULL, &value, error))
 		return FALSE;
 	fwupd_bios_setting_set_current_value(attr, value);
@@ -334,7 +352,7 @@ fu_bios_settings_set_folder_attributes(FuBiosSettings *self, FwupdBiosSetting *a
 		return FALSE;
 	if (!fu_bios_setting_set_current_value(attr, error))
 		return FALSE;
-	if (!fu_bios_setting_set_description(attr, &error_local))
+	if (!fu_bios_setting_set_description(self, attr, &error_local))
 		g_debug("%s", error_local->message);
 	if (!fu_bios_settings_run_folder_fixups(attr, error))
 		return FALSE;
@@ -358,21 +376,36 @@ fu_bios_settings_populate_attribute(FuBiosSettings *self,
 
 	attr = fwupd_bios_setting_new(name, path);
 
+	id = g_strdup_printf("com.%s.%s", driver, name);
+	fwupd_bios_setting_set_id(attr, id);
+
 	if (g_file_test(path, G_FILE_TEST_IS_DIR)) {
 		if (!fu_bios_settings_set_folder_attributes(self, attr, error))
 			return FALSE;
 	} else {
-		if (!fu_bios_setting_set_file_attributes(attr, error))
+		if (!fu_bios_setting_set_file_attributes(self, attr, error))
 			return FALSE;
 	}
-
-	id = g_strdup_printf("com.%s.%s", driver, name);
-	fwupd_bios_setting_set_id(attr, id);
 	fu_bios_setting_fixup_read_only(attr);
 
 	g_ptr_array_add(self->attrs, g_object_ref(attr));
 
 	return TRUE;
+}
+
+static void
+fu_bios_settings_populate_descriptions(FuBiosSettings *self)
+{
+	g_return_if_fail(FU_IS_BIOS_SETTINGS(self));
+
+	g_hash_table_insert(self->descriptions,
+			    g_strdup("pending_reboot"),
+			    /* TRANSLATORS: description of a BIOS setting */
+			    g_strdup(_("Settings will apply after system reboots")));
+	g_hash_table_insert(self->descriptions,
+			    g_strdup("com.thinklmi.WindowsUEFIFirmwareUpdate"),
+			    /* TRANSLATORS: description of a BIOS setting */
+			    g_strdup(_("BIOS updates delivered via LVFS or Windows Update")));
 }
 
 /**
@@ -398,6 +431,8 @@ fu_bios_settings_setup(FuBiosSettings *self, GError **error)
 		g_debug("re-initializing attributes");
 		g_ptr_array_set_size(self->attrs, 0);
 	}
+	if (g_hash_table_size(self->descriptions) == 0)
+		fu_bios_settings_populate_descriptions(self);
 
 	sysfsfwdir = fu_path_from_kind(FU_PATH_KIND_SYSFSDIR_FW_ATTRIB);
 	class_dir = g_dir_open(sysfsfwdir, 0, error);
@@ -450,6 +485,7 @@ static void
 fu_bios_settings_init(FuBiosSettings *self)
 {
 	self->attrs = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
+	self->descriptions = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
 }
 
 /**
