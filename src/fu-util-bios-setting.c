@@ -14,33 +14,13 @@
 #include "fu-util-bios-setting.h"
 #include "fu-util-common.h"
 
-static gboolean
-fu_util_bios_setting_dup_fields(const gchar *name, const gchar *desc)
-{
-	return g_strcmp0(name, desc) == 0;
-}
-
 static void
 fu_util_bios_setting_update_description(FwupdBiosSetting *setting)
 {
-	const gchar *name = fwupd_bios_setting_get_name(setting);
-	const gchar *old = fwupd_bios_setting_get_description(setting);
 	const gchar *new = NULL;
 
-	if (g_strcmp0(name, FWUPD_BIOS_SETTING_PENDING_REBOOT) == 0) {
-		/* TRANSLATORS: Settings refers to BIOS settings in this context */
-		new = _("Settings will apply after system reboots");
-	}
-	/* For providing a better description on a number of Lenovo systems */
-	if (fu_util_bios_setting_dup_fields(name, old)) {
-		if (g_strcmp0(old, "WindowsUEFIFirmwareUpdate") == 0) {
-			/* TRANSLATORS: description of a BIOS setting */
-			new = _("BIOS updates delivered via LVFS or Windows Update");
-		}
-	} else {
-		/* try to look it up from translations */
-		new = gettext(old);
-	}
+	/* try to look it up from translations */
+	new = gettext(fwupd_bios_setting_get_description(setting));
 	if (new != NULL)
 		fwupd_bios_setting_set_description(setting, new);
 }

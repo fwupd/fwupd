@@ -1,5 +1,6 @@
 data/remotes.d/lvfs.metainfo.xml
 data/remotes.d/lvfs-testing.metainfo.xml
+libfwupdplugin/fu-bios-settings.c
 libfwupdplugin/tests/bios-attrs/dell-xps13-9310/strings.txt
 policy/org.freedesktop.fwupd.policy.in
 plugins/dfu/fu-dfu-tool.c
