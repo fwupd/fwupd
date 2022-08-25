@@ -37,20 +37,22 @@ fu_plugin_lenovo_thinklmi_device_registered(FuPlugin *plugin, FuDevice *device)
 
 	/* check if boot order lock is turned on */
 	attr = fu_context_get_bios_setting(ctx, BOOT_ORDER_LOCK);
-	if (!attr) {
+	if (attr == NULL) {
 		g_debug("failed to find %s in cache\n", BOOT_ORDER_LOCK);
 		return;
 	}
-	if (g_strcmp0(fwupd_bios_setting_get_current_value(attr), "Enable") == 0)
+	if (g_strcmp0(fwupd_bios_setting_get_current_value(attr), "Enable") == 0) {
 		fu_device_inhibit(device,
 				  "uefi-capsule-bootorder",
 				  "BootOrder is locked in firmware setup");
+	}
 
 	/* check if we're pending for a reboot */
-	if (fu_context_get_bios_setting_pending_reboot(ctx))
+	if (fu_context_get_bios_setting_pending_reboot(ctx)) {
 		fu_device_inhibit(device,
 				  "uefi-capsule-pending-reboot",
 				  "UEFI BIOS settings update pending reboot");
+	}
 }
 
 void
