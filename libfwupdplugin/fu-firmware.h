@@ -63,8 +63,12 @@ struct _FuFirmwareClass {
 			       GChecksumType csum_kind,
 			       GError **error)G_GNUC_WARN_UNUSED_RESULT;
 	gboolean (*check_magic)(FuFirmware *self, GBytes *fw, gsize offset, GError **error);
+	gboolean (*check_compatible)(FuFirmware *self,
+				     FuFirmware *other,
+				     FwupdInstallFlags flags,
+				     GError **error);
 	/*< private >*/
-	gpointer padding[25];
+	gpointer padding[24];
 };
 
 /**
@@ -292,6 +296,11 @@ gboolean
 fu_firmware_write_file(FuFirmware *self, GFile *file, GError **error) G_GNUC_WARN_UNUSED_RESULT;
 gchar *
 fu_firmware_get_checksum(FuFirmware *self, GChecksumType csum_kind, GError **error);
+gboolean
+fu_firmware_check_compatible(FuFirmware *self,
+			     FuFirmware *other,
+			     FwupdInstallFlags flags,
+			     GError **error);
 
 void
 fu_firmware_add_image(FuFirmware *self, FuFirmware *img);

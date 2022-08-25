@@ -1086,6 +1086,7 @@ LIBFWUPDPLUGIN_1.8.4 {
     fu_context_get_bios_settings;
     fu_context_reload_bios_settings;
     fu_device_security_attr_new;
+    fu_firmware_check_compatible;
     fu_plugin_add_string;
     fu_plugin_security_attr_new;
     fu_plugin_to_string;
