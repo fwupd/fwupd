@@ -6407,6 +6407,13 @@ fu_engine_attrs_calculate_hsi_for_chassis(FuEngine *self)
 	guint val =
 	    fu_context_get_smbios_integer(self->ctx, FU_SMBIOS_STRUCTURE_TYPE_CHASSIS, 0x05);
 
+	/* if emulating, force the chassis type to be valid */
+	if (self->host_emulation &&
+	    (val == FU_SMBIOS_CHASSIS_KIND_OTHER || val == FU_SMBIOS_CHASSIS_KIND_UNKNOWN)) {
+		g_debug("forcing chassis kind [0x%x] to be valid", val);
+		val = FU_SMBIOS_CHASSIS_KIND_DESKTOP;
+	}
+
 	switch (val) {
 	case FU_SMBIOS_CHASSIS_KIND_DESKTOP:
 	case FU_SMBIOS_CHASSIS_KIND_LOW_PROFILE_DESKTOP:
