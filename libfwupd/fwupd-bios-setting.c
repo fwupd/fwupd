@@ -228,7 +228,7 @@ fwupd_bios_setting_set_scalar_increment(FwupdBiosSetting *self, guint64 val)
  *
  * Gets the BIOS setting type used by the kernel interface.
  *
- * Returns: the bios settingibute type, or %FWUPD_BIOS_SETTING_KIND_UNKNOWN if unset.
+ * Returns: the bios setting type, or %FWUPD_BIOS_SETTING_KIND_UNKNOWN if unset.
  *
  * Since: 1.8.4
  **/
@@ -243,7 +243,7 @@ fwupd_bios_setting_get_kind(FwupdBiosSetting *self)
 /**
  * fwupd_bios_setting_set_kind:
  * @self: a #FwupdBiosSetting
- * @type: a bios settingibute type, e.g. %FWUPD_BIOS_SETTING_KIND_ENUMERATION
+ * @type: a bios setting type, e.g. %FWUPD_BIOS_SETTING_KIND_ENUMERATION
  *
  * Sets the BIOS setting type used by the kernel interface.
  *
@@ -604,7 +604,7 @@ fwupd_bios_setting_trusted(FwupdBiosSetting *self, gboolean trusted)
  * @self: a #FwupdBiosSetting
  * @trusted: whether the caller should receive trusted values
  *
- * Serialize the bios settingibute.
+ * Serialize the bios setting.
  *
  * Returns: the serialized data, or %NULL for error.
  *
@@ -746,7 +746,7 @@ fwupd_bios_setting_from_key_value(FwupdBiosSetting *self, const gchar *key, GVar
  * @json_node: a JSON node
  * @error: (nullable): optional return location for an error
  *
- * Loads a fwupd bios settingibute from a JSON node.
+ * Loads a fwupd bios setting from a JSON node.
  *
  * Returns: %TRUE for success
  *
@@ -833,7 +833,7 @@ fwupd_bios_setting_from_json(FwupdBiosSetting *self, JsonNode *json_node, GError
  * @self: a #FwupdBiosSetting
  * @builder: a JSON builder
  *
- * Adds a fwupd bios settingibute to a JSON builder.
+ * Adds a fwupd bios setting to a JSON builder.
  *
  * Since: 1.8.4
  **/
@@ -978,7 +978,7 @@ fwupd_bios_setting_set_from_variant_iter(FwupdBiosSetting *self, GVariantIter *i
  * fwupd_bios_setting_from_variant:
  * @value: (not nullable): the serialized data
  *
- * Creates a new bios settingibute using serialized data.
+ * Creates a new bios setting using serialized data.
  *
  * Returns: (transfer full): a new #FwupdBiosSetting, or %NULL if @value was invalid.
  *
@@ -1046,7 +1046,7 @@ fwupd_bios_setting_array_from_variant(GVariant *value)
  * @name: (nullable): the attribute name
  * @path: (nullable): the path the driver providing this attribute uses
  *
- * Creates a new bios settingibute.
+ * Creates a new bios setting.
  *
  * Returns: a new #FwupdBiosSetting.
  *
