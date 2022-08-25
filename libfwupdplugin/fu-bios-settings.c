@@ -20,6 +20,7 @@
 struct _FuBiosSettings {
 	GObject parent_instance;
 	GHashTable *descriptions;
+	GHashTable *read_only;
 	GPtrArray *attrs;
 };
 
@@ -31,6 +32,7 @@ fu_bios_settings_finalize(GObject *obj)
 	FuBiosSettings *self = FU_BIOS_SETTINGS(obj);
 	g_ptr_array_unref(self->attrs);
 	g_hash_table_unref(self->descriptions);
+	g_hash_table_unref(self->read_only);
 	G_OBJECT_CLASS(fu_bios_settings_parent_class)->finalize(obj);
 }
 
@@ -174,27 +176,13 @@ fu_bios_setting_set_current_value(FwupdBiosSetting *attr, GError **error)
 #define LENOVO_EXCLUDED		"[Excluded from boot order:"
 
 static void
-fu_bios_setting_fixup_read_only(FwupdBiosSetting *attr)
+fu_bios_setting_set_read_only(FuBiosSettings *self, FwupdBiosSetting *attr)
 {
 	if (fwupd_bios_setting_get_kind(attr) == FWUPD_BIOS_SETTING_KIND_ENUMERATION) {
-		struct {
-			const gchar *id;
-			const gchar *value;
-		} read_only_map[] = {{"com.thinklmi.SecureBoot", "Enable"},
-				     {"com.dell-wmi-sysman.SecureBoot", "Enabled"},
-				     {NULL, NULL}};
-		const gchar *id = fwupd_bios_setting_get_id(attr);
-		const gchar *tmp = fwupd_bios_setting_get_current_value(attr);
-		for (guint i = 0; read_only_map[i].id != NULL; i++) {
-			if (g_strcmp0(id, read_only_map[i].id) != 0)
-				continue;
-
-			if (read_only_map[i].value == NULL ||
-			    g_strcmp0(tmp, read_only_map[i].value) == 0) {
-				fwupd_bios_setting_set_read_only(attr, TRUE);
-				return;
-			}
-		}
+		const gchar *value =
+		    g_hash_table_lookup(self->read_only, fwupd_bios_setting_get_id(attr));
+		if (g_strcmp0(value, fwupd_bios_setting_get_current_value(attr)) == 0)
+			fwupd_bios_setting_set_read_only(attr, TRUE);
 	}
 }
 
@@ -356,6 +344,7 @@ fu_bios_settings_set_folder_attributes(FuBiosSettings *self, FwupdBiosSetting *a
 		g_debug("%s", error_local->message);
 	if (!fu_bios_settings_run_folder_fixups(attr, error))
 		return FALSE;
+	fu_bios_setting_set_read_only(self, attr);
 	return TRUE;
 }
 
@@ -386,7 +375,6 @@ fu_bios_settings_populate_attribute(FuBiosSettings *self,
 		if (!fu_bios_setting_set_file_attributes(self, attr, error))
 			return FALSE;
 	}
-	fu_bios_setting_fixup_read_only(attr);
 
 	g_ptr_array_add(self->attrs, g_object_ref(attr));
 
@@ -406,6 +394,19 @@ fu_bios_settings_populate_descriptions(FuBiosSettings *self)
 			    g_strdup("com.thinklmi.WindowsUEFIFirmwareUpdate"),
 			    /* TRANSLATORS: description of a BIOS setting */
 			    g_strdup(_("BIOS updates delivered via LVFS or Windows Update")));
+}
+
+static void
+fu_bios_settings_populate_read_only(FuBiosSettings *self)
+{
+	g_return_if_fail(FU_IS_BIOS_SETTINGS(self));
+
+	g_hash_table_insert(self->read_only,
+			    g_strdup("com.thinklmi.SecureBoot"),
+			    g_strdup(_("Enable")));
+	g_hash_table_insert(self->read_only,
+			    g_strdup("com.dell-wmi-sysman.SecureBoot"),
+			    g_strdup(_("Enabled")));
 }
 
 /**
@@ -433,6 +434,9 @@ fu_bios_settings_setup(FuBiosSettings *self, GError **error)
 	}
 	if (g_hash_table_size(self->descriptions) == 0)
 		fu_bios_settings_populate_descriptions(self);
+
+	if (g_hash_table_size(self->read_only) == 0)
+		fu_bios_settings_populate_read_only(self);
 
 	sysfsfwdir = fu_path_from_kind(FU_PATH_KIND_SYSFSDIR_FW_ATTRIB);
 	class_dir = g_dir_open(sysfsfwdir, 0, error);
@@ -486,6 +490,7 @@ fu_bios_settings_init(FuBiosSettings *self)
 {
 	self->attrs = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 	self->descriptions = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
+	self->read_only = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
 }
 
 /**
