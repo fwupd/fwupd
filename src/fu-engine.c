@@ -6903,6 +6903,8 @@ fu_engine_apply_default_bios_settings_policy(FuEngine *self, GError **error)
 		return TRUE;
 
 	dir = g_dir_open(dirname, 0, error);
+	if (dir == NULL)
+		return FALSE;
 	while ((tmp = g_dir_read_name(dir)) != NULL) {
 		g_autofree gchar *fn = NULL;
 		if (!g_str_has_suffix(tmp, ".json"))
