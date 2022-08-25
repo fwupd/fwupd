@@ -31,7 +31,6 @@ fu_plugin_lenovo_thinklmi_device_registered(FuPlugin *plugin, FuDevice *device)
 {
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	FwupdBiosSetting *attr;
-	g_autoptr(GError) error_local = NULL;
 
 	if (g_strcmp0(fu_device_get_plugin(device), "uefi_capsule") != 0)
 		return;
