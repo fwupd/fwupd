@@ -409,6 +409,25 @@ fu_bios_settings_populate_read_only(FuBiosSettings *self)
 			    g_strdup(_("Enabled")));
 }
 
+static void
+fu_bios_settings_combination_fixups(FuBiosSettings *self)
+{
+	FwupdBiosSetting *thinklmi_sb = fu_bios_settings_get_attr(self, "com.thinklmi.SecureBoot");
+	FwupdBiosSetting *thinklmi_3rd =
+	    fu_bios_settings_get_attr(self, "com.thinklmi.Allow3rdPartyUEFICA");
+
+	if (thinklmi_sb != NULL && thinklmi_3rd != NULL) {
+		const gchar *val = fwupd_bios_setting_get_current_value(thinklmi_sb);
+		if (g_strcmp0(val, "Disable") == 0) {
+			g_debug("Disabling changing %s since %s is %s",
+				fwupd_bios_setting_get_name(thinklmi_sb),
+				fwupd_bios_setting_get_name(thinklmi_3rd),
+				val);
+			fwupd_bios_setting_set_read_only(thinklmi_sb, TRUE);
+		}
+	}
+}
+
 /**
  * fu_bios_settings_setup:
  * @self: a #FuBiosSettings
@@ -481,6 +500,8 @@ fu_bios_settings_setup(FuBiosSettings *self, GError **error)
 		} while (++count);
 	} while (TRUE);
 	g_debug("loaded %u BIOS settings", count);
+
+	fu_bios_settings_combination_fixups(self);
 
 	return TRUE;
 }
