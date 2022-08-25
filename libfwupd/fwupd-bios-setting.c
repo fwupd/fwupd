@@ -378,7 +378,6 @@ fwupd_bios_setting_map_possible_value(FwupdBiosSetting *self, const gchar *key, 
 	FwupdBiosSettingPrivate *priv = GET_PRIVATE(self);
 	gboolean positive_key = FALSE;
 	gboolean negative_key = FALSE;
-	g_autofree gchar *result = NULL;
 	g_autofree gchar *lower_key = NULL;
 
 	g_return_val_if_fail(FWUPD_IS_BIOS_SETTING(self), NULL);
