@@ -772,6 +772,37 @@ fu_firmware_tokenize(FuFirmware *self, GBytes *fw, FwupdInstallFlags flags, GErr
 	return TRUE;
 }
 
+/**
+ * fu_firmware_check_compatible:
+ * @self: a #FuFirmware
+ * @other: a #FuFirmware
+ * @flags: install flags, e.g. %FWUPD_INSTALL_FLAG_FORCE
+ * @error: (nullable): optional return location for an error
+ *
+ * Check a new firmware is compatible with the existing firmware.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.8.4
+ **/
+gboolean
+fu_firmware_check_compatible(FuFirmware *self,
+			     FuFirmware *other,
+			     FwupdInstallFlags flags,
+			     GError **error)
+{
+	FuFirmwareClass *klass = FU_FIRMWARE_GET_CLASS(self);
+
+	g_return_val_if_fail(FU_IS_FIRMWARE(self), FALSE);
+	g_return_val_if_fail(FU_IS_FIRMWARE(other), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	/* optionally subclassed */
+	if (klass->check_compatible == NULL)
+		return TRUE;
+	return klass->check_compatible(self, other, flags, error);
+}
+
 static gboolean
 fu_firmware_check_magic_for_offset(FuFirmware *self,
 				   GBytes *fw,
