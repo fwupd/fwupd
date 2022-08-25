@@ -6906,7 +6906,7 @@ fu_engine_apply_default_bios_settings_policy(FuEngine *self, GError **error)
 	dir = g_dir_open(dirname, 0, error);
 	while ((tmp = g_dir_read_name(dir)) != NULL) {
 		g_autofree gchar *fn = NULL;
-		if (g_strcmp0(tmp, "README.md") == 0)
+		if (!g_str_has_suffix(tmp, ".json"))
 			continue;
 		fn = g_build_filename(dirname, tmp, NULL);
 		g_debug("Loading default BIOS settings policy from %s", fn);
