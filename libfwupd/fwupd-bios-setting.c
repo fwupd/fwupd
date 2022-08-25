@@ -31,6 +31,9 @@ typedef struct {
 	guint64 upper_bound;
 	guint64 scalar_increment;
 	gboolean read_only;
+	gboolean auth_enabled;
+	FwupdBiosAuthRole role;
+	FwupdBiosAuthMechanism mechanism;
 	GPtrArray *possible_values;
 } FwupdBiosSettingPrivate;
 
@@ -243,7 +246,7 @@ fwupd_bios_setting_get_kind(FwupdBiosSetting *self)
 /**
  * fwupd_bios_setting_set_kind:
  * @self: a #FwupdBiosSetting
- * @type: a bios settingibute type, e.g. %FWUPD_BIOS_SETTING_KIND_ENUMERATION
+ * @type: a bios setting type, e.g. %FWUPD_BIOS_SETTING_KIND_ENUMERATION
  *
  * Sets the BIOS setting type used by the kernel interface.
  *
@@ -255,6 +258,112 @@ fwupd_bios_setting_set_kind(FwupdBiosSetting *self, FwupdBiosSettingKind type)
 	FwupdBiosSettingPrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FWUPD_IS_BIOS_SETTING(self));
 	priv->kind = type;
+}
+
+/**
+ * fwupd_bios_setting_get_auth_role:
+ * @self: a #FwupdBiosSetting
+ *
+ * Gets the BIOS setting authentication rol
+ *
+ * Returns: the bios setting authentication role, or %FWUPD_BIOS_AUTH_ROLE_UNKNOWN if unset.
+ *
+ * Since: 1.8.4
+ **/
+FwupdBiosAuthRole
+fwupd_bios_setting_get_auth_role(FwupdBiosSetting *self)
+{
+	FwupdBiosSettingPrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_BIOS_SETTING(self), 0);
+	return priv->role;
+}
+
+/**
+ * fwupd_bios_setting_set_auth_role:
+ * @self: a #FwupdBiosSetting
+ * @role: a bios authentication role type, e.g. %FWUPD_BIOS_AUTH_ROLE_SYSTEM
+ *
+ * Sets the BIOS authentication role used for %FWUPD_BIOS_SETTING_KIND_AUTH settings
+ *
+ * Since: 1.8.4
+ **/
+void
+fwupd_bios_setting_set_auth_role(FwupdBiosSetting *self, FwupdBiosAuthRole role)
+{
+	FwupdBiosSettingPrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FWUPD_IS_BIOS_SETTING(self));
+	priv->role = role;
+}
+
+/**
+ * fwupd_bios_setting_get_auth_mechanism:
+ * @self: a #FwupdBiosSetting
+ *
+ * Gets the BIOS setting authentication mechanism.
+ *
+ * Returns: the bios setting authentication mechanism, or %FWUPD_BIOS_AUTH_MECHANISM_UNKNOWN if
+ *unset.
+ *
+ * Since: 1.8.4
+ **/
+FwupdBiosAuthMechanism
+fwupd_bios_setting_get_auth_mechanism(FwupdBiosSetting *self)
+{
+	FwupdBiosSettingPrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_BIOS_SETTING(self), 0);
+	return priv->mechanism;
+}
+
+/**
+ * fwupd_bios_setting_set_auth_mechanism:
+ * @self: a #FwupdBiosSetting
+ * @mechanism: a bios authentication mechanism, e.g. %FWUPD_BIOS_AUTH_MECHANISM_PASSWORD
+ *
+ * Sets the BIOS authentication mechanism used for %FWUPD_BIOS_SETTING_KIND_AUTH settings
+ *
+ * Since: 1.8.4
+ **/
+void
+fwupd_bios_setting_set_auth_mechanism(FwupdBiosSetting *self, FwupdBiosAuthMechanism mechanism)
+{
+	FwupdBiosSettingPrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FWUPD_IS_BIOS_SETTING(self));
+	priv->mechanism = mechanism;
+}
+
+/**
+ * fwupd_bios_setting_get_auth_enabled:
+ * @self: a #FwupdBiosSetting
+ *
+ * Determine if the authentication requirement is enabled
+ *
+ * Returns: TRUE if enabled, or FALSE if not.
+ *
+ * Since: 1.8.4
+ **/
+gboolean
+fwupd_bios_setting_get_auth_enabled(FwupdBiosSetting *self)
+{
+	FwupdBiosSettingPrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_BIOS_SETTING(self), FALSE);
+	return priv->auth_enabled;
+}
+
+/**
+ * fwupd_bios_setting_set_auth_enabled:
+ * @self: a #FwupdBiosSetting
+ * @auth_enabled: TRUE for enabled, FALSE for disabled
+ *
+ * Sets whether the BIOS authentication is enabled or disabled
+ *
+ * Since: 1.8.4
+ **/
+void
+fwupd_bios_setting_set_auth_enabled(FwupdBiosSetting *self, gboolean auth_enabled)
+{
+	FwupdBiosSettingPrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FWUPD_IS_BIOS_SETTING(self));
+	priv->auth_enabled = auth_enabled;
 }
 
 /**
@@ -651,14 +760,16 @@ fwupd_bios_setting_to_variant(FwupdBiosSetting *self, gboolean trusted)
 			      "{sv}",
 			      FWUPD_RESULT_KEY_BIOS_SETTING_READ_ONLY,
 			      g_variant_new_boolean(priv->read_only));
-	if (fwupd_bios_setting_trusted(self, trusted)) {
+	if (fwupd_bios_setting_trusted(self, trusted) &&
+	    priv->kind != FWUPD_BIOS_SETTING_KIND_AUTH) {
 		g_variant_builder_add(&builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_BIOS_SETTING_CURRENT_VALUE,
 				      g_variant_new_string(priv->current_value));
 	}
 	if (priv->kind == FWUPD_BIOS_SETTING_KIND_INTEGER ||
-	    priv->kind == FWUPD_BIOS_SETTING_KIND_STRING) {
+	    priv->kind == FWUPD_BIOS_SETTING_KIND_STRING ||
+	    priv->kind == FWUPD_BIOS_SETTING_KIND_AUTH) {
 		g_variant_builder_add(&builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_BIOS_SETTING_LOWER_BOUND,
@@ -672,6 +783,19 @@ fwupd_bios_setting_to_variant(FwupdBiosSetting *self, gboolean trusted)
 					      "{sv}",
 					      FWUPD_RESULT_KEY_BIOS_SETTING_SCALAR_INCREMENT,
 					      g_variant_new_uint64(priv->scalar_increment));
+		} else if (priv->kind == FWUPD_BIOS_SETTING_KIND_AUTH) {
+			g_variant_builder_add(&builder,
+					      "{sv}",
+					      FWUPD_RESULT_KEY_BIOS_SETTING_AUTH_ENABLED,
+					      g_variant_new_boolean(priv->auth_enabled));
+			g_variant_builder_add(&builder,
+					      "{sv}",
+					      FWUPD_RESULT_KEY_BIOS_SETTING_AUTH_MECHANISM,
+					      g_variant_new_uint64(priv->mechanism));
+			g_variant_builder_add(&builder,
+					      "{sv}",
+					      FWUPD_RESULT_KEY_BIOS_SETTING_AUTH_ROLE,
+					      g_variant_new_uint64(priv->role));
 		}
 	} else if (priv->kind == FWUPD_BIOS_SETTING_KIND_ENUMERATION) {
 		if (priv->possible_values->len > 0) {
@@ -736,6 +860,18 @@ fwupd_bios_setting_from_key_value(FwupdBiosSetting *self, const gchar *key, GVar
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_BIOS_SETTING_READ_ONLY) == 0) {
 		fwupd_bios_setting_set_read_only(self, g_variant_get_boolean(value));
+		return;
+	}
+	if (g_strcmp0(key, FWUPD_RESULT_KEY_BIOS_SETTING_AUTH_ENABLED) == 0) {
+		fwupd_bios_setting_set_auth_enabled(self, g_variant_get_boolean(value));
+		return;
+	}
+	if (g_strcmp0(key, FWUPD_RESULT_KEY_BIOS_SETTING_AUTH_MECHANISM) == 0) {
+		fwupd_bios_setting_set_auth_mechanism(self, g_variant_get_uint64(value));
+		return;
+	}
+	if (g_strcmp0(key, FWUPD_RESULT_KEY_BIOS_SETTING_AUTH_ROLE) == 0) {
+		fwupd_bios_setting_set_auth_role(self, g_variant_get_uint64(value));
 		return;
 	}
 }
@@ -817,6 +953,21 @@ fwupd_bios_setting_from_json(FwupdBiosSetting *self, JsonNode *json_node, GError
 	    json_object_get_int_member_with_default(obj,
 						    FWUPD_RESULT_KEY_BIOS_SETTING_READ_ONLY,
 						    0));
+	fwupd_bios_setting_set_auth_enabled(
+	    self,
+	    json_object_get_int_member_with_default(obj,
+						    FWUPD_RESULT_KEY_BIOS_SETTING_AUTH_ENABLED,
+						    0));
+	fwupd_bios_setting_set_auth_mechanism(
+	    self,
+	    json_object_get_int_member_with_default(obj,
+						    FWUPD_RESULT_KEY_BIOS_SETTING_AUTH_MECHANISM,
+						    0));
+	fwupd_bios_setting_set_auth_role(
+	    self,
+	    json_object_get_int_member_with_default(obj,
+						    FWUPD_RESULT_KEY_BIOS_SETTING_AUTH_ROLE,
+						    0));
 	/* success */
 	return TRUE;
 #else
@@ -869,7 +1020,8 @@ fwupd_bios_setting_to_json(FwupdBiosSetting *self, JsonBuilder *builder)
 		}
 	}
 	if (priv->kind == FWUPD_BIOS_SETTING_KIND_INTEGER ||
-	    priv->kind == FWUPD_BIOS_SETTING_KIND_STRING) {
+	    priv->kind == FWUPD_BIOS_SETTING_KIND_STRING ||
+	    priv->kind == FWUPD_BIOS_SETTING_KIND_AUTH) {
 		fwupd_common_json_add_int(builder,
 					  FWUPD_RESULT_KEY_BIOS_SETTING_LOWER_BOUND,
 					  priv->lower_bound);
@@ -880,6 +1032,16 @@ fwupd_bios_setting_to_json(FwupdBiosSetting *self, JsonBuilder *builder)
 			fwupd_common_json_add_int(builder,
 						  FWUPD_RESULT_KEY_BIOS_SETTING_SCALAR_INCREMENT,
 						  priv->scalar_increment);
+		} else if (priv->kind == FWUPD_BIOS_SETTING_KIND_AUTH) {
+			fwupd_common_json_add_int(builder,
+						  FWUPD_RESULT_KEY_BIOS_SETTING_AUTH_ENABLED,
+						  priv->auth_enabled);
+			fwupd_common_json_add_int(builder,
+						  FWUPD_RESULT_KEY_BIOS_SETTING_AUTH_MECHANISM,
+						  priv->mechanism);
+			fwupd_common_json_add_int(builder,
+						  FWUPD_RESULT_KEY_BIOS_SETTING_AUTH_ROLE,
+						  priv->role);
 		}
 	}
 }
@@ -920,13 +1082,22 @@ fwupd_bios_setting_to_string(FwupdBiosSetting *self)
 		}
 	}
 	if (priv->kind == FWUPD_BIOS_SETTING_KIND_INTEGER ||
-	    priv->kind == FWUPD_BIOS_SETTING_KIND_STRING) {
+	    priv->kind == FWUPD_BIOS_SETTING_KIND_STRING ||
+	    priv->kind == FWUPD_BIOS_SETTING_KIND_AUTH) {
 		fwupd_pad_kv_int(str, FWUPD_RESULT_KEY_BIOS_SETTING_LOWER_BOUND, priv->lower_bound);
 		fwupd_pad_kv_int(str, FWUPD_RESULT_KEY_BIOS_SETTING_UPPER_BOUND, priv->upper_bound);
 		if (priv->kind == FWUPD_BIOS_SETTING_KIND_INTEGER) {
 			fwupd_pad_kv_int(str,
 					 FWUPD_RESULT_KEY_BIOS_SETTING_SCALAR_INCREMENT,
 					 priv->scalar_increment);
+		} else if (priv->kind == FWUPD_BIOS_SETTING_KIND_AUTH) {
+			fwupd_pad_kv_str(str,
+					 FWUPD_RESULT_KEY_BIOS_SETTING_AUTH_ENABLED,
+					 priv->auth_enabled ? "True" : "False");
+			fwupd_pad_kv_int(str,
+					 FWUPD_RESULT_KEY_BIOS_SETTING_AUTH_MECHANISM,
+					 priv->mechanism);
+			fwupd_pad_kv_int(str, FWUPD_RESULT_KEY_BIOS_SETTING_AUTH_ROLE, priv->role);
 		}
 	}
 

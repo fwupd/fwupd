@@ -158,7 +158,7 @@ fu_bios_setting_set_current_value(FwupdBiosSetting *attr, GError **error)
 #define LENOVO_EXCLUDED		"[Excluded from boot order:"
 
 static void
-fu_bios_setting_fixup_read_only(FwupdBiosSetting *attr)
+fu_bios_setting_fixup_read_only(FwupdBiosSetting *attr, const gchar *driver)
 {
 	if (fwupd_bios_setting_get_kind(attr) == FWUPD_BIOS_SETTING_KIND_ENUMERATION) {
 		struct {
@@ -179,6 +179,11 @@ fu_bios_setting_fixup_read_only(FwupdBiosSetting *attr)
 				return;
 			}
 		}
+	} else if (fwupd_bios_setting_get_kind(attr) == FWUPD_BIOS_SETTING_KIND_AUTH) {
+		/* we can't enable from Linux unless already set from BIOS */
+		if (g_strcmp0(driver, "thinklmi") == 0 &&
+		    !fwupd_bios_setting_get_auth_enabled(attr))
+			fwupd_bios_setting_set_read_only(attr, TRUE);
 	}
 }
 
@@ -341,6 +346,14 @@ fu_bios_settings_set_folder_attributes(FuBiosSettings *self, FwupdBiosSetting *a
 	return TRUE;
 }
 
+static void
+fu_bios_settings_populate_id(FwupdBiosSetting *attr, const gchar *driver, const gchar *name)
+{
+	g_autofree gchar *id = g_strdup_printf("com.%s.%s", driver, name);
+	fwupd_bios_setting_set_id(attr, id);
+	fu_bios_setting_fixup_read_only(attr, driver);
+}
+
 static gboolean
 fu_bios_settings_populate_attribute(FuBiosSettings *self,
 				    const gchar *driver,
@@ -349,7 +362,6 @@ fu_bios_settings_populate_attribute(FuBiosSettings *self,
 				    GError **error)
 {
 	g_autoptr(FwupdBiosSetting) attr = NULL;
-	g_autofree gchar *id = NULL;
 
 	g_return_val_if_fail(FU_IS_BIOS_SETTINGS(self), FALSE);
 	g_return_val_if_fail(name != NULL, FALSE);
@@ -366,15 +378,70 @@ fu_bios_settings_populate_attribute(FuBiosSettings *self,
 			return FALSE;
 	}
 
-	id = g_strdup_printf("com.%s.%s", driver, name);
-	fwupd_bios_setting_set_id(attr, id);
-	fu_bios_setting_fixup_read_only(attr);
-
+	fu_bios_settings_populate_id(attr, driver, name);
 	g_ptr_array_add(self->attrs, g_object_ref(attr));
 
 	return TRUE;
 }
 
+static gboolean
+fu_bios_settings_populate_authentication(FuBiosSettings *self,
+					 const gchar *driver,
+					 const gchar *path,
+					 const gchar *name,
+					 GError **error)
+{
+	guint64 tmp;
+	g_autoptr(FwupdBiosSetting) attr = NULL;
+	g_autofree gchar *role = NULL;
+	g_autofree gchar *mechanism = NULL;
+
+	g_return_val_if_fail(FU_IS_BIOS_SETTINGS(self), FALSE);
+	g_return_val_if_fail(name != NULL, FALSE);
+	g_return_val_if_fail(path != NULL, FALSE);
+	g_return_val_if_fail(driver != NULL, FALSE);
+
+	attr = fwupd_bios_setting_new(name, path);
+	fwupd_bios_setting_set_kind(attr, FWUPD_BIOS_SETTING_KIND_AUTH);
+
+	tmp = fu_bios_setting_get_key_as_integer(attr, "min_password_length", error);
+	if (tmp == G_MAXUINT64)
+		return FALSE;
+	fwupd_bios_setting_set_lower_bound(attr, tmp);
+	tmp = fu_bios_setting_get_key_as_integer(attr, "max_password_length", error);
+	if (tmp == G_MAXUINT64)
+		return FALSE;
+	fwupd_bios_setting_set_upper_bound(attr, tmp);
+	tmp = fu_bios_setting_get_key_as_integer(attr, "is_enabled", error);
+	if (tmp == G_MAXUINT64)
+		return FALSE;
+	fwupd_bios_setting_set_auth_enabled(attr, tmp);
+
+	/* common information */
+	if (!fu_bios_setting_get_key(attr, "mechanism", &mechanism, error))
+		return FALSE;
+	if (g_strcmp0(mechanism, "password") == 0)
+		fwupd_bios_setting_set_auth_mechanism(attr, FWUPD_BIOS_AUTH_MECHANISM_PASSWORD);
+	else if (g_strcmp0(mechanism, "certificate") == 0)
+		fwupd_bios_setting_set_auth_mechanism(attr, FWUPD_BIOS_AUTH_MECHANISM_CERTIFICATE);
+	if (!fu_bios_setting_get_key(attr, "role", &role, error))
+		return FALSE;
+	if (g_strcmp0(role, "bios-admin") == 0)
+		fwupd_bios_setting_set_auth_role(attr, FWUPD_BIOS_AUTH_ROLE_BIOS_ADMIN);
+	else if (g_strcmp0(role, "hdd") == 0)
+		fwupd_bios_setting_set_auth_role(attr, FWUPD_BIOS_AUTH_ROLE_HDD);
+	else if (g_strcmp0(role, "nvme") == 0)
+		fwupd_bios_setting_set_auth_role(attr, FWUPD_BIOS_AUTH_ROLE_NVME);
+	else if (g_strcmp0(role, "system") == 0)
+		fwupd_bios_setting_set_auth_role(attr, FWUPD_BIOS_AUTH_ROLE_SYSTEM);
+	else if (g_strcmp0(role, "power-on") == 0)
+		fwupd_bios_setting_set_auth_role(attr, FWUPD_BIOS_AUTH_ROLE_POWER_ON);
+
+	fu_bios_settings_populate_id(attr, driver, name);
+	g_ptr_array_add(self->attrs, g_object_ref(attr));
+
+	return TRUE;
+}
 /**
  * fu_bios_settings_setup:
  * @self: a #FuBiosSettings
@@ -405,26 +472,30 @@ fu_bios_settings_setup(FuBiosSettings *self, GError **error)
 		return FALSE;
 
 	do {
-		g_autofree gchar *path = NULL;
-		g_autoptr(GDir) driver_dir = NULL;
+		g_autofree gchar *attributes_path = NULL;
+		g_autofree gchar *authentication_path = NULL;
+		g_autoptr(GDir) driver_attr_dir = NULL;
+		g_autoptr(GDir) driver_auth_dir = NULL;
 		const gchar *driver = g_dir_read_name(class_dir);
 		if (driver == NULL)
 			break;
-		path = g_build_filename(sysfsfwdir, driver, "attributes", NULL);
-		if (!g_file_test(path, G_FILE_TEST_IS_DIR)) {
-			g_debug("skipping non-directory %s", path);
+
+		/* read all settings */
+		attributes_path = g_build_filename(sysfsfwdir, driver, "attributes", NULL);
+		if (!g_file_test(attributes_path, G_FILE_TEST_IS_DIR)) {
+			g_debug("skipping non-directory %s", attributes_path);
 			continue;
 		}
-		driver_dir = g_dir_open(path, 0, error);
-		if (driver_dir == NULL)
+		driver_attr_dir = g_dir_open(attributes_path, 0, error);
+		if (driver_attr_dir == NULL)
 			return FALSE;
 		do {
-			const gchar *name = g_dir_read_name(driver_dir);
+			const gchar *name = g_dir_read_name(driver_attr_dir);
 			g_autofree gchar *full_path = NULL;
 			g_autoptr(GError) error_local = NULL;
 			if (name == NULL)
 				break;
-			full_path = g_build_filename(path, name, NULL);
+			full_path = g_build_filename(attributes_path, name, NULL);
 			if (!fu_bios_settings_populate_attribute(self,
 								 driver,
 								 full_path,
@@ -440,6 +511,39 @@ fu_bios_settings_setup(FuBiosSettings *self, GError **error)
 				return FALSE;
 			}
 		} while (++count);
+
+		/* read all authentication info */
+		authentication_path = g_build_filename(sysfsfwdir, driver, "authentication", NULL);
+		if (!g_file_test(authentication_path, G_FILE_TEST_IS_DIR)) {
+			g_debug("skipping non-directory %s", authentication_path);
+			continue;
+		}
+		driver_auth_dir = g_dir_open(authentication_path, 0, error);
+		if (driver_auth_dir == NULL)
+			return FALSE;
+		do {
+			const gchar *name = g_dir_read_name(driver_auth_dir);
+			g_autofree gchar *full_path = NULL;
+			g_autoptr(GError) error_local = NULL;
+			if (name == NULL)
+				break;
+			full_path = g_build_filename(authentication_path, name, NULL);
+			if (!fu_bios_settings_populate_authentication(self,
+								      driver,
+								      full_path,
+								      name,
+								      &error_local)) {
+				if (g_error_matches(error_local,
+						    FWUPD_ERROR,
+						    FWUPD_ERROR_NOT_SUPPORTED)) {
+					g_debug("%s is not supported", name);
+					continue;
+				}
+				g_propagate_error(error, g_steal_pointer(&error_local));
+				return FALSE;
+			}
+		} while (++count);
+
 	} while (TRUE);
 	g_debug("loaded %u BIOS settings", count);
 

@@ -60,6 +60,10 @@ fu_util_bios_setting_kind_to_string(FwupdBiosSettingKind kind)
 		/* TRANSLATORS: The BIOS setting accepts strings */
 		return _("String");
 	}
+	if (kind == FWUPD_BIOS_SETTING_KIND_AUTH) {
+		/* TRANSLATORS: The BIOS setting is for authentication */
+		return _("Authentication");
+	}
 	return NULL;
 }
 
@@ -128,15 +132,18 @@ fu_util_bios_setting_to_string(FwupdBiosSetting *setting, guint idt)
 		fu_string_append(str, idt + 1, _("Setting type"), tmp);
 	}
 
-	tmp = fwupd_bios_setting_get_current_value(setting);
-	if (tmp != NULL) {
-		current_value = g_strdup(tmp);
-	} else {
-		/* TRANSLATORS: tell a user how to get information */
-		current_value = g_strdup_printf(_("Run without '%s' to see"), "--no-authenticate");
+	if (type != FWUPD_BIOS_SETTING_KIND_AUTH) {
+		tmp = fwupd_bios_setting_get_current_value(setting);
+		if (tmp != NULL) {
+			current_value = g_strdup(tmp);
+		} else {
+			/* TRANSLATORS: tell a user how to get information */
+			current_value =
+			    g_strdup_printf(_("Run without '%s' to see"), "--no-authenticate");
+		}
+		/* TRANSLATORS: current value of a BIOS setting */
+		fu_string_append(str, idt + 1, _("Current Value"), current_value);
 	}
-	/* TRANSLATORS: current value of a BIOS setting */
-	fu_string_append(str, idt + 1, _("Current Value"), current_value);
 
 	fu_util_bios_setting_update_description(setting);
 	tmp = fwupd_bios_setting_get_description(setting);
@@ -155,7 +162,8 @@ fu_util_bios_setting_to_string(FwupdBiosSetting *setting, guint idt)
 	/* TRANSLATORS: BIOS setting is read only */
 	fu_string_append(str, idt + 1, _("Read Only"), tmp);
 
-	if (type == FWUPD_BIOS_SETTING_KIND_INTEGER || type == FWUPD_BIOS_SETTING_KIND_STRING) {
+	if (type == FWUPD_BIOS_SETTING_KIND_INTEGER || type == FWUPD_BIOS_SETTING_KIND_STRING ||
+	    type == FWUPD_BIOS_SETTING_KIND_AUTH) {
 		g_autofree gchar *lower =
 		    g_strdup_printf("%" G_GUINT64_FORMAT,
 				    fwupd_bios_setting_get_lower_bound(setting));
@@ -178,7 +186,7 @@ fu_util_bios_setting_to_string(FwupdBiosSetting *setting, guint idt)
 				/* TRANSLATORS: Scalar increment for integer BIOS setting */
 				fu_string_append(str, idt + 1, _("Scalar Increment"), scalar);
 			}
-		} else {
+		} else if (type == FWUPD_BIOS_SETTING_KIND_STRING) {
 			if (lower != NULL) {
 				/* TRANSLATORS: Shortest valid string for BIOS setting */
 				fu_string_append(str, idt + 1, _("Minimum length"), lower);
@@ -186,6 +194,73 @@ fu_util_bios_setting_to_string(FwupdBiosSetting *setting, guint idt)
 			if (upper != NULL) {
 				/* TRANSLATORS: Longest valid string for BIOS setting */
 				fu_string_append(str, idt + 1, _("Maximum length"), upper);
+			}
+		} else {
+			if (lower != NULL) {
+				/* TRANSLATORS: Shortest valid string for BIOS authentication
+				 * setting */
+				fu_string_append(str, idt + 1, _("Min password length"), lower);
+			}
+			if (upper != NULL) {
+				/* TRANSLATORS: Longest valid string for BIOS authentication setting
+				 */
+				fu_string_append(str, idt + 1, _("Max password length"), upper);
+			}
+
+			if (fwupd_bios_setting_get_auth_enabled(setting)) {
+				/* TRANSLATORS: item is TRUE */
+				tmp = _("True");
+			} else {
+				/* TRANSLATORS: item is FALSE */
+				tmp = _("False");
+			}
+			/* TRANSLATORS: BIOS authentication setting is enabled */
+			fu_string_append(str, idt + 1, _("Auth Required"), tmp);
+
+			switch (fwupd_bios_setting_get_auth_mechanism(setting)) {
+			case FWUPD_BIOS_AUTH_MECHANISM_PASSWORD:
+				/* TRANSLATORS: BIOS Authentication mechanism */
+				tmp = _("Password");
+				break;
+			case FWUPD_BIOS_AUTH_MECHANISM_CERTIFICATE:
+				/* TRANSLATORS: BIOS Authentication mechanism */
+				tmp = _("Certificate");
+				break;
+			default:
+				tmp = NULL;
+			}
+			if (tmp) {
+				/* TRANSLATORS: BIOS authentication mechanism */
+				fu_string_append(str, idt + 1, _("Auth Mechanism"), tmp);
+			}
+
+			switch (fwupd_bios_setting_get_auth_role(setting)) {
+			case FWUPD_BIOS_AUTH_ROLE_BIOS_ADMIN:
+				/* TRANSLATORS: BIOS Authentication purpose */
+				tmp = _("BIOS Admin");
+				break;
+			case FWUPD_BIOS_AUTH_ROLE_HDD:
+				/* TRANSLATORS: BIOS Authentication purpose */
+				tmp = _("Hard Drive");
+				break;
+			case FWUPD_BIOS_AUTH_ROLE_POWER_ON:
+				/* TRANSLATORS: BIOS Authentication purpose */
+				tmp = _("Power On");
+				break;
+			case FWUPD_BIOS_AUTH_ROLE_NVME:
+				/* TRANSLATORS: BIOS Authentication purpose */
+				tmp = _("NVME");
+				break;
+			case FWUPD_BIOS_AUTH_ROLE_SYSTEM:
+				/* TRANSLATORS: BIOS Authentication purpose */
+				tmp = _("System");
+				break;
+			default:
+				tmp = NULL;
+			}
+			if (tmp) {
+				/* TRANSLATORS: BIOS authentication purpose */
+				fu_string_append(str, idt + 1, _("Auth Role"), tmp);
 			}
 		}
 	} else if (type == FWUPD_BIOS_SETTING_KIND_ENUMERATION) {

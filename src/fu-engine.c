@@ -886,6 +886,41 @@ fu_engine_modify_single_bios_setting(FuEngine *self,
 	return fu_engine_update_bios_setting(attr, tmp, force_ro, error);
 }
 
+static gboolean
+fu_engine_set_bios_password(FuEngine *self, GError **error)
+{
+	g_autoptr(FuBiosSettings) bios_settings = fu_context_get_bios_settings(self->ctx);
+	g_autoptr(GPtrArray) items = fu_bios_settings_get_all(bios_settings);
+
+	for (guint i = 0; i < items->len; i++) {
+		FwupdBiosSetting *setting = g_ptr_array_index(items, i);
+		if (fwupd_bios_setting_get_kind(setting) != FWUPD_BIOS_SETTING_KIND_AUTH)
+			continue;
+		if (fwupd_bios_setting_get_auth_role(setting) != FWUPD_BIOS_AUTH_ROLE_BIOS_ADMIN)
+			continue;
+		if (!fwupd_bios_setting_get_auth_enabled(setting))
+			continue;
+		if (fwupd_bios_setting_get_auth_mechanism(setting) ==
+		    FWUPD_BIOS_AUTH_MECHANISM_CERTIFICATE) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
+					    "certificate based authentication is not supported");
+			return FALSE;
+		}
+		if (fwupd_bios_setting_get_auth_mechanism(setting) ==
+		    FWUPD_BIOS_AUTH_MECHANISM_PASSWORD) {
+			g_set_error_literal(
+			    error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "password based authentication is not currently supported");
+			return FALSE;
+		}
+	}
+	return TRUE;
+}
+
 /**
  * fu_engine_modify_bios_settings:
  * @self: a #FuEngine
@@ -911,6 +946,10 @@ fu_engine_modify_bios_settings(FuEngine *self,
 	g_return_val_if_fail(FU_IS_ENGINE(self), FALSE);
 	g_return_val_if_fail(settings != NULL, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	/* do we have a bios-admin password set */
+	if (!fu_engine_set_bios_password(self, error))
+		return FALSE;
 
 	g_hash_table_iter_init(&iter, settings);
 	while (g_hash_table_iter_next(&iter, &key, &value)) {

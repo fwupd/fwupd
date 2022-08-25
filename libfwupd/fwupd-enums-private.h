@@ -582,5 +582,31 @@ G_BEGIN_DECLS
  * The D-Bus type signature string is 'b' i.e. a boolean.
  **/
 #define FWUPD_RESULT_KEY_BIOS_SETTING_READ_ONLY "BiosSettingReadOnly"
+/**
+ * FWUPD_RESULT_KEY_BIOS_SETTING_AUTH_ENABLED:
+ *
+ * Result key to represent whether BIOS authentication setting is in use.
+ *
+ * The D-Bus type signature string is 'b' i.e. a boolean.
+ **/
+#define FWUPD_RESULT_KEY_BIOS_SETTING_AUTH_ENABLED "BiosSettingAuthEnabled"
+/**
+ * FWUPD_RESULT_KEY_BIOS_SETTING_AUTH_MECHANISM:
+ *
+ * Result key to represent the BIOS authentication setting authorization
+ * mechanism.
+ *
+ * The D-Bus type signature string is 't' i.e. a unsigned 64 bit integer.
+ **/
+#define FWUPD_RESULT_KEY_BIOS_SETTING_AUTH_MECHANISM "BiosSettingAuthMechanism"
+/**
+ * FWUPD_RESULT_KEY_BIOS_SETTING_AUTH_ROLE:
+ *
+ * Result key to represent the BIOS authentication setting role, describing
+ * how the authentication is used.
+ *
+ * The D-Bus type signature string is 't' i.e. a unsigned 64 bit integer.
+ **/
+#define FWUPD_RESULT_KEY_BIOS_SETTING_AUTH_ROLE "BiosSettingAuthRole"
 
 G_END_DECLS

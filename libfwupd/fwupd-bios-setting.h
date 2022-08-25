@@ -35,10 +35,10 @@ struct _FwupdBiosSettingClass {
 /**
  * FwupdBiosSettingKind:
  * @FWUPD_BIOS_SETTING_KIND_UNKNOWN:		BIOS setting type is unknown
- * @FWUPD_BIOS_SETTING_KIND_ENUMERATION:		BIOS setting that has enumerated possible
- *values
+ * @FWUPD_BIOS_SETTING_KIND_ENUMERATION:	BIOS setting that has enumerated possible values
  * @FWUPD_BIOS_SETTING_KIND_INTEGER:		BIOS setting that is an integer
  * @FWUPD_BIOS_SETTING_KIND_STRING:		BIOS setting that accepts a string
+ * @FWUPD_BIOS_SETTING_KIND_AUTH:		BIOS setting used for managing authentication
  *
  * The type of BIOS setting.
  **/
@@ -47,9 +47,48 @@ typedef enum {
 	FWUPD_BIOS_SETTING_KIND_ENUMERATION = 1, /* Since: 1.8.4 */
 	FWUPD_BIOS_SETTING_KIND_INTEGER = 2,	 /* Since: 1.8.4 */
 	FWUPD_BIOS_SETTING_KIND_STRING = 3,	 /* Since: 1.8.4 */
+	FWUPD_BIOS_SETTING_KIND_AUTH = 4,	 /* Since: 1.8.4 */
 	/*< private >*/
-	FWUPD_BIOS_SETTING_KIND_LAST = 4 /* perhaps increased in the future */
+	FWUPD_BIOS_SETTING_KIND_LAST = 5 /* perhaps increased in the future */
 } FwupdBiosSettingKind;
+
+/**
+ * FwupdBiosAuthRole:
+ * @FWUPD_BIOS_AUTH_ROLE_UNKNOWN:	BIOS authentication role is unknown
+ * @FWUPD_BIOS_AUTH_ROLE_POWER_ON:	BIOS authentication role is power-on
+ * @FWUPD_BIOS_AUTH_ROLE_SYSTEM:	BIOS authentication role is system
+ * @FWUPD_BIOS_AUTH_ROLE_BIOS_ADMIN:	BIOS authentication role is bios-admin
+ * @FWUPD_BIOS_AUTH_ROLE_NVME:		BIOS authentication role is nvme
+ * @FWUPD_BIOS_AUTH_ROLE_HDD:		BIOS authentication role is hdd
+ *
+ * The role of BIOS authentication.
+ **/
+typedef enum {
+	FWUPD_BIOS_AUTH_ROLE_UNKNOWN = 0,    /* Since: 1.8.4 */
+	FWUPD_BIOS_AUTH_ROLE_POWER_ON = 1,   /* Since: 1.8.4 */
+	FWUPD_BIOS_AUTH_ROLE_SYSTEM = 2,     /* Since: 1.8.4 */
+	FWUPD_BIOS_AUTH_ROLE_BIOS_ADMIN = 3, /* Since: 1.8.4 */
+	FWUPD_BIOS_AUTH_ROLE_NVME = 4,	     /* Since: 1.8.4 */
+	FWUPD_BIOS_AUTH_ROLE_HDD = 5,	     /* Since: 1.8.4 */
+	/*< private >*/
+	FWUPD_BIOS_AUTH_ROLE_LAST = 6 /* perhaps increased in the future */
+} FwupdBiosAuthRole;
+
+/**
+ * FwupdBiosAuthMechanism:
+ * @FWUPD_BIOS_AUTH_MECHANISM_UNKNOWN:	Unknown how BIOS authentication is performed
+ * @FWUPD_BIOS_AUTH_MECHANISM_PASSWORD:	BIOS authentication is performed with password
+ * @FWUPD_BIOS_AUTH_MECHANISM_CERTIFICATE:	BIOS authentication is performed with certificate
+ *
+ * How BIOS authentication is performed
+ **/
+typedef enum {
+	FWUPD_BIOS_AUTH_MECHANISM_UNKNOWN = 0,	   /* Since: 1.8.4 */
+	FWUPD_BIOS_AUTH_MECHANISM_PASSWORD = 1,	   /* Since: 1.8.4 */
+	FWUPD_BIOS_AUTH_MECHANISM_CERTIFICATE = 2, /* Since: 1.8.4 */
+	/*< private >*/
+	FWUPD_BIOS_AUTH_MECHANISM_LAST = 3 /* perhaps increased in the future */
+} FwupdBiosAuthMechanism;
 
 FwupdBiosSetting *
 fwupd_bios_setting_new(const gchar *name, const gchar *path);
@@ -115,5 +154,18 @@ const gchar *
 fwupd_bios_setting_get_id(FwupdBiosSetting *self);
 void
 fwupd_bios_setting_set_id(FwupdBiosSetting *self, const gchar *id);
+
+FwupdBiosAuthRole
+fwupd_bios_setting_get_auth_role(FwupdBiosSetting *self);
+void
+fwupd_bios_setting_set_auth_role(FwupdBiosSetting *self, FwupdBiosAuthRole role);
+gboolean
+fwupd_bios_setting_get_auth_enabled(FwupdBiosSetting *self);
+void
+fwupd_bios_setting_set_auth_enabled(FwupdBiosSetting *self, gboolean auth_enabled);
+FwupdBiosAuthMechanism
+fwupd_bios_setting_get_auth_mechanism(FwupdBiosSetting *self);
+void
+fwupd_bios_setting_set_auth_mechanism(FwupdBiosSetting *self, FwupdBiosAuthMechanism mechanism);
 
 G_END_DECLS

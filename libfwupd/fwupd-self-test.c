@@ -1383,10 +1383,12 @@ fwupd_bios_settings_func(void)
 	g_autofree gchar *str1 = NULL;
 	g_autofree gchar *str2 = NULL;
 	g_autofree gchar *str3 = NULL;
+	g_autofree gchar *str4 = NULL;
 	g_autofree gchar *json1 = NULL;
 	g_autofree gchar *json2 = NULL;
 	g_autoptr(FwupdBiosSetting) attr1 = fwupd_bios_setting_new("foo", "/path/to/bar");
 	g_autoptr(FwupdBiosSetting) attr2 = NULL;
+	g_autoptr(FwupdBiosSetting) attr3 = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GVariant) data1 = NULL;
 	g_autoptr(GVariant) data2 = NULL;
@@ -1425,11 +1427,31 @@ fwupd_bios_settings_func(void)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
-	/* roundtrip GVariant */
-	data1 = fwupd_bios_setting_to_variant(attr1, TRUE);
-	attr2 = fwupd_bios_setting_from_variant(data1);
+	attr2 = fwupd_bios_setting_new("Admin", "/path/to/Admin");
+	fwupd_bios_setting_set_name(attr2, "Admin");
+	fwupd_bios_setting_set_kind(attr2, FWUPD_BIOS_SETTING_KIND_AUTH);
+	fwupd_bios_setting_set_auth_mechanism(attr2, FWUPD_BIOS_AUTH_MECHANISM_PASSWORD);
+	fwupd_bios_setting_set_auth_role(attr2, FWUPD_BIOS_AUTH_ROLE_BIOS_ADMIN);
+	fwupd_bios_setting_set_auth_enabled(attr2, TRUE);
+	g_assert_cmpint(fwupd_bios_setting_get_kind(attr2), ==, FWUPD_BIOS_SETTING_KIND_AUTH);
 	str2 = fwupd_bios_setting_to_string(attr2);
 	ret = fu_test_compare_lines(str2,
+				    "  Name:                 Admin\n"
+				    "  Filename:             /path/to/Admin\n"
+				    "  BiosSettingType:      4\n"
+				    "  BiosSettingReadOnly:  False\n"
+				    "  BiosSettingAuthEnabled: True\n"
+				    "  BiosSettingAuthMechanism: 1\n"
+				    "  BiosSettingAuthRole:  3\n",
+				    &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* roundtrip GVariant */
+	data1 = fwupd_bios_setting_to_variant(attr1, TRUE);
+	attr3 = fwupd_bios_setting_from_variant(data1);
+	str3 = fwupd_bios_setting_to_string(attr3);
+	ret = fu_test_compare_lines(str3,
 				    "  Name:                 UEFISecureBoot\n"
 				    "  Description:          Controls Secure boot\n"
 				    "  Filename:             /path/to/bar\n"
@@ -1475,8 +1497,8 @@ fwupd_bios_settings_func(void)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
-	str3 = fwupd_bios_setting_to_string(attr2);
-	ret = fu_test_compare_lines(str3, str1, &error);
+	str4 = fwupd_bios_setting_to_string(attr2);
+	ret = fu_test_compare_lines(str4, str1, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 

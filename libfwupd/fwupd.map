@@ -807,6 +807,9 @@ LIBFWUPD_1.8.4 {
     fwupd_bios_setting_array_from_variant;
     fwupd_bios_setting_from_json;
     fwupd_bios_setting_from_variant;
+    fwupd_bios_setting_get_auth_enabled;
+    fwupd_bios_setting_get_auth_mechanism;
+    fwupd_bios_setting_get_auth_role;
     fwupd_bios_setting_get_current_value;
     fwupd_bios_setting_get_description;
     fwupd_bios_setting_get_id;
@@ -822,6 +825,9 @@ LIBFWUPD_1.8.4 {
     fwupd_bios_setting_has_possible_value;
     fwupd_bios_setting_map_possible_value;
     fwupd_bios_setting_new;
+    fwupd_bios_setting_set_auth_enabled;
+    fwupd_bios_setting_set_auth_mechanism;
+    fwupd_bios_setting_set_auth_role;
     fwupd_bios_setting_set_current_value;
     fwupd_bios_setting_set_description;
     fwupd_bios_setting_set_id;
