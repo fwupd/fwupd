@@ -1,0 +1,16 @@
+[BLOCK]
+Plugin = android_boot
+
+# SHIFT6mq ABL A
+[DRIVE\UUID_c49183ed-aaec-9bf5-760a-66330fbcffc1&LABEL_abl-a]
+Flags = updatable,signed-payload
+Vendor = SHIFT GmbH
+VendorId = eco.shift
+AndroidBootVersionProperty = androidboot.abl.revision
+
+# SHIFT6mq ABL B
+[DRIVE\UUID_3d7b21e8-048b-db0b-0c18-d07a9bb32f2d&LABEL_abl-b]
+Flags = updatable,signed-payload
+Vendor = SHIFT GmbH
+VendorId = eco.shift
+AndroidBootVersionProperty = androidboot.abl.revision

@@ -18,6 +18,7 @@ option('lzma', type: 'feature', description : 'LZMA support', deprecated: {'true
 option('cbor', type: 'feature', description : 'CBOR support for coSWID and uSWID')
 option('plugin_amt', type : 'feature', description : 'Intel AMT support', deprecated: {'true': 'enabled', 'false': 'disabled'})
 option('plugin_acpi_phat', type : 'feature', description : 'ACPI PHAT support', deprecated: {'true': 'enabled', 'false': 'disabled'})
+option('plugin_android_boot', type : 'feature', description : 'Android Boot support')
 option('plugin_bcm57xx', type : 'feature', description : 'BCM57xx support', deprecated: {'true': 'enabled', 'false': 'disabled'})
 option('plugin_cfu', type : 'feature', description : 'CFU support', deprecated: {'true': 'enabled', 'false': 'disabled'})
 option('plugin_cpu', type : 'feature', description : 'CPU support', deprecated: {'true': 'enabled', 'false': 'disabled'})
