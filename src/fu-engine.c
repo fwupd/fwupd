@@ -6355,7 +6355,7 @@ fu_engine_attrs_calculate_hsi_for_chassis(FuEngine *self)
 	/* get chassis type from SMBIOS data */
 	val = fu_context_get_smbios_integer(self->ctx, FU_SMBIOS_STRUCTURE_TYPE_CHASSIS, 0x05);
 	if (val == G_MAXUINT)
-		return g_strdup("HSI-INVALID:chassis");
+		return g_strdup("HSI:INVALID:chassis");
 
 	/* verify HSI makes sense for this chassis type */
 	switch (val) {
@@ -6384,7 +6384,7 @@ fu_engine_attrs_calculate_hsi_for_chassis(FuEngine *self)
 	}
 
 	/* failed */
-	return g_strdup_printf("HSI-INVALID:chassis[0x%02x]", val);
+	return g_strdup_printf("HSI:INVALID:chassis[0x%02x]", val);
 }
 
 static gboolean
