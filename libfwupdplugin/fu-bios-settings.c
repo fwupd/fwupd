@@ -417,7 +417,7 @@ fu_bios_settings_combination_fixups(FuBiosSettings *self)
 	    fu_bios_settings_get_attr(self, "com.thinklmi.Allow3rdPartyUEFICA");
 
 	if (thinklmi_sb != NULL && thinklmi_3rd != NULL) {
-		const gchar *val = fwupd_bios_setting_get_current_value(thinklmi_sb);
+		const gchar *val = fwupd_bios_setting_get_current_value(thinklmi_3rd);
 		if (g_strcmp0(val, "Disable") == 0) {
 			g_debug("Disabling changing %s since %s is %s",
 				fwupd_bios_setting_get_name(thinklmi_sb),
