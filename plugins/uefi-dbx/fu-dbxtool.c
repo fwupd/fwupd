@@ -219,6 +219,7 @@ main(int argc, char *argv[])
 				fu_efi_signature_kind_to_string(fu_efi_signature_get_kind(sig)),
 				checksum);
 		}
+		g_debug("version: %s", fu_firmware_get_version(FU_FIRMWARE(dbx)));
 		return EXIT_SUCCESS;
 	}
 
