@@ -89,7 +89,6 @@ fu_util_bios_setting_to_string(FwupdBiosSetting *setting, guint idt)
 	const gchar *tmp;
 	FwupdBiosSettingKind type;
 	g_autofree gchar *current_value = NULL;
-	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GString) str = g_string_new(NULL);
 
 	if (g_getenv("FWUPD_VERBOSE") != NULL) {
