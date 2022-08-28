@@ -159,7 +159,7 @@ fu_plugin_tpm_add_security_attr_eventlog(FuPlugin *plugin, FuSecurityAttrs *attr
 	fu_security_attrs_append(attrs, attr);
 
 	/* check reconstructed to PCR0 */
-	if (priv->ev_items == NULL || priv->bios_device == NULL) {
+	if (priv->ev_items == NULL) {
 		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_FOUND);
 		return;
 	}
