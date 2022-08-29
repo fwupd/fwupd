@@ -140,6 +140,16 @@ A safe baseline for security should be HSI-1. If your system isn't at least meet
 
 The command line tool `fwupdmgr security` included with fwupd 1.8.4 or later will make individual recommendations on what you can do for individual test failures.  GUI tools built against `libfwupd` 1.8.4 or later may also make these recommendation as well.
 
+<a id="not-enough-info"></a>
+
+## [Not enough information](#not-enough-info)
+
+HSI calculations require that the SOC, firmware, and kernel provide enough data to the fwupd daemon about the state of the system.  If any HSI test that runs on the system declares it's *missing data* then the client will show a message like this:
+
+**Not enough data was provided to make an HSI calculation.**
+
+The HSI level will also be set to `INVALID` indicating this.
+
 <a id="tests"></a>
 
 ## [Tests included in fwupd](#tests)

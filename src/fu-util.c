@@ -3456,16 +3456,20 @@ fu_util_security(FuUtilPrivate *priv, gchar **values, GError **error)
 
 	for (guint j = 0; j < attrs->len; j++) {
 		FwupdSecurityAttr *attr = g_ptr_array_index(attrs, j);
+		g_autofree gchar *err_str = NULL;
 
 		if (!fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA))
 			continue;
 		if (priv->flags & FWUPD_INSTALL_FLAG_FORCE)
 			continue;
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "Not enough data was provided to make an HSI calculation. "
-				    "To ignore this warning, use --force");
+		err_str = g_strdup_printf(
+		    "\n%s\n » %s\n%s",
+		    /* TRANSLATORS: error message to tell someone they can't use this feature */
+		    _("Not enough data was provided to make an HSI calculation."),
+		    "https://fwupd.github.io/hsi.html#not-enough-info",
+		    /* TRANSLATORS: message to tell someone how to ignore error */
+		    _("To ignore this warning, use --force"));
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, err_str);
 		return FALSE;
 	}
 
