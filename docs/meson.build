@@ -40,7 +40,7 @@ if gidocgen_dep.found() and docs_python_deps.allowed() and gidocgen_app.found() 
     ],
     build_by_default: true,
     install: true,
-    install_dir: join_paths(datadir, 'doc'),
+    install_dir: join_paths(datadir, 'doc', 'fwupd'),
   )
 
   custom_target('doc-fwupdplugin',
@@ -66,15 +66,24 @@ if gidocgen_dep.found() and docs_python_deps.allowed() and gidocgen_app.found() 
     ],
     build_by_default: true,
     install: true,
-    install_dir: join_paths(datadir, 'doc'),
+    install_dir: join_paths(datadir, 'doc', 'fwupd'),
   )
  install_data(['index.html', 'hsi.html'],
     install_dir : join_paths(datadir, 'doc', 'fwupd')
   )
  install_data(['urlmap_fwupd.js'],
-    install_dir: join_paths(datadir, 'doc', 'libfwupd')
+    install_dir: join_paths(datadir, 'doc', 'fwupd', 'libfwupd')
   )
  install_data(['urlmap_fwupdplugin.js'],
-    install_dir: join_paths(datadir, 'doc', 'libfwupdplugin')
+    install_dir: join_paths(datadir, 'doc', 'fwupd', 'libfwupdplugin')
+  )
+  #make devhelp work
+  install_symlink('libfwupd',
+    install_dir: join_paths(datadir, 'doc',),
+    pointing_to: join_paths('fwupd', 'libfwupd'),
+  )
+  install_symlink('libfwupdplugin',
+    install_dir: join_paths(datadir, 'doc',),
+    pointing_to: join_paths('fwupd', 'libfwupdplugin'),
   )
 endif

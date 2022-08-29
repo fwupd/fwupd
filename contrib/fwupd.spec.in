@@ -547,6 +547,8 @@ done
 %files devel
 %{_datadir}/gir-1.0/Fwupd-2.0.gir
 %{_datadir}/gir-1.0/FwupdPlugin-1.0.gir
+%{_datadir}/doc/fwupd/libfwupdplugin
+%{_datadir}/doc/fwupd/libfwupd
 %{_datadir}/doc/libfwupdplugin
 %{_datadir}/doc/libfwupd
 %{_datadir}/vala/vapi
