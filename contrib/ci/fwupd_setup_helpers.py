@@ -17,7 +17,7 @@ ENDC = "\033[0m"
 MINIMUM_MARKDOWN = (3, 3, 3)
 
 # Minimum meson required
-MINIMUM_MESON = "0.60.0"
+MINIMUM_MESON = "0.61.0"
 
 
 def get_possible_profiles():

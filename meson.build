@@ -1,7 +1,7 @@
 project('fwupd', 'c',
   version: '1.8.4',
   license: 'LGPL-2.1+',
-  meson_version: '>=0.60.0',
+  meson_version: '>=0.61.0',
   default_options: ['warning_level=2', 'c_std=c99'],
 )
 
