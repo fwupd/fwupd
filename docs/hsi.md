@@ -63,6 +63,9 @@ Orthogonal to the security features provided by the firmware there are other sec
 It would not make sense to have *have updates on the LVFS* as a requirement for a specific security level as this would mean offline the platform might be a higher level initially but as soon as it is brought online it is downgraded which would be really confusing to users.
 The *core* security level will not change at Operating System runtime, but the suffix may.
 
+**More information**
+Additional information about specific bugs and debugging steps are available on the [fwupd wiki](https://github.com/fwupd/fwupd/wiki/Host-security-ID-runtime-issues).
+
 <a id="hsi-level0"></a>
 
 ### [HSI:0 (Insecure State)](#hsi-level0)
@@ -128,6 +131,14 @@ A runtime security issue detected.
 - Unencrypted [swap partition](https://wiki.archlinux.org/index.php/Dm-crypt/Swap_encryption). *[v1.5.0]*
 
 - The installed fwupd is running with [custom or modified plugins](https://github.com/fwupd/fwupd/tree/main/plugins). *[v1.5.0]*
+
+<a id="low-security-level"></a>
+
+## [Low Security Level](#low-security-level)
+
+A safe baseline for security should be HSI-1. If your system isn't at least meeting this criteria, you should adjust firmware setup options, contact your manufacturer or replace the hardware.
+
+The command line tool `fwupdmgr security` included with fwupd 1.8.4 or later will make individual recommendations on what you can do for individual test failures.  GUI tools built against `libfwupd` 1.8.4 or later may also make these recommendation as well.
 
 <a id="tests"></a>
 
@@ -453,6 +464,9 @@ If extra events are included in the event log, or some are missing, the reconsti
 - `not-found`: no TPM hardware could be found
 
 To meet HSI-2 on systems that run this test, the result must be `valid`. *[v1.5.0]*
+
+**More information**
+Additional information about specific bugs and debugging steps are available on the [fwupd wiki](https://github.com/fwupd/fwupd/wiki/TPM-PCR0-differs-from-reconstruction).
 
 **References:**
 

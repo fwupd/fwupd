@@ -2512,7 +2512,7 @@ fu_util_security_attrs_to_string(GPtrArray *attrs, FuSecurityAttrToStringFlags s
 		    "\n%s\n » %s\n",
 		    /* TRANSLATORS: this is instructions on how to improve the HSI security level */
 		    _("This system has a low HSI security level."),
-		    "https://github.com/fwupd/fwupd/wiki/Low-host-security-level");
+		    "https://fwupd.github.io/hsi.html#low-security-level");
 	}
 	if (runtime_help) {
 		g_string_append_printf(
@@ -2520,7 +2520,7 @@ fu_util_security_attrs_to_string(GPtrArray *attrs, FuSecurityAttrToStringFlags s
 		    "\n%s\n » %s\n",
 		    /* TRANSLATORS: this is instructions on how to improve the HSI suffix */
 		    _("This system has HSI runtime issues."),
-		    "https://github.com/fwupd/fwupd/wiki/Host-security-ID-runtime-issues");
+		    "https://fwupd.github.io/hsi.html#hsi-runtime-suffix");
 	}
 
 	if (pcr0_help) {
@@ -2529,7 +2529,7 @@ fu_util_security_attrs_to_string(GPtrArray *attrs, FuSecurityAttrToStringFlags s
 		    "\n%s\n » %s\n",
 		    /* TRANSLATORS: this is more background on a security measurement problem */
 		    _("The TPM PCR0 differs from reconstruction."),
-		    "https://github.com/fwupd/fwupd/wiki/TPM-PCR0-differs-from-reconstruction");
+		    "https://fwupd.github.io/hsi.html#pcr0-tpm-event-log-reconstruction");
 	}
 
 	return g_string_free(str, FALSE);
