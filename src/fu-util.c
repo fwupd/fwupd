@@ -3534,14 +3534,16 @@ fu_util_security(FuUtilPrivate *priv, gchar **values, GError **error)
 	}
 
 	/* any things we can fix? */
-	for (guint j = 0; j < attrs->len; j++) {
-		FwupdSecurityAttr *attr = g_ptr_array_index(attrs, j);
-		if (!fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS) &&
-		    fwupd_security_attr_get_bios_setting_id(attr) != NULL &&
-		    fwupd_security_attr_get_bios_setting_current_value(attr) != NULL &&
-		    fwupd_security_attr_get_bios_setting_target_value(attr) != NULL) {
-			if (!fu_util_security_modify_bios_setting(priv, attr, error))
-				return FALSE;
+	if (priv->flags & FWUPD_INSTALL_FLAG_FORCE) {
+		for (guint j = 0; j < attrs->len; j++) {
+			FwupdSecurityAttr *attr = g_ptr_array_index(attrs, j);
+			if (!fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS) &&
+			    fwupd_security_attr_get_bios_setting_id(attr) != NULL &&
+			    fwupd_security_attr_get_bios_setting_current_value(attr) != NULL &&
+			    fwupd_security_attr_get_bios_setting_target_value(attr) != NULL) {
+				if (!fu_util_security_modify_bios_setting(priv, attr, error))
+					return FALSE;
+			}
 		}
 	}
 
