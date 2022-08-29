@@ -254,8 +254,9 @@ fu_cpu_device_probe_extended_features(FuDevice *device, GError **error)
 	FuCpuDevice *self = FU_CPU_DEVICE(device);
 	guint32 ebx = 0;
 	guint32 ecx = 0;
+	guint32 edx = 0;
 
-	if (!fu_common_cpuid(0x7, NULL, &ebx, &ecx, NULL, error))
+	if (!fu_common_cpuid(0x7, NULL, &ebx, &ecx, &edx, error))
 		return FALSE;
 	if ((ebx >> 20) & 0x1)
 		self->flags |= FU_CPU_DEVICE_FLAG_SMAP;
@@ -263,7 +264,7 @@ fu_cpu_device_probe_extended_features(FuDevice *device, GError **error)
 		self->flags |= FU_CPU_DEVICE_FLAG_SHSTK;
 	if ((ecx >> 13) & 0x1)
 		self->flags |= FU_CPU_DEVICE_FLAG_TME;
-	if ((ecx >> 20) & 0x1)
+	if ((edx >> 20) & 0x1)
 		self->flags |= FU_CPU_DEVICE_FLAG_IBT;
 	return TRUE;
 }
