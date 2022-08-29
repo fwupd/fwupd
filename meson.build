@@ -581,5 +581,8 @@ endif
 subdir('docs')
 
 if build_daemon and libsystemd.found()
-  meson.add_install_script('meson_post_install.sh', systemdunitdir)
+  install_symlink('fwupd-offline-update.service',
+    install_dir: join_paths(systemdunitdir, 'system-update.target.wants'),
+    pointing_to: join_paths('..', 'fwupd-offline-update.service')
+  )
 endif

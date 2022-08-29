@@ -110,11 +110,10 @@ fwupdmgr = executable(
 
 # for compatibility
 if get_option('compat_cli')
-meson.add_install_script(
-  'sh', '-c',
-  'ln -fs fwupdmgr @0@@1@'.format(
-      '${DESTDIR}',
-      join_paths(get_option('prefix'), get_option('bindir'), 'fwupdagent')))
+  install_symlink('fwupdagent',
+    install_dir: join_paths(get_option('prefix'), get_option('bindir')),
+    pointing_to: 'fwupdmgr',
+  )
 endif
 endif
 
