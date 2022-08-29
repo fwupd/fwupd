@@ -18,17 +18,17 @@ search_index = true
   [dependencies."GObject-2.0"]
   name = "GObject"
   description = "The base type system library"
-  docs_url = "https://developer.gnome.org/gobject/stable/"
+  docs_url = "https://docs.gtk.org/gobject/"
 
   [dependencies."Gio-2.0"]
   name = "Gio"
   description = "A modern, easy-to-use VFS API"
-  docs_url = "https://developer.gnome.org/gio/stable/"
+  docs_url = "https://docs.gtk.org/gio/"
 
   [dependencies."Json-1.0"]
   name = "Json"
   description = "API for efficient parsing and writing of JSON (JavaScript Object Notation) streams"
-  docs_url = "https://developer.gnome.org/json-glib/stable/"
+  docs_url = "https://gnome.pages.gitlab.gnome.org/json-glib/"
 
 [theme]
 name = "basic"
