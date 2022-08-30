@@ -67,6 +67,7 @@ override_dh_install:
 	#install MSR conf if needed (depending on distro)
 	[ ! -d debian/tmp/usr/lib/modules-load.d ] || dh_install -pfwupd usr/lib/modules-load.d
 	[ ! -d debian/tmp/lib/modules-load.d ] || dh_install -pfwupd lib/modules-load.d
+	[ ! -d debian/tmp/usr/share/fwupd/quirks.d ] || dh_install -pfwupd usr/share/fwupd/quirks.d
 
 	#install docs (maybe)
 	[ ! -d debian/tmp/usr/share/doc ] || dh_install -pfwupd-doc usr/share/doc
