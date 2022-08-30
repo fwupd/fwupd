@@ -295,6 +295,22 @@ msgstr "(obsoleted)"
 msgid "A TPM PCR is now an invalid value"
 msgstr "A TPM PCR is now an invalid value"
 
+#. TRANSLATORS: Title: if hardware enforces control of SPI replays
+msgid "AMD Firmware Replay Protection"
+msgstr "AMD Firmware Replay Protection"
+
+#. TRANSLATORS: Title: if hardware enforces control of SPI writes
+msgid "AMD Firmware Write Protection"
+msgstr "AMD Firmware Write Protection"
+
+#. TRANSLATORS: Title: if firmware enforces rollback protection
+msgid "AMD Rollback Protection"
+msgstr "AMD Rollback Protection"
+
+#. TRANSLATORS: longer description
+msgid "AMD Rollback Protection prevents device software from being downgraded to an older version that has security problems."
+msgstr "AMD Rollback Protection prevents device software from being downgraded to an older version that has security problems."
+
 #. TRANSLATORS: the user needs to do something, e.g. remove the device
 msgid "Action Required:"
 msgstr "Action Required:"
@@ -433,6 +449,10 @@ msgid "Authentication is required to modify daemon configuration"
 msgstr "Authentication is required to modify daemon configuration"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to read BIOS settings"
+msgstr "Authentication is required to read BIOS settings"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to set the list of approved firmware"
 msgstr "Authentication is required to set the list of approved firmware"
 
@@ -467,6 +487,10 @@ msgstr "Automatic Reporting"
 #. TRANSLATORS: can we JFDI?
 msgid "Automatically upload every time?"
 msgstr "Automatically upload every time?"
+
+#. TRANSLATORS: description of a BIOS setting
+msgid "BIOS updates delivered via LVFS or Windows Update"
+msgstr "BIOS updates delivered via LVFS or Windows Update"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "BUILDER-XML FILENAME-DST"
@@ -572,6 +596,10 @@ msgstr "Command not found"
 msgid "Community supported"
 msgstr "Community supported"
 
+#. TRANSLATORS: title prefix for the BIOS settings dialog
+msgid "Configuration Change Suggested"
+msgstr "Configuration Change Suggested"
+
 #. TRANSLATORS: command description
 msgid "Convert a firmware file"
 msgstr "Convert a firmware file"
@@ -587,6 +615,10 @@ msgstr "Critical"
 #. TRANSLATORS: Device supports some form of checksum verification
 msgid "Cryptographic hash verification is available"
 msgstr "Cryptographic hash verification is available"
+
+#. TRANSLATORS: current value of a BIOS setting
+msgid "Current Value"
+msgstr "Current Value"
 
 #. TRANSLATORS: version number of current firmware
 msgid "Current version"
@@ -665,6 +697,10 @@ msgstr "Device changed:"
 msgid "Device firmware is required to have a version check"
 msgstr "Device firmware is required to have a version check"
 
+#. TRANSLATORS: emulated means we are pretending to be a different model
+msgid "Device is emulated"
+msgstr "Device is emulated"
+
 #. TRANSLATORS: Is locked and can be unlocked
 msgid "Device is locked"
 msgstr "Device is locked"
@@ -698,6 +734,10 @@ msgstr "Device removed:"
 #. TRANSLATORS: as in, wired mains power for a laptop
 msgid "Device requires AC power to be connected"
 msgstr "Device requires AC power to be connected"
+
+#. TRANSLATORS: longer description
+msgid "Device software updates are provided for this device."
+msgstr "Device software updates are provided for this device."
 
 #. TRANSLATORS: Device supports a safety mechanism for flashing
 msgid "Device stages updates"
@@ -823,6 +863,10 @@ msgstr "Do you want to refresh this remote now?"
 msgid "Do you want to upload reports automatically for future updates?"
 msgstr "Do you want to upload reports automatically for future updates?"
 
+#. TRANSLATORS: command line option
+msgid "Don't prompt for authentication (less details may be shown)"
+msgstr "Don't prompt for authentication (less details may be shown)"
+
 #. TRANSLATORS: success
 #. success
 msgid "Done!"
@@ -869,6 +913,10 @@ msgstr "Duration"
 #. TRANSLATORS: ESP is EFI System Partition
 msgid "ESP specified was not valid"
 msgstr "ESP specified was not valid"
+
+#. TRANSLATORS: longer description
+msgid "Each system should have tests to ensure firmware security."
+msgstr "Each system should have tests to ensure firmware security."
 
 #. TRANSLATORS: Title: if we are emulating a different host
 msgid "Emulated host"
@@ -918,9 +966,16 @@ msgstr "Encrypted"
 msgid "Encrypted RAM"
 msgstr "Encrypted RAM"
 
+msgid "Encrypted RAM makes it impossible for information that is stored in device memory to be read if the memory chip is removed and accessed."
+msgstr "Encrypted RAM makes it impossible for information that is stored in device memory to be read if the memory chip is removed and accessed."
+
 #. TRANSLATORS: the vendor is no longer supporting the device
 msgid "End of life"
 msgstr "End of life"
+
+#. TRANSLATORS: The BIOS setting can only be changed to fixed values
+msgid "Enumeration"
+msgstr "Enumeration"
 
 #. TRANSLATORS: command description
 msgid "Erase all firmware update history"
@@ -1061,6 +1116,10 @@ msgstr "Failed to set splash mode"
 msgid "Failed to validate ESP contents"
 msgstr "Failed to validate ESP contents"
 
+#. TRANSLATORS: item is FALSE
+msgid "False"
+msgstr "False"
+
 #. TRANSLATORS: filename of the local file
 msgid "Filename"
 msgstr "Filename"
@@ -1085,13 +1144,25 @@ msgstr "Filter with a set of device flags using a ~ prefix to exclude, e.g. 'int
 msgid "Firmware Attestation"
 msgstr "Firmware Attestation"
 
+#. TRANSLATORS: longer description
+msgid "Firmware Attestation checks device software using a reference copy, to make sure that it has not been changed."
+msgstr "Firmware Attestation checks device software using a reference copy, to make sure that it has not been changed."
+
 #. TRANSLATORS: Title: firmware refers to the flash chip in the computer
 msgid "Firmware BIOS Descriptor"
 msgstr "Firmware BIOS Descriptor"
 
+#. TRANSLATORS: longer description
+msgid "Firmware BIOS Descriptor protects device firmware memory from being tampered with."
+msgstr "Firmware BIOS Descriptor protects device firmware memory from being tampered with."
+
 #. TRANSLATORS: Title: SPI refers to the flash chip in the computer
 msgid "Firmware BIOS Region"
 msgstr "Firmware BIOS Region"
+
+#. TRANSLATORS: longer description
+msgid "Firmware BIOS Region protects device firmware memory from being tampered with."
+msgstr "Firmware BIOS Region protects device firmware memory from being tampered with."
 
 #. TRANSLATORS: remote URI
 msgid "Firmware Base URI"
@@ -1109,6 +1180,9 @@ msgstr "Firmware Update Daemon"
 msgid "Firmware Updater Verification"
 msgstr "Firmware Updater Verification"
 
+msgid "Firmware Updater Verification checks that software used for updating has not been tampered with."
+msgstr "Firmware Updater Verification checks that software used for updating has not been tampered with."
+
 #. TRANSLATORS: Title: if firmware updates are available
 msgid "Firmware Updates"
 msgstr "Firmware Updates"
@@ -1124,6 +1198,10 @@ msgstr "Firmware Write Protection"
 #. TRANSLATORS: Title: firmware refers to the flash chip in the computer
 msgid "Firmware Write Protection Lock"
 msgstr "Firmware Write Protection Lock"
+
+#. TRANSLATORS: longer description
+msgid "Firmware Write Protection protects device firmware memory from being tampered with."
+msgstr "Firmware Write Protection protects device firmware memory from being tampered with."
 
 #. TRANSLATORS: Title: if we can verify the firmware checksums
 msgid "Firmware attestation"
@@ -1190,6 +1268,10 @@ msgid "Full disk encryption secrets may be invalidated when updating"
 msgstr "Full disk encryption secrets may be invalidated when updating"
 
 #. TRANSLATORS: Title: if the part has been fused
+msgid "Fused Platform"
+msgstr "Fused Platform"
+
+#. TRANSLATORS: Title: if the part has been fused
 msgid "Fused platform"
 msgstr "Fused platform"
 
@@ -1203,6 +1285,9 @@ msgstr[1] "GUIDs"
 msgctxt "A single GUID"
 msgid "GUID"
 msgstr "GUID"
+
+msgid "Get BIOS settings"
+msgstr "Get BIOS settings"
 
 #. TRANSLATORS: command description
 msgid "Get all device flags supported by fwupd"
@@ -1278,6 +1363,10 @@ msgstr "IOMMU"
 msgid "IOMMU Protection"
 msgstr "IOMMU Protection"
 
+#. TRANSLATORS: longer description
+msgid "IOMMU Protection prevents connected devices from accessing unauthorized parts of system memory."
+msgstr "IOMMU Protection prevents connected devices from accessing unauthorised parts of system memory."
+
 #. TRANSLATORS: HSI event title
 msgid "IOMMU device protection disabled"
 msgstr "IOMMU device protection disabled"
@@ -1322,6 +1411,10 @@ msgstr "Install a firmware blob on a device"
 msgid "Install a firmware file on this hardware"
 msgstr "Install a firmware file on this hardware"
 
+#. TRANSLATORS: command description
+msgid "Install a specific firmware on a device, all possible devices will also be installed once the CAB matches"
+msgstr "Install a specific firmware on a device, all possible devices will also be installed once the CAB matches"
+
 msgid "Install old version of signed system firmware"
 msgstr "Install old version of signed system firmware"
 
@@ -1361,6 +1454,10 @@ msgstr "Installing on %s…"
 msgid "Installing this update may also void any device warranty."
 msgstr "Installing this update may also void any device warranty."
 
+#. TRANSLATORS: The BIOS setting only accepts integers in a fixed range
+msgid "Integer"
+msgstr "Integer"
+
 #. TRANSLATORS: Title: BootGuard is a trademark from Intel
 msgid "Intel BootGuard"
 msgstr "Intel BootGuard"
@@ -1379,6 +1476,9 @@ msgstr "Intel BootGuard ACM protected"
 #. * error policy is what to do on failure
 msgid "Intel BootGuard Error Policy"
 msgstr "Intel BootGuard Error Policy"
+
+msgid "Intel BootGuard Error Policy ensures the device does not continue to start if its device software has been tampered with."
+msgstr "Intel BootGuard Error Policy ensures the device does not continue to start if its device software has been tampered with."
 
 #. TRANSLATORS: Title: BootGuard is a trademark from Intel
 msgid "Intel BootGuard Fuse"
@@ -1399,6 +1499,10 @@ msgstr "Intel BootGuard Verified Boot"
 msgid "Intel BootGuard error policy"
 msgstr "Intel BootGuard error policy"
 
+#. TRANSLATORS: longer description
+msgid "Intel BootGuard prevents unauthorized device software from operating when the device is started."
+msgstr "Intel BootGuard prevents unauthorised device software from operating when the device is started."
+
 #. TRANSLATORS: Title: BootGuard is a trademark from Intel,
 #. * verified boot refers to the way the boot process is verified
 msgid "Intel BootGuard verified boot"
@@ -1418,6 +1522,10 @@ msgstr "Intel CET Active"
 msgid "Intel CET Enabled"
 msgstr "Intel CET Enabled"
 
+#. TRANSLATORS: longer description
+msgid "Intel Control-Flow Enforcement Technology detects and prevents certain methods for running malicious software on the device."
+msgstr "Intel Control-Flow Enforcement Technology detects and prevents certain methods for running malicious software on the device."
+
 #. TRANSLATORS: Title: MEI = Intel Management Engine
 msgid "Intel Management Engine Manufacturing Mode"
 msgstr "Intel Management Engine Manufacturing Mode"
@@ -1430,6 +1538,10 @@ msgstr "Intel Management Engine Manufacturing Mode"
 msgid "Intel Management Engine Override"
 msgstr "Intel Management Engine Override"
 
+#. TRANSLATORS: longer description
+msgid "Intel Management Engine Override disables checks for device software tampering."
+msgstr "Intel Management Engine Override disables checks for device software tampering."
+
 #. TRANSLATORS: Title: MEI = Intel Management Engine
 msgid "Intel Management Engine Version"
 msgstr "Intel Management Engine Version"
@@ -1438,6 +1550,10 @@ msgstr "Intel Management Engine Version"
 msgid "Intel SMAP"
 msgstr "Intel SMAP"
 
+#. TRANSLATORS: longer description
+msgid "Intel Supervisor Mode Access Prevention ensures critical parts of device memory are not accessed by less secure programs."
+msgstr "Intel Supervisor Mode Access Prevention ensures critical parts of device memory are not accessed by less secure programs."
+
 #. TRANSLATORS: Device cannot be removed easily
 msgid "Internal device"
 msgstr "Internal device"
@@ -1445,6 +1561,10 @@ msgstr "Internal device"
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Invalid"
 msgstr "Invalid"
+
+#. TRANSLATORS: error message
+msgid "Invalid arguments"
+msgstr "Invalid arguments"
 
 #. TRANSLATORS: version is older
 msgid "Is downgrade"
@@ -1508,9 +1628,19 @@ msgstr "Licence"
 msgid "Linux Kernel Lockdown"
 msgstr "Linux Kernel Lockdown"
 
+#. TRANSLATORS: longer description
+msgid "Linux Kernel Lockdown mode prevents administrator (root) accounts from accessing and changing critical parts of system software."
+msgstr "Linux Kernel Lockdown mode prevents administrator (root) accounts from accessing and changing critical parts of system software."
+
+msgid "Linux Kernel Swap temporarily saves information to disk as you work. If the information is not protected, it could be accessed by someone if they obtained the disk."
+msgstr "Linux Kernel Swap temporarily saves information to disk as you work. If the information is not protected, it could be accessed by someone if they obtained the disk."
+
 #. TRANSLATORS: Title: if it's tainted or not
 msgid "Linux Kernel Verification"
 msgstr "Linux Kernel Verification"
+
+msgid "Linux Kernel Verification makes sure that critical system software has not been tampered with. Using device drivers which are not provided with the system can prevent this security feature from working correctly."
+msgstr "Linux Kernel Verification makes sure that critical system software has not been tampered with. Using device drivers which are not provided with the system can prevent this security feature from working correctly."
 
 #. TRANSLATORS: Title: swap space or swap partition
 msgid "Linux Swap"
@@ -1580,6 +1710,18 @@ msgstr "MEI version"
 msgid "Manually enable specific plugins"
 msgstr "Manually enable specific plugins"
 
+#. TRANSLATORS: longer description
+msgid "Manufacturing Mode is used when the device is manufactured and security features are not yet enabled."
+msgstr "Manufacturing Mode is used when the device is manufactured and security features are not yet enabled."
+
+#. TRANSLATORS: Longest valid string for BIOS setting
+msgid "Maximum length"
+msgstr "Maximum length"
+
+#. TRANSLATORS: Highest valid integer for BIOS setting
+msgid "Maximum value"
+msgstr "Maximum value"
+
 #. TRANSLATORS: the release urgency
 msgid "Medium"
 msgstr "Medium"
@@ -1599,6 +1741,14 @@ msgstr "Metadata can be obtained from the Linux Vendor Firmware Service."
 #. TRANSLATORS: smallest version number installable on device
 msgid "Minimum Version"
 msgstr "Minimum Version"
+
+#. TRANSLATORS: Shortest valid string for BIOS setting
+msgid "Minimum length"
+msgstr "Minimum length"
+
+#. TRANSLATORS: Lowest valid integer for BIOS setting
+msgid "Minimum value"
+msgstr "Minimum value"
 
 #. TRANSLATORS: error message
 #, c-format
@@ -1780,6 +1930,10 @@ msgstr "Perform operation?"
 msgid "Platform Debugging"
 msgstr "Platform Debugging"
 
+#. TRANSLATORS: longer description
+msgid "Platform Debugging allows device security features to be disabled. This should only be used by hardware manufacturers."
+msgstr "Platform Debugging allows device security features to be disabled. This should only be used by hardware manufacturers."
+
 #. TRANSLATORS: 'recovery key' here refers to a code, rather than a physical
 #. metal thing
 msgid "Please ensure you have the volume recovery key before continuing."
@@ -1793,6 +1947,10 @@ msgstr "Please enter a number from 0 to %u: "
 #. TRANSLATORS: Failed to open plugin, hey Arch users
 msgid "Plugin dependencies missing"
 msgstr "Plugin dependencies missing"
+
+#. TRANSLATORS: Possible values for a bios setting
+msgid "Possible Values"
+msgstr "Possible Values"
 
 #. TRANSLATORS: Title: DMA as in https://en.wikipedia.org/wiki/DMA_attack
 msgid "Pre-boot DMA Protection"
@@ -1809,6 +1967,10 @@ msgstr "Pre-boot DMA protection is disabled"
 #. TRANSLATORS: HSI event title
 msgid "Pre-boot DMA protection is enabled"
 msgstr "Pre-boot DMA protection is enabled"
+
+#. TRANSLATORS: longer description
+msgid "Pre-boot DMA protection prevents devices from being connected to the computer and accessing system memory."
+msgstr "Pre-boot DMA protection prevents devices from being connected to the computer and accessing system memory."
 
 #. TRANSLATORS: version number of previous firmware
 msgid "Previous version"
@@ -1831,6 +1993,10 @@ msgstr "Problems"
 msgid "Proceed with upload?"
 msgstr "Proceed with upload?"
 
+#. TRANSLATORS: Title: if fwupd supports HSI on this chip
+msgid "Processor Security Checks"
+msgstr "Processor Security Checks"
+
 #. TRANSLATORS: a non-free software license
 msgid "Proprietary"
 msgstr "Proprietary"
@@ -1846,6 +2012,10 @@ msgstr "REMOTE-ID"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "REMOTE-ID KEY VALUE"
 msgstr "REMOTE-ID KEY VALUE"
+
+#. TRANSLATORS: BIOS setting is read only
+msgid "Read Only"
+msgstr "Read Only"
 
 #. TRANSLATORS: command description
 msgid "Read a firmware blob from a device"
@@ -1959,6 +2129,10 @@ msgid "Restarting device…"
 msgstr "Restarting device…"
 
 #. TRANSLATORS: command description
+msgid "Retrieve BIOS settings.  If no arguments are passed all settings are returned"
+msgstr "Retrieve BIOS settings.  If no arguments are passed all settings are returned"
+
+#. TRANSLATORS: command description
 msgid "Return all the hardware IDs for the machine"
 msgstr "Return all the hardware IDs for the machine"
 
@@ -1982,6 +2156,11 @@ msgstr "Run the plugin composite cleanup routine when using install-blob"
 msgid "Run the plugin composite prepare routine when using install-blob"
 msgstr "Run the plugin composite prepare routine when using install-blob"
 
+#. TRANSLATORS: tell a user how to get information
+#, c-format
+msgid "Run without '%s' to see"
+msgstr "Run without '%s' to see"
+
 #. TRANSLATORS: The kernel does not support this plugin
 msgid "Running kernel is too old"
 msgstr "Running kernel is too old"
@@ -1989,6 +2168,14 @@ msgstr "Running kernel is too old"
 #. TRANSLATORS:  this is the HSI suffix
 msgid "Runtime Suffix"
 msgstr "Runtime Suffix"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "SETTING VALUE"
+msgstr "SETTING VALUE"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "SETTING1 VALUE1 [SETTING2] [VALUE2]"
+msgstr "SETTING1 VALUE1 [SETTING2] [VALUE2]"
 
 #. TRANSLATORS: Title: SPI refers to the flash chip in the computer
 msgid "SPI BIOS Descriptor"
@@ -2021,6 +2208,10 @@ msgstr "SUBSYSTEM DRIVER [DEVICE-ID|GUID]"
 #. TRANSLATORS: command description
 msgid "Save a file that allows generation of hardware IDs"
 msgstr "Save a file that allows generation of hardware IDs"
+
+#. TRANSLATORS: Scalar increment for integer BIOS setting
+msgid "Scalar Increment"
+msgstr "Scalar Increment"
 
 #. TRANSLATORS: command line option
 msgid "Schedule installation for next reboot when possible"
@@ -2060,13 +2251,37 @@ msgstr "Selected volume"
 msgid "Serial Number"
 msgstr "Serial Number"
 
+#. TRANSLATORS: Configured a BIOS setting to a value
+#, c-format
+msgid "Set BIOS setting '%s' using '%s'."
+msgstr "Set BIOS setting '%s' using '%s'."
+
+#. TRANSLATORS: command description
+msgid "Set a BIOS setting"
+msgstr "Set a BIOS setting"
+
+msgid "Set one or more BIOS settings"
+msgstr "Set one or more BIOS settings"
+
 #. TRANSLATORS: command line option
 msgid "Set the debugging flag during update"
 msgstr "Set the debugging flag during update"
 
+#. TRANSLATORS: command description
+msgid "Sets one or more BIOS settings"
+msgstr "Sets one or more BIOS settings"
+
 #. TRANSLATORS: firmware approved by the admin
 msgid "Sets the list of approved firmware"
 msgstr "Sets the list of approved firmware"
+
+#. TRANSLATORS: type of BIOS setting
+msgid "Setting type"
+msgstr "Setting type"
+
+#. TRANSLATORS: description of a BIOS setting
+msgid "Settings will apply after system reboots"
+msgstr "Settings will apply after system reboots"
 
 #. TRANSLATORS: command description
 msgid "Share firmware history with the developers"
@@ -2169,6 +2384,10 @@ msgstr "Specify the dbx database file"
 msgid "Specify the number of bytes per USB transfer"
 msgstr "Specify the number of bytes per USB transfer"
 
+#. TRANSLATORS: The BIOS setting accepts strings
+msgid "String"
+msgstr "String"
+
 #. TRANSLATORS: the update state of the specific device
 msgid "Success"
 msgstr "Success"
@@ -2251,6 +2470,14 @@ msgstr "Suspend To Idle"
 msgid "Suspend To RAM"
 msgstr "Suspend To RAM"
 
+#. TRANSLATORS: longer description
+msgid "Suspend to Idle allows the device to quickly go to sleep in order to save power. While the device has been suspended, its memory could be physically removed and its information accessed."
+msgstr "Suspend to Idle allows the device to quickly go to sleep in order to save power. While the device has been suspended, its memory could be physically removed and its information accessed."
+
+#. TRANSLATORS: longer description
+msgid "Suspend to RAM allows the device to quickly go to sleep in order to save power. While the device has been suspended, its memory could be physically removed and its information accessed."
+msgstr "Suspend to RAM allows the device to quickly go to sleep in order to save power. While the device has been suspended, its memory could be physically removed and its information accessed."
+
 #. TRANSLATORS: Title: a better sleep state
 msgid "Suspend-to-idle"
 msgstr "Suspend-to-idle"
@@ -2289,6 +2516,10 @@ msgstr "System requires external power source"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "TEXT"
 msgstr "TEXT"
+
+#. TRANSLATORS: longer description
+msgid "TPM (Trusted Platform Module) is a computer chip that detects when hardware components have been tampered with."
+msgstr "TPM (Trusted Platform Module) is a computer chip that detects when hardware components have been tampered with."
 
 #. TRANSLATORS: Title: the PCR is rebuilt from the TPM event log
 msgid "TPM PCR0 reconstruction"
@@ -2337,13 +2568,29 @@ msgstr "Target"
 msgid "Test a device using a JSON manifest"
 msgstr "Test a device using a JSON manifest"
 
+#. TRANSLATORS: longer description
+msgid "The Intel Management Engine controls device components and needs to have a recent version to avoid security issues."
+msgstr "The Intel Management Engine controls device components and needs to have a recent version to avoid security issues."
+
 #. TRANSLATORS: do not translate the variables marked using $
 msgid "The LVFS is a free service that operates as an independent legal entity and has no connection with $OS_RELEASE:NAME$. Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices. All firmware is provided only by the original equipment manufacturer."
 msgstr "The LVFS is a free service that operates as an independent legal entity and has no connection with $OS_RELEASE:NAME$. Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices. All firmware is provided only by the original equipment manufacturer."
 
+#. TRANSLATORS: longer description
+msgid "The TPM (Trusted Platform Module) Platform Configuration is used to check whether the device start process has been modified."
+msgstr "The TPM (Trusted Platform Module) Platform Configuration is used to check whether the device start process has been modified."
+
+#. TRANSLATORS: longer description
+msgid "The TPM (Trusted Platform Module) Reconstruction is used to check whether the device start process has been modified."
+msgstr "The TPM (Trusted Platform Module) Reconstruction is used to check whether the device start process has been modified."
+
 #. TRANSLATORS: this is more background on a security measurement problem
 msgid "The TPM PCR0 differs from reconstruction."
 msgstr "The TPM PCR0 differs from reconstruction."
+
+#. TRANSLATORS: longer description
+msgid "The UEFI Platform Key is used to determine if device software comes from a trusted source."
+msgstr "The UEFI Platform Key is used to determine if device software comes from a trusted source."
 
 #. TRANSLATORS: the user is SOL for support...
 msgid "The daemon has loaded 3rd party code and is no longer supported by the upstream developers!"
@@ -2402,6 +2649,10 @@ msgstr "This program may only work correctly as root"
 msgid "This remote contains firmware which is not embargoed, but is still being tested by the hardware vendor. You should ensure you have a way to manually downgrade the firmware if the firmware update fails."
 msgstr "This remote contains firmware which is not embargoed, but is still being tested by the hardware vendor. You should ensure you have a way to manually downgrade the firmware if the firmware update fails."
 
+#. TRANSLATORS: error message
+msgid "This system doesn't support firmware settings"
+msgstr "This system doesn't support firmware settings"
+
 #. TRANSLATORS: this is instructions on how to improve the HSI suffix
 msgid "This system has HSI runtime issues."
 msgstr "This system has HSI runtime issues."
@@ -2426,6 +2677,12 @@ msgstr "This tool allows an administrator to query and control the fwupd daemon,
 msgid "This tool allows an administrator to use the fwupd plugins without being installed on the host system."
 msgstr "This tool allows an administrator to use the fwupd plugins without being installed on the host system."
 
+#. TRANSLATORS: the %1 is a BIOS setting name.  %2 and %3 are the
+#. values, e.g. "True" or "Windows10"
+#, c-format
+msgid "This tool can change the BIOS setting '%s' from '%s' to '%s' automatically, but it will only be active after restarting the computer."
+msgstr "This tool can change the BIOS setting '%s' from '%s' to '%s' automatically, but it will only be active after restarting the computer."
+
 #. TRANSLATORS: the user needs to stop playing with stuff
 msgid "This tool can only be used by the root user"
 msgstr "This tool can only be used by the root user"
@@ -2437,6 +2694,10 @@ msgstr "This tool will read and parse the TPM event log from the system firmware
 #. TRANSLATORS: the update state of the specific device
 msgid "Transient failure"
 msgstr "Transient failure"
+
+#. TRANSLATORS: item is TRUE
+msgid "True"
+msgstr "True"
 
 #. TRANSLATORS: We verified the meatdata against the server
 msgid "Trusted metadata"
@@ -2458,9 +2719,17 @@ msgstr "UEFI ESP partition not detected or configured"
 msgid "UEFI Firmware Utility"
 msgstr "UEFI Firmware Utility"
 
+#. TRANSLATORS: Title: PK is the 'platform key' for the machine
+msgid "UEFI Platform Key"
+msgstr "UEFI Platform Key"
+
 #. TRANSLATORS: Title: SB is a way of locking down UEFI
 msgid "UEFI Secure Boot"
 msgstr "UEFI Secure Boot"
+
+#. TRANSLATORS: longer description
+msgid "UEFI Secure Boot prevents malicious software from being loaded when the device starts."
+msgstr "UEFI Secure Boot prevents malicious software from being loaded when the device starts."
 
 #. TRANSLATORS: capsule updates are an optional BIOS feature
 msgid "UEFI capsule updates not available or enabled in firmware setup"
@@ -2485,6 +2754,11 @@ msgstr "UEFI secure boot"
 #. TRANSLATORS: error message
 msgid "Unable to connect to service"
 msgstr "Unable to connect to service"
+
+#. TRANSLATORS: error message
+#, c-format
+msgid "Unable to find attribute"
+msgstr "Unable to find attribute"
 
 #. TRANSLATORS: command description
 msgid "Unbind current driver"
@@ -2700,6 +2974,11 @@ msgstr "Writing file:"
 msgid "Writing…"
 msgstr "Writing…"
 
+#. TRANSLATORS: the user has to manually recover; we can't do it
+#, c-format
+msgid "You should ensure you are comfortable restoring the setting from the system firmware setup, as this change may cause the system to not boot into Linux or cause other system instability."
+msgstr "You should ensure you are comfortable restoring the setting from the system firmware setup, as this change may cause the system to not boot into Linux or cause other system instability."
+
 #. TRANSLATORS: show the user a warning
 msgid "Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices."
 msgstr "Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices."
@@ -2739,6 +3018,14 @@ msgstr "[FILE FILE_SIG REMOTE-ID]"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[FILENAME1] [FILENAME2]"
 msgstr "[FILENAME1] [FILENAME2]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[SETTING1] [ SETTING2]..."
+msgstr "[SETTING1] [ SETTING2]..."
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[SETTING1] [SETTING2] [--no-authenticate]"
+msgstr "[SETTING1] [SETTING2] [--no-authenticate]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[SMBIOS-FILE|HWIDS-FILE]"

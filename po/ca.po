@@ -449,6 +449,10 @@ msgid "Authentication is required to modify daemon configuration"
 msgstr "Es requereix autenticació per a modificar la configuració del dimoni"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to read BIOS settings"
+msgstr "Cal autenticació per a llegir la configuració del BIOS"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to set the list of approved firmware"
 msgstr "Es requereix autenticació per a establir la llista de microprogramari aprovat"
 
@@ -591,6 +595,10 @@ msgstr "No s'ha trobat cap ordre"
 #. TRANSLATORS: is not supported by the vendor
 msgid "Community supported"
 msgstr "Recolzada per la comunitat"
+
+#. TRANSLATORS: title prefix for the BIOS settings dialog
+msgid "Configuration Change Suggested"
+msgstr "Canvi de configuració suggerit"
 
 #. TRANSLATORS: command description
 msgid "Convert a firmware file"
@@ -854,6 +862,10 @@ msgstr "Voleu refrescar ara aquest remot?"
 #. TRANSLATORS: offer to stop asking the question
 msgid "Do you want to upload reports automatically for future updates?"
 msgstr "Voleu pujar automàticament els informes per a futures actualitzacions?"
+
+#. TRANSLATORS: command line option
+msgid "Don't prompt for authentication (less details may be shown)"
+msgstr "No demanis autenticació (pot mostrar menys detalls)"
 
 #. TRANSLATORS: success
 #. success
@@ -1274,6 +1286,9 @@ msgctxt "A single GUID"
 msgid "GUID"
 msgstr "GUID"
 
+msgid "Get BIOS settings"
+msgstr "Obtén la configuració del BIOS"
+
 #. TRANSLATORS: command description
 msgid "Get all device flags supported by fwupd"
 msgstr "Obté totes les etiquetes admeses per «fwupd»."
@@ -1395,6 +1410,10 @@ msgstr "Instal·la un blob de microprogramari en un dispositiu."
 #. TRANSLATORS: command description
 msgid "Install a firmware file on this hardware"
 msgstr "Instal·la un fitxer de microprogramari en aquest maquinari."
+
+#. TRANSLATORS: command description
+msgid "Install a specific firmware on a device, all possible devices will also be installed once the CAB matches"
+msgstr "Instal·la un microprogramari específic en un dispositiu, tots els dispositius possibles també s’instal·laran una vegada que coincideixi el CAB"
 
 msgid "Install old version of signed system firmware"
 msgstr "Instal·la la versió antiga del microprogramari signat per al sistema"
@@ -2137,6 +2156,11 @@ msgstr "Executa la rutina de neteja de la composició del connector en usar inst
 msgid "Run the plugin composite prepare routine when using install-blob"
 msgstr "Executa la rutina de preparació de la composició del connector en usar install-blob"
 
+#. TRANSLATORS: tell a user how to get information
+#, c-format
+msgid "Run without '%s' to see"
+msgstr "Per a veure executa sense «%s»"
+
 #. TRANSLATORS: The kernel does not support this plugin
 msgid "Running kernel is too old"
 msgstr "El nucli executat és massa antic"
@@ -2148,6 +2172,10 @@ msgstr "Sufix d'execució"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "SETTING VALUE"
 msgstr "VALOR DE CONFIGURACIÓ"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "SETTING1 VALUE1 [SETTING2] [VALUE2]"
+msgstr "CONFIG_1 VALOR_1 [CONFIG_2] [VALOR_2]"
 
 #. TRANSLATORS: Title: SPI refers to the flash chip in the computer
 msgid "SPI BIOS Descriptor"
@@ -2223,13 +2251,25 @@ msgstr "Volum seleccionat"
 msgid "Serial Number"
 msgstr "Número de sèrie"
 
+#. TRANSLATORS: Configured a BIOS setting to a value
+#, c-format
+msgid "Set BIOS setting '%s' using '%s'."
+msgstr "Estableix la configuració «%s» del BIOS a «%s»"
+
 #. TRANSLATORS: command description
 msgid "Set a BIOS setting"
 msgstr "Estableix una configuració del BIOS"
 
+msgid "Set one or more BIOS settings"
+msgstr "Estableix una o més configuracions del BIOS"
+
 #. TRANSLATORS: command line option
 msgid "Set the debugging flag during update"
 msgstr "Estableix l'indicador de depuració durant l'actualització"
+
+#. TRANSLATORS: command description
+msgid "Sets one or more BIOS settings"
+msgstr "Estableix una o més configuracions del BIOS"
 
 #. TRANSLATORS: firmware approved by the admin
 msgid "Sets the list of approved firmware"
@@ -2239,7 +2279,7 @@ msgstr "Estableix la llista de microprogramari aprovat"
 msgid "Setting type"
 msgstr "Tipus de configuració"
 
-#. TRANSLATORS: Settings refers to BIOS settings in this context
+#. TRANSLATORS: description of a BIOS setting
 msgid "Settings will apply after system reboots"
 msgstr "La configuració s'aplicarà després de reiniciar el sistema"
 
@@ -2637,6 +2677,12 @@ msgstr "Aquesta eina permet que un administrador consulti i controli el dimoni �
 msgid "This tool allows an administrator to use the fwupd plugins without being installed on the host system."
 msgstr "Aquesta eina permet a un administrador usar els connectors de «fwupd» sense estar instal·lats en el sistema amfitrió."
 
+#. TRANSLATORS: the %1 is a BIOS setting name.  %2 and %3 are the
+#. values, e.g. "True" or "Windows10"
+#, c-format
+msgid "This tool can change the BIOS setting '%s' from '%s' to '%s' automatically, but it will only be active after restarting the computer."
+msgstr "Aquesta eina pot canviar la configuració del BIOS «%s» des de «%s» a «%s» de forma automàtica, però només estarà activa una vegada es reiniciï l'ordinador."
+
 #. TRANSLATORS: the user needs to stop playing with stuff
 msgid "This tool can only be used by the root user"
 msgstr "Aquesta eina només pot ser usada per l'usuari «root»."
@@ -2928,6 +2974,11 @@ msgstr "Fitxer d'escriptura:"
 msgid "Writing…"
 msgstr "S'està escrivint..."
 
+#. TRANSLATORS: the user has to manually recover; we can't do it
+#, c-format
+msgid "You should ensure you are comfortable restoring the setting from the system firmware setup, as this change may cause the system to not boot into Linux or cause other system instability."
+msgstr "Heu d’assegurar-vos que esteu còmode restablint la configuració des de la configuració del microprogramari del sistema, ja que aquest canvi pot fer que el sistema no arrenqui a Linux o que causi alguna altra inestabilitat en el sistema."
+
 #. TRANSLATORS: show the user a warning
 msgid "Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices."
 msgstr "És possible que el vostre distribuïdor no hagi verificat cap de les actualitzacions del microprogramari per a la compatibilitat amb el vostre sistema o els dispositius connectats."
@@ -2971,6 +3022,10 @@ msgstr "[NOM_FITXER_1] [NOM_FITXER_2]"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[SETTING1] [ SETTING2]..."
 msgstr "[CONFIG_1] [ CONFIG_2]..."
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[SETTING1] [SETTING2] [--no-authenticate]"
+msgstr "[CONFIG_1] [CONFIG_2] [--no-authenticate]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[SMBIOS-FILE|HWIDS-FILE]"

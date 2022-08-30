@@ -461,6 +461,10 @@ msgid "Authentication is required to modify daemon configuration"
 msgstr "Potrebna je ovjera za promjenu podešavanja pozadinskog programa"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to read BIOS settings"
+msgstr "Potrebna je ovjera za čitanje BIOS postavki"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to set the list of approved firmware"
 msgstr "Potrebna je ovjera za postavljanje popisa odobrenih firmvera"
 
@@ -603,6 +607,10 @@ msgstr "Naredba nije pronađena"
 #. TRANSLATORS: is not supported by the vendor
 msgid "Community supported"
 msgstr "Podržano od strane zajednice"
+
+#. TRANSLATORS: title prefix for the BIOS settings dialog
+msgid "Configuration Change Suggested"
+msgstr "Predložena promjena podešavanja"
 
 #. TRANSLATORS: command description
 msgid "Convert a firmware file"
@@ -866,6 +874,10 @@ msgstr "Želite li odmah provjeriti ovu udaljenu lokaciju?"
 #. TRANSLATORS: offer to stop asking the question
 msgid "Do you want to upload reports automatically for future updates?"
 msgstr "Želite li poslati izvještaje automatski za buduće nadopune?"
+
+#. TRANSLATORS: command line option
+msgid "Don't prompt for authentication (less details may be shown)"
+msgstr "Ne pitaj za ovjeru (može biti prikazano manje pojedinosti)"
 
 #. TRANSLATORS: success
 #. success
@@ -1288,6 +1300,9 @@ msgctxt "A single GUID"
 msgid "GUID"
 msgstr "GUID"
 
+msgid "Get BIOS settings"
+msgstr "Prikaži BIOS postavke"
+
 #. TRANSLATORS: command description
 msgid "Get all device flags supported by fwupd"
 msgstr "Prikaži sve oznake uređaja koje podržava fwupd"
@@ -1409,6 +1424,10 @@ msgstr "Instaliraj blob firmvera na uređaj"
 #. TRANSLATORS: command description
 msgid "Install a firmware file on this hardware"
 msgstr "Instaliraj datoteku firmvera na ovaj uređaj"
+
+#. TRANSLATORS: command description
+msgid "Install a specific firmware on a device, all possible devices will also be installed once the CAB matches"
+msgstr "Instaliraj određeni firmver na uređaj, svi mogući uređaji će biti instalirani jednom kada se CAB podudara"
 
 msgid "Install old version of signed system firmware"
 msgstr "Instaliraj staru inačicu potpisanog frimvera sustava"
@@ -2152,6 +2171,11 @@ msgstr "Pokreni rutinu čišćenja sastavljanja priključka kada se koristi inst
 msgid "Run the plugin composite prepare routine when using install-blob"
 msgstr "Pokreni rutinu pripreme sastavljanja priključka kada se koristi install-blob"
 
+#. TRANSLATORS: tell a user how to get information
+#, c-format
+msgid "Run without '%s' to see"
+msgstr "Pokrenite bez '%s' za prikaz"
+
 #. TRANSLATORS: The kernel does not support this plugin
 msgid "Running kernel is too old"
 msgstr "Pokrenuti kernel je prestar"
@@ -2163,6 +2187,10 @@ msgstr "Sufiks vremenskog izvršavanja"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "SETTING VALUE"
 msgstr "VRIJEDNOST POSTAVKE"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "SETTING1 VALUE1 [SETTING2] [VALUE2]"
+msgstr "POSTAVKA1 VRIJEDNOST1 [POSTAVKA2] [VRIJEDNOST2]"
 
 #. TRANSLATORS: Title: SPI refers to the flash chip in the computer
 msgid "SPI BIOS Descriptor"
@@ -2238,13 +2266,25 @@ msgstr "Odabrani uređaj"
 msgid "Serial Number"
 msgstr "Serijski broj"
 
+#. TRANSLATORS: Configured a BIOS setting to a value
+#, c-format
+msgid "Set BIOS setting '%s' using '%s'."
+msgstr "Postavi BIOS postavku '%s' koristeći '%s'."
+
 #. TRANSLATORS: command description
 msgid "Set a BIOS setting"
 msgstr "Postavi BIOS postavku"
 
+msgid "Set one or more BIOS settings"
+msgstr "Postavi jednu ili više BIOS postavki"
+
 #. TRANSLATORS: command line option
 msgid "Set the debugging flag during update"
 msgstr "Postavi oznaku otklanjanja grešaka tijekom nadopune"
+
+#. TRANSLATORS: command description
+msgid "Sets one or more BIOS settings"
+msgstr "Postavlja jednu ili više BIOS postavki"
 
 #. TRANSLATORS: firmware approved by the admin
 msgid "Sets the list of approved firmware"
@@ -2254,7 +2294,7 @@ msgstr "Postavlja popis odobrenih firmvera"
 msgid "Setting type"
 msgstr "Vrsta postavke"
 
-#. TRANSLATORS: Settings refers to BIOS settings in this context
+#. TRANSLATORS: description of a BIOS setting
 msgid "Settings will apply after system reboots"
 msgstr "Postavke će se primijeniti nakon ponovnog pokretanja sustava"
 
@@ -2654,6 +2694,12 @@ msgstr "Ovaj alat dopušta administratoru postavljanje upita i upravljanje fwupd
 msgid "This tool allows an administrator to use the fwupd plugins without being installed on the host system."
 msgstr "Ovaj alat dopušta administratoru korištenje fwupd priključaka bez instalacije na sustavu."
 
+#. TRANSLATORS: the %1 is a BIOS setting name.  %2 and %3 are the
+#. values, e.g. "True" or "Windows10"
+#, c-format
+msgid "This tool can change the BIOS setting '%s' from '%s' to '%s' automatically, but it will only be active after restarting the computer."
+msgstr "Ovaj alat može promijeniti BIOS postavku '%s' iz '%s' u '%s' automatski, ali će biti aktivno nakon ponovnog pokretanja računala."
+
 #. TRANSLATORS: the user needs to stop playing with stuff
 msgid "This tool can only be used by the root user"
 msgstr "Ovaj alat može koristiti samo korijenski korisnik"
@@ -2945,6 +2991,11 @@ msgstr "Zapisivanje datoteke:"
 msgid "Writing…"
 msgstr "Zapisivanje…"
 
+#. TRANSLATORS: the user has to manually recover; we can't do it
+#, c-format
+msgid "You should ensure you are comfortable restoring the setting from the system firmware setup, as this change may cause the system to not boot into Linux or cause other system instability."
+msgstr "Trebali bi osigurati da možete vratiti postavke iz podešavanja firmvera sustava, pošto ova promjena može uzrokovati nemogućnost pokretanja u Linux sustav ili uzrokovati druge nestabilnosti sustava."
+
 #. TRANSLATORS: show the user a warning
 msgid "Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices."
 msgstr "Vaš distributer možda nije provjerio nadopune firmvera za kompatibilnost s vašim sustavom ili priključenim uređajima."
@@ -2988,6 +3039,10 @@ msgstr "[NAZIV DATOTEKE1] [NAZIV DATOTEKE2]"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[SETTING1] [ SETTING2]..."
 msgstr "[POSTAVKA1] [POSTAVKAG2]..."
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[SETTING1] [SETTING2] [--no-authenticate]"
+msgstr "[POSTAVKA1] [POSTAVKA2] [--no-authenticate]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[SMBIOS-FILE|HWIDS-FILE]"

@@ -454,6 +454,10 @@ msgid "Authentication is required to modify daemon configuration"
 msgstr "Autentisering krävs för att modifiera demonkonfiguration"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to read BIOS settings"
+msgstr "Autentisering krävs för att läsa BIOS-inställningar"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to set the list of approved firmware"
 msgstr "Autentisering krävs för att sätta listan över godkänd fast programvara"
 
@@ -596,6 +600,10 @@ msgstr "Kommandot hittades inte"
 #. TRANSLATORS: is not supported by the vendor
 msgid "Community supported"
 msgstr "Stöds av gemenskapen"
+
+#. TRANSLATORS: title prefix for the BIOS settings dialog
+msgid "Configuration Change Suggested"
+msgstr "Föreslagen ändring av konfiguration"
 
 #. TRANSLATORS: command description
 msgid "Convert a firmware file"
@@ -859,6 +867,10 @@ msgstr "Vill du uppdatera den här fjärrkällan nu?"
 #. TRANSLATORS: offer to stop asking the question
 msgid "Do you want to upload reports automatically for future updates?"
 msgstr "Vill du skicka rapporter automatiskt för framtida uppdateringar?"
+
+#. TRANSLATORS: command line option
+msgid "Don't prompt for authentication (less details may be shown)"
+msgstr "Fråga inte om autentisering (mindre detaljer kan visas)"
 
 #. TRANSLATORS: success
 #. success
@@ -1279,6 +1291,9 @@ msgctxt "A single GUID"
 msgid "GUID"
 msgstr "GUID"
 
+msgid "Get BIOS settings"
+msgstr "Erhåll BIOS-inställningar"
+
 #. TRANSLATORS: command description
 msgid "Get all device flags supported by fwupd"
 msgstr "Hämta alla enhetsflaggor som stöds av fwupd"
@@ -1401,6 +1416,10 @@ msgstr "Installera en fast programvaru-blob på en enhet"
 msgid "Install a firmware file on this hardware"
 msgstr "Installera en fast programvarufil på denna hårdvara"
 
+#. TRANSLATORS: command description
+msgid "Install a specific firmware on a device, all possible devices will also be installed once the CAB matches"
+msgstr "Installera specifik fast programvara på en enhet, alla möjliga enheter kommer också installeras när CAB-arkivet matchar"
+
 msgid "Install old version of signed system firmware"
 msgstr "Installera en gammal version av signerad fast programvara för systemet"
 
@@ -1493,6 +1512,10 @@ msgstr "Intel BootGuard förhindrar ej auktoriserad enhetsprogramvara från att 
 #. * verified boot refers to the way the boot process is verified
 msgid "Intel BootGuard verified boot"
 msgstr "Intel BootGuard verifierad uppstart"
+
+#. TRANSLATORS: Title: CET = Control-flow Enforcement Technology
+msgid "Intel CET"
+msgstr "Intel CET"
 
 #. TRANSLATORS: Title: CET = Control-flow Enforcement Technology,
 #. * active means being used by the OS
@@ -2138,6 +2161,11 @@ msgstr "Kör uppstädningssammansättningsrutin för insticksmodulen när instal
 msgid "Run the plugin composite prepare routine when using install-blob"
 msgstr "Kör förberedelsesammansättningsrutin för insticksmodulen när install-blob används"
 
+#. TRANSLATORS: tell a user how to get information
+#, c-format
+msgid "Run without '%s' to see"
+msgstr "Kör utan ”%s” för att se"
+
 #. TRANSLATORS: The kernel does not support this plugin
 msgid "Running kernel is too old"
 msgstr "Kärnan som körs är för gammal"
@@ -2149,6 +2177,10 @@ msgstr "Exekveringssuffix"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "SETTING VALUE"
 msgstr "INSTÄLLNING VÄRDE"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "SETTING1 VALUE1 [SETTING2] [VALUE2]"
+msgstr "INSTÄLLNING1 VÄRDE1 [INSTÄLLNING2] [VÄRDE2]"
 
 #. TRANSLATORS: Title: SPI refers to the flash chip in the computer
 msgid "SPI BIOS Descriptor"
@@ -2224,13 +2256,25 @@ msgstr "Vald volym"
 msgid "Serial Number"
 msgstr "Serienummer"
 
+#. TRANSLATORS: Configured a BIOS setting to a value
+#, c-format
+msgid "Set BIOS setting '%s' using '%s'."
+msgstr "Ställde in BIOS-inställningen ”%s” till ”%s”."
+
 #. TRANSLATORS: command description
 msgid "Set a BIOS setting"
 msgstr "Ställ in en BIOS-inställning"
 
+msgid "Set one or more BIOS settings"
+msgstr "Ställ in en eller flera BIOS-inställningar"
+
 #. TRANSLATORS: command line option
 msgid "Set the debugging flag during update"
 msgstr "Ställ in felsökningsflaggan under uppdatering"
+
+#. TRANSLATORS: command description
+msgid "Sets one or more BIOS settings"
+msgstr "Ställer in en eller flera BIOS-inställningar"
 
 #. TRANSLATORS: firmware approved by the admin
 msgid "Sets the list of approved firmware"
@@ -2240,7 +2284,7 @@ msgstr "Sätter listan av godkänd fast programvara"
 msgid "Setting type"
 msgstr "Inställningstyp"
 
-#. TRANSLATORS: Settings refers to BIOS settings in this context
+#. TRANSLATORS: description of a BIOS setting
 msgid "Settings will apply after system reboots"
 msgstr "Inställningar kommer börja gälla efter systemet startats om"
 
@@ -2638,6 +2682,12 @@ msgstr "Detta verktyg låter en administratör ställa frågor till och styra fw
 msgid "This tool allows an administrator to use the fwupd plugins without being installed on the host system."
 msgstr "Detta verktyg tillåter en administratör att använda fwupd-insticksmoduler utan att dessa är installerade på värdsystemet."
 
+#. TRANSLATORS: the %1 is a BIOS setting name.  %2 and %3 are the
+#. values, e.g. "True" or "Windows10"
+#, c-format
+msgid "This tool can change the BIOS setting '%s' from '%s' to '%s' automatically, but it will only be active after restarting the computer."
+msgstr "Detta verktyg kan automatiskt ändra BIOS-inställningen ”%s” från ”%s” till ”%s”, men den kommer aktiveras först efter att datorn startats om."
+
 #. TRANSLATORS: the user needs to stop playing with stuff
 msgid "This tool can only be used by the root user"
 msgstr "Detta verktyg kan endast användas av administratörsanvändaren"
@@ -2929,6 +2979,11 @@ msgstr "Skriver fil:"
 msgid "Writing…"
 msgstr "Skriver…"
 
+#. TRANSLATORS: the user has to manually recover; we can't do it
+#, c-format
+msgid "You should ensure you are comfortable restoring the setting from the system firmware setup, as this change may cause the system to not boot into Linux or cause other system instability."
+msgstr "Du bör säkerställa att du är bekväm med att återställa inställningen från systemets konfiguration för fast programvara, då denna ändring kan få systemet att inte kunna starta Linux eller orsaka annan systeminstabilitet."
+
 #. TRANSLATORS: show the user a warning
 msgid "Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices."
 msgstr "Din distributör kanske inte har verifierat någon av uppdateringarna av fast programvara för kompatibilitet med ditt system eller anslutna enheter."
@@ -2972,6 +3027,10 @@ msgstr "[FILNAMN1] [FILNAMN2]"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[SETTING1] [ SETTING2]..."
 msgstr "[INSTÄLLNING1] [ INSTÄLLNING2]…"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[SETTING1] [SETTING2] [--no-authenticate]"
+msgstr "[INSTÄLLNING1] [INSTÄLLNING2] [--no-authenticate]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[SMBIOS-FILE|HWIDS-FILE]"

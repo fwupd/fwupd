@@ -450,6 +450,10 @@ msgid "Authentication is required to modify daemon configuration"
 msgstr "Wymagane jest uwierzytelnienie, aby zmodyfikować konfigurację usługi"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to read BIOS settings"
+msgstr "Wymagane jest uwierzytelnienie, aby odczytać ustawienia BIOS-u"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to set the list of approved firmware"
 msgstr "Wymagane jest uwierzytelnienie, aby ustawić listę zatwierdzonego oprogramowania sprzętowego"
 
@@ -592,6 +596,10 @@ msgstr "Nie odnaleziono polecenia"
 #. TRANSLATORS: is not supported by the vendor
 msgid "Community supported"
 msgstr "Wspierane przez społeczność"
+
+#. TRANSLATORS: title prefix for the BIOS settings dialog
+msgid "Configuration Change Suggested"
+msgstr "Proponowana zmiana konfiguracji"
 
 #. TRANSLATORS: command description
 msgid "Convert a firmware file"
@@ -851,6 +859,10 @@ msgstr "Odświeżyć to repozytorium teraz?"
 #. TRANSLATORS: offer to stop asking the question
 msgid "Do you want to upload reports automatically for future updates?"
 msgstr "Automatycznie wysyłać zgłoszenia dla przyszłych aktualizacji?"
+
+#. TRANSLATORS: command line option
+msgid "Don't prompt for authentication (less details may be shown)"
+msgstr "Bez pytania o uwierzytelnienie (może być wyświetlanych mniej informacji)"
 
 #. TRANSLATORS: success
 #. success
@@ -1130,6 +1142,10 @@ msgstr "Usługa D-Bus aktualizacji oprogramowania sprzętowego"
 msgid "Firmware Update Daemon"
 msgstr "Usługa aktualizacji oprogramowania sprzętowego"
 
+#. TRANSLATORS: Title: if firmware updates are available
+msgid "Firmware Updates"
+msgstr "Aktualizacje oprogramowania sprzętowego"
+
 #. TRANSLATORS: program name
 msgid "Firmware Utility"
 msgstr "Narzędzie oprogramowania sprzętowego"
@@ -1216,6 +1232,9 @@ msgstr[3] "GUID"
 msgctxt "A single GUID"
 msgid "GUID"
 msgstr "GUID"
+
+msgid "Get BIOS settings"
+msgstr "Uzyskanie ustawień BIOS-u"
 
 #. TRANSLATORS: command description
 msgid "Get all device flags supported by fwupd"
@@ -1329,6 +1348,10 @@ msgstr "Instaluje zamknięte oprogramowanie sprzętowe na urządzeniu"
 #. TRANSLATORS: command description
 msgid "Install a firmware file on this hardware"
 msgstr "Instaluje plik oprogramowania sprzętowego na tym sprzęcie"
+
+#. TRANSLATORS: command description
+msgid "Install a specific firmware on a device, all possible devices will also be installed once the CAB matches"
+msgstr "Instaluje podane oprogramowanie sprzętowe na urządzeniu, wszystkie możliwe urządzenia także zostaną zainstalowane, jeśli CAB pasuje"
 
 msgid "Install old version of signed system firmware"
 msgstr "Instalacja poprzedniej wersji podpisanego oprogramowania sprzętowego komputera"
@@ -1977,6 +2000,11 @@ msgstr "Wykonuje procedurę czyszczenia składania wtyczki podczas używania „
 msgid "Run the plugin composite prepare routine when using install-blob"
 msgstr "Wykonuje procedurę przygotowania składania wtyczki podczas używania „install-blob”"
 
+#. TRANSLATORS: tell a user how to get information
+#, c-format
+msgid "Run without '%s' to see"
+msgstr "Wykonanie bez „%s” wyświetli"
+
 #. TRANSLATORS: The kernel does not support this plugin
 msgid "Running kernel is too old"
 msgstr "Działające jądro jest za stare"
@@ -1988,6 +2016,10 @@ msgstr "Przyrostek uruchamiania"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "SETTING VALUE"
 msgstr "USTAWIENIE WARTOŚĆ"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "SETTING1 VALUE1 [SETTING2] [VALUE2]"
+msgstr "USTAWIENIE1 WARTOŚĆ1 [USTAWIENIE2] [WARTOŚĆ2]"
 
 #. TRANSLATORS: Title: SPI refers to the flash chip in the computer
 msgid "SPI BIOS Descriptor"
@@ -2063,13 +2095,25 @@ msgstr "Wybrany wolumin"
 msgid "Serial Number"
 msgstr "Numer seryjny"
 
+#. TRANSLATORS: Configured a BIOS setting to a value
+#, c-format
+msgid "Set BIOS setting '%s' using '%s'."
+msgstr "Ustawienie ustawienia BIOS-u „%s” na „%s”."
+
 #. TRANSLATORS: command description
 msgid "Set a BIOS setting"
 msgstr "Ustawia ustawienie BIOS-u"
 
+msgid "Set one or more BIOS settings"
+msgstr "Ustawienie co najmniej jednego ustawienia BIOS-u"
+
 #. TRANSLATORS: command line option
 msgid "Set the debugging flag during update"
 msgstr "Ustawia flagę debugowania podczas aktualizacji"
+
+#. TRANSLATORS: command description
+msgid "Sets one or more BIOS settings"
+msgstr "Ustawia co najmniej jedno ustawienie BIOS-u"
 
 #. TRANSLATORS: firmware approved by the admin
 msgid "Sets the list of approved firmware"
@@ -2079,7 +2123,7 @@ msgstr "Ustawienie listy zatwierdzonego oprogramowania sprzętowego"
 msgid "Setting type"
 msgstr "Typ ustawienia"
 
-#. TRANSLATORS: Settings refers to BIOS settings in this context
+#. TRANSLATORS: description of a BIOS setting
 msgid "Settings will apply after system reboots"
 msgstr "Ustawienia zostaną zastosowane po ponownym uruchomieniu komputera"
 
@@ -2436,6 +2480,12 @@ msgstr "To narzędzie umożliwia administratorowi odpytywanie i sterowanie usł
 msgid "This tool allows an administrator to use the fwupd plugins without being installed on the host system."
 msgstr "To narzędzie umożliwia administratorowi używanie wtyczek fwupd bez ich instalacji na komputerze."
 
+#. TRANSLATORS: the %1 is a BIOS setting name.  %2 and %3 are the
+#. values, e.g. "True" or "Windows10"
+#, c-format
+msgid "This tool can change the BIOS setting '%s' from '%s' to '%s' automatically, but it will only be active after restarting the computer."
+msgstr "To narzędzie może automatycznie zmienić ustawienie BIOS-u „%s” z „%s” na „%s”, ale zmiana będzie aktywna dopiero po ponownym uruchomieniu komputera."
+
 #. TRANSLATORS: the user needs to stop playing with stuff
 msgid "This tool can only be used by the root user"
 msgstr "To narzędzie może być używane tylko przez użytkownika root"
@@ -2715,6 +2765,11 @@ msgstr "Zapisywanie pliku:"
 msgid "Writing…"
 msgstr "Zapisywanie…"
 
+#. TRANSLATORS: the user has to manually recover; we can't do it
+#, c-format
+msgid "You should ensure you are comfortable restoring the setting from the system firmware setup, as this change may cause the system to not boot into Linux or cause other system instability."
+msgstr "Należy się upewnić, że użytkownik jest w stanie przywrócić ustawienia w konfiguracji oprogramowania sprzętowego komputera, ponieważ ta zmiana może spowodować, że komputer nie będzie mógł uruchomić systemu Linux lub spowodować inny rodzaj niestabilności komputera."
+
 #. TRANSLATORS: show the user a warning
 msgid "Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices."
 msgstr "Używana dystrybucja mogła nie sprawdzić zgodności aktualizacji oprogramowania sprzętowego z komputerem i podłączonymi urządzeniami."
@@ -2758,6 +2813,10 @@ msgstr "[NAZWA-PLIKU1] [NAZWA-PLIKU2]"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[SETTING1] [ SETTING2]..."
 msgstr "[USTAWIENIE1] [USTAWIENIE2]…"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[SETTING1] [SETTING2] [--no-authenticate]"
+msgstr "[USTAWIENIE1] [USTAWIENIE2] [--no-authenticate]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[SMBIOS-FILE|HWIDS-FILE]"

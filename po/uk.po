@@ -466,6 +466,10 @@ msgid "Authentication is required to modify daemon configuration"
 msgstr "Для внесення змін до налаштувань фонової служби слід пройти розпізнавання"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to read BIOS settings"
+msgstr "Для читання параметрів BIOS слід пройти розпізнавання"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to set the list of approved firmware"
 msgstr "Щоб встановити список схвалених мікропрограм, вам слід пройти розпізнавання"
 
@@ -608,6 +612,10 @@ msgstr "Такої команди не знайдено"
 #. TRANSLATORS: is not supported by the vendor
 msgid "Community supported"
 msgstr "Підтримка спільноти"
+
+#. TRANSLATORS: title prefix for the BIOS settings dialog
+msgid "Configuration Change Suggested"
+msgstr "Запропоновано зміни у налаштуваннях"
 
 #. TRANSLATORS: command description
 msgid "Convert a firmware file"
@@ -871,6 +879,10 @@ msgstr "Хочете освіжити це віддалене сховище з�
 #. TRANSLATORS: offer to stop asking the question
 msgid "Do you want to upload reports automatically for future updates?"
 msgstr "Хочете вивантажувати звіти автоматично для наступних оновлень?"
+
+#. TRANSLATORS: command line option
+msgid "Don't prompt for authentication (less details may be shown)"
+msgstr "Не просити про розпізнавання (буде показано менше подробиць)"
 
 #. TRANSLATORS: success
 #. success
@@ -1295,6 +1307,9 @@ msgctxt "A single GUID"
 msgid "GUID"
 msgstr "GUID"
 
+msgid "Get BIOS settings"
+msgstr "Отримання параметрів BIOS"
+
 #. TRANSLATORS: command description
 msgid "Get all device flags supported by fwupd"
 msgstr "Отримати усі прапорці пристроїв, підтримку яких передбачено у fwupd"
@@ -1416,6 +1431,10 @@ msgstr "Встановити бінарну мікропрограму на пр
 #. TRANSLATORS: command description
 msgid "Install a firmware file on this hardware"
 msgstr "Встановити файл мікропрограми на це обладнання"
+
+#. TRANSLATORS: command description
+msgid "Install a specific firmware on a device, all possible devices will also be installed once the CAB matches"
+msgstr "Встановити вказану мікропрограму на пристрій. Буде також встановлено на усі можливі пристрої, щойно буде встановлено відповідність CAB"
 
 msgid "Install old version of signed system firmware"
 msgstr "Встановити стару версію підписаної мікропрограми системи"
@@ -2160,6 +2179,11 @@ msgstr "Запустити процедуру чищення композиці�
 msgid "Run the plugin composite prepare routine when using install-blob"
 msgstr "Запустити процедуру приготування композиції додатків при використанні install-blob"
 
+#. TRANSLATORS: tell a user how to get information
+#, c-format
+msgid "Run without '%s' to see"
+msgstr "Запустіть без «%s», щоб переглянути"
+
 #. TRANSLATORS: The kernel does not support this plugin
 msgid "Running kernel is too old"
 msgstr "Поточне ядро є надто застарілим"
@@ -2171,6 +2195,10 @@ msgstr "Динамічний суфікс"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "SETTING VALUE"
 msgstr "ПАРАМЕТР ЗНАЧЕННЯ"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "SETTING1 VALUE1 [SETTING2] [VALUE2]"
+msgstr "ПАРАМЕТР1 ЗНАЧЕННЯ1 [ПАРАМЕТР2] [ЗНАЧЕННЯ2]"
 
 #. TRANSLATORS: Title: SPI refers to the flash chip in the computer
 msgid "SPI BIOS Descriptor"
@@ -2246,13 +2274,25 @@ msgstr "Вибраний том"
 msgid "Serial Number"
 msgstr "Серійний номер"
 
+#. TRANSLATORS: Configured a BIOS setting to a value
+#, c-format
+msgid "Set BIOS setting '%s' using '%s'."
+msgstr "Встановити параметр BIOS «%s» за допомогою «%s»."
+
 #. TRANSLATORS: command description
 msgid "Set a BIOS setting"
 msgstr "Встановити параметр BIOS"
 
+msgid "Set one or more BIOS settings"
+msgstr "Встановити один або декілька параметрів BIOS"
+
 #. TRANSLATORS: command line option
 msgid "Set the debugging flag during update"
 msgstr "Встановити під час оновлення прапорець діагностики"
+
+#. TRANSLATORS: command description
+msgid "Sets one or more BIOS settings"
+msgstr "Встановити один або декілька параметрів BIOS"
 
 #. TRANSLATORS: firmware approved by the admin
 msgid "Sets the list of approved firmware"
@@ -2262,7 +2302,7 @@ msgstr "Встановлення списку схвалених мікропр�
 msgid "Setting type"
 msgstr "Тип параметра"
 
-#. TRANSLATORS: Settings refers to BIOS settings in this context
+#. TRANSLATORS: description of a BIOS setting
 msgid "Settings will apply after system reboots"
 msgstr "Параметри буде застосовано після перезавантаження системи"
 
@@ -2664,6 +2704,12 @@ msgstr "За допомогою цього інструмента адмініс
 msgid "This tool allows an administrator to use the fwupd plugins without being installed on the host system."
 msgstr "За допомогою цього інструмента адміністратор може скористатися додатками fwupd без встановлення їх до основної системи."
 
+#. TRANSLATORS: the %1 is a BIOS setting name.  %2 and %3 are the
+#. values, e.g. "True" or "Windows10"
+#, c-format
+msgid "This tool can change the BIOS setting '%s' from '%s' to '%s' automatically, but it will only be active after restarting the computer."
+msgstr "Цей інструмент здатен змінити параметр BIOS «%s» з «%s» на «%s» автоматично, але нове значення буде задіяно лише після перезапуску комп'ютера."
+
 #. TRANSLATORS: the user needs to stop playing with stuff
 msgid "This tool can only be used by the root user"
 msgstr "Цим інструментом може користуватися лише root"
@@ -2955,6 +3001,11 @@ msgstr "Записуємо файл:"
 msgid "Writing…"
 msgstr "Записуємо…"
 
+#. TRANSLATORS: the user has to manually recover; we can't do it
+#, c-format
+msgid "You should ensure you are comfortable restoring the setting from the system firmware setup, as this change may cause the system to not boot into Linux or cause other system instability."
+msgstr "Ви маєте переконатися, що зможете відновити параметр із налаштувань системної мікропрограми, оскільки ця зміна може спричинити до неможливості завантаження системи Linux або спричинити інші нестабільності у роботі системи."
+
 #. TRANSLATORS: show the user a warning
 msgid "Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices."
 msgstr "Виробник вашого дистрибутива може не перевіряти усі оновлення мікропрограми на сумісність із вашою системою або з’єднаними із нею пристроями."
@@ -2998,6 +3049,10 @@ msgstr "[НАЗВАФАЙЛА1] [НАЗВАФАЙЛА2]"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[SETTING1] [ SETTING2]..."
 msgstr "[ПАРАМЕТР1] [ПАРАМЕТР2]..."
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[SETTING1] [SETTING2] [--no-authenticate]"
+msgstr "[ПАРАМЕТР1] [ПАРАМЕТР2] [--no-authenticate]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[SMBIOS-FILE|HWIDS-FILE]"

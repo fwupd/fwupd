@@ -31,9 +31,45 @@
   <provides>
     <binary>fwupdmgr</binary>
     <binary>fwupdtool</binary>
-    <binary>fwupdagent</binary>
   </provides>
   <releases>
+    <release version="1.8.4" date="2022-08-30">
+      <description>
+        <p>
+          This release adds the following features:
+        </p>
+        <ul>
+          <li>Add a translated title and long description for HSI security attributes</li>
+          <li>Add support for loading a machine-default BIOS settings policy</li>
+          <li>Add support for reading and writing BIOS settings</li>
+          <li>Allow loading BIOS settings for host emulation</li>
+          <li>Prompt users to fix some BIOS configuration issues</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Actually show provided AppStream security issues</li>
+          <li>Add Quectel secure boot status AT commands</li>
+          <li>Correctly detect CET IBT</li>
+          <li>Do not assert when running with no plugins</li>
+          <li>Do not require UEFI capsule updates for checking TPM PCR0</li>
+          <li>Do not show HSI events where we changed the spec result value</li>
+          <li>Fix applying the latest DBX update</li>
+          <li>Include vfat in the list of possible BDP partition types</li>
+          <li>Install all devices with the same composite id in fwupdtool</li>
+          <li>Only fail the kernel HSI test for specific taint reasons</li>
+          <li>Only show changed events in fwupdmgr security</li>
+          <li>Update vulnerable CMSE versions from CSMEVDT data</li>
+        </ul>
+        <p>This release adds support for the following hardware:</p>
+        <ul>
+          <li>Elan non-HID touchpads</li>
+          <li>Google Prism</li>
+          <li>LabTop Mk III</li>
+          <li>ThinkPad Thunderbolt 4 Dock</li>
+          <li>ThinkPad Universal Smart Dock</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.8.3" date="2022-07-22">
       <description>
         <p>
