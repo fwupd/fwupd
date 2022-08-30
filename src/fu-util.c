@@ -3449,6 +3449,15 @@ fu_util_security(FuUtilPrivate *priv, gchar **values, GError **error)
 	g_autoptr(GError) error_local = NULL;
 	g_autofree gchar *str = NULL;
 
+#ifndef HAVE_HSI
+	g_set_error(error,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_NOT_SUPPORTED,
+		    /* TRANSLATORS: error message for unsupported feature */
+		    _("Host Security ID (HSI) is not supported"));
+	return FALSE;
+#endif /* HAVE_HSI */
+
 	/* the "why" */
 	attrs = fwupd_client_get_host_security_attrs(priv->client, priv->cancellable, error);
 	if (attrs == NULL)
