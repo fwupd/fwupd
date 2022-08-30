@@ -68,13 +68,15 @@ if gidocgen_dep.found() and docs_python_deps.allowed() and gidocgen_app.found() 
     install: true,
     install_dir: join_paths(datadir, 'doc', 'fwupd'),
   )
- install_data(['index.html', 'hsi.html'],
-    install_dir : join_paths(datadir, 'doc', 'fwupd')
-  )
- install_data(['urlmap_fwupd.js'],
+  if hsi
+    install_data(['index.html', 'hsi.html'],
+      install_dir : join_paths(datadir, 'doc', 'fwupd')
+    )
+  endif
+  install_data(['urlmap_fwupd.js'],
     install_dir: join_paths(datadir, 'doc', 'fwupd', 'libfwupd')
   )
- install_data(['urlmap_fwupdplugin.js'],
+  install_data(['urlmap_fwupdplugin.js'],
     install_dir: join_paths(datadir, 'doc', 'fwupd', 'libfwupdplugin')
   )
   #make devhelp work
