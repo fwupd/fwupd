@@ -314,7 +314,7 @@ fu_bytes_new_offset(GBytes *bytes, gsize offset, gsize length, GError **error)
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
 	/* sanity check */
-	if (offset + length > g_bytes_get_size(bytes)) {
+	if (offset + length < length || offset + length > g_bytes_get_size(bytes)) {
 		g_set_error(error,
 			    G_IO_ERROR,
 			    G_IO_ERROR_INVALID_DATA,
