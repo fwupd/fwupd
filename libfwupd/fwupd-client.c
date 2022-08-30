@@ -2856,7 +2856,7 @@ fwupd_client_install_bytes_async(FwupdClient *self,
 	g_task_return_new_error(task,
 				FWUPD_ERROR,
 				FWUPD_ERROR_NOT_SUPPORTED,
-				"Not supported as <glib-unix.h> is unavailable");
+				"Install CAB only supported on Linux");
 #endif
 }
 
@@ -2941,7 +2941,7 @@ fwupd_client_install_async(FwupdClient *self,
 	g_task_return_new_error(task,
 				FWUPD_ERROR,
 				FWUPD_ERROR_NOT_SUPPORTED,
-				"Not supported as <glib-unix.h> is unavailable");
+				"Install CAB async only supported on Linux");
 #endif
 }
 
@@ -3415,7 +3415,7 @@ fwupd_client_get_details_bytes_async(FwupdClient *self,
 	g_task_return_new_error(task,
 				FWUPD_ERROR,
 				FWUPD_ERROR_NOT_SUPPORTED,
-				"Not supported as <glib-unix.h> is unavailable");
+				"Get Details only supported on Linux");
 #endif
 }
 
@@ -3815,7 +3815,7 @@ fwupd_client_update_metadata_bytes_async(FwupdClient *self,
 	g_task_return_new_error(task,
 				FWUPD_ERROR,
 				FWUPD_ERROR_NOT_SUPPORTED,
-				"Not supported as <glib-unix.h> is unavailable");
+				"Update metadata only supported on Linux");
 #endif
 }
 

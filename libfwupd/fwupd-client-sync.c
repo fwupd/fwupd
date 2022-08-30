@@ -518,7 +518,7 @@ fwupd_client_get_details(FwupdClient *self,
 	g_set_error_literal(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "Not supported as <glib-unix.h> is unavailable");
+			    "Get Details only supported on Linux");
 	return NULL;
 #endif
 }
@@ -1272,7 +1272,7 @@ fwupd_client_install(FwupdClient *self,
 	g_set_error_literal(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "Not supported as <glib-unix.h> is unavailable");
+			    "Install CAB only supported on Linux");
 	return FALSE;
 #endif
 }
@@ -1514,7 +1514,7 @@ fwupd_client_update_metadata(FwupdClient *self,
 	g_set_error_literal(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "Not supported as <glib-unix.h> is unavailable");
+			    "Update metadata only supported on Linux");
 	return FALSE;
 #endif
 }
