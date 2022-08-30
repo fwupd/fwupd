@@ -4604,7 +4604,13 @@ main(int argc, char *argv[])
 
 	/* show a warning if the daemon is tainted */
 	if (!fwupd_client_connect(priv->client, priv->cancellable, &error)) {
+#ifdef _WIN32
+		/* TRANSLATORS: error message for Windows */
+		g_printerr(_("Failed to connect to Windows service, please ensure it's running."));
+		g_debug("%s", error->message);
+#else
 		g_printerr("Failed to connect to daemon: %s\n", error->message);
+#endif
 		return EXIT_FAILURE;
 	}
 	if (fwupd_client_get_tainted(priv->client)) {
