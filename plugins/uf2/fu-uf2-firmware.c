@@ -239,6 +239,7 @@ fu_uf2_firmware_parse(FuFirmware *firmware,
 {
 	FuUf2Firmware *self = FU_UF2_FIRMWARE(firmware);
 	g_autoptr(GByteArray) tmp = g_byte_array_new();
+	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GPtrArray) chunks = NULL;
 
 	/* read in fixed sized chunks */
@@ -250,7 +251,8 @@ fu_uf2_firmware_parse(FuFirmware *firmware,
 	}
 
 	/* success */
-	fu_firmware_set_bytes(firmware, g_byte_array_free_to_bytes(g_steal_pointer(&tmp)));
+	blob = g_byte_array_free_to_bytes(g_steal_pointer(&tmp));
+	fu_firmware_set_bytes(firmware, blob);
 	return TRUE;
 }
 
