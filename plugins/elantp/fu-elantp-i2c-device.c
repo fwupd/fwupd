@@ -327,7 +327,6 @@ fu_elantp_i2c_device_setup(FuDevice *device, GError **error)
 				    G_LITTLE_ENDIAN,
 				    error))
 		return FALSE;
-	fu_device_add_instance_u16(device, "MOD", self->module_id);
 
 	/* define the extra instance IDs */
 	fu_device_add_instance_u16(device, "VEN", vid);
