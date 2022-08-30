@@ -146,6 +146,12 @@ find "$DESTDIR" | \
 	--component-group "CG.fwupd-files" | \
 	tee "$build/contrib/fwupd-files.wxs"
 
+#add service install key
+sed -i "$build/contrib/fwupd-files.wxs" -f - << EOF
+s,fwupd.exe"/>,fwupd.exe"/>\\
+          <ServiceInstall Id="FwupdServiceInstaller" Interactive="no" ErrorControl="normal" Name="fwupd" DisplayName="fwupd" Description="fwupd" Start="auto" Type="ownProcess" Arguments=""/>,
+EOF
+
 MSI_FILENAME="$DESTDIR/setup/fwupd-$VERSION-setup-x86_64.msi"
 mkdir -p "$DESTDIR/setup"
 wixl -v \
