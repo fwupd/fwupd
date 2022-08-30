@@ -689,7 +689,7 @@ fu_usi_dock_mcu_device_write_firmware(FuDevice *device,
 static gboolean
 fu_usi_dock_mcu_device_attach(FuDevice *device, FuProgress *progress, GError **error)
 {
-	fu_device_set_remove_delay(device, 500000);
+	fu_device_set_remove_delay(device, 900000);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 
 	/* success */
