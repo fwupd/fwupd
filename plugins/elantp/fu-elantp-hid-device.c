@@ -474,6 +474,9 @@ fu_elantp_hid_device_detach(FuDevice *device, FuProgress *progress, GError **err
 	} else {
 		iap_ver = fu_common_read_uint16(buf, G_LITTLE_ENDIAN);
 	}
+
+	/* set the page size */
+	self->fw_page_size = 64;
 	if (ic_type >= 0x10) {
 		if (iap_ver >= 1) {
 			/* set the IAP type, presumably some kind of ABI */
