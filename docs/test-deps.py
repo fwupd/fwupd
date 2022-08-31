@@ -4,7 +4,11 @@
 import sys
 import markdown
 
-from packaging.version import Version
+try:
+    from packaging.version import Version
+except ImportError:
+    print("Missing 'packaging' python module")
+    sys.exit(1)
 
 # https://github.com/fwupd/fwupd/pull/3337#issuecomment-858947695
 if Version(markdown.__version__) < Version("3.3.3"):
