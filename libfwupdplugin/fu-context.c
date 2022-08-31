@@ -590,6 +590,7 @@ fu_context_load_hwinfo(FuContext *self, GError **error)
 	GPtrArray *guids;
 	g_autoptr(GError) error_smbios = NULL;
 	g_autoptr(GError) error_hwids = NULL;
+	g_autoptr(GError) error_bios_settings = NULL;
 
 	g_return_val_if_fail(FU_IS_CONTEXT(self), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
@@ -614,8 +615,9 @@ fu_context_load_hwinfo(FuContext *self, GError **error)
 		}
 	}
 
-	/* set it up so that udev will load firmware attributes */
 	fu_context_add_udev_subsystem(self, "firmware-attributes");
+	if (!fu_context_reload_bios_settings(self, &error_bios_settings))
+		g_debug("%s", error_bios_settings->message);
 
 	/* always */
 	return TRUE;

@@ -6926,7 +6926,7 @@ fu_engine_apply_default_bios_settings_policy(FuEngine *self, GError **error)
 }
 
 static void
-fu_engine_check_firmware_attributes(FuEngine *self, FuDevice *device)
+fu_engine_check_firmware_attributes(FuEngine *self, FuDevice *device, gboolean added)
 {
 	const gchar *subsystem;
 
@@ -6937,6 +6937,15 @@ fu_engine_check_firmware_attributes(FuEngine *self, FuDevice *device)
 	subsystem = fu_udev_device_get_subsystem(FU_UDEV_DEVICE(device));
 	if (g_strcmp0(subsystem, "firmware-attributes") == 0) {
 		g_autoptr(GError) error = NULL;
+		if (added) {
+			FuBiosSettings *settings = fu_context_get_bios_settings(self->ctx);
+			g_autoptr(GPtrArray) items = fu_bios_settings_get_all(settings);
+
+			if (items->len > 0) {
+				g_debug("ignoring add event for already loaded settings");
+				return;
+			}
+		}
 		if (!fu_context_reload_bios_settings(self->ctx, &error)) {
 			g_debug("%s", error->message);
 			return;
@@ -6958,7 +6967,7 @@ fu_engine_backend_device_removed_cb(FuBackend *backend, FuDevice *device, FuEngi
 	g_autoptr(GPtrArray) devices = NULL;
 
 	/* if this is for firmware attributes, reload that part of the daemon */
-	fu_engine_check_firmware_attributes(self, device);
+	fu_engine_check_firmware_attributes(self, device, FALSE);
 
 	/* debug */
 	if (g_getenv("FWUPD_PROBE_VERBOSE") != NULL) {
@@ -7101,7 +7110,7 @@ fu_engine_backend_device_added(FuEngine *self, FuDevice *device, FuProgress *pro
 	}
 
 	/* if this is for firmware attributes, reload that part of the daemon */
-	fu_engine_check_firmware_attributes(self, device);
+	fu_engine_check_firmware_attributes(self, device, TRUE);
 
 	/* can be specified using a quirk */
 	fu_engine_backend_device_added_run_plugins(self, device, fu_progress_get_child(progress));
