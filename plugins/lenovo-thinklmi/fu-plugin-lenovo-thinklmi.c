@@ -14,13 +14,13 @@
 static gboolean
 fu_plugin_lenovo_thinklmi_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 {
-	FuContext *ctx = fu_plugin_get_context(plugin);
-
-	if (fu_context_get_bios_setting(ctx, BOOT_ORDER_LOCK) == NULL) {
+	const gchar *hwid =
+	    fu_context_get_hwid_value(fu_plugin_get_context(plugin), FU_HWIDS_KEY_MANUFACTURER);
+	if (g_strcmp0(hwid, "LENOVO") != 0) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "unable to access needed attribute");
+				    "unsupported manufacturer");
 		return FALSE;
 	}
 
