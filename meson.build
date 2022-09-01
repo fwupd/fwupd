@@ -273,11 +273,7 @@ if libgcab.type_name() == 'pkgconfig' and cc.has_function('gcab_file_set_bytes',
 endif
 
 bashcomp = dependency('bash-completion', required: false)
-if host_machine.system() != 'freebsd'
-  python3 = find_program('python3')
-else
-  python3 = find_program('python3.8', 'python3', 'python3.9')
-endif
+python3 = import('python').find_installation('python3')
 
 gnutls = dependency('gnutls', version: '>= 3.6.0', required: get_option('gnutls'))
 if gnutls.found()
