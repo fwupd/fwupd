@@ -2,7 +2,12 @@
 # SPDX-License-Identifier: LGPL-2.1+
 
 import sys
-import markdown
+
+try:
+    import markdown
+except ImportError:
+    print("Missing 'markdown' python module")
+    sys.exit(1)
 
 try:
     from packaging.version import Version
