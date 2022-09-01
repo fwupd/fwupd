@@ -8,6 +8,7 @@ install_data([
     'corsair-katar-pro-wireless.json',
     'corsair-katar-pro-xt.json',
     'corsair-sabre-pro.json',
+    'corsair-sabre-rgb-pro.json',
     'dell-kh08p.json',
     'dell-wd19tb.json',
     'fwupd-a3bu-xplained.json',
