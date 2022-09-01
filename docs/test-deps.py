@@ -2,18 +2,31 @@
 # SPDX-License-Identifier: LGPL-2.1+
 
 import sys
-import markdown
+
+# https://github.com/fwupd/fwupd/pull/3337#issuecomment-858947695
+MINIMUM_VERSION = "3.3.3"
+
+
+def error():
+    print("python3-markdown version %s required for gi-docgen" % MINIMUM_VERSION)
+    sys.exit(1)
+
+
+try:
+    import markdown
+except ImportError:
+    error()
 
 try:
     from packaging.version import Version
-except ImportError:
-    print("Missing 'packaging' python module")
-    sys.exit(1)
 
-# https://github.com/fwupd/fwupd/pull/3337#issuecomment-858947695
-if Version(markdown.__version__) < Version("3.3.3"):
-    print("python3-markdown version 3.3.3 required for gi-docgen")
-    sys.exit(1)
+    if Version(markdown.__version__) < Version(MINIMUM_VERSION):
+        error()
+except ImportError:
+    from distutils.version import LooseVersion
+
+    if LooseVersion(markdown.version) < LooseVersion(MINIMUM_VERSION):
+        error()
 
 # success
 sys.exit(0)
