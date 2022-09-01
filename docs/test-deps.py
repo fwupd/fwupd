@@ -16,8 +16,8 @@ except ImportError:
     sys.exit(1)
 
 # https://github.com/fwupd/fwupd/pull/3337#issuecomment-858947695
-if Version(markdown.__version__) < Version("3.3.3"):
-    print("python3-markdown version 3.3.3 required for gi-docgen")
+if Version(markdown.__version__) < Version("3.2.0"):
+    print("python3-markdown version 3.2.0 required for gi-docgen")
     sys.exit(1)
 
 # success

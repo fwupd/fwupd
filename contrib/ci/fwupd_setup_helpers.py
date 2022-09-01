@@ -14,7 +14,7 @@ WARNING = "\033[93m"
 ENDC = "\033[0m"
 
 # Minimum version of markdown required
-MINIMUM_MARKDOWN = (3, 3, 3)
+MINIMUM_MARKDOWN = (3, 2, 0)
 
 # Minimum meson required
 MINIMUM_MESON = "0.61.0"
