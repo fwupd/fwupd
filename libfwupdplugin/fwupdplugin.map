@@ -1109,5 +1109,6 @@ LIBFWUPDPLUGIN_1.8.5 {
     fu_intel_thunderbolt_nvm_is_host;
     fu_intel_thunderbolt_nvm_is_native;
     fu_intel_thunderbolt_nvm_new;
+    fu_kernel_get_cmdline;
   local: *;
 } LIBFWUPDPLUGIN_1.8.4;

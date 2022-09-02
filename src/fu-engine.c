@@ -2018,8 +2018,10 @@ fu_engine_get_report_metadata_os_release(GHashTable *hash, GError **error)
 static gchar *
 fu_engine_get_proc_cmdline(GError **error)
 {
-	gsize bufsz = 0;
-	g_autofree gchar *buf = NULL;
+	GHashTableIter iter;
+	gpointer key;
+	gpointer value;
+	g_autoptr(GHashTable) hash = NULL;
 	g_autoptr(GString) cmdline_safe = g_string_new(NULL);
 	const gchar *ignore[] = {
 	    "",
@@ -2085,22 +2087,18 @@ fu_engine_get_proc_cmdline(GError **error)
 	};
 
 	/* get a PII-safe kernel command line */
-	if (!g_file_get_contents("/proc/cmdline", &buf, &bufsz, error))
+	hash = fu_kernel_get_cmdline(error);
+	if (hash == NULL)
 		return NULL;
-	if (bufsz > 0) {
-		g_auto(GStrv) tokens = fu_strsplit(buf, bufsz - 1, " ", -1);
-		for (guint i = 0; tokens[i] != NULL; i++) {
-			g_auto(GStrv) kv = NULL;
-			if (strlen(tokens[i]) == 0)
-				continue;
-			kv = g_strsplit(tokens[i], "=", 2);
-			if (g_strv_contains(ignore, kv[0]))
-				continue;
-			if (cmdline_safe->len > 0)
-				g_string_append(cmdline_safe, " ");
-			g_string_append(cmdline_safe, tokens[i]);
-		}
+	for (guint i = 0; ignore[i] != NULL; i++)
+		g_hash_table_remove(hash, ignore[i]);
+	g_hash_table_iter_init(&iter, hash);
+	while (g_hash_table_iter_next(&iter, &key, &value)) {
+		if (cmdline_safe->len > 0)
+			g_string_append(cmdline_safe, " ");
+		g_string_append_printf(cmdline_safe, "%s=%s", (gchar *)key, (gchar *)value);
 	}
+
 	return g_string_free(g_steal_pointer(&cmdline_safe), FALSE);
 }
 #endif
