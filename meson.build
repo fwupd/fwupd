@@ -536,7 +536,9 @@ protoc = find_program('protoc', 'protoc-c', required: get_option('plugin_logitec
 root_incdir = include_directories('.')
 
 fwupd_gir = []
-introspection = get_option('introspection').disable_auto_if(host_machine.system() != 'linux')
+gir_dep = dependency('gobject-introspection-1.0', required: get_option('introspection'))
+introspection = get_option('introspection').disable_auto_if(host_machine.system() != 'linux').disable_auto_if(not gir_dep.found())
+
 markdown_version = run_command(
   python3, '-c', 'import markdown; print(markdown.__version__)'
 ).stdout().strip()
