@@ -6,32 +6,12 @@
 #
 import os
 import sys
-from fwupd_setup_helpers import get_build_dependencies
+from fwupd_setup_helpers import parse_dependencies
 
 
-def parse_control_dependencies(requested_type):
-    TARGET = os.getenv("OS")
+def parse_control_dependencies():
     QUBES = os.getenv("QUBES")
-
-    if TARGET == "":
-        print("Missing OS environment variable")
-        sys.exit(1)
-    OS = TARGET
-    SUBOS = ""
-    if TARGET:
-        split = TARGET.split("-")
-        if len(split) >= 2:
-            OS = split[0]
-            SUBOS = split[1]
-    else:
-        import lsb_release
-
-        OS = lsb_release.get_distro_information()["ID"].lower()
-        import platform
-
-        SUBOS = platform.machine()
-
-    return get_build_dependencies(OS, SUBOS), QUBES
+    return parse_dependencies("debian", "x86_64", True), QUBES
 
 
 def update_debian_control(target):
@@ -45,7 +25,7 @@ def update_debian_control(target):
     with open(control_in, "r") as rfd:
         lines = rfd.readlines()
 
-    deps, QUBES = parse_control_dependencies("build")
+    deps, QUBES = parse_control_dependencies()
     deps.sort()
 
     if QUBES:
@@ -56,7 +36,7 @@ def update_debian_control(target):
 
     with open(control_out, "w") as wfd:
         for line in lines:
-            if line.startswith("Build-Depends: %%%DYNAMIC%%%"):
+            if "Build-Depends:" in line and "%%%DYNAMIC%%%" in line:
                 wfd.write("Build-Depends:\n")
                 for i in range(0, len(deps)):
                     wfd.write("\t%s,\n" % deps[i])
