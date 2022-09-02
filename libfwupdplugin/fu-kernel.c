@@ -17,6 +17,7 @@
 #include "fu-common.h"
 #include "fu-kernel.h"
 #include "fu-path.h"
+#include "fu-string.h"
 #include "fu-version-common.h"
 
 /**
@@ -217,4 +218,49 @@ fu_kernel_reset_firmware_search_path(GError **error)
 	const gchar *contents = " ";
 
 	return fu_kernel_set_firmware_search_path(contents, error);
+}
+
+/**
+ * fu_kernel_get_cmdline:
+ * @error: (nullable): optional return location for an error
+ *
+ * Loads all the kernel /proc/cmdline key/values into a hash table.
+ *
+ * Returns: (transfer container) (element-type utf8 utf8): keys from the kernel command line
+ *
+ * Since: 1.8.5
+ **/
+GHashTable *
+fu_kernel_get_cmdline(GError **error)
+{
+#ifdef __linux__
+	gsize bufsz = 0;
+	g_autofree gchar *buf = NULL;
+	g_autoptr(GHashTable) hash = NULL;
+
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	if (!g_file_get_contents("/proc/cmdline", &buf, &bufsz, error))
+		return NULL;
+	hash = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
+	if (bufsz > 0) {
+		g_auto(GStrv) tokens = fu_strsplit(buf, bufsz - 1, " ", -1);
+		for (guint i = 0; tokens[i] != NULL; i++) {
+			g_auto(GStrv) kv = NULL;
+			if (strlen(tokens[i]) == 0)
+				continue;
+			kv = g_strsplit(tokens[i], "=", 2);
+			g_hash_table_insert(hash, g_strdup(kv[0]), g_strdup(kv[1]));
+		}
+	}
+
+	/* success */
+	return g_steal_pointer(&hash);
+#else
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "platform does not support getting the kernel cmdline");
+	return NULL;
+#endif
 }
