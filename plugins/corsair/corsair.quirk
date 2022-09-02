@@ -1,21 +1,3 @@
-# KATAR PRO WIRELESS receiver
-[USB\VID_1B1C&PID_1B94]
-Plugin = corsair
-GType = FuCorsairDevice
-Name = KATAR PRO WIRELESS receiver
-CorsairDeviceKind = mouse
-Flags = legacy-attach
-CorsairSubdeviceId = USB\VID_1B1C&PID_1B94&WIRELESS
-
-# KATAR PRO WIRELESS mouse
-[USB\VID_1B1C&PID_1B94&WIRELESS]
-Plugin = corsair
-GType = FuCorsairDevice
-Name = KATAR PRO WIRELESS mouse
-CorsairDeviceKind = mouse
-BatteryThreshold = 30
-Flags = is-subdevice,legacy-attach,no-version-in-bl
-
 [USB\VID_1B1C&PID_1BAC]
 Plugin = corsair
 GType = FuCorsairDevice
@@ -29,13 +11,6 @@ GType = FuCorsairDevice
 Name = SABRE PRO Gaming Mouse
 CorsairDeviceKind = mouse
 Flags = legacy-attach,no-version-in-bl
-
-[USB\VID_1B1C&PID_1B5E]
-Plugin = corsair
-GType = FuCorsairDevice
-Name = HARPOON RGB WIRELESS Gaming Mouse
-CorsairDeviceKind = mouse
-Flags = legacy-attach
 
 [USB\VID_1B1C&PID_1B79]
 Plugin = corsair
