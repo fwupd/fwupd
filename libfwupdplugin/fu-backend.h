@@ -6,11 +6,21 @@
 
 #pragma once
 
+#include <json-glib/json-glib.h>
+
 #include "fu-context.h"
 #include "fu-device.h"
 
 #define FU_TYPE_BACKEND (fu_backend_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuBackend, fu_backend, FU, BACKEND, GObject)
+
+typedef enum {
+	FU_BACKEND_LOAD_FLAG_NONE,
+} FuBackendLoadFlags;
+
+typedef enum {
+	FU_BACKEND_SAVE_FLAG_NONE,
+} FuBackendSaveFlags;
 
 struct _FuBackendClass {
 	GObjectClass parent_class;
@@ -24,8 +34,18 @@ struct _FuBackendClass {
 	void (*registered)(FuBackend *self, FuDevice *device);
 	void (*invalidate)(FuBackend *self);
 	void (*to_string)(FuBackend *self, guint indent, GString *str);
+	gboolean (*load)(FuBackend *self,
+			 JsonObject *json_object,
+			 const gchar *tag,
+			 FuBackendLoadFlags flags,
+			 GError **error);
+	gboolean (*save)(FuBackend *self,
+			 JsonBuilder *json_builder,
+			 const gchar *tag,
+			 FuBackendSaveFlags flags,
+			 GError **error);
 	/*< private >*/
-	gpointer padding[26];
+	gpointer padding[24];
 };
 
 const gchar *

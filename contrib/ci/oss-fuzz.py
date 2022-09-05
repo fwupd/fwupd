@@ -329,6 +329,14 @@ def _build(bld: Builder) -> None:
             "PACKAGE_VERSION": "0.0.0",
         },
     )
+    bld.write_header(
+        "libfwupdplugin/fu-version.h",
+        {
+            "FU_MAJOR_VERSION": 0,
+            "FU_MINOR_VERSION": 0,
+            "FU_MICRO_VERSION": 0,
+        },
+    )
 
     # libfwupd + libfwupdplugin
     built_objs: List[str] = []

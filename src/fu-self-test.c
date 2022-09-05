@@ -16,6 +16,7 @@
 #include "fwupd-bios-setting-private.h"
 #include "fwupd-security-attr-private.h"
 
+#include "fu-backend-private.h"
 #include "fu-bios-settings-private.h"
 #include "fu-cabinet-common.h"
 #include "fu-config.h"
@@ -32,6 +33,7 @@
 #include "fu-security-attr-common.h"
 #include "fu-smbios-private.h"
 #include "fu-spawn.h"
+#include "fu-usb-backend.h"
 
 typedef struct {
 	FuPlugin *plugin;
@@ -3176,6 +3178,157 @@ _plugin_device_register_cb(FuPlugin *plugin, FuDevice *device, gpointer user_dat
 	fu_plugin_runner_device_register(plugin, device);
 }
 
+/*
+ * To generate the fwupd DS20 descriptor in the usb-devices.json file save fw-ds20.builder.xml:
+ *
+ *    <firmware gtype="FuUsbDeviceFwDs20">
+ *      <idx>42</idx>   <!-- bVendorCode -->
+ *      <size>32</size> <!-- wLength -->
+ *    </firmware>
+ *
+ * Then run:
+ *
+ *    fwupdtool firmware-build fw-ds20.builder.xml fw-ds20.bin
+ *    base64 fw-ds20.bin
+ *
+ * To generate the fake control transfer response, save fw-ds20.quirk:
+ *
+ *    [USB\VID_273F&PID_1004]
+ *    Plugin = dfu
+ *    Icon = computer
+ *
+ * Then run:
+ *
+ *    contrib/generate-ds20.py fw-ds20.quirk --bufsz 32
+ */
+static void
+fu_backend_usb_func(gconstpointer user_data)
+{
+	FuTest *self = (FuTest *)user_data;
+	gboolean ret;
+	FuDevice *device_tmp;
+	g_autofree gchar *gusb_emulate_fn = NULL;
+	g_autofree gchar *devicestr = NULL;
+	g_autoptr(FuBackend) backend = fu_usb_backend_new(self->ctx);
+	g_autoptr(FuDeviceLocker) locker = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GPtrArray) devices = NULL;
+	g_autoptr(GPtrArray) possible_plugins = NULL;
+	g_autoptr(JsonParser) parser = json_parser_new();
+
+#if !G_USB_CHECK_VERSION(0, 4, 0)
+	g_test_skip("GUsb version too old");
+	return;
+#endif
+
+	/* load the JSON into the backend */
+	gusb_emulate_fn = g_test_build_filename(G_TEST_DIST, "tests", "usb-devices.json", NULL);
+	ret = json_parser_load_from_file(parser, gusb_emulate_fn, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpstr(fu_backend_get_name(backend), ==, "usb");
+	g_assert_true(fu_backend_get_enabled(backend));
+	ret = fu_backend_setup(backend, progress, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = fu_backend_load(backend,
+			      json_node_get_object(json_parser_get_root(parser)),
+			      NULL,
+			      FU_BACKEND_LOAD_FLAG_NONE,
+			      &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = fu_backend_coldplug(backend, progress, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	devices = fu_backend_get_devices(backend);
+	g_assert_cmpint(devices->len, ==, 1);
+	device_tmp = g_ptr_array_index(devices, 0);
+	fu_device_set_context(device_tmp, self->ctx);
+	locker = fu_device_locker_new(device_tmp, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(locker);
+
+	/* for debugging */
+	devicestr = fu_device_to_string(device_tmp);
+	g_debug("%s", devicestr);
+
+	/* check the device was processed correctly by FuUsbDevice */
+	g_assert_cmpstr(fu_device_get_name(device_tmp), ==, "ColorHug2");
+	g_assert_true(fu_device_has_instance_id(device_tmp, "USB\\VID_273F&PID_1004&REV_0002"));
+	g_assert_true(fu_device_has_vendor_id(device_tmp, "USB:0x273F"));
+
+	/* check the fwupd DS20 descriptor was parsed */
+	g_assert_true(fu_device_has_icon(device_tmp, "computer"));
+	possible_plugins = fu_device_get_possible_plugins(device_tmp);
+	g_assert_cmpint(possible_plugins->len, ==, 1);
+	g_assert_cmpstr(g_ptr_array_index(possible_plugins, 0), ==, "dfu");
+}
+
+static void
+fu_backend_usb_invalid_func(gconstpointer user_data)
+{
+	FuTest *self = (FuTest *)user_data;
+	gboolean ret;
+	FuDevice *device_tmp;
+	g_autofree gchar *gusb_emulate_fn = NULL;
+	g_autoptr(FuBackend) backend = fu_usb_backend_new(self->ctx);
+	g_autoptr(FuDeviceLocker) locker = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GPtrArray) devices = NULL;
+	g_autoptr(JsonParser) parser = json_parser_new();
+
+#if !G_USB_CHECK_VERSION(0, 4, 0)
+	g_test_skip("GUsb version too old");
+	return;
+#endif
+
+	/* load the JSON into the backend */
+	gusb_emulate_fn =
+	    g_test_build_filename(G_TEST_DIST, "tests", "usb-devices-invalid.json", NULL);
+	ret = json_parser_load_from_file(parser, gusb_emulate_fn, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = fu_backend_setup(backend, progress, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = fu_backend_load(backend,
+			      json_node_get_object(json_parser_get_root(parser)),
+			      NULL,
+			      FU_BACKEND_LOAD_FLAG_NONE,
+			      &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = fu_backend_coldplug(backend, progress, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	devices = fu_backend_get_devices(backend);
+	g_assert_cmpint(devices->len, ==, 1);
+	device_tmp = g_ptr_array_index(devices, 0);
+	fu_device_set_context(device_tmp, self->ctx);
+
+	g_test_expect_message("FuUsbDevice",
+			      G_LOG_LEVEL_WARNING,
+			      "*invalid platform version 0x0000000a, expected >= 0x00010805*");
+	g_test_expect_message("FuUsbDevice",
+			      G_LOG_LEVEL_WARNING,
+			      "failed to parse * BOS descriptor: did not find magic*");
+
+	locker = fu_device_locker_new(device_tmp, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(locker);
+
+	/* check the device was processed correctly by FuUsbDevice */
+	g_assert_cmpstr(fu_device_get_name(device_tmp), ==, "ColorHug2");
+	g_assert_true(fu_device_has_instance_id(device_tmp, "USB\\VID_273F&PID_1004&REV_0002"));
+	g_assert_true(fu_device_has_vendor_id(device_tmp, "USB:0x273F"));
+
+	/* check the fwupd DS20 descriptor was *not* parsed */
+	g_assert_false(fu_device_has_icon(device_tmp, "computer"));
+}
+
 static void
 fu_plugin_module_func(gconstpointer user_data)
 {
@@ -4689,6 +4842,8 @@ main(int argc, char **argv)
 		g_test_add_data_func("/fwupd/progressbar", self, fu_progressbar_func);
 	}
 	g_test_add_data_func("/fwupd/plugin{build-hash}", self, fu_plugin_hash_func);
+	g_test_add_data_func("/fwupd/backend{usb}", self, fu_backend_usb_func);
+	g_test_add_data_func("/fwupd/backend{usb-invalid}", self, fu_backend_usb_invalid_func);
 	g_test_add_data_func("/fwupd/plugin{module}", self, fu_plugin_module_func);
 	g_test_add_data_func("/fwupd/memcpy", self, fu_memcpy_func);
 	g_test_add_data_func("/fwupd/security-attr", self, fu_security_attr_func);

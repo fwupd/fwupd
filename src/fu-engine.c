@@ -37,6 +37,7 @@
 #include "fwupd-resources.h"
 #include "fwupd-security-attr-private.h"
 
+#include "fu-backend-private.h"
 #include "fu-bios-settings-private.h"
 #include "fu-cabinet.h"
 #include "fu-context-private.h"
@@ -60,6 +61,8 @@
 #include "fu-security-attr-common.h"
 #include "fu-security-attrs-private.h"
 #include "fu-udev-device-private.h"
+#include "fu-usb-device-fw-ds20.h"
+#include "fu-usb-device-ms-ds20.h"
 #include "fu-version.h"
 
 #ifdef HAVE_GUDEV
@@ -7760,6 +7763,8 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 	fu_context_add_firmware_gtype(self->ctx,
 				      "intel-thunderbolt-nvm",
 				      FU_TYPE_INTEL_THUNDERBOLT_NVM);
+	fu_context_add_firmware_gtype(self->ctx, "usb-device-fw-ds20", FU_TYPE_USB_DEVICE_FW_DS20);
+	fu_context_add_firmware_gtype(self->ctx, "usb-device-ms-ds20", FU_TYPE_USB_DEVICE_MS_DS20);
 
 	/* we are emulating a different host */
 	if (host_emulate != NULL) {
@@ -8031,6 +8036,22 @@ fu_engine_idle_status_notify_cb(FuIdle *idle, GParamSpec *pspec, FuEngine *self)
 	FwupdStatus status = fu_idle_get_status(idle);
 	if (status == FWUPD_STATUS_SHUTDOWN)
 		fu_engine_set_status(self, status);
+}
+
+gboolean
+fu_engine_backends_save(FuEngine *self, JsonBuilder *json_builder, GError **error)
+{
+	json_builder_begin_object(json_builder);
+	json_builder_set_member_name(json_builder, "Backends");
+	json_builder_begin_array(json_builder);
+	for (guint i = 0; i < self->backends->len; i++) {
+		FuBackend *backend = g_ptr_array_index(self->backends, i);
+		if (!fu_backend_save(backend, json_builder, NULL, FU_BACKEND_SAVE_FLAG_NONE, error))
+			return FALSE;
+	}
+	json_builder_end_array(json_builder);
+	json_builder_end_object(json_builder);
+	return TRUE;
 }
 
 static void

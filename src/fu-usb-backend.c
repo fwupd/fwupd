@@ -120,12 +120,21 @@ static gboolean
 fu_usb_backend_coldplug(FuBackend *backend, FuProgress *progress, GError **error)
 {
 	FuUsbBackend *self = FU_USB_BACKEND(backend);
+#if G_USB_CHECK_VERSION(0, 4, 0)
+	FuContext *ctx = fu_backend_get_context(backend);
+#endif
 	g_autoptr(GPtrArray) usb_devices = NULL;
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "enumerate");
 	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 99, "add-devices");
+
+#if G_USB_CHECK_VERSION(0, 4, 0)
+	/* save events */
+	if (fu_context_has_flag(ctx, FU_CONTEXT_FLAG_SAVE_EVENTS))
+		g_usb_context_set_flags(self->usb_ctx, G_USB_CONTEXT_FLAGS_SAVE_EVENTS);
+#endif
 
 	/* no insight */
 	g_usb_context_enumerate(self->usb_ctx);
@@ -146,6 +155,44 @@ fu_usb_backend_coldplug(FuBackend *backend, FuProgress *progress, GError **error
 			 G_CALLBACK(fu_usb_backend_device_removed_cb),
 			 self);
 	return TRUE;
+}
+
+static gboolean
+fu_usb_backend_load(FuBackend *backend,
+		    JsonObject *json_object,
+		    const gchar *tag,
+		    FuBackendLoadFlags flags,
+		    GError **error)
+{
+#if G_USB_CHECK_VERSION(0, 4, 0)
+	FuUsbBackend *self = FU_USB_BACKEND(backend);
+	return g_usb_context_load(self->usb_ctx, json_object, error);
+#else
+	g_set_error_literal(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_NOT_SUPPORTED,
+			    "GUsb version too old to load backends");
+	return FALSE;
+#endif
+}
+
+static gboolean
+fu_usb_backend_save(FuBackend *backend,
+		    JsonBuilder *json_builder,
+		    const gchar *tag,
+		    FuBackendSaveFlags flags,
+		    GError **error)
+{
+#if G_USB_CHECK_VERSION(0, 4, 0)
+	FuUsbBackend *self = FU_USB_BACKEND(backend);
+	return g_usb_context_save(self->usb_ctx, json_builder, error);
+#else
+	g_set_error_literal(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_NOT_SUPPORTED,
+			    "GUsb version too old to save backends");
+	return FALSE;
+#endif
 }
 
 static void
@@ -170,6 +217,7 @@ fu_usb_backend_finalize(GObject *object)
 	FuUsbBackend *self = FU_USB_BACKEND(object);
 
 	if (self->usb_ctx != NULL) {
+		g_signal_handlers_disconnect_by_data(G_USB_CONTEXT(self->usb_ctx), self);
 		g_object_weak_unref(G_OBJECT(self->usb_ctx),
 				    fu_usb_backend_context_finalized_cb,
 				    self);
@@ -191,6 +239,8 @@ fu_usb_backend_class_init(FuUsbBackendClass *klass)
 	object_class->finalize = fu_usb_backend_finalize;
 	klass_backend->setup = fu_usb_backend_setup;
 	klass_backend->coldplug = fu_usb_backend_coldplug;
+	klass_backend->load = fu_usb_backend_load;
+	klass_backend->save = fu_usb_backend_save;
 	klass_backend->registered = fu_usb_backend_registered;
 }
 
