@@ -1822,14 +1822,16 @@ fu_mm_device_setup_secboot_status_quectel(FuMmDevice *self)
 			return;
 		}
 
-		/* Try to query sec boot status with AT commands */
+		/* try to query sec boot status with AT commands */
 		for (guint i = 0; at_cmd[i] != NULL; i++) {
-			if (!fu_mm_device_at_cmd(self, at_cmd[i], TRUE, &error_local))
+			g_autoptr(GError) error_loop = NULL;
+			if (!fu_mm_device_at_cmd(self, at_cmd[i], TRUE, &error_loop)) {
 				g_debug("AT command failed (%s): %s",
 					at_cmd[i],
-					error_local->message);
-			else
+					error_loop->message);
+			} else {
 				return;
+			}
 		}
 	}
 
