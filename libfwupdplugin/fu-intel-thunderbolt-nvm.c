@@ -626,21 +626,6 @@ fu_intel_thunderbolt_nvm_parse(FuFirmware *firmware,
 		}
 	}
 
-	/* has PD */
-	if (priv->sections[FU_INTEL_THUNDERBOLT_NVM_SECTION_ARC_PARAMS] != 0x0) {
-		guint32 pd_pointer = 0x0;
-		if (!fu_intel_thunderbolt_nvm_read_uint32(
-			self,
-			FU_INTEL_THUNDERBOLT_NVM_SECTION_ARC_PARAMS,
-			FU_INTEL_THUNDERBOLT_NVM_ARC_PARAMS_OFFSET_PD_POINTER,
-			&pd_pointer,
-			error)) {
-			g_prefix_error(error, "failed to read pd-pointer: ");
-			return FALSE;
-		}
-		priv->has_pd = fu_intel_thunderbolt_nvm_valid_pd_pointer(pd_pointer);
-	}
-
 	/* versions */
 	switch (priv->family) {
 	case FU_INTEL_THUNDERBOLT_NVM_FAMILY_TR: // FIXME and GR
@@ -681,6 +666,26 @@ fu_intel_thunderbolt_nvm_parse(FuFirmware *firmware,
 		default:
 			break;
 		}
+	}
+
+	/* we're only reading enough to get the vendor-id and model-id */
+	if (offset == 0x0 &&
+	    g_bytes_get_size(fw) < priv->sections[FU_INTEL_THUNDERBOLT_NVM_SECTION_ARC_PARAMS])
+		return TRUE;
+
+	/* has PD */
+	if (priv->sections[FU_INTEL_THUNDERBOLT_NVM_SECTION_ARC_PARAMS] != 0x0) {
+		guint32 pd_pointer = 0x0;
+		if (!fu_intel_thunderbolt_nvm_read_uint32(
+			self,
+			FU_INTEL_THUNDERBOLT_NVM_SECTION_ARC_PARAMS,
+			FU_INTEL_THUNDERBOLT_NVM_ARC_PARAMS_OFFSET_PD_POINTER,
+			&pd_pointer,
+			error)) {
+			g_prefix_error(error, "failed to read pd-pointer: ");
+			return FALSE;
+		}
+		priv->has_pd = fu_intel_thunderbolt_nvm_valid_pd_pointer(pd_pointer);
 	}
 
 	/* as as easy-to-grab payload blob */
