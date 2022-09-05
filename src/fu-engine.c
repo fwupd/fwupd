@@ -7756,6 +7756,9 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 	fu_context_add_firmware_gtype(self->ctx,
 				      "intel-thunderbolt",
 				      FU_TYPE_INTEL_THUNDERBOLT_FIRMWARE);
+	fu_context_add_firmware_gtype(self->ctx,
+				      "intel-thunderbolt-nvm",
+				      FU_TYPE_INTEL_THUNDERBOLT_NVM);
 
 	/* we are emulating a different host */
 	if (host_emulate != NULL) {
