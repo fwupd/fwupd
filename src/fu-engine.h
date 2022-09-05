@@ -248,3 +248,5 @@ fu_engine_modify_bios_settings(FuEngine *self,
 			       GHashTable *settings,
 			       gboolean force_ro,
 			       GError **error);
+gboolean
+fu_engine_backends_save(FuEngine *self, JsonBuilder *json_builder, GError **error);

@@ -78,6 +78,9 @@ fwupdplugin_src = [
   'fu-i2c-device.c',
   'fu-mei-device.c',
   'fu-usb-device.c',
+  'fu-usb-device-ds20.c',         # fuzzing
+  'fu-usb-device-fw-ds20.c',      # fuzzing
+  'fu-usb-device-ms-ds20.c',      # fuzzing
   'fu-cfi-device.c',
   'fu-hid-device.c',
   'fu-linear-firmware.c',
@@ -193,6 +196,7 @@ fu_hash = custom_target(
 
 fwupdplugin_headers_private = [
   fu_hash,
+  'fu-backend-private.h',
   'fu-context-private.h',
   'fu-device-private.h',
   'fu-kenv.h',
@@ -201,6 +205,9 @@ fwupdplugin_headers_private = [
   'fu-security-attrs-private.h',
   'fu-smbios-private.h',
   'fu-udev-device-private.h',
+  'fu-usb-device-ds20.h',
+  'fu-usb-device-fw-ds20.h',
+  'fu-usb-device-ms-ds20.h',
   'fu-usb-device-private.h',
   fwupdplugin_version_h,
 ]

@@ -1098,6 +1098,10 @@ LIBFWUPDPLUGIN_1.8.4 {
 
 LIBFWUPDPLUGIN_1.8.5 {
   global:
+    fu_backend_load;
+    fu_backend_save;
+    fu_context_add_flag;
+    fu_context_has_flag;
     fu_device_set_quirk_kv;
     fu_intel_thunderbolt_firmware_get_type;
     fu_intel_thunderbolt_firmware_new;
@@ -1111,5 +1115,12 @@ LIBFWUPDPLUGIN_1.8.5 {
     fu_intel_thunderbolt_nvm_is_native;
     fu_intel_thunderbolt_nvm_new;
     fu_kernel_get_cmdline;
+    fu_usb_device_ds20_apply_to_device;
+    fu_usb_device_ds20_get_type;
+    fu_usb_device_ds20_set_version_lowest;
+    fu_usb_device_fw_ds20_get_type;
+    fu_usb_device_fw_ds20_new;
+    fu_usb_device_ms_ds20_get_type;
+    fu_usb_device_ms_ds20_new;
   local: *;
 } LIBFWUPDPLUGIN_1.8.4;

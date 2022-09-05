@@ -62,6 +62,7 @@ _fwupdtool_opts=(
 	'--no-safety-check'
 	'--ignore-checksum'
 	'--ignore-vid-pid'
+	'--save-backends'
 )
 
 _show_filters()

@@ -21,6 +21,7 @@
  */
 
 typedef struct {
+	FuContextFlags flags;
 	FuHwids *hwids;
 	FuSmbios *smbios;
 	FuQuirks *quirks;
@@ -828,6 +829,42 @@ fu_context_set_battery_threshold(FuContext *self, guint battery_threshold)
 	priv->battery_threshold = battery_threshold;
 	g_debug("battery threshold now %u", battery_threshold);
 	g_object_notify(G_OBJECT(self), "battery-threshold");
+}
+
+/**
+ * fu_context_add_flag:
+ * @context: a #FuContext
+ * @flag: the context flag
+ *
+ * Adds a specific flag to the context.
+ *
+ * Since: 1.8.5
+ **/
+void
+fu_context_add_flag(FuContext *context, FuContextFlags flag)
+{
+	FuContextPrivate *priv = GET_PRIVATE(context);
+	g_return_if_fail(FU_IS_CONTEXT(context));
+	priv->flags |= flag;
+}
+
+/**
+ * fu_context_has_flag:
+ * @context: a #FuContext
+ * @flag: the context flag
+ *
+ * Finds if the context has a specific flag.
+ *
+ * Returns: %TRUE if the flag is set
+ *
+ * Since: 1.8.5
+ **/
+gboolean
+fu_context_has_flag(FuContext *context, FuContextFlags flag)
+{
+	FuContextPrivate *priv = GET_PRIVATE(context);
+	g_return_val_if_fail(FU_IS_CONTEXT(context), FALSE);
+	return (priv->flags & flag) > 0;
 }
 
 static void

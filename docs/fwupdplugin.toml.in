@@ -45,6 +45,7 @@ content_files = [
   "env.md",
   "tutorial.md",
   "hsi.md",
+  "ds20.md",
   "bios-settings.md",
 ]
 content_images = [
