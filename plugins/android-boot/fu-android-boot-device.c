@@ -118,9 +118,9 @@ fu_android_boot_device_probe(FuDevice *device, GError **error)
 	fu_device_add_instance_strsafe(device, "SLOT", self->boot_slot);
 
 	/* GUID based on UUID / UUID, label / UUID, label, slot */
-	fu_device_build_instance_id(device, error, "DRIVE", "UUID", NULL);
-	fu_device_build_instance_id(device, error, "DRIVE", "UUID", "LABEL", NULL);
-	fu_device_build_instance_id(device, error, "DRIVE", "UUID", "LABEL", "SLOT", NULL);
+	fu_device_build_instance_id(device, NULL, "DRIVE", "UUID", NULL);
+	fu_device_build_instance_id(device, NULL, "DRIVE", "UUID", "LABEL", NULL);
+	fu_device_build_instance_id(device, NULL, "DRIVE", "UUID", "LABEL", "SLOT", NULL);
 
 	return TRUE;
 }
