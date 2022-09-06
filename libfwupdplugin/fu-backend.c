@@ -55,8 +55,8 @@ fu_backend_device_added(FuBackend *self, FuDevice *device)
 	g_return_if_fail(FU_IS_DEVICE(device));
 	g_return_if_fail(priv->thread_init == g_thread_self());
 
-	/* assign context if unset */
-	if (fu_device_get_context(device) == NULL)
+	/* assign context if set */
+	if (priv->ctx != NULL)
 		fu_device_set_context(device, priv->ctx);
 
 	/* add */

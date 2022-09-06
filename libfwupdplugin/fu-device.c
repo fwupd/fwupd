@@ -3814,12 +3814,6 @@ fu_device_set_context(FuDevice *self, FuContext *ctx)
 			   fu_device_get_id(self));
 		return;
 	}
-	if (priv->ctx != NULL && priv->ctx == ctx) {
-		g_critical("re-setting device context for %s [%s]",
-			   fu_device_get_name(self),
-			   fu_device_get_id(self));
-		return;
-	}
 #endif
 
 	if (g_set_object(&priv->ctx, ctx))

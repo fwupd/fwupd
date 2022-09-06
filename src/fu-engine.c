@@ -8095,14 +8095,13 @@ fu_engine_init(FuEngine *self)
 
 	/* backends */
 #ifdef HAVE_GUSB
-	g_ptr_array_add(self->backends, fu_usb_backend_new());
+	g_ptr_array_add(self->backends, fu_usb_backend_new(self->ctx));
 #endif
 #ifdef HAVE_GUDEV
-	g_ptr_array_add(self->backends,
-			fu_udev_backend_new(fu_context_get_udev_subsystems(self->ctx)));
+	g_ptr_array_add(self->backends, fu_udev_backend_new(self->ctx));
 #endif
 #ifdef HAVE_BLUEZ
-	g_ptr_array_add(self->backends, fu_bluez_backend_new());
+	g_ptr_array_add(self->backends, fu_bluez_backend_new(self->ctx));
 #endif
 
 	/* setup Jcat context */

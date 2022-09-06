@@ -12,4 +12,4 @@
 G_DECLARE_FINAL_TYPE(FuUdevBackend, fu_udev_backend, FU, UDEV_BACKEND, FuBackend)
 
 FuBackend *
-fu_udev_backend_new(GPtrArray *subsystems);
+fu_udev_backend_new(FuContext *ctx);

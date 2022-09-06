@@ -12,6 +12,7 @@
 
 #include <gudev/gudev.h>
 
+#include "fu-context-private.h"
 #include "fu-udev-backend.h"
 
 struct _FuUdevBackend {
@@ -238,10 +239,12 @@ fu_udev_backend_class_init(FuUdevBackendClass *klass)
 }
 
 FuBackend *
-fu_udev_backend_new(GPtrArray *subsystems)
+fu_udev_backend_new(FuContext *ctx)
 {
 	FuUdevBackend *self;
-	self = FU_UDEV_BACKEND(g_object_new(FU_TYPE_UDEV_BACKEND, "name", "udev", NULL));
+	GPtrArray *subsystems = fu_context_get_udev_subsystems(ctx);
+	self = FU_UDEV_BACKEND(
+	    g_object_new(FU_TYPE_UDEV_BACKEND, "name", "udev", "context", ctx, NULL));
 	if (subsystems != NULL)
 		self->subsystems = g_ptr_array_ref(subsystems);
 	return FU_BACKEND(self);
