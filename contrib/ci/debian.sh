@@ -60,6 +60,7 @@ lintian ../*changes \
 	-IE \
 	--pedantic \
 	--no-tag-display-limit \
+	--suppress-tags library-not-linked-against-libc \
 	--suppress-tags bad-distribution-in-changes-file \
 	--suppress-tags debian-watch-file-in-native-package \
 	--suppress-tags source-nmu-has-incorrect-version-number \
