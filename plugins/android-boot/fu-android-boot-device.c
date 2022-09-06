@@ -122,6 +122,15 @@ fu_android_boot_device_probe(FuDevice *device, GError **error)
 	fu_device_build_instance_id(device, NULL, "DRIVE", "UUID", "LABEL", NULL);
 	fu_device_build_instance_id(device, NULL, "DRIVE", "UUID", "LABEL", "SLOT", NULL);
 
+	/* quirks will have matched now */
+	if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE)) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "device is not updatable");
+		return FALSE;
+	}
+
 	return TRUE;
 }
 
