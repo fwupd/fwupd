@@ -33,31 +33,6 @@ jobs:
       - store_artifacts:
           path: dist/setup
 
-  build-snap:
-    docker:
-      - image: ubuntu:18.04
-    steps:
-      - run:
-          name: "Update apt"
-          command: apt update
-      - run:
-          name: "install snapcraft"
-          command: apt install snapcraft git -y
-      - checkout
-      - run:
-          name: "Build Snap"
-          command: snapcraft
-      - run:
-          command: |
-            mkdir -p /tmp/snaps
-            cp *.snap /tmp/snaps
-      - store_artifacts:
-          path: /tmp/snaps
-      - persist_to_workspace:
-          root: .
-          paths:
-            - "*.snap"
-
   publish-docs:
     machine:
       image: ubuntu-2204:edge
@@ -85,32 +60,6 @@ jobs:
             git commit -a --allow-empty -m "Trigger deployment"
             git push git@github.com:fwupd/fwupd.github.io.git
 
-  publish-edge:
-    docker:
-      - image: cibuilds/snapcraft:stable
-    steps:
-      - attach_workspace:
-          at: .
-      - run:
-          name: "Publish to Store"
-          command: |
-            mkdir .snapcraft
-            echo $SNAPCRAFT_LOGIN_FILE | base64 --decode --ignore-garbage > .snapcraft/snapcraft.cfg
-            snapcraft push *.snap --release edge
-
-  publish-stable:
-    docker:
-      - image: cibuilds/snapcraft:stable
-    steps:
-      - attach_workspace:
-          at: .
-      - run:
-          name: "Publish to Store"
-          command: |
-            mkdir .snapcraft
-            echo $SNAPCRAFT_LOGIN_FILE | base64 --decode --ignore-garbage > .snapcraft/snapcraft.cfg
-            snapcraft push *.snap --release stable
-
   publish-github-exe-release:
     docker:
       - image: circleci/golang:1.17.5
@@ -130,13 +79,6 @@ workflows:
     jobs:
       - build-windows
       - build-ubuntu-x86_64
-      - build-snap
-      - publish-edge:
-          requires:
-            - build-snap
-          filters:
-            branches:
-              only: main
   deploy:
     jobs:
       - build-ubuntu-x86_64:
@@ -162,20 +104,6 @@ workflows:
       - publish-docs:
           requires:
             - build-ubuntu-x86_64
-          filters:
-            branches:
-              ignore: /.*/
-            tags:
-              only: /^\d+\.\d+\.\d+$/
-      - build-snap:
-          filters:
-            branches:
-              ignore: /.*/
-            tags:
-              only: /^\d+\.\d+\.\d+$/
-      - publish-stable:
-          requires:
-            - build-snap
           filters:
             branches:
               ignore: /.*/
