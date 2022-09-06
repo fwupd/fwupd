@@ -129,9 +129,20 @@ fu_coswid_firmware_parse(FuFirmware *firmware,
 	pairs = cbor_map_handle(item);
 	for (gsize i = 0; i < cbor_map_size(item); i++) {
 		guint8 tag_id = cbor_get_uint8(pairs[i].key);
+
+		/* identity can be specified as a string or in binary */
 		if (tag_id == COSWID_GLOBAL_MAP_TAG_ID) {
-			g_autofree gchar *str = fu_coswid_firmware_strndup(pairs[i].value);
-			fu_firmware_set_id(firmware, str);
+			g_autofree gchar *str = NULL;
+			if (cbor_isa_string(pairs[i].value)) {
+				str = fu_coswid_firmware_strndup(pairs[i].value);
+			} else if (cbor_isa_bytestring(pairs[i].value) &&
+				   cbor_bytestring_length(pairs[i].value) == 16) {
+				str = fwupd_guid_to_string(
+				    (const fwupd_guid_t *)cbor_bytestring_handle(pairs[i].value),
+				    FWUPD_GUID_FLAG_NONE);
+			}
+			if (str != NULL)
+				fu_firmware_set_id(firmware, str);
 		} else if (tag_id == COSWID_GLOBAL_MAP_SOFTWARE_NAME) {
 			g_autofree gchar *str = fu_coswid_firmware_strndup(pairs[i].value);
 			fu_firmware_set_filename(firmware, str);
