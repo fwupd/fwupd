@@ -32,12 +32,13 @@ fu_mtd_device_to_string(FuDevice *device, guint idt, GString *str)
 static gboolean
 fu_mtd_device_setup(FuDevice *device, GError **error)
 {
-	FuFirmware *firmware_child = NULL;
 	GPtrArray *instance_ids;
 	GType firmware_gtype = fu_device_get_firmware_gtype(device);
 	const gchar *fn;
+	g_autoptr(FuFirmware) firmware_child = NULL;
 	g_autoptr(FuFirmware) firmware = NULL;
 	g_autoptr(GFile) file = NULL;
+	g_autoptr(GPtrArray) imgs = NULL;
 
 	/* nothing to do */
 	if (firmware_gtype == G_TYPE_INVALID)
@@ -57,8 +58,8 @@ fu_mtd_device_setup(FuDevice *device, GError **error)
 	if (!fu_firmware_parse_file(firmware, file, FWUPD_INSTALL_FLAG_NONE, error))
 		return FALSE;
 
-	/* find the firmware child that matches any of the device GUID,
-	 * and use the main firmware version if no match */
+	/* find the firmware child that matches any of the device GUID, then use the first
+	 * child that have a version, and finally use the main firmware as a fallback */
 	instance_ids = fu_device_get_instance_ids(device);
 	for (guint i = 0; i < instance_ids->len; i++) {
 		const gchar *instance_id = g_ptr_array_index(instance_ids, i);
@@ -67,8 +68,17 @@ fu_mtd_device_setup(FuDevice *device, GError **error)
 		if (firmware_child != NULL)
 			break;
 	}
+	imgs = fu_firmware_get_images(firmware);
+	for (guint i = 0; i < imgs->len; i++) {
+		FuFirmware *firmare_tmp = g_ptr_array_index(imgs, i);
+		if (fu_firmware_get_version(firmare_tmp) != NULL ||
+		    fu_firmware_get_version_raw(firmare_tmp) != 0) {
+			firmware_child = g_object_ref(firmare_tmp);
+			break;
+		}
+	}
 	if (firmware_child == NULL)
-		firmware_child = firmware;
+		firmware_child = g_object_ref(firmware);
 
 	/* copy over the version */
 	if (fu_firmware_get_version(firmware_child) != NULL)
