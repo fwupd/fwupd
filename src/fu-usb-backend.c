@@ -195,7 +195,7 @@ fu_usb_backend_class_init(FuUsbBackendClass *klass)
 }
 
 FuBackend *
-fu_usb_backend_new(void)
+fu_usb_backend_new(FuContext *ctx)
 {
-	return FU_BACKEND(g_object_new(FU_TYPE_USB_BACKEND, "name", "usb", NULL));
+	return FU_BACKEND(g_object_new(FU_TYPE_USB_BACKEND, "name", "usb", "context", ctx, NULL));
 }
