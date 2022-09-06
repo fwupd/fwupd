@@ -6936,7 +6936,8 @@ fu_engine_check_firmware_attributes(FuEngine *self, FuDevice *device, gboolean a
 	if (g_strcmp0(subsystem, "firmware-attributes") == 0) {
 		g_autoptr(GError) error = NULL;
 		if (added) {
-			FuBiosSettings *settings = fu_context_get_bios_settings(self->ctx);
+			g_autoptr(FuBiosSettings) settings =
+			    fu_context_get_bios_settings(self->ctx);
 			g_autoptr(GPtrArray) items = fu_bios_settings_get_all(settings);
 
 			if (items->len > 0) {
