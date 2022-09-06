@@ -84,7 +84,7 @@ main(void)
 {
 	gint retval;
 	g_autoptr(FwupdClient) client = fwupd_client_new();
-	g_autoptr(GApplication) app = g_application_new("org.test.Test", G_APPLICATION_FLAGS_NONE);
+	g_autoptr(GApplication) app = g_application_new("org.test.Test", G_APPLICATION_NON_UNIQUE);
 	g_autoptr(GPtrArray) worker_threads = g_ptr_array_new();
 	FuThreadTestSelf self = {app, client, worker_threads};
 

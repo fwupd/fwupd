@@ -84,7 +84,7 @@ main(void)
 	gint retval;
 	g_autoptr(FwupdClient) client = fwupd_client_new();
 	g_autoptr(GApplication) app =
-	    g_application_new("org.fwupd.ContextTest", G_APPLICATION_FLAGS_NONE);
+	    g_application_new("org.fwupd.ContextTest", G_APPLICATION_NON_UNIQUE);
 	g_autoptr(GThread) worker_thread = NULL;
 	FuThreadTestSelf self = {
 	    .app = app,
