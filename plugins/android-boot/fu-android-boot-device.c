@@ -131,14 +131,6 @@ fu_android_boot_device_probe(FuDevice *device, GError **error)
 		return FALSE;
 	}
 
-	return TRUE;
-}
-
-static gboolean
-fu_android_boot_device_setup(FuDevice *device, GError **error)
-{
-	FuAndroidBootDevice *self = FU_ANDROID_BOOT_DEVICE(device);
-
 	/* set the firmware maximum size based on partition size or from quirk */
 	fu_device_set_firmware_size_max(device, self->max_size);
 
@@ -375,7 +367,6 @@ fu_android_boot_device_class_init(FuAndroidBootDeviceClass *klass)
 
 	klass_object->finalize = fu_android_boot_device_finalize;
 	klass_device->probe = fu_android_boot_device_probe;
-	klass_device->setup = fu_android_boot_device_setup;
 	klass_device->open = fu_android_boot_device_open;
 	klass_device->write_firmware = fu_android_boot_device_write_firmware;
 	klass_device->to_string = fu_android_boot_device_to_string;
