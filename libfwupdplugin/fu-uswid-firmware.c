@@ -198,7 +198,7 @@ fu_uswid_firmware_parse(FuFirmware *firmware,
 	}
 
 	/* payload */
-	for (gsize offset_tmp = offset; offset_tmp < payloadsz;) {
+	for (gsize offset_tmp = 0; offset_tmp < payloadsz;) {
 		g_autoptr(FuFirmware) firmware_coswid = fu_coswid_firmware_new();
 		g_autoptr(GBytes) fw2 = NULL;
 
