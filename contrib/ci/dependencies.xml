@@ -972,6 +972,7 @@
     </distro>
   </dependency>
   <dependency id="libumockdev-dev">
+    <control />
     <distro id="debian">
       <package variant="x86_64" />
       <package variant="i386" />
