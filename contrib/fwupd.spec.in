@@ -47,6 +47,11 @@
 %global have_pci_psp 1
 %endif
 
+# Until we actually have seen it outside x86
+%ifarch i686 x86_64
+%global have_thunderbolt 1
+%endif
+
 # only available recently
 %if 0%{?fedora} >= 30
 %global have_modem_manager 1
@@ -340,7 +345,9 @@ done
 %config(noreplace)%{_sysconfdir}/fwupd/uefi_capsule.conf
 %endif
 %config(noreplace)%{_sysconfdir}/fwupd/redfish.conf
+%if 0%{?have_thunderbolt}
 %config(noreplace)%{_sysconfdir}/fwupd/thunderbolt.conf
+%endif
 %dir %{_libexecdir}/fwupd
 %{_libexecdir}/fwupd/fwupd
 %ifarch i686 x86_64
@@ -510,7 +517,9 @@ done
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_invalid.so
 %endif
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_thelio_io.so
+%if 0%{?have_thunderbolt}
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_thunderbolt.so
+%endif
 %if 0%{?have_uefi}
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_tpm.so
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_bios.so
