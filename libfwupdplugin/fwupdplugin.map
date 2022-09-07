@@ -1098,6 +1098,7 @@ LIBFWUPDPLUGIN_1.8.4 {
 
 LIBFWUPDPLUGIN_1.8.5 {
   global:
+    fu_device_set_quirk_kv;
     fu_intel_thunderbolt_firmware_get_type;
     fu_intel_thunderbolt_firmware_new;
     fu_intel_thunderbolt_nvm_get_device_id;
