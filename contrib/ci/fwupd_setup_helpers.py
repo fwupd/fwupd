@@ -97,6 +97,8 @@ def parse_dependencies(OS, variant, add_control):
             if add_control:
                 inclusive = []
                 exclusive = []
+                if not distro.findall("control"):
+                    continue
                 for control_parent in distro.findall("control"):
                     for obj in control_parent.findall("inclusive"):
                         inclusive.append(obj.text)
