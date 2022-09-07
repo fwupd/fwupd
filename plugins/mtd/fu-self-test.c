@@ -39,6 +39,15 @@ fu_test_mtd_device_func(void)
 		g_test_skip("could not find mtdram device");
 		return;
 	}
+	dev_name = g_udev_device_get_property(udev_device, "DEVNAME");
+	if (g_strcmp0(dev_name, "/dev/mtd0") != 0) {
+		g_test_skip("DEVNAME not /dev/mtd0");
+		return;
+	}
+	if (!g_file_test(dev_name, G_FILE_TEST_EXISTS)) {
+		g_test_skip("/dev/mtd0 doesn't exist");
+		return;
+	}
 
 	/* create device */
 	device = g_object_new(FU_TYPE_MTD_DEVICE, "context", ctx, "udev-device", udev_device, NULL);
