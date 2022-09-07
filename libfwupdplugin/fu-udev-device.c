@@ -1222,7 +1222,7 @@ fu_udev_device_set_physical_id(FuUdevDevice *self, const gchar *subsystems, GErr
 			g_set_error_literal(error,
 					    G_IO_ERROR,
 					    G_IO_ERROR_NOT_FOUND,
-					    "failed to find DEVPATH");
+					    "failed to find DEVNAME");
 			return FALSE;
 		}
 		physical_id = g_strdup_printf("DEVNAME=%s", tmp);
