@@ -43,6 +43,7 @@ typedef enum {
 	FU_INTEL_THUNDERBOLT_NVM_FAMILY_TR,
 	FU_INTEL_THUNDERBOLT_NVM_FAMILY_BB,
 	FU_INTEL_THUNDERBOLT_NVM_FAMILY_MR,
+	FU_INTEL_THUNDERBOLT_NVM_FAMILY_GR,
 	FU_INTEL_THUNDERBOLT_NVM_FAMILY_LAST,
 } FuIntelThunderboltNvmFamily;
 
@@ -95,6 +96,8 @@ fu_intel_thunderbolt_nvm_family_to_string(FuIntelThunderboltNvmFamily family)
 		return "bb";
 	if (family == FU_INTEL_THUNDERBOLT_NVM_FAMILY_MR)
 		return "maple-ridge";
+	if (family == FU_INTEL_THUNDERBOLT_NVM_FAMILY_GR)
+		return "goshen-ridge";
 	return "unknown";
 }
 
@@ -115,6 +118,8 @@ fu_intel_thunderbolt_nvm_family_from_string(const gchar *family)
 		return FU_INTEL_THUNDERBOLT_NVM_FAMILY_BB;
 	if (g_strcmp0(family, "maple-ridge") == 0)
 		return FU_INTEL_THUNDERBOLT_NVM_FAMILY_MR;
+	if (g_strcmp0(family, "goshen-ridge") == 0)
+		return FU_INTEL_THUNDERBOLT_NVM_FAMILY_GR;
 	return FU_INTEL_THUNDERBOLT_NVM_FAMILY_UNKNOWN;
 }
 
@@ -522,6 +527,7 @@ fu_intel_thunderbolt_nvm_parse(FuFirmware *firmware,
 			   {0x15EA, 3, FU_INTEL_THUNDERBOLT_NVM_FAMILY_TR, 2},	 /* TR 4C */
 			   {0x15EF, 3, FU_INTEL_THUNDERBOLT_NVM_FAMILY_TR, 2},	 /* TR 4C device */
 			   {0x15EE, 3, FU_INTEL_THUNDERBOLT_NVM_FAMILY_BB, 0},	 /* BB device */
+			   {0x0B26, 4, FU_INTEL_THUNDERBOLT_NVM_FAMILY_GR, 2},	 /* GR USB4 */
 			   /* Maple ridge devices
 			    * NOTE: These are expected to be flashed via UEFI capsules *not*
 			    * Thunderbolt plugin Flashing via fwupd will require matching kernel
@@ -628,7 +634,8 @@ fu_intel_thunderbolt_nvm_parse(FuFirmware *firmware,
 
 	/* versions */
 	switch (priv->family) {
-	case FU_INTEL_THUNDERBOLT_NVM_FAMILY_TR: // FIXME and GR
+	case FU_INTEL_THUNDERBOLT_NVM_FAMILY_TR:
+	case FU_INTEL_THUNDERBOLT_NVM_FAMILY_GR:
 		if (!fu_intel_thunderbolt_nvm_read_uint16(
 			self,
 			FU_INTEL_THUNDERBOLT_NVM_SECTION_DIGITAL,
