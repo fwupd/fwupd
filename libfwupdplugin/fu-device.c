@@ -1619,12 +1619,30 @@ fu_device_set_quirk_inhibit_section(FuDevice *self, const gchar *value, GError *
 	return TRUE;
 }
 
-static gboolean
+/**
+ * fu_device_set_quirk_kv:
+ * @self: a #FuDevice
+ * @key: a string key
+ * @value: a string value
+ * @error: (nullable): optional return location for an error
+ *
+ * Sets a specific quirk on the device.
+ *
+ * Returns: %TRUE on success
+ *
+ * Since: 1.8.5
+ **/
+gboolean
 fu_device_set_quirk_kv(FuDevice *self, const gchar *key, const gchar *value, GError **error)
 {
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 	FuDeviceClass *klass = FU_DEVICE_GET_CLASS(self);
 	guint64 tmp;
+
+	g_return_val_if_fail(FU_IS_DEVICE(self), FALSE);
+	g_return_val_if_fail(key != NULL, FALSE);
+	g_return_val_if_fail(value != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	if (g_strcmp0(key, FU_QUIRKS_PLUGIN) == 0) {
 		g_auto(GStrv) sections = g_strsplit(value, ",", -1);

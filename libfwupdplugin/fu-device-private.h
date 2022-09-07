@@ -56,3 +56,5 @@ FuDeviceInternalFlags
 fu_device_get_internal_flags(FuDevice *self);
 void
 fu_device_set_internal_flags(FuDevice *self, FuDeviceInternalFlags flags);
+gboolean
+fu_device_set_quirk_kv(FuDevice *self, const gchar *key, const gchar *value, GError **error);
