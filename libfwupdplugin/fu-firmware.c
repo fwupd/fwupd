@@ -1032,6 +1032,9 @@ fu_firmware_build(FuFirmware *self, XbNode *n, GError **error)
 	tmpval = xb_node_query_text_as_uint(n, "offset", NULL);
 	if (tmpval != G_MAXUINT64)
 		fu_firmware_set_offset(self, tmpval);
+	tmpval = xb_node_query_text_as_uint(n, "size", NULL);
+	if (tmpval != G_MAXUINT64)
+		fu_firmware_set_size(self, tmpval);
 	tmpval = xb_node_query_text_as_uint(n, "alignment", NULL);
 	if (tmpval != G_MAXUINT64) {
 		if (tmpval > FU_FIRMWARE_ALIGNMENT_2G) {
