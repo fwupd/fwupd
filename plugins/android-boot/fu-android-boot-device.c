@@ -18,8 +18,8 @@
 
 struct _FuAndroidBootDevice {
 	FuUdevDevice parent_instance;
-	const gchar *label;
-	const gchar *uuid;
+	gchar *label;
+	gchar *uuid;
 	gchar *boot_slot;
 	guint64 max_size;
 };
@@ -42,7 +42,6 @@ fu_android_boot_device_probe(FuDevice *device, GError **error)
 {
 	FuAndroidBootDevice *self = FU_ANDROID_BOOT_DEVICE(device);
 	GUdevDevice *udev_device = fu_udev_device_get_dev(FU_UDEV_DEVICE(device));
-	g_autofree gchar *serial = NULL;
 	guint64 sectors = 0;
 	guint64 size = 0;
 	g_autoptr(GHashTable) cmdline = NULL;
@@ -65,7 +64,8 @@ fu_android_boot_device_probe(FuDevice *device, GError **error)
 
 	/* extract label and check if it matches boot slot*/
 	if (g_udev_device_has_property(udev_device, "ID_PART_ENTRY_NAME")) {
-		self->label = g_udev_device_get_property(udev_device, "ID_PART_ENTRY_NAME");
+		self->label =
+		    g_strdup(g_udev_device_get_property(udev_device, "ID_PART_ENTRY_NAME"));
 
 		/* Use label as device name */
 		fu_device_set_name(device, self->label);
@@ -102,11 +102,10 @@ fu_android_boot_device_probe(FuDevice *device, GError **error)
 				    "device does not have a UUID");
 		return FALSE;
 	}
-	self->uuid = g_udev_device_get_property(udev_device, "ID_PART_ENTRY_UUID");
+	self->uuid = g_strdup(g_udev_device_get_property(udev_device, "ID_PART_ENTRY_UUID"));
 
 	/* extract serial number and set it */
-	serial = g_hash_table_lookup(cmdline, "androidboot.serialno");
-	fu_device_set_serial(device, serial);
+	fu_device_set_serial(device, g_hash_table_lookup(cmdline, "androidboot.serialno"));
 
 	/*
 	 * Some devices don't have unique TYPE UUIDs, add the partition label to make them truly
@@ -334,6 +333,8 @@ fu_android_boot_device_finalize(GObject *obj)
 	FuAndroidBootDevice *self = FU_ANDROID_BOOT_DEVICE(obj);
 	G_OBJECT_CLASS(fu_android_boot_device_parent_class)->finalize(obj);
 	g_free(self->boot_slot);
+	g_free(self->label);
+	g_free(self->uuid);
 }
 
 static void
