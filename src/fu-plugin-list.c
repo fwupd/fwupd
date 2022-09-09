@@ -279,7 +279,7 @@ fu_plugin_list_depsolve(FuPluginList *self, GError **error)
 		deps = fu_plugin_get_rules(plugin, FU_PLUGIN_RULE_CONFLICTS);
 		if (deps == NULL)
 			continue;
-		for (guint j = 0; j < deps->len && !changes; j++) {
+		for (guint j = 0; j < deps->len; j++) {
 			const gchar *plugin_name = g_ptr_array_index(deps, j);
 			dep = fu_plugin_list_find_by_name(self, plugin_name, NULL);
 			if (dep == NULL)
