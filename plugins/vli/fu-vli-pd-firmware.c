@@ -167,8 +167,7 @@ fu_vli_pd_firmware_parse(FuFirmware *firmware,
 		}
 	}
 
-	/* whole image */
-	fu_firmware_set_bytes(firmware, fw);
+	/* success */
 	return TRUE;
 }
 

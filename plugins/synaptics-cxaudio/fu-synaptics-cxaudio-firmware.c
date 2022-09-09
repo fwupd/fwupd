@@ -311,8 +311,7 @@ fu_synaptics_cxaudio_firmware_parse(FuFirmware *firmware,
 		fu_synaptics_cxaudio_firmware_avoid_badblocks(badblocks, records);
 	}
 
-	/* this isn't used, but it seems a good thing to add */
-	fu_firmware_set_bytes(firmware, fw);
+	/* success */
 	return TRUE;
 }
 

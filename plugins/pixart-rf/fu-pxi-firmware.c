@@ -120,7 +120,6 @@ fu_pxi_firmware_parse(FuFirmware *firmware,
 	self->model_name = g_strndup((gchar *)model_name, sizeof(model_name));
 
 	/* success */
-	fu_firmware_set_bytes(firmware, fw);
 	return TRUE;
 }
 

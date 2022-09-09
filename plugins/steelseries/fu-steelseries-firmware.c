@@ -54,7 +54,6 @@ fu_steelseries_firmware_parse(FuFirmware *firmware,
 
 	self->checksum = checksum;
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_CHECKSUM);
-	fu_firmware_set_bytes(firmware, fw);
 
 	/* success */
 	return TRUE;

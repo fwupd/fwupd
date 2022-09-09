@@ -60,7 +60,6 @@ fu_fresco_pd_firmware_parse(FuFirmware *firmware,
 	/* set version number */
 	version = fu_fresco_pd_version_from_buf(ver);
 	fu_firmware_set_version(firmware, version);
-	fu_firmware_set_bytes(firmware, fw);
 	return TRUE;
 }
 

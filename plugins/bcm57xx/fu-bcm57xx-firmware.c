@@ -360,7 +360,6 @@ fu_bcm57xx_firmware_parse(FuFirmware *firmware,
 		g_autoptr(FuFirmware) img = fu_bcm57xx_dict_image_new();
 		fu_bcm57xx_dict_image_set_target(FU_BCM57XX_DICT_IMAGE(img), 0xD);
 		fu_bcm57xx_dict_image_set_kind(FU_BCM57XX_DICT_IMAGE(img), 0x0);
-		fu_firmware_set_bytes(img, fw);
 		fu_firmware_set_addr(img, BCM_CODE_DIRECTORY_ADDR_APE);
 		fu_firmware_set_id(img, "ape");
 		fu_firmware_add_image(firmware, img);
