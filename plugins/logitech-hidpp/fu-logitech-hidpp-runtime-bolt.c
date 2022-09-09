@@ -253,7 +253,7 @@ fu_logitech_hidpp_runtime_bolt_process_notification(FuLogitechHidPpRuntimeBolt *
 			g_debug("ignoring link quality message");
 			break;
 		case HIDPP_SUBID_ERROR_MSG:
-			g_debug("ignoring link quality message");
+			g_debug("ignoring error message");
 			break;
 		default:
 			g_debug("unknown SubID %02x", msg->sub_id);
