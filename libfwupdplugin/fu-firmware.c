@@ -519,7 +519,6 @@ fu_firmware_set_bytes(FuFirmware *self, GBytes *bytes)
 	FuFirmwarePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FU_IS_FIRMWARE(self));
 	g_return_if_fail(bytes != NULL);
-	g_return_if_fail(priv->bytes == NULL);
 	if (priv->bytes != NULL)
 		g_bytes_unref(priv->bytes);
 	priv->bytes = g_bytes_ref(bytes);
