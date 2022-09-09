@@ -116,12 +116,7 @@ fu_emmc_device_get_sysattr_guint64(GUdevDevice *device,
 
 	sysfs = g_udev_device_get_sysfs_attr(device, name);
 	if (sysfs == NULL) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INTERNAL,
-			    "failed get %s for %s",
-			    name,
-			    sysfs);
+		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "failed get %s", name);
 		return FALSE;
 	}
 
