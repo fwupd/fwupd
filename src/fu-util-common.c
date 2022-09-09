@@ -1862,9 +1862,9 @@ fu_util_release_to_string(FwupdRelease *rel, guint idt)
 	const gchar *tmp2;
 	GPtrArray *issues = fwupd_release_get_issues(rel);
 	GPtrArray *tags = fwupd_release_get_tags(rel);
-	GString *str = g_string_new(NULL);
 	guint64 flags = fwupd_release_get_flags(rel);
 	g_autofree gchar *desc_fb = NULL;
+	g_autoptr(GString) str = g_string_new(NULL);
 
 	g_return_val_if_fail(FWUPD_IS_RELEASE(rel), NULL);
 
@@ -2022,17 +2022,17 @@ fu_util_release_to_string(FwupdRelease *rel, guint idt)
 				 tag_strs);
 	}
 
-	return g_string_free(str, FALSE);
+	return g_string_free(g_steal_pointer(&str), FALSE);
 }
 
 gchar *
 fu_util_remote_to_string(FwupdRemote *remote, guint idt)
 {
-	GString *str = g_string_new(NULL);
 	FwupdRemoteKind kind = fwupd_remote_get_kind(remote);
 	FwupdKeyringKind keyring_kind = fwupd_remote_get_keyring_kind(remote);
 	const gchar *tmp;
 	gint priority;
+	g_autoptr(GString) str = g_string_new(NULL);
 
 	g_return_val_if_fail(FWUPD_IS_REMOTE(remote), NULL);
 
@@ -2149,7 +2149,7 @@ fu_util_remote_to_string(FwupdRemote *remote, guint idt)
 				 fwupd_remote_get_automatic_reports(remote) ? "true" : "false");
 	}
 
-	return g_string_free(str, FALSE);
+	return g_string_free(g_steal_pointer(&str), FALSE);
 }
 
 static void

@@ -14,10 +14,10 @@
 static gchar *
 fu_logitech_hidpp_msg_to_string(FuLogitechHidPpHidppMsg *msg)
 {
-	GString *str = g_string_new(NULL);
 	const gchar *tmp;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GString) flags_str = g_string_new(NULL);
+	g_autoptr(GString) str = g_string_new(NULL);
 
 	g_return_val_if_fail(msg != NULL, NULL);
 
@@ -53,7 +53,7 @@ fu_logitech_hidpp_msg_to_string(FuLogitechHidPpHidppMsg *msg)
 	if (!fu_logitech_hidpp_msg_is_error(msg, &error)) {
 		g_string_append_printf(str, "error:       %s\n", error->message);
 	}
-	return g_string_free(str, FALSE);
+	return g_string_free(g_steal_pointer(&str), FALSE);
 }
 
 gboolean
