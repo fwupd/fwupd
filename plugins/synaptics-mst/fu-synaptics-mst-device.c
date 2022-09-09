@@ -42,6 +42,8 @@
 
 #define FLASH_SETTLE_TIME 5000000 /* us */
 
+#define CAYENNE_FIRMWARE_SIZE 0x50000 /* bytes */
+
 /**
  * FU_SYNAPTICS_MST_DEVICE_FLAG_IGNORE_BOARD_ID:
  *
@@ -860,7 +862,17 @@ fu_synaptics_mst_device_update_cayenne_firmware(FuSynapticsMstDevice *self,
 	guint32 offset = 0;
 	guint32 write_loops = 0;
 
-	payload_len = 0x50000;
+	/* sanity check */
+	if (payload_len < CAYENNE_FIRMWARE_SIZE) {
+		g_set_error(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_INVALID_DATA,
+			    "payload too small, expected >=0x%x",
+			    (guint)CAYENNE_FIRMWARE_SIZE);
+		return FALSE;
+	}
+
+	payload_len = CAYENNE_FIRMWARE_SIZE;
 	write_loops = (payload_len / BLOCK_UNIT);
 	data_to_write = payload_len;
 
