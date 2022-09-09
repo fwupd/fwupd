@@ -1246,7 +1246,6 @@ fu_dell_dock_mst_class_init(FuDellDockMstClass *klass)
 	klass_device->open = fu_dell_dock_mst_open;
 	klass_device->close = fu_dell_dock_mst_close;
 	klass_device->setup = fu_dell_dock_mst_setup;
-	klass_device->probe = fu_dell_dock_mst_probe;
 	klass_device->write_firmware = fu_dell_dock_mst_write_fw;
 	klass_device->set_quirk_kv = fu_dell_dock_mst_set_quirk_kv;
 	klass_device->set_progress = fu_dell_dock_mst_set_progress;
