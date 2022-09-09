@@ -201,10 +201,10 @@ fu_dfu_csr_device_upload(FuDevice *device, FuProgress *progress, GError **error)
 			return NULL;
 		chunk_sz = g_bytes_get_size(chunk);
 
-		/* get the total size using the DFU_CSR header */
+		/* get the total size using the CSR header */
 		if (i == 0 && chunk_sz >= 10) {
 			const guint8 *buf = g_bytes_get_data(chunk, NULL);
-			if (memcmp(buf, "DFU_CSR-dfu", 7) == 0) {
+			if (memcmp(buf, "CSR-dfu", 7) == 0) {
 				guint16 hdr_ver;
 				guint16 hdr_len;
 				if (!fu_memread_uint16_safe(buf,
