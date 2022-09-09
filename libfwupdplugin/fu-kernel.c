@@ -123,8 +123,18 @@ fu_kernel_get_firmware_search_path(GError **error)
 	if (!g_file_get_contents(sys_fw_search_path, &contents, &sz, error))
 		return NULL;
 
+	/* sanity check */
+	if (contents == NULL || sz == 0) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "failed to get firmware search path from %s",
+			    sys_fw_search_path);
+		return NULL;
+	}
+
 	/* remove newline character */
-	if (contents != NULL && sz > 0 && contents[sz - 1] == '\n')
+	if (contents[sz - 1] == '\n')
 		contents[sz - 1] = 0;
 
 	g_debug("read firmware search path (%" G_GSIZE_FORMAT "): %s", sz, contents);
