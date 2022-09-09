@@ -220,9 +220,8 @@ fu_redfish_request_perform(FuRedfishRequest *self,
 	}
 
 	/* save to cache */
-	if (self->cache != NULL && path != NULL) {
+	if (self->cache != NULL)
 		g_hash_table_insert(self->cache, g_strdup(path), g_byte_array_ref(self->buf));
-	}
 
 	/* success */
 	return TRUE;
