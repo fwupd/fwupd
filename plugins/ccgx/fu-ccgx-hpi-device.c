@@ -1218,7 +1218,7 @@ fu_ccgx_hpi_load_metadata(FuCcgxHpiDevice *self,
 			      buf,
 			      self->flash_row_size,
 			      md_offset,
-			      sizeof(metadata),
+			      sizeof(*metadata),
 			      error);
 }
 
@@ -1247,7 +1247,7 @@ fu_ccgx_hpi_save_metadata(FuCcgxHpiDevice *self,
 			    (guint8 *)metadata,
 			    sizeof(*metadata),
 			    0x0,
-			    sizeof(metadata),
+			    sizeof(*metadata),
 			    error))
 		return FALSE;
 	if (!fu_ccgx_hpi_write_flash(self, addr, buf, self->flash_row_size, error)) {
