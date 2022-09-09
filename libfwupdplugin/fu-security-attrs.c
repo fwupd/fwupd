@@ -204,7 +204,7 @@ fu_security_attrs_calculate_hsi(FuSecurityAttrs *self, FuSecurityAttrsFlags flag
 {
 	guint hsi_number = 0;
 	FwupdSecurityAttrFlags attr_flags = FWUPD_SECURITY_ATTR_FLAG_NONE;
-	GString *str = g_string_new("HSI:");
+	g_autoptr(GString) str = g_string_new("HSI:");
 	const FwupdSecurityAttrFlags hpi_suffixes[] = {
 	    FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ISSUE,
 	    FWUPD_SECURITY_ATTR_FLAG_NONE,
@@ -247,10 +247,8 @@ fu_security_attrs_calculate_hsi(FuSecurityAttrs *self, FuSecurityAttrsFlags flag
 		if (fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ISSUE) &&
 		    fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS))
 			continue;
-		if (fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA)) {
-			g_string_append(str, "INVALID:missing-data");
-			return g_string_free(str, FALSE);
-		}
+		if (fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA))
+			return g_strdup("HSI:INVALID:missing-data");
 
 		attr_flags |= fwupd_security_attr_get_flags(attr);
 	}
@@ -273,7 +271,7 @@ fu_security_attrs_calculate_hsi(FuSecurityAttrs *self, FuSecurityAttrsFlags flag
 				       FWUPD_MICRO_VERSION);
 	}
 
-	return g_string_free(str, FALSE);
+	return g_string_free(g_steal_pointer(&str), FALSE);
 }
 
 static gchar *
