@@ -388,7 +388,7 @@ fu_vbe_simple_device_upload(FuDevice *device, FuProgress *progress, GError **err
 {
 	FuVbeSimpleDevice *self = FU_VBE_SIMPLE_DEVICE(device);
 	gssize rc;
-	g_autoptr(GByteArray) buf = NULL;
+	g_autoptr(GByteArray) buf = g_byte_array_new();
 	g_autoptr(GPtrArray) chunks = NULL;
 
 	/* notify UI */
