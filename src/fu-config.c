@@ -170,7 +170,7 @@ fu_config_reload(FuConfig *self, GError **error)
 		guint64 memory_size = fu_common_get_memory_size();
 		g_autofree gchar *str = NULL;
 		if (memory_size > 0) {
-			self->archive_size_max = MAX(memory_size / 4, G_MAXSIZE);
+			self->archive_size_max = MIN(memory_size / 4, G_MAXUINT32);
 			str = g_format_size(self->archive_size_max);
 			g_debug("using autodetected max archive size %s", str);
 		} else {
