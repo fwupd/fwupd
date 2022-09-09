@@ -33,7 +33,7 @@ if len(split) >= 2:
     OS = split[0]
     SUBOS = split[1]
 
-deps = parse_dependencies(OS, SUBOS, "build")
+deps = parse_dependencies(OS, SUBOS, False)
 
 f = os.path.join(directory, "Dockerfile-%s.in" % OS)
 if not os.path.exists(f):
