@@ -6,8 +6,6 @@
 
 #include "config.h"
 
-#include <string.h>
-
 #include "fu-logitech-hidpp-common.h"
 #include "fu-logitech-hidpp-device.h"
 #include "fu-logitech-hidpp-hidpp.h"
@@ -1102,7 +1100,15 @@ fu_logitech_hidpp_device_write_firmware_pkt(FuLogitechHidPpDevice *self,
 	/* enable transfer workaround for devices paired to Bolt receiver */
 	if (priv->device_idx != HIDPP_DEVICE_IDX_UNSET && priv->device_idx != HIDPP_DEVICE_IDX_BLE)
 		msg->flags = FU_UNIFYING_HIDPP_MSG_FLAG_RETRY_STUCK;
-	memcpy(msg->data, data, 16);
+	if (!fu_memcpy_safe(msg->data,
+			    sizeof(msg->data),
+			    0x0, /* dst */
+			    data,
+			    16,
+			    0x0, /* src */
+			    16,
+			    error))
+		return FALSE;
 	if (!fu_logitech_hidpp_transfer(priv->io_channel, msg, error)) {
 		g_prefix_error(error, "failed to supply program data: ");
 		return FALSE;

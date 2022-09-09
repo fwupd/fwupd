@@ -6,8 +6,6 @@
 
 #include "config.h"
 
-#include <string.h>
-
 #include "fu-logitech-hidpp-bootloader-texas.h"
 #include "fu-logitech-hidpp-common.h"
 
@@ -185,7 +183,15 @@ fu_logitech_hidpp_bootloader_texas_write_firmware(FuDevice *device,
 			req->addr = payload->addr % 0x80;
 
 		req->len = payload->len;
-		memcpy(req->data, payload->data, payload->len);
+		if (!fu_memcpy_safe(req->data,
+				    req->len,
+				    0x0, /* dst */
+				    payload->data,
+				    payload->len,
+				    0x0, /* src */
+				    payload->len,
+				    error))
+			return FALSE;
 		if (!fu_logitech_hidpp_bootloader_request(self, req, error)) {
 			g_prefix_error(error, "failed to write ram buffer @0x%02x: ", req->addr);
 			return FALSE;
