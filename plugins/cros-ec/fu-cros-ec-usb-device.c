@@ -621,7 +621,7 @@ fu_cros_ec_usb_device_transfer_section(FuDevice *device,
 	while (data_len != 0 && (data_ptr[data_len - 1] == 0xff))
 		data_len--;
 	g_debug("trimmed %" G_GSIZE_FORMAT " trailing bytes", section->size - data_len);
-	g_debug("sending 0x%zx bytes to %#x", data_len, section->offset);
+	g_debug("sending 0x%x bytes to 0x%x", (guint)data_len, section->offset);
 
 	/* send in chunks of PDU size */
 	blocks = fu_chunk_array_new(data_ptr,
