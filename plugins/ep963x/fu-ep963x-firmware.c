@@ -68,7 +68,6 @@ fu_ep963x_firmware_parse(FuFirmware *firmware,
 	}
 
 	/* success */
-	fu_firmware_set_bytes(firmware, fw);
 	return TRUE;
 }
 

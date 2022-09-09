@@ -52,7 +52,8 @@ fu_synaptics_mst_firmware_parse(FuFirmware *firmware,
 				    G_BIG_ENDIAN,
 				    error))
 		return FALSE;
-	fu_firmware_set_bytes(firmware, fw);
+
+	/* success */
 	return TRUE;
 }
 

@@ -383,8 +383,7 @@ fu_ccgx_firmware_parse(FuFirmware *firmware,
 		return FALSE;
 	}
 
-	/* add something, although we'll use the records for the update */
-	fu_firmware_set_bytes(firmware, fw);
+	/* success */
 	return TRUE;
 }
 

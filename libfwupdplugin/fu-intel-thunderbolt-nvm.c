@@ -543,7 +543,6 @@ fu_intel_thunderbolt_nvm_parse(FuFirmware *firmware,
 
 	/* add this straight away */
 	priv->sections[FU_INTEL_THUNDERBOLT_NVM_SECTION_DIGITAL] = offset;
-	fu_firmware_set_bytes(firmware, fw);
 
 	/* is native */
 	if (!fu_intel_thunderbolt_nvm_read_uint8(

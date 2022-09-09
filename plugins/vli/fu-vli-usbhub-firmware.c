@@ -259,8 +259,7 @@ fu_vli_usbhub_firmware_parse(FuFirmware *firmware,
 		break;
 	}
 
-	/* whole image */
-	fu_firmware_set_bytes(firmware, fw);
+	/* success */
 	return TRUE;
 }
 

@@ -73,9 +73,7 @@ fu_nordic_hid_firmware_parse(FuFirmware *firmware,
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_CHECKSUM);
 	priv->crc32 = fu_nordic_hid_firmware_crc32(buf, bufsz);
 
-	/* do not strip the header */
-	fu_firmware_set_bytes(firmware, fw);
-
+	/* success */
 	return TRUE;
 }
 

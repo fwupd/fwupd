@@ -131,8 +131,7 @@ fu_elantp_firmware_parse(FuFirmware *firmware,
 				    error))
 		return FALSE;
 
-	/* whole image */
-	fu_firmware_set_bytes(firmware, fw);
+	/* success */
 	return TRUE;
 }
 

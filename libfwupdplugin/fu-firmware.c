@@ -906,6 +906,11 @@ fu_firmware_parse_full(FuFirmware *self,
 	}
 	if (!fu_firmware_check_magic_for_offset(self, fw, &offset, flags, error))
 		return FALSE;
+
+	/* always set by default */
+	fu_firmware_set_bytes(self, fw);
+
+	/* handled by the subclass */
 	if (klass->parse != NULL)
 		return klass->parse(self, fw, offset, flags, error);
 
@@ -922,9 +927,7 @@ fu_firmware_parse_full(FuFirmware *self,
 		return FALSE;
 	}
 
-	/* just add entire blob */
-	fu_firmware_set_bytes(self, fw);
-	fu_firmware_set_size(self, g_bytes_get_size(fw));
+	/* success */
 	return TRUE;
 }
 
