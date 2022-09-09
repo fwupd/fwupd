@@ -49,8 +49,6 @@ fu_efi_guid_to_name(const gchar *guid)
 		return "Section:LzmaCompress";
 	if (g_strcmp0(guid, FU_EFI_FIRMWARE_SECTION_TIANO_COMPRESS) == 0)
 		return "Section:TianoCompress";
-	if (g_strcmp0(guid, FU_EFI_FIRMWARE_SECTION_TIANO_COMPRESS) == 0)
-		return "Section:TianoCompress";
 	if (g_strcmp0(guid, FU_EFI_FIRMWARE_SECTION_SMBIOS_TABLE) == 0)
 		return "Section:SmbiosTable";
 	if (g_strcmp0(guid, FU_EFI_FIRMWARE_SECTION_ESRT_TABLE) == 0)
