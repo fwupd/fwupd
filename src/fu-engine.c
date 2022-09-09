@@ -1584,7 +1584,7 @@ fu_engine_check_requirement_firmware(FuEngine *self,
 	if (depth != G_MAXUINT64) {
 		for (guint64 i = 0; i < depth; i++) {
 			FuDevice *device_tmp = fu_device_get_parent(device_actual);
-			if (device_actual == NULL) {
+			if (device_tmp == NULL) {
 				g_set_error(error,
 					    FWUPD_ERROR,
 					    FWUPD_ERROR_NOT_SUPPORTED,
