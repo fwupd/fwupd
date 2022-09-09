@@ -454,7 +454,6 @@ fu_parade_lspcon_flash_write(FuParadeLspconDevice *self,
 
 		/* page write is prefixed with an offset:
 		 * we always start from offset 0 */
-		write_data[0] = 0;
 		if (!fu_memcpy_safe(write_data,
 				    sizeof(write_data),
 				    1,
