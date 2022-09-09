@@ -636,7 +636,7 @@ fu_progress_child_percentage_changed_cb(FuProgress *child, guint percentage, FuP
 	}
 
 	/* if the child finished, set the status back to the last parent status */
-	if (percentage == 100 && priv->children->len > 0) {
+	if (percentage == 100) {
 		FuProgress *child_tmp = g_ptr_array_index(priv->children, priv->step_now);
 		if (fu_progress_get_status(child_tmp) != FWUPD_STATUS_UNKNOWN)
 			fu_progress_set_status(self, fu_progress_get_status(child_tmp));
