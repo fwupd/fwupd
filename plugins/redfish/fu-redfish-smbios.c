@@ -312,7 +312,7 @@ fu_redfish_smbios_parse(FuFirmware *firmware,
 	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
 
 	/* check size */
-	if (bufsz < 0x09) {
+	if (bufsz < 0x09 + offset) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_FILE,
@@ -322,14 +322,14 @@ fu_redfish_smbios_parse(FuFirmware *firmware,
 	}
 
 	/* check type */
-	if (buf[0x0] != REDFISH_SMBIOS_TABLE_TYPE) {
+	if (buf[offset + 0x0] != REDFISH_SMBIOS_TABLE_TYPE) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_FILE,
 				    "not Management Controller Host Interface");
 		return FALSE;
 	}
-	if (buf[0x1] != bufsz) {
+	if (buf[offset + 0x1] != bufsz) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_FILE,
@@ -340,7 +340,7 @@ fu_redfish_smbios_parse(FuFirmware *firmware,
 	}
 
 	/* check interface type */
-	if (buf[0x04] != REDFISH_CONTROLLER_INTERFACE_TYPE_NETWORK_HOST) {
+	if (buf[offset + 0x04] != REDFISH_CONTROLLER_INTERFACE_TYPE_NETWORK_HOST) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_FILE,
@@ -349,15 +349,15 @@ fu_redfish_smbios_parse(FuFirmware *firmware,
 	}
 
 	/* check length */
-	if (buf[0x05] > 0) {
+	if (buf[offset + 0x05] > 0) {
 		if (!fu_redfish_smbios_parse_interface_data(self, fw, 0x06, error))
 			return FALSE;
 	}
 
 	/* parse protocol records */
-	if (!fu_memread_uint8_safe(buf, bufsz, 0x06 + buf[0x05], &protocol_rcds, error))
+	if (!fu_memread_uint8_safe(buf, bufsz, offset + 0x06 + buf[0x05], &protocol_rcds, error))
 		return FALSE;
-	offset = 0x07 + buf[0x05];
+	offset += 0x07 + buf[0x05];
 	g_debug("protocol_rcds: %u", protocol_rcds);
 	for (guint i = 0; i < protocol_rcds; i++) {
 		guint8 protocol_id = 0;
