@@ -1349,7 +1349,7 @@ fu_util_device_problem_to_string(FwupdClient *client, FwupdDevice *dev, FwupdDev
 		if (fwupd_device_get_battery_level(dev) == FWUPD_BATTERY_LEVEL_INVALID ||
 		    fwupd_device_get_battery_threshold(dev) == FWUPD_BATTERY_LEVEL_INVALID) {
 			/* TRANSLATORS: for example the batteries *inside* the Bluetooth mouse */
-			return g_strdup_printf(_("Device battery power is too low"));
+			return g_strdup(_("Device battery power is too low"));
 		}
 		/* TRANSLATORS: for example the batteries *inside* the Bluetooth mouse */
 		return g_strdup_printf(_("Device battery power is too low (%u%%, requires %u%%)"),

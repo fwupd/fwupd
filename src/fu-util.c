@@ -3412,11 +3412,11 @@ fu_util_security_modify_bios_setting(FuUtilPrivate *priv, FwupdSecurityAttr *att
 			       fwupd_security_attr_get_bios_setting_current_value(attr),
 			       fwupd_security_attr_get_bios_setting_target_value(attr));
 	g_string_append(body, "\n\n");
-	g_string_append_printf(body,
-			       /* TRANSLATORS: the user has to manually recover; we can't do it */
-			       _("You should ensure you are comfortable restoring the setting from "
-				 "the system firmware setup, as this change may cause the system "
-				 "to not boot into Linux or cause other system instability."));
+	g_string_append(body,
+			/* TRANSLATORS: the user has to manually recover; we can't do it */
+			_("You should ensure you are comfortable restoring the setting from "
+			  "the system firmware setup, as this change may cause the system "
+			  "to not boot into Linux or cause other system instability."));
 	fu_util_warning_box(title->str, body->str, 80);
 
 	/* ask for confirmation */
@@ -3948,11 +3948,11 @@ fu_util_get_bios_setting(FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 	}
 	if (!found) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_ARGS,
-			    /* TRANSLATORS: error message */
-			    _("Unable to find attribute"));
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_ARGS,
+				    /* TRANSLATORS: error message */
+				    _("Unable to find attribute"));
 		return FALSE;
 	}
 	return TRUE;
