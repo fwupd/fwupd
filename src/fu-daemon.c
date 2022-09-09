@@ -258,8 +258,6 @@ fu_daemon_create_request(FuDaemon *self, const gchar *sender, GError **error)
 		return g_steal_pointer(&request);
 	}
 
-	g_return_val_if_fail(sender != NULL, NULL);
-
 	/* did the client set the list of supported features or any hints */
 	sender_item = g_hash_table_lookup(self->sender_items, sender);
 	if (sender_item != NULL) {
