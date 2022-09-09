@@ -217,7 +217,7 @@ fu_util_traverse_tree(GNode *n, gpointer data)
 		}
 
 		/* ancestors */
-		for (GNode *c = n->parent; c->parent != NULL; c = c->parent) {
+		for (GNode *c = n->parent; c != NULL && c->parent != NULL; c = c->parent) {
 			if (g_node_next_sibling(c) != NULL || idx == 0) {
 				g_string_prepend(str, "│ ");
 				continue;
