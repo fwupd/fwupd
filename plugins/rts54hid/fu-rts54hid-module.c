@@ -8,8 +8,6 @@
 
 #include <fwupdplugin.h>
 
-#include <string.h>
-
 #include "fu-rts54hid-common.h"
 #include "fu-rts54hid-device.h"
 #include "fu-rts54hid-module.h"
@@ -70,7 +68,15 @@ fu_rts54hid_module_i2c_write(FuRts54HidModule *self,
 	if (parent == NULL)
 		return FALSE;
 
-	memcpy(buf, &cmd_buffer, sizeof(cmd_buffer));
+	if (!fu_memcpy_safe(buf,
+			    sizeof(buf),
+			    0x0, /* dst */
+			    (const guint8 *)&cmd_buffer,
+			    sizeof(cmd_buffer),
+			    0x0, /* src */
+			    sizeof(cmd_buffer),
+			    error))
+		return FALSE;
 	if (!fu_memcpy_safe(buf,
 			    sizeof(buf),
 			    FU_RTS54HID_CMD_BUFFER_OFFSET_DATA, /* dst */
@@ -122,7 +128,15 @@ fu_rts54hid_module_i2c_read(FuRts54HidModule *self,
 		return FALSE;
 
 	/* read from module */
-	memcpy(buf, &cmd_buffer, sizeof(cmd_buffer));
+	if (!fu_memcpy_safe(buf,
+			    sizeof(buf),
+			    0x0, /* dst */
+			    (const guint8 *)&cmd_buffer,
+			    sizeof(cmd_buffer),
+			    0x0, /* src */
+			    sizeof(cmd_buffer),
+			    error))
+		return FALSE;
 	if (!fu_hid_device_set_report(FU_HID_DEVICE(parent),
 				      0x0,
 				      buf,
