@@ -4209,7 +4209,7 @@ main(int argc, char *argv[])
 	textdomain(GETTEXT_PACKAGE);
 
 	/* ensure D-Bus errors are registered */
-	fwupd_error_quark();
+	(void)fwupd_error_quark();
 
 	/* this is an old command which is possibly a symlink */
 	if (g_str_has_suffix(argv[0], "fwupdagent")) {
