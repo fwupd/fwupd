@@ -3928,7 +3928,7 @@ gsize
 fu_common_align_up(gsize value, guint8 alignment)
 {
 	gsize value_new;
-	guint32 mask = 1 << alignment;
+	gsize mask = (gsize)1 << alignment;
 
 	g_return_val_if_fail(alignment <= FU_FIRMWARE_ALIGNMENT_2G, G_MAXSIZE);
 
