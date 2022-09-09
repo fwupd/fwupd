@@ -598,9 +598,7 @@ fu_firehose_updater_actions_validate(GPtrArray *action_nodes,
 			g_set_error(error,
 				    G_IO_ERROR,
 				    G_IO_ERROR_FAILED,
-				    "Failed to validate program file '%s' command: "
-				    "failed to get %s",
-				    program_filename,
+				    "Failed to validate program file: failed to get %s",
 				    name);
 			return FALSE;
 		}
@@ -610,9 +608,7 @@ fu_firehose_updater_actions_validate(GPtrArray *action_nodes,
 			g_set_error(error,
 				    G_IO_ERROR,
 				    G_IO_ERROR_FAILED,
-				    "Failed to validate program file '%s' command: "
-				    "failed to get %s",
-				    program_filename,
+				    "Failed to validate program file: failed to get %s",
 				    name);
 			return FALSE;
 		}
