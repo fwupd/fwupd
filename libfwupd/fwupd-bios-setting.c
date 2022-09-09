@@ -813,9 +813,9 @@ fwupd_bios_setting_from_json(FwupdBiosSetting *self, JsonNode *json_node, GError
 						    0));
 	fwupd_bios_setting_set_read_only(
 	    self,
-	    json_object_get_int_member_with_default(obj,
-						    FWUPD_RESULT_KEY_BIOS_SETTING_READ_ONLY,
-						    0));
+	    json_object_get_boolean_member_with_default(obj,
+							FWUPD_RESULT_KEY_BIOS_SETTING_READ_ONLY,
+							FALSE));
 	/* success */
 	return TRUE;
 #else
