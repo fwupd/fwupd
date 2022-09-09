@@ -819,12 +819,8 @@ fu_synaptics_cxaudio_device_set_quirk_kv(FuDevice *device,
 		self->chip_id_base = tmp;
 		return TRUE;
 	}
-	if (g_strcmp0(key, "CxaudioSoftwareReset") == 0) {
-		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT32, error))
-			return FALSE;
-		self->sw_reset_supported = tmp;
-		return TRUE;
-	}
+	if (g_strcmp0(key, "CxaudioSoftwareReset") == 0)
+		return fu_strtobool(value, &self->sw_reset_supported, error);
 	if (g_strcmp0(key, "CxaudioPatch1ValidAddr") == 0) {
 		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT32, error))
 			return FALSE;
