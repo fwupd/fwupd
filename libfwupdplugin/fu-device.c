@@ -4590,7 +4590,6 @@ fu_device_set_progress(FuDevice *self, FuProgress *progress)
 
 	g_return_if_fail(FU_IS_DEVICE(self));
 	g_return_if_fail(FU_IS_PROGRESS(progress));
-	g_return_if_fail(FU_IS_PROGRESS(progress));
 
 	/* subclassed */
 	if (klass->set_progress == NULL)
