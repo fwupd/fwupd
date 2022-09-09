@@ -261,7 +261,7 @@ fu_mei_device_write(FuMeiDevice *self,
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_WRITE,
-			    "write failed with status %zd %s",
+			    "write failed with status %" G_GSSIZE_FORMAT " %s",
 			    written,
 			    strerror(errno));
 		return FALSE;
@@ -295,7 +295,7 @@ fu_mei_device_write(FuMeiDevice *self,
 	g_set_error(error,
 		    FWUPD_ERROR,
 		    FWUPD_ERROR_WRITE,
-		    "write failed on select with status %zd",
+		    "write failed on select with status %" G_GSSIZE_FORMAT,
 		    rc);
 	return FALSE;
 #else
