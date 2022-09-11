@@ -24,6 +24,12 @@ when using an Android A/B partitioning scheme, e.g.
 * `DRIVE\UUID_c49183ed-aaec-9bf5-760a-66330fbcffc1&LABEL_label`
 * `DRIVE\UUID_c49183ed-aaec-9bf5-760a-66330fbcffc1`
 
+For some devices with eMMC boot partitions, we cannot use UUIDs or labels as they do not contain a partition
+table since the firmware is flashed already at offset 0 of the block device.
+To support such devices, a combination of the block device name, path, hardware name is used:
+
+* `DRIVE\DEVNAME_dev-mmcblk2boot0&ID_PATH=platform-1c11000_mmc&ID_NAME_DA4032`
+
 ## Update Behavior
 
 The block device is erased in chunks, written and then read back to verify.

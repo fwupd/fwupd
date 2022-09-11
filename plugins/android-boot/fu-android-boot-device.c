@@ -81,8 +81,12 @@ fu_android_boot_device_probe(FuDevice *device, GError **error)
 		}
 	}
 
-	/* set max firmware size, required to avoid writing firmware bigger than partition */
-	if (!g_udev_device_has_property(udev_device, "ID_PART_ENTRY_SIZE")) {
+	/*
+	 * Set max firmware size, required to avoid writing firmware bigger than partition.
+	 * Some partitions like eMMC boot partitions do not expose their size, a quirk must
+	 * be added to these partitions to define their maximum size.
+	 */
+	if (g_udev_device_has_property(udev_device, "ID_PART_ENTRY_SIZE") && self->max_size <= 0) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
@@ -95,13 +99,6 @@ fu_android_boot_device_probe(FuDevice *device, GError **error)
 	self->max_size = size;
 
 	/* extract partition UUID and require it for supporting a device */
-	if (!g_udev_device_has_property(udev_device, "ID_PART_ENTRY_UUID")) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "device does not have a UUID");
-		return FALSE;
-	}
 	self->uuid = g_strdup(g_udev_device_get_property(udev_device, "ID_PART_ENTRY_UUID"));
 
 	/* extract serial number and set it */
@@ -116,10 +113,27 @@ fu_android_boot_device_probe(FuDevice *device, GError **error)
 	fu_device_add_instance_strsafe(device, "LABEL", self->label);
 	fu_device_add_instance_strsafe(device, "SLOT", self->boot_slot);
 
+	/*
+	 * eMMC boot partitions cannot have a label, UUID, etc. because they do not contain a
+	 * partition table. These devices are typically used to store platform or bootloader
+	 * firmware on it at offset 0. Combine their exposed device name, path and hardware name for
+	 * a GUID. The GUID depends on the device DT and therefore unique.
+	 */
+	fu_device_add_instance_strsafe(device,
+				       "DEVNAME",
+				       g_udev_device_get_property(udev_device, "DEVNAME"));
+	fu_device_add_instance_strsafe(device,
+				       "ID_PATH",
+				       g_udev_device_get_property(udev_device, "ID_PATH"));
+	fu_device_add_instance_strsafe(device,
+				       "ID_NAME",
+				       g_udev_device_get_property(udev_device, "ID_NAME"));
+
 	/* GUID based on UUID / UUID, label / UUID, label, slot */
 	fu_device_build_instance_id(device, NULL, "DRIVE", "UUID", NULL);
 	fu_device_build_instance_id(device, NULL, "DRIVE", "UUID", "LABEL", NULL);
 	fu_device_build_instance_id(device, NULL, "DRIVE", "UUID", "LABEL", "SLOT", NULL);
+	fu_device_build_instance_id(device, NULL, "DRIVE", "DEVNAME", "ID_PATH", "ID_NAME", NULL);
 
 	/* quirks will have matched now */
 	if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE)) {
@@ -351,6 +365,7 @@ fu_android_boot_device_init(FuAndroidBootDevice *self)
 				 FU_UDEV_DEVICE_FLAG_OPEN_READ | FU_UDEV_DEVICE_FLAG_OPEN_WRITE |
 				     FU_UDEV_DEVICE_FLAG_OPEN_SYNC);
 	fu_device_add_icon(FU_DEVICE(self), "computer");
+	self->max_size = 0;
 
 	/*
 	 * Fallback for ABL without version reporting, fwupd will always provide an upgrade in this
