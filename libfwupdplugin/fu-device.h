@@ -540,6 +540,12 @@ fu_device_set_version_lowest(FuDevice *self, const gchar *version);
 void
 fu_device_set_version_bootloader(FuDevice *self, const gchar *version);
 void
+fu_device_add_backend_tag(FuDevice *self, const gchar *backend_tag);
+gboolean
+fu_device_has_backend_tag(FuDevice *self, const gchar *backend_tag);
+GPtrArray *
+fu_device_get_backend_tags(FuDevice *self);
+void
 fu_device_inhibit(FuDevice *self, const gchar *inhibit_id, const gchar *reason);
 void
 fu_device_uninhibit(FuDevice *self, const gchar *inhibit_id);
