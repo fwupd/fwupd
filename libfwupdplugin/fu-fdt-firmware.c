@@ -66,6 +66,7 @@ typedef struct __attribute__((packed)) {
 #define FDT_END	       0x00000009
 
 #define FDT_LAST_COMP_VERSION 2
+#define FDT_DEPTH_MAX	      128
 
 static GString *
 fu_string_new_safe(const guint8 *buf, gsize bufsz, gsize offset, GError **error)
@@ -172,6 +173,7 @@ fu_fdt_firmware_parse_dt_struct(FuFdtFirmware *self, GBytes *fw, GHashTable *str
 {
 	gsize bufsz = 0;
 	gsize offset = 0;
+	guint depth = 0;
 	gboolean has_end = FALSE;
 	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
 	g_autoptr(FuFirmware) firmware_current = g_object_ref(FU_FIRMWARE(self));
@@ -213,6 +215,17 @@ fu_fdt_firmware_parse_dt_struct(FuFdtFirmware *self, GBytes *fw, GHashTable *str
 		if (token == FDT_BEGIN_NODE) {
 			g_autoptr(GString) str = NULL;
 			g_autoptr(FuFirmware) image = NULL;
+
+			/* sanity check */
+			if (depth++ > FDT_DEPTH_MAX) {
+				g_set_error(error,
+					    G_IO_ERROR,
+					    G_IO_ERROR_INVALID_DATA,
+					    "node depth exceeded maximum: 0x%x",
+					    (guint)FDT_DEPTH_MAX);
+				return FALSE;
+			}
+
 			str = fu_string_new_safe(buf, bufsz, offset, error);
 			if (str == NULL)
 				return FALSE;
@@ -236,6 +249,8 @@ fu_fdt_firmware_parse_dt_struct(FuFdtFirmware *self, GBytes *fw, GHashTable *str
 				return FALSE;
 			}
 			g_set_object(&firmware_current, fu_firmware_get_parent(firmware_current));
+			if (depth > 0)
+				depth--;
 			continue;
 		}
 
