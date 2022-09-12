@@ -1226,6 +1226,7 @@ fu_plugin_runner_prepare(FuPlugin *self,
 			 GError **error)
 {
 	FuPluginVfuncs *vfuncs = fu_plugin_get_vfuncs(self);
+	fu_device_add_backend_tag(device, "prepare");
 	return fu_plugin_runner_flagged_device_generic(self,
 						       device,
 						       progress,
@@ -1257,6 +1258,7 @@ fu_plugin_runner_cleanup(FuPlugin *self,
 			 GError **error)
 {
 	FuPluginVfuncs *vfuncs = fu_plugin_get_vfuncs(self);
+	fu_device_add_backend_tag(device, "cleanup");
 	return fu_plugin_runner_flagged_device_generic(self,
 						       device,
 						       progress,
@@ -1283,6 +1285,7 @@ gboolean
 fu_plugin_runner_attach(FuPlugin *self, FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuPluginVfuncs *vfuncs = fu_plugin_get_vfuncs(self);
+	fu_device_add_backend_tag(device, "attach");
 	return fu_plugin_runner_device_generic_progress(
 	    self,
 	    device,
@@ -1309,6 +1312,7 @@ gboolean
 fu_plugin_runner_detach(FuPlugin *self, FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuPluginVfuncs *vfuncs = fu_plugin_get_vfuncs(self);
+	fu_device_add_backend_tag(device, "detach");
 	return fu_plugin_runner_device_generic_progress(
 	    self,
 	    device,
@@ -1344,6 +1348,7 @@ fu_plugin_runner_reload(FuPlugin *self, FuDevice *device, GError **error)
 	locker = fu_device_locker_new(proxy, error);
 	if (locker == NULL)
 		return FALSE;
+	fu_device_add_backend_tag(device, "reload");
 	return fu_device_reload(device, error);
 }
 
@@ -1917,6 +1922,7 @@ fu_plugin_runner_activate(FuPlugin *self, FuDevice *device, FuProgress *progress
 	}
 
 	/* run vfunc */
+	fu_device_add_backend_tag(device, "activate");
 	if (!fu_plugin_runner_device_generic_progress(
 		self,
 		device,
@@ -1966,6 +1972,7 @@ fu_plugin_runner_unlock(FuPlugin *self, FuDevice *device, GError **error)
 	}
 
 	/* run vfunc */
+	fu_device_add_backend_tag(device, "unlock");
 	if (!fu_plugin_runner_device_generic(self,
 					     device,
 					     "fu_plugin_unlock",
@@ -2015,6 +2022,7 @@ fu_plugin_runner_write_firmware(FuPlugin *self,
 		g_debug("plugin not enabled, skipping");
 		return TRUE;
 	}
+	fu_device_add_backend_tag(device, "write-firmware");
 
 	/* optional */
 	if (vfuncs->write_firmware == NULL) {
