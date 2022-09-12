@@ -72,7 +72,7 @@ jobs:
           docker run --privileged -e CI=true -t -v $GITHUB_WORKSPACE:/github/workspace docker.pkg.github.com/fwupd/fwupd/fwupd-${{matrix.os}}:latest
 
   macos:
-    runs-on: macos-11
+    runs-on: macos-12
     steps:
     - name: install dependencies
       run: brew install meson gcab libusb gobject-introspection sqlite libarchive json-glib curl gnutls protobuf-c vala
