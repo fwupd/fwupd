@@ -262,6 +262,10 @@ fu_plugin_msr_backend_device_added(FuPlugin *plugin, FuDevice *device, GError **
 	/* get microcode version */
 	if (device_cpu != NULL) {
 		guint32 ver_raw;
+		guint8 offset;
+
+		if (!fu_cpuid(0x1, NULL, NULL, NULL, NULL, error))
+			return FALSE;
 		if (!fu_udev_device_pread(FU_UDEV_DEVICE(device),
 					  PCI_MSR_IA32_BIOS_SIGN_ID,
 					  buf,
@@ -271,9 +275,10 @@ fu_plugin_msr_backend_device_added(FuPlugin *plugin, FuDevice *device, GError **
 			return FALSE;
 		}
 		fu_dump_raw(G_LOG_DOMAIN, "IA32_BIOS_SIGN_ID", buf, sizeof(buf));
+		offset = fu_cpu_get_vendor() == FU_CPU_VENDOR_AMD ? 0x0 : 0x4;
 		if (!fu_memread_uint32_safe(buf,
 					    sizeof(buf),
-					    0x4,
+					    offset,
 					    &ver_raw,
 					    G_LITTLE_ENDIAN,
 					    error))
