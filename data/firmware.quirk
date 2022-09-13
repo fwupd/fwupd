@@ -1,0 +1,5 @@
+# Gatkex EVB & HP Thunderbolt Dock G4
+[INTEL_THUNDERBOLT_NVM\DEV_0B26]
+IntelThunderboltNvmFamily=goshen-ridge
+IntelThunderboltNvmGeneration=4
+IntelThunderboltNvmPorts=3

@@ -14,6 +14,7 @@
 #include "fu-common.h"
 #include "fu-firmware.h"
 #include "fu-mem.h"
+#include "fu-quirks.h"
 #include "fu-string.h"
 
 /**
@@ -25,6 +26,7 @@
  */
 
 typedef struct {
+	FuContext *ctx;
 	FuFirmwareFlags flags;
 	FuFirmware *parent; /* noref */
 	GPtrArray *images; /* FuFirmware */
@@ -40,12 +42,13 @@ typedef struct {
 	gsize size;
 	GPtrArray *chunks;  /* nullable, element-type FuChunk */
 	GPtrArray *patches; /* nullable, element-type FuFirmwarePatch */
+	GPtrArray *instance_ids; /* element-type utf-8 */
 } FuFirmwarePrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE(FuFirmware, fu_firmware, G_TYPE_OBJECT)
 #define GET_PRIVATE(o) (fu_firmware_get_instance_private(o))
 
-enum { PROP_0, PROP_PARENT, PROP_LAST };
+enum { PROP_0, PROP_CONTEXT, PROP_PARENT, PROP_LAST };
 
 #define FU_FIRMWARE_SEARCH_MAGIC_BUFSZ_MAX (32 * 1024 * 1024)
 
@@ -423,6 +426,112 @@ fu_firmware_set_parent(FuFirmware *self, FuFirmware *parent)
 	if (parent != NULL)
 		g_object_add_weak_pointer(G_OBJECT(parent), (gpointer *)&priv->parent);
 	priv->parent = parent;
+}
+
+/**
+ * fu_firmware_set_context:
+ * @self: a #FuFirmware
+ * @ctx: (nullable): optional #FuContext
+ *
+ * Sets the optional context which may be useful to this firmware.
+ * This is typically set after the firmware has been created, but before
+ * the firmware has been parsed.
+ *
+ * Since: 1.8.5
+ **/
+void
+fu_firmware_set_context(FuFirmware *self, FuContext *ctx)
+{
+	FuFirmwarePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_FIRMWARE(self));
+	g_return_if_fail(FU_IS_CONTEXT(ctx) || ctx == NULL);
+
+#ifndef SUPPORTED_BUILD
+	if (priv->ctx != NULL && ctx == NULL) {
+		g_critical("clearing firmware context for %s", fu_firmware_get_id(self));
+		return;
+	}
+#endif
+
+	if (g_set_object(&priv->ctx, ctx))
+		g_object_notify(G_OBJECT(self), "context");
+}
+
+/**
+ * fu_firmware_get_context:
+ * @self: a #FuFirmware
+ *
+ * Gets the context assigned for this firmware.
+ *
+ * Returns: (transfer none): the #FuContext object, or %NULL
+ *
+ * Since: 1.8.5
+ **/
+FuContext *
+fu_firmware_get_context(FuFirmware *self)
+{
+	FuFirmwarePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_FIRMWARE(self), NULL);
+	return priv->ctx;
+}
+
+static gboolean
+fu_firmware_set_quirk_kv(FuFirmware *self, const gchar *key, const gchar *value, GError **error)
+{
+	FuFirmwareClass *klass = FU_FIRMWARE_GET_CLASS(self);
+
+	/* standard keys */
+	if (g_strcmp0(key, FU_QUIRKS_GUID) == 0) {
+		fu_firmware_add_instance_id(self, value);
+		return TRUE;
+	}
+	if (g_strcmp0(key, FU_QUIRKS_VERSION) == 0) {
+		fu_firmware_set_version(self, value);
+		return TRUE;
+	}
+	if (g_strcmp0(key, FU_QUIRKS_FIRMWARE_SIZE) == 0) {
+		guint64 val = 0;
+		if (!fu_strtoull(value, &val, 0, G_MAXSIZE, error))
+			return FALSE;
+		fu_firmware_set_size(self, val);
+		return TRUE;
+	}
+
+	/* optional device-specific method */
+	if (klass->set_quirk_kv != NULL)
+		return klass->set_quirk_kv(self, key, value, error);
+
+	/* failed */
+	g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED, "not supported");
+	return FALSE;
+}
+
+static void
+fu_firmware_quirk_cb(FuContext *ctx, const gchar *key, const gchar *value, gpointer user_data)
+{
+	FuFirmware *self = FU_FIRMWARE(user_data);
+	g_autoptr(GError) error = NULL;
+	if (!fu_firmware_set_quirk_kv(self, key, value, &error))
+		g_warning("failed to set firmware quirk %s=%s", key, value);
+}
+
+/**
+ * fu_firmware_add_instance_id:
+ * @self: a #FuFirmware
+ * @instance_id: the instance ID, e.g. `PCI\VEN_10EC&DEV_525A`
+ *
+ * Adds an instance ID to the firmware.
+ * If the context has been set using fu_firmware_set_context() then quirks may be added.
+ *
+ * Since: 1.8.5
+ **/
+void
+fu_firmware_add_instance_id(FuFirmware *self, const gchar *instance_id)
+{
+	FuFirmwarePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_FIRMWARE(self));
+	g_return_if_fail(instance_id != NULL);
+	g_ptr_array_add(priv->instance_ids, g_strdup(instance_id));
 }
 
 /**
@@ -893,6 +1002,13 @@ fu_firmware_parse_full(FuFirmware *self,
 				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "invalid firmware as zero sized");
 		return FALSE;
+	}
+
+	/* add quirks */
+	for (guint i = 0; i < priv->instance_ids->len; i++) {
+		const gchar *instance_id = g_ptr_array_index(priv->instance_ids, i);
+		g_autofree gchar *guid = fwupd_guid_hash_string(instance_id);
+		fu_context_lookup_quirk_by_id_iter(priv->ctx, guid, fu_firmware_quirk_cb, self);
 	}
 
 	/* any FuFirmware subclass that gets past this point might have allocated memory in
@@ -1736,6 +1852,15 @@ fu_firmware_export(FuFirmware *self, FuFirmwareExportFlags flags, XbBuilderNode 
 	if (g_strcmp0(gtypestr, "FuFirmware") != 0)
 		xb_builder_node_set_attr(bn, "gtype", gtypestr);
 
+	/* provides */
+	if (priv->instance_ids->len > 0) {
+		g_autoptr(XbBuilderNode) bp = xb_builder_node_insert(bn, "provides", NULL);
+		for (guint i = 0; i < priv->instance_ids->len; i++) {
+			const gchar *instance_id = g_ptr_array_index(priv->instance_ids, i);
+			xb_builder_node_insert_text(bp, "firmware", instance_id, NULL);
+		}
+	}
+
 	/* subclassed type */
 	if (priv->flags != FU_FIRMWARE_FLAG_NONE) {
 		g_autoptr(GString) tmp = g_string_new("");
@@ -1867,6 +1992,9 @@ fu_firmware_get_property(GObject *object, guint prop_id, GValue *value, GParamSp
 	FuFirmware *self = FU_FIRMWARE(object);
 	FuFirmwarePrivate *priv = GET_PRIVATE(self);
 	switch (prop_id) {
+	case PROP_CONTEXT:
+		g_value_set_object(value, priv->ctx);
+		break;
 	case PROP_PARENT:
 		g_value_set_object(value, priv->parent);
 		break;
@@ -1881,6 +2009,9 @@ fu_firmware_set_property(GObject *object, guint prop_id, const GValue *value, GP
 {
 	FuFirmware *self = FU_FIRMWARE(object);
 	switch (prop_id) {
+	case PROP_CONTEXT:
+		fu_firmware_set_context(self, g_value_get_object(value));
+		break;
 	case PROP_PARENT:
 		fu_firmware_set_parent(self, g_value_get_object(value));
 		break;
@@ -1895,6 +2026,7 @@ fu_firmware_init(FuFirmware *self)
 {
 	FuFirmwarePrivate *priv = GET_PRIVATE(self);
 	priv->images = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
+	priv->instance_ids = g_ptr_array_new_with_free_func(g_free);
 }
 
 static void
@@ -1905,6 +2037,8 @@ fu_firmware_finalize(GObject *object)
 	g_free(priv->version);
 	g_free(priv->id);
 	g_free(priv->filename);
+	if (priv->ctx != NULL)
+		g_object_unref(priv->ctx);
 	if (priv->bytes != NULL)
 		g_bytes_unref(priv->bytes);
 	if (priv->chunks != NULL)
@@ -1914,6 +2048,7 @@ fu_firmware_finalize(GObject *object)
 	if (priv->parent != NULL)
 		g_object_remove_weak_pointer(G_OBJECT(priv->parent), (gpointer *)&priv->parent);
 	g_ptr_array_unref(priv->images);
+	g_ptr_array_unref(priv->instance_ids);
 	G_OBJECT_CLASS(fu_firmware_parent_class)->finalize(object);
 }
 
@@ -1940,6 +2075,20 @@ fu_firmware_class_init(FuFirmwareClass *klass)
 				    FU_TYPE_FIRMWARE,
 				    G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_PARENT, pspec);
+
+	/**
+	 * FuFirmware:context:
+	 *
+	 * The #FuContext to use.
+	 *
+	 * Since: 1.8.5
+	 */
+	pspec = g_param_spec_object("context",
+				    NULL,
+				    NULL,
+				    FU_TYPE_CONTEXT,
+				    G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_NAME);
+	g_object_class_install_property(object_class, PROP_CONTEXT, pspec);
 }
 
 /**

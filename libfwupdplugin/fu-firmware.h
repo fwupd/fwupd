@@ -10,6 +10,7 @@
 #include <xmlb.h>
 
 #include "fu-chunk.h"
+#include "fu-context.h"
 #include "fu-firmware.h"
 
 #define FU_TYPE_FIRMWARE (fu_firmware_get_type())
@@ -67,8 +68,12 @@ struct _FuFirmwareClass {
 				     FuFirmware *other,
 				     FwupdInstallFlags flags,
 				     GError **error);
+	gboolean (*set_quirk_kv)(FuFirmware *self,
+				 const gchar *key,
+				 const gchar *value,
+				 GError **error) G_GNUC_WARN_UNUSED_RESULT;
 	/*< private >*/
-	gpointer padding[24];
+	gpointer padding[23];
 };
 
 /**
@@ -265,6 +270,12 @@ FuFirmware *
 fu_firmware_get_parent(FuFirmware *self);
 void
 fu_firmware_set_parent(FuFirmware *self, FuFirmware *parent);
+void
+fu_firmware_set_context(FuFirmware *self, FuContext *ctx);
+FuContext *
+fu_firmware_get_context(FuFirmware *self);
+void
+fu_firmware_add_instance_id(FuFirmware *self, const gchar *instance_id);
 
 gboolean
 fu_firmware_tokenize(FuFirmware *self, GBytes *fw, FwupdInstallFlags flags, GError **error)

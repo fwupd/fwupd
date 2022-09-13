@@ -30,6 +30,7 @@ if build_standalone
   )
   plugin_quirks += join_paths(meson.current_source_dir(), 'power.quirk')
   plugin_quirks += join_paths(meson.current_source_dir(), 'cfi.quirk')
+  plugin_quirks += join_paths(meson.current_source_dir(), 'firmware.quirk')
 endif
 
 if get_option('metainfo')

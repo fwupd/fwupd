@@ -501,6 +501,44 @@ fu_intel_thunderbolt_nvm_missing_needed_drom(FuIntelThunderboltNvm *self)
 }
 
 static gboolean
+fu_intel_thunderbolt_nvm_set_quirk_kv(FuFirmware *firmware,
+				      const gchar *key,
+				      const gchar *value,
+				      GError **error)
+{
+	FuIntelThunderboltNvm *self = FU_INTEL_THUNDERBOLT_NVM(firmware);
+	FuIntelThunderboltNvmPrivate *priv = GET_PRIVATE(self);
+
+	if (g_strcmp0(key, "IntelThunderboltNvmFamily") == 0) {
+		priv->family = fu_intel_thunderbolt_nvm_family_from_string(value);
+		if (priv->family == FU_INTEL_THUNDERBOLT_NVM_FAMILY_UNKNOWN) {
+			g_set_error_literal(error,
+					    G_IO_ERROR,
+					    G_IO_ERROR_INVALID_DATA,
+					    "family unknown");
+			return FALSE;
+		}
+		return TRUE;
+	}
+	if (g_strcmp0(key, "IntelThunderboltNvmGeneration") == 0) {
+		guint64 val = 0;
+		if (!fu_strtoull(value, &val, 0, G_MAXUINT8, error))
+			return FALSE;
+		priv->gen = val;
+		return TRUE;
+	}
+	if (g_strcmp0(key, "IntelThunderboltNvmPorts") == 0) {
+		guint64 val = 0;
+		if (!fu_strtoull(value, &val, 0, G_MAXUINT8, error))
+			return FALSE;
+		priv->ports = val;
+		return TRUE;
+	}
+	g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED, "not supported");
+	return FALSE;
+}
+
+static gboolean
 fu_intel_thunderbolt_nvm_parse(FuFirmware *firmware,
 			       GBytes *fw,
 			       gsize offset,
@@ -537,6 +575,7 @@ fu_intel_thunderbolt_nvm_parse(FuFirmware *firmware,
 			   {0x1136, 4, FU_INTEL_THUNDERBOLT_NVM_FAMILY_MR, 2},
 			   {0x1137, 4, FU_INTEL_THUNDERBOLT_NVM_FAMILY_MR, 2},
 			   {0}};
+	g_autofree gchar *instance_id0 = NULL;
 	g_autofree gchar *version = NULL;
 	g_autoptr(FuFirmware) img_payload = NULL;
 	g_autoptr(GBytes) fw_payload = NULL;
@@ -580,6 +619,8 @@ fu_intel_thunderbolt_nvm_parse(FuFirmware *firmware,
 		g_prefix_error(error, "failed to read device-id: ");
 		return FALSE;
 	}
+	instance_id0 = g_strdup_printf("INTEL_THUNDERBOLT_NVM\\DEV_%04X", priv->device_id);
+	fu_firmware_add_instance_id(firmware, instance_id0);
 
 	/* this is best-effort */
 	for (guint i = 0; hw_info_arr[i].device_id != 0; i++) {
@@ -963,6 +1004,7 @@ fu_intel_thunderbolt_nvm_class_init(FuIntelThunderboltNvmClass *klass)
 	klass_firmware->write = fu_intel_thunderbolt_nvm_write;
 	klass_firmware->build = fu_intel_thunderbolt_nvm_build;
 	klass_firmware->check_compatible = fu_intel_thunderbolt_nvm_check_compatible;
+	klass_firmware->set_quirk_kv = fu_intel_thunderbolt_nvm_set_quirk_kv;
 }
 
 /**

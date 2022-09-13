@@ -1103,6 +1103,9 @@ LIBFWUPDPLUGIN_1.8.5 {
     fu_context_add_flag;
     fu_context_has_flag;
     fu_device_set_quirk_kv;
+    fu_firmware_add_instance_id;
+    fu_firmware_get_context;
+    fu_firmware_set_context;
     fu_intel_thunderbolt_firmware_get_type;
     fu_intel_thunderbolt_firmware_new;
     fu_intel_thunderbolt_nvm_get_device_id;

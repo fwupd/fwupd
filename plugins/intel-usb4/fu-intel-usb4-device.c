@@ -435,6 +435,7 @@ fu_intel_usb4_device_prepare_firmware(FuDevice *device,
 	g_autoptr(FuFirmware) firmware = fu_intel_thunderbolt_firmware_new();
 
 	/* get vid:pid:rev */
+	fu_firmware_set_context(firmware, fu_device_get_context(device));
 	if (!fu_firmware_parse(firmware, fw, flags, error))
 		return NULL;
 
@@ -521,6 +522,10 @@ fu_intel_usb4_device_setup(FuDevice *device, GError **error)
 	if (!fu_firmware_parse(fw, blob, FWUPD_INSTALL_FLAG_NONE, error)) {
 		g_prefix_error(error, "NVM parse error: ");
 		return FALSE;
+	}
+	if (g_getenv("FWUPD_INTEL_USB4_VERBOSE") != NULL) {
+		g_autofree gchar *str = fu_firmware_to_string(fw);
+		g_debug("%s", str);
 	}
 	self->nvm_vendor_id = fu_intel_thunderbolt_nvm_get_vendor_id(FU_INTEL_THUNDERBOLT_NVM(fw));
 	self->nvm_model_id = fu_intel_thunderbolt_nvm_get_model_id(FU_INTEL_THUNDERBOLT_NVM(fw));
