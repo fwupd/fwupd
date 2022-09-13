@@ -7,6 +7,7 @@ shared_module('fu_plugin_pci_psp',
   fu_hash,
   sources: [
     'fu-plugin-pci-psp.c',
+    'fu-pci-psp-device.c',
   ],
   include_directories: [
     root_incdir,
