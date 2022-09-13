@@ -17,6 +17,33 @@ struct _FuPciPspDevice {
 G_DEFINE_TYPE(FuPciPspDevice, fu_pci_psp_device, FU_TYPE_UDEV_DEVICE)
 
 static gboolean
+fu_pci_psp_device_probe(FuDevice *device, GError **error)
+{
+	const gchar *bootloader_version;
+	const gchar *tee_version;
+	g_autoptr(GError) error_boot = NULL;
+	g_autoptr(GError) error_tee = NULL;
+	g_autoptr(FuUdevDevice) udev_parent = NULL;
+
+	bootloader_version = fu_udev_device_get_sysfs_attr(FU_UDEV_DEVICE(device),
+							   "bootloader_version",
+							   &error_boot);
+	if (bootloader_version == NULL)
+		g_info("failed to read bootloader version: %s", error_boot->message);
+	else
+		fu_device_set_version_bootloader(device, bootloader_version);
+
+	tee_version =
+	    fu_udev_device_get_sysfs_attr(FU_UDEV_DEVICE(device), "tee_version", &error_tee);
+	if (tee_version == NULL)
+		g_info("failed to read bootloader version: %s", error_tee->message);
+	else
+		fu_device_set_version(device, tee_version);
+
+	return TRUE;
+}
+
+static gboolean
 fu_pci_psp_device_get_attr(FwupdSecurityAttr *attr,
 			   const gchar *path,
 			   const gchar *file,
@@ -284,5 +311,6 @@ static void
 fu_pci_psp_device_class_init(FuPciPspDeviceClass *klass)
 {
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
+	klass_device->probe = fu_pci_psp_device_probe;
 	klass_device->add_security_attrs = fu_pci_psp_device_add_security_attrs;
 }
