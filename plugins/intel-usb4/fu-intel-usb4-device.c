@@ -69,8 +69,8 @@ struct _FuIntelUsb4Device {
 	FuUsbDevice parent_instance;
 	guint blocksz;
 	guint8 intf_nr;
-	guint16 nvm_product_id;
 	guint16 nvm_vendor_id;
+	guint16 nvm_model_id;
 };
 
 G_DEFINE_TYPE(FuIntelUsb4Device, fu_intel_usb4_device, FU_TYPE_USB_DEVICE)
@@ -428,7 +428,7 @@ fu_intel_usb4_device_prepare_firmware(FuDevice *device,
 {
 	FuIntelUsb4Device *self = FU_INTEL_USB4_DEVICE(device);
 	guint16 fw_vendor_id;
-	guint16 fw_product_id;
+	guint16 fw_model_id;
 	g_autoptr(FuFirmware) firmware = fu_intel_thunderbolt_firmware_new();
 
 	/* get vid:pid:rev */
@@ -437,24 +437,24 @@ fu_intel_usb4_device_prepare_firmware(FuDevice *device,
 
 	/* check is compatible */
 	fw_vendor_id = fu_intel_thunderbolt_nvm_get_vendor_id(FU_INTEL_THUNDERBOLT_NVM(firmware));
-	fw_product_id = fu_intel_thunderbolt_nvm_get_model_id(FU_INTEL_THUNDERBOLT_NVM(firmware));
-	if (self->nvm_vendor_id != fw_vendor_id || self->nvm_product_id != fw_product_id) {
+	fw_model_id = fu_intel_thunderbolt_nvm_get_model_id(FU_INTEL_THUNDERBOLT_NVM(firmware));
+	if (self->nvm_vendor_id != fw_vendor_id || self->nvm_model_id != fw_model_id) {
 		if ((flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "firmware 0x%04x:0x%04x does not match device 0x%04x:0x%04x",
 				    fw_vendor_id,
-				    fw_product_id,
+				    fw_model_id,
 				    self->nvm_vendor_id,
-				    self->nvm_product_id);
+				    self->nvm_model_id);
 			return NULL;
 		}
 		g_warning("firmware 0x%04x:0x%04x does not match device 0x%04x:0x%04x",
 			  fw_vendor_id,
-			  fw_product_id,
+			  fw_model_id,
 			  self->nvm_vendor_id,
-			  self->nvm_product_id);
+			  self->nvm_model_id);
 	}
 
 	/* success */
@@ -520,9 +520,9 @@ fu_intel_usb4_device_setup(FuDevice *device, GError **error)
 		return FALSE;
 	}
 	self->nvm_vendor_id = fu_intel_thunderbolt_nvm_get_vendor_id(FU_INTEL_THUNDERBOLT_NVM(fw));
-	self->nvm_product_id = fu_intel_thunderbolt_nvm_get_model_id(FU_INTEL_THUNDERBOLT_NVM(fw));
+	self->nvm_model_id = fu_intel_thunderbolt_nvm_get_model_id(FU_INTEL_THUNDERBOLT_NVM(fw));
 
-	name = g_strdup_printf("TBT-%04x%04x", self->nvm_vendor_id, self->nvm_product_id);
+	name = g_strdup_printf("TBT-%04x%04x", self->nvm_vendor_id, self->nvm_model_id);
 	fu_device_add_instance_id(device, name);
 	fu_device_set_version(device, fu_firmware_get_version(fw));
 	return TRUE;
@@ -533,7 +533,7 @@ fu_intel_usb4_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuIntelUsb4Device *self = FU_INTEL_USB4_DEVICE(device);
 	fu_string_append_kx(str, idt, "NvmVendorId", self->nvm_vendor_id);
-	fu_string_append_kx(str, idt, "NvmProductId", self->nvm_product_id);
+	fu_string_append_kx(str, idt, "NvmModelId", self->nvm_model_id);
 }
 
 static void
