@@ -69,8 +69,11 @@ struct _FuIntelUsb4Device {
 	FuUsbDevice parent_instance;
 	guint blocksz;
 	guint8 intf_nr;
+	/* from DROM */
 	guint16 nvm_vendor_id;
 	guint16 nvm_model_id;
+	/* from DIGITAL */
+	guint16 nvm_device_id;
 };
 
 G_DEFINE_TYPE(FuIntelUsb4Device, fu_intel_usb4_device, FU_TYPE_USB_DEVICE)
@@ -521,6 +524,7 @@ fu_intel_usb4_device_setup(FuDevice *device, GError **error)
 	}
 	self->nvm_vendor_id = fu_intel_thunderbolt_nvm_get_vendor_id(FU_INTEL_THUNDERBOLT_NVM(fw));
 	self->nvm_model_id = fu_intel_thunderbolt_nvm_get_model_id(FU_INTEL_THUNDERBOLT_NVM(fw));
+	self->nvm_device_id = fu_intel_thunderbolt_nvm_get_device_id(FU_INTEL_THUNDERBOLT_NVM(fw));
 
 	name = g_strdup_printf("TBT-%04x%04x", self->nvm_vendor_id, self->nvm_model_id);
 	fu_device_add_instance_id(device, name);
@@ -534,6 +538,7 @@ fu_intel_usb4_device_to_string(FuDevice *device, guint idt, GString *str)
 	FuIntelUsb4Device *self = FU_INTEL_USB4_DEVICE(device);
 	fu_string_append_kx(str, idt, "NvmVendorId", self->nvm_vendor_id);
 	fu_string_append_kx(str, idt, "NvmModelId", self->nvm_model_id);
+	fu_string_append_kx(str, idt, "NvmDeviceId", self->nvm_device_id);
 }
 
 static void
