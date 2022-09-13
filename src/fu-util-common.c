@@ -264,6 +264,8 @@ fu_util_is_interesting_device(FwupdDevice *dev)
 		return TRUE;
 	if (fwupd_device_get_update_error(dev) != NULL)
 		return TRUE;
+	if (fwupd_device_get_version(dev) != NULL)
+		return TRUE;
 	/* device not plugged in, get-details */
 	if (fwupd_device_get_flags(dev) == 0)
 		return TRUE;
