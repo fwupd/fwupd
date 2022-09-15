@@ -134,4 +134,4 @@ GType = FuWacomEmrDevice
 GType = FuWacomAesDevice
 WacomI2cFlashBlockSize = 128
 WacomI2cFlashBaseAddr = 0x8000
-WacomI2cFlashSize = 0x24000
+WacomI2cFlashSize = 0x28000
