@@ -221,6 +221,22 @@ fu_wacom_aes_device_write_block(FuWacomAesDevice *self,
 }
 
 static gboolean
+fu_wacom_aes_device_finalize_firmware(FuDevice *device, GError **error)
+{
+	FuWacomDevice *self = FU_WACOM_DEVICE(device);
+	FuWacomRawRequest req = {.report_id = FU_WACOM_RAW_BL_REPORT_ID_TYPE,
+				 .cmd = FU_WACOM_RAW_BL_TYPE_FINALIZER,
+				 0x00};
+
+	if (!fu_wacom_device_set_feature(self, (const guint8 *)&req, sizeof(req), error)) {
+		g_prefix_error(error, "failed to finalize the device: ");
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+static gboolean
 fu_wacom_aes_device_write_firmware(FuDevice *device,
 				   GPtrArray *chunks,
 				   FuProgress *progress,
@@ -253,6 +269,14 @@ fu_wacom_aes_device_write_firmware(FuDevice *device,
 						(gsize)i,
 						(gsize)chunks->len);
 	}
+
+	/* finalize the device */
+	if (!fu_wacom_aes_device_finalize_firmware(device, error)) {
+		return FALSE;
+	}
+
+	g_usleep(500 * 1000);
+
 	fu_progress_step_done(progress);
 	return TRUE;
 }
