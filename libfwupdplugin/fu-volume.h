@@ -62,3 +62,5 @@ FuVolume *
 fu_volume_new_esp_for_path(const gchar *esp_path, GError **error) G_GNUC_WARN_UNUSED_RESULT;
 FuVolume *
 fu_volume_new_esp_default(GError **error) G_GNUC_WARN_UNUSED_RESULT;
+GPtrArray *
+fu_volume_new_by_esp(GError **error) G_GNUC_WARN_UNUSED_RESULT;
