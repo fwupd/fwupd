@@ -151,6 +151,67 @@ fu_android_boot_device_probe(FuDevice *device, GError **error)
 }
 
 static gboolean
+fu_android_boot_device_setup(FuDevice *device, GError **error)
+{
+	GPtrArray *instance_ids;
+	GType firmware_gtype = fu_device_get_firmware_gtype(device);
+	const gchar *fn;
+	g_autoptr(FuFirmware) firmware_child = NULL;
+	g_autoptr(FuFirmware) firmware = NULL;
+	g_autoptr(GFile) file = NULL;
+	g_autoptr(GPtrArray) imgs = NULL;
+
+	/* nothing to do */
+	if (firmware_gtype == G_TYPE_INVALID)
+		return TRUE;
+
+	/* read entire contents */
+	fn = fu_udev_device_get_device_file(FU_UDEV_DEVICE(device));
+	if (fn == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "Not supported as no device file");
+		return FALSE;
+	}
+	file = g_file_new_for_path(fn);
+	firmware = g_object_new(firmware_gtype, NULL);
+	if (!fu_firmware_parse_file(firmware, file, FWUPD_INSTALL_FLAG_NONE, error))
+		return FALSE;
+
+	/* find the firmware child that matches any of the device GUID, then use the first
+	 * child that have a version, and finally use the main firmware as a fallback */
+	instance_ids = fu_device_get_instance_ids(device);
+	for (guint i = 0; i < instance_ids->len; i++) {
+		const gchar *instance_id = g_ptr_array_index(instance_ids, i);
+		g_autofree gchar *guid = fwupd_guid_hash_string(instance_id);
+		firmware_child = fu_firmware_get_image_by_id(firmware, guid, NULL);
+		if (firmware_child != NULL)
+			break;
+	}
+	imgs = fu_firmware_get_images(firmware);
+	for (guint i = 0; i < imgs->len; i++) {
+		FuFirmware *firmare_tmp = g_ptr_array_index(imgs, i);
+		if (fu_firmware_get_version(firmare_tmp) != NULL ||
+		    fu_firmware_get_version_raw(firmare_tmp) != 0) {
+			firmware_child = g_object_ref(firmare_tmp);
+			break;
+		}
+	}
+	if (firmware_child == NULL)
+		firmware_child = g_object_ref(firmware);
+
+	/* copy over the version */
+	if (fu_firmware_get_version(firmware_child) != NULL)
+		fu_device_set_version(device, fu_firmware_get_version(firmware_child));
+	if (fu_firmware_get_version_raw(firmware_child) != G_MAXUINT64)
+		fu_device_set_version_raw(device, fu_firmware_get_version_raw(firmware_child));
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_android_boot_device_open(FuDevice *device, GError **error)
 {
 	g_autoptr(GError) error_local = NULL;
@@ -383,6 +444,7 @@ fu_android_boot_device_class_init(FuAndroidBootDeviceClass *klass)
 
 	klass_object->finalize = fu_android_boot_device_finalize;
 	klass_device->probe = fu_android_boot_device_probe;
+	klass_device->setup = fu_android_boot_device_setup;
 	klass_device->open = fu_android_boot_device_open;
 	klass_device->write_firmware = fu_android_boot_device_write_firmware;
 	klass_device->to_string = fu_android_boot_device_to_string;
