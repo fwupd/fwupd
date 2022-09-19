@@ -215,6 +215,7 @@ static gboolean
 fu_android_boot_device_open(FuDevice *device, GError **error)
 {
 	g_autoptr(GError) error_local = NULL;
+	const gchar *force_ro = "force_ro";
 
 	/* FuUdevDevice->open */
 	if (!FU_DEVICE_CLASS(fu_android_boot_device_parent_class)->open(device, &error_local)) {
@@ -226,6 +227,26 @@ fu_android_boot_device_open(FuDevice *device, GError **error)
 			return FALSE;
 		}
 		g_propagate_error(error, g_steal_pointer(&error_local));
+		return FALSE;
+	}
+
+	/* Allow writing to eMMC boot partitions */
+	if (fu_udev_device_get_sysfs_attr(FU_UDEV_DEVICE(device), force_ro, NULL) != NULL &&
+	    !fu_udev_device_write_sysfs(FU_UDEV_DEVICE(device), force_ro, "0", error)) {
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+static gboolean
+fu_android_boot_device_close(FuDevice *device, GError **error)
+{
+	const gchar *force_ro = "force_ro";
+
+	/* Disallow writing to eMMC boot partitions */
+	if (fu_udev_device_get_sysfs_attr(FU_UDEV_DEVICE(device), force_ro, NULL) != NULL &&
+	    !fu_udev_device_write_sysfs(FU_UDEV_DEVICE(device), force_ro, "1", error)) {
 		return FALSE;
 	}
 
@@ -446,6 +467,7 @@ fu_android_boot_device_class_init(FuAndroidBootDeviceClass *klass)
 	klass_device->probe = fu_android_boot_device_probe;
 	klass_device->setup = fu_android_boot_device_setup;
 	klass_device->open = fu_android_boot_device_open;
+	klass_device->close = fu_android_boot_device_close;
 	klass_device->write_firmware = fu_android_boot_device_write_firmware;
 	klass_device->to_string = fu_android_boot_device_to_string;
 	klass_device->set_quirk_kv = fu_android_boot_device_set_quirk_kv;
