@@ -1,7 +1,7 @@
 [Unit]
 Description=Refresh fwupd metadata and update motd
 Documentation=man:fwupdmgr(1)
-After=network.target
+After=network-online.target
 
 [Service]
 Type=oneshot
