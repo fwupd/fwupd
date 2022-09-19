@@ -4,3 +4,5 @@ Plugin = mtd
 [MTD\VENDOR_PINE64&PRODUCT_PinePhone-Pro&NAME_spi1.0]
 Name = Tow-Boot platform firmware
 FirmwareGType = FuUswidFirmware
+Vendor = Tow-Boot
+VendorId = org.tow-boot
