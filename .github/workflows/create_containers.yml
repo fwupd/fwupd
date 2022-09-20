@@ -4,6 +4,9 @@ on:
   schedule:
     - cron:  '0 0 * * *'
 
+permissions:
+  contents: read # to fetch code (actions/checkout)
+
 jobs:
   push_to_registry:
     runs-on: ubuntu-latest
