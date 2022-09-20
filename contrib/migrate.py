@@ -125,7 +125,7 @@ if __name__ == "__main__":
             "fu_common_get_volume_by_device": "fu_volume_new_by_device",
             "fu_common_get_volume_by_devnum": "fu_volume_new_by_devnum",
             "fu_common_get_esp_for_path": "fu_volume_new_esp_for_path",
-            "fu_common_get_esp_default": "fu_volume_new_esp_default",
+            "fu_common_get_esp_default": "fu_context_get_esp_volumes",
             "fu_smbios_to_string": "fu_firmware_to_string",
             "fu_i2c_device_read_full": "fu_i2c_device_read",
             "fu_i2c_device_write_full": "fu_i2c_device_write",

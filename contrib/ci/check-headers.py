@@ -66,7 +66,7 @@ def test_files() -> int:
         if (
             fn.startswith("plugins")
             and not fn.endswith("self-test.c")
-            and not fn.endswith("-tool.c")
+            and not fn.endswith("tool.c")
         ):
             for include in includes:
                 # check for using private header use in plugins

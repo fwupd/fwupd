@@ -2996,14 +2996,15 @@ fu_util_security(FuUtilPrivate *priv, gchar **values, GError **error)
 }
 
 static FuVolume *
-fu_util_prompt_for_volume(GError **error)
+fu_util_prompt_for_volume(FuUtilPrivate *priv, GError **error)
 {
+	FuContext *ctx = fu_engine_get_context(priv->engine);
 	FuVolume *volume;
 	guint idx;
 	g_autoptr(GPtrArray) volumes = NULL;
 
 	/* exactly one */
-	volumes = fu_volume_new_by_esp(error);
+	volumes = fu_context_get_esp_volumes(ctx, error);
 	if (volumes == NULL)
 		return NULL;
 	if (volumes->len == 1) {
@@ -3037,7 +3038,7 @@ static gboolean
 fu_util_esp_mount(FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(FuVolume) volume = NULL;
-	volume = fu_util_prompt_for_volume(error);
+	volume = fu_util_prompt_for_volume(priv, error);
 	if (volume == NULL)
 		return FALSE;
 	return fu_volume_mount(volume, error);
@@ -3047,7 +3048,7 @@ static gboolean
 fu_util_esp_unmount(FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(FuVolume) volume = NULL;
-	volume = fu_util_prompt_for_volume(error);
+	volume = fu_util_prompt_for_volume(priv, error);
 	if (volume == NULL)
 		return FALSE;
 	return fu_volume_unmount(volume, error);
@@ -3061,7 +3062,7 @@ fu_util_esp_list(FuUtilPrivate *priv, gchar **values, GError **error)
 	g_autoptr(FuVolume) volume = NULL;
 	g_autoptr(GPtrArray) files = NULL;
 
-	volume = fu_util_prompt_for_volume(error);
+	volume = fu_util_prompt_for_volume(priv, error);
 	if (volume == NULL)
 		return FALSE;
 	locker = fu_volume_locker(volume, error);

@@ -12,6 +12,7 @@
 #include "fu-context-private.h"
 #include "fu-hwids.h"
 #include "fu-smbios-private.h"
+#include "fu-volume-private.h"
 
 /**
  * FuContext:
@@ -28,6 +29,7 @@ typedef struct {
 	GHashTable *runtime_versions;
 	GHashTable *compile_versions;
 	GPtrArray *udev_subsystems;
+	GPtrArray *esp_volumes;
 	GHashTable *firmware_gtypes;
 	GHashTable *hwid_flags; /* str: */
 	FuBatteryState battery_state;
@@ -867,6 +869,111 @@ fu_context_has_flag(FuContext *context, FuContextFlags flag)
 	return (priv->flags & flag) > 0;
 }
 
+/**
+ * fu_context_add_esp_volume:
+ * @context: a #FuContext
+ * @volume: a #FuVolume
+ *
+ * Adds an ESP volume location.
+ *
+ * Since: 1.8.5
+ **/
+void
+fu_context_add_esp_volume(FuContext *self, FuVolume *volume)
+{
+	FuContextPrivate *priv = GET_PRIVATE(self);
+
+	g_return_if_fail(FU_IS_CONTEXT(self));
+	g_return_if_fail(FU_IS_VOLUME(volume));
+
+	/* check for dupes */
+	for (guint i = 0; i < priv->esp_volumes->len; i++) {
+		FuVolume *volume_tmp = g_ptr_array_index(priv->esp_volumes, i);
+		if (g_strcmp0(fu_volume_get_id(volume_tmp), fu_volume_get_id(volume)) == 0) {
+			g_debug("not adding duplicate volume %s", fu_volume_get_id(volume));
+			return;
+		}
+	}
+
+	/* add */
+	g_ptr_array_add(priv->esp_volumes, g_object_ref(volume));
+}
+
+/**
+ * fu_context_get_esp_volumes:
+ * @context: a #FuContext
+ * @error: (nullable): optional return location for an error
+ *
+ * Finds all volumes that could be an ESP.
+ *
+ * The volumes are cached and so subsequent calls to this function will be much faster.
+ *
+ * Returns: (transfer container) (element-type FuVolume): a #GPtrArray, or %NULL if no ESP was found
+ *
+ * Since: 1.8.5
+ **/
+GPtrArray *
+fu_context_get_esp_volumes(FuContext *self, GError **error)
+{
+	FuContextPrivate *priv = GET_PRIVATE(self);
+	const gchar *path_tmp;
+	g_autoptr(GError) error_bdp = NULL;
+	g_autoptr(GError) error_esp = NULL;
+	g_autoptr(GPtrArray) volumes_bdp = NULL;
+	g_autoptr(GPtrArray) volumes_esp = NULL;
+
+	g_return_val_if_fail(FU_IS_CONTEXT(self), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	/* cached result */
+	if (priv->esp_volumes->len > 0)
+		return g_ptr_array_ref(priv->esp_volumes);
+
+	/* for the test suite use local directory for ESP */
+	path_tmp = g_getenv("FWUPD_UEFI_ESP_PATH");
+	if (path_tmp != NULL) {
+		g_autoptr(FuVolume) vol = fu_volume_new_from_mount_path(path_tmp);
+		fu_context_add_esp_volume(self, vol);
+		return g_ptr_array_ref(priv->esp_volumes);
+	}
+
+	/* ESP */
+	volumes_esp = fu_volume_new_by_kind(FU_VOLUME_KIND_ESP, &error_esp);
+	if (volumes_esp == NULL) {
+		g_debug("%s", error_esp->message);
+	} else {
+		for (guint i = 0; i < volumes_esp->len; i++) {
+			FuVolume *vol = g_ptr_array_index(volumes_esp, i);
+			fu_context_add_esp_volume(self, vol);
+		}
+	}
+
+	/* BDP */
+	volumes_bdp = fu_volume_new_by_kind(FU_VOLUME_KIND_BDP, &error_bdp);
+	if (volumes_bdp == NULL) {
+		g_debug("%s", error_bdp->message);
+	} else {
+		for (guint i = 0; i < volumes_bdp->len; i++) {
+			FuVolume *vol = g_ptr_array_index(volumes_bdp, i);
+			g_autofree gchar *type = fu_volume_get_id_type(vol);
+			if (g_strcmp0(type, "vfat") != 0)
+				continue;
+			if (!fu_volume_is_internal(vol))
+				continue;
+			fu_context_add_esp_volume(self, vol);
+		}
+	}
+
+	/* nothing found */
+	if (priv->esp_volumes->len == 0) {
+		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_NOT_FOUND, "No ESP or BDP found");
+		return NULL;
+	}
+
+	/* success */
+	return g_ptr_array_ref(priv->esp_volumes);
+}
+
 static void
 fu_context_get_property(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
 {
@@ -931,6 +1038,7 @@ fu_context_finalize(GObject *object)
 	g_object_unref(priv->host_bios_settings);
 	g_hash_table_unref(priv->firmware_gtypes);
 	g_ptr_array_unref(priv->udev_subsystems);
+	g_ptr_array_unref(priv->esp_volumes);
 
 	G_OBJECT_CLASS(fu_context_parent_class)->finalize(object);
 }
@@ -1044,6 +1152,7 @@ fu_context_init(FuContext *self)
 	priv->firmware_gtypes = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
 	priv->quirks = fu_quirks_new();
 	priv->host_bios_settings = fu_bios_settings_new();
+	priv->esp_volumes = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 }
 
 /**

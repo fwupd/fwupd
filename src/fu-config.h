@@ -46,3 +46,5 @@ gboolean
 fu_config_get_show_device_private(FuConfig *self);
 const gchar *
 fu_config_get_host_bkc(FuConfig *self);
+const gchar *
+fu_config_get_esp_location(FuConfig *self);

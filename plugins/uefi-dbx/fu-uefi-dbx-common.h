@@ -11,4 +11,4 @@
 gchar *
 fu_uefi_dbx_get_authenticode_hash(const gchar *fn, GError **error);
 gboolean
-fu_uefi_dbx_signature_list_validate(FuEfiSignatureList *siglist, GError **error);
+fu_uefi_dbx_signature_list_validate(FuContext *ctx, FuEfiSignatureList *siglist, GError **error);
