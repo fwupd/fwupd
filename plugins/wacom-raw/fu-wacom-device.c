@@ -127,27 +127,14 @@ fu_wacom_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 static gboolean
 fu_wacom_device_attach(FuDevice *device, FuProgress *progress, GError **error)
 {
-	FuWacomDevice *self = FU_WACOM_DEVICE(device);
-	FuWacomRawRequest req = {.report_id = FU_WACOM_RAW_BL_REPORT_ID_SET,
-				 .cmd = FU_WACOM_RAW_BL_CMD_ATTACH,
-				 .echo = FU_WACOM_RAW_ECHO_DEFAULT,
-				 0x00};
-	gboolean emr_device = fu_device_has_guid(device, "WacomEMR");
+	FuWacomDeviceClass *klass = FU_WACOM_DEVICE_GET_CLASS(device);
 
-	/* only EMR requires way back to runtime mode */
-	if (emr_device) {
-		if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
-			g_debug("already in runtime mode, skipping");
-			return TRUE;
-		}
-		if (!fu_wacom_device_set_feature(self, (const guint8 *)&req, sizeof(req), error)) {
-			g_prefix_error(error, "failed to switch to runtime mode: ");
-			return FALSE;
-		}
+	if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
+		g_debug("already in runtime mode, skipping");
+		return TRUE;
 	}
 
-	fu_device_remove_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
-	return TRUE;
+	return klass->attach(device, error);
 }
 
 static gboolean
