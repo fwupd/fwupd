@@ -23,6 +23,9 @@ for fn in sorted(sys.argv[2:]):
         n_file.set("preprocess", "xml-stripblanks")
     n_file.set("alias", os.path.basename(fn))
 with open(sys.argv[1], "wb") as f:
-    f.write(ET.tostring(root, "utf-8", xml_declaration=True))
+    try:
+        f.write(ET.tostring(root, "utf-8", xml_declaration=True))
+    except TypeError:
+        f.write(ET.tostring(root, "utf-8"))
 
 sys.exit(0)
