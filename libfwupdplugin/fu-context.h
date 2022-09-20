@@ -123,3 +123,6 @@ gboolean
 fu_context_get_bios_setting_pending_reboot(FuContext *self);
 FwupdBiosSetting *
 fu_context_get_bios_setting(FuContext *self, const gchar *name);
+
+GPtrArray *
+fu_context_get_esp_volumes(FuContext *self, GError **error) G_GNUC_WARN_UNUSED_RESULT;

@@ -500,6 +500,28 @@ fu_plugin_uefi_capsule_load_config(FuPlugin *plugin, FuDevice *device)
 		fu_device_add_private_flag(device, FU_UEFI_DEVICE_FLAG_FALLBACK_TO_REMOVABLE_PATH);
 }
 
+static FuVolume *
+fu_plugin_uefi_capsule_get_default_esp(FuPlugin *plugin, GError **error)
+{
+	g_autoptr(GPtrArray) esp_volumes = NULL;
+	esp_volumes = fu_context_get_esp_volumes(fu_plugin_get_context(plugin), error);
+	if (esp_volumes == NULL)
+		return NULL;
+	if (esp_volumes->len > 1) {
+		g_autoptr(GString) str = g_string_new(NULL);
+		for (guint i = 1; i < esp_volumes->len; i++) {
+			FuVolume *vol = g_ptr_array_index(esp_volumes, i);
+			if (str->len > 0)
+				g_string_append_c(str, ',');
+			g_string_append(str, fu_volume_get_id(vol));
+		}
+		g_warning("more than one ESP possible -- using %s, not using %s",
+			  fu_volume_get_id(FU_VOLUME(g_ptr_array_index(esp_volumes, 0))),
+			  str->str);
+	}
+	return g_object_ref(g_ptr_array_index(esp_volumes, 0));
+}
+
 static void
 fu_plugin_uefi_capsule_register_proxy_device(FuPlugin *plugin, FuDevice *device)
 {
@@ -511,7 +533,7 @@ fu_plugin_uefi_capsule_register_proxy_device(FuPlugin *plugin, FuDevice *device)
 	dev = fu_uefi_backend_device_new_from_dev(FU_UEFI_BACKEND(priv->backend), device);
 	fu_plugin_uefi_capsule_load_config(plugin, FU_DEVICE(dev));
 	if (priv->esp == NULL)
-		priv->esp = fu_volume_new_esp_default(&error_local);
+		priv->esp = fu_plugin_uefi_capsule_get_default_esp(plugin, &error_local);
 	if (priv->esp == NULL) {
 		fu_device_inhibit(device, "no-esp", error_local->message);
 	} else {
@@ -860,7 +882,7 @@ fu_plugin_uefi_capsule_coldplug(FuPlugin *plugin, FuProgress *progress, GError *
 	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "setup-bgrt");
 
 	if (priv->esp == NULL) {
-		priv->esp = fu_volume_new_esp_default(&error_udisks2);
+		priv->esp = fu_plugin_uefi_capsule_get_default_esp(plugin, &error_udisks2);
 		if (priv->esp == NULL) {
 			fu_plugin_add_flag(plugin, FWUPD_PLUGIN_FLAG_ESP_NOT_FOUND);
 			fu_plugin_add_flag(plugin, FWUPD_PLUGIN_FLAG_CLEAR_UPDATABLE);

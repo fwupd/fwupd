@@ -9,6 +9,7 @@
 #include "fu-context.h"
 #include "fu-hwids.h"
 #include "fu-quirks.h"
+#include "fu-volume.h"
 
 FuContext *
 fu_context_new(void);
@@ -32,3 +33,5 @@ void
 fu_context_add_udev_subsystem(FuContext *self, const gchar *subsystem);
 GPtrArray *
 fu_context_get_udev_subsystems(FuContext *self);
+void
+fu_context_add_esp_volume(FuContext *self, FuVolume *volume);

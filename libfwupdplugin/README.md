@@ -94,3 +94,7 @@ Remember: Plugins should be upstream!
 * `fu_i2c_device_read_full()`: Use `fu_i2c_device_read` instead.
 * `fu_i2c_device_write_full()`: Use `fu_i2c_device_write` instead.
 * `fu_firmware_parse_full()`: Remove the `addr_end` parameter, and ensure that `offset` is a `gsize`.
+
+## 1.8.5
+
+* `fu_volume_new_esp_default()`: Use `fu_context_get_esp_volumes()` instead.

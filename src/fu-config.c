@@ -32,6 +32,7 @@ struct _FuConfig {
 	guint64 archive_size_max;
 	guint idle_timeout;
 	gchar *host_bkc;
+	gchar *esp_location;
 	gboolean update_motd;
 	gboolean enumerate_all_devices;
 	gboolean ignore_power;
@@ -61,6 +62,7 @@ fu_config_reload(FuConfig *self, GError **error)
 	g_auto(GStrv) plugins = NULL;
 	g_autofree gchar *domains = NULL;
 	g_autofree gchar *host_bkc = NULL;
+	g_autofree gchar *esp_location = NULL;
 	g_autoptr(GKeyFile) keyfile = g_key_file_new();
 	g_autoptr(GError) error_update_motd = NULL;
 	g_autoptr(GError) error_ignore_power = NULL;
@@ -240,6 +242,11 @@ fu_config_reload(FuConfig *self, GError **error)
 	host_bkc = g_key_file_get_string(keyfile, "fwupd", "HostBkc", NULL);
 	if (host_bkc != NULL && host_bkc[0] != '\0')
 		self->host_bkc = g_steal_pointer(&host_bkc);
+
+	/* fetch hardcoded ESP mountpoint */
+	esp_location = g_key_file_get_string(keyfile, "fwupd", "EspLocation", NULL);
+	if (esp_location != NULL && esp_location[0] != '\0')
+		self->esp_location = g_steal_pointer(&esp_location);
 
 	/* get trusted uids */
 	g_array_set_size(self->trusted_uids, 0);
@@ -444,6 +451,13 @@ fu_config_get_host_bkc(FuConfig *self)
 	return self->host_bkc;
 }
 
+const gchar *
+fu_config_get_esp_location(FuConfig *self)
+{
+	g_return_val_if_fail(FU_IS_CONFIG(self), NULL);
+	return self->esp_location;
+}
+
 static void
 fu_config_class_init(FuConfigClass *klass)
 {
@@ -499,6 +513,7 @@ fu_config_finalize(GObject *obj)
 	g_ptr_array_unref(self->uri_schemes);
 	g_array_unref(self->trusted_uids);
 	g_free(self->host_bkc);
+	g_free(self->esp_location);
 
 	G_OBJECT_CLASS(fu_config_parent_class)->finalize(obj);
 }

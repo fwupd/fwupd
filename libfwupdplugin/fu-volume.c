@@ -647,7 +647,9 @@ fu_volume_new_by_devnum(guint32 devnum, GError **error)
  * fu_volume_new_esp_default:
  * @error: (nullable): optional return location for an error
  *
- * Gets the platform default ESP
+ * Gets the platform default ESP.
+ *
+ * NOTE: This has been deprecated, please use fu_context_get_esp_volumes() instead.
  *
  * Returns: (transfer full): a volume, or %NULL if the ESP was not found
  *
@@ -755,8 +757,11 @@ fu_volume_new_esp_for_path(const gchar *esp_path, GError **error)
 	basename = g_path_get_basename(esp_path);
 	for (guint i = 0; i < volumes->len; i++) {
 		FuVolume *vol = g_ptr_array_index(volumes, i);
-		g_autofree gchar *vol_basename =
-		    g_path_get_basename(fu_volume_get_mount_point(vol));
+		const gchar *mount_point = fu_volume_get_mount_point(vol);
+		g_autofree gchar *vol_basename = NULL;
+		if (mount_point == NULL)
+			continue;
+		vol_basename = g_path_get_basename(mount_point);
 		if (g_strcmp0(basename, vol_basename) == 0)
 			return g_object_ref(vol);
 	}
@@ -766,61 +771,4 @@ fu_volume_new_esp_for_path(const gchar *esp_path, GError **error)
 		    "No ESP with path %s",
 		    esp_path);
 	return NULL;
-}
-
-/**
- * fu_volume_new_by_esp:
- * @error: (nullable): optional return location for an error
- *
- * Finds all volumes that could be an ESP.
- *
- * Returns: (transfer container) (element-type FuVolume): a #GPtrArray, or %NULL if no ESP was found
- *
- * Since: 1.8.5
- **/
-GPtrArray *
-fu_volume_new_by_esp(GError **error)
-{
-	g_autoptr(GError) error_bdp = NULL;
-	g_autoptr(GError) error_esp = NULL;
-	g_autoptr(GPtrArray) volumes_bdp = NULL;
-	g_autoptr(GPtrArray) volumes_esp = NULL;
-	g_autoptr(GPtrArray) volumes =
-	    g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
-
-	/* ESP */
-	volumes_esp = fu_volume_new_by_kind(FU_VOLUME_KIND_ESP, &error_esp);
-	if (volumes_esp == NULL) {
-		g_debug("%s", error_esp->message);
-	} else {
-		for (guint i = 0; i < volumes_esp->len; i++) {
-			FuVolume *vol = g_ptr_array_index(volumes_esp, i);
-			g_ptr_array_add(volumes, g_object_ref(vol));
-		}
-	}
-
-	/* BDP */
-	volumes_bdp = fu_volume_new_by_kind(FU_VOLUME_KIND_BDP, &error_bdp);
-	if (volumes_bdp == NULL) {
-		g_debug("%s", error_bdp->message);
-	} else {
-		for (guint i = 0; i < volumes_bdp->len; i++) {
-			FuVolume *vol = g_ptr_array_index(volumes_bdp, i);
-			g_autofree gchar *type = fu_volume_get_id_type(vol);
-			if (g_strcmp0(type, "vfat") != 0)
-				continue;
-			if (!fu_volume_is_internal(vol))
-				continue;
-			g_ptr_array_add(volumes, g_object_ref(vol));
-		}
-	}
-
-	/* nothing found */
-	if (volumes->len == 0) {
-		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_NOT_FOUND, "No ESP or BDP found");
-		return NULL;
-	}
-
-	/* success */
-	return g_steal_pointer(&volumes);
 }

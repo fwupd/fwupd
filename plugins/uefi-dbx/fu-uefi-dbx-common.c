@@ -80,10 +80,10 @@ fu_uefi_dbx_signature_list_validate_volume(FuEfiSignatureList *siglist,
 }
 
 gboolean
-fu_uefi_dbx_signature_list_validate(FuEfiSignatureList *siglist, GError **error)
+fu_uefi_dbx_signature_list_validate(FuContext *ctx, FuEfiSignatureList *siglist, GError **error)
 {
 	g_autoptr(GPtrArray) volumes = NULL;
-	volumes = fu_volume_new_by_esp(error);
+	volumes = fu_context_get_esp_volumes(ctx, error);
 	if (volumes == NULL)
 		return FALSE;
 	for (guint i = 0; i < volumes->len; i++) {

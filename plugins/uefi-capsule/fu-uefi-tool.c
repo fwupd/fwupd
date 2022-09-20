@@ -11,6 +11,7 @@
 #include <glib-unix.h>
 #include <glib/gi18n.h>
 #include <locale.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 
@@ -37,6 +38,34 @@ fu_util_ignore_cb(const gchar *log_domain,
 		  const gchar *message,
 		  gpointer user_data)
 {
+}
+
+static guint
+fu_util_prompt_for_number(guint maxnum)
+{
+	gint retval;
+	guint answer = 0;
+
+	do {
+		char buffer[64];
+
+		/* swallow the \n at end of line too */
+		if (!fgets(buffer, sizeof(buffer), stdin))
+			break;
+		if (strlen(buffer) == sizeof(buffer) - 1)
+			continue;
+
+		/* get a number */
+		retval = sscanf(buffer, "%u", &answer);
+
+		/* positive */
+		if (retval == 1 && answer <= maxnum)
+			break;
+
+		/* TRANSLATORS: the user isn't reading the question */
+		g_print(_("Please enter a number from 0 to %u: "), maxnum);
+	} while (TRUE);
+	return answer;
 }
 
 static void
@@ -72,6 +101,8 @@ main(int argc, char *argv[])
 	g_autoptr(FuUtilPrivate) priv = g_new0(FuUtilPrivate, 1);
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
+	g_autoptr(GPtrArray) esp_volumes = NULL;
+	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuVolume) esp = NULL;
 	const GOptionEntry options[] = {
 	    {"verbose",
@@ -234,18 +265,43 @@ main(int argc, char *argv[])
 
 	/* override the default ESP path */
 	if (esp_path != NULL) {
-		esp = fu_volume_new_esp_for_path(esp_path, &error);
-		if (esp == NULL) {
+		g_autoptr(FuVolume) volume = NULL;
+		volume = fu_volume_new_esp_for_path(esp_path, &error);
+		if (volume == NULL) {
 			/* TRANSLATORS: ESP is EFI System Partition */
 			g_print("%s: %s\n", _("ESP specified was not valid"), error->message);
 			return EXIT_FAILURE;
 		}
-	} else {
-		esp = fu_volume_new_esp_default(&error);
-		if (esp == NULL) {
-			g_printerr("failed: %s\n", error->message);
+		fu_context_add_esp_volume(ctx, volume);
+	}
+
+	/* get the default ESP only */
+	esp_volumes = fu_context_get_esp_volumes(ctx, &error);
+	if (esp_volumes == NULL) {
+		g_printerr("%s\n", error->message);
+		return EXIT_FAILURE;
+	}
+	if (esp_volumes->len > 1) {
+		guint idx;
+
+		/* TRANSLATORS: get interactive prompt */
+		g_print("%s\n", _("Choose the ESP:"));
+		/* TRANSLATORS: this is to abort the interactive prompt */
+		g_print("0.\t%s\n", _("Cancel"));
+		for (guint i = 0; i < esp_volumes->len; i++) {
+			FuVolume *esp_tmp = g_ptr_array_index(esp_volumes, i);
+			g_autofree gchar *id_type = fu_volume_get_id_type(esp_tmp);
+			g_print("%u.\t%s (%s)\n", i + 1, fu_volume_get_id(esp_tmp), id_type);
+		}
+		idx = fu_util_prompt_for_number(esp_volumes->len);
+		if (idx == 0) {
+			/* TRANSLATORS: we asked the user to choose an option and they declined */
+			g_printerr("%s\n", _("Request canceled"));
 			return EXIT_FAILURE;
 		}
+		esp = g_object_ref(g_ptr_array_index(esp_volumes, idx - 1));
+	} else {
+		esp = g_object_ref(g_ptr_array_index(esp_volumes, 0));
 	}
 
 	/* show the debug action_log from the last attempted update */
@@ -275,7 +331,6 @@ main(int argc, char *argv[])
 	}
 
 	if (action_list || action_supported || action_info) {
-		g_autoptr(FuContext) ctx = fu_context_new();
 		g_autoptr(FuBackend) backend = fu_uefi_backend_new(ctx);
 		g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 		g_autoptr(GError) error_local = NULL;
@@ -395,7 +450,6 @@ main(int argc, char *argv[])
 
 	/* apply firmware updates */
 	if (apply != NULL) {
-		g_autoptr(FuContext) ctx = fu_context_new();
 		g_autoptr(FuBackend) backend = fu_uefi_backend_new(ctx);
 		g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 		g_autoptr(FuUefiDevice) dev = NULL;

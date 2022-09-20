@@ -1100,7 +1100,9 @@ LIBFWUPDPLUGIN_1.8.5 {
   global:
     fu_backend_load;
     fu_backend_save;
+    fu_context_add_esp_volume;
     fu_context_add_flag;
+    fu_context_get_esp_volumes;
     fu_context_has_flag;
     fu_device_add_backend_tag;
     fu_device_get_backend_tags;
@@ -1125,6 +1127,5 @@ LIBFWUPDPLUGIN_1.8.5 {
     fu_usb_device_fw_ds20_new;
     fu_usb_device_ms_ds20_get_type;
     fu_usb_device_ms_ds20_new;
-    fu_volume_new_by_esp;
   local: *;
 } LIBFWUPDPLUGIN_1.8.4;

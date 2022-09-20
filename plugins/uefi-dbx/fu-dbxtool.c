@@ -15,6 +15,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#include "fu-context-private.h"
 #include "fu-uefi-dbx-common.h"
 
 /* custom return code */
@@ -95,8 +96,10 @@ main(int argc, char *argv[])
 	gboolean verbose = FALSE;
 	g_autofree gchar *dbxfile = NULL;
 	g_autoptr(GError) error = NULL;
+	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(GOptionContext) context = NULL;
 	g_autofree gchar *tmp = NULL;
+	g_autofree gchar *esp_path = NULL;
 	const GOptionEntry options[] = {
 	    {"verbose",
 	     'v',
@@ -139,6 +142,15 @@ main(int argc, char *argv[])
 	     N_("Specify the dbx database file"),
 	     /* TRANSLATORS: command argument: uppercase, spaces->dashes */
 	     N_("FILENAME")},
+	    {"esp-path",
+	     'p',
+	     G_OPTION_FLAG_NONE,
+	     G_OPTION_ARG_STRING,
+	     &esp_path,
+	     /* TRANSLATORS: command line option */
+	     N_("Override the default ESP path"),
+	     /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+	     N_("PATH")},
 	    {"force",
 	     'f',
 	     0,
@@ -176,6 +188,18 @@ main(int argc, char *argv[])
 		(void)g_setenv("G_MESSAGES_DEBUG", "all", FALSE);
 	} else {
 		g_log_set_handler(G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, fu_util_ignore_cb, NULL);
+	}
+
+	/* override the default ESP path */
+	if (esp_path != NULL) {
+		g_autoptr(FuVolume) volume = NULL;
+		volume = fu_volume_new_esp_for_path(esp_path, &error);
+		if (volume == NULL) {
+			/* TRANSLATORS: ESP is EFI System Partition */
+			g_print("%s: %s\n", _("ESP specified was not valid"), error->message);
+			return EXIT_FAILURE;
+		}
+		fu_context_add_esp_volume(ctx, volume);
 	}
 
 	/* list contents, either of the existing system, or an update */
@@ -285,7 +309,8 @@ main(int argc, char *argv[])
 		if (!force) {
 			/* TRANSLATORS: ESP refers to the EFI System Partition */
 			g_print("%s\n", _("Validating ESP contents…"));
-			if (!fu_uefi_dbx_signature_list_validate(FU_EFI_SIGNATURE_LIST(dbx_update),
+			if (!fu_uefi_dbx_signature_list_validate(ctx,
+								 FU_EFI_SIGNATURE_LIST(dbx_update),
 								 &error)) {
 				g_printerr("%s: %s\n",
 					   /* TRANSLATORS: something with a blocked hash exists

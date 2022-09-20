@@ -4114,6 +4114,18 @@ static void
 fu_engine_config_changed_cb(FuConfig *config, FuEngine *self)
 {
 	fu_idle_set_timeout(self->idle, fu_config_get_idle_timeout(config));
+
+	/* allow changing the hardcoded ESP location */
+	if (fu_config_get_esp_location(config) != NULL) {
+		g_autoptr(GError) error = NULL;
+		g_autoptr(FuVolume) vol = NULL;
+		vol = fu_volume_new_esp_for_path(fu_config_get_esp_location(config), &error);
+		if (vol == NULL) {
+			g_warning("not adding changed EspLocation: %s", error->message);
+		} else {
+			fu_context_add_esp_volume(self->ctx, vol);
+		}
+	}
 }
 
 static void
@@ -7565,6 +7577,7 @@ fu_engine_backends_coldplug(FuEngine *self, FuProgress *progress)
 gboolean
 fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GError **error)
 {
+	FuPlugin *plugin_uefi;
 	FuQuirksLoadFlags quirks_flags = FU_QUIRKS_LOAD_FLAG_NONE;
 	GPtrArray *guids;
 	const gchar *host_emulate = g_getenv("FWUPD_HOST_EMULATE");
@@ -7644,6 +7657,15 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 	}
 	fu_progress_step_done(progress);
 
+	/* set the hardcoded ESP */
+	if (fu_config_get_esp_location(self->config) != NULL) {
+		g_autoptr(FuVolume) vol = NULL;
+		vol = fu_volume_new_esp_for_path(fu_config_get_esp_location(self->config), error);
+		if (vol == NULL)
+			return FALSE;
+		fu_context_add_esp_volume(self->ctx, vol);
+	}
+
 	/* read remotes */
 	if (flags & FU_ENGINE_LOAD_FLAG_REMOTES) {
 		FuRemoteListLoadFlags remote_list_flags = FU_REMOTE_LIST_LOAD_FLAG_NONE;
@@ -7697,6 +7719,17 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 		return FALSE;
 	}
 	fu_progress_step_done(progress);
+
+	/* migrate per-plugin settings into daemon.conf */
+	plugin_uefi = fu_plugin_list_find_by_name(self->plugin_list, "uefi_capsule", NULL);
+	if (plugin_uefi != NULL) {
+		const gchar *tmp = fu_plugin_get_config_value(plugin_uefi, "OverrideESPMountPoint");
+		if (tmp != NULL && g_strcmp0(tmp, fu_config_get_esp_location(self->config)) != 0) {
+			g_info("migrating OverrideESPMountPoint=%s to EspLocation", tmp);
+			if (!fu_config_set_key_value(self->config, "EspLocation", tmp, error))
+				return FALSE;
+		}
+	}
 
 	/* set up idle exit */
 	if ((flags & FU_ENGINE_LOAD_FLAG_NO_IDLE_SOURCES) == 0)

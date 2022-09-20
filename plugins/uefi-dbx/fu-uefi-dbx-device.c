@@ -73,6 +73,7 @@ fu_uefi_dbx_device_set_version_number(FuDevice *device, GError **error)
 static FuFirmware *
 fu_uefi_dbx_prepare_firmware(FuDevice *device, GBytes *fw, FwupdInstallFlags flags, GError **error)
 {
+	FuContext *ctx = fu_device_get_context(device);
 	g_autoptr(FuFirmware) siglist = fu_efi_signature_list_new();
 
 	/* parse dbx */
@@ -82,7 +83,9 @@ fu_uefi_dbx_prepare_firmware(FuDevice *device, GBytes *fw, FwupdInstallFlags fla
 	/* validate this is safe to apply */
 	if ((flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {
 		//		fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_VERIFY);
-		if (!fu_uefi_dbx_signature_list_validate(FU_EFI_SIGNATURE_LIST(siglist), error)) {
+		if (!fu_uefi_dbx_signature_list_validate(ctx,
+							 FU_EFI_SIGNATURE_LIST(siglist),
+							 error)) {
 			g_prefix_error(error,
 				       "Blocked executable in the ESP, "
 				       "ensure grub and shim are up to date: ");
