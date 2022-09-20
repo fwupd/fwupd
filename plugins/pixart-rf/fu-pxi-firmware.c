@@ -47,7 +47,7 @@ fu_pxi_firmware_check_magic(FuFirmware *firmware, GBytes *fw, gsize offset, GErr
 				    g_bytes_get_size(fw) - PIXART_RF_FW_HEADER_SIZE +
 					PIXART_RF_FW_HEADER_TAG_OFFSET,
 				    &magic,
-				    G_LITTLE_ENDIAN,
+				    G_BIG_ENDIAN,
 				    error)) {
 		g_prefix_error(error, "failed to read magic: ");
 		return FALSE;

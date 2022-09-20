@@ -16,7 +16,7 @@ G_DECLARE_FINAL_TYPE(FuVolume, fu_volume, FU, VOLUME, GObject)
 /**
  * FU_VOLUME_KIND_ESP:
  *
- * The GUID for the ESP.
+ * The GUID for the ESP, see: https://en.wikipedia.org/wiki/EFI_system_partition
  *
  * Since: 1.5.0
  **/
@@ -24,7 +24,7 @@ G_DECLARE_FINAL_TYPE(FuVolume, fu_volume, FU, VOLUME, GObject)
 /**
  * FU_VOLUME_KIND_BDP:
  *
- * The GUID for the BDP.
+ * The GUID for the BDP, see: https://en.wikipedia.org/wiki/Microsoft_basic_data_partition
  *
  * Since: 1.5.3
  **/
@@ -62,3 +62,5 @@ FuVolume *
 fu_volume_new_esp_for_path(const gchar *esp_path, GError **error) G_GNUC_WARN_UNUSED_RESULT;
 FuVolume *
 fu_volume_new_esp_default(GError **error) G_GNUC_WARN_UNUSED_RESULT;
+GPtrArray *
+fu_volume_new_by_esp(GError **error) G_GNUC_WARN_UNUSED_RESULT;
