@@ -4,12 +4,13 @@ on:
   schedule:
     - cron:  '0 0 * * *'
 
-permissions: {}
+permissions:
+  contents: read
 
 jobs:
   push_to_registry:
     permissions:
-      contents: write # for docker/build-push-action
+      packages: write # for docker/build-push-action
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
