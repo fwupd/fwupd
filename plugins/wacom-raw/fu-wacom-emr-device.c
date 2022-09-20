@@ -136,6 +136,25 @@ fu_wacom_device_w9021_erase_all(FuWacomEmrDevice *self, GError **error)
 }
 
 static gboolean
+fu_wacom_emr_device_attach(FuDevice *device, GError **error)
+{
+	FuWacomDevice *self = FU_WACOM_DEVICE(device);
+	FuWacomRawRequest req = {.report_id = FU_WACOM_RAW_BL_REPORT_ID_SET,
+				 .cmd = FU_WACOM_RAW_BL_CMD_ATTACH,
+				 .echo = FU_WACOM_RAW_ECHO_DEFAULT,
+				 0x00};
+
+	if (!fu_wacom_device_set_feature(self, (const guint8 *)&req, sizeof(req), error)) {
+		g_prefix_error(error, "failed to switch to runtime mode: ");
+		return FALSE;
+	}
+
+	fu_device_remove_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
+
+	return TRUE;
+}
+
+static gboolean
 fu_wacom_emr_device_write_block(FuWacomEmrDevice *self,
 				guint32 idx,
 				guint32 address,
@@ -258,6 +277,7 @@ fu_wacom_emr_device_class_init(FuWacomEmrDeviceClass *klass)
 	FuWacomDeviceClass *klass_wac_device = FU_WACOM_DEVICE_CLASS(klass);
 	klass_device->setup = fu_wacom_emr_device_setup;
 	klass_wac_device->write_firmware = fu_wacom_emr_device_write_firmware;
+	klass_wac_device->attach = fu_wacom_emr_device_attach;
 }
 
 FuWacomEmrDevice *

@@ -19,6 +19,7 @@ struct _FuWacomDeviceClass {
 				   GPtrArray *chunks,
 				   FuProgress *progress,
 				   GError **error);
+	gboolean (*attach)(FuDevice *self, GError **error);
 };
 
 typedef enum {
