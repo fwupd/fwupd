@@ -1252,11 +1252,10 @@ fu_device_get_children(FuDevice *self)
 /**
  * fu_device_get_backend_tags:
  * @self: a #FuDevice
- * @backend_tag: a tag, for example `bootloader` or `runtime-reload`
  *
  * Gets any backend tags.
  *
- * Returns: (transfer none) (element-type utf-8): string tags
+ * Returns: (transfer none) (element-type utf8): string tags
  *
  * Since: 1.8.5
  **/
