@@ -1,6 +1,6 @@
 # Lenovo ThinkSystem
 [42f00735-c9ab-5374-bd63-a5deee5881e0]
-Flags = wildcard-targets,reset-required
+Flags = wildcard-targets,reset-required,ipmi-create-user
 
 [REDFISH\VENDOR_Lenovo&ID_BMC-Backup]
 ParentGuid = REDFISH\VENDOR_Lenovo&ID_BMC-Primary
