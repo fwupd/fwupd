@@ -150,6 +150,27 @@ fu_wacom_aes_device_setup(FuDevice *device, GError **error)
 }
 
 static gboolean
+fu_wacom_aes_device_attach(FuDevice *device, GError **error)
+{
+	FuWacomDevice *self = FU_WACOM_DEVICE(device);
+	FuWacomRawRequest req = {.report_id = FU_WACOM_RAW_BL_REPORT_ID_TYPE,
+				 .cmd = FU_WACOM_RAW_BL_TYPE_FINALIZER,
+				 0x00};
+
+	if (!fu_wacom_device_set_feature(self, (const guint8 *)&req, sizeof(req), error)) {
+		g_prefix_error(error, "failed to finalize the device: ");
+		return FALSE;
+	}
+
+	/* wait for deice back to runtime mode */
+	g_usleep(500 * 1000);
+
+	fu_device_remove_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
+
+	return TRUE;
+}
+
+static gboolean
 fu_wacom_aes_device_erase_all(FuWacomAesDevice *self, FuProgress *progress, GError **error)
 {
 	FuWacomRawRequest req = {.cmd = FU_WACOM_RAW_BL_CMD_ALL_ERASE,
@@ -221,22 +242,6 @@ fu_wacom_aes_device_write_block(FuWacomAesDevice *self,
 }
 
 static gboolean
-fu_wacom_aes_device_finalize_firmware(FuDevice *device, GError **error)
-{
-	FuWacomDevice *self = FU_WACOM_DEVICE(device);
-	FuWacomRawRequest req = {.report_id = FU_WACOM_RAW_BL_REPORT_ID_TYPE,
-				 .cmd = FU_WACOM_RAW_BL_TYPE_FINALIZER,
-				 0x00};
-
-	if (!fu_wacom_device_set_feature(self, (const guint8 *)&req, sizeof(req), error)) {
-		g_prefix_error(error, "failed to finalize the device: ");
-		return FALSE;
-	}
-
-	return TRUE;
-}
-
-static gboolean
 fu_wacom_aes_device_write_firmware(FuDevice *device,
 				   GPtrArray *chunks,
 				   FuProgress *progress,
@@ -294,6 +299,7 @@ fu_wacom_aes_device_class_init(FuWacomAesDeviceClass *klass)
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
 	FuWacomDeviceClass *klass_wac_device = FU_WACOM_DEVICE_CLASS(klass);
 	klass_device->setup = fu_wacom_aes_device_setup;
+	klass_wac_device->attach = fu_wacom_aes_device_attach;
 	klass_wac_device->write_firmware = fu_wacom_aes_device_write_firmware;
 }
 
