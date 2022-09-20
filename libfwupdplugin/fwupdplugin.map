@@ -1125,5 +1125,6 @@ LIBFWUPDPLUGIN_1.8.5 {
     fu_usb_device_fw_ds20_new;
     fu_usb_device_ms_ds20_get_type;
     fu_usb_device_ms_ds20_new;
+    fu_volume_new_by_esp;
   local: *;
 } LIBFWUPDPLUGIN_1.8.4;

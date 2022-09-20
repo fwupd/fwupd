@@ -21,6 +21,8 @@ fu_pxi_firmware_xml_func(void)
 	g_autofree gchar *xml_src = NULL;
 	g_autoptr(FuFirmware) firmware1 = fu_pxi_firmware_new();
 	g_autoptr(FuFirmware) firmware2 = fu_pxi_firmware_new();
+	g_autoptr(FuFirmware) firmware3 = fu_pxi_firmware_new();
+	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GError) error = NULL;
 
 	/* build and write */
@@ -31,9 +33,17 @@ fu_pxi_firmware_xml_func(void)
 	ret = fu_firmware_build_from_xml(firmware1, xml_src, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
+	fw = fu_firmware_write(firmware1, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(fw);
 	csum1 = fu_firmware_get_checksum(firmware1, G_CHECKSUM_SHA1, &error);
 	g_assert_no_error(error);
 	g_assert_cmpstr(csum1, ==, "2aae6c35c94fcfb415dbe95f408b9ce91ee846ed");
+
+	/* ensure we can parse */
+	ret = fu_firmware_parse(firmware3, fw, FWUPD_INSTALL_FLAG_NONE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
 
 	/* ensure we can round-trip */
 	xml_out = fu_firmware_export_to_xml(firmware1, FU_FIRMWARE_EXPORT_FLAG_NONE, &error);
