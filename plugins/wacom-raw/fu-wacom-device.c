@@ -125,28 +125,6 @@ fu_wacom_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 }
 
 static gboolean
-fu_wacom_device_attach(FuDevice *device, FuProgress *progress, GError **error)
-{
-	FuWacomDevice *self = FU_WACOM_DEVICE(device);
-	FuWacomRawRequest req = {.report_id = FU_WACOM_RAW_BL_REPORT_ID_SET,
-				 .cmd = FU_WACOM_RAW_BL_CMD_ATTACH,
-				 .echo = FU_WACOM_RAW_ECHO_DEFAULT,
-				 0x00};
-	if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
-		g_debug("already in runtime mode, skipping");
-		return TRUE;
-	}
-	if (!fu_wacom_device_set_feature(self, (const guint8 *)&req, sizeof(req), error)) {
-		g_prefix_error(error, "failed to switch to runtime mode: ");
-		return FALSE;
-	}
-	/* only required on AES, but harmless for EMR */
-	g_usleep(300 * 1000);
-	fu_device_remove_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
-	return TRUE;
-}
-
-static gboolean
 fu_wacom_device_check_mode(FuWacomDevice *self, GError **error)
 {
 	FuWacomRawRequest req = {.cmd = FU_WACOM_RAW_BL_CMD_CHECK_MODE,
@@ -372,7 +350,6 @@ fu_wacom_device_class_init(FuWacomDeviceClass *klass)
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
 	klass_device->to_string = fu_wacom_device_to_string;
 	klass_device->write_firmware = fu_wacom_device_write_firmware;
-	klass_device->attach = fu_wacom_device_attach;
 	klass_device->detach = fu_wacom_device_detach;
 	klass_device->set_quirk_kv = fu_wacom_device_set_quirk_kv;
 	klass_device->probe = fu_wacom_device_probe;
