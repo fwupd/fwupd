@@ -83,9 +83,19 @@ gboolean
 fu_uefi_dbx_signature_list_validate(FuEfiSignatureList *siglist, GError **error)
 {
 	g_autoptr(GPtrArray) volumes = NULL;
-	volumes = fu_common_get_volumes_by_kind(FU_VOLUME_KIND_ESP, error);
+
+	volumes = fu_common_get_volumes_by_kind(FU_VOLUME_KIND_ESP, NULL);
 	if (volumes == NULL)
+		volumes = fu_common_get_volumes_by_kind(FU_VOLUME_KIND_BDP, NULL);
+	if (volumes == NULL) {
+		g_set_error(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_NOT_FOUND,
+			    "no volumes of type %s or %s",
+			    FU_VOLUME_KIND_ESP,
+			    FU_VOLUME_KIND_BDP);
 		return FALSE;
+	}
 	for (guint i = 0; i < volumes->len; i++) {
 		FuVolume *esp = g_ptr_array_index(volumes, i);
 		g_autoptr(FuDeviceLocker) locker = NULL;
