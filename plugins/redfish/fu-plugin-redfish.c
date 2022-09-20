@@ -422,6 +422,14 @@ fu_plugin_redfish_startup(FuPlugin *plugin, GError **error)
 #ifdef HAVE_LINUX_IPMI_H
 	/* we got neither a type 42 entry or config value, lets try IPMI */
 	if (fu_redfish_backend_get_username(data->backend) == NULL) {
+		if (!fu_context_has_hwid_flag(fu_plugin_get_context(plugin), "ipmi-create-user")) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
+					    "no username and password specified, "
+					    "and no vendor quirk for 'ipmi-create-user'");
+			return FALSE;
+		}
 		if (!fu_plugin_get_config_value_boolean(plugin, "IpmiDisableCreateUser")) {
 			g_debug("attempting to create user using IPMI");
 			if (!fu_redfish_plugin_ipmi_create_user(plugin, error))
