@@ -170,7 +170,7 @@ fwupd_enums_func(void)
 		g_assert_cmpstr(tmp, !=, NULL);
 		g_assert_cmpint(fwupd_device_problem_from_string(tmp), ==, i);
 	}
-	for (guint64 i = 1; i <= FWUPD_PLUGIN_FLAG_AUTH_REQUIRED; i *= 2) {
+	for (guint64 i = 1; i <= FWUPD_PLUGIN_FLAG_SECURE_CONFIG; i *= 2) {
 		const gchar *tmp = fwupd_plugin_flag_to_string(i);
 		if (tmp == NULL)
 			g_warning("missing plugin flag 0x%x", (guint)i);

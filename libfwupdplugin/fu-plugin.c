@@ -84,6 +84,9 @@ typedef gboolean (*FuPluginFlaggedDeviceFunc)(FuPlugin *self,
 					      GError **error);
 typedef gboolean (*FuPluginDeviceArrayFunc)(FuPlugin *self, GPtrArray *devices, GError **error);
 
+#define FU_PLUGIN_FILE_MODE_NONSECURE 0644
+#define FU_PLUGIN_FILE_MODE_SECURE    0640
+
 /**
  * fu_plugin_is_open:
  * @self: a #FuPlugin
@@ -299,6 +302,14 @@ fu_plugin_guess_name_from_fn(const gchar *filename)
 	return name;
 }
 
+static gchar *
+fu_plugin_get_config_filename(FuPlugin *self)
+{
+	g_autofree gchar *conf_dir = fu_path_from_kind(FU_PATH_KIND_SYSCONFDIR_PKG);
+	g_autofree gchar *conf_file = g_strdup_printf("%s.conf", fu_plugin_get_name(self));
+	return g_build_filename(conf_dir, conf_file, NULL);
+}
+
 /**
  * fu_plugin_open:
  * @self: a #FuPlugin
@@ -353,6 +364,23 @@ fu_plugin_open(FuPlugin *self, const gchar *filename, GError **error)
 	if (fu_plugin_get_name(self) == NULL) {
 		g_autofree gchar *str = fu_plugin_guess_name_from_fn(filename);
 		fu_plugin_set_name(self, str);
+	}
+
+	/* ensure the configure file is set to the correct permission */
+	if (fu_plugin_has_flag(self, FWUPD_PLUGIN_FLAG_SECURE_CONFIG)) {
+		g_autofree gchar *conf_path = fu_plugin_get_config_filename(self);
+		if (g_file_test(conf_path, G_FILE_TEST_EXISTS)) {
+			gint rc = g_chmod(conf_path, FU_PLUGIN_FILE_MODE_SECURE);
+			if (rc != 0) {
+				g_set_error(error,
+					    G_IO_ERROR,
+					    G_IO_ERROR_FAILED,
+					    "failed to change permission of %s",
+					    filename);
+				fu_plugin_add_flag(self, FWUPD_PLUGIN_FLAG_FAILED_OPEN);
+				return FALSE;
+			}
+		}
 	}
 
 	/* optional */
@@ -500,14 +528,6 @@ fu_plugin_config_monitor_changed_cb(GFileMonitor *monitor,
 	g_autofree gchar *fn = g_file_get_path(file);
 	g_debug("%s changed, sending signal", fn);
 	g_signal_emit(self, signals[SIGNAL_CONFIG_CHANGED], 0);
-}
-
-static gchar *
-fu_plugin_get_config_filename(FuPlugin *self)
-{
-	g_autofree gchar *conf_dir = fu_path_from_kind(FU_PATH_KIND_SYSCONFDIR_PKG);
-	g_autofree gchar *conf_file = g_strdup_printf("%s.conf", fu_plugin_get_name(self));
-	return g_build_filename(conf_dir, conf_file, NULL);
 }
 
 /**
@@ -2388,36 +2408,6 @@ fu_plugin_security_attr_new(FuPlugin *self, const gchar *appstream_id)
 	return g_steal_pointer(&attr);
 }
 
-/**
- * fu_plugin_set_config_value:
- * @self: a #FuPlugin
- * @key: a settings key
- * @value: (nullable): a settings value
- * @error: (nullable): optional return location for an error
- *
- * Sets a plugin config value.
- *
- * Returns: %TRUE for success
- *
- * Since: 1.7.0
- **/
-gboolean
-fu_plugin_set_config_value(FuPlugin *self, const gchar *key, const gchar *value, GError **error)
-{
-	g_autofree gchar *conf_path = fu_plugin_get_config_filename(self);
-	g_autoptr(GKeyFile) keyfile = NULL;
-
-	g_return_val_if_fail(FU_IS_PLUGIN(self), FALSE);
-	g_return_val_if_fail(key != NULL, FALSE);
-	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
-
-	keyfile = g_key_file_new();
-	if (!g_key_file_load_from_file(keyfile, conf_path, G_KEY_FILE_KEEP_COMMENTS, error))
-		return FALSE;
-	g_key_file_set_string(keyfile, fu_plugin_get_name(self), key, value);
-	return g_key_file_save_to_file(keyfile, conf_path, error);
-}
-
 #if !GLIB_CHECK_VERSION(2, 66, 0)
 
 #define G_FILE_SET_CONTENTS_CONSISTENT 0
@@ -2458,25 +2448,12 @@ g_file_set_contents_full(const gchar *filename,
 }
 #endif
 
-/**
- * fu_plugin_set_secure_config_value:
- * @self: a #FuPlugin
- * @key: a settings key
- * @value: (nullable): a settings value
- * @error: (nullable): optional return location for an error
- *
- * Sets a plugin config file value and updates file so that non-privileged users
- * cannot read it.
- *
- * Returns: %TRUE for success
- *
- * Since: 1.7.4
- **/
-gboolean
-fu_plugin_set_secure_config_value(FuPlugin *self,
-				  const gchar *key,
-				  const gchar *value,
-				  GError **error)
+static gboolean
+fu_plugin_set_config_value_internal(FuPlugin *self,
+				    const gchar *key,
+				    const gchar *value,
+				    guint32 mode,
+				    GError **error)
 {
 	g_autofree gchar *conf_path = fu_plugin_get_config_filename(self);
 	g_autofree gchar *data = NULL;
@@ -2499,8 +2476,73 @@ fu_plugin_set_secure_config_value(FuPlugin *self,
 					data,
 					-1,
 					G_FILE_SET_CONTENTS_CONSISTENT,
-					0660,
+					mode,
 					error);
+}
+
+/**
+ * fu_plugin_set_secure_config_value:
+ * @self: a #FuPlugin
+ * @key: a settings key
+ * @value: (nullable): a settings value
+ * @error: (nullable): optional return location for an error
+ *
+ * Sets a plugin config file value and updates file so that non-privileged users
+ * cannot read it.
+ *
+ * This function is deprecated, and you should use `FWUPD_PLUGIN_FLAG_SECURE_CONFIG` and
+ * fu_plugin_set_config_value() instead.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.7.4
+ **/
+gboolean
+fu_plugin_set_secure_config_value(FuPlugin *self,
+				  const gchar *key,
+				  const gchar *value,
+				  GError **error)
+{
+	g_return_val_if_fail(FU_IS_PLUGIN(self), FALSE);
+	g_return_val_if_fail(key != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+	fu_plugin_add_flag(self, FWUPD_PLUGIN_FLAG_SECURE_CONFIG);
+	return fu_plugin_set_config_value(self, key, value, error);
+}
+
+/**
+ * fu_plugin_set_config_value:
+ * @self: a #FuPlugin
+ * @key: a settings key
+ * @value: (nullable): a settings value
+ * @error: (nullable): optional return location for an error
+ *
+ * Sets a plugin config value.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.7.0
+ **/
+gboolean
+fu_plugin_set_config_value(FuPlugin *self, const gchar *key, const gchar *value, GError **error)
+{
+	g_return_val_if_fail(FU_IS_PLUGIN(self), FALSE);
+	g_return_val_if_fail(key != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	/* when removing fu_plugin_set_secure_config_value() just remove this instead */
+	if (fu_plugin_has_flag(self, FWUPD_PLUGIN_FLAG_SECURE_CONFIG)) {
+		return fu_plugin_set_config_value_internal(self,
+							   key,
+							   value,
+							   FU_PLUGIN_FILE_MODE_SECURE,
+							   error);
+	}
+	return fu_plugin_set_config_value_internal(self,
+						   key,
+						   value,
+						   FU_PLUGIN_FILE_MODE_NONSECURE,
+						   error);
 }
 
 /**

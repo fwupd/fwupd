@@ -460,6 +460,7 @@ void
 fu_plugin_add_report_metadata(FuPlugin *self, const gchar *key, const gchar *value);
 gchar *
 fu_plugin_get_config_value(FuPlugin *self, const gchar *key);
+G_DEPRECATED_FOR(fu_plugin_set_config_value)
 gboolean
 fu_plugin_set_secure_config_value(FuPlugin *self,
 				  const gchar *key,

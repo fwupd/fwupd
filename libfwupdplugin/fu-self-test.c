@@ -721,8 +721,9 @@ fu_plugin_config_func(void)
 	g_assert_cmpstr(value, ==, "True");
 	g_assert_true(fu_plugin_get_config_value_boolean(plugin, "Key"));
 
-	/* check it is private, i.e. only readable by the user/group */
-	ret = fu_plugin_set_secure_config_value(plugin, "Key", "False", &error);
+	/* write it private, i.e. only readable by the user/group */
+	fu_plugin_add_flag(plugin, FWUPD_PLUGIN_FLAG_SECURE_CONFIG);
+	ret = fu_plugin_set_config_value(plugin, "Key", "False", &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	rc = g_stat(fn, &statbuf);

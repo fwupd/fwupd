@@ -855,6 +855,15 @@ typedef enum {
  */
 #define FWUPD_PLUGIN_FLAG_AUTH_REQUIRED (1u << 12)
 /**
+ * FWUPD_PLUGIN_FLAG_SECURE_CONFIG:
+ *
+ * The plugin requires the config file to be saved with permissions that only allow the root user
+ * to read.
+ *
+ * Since: 1.8.5
+ */
+#define FWUPD_PLUGIN_FLAG_SECURE_CONFIG (1u << 13)
+/**
  * FWUPD_PLUGIN_FLAG_UNKNOWN:
  *
  * The plugin flag is Unknown.

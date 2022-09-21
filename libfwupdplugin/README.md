@@ -98,3 +98,4 @@ Remember: Plugins should be upstream!
 ## 1.8.5
 
 * `fu_volume_new_esp_default()`: Use `fu_context_get_esp_volumes()` instead.
+* `fu_plugin_set_secure_config_value()`: Set `FWUPD_PLUGIN_FLAG_SECURE_CONFIG` and use `fu_plugin_set_config_value()`
