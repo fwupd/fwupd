@@ -390,8 +390,13 @@ fu_quirks_check_silo(FuQuirks *self, GError **error)
 
 	/* built-in quirks */
 	builder = xb_builder_new();
-	if (!fu_quirks_add_quirks_for_resources(self, builder, "/org/freedesktop/fwupd", error))
-		return FALSE;
+	if ((self->load_flags & FU_QUIRKS_LOAD_FLAG_NO_CACHE) == 0) {
+		if (!fu_quirks_add_quirks_for_resources(self,
+							builder,
+							"/org/freedesktop/fwupd",
+							error))
+			return FALSE;
+	}
 
 	/* system datadir */
 	datadir = fu_path_from_kind(FU_PATH_KIND_DATADIR_QUIRKS);
