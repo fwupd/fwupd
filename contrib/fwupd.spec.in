@@ -313,6 +313,9 @@ for fn in /etc/fwupd/remotes.d/*.conf; do
     fi
 done
 
+# ensure this is private
+chmod 0660 /etc/fwupd/redfish.conf
+
 %preun
 %systemd_preun fwupd.service
 

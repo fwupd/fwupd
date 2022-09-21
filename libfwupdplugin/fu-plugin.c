@@ -9,6 +9,7 @@
 #include "config.h"
 
 #include <errno.h>
+#include <fcntl.h>
 #include <fwupd.h>
 #include <glib/gstdio.h>
 #include <gmodule.h>
@@ -2256,6 +2257,46 @@ fu_plugin_set_config_value(FuPlugin *self, const gchar *key, const gchar *value,
 	return g_key_file_save_to_file(keyfile, conf_path, error);
 }
 
+#if !GLIB_CHECK_VERSION(2, 66, 0)
+
+#define G_FILE_SET_CONTENTS_CONSISTENT 0
+typedef guint GFileSetContentsFlags;
+static gboolean
+g_file_set_contents_full(const gchar *filename,
+			 const gchar *contents,
+			 gssize length,
+			 GFileSetContentsFlags flags,
+			 int mode,
+			 GError **error)
+{
+	gint fd;
+	gssize wrote;
+
+	if (length < 0)
+		length = strlen(contents);
+	fd = g_open(filename, O_CREAT, mode);
+	if (fd <= 0) {
+		g_set_error(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_FAILED,
+			    "could not open %s file",
+			    filename);
+		return FALSE;
+	}
+	wrote = write(fd, contents, length);
+	if (wrote != length) {
+		g_set_error(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_FAILED,
+			    "did not write %s file",
+			    filename);
+		g_close(fd, NULL);
+		return FALSE;
+	}
+	return g_close(fd, error);
+}
+#endif
+
 /**
  * fu_plugin_set_secure_config_value:
  * @self: a #FuPlugin
@@ -2277,7 +2318,8 @@ fu_plugin_set_secure_config_value(FuPlugin *self,
 				  GError **error)
 {
 	g_autofree gchar *conf_path = fu_plugin_get_config_filename(self);
-	gint ret;
+	g_autofree gchar *data = NULL;
+	g_autoptr(GKeyFile) keyfile = g_key_file_new();
 
 	g_return_val_if_fail(FU_IS_PLUGIN(self), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
@@ -2286,17 +2328,18 @@ fu_plugin_set_secure_config_value(FuPlugin *self,
 		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "%s is missing", conf_path);
 		return FALSE;
 	}
-	ret = g_chmod(conf_path, 0660);
-	if (ret == -1) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INTERNAL,
-			    "failed to set permissions on %s",
-			    conf_path);
+	if (!g_key_file_load_from_file(keyfile, conf_path, G_KEY_FILE_KEEP_COMMENTS, error))
 		return FALSE;
-	}
-
-	return fu_plugin_set_config_value(self, key, value, error);
+	g_key_file_set_string(keyfile, fu_plugin_get_name(self), key, value);
+	data = g_key_file_to_data(keyfile, NULL, error);
+	if (data == NULL)
+		return FALSE;
+	return g_file_set_contents_full(conf_path,
+					data,
+					-1,
+					G_FILE_SET_CONTENTS_CONSISTENT,
+					0660,
+					error);
 }
 
 /**
