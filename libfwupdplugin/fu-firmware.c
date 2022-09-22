@@ -2001,7 +2001,7 @@ fu_firmware_new_from_gtypes(GBytes *fw, FwupdInstallFlags flags, GError **error,
 
 	/* create array of GTypes */
 	va_start(args, error);
-	while (1) {
+	while (TRUE) {
 		GType gtype = va_arg(args, GType);
 		if (gtype == G_TYPE_INVALID)
 			break;
