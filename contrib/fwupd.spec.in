@@ -482,7 +482,7 @@ done
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_acpi_ivrs.so
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_msr.so
 %endif
-%ifarch x86_64
+%ifarch i686 x86_64
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_amd_pmc.so
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_pci_psp.so
 %endif
