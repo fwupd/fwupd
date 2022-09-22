@@ -871,7 +871,7 @@ fu_context_has_flag(FuContext *context, FuContextFlags flag)
 
 /**
  * fu_context_add_esp_volume:
- * @context: a #FuContext
+ * @self: a #FuContext
  * @volume: a #FuVolume
  *
  * Adds an ESP volume location.
@@ -901,7 +901,7 @@ fu_context_add_esp_volume(FuContext *self, FuVolume *volume)
 
 /**
  * fu_context_get_esp_volumes:
- * @context: a #FuContext
+ * @self: a #FuContext
  * @error: (nullable): optional return location for an error
  *
  * Finds all volumes that could be an ESP.
