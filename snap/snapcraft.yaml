@@ -6,30 +6,56 @@ description: |
   not yet supported by the version of fwupd distributed with the OS.
 
 grade: stable
-confinement: classic
+confinement: strict
 base: core22
 
 architectures:
   - amd64
 
+slots:
+  fwupd:
+    interface: fwupd
+  fwupd-dbus:
+    interface: dbus
+    bus: system
+    name: org.freedesktop.fwupd
+
+plugs:
+  fwupdmgr:
+    interface: fwupd
+  polkit:
+    interface: polkit
+    action-prefix: org.freedesktop.fwupd
+
 apps:
   dfu-tool:
     command: dfu-tool.wrapper
+    plugs: [fwupdmgr, network]
   dbxtool:
     command: dbxtool.wrapper
+    plugs: [fwupdmgr, network]
   fwupdtool:
     command: fwupdtool.wrapper
+    plugs: [bluez, udisks2, modem-manager, upower-observe, network, hardware-observe]
+    slots: [fwupd]
     completer:
       share/bash-completion/completions/fwupdtool
   fwupd:
     command: fwupd.wrapper
-    daemon: simple
+    daemon: dbus
+    slots: [fwupd]
+    plugs: [bluez, udisks2, modem-manager, upower-observe, polkit, network, hardware-observe]
+    daemon-scope: system
+    activates-on:
+      - fwupd-dbus
   fwupdmgr:
     command: fwupdmgr.wrapper
+    plugs: [fwupdmgr, network, polkit]
     completer:
       share/bash-completion/completions/fwupdmgr
   fwupdagent:
     command: fwupdagent.wrapper
+    plugs: [fwupdmgr, network]
 
 parts:
   #needed for UEFI plugin to build UX labels
@@ -43,6 +69,16 @@ parts:
       - -etc
       - -usr
       - -var
+
+  pkttyagent:
+    plugin: nil
+    stage-packages:
+      - polkitd
+      - libpolkit-agent-1-0
+    prime:
+      - usr/bin/pkttyagent
+      - usr/lib/*/libpolkit-agent-1.so*
+
   fwupd:
     plugin: meson
     meson-parameters: [--prefix=/,
@@ -255,3 +291,12 @@ parts:
     - fwupd.wrapper
     - fwupdmgr.wrapper
     - fwupdagent.wrapper
+
+  policy:
+    plugin: nil
+    after:
+      - fwupd
+    override-build: |
+      mkdir -p "${CRAFT_PART_INSTALL}/meta/polkit/polkit.fwupd/"
+      cp "${CRAFT_STAGE}/share/polkit-1/actions/org.freedesktop.fwupd.policy" \
+         "${CRAFT_PART_INSTALL}/meta/polkit/polkit.org.freedesktop.fwupd.policy"

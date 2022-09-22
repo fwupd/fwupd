@@ -1,2 +1,3 @@
 #!/bin/sh
+export FWUPD_POLKIT_NOCHECK=1
 exec "$SNAP/fwupd-command" $SNAP/bin/fwupdmgr $@

@@ -4,6 +4,8 @@ export XDG_CACHE_HOME=$SNAP_USER_COMMON/.cache
 mkdir -p $XDG_CACHE_HOME
 export GIO_MODULE_DIR=$XDG_CACHE_HOME/gio-modules
 export XDG_DATA_DIRS="$SNAP/usr/share"
+export FWUPD_LOCKDIR=/run/lock/snap.fwupd
+export FWUPD_POLKIT_NOCHECK=1
 
 #determine architecture
 if [ "$SNAP_ARCH" = "amd64" ]; then
