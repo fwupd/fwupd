@@ -689,7 +689,6 @@ msgid "Device added:"
 msgstr "Додано пристрій:"
 
 #. TRANSLATORS: for example the batteries *inside* the Bluetooth mouse
-#, c-format
 msgid "Device battery power is too low"
 msgstr "Рівень заряду акумулятора пристрою є надто низьким"
 
@@ -939,6 +938,9 @@ msgstr "У кожній системі мають бути перевірки, �
 msgid "Emulated host"
 msgstr "Емульований вузол"
 
+msgid "Enable"
+msgstr "Увімкнути"
+
 #. TRANSLATORS: command line option
 msgid "Enable firmware update support on supported systems"
 msgstr "Увімкнути підтримку оновлення мікропрограми на підтримуваних системах"
@@ -1027,6 +1029,7 @@ msgid "FILE [DEVICE-ID|GUID]"
 msgstr "ФАЙЛ [ІД_ПРИСТРОЮ|GUID]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
+#. TRANSLATORS: filename argument with path
 msgid "FILENAME"
 msgstr "НАЗВА_ФАЙЛА"
 
@@ -1873,6 +1876,10 @@ msgstr "Не застосовано жодного оновлення"
 msgid "Not approved"
 msgstr "Не затверджено"
 
+#. TRANSLATORS: error message to tell someone they can't use this feature
+msgid "Not enough data was provided to make an HSI calculation."
+msgstr "Надано недостатньо даних для обчислення HSI."
+
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Not found"
 msgstr "Не знайдено"
@@ -2718,6 +2725,10 @@ msgstr "Цим інструментом може користуватися ли
 msgid "This tool will read and parse the TPM event log from the system firmware."
 msgstr "Цей інструмент читає і обробляє журнал подій TPM, який заповнюється мікропрограмами системи."
 
+#. TRANSLATORS: message to tell someone how to ignore error
+msgid "To ignore this warning, use --force"
+msgstr "Щоб проігнорувати це попередження, скористайтеся параметром --force"
+
 #. TRANSLATORS: the update state of the specific device
 msgid "Transient failure"
 msgstr "Проміжна помилка"
@@ -2783,7 +2794,6 @@ msgid "Unable to connect to service"
 msgstr "Не вдалося встановити з'єднання зі службою"
 
 #. TRANSLATORS: error message
-#, c-format
 msgid "Unable to find attribute"
 msgstr "Не вдалося знайти атрибут"
 
@@ -3002,7 +3012,6 @@ msgid "Writing…"
 msgstr "Записуємо…"
 
 #. TRANSLATORS: the user has to manually recover; we can't do it
-#, c-format
 msgid "You should ensure you are comfortable restoring the setting from the system firmware setup, as this change may cause the system to not boot into Linux or cause other system instability."
 msgstr "Ви маєте переконатися, що зможете відновити параметр із налаштувань системної мікропрограми, оскільки ця зміна може спричинити до неможливості завантаження системи Linux або спричинити інші нестабільності у роботі системи."
 

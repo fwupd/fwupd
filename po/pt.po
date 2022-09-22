@@ -806,6 +806,7 @@ msgid "FILE [DEVICE-ID|GUID]"
 msgstr "FICHEIRO [ID-DISPOSITIVO|GUID]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
+#. TRANSLATORS: filename argument with path
 msgid "FILENAME"
 msgstr "NOMEDOFICHEIRO"
 

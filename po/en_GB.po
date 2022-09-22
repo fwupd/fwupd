@@ -672,7 +672,6 @@ msgid "Device added:"
 msgstr "Device added:"
 
 #. TRANSLATORS: for example the batteries *inside* the Bluetooth mouse
-#, c-format
 msgid "Device battery power is too low"
 msgstr "Device battery power is too low"
 
@@ -1010,6 +1009,7 @@ msgid "FILE [DEVICE-ID|GUID]"
 msgstr "FILE [DEVICE-ID|GUID]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
+#. TRANSLATORS: filename argument with path
 msgid "FILENAME"
 msgstr "FILENAME"
 
@@ -2756,7 +2756,6 @@ msgid "Unable to connect to service"
 msgstr "Unable to connect to service"
 
 #. TRANSLATORS: error message
-#, c-format
 msgid "Unable to find attribute"
 msgstr "Unable to find attribute"
 
@@ -2975,7 +2974,6 @@ msgid "Writing…"
 msgstr "Writing…"
 
 #. TRANSLATORS: the user has to manually recover; we can't do it
-#, c-format
 msgid "You should ensure you are comfortable restoring the setting from the system firmware setup, as this change may cause the system to not boot into Linux or cause other system instability."
 msgstr "You should ensure you are comfortable restoring the setting from the system firmware setup, as this change may cause the system to not boot into Linux or cause other system instability."
 

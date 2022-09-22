@@ -619,7 +619,6 @@ msgid "Device added:"
 msgstr "උපාංගය එකතු කළේ:"
 
 #. TRANSLATORS: for example the batteries *inside* the Bluetooth mouse
-#, c-format
 msgid "Device battery power is too low"
 msgstr "උපාංගයේ බැටරි බලය ඉතා අඩුය"
 
@@ -930,6 +929,7 @@ msgid "FILE [DEVICE-ID|GUID]"
 msgstr "ගොනුව [උපාංගය-ID|මාර්ගෝපදේශය]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
+#. TRANSLATORS: filename argument with path
 msgid "FILENAME"
 msgstr "ගොනුවේ නම"
 

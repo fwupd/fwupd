@@ -310,6 +310,18 @@ msgstr "(przestarzałe)"
 msgid "A TPM PCR is now an invalid value"
 msgstr "PCR TPM ma teraz nieprawidłową wartość"
 
+#. TRANSLATORS: Title: if hardware enforces control of SPI replays
+msgid "AMD Firmware Replay Protection"
+msgstr "Ochrona przed odtwarzaniem oprogramowania sprzętowego AMD"
+
+#. TRANSLATORS: Title: if hardware enforces control of SPI writes
+msgid "AMD Firmware Write Protection"
+msgstr "Ochrona przed zapisem oprogramowania sprzętowego AMD"
+
+#. TRANSLATORS: Title: if firmware enforces rollback protection
+msgid "AMD Rollback Protection"
+msgstr "Ochrona przed wycofaniem AMD"
+
 #. TRANSLATORS: the user needs to do something, e.g. remove the device
 msgid "Action Required:"
 msgstr "Wymagane działanie:"
@@ -673,7 +685,6 @@ msgid "Device added:"
 msgstr "Dodano urządzenie:"
 
 #. TRANSLATORS: for example the batteries *inside* the Bluetooth mouse
-#, c-format
 msgid "Device battery power is too low"
 msgstr "Poziom naładowania akumulatora urządzenia jest za niski"
 
@@ -915,6 +926,9 @@ msgstr "Podana partycja ESP nie jest prawidłowa"
 msgid "Emulated host"
 msgstr "Emulowany komputer"
 
+msgid "Enable"
+msgstr "Włącz"
+
 #. TRANSLATORS: command line option
 msgid "Enable firmware update support on supported systems"
 msgstr "Włącza obsługę aktualizacji oprogramowania sprzętowego na obsługiwanych systemach"
@@ -1000,6 +1014,7 @@ msgid "FILE [DEVICE-ID|GUID]"
 msgstr "PLIK [IDENTYFIKATOR-URZĄDZENIA|GUID]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
+#. TRANSLATORS: filename argument with path
 msgid "FILENAME"
 msgstr "NAZWA-PLIKU"
 
@@ -1130,6 +1145,18 @@ msgstr "Wymagana jest nazwa pliku"
 msgid "Filter with a set of device flags using a ~ prefix to exclude, e.g. 'internal,~needs-reboot'"
 msgstr "Filtruje za pomocą zestawu flag urządzeń, przedrostek ~ wyklucza, np. „internal,~needs-reboot”"
 
+#. TRANSLATORS: Title: if we can verify the firmware checksums
+msgid "Firmware Attestation"
+msgstr "Zaświadczenie oprogramowania sprzętowego"
+
+#. TRANSLATORS: Title: firmware refers to the flash chip in the computer
+msgid "Firmware BIOS Descriptor"
+msgstr "Deskryptor BIOS-u oprogramowania sprzętowego"
+
+#. TRANSLATORS: Title: SPI refers to the flash chip in the computer
+msgid "Firmware BIOS Region"
+msgstr "Region BIOS-u oprogramowania sprzętowego"
+
 #. TRANSLATORS: remote URI
 msgid "Firmware Base URI"
 msgstr "Podstawowy adres URI oprogramowania sprzętowego"
@@ -1142,6 +1169,10 @@ msgstr "Usługa D-Bus aktualizacji oprogramowania sprzętowego"
 msgid "Firmware Update Daemon"
 msgstr "Usługa aktualizacji oprogramowania sprzętowego"
 
+#. TRANSLATORS: Title: if the fwupd plugins are all present and correct
+msgid "Firmware Updater Verification"
+msgstr "Weryfikacja aktualizatora oprogramowania sprzętowego"
+
 #. TRANSLATORS: Title: if firmware updates are available
 msgid "Firmware Updates"
 msgstr "Aktualizacje oprogramowania sprzętowego"
@@ -1149,6 +1180,14 @@ msgstr "Aktualizacje oprogramowania sprzętowego"
 #. TRANSLATORS: program name
 msgid "Firmware Utility"
 msgstr "Narzędzie oprogramowania sprzętowego"
+
+#. TRANSLATORS: Title: firmware refers to the flash chip in the computer
+msgid "Firmware Write Protection"
+msgstr "Ochrona przed zapisem oprogramowania sprzętowego"
+
+#. TRANSLATORS: Title: firmware refers to the flash chip in the computer
+msgid "Firmware Write Protection Lock"
+msgstr "Blokada ochrony przed zapisem oprogramowania sprzętowego"
 
 #. TRANSLATORS: Title: if we can verify the firmware checksums
 msgid "Firmware attestation"
@@ -1215,6 +1254,10 @@ msgstr "Wykryto pełne szyfrowanie dysku"
 #. Windows
 msgid "Full disk encryption secrets may be invalidated when updating"
 msgstr "Hasła pełnego szyfrowania dysku mogą zostać unieważnione podczas aktualizacji"
+
+#. TRANSLATORS: Title: if the part has been fused
+msgid "Fused Platform"
+msgstr "Platforma z bezpiecznikiem"
 
 #. TRANSLATORS: Title: if the part has been fused
 msgid "Fused platform"
@@ -1304,6 +1347,11 @@ msgstr "Identyfikator zabezpieczeń komputera:"
 #. * https://en.wikipedia.org/wiki/Input%E2%80%93output_memory_management_unit
 msgid "IOMMU"
 msgstr "IOMMU"
+
+#. TRANSLATORS: Title:
+#. * https://en.wikipedia.org/wiki/Input%E2%80%93output_memory_management_unit
+msgid "IOMMU Protection"
+msgstr "Ochrona IOMMU"
 
 #. TRANSLATORS: HSI event title
 msgid "IOMMU device protection disabled"
@@ -1402,8 +1450,22 @@ msgstr "Intel BootGuard"
 
 #. TRANSLATORS: Title: BootGuard is a trademark from Intel,
 #. * ACM means to verify the integrity of Initial Boot Block
+msgid "Intel BootGuard ACM Protected"
+msgstr "ACM chronione przez Intel BootGuard"
+
+#. TRANSLATORS: Title: BootGuard is a trademark from Intel,
+#. * ACM means to verify the integrity of Initial Boot Block
 msgid "Intel BootGuard ACM protected"
 msgstr "ACM chronione przez Intel BootGuard"
+
+#. TRANSLATORS: Title: BootGuard is a trademark from Intel,
+#. * error policy is what to do on failure
+msgid "Intel BootGuard Error Policy"
+msgstr "Zasady postępowania Intel BootGuard w przypadku błędów"
+
+#. TRANSLATORS: Title: BootGuard is a trademark from Intel
+msgid "Intel BootGuard Fuse"
+msgstr "Bezpiecznik Intel BootGuard"
 
 #. TRANSLATORS: Title: BootGuard is a trademark from Intel,
 #. * OTP = one time programmable
@@ -1411,9 +1473,14 @@ msgid "Intel BootGuard OTP fuse"
 msgstr "Bezpiecznik OTP Intel BootGuard"
 
 #. TRANSLATORS: Title: BootGuard is a trademark from Intel,
+#. * verified boot refers to the way the boot process is verified
+msgid "Intel BootGuard Verified Boot"
+msgstr "Uruchamianie zweryfikowane przez Intel BootGuard"
+
+#. TRANSLATORS: Title: BootGuard is a trademark from Intel,
 #. * error policy is what to do on failure
 msgid "Intel BootGuard error policy"
-msgstr "Błąd zasad postępowania Intel BootGuard w przypadku błędów"
+msgstr "Zasady postępowania Intel BootGuard w przypadku błędów"
 
 #. TRANSLATORS: Title: BootGuard is a trademark from Intel,
 #. * verified boot refers to the way the boot process is verified
@@ -1433,6 +1500,22 @@ msgstr "Intel CET jest aktywne"
 #. * enabled means supported by the processor
 msgid "Intel CET Enabled"
 msgstr "Intel CET jest włączone"
+
+#. TRANSLATORS: Title: MEI = Intel Management Engine
+msgid "Intel Management Engine Manufacturing Mode"
+msgstr "Tryb serwisowy Intel Management Engine"
+
+#. TRANSLATORS: Title: MEI = Intel Management Engine, and the "override" is
+#. enabled
+#. * with a jumper -- luckily it is probably not accessible to end users on
+#. consumer
+#. * boards
+msgid "Intel Management Engine Override"
+msgstr "Obejście Intel Management Engine"
+
+#. TRANSLATORS: Title: MEI = Intel Management Engine
+msgid "Intel Management Engine Version"
+msgstr "Wersja Intel Management Engine"
 
 #. TRANSLATORS: Title: SMAP = Supervisor Mode Access Prevention
 msgid "Intel SMAP"
@@ -1510,6 +1593,18 @@ msgstr "Pozostała mniej niż jedna minuta"
 msgid "License"
 msgstr "Licencja"
 
+#. TRANSLATORS: Title: lockdown is a security mode of the kernel
+msgid "Linux Kernel Lockdown"
+msgstr "Blokada jądra Linux"
+
+#. TRANSLATORS: Title: if it's tainted or not
+msgid "Linux Kernel Verification"
+msgstr "Weryfikacja jądra Linux"
+
+#. TRANSLATORS: Title: swap space or swap partition
+msgid "Linux Swap"
+msgstr "Obszar wymiany systemu Linux"
+
 msgid "Linux Vendor Firmware Service (stable firmware)"
 msgstr "Linux Vendor Firmware Service (stabilne oprogramowanie sprzętowe)"
 
@@ -1558,7 +1653,7 @@ msgstr "Niska"
 
 #. TRANSLATORS: Title: MEI = Intel Management Engine
 msgid "MEI manufacturing mode"
-msgstr "Tryb produkcyjny MEI"
+msgstr "Tryb serwisowy MEI"
 
 #. TRANSLATORS: Title: MEI = Intel Management Engine, and the
 #. * "override" is the physical PIN that can be driven to
@@ -1710,6 +1805,10 @@ msgstr "Nie zastosowano żadnych aktualizacji"
 msgid "Not approved"
 msgstr "Niezatwierdzone"
 
+#. TRANSLATORS: error message to tell someone they can't use this feature
+msgid "Not enough data was provided to make an HSI calculation."
+msgstr "Dostarczono za mało danych, aby wykonać obliczenie HSI."
+
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Not found"
 msgstr "Nie odnaleziono"
@@ -1809,6 +1908,10 @@ msgid "Possible Values"
 msgstr "Możliwe wartości"
 
 #. TRANSLATORS: Title: DMA as in https://en.wikipedia.org/wiki/DMA_attack
+msgid "Pre-boot DMA Protection"
+msgstr "Ochrona DMA przed uruchomieniem"
+
+#. TRANSLATORS: Title: DMA as in https://en.wikipedia.org/wiki/DMA_attack
 msgid "Pre-boot DMA protection"
 msgstr "Ochrona DMA przed uruchomieniem"
 
@@ -1840,6 +1943,10 @@ msgstr "Problemy"
 
 msgid "Proceed with upload?"
 msgstr "Kontynuować wysyłanie?"
+
+#. TRANSLATORS: Title: if fwupd supports HSI on this chip
+msgid "Processor Security Checks"
+msgstr "Testy zabezpieczeń procesora"
 
 #. TRANSLATORS: a non-free software license
 msgid "Proprietary"
@@ -2309,6 +2416,14 @@ msgid "Supported on remote server"
 msgstr "Obsługiwane na zdalnym serwerze"
 
 #. TRANSLATORS: Title: a better sleep state
+msgid "Suspend To Idle"
+msgstr "Uśpienie do trybu bezczynności"
+
+#. TRANSLATORS: Title: sleep state
+msgid "Suspend To RAM"
+msgstr "Uśpienie do pamięci RAM"
+
+#. TRANSLATORS: Title: a better sleep state
 msgid "Suspend-to-idle"
 msgstr "Uśpienie do trybu bezczynności"
 
@@ -2358,6 +2473,15 @@ msgstr "Rekonstrukcja PCR0 TPM jest nieprawidłowa"
 #. TRANSLATORS: HSI event title
 msgid "TPM PCR0 reconstruction is now valid"
 msgstr "Rekonstrukcja PCR0 TPM jest teraz prawidłowa"
+
+#. TRANSLATORS: Title: PCRs (Platform Configuration Registers) shouldn't be
+#. empty
+msgid "TPM Platform Configuration"
+msgstr "Konfiguracja platformy TPM"
+
+#. TRANSLATORS: Title: the PCR is rebuilt from the TPM event log
+msgid "TPM Reconstruction"
+msgstr "Rekonstrukcja TPM"
 
 #. TRANSLATORS: Title: PCRs (Platform Configuration Registers) shouldn't be
 #. empty
@@ -2494,6 +2618,10 @@ msgstr "To narzędzie może być używane tylko przez użytkownika root"
 msgid "This tool will read and parse the TPM event log from the system firmware."
 msgstr "To narzędzie odczyta i przetworzy dziennik zdarzeń TPM z oprogramowania sprzętowego komputera."
 
+#. TRANSLATORS: message to tell someone how to ignore error
+msgid "To ignore this warning, use --force"
+msgstr "Aby zignorować to ostrzeżenie, należy użyć parametru --force"
+
 #. TRANSLATORS: the update state of the specific device
 msgid "Transient failure"
 msgstr "Przejściowe niepowodzenie"
@@ -2522,6 +2650,14 @@ msgstr "Nie wykryto lub nie skonfigurowano partycji ESP UEFI"
 msgid "UEFI Firmware Utility"
 msgstr "Narzędzie oprogramowania sprzętowego UEFI"
 
+#. TRANSLATORS: Title: PK is the 'platform key' for the machine
+msgid "UEFI Platform Key"
+msgstr "Klucz platformy UEFI"
+
+#. TRANSLATORS: Title: SB is a way of locking down UEFI
+msgid "UEFI Secure Boot"
+msgstr "Zabezpieczone uruchamianie UEFI"
+
 #. TRANSLATORS: capsule updates are an optional BIOS feature
 msgid "UEFI capsule updates not available or enabled in firmware setup"
 msgstr "Aktualizacje kapsułowe UEFI są niedostępne lub wyłączone w konfiguracji oprogramowania sprzętowego"
@@ -2547,7 +2683,6 @@ msgid "Unable to connect to service"
 msgstr "Nie można połączyć się z usługą"
 
 #. TRANSLATORS: error message
-#, c-format
 msgid "Unable to find attribute"
 msgstr "Nie można odnaleźć atrybutu"
 
@@ -2766,7 +2901,6 @@ msgid "Writing…"
 msgstr "Zapisywanie…"
 
 #. TRANSLATORS: the user has to manually recover; we can't do it
-#, c-format
 msgid "You should ensure you are comfortable restoring the setting from the system firmware setup, as this change may cause the system to not boot into Linux or cause other system instability."
 msgstr "Należy się upewnić, że użytkownik jest w stanie przywrócić ustawienia w konfiguracji oprogramowania sprzętowego komputera, ponieważ ta zmiana może spowodować, że komputer nie będzie mógł uruchomić systemu Linux lub spowodować inny rodzaj niestabilności komputera."
 

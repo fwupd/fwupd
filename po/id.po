@@ -814,6 +814,7 @@ msgid "FILE [DEVICE-ID|GUID]"
 msgstr "BERKAS [ID-PERANTI|GUID]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
+#. TRANSLATORS: filename argument with path
 msgid "FILENAME"
 msgstr "NAMABERKAS"
 

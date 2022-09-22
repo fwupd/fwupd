@@ -487,6 +487,7 @@ msgid "FILE"
 msgstr "FILE"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
+#. TRANSLATORS: filename argument with path
 msgid "FILENAME"
 msgstr "FILENAME"
 

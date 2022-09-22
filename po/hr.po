@@ -684,7 +684,6 @@ msgid "Device added:"
 msgstr "Uređaj dodan:"
 
 #. TRANSLATORS: for example the batteries *inside* the Bluetooth mouse
-#, c-format
 msgid "Device battery power is too low"
 msgstr "Energija baterije uređaja je preniska"
 
@@ -934,6 +933,9 @@ msgstr "Svaki uređaj bi se trebao testirati firmver, kako bi se osigurala sigur
 msgid "Emulated host"
 msgstr "Emulirani poslužitelj"
 
+msgid "Enable"
+msgstr "Omogući"
+
 #. TRANSLATORS: command line option
 msgid "Enable firmware update support on supported systems"
 msgstr "Omogući podršku nadopune firmvera na podržanim sustavima"
@@ -1022,6 +1024,7 @@ msgid "FILE [DEVICE-ID|GUID]"
 msgstr "DATOTEKA [UREĐAJ-ID|GUID]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
+#. TRANSLATORS: filename argument with path
 msgid "FILENAME"
 msgstr "NAZIV DATOTEKE"
 
@@ -1864,6 +1867,10 @@ msgstr "Nema primijenjenih nadopuna"
 #. TRANSLATORS: version cannot be installed due to policy
 msgid "Not approved"
 msgstr "Nije odobreno"
+
+#. TRANSLATORS: error message to tell someone they can't use this feature
+msgid "Not enough data was provided to make an HSI calculation."
+msgstr "Nedovoljno podataka je dostupno za HIS izračun."
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Not found"
@@ -2708,6 +2715,10 @@ msgstr "Ovaj alat može koristiti samo korijenski korisnik"
 msgid "This tool will read and parse the TPM event log from the system firmware."
 msgstr "Ovo pomagalo će očitati i obraditi TPM zapis događaja iz frimvera sustava."
 
+#. TRANSLATORS: message to tell someone how to ignore error
+msgid "To ignore this warning, use --force"
+msgstr "Za zanemraivanje ovog upozorenja, koristite --force"
+
 #. TRANSLATORS: the update state of the specific device
 msgid "Transient failure"
 msgstr "Privremeni kvar"
@@ -2773,7 +2784,6 @@ msgid "Unable to connect to service"
 msgstr "Neuspjelo povezivanje s udaljenom uslugom"
 
 #. TRANSLATORS: error message
-#, c-format
 msgid "Unable to find attribute"
 msgstr "Nemoguć pronalazak svojstva"
 
@@ -2992,7 +3002,6 @@ msgid "Writing…"
 msgstr "Zapisivanje…"
 
 #. TRANSLATORS: the user has to manually recover; we can't do it
-#, c-format
 msgid "You should ensure you are comfortable restoring the setting from the system firmware setup, as this change may cause the system to not boot into Linux or cause other system instability."
 msgstr "Trebali bi osigurati da možete vratiti postavke iz podešavanja firmvera sustava, pošto ova promjena može uzrokovati nemogućnost pokretanja u Linux sustav ili uzrokovati druge nestabilnosti sustava."
 

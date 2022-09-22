@@ -591,7 +591,6 @@ msgid "Device added:"
 msgstr "Dispositivo añadido:"
 
 #. TRANSLATORS: for example the batteries *inside* the Bluetooth mouse
-#, c-format
 msgid "Device battery power is too low"
 msgstr "La carga de batería del dispositivo es muy baja"
 
@@ -902,6 +901,7 @@ msgid "FILE [DEVICE-ID|GUID]"
 msgstr "ARCHIVO [ID-DISPOSITIVO|GUID]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
+#. TRANSLATORS: filename argument with path
 msgid "FILENAME"
 msgstr "NOMBRE-DE-ARCHIVO"
 

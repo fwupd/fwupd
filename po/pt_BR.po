@@ -895,6 +895,7 @@ msgid "FILE [DEVICE-ID|GUID]"
 msgstr "ARQUIVO [ID-DISPOSITIVO|GUID]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
+#. TRANSLATORS: filename argument with path
 msgid "FILENAME"
 msgstr "NOME-DE-ARQUIVO"
 

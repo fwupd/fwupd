@@ -220,6 +220,10 @@ msgstr "AMD-ის მიკროკოდში ჩაწერისგან
 msgid "AMD Rollback Protection"
 msgstr "AMD-ის მიკროკოდის ვერსიის ჩამოწევისგან დაცვა"
 
+#. TRANSLATORS: shown when shutting down to switch to the new version
+msgid "Activating firmware update"
+msgstr "მიკროკოდის განახლების აქტივაცია"
+
 #. TRANSLATORS: the age of the metadata
 msgid "Age"
 msgstr "ასაკი"
@@ -247,9 +251,16 @@ msgstr "მიკროკოდის განახლებების გ�
 msgid "Apply update files"
 msgstr "განახლების ფალების გადატარება"
 
+#. TRANSLATORS: actually sending the update to the hardware
+msgid "Applying update…"
+msgstr "განახლების გადატარება…"
+
 #. TRANSLATORS: waiting for user to authenticate
 msgid "Authenticating…"
 msgstr "ავთენტიკაცია…"
+
+msgid "BYTES"
+msgstr "BYTES"
 
 #. TRANSLATORS: refers to the battery inside the peripheral device
 msgid "Battery"
@@ -324,6 +335,10 @@ msgstr "მიმდინარე მნიშვნელობა"
 msgid "Current version"
 msgstr "მიმდინარე ვერსია"
 
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "DEVICE-ID|GUID"
+msgstr "DEVICE-ID|GUID"
+
 #. TRANSLATORS: for the --verbose arg
 msgid "Debugging Options"
 msgstr "გამართვის პარამეტრები"
@@ -345,8 +360,11 @@ msgstr "დეტალები"
 msgid "Device ID"
 msgstr "მოწყობილობის ID"
 
+#. TRANSLATORS: this is when a device is hotplugged
+msgid "Device added:"
+msgstr "მოწყობილობა დაემატა:"
+
 #. TRANSLATORS: for example the batteries *inside* the Bluetooth mouse
-#, c-format
 msgid "Device battery power is too low"
 msgstr "მოწყობილობის ელემენტის სიმძლავრე მეტისმეტად დაბალია"
 
@@ -363,6 +381,10 @@ msgstr "მოწყობილობას შეუძლია ფლეშ�
 msgid "Device cannot be used while the lid is closed"
 msgstr "მოწყობილობას ვერ გამოიყენებთ, თუ ის დახურულია"
 
+#. TRANSLATORS: this is when a device has been updated
+msgid "Device changed:"
+msgstr "მოწყობილობა შეიცვალა:"
+
 #. TRANSLATORS: Is locked and can be unlocked
 msgid "Device is locked"
 msgstr "მოწყობილობა ჩაკეტილია"
@@ -378,6 +400,10 @@ msgstr "მოწყობილობა განახლების დრ�
 #. TRANSLATORS: usually this is when we're waiting for a reboot
 msgid "Device is waiting for the update to be applied"
 msgstr "მოწყობილობა განახლების დასრულებას ელოდება"
+
+#. TRANSLATORS: this is when a device is hotplugged
+msgid "Device removed:"
+msgstr "მოწყობილობა წაშლილია:"
 
 #. TRANSLATORS: as in, wired mains power for a laptop
 msgid "Device requires AC power to be connected"
@@ -429,6 +455,9 @@ msgstr "ხანგრძლოვობა"
 msgid "Emulated host"
 msgstr "ემულირებული ჰოსტი"
 
+msgid "Enable"
+msgstr "ჩართვა"
+
 #. TRANSLATORS: Suffix: the HSI result
 #. TRANSLATORS: Plugin is active and in use
 #. TRANSLATORS: if the remote is enabled
@@ -460,8 +489,33 @@ msgid "Exit after the engine has loaded"
 msgstr "გამოსვლა ძრავის ჩატვირთვის შემდეგ"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILE"
+msgstr "FILE"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+#. TRANSLATORS: filename argument with path
 msgid "FILENAME"
 msgstr "ფაილის სახელი"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME CERTIFICATE PRIVATE-KEY"
+msgstr "FILENAME CERTIFICATE PRIVATE-KEY"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME DEVICE-ID"
+msgstr "FILENAME DEVICE-ID"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME OFFSET DATA [FIRMWARE-TYPE]"
+msgstr "FILENAME OFFSET DATA [FIRMWARE-TYPE]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME [DEVICE-ID|GUID]"
+msgstr "FILENAME [DEVICE-ID|GUID]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME [FIRMWARE-TYPE]"
+msgstr "FILENAME [FIRMWARE-TYPE]"
 
 #. TRANSLATORS: Suffix: the fallback HSI result
 #. TRANSLATORS: the update state of the specific device
@@ -471,6 +525,14 @@ msgstr "შეცდომა"
 #. TRANSLATORS: the user didn't read the man page
 msgid "Failed to parse arguments"
 msgstr "არგუმენტების დამუშავების შეცდომა"
+
+#. TRANSLATORS: failed to read measurements file
+msgid "Failed to parse file"
+msgstr "ფაილის დამუშავების შეცდომა"
+
+#. TRANSLATORS: we could not reboot for some reason
+msgid "Failed to reboot"
+msgstr "გადატვირთვის შეცდომა"
 
 #. TRANSLATORS: item is FALSE
 msgid "False"
@@ -487,6 +549,10 @@ msgstr "ფაილის სახელის ხელმოწერა"
 #. TRANSLATORS: full path of the remote.conf file
 msgid "Filename Source"
 msgstr "ფაილის სახელის წყარო"
+
+#. TRANSLATORS: user did not include a filename parameter
+msgid "Filename required"
+msgstr "ფაილის სახელი აუცილებელია"
 
 #. TRANSLATORS: Title: if we can verify the firmware checksums
 msgid "Firmware Attestation"
@@ -542,6 +608,10 @@ msgstr[1] "GUIDs"
 msgctxt "A single GUID"
 msgid "GUID"
 msgstr "GUID"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "HWIDS-FILE"
+msgstr "HWIDS-FILE"
 
 #. TRANSLATORS: the hardware is waiting to be replugged
 msgid "Hardware is waiting to be replugged"
@@ -604,6 +674,49 @@ msgstr "მთელი რიცხვი"
 #. TRANSLATORS: Title: BootGuard is a trademark from Intel
 msgid "Intel BootGuard"
 msgstr "Intel BootGuard"
+
+#. TRANSLATORS: Title: BootGuard is a trademark from Intel,
+#. * ACM means to verify the integrity of Initial Boot Block
+msgid "Intel BootGuard ACM Protected"
+msgstr "Intel BootGuard ACM-ით დაცული"
+
+#. TRANSLATORS: Title: BootGuard is a trademark from Intel,
+#. * ACM means to verify the integrity of Initial Boot Block
+msgid "Intel BootGuard ACM protected"
+msgstr "Intel BootGuard ACM-ით დაცული"
+
+#. TRANSLATORS: Title: BootGuard is a trademark from Intel,
+#. * error policy is what to do on failure
+msgid "Intel BootGuard Error Policy"
+msgstr "Intel BootGuard-ის შეცდომების პოლიტიკა"
+
+#. TRANSLATORS: Title: BootGuard is a trademark from Intel
+msgid "Intel BootGuard Fuse"
+msgstr "Intel BootGuard-ის პატრუქი"
+
+#. TRANSLATORS: Title: BootGuard is a trademark from Intel,
+#. * OTP = one time programmable
+msgid "Intel BootGuard OTP fuse"
+msgstr "Intel BootGuard-ის OTP პატრუქი"
+
+#. TRANSLATORS: Title: BootGuard is a trademark from Intel,
+#. * verified boot refers to the way the boot process is verified
+msgid "Intel BootGuard Verified Boot"
+msgstr "Intel BootGuard-ით შემოწმებული ჩატვირთვა"
+
+#. TRANSLATORS: Title: BootGuard is a trademark from Intel,
+#. * error policy is what to do on failure
+msgid "Intel BootGuard error policy"
+msgstr "Intel BootGuard-ის შეცდომების პოლიტიკა"
+
+#. TRANSLATORS: Title: BootGuard is a trademark from Intel,
+#. * verified boot refers to the way the boot process is verified
+msgid "Intel BootGuard verified boot"
+msgstr "Intel BootGuard-ით შემოწმებული ჩატვირთვა"
+
+#. TRANSLATORS: Title: CET = Control-flow Enforcement Technology
+msgid "Intel CET"
+msgstr "Intel CET"
 
 #. TRANSLATORS: Title: CET = Control-flow Enforcement Technology,
 #. * active means being used by the OS
@@ -693,6 +806,10 @@ msgstr "Linux Swap"
 msgid "Linux kernel"
 msgstr "Linux kernel"
 
+#. TRANSLATORS: Title: lockdown is a security mode of the kernel
+msgid "Linux kernel lockdown"
+msgstr "Linux-ის ბირთვი დაბლოკილია"
+
 #. TRANSLATORS: Title: swap space or swap partition
 msgid "Linux swap"
 msgstr "Linux Swap"
@@ -748,6 +865,10 @@ msgstr "დაყენების შემდეგ საჭიროებ�
 msgid "New version"
 msgstr "ახალი ვერსია"
 
+#. TRANSLATORS: user did not tell the tool what to do
+msgid "No action specified!"
+msgstr "ქმედება მითითებული არაა!"
+
 #. TRANSLATORS: nothing found
 msgid "No firmware IDs found"
 msgstr "მიკროკოდის ID-ები ვერ ვიპოვე"
@@ -755,6 +876,14 @@ msgstr "მიკროკოდის ID-ები ვერ ვიპოვე
 #. TRANSLATORS: nothing found
 msgid "No plugins found"
 msgstr "დამატებები ნაპოვნი არაა"
+
+#. TRANSLATORS: this is an error string
+msgid "No updatable devices"
+msgstr "განახლებადი მოწყობილობები ვერ ვიპოვე"
+
+#. TRANSLATORS: this is an error string
+msgid "No updates available"
+msgstr "განახლებების ვერ ვიპოვე"
 
 #. TRANSLATORS: version cannot be installed due to policy
 msgid "Not approved"
@@ -771,6 +900,10 @@ msgstr "მხარდაუჭერელია"
 #. TRANSLATORS: Suffix: the HSI result
 msgid "OK"
 msgstr "OK"
+
+#. TRANSLATORS: this is for the device tests
+msgid "OK!"
+msgstr "დიახ!"
 
 #. TRANSLATORS: some devices can only be updated to a new semver and cannot
 #. * be downgraded or reinstalled with the existing version
@@ -792,6 +925,10 @@ msgstr "შემცველობა"
 msgid "Pending"
 msgstr "დარჩენილი"
 
+#. TRANSLATORS: console message when not using plymouth
+msgid "Percentage complete"
+msgstr "პროცენტები დასრულებულია"
+
 #. TRANSLATORS: prompt to apply the update
 msgid "Perform operation?"
 msgstr "შევასრულო ოპერაცია?"
@@ -812,6 +949,9 @@ msgstr "პრიორიტეტი"
 #. TRANSLATORS: reasons the device is not updatable
 msgid "Problems"
 msgstr "პრობლემები"
+
+msgid "Proceed with upload?"
+msgstr "დავიწყო ატვირთვა?"
 
 #. TRANSLATORS: Title: if fwupd supports HSI on this chip
 msgid "Processor Security Checks"
@@ -877,6 +1017,10 @@ msgstr "SPI ბლოკი"
 #. TRANSLATORS: Title: SPI refers to the flash chip in the computer
 msgid "SPI write"
 msgstr "SPI ჩაწერა"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "SUBSYSTEM DRIVER [DEVICE-ID|GUID]"
+msgstr "SUBSYSTEM DRIVER [DEVICE-ID|GUID]"
 
 #. TRANSLATORS: scheduling an update to be done on the next boot
 msgid "Scheduling…"
@@ -1040,11 +1184,23 @@ msgstr "UEFI უსაფრთხო ჩატვირთვა"
 msgid "UEFI platform key"
 msgstr "UEFI პლატფორმის გასაღები"
 
+#. TRANSLATORS: Title: SB is a way of locking down UEFI
+msgid "UEFI secure boot"
+msgstr "UEFI უსაფრთხო ჩატვირთვა"
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Unencrypted"
+msgstr "დაუშიფრავი"
+
 #. TRANSLATORS: current daemon status is unknown
 #. TRANSLATORS: we don't know the license of the update
 #. TRANSLATORS: unknown release urgency
 msgid "Unknown"
 msgstr "უცნობია"
+
+#. TRANSLATORS: Name of hardware
+msgid "Unknown Device"
+msgstr "უცნობი მოწყობილობა"
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Unlocked"
@@ -1067,12 +1223,21 @@ msgstr "ასლის განახლება"
 msgid "Update Message"
 msgstr "განახლების შეტყობინება"
 
+#. TRANSLATORS: ask the user if we can update the metadata
+msgid "Update now?"
+msgstr "განვაახლო ახლა?"
+
 #. TRANSLATORS: Update can only be done from offline mode
 msgid "Update requires a reboot"
 msgstr "განახლება გადატვირთვას საჭიროებს"
 
 msgid "Updating"
 msgstr "განახლება"
+
+#. TRANSLATORS: %1 is a device name
+#, c-format
+msgid "Updating %s…"
+msgstr "%s-ის განახლება..."
 
 #. TRANSLATORS: User has been notified
 msgid "User has been notified"
@@ -1081,6 +1246,9 @@ msgstr "მომხმარებელი გაფრთხილებუ�
 #. TRANSLATORS: remote filename base
 msgid "Username"
 msgstr "მომხმარებელი"
+
+msgid "VID:PID"
+msgstr "VID:PID"
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Valid"
@@ -1102,6 +1270,10 @@ msgstr "შემოწმება…"
 msgid "Version"
 msgstr "ვერსია"
 
+#. TRANSLATORS: this is a prefix on the console
+msgid "WARNING:"
+msgstr "გაფთხილება:"
+
 #. TRANSLATORS: waiting for device to do something
 msgid "Waiting…"
 msgstr "მოლოდინი…"
@@ -1118,6 +1290,14 @@ msgstr "ჩაწერა…"
 #, c-format
 msgid "Your hardware may be damaged using this firmware, and installing this release may void any warranty with %s."
 msgstr "ამ მიკროკოდით თქვენი აპარატურა შეიძლება დაზიანდეს. ამავე დროს ამ რელიზის დაყენებამ შეიძლება %s-ზე გარანტია მოგიხსნათ."
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[DEVICE-ID|GUID]"
+msgstr "[DEVICE-ID|GUID]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[SMBIOS-FILE|HWIDS-FILE]"
+msgstr "[SMBIOS-FILE|HWIDS-FILE]"
 
 #. TRANSLATORS: this is the default branch name when unset
 msgid "default"

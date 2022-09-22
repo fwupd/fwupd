@@ -798,6 +798,7 @@ msgid "FILE [DEVICE-ID|GUID]"
 msgstr "FIL [ENHEDS-ID|GUID]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
+#. TRANSLATORS: filename argument with path
 msgid "FILENAME"
 msgstr "FILNAVN"
 

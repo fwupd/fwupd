@@ -677,7 +677,6 @@ msgid "Device added:"
 msgstr "Enhet tillagd:"
 
 #. TRANSLATORS: for example the batteries *inside* the Bluetooth mouse
-#, c-format
 msgid "Device battery power is too low"
 msgstr "Enheten har för lite batteri"
 
@@ -921,11 +920,14 @@ msgstr "Angiven ESP var inte giltig"
 
 #. TRANSLATORS: longer description
 msgid "Each system should have tests to ensure firmware security."
-msgstr "Varje system bör ha test för att säkerställa den fasta progamvarans säkerhet."
+msgstr "Varje system bör ha test för att säkerställa den fasta programvarans säkerhet."
 
 #. TRANSLATORS: Title: if we are emulating a different host
 msgid "Emulated host"
 msgstr "Emulerad värd"
+
+msgid "Enable"
+msgstr "Aktivera"
 
 #. TRANSLATORS: command line option
 msgid "Enable firmware update support on supported systems"
@@ -1015,6 +1017,7 @@ msgid "FILE [DEVICE-ID|GUID]"
 msgstr "FIL [ENHETS-ID|GUID]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
+#. TRANSLATORS: filename argument with path
 msgid "FILENAME"
 msgstr "FILNAMN"
 
@@ -1525,7 +1528,7 @@ msgstr "Intel CET aktiv"
 #. TRANSLATORS: Title: CET = Control-flow Enforcement Technology,
 #. * enabled means supported by the processor
 msgid "Intel CET Enabled"
-msgstr "Intel CET aktiverad"
+msgstr "Intel CET stöds"
 
 #. TRANSLATORS: longer description
 msgid "Intel Control-Flow Enforcement Technology detects and prevents certain methods for running malicious software on the device."
@@ -1854,6 +1857,10 @@ msgstr "Inga uppdateringar applicerades"
 #. TRANSLATORS: version cannot be installed due to policy
 msgid "Not approved"
 msgstr "Inte godkänd"
+
+#. TRANSLATORS: error message to tell someone they can't use this feature
+msgid "Not enough data was provided to make an HSI calculation."
+msgstr "För lite data tillhandahölls för att göra en HSI-beräkning."
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Not found"
@@ -2696,6 +2703,10 @@ msgstr "Detta verktyg kan endast användas av administratörsanvändaren"
 msgid "This tool will read and parse the TPM event log from the system firmware."
 msgstr "Detta verktyg läser och analyserar TPM-händelseloggen från systemets fasta programvara."
 
+#. TRANSLATORS: message to tell someone how to ignore error
+msgid "To ignore this warning, use --force"
+msgstr "Använd --force för att ignorera denna varning"
+
 #. TRANSLATORS: the update state of the specific device
 msgid "Transient failure"
 msgstr "Tillfälligt misslyckande"
@@ -2761,7 +2772,6 @@ msgid "Unable to connect to service"
 msgstr "Kunde inte ansluta till tjänst"
 
 #. TRANSLATORS: error message
-#, c-format
 msgid "Unable to find attribute"
 msgstr "Kunde inte hitta attribut"
 
@@ -2980,7 +2990,6 @@ msgid "Writing…"
 msgstr "Skriver…"
 
 #. TRANSLATORS: the user has to manually recover; we can't do it
-#, c-format
 msgid "You should ensure you are comfortable restoring the setting from the system firmware setup, as this change may cause the system to not boot into Linux or cause other system instability."
 msgstr "Du bör säkerställa att du är bekväm med att återställa inställningen från systemets konfiguration för fast programvara, då denna ändring kan få systemet att inte kunna starta Linux eller orsaka annan systeminstabilitet."
 

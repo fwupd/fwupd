@@ -672,7 +672,6 @@ msgid "Device added:"
 msgstr "S'ha afegit el dispositiu:"
 
 #. TRANSLATORS: for example the batteries *inside* the Bluetooth mouse
-#, c-format
 msgid "Device battery power is too low"
 msgstr "L’alimentació de la bateria del dispositiu és massa baixa"
 
@@ -922,6 +921,9 @@ msgstr "Cada sistema haurà de tenir proves per a assegurar la seguretat del mic
 msgid "Emulated host"
 msgstr "Amfitrió emulat"
 
+msgid "Enable"
+msgstr "Habilita"
+
 #. TRANSLATORS: command line option
 msgid "Enable firmware update support on supported systems"
 msgstr "Habilita el suport per a l'actualització del microprogramari sobre sistemes compatibles"
@@ -1010,6 +1012,7 @@ msgid "FILE [DEVICE-ID|GUID]"
 msgstr "FITXER [ID_DISPOSITIU|GUID]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
+#. TRANSLATORS: filename argument with path
 msgid "FILENAME"
 msgstr "NOM_FITXER"
 
@@ -1849,6 +1852,10 @@ msgstr "No s'han aplicat les actualitzacions"
 #. TRANSLATORS: version cannot be installed due to policy
 msgid "Not approved"
 msgstr "No aprovada"
+
+#. TRANSLATORS: error message to tell someone they can't use this feature
+msgid "Not enough data was provided to make an HSI calculation."
+msgstr "No s'han proporcionat prou dades per a fer un càlcul HSI."
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Not found"
@@ -2691,6 +2698,10 @@ msgstr "Aquesta eina només pot ser usada per l'usuari «root»."
 msgid "This tool will read and parse the TPM event log from the system firmware."
 msgstr "Aquesta eina llegirà i analitzarà el registre d'esdeveniments TPM des del microprogramari del sistema."
 
+#. TRANSLATORS: message to tell someone how to ignore error
+msgid "To ignore this warning, use --force"
+msgstr "Per a ignorar aquest avís, useu --force"
+
 #. TRANSLATORS: the update state of the specific device
 msgid "Transient failure"
 msgstr "Fallada transitòria"
@@ -2756,7 +2767,6 @@ msgid "Unable to connect to service"
 msgstr "No s'ha pogut connectar amb el servei"
 
 #. TRANSLATORS: error message
-#, c-format
 msgid "Unable to find attribute"
 msgstr "No es pot trobar atribut"
 
@@ -2975,7 +2985,6 @@ msgid "Writing…"
 msgstr "S'està escrivint..."
 
 #. TRANSLATORS: the user has to manually recover; we can't do it
-#, c-format
 msgid "You should ensure you are comfortable restoring the setting from the system firmware setup, as this change may cause the system to not boot into Linux or cause other system instability."
 msgstr "Heu d’assegurar-vos que esteu còmode restablint la configuració des de la configuració del microprogramari del sistema, ja que aquest canvi pot fer que el sistema no arrenqui a Linux o que causi alguna altra inestabilitat en el sistema."
 

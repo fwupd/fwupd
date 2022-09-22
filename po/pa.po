@@ -118,6 +118,7 @@ msgid "Enabling this functionality is done at your own risk, which means you hav
 msgstr "ਇਹ ਸਹੂਲਤ ਨੂੰ ਆਪਣੇ ਖਤਰੇ ਉੱਤੇ ਹੀ ਸਮਰੱਥ ਕਰੋ, ਜਿਸ ਦਾ ਅਰਥ ਹੋਵੇਗਾ ਕਿ ਇਹਨਾਂ ਅੱਪਡੇਟਾਂ ਨਾਲ ਆਈ ਕਿਸੇ ਵੀ ਸਮੱਸਿਆ ਵਾਸਤੇ ਤੁਸੀਂ ਅਸਲ ਡਿਵਾਈਸ ਨਿਰਮਾਤਾ ਨਾਲ ਸੰਪਰਕ ਕਰੋਗੇ। ਅੱਪਡੇਟ ਕਰਨ ਦੀ ਕਾਰਵਾਈ ਸੰਬੰਧੀ ਕਿਸੇ ਵੀ ਸਮੱਸਿਆ ਬਾਰੇ $OS_RELEASE:BUG_REPORT_URL$ ਉੱਤੇ ਰਿਪੋਰਟ ਕਰੋ।"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
+#. TRANSLATORS: filename argument with path
 msgid "FILENAME"
 msgstr "ਫਾਇਲ-ਨਾਂ"
 

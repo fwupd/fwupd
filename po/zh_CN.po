@@ -794,6 +794,7 @@ msgid "FILE [DEVICE-ID|GUID]"
 msgstr "文件 [设备ID|GUID]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
+#. TRANSLATORS: filename argument with path
 msgid "FILENAME"
 msgstr "文件名"
 

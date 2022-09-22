@@ -33,6 +33,50 @@
     <binary>fwupdtool</binary>
   </provides>
   <releases>
+    <release version="1.8.5" date="2022-09-22">
+      <description>
+        <p>
+          This release adds the following features:
+        </p>
+        <ul>
+          <li>Add a new android-boot plugin to update specific block devices</li>
+          <li>Add new plugin to display SMU firmware version on AMD APU/CPU</li>
+          <li>Add support for platform capability descriptors so devices can set quirks</li>
+          <li>Move the generic Intel Goshen Ridge code out to a new plugin</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Allow specifying the ESP when applying the dbx update</li>
+          <li>Always check the BDP partitions when getting all the possible ESPs</li>
+          <li>Correctly update Wacom AES devices</li>
+          <li>Disable changing sleep mode on Ryzen 6000 systems</li>
+          <li>Do not show the 'may not be usable while updating' message for DBX updates</li>
+          <li>Expose Pine64 PinePhone Pro MTD as Tow-Boot</li>
+          <li>Fix a critical warning when issuing Secure Boot modem AT commands</li>
+          <li>Fix a fuzzing crash when parsing malicious FDT data</li>
+          <li>Fix aligning up addresses greater than 4GB</li>
+          <li>Fix a possible crash when dumping VBE firmware</li>
+          <li>Fix a possible critical warning when parsing cabinet archives</li>
+          <li>Fix a regression when parsing pixart-rf firmware</li>
+          <li>Fix a small memory leak when parsing UF2 files</li>
+          <li>Fix checking for invalid depth requirements</li>
+          <li>Fix parsing the coSWID firmware ID when encoded as a UUID</li>
+          <li>Fix parsing uSWID uncompressed metadata</li>
+          <li>Fix uploading to DFU-CSR devices</li>
+          <li>Limit the archive size to 25% of the RAM, or 4G</li>
+          <li>Load coSWID metadata from a uSWID MTD block device</li>
+          <li>Never save the Redfish auto-generated password to a user-readable file</li>
+          <li>Only create users using IPMI when we know it's going to work</li>
+          <li>Write all the CCGX metadata block as intended</li>
+        </ul>
+        <p>This release adds support for the following hardware:</p>
+        <ul>
+          <li>Corsair SABRE RGB PRO Gaming mouse</li>
+          <li>More Sonix CAM devices</li>
+          <li>More Intel Goshen Ridge USB-4 docks</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.8.4" date="2022-08-30">
       <description>
         <p>
