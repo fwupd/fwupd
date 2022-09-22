@@ -390,8 +390,8 @@ fu_security_attr_get_description(FwupdSecurityAttr *attr)
 	}
 	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_PREBOOT_DMA_PROTECTION) == 0) {
 		/* TRANSLATORS: longer description */
-		return _("Pre-boot DMA protection prevents devices from being connected to the "
-			 "computer and accessing system memory.");
+		return _("Pre-boot DMA protection prevents devices from accessing system memory "
+			 "after being connected to the computer.");
 	}
 	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_ENABLED) == 0 ||
 	    g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_ACM) == 0 ||
