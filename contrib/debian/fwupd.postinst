@@ -53,5 +53,5 @@ done
 adduser --quiet --system --group --no-create-home --home /run/systemd \
     --gecos "fwupd-refresh user" fwupd-refresh
 if [ -d /run/systemd/system ]; then
-    systemctl reload dbus || true
+    deb-systemd-invoke reload dbus || true
 fi
