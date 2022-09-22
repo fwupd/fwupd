@@ -524,6 +524,37 @@ fu_usi_dock_mcu_device_wait_for_spi_ready_cb(FuDevice *device, gpointer user_dat
 }
 
 static gboolean
+fu_usi_dock_mcu_device_wait_for_spi_initial_ready_cb(FuDevice *device,
+						     gpointer user_data,
+						     GError **error)
+{
+	FuUsiDockMcuDevice *self = FU_USI_DOCK_MCU_DEVICE(device);
+	guint8 buf[] = {USBUID_ISP_DEVICE_CMD_FWBUFER_INITIAL};
+	guint8 val = 0;
+
+	if (!fu_usi_dock_mcu_device_txrx(self,
+					 TAG_TAG2_CMD_SPI,
+					 buf,
+					 sizeof(buf),
+					 &val,
+					 sizeof(val),
+					 error))
+		return FALSE;
+	if (val != SPI_STATE_READY) {
+		g_set_error(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_BUSY,
+			    "SPI state is %s [0x%02x]",
+			    fu_usi_dock_spi_state_to_string(val),
+			    val);
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_usi_dock_mcu_device_wait_for_checksum_cb(FuDevice *device, gpointer user_data, GError **error)
 {
 	FuUsiDockMcuDevice *self = FU_USI_DOCK_MCU_DEVICE(device);
@@ -548,7 +579,6 @@ fu_usi_dock_mcu_device_write_firmware_with_idx(FuUsiDockMcuDevice *self,
 					       GError **error)
 {
 	guint8 cmd;
-	guint8 val = 0x0;
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GPtrArray) chunks = NULL;
 	guint8 checksum = 0xFF;
@@ -557,27 +587,18 @@ fu_usi_dock_mcu_device_write_firmware_with_idx(FuUsiDockMcuDevice *self,
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 0, NULL);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 6, NULL);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 40, "write-external");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 13, "wait-for-checksum");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 42, "internal-flash");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 5, NULL);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 69, "write-external");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 25, "wait-for-checksum");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 0, "internal-flash");
 
 	/* initial external flash */
-	cmd = USBUID_ISP_DEVICE_CMD_FWBUFER_INITIAL;
-	if (!fu_usi_dock_mcu_device_txrx(self,
-					 TAG_TAG2_CMD_SPI,
-					 &cmd,
-					 sizeof(cmd),
-					 &val,
-					 sizeof(val),
-					 error))
-		return FALSE;
-	if (val != SPI_STATE_READY) {
-		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
-			    "invalid state for CMD_FWBUFER_INITIAL, got 0x%02x",
-			    val);
+	if (!fu_device_retry(FU_DEVICE(self),
+			     fu_usi_dock_mcu_device_wait_for_spi_initial_ready_cb,
+			     30,
+			     NULL,
+			     error)) {
+		g_prefix_error(error, "failed to wait for initial: ");
 		return FALSE;
 	}
 	fu_progress_step_done(progress);
