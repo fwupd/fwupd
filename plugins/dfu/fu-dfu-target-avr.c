@@ -562,8 +562,7 @@ fu_dfu_target_avr_setup(FuDfuTarget *target, GError **error)
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "ChipID %s [%s] is not supported",
-			    chip_id,
+			    "ChipID GUID %s is not supported",
 			    chip_id_guid);
 		return FALSE;
 	}
