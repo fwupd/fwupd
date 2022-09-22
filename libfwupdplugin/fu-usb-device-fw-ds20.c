@@ -29,7 +29,7 @@ fu_usb_device_fw_ds20_parse(FuUsbDeviceDs20 *self,
 			    GError **error)
 {
 	gsize bufsz = 0;
-	gsize bufsz_safe;
+	gsize bufsz_safe = 0;
 	const guint8 *buf = g_bytes_get_data(blob, &bufsz);
 	g_auto(GStrv) lines = NULL;
 
@@ -43,8 +43,17 @@ fu_usb_device_fw_ds20_parse(FuUsbDeviceDs20 *self,
 	}
 
 	/* find the first NUL, if one exists */
-	for (bufsz_safe = 0; buf[bufsz_safe] != '\0' && bufsz_safe < bufsz; bufsz_safe++)
-		;
+	for (gsize i = 1; i < bufsz; i++) {
+		if (buf[i] == '\0') {
+			bufsz_safe = i - 1;
+			break;
+		}
+	}
+
+	/* no NUL is unexpected, but fine */
+	if (bufsz == 0)
+		bufsz_safe = bufsz;
+
 	if (!g_utf8_validate((const gchar *)buf, (gssize)bufsz_safe, NULL)) {
 		g_set_error_literal(error,
 				    G_IO_ERROR,
