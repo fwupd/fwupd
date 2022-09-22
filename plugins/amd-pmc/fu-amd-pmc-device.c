@@ -21,7 +21,6 @@ fu_amd_pmc_device_probe(FuDevice *device, GError **error)
 	guint64 program;
 	const gchar *version;
 	g_autoptr(GError) error_local = NULL;
-	g_autoptr(FuUdevDevice) udev_parent = NULL;
 	g_autofree gchar *summary = NULL;
 
 	version =
