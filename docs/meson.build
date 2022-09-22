@@ -82,10 +82,10 @@ if gidocgen_dep.found() and docs_python_deps.allowed() and gidocgen_app.found() 
   #make devhelp work
   install_symlink('libfwupd',
     install_dir: join_paths(datadir, 'doc', 'fwupd'),
-    pointing_to: join_paths(datadir, 'doc', 'libfwupd'),
+    pointing_to: join_paths('..', 'libfwupd'),
   )
   install_symlink('libfwupdplugin',
     install_dir: join_paths(datadir, 'doc', 'fwupd'),
-    pointing_to: join_paths(datadir, 'doc', 'libfwupdplugin'),
+    pointing_to: join_paths('..', 'libfwupdplugin'),
   )
 endif
