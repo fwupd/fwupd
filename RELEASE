@@ -2,14 +2,14 @@ fwupd Release Notes
 
 1. Write release entries:
 
-git log --format="%s" --cherry-pick --right-only 1.7.9... | grep -i -v trivial | grep -v Merge | sort | uniq
+git log --format="%s" --cherry-pick --right-only 1.7.10... | grep -i -v trivial | grep -v Merge | sort | uniq
 Add any user visible changes into ../data/org.freedesktop.fwupd.metainfo.xml
 appstream-util appdata-to-news ../data/org.freedesktop.fwupd.metainfo.xml > NEWS
 
 2. Commit changes to git:
 
 # MAKE SURE THIS IS CORRECT
-export release_ver="1.7.10"
+export release_ver="1.7.11"
 
 git commit -a -m "Release fwupd ${release_ver}" --no-verify
 git tag -s -f -m "Release fwupd ${release_ver}" "${release_ver}"
