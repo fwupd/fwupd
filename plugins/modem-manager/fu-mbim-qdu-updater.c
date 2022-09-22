@@ -321,7 +321,6 @@ fu_mbim_qdu_updater_file_open_ready(MbimDevice *device, GAsyncResult *res, gpoin
 {
 	WriteContext *ctx = user_data;
 	guint32 out_max_transfer_size;
-	guint32 total_sending_numbers = 0;
 	FuChunk *chk = NULL;
 	g_autoptr(MbimMessage) request = NULL;
 	g_autoptr(MbimMessage) response = NULL;
@@ -343,10 +342,6 @@ fu_mbim_qdu_updater_file_open_ready(MbimDevice *device, GAsyncResult *res, gpoin
 		g_main_loop_quit(ctx->mainloop);
 		return;
 	}
-
-	total_sending_numbers = g_bytes_get_size(ctx->blob) / out_max_transfer_size;
-	if (g_bytes_get_size(ctx->blob) % out_max_transfer_size != 0)
-		total_sending_numbers++;
 
 	ctx->chunks = fu_chunk_array_new_from_bytes(ctx->blob,
 						    0x00, /* start addr */
