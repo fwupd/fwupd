@@ -1,4 +1,2 @@
-#these are intended to be D-bus activated
-fwupd binary: systemd-service-file-missing-install-key lib/systemd/system/*
 #see Debian bug 896012
 fwupd: library-not-linked-against-libc usr/lib/*/fwupd-plugins-*/*
