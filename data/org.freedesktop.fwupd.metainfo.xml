@@ -34,6 +34,27 @@
     <binary>fwupdagent</binary>
   </provides>
   <releases>
+    <release version="1.7.10" date="2022-09-22">
+      <description>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Always check the BDP partitions when getting all the possible ESPs</li>
+          <li>Correctly detect CET IBT</li>
+          <li>Do not show HSI events where we changed the spec result value</li>
+          <li>Fix aligning up addresses greater than 4GB</li>
+          <li>Fix applying the latest DBX update on machines with 20200729.x64 installed</li>
+          <li>Fix checking for invalid depth requirements</li>
+          <li>Fix getting the new version number of the USI docking hardware</li>
+          <li>Fix HSI prefix for invalid chassis</li>
+          <li>Never save the Redfish auto-generated password to a user-readable file</li>
+          <li>Only create users using IPMI when we've tested the hardware</li>
+          <li>Only fail the kernel tainted HSI test for specific taint reasons</li>
+          <li>Only show changed events in the fwupdmgr security output</li>
+          <li>Recognize CSME version 16 and update vulnerable versions from CSMEVDT data</li>
+          <li>Write all the CCGX metadata block as intended</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.7.9" date="2022-07-25">
       <description>
         <p>This release fixes the following bugs:</p>
