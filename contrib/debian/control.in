@@ -48,6 +48,7 @@ Package: fwupd
 Architecture: linux-any
 Depends: ${misc:Depends},
          ${shlibs:Depends},
+	 adduser,
          shared-mime-info
 Recommends: python3,
 	    bolt,
