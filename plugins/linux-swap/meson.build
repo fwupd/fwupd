@@ -1,48 +1,29 @@
 if hsi
 cargs = ['-DG_LOG_DOMAIN="FuPluginLinuxSwap"']
 
-shared_module('fu_plugin_linux_swap',
-  fu_hash,
+plugin_builtin_linux_swap = static_library('fu_plugin_linux_swap',
   sources: [
-    'fu-plugin-linux-swap.c',
+    'fu-linux-swap-plugin.c',
     'fu-linux-swap.c',
   ],
-  include_directories: [
-    root_incdir,
-    fwupd_incdir,
-    fwupdplugin_incdir,
-  ],
-  install: true,
-  install_dir: plugin_dir,
-  link_with: [
-    fwupd,
-    fwupdplugin,
-  ],
+  include_directories: plugin_incdirs,
+  link_with: plugin_libs,
   c_args: cargs,
-  dependencies: [
-    plugin_deps,
-  ],
+  dependencies: plugin_deps,
 )
+plugin_builtins += plugin_builtin_linux_swap
 
 if get_option('tests')
   e = executable(
     'linux-swap-self-test',
-    fu_hash,
     sources: [
       'fu-self-test.c',
-      'fu-linux-swap.c',
     ],
-    include_directories: [
-      root_incdir,
-      fwupd_incdir,
-      fwupdplugin_incdir,
-    ],
-    dependencies: [
-      plugin_deps,
-    ],
+    include_directories: plugin_incdirs,
+    dependencies: plugin_deps,
     link_with: [
-      fwupd,
-      fwupdplugin,
+      plugin_libs,
+      plugin_builtin_linux_swap,
     ],
     install: true,
     install_rpath: plugin_dir,

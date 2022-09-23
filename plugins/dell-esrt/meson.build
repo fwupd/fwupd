@@ -4,26 +4,15 @@ cargs = ['-DG_LOG_DOMAIN="FuPluginDellEsrt"']
 install_data(['metadata.xml'],
   install_dir: join_paths(datadir, 'fwupd', 'remotes.d', 'dell-esrt')
 )
-
-shared_module('fu_plugin_dell_esrt',
-  fu_hash,
+plugin_builtins += static_library('fu_plugin_dell_esrt',
   sources: [
-    'fu-plugin-dell-esrt.c',
+    'fu-dell-esrt-plugin.c',
   ],
-  include_directories: [
-    root_incdir,
-    fwupd_incdir,
-    fwupdplugin_incdir,
-  ],
-  install: true,
-  install_dir: plugin_dir,
+  include_directories: plugin_incdirs,
   c_args: [
     cargs,
   ],
-  link_with: [
-    fwupd,
-    fwupdplugin,
-  ],
+  link_with: plugin_libs,
   dependencies: [
     plugin_deps,
     libsmbios_c,

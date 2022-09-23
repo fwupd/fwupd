@@ -2,50 +2,33 @@ if get_option('plugin_nitrokey').disable_auto_if(host_machine.system() != 'linux
 cargs = ['-DG_LOG_DOMAIN="FuPluginNitrokey"']
 
 plugin_quirks += files('nitrokey.quirk')
-
-shared_module('fu_plugin_nitrokey',
-  fu_hash,
+plugin_builtin_nitrokey = static_library('fu_plugin_nitrokey',
   sources: [
     'fu-nitrokey-device.c',
     'fu-nitrokey-common.c',
-    'fu-plugin-nitrokey.c',
+    'fu-nitrokey-plugin.c',
   ],
-  include_directories: [
-    root_incdir,
-    fwupd_incdir,
-    fwupdplugin_incdir,
-  ],
-  install: true,
-  install_dir: plugin_dir,
-  link_with: [
-    fwupd,
-    fwupdplugin,
-  ],
+  include_directories: plugin_incdirs,
+  link_with: plugin_libs,
   c_args: cargs,
-  dependencies: [
-    plugin_deps,
-  ],
+  dependencies: plugin_deps,
 )
+plugin_builtins += plugin_builtin_nitrokey
 
 if get_option('tests')
   e = executable(
     'nitrokey-self-test',
-    fu_hash,
     sources: [
-      'fu-nitrokey-common.c',
       'fu-self-test.c',
     ],
-    include_directories: [
-      root_incdir,
-      fwupd_incdir,
-      fwupdplugin_incdir,
-    ],
+    include_directories: plugin_incdirs,
     dependencies: [
       plugin_deps,
       valgrind,
     ],
     link_with: [
-      fwupdplugin,
+      plugin_libs,
+      plugin_builtin_nitrokey,
     ],
     install: true,
     install_rpath: plugin_dir,

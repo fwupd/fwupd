@@ -2,30 +2,17 @@ if gudev.found()
 cargs = ['-DG_LOG_DOMAIN="FuPluginWacomRaw"']
 
 plugin_quirks += files('wacom-raw.quirk')
-
-shared_module('fu_plugin_wacom_raw',
-  fu_hash,
+plugin_builtins += static_library('fu_plugin_wacom_raw',
   sources: [
-    'fu-plugin-wacom-raw.c',
+    'fu-wacom-raw-plugin.c',
     'fu-wacom-common.c',
     'fu-wacom-device.c',
     'fu-wacom-aes-device.c',
     'fu-wacom-emr-device.c',
   ],
-  include_directories: [
-    root_incdir,
-    fwupd_incdir,
-    fwupdplugin_incdir,
-  ],
-  install: true,
-  install_dir: plugin_dir,
+  include_directories: plugin_incdirs,
   c_args: cargs,
-  dependencies: [
-    plugin_deps,
-  ],
-  link_with: [
-    fwupd,
-    fwupdplugin,
-  ],
+  dependencies: plugin_deps,
+  link_with: plugin_libs,
 )
 endif

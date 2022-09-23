@@ -9,10 +9,9 @@ if have_linux_ipmi
   ipmi_src += 'fu-ipmi-device.c'
 endif
 
-shared_module('fu_plugin_redfish',
-  fu_hash,
+plugin_builtin_redfish = static_library('fu_plugin_redfish',
   sources: [
-    'fu-plugin-redfish.c',
+    'fu-redfish-plugin.c',
     'fu-redfish-backend.c',
     'fu-redfish-common.c',     # fuzzing
     'fu-redfish-device.c',
@@ -24,23 +23,15 @@ shared_module('fu_plugin_redfish',
     'fu-redfish-smbios.c',     # fuzzing
     ipmi_src,
   ],
-  include_directories: [
-    root_incdir,
-    fwupd_incdir,
-    fwupdplugin_incdir,
-  ],
-  install: true,
-  install_dir: plugin_dir,
-  link_with: [
-    fwupd,
-    fwupdplugin,
-  ],
+  include_directories: plugin_incdirs,
+  link_with: plugin_libs,
   c_args: cargs,
   dependencies: [
     plugin_deps,
     libcurl,
   ],
 )
+plugin_libs += plugin_builtin_redfish
 
 install_data(['redfish.conf'],
   install_dir: join_paths(sysconfdir, 'fwupd'),
@@ -62,25 +53,10 @@ if get_option('tests')
   env.set('FWUPD_LOCALSTATEDIR', '/tmp/fwupd-self-test/var')
   e = executable(
     'redfish-self-test',
-    fu_hash,
     sources: [
       'fu-self-test.c',
-      'fu-redfish-backend.c',
-      'fu-redfish-common.c',
-      'fu-redfish-device.c',
-      'fu-redfish-legacy-device.c',
-      'fu-redfish-multipart-device.c',
-      'fu-redfish-network.c',
-      'fu-redfish-network-device.c',
-      'fu-redfish-request.c',
-      'fu-redfish-smbios.c',
-      ipmi_src,
     ],
-    include_directories: [
-      root_incdir,
-      fwupd_incdir,
-      fwupdplugin_incdir,
-    ],
+    include_directories: plugin_incdirs,
     c_args: cargs,
     dependencies: [
       plugin_deps,
@@ -89,6 +65,7 @@ if get_option('tests')
     link_with: [
       fwupd,
       fwupdplugin,
+      plugin_builtin_redfish,
     ],
     install: true,
     install_rpath: plugin_dir,

@@ -1,5 +1,4 @@
 /*
- * Copyright (C) 2022 Haowei Lo <haowei.lo@fingerprints.com>
  *
  * SPDX-License-Identifier: LGPL-2.1+
  */
@@ -13,7 +12,6 @@
 static void
 fu_plugin_fpc_init(FuPlugin *plugin)
 {
-	fu_plugin_add_device_gtype(plugin, FU_TYPE_FPC_DEVICE);
 }
 
 void

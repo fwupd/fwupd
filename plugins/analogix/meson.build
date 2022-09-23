@@ -2,29 +2,16 @@ if gusb.found()
 cargs = ['-DG_LOG_DOMAIN="FuPluginAnalogix"']
 
 plugin_quirks += files('analogix.quirk')
-
-shared_module('fu_plugin_analogix',
-  fu_hash,
+plugin_builtins += static_library('fu_plugin_analogix',
   sources: [
-    'fu-plugin-analogix.c',
+    'fu-analogix-plugin.c',
     'fu-analogix-device.c',
     'fu-analogix-common.c',
     'fu-analogix-firmware.c',
   ],
-  include_directories: [
-    root_incdir,
-    fwupd_incdir,
-    fwupdplugin_incdir,
-  ],
-  install: true,
-  install_dir: plugin_dir,
-  link_with: [
-    fwupd,
-    fwupdplugin,
-  ],
+  include_directories: plugin_incdirs,
+  link_with: plugin_libs,
   c_args: cargs,
-  dependencies: [
-    plugin_deps,
-  ],
+  dependencies: plugin_deps,
 )
 endif

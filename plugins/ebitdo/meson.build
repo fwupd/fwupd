@@ -2,29 +2,16 @@ if gusb.found()
 cargs = ['-DG_LOG_DOMAIN="FuPluginEbitdo"']
 
 plugin_quirks += files('ebitdo.quirk')
-
-shared_module('fu_plugin_ebitdo',
-  fu_hash,
+plugin_builtins += static_library('fu_plugin_ebitdo',
   sources: [
-    'fu-plugin-ebitdo.c',
+    'fu-ebitdo-plugin.c',
     'fu-ebitdo-common.c',
     'fu-ebitdo-device.c',
     'fu-ebitdo-firmware.c',     # fuzzing
   ],
-  include_directories: [
-    root_incdir,
-    fwupd_incdir,
-    fwupdplugin_incdir,
-  ],
-  install: true,
-  install_dir: plugin_dir,
-  link_with: [
-    fwupd,
-    fwupdplugin,
-  ],
+  include_directories: plugin_incdirs,
+  link_with: plugin_libs,
   c_args: cargs,
-  dependencies: [
-    plugin_deps,
-  ],
+  dependencies: plugin_deps,
 )
 endif

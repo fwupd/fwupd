@@ -424,6 +424,8 @@ typedef struct FuPluginData FuPluginData;
 /* for plugins to use */
 const gchar *
 fu_plugin_get_name(FuPlugin *self);
+void
+fu_plugin_set_name(FuPlugin *self, const gchar *name);
 FuPluginData *
 fu_plugin_get_data(FuPlugin *self);
 FuPluginData *

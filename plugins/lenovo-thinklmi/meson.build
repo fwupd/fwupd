@@ -2,29 +2,18 @@ if get_option('plugin_uefi_capsule').disable_auto_if(host_machine.system() != 'l
 
 cargs = ['-DG_LOG_DOMAIN="FuPluginLenovoThinkLmi"']
 
-shared_module('fu_plugin_lenovo_thinklmi',
-  fu_hash,
+plugin_builtin_lenovo_thinklmi = static_library('fu_plugin_lenovo_thinklmi',
   sources: [
-    'fu-plugin-lenovo-thinklmi.c',
+    'fu-lenovo-thinklmi-plugin.c',
   ],
-  include_directories: [
-    root_incdir,
-    fwupd_incdir,
-    fwupdplugin_incdir,
-  ],
-  install: true,
-  install_dir: plugin_dir,
+  include_directories: plugin_incdirs,
   c_args: [
     cargs,
   ],
-  link_with: [
-    fwupd,
-    fwupdplugin,
-  ],
-  dependencies: [
-    plugin_deps,
-  ],
+  link_with: plugin_libs,
+  dependencies: plugin_deps,
 )
+plugin_libs += plugin_builtin_lenovo_thinklmi
 
 if get_option('tests')
   env = environment()
@@ -33,21 +22,16 @@ if get_option('tests')
   env.set('FWUPD_LOCALSTATEDIR', '/tmp/fwupd-self-test/var')
   e = executable(
     'lenovo-thinklmi-self-test',
-    fu_hash,
     sources: [
       'fu-self-test.c',
     ],
-    include_directories: [
-      root_incdir,
-      fwupd_incdir,
-      fwupdplugin_incdir,
-    ],
-    dependencies: [
-      plugin_deps,
-    ],
+    include_directories: plugin_incdirs,
+    dependencies: plugin_deps,
     link_with: [
       fwupd,
       fwupdplugin,
+      plugin_builtin_lenovo_thinklmi,
+      plugin_builtin_uefi_capsule,
     ],
     c_args: [
       cargs,

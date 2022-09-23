@@ -2,9 +2,7 @@ if gusb.found()
 cargs = ['-DG_LOG_DOMAIN="FuPluginWacomUsb"']
 
 plugin_quirks += files('wacom-usb.quirk')
-
-shared_module('fu_plugin_wacom_usb',
-  fu_hash,
+plugin_builtin_wac = static_library('fu_plugin_wac',
   sources: [
     'fu-wac-common.c',
     'fu-wac-android-device.c',
@@ -14,24 +12,14 @@ shared_module('fu_plugin_wacom_usb',
     'fu-wac-module-bluetooth.c',
     'fu-wac-module-bluetooth-id6.c',
     'fu-wac-module-touch.c',
-    'fu-plugin-wacom-usb.c',
+    'fu-wac-plugin.c',
   ],
-  include_directories: [
-    root_incdir,
-    fwupd_incdir,
-    fwupdplugin_incdir,
-  ],
-  install: true,
-  install_dir: plugin_dir,
+  include_directories: plugin_incdirs,
   c_args: cargs,
-  dependencies: [
-    plugin_deps,
-  ],
-  link_with: [
-    fwupd,
-    fwupdplugin,
-  ],
+  dependencies: plugin_deps,
+  link_with: plugin_libs,
 )
+plugin_builtins += plugin_builtin_wac
 
 if get_option('tests')
   install_data(['tests/wacom-usb.builder.xml'],
@@ -41,23 +29,14 @@ if get_option('tests')
   env.set('G_TEST_BUILDDIR', meson.current_build_dir())
   e = executable(
     'wacom-usb-self-test',
-    fu_hash,
     sources: [
       'fu-self-test.c',
-      'fu-wac-common.c',
-      'fu-wac-firmware.c',
     ],
-    include_directories: [
-      root_incdir,
-      fwupd_incdir,
-      fwupdplugin_incdir,
-    ],
-    dependencies: [
-      plugin_deps,
-    ],
+    include_directories: plugin_incdirs,
+    dependencies: plugin_deps,
     link_with: [
-      fwupd,
-      fwupdplugin,
+      plugin_libs,
+      plugin_builtin_wac,
     ],
     c_args: cargs,
     install: true,

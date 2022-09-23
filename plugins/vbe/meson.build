@@ -1,9 +1,8 @@
 cargs = ['-DG_LOG_DOMAIN="FuPluginVbe"']
 
-shared_module('fu_plugin_vbe',
-  fu_hash,
+plugin_builtins += static_library('fu_plugin_vbe',
   sources : [
-    'fu-plugin-vbe.c',
+    'fu-vbe-plugin.c',
     'fu-vbe-device.c',
     'fu-vbe-simple-device.c',
   ],
@@ -12,8 +11,6 @@ shared_module('fu_plugin_vbe',
     fwupd_incdir,
     fwupdplugin_incdir,
   ],
-  install : true,
-  install_dir: plugin_dir,
   link_with : [
     fwupd,
     fwupdplugin,

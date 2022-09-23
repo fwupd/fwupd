@@ -2,33 +2,21 @@ if get_option('plugin_pixart_rf').disable_auto_if(host_machine.system() != 'linu
 cargs = ['-DG_LOG_DOMAIN="FuPluginPixartRf"']
 
 plugin_quirks += files('pixart-rf.quirk')
-
-shared_module('fu_plugin_pixart_rf',
-  fu_hash,
+plugin_builtin_pxi = static_library('fu_plugin_pxi',
   sources: [
-    'fu-plugin-pixart-rf.c',
+    'fu-pxi-plugin.c',
     'fu-pxi-common.c',
     'fu-pxi-ble-device.c',
     'fu-pxi-receiver-device.c',
     'fu-pxi-wireless-device.c',
     'fu-pxi-firmware.c',      # fuzzing
   ],
-  include_directories: [
-    root_incdir,
-    fwupd_incdir,
-    fwupdplugin_incdir,
-  ],
-  install: true,
-  install_dir: plugin_dir,
+  include_directories: plugin_incdirs,
   c_args: cargs,
-  dependencies: [
-    plugin_deps,
-  ],
-  link_with: [
-    fwupd,
-    fwupdplugin,
-  ],
+  dependencies: plugin_deps,
+  link_with: plugin_libs,
 )
+plugin_builtins += plugin_builtin_pxi
 
 if get_option('tests')
   install_data(['tests/pixart.builder.xml'],
@@ -38,22 +26,14 @@ if get_option('tests')
   env.set('G_TEST_BUILDDIR', meson.current_build_dir())
   e = executable(
     'pxi-self-test',
-    fu_hash,
     sources: [
       'fu-self-test.c',
-      'fu-pxi-firmware.c',
     ],
-    include_directories: [
-      root_incdir,
-      fwupd_incdir,
-      fwupdplugin_incdir,
-    ],
-    dependencies: [
-      plugin_deps,
-    ],
+    include_directories: plugin_incdirs,
+    dependencies: plugin_deps,
     link_with: [
-      fwupd,
-      fwupdplugin,
+      plugin_libs,
+      plugin_builtin_pxi,
     ],
     install: true,
     install_rpath: plugin_dir,

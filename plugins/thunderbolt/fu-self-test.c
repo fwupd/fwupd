@@ -22,6 +22,7 @@
 
 #include "fu-context-private.h"
 #include "fu-plugin-private.h"
+#include "fu-thunderbolt-plugin.h"
 #include "fu-udev-device-private.h"
 
 static gchar *
@@ -916,7 +917,6 @@ test_set_up(ThunderboltTest *tt, gconstpointer params)
 {
 	TestFlags flags = GPOINTER_TO_UINT(params);
 	gboolean ret;
-	g_autofree gchar *pluginfn = NULL;
 	g_autofree gchar *sysfs = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
@@ -935,15 +935,9 @@ test_set_up(ThunderboltTest *tt, gconstpointer params)
 	sysfs = umockdev_testbed_get_sys_dir(tt->bed);
 	g_debug("mock sysfs at %s", sysfs);
 
-	tt->plugin = fu_plugin_new(tt->ctx);
+	tt->plugin = fu_plugin_new_from_gtype(fu_thunderbolt_plugin_get_type(), tt->ctx);
+
 	g_assert_nonnull(tt->plugin);
-
-	pluginfn =
-	    g_test_build_filename(G_TEST_BUILT, "libfu_plugin_thunderbolt." G_MODULE_SUFFIX, NULL);
-	ret = fu_plugin_open(tt->plugin, pluginfn, &error);
-
-	g_assert_no_error(error);
-	g_assert_true(ret);
 
 	ret = fu_plugin_runner_startup(tt->plugin, progress, &error);
 	g_assert_no_error(error);

@@ -24,20 +24,11 @@ shared_module('fu_plugin_modem_manager',
     'fu-sahara-loader.c',
     'fu-mm-utils.c'
   ],
-  include_directories: [
-    root_incdir,
-    fwupd_incdir,
-    fwupdplugin_incdir,
-  ],
+  include_directories: plugin_incdirs,
   install: true,
   install_dir: plugin_dir,
-  c_args: [
-    cargs,
-  ],
-  link_with: [
-    fwupd,
-    fwupdplugin,
-  ],
+  c_args: cargs,
+  link_with: plugin_libs,
   dependencies: [
     plugin_deps,
     libmm_glib,

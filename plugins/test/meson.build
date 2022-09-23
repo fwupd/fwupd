@@ -9,26 +9,14 @@ if bluez.allowed()
   plugin_quirks += files('test-ble.quirk')
 endif
 
-shared_module('fu_plugin_test',
-  fu_hash,
+plugin_builtins += static_library('fu_plugin_test',
   sources: [
-    'fu-plugin-test.c',
+    'fu-test-plugin.c',
   ],
-  include_directories: [
-    root_incdir,
-    fwupd_incdir,
-    fwupdplugin_incdir,
-  ],
-  install: install_dummy,
-  install_dir: plugin_dir,
-  link_with: [
-    fwupd,
-    fwupdplugin,
-  ],
+  include_directories: plugin_incdirs,
+  link_with: plugin_libs,
   c_args: cargs,
-  dependencies: [
-    plugin_deps,
-  ],
+  dependencies: plugin_deps,
 )
 
 shared_module('fu_plugin_invalid',
@@ -36,43 +24,23 @@ shared_module('fu_plugin_invalid',
   sources: [
     'fu-plugin-invalid.c',
   ],
-  include_directories: [
-    root_incdir,
-    fwupd_incdir,
-    fwupdplugin_incdir,
-  ],
+  include_directories: plugin_incdirs,
   install: install_dummy,
   install_dir: plugin_dir,
-  link_with: [
-    fwupdplugin,
-  ],
+  link_with: plugin_libs,
   c_args: cargs,
-  dependencies: [
-    plugin_deps,
-  ],
+  dependencies: plugin_deps,
 )
 
 if bluez.allowed()
-shared_module('fu_plugin_test_ble',
-  fu_hash,
+plugin_builtins += static_library('fu_plugin_test_ble',
   sources: [
-    'fu-plugin-test-ble.c',
+    'fu-test-ble-plugin.c',
     'fu-test-ble-device.c',
   ],
-  include_directories: [
-    root_incdir,
-    fwupd_incdir,
-    fwupdplugin_incdir,
-  ],
-  install: install_dummy,
-  install_dir: plugin_dir,
-  link_with: [
-    fwupd,
-    fwupdplugin,
-  ],
+  include_directories: plugin_incdirs,
+  link_with: plugin_libs,
   c_args: cargs,
-  dependencies: [
-    plugin_deps,
-  ],
+  dependencies: plugin_deps,
 )
 endif

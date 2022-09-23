@@ -9,23 +9,13 @@ cargs = ['-DG_LOG_DOMAIN="FuPluginDell"']
 
 plugin_quirks += files('dell.quirk')
 
-shared_module('fu_plugin_dell',
-  fu_hash,
+plugin_builtin_dell = static_library('fu_plugin_dell',
   sources: [
-    'fu-plugin-dell.c',
+    'fu-dell-plugin.c',
     'fu-dell-smi.c',
   ],
-  include_directories: [
-    root_incdir,
-    fwupd_incdir,
-    fwupdplugin_incdir,
-  ],
-  install: true,
-  install_dir: plugin_dir,
-  link_with: [
-    fwupd,
-    fwupdplugin,
-  ],
+  include_directories: plugin_incdirs,
+  link_with: plugin_libs,
   c_args: [
     cargs,
   ],
@@ -35,6 +25,7 @@ shared_module('fu_plugin_dell',
     tpm2tss_dell,
   ],
 )
+plugin_builtins += plugin_builtin_dell
 
 if get_option('tests')
   env = environment()
@@ -43,17 +34,10 @@ if get_option('tests')
   env.set('FWUPD_LOCALSTATEDIR', '/tmp/fwupd-self-test/var')
   e = executable(
     'dell-self-test',
-    fu_hash,
     sources: [
       'fu-self-test.c',
-      'fu-dell-smi.c',
-      'fu-plugin-dell.c',
     ],
-    include_directories: [
-      root_incdir,
-      fwupd_incdir,
-      fwupdplugin_incdir,
-    ],
+    include_directories: plugin_incdirs,
     dependencies: [
       plugin_deps,
       libsmbios_c,
@@ -61,8 +45,9 @@ if get_option('tests')
       tpm2tss_dell,
     ],
     link_with: [
-      fwupd,
-      fwupdplugin,
+      plugin_libs,
+      plugin_builtin_uefi_capsule,
+      plugin_builtin_dell,
     ],
     c_args: [
       cargs,

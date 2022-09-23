@@ -2,11 +2,9 @@ if gusb.found()
 cargs = ['-DG_LOG_DOMAIN="FuPluginDellDock"']
 
 plugin_quirks += files('dell-dock.quirk')
-
-shared_module('fu_plugin_dell_dock',
-  fu_hash,
+plugin_builtins += static_library('fu_plugin_dell_dock',
   sources: [
-    'fu-plugin-dell-dock.c',
+    'fu-dell-dock-plugin.c',
     'fu-dell-dock-common.c',
     'fu-dell-dock-hid.c',
     'fu-dell-dock-status.c',
@@ -15,17 +13,8 @@ shared_module('fu_plugin_dell_dock',
     'fu-dell-dock-i2c-tbt.c',
     'fu-dell-dock-i2c-mst.c',
   ],
-  include_directories: [
-    root_incdir,
-    fwupd_incdir,
-    fwupdplugin_incdir,
-  ],
-  install: true,
-  install_dir: plugin_dir,
-  link_with: [
-    fwupd,
-    fwupdplugin,
-  ],
+  include_directories: plugin_incdirs,
+  link_with: plugin_libs,
   c_args: cargs,
   dependencies: [
     plugin_deps,

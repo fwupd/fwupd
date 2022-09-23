@@ -12,6 +12,9 @@ plugin_deps = [
   protobufc,
 ]
 
+# this is used by lenovo-thinklmi and dell
+subdir('uefi-capsule')
+
 subdir('acpi-dmar')
 subdir('acpi-facp')
 subdir('acpi-ivrs')
@@ -91,7 +94,6 @@ subdir('test')
 subdir('thelio-io')
 subdir('thunderbolt')
 subdir('tpm')
-subdir('uefi-capsule')
 subdir('uefi-dbx')
 subdir('uefi-pk')
 subdir('uefi-recovery')

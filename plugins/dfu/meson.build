@@ -3,10 +3,9 @@ cargs = ['-DG_LOG_DOMAIN="FuPluginDfu"']
 
 plugin_quirks += files('dfu.quirk')
 
-dfu = static_library(
-  'dfu',
-  fu_hash,
+plugin_builtin_dfu = static_library('fu_plugin_dfu',
   sources: [
+    'fu-dfu-plugin.c',
     'fu-dfu-common.c',
     'fu-dfu-device.c',
     'fu-dfu-sector.c',
@@ -14,63 +13,26 @@ dfu = static_library(
     'fu-dfu-target-stm.c',
     'fu-dfu-target-avr.c',
   ],
-  dependencies: [
-    plugin_deps,
-    libm,
-  ],
-  link_with: [
-    fwupd,
-    fwupdplugin,
-  ],
-  c_args: cargs,
-  include_directories: [
-    root_incdir,
-    fwupd_incdir,
-    fwupdplugin_incdir,
-  ],
-)
-
-shared_module('fu_plugin_dfu',
-  fu_hash,
-  sources: [
-    'fu-plugin-dfu.c',
-  ],
-  include_directories: [
-    root_incdir,
-    fwupd_incdir,
-    fwupdplugin_incdir,
-  ],
-  install: true,
-  install_dir: plugin_dir,
+  include_directories: plugin_incdirs,
   c_args: cargs,
   dependencies: [
     plugin_deps,
     libm,
   ],
-  link_with: [
-    fwupd,
-    fwupdplugin,
-    dfu,
-  ],
+  link_with: plugin_libs,
 )
+plugin_builtins += plugin_builtin_dfu
 
 if get_option('compat_cli')
 fu_dfu_tool = executable(
   'dfu-tool',
-  fu_hash,
   sources: [
     'fu-dfu-tool.c',
   ],
-  include_directories: [
-    root_incdir,
-    fwupd_incdir,
-    fwupdplugin_incdir,
-  ],
-  dependencies: [
-    plugin_deps,
-  ],
+  include_directories: plugin_incdirs,
+  dependencies: plugin_deps,
   link_with: [
-    dfu,
+    plugin_builtin_dfu,
     fwupd,
     fwupdplugin,
   ],
@@ -96,23 +58,17 @@ if get_option('tests')
   env.set('G_TEST_BUILDDIR', meson.current_build_dir())
   e = executable(
     'fu-dfu-self-test',
-    fu_hash,
     sources: [
       'fu-dfu-self-test.c'
     ],
-    include_directories: [
-      root_incdir,
-      fwupd_incdir,
-      fwupdplugin_incdir,
-    ],
+    include_directories: plugin_incdirs,
     dependencies: [
       plugin_deps,
       libm,
     ],
     link_with: [
-      dfu,
-      fwupd,
-      fwupdplugin,
+      plugin_libs,
+      plugin_builtin_dfu,
     ],
     install: true,
     install_rpath: plugin_dir,

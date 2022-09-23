@@ -11,9 +11,11 @@
 #include <glib/gstdio.h>
 #include <stdlib.h>
 
+#include "../uefi-capsule/fu-uefi-capsule-plugin.h"
 #include "fu-bios-settings-private.h"
 #include "fu-context-private.h"
 #include "fu-device-private.h"
+#include "fu-lenovo-thinklmi-plugin.h"
 #include "fu-plugin-private.h"
 
 typedef struct {
@@ -36,8 +38,6 @@ fu_test_self_init(FuTest *self, GError **error_global)
 	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GError) error = NULL;
-	g_autofree gchar *pluginfn_uefi = NULL;
-	g_autofree gchar *pluginfn_lenovo = NULL;
 
 	g_test_expect_message("FuBiosSettings", G_LOG_LEVEL_WARNING, "*KERNEL*BUG*");
 
@@ -54,34 +54,14 @@ fu_test_self_init(FuTest *self, GError **error_global)
 	g_assert_true(ret);
 	g_test_assert_expected_messages();
 
-	self->plugin_uefi_capsule = fu_plugin_new(ctx);
-	pluginfn_uefi = g_test_build_filename(G_TEST_BUILT,
-					      "..",
-					      "uefi-capsule",
-					      "libfu_plugin_uefi_capsule." G_MODULE_SUFFIX,
-					      NULL);
-	if (!g_file_test(pluginfn_uefi, G_FILE_TEST_EXISTS)) {
-		g_set_error(error_global,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_FOUND,
-			    "%s was not found",
-			    pluginfn_uefi);
-		return FALSE;
-	}
-	ret = fu_plugin_open(self->plugin_uefi_capsule, pluginfn_uefi, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
+	self->plugin_uefi_capsule =
+	    fu_plugin_new_from_gtype(fu_uefi_capsule_plugin_get_type(), ctx);
 	ret = fu_plugin_runner_startup(self->plugin_uefi_capsule, progress, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
-	self->plugin_lenovo_thinklmi = fu_plugin_new(ctx);
-	pluginfn_lenovo = g_test_build_filename(G_TEST_BUILT,
-						"libfu_plugin_lenovo_thinklmi." G_MODULE_SUFFIX,
-						NULL);
-	ret = fu_plugin_open(self->plugin_lenovo_thinklmi, pluginfn_lenovo, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
+	self->plugin_lenovo_thinklmi =
+	    fu_plugin_new_from_gtype(fu_lenovo_thinklmi_plugin_get_type(), ctx);
 	ret = fu_plugin_runner_startup(self->plugin_lenovo_thinklmi, progress, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);

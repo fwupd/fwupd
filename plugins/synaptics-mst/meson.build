@@ -4,33 +4,22 @@ cargs = ['-DG_LOG_DOMAIN="FuPluginSynapticsMST"']
 
 plugin_quirks += files('synaptics-mst.quirk')
 
-shared_module('fu_plugin_synaptics_mst',
-  fu_hash,
+plugin_builtin_synaptics_mst = static_library('fu_plugin_synaptics_mst',
   sources: [
-    'fu-plugin-synaptics-mst.c',
+    'fu-synaptics-mst-plugin.c',
     'fu-synaptics-mst-common.c',
     'fu-synaptics-mst-connection.c',
     'fu-synaptics-mst-device.c',
     'fu-synaptics-mst-firmware.c',      # fuzzing
   ],
-  include_directories: [
-    root_incdir,
-    fwupd_incdir,
-    fwupdplugin_incdir,
-  ],
-  install: true,
-  install_dir: plugin_dir,
+  include_directories: plugin_incdirs,
   c_args: [
     cargs,
   ],
-  link_with: [
-    fwupd,
-    fwupdplugin,
-  ],
-  dependencies: [
-    plugin_deps,
-  ],
+  link_with: plugin_libs,
+  dependencies: plugin_deps,
 )
+plugin_libs += plugin_builtin_synaptics_mst
 
 if get_option('tests')
   install_data(['tests/synaptics-mst.builder.xml'],
@@ -42,19 +31,10 @@ if get_option('tests')
   env.set('FWUPD_DATADIR_QUIRKS', meson.current_source_dir())
   e = executable(
     'synaptics-mst-self-test',
-    fu_hash,
     sources: [
       'fu-self-test.c',
-      'fu-synaptics-mst-common.c',
-      'fu-synaptics-mst-connection.c',
-      'fu-synaptics-mst-device.c',
-      'fu-synaptics-mst-firmware.c',
     ],
-    include_directories: [
-      root_incdir,
-      fwupd_incdir,
-      fwupdplugin_incdir,
-    ],
+    include_directories: plugin_incdirs,
     dependencies: [
       plugin_deps,
       valgrind,
@@ -62,6 +42,7 @@ if get_option('tests')
     link_with: [
       fwupd,
       fwupdplugin,
+      plugin_builtin_synaptics_mst,
     ],
     c_args: [
       cargs,
