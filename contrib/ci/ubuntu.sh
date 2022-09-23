@@ -29,7 +29,7 @@ export LDFLAGS
 root=$(pwd)
 rm -rf ${root}/build
 chown -R nobody ${root}
-sudo -u nobody meson ${root}/build -Dman=false -Ddocs=enabled -Dgusb:tests=false -Dplugin_platform_integrity=true --prefix=${root}/dist
+sudo -u nobody meson ${root}/build -Dman=false -Ddocs=enabled -Dgusb:tests=false --prefix=${root}/dist
 #build with clang
 sudo -u nobody ninja -C ${root}/build test -v
 
