@@ -16,19 +16,11 @@
 #include "fu-plugin-private.h"
 #include "fu-redfish-common.h"
 #include "fu-redfish-network.h"
+#include "fu-redfish-plugin.h"
 
 typedef struct {
 	FuPlugin *plugin;
 } FuTest;
-
-static gboolean
-fu_test_is_installed_test(void)
-{
-	const gchar *builddir = g_getenv("G_TEST_BUILDDIR");
-	if (builddir == NULL)
-		return FALSE;
-	return g_str_has_prefix(builddir, FWUPD_PREFIX);
-}
 
 static void
 fu_test_self_init(FuTest *self)
@@ -37,7 +29,6 @@ fu_test_self_init(FuTest *self)
 	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GError) error = NULL;
-	g_autofree gchar *pluginfn = NULL;
 
 	ret = fu_context_load_quirks(ctx,
 				     FU_QUIRKS_LOAD_FLAG_NO_CACHE | FU_QUIRKS_LOAD_FLAG_NO_VERIFY,
@@ -45,21 +36,7 @@ fu_test_self_init(FuTest *self)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
-	self->plugin = fu_plugin_new(ctx);
-
-	/* running as an installed test */
-	if (fu_test_is_installed_test()) {
-		g_autofree gchar *plugindir = fu_path_from_kind(FU_PATH_KIND_PLUGINDIR_PKG);
-		pluginfn =
-		    g_build_filename(plugindir, "libfu_plugin_redfish." G_MODULE_SUFFIX, NULL);
-	} else {
-		pluginfn = g_test_build_filename(G_TEST_BUILT,
-						 "libfu_plugin_redfish." G_MODULE_SUFFIX,
-						 NULL);
-	}
-	ret = fu_plugin_open(self->plugin, pluginfn, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
+	self->plugin = fu_plugin_new_from_gtype(fu_redfish_plugin_get_type(), ctx);
 	ret = fu_plugin_runner_startup(self->plugin, progress, &error);
 	if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE)) {
 		g_test_skip("no redfish.py running");

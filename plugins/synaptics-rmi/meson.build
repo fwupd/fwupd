@@ -5,11 +5,9 @@ if get_option('plugin_synaptics_rmi').require(gnutls.found(),
 cargs = ['-DG_LOG_DOMAIN="FuPluginSynapticsRmi"']
 
 plugin_quirks += files('synaptics-rmi.quirk')
-
-shared_module('fu_plugin_synaptics_rmi',
-  fu_hash,
+plugin_builtin_synaptics_rmi = static_library('fu_plugin_synaptics_rmi',
   sources: [
-    'fu-plugin-synaptics-rmi.c',
+    'fu-synaptics-rmi-plugin.c',
     'fu-synaptics-rmi-common.c',      # fuzzing
     'fu-synaptics-rmi-device.c',
     'fu-synaptics-rmi-hid-device.c',
@@ -19,22 +17,12 @@ shared_module('fu_plugin_synaptics_rmi',
     'fu-synaptics-rmi-v7-device.c',
     'fu-synaptics-rmi-firmware.c',    # fuzzing
   ],
-  include_directories: [
-    root_incdir,
-    fwupd_incdir,
-    fwupdplugin_incdir,
-  ],
-  install: true,
-  install_dir: plugin_dir,
+  include_directories: plugin_incdirs,
   c_args: cargs,
-  dependencies: [
-    plugin_deps,
-  ],
-  link_with: [
-    fwupd,
-    fwupdplugin,
-  ],
+  dependencies: plugin_deps,
+  link_with: plugin_libs,
 )
+plugin_builtins += plugin_builtin_synaptics_rmi
 
 if get_option('tests')
   install_data(['tests/synaptics-rmi-0x.builder.xml','tests/synaptics-rmi-10.builder.xml'],
@@ -44,23 +32,14 @@ if get_option('tests')
   env.set('G_TEST_BUILDDIR', meson.current_build_dir())
   e = executable(
     'synaptics-rmi-self-test',
-    fu_hash,
     sources: [
       'fu-self-test.c',
-      'fu-synaptics-rmi-common.c',
-      'fu-synaptics-rmi-firmware.c',
     ],
-    include_directories: [
-      root_incdir,
-      fwupd_incdir,
-      fwupdplugin_incdir,
-    ],
-    dependencies: [
-      plugin_deps,
-    ],
+    include_directories: plugin_incdirs,
+    dependencies: plugin_deps,
     link_with: [
-      fwupd,
-      fwupdplugin,
+      plugin_libs,
+      plugin_builtin_synaptics_rmi,
     ],
     install: true,
     install_rpath: plugin_dir,

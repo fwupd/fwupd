@@ -2,30 +2,17 @@ if gusb.found()
 cargs = ['-DG_LOG_DOMAIN="FuPluginUsiDock"']
 
 plugin_quirks += files('usi-dock.quirk')
-
-shared_module('fu_plugin_usi_dock',
-  fu_hash,
+plugin_builtins += static_library('fu_plugin_usi_dock',
   sources: [
     'fu-usi-dock-common.c',
     'fu-usi-dock-child-device.c',
     'fu-usi-dock-dmc-device.c',
     'fu-usi-dock-mcu-device.c',
-    'fu-plugin-usi-dock.c',
+    'fu-usi-dock-plugin.c',
   ],
-  include_directories: [
-    root_incdir,
-    fwupd_incdir,
-    fwupdplugin_incdir,
-  ],
-  install: true,
-  install_dir: plugin_dir,
-  link_with: [
-    fwupd,
-    fwupdplugin,
-  ],
+  include_directories: plugin_incdirs,
+  link_with: plugin_libs,
   c_args: cargs,
-  dependencies: [
-    plugin_deps,
-  ],
+  dependencies: plugin_deps,
 )
 endif

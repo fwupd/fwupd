@@ -3,31 +3,20 @@ cargs = ['-DG_LOG_DOMAIN="FuPluginThunderbolt"']
 
 plugin_quirks += files('thunderbolt.quirk')
 
-fu_plugin_thunderbolt = shared_module('fu_plugin_thunderbolt',
-  fu_hash,
+plugin_builtin_thunderbolt = static_library('fu_plugin_thunderbolt',
   sources: [
-    'fu-plugin-thunderbolt.c',
+    'fu-thunderbolt-plugin.c',
     'fu-thunderbolt-common.c',
     'fu-thunderbolt-device.c',
     'fu-thunderbolt-retimer.c',
     'fu-thunderbolt-controller.c',
   ],
-  include_directories: [
-    root_incdir,
-    fwupd_incdir,
-    fwupdplugin_incdir,
-  ],
-  install: true,
-  install_dir: plugin_dir,
-  link_with: [
-    fwupd,
-    fwupdplugin,
-  ],
+  include_directories: plugin_incdirs,
+  link_with: plugin_libs,
   c_args: cargs,
-  dependencies: [
-    plugin_deps,
-  ],
+  dependencies: plugin_deps,
 )
+plugin_libs += plugin_builtin_thunderbolt
 
 install_data(['thunderbolt.conf'],
   install_dir: join_paths(sysconfdir, 'fwupd')
@@ -41,20 +30,10 @@ if get_option('tests') and run_sanitize_unsafe_tests and umockdev.found() and gi
   env.set('FWUPD_DATADIR_QUIRKS', meson.current_source_dir())
   e = executable(
     'thunderbolt-self-test',
-    fu_hash,
     sources: [
       'fu-self-test.c',
-      'fu-plugin-thunderbolt.c',
-      'fu-thunderbolt-common.c',
-      'fu-thunderbolt-device.c',
-      'fu-thunderbolt-retimer.c',
-      'fu-thunderbolt-controller.c',
     ],
-    include_directories: [
-      root_incdir,
-      fwupd_incdir,
-      fwupdplugin_incdir,
-    ],
+    include_directories: plugin_incdirs,
     dependencies: [
       gudev,
       plugin_deps,
@@ -63,6 +42,7 @@ if get_option('tests') and run_sanitize_unsafe_tests and umockdev.found() and gi
     link_with: [
       fwupd,
       fwupdplugin,
+      plugin_builtin_thunderbolt,
     ],
     c_args: cargs
   )

@@ -8,23 +8,16 @@ cargs = ['-DG_LOG_DOMAIN="FuPluginTpm"']
 
 plugin_quirks += files('tpm.quirk')
 
-plugin_tpm = shared_module('fu_plugin_tpm',
-  fu_hash,
+plugin_builtin_tpm = static_library('fu_plugin_tpm',
   sources: [
-    'fu-plugin-tpm.c',
+    'fu-tpm-plugin.c',
     'fu-tpm-device.c',
     'fu-tpm-v1-device.c',
     'fu-tpm-v2-device.c',
     'fu-tpm-eventlog-common.c',
     'fu-tpm-eventlog-parser.c',
   ],
-  include_directories: [
-    root_incdir,
-    fwupd_incdir,
-    fwupdplugin_incdir,
-  ],
-  install: true,
-  install_dir: plugin_dir,
+  include_directories: plugin_incdirs,
   link_with: [
     fwupdplugin,
     fwupd,
@@ -35,6 +28,7 @@ plugin_tpm = shared_module('fu_plugin_tpm',
     tpm2tss_tpm,
   ],
 )
+plugin_libs += plugin_builtin_tpm
 
 if get_option('tests')
   env = environment()
@@ -43,20 +37,10 @@ if get_option('tests')
   env.set('FWUPD_LOCALSTATEDIR', '/tmp/fwupd-self-test/var')
   e = executable(
     'tpm-self-test',
-    fu_hash,
     sources: [
       'fu-self-test.c',
-      'fu-tpm-device.c',
-      'fu-tpm-v1-device.c',
-      'fu-tpm-v2-device.c',
-      'fu-tpm-eventlog-common.c',
-      'fu-tpm-eventlog-parser.c',
     ],
-    include_directories: [
-      root_incdir,
-      fwupd_incdir,
-      fwupdplugin_incdir,
-    ],
+    include_directories: plugin_incdirs,
     dependencies: [
       plugin_deps,
       tpm2tss_tpm,
@@ -64,6 +48,7 @@ if get_option('tests')
     link_with: [
       fwupd,
       fwupdplugin,
+      plugin_builtin_tpm,
     ],
     c_args: cargs
   )
@@ -72,25 +57,17 @@ endif
 
 executable(
   'fwupdtpmevlog',
-  fu_hash,
   sources: [
     'fu-tpm-eventlog.c',
     'fu-tpm-eventlog-common.c',
     'fu-tpm-eventlog-parser.c',
   ],
-  include_directories: [
-    root_incdir,
-    fwupd_incdir,
-    fwupdplugin_incdir,
-  ],
+  include_directories: plugin_incdirs,
   dependencies: [
       plugin_deps,
       tpm2tss_tpm,
   ],
-  link_with: [
-    fwupd,
-    fwupdplugin,
-  ],
+  link_with: plugin_libs,
 )
 
 endif

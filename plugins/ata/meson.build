@@ -2,32 +2,20 @@ if gudev.found()
 cargs = ['-DG_LOG_DOMAIN="FuPluginAta"']
 
 plugin_quirks += files('ata.quirk')
-
-shared_module('fu_plugin_ata',
-  fu_hash,
+plugin_builtin_ata = static_library('fu_plugin_ata',
   sources: [
-    'fu-plugin-ata.c',
+    'fu-ata-plugin.c',
     'fu-ata-device.c',
   ],
-  include_directories: [
-    root_incdir,
-    fwupd_incdir,
-    fwupdplugin_incdir,
-  ],
-  install: true,
-  install_dir: plugin_dir,
+  include_directories: plugin_incdirs,
   c_args: [
     cargs,
     '-DLOCALSTATEDIR="' + localstatedir + '"',
   ],
-  link_with: [
-    fwupd,
-    fwupdplugin,
-  ],
-  dependencies: [
-    plugin_deps,
-  ],
+  link_with: plugin_libs,
+  dependencies: plugin_deps,
 )
+plugin_builtins += plugin_builtin_ata
 
 if get_option('tests')
   env = environment()
@@ -36,22 +24,14 @@ if get_option('tests')
   env.set('FWUPD_DATADIR_QUIRKS', meson.current_source_dir())
   e = executable(
     'ata-self-test',
-    fu_hash,
     sources: [
       'fu-self-test.c',
-      'fu-ata-device.c',
     ],
-    include_directories: [
-      root_incdir,
-      fwupd_incdir,
-      fwupdplugin_incdir,
-    ],
-    dependencies: [
-      plugin_deps,
-    ],
+    include_directories: plugin_incdirs,
+    dependencies: plugin_deps,
     link_with: [
-      fwupd,
-      fwupdplugin,
+      plugin_libs,
+      plugin_builtin_ata,
     ],
     install: true,
     install_rpath: plugin_dir,

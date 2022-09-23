@@ -10,16 +10,8 @@
 
 #include "fu-dell-smi.h"
 
-struct FuPluginData {
-	FuDellSmiObj *smi_obj;
-	guint16 fake_vid;
-	guint16 fake_pid;
-	gboolean can_switch_modes;
-	gboolean capsule_supported;
-};
-
 void
-fu_plugin_dell_inject_fake_data(FuPlugin *plugin,
+fu_dell_plugin_inject_fake_data(FuPlugin *plugin,
 				guint32 *output,
 				guint16 vid,
 				guint16 pid,
@@ -27,9 +19,9 @@ fu_plugin_dell_inject_fake_data(FuPlugin *plugin,
 				gboolean can_switch_modes);
 
 gboolean
-fu_plugin_dell_detect_tpm(FuPlugin *plugin, GError **error);
+fu_dell_plugin_detect_tpm(FuPlugin *plugin, GError **error);
 gboolean
-fu_plugin_dell_backend_device_added(FuPlugin *plugin, FuDevice *device, GError **error);
+fu_dell_plugin_backend_device_added(FuPlugin *plugin, FuDevice *device, GError **error);
 
 /* These are nodes that will indicate information about
  * the TPM status

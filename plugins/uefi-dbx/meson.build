@@ -2,31 +2,19 @@ if efiboot.found() and efivar.found()
 cargs = ['-DG_LOG_DOMAIN="FuPluginUefiDbx"']
 
 plugin_quirks += files('uefi-dbx.quirk')
-
-shared_module('fu_plugin_uefi_dbx',
-  fu_hash,
+plugin_builtin_uefi_dbx = static_library('fu_plugin_uefi_dbx',
   sources: [
-    'fu-plugin-uefi-dbx.c',
+    'fu-uefi-dbx-plugin.c',
     'fu-uefi-dbx-common.c',
     'fu-uefi-dbx-device.c',
     'fu-efi-image.c',
   ],
-  include_directories: [
-    root_incdir,
-    fwupd_incdir,
-    fwupdplugin_incdir,
-  ],
-  install: true,
-  install_dir: plugin_dir,
-  link_with: [
-    fwupd,
-    fwupdplugin,
-  ],
+  include_directories: plugin_incdirs,
+  link_with: plugin_libs,
   c_args: cargs,
-  dependencies: [
-    plugin_deps,
-  ],
+  dependencies: plugin_deps,
 )
+plugin_builtins += plugin_builtin_uefi_dbx
 
 if get_option('tests')
   env = environment()
@@ -34,23 +22,14 @@ if get_option('tests')
   env.set('G_TEST_BUILDDIR', meson.current_build_dir())
   e = executable(
     'uefi-dbx-self-test',
-    fu_hash,
     sources: [
       'fu-self-test.c',
-      'fu-uefi-dbx-common.c',
-      'fu-efi-image.c',
     ],
-    include_directories: [
-      root_incdir,
-      fwupd_incdir,
-      fwupdplugin_incdir,
-    ],
-    dependencies: [
-      plugin_deps,
-    ],
+    include_directories: plugin_incdirs,
+    dependencies: plugin_deps,
     link_with: [
-      fwupd,
-      fwupdplugin,
+      plugin_libs,
+      plugin_builtin_uefi_dbx,
     ],
     c_args: cargs,
     install: true,
@@ -62,24 +41,14 @@ endif
 
 dbxtool = executable(
   'dbxtool',
-  fu_hash,
   sources: [
     'fu-dbxtool.c',
     'fu-uefi-dbx-common.c',
     'fu-efi-image.c',
   ],
-  include_directories: [
-    root_incdir,
-    fwupd_incdir,
-    fwupdplugin_incdir,
-  ],
-  dependencies: [
-    plugin_deps,
-  ],
-  link_with: [
-    fwupd,
-    fwupdplugin,
-  ],
+  include_directories: plugin_incdirs,
+  dependencies: plugin_deps,
+  link_with: plugin_libs,
   install: true,
   install_dir: bindir,
   c_args: cargs,

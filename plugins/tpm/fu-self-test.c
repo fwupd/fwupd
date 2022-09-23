@@ -13,6 +13,7 @@
 #include "fu-security-attrs-private.h"
 #include "fu-tpm-eventlog-common.h"
 #include "fu-tpm-eventlog-parser.h"
+#include "fu-tpm-plugin.h"
 #include "fu-tpm-v1-device.h"
 #include "fu-tpm-v2-device.h"
 
@@ -22,9 +23,8 @@ fu_tpm_device_1_2_func(void)
 	FuTpmDevice *device;
 	GPtrArray *devices;
 	gboolean ret;
-	g_autofree gchar *pluginfn = NULL;
 	g_autoptr(FuContext) ctx = fu_context_new();
-	g_autoptr(FuPlugin) plugin = fu_plugin_new(ctx);
+	g_autoptr(FuPlugin) plugin = NULL;
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
 	g_autoptr(FwupdSecurityAttr) attr0 = NULL;
@@ -39,10 +39,7 @@ fu_tpm_device_1_2_func(void)
 	g_assert_true(ret);
 
 	/* load the plugin */
-	pluginfn = g_test_build_filename(G_TEST_BUILT, "libfu_plugin_tpm." G_MODULE_SUFFIX, NULL);
-	ret = fu_plugin_open(plugin, pluginfn, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
+	plugin = fu_plugin_new_from_gtype(fu_tpm_plugin_get_type(), ctx);
 	ret = fu_plugin_runner_startup(plugin, progress, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -191,11 +188,10 @@ static void
 fu_tpm_empty_pcr_func(void)
 {
 	gboolean ret;
-	g_autofree gchar *pluginfn = NULL;
 	g_autofree gchar *testdatadir = NULL;
 	g_auto(GStrv) environ_old = NULL;
 	g_autoptr(FuContext) ctx = fu_context_new();
-	g_autoptr(FuPlugin) plugin = fu_plugin_new(ctx);
+	g_autoptr(FuPlugin) plugin = NULL;
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
@@ -212,10 +208,7 @@ fu_tpm_empty_pcr_func(void)
 	(void)g_setenv("FWUPD_SYSFSTPMDIR", testdatadir, TRUE);
 
 	/* load the plugin */
-	pluginfn = g_test_build_filename(G_TEST_BUILT, "libfu_plugin_tpm." G_MODULE_SUFFIX, NULL);
-	ret = fu_plugin_open(plugin, pluginfn, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
+	plugin = fu_plugin_new_from_gtype(fu_tpm_plugin_get_type(), ctx);
 	ret = fu_plugin_runner_startup(plugin, progress, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);

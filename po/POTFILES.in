@@ -5,7 +5,7 @@ libfwupdplugin/tests/bios-attrs/dell-xps13-9310/strings.txt
 policy/org.freedesktop.fwupd.policy.in
 plugins/dfu/fu-dfu-tool.c
 plugins/tpm/fu-tpm-eventlog.c
-plugins/uefi-capsule/fu-plugin-uefi-capsule.c
+plugins/uefi-capsule/fu-uefi-capsule-plugin.c
 plugins/uefi-capsule/fu-uefi-tool.c
 plugins/uefi-dbx/fu-dbxtool.c
 src/fu-debug.c

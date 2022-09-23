@@ -16,6 +16,7 @@
 #include "fwupd-bios-setting-private.h"
 #include "fwupd-security-attr-private.h"
 
+#include "../plugins/test/fu-test-plugin.h"
 #include "fu-backend-private.h"
 #include "fu-bios-settings-private.h"
 #include "fu-cabinet-common.h"
@@ -4795,7 +4796,6 @@ int
 main(int argc, char **argv)
 {
 	gboolean ret;
-	g_autofree gchar *pluginfn = NULL;
 	g_autofree gchar *testdatadir = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(FuTest) self = g_new0(FuTest, 1);
@@ -4826,16 +4826,7 @@ main(int argc, char **argv)
 	g_assert_true(ret);
 
 	/* load the test plugin */
-	self->plugin = fu_plugin_new(self->ctx);
-	pluginfn = g_test_build_filename(G_TEST_BUILT,
-					 "..",
-					 "plugins",
-					 "test",
-					 "libfu_plugin_test." G_MODULE_SUFFIX,
-					 NULL);
-	ret = fu_plugin_open(self->plugin, pluginfn, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
+	self->plugin = fu_plugin_new_from_gtype(fu_test_plugin_get_type(), self->ctx);
 
 	/* tests go here */
 	if (g_test_slow()) {

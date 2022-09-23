@@ -2,26 +2,16 @@ if hsi and (host_cpu == 'x86' or host_cpu == 'x86_64')
 cargs = ['-DG_LOG_DOMAIN="FuPluginIommu"']
 
 plugin_quirks += files('iommu.quirk')
-
-shared_module('fu_plugin_iommu',
-  fu_hash,
+plugin_builtins += static_library('fu_plugin_iommu',
   sources: [
-    'fu-plugin-iommu.c',
+    'fu-iommu-plugin.c',
   ],
-  include_directories: [
-    root_incdir,
-    fwupd_incdir,
-    fwupdplugin_incdir,
-  ],
-  install: true,
-  install_dir: plugin_dir,
+  include_directories: plugin_incdirs,
   link_with: [
     fwupdplugin,
     fwupd,
   ],
   c_args: cargs,
-  dependencies: [
-    plugin_deps,
-  ],
+  dependencies: plugin_deps,
 )
 endif

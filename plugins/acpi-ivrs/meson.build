@@ -1,28 +1,17 @@
 if hsi and (host_cpu == 'x86' or host_cpu == 'x86_64')
 cargs = ['-DG_LOG_DOMAIN="FuPluginAcpiIvrs"']
 
-shared_module('fu_plugin_acpi_ivrs',
-  fu_hash,
+plugin_builtin_acpi_ivrs = static_library('fu_plugin_acpi_ivrs',
   sources: [
-    'fu-plugin-acpi-ivrs.c',
+    'fu-acpi-ivrs-plugin.c',
     'fu-acpi-ivrs.c',
   ],
-  include_directories: [
-    root_incdir,
-    fwupd_incdir,
-    fwupdplugin_incdir,
-  ],
-  install: true,
-  install_dir: plugin_dir,
-  link_with: [
-    fwupd,
-    fwupdplugin,
-  ],
+  include_directories: plugin_incdirs,
+  link_with: plugin_libs,
   c_args: cargs,
-  dependencies: [
-    plugin_deps,
-  ],
+  dependencies: plugin_deps,
 )
+plugin_builtins += plugin_builtin_acpi_ivrs
 
 if get_option('tests')
   env = environment()
@@ -30,22 +19,14 @@ if get_option('tests')
   env.set('G_TEST_BUILDDIR', meson.current_build_dir())
   e = executable(
     'acpi-ivrs-self-test',
-    fu_hash,
     sources: [
       'fu-self-test.c',
-      'fu-acpi-ivrs.c',
     ],
-    include_directories: [
-      root_incdir,
-      fwupd_incdir,
-      fwupdplugin_incdir,
-    ],
-    dependencies: [
-      plugin_deps,
-    ],
+    include_directories: plugin_incdirs,
+    dependencies: plugin_deps,
     link_with: [
-      fwupd,
-      fwupdplugin,
+      plugin_libs,
+      plugin_builtin_acpi_ivrs,
     ],
     install: true,
     install_rpath: plugin_dir,

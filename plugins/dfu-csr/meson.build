@@ -2,12 +2,10 @@ if gusb.found()
 cargs = ['-DG_LOG_DOMAIN="FuPluginDfuCsr"']
 
 plugin_quirks += files('dfu-csr.quirk')
-
-shared_module('fu_plugin_dfu_csr',
-  fu_hash,
+plugin_builtins += static_library('fu_plugin_dfu_csr',
   sources: [
     'fu-dfu-csr-device.c',
-    'fu-plugin-dfu-csr.c',
+    'fu-dfu-csr-plugin.c',
   ],
   include_directories: [
     root_incdir,
@@ -15,15 +13,11 @@ shared_module('fu_plugin_dfu_csr',
     fwupdplugin_incdir,
     plugindfu_incdir,
   ],
-  install: true,
-  install_dir: plugin_dir,
   c_args: cargs,
-  dependencies: [
-    plugin_deps,
-  ],
+  dependencies: plugin_deps,
   link_with: [
     fwupdplugin,
-    dfu,
+    plugin_builtin_dfu,
   ],
 )
 endif

@@ -9,11 +9,9 @@ plugin_quirks += files([
   'vli-lenovo.quirk',
   'vli-samsung.quirk',
   ])
-
-shared_module('fu_plugin_vli',
-  fu_hash,
+plugin_builtin_vli = static_library('fu_plugin_vli',
   sources: [
-    'fu-plugin-vli.c',
+    'fu-vli-plugin.c',
     'fu-vli-common.c',
     'fu-vli-device.c',
     'fu-vli-pd-common.c',
@@ -28,42 +26,24 @@ shared_module('fu_plugin_vli',
     'fu-vli-usbhub-pd-device.c',
     'fu-vli-usbhub-rtd21xx-device.c',
   ],
-  include_directories: [
-    root_incdir,
-    fwupd_incdir,
-    fwupdplugin_incdir,
-  ],
-  install: true,
-  install_dir: plugin_dir,
-  link_with: [
-    fwupd,
-    fwupdplugin,
-  ],
+  include_directories: plugin_incdirs,
+  link_with: plugin_libs,
   c_args: cargs,
-  dependencies: [
-    plugin_deps,
-  ],
+  dependencies: plugin_deps,
 )
+plugin_builtins += plugin_builtin_vli
 
 if get_option('tests')
   e = executable(
     'vli-self-test',
-    fu_hash,
     sources: [
       'fu-self-test.c',
-      'fu-vli-common.c',
     ],
-    include_directories: [
-      root_incdir,
-      fwupd_incdir,
-      fwupdplugin_incdir,
-    ],
-    dependencies: [
-      plugin_deps,
-    ],
+    include_directories: plugin_incdirs,
+    dependencies: plugin_deps,
     link_with: [
-      fwupd,
-      fwupdplugin,
+      plugin_libs,
+      plugin_builtin_vli,
     ],
     c_args: cargs,
     install: true,

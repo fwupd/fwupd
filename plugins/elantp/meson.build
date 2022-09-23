@@ -2,35 +2,22 @@ if gudev.found()
 cargs = ['-DG_LOG_DOMAIN="FuPluginElantp"']
 
 plugin_quirks += files('elantp.quirk')
-
-shared_module('fu_plugin_elantp',
-  fu_hash,
+plugin_builtin_elantp = static_library('fu_plugin_elantp',
   sources: [
-    'fu-plugin-elantp.c',
+    'fu-elantp-plugin.c',
     'fu-elantp-firmware.c',   # fuzzing
     'fu-elantp-hid-device.c',
     'fu-elantp-i2c-device.c',
   ],
-  include_directories: [
-    root_incdir,
-    fwupd_incdir,
-    fwupdplugin_incdir,
-  ],
-  install: true,
-  install_dir: plugin_dir,
+  include_directories: plugin_incdirs,
   c_args: [
     cargs,
     '-DLOCALSTATEDIR="' + localstatedir + '"',
   ],
-  link_with: [
-    fwupd,
-    fwupdplugin,
-  ],
-  dependencies: [
-    plugin_deps,
-  ],
+  link_with: plugin_libs,
+  dependencies: plugin_deps,
 )
-endif
+plugin_builtins += plugin_builtin_elantp
 
 if get_option('tests')
   install_data(['tests/elantp.builder.xml'],
@@ -40,26 +27,19 @@ if get_option('tests')
   env.set('G_TEST_BUILDDIR', meson.current_build_dir())
   e = executable(
     'elantp-self-test',
-    fu_hash,
     sources: [
       'fu-self-test.c',
-      'fu-elantp-firmware.c',
     ],
-    include_directories: [
-      root_incdir,
-      fwupd_incdir,
-      fwupdplugin_incdir,
-    ],
-    dependencies: [
-      plugin_deps,
-    ],
+    include_directories: plugin_incdirs,
+    dependencies: plugin_deps,
     link_with: [
-      fwupd,
-      fwupdplugin,
+      plugin_libs,
+      plugin_builtin_elantp,
     ],
     install: true,
     install_rpath: plugin_dir,
     install_dir: installed_test_bindir,
   )
   test('elantp-self-test', e, env: env)
+endif
 endif

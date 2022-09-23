@@ -6,33 +6,21 @@ if nvme_header and \
 cargs = ['-DG_LOG_DOMAIN="FuPluginNvme"']
 
 plugin_quirks += files('nvme.quirk')
-
-shared_module('fu_plugin_nvme',
-  fu_hash,
+plugin_builtin_nvme = static_library('fu_plugin_nvme',
   sources: [
-    'fu-plugin-nvme.c',
+    'fu-nvme-plugin.c',
     'fu-nvme-common.c',
     'fu-nvme-device.c',
   ],
-  include_directories: [
-    root_incdir,
-    fwupd_incdir,
-    fwupdplugin_incdir,
-  ],
-  install: true,
-  install_dir: plugin_dir,
+  include_directories: plugin_incdirs,
   c_args: [
     cargs,
     '-DLOCALSTATEDIR="' + localstatedir + '"',
   ],
-  link_with: [
-    fwupd,
-    fwupdplugin,
-  ],
-  dependencies: [
-    plugin_deps,
-  ],
+  link_with: plugin_libs,
+  dependencies: plugin_deps,
 )
+plugin_builtins += plugin_builtin_nvme
 
 if get_option('tests')
   env = environment()
@@ -41,23 +29,14 @@ if get_option('tests')
   env.set('FWUPD_DATADIR_QUIRKS', meson.current_source_dir())
   e = executable(
     'nvme-self-test',
-    fu_hash,
     sources: [
       'fu-self-test.c',
-      'fu-nvme-common.c',
-      'fu-nvme-device.c',
     ],
-    include_directories: [
-      root_incdir,
-      fwupd_incdir,
-      fwupdplugin_incdir,
-    ],
-    dependencies: [
-      plugin_deps,
-    ],
+    include_directories: plugin_incdirs,
+    dependencies: plugin_deps,
     link_with: [
-      fwupd,
-      fwupdplugin,
+      plugin_libs,
+      plugin_builtin_nvme,
     ],
     install: true,
     install_rpath: plugin_dir,

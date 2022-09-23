@@ -4,30 +4,18 @@ if get_option('plugin_uf2').require(gudev.found(),
 cargs = ['-DG_LOG_DOMAIN="FuPluginUf2"']
 
 plugin_quirks += files('uf2.quirk')
-
-shared_module('fu_plugin_uf2',
-  fu_hash,
+plugin_builtin_uf2 = static_library('fu_plugin_uf2',
   sources: [
-    'fu-plugin-uf2.c',
+    'fu-uf2-plugin.c',
     'fu-uf2-device.c',
     'fu-uf2-firmware.c',      # fuzzing
   ],
-  include_directories: [
-    root_incdir,
-    fwupd_incdir,
-    fwupdplugin_incdir,
-  ],
-  install: true,
-  install_dir: plugin_dir,
+  include_directories: plugin_incdirs,
   c_args: cargs,
-  dependencies: [
-    plugin_deps,
-  ],
-  link_with: [
-    fwupd,
-    fwupdplugin,
-  ],
+  dependencies: plugin_deps,
+  link_with: plugin_libs,
 )
+plugin_builtins += plugin_builtin_uf2
 
 if get_option('tests')
   install_data(['tests/uf2.builder.xml'],
@@ -37,22 +25,14 @@ if get_option('tests')
   env.set('G_TEST_BUILDDIR', meson.current_build_dir())
   e = executable(
     'uf2-self-test',
-    fu_hash,
     sources: [
       'fu-self-test.c',
-      'fu-uf2-firmware.c',
     ],
-    include_directories: [
-      root_incdir,
-      fwupd_incdir,
-      fwupdplugin_incdir,
-    ],
-    dependencies: [
-      plugin_deps,
-    ],
+    include_directories: plugin_incdirs,
+    dependencies: plugin_deps,
     link_with: [
-      fwupd,
-      fwupdplugin,
+      plugin_libs,
+      plugin_builtin_uf2,
     ],
     install: true,
     install_rpath: plugin_dir,
