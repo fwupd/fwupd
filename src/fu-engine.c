@@ -6246,7 +6246,7 @@ fu_engine_add_plugin(FuEngine *self, FuPlugin *plugin)
 		/* plugin does not match built version */
 		if (fu_plugin_get_build_hash(plugin) == NULL) {
 			const gchar *name = fu_plugin_get_name(plugin);
-			g_warning("%s should call fu_plugin_set_build_hash()", name);
+			g_warning("%s should set vfuncs->build_hash", name);
 			self->tainted = TRUE;
 		} else if (g_strcmp0(fu_plugin_get_build_hash(plugin), FU_BUILD_HASH) != 0) {
 			const gchar *name = fu_plugin_get_name(plugin);
