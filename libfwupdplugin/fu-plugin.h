@@ -92,7 +92,6 @@ typedef struct {
 	 *
 	 * Initializes the plugin.
 	 * Sets up any static data structures for the plugin.
-	 * Most plugins should call fu_plugin_set_build_hash in here.
 	 *
 	 * Since: 1.7.2
 	 **/
