@@ -1,7 +1,7 @@
 if gusb.found()
 cargs = ['-DG_LOG_DOMAIN="FuPluginSynapticsPrometheus"']
 
-plugin_quirks += join_paths(meson.current_source_dir(), 'synaptics-prometheus.quirk')
+plugin_quirks += files('synaptics-prometheus.quirk')
 
 shared_module('fu_plugin_synaptics_prometheus',
   fu_hash,

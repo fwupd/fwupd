@@ -1,7 +1,7 @@
 if get_option('plugin_amt').disable_auto_if(host_machine.system() != 'linux').allowed()
 cargs = ['-DG_LOG_DOMAIN="FuPluginAmt"']
 
-plugin_quirks += join_paths(meson.current_source_dir(), 'amt.quirk')
+plugin_quirks += files('amt.quirk')
 
 shared_module('fu_plugin_amt',
   fu_hash,

@@ -1,7 +1,7 @@
 if hsi and (host_cpu == 'x86' or host_cpu == 'x86_64')
 cargs = ['-DG_LOG_DOMAIN="FuPluginIommu"']
 
-plugin_quirks += join_paths(meson.current_source_dir(), 'iommu.quirk')
+plugin_quirks += files('iommu.quirk')
 
 shared_module('fu_plugin_iommu',
   fu_hash,

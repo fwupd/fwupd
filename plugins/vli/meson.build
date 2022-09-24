@@ -1,12 +1,14 @@
 if gusb.found()
 cargs = ['-DG_LOG_DOMAIN="FuPluginVliUsbhub"']
 
-plugin_quirks += join_paths(meson.current_source_dir(), 'vli-bizlink.quirk')
-plugin_quirks += join_paths(meson.current_source_dir(), 'vli-dell.quirk')
-plugin_quirks += join_paths(meson.current_source_dir(), 'vli-goodway.quirk')
-plugin_quirks += join_paths(meson.current_source_dir(), 'vli-hyper.quirk')
-plugin_quirks += join_paths(meson.current_source_dir(), 'vli-lenovo.quirk')
-plugin_quirks += join_paths(meson.current_source_dir(), 'vli-samsung.quirk')
+plugin_quirks += files([
+  'vli-bizlink.quirk',
+  'vli-dell.quirk',
+  'vli-goodway.quirk',
+  'vli-hyper.quirk',
+  'vli-lenovo.quirk',
+  'vli-samsung.quirk',
+  ])
 
 shared_module('fu_plugin_vli',
   fu_hash,

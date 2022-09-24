@@ -1,7 +1,7 @@
 if gusb.found()
 cargs = ['-DG_LOG_DOMAIN="FuPluginCh341a"']
 
-plugin_quirks += join_paths(meson.current_source_dir(), 'ch341a.quirk')
+plugin_quirks += files('ch341a.quirk')
 
 shared_module('fu_plugin_ch341a',
   fu_hash,

@@ -28,8 +28,10 @@ if build_standalone
   install_data(['daemon.conf'],
     install_dir: join_paths(sysconfdir, 'fwupd')
   )
-  plugin_quirks += join_paths(meson.current_source_dir(), 'power.quirk')
-  plugin_quirks += join_paths(meson.current_source_dir(), 'cfi.quirk')
+  plugin_quirks += files([
+    'power.quirk',
+    'cfi.quirk',
+  ])
 endif
 
 if get_option('metainfo')
