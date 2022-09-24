@@ -153,7 +153,7 @@ if get_option('gresource_quirks').require(meson.version().version_compare('>=0.6
     error_message: 'meson >= 0.63.0 is needed for -Dgresource_quirks=enabled').allowed()
   fwupd_gresource_xml = custom_target('fwupd-resources-xml',
     input : [
-      join_paths(meson.current_source_dir(), 'org.freedesktop.fwupd.xml'),
+      files('org.freedesktop.fwupd.xml'),
     ] + plugin_quirks,
     output : 'fwupd.gresource.xml',
     command : [

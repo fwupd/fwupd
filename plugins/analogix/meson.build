@@ -1,7 +1,7 @@
 if gusb.found()
 cargs = ['-DG_LOG_DOMAIN="FuPluginAnalogix"']
 
-plugin_quirks += join_paths(meson.current_source_dir(), 'analogix.quirk')
+plugin_quirks += files('analogix.quirk')
 
 shared_module('fu_plugin_analogix',
   fu_hash,

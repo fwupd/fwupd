@@ -7,7 +7,7 @@ if efi_os_dir != ''
   cargs += '-DEFI_OS_DIR="' + efi_os_dir + '"'
 endif
 
-plugin_quirks += join_paths(meson.current_source_dir(), 'uefi-capsule.quirk')
+plugin_quirks += files('uefi-capsule.quirk')
 
 backend_srcs = ['fu-uefi-backend.c']
 if host_machine.system() == 'linux'
@@ -127,13 +127,13 @@ if get_option('plugin_uefi_capsule_splash')
   custom_target('ux-capsule-tar',
     input: [
       join_paths(meson.project_source_root(), 'po', 'LINGUAS'),
-      join_paths(meson.current_source_dir(), 'make-images.py'),
+      files('make-images.py'),
       ux_capsule_pofiles,
     ],
     output: 'uefi-capsule-ux.tar.xz',
     command: [
       python3.full_path(),
-      join_paths(meson.current_source_dir(), 'make-images.py'),
+      files('make-images.py'),
       '--podir', join_paths(meson.project_source_root(), 'po'),
       '--label', 'Installing firmware update…',
       '--out', '@OUTPUT@',

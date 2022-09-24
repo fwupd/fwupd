@@ -1,7 +1,7 @@
 if gudev.found()
 cargs = ['-DG_LOG_DOMAIN="FuPluginAta"']
 
-plugin_quirks += join_paths(meson.current_source_dir(), 'ata.quirk')
+plugin_quirks += files('ata.quirk')
 
 shared_module('fu_plugin_ata',
   fu_hash,

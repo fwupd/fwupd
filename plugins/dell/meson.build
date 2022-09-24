@@ -7,7 +7,7 @@ if tpm2tss_dell.found() and libsmbios_c.found() and \
 
 cargs = ['-DG_LOG_DOMAIN="FuPluginDell"']
 
-plugin_quirks += join_paths(meson.current_source_dir(), 'dell.quirk')
+plugin_quirks += files('dell.quirk')
 
 shared_module('fu_plugin_dell',
   fu_hash,

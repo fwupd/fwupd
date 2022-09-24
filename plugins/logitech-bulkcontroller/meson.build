@@ -2,7 +2,7 @@ if gusb.found() and protobufc.found() and protoc.found()
 
 cargs = ['-DG_LOG_DOMAIN="FuPluginLogitechBulkController"']
 
-plugin_quirks += join_paths(meson.current_source_dir(), 'logitech-bulkcontroller.quirk')
+plugin_quirks += files('logitech-bulkcontroller.quirk')
 
 subdir('proto')
 shared_module('fu_plugin_logitech_bulkcontroller',

@@ -2,7 +2,7 @@ if get_option('plugin_bcm57xx').require(gudev.found(),
     error_message: 'gudev is needed for plugin_bcm57xx').allowed()
 cargs = ['-DG_LOG_DOMAIN="FuPluginBcm57xx"']
 
-plugin_quirks += join_paths(meson.current_source_dir(), 'bcm57xx.quirk')
+plugin_quirks += files('bcm57xx.quirk')
 
 shared_module('fu_plugin_bcm57xx',
   fu_hash,

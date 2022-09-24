@@ -1,7 +1,7 @@
 if gusb.found()
 cargs = ['-DG_LOG_DOMAIN="FuPluginUsiDock"']
 
-plugin_quirks += join_paths(meson.current_source_dir(), 'usi-dock.quirk')
+plugin_quirks += files('usi-dock.quirk')
 
 shared_module('fu_plugin_usi_dock',
   fu_hash,
