@@ -6,7 +6,7 @@ if get_option('plugin_dummy')
 endif
 
 if bluez.allowed()
-  plugin_quirks += files('test-ble.quirk')
+  plugin_quirks += join_paths(meson.current_source_dir(), 'test-ble.quirk')
 endif
 
 shared_module('fu_plugin_test',

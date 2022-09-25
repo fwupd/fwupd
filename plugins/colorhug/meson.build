@@ -1,7 +1,7 @@
 if gusb.found()
 cargs = ['-DG_LOG_DOMAIN="FuPluginColorHug"']
 
-plugin_quirks += files('colorhug.quirk')
+plugin_quirks += join_paths(meson.current_source_dir(), 'colorhug.quirk')
 
 shared_module('fu_plugin_colorhug',
   fu_hash,

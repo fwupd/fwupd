@@ -1,7 +1,7 @@
 if gudev.found()
 cargs = ['-DG_LOG_DOMAIN="FuPluginSuperio"']
 
-plugin_quirks += files('superio.quirk')
+plugin_quirks += join_paths(meson.current_source_dir(), 'superio.quirk')
 
 shared_module('fu_plugin_superio',
   fu_hash,

@@ -1,7 +1,7 @@
 if gudev.found() and gusb.found()
 cargs = ['-DG_LOG_DOMAIN="FuPluginNordicHid"']
 
-plugin_quirks += files('nordic-hid.quirk')
+plugin_quirks += join_paths(meson.current_source_dir(), 'nordic-hid.quirk')
 
 shared_module('fu_plugin_nordic_hid',
   fu_hash,

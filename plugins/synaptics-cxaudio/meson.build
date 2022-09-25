@@ -1,7 +1,7 @@
 if gusb.found()
 cargs = ['-DG_LOG_DOMAIN="FuPluginSynapticsCxaudio"']
 
-plugin_quirks += files('synaptics-cxaudio.quirk')
+plugin_quirks += join_paths(meson.current_source_dir(), 'synaptics-cxaudio.quirk')
 
 shared_module('fu_plugin_synaptics_cxaudio',
   fu_hash,

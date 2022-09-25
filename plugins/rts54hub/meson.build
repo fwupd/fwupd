@@ -1,7 +1,7 @@
 if gusb.found()
 cargs = ['-DG_LOG_DOMAIN="FuPluginRts54Hub"']
 
-plugin_quirks += files('rts54hub.quirk')
+plugin_quirks += join_paths(meson.current_source_dir(), 'rts54hub.quirk')
 
 shared_module('fu_plugin_rts54hub',
   fu_hash,

@@ -1,7 +1,7 @@
 if gusb.found()
 cargs = ['-DG_LOG_DOMAIN="FuPluginEbitdo"']
 
-plugin_quirks += files('ebitdo.quirk')
+plugin_quirks += join_paths(meson.current_source_dir(), 'ebitdo.quirk')
 
 shared_module('fu_plugin_ebitdo',
   fu_hash,

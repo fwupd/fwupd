@@ -1,7 +1,7 @@
 if gusb.found()
 cargs = ['-DG_LOG_DOMAIN="FuPluginGoodixMoc"']
 
-plugin_quirks += files('goodixmoc.quirk')
+plugin_quirks += join_paths(meson.current_source_dir(), 'goodixmoc.quirk')
 
 shared_module('fu_plugin_goodixmoc',
   fu_hash,

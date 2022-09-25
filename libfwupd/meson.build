@@ -177,7 +177,7 @@ if introspection.allowed()
   test('fwupd-exported-api', diffcmd,
        args: [
         '-urNp',
-        files('fwupd.map'),
+        join_paths(meson.current_source_dir(), 'fwupd.map'),
         mapfile_target,
         ],
       )

@@ -4,7 +4,7 @@ if get_option('plugin_synaptics_rmi').require(gnutls.found(),
     error_message: 'gudev is needed for plugin_synaptics_rmi').allowed()
 cargs = ['-DG_LOG_DOMAIN="FuPluginSynapticsRmi"']
 
-plugin_quirks += files('synaptics-rmi.quirk')
+plugin_quirks += join_paths(meson.current_source_dir(), 'synaptics-rmi.quirk')
 
 shared_module('fu_plugin_synaptics_rmi',
   fu_hash,

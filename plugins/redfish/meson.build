@@ -2,7 +2,7 @@ if get_option('plugin_redfish').require(libcurl.found(),
     error_message: 'curl is needed for plugin_redfish').disable_auto_if(host_machine.system() != 'linux').allowed()
 cargs = ['-DG_LOG_DOMAIN="FuPluginRedfish"']
 
-plugin_quirks += files('redfish.quirk')
+plugin_quirks += join_paths(meson.current_source_dir(), 'redfish.quirk')
 
 ipmi_src = []
 if have_linux_ipmi

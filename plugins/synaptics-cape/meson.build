@@ -1,7 +1,7 @@
 if gusb.found()
 cargs = ['-DG_LOG_DOMAIN="FuPluginSynapticsCape"']
 
-plugin_quirks += files('synaptics-cape.quirk')
+plugin_quirks += join_paths(meson.current_source_dir(), 'synaptics-cape.quirk')
 
 shared_module('fu_plugin_synaptics_cape',
   fu_hash,

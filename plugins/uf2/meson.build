@@ -3,7 +3,7 @@ if get_option('plugin_uf2').require(gudev.found(),
     error_message: 'gudev is needed for plugin_uf2').allowed()
 cargs = ['-DG_LOG_DOMAIN="FuPluginUf2"']
 
-plugin_quirks += files('uf2.quirk')
+plugin_quirks += join_paths(meson.current_source_dir(), 'uf2.quirk')
 
 shared_module('fu_plugin_uf2',
   fu_hash,

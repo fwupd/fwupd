@@ -1,7 +1,7 @@
 if get_option('plugin_nitrokey').disable_auto_if(host_machine.system() != 'linux').allowed()
 cargs = ['-DG_LOG_DOMAIN="FuPluginNitrokey"']
 
-plugin_quirks += files('nitrokey.quirk')
+plugin_quirks += join_paths(meson.current_source_dir(), 'nitrokey.quirk')
 
 shared_module('fu_plugin_nitrokey',
   fu_hash,

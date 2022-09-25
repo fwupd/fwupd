@@ -3,7 +3,7 @@ if get_option('plugin_parade_lspcon').require(gudev.found(),
 
 cargs = ['-DG_LOG_DOMAIN="FuPluginParadeLspcon"']
 
-plugin_quirks += files('parade-lspcon.quirk')
+plugin_quirks += join_paths(meson.current_source_dir(), 'parade-lspcon.quirk')
 
 shared_module('fu_plugin_parade_lspcon',
   fu_hash,

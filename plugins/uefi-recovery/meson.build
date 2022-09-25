@@ -1,7 +1,7 @@
 if get_option('plugin_uefi_capsule').disable_auto_if(host_machine.system() != 'linux').allowed()
 cargs = ['-DG_LOG_DOMAIN="FuPluginUefiRecovery"']
 
-plugin_quirks += files('uefi-recovery.quirk')
+plugin_quirks += join_paths(meson.current_source_dir(), 'uefi-recovery.quirk')
 
 shared_module('fu_plugin_uefi_recovery',
   fu_hash,

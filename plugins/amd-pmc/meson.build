@@ -1,7 +1,7 @@
 if gudev.found() and (host_cpu == 'x86' or host_cpu == 'x86_64')
 cargs = ['-DG_LOG_DOMAIN="FuPluginAmdPmc"']
 
-plugin_quirks += files('amd-pmc.quirk')
+plugin_quirks += join_paths(meson.current_source_dir(), 'amd-pmc.quirk')
 
 shared_module('fu_plugin_amd_pmc',
   fu_hash,

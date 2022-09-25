@@ -1,7 +1,7 @@
 if gusb.found()
 cargs = ['-DG_LOG_DOMAIN="FuPluginSystem76Launch"']
 
-plugin_quirks += files('system76-launch.quirk')
+plugin_quirks += join_paths(meson.current_source_dir(), 'system76-launch.quirk')
 
 shared_module('fu_plugin_system76_launch',
   fu_hash,

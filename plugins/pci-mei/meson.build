@@ -1,7 +1,7 @@
 if hsi
 cargs = ['-DG_LOG_DOMAIN="FuPluginPciMei"']
 
-plugin_quirks += files('pci-mei.quirk')
+plugin_quirks += join_paths(meson.current_source_dir(), 'pci-mei.quirk')
 
 shared_module('fu_plugin_pci_mei',
   fu_hash,

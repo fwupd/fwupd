@@ -190,7 +190,7 @@ fu_hash = custom_target(
   input: fwupdplugin_src,
   output: 'fu-hash.h',
   command: [python3.full_path(),
-             files('fu-hash.py'),
+             join_paths(meson.current_source_dir(), 'fu-hash.py'),
              '@OUTPUT@', '@INPUT@']
 )
 
@@ -356,7 +356,7 @@ if introspection.allowed()
   test('fwupdplugin-exported-api', diffcmd,
        args: [
         '-urNp',
-        files('fwupdplugin.map'),
+        join_paths(meson.current_source_dir(), 'fwupdplugin.map'),
         fwupdplugin_mapfile_target,
         ],
       )

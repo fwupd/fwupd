@@ -11,7 +11,7 @@ if libmm_glib.found() and \
 cargs = ['-DG_LOG_DOMAIN="FuPluginMm"']
 cargs +=['-DMM_REQUIRED_VERSION="1.10.0"']
 
-plugin_quirks += files('modem-manager.quirk')
+plugin_quirks += join_paths(meson.current_source_dir(), 'modem-manager.quirk')
 
 shared_module('fu_plugin_modem_manager',
   fu_hash,

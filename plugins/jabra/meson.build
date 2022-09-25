@@ -1,7 +1,7 @@
 if gusb.found()
 cargs = ['-DG_LOG_DOMAIN="FuPluginJabra"']
 
-plugin_quirks += files('jabra.quirk')
+plugin_quirks += join_paths(meson.current_source_dir(), 'jabra.quirk')
 
 shared_module('fu_plugin_jabra',
   fu_hash,

@@ -1,7 +1,7 @@
 if gudev.found()
 cargs = ['-DG_LOG_DOMAIN="FuPluginOptionrom"']
 
-plugin_quirks += files('optionrom.quirk')
+plugin_quirks += join_paths(meson.current_source_dir(), 'optionrom.quirk')
 
 shared_module('fu_plugin_optionrom',
   fu_hash,
