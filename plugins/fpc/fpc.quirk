@@ -1,0 +1,9 @@
+# FPC Fingerprint sensor
+[USB\VID_10A5&PID_FFE0]
+Plugin = fpc
+[USB\VID_10A5&PID_FFE1]
+Plugin = fpc
+Flags = moh-device,rts
+[USB\VID_10A5&PID_9800]
+Plugin = fpc
+Flags = moh-device,rts
