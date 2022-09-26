@@ -12,6 +12,8 @@
 
 FuPlugin *
 fu_plugin_new(FuContext *ctx);
+void
+fu_plugin_set_context(FuPlugin *self, FuContext *ctx);
 gboolean
 fu_plugin_is_open(FuPlugin *self);
 guint

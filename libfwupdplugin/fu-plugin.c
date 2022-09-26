@@ -56,6 +56,8 @@ typedef struct {
 	FuPluginVfuncs vfuncs;
 } FuPluginPrivate;
 
+enum { PROP_0, PROP_CONTEXT, PROP_LAST };
+
 enum {
 	SIGNAL_DEVICE_ADDED,
 	SIGNAL_DEVICE_REMOVED,
@@ -712,6 +714,26 @@ fu_plugin_get_context(FuPlugin *self)
 {
 	FuPluginPrivate *priv = GET_PRIVATE(self);
 	return priv->ctx;
+}
+
+/**
+ * fu_plugin_set_context:
+ * @self: a #FuPlugin
+ * @ctx: (nullable): optional #FuContext
+ *
+ * Sets the context for this plugin.
+ *
+ * Since: 1.8.6
+ **/
+void
+fu_plugin_set_context(FuPlugin *self, FuContext *ctx)
+{
+	FuPluginPrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_PLUGIN(self));
+	g_return_if_fail(FU_IS_CONTEXT(ctx) || ctx == NULL);
+
+	if (g_set_object(&priv->ctx, ctx))
+		g_object_notify(G_OBJECT(self), "context");
 }
 
 static gboolean
@@ -2604,12 +2626,44 @@ fu_plugin_order_compare(FuPlugin *plugin1, FuPlugin *plugin2)
 		return 1;
 	return fu_plugin_name_compare(plugin1, plugin2);
 }
+static void
+fu_plugin_get_property(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
+{
+	FuPlugin *self = FU_PLUGIN(object);
+	FuPluginPrivate *priv = GET_PRIVATE(self);
+	switch (prop_id) {
+	case PROP_CONTEXT:
+		g_value_set_object(value, priv->ctx);
+		break;
+	default:
+		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
+		break;
+	}
+}
+
+static void
+fu_plugin_set_property(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
+{
+	FuPlugin *self = FU_PLUGIN(object);
+	switch (prop_id) {
+	case PROP_CONTEXT:
+		fu_plugin_set_context(self, g_value_get_object(value));
+		break;
+	default:
+		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
+		break;
+	}
+}
 
 static void
 fu_plugin_class_init(FuPluginClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
+	GParamSpec *pspec;
+
 	object_class->finalize = fu_plugin_finalize;
+	object_class->get_property = fu_plugin_get_property;
+	object_class->set_property = fu_plugin_set_property;
 
 	/**
 	 * FuPlugin::device-added:
@@ -2721,6 +2775,20 @@ fu_plugin_class_init(FuPluginClass *klass)
 			 g_cclosure_marshal_VOID__VOID,
 			 G_TYPE_NONE,
 			 0);
+
+	/**
+	 * FuPlugin:context:
+	 *
+	 * The #FuContext to use.
+	 *
+	 * Since: 1.8.6
+	 */
+	pspec = g_param_spec_object("context",
+				    NULL,
+				    NULL,
+				    FU_TYPE_CONTEXT,
+				    G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_NAME);
+	g_object_class_install_property(object_class, PROP_CONTEXT, pspec);
 }
 
 static void
@@ -2782,8 +2850,7 @@ FuPlugin *
 fu_plugin_new(FuContext *ctx)
 {
 	FuPlugin *self = FU_PLUGIN(g_object_new(FU_TYPE_PLUGIN, NULL));
-	FuPluginPrivate *priv = GET_PRIVATE(self);
 	if (ctx != NULL)
-		priv->ctx = g_object_ref(ctx);
+		fu_plugin_set_context(self, ctx);
 	return self;
 }
