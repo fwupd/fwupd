@@ -7,7 +7,7 @@ if not lzma.found() or \
 endif
 cargs = ['-DG_LOG_DOMAIN="FuPluginIntelSpi"']
 
-plugin_quirks += join_paths(meson.current_source_dir(), 'intel-spi.quirk')
+plugin_quirks += files('intel-spi.quirk')
 
 shared_module('fu_plugin_intel_spi',
   fu_hash,

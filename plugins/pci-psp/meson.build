@@ -1,7 +1,7 @@
 if hsi and (host_cpu == 'x86' or host_cpu == 'x86_64')
 cargs = ['-DG_LOG_DOMAIN="FuPluginPciPsp"']
 
-plugin_quirks += join_paths(meson.current_source_dir(), 'pci-psp.quirk')
+plugin_quirks += files('pci-psp.quirk')
 
 shared_module('fu_plugin_pci_psp',
   fu_hash,

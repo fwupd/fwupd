@@ -2,9 +2,7 @@ if get_option('plugin_android_boot').require(gudev.found(),
     error_message: 'gudev is needed for plugin_android_boot').allowed()
 cargs = ['-DG_LOG_DOMAIN="FuPluginAndroidBoot"']
 
-install_data(['android-boot.quirk'],
-  install_dir: join_paths(datadir, 'fwupd', 'quirks.d')
-)
+plugin_quirks += files('android-boot.quirk')
 
 shared_module('fu_plugin_android_boot',
   fu_hash,

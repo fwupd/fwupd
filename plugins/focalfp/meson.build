@@ -1,7 +1,7 @@
 if gudev.found()
 cargs = ['-DG_LOG_DOMAIN="FuPluginFocalfp"']
 
-plugin_quirks += join_paths(meson.current_source_dir(), 'focalfp.quirk')
+plugin_quirks += files('focalfp.quirk')
 
 shared_module('fu_plugin_focalfp',
   fu_hash,

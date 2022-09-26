@@ -1,7 +1,7 @@
 if gusb.found()
 cargs = ['-DG_LOG_DOMAIN="FuPluginNovatek"']
 
-plugin_quirks += join_paths(meson.current_source_dir(), 'hailuck.quirk')
+plugin_quirks += files('hailuck.quirk')
 
 shared_module('fu_plugin_hailuck',
   fu_hash,

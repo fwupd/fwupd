@@ -2,7 +2,7 @@ if get_option('plugin_scsi').require(gudev.found(),
     error_message: 'gudev is needed for plugin_scsi').allowed()
 cargs = ['-DG_LOG_DOMAIN="FuPluginScsi"']
 
-plugin_quirks += join_paths(meson.current_source_dir(), 'scsi.quirk')
+plugin_quirks += files('scsi.quirk')
 
 shared_module('fu_plugin_scsi',
   fu_hash,
