@@ -6,7 +6,7 @@ if hsi and \
     error_message: 'gudev is needed for plugin_tpm').allowed()
 cargs = ['-DG_LOG_DOMAIN="FuPluginTpm"']
 
-plugin_quirks += join_paths(meson.current_source_dir(), 'tpm.quirk')
+plugin_quirks += files('tpm.quirk')
 
 plugin_tpm = shared_module('fu_plugin_tpm',
   fu_hash,

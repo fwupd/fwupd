@@ -1,7 +1,7 @@
 if gusb.found()
 cargs = ['-DG_LOG_DOMAIN="FuPluginDfu"']
 
-plugin_quirks += join_paths(meson.current_source_dir(), 'dfu.quirk')
+plugin_quirks += files('dfu.quirk')
 
 dfu = static_library(
   'dfu',

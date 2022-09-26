@@ -1,7 +1,7 @@
 if gusb.found()
 cargs = ['-DG_LOG_DOMAIN="FuPluginElanfp"']
 
-plugin_quirks += join_paths(meson.current_source_dir(), 'elanfp.quirk')
+plugin_quirks += files('elanfp.quirk')
 
 shared_module('fu_plugin_elanfp',
   fu_hash,
