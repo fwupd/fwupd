@@ -12,7 +12,7 @@ jobs:
   pre-commit:
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
       - name: Refresh dependencies
@@ -28,7 +28,7 @@ jobs:
   abi:
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
       - name: Refresh dependencies
@@ -43,7 +43,7 @@ jobs:
   openbmc:
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Refresh dependencies
         run: sudo apt update
       - name: Install dependencies
@@ -61,7 +61,7 @@ jobs:
       matrix:
         os: [fedora, debian-x86_64, arch, debian-i386]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Docker login
         run: docker login docker.pkg.github.com -u $GITHUB_ACTOR -p $GITHUB_TOKEN
         env:
@@ -79,7 +79,7 @@ jobs:
     steps:
     - name: install dependencies
       run: brew install meson gcab libusb gobject-introspection sqlite libarchive json-glib curl gnutls protobuf-c vala
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: configure
       run: ./contrib/ci/build_macos.sh
     - name: build
