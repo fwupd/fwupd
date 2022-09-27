@@ -22,11 +22,6 @@
 #include "fu-quirks.h"
 #include "fu-string.h"
 
-#ifdef _WIN32
-#include <fwupd-windows.h>
-#include <windows.h>
-#endif
-
 /**
  * FuQuirks:
  *
