@@ -50,8 +50,8 @@ fu_test_self_init(FuTest *self, GError **error_global)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	ret = fu_context_reload_bios_settings(ctx, &error);
-	g_assert_true(ret);
 	g_assert_no_error(error);
+	g_assert_true(ret);
 	g_test_assert_expected_messages();
 
 	self->plugin_uefi_capsule = fu_plugin_new(ctx);
@@ -124,8 +124,8 @@ fu_plugin_lenovo_thinklmi_bootorder_locked(gconstpointer user_data)
 	(void)g_setenv("FWUPD_SYSFSFWATTRIBDIR", test_dir, TRUE);
 
 	ret = fu_context_reload_bios_settings(self->ctx, &error);
-	g_assert_true(ret);
 	g_assert_no_error(error);
+	g_assert_true(ret);
 
 	dev = fu_test_probe_fake_esrt(self);
 	fu_plugin_runner_device_register(self->plugin_lenovo_thinklmi, dev);
@@ -144,8 +144,8 @@ fu_plugin_lenovo_thinklmi_bootorder_unlocked(gconstpointer user_data)
 	(void)g_setenv("FWUPD_SYSFSFWATTRIBDIR", test_dir, TRUE);
 
 	ret = fu_context_reload_bios_settings(self->ctx, &error);
-	g_assert_true(ret);
 	g_assert_no_error(error);
+	g_assert_true(ret);
 	dev = fu_test_probe_fake_esrt(self);
 	fu_plugin_runner_device_register(self->plugin_lenovo_thinklmi, dev);
 	g_assert_true(fu_device_has_flag(dev, FWUPD_DEVICE_FLAG_UPDATABLE));
@@ -166,8 +166,8 @@ fu_plugin_lenovo_thinklmi_reboot_pending(gconstpointer user_data)
 	(void)g_setenv("FWUPD_SYSFSFWATTRIBDIR", test_dir, TRUE);
 
 	ret = fu_context_reload_bios_settings(self->ctx, &error);
-	g_assert_true(ret);
 	g_assert_no_error(error);
+	g_assert_true(ret);
 	dev = fu_test_probe_fake_esrt(self);
 	fu_plugin_runner_device_register(self->plugin_lenovo_thinklmi, dev);
 	g_assert_true(fu_device_has_flag(dev, FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN));

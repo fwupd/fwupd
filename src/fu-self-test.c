@@ -193,8 +193,8 @@ fu_plugin_hash_func(gconstpointer user_data)
 					 "libfu_plugin_invalid." G_MODULE_SUFFIX,
 					 NULL);
 	ret = fu_plugin_open(plugin, pluginfn, &error);
-	g_assert_true(ret);
 	g_assert_no_error(error);
+	g_assert_true(ret);
 
 	/* make sure it tainted now */
 	g_test_expect_message("FuEngine", G_LOG_LEVEL_WARNING, "* has incorrect built version*");
