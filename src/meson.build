@@ -22,6 +22,9 @@ daemon_dep = [
 client_dep = [
   gudev,
   gusb,
+  libcurl,
+  libjsonglib,
+  libxmlb,
   sqlite,
 ]
 if libsystemd.found()
@@ -73,6 +76,31 @@ if host_machine.system() == 'windows'
   daemon_src += windows.compile_resources(fwupd_rc)
 endif
 
+fwupdutil = library(
+  'fwupdutil',
+  sources: [
+    'fu-progressbar.c',
+    'fu-security-attr-common.c',
+    'fu-util-bios-setting.c',
+    'fu-util-common.c',
+    systemd_src,
+  ],
+  install: true,
+  install_dir: plugin_dir,
+  include_directories: [
+    root_incdir,
+    fwupd_incdir,
+    fwupdplugin_incdir,
+  ],
+  dependencies: [
+    client_dep,
+  ],
+  link_with: [
+    fwupd,
+    fwupdplugin,
+  ],
+)
+
 if build_daemon
 install_data(['org.freedesktop.fwupd.xml'],
   install_dir: join_paths(datadir, 'dbus-1', 'interfaces')
@@ -83,12 +111,7 @@ fwupdmgr = executable(
   sources: [
     'fu-util.c',
     'fu-history.c',
-    'fu-progressbar.c',
-    'fu-security-attr-common.c',
-    'fu-util-bios-setting.c',
-    'fu-util-common.c',
     client_src,
-    systemd_src
   ],
   include_directories: [
     root_incdir,
@@ -97,12 +120,12 @@ fwupdmgr = executable(
   ],
   dependencies: [
     libfwupd_deps,
-    libxmlb,
     client_dep,
   ],
   link_with: [
     fwupd,
     fwupdplugin,
+    fwupdutil,
   ],
   install: true,
   install_rpath: plugin_dir,
@@ -126,8 +149,6 @@ fwupdoffline = executable(
     'fu-history.c',
     'fu-offline.c',
     'fu-spawn.c',
-    'fu-security-attr-common.c',
-    'fu-util-common.c',
     systemd_src
   ],
   include_directories: [
@@ -138,11 +159,11 @@ fwupdoffline = executable(
   dependencies: [
     libfwupd_deps,
     client_dep,
-    libxmlb,
   ],
   link_with: [
     fwupd,
     fwupdplugin,
+    fwupdutil,
   ],
   install: true,
   install_rpath: plugin_dir,
@@ -164,9 +185,6 @@ fwupdtool = executable(
   export_dynamic: true,
   sources: [
     'fu-tool.c',
-    'fu-progressbar.c',
-    'fu-util-common.c',
-    'fu-util-bios-setting.c',
     daemon_src,
   ],
   include_directories: [
@@ -176,7 +194,6 @@ fwupdtool = executable(
   ],
   dependencies: [
     libfwupd_deps,
-    libxmlb,
     libgcab,
     libarchive,
     client_dep,
@@ -184,7 +201,8 @@ fwupdtool = executable(
   ],
   link_with: [
     fwupd,
-    fwupdplugin
+    fwupdplugin,
+    fwupdutil,
   ],
   install: true,
   install_rpath: plugin_dir,

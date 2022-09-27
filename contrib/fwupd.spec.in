@@ -425,6 +425,7 @@ done
 /usr/lib/systemd/system-shutdown/fwupd.shutdown
 %dir %{_libdir}/fwupd-%{fwupdplugin_version}
 %{_libdir}/fwupd-%{fwupdplugin_version}/libfwupdplugin.so
+%{_libdir}/fwupd-%{fwupdplugin_version}/libfwupdutil.so
 %ifarch i686 x86_64
 %{_libdir}/fwupd-%{fwupdplugin_version}/libfu_plugin_acpi_facp.so
 %endif
