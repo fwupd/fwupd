@@ -571,15 +571,27 @@ if build_standalone
   subdir('po')
   subdir('libfwupdplugin')
   subdir('contrib')
-
-  # the plugins each add the gresource files into an array, and then in src:
-  # * for -Dgresource_quirks=enabled, they get built into ./src/fwupd and the files are ignored
-  # * for -Dgresource_quirks=disabled, the files get installed into quirks.d
   subdir('plugins')
   subdir('src')
-
 endif
 subdir('docs')
+
+# append all the quirks into one big file and gzip it -- lzma is smaller, but needs libxmlb 0.3.3
+builtin_quirk = custom_target('builtin-quirk',
+  input: plugin_quirks,
+  output: 'builtin.quirk',
+  capture: true,
+  command: ['cat', '@INPUT@'],
+)
+gzip = find_program('gzip')
+custom_target('builtin-quirk-gz',
+  input: builtin_quirk,
+  output: 'builtin.quirk.gz',
+  capture: true,
+  command: [gzip, '-k', '--stdout', '@INPUT@'],
+  install: true,
+  install_dir: join_paths(datadir, 'fwupd', 'quirks.d'),
+)
 
 if build_daemon and libsystemd.found()
   install_symlink('fwupd-offline-update.service',

@@ -425,8 +425,8 @@ fu_plugin_dell_dock_func(gconstpointer user_data)
 	ret = fu_plugin_dell_backend_device_added(self->plugin_dell,
 						  FU_DEVICE(fake_usb_device),
 						  &error);
-	g_assert_true(ret);
 	g_assert_no_error(error);
+	g_assert_true(ret);
 	g_assert_cmpint(devices->len, ==, 3);
 	g_ptr_array_set_size(devices, 0);
 	g_free(buf.record);
@@ -462,8 +462,8 @@ fu_plugin_dell_dock_func(gconstpointer user_data)
 	ret = fu_plugin_dell_backend_device_added(self->plugin_dell,
 						  FU_DEVICE(fake_usb_device),
 						  &error);
-	g_assert_true(ret);
 	g_assert_no_error(error);
+	g_assert_true(ret);
 	g_assert_cmpint(devices->len, ==, 2);
 	g_ptr_array_set_size(devices, 0);
 	g_free(buf.record);

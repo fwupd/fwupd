@@ -1,7 +1,7 @@
 if gusb.found()
 cargs = ['-DG_LOG_DOMAIN="FuPluginIntelUsb4"']
 
-plugin_quirks += join_paths(meson.current_source_dir(), 'intel-usb4.quirk')
+plugin_quirks += files('intel-usb4.quirk')
 
 shared_module('fu_plugin_intel_usb4',
   fu_hash,

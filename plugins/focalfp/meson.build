@@ -1,14 +1,14 @@
-if get_option('plugin_scsi').require(gudev.found(),
-    error_message: 'gudev is needed for plugin_scsi').allowed()
-cargs = ['-DG_LOG_DOMAIN="FuPluginScsi"']
+if gudev.found()
+cargs = ['-DG_LOG_DOMAIN="FuPluginFocalfp"']
 
-plugin_quirks += files('scsi.quirk')
+plugin_quirks += files('focalfp.quirk')
 
-shared_module('fu_plugin_scsi',
+shared_module('fu_plugin_focalfp',
   fu_hash,
   sources: [
-    'fu-plugin-scsi.c',
-    'fu-scsi-device.c',
+    'fu-plugin-focalfp.c',
+    'fu-focalfp-firmware.c',
+    'fu-focalfp-hid-device.c',
   ],
   include_directories: [
     root_incdir,

@@ -1129,3 +1129,9 @@ LIBFWUPDPLUGIN_1.8.5 {
     fu_usb_device_ms_ds20_new;
   local: *;
 } LIBFWUPDPLUGIN_1.8.4;
+
+LIBFWUPDPLUGIN_1.8.6 {
+  global:
+    fu_plugin_set_context;
+  local: *;
+} LIBFWUPDPLUGIN_1.8.5;

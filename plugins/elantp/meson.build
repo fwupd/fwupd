@@ -1,7 +1,7 @@
 if gudev.found()
 cargs = ['-DG_LOG_DOMAIN="FuPluginElantp"']
 
-plugin_quirks += join_paths(meson.current_source_dir(), 'elantp.quirk')
+plugin_quirks += files('elantp.quirk')
 
 shared_module('fu_plugin_elantp',
   fu_hash,

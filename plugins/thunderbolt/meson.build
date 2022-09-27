@@ -1,7 +1,7 @@
 if gudev.found() and (host_cpu == 'x86' or host_cpu == 'x86_64')
 cargs = ['-DG_LOG_DOMAIN="FuPluginThunderbolt"']
 
-plugin_quirks += join_paths(meson.current_source_dir(), 'thunderbolt.quirk')
+plugin_quirks += files('thunderbolt.quirk')
 
 fu_plugin_thunderbolt = shared_module('fu_plugin_thunderbolt',
   fu_hash,

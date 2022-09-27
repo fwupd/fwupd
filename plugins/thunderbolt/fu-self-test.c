@@ -1078,8 +1078,8 @@ test_image_validation(ThunderboltTest *tt, gconstpointer user_data)
 
 	/* parse controller image */
 	ret = fu_firmware_parse(firmware_ctl, ctl_data, FWUPD_INSTALL_FLAG_NO_SEARCH, &error);
-	g_assert_true(ret);
 	g_assert_no_error(error);
+	g_assert_true(ret);
 
 	/* valid firmware update image */
 	fwi_path = g_test_build_filename(G_TEST_DIST, "tests", "minimal-fw.bin", NULL);
@@ -1092,8 +1092,8 @@ test_image_validation(ThunderboltTest *tt, gconstpointer user_data)
 
 	/* parse */
 	ret = fu_firmware_parse(firmware_fwi, fwi_data, FWUPD_INSTALL_FLAG_NO_SEARCH, &error);
-	g_assert_true(ret);
 	g_assert_no_error(error);
+	g_assert_true(ret);
 
 	/* a wrong/bad firmware update image */
 	bad_path = g_test_build_filename(G_TEST_DIST, "tests", "colorhug.bin", NULL);

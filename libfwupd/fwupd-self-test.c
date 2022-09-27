@@ -1178,8 +1178,8 @@ fwupd_common_guid_func(void)
 				     &buf,
 				     FWUPD_GUID_FLAG_NONE,
 				     &error);
-	g_assert_true(ret);
 	g_assert_no_error(error);
+	g_assert_true(ret);
 	g_assert_cmpint(memcmp(buf,
 			       "\x00\x11\x22\x33\x44\x55\x66\x77\x88\x99\xaa\xbb\xcc\xdd\xee\xff",
 			       sizeof(buf)),
@@ -1193,8 +1193,8 @@ fwupd_common_guid_func(void)
 				     &buf,
 				     FWUPD_GUID_FLAG_MIXED_ENDIAN,
 				     &error);
-	g_assert_true(ret);
 	g_assert_no_error(error);
+	g_assert_true(ret);
 	g_assert_cmpint(memcmp(buf,
 			       "\x33\x22\x11\x00\x55\x44\x77\x66\x88\x99\xaa\xbb\xcc\xdd\xee\xff",
 			       sizeof(buf)),

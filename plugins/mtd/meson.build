@@ -1,7 +1,7 @@
 if get_option('plugin_mtd').disable_auto_if(host_machine.system() != 'linux').allowed()
 cargs = ['-DG_LOG_DOMAIN="FuPluginMtd"']
 
-plugin_quirks += join_paths(meson.current_source_dir(), 'mtd.quirk')
+plugin_quirks += files('mtd.quirk')
 
 shared_module('fu_plugin_mtd',
   fu_hash,
