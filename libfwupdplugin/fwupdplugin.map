@@ -1132,6 +1132,7 @@ LIBFWUPDPLUGIN_1.8.5 {
 
 LIBFWUPDPLUGIN_1.8.6 {
   global:
+    fu_plugin_new_from_gtype;
     fu_plugin_set_context;
   local: *;
 } LIBFWUPDPLUGIN_1.8.5;

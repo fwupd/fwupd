@@ -2626,6 +2626,37 @@ fu_plugin_order_compare(FuPlugin *plugin1, FuPlugin *plugin2)
 		return 1;
 	return fu_plugin_name_compare(plugin1, plugin2);
 }
+
+static gchar *
+fu_plugin_convert_gtype_to_name(GType gtype)
+{
+	const gchar *gtype_name = g_type_name(gtype);
+	gsize len = strlen(gtype_name);
+	g_autoptr(GString) str = g_string_new(NULL);
+
+	g_return_val_if_fail(g_str_has_prefix(gtype_name, "Fu"), NULL);
+	g_return_val_if_fail(g_str_has_suffix(gtype_name, "Plugin"), NULL);
+
+	/* self tests */
+	if (g_strcmp0(gtype_name, "FuPlugin") == 0)
+		return g_strdup("plugin");
+
+	/* normal plugins */
+	for (guint j = 2; j < len - 6; j++) {
+		gchar tmp = gtype_name[j];
+		if (g_ascii_isupper(tmp)) {
+			if (str->len > 0)
+				g_string_append_c(str, '_');
+			g_string_append_c(str, g_ascii_tolower(tmp));
+		} else {
+			g_string_append_c(str, tmp);
+		}
+	}
+	if (str->len == 0)
+		return NULL;
+	return g_string_free(g_steal_pointer(&str), FALSE);
+}
+
 static void
 fu_plugin_get_property(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
 {
@@ -2836,6 +2867,25 @@ fu_plugin_finalize(GObject *object)
 	g_free(priv->data);
 
 	G_OBJECT_CLASS(fu_plugin_parent_class)->finalize(object);
+}
+
+/**
+ * fu_plugin_new_from_gtype:
+ * @ctx: (nullable): a #FuContext
+ * @gtype: a #GType, possibly even `G_TYPE_PLUGIN`
+ *
+ * Creates a new #FuPlugin
+ *
+ * Since: 1.8.6
+ **/
+FuPlugin *
+fu_plugin_new_from_gtype(GType gtype, FuContext *ctx)
+{
+	g_autofree gchar *name = NULL;
+	g_return_val_if_fail(gtype != G_TYPE_INVALID, NULL);
+	g_return_val_if_fail(ctx == NULL || FU_IS_CONTEXT(ctx), NULL);
+	name = fu_plugin_convert_gtype_to_name(gtype);
+	return g_object_new(gtype, "context", ctx, "name", name, NULL);
 }
 
 /**

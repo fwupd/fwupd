@@ -2339,7 +2339,7 @@ fu_daemon_setup(FuDaemon *self, const gchar *socket_address, GError **error)
 			 self);
 	if (!fu_engine_load(self->engine,
 			    FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_HWINFO |
-				FU_ENGINE_LOAD_FLAG_REMOTES,
+				FU_ENGINE_LOAD_FLAG_REMOTES | FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS,
 			    fu_progress_get_child(progress),
 			    error)) {
 		g_prefix_error(error, "failed to load engine: ");

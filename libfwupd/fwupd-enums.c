@@ -442,6 +442,8 @@ fwupd_plugin_flag_to_string(FwupdPluginFlags plugin_flag)
 		return "auth-required";
 	if (plugin_flag == FWUPD_PLUGIN_FLAG_SECURE_CONFIG)
 		return "secure-config";
+	if (plugin_flag == FWUPD_PLUGIN_FLAG_MODULAR)
+		return "modular";
 	return NULL;
 }
 
@@ -488,6 +490,8 @@ fwupd_plugin_flag_from_string(const gchar *plugin_flag)
 		return FWUPD_PLUGIN_FLAG_AUTH_REQUIRED;
 	if (g_strcmp0(plugin_flag, "secure-config") == 0)
 		return FWUPD_PLUGIN_FLAG_SECURE_CONFIG;
+	if (g_strcmp0(plugin_flag, "modular") == 0)
+		return FWUPD_PLUGIN_FLAG_MODULAR;
 	return FWUPD_DEVICE_FLAG_UNKNOWN;
 }
 

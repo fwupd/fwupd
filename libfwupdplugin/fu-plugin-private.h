@@ -12,6 +12,8 @@
 
 FuPlugin *
 fu_plugin_new(FuContext *ctx);
+FuPlugin *
+fu_plugin_new_from_gtype(GType gtype, FuContext *ctx);
 void
 fu_plugin_set_context(FuPlugin *self, FuContext *ctx);
 gboolean

@@ -864,6 +864,14 @@ typedef enum {
  */
 #define FWUPD_PLUGIN_FLAG_SECURE_CONFIG (1u << 13)
 /**
+ * FWUPD_PLUGIN_FLAG_MODULAR:
+ *
+ * The plugin is loaded from an external module.
+ *
+ * Since: 1.8.6
+ */
+#define FWUPD_PLUGIN_FLAG_MODULAR (1u << 14)
+/**
  * FWUPD_PLUGIN_FLAG_UNKNOWN:
  *
  * The plugin flag is Unknown.

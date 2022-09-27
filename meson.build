@@ -567,6 +567,18 @@ if build_standalone
   subdir('po')
   subdir('libfwupdplugin')
   subdir('contrib')
+
+  # common to all plugins
+  plugin_builtins = []
+  plugin_incdirs = [
+    root_incdir,
+    fwupd_incdir,
+    fwupdplugin_incdir,
+  ]
+  plugin_libs = [
+    fwupd,
+    fwupdplugin,
+  ]
   subdir('plugins')
   subdir('src')
 endif

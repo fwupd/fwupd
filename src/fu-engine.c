@@ -54,6 +54,7 @@
 #include "fu-kenv.h"
 #include "fu-keyring-utils.h"
 #include "fu-mutex.h"
+#include "fu-plugin-builtin.h"
 #include "fu-plugin-list.h"
 #include "fu-plugin-private.h"
 #include "fu-release.h"
@@ -6750,6 +6751,7 @@ fu_engine_load_plugins_filename(FuEngine *self, const gchar *filename, FuProgres
 	/* open module */
 	plugin = fu_plugin_new(self->ctx);
 	fu_plugin_set_name(plugin, name);
+	fu_plugin_add_flag(plugin, FWUPD_PLUGIN_FLAG_MODULAR);
 	fu_engine_add_plugin(self, plugin);
 	fu_progress_step_done(progress);
 
@@ -6771,8 +6773,31 @@ fu_engine_load_plugins_filenames(FuEngine *self, GPtrArray *filenames, FuProgres
 	}
 }
 
+static void
+fu_engine_load_plugins_builtins(FuEngine *self, FuProgress *progress)
+{
+	guint steps = 0;
+
+	/* count possible steps */
+	for (guint i = 0; fu_plugin_externals[i] != NULL; i++)
+		steps++;
+
+	/* progress */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_set_steps(progress, steps);
+	for (guint i = 0; fu_plugin_externals[i] != NULL; i++) {
+		GType plugin_gtype = fu_plugin_externals[i]();
+		g_autoptr(FuPlugin) plugin = fu_plugin_new_from_gtype(plugin_gtype, self->ctx);
+		fu_engine_add_plugin(self, plugin);
+		fu_progress_step_done(progress);
+	}
+}
+
 static gboolean
-fu_engine_load_plugins(FuEngine *self, FuProgress *progress, GError **error)
+fu_engine_load_plugins(FuEngine *self,
+		       FuEngineLoadFlags flags,
+		       FuProgress *progress,
+		       GError **error)
 {
 	const gchar *fn;
 	g_autoptr(GDir) dir = NULL;
@@ -6785,6 +6810,7 @@ fu_engine_load_plugins(FuEngine *self, FuProgress *progress, GError **error)
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_NO_PROFILE);
 	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 13, "search");
 	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 87, "load");
+	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 5, "load-builtins");
 
 	/* search */
 	plugin_path = fu_path_from_kind(FU_PATH_KIND_PLUGINDIR_PKG);
@@ -6801,6 +6827,11 @@ fu_engine_load_plugins(FuEngine *self, FuProgress *progress, GError **error)
 
 	/* load */
 	fu_engine_load_plugins_filenames(self, filenames, fu_progress_get_child(progress));
+	fu_progress_step_done(progress);
+
+	/* load builtins */
+	if (flags & FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS)
+		fu_engine_load_plugins_builtins(self, fu_progress_get_child(progress));
 	fu_progress_step_done(progress);
 
 	/* success */
@@ -7714,8 +7745,8 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 	fu_progress_step_done(progress);
 
 	/* load plugins early, as we have to call ->load() *before* building quirk silo */
-	if (!fu_engine_load_plugins(self, fu_progress_get_child(progress), error)) {
-		g_prefix_error(error, "Failed to load plugins: ");
+	if (!fu_engine_load_plugins(self, flags, fu_progress_get_child(progress), error)) {
+		g_prefix_error(error, "failed to load plugins: ");
 		return FALSE;
 	}
 	fu_progress_step_done(progress);
