@@ -48,6 +48,7 @@ if get_option('tests')
       fwupdplugin,
     ],
     install: true,
+    install_rpath: plugin_dir,
     install_dir: installed_test_bindir,
   )
   test('nitrokey-self-test', e)  # added to installed-tests
