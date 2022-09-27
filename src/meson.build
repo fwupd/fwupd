@@ -178,10 +178,46 @@ resources_src = gnome.compile_resources(
   c_name: 'fu'
 )
 
+# generate a header file that allows us to instantiate the plugins without copy-pasting or
+# duplicating the meson build logic in the engine
+plugin_names = []
+foreach lib : plugin_builtins
+  plugin_names += lib.full_path()
+endforeach
+plugins_hdr = custom_target('fwupd-generate-plugins-header',
+  output : 'fu-plugin-builtin.h',
+  command : [
+    join_paths(meson.project_source_root(), 'contrib', 'generate-plugins-header.py'),
+    '@OUTPUT@',
+    meson.project_source_root(),
+    ','.join(plugin_names),
+  ],
+)
+
+# build all the plugins into one installed library
+fwupdpluginbuiltin = library(
+  'fwupdpluginbuiltin',
+  sources: [],
+  install: true,
+  install_dir: plugin_dir,
+  include_directories: plugin_incdirs,
+  dependencies: [
+    plugin_deps,
+  ],
+  link_whole: [
+    plugin_builtins,
+  ],
+  link_with: [
+    fwupd,
+    fwupdplugin,
+  ],
+)
+
 fwupdtool = executable(
   'fwupdtool',
   resources_src,
   fu_hash,
+  plugins_hdr,
   export_dynamic: true,
   sources: [
     'fu-tool.c',
@@ -202,6 +238,7 @@ fwupdtool = executable(
   link_with: [
     fwupd,
     fwupdplugin,
+    fwupdpluginbuiltin,
     fwupdutil,
   ],
   install: true,
@@ -250,6 +287,7 @@ executable(
   'fwupd',
   resources_src,
   fu_hash,
+  plugins_hdr,
   sources: [
     daemon_loader_src,
     'fu-daemon.c',
@@ -268,6 +306,7 @@ executable(
   link_with: [
     fwupd,
     fwupdplugin,
+    fwupdpluginbuiltin,
   ],
   c_args: [
     '-DFU_OFFLINE_DESTDIR=""',
@@ -280,10 +319,6 @@ executable(
 endif
 
 if get_option('tests')
-  test_deps += colorhug_test_firmware
-  test_deps += hwid_test_firmware
-  test_deps += multiple_rels_test_firmware
-  test_deps += noreqs_test_firmware
   env = environment()
   env.set('G_TEST_SRCDIR', meson.current_source_dir())
   env.set('G_TEST_BUILDDIR', meson.current_build_dir())
@@ -291,8 +326,12 @@ if get_option('tests')
   e = executable(
     'fu-self-test',
     resources_src,
-    test_deps,
+    colorhug_test_firmware,
+    hwid_test_firmware,
+    multiple_rels_test_firmware,
+    noreqs_test_firmware,
     fu_hash,
+    plugins_hdr,
     sources: [
       'fu-progressbar.c',
       'fu-spawn.c',
@@ -309,7 +348,8 @@ if get_option('tests')
     ],
     link_with: [
       fwupd,
-      fwupdplugin
+      fwupdplugin,
+      fwupdpluginbuiltin,
     ],
     c_args: [
     ],

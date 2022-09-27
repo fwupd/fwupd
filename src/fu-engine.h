@@ -27,6 +27,8 @@ G_DECLARE_FINAL_TYPE(FuEngine, fu_engine, FU, ENGINE, GObject)
  * @FU_ENGINE_LOAD_FLAG_REMOTES:	Enumerate remotes
  * @FU_ENGINE_LOAD_FLAG_HWINFO:		Load details about the hardware
  * @FU_ENGINE_LOAD_FLAG_NO_CACHE:	Do not save persistent xmlb silos
+ * @FU_ENGINE_LOAD_FLAG_NO_IDLE_SOURCES:Do not load idle sources
+ * @FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS:	Load built-in plugins
  *
  * The flags to use when loading the engine.
  **/
@@ -38,6 +40,7 @@ typedef enum {
 	FU_ENGINE_LOAD_FLAG_HWINFO = 1 << 3,
 	FU_ENGINE_LOAD_FLAG_NO_CACHE = 1 << 4,
 	FU_ENGINE_LOAD_FLAG_NO_IDLE_SOURCES = 1 << 5,
+	FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS = 1 << 6,
 	/*< private >*/
 	FU_ENGINE_LOAD_FLAG_LAST
 } FuEngineLoadFlags;

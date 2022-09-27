@@ -1694,6 +1694,10 @@ fu_util_plugin_flag_to_string(FwupdPluginFlags plugin_flag)
 		/* TRANSLATORS: no peeking */
 		return _("Configuration is only readable by the system administrator");
 	}
+	if (plugin_flag == FWUPD_PLUGIN_FLAG_MODULAR) {
+		/* TRANSLATORS: the plugin was created from a .so object, and was not built-in */
+		return _("Loaded from an external module");
+	}
 	if (plugin_flag == FWUPD_PLUGIN_FLAG_EFIVAR_NOT_MOUNTED) {
 		/* TRANSLATORS: the user is using Gentoo/Arch and has screwed something up */
 		return _("Required efivarfs filesystem was not found");
@@ -1725,6 +1729,7 @@ fu_util_plugin_flag_to_cli_text(FwupdPluginFlags plugin_flag)
 		return NULL;
 	case FWUPD_PLUGIN_FLAG_NONE:
 	case FWUPD_PLUGIN_FLAG_REQUIRE_HWID:
+	case FWUPD_PLUGIN_FLAG_MODULAR:
 		return fu_util_term_format(fu_util_plugin_flag_to_string(plugin_flag),
 					   FU_UTIL_TERM_COLOR_GREEN);
 	case FWUPD_PLUGIN_FLAG_DISABLED:

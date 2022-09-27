@@ -229,6 +229,7 @@ fu_util_start_engine(FuUtilPrivate *priv,
 	}
 #endif
 	flags |= FU_ENGINE_LOAD_FLAG_NO_IDLE_SOURCES;
+	flags |= FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS;
 	if (!fu_engine_load(priv->engine, flags, progress, error))
 		return FALSE;
 	if (fu_engine_get_tainted(priv->engine)) {
