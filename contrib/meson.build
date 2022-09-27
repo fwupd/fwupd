@@ -5,7 +5,6 @@ endif
 
 con2 = configuration_data()
 con2.set('FWUPD_VERSION', fwupd_version)
-con2.set('FWUPD_PLUGINVER', libfwupdplugin_lt_current)
 
 configure_file(
   input: 'fwupd.spec.in',

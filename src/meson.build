@@ -105,6 +105,7 @@ fwupdmgr = executable(
     fwupdplugin,
   ],
   install: true,
+  install_rpath: plugin_dir,
   install_dir: bindir
 )
 
@@ -144,6 +145,7 @@ fwupdoffline = executable(
     fwupdplugin,
   ],
   install: true,
+  install_rpath: plugin_dir,
   install_dir: join_paths(libexecdir, 'fwupd')
 )
 endif
@@ -185,6 +187,7 @@ fwupdtool = executable(
     fwupdplugin
   ],
   install: true,
+  install_rpath: plugin_dir,
   install_dir: bindir
 )
 
@@ -252,6 +255,7 @@ executable(
     '-DFU_OFFLINE_DESTDIR=""',
   ],
   install: true,
+  install_rpath: plugin_dir,
   install_dir: daemon_dir
 )
 

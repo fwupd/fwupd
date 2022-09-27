@@ -18,6 +18,6 @@ lib/systemd/system-shutdown/*
 lib/udev/rules.d/*
 data/daemon.conf etc/fwupd
 debian/fwupd.pkla /var/lib/polkit-1/localauthority/10-vendor.d
-usr/lib/*/fwupd-plugins-*/*.so
+usr/lib/*/fwupd-*/*.so
 debian/lintian/fwupd usr/share/lintian/overrides
 obj*/data/motd/85-fwupd /etc/update-motd.d

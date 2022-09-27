@@ -59,6 +59,7 @@ if get_option('tests')
     ],
     c_args: cargs,
     install: true,
+    install_rpath: plugin_dir,
     install_dir: installed_test_bindir,
   )
   test('synaptics-prometheus-self-test', e, env: env)  # added to installed-tests

@@ -44,10 +44,6 @@ pacman -S --noconfirm qt5-base
 meson qt5-thread-test ../contrib/ci/qt5-thread-test
 ninja -C qt5-thread-test test
 
-#run the CI tests for making sure we can link fwupd/fwupdplugin
-meson out-of-tree-link ../contrib/ci/out-of-tree-link
-ninja -C out-of-tree-link test
-
 # move the package to working dir
 mv *.pkg.* ../dist
 

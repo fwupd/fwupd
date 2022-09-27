@@ -14,21 +14,6 @@ Homepage: https://github.com/fwupd/fwupd
 Vcs-Git: https://salsa.debian.org/efi-team/fwupd.git
 Vcs-Browser: https://salsa.debian.org/efi-team/fwupd
 
-Package: libfwupdplugin7
-Section: libs
-Architecture: linux-any
-Depends: ${misc:Depends},
-         ${shlibs:Depends}
-Multi-Arch: same
-Description: Firmware update daemon plugin library
- fwupd is a daemon to allow session software to update device firmware.
- You can either use a GUI software manager like GNOME Software to view and
- apply updates, the command-line tool or the system D-Bus interface directly.
- Firmware updates are supported for a variety of technologies.
- See <https://github.com/fwupd/fwupd> for details
- .
- This package provides the library for the interface between daemon and plugins.
-
 Package: libfwupd2
 Section: libs
 Architecture: linux-any
@@ -150,46 +135,6 @@ Depends: ${misc:Depends},
 Section: introspection
 Description: GObject introspection data for libfwupd
  This package provides the introspection data for libfwupd.
- .
- It can be used by packages using the GIRepository format to generate
- dynamic bindings.
-
-Package: libfwupdplugin-dev
-Architecture: linux-any
-Multi-Arch: same
-Depends: libfwupdplugin7 (= ${binary:Version}),
-         gir1.2-fwupdplugin-1.0 (= ${binary:Version}),
-         libarchive-dev,
-         libcbor-dev,
-         libcurl4-gnutls-dev,
-         libfwupd-dev (= ${binary:Version}),
-         libgcab-dev,
-         libglib2.0-dev (>= 2.45.8),
-         libgudev-1.0-dev,
-         libgusb-dev (>= 0.3.5),
-         libjcat-dev,
-         libjson-glib-dev (>= 1.1.1),
-         libxmlb-dev (>= 0.1.13),
-         valgrind [!ia64 !riscv64 !x32 !mips !sparc64 !sh4 !ppc64 !powerpcspe !hppa !alpha !mips64el !armhf !armel !mipsel !m68k],
-         ${misc:Depends}
-Section: libdevel
-Description: development files for libfwupdplugin
- fwupd is a daemon to allow session software to update device firmware.
- You can either use a GUI software manager like GNOME Software to view and
- apply updates, the command-line tool or the system D-Bus interface directly.
- Firmware updates are supported for a variety of technologies.
- See <https://github.com/fwupd/fwupd> for details
- .
- This package provides the development files for libfwupdplugin
-
-Package: gir1.2-fwupdplugin-1.0
-Architecture: linux-any
-Multi-Arch: same
-Depends: ${misc:Depends},
-         ${gir:Depends}
-Section: introspection
-Description: GObject introspection data for libfwupdplugin
- This package provides the introspection data for libfwupdplugin.
  .
  It can be used by packages using the GIRepository format to generate
  dynamic bindings.

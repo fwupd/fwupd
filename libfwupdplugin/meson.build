@@ -177,13 +177,6 @@ fwupdplugin_headers = [
   'fu-usb-device.h',
   'fu-hid-device.h',
 ]
-install_headers(
-  'fwupdplugin.h',
-  subdir: 'fwupd-1',
-)
-install_headers([fwupdplugin_headers, 'fu-plugin-vfuncs.h'],
-  subdir: 'fwupd-1/libfwupdplugin',
-)
 
 fu_hash = custom_target(
   'fu-hash.h',
@@ -254,8 +247,6 @@ fwupdplugin = library(
     fwupdplugin_headers,
     fwupdplugin_headers_private,
   ],
-  soversion: libfwupdplugin_lt_current,
-  version: libfwupdplugin_lt_version,
   include_directories: [
     root_incdir,
     fwupd_incdir,
@@ -268,18 +259,8 @@ fwupdplugin = library(
   ],
   link_args: cc.get_supported_link_arguments([vflag]),
   link_depends: fwupdplugin_mapfile,
+  install_dir: plugin_dir,
   install: true
-)
-
-fwupdplugin_pkgg = import('pkgconfig')
-fwupdplugin_pkgg.generate(
-  libraries: fwupdplugin,
-  requires: pkgg_requires,
-  subdirs: 'fwupd-1',
-  version: meson.project_version(),
-  name: 'fwupdplugin',
-  filebase: 'fwupdplugin',
-  description: 'library for plugins to use to interact with fwupd daemon',
 )
 
 if introspection.allowed()
@@ -328,7 +309,7 @@ if introspection.allowed()
       girtargets,
       fwupd_gir[0],
     ],
-    install: true
+    install: false
   )
 
   # Verify the map file is correct -- note we can't actually use the generated
