@@ -423,9 +423,7 @@ done
 /usr/lib/udev/rules.d/*.rules
 /usr/lib/systemd/system-shutdown/fwupd.shutdown
 %dir %{_libdir}/fwupd-%{version}
-%{_libdir}/fwupd-%{version}/libfwupdpluginbuiltin.so
-%{_libdir}/fwupd-%{version}/libfwupdplugin.so
-%{_libdir}/fwupd-%{version}/libfwupdutil.so
+%{_libdir}/fwupd-%{version}/libfwupd*.so
 %if 0%{?enable_dummy}
 %{_libdir}/fwupd-%{version}/libfu_plugin_invalid.so
 %endif
