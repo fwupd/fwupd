@@ -143,7 +143,9 @@ static FuPluginVfuncs *
 fu_plugin_get_vfuncs(FuPlugin *self)
 {
 	FuPluginPrivate *priv = GET_PRIVATE(self);
-	return &priv->vfuncs;
+	if (fu_plugin_has_flag(self, FWUPD_PLUGIN_FLAG_MODULAR))
+		return &priv->vfuncs;
+	return FU_PLUGIN_GET_CLASS(self);
 }
 
 /**
@@ -328,7 +330,7 @@ gboolean
 fu_plugin_open(FuPlugin *self, const gchar *filename, GError **error)
 {
 	FuPluginPrivate *priv = GET_PRIVATE(self);
-	FuPluginVfuncs *vfuncs = fu_plugin_get_vfuncs(self);
+	FuPluginVfuncs *vfuncs;
 	FuPluginInitVfuncsFunc init_vfuncs = NULL;
 
 	g_return_val_if_fail(FU_IS_PLUGIN(self), FALSE);
@@ -360,6 +362,10 @@ fu_plugin_open(FuPlugin *self, const gchar *filename, GError **error)
 		fu_plugin_add_flag(self, FWUPD_PLUGIN_FLAG_USER_WARNING);
 		return FALSE;
 	}
+
+	/* we can't "fallback" from modular to built-in so this is safe */
+	fu_plugin_add_flag(self, FWUPD_PLUGIN_FLAG_MODULAR);
+	vfuncs = fu_plugin_get_vfuncs(self);
 	init_vfuncs(vfuncs);
 
 	/* set automatically */
