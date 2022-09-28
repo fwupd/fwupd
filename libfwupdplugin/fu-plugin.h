@@ -48,14 +48,14 @@ G_DECLARE_DERIVABLE_TYPE(FuPlugin, fu_plugin, FU, PLUGIN, FwupdPlugin)
 struct _FuPluginClass {
 	FwupdPluginClass parent_class;
 	/* signals */
-	void (*device_added)(FuPlugin *self, FuDevice *device);
-	void (*device_removed)(FuPlugin *self, FuDevice *device);
-	void (*status_changed)(FuPlugin *self, FwupdStatus status);
-	void (*percentage_changed)(FuPlugin *self, guint percentage);
-	void (*device_register)(FuPlugin *self, FuDevice *device);
-	gboolean (*check_supported)(FuPlugin *self, const gchar *guid);
-	void (*rules_changed)(FuPlugin *self);
-	void (*config_changed)(FuPlugin *self);
+	void (*_device_added)(FuPlugin *self, FuDevice *device);
+	void (*_device_removed)(FuPlugin *self, FuDevice *device);
+	void (*_status_changed)(FuPlugin *self, FwupdStatus status);
+	void (*_percentage_changed)(FuPlugin *self, guint percentage);
+	void (*_device_register)(FuPlugin *self, FuDevice *device);
+	gboolean (*_check_supported)(FuPlugin *self, const gchar *guid);
+	void (*_rules_changed)(FuPlugin *self);
+	void (*_config_changed)(FuPlugin *self);
 };
 
 /**
