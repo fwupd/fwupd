@@ -213,6 +213,24 @@ fwupdpluginbuiltin = library(
   ],
 )
 
+fwupdengine = library(
+  'fwupdengine',
+  resources_src,
+  sources: daemon_src,
+  install: true,
+  install_dir: libdir_pkg,
+  install_rpath: libdir_pkg,
+  include_directories: plugin_incdirs,
+  dependencies: [
+    daemon_dep,
+  ],
+  link_with: [
+    fwupd,
+    fwupdplugin,
+    fwupdpluginbuiltin,
+  ],
+)
+
 fwupdtool = executable(
   'fwupdtool',
   resources_src,
@@ -221,7 +239,6 @@ fwupdtool = executable(
   export_dynamic: true,
   sources: [
     'fu-tool.c',
-    daemon_src,
   ],
   include_directories: [
     root_incdir,
@@ -237,6 +254,7 @@ fwupdtool = executable(
   ],
   link_with: [
     fwupd,
+    fwupdengine,
     fwupdplugin,
     fwupdpluginbuiltin,
     fwupdutil,
@@ -291,7 +309,6 @@ executable(
   sources: [
     daemon_loader_src,
     'fu-daemon.c',
-    daemon_src,
   ],
   include_directories: [
     root_incdir,
@@ -305,6 +322,7 @@ executable(
   ],
   link_with: [
     fwupd,
+    fwupdengine,
     fwupdplugin,
     fwupdpluginbuiltin,
   ],
@@ -333,10 +351,8 @@ if get_option('tests')
     fu_hash,
     plugins_hdr,
     sources: [
-      'fu-progressbar.c',
       'fu-spawn.c',
       'fu-self-test.c',
-      daemon_src,
     ],
     include_directories: [
       root_incdir,
@@ -348,8 +364,10 @@ if get_option('tests')
     ],
     link_with: [
       fwupd,
+      fwupdengine,
       fwupdplugin,
       fwupdpluginbuiltin,
+      fwupdutil,
     ],
     c_args: [
     ],
