@@ -848,7 +848,6 @@ LIBFWUPDPLUGIN_1.7.4 {
     fu_firmware_add_patch;
     fu_firmware_get_bytes_with_patches;
     fu_lid_state_to_string;
-    fu_plugin_set_secure_config_value;
     fu_usb_device_add_interface;
     fu_usb_device_set_configuration;
   local: *;
