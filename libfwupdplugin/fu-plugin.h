@@ -45,19 +45,6 @@ G_DECLARE_DERIVABLE_TYPE(FuPlugin, fu_plugin, FU, PLUGIN, FwupdPlugin)
 #define fu_plugin_add_flag(p, f)    fwupd_plugin_add_flag(FWUPD_PLUGIN(p), f)
 #define fu_plugin_remove_flag(p, f) fwupd_plugin_remove_flag(FWUPD_PLUGIN(p), f)
 
-struct _FuPluginClass {
-	FwupdPluginClass parent_class;
-	/* signals */
-	void (*_device_added)(FuPlugin *self, FuDevice *device);
-	void (*_device_removed)(FuPlugin *self, FuDevice *device);
-	void (*_status_changed)(FuPlugin *self, FwupdStatus status);
-	void (*_percentage_changed)(FuPlugin *self, guint percentage);
-	void (*_device_register)(FuPlugin *self, FuDevice *device);
-	gboolean (*_check_supported)(FuPlugin *self, const gchar *guid);
-	void (*_rules_changed)(FuPlugin *self);
-	void (*_config_changed)(FuPlugin *self);
-};
-
 /**
  * FuPluginVerifyFlags:
  * @FU_PLUGIN_VERIFY_FLAG_NONE:		No flags set
@@ -70,16 +57,23 @@ typedef enum {
 	FU_PLUGIN_VERIFY_FLAG_LAST
 } FuPluginVerifyFlags;
 
-/**
- * FuPluginVfuncs:
- *
- * The virtual functions that are implemented by the plugins.
- **/
-typedef struct {
+struct _FuPluginClass {
+	FwupdPluginClass parent_class;
+	/* signals */
+	void (*_device_added)(FuPlugin *self, FuDevice *device);
+	void (*_device_removed)(FuPlugin *self, FuDevice *device);
+	void (*_status_changed)(FuPlugin *self, FwupdStatus status);
+	void (*_percentage_changed)(FuPlugin *self, guint percentage);
+	void (*_device_register)(FuPlugin *self, FuDevice *device);
+	gboolean (*_check_supported)(FuPlugin *self, const gchar *guid);
+	void (*_rules_changed)(FuPlugin *self);
+	void (*_config_changed)(FuPlugin *self);
+
+	/* vfuncs */
 	/**
 	 * build_hash:
 	 *
-	 * Sets the plugin build hash which must be set to avoid tainting the engine.
+	 * Sets the build hash which must be set by modular plugins to avoid tainting the engine.
 	 *
 	 * Since: 1.7.2
 	 **/
@@ -388,7 +382,14 @@ typedef struct {
 	 * Since: 1.8.4
 	 **/
 	void (*to_string)(FuPlugin *self, guint idt, GString *str);
-} FuPluginVfuncs;
+};
+
+/**
+ * FuPluginVfuncs:
+ *
+ * A subset of virtual functions that are implemented by modular plugins.
+ **/
+typedef struct _FuPluginClass FuPluginVfuncs;
 
 /**
  * FuPluginRule:

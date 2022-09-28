@@ -6751,7 +6751,6 @@ fu_engine_load_plugins_filename(FuEngine *self, const gchar *filename, FuProgres
 	/* open module */
 	plugin = fu_plugin_new(self->ctx);
 	fu_plugin_set_name(plugin, name);
-	fu_plugin_add_flag(plugin, FWUPD_PLUGIN_FLAG_MODULAR);
 	fu_engine_add_plugin(self, plugin);
 	fu_progress_step_done(progress);
 
