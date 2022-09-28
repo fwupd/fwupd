@@ -2503,36 +2503,6 @@ fu_plugin_set_config_value_internal(FuPlugin *self,
 }
 
 /**
- * fu_plugin_set_secure_config_value:
- * @self: a #FuPlugin
- * @key: a settings key
- * @value: (nullable): a settings value
- * @error: (nullable): optional return location for an error
- *
- * Sets a plugin config file value and updates file so that non-privileged users
- * cannot read it.
- *
- * This function is deprecated, and you should use `FWUPD_PLUGIN_FLAG_SECURE_CONFIG` and
- * fu_plugin_set_config_value() instead.
- *
- * Returns: %TRUE for success
- *
- * Since: 1.7.4
- **/
-gboolean
-fu_plugin_set_secure_config_value(FuPlugin *self,
-				  const gchar *key,
-				  const gchar *value,
-				  GError **error)
-{
-	g_return_val_if_fail(FU_IS_PLUGIN(self), FALSE);
-	g_return_val_if_fail(key != NULL, FALSE);
-	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
-	fu_plugin_add_flag(self, FWUPD_PLUGIN_FLAG_SECURE_CONFIG);
-	return fu_plugin_set_config_value(self, key, value, error);
-}
-
-/**
  * fu_plugin_set_config_value:
  * @self: a #FuPlugin
  * @key: a settings key
