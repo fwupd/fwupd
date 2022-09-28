@@ -49,6 +49,7 @@ Since: 1.0.1
 ### DfuForceVersion
 
 Forces a specific DFU version for the hardware device. This is required if the device does not set, or sets incorrectly, items in the DFU functional descriptor.
+If set to 0000 then the DFU functionality is disabled.
 
 Since: 1.0.1
 
