@@ -1055,7 +1055,6 @@ LIBFWUPDPLUGIN_1.8.2 {
     fu_volume_new_by_device;
     fu_volume_new_by_devnum;
     fu_volume_new_by_kind;
-    fu_volume_new_esp_default;
     fu_volume_new_esp_for_path;
   local: *;
 } LIBFWUPDPLUGIN_1.8.1;

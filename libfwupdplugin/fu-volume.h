@@ -60,7 +60,3 @@ FuVolume *
 fu_volume_new_by_devnum(guint32 devnum, GError **error) G_GNUC_WARN_UNUSED_RESULT;
 FuVolume *
 fu_volume_new_esp_for_path(const gchar *esp_path, GError **error) G_GNUC_WARN_UNUSED_RESULT;
-
-G_DEPRECATED_FOR(fu_context_get_esp_volumes)
-FuVolume *
-fu_volume_new_esp_default(GError **error) G_GNUC_WARN_UNUSED_RESULT;
