@@ -17,8 +17,6 @@ struct _FuProgressClass {
 	/* signals */
 	void (*percentage_changed)(FuProgress *self, guint value);
 	void (*status_changed)(FuProgress *self, FwupdStatus status);
-	/*< private >*/
-	gpointer padding[29];
 };
 
 /**

@@ -67,8 +67,6 @@ struct _FuFirmwareClass {
 				     FuFirmware *other,
 				     FwupdInstallFlags flags,
 				     GError **error);
-	/*< private >*/
-	gpointer padding[24];
 };
 
 /**

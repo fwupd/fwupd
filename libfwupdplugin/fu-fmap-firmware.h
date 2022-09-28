@@ -21,8 +21,6 @@ struct _FuFmapFirmwareClass {
 			  gsize offset,
 			  FwupdInstallFlags flags,
 			  GError **error);
-	/*< private >*/
-	gpointer padding[14];
 };
 
 /**

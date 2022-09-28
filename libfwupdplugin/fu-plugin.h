@@ -56,8 +56,6 @@ struct _FuPluginClass {
 	gboolean (*check_supported)(FuPlugin *self, const gchar *guid);
 	void (*rules_changed)(FuPlugin *self);
 	void (*config_changed)(FuPlugin *self);
-	/*< private >*/
-	gpointer padding[19];
 };
 
 /**
@@ -390,8 +388,6 @@ typedef struct {
 	 * Since: 1.8.4
 	 **/
 	void (*to_string)(FuPlugin *self, guint idt, GString *str);
-	/*< private >*/
-	gpointer padding[7];
 } FuPluginVfuncs;
 
 /**
