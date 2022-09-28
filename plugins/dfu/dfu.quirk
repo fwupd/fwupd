@@ -479,3 +479,11 @@ Flags = detach-for-attach,ignore-upload
 [USB\VID_0C45&PID_6374]
 Plugin = dfu
 Flags = detach-for-attach,ignore-upload
+
+# FPC Fingerprint Reader
+[USB\VID_10A5&PID_FFE0]
+DfuForceVersion = 0x0
+[USB\VID_10A5&PID_FFE1]
+DfuForceVersion = 0x0
+[USB\VID_10A5&PID_9800]
+DfuForceVersion = 0x0
