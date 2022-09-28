@@ -44,8 +44,6 @@ struct _FuBackendClass {
 			 const gchar *tag,
 			 FuBackendSaveFlags flags,
 			 GError **error);
-	/*< private >*/
-	gpointer padding[24];
 };
 
 const gchar *

@@ -16,8 +16,6 @@ struct _FuUsbDeviceDs20Class {
 	FuFirmwareClass parent_class;
 	gboolean (*parse)(FuUsbDeviceDs20 *self, GBytes *blob, FuUsbDevice *device, GError **error)
 	    G_GNUC_WARN_UNUSED_RESULT;
-	/*< private >*/
-	gpointer padding[30];
 };
 
 void

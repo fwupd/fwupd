@@ -18,8 +18,6 @@ struct _FuContextClass {
 	GObjectClass parent_class;
 	/* signals */
 	void (*security_changed)(FuContext *self);
-	/*< private >*/
-	gpointer padding[30];
 };
 
 /**

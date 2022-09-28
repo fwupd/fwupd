@@ -83,8 +83,6 @@ struct _FuDeviceClass {
 			FwupdRequest *request);
 	gboolean (*get_results)(FuDevice *self, GError **error) G_GNUC_WARN_UNUSED_RESULT;
 	void (*set_progress)(FuDevice *self, FuProgress *progress);
-	/*< private >*/
-	gpointer padding[16];
 #endif
 };
 
