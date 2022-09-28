@@ -26,7 +26,7 @@
  *
  * Forces a specific DFU version for the hardware device. This is required
  * if the device does not set, or sets incorrectly, items in the DFU functional
- * descriptor.
+ * descriptor. If zero, then DFU functionality is disabled.
  *
  * Since: 1.0.1
  */
@@ -86,7 +86,8 @@ fu_dfu_device_to_string(FuDevice *device, guint idt, GString *str)
 	if (priv->chip_id != NULL)
 		fu_string_append(str, idt, "ChipId", priv->chip_id);
 	fu_string_append_kx(str, idt, "Version", priv->version);
-	fu_string_append_kx(str, idt, "ForceVersion", priv->force_version);
+	if (priv->force_version != G_MAXUINT16)
+		fu_string_append_kx(str, idt, "ForceVersion", priv->force_version);
 	if (priv->force_transfer_size != 0x0) {
 		fu_string_append_kx(str, idt, "ForceTransferSize", priv->force_transfer_size);
 	}
@@ -258,6 +259,15 @@ fu_dfu_device_add_targets(FuDfuDevice *self, GError **error)
 	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
 	g_autoptr(GPtrArray) ifaces = NULL;
 
+	/* disabled using quirk */
+	if (priv->force_version == 0x0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "ignoring device as DFU version set to 0x0");
+		return FALSE;
+	}
+
 	/* add all DFU-capable targets */
 	ifaces = g_usb_device_get_interfaces(usb_device, error);
 	if (ifaces == NULL)
@@ -296,7 +306,7 @@ fu_dfu_device_add_targets(FuDfuDevice *self, GError **error)
 		}
 
 		/* fix up the version */
-		if (priv->force_version > 0)
+		if (priv->force_version != G_MAXUINT16)
 			priv->version = priv->force_version;
 		if (priv->version == FU_DFU_FIRMARE_VERSION_DFU_1_0 ||
 		    priv->version == FU_DFU_FIRMARE_VERSION_DFU_1_1) {
@@ -886,7 +896,7 @@ fu_dfu_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 	}
 
 	/* success */
-	priv->force_version = 0x0;
+	priv->force_version = G_MAXUINT16;
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	return TRUE;
 }
@@ -1688,6 +1698,7 @@ fu_dfu_device_init(FuDfuDevice *self)
 	priv->targets = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 	priv->timeout_ms = 1500;
 	priv->transfer_size = 64;
+	priv->force_version = G_MAXUINT16;
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_ADD_COUNTERPART_GUIDS);
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID);
