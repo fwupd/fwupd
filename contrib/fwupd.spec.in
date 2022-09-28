@@ -5,7 +5,6 @@
 %global libjcat_version 0.1.0
 %global systemd_version 231
 %global json_glib_version 1.1.1
-%global fwupdplugin_version @FWUPD_VERSION@
 
 # although we ship a few tiny python files these are utilities that 99.99%
 # of users do not need -- use this to avoid dragging python onto CoreOS
@@ -423,22 +422,22 @@ done
 %{_libdir}/girepository-1.0/Fwupd-2.0.typelib
 /usr/lib/udev/rules.d/*.rules
 /usr/lib/systemd/system-shutdown/fwupd.shutdown
-%dir %{_libdir}/fwupd-%{fwupdplugin_version}
-%{_libdir}/fwupd-%{fwupdplugin_version}/libfwupdpluginbuiltin.so
-%{_libdir}/fwupd-%{fwupdplugin_version}/libfwupdplugin.so
-%{_libdir}/fwupd-%{fwupdplugin_version}/libfwupdutil.so
+%dir %{_libdir}/fwupd-%{version}
+%{_libdir}/fwupd-%{version}/libfwupdpluginbuiltin.so
+%{_libdir}/fwupd-%{version}/libfwupdplugin.so
+%{_libdir}/fwupd-%{version}/libfwupdutil.so
 %if 0%{?enable_dummy}
-%{_libdir}/fwupd-%{fwupdplugin_version}/libfu_plugin_invalid.so
+%{_libdir}/fwupd-%{version}/libfu_plugin_invalid.so
 %endif
 %ghost %{_localstatedir}/lib/fwupd/gnupg
 
 %if 0%{?have_modem_manager}
 %files plugin-modem-manager
-%{_libdir}/fwupd-%{fwupdplugin_version}/libfu_plugin_modem_manager.so
+%{_libdir}/fwupd-%{version}/libfu_plugin_modem_manager.so
 %endif
 %if 0%{?have_flashrom}
 %files plugin-flashrom
-%{_libdir}/fwupd-%{fwupdplugin_version}/libfu_plugin_flashrom.so
+%{_libdir}/fwupd-%{version}/libfu_plugin_flashrom.so
 %endif
 %if 0%{?have_uefi}
 %files plugin-uefi-capsule-data
