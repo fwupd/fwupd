@@ -17,7 +17,7 @@
  * @FU_PATH_KIND_LOCALSTATEDIR:		The local state directory (IE /var)
  * @FU_PATH_KIND_LOCALSTATEDIR_PKG:	The local state directory for the package (IE
  * /var/lib/fwupd)
- * @FU_PATH_KIND_PLUGINDIR_PKG:		The location to look for plugins for package (IE
+ * @FU_PATH_KIND_LIBDIR_PKG:		The location to look for plugins for package (IE
  * /usr/lib/[triplet]/fwupd-plugins-3)
  * @FU_PATH_KIND_SYSCONFDIR:		The configuration location (IE /etc)
  * @FU_PATH_KIND_SYSCONFDIR_PKG:	The package configuration location (IE /etc/fwupd)
@@ -53,7 +53,7 @@ typedef enum {
 	FU_PATH_KIND_EFIAPPDIR,
 	FU_PATH_KIND_LOCALSTATEDIR,
 	FU_PATH_KIND_LOCALSTATEDIR_PKG,
-	FU_PATH_KIND_PLUGINDIR_PKG,
+	FU_PATH_KIND_LIBDIR_PKG,
 	FU_PATH_KIND_SYSCONFDIR,
 	FU_PATH_KIND_SYSCONFDIR_PKG,
 	FU_PATH_KIND_SYSFSDIR_FW,

@@ -500,11 +500,11 @@ conf.set_quoted('FWUPD_LOCALEDIR', localedir)
 
 if build_standalone
 if host_machine.system() == 'windows'
-  plugin_dir = 'fwupd-@0@'.format(fwupd_version)
+  libdir_pkg = 'fwupd-@0@'.format(fwupd_version)
 else
-  plugin_dir = join_paths(libdir, 'fwupd-@0@'.format(fwupd_version))
+  libdir_pkg = join_paths(libdir, 'fwupd-@0@'.format(fwupd_version))
 endif
-conf.set_quoted('FWUPD_PLUGINDIR', plugin_dir)
+conf.set_quoted('FWUPD_LIBDIR_PKG', libdir_pkg)
 endif
 
 # sanity check, otherwise there is not point building

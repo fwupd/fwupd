@@ -31,7 +31,7 @@ if get_option('tests')
       plugin_builtin_nitrokey,
     ],
     install: true,
-    install_rpath: plugin_dir,
+    install_rpath: libdir_pkg,
     install_dir: installed_test_bindir,
   )
   test('nitrokey-self-test', e)  # added to installed-tests

@@ -37,7 +37,7 @@ if get_option('tests')
       plugin_builtin_elantp,
     ],
     install: true,
-    install_rpath: plugin_dir,
+    install_rpath: libdir_pkg,
     install_dir: installed_test_bindir,
   )
   test('elantp-self-test', e, env: env)

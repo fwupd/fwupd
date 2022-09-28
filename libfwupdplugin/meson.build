@@ -259,7 +259,7 @@ fwupdplugin = library(
   ],
   link_args: cc.get_supported_link_arguments([vflag]),
   link_depends: fwupdplugin_mapfile,
-  install_dir: plugin_dir,
+  install_dir: libdir_pkg,
   install: true
 )
 

@@ -86,7 +86,7 @@ fwupdutil = library(
     systemd_src,
   ],
   install: true,
-  install_dir: plugin_dir,
+  install_dir: libdir_pkg,
   include_directories: [
     root_incdir,
     fwupd_incdir,
@@ -128,7 +128,7 @@ fwupdmgr = executable(
     fwupdutil,
   ],
   install: true,
-  install_rpath: plugin_dir,
+  install_rpath: libdir_pkg,
   install_dir: bindir
 )
 
@@ -166,7 +166,7 @@ fwupdoffline = executable(
     fwupdutil,
   ],
   install: true,
-  install_rpath: plugin_dir,
+  install_rpath: libdir_pkg,
   install_dir: join_paths(libexecdir, 'fwupd')
 )
 endif
@@ -199,7 +199,7 @@ fwupdpluginbuiltin = library(
   'fwupdpluginbuiltin',
   sources: [],
   install: true,
-  install_dir: plugin_dir,
+  install_dir: libdir_pkg,
   include_directories: plugin_incdirs,
   dependencies: [
     plugin_deps,
@@ -242,7 +242,7 @@ fwupdtool = executable(
     fwupdutil,
   ],
   install: true,
-  install_rpath: plugin_dir,
+  install_rpath: libdir_pkg,
   install_dir: bindir
 )
 
@@ -312,7 +312,7 @@ executable(
     '-DFU_OFFLINE_DESTDIR=""',
   ],
   install: true,
-  install_rpath: plugin_dir,
+  install_rpath: libdir_pkg,
   install_dir: daemon_dir
 )
 

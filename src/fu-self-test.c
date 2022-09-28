@@ -4808,7 +4808,7 @@ main(int argc, char **argv)
 	(void)g_setenv("FWUPD_DEVICE_LIST_VERBOSE", "1", TRUE);
 	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
 	(void)g_setenv("FWUPD_DATADIR", testdatadir, TRUE);
-	(void)g_setenv("FWUPD_PLUGINDIR", testdatadir, TRUE);
+	(void)g_setenv("FWUPD_LIBDIR_PKG", testdatadir, TRUE);
 	(void)g_setenv("FWUPD_SYSCONFDIR", testdatadir, TRUE);
 	(void)g_setenv("FWUPD_SYSFSFWDIR", testdatadir, TRUE);
 	(void)g_setenv("CONFIGURATION_DIRECTORY", testdatadir, TRUE);
