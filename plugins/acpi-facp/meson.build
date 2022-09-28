@@ -29,7 +29,7 @@ if get_option('tests')
       plugin_builtin_acpi_facp,
     ],
     install: true,
-    install_rpath: plugin_dir,
+    install_rpath: libdir_pkg,
     install_dir: installed_test_bindir,
   )
   test('acpi-facp-self-test', e, env: env)  # added to installed-tests

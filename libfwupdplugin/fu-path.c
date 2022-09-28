@@ -315,18 +315,18 @@ fu_path_from_kind(FuPathKind path_kind)
 			return g_build_filename(basedir, FWUPD_SYSCONFDIR, NULL);
 		return g_strdup(FWUPD_SYSCONFDIR);
 
-	/* /usr/lib/<triplet>/fwupd-plugins-3 */
-	case FU_PATH_KIND_PLUGINDIR_PKG:
-		tmp = g_getenv("FWUPD_PLUGINDIR");
+	/* /usr/lib/<triplet>/fwupd-#VERSION# */
+	case FU_PATH_KIND_LIBDIR_PKG:
+		tmp = g_getenv("FWUPD_LIBDIR_PKG");
 		if (tmp != NULL)
 			return g_strdup(tmp);
 		tmp = g_getenv("SNAP");
 		if (tmp != NULL)
-			return g_build_filename(tmp, FWUPD_PLUGINDIR, NULL);
+			return g_build_filename(tmp, FWUPD_LIBDIR_PKG, NULL);
 		basedir = fu_path_get_win32_basedir();
 		if (basedir != NULL)
-			return g_build_filename(basedir, FWUPD_PLUGINDIR, NULL);
-		return g_build_filename(FWUPD_PLUGINDIR, NULL);
+			return g_build_filename(basedir, FWUPD_LIBDIR_PKG, NULL);
+		return g_build_filename(FWUPD_LIBDIR_PKG, NULL);
 	/* /usr/share/fwupd */
 	case FU_PATH_KIND_DATADIR_PKG:
 		tmp = g_getenv("FWUPD_DATADIR");

@@ -13,7 +13,7 @@ shared_module('fu_plugin_flashrom',
   ],
   include_directories: plugin_incdirs,
   install: true,
-  install_dir: plugin_dir,
+  install_dir: libdir_pkg,
   link_with: plugin_libs,
   c_args: [
     cargs,

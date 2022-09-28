@@ -26,7 +26,7 @@ shared_module('fu_plugin_modem_manager',
   ],
   include_directories: plugin_incdirs,
   install: true,
-  install_dir: plugin_dir,
+  install_dir: libdir_pkg,
   c_args: cargs,
   link_with: plugin_libs,
   dependencies: [

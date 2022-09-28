@@ -6812,7 +6812,7 @@ fu_engine_load_plugins(FuEngine *self,
 	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 5, "load-builtins");
 
 	/* search */
-	plugin_path = fu_path_from_kind(FU_PATH_KIND_PLUGINDIR_PKG);
+	plugin_path = fu_path_from_kind(FU_PATH_KIND_LIBDIR_PKG);
 	dir = g_dir_open(plugin_path, 0, error);
 	if (dir == NULL)
 		return FALSE;

@@ -322,7 +322,7 @@ def _build(bld: Builder) -> None:
         {
             "FWUPD_DATADIR": "/tmp",
             "FWUPD_LOCALSTATEDIR": "/tmp",
-            "FWUPD_PLUGINDIR": "/tmp",
+            "FWUPD_LIBDIR_PKG": "/tmp",
             "FWUPD_SYSCONFDIR": "/tmp",
             "HAVE_REALPATH": None,
             "PACKAGE_NAME": "fwupd",
