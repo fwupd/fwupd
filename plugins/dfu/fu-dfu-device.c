@@ -38,8 +38,6 @@
 
 #include <fwupdplugin.h>
 
-#include <string.h>
-
 #include "fu-dfu-common.h"
 #include "fu-dfu-device.h"
 #include "fu-dfu-target-avr.h"
@@ -1607,19 +1605,10 @@ fu_dfu_device_set_quirk_kv(FuDevice *device, const gchar *key, const gchar *valu
 	guint64 tmp = 0;
 
 	if (g_strcmp0(key, FU_QUIRKS_DFU_FORCE_VERSION) == 0) {
-		if (value != NULL) {
-			gsize valuesz = strlen(value);
-			return fu_firmware_strparse_uint16_safe(value,
-								valuesz,
-								0,
-								&priv->force_version,
-								error);
-		}
-		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
-				    "invalid DFU version");
-		return FALSE;
+		if (!fu_strtoull(value, &tmp, 0x0, G_MAXUINT16, error))
+			return FALSE;
+		priv->force_version = tmp;
+		return TRUE;
 	}
 	if (g_strcmp0(key, "DfuForceTimeout") == 0) {
 		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT, error))

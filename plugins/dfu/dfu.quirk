@@ -99,19 +99,19 @@ Flags = no-pid-change,ignore-upload,attach-extra-reset
 [USB\VID_03EB&PID_2FF7]
 Plugin = dfu
 Flags = use-any-interface,legacy-protocol,force-dfu-mode
-DfuForceVersion = ff01
+DfuForceVersion = 0xff01
 [USB\VID_03EB&PID_2FF9]
 Plugin = dfu
 Flags = use-any-interface,legacy-protocol,force-dfu-mode
-DfuForceVersion = ff01
+DfuForceVersion = 0xff01
 [USB\VID_03EB&PID_2FFA]
 Plugin = dfu
 Flags = use-any-interface,legacy-protocol,force-dfu-mode
-DfuForceVersion = ff01
+DfuForceVersion = 0xff01
 [USB\VID_03EB&PID_2FFB]
 Plugin = dfu
 Flags = use-any-interface,legacy-protocol,force-dfu-mode
-DfuForceVersion = ff01
+DfuForceVersion = 0xff01
 
 # Atmel ATMEGA Bootloader
 [USB\VID_03EB&PID_2FEE]
@@ -137,12 +137,12 @@ Flags = use-any-interface,legacy-protocol,force-dfu-mode
 [USB\VID_03EB&PID_2FE2]
 Plugin = dfu
 Flags = use-any-interface,force-dfu-mode
-DfuForceVersion = ff01
+DfuForceVersion = 0xff01
 
 # Leaflabs Maple3
 [USB\VID_1EAF&PID_0003&REV_0200]
 Plugin = dfu
-DfuForceVersion = 0110
+DfuForceVersion = 0x0110
 
 # AT32UC3B1256	[BLDR][USER]	USER@0x2000, BLDR+USER=0x40000
 [DFU_AVR\CID_0x58200203]
@@ -337,7 +337,7 @@ DfuAltName = @Flash/0x0/1*32Kg
 [USB\VID_0483&PID_DF11]
 Flags = absent-sector-size,will-disappear
 Plugin = dfu
-DfuForceVersion = 011a
+DfuForceVersion = 0x011a
 DfuForceTimeout = 5000
 
 # Poly Studio USB
