@@ -103,7 +103,7 @@ jobs:
       uses: google/oss-fuzz/infra/cifuzz/actions/run_fuzzers@master
       with:
         oss-fuzz-project-name: 'fwupd'
-        fuzz-seconds: 300
+        fuzz-seconds: 150
         dry-run: false
     - name: Upload Crash
       uses: actions/upload-artifact@v3
