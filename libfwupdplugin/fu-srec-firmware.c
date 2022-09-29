@@ -133,6 +133,7 @@ fu_srec_firmware_tokenize_cb(GString *token, guint token_idx, gpointer user_data
 	FuSrecFirmwareTokenHelper *helper = (FuSrecFirmwareTokenHelper *)user_data;
 	FuSrecFirmwarePrivate *priv = GET_PRIVATE(helper->self);
 	g_autoptr(FuSrecFirmwareRecord) rcd = NULL;
+	gboolean require_data = FALSE;
 	guint32 rec_addr32;
 	guint16 rec_addr16;
 	guint8 addrsz = 0; /* bytes */
@@ -230,15 +231,19 @@ fu_srec_firmware_tokenize_cb(GString *token, guint token_idx, gpointer user_data
 	switch (rec_kind) {
 	case FU_FIRMWARE_SREC_RECORD_KIND_S0_HEADER:
 		addrsz = 2;
+		require_data = TRUE;
 		break;
 	case FU_FIRMWARE_SREC_RECORD_KIND_S1_DATA_16:
 		addrsz = 2;
+		require_data = TRUE;
 		break;
 	case FU_FIRMWARE_SREC_RECORD_KIND_S2_DATA_24:
 		addrsz = 3;
+		require_data = TRUE;
 		break;
 	case FU_FIRMWARE_SREC_RECORD_KIND_S3_DATA_32:
 		addrsz = 4;
+		require_data = TRUE;
 		break;
 	case FU_FIRMWARE_SREC_RECORD_KIND_S5_COUNT_16:
 		addrsz = 2;
@@ -305,6 +310,14 @@ fu_srec_firmware_tokenize_cb(GString *token, guint token_idx, gpointer user_data
 			rec_kind,
 			rec_addr32,
 			(guint)rec_count - addrsz - 1);
+	}
+	if (require_data && rec_count == addrsz) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "S%u required data but not provided",
+			    rec_kind);
+		return FALSE;
 	}
 
 	/* data */
