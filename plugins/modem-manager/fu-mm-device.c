@@ -1509,6 +1509,7 @@ fu_mm_device_write_firmware_firehose(FuDevice *device,
 				     GError **error)
 {
 	FuMmDevice *self = FU_MM_DEVICE(device);
+	MMModem *modem = mm_object_peek_modem(self->omodem);
 	GBytes *firehose_rawprogram;
 	GBytes *firehose_prog;
 	g_autoptr(FuDeviceLocker) locker = NULL;
@@ -1550,10 +1551,11 @@ fu_mm_device_write_firmware_firehose(FuDevice *device,
 	/* Firehose program needs to be loaded to the modem before firehose update process can
 	 * start. Generally, modems use Sahara protocol to load the firehose binary.
 	 *
-	 * In case of MHI PCI modems, the mhi_wwan driver reads the firehose binary from the
+	 * In case of MHI PCI modems, the mhi-pci-generic driver reads the firehose binary from the
 	 * firmware-loader and writes it to the modem.
 	 **/
-	if (g_strrstr(fu_device_get_physical_id(device), "pci") && self->port_qcdm != NULL) {
+	if (g_strv_contains(mm_modem_get_drivers(modem), "mhi-pci-generic") &&
+	    self->port_qcdm != NULL) {
 		/* modify firmware search path and restore it before function returns */
 		locker = fu_device_locker_new_full(
 		    self,
