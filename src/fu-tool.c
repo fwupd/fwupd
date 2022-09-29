@@ -1842,7 +1842,8 @@ fu_util_activate(FuUtilPrivate *priv, gchar **values, GError **error)
 	/* load engine */
 	if (!fu_util_start_engine(priv,
 				  FU_ENGINE_LOAD_FLAG_READONLY | FU_ENGINE_LOAD_FLAG_COLDPLUG |
-				      FU_ENGINE_LOAD_FLAG_REMOTES | FU_ENGINE_LOAD_FLAG_HWINFO,
+				      FU_ENGINE_LOAD_FLAG_REMOTES | FU_ENGINE_LOAD_FLAG_HWINFO |
+				      FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS,
 				  fu_progress_get_child(priv->progress),
 				  error))
 		return FALSE;
@@ -2117,7 +2118,10 @@ fu_util_get_firmware_types(FuUtilPrivate *priv, gchar **values, GError **error)
 	g_autoptr(GPtrArray) firmware_types = NULL;
 
 	/* load engine */
-	if (!fu_engine_load(priv->engine, FU_ENGINE_LOAD_FLAG_READONLY, priv->progress, error))
+	if (!fu_engine_load(priv->engine,
+			    FU_ENGINE_LOAD_FLAG_READONLY | FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS,
+			    priv->progress,
+			    error))
 		return FALSE;
 
 	firmware_types = fu_context_get_firmware_gtype_ids(fu_engine_get_context(priv->engine));
@@ -2188,7 +2192,10 @@ fu_util_firmware_parse(FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 
 	/* load engine */
-	if (!fu_engine_load(priv->engine, FU_ENGINE_LOAD_FLAG_READONLY, priv->progress, error))
+	if (!fu_engine_load(priv->engine,
+			    FU_ENGINE_LOAD_FLAG_READONLY | FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS,
+			    priv->progress,
+			    error))
 		return FALSE;
 
 	/* find the GType to use */
@@ -2258,7 +2265,10 @@ fu_util_firmware_export(FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 
 	/* load engine */
-	if (!fu_engine_load(priv->engine, FU_ENGINE_LOAD_FLAG_READONLY, priv->progress, error))
+	if (!fu_engine_load(priv->engine,
+			    FU_ENGINE_LOAD_FLAG_READONLY | FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS,
+			    priv->progress,
+			    error))
 		return FALSE;
 
 	/* find the GType to use */
@@ -2315,7 +2325,10 @@ fu_util_firmware_extract(FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 
 	/* load engine */
-	if (!fu_engine_load(priv->engine, FU_ENGINE_LOAD_FLAG_READONLY, priv->progress, error))
+	if (!fu_engine_load(priv->engine,
+			    FU_ENGINE_LOAD_FLAG_READONLY | FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS,
+			    priv->progress,
+			    error))
 		return FALSE;
 
 	/* find the GType to use */
@@ -2401,7 +2414,10 @@ fu_util_firmware_build(FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 
 	/* load engine */
-	if (!fu_engine_load(priv->engine, FU_ENGINE_LOAD_FLAG_READONLY, priv->progress, error))
+	if (!fu_engine_load(priv->engine,
+			    FU_ENGINE_LOAD_FLAG_READONLY | FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS,
+			    priv->progress,
+			    error))
 		return FALSE;
 
 	/* parse XML */
@@ -2501,7 +2517,10 @@ fu_util_firmware_convert(FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 
 	/* load engine */
-	if (!fu_engine_load(priv->engine, FU_ENGINE_LOAD_FLAG_READONLY, priv->progress, error))
+	if (!fu_engine_load(priv->engine,
+			    FU_ENGINE_LOAD_FLAG_READONLY | FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS,
+			    priv->progress,
+			    error))
 		return FALSE;
 
 	/* find the GType to use */
@@ -2630,7 +2649,10 @@ fu_util_firmware_patch(FuUtilPrivate *priv, gchar **values, GError **error)
 	}
 
 	/* load engine */
-	if (!fu_engine_load(priv->engine, FU_ENGINE_LOAD_FLAG_READONLY, priv->progress, error))
+	if (!fu_engine_load(priv->engine,
+			    FU_ENGINE_LOAD_FLAG_READONLY | FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS,
+			    priv->progress,
+			    error))
 		return FALSE;
 
 	/* find the GType to use */
@@ -3316,7 +3338,11 @@ fu_util_version(FuUtilPrivate *priv, GError **error)
 	g_autofree gchar *str = NULL;
 
 	/* load engine */
-	if (!fu_util_start_engine(priv, FU_ENGINE_LOAD_FLAG_READONLY, priv->progress, error))
+	if (!fu_util_start_engine(priv,
+				  FU_ENGINE_LOAD_FLAG_READONLY |
+				      FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS,
+				  priv->progress,
+				  error))
 		return FALSE;
 
 	/* get metadata */
