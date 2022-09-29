@@ -43,14 +43,16 @@ dbxtool = executable(
   'dbxtool',
   sources: [
     'fu-dbxtool.c',
-    'fu-uefi-dbx-common.c',
-    'fu-efi-image.c',
   ],
   include_directories: plugin_incdirs,
   dependencies: plugin_deps,
-  link_with: plugin_libs,
+  link_with: [
+    plugin_libs,
+    plugin_builtin_uefi_dbx,
+  ],
   install: true,
   install_dir: bindir,
+  install_rpath: libdir_pkg,
   c_args: cargs,
 )
 
