@@ -59,15 +59,16 @@ executable(
   'fwupdtpmevlog',
   sources: [
     'fu-tpm-eventlog.c',
-    'fu-tpm-eventlog-common.c',
-    'fu-tpm-eventlog-parser.c',
   ],
   include_directories: plugin_incdirs,
   dependencies: [
       plugin_deps,
       tpm2tss_tpm,
   ],
-  link_with: plugin_libs,
+  link_with: [
+    plugin_libs,
+    plugin_builtin_tpm,
+  ],
 )
 
 endif
