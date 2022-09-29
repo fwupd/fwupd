@@ -456,6 +456,36 @@ fu_volume_new_from_mount_path(const gchar *mount_path)
 }
 
 /**
+ * fu_volume_kind_convert_to_gpt:
+ * @kind: UDisk reported type string, e.g. `efi` or `0xef`
+ *
+ * Converts a MBR type to a GPT type.
+ *
+ * Returns: the GPT type, usually a GUID. If not known @kind is returned.
+ *
+ * Since: 1.8.6
+ **/
+const gchar *
+fu_volume_kind_convert_to_gpt(const gchar *kind)
+{
+	struct {
+		const gchar *gpt;
+		const gchar *mbrs[6];
+	} typeguids[] = {{"c12a7328-f81f-11d2-ba4b-00a0c93ec93b", /* esp */
+			  {"0xef", "efi", NULL}},
+			 {"ebd0a0a2-b9e5-4433-87c0-68b6b72699c7", /* fat32 */
+			  {"0x0b", "0x06", "vfat", "fat32", "fat32lba", NULL}},
+			 {NULL, {NULL}}};
+	for (guint i = 0; typeguids[i].gpt != NULL; i++) {
+		for (guint j = 0; typeguids[i].mbrs[j] != NULL; j++) {
+			if (g_strcmp0(kind, typeguids[i].mbrs[j]) == 0)
+				return typeguids[i].gpt;
+		}
+	}
+	return kind;
+}
+
+/**
  * fu_volume_new_by_kind:
  * @kind: a volume kind, typically a GUID
  * @error: (nullable): optional return location for an error
@@ -529,7 +559,7 @@ fu_volume_new_by_kind(const gchar *kind, GError **error)
 				   NULL);
 
 		/* convert reported type to GPT type */
-		type_str = fu_common_convert_to_gpt_type(type_str);
+		type_str = fu_volume_kind_convert_to_gpt(type_str);
 		if (g_getenv("FWUPD_VERBOSE") != NULL) {
 			g_autofree gchar *id_type = fu_volume_get_id_type(vol);
 			g_debug("device %s, type: %s, internal: %d, fs: %s",

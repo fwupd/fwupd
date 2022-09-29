@@ -60,3 +60,5 @@ FuVolume *
 fu_volume_new_by_devnum(guint32 devnum, GError **error) G_GNUC_WARN_UNUSED_RESULT;
 FuVolume *
 fu_volume_new_esp_for_path(const gchar *esp_path, GError **error) G_GNUC_WARN_UNUSED_RESULT;
+const gchar *
+fu_volume_kind_convert_to_gpt(const gchar *kind);

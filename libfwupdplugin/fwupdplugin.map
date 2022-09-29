@@ -1132,5 +1132,6 @@ LIBFWUPDPLUGIN_1.8.6 {
   global:
     fu_plugin_new_from_gtype;
     fu_plugin_set_context;
+    fu_volume_kind_convert_to_gpt;
   local: *;
 } LIBFWUPDPLUGIN_1.8.5;

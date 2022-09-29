@@ -354,7 +354,6 @@ if get_option('tests')
     'fwupdplugin-self-test',
     test_deps,
     sources: [
-      fwupdplugin_src,
       'fu-self-test.c'
     ],
     include_directories: [

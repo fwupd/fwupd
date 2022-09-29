@@ -141,26 +141,6 @@ fu_common_get_memory_size(void)
 	return fu_common_get_memory_size_impl();
 }
 
-const gchar *
-fu_common_convert_to_gpt_type(const gchar *type)
-{
-	struct {
-		const gchar *gpt;
-		const gchar *mbrs[6];
-	} typeguids[] = {{"c12a7328-f81f-11d2-ba4b-00a0c93ec93b", /* esp */
-			  {"0xef", "efi", NULL}},
-			 {"ebd0a0a2-b9e5-4433-87c0-68b6b72699c7", /* fat32 */
-			  {"0x0b", "0x06", "vfat", "fat32", "fat32lba", NULL}},
-			 {NULL, {NULL}}};
-	for (guint i = 0; typeguids[i].gpt != NULL; i++) {
-		for (guint j = 0; typeguids[i].mbrs[j] != NULL; j++) {
-			if (g_strcmp0(type, typeguids[i].mbrs[j]) == 0)
-				return typeguids[i].gpt;
-		}
-	}
-	return type;
-}
-
 /**
  * fu_common_check_full_disk_encryption:
  * @error: (nullable): optional return location for an error
