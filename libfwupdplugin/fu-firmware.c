@@ -76,6 +76,8 @@ fu_firmware_flag_to_string(FuFirmwareFlags flag)
 		return "done-parse";
 	if (flag == FU_FIRMWARE_FLAG_HAS_STORED_SIZE)
 		return "has-stored-size";
+	if (flag == FU_FIRMWARE_FLAG_ALWAYS_SEARCH)
+		return "always-search";
 	return NULL;
 }
 
@@ -104,6 +106,8 @@ fu_firmware_flag_from_string(const gchar *flag)
 		return FU_FIRMWARE_FLAG_DONE_PARSE;
 	if (g_strcmp0(flag, "has-stored-size") == 0)
 		return FU_FIRMWARE_FLAG_HAS_STORED_SIZE;
+	if (g_strcmp0(flag, "always-search") == 0)
+		return FU_FIRMWARE_FLAG_ALWAYS_SEARCH;
 	return FU_FIRMWARE_FLAG_NONE;
 }
 
@@ -816,7 +820,8 @@ fu_firmware_check_magic_for_offset(FuFirmware *self,
 		return TRUE;
 
 	/* fuzzing */
-	if ((flags & FWUPD_INSTALL_FLAG_NO_SEARCH) > 0) {
+	if (!fu_firmware_has_flag(self, FU_FIRMWARE_FLAG_ALWAYS_SEARCH) &&
+	    (flags & FWUPD_INSTALL_FLAG_NO_SEARCH) > 0) {
 		if (!klass->check_magic(self, fw, *offset, error)) {
 			g_prefix_error(error, "not searching magic due to install flags: ");
 			return FALSE;

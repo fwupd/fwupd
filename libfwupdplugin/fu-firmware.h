@@ -125,6 +125,16 @@ struct _FuFirmwareClass {
  * Since: 1.8.2
  **/
 #define FU_FIRMWARE_FLAG_HAS_STORED_SIZE (1u << 5)
+/**
+ * FU_FIRMWARE_FLAG_ALWAYS_SEARCH:
+ *
+ * Always searches for magic regardless of the install flags.
+ * This is useful for firmware that always has an *unparsed* variable-length
+ * header.
+ *
+ * Since: 1.8.6
+ **/
+#define FU_FIRMWARE_FLAG_ALWAYS_SEARCH (1u << 6)
 
 /**
  * FuFirmwareFlags:
