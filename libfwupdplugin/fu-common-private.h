@@ -17,7 +17,3 @@ GPtrArray *
 fu_common_get_block_devices(GError **error);
 guint64
 fu_common_get_memory_size_impl(void);
-
-/* for self tests */
-const gchar *
-fu_common_convert_to_gpt_type(const gchar *type);
