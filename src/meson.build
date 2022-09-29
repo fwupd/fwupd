@@ -34,7 +34,7 @@ if polkit.found()
   client_src += 'fu-polkit-agent.c'
 endif
 
-daemon_src = [
+fwupd_engine_src = [
   'fu-cabinet-common.c',
   'fu-config.c',
   'fu-debug.c',
@@ -53,13 +53,13 @@ daemon_src = [
 ] + systemd_src
 
 if gudev.found()
-  daemon_src += 'fu-udev-backend.c'
+  fwupd_engine_src += 'fu-udev-backend.c'
 endif
 if gusb.found()
-  daemon_src += 'fu-usb-backend.c'
+  fwupd_engine_src += 'fu-usb-backend.c'
 endif
 if bluez.allowed()
-  daemon_src += 'fu-bluez-backend.c'
+  fwupd_engine_src += 'fu-bluez-backend.c'
 endif
 
 # include event message file
@@ -73,7 +73,7 @@ if host_machine.system() == 'windows'
     ],
   )
   windows = import('windows')
-  daemon_src += windows.compile_resources(fwupd_rc)
+  fwupd_engine_src += windows.compile_resources(fwupd_rc)
 endif
 
 fwupdutil = library(
@@ -194,15 +194,16 @@ plugins_hdr = custom_target('fwupd-generate-plugins-header',
   ],
 )
 
-# build all the plugins into one installed library
-fwupdpluginbuiltin = library(
-  'fwupdpluginbuiltin',
-  sources: [],
+# build all the plugins and engine into one installed library
+fwupdengine = library(
+  'fwupdengine',
+  resources_src,
+  sources: fwupd_engine_src,
   install: true,
   install_dir: libdir_pkg,
   include_directories: plugin_incdirs,
   dependencies: [
-    plugin_deps,
+    daemon_dep,
   ],
   link_whole: [
     plugin_builtins,
@@ -210,24 +211,6 @@ fwupdpluginbuiltin = library(
   link_with: [
     fwupd,
     fwupdplugin,
-  ],
-)
-
-fwupdengine = library(
-  'fwupdengine',
-  resources_src,
-  sources: daemon_src,
-  install: true,
-  install_dir: libdir_pkg,
-  install_rpath: libdir_pkg,
-  include_directories: plugin_incdirs,
-  dependencies: [
-    daemon_dep,
-  ],
-  link_with: [
-    fwupd,
-    fwupdplugin,
-    fwupdpluginbuiltin,
   ],
 )
 
@@ -253,11 +236,9 @@ fwupdtool = executable(
     valgrind,
   ],
   link_with: [
-    fwupd,
     fwupdengine,
-    fwupdplugin,
-    fwupdpluginbuiltin,
     fwupdutil,
+    plugin_libs,
   ],
   install: true,
   install_rpath: libdir_pkg,
@@ -321,10 +302,8 @@ executable(
     daemon_dep,
   ],
   link_with: [
-    fwupd,
     fwupdengine,
-    fwupdplugin,
-    fwupdpluginbuiltin,
+    plugin_libs,
   ],
   c_args: [
     '-DFU_OFFLINE_DESTDIR=""',
@@ -363,11 +342,9 @@ if get_option('tests')
       daemon_dep,
     ],
     link_with: [
-      fwupd,
       fwupdengine,
-      fwupdplugin,
-      fwupdpluginbuiltin,
       fwupdutil,
+      plugin_libs,
     ],
     c_args: [
     ],
