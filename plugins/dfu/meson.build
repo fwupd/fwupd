@@ -32,12 +32,12 @@ fu_dfu_tool = executable(
   include_directories: plugin_incdirs,
   dependencies: plugin_deps,
   link_with: [
+    plugin_libs,
     plugin_builtin_dfu,
-    fwupd,
-    fwupdplugin,
   ],
   c_args: cargs,
   install: true,
+  install_rpath: libdir_pkg,
   install_dir: bindir
 )
 endif
