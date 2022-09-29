@@ -58,16 +58,6 @@ fwupdate = executable(
   'fwupdate',
   sources: [
     'fu-uefi-tool.c',
-    'fu-uefi-bgrt.c',
-    'fu-uefi-bootmgr.c',
-    'fu-uefi-common.c',
-    'fu-uefi-device.c',
-    'fu-uefi-cod-device.c',
-    'fu-uefi-nvram-device.c',
-    'fu-uefi-grub-device.c',
-    'fu-uefi-devpath.c',
-    'fu-uefi-update-info.c',
-    backend_srcs,
   ],
   include_directories: plugin_incdirs,
   dependencies: [
@@ -75,9 +65,13 @@ fwupdate = executable(
     platform_deps,
     efiboot,
   ],
-  link_with: plugin_libs,
+  link_with: [
+    plugin_libs,
+    plugin_builtin_uefi_capsule,
+  ],
   install: true,
   install_dir: bindir,
+  install_rpath: libdir_pkg,
   c_args: cargs,
 )
 endif
