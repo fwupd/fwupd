@@ -110,7 +110,6 @@ fwupdmgr = executable(
   fu_hash,
   sources: [
     'fu-util.c',
-    'fu-history.c',
     client_src,
   ],
   include_directories: [
