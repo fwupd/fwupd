@@ -67,14 +67,6 @@ struct _FuPluginClass {
 
 	/* vfuncs */
 	/**
-	 * build_hash:
-	 *
-	 * Sets the build hash which must be set by modular plugins to avoid tainting the engine.
-	 *
-	 * Since: 1.7.2
-	 **/
-	const gchar *build_hash;
-	/**
 	 * init:
 	 * @self: A #FuPlugin
 	 *

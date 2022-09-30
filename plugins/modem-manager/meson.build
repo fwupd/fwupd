@@ -14,7 +14,6 @@ cargs +=['-DMM_REQUIRED_VERSION="1.10.0"']
 plugin_quirks += files('modem-manager.quirk')
 
 shared_module('fu_plugin_modem_manager',
-  fu_hash,
   sources: [
     'fu-plugin-modem-manager.c',
     'fu-mm-device.c',

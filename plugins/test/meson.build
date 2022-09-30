@@ -19,19 +19,6 @@ plugin_builtins += static_library('fu_plugin_test',
   dependencies: plugin_deps,
 )
 
-shared_module('fu_plugin_invalid',
-  fu_hash,
-  sources: [
-    'fu-plugin-invalid.c',
-  ],
-  include_directories: plugin_incdirs,
-  install: install_dummy,
-  install_dir: libdir_pkg,
-  link_with: plugin_libs,
-  c_args: cargs,
-  dependencies: plugin_deps,
-)
-
 if bluez.allowed()
 plugin_builtins += static_library('fu_plugin_test_ble',
   sources: [

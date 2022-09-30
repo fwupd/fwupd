@@ -257,7 +257,6 @@ LIBFWUPDPLUGIN_1.2.2 {
 LIBFWUPDPLUGIN_1.2.4 {
   global:
     fu_device_incorporate_from_component;
-    fu_plugin_get_build_hash;
     fu_udev_device_get_slot_depth;
   local: *;
 } LIBFWUPDPLUGIN_1.2.2;

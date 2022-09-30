@@ -232,15 +232,6 @@ fu_util_start_engine(FuUtilPrivate *priv,
 	flags |= FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS;
 	if (!fu_engine_load(priv->engine, flags, progress, error))
 		return FALSE;
-	if (fu_engine_get_tainted(priv->engine)) {
-		g_autofree gchar *fmt = NULL;
-
-		/* TRANSLATORS: this is a prefix on the console */
-		fmt = fu_util_term_format(_("WARNING:"), FU_UTIL_TERM_COLOR_RED);
-		g_printerr("%s This tool has loaded 3rd party code and "
-			   "is no longer supported by the upstream developers!\n",
-			   fmt);
-	}
 	fu_util_show_plugin_warnings(priv);
 	fu_util_show_unsupported_warn();
 

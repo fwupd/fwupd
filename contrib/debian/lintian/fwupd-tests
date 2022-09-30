@@ -1,3 +1,2 @@
 #see Debian bug 896012
 fwupd-tests: library-not-linked-against-libc usr/lib/*/fwupd-plugins-*/*
-fwupd-tests: shared-library-lacks-prerequisites usr/lib/*/fwupd-plugins-*/libfu_plugin_invalid.so

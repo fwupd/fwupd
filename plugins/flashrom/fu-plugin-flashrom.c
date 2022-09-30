@@ -13,7 +13,6 @@
 #include <string.h>
 
 #include "fu-flashrom-device.h"
-#include "fu-hash.h"
 
 #define SELFCHECK_TRUE 1
 
@@ -348,7 +347,6 @@ fu_plugin_flashrom_unlock(FuPlugin *self, FuDevice *device, GError **error)
 void
 fu_plugin_init_vfuncs(FuPluginVfuncs *vfuncs)
 {
-	vfuncs->build_hash = FU_BUILD_HASH;
 	vfuncs->init = fu_plugin_flashrom_init;
 	vfuncs->destroy = fu_plugin_flashrom_destroy;
 	vfuncs->to_string = fu_plugin_flashrom_to_string;
