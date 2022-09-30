@@ -30,12 +30,8 @@
 #include <libfwupd/fwupd-common.h>
 #include <libfwupd/fwupd-plugin.h>
 
-/* for in-tree plugins only */
-#ifdef FWUPD_COMPILATION
-#include "fu-hash.h"
 /* only until HSI is declared stable */
 #include "fwupd-security-attr-private.h"
-#endif
 
 #define FU_TYPE_PLUGIN (fu_plugin_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuPlugin, fu_plugin, FU, PLUGIN, FwupdPlugin)

@@ -13,6 +13,7 @@
 #include <string.h>
 
 #include "fu-flashrom-device.h"
+#include "fu-hash.h"
 
 #define SELFCHECK_TRUE 1
 

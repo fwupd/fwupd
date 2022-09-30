@@ -12,6 +12,7 @@
 #include <libmm-glib.h>
 #include <string.h>
 
+#include "fu-hash.h"
 #include "fu-mm-device.h"
 #include "fu-mm-utils.h"
 
