@@ -103,8 +103,12 @@ fu_redfish_smc_device_start_update(FuDevice *device, FuProgress *progress, GErro
 		request,
 		"/redfish/v1/UpdateService/Actions/UpdateService.StartUpdate",
 		FU_REDFISH_REQUEST_PERFORM_FLAG_LOAD_JSON,
-		error))
+		error)) {
+		if (g_error_matches(*error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
+			fu_device_add_problem(device, FWUPD_DEVICE_PROBLEM_UPDATE_PENDING);
+		}
 		return FALSE;
+	}
 	json_obj = fu_redfish_request_get_json_object(request);
 
 	location = fu_redfish_smc_device_get_task(json_obj);
@@ -171,16 +175,19 @@ fu_redfish_smc_device_write_firmware(FuDevice *device,
 	if (!fu_redfish_request_perform(request,
 					fu_redfish_backend_get_push_uri_path(backend),
 					FU_REDFISH_REQUEST_PERFORM_FLAG_LOAD_JSON,
-					error))
+					error)) {
+		if (g_error_matches(*error, FWUPD_ERROR, FWUPD_ERROR_ALREADY_PENDING)) {
+			fu_device_add_problem(device, FWUPD_DEVICE_PROBLEM_UPDATE_PENDING);
+		}
 		return FALSE;
-	if (fu_redfish_request_get_status_code(request) != 202) {
+	}
+	if (fu_redfish_request_get_status_code(request) != 202)
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_FILE,
 			    "failed to upload: %li",
 			    fu_redfish_request_get_status_code(request));
-		return FALSE;
-	}
+	return FALSE;
 	json_obj = fu_redfish_request_get_json_object(request);
 
 	/* poll the verify task for progress */
