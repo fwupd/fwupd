@@ -81,3 +81,9 @@ Flags = use-runtime-version,no-serial-number
 [USB\VID_2D1F&PID_03C7]
 Plugin = wacom_usb
 GType = FuWacAndroidDevice
+
+# Intuos Pro Small (2nd-gen USB v2) [PTH-460]
+[USB\VID_056A&PID_03DC]
+GType = FuWacDevice
+Plugin = wacom_usb
+Flags = use-runtime-version
