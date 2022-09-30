@@ -91,7 +91,7 @@ def _cairo_surface_write_to_bmp(img: cairo.ImageSurface) -> bytes:
 def main(args) -> int:
 
     # open output archive
-    with tarfile.open(args.out, "w:xz") as tar:
+    with tarfile.open(args.out, "w:xz", preset=8) as tar:
 
         for lang in languages(args.podir):
             # these are the 1.6:1 of some common(ish) screen widths
