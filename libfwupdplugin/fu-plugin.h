@@ -70,22 +70,22 @@ struct _FuPluginClass {
 	 * init:
 	 * @self: A #FuPlugin
 	 *
-	 * Initializes the plugin.
+	 * Initializes the modular plugin.
 	 * Sets up any static data structures for the plugin.
 	 *
 	 * Since: 1.7.2
 	 **/
-	void (*init)(FuPlugin *self);
+	void (*constructed)(GObject *obj);
 	/**
-	 * destroy:
+	 * finalize:
 	 * @self: a plugin
 	 *
-	 * Destroys the plugin.
+	 * Destroys the modular plugin.
 	 * Any allocated memory should be freed here.
 	 *
 	 * Since: 1.7.2
 	 **/
-	void (*destroy)(FuPlugin *self);
+	void (*finalize)(GObject *obj);
 	/**
 	 * startup:
 	 * @self: a #FuPlugin

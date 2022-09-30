@@ -15,7 +15,7 @@ plugin_quirks += files('modem-manager.quirk')
 
 shared_module('fu_plugin_modem_manager',
   sources: [
-    'fu-plugin-modem-manager.c',
+    'fu-mm-plugin.c',
     'fu-mm-device.c',
     'fu-qmi-pdc-updater.c',
     'fu-mbim-qdu-updater.c',

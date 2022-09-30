@@ -948,7 +948,7 @@ fu_plugin_runner_startup(FuPlugin *self, FuProgress *progress, GError **error)
  * fu_plugin_runner_init:
  * @self: a #FuPlugin
  *
- * Runs the init routine for the plugin, if enabled.
+ * Runs the constructed routine for the plugin, if enabled.
  *
  * Since: 1.8.1
  **/
@@ -969,9 +969,9 @@ fu_plugin_runner_init(FuPlugin *self)
 		return;
 
 	/* optional */
-	if (vfuncs->init != NULL) {
-		g_debug("init(%s)", fu_plugin_get_name(self));
-		vfuncs->init(self);
+	if (vfuncs->constructed != NULL) {
+		g_debug("constructed(%s)", fu_plugin_get_name(self));
+		vfuncs->constructed(G_OBJECT(self));
 		priv->done_init = TRUE;
 	}
 }
@@ -2797,9 +2797,9 @@ fu_plugin_finalize(GObject *object)
 	g_rw_lock_clear(&priv->cache_mutex);
 
 	/* optional */
-	if (priv->done_init && vfuncs->destroy != NULL) {
-		g_debug("destroy(%s)", fu_plugin_get_name(self));
-		vfuncs->destroy(self);
+	if (priv->done_init && vfuncs->finalize != NULL) {
+		g_debug("finalize(%s)", fu_plugin_get_name(self));
+		vfuncs->finalize(G_OBJECT(self));
 	}
 
 	for (guint i = 0; i < FU_PLUGIN_RULE_LAST; i++) {
