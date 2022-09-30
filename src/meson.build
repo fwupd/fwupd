@@ -107,7 +107,6 @@ install_data(['org.freedesktop.fwupd.xml'],
 )
 fwupdmgr = executable(
   'fwupdmgr',
-  fu_hash,
   sources: [
     'fu-util.c',
     client_src,
@@ -143,7 +142,6 @@ endif
 if offline.allowed()
 fwupdoffline = executable(
   'fwupdoffline',
-  fu_hash,
   sources: [
     'fu-history.c',
     'fu-offline.c',
@@ -216,7 +214,6 @@ fwupdengine = library(
 fwupdtool = executable(
   'fwupdtool',
   resources_src,
-  fu_hash,
   plugins_hdr,
   export_dynamic: true,
   sources: [
@@ -284,7 +281,6 @@ endif
 executable(
   'fwupd',
   resources_src,
-  fu_hash,
   plugins_hdr,
   sources: [
     daemon_loader_src,
@@ -326,7 +322,6 @@ if get_option('tests')
     hwid_test_firmware,
     multiple_rels_test_firmware,
     noreqs_test_firmware,
-    fu_hash,
     plugins_hdr,
     sources: [
       'fu-spawn.c',

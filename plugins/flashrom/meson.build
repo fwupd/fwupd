@@ -5,7 +5,6 @@ cargs = ['-DG_LOG_DOMAIN="FuPluginFlashrom"']
 plugin_quirks += files('flashrom.quirk')
 
 shared_module('fu_plugin_flashrom',
-  fu_hash,
   sources: [
     'fu-flashrom-device.c',
     'fu-plugin-flashrom.c',

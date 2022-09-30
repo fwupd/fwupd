@@ -53,8 +53,6 @@ void
 fu_engine_idle_reset(FuEngine *self);
 gboolean
 fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GError **error);
-gboolean
-fu_engine_get_tainted(FuEngine *self);
 const gchar *
 fu_engine_get_host_vendor(FuEngine *self);
 const gchar *

@@ -178,17 +178,7 @@ fwupdplugin_headers = [
   'fu-hid-device.h',
 ]
 
-fu_hash = custom_target(
-  'fu-hash.h',
-  input: fwupdplugin_src,
-  output: 'fu-hash.h',
-  command: [python3.full_path(),
-             files('fu-hash.py'),
-             '@OUTPUT@', '@INPUT@']
-)
-
 fwupdplugin_headers_private = [
-  fu_hash,
   'fu-backend-private.h',
   'fu-context-private.h',
   'fu-device-private.h',
@@ -344,15 +334,11 @@ if introspection.allowed()
 endif
 
 if get_option('tests')
-  test_deps = [
-    fu_hash,
-  ]
   env = environment()
   env.set('G_TEST_SRCDIR', meson.current_source_dir())
   env.set('G_TEST_BUILDDIR', meson.current_build_dir())
   e = executable(
     'fwupdplugin-self-test',
-    test_deps,
     sources: [
       'fu-self-test.c'
     ],

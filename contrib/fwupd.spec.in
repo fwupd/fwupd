@@ -424,9 +424,6 @@ done
 /usr/lib/systemd/system-shutdown/fwupd.shutdown
 %dir %{_libdir}/fwupd-%{version}
 %{_libdir}/fwupd-%{version}/libfwupd*.so
-%if 0%{?enable_dummy}
-%{_libdir}/fwupd-%{version}/libfu_plugin_invalid.so
-%endif
 %ghost %{_localstatedir}/lib/fwupd/gnupg
 
 %if 0%{?have_modem_manager}

@@ -149,24 +149,6 @@ fu_plugin_get_vfuncs(FuPlugin *self)
 }
 
 /**
- * fu_plugin_get_build_hash:
- * @self: a #FuPlugin
- *
- * Gets the build hash a plugin was generated with.
- *
- * Returns: (transfer none): a #gchar, or %NULL for unset.
- *
- * Since: 1.2.4
- **/
-const gchar *
-fu_plugin_get_build_hash(FuPlugin *self)
-{
-	FuPluginVfuncs *vfuncs = fu_plugin_get_vfuncs(self);
-	g_return_val_if_fail(FU_IS_PLUGIN(self), NULL);
-	return vfuncs->build_hash;
-}
-
-/**
  * fu_plugin_cache_lookup:
  * @self: a #FuPlugin
  * @id: the key

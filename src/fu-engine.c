@@ -48,7 +48,6 @@
 #include "fu-engine-helper.h"
 #include "fu-engine-request.h"
 #include "fu-engine.h"
-#include "fu-hash.h"
 #include "fu-history.h"
 #include "fu-idle.h"
 #include "fu-kenv.h"
@@ -96,7 +95,6 @@ struct _FuEngine {
 	FuConfig *config;
 	FuRemoteList *remote_list;
 	FuDeviceList *device_list;
-	gboolean tainted;
 	gboolean only_trusted;
 	gboolean write_history;
 	gboolean host_emulation;
@@ -2174,8 +2172,7 @@ fu_engine_get_report_metadata(FuEngine *self, GError **error)
 	if (!fu_engine_get_report_metadata_kernel_cmdline(hash, error))
 		return NULL;
 
-	/* these affect the report credibility */
-	fu_engine_add_report_metadata_bool(hash, "FwupdTainted", self->tainted);
+		/* these affect the report credibility */
 #ifdef SUPPORTED_BUILD
 	fu_engine_add_report_metadata_bool(hash, "FwupdSupported", TRUE);
 #else
@@ -6243,21 +6240,6 @@ fu_engine_plugin_device_removed_cb(FuPlugin *plugin, FuDevice *device, gpointer 
 void
 fu_engine_add_plugin(FuEngine *self, FuPlugin *plugin)
 {
-	if (fu_plugin_is_open(plugin)) {
-		/* plugin does not match built version */
-		if (fu_plugin_get_build_hash(plugin) == NULL) {
-			const gchar *name = fu_plugin_get_name(plugin);
-			g_warning("%s should set vfuncs->build_hash", name);
-			self->tainted = TRUE;
-		} else if (g_strcmp0(fu_plugin_get_build_hash(plugin), FU_BUILD_HASH) != 0) {
-			const gchar *name = fu_plugin_get_name(plugin);
-			g_warning("%s has incorrect built version %s",
-				  name,
-				  fu_plugin_get_build_hash(plugin));
-			self->tainted = TRUE;
-		}
-	}
-
 	fu_plugin_list_add(self->plugin_list, plugin);
 }
 
@@ -6330,12 +6312,6 @@ fu_engine_plugin_check_supported_cb(FuPlugin *plugin, const gchar *guid, FuEngin
 	return n != NULL;
 }
 
-gboolean
-fu_engine_get_tainted(FuEngine *self)
-{
-	return self->tainted;
-}
-
 FuConfig *
 fu_engine_get_config(FuEngine *self)
 {
@@ -6391,15 +6367,10 @@ fu_engine_ensure_security_attrs_tainted(FuEngine *self)
 	fu_security_attrs_append(self->host_security_attrs, attr);
 	for (guint i = 0; i < disabled->len; i++) {
 		const gchar *name_tmp = g_ptr_array_index(disabled, i);
-		if (!g_str_has_prefix(name_tmp, "test") && g_strcmp0(name_tmp, "invalid") != 0) {
+		if (!g_str_has_prefix(name_tmp, "test")) {
 			disabled_plugins = TRUE;
 			break;
 		}
-	}
-	if (self->tainted) {
-		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_TAINTED);
-		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_OS);
-		return;
 	}
 	if (self->plugin_filter->len > 0 || disabled_plugins) {
 		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);

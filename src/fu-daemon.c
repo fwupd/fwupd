@@ -2101,7 +2101,7 @@ fu_daemon_daemon_get_property(GDBusConnection *connection_,
 		return g_variant_new_string(fu_engine_get_host_bkc(self->engine));
 
 	if (g_strcmp0(property_name, "Tainted") == 0)
-		return g_variant_new_boolean(fu_engine_get_tainted(self->engine));
+		return g_variant_new_boolean(FALSE);
 
 	if (g_strcmp0(property_name, "Status") == 0)
 		return g_variant_new_uint32(self->status);
