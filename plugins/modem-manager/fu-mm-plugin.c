@@ -34,78 +34,81 @@ struct FuPluginData {
 	FuMmDevice *shadow_device;
 };
 
+typedef FuPluginData FuModemManagerPlugin;
+#define FU_MODEM_MANAGER_PLUGIN(o) fu_plugin_get_data(FU_PLUGIN(o))
+
 static void
-fu_plugin_mm_to_string(FuPlugin *plugin, guint idt, GString *str)
+fu_mm_plugin_to_string(FuPlugin *plugin, guint idt, GString *str)
 {
-	FuPluginData *priv = fu_plugin_get_data(plugin);
-	fu_string_append_kb(str, idt, "ManagerReady", priv->manager_ready);
-	if (priv->shadow_device != NULL)
-		fu_string_append(str, idt, "ShadowDevice", fu_device_get_id(priv->shadow_device));
+	FuModemManagerPlugin *self = FU_MODEM_MANAGER_PLUGIN(plugin);
+	fu_string_append_kb(str, idt, "ManagerReady", self->manager_ready);
+	if (self->shadow_device != NULL)
+		fu_string_append(str, idt, "ShadowDevice", fu_device_get_id(self->shadow_device));
 }
 
 static void
-fu_plugin_mm_load(FuContext *ctx)
+fu_mm_plugin_load(FuContext *ctx)
 {
 	fu_context_add_quirk_key(ctx, "ModemManagerBranchAtCommand");
 }
 
 static void
-fu_plugin_mm_udev_device_removed(FuPlugin *plugin)
+fu_mm_plugin_udev_device_removed(FuPlugin *plugin)
 {
-	FuPluginData *priv = fu_plugin_get_data(plugin);
+	FuModemManagerPlugin *self = FU_MODEM_MANAGER_PLUGIN(plugin);
 	FuMmDevice *dev;
 
-	if (priv->shadow_device == NULL)
+	if (self->shadow_device == NULL)
 		return;
 
 	dev = fu_plugin_cache_lookup(plugin,
-				     fu_device_get_physical_id(FU_DEVICE(priv->shadow_device)));
+				     fu_device_get_physical_id(FU_DEVICE(self->shadow_device)));
 	if (dev == NULL)
 		return;
 
 	/* once the first port is gone, consider device is gone */
-	fu_plugin_cache_remove(plugin, fu_device_get_physical_id(FU_DEVICE(priv->shadow_device)));
+	fu_plugin_cache_remove(plugin, fu_device_get_physical_id(FU_DEVICE(self->shadow_device)));
 	fu_plugin_device_remove(plugin, FU_DEVICE(dev));
 
 	/* no need to wait for more ports, cancel that right away */
-	if (priv->udev_timeout_id != 0) {
-		g_source_remove(priv->udev_timeout_id);
-		priv->udev_timeout_id = 0;
+	if (self->udev_timeout_id != 0) {
+		g_source_remove(self->udev_timeout_id);
+		self->udev_timeout_id = 0;
 	}
 }
 
 static void
-fu_plugin_mm_uninhibit_device(FuPlugin *plugin)
+fu_mm_plugin_uninhibit_device(FuPlugin *plugin)
 {
-	FuPluginData *priv = fu_plugin_get_data(plugin);
+	FuModemManagerPlugin *self = FU_MODEM_MANAGER_PLUGIN(plugin);
 	g_autoptr(FuMmDevice) shadow_device = NULL;
 
-	g_clear_object(&priv->udev_client);
+	g_clear_object(&self->udev_client);
 
 	/* get the device removed from the plugin cache before uninhibiting */
-	fu_plugin_mm_udev_device_removed(plugin);
+	fu_mm_plugin_udev_device_removed(plugin);
 
-	shadow_device = g_steal_pointer(&priv->shadow_device);
-	if (priv->manager != NULL && shadow_device != NULL) {
+	shadow_device = g_steal_pointer(&self->shadow_device);
+	if (self->manager != NULL && shadow_device != NULL) {
 		const gchar *inhibition_uid = fu_mm_device_get_inhibition_uid(shadow_device);
 		g_debug("uninhibit modemmanager device with uid %s", inhibition_uid);
-		mm_manager_uninhibit_device_sync(priv->manager, inhibition_uid, NULL, NULL);
+		mm_manager_uninhibit_device_sync(self->manager, inhibition_uid, NULL, NULL);
 	}
 }
 
 static gboolean
-fu_plugin_mm_udev_device_ports_timeout(gpointer user_data)
+fu_mm_plugin_udev_device_ports_timeout(gpointer user_data)
 {
 	FuPlugin *plugin = user_data;
-	FuPluginData *priv = fu_plugin_get_data(plugin);
+	FuModemManagerPlugin *self = FU_MODEM_MANAGER_PLUGIN(plugin);
 	FuMmDevice *dev;
 	g_autoptr(GError) error = NULL;
 
-	g_return_val_if_fail(priv->shadow_device != NULL, G_SOURCE_REMOVE);
-	priv->udev_timeout_id = 0;
+	g_return_val_if_fail(self->shadow_device != NULL, G_SOURCE_REMOVE);
+	self->udev_timeout_id = 0;
 
 	dev = fu_plugin_cache_lookup(plugin,
-				     fu_device_get_physical_id(FU_DEVICE(priv->shadow_device)));
+				     fu_device_get_physical_id(FU_DEVICE(self->shadow_device)));
 	if (dev != NULL) {
 		if (!fu_device_probe(FU_DEVICE(dev), &error)) {
 			g_debug("failed to probe MM device: %s", error->message);
@@ -118,59 +121,59 @@ fu_plugin_mm_udev_device_ports_timeout(gpointer user_data)
 }
 
 static void
-fu_plugin_mm_udev_device_ports_timeout_reset(FuPlugin *plugin)
+fu_mm_plugin_udev_device_ports_timeout_reset(FuPlugin *plugin)
 {
-	FuPluginData *priv = fu_plugin_get_data(plugin);
+	FuModemManagerPlugin *self = FU_MODEM_MANAGER_PLUGIN(plugin);
 
-	g_return_if_fail(priv->shadow_device != NULL);
-	if (priv->udev_timeout_id != 0)
-		g_source_remove(priv->udev_timeout_id);
-	priv->udev_timeout_id = g_timeout_add_seconds(FU_MM_UDEV_DEVICE_PORTS_TIMEOUT,
-						      fu_plugin_mm_udev_device_ports_timeout,
+	g_return_if_fail(self->shadow_device != NULL);
+	if (self->udev_timeout_id != 0)
+		g_source_remove(self->udev_timeout_id);
+	self->udev_timeout_id = g_timeout_add_seconds(FU_MM_UDEV_DEVICE_PORTS_TIMEOUT,
+						      fu_mm_plugin_udev_device_ports_timeout,
 						      plugin);
 }
 
 static void
-fu_plugin_mm_udev_device_port_added(FuPlugin *plugin,
+fu_mm_plugin_udev_device_port_added(FuPlugin *plugin,
 				    const gchar *subsystem,
 				    const gchar *path,
 				    gint ifnum)
 {
-	FuPluginData *priv = fu_plugin_get_data(plugin);
+	FuModemManagerPlugin *self = FU_MODEM_MANAGER_PLUGIN(plugin);
 	FuMmDevice *existing;
 	g_autoptr(FuMmDevice) dev = NULL;
 
-	g_return_if_fail(priv->shadow_device != NULL);
+	g_return_if_fail(self->shadow_device != NULL);
 
 	existing =
 	    fu_plugin_cache_lookup(plugin,
-				   fu_device_get_physical_id(FU_DEVICE(priv->shadow_device)));
+				   fu_device_get_physical_id(FU_DEVICE(self->shadow_device)));
 	if (existing != NULL) {
 		/* add port to existing device */
 		fu_mm_device_udev_add_port(existing, subsystem, path, ifnum);
-		fu_plugin_mm_udev_device_ports_timeout_reset(plugin);
+		fu_mm_plugin_udev_device_ports_timeout_reset(plugin);
 		return;
 	}
 
 	/* create device and add to cache */
 	dev = fu_mm_device_udev_new(fu_plugin_get_context(plugin),
-				    priv->manager,
-				    priv->shadow_device);
+				    self->manager,
+				    self->shadow_device);
 	fu_mm_device_udev_add_port(dev, subsystem, path, ifnum);
-	fu_plugin_cache_add(plugin, fu_device_get_physical_id(FU_DEVICE(priv->shadow_device)), dev);
+	fu_plugin_cache_add(plugin, fu_device_get_physical_id(FU_DEVICE(self->shadow_device)), dev);
 
 	/* wait a bit before probing, in case more ports get added */
-	fu_plugin_mm_udev_device_ports_timeout_reset(plugin);
+	fu_mm_plugin_udev_device_ports_timeout_reset(plugin);
 }
 
 static gboolean
-fu_plugin_mm_udev_uevent_cb(GUdevClient *udev,
+fu_mm_plugin_udev_uevent_cb(GUdevClient *udev,
 			    const gchar *action,
 			    GUdevDevice *device,
 			    gpointer user_data)
 {
 	FuPlugin *plugin = FU_PLUGIN(user_data);
-	FuPluginData *priv = fu_plugin_get_data(plugin);
+	FuModemManagerPlugin *self = FU_MODEM_MANAGER_PLUGIN(plugin);
 	const gchar *subsystem = g_udev_device_get_subsystem(device);
 	const gchar *name = g_udev_device_get_name(device);
 	g_autofree gchar *path = NULL;
@@ -178,7 +181,7 @@ fu_plugin_mm_udev_uevent_cb(GUdevClient *udev,
 	g_autofree gchar *device_bus = NULL;
 	gint ifnum = -1;
 
-	if (action == NULL || subsystem == NULL || priv->shadow_device == NULL || name == NULL)
+	if (action == NULL || subsystem == NULL || self->shadow_device == NULL || name == NULL)
 		return TRUE;
 
 	/* ignore if loading port info fails */
@@ -191,49 +194,49 @@ fu_plugin_mm_udev_uevent_cb(GUdevClient *udev,
 
 	/* ignore all events for ports not owned by our device */
 	if (g_strcmp0(device_sysfs_path,
-		      fu_device_get_physical_id(FU_DEVICE(priv->shadow_device))) != 0)
+		      fu_device_get_physical_id(FU_DEVICE(self->shadow_device))) != 0)
 		return TRUE;
 
 	path = g_strdup_printf("/dev/%s", name);
 
 	if ((g_str_equal(action, "add")) || (g_str_equal(action, "change"))) {
 		g_debug("added port to shadow_device modem: %s (ifnum %d)", path, ifnum);
-		fu_plugin_mm_udev_device_port_added(plugin, subsystem, path, ifnum);
+		fu_mm_plugin_udev_device_port_added(plugin, subsystem, path, ifnum);
 	} else if (g_str_equal(action, "remove")) {
 		g_debug("removed port from shadow_device modem: %s", path);
-		fu_plugin_mm_udev_device_removed(plugin);
+		fu_mm_plugin_udev_device_removed(plugin);
 	}
 
 	return TRUE;
 }
 
 static gboolean
-fu_plugin_mm_inhibit_device(FuPlugin *plugin, FuDevice *device, GError **error)
+fu_mm_plugin_inhibit_device(FuPlugin *plugin, FuDevice *device, GError **error)
 {
 	const gchar *inhibition_uid;
 	static const gchar *subsystems[] = {"tty", "usbmisc", "wwan", NULL};
-	FuPluginData *priv = fu_plugin_get_data(plugin);
+	FuModemManagerPlugin *self = FU_MODEM_MANAGER_PLUGIN(plugin);
 	g_autoptr(FuMmDevice) shadow_device = NULL;
 
-	fu_plugin_mm_uninhibit_device(plugin);
+	fu_mm_plugin_uninhibit_device(plugin);
 
 	shadow_device = fu_mm_shadow_device_new(FU_MM_DEVICE(device));
 	inhibition_uid = fu_mm_device_get_inhibition_uid(shadow_device);
 	g_debug("inhibit modemmanager device with uid %s", inhibition_uid);
-	if (!mm_manager_inhibit_device_sync(priv->manager, inhibition_uid, NULL, error))
+	if (!mm_manager_inhibit_device_sync(self->manager, inhibition_uid, NULL, error))
 		return FALSE;
 
 	/* setup shadow_device device info */
-	priv->shadow_device = g_steal_pointer(&shadow_device);
+	self->shadow_device = g_steal_pointer(&shadow_device);
 
 	/* only do modem port monitoring using udev if the module is expected
 	 * to reset itself into a fully different layout, e.g. a fastboot device */
 	if (fu_mm_device_get_update_methods(FU_MM_DEVICE(device)) &
 	    MM_MODEM_FIRMWARE_UPDATE_METHOD_FASTBOOT) {
-		priv->udev_client = g_udev_client_new(subsystems);
-		g_signal_connect(G_UDEV_CLIENT(priv->udev_client),
+		self->udev_client = g_udev_client_new(subsystems);
+		g_signal_connect(G_UDEV_CLIENT(self->udev_client),
 				 "uevent",
-				 G_CALLBACK(fu_plugin_mm_udev_uevent_cb),
+				 G_CALLBACK(fu_mm_plugin_udev_uevent_cb),
 				 plugin);
 	}
 
@@ -241,7 +244,7 @@ fu_plugin_mm_inhibit_device(FuPlugin *plugin, FuDevice *device, GError **error)
 }
 
 static void
-fu_plugin_mm_ensure_modem_power_inhibit(FuPlugin *plugin, FuDevice *device)
+fu_mm_plugin_ensure_modem_power_inhibit(FuPlugin *plugin, FuDevice *device)
 {
 	if (g_file_test(MODEM_POWER_SYSFS_PATH, G_FILE_TEST_EXISTS)) {
 		fu_device_inhibit(device,
@@ -253,9 +256,9 @@ fu_plugin_mm_ensure_modem_power_inhibit(FuPlugin *plugin, FuDevice *device)
 }
 
 static void
-fu_plugin_mm_device_add(FuPlugin *plugin, MMObject *modem)
+fu_mm_plugin_device_add(FuPlugin *plugin, MMObject *modem)
 {
-	FuPluginData *priv = fu_plugin_get_data(plugin);
+	FuModemManagerPlugin *self = FU_MODEM_MANAGER_PLUGIN(plugin);
 	const gchar *object_path = mm_object_get_path(modem);
 	g_autoptr(FuMmDevice) dev = NULL;
 	g_autoptr(GError) error = NULL;
@@ -266,25 +269,25 @@ fu_plugin_mm_device_add(FuPlugin *plugin, MMObject *modem)
 		g_warning("MM device already added, ignoring");
 		return;
 	}
-	dev = fu_mm_device_new(fu_plugin_get_context(plugin), priv->manager, modem);
+	dev = fu_mm_device_new(fu_plugin_get_context(plugin), self->manager, modem);
 	if (!fu_device_setup(FU_DEVICE(dev), &error)) {
 		g_debug("failed to probe MM device: %s", error->message);
 		return;
 	}
-	fu_plugin_mm_ensure_modem_power_inhibit(plugin, FU_DEVICE(dev));
+	fu_mm_plugin_ensure_modem_power_inhibit(plugin, FU_DEVICE(dev));
 	fu_plugin_device_add(plugin, FU_DEVICE(dev));
 	fu_plugin_cache_add(plugin, object_path, dev);
 	fu_plugin_cache_add(plugin, fu_device_get_physical_id(FU_DEVICE(dev)), dev);
 }
 
 static void
-fu_plugin_mm_device_added_cb(MMManager *manager, MMObject *modem, FuPlugin *plugin)
+fu_mm_plugin_device_added_cb(MMManager *manager, MMObject *modem, FuPlugin *plugin)
 {
-	fu_plugin_mm_device_add(plugin, modem);
+	fu_mm_plugin_device_add(plugin, modem);
 }
 
 static void
-fu_plugin_mm_device_removed_cb(MMManager *manager, MMObject *modem, FuPlugin *plugin)
+fu_mm_plugin_device_removed_cb(MMManager *manager, MMObject *modem, FuPlugin *plugin)
 {
 	const gchar *object_path = mm_object_get_path(modem);
 	FuMmDevice *dev = fu_plugin_cache_lookup(plugin, object_path);
@@ -311,27 +314,27 @@ fu_plugin_mm_device_removed_cb(MMManager *manager, MMObject *modem, FuPlugin *pl
 }
 
 static void
-fu_plugin_mm_teardown_manager(FuPlugin *plugin)
+fu_mm_plugin_teardown_manager(FuPlugin *plugin)
 {
-	FuPluginData *priv = fu_plugin_get_data(plugin);
+	FuModemManagerPlugin *self = FU_MODEM_MANAGER_PLUGIN(plugin);
 
-	if (priv->manager_ready) {
+	if (self->manager_ready) {
 		g_debug("ModemManager no longer available");
-		g_signal_handlers_disconnect_by_func(priv->manager,
-						     G_CALLBACK(fu_plugin_mm_device_added_cb),
+		g_signal_handlers_disconnect_by_func(self->manager,
+						     G_CALLBACK(fu_mm_plugin_device_added_cb),
 						     plugin);
-		g_signal_handlers_disconnect_by_func(priv->manager,
-						     G_CALLBACK(fu_plugin_mm_device_removed_cb),
+		g_signal_handlers_disconnect_by_func(self->manager,
+						     G_CALLBACK(fu_mm_plugin_device_removed_cb),
 						     plugin);
-		priv->manager_ready = FALSE;
+		self->manager_ready = FALSE;
 	}
 }
 
 static void
-fu_plugin_mm_setup_manager(FuPlugin *plugin)
+fu_mm_plugin_setup_manager(FuPlugin *plugin)
 {
-	FuPluginData *priv = fu_plugin_get_data(plugin);
-	const gchar *version = mm_manager_get_version(priv->manager);
+	FuModemManagerPlugin *self = FU_MODEM_MANAGER_PLUGIN(plugin);
+	const gchar *version = mm_manager_get_version(self->manager);
 	GList *list;
 
 	if (fu_version_compare(version, MM_REQUIRED_VERSION, FWUPD_VERSION_FORMAT_TRIPLET) < 0) {
@@ -343,53 +346,53 @@ fu_plugin_mm_setup_manager(FuPlugin *plugin)
 
 	g_debug("ModemManager %s is available", version);
 
-	g_signal_connect(G_DBUS_OBJECT_MANAGER(priv->manager),
+	g_signal_connect(G_DBUS_OBJECT_MANAGER(self->manager),
 			 "object-added",
-			 G_CALLBACK(fu_plugin_mm_device_added_cb),
+			 G_CALLBACK(fu_mm_plugin_device_added_cb),
 			 plugin);
-	g_signal_connect(G_DBUS_OBJECT_MANAGER(priv->manager),
+	g_signal_connect(G_DBUS_OBJECT_MANAGER(self->manager),
 			 "object-removed",
-			 G_CALLBACK(fu_plugin_mm_device_removed_cb),
+			 G_CALLBACK(fu_mm_plugin_device_removed_cb),
 			 plugin);
 
-	list = g_dbus_object_manager_get_objects(G_DBUS_OBJECT_MANAGER(priv->manager));
+	list = g_dbus_object_manager_get_objects(G_DBUS_OBJECT_MANAGER(self->manager));
 	for (GList *l = list; l != NULL; l = g_list_next(l)) {
 		MMObject *modem = MM_OBJECT(l->data);
-		fu_plugin_mm_device_add(plugin, modem);
+		fu_mm_plugin_device_add(plugin, modem);
 		g_object_unref(modem);
 	}
 	g_list_free(list);
 
-	priv->manager_ready = TRUE;
+	self->manager_ready = TRUE;
 }
 
 static void
-fu_plugin_mm_name_owner_updated(FuPlugin *plugin)
+fu_mm_plugin_name_owner_updated(FuPlugin *plugin)
 {
-	FuPluginData *priv = fu_plugin_get_data(plugin);
+	FuModemManagerPlugin *self = FU_MODEM_MANAGER_PLUGIN(plugin);
 	g_autofree gchar *name_owner = NULL;
 	name_owner = g_dbus_object_manager_client_get_name_owner(
-	    G_DBUS_OBJECT_MANAGER_CLIENT(priv->manager));
+	    G_DBUS_OBJECT_MANAGER_CLIENT(self->manager));
 	if (name_owner != NULL)
-		fu_plugin_mm_setup_manager(plugin);
+		fu_mm_plugin_setup_manager(plugin);
 	else
-		fu_plugin_mm_teardown_manager(plugin);
+		fu_mm_plugin_teardown_manager(plugin);
 }
 
 static gboolean
-fu_plugin_mm_coldplug(FuPlugin *plugin, FuProgress *progress, GError **error)
+fu_mm_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError **error)
 {
-	FuPluginData *priv = fu_plugin_get_data(plugin);
-	g_signal_connect_swapped(MM_MANAGER(priv->manager),
+	FuModemManagerPlugin *self = FU_MODEM_MANAGER_PLUGIN(plugin);
+	g_signal_connect_swapped(MM_MANAGER(self->manager),
 				 "notify::name-owner",
-				 G_CALLBACK(fu_plugin_mm_name_owner_updated),
+				 G_CALLBACK(fu_mm_plugin_name_owner_updated),
 				 plugin);
-	fu_plugin_mm_name_owner_updated(plugin);
+	fu_mm_plugin_name_owner_updated(plugin);
 	return TRUE;
 }
 
 static void
-fu_plugin_mm_modem_power_changed_cb(GFileMonitor *monitor,
+fu_mm_plugin_modem_power_changed_cb(GFileMonitor *monitor,
 				    GFile *file,
 				    GFile *other_file,
 				    GFileMonitorEvent event_type,
@@ -399,66 +402,43 @@ fu_plugin_mm_modem_power_changed_cb(GFileMonitor *monitor,
 	GPtrArray *devices = fu_plugin_get_devices(plugin);
 	for (guint i = 0; i < devices->len; i++) {
 		FuDevice *device = g_ptr_array_index(devices, i);
-		fu_plugin_mm_ensure_modem_power_inhibit(plugin, device);
+		fu_mm_plugin_ensure_modem_power_inhibit(plugin, device);
 	}
 }
 
 static gboolean
-fu_plugin_mm_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
+fu_mm_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 {
-	FuPluginData *priv = fu_plugin_get_data(plugin);
+	FuModemManagerPlugin *self = FU_MODEM_MANAGER_PLUGIN(plugin);
 	g_autoptr(GDBusConnection) connection = NULL;
 	g_autoptr(GFile) file = g_file_new_for_path(MODEM_POWER_SYSFS_PATH);
 
 	connection = g_bus_get_sync(G_BUS_TYPE_SYSTEM, NULL, error);
 	if (connection == NULL)
 		return FALSE;
-	priv->manager = mm_manager_new_sync(connection,
+	self->manager = mm_manager_new_sync(connection,
 					    G_DBUS_OBJECT_MANAGER_CLIENT_FLAGS_DO_NOT_AUTO_START,
 					    NULL,
 					    error);
-	if (priv->manager == NULL)
+	if (self->manager == NULL)
 		return FALSE;
 
 	/* detect presence of unsupported modem-power driver */
-	priv->modem_power_monitor = g_file_monitor(file, G_FILE_MONITOR_NONE, NULL, error);
-	if (priv->modem_power_monitor == NULL)
+	self->modem_power_monitor = g_file_monitor(file, G_FILE_MONITOR_NONE, NULL, error);
+	if (self->modem_power_monitor == NULL)
 		return FALSE;
-	g_signal_connect(priv->modem_power_monitor,
+	g_signal_connect(self->modem_power_monitor,
 			 "changed",
-			 G_CALLBACK(fu_plugin_mm_modem_power_changed_cb),
+			 G_CALLBACK(fu_mm_plugin_modem_power_changed_cb),
 			 plugin);
 
 	return TRUE;
 }
 
-static void
-fu_plugin_mm_init(FuPlugin *plugin)
-{
-	fu_plugin_alloc_data(plugin, sizeof(FuPluginData));
-}
-
-static void
-fu_plugin_mm_destroy(FuPlugin *plugin)
-{
-	FuPluginData *priv = fu_plugin_get_data(plugin);
-
-	fu_plugin_mm_uninhibit_device(plugin);
-
-	if (priv->udev_timeout_id)
-		g_source_remove(priv->udev_timeout_id);
-	if (priv->udev_client)
-		g_object_unref(priv->udev_client);
-	if (priv->manager != NULL)
-		g_object_unref(priv->manager);
-	if (priv->modem_power_monitor != NULL)
-		g_object_unref(priv->modem_power_monitor);
-}
-
 static gboolean
-fu_plugin_mm_detach(FuPlugin *plugin, FuDevice *device, FuProgress *progress, GError **error)
+fu_mm_plugin_detach(FuPlugin *plugin, FuDevice *device, FuProgress *progress, GError **error)
 {
-	FuPluginData *priv = fu_plugin_get_data(plugin);
+	FuModemManagerPlugin *self = FU_MODEM_MANAGER_PLUGIN(plugin);
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
 	/* open device */
@@ -470,14 +450,14 @@ fu_plugin_mm_detach(FuPlugin *plugin, FuDevice *device, FuProgress *progress, GE
 	 * lifetime of the FuMmDevice, because that object will only exist for
 	 * as long as the ModemManager device exists, and inhibiting will
 	 * implicitly remove the device from ModemManager. */
-	if (priv->shadow_device == NULL) {
-		if (!fu_plugin_mm_inhibit_device(plugin, device, error))
+	if (self->shadow_device == NULL) {
+		if (!fu_mm_plugin_inhibit_device(plugin, device, error))
 			return FALSE;
 	}
 
 	/* reset */
 	if (!fu_device_detach_full(device, progress, error)) {
-		fu_plugin_mm_uninhibit_device(plugin);
+		fu_mm_plugin_uninhibit_device(plugin);
 		return FALSE;
 	}
 
@@ -486,14 +466,14 @@ fu_plugin_mm_detach(FuPlugin *plugin, FuDevice *device, FuProgress *progress, GE
 }
 
 static void
-fu_plugin_mm_device_attach_finished(gpointer user_data)
+fu_mm_plugin_device_attach_finished(gpointer user_data)
 {
 	FuPlugin *plugin = FU_PLUGIN(user_data);
-	fu_plugin_mm_uninhibit_device(plugin);
+	fu_mm_plugin_uninhibit_device(plugin);
 }
 
 static gboolean
-fu_plugin_mm_attach(FuPlugin *plugin, FuDevice *device, FuProgress *progress, GError **error)
+fu_mm_plugin_attach(FuPlugin *plugin, FuDevice *device, FuProgress *progress, GError **error)
 {
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
@@ -512,14 +492,14 @@ fu_plugin_mm_attach(FuPlugin *plugin, FuDevice *device, FuProgress *progress, GE
 	/* this signal will always be emitted asynchronously */
 	g_signal_connect_swapped(FU_DEVICE(device),
 				 "attach-finished",
-				 G_CALLBACK(fu_plugin_mm_device_attach_finished),
+				 G_CALLBACK(fu_mm_plugin_device_attach_finished),
 				 plugin);
 
 	return TRUE;
 }
 
 static gboolean
-fu_plugin_mm_backend_device_added(FuPlugin *plugin, FuDevice *device, GError **error)
+fu_mm_plugin_backend_device_added(FuPlugin *plugin, FuDevice *device, GError **error)
 {
 	FuDevice *device_tmp;
 	g_autoptr(GUdevDevice) udev_device = NULL;
@@ -545,16 +525,43 @@ fu_plugin_mm_backend_device_added(FuPlugin *plugin, FuDevice *device, GError **e
 	return TRUE;
 }
 
+static void
+fu_mm_plugin_constructed(GObject *obj)
+{
+	FuPlugin *plugin = FU_PLUGIN(obj);
+	(void)fu_plugin_alloc_data(plugin, sizeof(FuModemManagerPlugin));
+}
+
+static void
+fu_mm_plugin_finalize(GObject *obj)
+{
+	FuPlugin *plugin = FU_PLUGIN(obj);
+	FuModemManagerPlugin *self = FU_MODEM_MANAGER_PLUGIN(plugin);
+
+	fu_mm_plugin_uninhibit_device(plugin);
+
+	if (self->udev_timeout_id)
+		g_source_remove(self->udev_timeout_id);
+	if (self->udev_client)
+		g_object_unref(self->udev_client);
+	if (self->manager != NULL)
+		g_object_unref(self->manager);
+	if (self->modem_power_monitor != NULL)
+		g_object_unref(self->modem_power_monitor);
+
+	/* G_OBJECT_CLASS(fu_mm_plugin_parent_class)->finalize() not required as modular */
+}
+
 void
 fu_plugin_init_vfuncs(FuPluginVfuncs *vfuncs)
 {
-	vfuncs->load = fu_plugin_mm_load;
-	vfuncs->init = fu_plugin_mm_init;
-	vfuncs->destroy = fu_plugin_mm_destroy;
-	vfuncs->to_string = fu_plugin_mm_to_string;
-	vfuncs->startup = fu_plugin_mm_startup;
-	vfuncs->coldplug = fu_plugin_mm_coldplug;
-	vfuncs->attach = fu_plugin_mm_attach;
-	vfuncs->detach = fu_plugin_mm_detach;
-	vfuncs->backend_device_added = fu_plugin_mm_backend_device_added;
+	vfuncs->load = fu_mm_plugin_load;
+	vfuncs->constructed = fu_mm_plugin_constructed;
+	vfuncs->finalize = fu_mm_plugin_finalize;
+	vfuncs->to_string = fu_mm_plugin_to_string;
+	vfuncs->startup = fu_mm_plugin_startup;
+	vfuncs->coldplug = fu_mm_plugin_coldplug;
+	vfuncs->attach = fu_mm_plugin_attach;
+	vfuncs->detach = fu_mm_plugin_detach;
+	vfuncs->backend_device_added = fu_mm_plugin_backend_device_added;
 }

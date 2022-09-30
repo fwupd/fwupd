@@ -7,7 +7,7 @@ plugin_quirks += files('flashrom.quirk')
 shared_module('fu_plugin_flashrom',
   sources: [
     'fu-flashrom-device.c',
-    'fu-plugin-flashrom.c',
+    'fu-flashrom-plugin.c',
     'fu-flashrom-cmos.c',
   ],
   include_directories: plugin_incdirs,
