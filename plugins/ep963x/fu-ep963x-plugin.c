@@ -25,6 +25,7 @@ static void
 fu_ep963x_plugin_constructed(GObject *obj)
 {
 	FuPlugin *plugin = FU_PLUGIN(obj);
+	fu_plugin_set_name(plugin, "ep963x");
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_EP963X_DEVICE);
 	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_EP963X_FIRMWARE);
 }

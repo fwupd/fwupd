@@ -28,6 +28,7 @@ static void
 fu_bcm57xx_plugin_constructed(GObject *obj)
 {
 	FuPlugin *plugin = FU_PLUGIN(obj);
+	fu_plugin_set_name(plugin, "bcm57xx");
 	fu_plugin_add_udev_subsystem(plugin, "pci");
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_BCM57XX_DEVICE);
 	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_BCM57XX_FIRMWARE);

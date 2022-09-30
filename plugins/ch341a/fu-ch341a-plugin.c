@@ -24,6 +24,7 @@ static void
 fu_ch341a_plugin_constructed(GObject *obj)
 {
 	FuPlugin *plugin = FU_PLUGIN(obj);
+	fu_plugin_set_name(plugin, "ch341a");
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_CH341A_DEVICE);
 }
 
