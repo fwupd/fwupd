@@ -51,7 +51,7 @@ plugin_builtin_uefi_capsule = static_library('fu_plugin_uefi_capsule',
     efiboot,
   ],
 )
-plugin_libs += plugin_builtin_uefi_capsule
+plugin_builtins += plugin_builtin_uefi_capsule
 
 if get_option('compat_cli')
 fwupdate = executable(

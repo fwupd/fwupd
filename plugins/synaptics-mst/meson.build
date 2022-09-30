@@ -19,7 +19,7 @@ plugin_builtin_synaptics_mst = static_library('fu_plugin_synaptics_mst',
   link_with: plugin_libs,
   dependencies: plugin_deps,
 )
-plugin_libs += plugin_builtin_synaptics_mst
+plugin_builtins += plugin_builtin_synaptics_mst
 
 if get_option('tests')
   install_data(['tests/synaptics-mst.builder.xml'],

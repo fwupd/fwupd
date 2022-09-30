@@ -28,7 +28,7 @@ plugin_builtin_tpm = static_library('fu_plugin_tpm',
     tpm2tss_tpm,
   ],
 )
-plugin_libs += plugin_builtin_tpm
+plugin_builtins += plugin_builtin_tpm
 
 if get_option('tests')
   env = environment()

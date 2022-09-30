@@ -16,7 +16,7 @@ plugin_builtin_thunderbolt = static_library('fu_plugin_thunderbolt',
   c_args: cargs,
   dependencies: plugin_deps,
 )
-plugin_libs += plugin_builtin_thunderbolt
+plugin_builtins += plugin_builtin_thunderbolt
 
 install_data(['thunderbolt.conf'],
   install_dir: join_paths(sysconfdir, 'fwupd')

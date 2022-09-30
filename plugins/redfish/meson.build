@@ -31,7 +31,7 @@ plugin_builtin_redfish = static_library('fu_plugin_redfish',
     libcurl,
   ],
 )
-plugin_libs += plugin_builtin_redfish
+plugin_builtins += plugin_builtin_redfish
 
 install_data(['redfish.conf'],
   install_dir: join_paths(sysconfdir, 'fwupd'),

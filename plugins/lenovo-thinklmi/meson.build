@@ -13,7 +13,7 @@ plugin_builtin_lenovo_thinklmi = static_library('fu_plugin_lenovo_thinklmi',
   link_with: plugin_libs,
   dependencies: plugin_deps,
 )
-plugin_libs += plugin_builtin_lenovo_thinklmi
+plugin_builtins += plugin_builtin_lenovo_thinklmi
 
 if get_option('tests')
   env = environment()
