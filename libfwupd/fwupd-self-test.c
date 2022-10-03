@@ -191,7 +191,7 @@ fwupd_enums_func(void)
 		g_assert_cmpstr(tmp, !=, NULL);
 		g_assert_cmpint(fwupd_feature_flag_from_string(tmp), ==, i);
 	}
-	for (guint64 i = 1; i <= FWUPD_RELEASE_FLAG_IS_COMMUNITY; i *= 2) {
+	for (guint64 i = 1; i <= FWUPD_RELEASE_FLAG_UPDATE_ACTION_REMOVE_REPLUG; i *= 2) {
 		const gchar *tmp = fwupd_release_flag_to_string(i);
 		if (tmp == NULL)
 			g_warning("missing release flag 0x%x", (guint)i);

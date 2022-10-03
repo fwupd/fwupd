@@ -1867,6 +1867,42 @@ fu_util_release_flag_to_string(FwupdReleaseFlags release_flag)
 	return fwupd_release_flag_to_string(release_flag);
 }
 
+const gchar *
+fu_util_request_get_message(FwupdRequest *req)
+{
+	if (fwupd_request_has_flag(req, FWUPD_REQUEST_FLAG_FORCE_GENERIC)) {
+		if (g_strcmp0(fwupd_request_get_id(req), FWUPD_REQUEST_ID_REMOVE_REPLUG) == 0) {
+			/* TRANSLATORS: warning message shown after update has been scheduled */
+			return _("The update will continue when the device USB cable is unplugged "
+				 "and then re-inserted.");
+		}
+		if (g_strcmp0(fwupd_request_get_id(req), FWUPD_REQUEST_ID_PRESS_UNLOCK) == 0) {
+			/* TRANSLATORS: warning message shown after update has been scheduled */
+			return _("Press unlock on the device to continue the update process.");
+		}
+		if (g_strcmp0(fwupd_request_get_id(req), FWUPD_REQUEST_ID_DO_NOT_UNPLUG_POWER) ==
+		    0) {
+			/* TRANSLATORS: warning message shown after update has been scheduled */
+			return _("Do not turn off your computer or remove the AC adaptor while the "
+				 "update is in progress.");
+		}
+	}
+	return fwupd_request_get_message(req);
+}
+
+static const gchar *
+fu_util_release_get_update_message(FwupdRelease *rel)
+{
+	if (fwupd_release_has_flag(rel, FWUPD_RELEASE_FLAG_UPDATE_ACTION_DO_NOT_UNPLUG_POWER))
+		return NULL;
+	if (fwupd_release_has_flag(rel, FWUPD_REQUEST_ID_REMOVE_REPLUG)) {
+		/* TRANSLATORS: warning message shown after update has been scheduled */
+		return _("The update will require the device USB cable to be unplugged and then "
+			 "re-inserted after the update has completed.");
+	}
+	return fwupd_release_get_update_message(rel);
+}
+
 gchar *
 fu_util_release_to_string(FwupdRelease *rel, guint idt)
 {
@@ -1980,7 +2016,7 @@ fu_util_release_to_string(FwupdRelease *rel, guint idt)
 				 idt + 1,
 				 /* TRANSLATORS: helpful messages for the update */
 				 _("Update Message"),
-				 fwupd_release_get_update_message(rel));
+				 fu_util_release_get_update_message(rel));
 	}
 	if (fwupd_release_get_update_image(rel) != NULL) {
 		fu_string_append(str,

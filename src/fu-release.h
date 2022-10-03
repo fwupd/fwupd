@@ -18,9 +18,12 @@ FuRelease *
 fu_release_new(void);
 
 #define fu_release_get_version(r)     fwupd_release_get_version(FWUPD_RELEASE(r))
+#define fu_release_get_update_message(r) fwupd_release_get_update_message(FWUPD_RELEASE(r))
+#define fu_release_get_update_image(r)	 fwupd_release_get_update_image(FWUPD_RELEASE(r))
 #define fu_release_get_branch(r)      fwupd_release_get_branch(FWUPD_RELEASE(r))
 #define fu_release_get_checksums(r)   fwupd_release_get_checksums(FWUPD_RELEASE(r))
 #define fu_release_add_flag(r, v)     fwupd_release_add_flag(FWUPD_RELEASE(r), v)
+#define fu_release_has_flag(r, v)	 fwupd_release_has_flag(FWUPD_RELEASE(r), v)
 #define fu_release_add_tag(r, v)      fwupd_release_add_tag(FWUPD_RELEASE(r), v)
 #define fu_release_add_metadata(r, v) fwupd_release_add_metadata(FWUPD_RELEASE(r), v)
 

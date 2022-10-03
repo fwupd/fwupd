@@ -746,6 +746,10 @@ fwupd_release_flag_to_string(FwupdReleaseFlags release_flag)
 		return "is-alternate-branch";
 	if (release_flag == FWUPD_RELEASE_FLAG_IS_COMMUNITY)
 		return "is-community";
+	if (release_flag == FWUPD_RELEASE_FLAG_UPDATE_ACTION_DO_NOT_UNPLUG_POWER)
+		return "do-not-unplug-power";
+	if (release_flag == FWUPD_RELEASE_FLAG_UPDATE_ACTION_REMOVE_REPLUG)
+		return "remove-replug";
 	return NULL;
 }
 
@@ -778,6 +782,10 @@ fwupd_release_flag_from_string(const gchar *release_flag)
 		return FWUPD_RELEASE_FLAG_IS_ALTERNATE_BRANCH;
 	if (g_strcmp0(release_flag, "is-community") == 0)
 		return FWUPD_RELEASE_FLAG_IS_COMMUNITY;
+	if (g_strcmp0(release_flag, "do-not-unplug-power") == 0)
+		return FWUPD_RELEASE_FLAG_UPDATE_ACTION_DO_NOT_UNPLUG_POWER;
+	if (g_strcmp0(release_flag, "remove-replug") == 0)
+		return FWUPD_RELEASE_FLAG_UPDATE_ACTION_REMOVE_REPLUG;
 	return FWUPD_RELEASE_FLAG_NONE;
 }
 

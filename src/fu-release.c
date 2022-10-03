@@ -861,6 +861,17 @@ fu_release_load(FuRelease *self,
 	tmp = xb_node_query_text(component, "custom/value[@key='LVFS::UpdateMessage']", NULL);
 	if (tmp != NULL)
 		fwupd_release_set_update_message(FWUPD_RELEASE(self), tmp);
+	tmp = xb_node_query_text(component, "custom/value[@key='LVFS::UpdateAction']", NULL);
+	if (tmp != NULL) {
+		if (g_strcmp0(tmp, "do-not-unplug-power") == 0) {
+			fwupd_release_add_flag(
+			    FWUPD_RELEASE(self),
+			    FWUPD_RELEASE_FLAG_UPDATE_ACTION_DO_NOT_UNPLUG_POWER);
+		} else if (g_strcmp0(tmp, "remove-replug") == 0) {
+			fwupd_release_add_flag(FWUPD_RELEASE(self),
+					       FWUPD_RELEASE_FLAG_UPDATE_ACTION_REMOVE_REPLUG);
+		}
+	}
 	tmp = xb_node_query_text(component, "custom/value[@key='LVFS::UpdateImage']", NULL);
 	if (tmp != NULL) {
 		if (self->remote != NULL) {

@@ -2745,6 +2745,26 @@ fu_engine_install_release(FuEngine *self,
 			return FALSE;
 	}
 
+	/* warnings specified in the metainfo file */
+	if (fu_release_has_flag(release, FWUPD_RELEASE_FLAG_UPDATE_ACTION_REMOVE_REPLUG)) {
+		g_autoptr(FwupdRequest) req = fwupd_request_new();
+		fwupd_request_set_kind(req, FWUPD_REQUEST_KIND_POST);
+		fwupd_request_add_flag(req, FWUPD_REQUEST_FLAG_FORCE_GENERIC);
+		fwupd_request_set_id(req, FWUPD_REQUEST_ID_REMOVE_REPLUG);
+		fwupd_request_set_message(req, fu_release_get_update_message(release));
+		fwupd_request_set_image(req, fu_release_get_update_image(release));
+		fu_device_emit_request(device, req);
+	}
+	if (fu_release_has_flag(release, FWUPD_RELEASE_FLAG_UPDATE_ACTION_DO_NOT_UNPLUG_POWER)) {
+		g_autoptr(FwupdRequest) req = fwupd_request_new();
+		fwupd_request_set_kind(req, FWUPD_REQUEST_KIND_POST);
+		fwupd_request_add_flag(req, FWUPD_REQUEST_FLAG_FORCE_GENERIC);
+		fwupd_request_set_id(req, FWUPD_REQUEST_ID_DO_NOT_UNPLUG_POWER);
+		fwupd_request_set_message(req, fu_release_get_update_message(release));
+		fwupd_request_set_image(req, fu_release_get_update_image(release));
+		fu_device_emit_request(device, req);
+	}
+
 	/* install firmware blob */
 	version_orig = g_strdup(fu_device_get_version(device));
 	if (!fu_engine_install_blob(self,

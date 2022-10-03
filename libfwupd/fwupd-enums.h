@@ -698,6 +698,26 @@ typedef guint64 FwupdDeviceProblem;
  */
 #define FWUPD_RELEASE_FLAG_IS_COMMUNITY (1u << 7)
 /**
+ * FWUPD_RELEASE_FLAG_UPDATE_ACTION_DO_NOT_UNPLUG_POWER:
+ *
+ * Show the user a message not to unplug the machine from the AC power, e.g.
+ *
+ * "Do not turn off your computer or remove the AC adaptor while the update is in progress."
+ *
+ * Since: 1.8.6
+ */
+#define FWUPD_RELEASE_FLAG_UPDATE_ACTION_DO_NOT_UNPLUG_POWER (1u << 8)
+/**
+ * FWUPD_RELEASE_FLAG_UPDATE_ACTION_REMOVE_REPLUG:
+ *
+ * Show the user a message to replug the USB cable, e.g.
+ *
+ * "The update will continue when the device USB cable is unplugged and then re-inserted."
+ *
+ * Since: 1.8.6
+ */
+#define FWUPD_RELEASE_FLAG_UPDATE_ACTION_REMOVE_REPLUG (1u << 9)
+/**
  * FWUPD_RELEASE_FLAG_UNKNOWN:
  *
  * The release flag is unknown, typically caused by using mismatched client and daemon.
