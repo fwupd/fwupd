@@ -198,6 +198,13 @@ fwupd_enums_func(void)
 		g_assert_cmpstr(tmp, !=, NULL);
 		g_assert_cmpint(fwupd_release_flag_from_string(tmp), ==, i);
 	}
+	for (guint64 i = 1; i <= FWUPD_REQUEST_FLAG_NONE; i *= 2) {
+		const gchar *tmp = fwupd_request_flag_to_string(i);
+		if (tmp == NULL)
+			g_warning("missing request flag 0x%x", (guint)i);
+		g_assert_cmpstr(tmp, !=, NULL);
+		g_assert_cmpint(fwupd_request_flag_from_string(tmp), ==, i);
+	}
 	for (guint i = 1; i < FWUPD_KEYRING_KIND_LAST; i++) {
 		const gchar *tmp = fwupd_keyring_kind_to_string(i);
 		if (tmp == NULL)

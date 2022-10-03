@@ -849,3 +849,15 @@ LIBFWUPD_1.8.4 {
     fwupd_security_attr_set_bios_setting_target_value;
   local: *;
 } LIBFWUPD_1.8.3;
+
+LIBFWUPD_1.8.6 {
+  global:
+    fwupd_request_add_flag;
+    fwupd_request_flag_from_string;
+    fwupd_request_flag_to_string;
+    fwupd_request_get_flags;
+    fwupd_request_has_flag;
+    fwupd_request_remove_flag;
+    fwupd_request_set_flags;
+  local: *;
+} LIBFWUPD_1.8.4;
