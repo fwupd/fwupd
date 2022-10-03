@@ -668,6 +668,7 @@ fu_steelseries_sonic_attach(FuDevice *device, FuProgress *progress, GError **err
 	request = fwupd_request_new();
 	fwupd_request_set_kind(request, FWUPD_REQUEST_KIND_IMMEDIATE);
 	fwupd_request_set_id(request, FWUPD_REQUEST_ID_REMOVE_REPLUG);
+	fwupd_request_add_flag(request, FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE);
 	fwupd_request_set_message(request, msg);
 	fu_device_emit_request(device, request);
 
