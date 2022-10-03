@@ -21,13 +21,23 @@
 typedef struct {
 	gchar *id;
 	FwupdRequestKind kind;
+	FwupdRequestFlags flags;
 	guint64 created;
 	gchar *device_id;
 	gchar *message;
 	gchar *image;
 } FwupdRequestPrivate;
 
-enum { PROP_0, PROP_ID, PROP_KIND, PROP_MESSAGE, PROP_IMAGE, PROP_DEVICE_ID, PROP_LAST };
+enum {
+	PROP_0,
+	PROP_ID,
+	PROP_KIND,
+	PROP_FLAGS,
+	PROP_MESSAGE,
+	PROP_IMAGE,
+	PROP_DEVICE_ID,
+	PROP_LAST
+};
 
 G_DEFINE_TYPE_WITH_PRIVATE(FwupdRequest, fwupd_request, G_TYPE_OBJECT)
 #define GET_PRIVATE(o) (fwupd_request_get_instance_private(o))
@@ -74,6 +84,40 @@ fwupd_request_kind_from_string(const gchar *kind)
 	if (g_strcmp0(kind, "immediate") == 0)
 		return FWUPD_REQUEST_KIND_IMMEDIATE;
 	return FWUPD_REQUEST_KIND_LAST;
+}
+
+/**
+ * fwupd_request_flag_to_string:
+ * @flag: a request flag, e.g. %FWUPD_REQUEST_FLAG_NONE
+ *
+ * Converts an enumerated request flag to a string.
+ *
+ * Returns: identifier string
+ *
+ * Since: 1.8.6
+ **/
+const gchar *
+fwupd_request_flag_to_string(FwupdRequestFlags flag)
+{
+	if (flag == FWUPD_REQUEST_FLAG_NONE)
+		return "none";
+	return NULL;
+}
+
+/**
+ * fwupd_request_flag_from_string:
+ * @flag: (nullable): a string, e.g. `none`
+ *
+ * Converts a string to an enumerated request flag.
+ *
+ * Returns: enumerated value
+ *
+ * Since: 1.8.6
+ **/
+FwupdRequestFlags
+fwupd_request_flag_from_string(const gchar *flag)
+{
+	return FWUPD_REQUEST_FLAG_NONE;
 }
 
 /**
@@ -249,6 +293,12 @@ fwupd_request_to_variant(FwupdRequest *self)
 				      FWUPD_RESULT_KEY_REQUEST_KIND,
 				      g_variant_new_uint32(priv->kind));
 	}
+	if (priv->flags != FWUPD_REQUEST_FLAG_NONE) {
+		g_variant_builder_add(&builder,
+				      "{sv}",
+				      FWUPD_RESULT_KEY_FLAGS,
+				      g_variant_new_uint64(priv->flags));
+	}
 	return g_variant_new("a{sv}", &builder);
 }
 
@@ -277,6 +327,10 @@ fwupd_request_from_key_value(FwupdRequest *self, const gchar *key, GVariant *val
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_REQUEST_KIND) == 0) {
 		fwupd_request_set_kind(self, g_variant_get_uint32(value));
+		return;
+	}
+	if (g_strcmp0(key, FWUPD_RESULT_KEY_FLAGS) == 0) {
+		fwupd_request_set_flags(self, g_variant_get_uint64(value));
 		return;
 	}
 }
@@ -404,6 +458,100 @@ fwupd_request_set_kind(FwupdRequest *self, FwupdRequestKind kind)
 }
 
 /**
+ * fwupd_request_get_flags:
+ * @self: a #FwupdRequest
+ *
+ * Gets the request flags.
+ *
+ * Returns: request flags, or 0 if unset
+ *
+ * Since: 1.8.6
+ **/
+FwupdRequestFlags
+fwupd_request_get_flags(FwupdRequest *self)
+{
+	FwupdRequestPrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_REQUEST(self), 0);
+	return priv->flags;
+}
+
+/**
+ * fwupd_request_set_flags:
+ * @self: a #FwupdRequest
+ * @flags: request flags, e.g. %FWUPD_REQUEST_FLAG_NONE
+ *
+ * Sets the request flags.
+ *
+ * Since: 1.8.6
+ **/
+void
+fwupd_request_set_flags(FwupdRequest *self, FwupdRequestFlags flags)
+{
+	FwupdRequestPrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FWUPD_IS_REQUEST(self));
+
+	/* not changed */
+	if (priv->flags == flags)
+		return;
+
+	priv->flags = flags;
+	g_object_notify(G_OBJECT(self), "flags");
+}
+
+/**
+ * fwupd_request_add_flag:
+ * @self: a #FwupdRequest
+ * @flag: the #FwupdRequestFlags
+ *
+ * Adds a specific flag to the request.
+ *
+ * Since: 1.8.6
+ **/
+void
+fwupd_request_add_flag(FwupdRequest *self, FwupdRequestFlags flag)
+{
+	FwupdRequestPrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FWUPD_IS_REQUEST(self));
+	priv->flags |= flag;
+}
+
+/**
+ * fwupd_request_remove_flag:
+ * @self: a #FwupdRequest
+ * @flag: the #FwupdRequestFlags
+ *
+ * Removes a specific flag from the request.
+ *
+ * Since: 1.8.6
+ **/
+void
+fwupd_request_remove_flag(FwupdRequest *self, FwupdRequestFlags flag)
+{
+	FwupdRequestPrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FWUPD_IS_REQUEST(self));
+	priv->flags &= ~flag;
+}
+
+/**
+ * fwupd_request_has_flag:
+ * @self: a #FwupdRequest
+ * @flag: the #FwupdRequestFlags
+ *
+ * Finds if the request has a specific flag.
+ *
+ * Returns: %TRUE if the flag is set
+ *
+ * Since: 1.8.6
+ **/
+gboolean
+fwupd_request_has_flag(FwupdRequest *self, FwupdRequestFlags flag)
+{
+	FwupdRequestPrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_REQUEST(self), FALSE);
+	return (priv->flags & flag) > 0;
+}
+
+/**
  * fwupd_request_to_string:
  * @self: a #FwupdRequest
  *
@@ -427,6 +575,7 @@ fwupd_request_to_string(FwupdRequest *self)
 				 FWUPD_RESULT_KEY_REQUEST_KIND,
 				 fwupd_request_kind_to_string(priv->kind));
 	}
+	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_FLAGS, fwupd_request_flag_to_string(priv->flags));
 	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_DEVICE_ID, priv->device_id);
 	fwupd_pad_kv_unx(str, FWUPD_RESULT_KEY_CREATED, priv->created);
 	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_UPDATE_MESSAGE, priv->message);
@@ -455,6 +604,9 @@ fwupd_request_get_property(GObject *object, guint prop_id, GValue *value, GParam
 	case PROP_KIND:
 		g_value_set_uint(value, priv->kind);
 		break;
+	case PROP_FLAGS:
+		g_value_set_uint64(value, priv->flags);
+		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
 		break;
@@ -480,6 +632,9 @@ fwupd_request_set_property(GObject *object, guint prop_id, const GValue *value, 
 		break;
 	case PROP_KIND:
 		fwupd_request_set_kind(self, g_value_get_uint(value));
+		break;
+	case PROP_FLAGS:
+		fwupd_request_set_flags(self, g_value_get_uint64(value));
 		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
@@ -544,6 +699,22 @@ fwupd_request_class_init(FwupdRequestClass *klass)
 				  FWUPD_REQUEST_KIND_UNKNOWN,
 				  G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_KIND, pspec);
+
+	/**
+	 * FwupdRequest:flags:
+	 *
+	 * The flags for the request.
+	 *
+	 * Since: 1.8.6
+	 */
+	pspec = g_param_spec_uint64("flags",
+				    NULL,
+				    NULL,
+				    FWUPD_REQUEST_FLAG_NONE,
+				    FWUPD_REQUEST_FLAG_UNKNOWN,
+				    FWUPD_REQUEST_FLAG_UNKNOWN,
+				    G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
+	g_object_class_install_property(object_class, PROP_FLAGS, pspec);
 
 	/**
 	 * FwupdRequest:message:

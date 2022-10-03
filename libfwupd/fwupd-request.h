@@ -59,10 +59,40 @@ typedef enum {
  */
 #define FWUPD_REQUEST_ID_PRESS_UNLOCK "org.freedesktop.fwupd.request.press-unlock"
 
+/**
+ * FWUPD_REQUEST_FLAG_NONE:
+ *
+ * No flags are set.
+ *
+ * Since: 1.8.6
+ */
+#define FWUPD_REQUEST_FLAG_NONE (0u)
+
+/**
+ * FWUPD_REQUEST_FLAG_UNKNOWN:
+ *
+ * The request flag is unknown, typically caused by using mismatched client and daemon.
+ *
+ * Since: 1.8.6
+ */
+#define FWUPD_REQUEST_FLAG_UNKNOWN G_MAXUINT64
+
+/**
+ * FwupdRequestFlags:
+ *
+ * Flags used to represent request attributes
+ */
+typedef guint64 FwupdRequestFlags;
+
 const gchar *
 fwupd_request_kind_to_string(FwupdRequestKind kind);
 FwupdRequestKind
 fwupd_request_kind_from_string(const gchar *kind);
+
+const gchar *
+fwupd_request_flag_to_string(FwupdRequestFlags flag);
+FwupdRequestFlags
+fwupd_request_flag_from_string(const gchar *flag);
 
 FwupdRequest *
 fwupd_request_new(void);
@@ -93,6 +123,17 @@ FwupdRequestKind
 fwupd_request_get_kind(FwupdRequest *self);
 void
 fwupd_request_set_kind(FwupdRequest *self, FwupdRequestKind kind);
+
+FwupdRequestFlags
+fwupd_request_get_flags(FwupdRequest *self);
+void
+fwupd_request_set_flags(FwupdRequest *self, FwupdRequestFlags flags);
+void
+fwupd_request_add_flag(FwupdRequest *self, FwupdRequestFlags flag);
+void
+fwupd_request_remove_flag(FwupdRequest *self, FwupdRequestFlags flag);
+gboolean
+fwupd_request_has_flag(FwupdRequest *self, FwupdRequestFlags flag);
 
 FwupdRequest *
 fwupd_request_from_variant(GVariant *value);
