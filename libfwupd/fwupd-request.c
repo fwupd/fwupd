@@ -101,6 +101,10 @@ fwupd_request_flag_to_string(FwupdRequestFlags flag)
 {
 	if (flag == FWUPD_REQUEST_FLAG_NONE)
 		return "none";
+	if (flag == FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE)
+		return "allow-generic-message";
+	if (flag == FWUPD_REQUEST_FLAG_ALLOW_GENERIC_IMAGE)
+		return "allow-generic-image";
 	return NULL;
 }
 
@@ -117,6 +121,10 @@ fwupd_request_flag_to_string(FwupdRequestFlags flag)
 FwupdRequestFlags
 fwupd_request_flag_from_string(const gchar *flag)
 {
+	if (g_strcmp0(flag, "allow-generic-message") == 0)
+		return FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE;
+	if (g_strcmp0(flag, "allow-generic-image") == 0)
+		return FWUPD_REQUEST_FLAG_ALLOW_GENERIC_IMAGE;
 	return FWUPD_REQUEST_FLAG_NONE;
 }
 

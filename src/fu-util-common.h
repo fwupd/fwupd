@@ -96,6 +96,8 @@ gchar *
 fu_util_release_get_name(FwupdRelease *release);
 const gchar *
 fu_util_branch_for_display(const gchar *branch);
+const gchar *
+fu_util_request_get_message(FwupdRequest *req);
 
 const gchar *
 fu_util_get_systemd_unit(void);

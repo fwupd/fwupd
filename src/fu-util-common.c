@@ -2164,6 +2164,33 @@ fu_util_remote_to_string(FwupdRemote *remote, guint idt)
 	return g_string_free(g_steal_pointer(&str), FALSE);
 }
 
+const gchar *
+fu_util_request_get_message(FwupdRequest *req)
+{
+	if (fwupd_request_has_flag(req, FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE)) {
+		if (g_strcmp0(fwupd_request_get_id(req), FWUPD_REQUEST_ID_REMOVE_REPLUG) == 0) {
+			/* TRANSLATORS: warning message shown after update has been scheduled */
+			return _("The update will continue when the device USB cable has been "
+				 "unplugged and then re-inserted.");
+		}
+		if (g_strcmp0(fwupd_request_get_id(req), FWUPD_REQUEST_ID_REMOVE_USB_CABLE) == 0) {
+			/* TRANSLATORS: warning message shown after update has been scheduled */
+			return _("The update will continue when the device USB cable has been "
+				 "unplugged.");
+		}
+		if (g_strcmp0(fwupd_request_get_id(req), FWUPD_REQUEST_ID_PRESS_UNLOCK) == 0) {
+			/* TRANSLATORS: warning message */
+			return _("Press unlock on the device to continue the update process.");
+		}
+		if (g_strcmp0(fwupd_request_get_id(req), FWUPD_REQUEST_ID_DO_NOT_POWER_OFF) == 0) {
+			/* TRANSLATORS: warning message shown after update has been scheduled */
+			return _("Do not turn off your computer or remove the AC adaptor until "
+				 "you are sure the update has completed.");
+		}
+	}
+	return fwupd_request_get_message(req);
+}
+
 static void
 fu_security_attr_append_str(FwupdSecurityAttr *attr,
 			    GString *str,

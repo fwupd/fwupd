@@ -878,7 +878,7 @@ fu_util_display_current_message(FuUtilPrivate *priv)
 	/* print all POST requests */
 	for (guint i = 0; i < priv->post_requests->len; i++) {
 		FwupdRequest *request = g_ptr_array_index(priv->post_requests, i);
-		g_print("%s\n", fwupd_request_get_message(request));
+		g_print("%s\n", fu_util_request_get_message(request));
 	}
 }
 

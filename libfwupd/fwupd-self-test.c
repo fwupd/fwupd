@@ -769,11 +769,20 @@ fwupd_request_func(void)
 	/* create dummy */
 	fwupd_request_set_kind(request, FWUPD_REQUEST_KIND_IMMEDIATE);
 	fwupd_request_set_id(request, FWUPD_REQUEST_ID_REMOVE_REPLUG);
+	fwupd_request_add_flag(request, FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE);
 	fwupd_request_set_message(request, "foo");
 	fwupd_request_set_image(request, "bar");
 	fwupd_request_set_device_id(request, "950da62d4c753a26e64f7f7d687104ce38e32ca5");
 	str = fwupd_request_to_string(request);
 	g_debug("%s", str);
+
+	g_assert_true(fwupd_request_has_flag(request, FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE));
+	g_assert_cmpint(fwupd_request_get_flags(request),
+			==,
+			FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE);
+	fwupd_request_remove_flag(request, FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE);
+	g_assert_false(fwupd_request_has_flag(request, FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE));
+	g_assert_cmpint(fwupd_request_get_flags(request), ==, FWUPD_REQUEST_FLAG_NONE);
 
 	/* set in init */
 	g_assert_cmpint(fwupd_request_get_created(request), >, 0);
