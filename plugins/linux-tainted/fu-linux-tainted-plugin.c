@@ -84,6 +84,12 @@ fu_linux_tainted_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *at
 	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ISSUE);
 	fu_security_attrs_append(attrs, attr);
 
+	/* startup failed */
+	if (fu_plugin_has_flag(plugin, FWUPD_PLUGIN_FLAG_DISABLED)) {
+		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA);
+		return;
+	}
+
 	/* load file */
 	if (!g_file_load_contents(self->file, NULL, &buf, &bufsz, NULL, &error_local)) {
 		g_autofree gchar *fn = g_file_get_path(self->file);
