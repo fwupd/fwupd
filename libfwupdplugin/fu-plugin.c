@@ -2839,11 +2839,17 @@ fu_plugin_finalize(GObject *object)
 FuPlugin *
 fu_plugin_new_from_gtype(GType gtype, FuContext *ctx)
 {
-	g_autofree gchar *name = NULL;
+	FuPlugin *self;
+
 	g_return_val_if_fail(gtype != G_TYPE_INVALID, NULL);
 	g_return_val_if_fail(ctx == NULL || FU_IS_CONTEXT(ctx), NULL);
-	name = fu_plugin_convert_gtype_to_name(gtype);
-	return g_object_new(gtype, "context", ctx, "name", name, NULL);
+
+	self = g_object_new(gtype, "context", ctx, NULL);
+	if (fu_plugin_get_name(self) == NULL) {
+		g_autofree gchar *name = fu_plugin_convert_gtype_to_name(gtype);
+		fu_plugin_set_name(self, name);
+	}
+	return self;
 }
 
 /**
