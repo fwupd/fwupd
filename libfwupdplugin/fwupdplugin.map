@@ -1129,6 +1129,8 @@ LIBFWUPDPLUGIN_1.8.5 {
 
 LIBFWUPDPLUGIN_1.8.6 {
   global:
+    fu_device_get_update_request_id;
+    fu_device_set_update_request_id;
     fu_plugin_new_from_gtype;
     fu_plugin_set_context;
     fu_volume_kind_convert_to_gpt;
