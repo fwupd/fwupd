@@ -30,6 +30,10 @@ gint
 fu_device_get_order(FuDevice *self);
 void
 fu_device_set_order(FuDevice *self, gint order);
+const gchar *
+fu_device_get_update_request_id(FuDevice *self);
+void
+fu_device_set_update_request_id(FuDevice *self, const gchar *update_request_id);
 void
 fu_device_set_alternate(FuDevice *self, FuDevice *alternate);
 gboolean

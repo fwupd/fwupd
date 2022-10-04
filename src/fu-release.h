@@ -34,6 +34,8 @@ GPtrArray *
 fu_release_get_soft_reqs(FuRelease *self);
 GPtrArray *
 fu_release_get_hard_reqs(FuRelease *self);
+const gchar *
+fu_release_get_update_request_id(FuRelease *self);
 
 void
 fu_release_set_request(FuRelease *self, FuEngineRequest *request);

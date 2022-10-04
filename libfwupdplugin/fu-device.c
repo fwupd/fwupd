@@ -47,6 +47,7 @@ typedef struct {
 	gchar *physical_id;
 	gchar *logical_id;
 	gchar *backend_id;
+	gchar *update_request_id;
 	gchar *proxy_guid;
 	FuDevice *alternate;
 	FuDevice *proxy; /* noref */
@@ -3166,6 +3167,47 @@ fu_device_set_backend_id(FuDevice *self, const gchar *backend_id)
 }
 
 /**
+ * fu_device_get_update_request_id:
+ * @self: a #FuDevice
+ *
+ * Gets the update request ID as specified from `LVFS::UpdateRequestId`.
+ *
+ * Returns: a string value, or %NULL if never set.
+ *
+ * Since: 1.8.6
+ **/
+const gchar *
+fu_device_get_update_request_id(FuDevice *self)
+{
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_DEVICE(self), NULL);
+	return priv->update_request_id;
+}
+
+/**
+ * fu_device_set_update_request_id:
+ * @self: a #FuDevice
+ * @update_request_id: a string, e.g. `org.freedesktop.fwupd.request.do-not-power-off`
+ *
+ * Sets the update request ID as specified in `LVFS::UpdateRequestId`.
+ *
+ * Since: 1.8.6
+ **/
+void
+fu_device_set_update_request_id(FuDevice *self, const gchar *update_request_id)
+{
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_DEVICE(self));
+
+	/* not changed */
+	if (g_strcmp0(priv->update_request_id, update_request_id) == 0)
+		return;
+
+	g_free(priv->update_request_id);
+	priv->update_request_id = g_strdup(update_request_id);
+}
+
+/**
  * fu_device_get_proxy_guid:
  * @self: a #FuDevice
  *
@@ -3766,6 +3808,8 @@ fu_device_add_string(FuDevice *self, guint idt, GString *str)
 		fu_string_append(str, idt + 1, "LogicalId", priv->logical_id);
 	if (priv->backend_id != NULL)
 		fu_string_append(str, idt + 1, "BackendId", priv->backend_id);
+	if (priv->update_request_id != NULL)
+		fu_string_append(str, idt + 1, "UpdateRequestId", priv->update_request_id);
 	if (priv->proxy != NULL)
 		fu_string_append(str, idt + 1, "ProxyId", fu_device_get_id(priv->proxy));
 	if (priv->proxy_guid != NULL)
@@ -4037,9 +4081,13 @@ fu_device_write_firmware(FuDevice *self,
 	 * but did not do an event; guess something */
 	if (priv->request_cnts[FWUPD_REQUEST_KIND_POST] == 0 &&
 	    fu_device_get_update_message(self) != NULL) {
+		const gchar *update_request_id = fu_device_get_update_request_id(self);
 		g_autoptr(FwupdRequest) request = fwupd_request_new();
 		fwupd_request_set_kind(request, FWUPD_REQUEST_KIND_POST);
-		fwupd_request_set_id(request, FWUPD_REQUEST_ID_REMOVE_REPLUG);
+		if (update_request_id != NULL) {
+			fwupd_request_set_id(request, update_request_id);
+			fwupd_request_add_flag(request, FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE);
+		}
 		fwupd_request_set_message(request, fu_device_get_update_message(self));
 		fwupd_request_set_image(request, fu_device_get_update_image(self));
 		fu_device_emit_request(self, request);
@@ -5008,6 +5056,8 @@ fu_device_incorporate(FuDevice *self, FuDevice *donor)
 		fu_device_set_logical_id(self, priv_donor->logical_id);
 	if (priv->backend_id == NULL && priv_donor->backend_id != NULL)
 		fu_device_set_backend_id(self, priv_donor->backend_id);
+	if (priv->update_request_id == NULL && priv_donor->update_request_id != NULL)
+		fu_device_set_update_request_id(self, priv_donor->update_request_id);
 	if (priv->proxy == NULL && priv_donor->proxy != NULL)
 		fu_device_set_proxy(self, priv_donor->proxy);
 	if (priv->proxy_guid == NULL && priv_donor->proxy_guid != NULL)
@@ -5725,6 +5775,7 @@ fu_device_finalize(GObject *object)
 	g_free(priv->physical_id);
 	g_free(priv->logical_id);
 	g_free(priv->backend_id);
+	g_free(priv->update_request_id);
 	g_free(priv->proxy_guid);
 	g_free(priv->custom_flags);
 	g_hash_table_unref(priv->instance_hash);

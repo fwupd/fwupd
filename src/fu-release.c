@@ -28,6 +28,7 @@ struct _FuRelease {
 	FwupdRemote *remote;
 	FuConfig *config;
 	GBytes *blob_fw;
+	gchar *update_request_id;
 	FwupdReleaseFlags trust_flags;
 	gboolean is_downgrade;
 	GPtrArray *soft_reqs; /* nullable, element-type XbNode */
@@ -137,6 +138,34 @@ fu_release_get_hard_reqs(FuRelease *self)
 {
 	g_return_val_if_fail(FU_IS_RELEASE(self), NULL);
 	return self->hard_reqs;
+}
+
+/**
+ * fu_release_get_update_request_id:
+ * @self: a #FuRelease
+ *
+ * Gets the update request ID as specified from `LVFS::UpdateRequestId`.
+ *
+ * Returns: a string value, or %NULL if never set.
+ **/
+const gchar *
+fu_release_get_update_request_id(FuRelease *self)
+{
+	g_return_val_if_fail(FU_IS_RELEASE(self), NULL);
+	return self->update_request_id;
+}
+
+static void
+fu_release_set_update_request_id(FuRelease *self, const gchar *update_request_id)
+{
+	g_return_if_fail(FU_IS_RELEASE(self));
+
+	/* not changed */
+	if (g_strcmp0(self->update_request_id, update_request_id) == 0)
+		return;
+
+	g_free(self->update_request_id);
+	self->update_request_id = g_strdup(update_request_id);
 }
 
 /**
@@ -873,6 +902,9 @@ fu_release_load(FuRelease *self,
 			fwupd_release_set_update_image(FWUPD_RELEASE(self), tmp);
 		}
 	}
+	tmp = xb_node_query_text(component, "custom/value[@key='LVFS::UpdateRequestId']", NULL);
+	if (tmp != NULL)
+		fu_release_set_update_request_id(self, tmp);
 
 	/* hard and soft requirements */
 	self->hard_reqs = xb_node_query(component, "requires/*", 0, &error_hard);
@@ -1009,6 +1041,7 @@ fu_release_finalize(GObject *obj)
 {
 	FuRelease *self = FU_RELEASE(obj);
 
+	g_free(self->update_request_id);
 	if (self->request != NULL)
 		g_object_unref(self->request);
 	if (self->device != NULL)
