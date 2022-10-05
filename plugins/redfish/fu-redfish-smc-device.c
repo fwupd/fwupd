@@ -26,12 +26,14 @@ fu_redfish_smc_device_get_task(JsonObject *json_obj)
 	if (!json_object_has_member(json_obj, "Accepted"))
 		return NULL;
 	tmp_obj = json_object_get_object_member(json_obj, "Accepted");
-	if (!json_object_has_member(tmp_obj, "@Message.ExtendedInfo"))
+	if (tmp_obj == NULL || !json_object_has_member(tmp_obj, "@Message.ExtendedInfo"))
 		return NULL;
 	tmp_ary = json_object_get_array_member(tmp_obj, "@Message.ExtendedInfo");
-	if (json_array_get_length(tmp_ary) != 1)
+	if (tmp_ary == NULL || json_array_get_length(tmp_ary) != 1)
 		return NULL;
 	tmp_obj = json_array_get_object_element(tmp_ary, 0);
+	if (tmp_obj == NULL)
+		return NULL;
 	msgid = json_object_get_string_member(tmp_obj, "MessageId");
 	if (g_strcmp0(msgid, "SMC.1.0.OemSimpleupdateAcceptedMessage") != 0)
 		return NULL;

@@ -375,6 +375,8 @@ fu_redfish_backend_smc_license_check(FuDevice *device)
 					&error_local)) {
 		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED))
 			fu_device_add_problem(device, FWUPD_DEVICE_PROBLEM_MISSING_LICENSE);
+		else
+			g_debug("supermicro license check returned %s\n", error_local->message);
 	}
 
 	return;
@@ -518,23 +520,15 @@ fu_redfish_device_probe(FuDevice *dev, GError **error)
 			if (json_object_has_member(related_item, "@odata.id")) {
 				const gchar *id =
 				    json_object_get_string_member(related_item, "@odata.id");
-				g_autoptr(GError) error_local = NULL;
-				if (!fu_redfish_device_probe_related_item(self, id, &error_local)) {
-					if (!g_error_matches(error_local,
-							     FWUPD_ERROR,
-							     FWUPD_ERROR_NOT_SUPPORTED)) {
-						g_propagate_error(error,
-								  g_steal_pointer(&error_local));
-						return FALSE;
-					}
-					fu_device_set_logical_id(dev, id);
-				}
+				if (!fu_redfish_device_probe_related_item(self, id, error))
+					return FALSE;
 			}
 		}
 	}
 
 	/* for Supermicro check whether we have a proper Redfish license installed */
-	fu_redfish_backend_smc_license_check(dev);
+	if (g_strcmp0("SMCI", fu_device_get_vendor(dev)) == 0)
+		fu_redfish_backend_smc_license_check(dev);
 
 	/* success */
 	return TRUE;

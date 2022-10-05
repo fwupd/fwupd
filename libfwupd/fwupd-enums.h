@@ -612,7 +612,7 @@ typedef guint64 FwupdDeviceFlags;
  *
  * The device cannot be updated due to missing vendor's license.
  *
- * Since 1.8.5
+ * Since 1.8.6
  */
 #define FWUPD_DEVICE_PROBLEM_MISSING_LICENSE (1u << 7)
 /**

@@ -115,7 +115,6 @@ def firmware_inventory_bmc():
         "@odata.type": "#SoftwareInventory.v1_2_3.SoftwareInventory",
         "Id": "BMC",
         "LowestSupportedVersion": "11A-0.12",
-        "Manufacturer": "Lenovo",
         "Name": "Lenovo BMC Firmware",
         "RelatedItem": [{"@odata.id": "/redfish/v1/Managers/BMC"}],
         "SoftwareId": "UEFI-AFE1-6",
@@ -124,6 +123,13 @@ def firmware_inventory_bmc():
         "Version": "11A-1.02",
         "ReleaseDate": "2019-03-15T00:00:00",
     }
+    if request.authorization["username"] in {
+        HARDCODED_UNL_USERNAME,
+        HARDCODED_SMC_USERNAME,
+    }:
+        res["Manufacturer"] = "SMCI"
+    else:
+        res["Manufacturer"] = "Lenovo"
     return Response(json.dumps(res), status=200, mimetype="application/json")
 
 
@@ -185,7 +191,6 @@ def firmware_inventory_bios():
         "@odata.type": "#SoftwareInventory.v1_2_3.SoftwareInventory",
         "Id": "BIOS",
         "LowestSupportedVersion": "P79 v1.10",
-        "Manufacturer": "Contoso",
         "Name": "Contoso BIOS Firmware",
         "RelatedItem": [{"@odata.id": "/redfish/v1/Systems/437XR1138R2"}],
         "ReleaseDate": "2017-12-06T12:00:00",
@@ -194,6 +199,13 @@ def firmware_inventory_bios():
         "Version": "P79 v1.45",
         "ReleaseDate": "2019-03-15T00:00:00Z",
     }
+    if request.authorization["username"] in {
+        HARDCODED_UNL_USERNAME,
+        HARDCODED_SMC_USERNAME,
+    }:
+        res["Manufacturer"] = "SMCI"
+    else:
+        res["Manufacturer"] = "Contoso"
     return Response(json.dumps(res), status=200, mimetype="application/json")
 
 
