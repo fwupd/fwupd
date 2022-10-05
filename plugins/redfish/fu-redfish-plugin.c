@@ -126,6 +126,16 @@ fu_redfish_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError **erro
 	return TRUE;
 }
 
+gboolean
+fu_redfish_plugin_set_credentials(FuPlugin *plugin, const gchar *username, const gchar *password)
+{
+	FuRedfishPlugin *self = FU_REDFISH_PLUGIN(plugin);
+
+	fu_redfish_backend_set_username(self->backend, username);
+	fu_redfish_backend_set_password(self->backend, password);
+	return TRUE;
+}
+
 static gboolean
 fu_redfish_plugin_discover_uefi_credentials(FuPlugin *plugin, GError **error)
 {
