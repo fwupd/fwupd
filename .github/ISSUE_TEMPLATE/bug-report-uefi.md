@@ -25,12 +25,17 @@ fwupdmgr --version
 
 Please note how you installed it (`apt`, `dnf`, `pacman`, source, etc):
 
-**fwupd device information**
+<details>
+
+<summary>**fwupd device information**</summary>
+
 Please provide the output of the fwupd devices recognized in your system.
 
 ```shell
 fwupdmgr get-devices --show-all-devices
 ```
+
+</details>
 
 **System UEFI configuration**
 Please provide the output of the following commands:
