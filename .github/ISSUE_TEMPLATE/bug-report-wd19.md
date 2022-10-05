@@ -25,12 +25,17 @@ fwupdmgr --version
 
 Please note how you installed it (`apt`, `dnf`, `pacman`, source, etc):
 
-**fwupd device information**
+<details>
+
+<summary>**fwupd device information**</summary>
+
 Please provide the output of the external fwupd devices recognized in your system.
 
 ```shell
 fwupdmgr get-devices --filter=~internal
 ```
+
+</details>
 
 **Dock SKU**
 Please mention which module is installed in your WD19.
