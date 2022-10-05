@@ -2184,8 +2184,8 @@ fu_util_request_get_message(FwupdRequest *req)
 		}
 		if (g_strcmp0(fwupd_request_get_id(req), FWUPD_REQUEST_ID_DO_NOT_POWER_OFF) == 0) {
 			/* TRANSLATORS: warning message shown after update has been scheduled */
-			return _("Do not turn off your computer or remove the AC adaptor until "
-				 "you are sure the update has completed.");
+			return _("Do not turn off your computer or remove the AC adaptor "
+				 "while the update is in progress.");
 		}
 	}
 	return fwupd_request_get_message(req);
