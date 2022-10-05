@@ -30,6 +30,7 @@ fu_rts54hub_plugin_constructed(GObject *obj)
 	fu_context_add_quirk_key(ctx, "Rts54TargetAddr");
 	fu_context_add_quirk_key(ctx, "Rts54I2cSpeed");
 	fu_context_add_quirk_key(ctx, "Rts54RegisterAddrLen");
+	fu_plugin_set_name(plugin, "rts54hub");
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_RTS54HUB_DEVICE);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_RTS54HUB_RTD21XX_BACKGROUND);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_RTS54HUB_RTD21XX_FOREGROUND);

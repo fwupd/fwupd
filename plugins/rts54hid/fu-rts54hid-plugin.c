@@ -29,6 +29,7 @@ fu_rts54hid_plugin_constructed(GObject *obj)
 	fu_context_add_quirk_key(ctx, "Rts54TargetAddr");
 	fu_context_add_quirk_key(ctx, "Rts54I2cSpeed");
 	fu_context_add_quirk_key(ctx, "Rts54RegisterAddrLen");
+	fu_plugin_set_name(plugin, "rts54hid");
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_RTS54HID_DEVICE);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_RTS54HID_MODULE);
 }
