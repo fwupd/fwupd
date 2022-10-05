@@ -181,13 +181,14 @@ fu_redfish_smc_device_write_firmware(FuDevice *device,
 		}
 		return FALSE;
 	}
-	if (fu_redfish_request_get_status_code(request) != 202)
+	if (fu_redfish_request_get_status_code(request) != 202) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_FILE,
 			    "failed to upload: %li",
 			    fu_redfish_request_get_status_code(request));
-	return FALSE;
+		return FALSE;
+	}
 	json_obj = fu_redfish_request_get_json_object(request);
 
 	/* poll the verify task for progress */
