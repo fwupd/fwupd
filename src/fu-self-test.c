@@ -3181,7 +3181,7 @@ fu_backend_usb_func(gconstpointer user_data)
 	g_autoptr(GPtrArray) possible_plugins = NULL;
 	g_autoptr(JsonParser) parser = json_parser_new();
 
-#if !G_USB_CHECK_VERSION(0, 4, 0)
+#if !G_USB_CHECK_VERSION(0, 4, 2)
 	g_test_skip("GUsb version too old");
 	return;
 #endif
@@ -3244,7 +3244,7 @@ fu_backend_usb_invalid_func(gconstpointer user_data)
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(JsonParser) parser = json_parser_new();
 
-#if !G_USB_CHECK_VERSION(0, 4, 0)
+#if !G_USB_CHECK_VERSION(0, 4, 2)
 	g_test_skip("GUsb version too old");
 	return;
 #endif

@@ -367,7 +367,7 @@ fu_usb_device_setup(FuDevice *device, GError **error)
 			return FALSE;
 	}
 
-#if G_USB_CHECK_VERSION(0, 4, 0)
+#if G_USB_CHECK_VERSION(0, 4, 2)
 	/* get the platform capability BOS descriptors */
 	bos_descriptors = g_usb_device_get_bos_descriptors(priv->usb_device, NULL);
 	for (guint i = 0; bos_descriptors != NULL && i < bos_descriptors->len; i++) {
