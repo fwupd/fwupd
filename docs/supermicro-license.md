@@ -11,7 +11,7 @@ additional feature. One of those are applying BIOS and BMC firmware updates.
 ## Details
 
 If you want to update your Supermicro board via redfish using fwupd you will
-need either the SFT-OOB-LIC or the SFT-DCMS-Single license.
+need either the [SFT-OOB-LIC](https://store.supermicro.com/out-of-band-sft-oob-lic.html) or the [SFT-DCMS-Single](https://store.supermicro.com/supermicro-server-manager-dcms-license-key-sft-dcms-single.html) license.
 
 The license can be installed via redfish by POSTing it to
 `/redfish/v1/Managers/1/LicenseManager/ActivateLicense` or using the web
