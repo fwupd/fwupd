@@ -553,7 +553,7 @@ fu_fpc_device_init(FuFpcDevice *self)
 	fu_device_set_summary(FU_DEVICE(self), "FPC fingerprint sensor");
 	fu_device_set_install_duration(FU_DEVICE(self), 15);
 	fu_device_set_firmware_size_min(FU_DEVICE(self), 0x10000);
-	fu_device_set_firmware_size_max(FU_DEVICE(self), 0x50000);
+	fu_device_set_firmware_size_max(FU_DEVICE(self), 0x64000);
 	fu_usb_device_add_interface(FU_USB_DEVICE(self), FPC_USB_INTERFACE);
 	fu_device_register_private_flag(FU_DEVICE(self),
 					FU_FPC_DEVICE_FLAG_MOH_DEVICE,
