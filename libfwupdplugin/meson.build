@@ -72,6 +72,7 @@ fwupdplugin_src = [
   'fu-ifd-firmware.c',            # fuzzing
   'fu-ifd-image.c',               # fuzzing
   'fu-uswid-firmware.c',          # fuzzing
+  'fu-coswid-common.c',           # fuzzing
   'fu-coswid-firmware.c',         # fuzzing
   'fu-efivar.c',
   'fu-udev-device.c',
