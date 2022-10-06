@@ -462,25 +462,93 @@ fu_uefi_capsule_plugin_load_config(FuPlugin *plugin, FuDevice *device)
 		fu_device_add_private_flag(device, FU_UEFI_DEVICE_FLAG_FALLBACK_TO_REMOVABLE_PATH);
 }
 
+static gboolean
+fu_uefi_capsule_plugin_is_esp_linux(FuVolume *esp, GError **error)
+{
+	const gchar *basenames_root[] = {"grub", "shim", "systemd-boot", NULL};
+	const gchar *efi_suffix;
+	g_autofree gchar *basenames_str = NULL;
+	g_autofree gchar *mount_point = fu_volume_get_mount_point(esp);
+	g_auto(GStrv) basenames = g_new0(gchar *, G_N_ELEMENTS(basenames_root));
+	g_autoptr(GPtrArray) files = NULL;
+
+	/* build a list of possible files, e.g. grubx64.efi, shimaa64.efi, etc. */
+	efi_suffix = fu_uefi_bootmgr_get_suffix(error);
+	if (efi_suffix == NULL)
+		return FALSE;
+	for (guint i = 0; basenames_root[i] != NULL; i++)
+		basenames[i] = g_strdup_printf("%s%s.efi", basenames_root[i], efi_suffix);
+
+	/* look for any likely basenames */
+	files = fu_path_get_files(mount_point, error);
+	if (files == NULL)
+		return FALSE;
+	for (guint i = 0; i < files->len; i++) {
+		const gchar *fn = g_ptr_array_index(files, i);
+		g_autofree gchar *basename = g_path_get_basename(fn);
+		g_autofree gchar *basename_lower = g_utf8_strdown(basename, -1);
+		if (g_strv_contains((const gchar *const *)basenames, basename_lower)) {
+			g_debug("found %s which indicates a Linux ESP, using %s", fn, mount_point);
+			return TRUE;
+		}
+	}
+
+	/* failed */
+	basenames_str = g_strjoinv("|", (gchar **)basenames);
+	g_set_error(error,
+		    G_IO_ERROR,
+		    G_IO_ERROR_NOT_FOUND,
+		    "did not find %s in %s",
+		    basenames_str,
+		    mount_point);
+	return FALSE;
+}
+
 static FuVolume *
 fu_uefi_capsule_plugin_get_default_esp(FuPlugin *plugin, GError **error)
 {
 	g_autoptr(GPtrArray) esp_volumes = NULL;
+
+	/* show which volumes we're choosing from */
 	esp_volumes = fu_context_get_esp_volumes(fu_plugin_get_context(plugin), error);
 	if (esp_volumes == NULL)
 		return NULL;
 	if (esp_volumes->len > 1) {
 		g_autoptr(GString) str = g_string_new(NULL);
-		for (guint i = 1; i < esp_volumes->len; i++) {
+		for (guint i = 0; i < esp_volumes->len; i++) {
 			FuVolume *vol = g_ptr_array_index(esp_volumes, i);
 			if (str->len > 0)
 				g_string_append_c(str, ',');
 			g_string_append(str, fu_volume_get_id(vol));
 		}
-		g_warning("more than one ESP possible -- using %s, not using %s",
-			  fu_volume_get_id(FU_VOLUME(g_ptr_array_index(esp_volumes, 0))),
-			  str->str);
+		g_debug("more than one ESP possible: %s", str->str);
 	}
+
+	/* we found more than one: lets look for something plausible */
+	if (esp_volumes->len > 1) {
+		for (guint i = 0; i < esp_volumes->len; i++) {
+			FuVolume *esp = g_ptr_array_index(esp_volumes, i);
+			g_autoptr(FuDeviceLocker) locker = NULL;
+			g_autoptr(GError) error_local = NULL;
+
+			locker = fu_volume_locker(esp, &error_local);
+			if (locker == NULL) {
+				g_warning("failed to mount ESP: %s", error_local->message);
+				continue;
+			}
+			if (!fu_uefi_capsule_plugin_is_esp_linux(esp, &error_local)) {
+				g_debug("not a Linux ESP: %s", error_local->message);
+				continue;
+			}
+			return g_object_ref(esp);
+		}
+
+		/* we never found anything plausible */
+		g_warning("more than one ESP possible -- using %s because it is listed first",
+			  fu_volume_get_id(FU_VOLUME(g_ptr_array_index(esp_volumes, 0))));
+	}
+
+	/* "success" */
 	return g_object_ref(g_ptr_array_index(esp_volumes, 0));
 }
 

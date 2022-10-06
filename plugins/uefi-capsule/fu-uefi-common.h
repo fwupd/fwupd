@@ -89,3 +89,5 @@ gboolean
 fu_uefi_cmp_asset(const gchar *source, const gchar *target);
 gboolean
 fu_uefi_copy_asset(const gchar *source, const gchar *target, GError **error);
+const gchar *
+fu_uefi_bootmgr_get_suffix(GError **error);
