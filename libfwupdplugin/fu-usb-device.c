@@ -377,7 +377,6 @@ fu_usb_device_setup(FuDevice *device, GError **error)
 		    g_bytes_get_size(extra) > 0) {
 			g_autoptr(FuFirmware) ds20 = NULL;
 			g_autoptr(GError) error_ds20 = NULL;
-			g_autofree gchar *str = NULL;
 
 			ds20 = fu_firmware_new_from_gtypes(extra,
 							   FWUPD_INSTALL_FLAG_NONE,
@@ -396,8 +395,10 @@ fu_usb_device_setup(FuDevice *device, GError **error)
 				g_warning("failed to get DS20 data: %s", error_ds20->message);
 				continue;
 			}
-			str = fu_firmware_to_string(ds20);
-			g_debug("DS20: %s", str);
+			if (g_getenv("FU_USB_DEVICE_DEBUG") != NULL) {
+				g_autofree gchar *str = fu_firmware_to_string(ds20);
+				g_debug("DS20: %s", str);
+			}
 		}
 	}
 #endif
