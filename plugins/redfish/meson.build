@@ -15,6 +15,7 @@ plugin_builtin_redfish = static_library('fu_plugin_redfish',
     'fu-redfish-backend.c',
     'fu-redfish-common.c',     # fuzzing
     'fu-redfish-device.c',
+    'fu-redfish-smc-device.c',
     'fu-redfish-legacy-device.c',
     'fu-redfish-multipart-device.c',
     'fu-redfish-network.c',

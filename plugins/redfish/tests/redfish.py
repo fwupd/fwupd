@@ -11,10 +11,13 @@ from flask import Flask, Response, request
 
 app = Flask(__name__)
 
-HARDCODED_USERNAME = "username2"
+HARDCODED_SMC_USERNAME = "smc_username"
+HARDCODED_UNL_USERNAME = "unlicensed_username"
+HARDCODED_USERNAMES = {"username2", HARDCODED_SMC_USERNAME, HARDCODED_UNL_USERNAME}
 HARDCODED_PASSWORD = "password2"
 
-app._percentage: int = 0
+app._percentage545: int = 0
+app._percentage546: int = 0
 
 
 def _failure(msg: str, status=400):
@@ -28,12 +31,13 @@ def _failure(msg: str, status=400):
 def index():
 
     # reset counter
-    app._percentage = 0
+    app._percentage545 = 0
+    app._percentage546 = 0
 
     # check password from the config file
     try:
         if (
-            request.authorization["username"] != HARDCODED_USERNAME
+            not request.authorization["username"] in HARDCODED_USERNAMES
             or request.authorization["password"] != HARDCODED_PASSWORD
         ):
             return _failure("unauthorised", status=401)
@@ -58,7 +62,6 @@ def update_service():
         "FirmwareInventory": {
             "@odata.id": "/redfish/v1/UpdateService/FirmwareInventory"
         },
-        "MultipartHttpPushUri": "/FWUpdate",
         "HttpPushUri": "/FWUpdate",
         "HttpPushUriOptions": {
             "HttpPushUriApplyTime": {
@@ -68,6 +71,24 @@ def update_service():
         "HttpPushUriOptionsBusy": False,
         "ServiceEnabled": True,
     }
+
+    if request.authorization["username"] == HARDCODED_UNL_USERNAME:
+        res["MultipartHttpPushUri"] = "/FWUpdate-unlicensed"
+        res["Actions"] = {
+            "#UpdateService.StartUpdate": {
+                "target": "/redfish/v1/UpdateService/Actions/UpdateService.StartUpdate"
+            }
+        }
+    elif request.authorization["username"] == HARDCODED_SMC_USERNAME:
+        res["MultipartHttpPushUri"] = "/FWUpdate-smc"
+        res["Actions"] = {
+            "#UpdateService.StartUpdate": {
+                "target": "/redfish/v1/UpdateService/Actions/UpdateService.StartUpdate"
+            }
+        }
+    else:
+        res["MultipartHttpPushUri"] = "/FWUpdate"
+
     return Response(json.dumps(res), status=200, mimetype="application/json")
 
 
@@ -94,7 +115,6 @@ def firmware_inventory_bmc():
         "@odata.type": "#SoftwareInventory.v1_2_3.SoftwareInventory",
         "Id": "BMC",
         "LowestSupportedVersion": "11A-0.12",
-        "Manufacturer": "Lenovo",
         "Name": "Lenovo BMC Firmware",
         "RelatedItem": [{"@odata.id": "/redfish/v1/Managers/BMC"}],
         "SoftwareId": "UEFI-AFE1-6",
@@ -103,6 +123,13 @@ def firmware_inventory_bmc():
         "Version": "11A-1.02",
         "ReleaseDate": "2019-03-15T00:00:00",
     }
+    if request.authorization["username"] in {
+        HARDCODED_UNL_USERNAME,
+        HARDCODED_SMC_USERNAME,
+    }:
+        res["Manufacturer"] = "SMCI"
+    else:
+        res["Manufacturer"] = "Lenovo"
     return Response(json.dumps(res), status=200, mimetype="application/json")
 
 
@@ -164,7 +191,6 @@ def firmware_inventory_bios():
         "@odata.type": "#SoftwareInventory.v1_2_3.SoftwareInventory",
         "Id": "BIOS",
         "LowestSupportedVersion": "P79 v1.10",
-        "Manufacturer": "Contoso",
         "Name": "Contoso BIOS Firmware",
         "RelatedItem": [{"@odata.id": "/redfish/v1/Systems/437XR1138R2"}],
         "ReleaseDate": "2017-12-06T12:00:00",
@@ -173,6 +199,13 @@ def firmware_inventory_bios():
         "Version": "P79 v1.45",
         "ReleaseDate": "2019-03-15T00:00:00Z",
     }
+    if request.authorization["username"] in {
+        HARDCODED_UNL_USERNAME,
+        HARDCODED_SMC_USERNAME,
+    }:
+        res["Manufacturer"] = "SMCI"
+    else:
+        res["Manufacturer"] = "Contoso"
     return Response(json.dumps(res), status=200, mimetype="application/json")
 
 
@@ -188,18 +221,18 @@ def task_manager():
 
 
 @app.route("/redfish/v1/TaskService/Tasks/545")
-def task_status():
+def task_status_545():
 
     res = {
         "@odata.id": "/redfish/v1/TaskService/Tasks/545",
         "@odata.type": "#Task.v1_4_3.Task",
         "Id": "545",
         "Name": "Task 545",
-        "PercentComplete": app._percentage,
+        "PercentComplete": app._percentage545,
     }
-    if app._percentage == 0:
+    if app._percentage545 == 0:
         res["TaskState"] = "Running"
-    elif app._percentage in [25, 50, 75]:
+    elif app._percentage545 in [25, 50, 75]:
         res["TaskState"] = "Running"
         res["TaskStatus"] = "OK"
         res["Messages"] = [
@@ -208,7 +241,7 @@ def task_status():
                 "MessageId": "Update.1.1.TransferringToComponent",
             }
         ]
-    elif app._percentage == 100:
+    elif app._percentage545 == 100:
         res["TaskState"] = "Completed"
         res["TaskStatus"] = "OK"
         res["Messages"] = [
@@ -235,8 +268,148 @@ def task_status():
                 "Severity": "Warning",
             }
         ]
-    app._percentage += 25
+    app._percentage545 += 25
     return Response(response=json.dumps(res), status=200, mimetype="application/json")
+
+
+@app.route("/redfish/v1/TaskService/Tasks/546")
+def task_status_546():
+
+    res = {
+        "@odata.type": "#Task.v1_4_3.Task",
+        "@odata.id": "/redfish/v1/TaskService/Tasks/546",
+        "Id": "546",
+        "Name": "BIOS Verify",
+        "TaskState": "Running",
+        "StartTime": "2022-09-29T14:50:54+00:00",
+        "PercentComplete": app._percentage546,
+        "HidePayload": True,
+        "TaskMonitor": "/redfish/v1/TaskMonitor/gd5n5ffS4gi9r6YKVZmgIIaj8ECLfnc",
+        "TaskStatus": "OK",
+        "Messages": [
+            {
+                "MessageId": "",
+                "RelatedProperties": [""],
+                "Message": "",
+                "MessageArgs": [""],
+                "Severity": "",
+            }
+        ],
+        "Oem": {},
+    }
+    if app._percentage546 == 0:
+        res["TaskState"] = "Running"
+    elif app._percentage546 in [25, 50, 75]:
+        res["TaskState"] = "Running"
+    elif app._percentage546 == 100:
+        res["TaskState"] = "Completed"
+    app._percentage546 += 25
+    return Response(response=json.dumps(res), status=200, mimetype="application/json")
+
+
+@app.route("/FWUpdate-unlicensed", methods=["GET"])
+def fwupdate_unlicensed():
+
+    res = {
+        "error": {
+            "code": "Base.v1_4_0.GeneralError",
+            "Message": "A general error has occurred. See ExtendedInfo for more information.",
+            "@Message.ExtendedInfo": [
+                {
+                    "MessageId": "SMC.1.0.OemLicenseNotPassed",
+                    "Severity": "Warning",
+                    "Resolution": "Please check if there was the next step with respective API to execute.",
+                    "Message": "The BIOS firmware update was already in update mode.",
+                    "MessageArgs": ["BIOS"],
+                    "RelatedProperties": ["EnterUpdateMode_StatusCheck"],
+                }
+            ],
+        }
+    }
+    return Response(json.dumps(res), status=405, mimetype="application/json")
+    data = json.loads(request.form["UpdateParameters"])
+    if data["@Redfish.OperationApplyTime"] != "Immediate":
+        return _failure("apply invalid")
+    if data["Targets"][0] != "/redfish/v1/UpdateService/FirmwareInventory/BMC":
+        return _failure("id invalid")
+    fileitem = request.files["UpdateFile"]
+    if not fileitem.filename.endswith(".bin"):
+        return _failure("filename invalid")
+    if fileitem.read().decode() != "hello":
+        return _failure("data invalid")
+    res = {
+        "Version": "P79 v1.45",
+        "@odata.id": "/redfish/v1/TaskService/Tasks/545",
+        "TaskMonitor": "/redfish/v1/TaskService/999",
+    }
+    # Location set to the URI of a task monitor.
+    return Response(
+        json.dumps(res),
+        status=202,
+        mimetype="application/json",
+        headers={"Location": "http://localhost:4661/redfish/v1/TaskService/Tasks/545"},
+    )
+
+
+@app.route("/FWUpdate-smc", methods=["POST"])
+def fwupdate_smc():
+
+    data = json.loads(request.form["UpdateParameters"])
+    if data["@Redfish.OperationApplyTime"] != "OnStartUpdateRequest":
+        return _failure("apply invalid")
+    if data["Targets"][0] != "/redfish/v1/Systems/1/Bios":
+        return _failure("id invalid")
+    fileitem = request.files["UpdateFile"]
+    if not fileitem.filename.endswith(".bin"):
+        return _failure("filename invalid")
+    filecontents = fileitem.read().decode()
+    if filecontents == "hello":
+        app._percentage546 = 0
+        res = {
+            "Accepted": {
+                "code": "Base.v1_4_0.Accepted",
+                "Message": "Successfully Accepted Request. Please see the location header and ExtendedInfo for more information.",
+                "@Message.ExtendedInfo": [
+                    {
+                        "MessageId": "SMC.1.0.OemSimpleupdateAcceptedMessage",
+                        "Severity": "Ok",
+                        "Resolution": "No resolution was required.",
+                        "Message": "Please also check Task Resource /redfish/v1/TaskService/Tasks/546 to see more information.",
+                        "MessageArgs": ["/redfish/v1/TaskService/Tasks/546"],
+                        "RelatedProperties": ["BiosVerifyAccepted"],
+                    }
+                ],
+            }
+        }
+        # Location set to the URI of a task monitor.
+        return Response(
+            json.dumps(res),
+            status=202,
+            mimetype="application/json",
+            headers={
+                "Location": "http://localhost:4661/redfish/v1/TaskService/Tasks/546"
+            },
+        )
+    elif filecontents == "stuck":
+        res = {
+            "error": {
+                "code": "Base.v1_4_0.GeneralError",
+                "Message": "A general error has occurred. See ExtendedInfo for more information.",
+                "@Message.ExtendedInfo": [
+                    {
+                        "MessageId": "SMC.1.0.OemFirmwareAlreadyInUpdateMode",
+                        "Severity": "Warning",
+                        "Resolution": "Please check if there was the next step with respective API to execute.",
+                        "Message": "The BIOS firmware update was already in update mode.",
+                        "MessageArgs": ["BIOS"],
+                        "RelatedProperties": ["EnterUpdateMode_StatusCheck"],
+                    }
+                ],
+            }
+        }
+        return Response(json.dumps(res), status=405, mimetype="application/json")
+    else:
+        return _failure("data invalid")
 
 
 @app.route("/FWUpdate", methods=["POST"])
@@ -263,6 +436,35 @@ def fwupdate():
         status=202,
         mimetype="application/json",
         headers={"Location": "http://localhost:4661/redfish/v1/TaskService/Tasks/545"},
+    )
+
+
+@app.route(
+    "/redfish/v1/UpdateService/Actions/UpdateService.StartUpdate", methods=["POST"]
+)
+def startupdate():
+    res = {
+        "Accepted": {
+            "code": "Base.v1_4_0.Accepted",
+            "Message": "Successfully Accepted Request. Please see the location header and ExtendedInfo for more information.",
+            "@Message.ExtendedInfo": [
+                {
+                    "MessageId": "SMC.1.0.OemSimpleupdateAcceptedMessage",
+                    "Severity": "Ok",
+                    "Resolution": "No resolution was required.",
+                    "Message": "Please also check Task Resource /redfish/v1/TaskService/Tasks/546 to see more information.",
+                    "MessageArgs": ["/redfish/v1/TaskService/Tasks/546"],
+                    "RelatedProperties": ["BiosUpdateAccepted"],
+                }
+            ],
+        }
+    }
+    app._percentage546 = 0
+    return Response(
+        json.dumps(res),
+        status=202,
+        mimetype="application/json",
+        headers={"Location": "http://localhost:4661/redfish/v1/TaskService/Tasks/546"},
     )
 
 

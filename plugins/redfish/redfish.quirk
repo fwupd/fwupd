@@ -19,3 +19,6 @@ ParentGuid = REDFISH\VENDOR_Lenovo&ID_LXPM
 [REDFISH\VENDOR_Lenovo&ID_LXPMWindowsDriver]
 Flags = ~updatable
 ParentGuid = REDFISH\VENDOR_Lenovo&ID_LXPM
+
+[REDFISH\VENDOR_SMCI&ID_Backup_BIOS]
+Flags = is-backup,no-probe
