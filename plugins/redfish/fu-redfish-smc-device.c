@@ -37,7 +37,8 @@ fu_redfish_smc_device_get_task(JsonObject *json_obj)
 	msgid = json_object_get_string_member(tmp_obj, "MessageId");
 	if (g_strcmp0(msgid, "SMC.1.0.OemSimpleupdateAcceptedMessage") != 0)
 		return NULL;
-	if (!(tmp_ary = json_object_get_array_member(tmp_obj, "MessageArgs")))
+	tmp_ary = json_object_get_array_member(tmp_obj, "MessageArgs");
+	if (tmp_ary == NULL)
 		return NULL;
 	if (json_array_get_length(tmp_ary) != 1)
 		return NULL;

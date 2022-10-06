@@ -378,8 +378,6 @@ fu_redfish_backend_smc_license_check(FuDevice *device)
 		else
 			g_debug("supermicro license check returned %s\n", error_local->message);
 	}
-
-	return;
 }
 
 static gboolean

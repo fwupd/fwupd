@@ -39,12 +39,12 @@ fu_test_self_init(FuTest *self)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
-	// generic BMC
+	/* generic BMC */
 	self->plugin = fu_plugin_new_from_gtype(fu_redfish_plugin_get_type(), ctx);
 	ret = fu_plugin_runner_startup(self->plugin, progress, &error);
 	if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE)) {
 		g_test_skip("no redfish.py running");
-		error = NULL;
+		g_clear_error(&error);
 	} else {
 		g_assert_no_error(error);
 		g_assert_true(ret);
@@ -53,12 +53,12 @@ fu_test_self_init(FuTest *self)
 		g_assert_true(ret);
 	}
 
-	// supermicro BMC
+	/* supermicro BMC */
 	self->smc_plugin = fu_plugin_new_from_gtype(fu_redfish_plugin_get_type(), ctx);
 	ret = fu_plugin_runner_startup(self->smc_plugin, progress, &error);
 	if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE)) {
 		g_test_skip("no redfish.py running");
-		error = NULL;
+		g_clear_error(&error);
 	} else {
 		g_assert_no_error(error);
 		g_assert_true(ret);
@@ -68,7 +68,7 @@ fu_test_self_init(FuTest *self)
 		g_assert_true(ret);
 	}
 
-	// unlicensed supermicro BMC
+	/* unlicensed supermicro BMC */
 	self->unlicensed_plugin = fu_plugin_new_from_gtype(fu_redfish_plugin_get_type(), ctx);
 	ret = fu_plugin_runner_startup(self->unlicensed_plugin, progress, &error);
 	if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE)) {
