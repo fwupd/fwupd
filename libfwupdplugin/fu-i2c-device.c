@@ -115,6 +115,7 @@ fu_i2c_device_probe(FuDevice *device, GError **error)
 	GUdevDevice *udev_device = fu_udev_device_get_dev(FU_UDEV_DEVICE(device));
 	const gchar *tmp;
 	g_autofree gchar *devname = NULL;
+	g_autoptr(GUdevDevice) udev_parent = NULL;
 #endif
 
 	/* set physical ID */
@@ -129,7 +130,8 @@ fu_i2c_device_probe(FuDevice *device, GError **error)
 		return FALSE;
 
 	/* get bus number out of sysfs path */
-	devname = g_path_get_basename(fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(device)));
+	udev_parent = g_udev_device_get_parent(udev_device);
+	devname = g_path_get_basename(g_udev_device_get_sysfs_path(udev_parent));
 	if (g_str_has_prefix(devname, "i2c-")) {
 		guint64 tmp64 = 0;
 		g_autoptr(GError) error_local = NULL;
