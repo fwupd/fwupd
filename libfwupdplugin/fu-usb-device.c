@@ -241,7 +241,13 @@ fu_usb_device_query_hub(FuUsbDevice *self, GError **error)
 	}
 	if (hub->len > 0)
 		fu_device_add_instance_str(FU_DEVICE(self), "HUB", hub->str);
-	return fu_device_build_instance_id(FU_DEVICE(self), error, "VID", "PID", "HUB", NULL);
+	return fu_device_build_instance_id(FU_DEVICE(self),
+					   error,
+					   "USB",
+					   "VID",
+					   "PID",
+					   "HUB",
+					   NULL);
 }
 #endif
 
