@@ -86,6 +86,7 @@ fwupdutil = library(
     systemd_src,
   ],
   install: true,
+  install_rpath: libdir_pkg,
   install_dir: libdir_pkg,
   include_directories: [
     root_incdir,
@@ -197,6 +198,7 @@ fwupdengine = library(
   resources_src,
   sources: fwupd_engine_src,
   install: true,
+  install_rpath: libdir_pkg,
   install_dir: libdir_pkg,
   include_directories: plugin_incdirs,
   dependencies: [
