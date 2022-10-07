@@ -533,9 +533,9 @@ fu_parade_lspcon_device_reload(FuDevice *device, GError **error)
 	guint8 version_buf[2] = {0x0};
 	g_autofree gchar *version = NULL;
 	g_autofree gchar *oui_string = NULL;
+	g_autolist(GUdevDevice) aux_devices = NULL;
 	g_autoptr(FuDeviceLocker) aux_device_locker = NULL;
 	g_autoptr(FuUdevDevice) aux_device = NULL;
-	g_autoptr(GList) aux_devices = NULL;
 	g_autoptr(GUdevClient) udev_client = g_udev_client_new(NULL);
 	g_autoptr(GUdevEnumerator) enumerator = g_udev_enumerator_new(udev_client);
 
@@ -581,8 +581,7 @@ fu_parade_lspcon_device_reload(FuDevice *device, GError **error)
 			    self->aux_device_name);
 		return FALSE;
 	}
-	aux_device =
-	    fu_udev_device_new(fu_device_get_context(device), g_steal_pointer(&aux_devices->data));
+	aux_device = fu_udev_device_new(fu_device_get_context(device), aux_devices->data);
 	g_debug("using aux dev %s", fu_udev_device_get_sysfs_path(aux_device));
 
 	/* the following open() requires the device have IDs set */
