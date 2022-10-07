@@ -40,6 +40,7 @@ _test_add_fake_devices_from_dir(FuPlugin *plugin, const gchar *path)
 
 	while ((basename = g_dir_read_name(dir)) != NULL) {
 		g_autofree gchar *fn = g_build_filename(path, basename, NULL);
+		g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 		g_autoptr(FuUdevDevice) dev = NULL;
 		if (!g_str_has_prefix(basename, "drm_dp_aux"))
 			continue;
@@ -56,7 +57,8 @@ _test_add_fake_devices_from_dir(FuPlugin *plugin, const gchar *path)
 				   fn,
 				   NULL);
 		g_debug("creating drm_dp_aux_dev object backed by %s", fn);
-		ret = fu_plugin_runner_backend_device_added(plugin, FU_DEVICE(dev), &error);
+		ret =
+		    fu_plugin_runner_backend_device_added(plugin, FU_DEVICE(dev), progress, &error);
 		g_assert_no_error(error);
 		g_assert_true(ret);
 	}

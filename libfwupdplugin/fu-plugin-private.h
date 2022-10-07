@@ -79,6 +79,7 @@ fu_plugin_runner_reload(FuPlugin *self, FuDevice *device, GError **error) G_GNUC
 gboolean
 fu_plugin_runner_backend_device_added(FuPlugin *self,
 				      FuDevice *device,
+				      FuProgress *progress,
 				      GError **error) G_GNUC_WARN_UNUSED_RESULT;
 gboolean
 fu_plugin_runner_backend_device_changed(FuPlugin *self,

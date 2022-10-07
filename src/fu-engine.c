@@ -7034,7 +7034,7 @@ fu_engine_backend_device_added_run_plugin(FuEngine *self,
 		return FALSE;
 
 	/* run the ->probe() then ->setup() vfuncs */
-	if (!fu_plugin_runner_backend_device_added(plugin, device, error)) {
+	if (!fu_plugin_runner_backend_device_added(plugin, device, progress, error)) {
 #ifdef SUPPORTED_BUILD
 		/* sanity check */
 		if (*error == NULL) {
