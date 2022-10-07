@@ -4,7 +4,6 @@ Plugin = vli
 GType = FuVliUsbhubDevice
 Flags = usb3
 CounterpartGuid = USB\VID_065F&PID_F816
-ParentGuid = USB\VID_1F29&PID_7518
 [USB\VID_065F&PID_F816]
 Plugin = vli
 GType = FuVliUsbhubDevice
