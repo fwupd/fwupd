@@ -26,7 +26,6 @@ plugin_builtin_ccgx = static_library('fu_plugin_ccgx',
   ],
 )
 plugin_builtins += plugin_builtin_ccgx
-endif
 
 if get_option('tests')
   install_data(['tests/ccgx.builder.xml', 'tests/ccgx-dmc.builder.xml'],
@@ -50,4 +49,5 @@ if get_option('tests')
     install_dir: installed_test_bindir,
   )
   test('ccgx-self-test', e, env: env)
+endif
 endif
