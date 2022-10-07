@@ -3168,6 +3168,7 @@ _plugin_device_register_cb(FuPlugin *plugin, FuDevice *device, gpointer user_dat
 static void
 fu_backend_usb_func(gconstpointer user_data)
 {
+#ifdef HAVE_GUSB
 	FuTest *self = (FuTest *)user_data;
 	gboolean ret;
 	FuDevice *device_tmp;
@@ -3228,11 +3229,15 @@ fu_backend_usb_func(gconstpointer user_data)
 	possible_plugins = fu_device_get_possible_plugins(device_tmp);
 	g_assert_cmpint(possible_plugins->len, ==, 1);
 	g_assert_cmpstr(g_ptr_array_index(possible_plugins, 0), ==, "dfu");
+#else
+	g_test_skip("No GUsb support");
+#endif
 }
 
 static void
 fu_backend_usb_invalid_func(gconstpointer user_data)
 {
+#ifdef HAVE_GUSB
 	FuTest *self = (FuTest *)user_data;
 	gboolean ret;
 	FuDevice *device_tmp;
@@ -3291,6 +3296,9 @@ fu_backend_usb_invalid_func(gconstpointer user_data)
 
 	/* check the fwupd DS20 descriptor was *not* parsed */
 	g_assert_false(fu_device_has_icon(device_tmp, "computer"));
+#else
+	g_test_skip("No GUsb support");
+#endif
 }
 
 static void
