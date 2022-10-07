@@ -13,6 +13,7 @@
 #include "fu-common.h"
 #include "fu-coswid-firmware.h"
 #include "fu-mem.h"
+#include "fu-string.h"
 #include "fu-uswid-firmware.h"
 
 /**
@@ -68,7 +69,7 @@ fu_uswid_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBu
 	FuUswidFirmware *self = FU_USWID_FIRMWARE(firmware);
 	FuUswidFirmwarePrivate *priv = GET_PRIVATE(self);
 	fu_xmlb_builder_insert_kx(bn, "hdrver", priv->hdrver);
-	fu_xmlb_builder_insert_kx(bn, "compressed", priv->compressed);
+	fu_xmlb_builder_insert_kb(bn, "compressed", priv->compressed);
 }
 
 static gboolean
@@ -275,6 +276,7 @@ fu_uswid_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
 {
 	FuUswidFirmware *self = FU_USWID_FIRMWARE(firmware);
 	FuUswidFirmwarePrivate *priv = GET_PRIVATE(self);
+	const gchar *str;
 	guint64 tmp;
 
 	/* simple properties */
@@ -283,9 +285,11 @@ fu_uswid_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
 		priv->hdrver = tmp;
 
 	/* simple properties */
-	tmp = xb_node_query_text_as_uint(n, "compressed", NULL);
-	if (tmp != G_MAXUINT64 && tmp <= G_MAXUINT8)
-		priv->compressed = tmp;
+	str = xb_node_query_text(n, "compressed", NULL);
+	if (str != NULL) {
+		if (!fu_strtobool(str, &priv->compressed, error))
+			return FALSE;
+	}
 
 	/* success */
 	return TRUE;
