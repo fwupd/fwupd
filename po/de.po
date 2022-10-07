@@ -1745,10 +1745,6 @@ msgstr "DMA-Schutz vor dem Booten ist deaktiviert"
 msgid "Pre-boot DMA protection is enabled"
 msgstr "DMA-Schutz vor dem Booten ist aktiviert"
 
-#. TRANSLATORS: longer description
-msgid "Pre-boot DMA protection prevents devices from being connected to the computer and accessing system memory."
-msgstr "DMA-Schutz vor dem Booten verhindert, dass Geräte an den Computer angeschlossen werden und auf den Systemspeicher zugreifen."
-
 #. TRANSLATORS: version number of previous firmware
 msgid "Previous version"
 msgstr "Vorherige Version"

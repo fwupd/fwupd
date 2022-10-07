@@ -2001,10 +2001,6 @@ msgstr "Ochrana přímého přístupu do paměti před startem operačního syst
 msgid "Pre-boot DMA protection is enabled"
 msgstr "Ochrana přímého přístupu do paměti před startem operačního systému je zapnuta"
 
-#. TRANSLATORS: longer description
-msgid "Pre-boot DMA protection prevents devices from being connected to the computer and accessing system memory."
-msgstr "Ochrana přímého přístupu do paměti před startem operačního systému brání před připojováním zařízení k počítači a přístupu k paměti systému."
-
 #. TRANSLATORS: version number of previous firmware
 msgid "Previous version"
 msgstr "Předchozí verze"

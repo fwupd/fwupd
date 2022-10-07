@@ -596,6 +596,10 @@ msgstr "Odaberi izdanje:"
 msgid "Choose a volume:"
 msgstr "Odaberite uređaj:"
 
+#. TRANSLATORS: get interactive prompt
+msgid "Choose the ESP:"
+msgstr "Odaberi ESP:"
+
 #. TRANSLATORS: command description
 msgid "Clears the results from the last update"
 msgstr "Uklanja rezultate posljednje nadopune"
@@ -611,6 +615,10 @@ msgstr "Podržano od strane zajednice"
 #. TRANSLATORS: title prefix for the BIOS settings dialog
 msgid "Configuration Change Suggested"
 msgstr "Predložena promjena podešavanja"
+
+#. TRANSLATORS: no peeking
+msgid "Configuration is only readable by the system administrator"
+msgstr "Podešavanje može čitati samo administrator sustava"
 
 #. TRANSLATORS: command description
 msgid "Convert a firmware file"
@@ -1073,6 +1081,11 @@ msgstr "Neuspjelo"
 msgid "Failed to apply update"
 msgstr "Neuspjela primjena nadopune"
 
+#. TRANSLATORS: error message for Windows
+#, c-format
+msgid "Failed to connect to Windows service, please ensure it's running."
+msgstr "Neuspjelo povezivanje s Windows uslugom, provjerite je li pokrenuta."
+
 #. TRANSLATORS: we could not talk to the fwupd daemon
 msgid "Failed to connect to daemon"
 msgstr "Neuspjelo povezivanje s pozadinskim programom"
@@ -1365,6 +1378,11 @@ msgstr "Visoka"
 #. TRANSLATORS: title for host security events
 msgid "Host Security Events"
 msgstr "Događaji sigurnosti računala"
+
+#. TRANSLATORS: error message for unsupported feature
+#, c-format
+msgid "Host Security ID (HSI) is not supported"
+msgstr "ID sigurnosti sustava (HSI) nije podržan"
 
 #. TRANSLATORS: this is a string like 'HSI:2-U'
 msgid "Host Security ID:"
@@ -1991,8 +2009,8 @@ msgid "Pre-boot DMA protection is enabled"
 msgstr "DMA zaštita prije pokretanja je omogućena"
 
 #. TRANSLATORS: longer description
-msgid "Pre-boot DMA protection prevents devices from being connected to the computer and accessing system memory."
-msgstr "DMA zaštita predpokretanja sprječava povezivanje uređaja s računalom i pristup memoriji sustava."
+msgid "Pre-boot DMA protection prevents devices from accessing system memory after being connected to the computer."
+msgstr "DMA zaštita predpokretanja sprječava pristup uređaja memoriji sustava nakon što se povežu s računalom. "
 
 #. TRANSLATORS: version number of previous firmware
 msgid "Previous version"
@@ -2121,6 +2139,10 @@ msgstr "URI izvještaja"
 #. TRANSLATORS: Has been reported to a metadata server
 msgid "Reported to remote server"
 msgstr "Prijavljeno na udaljenom poslužitelju"
+
+#. TRANSLATORS: we asked the user to choose an option and they declined
+msgid "Request canceled"
+msgstr "Zahtjev je prekinut"
 
 #. TRANSLATORS: the user is using Gentoo/Arch and has screwed something up
 msgid "Required efivarfs filesystem was not found"
@@ -2398,6 +2420,10 @@ msgstr "Izvor"
 
 msgid "Specify Vendor/Product ID(s) of DFU device"
 msgstr "Odredi ID-ove Proizvođača/Proizvoda DFU uređaja"
+
+#. TRANSLATORS: command line option
+msgid "Specify a filename to use to save backend events"
+msgstr "Odredi naziv datoteke za spremanje pozadinskih događaja"
 
 #. TRANSLATORS: command line option
 msgid "Specify the dbx database file"

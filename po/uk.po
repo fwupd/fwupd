@@ -601,6 +601,10 @@ msgstr "Виберіть випуск:"
 msgid "Choose a volume:"
 msgstr "Виберіть том:"
 
+#. TRANSLATORS: get interactive prompt
+msgid "Choose the ESP:"
+msgstr "Виберіть ESP:"
+
 #. TRANSLATORS: command description
 msgid "Clears the results from the last update"
 msgstr "Вилучає результати останнього оновлення"
@@ -616,6 +620,10 @@ msgstr "Підтримка спільноти"
 #. TRANSLATORS: title prefix for the BIOS settings dialog
 msgid "Configuration Change Suggested"
 msgstr "Запропоновано зміни у налаштуваннях"
+
+#. TRANSLATORS: no peeking
+msgid "Configuration is only readable by the system administrator"
+msgstr "Налаштування можна читати лише від імені адміністратора системи"
 
 #. TRANSLATORS: command description
 msgid "Convert a firmware file"
@@ -1078,6 +1086,11 @@ msgstr "Помилка"
 msgid "Failed to apply update"
 msgstr "Не вдалося застосувати оновлення"
 
+#. TRANSLATORS: error message for Windows
+#, c-format
+msgid "Failed to connect to Windows service, please ensure it's running."
+msgstr "Не вдалося встановити з'єднання зі службою Windows. Будь ласка, переконайтеся, що її запущено."
+
 #. TRANSLATORS: we could not talk to the fwupd daemon
 msgid "Failed to connect to daemon"
 msgstr "Не вдалося встановити з'єднання із фоновою службою"
@@ -1372,6 +1385,11 @@ msgstr "Високий"
 #. TRANSLATORS: title for host security events
 msgid "Host Security Events"
 msgstr "Події захисту вузла"
+
+#. TRANSLATORS: error message for unsupported feature
+#, c-format
+msgid "Host Security ID (HSI) is not supported"
+msgstr "Підтримки Host Security ID (HSI) не передбачено"
 
 #. TRANSLATORS: this is a string like 'HSI:2-U'
 msgid "Host Security ID:"
@@ -1999,8 +2017,8 @@ msgid "Pre-boot DMA protection is enabled"
 msgstr "Захист DMA перед завантаженням увімкнено"
 
 #. TRANSLATORS: longer description
-msgid "Pre-boot DMA protection prevents devices from being connected to the computer and accessing system memory."
-msgstr "Захист перед завантаженням DMA запобігає можливості з'єднання пристроїв із комп'ютером і доступу до пам'яті системи."
+msgid "Pre-boot DMA protection prevents devices from accessing system memory after being connected to the computer."
+msgstr "Захист DMA перед завантаженням запобігає доступу з боку пристроїв до системної пам'яті після встановлення з'єднання пристроїв з комп'ютером."
 
 #. TRANSLATORS: version number of previous firmware
 msgid "Previous version"
@@ -2129,6 +2147,10 @@ msgstr "Адреса звіту"
 #. TRANSLATORS: Has been reported to a metadata server
 msgid "Reported to remote server"
 msgstr "Повідомлено на віддаленому сервері"
+
+#. TRANSLATORS: we asked the user to choose an option and they declined
+msgid "Request canceled"
+msgstr "Запит скасовано"
 
 #. TRANSLATORS: the user is using Gentoo/Arch and has screwed something up
 msgid "Required efivarfs filesystem was not found"
@@ -2406,6 +2428,10 @@ msgstr "Джерело"
 
 msgid "Specify Vendor/Product ID(s) of DFU device"
 msgstr "Вказати ідентифікатори виробника/продукту пристрою DFU"
+
+#. TRANSLATORS: command line option
+msgid "Specify a filename to use to save backend events"
+msgstr "Вкажіть назву файла, якою слід скористатися для зберігання записів подій модуля обробки"
 
 #. TRANSLATORS: command line option
 msgid "Specify the dbx database file"

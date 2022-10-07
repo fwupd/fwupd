@@ -584,6 +584,10 @@ msgstr "Choose a release:"
 msgid "Choose a volume:"
 msgstr "Choose a volume:"
 
+#. TRANSLATORS: get interactive prompt
+msgid "Choose the ESP:"
+msgstr "Choose the ESP:"
+
 #. TRANSLATORS: command description
 msgid "Clears the results from the last update"
 msgstr "Clears the results from the last update"
@@ -599,6 +603,10 @@ msgstr "Community supported"
 #. TRANSLATORS: title prefix for the BIOS settings dialog
 msgid "Configuration Change Suggested"
 msgstr "Configuration Change Suggested"
+
+#. TRANSLATORS: no peeking
+msgid "Configuration is only readable by the system administrator"
+msgstr "Configuration is only readable by the system administrator"
 
 #. TRANSLATORS: command description
 msgid "Convert a firmware file"
@@ -921,6 +929,9 @@ msgstr "Each system should have tests to ensure firmware security."
 msgid "Emulated host"
 msgstr "Emulated host"
 
+msgid "Enable"
+msgstr "Enable"
+
 #. TRANSLATORS: command line option
 msgid "Enable firmware update support on supported systems"
 msgstr "Enable firmware update support on supported systems"
@@ -1057,6 +1068,11 @@ msgstr "Failed"
 #. TRANSLATORS: dbx file failed to be applied as an update
 msgid "Failed to apply update"
 msgstr "Failed to apply update"
+
+#. TRANSLATORS: error message for Windows
+#, c-format
+msgid "Failed to connect to Windows service, please ensure it's running."
+msgstr "Failed to connect to Windows service, please ensure it's running."
 
 #. TRANSLATORS: we could not talk to the fwupd daemon
 msgid "Failed to connect to daemon"
@@ -1348,6 +1364,11 @@ msgstr "High"
 #. TRANSLATORS: title for host security events
 msgid "Host Security Events"
 msgstr "Host Security Events"
+
+#. TRANSLATORS: error message for unsupported feature
+#, c-format
+msgid "Host Security ID (HSI) is not supported"
+msgstr "Host Security ID (HSI) is not supported"
 
 #. TRANSLATORS: this is a string like 'HSI:2-U'
 msgid "Host Security ID:"
@@ -1850,6 +1871,10 @@ msgstr "No updates were applied"
 msgid "Not approved"
 msgstr "Not approved"
 
+#. TRANSLATORS: error message to tell someone they can't use this feature
+msgid "Not enough data was provided to make an HSI calculation."
+msgstr "Not enough data was provided to make an HSI calculation."
+
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Not found"
 msgstr "Not found"
@@ -1969,8 +1994,8 @@ msgid "Pre-boot DMA protection is enabled"
 msgstr "Pre-boot DMA protection is enabled"
 
 #. TRANSLATORS: longer description
-msgid "Pre-boot DMA protection prevents devices from being connected to the computer and accessing system memory."
-msgstr "Pre-boot DMA protection prevents devices from being connected to the computer and accessing system memory."
+msgid "Pre-boot DMA protection prevents devices from accessing system memory after being connected to the computer."
+msgstr "Pre-boot DMA protection prevents devices from accessing system memory after being connected to the computer."
 
 #. TRANSLATORS: version number of previous firmware
 msgid "Previous version"
@@ -2099,6 +2124,10 @@ msgstr "Report URI"
 #. TRANSLATORS: Has been reported to a metadata server
 msgid "Reported to remote server"
 msgstr "Reported to remote server"
+
+#. TRANSLATORS: we asked the user to choose an option and they declined
+msgid "Request canceled"
+msgstr "Request cancelled"
 
 #. TRANSLATORS: the user is using Gentoo/Arch and has screwed something up
 msgid "Required efivarfs filesystem was not found"
@@ -2376,6 +2405,10 @@ msgstr "Source"
 
 msgid "Specify Vendor/Product ID(s) of DFU device"
 msgstr "Specify Vendor/Product ID(s) of DFU device"
+
+#. TRANSLATORS: command line option
+msgid "Specify a filename to use to save backend events"
+msgstr "Specify a filename to use to save backend events"
 
 #. TRANSLATORS: command line option
 msgid "Specify the dbx database file"
@@ -2690,6 +2723,10 @@ msgstr "This tool can only be used by the root user"
 #. TRANSLATORS: CLI description
 msgid "This tool will read and parse the TPM event log from the system firmware."
 msgstr "This tool will read and parse the TPM event log from the system firmware."
+
+#. TRANSLATORS: message to tell someone how to ignore error
+msgid "To ignore this warning, use --force"
+msgstr "To ignore this warning, use --force"
 
 #. TRANSLATORS: the update state of the specific device
 msgid "Transient failure"

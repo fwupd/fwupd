@@ -92,7 +92,7 @@ msgstr "Actualització del controlador %s"
 #. * the first %s is the device name, e.g. 'ThinkPad P50`
 #, c-format
 msgid "%s Embedded Controller Update"
-msgstr "Actualització del controlador incorporat %s"
+msgstr "Actualització del controlador incrustat %s"
 
 #. TRANSLATORS: flash refers to solid state storage, e.g. UFS or eMMC
 #, c-format
@@ -340,7 +340,7 @@ msgstr "Antiguitat"
 
 #. TRANSLATORS: should the remote still be enabled
 msgid "Agree and enable the remote?"
-msgstr "Accepteu i habiliteu el remot?"
+msgstr "Voleu acceptar i habilitar el remot?"
 
 #. TRANSLATORS: this is a command alias, e.g. 'get-devices'
 #, c-format
@@ -403,7 +403,7 @@ msgstr "Aplica els fitxers d'actualització."
 
 #. TRANSLATORS: actually sending the update to the hardware
 msgid "Applying update…"
-msgstr "S'està aplicant l'actualització"
+msgstr "S'està aplicant l'actualització…"
 
 #. TRANSLATORS: approved firmware has been checked by
 #. * the domain administrator
@@ -414,7 +414,7 @@ msgstr[1] "Microprogramari aprovat:"
 
 #. TRANSLATORS: stop nagging the user
 msgid "Ask again next time?"
-msgstr "Demana-m'ho de nou la propera vegada?"
+msgstr "Demana-m'ho de nou la pròxima vegada?"
 
 #. TRANSLATORS: command description
 msgid "Attach to firmware mode"
@@ -438,7 +438,7 @@ msgstr "Es requereix autenticació per a desactualitzar el microprogramari en aq
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify BIOS settings"
-msgstr "Cal autenticació per a modificar la configuració del BIOS"
+msgstr "Cal autenticació per a modificar les opcions de configuració del BIOS"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify a configured remote used for firmware updates"
@@ -450,7 +450,7 @@ msgstr "Es requereix autenticació per a modificar la configuració del dimoni"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to read BIOS settings"
-msgstr "Cal autenticació per a llegir la configuració del BIOS"
+msgstr "Cal autenticació per a llegir les opcions de configuració del BIOS"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to set the list of approved firmware"
@@ -486,7 +486,7 @@ msgstr "Informa automàticament"
 
 #. TRANSLATORS: can we JFDI?
 msgid "Automatically upload every time?"
-msgstr "El pujo automàticament cada vegada?"
+msgstr "Voleu pujar-lo automàticament cada vegada?"
 
 #. TRANSLATORS: description of a BIOS setting
 msgid "BIOS updates delivered via LVFS or Windows Update"
@@ -561,7 +561,7 @@ msgstr "Comprova que la suma criptogràfica coincideix amb el microprogramari."
 
 #. TRANSLATORS: remote checksum
 msgid "Checksum"
-msgstr "Suma de comprovació"
+msgstr "Suma de verificació"
 
 #. TRANSLATORS: get interactive prompt, where branch is the
 #. * supplier of the firmware, e.g. "non-free" or "free"
@@ -584,6 +584,10 @@ msgstr "Trieu un alliberament:"
 msgid "Choose a volume:"
 msgstr "Trieu un volum:"
 
+#. TRANSLATORS: get interactive prompt
+msgid "Choose the ESP:"
+msgstr "Trieu l'ESP:"
+
 #. TRANSLATORS: command description
 msgid "Clears the results from the last update"
 msgstr "Esborra els resultats de l'última actualització."
@@ -594,11 +598,15 @@ msgstr "No s'ha trobat cap ordre"
 
 #. TRANSLATORS: is not supported by the vendor
 msgid "Community supported"
-msgstr "Recolzada per la comunitat"
+msgstr "Sostinguda per la comunitat"
 
 #. TRANSLATORS: title prefix for the BIOS settings dialog
 msgid "Configuration Change Suggested"
 msgstr "Canvi de configuració suggerit"
+
+#. TRANSLATORS: no peeking
+msgid "Configuration is only readable by the system administrator"
+msgstr "La configuració només la pot llegir l'administrador del sistema"
 
 #. TRANSLATORS: command description
 msgid "Convert a firmware file"
@@ -673,12 +681,12 @@ msgstr "S'ha afegit el dispositiu:"
 
 #. TRANSLATORS: for example the batteries *inside* the Bluetooth mouse
 msgid "Device battery power is too low"
-msgstr "L’alimentació de la bateria del dispositiu és massa baixa"
+msgstr "L'alimentació de la bateria del dispositiu és massa baixa"
 
 #. TRANSLATORS: for example the batteries *inside* the Bluetooth mouse
 #, c-format
 msgid "Device battery power is too low (%u%%, requires %u%%)"
-msgstr " L'energia de la bateria és massa baixa (%u%%,, requereix %u%%)"
+msgstr " L'energia de la bateria és massa baixa (%u%%, requereix %u%%)"
 
 #. TRANSLATORS: Device supports a safety mechanism for flashing
 msgid "Device can recover flash failures"
@@ -875,7 +883,7 @@ msgstr "Fet!"
 #. * %1 is the device name and %2 and %3 are version strings
 #, c-format
 msgid "Downgrade %s from %s to %s?"
-msgstr "Desactualitzo %s des de %s a %s?"
+msgstr "Voleu desactualitzar %s des de %s a %s?"
 
 #. TRANSLATORS: command description
 msgid "Downgrades the firmware on a device"
@@ -930,11 +938,11 @@ msgstr "Habilita el suport per a l'actualització del microprogramari sobre sist
 
 #. TRANSLATORS: a remote here is like a 'repo' or software source
 msgid "Enable new remote?"
-msgstr "Habilito el remot nou?"
+msgstr "Voleu habilitar el remot nou?"
 
 #. TRANSLATORS: Turn on the remote
 msgid "Enable this remote?"
-msgstr "Habilito aquest remot?"
+msgstr "Voleu habilitar aquest remot?"
 
 #. TRANSLATORS: Suffix: the HSI result
 #. TRANSLATORS: Plugin is active and in use
@@ -969,7 +977,7 @@ msgid "Encrypted RAM"
 msgstr "RAM encriptada"
 
 msgid "Encrypted RAM makes it impossible for information that is stored in device memory to be read if the memory chip is removed and accessed."
-msgstr "La RAM encriptada fa impossible que es pugui llegir la informació que s'emmagatzema a la memòria del dispositiu si es treu i s’accedeix al xip de memòria."
+msgstr "La RAM encriptada fa impossible que es pugui llegir la informació que s'emmagatzema a la memòria del dispositiu si es treu i s'accedeix al xip de memòria."
 
 #. TRANSLATORS: the vendor is no longer supporting the device
 msgid "End of life"
@@ -993,7 +1001,7 @@ msgstr "Surt després d'un petit retard"
 
 #. TRANSLATORS: exit straight away, used for automatic profiling
 msgid "Exit after the engine has loaded"
-msgstr "Sur una vegada s'hagi carregat el motor"
+msgstr "Surt una vegada s'hagi carregat el motor"
 
 #. TRANSLATORS: command description
 msgid "Export a firmware file structure to XML"
@@ -1060,6 +1068,11 @@ msgstr "Ha fallat"
 #. TRANSLATORS: dbx file failed to be applied as an update
 msgid "Failed to apply update"
 msgstr "Ha fallat en aplicar l'actualització"
+
+#. TRANSLATORS: error message for Windows
+#, c-format
+msgid "Failed to connect to Windows service, please ensure it's running."
+msgstr "Ha fallat en connectar al servei de Windows, assegureu-vos que s'està executant."
 
 #. TRANSLATORS: we could not talk to the fwupd daemon
 msgid "Failed to connect to daemon"
@@ -1133,7 +1146,7 @@ msgstr "Signatura del nom del fitxer"
 
 #. TRANSLATORS: full path of the remote.conf file
 msgid "Filename Source"
-msgstr "Nom del fitxer d'origen:"
+msgstr "Nom del fitxer d'origen"
 
 #. TRANSLATORS: user did not include a filename parameter
 msgid "Filename required"
@@ -1230,7 +1243,7 @@ msgstr[1] "Les metadades del microprogramari no s'han actualitzat durant %u dies
 #. as 6 hours or 15 seconds
 #, c-format
 msgid "Firmware metadata last refresh: %s ago. Use --force to refresh again."
-msgstr "Últim refresc de les metadades de microprogramari: fa %s. Empreu «--force» per a refrescar de nou."
+msgstr "Última actualització de les metadades de microprogramari: fa %s. Empreu «--force» per a actualitzar de nou."
 
 #. TRANSLATORS: Title: if firmware updates are available
 msgid "Firmware updates"
@@ -1263,7 +1276,7 @@ msgstr "S'ha trobat"
 
 #. TRANSLATORS: title text, shown as a warning
 msgid "Full Disk Encryption Detected"
-msgstr "S'ha detectat una encriptació de tot el disc"
+msgstr "S'ha detectat un encriptatge de tot el disc"
 
 #. TRANSLATORS: we might ask the user the recovery key when next booting
 #. Windows
@@ -1290,7 +1303,7 @@ msgid "GUID"
 msgstr "GUID"
 
 msgid "Get BIOS settings"
-msgstr "Obtén la configuració del BIOS"
+msgstr "Obtén les opcions de configuració del BIOS"
 
 #. TRANSLATORS: command description
 msgid "Get all device flags supported by fwupd"
@@ -1352,6 +1365,11 @@ msgstr "Alta"
 msgid "Host Security Events"
 msgstr "Esdeveniments de seguretat a l'amfitrió"
 
+#. TRANSLATORS: error message for unsupported feature
+#, c-format
+msgid "Host Security ID (HSI) is not supported"
+msgstr "L'ID de seguretat de l'amfitrió (HSI) no està admès"
+
 #. TRANSLATORS: this is a string like 'HSI:2-U'
 msgid "Host Security ID:"
 msgstr "ID de seguretat de l'amfitrió:"
@@ -1388,7 +1406,7 @@ msgstr "Ignora les comprovacions estrictes de SSL quan es baixin els fitxers"
 
 #. TRANSLATORS: command line option
 msgid "Ignore firmware checksum failures"
-msgstr "Ignora les falles de la suma de comprovació del microprogramari"
+msgstr "Ignora les falles de la suma de verificació del microprogramari"
 
 #. TRANSLATORS: command line option
 msgid "Ignore firmware hardware mismatch failures"
@@ -1416,7 +1434,7 @@ msgstr "Instal·la un fitxer de microprogramari en aquest maquinari."
 
 #. TRANSLATORS: command description
 msgid "Install a specific firmware on a device, all possible devices will also be installed once the CAB matches"
-msgstr "Instal·la un microprogramari específic en un dispositiu, tots els dispositius possibles també s’instal·laran una vegada que coincideixi el CAB"
+msgstr "Instal·la un microprogramari específic en un dispositiu, tots els dispositius possibles també s'instal·laran una vegada que coincideixi el CAB"
 
 msgid "Install old version of signed system firmware"
 msgstr "Instal·la la versió antiga del microprogramari signat per al sistema"
@@ -1481,7 +1499,7 @@ msgid "Intel BootGuard Error Policy"
 msgstr "Política d'error del BootGuard d'Intel"
 
 msgid "Intel BootGuard Error Policy ensures the device does not continue to start if its device software has been tampered with."
-msgstr "La política d’error del BootGuard d'Intel assegura que el dispositiu no continuarà l'inici si s’ha alterat el seu programari de dispositiu."
+msgstr "La política d'error del BootGuard d'Intel assegura que el dispositiu no continuarà l'inici si s'ha alterat el seu programari de dispositiu."
 
 #. TRANSLATORS: Title: BootGuard is a trademark from Intel
 msgid "Intel BootGuard Fuse"
@@ -1504,7 +1522,7 @@ msgstr "Política d'error del BootGuard d'Intel"
 
 #. TRANSLATORS: longer description
 msgid "Intel BootGuard prevents unauthorized device software from operating when the device is started."
-msgstr "El BootGuard d'Intel impedeix que el programari de dispositiu sense autorització funcioni quan s’inicia el dispositiu."
+msgstr "El BootGuard d'Intel impedeix que el programari de dispositiu sense autorització funcioni quan s'inicia el dispositiu."
 
 #. TRANSLATORS: Title: BootGuard is a trademark from Intel,
 #. * verified boot refers to the way the boot process is verified
@@ -1531,7 +1549,7 @@ msgstr "La tecnologia de compliment del flux de control d'Intel detecta i impede
 
 #. TRANSLATORS: Title: MEI = Intel Management Engine
 msgid "Intel Management Engine Manufacturing Mode"
-msgstr "Mode de fabricació del motor de gestió d’Intel"
+msgstr "Mode de fabricació del motor de gestió d'Intel"
 
 #. TRANSLATORS: Title: MEI = Intel Management Engine, and the "override" is
 #. enabled
@@ -1539,11 +1557,11 @@ msgstr "Mode de fabricació del motor de gestió d’Intel"
 #. consumer
 #. * boards
 msgid "Intel Management Engine Override"
-msgstr "Superposa el motor de gestió d’Intel"
+msgstr "Superposa el motor de gestió d'Intel"
 
 #. TRANSLATORS: longer description
 msgid "Intel Management Engine Override disables checks for device software tampering."
-msgstr "El superposar el motor de gestió d’Intel desactiva les comprovacions per a la manipulació de programari del dispositiu."
+msgstr "El fet de superposar el motor de gestió d'Intel desactivarà les comprovacions per a la manipulació de programari del dispositiu."
 
 #. TRANSLATORS: Title: MEI = Intel Management Engine
 msgid "Intel Management Engine Version"
@@ -1633,7 +1651,7 @@ msgstr "Bloqueig del nucli Linux"
 
 #. TRANSLATORS: longer description
 msgid "Linux Kernel Lockdown mode prevents administrator (root) accounts from accessing and changing critical parts of system software."
-msgstr "El mode de bloqueig del nucli Linux evita que els comptes d’administrador (root) accedir i canviar a parts crítiques del programari del sistema."
+msgstr "El mode de bloqueig del nucli Linux evita que els comptes d'administrador (root) accedir i canviar a parts crítiques del programari del sistema."
 
 msgid "Linux Kernel Swap temporarily saves information to disk as you work. If the information is not protected, it could be accessed by someone if they obtained the disk."
 msgstr "L'intercanvi del nucli de Linux desa temporalment informació en el disc mentre treballeu. Si la informació no està protegida, algú podria accedir-hi si obté el disc."
@@ -1643,7 +1661,7 @@ msgid "Linux Kernel Verification"
 msgstr "Verificació del nucli Linux"
 
 msgid "Linux Kernel Verification makes sure that critical system software has not been tampered with. Using device drivers which are not provided with the system can prevent this security feature from working correctly."
-msgstr "La verificació del nucli de Linux s’assegura que el programari crític del sistema no ha estat alterat. L'ús de controladors de dispositiu que no es proporcionen amb el sistema pot evitar que aquesta característica de seguretat funcioni correctament."
+msgstr "La verificació del nucli de Linux s'assegura que el programari crític del sistema no ha estat alterat. L'ús de controladors de dispositiu que no es proporcionen amb el sistema pot evitar que aquesta característica de seguretat funcioni correctament."
 
 #. TRANSLATORS: Title: swap space or swap partition
 msgid "Linux Swap"
@@ -1931,7 +1949,7 @@ msgstr "Percentatge completat"
 
 #. TRANSLATORS: prompt to apply the update
 msgid "Perform operation?"
-msgstr "Realitzo l'operació?"
+msgstr "Voleu realitzar l'operació?"
 
 #. TRANSLATORS: Title: Allows debugging of parts using proprietary hardware
 msgid "Platform Debugging"
@@ -1976,8 +1994,8 @@ msgid "Pre-boot DMA protection is enabled"
 msgstr "La protecció DMA durant la prearrencada està activada"
 
 #. TRANSLATORS: longer description
-msgid "Pre-boot DMA protection prevents devices from being connected to the computer and accessing system memory."
-msgstr "La protecció DMA durant la prearrencada evita que els dispositius estiguin connectats a l’ordinador i que accedeixin a la memòria del sistema."
+msgid "Pre-boot DMA protection prevents devices from accessing system memory after being connected to the computer."
+msgstr "La protecció de DMA en la prearrencada impedeix que els dispositius accedeixin a la memòria del sistema després de connectar-los a l'ordinador."
 
 #. TRANSLATORS: version number of previous firmware
 msgid "Previous version"
@@ -1998,7 +2016,7 @@ msgid "Problems"
 msgstr "Problemes"
 
 msgid "Proceed with upload?"
-msgstr "Continuo amb l'enviament?"
+msgstr "Voleu continuar amb l'enviament?"
 
 #. TRANSLATORS: Title: if fwupd supports HSI on this chip
 msgid "Processor Security Checks"
@@ -2061,7 +2079,7 @@ msgstr "Refresca les metadades des del servidor remot."
 #. * %1 is the device name and %2 is a version string
 #, c-format
 msgid "Reinstall %s to %s?"
-msgstr "Reinstal·lo %s a %s?"
+msgstr "Voleu reinstal·lar %s a %s?"
 
 #. TRANSLATORS: command description
 msgid "Reinstall current firmware on the device"
@@ -2107,6 +2125,10 @@ msgstr "URI de l'informe"
 msgid "Reported to remote server"
 msgstr "Informat al servidor remot"
 
+#. TRANSLATORS: we asked the user to choose an option and they declined
+msgid "Request canceled"
+msgstr "Sol·licitud cancel·lada"
+
 #. TRANSLATORS: the user is using Gentoo/Arch and has screwed something up
 msgid "Required efivarfs filesystem was not found"
 msgstr "No s'ha trobat el sistema de fitxers «efivarfs» requerit"
@@ -2125,11 +2147,11 @@ msgstr "Requereix connexió a Internet"
 
 #. TRANSLATORS: reboot to apply the update
 msgid "Restart now?"
-msgstr "Reinicio ara?"
+msgstr "Voleu reiniciar ara?"
 
 #. TRANSLATORS: configuration changes only take effect on restart
 msgid "Restart the daemon to make the change effective?"
-msgstr "Reinicio el dimoni per a fer efectiu el canvi?"
+msgstr "Voleu reiniciar el dimoni per a fer efectiu el canvi?"
 
 #. TRANSLATORS: restarting the device to pick up new F/W
 msgid "Restarting device…"
@@ -2137,7 +2159,7 @@ msgstr "S'està reiniciant el dispositiu..."
 
 #. TRANSLATORS: command description
 msgid "Retrieve BIOS settings.  If no arguments are passed all settings are returned"
-msgstr "Es recupera la configuració del BIOS. Si no es transmeten arguments, es retornarà tota la configuració"
+msgstr "Es recuperen les opcions de configuració del BIOS. Si no es transmeten arguments, es retornarà tota la configuració"
 
 #. TRANSLATORS: command description
 msgid "Return all the hardware IDs for the machine"
@@ -2145,15 +2167,15 @@ msgstr "Retorna tots els ID del maquinari de la màquina."
 
 #. TRANSLATORS: Title: if firmware enforces rollback protection
 msgid "Rollback protection"
-msgstr "Protecció de versió antiga:"
+msgstr "Protecció de versió antiga"
 
 #. TRANSLATORS: this is shown in the MOTD
 msgid "Run `fwupdmgr get-upgrades` for more information."
-msgstr "Per a més informació executeu «fwupdmgr get-upgrades»."
+msgstr "Per a més informació, executeu «fwupdmgr get-upgrades»."
 
 #. TRANSLATORS: this is shown in the MOTD
 msgid "Run `fwupdmgr sync-bkc` to complete this action."
-msgstr "Executeu `fwupdmgr sync-bkc` per a completar aquesta acció."
+msgstr "Per a completar aquesta acció, executeu «fwupdmgr sync-bkc»."
 
 #. TRANSLATORS: command line option
 msgid "Run the plugin composite cleanup routine when using install-blob"
@@ -2261,14 +2283,14 @@ msgstr "Número de sèrie"
 #. TRANSLATORS: Configured a BIOS setting to a value
 #, c-format
 msgid "Set BIOS setting '%s' using '%s'."
-msgstr "Estableix la configuració «%s» del BIOS a «%s»"
+msgstr "Estableix la configuració «%s» del BIOS a «%s»."
 
 #. TRANSLATORS: command description
 msgid "Set a BIOS setting"
 msgstr "Estableix una configuració del BIOS"
 
 msgid "Set one or more BIOS settings"
-msgstr "Estableix una o més configuracions del BIOS"
+msgstr "Estableix una o més opcions de configuració del BIOS"
 
 #. TRANSLATORS: command line option
 msgid "Set the debugging flag during update"
@@ -2276,7 +2298,7 @@ msgstr "Estableix l'indicador de depuració durant l'actualització"
 
 #. TRANSLATORS: command description
 msgid "Sets one or more BIOS settings"
-msgstr "Estableix una o més configuracions del BIOS"
+msgstr "Estableix una o més opcions de configuració del BIOS"
 
 #. TRANSLATORS: firmware approved by the admin
 msgid "Sets the list of approved firmware"
@@ -2344,7 +2366,7 @@ msgstr "Mostra la informació sobre l'estat de l'actualització del microprogram
 
 #. TRANSLATORS: shutdown to apply the update
 msgid "Shutdown now?"
-msgstr "Aturar-lo ara?"
+msgstr "Voleu aturar-lo ara?"
 
 #. TRANSLATORS: command description
 msgid "Sign a firmware with a new key"
@@ -2383,6 +2405,10 @@ msgstr "Origen"
 
 msgid "Specify Vendor/Product ID(s) of DFU device"
 msgstr "Especifiqueu el proveïdor/ID del producte del dispositiu DFU"
+
+#. TRANSLATORS: command line option
+msgid "Specify a filename to use to save backend events"
+msgstr "Especifiqueu un nom de fitxer que s'usarà per a desar els esdeveniments del dorsal"
 
 #. TRANSLATORS: command line option
 msgid "Specify the dbx database file"
@@ -2497,7 +2523,7 @@ msgstr "Suspensió a la RAM"
 #. * %1 is the old branch name, %2 is the new branch name
 #, c-format
 msgid "Switch branch from %s to %s?"
-msgstr "Canvio la branca des de %s a %s?"
+msgstr "Voleu canviar la branca des de %s a %s?"
 
 #. TRANSLATORS: command description
 msgid "Switch the firmware branch on the device"
@@ -2509,7 +2535,7 @@ msgstr "Sincronitza les versions de microprogramari a la millor configuració co
 
 #. TRANSLATORS: as in laptop battery power
 msgid "System power is too low to perform the update"
-msgstr "L'energia del sistema és massa baixa per a realitzar l’actualització"
+msgstr "L'energia del sistema és massa baixa per a realitzar l'actualització"
 
 #. TRANSLATORS: as in laptop battery power
 #, c-format
@@ -2526,7 +2552,7 @@ msgstr "TEXT"
 
 #. TRANSLATORS: longer description
 msgid "TPM (Trusted Platform Module) is a computer chip that detects when hardware components have been tampered with."
-msgstr "El TPM (mòdul de plataforma de confiança) és un xip d’ordinador que detecta quan s’han manipulat els components de maquinari."
+msgstr "El TPM (mòdul de plataforma de confiança) és un xip d'ordinador que detecta quan s'han manipulat els components de maquinari."
 
 #. TRANSLATORS: Title: the PCR is rebuilt from the TPM event log
 msgid "TPM PCR0 reconstruction"
@@ -2647,7 +2673,7 @@ msgstr "Aquest microprogramari és proporcionat pels membres de la comunitat LVF
 
 #. TRANSLATORS: unsupported build of the package
 msgid "This package has not been validated, it may not work properly."
-msgstr "Aquest paquet no ha estat validat, pel que podria no funcionar adecuadament."
+msgstr "Aquest paquet no ha estat validat, i per això podria no funcionar adequadament."
 
 #. TRANSLATORS: we're poking around as a power user
 msgid "This program may only work correctly as root"
@@ -2784,7 +2810,7 @@ msgstr "Desbloqueja la instal·lació d'un microprogramari específic."
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Unencrypted"
-msgstr "Desencriptada"
+msgstr "No està encriptada"
 
 #. TRANSLATORS: current daemon status is unknown
 #. TRANSLATORS: we don't know the license of the update
@@ -2855,7 +2881,7 @@ msgstr "Que falli en actualitzar és un problema conegut, visiteu aquest URL per
 
 #. TRANSLATORS: ask the user if we can update the metadata
 msgid "Update now?"
-msgstr "Actualitzo ara?"
+msgstr "Voleu actualitzar ara?"
 
 #. TRANSLATORS: Update can only be done from offline mode
 msgid "Update requires a reboot"
@@ -2874,7 +2900,7 @@ msgstr "Actualitza les metadades emmagatzemades amb el contingut actual."
 
 #. TRANSLATORS: command description
 msgid "Updates all specified devices to latest firmware version, or all devices if unspecified"
-msgstr "Actualitza tots els dispositius especificats a la versió més recent del microprogramari o tots els dispositius sense especificar "
+msgstr "Actualitza tots els dispositius especificats a la versió més recent del microprogramari o tots els dispositius sense especificar"
 
 msgid "Updating"
 msgstr "S'està actualitzant"
@@ -2895,11 +2921,11 @@ msgstr "S'està actualitzant %s…"
 #. * %1 is the device name and %2 and %3 are version strings
 #, c-format
 msgid "Upgrade %s from %s to %s?"
-msgstr "Actualitzo %s des de %s a %s?"
+msgstr "Voleu actualitzar %s des de %s a %s?"
 
 #. TRANSLATORS: ask the user to upload
 msgid "Upload report now?"
-msgstr "Envio l'informe ara?"
+msgstr "Voleu enviar l'informe ara?"
 
 #. TRANSLATORS: explain why we want to upload
 msgid "Uploading firmware reports helps hardware vendors to quickly identify failing and successful updates on real devices."
@@ -2954,7 +2980,7 @@ msgstr "S'està verificant..."
 
 #. TRANSLATORS: the detected version number of the dbx
 msgid "Version"
-msgstr "Versió:"
+msgstr "Versió"
 
 #. TRANSLATORS: this is a prefix on the console
 msgid "WARNING:"
@@ -2986,7 +3012,7 @@ msgstr "S'està escrivint..."
 
 #. TRANSLATORS: the user has to manually recover; we can't do it
 msgid "You should ensure you are comfortable restoring the setting from the system firmware setup, as this change may cause the system to not boot into Linux or cause other system instability."
-msgstr "Heu d’assegurar-vos que esteu còmode restablint la configuració des de la configuració del microprogramari del sistema, ja que aquest canvi pot fer que el sistema no arrenqui a Linux o que causi alguna altra inestabilitat en el sistema."
+msgstr "Heu d'assegurar-vos que esteu còmode restablint la configuració des de la configuració del microprogramari del sistema, ja que aquest canvi pot fer que el sistema no arrenqui a Linux o que causi alguna altra inestabilitat en el sistema."
 
 #. TRANSLATORS: show the user a warning
 msgid "Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices."

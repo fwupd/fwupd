@@ -33,6 +33,36 @@
     <binary>fwupdtool</binary>
   </provides>
   <releases>
+    <release version="1.8.6" date="2022-10-07">
+      <description>
+        <p>
+          This release adds the following features:
+        </p>
+        <ul>
+          <li>Reduce the installed package size by more than 30%</li>
+          <li>Translate more interactive messages</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Allow disabling a DFU device when required</li>
+          <li>Fix a regression when getting the i2c bus number</li>
+          <li>Fix a small memory leak when reloading the parade-lspcon device</li>
+          <li>Fix installing the dbx update when using fwupdtool</li>
+          <li>Improve writing CoSWID and uSWID metadata</li>
+          <li>Only include the last 5 releases in the installed metainfo file</li>
+          <li>Only request the BOS descriptor for newer libgusb versions</li>
+          <li>Prevent high memory usage when loading corrupt SREC files</li>
+          <li>Try harder when trying to find the default ESP volume</li>
+          <li>Use a higher compression preset for the UEFI splash images</li>
+        </ul>
+        <p>This release adds support for the following hardware:</p>
+        <ul>
+          <li>Focaltech touchpads</li>
+          <li>FPC fingerprint readers</li>
+          <li>Supermicro machines using Redfish</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.8.5" date="2022-09-22">
       <description>
         <p>

@@ -3,7 +3,7 @@
 # This file is distributed under the same license as the fwupd package.
 #
 # Translators:
-# Jiri Grönroos <jiri.gronroos@iki.fi>, 2017-2018,2020-2021
+# Jiri Grönroos <jiri.gronroos@iki.fi>, 2017-2018,2020-2022
 # Kimmo Kujansuu <mrkujansuu@gmail.com>, 2019-2022
 # Timo Jyrinki <timo.jyrinki@gmail.com>, 2021
 # Ville-Pekka Vainio <vpvainio@iki.fi>, 2021
@@ -161,6 +161,12 @@ msgstr "%s muutettu: %s → %s"
 #, c-format
 msgid "%s disappeared: %s"
 msgstr "%s kadonnut: %s"
+
+#. TRANSLATORS: the device has a reason it can't update, e.g. laptop lid
+#. closed
+#, c-format
+msgid "%s is not currently updatable"
+msgstr "%s ei ole tällä hetkellä päivitettävissä"
 
 #. TRANSLATORS: Title: %s is ME kind, e.g. CSME/TXT
 #, c-format
@@ -377,12 +383,20 @@ msgid "Authentication is required to downgrade the firmware on this machine"
 msgstr "Tämän järjestelmän laiteohjelmiston version alentaminen vaatii tunnistautumisen"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to modify BIOS settings"
+msgstr "BIOS-asetusten muuttaminen vaatii tunnistautumisen"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify a configured remote used for firmware updates"
 msgstr "Laiteohjelmistojen päivityslähteen asetusten muokkaaminen vaatii tunnistautumisen"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify daemon configuration"
 msgstr "Taustaprosessin asetusten muokkaaminen vaatii tunnistautumisen"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to read BIOS settings"
+msgstr "BIOS-asetusten lukeminen vaatii tunnistautumisen"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to set the list of approved firmware"
@@ -419,6 +433,10 @@ msgstr "Automaattinen raportointi"
 #. TRANSLATORS: can we JFDI?
 msgid "Automatically upload every time?"
 msgstr "Lähetetäänkö automaattisesti joka kerta?"
+
+#. TRANSLATORS: description of a BIOS setting
+msgid "BIOS updates delivered via LVFS or Windows Update"
+msgstr "BIOS-päivitykset toimitetaan LVFS:n tai Windows Updaten kautta"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "BUILDER-XML FILENAME-DST"
@@ -536,6 +554,10 @@ msgstr "Kriittinen"
 msgid "Cryptographic hash verification is available"
 msgstr "Kryptografisen tiivisteen tarkistus on käytettävissä"
 
+#. TRANSLATORS: current value of a BIOS setting
+msgid "Current Value"
+msgstr "Nykyinen arvo"
+
 #. TRANSLATORS: version number of current firmware
 msgid "Current version"
 msgstr "Nykyinen versio"
@@ -581,9 +603,17 @@ msgstr "Laitetunnus"
 msgid "Device added:"
 msgstr "Laite lisätty:"
 
+#. TRANSLATORS: for example the batteries *inside* the Bluetooth mouse
+msgid "Device battery power is too low"
+msgstr "Laitteen akun lataus on liian vähissä"
+
 #. TRANSLATORS: Device supports a safety mechanism for flashing
 msgid "Device can recover flash failures"
 msgstr "Laite voi palautua asennuksen virheistä"
+
+#. TRANSLATORS: lid means "laptop top cover"
+msgid "Device cannot be used while the lid is closed"
+msgstr "Laitetta ei voi käyttää kun kansi on suljettu"
 
 #. TRANSLATORS: this is when a device has been updated
 msgid "Device changed:"
@@ -611,9 +641,17 @@ msgstr "Laite ei ole tavoitettavissa"
 msgid "Device is usable for the duration of the update"
 msgstr "Laitetta voidaan käyttää päivityksen aikana"
 
+#. TRANSLATORS: usually this is when we're waiting for a reboot
+msgid "Device is waiting for the update to be applied"
+msgstr "Laite odottaa päivityksen toteuttamista"
+
 #. TRANSLATORS: this is when a device is hotplugged
 msgid "Device removed:"
 msgstr "Laite poistettu:"
+
+#. TRANSLATORS: as in, wired mains power for a laptop
+msgid "Device requires AC power to be connected"
+msgstr "Laite vaatii verkkovirran olevan kytketty"
 
 #. TRANSLATORS: Device supports a safety mechanism for flashing
 msgid "Device stages updates"
@@ -786,6 +824,9 @@ msgstr "Kesto"
 msgid "ESP specified was not valid"
 msgstr "Annettu ESP-polku on virheellinen"
 
+msgid "Enable"
+msgstr "Käytä"
+
 #. TRANSLATORS: command line option
 msgid "Enable firmware update support on supported systems"
 msgstr "Ota laiteohjelmiston päivitystuki käyttöön tuetuissa järjestelmissä"
@@ -833,6 +874,10 @@ msgstr "Salattu RAM-muisti"
 #. TRANSLATORS: the vendor is no longer supporting the device
 msgid "End of life"
 msgstr "Käyttöaika loppu"
+
+#. TRANSLATORS: The BIOS setting can only be changed to fixed values
+msgid "Enumeration"
+msgstr "Enumeraatio"
 
 #. TRANSLATORS: command description
 msgid "Erase all firmware update history"
@@ -970,6 +1015,10 @@ msgstr "Splash-tilan asettaminen epäonnistui"
 msgid "Failed to validate ESP contents"
 msgstr "ESP:n sisällön vahvistaminen epäonnistui"
 
+#. TRANSLATORS: item is FALSE
+msgid "False"
+msgstr "Epätosi"
+
 #. TRANSLATORS: filename of the local file
 msgid "Filename"
 msgstr "Tiedostonimi"
@@ -1001,6 +1050,10 @@ msgstr "Laiteohjelmistopäivityksen D-Bus-palvelu"
 #. TRANSLATORS: program name
 msgid "Firmware Update Daemon"
 msgstr "Firmware-päivityksen taustaprosessi"
+
+#. TRANSLATORS: Title: if firmware updates are available
+msgid "Firmware Updates"
+msgstr "Laiteohjelmistopäivitykset"
 
 #. TRANSLATORS: program name
 msgid "Firmware Utility"
@@ -1081,6 +1134,9 @@ msgctxt "A single GUID"
 msgid "GUID"
 msgstr "GUID"
 
+msgid "Get BIOS settings"
+msgstr "Hae BIOS-asetukset"
+
 #. TRANSLATORS: command description
 msgid "Get all device flags supported by fwupd"
 msgstr "Hae kaikki fwupd:n tukemat laiteliput"
@@ -1140,6 +1196,11 @@ msgstr "Korkea"
 #. TRANSLATORS: title for host security events
 msgid "Host Security Events"
 msgstr "Koneen suojaustapahtumia"
+
+#. TRANSLATORS: error message for unsupported feature
+#, c-format
+msgid "Host Security ID (HSI) is not supported"
+msgstr "Host Security ID (HSI) ei ole tuettu"
 
 #. TRANSLATORS: this is a string like 'HSI:2-U'
 msgid "Host Security ID:"
@@ -1229,6 +1290,14 @@ msgstr "Asennetaan laiteohjelmstopäivitystä…"
 msgid "Installing on %s…"
 msgstr "Asentaa laitteelle %s…"
 
+#. TRANSLATORS: if it breaks, you get to keep both pieces
+msgid "Installing this update may also void any device warranty."
+msgstr "Tämän päivityksen asentaminen saattaa kumota laitteen takuun."
+
+#. TRANSLATORS: The BIOS setting only accepts integers in a fixed range
+msgid "Integer"
+msgstr "Kokonaisluku"
+
 #. TRANSLATORS: Title: BootGuard is a trademark from Intel
 msgid "Intel BootGuard"
 msgstr "Intel BootGuard"
@@ -1278,6 +1347,10 @@ msgstr "Sisäinen laite"
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Invalid"
 msgstr "Virheellinen"
+
+#. TRANSLATORS: error message
+msgid "Invalid arguments"
+msgstr "Virheelliset argumentit"
 
 #. TRANSLATORS: version is older
 msgid "Is downgrade"
@@ -1401,6 +1474,14 @@ msgstr "MEI-versio"
 msgid "Manually enable specific plugins"
 msgstr "Ota manuaalisesti tietyt laajennukset käyttöön"
 
+#. TRANSLATORS: Longest valid string for BIOS setting
+msgid "Maximum length"
+msgstr "Enimmäispituus"
+
+#. TRANSLATORS: Highest valid integer for BIOS setting
+msgid "Maximum value"
+msgstr "Enimmäisarvo"
+
 #. TRANSLATORS: the release urgency
 msgid "Medium"
 msgstr "Keskitaso"
@@ -1420,6 +1501,14 @@ msgstr "Metatiedot voidaan hankkia Linux Vendor Firmware -palvelusta."
 #. TRANSLATORS: smallest version number installable on device
 msgid "Minimum Version"
 msgstr "Vähimmäisversio"
+
+#. TRANSLATORS: Shortest valid string for BIOS setting
+msgid "Minimum length"
+msgstr "Vähimmäispituus"
+
+#. TRANSLATORS: Lowest valid integer for BIOS setting
+msgid "Minimum value"
+msgstr "Vähimmäisarvo"
 
 #. TRANSLATORS: error message
 #, c-format
@@ -1501,6 +1590,14 @@ msgstr "Mitään lähteitä ei ole tällä hetkellä käytössä, joten metatiet
 #. TRANSLATORS: no repositories to download from
 msgid "No remotes available"
 msgstr "Lähteitä ei saatavilla"
+
+#. TRANSLATORS: this is an error string
+msgid "No updatable devices"
+msgstr "Ei päivitettäviä laitteita"
+
+#. TRANSLATORS: this is an error string
+msgid "No updates available"
+msgstr "Päivityksiä ei ole saatavilla"
 
 msgid "No updates available for remaining devices"
 msgstr "Muille laitteille ei ole saatavilla päivityksiä"
@@ -1603,6 +1700,10 @@ msgstr "Anna numero 0 -%u"
 msgid "Plugin dependencies missing"
 msgstr "Laajennuksen riippuvuudet puuttuvat"
 
+#. TRANSLATORS: Possible values for a bios setting
+msgid "Possible Values"
+msgstr "Mahdolliset arvot"
+
 #. TRANSLATORS: Title: DMA as in https://en.wikipedia.org/wiki/DMA_attack
 msgid "Pre-boot DMA protection"
 msgstr "Käynnistystä edeltävä DMA-suojaus"
@@ -1632,6 +1733,10 @@ msgstr "Prioriteetti"
 msgid "Proceed with upload?"
 msgstr "Jatketaanko lähettämistä?"
 
+#. TRANSLATORS: Title: if fwupd supports HSI on this chip
+msgid "Processor Security Checks"
+msgstr "Suorittimen turvallisuustarkastukset"
+
 #. TRANSLATORS: a non-free software license
 msgid "Proprietary"
 msgstr "Suljettu"
@@ -1648,9 +1753,17 @@ msgstr "LÄHDETUNNUS"
 msgid "REMOTE-ID KEY VALUE"
 msgstr "LÄHDETUNNUS AVAIN ARVO"
 
+#. TRANSLATORS: BIOS setting is read only
+msgid "Read Only"
+msgstr "Vain luku"
+
 #. TRANSLATORS: command description
 msgid "Read a firmware blob from a device"
 msgstr "Lue laiteohjelmiston \"blob\" laitteesta"
+
+#. TRANSLATORS: command description
+msgid "Read a firmware from a device"
+msgstr "Lue laiteohjelmisto laitteelta"
 
 #. TRANSLATORS: command description
 msgid "Read firmware from device into a file"
@@ -1722,6 +1835,10 @@ msgstr "Ilmoitus-URI"
 #. TRANSLATORS: Has been reported to a metadata server
 msgid "Reported to remote server"
 msgstr "Raportoitu etäpalvelimelle"
+
+#. TRANSLATORS: we asked the user to choose an option and they declined
+msgid "Request canceled"
+msgstr "Pyyntö peruttu"
 
 #. TRANSLATORS: the user is using Gentoo/Arch and has screwed something up
 msgid "Required efivarfs filesystem was not found"
@@ -1836,13 +1953,28 @@ msgstr "Valittu asema"
 msgid "Serial Number"
 msgstr "Sarjanumero"
 
+#. TRANSLATORS: command description
+msgid "Set a BIOS setting"
+msgstr "Aseta BIOS-asetus"
+
+msgid "Set one or more BIOS settings"
+msgstr "Aseta yksi tai useampi BIOS-asetus"
+
 #. TRANSLATORS: command line option
 msgid "Set the debugging flag during update"
 msgstr "Aseta virheenkorjauksen lippu päivityksen aikana"
 
+#. TRANSLATORS: command description
+msgid "Sets one or more BIOS settings"
+msgstr "Asettaa yhden tai useamman BIOS-asetuksen"
+
 #. TRANSLATORS: firmware approved by the admin
 msgid "Sets the list of approved firmware"
 msgstr "Tallentaa hyväksyttyjen laiteohjelmistojen luettelon"
+
+#. TRANSLATORS: description of a BIOS setting
+msgid "Settings will apply after system reboots"
+msgstr "Asetukset tulevat voimaan, kun järjestelmä on käynnistetty uudelleen"
 
 #. TRANSLATORS: command description
 msgid "Share firmware history with the developers"
@@ -1941,6 +2073,10 @@ msgstr "Määritä dbx-tietokantatiedosto"
 msgid "Specify the number of bytes per USB transfer"
 msgstr "Määritä tavujen määrä USB-siirtoa kohti"
 
+#. TRANSLATORS: The BIOS setting accepts strings
+msgid "String"
+msgstr "Merkkijono"
+
 #. TRANSLATORS: the update state of the specific device
 msgid "Success"
 msgstr "Onnistui"
@@ -2029,6 +2165,10 @@ msgstr "Vaihdatko haaran %s haaraksi %s?"
 msgid "Switch the firmware branch on the device"
 msgstr "Vaihda laitteen laiteohjelmiston haaraa"
 
+#. TRANSLATORS: as in laptop battery power
+msgid "System power is too low to perform the update"
+msgstr "Järjestelmän akun varaus ei riitä päivityksen toteuttamiseen"
+
 #. TRANSLATORS: Must be plugged in to an outlet
 msgid "System requires external power source"
 msgstr "Järjestelmä vaatii ulkoisen virtalähteen"
@@ -2092,6 +2232,10 @@ msgstr "Laiteohjelmiston on toimittanut %s eikä laitteen toimittaja %s."
 msgid "The system clock has not been set correctly and downloading files may fail."
 msgstr "Järjestelmän kelloa ei ole asetettu oikein ja tiedostojen lataaminen saattaa epäonnistua."
 
+#. TRANSLATORS: naughty vendor
+msgid "The vendor did not supply any release notes."
+msgstr "Valmistaja ei toimittanut julkaisutietoja."
+
 #. TRANSLATORS: nothing to show
 msgid "There are no blocked firmware files"
 msgstr "Estettyjä laiteohjelmistotiedostoja ei ole"
@@ -2100,6 +2244,10 @@ msgstr "Estettyjä laiteohjelmistotiedostoja ei ole"
 #. * the domain administrator
 msgid "There is no approved firmware."
 msgstr "Hyväksyttyä laiteohjelmistoa ei ole."
+
+#. TRANSLATORS: the vendor did not upload this
+msgid "This firmware is provided by LVFS community members and is not provided (or supported) by the original hardware vendor."
+msgstr "Tämä laiteohjelmisto on tarjolla LVFS-yhteisöjäsenten toimesta, sitä ei ole tarjottu (tai tuettu) alkuperäisen laitevalmistajan toimesta."
 
 #. TRANSLATORS: unsupported build of the package
 msgid "This package has not been validated, it may not work properly."
@@ -2111,6 +2259,10 @@ msgstr "Tämä ohjelma toimii oikein vain root-käyttäjän oikeuksin"
 
 msgid "This remote contains firmware which is not embargoed, but is still being tested by the hardware vendor. You should ensure you have a way to manually downgrade the firmware if the firmware update fails."
 msgstr "Tämä lähde sisältää laiteohjelmiston, joka ei ole vientikiellossa, mutta jota laitteistotoimittaja testaa edelleen. Varmista, että voit päivittää laiteohjelmiston takaisin vanhempaan versioon manuaalisesti, jos päivitys epäonnistuu."
+
+#. TRANSLATORS: error message
+msgid "This system doesn't support firmware settings"
+msgstr "Tämä järjestelmä ei tue laiteohjelmiston asetuksia"
 
 #. TRANSLATORS: this is instructions on how to improve the HSI suffix
 msgid "This system has HSI runtime issues."
@@ -2147,6 +2299,10 @@ msgstr "Tämä työkalu lukee ja jäsentää TPM-tapahtumalokin järjestelmän l
 #. TRANSLATORS: the update state of the specific device
 msgid "Transient failure"
 msgstr "Ohimenevä häiriö"
+
+#. TRANSLATORS: item is TRUE
+msgid "True"
+msgstr "Tosi"
 
 #. TRANSLATORS: We verified the meatdata against the server
 msgid "Trusted metadata"

@@ -597,6 +597,10 @@ msgstr "Wybór wydania:"
 msgid "Choose a volume:"
 msgstr "Proszę wybrać wolumin:"
 
+#. TRANSLATORS: get interactive prompt
+msgid "Choose the ESP:"
+msgstr "Wybór ESP:"
+
 #. TRANSLATORS: command description
 msgid "Clears the results from the last update"
 msgstr "Usuwa wyniki z ostatniej aktualizacji"
@@ -612,6 +616,10 @@ msgstr "Wspierane przez społeczność"
 #. TRANSLATORS: title prefix for the BIOS settings dialog
 msgid "Configuration Change Suggested"
 msgstr "Proponowana zmiana konfiguracji"
+
+#. TRANSLATORS: no peeking
+msgid "Configuration is only readable by the system administrator"
+msgstr "Tylko administrator komputera może odczytywać konfigurację"
 
 #. TRANSLATORS: command description
 msgid "Convert a firmware file"
@@ -1063,6 +1071,11 @@ msgstr "Nie powiodło się"
 msgid "Failed to apply update"
 msgstr "Zastosowanie aktualizacji się nie powiodło"
 
+#. TRANSLATORS: error message for Windows
+#, c-format
+msgid "Failed to connect to Windows service, please ensure it's running."
+msgstr "Połączenie z usługą systemu Windows się nie powiodło, proszę się upewnić, że ona działa."
+
 #. TRANSLATORS: we could not talk to the fwupd daemon
 msgid "Failed to connect to daemon"
 msgstr "Połączenie z usługą się nie powiodło"
@@ -1338,6 +1351,11 @@ msgstr "Wysoka"
 #. TRANSLATORS: title for host security events
 msgid "Host Security Events"
 msgstr "Zdarzenia zabezpieczeń komputera"
+
+#. TRANSLATORS: error message for unsupported feature
+#, c-format
+msgid "Host Security ID (HSI) is not supported"
+msgstr "Identyfikator zabezpieczeń komputera (HSI) jest nieobsługiwany"
 
 #. TRANSLATORS: this is a string like 'HSI:2-U'
 msgid "Host Security ID:"
@@ -2051,6 +2069,10 @@ msgstr "Adres URI zgłoszenia"
 msgid "Reported to remote server"
 msgstr "Zgłoszone do zdalnego serwera"
 
+#. TRANSLATORS: we asked the user to choose an option and they declined
+msgid "Request canceled"
+msgstr "Anulowano żądanie"
+
 #. TRANSLATORS: the user is using Gentoo/Arch and has screwed something up
 msgid "Required efivarfs filesystem was not found"
 msgstr "Nie odnaleziono wymaganego systemu plików „efivarfs”"
@@ -2327,6 +2349,10 @@ msgstr "Źródło"
 
 msgid "Specify Vendor/Product ID(s) of DFU device"
 msgstr "Podaje identyfikatory dostawcy/produktu urządzenia DFU"
+
+#. TRANSLATORS: command line option
+msgid "Specify a filename to use to save backend events"
+msgstr "Podaje nazwę pliku używaną do zapisywania zdarzeń mechanizmu"
 
 #. TRANSLATORS: command line option
 msgid "Specify the dbx database file"

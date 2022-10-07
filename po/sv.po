@@ -589,6 +589,10 @@ msgstr "Välj en utgåva:"
 msgid "Choose a volume:"
 msgstr "Välj en volym:"
 
+#. TRANSLATORS: get interactive prompt
+msgid "Choose the ESP:"
+msgstr "Välj ESP:"
+
 #. TRANSLATORS: command description
 msgid "Clears the results from the last update"
 msgstr "Rensar resultaten från senaste uppdateringen"
@@ -604,6 +608,10 @@ msgstr "Stöds av gemenskapen"
 #. TRANSLATORS: title prefix for the BIOS settings dialog
 msgid "Configuration Change Suggested"
 msgstr "Föreslagen ändring av konfiguration"
+
+#. TRANSLATORS: no peeking
+msgid "Configuration is only readable by the system administrator"
+msgstr "Konfigurationen är endast läsbar av systemadministratören"
 
 #. TRANSLATORS: command description
 msgid "Convert a firmware file"
@@ -1066,6 +1074,11 @@ msgstr "Misslyckades"
 msgid "Failed to apply update"
 msgstr "Misslyckades med att tillämpa uppdatering"
 
+#. TRANSLATORS: error message for Windows
+#, c-format
+msgid "Failed to connect to Windows service, please ensure it's running."
+msgstr "Misslyckades med att ansluta till Windows-tjänst, säkerställ att den körs."
+
 #. TRANSLATORS: we could not talk to the fwupd daemon
 msgid "Failed to connect to daemon"
 msgstr "Misslyckades med att ansluta till demon"
@@ -1356,6 +1369,11 @@ msgstr "Hög"
 #. TRANSLATORS: title for host security events
 msgid "Host Security Events"
 msgstr "Säkerhetshändelser för värd"
+
+#. TRANSLATORS: error message for unsupported feature
+#, c-format
+msgid "Host Security ID (HSI) is not supported"
+msgstr "Värdsäkerhets-ID (HSI) stöds inte"
 
 #. TRANSLATORS: this is a string like 'HSI:2-U'
 msgid "Host Security ID:"
@@ -1981,8 +1999,8 @@ msgid "Pre-boot DMA protection is enabled"
 msgstr "DMA-skydd före uppstart är aktiverat"
 
 #. TRANSLATORS: longer description
-msgid "Pre-boot DMA protection prevents devices from being connected to the computer and accessing system memory."
-msgstr "DMA-skydd före uppstart förhindrar enheter från att anslutas till datorn och att komma åt systemminne."
+msgid "Pre-boot DMA protection prevents devices from accessing system memory after being connected to the computer."
+msgstr "DMA-skydd före uppstart förhindrar enheter från att komma åt systemminne efter att de anslutits till datorn."
 
 #. TRANSLATORS: version number of previous firmware
 msgid "Previous version"
@@ -2111,6 +2129,10 @@ msgstr "Rapport-URI"
 #. TRANSLATORS: Has been reported to a metadata server
 msgid "Reported to remote server"
 msgstr "Rapporterat till fjärrserver"
+
+#. TRANSLATORS: we asked the user to choose an option and they declined
+msgid "Request canceled"
+msgstr "Begäran avbruten"
 
 #. TRANSLATORS: the user is using Gentoo/Arch and has screwed something up
 msgid "Required efivarfs filesystem was not found"
@@ -2388,6 +2410,10 @@ msgstr "Källa"
 
 msgid "Specify Vendor/Product ID(s) of DFU device"
 msgstr "Ange Tillverkar-/Produkt-ID för DFU-enhet"
+
+#. TRANSLATORS: command line option
+msgid "Specify a filename to use to save backend events"
+msgstr "Ange ett filnamn att använda för att spara bakändeshändelser"
 
 #. TRANSLATORS: command line option
 msgid "Specify the dbx database file"
