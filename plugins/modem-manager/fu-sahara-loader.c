@@ -214,6 +214,7 @@ fu_sahara_loader_qdl_is_open(FuSaharaLoader *self)
 GByteArray *
 fu_sahara_loader_qdl_read(FuSaharaLoader *self, GError **error)
 {
+#ifdef HAVE_GUSB
 	gsize actual_len = 0;
 	g_autoptr(GByteArray) buf = g_byte_array_sized_new(SAHARA_RAW_BUFFER_SIZE);
 	fu_byte_array_set_size(buf, SAHARA_RAW_BUFFER_SIZE, 0x00);
@@ -236,11 +237,16 @@ fu_sahara_loader_qdl_read(FuSaharaLoader *self, GError **error)
 		g_debug("received %" G_GSIZE_FORMAT " bytes", actual_len);
 
 	return g_steal_pointer(&buf);
+#else
+	g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED, "GUsb not supported");
+	return NULL;
+#endif
 }
 
 gboolean
 fu_sahara_loader_qdl_write(FuSaharaLoader *self, const guint8 *data, gsize sz, GError **error)
 {
+#ifdef HAVE_GUSB
 	gsize actual_len = 0;
 	g_autoptr(GPtrArray) chunks = NULL;
 	g_autoptr(GByteArray) bytes = NULL;
@@ -288,6 +294,10 @@ fu_sahara_loader_qdl_write(FuSaharaLoader *self, const guint8 *data, gsize sz, G
 	}
 
 	return TRUE;
+#else
+	g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED, "GUsb not supported");
+	return FALSE;
+#endif
 }
 
 gboolean
