@@ -258,13 +258,13 @@ fu_uswid_firmware_write(FuFirmware *firmware, GError **error)
 	g_byte_array_append(buf, USWID_HEADER_MAGIC, sizeof(USWID_HEADER_MAGIC));
 	fu_byte_array_append_uint8(buf, priv->hdrver);
 	fu_byte_array_append_uint16(buf, fu_uswid_firmware_calculate_hdrsz(self), G_LITTLE_ENDIAN);
+	fu_byte_array_append_uint32(buf, payload->len, G_LITTLE_ENDIAN);
 	if (priv->hdrver >= 2) {
 		guint8 flags = 0;
 		if (priv->compressed)
 			flags |= USWID_HEADER_FLAG_COMPRESSED;
 		fu_byte_array_append_uint8(buf, flags);
 	}
-	fu_byte_array_append_uint32(buf, payload->len, G_LITTLE_ENDIAN);
 	g_byte_array_append(buf, payload->data, payload->len);
 
 	/* success */
