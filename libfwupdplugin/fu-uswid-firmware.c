@@ -243,6 +243,7 @@ fu_uswid_firmware_write(FuFirmware *firmware, GError **error)
 	FuUswidFirmwarePrivate *priv = GET_PRIVATE(self);
 	g_autoptr(GByteArray) buf = g_byte_array_new();
 	g_autoptr(GByteArray) payload = g_byte_array_new();
+	g_autoptr(GBytes) payload_blob = NULL;
 	g_autoptr(GPtrArray) images = fu_firmware_get_images(firmware);
 
 	/* generate early so we know the size */
@@ -254,18 +255,34 @@ fu_uswid_firmware_write(FuFirmware *firmware, GError **error)
 		fu_byte_array_append_bytes(payload, fw);
 	}
 
+	/* zlibify */
+	if (priv->compressed) {
+		g_autoptr(GConverter) conv = NULL;
+		g_autoptr(GInputStream) istream1 = NULL;
+		g_autoptr(GInputStream) istream2 = NULL;
+
+		conv = G_CONVERTER(g_zlib_compressor_new(G_ZLIB_COMPRESSOR_FORMAT_ZLIB, -1));
+		istream1 = g_memory_input_stream_new_from_data(payload->data, payload->len, NULL);
+		istream2 = g_converter_input_stream_new(istream1, conv);
+		payload_blob = fu_bytes_get_contents_stream(istream2, G_MAXSIZE, error);
+		if (payload_blob == NULL)
+			return NULL;
+	} else {
+		payload_blob = g_byte_array_free_to_bytes(g_steal_pointer(&payload));
+	}
+
 	/* header then CBOR blob */
 	g_byte_array_append(buf, USWID_HEADER_MAGIC, sizeof(USWID_HEADER_MAGIC));
 	fu_byte_array_append_uint8(buf, priv->hdrver);
 	fu_byte_array_append_uint16(buf, fu_uswid_firmware_calculate_hdrsz(self), G_LITTLE_ENDIAN);
-	fu_byte_array_append_uint32(buf, payload->len, G_LITTLE_ENDIAN);
+	fu_byte_array_append_uint32(buf, g_bytes_get_size(payload_blob), G_LITTLE_ENDIAN);
 	if (priv->hdrver >= 2) {
 		guint8 flags = 0;
 		if (priv->compressed)
 			flags |= USWID_HEADER_FLAG_COMPRESSED;
 		fu_byte_array_append_uint8(buf, flags);
 	}
-	g_byte_array_append(buf, payload->data, payload->len);
+	fu_byte_array_append_bytes(buf, payload_blob);
 
 	/* success */
 	return g_byte_array_free_to_bytes(g_steal_pointer(&buf));
