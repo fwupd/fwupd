@@ -887,6 +887,7 @@ fu_thunderbolt_gudev_uevent_cb(GUdevClient *gudev_client,
 	if (g_strcmp0(action, "add") == 0) {
 		g_autoptr(FuUdevDevice) device = NULL;
 		g_autoptr(GError) error_local = NULL;
+		g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 
 		device = fu_udev_device_new(tt->ctx, udev_device);
 		if (!fu_device_probe(FU_DEVICE(device), &error_local)) {
@@ -895,6 +896,7 @@ fu_thunderbolt_gudev_uevent_cb(GUdevClient *gudev_client,
 		}
 		if (!fu_plugin_runner_backend_device_added(tt->plugin,
 							   FU_DEVICE(device),
+							   progress,
 							   &error_local))
 			g_debug("failed to add: %s", error_local->message);
 		return;

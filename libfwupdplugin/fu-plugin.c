@@ -1547,13 +1547,23 @@ fu_plugin_check_supported_device(FuPlugin *self, FuDevice *device)
 }
 
 static gboolean
-fu_plugin_backend_device_added(FuPlugin *self, FuDevice *device, GError **error)
+fu_plugin_backend_device_added(FuPlugin *self,
+			       FuDevice *device,
+			       FuProgress *progress,
+			       GError **error)
 {
 	FuDevice *proxy;
 	FuPluginPrivate *priv = GET_PRIVATE(self);
 	GType device_gtype = fu_device_get_specialized_gtype(FU_DEVICE(device));
 	g_autoptr(FuDevice) dev = NULL;
 	g_autoptr(FuDeviceLocker) locker = NULL;
+
+	/* progress */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_NO_PROFILE);
+	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 4, "created");
+	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 48, "open");
+	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 48, "add");
 
 	/* fall back to plugin default */
 	if (device_gtype == G_TYPE_INVALID) {
@@ -1572,6 +1582,7 @@ fu_plugin_backend_device_added(FuPlugin *self, FuDevice *device, GError **error)
 	fu_device_incorporate(dev, FU_DEVICE(device));
 	if (!fu_plugin_runner_device_created(self, dev, error))
 		return FALSE;
+	fu_progress_step_done(progress);
 
 	/* there are a lot of different devices that match, but not all respond
 	 * well to opening -- so limit some ones with issued updates */
@@ -1582,11 +1593,12 @@ fu_plugin_backend_device_added(FuPlugin *self, FuDevice *device, GError **error)
 		if (!fu_plugin_check_supported_device(self, dev)) {
 			g_autofree gchar *guids = fu_device_get_guids_as_str(dev);
 			g_debug("%s has no updates, so ignoring device", guids);
+			fu_progress_finished(progress);
 			return TRUE;
 		}
 	}
 
-	/* open and add */
+	/* open */
 	proxy = fu_device_get_proxy(device);
 	if (proxy != NULL) {
 		g_autoptr(FuDeviceLocker) locker_proxy = NULL;
@@ -1597,8 +1609,12 @@ fu_plugin_backend_device_added(FuPlugin *self, FuDevice *device, GError **error)
 	locker = fu_device_locker_new(dev, error);
 	if (locker == NULL)
 		return FALSE;
+	fu_progress_step_done(progress);
+
+	/* add */
 	fu_plugin_device_add(self, dev);
 	fu_plugin_runner_device_added(self, dev);
+	fu_progress_step_done(progress);
 	return TRUE;
 }
 
@@ -1606,6 +1622,7 @@ fu_plugin_backend_device_added(FuPlugin *self, FuDevice *device, GError **error)
  * fu_plugin_runner_backend_device_added:
  * @self: a #FuPlugin
  * @device: a device
+ * @progress: a #FuProgress
  * @error: (nullable): optional return location for an error
  *
  * Call the backend_device_added routine for the plugin
@@ -1615,7 +1632,10 @@ fu_plugin_backend_device_added(FuPlugin *self, FuDevice *device, GError **error)
  * Since: 1.5.6
  **/
 gboolean
-fu_plugin_runner_backend_device_added(FuPlugin *self, FuDevice *device, GError **error)
+fu_plugin_runner_backend_device_added(FuPlugin *self,
+				      FuDevice *device,
+				      FuProgress *progress,
+				      GError **error)
 {
 	FuPluginPrivate *priv = GET_PRIVATE(self);
 	FuPluginVfuncs *vfuncs = fu_plugin_get_vfuncs(self);
@@ -1623,6 +1643,7 @@ fu_plugin_runner_backend_device_added(FuPlugin *self, FuDevice *device, GError *
 
 	g_return_val_if_fail(FU_IS_PLUGIN(self), FALSE);
 	g_return_val_if_fail(FU_IS_DEVICE(device), FALSE);
+	g_return_val_if_fail(FU_IS_PROGRESS(progress), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* not enabled */
@@ -1633,7 +1654,7 @@ fu_plugin_runner_backend_device_added(FuPlugin *self, FuDevice *device, GError *
 	if (vfuncs->backend_device_added == NULL) {
 		if (priv->device_gtypes != NULL ||
 		    fu_device_get_specialized_gtype(device) != G_TYPE_INVALID) {
-			return fu_plugin_backend_device_added(self, device, error);
+			return fu_plugin_backend_device_added(self, device, progress, error);
 		}
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
