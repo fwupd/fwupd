@@ -131,7 +131,7 @@ fu_debug_handler_cb(const gchar *log_domain,
 	/* time header */
 	if (!self->no_timestamp) {
 		g_autoptr(GDateTime) dt = g_date_time_new_now_utc();
-		timestamp = g_strdup_printf("%02i:%02i:%02i:%04i",
+		timestamp = g_strdup_printf("%02i:%02i:%02i.%03i",
 					    g_date_time_get_hour(dt),
 					    g_date_time_get_minute(dt),
 					    g_date_time_get_second(dt),
