@@ -75,6 +75,9 @@ parts:
     override-build: |
       snapcraftctl build
       echo $(git describe HEAD --always) > $SNAPCRAFT_STAGE/version
+      for name in ${SNAPCRAFT_PART_INSTALL}/lib/*/fwupd-*/libfwupd*; do
+        mv ${name} `dirname ${name}`/.. ;\
+      done
     override-pull: |
       snapcraftctl pull
       snapcraftctl set-version $(git describe HEAD --always)
