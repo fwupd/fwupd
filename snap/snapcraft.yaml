@@ -78,6 +78,15 @@ parts:
       for name in ${SNAPCRAFT_PART_INSTALL}/lib/*/fwupd-*/libfwupd*; do
         mv ${name} `dirname ${name}`/.. ;\
       done
+      # fixes up commands like fwupdtool -> fwupd.fwupdtool
+      sed -i "s,\(complete -F _fwupd[a-z]*\) \(fwupd.*\),\1 fwupd.\2,;          \
+              s,\(command.*\)\(fwupdtool\),\1fwupd.\2,;                         \
+              s,\(command.*\)\(fwupdmgr\),\1fwupd.\2,;                          \
+              s,\(command.*\)\(fwupdagent\),\1fwupd.\2,"                        \
+              ${SNAPCRAFT_PART_INSTALL}/share/bash-completion/completions/*
+      # fixes up dbus service for classic snap
+      sed -i 's!SystemdService=\(.*\)!SystemdService=snap.fwupd.fwupd.service!' \
+              ${SNAPCRAFT_PART_INSTALL}/share/dbus-1/system-services/org.freedesktop.fwupd.service
     override-pull: |
       snapcraftctl pull
       snapcraftctl set-version $(git describe HEAD --always)
@@ -192,10 +201,6 @@ parts:
       - -usr/share/upstart
       - -usr/lib/*/pkgconfig
     after: [build-introspection]
-  fix-bash-completion:
-    plugin: make
-    source: contrib/snap/fix-bash-completion
-    after: [fwupd]
   activate-shutdown:
     plugin: make
     source: contrib/snap/activate-shutdown
