@@ -32,13 +32,6 @@ apps:
     command: fwupdagent.wrapper
 
 parts:
-  #fetch the latest version of the signed bootloader
-  #this might not match our fwupdx64.efi, but it's better than nothing
-  fwup-efi-signed:
-    build-packages:
-      - python3-apt
-    plugin: make
-    source: contrib/snap/fwup-efi-signed
   #needed for UEFI plugin to build UX labels
   build-introspection:
     plugin: nil
@@ -96,6 +89,7 @@ parts:
       - gettext
       - gcab
       - gnu-efi
+      - fwupd-unsigned-dev
       - libcurl4-openssl-dev
       - libarchive-dev
       - libcbor-dev
@@ -135,6 +129,8 @@ parts:
       - systemd
       - uuid-dev
     stage-packages:
+      - fwupd-signed
+      - fwupd-unsigned
       - libgcab-1.0-0
       - libarchive13
       - libcurl4
