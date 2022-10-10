@@ -52,7 +52,7 @@ parts:
                        -Dintrospection=disabled,
                        -Dman=false,
                        -Dplugin_powerd=disabled,
-                       -Dudevdir=$SNAPCRAFT_STAGE/lib/udev,
+                       -Dudevdir=$CRAFT_STAGE/lib/udev,
                        "-Dgusb:tests=false",
                        "-Dgusb:docs=false",
                        "-Dgusb:introspection=false",
@@ -66,9 +66,8 @@ parts:
     source: .
     source-type: git
     override-build: |
-      snapcraftctl build
-      echo $(git describe HEAD --always) > $SNAPCRAFT_STAGE/version
-      for name in ${SNAPCRAFT_PART_INSTALL}/lib/*/fwupd-*/libfwupd*; do
+      craftctl default
+      for name in ${CRAFT_PART_INSTALL}/lib/*/fwupd-*/libfwupd*; do
         mv ${name} `dirname ${name}`/.. ;\
       done
       # fixes up commands like fwupdtool -> fwupd.fwupdtool
@@ -76,13 +75,13 @@ parts:
               s,\(command.*\)\(fwupdtool\),\1fwupd.\2,;                         \
               s,\(command.*\)\(fwupdmgr\),\1fwupd.\2,;                          \
               s,\(command.*\)\(fwupdagent\),\1fwupd.\2,"                        \
-              ${SNAPCRAFT_PART_INSTALL}/share/bash-completion/completions/*
+              ${CRAFT_PART_INSTALL}/share/bash-completion/completions/*
       # fixes up dbus service for classic snap
       sed -i 's!SystemdService=\(.*\)!SystemdService=snap.fwupd.fwupd.service!' \
               ${SNAPCRAFT_PART_INSTALL}/share/dbus-1/system-services/org.freedesktop.fwupd.service
     override-pull: |
-      snapcraftctl pull
-      snapcraftctl set-version $(git describe HEAD --always)
+      craftctl default
+      craftctl set version=$(git describe HEAD --always)
     build-packages:
       - bash-completion
       - curl
