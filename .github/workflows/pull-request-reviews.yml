@@ -1,0 +1,49 @@
+name: Pull Request reviews
+on:
+  pull_request:
+    branches: [ main ]
+
+permissions:
+  contents: read # to fetch code (actions/checkout)
+
+jobs:
+  pre-commit:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Refresh dependencies
+        run: sudo apt update
+      - name: Install dependencies
+        run: sudo apt install shellcheck clang-format -y
+      - name: Run pre-commit hooks
+        run: |
+          ./contrib/setup
+          source venv/bin/activate
+          sed -i "/no-commit-to-branch/,+1d" .pre-commit-config.yaml
+          pre-commit run --hook-stage commit --all-files
+  abi:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Refresh dependencies
+        run: sudo apt update
+      - name: Install dependencies
+        run: |
+          sudo ./contrib/ci/fwupd_setup_helpers.py install-dependencies -o ubuntu --yes
+          python3 -m pip install --user "meson >= 0.60.0"
+      - name: Check ABI
+        run: ./contrib/ci/check-abi $(git describe --abbrev=0 --tags) $(git rev-parse HEAD)
+
+  snap:
+    uses: ./.github/workflows/snap.yml
+    with:
+      deploy: false
+      channel: edge
+    secrets: inherit
+
+  matrix:
+    uses: ./.github/workflows/matrix.yml

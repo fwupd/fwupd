@@ -1,0 +1,43 @@
+name: Continuous Integration
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  snap:
+    uses: ./.github/workflows/snap.yml
+    with:
+      deploy: true
+      channel: edge
+    secrets: inherit
+
+  matrix:
+    uses: ./.github/workflows/matrix.yml
+
+  fuzzing:
+    permissions:
+      actions: read # to fetch the artifacts (google/oss-fuzz/infra/cifuzz/actions/run_fuzzers)
+      contents: read # to clone the repo (google/oss-fuzz/infra/cifuzz/actions/run_fuzzers)
+
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+    - name: Build Fuzzers
+      id: build
+      uses: google/oss-fuzz/infra/cifuzz/actions/build_fuzzers@master
+      with:
+        oss-fuzz-project-name: 'fwupd'
+        dry-run: false
+    - name: Run Fuzzers
+      uses: google/oss-fuzz/infra/cifuzz/actions/run_fuzzers@master
+      with:
+        oss-fuzz-project-name: 'fwupd'
+        fuzz-seconds: 150
+        dry-run: false
+    - name: Upload Crash
+      uses: actions/upload-artifact@v3
+      if: failure() && steps.build.outcome == 'success'
+      with:
+        name: artifacts
+        path: ./out/artifacts
+

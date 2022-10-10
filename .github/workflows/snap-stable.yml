@@ -11,3 +11,4 @@ jobs:
       deploy:  true
       channel: stable
     secrets: inherit
+
