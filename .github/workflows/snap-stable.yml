@@ -1,0 +1,13 @@
+name: Publish to snap stable channel
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  snap:
+    uses: ./.github/workflows/snap.yml
+    with:
+      deploy:  true
+      channel: stable
+    secrets: inherit

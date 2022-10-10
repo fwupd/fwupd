@@ -1,0 +1,38 @@
+name: Snap workflow
+on:
+  workflow_call:
+    inputs:
+      channel:
+        required: true
+        type: string
+      deploy:
+        required: true
+        type: boolean
+
+jobs:
+  build-snap:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: snapcore/action-build@v1
+      id: snapcraft
+    - uses: actions/upload-artifact@v3
+      with:
+        name: snap
+        path: ${{ steps.snapcraft.outputs.snap }}
+
+  deploy-store:
+    needs: build-snap
+    runs-on: ubuntu-latest
+    if: ${{ inputs.perform_deploy }}
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/download-artifact@v3
+      with:
+        name: snap
+    - uses: snapcore/action-publish@v1
+      env:
+        SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.STORE_LOGIN }}
+      with:
+        snap: ${{ steps.build.outputs.snap }}
+        release: ${{ inputs.channel }}

@@ -74,6 +74,13 @@ jobs:
           echo $GITHUB_WORKSPACE
           docker run --privileged -e CI=true -t -v $GITHUB_WORKSPACE:/github/workspace docker.pkg.github.com/fwupd/fwupd/fwupd-${{matrix.os}}:latest
 
+  snap:
+    uses: ./.github/workflows/snap.yml
+    with:
+      deploy:  ${{ github.event_name }} == "push'
+      channel: edge
+    secrets: inherit
+
   macos:
     runs-on: macos-12
     steps:
