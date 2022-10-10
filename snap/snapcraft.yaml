@@ -122,6 +122,7 @@ parts:
       - libsystemd-dev
       - libtss2-dev
       - libxmlb-dev
+      - libmm-glib-dev
       - libqmi-glib-dev
       - libmbim-glib-dev
       - locales
