@@ -273,10 +273,7 @@ fu_amt_device_open(FuDevice *device, GError **error)
 	/* open then create context */
 	if (!FU_DEVICE_CLASS(fu_amt_device_parent_class)->open(device, error))
 		return FALSE;
-	return fu_mei_device_connect(FU_MEI_DEVICE(device),
-				     FU_MEI_DEVICE_HECI_AMTHI_GUID,
-				     0,
-				     error);
+	return fu_mei_device_connect(FU_MEI_DEVICE(device), 0, error);
 }
 
 static gboolean
@@ -325,7 +322,6 @@ fu_amt_device_setup(FuDevice *device, GError **error)
 	}
 
 	/* add guid */
-	fu_device_add_guid(device, FU_MEI_DEVICE_HECI_AMTHI_GUID);
 	fu_device_add_parent_guid(device, "main-system-firmware");
 
 	/* get version numbers */

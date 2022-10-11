@@ -16,53 +16,8 @@ struct _FuMeiDeviceClass {
 	gpointer __reserved[31];
 };
 
-/**
- * FU_MEI_DEVICE_HECI_AMTHI_GUID:
- *
- * GUID used to connect to the PTHI client (via the HECI device).
- */
-#define FU_MEI_DEVICE_HECI_AMTHI_GUID "12f80028-b4b7-4b2d-aca8-46e0ff65814c"
-
-/**
- * FU_MEI_DEVICE_HECI_WATCHDOG_GUID:
- *
- * GUID used to connect to the Watchdog client (via the HECI device).
- */
-#define FU_MEI_DEVICE_HECI_WATCHDOG_GUID "05b79a6f-4628-4d7f-899d-a91514cb32ab"
-
-/**
- * FU_MEI_DEVICE_HECI_FWUPDATE_GUID:
- *
- * GUID used to connect to the FWUpdate client (via the HECI device).
- */
-#define FU_MEI_DEVICE_HECI_FWUPDATE_GUID "309dcde8-ccb1-4062-8f78-600115a34327"
-
-/**
- * FU_MEI_DEVICE_HECI_MKHI_GUID:
- *
- * GUID used to connect to the MKHI client (via the HECI device).
- */
-#define FU_MEI_DEVICE_HECI_MKHI_GUID "8e6a6715-9abc-4043-88ef-9e39c6f63e0f"
-
-/**
- * FU_MEI_DEVICE_HECI_UPI_GUID:
- *
- * GUID used to connect to the Unique Platform ID client (via the HECI device).
- */
-#define FU_MEI_DEVICE_HECI_UPI_GUID "92136c79-5fea-4cfd-980e-23be07fa5e9f"
-
-/**
- * FU_MEI_DEVICE_HECI_PSR_GUID:
- *
- * GUID used to connect to the Platform Service Record client (via the HECI device).
- */
-#define FU_MEI_DEVICE_HECI_PSR_GUID "ed6703fa-d312-4e8b-9ddd-2155bb2dee65"
-
 gboolean
-fu_mei_device_connect(FuMeiDevice *self,
-		      const gchar *guid,
-		      guchar req_protocol_version,
-		      GError **error);
+fu_mei_device_connect(FuMeiDevice *self, guchar req_protocol_version, GError **error);
 gboolean
 fu_mei_device_read(FuMeiDevice *self,
 		   guint8 *buf,

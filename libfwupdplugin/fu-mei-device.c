@@ -44,6 +44,7 @@
 typedef struct {
 	guint32 max_msg_length;
 	guint8 protocol_version;
+	gchar *uuid;
 } FuMeiDevicePrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE(FuMeiDevice, fu_mei_device, FU_TYPE_UDEV_DEVICE)
@@ -56,6 +57,7 @@ fu_mei_device_to_string(FuDevice *device, guint idt, GString *str)
 	FuMeiDevice *self = FU_MEI_DEVICE(device);
 	FuMeiDevicePrivate *priv = GET_PRIVATE(self);
 	FU_DEVICE_CLASS(fu_mei_device_parent_class)->to_string(device, idt, str);
+	fu_string_append(str, idt, "Uuid", priv->uuid);
 	if (priv->max_msg_length > 0x0)
 		fu_string_append_kx(str, idt, "MaxMsgLength", priv->max_msg_length);
 	if (priv->protocol_version > 0x0)
@@ -65,11 +67,25 @@ fu_mei_device_to_string(FuDevice *device, guint idt, GString *str)
 static gboolean
 fu_mei_device_probe(FuDevice *device, GError **error)
 {
-	/* only open the main device */
-	if (fu_udev_device_get_device_file(FU_UDEV_DEVICE(device)) == NULL) {
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no device");
+	FuMeiDevice *self = FU_MEI_DEVICE(device);
+	FuMeiDevicePrivate *priv = GET_PRIVATE(self);
+	const gchar *uuid;
+
+	/* the kernel is missing `dev` on mei_me children */
+	if (fu_udev_device_get_device_file(FU_UDEV_DEVICE(device)) == NULL)
+		fu_udev_device_set_device_file(FU_UDEV_DEVICE(device), "/dev/mei0");
+
+	/* this has to exist */
+	uuid = fu_udev_device_get_sysfs_attr(FU_UDEV_DEVICE(device), "uuid", NULL);
+	if (uuid == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "UUID not provided");
 		return FALSE;
 	}
+	priv->uuid = g_strdup(uuid);
+	fu_device_add_guid(device, uuid);
 
 	/* FuUdevDevice->probe */
 	if (!FU_DEVICE_CLASS(fu_mei_device_parent_class)->probe(device, error))
@@ -118,21 +134,17 @@ fu_mei_device_get_protocol_version(FuMeiDevice *self)
 /**
  * fu_mei_device_connect:
  * @self: a #FuMeiDevice
- * @guid: A GUID, e.g. "2800f812-b7b4-2d4b-aca8-46e0ff65814c"
  * @req_protocol_version: required protocol version, or 0
  * @error: (nullable): optional return location for an error
  *
- * Connects to the MEI device for a specific GUID.
+ * Connects to the MEI device.
  *
  * Returns: %TRUE for success
  *
  * Since: 1.8.2
  **/
 gboolean
-fu_mei_device_connect(FuMeiDevice *self,
-		      const gchar *guid,
-		      guchar req_protocol_version,
-		      GError **error)
+fu_mei_device_connect(FuMeiDevice *self, guchar req_protocol_version, GError **error)
 {
 #ifdef HAVE_MEI_H
 	FuMeiDevicePrivate *priv = GET_PRIVATE(self);
@@ -141,10 +153,9 @@ fu_mei_device_connect(FuMeiDevice *self,
 	struct mei_connect_client_data data = {0x0};
 
 	g_return_val_if_fail(FU_IS_MEI_DEVICE(self), FALSE);
-	g_return_val_if_fail(guid != NULL, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
-	if (!fwupd_guid_from_string(guid, &guid_le, FWUPD_GUID_FLAG_MIXED_ENDIAN, error))
+	if (!fwupd_guid_from_string(priv->uuid, &guid_le, FWUPD_GUID_FLAG_MIXED_ENDIAN, error))
 		return FALSE;
 	memcpy(&data.in_client_uuid, &guid_le, sizeof(guid_le));
 	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
@@ -333,15 +344,27 @@ fu_mei_device_incorporate(FuDevice *device, FuDevice *donor)
 static void
 fu_mei_device_init(FuMeiDevice *self)
 {
+	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_NO_AUTO_INSTANCE_IDS);
 	fu_udev_device_set_flags(FU_UDEV_DEVICE(self),
 				 FU_UDEV_DEVICE_FLAG_OPEN_READ | FU_UDEV_DEVICE_FLAG_OPEN_WRITE |
 				     FU_UDEV_DEVICE_FLAG_VENDOR_FROM_PARENT);
 }
 
 static void
+fu_mei_device_finalize(GObject *object)
+{
+	FuMeiDevice *self = FU_MEI_DEVICE(object);
+	FuMeiDevicePrivate *priv = GET_PRIVATE(self);
+	g_free(priv->uuid);
+	G_OBJECT_CLASS(fu_mei_device_parent_class)->finalize(object);
+}
+
+static void
 fu_mei_device_class_init(FuMeiDeviceClass *klass)
 {
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
+	GObjectClass *object_class = G_OBJECT_CLASS(klass);
+	object_class->finalize = fu_mei_device_finalize;
 	klass_device->probe = fu_mei_device_probe;
 	klass_device->to_string = fu_mei_device_to_string;
 	klass_device->incorporate = fu_mei_device_incorporate;

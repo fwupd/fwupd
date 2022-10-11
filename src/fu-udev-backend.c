@@ -46,13 +46,6 @@ fu_udev_backend_device_add(FuUdevBackend *self, GUdevDevice *udev_device)
 		}
 	}
 
-	/* ignore some devices */
-	if (gtype == FU_TYPE_MEI_DEVICE && g_udev_device_get_device_file(udev_device) == NULL) {
-		g_debug("ignoring MEI device %s as no device file",
-			g_udev_device_get_sysfs_path(udev_device));
-		return;
-	}
-
 	/* success */
 	device = g_object_new(gtype,
 			      "context",
