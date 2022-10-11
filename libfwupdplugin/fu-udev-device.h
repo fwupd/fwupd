@@ -57,6 +57,8 @@ void
 fu_udev_device_set_dev(FuUdevDevice *self, GUdevDevice *udev_device);
 const gchar *
 fu_udev_device_get_device_file(FuUdevDevice *self);
+void
+fu_udev_device_set_device_file(FuUdevDevice *self, const gchar *device_file);
 const gchar *
 fu_udev_device_get_sysfs_path(FuUdevDevice *self);
 const gchar *

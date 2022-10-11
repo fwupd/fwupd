@@ -276,7 +276,16 @@ fu_udev_device_set_driver(FuUdevDevice *self, const gchar *driver)
 	g_object_notify(G_OBJECT(self), "driver");
 }
 
-static void
+/**
+ * fu_udev_device_set_device_file:
+ * @self: a #FuUdevDevice
+ * @device_file: (nullable): a device path
+ *
+ * Sets the device file to use for reading and writing.
+ *
+ * Since: 1.8.7
+ **/
+void
 fu_udev_device_set_device_file(FuUdevDevice *self, const gchar *device_file)
 {
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
