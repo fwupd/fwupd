@@ -24,3 +24,9 @@ CfiDevicePageSize = 0x200
 CfiDeviceSectorSize = 0x2000
 CfiDeviceBlockSize = 0x8000
 FirmwareSizeMax = 0x10000
+
+[MEI]
+Plugin = one
+
+[MEI]
+Plugin = two
