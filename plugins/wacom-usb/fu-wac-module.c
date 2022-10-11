@@ -49,6 +49,8 @@ fu_wac_module_fw_type_to_string(guint8 fw_type)
 		return "bluetooth";
 	if (fw_type == FU_WAC_MODULE_FW_TYPE_BLUETOOTH_ID6)
 		return "bluetooth-id6";
+	if (fw_type == FU_WAC_MODULE_FW_TYPE_SCALER)
+		return "scaler";
 	if (fw_type == FU_WAC_MODULE_FW_TYPE_EMR_CORRECTION)
 		return "emr-correction";
 	if (fw_type == FU_WAC_MODULE_FW_TYPE_BLUETOOTH_HID)

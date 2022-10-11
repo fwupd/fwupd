@@ -86,3 +86,8 @@ GType = FuWacAndroidDevice
 [USB\VID_056A&PID_03DC]
 GType = FuWacDevice
 Plugin = wacom_usb
+
+# Cintiq Pro 27 (USB) [DTH-271]
+[USB\VID_056A&PID_03C0]
+Plugin = wacom_usb
+GType = FuWacDevice
