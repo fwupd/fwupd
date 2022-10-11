@@ -167,6 +167,14 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_SECURITY_ATTR_ID_MEI_OVERRIDE_STRAP "org.fwupd.hsi.Mei.OverrideStrap"
 /**
+ * FWUPD_SECURITY_ATTR_ID_MEI_KEY_MANIFEST:
+ *
+ * Host Security ID attribute for Intel ME Key Manifest
+ *
+ * Since: 1.8.7
+ **/
+#define FWUPD_SECURITY_ATTR_ID_MEI_KEY_MANIFEST "org.fwupd.hsi.Mei.KeyManifest"
+/**
  * FWUPD_SECURITY_ATTR_ID_MEI_VERSION:
  *
  * Host Security ID attribute for Intel ME version

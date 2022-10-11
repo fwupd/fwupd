@@ -157,6 +157,8 @@ fu_mei_device_connect(FuMeiDevice *self, guchar req_protocol_version, GError **e
 
 	if (!fwupd_guid_from_string(priv->uuid, &guid_le, FWUPD_GUID_FLAG_MIXED_ENDIAN, error))
 		return FALSE;
+	if (g_getenv("FU_MEI_DEVICE_DEBUG") != NULL)
+		fu_dump_raw(G_LOG_DOMAIN, "guid_le", (guint8 *)&guid_le, sizeof(guid_le));
 	memcpy(&data.in_client_uuid, &guid_le, sizeof(guid_le));
 	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
 				  IOCTL_MEI_CONNECT_CLIENT,

@@ -146,6 +146,11 @@ fu_security_attr_get_name(FwupdSecurityAttr *attr)
 		 * end users on consumer boards */
 		return g_strdup(_("MEI override"));
 	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_MEI_KEY_MANIFEST) == 0) {
+		/* TRANSLATORS: Title: MEI = Intel Management Engine, and key refer
+		 * to the private/public key used to secure loading of firmware */
+		return g_strdup(_("MEI key manifest"));
+	}
 	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_MEI_VERSION) == 0) {
 		/* TRANSLATORS: Title: MEI = Intel Management Engine */
 		const gchar *kind = fwupd_security_attr_get_metadata(attr, "kind");
@@ -322,6 +327,11 @@ fu_security_attr_get_title(FwupdSecurityAttr *attr)
 		 * boards */
 		return _("Intel Management Engine Override");
 	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_MEI_KEY_MANIFEST) == 0) {
+		/* TRANSLATORS: Title: MEI = Intel Management Engine, and key refers
+		 * to the private/public key used to secure loading of firmware */
+		return g_strdup(_("MEI Key Manifest"));
+	}
 	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_MEI_VERSION) == 0) {
 		/* TRANSLATORS: Title: MEI = Intel Management Engine */
 		return _("Intel Management Engine Version");
@@ -495,6 +505,11 @@ fu_security_attr_get_description(FwupdSecurityAttr *attr)
 		/* TRANSLATORS: longer description */
 		return _("Intel Management Engine Override disables checks for device software "
 			 "tampering.");
+	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_MEI_KEY_MANIFEST) == 0) {
+		/* TRANSLATORS: longer description */
+		return _("The Intel Management Engine Key Manifest must be valid so "
+			 "that the device firmware can be trusted by the CPU.");
 	}
 	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_MEI_VERSION) == 0) {
 		/* TRANSLATORS: longer description */

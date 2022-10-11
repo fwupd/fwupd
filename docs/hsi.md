@@ -350,6 +350,33 @@ To meet HSI-1 on systems that run this test, the result must be `locked`. *[v1.5
 
 - [Chromium documentation for Intel ME](https://chromium.googlesource.com/chromiumos/third_party/flashrom/+/master/Documentation/mysteries_intel.txt)
 
+<a id="org.fwupd.hsi.Mei.BootGuardPlatformKey"></a>
+
+### [ME BootGuard Platform Key](#org.fwupd.hsi.Mei.BootGuardPlatformKey)
+
+The BootGuard Platform Key is fused into the CPU PCH during manufacturing by the OEM.
+
+At bootup, an authenticated code module computes a hash of the Platform Key and and compares it
+with the one stored in field-programmable fuses.
+If the key matches the ACM will pass control to the firmware, otherwise the boot process will stop.
+
+In 2022 a number of Platform **secret** Keys were leaked by Lenovo and confirmed by Intel.
+
+**Impact:** A custom system firmware can be signed using the leaked private key to completely
+disable UEFI Secure Boot and allow complete persistent compromise of the affected machine.
+
+**Possible results:**
+
+- `valid`: device uses a BootGuard Platform Key that is not known to be compromised
+- `not-valid`: device uses a key that is compromised
+
+To meet HSI-1 on systems that run this test, the result must be `valid`. *[v1.8.7]*
+
+**References:**
+
+- [Intel leak checker](https://github.com/phretor/intel-leak-checker/)
+- [Tom's Hardware Article](https://www.tomshardware.com/news/intel-confirms-6gb-alder-lake-bios-source-code-leak-new-details-emerge)
+
 <a id="org.fwupd.hsi.Mei.Version"></a>
 
 ### [CSME Version](#org.fwupd.hsi.Mei.Version)

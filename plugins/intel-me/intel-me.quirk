@@ -1,0 +1,9 @@
+# MKHI (legacy)
+[8e6a6715-9abc-4043-88ef-9e39c6f63e0f]
+Plugin = intel_me
+GType = FuIntelMeMkhiDevice
+
+# MCA?
+[dd17041c-09ea-4b17-a271-5b989867ec65]
+Plugin = intel_me
+GType = FuIntelMeMcaDevice
