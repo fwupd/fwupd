@@ -119,79 +119,128 @@ fu_quirks_validate_flags(const gchar *value, GError **error)
 	return TRUE;
 }
 
+typedef struct {
+	GString *group;
+	XbBuilderNode *bn;
+	XbBuilderNode *root;
+} FuQuirksConvertHelper;
+
+static void
+fu_quirks_convert_helper_free(FuQuirksConvertHelper *helper)
+{
+	g_string_free(helper->group, TRUE);
+	g_object_unref(helper->root);
+	if (helper->bn != NULL)
+		g_object_unref(helper->bn);
+	g_free(helper);
+}
+
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuQuirksConvertHelper, fu_quirks_convert_helper_free)
+
+static gboolean
+fu_quirks_convert_keyfile_to_xml_cb(GString *token,
+				    guint token_idx,
+				    gpointer user_data,
+				    GError **error)
+{
+	FuQuirksConvertHelper *helper = (FuQuirksConvertHelper *)user_data;
+	g_autofree gchar *key = NULL;
+	g_autofree gchar *value = NULL;
+	g_auto(GStrv) kv = NULL;
+
+	/* blank line */
+	if (token->len == 0)
+		return TRUE;
+
+	/* comment */
+	if (token->str[0] == '#')
+		return TRUE;
+
+	/* neither a key=value or [group] */
+	if (token->len < 3) {
+		g_set_error(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_INVALID_DATA,
+			    "invalid line: %s",
+			    token->str);
+		return FALSE;
+	}
+
+	/* a group */
+	if (token->str[0] == '[' && token->str[token->len - 1] == ']') {
+		g_autofree gchar *group_id = NULL;
+		g_autofree gchar *group_tmp = NULL;
+		g_autoptr(XbBuilderNode) bn_tmp = NULL;
+
+		/* trim off the [] and convert to a GUID */
+		group_tmp = g_strndup(token->str + 1, token->len - 2);
+		group_id = fu_quirks_build_group_key(group_tmp);
+		bn_tmp = xb_builder_node_insert(helper->root, "device", "id", group_id, NULL);
+		g_set_object(&helper->bn, bn_tmp);
+		g_string_assign(helper->group, group_tmp);
+		return TRUE;
+	}
+
+	/* no current group */
+	if (helper->bn == NULL) {
+		g_set_error(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_INVALID_DATA,
+			    "invalid line when group unset: %s",
+			    token->str);
+		return FALSE;
+	}
+
+	/* parse as key=value */
+	kv = g_strsplit(token->str, "=", 2);
+	if (kv[1] == NULL) {
+		g_set_error(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_INVALID_DATA,
+			    "invalid line: not key=value: %s",
+			    token->str);
+		return FALSE;
+	}
+
+	/* sanity check flags */
+	key = fu_strstrip(kv[0]);
+	value = fu_strstrip(kv[1]);
+	if (g_strcmp0(key, FU_QUIRKS_FLAGS) == 0) {
+		g_autoptr(GError) error_local = NULL;
+		if (!fu_quirks_validate_flags(value, &error_local)) {
+			g_warning("[%s] %s = %s is invalid: %s",
+				  helper->group->str,
+				  key,
+				  value,
+				  error_local->message);
+		}
+	}
+
+	/* add */
+	xb_builder_node_insert_text(helper->bn, "value", value, "key", key, NULL);
+	return TRUE;
+}
+
 static GBytes *
 fu_quirks_convert_keyfile_to_xml(FuQuirks *self, GBytes *bytes, GError **error)
 {
 	gsize xmlsz;
 	g_autofree gchar *xml = NULL;
-	g_auto(GStrv) groups = NULL;
-	g_autoptr(GKeyFile) kf = g_key_file_new();
-	g_autoptr(XbBuilderNode) root = xb_builder_node_new("quirk");
+	g_autoptr(FuQuirksConvertHelper) helper = g_new0(FuQuirksConvertHelper, 1);
 
-	/* parse keyfile */
-	if (!g_key_file_load_from_data(kf,
-				       g_bytes_get_data(bytes, NULL),
-				       g_bytes_get_size(bytes),
-				       G_KEY_FILE_NONE,
-				       error))
+	/* split into lines */
+	helper->root = xb_builder_node_new("quirk");
+	helper->group = g_string_new(NULL);
+	if (!fu_strsplit_full((const gchar *)g_bytes_get_data(bytes, NULL),
+			      g_bytes_get_size(bytes),
+			      "\n",
+			      fu_quirks_convert_keyfile_to_xml_cb,
+			      helper,
+			      error))
 		return NULL;
 
-	/* add each set of groups and keys */
-	groups = g_key_file_get_groups(kf, NULL);
-	for (guint i = 0; groups[i] != NULL; i++) {
-		g_auto(GStrv) keys = NULL;
-		g_autofree gchar *group_id = NULL;
-		g_autoptr(GError) error_local = NULL;
-		g_autoptr(XbBuilderNode) bn = NULL;
-
-		/* sanity check group */
-		if (g_str_has_prefix(groups[i], "HwID") ||
-		    g_str_has_prefix(groups[i], "DeviceInstanceID") ||
-		    g_str_has_prefix(groups[i], "GUID")) {
-			g_warning("invalid group name '%s'", groups[i]);
-			continue;
-		}
-
-		/* get all KVs for the entry */
-		keys = g_key_file_get_keys(kf, groups[i], NULL, error);
-		if (keys == NULL)
-			return NULL;
-		group_id = fu_quirks_build_group_key(groups[i]);
-		bn = xb_builder_node_insert(root, "device", "id", group_id, NULL);
-		for (guint j = 0; keys[j] != NULL; j++) {
-			g_autofree gchar *value = NULL;
-
-			/* sanity check key */
-			if ((self->load_flags & FU_QUIRKS_LOAD_FLAG_NO_VERIFY) == 0 &&
-			    g_hash_table_lookup(self->possible_keys, keys[j]) == NULL) {
-				if (!g_ptr_array_find_with_equal_func(self->invalid_keys,
-								      keys[j],
-								      g_str_equal,
-								      NULL)) {
-					g_ptr_array_add(self->invalid_keys, g_strdup(keys[j]));
-				}
-			}
-			value = g_key_file_get_value(kf, groups[i], keys[j], error);
-			if (value == NULL)
-				return NULL;
-
-			/* sanity check flags */
-			if (g_strcmp0(keys[j], FU_QUIRKS_FLAGS) == 0) {
-				if (!fu_quirks_validate_flags(value, &error_local)) {
-					g_warning("[%s] %s = %s is invalid: %s",
-						  groups[i],
-						  keys[j],
-						  value,
-						  error_local->message);
-				}
-			}
-
-			xb_builder_node_insert_text(bn, "value", value, "key", keys[j], NULL);
-		}
-	}
-
 	/* export as XML blob */
-	xml = xb_builder_node_export(root, XB_NODE_EXPORT_FLAG_ADD_HEADER, error);
+	xml = xb_builder_node_export(helper->root, XB_NODE_EXPORT_FLAG_ADD_HEADER, error);
 	if (xml == NULL)
 		return NULL;
 	xmlsz = strlen(xml);

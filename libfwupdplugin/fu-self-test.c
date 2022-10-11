@@ -900,6 +900,51 @@ fu_plugin_quirks_performance_func(void)
 	g_print("lookup=%.3fms ", g_timer_elapsed(timer, NULL) * 1000.f);
 }
 
+typedef struct {
+	gboolean seen_one;
+	gboolean seen_two;
+} FuPluginQuirksAppendHelper;
+
+static void
+fu_plugin_quirks_append_cb(FuQuirks *quirks,
+			   const gchar *key,
+			   const gchar *value,
+			   gpointer user_data)
+{
+	FuPluginQuirksAppendHelper *helper = (FuPluginQuirksAppendHelper *)user_data;
+	g_debug("key=%s, value=%s", key, value);
+	if (g_strcmp0(key, "Plugin") == 0 && g_strcmp0(value, "one") == 0) {
+		helper->seen_one = TRUE;
+		return;
+	}
+	if (g_strcmp0(key, "Plugin") == 0 && g_strcmp0(value, "two") == 0) {
+		helper->seen_two = TRUE;
+		return;
+	}
+	g_assert_not_reached();
+}
+
+static void
+fu_plugin_quirks_append_func(void)
+{
+	FuPluginQuirksAppendHelper helper = {0};
+	gboolean ret;
+	g_autoptr(FuQuirks) quirks = fu_quirks_new();
+	g_autoptr(GError) error = NULL;
+
+	/* lookup a duplicate group name */
+	ret = fu_quirks_load(quirks, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = fu_quirks_lookup_by_id_iter(quirks,
+					  "b19d1c67-a29a-51ce-9cae-f7b40fe5505b",
+					  fu_plugin_quirks_append_cb,
+					  &helper);
+	g_assert_true(ret);
+	g_assert_true(helper.seen_one);
+	g_assert_true(helper.seen_two);
+}
+
 static void
 fu_plugin_quirks_device_func(void)
 {
@@ -3645,6 +3690,7 @@ main(int argc, char **argv)
 	(void)g_setenv("FWUPD_LOCALSTATEDIR", "/tmp/fwupd-self-test/var", TRUE);
 	(void)g_setenv("FWUPD_PROFILE", "1", TRUE);
 
+	g_test_add_func("/fwupd/plugin{quirks-append}", fu_plugin_quirks_append_func);
 	g_test_add_func("/fwupd/common{strnsplit}", fu_strsplit_func);
 	g_test_add_func("/fwupd/common{memmem}", fu_common_memmem_func);
 	g_test_add_func("/fwupd/progress", fu_progress_func);
