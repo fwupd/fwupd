@@ -16,7 +16,7 @@ struct _FuAmtDevice {
 
 G_DEFINE_TYPE(FuAmtDevice, fu_amt_device, FU_TYPE_MEI_DEVICE)
 
-#define FU_AMT_DEVICE_MEI_IAMTHIF "2800f812-b7b4-2d4b-aca8-46e0ff65814c"
+#define FU_AMT_DEVICE_MEI_IAMTHIF "12f80028-b4b7-4b2d-aca8-46e0ff65814c"
 
 #define AMT_MAJOR_VERSION 1
 #define AMT_MINOR_VERSION 1
