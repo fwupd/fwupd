@@ -135,6 +135,7 @@ parts:
       - libcurl4
       - libcbor0.8
       - libassuan0
+      - libffi8
       - libflashrom1
       - libjcat1
       - liblcms2-2
@@ -145,6 +146,7 @@ parts:
       - libusb-1.0-0
       - libgudev-1.0-0
       - libgpgme11
+      - libprotobuf-c1
       - libpolkit-gobject-1-0
       - libsmbios-c2
       - libtss2-esys-3.0.2-0
