@@ -144,7 +144,7 @@ fu_mei_device_connect(FuMeiDevice *self,
 	g_return_val_if_fail(guid != NULL, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
-	if (!fwupd_guid_from_string(guid, &guid_le, FWUPD_GUID_FLAG_NONE, error))
+	if (!fwupd_guid_from_string(guid, &guid_le, FWUPD_GUID_FLAG_MIXED_ENDIAN, error))
 		return FALSE;
 	memcpy(&data.in_client_uuid, &guid_le, sizeof(guid_le));
 	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
