@@ -26,7 +26,6 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ inputs.deploy }}
     steps:
-    - uses: actions/checkout@v2
     - uses: actions/download-artifact@v3
       with:
         name: snap
