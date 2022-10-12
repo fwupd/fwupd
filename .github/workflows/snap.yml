@@ -32,11 +32,9 @@ jobs:
       id: download
       with:
         name: snap
-    - name: 'Echo download path'
-      run: echo ${{steps.download.outputs.download-path}}
     - uses: snapcore/action-publish@v1
       env:
         SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.STORE_LOGIN }}
       with:
-        snap: ${{steps.download.outputs.download-path}}
+        snap: ${{steps.download.outputs.download-path}}/*.snap
         release: ${{ inputs.channel }}
