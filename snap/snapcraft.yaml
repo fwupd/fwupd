@@ -203,6 +203,10 @@ parts:
       - -usr/share/gir-1.0
       - -usr/share/upstart
       - -usr/lib/*/pkgconfig
+      - -usr/lib/x86_64-linux-gnu/gio/modules/libdconfsettings.so
+      - -usr/lib/systemd/user/dconf.service
+      - -usr/share/dbus-1/services/ca.desrt.dconf.service
+      - -usr/lib/x86_64-linux-gnu/libdconf.so.1.0.0
     after: [build-introspection]
   activate-shutdown:
     plugin: make
