@@ -32,6 +32,8 @@ jobs:
       id: download
       with:
         name: snap
+    - name: Display structure of downloaded files
+      run: ls -R
     - uses: snapcore/action-publish@v1
       env:
         SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.STORE_LOGIN }}
