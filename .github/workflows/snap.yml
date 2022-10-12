@@ -12,6 +12,8 @@ on:
 jobs:
   build-snap:
     runs-on: ubuntu-latest
+    outputs:
+      snap_name: ${{ steps.snapcraft.outputs.snap }}
     steps:
     - uses: actions/checkout@v3
       with:
@@ -32,11 +34,9 @@ jobs:
       id: download
       with:
         name: snap
-    - name: Display structure of downloaded files
-      run: ls -R
     - uses: snapcore/action-publish@v1
       env:
         SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.STORE_LOGIN }}
       with:
-        snap: ${{steps.download.outputs.download-path}}/*.snap
+        snap: ${{ needs.build-snap.outputs.snap_name }}
         release: ${{ inputs.channel }}
