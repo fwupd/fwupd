@@ -51,6 +51,7 @@ parts:
                        -Dbuild=all,
                        -Dintrospection=disabled,
                        -Dman=false,
+                       -Dplugin_flashrom=false,
                        -Dplugin_powerd=disabled,
                        -Dudevdir=$CRAFT_STAGE/lib/udev,
                        "-Dgusb:tests=false",
@@ -95,7 +96,6 @@ parts:
       - libcairo-dev
       - libefiboot-dev
       - libefivar-dev
-      - libflashrom-dev
       - libftdi1-dev
       - libgudev-1.0-dev
       - libgcab-dev
@@ -141,7 +141,6 @@ parts:
       - libcbor0.8
       - libassuan0
       - libffi8
-      - libflashrom1
       - libjcat1
       - liblcms2-2
       - liblzma5
