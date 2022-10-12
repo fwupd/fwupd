@@ -38,6 +38,9 @@ parts:
     stage-packages:
       - python3-gi
       - python3-cairo
+      - python3-gi-cairo
+    override-stage: |
+      craftctl default
     prime:
       - -etc
       - -usr
@@ -46,7 +49,6 @@ parts:
     plugin: meson
     meson-parameters: [--prefix=/,
                        -Defi_binary=false,
-                       -Dplugin_uefi_capsule_splash=false,
                        -Dtests=false,
                        -Dbuild=all,
                        -Dintrospection=disabled,
@@ -208,6 +210,8 @@ parts:
       - -usr/share/dbus-1/services/ca.desrt.dconf.service
       - -usr/lib/x86_64-linux-gnu/libdconf.so.1.0.0
     after: [build-introspection]
+    build-environment:
+      - PYTHONPATH: "${CRAFT_STAGE}/usr/lib/python3/dist-packages"
   activate-shutdown:
     plugin: make
     source: contrib/snap/activate-shutdown
