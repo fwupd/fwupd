@@ -55,10 +55,3 @@ git push
 7. Update flatpak package for new release:
 
 https://github.com/flathub/org.freedesktop.fwupd
-
-8. Promote snap package from edge to stable:
-
-https://snapcraft.io/fwupd/releases
-or
-
-snapcraft promote fwupd --from-channel edge --to-channel stable
