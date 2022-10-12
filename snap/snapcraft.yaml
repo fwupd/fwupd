@@ -130,6 +130,11 @@ parts:
     stage-packages:
       - fwupd-signed
       - fwupd-unsigned
+      - libunbound8
+      - libevent-2.1-7
+      - libnghttp2-14
+      - libpsl5
+      - librtmp1
       - libgcab-1.0-0
       - libarchive13
       - libcurl4
