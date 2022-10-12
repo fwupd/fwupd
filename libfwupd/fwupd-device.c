@@ -114,6 +114,33 @@ fwupd_device_get_checksums(FwupdDevice *self)
 }
 
 /**
+ * fwupd_device_has_checksum:
+ * @self: a #FwupdDevice
+ * @checksum: (not nullable): the device checksum
+ *
+ * Finds out if the device has this specific checksum.
+ *
+ * Returns: %TRUE if the checksum name is found
+ *
+ * Since: 1.8.7
+ **/
+gboolean
+fwupd_device_has_checksum(FwupdDevice *self, const gchar *checksum)
+{
+	FwupdDevicePrivate *priv = GET_PRIVATE(self);
+
+	g_return_val_if_fail(FWUPD_IS_DEVICE(self), FALSE);
+	g_return_val_if_fail(checksum != NULL, FALSE);
+
+	for (guint i = 0; i < priv->checksums->len; i++) {
+		const gchar *checksum_tmp = g_ptr_array_index(priv->checksums, i);
+		if (g_strcmp0(checksum, checksum_tmp) == 0)
+			return TRUE;
+	}
+	return FALSE;
+}
+
+/**
  * fwupd_device_add_checksum:
  * @self: a #FwupdDevice
  * @checksum: (not nullable): the device checksum
@@ -128,11 +155,9 @@ fwupd_device_add_checksum(FwupdDevice *self, const gchar *checksum)
 	FwupdDevicePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FWUPD_IS_DEVICE(self));
 	g_return_if_fail(checksum != NULL);
-	for (guint i = 0; i < priv->checksums->len; i++) {
-		const gchar *checksum_tmp = g_ptr_array_index(priv->checksums, i);
-		if (g_strcmp0(checksum_tmp, checksum) == 0)
-			return;
-	}
+
+	if (fwupd_device_has_checksum(self, checksum))
+		return;
 	g_ptr_array_add(priv->checksums, g_strdup(checksum));
 }
 
