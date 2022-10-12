@@ -6,6 +6,7 @@
 
 #include "config.h"
 
+#include "fu-intel-me-amt-device.h"
 #include "fu-intel-me-mca-device.h"
 #include "fu-intel-me-mkhi-device.h"
 #include "fu-intel-me-plugin.h"
@@ -26,6 +27,7 @@ fu_intel_me_plugin_constructed(GObject *obj)
 {
 	FuPlugin *plugin = FU_PLUGIN(obj);
 	fu_plugin_add_udev_subsystem(plugin, "mei");
+	fu_plugin_add_device_gtype(plugin, FU_TYPE_INTEL_ME_AMT_DEVICE);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_INTEL_ME_MCA_DEVICE);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_INTEL_ME_MKHI_DEVICE);
 }

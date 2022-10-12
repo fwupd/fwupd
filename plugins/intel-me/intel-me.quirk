@@ -1,3 +1,8 @@
+# PTHI client (via the HECI device)
+[12f80028-b4b7-4b2d-aca8-46e0ff65814c]
+Plugin = intel_me
+GType = FuIntelMeAmtDevice
+
 # MKHI (legacy)
 [8e6a6715-9abc-4043-88ef-9e39c6f63e0f]
 Plugin = intel_me
