@@ -146,6 +146,7 @@ parts:
       - libusb-1.0-0
       - libgudev-1.0-0
       - libgpgme11
+      - libpcre32-3
       - libprotobuf-c1
       - libpolkit-gobject-1-0
       - libsmbios-c2
