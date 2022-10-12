@@ -157,6 +157,8 @@ GPtrArray *
 fwupd_device_get_checksums(FwupdDevice *self);
 void
 fwupd_device_add_checksum(FwupdDevice *self, const gchar *checksum);
+gboolean
+fwupd_device_has_checksum(FwupdDevice *self, const gchar *checksum);
 const gchar *
 fwupd_device_get_plugin(FwupdDevice *self);
 void
