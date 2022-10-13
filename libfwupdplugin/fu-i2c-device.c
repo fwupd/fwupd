@@ -131,8 +131,9 @@ fu_i2c_device_probe(FuDevice *device, GError **error)
 
 	/* get bus number out of sysfs path */
 	udev_parent = g_udev_device_get_parent(udev_device);
-	devname = g_path_get_basename(g_udev_device_get_sysfs_path(udev_parent));
-	if (g_str_has_prefix(devname, "i2c-")) {
+	if (udev_parent != NULL)
+		devname = g_path_get_basename(g_udev_device_get_sysfs_path(udev_parent));
+	if (devname != NULL && g_str_has_prefix(devname, "i2c-")) {
 		guint64 tmp64 = 0;
 		g_autoptr(GError) error_local = NULL;
 		if (!fu_strtoull(devname + 4, &tmp64, 0, G_MAXUINT, &error_local)) {
