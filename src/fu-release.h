@@ -23,6 +23,7 @@ fu_release_new(void);
 #define fu_release_add_flag(r, v)     fwupd_release_add_flag(FWUPD_RELEASE(r), v)
 #define fu_release_add_tag(r, v)      fwupd_release_add_tag(FWUPD_RELEASE(r), v)
 #define fu_release_add_metadata(r, v) fwupd_release_add_metadata(FWUPD_RELEASE(r), v)
+#define fu_release_set_branch(r, v)   fwupd_release_set_branch(FWUPD_RELEASE(r), v)
 
 FuDevice *
 fu_release_get_device(FuRelease *self);
@@ -58,3 +59,5 @@ const gchar *
 fu_release_get_action_id(FuRelease *self);
 gint
 fu_release_compare(FuRelease *release1, FuRelease *release2);
+void
+fu_release_set_priority(FuRelease *self, guint64 priority);

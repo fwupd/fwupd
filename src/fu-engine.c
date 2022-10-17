@@ -5052,19 +5052,24 @@ static gint
 fu_engine_sort_releases_cb(gconstpointer a, gconstpointer b, gpointer user_data)
 {
 	FuDevice *device = FU_DEVICE(user_data);
-	FwupdRelease *rel_a = FWUPD_RELEASE(*((FwupdRelease **)a));
-	FwupdRelease *rel_b = FWUPD_RELEASE(*((FwupdRelease **)b));
+	FuRelease *rel_a = FU_RELEASE(*((FuRelease **)a));
+	FuRelease *rel_b = FU_RELEASE(*((FuRelease **)b));
 	gint rc;
 
 	/* first by branch */
-	rc = g_strcmp0(fwupd_release_get_branch(rel_b), fwupd_release_get_branch(rel_a));
+	rc = g_strcmp0(fu_release_get_branch(rel_b), fu_release_get_branch(rel_a));
 	if (rc != 0)
 		return rc;
 
 	/* then by version */
-	return fu_version_compare(fwupd_release_get_version(rel_b),
-				  fwupd_release_get_version(rel_a),
-				  fu_device_get_version_format(device));
+	rc = fu_version_compare(fu_release_get_version(rel_b),
+				fu_release_get_version(rel_a),
+				fu_device_get_version_format(device));
+	if (rc != 0)
+		return rc;
+
+	/* then by priority */
+	return fu_release_compare(rel_a, rel_b);
 }
 
 static gboolean

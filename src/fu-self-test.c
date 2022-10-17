@@ -4096,7 +4096,6 @@ fu_spawn_timeout_func(void)
 static void
 fu_release_compare_func(gconstpointer user_data)
 {
-	FuDevice *device_tmp;
 	g_autoptr(GPtrArray) releases = g_ptr_array_new();
 	g_autoptr(FuDevice) device1 = fu_device_new(NULL);
 	g_autoptr(FuDevice) device2 = fu_device_new(NULL);
@@ -4105,25 +4104,31 @@ fu_release_compare_func(gconstpointer user_data)
 	g_autoptr(FuRelease) release2 = fu_release_new();
 	g_autoptr(FuRelease) release3 = fu_release_new();
 
-	fu_device_set_order(device1, 99);
+	fu_device_set_order(device1, 33);
 	fu_release_set_device(release1, device1);
-	g_ptr_array_add(releases, release1);
+	fu_release_set_priority(release1, 0);
+	fu_release_set_branch(release1, "1");
+
 	fu_device_set_order(device2, 11);
 	fu_release_set_device(release2, device2);
-	g_ptr_array_add(releases, release2);
-	fu_device_set_order(device3, 33);
+	fu_release_set_priority(release2, 0);
+	fu_release_set_branch(release2, "2");
+
+	fu_device_set_order(device3, 11);
 	fu_release_set_device(release3, device3);
+	fu_release_set_priority(release3, 99);
+	fu_release_set_branch(release3, "3");
+
+	g_ptr_array_add(releases, release1);
+	g_ptr_array_add(releases, release2);
 	g_ptr_array_add(releases, release3);
 
 	/* order the install tasks */
 	g_ptr_array_sort(releases, fu_release_compare_func_cb);
 	g_assert_cmpint(releases->len, ==, 3);
-	device_tmp = fu_release_get_device(g_ptr_array_index(releases, 0));
-	g_assert_cmpint(fu_device_get_order(device_tmp), ==, 11);
-	device_tmp = fu_release_get_device(g_ptr_array_index(releases, 1));
-	g_assert_cmpint(fu_device_get_order(device_tmp), ==, 33);
-	device_tmp = fu_release_get_device(g_ptr_array_index(releases, 2));
-	g_assert_cmpint(fu_device_get_order(device_tmp), ==, 99);
+	g_assert_cmpstr(fu_release_get_branch(g_ptr_array_index(releases, 0)), ==, "3");
+	g_assert_cmpstr(fu_release_get_branch(g_ptr_array_index(releases, 1)), ==, "2");
+	g_assert_cmpstr(fu_release_get_branch(g_ptr_array_index(releases, 2)), ==, "1");
 }
 
 static void
