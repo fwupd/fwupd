@@ -81,7 +81,15 @@ fu_usb_backend_setup(FuBackend *backend, FuProgress *progress, GError **error)
 {
 	FuUsbBackend *self = FU_USB_BACKEND(backend);
 
+#if G_USB_CHECK_VERSION(0, 4, 2)
+#if defined(__FreeBSD__) || defined(_WIN32)
+	self->usb_ctx = g_usb_context_new_full(G_USB_CONTEXT_FLAGS_USE_HOTPLUG_THREAD, NULL, error);
+#else
+	self->usb_ctx = g_usb_context_new_full(G_USB_CONTEXT_FLAGS_NONE, NULL, error);
+#endif
+#else
 	self->usb_ctx = g_usb_context_new(error);
+#endif
 	if (self->usb_ctx == NULL) {
 		g_prefix_error(error, "failed to get USB context: ");
 		return FALSE;
