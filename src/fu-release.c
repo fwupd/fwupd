@@ -33,6 +33,7 @@ struct _FuRelease {
 	gboolean is_downgrade;
 	GPtrArray *soft_reqs; /* nullable, element-type XbNode */
 	GPtrArray *hard_reqs; /* nullable, element-type XbNode */
+	guint64 priority;
 };
 
 G_DEFINE_TYPE(FuRelease, fu_release, FWUPD_TYPE_RELEASE)
@@ -618,6 +619,13 @@ fu_release_check_requirements(FuRelease *self,
 	return TRUE;
 }
 
+void
+fu_release_set_priority(FuRelease *self, guint64 priority)
+{
+	g_return_if_fail(FU_IS_RELEASE(self));
+	self->priority = priority;
+}
+
 /**
  * fu_release_load:
  * @self: a #FuRelease
@@ -689,6 +697,9 @@ fu_release_load(FuRelease *self,
 	tmp = xb_node_query_text(component, "developer_name", NULL);
 	if (tmp != NULL)
 		fwupd_release_set_vendor(FWUPD_RELEASE(self), tmp);
+	tmp64 = xb_node_get_attr_as_uint(component, "priority");
+	if (tmp64 != G_MAXUINT64)
+		fu_release_set_priority(self, tmp64);
 
 	/* use default release */
 	if (rel_optional == NULL) {
@@ -1014,7 +1025,7 @@ fu_release_get_action_id(FuRelease *self)
  * @release1: first task to compare.
  * @release2: second task to compare.
  *
- * Compares two install tasks.
+ * Compares two releases.
  *
  * Returns: 1, 0 or -1 if @release1 is greater, equal, or less than @release2, respectively.
  **/
@@ -1023,9 +1034,17 @@ fu_release_compare(FuRelease *release1, FuRelease *release2)
 {
 	FuDevice *device1 = fu_release_get_device(release1);
 	FuDevice *device2 = fu_release_get_device(release2);
+
+	/* device order, lower is better */
 	if (fu_device_get_order(device1) < fu_device_get_order(device2))
 		return -1;
 	if (fu_device_get_order(device1) > fu_device_get_order(device2))
+		return 1;
+
+	/* release priority, higher is better */
+	if (release1->priority > release2->priority)
+		return -1;
+	if (release1->priority < release2->priority)
 		return 1;
 	return 0;
 }
