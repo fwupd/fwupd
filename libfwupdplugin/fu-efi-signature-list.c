@@ -187,9 +187,7 @@ static gchar *
 fu_efi_signature_list_get_version(FuEfiSignatureList *self)
 {
 	guint csum_cnt = 0;
-	const gchar *ignored_guids[] = {FU_EFI_SIGNATURE_GUID_OVMF,
-					FU_EFI_SIGNATURE_GUID_OVMF_LEGACY,
-					NULL};
+	const gchar *valid_owners[] = {FU_EFI_SIGNATURE_GUID_MICROSOFT, NULL};
 	g_autofree gchar *checksum_last = NULL;
 	g_autoptr(GPtrArray) sigs = NULL;
 	struct {
@@ -223,10 +221,18 @@ fu_efi_signature_list_get_version(FuEfiSignatureList *self)
 	sigs = fu_firmware_get_images(FU_FIRMWARE(self));
 	for (guint i = 0; i < sigs->len; i++) {
 		FuEfiSignature *sig = g_ptr_array_index(sigs, i);
-		if (fu_efi_signature_get_kind(sig) != FU_EFI_SIGNATURE_KIND_SHA256)
+		if (fu_efi_signature_get_kind(sig) != FU_EFI_SIGNATURE_KIND_SHA256) {
+			if (g_getenv("FWUPD_EFI_SIGNATURE_VERBOSE") != NULL)
+				g_debug("ignoring dbx certificate");
 			continue;
-		if (g_strv_contains(ignored_guids, fu_efi_signature_get_owner(sig)))
+		}
+		if (!g_strv_contains(valid_owners, fu_efi_signature_get_owner(sig))) {
+			if (g_getenv("FWUPD_EFI_SIGNATURE_VERBOSE") != NULL) {
+				g_debug("ignoring non-Microsoft dbx hash: %s",
+					fu_efi_signature_get_owner(sig));
+			}
 			continue;
+		}
 
 		/* save the last hash in the list */
 		if (i == sigs->len - 1) {
