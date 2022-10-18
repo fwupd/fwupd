@@ -589,6 +589,7 @@ fu_elantp_hid_haptic_device_write_firmware(FuDevice *device,
 		g_prefix_error(error, "cannot leave EEPROM IAP: ");
 		return FALSE;
 	}
+	g_usleep(ELANTP_DELAY_RESET * 1000);
 	checksum_device = fu_elantp_hid_haptic_device_get_checksum(FU_DEVICE(parent), error);
 
 	if (checksum != checksum_device) {
