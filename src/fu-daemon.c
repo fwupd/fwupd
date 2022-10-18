@@ -1994,6 +1994,9 @@ fu_daemon_daemon_method_call(GDBusConnection *connection,
 
 		g_debug("Called %s", method_name);
 		if (!authenticate) {
+			/* if we cannot authenticate and the peer is not
+			 * inherently trusted, only return a non-sensitive
+			 * subset of the settings */
 			g_autoptr(FuBiosSettings) attrs =
 			    fu_context_get_bios_settings(fu_engine_get_context(self->engine));
 			val = fu_bios_settings_to_variant(
