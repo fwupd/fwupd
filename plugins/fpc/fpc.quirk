@@ -6,4 +6,4 @@ Plugin = fpc
 Flags = moh-device,rts
 [USB\VID_10A5&PID_9800]
 Plugin = fpc
-Flags = moh-device,rts
+Flags = moh-device,rts,lenfy
