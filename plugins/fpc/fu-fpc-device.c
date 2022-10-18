@@ -21,8 +21,9 @@
 #define FPC_CMD_DFU_CLRSTATUS	  0x04
 #define FPC_CMD_DFU_GET_FW_STATUS 0x09
 
-#define FPC_CMD_BOOT0	  0x04
-#define FPC_CMD_GET_STATE 0x0B
+#define FPC_CMD_BOOT0		0x04
+#define FPC_CMD_GET_STATE	0x0B
+#define FPC_CMD_GET_STATE_LENFY 0x50
 
 #define FPC_DEVICE_MOC_STATE_LEN     68
 #define FPC_DEVICE_MOH_STATE_LEN     72
@@ -58,6 +59,14 @@
  */
 
 #define FU_FPC_DEVICE_FLAG_RTS_DEVICE (1 << 2)
+
+/**
+ * FU_FPC_DEVICE_FLAG_LENFY_DEVICE:
+ *
+ * Device is a LENFY MOH device
+ */
+
+#define FU_FPC_DEVICE_FLAG_LENFY_DEVICE (1 << 3)
 
 struct _FuFpcDevice {
 	FuUsbDevice parent_instance;
@@ -210,6 +219,7 @@ fu_fpc_device_setup_version(FuFpcDevice *self, GError **error)
 	FuEndianType endian_type = G_LITTLE_ENDIAN;
 	g_autofree guint8 *data = NULL;
 	g_autofree gchar *str_version = NULL;
+	guint32 cmd_id = FPC_CMD_GET_STATE;
 
 	if (fu_device_has_private_flag(FU_DEVICE(self), FU_FPC_DEVICE_FLAG_RTS_DEVICE))
 		endian_type = G_BIG_ENDIAN;
@@ -222,7 +232,9 @@ fu_fpc_device_setup_version(FuFpcDevice *self, GError **error)
 		}
 
 		data = g_malloc0(data_len);
-		if (!fu_fpc_device_fw_cmd(self, FPC_CMD_GET_STATE, data, data_len, TRUE, error))
+		if (fu_device_has_private_flag(FU_DEVICE(self), FU_FPC_DEVICE_FLAG_LENFY_DEVICE))
+			cmd_id = FPC_CMD_GET_STATE_LENFY;
+		if (!fu_fpc_device_fw_cmd(self, cmd_id, data, data_len, TRUE, error))
 			return FALSE;
 
 		if (!fu_memread_uint32_safe(data, data_len, 0, &version, endian_type, error))
@@ -562,6 +574,7 @@ fu_fpc_device_init(FuFpcDevice *self)
 	fu_device_register_private_flag(FU_DEVICE(self),
 					FU_FPC_DEVICE_FLAG_LEGACY_DFU,
 					"legacy-dfu");
+	fu_device_register_private_flag(FU_DEVICE(self), FU_FPC_DEVICE_FLAG_LENFY_DEVICE, "lenfy");
 }
 
 static void
