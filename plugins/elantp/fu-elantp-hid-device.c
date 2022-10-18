@@ -14,6 +14,7 @@
 #include "fu-elantp-common.h"
 #include "fu-elantp-firmware.h"
 #include "fu-elantp-hid-device.h"
+#include "fu-elantp-hid-haptic-device.h"
 
 struct _FuElantpHidDevice {
 	FuUdevDevice parent_instance;
@@ -160,6 +161,30 @@ fu_elantp_hid_device_ensure_iap_ctrl(FuElantpHidDevice *self, GError **error)
 }
 
 static gboolean
+fu_elantp_hid_device_read_hatpic_enable(FuElantpHidDevice *self, GError **error)
+{
+	guint8 buf[2] = {0x0};
+	guint16 value;
+	if (!fu_elantp_hid_device_read_cmd(self, 
+					   ETP_CMD_I2C_FLIM_TYPE_ENABLE, 
+                                           buf, 
+                                           sizeof(buf), 
+                                           error)) {
+		g_prefix_error(error, "failed to read haptic enable cmd: ");
+		return FALSE;
+	}
+	value = fu_memread_uint16(buf, G_LITTLE_ENDIAN);
+
+	if (value == 0xFFFF || value == ETP_CMD_I2C_FLIM_TYPE_ENABLE)
+		return FALSE;
+
+	if (buf[0] & ETP_FW_FLIM_TYPE_ENABLE_BIT && buf[0] & ETP_FW_EEPROM_ENABLE_BIT)
+		return TRUE;
+
+	return FALSE;
+}
+
+static gboolean
 fu_elantp_hid_device_setup(FuDevice *device, GError **error)
 {
 	FuElantpHidDevice *self = FU_ELANTP_HID_DEVICE(device);
@@ -216,6 +241,8 @@ fu_elantp_hid_device_setup(FuDevice *device, GError **error)
 	}
 	self->module_id = fu_memread_uint16(buf, G_LITTLE_ENDIAN);
 
+	fu_device_set_vendor(device, "ELAN Microelectronics Corp.");
+
 	/* define the extra instance IDs */
 	fu_device_add_instance_u16(device, "VEN", fu_udev_device_get_vendor(udev_device));
 	fu_device_add_instance_u16(device, "DEV", fu_udev_device_get_model(udev_device));
@@ -271,6 +298,10 @@ fu_elantp_hid_device_setup(FuDevice *device, GError **error)
 	if (!fu_elantp_hid_device_ensure_iap_ctrl(self, error))
 		return FALSE;
 
+	if (fu_elantp_hid_device_read_hatpic_enable(self, error)) {
+		g_autoptr(FuElantpHidHapticDevice) cfg = fu_elantp_haptic_device_new(device);
+		fu_device_add_child(FU_DEVICE(device), FU_DEVICE(cfg));
+	}
 	/* success */
 	return TRUE;
 }
@@ -603,7 +634,7 @@ fu_elantp_hid_device_init(FuElantpHidDevice *self)
 {
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
-	fu_device_set_summary(FU_DEVICE(self), "Touchpad");
+	fu_device_set_summary(FU_DEVICE(self), "Elan Touchpad");
 	fu_device_add_icon(FU_DEVICE(self), "input-touchpad");
 	fu_device_add_protocol(FU_DEVICE(self), "tw.com.emc.elantp");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_HEX);
