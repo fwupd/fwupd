@@ -25,6 +25,8 @@
 #define FU_DEVICE_RETRY_OPEN_COUNT 5
 #define FU_DEVICE_RETRY_OPEN_DELAY 500 /* ms */
 
+#define FU_DEVICE_GUID_MAIN_SYSTEM_FIRMWARE "230c8b18-8d9b-53ec-838b-6cfc0383493a"
+
 /**
  * FuDevice:
  *
@@ -5555,6 +5557,21 @@ fu_device_security_attr_new(FuDevice *self, const gchar *appstream_id)
 	attr = fu_security_attr_new(priv->ctx, appstream_id);
 	fwupd_security_attr_set_plugin(attr, fu_device_get_plugin(FU_DEVICE(self)));
 	fwupd_security_attr_add_guids(attr, fu_device_get_guids(FU_DEVICE(self)));
+
+	/* if the device has a parent of main-system-firmware then add those GUIDs too */
+	if (fu_device_has_parent_guid(self, FU_DEVICE_GUID_MAIN_SYSTEM_FIRMWARE)) {
+		FuDevice *msf_device = fu_device_get_parent(self);
+		if (msf_device != NULL) {
+			GPtrArray *guids = fu_device_get_guids(msf_device);
+			for (guint i = 0; i < guids->len; i++) {
+				const gchar *guid = g_ptr_array_index(guids, i);
+				if (g_strcmp0(guid, FU_DEVICE_GUID_MAIN_SYSTEM_FIRMWARE) == 0)
+					continue;
+				fwupd_security_attr_add_guid(attr, guid);
+			}
+		}
+	}
+
 	return g_steal_pointer(&attr);
 }
 
