@@ -84,6 +84,9 @@
 
 #define MINIMUM_BATTERY_PERCENTAGE_FALLBACK 10
 
+#define FU_ENGINE_MAX_METADATA_SIZE  0x2000000 /* 32MB */
+#define FU_ENGINE_MAX_SIGNATURE_SIZE 0x100000  /* 1MB */
+
 static void
 fu_engine_finalize(GObject *obj);
 static void
@@ -4427,12 +4430,12 @@ fu_engine_update_metadata(FuEngine *self,
 	stream_sig = g_unix_input_stream_new(fd_sig, TRUE);
 
 	/* read the entire file into memory */
-	bytes_raw = g_input_stream_read_bytes(stream_fd, 0x100000, NULL, error);
+	bytes_raw = fu_bytes_get_contents_stream(stream_fd, FU_ENGINE_MAX_METADATA_SIZE, error);
 	if (bytes_raw == NULL)
 		return FALSE;
 
 	/* read signature */
-	bytes_sig = g_input_stream_read_bytes(stream_sig, 0x100000, NULL, error);
+	bytes_sig = fu_bytes_get_contents_stream(stream_sig, FU_ENGINE_MAX_SIGNATURE_SIZE, error);
 	if (bytes_sig == NULL)
 		return FALSE;
 
