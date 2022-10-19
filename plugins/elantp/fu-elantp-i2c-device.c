@@ -257,7 +257,7 @@ fu_elantp_i2c_device_setup(FuDevice *device, GError **error)
 	if (!fu_memread_uint16_safe(buf, sizeof(buf), 22, &pid, G_LITTLE_ENDIAN, error))
 		return FALSE;
 
-	fu_device_set_vendor(device, "ELAN Microelectronics Corp.");
+	fu_device_set_vendor(device, "ELAN Microelectronics");
 	/* set the vendor ID */
 	if (vid != 0x0000) {
 		g_autofree gchar *vendor_id = NULL;

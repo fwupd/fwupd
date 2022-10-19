@@ -1,5 +1,5 @@
-	/*
- * Copyright (C) 2020 Richard Hughes <richard@hughsie.com>
+/*
+ *  Copyright (C) 2022 Jingle Wu <jingle.wu@emc.com.tw>
  *
  * SPDX-License-Identifier: LGPL-2.1+
  */

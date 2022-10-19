@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2022 Jingle Wu <jingle.wu@emc.com.tw>
  *
  * SPDX-License-Identifier: LGPL-2.1+
  */
@@ -14,20 +14,12 @@
 struct _FuElanhapticFirmware {
 	FuFirmwareClass parent_instance;
 	guint16 eeprom_driver_ic;
-	guint32 eeprom_fw_ver;
 };
 
 G_DEFINE_TYPE(FuElanhapticFirmware, fu_elanhaptic_firmware, FU_TYPE_FIRMWARE)
 
 
 const guint8 elanhaptic_signature_ictype02[] = {0xFF, 0x40, 0xA2, 0x5B};
-
-guint32
-fu_elanhaptic_firmware_get_fwver(FuElanhapticFirmware *self)
-{
-	g_return_val_if_fail(FU_IS_ELANHAPTIC_FIRMWARE(self), 0);
-	return self->eeprom_fw_ver;
-}
 
 guint16
 fu_elanhaptic_firmware_get_driveric(FuElanhapticFirmware *self)
@@ -40,7 +32,6 @@ static void
 fu_elanhaptic_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
 {
 	FuElanhapticFirmware *self = FU_ELANHAPTIC_FIRMWARE(firmware);
-	fu_xmlb_builder_insert_kx(bn, "eeprom_fw_ver", self->eeprom_fw_ver);
 	fu_xmlb_builder_insert_kx(bn, "eeprom_driver_ic", self->eeprom_driver_ic);
 }
 
@@ -83,25 +74,34 @@ fu_elanhaptic_firmware_parse(FuFirmware *firmware,
 {
 	FuElanhapticFirmware *self = FU_ELANHAPTIC_FIRMWARE(firmware);
 	gsize bufsz = 0;
-	guint16 v_s = 0;
-    	guint16 v_d = 0;
-    	guint16 v_m = 0;
-    	guint16 v_y = 0;
-    	gint8 tmp[256] = {0x0};
+	guint8 v_s = 0;
+    	guint8 v_d = 0;
+    	guint8 v_m = 0;
+    	guint8 v_y = 0;
+    	guint8 tmp = 0;
+    	g_autofree gchar *version_str = NULL;
 	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
 
 	g_return_val_if_fail(fw != NULL, FALSE);
 	
-	v_d = buf[5];
-	v_m = buf[4] & 0xF;
-	v_s = (buf[4] & 0xF0) >> 4;
-	v_y = buf[6];
-
-	if ((v_y==0xFF) || (v_m==0xFF) || (v_d==0xFF) || (v_s==0xFF))
+	if (bufsz < 6)
+		return FALSE;
+	
+	if (!fu_memread_uint8_safe(buf, bufsz, 0x4, &tmp, error))
+		return FALSE;
+	v_m = tmp & 0xF;
+	v_s = (tmp & 0xF0) >> 4;
+	
+	if (!fu_memread_uint8_safe(buf, bufsz, 0x5, &v_d, error))
+		return FALSE;
+	if (!fu_memread_uint8_safe(buf, bufsz, 0x6, &v_y, error))
 		return FALSE;
 
-	sprintf((char*)tmp, "%02d%02d%02d%02d", v_y, v_m, v_d, v_s);
-	self->eeprom_fw_ver = atoi((char*)tmp);
+	if (v_y==0xFF || v_d==0xFF || v_m==0xF)
+		return FALSE;
+
+	version_str = g_strdup_printf("%02d%02d%02d%02d", v_y, v_m, v_d, v_s);
+	fu_firmware_set_version(FU_FIRMWARE(self), version_str);
 	
 	/* success */
 	return TRUE;
@@ -117,9 +117,6 @@ fu_elanhaptic_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
 	tmp = xb_node_query_text_as_uint(n, "eeprom_driver_ic", NULL);
 	if (tmp != G_MAXUINT64 && tmp <= G_MAXUINT16)
 		self->eeprom_driver_ic = tmp;
-	tmp = xb_node_query_text_as_uint(n, "eeprom_fw_ver", NULL);
-	if (tmp != G_MAXUINT64 && tmp <= G_MAXUINT32)
-		self->eeprom_fw_ver = tmp;
 
 	/* success */
 	return TRUE;
