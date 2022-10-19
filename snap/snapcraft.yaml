@@ -81,13 +81,16 @@ parts:
               ${CRAFT_PART_INSTALL}/share/bash-completion/completions/*
       # fixes up dbus service for classic snap
       sed -i 's!SystemdService=\(.*\)!SystemdService=snap.fwupd.fwupd.service!' \
-              ${SNAPCRAFT_PART_INSTALL}/share/dbus-1/system-services/org.freedesktop.fwupd.service
+              ${CRAFT_PART_INSTALL}/share/dbus-1/system-services/org.freedesktop.fwupd.service
+      cp -R /usr/libexec/fwupd/efi ${CRAFT_PART_INSTALL}/libexec/fwupd
     override-pull: |
       craftctl default
       craftctl set version=$(git describe HEAD --always)
     build-packages:
       - bash-completion
       - curl
+      - fwupd-signed
+      - fwupd-unsigned
       - gettext
       - gcab
       - gnu-efi
@@ -130,8 +133,6 @@ parts:
       - systemd
       - uuid-dev
     stage-packages:
-      - fwupd-signed
-      - fwupd-unsigned
       - libunbound8
       - libevent-2.1-7
       - libnghttp2-14
@@ -177,6 +178,7 @@ parts:
       # /usr/bin/gpg2
       - -usr/bin
       - -usr/sbin
+      - -usr/libexec
       - -usr/share/man
       - -usr/share/GConf
       - -etc/X11
