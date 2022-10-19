@@ -97,8 +97,14 @@ fu_elanhaptic_firmware_parse(FuFirmware *firmware,
 	if (!fu_memread_uint8_safe(buf, bufsz, 0x6, &v_y, error))
 		return FALSE;
 
-	if (v_y==0xFF || v_d==0xFF || v_m==0xF)
+	if (v_y == 0xFF || v_d == 0xFF || v_m == 0xF) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "bad firmware version %02d%02d%02d%02d", 
+			    v_y, v_m, v_d, v_s);
 		return FALSE;
+	}
 
 	version_str = g_strdup_printf("%02d%02d%02d%02d", v_y, v_m, v_d, v_s);
 	fu_firmware_set_version(FU_FIRMWARE(self), version_str);

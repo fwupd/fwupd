@@ -8,6 +8,11 @@
 
 #include <glib.h>
 
+typedef struct {
+	guint16 checksum;
+	guint16 iap_password;
+} FuElanhaptictpWaitFlashEEPROMChecksumHelper;
+
 #define ETP_CMD_GET_HID_DESCRIPTOR 0x0001
 #define ETP_CMD_GET_HARDWARE_ID	   0x0100
 #define ETP_CMD_GET_MODULE_ID	   0x0101
