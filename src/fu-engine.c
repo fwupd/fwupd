@@ -2413,6 +2413,16 @@ fu_engine_install_releases(FuEngine *self,
 	return TRUE;
 }
 
+static void
+fu_engine_update_release_integrity(FuEngine *self, FwupdRelease *release, const gchar *key)
+{
+	g_autoptr(GHashTable) integrity = fu_engine_integrity_new(NULL);
+	if (integrity != NULL) {
+		g_autofree gchar *str = fu_engine_integrity_to_string(integrity);
+		fwupd_release_add_metadata_item(FWUPD_RELEASE(release), key, str);
+	}
+}
+
 static gboolean
 fu_engine_add_release_metadata(FuEngine *self, FuRelease *release, FuPlugin *plugin, GError **error)
 {
@@ -2455,6 +2465,14 @@ fu_engine_add_release_metadata(FuEngine *self, FuRelease *release, FuPlugin *plu
 			}
 		}
 	}
+
+	/* measure the "old" system state */
+	if (fu_plugin_has_flag(plugin, FWUPD_PLUGIN_FLAG_MEASURE_SYSTEM_INTEGRITY)) {
+		fu_engine_update_release_integrity(self,
+						   FWUPD_RELEASE(release),
+						   "SystemIntegrityOld");
+	}
+
 	return TRUE;
 }
 
@@ -7315,6 +7333,13 @@ fu_engine_update_history_device(FuEngine *self, FuDevice *dev_history, GError **
 		}
 	}
 
+	/* measure the "new" system state */
+	plugin = fu_plugin_list_find_by_name(self->plugin_list, fu_device_get_plugin(dev), error);
+	if (plugin == NULL)
+		return FALSE;
+	if (fu_plugin_has_flag(plugin, FWUPD_PLUGIN_FLAG_MEASURE_SYSTEM_INTEGRITY))
+		fu_engine_update_release_integrity(self, rel_history, "SystemIntegrityNew");
+
 	/* the system is running with the new firmware version */
 	if (fu_version_compare(fu_device_get_version(dev),
 			       fwupd_release_get_version(rel_history),
@@ -7338,9 +7363,6 @@ fu_engine_update_history_device(FuEngine *self, FuDevice *dev_history, GError **
 	}
 
 	/* does the plugin know the update failure */
-	plugin = fu_plugin_list_find_by_name(self->plugin_list, fu_device_get_plugin(dev), error);
-	if (plugin == NULL)
-		return FALSE;
 	if (!fu_plugin_runner_get_results(plugin, dev, error))
 		return FALSE;
 

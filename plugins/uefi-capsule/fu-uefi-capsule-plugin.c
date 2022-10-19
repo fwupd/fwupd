@@ -997,6 +997,7 @@ static void
 fu_uefi_capsule_plugin_init(FuUefiCapsulePlugin *self)
 {
 	self->bgrt = fu_uefi_bgrt_new();
+	fu_plugin_add_flag(FU_PLUGIN(self), FWUPD_PLUGIN_FLAG_MEASURE_SYSTEM_INTEGRITY);
 }
 
 static void

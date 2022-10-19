@@ -880,6 +880,14 @@ typedef enum {
  */
 #define FWUPD_PLUGIN_FLAG_MODULAR (1u << 14)
 /**
+ * FWUPD_PLUGIN_FLAG_MEASURE_SYSTEM_INTEGRITY:
+ *
+ * The plugin will be checked that it preserves system state such as `KEK`, `PK`, `BOOT####` etc.
+ *
+ * Since: 1.8.7
+ */
+#define FWUPD_PLUGIN_FLAG_MEASURE_SYSTEM_INTEGRITY (1u << 15)
+/**
  * FWUPD_PLUGIN_FLAG_UNKNOWN:
  *
  * The plugin flag is Unknown.
