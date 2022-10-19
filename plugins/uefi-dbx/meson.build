@@ -12,7 +12,11 @@ plugin_builtin_uefi_dbx = static_library('fu_plugin_uefi_dbx',
   include_directories: plugin_incdirs,
   link_with: plugin_libs,
   c_args: cargs,
-  dependencies: plugin_deps,
+  dependencies: [
+    plugin_deps,
+    efiboot,
+    efivar,
+  ],
 )
 plugin_builtins += plugin_builtin_uefi_dbx
 
@@ -26,7 +30,11 @@ if get_option('tests')
       'fu-self-test.c',
     ],
     include_directories: plugin_incdirs,
-    dependencies: plugin_deps,
+    dependencies: [
+      plugin_deps,
+      efiboot,
+      efivar,
+    ],
     link_with: [
       plugin_libs,
       plugin_builtin_uefi_dbx,
@@ -45,7 +53,11 @@ dbxtool = executable(
     'fu-dbxtool.c',
   ],
   include_directories: plugin_incdirs,
-  dependencies: plugin_deps,
+  dependencies: [
+    plugin_deps,
+    efiboot,
+    efivar,
+  ],
   link_with: [
     plugin_libs,
     plugin_builtin_uefi_dbx,

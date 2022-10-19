@@ -8,6 +8,8 @@
 
 #include <fwupdplugin.h>
 
+#include <efivar.h>
+
 gchar *
 fu_uefi_dbx_get_authenticode_hash(const gchar *fn, GError **error);
 gboolean
