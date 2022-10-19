@@ -1702,6 +1702,10 @@ fu_util_plugin_flag_to_string(FwupdPluginFlags plugin_flag)
 		/* TRANSLATORS: the plugin was created from a .so object, and was not built-in */
 		return _("Loaded from an external module");
 	}
+	if (plugin_flag == FWUPD_PLUGIN_FLAG_MEASURE_SYSTEM_INTEGRITY) {
+		/* TRANSLATORS: check various UEFI and ACPI tables are unchanged after the update */
+		return _("Will measure elements of system integrity around an update");
+	}
 	if (plugin_flag == FWUPD_PLUGIN_FLAG_EFIVAR_NOT_MOUNTED) {
 		/* TRANSLATORS: the user is using Gentoo/Arch and has screwed something up */
 		return _("Required efivarfs filesystem was not found");
