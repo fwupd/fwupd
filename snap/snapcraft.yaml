@@ -187,11 +187,17 @@ parts:
       - -usr/lib/dconf
       - -usr/lib/gcc
       - -usr/lib/glib-networking
+      - -usr/lib/gnupg
       - -usr/lib/gnupg2
       - -usr/lib/sasl2
       - -usr/lib/systemd
       - -usr/lib/*/audit
+      - -usr/share/bash-completion
+      - -usr/share/dbus-1
+      - -usr/share/gnupg
       - -usr/share/glib-2.0/schemas
+      - -usr/share/session-migration
+      - -usr/share/upstart
       - -usr/share/X11
       - -include
       - -lib/udev
