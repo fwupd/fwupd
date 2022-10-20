@@ -10,6 +10,11 @@ if build_standalone and get_option('lvfs') != 'false'
   else
     con3.set('enabled', 'true')
   endif
+  if libxmlb.version().version_compare('>= 0.3.3')
+    con3.set('compression', 'xz')
+  else
+    con3.set('compression', 'gz')
+  endif
   configure_file(
     input: 'lvfs.conf',
     output: 'lvfs.conf',
