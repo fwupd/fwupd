@@ -7,9 +7,9 @@
 #include "config.h"
 
 #include <fwupdplugin.h>
-#include <stdio.h>
-#include "fu-elantp-common.h"
+
 #include "fu-elanhaptic-firmware.h"
+#include "fu-elantp-common.h"
 
 struct _FuElanhapticFirmware {
 	FuFirmwareClass parent_instance;
@@ -17,7 +17,6 @@ struct _FuElanhapticFirmware {
 };
 
 G_DEFINE_TYPE(FuElanhapticFirmware, fu_elanhaptic_firmware, FU_TYPE_FIRMWARE)
-
 
 const guint8 elanhaptic_signature_ictype02[] = {0xFF, 0x40, 0xA2, 0x5B};
 
@@ -43,11 +42,7 @@ fu_elanhaptic_firmware_check_magic(FuFirmware *firmware, GBytes *fw, gsize offse
 	const guint8 *buf = g_bytes_get_data(fw, NULL);
 	for (gsize i = 0; i < sizeof(elanhaptic_signature_ictype02); i++) {
 		guint8 tmp = 0x0;
-		if (!fu_memread_uint8_safe(buf,
-					   bufsz,
-					   i,
-					   &tmp,
-					   error)) 
+		if (!fu_memread_uint8_safe(buf, bufsz, i, &tmp, error))
 			return FALSE;
 		if (tmp != elanhaptic_signature_ictype02[i]) {
 			g_set_error(error,
@@ -61,37 +56,37 @@ fu_elanhaptic_firmware_check_magic(FuFirmware *firmware, GBytes *fw, gsize offse
 		}
 	}
 	self->eeprom_driver_ic = 0x2;
-	
-	return TRUE;	
+
+	return TRUE;
 }
 
 static gboolean
 fu_elanhaptic_firmware_parse(FuFirmware *firmware,
-			 GBytes *fw,
-			 gsize offset,
-			 FwupdInstallFlags flags,
-			 GError **error)
+			     GBytes *fw,
+			     gsize offset,
+			     FwupdInstallFlags flags,
+			     GError **error)
 {
 	FuElanhapticFirmware *self = FU_ELANHAPTIC_FIRMWARE(firmware);
 	gsize bufsz = 0;
 	guint8 v_s = 0;
-    	guint8 v_d = 0;
-    	guint8 v_m = 0;
-    	guint8 v_y = 0;
-    	guint8 tmp = 0;
-    	g_autofree gchar *version_str = NULL;
+	guint8 v_d = 0;
+	guint8 v_m = 0;
+	guint8 v_y = 0;
+	guint8 tmp = 0;
+	g_autofree gchar *version_str = NULL;
 	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
 
 	g_return_val_if_fail(fw != NULL, FALSE);
-	
+
 	if (bufsz < 6)
 		return FALSE;
-	
+
 	if (!fu_memread_uint8_safe(buf, bufsz, 0x4, &tmp, error))
 		return FALSE;
 	v_m = tmp & 0xF;
 	v_s = (tmp & 0xF0) >> 4;
-	
+
 	if (!fu_memread_uint8_safe(buf, bufsz, 0x5, &v_d, error))
 		return FALSE;
 	if (!fu_memread_uint8_safe(buf, bufsz, 0x6, &v_y, error))
@@ -101,14 +96,17 @@ fu_elanhaptic_firmware_parse(FuFirmware *firmware,
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_FILE,
-			    "bad firmware version %02d%02d%02d%02d", 
-			    v_y, v_m, v_d, v_s);
+			    "bad firmware version %02d%02d%02d%02d",
+			    v_y,
+			    v_m,
+			    v_d,
+			    v_s);
 		return FALSE;
 	}
 
 	version_str = g_strdup_printf("%02d%02d%02d%02d", v_y, v_m, v_d, v_s);
 	fu_firmware_set_version(FU_FIRMWARE(self), version_str);
-	
+
 	/* success */
 	return TRUE;
 }

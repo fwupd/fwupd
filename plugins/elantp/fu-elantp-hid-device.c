@@ -165,21 +165,18 @@ fu_elantp_hid_device_read_hatpic_enable(FuElantpHidDevice *self, GError **error)
 {
 	guint8 buf[2] = {0x0};
 	guint16 value;
-	if (!fu_elantp_hid_device_read_cmd(self, 
-					   ETP_CMD_I2C_FLIM_TYPE_ENABLE, 
-                                           buf, 
-                                           sizeof(buf), 
-                                           error)) {
+	if (!fu_elantp_hid_device_read_cmd(self,
+					   ETP_CMD_I2C_FLIM_TYPE_ENABLE,
+					   buf,
+					   sizeof(buf),
+					   error)) {
 		g_prefix_error(error, "failed to read haptic enable cmd: ");
 		return FALSE;
 	}
 	value = fu_memread_uint16(buf, G_LITTLE_ENDIAN);
 
 	if (value == 0xFFFF || value == ETP_CMD_I2C_FLIM_TYPE_ENABLE) {
-		g_set_error(error,
-		    	FWUPD_ERROR,
-			FWUPD_ERROR_NOT_SUPPORTED,
-			"not hapticpad.");
+		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "not hapticpad.");
 		return FALSE;
 	}
 
@@ -187,9 +184,9 @@ fu_elantp_hid_device_read_hatpic_enable(FuElantpHidDevice *self, GError **error)
 		return TRUE;
 
 	g_set_error(error,
-		FWUPD_ERROR,
-		FWUPD_ERROR_NOT_SUPPORTED,
-		"the haptic eeprom not supported.");
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_NOT_SUPPORTED,
+		    "the haptic eeprom not supported.");
 	return FALSE;
 }
 
@@ -206,7 +203,7 @@ fu_elantp_hid_device_setup(FuDevice *device, GError **error)
 	g_autofree gchar *version_bl = NULL;
 	g_autofree gchar *version = NULL;
 	g_autoptr(GError) error_local = NULL;
-	
+
 	/* get pattern */
 	if (!fu_elantp_hid_device_read_cmd(self, ETP_CMD_I2C_GET_HID_ID, buf, sizeof(buf), error)) {
 		g_prefix_error(error, "failed to read HID ID: ");
@@ -308,12 +305,12 @@ fu_elantp_hid_device_setup(FuDevice *device, GError **error)
 	if (!fu_elantp_hid_device_ensure_iap_ctrl(self, error))
 		return FALSE;
 
- 	if (!fu_elantp_hid_device_read_hatpic_enable(self, &error_local)) {
- 		g_debug("no haptic device detected: %s", error_local->message);
- 	} else {
- 		g_autoptr(FuElantpHidHapticDevice) cfg = fu_elantp_haptic_device_new(device);
- 		fu_device_add_child(FU_DEVICE(device), FU_DEVICE(cfg));
- 	}
+	if (!fu_elantp_hid_device_read_hatpic_enable(self, &error_local)) {
+		g_debug("no haptic device detected: %s", error_local->message);
+	} else {
+		g_autoptr(FuElantpHidHapticDevice) cfg = fu_elantp_haptic_device_new(device);
+		fu_device_add_child(FU_DEVICE(device), FU_DEVICE(cfg));
+	}
 	/* success */
 	return TRUE;
 }
