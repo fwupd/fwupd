@@ -209,18 +209,26 @@ fu_elantp_hid_haptic_device_get_hatpic_driver_ic(FuDevice *parent,
 		return FALSE;
 	}
 	value = fu_memread_uint16(buf, G_LITTLE_ENDIAN);
-
 	if (value == 0xFFFF || value == ETP_CMD_I2C_FLIM_TYPE_ENABLE) {
-		g_prefix_error(error, "failed to read haptic enable cmd: ");
+		g_set_error_literal(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_NOT_SUPPORTED,
+				    "failed to read haptic enable cmd");
 		return FALSE;
 	}
 
-	if (buf[0] & ETP_FW_FLIM_TYPE_ENABLE_BIT && buf[0] & ETP_FW_EEPROM_ENABLE_BIT) {
-		self->driver_ic = (buf[0] >> 4) & 0xF;
-		return TRUE;
+	if ((buf[0] & ETP_FW_FLIM_TYPE_ENABLE_BIT) == 0 ||
+	    (buf[0] & ETP_FW_EEPROM_ENABLE_BIT) == 0) {
+		g_set_error_literal(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_NOT_SUPPORTED,
+				    "eeprom enable bit unset");
+		return FALSE;
 	}
 
-	return FALSE;
+	/* success */
+	self->driver_ic = (buf[0] >> 4) & 0xF;
+	return TRUE;
 }
 
 static gboolean
@@ -307,7 +315,11 @@ fu_elantp_hid_haptic_device_write_checksum_cb(FuDevice *parent, gpointer user_da
 	value = fu_memread_uint16(buf, G_LITTLE_ENDIAN);
 
 	if ((value & 0xFFFF) != ETP_CMD_I2C_EEPROM_WRITE_INFOMATION) {
-		g_prefix_error(error, "failed to set haptic info (0x%04x): ", value);
+		g_set_error(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_FAILED,
+			    "failed to set haptic info (0x%04x): ",
+			    value);
 		return FALSE;
 	}
 	if (!fu_elantp_hid_haptic_device_write_cmd(parent,
@@ -342,15 +354,19 @@ fu_elantp_hid_haptic_device_write_checksum_cb(FuDevice *parent, gpointer user_da
 	value = fu_memread_uint16(buf, G_LITTLE_ENDIAN);
 
 	if ((value & 0xFFFF) != helper->checksum) {
-		g_prefix_error(error,
-			       "eeprom checksum failed 0x%04x != 0x%04x : ",
-			       value,
-			       helper->checksum);
+		g_set_error(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_INVALID_DATA,
+			    "eeprom checksum failed 0x%04x != 0x%04x : ",
+			    value,
+			    helper->checksum);
 		return FALSE;
 	}
 
+	/* success */
 	return TRUE;
 }
+
 static gboolean
 fu_elantp_hid_haptic_device_get_checksum(FuDevice *parent, guint16 *checksum, GError **error)
 {
