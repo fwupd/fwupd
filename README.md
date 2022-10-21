@@ -6,7 +6,7 @@
 [![Fuzzing Status](https://oss-fuzz-build-logs.storage.googleapis.com/badges/fwupd.svg)](https://bugs.chromium.org/p/oss-fuzz/issues/list?sort=-opened&can=1&q=proj:fwupd)
 [![CircleCI](https://circleci.com/gh/fwupd/fwupd/tree/main.svg?style=svg)](https://circleci.com/gh/fwupd/fwupd/tree/main)
 
-This project aims to make updating firmware on Linux automatic, safe and reliable.
+This project aims to make updating firmware on Linux automatic, safe, and reliable.
 
 Additional information is available [at the website](https://fwupd.org/).
 
@@ -19,9 +19,9 @@ Additional information is available [at the website](https://fwupd.org/).
 
 ## Compiling
 
-The most up to date compilation instructions are available in the [Wiki](https://github.com/fwupd/fwupd/wiki/Compilation).
+The most up-to-date compilation instructions are available in the [Wiki](https://github.com/fwupd/fwupd/wiki/Compilation).
 
-**NOTE:** In most cases end users should never compile fwupd from scratch; it's a
+**NOTE:** In most cases, end users should never compile fwupd from scratch; it's a
 complicated project with dozens of dependencies (and as many configuration options)
 and there's just too many things that can go wrong.
 
@@ -49,7 +49,7 @@ capsule in the hardware vendors section of the [fwupd website](https://fwupd.org
 
 ## Basic usage flow (command line)
 
-If you have a device with firmware supported by fwupd, this is how you will check
+If you have a device with firmware supported by fwupd, this is how you can check
 for updates and apply them using fwupd's command line tools.
 
 `# fwupdmgr get-devices`
@@ -83,11 +83,11 @@ process efficacy.
 
 The privacy policy regarding this data can be viewed on the [fwupd website](https://fwupd.org/privacy).
 
-To report the status of an update run:
+To report the status of an update, run:
 
 `# fwupdmgr report-history`
 
- Only updates that were distributed from the LVFS will be reported to the LVFS.
+Only updates that were distributed from the LVFS will be reported to the LVFS.
 
 ## Enterprise use
 
@@ -98,7 +98,7 @@ to only firmware that have been tested specifically in your organization.
 
 The list of approved updates can be enabled by adding `ApprovalRequired=true`
 to the remote configuration file, e.g. `lvfs.conf`. Once enabled, the
-list of approved updates can be set in `daemon.conf` using a comma delimited list.
+list of approved updates can be set in `daemon.conf` using a comma-delimited list.
 
 For example:
 
@@ -168,7 +168,7 @@ This then appears when getting the releases for that specific GUID:
 1. [GNOME Software](https://wiki.gnome.org/Apps/Software) is the graphical
  frontend available. When compiled with firmware support, it will check for
  updates periodically and automatically download firmware in the background.
- After the firmware has been downloaded a popup will be displayed in GNOME
+ After the firmware has been downloaded, a popup will be displayed in GNOME
  Software to perform the update.
 
 2. [KDE Discover](https://userbase.kde.org/Discover) is the software center,
