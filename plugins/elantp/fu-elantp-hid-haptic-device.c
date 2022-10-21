@@ -11,8 +11,8 @@
 #include <linux/hidraw.h>
 #include <linux/input.h>
 
-#include "fu-elanhaptic-firmware.h"
 #include "fu-elantp-common.h"
+#include "fu-elantp-haptic-firmware.h"
 #include "fu-elantp-hid-haptic-device.h"
 
 struct _FuElantpHidHapticDevice {
@@ -288,14 +288,14 @@ fu_elantp_hid_haptic_device_get_version(FuDevice *parent,
 typedef struct {
 	guint16 checksum;
 	guint16 iap_password;
-} FuElanhaptictpWaitFlashEEPROMChecksumHelper;
+} FuElantpHaptictpWaitFlashEEPROMChecksumHelper;
 
 static gboolean
 fu_elantp_hid_haptic_device_write_checksum_cb(FuDevice *parent, gpointer user_data, GError **error)
 {
 	guint8 buf[2] = {0x0};
 	guint16 value;
-	FuElanhaptictpWaitFlashEEPROMChecksumHelper *helper = user_data;
+	FuElantpHaptictpWaitFlashEEPROMChecksumHelper *helper = user_data;
 
 	if (!fu_elantp_hid_haptic_device_write_cmd(parent,
 						   ETP_CMD_I2C_EEPROM_SETTING,
@@ -352,7 +352,6 @@ fu_elantp_hid_haptic_device_write_checksum_cb(FuDevice *parent, gpointer user_da
 		return FALSE;
 	}
 	value = fu_memread_uint16(buf, G_LITTLE_ENDIAN);
-
 	if ((value & 0xFFFF) != helper->checksum) {
 		g_set_error(error,
 			    G_IO_ERROR,
@@ -372,7 +371,7 @@ fu_elantp_hid_haptic_device_wait_calc_checksum_cb(FuDevice *parent,
 						  gpointer user_data,
 						  GError **error)
 {
-	guint16 ctrl = 0;
+	guint16 ctrl;
 	guint8 buf[2] = {0x0};
 
 	if (!fu_elantp_hid_haptic_device_write_cmd(parent,
@@ -391,7 +390,6 @@ fu_elantp_hid_haptic_device_wait_calc_checksum_cb(FuDevice *parent,
 		return FALSE;
 	}
 	ctrl = fu_memread_uint16(buf, G_LITTLE_ENDIAN);
-
 	if ((ctrl & 0x20) == 0x20) {
 		g_set_error(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA, "ctrl failed 0x%04x", ctrl);
 		return FALSE;
@@ -491,8 +489,8 @@ fu_elantp_hid_haptic_device_setup(FuDevice *device, GError **error)
 	}
 	self->module_id = fu_memread_uint16(buf, G_LITTLE_ENDIAN);
 
-	udev_parent = FU_UDEV_DEVICE(parent);
 	/* define the extra instance IDs */
+	udev_parent = FU_UDEV_DEVICE(parent);
 	fu_device_add_instance_u16(device, "VEN", fu_udev_device_get_vendor(udev_parent));
 	fu_device_add_instance_u16(device, "DEV", fu_udev_device_get_model(udev_parent));
 	fu_device_add_instance_u16(device, "DRIVERIC", self->driver_ic);
@@ -557,7 +555,7 @@ fu_elantp_hid_haptic_device_setup(FuDevice *device, GError **error)
 
 	fu_device_set_firmware_size(device, 32768);
 
-	/* is in bootloader mode */
+	/* find out if in bootloader mode */
 	if (!fu_elantp_hid_haptic_device_ensure_iap_ctrl(FU_DEVICE(parent), self, error))
 		return FALSE;
 
@@ -572,13 +570,13 @@ fu_elantp_hid_haptic_device_prepare_firmware(FuDevice *device,
 					     GError **error)
 {
 	FuElantpHidHapticDevice *self = FU_ELANTP_HID_HAPTIC_DEVICE(device);
-	guint16 driver_ic = 0;
-	g_autoptr(FuFirmware) firmware = fu_elanhaptic_firmware_new();
+	guint16 driver_ic;
+	g_autoptr(FuFirmware) firmware = fu_elantp_haptic_firmware_new();
 
 	/* check is compatible with hardware */
 	if (!fu_firmware_parse(firmware, fw, flags, error))
 		return NULL;
-	driver_ic = fu_elanhaptic_firmware_get_driveric(FU_ELANHAPTIC_FIRMWARE(firmware));
+	driver_ic = fu_elantp_haptic_firmware_get_driver_ic(FU_ELANTP_HAPTIC_FIRMWARE(firmware));
 	if (driver_ic != self->driver_ic) {
 		g_set_error(error,
 			    G_IO_ERROR,
@@ -605,16 +603,16 @@ fu_elantp_hid_haptic_device_write_firmware(FuDevice *device,
 	gsize bufsz = 0;
 	guint16 checksum = 0;
 	guint16 checksum_device = 0;
-	guint16 retry_cnt = 0;
 	guint16 eeprom_fw_page_size = 32;
+	guint16 retry_cnt = 0;
+	guint8 first_page[32] = {0x0};
 	const gchar *fw_ver;
 	const gchar *fw_ver_device;
 	const guint8 *buf;
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GPtrArray) chunks = NULL;
-	guint8 first_page[32];
 	g_autoptr(GError) error_local = NULL;
-	FuElanhaptictpWaitFlashEEPROMChecksumHelper helper;
+	FuElantpHaptictpWaitFlashEEPROMChecksumHelper helper;
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
@@ -762,7 +760,6 @@ fu_elantp_hid_haptic_device_write_firmware(FuDevice *device,
 		g_prefix_error(error, "read device checksum fail: ");
 		return FALSE;
 	}
-
 	if (checksum != checksum_device) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -772,9 +769,9 @@ fu_elantp_hid_haptic_device_write_firmware(FuDevice *device,
 			    checksum_device);
 		return FALSE;
 	}
+
 	helper.checksum = checksum_device;
 	helper.iap_password = self->iap_password;
-
 	if (!fu_device_retry_full(FU_DEVICE(parent),
 				  fu_elantp_hid_haptic_device_write_checksum_cb,
 				  3,
@@ -824,7 +821,7 @@ fu_elantp_hid_haptic_device_detach(FuDevice *device, FuProgress *progress, GErro
 	guint16 ctrl;
 	guint16 tmp;
 
-	/* The Haptic EEPROM IAP process runs in the TP main code. */
+	/* haptic EEPROM IAP process runs in the TP main code */
 	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
 		g_set_error(error,
 			    G_IO_ERROR,
@@ -1041,8 +1038,7 @@ fu_elantp_hid_haptic_device_init(FuElantpHidHapticDevice *self)
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_USE_PARENT_FOR_OPEN);
 	fu_device_add_icon(FU_DEVICE(self), "input-touchpad");
 	fu_device_add_protocol(FU_DEVICE(self), "tw.com.emc.elantp.haptic");
-	fu_device_set_name(FU_DEVICE(self), "Elan HapticPad EEPROM");
-	fu_device_set_summary(FU_DEVICE(self), "HapticPad EEPROM");
+	fu_device_set_name(FU_DEVICE(self), "HapticPad EEPROM");
 	fu_device_set_logical_id(FU_DEVICE(self), "eeprom");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PLAIN);
 	fu_device_set_priority(FU_DEVICE(self), 1); /* better than i2c */
