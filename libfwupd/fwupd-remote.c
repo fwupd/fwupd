@@ -562,8 +562,13 @@ fwupd_remote_setup(FwupdRemote *self, GError **error)
 			return FALSE;
 		}
 		/* set cache to /var/lib... */
-		filename_cache =
-		    g_build_filename(priv->remotes_dir, priv->id, "metadata.xml.gz", NULL);
+		if (g_str_has_suffix(priv->metadata_uri, ".xml.xz")) {
+			filename_cache =
+			    g_build_filename(priv->remotes_dir, priv->id, "metadata.xml.xz", NULL);
+		} else {
+			filename_cache =
+			    g_build_filename(priv->remotes_dir, priv->id, "metadata.xml.gz", NULL);
+		}
 		fwupd_remote_set_filename_cache(self, filename_cache);
 	}
 
