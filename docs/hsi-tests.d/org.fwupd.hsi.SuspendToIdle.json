@@ -1,0 +1,19 @@
+{
+  "id" : "org.fwupd.hsi.SuspendToIdle",
+  "name" : "Suspend-to-Idle",
+  "description" : [
+    "The platform should be set up with Suspend-to-Idle as the default S3 sleep state."
+  ],
+  "failure-impact" : [
+    "A local attacker could overwrite the S3 resume script to modify system RAM which can lead to privilege escalation."
+  ],
+  "failure-results" : {
+    "enabled" : "deep sleep enabled",
+    "not-valid" : "could not determine the default"
+  },
+  "success-results" : {
+    "not-enabled" : "suspend-to-idle being used"
+  },
+  "hsi-level" : 3,
+  "fwupd-version" : "1.5.0"
+}

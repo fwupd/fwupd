@@ -1,0 +1,25 @@
+{
+  "id" : "org.fwupd.hsi.PlatformDebugLocked",
+  "deprecated-ids" : [
+    "org.fwupd.hsi.IntelDci.Locked"
+  ],
+  "name" : "Part is debug locked",
+  "description" : [
+    "Some devices support a concept of whether a part has been unlocked for debugging using proprietary hardware. Such parts allow access to registers that are typically restricted when parts are fused.",
+    "On Intel systems access to this interface is done via a proprietary Direct Connection Interface (DCI)."
+  ],
+  "failure-impact" : [
+    "If using a debug unlocked part, the platform's overall security will be decreased as an attacker may have elevated access to registers and memory within the system and can potentially enable persistent backdoors."
+  ],
+  "failure-results" : {
+    "not-locked" : "device is not not locked"
+  },
+  "success-results" : {
+    "locked" : "device is locked"
+  },
+  "hsi-level" : 2,
+  "references" : {
+    "https://www.intel.co.uk/content/www/uk/en/support/articles/000029393/processors.html" : "Intel Direct Connect Interface"
+  },
+  "fwupd-version" : "1.8.0"
+}

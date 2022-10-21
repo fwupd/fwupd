@@ -43,6 +43,18 @@ if gidocgen_dep.found() and docs_python_deps.allowed() and gidocgen_app.found() 
     install_dir: join_paths(datadir, 'doc'),
   )
 
+  hsi_md = custom_target('generate-hsi-spec',
+    input : 'hsi.md.in',
+    output : 'hsi.md',
+    command : [
+      python3,
+      join_paths(meson.current_source_dir(), 'generate-hsi-spec.py'),
+      '@INPUT@',
+      '@OUTPUT@',
+      join_paths(meson.current_source_dir(), 'hsi-tests.d'),
+    ],
+  )
+
   custom_target('doc-fwupdplugin',
     input: [
       fwupdplugin_toml,
@@ -58,11 +70,13 @@ if gidocgen_dep.found() and docs_python_deps.allowed() and gidocgen_app.found() 
       '--config=@INPUT0@',
       '--output-dir=@OUTPUT@',
       '--no-namespace-dir',
+      '--content-dir=@0@'.format(meson.current_build_dir()),
       '--content-dir=@0@'.format(meson.current_source_dir()),
       '@INPUT1@',
     ],
     depends: [
       fwupdplugin_gir[0],
+      hsi_md,
     ],
     build_by_default: true,
     install: true,

@@ -1,0 +1,23 @@
+{
+  "id" : "org.fwupd.hsi.Uefi.Pk",
+  "name" : "UEFI PK",
+  "description" : [
+    "UEFI defines a platform key for the system.",
+    "This should not be a test key, e.g. `DO NOT TRUST - AMI Test PK`"
+  ],
+  "failure-impact" : [
+    "It is possible to sign an EFI binary with the test platform key, which invalidates the Secure Boot trust chain.",
+    "It effectively gives the local attacker full access to your hardware."
+  ],
+  "failure-results" : {
+    "not-valid" : "an invalid key has been enrolled"
+  },
+  "success-results" : {
+    "valid" : "valid key"
+  },
+  "hsi-level" : 1,
+  "references" : {
+    "https://wiki.ubuntu.com/UEFI/SecureBoot/Testing" : "Ubuntu SecureBoot Wiki Page"
+  },
+  "fwupd-version" : "1.5.0"
+}

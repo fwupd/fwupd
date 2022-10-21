@@ -1,0 +1,24 @@
+{
+  "id" : "org.fwupd.hsi.Uefi.SecureBoot",
+  "name" : "UEFI SecureBoot",
+  "description" : [
+    "UEFI Secure boot is a verification mechanism for ensuring that code launched by firmware is trusted.",
+    "Secure Boot requires that each binary loaded at boot is validated against trusted certificates."
+  ],
+  "failure-impact" : [
+    "When Secure Boot is not enabled any EFI binary can be run at startup, which gives the attacker full access to your hardware."
+  ],
+  "failure-results" : {
+    "not-found" : "support has not been detected",
+    "not-enabled" : "detected, but has been turned off"
+  },
+  "success-results" : {
+    "enabled" : "supported and enabled"
+  },
+  "hsi-level" : 1,
+  "resolution" : "Turn off CSM boot and enable Secure Boot in the BIOS setup.",
+  "references" : {
+    "https://wiki.ubuntu.com/UEFI/SecureBoot" : "Ubuntu SecureBoot Wiki Page"
+  },
+  "fwupd-version" : "1.5.0"
+}

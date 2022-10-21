@@ -1,0 +1,26 @@
+{
+  "id" : "org.fwupd.hsi.IntelBootguard.Enabled",
+  "deprecated-ids" : [
+    "org.fwupd.hsi.Kernel.IntelBootguard"
+  ],
+  "name" : "Intel BootGuard: Enabled",
+  "description" : [
+    "BootGuard is a processor feature that prevents the machine from running firmware images not released by the system manufacturer.",
+    "It forms a root-of-trust by fusing in cryptographic keys into the processor itself that are used to verify the Authenticated Code Modules found in the SPI flash."
+  ],
+  "failure-impact" : [
+    "When BootGuard is not set up correctly then the chain-of-trust between the CPU and the bootloader can not be verified.",
+    "This would allow subverting the Secure Boot protection which gives the attacker full access to your hardware."
+  ],
+  "failure-results" : {
+    "not-enabled" : "not detected, or detected but not enabled"
+  },
+  "success-results" : {
+    "enabled" : "detected and enabled"
+  },
+  "hsi-level" : 2,
+  "references" : {
+    "https://github.com/coreboot/coreboot/blob/master/src/soc/intel/jasperlake/include/soc/me.h" : "Coreboot documentation"
+  },
+  "fwupd-version" : "1.5.0"
+}

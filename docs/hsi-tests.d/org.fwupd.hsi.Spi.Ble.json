@@ -1,0 +1,23 @@
+{
+  "id" : "org.fwupd.hsi.Spi.Ble",
+  "name" : "BIOS Lock Enable (BLE)",
+  "description" : [
+    "If the lock bit is set then System Management Interrupts (SMIs) are raised when setting BIOS Write Enable.",
+    "The `BLE` bit must be enabled in the PCH otherwise `BIOSWE` can easily be unset."
+  ],
+  "failure-impact" : [
+    "The system firmware can be written from userspace.",
+    "This gives any attacker with root access a method to write persistent executable code to the firmware, which survives even a full disk wipe and OS reinstall."
+  ],
+  "failure-results" : {
+    "not-enabled" : "the register is not locked"
+  },
+  "success-results" : {
+    "enabled" : "the register is locked"
+  },
+  "hsi-level" : 1,
+  "references" : {
+    "https://www.intel.com/content/dam/www/public/us/en/documents/datasheets/6-chipset-c200-chipset-datasheet.pdf" : "Intel C200 Datasheet"
+  },
+  "fwupd-version" : "1.5.0"
+}

@@ -1,0 +1,23 @@
+{
+  "id" : "org.fwupd.hsi.Tpm.Version20",
+  "name" : "TPM 2.0 Present",
+  "description" : [
+    "A TPM securely stores platform specific secrets that can only be divulged to trusted consumers in a secure environment."
+  ],
+  "failure-impact" : [
+    "The PCR registers will not be available for use by the bootloader and kernel.",
+    "This means userspace cannot either encrypt disks to the specific machine, and also can't know if the system firmware was externally modified."
+  ],
+  "failure-results" : {
+    "not-found" : "no TPM device found",
+    "not-enabled" : "TPM not in v2 mode"
+  },
+  "success-results" : {
+    "found" : "TPM device found in v2 mode"
+  },
+  "hsi-level" : 1,
+  "references" : {
+    "https://en.wikipedia.org/wiki/Trusted_Platform_Module" : "TPM Wikipedia Page"
+  },
+  "fwupd-version" : "1.5.0"
+}

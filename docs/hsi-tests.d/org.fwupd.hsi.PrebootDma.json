@@ -1,0 +1,33 @@
+{
+  "id" : "org.fwupd.hsi.PrebootDma",
+  "deprecated-ids" : [
+    "org.fwupd.hsi.AcpiDmar"
+  ],
+  "name" : "Pre-boot DMA protection",
+  "description" : [
+    "The IOMMU on modern systems is used to mitigate against DMA attacks.",
+    "All I/O for devices capable of DMA is mapped into a private virtual memory region.",
+    "On Intel systems the ACPI DMAR table indicated the system is configured with pre-boot DMA protection which eliminates some firmware attacks.",
+    "On AMD systems the ACPI IVRS table indicates the same."
+  ],
+  "failure-impact" : [
+    "An attacker could connect a malicious peripheral using ThunderBolt and reboot the machine, which would allow the attacker to modify the system memory.",
+    "This would allow subverting the Secure Boot protection, and also invalidate any system attestation."
+  ],
+  "failure-results" : {
+    "not-valid" : "could not determine state",
+    "not-enabled" : "was not enabled"
+  },
+  "success-results" : {
+    "enabled" : "detected correctly"
+  },
+  "hsi-level" : 3,
+  "references" : {
+    "https://en.wikipedia.org/wiki/Input%E2%80%93output_memory_management_unit" : "IOMMU Wikipedia Page",
+    "https://www.amd.com/system/files/TechDocs/48882_IOMMU.pdf" : "AMD IVRS Specification"
+  },
+  "more-information" : [
+    "This attribute was previously known as `org.fwupd.hsi.AcpiDmar` in 1.5.0, but was renamed in 1.8.0 to support other vendors."
+  ],
+  "fwupd-version" : "1.8.0"
+}

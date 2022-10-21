@@ -1,0 +1,18 @@
+{
+  "id" : "org.fwupd.hsi.Amd.SpiWriteProtection",
+  "name" : "AMD SPI Replay protections",
+  "description" : [
+    "SOCs may include support for replay-protected monotonic counters to prevent replay attacks."
+  ],
+  "failure-impact" : [
+    "SOCs without this feature may be attacked by an attacker modifying the SPI."
+  ],
+  "failure-results" : {
+    "not-enabled" : "SPI protections disabled"
+  },
+  "success-results" : {
+    "enabled" : "SPI protections enabled"
+  },
+  "hsi-level" : 3,
+  "fwupd-version" : "1.8.0"
+}

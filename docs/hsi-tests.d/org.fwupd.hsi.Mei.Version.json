@@ -1,0 +1,34 @@
+{
+  "id" : "org.fwupd.hsi.Mei.Version",
+  "name" : "CSME Version",
+  "description" : [
+    "Converged Security and Manageability Engine is a standalone management module that can manage and control some local devices without the host CPU involvement.",
+    "The CSME lives in the PCH and can only be updated by the OEM vendor.",
+    "The version of the CSME module can be checked to detect the most common and serious vulnerabilities."
+  ],
+  "failure-impact" : [
+    "Using any one of the critical vulnerabilities, a remote attacker can take full control of the system and all connected devices, even when the system is powered off."
+  ],
+  "failure-results" : {
+    "not-valid" : "affected by one of the critical CVEs"
+  },
+  "success-results" : {
+    "valid" : "is not affected by the most critical CVEs"
+  },
+  "hsi-level" : 1,
+  "resolution" : "Update your Management Engine firmware",
+  "references" : {
+    "https://www.intel.com/content/www/us/en/security-center/advisory/intel-sa-00086.html" : "Intel CSME Security Review Cumulative Update"
+  },
+  "issues" : [
+    "CVE-2017-5705",
+    "CVE-2017-5706",
+    "CVE-2017-5707",
+    "CVE-2017-5708",
+    "CVE-2017-5709",
+    "CVE-2017-5710",
+    "CVE-2017-5711",
+    "CVE-2017-5712"
+  ],
+  "fwupd-version" : "1.5.0"
+}

@@ -1,0 +1,22 @@
+{
+  "id" : "org.fwupd.hsi.Amd.PlatformRollbackProtection",
+  "name" : "AMD Rollback protection",
+  "description" : [
+    "AMD SOCs include the ability to prevent a rollback attack by a rollback protection feature on the firmware.",
+    "This feature prevents an attacker from loading an older firmware onto the part after a security vulnerability has been fixed."
+  ],
+  "failure-impact" : [
+    "SOCs without this feature may be attacked by an attacker installing an older firmware that takes advantage of a well-known vulnerability."
+  ],
+  "failure-results" : {
+    "not-enabled" : "rollback protection disabled"
+  },
+  "success-results" : {
+    "enabled" : "rollback protection enabled"
+  },
+  "hsi-level" : 1,
+  "references" : {
+    "https://www.psacertified.org/blog/anti-rollback-explained/" : "Rollback protection"
+  },
+  "fwupd-version" : "1.8.0"
+}
