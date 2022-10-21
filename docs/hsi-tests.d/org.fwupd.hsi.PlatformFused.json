@@ -1,0 +1,18 @@
+{
+  "id" : "org.fwupd.hsi.PlatformFused",
+  "name" : "Part is fused",
+  "description" : [
+    "When fuses are blown in parts from some manufacturers the hardware will enforce protections against tampering or accessing of certain registers."
+  ],
+  "failure-impact" : [
+    "If using an unfused part, the platform's overall security will be decreased."
+  ],
+  "failure-results" : {
+    "not-locked" : "device is not fused"
+  },
+  "success-results" : {
+    "locked" : "device is fused"
+  },
+  "hsi-level" : 1,
+  "fwupd-version" : "1.8.0"
+}

@@ -1,0 +1,30 @@
+{
+  "id" : "org.fwupd.hsi.PlatformDebugEnabled",
+  "deprecated-ids" : [
+    "org.fwupd.hsi.IntelDci.Enabled"
+  ],
+  "name" : "Intel DCI",
+  "description" : [
+    "Newer Intel CPUs support debugging over USB3 via a proprietary Direct Connection Interface (DCI) with the use of off-the-shelf hardware."
+  ],
+  "failure-impact" : [
+    "Using DCI an attacker with physical access to the computer has full access to all registers and memory in the system, and is able to make changes.",
+    "This makes privilege escalation from user to root possible, and also modifying SMM makes it possible to write to system firmware for a persistent backdoor."
+  ],
+  "failure-results" : {
+    "enabled" : "debugging is currently enabled"
+  },
+  "success-results" : {
+    "not-enabled" : "debugging is not currently enabled"
+  },
+  "hsi-level" : 1,
+  "references" : {
+    "https://www.intel.co.uk/content/www/uk/en/support/articles/000029393/processors.html" : "Intel Direct Connect Interface",
+    "https://github.com/chipsec/chipsec/blob/master/chipsec/cfg/8086/pch_4xxlp.xml#L270" : "Chipsec 4xxlp register definitions",
+    "https://github.com/riscv/riscv-edk2-platforms/blob/85a50de1b459d1d6644a402081120770aa6dd8c7/Silicon/Intel/CoffeelakeSiliconPkg/Pch/Include/Register/PchRegsDci.h" : "RISC-V EDK PCH register definitions"
+  },
+  "more-information" : [
+    "This attribute was previously known as `org.fwupd.hsi.IntelDci.Enabled` in 1.5.0, but was renamed in 1.8.0 to support other vendors."
+  ],
+  "fwupd-version" : "1.5.0"
+}

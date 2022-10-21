@@ -1,0 +1,27 @@
+{
+  "id" : "org.fwupd.hsi.Tpm.ReconstructionPcr0",
+  "name" : "PCR0 TPM Event Log Reconstruction",
+  "description" : [
+    "The TPM event log records which events are registered for the PCR0 hash.",
+    "When reconstructed the event log values should always match the TPM PCR0.",
+    "If extra events are included in the event log, or some are missing, the reconstitution will fail."
+  ],
+  "failure-impact" : [
+    "This is not a vulnerability per-se, but it shows that the system firmware checksum cannot be verified as the PCR result has been calculated incorrectly."
+  ],
+  "more-information" : [
+    "Additional information about specific bugs and debugging steps are available here https://github.com/fwupd/fwupd/wiki/TPM-PCR0-differs-from-reconstruction"
+  ],
+  "failure-results" : {
+    "not-valid" : "could not reconstitute the hash value",
+    "not-found" : "no TPM hardware could be found"
+  },
+  "success-results" : {
+    "valid" : "all correct"
+  },
+  "hsi-level" : 2,
+  "references" : {
+    "https://www.kernel.org/doc/html/latest/security/tpm/tpm_event_log.html" : "Linux Kernel TPM Documentation"
+  },
+  "fwupd-version" : "1.5.0"
+}

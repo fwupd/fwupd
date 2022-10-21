@@ -1,0 +1,19 @@
+{
+  "id" : "org.fwupd.hsi.IntelBootguard.Policy",
+  "name" : "Intel BootGuard: Policy",
+  "description" : [
+    "BootGuard is a processor feature that prevents the machine from running firmware images not released by the system manufacturer.",
+    "It forms a root-of-trust by fusing in cryptographic keys into the processor itself that are used to verify the Authenticated Code Modules found in the SPI flash."
+  ],
+  "failure-impact" : [
+    "The attacker can invalidate the chain of trust (subverting Secure Boot), and the user would get just a console warning and then continue to boot."
+  ],
+  "failure-results" : {
+    "not-valid" : "policy is invalid"
+  },
+  "success-results" : {
+    "valid" : "error enforce policy is set to shutdown"
+  },
+  "hsi-level" : 3,
+  "fwupd-version" : "1.5.0"
+}

@@ -1,0 +1,27 @@
+{
+  "id" : "org.fwupd.hsi.Tpm.EmptyPcr",
+  "name" : "Empty PCR in TPM",
+  "description" : [
+    "The system firmware is responsible for measuring values about its boot stage in PCRs 0 through 7.",
+    "Some firmwares have bugs that prevent them from measuring some of those values, breaking the fundamental assumption of the Measured Boot chain-of-trust."
+  ],
+  "failure-impact" : [
+    "A local attacker could measure fake values into the empty PCR, corresponding to a firmware and OS that do not match the ones actually loaded.",
+    "This allows hiding a compromised boot chain or fooling a remote-attestation server into believing that a different kernel is running."
+  ],
+  "failure-results" : {
+    "not-found" : "no TPM hardware could be found",
+    "not-valid" : "at least one empty checksum has been found"
+  },
+  "success-results" : {
+    "valid" : "all PCRs from 0 to 7 must have non-empty measurements"
+  },
+  "hsi-level" : 1,
+  "references" : {
+    "https://github.com/google/security-research/blob/master/pocs/bios/tpm-carte-blanche/writeup.md" : "TPM Carte Blanche"
+  },
+  "issues" : [
+    "CVE-2021-42299"
+  ],
+  "fwupd-version" : "1.7.2"
+}

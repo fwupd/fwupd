@@ -1,0 +1,18 @@
+{
+  "id" : "org.fwupd.hsi.Amd.SpiReplayProtection",
+  "name" : "AMD SPI Write protections",
+  "description" : [
+    "SOCs may enforce control of the SPI bus to prevent writes other than by verified entities."
+  ],
+  "failure-impact" : [
+    "SOCs without this feature may be attacked by an attacker modifying the SPI."
+  ],
+  "failure-results" : {
+    "not-enabled" : "SPI protections disabled"
+  },
+  "success-results" : {
+    "enabled" : "SPI protections enabled"
+  },
+  "hsi-level" : 2,
+  "fwupd-version" : "1.8.0"
+}

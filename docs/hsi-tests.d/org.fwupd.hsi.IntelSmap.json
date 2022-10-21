@@ -1,0 +1,22 @@
+{
+  "id" : "org.fwupd.hsi.IntelSmap",
+  "name" : "Intel SMAP",
+  "description" : [
+    "Without Supervisor Mode Access Prevention, the supervisor code usually has full read and write access to user-space memory mappings.",
+    "This can make exploits easier to write, as it allows the kernel to access user-space memory when it did not intend to."
+  ],
+  "failure-impact" : [
+    "A local or remote attacker can use a simple exploit to modify the contents of kernel memory which can lead to privilege escalation."
+  ],
+  "failure-results" : {
+    "not-supported" : "SMAP not enabled"
+  },
+  "success-results" : {
+    "enabled" : "SMAP features are detected and enabled"
+  },
+  "hsi-level" : 4,
+  "references" : {
+    "https://en.wikipedia.org/wiki/Supervisor_Mode_Access_Prevention" : "SMAP Wikipedia Page"
+  },
+  "fwupd-version" : "1.5.0"
+}

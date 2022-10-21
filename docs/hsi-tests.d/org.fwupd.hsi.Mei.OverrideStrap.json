@@ -1,0 +1,22 @@
+{
+  "id" : "org.fwupd.hsi.Mei.OverrideStrap",
+  "name" : "ME Flash Descriptor Override",
+  "description" : [
+    "The Flash Descriptor Security Override Strap is not accessible to end users on consumer boards and Intel stresses that this is for debugging only."
+  ],
+  "failure-impact" : [
+    "The system firmware can be written from userspace by changing the protected region.",
+    "This gives any attacker with root access a method to write persistent executable code to the firmware, which survives even a full disk wipe and OS reinstall."
+  ],
+  "failure-results" : {
+    "not-locked" : "device is in debugging mode"
+  },
+  "success-results" : {
+    "locked" : "device in in normal runtime mode"
+  },
+  "hsi-level" : 1,
+  "references" : {
+    "https://chromium.googlesource.com/chromiumos/third_party/flashrom/+/master/Documentation/mysteries_intel.txt" : "Chromium documentation for Intel ME"
+  },
+  "fwupd-version" : "1.5.0"
+}

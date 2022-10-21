@@ -1,0 +1,25 @@
+{
+  "id" : "org.fwupd.hsi.Mei.BootGuardPlatformKey",
+  "name" : "ME BootGuard Platform Key",
+  "description" : [
+    "The BootGuard Platform Key is fused into the CPU PCH during manufacturing by the OEM.",
+    "At bootup, an authenticated code module computes a hash of the Platform Key and and compares it with the one stored in field-programmable fuses.",
+    "If the key matches the ACM will pass control to the firmware, otherwise the boot process will stop.",
+    "In 2022 a number of Platform **secret** Keys were leaked by Lenovo and confirmed by Intel."
+  ],
+  "failure-impact" : [
+    "A custom system firmware can be signed using the leaked private key to completely disable UEFI Secure Boot and allow complete persistent compromise of the affected machine."
+  ],
+  "failure-results" : {
+    "not-valid" : "device uses a key that is compromised"
+  },
+  "success-results" : {
+    "valid" : "device uses a BootGuard Platform Key that is not known to be compromised"
+  },
+  "hsi-level" : 1,
+  "references" : {
+    "https://github.com/phretor/intel-leak-checker/" : "Intel leak checker",
+    "https://www.tomshardware.com/news/intel-confirms-6gb-alder-lake-bios-source-code-leak-new-details-emerge" : "Tom's Hardware Article"
+  },
+  "fwupd-version" : "1.8.7"
+}

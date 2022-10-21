@@ -1,0 +1,25 @@
+{
+  "id" : "org.fwupd.hsi.EncryptedRam",
+  "name" : "DRAM memory encryption",
+  "description" : [
+    "TME (Intel) or SME (AMD) is used by the hardware on supported SOCs to encrypt all data on external memory buses.",
+    "It mitigates against an attacker being able to capture memory data while the system is running or to capture memory by removing a DRAM chip.",
+    "This encryption may be activated by either transparently via firmware configuration or by code running in the Linux kernel."
+  ],
+  "failure-impact" : [
+    "A local attacker can either extract unencrypted content by attaching debug probes on the DIMM modules, or by removing them and inserting them into a computer with a modified DRAM controller."
+  ],
+  "failure-results" : {
+    "not-encrypted" : "detected but disabled",
+    "not-supported" : "not available"
+  },
+  "success-results" : {
+    "encrypted" : "detected and enabled"
+  },
+  "hsi-level" : 4,
+  "references" : {
+    "https://software.intel.com/content/www/us/en/develop/blogs/intel-releases-new-technology-specification-for-memory-encryption.html" : "Intel TME Press Release",
+    "https://en.wikichip.org/wiki/x86/sme" : "WikiChip SME Overview"
+  },
+  "fwupd-version" : "1.5.0"
+}

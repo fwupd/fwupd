@@ -1,0 +1,23 @@
+{
+  "id" : "org.fwupd.hsi.Spi.SmmBwp",
+  "name" : "SMM Bios Write Protect (SMM_BWP)",
+  "description" : [
+    "This bit set defines when the BIOS region can be written by the host.",
+    "The `SMM_BWP` bit must be set to make the BIOS region non-writable unless all processors are in system management mode."
+  ],
+  "failure-impact" : [
+    "The system firmware can be written from userspace by exploiting a race condition in checking `BLE`.",
+    "This gives any attacker with root access a method to write persistent executable code to the firmware, which survives even a full disk wipe and OS reinstall."
+  ],
+  "failure-results" : {
+    "not-locked" : "the region is not locked"
+  },
+  "success-results" : {
+    "locked" : "the region is locked"
+  },
+  "hsi-level" : 1,
+  "references" : {
+    "https://www.intel.com/content/dam/www/public/us/en/documents/datasheets/6-chipset-c200-chipset-datasheet.pdf" : "Intel C200 Datasheet"
+  },
+  "fwupd-version" : "1.5.0"
+}

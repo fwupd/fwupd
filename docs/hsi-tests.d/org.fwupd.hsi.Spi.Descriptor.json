@@ -1,0 +1,21 @@
+{
+  "id" : "org.fwupd.hsi.Spi.Descriptor",
+  "name" : "Read-only SPI Descriptor",
+  "description" : [
+    "The SPI descriptor must always be read only from all other regions.",
+    "Additionally on Intel architectures the FLOCKDN register must be set to prevent configuration registers in the SPI BAR from being changed."
+  ],
+  "failure-impact" : [
+    "The system firmware can be written from userspace by changing the protected region.",
+    "This gives any attacker with root access a method to write persistent executable code to the firmware, which survives even a full disk wipe and OS reinstall."
+  ],
+  "failure-results" : {
+    "not-valid" : "any region can write to the flash descriptor",
+    "not-locked" : "the SPI BAR is not locked"
+  },
+  "success-results" : {
+    "locked" : "the SPI BAR is locked and read only from all regions"
+  },
+  "hsi-level" : 1,
+  "fwupd-version" : "1.6.0"
+}

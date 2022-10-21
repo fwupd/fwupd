@@ -1,0 +1,24 @@
+{
+  "id" : "org.fwupd.hsi.Mei.ManufacturingMode",
+  "name" : "ME not in manufacturing mode",
+  "description" : [
+    "There have been some unfortunate cases of the ME being distributed in manufacturing mode.",
+    "In manufacturing mode many features from the ME can be interacted with that decrease the platform's security."
+  ],
+  "failure-impact" : [
+    "If the ME is in manufacturing mode then any user with root access can provision the ME engine with new keys.",
+    "This gives them full access to the system even when the system is powered off."
+  ],
+  "failure-results" : {
+    "not-locked" : "device is in manufacturing mode"
+  },
+  "success-results" : {
+    "locked" : "device has had manufacturing mode disabled"
+  },
+  "hsi-level" : 1,
+  "references" : {
+    "https://malware.news/t/intel-me-manufacturing-mode-obscured-dangers-and-their-relationship-to-apple-macbook-vulnerability-cve-2018-4251/23214" : "ME Manufacturing Mode: obscured dangers",
+    "https://www.intel.com/content/www/us/en/security-center/advisory/intel-sa-00086.html" : "Intel security advisory SA-00086"
+  },
+  "fwupd-version" : "1.5.0"
+}

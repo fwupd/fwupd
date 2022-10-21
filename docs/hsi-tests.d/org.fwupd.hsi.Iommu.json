@@ -1,0 +1,24 @@
+{
+  "id" : "org.fwupd.hsi.Iommu",
+  "name" : "DMA protection",
+  "description" : [
+    "The IOMMU on modern systems is used to mitigate against DMA attacks.",
+    "All I/O for devices capable of DMA is mapped into a private virtual memory region.",
+    "Common implementations are Intel VT-d and AMD-Vi."
+  ],
+  "failure-impact" : [
+    "An attacker with inexpensive PCIe development hardware can write to system RAM from the ThunderBolt or Firewire ports which can lead to privilege escalation."
+  ],
+  "failure-results" : {
+    "not-found" : "IOMMU hardware was not detected"
+  },
+  "success-results" : {
+    "enabled" : "IOMMU hardware detected and enabled"
+  },
+  "hsi-level" : 2,
+  "resolution" : "If available, turn on IOMMU in the system BIOS. You may also have to use additional kernel boot parameters, for example `intel_iommu=on iommu=pt`.",
+  "references" : {
+    "https://en.wikipedia.org/wiki/Input%E2%80%93output_memory_management_unit" : "IOMMU Wikipedia Page"
+  },
+  "fwupd-version" : "1.5.0"
+}

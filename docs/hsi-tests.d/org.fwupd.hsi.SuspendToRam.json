@@ -1,0 +1,24 @@
+{
+  "id" : "org.fwupd.hsi.SuspendToRam",
+  "name" : "Suspend to RAM disabled",
+  "description" : [
+    "Suspend to Ram (S3) keeps the raw contents of the DRAM refreshed when the system is asleep.",
+    "This means that the memory modules can be physically removed and the contents recovered, or a cold boot attack can be performed with a USB device.",
+    "The firmware should be configured to prefer using suspend to idle instead of suspend to ram or to not offer suspend to RAM."
+  ],
+  "failure-impact" : [
+    "An attacker with physical access to a system can obtain the un-encrypted contents of the RAM by suspending the machine, removing the DIMM and inserting it into another machine with modified DRAM controller before the memory contents decay."
+  ],
+  "failure-results" : {
+    "enabled" : "sleep enabled",
+    "not-valid" : "could not determine the default"
+  },
+  "success-results" : {
+    "not-enabled" : "suspend-to-ram being used"
+  },
+  "hsi-level" : 3,
+  "references" : {
+    "https://en.wikipedia.org/wiki/Cold_boot_attack" : "Cold Boot Attack Wikipedia Page"
+  },
+  "fwupd-version" : "1.5.0"
+}

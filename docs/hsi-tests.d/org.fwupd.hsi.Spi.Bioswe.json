@@ -1,0 +1,24 @@
+{
+  "id" : "org.fwupd.hsi.Spi.Bioswe",
+  "name" : "BIOS Write Enable (BWE)",
+  "description" : [
+    "Intel hardware provides this mechanism to protect the SPI ROM chip located on the motherboard from being overwritten by the operating system.",
+    "The `BIOSWE` bit must be unset otherwise userspace can write to the SPI chip."
+  ],
+  "failure-impact" : [
+    "The system firmware can be written from userspace.",
+    "This gives any attacker with root access a method to write persistent executable code to the firmware, which survives even a full disk wipe and OS reinstall."
+  ],
+  "failure-results" : {
+    "not-found" : "the SPI device was not found",
+    "enabled" : "write enable is enabled"
+  },
+  "success-results" : {
+    "not-enabled" : "write enable is disabled"
+  },
+  "hsi-level" : 1,
+  "references" : {
+    "https://www.intel.com/content/dam/www/public/us/en/documents/datasheets/6-chipset-c200-chipset-datasheet.pdf" : "Intel C200 Datasheet"
+  },
+  "fwupd-version" : "1.5.0"
+}
