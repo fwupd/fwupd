@@ -825,8 +825,13 @@ fu_elantp_hid_haptic_device_detach(FuDevice *device, FuProgress *progress, GErro
 	guint16 tmp;
 
 	/* The Haptic EEPROM IAP process runs in the TP main code. */
-	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER))
+	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
+		g_set_error(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_NOT_SUPPORTED,
+			    "in touchpad bootloader mode");
 		return FALSE;
+	}
 
 	if (self->driver_ic != 0x2 || self->iap_ver != 0x1) {
 		g_set_error(error,
