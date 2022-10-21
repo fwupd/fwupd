@@ -16,7 +16,7 @@ import re
 import shutil
 import subprocess
 
-FWUPD_DOM0_DIR = "/root/.cache/fwupd"
+FWUPD_DOM0_DIR = "/var/cache/fwupd"
 FWUPD_DOM0_UPDATES_DIR = os.path.join(FWUPD_DOM0_DIR, "updates")
 FWUPD_DOM0_UNTRUSTED_DIR = os.path.join(FWUPD_DOM0_UPDATES_DIR, "untrusted")
 FWUPD_DOM0_METADATA_DIR = os.path.join(FWUPD_DOM0_DIR, "metadata")

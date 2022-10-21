@@ -12,7 +12,7 @@ import os
 import re
 import subprocess
 
-FWUPD_DOM0_DIR = "/root/.cache/fwupd"
+FWUPD_DOM0_DIR = "/var/cache/fwupd"
 FWUPD_VM_DOWNLOAD = "/usr/libexec/qubes-fwupd/fwupd_download_updates.py"
 FWUPD_DOM0_UPDATES_DIR = os.path.join(FWUPD_DOM0_DIR, "updates")
 FWUPD_DOWNLOAD_PREFIX = "https://fwupd.org/downloads/"

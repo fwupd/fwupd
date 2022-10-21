@@ -30,7 +30,7 @@ if os.path.exists(QUBES_FWUPDMGR_REPO):
 elif os.path.exists(QUBES_FWUPDMGR_BINDIR):
     qfwupd = imp.load_source("qubes_fwupdmgr", QUBES_FWUPDMGR_BINDIR)
 
-FWUPD_DOM0_DIR = "/root/.cache/fwupd"
+FWUPD_DOM0_DIR = "/var/cache/qubes-fwupd"
 FWUPD_DOM0_UPDATES_DIR = os.path.join(FWUPD_DOM0_DIR, "updates")
 FWUPD_DOM0_UNTRUSTED_DIR = os.path.join(FWUPD_DOM0_UPDATES_DIR, "untrusted")
 FWUPD_VM_LOG = os.path.join(FWUPD_DOM0_DIR, "usbvm-devices.log")
