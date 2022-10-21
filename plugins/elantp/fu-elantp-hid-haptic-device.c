@@ -368,26 +368,20 @@ fu_elantp_hid_haptic_device_write_checksum_cb(FuDevice *parent, gpointer user_da
 }
 
 static gboolean
-fu_elantp_hid_haptic_device_get_checksum(FuDevice *parent, guint16 *checksum, GError **error)
+fu_elantp_hid_haptic_device_wait_calc_checksum_cb(FuDevice *parent,
+						  gpointer user_data,
+						  GError **error)
 {
 	guint16 ctrl = 0;
-	int cnt = 0;
 	guint8 buf[2] = {0x0};
 
 	if (!fu_elantp_hid_haptic_device_write_cmd(parent,
 						   ETP_CMD_I2C_SET_EEPROM_CTRL,
-						   ETP_CMD_I2C_CALC_EEPROM_CHECKSUM,
-						   error))
-		return FALSE;
-
-wait:
-	g_usleep(ELANTP_EEPROM_READ_DELAY * 1000);
-	if (!fu_elantp_hid_haptic_device_write_cmd(parent,
-						   ETP_CMD_I2C_SET_EEPROM_CTRL,
 						   ETP_CMD_I2C_SET_EEPROM_DATATYPE,
-						   error))
+						   error)) {
+		g_prefix_error(error, "failed to write eeprom datatype: ");
 		return FALSE;
-
+	}
 	if (!fu_elantp_hid_haptic_device_read_cmd(parent,
 						  ETP_CMD_I2C_SET_EEPROM_CTRL,
 						  buf,
@@ -399,15 +393,36 @@ wait:
 	ctrl = fu_memread_uint16(buf, G_LITTLE_ENDIAN);
 
 	if ((ctrl & 0x20) == 0x20) {
-		cnt++;
-		if (cnt >= 100) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_READ,
-				    "failed to wait calc haptic cmd");
-			return FALSE;
-		}
-		goto wait;
+		g_set_error(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA, "ctrl failed 0x%04x", ctrl);
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+static gboolean
+fu_elantp_hid_haptic_device_get_checksum(FuDevice *parent, guint16 *checksum, GError **error)
+{
+	guint8 buf[2] = {0x0};
+	g_autoptr(GError) error_local = NULL;
+
+	if (!fu_elantp_hid_haptic_device_write_cmd(parent,
+						   ETP_CMD_I2C_SET_EEPROM_CTRL,
+						   ETP_CMD_I2C_CALC_EEPROM_CHECKSUM,
+						   error))
+		return FALSE;
+	if (!fu_device_retry_full(parent,
+				  fu_elantp_hid_haptic_device_wait_calc_checksum_cb,
+				  100,
+				  ELANTP_EEPROM_READ_DELAY,
+				  NULL,
+				  &error_local)) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_READ,
+			    "failed to wait calc eeprom checksum (%s)",
+			    error_local->message);
+		return FALSE;
 	}
 	if (!fu_elantp_hid_haptic_device_write_cmd(parent,
 						   ETP_CMD_I2C_SET_EEPROM_CTRL,
@@ -642,8 +657,7 @@ fu_elantp_hid_haptic_device_write_firmware(FuDevice *device,
 		blk[0] = 0x0B; /* report ID */
 		blk[1] = eeprom_fw_page_size + 5;
 		blk[2] = 0xA2;
-		blk[3] = index / 256;
-		blk[4] = index % 256;
+		fu_memwrite_uint16(blk + 0x3, index, G_BIG_ENDIAN);
 
 		if (i == 0) {
 			memset(&first_page[0], 0xFF, sizeof(first_page));
@@ -810,9 +824,9 @@ fu_elantp_hid_haptic_device_detach(FuDevice *device, FuProgress *progress, GErro
 	guint16 ctrl;
 	guint16 tmp;
 
-	/* sanity check */
+	/* The Haptic EEPROM IAP process runs in the TP main code. */
 	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER))
-		return TRUE;
+		return FALSE;
 
 	if (self->driver_ic != 0x2 || self->iap_ver != 0x1) {
 		g_set_error(error,
