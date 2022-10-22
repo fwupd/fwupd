@@ -44,19 +44,6 @@ class FwupdUsbvmUpdates(FwupdVmCommon):
             if os.path.islink(path_f) or not os.path.isfile(path_f):
                 raise Exception("Dom0 sent not regular file")
 
-    def _extract_archive(self, archive_path, output_path):
-        """Extracts archive file to the specified directory.
-
-        Keyword arguments:
-        archive_path -- absolute path to archive file
-        output_path -- absolute path to the output directory
-        """
-        cmd_extract = ["gcab", "-x", f"--directory={output_path}", f"{archive_path}"]
-        p = subprocess.Popen(cmd_extract, stdout=subprocess.PIPE)
-        p.communicate()[0].decode("ascii")
-        if p.returncode != 0:
-            raise Exception("gcab: Error while extracting %s." % archive_path)
-
     def validate_metadata(self, metadata_url=None):
         """Validates received the metadata files."""
         print("Running validation of the metadata files")
@@ -85,17 +72,8 @@ class FwupdUsbvmUpdates(FwupdVmCommon):
         output_path = archive_path.replace(".cab", "")
         arch_temp = os.path.join(output_path, archive_name)
         os.mkdir(output_path)
+        # jcat verification will be done by fwupd itself
         shutil.copyfile(archive_path, arch_temp)
-        self._extract_archive(arch_temp, output_path)
-        signature_name = os.path.join(output_path, "firmware*.jcat")
-        file_path = glob.glob(signature_name)
-        try:
-            self._jcat_verification(file_path[0], output_path)
-            shutil.rmtree(output_path)
-        except Exception as e:
-            print(str(e), file=sys.stderr)
-            self.clean_vm_cache()
-            exit(1)
 
 
 def main():
