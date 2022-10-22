@@ -6,8 +6,10 @@ plugin_builtin_elantp = static_library('fu_plugin_elantp',
   sources: [
     'fu-elantp-plugin.c',
     'fu-elantp-firmware.c',   # fuzzing
+    'fu-elantp-haptic-firmware.c',
     'fu-elantp-hid-device.c',
     'fu-elantp-i2c-device.c',
+    'fu-elantp-hid-haptic-device.c',
   ],
   include_directories: plugin_incdirs,
   c_args: [

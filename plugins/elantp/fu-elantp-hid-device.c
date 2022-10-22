@@ -14,6 +14,7 @@
 #include "fu-elantp-common.h"
 #include "fu-elantp-firmware.h"
 #include "fu-elantp-hid-device.h"
+#include "fu-elantp-hid-haptic-device.h"
 
 struct _FuElantpHidDevice {
 	FuUdevDevice parent_instance;
@@ -160,6 +161,38 @@ fu_elantp_hid_device_ensure_iap_ctrl(FuElantpHidDevice *self, GError **error)
 }
 
 static gboolean
+fu_elantp_hid_device_read_hatpic_enable(FuElantpHidDevice *self, GError **error)
+{
+	guint8 buf[2] = {0x0};
+	guint16 value;
+	if (!fu_elantp_hid_device_read_cmd(self,
+					   ETP_CMD_I2C_FLIM_TYPE_ENABLE,
+					   buf,
+					   sizeof(buf),
+					   error)) {
+		g_prefix_error(error, "failed to read haptic enable cmd: ");
+		return FALSE;
+	}
+	value = fu_memread_uint16(buf, G_LITTLE_ENDIAN);
+	if (value == 0xFFFF || value == ETP_CMD_I2C_FLIM_TYPE_ENABLE) {
+		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "not hapticpad");
+		return FALSE;
+	}
+
+	if ((buf[0] & ETP_FW_FLIM_TYPE_ENABLE_BIT) == 0 ||
+	    (buf[0] & ETP_FW_EEPROM_ENABLE_BIT) == 0) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "the haptic eeprom not supported");
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_elantp_hid_device_setup(FuDevice *device, GError **error)
 {
 	FuElantpHidDevice *self = FU_ELANTP_HID_DEVICE(device);
@@ -171,6 +204,7 @@ fu_elantp_hid_device_setup(FuDevice *device, GError **error)
 	guint8 ic_type;
 	g_autofree gchar *version_bl = NULL;
 	g_autofree gchar *version = NULL;
+	g_autoptr(GError) error_local = NULL;
 
 	/* get pattern */
 	if (!fu_elantp_hid_device_read_cmd(self, ETP_CMD_I2C_GET_HID_ID, buf, sizeof(buf), error)) {
@@ -178,7 +212,7 @@ fu_elantp_hid_device_setup(FuDevice *device, GError **error)
 		return FALSE;
 	}
 	tmp = fu_memread_uint16(buf, G_LITTLE_ENDIAN);
-	self->pattern = tmp != 0xffff ? (tmp & 0xff00) >> 8 : 0;
+	self->pattern = tmp != 0xFFFF ? (tmp & 0xFF00) >> 8 : 0;
 
 	/* get current firmware version */
 	if (!fu_elantp_hid_device_read_cmd(self, ETP_CMD_I2C_FW_VERSION, buf, sizeof(buf), error)) {
@@ -271,6 +305,12 @@ fu_elantp_hid_device_setup(FuDevice *device, GError **error)
 	if (!fu_elantp_hid_device_ensure_iap_ctrl(self, error))
 		return FALSE;
 
+	if (!fu_elantp_hid_device_read_hatpic_enable(self, &error_local)) {
+		g_debug("no haptic device detected: %s", error_local->message);
+	} else {
+		g_autoptr(FuElantpHidHapticDevice) cfg = fu_elantp_haptic_device_new(device);
+		fu_device_add_child(FU_DEVICE(device), FU_DEVICE(cfg));
+	}
 	/* success */
 	return TRUE;
 }
@@ -606,6 +646,7 @@ fu_elantp_hid_device_init(FuElantpHidDevice *self)
 	fu_device_set_summary(FU_DEVICE(self), "Touchpad");
 	fu_device_add_icon(FU_DEVICE(self), "input-touchpad");
 	fu_device_add_protocol(FU_DEVICE(self), "tw.com.emc.elantp");
+	fu_device_set_vendor(FU_DEVICE(self), "ELAN Microelectronics");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_HEX);
 	fu_device_set_priority(FU_DEVICE(self), 1); /* better than i2c */
 	fu_udev_device_set_flags(FU_UDEV_DEVICE(self),
