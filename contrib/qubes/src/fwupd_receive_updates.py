@@ -107,20 +107,6 @@ class FwupdReceiveUpdates:
                     f"the personal data!!{WARNING_COLOR}"
                 )
 
-    def _extract_archive(self, archive_path, output_path):
-        """Extracts archive file to the specified directory.
-
-        Keyword arguments:
-        archive_path -- absolute path to archive file
-        output_path -- absolute path to the output directory
-        """
-        cmd_extract = ["gcab", "-x", f"--directory={output_path}", f"{archive_path}"]
-        shutil.copy(archive_path, FWUPD_DOM0_UPDATES_DIR)
-        p = subprocess.Popen(cmd_extract, stdout=subprocess.PIPE)
-        p.communicate()[0].decode("ascii")
-        if p.returncode != 0:
-            raise Exception(f"gcab: Error while extracting {archive_path}.")
-
     def _jcat_verification(self, file_path, file_directory):
         """Verifies sha1 and sha256 checksum, GPG signature,
         and PKCS#7 signature.
@@ -171,13 +157,7 @@ class FwupdReceiveUpdates:
             FWUPD_DOM0_UNTRUSTED_DIR, fwupd_firmware_file_regex, updatevm
         )
         self._check_shasum(dom0_firmware_untrusted_path, sha)
-        untrusted_dir_name = filename.replace(".cab", "")
-        self._extract_archive(dom0_firmware_untrusted_path, FWUPD_DOM0_UNTRUSTED_DIR)
-        signature_name = os.path.join(FWUPD_DOM0_UNTRUSTED_DIR, "firmware*.jcat")
-        file_path = glob.glob(signature_name)
-        if not file_path:
-            raise FileNotFoundError("jcat file not found!")
-        self._jcat_verification(file_path[0], FWUPD_DOM0_UNTRUSTED_DIR)
+        # jcat verification will be done by fwupd itself
         os.umask(self.old_umask)
         if untrusted_dir_name == "untrusted":
             untrusted_dir_name = "trusted"
