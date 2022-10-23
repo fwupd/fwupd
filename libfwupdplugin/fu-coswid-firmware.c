@@ -135,6 +135,10 @@ fu_coswid_firmware_parse_entity(FuCoswidFirmware *self, cbor_item_t *item, GErro
 		} else if (tag_id == FU_COSWID_TAG_REG_ID) {
 			entity->regid = fu_coswid_firmware_strndup(pairs[i].value);
 		} else if (tag_id == FU_COSWID_TAG_ROLE) {
+			if (cbor_isa_uint(pairs[i].value)) {
+				FuCoswidEntityRole role = cbor_get_uint8(pairs[i].value);
+				entity->roles[entity_role_cnt++] = role;
+			}
 			for (guint j = 0; j < cbor_array_size(pairs[i].value); j++) {
 				g_autoptr(cbor_item_t) value = cbor_array_get(pairs[i].value, j);
 				FuCoswidEntityRole role = cbor_get_uint8(value);
