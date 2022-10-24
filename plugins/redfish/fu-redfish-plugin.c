@@ -204,7 +204,7 @@ fu_redfish_plugin_discover_smbios_table(FuPlugin *plugin, GError **error)
 		if (smbios_data == NULL)
 			return FALSE;
 	} else {
-		smbios_data = fu_context_get_smbios_data(ctx, REDFISH_SMBIOS_TABLE_TYPE);
+		smbios_data = fu_context_get_smbios_data(ctx, REDFISH_SMBIOS_TABLE_TYPE, NULL);
 		if (smbios_data == NULL)
 			return TRUE;
 	}

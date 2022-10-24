@@ -69,7 +69,7 @@ fu_context_get_smbios_string(FuContext *self, guint8 structure_type, guint8 offs
 guint
 fu_context_get_smbios_integer(FuContext *self, guint8 type, guint8 offset);
 GBytes *
-fu_context_get_smbios_data(FuContext *self, guint8 structure_type);
+fu_context_get_smbios_data(FuContext *self, guint8 structure_type, GError **error);
 gboolean
 fu_context_has_hwid_guid(FuContext *self, const gchar *guid);
 GPtrArray *

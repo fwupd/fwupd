@@ -142,7 +142,7 @@ fu_dell_get_system_id(FuPlugin *plugin)
 }
 
 static gboolean
-fu_dell_supported(FuPlugin *plugin)
+fu_dell_supported(FuPlugin *plugin, GError **error)
 {
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	g_autoptr(GBytes) de_table = NULL;
@@ -153,38 +153,39 @@ fu_dell_supported(FuPlugin *plugin)
 	gsize len;
 
 	/* make sure that Dell SMBIOS methods are available */
-	de_table = fu_context_get_smbios_data(ctx, 0xDE);
+	de_table = fu_context_get_smbios_data(ctx, 0xDE, error);
 	if (de_table == NULL)
 		return FALSE;
 	value = g_bytes_get_data(de_table, &len);
-	if (len == 0)
+	if (*value != 0xDE) {
+		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA, "invalid DE data");
 		return FALSE;
-	if (*value != 0xDE)
-		return FALSE;
-	da_table = fu_context_get_smbios_data(ctx, 0xDA);
+	}
+	da_table = fu_context_get_smbios_data(ctx, 0xDA, error);
 	if (da_table == NULL)
 		return FALSE;
 	da_values = (struct da_structure *)g_bytes_get_data(da_table, &len);
-	if (len == 0)
-		return FALSE;
 	if (!(da_values->supported_cmds & (1 << DACI_FLASH_INTERFACE_CLASS))) {
-		g_debug("unable to access flash interface. supported commands: 0x%x",
-			da_values->supported_cmds);
+		g_set_error(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_INVALID_DATA,
+			    "unable to access flash interface. supported commands: 0x%x",
+			    da_values->supported_cmds);
 		return FALSE;
 	}
 
 	/* only run on intended Dell hw types */
-	enclosure = fu_context_get_smbios_data(ctx, FU_SMBIOS_STRUCTURE_TYPE_CHASSIS);
+	enclosure = fu_context_get_smbios_data(ctx, FU_SMBIOS_STRUCTURE_TYPE_CHASSIS, error);
 	if (enclosure == NULL)
 		return FALSE;
 	value = g_bytes_get_data(enclosure, &len);
-	if (len == 0)
-		return FALSE;
 	for (guint i = 0; i < G_N_ELEMENTS(enclosure_allowlist); i++) {
 		if (enclosure_allowlist[i] == value[0])
 			return TRUE;
 	}
 
+	/* failed */
+	g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA, "chassis invalid");
 	return FALSE;
 }
 
@@ -467,7 +468,9 @@ fu_dell_plugin_get_results(FuPlugin *plugin, FuDevice *device, GError **error)
 	const guint16 *completion_code;
 	gsize len;
 
-	de_table = fu_context_get_smbios_data(ctx, 0xDE);
+	de_table = fu_context_get_smbios_data(ctx, 0xDE, error);
+	if (de_table == NULL)
+		return FALSE;
 	completion_code = g_bytes_get_data(de_table, &len);
 	if (len < 8) {
 		g_set_error(error,
@@ -886,11 +889,8 @@ fu_dell_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 		return TRUE;
 	}
 
-	if (!fu_dell_supported(plugin)) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "Firmware updating not supported");
+	if (!fu_dell_supported(plugin, error)) {
+		g_prefix_error(error, "firmware updating not supported: ");
 		return FALSE;
 	}
 

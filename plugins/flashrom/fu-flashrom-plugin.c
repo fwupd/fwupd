@@ -95,8 +95,9 @@ fu_flashrom_plugin_device_set_version(FuPlugin *plugin, FuDevice *device)
 		return;
 	}
 }
-static void
-fu_flashrom_plugin_device_set_bios_info(FuPlugin *plugin, FuDevice *device)
+
+static gboolean
+fu_flashrom_plugin_device_set_bios_info(FuPlugin *plugin, FuDevice *device, GError **error)
 {
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	const guint8 *buf;
@@ -105,9 +106,9 @@ fu_flashrom_plugin_device_set_bios_info(FuPlugin *plugin, FuDevice *device)
 	g_autoptr(GBytes) bios_table = NULL;
 
 	/* get SMBIOS info */
-	bios_table = fu_context_get_smbios_data(ctx, FU_SMBIOS_STRUCTURE_TYPE_BIOS);
+	bios_table = fu_context_get_smbios_data(ctx, FU_SMBIOS_STRUCTURE_TYPE_BIOS, error);
 	if (bios_table == NULL)
-		return;
+		return FALSE;
 
 	/* ROM size if not already been quirked */
 	buf = g_bytes_get_data(bios_table, &bufsz);
@@ -127,6 +128,7 @@ fu_flashrom_plugin_device_set_bios_info(FuPlugin *plugin, FuDevice *device)
 					  "Not supported from SMBIOS");
 		}
 	}
+	return TRUE;
 }
 
 static void
@@ -166,6 +168,7 @@ fu_flashrom_plugin_add_device(FuPlugin *plugin,
 	const gchar *region_str = fu_ifd_region_to_string(region);
 	g_autofree gchar *name = g_strdup_printf("%s (%s)", product, region_str);
 	g_autoptr(FuDevice) device = fu_flashrom_device_new(ctx, self->flashctx, region);
+	g_autoptr(GError) error_local = NULL;
 
 	fu_device_set_name(device, name);
 	fu_device_set_vendor(device, vendor);
@@ -195,7 +198,8 @@ fu_flashrom_plugin_add_device(FuPlugin *plugin,
 	}
 	fu_flashrom_plugin_device_set_version(plugin, device);
 	fu_flashrom_plugin_device_set_hwids(plugin, device);
-	fu_flashrom_plugin_device_set_bios_info(plugin, device);
+	if (!fu_flashrom_plugin_device_set_bios_info(plugin, device, &error_local))
+		g_warning("failed to set bios info: %s", error_local->message);
 	if (!fu_device_setup(device, error))
 		return NULL;
 
