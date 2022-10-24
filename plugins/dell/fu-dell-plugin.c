@@ -894,6 +894,7 @@ fu_dell_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 		return FALSE;
 	}
 
+	self->smi_obj->smi = dell_smi_factory(DELL_SMI_DEFAULTS);
 	if (self->smi_obj->smi == NULL) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -955,8 +956,6 @@ fu_dell_plugin_constructed(GObject *obj)
 	fu_context_add_runtime_version(ctx, "com.dell.libsmbios", tmp);
 	g_debug("Using libsmbios %s", tmp);
 
-	if (fu_dell_supported(plugin))
-		self->smi_obj->smi = dell_smi_factory(DELL_SMI_DEFAULTS);
 	self->smi_obj->fake_smbios = FALSE;
 	if (g_getenv("FWUPD_DELL_FAKE_SMBIOS") != NULL)
 		self->smi_obj->fake_smbios = TRUE;
