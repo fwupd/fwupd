@@ -43,18 +43,6 @@ needed to access an MST hub.
 This patch can be backported to earlier kernels:
 <https://github.com/torvalds/linux/commit/e94cb37b34eb8a88fe847438dba55c3f18bf024a>
 
-### libsmbios
-
-At compilation time and runtime you will need libsmbios_c version 2.3.0 or later
-
-* [source](https://github.com/dell/libsmbios)
-* [rpms](https://apps.fedoraproject.org/packages/libsmbios)
-* [debs (Debian)](http://tracker.debian.org/pkg/libsmbios)
-* [debs (Ubuntu)](http://launchpad.net/ubuntu/+source/libsmbios)
-
-If you don't want or need this functionality you can use the
-`--disable-dell` option.
-
 ## Usage
 
 Supported devices will be displayed in `# fwupdmgr get-devices` output.
