@@ -161,7 +161,7 @@ fu_uefi_backend_linux_check_smbios_enabled(FuContext *ctx, GError **error)
 {
 	const guint8 *data;
 	gsize sz;
-	g_autoptr(GBytes) bios_information = fu_context_get_smbios_data(ctx, 0);
+	g_autoptr(GBytes) bios_information = fu_context_get_smbios_data(ctx, 0, NULL);
 	if (bios_information == NULL) {
 		const gchar *tmp = g_getenv("FWUPD_DELL_FAKE_SMBIOS");
 		if (tmp != NULL)

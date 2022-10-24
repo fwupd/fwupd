@@ -103,3 +103,4 @@ Remember: Plugins should be upstream!
 ## 1.8.7
 
 * `fu_mei_device_connect()`: Drop the explicit GUID parameter and match in the quirk file instead.
+* `fu_context_get_smbios_data()`: Add a `GError`
