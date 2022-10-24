@@ -148,29 +148,46 @@ fu_dell_supported(FuPlugin *plugin, GError **error)
 	g_autoptr(GBytes) de_table = NULL;
 	g_autoptr(GBytes) da_table = NULL;
 	g_autoptr(GBytes) enclosure = NULL;
-	const guint8 *value;
-	const struct da_structure *da_values;
-	gsize len;
+	guint8 value = 0;
+	struct da_structure da_values = {0x0};
 
 	/* make sure that Dell SMBIOS methods are available */
 	de_table = fu_context_get_smbios_data(ctx, 0xDE, error);
 	if (de_table == NULL)
 		return FALSE;
-	value = g_bytes_get_data(de_table, &len);
-	if (*value != 0xDE) {
+	if (!fu_memread_uint8_safe(g_bytes_get_data(de_table, NULL),
+				   g_bytes_get_size(de_table),
+				   0x0,
+				   &value,
+				   error)) {
+		g_prefix_error(error, "invalid DE data: ");
+		return FALSE;
+	}
+	if (value != 0xDE) {
 		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA, "invalid DE data");
 		return FALSE;
 	}
+
 	da_table = fu_context_get_smbios_data(ctx, 0xDA, error);
 	if (da_table == NULL)
 		return FALSE;
-	da_values = (struct da_structure *)g_bytes_get_data(da_table, &len);
-	if (!(da_values->supported_cmds & (1 << DACI_FLASH_INTERFACE_CLASS))) {
+	if (!fu_memcpy_safe((guint8 *)&da_values,
+			    sizeof(da_values),
+			    0x0, /* dst */
+			    g_bytes_get_data(da_table, NULL),
+			    g_bytes_get_size(da_table),
+			    0x0, /* src */
+			    sizeof(da_values),
+			    error)) {
+		g_prefix_error(error, "unable to access flash interface: ");
+		return FALSE;
+	}
+	if (!(da_values.supported_cmds & (1 << DACI_FLASH_INTERFACE_CLASS))) {
 		g_set_error(error,
 			    G_IO_ERROR,
 			    G_IO_ERROR_INVALID_DATA,
 			    "unable to access flash interface. supported commands: 0x%x",
-			    da_values->supported_cmds);
+			    da_values.supported_cmds);
 		return FALSE;
 	}
 
@@ -178,9 +195,16 @@ fu_dell_supported(FuPlugin *plugin, GError **error)
 	enclosure = fu_context_get_smbios_data(ctx, FU_SMBIOS_STRUCTURE_TYPE_CHASSIS, error);
 	if (enclosure == NULL)
 		return FALSE;
-	value = g_bytes_get_data(enclosure, &len);
+	if (!fu_memread_uint8_safe(g_bytes_get_data(enclosure, NULL),
+				   g_bytes_get_size(enclosure),
+				   0x0,
+				   &value,
+				   error)) {
+		g_prefix_error(error, "invalid enclosure data: ");
+		return FALSE;
+	}
 	for (guint i = 0; i < G_N_ELEMENTS(enclosure_allowlist); i++) {
-		if (enclosure_allowlist[i] == value[0])
+		if (enclosure_allowlist[i] == value)
 			return TRUE;
 	}
 
@@ -465,29 +489,27 @@ fu_dell_plugin_get_results(FuPlugin *plugin, FuDevice *device, GError **error)
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	g_autoptr(GBytes) de_table = NULL;
 	const gchar *tmp = NULL;
-	const guint16 *completion_code;
-	gsize len;
+	guint16 completion_code = 0;
 
 	de_table = fu_context_get_smbios_data(ctx, 0xDE, error);
 	if (de_table == NULL)
 		return FALSE;
-	completion_code = g_bytes_get_data(de_table, &len);
-	if (len < 8) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INTERNAL,
-			    "ERROR: Unable to read results of %s: %" G_GSIZE_FORMAT " < 8",
-			    fu_device_get_name(device),
-			    len);
-		return FALSE;
-	}
 
 	/* look at byte offset 0x06  for identifier meaning completion code */
-	if (completion_code[3] == DELL_SUCCESS) {
+	if (!fu_memread_uint16_safe(g_bytes_get_data(de_table, NULL),
+				    g_bytes_get_size(de_table),
+				    0x06,
+				    &completion_code,
+				    G_LITTLE_ENDIAN,
+				    error)) {
+		g_prefix_error(error, "unable to read results of %s: ", fu_device_get_name(device));
+		return FALSE;
+	}
+	if (completion_code == DELL_SUCCESS) {
 		fu_device_set_update_state(device, FWUPD_UPDATE_STATE_SUCCESS);
 	} else {
 		FwupdUpdateState update_state = FWUPD_UPDATE_STATE_FAILED;
-		switch (completion_code[3]) {
+		switch (completion_code) {
 		case DELL_CONSISTENCY_FAIL:
 			tmp = "The image failed one or more consistency checks.";
 			break;
