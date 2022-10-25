@@ -5816,7 +5816,7 @@ fu_engine_get_results(FuEngine *self, const gchar *device_id, GError **error)
 }
 
 static void
-fu_engine_plugins_setup(FuEngine *self, FuProgress *progress)
+fu_engine_plugins_startup(FuEngine *self, FuProgress *progress)
 {
 	GPtrArray *plugins = fu_plugin_list_get_all(self->plugin_list);
 	fu_progress_set_id(progress, G_STRLOC);
@@ -7907,7 +7907,7 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 
 	/* add devices */
 	if (flags & FU_ENGINE_LOAD_FLAG_COLDPLUG) {
-		fu_engine_plugins_setup(self, fu_progress_get_child(progress));
+		fu_engine_plugins_startup(self, fu_progress_get_child(progress));
 		fu_progress_step_done(progress);
 		fu_engine_plugins_coldplug(self, fu_progress_get_child(progress));
 		fu_progress_step_done(progress);
