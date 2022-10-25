@@ -101,6 +101,7 @@ struct _FuEngine {
 	gboolean only_trusted;
 	gboolean write_history;
 	gboolean host_emulation;
+	gboolean has_hwinfo;
 	guint percentage;
 	FuHistory *history;
 	FuIdle *idle;
@@ -1887,8 +1888,11 @@ fu_engine_check_requirement(FuEngine *self,
 	}
 
 	/* ensure hardware requirement */
-	if (g_strcmp0(xb_node_get_element(req), "hardware") == 0)
+	if (g_strcmp0(xb_node_get_element(req), "hardware") == 0) {
+		if (!self->has_hwinfo)
+			return TRUE;
 		return fu_engine_check_requirement_hardware(self, req, error);
+	}
 
 	/* ensure client requirement */
 	if (g_strcmp0(xb_node_get_element(req), "client") == 0)
@@ -2195,18 +2199,20 @@ fu_engine_get_report_metadata(FuEngine *self, GError **error)
 		g_hash_table_insert(hash, g_strdup("HostBkc"), g_strdup(tmp));
 
 	/* DMI data */
-	tmp = fu_context_get_hwid_value(self->ctx, FU_HWIDS_KEY_PRODUCT_NAME);
-	if (tmp != NULL)
-		g_hash_table_insert(hash, g_strdup("HostProduct"), g_strdup(tmp));
-	tmp = fu_context_get_hwid_value(self->ctx, FU_HWIDS_KEY_FAMILY);
-	if (tmp != NULL)
-		g_hash_table_insert(hash, g_strdup("HostFamily"), g_strdup(tmp));
-	tmp = fu_context_get_hwid_value(self->ctx, FU_HWIDS_KEY_PRODUCT_SKU);
-	if (tmp != NULL)
-		g_hash_table_insert(hash, g_strdup("HostSku"), g_strdup(tmp));
-	tmp = fu_context_get_hwid_value(self->ctx, FU_HWIDS_KEY_MANUFACTURER);
-	if (tmp != NULL)
-		g_hash_table_insert(hash, g_strdup("HostVendor"), g_strdup(tmp));
+	if (self->has_hwinfo) {
+		tmp = fu_context_get_hwid_value(self->ctx, FU_HWIDS_KEY_PRODUCT_NAME);
+		if (tmp != NULL)
+			g_hash_table_insert(hash, g_strdup("HostProduct"), g_strdup(tmp));
+		tmp = fu_context_get_hwid_value(self->ctx, FU_HWIDS_KEY_FAMILY);
+		if (tmp != NULL)
+			g_hash_table_insert(hash, g_strdup("HostFamily"), g_strdup(tmp));
+		tmp = fu_context_get_hwid_value(self->ctx, FU_HWIDS_KEY_PRODUCT_SKU);
+		if (tmp != NULL)
+			g_hash_table_insert(hash, g_strdup("HostSku"), g_strdup(tmp));
+		tmp = fu_context_get_hwid_value(self->ctx, FU_HWIDS_KEY_MANUFACTURER);
+		if (tmp != NULL)
+			g_hash_table_insert(hash, g_strdup("HostVendor"), g_strdup(tmp));
+	}
 
 		/* kernel version is often important for debugging failures */
 #ifdef HAVE_UTSNAME_H
@@ -7600,7 +7606,6 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 {
 	FuPlugin *plugin_uefi;
 	FuQuirksLoadFlags quirks_flags = FU_QUIRKS_LOAD_FLAG_NONE;
-	GPtrArray *guids;
 	const gchar *host_emulate = g_getenv("FWUPD_HOST_EMULATE");
 	guint backend_cnt = 0;
 	g_autoptr(GPtrArray) checksums_approved = NULL;
@@ -7769,6 +7774,7 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 	if (flags & FU_ENGINE_LOAD_FLAG_HWINFO) {
 		if (!fu_context_load_hwinfo(self->ctx, error))
 			return FALSE;
+		self->has_hwinfo = TRUE;
 	}
 	fu_progress_step_done(progress);
 
@@ -7882,15 +7888,18 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 	fu_progress_step_done(progress);
 
 	/* set quirks for each hwid */
-	guids = fu_context_get_hwid_guids(self->ctx);
-	for (guint i = 0; i < guids->len; i++) {
-		const gchar *hwid = g_ptr_array_index(guids, i);
-		fu_engine_load_quirks_for_hwid(self, hwid);
+	if (self->has_hwinfo) {
+		GPtrArray *guids = fu_context_get_hwid_guids(self->ctx);
+		for (guint i = 0; i < guids->len; i++) {
+			const gchar *hwid = g_ptr_array_index(guids, i);
+			fu_engine_load_quirks_for_hwid(self, hwid);
+		}
 	}
 	fu_progress_step_done(progress);
 
 	/* set up battery threshold */
-	fu_engine_context_set_battery_threshold(self->ctx);
+	if (self->has_hwinfo)
+		fu_engine_context_set_battery_threshold(self->ctx);
 
 	/* watch the device list for updates and proxy */
 	g_signal_connect(FU_DEVICE_LIST(self->device_list),
