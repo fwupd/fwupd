@@ -356,23 +356,6 @@ fu_plugin_open(FuPlugin *self, const gchar *filename, GError **error)
 		fu_plugin_set_name(self, str);
 	}
 
-	/* ensure the configure file is set to the correct permission */
-	if (fu_plugin_has_flag(self, FWUPD_PLUGIN_FLAG_SECURE_CONFIG)) {
-		g_autofree gchar *conf_path = fu_plugin_get_config_filename(self);
-		if (g_file_test(conf_path, G_FILE_TEST_EXISTS)) {
-			gint rc = g_chmod(conf_path, FU_PLUGIN_FILE_MODE_SECURE);
-			if (rc != 0) {
-				g_set_error(error,
-					    G_IO_ERROR,
-					    G_IO_ERROR_FAILED,
-					    "failed to change permission of %s",
-					    filename);
-				fu_plugin_add_flag(self, FWUPD_PLUGIN_FLAG_FAILED_OPEN);
-				return FALSE;
-			}
-		}
-	}
-
 	/* optional */
 	if (vfuncs->load != NULL) {
 		FuContext *ctx = fu_plugin_get_context(self);
@@ -911,6 +894,22 @@ fu_plugin_runner_startup(FuPlugin *self, FuProgress *progress, GError **error)
 	/* not enabled */
 	if (fu_plugin_has_flag(self, FWUPD_PLUGIN_FLAG_DISABLED))
 		return TRUE;
+
+	/* ensure the configure file is set to the correct permission */
+	if (fu_plugin_has_flag(self, FWUPD_PLUGIN_FLAG_SECURE_CONFIG)) {
+		if (g_file_test(config_filename, G_FILE_TEST_EXISTS)) {
+			gint rc = g_chmod(config_filename, FU_PLUGIN_FILE_MODE_SECURE);
+			if (rc != 0) {
+				g_set_error(error,
+					    G_IO_ERROR,
+					    G_IO_ERROR_FAILED,
+					    "failed to change permission of %s",
+					    config_filename);
+				fu_plugin_add_flag(self, FWUPD_PLUGIN_FLAG_FAILED_OPEN);
+				return FALSE;
+			}
+		}
+	}
 
 	/* optional */
 	if (vfuncs->startup == NULL)
