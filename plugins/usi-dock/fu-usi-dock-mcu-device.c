@@ -22,6 +22,7 @@ G_DEFINE_TYPE(FuUsiDockMcuDevice, fu_usi_dock_mcu_device, FU_TYPE_HID_DEVICE)
 
 #define FU_USI_DOCK_DEVICE_FLAG_VERFMT_HP (1 << 0)
 
+#define USI_DOCK_NON_IOT_INSTANCE_ID "USB\\VID_17EF&PID_30B4&CID_40B0"
 static gboolean
 fu_usi_dock_mcu_device_tx(FuUsiDockMcuDevice *self,
 			  guint8 tag2,
@@ -708,6 +709,30 @@ fu_usi_dock_mcu_device_write_firmware(FuDevice *device,
 }
 
 static gboolean
+fu_usi_dock_mcu_device_prepare(FuDevice *device,
+			       FuProgress *progress,
+			       FwupdInstallFlags flags,
+			       GError **error)
+{
+	FuUsiDockMcuDevice *self = FU_USI_DOCK_MCU_DEVICE(device);
+	guint8 inbuf[] = {USBUID_ISP_DEVICE_CMD_SET_CHIP_TYPE, 1, 1};
+
+	if (fu_device_has_guid(device, USI_DOCK_NON_IOT_INSTANCE_ID) &&
+	    g_strcmp0(fu_device_get_version(device), "10.10") == 0) {
+		if (!fu_usi_dock_mcu_device_txrx(self,
+						 TAG_TAG2_CMD_MCU,
+						 inbuf,
+						 sizeof(inbuf),
+						 NULL,
+						 0x0,
+						 error))
+			return FALSE;
+	}
+
+	return TRUE;
+}
+
+static gboolean
 fu_usi_dock_mcu_device_attach(FuDevice *device, FuProgress *progress, GError **error)
 {
 	fu_device_set_remove_delay(device, 900000);
@@ -760,4 +785,5 @@ fu_usi_dock_mcu_device_class_init(FuUsiDockMcuDeviceClass *klass)
 	klass_device->attach = fu_usi_dock_mcu_device_attach;
 	klass_device->setup = fu_usi_dock_mcu_device_setup;
 	klass_device->set_progress = fu_usi_dock_mcu_device_set_progress;
+	klass_device->prepare = fu_usi_dock_mcu_device_prepare;
 }
