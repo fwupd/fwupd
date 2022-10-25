@@ -7766,8 +7766,10 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 	fu_progress_step_done(progress);
 
 	/* load SMBIOS and the hwids */
-	if (flags & FU_ENGINE_LOAD_FLAG_HWINFO)
-		fu_context_load_hwinfo(self->ctx, NULL);
+	if (flags & FU_ENGINE_LOAD_FLAG_HWINFO) {
+		if (!fu_context_load_hwinfo(self->ctx, error))
+			return FALSE;
+	}
 	fu_progress_step_done(progress);
 
 	/* load AppStream metadata */
