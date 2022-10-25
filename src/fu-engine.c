@@ -7622,9 +7622,9 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "read-remotes");
 	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "ensure-client-cert");
 	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "write-db");
-	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "load-hwinfo");
 	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "load-plugins");
 	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "load-quirks");
+	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "load-hwinfo");
 	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "load-appstream");
 	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "backend-setup");
 	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "plugins-init");
@@ -7734,11 +7734,6 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 	}
 	fu_progress_step_done(progress);
 
-	/* load SMBIOS and the hwids */
-	if (flags & FU_ENGINE_LOAD_FLAG_HWINFO)
-		fu_context_load_hwinfo(self->ctx, NULL);
-	fu_progress_step_done(progress);
-
 	/* load plugins early, as we have to call ->load() *before* building quirk silo */
 	if (!fu_engine_load_plugins(self, flags, fu_progress_get_child(progress), error)) {
 		g_prefix_error(error, "failed to load plugins: ");
@@ -7768,6 +7763,11 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 		quirks_flags |= FU_QUIRKS_LOAD_FLAG_NO_CACHE;
 	if (!fu_context_load_quirks(self->ctx, quirks_flags, &error_quirks))
 		g_warning("Failed to load quirks: %s", error_quirks->message);
+	fu_progress_step_done(progress);
+
+	/* load SMBIOS and the hwids */
+	if (flags & FU_ENGINE_LOAD_FLAG_HWINFO)
+		fu_context_load_hwinfo(self->ctx, NULL);
 	fu_progress_step_done(progress);
 
 	/* load AppStream metadata */
