@@ -76,6 +76,7 @@ typedef struct {
 	GType specialized_gtype;
 	GType firmware_gtype;
 	GPtrArray *possible_plugins;
+	GPtrArray *instance_id_quirks; /* of utf-8 */
 	GPtrArray *retry_recs; /* of FuDeviceRetryRecovery */
 	guint retry_delay;
 	FuDeviceInternalFlags internal_flags;
@@ -2133,8 +2134,11 @@ fu_device_add_instance_id_full(FuDevice *self,
 	 * so the plugin is set, but not the LVFS metadata to match firmware
 	 * until we're sure the device isn't using _NO_AUTO_INSTANCE_IDS */
 	guid = fwupd_guid_hash_string(instance_id);
-	if ((flags & FU_DEVICE_INSTANCE_FLAG_NO_QUIRKS) == 0)
+	if ((flags & FU_DEVICE_INSTANCE_FLAG_NO_QUIRKS) == 0) {
 		fu_device_add_guid_quirks(self, guid);
+		/* save this to make debugging easier, and also so we can incorporate */
+		g_ptr_array_add(priv->instance_id_quirks, g_strdup(instance_id));
+	}
 	if ((flags & FU_DEVICE_INSTANCE_FLAG_ONLY_QUIRKS) == 0)
 		fwupd_device_add_instance_id(FWUPD_DEVICE(self), instance_id);
 
@@ -3802,6 +3806,12 @@ fu_device_add_string(FuDevice *self, guint idt, GString *str)
 	tmp = fwupd_device_to_string(FWUPD_DEVICE(self));
 	if (tmp != NULL && tmp[0] != '\0')
 		g_string_append(str, tmp);
+	for (guint i = 0; i < priv->instance_id_quirks->len; i++) {
+		const gchar *instance_id = g_ptr_array_index(priv->instance_id_quirks, i);
+		g_autofree gchar *guid = fwupd_guid_hash_string(instance_id);
+		g_autofree gchar *tmp2 = g_strdup_printf("%s ← %s", guid, instance_id);
+		fu_string_append(str, idt + 1, "Guid[quirks]", tmp2);
+	}
 	if (priv->alternate_id != NULL)
 		fu_string_append(str, idt + 1, "AlternateId", priv->alternate_id);
 	if (priv->equivalent_id != NULL)
@@ -5095,6 +5105,12 @@ fu_device_incorporate(FuDevice *self, FuDevice *donor)
 		const gchar *possible_plugin = g_ptr_array_index(priv_donor->possible_plugins, i);
 		fu_device_add_possible_plugin(self, possible_plugin);
 	}
+	for (guint i = 0; i < priv_donor->instance_id_quirks->len; i++) {
+		const gchar *instance_id = g_ptr_array_index(priv_donor->instance_id_quirks, i);
+		fu_device_add_instance_id_full(self,
+					       instance_id,
+					       FU_DEVICE_INSTANCE_FLAG_ONLY_QUIRKS);
+	}
 
 	/* copy all instance ID keys if not already set */
 	g_hash_table_iter_init(&iter, priv_donor->instance_hash);
@@ -5748,6 +5764,7 @@ fu_device_init(FuDevice *self)
 	priv->order = G_MAXINT;
 	priv->parent_guids = g_ptr_array_new_with_free_func(g_free);
 	priv->possible_plugins = g_ptr_array_new_with_free_func(g_free);
+	priv->instance_id_quirks = g_ptr_array_new_with_free_func(g_free);
 	priv->retry_recs = g_ptr_array_new_with_free_func(g_free);
 	priv->instance_hash = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
 	priv->backend_tags = g_ptr_array_new_with_free_func(g_free);
@@ -5787,6 +5804,7 @@ fu_device_finalize(GObject *object)
 		g_ptr_array_unref(priv->private_flag_items);
 	g_ptr_array_unref(priv->parent_guids);
 	g_ptr_array_unref(priv->possible_plugins);
+	g_ptr_array_unref(priv->instance_id_quirks);
 	g_ptr_array_unref(priv->retry_recs);
 	g_ptr_array_unref(priv->backend_tags);
 	g_free(priv->alternate_id);
