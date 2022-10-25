@@ -912,22 +912,23 @@ fu_plugin_runner_startup(FuPlugin *self, FuProgress *progress, GError **error)
 	}
 
 	/* optional */
-	if (vfuncs->startup == NULL)
-		return TRUE;
-	g_debug("startup(%s)", fu_plugin_get_name(self));
-	if (!vfuncs->startup(self, progress, &error_local)) {
-		if (error_local == NULL) {
-			g_critical("unset plugin error in startup(%s)", fu_plugin_get_name(self));
-			g_set_error_literal(&error_local,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_INTERNAL,
-					    "unspecified error");
-		}
-		g_propagate_prefixed_error(error,
-					   g_steal_pointer(&error_local),
-					   "failed to startup using %s: ",
+	if (vfuncs->startup != NULL) {
+		g_debug("startup(%s)", fu_plugin_get_name(self));
+		if (!vfuncs->startup(self, progress, &error_local)) {
+			if (error_local == NULL) {
+				g_critical("unset plugin error in startup(%s)",
 					   fu_plugin_get_name(self));
-		return FALSE;
+				g_set_error_literal(&error_local,
+						    FWUPD_ERROR,
+						    FWUPD_ERROR_INTERNAL,
+						    "unspecified error");
+			}
+			g_propagate_prefixed_error(error,
+						   g_steal_pointer(&error_local),
+						   "failed to startup using %s: ",
+						   fu_plugin_get_name(self));
+			return FALSE;
+		}
 	}
 
 	/* create a monitor on the config file */
