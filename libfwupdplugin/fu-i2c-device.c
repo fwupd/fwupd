@@ -118,6 +118,10 @@ fu_i2c_device_probe(FuDevice *device, GError **error)
 	g_autoptr(GUdevDevice) udev_parent = NULL;
 #endif
 
+	/* FuUdevDevice->probe */
+	if (!FU_DEVICE_CLASS(fu_i2c_device_parent_class)->probe(device, error))
+		return FALSE;
+
 	/* set physical ID */
 	if (!fu_udev_device_set_physical_id(FU_UDEV_DEVICE(device), "i2c", error))
 		return FALSE;
