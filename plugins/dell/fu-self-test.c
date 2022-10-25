@@ -112,9 +112,10 @@ fu_dell_plugin_tpm_func(gconstpointer user_data)
 	tpm_out.ret = -2;
 	fu_dell_plugin_inject_fake_data(self->plugin_dell, (guint32 *)&tpm_out, 0, 0, NULL, FALSE);
 	ret = fu_dell_plugin_detect_tpm(self->plugin_dell, &error);
-	g_assert_no_error(error);
+	g_assert_error(error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED);
 	g_assert_false(ret);
 	g_assert_cmpint(devices->len, ==, 0);
+	g_clear_error(&error);
 
 	/* inject fake data:
 	 * - that is out of flashes

@@ -728,13 +728,17 @@ fu_dell_plugin_detect_tpm(FuPlugin *plugin, GError **error)
 	self->smi_obj->input[0] = DACI_FLASH_ARG_TPM;
 	if (!fu_dell_execute_simple_smi(self->smi_obj,
 					DACI_FLASH_INTERFACE_CLASS,
-					DACI_FLASH_INTERFACE_SELECT))
+					DACI_FLASH_INTERFACE_SELECT)) {
+		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED, "cannot query");
 		return FALSE;
+	}
 
 	if (out->ret != 0) {
-		g_debug("Failed to query system for TPM information: "
-			"(%" G_GUINT32_FORMAT ")",
-			out->ret);
+		g_set_error(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_NOT_SUPPORTED,
+			    "failed to query system for TPM information: 0x%x",
+			    (guint)out->ret);
 		return FALSE;
 	}
 	/* HW version is output in second /input/ arg
@@ -745,7 +749,11 @@ fu_dell_plugin_detect_tpm(FuPlugin *plugin, GError **error)
 
 	/* test TPM enabled (Bit 0) */
 	if (!(out->status & TPM_EN_MASK)) {
-		g_debug("TPM not enabled (%x)", out->status);
+		g_set_error(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_NOT_SUPPORTED,
+			    "TPM not enabled: 0x%x",
+			    out->status);
 		return FALSE;
 	}
 
@@ -757,15 +765,20 @@ fu_dell_plugin_detect_tpm(FuPlugin *plugin, GError **error)
 		tpm_mode = "2.0";
 		tpm_mode_alt = "1.2";
 	} else {
-		g_debug("Unable to determine TPM mode");
+		g_set_error_literal(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_NOT_SUPPORTED,
+				    "unable to determine TPM mode");
 		return FALSE;
 	}
 
 	system_id = fu_dell_get_system_id(plugin);
-	if (self->smi_obj->fake_smbios)
+	if (self->smi_obj->fake_smbios) {
 		can_switch_modes = self->can_switch_modes;
-	else if (system_id == 0)
+	} else if (system_id == 0) {
+		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED, "no system ID");
 		return FALSE;
+	}
 
 	for (guint i = 0; i < G_N_ELEMENTS(tpm_switch_allowlist); i++) {
 		if (tpm_switch_allowlist[i] == system_id) {
@@ -948,9 +961,13 @@ fu_dell_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 static gboolean
 fu_dell_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError **error)
 {
+	g_autoptr(GError) error_local = NULL;
+
 	/* look for switchable TPM */
-	if (!fu_dell_plugin_detect_tpm(plugin, error))
-		g_debug("No switchable TPM detected");
+	if (!fu_dell_plugin_detect_tpm(plugin, &error_local))
+		g_debug("no switchable TPM detected: %s", error_local->message);
+
+	/* always success */
 	return TRUE;
 }
 
