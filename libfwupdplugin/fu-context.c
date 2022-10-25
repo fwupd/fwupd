@@ -37,6 +37,7 @@ typedef struct {
 	guint battery_level;
 	guint battery_threshold;
 	FuBiosSettings *host_bios_settings;
+	gboolean loaded_hwinfo;
 } FuContextPrivate;
 
 enum { SIGNAL_SECURITY_CHANGED, SIGNAL_LAST };
@@ -76,6 +77,10 @@ fu_context_get_smbios_string(FuContext *self, guint8 structure_type, guint8 offs
 {
 	FuContextPrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FU_IS_CONTEXT(self), NULL);
+	if (!priv->loaded_hwinfo) {
+		g_critical("cannot use SMBIOS before calling ->load_hwinfo()");
+		return NULL;
+	}
 	return fu_smbios_get_string(priv->smbios, structure_type, offset, NULL);
 }
 
@@ -100,6 +105,11 @@ fu_context_get_smbios_data(FuContext *self, guint8 structure_type, GError **erro
 	g_return_val_if_fail(FU_IS_CONTEXT(self), NULL);
 
 	/* must be valid and non-zero length */
+	if (!priv->loaded_hwinfo) {
+		g_critical("cannot use SMBIOS before calling ->load_hwinfo()");
+		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_NOT_INITIALIZED, "no data");
+		return NULL;
+	}
 	blob = fu_smbios_get_data(priv->smbios, structure_type, error);
 	if (blob == NULL)
 		return NULL;
@@ -130,6 +140,10 @@ fu_context_get_smbios_integer(FuContext *self, guint8 type, guint8 offset)
 {
 	FuContextPrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FU_IS_CONTEXT(self), G_MAXUINT);
+	if (!priv->loaded_hwinfo) {
+		g_critical("cannot use SMBIOS before calling ->load_hwinfo()");
+		return G_MAXUINT;
+	}
 	return fu_smbios_get_integer(priv->smbios, type, offset, NULL);
 }
 
@@ -224,6 +238,10 @@ fu_context_has_hwid_guid(FuContext *self, const gchar *guid)
 {
 	FuContextPrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FU_IS_CONTEXT(self), FALSE);
+	if (!priv->loaded_hwinfo) {
+		g_critical("cannot use HWIDs before calling ->load_hwinfo()");
+		return FALSE;
+	}
 	return fu_hwids_has_guid(priv->hwids, guid);
 }
 
@@ -243,6 +261,10 @@ fu_context_get_hwid_guids(FuContext *self)
 {
 	FuContextPrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FU_IS_CONTEXT(self), NULL);
+	if (!priv->loaded_hwinfo) {
+		g_critical("cannot use HWIDs before calling ->load_hwinfo()");
+		return NULL;
+	}
 	return fu_hwids_get_guids(priv->hwids);
 }
 
@@ -264,6 +286,10 @@ fu_context_get_hwid_value(FuContext *self, const gchar *key)
 	FuContextPrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FU_IS_CONTEXT(self), NULL);
 	g_return_val_if_fail(key != NULL, NULL);
+	if (!priv->loaded_hwinfo) {
+		g_critical("cannot use HWIDs before calling ->load_hwinfo()");
+		return NULL;
+	}
 	return fu_hwids_get_value(priv->hwids, key);
 }
 
@@ -286,6 +312,11 @@ fu_context_get_hwid_replace_value(FuContext *self, const gchar *keys, GError **e
 	FuContextPrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FU_IS_CONTEXT(self), NULL);
 	g_return_val_if_fail(keys != NULL, NULL);
+	if (!priv->loaded_hwinfo) {
+		g_critical("cannot use HWIDs before calling ->load_hwinfo()");
+		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_NOT_INITIALIZED, "no data");
+		return NULL;
+	}
 	return fu_hwids_get_replace_values(priv->hwids, keys, error);
 }
 
@@ -614,6 +645,7 @@ fu_context_load_hwinfo(FuContext *self, GError **error)
 		g_warning("Failed to load SMBIOS: %s", error_smbios->message);
 	if (!fu_hwids_setup(priv->hwids, priv->smbios, &error_hwids))
 		g_warning("Failed to load HWIDs: %s", error_hwids->message);
+	priv->loaded_hwinfo = TRUE;
 
 	/* set the hwid flags */
 	guids = fu_context_get_hwid_guids(self);

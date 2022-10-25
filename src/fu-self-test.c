@@ -1480,7 +1480,10 @@ fu_engine_require_hwid_func(gconstpointer user_data)
 	fu_engine_set_silo(engine, silo_empty);
 
 	/* load engine to get FuConfig set up */
-	ret = fu_engine_load(engine, FU_ENGINE_LOAD_FLAG_NO_CACHE, progress, &error);
+	ret = fu_engine_load(engine,
+			     FU_ENGINE_LOAD_FLAG_NO_CACHE | FU_ENGINE_LOAD_FLAG_HWINFO,
+			     progress,
+			     &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
