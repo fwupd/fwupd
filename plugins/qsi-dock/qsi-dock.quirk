@@ -1,0 +1,9 @@
+[USB\VID_2BEF&PID_1003]
+Plugin = qsi_dock
+GType = FuQsiDockMcuDevice
+Name = QSI Dock
+
+[USB\VID_047D&PID_808D]
+Plugin = qsi_dock
+GType = FuQsiDockMcuDevice
+Name = QSI Dock
