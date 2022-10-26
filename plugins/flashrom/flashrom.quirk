@@ -39,6 +39,10 @@ Plugin = flashrom
 [85aba599-addd-5985-a2e8-eddb41c61ba3]
 Plugin = flashrom
 
+# StarBook Mk VI - Intel (HwId)
+[5c917039-d938-5c9a-b22a-9c392b1534f3]
+Plugin = flashrom
+
 # StarLabTop Mk III (coreboot GUID)
 [d33219e2-b84c-53a8-a624-27af9752dba6]
 Branch = coreboot
@@ -83,6 +87,12 @@ PciBcrAddr = 0x0
 
 # StarBook Mk V (coreboot GUID)
 [54c96fef-31e7-5011-a3ff-ea8e855d9acd]
+Branch = coreboot
+Flags = reset-cmos
+PciBcrAddr = 0x0
+
+# StarBook Mk VI - Intel (coreboot GUID)
+[8c994a92-7ef8-5d68-80b5-99ead7cf4686]
 Branch = coreboot
 Flags = reset-cmos
 PciBcrAddr = 0x0

@@ -47,6 +47,15 @@ SuperioPort = 0x4e
 InstallDuration = 20
 Flags = signed-payload
 
+# StarBook Mk VI - Intel (HwId)
+[5c917039-d938-5c9a-b22a-9c392b1534f3]
+SuperioGType = FuSuperioIt89Device
+[SUPERIO\GUID_5c917039-d938-5c9a-b22a-9c392b1534f3]
+SuperioId = 0x5570
+SuperioPort = 0x4e
+InstallDuration = 20
+Flags = signed-payload
+
 # Star Lite Mk II (HwId)
 [013b60e5-1023-5bee-8ae5-14cae21377b7]
 SuperioGType = FuSuperioIt89Device
