@@ -132,3 +132,12 @@ Summary = Dock Management Controller Device
 CcgxDmcTriggerCode = 0x01
 CcgxImageKind = dmc-composite
 RemoveDelay = 732000
+
+# Anker Thunderbolt4 Mini Dock
+[USB\VID_291A&PID_8398]
+Plugin = ccgx
+GType = FuCcgxDmcDevice
+Summary = Dock Management Controller Device
+CcgxDmcTriggerCode = 0x01
+CcgxImageKind = dmc-composite
+RemoveDelay = 732000
