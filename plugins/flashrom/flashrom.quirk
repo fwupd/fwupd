@@ -47,6 +47,10 @@ Plugin = flashrom
 [b39593ad-7522-52a5-a4ab-1b2ca2153956]
 Plugin = flashrom
 
+# Byte Mk I - AMD (HwId)
+[79a64046-5643-59c4-91d0-e68b33db5829]
+Plugin = flashrom
+
 # StarLabTop Mk III (coreboot GUID)
 [d33219e2-b84c-53a8-a624-27af9752dba6]
 Branch = coreboot

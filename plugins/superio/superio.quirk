@@ -65,6 +65,15 @@ SuperioPort = 0x4e
 InstallDuration = 20
 Flags = signed-payload
 
+# Byte Mk I - AMD (HwId)
+[79a64046-5643-59c4-91d0-e68b33db5829]
+SuperioGType = FuSuperioIt89Device
+[SUPERIO\79a64046-5643-59c4-91d0-e68b33db5829]
+SuperioId = 0x5570
+SuperioPort = 0x4e
+InstallDuration = 20
+Flags = signed-payload
+
 # Star Lite Mk II (HwId)
 [013b60e5-1023-5bee-8ae5-14cae21377b7]
 SuperioGType = FuSuperioIt89Device
