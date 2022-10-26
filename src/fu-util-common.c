@@ -2281,12 +2281,12 @@ fu_util_security_event_to_string(FwupdSecurityAttr *attr)
 		      FWUPD_SECURITY_ATTR_RESULT_TAINTED,
 		      FWUPD_SECURITY_ATTR_RESULT_NOT_TAINTED,
 		      /* TRANSLATORS: HSI event title */
-		      _("Kernel is tainted")},
+		      _("Kernel is no longer tainted")},
 		     {FWUPD_SECURITY_ATTR_ID_KERNEL_TAINTED,
 		      FWUPD_SECURITY_ATTR_RESULT_NOT_TAINTED,
 		      FWUPD_SECURITY_ATTR_RESULT_TAINTED,
 		      /* TRANSLATORS: HSI event title */
-		      _("Kernel is no longer tainted")},
+		      _("Kernel is tainted")},
 		     /* ------------------------------------------*/
 		     {FWUPD_SECURITY_ATTR_ID_KERNEL_LOCKDOWN,
 		      FWUPD_SECURITY_ATTR_RESULT_ENABLED,
