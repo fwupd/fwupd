@@ -43,6 +43,10 @@ Plugin = flashrom
 [5c917039-d938-5c9a-b22a-9c392b1534f3]
 Plugin = flashrom
 
+# StarBook Mk VI - AMD (HwId)
+[b39593ad-7522-52a5-a4ab-1b2ca2153956]
+Plugin = flashrom
+
 # StarLabTop Mk III (coreboot GUID)
 [d33219e2-b84c-53a8-a624-27af9752dba6]
 Branch = coreboot
