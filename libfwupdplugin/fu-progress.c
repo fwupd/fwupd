@@ -1013,6 +1013,55 @@ fu_progress_traceback(FuProgress *self)
 }
 
 static void
+fu_progress_to_string_cb(FuProgress *self, guint idt, GString *str)
+{
+	FuProgressPrivate *priv = GET_PRIVATE(self);
+
+	/* not interesting */
+	if (priv->id == NULL && priv->name == NULL)
+		return;
+
+	if (priv->id != NULL)
+		fu_string_append(str, idt, "Id", priv->id);
+	if (priv->name != NULL)
+		fu_string_append(str, idt, "Name", priv->name);
+	if (priv->percentage != G_MAXUINT)
+		fu_string_append_ku(str, idt, "Percentage", priv->percentage);
+	if (priv->status != FWUPD_STATUS_UNKNOWN)
+		fu_string_append(str, idt, "Status", fwupd_status_to_string(priv->status));
+	if (priv->duration > 0.0001)
+		fu_string_append_ku(str, idt, "DurationMs", priv->duration * 1000.f);
+	if (priv->step_weighting > 0)
+		fu_string_append_ku(str, idt, "StepWeighting", priv->step_weighting);
+	if (priv->step_now > 0)
+		fu_string_append_ku(str, idt, "StepNow", priv->step_now);
+	for (guint i = 0; i < priv->children->len; i++) {
+		FuProgress *child = g_ptr_array_index(priv->children, i);
+		fu_progress_to_string_cb(child, idt + 1, str);
+	}
+}
+
+/**
+ * fu_progress_to_string:
+ * @self: A #FuProgress
+ *
+ * Prints the progress for debugging.
+ *
+ * Return value: (transfer full): string
+ *
+ * Since: 1.8.7
+ **/
+gchar *
+fu_progress_to_string(FuProgress *self)
+{
+	g_autoptr(GString) str = g_string_new(NULL);
+	fu_progress_to_string_cb(self, 0, str);
+	if (str->len == 0)
+		return NULL;
+	return g_string_free(g_steal_pointer(&str), FALSE);
+}
+
+static void
 fu_progress_init(FuProgress *self)
 {
 	FuProgressPrivate *priv = GET_PRIVATE(self);
