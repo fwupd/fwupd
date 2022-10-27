@@ -41,8 +41,10 @@ fu_wac_module_touch_write_firmware(FuDevice *device,
 
 	/* build each data packet */
 	fw = fu_firmware_get_bytes(firmware, error);
-	if (fw == NULL)
+	if (fw == NULL) {
+		g_prefix_error(error, "wacom touch module failed to get bytes: ");
 		return FALSE;
+	}
 	chunks = fu_chunk_array_new_from_bytes(fw,
 					       fu_firmware_get_addr(firmware),
 					       0x0,  /* page_sz */
@@ -54,8 +56,10 @@ fu_wac_module_touch_write_firmware(FuDevice *device,
 				       NULL,
 				       fu_progress_get_child(progress),
 				       FU_WAC_MODULE_ERASE_TIMEOUT,
-				       error))
+				       error)) {
+		g_prefix_error(error, "wacom touch module failed to erase: ");
 		return FALSE;
+	}
 	fu_progress_step_done(progress);
 
 	/* data */
@@ -77,8 +81,10 @@ fu_wac_module_touch_write_firmware(FuDevice *device,
 				    fu_chunk_get_data_sz(chk),
 				    0x0, /* src */
 				    fu_chunk_get_data_sz(chk),
-				    error))
+				    error)) {
+			g_prefix_error(error, "wacom touch module failed to memcpy: ");
 			return FALSE;
+		}
 		blob_chunk = g_bytes_new(buf, sizeof(buf));
 		if (!fu_wac_module_set_feature(self,
 					       FU_WAC_MODULE_COMMAND_DATA,
@@ -103,8 +109,10 @@ fu_wac_module_touch_write_firmware(FuDevice *device,
 				       NULL,
 				       fu_progress_get_child(progress),
 				       FU_WAC_MODULE_FINISH_TIMEOUT,
-				       error))
+				       error)) {
+		g_prefix_error(error, "wacom touch module failed to end: ");
 		return FALSE;
+	}
 	fu_progress_step_done(progress);
 
 	/* success */
