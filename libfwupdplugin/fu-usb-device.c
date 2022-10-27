@@ -835,7 +835,7 @@ FuUsbDevice *
 fu_usb_device_new(FuContext *ctx, GUsbDevice *usb_device)
 {
 #if G_USB_CHECK_VERSION(0, 4, 3)
-	if (g_usb_device_has_tag(usb_device, "is-transient")) {
+	if (usb_device != NULL && g_usb_device_has_tag(usb_device, "is-transient")) {
 		g_critical("cannot use a device built using fu_udev_device_find_usb_device() as "
 			   "the GUsbContext is different");
 		return NULL;
