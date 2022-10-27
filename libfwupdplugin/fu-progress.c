@@ -664,7 +664,7 @@ fu_progress_child_percentage_changed_cb(FuProgress *child, guint percentage, FuP
 		gdouble pc1 = fu_progress_get_step_percentage(self, priv->step_now - 1);
 		gdouble pc2 = fu_progress_get_step_percentage(self, priv->step_now);
 		/* bi-linearly interpolate */
-		if (pc1 > 0 && pc2 > 0)
+		if (pc1 >= 0 && pc2 >= 0)
 			parent_percentage = (((100 - percentage) * pc1) + (percentage * pc2)) / 100;
 	}
 	if (parent_percentage != G_MAXUINT) {
