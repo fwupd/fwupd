@@ -592,15 +592,28 @@ fu_progress_get_step_percentage(FuProgress *self, guint idx)
 	FuProgressPrivate *priv = GET_PRIVATE(self);
 	guint current = 0;
 	guint total = 0;
+	gboolean any_step_weighting = FALSE;
 
+	/* we set the step weighting manually */
+	for (guint i = 0; i < priv->children->len; i++) {
+		FuProgress *child = g_ptr_array_index(priv->children, i);
+		if (fu_progress_get_step_weighting(child) > 0) {
+			any_step_weighting = TRUE;
+			break;
+		}
+	}
+
+	/* just use proportional */
+	if (!any_step_weighting)
+		return -1;
+
+	/* work out percentage */
 	for (guint i = 0; i < priv->children->len; i++) {
 		FuProgress *child = g_ptr_array_index(priv->children, i);
 		if (i <= idx)
 			current += fu_progress_get_step_weighting(child);
 		total += fu_progress_get_step_weighting(child);
 	}
-	if (total == 0)
-		return -1;
 	return ((gdouble)current * 100.f) / (gdouble)total;
 }
 
