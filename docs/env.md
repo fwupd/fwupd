@@ -36,7 +36,8 @@ with a non-standard filesystem layout.
 ## Shared libfwupdplugin
 
 * `FU_HID_DEVICE_VERBOSE` shows HID traffic
-* `FU_SREC_FIRMWARE_VERBOSE` shows more information about parsing
+* `FU_SREC_FIRMWARE_VERBOSE` shows more information about parsing Motorola S-record files
+* `FU_IHEX_FIRMWARE_VERBOSE` shows more information about parsing Intel hex files
 * `FU_UDEV_DEVICE_DEBUG` shows more information about UDEV devices, including parents
 * `FU_USB_DEVICE_DEBUG` shows more information about USB devices
 * `FU_MEI_DEVICE_DEBUG` shows MEI reads and writes
