@@ -134,3 +134,5 @@ void
 fu_progress_sleep(FuProgress *self, guint delay_ms);
 gchar *
 fu_progress_traceback(FuProgress *self);
+gchar *
+fu_progress_to_string(FuProgress *self);
