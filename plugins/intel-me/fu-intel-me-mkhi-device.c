@@ -48,7 +48,6 @@ fu_intel_me_mkhi_device_setup(FuDevice *device, GError **error)
 	 * possible path traversal attacks */
 	for (guint i = 0; fns[i] != NULL; i++) {
 		g_autoptr(GError) error_local = NULL;
-		g_autoptr(GByteArray) buf = NULL;
 		if (!fu_intel_me_mkhi_device_add_checksum_for_filename(self,
 								       fns[i],
 								       &error_local)) {
