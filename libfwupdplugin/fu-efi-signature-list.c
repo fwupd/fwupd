@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
+#define G_LOG_DOMAIN "FuEfiSignatureList"
+
 #include "config.h"
 
 #include <fwupd.h>
