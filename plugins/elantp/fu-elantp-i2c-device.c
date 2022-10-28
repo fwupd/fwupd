@@ -16,7 +16,7 @@
 #include "fu-elantp-i2c-device.h"
 
 struct _FuElantpI2cDevice {
-	FuUdevDevice parent_instance;
+	FuI2cDevice parent_instance;
 	guint16 i2c_addr;
 	guint16 ic_page_count;
 	guint16 iap_type;
@@ -29,7 +29,7 @@ struct _FuElantpI2cDevice {
 	gchar *bind_id;
 };
 
-G_DEFINE_TYPE(FuElantpI2cDevice, fu_elantp_i2c_device, FU_TYPE_UDEV_DEVICE)
+G_DEFINE_TYPE(FuElantpI2cDevice, fu_elantp_i2c_device, FU_TYPE_I2C_DEVICE)
 
 #define FU_ELANTP_DEVICE_IOCTL_TIMEOUT 5000 /* ms */
 
