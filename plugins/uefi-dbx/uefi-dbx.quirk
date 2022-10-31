@@ -115,3 +115,28 @@ Flags = no-dbx-updates
 # BaseboardProduct=8620
 [3f4f41b0-f419-5715-879e-73500cdb3c5d]
 Flags = no-dbx-updates
+
+# Manufacturer=Red Hat
+# ProductName=KVM
+[18a0234c-0378-529b-8b77-1de25136d95f]
+Flags = no-dbx-updates
+
+# Manufacturer=QEMU
+# ProductName=Standard PC (Q35 + ICH9, 2009)
+[817fca52-ae83-52f5-8642-9497f79d49d0]
+Flags = no-dbx-updates
+
+# Manufacturer=VMware, Inc.
+# ProductName=VMware7,1
+[f72aec88-d9ff-585c-8a0d-7c15c107cfa5]
+Flags = no-dbx-updates
+
+# Manufacturer=To Be Filled By O.E.M.
+# ProductName=To Be Filled By O.E.M.
+[f7706332-d59f-5e58-908f-f37e880771f9]
+Flags = no-dbx-updates
+
+# Manufacturer=System manufacturer
+# ProductName=To be filled by O.E.M.
+[7315e85a-f6ec-5bf0-b11d-411fb886c323]
+Flags = no-dbx-updates
