@@ -2200,18 +2200,28 @@ fu_engine_get_report_metadata(FuEngine *self, GError **error)
 
 	/* DMI data */
 	if (self->has_hwinfo) {
-		tmp = fu_context_get_hwid_value(self->ctx, FU_HWIDS_KEY_PRODUCT_NAME);
-		if (tmp != NULL)
-			g_hash_table_insert(hash, g_strdup("HostProduct"), g_strdup(tmp));
-		tmp = fu_context_get_hwid_value(self->ctx, FU_HWIDS_KEY_FAMILY);
-		if (tmp != NULL)
-			g_hash_table_insert(hash, g_strdup("HostFamily"), g_strdup(tmp));
-		tmp = fu_context_get_hwid_value(self->ctx, FU_HWIDS_KEY_PRODUCT_SKU);
-		if (tmp != NULL)
-			g_hash_table_insert(hash, g_strdup("HostSku"), g_strdup(tmp));
-		tmp = fu_context_get_hwid_value(self->ctx, FU_HWIDS_KEY_MANUFACTURER);
-		if (tmp != NULL)
-			g_hash_table_insert(hash, g_strdup("HostVendor"), g_strdup(tmp));
+		struct {
+			const gchar *hwid;
+			const gchar *name;
+		} keys[] = {{FU_HWIDS_KEY_BASEBOARD_MANUFACTURER, "HostBaseboardManufacturer"},
+			    {FU_HWIDS_KEY_BASEBOARD_PRODUCT, "HostBaseboardProduct"},
+			    {FU_HWIDS_KEY_BIOS_MAJOR_RELEASE, "HostBiosMajorRelease"},
+			    {FU_HWIDS_KEY_BIOS_MINOR_RELEASE, "HostBiosMinorRelease"},
+			    {FU_HWIDS_KEY_BIOS_VENDOR, "HostBiosVendor"},
+			    {FU_HWIDS_KEY_BIOS_VERSION, "HostBiosVersion"},
+			    {FU_HWIDS_KEY_FIRMWARE_MAJOR_RELEASE, "HostFirmwareMajorRelease"},
+			    {FU_HWIDS_KEY_FIRMWARE_MINOR_RELEASE, "HostFirmwareMinorRelease"},
+			    {FU_HWIDS_KEY_ENCLOSURE_KIND, "HostEnclosureKind"},
+			    {FU_HWIDS_KEY_FAMILY, "HostFamily"},
+			    {FU_HWIDS_KEY_MANUFACTURER, "HostVendor"},
+			    {FU_HWIDS_KEY_PRODUCT_NAME, "HostProduct"},
+			    {FU_HWIDS_KEY_PRODUCT_SKU, "HostSku"},
+			    {NULL, NULL}};
+		for (guint i = 0; keys[i].hwid != NULL; i++) {
+			tmp = fu_context_get_hwid_value(self->ctx, keys[i].hwid);
+			if (tmp != NULL)
+				g_hash_table_insert(hash, g_strdup(keys[i].name), g_strdup(tmp));
+		}
 	}
 
 		/* kernel version is often important for debugging failures */
