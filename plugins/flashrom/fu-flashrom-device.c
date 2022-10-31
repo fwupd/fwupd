@@ -77,7 +77,6 @@ static gboolean
 fu_flashrom_device_open(FuDevice *device, GError **error)
 {
 	FuFlashromDevice *self = FU_FLASHROM_DEVICE(device);
-	struct flashrom_layout *layout;
 
 	/* get the flash size from the device if not already been quirked */
 	if (fu_device_get_firmware_size_max(device) == 0) {
@@ -92,28 +91,30 @@ fu_flashrom_device_open(FuDevice *device, GError **error)
 		fu_device_set_firmware_size_max(device, flash_size);
 	}
 
-	if (flashrom_layout_read_from_ifd(&layout, self->flashctx, NULL, 0)) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_READ,
-				    "failed to read layout from Intel ICH descriptor");
-		return FALSE;
-	}
-
 	/* update only one specific region of the flash and do not touch others */
-	if (flashrom_layout_include_region(layout, fu_ifd_region_to_string(self->region))) {
-		flashrom_layout_release(layout);
+	if (fu_cpu_get_vendor() == FU_CPU_VENDOR_INTEL) {
+		struct flashrom_layout *layout = NULL;
+		if (flashrom_layout_read_from_ifd(&layout, self->flashctx, NULL, 0)) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_READ,
+					    "failed to read layout from Intel ICH descriptor");
+			return FALSE;
+		}
+		if (flashrom_layout_include_region(layout, fu_ifd_region_to_string(self->region))) {
+			flashrom_layout_release(layout);
 
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "invalid region name");
-		return FALSE;
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
+					    "invalid region name");
+			return FALSE;
+		}
+
+		/* does not transfer ownership, so we must manage the lifetime of layout */
+		self->layout = layout;
+		flashrom_layout_set(self->flashctx, self->layout);
 	}
-
-	/* flashrom_layout_set() doesn't transfer ownership, so we must manage layout's lifetime */
-	self->layout = layout;
-	flashrom_layout_set(self->flashctx, self->layout);
 
 	return TRUE;
 }
