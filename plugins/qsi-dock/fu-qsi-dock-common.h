@@ -11,8 +11,8 @@
 
 #define Report_ID 5
 
-#define TX_ISP_LENGTH 61
-#define TX_ISP_LENGTH_MCU 60
+#define TX_ISP_LENGTH	       61
+#define TX_ISP_LENGTH_MCU      60
 #define EXTERN_FLASH_PAGE_SIZE 256
 
 #define FIRMWARE_IDX_NONE   0x00
@@ -39,7 +39,7 @@ typedef struct {
 	guint8 bcdVersion[2];
 } IspVersionInMcu_t;
 
-enum Hid_CmdPrimary {
+typedef enum {
 	CmdPrimary_CMD_BOOT = 0x11,
 	CmdPrimary_CMD_SYSTEM = 0x31,
 	CmdPrimary_CMD_MCU = 0x51,
@@ -51,9 +51,9 @@ enum Hid_CmdPrimary {
 	CmdPrimary_Mass_SPI,
 	CmdPrimary_Mass_I2C_VMM,
 	CmdPrimary_Mass_I2C_CY,
-};
+} Hid_CmdPrimary;
 
-enum Hid_CmdSecond_0x51 {
+typedef enum {
 	CmdSecond_CMD_DEVICE_STATUS,
 	CmdSecond_CMD_SET_BOOT_MODE,
 	CmdSecond_CMD_SET_AP_MODE,
@@ -62,14 +62,14 @@ enum Hid_CmdSecond_0x51 {
 	CmdSecond_CMD_DEVICE_VERSION,
 	CmdSecond_CMD_DEVICE_PCB_VERSION,
 	CmdSecond_CMD_DEVICE_SN,
-};
+} Hid_CmdSecond_0x51;
 
-enum Hid_CmdSecond_0x61 {
+typedef enum {
 	CmdSecond_SPI_External_Flash_Ini,
 	CmdSecond_SPI_External_Flash_Erase,
 	CmdSecond_SPI_External_Flash_Checksum,
 
-};
+} Hid_CmdSecond_0x61;
 
 const gchar *
 fu_qsi_dock_idx_to_string(guint8 val);
