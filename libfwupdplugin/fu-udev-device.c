@@ -1971,7 +1971,7 @@ fu_udev_device_get_devtype(FuUdevDevice *self)
  * Since: 1.6.0
  */
 GPtrArray *
-fu_udev_device_get_siblings_with_subsystem(FuUdevDevice *self, const gchar *const subsystem)
+fu_udev_device_get_siblings_with_subsystem(FuUdevDevice *self, const gchar *subsystem)
 {
 	g_autoptr(GPtrArray) out = g_ptr_array_new_with_free_func(g_object_unref);
 
