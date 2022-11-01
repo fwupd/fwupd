@@ -45,6 +45,16 @@
       <package variant="x86_64" />
       <package variant="i386" />
     </distro>
+    <distro id="ubuntu">
+      <control>
+        <inclusive>amd64</inclusive>
+        <inclusive>arm64</inclusive>
+        <inclusive>armhf</inclusive>
+        <inclusive>i386</inclusive>
+      </control>
+      <package variant="x86_64" />
+      <package variant="i386" />
+    </distro>
   </dependency>
   <dependency type="build" id="noto-fonts-cjk">
     <distro id="arch">
@@ -1195,6 +1205,11 @@
       <control />
       <package variant="x86_64" />
       <package variant="s390x">libqrtr-glib-dev:s390x</package>
+      <package variant="i386" />
+    </distro>
+    <distro id="ubuntu">
+      <control />
+      <package variant="x86_64" />
       <package variant="i386" />
     </distro>
   </dependency>
