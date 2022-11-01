@@ -35,3 +35,7 @@ guint
 fu_mei_device_get_max_msg_length(FuMeiDevice *self);
 guint8
 fu_mei_device_get_protocol_version(FuMeiDevice *self);
+gchar *
+fu_mei_device_get_fw_ver(FuMeiDevice *self, guint idx, GError **error);
+gchar *
+fu_mei_device_get_fw_status(FuMeiDevice *self, guint idx, GError **error);

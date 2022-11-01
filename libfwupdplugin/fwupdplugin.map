@@ -1139,6 +1139,8 @@ LIBFWUPDPLUGIN_1.8.6 {
 
 LIBFWUPDPLUGIN_1.8.7 {
   global:
+    fu_mei_device_get_fw_status;
+    fu_mei_device_get_fw_ver;
     fu_progress_to_string;
     fu_udev_device_find_usb_device;
     fu_udev_device_set_device_file;

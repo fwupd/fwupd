@@ -27,6 +27,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
+#include "fu-bytes.h"
 #include "fu-dump.h"
 #include "fu-mei-device.h"
 #include "fu-string.h"
@@ -45,6 +46,7 @@ typedef struct {
 	guint32 max_msg_length;
 	guint8 protocol_version;
 	gchar *uuid;
+	gchar *parent_device_file;
 } FuMeiDevicePrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE(FuMeiDevice, fu_mei_device, FU_TYPE_UDEV_DEVICE)
@@ -58,10 +60,51 @@ fu_mei_device_to_string(FuDevice *device, guint idt, GString *str)
 	FuMeiDevicePrivate *priv = GET_PRIVATE(self);
 	FU_DEVICE_CLASS(fu_mei_device_parent_class)->to_string(device, idt, str);
 	fu_string_append(str, idt, "Uuid", priv->uuid);
+	fu_string_append(str, idt, "ParentDeviceFile", priv->parent_device_file);
 	if (priv->max_msg_length > 0x0)
 		fu_string_append_kx(str, idt, "MaxMsgLength", priv->max_msg_length);
 	if (priv->protocol_version > 0x0)
 		fu_string_append_kx(str, idt, "ProtocolVer", priv->protocol_version);
+}
+
+static gchar *
+fu_mei_device_get_parent_device_file(FuMeiDevice *self, GError **error)
+{
+	const gchar *fn;
+	g_autofree gchar *parent_mei_path = NULL;
+	g_autoptr(FuUdevDevice) parent = NULL;
+	g_autoptr(GDir) dir = NULL;
+
+	/* get direct parent */
+	parent = fu_udev_device_get_parent_with_subsystem(FU_UDEV_DEVICE(self), NULL);
+	if (parent == NULL) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no MEI parent");
+		return NULL;
+	}
+
+	/* look for the only child with this subsystem */
+	parent_mei_path = g_build_filename(fu_udev_device_get_sysfs_path(parent), "mei", NULL);
+	dir = g_dir_open(parent_mei_path, 0, NULL);
+	if (dir == NULL) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "no MEI parent dir for %s",
+			    fu_udev_device_get_sysfs_path(parent));
+		return NULL;
+	}
+	fn = g_dir_read_name(dir);
+	if (fn == NULL) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "no MEI parent in %s",
+			    parent_mei_path);
+		return NULL;
+	}
+
+	/* success */
+	return g_build_filename(fu_udev_device_get_sysfs_path(parent), "mei", fn, NULL);
 }
 
 static gboolean
@@ -87,12 +130,97 @@ fu_mei_device_probe(FuDevice *device, GError **error)
 	priv->uuid = g_strdup(uuid);
 	fu_device_add_guid(device, uuid);
 
+	/* get the mei[0-9] device file the parent is using */
+	priv->parent_device_file = fu_mei_device_get_parent_device_file(self, error);
+	if (priv->parent_device_file == NULL)
+		return FALSE;
+
 	/* FuUdevDevice->probe */
 	if (!FU_DEVICE_CLASS(fu_mei_device_parent_class)->probe(device, error))
 		return FALSE;
 
 	/* set the physical ID */
 	return fu_udev_device_set_physical_id(FU_UDEV_DEVICE(device), "pci", error);
+}
+
+static gchar *
+fu_mei_device_get_parent_attr(FuMeiDevice *self, const gchar *basename, guint idx, GError **error)
+{
+	FuMeiDevicePrivate *priv = GET_PRIVATE(self);
+	g_autofree gchar *fn = NULL;
+	g_auto(GStrv) lines = NULL;
+	g_autoptr(GBytes) blob = NULL;
+
+	/* sanity check */
+	if (priv->parent_device_file == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "no parent device file");
+		return NULL;
+	}
+
+	/* load lines */
+	fn = g_build_filename(priv->parent_device_file, basename, NULL);
+	blob = fu_bytes_get_contents(fn, error);
+	if (blob == NULL)
+		return NULL;
+	lines = fu_strsplit((const gchar *)g_bytes_get_data(blob, NULL),
+			    g_bytes_get_size(blob),
+			    "\n",
+			    -1);
+	if (g_strv_length(lines) <= idx) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "requested line %u of %u",
+			    idx,
+			    g_strv_length(lines));
+		return NULL;
+	}
+
+	/* success */
+	return g_strdup(lines[idx]);
+}
+
+/**
+ * fu_mei_device_get_fw_ver:
+ * @self: a #FuMeiDevice
+ * @idx: line index
+ * @error: (nullable): optional return location for an error
+ *
+ * Gets the firmware version for a specific index.
+ *
+ * Returns: string value
+ *
+ * Since: 1.8.7
+ **/
+gchar *
+fu_mei_device_get_fw_ver(FuMeiDevice *self, guint idx, GError **error)
+{
+	g_return_val_if_fail(FU_IS_MEI_DEVICE(self), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+	return fu_mei_device_get_parent_attr(self, "fw_ver", idx, error);
+}
+
+/**
+ * fu_mei_device_get_fw_status:
+ * @self: a #FuMeiDevice
+ * @idx: line index
+ * @error: (nullable): optional return location for an error
+ *
+ * Gets the firmware status for a specific index.
+ *
+ * Returns: string value
+ *
+ * Since: 1.8.7
+ **/
+gchar *
+fu_mei_device_get_fw_status(FuMeiDevice *self, guint idx, GError **error)
+{
+	g_return_val_if_fail(FU_IS_MEI_DEVICE(self), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+	return fu_mei_device_get_parent_attr(self, "fw_status", idx, error);
 }
 
 /**
@@ -358,6 +486,7 @@ fu_mei_device_finalize(GObject *object)
 	FuMeiDevice *self = FU_MEI_DEVICE(object);
 	FuMeiDevicePrivate *priv = GET_PRIVATE(self);
 	g_free(priv->uuid);
+	g_free(priv->parent_device_file);
 	G_OBJECT_CLASS(fu_mei_device_parent_class)->finalize(object);
 }
 
