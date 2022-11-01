@@ -479,7 +479,6 @@ fu_mei_device_incorporate(FuDevice *device, FuDevice *donor)
 static void
 fu_mei_device_init(FuMeiDevice *self)
 {
-	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_NO_AUTO_INSTANCE_IDS);
 	fu_udev_device_set_flags(FU_UDEV_DEVICE(self),
 				 FU_UDEV_DEVICE_FLAG_OPEN_READ | FU_UDEV_DEVICE_FLAG_OPEN_WRITE |
 				     FU_UDEV_DEVICE_FLAG_VENDOR_FROM_PARENT);
