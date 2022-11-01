@@ -2088,7 +2088,7 @@ fu_udev_device_get_children_with_subsystem(FuUdevDevice *self, const gchar *cons
 
 /**
  * fu_udev_device_find_usb_device:
- * @FuUdevDevice: a #FuUdevDevice
+ * @self: a #FuUdevDevice
  * @error: (nullable): optional return location for an error
  *
  * Gets the matching #GUsbDevice for the #GUdevDevice.
