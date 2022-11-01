@@ -114,10 +114,6 @@ fu_mei_device_probe(FuDevice *device, GError **error)
 	FuMeiDevicePrivate *priv = GET_PRIVATE(self);
 	const gchar *uuid;
 
-	/* the kernel is missing `dev` on mei_me children */
-	if (fu_udev_device_get_device_file(FU_UDEV_DEVICE(device)) == NULL)
-		fu_udev_device_set_device_file(FU_UDEV_DEVICE(device), "/dev/mei0");
-
 	/* this has to exist */
 	uuid = fu_udev_device_get_sysfs_attr(FU_UDEV_DEVICE(device), "uuid", NULL);
 	if (uuid == NULL) {
@@ -134,6 +130,13 @@ fu_mei_device_probe(FuDevice *device, GError **error)
 	priv->parent_device_file = fu_mei_device_get_parent_device_file(self, error);
 	if (priv->parent_device_file == NULL)
 		return FALSE;
+
+	/* the kernel is missing `dev` on mei_me children */
+	if (fu_udev_device_get_device_file(FU_UDEV_DEVICE(device)) == NULL) {
+		g_autofree gchar *basename = g_path_get_basename(priv->parent_device_file);
+		g_autofree gchar *device_file = g_build_filename("/dev", basename, NULL);
+		fu_udev_device_set_device_file(FU_UDEV_DEVICE(device), device_file);
+	}
 
 	/* FuUdevDevice->probe */
 	if (!FU_DEVICE_CLASS(fu_mei_device_parent_class)->probe(device, error))
