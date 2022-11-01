@@ -439,6 +439,25 @@ fu_analogix_device_write_firmware(FuDevice *device,
 	return TRUE;
 }
 
+static gboolean
+fu_analogix_device_attach(FuDevice *device, FuProgress *progress, GError **error)
+{
+	g_autoptr(FwupdRequest) request = fwupd_request_new();
+
+	/* the user has to do something */
+	fwupd_request_set_kind(request, FWUPD_REQUEST_KIND_IMMEDIATE);
+	fwupd_request_set_id(request, FWUPD_REQUEST_ID_REMOVE_REPLUG);
+	fwupd_request_add_flag(request, FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE);
+	fwupd_request_set_message(request,
+				  "The update will continue when the device USB cable has been "
+				  "unplugged and then re-inserted.");
+	fu_device_emit_request(device, request);
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+
+	/* success */
+	return TRUE;
+}
+
 static void
 fu_analogix_device_set_progress(FuDevice *self, FuProgress *progress)
 {
@@ -458,6 +477,7 @@ fu_analogix_device_init(FuAnalogixDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PAIR);
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_ANALOGIX_FIRMWARE);
+	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_USER_REPLUG); /* 40 s */
 }
 
 static void
@@ -466,6 +486,7 @@ fu_analogix_device_class_init(FuAnalogixDeviceClass *klass)
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
 	klass_device->to_string = fu_analogix_device_to_string;
 	klass_device->write_firmware = fu_analogix_device_write_firmware;
+	klass_device->attach = fu_analogix_device_attach;
 	klass_device->setup = fu_analogix_device_setup;
 	klass_device->probe = fu_analogix_device_probe;
 	klass_device->set_progress = fu_analogix_device_set_progress;
