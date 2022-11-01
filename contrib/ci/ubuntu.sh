@@ -15,6 +15,7 @@ set -x
 ./contrib/ci/fwupd_setup_helpers.py test-markdown
 
 #clone test firmware if necessary
+apt update -qq && apt install git -y
 . ./contrib/ci/get_test_firmware.sh
 
 #evaluate using Ubuntu's buildflags
