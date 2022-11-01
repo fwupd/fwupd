@@ -1,0 +1,28 @@
+{
+  "name": "Analogix ANX7518",
+  "interactive": true,
+  "steps": [
+    {
+      "url": "https://fwupd.org/downloads/5d860747c1378ef8921f95e41bbb7055dc9b470043655a65b00157ab74dd12e8-Analogix-ANX7518-fw-1.5.01-rx-1206.cab",
+      "components": [
+        {
+          "version": "0001.1501",
+          "guids": [
+            "cfc5f783-2f3c-5db0-9d09-d5a3044eabd9"
+          ]
+        }
+      ]
+    },
+    {
+      "url": "https://fwupd.org/downloads/2e4b5747ea2659ddae893a7b8a238d6d9c3166b426c0d0e5feb308a443662c38-Analogix-ANX7518-fw-1.5.08.cab",
+      "components": [
+        {
+          "version": "0001.1508",
+          "guids": [
+            "cfc5f783-2f3c-5db0-9d09-d5a3044eabd9"
+          ]
+        }
+      ]
+    }
+  ]
+}
