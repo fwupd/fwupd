@@ -988,6 +988,9 @@ fu_context_get_esp_volumes(FuContext *self, GError **error)
 	} else {
 		for (guint i = 0; i < volumes_esp->len; i++) {
 			FuVolume *vol = g_ptr_array_index(volumes_esp, i);
+			g_autofree gchar *type = fu_volume_get_id_type(vol);
+			if (g_strcmp0(type, "ext4") == 0)
+				continue;
 			fu_context_add_esp_volume(self, vol);
 		}
 	}
