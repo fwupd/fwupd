@@ -60,6 +60,7 @@ _fwupdtool_opts=(
 	'--method'
 	'--disable-ssl-strict'
 	'--no-safety-check'
+	'--no-search'
 	'--ignore-checksum'
 	'--ignore-vid-pid'
 	'--save-backends'

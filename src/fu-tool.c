@@ -3401,6 +3401,7 @@ main(int argc, char *argv[])
 	gboolean allow_older = FALSE;
 	gboolean allow_reinstall = FALSE;
 	gboolean force = FALSE;
+	gboolean no_search = FALSE;
 	gboolean ret;
 	gboolean version = FALSE;
 	gboolean ignore_checksum = FALSE;
@@ -3477,6 +3478,14 @@ main(int argc, char *argv[])
 	     &priv->no_reboot_check,
 	     /* TRANSLATORS: command line option */
 	     N_("Do not check or prompt for reboot after update"),
+	     NULL},
+	    {"no-search",
+	     '\0',
+	     0,
+	     G_OPTION_ARG_NONE,
+	     &no_search,
+	     /* TRANSLATORS: command line option */
+	     N_("Do not search the firmware when parsing"),
 	     NULL},
 	    {"no-safety-check",
 	     '\0',
@@ -3995,7 +4004,7 @@ main(int argc, char *argv[])
 		priv->flags |= FWUPD_INSTALL_FLAG_ALLOW_BRANCH_SWITCH;
 	if (force)
 		priv->flags |= FWUPD_INSTALL_FLAG_FORCE;
-	else
+	if (no_search)
 		priv->flags |= FWUPD_INSTALL_FLAG_NO_SEARCH;
 	if (ignore_checksum)
 		priv->flags |= FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM;
