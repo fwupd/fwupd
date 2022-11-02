@@ -88,6 +88,8 @@ fu_path_get_file_list_internal(GPtrArray *files, const gchar *directory, GError 
 	/* find each */
 	while ((filename = g_dir_read_name(dir))) {
 		g_autofree gchar *src = g_build_filename(directory, filename, NULL);
+		if (g_file_test(src, G_FILE_TEST_IS_SYMLINK))
+			continue;
 		if (g_file_test(src, G_FILE_TEST_IS_DIR)) {
 			if (!fu_path_get_file_list_internal(files, src, error))
 				return FALSE;
