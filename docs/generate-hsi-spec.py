@@ -8,7 +8,6 @@
 import argparse
 import sys
 import json
-import glob
 import os
 from typing import Dict, List, Any
 
@@ -21,16 +20,14 @@ if __name__ == "__main__":
     parser.add_argument(
         "filename_dst", action="store", type=str, help="markdown destination"
     )
-    parser.add_argument(
-        "attr_dir", action="store", type=str, help="directory for attributes"
-    )
+    parser.add_argument("json_attrs", nargs="+", help="JSON attributes")
     args = parser.parse_args()
 
     with open(args.filename_src, "rb") as f:
         template = f.read()
 
     txt: List[str] = []
-    for fn in sorted(glob.glob(os.path.join(args.attr_dir, "*.json"))):
+    for fn in sorted(args.json_attrs):
         try:
             with open(fn, "rb") as f:
                 item = json.loads(f.read())

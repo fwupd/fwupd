@@ -43,15 +43,15 @@ if gidocgen_dep.found() and docs_python_deps.allowed() and gidocgen_app.found() 
     install_dir: join_paths(datadir, 'doc'),
   )
 
+  subdir('hsi-tests.d')
   hsi_md = custom_target('generate-hsi-spec',
-    input : 'hsi.md.in',
+    input: hsi_test_jsons,
     output : 'hsi.md',
     command : [
       python3,
-      join_paths(meson.current_source_dir(), 'generate-hsi-spec.py'),
-      '@INPUT@',
+      files(['generate-hsi-spec.py', 'hsi.md.in']),
       '@OUTPUT@',
-      join_paths(meson.current_source_dir(), 'hsi-tests.d'),
+      '@INPUT@',
     ],
   )
 
