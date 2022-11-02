@@ -157,7 +157,7 @@ fu_elantp_hid_haptic_device_ensure_iap_ctrl(FuDevice *parent,
 	self->tp_iap_ctrl = fu_memread_uint16(buf, G_LITTLE_ENDIAN);
 
 	/* in bootloader mode? */
-	if ((self->tp_iap_ctrl & ETP_I2C_MAIN_MODE_ON) == 0)
+	if ((self->tp_iap_ctrl & ETP_I2C_MAIN_MODE_ON2) == 0)
 		fu_device_add_flag(FU_DEVICE(parent), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 	else
 		fu_device_remove_flag(FU_DEVICE(parent), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
@@ -201,7 +201,7 @@ fu_elantp_hid_haptic_device_get_hatpic_driver_ic(FuDevice *parent,
 	guint8 buf[2] = {0x0};
 	guint16 value;
 	if (!fu_elantp_hid_haptic_device_read_cmd(parent,
-						  ETP_CMD_I2C_FLIM_TYPE_ENABLE,
+						  ETP_CMD_I2C_FORCE_TYPE_ENABLE,
 						  buf,
 						  sizeof(buf),
 						  error)) {
@@ -209,7 +209,7 @@ fu_elantp_hid_haptic_device_get_hatpic_driver_ic(FuDevice *parent,
 		return FALSE;
 	}
 	value = fu_memread_uint16(buf, G_LITTLE_ENDIAN);
-	if (value == 0xFFFF || value == ETP_CMD_I2C_FLIM_TYPE_ENABLE) {
+	if (value == 0xFFFF || value == ETP_CMD_I2C_FORCE_TYPE_ENABLE) {
 		g_set_error_literal(error,
 				    G_IO_ERROR,
 				    G_IO_ERROR_NOT_SUPPORTED,
@@ -217,7 +217,7 @@ fu_elantp_hid_haptic_device_get_hatpic_driver_ic(FuDevice *parent,
 		return FALSE;
 	}
 
-	if ((buf[0] & ETP_FW_FLIM_TYPE_ENABLE_BIT) == 0 ||
+	if ((buf[0] & ETP_FW_FORCE_TYPE_ENABLE_BIT) == 0 ||
 	    (buf[0] & ETP_FW_EEPROM_ENABLE_BIT) == 0) {
 		g_set_error_literal(error,
 				    G_IO_ERROR,

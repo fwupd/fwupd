@@ -14,13 +14,20 @@
 struct _FuElantpFirmware {
 	FuFirmwareClass parent_instance;
 	guint16 module_id;
+	guint16 ic_type;
 	guint16 iap_addr;
+	guint16 iap_ver;
+	gboolean force_table_support;
+	guint32 force_table_addr;
 };
 
 G_DEFINE_TYPE(FuElantpFirmware, fu_elantp_firmware, FU_TYPE_FIRMWARE)
 
 /* firmware block update */
-#define ETP_IAP_START_ADDR_WRDS 0x0083
+#define ETP_IC_TYPE_ADDR_WRDS	   0x0080
+#define ETP_IAP_VER_ADDR_WRDS	   0x0082
+#define ETP_IAP_START_ADDR_WRDS	   0x0083
+#define ETP_IAP_FORCETABLE_ADDR_V5 0x0085
 
 const guint8 elantp_signature[] = {0xAA, 0x55, 0xCC, 0x33, 0xFF, 0xFF};
 
@@ -32,10 +39,38 @@ fu_elantp_firmware_get_module_id(FuElantpFirmware *self)
 }
 
 guint16
+fu_elantp_firmware_get_ic_type(FuElantpFirmware *self)
+{
+	g_return_val_if_fail(FU_IS_ELANTP_FIRMWARE(self), 0);
+	return self->ic_type;
+}
+
+guint16
 fu_elantp_firmware_get_iap_addr(FuElantpFirmware *self)
 {
 	g_return_val_if_fail(FU_IS_ELANTP_FIRMWARE(self), 0);
 	return self->iap_addr;
+}
+
+guint16
+fu_elantp_firmware_get_iap_ver(FuElantpFirmware *self)
+{
+	g_return_val_if_fail(FU_IS_ELANTP_FIRMWARE(self), 0);
+	return self->iap_ver;
+}
+
+gboolean
+fu_elantp_firmware_get_forcetable_support(FuElantpFirmware *self)
+{
+	g_return_val_if_fail(FU_IS_ELANTP_FIRMWARE(self), 0);
+	return self->force_table_support;
+}
+
+guint32
+fu_elantp_firmware_get_forcetable_addr(FuElantpFirmware *self)
+{
+	g_return_val_if_fail(FU_IS_ELANTP_FIRMWARE(self), 0);
+	return self->force_table_addr;
 }
 
 static void
@@ -49,6 +84,7 @@ fu_elantp_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbB
 static gboolean
 fu_elantp_firmware_check_magic(FuFirmware *firmware, GBytes *fw, gsize offset, GError **error)
 {
+	FuElantpFirmware *self = FU_ELANTP_FIRMWARE(firmware);
 	gsize bufsz = g_bytes_get_size(fw);
 	const guint8 *buf = g_bytes_get_data(fw, NULL);
 
@@ -57,6 +93,30 @@ fu_elantp_firmware_check_magic(FuFirmware *firmware, GBytes *fw, gsize offset, G
 		if (!fu_memread_uint8_safe(buf,
 					   bufsz,
 					   bufsz - sizeof(elantp_signature) + i,
+					   &tmp,
+					   error))
+			return FALSE;
+		if (tmp != elantp_signature[i]) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "signature[%u] invalid: got 0x%2x, expected 0x%02x",
+				    (guint)i,
+				    tmp,
+				    elantp_signature[i]);
+			return FALSE;
+		}
+	}
+
+	if (self->force_table_addr == 0)
+		return TRUE;
+
+	for (gsize i = 0; i < sizeof(elantp_signature); i++) {
+		guint8 tmp = 0x0;
+		if (!fu_memread_uint8_safe(buf,
+					   bufsz,
+					   self->force_table_addr - 1 - sizeof(elantp_signature) +
+					       i,
 					   &tmp,
 					   error))
 			return FALSE;
@@ -86,8 +146,10 @@ fu_elantp_firmware_parse(FuFirmware *firmware,
 	FuElantpFirmware *self = FU_ELANTP_FIRMWARE(firmware);
 	gsize bufsz = 0;
 	guint16 iap_addr_wrds;
+	guint16 force_table_addr_wrds;
 	guint16 module_id_wrds;
 	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
+	g_autoptr(GError) error_local = NULL;
 
 	/* presumably in words */
 	if (!fu_memread_uint16_safe(buf,
@@ -130,6 +192,53 @@ fu_elantp_firmware_parse(FuFirmware *firmware,
 				    G_LITTLE_ENDIAN,
 				    error))
 		return FALSE;
+	if (!fu_memread_uint16_safe(buf,
+				    bufsz,
+				    offset + ETP_IC_TYPE_ADDR_WRDS * 2,
+				    &self->ic_type,
+				    G_LITTLE_ENDIAN,
+				    error))
+		return FALSE;
+	if (!fu_memread_uint16_safe(buf,
+				    bufsz,
+				    offset + ETP_IAP_VER_ADDR_WRDS * 2,
+				    &self->iap_ver,
+				    G_LITTLE_ENDIAN,
+				    error))
+		return FALSE;
+
+	self->force_table_addr = 0;
+	self->force_table_support = FALSE;
+
+	if (self->ic_type != 0x12 && self->ic_type != 0x13)
+		return TRUE;
+
+	if (self->iap_ver <= 4) {
+		if (!fu_memread_uint16_safe(buf,
+					    bufsz,
+					    offset + (self->iap_addr + 6),
+					    &force_table_addr_wrds,
+					    G_LITTLE_ENDIAN,
+					    &error_local)) {
+			g_debug("forcetable address wrong: %s", error_local->message);
+			return TRUE;
+		}
+	} else {
+		if (!fu_memread_uint16_safe(buf,
+					    bufsz,
+					    offset + ETP_IAP_FORCETABLE_ADDR_V5 * 2,
+					    &force_table_addr_wrds,
+					    G_LITTLE_ENDIAN,
+					    &error_local)) {
+			g_debug("forcetable address wrong: %s", error_local->message);
+			return TRUE;
+		}
+	}
+
+	if (force_table_addr_wrds % 32 == 0) {
+		self->force_table_addr = force_table_addr_wrds * 2;
+		self->force_table_support = TRUE;
+	}
 
 	/* success */
 	return TRUE;
