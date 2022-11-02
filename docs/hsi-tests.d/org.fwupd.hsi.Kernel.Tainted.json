@@ -1,0 +1,19 @@
+{
+  "id" : "org.fwupd.hsi.Kernel.Tainted",
+  "name" : "Kernel Tainted",
+  "description" : [
+    "When calculating the HSI value fwupd has to ask the Linux Kernel for information.",
+    "If the kernel has been tainted by overriding a firmware table or by loading a proprietary module then we cannot trust the data it reports."
+  ],
+  "failure-impact" : [
+    "Using a tainted kernel means that values obtained from the kernel cannot be trusted."
+  ],
+  "failure-results" : {
+    "not-valid" : "could not detect kernel taint status",
+    "tainted" : "the kernel is untrusted, perhaps because a proprietary module was loaded"
+  },
+  "success-results" : {
+    "not-tainted" : "the kernel is trusted"
+  },
+  "fwupd-version" : "1.5.0"
+}
