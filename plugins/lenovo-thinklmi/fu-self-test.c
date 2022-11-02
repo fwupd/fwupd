@@ -39,7 +39,9 @@ fu_test_self_init(FuTest *self, GError **error_global)
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GError) error = NULL;
 
+#if GLIB_CHECK_VERSION(2, 64, 0) && !defined(SUPPORTED_BUILD)
 	g_test_expect_message("FuBiosSettings", G_LOG_LEVEL_WARNING, "*KERNEL*BUG*");
+#endif
 
 	ret = fu_context_load_quirks(ctx,
 				     FU_QUIRKS_LOAD_FLAG_NO_CACHE | FU_QUIRKS_LOAD_FLAG_NO_VERIFY,

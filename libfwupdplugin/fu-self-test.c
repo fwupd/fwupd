@@ -3056,7 +3056,9 @@ fu_bios_settings_load_func(void)
 	test_dir = g_test_build_filename(G_TEST_DIST, "tests", "bios-attrs", "lenovo-p620", NULL);
 	(void)g_setenv("FWUPD_SYSFSFWATTRIBDIR", test_dir, TRUE);
 
+#if GLIB_CHECK_VERSION(2, 64, 0) && !defined(SUPPORTED_BUILD)
 	g_test_expect_message("FuBiosSettings", G_LOG_LEVEL_WARNING, "*BUG*");
+#endif
 	ret = fu_context_reload_bios_settings(ctx, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);

@@ -276,7 +276,7 @@ fu_bios_setting_set_type(FuBiosSettings *self, FwupdBiosSetting *attr, GError **
 
 	/* lenovo thinklmi seems to be missing it even though it's mandatory :/ */
 	if (!fu_bios_setting_get_key(attr, "type", &data, &error_key)) {
-#if GLIB_CHECK_VERSION(2, 64, 0)
+#if GLIB_CHECK_VERSION(2, 64, 0) && !defined(SUPPORTED_BUILD)
 		g_warning_once("KERNEL BUG: 'type' attribute not exported: (%s)",
 			       error_key->message);
 #else
