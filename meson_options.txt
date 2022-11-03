@@ -28,6 +28,7 @@ option('plugin_fastboot', type : 'feature', description : 'Fastboot support', de
 option('plugin_gpio', type : 'feature', description : 'Linux GPIO support', deprecated: {'true': 'enabled', 'false': 'disabled'})
 option('plugin_igsc', type : 'feature', description : 'Intel Graphics System Controller support')
 option('plugin_logitech_bulkcontroller', type : 'feature', description : 'Logitech bulk controller support', deprecated: {'true': 'enabled', 'false': 'disabled'})
+option('plugin_logitech_scribe', type : 'feature', description : 'Logitech Scribe support', deprecated: {'true': 'enabled', 'false': 'disabled'})
 option('plugin_parade_lspcon', type : 'feature', description : 'Parade LSPCON support', deprecated: {'true': 'enabled', 'false': 'disabled'})
 option('plugin_pixart_rf', type : 'feature', description : 'PixartRF support', deprecated: {'true': 'enabled', 'false': 'disabled'})
 option('plugin_realtek_mst', type : 'feature', description : 'Realtek MST hub support', deprecated: {'true': 'enabled', 'false': 'disabled'})
