@@ -581,7 +581,9 @@ gboolean
 fu_history_modify_device(FuHistory *self, FuDevice *device, GError **error)
 {
 #ifdef HAVE_SQLITE
+	FwupdRelease *release;
 	gint rc;
+	g_autofree gchar *metadata = NULL;
 	g_autoptr(sqlite3_stmt) stmt = NULL;
 	g_autoptr(GRWLockWriterLocker) locker = NULL;
 
@@ -591,6 +593,10 @@ fu_history_modify_device(FuHistory *self, FuDevice *device, GError **error)
 	/* lazy load */
 	if (!fu_history_load(self, error))
 		return FALSE;
+
+	/* metadata is stored as a simple string */
+	release = fu_device_get_release_default(device);
+	metadata = _convert_hash_to_string(fwupd_release_get_metadata(release));
 
 	/* overwrite entry if it exists */
 	locker = g_rw_lock_writer_locker_new(&self->db_mutex);
@@ -602,6 +608,7 @@ fu_history_modify_device(FuHistory *self, FuDevice *device, GError **error)
 				"update_error = ?2, "
 				"checksum_device = ?6, "
 				"device_modified = ?7, "
+				"metadata = ?8, "
 				"flags = ?3 "
 				"WHERE device_id = ?4;",
 				-1,
@@ -628,6 +635,7 @@ fu_history_modify_device(FuHistory *self, FuDevice *device, GError **error)
 	    -1,
 	    SQLITE_STATIC);
 	sqlite3_bind_int64(stmt, 7, fu_device_get_modified(device));
+	sqlite3_bind_text(stmt, 8, metadata, -1, SQLITE_STATIC);
 
 	return fu_history_stmt_exec(self, stmt, NULL, error);
 #else
