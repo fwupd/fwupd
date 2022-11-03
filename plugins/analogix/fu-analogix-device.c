@@ -358,6 +358,13 @@ fu_analogix_device_write_firmware(FuDevice *device,
 		totalsz += fu_firmware_get_size(fw_srx);
 	if (fw_ocm != NULL)
 		totalsz += fu_firmware_get_size(fw_ocm);
+	if (totalsz == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_FOUND,
+				    "no firmware sections to update");
+		return FALSE;
+	}
 	if (fw_cus != NULL) {
 		fu_progress_add_step(progress,
 				     FWUPD_STATUS_DEVICE_WRITE,
