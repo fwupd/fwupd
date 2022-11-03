@@ -4101,6 +4101,8 @@ fu_device_write_firmware(FuDevice *self,
 		if (update_request_id != NULL) {
 			fwupd_request_set_id(request, update_request_id);
 			fwupd_request_add_flag(request, FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE);
+		} else {
+			fwupd_request_set_id(request, FWUPD_REQUEST_ID_REMOVE_REPLUG);
 		}
 		fwupd_request_set_message(request, fu_device_get_update_message(self));
 		fwupd_request_set_image(request, fu_device_get_update_image(self));
