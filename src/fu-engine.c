@@ -608,13 +608,21 @@ fu_engine_load_release(FuEngine *self,
 static const gchar *
 fu_engine_get_remote_id_for_checksum(FuEngine *self, const gchar *csum)
 {
-	g_autofree gchar *xpath = NULL;
+	g_autoptr(GString) xpath = g_string_new(NULL);
 	g_autoptr(XbNode) key = NULL;
-	xpath = g_strdup_printf("components/component[@type='firmware']/releases/release/"
-				"checksum[@target='container'][text()='%s']/../../"
-				"../../custom/value[@key='fwupd::RemoteId']",
-				csum);
-	key = xb_silo_query_first(self->silo, xpath, NULL);
+
+	/* old-style <checksum target="container"> and new-style <artifact> */
+	xb_string_append_union(xpath,
+			       "components/component[@type='firmware']/releases/release/"
+			       "checksum[@target='container'][text()='%s']/../../"
+			       "../../custom/value[@key='fwupd::RemoteId']",
+			       csum);
+	xb_string_append_union(xpath,
+			       "components/component[@type='firmware']/releases/release/"
+			       "artifacts/artifact[@type='binary']/checksum[text()='%s']/../../"
+			       "../../../../custom/value[@key='fwupd::RemoteId']",
+			       csum);
+	key = xb_silo_query_first(self->silo, xpath->str, NULL);
 	if (key == NULL)
 		return NULL;
 	return xb_node_get_text(key);
