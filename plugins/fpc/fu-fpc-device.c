@@ -188,16 +188,11 @@ fu_fpc_device_setup_mode(FuFpcDevice *self, GError **error)
 		    g_usb_interface_get_protocol(intf) == FPC_DEVICE_DFU_MODE_PORT) {
 			fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 			return TRUE;
-		} else if (g_usb_interface_get_class(intf) == FPC_DEVICE_NORMAL_MODE_CLASS &&
-			   g_usb_interface_get_protocol(intf) == FPC_DEVICE_NORMAL_MODE_PORT) {
+		}
+		if (g_usb_interface_get_class(intf) == FPC_DEVICE_NORMAL_MODE_CLASS &&
+		    g_usb_interface_get_protocol(intf) == FPC_DEVICE_NORMAL_MODE_PORT) {
 			fu_device_remove_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 			return TRUE;
-		} else {
-			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_NOT_SUPPORTED,
-				    "device is not supported by this plugin");
-			return FALSE;
 		}
 	}
 	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "no update interface found");
