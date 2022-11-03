@@ -22,6 +22,39 @@ UPDATEVM_REGEX = re.compile(r"^sys-")
 
 WARNING_COLOR = "\033[93m"
 
+run_cmd = (
+    "qvm-run",
+    "--no-gui",
+    "--no-shell",
+    "-q",
+    "-a",
+    "--filter-escape-chars",
+    "--color-output=31",
+    "--color-stderr=31",
+    "--",
+)
+
+
+def usbvm_run(args, **kwargs):
+    return subprocess.check_call((*run_cmd, *args), **kwargs)
+
+
+def run_in_tty(updatevm, args, **kwargs):
+    return subprocess.check_call(
+        (
+            *run_cmd,
+            updatevm,
+            "script",
+            "--quiet",
+            "--return",
+            "--command",
+            shlex.join(args),
+            "/dev/null",
+        ),
+        stdin=subprocess.DEVNULL,
+        **kwargs,
+    )
+
 
 class FwupdUpdate:
     def _create_dirs(self, *args):
@@ -64,19 +97,8 @@ class FwupdUpdate:
 
     def _encrypt_update_url(self, url):
         self.enc_url = url
-        self.arch_name = url.replace(FWUPD_DOWNLOAD_PREFIX, "")
         self.arch_path = os.path.join(FWUPD_DOM0_UPDATES_DIR, self.arch_name)
-        if "&" in url:
-            self.enc_url = self.enc_url.replace("&", "--and--")
-            self.arch_name = "untrusted.cab"
-        if "|" in url:
-            self.enc_url = self.enc_url.replace("|", "--or--")
-            self.arch_name = "untrusted.cab"
-        if "#" in url:
-            self.enc_url = self.enc_url.replace("#", "--hash--")
-            self.arch_name = "untrusted.cab"
-        if "%20" in url:
-            self.arch_name = "untrusted.cab"
+        self.arch_name = "untrusted.cab"
 
     def download_metadata(self, whonix=False, metadata_url=None):
         """Initialize downloading metadata files.
@@ -93,30 +115,12 @@ class FwupdUpdate:
             raise Exception(f"{self.updatevm} is not running!!")
         if not os.path.exists(FWUPD_DOM0_DIR):
             self._create_dirs(FWUPD_DOM0_DIR)
+        cmd_metadata = [FWUPD_VM_DOWNLOAD, "--metadata"]
         if metadata_url:
-            cmd_metadata = [
-                "qvm-run",
-                "--pass-io",
-                self.updatevm,
-                (
-                    "script --quiet --return --command "
-                    f'"{FWUPD_VM_DOWNLOAD} --metadata'
-                    f' --url={metadata_url}"'
-                ),
-            ]
-        else:
-            cmd_metadata = [
-                "qvm-run",
-                "--pass-io",
-                self.updatevm,
-                (
-                    "script --quiet --return --command "
-                    f'"{FWUPD_VM_DOWNLOAD} --metadata"'
-                ),
-            ]
-        p = subprocess.Popen(cmd_metadata)
-        p.wait()
-        if p.returncode != 0:
+            cmd_metadata.append("--url=" + metadata_url)
+        try:
+            run_in_tty(updatevm, cmd_metadata)
+        except subprocess.CalledProcessError:
             raise Exception("Metadata download failed.")
 
     def download_firmware_updates(self, url, sha, whonix=False):
@@ -140,14 +144,22 @@ class FwupdUpdate:
             cmd_firmware_download = [
                 "qvm-run",
                 "--pass-io",
+                "--quiet",
+                "--autostart",
+                "--no-shell",
+                "--color-output=31",
+                "--color-stderr=31",
+                "--",
                 self.updatevm,
-                (
-                    "script --quiet --return --command "
-                    f'"{FWUPD_VM_DOWNLOAD} --url={self.enc_url}'
-                    f' --sha={sha}"'
+                "script",
+                "--quiet",
+                "--return",
+                "--command",
+                shlex.join(
+                    (FWUPD_VM_DOWNLOAD, f"--url={self.enc_url}", f"--sha={sha}")
                 ),
             ]
-            p = subprocess.Popen(cmd_firmware_download)
+            p = subprocess.Popen(cmd_firmware_download, stdin=subprocess.DEVNULL)
             p.wait()
             if p.returncode != 0:
                 raise Exception("Firmware download failed.")

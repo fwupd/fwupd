@@ -143,12 +143,17 @@ class FwupdReceiveUpdates:
             shutil.rmtree(FWUPD_DOM0_UNTRUSTED_DIR)
         self._create_dirs(FWUPD_DOM0_UPDATES_DIR, FWUPD_DOM0_UNTRUSTED_DIR)
 
-        cmd_copy = "qvm-run --pass-io %s %s > %s" % (
-            updatevm,
-            "'cat %s'" % updatevm_firmware_file_path,
-            dom0_firmware_untrusted_path,
-        )
-        p = subprocess.Popen(cmd_copy, shell=True)
+        cmd_copy = [
+            "qvm-run",
+            "--pass-io",
+            "--no-shell",
+            "--",
+            "cat",
+            "--",
+            updatevm_firmware_file_path,
+        ]
+        with open(dom0_firmware_untrusted_path, "wbx") as untrusted_file:
+            p = subprocess.Popen(cmd_copy, stdout=untrusted_file, shell=False)
         p.wait()
         if p.returncode != 0:
             raise Exception("qvm-run: Copying firmware file failed!!")
@@ -192,27 +197,39 @@ class FwupdReceiveUpdates:
         )
         self._check_domain(updatevm)
         self._create_dirs(FWUPD_DOM0_METADATA_DIR)
-        cmd_file = "'cat %s'" % self.metadata_file_updatevm
-        cmd_jcat = "'cat %s'" % self.metadata_file_jcat_updatevm
-        cmd_copy_metadata_file = "qvm-run --pass-io %s %s > %s" % (
+        cmd_copy_metadata_file = [
+            "qvm-run",
+            "--pass-io",
+            "--no-shell",
+            "--",
             updatevm,
-            cmd_file,
-            self.metadata_file,
-        )
-        cmd_copy_metadata_jcat = "qvm-run --pass-io %s %s > %s" % (
+            "cat",
+            "--",
+            self.metadata_file_updatevm,
+        ]
+        cmd_copy_metadata_file_jcat = [
+            "qvm-run",
+            "--pass-io",
+            "--no-shell",
+            "--",
             updatevm,
-            cmd_jcat,
-            self.metadata_file_jcat,
-        )
-
-        p = subprocess.Popen(cmd_copy_metadata_file, shell=True)
-        p.wait()
+            "cat",
+            "--",
+            self.metadata_file_jcat_updatevm,
+        ]
+        with open(self.metadata_file, "wbx") as untrusted_file_1, open(
+            self.metadata_file_jcat, "wbx"
+        ) as untrusted_file_2, subprocess.Popen(
+            cmd_copy_metadata_file, stdout=untrusted_file_1
+        ) as p, subprocess.Popen(
+            cmd_copy_metadata_file_jcat, stdout=untrusted_file_2
+        ) as q:
+            p.wait()
+            q.wait()
         if p.returncode != 0:
             raise Exception("qvm-run: Copying metadata file failed!!")
-        p = subprocess.Popen(cmd_copy_metadata_jcat, shell=True)
-        p.wait()
         if p.returncode != 0:
-            raise Exception('qvm-run": Copying metadata jcat failed!!')
+            raise Exception("qvm-run: Copying metadata jcat failed!!")
 
         self._verify_received(
             FWUPD_DOM0_METADATA_DIR, FWUPD_METADATA_FILES_REGEX, updatevm
