@@ -19,6 +19,7 @@ from pathlib import Path
 from packaging.version import Version
 
 FWUPD_QUBES_DIR = "/usr/share/qubes-fwupd"
+USBVM_N = "sys-usb"
 
 # Check if script is run by tests and append sys path properly
 if __name__ == "__main__":
@@ -28,12 +29,17 @@ else:
 
 try:
     from qubes_fwupd_heads import FwupdHeads
-    from qubes_fwupd_update import FwupdUpdate
+    from qubes_fwupd_update import FwupdUpdate, usbvm_run, run_in_tty
     from fwupd_receive_updates import FwupdReceiveUpdates
 except ModuleNotFoundError:
     raise ModuleNotFoundError(
-        "qubes-fwupd modules not found. " "You may need to reinstall package."
+        "qubes-fwupd modules not found.  You may need to reinstall package."
     )
+
+
+def usbvm_run_in_tty(args, **kwargs):
+    return run_in_tty(USBVM_N, args, **kwargs)
+
 
 FWUPD_DOM0_DIR = "/var/cache/qubes-fwupd"
 FWUPD_DOM0_METADATA_DIR = os.path.join(FWUPD_DOM0_DIR, "metadata")
@@ -55,7 +61,16 @@ FWUPD_DOWNLOAD_PREFIX = "https://fwupd.org/downloads/"
 
 FWUPDMGR = "/bin/fwupdmgr"
 
-USBVM_N = "sys-usb"
+
+def usbvm_create_file(fname, dest, **kwargs):
+    with open(fname, "rb") as stdin:
+        subprocess.check_call(
+            [*usbvm_run_cmd, "dd", "of=" + dest, "bs=128K", "conv=fsync"],
+            stdin=stdin,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+
 
 BIOS_UPDATE_FLAG = os.path.join(FWUPD_DOM0_DIR, "bios_update")
 LVFS_TESTING_DOM0_FLAG = os.path.join(FWUPD_DOM0_DIR, "lvfs_testing")
@@ -111,30 +126,17 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
 
     def _validate_usbvm_dirs(self):
         """Validates if sys-ubs updates and metadata directories exist."""
-        cmd_validate_dirs = [
-            "qvm-run",
-            "--pass-io",
-            USBVM_N,
-            f'script --quiet --return --command "{FWUPD_VM_VALIDATE} dirs"',
-        ]
-        p = subprocess.Popen(cmd_validate_dirs)
-        p.wait()
-        if p.returncode != 0:
+        try:
+            usbvm_run_in_tty((FWUPD_VM_VALIDATE, "dirs"))
+        except subprocess.CalledProcessError:
             raise Exception("Validation of usbvm directories failed.")
 
     def _validate_usbvm_archive(self, arch_name, sha):
         """Validates checksum and gpg signature of the archive file."""
         arch_path = os.path.join(FWUPD_VM_UPDATES_DIR, arch_name)
-        arch_validate = f"{FWUPD_VM_VALIDATE} updates {arch_path} {sha}"
-        cmd_validate_arch = [
-            "qvm-run",
-            "--pass-io",
-            USBVM_N,
-            f'script --quiet --return --command "{arch_validate}"',
-        ]
-        p = subprocess.Popen(cmd_validate_arch)
-        p.wait()
-        if p.returncode != 0:
+        try:
+            usbvm_run_in_tty((FWUPD_VM_VALIDATE, "updates", arch_path, sha))
+        except subprocess.CalledProcessError:
             raise Exception("Validation of the archive file failed.")
 
     def _copy_usbvm_metadata(self):
@@ -143,58 +145,33 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
             FWUPD_DOM0_METADATA_DIR, FWUPD_VM_METADATA_DIR
         )
         self.metadata_file_jcat_usbvm = self.metadata_file_usbvm + ".jcat"
-        cat_file = f"cat > {self.metadata_file_usbvm}"
-        cmd_copy_file = (
-            f"cat {self.metadata_file} | "
-            f'qvm-run --nogui --pass-io {USBVM_N} "{cat_file}"'
-        )
-        cat_jcat = f"cat > {self.metadata_file_jcat_usbvm}"
-        cmd_copy_jcat = (
-            f"cat {self.metadata_file_jcat} | "
-            f'qvm-run --nogui --pass-io {USBVM_N} "{cat_jcat}"'
-        )
-        p = subprocess.Popen(cmd_copy_file, shell=True)
-        p.wait()
-        if p.returncode != 0:
-            raise Exception("Copying metadata file failed.")
-        p = subprocess.Popen(cmd_copy_jcat, shell=True)
-        p.wait()
-        if p.returncode != 0:
-            raise Exception("Copying metadata jcat failed.")
+        usbvm_create_file(self.metadata_file, self.metadata_file_usbvm)
+        usbvm_create_file(self.metadata_file_jcat, self.metadata_file_jcat_usbvm)
 
     def _validate_usbvm_metadata(self, metadata_url=None):
         """Checks GPG signature of metadata files in usbvm."""
         usbvm_cmd = f'"{FWUPD_VM_VALIDATE} metadata"'
+        cmd_metadata = [FWUPD_VM_DOWNLOAD, "metadata"]
         if metadata_url:
-            usbvm_cmd = f'"{FWUPD_VM_VALIDATE} metadata --url={metadata_url}"'
-        cmd_validate_metadata = [
-            "qvm-run",
-            "--pass-io",
-            USBVM_N,
-            "script --quiet --return --command" f" {usbvm_cmd}",
-        ]
+            cmd_metadata.append("--url=" + metadata_url)
         p = subprocess.Popen(cmd_validate_metadata)
-        p.wait()
-        if p.returncode != 0:
-            raise Exception("Metadata validation failed")
+        try:
+            usbvm_run_in_tty(cmd_metadata)
+        except subprocess.CalledProcessError:
+            raise Exception("Metadata validation failed.")
 
     def _refresh_usbvm_metadata(self):
         """Refreshes metadata in usbvm."""
         sig_metadata_file = self.metadata_file_jcat_usbvm
-        cmd_refresh_metadata = [
-            "qvm-run",
-            "--pass-io",
-            USBVM_N,
+        usbvm_run_in_tty(
             (
-                "script --quiet --return --command "
-                f'"{FWUPDMGR} refresh {self.metadata_file_usbvm} '
-                f'{sig_metadata_file} {self.lvfs}"'
-            ),
-        ]
-        p = subprocess.Popen(cmd_refresh_metadata)
-        p.wait()
-        if p.returncode != 0:
-            raise Exception("Metadata refresh in usbvm failed")
+                FWUPDMGR,
+                "refresh",
+                self.metadata_file_usbvm,
+                sig_metadata_file,
+                self.lvfs,
+            )
+        )
 
     def _copy_firmware_updates(self, arch_name):
         """Copies updates files to usbvm.
@@ -204,14 +181,7 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
         """
         arch_path = os.path.join(FWUPD_DOM0_UPDATES_DIR, arch_name)
         output_path = os.path.join(FWUPD_VM_UPDATES_DIR, arch_name)
-        cat_file = f"cat > {output_path}"
-        cmd_copy_file = (
-            f"cat {arch_path} | " f'qvm-run --nogui --pass-io {USBVM_N} "{cat_file}"'
-        )
-        p = subprocess.Popen(cmd_copy_file, shell=True)
-        p.wait()
-        if p.returncode != 0:
-            raise Exception("Copying metadata file failed.")
+        usbvm_create_file(arch_path, output_path)
 
     def _install_usbvm_firmware_update(self, arch_name):
         """Installs firmware update for specified device in dom0.
@@ -220,17 +190,7 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
         arch_name - name of the archive file
         """
         arch_path = os.path.join(FWUPD_VM_UPDATES_DIR, arch_name)
-        CMD_update = [
-            "qvm-run",
-            "--pass-io",
-            USBVM_N,
-            f"script --quiet --return --command"
-            f' "{FWUPDMGR} install {arch_path}" /dev/null',
-        ]
-        p = subprocess.Popen(CMD_update)
-        p.wait()
-        if p.returncode != 0:
-            raise Exception("fwupd-qubes: Firmware update failed")
+        usbvm_run_in_tty((FWUPDMGR, "--", "install", arch_path))
 
     def _install_usbvm_firmware_downgrade(self, arch_name):
         """Installs firmware downgrades for specified device in dom0.
@@ -239,29 +199,13 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
         arch_name - name of the archive file
         """
         arch_path = os.path.join(FWUPD_VM_UPDATES_DIR, arch_name)
-        CMD_downgrade = [
-            "qvm-run",
-            "--pass-io",
-            USBVM_N,
-            f"script --quiet --return --command"
-            f' "{FWUPDMGR} --allow-older install {arch_path}" /dev/null',
-        ]
-        p = subprocess.Popen(CMD_downgrade)
-        p.wait()
-        if p.returncode != 0:
-            raise Exception("fwupd-qubes: Firmware downgrade failed")
+        usbvm_run_in_tty((FWUPDMGR, "--allow-older", "--", "install", arch_path))
 
     def _clean_usbvm(self):
         """Cleans usbvm directories."""
-        cmd_clean = [
-            "qvm-run",
-            "--pass-io",
-            USBVM_N,
-            f'script --quiet --return --command "{FWUPD_VM_VALIDATE} clean"',
-        ]
-        p = subprocess.Popen(cmd_clean)
-        p.wait()
-        if p.returncode != 0:
+        try:
+            usbvm_run_in_tty((FWUPDMGR, "clean"))
+        except subprocess.CalledProcessError:
             raise Exception("Cleaning usbvm directories failed")
 
     def _enable_lvfs_testing_dom0(self):
@@ -277,42 +221,11 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
     def _enable_lvfs_testing_usbvm(self, usbvm=False):
         """Checks and enable lvfs-testing for custom metadata in usbvm"""
         if not usbvm:
-            return 0
-        cmd_refresh_metadata = [
-            "qvm-run",
-            "--pass-io",
-            USBVM_N,
-            (
-                "script --quiet --return --command "
-                f'"{FWUPDMGR} enable-remote -y lvfs-testing"'
-            ),
-        ]
-        cmd_validate_flag = [
-            "qvm-run",
-            "--pass-io",
-            USBVM_N,
-            (
-                "script --quiet --return --command "
-                f'"ls {LVFS_TESTING_USBVM_FLAG} &>/dev/null"'
-            ),
-        ]
-        cmd_touch_flag = [
-            "qvm-run",
-            "--pass-io",
-            USBVM_N,
-            ("script --quiet --return --command " f'"touch {LVFS_TESTING_USBVM_FLAG}"'),
-        ]
-        flag = subprocess.Popen(cmd_validate_flag)
-        flag.wait()
-        if flag.returncode != 0:
-            p = subprocess.Popen(cmd_refresh_metadata)
-            p.wait()
-            if p.returncode != 0:
-                raise Exception("Enabling usbvm lvfs-testing failed!!")
-            p = subprocess.Popen(cmd_touch_flag)
-            p.wait()
-            if p.returncode != 0:
-                raise Exception("Creating flag failed!!")
+            return
+        try:
+            usbvm_run_in_tty((FWUPDMGR, "enable-remote", "-y", "lvfs-testing"))
+        except subprocess.CalledProcessError:
+            raise Exception("Enabling usbvm lvfs-testing failed!!")
 
     def refresh_metadata(self, usbvm=False, whonix=False, metadata_url=None):
         """Updates metadata with downloaded files.
@@ -553,13 +466,13 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
         """Gathers information about devices connected in usbvm."""
         if os.path.exists(FWUPD_VM_LOG):
             os.remove(FWUPD_VM_LOG)
-        usbvm_cmd = f'"{FWUPDAGENT} get-devices"'
-        log_file = f" > {FWUPD_VM_LOG}"
-        cmd_get_usbvm_devices = (
-            f"qvm-run --nogui --pass-io {USBVM_N} {usbvm_cmd}{log_file}"
-        )
-        p = subprocess.Popen(cmd_get_usbvm_devices, shell=True)
-        p.wait()
+        with open(FWUPD_VM_LOG, "wb") as log:
+            p = usbvm_run(
+                [FWUPDAGENT, "get-devices"],
+                stdout=log,
+                stderr=log,
+                stdin=subprocess.DEVNULL,
+            )
         if p.returncode != 0 and p.returncode != 2 and not os.path.exists(FWUPD_VM_LOG):
             raise Exception("fwupd-qubes: Getting usbvm devices info failed")
         if not os.path.exists(FWUPD_VM_LOG):
