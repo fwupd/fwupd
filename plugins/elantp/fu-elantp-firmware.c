@@ -108,30 +108,28 @@ fu_elantp_firmware_check_magic(FuFirmware *firmware, GBytes *fw, gsize offset, G
 		}
 	}
 
-	if (self->force_table_addr == 0)
-		return TRUE;
-
-	for (gsize i = 0; i < sizeof(elantp_signature); i++) {
-		guint8 tmp = 0x0;
-		if (!fu_memread_uint8_safe(buf,
-					   bufsz,
-					   self->force_table_addr - 1 - sizeof(elantp_signature) +
-					       i,
-					   &tmp,
-					   error))
-			return FALSE;
-		if (tmp != elantp_signature[i]) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_FILE,
-				    "signature[%u] invalid: got 0x%2x, expected 0x%02x",
-				    (guint)i,
-				    tmp,
-				    elantp_signature[i]);
-			return FALSE;
+	if (self->force_table_addr != 0) {
+		for (gsize i = 0; i < sizeof(elantp_signature); i++) {
+			guint8 tmp = 0x0;
+			if (!fu_memread_uint8_safe(buf,
+						   bufsz,
+						   self->force_table_addr - 1 -
+						       sizeof(elantp_signature) + i,
+						   &tmp,
+						   error))
+				return FALSE;
+			if (tmp != elantp_signature[i]) {
+				g_set_error(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_FILE,
+					    "signature[%u] invalid: got 0x%2x, expected 0x%02x",
+					    (guint)i,
+					    tmp,
+					    elantp_signature[i]);
+				return FALSE;
+			}
 		}
 	}
-
 	/* success */
 	return TRUE;
 }
@@ -206,9 +204,6 @@ fu_elantp_firmware_parse(FuFirmware *firmware,
 				    G_LITTLE_ENDIAN,
 				    error))
 		return FALSE;
-
-	self->force_table_addr = 0;
-	self->force_table_support = FALSE;
 
 	if (self->ic_type != 0x12 && self->ic_type != 0x13)
 		return TRUE;

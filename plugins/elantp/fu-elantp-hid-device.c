@@ -253,7 +253,11 @@ fu_elantp_hid_device_get_forcetable_address(FuElantpHidDevice *self, GError **er
 	}
 	addr_wrds = fu_memread_uint16(buf, G_LITTLE_ENDIAN);
 	if (addr_wrds % 32 != 0) {
-		g_prefix_error(error, "illgeal force table address (%x): ", addr_wrds);
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "illgeal force table address (%x)",
+			    addr_wrds);
 		return FALSE;
 	}
 
@@ -270,11 +274,10 @@ fu_elantp_hid_device_write_fw_password(FuElantpHidDevice *self,
 				       GError **error)
 {
 	guint8 buf[2] = {0x0};
-	guint16 pw;
+	guint16 pw = ETP_I2C_IC13_IAPV5_PW;
 	guint16 value;
-	if (iap_ver == 0x5 && ic_type == 0x13)
-		pw = ETP_I2C_IC13_IAPV5_PW;
-	else
+
+	if (iap_ver < 0x5 || ic_type != 0x13)
 		return TRUE;
 
 	if (!fu_elantp_hid_device_write_cmd(self, ETP_CMD_I2C_FW_PW, pw, error)) {
@@ -288,7 +291,11 @@ fu_elantp_hid_device_write_fw_password(FuElantpHidDevice *self,
 	}
 	value = fu_memread_uint16(buf, G_LITTLE_ENDIAN);
 	if (value != pw) {
-		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "can't set fw password");
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "can't set fw password got:%x",
+			    value);
 		return FALSE;
 	}
 
@@ -408,7 +415,6 @@ fu_elantp_hid_device_setup(FuDevice *device, GError **error)
 	if (!fu_elantp_hid_device_ensure_iap_ctrl(self, error))
 		return FALSE;
 
-	self->force_table_support = FALSE;
 	if (self->ic_type != 0x12 && self->ic_type != 0x13)
 		return TRUE;
 
@@ -524,7 +530,7 @@ fu_elantp_hid_device_filling_forcetable_firmware(FuDevice *device,
 	FuElantpHidDevice *self = FU_ELANTP_HID_DEVICE(device);
 	const guint8 fillature[] = {0x77, 0x33, 0x44, 0xaa};
 	const guint8 signature[] = {0xAA, 0x55, 0xCC, 0x33, 0xFF, 0xFF};
-	guint8 buf[64];
+	guint8 buf[64] = {[0 ... 63] = 0xFF};
 	guint16 block_checksum;
 	guint16 filling_value;
 
@@ -532,14 +538,15 @@ fu_elantp_hid_device_filling_forcetable_firmware(FuDevice *device,
 		return TRUE;
 
 	if (self->force_table_addr < force_table_addr) {
-		g_prefix_error(error,
-			       "forcetable address wrong (%x,%x): ",
-			       force_table_addr,
-			       self->force_table_addr);
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "forcetable address wrong (%x,%x): ",
+			    force_table_addr,
+			    self->force_table_addr);
 		return FALSE;
 	}
 
-	memset(buf, 0xFF, 64);
 	if (!fu_memcpy_safe(buf,
 			    sizeof(buf),
 			    0, /* dst */
