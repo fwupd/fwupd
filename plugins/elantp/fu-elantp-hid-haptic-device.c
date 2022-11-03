@@ -591,55 +591,32 @@ fu_elantp_hid_haptic_device_prepare_firmware(FuDevice *device,
 	return g_steal_pointer(&firmware);
 }
 
+typedef struct {
+	guint16 checksum;
+	guint idx_page_start;
+	GBytes *fw;	      /* noref */
+	FuProgress *progress; /* noref */
+} FuElantpHaptictpWriteHelper;
+
 static gboolean
-fu_elantp_hid_haptic_device_write_firmware(FuDevice *device,
-					   FuFirmware *firmware,
-					   FuProgress *progress,
-					   FwupdInstallFlags flags,
-					   GError **error)
+fu_elantp_hid_haptic_device_write_chunks_cb(FuDevice *device, gpointer user_data, GError **error)
 {
-	FuElantpHidDevice *parent;
+	FuElantpHaptictpWriteHelper *helper = (FuElantpHaptictpWriteHelper *)user_data;
 	FuElantpHidHapticDevice *self = FU_ELANTP_HID_HAPTIC_DEVICE(device);
-	gsize bufsz = 0;
-	guint16 checksum = 0;
-	guint16 checksum_device = 0;
-	guint16 eeprom_fw_page_size = 32;
-	guint16 retry_cnt = 0;
-	guint8 first_page[32] = {0x0};
-	const gchar *fw_ver;
-	const gchar *fw_ver_device;
-	const guint8 *buf;
-	g_autoptr(GBytes) fw = NULL;
+	FuElantpHidDevice *parent;
+	const guint16 eeprom_fw_page_size = 32;
 	g_autoptr(GPtrArray) chunks = NULL;
-	g_autoptr(GError) error_local = NULL;
-	FuElantpHaptictpWaitFlashEEPROMChecksumHelper helper;
 
-	/* progress */
-	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 5, "detach");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 80, NULL);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 10, NULL);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 5, NULL);
-
-	/* simple image */
-	fw = fu_firmware_get_bytes(firmware, error);
-	if (fw == NULL)
-		return FALSE;
-
+	/* use parent */
 	parent = fu_elantp_haptic_device_get_parent(device, error);
 	if (parent == NULL)
 		return FALSE;
 
-	/* detach */
-	if (!fu_elantp_hid_haptic_device_detach(device, fu_progress_get_child(progress), error))
-		return FALSE;
-	fu_progress_step_done(progress);
-
-	/* write each block */
-	buf = g_bytes_get_data(fw, &bufsz);
-	chunks = fu_chunk_array_new(buf, bufsz, 0x0, 0x0, eeprom_fw_page_size);
-	for (guint i = 0; i <= chunks->len; i++) {
-		guint16 index = i * eeprom_fw_page_size;
+	/* progress */
+	chunks = fu_chunk_array_new_from_bytes(helper->fw, 0x0, 0x0, eeprom_fw_page_size);
+	fu_progress_set_id(helper->progress, G_STRLOC);
+	fu_progress_set_steps(helper->progress, chunks->len - helper->idx_page_start + 1);
+	for (guint i = helper->idx_page_start; i <= chunks->len; i++) {
 		FuChunk *chk;
 		guint16 csum_tmp;
 		gsize blksz = self->fw_page_size + 3;
@@ -655,9 +632,10 @@ fu_elantp_hid_haptic_device_write_firmware(FuDevice *device,
 		blk[0] = 0x0B; /* report ID */
 		blk[1] = eeprom_fw_page_size + 5;
 		blk[2] = 0xA2;
-		fu_memwrite_uint16(blk + 0x3, index, G_BIG_ENDIAN);
+		fu_memwrite_uint16(blk + 0x3, i * eeprom_fw_page_size, G_BIG_ENDIAN);
 
 		if (i == 0) {
+			guint8 first_page[32] = {0x0};
 			memset(&first_page[0], 0xFF, sizeof(first_page));
 			csum_tmp = fu_sum16(first_page, eeprom_fw_page_size);
 			if (!fu_memcpy_safe(blk,
@@ -709,20 +687,6 @@ fu_elantp_hid_haptic_device_write_firmware(FuDevice *device,
 		if (!fu_elantp_hid_haptic_device_ensure_eeprom_iap_ctrl(FU_DEVICE(parent),
 									self,
 									&error_iapctrl)) {
-			if (g_error_matches(error_iapctrl, G_IO_ERROR, G_IO_ERROR_BUSY)) {
-				i -= 1;
-				retry_cnt++;
-				if (retry_cnt >= 3) {
-					g_set_error(error,
-						    FWUPD_ERROR,
-						    FWUPD_ERROR_WRITE,
-						    "bootloader reports failed write: 0x%x (%s)",
-						    self->iap_ctrl,
-						    error_iapctrl->message);
-					return FALSE;
-				}
-				break;
-			}
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_WRITE,
@@ -731,14 +695,66 @@ fu_elantp_hid_haptic_device_write_firmware(FuDevice *device,
 				    error_iapctrl->message);
 			return FALSE;
 		}
-		retry_cnt = 0;
 
 		/* update progress */
-		checksum += csum_tmp;
-		fu_progress_set_percentage_full(fu_progress_get_child(progress),
-						(gsize)i + 1,
-						(gsize)chunks->len + 1);
+		helper->checksum += csum_tmp;
+		helper->idx_page_start = i + 1;
+		fu_progress_step_done(helper->progress);
 	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_elantp_hid_haptic_device_write_firmware(FuDevice *device,
+					   FuFirmware *firmware,
+					   FuProgress *progress,
+					   FwupdInstallFlags flags,
+					   GError **error)
+{
+	FuElantpHidDevice *parent;
+	FuElantpHidHapticDevice *self = FU_ELANTP_HID_HAPTIC_DEVICE(device);
+	guint16 checksum_device = 0;
+	const gchar *fw_ver;
+	const gchar *fw_ver_device;
+	g_autoptr(GBytes) fw = NULL;
+	g_autoptr(GError) error_local = NULL;
+	FuElantpHaptictpWaitFlashEEPROMChecksumHelper helper = {0x0};
+	FuElantpHaptictpWriteHelper helper_write = {0x0};
+
+	/* progress */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 5, "detach");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 80, NULL);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 10, NULL);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 5, NULL);
+
+	/* simple image */
+	fw = fu_firmware_get_bytes(firmware, error);
+	if (fw == NULL)
+		return FALSE;
+
+	/* use parent */
+	parent = fu_elantp_haptic_device_get_parent(device, error);
+	if (parent == NULL)
+		return FALSE;
+
+	/* detach */
+	if (!fu_elantp_hid_haptic_device_detach(device, fu_progress_get_child(progress), error))
+		return FALSE;
+	fu_progress_step_done(progress);
+
+	/* write each block */
+	helper_write.fw = fw;
+	helper_write.progress = fu_progress_get_child(progress);
+	if (!fu_device_retry_full(device,
+				  fu_elantp_hid_haptic_device_write_chunks_cb,
+				  3,
+				  100,
+				  &helper_write,
+				  error))
+		return FALSE;
 	fu_progress_step_done(progress);
 
 	if (!fu_elantp_hid_haptic_device_write_cmd(FU_DEVICE(parent),
@@ -760,12 +776,12 @@ fu_elantp_hid_haptic_device_write_firmware(FuDevice *device,
 		g_prefix_error(error, "read device checksum fail: ");
 		return FALSE;
 	}
-	if (checksum != checksum_device) {
+	if (helper_write.checksum != checksum_device) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_WRITE,
 			    "checksum failed 0x%04x != 0x%04x",
-			    checksum,
+			    helper_write.checksum,
 			    checksum_device);
 		return FALSE;
 	}
