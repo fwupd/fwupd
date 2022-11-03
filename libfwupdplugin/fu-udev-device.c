@@ -2116,7 +2116,7 @@ fu_udev_device_find_usb_device(FuUdevDevice *self, GError **error)
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
 	/* look at the current device and all the parent devices until we can find the USB data */
-	while (TRUE) {
+	while (udev_device != NULL) {
 		g_autoptr(GUdevDevice) udev_device_parent = NULL;
 		bus = g_udev_device_get_sysfs_attr_as_int(udev_device, "busnum");
 		address = g_udev_device_get_sysfs_attr_as_int(udev_device, "devnum");
