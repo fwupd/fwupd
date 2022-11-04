@@ -2102,6 +2102,30 @@ fu_device_has_guid(FuDevice *self, const gchar *guid)
 	return fwupd_device_has_guid(FWUPD_DEVICE(self), guid);
 }
 
+static gboolean
+fu_device_has_instance_id_quirk(FuDevice *self, const gchar *instance_id)
+{
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+	for (guint i = 0; i < priv->instance_id_quirks->len; i++) {
+		const gchar *instance_id_tmp = g_ptr_array_index(priv->instance_id_quirks, i);
+		if (g_strcmp0(instance_id, instance_id_tmp) == 0)
+			return TRUE;
+	}
+	return FALSE;
+}
+
+static void
+fu_device_add_instance_id_quirk(FuDevice *self, const gchar *instance_id)
+{
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+
+	if (fu_device_has_instance_id(self, instance_id))
+		return;
+	if (fu_device_has_instance_id_quirk(self, instance_id))
+		return;
+	g_ptr_array_add(priv->instance_id_quirks, g_strdup(instance_id));
+}
+
 /**
  * fu_device_add_instance_id_full:
  * @self: a #FuDevice
@@ -2137,7 +2161,7 @@ fu_device_add_instance_id_full(FuDevice *self,
 	if ((flags & FU_DEVICE_INSTANCE_FLAG_NO_QUIRKS) == 0) {
 		fu_device_add_guid_quirks(self, guid);
 		/* save this to make debugging easier, and also so we can incorporate */
-		g_ptr_array_add(priv->instance_id_quirks, g_strdup(instance_id));
+		fu_device_add_instance_id_quirk(self, instance_id);
 	}
 	if ((flags & FU_DEVICE_INSTANCE_FLAG_ONLY_QUIRKS) == 0)
 		fwupd_device_add_instance_id(FWUPD_DEVICE(self), instance_id);
