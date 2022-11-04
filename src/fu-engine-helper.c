@@ -223,9 +223,19 @@ fu_engine_integrity_measure_uefi(GHashTable *self)
 	} keys[] = {{FU_EFIVAR_GUID_EFI_GLOBAL, "BootOrder"},
 		    {FU_EFIVAR_GUID_EFI_GLOBAL, "BootCurrent"},
 		    {FU_EFIVAR_GUID_EFI_GLOBAL, "KEK"},
+		    {FU_EFIVAR_GUID_EFI_GLOBAL, "KEKDefault"},
+		    {FU_EFIVAR_GUID_EFI_GLOBAL, "OsIndications"},
+		    {FU_EFIVAR_GUID_EFI_GLOBAL, "OsIndicationsSupported"},
 		    {FU_EFIVAR_GUID_EFI_GLOBAL, "PK"},
+		    {FU_EFIVAR_GUID_EFI_GLOBAL, "PKDefault"},
+		    {FU_EFIVAR_GUID_EFI_GLOBAL, "SecureBoot"},
+		    {FU_EFIVAR_GUID_EFI_GLOBAL, "SetupMode"},
+		    {FU_EFIVAR_GUID_EFI_GLOBAL, "SignatureSupport"},
+		    {FU_EFIVAR_GUID_EFI_GLOBAL, "VendorKeys"},
 		    {FU_EFIVAR_GUID_SECURITY_DATABASE, "db"},
+		    {FU_EFIVAR_GUID_SECURITY_DATABASE, "dbDefault"},
 		    {FU_EFIVAR_GUID_SECURITY_DATABASE, "dbx"},
+		    {FU_EFIVAR_GUID_SECURITY_DATABASE, "dbxDefault"},
 		    {NULL, NULL}};
 
 	/* important keys */
