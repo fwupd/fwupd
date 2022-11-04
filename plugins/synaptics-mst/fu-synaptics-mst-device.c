@@ -1448,21 +1448,17 @@ fu_synaptics_mst_device_rescan(FuDevice *device, GError **error)
 	switch (self->family) {
 	case FU_SYNAPTICS_MST_FAMILY_TESLA:
 		fu_device_set_firmware_size_max(device, 0x10000);
-		fu_device_add_instance_id_full(device,
-					       "MST-tesla",
-					       FU_DEVICE_INSTANCE_FLAG_ONLY_QUIRKS);
+		fu_device_add_instance_id_full(device, "MST-tesla", FU_DEVICE_INSTANCE_FLAG_QUIRKS);
 		break;
 	case FU_SYNAPTICS_MST_FAMILY_LEAF:
 		fu_device_set_firmware_size_max(device, 0x10000);
-		fu_device_add_instance_id_full(device,
-					       "MST-leaf",
-					       FU_DEVICE_INSTANCE_FLAG_ONLY_QUIRKS);
+		fu_device_add_instance_id_full(device, "MST-leaf", FU_DEVICE_INSTANCE_FLAG_QUIRKS);
 		break;
 	case FU_SYNAPTICS_MST_FAMILY_PANAMERA:
 		fu_device_set_firmware_size_max(device, 0x80000);
 		fu_device_add_instance_id_full(device,
 					       "MST-panamera",
-					       FU_DEVICE_INSTANCE_FLAG_ONLY_QUIRKS);
+					       FU_DEVICE_INSTANCE_FLAG_QUIRKS);
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_DUAL_IMAGE);
 		break;
 	default:

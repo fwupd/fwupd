@@ -66,9 +66,7 @@ fu_flashrom_device_probe(FuDevice *device, GError **error)
 	}
 	dev_name = fu_udev_device_get_sysfs_attr(FU_UDEV_DEVICE(device), "name", NULL);
 	if (dev_name != NULL) {
-		fu_device_add_instance_id_full(device,
-					       dev_name,
-					       FU_DEVICE_INSTANCE_FLAG_ONLY_QUIRKS);
+		fu_device_add_instance_id_full(device, dev_name, FU_DEVICE_INSTANCE_FLAG_QUIRKS);
 	}
 	return TRUE;
 }

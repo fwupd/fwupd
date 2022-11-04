@@ -2069,9 +2069,9 @@ fu_device_add_guid_safe(FuDevice *self, const gchar *guid, FuDeviceInstanceFlags
 {
 	/* add the device GUID before adding additional GUIDs from quirks
 	 * to ensure the bootloader GUID is listed after the runtime GUID */
-	if ((flags & FU_DEVICE_INSTANCE_FLAG_ONLY_QUIRKS) == 0)
+	if (flags & FU_DEVICE_INSTANCE_FLAG_VISIBLE)
 		fwupd_device_add_guid(FWUPD_DEVICE(self), guid);
-	if ((flags & FU_DEVICE_INSTANCE_FLAG_NO_QUIRKS) == 0)
+	if (flags & FU_DEVICE_INSTANCE_FLAG_QUIRKS)
 		fu_device_add_guid_quirks(self, guid);
 }
 
@@ -2158,13 +2158,15 @@ fu_device_add_instance_id_full(FuDevice *self,
 	 * so the plugin is set, but not the LVFS metadata to match firmware
 	 * until we're sure the device isn't using _NO_AUTO_INSTANCE_IDS */
 	guid = fwupd_guid_hash_string(instance_id);
-	if ((flags & FU_DEVICE_INSTANCE_FLAG_NO_QUIRKS) == 0) {
+	if (flags & FU_DEVICE_INSTANCE_FLAG_QUIRKS)
 		fu_device_add_guid_quirks(self, guid);
-		/* save this to make debugging easier, and also so we can incorporate */
-		fu_device_add_instance_id_quirk(self, instance_id);
-	}
-	if ((flags & FU_DEVICE_INSTANCE_FLAG_ONLY_QUIRKS) == 0)
+	if (flags & FU_DEVICE_INSTANCE_FLAG_VISIBLE)
 		fwupd_device_add_instance_id(FWUPD_DEVICE(self), instance_id);
+
+	/* save this to make debugging easier, and also so we can incorporate */
+	if ((flags & FU_DEVICE_INSTANCE_FLAG_VISIBLE) == 0 &&
+	    (flags & FU_DEVICE_INSTANCE_FLAG_QUIRKS) > 0)
+		fu_device_add_instance_id_quirk(self, instance_id);
 
 	/* already done by ->setup(), so this must be ->registered() */
 	if (priv->done_setup)
@@ -2186,7 +2188,10 @@ fu_device_add_instance_id(FuDevice *self, const gchar *instance_id)
 {
 	g_return_if_fail(FU_IS_DEVICE(self));
 	g_return_if_fail(instance_id != NULL);
-	fu_device_add_instance_id_full(self, instance_id, FU_DEVICE_INSTANCE_FLAG_NONE);
+	fu_device_add_instance_id_full(self,
+				       instance_id,
+				       FU_DEVICE_INSTANCE_FLAG_VISIBLE |
+					   FU_DEVICE_INSTANCE_FLAG_QUIRKS);
 }
 
 /**
@@ -2208,7 +2213,9 @@ fu_device_add_guid(FuDevice *self, const gchar *guid)
 		fu_device_add_instance_id(self, guid);
 		return;
 	}
-	fu_device_add_guid_safe(self, guid, FU_DEVICE_INSTANCE_FLAG_NONE);
+	fu_device_add_guid_safe(self,
+				guid,
+				FU_DEVICE_INSTANCE_FLAG_VISIBLE | FU_DEVICE_INSTANCE_FLAG_QUIRKS);
 }
 
 /**
@@ -5133,9 +5140,7 @@ fu_device_incorporate(FuDevice *self, FuDevice *donor)
 	}
 	for (guint i = 0; i < priv_donor->instance_id_quirks->len; i++) {
 		const gchar *instance_id = g_ptr_array_index(priv_donor->instance_id_quirks, i);
-		fu_device_add_instance_id_full(self,
-					       instance_id,
-					       FU_DEVICE_INSTANCE_FLAG_ONLY_QUIRKS);
+		fu_device_add_instance_id_full(self, instance_id, FU_DEVICE_INSTANCE_FLAG_QUIRKS);
 	}
 
 	/* copy all instance ID keys if not already set */
@@ -5572,7 +5577,7 @@ fu_device_build_instance_id_quirk(FuDevice *self, GError **error, const gchar *s
 		return FALSE;
 
 	/* success */
-	fu_device_add_instance_id_full(self, str->str, FU_DEVICE_INSTANCE_FLAG_ONLY_QUIRKS);
+	fu_device_add_instance_id_full(self, str->str, FU_DEVICE_INSTANCE_FLAG_QUIRKS);
 	return TRUE;
 }
 
