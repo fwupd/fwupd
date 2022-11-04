@@ -86,4 +86,3 @@ GType = FuWacAndroidDevice
 [USB\VID_056A&PID_03DC]
 GType = FuWacDevice
 Plugin = wacom_usb
-Flags = use-runtime-version
