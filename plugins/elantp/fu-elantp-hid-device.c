@@ -161,7 +161,7 @@ fu_elantp_hid_device_ensure_iap_ctrl(FuElantpHidDevice *self, GError **error)
 	else
 		fu_device_remove_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 
-	if (self->force_table_support) {
+	if (self->force_table_support && self->iap_ver <= 5) {
 		if ((self->iap_ctrl & ETP_I2C_MAIN_MODE_ON2) == 0)
 			fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 		else
@@ -256,7 +256,7 @@ fu_elantp_hid_device_get_forcetable_address(FuElantpHidDevice *self, GError **er
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "illgeal force table address (%x)",
+			    "illegal force table address (%x)",
 			    addr_wrds);
 		return FALSE;
 	}

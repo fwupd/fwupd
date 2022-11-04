@@ -159,10 +159,17 @@ fu_elantp_hid_haptic_device_ensure_iap_ctrl(FuDevice *parent,
 	self->tp_iap_ctrl = fu_memread_uint16(buf, G_LITTLE_ENDIAN);
 
 	/* in bootloader mode? */
-	if ((self->tp_iap_ctrl & ETP_I2C_MAIN_MODE_ON2) == 0)
+	if ((self->tp_iap_ctrl & ETP_I2C_MAIN_MODE_ON) == 0)
 		fu_device_add_flag(FU_DEVICE(parent), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 	else
 		fu_device_remove_flag(FU_DEVICE(parent), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
+
+	if (self->tp_iap_ver <= 5) {
+		if ((self->tp_iap_ctrl & ETP_I2C_MAIN_MODE_ON2) == 0)
+			fu_device_add_flag(FU_DEVICE(parent), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
+		else
+			fu_device_remove_flag(FU_DEVICE(parent), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
+	}
 
 	return TRUE;
 }

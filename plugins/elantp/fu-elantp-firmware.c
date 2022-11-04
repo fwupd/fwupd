@@ -62,7 +62,7 @@ fu_elantp_firmware_get_iap_ver(FuElantpFirmware *self)
 gboolean
 fu_elantp_firmware_get_forcetable_support(FuElantpFirmware *self)
 {
-	g_return_val_if_fail(FU_IS_ELANTP_FIRMWARE(self), 0);
+	g_return_val_if_fail(FU_IS_ELANTP_FIRMWARE(self), FALSE);
 	return self->force_table_support;
 }
 
