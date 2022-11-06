@@ -17,8 +17,8 @@ import io
 import platform
 from packaging.version import Version
 from pathlib import Path
-from test.fwupd_logs import UPDATE_INFO, GET_DEVICES, DMI_DECODE
-from test.fwupd_logs import GET_DEVICES_NO_UPDATES, GET_DEVICES_NO_VERSION
+from .fwupd_logs import UPDATE_INFO, GET_DEVICES, DMI_DECODE
+from .fwupd_logs import GET_DEVICES_NO_UPDATES, GET_DEVICES_NO_VERSION
 from unittest.mock import patch
 
 

@@ -75,10 +75,6 @@ def usbvm_create_file(fname, dest, **kwargs):
 BIOS_UPDATE_FLAG = os.path.join(FWUPD_DOM0_DIR, "bios_update")
 LVFS_TESTING_DOM0_FLAG = os.path.join(FWUPD_DOM0_DIR, "lvfs_testing")
 LVFS_TESTING_USBVM_FLAG = os.path.join(FWUPD_VM_DIR, "lvfs_testing")
-METADATA_REFRESH_REGEX = re.compile(r"^Successfully refreshed metadata manually$")
-
-SPECIAL_CHAR_REGEX = re.compile(r"%20|&|\||#")
-
 
 HELP = {
     "Usage": [
@@ -260,11 +256,11 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
             self.lvfs,
         ]
         p = subprocess.Popen(cmd_refresh, stdout=subprocess.PIPE)
-        self.output = p.communicate()[0].decode()
-        print(self.output)
+        output = p.communicate()[0].decode()
+        print(output)
         if p.returncode != 0:
             raise Exception("fwupd-qubes: Refresh failed")
-        if not METADATA_REFRESH_REGEX.match(self.output):
+        if not output != "Successfully refreshed metadata manually":
             raise Exception("Manual metadata refresh failed!!!")
 
     def _get_dom0_updates(self):

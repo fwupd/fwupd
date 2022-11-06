@@ -115,7 +115,8 @@ class FwupdReceiveUpdates:
         file_path -- absolute path to jcat file
         file_directory -- absolute path to the directory to jcat file location
         """
-        cmd_jcat = ["jcat-tool", "verify", f"{file_path}", "--public-keys", FWUPD_PKI]
+        assert file_path.startswith("/"), "bad file path {file_path!r}"
+        cmd_jcat = ["jcat-tool", "verify", file_path, "--public-keys", FWUPD_PKI]
         p = subprocess.Popen(
             cmd_jcat, cwd=file_directory, stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
