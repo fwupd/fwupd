@@ -222,6 +222,7 @@ fu_kinetic_dp_device_rescan(FuDevice *device, GError **error)
 	self->family = fu_kinetic_dp_chip_id_to_family(dp_dev_info->chip_id);
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 	/* TO DO set max firmware size base upon family if we need it */
 =======
 	switch (self->family) {
@@ -244,6 +245,9 @@ fu_kinetic_dp_device_rescan(FuDevice *device, GError **error)
 =======
 	/* TO DO set max firmware size base upon family if we need it */
 >>>>>>> fix minor issues found in review
+=======
+	/* TO DO set max firmware size base upon family if we need it */
+>>>>>>> 0524baeb4bdb3d01180858cc241a35f6e5382054
 	/* add instance ID to generate GUIDs */
 	guid = g_strdup_printf("KT-DP-%s", chip_id);
 	g_debug("device generated instance id is %s", guid);

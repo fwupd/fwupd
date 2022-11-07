@@ -165,6 +165,7 @@ fu_kinetic_dp_puma_aux_isp_send_payload(FuKineticDpPumaAuxIspPrivate *priv,
 					FuKineticDpConnection *connection,
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 					const guint8 *buf,
 					const guint32 bufsz,
 =======
@@ -175,11 +176,16 @@ fu_kinetic_dp_puma_aux_isp_send_payload(FuKineticDpPumaAuxIspPrivate *priv,
 					const guint8 *buf,
 					const guint32 bufsz,
 >>>>>>> fix minor issues found in review
+=======
+					const guint8 *buf,
+					const guint32 bufsz,
+>>>>>>> 0524baeb4bdb3d01180858cc241a35f6e5382054
 					FuProgress *progress,
 					guint32 wait_time_ms,
 					GError **error,
 					gboolean ignore_error)
 {
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 	guint8 *remain_payload = (guint8 *)buf;
@@ -192,11 +198,16 @@ fu_kinetic_dp_puma_aux_isp_send_payload(FuKineticDpPumaAuxIspPrivate *priv,
 	guint8 *remain_payload = (guint8 *)buf;
 	guint32 remain_payload_len = bufsz;
 >>>>>>> fix minor issues found in review
+=======
+	guint8 *remain_payload = (guint8 *)buf;
+	guint32 remain_payload_len = bufsz;
+>>>>>>> 0524baeb4bdb3d01180858cc241a35f6e5382054
 	guint32 chunk_len;
 	guint32 chunk_remain_len;
 	guint32 chunk_offset;
 	guint8 status;
 	guint32 write_size;
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 	gboolean show_message = FALSE;
@@ -206,6 +217,9 @@ fu_kinetic_dp_puma_aux_isp_send_payload(FuKineticDpPumaAuxIspPrivate *priv,
 =======
 	gboolean show_message = FALSE;
 >>>>>>> fixup
+=======
+	gboolean show_message = FALSE;
+>>>>>>> 0524baeb4bdb3d01180858cc241a35f6e5382054
 
 	while (remain_payload_len > 0) {
 		chunk_len = (remain_payload_len >= PUMA_DPCD_DATA_SIZE) ? PUMA_DPCD_DATA_SIZE
@@ -226,6 +240,7 @@ fu_kinetic_dp_puma_aux_isp_send_payload(FuKineticDpPumaAuxIspPrivate *priv,
 					       "failed to AUX write at payload 0x%x: ",
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 					       (guint)((remain_payload + chunk_offset) - buf));
 =======
 					       (guint)((remain_payload + chunk_offset) - payload));
@@ -233,6 +248,9 @@ fu_kinetic_dp_puma_aux_isp_send_payload(FuKineticDpPumaAuxIspPrivate *priv,
 =======
 					       (guint)((remain_payload + chunk_offset) - buf));
 >>>>>>> fix minor issues found in review
+=======
+					       (guint)((remain_payload + chunk_offset) - buf));
+>>>>>>> 0524baeb4bdb3d01180858cc241a35f6e5382054
 				return FALSE;
 			}
 			/* adjust and write the next 16 bytes */
@@ -577,6 +595,7 @@ fu_kinetic_dp_puma_aux_isp_wait_fw_validate(FuKineticDpConnection *connection, G
 			g_debug("Firmware Update Done");
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 			return TRUE;
 =======
 			break;
@@ -584,6 +603,9 @@ fu_kinetic_dp_puma_aux_isp_wait_fw_validate(FuKineticDpConnection *connection, G
 =======
 			return TRUE;
 >>>>>>> fix minor issues found in review
+=======
+			return TRUE;
+>>>>>>> 0524baeb4bdb3d01180858cc241a35f6e5382054
 		} else {
 			/* wait interval before check the status again */
 			g_usleep(interval_ms * 1000);
@@ -595,14 +617,18 @@ fu_kinetic_dp_puma_aux_isp_wait_fw_validate(FuKineticDpConnection *connection, G
 	}
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> fix minor issues found in review
+=======
+>>>>>>> 0524baeb4bdb3d01180858cc241a35f6e5382054
 	/* if get here mean it is time out */
 	g_set_error_literal(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
 			    "waiting for PUMA_FW_UPDATE_READY failed.");
 	return FALSE;
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 	/* time out */
@@ -618,6 +644,8 @@ fu_kinetic_dp_puma_aux_isp_wait_fw_validate(FuKineticDpConnection *connection, G
 >>>>>>> kinetic-dp: Add a plugin to update Kinetic's DisplayPort converter
 =======
 >>>>>>> fix minor issues found in review
+=======
+>>>>>>> 0524baeb4bdb3d01180858cc241a35f6e5382054
 }
 
 static gboolean
@@ -802,6 +830,7 @@ fu_kinetic_dp_puma_aux_isp_parse_app_fw(FuKineticDpFirmware *firmware,
 	const guint8 *cmdb_buf;
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 	guint32 checksum;
 =======
 	guint8 checksum;
@@ -809,6 +838,9 @@ fu_kinetic_dp_puma_aux_isp_parse_app_fw(FuKineticDpFirmware *firmware,
 =======
 	guint32 checksum;
 >>>>>>> kinetic-dp: Fix a -Wstringop-overflow warning
+=======
+	guint32 checksum;
+>>>>>>> 0524baeb4bdb3d01180858cc241a35f6e5382054
 
 	if (fw_bin_size < SIZE_512KB) {
 		g_set_error(error,

@@ -286,6 +286,9 @@ fu_kinetic_dp_firmware_get_customer_project_id(FuKineticDpFirmware *self)
 guint32
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 0524baeb4bdb3d01180858cc241a35f6e5382054
 fu_kinetic_dp_firmware_get_valid_payload_size(const guint8 *buf, const guint32 bufsz)
 {
 	guint32 i = 0;
@@ -293,6 +296,7 @@ fu_kinetic_dp_firmware_get_valid_payload_size(const guint8 *buf, const guint32 b
 	while ((*(buf - i) == 0xFF) && (i < bufsz))
 		i++;
 	return (bufsz - i);
+<<<<<<< HEAD
 =======
 fu_kinetic_dp_firmware_get_valid_payload_size(const guint8 *payload_data, const guint32 data_size)
 =======
@@ -309,6 +313,8 @@ fu_kinetic_dp_firmware_get_valid_payload_size(const guint8 *buf, const guint32 b
 =======
 	return (bufsz - i);
 >>>>>>> fix minor issues found in review
+=======
+>>>>>>> 0524baeb4bdb3d01180858cc241a35f6e5382054
 }
 
 static gboolean
@@ -342,6 +348,7 @@ fu_kinetic_dp_firmware_parse(FuFirmware *self,
 	/* add ISP driver as a new image into firmware */
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 	// isp_drv_payload = g_bytes_new_from_bytes(fw_bytes, HEADER_LEN_ISP_DRV_SIZE,
 	// priv->isp_drv_size);
 	isp_drv_payload =
@@ -351,11 +358,16 @@ fu_kinetic_dp_firmware_parse(FuFirmware *self,
 	    g_bytes_new_from_bytes(fw_bytes, HEADER_LEN_ISP_DRV_SIZE, priv->isp_drv_size);
 >>>>>>> kinetic-dp: Add a plugin to update Kinetic's DisplayPort converter
 =======
+=======
+>>>>>>> 0524baeb4bdb3d01180858cc241a35f6e5382054
 	// isp_drv_payload = g_bytes_new_from_bytes(fw_bytes, HEADER_LEN_ISP_DRV_SIZE,
 	// priv->isp_drv_size);
 	isp_drv_payload =
 	    fu_bytes_new_offset(fw_bytes, HEADER_LEN_ISP_DRV_SIZE, priv->isp_drv_size, error);
+<<<<<<< HEAD
 >>>>>>> fix minor issues found in review
+=======
+>>>>>>> 0524baeb4bdb3d01180858cc241a35f6e5382054
 	isp_drv_img = fu_firmware_new_from_bytes(isp_drv_payload);
 	fu_firmware_set_idx(isp_drv_img, FU_KT_FW_IMG_IDX_ISP_DRV);
 	fu_firmware_add_image(self, isp_drv_img);
@@ -363,8 +375,11 @@ fu_kinetic_dp_firmware_parse(FuFirmware *self,
 	/* add App FW as a new image into firmware */
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> fix minor issues found in review
+=======
+>>>>>>> 0524baeb4bdb3d01180858cc241a35f6e5382054
 	// app_fw_payload = g_bytes_new_from_bytes(fw_bytes,
 	//					HEADER_LEN_ISP_DRV_SIZE + priv->isp_drv_size,
 	//					app_fw_payload_size);
@@ -373,6 +388,7 @@ fu_kinetic_dp_firmware_parse(FuFirmware *self,
 					     app_fw_payload_size,
 					     error);
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 	app_fw_payload = g_bytes_new_from_bytes(fw_bytes,
 						HEADER_LEN_ISP_DRV_SIZE + priv->isp_drv_size,
@@ -380,6 +396,8 @@ fu_kinetic_dp_firmware_parse(FuFirmware *self,
 >>>>>>> kinetic-dp: Add a plugin to update Kinetic's DisplayPort converter
 =======
 >>>>>>> fix minor issues found in review
+=======
+>>>>>>> 0524baeb4bdb3d01180858cc241a35f6e5382054
 
 	/* figure out which chip App FW it is for */
 	buf = g_bytes_get_data(app_fw_payload, &bufsz);

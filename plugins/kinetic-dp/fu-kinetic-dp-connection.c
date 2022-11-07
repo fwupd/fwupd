@@ -47,6 +47,7 @@ fu_kinetic_dp_connection_read(FuKineticDpConnection *self,
 			      guint8 *buf,
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 			      gssize length,
 =======
 			      guint32 length,
@@ -54,6 +55,9 @@ fu_kinetic_dp_connection_read(FuKineticDpConnection *self,
 =======
 			      gssize length,
 >>>>>>> fixup
+=======
+			      gssize length,
+>>>>>>> 0524baeb4bdb3d01180858cc241a35f6e5382054
 			      GError **error)
 {
 	g_return_val_if_fail(self != NULL, FALSE);
@@ -84,6 +88,7 @@ fu_kinetic_dp_connection_write(FuKineticDpConnection *self,
 			       const guint8 *buf,
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 			       gssize length,
 			       GError **error)
 {
@@ -101,6 +106,12 @@ fu_kinetic_dp_connection_write(FuKineticDpConnection *self,
 =======
 	gssize bytes_wrote;
 >>>>>>> fixup
+=======
+			       gssize length,
+			       GError **error)
+{
+	gssize bytes_wrote;
+>>>>>>> 0524baeb4bdb3d01180858cc241a35f6e5382054
 	g_return_val_if_fail(self != NULL, FALSE);
 
 	if (lseek(self->fd, offset, SEEK_SET) != offset) {
