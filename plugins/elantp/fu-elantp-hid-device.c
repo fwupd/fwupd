@@ -156,18 +156,19 @@ fu_elantp_hid_device_ensure_iap_ctrl(FuElantpHidDevice *self, GError **error)
 	self->iap_ctrl = fu_memread_uint16(buf, G_LITTLE_ENDIAN);
 
 	/* in bootloader mode? */
-	if ((self->iap_ctrl & ETP_I2C_MAIN_MODE_ON) == 0)
-		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
-	else
-		fu_device_remove_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
-
 	if (self->force_table_support && self->iap_ver <= 5) {
 		if ((self->iap_ctrl & ETP_I2C_MAIN_MODE_ON2) == 0)
 			fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 		else
 			fu_device_remove_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
+		return TRUE;
 	}
-
+	
+	if ((self->iap_ctrl & ETP_I2C_MAIN_MODE_ON) == 0)
+		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
+	else
+		fu_device_remove_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
+	
 	return TRUE;
 }
 
