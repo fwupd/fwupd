@@ -297,19 +297,7 @@ fu_kinetic_dp_secure_aux_isp_enter_code_loading_mode(FuKineticDpConnection *self
 						     GError **error)
 {
 	guint8 status;
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
 	if (is_app_mode) {
-=======
-	if (is_app_mode)
->>>>>>> kinetic-dp: Add a plugin to update Kinetic's DisplayPort converter
-=======
-	if (is_app_mode) {
->>>>>>> fix minor issues found in review
-=======
-	if (is_app_mode) {
->>>>>>> 0524baeb4bdb3d01180858cc241a35f6e5382054
 		/* send "DPCD_MCA_CMD_PREPARE_FOR_ISP_MODE" command first
 		 * to make DPCD 514writable */
 		if (!fu_kinetic_dp_secure_aux_isp_send_kt_prop_cmd(self,
@@ -319,19 +307,7 @@ fu_kinetic_dp_secure_aux_isp_enter_code_loading_mode(FuKineticDpConnection *self
 								   &status,
 								   error))
 			return FALSE;
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
 	}
-=======
-
->>>>>>> kinetic-dp: Add a plugin to update Kinetic's DisplayPort converter
-=======
-	}
->>>>>>> fix minor issues found in review
-=======
-	}
->>>>>>> 0524baeb4bdb3d01180858cc241a35f6e5382054
 	/* Update payload size to DPCD reply data reg first */
 	if (!fu_kinetic_dp_secure_aux_isp_write_dpcd_reply_data_reg(self,
 								    (guint8 *)&code_size,
@@ -916,43 +892,16 @@ fu_kinetic_dp_secure_aux_isp_send_reset_command(FuKineticDpConnection *connectio
 							    &error_local))
 		g_warning("failed to reset system: %s", error_local->message);
 }
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
 static gboolean
 
 fu_kinetic_dp_secure_aux_isp_get_flash_bank_idx(FuKineticDpConnection *connection,
 						KtFlashBankIdx *flash_bank_idx,
 						GError **error)
-=======
-
-static KtFlashBankIdx
-fu_kinetic_dp_secure_aux_isp_get_flash_bank_idx(FuKineticDpConnection *connection, GError **error)
->>>>>>> kinetic-dp: Add a plugin to update Kinetic's DisplayPort converter
-=======
-=======
->>>>>>> 0524baeb4bdb3d01180858cc241a35f6e5382054
-static gboolean
-
-fu_kinetic_dp_secure_aux_isp_get_flash_bank_idx(FuKineticDpConnection *connection,
-						KtFlashBankIdx *flash_bank_idx,
-						GError **error)
-<<<<<<< HEAD
->>>>>>> fix minor issues found in review
-=======
->>>>>>> 0524baeb4bdb3d01180858cc241a35f6e5382054
 {
 	guint8 status;
 	guint8 prev_src_oui[DPCD_SIZE_IEEE_OUI] = {0};
 	guint8 res = BANK_NONE;
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> fix minor issues found in review
-=======
->>>>>>> 0524baeb4bdb3d01180858cc241a35f6e5382054
 	if (!fu_kinetic_dp_aux_dpcd_read_oui(connection,
 					     prev_src_oui,
 					     sizeof(prev_src_oui),
@@ -964,44 +913,15 @@ fu_kinetic_dp_secure_aux_isp_get_flash_bank_idx(FuKineticDpConnection *connectio
 		*flash_bank_idx = BANK_NONE;
 		return FALSE;
 	}
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-	if (!fu_kinetic_dp_aux_dpcd_read_oui(connection, prev_src_oui, sizeof(prev_src_oui), error))
-		return BANK_NONE;
-	if (!fu_kinetic_dp_secure_aux_isp_write_mca_oui(connection, error))
-		return BANK_NONE;
->>>>>>> kinetic-dp: Add a plugin to update Kinetic's DisplayPort converter
-=======
->>>>>>> fix minor issues found in review
-=======
->>>>>>> 0524baeb4bdb3d01180858cc241a35f6e5382054
 	if (fu_kinetic_dp_secure_aux_isp_send_kt_prop_cmd(connection,
 							  KT_DPCD_CMD_GET_ACTIVE_FLASH_BANK,
 							  100,
 							  20,
 							  &status,
 							  error) &&
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
 	    !fu_kinetic_dp_secure_aux_isp_read_param_reg(connection, &res, error)) {
 		res = BANK_NONE;
 	}
-=======
-	    !fu_kinetic_dp_secure_aux_isp_read_param_reg(connection, &res, error))
-		res = BANK_NONE;
->>>>>>> kinetic-dp: Add a plugin to update Kinetic's DisplayPort converter
-=======
-	    !fu_kinetic_dp_secure_aux_isp_read_param_reg(connection, &res, error)) {
-		res = BANK_NONE;
-	}
->>>>>>> fix minor issues found in review
-=======
-	    !fu_kinetic_dp_secure_aux_isp_read_param_reg(connection, &res, error)) {
-		res = BANK_NONE;
-	}
->>>>>>> 0524baeb4bdb3d01180858cc241a35f6e5382054
 
 	fu_kinetic_dp_secure_aux_isp_clear_kt_prop_cmd(connection, error);
 
@@ -1009,27 +929,11 @@ fu_kinetic_dp_secure_aux_isp_get_flash_bank_idx(FuKineticDpConnection *connectio
 	fu_kinetic_dp_aux_dpcd_write_oui(connection, prev_src_oui, error);
 
 	g_debug("secure aux got active flash bank 0x%x (0=BankA, 1=BankB, 2=TotalBanks)", res);
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> fix minor issues found in review
-=======
->>>>>>> 0524baeb4bdb3d01180858cc241a35f6e5382054
 	*flash_bank_idx = (KtFlashBankIdx)res;
 	if (*flash_bank_idx == BANK_NONE)
 		return FALSE;
 	else
 		return TRUE;
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-	return (KtFlashBankIdx)res;
->>>>>>> kinetic-dp: Add a plugin to update Kinetic's DisplayPort converter
-=======
->>>>>>> fix minor issues found in review
-=======
->>>>>>> 0524baeb4bdb3d01180858cc241a35f6e5382054
 }
 
 gboolean
@@ -1083,19 +987,7 @@ fu_kinetic_dp_secure_aux_isp_disable_aux_forward(FuKineticDpConnection *connecti
 							    &status,
 							    error);
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
 	/* clear CMD_STATUS_REG, it's a necessary step after sending a proprietary command */
-=======
-	/* clear CMD_STATUS_REG, it's a necessary step after sending a proprieatry command */
->>>>>>> kinetic-dp: Add a plugin to update Kinetic's DisplayPort converter
-=======
-	/* clear CMD_STATUS_REG, it's a necessary step after sending a proprietary command */
->>>>>>> fix minor issues found in review
-=======
-	/* clear CMD_STATUS_REG, it's a necessary step after sending a proprietary command */
->>>>>>> 0524baeb4bdb3d01180858cc241a35f6e5382054
 	cmd_id = KT_DPCD_CMD_STS_NONE;
 	fu_kinetic_dp_connection_write(connection,
 				       DPCD_ADDR_CMD_STATUS_REG,
@@ -1138,26 +1030,9 @@ fu_kinetic_dp_secure_aux_isp_get_device_info(FuKineticDpAuxIsp *self,
 
 	if (KT_FW_STATE_RUN_APP == dev_info->fw_run_state) {
 		dev_info->is_dual_bank_supported = TRUE;
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
 		fu_kinetic_dp_secure_aux_isp_get_flash_bank_idx(connection,
 								&(dev_info->flash_bank_idx),
 								error);
-=======
-		dev_info->flash_bank_idx =
-		    fu_kinetic_dp_secure_aux_isp_get_flash_bank_idx(connection, error);
->>>>>>> kinetic-dp: Add a plugin to update Kinetic's DisplayPort converter
-=======
-		fu_kinetic_dp_secure_aux_isp_get_flash_bank_idx(connection,
-								&(dev_info->flash_bank_idx),
-								error);
->>>>>>> fix minor issues found in review
-=======
-		fu_kinetic_dp_secure_aux_isp_get_flash_bank_idx(connection,
-								&(dev_info->flash_bank_idx),
-								error);
->>>>>>> 0524baeb4bdb3d01180858cc241a35f6e5382054
 		if (dev_info->flash_bank_idx == BANK_NONE)
 			return FALSE;
 	}

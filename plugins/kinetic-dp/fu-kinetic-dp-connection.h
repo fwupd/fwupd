@@ -26,35 +26,11 @@ gboolean
 fu_kinetic_dp_connection_read(FuKineticDpConnection *self,
 			      guint32 offset,
 			      guint8 *buf,
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
 			      gssize length,
-=======
-			      guint32 length,
->>>>>>> kinetic-dp: Add a plugin to update Kinetic's DisplayPort converter
-=======
-			      gssize length,
->>>>>>> fixup
-=======
-			      gssize length,
->>>>>>> 0524baeb4bdb3d01180858cc241a35f6e5382054
 			      GError **error);
 gboolean
 fu_kinetic_dp_connection_write(FuKineticDpConnection *self,
 			       guint32 offset,
 			       const guint8 *buf,
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
 			       gssize length,
-=======
-			       guint32 length,
->>>>>>> kinetic-dp: Add a plugin to update Kinetic's DisplayPort converter
-=======
-			       gssize length,
->>>>>>> fixup
-=======
-			       gssize length,
->>>>>>> 0524baeb4bdb3d01180858cc241a35f6e5382054
 			       GError **error);
