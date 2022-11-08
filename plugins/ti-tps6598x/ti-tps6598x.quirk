@@ -1,0 +1,2 @@
+[USB\VID_0451&PID_ACE1]
+Plugin = ti_tps6598x
