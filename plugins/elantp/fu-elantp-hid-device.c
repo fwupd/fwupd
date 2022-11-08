@@ -163,12 +163,12 @@ fu_elantp_hid_device_ensure_iap_ctrl(FuElantpHidDevice *self, GError **error)
 			fu_device_remove_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 		return TRUE;
 	}
-	
+
 	if ((self->iap_ctrl & ETP_I2C_MAIN_MODE_ON) == 0)
 		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 	else
 		fu_device_remove_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
-	
+
 	return TRUE;
 }
 
@@ -660,6 +660,14 @@ fu_elantp_hid_device_write_firmware(FuDevice *device,
 					    0x0,
 					    self->fw_page_size);
 		total_pages = (self->force_table_addr - iap_addr - 1) / self->fw_page_size + 1;
+		if (total_pages > chunks->len) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_WRITE,
+				    "total pages wrong (%u)",
+				    total_pages);
+			return FALSE;
+		}
 	} else {
 		chunks = fu_chunk_array_new(buf + iap_addr,
 					    bufsz - iap_addr,

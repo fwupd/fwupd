@@ -171,7 +171,7 @@ fu_elantp_hid_haptic_device_ensure_iap_ctrl(FuDevice *parent,
 		fu_device_add_flag(FU_DEVICE(parent), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 	else
 		fu_device_remove_flag(FU_DEVICE(parent), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
-		
+
 	return TRUE;
 }
 
