@@ -681,12 +681,12 @@ msgstr "S'ha afegit el dispositiu:"
 
 #. TRANSLATORS: for example the batteries *inside* the Bluetooth mouse
 msgid "Device battery power is too low"
-msgstr "L'alimentació de la bateria del dispositiu és massa baixa"
+msgstr "L'energia de la bateria del dispositiu és massa baixa"
 
 #. TRANSLATORS: for example the batteries *inside* the Bluetooth mouse
 #, c-format
 msgid "Device battery power is too low (%u%%, requires %u%%)"
-msgstr " L'energia de la bateria és massa baixa (%u%%, requereix %u%%)"
+msgstr "L'energia de la bateria és massa baixa (%u%%, requereix %u%%)"
 
 #. TRANSLATORS: Device supports a safety mechanism for flashing
 msgid "Device can recover flash failures"
@@ -741,6 +741,10 @@ msgstr "S'ha eliminat el dispositiu:"
 #. TRANSLATORS: as in, wired mains power for a laptop
 msgid "Device requires AC power to be connected"
 msgstr "El dispositiu requereix que es connecti l'alimentació"
+
+#. TRANSLATORS: The device cannot be updated due to missing vendor's license."
+msgid "Device requires a software license to update"
+msgstr "El dispositiu requereix una llicència de programari per a actualitzar"
 
 #. TRANSLATORS: longer description
 msgid "Device software updates are provided for this device."
@@ -849,6 +853,14 @@ msgstr "No realitzar les comprovacions de seguretat al dispositiu"
 #. TRANSLATORS: command line option
 msgid "Do not prompt for devices"
 msgstr "No demanis pels dispositius"
+
+#. TRANSLATORS: command line option
+msgid "Do not search the firmware when parsing"
+msgstr "No cercar el microprogramari quan s'analitzi"
+
+#. TRANSLATORS: warning message shown after update has been scheduled
+msgid "Do not turn off your computer or remove the AC adaptor while the update is in progress."
+msgstr "No apagueu l'ordinador ni desendolleu l'adaptador de CA mentre estigui en curs l'actualització."
 
 #. TRANSLATORS: command line option
 msgid "Do not write to the history database"
@@ -1072,7 +1084,7 @@ msgstr "Ha fallat en aplicar l'actualització"
 #. TRANSLATORS: error message for Windows
 #, c-format
 msgid "Failed to connect to Windows service, please ensure it's running."
-msgstr "Ha fallat en connectar al servei de Windows, assegureu-vos que s'està executant."
+msgstr "Ha fallat en connectar amb el servei de Windows, assegureu-vos que s'està executant."
 
 #. TRANSLATORS: we could not talk to the fwupd daemon
 msgid "Failed to connect to daemon"
@@ -1701,6 +1713,10 @@ msgstr "Llista els tipus de microprogramari disponibles."
 msgid "Lists files on the ESP"
 msgstr "Llista els fitxers en l'ESP."
 
+#. TRANSLATORS: the plugin was created from a .so object, and was not built-in
+msgid "Loaded from an external module"
+msgstr "Carregat des d'un mòdul extern"
+
 #. TRANSLATORS: parsing the firmware information
 msgid "Loading…"
 msgstr "S'està carregant..."
@@ -1712,6 +1728,16 @@ msgstr "Blocada"
 #. TRANSLATORS: the release urgency
 msgid "Low"
 msgstr "Baixa"
+
+#. TRANSLATORS: Title: MEI = Intel Management Engine, and key refers
+#. * to the private/public key used to secure loading of firmware
+msgid "MEI Key Manifest"
+msgstr "Manifest de la clau MEI"
+
+#. TRANSLATORS: Title: MEI = Intel Management Engine, and key refer
+#. * to the private/public key used to secure loading of firmware
+msgid "MEI key manifest"
+msgstr "Manifest de la clau MEI"
 
 #. TRANSLATORS: Title: MEI = Intel Management Engine
 msgid "MEI manufacturing mode"
@@ -1995,7 +2021,11 @@ msgstr "La protecció DMA durant la prearrencada està activada"
 
 #. TRANSLATORS: longer description
 msgid "Pre-boot DMA protection prevents devices from accessing system memory after being connected to the computer."
-msgstr "La protecció de DMA en la prearrencada impedeix que els dispositius accedeixin a la memòria del sistema després de connectar-los a l'ordinador."
+msgstr "La protecció de DMA en la prearrencada impedeix que els dispositius accedeixin a la memòria del sistema després de connectar-los amb l'ordinador."
+
+#. TRANSLATORS: warning message
+msgid "Press unlock on the device to continue the update process."
+msgstr "Premeu desbloqueig en el dispositiu per a continuar amb el procés d'actualització."
 
 #. TRANSLATORS: version number of previous firmware
 msgid "Previous version"
@@ -2602,6 +2632,10 @@ msgid "Test a device using a JSON manifest"
 msgstr "Prova un dispositiu emprant un manifest JSON"
 
 #. TRANSLATORS: longer description
+msgid "The Intel Management Engine Key Manifest must be valid so that the device firmware can be trusted by the CPU."
+msgstr "El manifest de la clau del motor de gestió d'Intel ha de ser vàlid perquè la CPU pugui confiar en el microprogramari del dispositiu."
+
+#. TRANSLATORS: longer description
 msgid "The Intel Management Engine controls device components and needs to have a recent version to avoid security issues."
 msgstr "El motor de gestió d'Intel controla els components del dispositiu i necessita tenir una versió recent per a evitar problemes de seguretat."
 
@@ -2643,6 +2677,14 @@ msgstr "El microprogramari des de %s no és proporcionat per %s, el proveïdor d
 #. TRANSLATORS: try to help
 msgid "The system clock has not been set correctly and downloading files may fail."
 msgstr "El rellotge del sistema no s'ha configurat correctament i pot fallar la descàrrega de fitxers."
+
+#. TRANSLATORS: warning message shown after update has been scheduled
+msgid "The update will continue when the device USB cable has been unplugged and then re-inserted."
+msgstr "L'actualització continuarà quan el cable USB del dispositiu s'hagi desconnectat i es torni a inserir."
+
+#. TRANSLATORS: warning message shown after update has been scheduled
+msgid "The update will continue when the device USB cable has been unplugged."
+msgstr "L'actualització continuarà quan s'hagi desconnectat el cable USB del dispositiu."
 
 #. TRANSLATORS: naughty vendor
 msgid "The vendor did not supply any release notes."
@@ -2993,6 +3035,11 @@ msgstr "S'està esperant…"
 #. TRANSLATORS: command description
 msgid "Watch for hardware changes"
 msgstr "Mira per a canvis al maquinari."
+
+#. TRANSLATORS: check various UEFI and ACPI tables are unchanged after the
+#. update
+msgid "Will measure elements of system integrity around an update"
+msgstr "Mesurarà els elements d'integritat del sistema al voltant d'una actualització"
 
 #. TRANSLATORS: command description
 msgid "Write firmware from file into device"

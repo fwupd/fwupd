@@ -198,7 +198,7 @@ fwupd_enums_func(void)
 		g_assert_cmpstr(tmp, !=, NULL);
 		g_assert_cmpint(fwupd_release_flag_from_string(tmp), ==, i);
 	}
-	for (guint64 i = 1; i <= FWUPD_REQUEST_FLAG_NONE; i *= 2) {
+	for (guint64 i = 1; i <= FWUPD_REQUEST_FLAG_ALLOW_GENERIC_IMAGE; i *= 2) {
 		const gchar *tmp = fwupd_request_flag_to_string(i);
 		if (tmp == NULL)
 			g_warning("missing request flag 0x%x", (guint)i);

@@ -4,8 +4,6 @@
 
 This plugin is used to update the Intel graphics system controller via the Intel Management Engine.
 
-Non-Intel machines are not able to update these GPU devices due to missing HECI-over-MEI support.
-
 ## Firmware Format
 
 There are two firmware formats in use:

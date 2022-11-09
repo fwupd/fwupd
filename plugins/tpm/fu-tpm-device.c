@@ -109,7 +109,7 @@ fu_tpm_device_init(FuTpmDevice *self)
 	fu_udev_device_set_flags(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_NONE);
 	fu_device_add_instance_id_full(FU_DEVICE(self),
 				       "system-tpm",
-				       FU_DEVICE_INSTANCE_FLAG_NO_QUIRKS);
+				       FU_DEVICE_INSTANCE_FLAG_VISIBLE);
 }
 
 static void

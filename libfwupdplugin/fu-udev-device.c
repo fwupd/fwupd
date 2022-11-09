@@ -556,11 +556,8 @@ fu_udev_device_probe(FuDevice *device, GError **error)
 	fu_device_build_instance_id_quirk(device, NULL, subsystem, "MODALIAS", NULL);
 
 	/* add subsystem to match in plugins */
-	if (subsystem != NULL) {
-		fu_device_add_instance_id_full(device,
-					       subsystem,
-					       FU_DEVICE_INSTANCE_FLAG_ONLY_QUIRKS);
-	}
+	if (subsystem != NULL)
+		fu_device_add_instance_id_full(device, subsystem, FU_DEVICE_INSTANCE_FLAG_QUIRKS);
 
 	/* add firmware_id */
 	if (g_strcmp0(g_udev_device_get_subsystem(priv->udev_device), "serio") == 0) {
@@ -2117,7 +2114,7 @@ fu_udev_device_find_usb_device(FuUdevDevice *self, GError **error)
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
 	/* look at the current device and all the parent devices until we can find the USB data */
-	while (TRUE) {
+	while (udev_device != NULL) {
 		g_autoptr(GUdevDevice) udev_device_parent = NULL;
 		bus = g_udev_device_get_sysfs_attr_as_int(udev_device, "busnum");
 		address = g_udev_device_get_sysfs_attr_as_int(udev_device, "devnum");
