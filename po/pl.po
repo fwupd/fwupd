@@ -755,6 +755,10 @@ msgstr "Usunięto urządzenie:"
 msgid "Device requires AC power to be connected"
 msgstr "Urządzenie wymaga podłączenia do prądu"
 
+#. TRANSLATORS: The device cannot be updated due to missing vendor's license."
+msgid "Device requires a software license to update"
+msgstr "Urządzenie wymaga licencji na oprogramowanie, aby zaktualizować"
+
 #. TRANSLATORS: Device supports a safety mechanism for flashing
 msgid "Device stages updates"
 msgstr "Urządzenie przygotowuje aktualizacje"
@@ -858,6 +862,14 @@ msgstr "Bez wykonywania testów bezpieczeństwa urządzenia"
 #. TRANSLATORS: command line option
 msgid "Do not prompt for devices"
 msgstr "Bez pytania o urządzenia"
+
+#. TRANSLATORS: command line option
+msgid "Do not search the firmware when parsing"
+msgstr "Bez wyszukiwania oprogramowania sprzętowego podczas przetwarzania"
+
+#. TRANSLATORS: warning message shown after update has been scheduled
+msgid "Do not turn off your computer or remove the AC adaptor while the update is in progress."
+msgstr "Nie należy wyłączać komputera ani odłączać zasilacza w czasie trwania aktualizacji."
 
 #. TRANSLATORS: command line option
 msgid "Do not write to the history database"
@@ -1657,6 +1669,10 @@ msgstr "Wyświetla listę dostępnych typów oprogramowania sprzętowego"
 msgid "Lists files on the ESP"
 msgstr "Wyświetla listę plików na ESP"
 
+#. TRANSLATORS: the plugin was created from a .so object, and was not built-in
+msgid "Loaded from an external module"
+msgstr "Wczytane z zewnętrznego modułu"
+
 #. TRANSLATORS: parsing the firmware information
 msgid "Loading…"
 msgstr "Wczytywanie…"
@@ -1668,6 +1684,16 @@ msgstr "Zablokowane"
 #. TRANSLATORS: the release urgency
 msgid "Low"
 msgstr "Niska"
+
+#. TRANSLATORS: Title: MEI = Intel Management Engine, and key refers
+#. * to the private/public key used to secure loading of firmware
+msgid "MEI Key Manifest"
+msgstr "Manifest klucza MEI"
+
+#. TRANSLATORS: Title: MEI = Intel Management Engine, and key refer
+#. * to the private/public key used to secure loading of firmware
+msgid "MEI key manifest"
+msgstr "Manifest klucza MEI"
 
 #. TRANSLATORS: Title: MEI = Intel Management Engine
 msgid "MEI manufacturing mode"
@@ -1940,6 +1966,10 @@ msgstr "Ochrona DMA przed uruchomieniem jest wyłączona"
 #. TRANSLATORS: HSI event title
 msgid "Pre-boot DMA protection is enabled"
 msgstr "Ochrona DMA przed uruchomieniem jest włączona"
+
+#. TRANSLATORS: warning message
+msgid "Press unlock on the device to continue the update process."
+msgstr "Proszę nacisnąć „Odblokuj” na urządzeniu, aby kontynuować aktualizację."
 
 #. TRANSLATORS: version number of previous firmware
 msgid "Previous version"
@@ -2564,6 +2594,14 @@ msgstr "Oprogramowanie sprzętowe od firmy %s nie jest dostarczane przez firmę 
 msgid "The system clock has not been set correctly and downloading files may fail."
 msgstr "Zegar komputera nie jest poprawnie ustawiony i pobieranie plików może się nie powieść."
 
+#. TRANSLATORS: warning message shown after update has been scheduled
+msgid "The update will continue when the device USB cable has been unplugged and then re-inserted."
+msgstr "Aktualizacja zostanie kontynuowana po odłączeniu i ponownym podłączeniu kabla USB urządzenia."
+
+#. TRANSLATORS: warning message shown after update has been scheduled
+msgid "The update will continue when the device USB cable has been unplugged."
+msgstr "Aktualizacja zostanie kontynuowana po odłączeniu kabla USB urządzenia."
+
 #. TRANSLATORS: naughty vendor
 msgid "The vendor did not supply any release notes."
 msgstr "Dostawca nie dostarczył żadnych informacji o wydaniu."
@@ -2909,6 +2947,11 @@ msgstr "Oczekiwanie…"
 #. TRANSLATORS: command description
 msgid "Watch for hardware changes"
 msgstr "Obserwuje zmiany sprzętu"
+
+#. TRANSLATORS: check various UEFI and ACPI tables are unchanged after the
+#. update
+msgid "Will measure elements of system integrity around an update"
+msgstr "Dokona pomiaru elementów spójności komputera wokół aktualizacji"
 
 #. TRANSLATORS: command description
 msgid "Write firmware from file into device"
