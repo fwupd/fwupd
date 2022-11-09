@@ -169,16 +169,33 @@ def _get_installer_cmd(os, yes):
     return installer
 
 
+def _get_update_cmd(os, yes):
+    if os == "debian" or os == "ubuntu":
+        updater = ["apt", "update"]
+    elif os == "fedora":
+        updater = ["dnf", "update"]
+    else:
+        sys.exit(1)
+    if yes:
+        updater += ["-y"]
+    return updater
+
+
 def install_packages(os, variant, yes, debugging, packages):
     import subprocess
 
     if packages == "build-dependencies":
         packages = get_build_dependencies(os, variant)
     installer = _get_installer_cmd(os, yes)
+    updater = _get_update_cmd(os, yes)
     installer += packages
     if debugging:
         print(installer)
-    subprocess.call(installer)
+    try:
+        subprocess.check_call(installer)
+    except subprocess.CalledProcessError:
+        subprocess.check_call(updater)
+        subprocess.check_call(installer)
 
 
 if __name__ == "__main__":
