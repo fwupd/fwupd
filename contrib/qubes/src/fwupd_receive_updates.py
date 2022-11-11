@@ -240,12 +240,8 @@ class FwupdReceiveUpdates:
         self._jcat_verification(self.metadata_file_jcat, FWUPD_DOM0_METADATA_DIR)
         os.umask(self.old_umask)
 
-    def clean_cache(self, usbvm=False):
-        """Removes updates data
-
-        Keyword arguments:
-        usbvm -- usbvm support flag
-        """
+    def clean_cache(self):
+        """Removes updates data"""
         print("Cleaning dom0 cache directories")
         if os.path.exists(FWUPD_DOM0_METADATA_DIR):
             shutil.rmtree(FWUPD_DOM0_METADATA_DIR)
@@ -253,6 +249,3 @@ class FwupdReceiveUpdates:
             shutil.rmtree(FWUPD_DOM0_UPDATES_DIR)
         if os.path.exists(HEADS_UPDATES_DIR):
             shutil.rmtree(HEADS_UPDATES_DIR)
-        if usbvm:
-            print("Cleaning usbvm cache directories")
-            self._clean_usbvm()

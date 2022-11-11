@@ -28,7 +28,6 @@ install_data([
 install_data([
   'src/vms/fwupd_common_vm.py',
   'src/vms/fwupd_download_updates.py',
-  'src/vms/fwupd_usbvm_validate.py',
   ],
   install_dir: 'libexec/qubes-fwupd',
   install_mode: 'rwxrwxr-x',

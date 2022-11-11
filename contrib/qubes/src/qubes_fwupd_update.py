@@ -35,10 +35,6 @@ run_cmd = (
 )
 
 
-def usbvm_run(args, **kwargs):
-    return subprocess.check_call((*run_cmd, *args), **kwargs)
-
-
 def run_in_tty(updatevm, args, **kwargs):
     return subprocess.check_call(
         (
@@ -87,12 +83,12 @@ class FwupdUpdate:
             raise Exception("Specifying updatevm failed")
 
     def _check_updatevm(self):
-        """Checks if usbvm is running"""
+        """Checks if updatevm is running"""
         cmd_xl_list = ["xl", "list"]
         p = subprocess.Popen(cmd_xl_list, stdout=subprocess.PIPE)
         output = p.communicate()[0].decode()
         if p.returncode != 0:
-            raise Exception("fwupd-qubes: Firmware downgrade failed")
+            raise Exception("fwupd-qubes: updatevm check failed")
         return self.updatevm in output
 
     def _encrypt_update_url(self, url):
