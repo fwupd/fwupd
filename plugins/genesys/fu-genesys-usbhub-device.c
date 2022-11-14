@@ -368,10 +368,12 @@ fu_genesys_usbhub_device_wait_flash_status_register_cb(FuDevice *device,
 		return FALSE;
 	}
 	if (status != helper->expected_val) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INTERNAL,
-				    "wrong value in flash status register");
+		g_set_error(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_FAILED_HANDLED,
+			    "flash status register invalid, expected 0x%x, got 0x%x",
+			    helper->expected_val,
+			    status);
 		return FALSE;
 	}
 
@@ -1533,6 +1535,13 @@ fu_genesys_usbhub_device_set_quirk_kv(FuDevice *device,
 	return FALSE;
 }
 
+static gboolean
+fu_genesys_usbhub_device_failed_handled_cb(FuDevice *device, gpointer user_data, GError **error)
+{
+	/* nothing to do; just wait the delay and try again */
+	return TRUE;
+}
+
 static void
 fu_genesys_usbhub_device_init(FuGenesysUsbhubDevice *self)
 {
@@ -1541,6 +1550,10 @@ fu_genesys_usbhub_device_init(FuGenesysUsbhubDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
 	fu_device_add_protocol(FU_DEVICE(self), "com.genesys.usbhub");
 	fu_device_retry_set_delay(FU_DEVICE(self), 30);	   /* 30ms */
+	fu_device_retry_add_recovery(FU_DEVICE(self),
+				     G_IO_ERROR,
+				     G_IO_ERROR_FAILED_HANDLED,
+				     fu_genesys_usbhub_device_failed_handled_cb);
 	fu_device_set_remove_delay(FU_DEVICE(self), 5000); /* 5s */
 	fu_device_register_private_flag(FU_DEVICE(self),
 					FU_GENESYS_USBHUB_FLAG_HAS_MSTAR_SCALER,
