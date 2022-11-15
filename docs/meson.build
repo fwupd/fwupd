@@ -54,6 +54,18 @@ if build_docs and introspection.allowed()
       '@INPUT@',
     ],
   )
+  custom_target('generate-oval',
+    input: hsi_test_jsons,
+    output : 'oval.xml',
+    command : [
+      python3,
+      files(['generate-oval.py']),
+      '--version', fwupd_version,
+      '--schema-version', '5.11.3',
+      '@OUTPUT@',
+      '@INPUT@',
+    ],
+  )
 
   custom_target('doc-fwupdplugin',
     input: [
