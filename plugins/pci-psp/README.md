@@ -2,7 +2,7 @@
 
 ## Introduction
 
-This plugin checks all information reported from the AMD Platform Security processor into
+This plugin checks all information reported from the AMD Platform Secure processor into
 the operating system on select SOCs.
 
 The lack of these sysfs files does *NOT* indicate the lack of these security features, it only
