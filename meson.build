@@ -537,18 +537,24 @@ fwupd_gir = []
 gir_dep = dependency('gobject-introspection-1.0', required: get_option('introspection'))
 introspection = get_option('introspection').disable_auto_if(host_machine.system() != 'linux').disable_auto_if(not gir_dep.found())
 
-markdown_version = run_command(
-  python3, '-c', 'import markdown; print(markdown.__version__)'
-).stdout().strip()
-docs_python_deps = get_option('docs').require(markdown_version.version_compare('>=3.2'),
-						error_message: 'docs=enabled requires at least markdown >= 3.2')
 gidocgen_dep = dependency('gi-docgen',
   version: '>= 2021.1',
   native: true,
   fallback: ['gi-docgen', 'dummy_dep'],
-  required: docs_python_deps,
+  required: get_option('docs'),
 )
-gidocgen_app = find_program('gi-docgen', required: docs_python_deps)
+gidocgen_app = find_program('gi-docgen', required: gidocgen_dep.found())
+build_docs = gidocgen_dep.found() and gidocgen_app.found()
+
+if build_docs and gidocgen_dep.version().version_compare('< 2022.2')
+  markdown_version = run_command(
+    python3, '-c', 'import markdown; print(markdown.__version__)'
+  ).stdout().strip()
+  build_docs = get_option('docs').require(
+    markdown_version.version_compare('>=3.2'),
+    error_message: 'docs=enabled requires at least markdown >= 3.2'
+  ).allowed()
+endif
 
 # using "meson configure -Db_sanitize=address,undefined" is super useful in finding corruption,
 # but it does not work with our GMainContext-abuse tests...
