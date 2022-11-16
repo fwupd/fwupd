@@ -1,0 +1,21 @@
+{
+	"id": "org.fwupd.hsi.Bios.RollbackProtection",
+	"name": "BIOS Firmware Rollback protection",
+	"description": [
+		"Some OEMs include an optional firmware protection feature in their BIOS that would prevent installation of older firmware that may have security vulnerabilities."
+	],
+	"failure-impact": [
+		"Firmware without this feature enabled may be attacked by an attacker installing an older firmware that takes advantage of a well-known vulnerability."
+	],
+	"failure-results": {
+		"not-enabled": "rollback protection disabled"
+	},
+	"success-results": {
+		"enabled": "rollback protection enabled"
+	},
+	"hsi-level": 2,
+	"references": {
+		"https://www.psacertified.org/blog/anti-rollback-explained/": "Rollback protection"
+	},
+	"fwupd-version": "1.8.8"
+}
