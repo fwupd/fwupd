@@ -54,7 +54,6 @@ FWUPD_VM_METADATA_JCAT = os.path.join(FWUPD_VM_METADATA_DIR, "firmware.xml.gz.jc
 FWUPD_DOWNLOAD_PREFIX = "https://fwupd.org/downloads/"
 
 FWUPDMGR = "/bin/fwupdmgr"
-FWUPDAGENT = "/bin/fwupdagent"
 
 USBVM_N = "sys-usb"
 
@@ -357,7 +356,7 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
 
     def _get_dom0_updates(self):
         """Gathers infromations about available updates."""
-        cmd_get_dom0_updates = [FWUPDAGENT, "get-updates"]
+        cmd_get_dom0_updates = [FWUPDMGR, "--json", "get-updates"]
         p = subprocess.Popen(cmd_get_dom0_updates, stdout=subprocess.PIPE)
         self.dom0_updates_info = p.communicate()[0].decode()
         if p.returncode != 0 and p.returncode != 2:
@@ -544,7 +543,7 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
 
     def _get_dom0_devices(self):
         """Gathers information about devices connected in dom0."""
-        cmd_get_dom0_devices = [FWUPDAGENT, "get-devices"]
+        cmd_get_dom0_devices = [FWUPDMGR, "--json", "get-devices"]
         p = subprocess.Popen(cmd_get_dom0_devices, stdout=subprocess.PIPE)
         self.dom0_devices_info = p.communicate()[0].decode()
         if p.returncode != 0:
