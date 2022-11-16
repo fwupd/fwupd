@@ -147,6 +147,8 @@ class FwupdReceiveUpdates:
         cmd_copy = [
             "qvm-run",
             "--pass-io",
+            "-q",
+            "-a",
             "--no-shell",
             "--",
             "cat",
