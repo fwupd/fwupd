@@ -1,5 +1,4 @@
 [VIDEO4LINUX\VEN_046D&DEV_08E2]
 Plugin = logitech_scribe
 InstallDuration = 120
-Flags = is-scribe
 RemoveDelay = 120000
