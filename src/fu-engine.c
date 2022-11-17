@@ -6310,9 +6310,11 @@ fu_engine_is_uid_trusted(FuEngine *self, guint64 calling_uid)
 {
 	GArray *trusted;
 
+#ifndef HAVE_POLKIT
 	/* root is always trusted */
 	if (calling_uid == 0)
 		return TRUE;
+#endif
 
 	trusted = fu_config_get_trusted_uids(self->config);
 	for (guint i = 0; i < trusted->len; i++) {
