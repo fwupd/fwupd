@@ -13,3 +13,5 @@ Plugin = goodixmoc
 Plugin = goodixmoc
 [USB\VID_27C6&PID_659A]
 Plugin = goodixmoc
+[USB\VID_27C6&PID_609C]
+Plugin = goodixmoc
