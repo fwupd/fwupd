@@ -44,6 +44,7 @@ fwupd_engine_src = [
   'fu-engine-request.c',
   'fu-history.c',
   'fu-idle.c',
+  'fu-polkit-authority.c',
   'fu-release.c',
   'fu-release-common.c',
   'fu-keyring-utils.c',
