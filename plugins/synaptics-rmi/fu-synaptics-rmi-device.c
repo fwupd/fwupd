@@ -550,7 +550,11 @@ fu_synaptics_rmi_device_setup(FuDevice *device, GError **error)
 				 f01_basic->data[3],
 				 priv->flash.build_id);
 	fu_device_set_version(device, fw_ver);
-	bl_ver = g_strdup_printf("%u.0.0", priv->flash.bootloader_id[1]);
+	if (priv->f34->function_version == 0x0 || priv->f34->function_version == 0x1) {
+		bl_ver = g_strdup_printf("%c.0.0", priv->flash.bootloader_id[1]);
+	} else {
+		bl_ver = g_strdup_printf("%u.0.0", priv->flash.bootloader_id[1]);
+	}
 	fu_device_set_version_bootloader(device, bl_ver);
 
 	/* success */
