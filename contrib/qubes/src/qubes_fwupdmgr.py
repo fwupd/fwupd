@@ -16,7 +16,7 @@ import sys
 import xml.etree.ElementTree as ET
 
 from pathlib import Path
-from packaging.version import Version
+from packaging import version as pversion
 
 FWUPD_QUBES_DIR = "/usr/share/qubes-fwupd"
 USBVM_N = "sys-usb"
@@ -400,7 +400,7 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
         self.name = updates_dict[vm_name][choice]["Name"]
         self.version = updates_dict[vm_name][choice]["Releases"][0]["Version"]
         for ver_check in updates_dict[vm_name][choice]["Releases"]:
-            if Version(ver_check["Version"]) >= Version(self.version):
+            if pversion.parse(ver_check["Version"]) >= pversion.parse(self.version):
                 self.version = ver_check["Version"]
                 self.url = ver_check["Url"]
                 self.sha = ver_check["Checksum"]
@@ -447,7 +447,9 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
             raise ValueError("No vendor information in firmware metainfo.")
         if vendor not in dmi_info:
             raise ValueError("Wrong firmware provider.")
-        if not downgrade and Version(version) <= Version(self.dmi_version):
+        if not downgrade and pversion.parse(version) <= pversion.parse(
+            self.dmi_version
+        ):
             raise ValueError(f"{version} < {self.dmi_version} Downgrade not allowed")
 
     def _get_dom0_devices(self):
@@ -495,7 +497,9 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
                 )
                 current_version = device["Version"]
                 for update in device["Releases"]:
-                    if Version(update["Version"]) > current_version:
+                    if pversion.parse(update["Version"]) > pversion.parse(
+                        current_version
+                    ):
                         self.usbvm_updates_list[-1]["Releases"].append(
                             {
                                 "Version": update["Version"],
@@ -574,7 +578,8 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
                                 "Checksum": downgrade["Checksum"][-1],
                             }
                             for downgrade in device["Releases"]
-                            if Version(downgrade["Version"]) < Version(version)
+                            if pversion.parse(downgrade["Version"])
+                            < pversion.parse(version)
                         ],
                     }
                 )
