@@ -494,48 +494,54 @@ fu_synaptics_rmi_v5_device_setup(FuSynapticsRmiDevice *self, GError **error)
 	flash->bootloader_id[0] = f34_data0->data[0];
 	flash->bootloader_id[1] = f34_data0->data[1];
 
-	/* get flash properties */
-	buf_flash_properties2 = fu_synaptics_rmi_device_read(self, f34->query_base + 0x9, 1, error);
-	if (buf_flash_properties2 == NULL) {
-		g_prefix_error(error, "failed to read Flash Properties 2: ");
-		return FALSE;
-	}
-	if (!fu_memread_uint8_safe(buf_flash_properties2->data,
-				   buf_flash_properties2->len,
-				   0x0, /* offset */
-				   &flash_properties2,
-				   error)) {
-		g_prefix_error(error, "failed to parse Flash Properties 2: ");
-		return FALSE;
-	}
-	if (flash_properties2 & 0x01) {
-		guint16 sig_size = 0;
-		g_autoptr(GByteArray) buf_rsa_key = NULL;
-		buf_rsa_key =
-		    fu_synaptics_rmi_device_read(self, f34->query_base + 0x9 + 0x1, 2, error);
-		if (buf_rsa_key == NULL) {
-			g_prefix_error(error, "failed to read RSA key length: ");
-			return FALSE;
-		}
-		if (!fu_memread_uint16_safe(buf_rsa_key->data,
-					    buf_rsa_key->len,
-					    0x0, /* offset */
-					    &sig_size,
-					    G_LITTLE_ENDIAN,
-					    error)) {
-			g_prefix_error(error, "failed to parse RSA key length: ");
-			return FALSE;
-		}
-		fu_synaptics_rmi_device_set_sig_size(self, sig_size);
-		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
-	} else {
-		fu_synaptics_rmi_device_set_sig_size(self, 0);
-	}
-
-	/* get flash properties */
+	/* get flash properties1 */
 	f34_data2 = fu_synaptics_rmi_device_read(self, f34->query_base + 0x2, 0x7, error);
 	if (f34_data2 == NULL)
 		return FALSE;
+
+	if (f34_data2->data[0] & 0x80) {
+		/* get flash properties2 */
+		buf_flash_properties2 =
+		    fu_synaptics_rmi_device_read(self, f34->query_base + 0x9, 1, error);
+		if (buf_flash_properties2 == NULL) {
+			g_prefix_error(error, "failed to read Flash Properties 2: ");
+			return FALSE;
+		}
+		if (!fu_memread_uint8_safe(buf_flash_properties2->data,
+					   buf_flash_properties2->len,
+					   0x0, /* offset */
+					   &flash_properties2,
+					   error)) {
+			g_prefix_error(error, "failed to parse Flash Properties 2: ");
+			return FALSE;
+		}
+		if (flash_properties2 & 0x01) {
+			guint16 sig_size = 0;
+			g_autoptr(GByteArray) buf_rsa_key = NULL;
+			buf_rsa_key = fu_synaptics_rmi_device_read(self,
+								   f34->query_base + 0x9 + 0x1,
+								   2,
+								   error);
+			if (buf_rsa_key == NULL) {
+				g_prefix_error(error, "failed to read RSA key length: ");
+				return FALSE;
+			}
+			if (!fu_memread_uint16_safe(buf_rsa_key->data,
+						    buf_rsa_key->len,
+						    0x0, /* offset */
+						    &sig_size,
+						    G_LITTLE_ENDIAN,
+						    error)) {
+				g_prefix_error(error, "failed to parse RSA key length: ");
+				return FALSE;
+			}
+			fu_synaptics_rmi_device_set_sig_size(self, sig_size);
+			fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
+		} else {
+			fu_synaptics_rmi_device_set_sig_size(self, 0);
+		}
+	}
+
 	if (!fu_memread_uint16_safe(f34_data2->data,
 				    f34_data2->len,
 				    RMI_F34_BLOCK_SIZE_OFFSET,
