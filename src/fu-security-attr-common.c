@@ -333,7 +333,7 @@ fu_security_attr_get_title(FwupdSecurityAttr *attr)
 	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_MEI_KEY_MANIFEST) == 0) {
 		/* TRANSLATORS: Title: MEI = Intel Management Engine, and key refers
 		 * to the private/public key used to secure loading of firmware */
-		return g_strdup(_("MEI Key Manifest"));
+		return _("MEI Key Manifest");
 	}
 	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_MEI_VERSION) == 0) {
 		/* TRANSLATORS: Title: MEI = Intel Management Engine */
