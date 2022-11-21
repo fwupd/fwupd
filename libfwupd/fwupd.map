@@ -867,3 +867,9 @@ LIBFWUPD_1.8.7 {
     fwupd_device_has_checksum;
   local: *;
 } LIBFWUPD_1.8.6;
+
+LIBFWUPD_1.8.8 {
+  global:
+    fwupd_release_incorporate;
+  local: *;
+} LIBFWUPD_1.8.7;

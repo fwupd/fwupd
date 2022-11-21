@@ -589,6 +589,7 @@ fwupd_release_func(void)
 	g_autofree gchar *str = NULL;
 	g_autoptr(FwupdRelease) release1 = NULL;
 	g_autoptr(FwupdRelease) release2 = NULL;
+	g_autoptr(FwupdRelease) release3 = fwupd_release_new();
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GVariant) data = NULL;
 
@@ -719,6 +720,13 @@ fwupd_release_func(void)
 				    &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
+
+	/* copy properties */
+	fwupd_release_incorporate(release3, release2);
+	g_assert_cmpstr(fwupd_release_get_metadata_item(release3, "foo"), ==, "bar");
+	g_assert_cmpstr(fwupd_release_get_remote_id(release3), ==, "remote-id");
+	g_assert_cmpstr(fwupd_release_get_appstream_id(release3), ==, "appstream-id");
+	g_assert_cmpstr(fwupd_release_get_id(release3), ==, "id");
 }
 
 static void

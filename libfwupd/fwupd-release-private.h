@@ -16,5 +16,7 @@ GVariant *
 fwupd_release_to_variant(FwupdRelease *self);
 void
 fwupd_release_to_json(FwupdRelease *self, JsonBuilder *builder);
+void
+fwupd_release_incorporate(FwupdRelease *self, FwupdRelease *donor);
 
 G_END_DECLS
