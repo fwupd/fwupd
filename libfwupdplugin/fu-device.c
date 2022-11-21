@@ -4018,28 +4018,6 @@ fu_device_get_context(FuDevice *self)
 }
 
 /**
- * fu_device_get_release_default:
- * @self: a #FuDevice
- *
- * Gets the default release for the device, creating one if not found.
- *
- * Returns: (transfer none): the #FwupdRelease object
- *
- * Since: 1.0.5
- **/
-FwupdRelease *
-fu_device_get_release_default(FuDevice *self)
-{
-	g_autoptr(FwupdRelease) rel = NULL;
-	g_return_val_if_fail(FU_IS_DEVICE(self), NULL);
-	if (fwupd_device_get_release_default(FWUPD_DEVICE(self)) != NULL)
-		return fwupd_device_get_release_default(FWUPD_DEVICE(self));
-	rel = fwupd_release_new();
-	fwupd_device_add_release(FWUPD_DEVICE(self), rel);
-	return rel;
-}
-
-/**
  * fu_device_get_results:
  * @self: a #FuDevice
  * @error: (nullable): optional return location for an error

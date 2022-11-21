@@ -139,17 +139,11 @@ LIBFWUPDPLUGIN_1.0.4 {
   local: *;
 } LIBFWUPDPLUGIN_1.0.3;
 
-LIBFWUPDPLUGIN_1.0.5 {
-  global:
-    fu_device_get_release_default;
-  local: *;
-} LIBFWUPDPLUGIN_1.0.4;
-
 LIBFWUPDPLUGIN_1.0.6 {
   global:
     fu_plugin_get_config_value;
   local: *;
-} LIBFWUPDPLUGIN_1.0.5;
+} LIBFWUPDPLUGIN_1.0.4;
 
 LIBFWUPDPLUGIN_1.0.8 {
   global:

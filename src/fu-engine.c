@@ -4737,11 +4737,11 @@ fu_engine_get_details_for_bytes(FuEngine *self,
 	for (guint i = 0; i < components->len; i++) {
 		XbNode *component = g_ptr_array_index(components, i);
 		FuDevice *dev;
-		FwupdRelease *rel;
+		g_autoptr(FwupdRelease) rel = fwupd_release_new();
 		dev = fu_engine_get_result_from_component(self, request, component, error);
 		if (dev == NULL)
 			return NULL;
-		rel = fu_device_get_release_default(dev);
+		fu_device_add_release(dev, rel);
 		if (remote_id != NULL) {
 			fwupd_release_set_remote_id(rel, remote_id);
 			fu_device_add_flag(dev, FWUPD_DEVICE_FLAG_SUPPORTED);

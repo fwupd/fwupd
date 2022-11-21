@@ -3310,7 +3310,7 @@ fu_plugin_module_func(gconstpointer user_data)
 	FuTest *self = (FuTest *)user_data;
 	GError *error = NULL;
 	FuDevice *device_tmp;
-	FwupdRelease *release;
+	FwupdRelease *release_tmp;
 	gboolean ret;
 	guint cnt = 0;
 	g_autofree gchar *localstatedir = NULL;
@@ -3323,6 +3323,7 @@ fu_plugin_module_func(gconstpointer user_data)
 	g_autoptr(FuEngine) engine = fu_engine_new();
 	g_autoptr(FuHistory) history = NULL;
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(FwupdRelease) release = fwupd_release_new();
 	g_autoptr(GBytes) blob_cab = NULL;
 	g_autoptr(GMappedFile) mapped_file = NULL;
 	g_autoptr(XbSilo) silo_empty = xb_silo_new();
@@ -3374,7 +3375,6 @@ fu_plugin_module_func(gconstpointer user_data)
 	g_assert_no_error(error);
 	g_assert_nonnull(mapped_file);
 	blob_cab = g_mapped_file_get_bytes(mapped_file);
-	release = fu_device_get_release_default(device);
 	fwupd_release_set_version(release, "1.2.3");
 	ret = fu_engine_schedule_update(engine,
 					device,
@@ -3396,13 +3396,13 @@ fu_plugin_module_func(gconstpointer user_data)
 	g_assert_cmpint(fu_device_get_update_state(device2), ==, FWUPD_UPDATE_STATE_PENDING);
 	g_assert_cmpstr(fu_device_get_update_error(device2), ==, NULL);
 	g_assert_true(fu_device_has_flag(device2, FWUPD_DEVICE_FLAG_NEEDS_REBOOT));
-	release = fu_device_get_release_default(device2);
-	g_assert_nonnull(release);
-	g_assert_cmpstr(fwupd_release_get_filename(release), !=, NULL);
-	g_assert_cmpstr(fwupd_release_get_version(release), ==, "1.2.3");
+	release_tmp = fu_device_get_release_default(device2);
+	g_assert_nonnull(release_tmp);
+	g_assert_cmpstr(fwupd_release_get_filename(release_tmp), !=, NULL);
+	g_assert_cmpstr(fwupd_release_get_version(release_tmp), ==, "1.2.3");
 
 	/* save this; we'll need to delete it later */
-	pending_cap = g_strdup(fwupd_release_get_filename(release));
+	pending_cap = g_strdup(fwupd_release_get_filename(release_tmp));
 
 	/* lets do this online */
 	fu_engine_add_device(engine, device);
