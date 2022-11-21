@@ -204,6 +204,7 @@ fu_device_new(FuContext *ctx);
 #define fu_device_get_protocols(d)	    fwupd_device_get_protocols(FWUPD_DEVICE(d))
 #define fu_device_get_flashes_left(d)	    fwupd_device_get_flashes_left(FWUPD_DEVICE(d))
 #define fu_device_get_install_duration(d)   fwupd_device_get_install_duration(FWUPD_DEVICE(d))
+#define fu_device_get_release_default(d)    fwupd_device_get_release_default(FWUPD_DEVICE(d))
 
 /**
  * FuDeviceInternalFlags:
@@ -618,8 +619,6 @@ void
 fu_device_set_context(FuDevice *self, FuContext *ctx);
 FuContext *
 fu_device_get_context(FuDevice *self);
-FwupdRelease *
-fu_device_get_release_default(FuDevice *self);
 GType
 fu_device_get_specialized_gtype(FuDevice *self);
 GType
