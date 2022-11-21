@@ -2359,6 +2359,29 @@ fwupd_release_array_from_variant(GVariant *value)
 }
 
 /**
+ * fwupd_release_incorporate:
+ * @self: a #FwupdRelease
+ * @donor: another #FwupdRelease
+ *
+ * Copy all properties from the donor object.
+ *
+ * Since: 1.8.8
+ **/
+void
+fwupd_release_incorporate(FwupdRelease *self, FwupdRelease *donor)
+{
+	g_autoptr(GVariant) variant = NULL;
+	g_autoptr(GVariantIter) iter = NULL;
+
+	g_return_if_fail(FWUPD_IS_RELEASE(self));
+	g_return_if_fail(FWUPD_IS_RELEASE(donor));
+
+	variant = fwupd_release_to_variant(donor);
+	g_variant_get(variant, "a{sv}", &iter);
+	fwupd_release_set_from_variant_iter(self, iter);
+}
+
+/**
  * fwupd_release_new:
  *
  * Creates a new release.
