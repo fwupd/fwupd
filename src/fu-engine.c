@@ -4568,13 +4568,7 @@ fu_engine_get_result_from_component(FuEngine *self,
 			continue;
 		device = fu_device_list_get_by_guid(self->device_list, guid, NULL);
 		if (device != NULL) {
-			fu_device_set_name(dev, fu_device_get_name(device));
-			fu_device_set_flags(dev, fu_device_get_flags(device));
-			fu_device_set_internal_flags(dev, fu_device_get_internal_flags(device));
-			fu_device_set_id(dev, fu_device_get_id(device));
-			fu_device_set_version_raw(dev, fu_device_get_version_raw(device));
-			fu_device_set_version_format(dev, fu_device_get_version_format(device));
-			fu_device_set_version(dev, fu_device_get_version(device));
+			fu_device_incorporate(dev, device);
 		} else {
 			fu_device_inhibit(dev, "not-found", "Device was not found");
 		}
