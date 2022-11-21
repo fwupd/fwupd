@@ -7318,10 +7318,10 @@ fu_engine_update_history_device(FuEngine *self, FuDevice *dev_history, GError **
 	metadata_device = fu_device_report_metadata_post(dev);
 	if (metadata_device != NULL && g_hash_table_size(metadata_device) > 0) {
 		fwupd_release_add_metadata(rel_history, metadata_device);
-		if (!fu_history_set_device_metadata(self->history,
-						    fu_device_get_id(dev_history),
-						    fwupd_release_get_metadata(rel_history),
-						    error)) {
+		if (!fu_history_modify_device_release(self->history,
+						      dev_history,
+						      rel_history,
+						      error)) {
 			g_prefix_error(error, "failed to set metadata: ");
 			return FALSE;
 		}
@@ -7353,7 +7353,10 @@ fu_engine_update_history_device(FuEngine *self, FuDevice *dev_history, GError **
 		fu_device_set_version(dev_history, fu_device_get_version(dev));
 		fu_device_remove_flag(dev_history, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
 		fu_device_set_update_state(dev_history, FWUPD_UPDATE_STATE_SUCCESS);
-		return fu_history_modify_device(self->history, dev_history, error);
+		return fu_history_modify_device_release(self->history,
+							dev_history,
+							rel_history,
+							error);
 	}
 
 	/* does the plugin know the update failure */
@@ -7372,7 +7375,7 @@ fu_engine_update_history_device(FuEngine *self, FuDevice *dev_history, GError **
 	}
 
 	/* update the state in the database */
-	return fu_history_modify_device(self->history, dev_history, error);
+	return fu_history_modify_device_release(self->history, dev_history, rel_history, error);
 }
 
 static gboolean
