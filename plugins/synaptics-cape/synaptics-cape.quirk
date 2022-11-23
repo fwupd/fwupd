@@ -24,6 +24,12 @@ Flags = use-in-report-interrupt
 Guid = SYNAPTICS_CAPE\CX31993
 Flags = use-in-report-interrupt
 
+# This is the outdated PID for 0x0298
+[USB\VID_1395&PID_0286]
+Guid = SYNAPTICS_CAPE\CX31993
+Flags = add-counterpart-guids
+CounterpartGuid = USB\VID_1395&PID_0298
+
 [USB\VID_1395&PID_0298]
 Guid = SYNAPTICS_CAPE\CX31993
 Flags = use-in-report-interrupt
