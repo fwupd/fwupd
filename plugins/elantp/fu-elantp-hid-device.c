@@ -53,6 +53,8 @@ fu_elantp_hid_device_to_string(FuDevice *device, guint idt, GString *str)
 static gboolean
 fu_elantp_hid_device_probe(FuDevice *device, GError **error)
 {
+	guint16 did;
+
 	/* check is valid */
 	if (g_strcmp0(fu_udev_device_get_subsystem(FU_UDEV_DEVICE(device)), "hidraw") != 0) {
 		g_set_error(error,
@@ -63,9 +65,10 @@ fu_elantp_hid_device_probe(FuDevice *device, GError **error)
 		return FALSE;
 	}
 
+	did = fu_udev_device_get_model(FU_UDEV_DEVICE(device));
+
 	/* i2c-hid */
-	if (fu_udev_device_get_model(FU_UDEV_DEVICE(device)) < 0x400 ||
-	    fu_udev_device_get_model(FU_UDEV_DEVICE(device)) >= 0x4000) {
+	if (did != 0x400 && (did < 0x3000 || did >= 0x4000)) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
