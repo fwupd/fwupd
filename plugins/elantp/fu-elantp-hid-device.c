@@ -64,7 +64,7 @@ fu_elantp_hid_device_probe(FuDevice *device, GError **error)
 	}
 
 	/* i2c-hid */
-	if (fu_udev_device_get_model(FU_UDEV_DEVICE(device)) < 0x3000 ||
+	if (fu_udev_device_get_model(FU_UDEV_DEVICE(device)) < 0x400 ||
 	    fu_udev_device_get_model(FU_UDEV_DEVICE(device)) >= 0x4000) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
