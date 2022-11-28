@@ -512,6 +512,10 @@ fu_intel_usb4_device_setup(FuDevice *device, GError **error)
 	g_autoptr(FuFirmware) fw = fu_intel_thunderbolt_nvm_new();
 	g_autoptr(GBytes) blob = NULL;
 
+	/* FuUsbDevice->setup */
+	if (!FU_DEVICE_CLASS(fu_intel_usb4_device_parent_class)->setup(device, error))
+		return FALSE;
+
 	/* read from device and parse firmware */
 	if (!fu_intel_usb4_device_nvm_read(device, buf, sizeof(buf), 0, error)) {
 		g_prefix_error(error, "NVM read error: ");
