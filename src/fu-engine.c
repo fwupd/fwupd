@@ -2006,6 +2006,28 @@ fu_engine_get_boot_time(void)
 	return NULL;
 }
 
+static void
+fu_engine_get_report_metadata_cpu_device(FuEngine *self, GHashTable *hash)
+{
+	g_autofree gchar *guid = fwupd_guid_hash_string("cpu");
+	g_autoptr(FuDevice) device = NULL;
+	g_autoptr(GError) error_local = NULL;
+
+	device = fu_device_list_get_by_guid(self->device_list, guid, &error_local);
+	if (device == NULL) {
+		g_debug("failed to find CPU device: %s", error_local->message);
+		return;
+	}
+	if (fu_device_get_vendor(device) == NULL || fu_device_get_name(device) == NULL) {
+		g_debug("not enough data to include CpuModel");
+		return;
+	}
+	g_hash_table_insert(
+	    hash,
+	    g_strdup("CpuModel"),
+	    g_strdup_printf("%s %s", fu_device_get_vendor(device), fu_device_get_name(device)));
+}
+
 static gboolean
 fu_engine_get_report_metadata_os_release(GHashTable *hash, GError **error)
 {
@@ -2014,6 +2036,8 @@ fu_engine_get_report_metadata_os_release(GHashTable *hash, GError **error)
 		const gchar *key;
 		const gchar *val;
 	} distro_kv[] = {{"ID", "DistroId"},
+			 {"NAME", "DistroName"},
+			 {"PRETTY_NAME", "DistroPrettyName"},
 			 {"VERSION_ID", "DistroVersion"},
 			 {"VARIANT_ID", "DistroVariant"},
 			 {NULL, NULL}};
@@ -2189,6 +2213,7 @@ fu_engine_get_report_metadata(FuEngine *self, GError **error)
 				    g_strdup_printf("RuntimeVersion(%s)", id),
 				    g_strdup(version));
 	}
+	fu_engine_get_report_metadata_cpu_device(self, hash);
 	if (!fu_engine_get_report_metadata_os_release(hash, error))
 		return NULL;
 	if (!fu_engine_get_report_metadata_kernel_cmdline(hash, error))
