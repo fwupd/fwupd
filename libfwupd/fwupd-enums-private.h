@@ -491,6 +491,14 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_RESULT_KEY_VERSION "Version"
 /**
+ * FWUPD_RESULT_KEY_VERSION_OLD:
+ *
+ * Result key to represent the old version string.
+ *
+ * The D-Bus type signature string is 's' i.e. a string.
+ **/
+#define FWUPD_RESULT_KEY_VERSION_OLD "VersionOld"
+/**
  * FWUPD_RESULT_KEY_BATTERY_LEVEL:
  *
  * Result key to represent the current battery level in percent.
@@ -582,5 +590,45 @@ G_BEGIN_DECLS
  * The D-Bus type signature string is 'b' i.e. a boolean.
  **/
 #define FWUPD_RESULT_KEY_BIOS_SETTING_READ_ONLY "BiosSettingReadOnly"
+/**
+ * FWUPD_RESULT_KEY_DISTRO_ID:
+ *
+ * Result key to represent the distribution ID.
+ *
+ * The D-Bus type signature string is 's' i.e. a string.
+ **/
+#define FWUPD_RESULT_KEY_DISTRO_ID "DistroId"
+/**
+ * FWUPD_RESULT_KEY_DISTRO_VARIANT:
+ *
+ * Result key to represent the distribution variant.
+ *
+ * The D-Bus type signature string is 's' i.e. a string.
+ **/
+#define FWUPD_RESULT_KEY_DISTRO_VARIANT "DistroVariant"
+/**
+ * FWUPD_RESULT_KEY_DISTRO_VERSION:
+ *
+ * Result key to represent the distribution version.
+ *
+ * The D-Bus type signature string is 's' i.e. a string.
+ **/
+#define FWUPD_RESULT_KEY_DISTRO_VERSION "DistroVersion"
+/**
+ * FWUPD_RESULT_KEY_REPORTS:
+ *
+ * Result key to represent an array of reports.
+ *
+ * The D-Bus type signature string is 'a{sv}' i.e. a variant dictionary.
+ **/
+#define FWUPD_RESULT_KEY_REPORTS "Reports"
+/**
+ * FWUPD_RESULT_KEY_DEVICE_NAME:
+ *
+ * Result key to represent the device name.
+ *
+ * The D-Bus type signature string is 's' i.e. a string.
+ **/
+#define FWUPD_RESULT_KEY_DEVICE_NAME "DeviceName"
 
 G_END_DECLS

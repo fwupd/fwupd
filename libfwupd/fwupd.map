@@ -870,6 +870,33 @@ LIBFWUPD_1.8.7 {
 
 LIBFWUPD_1.8.8 {
   global:
+    fwupd_release_add_report;
+    fwupd_release_get_reports;
     fwupd_release_incorporate;
+    fwupd_report_add_metadata_item;
+    fwupd_report_from_variant;
+    fwupd_report_get_created;
+    fwupd_report_get_device_name;
+    fwupd_report_get_distro_id;
+    fwupd_report_get_distro_variant;
+    fwupd_report_get_distro_version;
+    fwupd_report_get_metadata;
+    fwupd_report_get_metadata_item;
+    fwupd_report_get_type;
+    fwupd_report_get_vendor;
+    fwupd_report_get_vendor_id;
+    fwupd_report_get_version_old;
+    fwupd_report_new;
+    fwupd_report_set_created;
+    fwupd_report_set_device_name;
+    fwupd_report_set_distro_id;
+    fwupd_report_set_distro_variant;
+    fwupd_report_set_distro_version;
+    fwupd_report_set_vendor;
+    fwupd_report_set_vendor_id;
+    fwupd_report_set_version_old;
+    fwupd_report_to_json;
+    fwupd_report_to_string;
+    fwupd_report_to_variant;
   local: *;
 } LIBFWUPD_1.8.7;
