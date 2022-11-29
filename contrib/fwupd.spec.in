@@ -359,7 +359,7 @@ done
 %{_bindir}/fwupdagent
 %dir %{_sysconfdir}/fwupd
 %dir %{_sysconfdir}/fwupd/bios-settings.d
-%config%(noreplace)%{_sysconfdir}/fwupd/bios-settings.d/README.md
+%{_sysconfdir}/fwupd/bios-settings.d/README.md
 %dir %{_sysconfdir}/fwupd/remotes.d
 %if 0%{?have_dell}
 %config(noreplace)%{_sysconfdir}/fwupd/remotes.d/dell-esrt.conf
