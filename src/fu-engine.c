@@ -2035,11 +2035,11 @@ fu_engine_get_report_metadata_os_release(GHashTable *hash, GError **error)
 	struct {
 		const gchar *key;
 		const gchar *val;
-	} distro_kv[] = {{"ID", "DistroId"},
+	} distro_kv[] = {{"ID", FWUPD_RESULT_KEY_DISTRO_ID},
 			 {"NAME", "DistroName"},
 			 {"PRETTY_NAME", "DistroPrettyName"},
-			 {"VERSION_ID", "DistroVersion"},
-			 {"VARIANT_ID", "DistroVariant"},
+			 {"VERSION_ID", FWUPD_RESULT_KEY_DISTRO_VERSION},
+			 {"VARIANT_ID", FWUPD_RESULT_KEY_DISTRO_VARIANT},
 			 {NULL, NULL}};
 
 	/* get all required os-release keys */
