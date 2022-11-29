@@ -246,12 +246,67 @@ fu_release_get_release_version(FuRelease *self, const gchar *version, GError **e
 }
 
 static gboolean
+fu_release_load_test_result(FuRelease *self, XbNode *n, GError **error)
+{
+	XbNode *c;
+	const gchar *tmp;
+	g_autoptr(FwupdReport) report = fwupd_report_new();
+	g_autoptr(GPtrArray) custom = NULL;
+
+	tmp = xb_node_get_attr(n, "date");
+	if (tmp != NULL) {
+		g_autoptr(GDateTime) dt = NULL;
+		g_autofree gchar *iso8601 = g_strdup_printf("%sT00:00:00Z", tmp);
+		dt = g_date_time_new_from_iso8601(iso8601, NULL);
+		if (dt != NULL)
+			fwupd_report_set_created(report, g_date_time_to_unix(dt));
+	}
+	tmp = xb_node_query_text(n, "device", NULL);
+	if (tmp != NULL)
+		fwupd_report_set_device_name(report, tmp);
+	tmp = xb_node_query_text(n, "previous_version", NULL);
+	if (tmp != NULL)
+		fwupd_report_set_version_old(report, tmp);
+	c = xb_node_query_first(n, "vendor_name", NULL);
+	if (c != NULL) {
+		guint64 vendor_id = xb_node_get_attr_as_uint(c, "id");
+		fwupd_report_set_vendor(report, xb_node_get_text(c));
+		if (vendor_id != G_MAXUINT64)
+			fwupd_report_set_vendor_id(report, vendor_id);
+	}
+	c = xb_node_query_first(n, "os", NULL);
+	if (c != NULL) {
+		tmp = xb_node_get_attr(c, "version");
+		if (tmp != NULL)
+			fwupd_report_set_distro_version(report, tmp);
+		tmp = xb_node_get_attr(c, "variant");
+		if (tmp != NULL)
+			fwupd_report_set_distro_variant(report, tmp);
+		fwupd_report_set_distro_id(report, xb_node_get_text(c));
+	}
+	custom = xb_node_query(n, "custom/value", 0, NULL);
+	if (custom != NULL) {
+		for (guint i = 0; i < custom->len; i++) {
+			c = g_ptr_array_index(custom, i);
+			fwupd_report_add_metadata_item(report,
+						       xb_node_get_attr(c, "key"),
+						       xb_node_get_text(c));
+		}
+	}
+
+	/* success */
+	fwupd_release_add_report(FWUPD_RELEASE(self), report);
+	return TRUE;
+}
+
+static gboolean
 fu_release_load_artifact(FuRelease *self, XbNode *artifact, GError **error)
 {
 	const gchar *filename;
 	guint64 size;
 	g_autoptr(GPtrArray) locations = NULL;
 	g_autoptr(GPtrArray) checksums = NULL;
+	g_autoptr(GPtrArray) test_result = NULL;
 
 	/* filename */
 	filename = xb_node_query_text(artifact, "filename", NULL);
@@ -300,6 +355,16 @@ fu_release_load_artifact(FuRelease *self, XbNode *artifact, GError **error)
 		for (guint i = 0; i < checksums->len; i++) {
 			XbNode *n = g_ptr_array_index(checksums, i);
 			fwupd_release_add_checksum(FWUPD_RELEASE(self), xb_node_get_text(n));
+		}
+	}
+
+	/* test results */
+	test_result = xb_node_query(artifact, "testing/test_result", 0, NULL);
+	if (test_result != NULL) {
+		for (guint i = 0; i < test_result->len; i++) {
+			XbNode *n = g_ptr_array_index(test_result, i);
+			if (!fu_release_load_test_result(self, n, error))
+				return FALSE;
 		}
 	}
 

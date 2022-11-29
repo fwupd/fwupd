@@ -18,6 +18,7 @@
 #include <libfwupd/fwupd-plugin.h>
 #include <libfwupd/fwupd-release.h>
 #include <libfwupd/fwupd-remote.h>
+#include <libfwupd/fwupd-report.h>
 #include <libfwupd/fwupd-request.h>
 #include <libfwupd/fwupd-security-attr.h>
 #include <libfwupd/fwupd-version.h>

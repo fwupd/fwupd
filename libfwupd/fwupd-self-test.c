@@ -22,6 +22,7 @@
 #include "fwupd-plugin-private.h"
 #include "fwupd-release-private.h"
 #include "fwupd-remote-private.h"
+#include "fwupd-report-private.h"
 #include "fwupd-request-private.h"
 #include "fwupd-security-attr-private.h"
 
@@ -727,6 +728,92 @@ fwupd_release_func(void)
 	g_assert_cmpstr(fwupd_release_get_remote_id(release3), ==, "remote-id");
 	g_assert_cmpstr(fwupd_release_get_appstream_id(release3), ==, "appstream-id");
 	g_assert_cmpstr(fwupd_release_get_id(release3), ==, "id");
+}
+
+static gchar *
+fwupd_report_to_json_string(FwupdReport *report, GError **error)
+{
+	g_autofree gchar *data = NULL;
+	g_autoptr(JsonGenerator) json_generator = NULL;
+	g_autoptr(JsonBuilder) builder = json_builder_new();
+	g_autoptr(JsonNode) json_root = NULL;
+	json_builder_begin_object(builder);
+	fwupd_report_to_json(report, builder);
+	json_builder_end_object(builder);
+	json_root = json_builder_get_root(builder);
+	json_generator = json_generator_new();
+	json_generator_set_pretty(json_generator, TRUE);
+	json_generator_set_root(json_generator, json_root);
+	data = json_generator_to_data(json_generator, NULL);
+	if (data == NULL) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "Failed to convert report to json.");
+		return NULL;
+	}
+	return g_steal_pointer(&data);
+}
+
+static void
+fwupd_report_func(void)
+{
+	gboolean ret;
+	g_autofree gchar *json1 = NULL;
+	g_autofree gchar *json2 = NULL;
+	g_autofree gchar *str = NULL;
+	g_autoptr(FwupdReport) report1 = NULL;
+	g_autoptr(FwupdReport) report2 = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GVariant) data = NULL;
+
+	report1 = fwupd_report_new();
+	fwupd_report_add_metadata_item(report1, "foo", "bar");
+	fwupd_report_add_metadata_item(report1, "baz", "bam");
+	fwupd_report_set_version_old(report1, "1.2.3");
+	fwupd_report_set_created(report1, 5678);
+	fwupd_report_set_vendor(report1, "acme");
+	fwupd_report_set_vendor_id(report1, 2468);
+	fwupd_report_set_device_name(report1, "name");
+	fwupd_report_set_distro_id(report1, "distro_id");
+	fwupd_report_set_distro_version(report1, "distro_version");
+	data = fwupd_report_to_variant(report1);
+	report2 = fwupd_report_from_variant(data);
+	g_assert_cmpstr(fwupd_report_get_metadata_item(report2, "foo"), ==, "bar");
+	g_assert_cmpstr(fwupd_report_get_metadata_item(report2, "baz"), ==, "bam");
+	g_assert_cmpstr(fwupd_report_get_version_old(report2), ==, "1.2.3");
+	g_assert_cmpstr(fwupd_report_get_vendor(report2), ==, "acme");
+	g_assert_cmpint(fwupd_report_get_vendor_id(report2), ==, 2468);
+	g_assert_cmpstr(fwupd_report_get_device_name(report2), ==, "name");
+	g_assert_cmpstr(fwupd_report_get_distro_id(report2), ==, "distro_id");
+	g_assert_cmpstr(fwupd_report_get_distro_version(report2), ==, "distro_version");
+	g_assert_cmpint(fwupd_report_get_created(report2), ==, 5678);
+
+	/* to JSON */
+	json1 = fwupd_report_to_json_string(report1, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(json1);
+	json2 = fwupd_report_to_json_string(report2, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(json2);
+	ret = fu_test_compare_lines(json1, json2, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* to string */
+	str = fwupd_report_to_string(report2);
+	ret = fu_test_compare_lines(str,
+				    "  DeviceName:           name\n"
+				    "  DistroId:             distro_id\n"
+				    "  DistroVersion:        distro_version\n"
+				    "  VersionOld:           1.2.3\n"
+				    "  Vendor:               acme\n"
+				    "  VendorId:             2468\n"
+				    "  foo:                  bar\n"
+				    "  baz:                  bam\n",
+				    &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
 }
 
 static void
@@ -1545,6 +1632,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/common{device-id}", fwupd_common_device_id_func);
 	g_test_add_func("/fwupd/common{guid}", fwupd_common_guid_func);
 	g_test_add_func("/fwupd/release", fwupd_release_func);
+	g_test_add_func("/fwupd/report", fwupd_report_func);
 	g_test_add_func("/fwupd/plugin", fwupd_plugin_func);
 	g_test_add_func("/fwupd/request", fwupd_request_func);
 	g_test_add_func("/fwupd/device", fwupd_device_func);
