@@ -604,7 +604,7 @@ custom_target('builtin-quirk-gz',
   input: builtin_quirk,
   output: 'builtin.quirk.gz',
   capture: true,
-  command: [gzip, '-k', '--stdout', '@INPUT@'],
+  command: [gzip, '-n', '-k', '--stdout', '@INPUT@'],
   install: true,
   install_dir: join_paths(datadir, 'fwupd', 'quirks.d'),
 )
