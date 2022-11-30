@@ -353,7 +353,7 @@ fu_superio_it55_device_write_attempt(FuDevice *device,
 	erased_fw =
 	    fu_superio_it55_device_get_firmware(device, fu_progress_get_child(progress), error);
 	if (erased_fw == NULL) {
-		g_prefix_error(error, "failed to read erased firmware");
+		g_prefix_error(error, "failed to read erased firmware: ");
 		return FALSE;
 	}
 	if (!fu_bytes_is_empty(erased_fw)) {
@@ -422,11 +422,11 @@ fu_superio_it55_device_write_attempt(FuDevice *device,
 	written_fw =
 	    fu_superio_it55_device_get_firmware(device, fu_progress_get_child(progress), error);
 	if (written_fw == NULL) {
-		g_prefix_error(error, "failed to read firmware");
+		g_prefix_error(error, "failed to read firmware: ");
 		return FALSE;
 	}
 	if (!fu_bytes_compare(written_fw, firmware, error)) {
-		g_prefix_error(error, "firmware verification");
+		g_prefix_error(error, "firmware verification: ");
 		return FALSE;
 	}
 	fu_progress_step_done(progress);
@@ -467,7 +467,7 @@ fu_superio_it55_device_write_firmware(FuDevice *device,
 
 	fwsize = g_bytes_get_size(fw);
 	if (fwsize < 1024) {
-		g_prefix_error(error, "firmware is too small: %u", (guint)fwsize);
+		g_prefix_error(error, "firmware is too small %u: ", (guint)fwsize);
 		return FALSE;
 	}
 

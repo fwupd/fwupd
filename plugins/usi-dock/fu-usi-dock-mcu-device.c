@@ -487,7 +487,7 @@ fu_usi_dock_mcu_device_write_chunks(FuUsiDockMcuDevice *self,
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index(chunks, i);
 		if (!fu_usi_dock_mcu_device_write_chunk(self, chk, error)) {
-			g_prefix_error(error, "failed to write chunk 0x%x", i);
+			g_prefix_error(error, "failed to write chunk 0x%x: ", i);
 			return FALSE;
 		}
 		fu_progress_step_done(progress);

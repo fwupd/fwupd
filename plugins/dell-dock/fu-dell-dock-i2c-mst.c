@@ -317,7 +317,7 @@ fu_dell_dock_trigger_rc_command(FuDevice *device, GError **error)
 						    sizeof(guint32),
 						    &bytes,
 						    error)) {
-			g_prefix_error(error, "Failed to poll MST_RC_COMMAND_ADDR");
+			g_prefix_error(error, "Failed to poll MST_RC_COMMAND_ADDR: ");
 			return FALSE;
 		}
 		result = g_bytes_get_data(bytes, NULL);

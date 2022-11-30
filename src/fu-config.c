@@ -259,7 +259,7 @@ fu_config_reload(FuConfig *self, GError **error)
 		for (guint i = 0; uids[i] != NULL; i++) {
 			guint64 val = 0;
 			if (!fu_strtoull(uids[i], &val, 0, G_MAXUINT64, error)) {
-				g_prefix_error(error, "failed to parse UID '%s'", uids[i]);
+				g_prefix_error(error, "failed to parse UID '%s': ", uids[i]);
 				return FALSE;
 			}
 			g_array_append_val(self->trusted_uids, val);

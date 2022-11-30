@@ -513,7 +513,7 @@ fu_elantp_hid_haptic_device_setup(FuDevice *device, GError **error)
 		return FALSE;
 
 	if (!fu_elantp_hid_haptic_device_get_hatpic_driver_ic(FU_DEVICE(parent), self, error)) {
-		g_prefix_error(error, "this module is not support haptic EEPROM.");
+		g_prefix_error(error, "this module is not support haptic EEPROM: ");
 		return FALSE;
 	}
 

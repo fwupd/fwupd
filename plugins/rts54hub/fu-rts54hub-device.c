@@ -104,7 +104,7 @@ fu_rts54hub_device_i2c_write(FuRts54HubDevice *self,
 					   FU_RTS54HUB_DEVICE_TIMEOUT,
 					   NULL,
 					   error)) {
-		g_prefix_error(error, "failed to write I2C");
+		g_prefix_error(error, "failed to write I2C: ");
 		return FALSE;
 	}
 	return TRUE;

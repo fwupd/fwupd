@@ -27,7 +27,7 @@ fu_powerd_plugin_create_suspend_file(GError **error)
 	inhibitsuspend_filename = g_build_filename(lockdir, "power_override", "fwupd.lock", NULL);
 	getpid_str = g_strdup_printf("%d", getpid());
 	if (!g_file_set_contents(inhibitsuspend_filename, getpid_str, -1, error)) {
-		g_prefix_error(error, "lock file unable to be created");
+		g_prefix_error(error, "lock file unable to be created: ");
 		return FALSE;
 	}
 	return TRUE;

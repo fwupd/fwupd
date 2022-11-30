@@ -126,7 +126,7 @@ fu_steelseries_fizz_tunnel_attach(FuDevice *device, FuProgress *progress, GError
 	fu_progress_step_done(progress);
 
 	if (!fu_steelseries_fizz_tunnel_wait_for_reconnect(device, remove_delay, error)) {
-		g_prefix_error(error, "device %s did not come back", fu_device_get_id(device));
+		g_prefix_error(error, "device %s did not come back: ", fu_device_get_id(device));
 		return FALSE;
 	}
 	fu_progress_step_done(progress);

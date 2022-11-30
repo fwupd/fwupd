@@ -178,7 +178,7 @@ fu_rts54hub_rtd21xx_foreground_exit(FuDevice *device, GError **error)
 						  buf,
 						  sizeof(buf),
 						  error)) {
-		g_prefix_error(error, "failed to ISP_CMD_FW_UPDATE_EXIT");
+		g_prefix_error(error, "failed to ISP_CMD_FW_UPDATE_EXIT: ");
 		return FALSE;
 	}
 

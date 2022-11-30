@@ -518,7 +518,7 @@ fu_fpc_device_write_firmware(FuDevice *device,
 					   FALSE,
 					   FALSE,
 					   error)) {
-			g_prefix_error(error, "fail to exit dnload loop:");
+			g_prefix_error(error, "fail to exit dnload loop: ");
 			return FALSE;
 		}
 	}

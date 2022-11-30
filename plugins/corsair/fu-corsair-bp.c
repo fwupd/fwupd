@@ -289,7 +289,7 @@ fu_corsair_bp_write_firmware_chunks(FuCorsairBp *self,
 	for (guint id = 0; id < chunks->len; id++) {
 		FuChunk *chunk = g_ptr_array_index(chunks, id);
 		if (!fu_corsair_bp_write_chunk(self, chunk, error)) {
-			g_prefix_error(error, "cannot write chunk %u", id);
+			g_prefix_error(error, "cannot write chunk %u: ", id);
 			return FALSE;
 		}
 		fu_progress_step_done(progress);
@@ -327,7 +327,7 @@ fu_corsair_bp_write_firmware(FuDevice *device,
 
 	blob = fu_firmware_get_bytes(firmware, error);
 	if (blob == NULL) {
-		g_prefix_error(error, "cannot get firmware data");
+		g_prefix_error(error, "cannot get firmware data: ");
 		return FALSE;
 	}
 	firmware_raw = fu_bytes_get_data_safe(blob, &firmware_size, error);
@@ -383,7 +383,7 @@ fu_corsair_bp_activate_firmware(FuCorsairBp *self, FuFirmware *firmware, GError 
 
 	blob = fu_firmware_get_bytes(firmware, error);
 	if (blob == NULL) {
-		g_prefix_error(error, "cannot get firmware bytes");
+		g_prefix_error(error, "cannot get firmware bytes: ");
 		return FALSE;
 	}
 

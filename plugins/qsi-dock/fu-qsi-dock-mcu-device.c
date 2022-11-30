@@ -358,7 +358,7 @@ fu_qsi_dock_mcu_device_write_chunks(FuQsiDockMcuDevice *self,
 							checksum,
 							fu_progress_get_child(progress),
 							error)) {
-			g_prefix_error(error, "failed to write chunk 0x%x", i);
+			g_prefix_error(error, "failed to write chunk 0x%x: ", i);
 			return FALSE;
 		}
 		fu_progress_step_done(progress);
