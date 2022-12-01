@@ -507,6 +507,14 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
         """Prints help information"""
         self._output_crawler(HELP, 0, help_f=True)
 
+    def check_vms(self):
+        """Checks which VMs are running"""
+        cmd_xl_list = ["xl", "list"]
+        p = subprocess.Popen(cmd_xl_list, stdout=subprocess.PIPE)
+        self.vm_list = p.communicate()[0].decode()
+        if p.returncode != 0:
+            raise Exception("fwupd-qubes: Listing VMs failed")
+
     def trusted_cleanup(self):
         """Deletes trusted directory."""
         trusted_path = os.path.join(FWUPD_DOM0_UPDATES_DIR, "trusted.cab")

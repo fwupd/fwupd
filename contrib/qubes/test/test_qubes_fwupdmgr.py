@@ -58,7 +58,8 @@ def check_whonix_updatevm():
     if "qubes" not in platform.release():
         return False
     q = qfwupd.QubesFwupdmgr()
-    return "sys-whonix" in q.output
+    q.check_vms()
+    return "sys-whonix" in q.vm_list
 
 
 class TestQubesFwupdmgr(unittest.TestCase):
@@ -353,11 +354,9 @@ class TestQubesFwupdmgr(unittest.TestCase):
         user_input = ["1", "6", "sth", "2.2.1", "", " ", "\0", "2"]
         with patch("builtins.input", side_effect=user_input):
             downgrade_list = self.q._parse_downgrades(GET_DEVICES)
-            downgrade_dict = {"dom0": downgrade_list}
-            key, device_choice, downgrade_choice = self.q._user_input(
-                downgrade_dict, downgrade=True
+            device_choice, downgrade_choice = self.q._user_input(
+                downgrade_list, downgrade=True
             )
-        self.assertEqual(key, "dom0")
         self.assertEqual(device_choice, 0)
         self.assertEqual(downgrade_choice, 1)
 
