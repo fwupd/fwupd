@@ -870,6 +870,7 @@ LIBFWUPD_1.8.7 {
 
 LIBFWUPD_1.8.8 {
   global:
+    fwupd_get_os_release_full;
     fwupd_release_add_report;
     fwupd_release_get_reports;
     fwupd_release_incorporate;

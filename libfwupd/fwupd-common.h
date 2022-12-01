@@ -78,6 +78,8 @@ gchar *
 fwupd_build_machine_id(const gchar *salt, GError **error);
 GHashTable *
 fwupd_get_os_release(GError **error);
+GHashTable *
+fwupd_get_os_release_full(const gchar *filename, GError **error);
 gchar *
 fwupd_build_history_report_json(GPtrArray *devices, GError **error);
 gboolean

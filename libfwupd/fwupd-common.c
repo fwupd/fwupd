@@ -168,28 +168,30 @@ fwupd_get_os_release_filename(void)
 }
 
 /**
- * fwupd_get_os_release:
+ * fwupd_get_os_release_full:
+ * @filename: (nullable): optional filename to load
  * @error: (nullable): optional return location for an error
  *
- * Loads information from the system os-release file.
+ * Loads information from a defined system os-release file.
  *
  * Returns: (transfer container) (element-type utf8 utf8): keys from os-release
  *
- * Since: 1.0.7
+ * Since: 1.8.8
  **/
 GHashTable *
-fwupd_get_os_release(GError **error)
+fwupd_get_os_release_full(const gchar *filename, GError **error)
 {
 	g_autofree gchar *buf = NULL;
-	g_autofree gchar *filename = NULL;
+	g_autofree gchar *filename2 = g_strdup(filename);
 	g_auto(GStrv) lines = NULL;
 	g_autoptr(GHashTable) hash = NULL;
 
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
 	hash = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
-	filename = fwupd_get_os_release_filename();
-	if (filename == NULL) {
+	if (filename2 == NULL)
+		filename2 = fwupd_get_os_release_filename();
+	if (filename2 == NULL) {
 #if defined(_WIN32)
 		/* TODO: Read the Windows version */
 		g_hash_table_insert(hash, g_strdup("OS"), g_strdup("Windows"));
@@ -205,7 +207,7 @@ fwupd_get_os_release(GError **error)
 	}
 
 	/* load each line */
-	if (!g_file_get_contents(filename, &buf, NULL, error))
+	if (!g_file_get_contents(filename2, &buf, NULL, error))
 		return NULL;
 	lines = g_strsplit(buf, "\n", -1);
 	for (guint i = 0; lines[i] != NULL; i++) {
@@ -228,6 +230,23 @@ fwupd_get_os_release(GError **error)
 		g_hash_table_insert(hash, g_strdup(split[0]), g_strndup(split[1] + off, len));
 	}
 	return g_steal_pointer(&hash);
+}
+
+/**
+ * fwupd_get_os_release:
+ * @error: (nullable): optional return location for an error
+ *
+ * Loads information from the system os-release file.
+ *
+ * Returns: (transfer container) (element-type utf8 utf8): keys from os-release
+ *
+ * Since: 1.0.7
+ **/
+GHashTable *
+fwupd_get_os_release(GError **error)
+{
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+	return fwupd_get_os_release_full(NULL, error);
 }
 
 static gchar *

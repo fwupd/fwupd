@@ -2055,6 +2055,30 @@ fu_engine_get_report_metadata_os_release(GHashTable *hash, GError **error)
 	return TRUE;
 }
 
+static gboolean
+fu_engine_get_report_metadata_lsb_release(GHashTable *hash, GError **error)
+{
+	const gchar *fn = "/etc/lsb-release";
+	g_autoptr(GHashTable) os_release = NULL;
+	struct {
+		const gchar *key;
+		const gchar *val;
+	} distro_kv[] = {{"CHROMEOS_RELEASE_TRACK", "DistroReleaseTrack"},
+			 {"CHROMEOS_RELEASE_BOARD", "DistroReleaseBoard"},
+			 {NULL, NULL}};
+	if (!g_file_test(fn, G_FILE_TEST_EXISTS))
+		return TRUE;
+	os_release = fwupd_get_os_release_full(fn, error);
+	if (os_release == NULL)
+		return FALSE;
+	for (guint i = 0; distro_kv[i].key != NULL; i++) {
+		const gchar *tmp = g_hash_table_lookup(os_release, distro_kv[i].key);
+		if (tmp != NULL)
+			g_hash_table_insert(hash, g_strdup(distro_kv[i].val), g_strdup(tmp));
+	}
+	return TRUE;
+}
+
 #ifdef __linux__
 static gchar *
 fu_engine_get_proc_cmdline(GError **error)
@@ -2215,6 +2239,8 @@ fu_engine_get_report_metadata(FuEngine *self, GError **error)
 	}
 	fu_engine_get_report_metadata_cpu_device(self, hash);
 	if (!fu_engine_get_report_metadata_os_release(hash, error))
+		return NULL;
+	if (!fu_engine_get_report_metadata_lsb_release(hash, error))
 		return NULL;
 	if (!fu_engine_get_report_metadata_kernel_cmdline(hash, error))
 		return NULL;
