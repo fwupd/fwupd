@@ -1,0 +1,28 @@
+{
+  "name": "Wistron Dock 40B7",
+  "interactive": true,
+  "steps": [
+    {
+      "url": "https://fwupd.org/downloads/f00838f10d6faf58ff57cbfcfca390ed63bd804e4c654f19ff89423b286dc5d2-lda_viking_r_composite.cab",
+      "components": [
+        {
+          "version": "1.0.1.4",
+          "guids": [
+            "78d3f11b-6ad9-5739-a650-2f0d2955a710"
+          ]
+        }
+      ]
+    },
+    {
+      "url": "https://fwupd.org/downloads/43bcfb3278ad2baf918af6abc972e0de9a0de66a25b012177b00d96664819010-lda_viking_r_composite.cab",
+      "components": [
+        {
+          "version": "1.0.1.6",
+          "guids": [
+            "78d3f11b-6ad9-5739-a650-2f0d2955a710"
+          ]
+        }
+      ]
+    }
+  ]
+}
