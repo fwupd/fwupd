@@ -53,7 +53,7 @@ libfwupd_src = [
   'fwupd-release.c',        # fuzzing
   'fwupd-plugin.c',
   'fwupd-remote.c',
-  'fwupd-report.c',
+  'fwupd-report.c',         # fuzzing
   'fwupd-request.c',        # fuzzing
   'fwupd-version.c',
 ]
