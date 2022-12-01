@@ -1,0 +1,7 @@
+# Wistron Travel Dock
+[USB\VID_0FB8&PID_0010]
+Plugin = wistron_dock
+
+# Wistron USB-C Dock
+[USB\VID_17EF&PID_30EF]
+Plugin = wistron_dock
