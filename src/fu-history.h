@@ -19,10 +19,10 @@ fu_history_add_device(FuHistory *self, FuDevice *device, FwupdRelease *release, 
 gboolean
 fu_history_modify_device(FuHistory *self, FuDevice *device, GError **error);
 gboolean
-fu_history_set_device_metadata(FuHistory *self,
-			       const gchar *device_id,
-			       GHashTable *metadata,
-			       GError **error);
+fu_history_modify_device_release(FuHistory *self,
+				 FuDevice *device,
+				 FwupdRelease *release,
+				 GError **error);
 gboolean
 fu_history_remove_device(FuHistory *self, FuDevice *device, GError **error);
 gboolean

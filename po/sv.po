@@ -747,6 +747,10 @@ msgstr "Enhet borttagen:"
 msgid "Device requires AC power to be connected"
 msgstr "Enheten behöver vara ansluten till nätspänning"
 
+#. TRANSLATORS: The device cannot be updated due to missing vendor's license."
+msgid "Device requires a software license to update"
+msgstr "Enheten kräver en programvarulicens för att uppdateras"
+
 #. TRANSLATORS: longer description
 msgid "Device software updates are provided for this device."
 msgstr "Enhetsprogramuppdateringar tillhandahålls för denna enhet."
@@ -854,6 +858,14 @@ msgstr "Utför inte säkerhetskontroller för enheter"
 #. TRANSLATORS: command line option
 msgid "Do not prompt for devices"
 msgstr "Fråga inte om enheter"
+
+#. TRANSLATORS: command line option
+msgid "Do not search the firmware when parsing"
+msgstr "Sök inte den fasta programvaran under tolkning"
+
+#. TRANSLATORS: warning message shown after update has been scheduled
+msgid "Do not turn off your computer or remove the AC adaptor while the update is in progress."
+msgstr "Slå inte av din dator och ta inte bort nätadaptern medan uppdateringen pågår."
 
 #. TRANSLATORS: command line option
 msgid "Do not write to the history database"
@@ -1706,6 +1718,10 @@ msgstr "Lista de tillgängliga typerna av fast programvara"
 msgid "Lists files on the ESP"
 msgstr "Listar filer på ESP"
 
+#. TRANSLATORS: the plugin was created from a .so object, and was not built-in
+msgid "Loaded from an external module"
+msgstr "Inläst från en extern modul"
+
 #. TRANSLATORS: parsing the firmware information
 msgid "Loading…"
 msgstr "Läser in…"
@@ -1717,6 +1733,16 @@ msgstr "Låst"
 #. TRANSLATORS: the release urgency
 msgid "Low"
 msgstr "Låg"
+
+#. TRANSLATORS: Title: MEI = Intel Management Engine, and key refers
+#. * to the private/public key used to secure loading of firmware
+msgid "MEI Key Manifest"
+msgstr "MEI-nyckelmanifest"
+
+#. TRANSLATORS: Title: MEI = Intel Management Engine, and key refer
+#. * to the private/public key used to secure loading of firmware
+msgid "MEI key manifest"
+msgstr "MEI-nyckelmanifest"
 
 #. TRANSLATORS: Title: MEI = Intel Management Engine
 msgid "MEI manufacturing mode"
@@ -2001,6 +2027,10 @@ msgstr "DMA-skydd före uppstart är aktiverat"
 #. TRANSLATORS: longer description
 msgid "Pre-boot DMA protection prevents devices from accessing system memory after being connected to the computer."
 msgstr "DMA-skydd före uppstart förhindrar enheter från att komma åt systemminne efter att de anslutits till datorn."
+
+#. TRANSLATORS: warning message
+msgid "Press unlock on the device to continue the update process."
+msgstr "Tryck lås upp på enheten för att fortsätta uppdateringsprocessen."
 
 #. TRANSLATORS: version number of previous firmware
 msgid "Previous version"
@@ -2607,6 +2637,10 @@ msgid "Test a device using a JSON manifest"
 msgstr "Testa en enhet med ett JSON-manifest"
 
 #. TRANSLATORS: longer description
+msgid "The Intel Management Engine Key Manifest must be valid so that the device firmware can be trusted by the CPU."
+msgstr "Nyckelmanifestet för Intel Management Engine måste vara giltigt så att enhetens fasta programvara kan vara betrodd av processorn."
+
+#. TRANSLATORS: longer description
 msgid "The Intel Management Engine controls device components and needs to have a recent version to avoid security issues."
 msgstr "Intel Management Engine kontrollerar enhetskomponenter och behöver ha en tillräckligt ny version för att undvika säkerhetsproblem."
 
@@ -2648,6 +2682,14 @@ msgstr "Fast programvara från %s levereras inte av %s, hårdvarutillverkaren."
 #. TRANSLATORS: try to help
 msgid "The system clock has not been set correctly and downloading files may fail."
 msgstr "Systemklockan har inte ställts in korrekt och hämtning av filer kan misslyckas."
+
+#. TRANSLATORS: warning message shown after update has been scheduled
+msgid "The update will continue when the device USB cable has been unplugged and then re-inserted."
+msgstr "Uppdateringen kommer fortsätta när enhetens USB-kabel har kopplats från och stoppats in igen."
+
+#. TRANSLATORS: warning message shown after update has been scheduled
+msgid "The update will continue when the device USB cable has been unplugged."
+msgstr "Uppdateringen kommer fortsätta när enhetens USB-kabel har kopplats från."
 
 #. TRANSLATORS: naughty vendor
 msgid "The vendor did not supply any release notes."
@@ -2998,6 +3040,11 @@ msgstr "Väntar…"
 #. TRANSLATORS: command description
 msgid "Watch for hardware changes"
 msgstr "Övervaka hårdvaruändringar"
+
+#. TRANSLATORS: check various UEFI and ACPI tables are unchanged after the
+#. update
+msgid "Will measure elements of system integrity around an update"
+msgstr "Kommer mäta element av systemintegritet vid en uppdatering"
 
 #. TRANSLATORS: command description
 msgid "Write firmware from file into device"

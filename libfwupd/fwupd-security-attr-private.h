@@ -341,6 +341,14 @@ G_BEGIN_DECLS
  * Since: 1.8.3
  **/
 #define FWUPD_SECURITY_ATTR_ID_HOST_EMULATION "org.fwupd.hsi.HostEmulation"
+/**
+ * FWUPD_SECURITY_ATTR_ID_BIOS_ROLLBACK_PROTECTION
+ *
+ * Host Security ID attribute for Rollback protection of BIOS firmware
+ *
+ * Since: 1.8.8
+ **/
+#define FWUPD_SECURITY_ATTR_ID_BIOS_ROLLBACK_PROTECTION "org.fwupd.hsi.Bios.RollbackProtection"
 
 GVariant *
 fwupd_security_attr_to_variant(FwupdSecurityAttr *self);

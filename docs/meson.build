@@ -1,4 +1,4 @@
-if gidocgen_dep.found() and docs_python_deps.allowed() and gidocgen_app.found() and introspection.allowed()
+if build_docs and introspection.allowed()
   toml_conf = configuration_data()
   docgen_version = source_version
   if git.found() and source_version != fwupd_version
@@ -50,6 +50,18 @@ if gidocgen_dep.found() and docs_python_deps.allowed() and gidocgen_app.found() 
     command : [
       python3,
       files(['generate-hsi-spec.py', 'hsi.md.in']),
+      '@OUTPUT@',
+      '@INPUT@',
+    ],
+  )
+  custom_target('generate-oval',
+    input: hsi_test_jsons,
+    output : 'oval.xml',
+    command : [
+      python3,
+      files(['generate-oval.py']),
+      '--version', fwupd_version,
+      '--schema-version', '5.11.3',
       '@OUTPUT@',
       '@INPUT@',
     ],

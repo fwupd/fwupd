@@ -19,11 +19,15 @@
 struct _FuElantpHidDevice {
 	FuUdevDevice parent_instance;
 	guint16 ic_page_count;
+	guint16 ic_type;
 	guint16 iap_type;
 	guint16 iap_ctrl;
 	guint16 iap_password;
+	guint16 iap_ver;
 	guint16 module_id;
 	guint16 fw_page_size;
+	gboolean force_table_support;
+	guint32 force_table_addr;
 	guint8 pattern;
 };
 
@@ -49,6 +53,8 @@ fu_elantp_hid_device_to_string(FuDevice *device, guint idt, GString *str)
 static gboolean
 fu_elantp_hid_device_probe(FuDevice *device, GError **error)
 {
+	guint16 device_id = fu_udev_device_get_model(FU_UDEV_DEVICE(device));
+
 	/* check is valid */
 	if (g_strcmp0(fu_udev_device_get_subsystem(FU_UDEV_DEVICE(device)), "hidraw") != 0) {
 		g_set_error(error,
@@ -60,8 +66,7 @@ fu_elantp_hid_device_probe(FuDevice *device, GError **error)
 	}
 
 	/* i2c-hid */
-	if (fu_udev_device_get_model(FU_UDEV_DEVICE(device)) < 0x3000 ||
-	    fu_udev_device_get_model(FU_UDEV_DEVICE(device)) >= 0x4000) {
+	if (device_id != 0x400 && (device_id < 0x3000 || device_id >= 0x4000)) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
@@ -152,6 +157,14 @@ fu_elantp_hid_device_ensure_iap_ctrl(FuElantpHidDevice *self, GError **error)
 	self->iap_ctrl = fu_memread_uint16(buf, G_LITTLE_ENDIAN);
 
 	/* in bootloader mode? */
+	if (self->force_table_support && self->iap_ver <= 5) {
+		if ((self->iap_ctrl & ETP_I2C_MAIN_MODE_ON2) == 0)
+			fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
+		else
+			fu_device_remove_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
+		return TRUE;
+	}
+
 	if ((self->iap_ctrl & ETP_I2C_MAIN_MODE_ON) == 0)
 		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 	else
@@ -161,12 +174,46 @@ fu_elantp_hid_device_ensure_iap_ctrl(FuElantpHidDevice *self, GError **error)
 }
 
 static gboolean
+fu_elantp_hid_device_read_force_table_enable(FuElantpHidDevice *self, GError **error)
+{
+	guint8 buf[2] = {0x0};
+	guint16 value;
+
+	if (!fu_elantp_hid_device_read_cmd(self,
+					   ETP_CMD_I2C_FORCE_TYPE_ENABLE,
+					   buf,
+					   sizeof(buf),
+					   error)) {
+		g_prefix_error(error, "failed to read force type cmd: ");
+		return FALSE;
+	}
+	value = fu_memread_uint16(buf, G_LITTLE_ENDIAN);
+	if (value == 0xFFFF || value == ETP_CMD_I2C_FORCE_TYPE_ENABLE) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "forcetype cmd not supported");
+		return FALSE;
+	}
+	if ((buf[0] & ETP_FW_FORCE_TYPE_ENABLE_BIT) == 0) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "force type table not supported");
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_elantp_hid_device_read_hatpic_enable(FuElantpHidDevice *self, GError **error)
 {
 	guint8 buf[2] = {0x0};
 	guint16 value;
 	if (!fu_elantp_hid_device_read_cmd(self,
-					   ETP_CMD_I2C_FLIM_TYPE_ENABLE,
+					   ETP_CMD_I2C_FORCE_TYPE_ENABLE,
 					   buf,
 					   sizeof(buf),
 					   error)) {
@@ -174,12 +221,12 @@ fu_elantp_hid_device_read_hatpic_enable(FuElantpHidDevice *self, GError **error)
 		return FALSE;
 	}
 	value = fu_memread_uint16(buf, G_LITTLE_ENDIAN);
-	if (value == 0xFFFF || value == ETP_CMD_I2C_FLIM_TYPE_ENABLE) {
+	if (value == 0xFFFF || value == ETP_CMD_I2C_FORCE_TYPE_ENABLE) {
 		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "not hapticpad");
 		return FALSE;
 	}
 
-	if ((buf[0] & ETP_FW_FLIM_TYPE_ENABLE_BIT) == 0 ||
+	if ((buf[0] & ETP_FW_FORCE_TYPE_ENABLE_BIT) == 0 ||
 	    (buf[0] & ETP_FW_EEPROM_ENABLE_BIT) == 0) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -193,18 +240,83 @@ fu_elantp_hid_device_read_hatpic_enable(FuElantpHidDevice *self, GError **error)
 }
 
 static gboolean
+fu_elantp_hid_device_get_forcetable_address(FuElantpHidDevice *self, GError **error)
+{
+	guint8 buf[2] = {0x0};
+	guint16 addr_wrds;
+
+	if (self->iap_ver == 0x3) {
+		self->force_table_addr = 0xFF40 * 2;
+		return TRUE;
+	}
+	if (!fu_elantp_hid_device_read_cmd(self, ETP_CMD_FORCE_ADDR, buf, sizeof(buf), error)) {
+		g_prefix_error(error, "failed to read force table address cmd: ");
+		return FALSE;
+	}
+	addr_wrds = fu_memread_uint16(buf, G_LITTLE_ENDIAN);
+	if (addr_wrds % 32 != 0) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "illegal force table address (%x)",
+			    addr_wrds);
+		return FALSE;
+	}
+
+	self->force_table_addr = addr_wrds * 2;
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_elantp_hid_device_write_fw_password(FuElantpHidDevice *self,
+				       guint16 ic_type,
+				       guint16 iap_ver,
+				       GError **error)
+{
+	guint8 buf[2] = {0x0};
+	guint16 pw = ETP_I2C_IC13_IAPV5_PW;
+	guint16 value;
+
+	if (iap_ver < 0x5 || ic_type != 0x13)
+		return TRUE;
+
+	if (!fu_elantp_hid_device_write_cmd(self, ETP_CMD_I2C_FW_PW, pw, error)) {
+		g_prefix_error(error, "failed to write fw password cmd: ");
+		return FALSE;
+	}
+
+	if (!fu_elantp_hid_device_read_cmd(self, ETP_CMD_I2C_FW_PW, buf, sizeof(buf), error)) {
+		g_prefix_error(error, "failed to read fw password cmd: ");
+		return FALSE;
+	}
+	value = fu_memread_uint16(buf, G_LITTLE_ENDIAN);
+	if (value != pw) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "can't set fw password got:%x",
+			    value);
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_elantp_hid_device_setup(FuDevice *device, GError **error)
 {
 	FuElantpHidDevice *self = FU_ELANTP_HID_DEVICE(device);
 	FuUdevDevice *udev_device = FU_UDEV_DEVICE(device);
 	guint16 fwver;
-	guint16 iap_ver;
 	guint16 tmp;
 	guint8 buf[2] = {0x0};
-	guint8 ic_type;
 	g_autofree gchar *version_bl = NULL;
 	g_autofree gchar *version = NULL;
 	g_autoptr(GError) error_local = NULL;
+	g_autoptr(GError) error_forcetable = NULL;
 
 	/* get pattern */
 	if (!fu_elantp_hid_device_read_cmd(self, ETP_CMD_I2C_GET_HID_ID, buf, sizeof(buf), error)) {
@@ -236,11 +348,11 @@ fu_elantp_hid_device_setup(FuDevice *device, GError **error)
 		return FALSE;
 	}
 	if (self->pattern >= 1) {
-		iap_ver = buf[1];
+		self->iap_ver = buf[1];
 	} else {
-		iap_ver = fu_memread_uint16(buf, G_LITTLE_ENDIAN);
+		self->iap_ver = fu_memread_uint16(buf, G_LITTLE_ENDIAN);
 	}
-	version_bl = fu_version_from_uint16(iap_ver, FWUPD_VERSION_FORMAT_HEX);
+	version_bl = fu_version_from_uint16(self->iap_ver, FWUPD_VERSION_FORMAT_HEX);
 	fu_device_set_version_bootloader(device, version_bl);
 
 	/* get module ID */
@@ -276,13 +388,13 @@ fu_elantp_hid_device_setup(FuDevice *device, GError **error)
 			g_prefix_error(error, "failed to read IC body: ");
 			return FALSE;
 		}
-		ic_type = fu_memread_uint16(buf, G_LITTLE_ENDIAN) & 0xFF;
+		self->ic_type = fu_memread_uint16(buf, G_LITTLE_ENDIAN) & 0xFF;
 	} else {
-		ic_type = (tmp >> 8) & 0xFF;
+		self->ic_type = (tmp >> 8) & 0xFF;
 	}
 
 	/* define the extra instance IDs (ic_type + module_id + driver) */
-	fu_device_add_instance_u8(device, "ICTYPE", ic_type);
+	fu_device_add_instance_u8(device, "ICTYPE", self->ic_type);
 	fu_device_build_instance_id(device, NULL, "ELANTP", "ICTYPE", NULL);
 	fu_device_build_instance_id(device, NULL, "ELANTP", "ICTYPE", "MOD", NULL);
 	fu_device_add_instance_str(device, "DRIVER", "HID");
@@ -294,7 +406,7 @@ fu_elantp_hid_device_setup(FuDevice *device, GError **error)
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "no page count for ELANTP\\ICTYPE_%02X",
-			    ic_type);
+			    self->ic_type);
 		return FALSE;
 	}
 
@@ -304,6 +416,25 @@ fu_elantp_hid_device_setup(FuDevice *device, GError **error)
 	/* is in bootloader mode */
 	if (!fu_elantp_hid_device_ensure_iap_ctrl(self, error))
 		return FALSE;
+
+	if (self->ic_type != 0x12 && self->ic_type != 0x13)
+		return TRUE;
+
+	if (!fu_elantp_hid_device_read_force_table_enable(self, &error_forcetable)) {
+		g_debug("no forcetable detected: %s", error_forcetable->message);
+	} else {
+		if (!fu_elantp_hid_device_get_forcetable_address(self, error)) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "get forcetable address fail");
+			return FALSE;
+		}
+		self->force_table_support = TRUE;
+		/* is in bootloader mode */
+		if (!fu_elantp_hid_device_ensure_iap_ctrl(self, error))
+			return FALSE;
+	}
 
 	if (!fu_elantp_hid_device_read_hatpic_enable(self, &error_local)) {
 		g_debug("no haptic device detected: %s", error_local->message);
@@ -323,6 +454,8 @@ fu_elantp_hid_device_prepare_firmware(FuDevice *device,
 {
 	FuElantpHidDevice *self = FU_ELANTP_HID_DEVICE(device);
 	guint16 module_id;
+	guint16 ic_type;
+	gboolean force_table_support;
 	g_autoptr(FuFirmware) firmware = fu_elantp_firmware_new();
 
 	/* check is compatible with hardware */
@@ -338,9 +471,121 @@ fu_elantp_hid_device_prepare_firmware(FuDevice *device,
 			    self->module_id);
 		return NULL;
 	}
+	ic_type = fu_elantp_firmware_get_ic_type(FU_ELANTP_FIRMWARE(firmware));
+	if (self->ic_type != ic_type) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "firmware ic type incompatible, got 0x%04x, expected 0x%04x",
+			    ic_type,
+			    self->ic_type);
+		return NULL;
+	}
+	force_table_support =
+	    fu_elantp_firmware_get_forcetable_support(FU_ELANTP_FIRMWARE(firmware));
+	if (self->force_table_support != force_table_support) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "firmware incompatible, forcetable incorrect.");
+		return NULL;
+	}
+	if (self->force_table_support) {
+		guint32 force_table_addr;
+		guint32 diff_size;
+		force_table_addr =
+		    fu_elantp_firmware_get_forcetable_addr(FU_ELANTP_FIRMWARE(firmware));
+		if (self->force_table_addr < force_table_addr) {
+			g_set_error(
+			    error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "firmware forcetable address incompatible, got 0x%04x, expected 0x%04x",
+			    force_table_addr / 2,
+			    self->force_table_addr / 2);
+			return NULL;
+		}
+		diff_size = self->force_table_addr - force_table_addr;
+		if (diff_size % 64 != 0) {
+			g_set_error(
+			    error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "firmware forcetable address incompatible, got 0x%04x, expected 0x%04x",
+			    force_table_addr / 2,
+			    self->force_table_addr / 2);
+			return NULL;
+		}
+	}
 
 	/* success */
 	return g_steal_pointer(&firmware);
+}
+
+static gboolean
+fu_elantp_hid_device_filling_forcetable_firmware(FuDevice *device,
+						 guint8 *fw_data,
+						 gsize fw_size,
+						 guint32 force_table_addr,
+						 GError **error)
+{
+	FuElantpHidDevice *self = FU_ELANTP_HID_DEVICE(device);
+	const guint8 fillature[] = {0x77, 0x33, 0x44, 0xaa};
+	const guint8 signature[] = {0xAA, 0x55, 0xCC, 0x33, 0xFF, 0xFF};
+	guint8 buf[64] = {[0 ... 63] = 0xFF};
+	guint16 block_checksum;
+	guint16 filling_value;
+
+	if (self->force_table_addr == force_table_addr)
+		return TRUE;
+
+	if (self->force_table_addr < force_table_addr) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "forcetable address wrong (%x,%x): ",
+			    force_table_addr,
+			    self->force_table_addr);
+		return FALSE;
+	}
+
+	if (!fu_memcpy_safe(buf,
+			    sizeof(buf),
+			    0, /* dst */
+			    fillature,
+			    sizeof(fillature),
+			    0x0, /* src */
+			    sizeof(fillature),
+			    error))
+		return FALSE;
+
+	fu_memwrite_uint16(buf + 0x4, self->force_table_addr / 2, G_LITTLE_ENDIAN);
+	if (!fu_memcpy_safe(buf,
+			    sizeof(buf),
+			    sizeof(buf) - 6, /* dst */
+			    signature,
+			    sizeof(signature),
+			    0x0, /* src */
+			    sizeof(signature),
+			    error))
+		return FALSE;
+
+	block_checksum = fu_sum16w(buf, sizeof(buf), G_LITTLE_ENDIAN) - 0xFFFF;
+	filling_value = 0x10000 - (block_checksum & 0xFFFF);
+	fu_memwrite_uint16(buf + 0x6, filling_value, G_LITTLE_ENDIAN);
+
+	for (guint i = force_table_addr; i < self->force_table_addr; i += 64) {
+		if (!fu_memcpy_safe(fw_data,
+				    fw_size,
+				    i, /* dst */
+				    buf,
+				    sizeof(buf),
+				    0x0, /* src */
+				    sizeof(buf),
+				    error))
+			return FALSE;
+	}
+	return TRUE;
 }
 
 static gboolean
@@ -360,6 +605,7 @@ fu_elantp_hid_device_write_firmware(FuDevice *device,
 	guint8 csum_buf[2] = {0x0};
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GPtrArray) chunks = NULL;
+	guint total_pages;
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
@@ -382,8 +628,56 @@ fu_elantp_hid_device_write_firmware(FuDevice *device,
 	/* write each block */
 	buf = g_bytes_get_data(fw, &bufsz);
 	iap_addr = fu_elantp_firmware_get_iap_addr(firmware_elantp);
-	chunks = fu_chunk_array_new(buf + iap_addr, bufsz - iap_addr, 0x0, 0x0, self->fw_page_size);
-	for (guint i = 0; i < chunks->len; i++) {
+
+	if (self->force_table_support &&
+	    self->force_table_addr >=
+		fu_elantp_firmware_get_forcetable_addr(FU_ELANTP_FIRMWARE(firmware))) {
+		g_autofree guint8 *buf2 = g_malloc0(bufsz);
+		if (!fu_memcpy_safe(buf2,
+				    bufsz,
+				    0x0, /* dst */
+				    buf,
+				    bufsz,
+				    0x0, /* src */
+				    bufsz,
+				    error))
+			return FALSE;
+
+		if (!fu_elantp_hid_device_filling_forcetable_firmware(
+			device,
+			buf2,
+			bufsz,
+			fu_elantp_firmware_get_forcetable_addr(FU_ELANTP_FIRMWARE(firmware)),
+			error)) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_WRITE,
+				    "filling forcetable failed");
+			return FALSE;
+		}
+		chunks = fu_chunk_array_new(buf2 + iap_addr,
+					    bufsz - iap_addr,
+					    0x0,
+					    0x0,
+					    self->fw_page_size);
+		total_pages = (self->force_table_addr - iap_addr - 1) / self->fw_page_size + 1;
+		if (total_pages > chunks->len) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_WRITE,
+				    "total pages wrong (%u)",
+				    total_pages);
+			return FALSE;
+		}
+	} else {
+		chunks = fu_chunk_array_new(buf + iap_addr,
+					    bufsz - iap_addr,
+					    0x0,
+					    0x0,
+					    self->fw_page_size);
+		total_pages = chunks->len;
+	}
+	for (guint i = 0; i < total_pages; i++) {
 		FuChunk *chk = g_ptr_array_index(chunks, i);
 		guint16 csum_tmp =
 		    fu_sum16w(fu_chunk_get_data(chk), fu_chunk_get_data_sz(chk), G_LITTLE_ENDIAN);
@@ -402,7 +696,6 @@ fu_elantp_hid_device_write_firmware(FuDevice *device,
 				    error))
 			return FALSE;
 		fu_memwrite_uint16(blk + fu_chunk_get_data_sz(chk) + 1, csum_tmp, G_LITTLE_ENDIAN);
-
 		if (!fu_elantp_hid_device_send_cmd(self, blk, blksz, NULL, 0, error))
 			return FALSE;
 		g_usleep(self->fw_page_size == 512 ? ELANTP_DELAY_WRITE_BLOCK_512 * 1000
@@ -552,6 +845,8 @@ fu_elantp_hid_device_detach(FuDevice *device, FuProgress *progress, GError **err
 			}
 		}
 	}
+	if (!fu_elantp_hid_device_write_fw_password(self, ic_type, iap_ver, error))
+		return FALSE;
 	if (!fu_elantp_hid_device_write_cmd(self, ETP_CMD_I2C_IAP, self->iap_password, error))
 		return FALSE;
 	g_usleep(ELANTP_DELAY_UNLOCK * 1000);

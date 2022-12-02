@@ -13,6 +13,7 @@
 #include "fwupd-enums-private.h"
 #include "fwupd-error.h"
 #include "fwupd-release-private.h"
+#include "fwupd-report-private.h"
 
 /**
  * FwupdRelease:
@@ -60,6 +61,7 @@ typedef struct {
 	FwupdReleaseUrgency urgency;
 	gchar *update_message;
 	gchar *update_image;
+	GPtrArray *reports;
 } FwupdReleasePrivate;
 
 enum { PROP_0, PROP_REMOTE_ID, PROP_LAST };
@@ -1550,6 +1552,42 @@ fwupd_release_get_install_duration(FwupdRelease *self)
 }
 
 /**
+ * fwupd_release_get_reports:
+ * @self: a #FwupdRelease
+ *
+ * Gets all the reports for this release.
+ *
+ * Returns: (transfer none) (element-type FwupdReport): array of reports
+ *
+ * Since: 1.8.8
+ **/
+GPtrArray *
+fwupd_release_get_reports(FwupdRelease *self)
+{
+	FwupdReleasePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_RELEASE(self), NULL);
+	return priv->reports;
+}
+
+/**
+ * fwupd_release_add_report:
+ * @self: a #FwupdRelease
+ * @report: (not nullable): a #FwupdReport
+ *
+ * Adds a report for this release.
+ *
+ * Since: 1.8.8
+ **/
+void
+fwupd_release_add_report(FwupdRelease *self, FwupdReport *report)
+{
+	FwupdReleasePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FWUPD_IS_RELEASE(self));
+	g_return_if_fail(FWUPD_IS_REPORT(report));
+	g_ptr_array_add(priv->reports, g_object_ref(report));
+}
+
+/**
  * fwupd_release_set_install_duration:
  * @self: a #FwupdRelease
  * @duration: amount of time in seconds
@@ -1793,6 +1831,20 @@ fwupd_release_to_variant(FwupdRelease *self)
 				      FWUPD_RESULT_KEY_INSTALL_DURATION,
 				      g_variant_new_uint32(priv->install_duration));
 	}
+	if (priv->reports->len > 0) {
+		g_autofree GVariant **children = NULL;
+		children = g_new0(GVariant *, priv->reports->len);
+		for (guint i = 0; i < priv->reports->len; i++) {
+			FwupdReport *report = g_ptr_array_index(priv->reports, i);
+			children[i] = fwupd_report_to_variant(report);
+		}
+		g_variant_builder_add(
+		    &builder,
+		    "{sv}",
+		    FWUPD_RESULT_KEY_REPORTS,
+		    g_variant_new_array(G_VARIANT_TYPE("a{sv}"), children, priv->reports->len));
+	}
+
 	return g_variant_new("a{sv}", &builder);
 }
 
@@ -1938,6 +1990,18 @@ fwupd_release_from_key_value(FwupdRelease *self, const gchar *key, GVariant *val
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_METADATA) == 0) {
 		g_hash_table_unref(priv->metadata);
 		priv->metadata = fwupd_variant_to_hash_kv(value);
+		return;
+	}
+	if (g_strcmp0(key, FWUPD_RESULT_KEY_REPORTS) == 0) {
+		GVariantIter iter;
+		GVariant *child;
+		g_variant_iter_init(&iter, value);
+		while ((child = g_variant_iter_next_value(&iter))) {
+			g_autoptr(FwupdReport) report = fwupd_report_from_variant(child);
+			if (report != NULL)
+				fwupd_release_add_report(self, report);
+			g_variant_unref(child);
+		}
 		return;
 	}
 }
@@ -2093,6 +2157,19 @@ fwupd_release_to_json(FwupdRelease *self, JsonBuilder *builder)
 		const gchar *value = g_hash_table_lookup(priv->metadata, key);
 		fwupd_common_json_add_string(builder, key, value);
 	}
+
+	/* reports */
+	if (priv->reports->len > 0) {
+		json_builder_set_member_name(builder, "Reports");
+		json_builder_begin_array(builder);
+		for (guint i = 0; i < priv->reports->len; i++) {
+			FwupdReport *report = g_ptr_array_index(priv->reports, i);
+			json_builder_begin_object(builder);
+			fwupd_report_to_json(report, builder);
+			json_builder_end_object(builder);
+		}
+		json_builder_end_array(builder);
+	}
 }
 
 /**
@@ -2172,6 +2249,11 @@ fwupd_release_to_string(FwupdRelease *self)
 		const gchar *value = g_hash_table_lookup(priv->metadata, key);
 		fwupd_pad_kv_str(str, key, value);
 	}
+	for (guint i = 0; i < priv->reports->len; i++) {
+		FwupdReport *report = g_ptr_array_index(priv->reports, i);
+		g_autofree gchar *tmp = fwupd_report_to_string(report);
+		g_string_append_printf(str, "  \n  [%s]\n%s", FWUPD_RESULT_KEY_REPORTS, tmp);
+	}
 
 	return g_string_free(str, FALSE);
 }
@@ -2240,6 +2322,7 @@ fwupd_release_init(FwupdRelease *self)
 	priv->checksums = g_ptr_array_new_with_free_func(g_free);
 	priv->tags = g_ptr_array_new_with_free_func(g_free);
 	priv->locations = g_ptr_array_new_with_free_func(g_free);
+	priv->reports = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 	priv->metadata = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
 }
 
@@ -2274,6 +2357,7 @@ fwupd_release_finalize(GObject *object)
 	g_ptr_array_unref(priv->issues);
 	g_ptr_array_unref(priv->checksums);
 	g_ptr_array_unref(priv->tags);
+	g_ptr_array_unref(priv->reports);
 	g_hash_table_unref(priv->metadata);
 
 	G_OBJECT_CLASS(fwupd_release_parent_class)->finalize(object);
@@ -2356,6 +2440,29 @@ fwupd_release_array_from_variant(GVariant *value)
 		g_ptr_array_add(array, self);
 	}
 	return array;
+}
+
+/**
+ * fwupd_release_incorporate:
+ * @self: a #FwupdRelease
+ * @donor: another #FwupdRelease
+ *
+ * Copy all properties from the donor object.
+ *
+ * Since: 1.8.8
+ **/
+void
+fwupd_release_incorporate(FwupdRelease *self, FwupdRelease *donor)
+{
+	g_autoptr(GVariant) variant = NULL;
+	g_autoptr(GVariantIter) iter = NULL;
+
+	g_return_if_fail(FWUPD_IS_RELEASE(self));
+	g_return_if_fail(FWUPD_IS_RELEASE(donor));
+
+	variant = fwupd_release_to_variant(donor);
+	g_variant_get(variant, "a{sv}", &iter);
+	fwupd_release_set_from_variant_iter(self, iter);
 }
 
 /**

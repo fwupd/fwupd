@@ -144,6 +144,8 @@ def main(args) -> int:
                 attrs = Pango.AttrList()
                 length = len(bytes(label_translated, "utf8"))
                 items = Pango.itemize(pctx, label_translated, 0, length, attrs, None)
+                if not items:
+                    continue
                 gs = Pango.GlyphString()
                 Pango.shape(label_translated, length, items[0].analysis, gs)
                 del img, cctx, pctx, layout

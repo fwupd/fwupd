@@ -123,6 +123,8 @@ fu_util_plugin_flag_to_string(FwupdPluginFlags plugin_flag);
 gchar *
 fu_util_release_to_string(FwupdRelease *rel, guint idt);
 gchar *
+fu_util_report_to_string(FwupdReport *report, guint idt);
+gchar *
 fu_util_remote_to_string(FwupdRemote *remote, guint idt);
 gchar *
 fu_util_security_attrs_to_string(GPtrArray *attrs, FuSecurityAttrToStringFlags flags);

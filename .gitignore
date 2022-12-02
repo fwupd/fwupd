@@ -29,7 +29,6 @@ plugins/acpi-facp/tests/
 plugins/ata/tests/
 plugins/dfu/tests/
 plugins/nvme/tests/
-plugins/synaptics-mst/tests/
 plugins/synaptics-prometheus/tests/
 plugins/tpm-eventlog/tests/
 plugins/uefi-dbx/tests/

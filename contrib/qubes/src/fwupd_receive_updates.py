@@ -16,7 +16,7 @@ import re
 import shutil
 import subprocess
 
-FWUPD_DOM0_DIR = "/root/.cache/fwupd"
+FWUPD_DOM0_DIR = "/var/cache/fwupd"
 FWUPD_DOM0_UPDATES_DIR = os.path.join(FWUPD_DOM0_DIR, "updates")
 FWUPD_DOM0_UNTRUSTED_DIR = os.path.join(FWUPD_DOM0_UPDATES_DIR, "untrusted")
 FWUPD_DOM0_METADATA_DIR = os.path.join(FWUPD_DOM0_DIR, "metadata")
@@ -107,20 +107,6 @@ class FwupdReceiveUpdates:
                     f"the personal data!!{WARNING_COLOR}"
                 )
 
-    def _extract_archive(self, archive_path, output_path):
-        """Extracts archive file to the specified directory.
-
-        Keyword arguments:
-        archive_path -- absolute path to archive file
-        output_path -- absolute path to the output directory
-        """
-        cmd_extract = ["gcab", "-x", f"--directory={output_path}", f"{archive_path}"]
-        shutil.copy(archive_path, FWUPD_DOM0_UPDATES_DIR)
-        p = subprocess.Popen(cmd_extract, stdout=subprocess.PIPE)
-        p.communicate()[0].decode("ascii")
-        if p.returncode != 0:
-            raise Exception(f"gcab: Error while extracting {archive_path}.")
-
     def _jcat_verification(self, file_path, file_directory):
         """Verifies sha1 and sha256 checksum, GPG signature,
         and PKCS#7 signature.
@@ -129,7 +115,8 @@ class FwupdReceiveUpdates:
         file_path -- absolute path to jcat file
         file_directory -- absolute path to the directory to jcat file location
         """
-        cmd_jcat = ["jcat-tool", "verify", f"{file_path}", "--public-keys", FWUPD_PKI]
+        assert file_path.startswith("/"), "bad file path {file_path!r}"
+        cmd_jcat = ["jcat-tool", "verify", file_path, "--public-keys", FWUPD_PKI]
         p = subprocess.Popen(
             cmd_jcat, cwd=file_directory, stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
@@ -157,12 +144,19 @@ class FwupdReceiveUpdates:
             shutil.rmtree(FWUPD_DOM0_UNTRUSTED_DIR)
         self._create_dirs(FWUPD_DOM0_UPDATES_DIR, FWUPD_DOM0_UNTRUSTED_DIR)
 
-        cmd_copy = "qvm-run --pass-io %s %s > %s" % (
-            updatevm,
-            "'cat %s'" % updatevm_firmware_file_path,
-            dom0_firmware_untrusted_path,
-        )
-        p = subprocess.Popen(cmd_copy, shell=True)
+        cmd_copy = [
+            "qvm-run",
+            "--pass-io",
+            "-q",
+            "-a",
+            "--no-shell",
+            "--",
+            "cat",
+            "--",
+            updatevm_firmware_file_path,
+        ]
+        with open(dom0_firmware_untrusted_path, "wbx") as untrusted_file:
+            p = subprocess.Popen(cmd_copy, stdout=untrusted_file, shell=False)
         p.wait()
         if p.returncode != 0:
             raise Exception("qvm-run: Copying firmware file failed!!")
@@ -171,13 +165,7 @@ class FwupdReceiveUpdates:
             FWUPD_DOM0_UNTRUSTED_DIR, fwupd_firmware_file_regex, updatevm
         )
         self._check_shasum(dom0_firmware_untrusted_path, sha)
-        untrusted_dir_name = filename.replace(".cab", "")
-        self._extract_archive(dom0_firmware_untrusted_path, FWUPD_DOM0_UNTRUSTED_DIR)
-        signature_name = os.path.join(FWUPD_DOM0_UNTRUSTED_DIR, "firmware*.jcat")
-        file_path = glob.glob(signature_name)
-        if not file_path:
-            raise FileNotFoundError("jcat file not found!")
-        self._jcat_verification(file_path[0], FWUPD_DOM0_UNTRUSTED_DIR)
+        # jcat verification will be done by fwupd itself
         os.umask(self.old_umask)
         if untrusted_dir_name == "untrusted":
             untrusted_dir_name = "trusted"
@@ -212,27 +200,39 @@ class FwupdReceiveUpdates:
         )
         self._check_domain(updatevm)
         self._create_dirs(FWUPD_DOM0_METADATA_DIR)
-        cmd_file = "'cat %s'" % self.metadata_file_updatevm
-        cmd_jcat = "'cat %s'" % self.metadata_file_jcat_updatevm
-        cmd_copy_metadata_file = "qvm-run --pass-io %s %s > %s" % (
+        cmd_copy_metadata_file = [
+            "qvm-run",
+            "--pass-io",
+            "--no-shell",
+            "--",
             updatevm,
-            cmd_file,
-            self.metadata_file,
-        )
-        cmd_copy_metadata_jcat = "qvm-run --pass-io %s %s > %s" % (
+            "cat",
+            "--",
+            self.metadata_file_updatevm,
+        ]
+        cmd_copy_metadata_file_jcat = [
+            "qvm-run",
+            "--pass-io",
+            "--no-shell",
+            "--",
             updatevm,
-            cmd_jcat,
-            self.metadata_file_jcat,
-        )
-
-        p = subprocess.Popen(cmd_copy_metadata_file, shell=True)
-        p.wait()
+            "cat",
+            "--",
+            self.metadata_file_jcat_updatevm,
+        ]
+        with open(self.metadata_file, "wbx") as untrusted_file_1, open(
+            self.metadata_file_jcat, "wbx"
+        ) as untrusted_file_2, subprocess.Popen(
+            cmd_copy_metadata_file, stdout=untrusted_file_1
+        ) as p, subprocess.Popen(
+            cmd_copy_metadata_file_jcat, stdout=untrusted_file_2
+        ) as q:
+            p.wait()
+            q.wait()
         if p.returncode != 0:
             raise Exception("qvm-run: Copying metadata file failed!!")
-        p = subprocess.Popen(cmd_copy_metadata_jcat, shell=True)
-        p.wait()
         if p.returncode != 0:
-            raise Exception('qvm-run": Copying metadata jcat failed!!')
+            raise Exception("qvm-run: Copying metadata jcat failed!!")
 
         self._verify_received(
             FWUPD_DOM0_METADATA_DIR, FWUPD_METADATA_FILES_REGEX, updatevm
@@ -240,12 +240,8 @@ class FwupdReceiveUpdates:
         self._jcat_verification(self.metadata_file_jcat, FWUPD_DOM0_METADATA_DIR)
         os.umask(self.old_umask)
 
-    def clean_cache(self, usbvm=False):
-        """Removes updates data
-
-        Keyword arguments:
-        usbvm -- usbvm support flag
-        """
+    def clean_cache(self):
+        """Removes updates data"""
         print("Cleaning dom0 cache directories")
         if os.path.exists(FWUPD_DOM0_METADATA_DIR):
             shutil.rmtree(FWUPD_DOM0_METADATA_DIR)
@@ -253,6 +249,3 @@ class FwupdReceiveUpdates:
             shutil.rmtree(FWUPD_DOM0_UPDATES_DIR)
         if os.path.exists(HEADS_UPDATES_DIR):
             shutil.rmtree(HEADS_UPDATES_DIR)
-        if usbvm:
-            print("Cleaning usbvm cache directories")
-            self._clean_usbvm()

@@ -288,15 +288,17 @@ fu_dfu_csr_device_download_chunk(FuDfuCsrDevice *self, guint16 idx, GBytes *chun
 	buf[1] = FU_DFU_CSR_COMMAND_UPGRADE;
 	fu_memwrite_uint16(&buf[2], idx, G_LITTLE_ENDIAN);
 	fu_memwrite_uint16(&buf[4], chunk_sz, G_LITTLE_ENDIAN);
-	if (!fu_memcpy_safe(buf,
-			    sizeof(buf),
-			    FU_DFU_CSR_COMMAND_HEADER_SIZE, /* dst */
-			    chunk_data,
-			    chunk_sz,
-			    0x0, /* src */
-			    chunk_sz,
-			    error))
-		return FALSE;
+	if (chunk_sz > 0) {
+		if (!fu_memcpy_safe(buf,
+				    sizeof(buf),
+				    FU_DFU_CSR_COMMAND_HEADER_SIZE, /* dst */
+				    chunk_data,
+				    chunk_sz,
+				    0x0, /* src */
+				    chunk_sz,
+				    error))
+			return FALSE;
+	}
 
 	/* hit hardware */
 	if (!fu_hid_device_set_report(FU_HID_DEVICE(self),

@@ -109,7 +109,7 @@ fu_ch341a_device_write(FuCh341aDevice *self, guint8 *buf, gsize bufsz, GError **
 					CH341A_USB_TIMEOUT,
 					NULL,
 					error)) {
-		g_prefix_error(error, "failed to write 0x%x bytes:", (guint)bufsz);
+		g_prefix_error(error, "failed to write 0x%x bytes: ", (guint)bufsz);
 		return FALSE;
 	}
 	if (bufsz != actual_length) {

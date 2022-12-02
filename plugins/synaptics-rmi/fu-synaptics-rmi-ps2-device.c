@@ -665,7 +665,7 @@ fu_synaptics_rmi_ps2_device_read(FuSynapticsRmiDevice *rmi_device,
 	g_autofree gchar *dump = NULL;
 
 	if (!fu_synaptics_rmi_device_set_page(rmi_device, addr >> 8, error)) {
-		g_prefix_error(error, "failed to set RMI page:");
+		g_prefix_error(error, "failed to set RMI page: ");
 		return NULL;
 	}
 
@@ -715,7 +715,7 @@ fu_synaptics_rmi_ps2_device_read_packet_register(FuSynapticsRmiDevice *rmi_devic
 	g_autoptr(GByteArray) buf = NULL;
 
 	if (!fu_synaptics_rmi_device_set_page(rmi_device, addr >> 8, error)) {
-		g_prefix_error(error, "failed to set RMI page:");
+		g_prefix_error(error, "failed to set RMI page: ");
 		return NULL;
 	}
 

@@ -22,6 +22,7 @@ install_headers([
     'fwupd-enums.h',
     'fwupd-error.h',
     'fwupd-remote.h',
+    'fwupd-report.h',
     'fwupd-request.h',
     'fwupd-bios-setting.h',
     'fwupd-security-attr.h',
@@ -52,6 +53,7 @@ libfwupd_src = [
   'fwupd-release.c',        # fuzzing
   'fwupd-plugin.c',
   'fwupd-remote.c',
+  'fwupd-report.c',         # fuzzing
   'fwupd-request.c',        # fuzzing
   'fwupd-version.c',
 ]
@@ -128,6 +130,9 @@ if introspection.allowed()
       'fwupd-remote.c',
       'fwupd-remote.h',
       'fwupd-remote-private.h',
+      'fwupd-report.c',
+      'fwupd-report.h',
+      'fwupd-report-private.h',
       'fwupd-request.c',
       'fwupd-request.h',
       'fwupd-request-private.h',

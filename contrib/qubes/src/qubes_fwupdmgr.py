@@ -16,7 +16,7 @@ import sys
 import xml.etree.ElementTree as ET
 
 from pathlib import Path
-from packaging.version import Version
+from packaging import version as pversion
 
 FWUPD_QUBES_DIR = "/usr/share/qubes-fwupd"
 
@@ -28,14 +28,14 @@ else:
 
 try:
     from qubes_fwupd_heads import FwupdHeads
-    from qubes_fwupd_update import FwupdUpdate
+    from qubes_fwupd_update import FwupdUpdate, run_in_tty
     from fwupd_receive_updates import FwupdReceiveUpdates
 except ModuleNotFoundError:
     raise ModuleNotFoundError(
-        "qubes-fwupd modules not found. " "You may need to reinstall package."
+        "qubes-fwupd modules not found.  You may need to reinstall package."
     )
 
-FWUPD_DOM0_DIR = "/root/.cache/fwupd"
+FWUPD_DOM0_DIR = "/var/cache/qubes-fwupd"
 FWUPD_DOM0_METADATA_DIR = os.path.join(FWUPD_DOM0_DIR, "metadata")
 FWUPD_DOM0_UPDATES_DIR = os.path.join(FWUPD_DOM0_DIR, "updates")
 FWUPD_DOM0_METADATA_SIGNATURE = os.path.join(
@@ -43,28 +43,12 @@ FWUPD_DOM0_METADATA_SIGNATURE = os.path.join(
 )
 FWUPD_DOM0_METADATA_FILE = os.path.join(FWUPD_DOM0_METADATA_DIR, "firmware.xml.gz")
 FWUPD_DOM0_METADATA_JCAT = os.path.join(FWUPD_DOM0_METADATA_DIR, "firmware.xml.gz.jcat")
-FWUPD_VM_LOG = os.path.join(FWUPD_DOM0_DIR, "usbvm-devices.log")
-FWUPD_VM_VALIDATE = "/usr/libexec/qubes-fwupd/fwupd_usbvm_validate.py"
-FWUPD_VM_DIR = "/home/user/.cache/fwupd"
-FWUPD_VM_UPDATES_DIR = os.path.join(FWUPD_VM_DIR, "updates")
-FWUPD_VM_METADATA_DIR = os.path.join(FWUPD_VM_DIR, "metadata")
-FWUPD_VM_METADATA_SIGNATURE = os.path.join(FWUPD_VM_METADATA_DIR, "firmware.xml.gz.asc")
-FWUPD_VM_METADATA_FILE = os.path.join(FWUPD_VM_METADATA_DIR, "firmware.xml.gz")
-FWUPD_VM_METADATA_JCAT = os.path.join(FWUPD_VM_METADATA_DIR, "firmware.xml.gz.jcat")
 FWUPD_DOWNLOAD_PREFIX = "https://fwupd.org/downloads/"
 
 FWUPDMGR = "/bin/fwupdmgr"
-FWUPDAGENT = "/bin/fwupdagent"
-
-USBVM_N = "sys-usb"
 
 BIOS_UPDATE_FLAG = os.path.join(FWUPD_DOM0_DIR, "bios_update")
 LVFS_TESTING_DOM0_FLAG = os.path.join(FWUPD_DOM0_DIR, "lvfs_testing")
-LVFS_TESTING_USBVM_FLAG = os.path.join(FWUPD_VM_DIR, "lvfs_testing")
-METADATA_REFRESH_REGEX = re.compile(r"^Successfully refreshed metadata manually$")
-
-SPECIAL_CHAR_REGEX = re.compile(r"%20|&|\||#")
-
 
 HELP = {
     "Usage": [
@@ -110,216 +94,10 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
         if not os.path.exists(self.metadata_file):
             raise FileNotFoundError("Metadata file does not exist")
 
-    def _validate_usbvm_dirs(self):
-        """Validates if sys-ubs updates and metadata directories exist."""
-        cmd_validate_dirs = [
-            "qvm-run",
-            "--pass-io",
-            USBVM_N,
-            f'script --quiet --return --command "{FWUPD_VM_VALIDATE} dirs"',
-        ]
-        p = subprocess.Popen(cmd_validate_dirs)
-        p.wait()
-        if p.returncode != 0:
-            raise Exception("Validation of usbvm directories failed.")
-
-    def _validate_usbvm_archive(self, arch_name, sha):
-        """Validates checksum and gpg signature of the archive file."""
-        arch_path = os.path.join(FWUPD_VM_UPDATES_DIR, arch_name)
-        arch_validate = f"{FWUPD_VM_VALIDATE} updates {arch_path} {sha}"
-        cmd_validate_arch = [
-            "qvm-run",
-            "--pass-io",
-            USBVM_N,
-            f'script --quiet --return --command "{arch_validate}"',
-        ]
-        p = subprocess.Popen(cmd_validate_arch)
-        p.wait()
-        if p.returncode != 0:
-            raise Exception("Validation of the archive file failed.")
-
-    def _copy_usbvm_metadata(self):
-        """Copies metadata files to usbvm."""
-        self.metadata_file_usbvm = self.metadata_file.replace(
-            FWUPD_DOM0_METADATA_DIR, FWUPD_VM_METADATA_DIR
-        )
-        self.metadata_file_jcat_usbvm = self.metadata_file_usbvm + ".jcat"
-        cat_file = f"cat > {self.metadata_file_usbvm}"
-        cmd_copy_file = (
-            f"cat {self.metadata_file} | "
-            f'qvm-run --nogui --pass-io {USBVM_N} "{cat_file}"'
-        )
-        cat_jcat = f"cat > {self.metadata_file_jcat_usbvm}"
-        cmd_copy_jcat = (
-            f"cat {self.metadata_file_jcat} | "
-            f'qvm-run --nogui --pass-io {USBVM_N} "{cat_jcat}"'
-        )
-        p = subprocess.Popen(cmd_copy_file, shell=True)
-        p.wait()
-        if p.returncode != 0:
-            raise Exception("Copying metadata file failed.")
-        p = subprocess.Popen(cmd_copy_jcat, shell=True)
-        p.wait()
-        if p.returncode != 0:
-            raise Exception("Copying metadata jcat failed.")
-
-    def _validate_usbvm_metadata(self, metadata_url=None):
-        """Checks GPG signature of metadata files in usbvm."""
-        usbvm_cmd = f'"{FWUPD_VM_VALIDATE} metadata"'
-        if metadata_url:
-            usbvm_cmd = f'"{FWUPD_VM_VALIDATE} metadata --url={metadata_url}"'
-        cmd_validate_metadata = [
-            "qvm-run",
-            "--pass-io",
-            USBVM_N,
-            "script --quiet --return --command" f" {usbvm_cmd}",
-        ]
-        p = subprocess.Popen(cmd_validate_metadata)
-        p.wait()
-        if p.returncode != 0:
-            raise Exception("Metadata validation failed")
-
-    def _refresh_usbvm_metadata(self):
-        """Refreshes metadata in usbvm."""
-        sig_metadata_file = self.metadata_file_jcat_usbvm
-        cmd_refresh_metadata = [
-            "qvm-run",
-            "--pass-io",
-            USBVM_N,
-            (
-                "script --quiet --return --command "
-                f'"{FWUPDMGR} refresh {self.metadata_file_usbvm} '
-                f'{sig_metadata_file} {self.lvfs}"'
-            ),
-        ]
-        p = subprocess.Popen(cmd_refresh_metadata)
-        p.wait()
-        if p.returncode != 0:
-            raise Exception("Metadata refresh in usbvm failed")
-
-    def _copy_firmware_updates(self, arch_name):
-        """Copies updates files to usbvm.
-
-        Keywords arguments:
-        arch_name - name of the archive file
-        """
-        arch_path = os.path.join(FWUPD_DOM0_UPDATES_DIR, arch_name)
-        output_path = os.path.join(FWUPD_VM_UPDATES_DIR, arch_name)
-        cat_file = f"cat > {output_path}"
-        cmd_copy_file = (
-            f"cat {arch_path} | " f'qvm-run --nogui --pass-io {USBVM_N} "{cat_file}"'
-        )
-        p = subprocess.Popen(cmd_copy_file, shell=True)
-        p.wait()
-        if p.returncode != 0:
-            raise Exception("Copying metadata file failed.")
-
-    def _install_usbvm_firmware_update(self, arch_name):
-        """Installs firmware update for specified device in dom0.
-
-        Keywords arguments:
-        arch_name - name of the archive file
-        """
-        arch_path = os.path.join(FWUPD_VM_UPDATES_DIR, arch_name)
-        CMD_update = [
-            "qvm-run",
-            "--pass-io",
-            USBVM_N,
-            f"script --quiet --return --command"
-            f' "{FWUPDMGR} install {arch_path}" /dev/null',
-        ]
-        p = subprocess.Popen(CMD_update)
-        p.wait()
-        if p.returncode != 0:
-            raise Exception("fwupd-qubes: Firmware update failed")
-
-    def _install_usbvm_firmware_downgrade(self, arch_name):
-        """Installs firmware downgrades for specified device in dom0.
-
-        Keywords arguments:
-        arch_name - name of the archive file
-        """
-        arch_path = os.path.join(FWUPD_VM_UPDATES_DIR, arch_name)
-        CMD_downgrade = [
-            "qvm-run",
-            "--pass-io",
-            USBVM_N,
-            f"script --quiet --return --command"
-            f' "{FWUPDMGR} --allow-older install {arch_path}" /dev/null',
-        ]
-        p = subprocess.Popen(CMD_downgrade)
-        p.wait()
-        if p.returncode != 0:
-            raise Exception("fwupd-qubes: Firmware downgrade failed")
-
-    def _clean_usbvm(self):
-        """Cleans usbvm directories."""
-        cmd_clean = [
-            "qvm-run",
-            "--pass-io",
-            USBVM_N,
-            f'script --quiet --return --command "{FWUPD_VM_VALIDATE} clean"',
-        ]
-        p = subprocess.Popen(cmd_clean)
-        p.wait()
-        if p.returncode != 0:
-            raise Exception("Cleaning usbvm directories failed")
-
-    def _enable_lvfs_testing_dom0(self):
-        """Checks and enable lvfs-testing for custom metadata in dom0"""
-        cmd_lvfs_testing = [FWUPDMGR, "enable-remote", "-y", "lvfs-testing"]
-        if not os.path.exists(LVFS_TESTING_DOM0_FLAG):
-            p = subprocess.Popen(cmd_lvfs_testing)
-            p.wait()
-            if p.returncode != 0:
-                raise Exception("Enabling dom0 lvfs-testing failed!!")
-            Path(LVFS_TESTING_DOM0_FLAG).touch(mode=0o644, exist_ok=False)
-
-    def _enable_lvfs_testing_usbvm(self, usbvm=False):
-        """Checks and enable lvfs-testing for custom metadata in usbvm"""
-        if not usbvm:
-            return 0
-        cmd_refresh_metadata = [
-            "qvm-run",
-            "--pass-io",
-            USBVM_N,
-            (
-                "script --quiet --return --command "
-                f'"{FWUPDMGR} enable-remote -y lvfs-testing"'
-            ),
-        ]
-        cmd_validate_flag = [
-            "qvm-run",
-            "--pass-io",
-            USBVM_N,
-            (
-                "script --quiet --return --command "
-                f'"ls {LVFS_TESTING_USBVM_FLAG} &>/dev/null"'
-            ),
-        ]
-        cmd_touch_flag = [
-            "qvm-run",
-            "--pass-io",
-            USBVM_N,
-            ("script --quiet --return --command " f'"touch {LVFS_TESTING_USBVM_FLAG}"'),
-        ]
-        flag = subprocess.Popen(cmd_validate_flag)
-        flag.wait()
-        if flag.returncode != 0:
-            p = subprocess.Popen(cmd_refresh_metadata)
-            p.wait()
-            if p.returncode != 0:
-                raise Exception("Enabling usbvm lvfs-testing failed!!")
-            p = subprocess.Popen(cmd_touch_flag)
-            p.wait()
-            if p.returncode != 0:
-                raise Exception("Creating flag failed!!")
-
-    def refresh_metadata(self, usbvm=False, whonix=False, metadata_url=None):
+    def refresh_metadata(self, whonix=False, metadata_url=None):
         """Updates metadata with downloaded files.
 
         Keyword arguments:
-        usbvm -- usbvm support flag
         whonix -- Flag enforces downloading the metadata updates via Tor
         metadata_url -- Use custom metadata from the url
         """
@@ -329,17 +107,11 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
             self.metadata_file_jcat = self.metadata_file + ".jcat"
             self.lvfs = "lvfs-testing"
             self._enable_lvfs_testing_dom0()
-            self._enable_lvfs_testing_usbvm(usbvm=usbvm)
         else:
             self.metadata_file = FWUPD_DOM0_METADATA_FILE
             self.metadata_file_jcat = FWUPD_DOM0_METADATA_JCAT
             self.lvfs = "lvfs"
         self._download_metadata(whonix=whonix, metadata_url=metadata_url)
-        if usbvm:
-            self._validate_usbvm_dirs()
-            self._copy_usbvm_metadata()
-            self._validate_usbvm_metadata(metadata_url=metadata_url)
-            self._refresh_usbvm_metadata()
         cmd_refresh = [
             FWUPDMGR,
             "refresh",
@@ -348,16 +120,16 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
             self.lvfs,
         ]
         p = subprocess.Popen(cmd_refresh, stdout=subprocess.PIPE)
-        self.output = p.communicate()[0].decode()
-        print(self.output)
+        output = p.communicate()[0].decode()
+        print(output)
         if p.returncode != 0:
             raise Exception("fwupd-qubes: Refresh failed")
-        if not METADATA_REFRESH_REGEX.match(self.output):
+        if not output != "Successfully refreshed metadata manually":
             raise Exception("Manual metadata refresh failed!!!")
 
     def _get_dom0_updates(self):
         """Gathers infromations about available updates."""
-        cmd_get_dom0_updates = [FWUPDAGENT, "get-updates"]
+        cmd_get_dom0_updates = [FWUPDMGR, "--json", "get-updates"]
         p = subprocess.Popen(cmd_get_dom0_updates, stdout=subprocess.PIPE)
         self.dom0_updates_info = p.communicate()[0].decode()
         if p.returncode != 0 and p.returncode != 2:
@@ -403,7 +175,7 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
         if not os.path.exists(update_path):
             raise NotADirectoryError("Firmware update files do not exist")
 
-    def _user_input(self, updates_dict, downgrade=False, usbvm=False):
+    def _user_input(self, updates_list, downgrade=False):
         """UI for update process.
 
         Keywords arguments:
@@ -411,11 +183,6 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
         downgrade -- downgrade flag
         """
         decorator = "======================================================"
-        if usbvm:
-            updates_list = updates_dict["dom0"] + updates_dict["usbvm"]
-        else:
-            updates_list = updates_dict["dom0"]
-        dom0_updates_num = len(updates_dict["dom0"])
         if len(updates_list) == 0:
             print("No updates available.")
             return EXIT_CODES["NOTHING_TO_DO"]
@@ -423,11 +190,7 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
             print("Available downgrades:")
         else:
             print("Available updates:")
-        self._updates_crawler(updates_dict["dom0"])
-        if usbvm:
-            self._updates_crawler(
-                updates_dict["usbvm"], usbvm=True, prefix=dom0_updates_num
-            )
+        self._updates_crawler(updates_list)
 
         while True:
             try:
@@ -438,10 +201,7 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
                 device_num = int(choice) - 1
                 if 0 <= device_num < len(updates_list):
                     if not downgrade:
-                        if device_num >= dom0_updates_num:
-                            return "usbvm", device_num - dom0_updates_num
-                        else:
-                            return "dom0", device_num
+                        return device_num
                     break
                 else:
                     raise ValueError()
@@ -471,28 +231,23 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
                         return EXIT_CODES["NOTHING_TO_DO"]
                     downgrade_num = int(choice) - 1
                     if 0 <= downgrade_num < len(releases):
-                        if device_num >= dom0_updates_num:
-                            device_abs_num = device_num - dom0_updates_num
-                            return "usbvm", device_abs_num, downgrade_num
-                        else:
-                            return "dom0", device_num, downgrade_num
+                        return device_num, downgrade_num
                     else:
                         raise ValueError()
                 except ValueError:
                     print("Invalid choice.")
 
-    def _parse_parameters(self, updates_dict, vm_name, choice):
+    def _parse_parameters(self, updates_list, choice):
         """Parses device name, url, version and SHA256 checksum of the file list.
 
         Keywords arguments:
-        updates_dict - dictionary of updates for dom0 and usbvm
-        vm_name - VM name
+        updates_list - list of updates for dom0
         choice -- number of device to be updated
         """
-        self.name = updates_dict[vm_name][choice]["Name"]
-        self.version = updates_dict[vm_name][choice]["Releases"][0]["Version"]
-        for ver_check in updates_dict[vm_name][choice]["Releases"]:
-            if Version(ver_check["Version"]) >= Version(self.version):
+        self.name = updates_list[choice]["Name"]
+        self.version = updates_list[choice]["Releases"][0]["Version"]
+        for ver_check in updates_list[choice]["Releases"]:
+            if pversion.parse(ver_check["Version"]) >= pversion.parse(self.version):
                 self.version = ver_check["Version"]
                 self.url = ver_check["Url"]
                 self.sha = ver_check["Checksum"]
@@ -539,104 +294,39 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
             raise ValueError("No vendor information in firmware metainfo.")
         if vendor not in dmi_info:
             raise ValueError("Wrong firmware provider.")
-        if not downgrade and Version(version) <= Version(self.dmi_version):
+        if not downgrade and pversion.parse(version) <= pversion.parse(
+            self.dmi_version
+        ):
             raise ValueError(f"{version} < {self.dmi_version} Downgrade not allowed")
 
     def _get_dom0_devices(self):
         """Gathers information about devices connected in dom0."""
-        cmd_get_dom0_devices = [FWUPDAGENT, "get-devices"]
+        cmd_get_dom0_devices = [FWUPDMGR, "--json", "get-devices"]
         p = subprocess.Popen(cmd_get_dom0_devices, stdout=subprocess.PIPE)
         self.dom0_devices_info = p.communicate()[0].decode()
         if p.returncode != 0:
             raise Exception("fwupd-qubes: Getting devices info failed")
 
-    def _get_usbvm_devices(self):
-        """Gathers information about devices connected in usbvm."""
-        if os.path.exists(FWUPD_VM_LOG):
-            os.remove(FWUPD_VM_LOG)
-        usbvm_cmd = f'"{FWUPDAGENT} get-devices"'
-        log_file = f" > {FWUPD_VM_LOG}"
-        cmd_get_usbvm_devices = (
-            f"qvm-run --nogui --pass-io {USBVM_N} {usbvm_cmd}{log_file}"
-        )
-        p = subprocess.Popen(cmd_get_usbvm_devices, shell=True)
-        p.wait()
-        if p.returncode != 0 and p.returncode != 2 and not os.path.exists(FWUPD_VM_LOG):
-            raise Exception("fwupd-qubes: Getting usbvm devices info failed")
-        if not os.path.exists(FWUPD_VM_LOG):
-            raise Exception("usbvm device info log does not exist")
-
-    def _parse_usbvm_updates(self, usbvm_devices_info):
-        """Creates dictionary and list with information about updates.
-
-        Keywords argument:
-        usbvm_devices_info - gathered usbvm information
-        """
-        self.usbvm_updates_list = []
-        if "No detected devices" in usbvm_devices_info:
-            return EXIT_CODES["NOTHING_TO_DO"]
-        usbvm_device_info_dict = json.loads(usbvm_devices_info)
-        for device in usbvm_device_info_dict["Devices"]:
-            if "Releases" in device:
-                self.usbvm_updates_list.append(
-                    {
-                        "Name": device["Name"],
-                        "Version": device["Version"],
-                        "Releases": [],
-                    }
-                )
-                current_version = device["Version"]
-                for update in device["Releases"]:
-                    if Version(update["Version"]) > current_version:
-                        self.usbvm_updates_list[-1]["Releases"].append(
-                            {
-                                "Version": update["Version"],
-                                "Url": update["Uri"],
-                                "Checksum": update["Checksum"][-1],
-                                "Description": update["Description"],
-                            }
-                        )
-                if not self.usbvm_updates_list[-1]["Releases"]:
-                    self.usbvm_updates_list.pop()
-
-    def update_firmware(self, usbvm=False, whonix=False):
+    def update_firmware(self, whonix=False):
         """Updates firmware of the specified device.
 
         Keyword arguments:
-        usbvm -- usbvm support flag
         whonix -- Flag enforces downloading the metadata updates via Tor
         """
         self._get_dom0_updates()
         self._parse_dom0_updates_info(self.dom0_updates_info)
-        if usbvm:
-            self._get_usbvm_devices()
-            with open(FWUPD_VM_LOG) as usbvm_device_info:
-                raw = usbvm_device_info.read()
-                self._parse_usbvm_updates(raw)
-            update_dict = {
-                "usbvm": self.usbvm_updates_list,
-                "dom0": self.dom0_updates_list,
-            }
-            ret_input = self._user_input(update_dict, usbvm=True)
-        else:
-            update_dict = {"dom0": self.dom0_updates_list}
-            ret_input = self._user_input(update_dict)
+        updates_list = self.dom0_updates_list
+        ret_input = self._user_input(updates_list)
         if ret_input == EXIT_CODES["NOTHING_TO_DO"]:
             exit(EXIT_CODES["NOTHING_TO_DO"])
-        vm_name, choice = ret_input
-        self._parse_parameters(update_dict, vm_name, choice)
+        choice = ret_input
+        self._parse_parameters(updates_list, choice)
         self._download_firmware_updates(self.url, self.sha, whonix=whonix)
         if self.name == "System Firmware":
             Path(BIOS_UPDATE_FLAG).touch(mode=0o644, exist_ok=True)
             extracted_path = self.arch_path.replace(".cab", "")
             self._verify_dmi(extracted_path, self.version)
-        if vm_name == "dom0":
-            self._install_dom0_firmware_update(self.arch_path)
-        if vm_name == "usbvm":
-            self._validate_usbvm_dirs()
-            self._copy_firmware_updates(self.arch_name)
-            self._validate_usbvm_archive(self.arch_name, self.sha)
-            self._install_usbvm_firmware_update(self.arch_name)
+        self._install_dom0_firmware_update(self.arch_path)
 
     def _parse_downgrades(self, device_list):
         """Parses information about possible downgrades.
@@ -666,7 +356,8 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
                                 "Checksum": downgrade["Checksum"][-1],
                             }
                             for downgrade in device["Releases"]
-                            if Version(downgrade["Version"]) < Version(version)
+                            if pversion.parse(downgrade["Version"])
+                            < pversion.parse(version)
                         ],
                     }
                 )
@@ -684,49 +375,34 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
         if p.returncode != 0:
             raise Exception("fwupd-qubes: Firmware downgrade failed")
 
-    def downgrade_firmware(self, usbvm=False, whonix=False):
+    def downgrade_firmware(self, whonix=False):
         """Downgrades firmware of the specified device.
 
         Keyword arguments:
-        usbvm -- usbvm support flag
         whonix -- Flag enforces downloading the metadata updates via Tor
         """
         self._get_dom0_devices()
         dom0_downgrades = self._parse_downgrades(self.dom0_devices_info)
-        if usbvm:
-            self._get_usbvm_devices()
-            with open(FWUPD_VM_LOG) as usbvm_device_info:
-                raw = usbvm_device_info.read()
-                usbvm_downgrades = self._parse_downgrades(raw)
-            downgrade_dict = {"usbvm": usbvm_downgrades, "dom0": dom0_downgrades}
-            ret_input = self._user_input(downgrade_dict, downgrade=True, usbvm=True)
-        else:
-            downgrade_dict = {"dom0": dom0_downgrades}
-            ret_input = self._user_input(downgrade_dict, downgrade=True)
+        ret_input = self._user_input(dom0_downgrades, downgrade=True)
         if ret_input == EXIT_CODES["NOTHING_TO_DO"]:
             exit(EXIT_CODES["NOTHING_TO_DO"])
-        vm_name, device_choice, downgrade_choice = ret_input
-        releases = downgrade_dict[vm_name][device_choice]["Releases"]
+        device_choice, downgrade_choice = ret_input
+        downgrade = dom0_downgrades[device_choice]
+        releases = downgrade["Releases"]
         downgrade_url = releases[downgrade_choice]["Url"]
         downgrade_sha = releases[downgrade_choice]["Checksum"]
         self._download_firmware_updates(downgrade_url, downgrade_sha, whonix=whonix)
-        if downgrade_dict[vm_name][device_choice]["Name"] == "System Firmware":
+        if downgrade["Name"] == "System Firmware":
             Path(BIOS_UPDATE_FLAG).touch(mode=0o644, exist_ok=True)
             extracted_path = self.arch_path.replace(".cab", "")
             self._verify_dmi(
                 extracted_path,
-                downgrade_dict[vm_name][device_choice]["Version"],
+                downgrade["Version"],
                 downgrade=True,
             )
-        if vm_name == "dom0":
-            self._install_dom0_firmware_downgrade(self.arch_path)
-        if vm_name == "usbvm":
-            self._validate_usbvm_dirs()
-            self._copy_firmware_updates(self.arch_name)
-            self._validate_usbvm_archive(self.arch_name, downgrade_sha)
-            self._install_usbvm_firmware_downgrade(self.arch_name)
+        self._install_dom0_firmware_downgrade(self.arch_path)
 
-    def _output_crawler(self, updev_dict, level, help_f=False, dom0=True):
+    def _output_crawler(self, updev_dict, level, help_f=False):
         """Prints device and updates information as a tree.
 
         Keywords arguments:
@@ -766,29 +442,23 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
                 if level == 0 and help_f is True:
                     print(output)
                 else:
-                    if level == 0 and dom0 is True:
+                    if level == 0:
                         print(f"Dom0 {output}")
-                    elif level == 0 and dom0 is False:
-                        print(f"{USBVM_N} {output}")
 
                 for nested_dict in updev_dict[updev_key]:
                     self._output_crawler(nested_dict, level + 1)
 
-    def _updates_crawler(self, updates_list, usbvm=False, prefix=0):
-        """Prints updates information for dom0 and usbvm
+    def _updates_crawler(self, updates_list, prefix=0):
+        """Prints updates information for dom0
 
         Keywords arguments:
         updates_list -- list of devices updates
-        usbvm -- usbvm support flag
         prefix -- device number prefix
         """
         available_updates = False
         decorator = "======================================================"
         print(decorator)
-        if usbvm:
-            print(f"{USBVM_N} updates:")
-        else:
-            print("Dom0 updates:")
+        print("Dom0 updates:")
         print(decorator)
         if len(updates_list) == 0:
             print("No updates available.")
@@ -821,80 +491,37 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
                 print("No updates available.")
                 return EXIT_CODES["NOTHING_TO_DO"]
 
-    def get_devices_qubes(self, usbvm=False):
-        """Gathers and prints devices information.
-
-        Keyword arguments:
-        usbvm -- usbvm support flag
-        """
+    def get_devices_qubes(self):
+        """Gathers and prints devices information."""
         self._get_dom0_devices()
         dom0_devices_info_dict = json.loads(self.dom0_devices_info)
         self._output_crawler(dom0_devices_info_dict, 0)
-        if usbvm:
-            self._get_usbvm_devices()
-            with open(FWUPD_VM_LOG) as usbvm_device_info:
-                raw = usbvm_device_info.read()
-                if "No detected devices" not in raw:
-                    usbvm_device_info_dict = json.loads(raw)
-                else:
-                    print(f"No detected devices in {USBVM_N}")
-                    return EXIT_CODES["NOTHING_TO_DO"]
-            self._output_crawler(usbvm_device_info_dict, 0, dom0=False)
 
-    def get_updates_qubes(self, usbvm=False):
-        """Gathers and prints updates information.
-
-        Keyword arguments:
-        usbvm -- usbvm support flag
-        """
+    def get_updates_qubes(self):
+        """Gathers and prints updates information."""
         self._get_dom0_updates()
         self._parse_dom0_updates_info(self.dom0_updates_info)
         self._updates_crawler(self.dom0_updates_list)
-        if usbvm:
-            self._get_usbvm_devices()
-            with open(FWUPD_VM_LOG) as usbvm_device_info:
-                raw = usbvm_device_info.read()
-                self._parse_usbvm_updates(raw)
-            self._updates_crawler(self.usbvm_updates_list, usbvm=True)
 
     def help(self):
         """Prints help information"""
         self._output_crawler(HELP, 0, help_f=True)
 
-    def check_usbvm(self):
-        """Checks if usbvm is running"""
-        cmd_xl_list = ["xl", "list"]
-        p = subprocess.Popen(cmd_xl_list, stdout=subprocess.PIPE)
-        self.output = p.communicate()[0].decode()
-        if p.returncode != 0:
-            raise Exception("fwupd-qubes: Firmware downgrade failed")
-        return USBVM_N in self.output
-
-    def trusted_cleanup(self, usbvm=False):
-        """Deletes trusted directory.
-
-        Keyword arguments:
-        usbvm -- usbvm support flag
-        """
+    def trusted_cleanup(self):
+        """Deletes trusted directory."""
         trusted_path = os.path.join(FWUPD_DOM0_UPDATES_DIR, "trusted.cab")
         if os.path.exists(trusted_path):
             os.remove(trusted_path)
             shutil.rmtree(trusted_path.replace(".cab", ""))
-        if usbvm:
-            self._clean_usbvm()
 
-    def refresh_metadata_after_bios_update(self, usbvm=False):
-        """Refreshes metadata after bios update
-
-        Keyword arguments:
-        usbvm -- usbvm support flag
-        """
+    def refresh_metadata_after_bios_update(self):
+        """Refreshes metadata after bios update"""
         if os.path.exists(BIOS_UPDATE_FLAG):
             print("BIOS was updated. Refreshing metadata...")
             if "--whonix" in sys.argv:
-                self.refresh_metadata(usbvm=usbvm, whonix=True)
+                self.refresh_metadata(whonix=True)
             else:
-                self.refresh_metadata(usbvm=usbvm)
+                self.refresh_metadata()
             os.remove(BIOS_UPDATE_FLAG)
 
     def heads_update(self, device="x230", whonix=False, metadata_url=None):
@@ -962,16 +589,15 @@ def main():
         exit(EXIT_CODES["ERROR"])
 
     q = QubesFwupdmgr()
-    sys_usb = q.check_usbvm()
     q.validate_dom0_dirs()
-    q.trusted_cleanup(usbvm=sys_usb)
-    q.refresh_metadata_after_bios_update(usbvm=sys_usb)
+    q.trusted_cleanup()
+    q.refresh_metadata_after_bios_update()
 
     metadata_url = None
     device = "x230"
 
     if not os.path.exists(FWUPD_DOM0_DIR):
-        q.refresh_metadata(usbvm=sys_usb)
+        q.refresh_metadata()
 
     if len(sys.argv) < 2:
         q.help()
@@ -990,23 +616,23 @@ def main():
             device = arg.replace("--device=", "")
 
     if sys.argv[1] == "get-updates":
-        q.get_updates_qubes(usbvm=sys_usb)
+        q.get_updates_qubes()
     elif sys.argv[1] == "get-devices":
-        q.get_devices_qubes(usbvm=sys_usb)
+        q.get_devices_qubes()
     elif sys.argv[1] == "update" and "--whonix" in sys.argv:
-        q.update_firmware(usbvm=sys_usb, whonix=True)
+        q.update_firmware(whonix=True)
     elif sys.argv[1] == "update" and "--whonix" not in sys.argv:
-        q.update_firmware(usbvm=sys_usb)
+        q.update_firmware()
     elif sys.argv[1] == "downgrade" and "--whonix" in sys.argv:
-        q.downgrade_firmware(usbvm=sys_usb, whonix=True)
+        q.downgrade_firmware(whonix=True)
     elif sys.argv[1] == "downgrade" and "--whonix" not in sys.argv:
-        q.downgrade_firmware(usbvm=sys_usb)
+        q.downgrade_firmware()
     elif sys.argv[1] == "clean":
-        q.clean_cache(usbvm=sys_usb)
+        q.clean_cache()
     elif sys.argv[1] == "refresh" and "--whonix" not in sys.argv:
-        q.refresh_metadata(usbvm=sys_usb, metadata_url=metadata_url)
+        q.refresh_metadata(metadata_url=metadata_url)
     elif sys.argv[1] == "refresh" and "--whonix" in sys.argv:
-        q.refresh_metadata(usbvm=sys_usb, whonix=True, metadata_url=metadata_url)
+        q.refresh_metadata(whonix=True, metadata_url=metadata_url)
     elif sys.argv[1] == "update-heads" and "--whonix" not in sys.argv:
         q.heads_update(device=device, metadata_url=metadata_url)
     elif sys.argv[1] == "update-heads" and "--whonix" in sys.argv:

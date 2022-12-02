@@ -2006,6 +2006,28 @@ fu_engine_get_boot_time(void)
 	return NULL;
 }
 
+static void
+fu_engine_get_report_metadata_cpu_device(FuEngine *self, GHashTable *hash)
+{
+	g_autofree gchar *guid = fwupd_guid_hash_string("cpu");
+	g_autoptr(FuDevice) device = NULL;
+	g_autoptr(GError) error_local = NULL;
+
+	device = fu_device_list_get_by_guid(self->device_list, guid, &error_local);
+	if (device == NULL) {
+		g_debug("failed to find CPU device: %s", error_local->message);
+		return;
+	}
+	if (fu_device_get_vendor(device) == NULL || fu_device_get_name(device) == NULL) {
+		g_debug("not enough data to include CpuModel");
+		return;
+	}
+	g_hash_table_insert(
+	    hash,
+	    g_strdup("CpuModel"),
+	    g_strdup_printf("%s %s", fu_device_get_vendor(device), fu_device_get_name(device)));
+}
+
 static gboolean
 fu_engine_get_report_metadata_os_release(GHashTable *hash, GError **error)
 {
@@ -2013,9 +2035,11 @@ fu_engine_get_report_metadata_os_release(GHashTable *hash, GError **error)
 	struct {
 		const gchar *key;
 		const gchar *val;
-	} distro_kv[] = {{"ID", "DistroId"},
-			 {"VERSION_ID", "DistroVersion"},
-			 {"VARIANT_ID", "DistroVariant"},
+	} distro_kv[] = {{"ID", FWUPD_RESULT_KEY_DISTRO_ID},
+			 {"NAME", "DistroName"},
+			 {"PRETTY_NAME", "DistroPrettyName"},
+			 {"VERSION_ID", FWUPD_RESULT_KEY_DISTRO_VERSION},
+			 {"VARIANT_ID", FWUPD_RESULT_KEY_DISTRO_VARIANT},
 			 {NULL, NULL}};
 
 	/* get all required os-release keys */
@@ -2189,6 +2213,7 @@ fu_engine_get_report_metadata(FuEngine *self, GError **error)
 				    g_strdup_printf("RuntimeVersion(%s)", id),
 				    g_strdup(version));
 	}
+	fu_engine_get_report_metadata_cpu_device(self, hash);
 	if (!fu_engine_get_report_metadata_os_release(hash, error))
 		return NULL;
 	if (!fu_engine_get_report_metadata_kernel_cmdline(hash, error))
@@ -4568,13 +4593,7 @@ fu_engine_get_result_from_component(FuEngine *self,
 			continue;
 		device = fu_device_list_get_by_guid(self->device_list, guid, NULL);
 		if (device != NULL) {
-			fu_device_set_name(dev, fu_device_get_name(device));
-			fu_device_set_flags(dev, fu_device_get_flags(device));
-			fu_device_set_internal_flags(dev, fu_device_get_internal_flags(device));
-			fu_device_set_id(dev, fu_device_get_id(device));
-			fu_device_set_version_raw(dev, fu_device_get_version_raw(device));
-			fu_device_set_version_format(dev, fu_device_get_version_format(device));
-			fu_device_set_version(dev, fu_device_get_version(device));
+			fu_device_incorporate(dev, device);
 		} else {
 			fu_device_inhibit(dev, "not-found", "Device was not found");
 		}
@@ -4737,11 +4756,11 @@ fu_engine_get_details_for_bytes(FuEngine *self,
 	for (guint i = 0; i < components->len; i++) {
 		XbNode *component = g_ptr_array_index(components, i);
 		FuDevice *dev;
-		FwupdRelease *rel;
+		g_autoptr(FwupdRelease) rel = fwupd_release_new();
 		dev = fu_engine_get_result_from_component(self, request, component, error);
 		if (dev == NULL)
 			return NULL;
-		rel = fu_device_get_release_default(dev);
+		fu_device_add_release(dev, rel);
 		if (remote_id != NULL) {
 			fwupd_release_set_remote_id(rel, remote_id);
 			fu_device_add_flag(dev, FWUPD_DEVICE_FLAG_SUPPORTED);
@@ -7324,10 +7343,10 @@ fu_engine_update_history_device(FuEngine *self, FuDevice *dev_history, GError **
 	metadata_device = fu_device_report_metadata_post(dev);
 	if (metadata_device != NULL && g_hash_table_size(metadata_device) > 0) {
 		fwupd_release_add_metadata(rel_history, metadata_device);
-		if (!fu_history_set_device_metadata(self->history,
-						    fu_device_get_id(dev_history),
-						    fwupd_release_get_metadata(rel_history),
-						    error)) {
+		if (!fu_history_modify_device_release(self->history,
+						      dev_history,
+						      rel_history,
+						      error)) {
 			g_prefix_error(error, "failed to set metadata: ");
 			return FALSE;
 		}
@@ -7359,7 +7378,10 @@ fu_engine_update_history_device(FuEngine *self, FuDevice *dev_history, GError **
 		fu_device_set_version(dev_history, fu_device_get_version(dev));
 		fu_device_remove_flag(dev_history, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
 		fu_device_set_update_state(dev_history, FWUPD_UPDATE_STATE_SUCCESS);
-		return fu_history_modify_device(self->history, dev_history, error);
+		return fu_history_modify_device_release(self->history,
+							dev_history,
+							rel_history,
+							error);
 	}
 
 	/* does the plugin know the update failure */
@@ -7378,7 +7400,7 @@ fu_engine_update_history_device(FuEngine *self, FuDevice *dev_history, GError **
 	}
 
 	/* update the state in the database */
-	return fu_history_modify_device(self->history, dev_history, error);
+	return fu_history_modify_device_release(self->history, dev_history, rel_history, error);
 }
 
 static gboolean

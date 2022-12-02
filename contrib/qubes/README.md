@@ -123,7 +123,7 @@ qvm-copy fwupd-qubes-vm-whonix-<ver>_amd64.deb
  # qubes-dom0-update gcab fwupd python36
  ```
 
-* Make sure that sys-firewall, sys-whonix, and sys-usb (if exists) are running.
+* Make sure that sys-firewall and sys-whonix are running.
 
 * Compare the SHA sums of the package in dom0 and qubes-builder VM.
  If they match, install the package:
@@ -132,7 +132,7 @@ qvm-copy fwupd-qubes-vm-whonix-<ver>_amd64.deb
  # rpm -U qubes-fwupd-dom0-0.2.0-1.fc32.x86_64.rpm
  ```
 
-* Reboot system (or reboot sys-firewall, sys-whonix, and sys-usb)
+* Reboot system (or reboot sys-firewall and sys-whonix)
 
 * Run the tests to verify the installation process
 

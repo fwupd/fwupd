@@ -33,6 +33,42 @@
     <binary>fwupdtool</binary>
   </provides>
   <releases>
+    <release version="1.8.7" date="2022-11-09">
+      <description>
+        <p>
+          This release adds the following features:
+        </p>
+        <ul>
+          <li>Add a new HSI check for the leaked Lenovo 'Key Manifest' hashes</li>
+          <li>Measure system integrity when installing UEFI updates</li>
+          <li>Record more host DMI data when submitting a report for dbx failures</li>
+          <li>Use xz-compressed metadata to reduce bandwidth used by ~25%</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Add documentation for three existing HSI attributes</li>
+          <li>Add re-insert requirement for Analogix devices</li>
+          <li>Allow parsing metadata more than 1MB in size</li>
+          <li>Do not follow symlinks when searching for ESP devices</li>
+          <li>Ensure the config file permission is correct for built-in plugins</li>
+          <li>Fix a compile failure when compiling without efiboot</li>
+          <li>Fix a regression when using fwuptool install-blob with FMAP firmware</li>
+          <li>Only count the Microsoft hashes when getting the dbx version</li>
+          <li>Only use the IFD when the system is Intel-based</li>
+          <li>Support loading CoSWID when only one role has been set</li>
+        </ul>
+        <p>This release adds support for the following hardware:</p>
+        <ul>
+          <li>Anker Thunderbolt 4 Mini Hub</li>
+          <li>ELAN haptic hardware</li>
+          <li>Fingerprint lenfy devices</li>
+          <li>Goodix GF3258WNC</li>
+          <li>Intel discrete GPUs (experimental)</li>
+          <li>More Star Labs laptops</li>
+          <li>QSI Godzilla Creek Reference Hub</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.8.6" date="2022-10-07">
       <description>
         <p>

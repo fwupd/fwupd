@@ -1,9 +1,4 @@
 if build_standalone and get_option('lvfs') != 'false'
-  install_data([
-      'lvfs-testing.conf',
-    ],
-    install_dir: join_paths(sysconfdir, 'fwupd', 'remotes.d')
-  )
   con3 = configuration_data()
   if get_option('lvfs') == 'disabled'
     con3.set('enabled', 'false')
@@ -18,6 +13,13 @@ if build_standalone and get_option('lvfs') != 'false'
   configure_file(
     input: 'lvfs.conf',
     output: 'lvfs.conf',
+    configuration: con3,
+    install: true,
+    install_dir: join_paths(sysconfdir, 'fwupd', 'remotes.d'),
+  )
+  configure_file(
+    input: 'lvfs-testing.conf',
+    output: 'lvfs-testing.conf',
     configuration: con3,
     install: true,
     install_dir: join_paths(sysconfdir, 'fwupd', 'remotes.d'),

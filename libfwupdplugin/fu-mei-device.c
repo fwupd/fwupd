@@ -472,8 +472,10 @@ fu_mei_device_incorporate(FuDevice *device, FuDevice *donor)
 	/* copy private instance data */
 	priv->max_msg_length = priv_donor->max_msg_length;
 	priv->protocol_version = priv_donor->protocol_version;
-	priv->uuid = g_strdup(priv_donor->uuid);
-	priv->parent_device_file = g_strdup(priv_donor->parent_device_file);
+	if (priv->uuid == NULL)
+		priv->uuid = g_strdup(priv_donor->uuid);
+	if (priv->parent_device_file == NULL)
+		priv->parent_device_file = g_strdup(priv_donor->parent_device_file);
 }
 
 static void

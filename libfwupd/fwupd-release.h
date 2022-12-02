@@ -6,9 +6,8 @@
 
 #pragma once
 
-#include <glib-object.h>
-
 #include "fwupd-enums.h"
+#include "fwupd-report.h"
 
 G_BEGIN_DECLS
 
@@ -185,6 +184,10 @@ const gchar *
 fwupd_release_get_update_image(FwupdRelease *self);
 void
 fwupd_release_set_update_image(FwupdRelease *self, const gchar *update_image);
+GPtrArray *
+fwupd_release_get_reports(FwupdRelease *self);
+void
+fwupd_release_add_report(FwupdRelease *self, FwupdReport *report);
 
 FwupdRelease *
 fwupd_release_from_variant(GVariant *value);

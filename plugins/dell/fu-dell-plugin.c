@@ -17,6 +17,8 @@
 #include "fu-dell-plugin.h"
 #include "fu-plugin-dell.h"
 
+#define BIOS_SETTING_BIOS_DOWNGRADE "com.dell-wmi-sysman.AllowBiosDowngrade"
+
 struct _FuDellPlugin {
 	FuPlugin parent_instance;
 	FuDellSmiObj *smi_obj;
@@ -972,6 +974,33 @@ fu_dell_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError **error)
 }
 
 static void
+fu_dell_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
+{
+	FwupdBiosSetting *bios_attr;
+	FuContext *ctx = fu_plugin_get_context(plugin);
+	g_autoptr(FwupdSecurityAttr) attr = NULL;
+
+	bios_attr = fu_context_get_bios_setting(ctx, BIOS_SETTING_BIOS_DOWNGRADE);
+	if (bios_attr == NULL) {
+		g_debug("failed to find %s in cache", BIOS_SETTING_BIOS_DOWNGRADE);
+		return;
+	}
+
+	attr = fu_plugin_security_attr_new(plugin, FWUPD_SECURITY_ATTR_ID_BIOS_ROLLBACK_PROTECTION);
+	fu_security_attr_add_bios_target_value(attr, BIOS_SETTING_BIOS_DOWNGRADE, "Disabled");
+	fu_security_attrs_append(attrs, attr);
+
+	if (g_strcmp0(fwupd_bios_setting_get_current_value(bios_attr), "Enabled") == 0) {
+		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_FW);
+		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
+		return;
+	}
+
+	fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_ENABLED);
+	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+}
+
+static void
 fu_dell_plugin_init(FuDellPlugin *self)
 {
 	self->smi_obj = g_malloc0(sizeof(FuDellSmiObj));
@@ -1030,4 +1059,5 @@ fu_dell_plugin_class_init(FuDellPluginClass *klass)
 	plugin_class->backend_device_added = fu_dell_plugin_backend_device_added;
 	plugin_class->device_registered = fu_dell_plugin_device_registered;
 	plugin_class->get_results = fu_dell_plugin_get_results;
+	plugin_class->add_security_attrs = fu_dell_plugin_add_security_attrs;
 }

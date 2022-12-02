@@ -754,6 +754,10 @@ msgstr "Uređaj uklonjen:"
 msgid "Device requires AC power to be connected"
 msgstr "Uređaj zahtijeva vanjski izvor energije"
 
+#. TRANSLATORS: The device cannot be updated due to missing vendor's license."
+msgid "Device requires a software license to update"
+msgstr "Uređaj zahtijeva softversku licencu za nadopunu"
+
 #. TRANSLATORS: longer description
 msgid "Device software updates are provided for this device."
 msgstr "Nadopune softvera uređaja su isporučene za ovaj uređaj."
@@ -861,6 +865,10 @@ msgstr "Nemoj izvoditi provjere sigurnosti uređaja"
 #. TRANSLATORS: command line option
 msgid "Do not prompt for devices"
 msgstr "Ne upitaj za uređaje"
+
+#. TRANSLATORS: warning message shown after update has been scheduled
+msgid "Do not turn off your computer or remove the AC adaptor while the update is in progress."
+msgstr "Ne isključujte svoje računalo ili AC adapter tijekom procesa nadopune."
 
 #. TRANSLATORS: command line option
 msgid "Do not write to the history database"
@@ -1716,6 +1724,10 @@ msgstr "Prikaži dostupne vrste firmvera"
 msgid "Lists files on the ESP"
 msgstr "Prikazuje datoteke na ESP-u"
 
+#. TRANSLATORS: the plugin was created from a .so object, and was not built-in
+msgid "Loaded from an external module"
+msgstr "Učitano iz vanjskog modula"
+
 #. TRANSLATORS: parsing the firmware information
 msgid "Loading…"
 msgstr "Učitavanje…"
@@ -2011,6 +2023,10 @@ msgstr "DMA zaštita prije pokretanja je omogućena"
 #. TRANSLATORS: longer description
 msgid "Pre-boot DMA protection prevents devices from accessing system memory after being connected to the computer."
 msgstr "DMA zaštita predpokretanja sprječava pristup uređaja memoriji sustava nakon što se povežu s računalom. "
+
+#. TRANSLATORS: warning message
+msgid "Press unlock on the device to continue the update process."
+msgstr "Pritisnite otključavanje na uređaju za nastavak procesa nadopune."
 
 #. TRANSLATORS: version number of previous firmware
 msgid "Previous version"
@@ -2660,6 +2676,14 @@ msgstr "%s firmver nije isporučen od strane %s dobavljača hardvera."
 #. TRANSLATORS: try to help
 msgid "The system clock has not been set correctly and downloading files may fail."
 msgstr "Sat sustava nije pravilno postavljen i preuzimanje datoteka možda ne uspije."
+
+#. TRANSLATORS: warning message shown after update has been scheduled
+msgid "The update will continue when the device USB cable has been unplugged and then re-inserted."
+msgstr "Nadopuna će se nastaviti kada se kabel USB uređaja odspoji i ponvno priključi."
+
+#. TRANSLATORS: warning message shown after update has been scheduled
+msgid "The update will continue when the device USB cable has been unplugged."
+msgstr "Nadopuna će se nastaviti kada se kabel USB uređaja odspoji."
 
 #. TRANSLATORS: naughty vendor
 msgid "The vendor did not supply any release notes."
