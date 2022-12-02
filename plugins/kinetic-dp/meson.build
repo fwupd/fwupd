@@ -7,7 +7,6 @@ install_data(['kinetic-dp.quirk'],
 )
 
 shared_module('fu_plugin_kinetic_dp',
-#  fu_hash,
   sources : [
     'fu-plugin-kinetic-dp.c',
     'fu-kinetic-dp-common.c',
@@ -25,7 +24,6 @@ shared_module('fu_plugin_kinetic_dp',
     fwupdplugin_incdir,
   ],
   install : true,
-#  install_dir: plugin_dir,
   install_dir: libdir_pkg,
   c_args : [
     cargs,

@@ -171,9 +171,6 @@ fu_plugin_kinetic_dp_destroy(FuPlugin *plugin)
 void
 fu_plugin_init_vfuncs(FuPluginVfuncs *vfuncs)
 {
-	// vfuncs->build_hash = FU_BUILD_HASH;
-	// vfuncs->init = fu_plugin_kinetic_dp_init;
-	// vfuncs->destroy = fu_plugin_kinetic_dp_destroy;
 	vfuncs->write_firmware = fu_plugin_kinetic_dp_write_firmware;
 	vfuncs->backend_device_added = fu_plugin_kinetic_dp_backend_device_added;
 	vfuncs->backend_device_changed = fu_plugin_kinetic_dp_backend_device_changed;
