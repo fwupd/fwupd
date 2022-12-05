@@ -14,7 +14,7 @@ hsi_test_jsons = files([
   'org.fwupd.hsi.Iommu.json',
   'org.fwupd.hsi.Kernel.Lockdown.json',
   'org.fwupd.hsi.Kernel.Tainted.json',
-  'org.fwupd.hsi.Mei.BootGuardPlatformKey.json',
+  'org.fwupd.hsi.Mei.KeyManifest.json',
   'org.fwupd.hsi.Mei.ManufacturingMode.json',
   'org.fwupd.hsi.Mei.OverrideStrap.json',
   'org.fwupd.hsi.Mei.Version.json',

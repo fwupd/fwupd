@@ -1,5 +1,5 @@
 {
-  "id" : "org.fwupd.hsi.Mei.BootGuardPlatformKey",
+  "id" : "org.fwupd.hsi.Mei.KeyManifest",
   "name" : "ME BootGuard Platform Key",
   "description" : [
     "The BootGuard Platform Key is fused into the CPU PCH during manufacturing by the OEM.",
