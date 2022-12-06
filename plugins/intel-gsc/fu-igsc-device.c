@@ -631,7 +631,6 @@ fu_igsc_device_reconnect_cb(FuDevice *self, gpointer user_data, GError **error)
 	return fu_mei_device_connect(FU_MEI_DEVICE(self), 0, error);
 }
 
-// FIXME we want to retry this on failure
 gboolean
 fu_igsc_device_write_blob(FuIgscDevice *self,
 			  enum gsc_fwu_heci_payload_type payload_type,
@@ -647,14 +646,23 @@ fu_igsc_device_write_blob(FuIgscDevice *self,
 	g_autoptr(GPtrArray) chunks = NULL;
 
 	/* progress */
-	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1, "get-status");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 1, "update-start");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 1, "write-chunks");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 5, "update-end");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 65, "wait-for-reboot");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 65, "reconnect");
+	if (payload_type == GSC_FWU_HECI_PAYLOAD_TYPE_GFX_FW) {
+		fu_progress_set_id(progress, G_STRLOC);
+		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1, "get-status");
+		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 1, "update-start");
+		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 50, "write-chunks");
+		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 1, "update-end");
+		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1, "wait-for-reboot");
+		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 46, "reconnect");
+	} else {
+		fu_progress_set_id(progress, G_STRLOC);
+		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1, "get-status");
+		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 1, "update-start");
+		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 96, "write-chunks");
+		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 1, "update-end");
+		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1, "wait-for-reboot");
+		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 0, "reconnect");
+	}
 
 	/* need to get the new version in a loop? */
 	if (!fu_igsc_device_get_fw_status(self, 5, &sts5, error))
@@ -781,11 +789,10 @@ static void
 fu_igsc_device_set_progress(FuDevice *self, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 1, "detach");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 88, "write");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 1, "attach");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 10, "reload");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 96, "write");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 2, "attach");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1, "reload");
 }
 
 static void
