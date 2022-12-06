@@ -45,11 +45,11 @@ fwupd_report_set_vendor(FwupdReport *self, const gchar *vendor);
 guint32
 fwupd_report_get_vendor_id(FwupdReport *self);
 void
-fwupd_report_set_vendor_id(FwupdReport *self, guint32 duration);
+fwupd_report_set_vendor_id(FwupdReport *self, guint32 vendor_id);
 const gchar *
 fwupd_report_get_device_name(FwupdReport *self);
 void
-fwupd_report_set_device_name(FwupdReport *self, const gchar *name);
+fwupd_report_set_device_name(FwupdReport *self, const gchar *device_name);
 const gchar *
 fwupd_report_get_distro_id(FwupdReport *self);
 void
