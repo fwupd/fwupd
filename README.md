@@ -181,15 +181,3 @@ This then appears when getting the releases for that specific GUID:
  A software suite available on Dell IoT gateways and Wyse thin clients with built-in fwupd support.
  The remote administration interface can be used to download and deploy firmware
  updates.
-
-## Fuzzing
-
-There are several automated fuzzing tests in fwupd. These take some time to run:
-
-    CC=hfuzz-clang meson --default-library=static \
-        -Dudevdir=/tmp -Dsystemd_root_prefix=/tmp \
-        -Dplugin_redfish=disabled -Dcurl=disabled \
-        -Dintrospection=false ../
-    ninja install
-    ninja fuzz-firmware
-    ninja fuzz-tpm-eventlog
