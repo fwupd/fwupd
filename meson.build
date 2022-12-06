@@ -2,7 +2,7 @@ project('fwupd', 'c',
   version: '1.8.8',
   license: 'LGPL-2.1+',
   meson_version: '>=0.61.0',
-  default_options: ['warning_level=2', 'c_std=c99'],
+  default_options: ['warning_level=2', 'c_std=c11'],
 )
 
 fwupd_version = meson.project_version()
@@ -89,6 +89,7 @@ warning_flags = [
   '-Wno-missing-field-initializers',
   '-Wno-strict-aliasing',
   '-Wno-suggest-attribute=format',
+  '-Wno-typedef-redefinition',
   '-Wno-unknown-warning-option',
   '-Wno-unused-parameter',
   '-Wold-style-definition',
