@@ -793,6 +793,7 @@ fu_igsc_device_init(FuIgscDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_REQUIRE_AC);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_device_set_vendor(FU_DEVICE(self), "Intel");
 	fu_device_set_name(FU_DEVICE(self), "Graphics Card");
 	fu_device_set_summary(FU_DEVICE(self), "Discrete Graphics Card");
