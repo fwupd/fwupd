@@ -438,8 +438,10 @@ fu_igsc_device_get_fw_status(FuIgscDevice *self, guint line, guint32 *fw_status,
 	g_autofree gchar *tmp = NULL;
 	g_autofree gchar *hex = NULL;
 
+	g_return_val_if_fail(line >= 1, FALSE);
+
 	/* read value and convert to hex */
-	tmp = fu_mei_device_get_fw_status(FU_MEI_DEVICE(self), line, error);
+	tmp = fu_mei_device_get_fw_status(FU_MEI_DEVICE(self), line - 1, error);
 	if (tmp == NULL) {
 		g_prefix_error(error, "device is corrupted: ");
 		return FALSE;
