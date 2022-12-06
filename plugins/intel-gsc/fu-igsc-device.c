@@ -707,6 +707,7 @@ fu_igsc_device_write_blob(FuIgscDevice *self,
 			g_prefix_error(error, "failed to send no-update: ");
 			return FALSE;
 		}
+		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	}
 	fu_progress_step_done(progress);
 
@@ -800,6 +801,7 @@ fu_igsc_device_init(FuIgscDevice *self)
 	fu_device_add_icon(FU_DEVICE(self), "video-display");
 	fu_device_add_protocol(FU_DEVICE(self), "com.intel.gsc");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PAIR);
+	fu_device_set_remove_delay(FU_DEVICE(self), 60000);
 	fu_device_register_private_flag(FU_DEVICE(self), FU_IGSC_DEVICE_FLAG_HAS_AUX, "has-aux");
 	fu_device_register_private_flag(FU_DEVICE(self),
 					FU_IGSC_DEVICE_FLAG_HAS_OPROM,
