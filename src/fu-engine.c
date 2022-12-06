@@ -3902,6 +3902,8 @@ fu_common_device_category_to_name(const gchar *cat)
 		return "BMC";
 	if (g_strcmp0(cat, "X-UsbReceiver") == 0)
 		return "USB Receiver";
+	if (g_strcmp0(cat, "X-Gpu") == 0)
+		return "GPU";
 	return NULL;
 }
 
