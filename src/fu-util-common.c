@@ -817,6 +817,11 @@ fu_util_release_get_name(FwupdRelease *release)
 			 * SATA or NVMe disk */
 			return g_strdup_printf(_("%s SSD Update"), name);
 		}
+		if (g_strcmp0(cat, "X-Gpu") == 0) {
+			/* TRANSLATORS: GPU refers to a Graphics Processing Unit, e.g.
+			 * the "video card" */
+			return g_strdup_printf(_("%s GPU Update"), name);
+		}
 	}
 
 	/* TRANSLATORS: this is the fallback where we don't know if the release
