@@ -93,8 +93,8 @@ class FwupdUpdate:
 
     def _encrypt_update_url(self, url):
         self.enc_url = url
-        self.arch_path = os.path.join(FWUPD_DOM0_UPDATES_DIR, self.arch_name)
         self.arch_name = "untrusted.cab"
+        self.arch_path = os.path.join(FWUPD_DOM0_UPDATES_DIR, self.arch_name)
 
     def download_metadata(self, whonix=False, metadata_url=None):
         """Initialize downloading metadata files.
@@ -115,7 +115,7 @@ class FwupdUpdate:
         if metadata_url:
             cmd_metadata.append("--url=" + metadata_url)
         try:
-            run_in_tty(updatevm, cmd_metadata)
+            run_in_tty(self.updatevm, cmd_metadata)
         except subprocess.CalledProcessError:
             raise Exception("Metadata download failed.")
 

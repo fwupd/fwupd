@@ -396,13 +396,6 @@ class TestQubesFwupdmgr(unittest.TestCase):
             self.fail("Test device not found")
         self.assertLess(Version(old_version), Version(new_version))
 
-    @unittest.skipUnless("qubes" in platform.release(), "Requires Qubes OS")
-    def test_enable_lvfs_testing_dom0(self):
-        if os.path.exists(LVFS_TESTING_DOM0_FLAG):
-            os.remove(LVFS_TESTING_DOM0_FLAG)
-        self.q._enable_lvfs_testing_dom0()
-        self.assertTrue(os.path.exists(LVFS_TESTING_DOM0_FLAG))
-
 
 if __name__ == "__main__":
     unittest.main()

@@ -107,7 +107,6 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
             self.metadata_file = os.path.join(FWUPD_DOM0_METADATA_DIR, metadata_name)
             self.metadata_file_jcat = self.metadata_file + ".jcat"
             self.lvfs = "lvfs-testing"
-            self._enable_lvfs_testing_dom0()
         else:
             self.metadata_file = FWUPD_DOM0_METADATA_FILE
             self.metadata_file_jcat = FWUPD_DOM0_METADATA_JCAT
