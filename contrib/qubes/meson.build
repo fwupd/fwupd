@@ -3,6 +3,7 @@ install_data([
   'src/fwupd_receive_updates.py',
   'src/qubes_fwupd_heads.py',
   'src/qubes_fwupd_update.py',
+  'src/qubes_fwupdmgr.py',
   ],
   install_dir: 'share/qubes-fwupd/src',
 )
@@ -44,9 +45,8 @@ install_data(
   install_dir: 'share/qubes-fwupd/test/logs/metainfo_version',
 )
 
-install_data(
-  'src/qubes_fwupdmgr.py',
-  install_dir: 'sbin',
-  rename: 'qubes-fwupdmgr',
-  install_mode: 'rwxrwxr-x',
+install_symlink(
+  'qubes_fwupdmgr',
+  pointing_to: '/usr/share/qubes-fwupd/src/qubes_fwupdmgr.py',
+  install_dir: '/usr/sbin',
 )

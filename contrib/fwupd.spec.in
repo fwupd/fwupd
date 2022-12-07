@@ -477,7 +477,8 @@ done
 
 %files qubes-dom0
 %{_datadir}/qubes-fwupd/src/fwupd_receive_updates.py
-/usr/sbin/qubes-fwupdmgr
+%{_sbindir}/qubes_fwupdmgr
+%{_datadir}/qubes-fwupd/src/qubes_fwupdmgr.py
 %{_datadir}/qubes-fwupd/src/qubes_fwupd_heads.py
 %{_datadir}/qubes-fwupd/src/qubes_fwupd_update.py
 %{_datadir}/qubes-fwupd/src/__init__.py
