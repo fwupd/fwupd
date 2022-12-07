@@ -309,12 +309,8 @@ msgid "AMD Firmware Write Protection"
 msgstr "Skrivskydd för AMD:s fasta programvara"
 
 #. TRANSLATORS: Title: if firmware enforces rollback protection
-msgid "AMD Rollback Protection"
-msgstr "AMD-tillbakarullningsskydd"
-
-#. TRANSLATORS: longer description
-msgid "AMD Rollback Protection prevents device software from being downgraded to an older version that has security problems."
-msgstr "AMD-tillbakarullningsskydd förhindrar enhetsprogramvara från att nedgraderas till en äldre version som har säkerhetsproblem."
+msgid "AMD Secure Processor Rollback Protection"
+msgstr "Säkert AMD-tillbakarullningsskydd för processorn"
 
 #. TRANSLATORS: the user needs to do something, e.g. remove the device
 msgid "Action Required:"
@@ -492,6 +488,14 @@ msgstr "Automatisk rapportering"
 #. TRANSLATORS: can we JFDI?
 msgid "Automatically upload every time?"
 msgstr "Skicka automatiskt varje gång?"
+
+#. TRANSLATORS: Title: if firmware enforces rollback protection
+msgid "BIOS Rollback Protection"
+msgstr "BIOS-tillbakarullningsskydd"
+
+#. TRANSLATORS: Title: if firmware enforces rollback protection
+msgid "BIOS rollback protection"
+msgstr "BIOS-tillbakarullningsskydd"
 
 #. TRANSLATORS: description of a BIOS setting
 msgid "BIOS updates delivered via LVFS or Windows Update"
@@ -1990,6 +1994,10 @@ msgstr "Plattformsfelsökning"
 msgid "Platform Debugging allows device security features to be disabled. This should only be used by hardware manufacturers."
 msgstr "Plattformsfelsökning tillåter att enhetens säkerhetsfunktioner inaktiveras. Detta bör endast göras av hårdvarutillverkare."
 
+#. TRANSLATORS: Title: Allows debugging of parts using proprietary hardware
+msgid "Platform debugging"
+msgstr "Plattformsfelsökning"
+
 #. TRANSLATORS: 'recovery key' here refers to a code, rather than a physical
 #. metal thing
 msgid "Please ensure you have the volume recovery key before continuing."
@@ -2056,6 +2064,10 @@ msgstr "Fortsätt med att skicka upp?"
 #. TRANSLATORS: Title: if fwupd supports HSI on this chip
 msgid "Processor Security Checks"
 msgstr "Processorsäkerhetskontroller"
+
+#. TRANSLATORS: Title: if firmware enforces rollback protection
+msgid "Processor rollback protection"
+msgstr "Processortillbakarullningsskydd"
 
 #. TRANSLATORS: a non-free software license
 msgid "Proprietary"
@@ -2200,9 +2212,9 @@ msgstr "Erhåll BIOS-inställningar. Om inga argument skickas med returneras all
 msgid "Return all the hardware IDs for the machine"
 msgstr "Returnera alla hårdvaru-ID:n för maskinen"
 
-#. TRANSLATORS: Title: if firmware enforces rollback protection
-msgid "Rollback protection"
-msgstr "Tillbakarullningsskydd"
+#. TRANSLATORS: longer description
+msgid "Rollback Protection prevents device software from being downgraded to an older version that has security problems."
+msgstr "Tillbakarullningsskydd förhindrar enhetsprogramvara från att nedgraderas till en äldre version som har säkerhetsproblem."
 
 #. TRANSLATORS: this is shown in the MOTD
 msgid "Run `fwupdmgr get-upgrades` for more information."

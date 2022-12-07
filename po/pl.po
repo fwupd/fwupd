@@ -319,8 +319,8 @@ msgid "AMD Firmware Write Protection"
 msgstr "Ochrona przed zapisem oprogramowania sprzętowego AMD"
 
 #. TRANSLATORS: Title: if firmware enforces rollback protection
-msgid "AMD Rollback Protection"
-msgstr "Ochrona przed wycofaniem AMD"
+msgid "AMD Secure Processor Rollback Protection"
+msgstr "Ochrona procesora zabezpieczeń AMD przed wycofaniem"
 
 #. TRANSLATORS: the user needs to do something, e.g. remove the device
 msgid "Action Required:"
@@ -500,6 +500,14 @@ msgstr "Automatyczne zgłaszanie"
 #. TRANSLATORS: can we JFDI?
 msgid "Automatically upload every time?"
 msgstr "Automatycznie wysyłać za każdym razem?"
+
+#. TRANSLATORS: Title: if firmware enforces rollback protection
+msgid "BIOS Rollback Protection"
+msgstr "Ochrona BIOS-u przed wycofaniem"
+
+#. TRANSLATORS: Title: if firmware enforces rollback protection
+msgid "BIOS rollback protection"
+msgstr "Ochrona BIOS-u przed wycofaniem"
 
 #. TRANSLATORS: description of a BIOS setting
 msgid "BIOS updates delivered via LVFS or Windows Update"
@@ -1933,6 +1941,10 @@ msgstr "Wykonać działanie?"
 msgid "Platform Debugging"
 msgstr "Debugowanie platformy"
 
+#. TRANSLATORS: Title: Allows debugging of parts using proprietary hardware
+msgid "Platform debugging"
+msgstr "Debugowanie platformy"
+
 #. TRANSLATORS: 'recovery key' here refers to a code, rather than a physical
 #. metal thing
 msgid "Please ensure you have the volume recovery key before continuing."
@@ -1995,6 +2007,10 @@ msgstr "Kontynuować wysyłanie?"
 #. TRANSLATORS: Title: if fwupd supports HSI on this chip
 msgid "Processor Security Checks"
 msgstr "Testy zabezpieczeń procesora"
+
+#. TRANSLATORS: Title: if firmware enforces rollback protection
+msgid "Processor rollback protection"
+msgstr "Ochrona procesora przed wycofaniem"
 
 #. TRANSLATORS: a non-free software license
 msgid "Proprietary"
@@ -2138,10 +2154,6 @@ msgstr "Pobiera ustawienia BIOS-u. Jeśli żadne parametry nie zostaną przekaza
 #. TRANSLATORS: command description
 msgid "Return all the hardware IDs for the machine"
 msgstr "Zwraca wszystkie identyfikatory sprzętu dla komputera"
-
-#. TRANSLATORS: Title: if firmware enforces rollback protection
-msgid "Rollback protection"
-msgstr "Ochrona przed wycofaniem"
 
 #. TRANSLATORS: this is shown in the MOTD
 msgid "Run `fwupdmgr get-upgrades` for more information."

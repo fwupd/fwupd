@@ -314,14 +314,6 @@ msgstr "AMD firmver zaštita ponavljanja"
 msgid "AMD Firmware Write Protection"
 msgstr "AMD firmver zaštita zpisivanja"
 
-#. TRANSLATORS: Title: if firmware enforces rollback protection
-msgid "AMD Rollback Protection"
-msgstr "AMD zaštita od vraćanja na stariju inačicu"
-
-#. TRANSLATORS: longer description
-msgid "AMD Rollback Protection prevents device software from being downgraded to an older version that has security problems."
-msgstr "AMD zaštita od vraćanja na stariju inačicu sprječava nadogradnju softvera uređaja na stariju inačicu koja ima sigurnosne probleme."
-
 #. TRANSLATORS: the user needs to do something, e.g. remove the device
 msgid "Action Required:"
 msgstr "Radnja je potrebna:"
@@ -2195,10 +2187,6 @@ msgstr "Preuzmi BIOS postavke.  Ako se argumenati ne proslijede, postavke su nep
 #. TRANSLATORS: command description
 msgid "Return all the hardware IDs for the machine"
 msgstr "Vrati sve ID-ove hardvera za uređaj"
-
-#. TRANSLATORS: Title: if firmware enforces rollback protection
-msgid "Rollback protection"
-msgstr "Zaštita od vraćanja na stariju inačicu"
 
 #. TRANSLATORS: this is shown in the MOTD
 msgid "Run `fwupdmgr get-upgrades` for more information."

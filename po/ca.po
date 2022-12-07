@@ -304,12 +304,8 @@ msgid "AMD Firmware Write Protection"
 msgstr "Protecció d'escriptura del microprogramari d'AMD"
 
 #. TRANSLATORS: Title: if firmware enforces rollback protection
-msgid "AMD Rollback Protection"
-msgstr "Protecció de versió antiga d'AMD"
-
-#. TRANSLATORS: longer description
-msgid "AMD Rollback Protection prevents device software from being downgraded to an older version that has security problems."
-msgstr "La protecció de versió antiga d'AMD evita que el programari del dispositiu es desactualitzi a una versió anterior amb problemes de seguretat."
+msgid "AMD Secure Processor Rollback Protection"
+msgstr "Protecció contra la reversió del processador segur d'AMD"
 
 #. TRANSLATORS: the user needs to do something, e.g. remove the device
 msgid "Action Required:"
@@ -487,6 +483,14 @@ msgstr "Informa automàticament"
 #. TRANSLATORS: can we JFDI?
 msgid "Automatically upload every time?"
 msgstr "Voleu pujar-lo automàticament cada vegada?"
+
+#. TRANSLATORS: Title: if firmware enforces rollback protection
+msgid "BIOS Rollback Protection"
+msgstr "Protecció contra la reversió del BIOS"
+
+#. TRANSLATORS: Title: if firmware enforces rollback protection
+msgid "BIOS rollback protection"
+msgstr "Protecció contra la reversió del BIOS"
 
 #. TRANSLATORS: description of a BIOS setting
 msgid "BIOS updates delivered via LVFS or Windows Update"
@@ -1046,7 +1050,7 @@ msgstr "NOM_FITXER NOM_ALT_DISPOSITIU|ID_ALT_DISPOSITIU"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME DEVICE-ALT-NAME|DEVICE-ALT-ID [IMAGE-ALT-NAME|IMAGE-ALT-ID]"
-msgstr "NOM_FITXER NOM_ALT_DISPOSITIU|ID_ALT_DISPOSITIU [NOM_ALT_IMATGE|NOM_ALT_IMTAGE]"
+msgstr "NOM_FITXER NOM_ALT_DISPOSITIU|ID_ALT_DISPOSITIU [NOM_ALT_IMATGE|ID_ALT_IMTAGE]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME DEVICE-ID"
@@ -1985,6 +1989,10 @@ msgstr "Depuració de la plataforma"
 msgid "Platform Debugging allows device security features to be disabled. This should only be used by hardware manufacturers."
 msgstr "La depuració de la plataforma permet que es desactivin les característiques de seguretat del dispositiu. Això només ho han d'emprar els fabricants de maquinari."
 
+#. TRANSLATORS: Title: Allows debugging of parts using proprietary hardware
+msgid "Platform debugging"
+msgstr "Depuració de la plataforma"
+
 #. TRANSLATORS: 'recovery key' here refers to a code, rather than a physical
 #. metal thing
 msgid "Please ensure you have the volume recovery key before continuing."
@@ -2051,6 +2059,10 @@ msgstr "Voleu continuar amb l'enviament?"
 #. TRANSLATORS: Title: if fwupd supports HSI on this chip
 msgid "Processor Security Checks"
 msgstr "Comprovacions de seguretat del processador"
+
+#. TRANSLATORS: Title: if firmware enforces rollback protection
+msgid "Processor rollback protection"
+msgstr "Protecció contra la reversió del processador"
 
 #. TRANSLATORS: a non-free software license
 msgid "Proprietary"
@@ -2195,9 +2207,9 @@ msgstr "Es recuperen les opcions de configuració del BIOS. Si no es transmeten 
 msgid "Return all the hardware IDs for the machine"
 msgstr "Retorna tots els ID del maquinari de la màquina."
 
-#. TRANSLATORS: Title: if firmware enforces rollback protection
-msgid "Rollback protection"
-msgstr "Protecció de versió antiga"
+#. TRANSLATORS: longer description
+msgid "Rollback Protection prevents device software from being downgraded to an older version that has security problems."
+msgstr "La protecció contra la reversió evita que el programari del dispositiu torni a una versió anterior, potser contindrà problemes de seguretat."
 
 #. TRANSLATORS: this is shown in the MOTD
 msgid "Run `fwupdmgr get-upgrades` for more information."
@@ -2262,7 +2274,7 @@ msgstr "Protecció d'escriptura per a l'SPI"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "SUBSYSTEM DRIVER [DEVICE-ID|GUID]"
-msgstr "SUBSISTEMA CONTROLADOR [ID_DISPOSITIU|GUID]"
+msgstr "CONTROLADOR SUBSISTEMA [ID_DISPOSITIU|GUID]"
 
 #. TRANSLATORS: command description
 msgid "Save a file that allows generation of hardware IDs"
@@ -2734,7 +2746,7 @@ msgstr "Aquest sistema té problemes d'execució HSI."
 
 #. TRANSLATORS: this is instructions on how to improve the HSI security level
 msgid "This system has a low HSI security level."
-msgstr "Aquest sistema té un nivell de seguretat HSI baix."
+msgstr "Aquest sistema té un nivell baix de seguretat HSI."
 
 #. TRANSLATORS: description of dbxtool
 msgid "This tool allows an administrator to apply UEFI dbx updates."
@@ -3111,7 +3123,7 @@ msgstr "[CONFIG_1] [CONFIG_2] [--no-authenticate]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[SMBIOS-FILE|HWIDS-FILE]"
-msgstr "[FITXER-HWIDS-SMBIOS]"
+msgstr "[FITXER_SMBIOS|FITXER_HWIDS]"
 
 #. TRANSLATORS: this is the default branch name when unset
 msgid "default"

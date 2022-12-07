@@ -216,9 +216,8 @@ msgstr "AMD-ის მიკროკოდის თავიდან ჩა�
 msgid "AMD Firmware Write Protection"
 msgstr "AMD-ის მიკროკოდში ჩაწერისგან დაცვა"
 
-#. TRANSLATORS: Title: if firmware enforces rollback protection
-msgid "AMD Rollback Protection"
-msgstr "AMD-ის მიკროკოდის ვერსიის ჩამოწევისგან დაცვა"
+msgid "Activate the new firmware on the device"
+msgstr "მოწყობილობაზე ახალი მიკროკოდის აქტივაცია"
 
 #. TRANSLATORS: shown when shutting down to switch to the new version
 msgid "Activating firmware update"
@@ -306,6 +305,10 @@ msgstr "აირჩიეთ მიკროკოდის ტიპი:"
 #. TRANSLATORS: get interactive prompt
 msgid "Choose a volume:"
 msgstr "აირჩიეთ ტომი:"
+
+#. TRANSLATORS: get interactive prompt
+msgid "Choose the ESP:"
+msgstr "აირჩეთ ESP:"
 
 #. TRANSLATORS: error message
 msgid "Command not found"
@@ -451,12 +454,20 @@ msgstr "გადმოწერა…"
 msgid "Duration"
 msgstr "ხანგრძლოვობა"
 
+#. TRANSLATORS: ESP is EFI System Partition
+msgid "ESP specified was not valid"
+msgstr "მითითებული ESP არასწორია"
+
 #. TRANSLATORS: Title: if we are emulating a different host
 msgid "Emulated host"
 msgstr "ემულირებული ჰოსტი"
 
 msgid "Enable"
 msgstr "ჩართვა"
+
+#. TRANSLATORS: command line option
+msgid "Enable firmware update support on supported systems"
+msgstr "მხარდაჭერილ სისტემებზე მიკროკოდის განახლების ჩართვა"
 
 #. TRANSLATORS: Suffix: the HSI result
 #. TRANSLATORS: Plugin is active and in use
@@ -655,9 +666,15 @@ msgstr "დადასტურების შემოწმების ტ�
 msgid "Install Duration"
 msgstr "დაყენების დრო"
 
+msgid "Install signed device firmware"
+msgstr "მოწყობილობის ხელმოწერილი მიკროკოდის დაყენება"
+
 #. TRANSLATORS: Install composite firmware on the parent before the child
 msgid "Install to parent device first"
 msgstr "ჯერ მშობელ მოწყობილობაზე დაყენება"
+
+msgid "Install unsigned device firmware"
+msgstr "მოწყობილობის ხელმოუწერელი მიკროკოდის დაყენება"
 
 #. TRANSLATORS: console message when no Plymouth is installed
 msgid "Installing Firmware…"
@@ -837,6 +854,10 @@ msgstr "MEI მწარმოებლის რეჟიმი"
 msgid "MEI version"
 msgstr "MEI-ის ვერსია"
 
+#. TRANSLATORS: Highest valid integer for BIOS setting
+msgid "Maximum value"
+msgstr "მაქსიმალური მნიშვნელობა"
+
 #. TRANSLATORS: the release urgency
 msgid "Medium"
 msgstr "საშუალო"
@@ -852,6 +873,13 @@ msgstr "მეტამონაცემების URI"
 #. TRANSLATORS: smallest version number installable on device
 msgid "Minimum Version"
 msgstr "მინიმალური ვერსია"
+
+#. TRANSLATORS: Lowest valid integer for BIOS setting
+msgid "Minimum value"
+msgstr "მინიმალური მნიშვნელობა"
+
+msgid "Modify daemon configuration"
+msgstr "დემონის კონფიგურაციის შეცვლა"
 
 #. TRANSLATORS: Requires a reboot to apply firmware or to reload hardware
 msgid "Needs a reboot after installation"
@@ -909,6 +937,10 @@ msgstr "დიახ!"
 #. * be downgraded or reinstalled with the existing version
 msgid "Only version upgrades are allowed"
 msgstr "დაშვებულია მხოლოდ ვერსიების განახლება"
+
+#. TRANSLATORS: command line option
+msgid "Override the default ESP path"
+msgstr "ნაგულისხმები ESP-ის ბილიკის გადაფარვა"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "PATH"
@@ -990,6 +1022,10 @@ msgstr "დაშორებულის ID"
 msgid "Report URI"
 msgstr "ანგარიშის URI"
 
+#. TRANSLATORS: we asked the user to choose an option and they declined
+msgid "Request canceled"
+msgstr "მოთხოვნა გაუქმებულია"
+
 #. TRANSLATORS: Requires a bootloader mode to be manually enabled by the user
 msgid "Requires a bootloader"
 msgstr "საჭიროებს ჩამტვირთავ კოდს"
@@ -1041,6 +1077,14 @@ msgstr "სერიული ნომერი"
 #. TRANSLATORS: command line option
 msgid "Show all results"
 msgstr "ყველა შედეგის ჩვენება"
+
+#. TRANSLATORS: command line option
+msgid "Show client and daemon versions"
+msgstr "კლიენტისა და დემონის ვერსიების ჩვენება"
+
+#. TRANSLATORS: for the --verbose arg
+msgid "Show debugging options"
+msgstr "გამართვის პარამეტრების ჩვენება"
 
 #. TRANSLATORS: command line option
 msgid "Show extra debugging information"
@@ -1172,6 +1216,10 @@ msgstr "სანდო დატვირთვა"
 msgid "Type"
 msgstr "ტიპით"
 
+#. TRANSLATORS: program name
+msgid "UEFI Firmware Utility"
+msgstr "UEFI მიკროკოდის ხელსაწყო"
+
 #. TRANSLATORS: Title: PK is the 'platform key' for the machine
 msgid "UEFI Platform Key"
 msgstr "UEFI პლატფორმის გასაღები"
@@ -1206,6 +1254,10 @@ msgstr "უცნობი მოწყობილობა"
 msgid "Unlocked"
 msgstr "განბლოკილი"
 
+#. TRANSLATORS: command line option
+msgid "Unset the debugging flag during update"
+msgstr "განახლებისას გამართვის ალმის მოხსნა"
+
 #. TRANSLATORS: Device is updatable in this or any other mode
 msgid "Updatable"
 msgstr "განახლებადი"
@@ -1237,7 +1289,11 @@ msgstr "განახლება"
 #. TRANSLATORS: %1 is a device name
 #, c-format
 msgid "Updating %s…"
-msgstr "%s-ის განახლება..."
+msgstr "%s-ის განახლება…"
+
+#. TRANSLATORS: how important the release is
+msgid "Urgency"
+msgstr "სასწრაფოობა"
 
 #. TRANSLATORS: User has been notified
 msgid "User has been notified"

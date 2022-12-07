@@ -1849,10 +1849,6 @@ msgstr "උපාංගය යළි ඇරඹෙමින්…"
 msgid "Return all the hardware IDs for the machine"
 msgstr "යන්ත්‍රය සඳහා සියලුම දෘඪාංග හැඳුනුම්පත් ආපසු දෙන්න"
 
-#. TRANSLATORS: Title: if firmware enforces rollback protection
-msgid "Rollback protection"
-msgstr "ආපසු හැරවීමේ ආරක්ෂාව"
-
 #. TRANSLATORS: this is shown in the MOTD
 msgid "Run `fwupdmgr get-upgrades` for more information."
 msgstr "වැඩි විස්තර සඳහා `fwupdmgr get-upgrades` ධාවනය කරන්න."

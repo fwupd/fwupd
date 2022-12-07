@@ -319,12 +319,8 @@ msgid "AMD Firmware Write Protection"
 msgstr "Захист від запису мікропрограми AMD"
 
 #. TRANSLATORS: Title: if firmware enforces rollback protection
-msgid "AMD Rollback Protection"
-msgstr "Захист відновлення попередніх станів AMD"
-
-#. TRANSLATORS: longer description
-msgid "AMD Rollback Protection prevents device software from being downgraded to an older version that has security problems."
-msgstr "Захист від відновлення попередніх версій AMD запобігає зниженню версій програмного забезпечення до тих, у яких виявлено проблеми із захистом."
+msgid "AMD Secure Processor Rollback Protection"
+msgstr "Захист від відновлення попередніх станів процесора AMD"
 
 #. TRANSLATORS: the user needs to do something, e.g. remove the device
 msgid "Action Required:"
@@ -504,6 +500,14 @@ msgstr "Автоматичне звітування"
 #. TRANSLATORS: can we JFDI?
 msgid "Automatically upload every time?"
 msgstr "Автоматично вивантажувати кожного разу?"
+
+#. TRANSLATORS: Title: if firmware enforces rollback protection
+msgid "BIOS Rollback Protection"
+msgstr "Захист від відновлення попередніх станів BIOS"
+
+#. TRANSLATORS: Title: if firmware enforces rollback protection
+msgid "BIOS rollback protection"
+msgstr "Захист від відновлення попередніх станів BIOS"
 
 #. TRANSLATORS: description of a BIOS setting
 msgid "BIOS updates delivered via LVFS or Windows Update"
@@ -2008,6 +2012,10 @@ msgstr "Діагностика платформи"
 msgid "Platform Debugging allows device security features to be disabled. This should only be used by hardware manufacturers."
 msgstr "Діагностика платформи надає змогу вимикати можливості захисту пристрою. Цією можливістю мають користуватися лише виробники обладнання."
 
+#. TRANSLATORS: Title: Allows debugging of parts using proprietary hardware
+msgid "Platform debugging"
+msgstr "Діагностика платформи"
+
 #. TRANSLATORS: 'recovery key' here refers to a code, rather than a physical
 #. metal thing
 msgid "Please ensure you have the volume recovery key before continuing."
@@ -2074,6 +2082,10 @@ msgstr "Продовжити вивантаження?"
 #. TRANSLATORS: Title: if fwupd supports HSI on this chip
 msgid "Processor Security Checks"
 msgstr "Перевірки захисту процесора"
+
+#. TRANSLATORS: Title: if firmware enforces rollback protection
+msgid "Processor rollback protection"
+msgstr "Захист від відновлення попередніх станів процесора"
 
 #. TRANSLATORS: a non-free software license
 msgid "Proprietary"
@@ -2218,9 +2230,9 @@ msgstr "Отримати параметри BIOS. Якщо аргументів 
 msgid "Return all the hardware IDs for the machine"
 msgstr "Повернути усі ідентифікатори апаратного забезпечення комп’ютера"
 
-#. TRANSLATORS: Title: if firmware enforces rollback protection
-msgid "Rollback protection"
-msgstr "Захист від повернення до попередніх версій"
+#. TRANSLATORS: longer description
+msgid "Rollback Protection prevents device software from being downgraded to an older version that has security problems."
+msgstr "Захист від відновлення попередніх версій запобігає зниженню версій програмного забезпечення до тих, у яких виявлено проблеми із захистом."
 
 #. TRANSLATORS: this is shown in the MOTD
 msgid "Run `fwupdmgr get-upgrades` for more information."

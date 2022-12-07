@@ -119,7 +119,7 @@ fwupd_error_from_string(const gchar *error)
 /**
  * fwupd_error_quark:
  *
- * The error quark for [enum@FwupdError].
+ * An error quark.
  *
  * Returns: an error quark
  *

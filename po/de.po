@@ -283,14 +283,6 @@ msgstr "Ein TPM PCR ist jetzt ein ungültiger Wert"
 msgid "AMD Firmware Write Protection"
 msgstr "AMD-Firmware-Schreibschutz"
 
-#. TRANSLATORS: Title: if firmware enforces rollback protection
-msgid "AMD Rollback Protection"
-msgstr "AMD-Rückrollschutz"
-
-#. TRANSLATORS: longer description
-msgid "AMD Rollback Protection prevents device software from being downgraded to an older version that has security problems."
-msgstr "Der AMD-Rückrollschutz verhindert, dass die Gerätesoftware auf eine ältere Version heruntergestuft wird, die Sicherheitsprobleme aufweist."
-
 #. TRANSLATORS: the user needs to do something, e.g. remove the device
 msgid "Action Required:"
 msgstr "Aktion erforderlich:"
@@ -1992,10 +1984,6 @@ msgstr "BIOS-Einstellungen abrufen. Wenn keine Argumente übergeben werden, werd
 #. TRANSLATORS: command description
 msgid "Return all the hardware IDs for the machine"
 msgstr "Alle Hardware-Kennungen für das System zurückgeben"
-
-#. TRANSLATORS: Title: if firmware enforces rollback protection
-msgid "Rollback protection"
-msgstr "Rückrollschutz"
 
 #. TRANSLATORS: this is shown in the MOTD
 msgid "Run `fwupdmgr get-upgrades` for more information."

@@ -33,6 +33,36 @@
     <binary>fwupdtool</binary>
   </provides>
   <releases>
+    <release version="1.8.8" date="2022-12-07">
+      <description>
+        <p>
+          This release adds the following features:
+        </p>
+        <ul>
+          <li>Add BIOS rollback protection support for Dell and Lenovo systems</li>
+          <li>Generate OVAL rules for openSCAP evaluation</li>
+          <li>Show the signed reports from QA teams in client tools</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Add a X-Gpu category for new hardware support</li>
+          <li>Add more ChromeOS metadata to the report attributes</li>
+          <li>Ensure the device name is set for Intel USB4 devices</li>
+          <li>Fix a critical DFU CSR warning when deploying firmware</li>
+          <li>Fix a Synaptics RMI issue when updating non-secure devices</li>
+          <li>Match more device properties when using GetDetails</li>
+          <li>Move AMD platform rollback protection to level 4</li>
+          <li>Use the correct AppStream ID for the Key Manifest failure</li>
+          <li>Wait for the Intel GPU to come back after updating</li>
+        </ul>
+        <p>This release adds support for the following hardware:</p>
+        <ul>
+          <li>Logitech Whiteboard cameras</li>
+          <li>More Goodix MoC devices</li>
+          <li>Several QSI Docks</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.8.7" date="2022-11-09">
       <description>
         <p>

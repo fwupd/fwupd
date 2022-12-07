@@ -3,7 +3,7 @@
 # This file is distributed under the same license as the fwupd package.
 #
 # Translators:
-# Seong-ho Cho <darkcircle.0426@gmail.com>, 2017,2019,2021
+# Seong-ho Cho <darkcircle.0426@gmail.com>, 2017,2019,2021-2022
 # Shinjo Park <kde@peremen.name>, 2018-2021
 msgid ""
 msgstr ""
@@ -183,6 +183,12 @@ msgid "%u device has a firmware upgrade available."
 msgid_plural "%u devices have a firmware upgrade available."
 msgstr[0] "장치 %u개의 펌웨어를 업데이트할 수 있습니다."
 
+#. TRANSLATORS: this is shown in the MOTD
+#, c-format
+msgid "%u device is not the best known configuration."
+msgid_plural "%u devices are not the best known configuration."
+msgstr[0] "장치 %u개가 알려진 최적의 설정 상태가 아닙니다."
+
 #. TRANSLATORS: duration in minutes
 #, c-format
 msgid "%u hour"
@@ -324,12 +330,20 @@ msgid "Authentication is required to downgrade the firmware on this machine"
 msgstr "이 머신에 이전 버전의 펌웨어를 설치하려면 인증해야 합니다"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to modify BIOS settings"
+msgstr "BIOS 설정 값을 수정하려면 인증이 필요합니다"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify a configured remote used for firmware updates"
 msgstr "펌웨어 업데이트에 사용할 원격 설정을 수정하려면 인증해야 합니다"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify daemon configuration"
 msgstr "데몬 설정을 수정하려면 인증해야 합니다"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to read BIOS settings"
+msgstr "BIOS 설정 값을 읽으려면 인증이 필요합니다"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to set the list of approved firmware"
@@ -366,6 +380,10 @@ msgstr "자동 보고"
 #. TRANSLATORS: can we JFDI?
 msgid "Automatically upload every time?"
 msgstr "매번 자동으로 업로드하시겠습니까?"
+
+#. TRANSLATORS: description of a BIOS setting
+msgid "BIOS updates delivered via LVFS or Windows Update"
+msgstr "LVFS 또는 윈도우 업데이트에서 BIOS 업데이트를 받아왔습니다"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "BUILDER-XML FILENAME-DST"
@@ -450,6 +468,10 @@ msgstr "출시 버전을 선택하십시오:"
 #. TRANSLATORS: get interactive prompt
 msgid "Choose a volume:"
 msgstr "볼륨 선택:"
+
+#. TRANSLATORS: get interactive prompt
+msgid "Choose the ESP:"
+msgstr "ESP 선택:"
 
 #. TRANSLATORS: command description
 msgid "Clears the results from the last update"
@@ -717,6 +739,13 @@ msgstr "예상 시간"
 msgid "ESP specified was not valid"
 msgstr "지정한 ESP가 올바르지 않습니다"
 
+#. TRANSLATORS: Title: if we are emulating a different host
+msgid "Emulated host"
+msgstr "에뮬레이팅 호스트"
+
+msgid "Enable"
+msgstr "활성"
+
 #. TRANSLATORS: command line option
 msgid "Enable firmware update support on supported systems"
 msgstr "지원하는 시스템의 펌웨어 업데이트 지원 활성화"
@@ -909,6 +938,18 @@ msgstr "파일 이름이 필요함"
 msgid "Filter with a set of device flags using a ~ prefix to exclude, e.g. 'internal,~needs-reboot'"
 msgstr "플래그로 장치를 필터하며, ~ 기호를 앞에 붙이면 제외할 수 있습니다. 예: 'internal,~needs-reboot'"
 
+#. TRANSLATORS: Title: if we can verify the firmware checksums
+msgid "Firmware Attestation"
+msgstr "펌웨어 검증"
+
+#. TRANSLATORS: Title: firmware refers to the flash chip in the computer
+msgid "Firmware BIOS Descriptor"
+msgstr "펌웨어 BIOS 서술자"
+
+#. TRANSLATORS: Title: SPI refers to the flash chip in the computer
+msgid "Firmware BIOS Region"
+msgstr "펌웨어 BIOS 영역"
+
 #. TRANSLATORS: remote URI
 msgid "Firmware Base URI"
 msgstr "펌웨어 기본 URI"
@@ -921,9 +962,21 @@ msgstr "펌웨어 업데이트 D-Bus 서비스"
 msgid "Firmware Update Daemon"
 msgstr "펌웨어 업데이트 데몬"
 
+#. TRANSLATORS: Title: if firmware updates are available
+msgid "Firmware Updates"
+msgstr "펌웨어 업데이트"
+
 #. TRANSLATORS: program name
 msgid "Firmware Utility"
 msgstr "펌웨어 유틸리티"
+
+#. TRANSLATORS: Title: firmware refers to the flash chip in the computer
+msgid "Firmware Write Protection"
+msgstr "펌웨어 기록 보호"
+
+#. TRANSLATORS: Title: firmware refers to the flash chip in the computer
+msgid "Firmware Write Protection Lock"
+msgstr "펌웨어 기록 보호 잠금"
 
 #. TRANSLATORS: Title: if we can verify the firmware checksums
 msgid "Firmware attestation"
@@ -979,6 +1032,10 @@ msgstr "모든 경고를 무시하고 작업 강제 진행"
 msgid "Found"
 msgstr "찾음"
 
+#. TRANSLATORS: Title: if the part has been fused
+msgid "Fused platform"
+msgstr "퓨징한 플랫폼"
+
 #. TRANSLATORS: global ID common to all similar hardware
 msgid "GUID"
 msgid_plural "GUIDs"
@@ -988,6 +1045,9 @@ msgstr[0] "GUID"
 msgctxt "A single GUID"
 msgid "GUID"
 msgstr "GUID"
+
+msgid "Get BIOS settings"
+msgstr "BIOS 설정 가져오기"
 
 #. TRANSLATORS: command description
 msgid "Get all device flags supported by fwupd"
@@ -1054,6 +1114,11 @@ msgstr "호스트 보안 ID:"
 msgid "IOMMU"
 msgstr "IOMMU"
 
+#. TRANSLATORS: Title:
+#. * https://en.wikipedia.org/wiki/Input%E2%80%93output_memory_management_unit
+msgid "IOMMU Protection"
+msgstr "IOMMU 보호"
+
 #. TRANSLATORS: daemon is inactive
 msgid "Idle…"
 msgstr "대기 중…"
@@ -1090,6 +1155,12 @@ msgstr "장치에 펌웨어 파일 설치"
 msgid "Install a firmware file on this hardware"
 msgstr "이 하드웨어에 펌웨어 파일 설치"
 
+msgid "Install old version of signed system firmware"
+msgstr "오래된 버전의 서명한 시스템 펌웨어 설치"
+
+msgid "Install old version of unsigned system firmware"
+msgstr "오래된 버전의 서명하지 않은 시스템 펌웨어 설치"
+
 msgid "Install signed device firmware"
 msgstr "서명된 장치 펌웨어 설치"
 
@@ -1125,13 +1196,32 @@ msgstr "Intel BootGuard"
 
 #. TRANSLATORS: Title: BootGuard is a trademark from Intel,
 #. * ACM means to verify the integrity of Initial Boot Block
+msgid "Intel BootGuard ACM Protected"
+msgstr "인텔 BootGuard ACM 보호"
+
+#. TRANSLATORS: Title: BootGuard is a trademark from Intel,
+#. * ACM means to verify the integrity of Initial Boot Block
 msgid "Intel BootGuard ACM protected"
 msgstr "Intel BootGuard ACM 보호됨"
+
+#. TRANSLATORS: Title: BootGuard is a trademark from Intel,
+#. * error policy is what to do on failure
+msgid "Intel BootGuard Error Policy"
+msgstr "인텔 BootGuard 오류 정책"
+
+#. TRANSLATORS: Title: BootGuard is a trademark from Intel
+msgid "Intel BootGuard Fuse"
+msgstr "인텔 BootGuard 퓨즈"
 
 #. TRANSLATORS: Title: BootGuard is a trademark from Intel,
 #. * OTP = one time programmable
 msgid "Intel BootGuard OTP fuse"
 msgstr "Intel BootGuard OTP 퓨즈"
+
+#. TRANSLATORS: Title: BootGuard is a trademark from Intel,
+#. * verified boot refers to the way the boot process is verified
+msgid "Intel BootGuard Verified Boot"
+msgstr "인텔 BootGuard 검증된 부트"
 
 #. TRANSLATORS: Title: BootGuard is a trademark from Intel,
 #. * error policy is what to do on failure
@@ -1143,6 +1233,10 @@ msgstr "Intel BootGuard 오류 정책"
 msgid "Intel BootGuard verified boot"
 msgstr "Intel BootGuard 검증된 부트"
 
+#. TRANSLATORS: Title: CET = Control-flow Enforcement Technology
+msgid "Intel CET"
+msgstr "인텔 CET"
+
 #. TRANSLATORS: Title: CET = Control-flow Enforcement Technology,
 #. * active means being used by the OS
 msgid "Intel CET Active"
@@ -1152,6 +1246,22 @@ msgstr "Intel CET 활성"
 #. * enabled means supported by the processor
 msgid "Intel CET Enabled"
 msgstr "Intel CET 활성화됨"
+
+#. TRANSLATORS: Title: MEI = Intel Management Engine
+msgid "Intel Management Engine Manufacturing Mode"
+msgstr "인텔 관리 엔진 제조사 모드"
+
+#. TRANSLATORS: Title: MEI = Intel Management Engine, and the "override" is
+#. enabled
+#. * with a jumper -- luckily it is probably not accessible to end users on
+#. consumer
+#. * boards
+msgid "Intel Management Engine Override"
+msgstr "인텔 관리 엔진 무시"
+
+#. TRANSLATORS: Title: MEI = Intel Management Engine
+msgid "Intel Management Engine Version"
+msgstr "인텔 관리 엔진 버전"
 
 #. TRANSLATORS: Title: SMAP = Supervisor Mode Access Prevention
 msgid "Intel SMAP"
@@ -1198,6 +1308,18 @@ msgstr "1분 미만 남음"
 msgid "License"
 msgstr "라이선스"
 
+#. TRANSLATORS: Title: lockdown is a security mode of the kernel
+msgid "Linux Kernel Lockdown"
+msgstr "리눅스 커널 락다운"
+
+#. TRANSLATORS: Title: if it's tainted or not
+msgid "Linux Kernel Verification"
+msgstr "리눅스 커널 검증"
+
+#. TRANSLATORS: Title: swap space or swap partition
+msgid "Linux Swap"
+msgstr "리눅스 스왑"
+
 msgid "Linux Vendor Firmware Service (stable firmware)"
 msgstr "리눅스 제조사 펌웨어 서비스(안정 버전 펌웨어)"
 
@@ -1243,6 +1365,16 @@ msgstr "잠김"
 #. TRANSLATORS: the release urgency
 msgid "Low"
 msgstr "낮음"
+
+#. TRANSLATORS: Title: MEI = Intel Management Engine, and key refers
+#. * to the private/public key used to secure loading of firmware
+msgid "MEI Key Manifest"
+msgstr "MEI 키 매니페스트"
+
+#. TRANSLATORS: Title: MEI = Intel Management Engine, and key refer
+#. * to the private/public key used to secure loading of firmware
+msgid "MEI key manifest"
+msgstr "MEI 키 매니페스트"
 
 #. TRANSLATORS: Title: MEI = Intel Management Engine
 msgid "MEI manufacturing mode"
@@ -1434,6 +1566,10 @@ msgstr "진행률"
 msgid "Perform operation?"
 msgstr "작업을 수행하시겠습니까?"
 
+#. TRANSLATORS: Title: Allows debugging of parts using proprietary hardware
+msgid "Platform Debugging"
+msgstr "플랫폼 디버깅"
+
 #. TRANSLATORS: the user isn't reading the question
 #, c-format
 msgid "Please enter a number from 0 to %u: "
@@ -1442,6 +1578,10 @@ msgstr "0에서 %u까지의 숫자 중 하나를 입력하십시오:"
 #. TRANSLATORS: Failed to open plugin, hey Arch users
 msgid "Plugin dependencies missing"
 msgstr "플러그인 의존성을 찾을 수 없음"
+
+#. TRANSLATORS: Title: DMA as in https://en.wikipedia.org/wiki/DMA_attack
+msgid "Pre-boot DMA Protection"
+msgstr "부팅 전 DMA 보호"
 
 #. TRANSLATORS: Title: DMA as in https://en.wikipedia.org/wiki/DMA_attack
 msgid "Pre-boot DMA protection"
@@ -1551,6 +1691,10 @@ msgstr "보고서 URI"
 msgid "Reported to remote server"
 msgstr "원격 서버에 보고됨"
 
+#. TRANSLATORS: we asked the user to choose an option and they declined
+msgid "Request canceled"
+msgstr "요청을 취소했습니다"
+
 #. TRANSLATORS: the user is using Gentoo/Arch and has screwed something up
 msgid "Required efivarfs filesystem was not found"
 msgstr "필요한 efivarfs 파일 시스템을 찾을 수 없음"
@@ -1587,6 +1731,10 @@ msgstr "머신의 모든 하드웨어 ID 반환"
 msgid "Run `fwupdmgr get-upgrades` for more information."
 msgstr "더 많은 정보를 보려면 `fwupdmgr get-upgrades` 명령을 실행하십시오."
 
+#. TRANSLATORS: this is shown in the MOTD
+msgid "Run `fwupdmgr sync-bkc` to complete this action."
+msgstr "이 동작을 끝내려면 `fwupdmgr sync-bkc` 명령을 실행하십시오."
+
 #. TRANSLATORS: command line option
 msgid "Run the plugin composite cleanup routine when using install-blob"
 msgstr "install-blob 사용 시 플러그인 정리 루틴 실행"
@@ -1615,9 +1763,17 @@ msgstr "SPI BIOS 영역"
 msgid "SPI lock"
 msgstr "SPI 잠금"
 
+#. TRANSLATORS: Title: if hardware enforces control of SPI replays
+msgid "SPI replay protection"
+msgstr "SPI 리플레이 보호"
+
 #. TRANSLATORS: Title: SPI refers to the flash chip in the computer
 msgid "SPI write"
 msgstr "SPI 기록"
+
+#. TRANSLATORS: Title: if hardware enforces control of SPI writes
+msgid "SPI write protection"
+msgstr "SPI 기록 보호"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "SUBSYSTEM DRIVER [DEVICE-ID|GUID]"
@@ -1652,6 +1808,9 @@ msgstr "선택한 볼륨"
 msgid "Serial Number"
 msgstr "일련 번호"
 
+msgid "Set one or more BIOS settings"
+msgstr "하나 이상의 BIOS 설정 값 설정"
+
 #. TRANSLATORS: command line option
 msgid "Set the debugging flag during update"
 msgstr "업데이트 중 디버깅 플래그 설정"
@@ -1659,6 +1818,10 @@ msgstr "업데이트 중 디버깅 플래그 설정"
 #. TRANSLATORS: firmware approved by the admin
 msgid "Sets the list of approved firmware"
 msgstr "허용된 펌웨어 목록 설정"
+
+#. TRANSLATORS: description of a BIOS setting
+msgid "Settings will apply after system reboots"
+msgstr "시스템을 다시 부팅하고 나면 설정을 반영합니다"
 
 #. TRANSLATORS: command description
 msgid "Share firmware history with the developers"
@@ -1818,9 +1981,21 @@ msgstr "요약"
 msgid "Supported"
 msgstr "지원함"
 
+#. TRANSLATORS: Title: if fwupd supports HSI on this chip
+msgid "Supported CPU"
+msgstr "지원 CPU"
+
 #. TRANSLATORS: Is found in current metadata
 msgid "Supported on remote server"
 msgstr "원격 서버에서 지원함"
+
+#. TRANSLATORS: Title: a better sleep state
+msgid "Suspend To Idle"
+msgstr "최대 절전"
+
+#. TRANSLATORS: Title: sleep state
+msgid "Suspend To RAM"
+msgstr "RAM 대기"
 
 #. TRANSLATORS: Title: a better sleep state
 msgid "Suspend-to-idle"
@@ -1851,6 +2026,20 @@ msgstr "TEXT"
 #. TRANSLATORS: Title: the PCR is rebuilt from the TPM event log
 msgid "TPM PCR0 reconstruction"
 msgstr "TPM PCR0 재구축"
+
+#. TRANSLATORS: Title: PCRs (Platform Configuration Registers) shouldn't be
+#. empty
+msgid "TPM Platform Configuration"
+msgstr "TPM 플랫폼 설정"
+
+#. TRANSLATORS: Title: the PCR is rebuilt from the TPM event log
+msgid "TPM Reconstruction"
+msgstr "TPM 재구성"
+
+#. TRANSLATORS: Title: PCRs (Platform Configuration Registers) shouldn't be
+#. empty
+msgid "TPM empty PCRs"
+msgstr "TPM이 PCR을 비웁니다"
 
 #. TRANSLATORS: Title: TPM = Trusted Platform Module
 msgid "TPM v2.0"
@@ -1955,6 +2144,14 @@ msgstr "UEFI ESP 파티션이 감지되지 않았거나 설정되지 않았음"
 #. TRANSLATORS: program name
 msgid "UEFI Firmware Utility"
 msgstr "UEFI 펌웨어 유틸리티"
+
+#. TRANSLATORS: Title: PK is the 'platform key' for the machine
+msgid "UEFI Platform Key"
+msgstr "UEFI 플랫폼 키"
+
+#. TRANSLATORS: Title: SB is a way of locking down UEFI
+msgid "UEFI Secure Boot"
+msgstr "UEFI 보안 부트"
 
 #. TRANSLATORS: capsule updates are an optional BIOS feature
 msgid "UEFI capsule updates not available or enabled in firmware setup"

@@ -1810,10 +1810,6 @@ msgstr "Reiniciando dispositivo…"
 msgid "Return all the hardware IDs for the machine"
 msgstr "Devuelve todos los ID de hardware para la máquina"
 
-#. TRANSLATORS: Title: if firmware enforces rollback protection
-msgid "Rollback protection"
-msgstr "Retrocede protección"
-
 #. TRANSLATORS: this is shown in the MOTD
 msgid "Run `fwupdmgr get-upgrades` for more information."
 msgstr "Ejecute `fwupdmgr get-upgrades` para más información."

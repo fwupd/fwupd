@@ -3,7 +3,7 @@
 # This file is distributed under the same license as the fwupd package.
 #
 # Translators:
-# Ascii Wolf <mail@asciiwolf.com>, 2017,2019-2020
+# Ascii Wolf <mail@asciiwolf.com>, 2017,2019-2020,2022
 # Ascii Wolf <mail@asciiwolf.com>, 2017
 # Marek Černocký <marek@manet.cz>, 2016,2018
 # Pavel Borecki <pavel.borecki@gmail.com>, 2020-2022
@@ -322,12 +322,8 @@ msgid "AMD Firmware Write Protection"
 msgstr "AMD – zamezení zápisu firmware"
 
 #. TRANSLATORS: Title: if firmware enforces rollback protection
-msgid "AMD Rollback Protection"
-msgstr "AMD – zamezení instalace starší verze"
-
-#. TRANSLATORS: longer description
-msgid "AMD Rollback Protection prevents device software from being downgraded to an older version that has security problems."
-msgstr "AMD – zamezení instalace starší verze brání přechodu na starší verzi software zařízení (mohly by obsahovat už známé problémy v zabezpečení)."
+msgid "AMD Secure Processor Rollback Protection"
+msgstr "AMD zamezení instalace starší verze na procesoru"
 
 #. TRANSLATORS: the user needs to do something, e.g. remove the device
 msgid "Action Required:"
@@ -377,7 +373,7 @@ msgstr "Všechny PCR registry jsou platné"
 #. versions,
 #. * e.g. the EFI driver for a given network card cannot be different
 msgid "All devices of the same type will be updated at the same time"
-msgstr "Veškerá zařízení stejného typu budu aktualizována naráz"
+msgstr "Veškerá zařízení stejného typu budou aktualizována naráz"
 
 #. TRANSLATORS: command line option
 msgid "Allow downgrading firmware versions"
@@ -507,6 +503,14 @@ msgstr "Automatické odesílání hlášení"
 #. TRANSLATORS: can we JFDI?
 msgid "Automatically upload every time?"
 msgstr "Pokaždé automaticky odeslat?"
+
+#. TRANSLATORS: Title: if firmware enforces rollback protection
+msgid "BIOS Rollback Protection"
+msgstr "Zamezení instalace starší verze BIOS"
+
+#. TRANSLATORS: Title: if firmware enforces rollback protection
+msgid "BIOS rollback protection"
+msgstr "Zamezení instalace starší verze BIOS"
 
 #. TRANSLATORS: description of a BIOS setting
 msgid "BIOS updates delivered via LVFS or Windows Update"
@@ -714,7 +718,7 @@ msgstr "Zařízení se dovede vzpamatovat z nezdaru při zápisu firmware"
 
 #. TRANSLATORS: lid means "laptop top cover"
 msgid "Device cannot be used while the lid is closed"
-msgstr "Zařízení není možné používat pokud je víko s displejem přiklopené"
+msgstr "Zařízení není možné používat, pokud je víko s displejem přiklopené"
 
 #. TRANSLATORS: this is when a device has been updated
 msgid "Device changed:"
@@ -880,7 +884,7 @@ msgstr "Při zpracovávání nehledat firmware"
 
 #. TRANSLATORS: warning message shown after update has been scheduled
 msgid "Do not turn off your computer or remove the AC adaptor while the update is in progress."
-msgstr "V průběhu aktualizace počítač nevypínejte ani ho neodpojujte od napájení ze zásuvky-"
+msgstr "V průběhu aktualizace počítač nevypínejte ani ho neodpojujte od napájení ze zásuvky."
 
 #. TRANSLATORS: command line option
 msgid "Do not write to the history database"
@@ -2011,6 +2015,10 @@ msgstr "Ladění platformy"
 msgid "Platform Debugging allows device security features to be disabled. This should only be used by hardware manufacturers."
 msgstr "Ladění platformy umožňuje vypínat funkce zabezpečení zařízení. Mělo by být používáno pouze výrobci zařízení."
 
+#. TRANSLATORS: Title: Allows debugging of parts using proprietary hardware
+msgid "Platform debugging"
+msgstr "Ladění platformy"
+
 #. TRANSLATORS: 'recovery key' here refers to a code, rather than a physical
 #. metal thing
 msgid "Please ensure you have the volume recovery key before continuing."
@@ -2078,9 +2086,13 @@ msgstr "Pokračovat v nahrávání?"
 msgid "Processor Security Checks"
 msgstr "Kontroly zabezpečení procesoru"
 
+#. TRANSLATORS: Title: if firmware enforces rollback protection
+msgid "Processor rollback protection"
+msgstr "Zamezení instalace starší verze na procesoru"
+
 #. TRANSLATORS: a non-free software license
 msgid "Proprietary"
-msgstr "Proprietární"
+msgstr "Uzavřená"
 
 #. TRANSLATORS: command line option
 msgid "Query for firmware update support"
@@ -2221,9 +2233,9 @@ msgstr "Získává nastavení z BIOS. Pokud nejsou uvedeny žádné argumenty, j
 msgid "Return all the hardware IDs for the machine"
 msgstr "Vypsat všechny identifikátory hardwaru počítače"
 
-#. TRANSLATORS: Title: if firmware enforces rollback protection
-msgid "Rollback protection"
-msgstr "Zamezení instalaci starší verze"
+#. TRANSLATORS: longer description
+msgid "Rollback Protection prevents device software from being downgraded to an older version that has security problems."
+msgstr "Zamezení instalace starší verze brání přechodu na starší verzi software zařízení (mohly by obsahovat už známé problémy v zabezpečení)."
 
 #. TRANSLATORS: this is shown in the MOTD
 msgid "Run `fwupdmgr get-upgrades` for more information."
@@ -2453,7 +2465,7 @@ msgstr "Velikost"
 
 #. TRANSLATORS: the platform secret is stored in the PCRx registers on the TPM
 msgid "Some of the platform secrets may be invalidated when updating this firmware."
-msgstr "Při aktualizaci tohoto firmware, mohou být některá tajemství, uložená v rámci platformy, zneplatněna."
+msgstr "Při aktualizaci tohoto firmwaru mohou být některá tajemství uložená v rámci platformy zneplatněna."
 
 #. TRANSLATORS: source (as in code) link
 msgid "Source"

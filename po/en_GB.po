@@ -304,12 +304,8 @@ msgid "AMD Firmware Write Protection"
 msgstr "AMD Firmware Write Protection"
 
 #. TRANSLATORS: Title: if firmware enforces rollback protection
-msgid "AMD Rollback Protection"
-msgstr "AMD Rollback Protection"
-
-#. TRANSLATORS: longer description
-msgid "AMD Rollback Protection prevents device software from being downgraded to an older version that has security problems."
-msgstr "AMD Rollback Protection prevents device software from being downgraded to an older version that has security problems."
+msgid "AMD Secure Processor Rollback Protection"
+msgstr "AMD Secure Processor Rollback Protection"
 
 #. TRANSLATORS: the user needs to do something, e.g. remove the device
 msgid "Action Required:"
@@ -487,6 +483,14 @@ msgstr "Automatic Reporting"
 #. TRANSLATORS: can we JFDI?
 msgid "Automatically upload every time?"
 msgstr "Automatically upload every time?"
+
+#. TRANSLATORS: Title: if firmware enforces rollback protection
+msgid "BIOS Rollback Protection"
+msgstr "BIOS Rollback Protection"
+
+#. TRANSLATORS: Title: if firmware enforces rollback protection
+msgid "BIOS rollback protection"
+msgstr "BIOS rollback protection"
 
 #. TRANSLATORS: description of a BIOS setting
 msgid "BIOS updates delivered via LVFS or Windows Update"
@@ -742,6 +746,10 @@ msgstr "Device removed:"
 msgid "Device requires AC power to be connected"
 msgstr "Device requires AC power to be connected"
 
+#. TRANSLATORS: The device cannot be updated due to missing vendor's license."
+msgid "Device requires a software license to update"
+msgstr "Device requires a software license to update"
+
 #. TRANSLATORS: longer description
 msgid "Device software updates are provided for this device."
 msgstr "Device software updates are provided for this device."
@@ -849,6 +857,14 @@ msgstr "Do not perform device safety checks"
 #. TRANSLATORS: command line option
 msgid "Do not prompt for devices"
 msgstr "Do not prompt for devices"
+
+#. TRANSLATORS: command line option
+msgid "Do not search the firmware when parsing"
+msgstr "Do not search the firmware when parsing"
+
+#. TRANSLATORS: warning message shown after update has been scheduled
+msgid "Do not turn off your computer or remove the AC adaptor while the update is in progress."
+msgstr "Do not turn off your computer or remove the AC adaptor while the update is in progress."
 
 #. TRANSLATORS: command line option
 msgid "Do not write to the history database"
@@ -1701,6 +1717,10 @@ msgstr "List the available firmware types"
 msgid "Lists files on the ESP"
 msgstr "Lists files on the ESP"
 
+#. TRANSLATORS: the plugin was created from a .so object, and was not built-in
+msgid "Loaded from an external module"
+msgstr "Loaded from an external module"
+
 #. TRANSLATORS: parsing the firmware information
 msgid "Loading…"
 msgstr "Loading…"
@@ -1712,6 +1732,16 @@ msgstr "Locked"
 #. TRANSLATORS: the release urgency
 msgid "Low"
 msgstr "Low"
+
+#. TRANSLATORS: Title: MEI = Intel Management Engine, and key refers
+#. * to the private/public key used to secure loading of firmware
+msgid "MEI Key Manifest"
+msgstr "MEI Key Manifest"
+
+#. TRANSLATORS: Title: MEI = Intel Management Engine, and key refer
+#. * to the private/public key used to secure loading of firmware
+msgid "MEI key manifest"
+msgstr "MEI key manifest"
 
 #. TRANSLATORS: Title: MEI = Intel Management Engine
 msgid "MEI manufacturing mode"
@@ -1959,6 +1989,10 @@ msgstr "Platform Debugging"
 msgid "Platform Debugging allows device security features to be disabled. This should only be used by hardware manufacturers."
 msgstr "Platform Debugging allows device security features to be disabled. This should only be used by hardware manufacturers."
 
+#. TRANSLATORS: Title: Allows debugging of parts using proprietary hardware
+msgid "Platform debugging"
+msgstr "Platform debugging"
+
 #. TRANSLATORS: 'recovery key' here refers to a code, rather than a physical
 #. metal thing
 msgid "Please ensure you have the volume recovery key before continuing."
@@ -1997,6 +2031,10 @@ msgstr "Pre-boot DMA protection is enabled"
 msgid "Pre-boot DMA protection prevents devices from accessing system memory after being connected to the computer."
 msgstr "Pre-boot DMA protection prevents devices from accessing system memory after being connected to the computer."
 
+#. TRANSLATORS: warning message
+msgid "Press unlock on the device to continue the update process."
+msgstr "Press unlock on the device to continue the update process."
+
 #. TRANSLATORS: version number of previous firmware
 msgid "Previous version"
 msgstr "Previous version"
@@ -2021,6 +2059,10 @@ msgstr "Proceed with upload?"
 #. TRANSLATORS: Title: if fwupd supports HSI on this chip
 msgid "Processor Security Checks"
 msgstr "Processor Security Checks"
+
+#. TRANSLATORS: Title: if firmware enforces rollback protection
+msgid "Processor rollback protection"
+msgstr "Processor rollback protection"
 
 #. TRANSLATORS: a non-free software license
 msgid "Proprietary"
@@ -2165,9 +2207,9 @@ msgstr "Retrieve BIOS settings.  If no arguments are passed all settings are ret
 msgid "Return all the hardware IDs for the machine"
 msgstr "Return all the hardware IDs for the machine"
 
-#. TRANSLATORS: Title: if firmware enforces rollback protection
-msgid "Rollback protection"
-msgstr "Rollback protection"
+#. TRANSLATORS: longer description
+msgid "Rollback Protection prevents device software from being downgraded to an older version that has security problems."
+msgstr "Rollback Protection prevents device software from being downgraded to an older version that has security problems."
 
 #. TRANSLATORS: this is shown in the MOTD
 msgid "Run `fwupdmgr get-upgrades` for more information."
@@ -2602,6 +2644,10 @@ msgid "Test a device using a JSON manifest"
 msgstr "Test a device using a JSON manifest"
 
 #. TRANSLATORS: longer description
+msgid "The Intel Management Engine Key Manifest must be valid so that the device firmware can be trusted by the CPU."
+msgstr "The Intel Management Engine Key Manifest must be valid so that the device firmware can be trusted by the CPU."
+
+#. TRANSLATORS: longer description
 msgid "The Intel Management Engine controls device components and needs to have a recent version to avoid security issues."
 msgstr "The Intel Management Engine controls device components and needs to have a recent version to avoid security issues."
 
@@ -2643,6 +2689,14 @@ msgstr "The firmware from %s is not supplied by %s, the hardware vendor."
 #. TRANSLATORS: try to help
 msgid "The system clock has not been set correctly and downloading files may fail."
 msgstr "The system clock has not been set correctly and downloading files may fail."
+
+#. TRANSLATORS: warning message shown after update has been scheduled
+msgid "The update will continue when the device USB cable has been unplugged and then re-inserted."
+msgstr "The update will continue when the device USB cable has been unplugged and then re-inserted."
+
+#. TRANSLATORS: warning message shown after update has been scheduled
+msgid "The update will continue when the device USB cable has been unplugged."
+msgstr "The update will continue when the device USB cable has been unplugged."
 
 #. TRANSLATORS: naughty vendor
 msgid "The vendor did not supply any release notes."
@@ -2993,6 +3047,11 @@ msgstr "Waiting…"
 #. TRANSLATORS: command description
 msgid "Watch for hardware changes"
 msgstr "Watch for hardware changes"
+
+#. TRANSLATORS: check various UEFI and ACPI tables are unchanged after the
+#. update
+msgid "Will measure elements of system integrity around an update"
+msgstr "Will measure elements of system integrity around an update"
 
 #. TRANSLATORS: command description
 msgid "Write firmware from file into device"
