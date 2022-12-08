@@ -1763,7 +1763,8 @@ fu_util_attach(FuUtilPrivate *priv, gchar **values, GError **error)
 	fu_progress_step_done(priv->progress);
 
 	/* get device */
-	priv->filter_include |= FWUPD_DEVICE_FLAG_IS_BOOTLOADER;
+	if ((priv->flags & FWUPD_INSTALL_FLAG_FORCE) == 0)
+		priv->filter_include |= FWUPD_DEVICE_FLAG_IS_BOOTLOADER;
 	if (g_strv_length(values) >= 1) {
 		device = fu_util_get_device(priv, values[0], error);
 		if (device == NULL)
