@@ -16,7 +16,7 @@
     "enabled" : "IOMMU hardware detected and enabled"
   },
   "hsi-level" : 2,
-  "resolution" : "If available, turn on IOMMU in the system BIOS. You may also have to use additional kernel boot parameters, for example `intel_iommu=on iommu=pt`.",
+  "resolution" : "If available, turn on IOMMU in the system BIOS. You may also have to use additional kernel boot parameters, for example `iommu=force`.",
   "references" : {
     "https://en.wikipedia.org/wiki/Input%E2%80%93output_memory_management_unit" : "IOMMU Wikipedia Page"
   },
