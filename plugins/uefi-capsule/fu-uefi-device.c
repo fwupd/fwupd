@@ -427,7 +427,7 @@ fu_uefi_device_fixup_firmware(FuUefiDevice *self, GBytes *fw, GError **error)
 		efi_capsule_header_t header = {0x0};
 		g_autoptr(GByteArray) buf_hdr = g_byte_array_new();
 
-		g_warning("missing or invalid embedded capsule header");
+		g_debug("missing or invalid embedded capsule header");
 		priv->missing_header = TRUE;
 
 		/* create a fake header with plausible contents */
