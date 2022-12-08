@@ -681,10 +681,10 @@ fu_device_retry_full(FuDevice *self,
 					if (!rec->recovery_func(self, user_data, error))
 						return FALSE;
 				} else {
-					g_set_error(error,
-						    G_IO_ERROR,
-						    G_IO_ERROR_FAILED,
-						    "device recovery not possible");
+					g_propagate_prefixed_error(
+					    error,
+					    g_steal_pointer(&error_local),
+					    "device recovery not possible: ");
 					return FALSE;
 				}
 			}
