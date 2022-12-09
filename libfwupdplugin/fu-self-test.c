@@ -1812,6 +1812,16 @@ fu_common_version_func(void)
 	    {0xc8, "0x000000c8", FWUPD_VERSION_FORMAT_HEX},
 	    {0, NULL}};
 	struct {
+		guint32 val;
+		const gchar *ver;
+		FwupdVersionFormat flags;
+	} version_from_uint24[] = {{0x0, NULL, FWUPD_VERSION_FORMAT_QUAD},
+				   {0x0, "0.0.0", FWUPD_VERSION_FORMAT_TRIPLET},
+				   {0xff, "0.0.255", FWUPD_VERSION_FORMAT_TRIPLET},
+				   {0x0, "0", FWUPD_VERSION_FORMAT_NUMBER},
+				   {0xc8, "0x0000c8", FWUPD_VERSION_FORMAT_HEX},
+				   {0, NULL}};
+	struct {
 		guint64 val;
 		const gchar *ver;
 		FwupdVersionFormat flags;
@@ -1863,6 +1873,12 @@ fu_common_version_func(void)
 		ver = fu_version_from_uint32(version_from_uint32[i].val,
 					     version_from_uint32[i].flags);
 		g_assert_cmpstr(ver, ==, version_from_uint32[i].ver);
+	}
+	for (i = 0; version_from_uint24[i].ver != NULL; i++) {
+		g_autofree gchar *ver = NULL;
+		ver = fu_version_from_uint24(version_from_uint24[i].val,
+					     version_from_uint24[i].flags);
+		g_assert_cmpstr(ver, ==, version_from_uint24[i].ver);
 	}
 	for (i = 0; version_from_uint16[i].ver != NULL; i++) {
 		g_autofree gchar *ver = NULL;

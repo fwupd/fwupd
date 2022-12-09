@@ -160,6 +160,45 @@ fu_version_from_uint32(guint32 val, FwupdVersionFormat kind)
 }
 
 /**
+ * fu_version_from_uint24:
+ * @val: a uint24le version number
+ * @kind: version kind used for formatting, e.g. %FWUPD_VERSION_FORMAT_TRIPLET
+ *
+ * Returns a dotted decimal version string from a 24 bit number.
+ *
+ * Returns: a version number, e.g. `1.0.3`, or %NULL if not supported
+ *
+ * Since: 1.8.9
+ **/
+gchar *
+fu_version_from_uint24(guint32 val, FwupdVersionFormat kind)
+{
+	if (kind == FWUPD_VERSION_FORMAT_TRIPLET) {
+		/* BB.CC.DD */
+		return g_strdup_printf("%u.%u.%u",
+				       (val >> 24) & 0xff,
+				       (val >> 16) & 0xff,
+				       val & 0xffff);
+	}
+	if (kind == FWUPD_VERSION_FORMAT_PAIR) {
+		/* BB.CCDD */
+		return g_strdup_printf("%u.%u", (val >> 16) & 0xff, val & 0xffff);
+	}
+	if (kind == FWUPD_VERSION_FORMAT_NUMBER || kind == FWUPD_VERSION_FORMAT_PLAIN) {
+		/* BBCCDD */
+		return g_strdup_printf("%" G_GUINT32_FORMAT, val);
+	}
+	if (kind == FWUPD_VERSION_FORMAT_HEX) {
+		/* 0xBBCCDD */
+		return g_strdup_printf("0x%06x", val);
+	}
+	g_critical("failed to convert version format %s: %u",
+		   fwupd_version_format_to_string(kind),
+		   val);
+	return NULL;
+}
+
+/**
  * fu_version_from_uint16:
  * @val: a uint16le version number
  * @kind: version kind used for formatting, e.g. %FWUPD_VERSION_FORMAT_TRIPLET
