@@ -10,14 +10,7 @@
 #include <gio/gio.h>
 
 #define FU_TYPE_PROGRESS (fu_progress_get_type())
-G_DECLARE_DERIVABLE_TYPE(FuProgress, fu_progress, FU, PROGRESS, GObject)
-
-struct _FuProgressClass {
-	GObjectClass parent_class;
-	/* signals */
-	void (*percentage_changed)(FuProgress *self, guint value);
-	void (*status_changed)(FuProgress *self, FwupdStatus status);
-};
+G_DECLARE_FINAL_TYPE(FuProgress, fu_progress, FU, PROGRESS, GObject)
 
 /**
  * FuProgressFlags:
