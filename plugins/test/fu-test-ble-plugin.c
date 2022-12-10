@@ -21,7 +21,7 @@ fu_test_ble_plugin_init(FuTestBlePlugin *self)
 }
 
 static void
-fu_xxx_plugin_constructed(GObject *obj)
+fu_test_ble_plugin_constructed(GObject *obj)
 {
 	FuPlugin *plugin = FU_PLUGIN(obj);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_TEST_BLE_DEVICE);
@@ -31,5 +31,5 @@ static void
 fu_test_ble_plugin_class_init(FuTestBlePluginClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
-	object_class->constructed = fu_xxx_plugin_constructed;
+	object_class->constructed = fu_test_ble_plugin_constructed;
 }
