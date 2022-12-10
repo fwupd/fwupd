@@ -5355,9 +5355,14 @@ fu_engine_get_releases_for_device(FuEngine *self,
 	g_autoptr(GError) error_all = NULL;
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GPtrArray) branches = NULL;
-	g_autoptr(GPtrArray) components = NULL;
 	g_autoptr(GPtrArray) releases = NULL;
 	g_autoptr(GString) xpath = g_string_new(NULL);
+
+	/* no components in silo */
+	if (self->query_component_by_guid == NULL) {
+		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no components in silo");
+		return NULL;
+	}
 
 	/* get device version */
 	version = fu_device_get_version(device);
@@ -5379,46 +5384,59 @@ fu_engine_get_releases_for_device(FuEngine *self,
 
 	/* get all the components that provide any of these GUIDs */
 	device_guids = fu_device_get_guids(device);
-	for (guint i = 0; i < device_guids->len; i++) {
-		const gchar *guid = g_ptr_array_index(device_guids, i);
-		xb_string_append_union(xpath,
-				       "components/component[@type='firmware']/"
-				       "provides/firmware[@type=$'flashed'][text()=$'%s']/"
-				       "../..",
-				       guid);
-	}
-	components = xb_silo_query(self->silo, xpath->str, 0, &error_local);
-	if (components == NULL) {
-		if (g_error_matches(error_local, G_IO_ERROR, G_IO_ERROR_NOT_FOUND) ||
-		    g_error_matches(error_local, G_IO_ERROR, G_IO_ERROR_INVALID_ARGUMENT)) {
-			g_set_error_literal(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_NOTHING_TO_DO,
-					    "No releases found");
+	releases = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
+	for (guint j = 0; j < device_guids->len; j++) {
+		const gchar *guid = g_ptr_array_index(device_guids, j);
+		g_autoptr(GPtrArray) components = NULL;
+#if LIBXMLB_CHECK_VERSION(0, 3, 0)
+		g_auto(XbQueryContext) context = XB_QUERY_CONTEXT_INIT();
+
+		xb_query_context_set_flags(&context, XB_QUERY_FLAG_USE_INDEXES);
+		xb_value_bindings_bind_str(xb_query_context_get_bindings(&context), 0, guid, NULL);
+		components = xb_silo_query_with_context(self->silo,
+							self->query_component_by_guid,
+							&context,
+							&error_local);
+#else
+		if (!xb_query_bind_str(self->query_component_by_guid, 0, guid, &error_local)) {
+			g_warning("failed to bind 0: %s", error_local->message);
 			return NULL;
 		}
-		g_propagate_error(error, g_steal_pointer(&error_local));
-		return NULL;
-	}
+		components =
+		    xb_silo_query_full(self->silo, self->query_component_by_guid, &error_local);
+#endif
 
-	/* find all the releases that pass all the requirements */
-	releases = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
-	for (guint i = 0; i < components->len; i++) {
-		XbNode *component = XB_NODE(g_ptr_array_index(components, i));
-		g_autoptr(GError) error_tmp = NULL;
-		if (!fu_engine_add_releases_for_device_component(self,
-								 request,
-								 device,
-								 component,
-								 releases,
-								 &error_tmp)) {
-			if (error_all == NULL) {
-				error_all = g_steal_pointer(&error_tmp);
-				continue;
+		/* nothing found */
+		if (components == NULL) {
+			if (g_error_matches(error_local, G_IO_ERROR, G_IO_ERROR_NOT_FOUND) ||
+			    g_error_matches(error_local, G_IO_ERROR, G_IO_ERROR_INVALID_ARGUMENT)) {
+				g_set_error_literal(error,
+						    FWUPD_ERROR,
+						    FWUPD_ERROR_NOTHING_TO_DO,
+						    "No releases found");
+				return NULL;
 			}
+			continue;
+		}
 
-			/* assume the domain and code is the same */
-			g_prefix_error(&error_all, "%s, ", error_tmp->message);
+		/* find all the releases that pass all the requirements */
+		for (guint i = 0; i < components->len; i++) {
+			XbNode *component = XB_NODE(g_ptr_array_index(components, i));
+			g_autoptr(GError) error_tmp = NULL;
+			if (!fu_engine_add_releases_for_device_component(self,
+									 request,
+									 device,
+									 component,
+									 releases,
+									 &error_tmp)) {
+				if (error_all == NULL) {
+					error_all = g_steal_pointer(&error_tmp);
+					continue;
+				}
+
+				/* assume the domain and code is the same */
+				g_prefix_error(&error_all, "%s, ", error_tmp->message);
+			}
 		}
 	}
 
