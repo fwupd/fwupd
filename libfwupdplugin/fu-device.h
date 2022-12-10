@@ -748,8 +748,10 @@ fu_device_add_instance_u16(FuDevice *self, const gchar *key, guint16 value);
 void
 fu_device_add_instance_u32(FuDevice *self, const gchar *key, guint32 value);
 gboolean
-fu_device_build_instance_id(FuDevice *self, GError **error, const gchar *subsystem, ...);
+fu_device_build_instance_id(FuDevice *self, GError **error, const gchar *subsystem, ...)
+    G_GNUC_NULL_TERMINATED;
 gboolean
-fu_device_build_instance_id_quirk(FuDevice *self, GError **error, const gchar *subsystem, ...);
+fu_device_build_instance_id_quirk(FuDevice *self, GError **error, const gchar *subsystem, ...)
+    G_GNUC_NULL_TERMINATED;
 FuDeviceLocker *
 fu_device_poll_locker_new(FuDevice *self, GError **error);
