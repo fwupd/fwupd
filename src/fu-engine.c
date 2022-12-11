@@ -1418,7 +1418,7 @@ fu_engine_verify(FuEngine *self, const gchar *device_id, FuProgress *progress, G
 	}
 	csum = xb_node_query_first(release, xpath_csum->str, NULL);
 	if (csum == NULL) {
-		g_autoptr(GString) checksums_device = g_string_new(NULL);
+		g_autofree gchar *checksums_device = fu_strjoin("|", checksums);
 		g_autoptr(GString) checksums_metadata = g_string_new(NULL);
 		g_autoptr(GPtrArray) csums = NULL;
 		g_autoptr(GString) xpath = g_string_new(NULL);
@@ -1442,10 +1442,6 @@ fu_engine_verify(FuEngine *self, const gchar *device_id, FuProgress *progress, G
 					       "%s",
 					       xb_node_get_text(csum_tmp));
 		}
-		for (guint i = 0; i < checksums->len; i++) {
-			const gchar *hash_tmp = g_ptr_array_index(checksums, i);
-			xb_string_append_union(checksums_device, "%s", hash_tmp);
-		}
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_FOUND,
@@ -1453,7 +1449,7 @@ fu_engine_verify(FuEngine *self, const gchar *device_id, FuProgress *progress, G
 			    fu_device_get_name(device),
 			    fu_device_get_version(device),
 			    checksums_metadata->str,
-			    checksums_device->str);
+			    checksums_device);
 		return FALSE;
 	}
 
