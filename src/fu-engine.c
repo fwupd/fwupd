@@ -107,6 +107,8 @@ struct _FuEngine {
 	FuIdle *idle;
 	XbSilo *silo;
 	XbQuery *query_component_by_guid;
+	XbQuery *query_container_checksum1;
+	XbQuery *query_container_checksum2;
 	guint coldplug_id;
 	FuPluginList *plugin_list;
 	GPtrArray *plugin_filter;
@@ -612,24 +614,37 @@ fu_engine_load_release(FuEngine *self,
 static const gchar *
 fu_engine_get_remote_id_for_checksum(FuEngine *self, const gchar *csum)
 {
-	g_autoptr(GString) xpath = g_string_new(NULL);
 	g_autoptr(XbNode) key = NULL;
+#if LIBXMLB_CHECK_VERSION(0, 3, 0)
+	g_auto(XbQueryContext) context = XB_QUERY_CONTEXT_INIT();
 
-	/* old-style <checksum target="container"> and new-style <artifact> */
-	xb_string_append_union(xpath,
-			       "components/component[@type='firmware']/releases/release/"
-			       "checksum[@target='container'][text()='%s']/../../"
-			       "../../custom/value[@key='fwupd::RemoteId']",
-			       csum);
-	xb_string_append_union(xpath,
-			       "components/component[@type='firmware']/releases/release/"
-			       "artifacts/artifact[@type='binary']/checksum[text()='%s']/../../"
-			       "../../../../custom/value[@key='fwupd::RemoteId']",
-			       csum);
-	key = xb_silo_query_first(self->silo, xpath->str, NULL);
-	if (key == NULL)
-		return NULL;
-	return xb_node_get_text(key);
+	xb_query_context_set_flags(&context, XB_QUERY_FLAG_USE_INDEXES);
+	xb_value_bindings_bind_str(xb_query_context_get_bindings(&context), 0, csum, NULL);
+	key = xb_silo_query_first_with_context(self->silo,
+					       self->query_container_checksum1,
+					       &context,
+					       NULL);
+	if (key != NULL)
+		return xb_node_get_text(key);
+	key = xb_silo_query_first_with_context(self->silo,
+					       self->query_container_checksum2,
+					       &context,
+					       NULL);
+	if (key != NULL)
+		return xb_node_get_text(key);
+#else
+	xb_query_bind_str(self->query_container_checksum1, 0, csum, NULL);
+	key = xb_silo_query_first_full(self->silo, self->query_container_checksum1, NULL);
+	if (key != NULL)
+		return xb_node_get_text(key);
+	xb_query_bind_str(self->query_container_checksum2, 0, csum, NULL);
+	key = xb_silo_query_first_full(self->silo, self->query_container_checksum2, NULL);
+	if (key != NULL)
+		return xb_node_get_text(key);
+#endif
+
+	/* failed */
+	return NULL;
 }
 
 /**
@@ -3672,6 +3687,32 @@ fu_engine_create_silo_index(FuEngine *self, GError **error)
 		g_prefix_error(error, "failed to prepare query: ");
 		return FALSE;
 	}
+
+	/* old-style <checksum target="container"> and new-style <artifact> */
+	self->query_container_checksum1 =
+	    xb_query_new_full(self->silo,
+			      "components/component[@type='firmware']/releases/release/"
+			      "checksum[@target='container'][text()=?]/../../"
+			      "../../custom/value[@key='fwupd::RemoteId']",
+			      XB_QUERY_FLAG_OPTIMIZE,
+			      error);
+	if (self->query_container_checksum1 == NULL) {
+		g_prefix_error(error, "failed to prepare query: ");
+		return FALSE;
+	}
+	self->query_container_checksum2 =
+	    xb_query_new_full(self->silo,
+			      "components/component[@type='firmware']/releases/release/"
+			      "artifacts/artifact[@type='binary']/checksum[text()=?]/../../"
+			      "../../../../custom/value[@key='fwupd::RemoteId']",
+			      XB_QUERY_FLAG_OPTIMIZE,
+			      error);
+	if (self->query_container_checksum2 == NULL) {
+		g_prefix_error(error, "failed to prepare query: ");
+		return FALSE;
+	}
+
+	/* success */
 	return TRUE;
 }
 
@@ -8382,6 +8423,10 @@ fu_engine_finalize(GObject *obj)
 		g_object_unref(self->silo);
 	if (self->query_component_by_guid != NULL)
 		g_object_unref(self->query_component_by_guid);
+	if (self->query_container_checksum1 != NULL)
+		g_object_unref(self->query_container_checksum1);
+	if (self->query_container_checksum2 != NULL)
+		g_object_unref(self->query_container_checksum2);
 	if (self->coldplug_id != 0)
 		g_source_remove(self->coldplug_id);
 	if (self->approved_firmware != NULL)
