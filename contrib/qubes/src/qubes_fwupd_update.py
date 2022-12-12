@@ -10,6 +10,7 @@
 import grp
 import os
 import re
+import shlex
 import subprocess
 
 FWUPD_DOM0_DIR = "/var/cache/fwupd"
