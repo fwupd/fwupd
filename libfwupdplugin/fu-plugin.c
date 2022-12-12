@@ -49,7 +49,6 @@ typedef struct {
 	FuContext *ctx;
 	GArray *device_gtypes; /* (nullable): of #GType */
 	GHashTable *cache;     /* (nullable): platform_id:GObject */
-	GRWLock cache_mutex;
 	GHashTable *report_metadata; /* (nullable): key:value */
 	GFileMonitor *config_monitor;
 	FuPluginData *data;
@@ -163,10 +162,8 @@ gpointer
 fu_plugin_cache_lookup(FuPlugin *self, const gchar *id)
 {
 	FuPluginPrivate *priv = GET_PRIVATE(self);
-	g_autoptr(GRWLockReaderLocker) locker = g_rw_lock_reader_locker_new(&priv->cache_mutex);
 	g_return_val_if_fail(FU_IS_PLUGIN(self), NULL);
 	g_return_val_if_fail(id != NULL, NULL);
-	g_return_val_if_fail(locker != NULL, NULL);
 	if (priv->cache == NULL)
 		return NULL;
 	return g_hash_table_lookup(priv->cache, id);
@@ -186,11 +183,9 @@ void
 fu_plugin_cache_add(FuPlugin *self, const gchar *id, gpointer dev)
 {
 	FuPluginPrivate *priv = GET_PRIVATE(self);
-	g_autoptr(GRWLockWriterLocker) locker = g_rw_lock_writer_locker_new(&priv->cache_mutex);
 	g_return_if_fail(FU_IS_PLUGIN(self));
 	g_return_if_fail(id != NULL);
 	g_return_if_fail(G_IS_OBJECT(dev));
-	g_return_if_fail(locker != NULL);
 	if (priv->cache == NULL) {
 		priv->cache = g_hash_table_new_full(g_str_hash,
 						    g_str_equal,
@@ -213,10 +208,8 @@ void
 fu_plugin_cache_remove(FuPlugin *self, const gchar *id)
 {
 	FuPluginPrivate *priv = GET_PRIVATE(self);
-	g_autoptr(GRWLockWriterLocker) locker = g_rw_lock_writer_locker_new(&priv->cache_mutex);
 	g_return_if_fail(FU_IS_PLUGIN(self));
 	g_return_if_fail(id != NULL);
-	g_return_if_fail(locker != NULL);
 	if (priv->cache == NULL)
 		return;
 	g_hash_table_remove(priv->cache, id);
@@ -2804,8 +2797,6 @@ fu_plugin_class_init(FuPluginClass *klass)
 static void
 fu_plugin_init(FuPlugin *self)
 {
-	FuPluginPrivate *priv = GET_PRIVATE(self);
-	g_rw_lock_init(&priv->cache_mutex);
 }
 
 static void
@@ -2814,8 +2805,6 @@ fu_plugin_finalize(GObject *object)
 	FuPlugin *self = FU_PLUGIN(object);
 	FuPluginPrivate *priv = GET_PRIVATE(self);
 	FuPluginVfuncs *vfuncs = fu_plugin_get_vfuncs(self);
-
-	g_rw_lock_clear(&priv->cache_mutex);
 
 	/* optional */
 	if (priv->done_init && vfuncs->finalize != NULL) {
