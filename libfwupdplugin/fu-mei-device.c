@@ -67,10 +67,12 @@ fu_mei_device_to_string(FuDevice *device, guint idt, GString *str)
 		fu_string_append_kx(str, idt, "ProtocolVer", priv->protocol_version);
 }
 
-static gchar *
-fu_mei_device_get_parent_device_file(FuMeiDevice *self, GError **error)
+static gboolean
+fu_mei_device_ensure_parent_device_file(FuMeiDevice *self, GError **error)
 {
+	FuMeiDevicePrivate *priv = GET_PRIVATE(self);
 	const gchar *fn;
+	g_autofree gchar *parent_tmp = NULL;
 	g_autofree gchar *parent_mei_path = NULL;
 	g_autoptr(FuUdevDevice) parent = NULL;
 	g_autoptr(GDir) dir = NULL;
@@ -79,7 +81,7 @@ fu_mei_device_get_parent_device_file(FuMeiDevice *self, GError **error)
 	parent = fu_udev_device_get_parent_with_subsystem(FU_UDEV_DEVICE(self), NULL);
 	if (parent == NULL) {
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no MEI parent");
-		return NULL;
+		return FALSE;
 	}
 
 	/* look for the only child with this subsystem */
@@ -91,7 +93,7 @@ fu_mei_device_get_parent_device_file(FuMeiDevice *self, GError **error)
 			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "no MEI parent dir for %s",
 			    fu_udev_device_get_sysfs_path(parent));
-		return NULL;
+		return FALSE;
 	}
 	fn = g_dir_read_name(dir);
 	if (fn == NULL) {
@@ -100,11 +102,26 @@ fu_mei_device_get_parent_device_file(FuMeiDevice *self, GError **error)
 			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "no MEI parent in %s",
 			    parent_mei_path);
-		return NULL;
+		return FALSE;
 	}
 
 	/* success */
-	return g_build_filename(fu_udev_device_get_sysfs_path(parent), "mei", fn, NULL);
+	parent_tmp = g_build_filename(fu_udev_device_get_sysfs_path(parent), "mei", fn, NULL);
+	if (g_strcmp0(parent_tmp, priv->parent_device_file) != 0) {
+		g_free(priv->parent_device_file);
+		priv->parent_device_file = g_steal_pointer(&parent_tmp);
+	}
+	return TRUE;
+}
+
+static void
+fu_mei_device_set_uuid(FuMeiDevice *self, const gchar *uuid)
+{
+	FuMeiDevicePrivate *priv = GET_PRIVATE(self);
+	if (g_strcmp0(priv->uuid, uuid) == 0)
+		return;
+	g_free(priv->uuid);
+	priv->uuid = g_strdup(uuid);
 }
 
 static gboolean
@@ -123,12 +140,11 @@ fu_mei_device_probe(FuDevice *device, GError **error)
 				    "UUID not provided");
 		return FALSE;
 	}
-	priv->uuid = g_strdup(uuid);
+	fu_mei_device_set_uuid(self, uuid);
 	fu_device_add_guid(device, uuid);
 
 	/* get the mei[0-9] device file the parent is using */
-	priv->parent_device_file = fu_mei_device_get_parent_device_file(self, error);
-	if (priv->parent_device_file == NULL)
+	if (!fu_mei_device_ensure_parent_device_file(self, error))
 		return FALSE;
 
 	/* the kernel is missing `dev` on mei_me children */
@@ -473,7 +489,7 @@ fu_mei_device_incorporate(FuDevice *device, FuDevice *donor)
 	priv->max_msg_length = priv_donor->max_msg_length;
 	priv->protocol_version = priv_donor->protocol_version;
 	if (priv->uuid == NULL)
-		priv->uuid = g_strdup(priv_donor->uuid);
+		fu_mei_device_set_uuid(self, priv_donor->uuid);
 	if (priv->parent_device_file == NULL)
 		priv->parent_device_file = g_strdup(priv_donor->parent_device_file);
 }
