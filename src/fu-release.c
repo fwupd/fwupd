@@ -643,7 +643,7 @@ fu_release_check_requirements(FuRelease *self,
 				    fu_release_get_version(self),
 				    fu_device_get_version_format(self->device));
 	if (fu_device_has_flag(self->device, FWUPD_DEVICE_FLAG_ONLY_VERSION_UPGRADE) &&
-	    vercmp >= 0) {
+	    vercmp > 0) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
