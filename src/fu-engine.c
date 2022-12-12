@@ -109,6 +109,7 @@ struct _FuEngine {
 	XbQuery *query_component_by_guid;
 	XbQuery *query_container_checksum1;
 	XbQuery *query_container_checksum2;
+	XbQuery *query_tag_by_guid_version;
 	guint coldplug_id;
 	FuPluginList *plugin_list;
 	GPtrArray *plugin_filter;
@@ -493,26 +494,14 @@ fu_engine_add_local_release_metadata(FuEngine *self, FuRelease *release, GError 
 {
 	FuDevice *dev = fu_release_get_device(release);
 	GPtrArray *guids;
-	g_autoptr(XbQuery) query = NULL;
-	g_autoptr(GError) error_query = NULL;
 
 	/* no device matched */
 	if (dev == NULL)
 		return TRUE;
 
-	/* prepare query with bound GUID parameter */
-	query = xb_query_new_full(self->silo,
-				  "local/components/component[@merge='append']/provides/"
-				  "firmware[text()=?]/../../releases/release[@version=?]/../../"
-				  "tags/tag",
-				  XB_QUERY_FLAG_OPTIMIZE | XB_QUERY_FLAG_USE_INDEXES,
-				  &error_query);
-	if (query == NULL) {
-		if (g_error_matches(error_query, G_IO_ERROR, G_IO_ERROR_INVALID_ARGUMENT))
-			return TRUE;
-		g_propagate_error(error, g_steal_pointer(&error_query));
-		return FALSE;
-	}
+	/* not set up */
+	if (self->query_tag_by_guid_version == NULL)
+		return TRUE;
 
 	/* use prepared query for each GUID */
 	guids = fu_device_get_guids(dev);
@@ -531,17 +520,24 @@ fu_engine_add_local_release_metadata(FuEngine *self, FuRelease *release, GError 
 					   1,
 					   fu_release_get_version(release),
 					   NULL);
-		tags = xb_silo_query_with_context(self->silo, query, &context, &error_local);
+		tags = xb_silo_query_with_context(self->silo,
+						  self->query_tag_by_guid_version,
+						  &context,
+						  &error_local);
 #else
-		if (!xb_query_bind_str(query, 0, guid, error)) {
+		if (!xb_query_bind_str(self->query_tag_by_guid_version, 0, guid, error)) {
 			g_prefix_error(error, "failed to bind GUID: ");
 			return FALSE;
 		}
-		if (!xb_query_bind_str(query, 1, fu_release_get_version(release), error)) {
+		if (!xb_query_bind_str(self->query_tag_by_guid_version,
+				       1,
+				       fu_release_get_version(release),
+				       error)) {
 			g_prefix_error(error, "failed to bind version: ");
 			return FALSE;
 		}
-		tags = xb_silo_query_full(self->silo, query, &error_local);
+		tags =
+		    xb_silo_query_full(self->silo, self->query_tag_by_guid_version, &error_local);
 #endif
 		if (tags == NULL) {
 			if (g_error_matches(error_local, G_IO_ERROR, G_IO_ERROR_NOT_FOUND) ||
@@ -3707,6 +3703,17 @@ fu_engine_create_silo_index(FuEngine *self, GError **error)
 		g_prefix_error(error, "failed to prepare query: ");
 		return FALSE;
 	}
+
+	/* prepare tag query with bound GUID parameter */
+	self->query_tag_by_guid_version =
+	    xb_query_new_full(self->silo,
+			      "local/components/component[@merge='append']/provides/"
+			      "firmware[text()=?]/../../releases/release[@version=?]/../../"
+			      "tags/tag",
+			      XB_QUERY_FLAG_OPTIMIZE,
+			      error);
+	if (self->query_tag_by_guid_version == NULL)
+		return FALSE;
 
 	/* success */
 	return TRUE;
@@ -8423,6 +8430,8 @@ fu_engine_finalize(GObject *obj)
 		g_object_unref(self->query_container_checksum1);
 	if (self->query_container_checksum2 != NULL)
 		g_object_unref(self->query_container_checksum2);
+	if (self->query_tag_by_guid_version != NULL)
+		g_object_unref(self->query_tag_by_guid_version);
 	if (self->coldplug_id != 0)
 		g_source_remove(self->coldplug_id);
 	if (self->approved_firmware != NULL)
