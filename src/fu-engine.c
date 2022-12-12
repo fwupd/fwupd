@@ -145,11 +145,15 @@ fu_engine_emit_changed(FuEngine *self)
 {
 	g_autoptr(GError) error = NULL;
 
+	/* do nothing */
+	if (!self->loaded)
+		return;
+
 	g_signal_emit(self, signals[SIGNAL_CHANGED], 0);
 	fu_engine_idle_reset(self);
 
 	/* update the motd */
-	if (self->loaded && fu_config_get_update_motd(self->config)) {
+	if (fu_config_get_update_motd(self->config)) {
 		g_autoptr(GError) error_local = NULL;
 		if (!fu_engine_update_motd(self, &error_local))
 			g_debug("failed to update MOTD: %s", error_local->message);
@@ -7705,6 +7709,7 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 	g_autoptr(GPtrArray) checksums_approved = NULL;
 	g_autoptr(GPtrArray) checksums_blocked = NULL;
 	g_autoptr(GError) error_quirks = NULL;
+	g_autoptr(GError) error_json_devices = NULL;
 	g_autoptr(GError) error_local = NULL;
 
 	g_return_val_if_fail(FU_IS_ENGINE(self), FALSE);
@@ -8049,6 +8054,10 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 	if (!fu_engine_update_history_database(self, error))
 		return FALSE;
 	fu_progress_step_done(progress);
+
+	/* update the devices JSON file */
+	if (!fu_engine_update_devices_file(self, &error_json_devices))
+		g_debug("failed to update list of devices: %s", error_json_devices->message);
 
 	fu_engine_set_status(self, FWUPD_STATUS_IDLE);
 	self->loaded = TRUE;
