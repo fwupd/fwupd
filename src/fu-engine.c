@@ -6917,6 +6917,9 @@ fu_engine_add_device(FuEngine *self, FuDevice *device)
 	/* create new device */
 	fu_device_list_add(self->device_list, device);
 
+	/* clean up any state only valid for ->probe */
+	fu_device_probe_complete(device);
+
 	/* fix order */
 	fu_device_list_depsolve_order(self->device_list, device);
 

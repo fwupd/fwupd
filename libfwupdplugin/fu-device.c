@@ -241,6 +241,8 @@ fu_device_internal_flag_to_string(FuDeviceInternalFlags flag)
 		return "only-wait-for-replug";
 	if (flag == FU_DEVICE_INTERNAL_FLAG_IGNORE_SYSTEM_POWER)
 		return "ignore-system-power";
+	if (flag == FU_DEVICE_INTERNAL_FLAG_NO_PROBE_COMPLETE)
+		return "no-probe-complete";
 	return NULL;
 }
 
@@ -311,6 +313,8 @@ fu_device_internal_flag_from_string(const gchar *flag)
 		return FU_DEVICE_INTERNAL_FLAG_ONLY_WAIT_FOR_REPLUG;
 	if (g_strcmp0(flag, "ignore-system-power") == 0)
 		return FU_DEVICE_INTERNAL_FLAG_IGNORE_SYSTEM_POWER;
+	if (g_strcmp0(flag, "no-probe-complete") == 0)
+		return FU_DEVICE_INTERNAL_FLAG_NO_PROBE_COMPLETE;
 	return FU_DEVICE_INTERNAL_FLAG_UNKNOWN;
 }
 
@@ -4742,6 +4746,28 @@ fu_device_probe(FuDevice *self, GError **error)
 	/* success */
 	priv->done_probe = TRUE;
 	return TRUE;
+}
+
+/**
+ * fu_device_probe_complete:
+ * @self: a #FuDevice
+ *
+ * Tell the device that all probing has finished. This allows it to release any resources that are
+ * only valid during coldplug or hotplug.
+ *
+ * Since: 1.8.12
+ **/
+void
+fu_device_probe_complete(FuDevice *self)
+{
+	FuDeviceClass *klass = FU_DEVICE_GET_CLASS(self);
+
+	g_return_if_fail(FU_IS_DEVICE(self));
+
+	if (fu_device_has_internal_flag(self, FU_DEVICE_INTERNAL_FLAG_NO_PROBE_COMPLETE))
+		return;
+	if (klass->probe_complete != NULL)
+		klass->probe_complete(self);
 }
 
 /**

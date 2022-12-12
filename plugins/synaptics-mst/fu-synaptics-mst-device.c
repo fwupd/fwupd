@@ -96,6 +96,7 @@ fu_synaptics_mst_device_init(FuSynapticsMstDevice *self)
 					FU_SYNAPTICS_MST_DEVICE_FLAG_IGNORE_BOARD_ID,
 					"ignore-board-id");
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_NO_PROBE_COMPLETE);
 }
 
 static void

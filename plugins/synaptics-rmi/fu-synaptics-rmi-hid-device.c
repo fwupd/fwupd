@@ -570,6 +570,7 @@ fu_synaptics_rmi_hid_device_init(FuSynapticsRmiHidDevice *self)
 {
 	fu_device_set_name(FU_DEVICE(self), "Touchpad");
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
+	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_NO_PROBE_COMPLETE);
 	fu_synaptics_rmi_device_set_max_page(FU_SYNAPTICS_RMI_DEVICE(self), 0xff);
 }
 

@@ -36,6 +36,7 @@
 
 typedef struct {
 	GUdevDevice *udev_device;
+	gboolean udev_device_cleared;
 	guint32 class;
 	guint16 vendor;
 	guint16 model;
@@ -732,6 +733,17 @@ fu_udev_device_get_slot_depth(FuUdevDevice *self, const gchar *subsystem)
 	return 0;
 }
 
+static void
+fu_udev_device_probe_complete(FuDevice *device)
+{
+	FuUdevDevice *self = FU_UDEV_DEVICE(device);
+	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
+
+	/* this is where we would call g_clear_object(&priv->udev_device) in the future, but for
+	 * now just set the flag so we get the warning in non-supported builds */
+	priv->udev_device_cleared = TRUE;
+}
+
 static gboolean
 fu_udev_device_unbind_driver(FuDevice *device, GError **error)
 {
@@ -872,6 +884,9 @@ fu_udev_device_incorporate(FuDevice *self, FuDevice *donor)
  *
  * Gets the #GUdevDevice.
  *
+ * NOTE: If a plugin calls this after the `->probe()` and `->setup()` phases then the
+ * %FU_DEVICE_INTERNAL_FLAG_NO_PROBE_COMPLETE flag should be set on the device to avoid a warning.
+ *
  * Returns: (transfer none): a #GUdevDevice, or %NULL
  *
  * Since: 1.1.2
@@ -881,6 +896,14 @@ fu_udev_device_get_dev(FuUdevDevice *self)
 {
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FU_IS_UDEV_DEVICE(self), NULL);
+#ifdef SUPPORTED_BUILD
+	if (priv->udev_device_cleared) {
+		g_warning("soon the GUdevDevice will not be available post-probe, use "
+			  "FU_DEVICE_INTERNAL_FLAG_NO_PROBE_COMPLETE in %s plugin to opt-out %s",
+			  fu_device_get_plugin(FU_DEVICE(self)),
+			  fu_device_get_id(FU_DEVICE(self)));
+	}
+#endif
 	return priv->udev_device;
 }
 
@@ -2322,6 +2345,7 @@ fu_udev_device_class_init(FuUdevDeviceClass *klass)
 	device_class->to_string = fu_udev_device_to_string;
 	device_class->bind_driver = fu_udev_device_bind_driver;
 	device_class->unbind_driver = fu_udev_device_unbind_driver;
+	device_class->probe_complete = fu_udev_device_probe_complete;
 
 	/**
 	 * FuUdevDevice::changed:

@@ -50,6 +50,7 @@ struct _FuDeviceClass {
 				 GError **error) G_GNUC_WARN_UNUSED_RESULT;
 	gboolean (*setup)(FuDevice *self, GError **error) G_GNUC_WARN_UNUSED_RESULT;
 	void (*incorporate)(FuDevice *self, FuDevice *donor);
+	void (*probe_complete)(FuDevice *self);
 	gboolean (*poll)(FuDevice *self, GError **error) G_GNUC_WARN_UNUSED_RESULT;
 	gboolean (*activate)(FuDevice *self,
 			     FuProgress *progress,
@@ -480,6 +481,18 @@ typedef guint64 FuDeviceInternalFlags;
  */
 #define FU_DEVICE_INTERNAL_FLAG_IGNORE_SYSTEM_POWER (1ull << 26)
 
+/**
+ * FU_DEVICE_INTERNAL_FLAG_NO_PROBE_COMPLETE:
+ *
+ * Do not deallocate resources typically only required during `->probe`.
+ *
+ * Note: the daemon will not actually free or unref device resources, but the plugin should
+ * still use this flag. After a a few releases and a lot of testing we'll actually flip the switch.
+ *
+ * Since: 1.8.12
+ */
+#define FU_DEVICE_INTERNAL_FLAG_NO_PROBE_COMPLETE (1ull << 27)
+
 /* accessors */
 gchar *
 fu_device_to_string(FuDevice *self);
@@ -704,6 +717,8 @@ gboolean
 fu_device_activate(FuDevice *self, FuProgress *progress, GError **error) G_GNUC_WARN_UNUSED_RESULT;
 void
 fu_device_probe_invalidate(FuDevice *self);
+void
+fu_device_probe_complete(FuDevice *self);
 gboolean
 fu_device_poll(FuDevice *self, GError **error) G_GNUC_WARN_UNUSED_RESULT;
 void
