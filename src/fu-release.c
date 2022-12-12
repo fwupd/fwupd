@@ -248,10 +248,11 @@ fu_release_get_release_version(FuRelease *self, const gchar *version, GError **e
 static gboolean
 fu_release_load_test_result(FuRelease *self, XbNode *n, GError **error)
 {
-	XbNode *c;
 	const gchar *tmp;
 	g_autoptr(FwupdReport) report = fwupd_report_new();
 	g_autoptr(GPtrArray) custom = NULL;
+	g_autoptr(XbNode) os = NULL;
+	g_autoptr(XbNode) vendor_name = NULL;
 
 	tmp = xb_node_get_attr(n, "date");
 	if (tmp != NULL) {
@@ -267,27 +268,27 @@ fu_release_load_test_result(FuRelease *self, XbNode *n, GError **error)
 	tmp = xb_node_query_text(n, "previous_version", NULL);
 	if (tmp != NULL)
 		fwupd_report_set_version_old(report, tmp);
-	c = xb_node_query_first(n, "vendor_name", NULL);
-	if (c != NULL) {
-		guint64 vendor_id = xb_node_get_attr_as_uint(c, "id");
-		fwupd_report_set_vendor(report, xb_node_get_text(c));
+	vendor_name = xb_node_query_first(n, "vendor_name", NULL);
+	if (vendor_name != NULL) {
+		guint64 vendor_id = xb_node_get_attr_as_uint(vendor_name, "id");
+		fwupd_report_set_vendor(report, xb_node_get_text(vendor_name));
 		if (vendor_id != G_MAXUINT64)
 			fwupd_report_set_vendor_id(report, vendor_id);
 	}
-	c = xb_node_query_first(n, "os", NULL);
-	if (c != NULL) {
-		tmp = xb_node_get_attr(c, "version");
+	os = xb_node_query_first(n, "os", NULL);
+	if (os != NULL) {
+		tmp = xb_node_get_attr(os, "version");
 		if (tmp != NULL)
 			fwupd_report_set_distro_version(report, tmp);
-		tmp = xb_node_get_attr(c, "variant");
+		tmp = xb_node_get_attr(os, "variant");
 		if (tmp != NULL)
 			fwupd_report_set_distro_variant(report, tmp);
-		fwupd_report_set_distro_id(report, xb_node_get_text(c));
+		fwupd_report_set_distro_id(report, xb_node_get_text(os));
 	}
 	custom = xb_node_query(n, "custom/value", 0, NULL);
 	if (custom != NULL) {
 		for (guint i = 0; i < custom->len; i++) {
-			c = g_ptr_array_index(custom, i);
+			XbNode *c = g_ptr_array_index(custom, i);
 			fwupd_report_add_metadata_item(report,
 						       xb_node_get_attr(c, "key"),
 						       xb_node_get_text(c));
