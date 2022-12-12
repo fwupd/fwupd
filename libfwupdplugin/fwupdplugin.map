@@ -1179,3 +1179,9 @@ LIBFWUPDPLUGIN_1.8.11 {
     fu_udev_device_is_pci_base_cls;
   local: *;
 } LIBFWUPDPLUGIN_1.8.10;
+
+LIBFWUPDPLUGIN_1.8.12 {
+  global:
+    fu_device_probe_complete;
+  local: *;
+} LIBFWUPDPLUGIN_1.8.11;

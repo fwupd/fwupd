@@ -282,8 +282,7 @@ fu_logitech_hidpp_device_open(FuDevice *device, GError **error)
 {
 	FuLogitechHidPpDevice *self = FU_HIDPP_DEVICE(device);
 	FuLogitechHidPpDevicePrivate *priv = GET_PRIVATE(self);
-	GUdevDevice *udev_device = fu_udev_device_get_dev(FU_UDEV_DEVICE(device));
-	const gchar *devpath = g_udev_device_get_device_file(udev_device);
+	const gchar *devpath = fu_udev_device_get_device_file(FU_UDEV_DEVICE(device));
 
 	/* open */
 	priv->io_channel = fu_io_channel_new_file(devpath, error);

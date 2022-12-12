@@ -18,10 +18,9 @@ static gboolean
 fu_optionrom_device_probe(FuDevice *device, GError **error)
 {
 	g_autofree gchar *fn = NULL;
-	GUdevDevice *udev_device = fu_udev_device_get_dev(FU_UDEV_DEVICE(device));
 
 	/* does the device even have ROM? */
-	fn = g_build_filename(g_udev_device_get_sysfs_path(udev_device), "rom", NULL);
+	fn = g_build_filename(fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(device)), "rom", NULL);
 	if (!g_file_test(fn, G_FILE_TEST_EXISTS)) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
