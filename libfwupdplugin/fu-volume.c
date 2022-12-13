@@ -516,6 +516,7 @@ fu_volume_new_by_kind(const gchar *kind, GError **error)
 		g_autoptr(FuVolume) vol = NULL;
 		g_autoptr(GDBusProxy) proxy_part = NULL;
 		g_autoptr(GDBusProxy) proxy_fs = NULL;
+		g_autoptr(GError) error_proxy_fs = NULL;
 		g_autoptr(GVariant) val = NULL;
 
 		proxy_part = g_dbus_proxy_new_sync(g_dbus_proxy_get_connection(proxy_blk),
@@ -544,12 +545,12 @@ fu_volume_new_by_kind(const gchar *kind, GError **error)
 						 g_dbus_proxy_get_object_path(proxy_blk),
 						 UDISKS_DBUS_INTERFACE_FILESYSTEM,
 						 NULL,
-						 error);
+						 &error_proxy_fs);
 		if (proxy_fs == NULL) {
-			g_prefix_error(error,
-				       "failed to initialize d-bus proxy %s: ",
-				       g_dbus_proxy_get_object_path(proxy_blk));
-			return NULL;
+			g_debug("failed to get filesystem for %s: %s",
+				g_dbus_proxy_get_object_path(proxy_blk),
+				error_proxy_fs->message);
+			continue;
 		}
 		vol = g_object_new(FU_TYPE_VOLUME,
 				   "proxy-block",
