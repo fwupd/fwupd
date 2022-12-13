@@ -107,14 +107,8 @@ This security level corresponds to out-of-band protection of the system firmware
 
 The system is in a robust secure state.
 
-The system is corresponding several kind of encryption and execution protection for the system firmware.
-
-<a id="hsi-level5"></a>
-
-### [HSI:5 (Secure Proven State)](#hsi-level5)
-
-This security level corresponds to out-of-band attestation of the system firmware.
-There are currently no tests implemented for HSI:5 and so this security level cannot yet be obtained.
+The system is corresponding several kind of encryption and execution protection for the system
+firmware, perhaps even including out-of-band attestation of the system firmware.
 
 <a id="runtime-bang"></a>
 
