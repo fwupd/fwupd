@@ -13,6 +13,26 @@
 #include "fu-mem.h"
 
 /**
+ * fu_byte_array_to_string:
+ * @array: a #GByteArray
+ *
+ * Converts the byte array to a lowercase hex string.
+ *
+ * Returns: (transfer full): a string, which may be zero length
+ *
+ * Since: 1.8.9
+ **/
+gchar *
+fu_byte_array_to_string(GByteArray *array)
+{
+	g_autoptr(GString) str = g_string_new(NULL);
+	g_return_val_if_fail(array != NULL, NULL);
+	for (guint i = 0; i < array->len; i++)
+		g_string_append_printf(str, "%02x", array->data[i]);
+	return g_string_free(g_steal_pointer(&str), FALSE);
+}
+
+/**
  * fu_byte_array_append_uint8:
  * @array: a #GByteArray
  * @data: value

@@ -8,6 +8,8 @@
 
 #include "fu-common.h"
 
+gchar *
+fu_byte_array_to_string(GByteArray *array);
 void
 fu_byte_array_set_size(GByteArray *array, guint length, guint8 data);
 void
