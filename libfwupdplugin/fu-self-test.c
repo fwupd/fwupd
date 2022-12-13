@@ -158,6 +158,7 @@ fu_common_align_up_func(void)
 static void
 fu_common_byte_array_func(void)
 {
+	g_autofree gchar *str = NULL;
 	g_autoptr(GByteArray) array = g_byte_array_new();
 
 	fu_byte_array_append_uint8(array, (guint8)'h');
@@ -171,6 +172,9 @@ fu_common_byte_array_func(void)
 	fu_byte_array_set_size(array, 10, 0x00);
 	g_assert_cmpint(array->len, ==, 10);
 	g_assert_cmpint(memcmp(array->data, "hello\0\0\0\0\0", array->len), ==, 0);
+
+	str = fu_byte_array_to_string(array);
+	g_assert_cmpstr(str, ==, "68656c6c6f0000000000");
 }
 
 static void
