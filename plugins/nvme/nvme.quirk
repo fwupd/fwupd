@@ -43,3 +43,7 @@ Flags = unsigned-payload
 # Western Digital
 [NVME\VEN_101C]
 Flags = signed-payload
+
+# Solidigm
+[NVME\VEN_025E&DEV_F1AB]
+Flags = needs-shutdown
