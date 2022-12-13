@@ -22,6 +22,7 @@ _fwupdtool_cmd_list=(
 	'get-history'
 	'get-plugins'
 	'get-remotes'
+	'get-report-metadata'
 	'get-topology'
 	'hwids'
 	'update'

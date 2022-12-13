@@ -24,6 +24,7 @@
 #include "fwupd-bios-setting-private.h"
 #include "fwupd-common-private.h"
 #include "fwupd-device-private.h"
+#include "fwupd-enums-private.h"
 #include "fwupd-plugin-private.h"
 
 #include "fu-bios-settings-private.h"
@@ -1782,6 +1783,82 @@ fu_util_attach(FuUtilPrivate *priv, gchar **values, GError **error)
 	if (!fu_device_attach_full(device, fu_progress_get_child(priv->progress), error))
 		return FALSE;
 	fu_progress_step_done(priv->progress);
+
+	/* success */
+	return TRUE;
+}
+
+static void
+fu_util_report_metadata_to_string(GHashTable *metadata, guint idt, GString *str)
+{
+	g_autoptr(GList) keys = g_hash_table_get_keys(metadata);
+	for (GList *l = g_list_sort(keys, (GCompareFunc)g_strcmp0); l != NULL; l = l->next) {
+		const gchar *key = l->data;
+		const gchar *value = g_hash_table_lookup(metadata, key);
+		fu_string_append(str, idt, key, value);
+	}
+}
+
+static gboolean
+fu_util_get_report_metadata(FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	g_autoptr(GHashTable) metadata = NULL;
+	g_autoptr(GPtrArray) devices = NULL;
+	g_autoptr(GString) str = g_string_new(NULL);
+
+	/* progress */
+	fu_progress_set_id(priv->progress, G_STRLOC);
+	fu_progress_add_step(priv->progress, FWUPD_STATUS_LOADING, 95, "start-engine");
+	fu_progress_add_step(priv->progress, FWUPD_STATUS_DEVICE_BUSY, 5, NULL);
+
+	/* load engine */
+	if (!fu_util_start_engine(priv,
+				  FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_HWINFO,
+				  fu_progress_get_child(priv->progress),
+				  error))
+		return FALSE;
+	fu_progress_step_done(priv->progress);
+
+	/* daemon metadata */
+	metadata = fu_engine_get_report_metadata(priv->engine, error);
+	if (metadata == NULL)
+		return FALSE;
+	fu_util_report_metadata_to_string(metadata, 0, str);
+
+	/* device metadata */
+	devices = fu_engine_get_devices(priv->engine, error);
+	if (devices == NULL)
+		return FALSE;
+	for (guint i = 0; i < devices->len; i++) {
+		FuDevice *device = g_ptr_array_index(devices, i);
+		g_autoptr(FuDeviceLocker) locker = NULL;
+		g_autoptr(GHashTable) metadata_post = NULL;
+		g_autoptr(GHashTable) metadata_pre = NULL;
+
+		locker = fu_device_locker_new(device, error);
+		if (locker == NULL)
+			return FALSE;
+		metadata_pre = fu_device_report_metadata_pre(device);
+		metadata_post = fu_device_report_metadata_post(device);
+		if (metadata_pre != NULL || metadata_post != NULL) {
+			fu_string_append(str,
+					 0,
+					 FWUPD_RESULT_KEY_DEVICE_ID,
+					 fu_device_get_id(device));
+		}
+		if (metadata_pre != NULL) {
+			fu_string_append(str, 1, "pre", NULL);
+			fu_util_report_metadata_to_string(metadata_pre, 3, str);
+		}
+		if (metadata_post != NULL) {
+			fu_string_append(str, 1, "post", NULL);
+			fu_util_report_metadata_to_string(metadata_post, 3, str);
+		}
+	}
+	fu_progress_step_done(priv->progress);
+
+	/* display */
+	g_print("\n%s", str->str);
 
 	/* success */
 	return TRUE;
@@ -3712,6 +3789,12 @@ main(int argc, char *argv[])
 			      /* TRANSLATORS: command description */
 			      _("Attach to firmware mode"),
 			      fu_util_attach);
+	fu_util_cmd_array_add(cmd_array,
+			      "get-report-metadata",
+			      NULL,
+			      /* TRANSLATORS: command description */
+			      _("Get device report metadata"),
+			      fu_util_get_report_metadata);
 	fu_util_cmd_array_add(cmd_array,
 			      "detach",
 			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
