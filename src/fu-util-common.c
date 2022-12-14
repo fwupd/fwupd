@@ -822,6 +822,16 @@ fu_util_release_get_name(FwupdRelease *release)
 			 * the "video card" */
 			return g_strdup_printf(_("%s GPU Update"), name);
 		}
+		if (g_strcmp0(cat, "X-Dock") == 0) {
+			/* TRANSLATORS: Dock refers to the port replicator hardware laptops are
+			 * cradled in, or lowered onto */
+			return g_strdup_printf(_("%s Dock Update"), name);
+		}
+		if (g_strcmp0(cat, "X-UsbDock") == 0) {
+			/* TRANSLATORS: Dock refers to the port replicator device connected
+			 * by plugging in a USB cable -- which may or may not also provide power */
+			return g_strdup_printf(_("%s USB Dock Update"), name);
+		}
 	}
 
 	/* TRANSLATORS: this is the fallback where we don't know if the release
