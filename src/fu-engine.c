@@ -5400,7 +5400,6 @@ fu_engine_get_releases_for_device(FuEngine *self,
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GPtrArray) branches = NULL;
 	g_autoptr(GPtrArray) releases = NULL;
-	g_autoptr(GString) xpath = g_string_new(NULL);
 
 	/* no components in silo */
 	if (self->query_component_by_guid == NULL) {
