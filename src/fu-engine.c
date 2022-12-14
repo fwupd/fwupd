@@ -5428,7 +5428,6 @@ fu_engine_get_releases_for_device(FuEngine *self,
 	GPtrArray *device_guids;
 	const gchar *version;
 	g_autoptr(GError) error_all = NULL;
-	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GPtrArray) branches = NULL;
 	g_autoptr(GPtrArray) releases = NULL;
 
@@ -5461,6 +5460,7 @@ fu_engine_get_releases_for_device(FuEngine *self,
 	releases = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 	for (guint j = 0; j < device_guids->len; j++) {
 		const gchar *guid = g_ptr_array_index(device_guids, j);
+		g_autoptr(GError) error_local = NULL;
 		g_autoptr(GPtrArray) components = NULL;
 #if LIBXMLB_CHECK_VERSION(0, 3, 0)
 		g_auto(XbQueryContext) context = XB_QUERY_CONTEXT_INIT();
@@ -5482,14 +5482,11 @@ fu_engine_get_releases_for_device(FuEngine *self,
 
 		/* nothing found */
 		if (components == NULL) {
-			if (g_error_matches(error_local, G_IO_ERROR, G_IO_ERROR_NOT_FOUND) ||
-			    g_error_matches(error_local, G_IO_ERROR, G_IO_ERROR_INVALID_ARGUMENT)) {
-				g_set_error_literal(error,
-						    FWUPD_ERROR,
-						    FWUPD_ERROR_NOTHING_TO_DO,
-						    "No releases found");
-				return NULL;
+			if (error_all == NULL) {
+				error_all = g_steal_pointer(&error_local);
+				continue;
 			}
+			g_prefix_error(&error_all, "%s, ", error_local->message);
 			continue;
 		}
 
@@ -5534,9 +5531,11 @@ fu_engine_get_releases_for_device(FuEngine *self,
 	/* return the compound error */
 	if (releases->len == 0) {
 		if (error_all != NULL) {
-			g_propagate_prefixed_error(error,
-						   g_steal_pointer(&error_all),
-						   "No releases found: ");
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOTHING_TO_DO,
+				    "No releases found: %s",
+				    error_all->message);
 			return NULL;
 		}
 		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO, "No releases found");
