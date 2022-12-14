@@ -3978,6 +3978,10 @@ fu_common_device_category_to_name(const gchar *cat)
 		return "USB Receiver";
 	if (g_strcmp0(cat, "X-Gpu") == 0)
 		return "GPU";
+	if (g_strcmp0(cat, "X-Dock") == 0)
+		return "Dock";
+	if (g_strcmp0(cat, "X-UsbDock") == 0)
+		return "USB Dock";
 	return NULL;
 }
 
