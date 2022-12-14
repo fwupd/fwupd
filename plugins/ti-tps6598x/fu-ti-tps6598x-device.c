@@ -14,6 +14,8 @@
 
 struct _FuTiTps6598xDevice {
 	FuUsbDevice parent_instance;
+	gchar *uid;
+	gchar *ouid;
 };
 
 G_DEFINE_TYPE(FuTiTps6598xDevice, fu_ti_tps6598x_device, FU_TYPE_USB_DEVICE)
@@ -24,6 +26,14 @@ G_DEFINE_TYPE(FuTiTps6598xDevice, fu_ti_tps6598x_device, FU_TYPE_USB_DEVICE)
 #define TI_TPS6598X_USB_REQUEST_WRITE 0xFD
 #define TI_TPS6598X_USB_REQUEST_READ  0xFE
 #define TI_TPS6598X_USB_BUFFER_SIZE   8 /* bytes */
+
+static void
+fu_ti_tps6598x_device_to_string(FuDevice *device, guint idt, GString *str)
+{
+	FuTiTps6598xDevice *self = FU_TI_TPS6598X_DEVICE(device);
+	fu_string_append(str, idt, "UID", self->uid);
+	fu_string_append(str, idt, "oUID", self->ouid);
+}
 
 /* read @length bytes from address @addr */
 static GByteArray *
@@ -465,61 +475,25 @@ fu_ti_tps6598x_device_ensure_mode(FuTiTps6598xDevice *self, GError **error)
 static gboolean
 fu_ti_tps6598x_device_ensure_uid(FuTiTps6598xDevice *self, GError **error)
 {
-	g_autofree gchar *str = NULL;
-	g_autoptr(GByteArray) buf = NULL;
-
-	buf = fu_ti_tps6598x_device_usbep_read(self, TI_TPS6598X_REGISTER_UID, 16, error);
+	g_autoptr(GByteArray) buf =
+	    fu_ti_tps6598x_device_usbep_read(self, TI_TPS6598X_REGISTER_UID, 16, error);
 	if (buf == NULL)
 		return FALSE;
-	str = fu_byte_array_to_string(buf);
-	fu_device_add_instance_str(FU_DEVICE(self), "UID", str);
-	return fu_device_build_instance_id(FU_DEVICE(self),
-					   error,
-					   "USB",
-					   "VID",
-					   "PID",
-					   "UID",
-					   NULL);
+	g_free(self->uid);
+	self->uid = fu_byte_array_to_string(buf);
+	return TRUE;
 }
 
 static gboolean
 fu_ti_tps6598x_device_ensure_ouid(FuTiTps6598xDevice *self, GError **error)
 {
-	g_autofree gchar *str = NULL;
-	g_autoptr(GByteArray) buf = NULL;
-
-	buf = fu_ti_tps6598x_device_usbep_read(self, TI_TPS6598X_REGISTER_OUID, 8, error);
+	g_autoptr(GByteArray) buf =
+	    fu_ti_tps6598x_device_usbep_read(self, TI_TPS6598X_REGISTER_OUID, 8, error);
 	if (buf == NULL)
 		return FALSE;
-	str = fu_byte_array_to_string(buf);
-	fu_device_add_instance_str(FU_DEVICE(self), "OUID", str);
-	return fu_device_build_instance_id(FU_DEVICE(self),
-					   error,
-					   "USB",
-					   "VID",
-					   "PID",
-					   "OUID",
-					   NULL);
-}
-
-static gboolean
-fu_ti_tps6598x_device_ensure_config(FuTiTps6598xDevice *self, GError **error)
-{
-	g_autofree gchar *str = NULL;
-	g_autoptr(GByteArray) buf = NULL;
-
-	buf = fu_ti_tps6598x_device_usbep_read(self, TI_TPS6598X_REGISTER_OTP_CONFIG, 12, error);
-	if (buf == NULL)
-		return FALSE;
-	str = fu_byte_array_to_string(buf);
-	fu_device_add_instance_strup(FU_DEVICE(self), "CONFIG", str);
-	return fu_device_build_instance_id(FU_DEVICE(self),
-					   error,
-					   "USB",
-					   "VID",
-					   "PID",
-					   "CONFIG",
-					   NULL);
+	g_free(self->ouid);
+	self->ouid = fu_byte_array_to_string(buf);
+	return TRUE;
 }
 
 static gboolean
@@ -556,10 +530,6 @@ fu_ti_tps6598x_device_setup(FuDevice *device, GError **error)
 	}
 	if (!fu_ti_tps6598x_device_ensure_ouid(self, error)) {
 		g_prefix_error(error, "failed to read oUID: ");
-		return FALSE;
-	}
-	if (!fu_ti_tps6598x_device_ensure_config(self, error)) {
-		g_prefix_error(error, "failed to read OTP config: ");
 		return FALSE;
 	}
 
@@ -787,9 +757,21 @@ fu_ti_tps6598x_device_init(FuTiTps6598xDevice *self)
 }
 
 static void
+fu_ti_tps6598x_device_finalize(GObject *object)
+{
+	FuTiTps6598xDevice *self = FU_TI_TPS6598X_DEVICE(object);
+	g_free(self->uid);
+	g_free(self->ouid);
+	G_OBJECT_CLASS(fu_ti_tps6598x_device_parent_class)->finalize(object);
+}
+
+static void
 fu_ti_tps6598x_device_class_init(FuTiTps6598xDeviceClass *klass)
 {
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
+	GObjectClass *object_class = G_OBJECT_CLASS(klass);
+	object_class->finalize = fu_ti_tps6598x_device_finalize;
+	klass_device->to_string = fu_ti_tps6598x_device_to_string;
 	klass_device->write_firmware = fu_ti_tps6598x_device_write_firmware;
 	klass_device->attach = fu_ti_tps6598x_device_attach;
 	klass_device->setup = fu_ti_tps6598x_device_setup;

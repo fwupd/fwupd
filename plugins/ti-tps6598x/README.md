@@ -23,11 +23,10 @@ These devices use the standard USB DeviceInstanceId values, e.g.
 * `USB\VID_0451&PID_ACE1`
 * `USB\VID_0451`
 
-Devices also have additional instance IDs which corresponds to the UID, oUID and OTP config, e.g.
+Child devices also have an additional instance IDs which corresponds to the index, e.g.
 
-* `USB\VID_0451&PID_ACE1&UID_50bf5616c608a6b98b4169b220d9a5b8`
-* `USB\VID_0451&PID_ACE1&OUID_2200000000000000`
-* `USB\VID_0451&PID_0451&CONFIG_00000000A206000030000000`
+* `USB\VID_2188&PID_5988&REV_0714&PD_00
+* `USB\VID_2188&PID_5988&PD_00
 
 ## Update Behavior
 

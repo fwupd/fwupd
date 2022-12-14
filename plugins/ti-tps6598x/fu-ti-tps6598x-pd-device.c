@@ -22,31 +22,21 @@ static gboolean
 fu_ti_tps6598x_pd_device_probe(FuDevice *device, GError **error)
 {
 	FuTiTps6598xPdDevice *self = FU_TI_TPS6598X_PD_DEVICE(device);
-	FuTiTps6598xDevice *parent = FU_TI_TPS6598X_DEVICE(fu_device_get_parent(device));
 	g_autofree gchar *name = g_strdup_printf("TPS6598X PD#%u", self->target);
 	g_autofree gchar *logical_id = g_strdup_printf("PD%u", self->target);
-
-	/* do as few register reads as possible as they are s...l...o...w... */
 	fu_device_set_name(device, name);
 	fu_device_set_logical_id(device, logical_id);
-
-	/* fake GUID */
-	fu_device_add_instance_u16(device, "VID", fu_usb_device_get_vid(FU_USB_DEVICE(parent)));
-	fu_device_add_instance_u16(device, "PID", fu_usb_device_get_pid(FU_USB_DEVICE(parent)));
 	fu_device_add_instance_u8(device, "PD", self->target);
-	return fu_device_build_instance_id(device, error, "USB", "VID", "PID", "PD", NULL);
+	return TRUE;
 }
 
 static gboolean
-fu_ti_tps6598x_pd_device_setup(FuDevice *device, GError **error)
+fu_ti_tps6598x_pd_device_ensure_version(FuTiTps6598xPdDevice *self, GError **error)
 {
-	FuTiTps6598xPdDevice *self = FU_TI_TPS6598X_PD_DEVICE(device);
-	FuTiTps6598xDevice *parent = FU_TI_TPS6598X_DEVICE(fu_device_get_parent(device));
+	FuTiTps6598xDevice *parent = FU_TI_TPS6598X_DEVICE(fu_device_get_parent(FU_DEVICE(self)));
 	g_autoptr(GByteArray) buf = NULL;
-	g_autofree gchar *version = NULL;
-	g_autofree gchar *config = NULL;
+	g_autofree gchar *str = NULL;
 
-	/* register reads are s...l...o...w... */
 	buf = fu_ti_tps6598x_device_read_target_register(parent,
 							 self->target,
 							 TI_TPS6598X_REGISTER_VERSION,
@@ -54,33 +44,67 @@ fu_ti_tps6598x_pd_device_setup(FuDevice *device, GError **error)
 							 error);
 	if (buf == NULL)
 		return FALSE;
-	version = g_strdup_printf("%02X%02X.%02X.%02X",
-				  buf->data[3],
-				  buf->data[2],
-				  buf->data[1],
-				  buf->data[0]);
-	fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_PLAIN);
-	fu_device_set_version(device, version);
+	str = g_strdup_printf("%02X%02X.%02X.%02X",
+			      buf->data[3],
+			      buf->data[2],
+			      buf->data[1],
+			      buf->data[0]);
+	fu_device_set_version(FU_DEVICE(self), str);
+	return TRUE;
+}
 
-	/* the PD OTP config should be unique enough */
+static gboolean
+fu_ti_tps6598x_pd_device_ensure_tx_identity(FuTiTps6598xPdDevice *self, GError **error)
+{
+	FuTiTps6598xDevice *parent = FU_TI_TPS6598X_DEVICE(fu_device_get_parent(FU_DEVICE(self)));
+	guint16 val = 0;
+	g_autoptr(GByteArray) buf = NULL;
+
 	buf = fu_ti_tps6598x_device_read_target_register(parent,
 							 self->target,
-							 TI_TPS6598X_REGISTER_OTP_CONFIG,
-							 12,
+							 TI_TPS6598X_REGISTER_TX_IDENTITY,
+							 47,
 							 error);
 	if (buf == NULL)
 		return FALSE;
-	config = fu_byte_array_to_string(buf);
-	fu_device_add_instance_strup(device, "CONFIG", config);
+	if (!fu_memread_uint16_safe(buf->data, buf->len, 0x01, &val, G_LITTLE_ENDIAN, error))
+		return FALSE;
+	if (val != 0x0 && val != 0xFF)
+		fu_device_add_instance_u16(FU_DEVICE(self), "VID", val);
+	if (!fu_memread_uint16_safe(buf->data, buf->len, 0x0B, &val, G_LITTLE_ENDIAN, error))
+		return FALSE;
+	if (val != 0x0 && val != 0xFF)
+		fu_device_add_instance_u16(FU_DEVICE(self), "PID", val);
+	if (!fu_memread_uint16_safe(buf->data, buf->len, 0x09, &val, G_LITTLE_ENDIAN, error))
+		return FALSE;
+	if (val != 0x0 && val != 0xFF)
+		fu_device_add_instance_u16(FU_DEVICE(self), "REV", val);
 
 	/* success */
-	return fu_device_build_instance_id(device,
+	return TRUE;
+}
+
+static gboolean
+fu_ti_tps6598x_pd_device_setup(FuDevice *device, GError **error)
+{
+	FuTiTps6598xPdDevice *self = FU_TI_TPS6598X_PD_DEVICE(device);
+
+	/* register reads are slow, so do as few as possible */
+	if (!fu_ti_tps6598x_pd_device_ensure_version(self, error))
+		return FALSE;
+	if (!fu_ti_tps6598x_pd_device_ensure_tx_identity(self, error))
+		return FALSE;
+
+	/* add new instance IDs */
+	if (!fu_device_build_instance_id(FU_DEVICE(self), error, "USB", "VID", "PID", "PD", NULL))
+		return FALSE;
+	return fu_device_build_instance_id(FU_DEVICE(self),
 					   error,
 					   "USB",
 					   "VID",
 					   "PID",
+					   "REV",
 					   "PD",
-					   "CONFIG",
 					   NULL);
 }
 
@@ -93,7 +117,7 @@ fu_ti_tps6598x_pd_device_report_metadata_pre(FuDevice *device, GHashTable *metad
 	/* this is too slow to do for each update... */
 	if (g_getenv("FWUPD_TI_TPS6598X_VERBOSE") == NULL)
 		return;
-	for (guint i = 0; i < 0x30; i++) {
+	for (guint i = 0; i < 0x80; i++) {
 		g_autoptr(GByteArray) buf = NULL;
 		g_autoptr(GError) error_local = NULL;
 
