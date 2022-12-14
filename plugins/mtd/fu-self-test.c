@@ -28,12 +28,11 @@ fu_test_mtd_device_func(void)
 	g_autoptr(GUdevDevice) udev_device = NULL;
 	const gchar *dev_name;
 
-	ret = fu_context_load_hwinfo(ctx, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
-
 	/* do not save silo */
 	ret = fu_context_load_quirks(ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = fu_context_load_hwinfo(ctx, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
