@@ -27,6 +27,7 @@
 #define TI_TPS6598X_REGISTER_OTP_CONFIG	      0x2D /* ro, 12 bytes */
 #define TI_TPS6598X_REGISTER_BUILD_IDENTIFIER 0x2E /* ro, 64 bytes */
 #define TI_TPS6598X_REGISTER_DEVICE_INFO      0x2F /* ro, 47 bytes */
+#define TI_TPS6598X_REGISTER_TX_IDENTITY      0x47 /* rw, 49 bytes */
 
 #define TI_TPS6598X_SFWI_SUCCESS		    0x0
 #define TI_TPS6598X_SFWI_FAIL_FLASH_ERROR_OR_BUSY   0x4
