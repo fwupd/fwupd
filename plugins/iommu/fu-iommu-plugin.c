@@ -50,6 +50,16 @@ fu_iommu_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 	fu_security_attr_add_bios_target_value(attr, "AmdVt", "enable");
 	fu_security_attr_add_bios_target_value(attr, "IOMMU", "enable");
 	fu_security_attr_add_bios_target_value(attr, "VtForDirectIo", "enable");
+	/**
+	 * Lenovo systems that offer a BIOS setting for ThunderboltAccess will
+	 * use this option to control whether the IOMMU is enabled by default
+	 * or not.
+	 *
+	 * It may be counter-intuitive; but as there are other more physically
+	 * difficult to attack PCIe devices it's better to have the IOMMU
+	 * enabled pre-boot even if it enables access to Thunderbolt/USB4.
+	 */
+	fu_security_attr_add_bios_target_value(attr, "com.thinklmi.ThunderboltAccess", "enable");
 
 	if (!self->has_iommu) {
 		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_FOUND);
