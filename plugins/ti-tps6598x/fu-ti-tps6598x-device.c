@@ -617,7 +617,6 @@ fu_ti_tps6598x_device_write_chunks(FuTiTps6598xDevice *self,
 		}
 
 		/* update progress */
-		g_usleep(100 * 1000);
 		fu_progress_step_done(progress);
 	}
 
