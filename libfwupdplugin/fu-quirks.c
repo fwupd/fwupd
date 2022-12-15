@@ -89,8 +89,7 @@ fu_quirks_build_group_key(const gchar *group)
 static gboolean
 fu_quirks_validate_flags(const gchar *value, GError **error)
 {
-	if (value == NULL)
-		return FALSE;
+	g_return_val_if_fail(value != NULL, FALSE);
 	for (gsize i = 0; value[i] != '\0'; i++) {
 		gchar tmp = value[i];
 
