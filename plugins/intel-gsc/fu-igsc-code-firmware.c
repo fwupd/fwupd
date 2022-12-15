@@ -101,7 +101,6 @@ fu_igsc_code_firmware_parse_imgi(FuIgscCodeFirmware *self, GBytes *fw, GError **
 		return TRUE;
 
 	/* get hw_sku */
-	buf = g_bytes_get_data(fw, &bufsz);
 	if (!fu_memread_uint32_safe(buf,
 				    bufsz,
 				    G_STRUCT_OFFSET(struct fwu_gws_image_info, format_version),
