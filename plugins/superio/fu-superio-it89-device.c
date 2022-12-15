@@ -287,6 +287,7 @@ fu_superio_it89_device_write_addr(FuSuperioDevice *self, guint addr, GBytes *fw,
 			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "write addr unaligned, got 0x%04x",
 			    (guint)addr);
+		return FALSE;
 	}
 	if (size % 2 != 0) {
 		g_set_error(error,
@@ -294,6 +295,7 @@ fu_superio_it89_device_write_addr(FuSuperioDevice *self, guint addr, GBytes *fw,
 			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "write length not supported, got 0x%04x",
 			    (guint)size);
+		return FALSE;
 	}
 
 	/* enable writes */
