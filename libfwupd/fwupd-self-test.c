@@ -1496,10 +1496,12 @@ fwupd_bios_settings_func(void)
 	g_autofree gchar *str1 = NULL;
 	g_autofree gchar *str2 = NULL;
 	g_autofree gchar *str3 = NULL;
+	g_autofree gchar *str4 = NULL;
 	g_autofree gchar *json1 = NULL;
 	g_autofree gchar *json2 = NULL;
 	g_autoptr(FwupdBiosSetting) attr1 = fwupd_bios_setting_new("foo", "/path/to/bar");
 	g_autoptr(FwupdBiosSetting) attr2 = NULL;
+	g_autoptr(FwupdBiosSetting) attr3 = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GVariant) data1 = NULL;
 	g_autoptr(GVariant) data2 = NULL;
@@ -1594,7 +1596,22 @@ fwupd_bios_settings_func(void)
 	g_assert_true(ret);
 
 	/* make sure we filter CurrentValue if not trusted */
-	data2 = fwupd_bios_setting_to_variant(attr1, TRUE);
+	data2 = fwupd_bios_setting_to_variant(attr1, FALSE);
+	attr3 = fwupd_bios_setting_from_variant(data2);
+	str4 = fwupd_bios_setting_to_string(attr3);
+	ret = fu_test_compare_lines(str4,
+				    "  Name:                 UEFISecureBoot\n"
+				    "  Description:          Controls Secure boot\n"
+				    "  Filename:             /path/to/bar\n"
+				    "  BiosSettingType:      1\n"
+				    "  BiosSettingReadOnly:  False\n"
+				    "  BiosSettingPossibleValues: Disabled\n"
+				    "  BiosSettingPossibleValues: Enabled\n",
+				    &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* convert to JSON */
 	json2 = fwupd_attr_to_json_string(G_OBJECT(attr1), &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(json2);
