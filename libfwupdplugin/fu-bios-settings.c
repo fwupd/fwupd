@@ -569,7 +569,7 @@ fu_bios_settings_get_all(FuBiosSettings *self)
 gboolean
 fu_bios_settings_get_pending_reboot(FuBiosSettings *self, gboolean *result, GError **error)
 {
-	FwupdBiosSetting *attr;
+	FwupdBiosSetting *attr = NULL;
 	g_autofree gchar *data = NULL;
 	guint64 val = 0;
 
@@ -577,15 +577,13 @@ fu_bios_settings_get_pending_reboot(FuBiosSettings *self, gboolean *result, GErr
 	g_return_val_if_fail(FU_IS_BIOS_SETTINGS(self), FALSE);
 
 	for (guint i = 0; i < self->attrs->len; i++) {
-		const gchar *tmp;
-
-		attr = g_ptr_array_index(self->attrs, i);
-		tmp = fwupd_bios_setting_get_name(attr);
-		if (g_strcmp0(tmp, FWUPD_BIOS_SETTING_PENDING_REBOOT) == 0)
+		FwupdBiosSetting *attr_tmp = g_ptr_array_index(self->attrs, i);
+		const gchar *tmp = fwupd_bios_setting_get_name(attr_tmp);
+		if (g_strcmp0(tmp, FWUPD_BIOS_SETTING_PENDING_REBOOT) == 0) {
+			attr = attr_tmp;
 			break;
-		attr = NULL;
+		}
 	}
-
 	if (attr == NULL) {
 		g_set_error_literal(error,
 				    G_IO_ERROR,
