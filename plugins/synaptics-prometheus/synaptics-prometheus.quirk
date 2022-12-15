@@ -49,3 +49,20 @@ InstallDuration = 2
 [USB\VID_06CB&PID_0129]
 Plugin = synaptics_prometheus
 InstallDuration = 2
+
+[USB\VID_06CB&PID_0100]
+Plugin = synaptics_prometheus
+InstallDuration = 2
+
+[USB\VID_06CB&PID_0168]
+Plugin = synaptics_prometheus
+InstallDuration = 2
+
+[USB\VID_06CB&PID_015F]
+Plugin = synaptics_prometheus
+InstallDuration = 2
+
+[USB\VID_06CB&PID_0104]
+Plugin = synaptics_prometheus
+InstallDuration = 2
+
