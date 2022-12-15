@@ -136,7 +136,7 @@ fwupd_release_get_version(FwupdRelease *self)
 /**
  * fwupd_release_set_version:
  * @self: a #FwupdRelease
- * @version: the update version, e.g. `1.2.4`
+ * @version: (nullable): the update version, e.g. `1.2.4`
  *
  * Sets the update version.
  *
@@ -177,7 +177,7 @@ fwupd_release_get_filename(FwupdRelease *self)
 /**
  * fwupd_release_set_filename:
  * @self: a #FwupdRelease
- * @filename: the update filename on disk
+ * @filename: (nullable): the update filename on disk
  *
  * Sets the update filename.
  *
@@ -2390,6 +2390,8 @@ fwupd_release_from_variant(GVariant *value)
 	FwupdRelease *self = NULL;
 	const gchar *type_string;
 	g_autoptr(GVariantIter) iter = NULL;
+
+	g_return_val_if_fail(value != NULL, NULL);
 
 	/* format from GetDetails */
 	type_string = g_variant_get_type_string(value);

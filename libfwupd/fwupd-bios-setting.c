@@ -566,7 +566,7 @@ fwupd_bios_setting_get_current_value(FwupdBiosSetting *self)
 /**
  * fwupd_bios_setting_set_current_value:
  * @self: a #FwupdBiosSetting
- * @value: The string to set an attribute to
+ * @value: (nullable): The string to set an attribute to
  *
  * Sets the string stored in an attribute.
  * This doesn't change the representation in the kernel.
@@ -1024,6 +1024,8 @@ fwupd_bios_setting_array_from_variant(GVariant *value)
 	GPtrArray *array = NULL;
 	gsize sz;
 	g_autoptr(GVariant) untuple = NULL;
+
+	g_return_val_if_fail(value != NULL, NULL);
 
 	array = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 	untuple = g_variant_get_child_value(value, 0);

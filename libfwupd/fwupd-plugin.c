@@ -413,6 +413,8 @@ fwupd_plugin_from_variant(GVariant *value)
 	const gchar *type_string;
 	g_autoptr(GVariantIter) iter = NULL;
 
+	g_return_val_if_fail(value != NULL, NULL);
+
 	/* format from GetDetails */
 	type_string = g_variant_get_type_string(value);
 	if (g_strcmp0(type_string, "(a{sv})") == 0) {

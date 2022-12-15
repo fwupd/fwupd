@@ -248,7 +248,7 @@ fwupd_security_attr_get_bios_setting_id(FwupdSecurityAttr *self)
 /**
  * fwupd_security_attr_set_bios_setting_id:
  * @self: a #FwupdSecurityAttr
- * @id: Unique identifier used for #FwupdBiosSetting
+ * @id: (nullable): Unique identifier used for #FwupdBiosSetting
  *
  * Sets the #FwupdBiosSetting that can be used to improve this
  * #FwupdSecurityAttr.
@@ -352,7 +352,7 @@ fwupd_security_attr_get_guids(FwupdSecurityAttr *self)
 /**
  * fwupd_security_attr_add_guid:
  * @self: a #FwupdSecurityAttr
- * @guid: the GUID
+ * @guid: (not nullable): the GUID
  *
  * Adds a device GUID to the attribute. This indicates the GUID in some way contributed to the
  * result decided.
@@ -524,7 +524,7 @@ fwupd_security_attr_get_bios_setting_target_value(FwupdSecurityAttr *self)
 /**
  * fwupd_security_attr_set_bios_setting_target_value:
  * @self: a #FwupdSecurityAttr
- * @value: The string to set target value to
+ * @value: (nullable): The string to set target value to
  *
  * Sets the string used for the target value of an attribute.
  *
@@ -564,7 +564,7 @@ fwupd_security_attr_get_bios_setting_current_value(FwupdSecurityAttr *self)
 /**
  * fwupd_security_attr_set_bios_setting_current_value:
  * @self: a #FwupdSecurityAttr
- * @value: The string to set current value to
+ * @value: (nullable): The string to set current value to
  *
  * Sets the current value of the BIOS setting that can be changed.
  *
@@ -1273,7 +1273,7 @@ fwupd_pad_kv_tfl(GString *str, const gchar *key, FwupdSecurityAttrFlags security
 /**
  * fwupd_security_attr_from_json:
  * @self: a #FwupdSecurityAttr
- * @json_node: a JSON node
+ * @json_node: (not nullable): a JSON node
  * @error: (nullable): optional return location for an error
  *
  * Loads a fwupd security attribute from a JSON node.
@@ -1287,6 +1287,10 @@ fwupd_security_attr_from_json(FwupdSecurityAttr *self, JsonNode *json_node, GErr
 {
 #if JSON_CHECK_VERSION(1, 6, 0)
 	JsonObject *obj;
+
+	g_return_val_if_fail(FWUPD_IS_SECURITY_ATTR(self), FALSE);
+	g_return_val_if_fail(json_node != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* sanity check */
 	if (!JSON_NODE_HOLDS_OBJECT(json_node)) {
@@ -1630,6 +1634,8 @@ fwupd_security_attr_array_from_variant(GVariant *value)
 	GPtrArray *array = NULL;
 	gsize sz;
 	g_autoptr(GVariant) untuple = NULL;
+
+	g_return_val_if_fail(value != NULL, NULL);
 
 	array = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 	untuple = g_variant_get_child_value(value, 0);
