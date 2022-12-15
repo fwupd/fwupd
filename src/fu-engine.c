@@ -4813,7 +4813,7 @@ fu_engine_get_details_for_bytes(FuEngine *self,
 				GBytes *blob,
 				GError **error)
 {
-	const gchar *remote_id;
+	const gchar *remote_id = NULL;
 	GChecksumType checksum_types[] = {G_CHECKSUM_SHA256, G_CHECKSUM_SHA1, 0};
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GPtrArray) components = NULL;
