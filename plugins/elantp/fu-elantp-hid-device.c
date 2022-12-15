@@ -424,10 +424,7 @@ fu_elantp_hid_device_setup(FuDevice *device, GError **error)
 		g_debug("no forcetable detected: %s", error_forcetable->message);
 	} else {
 		if (!fu_elantp_hid_device_get_forcetable_address(self, error)) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "get forcetable address fail");
+			g_prefix_error(error, "get forcetable address fail: ");
 			return FALSE;
 		}
 		self->force_table_support = TRUE;
