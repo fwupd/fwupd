@@ -1,0 +1,28 @@
+{
+  "name": "CalDigit TS4 Dock",
+  "interactive": false,
+  "steps": [
+    {
+      "url": "https://fwupd.org/downloads/dbeeba12332296ae68eaa104ed3b4b437659bfe027e347010a87c75bcea87292-CalDigit-TS4-combind-050322-secure-Cus-22.cab",
+      "components": [
+        {
+          "version": "F907.14.10",
+          "guids": [
+            "707d7941-3129-53d9-a205-47a659d94fe3"
+          ]
+        }
+      ]
+    },
+    {
+      "url": "https://fwupd.org/downloads/161f0243e4f1222114b941b7dce057b962e38f9f9a1e799437531afcd5a68677-CalDigit-TS4-combind-121022-secure-Cus-37.cab",
+      "components": [
+        {
+          "version": "F907.14.13",
+          "guids": [
+            "707d7941-3129-53d9-a205-47a659d94fe3"
+          ]
+        }
+      ]
+    }
+  ]
+}
