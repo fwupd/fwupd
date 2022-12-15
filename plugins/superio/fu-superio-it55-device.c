@@ -556,11 +556,11 @@ fu_superio_it55_device_prepare_firmware(FuDevice *device,
 	if (prj_name == NULL)
 		return NULL;
 
-	version = fu_ec_extract_field(fw, "VER", error);
+	version = fu_ec_extract_field(fw, "VER", NULL);
 	if (version == NULL)
 		version = g_strdup("(unknown version)");
 
-	date = fu_ec_extract_field(fw, "DATE", error);
+	date = fu_ec_extract_field(fw, "DATE", NULL);
 	if (date == NULL)
 		date = g_strdup("(unknown build date)");
 
