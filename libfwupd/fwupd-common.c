@@ -977,7 +977,7 @@ fwupd_guid_is_valid(const gchar *guid)
 
 /**
  * fwupd_guid_hash_string:
- * @str: a source string to use as a key
+ * @str: (nullable): a source string to use as a key
  *
  * Returns a GUID for a given string. This uses a hash and so even small
  * differences in the @str will produce radically different return values.

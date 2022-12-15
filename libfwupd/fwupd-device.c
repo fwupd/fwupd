@@ -552,7 +552,7 @@ fwupd_device_child_finalized_cb(gpointer data, GObject *where_the_object_was)
 /**
  * fwupd_device_add_child:
  * @self: a #FwupdDevice
- * @child: Another #FwupdDevice
+ * @child: (not nullable): Another #FwupdDevice
  *
  * Adds a child device. An child device is logically linked to the primary
  * device in some way.
@@ -3069,7 +3069,7 @@ fwupd_device_to_json_full(FwupdDevice *self, JsonBuilder *builder, FwupdDeviceFl
 /**
  * fwupd_device_from_json:
  * @self: a #FwupdDevice
- * @json_node: a JSON node
+ * @json_node: (not nullable): a JSON node
  * @error: (nullable): optional return location for an error
  *
  * Loads a fwupd security attribute from a JSON node.
@@ -3085,6 +3085,8 @@ fwupd_device_from_json(FwupdDevice *self, JsonNode *json_node, GError **error)
 	JsonObject *obj;
 
 	g_return_val_if_fail(FWUPD_IS_DEVICE(self), FALSE);
+	g_return_val_if_fail(json_node != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* sanity check */
 	if (!JSON_NODE_HOLDS_OBJECT(json_node)) {
@@ -3924,6 +3926,8 @@ fwupd_device_from_variant(GVariant *value)
 	const gchar *type_string;
 	g_autoptr(GVariantIter) iter = NULL;
 
+	g_return_val_if_fail(value != NULL, NULL);
+
 	/* format from GetDetails */
 	type_string = g_variant_get_type_string(value);
 	if (g_strcmp0(type_string, "(a{sv})") == 0) {
@@ -3942,7 +3946,7 @@ fwupd_device_from_variant(GVariant *value)
 
 /**
  * fwupd_device_array_ensure_parents:
- * @devices: (element-type FwupdDevice): devices
+ * @devices: (not nullable) (element-type FwupdDevice): devices
  *
  * Sets the parent object on all devices in the array using the parent ID.
  *
@@ -3952,6 +3956,8 @@ void
 fwupd_device_array_ensure_parents(GPtrArray *devices)
 {
 	g_autoptr(GHashTable) devices_by_id = NULL;
+
+	g_return_if_fail(devices != NULL);
 
 	/* create hash of ID->FwupdDevice */
 	devices_by_id = g_hash_table_new(g_str_hash, g_str_equal);
@@ -4016,8 +4022,8 @@ fwupd_device_array_from_variant(GVariant *value)
 
 /**
  * fwupd_device_compare:
- * @self1: a device
- * @self2: a different device
+ * @self1: (not nullable): a device
+ * @self2: (not nullable): a different device
  *
  * Comparison function for comparing two device objects.
  *

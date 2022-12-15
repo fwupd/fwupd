@@ -920,7 +920,7 @@ fwupd_client_connect_async(FwupdClient *self,
 /**
  * fwupd_client_connect_finish:
  * @self: a #FwupdClient
- * @res: the asynchronous result
+ * @res: (not nullable): the asynchronous result
  * @error: (nullable): optional return location for an error
  *
  * Gets the result of [method@Client.connect_async].
@@ -1067,7 +1067,7 @@ fwupd_client_get_host_security_attrs_async(FwupdClient *self,
 /**
  * fwupd_client_get_host_security_attrs_finish:
  * @self: a #FwupdClient
- * @res: the asynchronous result
+ * @res: (not nullable): the asynchronous result
  * @error: (nullable): optional return location for an error
  *
  * Gets the result of [method@FwupdClient.get_host_security_attrs_async].
@@ -1157,7 +1157,7 @@ fwupd_client_modify_bios_setting_async(FwupdClient *self,
 /**
  * fwupd_client_modify_bios_setting_finish:
  * @self: a #FwupdClient
- * @res: the asynchronous result
+ * @res: (not nullable): the asynchronous result
  * @error: (nullable): optional return location for an error
  *
  * Gets the result of [method@FwupdClient.modify_bios_setting_async].
@@ -1237,7 +1237,7 @@ fwupd_client_get_bios_settings_async(FwupdClient *self,
 /**
  * fwupd_client_get_bios_settings_finish:
  * @self: a #FwupdClient
- * @res: the asynchronous result
+ * @res: (not nullable): the asynchronous result
  * @error: (nullable): optional return location for an error
  *
  * Gets the result of [method@FwupdClient.get_bios_settings_async].
@@ -1319,7 +1319,7 @@ fwupd_client_get_host_security_events_async(FwupdClient *self,
 /**
  * fwupd_client_get_host_security_events_finish:
  * @self: a #FwupdClient
- * @res: the asynchronous result
+ * @res: (not nullable): the asynchronous result
  * @error: (nullable): optional return location for an error
  *
  * Gets the result of [method@FwupdClient.get_host_security_events_async].
@@ -1420,7 +1420,7 @@ fwupd_client_get_report_metadata_async(FwupdClient *self,
 /**
  * fwupd_client_get_report_metadata_finish:
  * @self: a #FwupdClient
- * @res: the asynchronous result
+ * @res: (not nullable): the asynchronous result
  * @error: (nullable): optional return location for an error
  *
  * Gets the result of [method@FwupdClient.get_report_metadata_async].
@@ -1500,7 +1500,7 @@ fwupd_client_get_devices_async(FwupdClient *self,
 /**
  * fwupd_client_get_devices_finish:
  * @self: a #FwupdClient
- * @res: the asynchronous result
+ * @res: (not nullable): the asynchronous result
  * @error: (nullable): optional return location for an error
  *
  * Gets the result of [method@FwupdClient.get_devices_async].
@@ -1580,7 +1580,7 @@ fwupd_client_get_plugins_async(FwupdClient *self,
 /**
  * fwupd_client_get_plugins_finish:
  * @self: a #FwupdClient
- * @res: the asynchronous result
+ * @res: (not nullable): the asynchronous result
  * @error: (nullable): optional return location for an error
  *
  * Gets the result of [method@FwupdClient.get_plugins_async].
@@ -1660,7 +1660,7 @@ fwupd_client_get_history_async(FwupdClient *self,
 /**
  * fwupd_client_get_history_finish:
  * @self: a #FwupdClient
- * @res: the asynchronous result
+ * @res: (not nullable): the asynchronous result
  * @error: (nullable): optional return location for an error
  *
  * Gets the result of [method@FwupdClient.get_history_async].
@@ -1769,7 +1769,7 @@ fwupd_client_get_device_by_id_async(FwupdClient *self,
 /**
  * fwupd_client_get_device_by_id_finish:
  * @self: a #FwupdClient
- * @res: the asynchronous result
+ * @res: (not nullable): the asynchronous result
  * @error: (nullable): optional return location for an error
  *
  * Gets the result of [method@FwupdClient.get_device_by_id_async].
@@ -1868,7 +1868,7 @@ fwupd_client_get_devices_by_guid_async(FwupdClient *self,
 /**
  * fwupd_client_get_devices_by_guid_finish:
  * @self: a #FwupdClient
- * @res: the asynchronous result
+ * @res: (not nullable): the asynchronous result
  * @error: (nullable): optional return location for an error
  *
  * Gets the result of [method@FwupdClient.get_devices_by_guid_async].
@@ -1951,7 +1951,7 @@ fwupd_client_get_releases_async(FwupdClient *self,
 /**
  * fwupd_client_get_releases_finish:
  * @self: a #FwupdClient
- * @res: the asynchronous result
+ * @res: (not nullable): the asynchronous result
  * @error: (nullable): optional return location for an error
  *
  * Gets the result of [method@FwupdClient.get_releases_async].
@@ -2034,7 +2034,7 @@ fwupd_client_get_downgrades_async(FwupdClient *self,
 /**
  * fwupd_client_get_downgrades_finish:
  * @self: a #FwupdClient
- * @res: the asynchronous result
+ * @res: (not nullable): the asynchronous result
  * @error: (nullable): optional return location for an error
  *
  * Gets the result of [method@FwupdClient.get_downgrades_async].
@@ -2117,7 +2117,7 @@ fwupd_client_get_upgrades_async(FwupdClient *self,
 /**
  * fwupd_client_get_upgrades_finish:
  * @self: a #FwupdClient
- * @res: the asynchronous result
+ * @res: (not nullable): the asynchronous result
  * @error: (nullable): optional return location for an error
  *
  * Gets the result of [method@FwupdClient.get_upgrades_async].
@@ -2199,7 +2199,7 @@ fwupd_client_modify_config_async(FwupdClient *self,
 /**
  * fwupd_client_modify_config_finish:
  * @self: a #FwupdClient
- * @res: the asynchronous result
+ * @res: (not nullable): the asynchronous result
  * @error: (nullable): optional return location for an error
  *
  * Gets the result of [method@FwupdClient.modify_config_async].
@@ -2278,7 +2278,7 @@ fwupd_client_activate_async(FwupdClient *self,
 /**
  * fwupd_client_activate_finish:
  * @self: a #FwupdClient
- * @res: the asynchronous result
+ * @res: (not nullable): the asynchronous result
  * @error: (nullable): optional return location for an error
  *
  * Gets the result of [method@FwupdClient.activate_async].
@@ -2356,7 +2356,7 @@ fwupd_client_verify_async(FwupdClient *self,
 /**
  * fwupd_client_verify_finish:
  * @self: a #FwupdClient
- * @res: the asynchronous result
+ * @res: (not nullable): the asynchronous result
  * @error: (nullable): optional return location for an error
  *
  * Gets the result of [method@FwupdClient.verify_async].
@@ -2434,7 +2434,7 @@ fwupd_client_verify_update_async(FwupdClient *self,
 /**
  * fwupd_client_verify_update_finish:
  * @self: a #FwupdClient
- * @res: the asynchronous result
+ * @res: (not nullable): the asynchronous result
  * @error: (nullable): optional return location for an error
  *
  * Gets the result of [method@FwupdClient.verify_update_async].
@@ -2512,7 +2512,7 @@ fwupd_client_unlock_async(FwupdClient *self,
 /**
  * fwupd_client_unlock_finish:
  * @self: a #FwupdClient
- * @res: the asynchronous result
+ * @res: (not nullable): the asynchronous result
  * @error: (nullable): optional return location for an error
  *
  * Gets the result of [method@FwupdClient.unlock_async].
@@ -2590,7 +2590,7 @@ fwupd_client_clear_results_async(FwupdClient *self,
 /**
  * fwupd_client_clear_results_finish:
  * @self: a #FwupdClient
- * @res: the asynchronous result
+ * @res: (not nullable): the asynchronous result
  * @error: (nullable): optional return location for an error
  *
  * Gets the result of [method@FwupdClient.clear_results_async].
@@ -2673,7 +2673,7 @@ fwupd_client_get_results_async(FwupdClient *self,
 /**
  * fwupd_client_get_results_finish:
  * @self: a #FwupdClient
- * @res: the asynchronous result
+ * @res: (not nullable): the asynchronous result
  * @error: (nullable): optional return location for an error
  *
  * Gets the result of [method@FwupdClient.get_results_async].
@@ -2863,7 +2863,7 @@ fwupd_client_install_bytes_async(FwupdClient *self,
 /**
  * fwupd_client_install_bytes_finish:
  * @self: a #FwupdClient
- * @res: the asynchronous result
+ * @res: (not nullable): the asynchronous result
  * @error: (nullable): optional return location for an error
  *
  * Gets the result of [method@FwupdClient.install_bytes_async].
@@ -2948,7 +2948,7 @@ fwupd_client_install_async(FwupdClient *self,
 /**
  * fwupd_client_install_finish:
  * @self: a #FwupdClient
- * @res: the asynchronous result
+ * @res: (not nullable): the asynchronous result
  * @error: (nullable): optional return location for an error
  *
  * Gets the result of [method@FwupdClient.install_async].
@@ -3183,8 +3183,8 @@ fwupd_client_filter_locations(GPtrArray *locations,
 /**
  * fwupd_client_install_release2_async:
  * @self: a #FwupdClient
- * @device: a device
- * @release: a release
+ * @device: (not nullable): a device
+ * @release: (not nullable): a release
  * @install_flags: install flags, e.g. %FWUPD_INSTALL_FLAG_ALLOW_REINSTALL
  * @download_flags: download flags, e.g. %FWUPD_CLIENT_DOWNLOAD_FLAG_DISABLE_IPFS
  * @cancellable: (nullable): optional #GCancellable
@@ -3252,8 +3252,8 @@ fwupd_client_install_release2_async(FwupdClient *self,
 /**
  * fwupd_client_install_release_async:
  * @self: a #FwupdClient
- * @device: a device
- * @release: a release
+ * @device: (not nullable): a device
+ * @release: (not nullable): a release
  * @install_flags: install flags, e.g. %FWUPD_INSTALL_FLAG_ALLOW_REINSTALL
  * @cancellable: (nullable): optional #GCancellable
  * @callback: the function to run on completion
@@ -3290,7 +3290,7 @@ fwupd_client_install_release_async(FwupdClient *self,
 /**
  * fwupd_client_install_release_finish:
  * @self: a #FwupdClient
- * @res: the asynchronous result
+ * @res: (not nullable): the asynchronous result
  * @error: (nullable): optional return location for an error
  *
  * Gets the result of [method@FwupdClient.install_release_async].
@@ -3422,7 +3422,7 @@ fwupd_client_get_details_bytes_async(FwupdClient *self,
 /**
  * fwupd_client_get_details_bytes_finish:
  * @self: a #FwupdClient
- * @res: the asynchronous result
+ * @res: (not nullable): the asynchronous result
  * @error: (nullable): optional return location for an error
  *
  * Gets the result of [method@FwupdClient.get_details_bytes_async].
@@ -3822,7 +3822,7 @@ fwupd_client_update_metadata_bytes_async(FwupdClient *self,
 /**
  * fwupd_client_update_metadata_bytes_finish:
  * @self: a #FwupdClient
- * @res: the asynchronous result
+ * @res: (not nullable): the asynchronous result
  * @error: (nullable): optional return location for an error
  *
  * Gets the result of [method@FwupdClient.update_metadata_bytes_async].
@@ -4010,7 +4010,7 @@ fwupd_client_refresh_remote_async(FwupdClient *self,
 /**
  * fwupd_client_refresh_remote_finish:
  * @self: a #FwupdClient
- * @res: the asynchronous result
+ * @res: (not nullable): the asynchronous result
  * @error: (nullable): optional return location for an error
  *
  * Gets the result of [method@FwupdClient.refresh_remote_async].
@@ -4090,7 +4090,7 @@ fwupd_client_get_remotes_async(FwupdClient *self,
 /**
  * fwupd_client_get_remotes_finish:
  * @self: a #FwupdClient
- * @res: the asynchronous result
+ * @res: (not nullable): the asynchronous result
  * @error: (nullable): optional return location for an error
  *
  * Gets the result of [method@FwupdClient.get_remotes_async].
@@ -4174,7 +4174,7 @@ fwupd_client_get_approved_firmware_async(FwupdClient *self,
 /**
  * fwupd_client_get_approved_firmware_finish:
  * @self: a #FwupdClient
- * @res: the asynchronous result
+ * @res: (not nullable): the asynchronous result
  * @error: (nullable): optional return location for an error
  *
  * Gets the result of [method@FwupdClient.get_approved_firmware_async].
@@ -4257,7 +4257,7 @@ fwupd_client_set_approved_firmware_async(FwupdClient *self,
 /**
  * fwupd_client_set_approved_firmware_finish:
  * @self: a #FwupdClient
- * @res: the asynchronous result
+ * @res: (not nullable): the asynchronous result
  * @error: (nullable): optional return location for an error
  *
  * Gets the result of [method@FwupdClient.set_approved_firmware_async].
@@ -4341,7 +4341,7 @@ fwupd_client_get_blocked_firmware_async(FwupdClient *self,
 /**
  * fwupd_client_get_blocked_firmware_finish:
  * @self: a #FwupdClient
- * @res: the asynchronous result
+ * @res: (not nullable): the asynchronous result
  * @error: (nullable): optional return location for an error
  *
  * Gets the result of [method@FwupdClient.get_blocked_firmware_async].
@@ -4424,7 +4424,7 @@ fwupd_client_set_blocked_firmware_async(FwupdClient *self,
 /**
  * fwupd_client_set_blocked_firmware_finish:
  * @self: a #FwupdClient
- * @res: the asynchronous result
+ * @res: (not nullable): the asynchronous result
  * @error: (nullable): optional return location for an error
  *
  * Gets the result of [method@FwupdClient.set_blocked_firmware_async].
@@ -4503,7 +4503,7 @@ fwupd_client_set_feature_flags_async(FwupdClient *self,
 /**
  * fwupd_client_set_feature_flags_finish:
  * @self: a #FwupdClient
- * @res: the asynchronous result
+ * @res: (not nullable): the asynchronous result
  * @error: (nullable): optional return location for an error
  *
  * Gets the result of [method@FwupdClient.set_feature_flags_async].
@@ -4601,7 +4601,7 @@ fwupd_client_self_sign_async(FwupdClient *self,
 /**
  * fwupd_client_self_sign_finish:
  * @self: a #FwupdClient
- * @res: the asynchronous result
+ * @res: (not nullable): the asynchronous result
  * @error: (nullable): optional return location for an error
  *
  * Gets the result of [method@FwupdClient.self_sign_async].
@@ -4685,7 +4685,7 @@ fwupd_client_modify_remote_async(FwupdClient *self,
 /**
  * fwupd_client_modify_remote_finish:
  * @self: a #FwupdClient
- * @res: the asynchronous result
+ * @res: (not nullable): the asynchronous result
  * @error: (nullable): optional return location for an error
  *
  * Gets the result of [method@FwupdClient.modify_remote_async].
@@ -4770,7 +4770,7 @@ fwupd_client_modify_device_async(FwupdClient *self,
 /**
  * fwupd_client_modify_device_finish:
  * @self: a #FwupdClient
- * @res: the asynchronous result
+ * @res: (not nullable): the asynchronous result
  * @error: (nullable): optional return location for an error
  *
  * Gets the result of [method@FwupdClient.modify_device_async].
@@ -4867,7 +4867,7 @@ fwupd_client_get_remote_by_id_async(FwupdClient *self,
 /**
  * fwupd_client_get_remote_by_id_finish:
  * @self: a #FwupdClient
- * @res: the asynchronous result
+ * @res: (not nullable): the asynchronous result
  * @error: (nullable): optional return location for an error
  *
  * Gets the result of [method@FwupdClient.get_remote_by_id_async].
@@ -5217,7 +5217,7 @@ fwupd_client_download_bytes_async(FwupdClient *self,
 /**
  * fwupd_client_download_bytes_finish:
  * @self: a #FwupdClient
- * @res: the asynchronous result
+ * @res: (not nullable): the asynchronous result
  * @error: (nullable): optional return location for an error
  *
  * Gets the result of [method@FwupdClient.download_bytes_async].
@@ -5372,7 +5372,7 @@ fwupd_client_upload_bytes_async(FwupdClient *self,
 /**
  * fwupd_client_upload_bytes_finish:
  * @self: a #FwupdClient
- * @res: the asynchronous result
+ * @res: (not nullable): the asynchronous result
  * @error: (nullable): optional return location for an error
  *
  * Gets the result of [method@FwupdClient.upload_bytes_async].
