@@ -395,11 +395,7 @@ fu_synaptics_cape_device_reset(FuSynapticsCapeDevice *self, GError **error)
 					      0,
 					      0,
 					      error)) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "reset command is not supported");
-
+		g_prefix_error(error, "reset command is not supported: ");
 		return FALSE;
 	}
 
