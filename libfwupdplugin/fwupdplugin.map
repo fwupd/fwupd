@@ -1143,6 +1143,7 @@ LIBFWUPDPLUGIN_1.8.7 {
 
 LIBFWUPDPLUGIN_1.8.9 {
   global:
+    fu_archive_firmware_get_image_fnmatch;
     fu_byte_array_to_string;
     fu_version_from_uint24;
   local: *;

@@ -28,3 +28,7 @@ FuArchiveCompression
 fu_archive_firmware_get_compression(FuArchiveFirmware *self);
 void
 fu_archive_firmware_set_compression(FuArchiveFirmware *self, FuArchiveCompression compression);
+FuFirmware *
+fu_archive_firmware_get_image_fnmatch(FuArchiveFirmware *self,
+				      const gchar *pattern,
+				      GError **error);
