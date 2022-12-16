@@ -12,6 +12,7 @@
 #include "fu-archive-firmware.h"
 #include "fu-archive.h"
 #include "fu-common.h"
+#include "fu-path.h"
 
 /**
  * FuArchiveFirmware:
@@ -140,6 +141,55 @@ fu_archive_firmware_set_compression(FuArchiveFirmware *self, FuArchiveCompressio
 	FuArchiveFirmwarePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FU_IS_ARCHIVE_FIRMWARE(self));
 	priv->compression = compression;
+}
+
+/**
+ * fu_archive_firmware_get_image_fnmatch:
+ * @self: a #FuPlugin
+ * @pattern: (not nullable) a glob pattern, e.g. `*foo*`
+ * @error: (nullable): optional return location for an error
+ *
+ * Gets a single firmware image using the image ID pattern. It is also an error for multiple images
+ * to match.
+ *
+ * Returns: (transfer full): a #FuFirmware, or %NULL if the image is not found
+ *
+ * Since: 1.8.9
+ **/
+FuFirmware *
+fu_archive_firmware_get_image_fnmatch(FuArchiveFirmware *self, const gchar *pattern, GError **error)
+{
+	g_autoptr(FuFirmware) img_match = NULL;
+	g_autoptr(GPtrArray) imgs = fu_firmware_get_images(FU_FIRMWARE(self));
+
+	g_return_val_if_fail(FU_IS_ARCHIVE_FIRMWARE(self), NULL);
+	g_return_val_if_fail(pattern != NULL, NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	for (guint i = 0; i < imgs->len; i++) {
+		FuFirmware *img = g_ptr_array_index(imgs, i);
+		const gchar *fn = fu_firmware_get_id(img);
+		if (!fu_path_fnmatch(pattern, fn))
+			continue;
+		if (img_match != NULL) {
+			g_set_error(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_INVALID_ARGUMENT,
+				    "multiple images matched %s",
+				    pattern);
+			return NULL;
+		}
+		img_match = g_object_ref(img);
+	}
+	if (img_match == NULL) {
+		g_set_error(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_NOT_FOUND,
+			    "no image matched %s",
+			    pattern);
+		return NULL;
+	}
+	return g_steal_pointer(&img_match);
 }
 
 static GBytes *

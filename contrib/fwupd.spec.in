@@ -459,6 +459,7 @@ done
 %{_datadir}/installed-tests/fwupd/*.test
 %{_datadir}/installed-tests/fwupd/*.cab
 %{_datadir}/installed-tests/fwupd/*.sh
+%{_datadir}/installed-tests/fwupd/*.zip
 %if 0%{?have_uefi}
 %{_datadir}/installed-tests/fwupd/efi
 %endif

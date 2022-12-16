@@ -340,6 +340,7 @@ if get_option('tests')
   env.set('G_TEST_BUILDDIR', meson.current_build_dir())
   e = executable(
     'fwupdplugin-self-test',
+    installed_firmware_zip,
     sources: [
       'fu-self-test.c'
     ],
