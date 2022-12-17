@@ -463,7 +463,8 @@ fu_synaptics_cape_device_setup_version(FuSynapticsCapeDevice *self, GError **err
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* gets version number from device */
-	fu_synaptics_cape_device_sendcmd_ex(self, &cmd, 0, error);
+	if (!fu_synaptics_cape_device_sendcmd_ex(self, &cmd, 0, error))
+		return FALSE;
 
 	/* the version number are stored in lowest byte of a sequence of returned data */
 	version_raw =
