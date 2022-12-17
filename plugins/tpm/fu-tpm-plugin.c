@@ -160,11 +160,11 @@ fu_tpm_plugin_add_security_attr_eventlog(FuPlugin *plugin, FuSecurityAttrs *attr
 
 	/* compare against the real PCR0s */
 	pcr0s_real = fu_tpm_device_get_checksums(self->tpm_device, 0);
-	for (guint i = 0; i < pcr0s_real->len; i++) {
-		const gchar *checksum = g_ptr_array_index(pcr0s_real, i);
+	for (guint i = 0; i < pcr0s_calc->len; i++) {
+		const gchar *checksum = g_ptr_array_index(pcr0s_calc, i);
 		reconstructed = FALSE;
-		for (guint j = 0; j < pcr0s_calc->len; j++) {
-			const gchar *checksum_tmp = g_ptr_array_index(pcr0s_calc, j);
+		for (guint j = 0; j < pcr0s_real->len; j++) {
+			const gchar *checksum_tmp = g_ptr_array_index(pcr0s_real, j);
 			/* skip unless same algorithm */
 			if (strlen(checksum) != strlen(checksum_tmp))
 				continue;
