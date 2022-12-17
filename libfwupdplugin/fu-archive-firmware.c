@@ -146,7 +146,7 @@ fu_archive_firmware_set_compression(FuArchiveFirmware *self, FuArchiveCompressio
 /**
  * fu_archive_firmware_get_image_fnmatch:
  * @self: a #FuPlugin
- * @pattern: (not nullable) a glob pattern, e.g. `*foo*`
+ * @pattern: (not nullable): a glob pattern, e.g. `*foo*`
  * @error: (nullable): optional return location for an error
  *
  * Gets a single firmware image using the image ID pattern. It is also an error for multiple images
