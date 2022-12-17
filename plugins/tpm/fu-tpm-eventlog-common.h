@@ -46,6 +46,7 @@ typedef struct {
 	FuTpmEventlogItemKind kind;
 	GBytes *checksum_sha1;
 	GBytes *checksum_sha256;
+	GBytes *checksum_sha384;
 	GBytes *blob;
 } FuTpmEventlogItem;
 
