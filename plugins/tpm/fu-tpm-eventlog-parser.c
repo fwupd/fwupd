@@ -42,6 +42,8 @@ fu_tpm_eventlog_parser_item_free(FuTpmEventlogItem *item)
 		g_bytes_unref(item->checksum_sha1);
 	if (item->checksum_sha256 != NULL)
 		g_bytes_unref(item->checksum_sha256);
+	if (item->checksum_sha384 != NULL)
+		g_bytes_unref(item->checksum_sha384);
 	g_free(item);
 }
 
@@ -65,6 +67,10 @@ fu_tpm_eventlog_item_to_string(FuTpmEventlogItem *item, guint idt, GString *str)
 	if (item->checksum_sha256 != NULL) {
 		g_autofree gchar *csum = fu_tpm_eventlog_strhex(item->checksum_sha256);
 		fu_string_append(str, idt, "ChecksumSha256", csum);
+	}
+	if (item->checksum_sha384 != NULL) {
+		g_autofree gchar *csum = fu_tpm_eventlog_strhex(item->checksum_sha384);
+		fu_string_append(str, idt, "ChecksumSha384", csum);
 	}
 	if (item->blob != NULL) {
 		g_autofree gchar *blobstr = fu_tpm_eventlog_blobstr(item->blob);
@@ -98,6 +104,7 @@ fu_tpm_eventlog_parser_parse_blob_v2(const guint8 *buf,
 		guint32 datasz = 0;
 		g_autoptr(GBytes) checksum_sha1 = NULL;
 		g_autoptr(GBytes) checksum_sha256 = NULL;
+		g_autoptr(GBytes) checksum_sha384 = NULL;
 
 		/* read entry */
 		if (!fu_memread_uint32_safe(buf,
@@ -168,6 +175,9 @@ fu_tpm_eventlog_parser_parse_blob_v2(const guint8 *buf,
 				    g_bytes_new_take(g_steal_pointer(&digest), alg_size);
 			else if (alg_type == TPM2_ALG_SHA256)
 				checksum_sha256 =
+				    g_bytes_new_take(g_steal_pointer(&digest), alg_size);
+			else if (alg_type == TPM2_ALG_SHA384)
+				checksum_sha384 =
 				    g_bytes_new_take(g_steal_pointer(&digest), alg_size);
 
 			/* next block */
