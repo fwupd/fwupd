@@ -64,6 +64,8 @@ fu_config_reload(FuConfig *self, GError **error)
 	g_autofree gchar *host_bkc = NULL;
 	g_autofree gchar *esp_location = NULL;
 	g_autoptr(GKeyFile) keyfile = g_key_file_new();
+	g_autoptr(GError) error_disabled_plugins = NULL;
+	g_autoptr(GError) error_timeout = NULL;
 	g_autoptr(GError) error_update_motd = NULL;
 	g_autoptr(GError) error_ignore_power = NULL;
 	g_autoptr(GError) error_only_trusted = NULL;
@@ -114,10 +116,15 @@ fu_config_reload(FuConfig *self, GError **error)
 					     "fwupd",
 					     "DisabledPlugins",
 					     NULL, /* length */
-					     NULL);
+					     &error_disabled_plugins);
 	if (plugins != NULL) {
 		for (guint i = 0; plugins[i] != NULL; i++) {
 			g_ptr_array_add(self->disabled_plugins, g_strdup(plugins[i]));
+		}
+	} else {
+		if (error_disabled_plugins != NULL) {
+			g_ptr_array_add(self->disabled_plugins, g_strdup("test"));
+			g_ptr_array_add(self->disabled_plugins, g_strdup("test_ble"));
 		}
 	}
 
@@ -185,9 +192,11 @@ fu_config_reload(FuConfig *self, GError **error)
 	}
 
 	/* get idle timeout */
-	idle_timeout = g_key_file_get_uint64(keyfile, "fwupd", "IdleTimeout", NULL);
+	idle_timeout = g_key_file_get_int64(keyfile, "fwupd", "IdleTimeout", &error_timeout);
 	if (idle_timeout > 0)
 		self->idle_timeout = idle_timeout;
+	else if (error_timeout != NULL)
+		self->idle_timeout = 7200;
 
 	/* get the domains to run in verbose */
 	domains = g_key_file_get_string(keyfile, "fwupd", "VerboseDomains", NULL);
@@ -208,7 +217,7 @@ fu_config_reload(FuConfig *self, GError **error)
 	/* if error parsing or missing, we want to default to true */
 	if (!self->enumerate_all_devices && error_enumerate_all != NULL) {
 		g_debug("failed to read EnumerateAllDevices key: %s", error_enumerate_all->message);
-		self->enumerate_all_devices = TRUE;
+		self->enumerate_all_devices = FALSE;
 	}
 
 	/* whether to ignore power levels for updates */
