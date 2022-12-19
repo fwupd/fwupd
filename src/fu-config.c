@@ -192,7 +192,7 @@ fu_config_reload(FuConfig *self, GError **error)
 	}
 
 	/* get idle timeout */
-	idle_timeout = g_key_file_get_int64(keyfile, "fwupd", "IdleTimeout", &error_timeout);
+	idle_timeout = g_key_file_get_uint64(keyfile, "fwupd", "IdleTimeout", &error_timeout);
 	if (idle_timeout > 0)
 		self->idle_timeout = idle_timeout;
 	else if (error_timeout != NULL)
