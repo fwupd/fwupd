@@ -170,6 +170,10 @@ fu_engine_emit_changed(FuEngine *self)
 static void
 fu_engine_emit_device_changed_safe(FuEngine *self, FuDevice *device)
 {
+	/* do nothing */
+	if (!self->loaded)
+		return;
+
 	/* invalidate host security attributes */
 	g_clear_pointer(&self->host_security_id, g_free);
 	g_signal_emit(self, signals[SIGNAL_DEVICE_CHANGED], 0, device);
