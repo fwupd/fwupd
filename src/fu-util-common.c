@@ -2258,6 +2258,11 @@ fu_util_request_get_message(FwupdRequest *req)
 			return _("The update will continue when the device USB cable has been "
 				 "unplugged.");
 		}
+		if (g_strcmp0(fwupd_request_get_id(req), FWUPD_REQUEST_ID_INSERT_USB_CABLE) == 0) {
+			/* TRANSLATORS: warning message shown after update has been scheduled */
+			return _("The update will continue when the device USB cable has been "
+				 "re-inserted.");
+		}
 		if (g_strcmp0(fwupd_request_get_id(req), FWUPD_REQUEST_ID_PRESS_UNLOCK) == 0) {
 			/* TRANSLATORS: warning message */
 			return _("Press unlock on the device to continue the update process.");

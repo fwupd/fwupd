@@ -72,6 +72,16 @@ typedef enum {
 #define FWUPD_REQUEST_ID_REMOVE_USB_CABLE "org.freedesktop.fwupd.request.remove-usb-cable"
 
 /**
+ * FWUPD_REQUEST_ID_INSERT_USB_CABLE:
+ *
+ * The user needs to insert the cable to complete the update, e.g.
+ * "The update will continue when the device USB cable has been re-inserted."
+ *
+ * Since 1.8.9
+ */
+#define FWUPD_REQUEST_ID_INSERT_USB_CABLE "org.freedesktop.fwupd.request.insert-usb-cable"
+
+/**
  * FWUPD_REQUEST_ID_DO_NOT_POWER_OFF:
  *
  * Show the user a message not to unplug the machine from the AC power, e.g.
