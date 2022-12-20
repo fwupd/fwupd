@@ -832,6 +832,10 @@ fu_util_release_get_name(FwupdRelease *release)
 			 * by plugging in a USB cable -- which may or may not also provide power */
 			return g_strdup_printf(_("%s USB Dock Update"), name);
 		}
+		if (g_strcmp0(cat, "X-FingerprintReader") == 0) {
+			/* TRANSLATORS: a device that can read your fingerprint pattern */
+			return g_strdup_printf(_("%s Fingerprint Reader Update"), name);
+		}
 	}
 
 	/* TRANSLATORS: this is the fallback where we don't know if the release
