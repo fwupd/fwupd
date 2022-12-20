@@ -226,7 +226,6 @@ static gboolean
 fu_tpm_v2_device_setup(FuDevice *device, GError **error)
 {
 	FuTpmV2Device *self = FU_TPM_V2_DEVICE(device);
-	FwupdVersionFormat verfmt;
 	TSS2_RC rc;
 	const gchar *tmp;
 	guint32 tpm_type = 0;
@@ -240,7 +239,6 @@ fu_tpm_v2_device_setup(FuDevice *device, GError **error)
 	g_autofree gchar *model4 = NULL;
 	g_autofree gchar *model = NULL;
 	g_autofree gchar *vendor_id = NULL;
-	g_autofree gchar *version = NULL;
 	g_autofree gchar *family = NULL;
 	g_autoptr(ESYS_CONTEXT) ctx = NULL;
 
@@ -316,13 +314,7 @@ fu_tpm_v2_device_setup(FuDevice *device, GError **error)
 	if (!fu_tpm_v2_device_get_uint32(ctx, TPM2_PT_FIRMWARE_VERSION_2, &version2, error))
 		return FALSE;
 	version_raw = ((guint64)version1) << 32 | ((guint64)version2);
-	fu_device_set_version_raw(device, version_raw);
-
-	/* this has to be done after _add_instance_id() sets the quirks */
-	verfmt = fu_device_get_version_format(device);
-	version = fu_version_from_uint64(version_raw, verfmt);
-	fu_device_set_version_format(device, verfmt);
-	fu_device_set_version(device, version);
+	fu_device_set_version_from_uint64(device, version_raw);
 
 	/* get PCRs */
 	return fu_tpm_v2_device_setup_pcrs(self, ctx, error);

@@ -756,13 +756,7 @@ fu_wistron_dock_device_ensure_wdit(FuWistronDockDevice *self, GError **error)
 				    G_BIG_ENDIAN,
 				    error))
 		return FALSE;
-	fu_device_set_version_raw(FU_DEVICE(self), version_raw);
-	if (version_raw != 0x0) {
-		g_autofree gchar *version =
-		    fu_version_from_uint32(version_raw,
-					   fu_device_get_version_format(FU_DEVICE(self)));
-		fu_device_set_version(FU_DEVICE(self), version);
-	}
+	fu_device_set_version_from_uint32(FU_DEVICE(self), version_raw);
 
 	/* for debugging only */
 	if (g_getenv("FWUPD_WISTRON_DOCK_VERBOSE") != NULL) {

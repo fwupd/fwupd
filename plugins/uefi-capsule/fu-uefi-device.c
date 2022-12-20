@@ -604,9 +604,6 @@ fu_uefi_device_probe(FuDevice *device, GError **error)
 {
 	FuUefiDevice *self = FU_UEFI_DEVICE(device);
 	FuUefiDevicePrivate *priv = GET_PRIVATE(self);
-	FwupdVersionFormat version_format;
-	g_autofree gchar *version_lowest = NULL;
-	g_autofree gchar *version = NULL;
 
 	/* broken sysfs? */
 	if (priv->fw_class == NULL) {
@@ -631,13 +628,11 @@ fu_uefi_device_probe(FuDevice *device, GError **error)
 	fu_device_add_guid(device, priv->fw_class);
 
 	/* set versions */
-	version_format = fu_device_get_version_format(device);
-	version = fu_version_from_uint32(priv->fw_version, version_format);
-	fu_device_set_version_format(device, version_format);
-	fu_device_set_version_raw(device, priv->fw_version);
-	fu_device_set_version(device, version);
+	fu_device_set_version_from_uint32(device, priv->fw_version);
 	if (priv->fw_version_lowest != 0) {
-		version_lowest = fu_version_from_uint32(priv->fw_version_lowest, version_format);
+		g_autofree gchar *version_lowest =
+		    fu_version_from_uint32(priv->fw_version_lowest,
+					   fu_device_get_version_format(self));
 		fu_device_set_version_lowest_raw(device, priv->fw_version_lowest);
 		fu_device_set_version_lowest(device, version_lowest);
 	}

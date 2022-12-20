@@ -52,7 +52,6 @@ static gboolean
 fu_steelseries_gamepad_setup(FuDevice *device, GError **error)
 {
 	g_autofree gchar *bootloader_version = NULL;
-	g_autofree gchar *version = NULL;
 	guint16 fw_ver;
 	guint8 data[STEELSERIES_BUFFER_CONTROL_SIZE] = {0};
 
@@ -70,8 +69,7 @@ fu_steelseries_gamepad_setup(FuDevice *device, GError **error)
 
 	if (!fu_memread_uint16_safe(data, sizeof(data), 0x01, &fw_ver, G_LITTLE_ENDIAN, error))
 		return FALSE;
-	version = fu_version_from_uint16(fw_ver, FWUPD_VERSION_FORMAT_BCD);
-	fu_device_set_version(FU_DEVICE(device), version);
+	fu_device_set_version_from_uint16(FU_DEVICE(device), fw_ver);
 
 	if (!fu_memread_uint16_safe(data, sizeof(data), 0x03, &fw_ver, G_LITTLE_ENDIAN, error))
 		return FALSE;

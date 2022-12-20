@@ -325,7 +325,6 @@ fu_vli_pd_device_setup(FuDevice *device, GError **error)
 	guint32 version_raw;
 	guint8 verbuf[4] = {0x0};
 	guint8 tmp = 0;
-	g_autofree gchar *version_str = NULL;
 
 	/* FuVliDevice->setup */
 	if (!FU_DEVICE_CLASS(fu_vli_pd_device_parent_class)->setup(device, error))
@@ -350,9 +349,7 @@ fu_vli_pd_device_setup(FuDevice *device, GError **error)
 	}
 	if (!fu_memread_uint32_safe(verbuf, sizeof(verbuf), 0x0, &version_raw, G_BIG_ENDIAN, error))
 		return FALSE;
-	fu_device_set_version_raw(FU_DEVICE(self), version_raw);
-	version_str = fu_version_from_uint32(version_raw, FWUPD_VERSION_FORMAT_QUAD);
-	fu_device_set_version(FU_DEVICE(self), version_str);
+	fu_device_set_version_from_uint32(FU_DEVICE(self), version_raw);
 
 	/* get device kind if not already in ROM mode */
 	if (fu_vli_device_get_kind(FU_VLI_DEVICE(self)) == FU_VLI_DEVICE_KIND_UNKNOWN) {

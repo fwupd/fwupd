@@ -551,7 +551,6 @@ static gboolean
 fu_logitech_scribe_device_set_version(FuDevice *device, GError **error)
 {
 	FuLogitechScribeDevice *self = FU_LOGITECH_SCRIBE_DEVICE(device);
-	g_autofree gchar *fwversion_str = NULL;
 	guint32 fwversion = 0;
 	guint16 data_len = 0;
 	g_autofree guint8 *query_data = NULL;
@@ -579,9 +578,7 @@ fu_logitech_scribe_device_set_version(FuDevice *device, GError **error)
 	/*  little-endian data. MinorVersion byte 0, MajorVersion byte 1, BuildVersion byte 3 & 2 */
 	fwversion =
 	    (query_data[1] << 24) + (query_data[0] << 16) + (query_data[3] << 8) + query_data[2];
-	fwversion_str = fu_version_from_uint32(fwversion, FWUPD_VERSION_FORMAT_TRIPLET);
-	fu_device_set_version(device, fwversion_str);
-	g_debug("version data: %u, version string: %s ", fwversion, fwversion_str);
+	fu_device_set_version_from_uint32(device, fwversion);
 
 	/* success */
 	return TRUE;

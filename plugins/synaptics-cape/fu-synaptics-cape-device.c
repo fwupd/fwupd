@@ -453,7 +453,6 @@ fu_synaptics_cape_device_setup_version(FuSynapticsCapeDevice *self, GError **err
 {
 	guint32 version_raw;
 	FuCapCmd cmd = {0};
-	g_autofree gchar *version_str = NULL;
 
 	cmd.cmd_id = GUINT16_TO_LE(FU_SYNAPTICS_CMD_GET_VERSION);
 	cmd.module_id = GUINT32_TO_LE(FU_SYNAPTICS_CAPE_CMD_APP_ID_CTRL);
@@ -470,10 +469,7 @@ fu_synaptics_cape_device_setup_version(FuSynapticsCapeDevice *self, GError **err
 	version_raw =
 	    (GUINT32_FROM_LE(cmd.data[0]) << 24) | ((GUINT32_FROM_LE(cmd.data[1]) & 0xFF) << 16) |
 	    ((GUINT32_FROM_LE(cmd.data[2]) & 0xFF) << 8) | (GUINT32_FROM_LE(cmd.data[3]) & 0xFF);
-
-	version_str = fu_version_from_uint32(version_raw, FWUPD_VERSION_FORMAT_QUAD);
-	fu_device_set_version(FU_DEVICE(self), version_str);
-	fu_device_set_version_raw(FU_DEVICE(self), version_raw);
+	fu_device_set_version_from_uint32(FU_DEVICE(self), version_raw);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 
 	/* success */

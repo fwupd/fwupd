@@ -48,7 +48,6 @@ fu_vli_usbhub_pd_device_setup(FuDevice *device, GError **error)
 	FuVliUsbhubDevice *parent = FU_VLI_USBHUB_DEVICE(fu_device_get_parent(device));
 	const gchar *name;
 	guint32 fwver;
-	g_autofree gchar *fwver_str = NULL;
 
 	/* legacy location */
 	if (!fu_vli_device_spi_read_block(FU_VLI_DEVICE(parent),
@@ -96,9 +95,7 @@ fu_vli_usbhub_pd_device_setup(FuDevice *device, GError **error)
 	fu_device_set_name(device, name);
 
 	/* use header to populate device info */
-	fu_device_set_version_raw(device, fwver);
-	fwver_str = fu_version_from_uint32(fwver, FWUPD_VERSION_FORMAT_QUAD);
-	fu_device_set_version(device, fwver_str);
+	fu_device_set_version_from_uint32(device, fwver);
 
 	/* add standard GUIDs in order of priority */
 	fu_device_add_instance_u16(device, "VID", GUINT16_FROM_LE(hdr.vid));
