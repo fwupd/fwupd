@@ -836,6 +836,11 @@ fu_util_release_get_name(FwupdRelease *release)
 			/* TRANSLATORS: a device that can read your fingerprint pattern */
 			return g_strdup_printf(_("%s Fingerprint Reader Update"), name);
 		}
+		if (g_strcmp0(cat, "X-GraphicsTablet") == 0) {
+			/* TRANSLATORS: a large pressure-sensitive drawing area typically used
+			 * by artists and digital artists */
+			return g_strdup_printf(_("%s Graphics Tablet Update"), name);
+		}
 	}
 
 	/* TRANSLATORS: this is the fallback where we don't know if the release

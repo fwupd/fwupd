@@ -4015,6 +4015,8 @@ fu_common_device_category_to_name(const gchar *cat)
 		return "USB Dock";
 	if (g_strcmp0(cat, "X-FingerprintReader") == 0)
 		return "Fingerprint Reader";
+	if (g_strcmp0(cat, "X-GraphicsTablet") == 0)
+		return "Graphics Tablet";
 	return NULL;
 }
 
