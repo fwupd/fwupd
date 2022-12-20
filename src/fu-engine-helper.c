@@ -254,7 +254,17 @@ fu_engine_integrity_measure_uefi(GHashTable *self)
 		g_autoptr(GBytes) blob =
 		    fu_efivar_get_data_bytes(FU_EFIVAR_GUID_EFI_GLOBAL, name, NULL, NULL);
 		if (blob != NULL && g_bytes_get_size(blob) > 0) {
+			const guint8 needle[] = "f\0w\0u\0p\0d";
 			g_autofree gchar *id = g_strdup_printf("UEFI:%s", name);
+			if (fu_memmem_safe(g_bytes_get_data(blob, NULL),
+					   g_bytes_get_size(blob),
+					   needle,
+					   sizeof(needle),
+					   NULL,
+					   NULL)) {
+				g_debug("skipping %s as fwupd found", id);
+				continue;
+			}
 			fu_engine_integrity_add_measurement(self, id, blob);
 		}
 	}
