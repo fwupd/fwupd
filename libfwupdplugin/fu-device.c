@@ -2772,6 +2772,63 @@ fu_device_set_version_bootloader(FuDevice *self, const gchar *version)
 	}
 }
 
+/**
+ * fu_device_set_version_from_uint16:
+ * @self: a #FuDevice
+ * @version_raw: an integer
+ *
+ * Sets the device version from a integer value and the device version format.
+ *
+ * Since: 1.8.9
+ **/
+void
+fu_device_set_version_from_uint16(FuDevice *self, guint16 version_raw)
+{
+	g_autofree gchar *version = NULL;
+	g_return_if_fail(FU_IS_DEVICE(self));
+	version = fu_version_from_uint16(version_raw, fu_device_get_version_format(self));
+	fwupd_device_set_version_raw(FWUPD_DEVICE(self), version_raw);
+	fwupd_device_set_version(FWUPD_DEVICE(self), version);
+}
+
+/**
+ * fu_device_set_version_from_uint32:
+ * @self: a #FuDevice
+ * @version_raw: an integer
+ *
+ * Sets the device version from a integer value and the device version format.
+ *
+ * Since: 1.8.9
+ **/
+void
+fu_device_set_version_from_uint32(FuDevice *self, guint32 version_raw)
+{
+	g_autofree gchar *version = NULL;
+	g_return_if_fail(FU_IS_DEVICE(self));
+	version = fu_version_from_uint32(version_raw, fu_device_get_version_format(self));
+	fwupd_device_set_version_raw(FWUPD_DEVICE(self), version_raw);
+	fwupd_device_set_version(FWUPD_DEVICE(self), version);
+}
+
+/**
+ * fu_device_set_version_from_uint64:
+ * @self: a #FuDevice
+ * @version_raw: an integer
+ *
+ * Sets the device version from a integer value and the device version format.
+ *
+ * Since: 1.8.9
+ **/
+void
+fu_device_set_version_from_uint64(FuDevice *self, guint64 version_raw)
+{
+	g_autofree gchar *version = NULL;
+	g_return_if_fail(FU_IS_DEVICE(self));
+	version = fu_version_from_uint64(version_raw, fu_device_get_version_format(self));
+	fwupd_device_set_version_raw(FWUPD_DEVICE(self), version_raw);
+	fwupd_device_set_version(FWUPD_DEVICE(self), version);
+}
+
 static void
 fu_device_inhibit_free(FuDeviceInhibit *inhibit)
 {

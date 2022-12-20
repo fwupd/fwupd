@@ -385,9 +385,7 @@ static gboolean
 fu_focalfp_hid_device_setup(FuDevice *device, GError **error)
 {
 	FuFocalfpHidDevice *self = FU_FOCALFP_HID_DEVICE(device);
-	guint16 fwver;
 	guint8 buf[2] = {0x0};
-	g_autofree gchar *version = NULL;
 
 	/* get current firmware version */
 	if (!fu_focalfp_hid_device_read_reg(self, 0xA6, buf, error)) {
@@ -398,9 +396,7 @@ fu_focalfp_hid_device_setup(FuDevice *device, GError **error)
 		g_prefix_error(error, "failed to read version2: ");
 		return FALSE;
 	}
-	fwver = fu_memread_uint16(buf, G_BIG_ENDIAN);
-	version = fu_version_from_uint16(fwver, FWUPD_VERSION_FORMAT_HEX);
-	fu_device_set_version(device, version);
+	fu_device_set_version_from_uint16(device, fu_memread_uint16(buf, G_BIG_ENDIAN));
 
 	/* success */
 	return TRUE;

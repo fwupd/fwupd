@@ -672,7 +672,6 @@ fu_wac_device_add_modules_bluetooth(FuWacDevice *self, GError **error)
 	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
 	g_autofree gchar *name = NULL;
 	g_autofree gchar *name_id6 = NULL;
-	g_autofree gchar *version = NULL;
 	g_autoptr(FuWacModule) module = NULL;
 	g_autoptr(FuWacModule) module_id6 = NULL;
 	guint16 fw_ver;
@@ -695,7 +694,6 @@ fu_wac_device_add_modules_bluetooth(FuWacDevice *self, GError **error)
 			break;
 		g_usleep(G_USEC_PER_SEC);
 	}
-	version = fu_version_from_uint16(fw_ver, FWUPD_VERSION_FORMAT_BCD);
 
 	/* Success! But legacy bluetooth can't tell us which module the device needs.
 	 * Initialize both and rely on the firmware update containing the appropriate
@@ -705,8 +703,7 @@ fu_wac_device_add_modules_bluetooth(FuWacDevice *self, GError **error)
 	module = fu_wac_module_bluetooth_new(fu_device_get_context(FU_DEVICE(self)), usb_device);
 	fu_device_add_child(FU_DEVICE(self), FU_DEVICE(module));
 	fu_device_set_name(FU_DEVICE(module), name);
-	fu_device_set_version(FU_DEVICE(module), version);
-	fu_device_set_version_raw(FU_DEVICE(module), fw_ver);
+	fu_device_set_version_from_uint16(FU_DEVICE(module), fw_ver);
 
 	name_id6 = g_strdup_printf("%s [Legacy Bluetooth Module (ID6)]",
 				   fu_device_get_name(FU_DEVICE(self)));
@@ -714,8 +711,7 @@ fu_wac_device_add_modules_bluetooth(FuWacDevice *self, GError **error)
 	    fu_wac_module_bluetooth_id6_new(fu_device_get_context(FU_DEVICE(self)), usb_device);
 	fu_device_add_child(FU_DEVICE(self), FU_DEVICE(module_id6));
 	fu_device_set_name(FU_DEVICE(module_id6), name_id6);
-	fu_device_set_version(FU_DEVICE(module_id6), version);
-	fu_device_set_version_raw(FU_DEVICE(module_id6), fw_ver);
+	fu_device_set_version_from_uint16(FU_DEVICE(module_id6), fw_ver);
 	return TRUE;
 }
 
@@ -777,7 +773,6 @@ fu_wac_device_add_modules(FuWacDevice *self, GError **error)
 	for (guint8 i = 0; i < buf[3]; i++) {
 		guint8 fw_type = buf[(i * 4) + 4] & ~0x80;
 		g_autofree gchar *name = NULL;
-		g_autofree gchar *version = NULL;
 		g_autoptr(FuWacModule) module = NULL;
 		guint16 ver;
 
@@ -788,7 +783,6 @@ fu_wac_device_add_modules(FuWacDevice *self, GError **error)
 					    G_BIG_ENDIAN,
 					    error))
 			return FALSE;
-		version = fu_version_from_uint16(ver, FWUPD_VERSION_FORMAT_BCD);
 
 		switch (fw_type) {
 		case FU_WAC_MODULE_FW_TYPE_TOUCH:
@@ -798,8 +792,7 @@ fu_wac_device_add_modules(FuWacDevice *self, GError **error)
 					       fu_device_get_name(FU_DEVICE(self)));
 			fu_device_add_child(FU_DEVICE(self), FU_DEVICE(module));
 			fu_device_set_name(FU_DEVICE(module), name);
-			fu_device_set_version(FU_DEVICE(module), version);
-			fu_device_set_version_raw(FU_DEVICE(module), ver);
+			fu_device_set_version_from_uint16(FU_DEVICE(module), ver);
 			break;
 		case FU_WAC_MODULE_FW_TYPE_BLUETOOTH:
 			module = fu_wac_module_bluetooth_new(fu_device_get_context(FU_DEVICE(self)),
@@ -808,8 +801,7 @@ fu_wac_device_add_modules(FuWacDevice *self, GError **error)
 					       fu_device_get_name(FU_DEVICE(self)));
 			fu_device_add_child(FU_DEVICE(self), FU_DEVICE(module));
 			fu_device_set_name(FU_DEVICE(module), name);
-			fu_device_set_version(FU_DEVICE(module), version);
-			fu_device_set_version_raw(FU_DEVICE(module), ver);
+			fu_device_set_version_from_uint16(FU_DEVICE(module), ver);
 			break;
 		case FU_WAC_MODULE_FW_TYPE_BLUETOOTH_ID6:
 			module =
@@ -819,12 +811,10 @@ fu_wac_device_add_modules(FuWacDevice *self, GError **error)
 					       fu_device_get_name(FU_DEVICE(self)));
 			fu_device_add_child(FU_DEVICE(self), FU_DEVICE(module));
 			fu_device_set_name(FU_DEVICE(module), name);
-			fu_device_set_version(FU_DEVICE(module), version);
-			fu_device_set_version_raw(FU_DEVICE(module), ver);
+			fu_device_set_version_from_uint16(FU_DEVICE(module), ver);
 			break;
 		case FU_WAC_MODULE_FW_TYPE_MAIN:
-			fu_device_set_version(FU_DEVICE(self), version);
-			fu_device_set_version_raw(FU_DEVICE(self), ver);
+			fu_device_set_version_from_uint16(FU_DEVICE(self), ver);
 			break;
 		default:
 			g_warning("unknown submodule type 0x%0x", fw_type);

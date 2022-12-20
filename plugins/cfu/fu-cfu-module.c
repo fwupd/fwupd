@@ -46,7 +46,6 @@ fu_cfu_module_setup(FuCfuModule *self, const guint8 *buf, gsize bufsz, gsize off
 	guint32 version_raw = 0;
 	guint8 tmp = 0;
 	g_autofree gchar *logical_id = NULL;
-	g_autofree gchar *version = NULL;
 
 	/* component ID */
 	if (!fu_memread_uint8_safe(buf, bufsz, offset + 0x5, &self->component_id, error))
@@ -87,9 +86,7 @@ fu_cfu_module_setup(FuCfuModule *self, const guint8 *buf, gsize bufsz, gsize off
 	/* version */
 	if (!fu_memread_uint32_safe(buf, bufsz, offset, &version_raw, G_LITTLE_ENDIAN, error))
 		return FALSE;
-	fu_device_set_version_raw(device, version_raw);
-	version = fu_version_from_uint32(version_raw, fu_device_get_version_format(device));
-	fu_device_set_version(device, version);
+	fu_device_set_version_from_uint32(device, version_raw);
 
 	/* logical ID */
 	logical_id = g_strdup_printf("CID:0x%02x,BANK:0x%02x", self->component_id, self->bank);

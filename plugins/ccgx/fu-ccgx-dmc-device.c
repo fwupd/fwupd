@@ -657,8 +657,6 @@ fu_ccgx_dmc_device_setup(FuDevice *device, GError **error)
 	FuCcgxDmcDevice *self = FU_CCGX_DMC_DEVICE(device);
 	DmcDockStatus dock_status = {0};
 	DmcDockIdentity dock_id = {0};
-	guint32 version_raw = 0;
-	g_autofree gchar *version = NULL;
 
 	/* FuUsbDevice->setup */
 	if (!FU_DEVICE_CLASS(fu_ccgx_dmc_device_parent_class)->setup(device, error))
@@ -684,10 +682,7 @@ fu_ccgx_dmc_device_setup(FuDevice *device, GError **error)
 		return FALSE;
 
 	/* set composite version */
-	version_raw = dock_status.composite_version;
-	version = fu_version_from_uint32(version_raw, FWUPD_VERSION_FORMAT_QUAD);
-	fu_device_set_version(FU_DEVICE(self), version);
-	fu_device_set_version_raw(FU_DEVICE(self), version_raw);
+	fu_device_set_version_from_uint32(FU_DEVICE(self), dock_status.composite_version);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 
 	if (dock_id.custom_meta_data_flag > 0)

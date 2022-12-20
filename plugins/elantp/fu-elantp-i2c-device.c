@@ -241,7 +241,6 @@ fu_elantp_i2c_device_setup(FuDevice *device, GError **error)
 	guint8 buf[30] = {0x0};
 	guint8 ic_type;
 	g_autofree gchar *version_bl = NULL;
-	g_autofree gchar *version = NULL;
 
 	/* read the I2C descriptor */
 	if (!fu_elantp_i2c_device_read_cmd(self,
@@ -288,8 +287,7 @@ fu_elantp_i2c_device_setup(FuDevice *device, GError **error)
 		return FALSE;
 	if (fwver == 0xFFFF || fwver == ETP_CMD_I2C_FW_VERSION)
 		fwver = 0;
-	version = fu_version_from_uint16(fwver, FWUPD_VERSION_FORMAT_HEX);
-	fu_device_set_version(device, version);
+	fu_device_set_version_from_uint16(device, fwver);
 
 	/* get IAP firmware version */
 	if (!fu_elantp_i2c_device_read_cmd(self,

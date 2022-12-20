@@ -314,7 +314,6 @@ fu_elantp_hid_device_setup(FuDevice *device, GError **error)
 	guint16 tmp;
 	guint8 buf[2] = {0x0};
 	g_autofree gchar *version_bl = NULL;
-	g_autofree gchar *version = NULL;
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GError) error_forcetable = NULL;
 
@@ -334,8 +333,7 @@ fu_elantp_hid_device_setup(FuDevice *device, GError **error)
 	fwver = fu_memread_uint16(buf, G_LITTLE_ENDIAN);
 	if (fwver == 0xFFFF || fwver == ETP_CMD_I2C_FW_VERSION)
 		fwver = 0;
-	version = fu_version_from_uint16(fwver, FWUPD_VERSION_FORMAT_HEX);
-	fu_device_set_version(device, version);
+	fu_device_set_version_from_uint16(device, fwver);
 
 	/* get IAP firmware version */
 	if (!fu_elantp_hid_device_read_cmd(self,

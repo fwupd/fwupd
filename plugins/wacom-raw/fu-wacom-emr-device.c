@@ -34,7 +34,6 @@ fu_wacom_emr_device_setup(FuDevice *device, GError **error)
 	} else {
 		guint16 fw_ver;
 		guint8 data[19] = {0x03, 0x0}; /* 0x03 is an unknown ReportID */
-		g_autofree gchar *version = NULL;
 		if (!fu_wacom_device_get_feature(FU_WACOM_DEVICE(self), data, sizeof(data), error))
 			return FALSE;
 		if (!fu_memread_uint16_safe(data,
@@ -45,9 +44,7 @@ fu_wacom_emr_device_setup(FuDevice *device, GError **error)
 					    error))
 			return FALSE;
 		fu_device_remove_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
-		version = fu_version_from_uint16(fw_ver, FWUPD_VERSION_FORMAT_PAIR);
-		fu_device_set_version(device, version);
-		fu_device_set_version_raw(device, fw_ver);
+		fu_device_set_version_from_uint32(device, fw_ver);
 	}
 
 	/* success */
@@ -271,6 +268,7 @@ static void
 fu_wacom_emr_device_init(FuWacomEmrDevice *self)
 {
 	fu_device_set_name(FU_DEVICE(self), "Wacom EMR Device");
+	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PAIR);
 }
 
 static void

@@ -213,7 +213,6 @@ fu_fpc_device_setup_version(FuFpcDevice *self, GError **error)
 	gsize data_len = 0;
 	FuEndianType endian_type = G_LITTLE_ENDIAN;
 	g_autofree guint8 *data = NULL;
-	g_autofree gchar *str_version = NULL;
 	guint32 cmd_id = FPC_CMD_GET_STATE;
 
 	if (fu_device_has_private_flag(FU_DEVICE(self), FU_FPC_DEVICE_FLAG_RTS_DEVICE))
@@ -269,9 +268,7 @@ fu_fpc_device_setup_version(FuFpcDevice *self, GError **error)
 	}
 
 	/* set display version */
-	str_version = fu_version_from_uint32(version, FWUPD_VERSION_FORMAT_QUAD);
-	fu_device_set_version_raw(FU_DEVICE(self), (guint64)version);
-	fu_device_set_version(FU_DEVICE(self), str_version);
+	fu_device_set_version_from_uint32(FU_DEVICE(self), version);
 	return TRUE;
 }
 
