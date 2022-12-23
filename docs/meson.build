@@ -2,7 +2,7 @@ if build_docs and introspection.allowed()
   toml_conf = configuration_data()
   docgen_version = source_version
   if git.found() and source_version != fwupd_version
-    docgen_version = run_command(git, 'branch', '--show-current').stdout().strip()
+    docgen_version = run_command([git, 'branch', '--show-current'], check: true).stdout().strip()
   endif
   toml_conf.set('version', docgen_version)
 

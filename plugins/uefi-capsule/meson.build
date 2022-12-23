@@ -92,7 +92,8 @@ install_data(['uefi_capsule.conf'],
 
 # add all the .po files as inputs to watch
 ux_linguas = run_command(
-  'cat', files(join_paths(meson.project_source_root(), 'po', 'LINGUAS')),
+  ['cat', files(join_paths(meson.project_source_root(), 'po', 'LINGUAS'))],
+  check: true,
 ).stdout().strip().split('\n')
 ux_capsule_pofiles = []
 foreach ux_lingua: ux_linguas

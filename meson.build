@@ -21,11 +21,11 @@ conf.set_quoted('PACKAGE_VERSION', fwupd_version)
 git = find_program('git', required: false)
 tag = false
 if git.found()
-  source_version = run_command(git, 'describe').stdout().strip()
+  source_version = run_command([git, 'describe'], check: false).stdout().strip()
   if source_version == ''
     source_version = fwupd_version
   endif
-  tag = run_command([git, 'describe', '--exact-match']).returncode() == 0
+  tag = run_command([git, 'describe', '--exact-match'], check: false).returncode() == 0
 else
   source_version = fwupd_version
 endif
@@ -435,10 +435,7 @@ if build_standalone and efiboot.found() and efivar.found()
   endif
 
   if get_option('plugin_uefi_capsule_splash')
-    r = run_command([python3, 'po/test-deps'])
-    if r.returncode() != 0
-      error(r.stdout())
-    endif
+    run_command([python3, 'po/test-deps'], check: true)
   endif
 endif
 
@@ -549,7 +546,8 @@ build_docs = gidocgen_dep.found() and gidocgen_app.found()
 
 if build_docs and gidocgen_dep.version().version_compare('< 2022.2')
   markdown_version = run_command(
-    python3, '-c', 'import markdown; print(markdown.__version__)'
+    [python3, '-c', 'import markdown; print(markdown.__version__)'],
+    check: true,
   ).stdout().strip()
   build_docs = get_option('docs').require(
     markdown_version.version_compare('>=3.2'),
