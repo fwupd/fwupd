@@ -9,7 +9,7 @@ set -x
 rm -rf build
 mkdir -p build
 cd build
-meson .. \
+meson setup .. \
 	--werror \
 	-Dplugin_uefi_capsule=disabled \
 	-Dplugin_dell=disabled \
