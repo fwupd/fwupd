@@ -16,7 +16,7 @@ if [ "$QUBES" = "true" ]; then
     QUBES_MACRO=(--define "qubes_packages 1")
 fi
 
-meson .. \
+meson setup .. \
     -Ddocs=disabled \
     -Dman=true \
     -Dtests=true \

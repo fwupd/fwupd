@@ -14,7 +14,7 @@ rm -rf build
 mkdir -p build
 cp contrib/ci/s390x_cross.txt build/
 cd build
-meson .. \
+meson setup .. \
 	--cross-file s390x_cross.txt \
 	--werror \
 	-Dplugin_flashrom=disabled \

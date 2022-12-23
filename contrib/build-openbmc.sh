@@ -1,6 +1,6 @@
 #!/bin/sh
 
-meson ../ \
+meson setup ../ \
     -Dauto_features=disabled \
     -Dbash_completion=false \
     -Dcompat_cli=false \

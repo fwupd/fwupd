@@ -33,7 +33,7 @@ rm -rf $DESTDIR $build
 
 # try to keep this and ../contrib/build-windows.sh in sync as much as makes sense
 mkdir -p $build $DESTDIR && cd $build
-meson .. \
+meson setup .. \
     --cross-file=/usr/share/mingw/toolchain-mingw64.meson \
     --cross-file=../contrib/mingw64.cross \
     --prefix=/ \
