@@ -132,6 +132,7 @@ parts:
       - git
       - gettext
       - gnu-efi
+      - rustc
       - fwupd-unsigned-dev
       - libcurl4-openssl-dev
       - libarchive-dev

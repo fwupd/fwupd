@@ -1,7 +1,7 @@
 project('fwupd', 'c',
   version: '1.9.7',
   license: 'LGPL-2.1-or-later',
-  meson_version: '>=0.61.0',
+  meson_version: '>=1.0.0',
   default_options: ['warning_level=2', 'c_std=c11'],
 )
 
@@ -142,6 +142,14 @@ add_project_link_arguments(
   global_link_args,
   language: 'c'
 )
+
+# rust is optional
+rust_support = find_program('rustc', required: get_option('rust')).found()
+if rust_support
+  if add_languages('rust', native: false)
+    add_project_arguments('-DHAVE_RUST', language: 'c')
+  endif
+endif
 
 add_project_arguments('-DFWUPD_COMPILATION', language: 'c')
 

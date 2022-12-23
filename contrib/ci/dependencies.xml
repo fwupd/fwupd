@@ -1755,4 +1755,19 @@
       <package variant="mingw64">msitools</package>
     </distro>
   </dependency>
+  <!-- optional -->
+  <dependency id="rustc">
+    <distro id="arch">
+      <package variant="x86_64">rust</package>
+    </distro>
+    <distro id="fedora">
+      <package variant="x86_64" />
+    </distro>
+    <distro id="debian">
+      <package variant="x86_64" />
+    </distro>
+    <distro id="ubuntu">
+      <package variant="x86_64" />
+    </distro>
+  </dependency>
 </dependencies>

@@ -8,6 +8,10 @@ option('build',
   value: 'all',
   description: 'build type',
 )
+option('rust',
+  type: 'feature',
+  description: 'Rust support',
+)
 option('consolekit',
   type: 'feature',
   description: 'ConsoleKit support',
