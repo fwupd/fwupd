@@ -2861,7 +2861,7 @@ fu_device_ensure_inhibits(FuDevice *self)
 			fu_device_add_flag(self, FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN);
 		}
 
-		/* update update error */
+		/* update the update error */
 		for (GList *l = values; l != NULL; l = l->next) {
 			FuDeviceInhibit *inhibit = (FuDeviceInhibit *)l->data;
 			g_ptr_array_add(reasons, inhibit->reason);
