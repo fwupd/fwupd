@@ -214,7 +214,7 @@ fu_nvme_device_parse_cns(FuNvmeDevice *self, const guint8 *buf, gsize sz, GError
 		return FALSE;
 	}
 
-	/* get sanitiezed string from CNS -- see the following doc for offsets:
+	/* get sanitized string from CNS -- see the following doc for offsets:
 	 * NVM-Express-1_3c-2018.05.24-Ratified.pdf */
 	sn = fu_nvme_device_get_string_safe(buf, 4, 23);
 	if (sn != NULL)
