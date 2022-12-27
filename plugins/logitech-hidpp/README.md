@@ -46,7 +46,7 @@ When in runtime mode, the HID raw DeviceInstanceId values are used:
 * `HIDRAW\VEN_046D&DEV_C52B&ENT_05`
 * `HIDRAW\VEN_046D`
 
-One additional legacy instance ID is added for periperals:
+One additional legacy instance ID is added for peripherals:
 
 * `UFY\VID_046D&PID_C52B`
 
