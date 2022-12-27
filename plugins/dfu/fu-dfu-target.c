@@ -172,10 +172,10 @@ fu_dfu_target_parse_sector(FuDfuTarget *self,
 		cap = DFU_SECTOR_CAP_READABLE;
 		break;
 	case 'b':
-		cap = DFU_SECTOR_CAP_ERASEABLE;
+		cap = DFU_SECTOR_CAP_ERASABLE;
 		break;
 	case 'c':
-		cap = DFU_SECTOR_CAP_READABLE | DFU_SECTOR_CAP_ERASEABLE;
+		cap = DFU_SECTOR_CAP_READABLE | DFU_SECTOR_CAP_ERASABLE;
 		break;
 	case 'd':
 		cap = DFU_SECTOR_CAP_WRITEABLE;
@@ -184,10 +184,10 @@ fu_dfu_target_parse_sector(FuDfuTarget *self,
 		cap = DFU_SECTOR_CAP_READABLE | DFU_SECTOR_CAP_WRITEABLE;
 		break;
 	case 'f':
-		cap = DFU_SECTOR_CAP_ERASEABLE | DFU_SECTOR_CAP_WRITEABLE;
+		cap = DFU_SECTOR_CAP_ERASABLE | DFU_SECTOR_CAP_WRITEABLE;
 		break;
 	case 'g':
-		cap = DFU_SECTOR_CAP_READABLE | DFU_SECTOR_CAP_ERASEABLE | DFU_SECTOR_CAP_WRITEABLE;
+		cap = DFU_SECTOR_CAP_READABLE | DFU_SECTOR_CAP_ERASABLE | DFU_SECTOR_CAP_WRITEABLE;
 		break;
 	default:
 		g_set_error(error,
@@ -239,7 +239,7 @@ fu_dfu_target_parse_sectors(FuDfuTarget *self, const gchar *alt_name, GError **e
 					   0x0, /* size_left */
 					   0x0, /* zone */
 					   0x0, /* number */
-					   DFU_SECTOR_CAP_ERASEABLE | DFU_SECTOR_CAP_READABLE |
+					   DFU_SECTOR_CAP_ERASABLE | DFU_SECTOR_CAP_READABLE |
 					       DFU_SECTOR_CAP_WRITEABLE);
 		g_ptr_array_add(priv->sectors, sector);
 	}

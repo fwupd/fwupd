@@ -20,7 +20,7 @@ struct _FuDfuSectorClass {
  * @DFU_SECTOR_CAP_NONE:		No operations possible
  * @DFU_SECTOR_CAP_READABLE:		Sector can be read
  * @DFU_SECTOR_CAP_WRITEABLE:		Sector can be written
- * @DFU_SECTOR_CAP_ERASEABLE:		Sector can be erased
+ * @DFU_SECTOR_CAP_ERASABLE:		Sector can be erased
  *
  * The flags indicating what the sector can do.
  **/
@@ -28,7 +28,7 @@ typedef enum {
 	DFU_SECTOR_CAP_NONE = 0,
 	DFU_SECTOR_CAP_READABLE = 1 << 0,
 	DFU_SECTOR_CAP_WRITEABLE = 1 << 1,
-	DFU_SECTOR_CAP_ERASEABLE = 1 << 2,
+	DFU_SECTOR_CAP_ERASABLE = 1 << 2,
 	/*< private >*/
 	DFU_SECTOR_CAP_LAST
 } FuDfuSectorCap;

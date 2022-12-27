@@ -186,7 +186,7 @@ fu_dfu_sector_get_id(FuDfuSector *self)
 /**
  * fu_dfu_sector_has_cap:
  * @self: a #FuDfuSector
- * @cap: a #FuDfuSectorCap, e.g. %DFU_SECTOR_CAP_ERASEABLE
+ * @cap: a #FuDfuSectorCap, e.g. %DFU_SECTOR_CAP_ERASABLE
  *
  * Finds out if the sector has the required capability.
  *
@@ -206,7 +206,7 @@ fu_dfu_sector_cap_to_string(FuDfuSectorCap cap)
 	GString *str = g_string_new(NULL);
 	if (cap & DFU_SECTOR_CAP_READABLE)
 		g_string_append(str, "R");
-	if (cap & DFU_SECTOR_CAP_ERASEABLE)
+	if (cap & DFU_SECTOR_CAP_ERASABLE)
 		g_string_append(str, "E");
 	if (cap & DFU_SECTOR_CAP_WRITEABLE)
 		g_string_append(str, "W");

@@ -298,7 +298,7 @@ fu_dfu_target_stm_download_element1(FuDfuTarget *target,
 			}
 
 			/* if it's erasable and not yet blanked */
-			if (fu_dfu_sector_has_cap(sector, DFU_SECTOR_CAP_ERASEABLE) &&
+			if (fu_dfu_sector_has_cap(sector, DFU_SECTOR_CAP_ERASABLE) &&
 			    g_hash_table_lookup(sectors_hash, sector) == NULL) {
 				g_hash_table_insert(sectors_hash, sector, GINT_TO_POINTER(1));
 				g_ptr_array_add(sectors_array, sector);
