@@ -464,7 +464,7 @@ fu_nordic_hid_cfg_channel_add_peers(FuNordicHidCfgChannel *self, GError **error)
 			g_debug("detected peer: 0x%02x", res->data[8]);
 
 		peer = fu_nordic_hid_cfg_channel_new(res->data[8]);
-		/* prohibit to close close parent's communication descriptor */
+		/* prohibit to close parent's communication descriptor */
 		fu_device_add_internal_flag(FU_DEVICE(peer),
 					    FU_DEVICE_INTERNAL_FLAG_USE_PARENT_FOR_OPEN);
 		/* probe&setup are the part of adding child */
