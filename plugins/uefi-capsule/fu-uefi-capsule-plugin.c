@@ -247,7 +247,7 @@ fu_uefi_capsule_plugin_write_splash_data(FuUefiCapsulePlugin *self,
 		return FALSE;
 	}
 
-	/* save to a predicatable filename */
+	/* save to a predictable filename */
 	esp_path = fu_volume_get_mount_point(self->esp);
 	directory = fu_uefi_get_esp_path_for_os(device, esp_path);
 	basename = g_strdup_printf("fwupd-%s.cap", FU_EFIVAR_GUID_UX_CAPSULE);
