@@ -795,7 +795,7 @@ fu_logitech_bulkcontroller_device_write_firmware(FuDevice *device,
 							    CMD_END_TRANSFER,
 							    end_pkt,
 							    error)) {
-		g_prefix_error(error, "failed to write end transfer transfer packet: ");
+		g_prefix_error(error, "failed to write end transfer packet: ");
 		return FALSE;
 	}
 	fu_progress_step_done(progress);
