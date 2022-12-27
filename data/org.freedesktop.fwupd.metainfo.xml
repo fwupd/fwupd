@@ -557,7 +557,7 @@
         <p>This release fixes the following bugs:</p>
         <ul>
           <li>Be case insensitive when fixing the device model</li>
-          <li>Fix a critial warning in ccgx found by the fuzzer</li>
+          <li>Fix a critical warning in ccgx found by the fuzzer</li>
           <li>Fix a DFU crash if the attach failed due to a hardware fault</li>
           <li>Fix a Redfish crash when specifying a URL without a port</li>
           <li>Fix CLI downloads when using fwupdmgr --ipfs</li>
@@ -2111,7 +2111,7 @@
         </ul>
         <p>This release fixes the following bugs:</p>
         <ul>
-          <li>Do not spew a critial warning when parsing an invalid URI</li>
+          <li>Do not spew a critical warning when parsing an invalid URI</li>
           <li>Ensure device is closed if did not complete setup</li>
           <li>Ensure steelseries device is closed if it returns an invalid packet</li>
           <li>Fix man page installation location</li>
