@@ -369,7 +369,7 @@ typedef guint64 FuDeviceInternalFlags;
 /**
  * FU_DEVICE_INTERNAL_FLAG_NO_AUTO_REMOVE_CHILDREN:
  *
- * Do not auto-remove clildren in the device list.
+ * Do not auto-remove children in the device list.
  *
  * Since: 1.6.2
  */
