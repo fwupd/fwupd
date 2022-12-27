@@ -531,7 +531,7 @@ fu_device_get_possible_plugins(FuDevice *self)
  * @plugin: a plugin name, e.g. `dfu`
  *
  * Adds a plugin name to the list of plugins that *might* be able to handle this
- * device. This is tyically called from a quirk handler.
+ * device. This is typically called from a quirk handler.
  *
  * Duplicate plugin names are ignored.
  *
