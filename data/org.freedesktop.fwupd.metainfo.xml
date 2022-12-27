@@ -643,7 +643,7 @@
           <li>Only probe SynapticsMST devices that have opted-in</li>
           <li>Remove support for --ignore-power as it did not work for UEFI firmware</li>
           <li>Reset the CMOS as required when changing system firmware branch</li>
-          <li>Restart the daemon if any of the the plugin config files are modified</li>
+          <li>Restart the daemon if any of the plugin config files are modified</li>
           <li>Show HSiLevel=0 attributes in JSON security output</li>
           <li>Update the child composite ID if the parent changes</li>
           <li>Use a per-device global percentage completion</li>
@@ -788,7 +788,7 @@
           <li>Add a composite ID that is used to identify dock device components</li>
           <li>Add an Intel Flash Descriptor parser</li>
           <li>Add API to allow the device to report its own battery level</li>
-          <li>Add API to recount why the the device is non-updatable</li>
+          <li>Add API to recount why the device is non-updatable</li>
           <li>Add lspcon-i2c-spi programmer support</li>
           <li>Add more hardware support to the pixart-rf plugin</li>
           <li>Add some more new category types for firmware to use</li>

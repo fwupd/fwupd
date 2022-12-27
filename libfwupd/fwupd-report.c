@@ -80,7 +80,7 @@ fwupd_report_set_created(FwupdReport *self, guint64 created)
  * fwupd_report_get_version_old:
  * @self: a #FwupdReport
  *
- * Gets the the old version, i.e. what the upser was upgrading *from*.
+ * Gets the old version, i.e. what the upser was upgrading *from*.
  *
  * Returns: the version, or %NULL if unset
  *
@@ -99,7 +99,7 @@ fwupd_report_get_version_old(FwupdReport *self)
  * @self: a #FwupdReport
  * @version_old: (nullable): the version, e.g. `1.2.3`
  *
- * Sets the the old version, i.e. what the upser was upgrading *from*.
+ * Sets the old version, i.e. what the upser was upgrading *from*.
  *
  * Since: 1.8.8
  **/
