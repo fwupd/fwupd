@@ -55,7 +55,7 @@ Binary Object Store Descriptor:
     bLength                    48
     bDescriptorType            16
     bDevCapabilityType         13
-    iAddtionalInfoURL           4 www.frescologic.com
+    iAdditionalInfoURL          4 www.frescologic.com
     bNumberOfAlternateModes     1
     bPreferredAlternateMode     0
     VCONN Power                 0 1W
