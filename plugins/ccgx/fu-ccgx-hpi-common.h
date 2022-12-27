@@ -63,7 +63,7 @@ typedef enum {
 				* value = bit0 - start, bit1 - stop, bit3 - start on idle,
 				* bits[14:8] - target address, bit15 - scbIndex. length = 0 the
 				* data	is provided over the bulk endpoints */
-	CY_I2C_READ_CMD,       /* rerform I2C read operation.
+	CY_I2C_READ_CMD,       /* perform I2C read operation.
 				* value = bit0 - start, bit1 - stop, bit2 - Nak last byte,
 				* bit3 - start on idle, bits[14:8] - target address, bit15 - scbIndex,
 				* length = 0. The data is provided over the bulk endpoints */
