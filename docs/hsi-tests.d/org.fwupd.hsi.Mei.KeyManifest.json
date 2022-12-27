@@ -3,7 +3,7 @@
   "name" : "ME BootGuard Platform Key",
   "description" : [
     "The BootGuard Platform Key is fused into the CPU PCH during manufacturing by the OEM.",
-    "At bootup, an authenticated code module computes a hash of the Platform Key and and compares it with the one stored in field-programmable fuses.",
+    "At bootup, an authenticated code module computes a hash of the Platform Key and compares it with the one stored in field-programmable fuses.",
     "If the key matches the ACM will pass control to the firmware, otherwise the boot process will stop.",
     "In 2022 a number of Platform **secret** Keys were leaked by Lenovo and confirmed by Intel."
   ],
