@@ -190,7 +190,7 @@ fu_dfu_sector_get_id(FuDfuSector *self)
  *
  * Finds out if the sector has the required capability.
  *
- * Returns: %TRUE if the sector has the capabilily
+ * Returns: %TRUE if the sector has the capability
  **/
 gboolean
 fu_dfu_sector_has_cap(FuDfuSector *self, FuDfuSectorCap cap)
