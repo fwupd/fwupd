@@ -184,7 +184,7 @@ fu_ccgx_firmware_parse_md_block(FuCcgxFirmware *self, FwupdInstallFlags flags, G
 		return FALSE;
 	}
 
-	/* read metadata from correct ofsset */
+	/* read metadata from correct offset */
 	rcd = g_ptr_array_index(self->records, self->records->len - 1);
 	buf = g_bytes_get_data(rcd->data, &bufsz);
 	if (bufsz == 0) {
