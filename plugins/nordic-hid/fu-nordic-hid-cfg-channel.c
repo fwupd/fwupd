@@ -522,7 +522,7 @@ fu_nordic_hid_cfg_channel_get_bl_name(FuNordicHidCfgChannel *self, GError **erro
 			    error,
 			    G_IO_ERROR,
 			    G_IO_ERROR_INVALID_DATA,
-			    "bootloader in qiurk file is '%s' while the board is supporting '%s'",
+			    "bootloader in quirk file is '%s' while the board is supporting '%s'",
 			    self->bl_name,
 			    g_strndup((const gchar *)res->data, res->data_len));
 			return FALSE;
