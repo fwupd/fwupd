@@ -30,6 +30,12 @@ AT command to execute to determine the firmware branch currently installed on th
 
 Since: 1.7.4
 
+### ModemManagerFirehoseProgFile
+
+Firehose program file to use during the switch to EDL (Emergency Download) mode.
+
+Since: 1.8.10
+
 ## Vendor ID Security
 
 The vendor ID is set from the USB or PCI vendor, for example `USB:0x413C` `PCI:0x105B`
