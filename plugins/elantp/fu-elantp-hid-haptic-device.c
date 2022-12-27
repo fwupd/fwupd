@@ -204,7 +204,7 @@ fu_elantp_hid_haptic_device_ensure_eeprom_iap_ctrl(FuDevice *parent,
 }
 
 static gboolean
-fu_elantp_hid_haptic_device_get_hatpic_driver_ic(FuDevice *parent,
+fu_elantp_hid_haptic_device_get_haptic_driver_ic(FuDevice *parent,
 						 FuElantpHidHapticDevice *self,
 						 GError **error)
 {
@@ -512,7 +512,7 @@ fu_elantp_hid_haptic_device_setup(FuDevice *device, GError **error)
 	if (parent == NULL)
 		return FALSE;
 
-	if (!fu_elantp_hid_haptic_device_get_hatpic_driver_ic(FU_DEVICE(parent), self, error)) {
+	if (!fu_elantp_hid_haptic_device_get_haptic_driver_ic(FU_DEVICE(parent), self, error)) {
 		g_prefix_error(error, "this module is not support haptic EEPROM: ");
 		return FALSE;
 	}

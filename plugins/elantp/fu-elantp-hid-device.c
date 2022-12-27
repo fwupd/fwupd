@@ -208,7 +208,7 @@ fu_elantp_hid_device_read_force_table_enable(FuElantpHidDevice *self, GError **e
 }
 
 static gboolean
-fu_elantp_hid_device_read_hatpic_enable(FuElantpHidDevice *self, GError **error)
+fu_elantp_hid_device_read_haptic_enable(FuElantpHidDevice *self, GError **error)
 {
 	guint8 buf[2] = {0x0};
 	guint16 value;
@@ -431,7 +431,7 @@ fu_elantp_hid_device_setup(FuDevice *device, GError **error)
 			return FALSE;
 	}
 
-	if (!fu_elantp_hid_device_read_hatpic_enable(self, &error_local)) {
+	if (!fu_elantp_hid_device_read_haptic_enable(self, &error_local)) {
 		g_debug("no haptic device detected: %s", error_local->message);
 	} else {
 		g_autoptr(FuElantpHidHapticDevice) cfg = fu_elantp_haptic_device_new(device);
