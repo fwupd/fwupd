@@ -244,7 +244,7 @@ fu_fit_firmware_verify_image(FuFirmware *firmware,
 	if (g_getenv("FU_FDT_FIRMWARE_VERBOSE") != NULL)
 		fu_dump_bytes(G_LOG_DOMAIN, "data", blob);
 
-	/* verify any hashes we recoginise */
+	/* verify any hashes we recognize */
 	if ((flags & FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM) == 0) {
 		g_autoptr(GPtrArray) img_hashes = fu_firmware_get_images(img);
 		for (guint i = 0; i < img_hashes->len; i++) {
