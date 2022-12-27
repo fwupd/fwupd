@@ -136,7 +136,7 @@ fu_ebitdo_device_receive(FuEbitdoDevice *self, guint8 *out, gsize out_len, GErro
 		fu_ebitdo_dump_pkt(hdr);
 	}
 
-	/* get-version (booloader) */
+	/* get-version (bootloader) */
 	if (hdr->type == FU_EBITDO_PKT_TYPE_USER_CMD &&
 	    hdr->subtype == FU_EBITDO_PKT_CMD_UPDATE_FIRMWARE_DATA &&
 	    hdr->cmd == FU_EBITDO_PKT_CMD_FW_GET_VERSION) {
