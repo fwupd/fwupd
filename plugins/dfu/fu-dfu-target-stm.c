@@ -276,7 +276,7 @@ fu_dfu_target_stm_download_element1(FuDfuTarget *target,
 		guint32 offset_dev = i * transfer_size;
 
 		/* for DfuSe devices we need to handle the erase and setting
-		 * the sectory address manually */
+		 * the sector address manually */
 		while (offset_dev < (i + 1) * transfer_size) {
 			FuDfuSector *sector =
 			    fu_dfu_target_get_sector_for_addr(target, address + offset_dev);
