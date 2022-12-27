@@ -2,7 +2,7 @@
 
 ## Introduction
 
-This plugin is used to update Power Devlivery devices by Fresco.
+This plugin is used to update Power Delivery devices by Fresco.
 
 ## Firmware Format
 
