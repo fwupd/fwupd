@@ -1178,7 +1178,7 @@ fu_util_device_flag_to_string(guint64 device_flag)
 		return _("Update requires a reboot");
 	}
 	if (device_flag == FWUPD_DEVICE_FLAG_REQUIRE_AC) {
-		/* TRANSLATORS: Must be plugged in to an outlet */
+		/* TRANSLATORS: Must be plugged into an outlet */
 		return _("System requires external power source");
 	}
 	if (device_flag == FWUPD_DEVICE_FLAG_LOCKED) {
