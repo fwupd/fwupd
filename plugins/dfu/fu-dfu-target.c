@@ -1080,7 +1080,7 @@ fu_dfu_target_download_element_dfu(FuDfuTarget *self,
 		guint32 offset;
 		g_autoptr(GBytes) bytes_tmp = NULL;
 
-		/* caclulate the offset into the chunk data */
+		/* calculate the offset into the chunk data */
 		offset = i * transfer_size;
 
 		/* we have to write one final zero-sized chunk for EOF */
