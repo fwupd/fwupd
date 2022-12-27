@@ -28,7 +28,7 @@ In the main menu, choose `options` and then go to `Flash/Update the BIOS`
 
 Decide to retain or erase the settings.
 
-![img](img/heads_firmware_managment_menu.jpg)
+![img](img/heads_firmware_management_menu.jpg)
 
 The tool will inform you that heads update has been detected in `/boot`
 directory. If you will decide not to update, you will be asked to attach the
