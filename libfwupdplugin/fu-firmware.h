@@ -80,7 +80,7 @@ struct _FuFirmwareClass {
 /**
  * FU_FIRMWARE_FLAG_DEDUPE_ID:
  *
- * Dedupe imges by ID.
+ * Dedupe images by ID.
  *
  * Since: 1.5.0
  **/
@@ -88,7 +88,7 @@ struct _FuFirmwareClass {
 /**
  * FU_FIRMWARE_FLAG_DEDUPE_IDX:
  *
- * Dedupe imges by IDX.
+ * Dedupe images by IDX.
  *
  * Since: 1.5.0
  **/
