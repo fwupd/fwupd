@@ -90,7 +90,7 @@ fu_nvme_status_to_string(guint32 status)
 		return "Commit was successful, activation requires a reset";
 	case NVME_SC_FW_NEEDS_MAX_TIME:
 		return "Would exceed the Maximum Time for Firmware Activation";
-	case NVME_SC_FW_ACIVATE_PROHIBITED:
+	case NVME_SC_FW_ACTIVATE_PROHIBITED:
 		return "Image specified is being prohibited from activation";
 	case NVME_SC_OVERLAPPING_RANGE:
 		return "Image has overlapping ranges";
