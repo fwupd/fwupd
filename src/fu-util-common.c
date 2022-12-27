@@ -1867,7 +1867,7 @@ fu_util_release_flag_to_string(FwupdReleaseFlags release_flag)
 		return _("Trusted payload");
 	}
 	if (release_flag == FWUPD_RELEASE_FLAG_TRUSTED_METADATA) {
-		/* TRANSLATORS: We verified the meatdata against the server */
+		/* TRANSLATORS: We verified the metadata against the server */
 		return _("Trusted metadata");
 	}
 	if (release_flag == FWUPD_RELEASE_FLAG_IS_UPGRADE) {
