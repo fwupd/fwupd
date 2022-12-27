@@ -3285,7 +3285,7 @@ fu_device_set_update_request_id(FuDevice *self, const gchar *update_request_id)
  * fu_device_get_proxy_guid:
  * @self: a #FuDevice
  *
- * Gets the proxy GUID device, which which is set to let the engine match up the
+ * Gets the proxy GUID device, which is set to let the engine match up the
  * proxy between plugins.
  *
  * Returns: a string value, or %NULL if never set.
