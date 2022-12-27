@@ -3995,7 +3995,7 @@ fu_memcpy_func(gconstpointer user_data)
 	g_assert_false(ret);
 	g_clear_error(&error);
 
-	/* read past past the end of dst */
+	/* read past the end of dst */
 	ret = fu_memcpy_safe(dst, sizeof(dst), 0x0, src, sizeof(src), 0x0, 6, &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_READ);
 	g_assert_false(ret);
