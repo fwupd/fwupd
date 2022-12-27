@@ -14,7 +14,7 @@
 
 /**
  * fu_keyring_get_release_flags:
- * @release: the reelase node
+ * @release: the release node
  * @flags: (out): flags for the release, e.g. %FWUPD_RELEASE_FLAG_TRUSTED_PAYLOAD
  * @error: (nullable): optional return location for an error
  *
