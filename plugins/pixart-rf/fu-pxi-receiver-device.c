@@ -114,9 +114,8 @@ fu_pxi_receiver_device_fw_ota_init_new(FuPxiReceiverDevice *device, gsize bufsz,
 	FuPxiReceiverDevice *self = FU_PXI_RECEIVER_DEVICE(device);
 
 	fu_byte_array_append_uint8(ota_cmd, 0X06); /* ota init new command length */
-	fu_byte_array_append_uint8(
-	    ota_cmd,
-	    FU_PXI_DEVICE_CMD_FW_OTA_INIT_NEW);			      /* ota ota init new op code */
+	fu_byte_array_append_uint8(ota_cmd,
+				   FU_PXI_DEVICE_CMD_FW_OTA_INIT_NEW); /* ota init new op code */
 	fu_byte_array_append_uint32(ota_cmd, bufsz, G_LITTLE_ENDIAN); /* fw size */
 	fu_byte_array_append_uint8(ota_cmd, 0x0);		      /* ota setting */
 	g_byte_array_append(ota_cmd, fw_version, sizeof(fw_version)); /* ota version */
@@ -696,7 +695,7 @@ fu_pxi_receiver_device_get_peripheral_num(FuPxiReceiverDevice *device,
 	fu_byte_array_append_uint8(ota_cmd, 0x1); /* ota init new command length */
 	fu_byte_array_append_uint8(
 	    ota_cmd,
-	    FU_PXI_DEVICE_CMD_FW_OTA_GET_NUM_OF_MODELS); /* ota ota init new op code */
+	    FU_PXI_DEVICE_CMD_FW_OTA_GET_NUM_OF_MODELS); /* ota init new op code */
 
 	self->sn++;
 	if (!fu_pxi_composite_receiver_cmd(FU_PXI_DEVICE_CMD_FW_OTA_GET_NUM_OF_MODELS,
