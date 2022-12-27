@@ -178,7 +178,7 @@ fu_ifwi_fpt_firmware_parse(FuFirmware *firmware,
 			return FALSE;
 		fu_firmware_set_idx(img, partition_name);
 
-		/* convert to text form for conveneience */
+		/* convert to text form for convenience */
 		id = fu_strsafe((const gchar *)&partition_name, sizeof(partition_name));
 		if (id != NULL)
 			fu_firmware_set_id(img, id);
