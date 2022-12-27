@@ -103,7 +103,7 @@ G_DECLARE_FINAL_TYPE(FuHwids, fu_hwids, FU, HWIDS, GObject)
 /**
  * FU_HWIDS_KEY_PRODUCT_NAME:
  *
- * The HwID key for the top-level product product name.
+ * The HwID key for the top-level product name.
  *
  * Since: 1.3.7
  **/
