@@ -156,7 +156,7 @@ class Builder:
         return os.path.join(self.builddir, "{}".format(dst))
 
     def link(self, objs: List[str], dst: str) -> None:
-        """link multiple obects into a binary"""
+        """link multiple objects into a binary"""
         argv = [self.cxx] + self.cxxflags
         for obj in objs:
             if obj.startswith("-"):
