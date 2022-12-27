@@ -2030,7 +2030,7 @@ fu_firmware_ihex_func(void)
 	g_assert_true(ret);
 
 	/* export a ihex file (which will be slightly different due to
-	 * non-continous regions being expanded */
+	 * non-continuous regions being expanded */
 	data_hex = fu_firmware_write(firmware, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(data_hex);
