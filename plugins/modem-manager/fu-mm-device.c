@@ -88,10 +88,12 @@ struct _FuMmDevice {
 	/* firehose update handling */
 	gchar *port_qcdm;
 	gchar *port_edl;
+	gchar *firehose_prog_file;
 	FuSaharaLoader *sahara_loader;
 #if MM_CHECK_VERSION(1, 17, 2)
 	FuFirehoseUpdater *firehose_updater;
 #endif
+
 	/* for sahara */
 	FuUsbDevice *usb_device;
 
@@ -1473,11 +1475,19 @@ fu_mm_copy_firehose_prog(FuMmDevice *self, GBytes *prog, GError **error)
 	g_autofree gchar *qcom_fw_dir = NULL;
 	g_autofree gchar *firehose_file_path = NULL;
 
+	if (self->firehose_prog_file == NULL) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_FOUND,
+			    "Firehose prog filename is not set for the device");
+		return FALSE;
+	}
+
 	qcom_fw_dir = g_build_filename(self->firmware_path, "qcom", NULL);
 	if (!fu_path_mkdir_parent(qcom_fw_dir, error))
 		return FALSE;
 
-	firehose_file_path = g_build_filename(qcom_fw_dir, "prog_firehose_sdx24.mbn", NULL);
+	firehose_file_path = g_build_filename(qcom_fw_dir, self->firehose_prog_file, NULL);
 
 	if (!fu_bytes_set_contents(firehose_file_path, prog, error))
 		return FALSE;
@@ -1678,6 +1688,11 @@ fu_mm_device_set_quirk_kv(FuDevice *device, const gchar *key, const gchar *value
 	/* load from quirks */
 	if (g_strcmp0(key, "ModemManagerBranchAtCommand") == 0) {
 		self->branch_at = g_strdup(value);
+		return TRUE;
+	}
+
+	if (g_strcmp0(key, "ModemManagerFirehoseProgFile") == 0) {
+		self->firehose_prog_file = g_strdup(value);
 		return TRUE;
 	}
 
@@ -1947,6 +1962,7 @@ fu_mm_device_finalize(GObject *object)
 	g_free(self->inhibition_uid);
 	g_free(self->firmware_path);
 	g_free(self->restore_firmware_path);
+	g_free(self->firehose_prog_file);
 	G_OBJECT_CLASS(fu_mm_device_parent_class)->finalize(object);
 }
 

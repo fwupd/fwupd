@@ -58,3 +58,13 @@ ModemManagerBranchAtCommand = AT+GETFWBRANCH
 [USB\VID_05C6&PID_9008]
 Summary = Qualcomm based modems in EDL (sahara)
 Plugin = modem_manager
+
+# Quectel EM120 firehose prog file
+[PCI\VID_1EAC&PID_1001]
+Summary = Quectel EM120 firehose prog file
+ModemManagerFirehoseProgFile = prog_firehose_sdx24.mbn
+
+# Quectel EM160 firehose prog file
+[PCI\VID_1EAC&PID_1002]
+Summary = Quectel EM160 firehose prog file
+ModemManagerFirehoseProgFile = prog_firehose_sdx24.mbn
