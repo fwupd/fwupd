@@ -201,7 +201,7 @@ fu_dell_dock_tbt_setup(FuDevice *device, GError **error)
 	    fu_version_compare(version, MIN_NVM, FWUPD_VERSION_FORMAT_PAIR) < 0) {
 		fu_device_set_update_error(
 		    device,
-		    "Updates over I2C are disabled due to insuffient NVM version");
+		    "Updates over I2C are disabled due to insufficient NVM version");
 		return TRUE;
 	}
 	/* minimum Hub2 version that supports this feature */
