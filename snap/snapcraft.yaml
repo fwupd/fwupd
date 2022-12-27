@@ -174,7 +174,7 @@ parts:
     prime:
       # we explicitly don't want /usr/bin/gpgconf
       # this will cause gpgme to error finding it
-      # but that also avoids trying to use non-existent
+      # but that also avoids trying to use nonexistent
       # /usr/bin/gpg2
       - -usr/bin
       - -usr/sbin
