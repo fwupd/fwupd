@@ -3735,7 +3735,7 @@ fu_progress_child_finished(void)
 	child = fu_progress_get_child(progress);
 	fu_progress_set_id(child, G_STRLOC);
 	fu_progress_set_steps(child, 3);
-	/* some imaginary igorable error */
+	/* some imaginary ignorable error */
 
 	/* parent step done after child finish */
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_CHILD_FINISHED);
