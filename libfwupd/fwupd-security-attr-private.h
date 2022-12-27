@@ -33,7 +33,7 @@ G_BEGIN_DECLS
 /**
  * FWUPD_SECURITY_ATTR_ID_FWUPD_ATTESTATION:
  *
- * Host Security ID attribute for attesation
+ * Host Security ID attribute for attestation
  *
  * Since: 1.5.0
  **/
