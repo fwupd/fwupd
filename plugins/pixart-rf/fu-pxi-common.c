@@ -130,8 +130,8 @@ fu_pxi_composite_receiver_cmd(guint8 opcode,
 	}
 
 	/* append ota dispatch header */
-	fu_byte_array_append_uint8(wireless_mod_cmd, opcode); /* wirelss module ota op code */
-	fu_byte_array_append_uint8(wireless_mod_cmd, ota_sn); /* wirelss module ota command sn */
+	fu_byte_array_append_uint8(wireless_mod_cmd, opcode); /* wireless module ota op code */
+	fu_byte_array_append_uint8(wireless_mod_cmd, ota_sn); /* wireless module ota command sn */
 
 	/* append ota command length and content  */
 	for (guint idx = 0; idx < ota_cmd->len; idx++)
