@@ -170,7 +170,7 @@ This *does not* stop the kernel firmware-attributes API from working.  So a dete
 
 The Linux kernel will offer the following types of BIOS settings:
 
-* Enumeration: The setting will only accept a limiited list of possible values
+* Enumeration: The setting will only accept a limited list of possible values
 * Integer: The setting will will accept a limited range of integer values
 * String: The setting will accept a limited length UTF-8 string
 
