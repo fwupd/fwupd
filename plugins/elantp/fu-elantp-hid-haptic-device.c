@@ -351,7 +351,7 @@ fu_elantp_hid_haptic_device_write_checksum_cb(FuDevice *parent, gpointer user_da
 
 	if (!fu_elantp_hid_haptic_device_write_cmd(parent,
 						   ETP_CMD_I2C_EEPROM_SETTING,
-						   ETP_CMD_I2C_EEPROM_WRITE_INFOMATION,
+						   ETP_CMD_I2C_EEPROM_WRITE_INFORMATION,
 						   error)) {
 		g_prefix_error(error, "failed to write haptic info: ");
 		return FALSE;
@@ -366,7 +366,7 @@ fu_elantp_hid_haptic_device_write_checksum_cb(FuDevice *parent, gpointer user_da
 	}
 	value = fu_memread_uint16(buf, G_LITTLE_ENDIAN);
 
-	if ((value & 0xFFFF) != ETP_CMD_I2C_EEPROM_WRITE_INFOMATION) {
+	if ((value & 0xFFFF) != ETP_CMD_I2C_EEPROM_WRITE_INFORMATION) {
 		g_set_error(error,
 			    G_IO_ERROR,
 			    G_IO_ERROR_FAILED,
