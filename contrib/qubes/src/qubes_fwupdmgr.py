@@ -128,7 +128,7 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
             raise Exception("Manual metadata refresh failed!!!")
 
     def _get_dom0_updates(self):
-        """Gathers infromations about available updates."""
+        """Gathers information about available updates."""
         cmd_get_dom0_updates = [FWUPDMGR, "--json", "get-updates"]
         p = subprocess.Popen(cmd_get_dom0_updates, stdout=subprocess.PIPE)
         self.dom0_updates_info = p.communicate()[0].decode()
