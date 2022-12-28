@@ -62,6 +62,7 @@ plugins = [
   'iommu',
   'jabra',
   'jabra-gnp',
+  'kinetic-dp',
   'lenovo-thinklmi',
   'linux-lockdown',
   'linux-sleep',
