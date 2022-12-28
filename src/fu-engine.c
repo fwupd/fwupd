@@ -8398,6 +8398,12 @@ fu_engine_init(FuEngine *self)
 
 	/* setup Jcat context */
 	self->jcat_context = jcat_context_new();
+#if LIBJCAT_CHECK_VERSION(0, 1, 13)
+	jcat_context_blob_kind_allow(self->jcat_context, JCAT_BLOB_KIND_SHA256);
+	jcat_context_blob_kind_allow(self->jcat_context, JCAT_BLOB_KIND_SHA512);
+	jcat_context_blob_kind_allow(self->jcat_context, JCAT_BLOB_KIND_PKCS7);
+	jcat_context_blob_kind_allow(self->jcat_context, JCAT_BLOB_KIND_GPG);
+#endif
 	keyring_path = fu_path_from_kind(FU_PATH_KIND_LOCALSTATEDIR_PKG);
 	jcat_context_set_keyring_path(self->jcat_context, keyring_path);
 	sysconfdir = fu_path_from_kind(FU_PATH_KIND_SYSCONFDIR);
