@@ -72,6 +72,12 @@ fu_cabinet_init(FuCabinet *self)
 	self->builder = xb_builder_new();
 	self->jcat_file = jcat_file_new();
 	self->jcat_context = jcat_context_new();
+#if LIBJCAT_CHECK_VERSION(0, 1, 13)
+	jcat_context_blob_kind_allow(self->jcat_context, JCAT_BLOB_KIND_SHA256);
+	jcat_context_blob_kind_allow(self->jcat_context, JCAT_BLOB_KIND_SHA512);
+	jcat_context_blob_kind_allow(self->jcat_context, JCAT_BLOB_KIND_PKCS7);
+	jcat_context_blob_kind_allow(self->jcat_context, JCAT_BLOB_KIND_GPG);
+#endif
 }
 
 /**
