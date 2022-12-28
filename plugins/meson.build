@@ -64,6 +64,7 @@ plugins = {
   'iommu': false,
   'jabra': false,
   'jabra-gnp': false,
+  'kinetic-dp': false,
   'lenovo-thinklmi': false,
   'linux-display': false,
   'linux-lockdown': false,
