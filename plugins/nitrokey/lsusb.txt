@@ -72,7 +72,7 @@ Device Descriptor:
         bVoltageSupport         2  3.0V 
         dwProtocols             2  T=1
         dwDefaultClock       3600
-        dwMaxiumumClock      3600
+        dwMaximumClock       3600
         bNumClockSupported      0
         dwDataRate           9677 bps
         dwMaxDataRate      116129 bps

@@ -18,7 +18,7 @@ G_DEFINE_TYPE(FuUsbDeviceMsDs20, fu_usb_device_ms_ds20, FU_TYPE_USB_DEVICE_DS20)
 #define USB_OS_20_SET_HEADER_DESCRIPTOR	      0x00
 #define USB_OS_20_SUBSET_HEADER_CONFIGURATION 0x01
 #define USB_OS_20_SUBSET_HEADER_FUNCTION      0x02
-#define USB_OS_20_FEATURE_COMPATBLE_ID	      0x03
+#define USB_OS_20_FEATURE_COMPATIBLE_ID	      0x03
 #define USB_OS_20_FEATURE_REG_PROPERTY	      0x04
 #define USB_OS_20_FEATURE_MIN_RESUME_TIME     0x05
 #define USB_OS_20_FEATURE_MODEL_ID	      0x06
@@ -34,8 +34,8 @@ fu_usb_device_os20_type_to_string(guint16 type)
 		return "subset-header-configuration";
 	if (type == USB_OS_20_SUBSET_HEADER_FUNCTION)
 		return "subset-header-function";
-	if (type == USB_OS_20_FEATURE_COMPATBLE_ID)
-		return "feature-compatble-id";
+	if (type == USB_OS_20_FEATURE_COMPATIBLE_ID)
+		return "feature-compatible-id";
 	if (type == USB_OS_20_FEATURE_REG_PROPERTY)
 		return "feature-reg-property";
 	if (type == USB_OS_20_FEATURE_MIN_RESUME_TIME)

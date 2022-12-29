@@ -921,7 +921,7 @@ fu_dell_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 
 	if (self->smi_obj->fake_smbios) {
 		g_debug("Called with fake SMBIOS implementation. "
-			"We're ignoring test for SBMIOS table and ESRT. "
+			"We're ignoring test for SMBIOS table and ESRT. "
 			"Individual calls will need to be properly staged.");
 		return TRUE;
 	}

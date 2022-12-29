@@ -220,7 +220,7 @@ fu_fit_firmware_verify_image(FuFirmware *firmware,
 	if (!fu_fdt_image_get_attr_str(FU_FDT_IMAGE(img), "description", NULL, error))
 		return FALSE;
 
-	/* if has data data */
+	/* if has data */
 	blob = fu_fdt_image_get_attr(FU_FDT_IMAGE(img), FU_FIT_FIRMWARE_ATTR_DATA, NULL);
 	if (blob == NULL) {
 		guint32 data_size = 0x0;
@@ -244,7 +244,7 @@ fu_fit_firmware_verify_image(FuFirmware *firmware,
 	if (g_getenv("FU_FDT_FIRMWARE_VERBOSE") != NULL)
 		fu_dump_bytes(G_LOG_DOMAIN, "data", blob);
 
-	/* verify any hashes we recoginise */
+	/* verify any hashes we recognize */
 	if ((flags & FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM) == 0) {
 		g_autoptr(GPtrArray) img_hashes = fu_firmware_get_images(img);
 		for (guint i = 0; i < img_hashes->len; i++) {

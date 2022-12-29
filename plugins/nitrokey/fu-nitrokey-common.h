@@ -53,7 +53,7 @@ typedef struct __attribute__((packed)) {
 	guint8 NewSDCardFound;
 	guint8 SDFillWithRandomChars;
 	guint32 ActiveSD_CardID;
-	guint8 VolumeActiceFlag;
+	guint8 VolumeActiveFlag;
 	guint8 NewSmartCardFound;
 	guint8 UserPwRetryCount;
 	guint8 AdminPwRetryCount;

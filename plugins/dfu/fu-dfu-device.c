@@ -679,7 +679,7 @@ fu_dfu_device_ensure_interface(FuDfuDevice *self, GError **error)
  * @self: a #FuDfuDevice
  * @error: (nullable): optional return location for an error
  *
- * Refreshes the cached properties on the DFU device. If there are any transers
+ * Refreshes the cached properties on the DFU device. If there are any transfers
  * in progress they are cancelled, and if there are any pending errors they are
  * cancelled.
  *

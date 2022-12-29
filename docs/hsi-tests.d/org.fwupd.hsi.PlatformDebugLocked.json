@@ -12,7 +12,7 @@
     "If using a debug unlocked part, the platform's overall security will be decreased as an attacker may have elevated access to registers and memory within the system and can potentially enable persistent backdoors."
   ],
   "failure-results" : {
-    "not-locked" : "device is not not locked"
+    "not-locked" : "device is not locked"
   },
   "success-results" : {
     "locked" : "device is locked"

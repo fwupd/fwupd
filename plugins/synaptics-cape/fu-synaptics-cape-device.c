@@ -261,7 +261,7 @@ fu_synaptics_cape_device_sendcmd_ex(FuSynapticsCapeDevice *self,
 	if (delay_us > 0)
 		g_usleep(delay_us);
 
-	/* waits for the command to complete. There are two appraoches to get status from device:
+	/* waits for the command to complete. There are two approaches to get status from device:
 	 *  1. gets IN_REPORT over interrupt endpoint. device won't reply until a command operation
 	 *     has completed. This works only on devices support interrupt endpoint.
 	 *  2. polls GET_REPORT over control endpoint. device will return 'reply==0' before a

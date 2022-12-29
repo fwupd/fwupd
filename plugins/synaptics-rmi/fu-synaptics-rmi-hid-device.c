@@ -41,7 +41,7 @@ G_DEFINE_TYPE(FuSynapticsRmiHidDevice, fu_synaptics_rmi_hid_device, FU_TYPE_SYNA
 #define HID_RMI4_WRITE_OUTPUT_ADDR     2
 #define HID_RMI4_WRITE_OUTPUT_DATA     4
 #define HID_RMI4_FEATURE_MODE	       1
-#define HID_RMI4_ATTN_INTERUPT_SOURCES 1
+#define HID_RMI4_ATTN_INTERRUPT_SOURCES 1
 #define HID_RMI4_ATTN_DATA	       2
 
 /*
@@ -261,7 +261,7 @@ fu_synaptics_rmi_hid_device_wait_for_attr(FuSynapticsRmiDevice *rmi_device,
 
 		/* read from fd */
 		res = fu_io_channel_read_byte_array(self->io_channel,
-						    HID_RMI4_ATTN_INTERUPT_SOURCES + 1,
+						    HID_RMI4_ATTN_INTERRUPT_SOURCES + 1,
 						    timeout_ms,
 						    FU_IO_CHANNEL_FLAG_NONE,
 						    &error_local);
@@ -279,7 +279,7 @@ fu_synaptics_rmi_hid_device_wait_for_attr(FuSynapticsRmiDevice *rmi_device,
 				     80,
 				     FU_DUMP_FLAGS_NONE);
 		}
-		if (res->len < HID_RMI4_ATTN_INTERUPT_SOURCES + 1) {
+		if (res->len < HID_RMI4_ATTN_INTERRUPT_SOURCES + 1) {
 			g_debug("attr: ignoring small read of %u", res->len);
 			continue;
 		}
@@ -290,12 +290,12 @@ fu_synaptics_rmi_hid_device_wait_for_attr(FuSynapticsRmiDevice *rmi_device,
 		}
 
 		/* success */
-		if (source_mask & res->data[HID_RMI4_ATTN_INTERUPT_SOURCES])
+		if (source_mask & res->data[HID_RMI4_ATTN_INTERRUPT_SOURCES])
 			return TRUE;
 
 		/* wrong mask */
 		g_debug("source mask did not match: 0x%x",
-			res->data[HID_RMI4_ATTN_INTERUPT_SOURCES]);
+			res->data[HID_RMI4_ATTN_INTERRUPT_SOURCES]);
 	}
 
 	/* urgh */

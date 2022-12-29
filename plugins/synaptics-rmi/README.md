@@ -27,7 +27,7 @@ The vendor ID is set from the udev vendor, in this instance set to `HIDRAW:0x06C
 ## Firmware Format
 
 The daemon will decompress the cabinet archive and extract a firmware blob in
-a proprietary (but docucumented) file format.
+a proprietary (but documented) file format.
 
 This plugin supports the following protocol ID:
 

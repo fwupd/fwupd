@@ -78,7 +78,7 @@ Update protocol: `com.qualcomm.mbim_qdu`
 
 If the device supports the 'firehose' update method, it should have QCDM port
 exposed and the contents of the CAB file should contain 'firehose-rawprogram.xml'.
-The device is then switched to the emergencly download mode (EDL) and flashed
+The device is then switched to the emergency download mode (EDL) and flashed
 with files described in 'firehose-rawprogram.xml'.
 
 Update protocol: `com.qualcomm.firehose`

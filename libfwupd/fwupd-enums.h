@@ -418,7 +418,7 @@ typedef enum {
 /**
  * FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN:
  *
- * The device is updatable but is currently inhbitied from updates in the client.
+ * The device is updatable but is currently inhibited from updates in the client.
  * Reasons include but are not limited to low power or requiring reboot from a previous update.
  *
  * Since: 1.4.1

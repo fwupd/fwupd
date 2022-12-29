@@ -38,7 +38,7 @@ repos:
       language: script
       entry: ./contrib/ci/check-deprecated.sh
     - id: check-null-false-returns
-      name: check for null / false return mistmatch
+      name: check for null / false return mismatch
       language: script
       entry: ./contrib/ci/check-null-false-returns.py
     - id: check-potfiles

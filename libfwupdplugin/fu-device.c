@@ -531,7 +531,7 @@ fu_device_get_possible_plugins(FuDevice *self)
  * @plugin: a plugin name, e.g. `dfu`
  *
  * Adds a plugin name to the list of plugins that *might* be able to handle this
- * device. This is tyically called from a quirk handler.
+ * device. This is typically called from a quirk handler.
  *
  * Duplicate plugin names are ignored.
  *
@@ -2861,7 +2861,7 @@ fu_device_ensure_inhibits(FuDevice *self)
 			fu_device_add_flag(self, FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN);
 		}
 
-		/* update update error */
+		/* update the update error */
 		for (GList *l = values; l != NULL; l = l->next) {
 			FuDeviceInhibit *inhibit = (FuDeviceInhibit *)l->data;
 			g_ptr_array_add(reasons, inhibit->reason);
@@ -3285,7 +3285,7 @@ fu_device_set_update_request_id(FuDevice *self, const gchar *update_request_id)
  * fu_device_get_proxy_guid:
  * @self: a #FuDevice
  *
- * Gets the proxy GUID device, which which is set to let the engine match up the
+ * Gets the proxy GUID device, which is set to let the engine match up the
  * proxy between plugins.
  *
  * Returns: a string value, or %NULL if never set.

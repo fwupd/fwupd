@@ -170,8 +170,8 @@ This *does not* stop the kernel firmware-attributes API from working.  So a dete
 
 The Linux kernel will offer the following types of BIOS settings:
 
-* Enumeration: The setting will only accept a limiited list of possible values
-* Integer: The setting will will accept a limited range of integer values
+* Enumeration: The setting will only accept a limited list of possible values
+* Integer: The setting will accept a limited range of integer values
 * String: The setting will accept a limited length UTF-8 string
 
 All of those setting types are accepted by fwupd. It is expected that drivers or firmware will validate the input, but where possible fwupd will do validation of the input to give better error messages and avoid failures.

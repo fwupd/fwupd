@@ -464,7 +464,7 @@ fu_nordic_hid_cfg_channel_add_peers(FuNordicHidCfgChannel *self, GError **error)
 			g_debug("detected peer: 0x%02x", res->data[8]);
 
 		peer = fu_nordic_hid_cfg_channel_new(res->data[8]);
-		/* prohibit to close close parent's communication descriptor */
+		/* prohibit to close parent's communication descriptor */
 		fu_device_add_internal_flag(FU_DEVICE(peer),
 					    FU_DEVICE_INTERNAL_FLAG_USE_PARENT_FOR_OPEN);
 		/* probe&setup are the part of adding child */
@@ -522,7 +522,7 @@ fu_nordic_hid_cfg_channel_get_bl_name(FuNordicHidCfgChannel *self, GError **erro
 			    error,
 			    G_IO_ERROR,
 			    G_IO_ERROR_INVALID_DATA,
-			    "bootloader in qiurk file is '%s' while the board is supporting '%s'",
+			    "bootloader in quirk file is '%s' while the board is supporting '%s'",
 			    self->bl_name,
 			    g_strndup((const gchar *)res->data, res->data_len));
 			return FALSE;

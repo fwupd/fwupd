@@ -575,7 +575,7 @@ fu_dell_dock_ec_get_dock_data(FuDevice *device, GError **error)
 	if (!fu_dell_dock_get_ec_status(device, &status, error))
 		return FALSE;
 
-	/* make sure this hardware spin matches our expecations */
+	/* make sure this hardware spin matches our expectations */
 	if (self->data->board_id >= self->board_min) {
 		if (status != FW_UPDATE_IN_PROGRESS) {
 			fu_dell_dock_ec_set_board(device);

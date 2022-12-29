@@ -63,7 +63,7 @@ typedef enum {
 				* value = bit0 - start, bit1 - stop, bit3 - start on idle,
 				* bits[14:8] - target address, bit15 - scbIndex. length = 0 the
 				* data	is provided over the bulk endpoints */
-	CY_I2C_READ_CMD,       /* rerform I2C read operation.
+	CY_I2C_READ_CMD,       /* perform I2C read operation.
 				* value = bit0 - start, bit1 - stop, bit2 - Nak last byte,
 				* bit3 - start on idle, bits[14:8] - target address, bit15 - scbIndex,
 				* length = 0. The data is provided over the bulk endpoints */
@@ -227,7 +227,7 @@ typedef enum {
 	CY_PD_REG_EVENT_MASK = 0x48,
 	CY_PD_REG_RESPONSE_ADDR = 0x7E,
 	CY_PD_REG_BOOTDATA_MEMORY_ADDR = 0x80,
-	CY_PD_REG_FWDATA_MEMEORY_ADDR = 0xC0,
+	CY_PD_REG_FWDATA_MEMORY_ADDR = 0xC0,
 } CyPDReg;
 
 #define CY_PD_GET_SILICON_ID_CMD_SIG	   0x53
@@ -319,7 +319,7 @@ typedef enum {
 	CY_PD_HARD_RESET_SENT,
 	CY_PD_SOFT_RESET_SENT,
 	CY_PD_CABLE_RESET_SENT,
-	CY_PD_SOURCE_DISBALED_STATE_ENTERED,
+	CY_PD_SOURCE_DISABLED_STATE_ENTERED,
 	CY_PD_SENDER_RESPONSE_TIMER_TIMEOUT,
 	CY_PD_NO_VDM_RESPONSE_RECEIVED
 } CyPDResp;

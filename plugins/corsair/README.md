@@ -18,7 +18,7 @@ device as a child. Difference in behavior is handled by private flags.
 
 FuCorsairBp contains low-level protocol related routines. Device objects should
 call correct versions of these routines in order to update firmware. Correct
-routines chosen by device quirsks and private flags.
+routines chosen by device quirks and private flags.
 
 ## Wired mice update behavior
 

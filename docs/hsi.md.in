@@ -181,9 +181,9 @@ In some cases security level measurements will only be possible on systems with 
 The long term goal is to increase the `HSI:x` level of systems being sold to consumers.
 By making some of the `HSI:x` attributes part of the LVFS uploaded report we can allow users to compare vendors and models before purchasing hardware.
 
-<a id="ommissions"></a>
+<a id="omissions"></a>
 
-## [Intentional Omissions](#ommissions)
+## [Intentional Omissions](#omissions)
 
 ### Intel SGX
 

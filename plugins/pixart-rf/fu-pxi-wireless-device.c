@@ -378,9 +378,8 @@ fu_pxi_wireless_device_fw_ota_init_new(FuDevice *device, gsize bufsz, GError **e
 		return FALSE;
 
 	fu_byte_array_append_uint8(ota_cmd, 0X06); /* ota init new command length */
-	fu_byte_array_append_uint8(
-	    ota_cmd,
-	    FU_PXI_DEVICE_CMD_FW_OTA_INIT_NEW);			      /* ota ota init new op code */
+	fu_byte_array_append_uint8(ota_cmd,
+				   FU_PXI_DEVICE_CMD_FW_OTA_INIT_NEW); /* ota init new op code */
 	fu_byte_array_append_uint32(ota_cmd, bufsz, G_LITTLE_ENDIAN); /* fw size */
 	fu_byte_array_append_uint8(ota_cmd, 0x0);		      /* ota setting */
 	g_byte_array_append(ota_cmd, fw_version, sizeof(fw_version)); /* ota version */

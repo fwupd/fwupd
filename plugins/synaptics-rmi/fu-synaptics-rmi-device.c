@@ -716,7 +716,7 @@ fu_synaptics_rmi_device_wait_for_idle(FuSynapticsRmiDevice *self,
 
 	/* if for some reason we are not getting attention reports for HID devices
 	 * then we can still continue after the timeout and read F34 status
-	 * but if we have to wait for the timeout to ellapse every time then this
+	 * but if we have to wait for the timeout to elapse every time then this
 	 * will be slow */
 	if (priv->f34->function_version == 0x1) {
 		res = fu_synaptics_rmi_device_read(self, priv->flash.status_addr, 0x2, error);

@@ -1000,7 +1000,7 @@ fu_udev_device_get_vendor(FuUdevDevice *self)
  * fu_udev_device_get_model:
  * @self: a #FuUdevDevice
  *
- * Gets the device device code.
+ * Gets the device model code.
  *
  * Returns: a vendor code, or 0 if unset or invalid
  *

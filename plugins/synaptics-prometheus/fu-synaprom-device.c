@@ -20,7 +20,7 @@ struct _FuSynapromDevice {
 	guint8 vminor;
 };
 
-/* vendor-specific USB control requets to write DFT word (Hayes) */
+/* vendor-specific USB control requests to write DFT word (Hayes) */
 #define FU_SYNAPROM_USB_CTRLREQUEST_VENDOR_WRITEDFT 21
 
 /* endpoint addresses for command and fingerprint data */

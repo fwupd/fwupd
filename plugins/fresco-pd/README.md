@@ -2,12 +2,12 @@
 
 ## Introduction
 
-This plugin is used to update Power Devlivery devices by Fresco.
+This plugin is used to update Power Delivery devices by Fresco.
 
 ## Firmware Format
 
 The daemon will decompress the cabinet archive and extract a firmware blob in
-an unspecifed binary format.
+an unspecified binary format.
 
 This plugin supports the following protocol ID:
 

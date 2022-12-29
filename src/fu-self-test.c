@@ -3995,7 +3995,7 @@ fu_memcpy_func(gconstpointer user_data)
 	g_assert_false(ret);
 	g_clear_error(&error);
 
-	/* read past past the end of dst */
+	/* read past the end of dst */
 	ret = fu_memcpy_safe(dst, sizeof(dst), 0x0, src, sizeof(src), 0x0, 6, &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_READ);
 	g_assert_false(ret);
@@ -4930,7 +4930,7 @@ main(int argc, char **argv)
 	g_test_add_data_func("/fwupd/plugin-list", self, fu_plugin_list_func);
 	g_test_add_data_func("/fwupd/plugin-list{depsolve}", self, fu_plugin_list_depsolve_func);
 	g_test_add_func("/fwupd/spawn", fu_spawn_func);
-	g_test_add_func("/fwupd/spawn-timeou)", fu_spawn_timeout_func);
+	g_test_add_func("/fwupd/spawn-timeout", fu_spawn_timeout_func);
 	g_test_add_func("/fwupd/common{cab-success}", fu_common_store_cab_func);
 	g_test_add_func("/fwupd/common{cab-success-artifact}", fu_common_store_cab_artifact_func);
 	g_test_add_func("/fwupd/common{cab-success-unsigned}", fu_common_store_cab_unsigned_func);

@@ -224,7 +224,7 @@ fu_igsc_aux_firmware_parse(FuFirmware *firmware,
 	if (fw_manifest == NULL)
 		return FALSE;
 
-	/* parse all the manifets extensions */
+	/* parse all the manifest extensions */
 	imgs = fu_firmware_get_images(fw_manifest);
 	for (guint i = 0; i < imgs->len; i++) {
 		FuFirmware *img = g_ptr_array_index(imgs, i);
