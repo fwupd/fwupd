@@ -185,6 +185,9 @@ Vendor = Winbond
 [CFI\FLASHID_EF3010]
 Name = W25X05CL
 FirmwareSizeMax = 0x10000
+[CFI\FLASHID_EF3011]
+Name = W25X10CL
+FirmwareSizeMax = 0x20000
 [CFI\FLASHID_EF4018]
 Name = W25Q128
 FirmwareSizeMax = 0x1000000
