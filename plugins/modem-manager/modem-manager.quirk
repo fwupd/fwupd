@@ -68,3 +68,8 @@ ModemManagerFirehoseProgFile = prog_firehose_sdx24.mbn
 [PCI\VID_1EAC&PID_1002]
 Summary = Quectel EM160 firehose prog file
 ModemManagerFirehoseProgFile = prog_firehose_sdx24.mbn
+
+# Quectel RM520 firehose prog file
+[PCI\VID_1EAC&PID_1004]
+Summary = Quectel RM520 firehose prog file
+ModemManagerFirehoseProgFile = prog_firehose_sdx6x.elf
