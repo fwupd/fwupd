@@ -1762,6 +1762,7 @@ fu_util_plugin_flag_to_cli_text(FwupdPluginFlags plugin_flag)
 	case FWUPD_PLUGIN_FLAG_NONE:
 	case FWUPD_PLUGIN_FLAG_REQUIRE_HWID:
 	case FWUPD_PLUGIN_FLAG_MODULAR:
+	case FWUPD_PLUGIN_FLAG_MEASURE_SYSTEM_INTEGRITY:
 		return fu_util_term_format(fu_util_plugin_flag_to_string(plugin_flag),
 					   FU_UTIL_TERM_COLOR_GREEN);
 	case FWUPD_PLUGIN_FLAG_DISABLED:
