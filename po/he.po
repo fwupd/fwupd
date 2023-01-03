@@ -5,7 +5,7 @@
 # Translators:
 # dhead666 <myfoolishgames@gmail.com>, 2015
 # gk <genghiskhan@gmx.ca>, 2015
-# Omer I.S. <omeritzicschwartz@gmail.com>, 2021
+# עומר א״ש <omeritzicschwartz@gmail.com>, 2021
 # Yaron Shahrabani <sh.yaron@gmail.com>, 2021
 msgid ""
 msgstr ""
@@ -1449,7 +1449,7 @@ msgstr "לעבור ענף מ־%s אל %s?"
 msgid "Switch the firmware branch on the device"
 msgstr "החלפת ענף הקושחה בהתקן"
 
-#. TRANSLATORS: Must be plugged in to an outlet
+#. TRANSLATORS: Must be plugged into an outlet
 msgid "System requires external power source"
 msgstr "המערכת דורשת מקור חשמל חיצוני"
 

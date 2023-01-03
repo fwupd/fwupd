@@ -1878,7 +1878,7 @@ msgstr "切换分支，从 %s 到 %s？"
 msgid "Switch the firmware branch on the device"
 msgstr "切换设备的固件分支"
 
-#. TRANSLATORS: Must be plugged in to an outlet
+#. TRANSLATORS: Must be plugged into an outlet
 msgid "System requires external power source"
 msgstr "系统需要外接电源"
 

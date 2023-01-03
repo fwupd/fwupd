@@ -103,6 +103,12 @@ msgstr "Aktualizace vestavěného řadiče (EC) v %s"
 msgid "%s Flash Drive Update"
 msgstr "%s aktualizace flash disku"
 
+#. TRANSLATORS: GPU refers to a Graphics Processing Unit, e.g.
+#. * the "video card"
+#, c-format
+msgid "%s GPU Update"
+msgstr "%s aktualizace GPU"
+
 #. TRANSLATORS: Keyboard refers to an input device for typing
 #, c-format
 msgid "%s Keyboard Update"
@@ -845,6 +851,10 @@ msgstr "Zakázat daný vzdálený zdroj"
 #. TRANSLATORS: command line option
 msgid "Display version"
 msgstr "Zobrazit verzi"
+
+#. TRANSLATORS: the OS the release was tested on
+msgid "Distribution"
+msgstr "Distribuce"
 
 #. TRANSLATORS: command line option
 msgid "Do not check for old metadata"
@@ -1947,6 +1957,10 @@ msgstr "V pořádku"
 msgid "OK!"
 msgstr "OK!"
 
+#. TRANSLATORS: the firmware old version
+msgid "Old version"
+msgstr "Stará verze"
+
 #. TRANSLATORS: command line option
 msgid "Only show single PCR value"
 msgstr "Zobrazit pouze jedinou PCR hodnotu"
@@ -2612,7 +2626,7 @@ msgstr "Akumulátor notebooku není dostatečně nabitý, aby aktualizaci bylo m
 msgid "System power is too low to perform the update (%u%%, requires %u%%)"
 msgstr "Akumulátor notebooku není dostatečně nabitý, aby aktualizaci bylo možné provést (%u%%, vyžaduje %u%%)"
 
-#. TRANSLATORS: Must be plugged in to an outlet
+#. TRANSLATORS: Must be plugged into an outlet
 msgid "System requires external power source"
 msgstr "Počítač vyžaduje externí napájení"
 
@@ -2672,6 +2686,15 @@ msgstr "Cíl"
 #. TRANSLATORS: command description
 msgid "Test a device using a JSON manifest"
 msgstr "Vyzkoušet zařízení pomocí JSON manifestu"
+
+#. TRANSLATORS: when the release was tested
+msgid "Tested"
+msgstr "Vyzkoušeno"
+
+#. TRANSLATORS: the %s is a vendor name, e.g. Lenovo
+#, c-format
+msgid "Tested by %s"
+msgstr "Vyzkoušeno výrobcem %s"
 
 #. TRANSLATORS: longer description
 msgid "The Intel Management Engine Key Manifest must be valid so that the device firmware can be trusted by the CPU."
@@ -2820,7 +2843,7 @@ msgstr "Přechodný nezdar"
 msgid "True"
 msgstr "Pravda"
 
-#. TRANSLATORS: We verified the meatdata against the server
+#. TRANSLATORS: We verified the metadata against the server
 msgid "Trusted metadata"
 msgstr "Důvěryhodná metadata"
 
@@ -3065,6 +3088,10 @@ msgstr "Ověřování zapsaného…"
 #. TRANSLATORS: the detected version number of the dbx
 msgid "Version"
 msgstr "Verze"
+
+#. TRANSLATORS: the fwupd version the release was tested on
+msgid "Version[fwupd]"
+msgstr "Verze[fwupd]"
 
 #. TRANSLATORS: this is a prefix on the console
 msgid "WARNING:"

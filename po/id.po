@@ -1920,7 +1920,7 @@ msgstr "Beralih cabang dari %s ke %s?"
 msgid "Switch the firmware branch on the device"
 msgstr "Beralih cabang firmware pada perangkat"
 
-#. TRANSLATORS: Must be plugged in to an outlet
+#. TRANSLATORS: Must be plugged into an outlet
 msgid "System requires external power source"
 msgstr "Sistem membutuhkan sumber daya eksternal"
 

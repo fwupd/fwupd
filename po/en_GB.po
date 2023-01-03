@@ -2790,7 +2790,7 @@ msgstr "Transient failure"
 msgid "True"
 msgstr "True"
 
-#. TRANSLATORS: We verified the meatdata against the server
+#. TRANSLATORS: We verified the metadata against the server
 msgid "Trusted metadata"
 msgstr "Trusted metadata"
 

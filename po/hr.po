@@ -2562,7 +2562,7 @@ msgstr "Energija sustava je preniska za obavljanje nadopune"
 msgid "System power is too low to perform the update (%u%%, requires %u%%)"
 msgstr "energija sustava je preniska za obavljanje nadopune (%u%%, zahtijeva %u%%)"
 
-#. TRANSLATORS: Must be plugged in to an outlet
+#. TRANSLATORS: Must be plugged into an outlet
 msgid "System requires external power source"
 msgstr "Sustav zahtijeva vanjski izvor energije"
 
@@ -2765,7 +2765,7 @@ msgstr "Privremeni kvar"
 msgid "True"
 msgstr "Istina"
 
-#. TRANSLATORS: We verified the meatdata against the server
+#. TRANSLATORS: We verified the metadata against the server
 msgid "Trusted metadata"
 msgstr "Pouzdani metapodaci"
 

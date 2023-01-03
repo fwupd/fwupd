@@ -2277,7 +2277,7 @@ msgstr "Cambia il ramo del firmware sul dispositivo"
 msgid "Sync firmware versions to the host best known configuration"
 msgstr "Sincronizza le versioni del firmware con quelle migliori note dell'host"
 
-#. TRANSLATORS: Must be plugged in to an outlet
+#. TRANSLATORS: Must be plugged into an outlet
 msgid "System requires external power source"
 msgstr "Il sistema richiede una sorgente elettrica esterna"
 
@@ -2433,7 +2433,7 @@ msgstr "Errore transitorio"
 msgid "True"
 msgstr "Vero"
 
-#. TRANSLATORS: We verified the meatdata against the server
+#. TRANSLATORS: We verified the metadata against the server
 msgid "Trusted metadata"
 msgstr "Metadati verificati"
 

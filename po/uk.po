@@ -100,6 +100,12 @@ msgstr "Оновлення для вбудованого контролера %s
 msgid "%s Flash Drive Update"
 msgstr "Оновлення для флеш-диска %s"
 
+#. TRANSLATORS: GPU refers to a Graphics Processing Unit, e.g.
+#. * the "video card"
+#, c-format
+msgid "%s GPU Update"
+msgstr "Оновлення для відеокартки %s"
+
 #. TRANSLATORS: Keyboard refers to an input device for typing
 #, c-format
 msgid "%s Keyboard Update"
@@ -842,6 +848,10 @@ msgstr "Вимикає вказане віддалене сховище"
 #. TRANSLATORS: command line option
 msgid "Display version"
 msgstr "Показати версію"
+
+#. TRANSLATORS: the OS the release was tested on
+msgid "Distribution"
+msgstr "Дистрибутив"
 
 #. TRANSLATORS: command line option
 msgid "Do not check for old metadata"
@@ -1944,6 +1954,10 @@ msgstr "Гаразд"
 msgid "OK!"
 msgstr "Гаразд!"
 
+#. TRANSLATORS: the firmware old version
+msgid "Old version"
+msgstr "Стара версія"
+
 #. TRANSLATORS: command line option
 msgid "Only show single PCR value"
 msgstr "Показувати лише одне значення PCR"
@@ -2609,7 +2623,7 @@ msgstr "Живлення системи на надто низькому рів�
 msgid "System power is too low to perform the update (%u%%, requires %u%%)"
 msgstr "Живлення системи на надто низькому рівні для виконання оновлення (%u%%, має бути принаймні %u%%)"
 
-#. TRANSLATORS: Must be plugged in to an outlet
+#. TRANSLATORS: Must be plugged into an outlet
 msgid "System requires external power source"
 msgstr "Система потребує зовнішнього джерела живлення"
 
@@ -2669,6 +2683,15 @@ msgstr "Ціль"
 #. TRANSLATORS: command description
 msgid "Test a device using a JSON manifest"
 msgstr "Перевірити пристрій за допомогою маніфесту JSON"
+
+#. TRANSLATORS: when the release was tested
+msgid "Tested"
+msgstr "Перевірено"
+
+#. TRANSLATORS: the %s is a vendor name, e.g. Lenovo
+#, c-format
+msgid "Tested by %s"
+msgstr "Перевірено %s"
 
 #. TRANSLATORS: longer description
 msgid "The Intel Management Engine Key Manifest must be valid so that the device firmware can be trusted by the CPU."
@@ -2817,7 +2840,7 @@ msgstr "Проміжна помилка"
 msgid "True"
 msgstr "Так"
 
-#. TRANSLATORS: We verified the meatdata against the server
+#. TRANSLATORS: We verified the metadata against the server
 msgid "Trusted metadata"
 msgstr "Надійні метадані"
 
@@ -3062,6 +3085,10 @@ msgstr "Перевіряємо…"
 #. TRANSLATORS: the detected version number of the dbx
 msgid "Version"
 msgstr "Версія"
+
+#. TRANSLATORS: the fwupd version the release was tested on
+msgid "Version[fwupd]"
+msgstr "Версія[fwupd]"
 
 #. TRANSLATORS: this is a prefix on the console
 msgid "WARNING:"

@@ -437,6 +437,10 @@ msgstr "გამორთულია"
 msgid "Display version"
 msgstr "ვერსის ჩვენება"
 
+#. TRANSLATORS: the OS the release was tested on
+msgid "Distribution"
+msgstr "გავრცელება"
+
 #. TRANSLATORS: ask the user if we can update the metadata
 msgid "Do you want to refresh this remote now?"
 msgstr "გნებავთ ეს დაშორებული ახლა განაახლოთ?"
@@ -666,7 +670,13 @@ msgstr "დადასტურების შემოწმების ტ�
 msgid "Install Duration"
 msgstr "დაყენების დრო"
 
+msgid "Install old version of unsigned system firmware"
+msgstr "მოწყობილობის ხელმოუწერელი მიკროკოდის ძველი ვერსიის დაყენება"
+
 msgid "Install signed device firmware"
+msgstr "მოწყობილობის ხელმოწერილი მიკროკოდის დაყენება"
+
+msgid "Install signed system firmware"
 msgstr "მოწყობილობის ხელმოწერილი მიკროკოდის დაყენება"
 
 #. TRANSLATORS: Install composite firmware on the parent before the child
@@ -674,6 +684,9 @@ msgid "Install to parent device first"
 msgstr "ჯერ მშობელ მოწყობილობაზე დაყენება"
 
 msgid "Install unsigned device firmware"
+msgstr "მოწყობილობის ხელმოუწერელი მიკროკოდის დაყენება"
+
+msgid "Install unsigned system firmware"
 msgstr "მოწყობილობის ხელმოუწერელი მიკროკოდის დაყენება"
 
 #. TRANSLATORS: console message when no Plymouth is installed
@@ -965,6 +978,10 @@ msgstr "პროცენტები დასრულებულია"
 msgid "Perform operation?"
 msgstr "შევასრულო ოპერაცია?"
 
+#. TRANSLATORS: Title: Allows debugging of parts using proprietary hardware
+msgid "Platform Debugging"
+msgstr "პლატფორმის გამართვა"
+
 #. TRANSLATORS: 'recovery key' here refers to a code, rather than a physical
 #. metal thing
 msgid "Please ensure you have the volume recovery key before continuing."
@@ -1170,7 +1187,7 @@ msgstr "სისტემის კვების სიმძლავრე 
 msgid "System power is too low to perform the update (%u%%, requires %u%%)"
 msgstr "სისტემის კვების სიმძლავრე განახლებისთვის მეტისმეტად დაბალია(%u%%, საჭიროა %u%%)"
 
-#. TRANSLATORS: Must be plugged in to an outlet
+#. TRANSLATORS: Must be plugged into an outlet
 msgid "System requires external power source"
 msgstr "სისტემას კვების გარე წყარო ესაჭიროება"
 
@@ -1204,7 +1221,7 @@ msgstr "სამიზნე წერტილი"
 msgid "True"
 msgstr "ჭეშმარიტი"
 
-#. TRANSLATORS: We verified the meatdata against the server
+#. TRANSLATORS: We verified the metadata against the server
 msgid "Trusted metadata"
 msgstr "სანდო მეტამონაცემები"
 

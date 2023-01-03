@@ -901,7 +901,7 @@ msgstr "Résumé"
 msgid "Supported"
 msgstr "Pris en charge"
 
-#. TRANSLATORS: Must be plugged in to an outlet
+#. TRANSLATORS: Must be plugged into an outlet
 msgid "System requires external power source"
 msgstr "Le système nécessite une source d'alimentation externe"
 

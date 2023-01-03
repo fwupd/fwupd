@@ -6,7 +6,7 @@
 # Jiri Grönroos <jiri.gronroos@iki.fi>, 2017-2018,2020-2022
 # Kimmo Kujansuu <mrkujansuu@gmail.com>, 2019-2022
 # Timo Jyrinki <timo.jyrinki@gmail.com>, 2021
-# Ville-Pekka Vainio <vpvainio@iki.fi>, 2021
+# Ville-Pekka Vainio <vpvainio@iki.fi>, 2021,2023
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
@@ -93,7 +93,7 @@ msgstr "Laitteen %s ME-päivitys"
 #. TRANSLATORS: Mouse refers to a handheld input device
 #, c-format
 msgid "%s Mouse Update"
-msgstr "Laitteen%s hiiripäivitys"
+msgstr "Laitteen %s hiiripäivitys"
 
 #. TRANSLATORS: Network Interface refers to the physical
 #. * PCI card, not the logical wired connection
@@ -115,7 +115,7 @@ msgstr "Laitteen %s järjestelmäpäivitys"
 #. TRANSLATORS: TPM refers to a Trusted Platform Module
 #, c-format
 msgid "%s TPM Update"
-msgstr "Laitteen%s TPM-päivitys"
+msgstr "Laitteen %s TPM-päivitys"
 
 #. TRANSLATORS: the Thunderbolt controller is a device that
 #. * has other high speed Thunderbolt devices plugged into it;
@@ -233,7 +233,7 @@ msgstr[1] "%u tuntia"
 msgid "%u local device supported"
 msgid_plural "%u local devices supported"
 msgstr[0] "%upaikallisia laitteita tuettu"
-msgstr[1] "%utuettua paikallista laitetta"
+msgstr[1] "%u tuettua paikallista laitetta"
 
 #. TRANSLATORS: duration in minutes
 #, c-format
@@ -1105,7 +1105,7 @@ msgstr "Liput"
 
 #. TRANSLATORS: command line option
 msgid "Force the action by relaxing some runtime checks"
-msgstr "Pakota toiminta vapauttamalla joitakin ajonaikaisia tarkistuksia"
+msgstr "Pakota toiminta helpottamalla joitakin ajonaikaisia tarkistuksia"
 
 msgid "Force the action ignoring all warnings"
 msgstr "Pakota toimenpide, älä huomioi varoituksia"
@@ -1195,7 +1195,7 @@ msgstr "Korkea"
 
 #. TRANSLATORS: title for host security events
 msgid "Host Security Events"
-msgstr "Koneen suojaustapahtumia"
+msgstr "Koneen suojaustapahtumat"
 
 #. TRANSLATORS: error message for unsupported feature
 #, c-format
@@ -1204,7 +1204,7 @@ msgstr "Host Security ID (HSI) ei ole tuettu"
 
 #. TRANSLATORS: this is a string like 'HSI:2-U'
 msgid "Host Security ID:"
-msgstr "Koneen tietoturvatunniste:"
+msgstr "Koneen tietoturvatunniste (Host Security ID):"
 
 #. TRANSLATORS: Title:
 #. * https://en.wikipedia.org/wiki/Input%E2%80%93output_memory_management_unit
@@ -1259,7 +1259,7 @@ msgid "Install old version of signed system firmware"
 msgstr "Asenna allekirjoitetun järjestelmän firmware:n vanha versio"
 
 msgid "Install old version of unsigned system firmware"
-msgstr "Asenna allekirjoittamattoman järjestelmän firmware:n vanha versio"
+msgstr "Asenna järjestelmän laiteohjelmiston allekirjoittamaton vanha versio"
 
 msgid "Install signed device firmware"
 msgstr "Asenna allekirjoitettu laiteohjelmisto"
@@ -1376,19 +1376,19 @@ msgstr "AVAIN,ARVO"
 
 #. TRANSLATORS: HSI event title
 msgid "Kernel is no longer tainted"
-msgstr "Kernel ei ole enää saastunut"
+msgstr "Ydin ei ole enää saastunut"
 
 #. TRANSLATORS: HSI event title
 msgid "Kernel is tainted"
-msgstr "Kernel on saastunut"
+msgstr "Ydin on saastunut"
 
 #. TRANSLATORS: HSI event title
 msgid "Kernel lockdown disabled"
-msgstr "Kernel lukitus poistettu käytöstä"
+msgstr "Ytimen lukitus on poistettu käytöstä"
 
 #. TRANSLATORS: HSI event title
 msgid "Kernel lockdown enabled"
-msgstr "Kernel lukitus käytössä"
+msgstr "Ytimen lukitus on käytössä"
 
 #. TRANSLATORS: keyring type, e.g. GPG or PKCS7
 msgid "Keyring"
@@ -1418,11 +1418,11 @@ msgstr "Linux-laitetoimittajien laiteohjelmistopalvelu (testattavat laiteohjelmi
 
 #. TRANSLATORS: Title: if it's tainted or not
 msgid "Linux kernel"
-msgstr "Linux kernel"
+msgstr "Linux-ydin"
 
 #. TRANSLATORS: Title: lockdown is a security mode of the kernel
 msgid "Linux kernel lockdown"
-msgstr "Linux kernel lukitus"
+msgstr "Linux-ytimen lukitus"
 
 #. TRANSLATORS: Title: swap space or swap partition
 msgid "Linux swap"
@@ -1539,7 +1539,7 @@ msgstr "Liitä ESP"
 
 #. TRANSLATORS: we're poking around as a power user
 msgid "NOTE: This program may only work correctly as root"
-msgstr "HUOMAA: Ohjelma saattaa toimia oikein vain root käyttäjänä"
+msgstr "HUOMAA: Tämä ohjelma toimii oikein vain root-käyttäjän oikeuksin"
 
 #. TRANSLATORS: Requires a reboot to apply firmware or to reload hardware
 msgid "Needs a reboot after installation"
@@ -1817,7 +1817,7 @@ msgstr "Julkaisuhaara"
 
 #. TRANSLATORS: the exact component on the server
 msgid "Release ID"
-msgstr "Julkaisu ID-tunnus"
+msgstr "Julkaisutunnus"
 
 #. TRANSLATORS: the server the file is coming from
 #. TRANSLATORS: remote identifier, e.g. lvfs-testing
@@ -1874,11 +1874,11 @@ msgstr "Palauta kaikki koneen laitetunnukset"
 
 #. TRANSLATORS: this is shown in the MOTD
 msgid "Run `fwupdmgr get-upgrades` for more information."
-msgstr "Suorita `fwupdmgr get-upgrades` saadaksesi lisätietoja."
+msgstr "Suorita ”fwupdmgr get-upgrades” saadaksesi lisätietoja."
 
 #. TRANSLATORS: this is shown in the MOTD
 msgid "Run `fwupdmgr sync-bkc` to complete this action."
-msgstr "Suorita \"fwupdmgr sync-bkc\" suorittaaksesi tämä toiminto loppuun."
+msgstr "Suorita ”fwupdmgr sync-bkc” suorittaaksesi tämä toiminto loppuun."
 
 #. TRANSLATORS: command line option
 msgid "Run the plugin composite cleanup routine when using install-blob"
@@ -2018,7 +2018,7 @@ msgstr "Näytä liitännäisten täydelliset tiedot"
 
 #. TRANSLATORS: command line option
 msgid "Show the calculated version of the dbx"
-msgstr "Näytä dbx laskettu versio"
+msgstr "Näytä dbx:n laskettu versio"
 
 #. TRANSLATORS: command line option
 msgid "Show the debug log from the last attempted update"
@@ -2046,7 +2046,7 @@ msgstr "Allekirjoita tietoja käyttämällä asiakkaan sertifikaattia"
 
 #. TRANSLATORS: command line option
 msgid "Sign the uploaded data with the client certificate"
-msgstr "Kirjoita lähetetyt tiedot asiakkaan sertifikaatilla"
+msgstr "Allekirjoita lähetetyt tiedot asiakkaan sertifikaatilla"
 
 msgid "Signature"
 msgstr "Allekirjoitus"
@@ -2057,7 +2057,7 @@ msgstr "Koko"
 
 #. TRANSLATORS: the platform secret is stored in the PCRx registers on the TPM
 msgid "Some of the platform secrets may be invalidated when updating this firmware."
-msgstr "Jotkut salaukset voidaan mitätöidä tätä firmware-ohjelmistoa päivitettäessä."
+msgstr "Jotkut alustasalaukset voidaan mitätöidä tätä laiteohjelmistoa päivitettäessä."
 
 #. TRANSLATORS: source (as in code) link
 msgid "Source"
@@ -2093,7 +2093,7 @@ msgstr "Lähteen poistaminen onnistui"
 #. TRANSLATORS: success message -- where 'metadata' is information
 #. * about available firmware on the remote server
 msgid "Successfully downloaded new metadata: "
-msgstr "Uusien metatietojen lataus onnistui:"
+msgstr "Uusien metatietojen lataus onnistui: "
 
 #. TRANSLATORS: success message
 msgid "Successfully enabled and refreshed remote"
@@ -2169,7 +2169,7 @@ msgstr "Vaihda laitteen laiteohjelmiston haaraa"
 msgid "System power is too low to perform the update"
 msgstr "Järjestelmän akun varaus ei riitä päivityksen toteuttamiseen"
 
-#. TRANSLATORS: Must be plugged in to an outlet
+#. TRANSLATORS: Must be plugged into an outlet
 msgid "System requires external power source"
 msgstr "Järjestelmä vaatii ulkoisen virtalähteen"
 
@@ -2183,7 +2183,7 @@ msgstr "TPM PCR0 -jälleenrakennus"
 
 #. TRANSLATORS: HSI event title
 msgid "TPM PCR0 reconstruction is invalid"
-msgstr "TPM PCR0 jälleenrakennus on virheellinen"
+msgstr "TPM PCR0 -jälleenrakennus on virheellinen"
 
 #. TRANSLATORS: Title: PCRs (Platform Configuration Registers) shouldn't be
 #. empty
@@ -2266,7 +2266,7 @@ msgstr "Tämä järjestelmä ei tue laiteohjelmiston asetuksia"
 
 #. TRANSLATORS: this is instructions on how to improve the HSI suffix
 msgid "This system has HSI runtime issues."
-msgstr "Järjestelmässä on HSI-suoritusajan ongelma."
+msgstr "Järjestelmässä on käytönaikainen HSI-ongelma."
 
 #. TRANSLATORS: this is instructions on how to improve the HSI security level
 msgid "This system has a low HSI security level."
@@ -2304,7 +2304,7 @@ msgstr "Ohimenevä häiriö"
 msgid "True"
 msgstr "Tosi"
 
-#. TRANSLATORS: We verified the meatdata against the server
+#. TRANSLATORS: We verified the metadata against the server
 msgid "Trusted metadata"
 msgstr "Luotettu metatieto"
 
@@ -2338,7 +2338,7 @@ msgstr "UEFI-laiteohjelmiston päivitys ei onnistu vanhassa BIOS-tilassa"
 
 #. TRANSLATORS: Title: PK is the 'platform key' for the machine
 msgid "UEFI platform key"
-msgstr "UEFI-alustan avain"
+msgstr "UEFI:n alusta-avain"
 
 #. TRANSLATORS: Title: SB is a way of locking down UEFI
 msgid "UEFI secure boot"
@@ -2444,7 +2444,7 @@ msgstr "Päivitä tallennetut metatiedot nykyisellä sisällöllä"
 
 #. TRANSLATORS: command description
 msgid "Updates all specified devices to latest firmware version, or all devices if unspecified"
-msgstr "Päivittää kaikki määritetyt laitteet uusimpaan firmware versioon tai niihin joita ei ole määritetty"
+msgstr "Päivittää kaikki määritetyt laitteet uusimpaan laiteohjelmistoversioon - tai kaikki laitteet, jos määritystä ei ole annettu"
 
 msgid "Updating"
 msgstr "Päivittää"

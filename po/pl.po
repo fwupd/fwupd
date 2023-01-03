@@ -100,6 +100,12 @@ msgstr "Aktualizacja wbudowanego kontrolera %s"
 msgid "%s Flash Drive Update"
 msgstr "Aktualizacja dysku półprzewodnikowego %s"
 
+#. TRANSLATORS: GPU refers to a Graphics Processing Unit, e.g.
+#. * the "video card"
+#, c-format
+msgid "%s GPU Update"
+msgstr "Aktualizacja karty graficznej %s"
+
 #. TRANSLATORS: Keyboard refers to an input device for typing
 #, c-format
 msgid "%s Keyboard Update"
@@ -838,6 +844,10 @@ msgstr "Wyłącza podane repozytorium"
 #. TRANSLATORS: command line option
 msgid "Display version"
 msgstr "Wyświetla wersję"
+
+#. TRANSLATORS: the OS the release was tested on
+msgid "Distribution"
+msgstr "Dystrybucja"
 
 #. TRANSLATORS: command line option
 msgid "Do not check for old metadata"
@@ -1877,6 +1887,10 @@ msgstr "OK"
 msgid "OK!"
 msgstr "OK!"
 
+#. TRANSLATORS: the firmware old version
+msgid "Old version"
+msgstr "Poprzednia wersja"
+
 #. TRANSLATORS: command line option
 msgid "Only show single PCR value"
 msgstr "Wyświetla tylko jedną wartość PCR"
@@ -2522,7 +2536,7 @@ msgstr "Poziom naładowania komputera jest za niski, aby wykonać aktualizację"
 msgid "System power is too low to perform the update (%u%%, requires %u%%)"
 msgstr "Poziom naładowania komputera jest za niski, aby wykonać aktualizację (%u%%, wymaga %u%%)"
 
-#. TRANSLATORS: Must be plugged in to an outlet
+#. TRANSLATORS: Must be plugged into an outlet
 msgid "System requires external power source"
 msgstr "Komputer wymaga zewnętrznego źródła zasilania"
 
@@ -2578,6 +2592,15 @@ msgstr "Cel"
 #. TRANSLATORS: command description
 msgid "Test a device using a JSON manifest"
 msgstr "Testuje urządzenie za pomocą manifestu JSON"
+
+#. TRANSLATORS: when the release was tested
+msgid "Tested"
+msgstr "Przetestowane"
+
+#. TRANSLATORS: the %s is a vendor name, e.g. Lenovo
+#, c-format
+msgid "Tested by %s"
+msgstr "Przetestowane przez: %s"
 
 #. TRANSLATORS: do not translate the variables marked using $
 msgid "The LVFS is a free service that operates as an independent legal entity and has no connection with $OS_RELEASE:NAME$. Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices. All firmware is provided only by the original equipment manufacturer."
@@ -2706,7 +2729,7 @@ msgstr "Przejściowe niepowodzenie"
 msgid "True"
 msgstr "Prawda"
 
-#. TRANSLATORS: We verified the meatdata against the server
+#. TRANSLATORS: We verified the metadata against the server
 msgid "Trusted metadata"
 msgstr "Zweryfikowane metadane"
 
@@ -2947,6 +2970,10 @@ msgstr "Sprawdzanie poprawności…"
 #. TRANSLATORS: the detected version number of the dbx
 msgid "Version"
 msgstr "Wersja"
+
+#. TRANSLATORS: the fwupd version the release was tested on
+msgid "Version[fwupd]"
+msgstr "Wersja[fwupd]"
 
 #. TRANSLATORS: this is a prefix on the console
 msgid "WARNING:"

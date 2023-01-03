@@ -2114,7 +2114,7 @@ msgstr "Alterna a ramificação do firmware no dispositivo"
 msgid "Sync firmware versions to the host best known configuration"
 msgstr "Sincroniza versões de firmware com a configuração mais conhecida do host"
 
-#. TRANSLATORS: Must be plugged in to an outlet
+#. TRANSLATORS: Must be plugged into an outlet
 msgid "System requires external power source"
 msgstr "O sistema exige uma fonte de alimentação externa"
 
@@ -2262,7 +2262,7 @@ msgstr "Esta ferramenta vai ler e analisar o log de evento de TPM do firmware do
 msgid "Transient failure"
 msgstr "Falha transitória"
 
-#. TRANSLATORS: We verified the meatdata against the server
+#. TRANSLATORS: We verified the metadata against the server
 msgid "Trusted metadata"
 msgstr "Metadados confiável"
 

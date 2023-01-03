@@ -104,6 +104,12 @@ msgstr "%s inbäddad styrenhetsuppdatering"
 msgid "%s Flash Drive Update"
 msgstr "%s-flashenhetsuppdatering"
 
+#. TRANSLATORS: GPU refers to a Graphics Processing Unit, e.g.
+#. * the "video card"
+#, c-format
+msgid "%s GPU Update"
+msgstr "%s GPU-uppdatering"
+
 #. TRANSLATORS: Keyboard refers to an input device for typing
 #, c-format
 msgid "%s Keyboard Update"
@@ -830,6 +836,10 @@ msgstr "Inaktiverar en given fjärrkälla"
 #. TRANSLATORS: command line option
 msgid "Display version"
 msgstr "Visa version"
+
+#. TRANSLATORS: the OS the release was tested on
+msgid "Distribution"
+msgstr "Distribution"
 
 #. TRANSLATORS: command line option
 msgid "Do not check for old metadata"
@@ -1926,6 +1936,10 @@ msgstr "OK"
 msgid "OK!"
 msgstr "OK!"
 
+#. TRANSLATORS: the firmware old version
+msgid "Old version"
+msgstr "Gammal version"
+
 #. TRANSLATORS: command line option
 msgid "Only show single PCR value"
 msgstr "Visa endast enkelt PCR-värde"
@@ -2589,7 +2603,7 @@ msgstr "Systemet har för lite batteri för att utföra uppdateringen"
 msgid "System power is too low to perform the update (%u%%, requires %u%%)"
 msgstr "Systemet har för lite batteri för att utföra uppdateringen (%u%%, behöver %u%%)"
 
-#. TRANSLATORS: Must be plugged in to an outlet
+#. TRANSLATORS: Must be plugged into an outlet
 msgid "System requires external power source"
 msgstr "Systemet kräver extern strömkälla"
 
@@ -2647,6 +2661,15 @@ msgstr "Mål"
 #. TRANSLATORS: command description
 msgid "Test a device using a JSON manifest"
 msgstr "Testa en enhet med ett JSON-manifest"
+
+#. TRANSLATORS: when the release was tested
+msgid "Tested"
+msgstr "Testad"
+
+#. TRANSLATORS: the %s is a vendor name, e.g. Lenovo
+#, c-format
+msgid "Tested by %s"
+msgstr "Testad av %s"
 
 #. TRANSLATORS: longer description
 msgid "The Intel Management Engine Key Manifest must be valid so that the device firmware can be trusted by the CPU."
@@ -2795,7 +2818,7 @@ msgstr "Tillfälligt misslyckande"
 msgid "True"
 msgstr "Sant"
 
-#. TRANSLATORS: We verified the meatdata against the server
+#. TRANSLATORS: We verified the metadata against the server
 msgid "Trusted metadata"
 msgstr "Betrodda metadata"
 
@@ -3040,6 +3063,10 @@ msgstr "Verifierar…"
 #. TRANSLATORS: the detected version number of the dbx
 msgid "Version"
 msgstr "Version"
+
+#. TRANSLATORS: the fwupd version the release was tested on
+msgid "Version[fwupd]"
+msgstr "Version[fwupd]"
 
 #. TRANSLATORS: this is a prefix on the console
 msgid "WARNING:"

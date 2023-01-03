@@ -227,7 +227,7 @@ msgstr "ਸਫ਼ਲ"
 msgid "Summary"
 msgstr "ਸਾਰ"
 
-#. TRANSLATORS: Must be plugged in to an outlet
+#. TRANSLATORS: Must be plugged into an outlet
 msgid "System requires external power source"
 msgstr "ਸਿਸਟਮ ਨੂੰ ਬਾਹਰੀ ਪਾਵਰ ਸਰੋਤ ਚਾਹੀਦਾ ਹੈ"
 

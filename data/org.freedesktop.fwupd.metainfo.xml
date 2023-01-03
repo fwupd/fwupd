@@ -33,6 +33,43 @@
     <binary>fwupdtool</binary>
   </provides>
   <releases>
+    <release version="1.8.9" date="2023-01-03">
+      <description>
+        <p>
+          This release adds the following features:
+        </p>
+        <ul>
+          <li>Add an interactive request for re-inserting the USB cable</li>
+          <li>Add SHA384 support for TPM hashes</li>
+          <li>Add X-FingerprintReader, X-GraphicsTablet, X-Dock and X-UsbDock categories</li>
+          <li>Allow specifying OR parent requirements in metadata</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Add the fwupd version to the HSI result if the chassis is invalid</li>
+          <li>Allow getting the ESP when there is a block device with no filesystem</li>
+          <li>Allow reinstalling on devices with only-version-upgrade set</li>
+          <li>Do not require the TPM event log to have all reconstructions</li>
+          <li>Fix a tiny memory leak when parsing signed reports</li>
+          <li>Ignore failure to mount the ESP if unsupported</li>
+          <li>Never allow using SHA-1 for checksum validation</li>
+          <li>Return a more useful error if USB recovery failed</li>
+          <li>Skip the fwupdx64.efi BootXXXX entry when measuring system integrity</li>
+          <li>Speed up daemon startup using prepared XPath queries</li>
+          <li>Suggest to turn on ThunderboltAccess for Lenovo systems</li>
+          <li>Use better defaults if the config file is missing</li>
+        </ul>
+        <p>This release adds support for the following hardware:</p>
+        <ul>
+          <li>More Solidigm NVMe devices</li>
+          <li>More Synaptics Cape devices</li>
+          <li>More Synaptics Prometheus devices</li>
+          <li>Most Texas Instruments USB-4 docks</li>
+          <li>Scaler support for Wacom USB devices</li>
+          <li>Several new Wistron USB-C docks</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.8.8" date="2022-12-07">
       <description>
         <p>

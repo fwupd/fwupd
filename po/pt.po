@@ -1876,7 +1876,7 @@ msgstr "Trocar ramificação de %s para %s ?"
 msgid "Switch the firmware branch on the device"
 msgstr "Alterna a ramificação do firmware no dispositivo"
 
-#. TRANSLATORS: Must be plugged in to an outlet
+#. TRANSLATORS: Must be plugged into an outlet
 msgid "System requires external power source"
 msgstr "O sistema exige uma fonte de alimentação externa"
 

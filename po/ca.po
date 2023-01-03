@@ -99,6 +99,12 @@ msgstr "Actualització del controlador incrustat %s"
 msgid "%s Flash Drive Update"
 msgstr "Actualització de la unitat flaix %s"
 
+#. TRANSLATORS: GPU refers to a Graphics Processing Unit, e.g.
+#. * the "video card"
+#, c-format
+msgid "%s GPU Update"
+msgstr "%s Actualització de la GPU"
+
 #. TRANSLATORS: Keyboard refers to an input device for typing
 #, c-format
 msgid "%s Keyboard Update"
@@ -826,6 +832,10 @@ msgstr "Inhabilita un remot indicat."
 msgid "Display version"
 msgstr "Mostra la versió"
 
+#. TRANSLATORS: the OS the release was tested on
+msgid "Distribution"
+msgstr "Distribució"
+
 #. TRANSLATORS: command line option
 msgid "Do not check for old metadata"
 msgstr "No comprovar si hi ha metadades antigues"
@@ -1050,7 +1060,7 @@ msgstr "NOM_FITXER NOM_ALT_DISPOSITIU|ID_ALT_DISPOSITIU"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME DEVICE-ALT-NAME|DEVICE-ALT-ID [IMAGE-ALT-NAME|IMAGE-ALT-ID]"
-msgstr "NOM_FITXER NOM_ALT_DISPOSITIU|ID_ALT_DISPOSITIU [NOM_ALT_IMATGE|ID_ALT_IMTAGE]"
+msgstr "NOM_FITXER NOM_ALT_DISPOSITIU|ID_ALT_DISPOSITIU [NOM_ALT_IMATGE|ID_ALT_IMATGE]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME DEVICE-ID"
@@ -1921,6 +1931,10 @@ msgstr "D'acord"
 msgid "OK!"
 msgstr "Bé!"
 
+#. TRANSLATORS: the firmware old version
+msgid "Old version"
+msgstr "Versió antiga"
+
 #. TRANSLATORS: command line option
 msgid "Only show single PCR value"
 msgstr "Mostra només un únic valor de PCR"
@@ -2209,7 +2223,7 @@ msgstr "Retorna tots els ID del maquinari de la màquina."
 
 #. TRANSLATORS: longer description
 msgid "Rollback Protection prevents device software from being downgraded to an older version that has security problems."
-msgstr "La protecció contra la reversió evita que el programari del dispositiu torni a una versió anterior, potser contindrà problemes de seguretat."
+msgstr "La protecció contra la reversió evita que el programari del dispositiu torni a una versió anterior que potser contingui problemes de seguretat."
 
 #. TRANSLATORS: this is shown in the MOTD
 msgid "Run `fwupdmgr get-upgrades` for more information."
@@ -2274,7 +2288,7 @@ msgstr "Protecció d'escriptura per a l'SPI"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "SUBSYSTEM DRIVER [DEVICE-ID|GUID]"
-msgstr "CONTROLADOR SUBSISTEMA [ID_DISPOSITIU|GUID]"
+msgstr "SUBSISTEMA CONTROLADOR [ID_DISPOSITIU|GUID]"
 
 #. TRANSLATORS: command description
 msgid "Save a file that allows generation of hardware IDs"
@@ -2584,7 +2598,7 @@ msgstr "L'energia del sistema és massa baixa per a realitzar l'actualització"
 msgid "System power is too low to perform the update (%u%%, requires %u%%)"
 msgstr " L'energia del sistema és massa baixa per a realitzar l'actualització (%u%%, requereix %u%%)"
 
-#. TRANSLATORS: Must be plugged in to an outlet
+#. TRANSLATORS: Must be plugged into an outlet
 msgid "System requires external power source"
 msgstr "El sistema requereix una font d'alimentació externa"
 
@@ -2642,6 +2656,15 @@ msgstr "Objectiu"
 #. TRANSLATORS: command description
 msgid "Test a device using a JSON manifest"
 msgstr "Prova un dispositiu emprant un manifest JSON"
+
+#. TRANSLATORS: when the release was tested
+msgid "Tested"
+msgstr "Provada"
+
+#. TRANSLATORS: the %s is a vendor name, e.g. Lenovo
+#, c-format
+msgid "Tested by %s"
+msgstr "Provada per %s"
 
 #. TRANSLATORS: longer description
 msgid "The Intel Management Engine Key Manifest must be valid so that the device firmware can be trusted by the CPU."
@@ -2790,7 +2813,7 @@ msgstr "Fallada transitòria"
 msgid "True"
 msgstr "Cert"
 
-#. TRANSLATORS: We verified the meatdata against the server
+#. TRANSLATORS: We verified the metadata against the server
 msgid "Trusted metadata"
 msgstr "Metadades de confiança"
 
@@ -3035,6 +3058,10 @@ msgstr "S'està verificant..."
 #. TRANSLATORS: the detected version number of the dbx
 msgid "Version"
 msgstr "Versió"
+
+#. TRANSLATORS: the fwupd version the release was tested on
+msgid "Version[fwupd]"
+msgstr "Versió[fwupd]"
 
 #. TRANSLATORS: this is a prefix on the console
 msgid "WARNING:"

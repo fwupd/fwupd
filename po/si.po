@@ -2157,7 +2157,7 @@ msgstr "යාවත්කාලීන කිරීම සිදු කිරී
 msgid "System power is too low to perform the update (%u%%, requires %u%%)"
 msgstr "යාවත්කාලීන කිරීම සිදු කිරීමට පද්ධතියේ බලය ඉතා අඩුය (%u%%, අවශ්‍ය වන්නේ %u%%)"
 
-#. TRANSLATORS: Must be plugged in to an outlet
+#. TRANSLATORS: Must be plugged into an outlet
 msgid "System requires external power source"
 msgstr "පද්ධතියට බාහිර බලශක්ති ප්රභවයක් අවශ්ය වේ"
 
@@ -2304,7 +2304,7 @@ msgstr "මෙම මෙවලම පද්ධති ස්ථිරාංගය
 msgid "Transient failure"
 msgstr "තාවකාලික අසාර්ථකත්වය"
 
-#. TRANSLATORS: We verified the meatdata against the server
+#. TRANSLATORS: We verified the metadata against the server
 msgid "Trusted metadata"
 msgstr "විශ්වාසදායක පාරදත්ත"
 

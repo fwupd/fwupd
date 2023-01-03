@@ -1856,7 +1856,7 @@ msgstr "Skift gren fra %s til %s?"
 msgid "Switch the firmware branch on the device"
 msgstr "Skift firmwaregrenen på enheden"
 
-#. TRANSLATORS: Must be plugged in to an outlet
+#. TRANSLATORS: Must be plugged into an outlet
 msgid "System requires external power source"
 msgstr "Systemet kræver ekstern strømkilde"
 

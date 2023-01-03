@@ -83,6 +83,17 @@ msgstr "%s Laufwerksaktualisierung"
 msgid "%s Embedded Controller Update"
 msgstr "%s Eingebetteter-Controller-Aktualisierung"
 
+#. TRANSLATORS: flash refers to solid state storage, e.g. UFS or eMMC
+#, c-format
+msgid "%s Flash Drive Update"
+msgstr "%s Flash-Laufwerk-Aktualisierung"
+
+#. TRANSLATORS: GPU refers to a Graphics Processing Unit, e.g.
+#. * the "video card"
+#, c-format
+msgid "%s GPU Update"
+msgstr "%s GPU-Aktualisierung"
+
 #. TRANSLATORS: Keyboard refers to an input device for typing
 #, c-format
 msgid "%s Keyboard Update"
@@ -782,6 +793,10 @@ msgstr "Deaktiviert eine gegebene Gegenstelle"
 msgid "Display version"
 msgstr "Version anzeigen"
 
+#. TRANSLATORS: the OS the release was tested on
+msgid "Distribution"
+msgstr "Distribution"
+
 #. TRANSLATORS: command line option
 msgid "Do not check for old metadata"
 msgstr "Nicht auf alte Metadaten prüfen"
@@ -1341,6 +1356,10 @@ msgstr "Firmware-Hardware-Nichtübereinstimmungsfehler ignorieren"
 msgid "Ignore validation safety checks"
 msgstr "Validierungssicherheitsüberprüfungen ignorieren"
 
+#. TRANSLATORS: try to help
+msgid "Ignoring SSL strict checks, to do this automatically in the future export DISABLE_SSL_STRICT in your environment"
+msgstr "Strenge SSL-Prüfungen werden ignoriert; um dies in Zukunft automatisch zu tun, exportieren Sie DISABLE_SSL_STRICT in Ihrer Umgebung"
+
 #. TRANSLATORS: length of time the update takes to apply
 msgid "Install Duration"
 msgstr "Installationsdauer"
@@ -1735,6 +1754,10 @@ msgstr "Ok"
 #. TRANSLATORS: this is for the device tests
 msgid "OK!"
 msgstr "OK!"
+
+#. TRANSLATORS: the firmware old version
+msgid "Old version"
+msgstr "Alte Version"
 
 #. TRANSLATORS: command line option
 msgid "Only show single PCR value"
@@ -2325,7 +2348,7 @@ msgstr "Systemleistung ist zu gering, um die Aktualisierung durchzuführen"
 msgid "System power is too low to perform the update (%u%%, requires %u%%)"
 msgstr "Systemleistung ist zu gering, um die Aktualisierung durchzuführen (%u%%, erfordert %u%%)"
 
-#. TRANSLATORS: Must be plugged in to an outlet
+#. TRANSLATORS: Must be plugged into an outlet
 msgid "System requires external power source"
 msgstr "System benötigt externe Stromquelle"
 
@@ -2378,6 +2401,15 @@ msgstr "Ziel"
 #. TRANSLATORS: command description
 msgid "Test a device using a JSON manifest"
 msgstr "Ein Gerät mit einem JSON-Manifest testen"
+
+#. TRANSLATORS: when the release was tested
+msgid "Tested"
+msgstr "Geprüft"
+
+#. TRANSLATORS: the %s is a vendor name, e.g. Lenovo
+#, c-format
+msgid "Tested by %s"
+msgstr "Geprüft von %s"
 
 #. TRANSLATORS: do not translate the variables marked using $
 msgid "The LVFS is a free service that operates as an independent legal entity and has no connection with $OS_RELEASE:NAME$. Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices. All firmware is provided only by the original equipment manufacturer."
@@ -2492,7 +2524,7 @@ msgstr "Vorübergehender Fehler"
 msgid "True"
 msgstr "Wahr"
 
-#. TRANSLATORS: We verified the meatdata against the server
+#. TRANSLATORS: We verified the metadata against the server
 msgid "Trusted metadata"
 msgstr "Vertrauenswürdige Metadaten"
 
@@ -2519,6 +2551,10 @@ msgstr "UEFI-Plattformschlüssel"
 #. TRANSLATORS: longer description
 msgid "UEFI Secure Boot prevents malicious software from being loaded when the device starts."
 msgstr "UEFI Secure Boot verhindert, dass bösartige Software beim Start des Geräts geladen wird."
+
+#. TRANSLATORS: capsule updates are an optional BIOS feature
+msgid "UEFI capsule updates not available or enabled in firmware setup"
+msgstr "Aktualisierung der UEFI-Kapsel nicht verfügbar oder in der Firmware-Einrichtung aktiviert"
 
 #. TRANSLATORS: program name
 msgid "UEFI dbx Utility"
@@ -2713,6 +2749,10 @@ msgstr "Überprüfung …"
 msgid "Version"
 msgstr "Version"
 
+#. TRANSLATORS: the fwupd version the release was tested on
+msgid "Version[fwupd]"
+msgstr "Version[fwupd]"
+
 #. TRANSLATORS: this is a prefix on the console
 msgid "WARNING:"
 msgstr "WARNUNG:"
@@ -2724,6 +2764,11 @@ msgstr "Warten …"
 #. TRANSLATORS: command description
 msgid "Watch for hardware changes"
 msgstr "Auf Hardware-Änderungen achten"
+
+#. TRANSLATORS: check various UEFI and ACPI tables are unchanged after the
+#. update
+msgid "Will measure elements of system integrity around an update"
+msgstr "Misst Elemente der Systemintegrität im Zusammenhang mit einer Aktualisierung"
 
 #. TRANSLATORS: command description
 msgid "Write firmware from file into device"

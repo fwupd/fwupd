@@ -34,7 +34,7 @@ fu_wac_module_scaler_parse_blocks(const guint8 *data, gsize sz, GError **error)
 {
 	GPtrArray *blocks = g_ptr_array_new_with_free_func(g_free);
 	for (guint addr = 0x0; addr < sz; addr += FU_WAC_MODULE_SCALER_PAYLOAD_SZ) {
-		FuWacModuleScalerBlockData *bd;
+		g_autofree FuWacModuleScalerBlockData *bd = NULL;
 		gsize cdata_sz = FU_WAC_MODULE_SCALER_PAYLOAD_SZ;
 
 		bd = g_new0(FuWacModuleScalerBlockData, 1);
@@ -56,7 +56,7 @@ fu_wac_module_scaler_parse_blocks(const guint8 *data, gsize sz, GError **error)
 				    error))
 			return NULL;
 		bd->crc = ~fu_crc8(bd->cdata, sizeof(bd->cdata));
-		g_ptr_array_add(blocks, bd);
+		g_ptr_array_add(blocks, g_steal_pointer(&bd));
 	}
 	return blocks;
 }

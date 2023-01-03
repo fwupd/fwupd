@@ -2119,7 +2119,7 @@ msgstr "Energía del sistema es demasiado baja para realizar la actualización"
 msgid "System power is too low to perform the update (%u%%, requires %u%%)"
 msgstr "La carga del sistema es muy baja para realizar una actualización (%u%%, requiere %u%%)"
 
-#. TRANSLATORS: Must be plugged in to an outlet
+#. TRANSLATORS: Must be plugged into an outlet
 msgid "System requires external power source"
 msgstr "Sistema requiere energía externa"
 
@@ -2267,7 +2267,7 @@ msgstr "Esta herramienta leerá y analizará sintácticamente el boletín de eve
 msgid "Transient failure"
 msgstr "Transición errónea"
 
-#. TRANSLATORS: We verified the meatdata against the server
+#. TRANSLATORS: We verified the metadata against the server
 msgid "Trusted metadata"
 msgstr "Metadatos confiados"
 

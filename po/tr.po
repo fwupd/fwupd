@@ -390,7 +390,7 @@ msgstr "Ekran sürümü"
 
 #. TRANSLATORS: command line option
 msgid "Do not check for old metadata"
-msgstr "Eski üstverileri kontrol etme"
+msgstr "Eski üst verileri kontrol etme"
 
 #. TRANSLATORS: command line option
 msgid "Do not check for unreported history"
@@ -755,15 +755,15 @@ msgstr "Orta"
 
 #. TRANSLATORS: remote URI
 msgid "Metadata Signature"
-msgstr "Üstveri İmzası"
+msgstr "Üst Veri İmzası"
 
 #. TRANSLATORS: remote URI
 msgid "Metadata URI"
-msgstr "Üstveri URI"
+msgstr "Üst veri URI"
 
 #. TRANSLATORS: explain why no metadata available
 msgid "Metadata can be obtained from the Linux Vendor Firmware Service."
-msgstr "Üstveri Linux Tedarikçi Donanım Yazılımı Hizmetinden edinilebilir"
+msgstr "Üst veri Linux Tedarikçi Donanım Yazılımı Hizmetinden edinilebilir"
 
 #. TRANSLATORS: smallest version number installable on device
 msgid "Minimum Version"
@@ -810,7 +810,7 @@ msgstr "Sürüm bulunamadı"
 
 #. TRANSLATORS: explain why no metadata available
 msgid "No remotes are currently enabled so no metadata is available."
-msgstr "Şu anda uzaktan kumanda etkin değil, bu nedenle üstveri yok."
+msgstr "Şu anda uzaktan kumanda etkin değil, bu nedenle üst veri yok."
 
 #. TRANSLATORS: no repositories to download from
 msgid "No remotes available"
@@ -912,7 +912,7 @@ msgstr "Yeniden Başlatılıyor…"
 
 #. TRANSLATORS: command description
 msgid "Refresh metadata from remote server"
-msgstr "Üstveriyi uzak sunucudan yenile"
+msgstr "Üst veriyi uzak sunucudan yenile"
 
 #. TRANSLATORS: the server the file is coming from
 #. TRANSLATORS: remote identifier, e.g. lvfs-testing
@@ -1073,7 +1073,7 @@ msgstr "Tüm aygıtlar başarıyla etkinleştirildi"
 #. TRANSLATORS: success message -- where 'metadata' is information
 #. * about available firmware on the remote server
 msgid "Successfully downloaded new metadata: "
-msgstr "Yeni üstveri başarıyla indirildi:"
+msgstr "Yeni üst veri başarıyla indirildi:"
 
 #. TRANSLATORS: success message
 msgid "Successfully installed firmware"
@@ -1085,7 +1085,7 @@ msgstr "Yapılandırma değeri başarıyla değiştirildi"
 
 #. TRANSLATORS: success message -- the user can do this by-hand too
 msgid "Successfully refreshed metadata manually"
-msgstr "Üstveri başarıyla yenilendi"
+msgstr "Üst veri başarıyla yenilendi"
 
 #. TRANSLATORS: success message when user refreshes device checksums
 msgid "Successfully updated device checksums"

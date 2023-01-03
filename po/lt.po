@@ -1205,7 +1205,7 @@ msgstr "Palaikomas"
 msgid "Supported on remote server"
 msgstr "Palaikomas nuotoliniame serveryje"
 
-#. TRANSLATORS: Must be plugged in to an outlet
+#. TRANSLATORS: Must be plugged into an outlet
 msgid "System requires external power source"
 msgstr "Sistema reikalauja išorinio maitinimo šaltinio"
 
