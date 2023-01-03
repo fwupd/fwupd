@@ -207,7 +207,7 @@ fu_msr_plugin_backend_device_added(FuPlugin *plugin, FuDevice *device, GError **
 					  buf,
 					  sizeof(buf),
 					  error)) {
-			g_prefix_error(error, "could not read IA32_DEBUG_INTERFACE: ");
+			g_prefix_error(error, "could not read IA32_TME_ACTIVATION: ");
 			return FALSE;
 		}
 		if (!fu_memread_uint64_safe(buf,
