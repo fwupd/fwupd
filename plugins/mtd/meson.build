@@ -15,6 +15,9 @@ plugin_builtin_mtd = static_library('fu_plugin_mtd',
 plugin_builtins += plugin_builtin_mtd
 
 if get_option('tests')
+  env = environment()
+  env.set('G_TEST_SRCDIR', meson.current_source_dir())
+  env.set('G_TEST_BUILDDIR', meson.current_build_dir())
   e = executable(
     'mtd-self-test',
     sources: [
@@ -31,6 +34,6 @@ if get_option('tests')
     install_rpath: libdir_pkg,
     install_dir: installed_test_bindir,
   )
-  test('mtd-self-test', e)  # added to installed-tests
+  test('mtd-self-test', e, env: env)  # added to installed-tests
 endif
 endif
