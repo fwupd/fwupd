@@ -35,6 +35,7 @@ fu_linux_swap_plain_func(void)
 			      0,
 			      &error);
 	if (g_error_matches(error, G_IO_ERROR, G_IO_ERROR_NOT_FOUND) ||
+	    g_error_matches(error, G_IO_ERROR, G_IO_ERROR_NOT_DIRECTORY) ||
 	    g_error_matches(error, G_IO_ERROR, G_IO_ERROR_INVALID_ARGUMENT)) {
 		g_test_skip(error->message);
 		return;
