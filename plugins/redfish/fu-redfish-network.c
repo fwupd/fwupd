@@ -118,6 +118,7 @@ fu_redfish_network_device_match(FuRedfishNetworkMatchHelper *helper, GError **er
 					      &error_local);
 	if (proxy == NULL) {
 		if (g_error_matches(error_local, G_IO_ERROR, G_IO_ERROR_DBUS_ERROR) ||
+		    g_error_matches(error_local, G_IO_ERROR, G_IO_ERROR_NOT_DIRECTORY) ||
 		    g_error_matches(error_local, G_IO_ERROR, G_IO_ERROR_NOT_FOUND)) {
 			g_set_error_literal(error,
 					    FWUPD_ERROR,
