@@ -267,8 +267,13 @@ if build_daemon
 endif
 libm = cc.find_library('m', required: false)
 libgcab = dependency('libgcab-1.0', version: '>= 1.0', fallback: ['gcab', 'gcab_dep'])
-if libgcab.type_name() == 'pkgconfig' and cc.has_function('gcab_file_set_bytes', dependencies: libgcab)
-  conf.set('HAVE_GCAB_FILE_SET_BYTES', '1')
+if libgcab.type_name() == 'pkgconfig'
+  if cc.has_function('gcab_file_set_bytes', dependencies: libgcab)
+    conf.set('HAVE_GCAB_FILE_SET_BYTES', '1')
+  endif
+  if cc.has_function('gcab_cabinet_add_allowed_compression', dependencies: libgcab)
+    conf.set('HAVE_GCAB_CABINET_ADD_ALLOWED_COMPRESSION', '1')
+  endif
 endif
 
 bashcomp = dependency('bash-completion', required: false)
