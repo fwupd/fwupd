@@ -60,6 +60,7 @@ typedef struct {
 	guint32 build_id;
 	guint8 bootloader_id[2];
 	guint8 status_addr;
+	gboolean has_pubkey;
 } FuSynapticsRmiFlash;
 
 #define RMI_F34_HAS_NEW_REG_MAP (1 << 0)
@@ -69,7 +70,7 @@ typedef struct {
 #define RMI_F34_BLOCK_DATA_V1_OFFSET 1
 
 #define RMI_F34_ENABLE_WAIT_MS 300 /* ms */
-#define RMI_F34_IDLE_WAIT_MS   20  /* ms */
+#define RMI_F34_IDLE_WAIT_MS   500 /* ms */
 
 #define RMI_DEVICE_PAGE_SELECT_REGISTER 0xff
 #define RMI_DEVICE_BUS_SELECT_REGISTER	0xfe

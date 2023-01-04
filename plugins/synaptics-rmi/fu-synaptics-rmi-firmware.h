@@ -19,3 +19,7 @@ FuFirmware *
 fu_synaptics_rmi_firmware_new(void);
 guint32
 fu_synaptics_rmi_firmware_get_sig_size(FuSynapticsRmiFirmware *self);
+GPtrArray *
+fu_synaptics_rmi_firmware_get_image_by_id(FuFirmware *firmware, const gchar *id);
+GPtrArray *
+fu_synaptics_rmi_firmware_get_images(FuFirmware *firmware);
