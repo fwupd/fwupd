@@ -69,6 +69,10 @@ fu_cabinet_init(FuCabinet *self)
 {
 	self->size_max = 1024 * 1024 * 100;
 	self->gcab_cabinet = gcab_cabinet_new();
+#ifdef HAVE_GCAB_CABINET_ADD_ALLOWED_COMPRESSION
+	gcab_cabinet_add_allowed_compression(self->gcab_cabinet, GCAB_COMPRESSION_NONE);
+	gcab_cabinet_add_allowed_compression(self->gcab_cabinet, GCAB_COMPRESSION_MSZIP);
+#endif
 	self->builder = xb_builder_new();
 	self->jcat_file = jcat_file_new();
 	self->jcat_context = jcat_context_new();
