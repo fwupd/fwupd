@@ -99,6 +99,10 @@ Branch = coreboot
 Flags = reset-cmos
 PciBcrAddr = 0x0
 
+# StarBook Mk VI - Intel (AMI GUID)
+[1292e166-a66f-5e11-b2bb-53265a8f53d9]
+FirmwareSizeMax = 0x2000000
+
 # StarBook Mk VI - Intel (coreboot GUID)
 [8c994a92-7ef8-5d68-80b5-99ead7cf4686]
 Branch = coreboot
