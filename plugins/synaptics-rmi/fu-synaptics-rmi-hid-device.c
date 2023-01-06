@@ -379,7 +379,8 @@ fu_synaptics_rmi_hid_device_rebind_driver(FuSynapticsRmiDevice *self, GError **e
 	g_autofree gchar *fn_rebind = NULL;
 	g_autofree gchar *fn_unbind = NULL;
 	g_autoptr(GUdevDevice) parent_hid = NULL;
-	g_autoptr(GUdevDevice) parent_i2c = NULL;
+	g_autoptr(GUdevDevice) parent_phys = NULL;
+	g_auto(GStrv) hid_strs = NULL;
 
 	/* get actual HID node */
 	parent_hid = g_udev_device_get_parent_with_subsystem(udev_device, "hid", NULL);
@@ -392,30 +393,36 @@ fu_synaptics_rmi_hid_device_rebind_driver(FuSynapticsRmiDevice *self, GError **e
 		return FALSE;
 	}
 
+	/* build paths */
+	parent_phys = g_udev_device_get_parent_with_subsystem(udev_device, "i2c", NULL);
+	if (parent_phys == NULL) {
+		parent_phys = g_udev_device_get_parent_with_subsystem(udev_device, "usb", NULL);
+		if (parent_phys == NULL) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "no parent device for %s",
+				    g_udev_device_get_sysfs_path(parent_hid));
+			return FALSE;
+		}
+	}
+
 	/* find the physical ID to use for the rebind */
-	hid_id = g_udev_device_get_property(parent_hid, "HID_PHYS");
+	hid_strs = g_strsplit(g_udev_device_get_sysfs_path(parent_phys), "/", -1);
+	hid_id = hid_strs[g_strv_length(hid_strs) - 1];
 	if (hid_id == NULL) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_FILE,
 			    "no HID_PHYS in %s",
-			    g_udev_device_get_sysfs_path(parent_hid));
+			    g_udev_device_get_sysfs_path(parent_phys));
 		return FALSE;
 	}
+
 	g_debug("HID_PHYS: %s", hid_id);
 
-	/* build paths */
-	parent_i2c = g_udev_device_get_parent_with_subsystem(udev_device, "i2c", NULL);
-	if (parent_i2c == NULL) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_FILE,
-			    "no I2C parent device for %s",
-			    g_udev_device_get_sysfs_path(udev_device));
-		return FALSE;
-	}
-	driver = g_udev_device_get_driver(parent_i2c);
-	subsystem = g_udev_device_get_subsystem(parent_i2c);
+	driver = g_udev_device_get_driver(parent_phys);
+	subsystem = g_udev_device_get_subsystem(parent_phys);
 	fn_rebind = g_build_filename("/sys/bus/", subsystem, "drivers", driver, "bind", NULL);
 	fn_unbind = g_build_filename("/sys/bus/", subsystem, "drivers", driver, "unbind", NULL);
 
