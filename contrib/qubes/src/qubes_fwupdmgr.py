@@ -184,7 +184,7 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
         decorator = "======================================================"
         if len(updates_list) == 0:
             print("No updates available.")
-            return EXIT_CODES["NOTHING_TO_DO"]
+            return -EXIT_CODES["NOTHING_TO_DO"]
         if downgrade:
             print("Available downgrades:")
         else:
@@ -196,7 +196,7 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
                 print("If you want to abandon process press 'N'.")
                 choice = input("Otherwise choose a device number: ")
                 if choice == "N" or choice == "n":
-                    return EXIT_CODES["NOTHING_TO_DO"]
+                    return -EXIT_CODES["NOTHING_TO_DO"]
                 device_num = int(choice) - 1
                 if 0 <= device_num < len(updates_list):
                     if not downgrade:
@@ -227,7 +227,7 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
                     print("If you want to abandon downgrade process press N.")
                     choice = input("Otherwise choose downgrade number: ")
                     if choice == "N" or choice == "n":
-                        return EXIT_CODES["NOTHING_TO_DO"]
+                        return -EXIT_CODES["NOTHING_TO_DO"]
                     downgrade_num = int(choice) - 1
                     if 0 <= downgrade_num < len(releases):
                         return device_num, downgrade_num
@@ -316,7 +316,7 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
         self._parse_dom0_updates_info(self.dom0_updates_info)
         updates_list = self.dom0_updates_list
         ret_input = self._user_input(updates_list)
-        if ret_input == EXIT_CODES["NOTHING_TO_DO"]:
+        if ret_input == -EXIT_CODES["NOTHING_TO_DO"]:
             exit(EXIT_CODES["NOTHING_TO_DO"])
         choice = ret_input
         self._parse_parameters(updates_list, choice)
@@ -383,7 +383,7 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
         self._get_dom0_devices()
         dom0_downgrades = self._parse_downgrades(self.dom0_devices_info)
         ret_input = self._user_input(dom0_downgrades, downgrade=True)
-        if ret_input == EXIT_CODES["NOTHING_TO_DO"]:
+        if ret_input == -EXIT_CODES["NOTHING_TO_DO"]:
             exit(EXIT_CODES["NOTHING_TO_DO"])
         device_choice, downgrade_choice = ret_input
         downgrade = dom0_downgrades[device_choice]

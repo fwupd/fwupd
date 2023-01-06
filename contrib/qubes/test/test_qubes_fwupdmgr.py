@@ -193,19 +193,19 @@ class TestQubesFwupdmgr(unittest.TestCase):
         self.assertTrue(os.path.exists(update_path))
 
     def test_user_input_empty_dict(self):
-        self.assertEqual(self.q._user_input([]), 2)
+        self.assertEqual(self.q._user_input([]), -2)
 
     def test_user_input_n(self):
         user_input = ["sth", "n"]
         with patch("builtins.input", side_effect=user_input):
             self.q._parse_dom0_updates_info(UPDATE_INFO)
             choice = self.q._user_input(self.q.dom0_updates_list)
-        self.assertEqual(choice, 2)
+        self.assertEqual(choice, -2)
         user_input = ["sth", "N"]
         with patch("builtins.input", side_effect=user_input):
             self.q._parse_dom0_updates_info(UPDATE_INFO)
             choice = self.q._user_input(self.q.dom0_updates_list)
-        self.assertEqual(choice, 2)
+        self.assertEqual(choice, -2)
 
     def test_user_input_choice(self):
         user_input = ["6", "1"]
@@ -366,7 +366,7 @@ class TestQubesFwupdmgr(unittest.TestCase):
         with patch("builtins.input", side_effect=user_input):
             downgrade_list = self.q._parse_downgrades(GET_DEVICES)
             N_choice = self.q._user_input(downgrade_list, downgrade=True)
-        self.assertEqual(N_choice, 2)
+        self.assertEqual(N_choice, -2)
 
     @unittest.skipUnless(device_connected_dom0(), REQUIRED_DEV)
     def test_update_firmware_dom0(self):
