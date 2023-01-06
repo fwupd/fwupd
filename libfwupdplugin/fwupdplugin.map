@@ -1151,3 +1151,10 @@ LIBFWUPDPLUGIN_1.8.9 {
     fu_version_from_uint24;
   local: *;
 } LIBFWUPDPLUGIN_1.8.7;
+
+LIBFWUPDPLUGIN_1.8.10 {
+  global:
+    fu_pefile_firmware_get_type;
+    fu_pefile_firmware_new;
+  local: *;
+} LIBFWUPDPLUGIN_1.8.9;
