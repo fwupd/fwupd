@@ -29,6 +29,7 @@ FWUPD_VM_METADATA_DIR = os.path.join(FWUPD_VM_DIR, "metadata")
 FWUPD_VM_METADATA_FILE = os.path.join(FWUPD_VM_METADATA_DIR, "firmware.xml.gz")
 FWUPD_VM_METADATA_JCAT = os.path.join(FWUPD_VM_METADATA_DIR, "firmware.xml.gz.jcat")
 FWUPD_PKI = "/etc/pki/fwupd"
+FWUPD_PKI_PGP = "/etc/pki/fwupd/GPG-KEY-Linux-Vendor-Firmware-Service"
 FWUPD_DOWNLOAD_PREFIX = "https://fwupd.org/downloads/"
 FWUPD_METADATA_FLAG_REGEX = re.compile(r"^metaflag")
 FWUPD_METADATA_FILES_REGEX = re.compile(
@@ -127,6 +128,60 @@ class FwupdReceiveUpdates:
             self.clean_cache()
             raise Exception("jcat-tool: Verification failed")
 
+    def _pgp_verification(self, signature_path, file_path):
+        """Verifies GPG signature.
+
+        Keyword argument:
+        signature_path -- absolute path to signature file
+        file_path -- absolute path to the signed file location
+        """
+        assert file_path.startswith("/"), "bad file path {file_path!r}"
+        cmd_verify = [
+            "sqv",
+            "--keyring",
+            FWUPD_PKI_PGP,
+            "--",
+            signature_path,
+            file_path,
+        ]
+        p = subprocess.Popen(cmd_verify, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        stdout, __ = p.communicate()
+        signature_key = stdout.decode("utf-8")
+        if p.returncode != 0 or not signature_key:
+            self.clean_cache()
+            raise Exception("pgp: Verification failed")
+
+    def _reconstruct_jcat(self, jcat_path, file_path):
+        """Reconstruct jcat file from verified parts
+
+        Currently included parts: .asc, .sha256
+        Hashes are generated locally if missing
+
+        Arguments:
+        jcat_path - absolute path to the output jcat file
+        file_path - absolute path to the signed file
+        """
+        # generate missing hashes
+        hashes = ("sha256",)
+        for hash_ext in hashes:
+            hash_fname = f"{file_path}.{hash_ext}"
+            if not os.path.exists(hash_fname):
+                # TODO: switch to hashlib.file_digest (py3.11)
+                with open(file_path, "rb") as f_data:
+                    hash_val = hashlib.new(hash_ext, f_data.read()).hexdigest()
+                with open(hash_fname, "w") as f_hash:
+                    f_hash.write(hash_val)
+
+        signatures = ("asc",)
+
+        file_id = os.path.basename(file_path)
+        for sign_type in signatures + hashes:
+            sign_path = f"{file_path}.{sign_type}"
+            if not os.path.exists(sign_path):
+                raise Exception(f"Missing signature: {sign_path}")
+            jcat_cmd = ["jcat-tool", "import", jcat_path, file_id, sign_path]
+            subprocess.check_call(jcat_cmd)
+
     def handle_fw_update(self, updatevm, sha, filename):
         """Copies firmware update archives from the updateVM.
 
@@ -188,14 +243,10 @@ class FwupdReceiveUpdates:
         if metadata_url:
             metadata_name = metadata_url.replace(FWUPD_DOWNLOAD_PREFIX, "")
             self.metadata_file = os.path.join(FWUPD_DOM0_METADATA_DIR, metadata_name)
-            self.metadata_file_jcat = self.metadata_file + ".jcat"
         else:
             self.metadata_file = FWUPD_DOM0_METADATA_FILE
-            self.metadata_file_jcat = FWUPD_DOM0_METADATA_JCAT
+        self.metadata_file_jcat = self.metadata_file + ".jcat"
         self.metadata_file_updatevm = self.metadata_file.replace(
-            FWUPD_DOM0_METADATA_DIR, FWUPD_VM_METADATA_DIR
-        )
-        self.metadata_file_jcat_updatevm = self.metadata_file_jcat.replace(
             FWUPD_DOM0_METADATA_DIR, FWUPD_VM_METADATA_DIR
         )
         self._check_domain(updatevm)
@@ -210,7 +261,8 @@ class FwupdReceiveUpdates:
             "--",
             self.metadata_file_updatevm,
         ]
-        cmd_copy_metadata_file_jcat = [
+        # TODO: switch to ed25519 once firmware.xml.gz.jcat will have it
+        cmd_copy_metadata_file_signature = [
             "qvm-run",
             "--pass-io",
             "--no-shell",
@@ -218,26 +270,27 @@ class FwupdReceiveUpdates:
             updatevm,
             "cat",
             "--",
-            self.metadata_file_jcat_updatevm,
+            self.metadata_file_updatevm + '.asc',
         ]
         with open(self.metadata_file, "wbx") as untrusted_file_1, open(
-            self.metadata_file_jcat, "wbx"
+            self.metadata_file + '.asc', "wbx"
         ) as untrusted_file_2, subprocess.Popen(
             cmd_copy_metadata_file, stdout=untrusted_file_1
         ) as p, subprocess.Popen(
-            cmd_copy_metadata_file_jcat, stdout=untrusted_file_2
+            cmd_copy_metadata_file_signature, stdout=untrusted_file_2
         ) as q:
             p.wait()
             q.wait()
         if p.returncode != 0:
             raise Exception("qvm-run: Copying metadata file failed!!")
-        if p.returncode != 0:
-            raise Exception("qvm-run: Copying metadata jcat failed!!")
+        if q.returncode != 0:
+            raise Exception("qvm-run: Copying metadata signature failed!!")
 
         self._verify_received(
             FWUPD_DOM0_METADATA_DIR, FWUPD_METADATA_FILES_REGEX, updatevm
         )
-        self._jcat_verification(self.metadata_file_jcat, FWUPD_DOM0_METADATA_DIR)
+        self._pgp_verification(self.metadata_file + '.asc', self.metadata_file)
+        self._reconstruct_jcat(self.metadata_file_jcat, self.metadata_file)
         os.umask(self.old_umask)
 
     def clean_cache(self):

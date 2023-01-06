@@ -218,6 +218,7 @@ Requires:   gcab
 Requires:   fwupd >= 1.5.7
 Requires:   libjcat >= 0.1.6
 Requires:   python3-packaging
+Requires:   sequoia-sqv
 
 %description qubes-dom0
 fwupd wrapper for Qubes OS
