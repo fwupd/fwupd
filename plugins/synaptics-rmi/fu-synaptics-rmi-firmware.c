@@ -93,6 +93,7 @@ typedef enum {
 	RMI_FIRMWARE_CONTAINER_ID_EXTERNAL_TOUCH_AFE_CONFIG,
 	RMI_FIRMWARE_CONTAINER_ID_UTILITY,
 	RMI_FIRMWARE_CONTAINER_ID_UTILITY_PARAMETER,
+	RMI_FIRMWARE_CONTAINER_ID_FIXED_LOCATION_DATA = 27,
 } RmiFirmwareContainerId;
 
 static const gchar *
@@ -146,6 +147,8 @@ rmi_firmware_container_id_to_string(RmiFirmwareContainerId container_id)
 		return "utility";
 	if (container_id == RMI_FIRMWARE_CONTAINER_ID_UTILITY_PARAMETER)
 		return "utility-parameter";
+	if (container_id == RMI_FIRMWARE_CONTAINER_ID_FIXED_LOCATION_DATA)
+		return "fixed-location-data";
 	return NULL;
 }
 
@@ -326,6 +329,33 @@ fu_synaptics_rmi_firmware_parse_v10(FuFirmware *firmware, GBytes *fw, GError **e
 		case RMI_FIRMWARE_CONTAINER_ID_CORE_CONFIG:
 			if (!fu_synaptics_rmi_firmware_add_image(firmware,
 								 "config",
+								 fw,
+								 content_addr,
+								 length,
+								 error))
+				return FALSE;
+			break;
+		case RMI_FIRMWARE_CONTAINER_ID_FIXED_LOCATION_DATA:
+			if (!fu_synaptics_rmi_firmware_add_image(firmware,
+								 "fixed-location-data",
+								 fw,
+								 content_addr,
+								 length,
+								 error))
+				return FALSE;
+			break;
+		case RMI_FIRMWARE_CONTAINER_ID_EXTERNAL_TOUCH_AFE_CONFIG:
+			if (!fu_synaptics_rmi_firmware_add_image(firmware,
+								 "afe-config",
+								 fw,
+								 content_addr,
+								 length,
+								 error))
+				return FALSE;
+			break;
+		case RMI_FIRMWARE_CONTAINER_ID_DISPLAY_CONFIG:
+			if (!fu_synaptics_rmi_firmware_add_image(firmware,
+								 "display-config",
 								 fw,
 								 content_addr,
 								 length,
