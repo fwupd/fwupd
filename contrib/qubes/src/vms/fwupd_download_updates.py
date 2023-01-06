@@ -66,6 +66,30 @@ class DownloadData(FwupdVmCommon):
             raise FileNotFoundError(
                 "fwupd-qubes: Downloaded metadata file does not exist"
             )
+        cmd_export = [
+            "jcat-tool",
+            f"--prefix={FWUPD_VM_METADATA_DIR}/",
+            "--",
+            "export",
+            f"{self.metadata_file}.jcat",
+        ]
+        environ = os.environ.copy()
+        environ["LC_ALL"] = "C"
+        p = subprocess.Popen(cmd_export, stdout=subprocess.PIPE, env=environ)
+        stdout, _ = p.communicate()
+        if p.returncode != 0:
+            raise Exception("fwupd-qubes: Extracting jcat file failed")
+        # rename extracted files to match jcat base name, instead of "ID"
+        # inside jcat
+        for line in stdout.decode("ascii").splitlines():
+            if not line.startswith("Wrote "):
+                continue
+            path = line.split(" ", 1)[1]
+            base_path, ext = os.path.splitext(path)
+            if base_path == self.metadata_file:
+                continue
+            new_path = f"{self.metadata_file}{ext}"
+            os.rename(path, new_path)
 
     def download_metadata(self, url=None):
         """Downloads default metadata and its signatures"""
