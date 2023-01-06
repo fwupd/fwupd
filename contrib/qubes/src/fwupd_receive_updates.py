@@ -12,7 +12,6 @@ import glob
 import grp
 import hashlib
 import os
-import re
 import shutil
 import subprocess
 
@@ -31,10 +30,6 @@ FWUPD_VM_METADATA_JCAT = os.path.join(FWUPD_VM_METADATA_DIR, "firmware.xml.gz.jc
 FWUPD_PKI = "/etc/pki/fwupd"
 FWUPD_PKI_PGP = "/etc/pki/fwupd/GPG-KEY-Linux-Vendor-Firmware-Service"
 FWUPD_DOWNLOAD_PREFIX = "https://fwupd.org/downloads/"
-FWUPD_METADATA_FLAG_REGEX = re.compile(r"^metaflag")
-FWUPD_METADATA_FILES_REGEX = re.compile(
-    r"^firmware[a-z0-9\[\]\@\<\>\.\"\-]{0,128}.xml.gz.?[aj]?[sc]?[ca]?t?$"
-)
 HEADS_UPDATES_DIR = "/boot/updates"
 WARNING_COLOR = "\033[93m"
 
@@ -52,39 +47,6 @@ class FwupdReceiveUpdates:
         if c_sha != sha:
             self.clean_cache()
             raise ValueError(f"Computed checksum {c_sha} did NOT match {sha}.")
-
-    def _check_domain(self, updatevm):
-        """Checks if domain given as `updatevm` is allowed to send update
-        files.
-
-        Keyword argument:
-        updatevm - domain to be checked
-        """
-        cmd = ["qubes-prefs", "--force-root", "updatevm"]
-        p = subprocess.check_output(cmd)
-        source = p.decode("ascii").rstrip()
-        if source != updatevm and "sys-whonix" != updatevm:
-            raise Exception(f"Domain {updatevm} not allowed to send dom0 updates")
-
-    def _verify_received(self, files_path, regex_pattern, updatevm):
-        """Checks if sent files match  regex filename pattern.
-
-        Keyword arguments:
-
-        files_path -- absolute path to inspected directory
-        regex_pattern -- pattern of the expected files
-        updatevm - domain to be checked
-        """
-        for untrusted_f in os.listdir(files_path):
-            if not regex_pattern.match(untrusted_f):
-                raise Exception(f"Domain {updatevm} sent unexpected file")
-            f = untrusted_f
-            assert "/" not in f
-            assert "\0" not in f
-            assert "\x1b" not in f
-            path_f = os.path.join(files_path, f)
-            if os.path.islink(path_f) or not os.path.isfile(path_f):
-                raise Exception(f"Domain {updatevm} sent not regular file")
 
     def _create_dirs(self, *args):
         """Method creates directories.
@@ -190,11 +152,9 @@ class FwupdReceiveUpdates:
         sha -- SHA256 checksum of the firmware update archive
         filename -- name of the firmware update archive
         """
-        fwupd_firmware_file_regex = re.compile(filename)
         dom0_firmware_untrusted_path = os.path.join(FWUPD_DOM0_UNTRUSTED_DIR, filename)
         updatevm_firmware_file_path = os.path.join(FWUPD_VM_UPDATES_DIR, filename)
 
-        self._check_domain(updatevm)
         if os.path.exists(FWUPD_DOM0_UNTRUSTED_DIR):
             shutil.rmtree(FWUPD_DOM0_UNTRUSTED_DIR)
         self._create_dirs(FWUPD_DOM0_UPDATES_DIR, FWUPD_DOM0_UNTRUSTED_DIR)
@@ -217,9 +177,6 @@ class FwupdReceiveUpdates:
         if p.returncode != 0:
             raise Exception("qvm-run: Copying firmware file failed!!")
 
-        self._verify_received(
-            FWUPD_DOM0_UNTRUSTED_DIR, fwupd_firmware_file_regex, updatevm
-        )
         self._check_shasum(dom0_firmware_untrusted_path, sha)
         # jcat verification will be done by fwupd itself
         os.umask(self.old_umask)
@@ -250,7 +207,6 @@ class FwupdReceiveUpdates:
         self.metadata_file_updatevm = self.metadata_file.replace(
             FWUPD_DOM0_METADATA_DIR, FWUPD_VM_METADATA_DIR
         )
-        self._check_domain(updatevm)
         self._create_dirs(FWUPD_DOM0_METADATA_DIR)
         cmd_copy_metadata_file = [
             "qvm-run",
@@ -289,9 +245,6 @@ class FwupdReceiveUpdates:
         if q.returncode != 0:
             raise Exception("qvm-run: Copying metadata signature failed!!")
 
-        self._verify_received(
-            FWUPD_DOM0_METADATA_DIR, FWUPD_METADATA_FILES_REGEX, updatevm
-        )
         self._pgp_verification(self.metadata_file + '.asc', self.metadata_file)
         self._reconstruct_jcat(self.metadata_file_jcat, self.metadata_file)
         os.umask(self.old_umask)
