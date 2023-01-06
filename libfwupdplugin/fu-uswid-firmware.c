@@ -319,6 +319,7 @@ fu_uswid_firmware_init(FuUswidFirmware *self)
 	priv->hdrver = USWID_HEADER_VERSION_V1;
 	priv->compressed = FALSE;
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_STORED_SIZE);
+	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_ALWAYS_SEARCH);
 }
 
 static void
