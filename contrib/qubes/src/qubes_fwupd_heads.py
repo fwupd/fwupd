@@ -45,6 +45,15 @@ class FwupdHeads:
             print("Exiting...")
             return EXIT_CODES["NOTHING_TO_DO"]
 
+    def _get_hwid_device(self):
+        """
+        Device model for Heads update, currently supports ThinkPad only.
+        """
+        for line in self.dom0_hwids_info.splitlines():
+            if line.startswith("Family: ThinkPad"):
+                return line.split(":", 1)[1].split(" ", 1)[1].lower()
+        return None
+
     def _parse_metadata(self, metadata_file):
         """
         Parse metadata info.

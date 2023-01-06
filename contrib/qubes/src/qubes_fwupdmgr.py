@@ -527,7 +527,7 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
                 self.refresh_metadata()
             os.remove(BIOS_UPDATE_FLAG)
 
-    def heads_update(self, device="x230", whonix=False, metadata_url=None):
+    def heads_update(self, device=None, whonix=False, metadata_url=None):
         """
         Updates heads firmware
 
@@ -544,6 +544,8 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
         else:
             self.metadata_file = FWUPD_DOM0_METADATA_FILE
         self._get_hwids()
+        if device is None:
+            device = self._get_hwid_device()
         self._download_metadata(whonix=whonix, metadata_url=metadata_url)
         self._parse_metadata(self.metadata_file)
         if self._gather_firmware_version() == EXIT_CODES["NOTHING_TO_DO"]:
@@ -598,7 +600,7 @@ def main():
         exit(1)
 
     metadata_url = None
-    device = "x230"
+    device_override = None
     whonix = False
 
     for arg in sys.argv:
@@ -612,7 +614,7 @@ def main():
                 print("Exiting...")
                 exit(1)
         if "--device=" in arg:
-            device = arg.replace("--device=", "")
+            device_override = arg.replace("--device=", "")
         if "--whonix" == arg:
             whonix = True
 
@@ -636,7 +638,7 @@ def main():
     elif sys.argv[1] == "refresh":
         q.refresh_metadata(metadata_url=metadata_url, whonix=whonix)
     elif sys.argv[1] == "update-heads":
-        q.heads_update(device=device, metadata_url=metadata_url, whonix=whonix)
+        q.heads_update(device=device_override, metadata_url=metadata_url, whonix=whonix)
     else:
         q.help()
         exit(1)
