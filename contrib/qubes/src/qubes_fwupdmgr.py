@@ -588,19 +588,15 @@ def main():
         exit(EXIT_CODES["ERROR"])
 
     q = QubesFwupdmgr()
-    q.validate_dom0_dirs()
-    q.trusted_cleanup()
-    q.refresh_metadata_after_bios_update()
-
-    metadata_url = None
-    device = "x230"
-
-    if not os.path.exists(FWUPD_DOM0_DIR):
-        q.refresh_metadata()
 
     if len(sys.argv) < 2:
         q.help()
         exit(1)
+
+    metadata_url = None
+    device = "x230"
+    whonix = False
+
     for arg in sys.argv:
         if "--url=" in arg:
             metadata_url = arg.replace("--url=", "")
@@ -613,29 +609,30 @@ def main():
                 exit(1)
         if "--device=" in arg:
             device = arg.replace("--device=", "")
+        if "--whonix" == arg:
+            whonix = True
+
+    q.validate_dom0_dirs()
+    q.trusted_cleanup()
+    q.refresh_metadata_after_bios_update()
+
+    if not os.path.exists(FWUPD_DOM0_DIR):
+        q.refresh_metadata(whonix=whonix, metadata_url=metadata_url)
 
     if sys.argv[1] == "get-updates":
         q.get_updates_qubes()
     elif sys.argv[1] == "get-devices":
         q.get_devices_qubes()
-    elif sys.argv[1] == "update" and "--whonix" in sys.argv:
-        q.update_firmware(whonix=True)
-    elif sys.argv[1] == "update" and "--whonix" not in sys.argv:
-        q.update_firmware()
-    elif sys.argv[1] == "downgrade" and "--whonix" in sys.argv:
-        q.downgrade_firmware(whonix=True)
-    elif sys.argv[1] == "downgrade" and "--whonix" not in sys.argv:
-        q.downgrade_firmware()
+    elif sys.argv[1] == "update":
+        q.update_firmware(whonix=whonix)
+    elif sys.argv[1] == "downgrade":
+        q.downgrade_firmware(whonix=whonix)
     elif sys.argv[1] == "clean":
         q.clean_cache()
-    elif sys.argv[1] == "refresh" and "--whonix" not in sys.argv:
-        q.refresh_metadata(metadata_url=metadata_url)
-    elif sys.argv[1] == "refresh" and "--whonix" in sys.argv:
-        q.refresh_metadata(whonix=True, metadata_url=metadata_url)
-    elif sys.argv[1] == "update-heads" and "--whonix" not in sys.argv:
-        q.heads_update(device=device, metadata_url=metadata_url)
-    elif sys.argv[1] == "update-heads" and "--whonix" in sys.argv:
-        q.heads_update(device=device, metadata_url=metadata_url, whonix=True)
+    elif sys.argv[1] == "refresh":
+        q.refresh_metadata(metadata_url=metadata_url, whonix=whonix)
+    elif sys.argv[1] == "update-heads":
+        q.heads_update(device=device, metadata_url=metadata_url, whonix=whonix)
     else:
         q.help()
         exit(1)
