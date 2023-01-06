@@ -38,6 +38,7 @@ typedef enum {
 	RMI_PARTITION_ID_DISPLAY_CONFIG,
 	RMI_PARTITION_ID_EXTERNAL_TOUCH_AFE_CONFIG,
 	RMI_PARTITION_ID_UTILITY_PARAMETER,
+	RMI_PARTITION_ID_FIXED_LOCATION_DATA = 0x0E,
 } RmiPartitionId;
 
 static const gchar *
@@ -69,6 +70,8 @@ rmi_firmware_partition_id_to_string(RmiPartitionId partition_id)
 		return "external-touch-afe-config";
 	if (partition_id == RMI_PARTITION_ID_UTILITY_PARAMETER)
 		return "utility-parameter";
+	if (partition_id == RMI_PARTITION_ID_FIXED_LOCATION_DATA)
+		return "fixed-location-data";
 	return NULL;
 }
 
@@ -344,15 +347,21 @@ fu_synaptics_rmi_v7_device_write_firmware(FuDevice *device,
 	g_autoptr(GBytes) bytes_bin = NULL;
 	g_autoptr(GBytes) bytes_cfg = NULL;
 	g_autoptr(GBytes) bytes_flashcfg = NULL;
+	g_autoptr(GBytes) bytes_fld = NULL;
+	g_autoptr(GBytes) bytes_afe = NULL;
+	g_autoptr(GBytes) bytes_displayconfig = NULL;
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1, "disable-sleep");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 1, "fixed-location-data");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 10, NULL);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 20, "flash-config");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 20, "core-code");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 20, "core-config");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 1, "external-touch-afe-config");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 1, "display-config");
 
 	/* we should be in bootloader mode now, but check anyway */
 	if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
@@ -380,10 +389,25 @@ fu_synaptics_rmi_v7_device_write_firmware(FuDevice *device,
 		if (bytes_flashcfg == NULL)
 			return FALSE;
 	}
+	bytes_fld = fu_firmware_get_image_by_id_bytes(firmware, "fixed-location-data", NULL);
+	bytes_afe = fu_firmware_get_image_by_id_bytes(firmware, "afe-config", NULL);
+	bytes_displayconfig = fu_firmware_get_image_by_id_bytes(firmware, "display-config", NULL);
 
 	/* disable powersaving */
 	if (!fu_synaptics_rmi_device_disable_sleep(self, error))
 		return FALSE;
+	fu_progress_step_done(progress);
+
+	/* write fld before erase if exists */
+	if (bytes_fld != NULL) {
+		if (!fu_synaptics_rmi_v7_device_write_partition(
+			self,
+			RMI_PARTITION_ID_FIXED_LOCATION_DATA,
+			bytes_fld,
+			fu_progress_get_child(progress),
+			error))
+			return FALSE;
+	}
 	fu_progress_step_done(progress);
 
 	/* erase all */
@@ -420,6 +444,29 @@ fu_synaptics_rmi_v7_device_write_firmware(FuDevice *device,
 							fu_progress_get_child(progress),
 							error))
 		return FALSE;
+	fu_progress_step_done(progress);
+
+	/* write afe-config if exists */
+	if (bytes_afe != NULL) {
+		if (!fu_synaptics_rmi_v7_device_write_partition(
+			self,
+			RMI_PARTITION_ID_EXTERNAL_TOUCH_AFE_CONFIG,
+			bytes_afe,
+			fu_progress_get_child(progress),
+			error))
+			return FALSE;
+	}
+	fu_progress_step_done(progress);
+
+	/* write display config if exists */
+	if (bytes_displayconfig != NULL) {
+		if (!fu_synaptics_rmi_v7_device_write_partition(self,
+								RMI_PARTITION_ID_DISPLAY_CONFIG,
+								bytes_displayconfig,
+								fu_progress_get_child(progress),
+								error))
+			return FALSE;
+	}
 	fu_progress_step_done(progress);
 
 	/* success */
