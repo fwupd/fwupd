@@ -13,7 +13,7 @@ import re
 import shlex
 import subprocess
 
-FWUPD_DOM0_DIR = "/var/cache/fwupd"
+FWUPD_DOM0_DIR = "/var/cache/fwupd/qubes"
 FWUPD_VM_DOWNLOAD = "/usr/libexec/qubes-fwupd/fwupd_download_updates.py"
 FWUPD_DOM0_UPDATES_DIR = os.path.join(FWUPD_DOM0_DIR, "updates")
 FWUPD_DOWNLOAD_PREFIX = "https://fwupd.org/downloads/"
@@ -25,6 +25,7 @@ WARNING_COLOR = "\033[93m"
 
 run_cmd = (
     "qvm-run",
+    "--pass-io",
     "--no-gui",
     "--no-shell",
     "-q",
@@ -41,12 +42,7 @@ def run_in_tty(updatevm, args, **kwargs):
         (
             *run_cmd,
             updatevm,
-            "script",
-            "--quiet",
-            "--return",
-            "--command",
-            shlex.join(args),
-            "/dev/null",
+            *args,
         ),
         stdin=subprocess.DEVNULL,
         **kwargs,
@@ -85,17 +81,12 @@ class FwupdUpdate:
 
     def _check_updatevm(self):
         """Checks if updatevm is running"""
-        cmd_xl_list = ["xl", "list"]
-        p = subprocess.Popen(cmd_xl_list, stdout=subprocess.PIPE)
+        cmd_xl_list = ["xl", "list", "--", self.updatevm]
+        p = subprocess.Popen(
+            cmd_xl_list, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+        )
         output = p.communicate()[0].decode()
-        if p.returncode != 0:
-            raise Exception("fwupd-qubes: updatevm check failed")
-        return self.updatevm in output
-
-    def _encrypt_update_url(self, url):
-        self.enc_url = url
-        self.arch_name = "untrusted.cab"
-        self.arch_path = os.path.join(FWUPD_DOM0_UPDATES_DIR, self.arch_name)
+        return p.returncode == 0
 
     def download_metadata(self, whonix=False, metadata_url=None):
         """Initialize downloading metadata files.
@@ -136,7 +127,8 @@ class FwupdUpdate:
             raise Exception(f"{self.updatevm} is not running!!")
         if not os.path.exists(FWUPD_DOM0_DIR):
             self._create_dirs(FWUPD_DOM0_DIR)
-        self._encrypt_update_url(url)
+        self.arch_name = os.path.basename(url)
+        self.arch_path = os.path.join(FWUPD_DOM0_UPDATES_DIR, self.arch_name)
         if not os.path.exists(self.arch_path):
             cmd_firmware_download = [
                 "qvm-run",
@@ -148,13 +140,9 @@ class FwupdUpdate:
                 "--color-stderr=31",
                 "--",
                 self.updatevm,
-                "script",
-                "--quiet",
-                "--return",
-                "--command",
-                shlex.join(
-                    (FWUPD_VM_DOWNLOAD, f"--url={self.enc_url}", f"--sha={sha}")
-                ),
+                FWUPD_VM_DOWNLOAD,
+                f"--url={url}",
+                f"--sha={sha}",
             ]
             p = subprocess.Popen(cmd_firmware_download, stdin=subprocess.DEVNULL)
             p.wait()

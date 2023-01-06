@@ -21,20 +21,6 @@ METADATA_URL_JCAT = "https://fwupd.org/downloads/firmware.xml.gz.jcat"
 
 
 class DownloadData(FwupdVmCommon):
-    def _decrypt_update_url(self, url):
-        self.dec_url = url
-        if "--and--" in url:
-            self.dec_url = self.dec_url.replace("--and--", "&")
-            self.arch_name = "untrusted.cab"
-        if "--or--" in url:
-            self.dec_url = self.dec_url.replace("--or--", "|")
-            self.arch_name = "untrusted.cab"
-        if "--hash--" in url:
-            self.dec_url = self.dec_url.replace("--hash--", "#")
-            self.arch_name = "untrusted.cab"
-        if "%20" in url:
-            self.arch_name = "untrusted.cab"
-
     def _download_metadata_file(self):
         """Download metadata file"""
         if self.custom_url is None:
@@ -114,10 +100,9 @@ class DownloadData(FwupdVmCommon):
         url - url address of the update
         """
         self.validate_vm_dirs()
-        self.arch_name = url.replace("https://fwupd.org/downloads/", "")
-        self._decrypt_update_url(url)
+        self.arch_name = os.path.basename(url)
         update_path = os.path.join(FWUPD_VM_UPDATES_DIR, self.arch_name)
-        cmd_update = ["wget", "-O", update_path, self.dec_url]
+        cmd_update = ["wget", "-O", update_path, url]
         p = subprocess.Popen(cmd_update)
         p.wait()
         if p.returncode != 0:
