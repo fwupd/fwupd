@@ -108,6 +108,7 @@ FirmwareSizeMax = 0x2000000
 Branch = coreboot
 Flags = reset-cmos
 PciBcrAddr = 0x0
+FirmwareSizeMax = 0x2000000
 
 # NovaCustom NV4x (HwId)
 [25b6ea34-8f52-598e-a27a-31e03014dbe3]
