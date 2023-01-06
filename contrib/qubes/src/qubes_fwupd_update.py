@@ -62,7 +62,7 @@ class FwupdUpdate:
             raise Exception("Creating directories failed, no paths given.")
         for file_path in args:
             if not os.path.exists(file_path):
-                os.mkdir(file_path)
+                os.makedirs(file_path)
                 os.chown(file_path, -1, qubes_gid)
             elif os.stat(file_path).st_gid != qubes_gid:
                 print(

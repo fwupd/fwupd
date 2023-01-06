@@ -14,6 +14,7 @@ import hashlib
 import os
 import shutil
 import subprocess
+import tempfile
 
 FWUPD_DOM0_DIR = "/var/cache/fwupd/qubes"
 FWUPD_DOM0_UPDATES_DIR = os.path.join(FWUPD_DOM0_DIR, "updates")
@@ -60,9 +61,8 @@ class FwupdReceiveUpdates:
             raise Exception("Creating directories failed, no paths given.")
         for file_path in args:
             if not os.path.exists(file_path):
-                os.mkdir(file_path)
+                os.makedirs(file_path, mode=0o0775)
                 os.chown(file_path, -1, qubes_gid)
-                os.chmod(file_path, 0o0775)
             elif os.stat(file_path).st_gid != qubes_gid:
                 print(
                     f"{WARNING_COLOR}Warning: You should move a personal files"
@@ -152,38 +152,37 @@ class FwupdReceiveUpdates:
         sha -- SHA256 checksum of the firmware update archive
         filename -- name of the firmware update archive
         """
-        dom0_firmware_untrusted_path = os.path.join(FWUPD_DOM0_UNTRUSTED_DIR, filename)
-        updatevm_firmware_file_path = os.path.join(FWUPD_VM_UPDATES_DIR, filename)
-
-        if os.path.exists(FWUPD_DOM0_UNTRUSTED_DIR):
-            shutil.rmtree(FWUPD_DOM0_UNTRUSTED_DIR)
         self._create_dirs(FWUPD_DOM0_UPDATES_DIR, FWUPD_DOM0_UNTRUSTED_DIR)
 
-        cmd_copy = [
-            "qvm-run",
-            "--pass-io",
-            "--no-gui",
-            "-q",
-            "-a",
-            "--no-shell",
-            "--",
-            updatevm,
-            "cat",
-            "--",
-            updatevm_firmware_file_path,
-        ]
-        with open(dom0_firmware_untrusted_path, "wbx") as untrusted_file:
-            p = subprocess.Popen(cmd_copy, stdout=untrusted_file, shell=False)
-        p.wait()
-        if p.returncode != 0:
-            raise Exception("qvm-run: Copying firmware file failed!!")
+        with tempfile.TemporaryDirectory(dir=FWUPD_DOM0_UNTRUSTED_DIR) as tmpdir:
+            dom0_firmware_untrusted_path = os.path.join(tmpdir, filename)
+            updatevm_firmware_file_path = os.path.join(FWUPD_VM_UPDATES_DIR, filename)
 
-        self._check_shasum(dom0_firmware_untrusted_path, sha)
-        # jcat verification will be done by fwupd itself
-        os.umask(self.old_umask)
-        self.arch_name = filename
-        self.arch_path = os.path.join(FWUPD_DOM0_UPDATES_DIR, filename)
-        shutil.move(dom0_firmware_untrusted_path, self.arch_path)
+            cmd_copy = [
+                "qvm-run",
+                "--pass-io",
+                "--no-gui",
+                "-q",
+                "-a",
+                "--no-shell",
+                "--",
+                updatevm,
+                "cat",
+                "--",
+                updatevm_firmware_file_path,
+            ]
+            with open(dom0_firmware_untrusted_path, "bx") as untrusted_file:
+                p = subprocess.Popen(cmd_copy, stdout=untrusted_file, shell=False)
+            p.wait()
+            if p.returncode != 0:
+                raise Exception("qvm-run: Copying firmware file failed!!")
+
+            self._check_shasum(dom0_firmware_untrusted_path, sha)
+            # jcat verification will be done by fwupd itself
+            os.umask(self.old_umask)
+            self.arch_name = filename
+            self.arch_path = os.path.join(FWUPD_DOM0_UPDATES_DIR, filename)
+            shutil.move(dom0_firmware_untrusted_path, self.arch_path)
 
     def handle_metadata_update(self, updatevm, metadata_url=None):
         """Copies metadata files from the updateVM.
@@ -195,51 +194,62 @@ class FwupdReceiveUpdates:
             metadata_name = metadata_url.replace(FWUPD_DOWNLOAD_PREFIX, "")
             self.metadata_file = os.path.join(FWUPD_DOM0_METADATA_DIR, metadata_name)
         else:
+            metadata_name = "firmware.xml.gz"
             self.metadata_file = FWUPD_DOM0_METADATA_FILE
         self.metadata_file_jcat = self.metadata_file + ".jcat"
         self.metadata_file_updatevm = self.metadata_file.replace(
             FWUPD_DOM0_METADATA_DIR, FWUPD_VM_METADATA_DIR
         )
-        self._create_dirs(FWUPD_DOM0_METADATA_DIR)
-        cmd_copy_metadata_file = [
-            "qvm-run",
-            "--pass-io",
-            "--no-gui",
-            "--no-shell",
-            "--",
-            updatevm,
-            "cat",
-            "--",
-            self.metadata_file_updatevm,
-        ]
-        # TODO: switch to ed25519 once firmware.xml.gz.jcat will have it
-        cmd_copy_metadata_file_signature = [
-            "qvm-run",
-            "--pass-io",
-            "--no-gui",
-            "--no-shell",
-            "--",
-            updatevm,
-            "cat",
-            "--",
-            self.metadata_file_updatevm + '.asc',
-        ]
-        with open(self.metadata_file, "wbx") as untrusted_file_1, open(
-            self.metadata_file + '.asc', "wbx"
-        ) as untrusted_file_2, subprocess.Popen(
-            cmd_copy_metadata_file, stdout=untrusted_file_1
-        ) as p, subprocess.Popen(
-            cmd_copy_metadata_file_signature, stdout=untrusted_file_2
-        ) as q:
-            p.wait()
-            q.wait()
-        if p.returncode != 0:
-            raise Exception("qvm-run: Copying metadata file failed!!")
-        if q.returncode != 0:
-            raise Exception("qvm-run: Copying metadata signature failed!!")
+        self._create_dirs(FWUPD_DOM0_METADATA_DIR, FWUPD_DOM0_UNTRUSTED_DIR)
+        with tempfile.TemporaryDirectory(dir=FWUPD_DOM0_UNTRUSTED_DIR) as tmpdir:
+            cmd_copy_metadata_file = [
+                "qvm-run",
+                "--pass-io",
+                "--no-gui",
+                "--no-shell",
+                "--",
+                updatevm,
+                "cat",
+                "--",
+                self.metadata_file_updatevm,
+            ]
+            # TODO: switch to ed25519 once firmware.xml.gz.jcat will have it
+            cmd_copy_metadata_file_signature = [
+                "qvm-run",
+                "--pass-io",
+                "--no-gui",
+                "--no-shell",
+                "--",
+                updatevm,
+                "cat",
+                "--",
+                self.metadata_file_updatevm + ".asc",
+            ]
+            untrusted_metadata_file = os.path.join(tmpdir, metadata_name)
 
-        self._pgp_verification(self.metadata_file + '.asc', self.metadata_file)
-        self._reconstruct_jcat(self.metadata_file_jcat, self.metadata_file)
+            with open(untrusted_metadata_file, "bx") as untrusted_file_1, open(
+                untrusted_metadata_file + ".asc", "bx"
+            ) as untrusted_file_2, subprocess.Popen(
+                cmd_copy_metadata_file, stdout=untrusted_file_1
+            ) as p, subprocess.Popen(
+                cmd_copy_metadata_file_signature, stdout=untrusted_file_2
+            ) as q:
+                p.wait()
+                q.wait()
+            if p.returncode != 0:
+                raise Exception("qvm-run: Copying metadata file failed!!")
+            if q.returncode != 0:
+                raise Exception("qvm-run: Copying metadata signature failed!!")
+
+            self._pgp_verification(
+                untrusted_metadata_file + ".asc", untrusted_metadata_file
+            )
+            self._reconstruct_jcat(
+                untrusted_metadata_file + ".jcat", untrusted_metadata_file
+            )
+            # verified, move into trusted dir
+            shutil.move(untrusted_metadata_file, self.metadata_file)
+            shutil.move(untrusted_metadata_file + ".jcat", self.metadata_file_jcat)
 
     def clean_cache(self):
         """Removes updates data"""
