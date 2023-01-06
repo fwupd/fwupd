@@ -74,6 +74,7 @@ fwupdplugin_src = [
   'fu-uswid-firmware.c',          # fuzzing
   'fu-coswid-common.c',           # fuzzing
   'fu-coswid-firmware.c',         # fuzzing
+  'fu-pefile-firmware.c',         # fuzzing
   'fu-efivar.c',
   'fu-udev-device.c',
   'fu-i2c-device.c',
@@ -149,6 +150,7 @@ fwupdplugin_headers = [
   'fu-ifd-firmware.h',
   'fu-uswid-firmware.h',
   'fu-coswid-firmware.h',
+  'fu-pefile-firmware.h',
   'fu-ifd-image.h',
   'fu-linear-firmware.h',
   'fu-volume.h',
