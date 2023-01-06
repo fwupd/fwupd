@@ -16,7 +16,7 @@ import re
 import shutil
 import subprocess
 
-FWUPD_DOM0_DIR = "/var/cache/fwupd"
+FWUPD_DOM0_DIR = "/var/cache/fwupd/qubes"
 FWUPD_DOM0_UPDATES_DIR = os.path.join(FWUPD_DOM0_DIR, "updates")
 FWUPD_DOM0_UNTRUSTED_DIR = os.path.join(FWUPD_DOM0_UPDATES_DIR, "untrusted")
 FWUPD_DOM0_METADATA_DIR = os.path.join(FWUPD_DOM0_DIR, "metadata")
@@ -202,6 +202,7 @@ class FwupdReceiveUpdates:
         cmd_copy = [
             "qvm-run",
             "--pass-io",
+            "--no-gui",
             "-q",
             "-a",
             "--no-shell",
@@ -254,6 +255,7 @@ class FwupdReceiveUpdates:
         cmd_copy_metadata_file = [
             "qvm-run",
             "--pass-io",
+            "--no-gui",
             "--no-shell",
             "--",
             updatevm,
@@ -265,6 +267,7 @@ class FwupdReceiveUpdates:
         cmd_copy_metadata_file_signature = [
             "qvm-run",
             "--pass-io",
+            "--no-gui",
             "--no-shell",
             "--",
             updatevm,

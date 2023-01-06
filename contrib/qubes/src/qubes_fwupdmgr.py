@@ -35,7 +35,7 @@ except ModuleNotFoundError:
         "qubes-fwupd modules not found.  You may need to reinstall package."
     )
 
-FWUPD_DOM0_DIR = "/var/cache/qubes-fwupd"
+FWUPD_DOM0_DIR = "/var/cache/fwupd/qubes"
 FWUPD_DOM0_METADATA_DIR = os.path.join(FWUPD_DOM0_DIR, "metadata")
 FWUPD_DOM0_UPDATES_DIR = os.path.join(FWUPD_DOM0_DIR, "updates")
 FWUPD_DOM0_METADATA_SIGNATURE = os.path.join(
