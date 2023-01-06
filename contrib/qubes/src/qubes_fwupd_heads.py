@@ -8,6 +8,7 @@
 #
 
 import subprocess
+import tempfile
 import os
 import shutil
 import xml.etree.ElementTree as ET
@@ -99,7 +100,6 @@ class FwupdHeads:
         Copies heads update to the boot path
         """
         heads_boot_path = os.path.join(HEADS_UPDATES_DIR, self.heads_update_version)
-        update_path = arch_path.replace(".cab", "/firmware.rom")
 
         heads_update_path = os.path.join(heads_boot_path, "firmware.rom")
         if not os.path.exists(HEADS_UPDATES_DIR):
@@ -109,7 +109,14 @@ class FwupdHeads:
             return EXIT_CODES["NOTHING_TO_DO"]
         else:
             os.mkdir(heads_boot_path)
-            shutil.copyfile(update_path, heads_update_path)
+            with tempfile.TemporaryDirectory() as tmpdir:
+                cmd_extract = ["gcab", "-x", f"--directory={tmpdir}", "--", arch_path]
+                p = subprocess.Popen(cmd_extract, stdout=subprocess.PIPE)
+                p.communicate()
+                if p.returncode != 0:
+                    raise Exception(f"gcab: Error while extracting {arch_path}.")
+                update_path = os.path.join(tmpdir, "firmware.rom")
+                shutil.copyfile(update_path, heads_update_path)
             print(
                 f"Heads Update == {self.heads_update_version} "
                 f"available at {heads_boot_path}"

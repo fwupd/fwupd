@@ -167,6 +167,7 @@ class FwupdReceiveUpdates:
             "-a",
             "--no-shell",
             "--",
+            updatevm,
             "cat",
             "--",
             updatevm_firmware_file_path,
@@ -180,17 +181,9 @@ class FwupdReceiveUpdates:
         self._check_shasum(dom0_firmware_untrusted_path, sha)
         # jcat verification will be done by fwupd itself
         os.umask(self.old_umask)
-        if untrusted_dir_name == "untrusted":
-            untrusted_dir_name = "trusted"
-            verified_file = os.path.join(FWUPD_DOM0_UPDATES_DIR, filename)
-            self.arch_name = "trusted.cab"
-            self.arch_path = os.path.join(FWUPD_DOM0_UPDATES_DIR, self.arch_name)
-            shutil.move(verified_file, self.arch_path)
-        else:
-            self.arch_path = os.path.join(FWUPD_DOM0_UPDATES_DIR, filename)
-        dir_name = os.path.join(FWUPD_DOM0_UPDATES_DIR, untrusted_dir_name)
-        os.remove(dom0_firmware_untrusted_path)
-        shutil.move(FWUPD_DOM0_UNTRUSTED_DIR, dir_name)
+        self.arch_name = filename
+        self.arch_path = os.path.join(FWUPD_DOM0_UPDATES_DIR, filename)
+        shutil.move(dom0_firmware_untrusted_path, self.arch_path)
 
     def handle_metadata_update(self, updatevm, metadata_url=None):
         """Copies metadata files from the updateVM.
@@ -247,7 +240,6 @@ class FwupdReceiveUpdates:
 
         self._pgp_verification(self.metadata_file + '.asc', self.metadata_file)
         self._reconstruct_jcat(self.metadata_file_jcat, self.metadata_file)
-        os.umask(self.old_umask)
 
     def clean_cache(self):
         """Removes updates data"""
