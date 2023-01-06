@@ -12,6 +12,7 @@ import os
 import re
 import shutil
 import subprocess
+import tempfile
 import sys
 import xml.etree.ElementTree as ET
 
@@ -170,9 +171,8 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
         self.download_firmware_updates(url, sha, whonix=whonix)
         if not self.cached:
             self.handle_fw_update(self.updatevm, sha, self.arch_name)
-        update_path = self.arch_path.replace(".cab", "")
-        if not os.path.exists(update_path):
-            raise NotADirectoryError("Firmware update files do not exist")
+        if not os.path.exists(self.arch_path):
+            raise FileNotFoundError("Firmware update files do not exist")
 
     def _user_input(self, updates_list, downgrade=False):
         """UI for update process.
@@ -276,17 +276,23 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
             raise Exception("dmidecode: Reading DMI failed")
         return p.communicate()[0].decode()
 
-    def _verify_dmi(self, path, version, downgrade=False):
+    def _verify_dmi(self, arch_path, version, downgrade=False):
         """Verifies DMI tables for BIOS updates.
 
         Keywords arguments:
-        path -- absolute path of the updates files
+        arch_path -- absolute path of the update archive
         version -- version of the update
         downgrade -- downgrade flag
         """
         dmi_info = self._read_dmi()
-        path_metainfo = os.path.join(path, "firmware.metainfo.xml")
-        tree = ET.parse(path_metainfo)
+        with tempfile.TemporaryDirectory() as tmpdir:
+            cmd_extract = ["gcab", "-x", f"--directory={tmpdir}", "--", arch_path]
+            p = subprocess.Popen(cmd_extract, stdout=subprocess.PIPE)
+            p.communicate()
+            if p.returncode != 0:
+                raise Exception(f"gcab: Error while extracting {arch_path}.")
+            path_metainfo = os.path.join(tmpdir, "firmware.metainfo.xml")
+            tree = ET.parse(path_metainfo)
         root = tree.getroot()
         vendor = root.find("developer_name").text
         if vendor is None:
@@ -323,8 +329,7 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
         self._download_firmware_updates(self.url, self.sha, whonix=whonix)
         if self.name == "System Firmware":
             Path(BIOS_UPDATE_FLAG).touch(mode=0o644, exist_ok=True)
-            extracted_path = self.arch_path.replace(".cab", "")
-            self._verify_dmi(extracted_path, self.version)
+            self._verify_dmi(self.arch_path, self.version)
         self._install_dom0_firmware_update(self.arch_path)
 
     def _parse_downgrades(self, device_list):
@@ -393,9 +398,8 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
         self._download_firmware_updates(downgrade_url, downgrade_sha, whonix=whonix)
         if downgrade["Name"] == "System Firmware":
             Path(BIOS_UPDATE_FLAG).touch(mode=0o644, exist_ok=True)
-            extracted_path = self.arch_path.replace(".cab", "")
             self._verify_dmi(
-                extracted_path,
+                self.arch_path,
                 downgrade["Version"],
                 downgrade=True,
             )

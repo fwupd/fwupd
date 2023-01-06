@@ -15,6 +15,7 @@ import sys
 import imp
 import io
 import platform
+import tempfile
 from packaging.version import Version
 from pathlib import Path
 from .fwupd_logs import UPDATE_INFO, GET_DEVICES, DMI_DECODE
@@ -278,7 +279,12 @@ class TestQubesFwupdmgr(unittest.TestCase):
     )
     def test_verify_dmi(self, output):
         self.q.dmi_version = "P.1.0"
-        self.q._verify_dmi("test/logs/", "P1.1")
+        with tempfile.TemporaryDirectory() as tmpdir:
+            arch_name = tmpdir + "/firmware.cab"
+            subprocess.check_call(
+                ["gcab", "-c", arch_name, "firmware.metainfo.xml"], cwd="test/logs"
+            )
+            self.q._verify_dmi(arch_name, "P1.1")
 
     @patch(
         "test.test_qubes_fwupdmgr.qfwupd.QubesFwupdmgr._read_dmi",
@@ -287,7 +293,13 @@ class TestQubesFwupdmgr(unittest.TestCase):
     def test_verify_dmi_wrong_vendor(self, output):
         with self.assertRaises(ValueError) as wrong_vendor:
             self.q.dmi_version = "P.1.0"
-            self.q._verify_dmi("test/logs/metainfo_name/", "P1.1")
+            with tempfile.TemporaryDirectory() as tmpdir:
+                arch_name = tmpdir + "/firmware.cab"
+                subprocess.check_call(
+                    ["gcab", "-c", arch_name, "firmware.metainfo.xml"],
+                    cwd="test/logs/metainfo_name",
+                )
+                self.q._verify_dmi(arch_name, "P1.1")
         self.assertIn("Wrong firmware provider.", str(wrong_vendor.exception))
 
     @patch(
@@ -297,7 +309,13 @@ class TestQubesFwupdmgr(unittest.TestCase):
     def test_verify_dmi_version(self, output):
         self.q.dmi_version = "P1.0"
         with self.assertRaises(ValueError) as downgrade:
-            self.q._verify_dmi("test/logs/metainfo_version/", "P0.1")
+            with tempfile.TemporaryDirectory() as tmpdir:
+                arch_name = tmpdir + "/firmware.cab"
+                subprocess.check_call(
+                    ["gcab", "-c", arch_name, "firmware.metainfo.xml"],
+                    cwd="test/logs/metainfo_version",
+                )
+                self.q._verify_dmi(arch_name, "P0.1")
         self.assertIn("P0.1 < P1.0 Downgrade not allowed", str(downgrade.exception))
 
     @unittest.skipUnless(device_connected_dom0(), REQUIRED_DEV)
