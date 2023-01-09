@@ -10,6 +10,7 @@
 #include <fcntl.h>
 #include <glib/gi18n.h>
 
+#include "fu-acpi-uefi.h"
 #include "fu-uefi-backend.h"
 #include "fu-uefi-bgrt.h"
 #include "fu-uefi-bootmgr.h"
@@ -843,10 +844,11 @@ fu_uefi_capsule_plugin_check_cod_support(FuPlugin *plugin, GError **error)
 {
 	gsize bufsz = 0;
 	guint64 value = 0;
+	g_autofree gchar *fn = NULL;
+	g_autofree gchar *path = NULL;
 	g_autofree guint8 *buf = NULL;
-#ifndef __aarch64__
-	FuContext *ctx = fu_plugin_get_context(plugin);
-#endif
+	g_autoptr(FuFirmware) acpi_uefi = NULL;
+	g_autoptr(GBytes) blob = NULL;
 
 	if (!fu_efivar_get_data(FU_EFIVAR_GUID_EFI_GLOBAL,
 				"OsIndicationsSupported",
@@ -867,21 +869,20 @@ fu_uefi_capsule_plugin_check_cod_support(FuPlugin *plugin, GError **error)
 		return FALSE;
 	}
 
-#ifndef __aarch64__
-	/* several models with Insyde firmware have been released where OsIndications advertises
-	 * support for CoD, but it simply does not work */
-	if (!fu_context_has_hwid_flag(ctx, "uefi-allow-cod")) {
-		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_NOT_SUPPORTED,
-				    "Capsule-on-Disk is supported, but non-aarch64 platforms "
-				    "require the 'uefi-allow-cod' quirk for it to be used");
-		return FALSE;
-	}
-#endif
+	/* no table, nothing to check */
+	path = fu_path_from_kind(FU_PATH_KIND_ACPI_TABLES);
+	fn = g_build_filename(path, "UEFI", NULL);
+	if (!g_file_test(fn, G_FILE_TEST_EXISTS))
+		return TRUE;
 
-	/* success */
-	return TRUE;
+	/* if we have a table, parse it and validate it */
+	blob = fu_bytes_get_contents(fn, error);
+	if (blob == NULL)
+		return FALSE;
+	acpi_uefi = fu_acpi_uefi_new();
+	if (!fu_firmware_parse(acpi_uefi, blob, FWUPD_INSTALL_FLAG_NONE, error))
+		return FALSE;
+	return fu_acpi_uefi_cod_functional(FU_ACPI_UEFI(acpi_uefi), error);
 }
 
 static gboolean
@@ -1008,6 +1009,7 @@ fu_uefi_capsule_plugin_constructed(GObject *obj)
 	fu_plugin_add_rule(plugin, FU_PLUGIN_RULE_METADATA_SOURCE, "linux_lockdown");
 	fu_plugin_add_rule(plugin, FU_PLUGIN_RULE_METADATA_SOURCE, "acpi_phat");
 	fu_plugin_add_rule(plugin, FU_PLUGIN_RULE_CONFLICTS, "uefi"); /* old name */
+	fu_plugin_add_firmware_gtype(FU_PLUGIN(self), NULL, FU_TYPE_ACPI_UEFI);
 
 	/* add a requirement on the fwupd-efi version -- which can change  */
 	if (!fu_uefi_capsule_plugin_fwupd_efi_probe(self, &error_local))
