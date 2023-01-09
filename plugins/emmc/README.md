@@ -13,12 +13,16 @@ eMMC devices support the `org.jedec.mmc` protocol.
 
 These devices use the following instance values:
 
-* `EMMC\%NAME%`
-* `EMMC\%NAME%&%REV%`
-* `EMMC\%MANFID%&%OEMID%`
-* `EMMC\%MANFID%&%OEMID%&%NAME%`
-* `EMMC\%MANFID%&%NAME%&%REV%`
-* `EMMC\%MANFID%&%OEMID%&%NAME%&%REV%`
+* `EMMC\NAME_%name%`
+* `EMMC\NAME_%name%&REV_%rev%`
+* `EMMC\MAN_%manfid%&OEM_%oemid%`
+* `EMMC\MAN_%manfid%&OEM_%oemid%&NAME_%name%`
+* `EMMC\MAN_%manfid%&NAME_%name%&REV_%rev%`
+* `EMMC\MAN_%manfid%&OEM_%oemid%&NAME_%name%&REV_%rev%`
+
+One deprecated instance ID is also added; new firmware should not use this.
+
+* `EMMC\%manfid%&%oemid%&%name%`
 
 ## Update Behavior
 
