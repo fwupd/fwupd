@@ -178,7 +178,7 @@ def install_packages(os, variant, yes, debugging, packages):
     installer += packages
     if debugging:
         print(installer)
-    subprocess.call(installer)
+    subprocess.check_call(installer)
 
 
 if __name__ == "__main__":
