@@ -57,10 +57,7 @@ typedef struct __attribute__((packed)) {
 	guint16 container_id;
 	guint8 minor_version;
 	guint8 major_version;
-	guint8 reserved_08;
-	guint8 reserved_09;
-	guint8 reserved_0a;
-	guint8 reserved_0b;
+	guint32 signature_size;
 	guint32 container_option_flags;
 	guint32 content_options_length;
 	guint32 content_options_address;
@@ -172,6 +169,33 @@ fu_synaptics_rmi_firmware_add_image(FuFirmware *firmware,
 	return TRUE;
 }
 
+static gboolean
+fu_synaptics_rmi_firmware_add_image_v10(FuFirmware *firmware,
+					const gchar *id,
+					GBytes *fw,
+					gsize offset,
+					gsize sz,
+					gsize sig_sz,
+					GError **error)
+{
+	g_autoptr(GBytes) bytes = NULL;
+	g_autoptr(FuFirmware) img = NULL;
+	g_autofree gchar *sig_id = NULL;
+
+	if (!fu_synaptics_rmi_firmware_add_image(firmware, id, fw, offset, sz, error))
+		return FALSE;
+	if (sig_sz != 0) {
+		bytes = fu_bytes_new_offset(fw, offset + sz, sig_sz, error);
+		if (bytes == NULL)
+			return FALSE;
+		img = fu_firmware_new_from_bytes(bytes);
+		sig_id = g_strdup_printf("%s-signature", id);
+		fu_firmware_set_id(img, sig_id);
+		fu_firmware_add_image(firmware, img);
+	}
+	return TRUE;
+}
+
 static void
 fu_synaptics_rmi_firmware_export(FuFirmware *firmware,
 				 FuFirmwareExportFlags flags,
@@ -203,6 +227,7 @@ fu_synaptics_rmi_firmware_parse_v10(FuFirmware *firmware, GBytes *fw, GError **e
 	guint8 product_id[RMI_PRODUCT_ID_LENGTH] = {0x0};
 	gsize sz = 0;
 	const guint8 *data = g_bytes_get_data(fw, &sz);
+	guint32 signature_size;
 
 	if (!fu_memread_uint32_safe(data,
 				    sz,
@@ -274,10 +299,12 @@ fu_synaptics_rmi_firmware_parse_v10(FuFirmware *firmware, GBytes *fw, GError **e
 		container_id = GUINT16_FROM_LE(desc.container_id);
 		content_addr = GUINT32_FROM_LE(desc.content_address);
 		length = GUINT32_FROM_LE(desc.content_length);
-		g_debug("RmiFirmwareContainerDescriptor 0x%02x @ 0x%x (len 0x%x)",
+		signature_size = GUINT32_FROM_LE(desc.signature_size);
+		g_debug("RmiFirmwareContainerDescriptor 0x%02x @ 0x%x (len 0x%x) sig_size 0x%x",
 			container_id,
 			content_addr,
-			length);
+			length,
+			signature_size);
 		if (length == 0 || length > sz) {
 			g_set_error(error,
 				    FWUPD_ERROR,
@@ -308,58 +335,64 @@ fu_synaptics_rmi_firmware_parse_v10(FuFirmware *firmware, GBytes *fw, GError **e
 			break;
 		case RMI_FIRMWARE_CONTAINER_ID_UI:
 		case RMI_FIRMWARE_CONTAINER_ID_CORE_CODE:
-			if (!fu_synaptics_rmi_firmware_add_image(firmware,
-								 "ui",
-								 fw,
-								 content_addr,
-								 length,
-								 error))
+			if (!fu_synaptics_rmi_firmware_add_image_v10(firmware,
+								     "ui",
+								     fw,
+								     content_addr,
+								     length,
+								     signature_size,
+								     error))
 				return FALSE;
 			break;
 		case RMI_FIRMWARE_CONTAINER_ID_FLASH_CONFIG:
-			if (!fu_synaptics_rmi_firmware_add_image(firmware,
-								 "flash-config",
-								 fw,
-								 content_addr,
-								 length,
-								 error))
+			if (!fu_synaptics_rmi_firmware_add_image_v10(firmware,
+								     "flash-config",
+								     fw,
+								     content_addr,
+								     length,
+								     signature_size,
+								     error))
 				return FALSE;
 			break;
 		case RMI_FIRMWARE_CONTAINER_ID_UI_CONFIG:
 		case RMI_FIRMWARE_CONTAINER_ID_CORE_CONFIG:
-			if (!fu_synaptics_rmi_firmware_add_image(firmware,
-								 "config",
-								 fw,
-								 content_addr,
-								 length,
-								 error))
+			if (!fu_synaptics_rmi_firmware_add_image_v10(firmware,
+								     "config",
+								     fw,
+								     content_addr,
+								     length,
+								     signature_size,
+								     error))
 				return FALSE;
 			break;
 		case RMI_FIRMWARE_CONTAINER_ID_FIXED_LOCATION_DATA:
-			if (!fu_synaptics_rmi_firmware_add_image(firmware,
-								 "fixed-location-data",
-								 fw,
-								 content_addr,
-								 length,
-								 error))
+			if (!fu_synaptics_rmi_firmware_add_image_v10(firmware,
+								     "fixed-location-data",
+								     fw,
+								     content_addr,
+								     length,
+								     signature_size,
+								     error))
 				return FALSE;
 			break;
 		case RMI_FIRMWARE_CONTAINER_ID_EXTERNAL_TOUCH_AFE_CONFIG:
-			if (!fu_synaptics_rmi_firmware_add_image(firmware,
-								 "afe-config",
-								 fw,
-								 content_addr,
-								 length,
-								 error))
+			if (!fu_synaptics_rmi_firmware_add_image_v10(firmware,
+								     "afe-config",
+								     fw,
+								     content_addr,
+								     length,
+								     signature_size,
+								     error))
 				return FALSE;
 			break;
 		case RMI_FIRMWARE_CONTAINER_ID_DISPLAY_CONFIG:
-			if (!fu_synaptics_rmi_firmware_add_image(firmware,
-								 "display-config",
-								 fw,
-								 content_addr,
-								 length,
-								 error))
+			if (!fu_synaptics_rmi_firmware_add_image_v10(firmware,
+								     "display-config",
+								     fw,
+								     content_addr,
+								     length,
+								     signature_size,
+								     error))
 				return FALSE;
 			break;
 		case RMI_FIRMWARE_CONTAINER_ID_GENERAL_INFORMATION:
@@ -581,6 +614,7 @@ fu_synaptics_rmi_firmware_parse(FuFirmware *firmware,
 		self->kind = RMI_FIRMWARE_KIND_0X;
 		break;
 	case 16:
+	case 17:
 		if (!fu_synaptics_rmi_firmware_parse_v10(firmware, fw, error))
 			return FALSE;
 		self->kind = RMI_FIRMWARE_KIND_10;

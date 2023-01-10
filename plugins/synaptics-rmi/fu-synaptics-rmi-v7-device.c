@@ -22,6 +22,7 @@ typedef enum {
 	RMI_FLASH_CMD_ERASE,
 	RMI_FLASH_CMD_ERASE_AP,
 	RMI_FLASH_CMD_SENSOR_ID,
+	RMI_FLASH_CMD_SIGNATURE,
 } RmiFlashCommand;
 
 typedef enum {
@@ -253,7 +254,87 @@ fu_synaptics_rmi_v7_device_write_blocks(FuSynapticsRmiDevice *self,
 }
 
 static gboolean
+fu_synaptics_rmi_v7_device_write_partition_signature(FuSynapticsRmiDevice *self,
+						     FuFirmware *firmware,
+						     const gchar *id,
+						     RmiPartitionId partition_id,
+						     GError **error)
+{
+	FuSynapticsRmiFunction *f34;
+	FuSynapticsRmiFlash *flash = fu_synaptics_rmi_device_get_flash(self);
+	g_autoptr(GByteArray) req_offset = g_byte_array_new();
+	g_autoptr(GPtrArray) chunks = NULL;
+	g_autoptr(GBytes) bytes = NULL;
+
+	/* f34 */
+	f34 = fu_synaptics_rmi_device_get_function(self, 0x34, error);
+	if (f34 == NULL)
+		return FALSE;
+
+	/*check if signature exists */
+	bytes =
+	    fu_firmware_get_image_by_id_bytes(firmware, g_strdup_printf("%s-signature", id), NULL);
+	if (bytes == NULL) {
+		return TRUE;
+	}
+
+	/* write partition signature */
+	g_debug("writing partition signature %s…",
+		rmi_firmware_partition_id_to_string(partition_id));
+
+	fu_byte_array_append_uint16(req_offset, 0x0, G_LITTLE_ENDIAN);
+	if (!fu_synaptics_rmi_device_write(self,
+					   f34->data_base + 0x2,
+					   req_offset,
+					   FU_SYNAPTICS_RMI_DEVICE_FLAG_NONE,
+					   error)) {
+		g_prefix_error(error, "failed to write offset: ");
+		return FALSE;
+	}
+
+	chunks =
+	    fu_chunk_array_new_from_bytes(bytes,
+					  0x00, /* start addr */
+					  0x00, /* page_sz */
+					  (gsize)flash->payload_length * (gsize)flash->block_size);
+	for (guint i = 0; i < chunks->len; i++) {
+		FuChunk *chk = g_ptr_array_index(chunks, i);
+		g_autoptr(GByteArray) req_trans_sz = g_byte_array_new();
+		g_autoptr(GByteArray) req_cmd = g_byte_array_new();
+		fu_byte_array_append_uint16(req_trans_sz,
+					    fu_chunk_get_data_sz(chk) / flash->block_size,
+					    G_LITTLE_ENDIAN);
+		if (!fu_synaptics_rmi_device_write(self,
+						   f34->data_base + 0x3,
+						   req_trans_sz,
+						   FU_SYNAPTICS_RMI_DEVICE_FLAG_NONE,
+						   error)) {
+			g_prefix_error(error, "failed to write transfer length: ");
+			return FALSE;
+		}
+		fu_byte_array_append_uint8(req_cmd, RMI_FLASH_CMD_SIGNATURE);
+		if (!fu_synaptics_rmi_device_write(self,
+						   f34->data_base + 0x4,
+						   req_cmd,
+						   FU_SYNAPTICS_RMI_DEVICE_FLAG_NONE,
+						   error)) {
+			g_prefix_error(error, "failed to write signature command: ");
+			return FALSE;
+		}
+		if (!fu_synaptics_rmi_v7_device_write_blocks(self,
+							     f34->data_base + 0x5,
+							     fu_chunk_get_data(chk),
+							     fu_chunk_get_data_sz(chk),
+							     error))
+			return FALSE;
+	}
+	return TRUE;
+}
+
+static gboolean
 fu_synaptics_rmi_v7_device_write_partition(FuSynapticsRmiDevice *self,
+					   FuFirmware *firmware,
+					   const gchar *id,
 					   RmiPartitionId partition_id,
 					   GBytes *bytes,
 					   FuProgress *progress,
@@ -298,7 +379,7 @@ fu_synaptics_rmi_v7_device_write_partition(FuSynapticsRmiDevice *self,
 					  0x00, /* page_sz */
 					  (gsize)flash->payload_length * (gsize)flash->block_size);
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_set_steps(progress, chunks->len);
+	fu_progress_set_steps(progress, chunks->len + 1);
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index(chunks, i);
 		g_autoptr(GByteArray) req_trans_sz = g_byte_array_new();
@@ -331,6 +412,13 @@ fu_synaptics_rmi_v7_device_write_partition(FuSynapticsRmiDevice *self,
 			return FALSE;
 		fu_progress_step_done(progress);
 	}
+	if (!fu_synaptics_rmi_v7_device_write_partition_signature(self,
+								  firmware,
+								  id,
+								  partition_id,
+								  error))
+		return FALSE;
+	fu_progress_step_done(progress);
 	return TRUE;
 }
 
@@ -354,14 +442,14 @@ fu_synaptics_rmi_v7_device_write_firmware(FuDevice *device,
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1, "disable-sleep");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 1, "fixed-location-data");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 10, NULL);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 20, "flash-config");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 20, "core-code");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 20, "core-config");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 1, "external-touch-afe-config");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 1, "display-config");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 0, "disable-sleep");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 2, "fixed-location-data");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 3, NULL);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 0, "flash-config");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 89, "core-code");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 2, "core-config");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 2, "external-touch-afe-config");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 2, "display-config");
 
 	/* we should be in bootloader mode now, but check anyway */
 	if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
@@ -402,6 +490,8 @@ fu_synaptics_rmi_v7_device_write_firmware(FuDevice *device,
 	if (bytes_fld != NULL) {
 		if (!fu_synaptics_rmi_v7_device_write_partition(
 			self,
+			firmware,
+			"fixed-location-data",
 			RMI_PARTITION_ID_FIXED_LOCATION_DATA,
 			bytes_fld,
 			fu_progress_get_child(progress),
@@ -420,6 +510,8 @@ fu_synaptics_rmi_v7_device_write_firmware(FuDevice *device,
 	/* write flash config for v8 */
 	if (bytes_flashcfg != NULL) {
 		if (!fu_synaptics_rmi_v7_device_write_partition(self,
+								firmware,
+								"flash-config",
 								RMI_PARTITION_ID_FLASH_CONFIG,
 								bytes_flashcfg,
 								fu_progress_get_child(progress),
@@ -430,6 +522,8 @@ fu_synaptics_rmi_v7_device_write_firmware(FuDevice *device,
 
 	/* write core code */
 	if (!fu_synaptics_rmi_v7_device_write_partition(self,
+							firmware,
+							"ui",
 							RMI_PARTITION_ID_CORE_CODE,
 							bytes_bin,
 							fu_progress_get_child(progress),
@@ -439,6 +533,8 @@ fu_synaptics_rmi_v7_device_write_firmware(FuDevice *device,
 
 	/* write core config */
 	if (!fu_synaptics_rmi_v7_device_write_partition(self,
+							firmware,
+							"config",
 							RMI_PARTITION_ID_CORE_CONFIG,
 							bytes_cfg,
 							fu_progress_get_child(progress),
@@ -450,6 +546,8 @@ fu_synaptics_rmi_v7_device_write_firmware(FuDevice *device,
 	if (bytes_afe != NULL) {
 		if (!fu_synaptics_rmi_v7_device_write_partition(
 			self,
+			firmware,
+			"afe-config",
 			RMI_PARTITION_ID_EXTERNAL_TOUCH_AFE_CONFIG,
 			bytes_afe,
 			fu_progress_get_child(progress),
@@ -461,6 +559,8 @@ fu_synaptics_rmi_v7_device_write_firmware(FuDevice *device,
 	/* write display config if exists */
 	if (bytes_displayconfig != NULL) {
 		if (!fu_synaptics_rmi_v7_device_write_partition(self,
+								firmware,
+								"display-config",
 								RMI_PARTITION_ID_DISPLAY_CONFIG,
 								bytes_displayconfig,
 								fu_progress_get_child(progress),
@@ -492,6 +592,7 @@ fu_synaptics_rmi_device_read_flash_config_v7(FuSynapticsRmiDevice *self, GError 
 	g_autoptr(GByteArray) req_partition_id = g_byte_array_new();
 	g_autoptr(GByteArray) req_transfer_length = g_byte_array_new();
 	g_autoptr(GByteArray) res = NULL;
+	gsize partition_size = sizeof(RmiPartitionTbl);
 
 	/* f34 */
 	f34 = fu_synaptics_rmi_device_get_function(self, 0x34, error);
@@ -565,8 +666,11 @@ fu_synaptics_rmi_device_read_flash_config_v7(FuSynapticsRmiDevice *self, GError 
 			     FU_DUMP_FLAGS_NONE);
 	}
 
+	if ((res->data[0] & 0x0f) == 1)
+		partition_size = sizeof(RmiPartitionTbl) + 2;
+
 	/* parse the config length */
-	for (guint i = 0x2; i < res->len; i += sizeof(RmiPartitionTbl)) {
+	for (guint i = 0x2; i < res->len; i += partition_size) {
 		RmiPartitionTbl tbl;
 		if (!fu_memcpy_safe((guint8 *)&tbl,
 				    sizeof(tbl),
