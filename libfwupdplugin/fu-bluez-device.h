@@ -13,7 +13,6 @@ G_DECLARE_DERIVABLE_TYPE(FuBluezDevice, fu_bluez_device, FU, BLUEZ_DEVICE, FuDev
 
 struct _FuBluezDeviceClass {
 	FuDeviceClass parent_class;
-	gpointer __reserved[31];
 };
 
 GByteArray *

@@ -27,7 +27,6 @@ G_DECLARE_DERIVABLE_TYPE(FuUdevDevice, fu_udev_device, FU, UDEV_DEVICE, FuDevice
 
 struct _FuUdevDeviceClass {
 	FuDeviceClass parent_class;
-	gpointer __reserved[31];
 };
 
 /**

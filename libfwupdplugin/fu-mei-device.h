@@ -13,7 +13,6 @@ G_DECLARE_DERIVABLE_TYPE(FuMeiDevice, fu_mei_device, FU, MEI_DEVICE, FuUdevDevic
 
 struct _FuMeiDeviceClass {
 	FuUdevDeviceClass parent_class;
-	gpointer __reserved[31];
 };
 
 gboolean
