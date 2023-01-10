@@ -59,6 +59,10 @@ fu_backend_device_added(FuBackend *self, FuDevice *device)
 	if (priv->ctx != NULL)
 		fu_device_set_context(device, priv->ctx);
 
+	/* set backend ID if required */
+	if (fu_device_get_backend_id(device) == NULL)
+		fu_device_set_backend_id(device, priv->name);
+
 	/* add */
 	g_hash_table_insert(priv->devices,
 			    g_strdup(fu_device_get_backend_id(device)),
