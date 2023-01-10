@@ -25,7 +25,6 @@ fu_vbe_plugin_coldplug_img(FuPlugin *plugin,
 			   FuFdtImage *fdt_node,
 			   GError **error)
 {
-	FuVbePlugin *self = FU_VBE_PLUGIN(plugin);
 	GType device_gtype = G_TYPE_INVALID;
 	g_autofree gchar *compatible = NULL;
 	g_auto(GStrv) split = NULL;
@@ -85,8 +84,6 @@ fu_vbe_plugin_coldplug_img(FuPlugin *plugin,
 			   fdt_root,
 			   "fdt-node",
 			   fdt_node,
-			   "vbe-dir",
-			   self->vbe_dir,
 			   NULL);
 	fu_plugin_device_add(plugin, dev);
 	return TRUE;
