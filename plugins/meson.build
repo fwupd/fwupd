@@ -12,100 +12,104 @@ plugin_deps = [
   protobufc,
 ]
 
-# this is used by lenovo-thinklmi and dell
-subdir('uefi-capsule')
+plugins = [
+  'uefi-capsule',
+  'acpi-dmar',
+  'acpi-facp',
+  'acpi-ivrs',
+  'acpi-phat',
+  'amd-pmc',
+  'analogix',
+  'android-boot',
+  'ata',
+  'bcm57xx',
+  'bios',
+  'ccgx',
+  'cfu',
+  'ch341a',
+  'colorhug',
+  'corsair',
+  'cpu',
+  'cros-ec',
+  'dell',
+  'dell-dock',
+  'dell-esrt',
+  'dfu',
+  'dfu-csr',
+  'ebitdo',
+  'elantp',
+  'elanfp',
+  'emmc',
+  'ep963x',
+  'fastboot',
+  'flashrom',
+  'focalfp',
+  'fpc',
+  'fresco-pd',
+  'genesys',
+  'goodix-moc',
+  'gpio',
+  'hailuck',
+  'intel-gsc',
+  'intel-me',
+  'intel-spi',
+  'intel-usb4',
+  'iommu',
+  'jabra',
+  'lenovo-thinklmi',
+  'linux-lockdown',
+  'linux-sleep',
+  'linux-swap',
+  'linux-tainted',
+  'logind',
+  'logitech-hidpp',
+  'logitech-bulkcontroller',
+  'logitech-scribe',
+  'modem-manager',
+  'msr',
+  'mtd',
+  'nitrokey',
+  'nordic-hid',
+  'nvme',
+  'optionrom',
+  'parade-lspcon',
+  'pci-bcr',
+  'pci-mei',
+  'pci-psp',
+  'pixart-rf',
+  'powerd',
+  'qsi-dock',
+  'realtek-mst',
+  'redfish',
+  'rts54hid',
+  'rts54hub',
+  'steelseries',
+  'scsi',
+  'superio',
+  'synaptics-cape',
+  'synaptics-cxaudio',
+  'synaptics-mst',
+  'synaptics-prometheus',
+  'synaptics-rmi',
+  'system76-launch',
+  'test',
+  'thelio-io',
+  'thunderbolt',
+  'ti-tps6598x',
+  'tpm',
+  'uefi-dbx',
+  'uefi-pk',
+  'uefi-recovery',
+  'uf2',
+  'upower',
+  'usi-dock',
+  'vbe',
+  'vli',
+  'wacom-raw',
+  'wacom-usb',
+  'wistron-dock',
+]
 
-subdir('acpi-dmar')
-subdir('acpi-facp')
-subdir('acpi-ivrs')
-subdir('acpi-phat')
-subdir('amd-pmc')
-subdir('analogix')
-subdir('android-boot')
-subdir('ata')
-subdir('bcm57xx')
-subdir('bios')
-subdir('ccgx')
-subdir('cfu')
-subdir('ch341a')
-subdir('colorhug')
-subdir('corsair')
-subdir('cpu')
-subdir('cros-ec')
-subdir('dell')
-subdir('dell-dock')
-subdir('dell-esrt')
-subdir('dfu')
-subdir('dfu-csr')
-subdir('ebitdo')
-subdir('elantp')
-subdir('elanfp')
-subdir('emmc')
-subdir('ep963x')
-subdir('fastboot')
-subdir('flashrom')
-subdir('focalfp')
-subdir('fpc')
-subdir('fresco-pd')
-subdir('genesys')
-subdir('goodix-moc')
-subdir('gpio')
-subdir('hailuck')
-subdir('intel-gsc')
-subdir('intel-me')
-subdir('intel-spi')
-subdir('intel-usb4')
-subdir('iommu')
-subdir('jabra')
-subdir('lenovo-thinklmi')
-subdir('linux-lockdown')
-subdir('linux-sleep')
-subdir('linux-swap')
-subdir('linux-tainted')
-subdir('logind')
-subdir('logitech-hidpp')
-subdir('logitech-bulkcontroller')
-subdir('logitech-scribe')
-subdir('modem-manager')
-subdir('msr')
-subdir('mtd')
-subdir('nitrokey')
-subdir('nordic-hid')
-subdir('nvme')
-subdir('optionrom')
-subdir('parade-lspcon')
-subdir('pci-bcr')
-subdir('pci-mei')
-subdir('pci-psp')
-subdir('pixart-rf')
-subdir('powerd')
-subdir('qsi-dock')
-subdir('realtek-mst')
-subdir('redfish')
-subdir('rts54hid')
-subdir('rts54hub')
-subdir('steelseries')
-subdir('scsi')
-subdir('superio')
-subdir('synaptics-cape')
-subdir('synaptics-cxaudio')
-subdir('synaptics-mst')
-subdir('synaptics-prometheus')
-subdir('synaptics-rmi')
-subdir('system76-launch')
-subdir('test')
-subdir('thelio-io')
-subdir('thunderbolt')
-subdir('ti-tps6598x')
-subdir('tpm')
-subdir('uefi-dbx')
-subdir('uefi-pk')
-subdir('uefi-recovery')
-subdir('uf2')
-subdir('upower')
-subdir('usi-dock')
-subdir('vbe')
-subdir('vli')
-subdir('wacom-raw')
-subdir('wacom-usb')
-subdir('wistron-dock')
+foreach plugin: plugins
+  subdir(plugin)
+endforeach

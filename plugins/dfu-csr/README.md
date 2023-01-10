@@ -1,4 +1,6 @@
-# DFU CSR
+---
+title: Plugin: DFU CSR — Cambridge Silicon Radio
+---
 
 ## Introduction
 
@@ -21,7 +23,7 @@ DFU file format.
 
 This plugin supports the following protocol ID:
 
-* com.qualcomm.dfu
+* `com.qualcomm.dfu`
 
 ## GUID Generation
 

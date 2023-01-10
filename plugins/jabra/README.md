@@ -1,4 +1,6 @@
-# Jabra
+---
+title: Plugin: Jabra
+---
 
 ## Introduction
 

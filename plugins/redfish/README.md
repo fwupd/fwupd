@@ -1,4 +1,6 @@
-# Redfish
+---
+title: Plugin: Redfish
+---
 
 ## Introduction
 
@@ -15,7 +17,7 @@ an unspecified binary file format.
 
 This plugin supports the following protocol ID:
 
-* org.dmtf.redfish
+* `org.dmtf.redfish`
 
 ## GUID Generation
 

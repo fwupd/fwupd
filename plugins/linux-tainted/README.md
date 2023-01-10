@@ -1,4 +1,6 @@
-# Linux Kernel Tainted
+---
+title: Plugin: Linux Kernel Tainted
+---
 
 ## Introduction
 

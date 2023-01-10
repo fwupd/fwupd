@@ -1,4 +1,6 @@
-# UEFI
+---
+title: Plugin: UEFI Recovery
+---
 
 ## Introduction
 

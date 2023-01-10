@@ -1,4 +1,6 @@
-# MSR
+---
+title: Plugin: MSR
+---
 
 ## Introduction
 

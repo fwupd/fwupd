@@ -1,4 +1,6 @@
-# Explore EP963x
+---
+title: Plugin: EP963x
+---
 
 ## Introduction
 
@@ -11,7 +13,7 @@ a packed binary file format.
 
 This plugin supports the following protocol ID:
 
-* tw.com.exploretech.ep963x
+* `tw.com.exploretech.ep963x`
 
 ## GUID Generation
 

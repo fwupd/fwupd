@@ -1,4 +1,6 @@
-# Test
+---
+title: Plugin: Test
+---
 
 ## Introduction
 

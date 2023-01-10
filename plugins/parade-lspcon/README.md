@@ -1,4 +1,6 @@
-# Parade LSPCON
+---
+title: Plugin: Parade LSPCON
+---
 
 ## Introduction
 
@@ -22,7 +24,7 @@ to an inactive partition of the Flash attached to the device.
 
 This plugin supports the following protocol ID:
 
-* com.paradetech.ps176
+* `com.paradetech.ps176`
 
 ## GUID Generation
 

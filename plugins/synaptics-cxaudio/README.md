@@ -1,4 +1,6 @@
-# Conexant Audio
+---
+title: Plugin: Synaptics CxAudio — Conexant Audio
+---
 
 ## Introduction
 
@@ -12,7 +14,7 @@ a modified SREC file format.
 
 This plugin supports the following protocol ID:
 
-* com.synaptics.synaptics-cxaudio
+* `com.synaptics.synaptics-cxaudio`
 
 ## GUID Generation
 

@@ -1,4 +1,6 @@
-# UPower
+---
+title: Plugin: UPower
+---
 
 ## Introduction
 

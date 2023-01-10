@@ -1,4 +1,6 @@
-# Infineon Technologies
+---
+title: Plugin: CCGX
+---
 
 ## Introduction
 
@@ -9,10 +11,10 @@ controller family of devices used in docks.
 
 This plugin supports the following protocol IDs:
 
-* com.cypress.ccgx
-* com.cypress.ccgx.dmc
-* com.infineon.ccgx
-* com.infineon.ccgx.dmc
+* `com.cypress.ccgx` (deprecated)
+* `com.cypress.ccgx.dmc` (deprecated)
+* `com.infineon.ccgx`
+* `com.infineon.ccgx.dmc`
 
 ## Device Flash
 
@@ -101,7 +103,7 @@ The vendor ID is set from the USB vendor, for example set to `USB:0x04B4`
 
 This plugin uses the following plugin-specific quirks:
 
-### Trigger Code
+### CcgxDmcTriggerCode
 
 DMC devices need a specified trigger code to request the device to update
 the firmware and the trigger code depends on the devices.

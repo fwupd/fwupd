@@ -1,4 +1,6 @@
-# CH341A
+---
+title: Plugin: CH341A
+---
 
 ## Introduction
 
@@ -22,7 +24,7 @@ The daemon will decompress the cabinet archive and extract a firmware blob of un
 
 This plugin supports the following protocol ID:
 
-- com.winchiphead.ch341a
+- `com.winchiphead.ch341a`
 
 ## GUID Generation
 

@@ -1,4 +1,6 @@
-# Lenovo ThinkLMI
+---
+title: Plugin: Lenovo ThinkLMI
+---
 
 ## Introduction
 

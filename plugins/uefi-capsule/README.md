@@ -1,4 +1,6 @@
-# UEFI Capsule
+---
+title: Plugin: UEFI Capsule
+---
 
 ## Introduction
 
@@ -37,7 +39,7 @@ for details.
 
 This plugin supports the following protocol ID:
 
-* org.uefi.capsule
+* `org.uefi.capsule`
 
 ## Update Behavior
 

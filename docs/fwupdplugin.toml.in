@@ -47,6 +47,7 @@ content_files = [
   "hsi.md",
   "ds20.md",
   "bios-settings.md",
+  @plugin_readme_outputs@,
 ]
 content_images = [
   "architecture-plan.svg",

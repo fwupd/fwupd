@@ -1,4 +1,6 @@
-# Thelio IO
+---
+title: Plugin: Thelio IO
+---
 
 ## Introduction
 

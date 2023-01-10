@@ -1,4 +1,6 @@
-# ColorHug
+---
+title: Plugin: ColorHug
+---
 
 ## Introduction
 
@@ -16,7 +18,7 @@ a packed binary file format.
 
 This plugin supports the following protocol ID:
 
-* com.hughski.colorhug
+* `com.hughski.colorhug`
 
 ## GUID Generation
 

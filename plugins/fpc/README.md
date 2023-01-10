@@ -1,4 +1,6 @@
-# FPC Fingerprint Sensor
+---
+title: Plugin: FPC Fingerprint Sensor
+---
 
 ## Introduction
 
@@ -11,7 +13,7 @@ a packed binary file format.
 
 This plugin supports the following protocol ID:
 
-* com.fingerprints.dfupc
+* `com.fingerprints.dfupc`
 
 ## GUID Generation
 

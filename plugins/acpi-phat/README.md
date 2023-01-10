@@ -1,4 +1,6 @@
-# Platform Health Assessment Table
+---
+title: Plugin: ACPI PHAT — Platform Health Assessment Table
+---
 
 ## Introduction
 

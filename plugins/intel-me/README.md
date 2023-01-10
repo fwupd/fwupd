@@ -1,4 +1,6 @@
-# Intel ME
+---
+title: Plugin: Intel ME
+---
 
 ## Introduction
 

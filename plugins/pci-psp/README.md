@@ -1,4 +1,6 @@
-# PCI PSP
+---
+title: Plugin: PCI PSP — Platform Secure Processor
+---
 
 ## Introduction
 

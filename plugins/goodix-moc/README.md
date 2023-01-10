@@ -1,4 +1,6 @@
-# Goodix Fingerprint Sensor
+---
+title: Plugin: Goodix Fingerprint Sensor
+---
 
 ## Introduction
 
@@ -11,7 +13,7 @@ a packed binary file format.
 
 This plugin supports the following protocol ID:
 
-* com.goodix.goodixmoc
+* `com.goodix.goodixmoc`
 
 ## GUID Generation
 

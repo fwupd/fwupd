@@ -1,4 +1,6 @@
-# DMA Protection
+---
+title: Plugin: ACPI DMAR — DMA Protection
+---
 
 ## Introduction
 

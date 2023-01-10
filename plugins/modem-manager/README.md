@@ -1,4 +1,6 @@
-# ModemManager
+---
+title: Plugin: ModemManager
+---
 
 ## Introduction
 

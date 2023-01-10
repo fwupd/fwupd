@@ -1,4 +1,6 @@
-# Analogix
+---
+title: Plugin: Analogix
+---
 
 ## Introduction
 
@@ -15,7 +17,7 @@ a Intel Hex file format. The resulting binary image is either:
 
 This plugin supports the following protocol ID:
 
-* com.analogix.bb
+* `com.analogix.bb`
 
 ## GUID Generation
 

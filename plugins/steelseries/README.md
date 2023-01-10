@@ -1,4 +1,6 @@
-# SteelSeries
+---
+title: Plugin: SteelSeries
+---
 
 ## Introduction
 
@@ -16,9 +18,9 @@ available from the vendor.
 
 This plugin supports the following protocol IDs:
 
-* com.steelseries.fizz
-* com.steelseries.gamepad
-* com.steelseries.sonic
+* `com.steelseries.fizz`
+* `com.steelseries.gamepad`
+* `com.steelseries.sonic`
 
 ## GUID Generation
 

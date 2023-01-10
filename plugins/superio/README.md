@@ -1,4 +1,8 @@
-# SuperIO
+---
+title: Plugin: SuperIO
+---
+
+## Introduction
 
 This plugin enumerates the various ITE85* SuperIO embedded controller ICs found
 in many laptops. Vendors wanting to expose the SuperIO functionality will need

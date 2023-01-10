@@ -1,4 +1,6 @@
-# Flashrom
+---
+title: Plugin: Flashrom
+---
 
 ## Introduction
 
@@ -15,7 +17,7 @@ EEPROM programmer.
 
 This plugin supports the following protocol ID:
 
-* org.flashrom
+* `org.flashrom`
 
 ## Coreboot Version String
 

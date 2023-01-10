@@ -1,4 +1,6 @@
-# DMA Protection
+---
+title: Plugin: ACPI IVRS — DMA Protection
+---
 
 ## Introduction
 

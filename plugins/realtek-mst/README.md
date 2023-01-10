@@ -1,4 +1,6 @@
-# Realtek MST
+---
+title: Plugin: Realtek MST
+---
 
 ## Introduction
 
@@ -25,7 +27,7 @@ device flash that is not currently running.
 
 This plugin supports the following protocol ID:
 
-* com.realtek.rtd2142
+* `com.realtek.rtd2142`
 
 ## GUID Generation
 

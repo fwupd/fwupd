@@ -1,4 +1,6 @@
-# PCI BIOS Control Register
+---
+title: Plugin: PCI BCR — BIOS Control Register
+---
 
 ## Introduction
 

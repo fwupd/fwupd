@@ -1,4 +1,6 @@
-# NVMe
+---
+title: Plugin: NVMe
+---
 
 ## Introduction
 
@@ -16,7 +18,7 @@ an unspecified binary file format.
 
 This plugin supports the following protocol ID:
 
-* org.nvmexpress
+* `org.nvmexpress`
 
 ## GUID Generation
 

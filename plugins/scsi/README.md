@@ -1,4 +1,6 @@
-# SCSI
+---
+title: Plugin: SCSI
+---
 
 ## Introduction
 
@@ -14,7 +16,7 @@ an unspecified binary file format.
 
 This plugin supports the following protocol ID:
 
-* org.jedec.ufs
+* `org.jedec.ufs`
 
 ## GUID Generation
 

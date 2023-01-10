@@ -1,4 +1,6 @@
-# Nitrokey
+---
+title: Plugin: Nitrokey
+---
 
 ## Introduction
 

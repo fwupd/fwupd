@@ -1,4 +1,6 @@
-# Wacom USB
+---
+title: Plugin: Wacom USB
+---
 
 ## Introduction
 
@@ -26,7 +28,7 @@ the following formats:
 
 This plugin supports the following protocol ID:
 
-* com.wacom.usb
+* `com.wacom.usb`
 
 ## GUID Generation
 

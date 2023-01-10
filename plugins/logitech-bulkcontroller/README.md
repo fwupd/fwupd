@@ -1,8 +1,11 @@
-# Logitech Video Collaboration
+---
+title: Plugin: Logitech Bulk Controller — Video Collaboration
+---
 
 ## Introduction
 
-This plugin can upgrade the firmware on Logitech Video Collaboration products (Rally Bar and Rally Bar Mini), using USB bulk transfer.
+This plugin can upgrade the firmware on Logitech Video Collaboration products
+(Rally Bar and RallyBar Mini), using USB bulk transfer.
 
 ## Firmware Format
 
@@ -11,7 +14,7 @@ a packed binary file format.
 
 This plugin supports the following protocol ID:
 
-* com.logitech.vc.proto
+* `com.logitech.vc.proto`
 
 ## GUID Generation
 

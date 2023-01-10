@@ -1,4 +1,6 @@
-# Synaptics Prometheus
+---
+title: Plugin: Synaptics Prometheus
+---
 
 ## Introduction
 
@@ -12,7 +14,7 @@ that is used when flashing the image.
 
 This plugin supports the following protocol ID:
 
-* com.synaptics.prometheus
+* `com.synaptics.prometheus`
 
 ## GUID Generation
 

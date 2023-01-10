@@ -1,4 +1,6 @@
-# Wistron Dock
+---
+title: Plugin: Wistron Dock
+---
 
 ## Introduction
 
@@ -16,7 +18,7 @@ The archive must contain exactly one file with each of these extensions:
 
 This plugin supports the following protocol ID:
 
-* com.wistron.dock
+* `com.wistron.dock`
 
 ## GUID Generation
 

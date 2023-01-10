@@ -1,8 +1,11 @@
-# Logitech Video Collaboration
+---
+title: Plugin: Logitech Scribe
+---
 
 ## Introduction
 
-This plugin can upgrade the firmware on Logitech Video Collaboration products (Scribe), using USB bulk transfer.
+This plugin can upgrade the firmware on Logitech Video Collaboration products
+(Scribe), using USB bulk transfer.
 
 ## Firmware Format
 
@@ -11,7 +14,7 @@ a packed binary file format.
 
 This plugin supports the following protocol ID:
 
-* com.logitech.vc.scribe
+* `com.logitech.vc.scribe`
 
 ## GUID Generation
 

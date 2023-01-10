@@ -1,4 +1,6 @@
-# Genesys Logic
+---
+title: Plugin: Genesys Logic
+---
 
 ## Introduction
 
@@ -18,8 +20,8 @@ The daemon will decompress the cabinet archives and extract the firmware blob in
 
 This plugin supports the following protocol IDs:
 
-* com.genesys.usbhub
-* com.mstarsemi.scaler
+* `com.genesys.usbhub`
+* `com.mstarsemi.scaler`
 
 ## GUID Generation
 

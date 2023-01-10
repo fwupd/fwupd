@@ -1,4 +1,6 @@
-# Logitech HID
+---
+title: Plugin: Logitech HID++
+---
 
 ## Introduction
 
@@ -26,8 +28,8 @@ a vendor-specific format that appears to be a subset of the Intel HEX format.
 
 This plugin supports the following protocol IDs:
 
-* com.logitech.unifying
-* com.logitech.unifyingsigned
+* `com.logitech.unifying`
+* `com.logitech.unifyingsigned`
 
 ## GUID Generation
 

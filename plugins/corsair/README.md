@@ -1,4 +1,6 @@
-# Corsair
+---
+title: Plugin: Corsair
+---
 
 ## Introduction
 

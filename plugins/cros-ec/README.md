@@ -1,4 +1,6 @@
-# Chrome OS EC
+---
+title: Plugin: Chrome OS EC
+---
 
 ## Introduction
 
@@ -19,7 +21,7 @@ the Google [fmap file format](https://www.chromium.org/chromium-os/firmware-port
 
 This plugin supports the following protocol ID:
 
-* com.google.usb.crosec
+* `com.google.usb.crosec`
 
 ## GUID Generation
 

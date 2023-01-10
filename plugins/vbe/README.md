@@ -1,4 +1,6 @@
-# Verified Boot for Embedded (VBE)
+---
+title: Plugin: VBE — Verified Boot for Embedded
+---
 
 ## Introduction
 

@@ -1,4 +1,6 @@
-# UEFI PK
+---
+title: Plugin: UEFI PK
+---
 
 ## Introduction
 

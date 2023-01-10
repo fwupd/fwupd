@@ -1,4 +1,6 @@
-# Texas Instruments TPS6598x
+---
+title: Plugin: TI TPS6598x
+---
 
 ## Introduction
 
@@ -13,7 +15,7 @@ signed binary file.
 
 This plugin supports the following protocol ID:
 
-* com.ti.tps6598x
+* `com.ti.tps6598x`
 
 ## GUID Generation
 
@@ -25,8 +27,8 @@ These devices use the standard USB DeviceInstanceId values, e.g.
 
 Child devices also have an additional instance IDs which corresponds to the index, e.g.
 
-* `USB\VID_2188&PID_5988&REV_0714&PD_00
-* `USB\VID_2188&PID_5988&PD_00
+* `USB\VID_2188&PID_5988&REV_0714&PD_00`
+* `USB\VID_2188&PID_5988&PD_00`
 
 ## Update Behavior
 

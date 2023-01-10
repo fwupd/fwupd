@@ -1,4 +1,6 @@
-# BCM57xx
+---
+title: Plugin: BCM57xx
+---
 
 ## Introduction
 

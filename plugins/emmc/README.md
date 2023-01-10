@@ -1,4 +1,6 @@
-# eMMC
+---
+title: Plugin: eMMC
+---
 
 ## Introduction
 

@@ -1,4 +1,6 @@
-# Dell Support
+---
+title: Plugin: Dell
+---
 
 ## Introduction
 
