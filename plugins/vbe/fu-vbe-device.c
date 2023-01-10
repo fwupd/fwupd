@@ -10,13 +10,12 @@
 
 #include "fu-vbe-device.h"
 
-enum { PROP_0, PROP_VBE_METHOD, PROP_FDT_ROOT, PROP_FDT_NODE, PROP_VBE_DIR, PROP_LAST };
+enum { PROP_0, PROP_VBE_METHOD, PROP_FDT_ROOT, PROP_FDT_NODE, PROP_LAST };
 
 typedef struct {
 	FuFdtImage *fdt_root;
 	FuFdtImage *fdt_node;
 	gchar **compatible;
-	gchar *vbe_dir;
 } FuVbeDevicePrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE(FuVbeDevice, fu_vbe_device, FU_TYPE_DEVICE)
@@ -28,7 +27,6 @@ fu_vbe_device_to_string(FuDevice *device, guint idt, GString *str)
 	FuVbeDevice *self = FU_VBE_DEVICE(device);
 	FuVbeDevicePrivate *priv = GET_PRIVATE(self);
 
-	fu_string_append(str, idt, "VbeDir", priv->vbe_dir);
 	if (priv->compatible != NULL) {
 		g_autofree gchar *tmp = g_strjoinv(":", priv->compatible);
 		fu_string_append(str, idt, "Compatible", tmp);
@@ -57,14 +55,6 @@ fu_vbe_device_get_compatible(FuVbeDevice *self)
 	FuVbeDevicePrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FU_IS_VBE_DEVICE(self), NULL);
 	return priv->compatible;
-}
-
-const gchar *
-fu_vbe_device_get_dir(FuVbeDevice *self)
-{
-	FuVbeDevicePrivate *priv = GET_PRIVATE(self);
-	g_return_val_if_fail(FU_IS_VBE_DEVICE(self), NULL);
-	return priv->vbe_dir;
 }
 
 static void
@@ -131,9 +121,6 @@ fu_vbe_device_get_property(GObject *obj, guint prop_id, GValue *value, GParamSpe
 	case PROP_FDT_NODE:
 		g_value_set_object(value, priv->fdt_node);
 		break;
-	case PROP_VBE_DIR:
-		g_value_set_string(value, priv->vbe_dir);
-		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(obj, prop_id, pspec);
 		break;
@@ -152,10 +139,6 @@ fu_vbe_device_set_property(GObject *obj, guint prop_id, const GValue *value, GPa
 	case PROP_FDT_NODE:
 		g_set_object(&priv->fdt_node, g_value_get_object(value));
 		break;
-	case PROP_VBE_DIR:
-		g_free(priv->vbe_dir);
-		priv->vbe_dir = g_strdup(g_value_get_string(value));
-		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(obj, prop_id, pspec);
 		break;
@@ -167,7 +150,6 @@ fu_vbe_device_finalize(GObject *obj)
 {
 	FuVbeDevice *self = FU_VBE_DEVICE(obj);
 	FuVbeDevicePrivate *priv = GET_PRIVATE(self);
-	g_free(priv->vbe_dir);
 	g_strfreev(priv->compatible);
 	if (priv->fdt_root != NULL)
 		g_object_unref(priv->fdt_root);
@@ -201,14 +183,6 @@ fu_vbe_device_class_init(FuVbeDeviceClass *klass)
 				FU_TYPE_FDT_IMAGE,
 				G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_FDT_NODE, pspec);
-
-	pspec =
-	    g_param_spec_string("vbe-dir",
-				NULL,
-				"Directory containing state file for each VBE method",
-				NULL,
-				G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_NAME);
-	g_object_class_install_property(object_class, PROP_VBE_DIR, pspec);
 
 	object_class->constructed = fu_vbe_device_constructed;
 	object_class->finalize = fu_vbe_device_finalize;

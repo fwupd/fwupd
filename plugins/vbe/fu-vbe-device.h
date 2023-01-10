@@ -21,5 +21,3 @@ FuFdtImage *
 fu_vbe_device_get_fdt_node(FuVbeDevice *self);
 gchar **
 fu_vbe_device_get_compatible(FuVbeDevice *self);
-const gchar *
-fu_vbe_device_get_dir(FuVbeDevice *self);
