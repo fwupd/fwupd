@@ -14,7 +14,6 @@ G_DECLARE_DERIVABLE_TYPE(FuCfiDevice, fu_cfi_device, FU, CFI_DEVICE, FuDevice)
 struct _FuCfiDeviceClass {
 	FuDeviceClass parent_class;
 	gboolean (*chip_select)(FuCfiDevice *self, gboolean value, GError **error);
-	gpointer __reserved[30];
 };
 
 /**

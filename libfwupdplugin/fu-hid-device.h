@@ -13,7 +13,6 @@ G_DECLARE_DERIVABLE_TYPE(FuHidDevice, fu_hid_device, FU, HID_DEVICE, FuUsbDevice
 
 struct _FuHidDeviceClass {
 	FuUsbDeviceClass parent_class;
-	gpointer __reserved[31];
 };
 
 /**

@@ -13,7 +13,6 @@ G_DECLARE_DERIVABLE_TYPE(FuI2cDevice, fu_i2c_device, FU, I2C_DEVICE, FuUdevDevic
 
 struct _FuI2cDeviceClass {
 	FuUdevDeviceClass parent_class;
-	gpointer __reserved[31];
 };
 
 guint
