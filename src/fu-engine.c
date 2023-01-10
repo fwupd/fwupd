@@ -7777,11 +7777,20 @@ fu_engine_backends_coldplug(FuEngine *self, FuProgress *progress)
 							 backend,
 							 fu_progress_get_child(progress),
 							 &error_backend)) {
-			g_warning("failed to coldplug backend %s: %s",
-				  fu_backend_get_name(backend),
-				  error_backend->message);
-			fu_progress_step_done(progress);
-			continue;
+			if (g_error_matches(error_backend,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED)) {
+				if (g_getenv("FWUPD_PROBE_VERBOSE") != NULL) {
+					g_debug("ignoring coldplug failure %s: %s",
+						fu_backend_get_name(backend),
+						error_backend->message);
+				}
+			} else {
+				g_warning("failed to coldplug backend %s: %s",
+					  fu_backend_get_name(backend),
+					  error_backend->message);
+			}
+			fu_progress_finished(fu_progress_get_child(progress));
 		}
 		fu_progress_step_done(progress);
 	}
