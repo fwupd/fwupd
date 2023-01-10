@@ -613,7 +613,7 @@ custom_target('builtin-quirk-gz',
   install_dir: join_paths(datadir, 'fwupd', 'quirks.d'),
 )
 
-if build_daemon and libsystemd.found()
+if build_daemon and libsystemd.found() and offline.allowed()
   install_symlink('fwupd-offline-update.service',
     install_dir: join_paths(systemdunitdir, 'system-update.target.wants'),
     pointing_to: join_paths('..', 'fwupd-offline-update.service')
