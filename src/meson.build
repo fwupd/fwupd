@@ -42,6 +42,8 @@ fwupd_engine_src = [
   'fu-engine.c',
   'fu-engine-helper.c',
   'fu-engine-request.c',
+  'fu-fdt-backend.c',
+  'fu-fdt-device.c',
   'fu-history.c',
   'fu-idle.c',
   'fu-polkit-authority.c',

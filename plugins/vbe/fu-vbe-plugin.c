@@ -13,14 +13,12 @@
 
 struct _FuVbePlugin {
 	FuPlugin parent_instance;
-	FuFirmware *fdt;
-	gchar *vbe_dir;
 };
 
 G_DEFINE_TYPE(FuVbePlugin, fu_vbe_plugin, FU_TYPE_PLUGIN)
 
 static gboolean
-fu_vbe_plugin_coldplug_img(FuPlugin *plugin,
+fu_vbe_plugin_coldplug_img(FuVbePlugin *self,
 			   FuFdtImage *fdt_root,
 			   FuFdtImage *fdt_node,
 			   GError **error)
@@ -79,33 +77,41 @@ fu_vbe_plugin_coldplug_img(FuPlugin *plugin,
 	/* success */
 	dev = g_object_new(device_gtype,
 			   "context",
-			   fu_plugin_get_context(plugin),
+			   fu_plugin_get_context(FU_PLUGIN(self)),
 			   "fdt-root",
 			   fdt_root,
 			   "fdt-node",
 			   fdt_node,
 			   NULL);
-	fu_plugin_device_add(plugin, dev);
+	fu_plugin_device_add(FU_PLUGIN(self), dev);
 	return TRUE;
 }
 
 static gboolean
-fu_vbe_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError **error)
+fu_vbe_plugin_backend_device_added(FuPlugin *plugin, FuDevice *device, GError **error)
 {
 	FuVbePlugin *self = FU_VBE_PLUGIN(plugin);
+	g_autoptr(FuFirmware) fdt = NULL;
 	g_autoptr(FuFdtImage) fdt_root = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GPtrArray) fdt_imgs = NULL;
 
+	/* not interesting */
+	if (g_strcmp0(fu_device_get_backend_id(device), "fdt") != 0)
+		return TRUE;
+
 	/* get compatible from root node */
-	fdt_root =
-	    fu_fdt_firmware_get_image_by_path(FU_FDT_FIRMWARE(self->fdt), "/chosen/fwupd", error);
+	fdt = fu_device_read_firmware(device, progress, error);
+	if (fdt == NULL)
+		return FALSE;
+	fdt_root = fu_fdt_firmware_get_image_by_path(FU_FDT_FIRMWARE(fdt), "/chosen/fwupd", error);
 	if (fdt_root == NULL)
 		return FALSE;
 	fdt_imgs = fu_firmware_get_images(FU_FIRMWARE(fdt_root));
 	for (guint i = 0; i < fdt_imgs->len; i++) {
 		FuFdtImage *fdt_node = g_ptr_array_index(fdt_imgs, i);
 		g_autoptr(GError) error_local = NULL;
-		if (!fu_vbe_plugin_coldplug_img(plugin, fdt_root, fdt_node, &error_local)) {
+		if (!fu_vbe_plugin_coldplug_img(self, fdt_root, fdt_node, &error_local)) {
 			g_warning("%s", error_local->message);
 			continue;
 		}
@@ -124,77 +130,14 @@ fu_vbe_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError **error)
 	return TRUE;
 }
 
-static GFile *
-fu_vbe_plugin_get_bfname(FuPlugin *plugin)
-{
-	FuVbePlugin *self = FU_VBE_PLUGIN(plugin);
-	g_autofree gchar *bfname_local = NULL;
-	g_autofree gchar *bfname_sys = NULL;
-	g_autofree gchar *sysfsdir = NULL;
-
-	/* look for override first, fall back to system value */
-	bfname_local = g_build_filename(self->vbe_dir, "system.dtb", NULL);
-	if (g_file_test(bfname_local, G_FILE_TEST_EXISTS))
-		return g_file_new_for_path(bfname_local);
-
-	/* actual hardware value */
-	sysfsdir = fu_path_from_kind(FU_PATH_KIND_SYSFSDIR_FW);
-	bfname_sys = g_build_filename(sysfsdir, "fdt", NULL);
-	return g_file_new_for_path(bfname_sys);
-}
-
-static gboolean
-fu_vbe_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
-{
-	FuVbePlugin *self = FU_VBE_PLUGIN(plugin);
-	g_autoptr(GFile) file = NULL;
-
-	/* look for override first, fall back to system value */
-	file = fu_vbe_plugin_get_bfname(plugin);
-	if (!fu_firmware_parse_file(self->fdt, file, FWUPD_INSTALL_FLAG_NO_SEARCH, error)) {
-		g_prefix_error(error, "failed to parse FDT: ");
-		return FALSE;
-	}
-
-	/* success */
-	return TRUE;
-}
-
-static void
-fu_vbe_plugin_to_string(FuPlugin *plugin, guint idt, GString *str)
-{
-	FuVbePlugin *self = FU_VBE_PLUGIN(plugin);
-	fu_string_append(str, idt, "VbeDir", self->vbe_dir);
-}
-
 static void
 fu_vbe_plugin_init(FuVbePlugin *self)
 {
-	g_autofree gchar *localstatedir_pkg = NULL;
-
-	/* where we can store the override and also image state */
-	localstatedir_pkg = fu_path_from_kind(FU_PATH_KIND_LOCALSTATEDIR_PKG);
-	self->vbe_dir = g_build_filename(localstatedir_pkg, "vbe", NULL);
-	self->fdt = fu_fdt_firmware_new();
-}
-
-static void
-fu_vbe_finalize(GObject *obj)
-{
-	FuVbePlugin *self = FU_VBE_PLUGIN(obj);
-	g_free(self->vbe_dir);
-	g_object_unref(self->fdt);
-	G_OBJECT_CLASS(fu_vbe_plugin_parent_class)->finalize(obj);
 }
 
 static void
 fu_vbe_plugin_class_init(FuVbePluginClass *klass)
 {
 	FuPluginClass *plugin_class = FU_PLUGIN_CLASS(klass);
-	GObjectClass *object_class = G_OBJECT_CLASS(klass);
-
-	object_class->finalize = fu_vbe_finalize;
-	plugin_class->to_string = fu_vbe_plugin_to_string;
-	plugin_class->startup = fu_vbe_plugin_startup;
-	plugin_class->coldplug = fu_vbe_plugin_coldplug;
+	plugin_class->backend_device_added = fu_vbe_plugin_backend_device_added;
 }

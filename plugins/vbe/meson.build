@@ -1,5 +1,6 @@
 cargs = ['-DG_LOG_DOMAIN="FuPluginVbe"']
 
+plugin_quirks += files('vbe.quirk')
 plugin_builtins += static_library('fu_plugin_vbe',
   sources : [
     'fu-vbe-plugin.c',

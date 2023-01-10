@@ -48,6 +48,7 @@
 #include "fu-engine-helper.h"
 #include "fu-engine-request.h"
 #include "fu-engine.h"
+#include "fu-fdt-backend.h"
 #include "fu-history.h"
 #include "fu-idle.h"
 #include "fu-kenv.h"
@@ -8396,6 +8397,7 @@ fu_engine_init(FuEngine *self)
 			 self);
 
 	/* backends */
+	g_ptr_array_add(self->backends, fu_fdt_backend_new(self->ctx));
 #ifdef HAVE_GUSB
 	g_ptr_array_add(self->backends, fu_usb_backend_new(self->ctx));
 #endif
