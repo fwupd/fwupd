@@ -1,4 +1,6 @@
-# Nordic Semiconductor HID
+---
+title: Plugin: Nordic HID
+---
 
 ## Introduction
 
@@ -24,7 +26,7 @@ aka "B0" is supported and tested.
 
 This plugin supports the following protocol ID:
 
-* Nordic HID Config Channel: com.nordic.hidcfgchannel
+* Nordic HID Config Channel: `com.nordic.hidcfgchannel`
 
 ## GUID Generation
 

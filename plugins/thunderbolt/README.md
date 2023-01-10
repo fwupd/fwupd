@@ -1,4 +1,6 @@
-# Thunderbolt™
+---
+title: Plugin: Thunderbolt
+---
 
 ## Introduction
 
@@ -14,7 +16,7 @@ an unspecified binary file format, with vendor specific header.
 
 This plugin supports the following protocol ID:
 
-* com.intel.thunderbolt
+* `com.intel.thunderbolt`
 
 ## GUID Generation
 

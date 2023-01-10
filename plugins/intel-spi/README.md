@@ -1,4 +1,6 @@
-# Intel SPI
+---
+title: Plugin: Intel SPI
+---
 
 ## Introduction
 

@@ -1,4 +1,6 @@
-# UF2 Devices
+---
+title: Plugin: UF2
+---
 
 ## Introduction
 

@@ -1,4 +1,6 @@
-# Intel USB4
+---
+title: Plugin: Intel USB4
+---
 
 ## Introduction
 
@@ -12,7 +14,7 @@ an unspecified binary file format, with vendor specific header.
 
 This plugin supports the following protocol ID:
 
-* com.intel.thunderbolt
+* `com.intel.thunderbolt`
 
 ## GUID Generation
 

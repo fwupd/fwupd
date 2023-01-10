@@ -1,4 +1,6 @@
-# Synaptics CAPE devices
+---
+title: Plugin: Synaptics CAPE
+---
 
 ## Introduction
 
@@ -10,7 +12,7 @@ The daemon will decompress the cabinet archive and extract a firmware blob.
 
 This plugin supports the following protocol ID:
 
-* com.synaptics.cape
+* `com.synaptics.cape`
 
 ## GUID Generation
 

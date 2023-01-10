@@ -1,4 +1,6 @@
-# Dell USB-C Dock
+---
+title: Plugin: Dell USB-C Dock
+---
 
 ## Dell System
 
@@ -35,8 +37,8 @@ blobs with an unspecified binary file format.
 
 This plugin supports the following protocol ID:
 
-* com.dell.dock
-* com.synaptics.mst
+* `com.dell.dock`
+* `com.synaptics.mst`
 
 ## GUID Generation
 

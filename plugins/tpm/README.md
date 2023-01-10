@@ -1,4 +1,6 @@
-# TPM
+---
+title: Plugin: TPM
+---
 
 ## Introduction
 

@@ -1,4 +1,6 @@
-# VIA
+---
+title: Plugin: VIA
+---
 
 ## Introduction
 
@@ -11,9 +13,9 @@ an undisclosed binary file format.
 
 This plugin supports the following protocol ID:
 
-* com.vli.i2c
-* com.vli.pd
-* com.vli.usbhub
+* `com.vli.i2c`
+* `com.vli.pd`
+* `com.vli.usbhub`
 
 ## GUID Generation
 

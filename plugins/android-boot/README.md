@@ -1,4 +1,6 @@
-# Android Bootloaders
+---
+title: Plugin: Android Boot
+---
 
 ## Introduction
 
@@ -13,7 +15,7 @@ to flash from the device itself rather than external device.
 
 This plugin supports the following protocol ID:
 
-* com.google.android_boot
+* `com.google.android_boot`
 
 ## GUID Generation
 

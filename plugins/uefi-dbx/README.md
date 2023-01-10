@@ -1,4 +1,6 @@
-# UEFI dbx
+---
+title: Plugin: UEFI dbx
+---
 
 ## Introduction
 
@@ -19,7 +21,7 @@ for details.
 
 This plugin supports the following protocol ID:
 
-* org.uefi.dbx
+* `org.uefi.dbx`
 
 ## GUID Generation
 

@@ -1,4 +1,6 @@
-# Dell ESRT Support
+---
+title: Plugin: Dell ESRT
+---
 
 ## Introduction
 

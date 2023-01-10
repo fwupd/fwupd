@@ -1,4 +1,6 @@
-# PCI MEI
+---
+title: Plugin: PCI MEI
+---
 
 ## Introduction
 

@@ -1,3 +1,16 @@
+plugin_readme_targets = []
+plugin_readme_outputs = []
+foreach plugin: plugins
+  plugin_readme_output = '@0@-README.md'.format(plugin)
+  plugin_readme_targets += custom_target('doc-plugin-@0@'.format(plugin),
+    input: join_paths(meson.project_source_root(), 'plugins', plugin, 'README.md'),
+    output: plugin_readme_output,
+    command: ['ln', '-sf', '@INPUT0@', '@OUTPUT@'],
+    build_by_default: true,
+  )
+  plugin_readme_outputs += '"@0@"'.format(plugin_readme_output)
+endforeach
+
 if build_docs and introspection.allowed()
   toml_conf = configuration_data()
   docgen_version = source_version
@@ -5,6 +18,7 @@ if build_docs and introspection.allowed()
     docgen_version = run_command([git, 'branch', '--show-current'], check: true).stdout().strip()
   endif
   toml_conf.set('version', docgen_version)
+  toml_conf.set('plugin_readme_outputs', ','.join(plugin_readme_outputs))
 
   fwupd_toml = configure_file(
     input: 'fwupd.toml.in',
@@ -89,6 +103,7 @@ if build_docs and introspection.allowed()
     depends: [
       fwupdplugin_gir[0],
       hsi_md,
+      plugin_readme_targets,
     ],
     build_by_default: true,
     install: true,

@@ -1,4 +1,6 @@
-# CPU Microcode
+---
+title: Plugin: CPU Microcode
+---
 
 ## Introduction
 

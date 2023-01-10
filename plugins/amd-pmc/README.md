@@ -1,4 +1,6 @@
-# AMD PMC
+---
+title: Plugin: AMD PMC
+---
 
 ## Introduction
 

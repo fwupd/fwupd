@@ -1,4 +1,6 @@
-# Hailuck
+---
+title: Plugin: Hailuck
+---
 
 ## Introduction
 
@@ -12,8 +14,8 @@ a packed binary file format.
 
 This plugin supports the following protocol ID:
 
-* com.hailuck.kbd
-* com.hailuck.tp
+* `com.hailuck.kbd`
+* `com.hailuck.tp`
 
 ## GUID Generation
 

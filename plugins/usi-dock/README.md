@@ -1,4 +1,6 @@
-# USI Dock
+---
+title: Plugin: USI Dock
+---
 
 ## Introduction
 
@@ -7,7 +9,7 @@ is provided by the DMC bcdDevice.
 
 This plugin supports the following protocol ID:
 
-* com.usi.dock
+* `com.usi.dock`
 
 ## GUID Generation
 

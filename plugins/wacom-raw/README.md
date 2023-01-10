@@ -1,4 +1,6 @@
-# Wacom RAW
+---
+title: Plugin: Wacom RAW
+---
 
 ## Introduction
 
@@ -16,7 +18,7 @@ Intel HEX file format.
 
 This plugin supports the following protocol ID:
 
-* com.wacom.raw
+* `com.wacom.raw`
 
 ## Quirk Use
 

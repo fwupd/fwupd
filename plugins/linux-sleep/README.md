@@ -1,4 +1,6 @@
-# Linux Kernel Sleep
+---
+title: Plugin: Linux Kernel Sleep
+---
 
 ## Introduction
 

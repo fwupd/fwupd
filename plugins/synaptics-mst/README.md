@@ -1,4 +1,8 @@
-# Synaptics MST
+---
+title: Plugin: Synaptics MST
+---
+
+## Introduction
 
 This plugin supports querying and flashing Synaptics MST hubs used in Dell systems
 and docks.
@@ -10,7 +14,7 @@ an unspecified binary file format.
 
 This plugin supports the following protocol ID:
 
-* com.synaptics.mst
+* `com.synaptics.mst`
 
 ## GUID Generation
 

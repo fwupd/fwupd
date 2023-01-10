@@ -1,4 +1,6 @@
-# PixArt RF Devices
+---
+title: Plugin: PixArt RF
+---
 
 ## Introduction
 
@@ -12,7 +14,7 @@ an unspecified binary file format.
 
 This plugin supports the following protocol ID:
 
-* com.pixart.rf
+* `com.pixart.rf`
 
 ## GUID Generation
 

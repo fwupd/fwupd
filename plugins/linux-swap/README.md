@@ -1,4 +1,6 @@
-# Linux Swap
+---
+title: Plugin: Linux Swap
+---
 
 ## Introduction
 

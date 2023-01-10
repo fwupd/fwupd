@@ -1,4 +1,6 @@
-# DFU
+---
+title: Plugin: DFU
+---
 
 ## Introduction
 
@@ -12,8 +14,8 @@ DFU or DfuSe file format.
 
 This plugin supports the following protocol IDs:
 
-* org.usb.dfu
-* com.st.dfuse
+* `org.usb.dfu`
+* `com.st.dfuse`
 
 ## GUID Generation
 

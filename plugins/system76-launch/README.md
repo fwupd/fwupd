@@ -1,4 +1,6 @@
-# System76 Launch
+---
+title: Plugin: System76 Launch
+---
 
 ## Introduction
 

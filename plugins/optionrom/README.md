@@ -1,4 +1,6 @@
-# OptionROM
+---
+title: Plugin: OptionROM
+---
 
 ## Introduction
 

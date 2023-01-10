@@ -1,4 +1,6 @@
-# Elan TouchPad
+---
+title: Plugin: Elan TouchPad
+---
 
 ## Introduction
 
@@ -13,7 +15,7 @@ an unspecified binary file format.
 
 This plugin supports the following protocol ID:
 
-* tw.com.emc.elantp
+* `tw.com.emc.elantp`
 
 ## GUID Generation
 

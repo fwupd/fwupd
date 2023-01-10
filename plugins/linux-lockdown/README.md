@@ -1,4 +1,6 @@
-# Linux Kernel Lockdown
+---
+title: Plugin: Linux Kernel Lockdown
+---
 
 ## Introduction
 

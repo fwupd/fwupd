@@ -1,4 +1,6 @@
-# ACPI FACP
+---
+title: Plugin: ACPI FACP — Fixed ACPI Description Table
+---
 
 ## Introduction
 

@@ -1,4 +1,6 @@
-# GPIO
+---
+title: Plugin: GPIO
+---
 
 ## Introduction
 

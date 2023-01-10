@@ -1,4 +1,6 @@
-# Synaptics RMI4
+---
+title: Plugin: Synaptics RMI4
+---
 
 ## Introduction
 
@@ -31,7 +33,7 @@ a proprietary (but documented) file format.
 
 This plugin supports the following protocol ID:
 
-* com.synaptics.rmi
+* `com.synaptics.rmi`
 
 ## External Interface Access
 

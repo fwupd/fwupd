@@ -1,4 +1,6 @@
-# logind
+---
+title: Plugin: logind
+---
 
 ## Introduction
 

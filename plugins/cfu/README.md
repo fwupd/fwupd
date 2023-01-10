@@ -1,4 +1,6 @@
-# Component Firmware update
+---
+title: Plugin: CFU - Component Firmware Update
+---
 
 ## Introduction
 
@@ -13,7 +15,7 @@ details.
 
 This plugin supports the following protocol ID:
 
-* com.microsoft.cfu
+* `com.microsoft.cfu`
 
 ## GUID Generation
 

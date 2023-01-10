@@ -1,4 +1,6 @@
-# Intel Graphics System Controller
+---
+title: Plugin: Intel GSC — Graphics System Controller
+---
 
 ## Introduction
 
@@ -13,7 +15,7 @@ There are two firmware formats in use:
 
 This plugin supports the following protocol ID:
 
-* com.intel.gsc
+* `com.intel.gsc`
 
 ## GUID Generation
 

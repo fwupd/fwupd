@@ -1,4 +1,6 @@
-# Linux IOMMU
+---
+title: Plugin: IOMMU
+---
 
 ## Introduction
 

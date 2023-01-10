@@ -1,4 +1,6 @@
-# Focal TouchPad
+---
+title: Plugin: Focal TouchPad
+---
 
 ## Introduction
 
@@ -12,7 +14,7 @@ an unspecified binary file format.
 
 This plugin supports the following protocol ID:
 
-* tw.com.focalfp
+* `tw.com.focalfp`
 
 ## GUID Generation
 

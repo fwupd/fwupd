@@ -1,4 +1,6 @@
-# Realtek RTS54HID
+---
+title: Plugin: RTS54HID
+---
 
 ## Introduction
 
@@ -15,7 +17,7 @@ an unspecified binary file format.
 
 This plugin supports the following protocol ID:
 
-* com.realtek.rts54
+* `com.realtek.rts54`
 
 ## GUID Generation
 

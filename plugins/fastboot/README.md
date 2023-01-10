@@ -1,4 +1,6 @@
-# Fastboot
+---
+title: Plugin: Fastboot
+---
 
 ## Introduction
 
@@ -17,7 +19,7 @@ be updated.
 
 This plugin supports the following protocol ID:
 
-* com.google.fastboot
+* `com.google.fastboot`
 
 ## GUID Generation
 

@@ -1,4 +1,6 @@
-# ATA
+---
+title: Plugin: ATA
+---
 
 ## Introduction
 
@@ -18,7 +20,7 @@ an unspecified binary file format.
 
 This plugin supports the following protocol ID:
 
-* org.t13.ata
+* `org.t13.ata`
 
 ## GUID Generation
 

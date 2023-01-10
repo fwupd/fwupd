@@ -1,4 +1,6 @@
-# MTD
+---
+title: Plugin: MTD
+---
 
 ## Introduction
 
@@ -9,7 +11,7 @@ See <http://www.linux-mtd.infradead.org/doc/general.html> for more details.
 
 This plugin supports the following protocol ID:
 
-* org.infradead.mtd
+* `org.infradead.mtd`
 
 ## GUID Generation
 

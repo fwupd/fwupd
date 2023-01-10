@@ -1,4 +1,6 @@
-# 8BitDo
+---
+title: Plugin: 8BitDo
+---
 
 ## Introduction
 
@@ -18,7 +20,7 @@ that is used when flashing the image.
 
 This plugin supports the following protocol ID:
 
-* com.8bitdo
+* `com.8bitdo`
 
 ## GUID Generation
 

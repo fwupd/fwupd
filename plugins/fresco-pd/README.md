@@ -1,4 +1,6 @@
-# Fresco PD
+---
+title: Plugin: Fresco PD
+---
 
 ## Introduction
 
@@ -11,7 +13,7 @@ an unspecified binary format.
 
 This plugin supports the following protocol ID:
 
-* com.frescologic.pd
+* `com.frescologic.pd`
 
 ## GUID Generation
 
