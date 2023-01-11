@@ -1392,6 +1392,7 @@ gboolean
 fu_firmware_write_file(FuFirmware *self, GFile *file, GError **error)
 {
 	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GFile) parent = NULL;
 
 	g_return_val_if_fail(FU_IS_FIRMWARE(self), FALSE);
 	g_return_val_if_fail(G_IS_FILE(file), FALSE);
@@ -1400,6 +1401,11 @@ fu_firmware_write_file(FuFirmware *self, GFile *file, GError **error)
 	blob = fu_firmware_write(self, error);
 	if (blob == NULL)
 		return FALSE;
+	parent = g_file_get_parent(file);
+	if (!g_file_query_exists(parent, NULL)) {
+		if (!g_file_make_directory_with_parents(parent, NULL, error))
+			return FALSE;
+	}
 	return g_file_replace_contents(file,
 				       g_bytes_get_data(blob, NULL),
 				       g_bytes_get_size(blob),
