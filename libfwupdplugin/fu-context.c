@@ -10,7 +10,9 @@
 
 #include "fu-bios-settings-private.h"
 #include "fu-context-private.h"
+#include "fu-fdt-firmware.h"
 #include "fu-hwids.h"
+#include "fu-path.h"
 #include "fu-smbios-private.h"
 #include "fu-volume-private.h"
 
@@ -38,6 +40,7 @@ typedef struct {
 	guint battery_threshold;
 	FuBiosSettings *host_bios_settings;
 	gboolean loaded_hwinfo;
+	FuFirmware *fdt; /* optional */
 } FuContextPrivate;
 
 enum { SIGNAL_SECURITY_CHANGED, SIGNAL_LAST };
@@ -56,6 +59,74 @@ static guint signals[SIGNAL_LAST] = {0};
 G_DEFINE_TYPE_WITH_PRIVATE(FuContext, fu_context, G_TYPE_OBJECT)
 
 #define GET_PRIVATE(o) (fu_context_get_instance_private(o))
+
+static GFile *
+fu_context_get_fdt_file(GError **error)
+{
+	g_autofree gchar *fdtfn_local = NULL;
+	g_autofree gchar *fdtfn_sys = NULL;
+	g_autofree gchar *localstatedir_pkg = fu_path_from_kind(FU_PATH_KIND_LOCALSTATEDIR_PKG);
+	g_autofree gchar *sysfsdir = NULL;
+
+	/* look for override first, fall back to system value */
+	fdtfn_local = g_build_filename(localstatedir_pkg, "system.dtb", NULL);
+	if (g_file_test(fdtfn_local, G_FILE_TEST_EXISTS))
+		return g_file_new_for_path(fdtfn_local);
+
+	/* actual hardware value */
+	sysfsdir = fu_path_from_kind(FU_PATH_KIND_SYSFSDIR_FW);
+	fdtfn_sys = g_build_filename(sysfsdir, "fdt", NULL);
+	if (g_file_test(fdtfn_sys, G_FILE_TEST_EXISTS))
+		return g_file_new_for_path(fdtfn_sys);
+
+	/* failed */
+	g_set_error(error,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_NOT_SUPPORTED,
+		    "cannot find %s or override %s",
+		    fdtfn_sys,
+		    fdtfn_local);
+	return NULL;
+}
+
+/**
+ * fu_context_get_fdt:
+ * @self: a #FuContext
+ * @error: (nullable): optional return location for an error
+ *
+ * Gets and parses the system FDT, aka. the Flat Device Tree.
+ *
+ * The results are cached internally to the context, and subsequent calls to this function
+ * returns the pre-parsed object.
+ *
+ * Returns: (transfer full): a #FuFdtFirmware, or %NULL
+ *
+ * Since: 1.8.10
+ **/
+FuFirmware *
+fu_context_get_fdt(FuContext *self, GError **error)
+{
+	FuContextPrivate *priv = GET_PRIVATE(self);
+
+	g_return_val_if_fail(FU_IS_CONTEXT(self), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	/* load if not already parsed */
+	if (priv->fdt == NULL) {
+		g_autoptr(FuFirmware) fdt_tmp = fu_fdt_firmware_new();
+		g_autoptr(GFile) file = fu_context_get_fdt_file(error);
+		if (file == NULL)
+			return NULL;
+		if (!fu_firmware_parse_file(fdt_tmp, file, FWUPD_INSTALL_FLAG_NO_SEARCH, error)) {
+			g_prefix_error(error, "failed to parse FDT: ");
+			return NULL;
+		}
+		priv->fdt = g_steal_pointer(&fdt_tmp);
+	}
+
+	/* success */
+	return g_object_ref(priv->fdt);
+}
 
 /**
  * fu_context_get_smbios_string:
@@ -1078,6 +1149,8 @@ fu_context_finalize(GObject *object)
 		g_hash_table_unref(priv->runtime_versions);
 	if (priv->compile_versions != NULL)
 		g_hash_table_unref(priv->compile_versions);
+	if (priv->fdt != NULL)
+		g_object_unref(priv->fdt);
 	g_object_unref(priv->hwids);
 	g_hash_table_unref(priv->hwid_flags);
 	g_object_unref(priv->quirks);
