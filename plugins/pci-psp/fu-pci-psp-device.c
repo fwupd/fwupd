@@ -149,6 +149,7 @@ fu_pci_psp_device_add_security_attrs_rollback_protection(FuDevice *device,
 		g_debug("rollback protection not enforced");
 		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
 		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM);
+		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_FW);
 		return;
 	}
 
