@@ -1154,6 +1154,7 @@ LIBFWUPDPLUGIN_1.8.9 {
 
 LIBFWUPDPLUGIN_1.8.10 {
   global:
+    fu_context_get_fdt;
     fu_pefile_firmware_get_type;
     fu_pefile_firmware_new;
   local: *;

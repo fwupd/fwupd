@@ -839,6 +839,47 @@ fu_plugin_delay_func(void)
 }
 
 static void
+fu_plugin_fdt_func(void)
+{
+	gboolean ret;
+	g_autofree gchar *compatible = NULL;
+	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuFirmware) fdt = NULL;
+	g_autoptr(FuFirmware) fdt_root = NULL;
+	g_autoptr(FuFirmware) fdt_tmp = fu_fdt_firmware_new();
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GFile) file =
+	    g_file_new_for_path("/tmp/fwupd-self-test/var/lib/fwupd/system.dtb");
+
+	/* write file */
+	ret = fu_firmware_build_from_xml(
+	    FU_FIRMWARE(fdt_tmp),
+	    "<firmware gtype=\"FuFdtFirmware\">\n"
+	    "  <firmware gtype=\"FuFdtImage\">\n"
+	    "    <metadata key=\"compatible\" format=\"str\">pine64,rockpro64-v2.1</metadata>\n"
+	    "  </firmware>\n"
+	    "</firmware>\n",
+	    &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = fu_firmware_write_file(FU_FIRMWARE(fdt_tmp), file, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* get compatible from the context */
+	fdt = fu_context_get_fdt(ctx, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(fdt);
+	fdt_root = fu_firmware_get_image_by_id(fdt, NULL, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(fdt_root);
+	ret = fu_fdt_image_get_attr_str(FU_FDT_IMAGE(fdt_root), "compatible", &compatible, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpstr(compatible, ==, "pine64,rockpro64-v2.1");
+}
+
+static void
 fu_plugin_quirks_func(void)
 {
 	const gchar *tmp;
@@ -3759,6 +3800,7 @@ main(int argc, char **argv)
 	(void)g_setenv("FWUPD_LIBDIR_PKG", testdatadir, TRUE);
 	(void)g_setenv("FWUPD_SYSCONFDIR", testdatadir, TRUE);
 	(void)g_setenv("FWUPD_SYSFSFWATTRIBDIR", testdatadir, TRUE);
+	(void)g_setenv("FWUPD_LOCALSTATEDIR", testdatadir, TRUE);
 	(void)g_setenv("FWUPD_OFFLINE_TRIGGER", "/tmp/fwupd-self-test/system-update", TRUE);
 	(void)g_setenv("FWUPD_LOCALSTATEDIR", "/tmp/fwupd-self-test/var", TRUE);
 	(void)g_setenv("FWUPD_PROFILE", "1", TRUE);
@@ -3780,6 +3822,7 @@ main(int argc, char **argv)
 			fu_plugin_device_inhibit_children_func);
 	g_test_add_func("/fwupd/plugin{delay}", fu_plugin_delay_func);
 	g_test_add_func("/fwupd/plugin{quirks}", fu_plugin_quirks_func);
+	g_test_add_func("/fwupd/plugin{fdt}", fu_plugin_fdt_func);
 	g_test_add_func("/fwupd/plugin{quirks-performance}", fu_plugin_quirks_performance_func);
 	g_test_add_func("/fwupd/plugin{quirks-device}", fu_plugin_quirks_device_func);
 	g_test_add_func("/fwupd/backend", fu_backend_func);
