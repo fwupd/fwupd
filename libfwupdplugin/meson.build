@@ -361,6 +361,25 @@ if get_option('tests')
     ],
   )
   test('fwupdplugin-self-test', e, is_parallel: false, timeout: 180, env: env)
+
+  install_data([
+      'tests/dmi/class/chassis_type',
+      'tests/dmi/class/sys_vendor',
+    ],
+    install_dir: join_paths(installed_test_datadir, 'dmi/class'),
+  )
+  install_data([
+      'tests/dmi/tables/DMI',
+      'tests/dmi/tables/smbios_entry_point',
+    ],
+    install_dir: join_paths(installed_test_datadir, 'dmi/tables'),
+  )
+  install_data([
+      'tests/dmi/tables64/DMI',
+      'tests/dmi/tables64/smbios_entry_point',
+    ],
+    install_dir: join_paths(installed_test_datadir, 'dmi/tables64'),
+  )
 endif
 
 fwupdplugin_incdir = include_directories('.')
