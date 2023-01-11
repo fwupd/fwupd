@@ -725,6 +725,10 @@ fu_volume_new_esp_for_path(const gchar *esp_path, GError **error)
 		if (g_strcmp0(basename, vol_basename) == 0)
 			return g_object_ref(vol);
 	}
+	if (g_file_test(esp_path, G_FILE_TEST_IS_DIR)) {
+		g_debug("Using user requested path %s for ESP", esp_path);
+		return fu_volume_new_from_mount_path(esp_path);
+	}
 	g_set_error(error,
 		    G_IO_ERROR,
 		    G_IO_ERROR_INVALID_FILENAME,
