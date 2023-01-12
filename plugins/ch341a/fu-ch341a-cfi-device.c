@@ -106,14 +106,17 @@ fu_ch341a_cfi_device_read_jedec(FuCh341aCfiDevice *self, GError **error)
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "flash ID non-valid");
+				    "flash ID non-valid, got 0x000000");
 		return FALSE;
 	}
 	if (buf[1] == 0xFF && buf[2] == 0xFF && buf[3] == 0xFF) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "device not detected");
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "device not detected, flash ID 0x%02X%02X%02X",
+			    buf[1],
+			    buf[2],
+			    buf[3]);
 		return FALSE;
 	}
 	g_string_append_printf(flash_id, "%02X", buf[1]);
