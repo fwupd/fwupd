@@ -1036,8 +1036,9 @@ fu_util_firmware_dump(FuUtilPrivate *priv, gchar **values, GError **error)
 
 	/* progress */
 	fu_progress_set_id(priv->progress, G_STRLOC);
-	fu_progress_add_step(priv->progress, FWUPD_STATUS_LOADING, 95, "start-engine");
-	fu_progress_add_step(priv->progress, FWUPD_STATUS_DEVICE_READ, 5, NULL);
+	fu_progress_add_flag(priv->progress, FU_PROGRESS_FLAG_NO_PROFILE);
+	fu_progress_add_step(priv->progress, FWUPD_STATUS_LOADING, 5, "start-engine");
+	fu_progress_add_step(priv->progress, FWUPD_STATUS_DEVICE_READ, 95, NULL);
 
 	/* invalid args */
 	if (g_strv_length(values) == 0) {
@@ -1110,8 +1111,9 @@ fu_util_firmware_read(FuUtilPrivate *priv, gchar **values, GError **error)
 
 	/* progress */
 	fu_progress_set_id(priv->progress, G_STRLOC);
-	fu_progress_add_step(priv->progress, FWUPD_STATUS_LOADING, 95, "start-engine");
-	fu_progress_add_step(priv->progress, FWUPD_STATUS_DEVICE_READ, 5, NULL);
+	fu_progress_add_flag(priv->progress, FU_PROGRESS_FLAG_NO_PROFILE);
+	fu_progress_add_step(priv->progress, FWUPD_STATUS_LOADING, 5, "start-engine");
+	fu_progress_add_step(priv->progress, FWUPD_STATUS_DEVICE_READ, 95, NULL);
 
 	/* invalid args */
 	if (g_strv_length(values) == 0) {
