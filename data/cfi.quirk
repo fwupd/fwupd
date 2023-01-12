@@ -191,6 +191,9 @@ FirmwareSizeMax = 0x20000
 [CFI\FLASHID_EF4018]
 Name = W25Q128
 FirmwareSizeMax = 0x1000000
+[CFI\FLASHID_EF4019]
+Name = W25Q256
+FirmwareSizeMax = 0x2000000
 
 # Fidelix
 [CFI\FLASHID_F8]
