@@ -133,6 +133,7 @@ fu_context_get_fdt(FuContext *self, GError **error)
  * @self: a #FuContext
  * @structure_type: a SMBIOS structure type, e.g. %FU_SMBIOS_STRUCTURE_TYPE_BIOS
  * @offset: a SMBIOS offset
+ * @error: (nullable): optional return location for an error
  *
  * Gets a hardware SMBIOS string.
  *
@@ -144,7 +145,7 @@ fu_context_get_fdt(FuContext *self, GError **error)
  * Since: 1.6.0
  **/
 const gchar *
-fu_context_get_smbios_string(FuContext *self, guint8 structure_type, guint8 offset)
+fu_context_get_smbios_string(FuContext *self, guint8 structure_type, guint8 offset, GError **error)
 {
 	FuContextPrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FU_IS_CONTEXT(self), NULL);
@@ -152,7 +153,7 @@ fu_context_get_smbios_string(FuContext *self, guint8 structure_type, guint8 offs
 		g_critical("cannot use SMBIOS before calling ->load_hwinfo()");
 		return NULL;
 	}
-	return fu_smbios_get_string(priv->smbios, structure_type, offset, NULL);
+	return fu_smbios_get_string(priv->smbios, structure_type, offset, error);
 }
 
 /**
@@ -196,6 +197,7 @@ fu_context_get_smbios_data(FuContext *self, guint8 structure_type, GError **erro
  * @self: a #FuContext
  * @type: a structure type, e.g. %FU_SMBIOS_STRUCTURE_TYPE_BIOS
  * @offset: a structure offset
+ * @error: (nullable): optional return location for an error
  *
  * Reads an integer value from the SMBIOS string table of a specific structure.
  *
@@ -207,7 +209,7 @@ fu_context_get_smbios_data(FuContext *self, guint8 structure_type, GError **erro
  * Since: 1.6.0
  **/
 guint
-fu_context_get_smbios_integer(FuContext *self, guint8 type, guint8 offset)
+fu_context_get_smbios_integer(FuContext *self, guint8 type, guint8 offset, GError **error)
 {
 	FuContextPrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FU_IS_CONTEXT(self), G_MAXUINT);
@@ -215,7 +217,7 @@ fu_context_get_smbios_integer(FuContext *self, guint8 type, guint8 offset)
 		g_critical("cannot use SMBIOS before calling ->load_hwinfo()");
 		return G_MAXUINT;
 	}
-	return fu_smbios_get_integer(priv->smbios, type, offset, NULL);
+	return fu_smbios_get_integer(priv->smbios, type, offset, error);
 }
 
 /**
