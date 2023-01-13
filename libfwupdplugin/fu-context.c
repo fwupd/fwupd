@@ -54,6 +54,7 @@ typedef struct {
 	FuBiosSettings *host_bios_settings;
 	FuFirmware *fdt; /* optional */
 	gchar *esp_location;
+	GPtrArray *hwid_guids; /* str */
 } FuContextPrivate;
 
 enum { SIGNAL_SECURITY_CHANGED, SIGNAL_HOUSEKEEPING, SIGNAL_LAST };
@@ -452,7 +453,7 @@ fu_context_get_hwid_guids(FuContext *self)
 		g_critical("cannot use HWIDs before calling ->load_hwinfo()");
 		return NULL;
 	}
-	return fu_hwids_get_guids(priv->hwids);
+	return priv->hwid_guids;
 }
 
 /**
@@ -1048,6 +1049,46 @@ fu_context_hwid_quirk_cb(FuContext *self,
 	}
 }
 
+/* adds compatible GUIDs */
+static gboolean
+fu_context_fdt_setup(FuContext *self, GError **error)
+{
+	FuContextPrivate *priv = GET_PRIVATE(self);
+	g_auto(GStrv) compatible = NULL;
+	g_autoptr(FuFirmware) fdt_img = NULL;
+	g_autoptr(FuFirmware) fdt = NULL;
+
+	fdt = fu_context_get_fdt(self, error);
+	if (fdt == NULL)
+		return FALSE;
+	fdt_img = fu_firmware_get_image_by_id(fdt, NULL, error);
+	if (fdt_img == NULL)
+		return FALSE;
+	if (!fu_fdt_image_get_attr_strlist(FU_FDT_IMAGE(fdt_img), "compatible", &compatible, error))
+		return FALSE;
+	for (guint i = 0; compatible[i] != NULL; i++) {
+		g_autofree gchar *guid = fwupd_guid_hash_string(compatible[i]);
+		g_debug("using %s for DT compatible %s", guid, compatible[i]);
+		g_ptr_array_add(priv->hwid_guids, g_steal_pointer(&guid));
+	}
+	return TRUE;
+}
+
+/* adds HWIDs */
+static gboolean
+fu_context_hwids_setup(FuContext *self, GError **error)
+{
+	FuContextPrivate *priv = GET_PRIVATE(self);
+	GPtrArray *guids = fu_hwids_get_guids(priv->hwids);
+	if (!fu_hwids_setup(priv->hwids, priv->smbios, error))
+		return FALSE;
+	for (guint i = 0; i < guids->len; i++) {
+		const gchar *guid = g_ptr_array_index(guids, i);
+		g_ptr_array_add(priv->hwid_guids, g_strdup(guid));
+	}
+	return TRUE;
+}
+
 /**
  * fu_context_load_hwinfo:
  * @self: a #FuContext
@@ -1070,6 +1111,7 @@ fu_context_load_hwinfo(FuContext *self,
 	FuContextPrivate *priv = GET_PRIVATE(self);
 	GPtrArray *guids;
 	g_autoptr(GError) error_hwids = NULL;
+	g_autoptr(GError) error_fdt = NULL;
 	g_autoptr(GError) error_bios_settings = NULL;
 	struct {
 		const gchar *name;
@@ -1109,6 +1151,13 @@ fu_context_load_hwinfo(FuContext *self,
 				continue;
 			}
 		}
+	if (!fu_smbios_setup(priv->smbios, &error_smbios))
+		g_warning("Failed to load SMBIOS: %s", error_smbios->message);
+	if (!fu_context_hwids_setup(self, &error_hwids))
+		g_warning("Failed to load HWIDs: %s", error_hwids->message);
+	if (!fu_context_fdt_setup(self, &error_fdt)) {
+		if (!g_error_matches(error_fdt, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED))
+			g_warning("Failed to load FDT: %s", error_fdt->message);
 	}
 	fu_context_add_flag(self, FU_CONTEXT_FLAG_LOADED_HWINFO);
 	fu_progress_step_done(progress);
@@ -2260,6 +2309,7 @@ fu_context_finalize(GObject *object)
 	g_hash_table_unref(priv->udev_subsystems);
 	g_ptr_array_unref(priv->esp_volumes);
 	g_ptr_array_unref(priv->backends);
+	g_ptr_array_unref(priv->hwid_guids);
 
 	G_OBJECT_CLASS(fu_context_parent_class)->finalize(object);
 }
@@ -2435,6 +2485,7 @@ fu_context_init(FuContext *self)
 	priv->runtime_versions = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
 	priv->compile_versions = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
 	priv->backends = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
+	priv->hwid_guids = g_ptr_array_new_with_free_func(g_free);
 }
 
 /**
