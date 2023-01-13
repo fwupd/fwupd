@@ -124,6 +124,53 @@ fu_synaptics_rmi_v7_device_detach(FuDevice *device, FuProgress *progress, GError
 }
 
 static gboolean
+fu_synaptics_rmi_v7_device_erase_partition(FuSynapticsRmiDevice *self,
+					   guint8 partition_id,
+					   GError **error)
+{
+	FuSynapticsRmiFunction *f34;
+	FuSynapticsRmiFlash *flash = fu_synaptics_rmi_device_get_flash(self);
+	g_autoptr(GByteArray) erase_cmd = g_byte_array_new();
+
+	/* f34 */
+	f34 = fu_synaptics_rmi_device_get_function(self, 0x34, error);
+	if (f34 == NULL)
+		return FALSE;
+	fu_byte_array_append_uint8(erase_cmd, partition_id);
+	fu_byte_array_append_uint32(erase_cmd, 0x0, G_LITTLE_ENDIAN);
+	fu_byte_array_append_uint8(erase_cmd, RMI_FLASH_CMD_ERASE);
+
+	fu_byte_array_append_uint8(erase_cmd, flash->bootloader_id[0]);
+	fu_byte_array_append_uint8(erase_cmd, flash->bootloader_id[1]);
+
+	g_usleep(1000 * 1000);
+	if (!fu_synaptics_rmi_device_write(self,
+					   f34->data_base + 1,
+					   erase_cmd,
+					   FU_SYNAPTICS_RMI_DEVICE_FLAG_NONE,
+					   error)) {
+		g_prefix_error(error, "failed to unlock erasing: ");
+		return FALSE;
+	}
+	g_usleep(1000 * 100);
+
+	/* wait for ATTN */
+	if (!fu_synaptics_rmi_device_wait_for_idle(self,
+						   RMI_F34_ERASE_WAIT_MS,
+						   RMI_DEVICE_WAIT_FOR_IDLE_FLAG_NONE,
+						   error)) {
+		g_prefix_error(error, "failed to wait for idle: ");
+		return FALSE;
+	}
+
+	if (!fu_synaptics_rmi_device_poll_wait(self, error)) {
+		g_prefix_error(error, "failed to get flash success: ");
+		return FALSE;
+	}
+	return TRUE;
+}
+
+static gboolean
 fu_synaptics_rmi_v7_device_erase_all(FuSynapticsRmiDevice *self, GError **error)
 {
 	FuSynapticsRmiFunction *f34;
@@ -137,7 +184,7 @@ fu_synaptics_rmi_v7_device_erase_all(FuSynapticsRmiDevice *self, GError **error)
 
 	fu_byte_array_append_uint8(erase_cmd, RMI_PARTITION_ID_CORE_CODE);
 	fu_byte_array_append_uint32(erase_cmd, 0x0, G_LITTLE_ENDIAN);
-	if (flash->bootloader_id[1] == 8) {
+	if (flash->bootloader_id[1] >= 8) {
 		/* For bootloader v8 */
 		fu_byte_array_append_uint8(erase_cmd, RMI_FLASH_CMD_ERASE_AP);
 	} else {
@@ -148,7 +195,7 @@ fu_synaptics_rmi_v7_device_erase_all(FuSynapticsRmiDevice *self, GError **error)
 	fu_byte_array_append_uint8(erase_cmd, flash->bootloader_id[1]);
 	/* for BL8 device, we need hold 1 seconds after querying F34 status to
 	 * avoid not get attention by following giving erase command */
-	if (flash->bootloader_id[1] == 8)
+	if (flash->bootloader_id[1] >= 8)
 		g_usleep(1000 * 1000);
 	if (!fu_synaptics_rmi_device_write(self,
 					   f34->data_base + 1,
@@ -159,7 +206,7 @@ fu_synaptics_rmi_v7_device_erase_all(FuSynapticsRmiDevice *self, GError **error)
 		return FALSE;
 	}
 	g_usleep(1000 * 100);
-	if (flash->bootloader_id[1] == 8) {
+	if (flash->bootloader_id[1] >= 8) {
 		/* wait for ATTN */
 		if (!fu_synaptics_rmi_device_wait_for_idle(self,
 							   RMI_F34_ERASE_WAIT_MS,
@@ -569,16 +616,19 @@ fu_synaptics_rmi_v7_device_write_firmware(FuDevice *device,
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
+	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_NO_PROFILE);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 0, "disable-sleep");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_READ, 1, "verify-signature");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 2, "fixed-location-data");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 3, NULL);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 0, "flash-config");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 89, "core-code");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 2, "core-config");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 2, "external-touch-afe-config");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 2, "display-config");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_READ, 0, "verify-signature");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 0, "fixed-location-data");
+	if (flash->bootloader_id[1] > 8)
+		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 17, "flash-config");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 0, NULL);
+	if (flash->bootloader_id[1] == 8)
+		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 17, "flash-config");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 81, "core-code");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 1, "core-config");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 0, "external-touch-afe-config");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 0, "display-config");
 
 	/* we should be in bootloader mode now, but check anyway */
 	if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
@@ -601,7 +651,7 @@ fu_synaptics_rmi_v7_device_write_firmware(FuDevice *device,
 	bytes_cfg = fu_firmware_get_image_by_id_bytes(firmware, "config", error);
 	if (bytes_cfg == NULL)
 		return FALSE;
-	if (flash->bootloader_id[1] == 8) {
+	if (flash->bootloader_id[1] >= 8) {
 		bytes_flashcfg = fu_firmware_get_image_by_id_bytes(firmware, "flash-config", error);
 		if (bytes_flashcfg == NULL)
 			return FALSE;
@@ -633,8 +683,12 @@ fu_synaptics_rmi_v7_device_write_firmware(FuDevice *device,
 	}
 	fu_progress_step_done(progress);
 
-	/* write flash config for v8+ */
-	if (bytes_flashcfg != NULL) {
+	/* write flash config for BL > v8 */
+	if (flash->bootloader_id[1] > 8) {
+		if (!fu_synaptics_rmi_v7_device_erase_partition(self,
+								RMI_PARTITION_ID_FLASH_CONFIG,
+								error))
+			return FALSE;
 		if (!fu_synaptics_rmi_v7_device_write_partition(self,
 								firmware,
 								"flash-config",
@@ -643,8 +697,8 @@ fu_synaptics_rmi_v7_device_write_firmware(FuDevice *device,
 								fu_progress_get_child(progress),
 								error))
 			return FALSE;
+		fu_progress_step_done(progress);
 	}
-	fu_progress_step_done(progress);
 
 	/* erase all */
 	if (!fu_synaptics_rmi_v7_device_erase_all(self, error)) {
@@ -652,6 +706,19 @@ fu_synaptics_rmi_v7_device_write_firmware(FuDevice *device,
 		return FALSE;
 	}
 	fu_progress_step_done(progress);
+
+	/* write flash config for v8 */
+	if (flash->bootloader_id[1] == 8) {
+		if (!fu_synaptics_rmi_v7_device_write_partition(self,
+								firmware,
+								"flash-config",
+								RMI_PARTITION_ID_FLASH_CONFIG,
+								bytes_flashcfg,
+								fu_progress_get_child(progress),
+								error))
+			return FALSE;
+		fu_progress_step_done(progress);
+	}
 
 	/* write core code */
 	if (!fu_synaptics_rmi_v7_device_write_partition(self,
