@@ -1,0 +1,14 @@
+[aspeed,ast2400]
+Plugin = aspeed_ast2x00
+Name = AST2400
+AspeedAst2x00Revision = 0x4
+
+[aspeed,ast2500]
+Plugin = aspeed_ast2x00
+Name = AST2500
+AspeedAst2x00Revision = 0x5
+
+[aspeed,ast2600]
+Plugin = aspeed_ast2x00
+Name = AST2600
+AspeedAst2x00Revision = 0x6

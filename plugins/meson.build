@@ -21,6 +21,7 @@ plugins = [
   'amd-pmc',
   'analogix',
   'android-boot',
+  'aspeed-ast2x00',
   'ata',
   'bcm57xx',
   'bios',
