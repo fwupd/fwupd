@@ -169,7 +169,7 @@ fu_fdt_firmware_get_image_by_path(FuFdtFirmware *self, const gchar *path, GError
 }
 
 static gboolean
-fu_fdt_firmware_parse_dt_struct(FuFdtFirmware *self, GBytes *fw, GHashTable *strtab, GError **error)
+fu_fdt_firmware_parse_dt_struct(FuFdtFirmware *self, GBytes *fw, GBytes *strtab, GError **error)
 {
 	gsize bufsz = 0;
 	gsize offset = 0;
@@ -258,8 +258,8 @@ fu_fdt_firmware_parse_dt_struct(FuFdtFirmware *self, GBytes *fw, GHashTable *str
 		if (token == FDT_PROP) {
 			guint32 prop_len = 0;
 			guint32 prop_nameoff = 0;
-			gpointer value = NULL;
 			g_autoptr(GBytes) blob = NULL;
+			g_autoptr(GString) str = NULL;
 
 			/* sanity check */
 			if (firmware_current == FU_FIRMWARE(self)) {
@@ -288,23 +288,18 @@ fu_fdt_firmware_parse_dt_struct(FuFdtFirmware *self, GBytes *fw, GHashTable *str
 			offset += sizeof(FuFdtProp);
 
 			/* add property */
-			if (!g_hash_table_lookup_extended(strtab,
-							  GINT_TO_POINTER(prop_nameoff),
-							  NULL,
-							  &value)) {
-				g_set_error(error,
-					    G_IO_ERROR,
-					    G_IO_ERROR_INVALID_DATA,
-					    "invalid strtab offset 0x%x",
-					    prop_nameoff);
+			str = fu_string_new_safe(g_bytes_get_data(strtab, NULL),
+						 g_bytes_get_size(strtab),
+						 prop_nameoff,
+						 error);
+			if (str == NULL) {
+				g_prefix_error(error, "invalid strtab offset 0x%x: ", prop_nameoff);
 				return FALSE;
 			}
 			blob = fu_bytes_new_offset(fw, offset, prop_len, error);
 			if (blob == NULL)
 				return FALSE;
-			fu_fdt_image_set_attr(FU_FDT_IMAGE(firmware_current),
-					      (const gchar *)value,
-					      blob);
+			fu_fdt_image_set_attr(FU_FDT_IMAGE(firmware_current), str->str, blob);
 			offset += prop_len;
 			continue;
 		}
@@ -326,43 +321,6 @@ fu_fdt_firmware_parse_dt_struct(FuFdtFirmware *self, GBytes *fw, GHashTable *str
 				    G_IO_ERROR_INVALID_DATA,
 				    "did not see FDT_END");
 		return FALSE;
-	}
-
-	/* success */
-	return TRUE;
-}
-
-static gboolean
-fu_fdt_firmware_parse_dt_strings(FuFdtFirmware *self,
-				 GBytes *fw,
-				 GHashTable *strtab,
-				 GError **error)
-{
-	gsize bufsz = 0;
-	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
-
-	/* debug */
-	if (g_getenv("FU_FDT_FIRMWARE_VERBOSE") != NULL)
-		fu_dump_bytes(G_LOG_DOMAIN, "dt_strings", fw);
-
-	/* parse */
-	for (gsize offset = 0; offset < bufsz; offset++) {
-		g_autoptr(GString) str = NULL;
-		str = fu_string_new_safe(buf, bufsz, offset, error);
-		if (str == NULL)
-			return FALSE;
-		if (str->len == 0) {
-			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
-				    "strtab invalid @0x%x",
-				    (guint)offset);
-			return FALSE;
-		}
-		if (g_getenv("FU_FDT_FIRMWARE_VERBOSE") != NULL)
-			g_debug("strtab: %s", str->str);
-		g_hash_table_insert(strtab, GINT_TO_POINTER(offset), g_strdup(str->str));
-		offset += str->len;
 	}
 
 	/* success */
@@ -451,7 +409,6 @@ fu_fdt_firmware_parse(FuFirmware *firmware,
 	guint32 size_dt_strings = 0;
 	guint32 size_dt_struct = 0;
 	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
-	g_autoptr(GHashTable) strtab = NULL; /* uint:str */
 
 	/* sanity check */
 	if (!fu_memread_uint32_safe(buf,
@@ -472,8 +429,7 @@ fu_fdt_firmware_parse(FuFirmware *firmware,
 	}
 	fu_firmware_set_size(firmware, totalsize);
 
-	/* read string table */
-	strtab = g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL, g_free);
+	/* read header */
 	if (!fu_memread_uint32_safe(buf,
 				    bufsz,
 				    offset + G_STRUCT_OFFSET(FuFdtHeader, off_dt_strings),
@@ -488,17 +444,6 @@ fu_fdt_firmware_parse(FuFirmware *firmware,
 				    G_BIG_ENDIAN,
 				    error))
 		return FALSE;
-	if (size_dt_strings != 0x0) {
-		g_autoptr(GBytes) dt_strings = NULL;
-		dt_strings =
-		    fu_bytes_new_offset(fw, offset + off_dt_strings, size_dt_strings, error);
-		if (dt_strings == NULL)
-			return FALSE;
-		if (!fu_fdt_firmware_parse_dt_strings(self, dt_strings, strtab, error))
-			return FALSE;
-	}
-
-	/* read out DT struct */
 	if (!fu_memread_uint32_safe(buf,
 				    bufsz,
 				    offset + G_STRUCT_OFFSET(FuFdtHeader, off_dt_struct),
@@ -513,16 +458,6 @@ fu_fdt_firmware_parse(FuFirmware *firmware,
 				    G_BIG_ENDIAN,
 				    error))
 		return FALSE;
-	if (size_dt_struct != 0x0) {
-		g_autoptr(GBytes) dt_struct = NULL;
-		dt_struct = fu_bytes_new_offset(fw, offset + off_dt_struct, size_dt_struct, error);
-		if (dt_struct == NULL)
-			return FALSE;
-		if (!fu_fdt_firmware_parse_dt_struct(self, dt_struct, strtab, error))
-			return FALSE;
-	}
-
-	/* read out reserved map */
 	if (!fu_memread_uint32_safe(buf,
 				    bufsz,
 				    offset + G_STRUCT_OFFSET(FuFdtHeader, off_mem_rsvmap),
@@ -538,8 +473,6 @@ fu_fdt_firmware_parse(FuFirmware *firmware,
 						      error))
 			return FALSE;
 	}
-
-	/* read in CPUID */
 	if (!fu_memread_uint32_safe(buf,
 				    bufsz,
 				    offset + G_STRUCT_OFFSET(FuFdtHeader, boot_cpuid_phys),
@@ -547,8 +480,6 @@ fu_fdt_firmware_parse(FuFirmware *firmware,
 				    G_BIG_ENDIAN,
 				    error))
 		return FALSE;
-
-	/* header version */
 	if (!fu_memread_uint32_safe(buf,
 				    bufsz,
 				    offset + G_STRUCT_OFFSET(FuFdtHeader, last_comp_version),
@@ -573,6 +504,23 @@ fu_fdt_firmware_parse(FuFirmware *firmware,
 				    error))
 		return FALSE;
 	fu_firmware_set_version_raw(firmware, version);
+
+	/* parse device tree struct */
+	if (size_dt_struct != 0x0 && size_dt_strings != 0x0) {
+		g_autoptr(GBytes) dt_strings = NULL;
+		g_autoptr(GBytes) dt_struct = NULL;
+		dt_strings =
+		    fu_bytes_new_offset(fw, offset + off_dt_strings, size_dt_strings, error);
+		if (dt_strings == NULL)
+			return FALSE;
+		dt_struct = fu_bytes_new_offset(fw, offset + off_dt_struct, size_dt_struct, error);
+		if (dt_struct == NULL)
+			return FALSE;
+		if (!fu_fdt_firmware_parse_dt_struct(self, dt_struct, dt_strings, error))
+			return FALSE;
+	}
+
+	/* success */
 	return TRUE;
 }
 
