@@ -6602,7 +6602,7 @@ static gchar *
 fu_engine_attrs_calculate_hsi_for_chassis(FuEngine *self)
 {
 	guint val =
-	    fu_context_get_smbios_integer(self->ctx, FU_SMBIOS_STRUCTURE_TYPE_CHASSIS, 0x05);
+	    fu_context_get_smbios_integer(self->ctx, FU_SMBIOS_STRUCTURE_TYPE_CHASSIS, 0x05, NULL);
 
 	/* if emulating, force the chassis type to be valid */
 	if (self->host_emulation &&
