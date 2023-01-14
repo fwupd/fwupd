@@ -20,7 +20,6 @@
 
 #include "fu-byte-array.h"
 #include "fu-common.h"
-#include "fu-kenv.h"
 #include "fu-mem.h"
 #include "fu-path.h"
 #include "fu-smbios-private.h"
@@ -29,9 +28,9 @@
 /**
  * FuSmbios:
  *
- * Enumerate the SMBIOS data on the system, either using DMI or Device Tree.
+ * Enumerate the SMBIOS data on the system.
  *
- * See also: [class@FuHwids]
+ * See also: [class@FuContext]
  */
 
 struct _FuSmbios {
@@ -80,274 +79,6 @@ typedef struct {
 } FuSmbiosItem;
 
 G_DEFINE_TYPE(FuSmbios, fu_smbios, FU_TYPE_FIRMWARE)
-
-static void
-fu_smbios_set_integer(FuSmbios *self, guint8 type, guint8 offset, guint8 value)
-{
-	FuSmbiosItem *item = g_ptr_array_index(self->items, type);
-	for (guint i = item->buf->len; i < (guint)offset + 1; i++)
-		fu_byte_array_append_uint8(item->buf, 0x0);
-	item->buf->data[offset] = value;
-}
-
-static void
-fu_smbios_set_string(FuSmbios *self, guint8 type, guint8 offset, const gchar *buf, gssize bufsz)
-{
-	FuSmbiosItem *item = g_ptr_array_index(self->items, type);
-
-	/* NUL terminated UTF-8 */
-	if (bufsz < 0)
-		bufsz = strlen(buf);
-
-	/* add value to string table */
-	g_ptr_array_add(item->strings, g_strndup(buf, (gsize)bufsz));
-	fu_smbios_set_integer(self, type, offset, item->strings->len);
-}
-
-static gboolean
-fu_smbios_convert_dt_string(FuSmbios *self,
-			    guint8 type,
-			    guint8 offset,
-			    const gchar *path,
-			    const gchar *subpath)
-{
-	gsize bufsz = 0;
-	g_autofree gchar *fn = g_build_filename(path, subpath, NULL);
-	g_autofree gchar *buf = NULL;
-
-	/* not found */
-	if (!g_file_get_contents(fn, &buf, &bufsz, NULL))
-		return FALSE;
-	if (bufsz == 0)
-		return FALSE;
-	fu_smbios_set_string(self, type, offset, buf, (gssize)bufsz);
-	return TRUE;
-}
-
-static gchar **
-fu_smbios_convert_dt_string_array(FuSmbios *self, const gchar *path, const gchar *subpath)
-{
-	gsize bufsz = 0;
-	g_autofree gchar *fn = g_build_filename(path, subpath, NULL);
-	g_autofree gchar *buf = NULL;
-	g_auto(GStrv) split = NULL;
-
-	/* not found */
-	if (!g_file_get_contents(fn, &buf, &bufsz, NULL))
-		return NULL;
-	if (bufsz == 0)
-		return NULL;
-
-	/* return only if valid */
-	split = g_strsplit(buf, ",", -1);
-	if (g_strv_length(split) == 0)
-		return NULL;
-
-	/* success */
-	return g_steal_pointer(&split);
-}
-
-#ifdef HAVE_KENV_H
-
-static gboolean
-fu_smbios_convert_kenv_string(FuSmbios *self,
-			      guint8 type,
-			      guint8 offset,
-			      const gchar *sminfo,
-			      GError **error)
-{
-	g_autofree gchar *value = fu_kenv_get_string(sminfo, error);
-	if (value == NULL)
-		return FALSE;
-	fu_smbios_set_string(self, type, offset, value, -1);
-	return TRUE;
-}
-
-static gboolean
-fu_smbios_setup_from_kenv(FuSmbios *self, GError **error)
-{
-	gboolean is_valid = FALSE;
-	g_autoptr(GError) error_local = NULL;
-
-	/* add all four faked structures */
-	for (guint i = 0; i < FU_SMBIOS_STRUCTURE_TYPE_LAST; i++) {
-		FuSmbiosItem *item = g_new0(FuSmbiosItem, 1);
-		item->type = i;
-		item->buf = g_byte_array_new();
-		item->strings = g_ptr_array_new_with_free_func(g_free);
-		g_ptr_array_add(self->items, item);
-	}
-
-	/* DMI:Manufacturer */
-	if (!fu_smbios_convert_kenv_string(self,
-					   FU_SMBIOS_STRUCTURE_TYPE_SYSTEM,
-					   0x04,
-					   "smbios.bios.vendor",
-					   &error_local)) {
-		g_debug("ignoring: %s", error_local->message);
-		g_clear_error(&error_local);
-	} else {
-		is_valid = TRUE;
-	}
-
-	/* DMI:BiosVersion */
-	if (!fu_smbios_convert_kenv_string(self,
-					   FU_SMBIOS_STRUCTURE_TYPE_BIOS,
-					   0x05,
-					   "smbios.bios.version",
-					   &error_local)) {
-		g_debug("ignoring: %s", error_local->message);
-		g_clear_error(&error_local);
-	} else {
-		is_valid = TRUE;
-	}
-
-	/* DMI:Family */
-	if (!fu_smbios_convert_kenv_string(self,
-					   FU_SMBIOS_STRUCTURE_TYPE_SYSTEM,
-					   0x1a,
-					   "smbios.system.family",
-					   &error_local)) {
-		g_debug("ignoring: %s", error_local->message);
-		g_clear_error(&error_local);
-	} else {
-		is_valid = TRUE;
-	}
-
-	/* DMI:ProductName */
-	if (!fu_smbios_convert_kenv_string(self,
-					   FU_SMBIOS_STRUCTURE_TYPE_SYSTEM,
-					   0x05,
-					   "smbios.planar.product",
-					   &error_local)) {
-		g_debug("ignoring: %s", error_local->message);
-		g_clear_error(&error_local);
-	} else {
-		is_valid = TRUE;
-	}
-
-	/* DMI:BaseboardManufacturer */
-	if (!fu_smbios_convert_kenv_string(self,
-					   FU_SMBIOS_STRUCTURE_TYPE_BASEBOARD,
-					   0x04,
-					   "smbios.planar.maker",
-					   &error_local)) {
-		g_debug("ignoring: %s", error_local->message);
-		g_clear_error(&error_local);
-	} else {
-		is_valid = TRUE;
-	}
-
-	/* we got no data */
-	if (!is_valid) {
-		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_READ, "no SMBIOS information provided");
-		return FALSE;
-	}
-
-	/* success */
-	return TRUE;
-}
-#endif
-
-static gboolean
-fu_smbios_setup_from_path_dt(FuSmbios *self, const gchar *path, GError **error)
-{
-	gboolean has_family;
-	gboolean has_model;
-	gboolean has_vendor;
-	g_autofree gchar *fn_battery = NULL;
-
-	/* add all four faked structures */
-	for (guint i = 0; i < FU_SMBIOS_STRUCTURE_TYPE_LAST; i++) {
-		FuSmbiosItem *item = g_new0(FuSmbiosItem, 1);
-		item->type = i;
-		item->buf = g_byte_array_new();
-		item->strings = g_ptr_array_new_with_free_func(g_free);
-		g_ptr_array_add(self->items, item);
-	}
-
-	/* if it has a battery it is portable (probably a laptop) */
-	fn_battery = g_build_filename(path, "battery", NULL);
-	if (g_file_test(fn_battery, G_FILE_TEST_EXISTS)) {
-		fu_smbios_set_integer(self,
-				      FU_SMBIOS_STRUCTURE_TYPE_CHASSIS,
-				      0x05,
-				      FU_SMBIOS_CHASSIS_KIND_PORTABLE);
-	}
-
-	/* DMI:Manufacturer */
-	has_vendor = fu_smbios_convert_dt_string(self,
-						 FU_SMBIOS_STRUCTURE_TYPE_SYSTEM,
-						 0x04,
-						 path,
-						 "vendor");
-
-	/* DMI:Family */
-	has_family = fu_smbios_convert_dt_string(self,
-						 FU_SMBIOS_STRUCTURE_TYPE_SYSTEM,
-						 0x1a,
-						 path,
-						 "model-name");
-
-	/* DMI:ProductName */
-	has_model =
-	    fu_smbios_convert_dt_string(self, FU_SMBIOS_STRUCTURE_TYPE_SYSTEM, 0x05, path, "model");
-
-	/* fall back to the first compatible string if required */
-	if (!has_vendor || !has_model || !has_family) {
-		g_auto(GStrv) parts = NULL;
-
-		/* NULL if invalid, otherwise we're sure this has size of exactly 3 */
-		parts = fu_smbios_convert_dt_string_array(self, path, "compatible");
-		if (parts != NULL) {
-			if (!has_vendor && g_strv_length(parts) > 0) {
-				fu_smbios_set_string(self,
-						     FU_SMBIOS_STRUCTURE_TYPE_SYSTEM,
-						     0x4,
-						     parts[0],
-						     -1);
-			}
-			if (!has_model && g_strv_length(parts) > 1) {
-				fu_smbios_set_string(self,
-						     FU_SMBIOS_STRUCTURE_TYPE_SYSTEM,
-						     0x05,
-						     parts[1],
-						     -1);
-			}
-			if (!has_family && g_strv_length(parts) > 2) {
-				fu_smbios_set_string(self,
-						     FU_SMBIOS_STRUCTURE_TYPE_SYSTEM,
-						     0x1a,
-						     parts[2],
-						     -1);
-			}
-		}
-	}
-
-	/* DMI:BiosVersion */
-	fu_smbios_convert_dt_string(self,
-				    FU_SMBIOS_STRUCTURE_TYPE_BIOS,
-				    0x05,
-				    path,
-				    "ibm,firmware-versions/version");
-
-	/* DMI:BaseboardManufacturer */
-	fu_smbios_convert_dt_string(self,
-				    FU_SMBIOS_STRUCTURE_TYPE_BASEBOARD,
-				    0x04,
-				    path,
-				    "vpd/root-node-vpd@a000/enclosure@1e00/backplane@800/vendor");
-
-	/* DMI:BaseboardProduct */
-	fu_smbios_convert_dt_string(
-	    self,
-	    FU_SMBIOS_STRUCTURE_TYPE_BASEBOARD,
-	    0x05,
-	    path,
-	    "vpd/root-node-vpd@a000/enclosure@1e00/backplane@800/part-number");
-
-	return TRUE;
-}
 
 static gboolean
 fu_smbios_setup_from_data(FuSmbios *self, const guint8 *buf, gsize sz, GError **error)
@@ -425,170 +156,15 @@ fu_smbios_setup_from_file(FuSmbios *self, const gchar *filename, GError **error)
 {
 	gsize sz = 0;
 	g_autofree gchar *buf = NULL;
-	g_autofree gchar *basename = NULL;
 
 	g_return_val_if_fail(FU_IS_SMBIOS(self), FALSE);
 	g_return_val_if_fail(filename != NULL, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
-	/* use a heuristic */
-	basename = g_path_get_basename(filename);
-	if (g_strcmp0(basename, "base") == 0)
-		return fu_smbios_setup_from_path_dt(self, filename, error);
-
 	/* DMI blob */
 	if (!g_file_get_contents(filename, &buf, &sz, error))
 		return FALSE;
 	return fu_smbios_setup_from_data(self, (guint8 *)buf, sz, error);
-}
-
-static gboolean
-fu_smbios_encode_string_from_kernel(FuSmbios *self,
-				    const gchar *file_contents,
-				    guint8 type,
-				    guint8 offset,
-				    GError **error)
-{
-	fu_smbios_set_string(self, type, offset, file_contents, -1);
-	return TRUE;
-}
-
-static gboolean
-fu_smbios_encode_byte_from_kernel(FuSmbios *self,
-				  const gchar *file_contents,
-				  guint8 type,
-				  guint8 offset,
-				  GError **error)
-{
-	gchar *endp;
-	gint64 value = g_ascii_strtoll(file_contents, &endp, 10);
-
-	if (*endp != 0) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "non-numeric values in numeric string: %s",
-			    endp);
-		return FALSE;
-	}
-	if (value < 0 || value > G_MAXUINT8) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "value \"%s\" is not representable in a byte",
-			    file_contents);
-		return FALSE;
-	}
-
-	fu_smbios_set_integer(self, type, offset, value);
-	return TRUE;
-}
-
-/*
- * The mapping from SMBIOS field to sysfs name can be found by mapping
- * the field to a kernel property name in dmi_decode()
- * (drivers/firmware/dmi_scan.c), then the property name to sysfs entry
- * in dmi_id_init_attr_table() (drivers/firmware/dmi-id.c). This table
- * lists each attribute exposed in /sys/class/dmi when CONFIG_DMIID is
- * enabled, mapping to the SMBIOS field and a function that can convert
- * the textual version of the field back into the raw SMBIOS table
- * representation.
- */
-#define SYSFS_DMI_FIELD(_name, _type, offset_ignored, kind)                                        \
-	{                                                                                          \
-		.name = _name, .type = _type, .offset = offset_ignored,                            \
-		.encode = fu_smbios_encode_##kind##_from_kernel                                    \
-	}
-const struct kernel_dmi_field {
-	const gchar *name;
-	gboolean (*encode)(FuSmbios *, const gchar *, guint8, guint8, GError **);
-	guint8 type;
-	guint8 offset;
-} KERNEL_DMI_FIELDS[] = {
-    SYSFS_DMI_FIELD("bios_vendor", 0, 4, string),
-    SYSFS_DMI_FIELD("bios_version", 0, 5, string),
-    SYSFS_DMI_FIELD("bios_date", 0, 8, string),
-    SYSFS_DMI_FIELD("sys_vendor", 1, 4, string),
-    SYSFS_DMI_FIELD("product_name", 1, 5, string),
-    SYSFS_DMI_FIELD("product_version", 1, 6, string),
-    SYSFS_DMI_FIELD("product_serial", 1, 7, string),
-    /* SYSFS_DMI_FIELD("product_uuid", 1, 8, uuid) */
-    SYSFS_DMI_FIELD("product_family", 1, 26, string),
-    SYSFS_DMI_FIELD("product_sku", 1, 25, string),
-    SYSFS_DMI_FIELD("board_vendor", 2, 4, string),
-    SYSFS_DMI_FIELD("board_name", 2, 5, string),
-    SYSFS_DMI_FIELD("board_version", 2, 6, string),
-    SYSFS_DMI_FIELD("board_serial", 2, 7, string),
-    SYSFS_DMI_FIELD("board_asset_tag", 2, 8, string),
-    SYSFS_DMI_FIELD("chassis_vendor", 3, 4, string),
-    SYSFS_DMI_FIELD("chassis_type", 3, 5, byte),
-    SYSFS_DMI_FIELD("chassis_version", 3, 6, string),
-    SYSFS_DMI_FIELD("chassis_serial", 3, 7, string),
-    SYSFS_DMI_FIELD("chassis_asset_tag", 3, 8, string),
-};
-
-/**
- * fu_smbios_setup_from_kernel:
- * @self: a #FuSmbios
- * @path: a directory path
- * @error: (nullable): optional return location for an error
- *
- * Reads SMBIOS value from DMI values provided by the kernel, such as in
- * /sys/class/dmi on Linux.
- *
- * Returns: %TRUE for success
- *
- * Since: 1.6.2
- **/
-gboolean
-fu_smbios_setup_from_kernel(FuSmbios *self, const gchar *path, GError **error)
-{
-	gboolean any_success = FALSE;
-
-	/* add fake structures */
-	for (guint i = 0; i < FU_SMBIOS_STRUCTURE_TYPE_LAST; i++) {
-		FuSmbiosItem *item = g_new0(FuSmbiosItem, 1);
-		item->type = i;
-		item->buf = g_byte_array_new();
-		item->strings = g_ptr_array_new_with_free_func(g_free);
-		g_ptr_array_add(self->items, item);
-	}
-
-	/* parse every known field from the corresponding file */
-	for (gsize i = 0; i < G_N_ELEMENTS(KERNEL_DMI_FIELDS); i++) {
-		const struct kernel_dmi_field *field = &KERNEL_DMI_FIELDS[i];
-		gsize bufsz = 0;
-		g_autofree gchar *buf = NULL;
-		g_autofree gchar *fn = g_build_filename(path, field->name, NULL);
-		g_autoptr(GError) local_error = NULL;
-
-		if (!g_file_get_contents(fn, &buf, &bufsz, &local_error)) {
-			g_debug("unable to read SMBIOS data from %s: %s", fn, local_error->message);
-			continue;
-		}
-
-		/* trim trailing newline added by kernel */
-		if (buf[bufsz - 1] == '\n')
-			buf[bufsz - 1] = 0;
-
-		if (!field->encode(self, buf, field->type, field->offset, &local_error)) {
-			g_warning("failed to parse SMBIOS data from %s: %s",
-				  fn,
-				  local_error->message);
-			continue;
-		}
-
-		any_success = TRUE;
-	}
-	if (!any_success) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "failed to read any SMBIOS values from %s",
-			    path);
-		return FALSE;
-	}
-	return TRUE;
 }
 
 static gboolean
@@ -685,8 +261,20 @@ fu_smbios_parse_ep64(FuSmbios *self, const gchar *buf, gsize sz, GError **error)
 	return TRUE;
 }
 
-static gboolean
-fu_smbios_setup_from_path_dmi(FuSmbios *self, const gchar *path, GError **error)
+/**
+ * fu_smbios_setup_from_path:
+ * @self: a #FuSmbios
+ * @path: a path, e.g. `/sys/firmware/dmi/tables`
+ * @error: (nullable): optional return location for an error
+ *
+ * Reads all the SMBIOS values from a specific path.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.0.0
+ **/
+gboolean
+fu_smbios_setup_from_path(FuSmbios *self, const gchar *path, GError **error)
 {
 	gsize sz = 0;
 	g_autofree gchar *dmi_fn = NULL;
@@ -695,6 +283,8 @@ fu_smbios_setup_from_path_dmi(FuSmbios *self, const gchar *path, GError **error)
 	g_autofree gchar *ep_raw = NULL;
 
 	g_return_val_if_fail(FU_IS_SMBIOS(self), FALSE);
+	g_return_val_if_fail(path != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* get the smbios entry point */
 	ep_fn = g_build_filename(path, "smbios_entry_point", NULL);
@@ -763,34 +353,6 @@ fu_smbios_parse(FuFirmware *firmware,
 	return fu_smbios_setup_from_data(self, buf, bufsz, error);
 }
 
-/**
- * fu_smbios_setup_from_path:
- * @self: a #FuSmbios
- * @path: a path, e.g. `/sys/firmware/dmi/tables`
- * @error: (nullable): optional return location for an error
- *
- * Reads all the SMBIOS values from a specific path.
- *
- * Returns: %TRUE for success
- *
- * Since: 1.0.0
- **/
-gboolean
-fu_smbios_setup_from_path(FuSmbios *self, const gchar *path, GError **error)
-{
-	g_autofree gchar *basename = NULL;
-
-	g_return_val_if_fail(FU_IS_SMBIOS(self), FALSE);
-	g_return_val_if_fail(path != NULL, FALSE);
-	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
-
-	/* use a heuristic */
-	basename = g_path_get_basename(path);
-	if (g_strcmp0(basename, "base") == 0)
-		return fu_smbios_setup_from_path_dt(self, path, error);
-	return fu_smbios_setup_from_path_dmi(self, path, error);
-}
-
 #ifdef _WIN32
 #define FU_SMBIOS_FT_SIG_ACPI	0x41435049
 #define FU_SMBIOS_FT_SIG_FIRM	0x4649524D
@@ -850,16 +412,13 @@ fu_smbios_setup(FuSmbios *self, GError **error)
 					 error);
 #else
 	g_autofree gchar *path = NULL;
-	g_autofree gchar *path_dt = NULL;
 	g_autofree gchar *sysfsfwdir = NULL;
-	const gchar *path_dmi_class = "/sys/class/dmi/id";
 
 	g_return_val_if_fail(FU_IS_SMBIOS(self), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
-	sysfsfwdir = fu_path_from_kind(FU_PATH_KIND_SYSFSDIR_FW);
-
 	/* DMI */
+	sysfsfwdir = fu_path_from_kind(FU_PATH_KIND_SYSFSDIR_FW);
 	path = g_build_filename(sysfsfwdir, "dmi", "tables", NULL);
 	if (g_file_test(path, G_FILE_TEST_EXISTS)) {
 		g_autoptr(GError) error_local = NULL;
@@ -873,27 +432,11 @@ fu_smbios_setup(FuSmbios *self, GError **error)
 			return TRUE;
 	}
 
-	/* the values the kernel parsed; these are world-readable */
-	if (g_file_test(path_dmi_class, G_FILE_TEST_IS_DIR)) {
-		g_debug("trying to read %s", path_dmi_class);
-		return fu_smbios_setup_from_kernel(self, path_dmi_class, error);
-	}
-
-	/* DT */
-	path_dt = g_build_filename(sysfsfwdir, "devicetree", "base", NULL);
-	if (g_file_test(path_dt, G_FILE_TEST_EXISTS))
-		return fu_smbios_setup_from_path(self, path_dt, error);
-
-#ifdef HAVE_KENV_H
-	/* kenv */
-	return fu_smbios_setup_from_kenv(self, error);
-#endif
-
 	/* neither found */
 	g_set_error_literal(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_FILE,
-			    "neither SMBIOS or DT found");
+			    "SMBIOS or kernel DMI not found");
 	return FALSE;
 #endif
 }

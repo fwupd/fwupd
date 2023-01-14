@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2017 Richard Hughes <richard@hughsie.com>
  *
  * SPDX-License-Identifier: LGPL-2.1+
  */
@@ -9,9 +9,9 @@
 #include "config.h"
 
 #include "fu-bios-settings-private.h"
+#include "fu-context-hwid.h"
 #include "fu-context-private.h"
 #include "fu-fdt-firmware.h"
-#include "fu-hwids.h"
 #include "fu-path.h"
 #include "fu-smbios-private.h"
 #include "fu-volume-private.h"
@@ -21,12 +21,21 @@
  *
  * A context that represents the shared system state. This object is shared
  * between the engine, the plugins and the devices.
+ *
+ * Note, HWIDs are called "CHIDs" in Microsoft Windows and the results here
+ * will match that of `ComputerHardwareIds.exe`.
+ *
+ * See also: [class@FuSmbios]
  */
 
 typedef struct {
 	FuContextFlags flags;
-	FuHwids *hwids;
+	GHashTable *hwid_values;	 /* BiosVersion->"1.2.3 " */
+	GHashTable *hwid_values_display; /* BiosVersion->"1.2.3" */
+	GHashTable *hwid_guids_present;	 /* a-c-b-d->1 */
+	GPtrArray *hwid_guids;		 /* a-c-b-d */
 	FuSmbios *smbios;
+	FuSmbiosChassisKind chassis_kind;
 	FuQuirks *quirks;
 	GHashTable *runtime_versions;
 	GHashTable *compile_versions;
@@ -126,6 +135,24 @@ fu_context_get_fdt(FuContext *self, GError **error)
 
 	/* success */
 	return g_object_ref(priv->fdt);
+}
+
+/**
+ * fu_context_get_smbios:
+ * @self: a #FuContext
+ *
+ * Gets the SMBIOS store.
+ *
+ * Returns: (transfer none): a #FuSmbios
+ *
+ * Since: 1.8.10
+ **/
+FuSmbios *
+fu_context_get_smbios(FuContext *self)
+{
+	FuContextPrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_CONTEXT(self), NULL);
+	return priv->smbios;
 }
 
 /**
@@ -296,6 +323,41 @@ fu_context_get_bios_setting_pending_reboot(FuContext *self)
 }
 
 /**
+ * fu_context_get_chassis_kind:
+ * @self: a #FuContext
+ *
+ * Finds out if a hardware GUID exists.
+ *
+ * Returns: a #FuSmbiosChassisKind, e.g. %FU_SMBIOS_CHASSIS_KIND_LAPTOP
+ *
+ * Since: 1.8.10
+ **/
+FuSmbiosChassisKind
+fu_context_get_chassis_kind(FuContext *self)
+{
+	FuContextPrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_CONTEXT(self), FALSE);
+	return priv->chassis_kind;
+}
+
+/**
+ * fu_context_set_chassis_kind:
+ * @self: a #FuContext
+ * @chassis_kind: a #FuSmbiosChassisKind, e.g. %FU_SMBIOS_CHASSIS_KIND_TABLET
+ *
+ * Adds a HWID GUID value.
+ *
+ * Since: 1.8.10
+ **/
+void
+fu_context_set_chassis_kind(FuContext *self, FuSmbiosChassisKind chassis_kind)
+{
+	FuContextPrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_CONTEXT(self));
+	priv->chassis_kind = chassis_kind;
+}
+
+/**
  * fu_context_has_hwid_guid:
  * @self: a #FuContext
  * @guid: a GUID, e.g. `059eb22d-6dc7-59af-abd3-94bbe017f67c`
@@ -315,7 +377,7 @@ fu_context_has_hwid_guid(FuContext *self, const gchar *guid)
 		g_critical("cannot use HWIDs before calling ->load_hwinfo()");
 		return FALSE;
 	}
-	return fu_hwids_has_guid(priv->hwids, guid);
+	return g_hash_table_lookup(priv->hwid_guids_present, guid) != NULL;
 }
 
 /**
@@ -338,7 +400,7 @@ fu_context_get_hwid_guids(FuContext *self)
 		g_critical("cannot use HWIDs before calling ->load_hwinfo()");
 		return NULL;
 	}
-	return fu_hwids_get_guids(priv->hwids);
+	return priv->hwid_guids;
 }
 
 /**
@@ -363,7 +425,7 @@ fu_context_get_hwid_value(FuContext *self, const gchar *key)
 		g_critical("cannot use HWIDs before calling ->load_hwinfo()");
 		return NULL;
 	}
-	return fu_hwids_get_value(priv->hwids, key);
+	return g_hash_table_lookup(priv->hwid_values_display, key);
 }
 
 /**
@@ -375,7 +437,7 @@ fu_context_get_hwid_value(FuContext *self, const gchar *key)
  * Gets the replacement value for a specific key. All hardware IDs on a
  * specific system can be shown using the `fwupdmgr hwids` command.
  *
- * Returns: (transfer full): a string, or %NULL for error.
+ * Returns: (transfer full): a string, e.g. `LENOVO&ThinkPad T440s`, or %NULL for error.
  *
  * Since: 1.6.0
  **/
@@ -383,14 +445,44 @@ gchar *
 fu_context_get_hwid_replace_value(FuContext *self, const gchar *keys, GError **error)
 {
 	FuContextPrivate *priv = GET_PRIVATE(self);
+	const gchar *keys_safe;
+	g_auto(GStrv) split = NULL;
+	g_autoptr(GString) str = g_string_new(NULL);
+
 	g_return_val_if_fail(FU_IS_CONTEXT(self), NULL);
 	g_return_val_if_fail(keys != NULL, NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
 	if (!priv->loaded_hwinfo) {
 		g_critical("cannot use HWIDs before calling ->load_hwinfo()");
 		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_NOT_INITIALIZED, "no data");
 		return NULL;
 	}
-	return fu_hwids_get_replace_values(priv->hwids, keys, error);
+
+	/* do any replacements */
+	keys_safe = fu_context_get_hwid_replace_keys(self, keys);
+	if (keys_safe == NULL) {
+		g_set_error(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA, "no data for %s", keys);
+		return NULL;
+	}
+
+	/* get each part of the HWID */
+	split = g_strsplit(keys_safe, "&", -1);
+	for (guint j = 0; split[j] != NULL; j++) {
+		const gchar *tmp = g_hash_table_lookup(priv->hwid_values, split[j]);
+		if (tmp == NULL) {
+			g_set_error(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_FAILED,
+				    "not available as '%s' unknown",
+				    split[j]);
+			return NULL;
+		}
+		g_string_append_printf(str, "%s&", tmp);
+	}
+	if (str->len > 0)
+		g_string_truncate(str, str->len - 1);
+	return g_strdup(str->str);
 }
 
 /**
@@ -692,6 +784,58 @@ fu_context_security_changed(FuContext *self)
 }
 
 /**
+ * fu_context_add_hwid_value:
+ * @self: a #FuContext
+ * @key: a key, e.g. %FU_HWIDS_KEY_PRODUCT_SKU
+ * @value: (nullable): a new value, e.g. `ExampleModel`
+ *
+ * Sets SMBIOS override values so you can emulate another system.
+ *
+ * This function has no effect if called after fu_context_load_hwinfo()
+ *
+ * Since: 1.8.10
+ **/
+void
+fu_context_add_hwid_value(FuContext *self, const gchar *key, const gchar *value)
+{
+	FuContextPrivate *priv = GET_PRIVATE(self);
+
+	/* does not replace; first value set wins */
+	if (g_hash_table_contains(priv->hwid_values, key))
+		return;
+	g_hash_table_insert(priv->hwid_values, g_strdup(key), g_strdup(value));
+
+	/* make suitable for display */
+	if (value != NULL) {
+		g_autofree gchar *value_safe = g_str_to_ascii(value, "C");
+		g_strdelimit(value_safe, "\n\r", '\0');
+		g_strchomp(value_safe);
+		g_hash_table_insert(priv->hwid_values_display,
+				    g_strdup(key),
+				    g_steal_pointer(&value_safe));
+	} else {
+		g_hash_table_insert(priv->hwid_values_display, g_strdup(key), NULL);
+	}
+}
+
+/**
+ * fu_context_add_hwid_guid:
+ * @self: a #FuContext
+ * @guid: a GUID
+ *
+ * Adds a HWID GUID value.
+ *
+ * Since: 1.8.10
+ **/
+void
+fu_context_add_hwid_guid(FuContext *self, const gchar *guid)
+{
+	FuContextPrivate *priv = GET_PRIVATE(self);
+	g_hash_table_insert(priv->hwid_guids_present, g_strdup(guid), GUINT_TO_POINTER(1));
+	g_ptr_array_add(priv->hwid_guids, g_strdup(guid));
+}
+
+/**
  * fu_context_load_hwinfo:
  * @self: a #FuContext
  * @error: (nullable): optional return location for an error
@@ -703,22 +847,46 @@ fu_context_security_changed(FuContext *self)
  * Since: 1.6.0
  **/
 gboolean
-fu_context_load_hwinfo(FuContext *self, GError **error)
+fu_context_load_hwinfo(FuContext *self, FuContextHwidFlags flags, GError **error)
 {
 	FuContextPrivate *priv = GET_PRIVATE(self);
 	GPtrArray *guids;
-	g_autoptr(GError) error_smbios = NULL;
-	g_autoptr(GError) error_hwids = NULL;
 	g_autoptr(GError) error_bios_settings = NULL;
+	g_autoptr(GError) error_dmi = NULL;
+	g_autoptr(GError) error_fdt = NULL;
+	g_autoptr(GError) error_hwids = NULL;
+	g_autoptr(GError) error_kenv = NULL;
+	g_autoptr(GError) error_smbios = NULL;
 
 	g_return_val_if_fail(FU_IS_CONTEXT(self), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
-	if (!fu_smbios_setup(priv->smbios, &error_smbios))
-		g_warning("Failed to load SMBIOS: %s", error_smbios->message);
-	if (!fu_hwids_setup(priv->hwids, priv->smbios, &error_hwids))
-		g_warning("Failed to load HWIDs: %s", error_hwids->message);
+	if ((flags & FU_CONTEXT_HWID_FLAG_LOAD_CONFIG) > 0 &&
+	    !fu_context_hwid_config_setup(self, error))
+		return FALSE;
+	if ((flags & FU_CONTEXT_HWID_FLAG_LOAD_SMBIOS) > 0 &&
+	    !fu_context_hwid_smbios_setup(self, &error_smbios)) {
+		if (!g_error_matches(error_smbios, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED))
+			g_warning("Failed to load SMBIOS: %s", error_smbios->message);
+	}
+	if ((flags & FU_CONTEXT_HWID_FLAG_LOAD_FDT) > 0 &&
+	    !fu_context_hwid_fdt_setup(self, &error_fdt)) {
+		if (!g_error_matches(error_fdt, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED))
+			g_warning("Failed to load FDT: %s", error_fdt->message);
+	}
+	if ((flags & FU_CONTEXT_HWID_FLAG_LOAD_KENV) > 0 &&
+	    !fu_context_hwid_kenv_setup(self, &error_kenv)) {
+		if (!g_error_matches(error_kenv, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED))
+			g_warning("Failed to load kenv: %s", error_kenv->message);
+	}
+	if ((flags & FU_CONTEXT_HWID_FLAG_LOAD_DMI) > 0 &&
+	    !fu_context_hwid_dmi_setup(self, &error_dmi)) {
+		if (!g_error_matches(error_dmi, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED))
+			g_warning("Failed to load DMI: %s", error_dmi->message);
+	}
 	priv->loaded_hwinfo = TRUE;
+	if (!fu_context_hwid_setup(self, &error_hwids))
+		g_warning("Failed to load HWIDs: %s", error_hwids->message);
 
 	/* set the hwid flags */
 	guids = fu_context_get_hwid_guids(self);
@@ -1153,7 +1321,10 @@ fu_context_finalize(GObject *object)
 		g_hash_table_unref(priv->compile_versions);
 	if (priv->fdt != NULL)
 		g_object_unref(priv->fdt);
-	g_object_unref(priv->hwids);
+	g_hash_table_unref(priv->hwid_values);
+	g_hash_table_unref(priv->hwid_values_display);
+	g_hash_table_unref(priv->hwid_guids_present);
+	g_ptr_array_unref(priv->hwid_guids);
 	g_hash_table_unref(priv->hwid_flags);
 	g_object_unref(priv->quirks);
 	g_object_unref(priv->smbios);
@@ -1265,10 +1436,14 @@ static void
 fu_context_init(FuContext *self)
 {
 	FuContextPrivate *priv = GET_PRIVATE(self);
+	priv->chassis_kind = FU_SMBIOS_CHASSIS_KIND_UNKNOWN;
 	priv->battery_level = FWUPD_BATTERY_LEVEL_INVALID;
 	priv->battery_threshold = FWUPD_BATTERY_LEVEL_INVALID;
 	priv->smbios = fu_smbios_new();
-	priv->hwids = fu_hwids_new();
+	priv->hwid_values = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
+	priv->hwid_values_display = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
+	priv->hwid_guids_present = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
+	priv->hwid_guids = g_ptr_array_new_with_free_func(g_free);
 	priv->hwid_flags = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
 	priv->udev_subsystems = g_ptr_array_new_with_free_func(g_free);
 	priv->firmware_gtypes = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);

@@ -6,12 +6,6 @@
 
 #pragma once
 
-#include "fu-smbios.h"
-
-#define FU_TYPE_HWIDS (fu_hwids_get_type())
-
-G_DECLARE_FINAL_TYPE(FuHwids, fu_hwids, FU, HWIDS, GObject)
-
 /**
  * FU_HWIDS_KEY_BASEBOARD_MANUFACTURER:
  *
@@ -116,26 +110,3 @@ G_DECLARE_FINAL_TYPE(FuHwids, fu_hwids, FU, HWIDS, GObject)
  * Since: 1.3.7
  **/
 #define FU_HWIDS_KEY_PRODUCT_SKU "ProductSku"
-
-FuHwids *
-fu_hwids_new(void);
-GPtrArray *
-fu_hwids_get_keys(FuHwids *self);
-const gchar *
-fu_hwids_get_value(FuHwids *self, const gchar *key);
-void
-fu_hwids_add_smbios_override(FuHwids *self, const gchar *key, const gchar *value);
-const gchar *
-fu_hwids_get_replace_keys(FuHwids *self, const gchar *key);
-gchar *
-fu_hwids_get_replace_values(FuHwids *self,
-			    const gchar *keys,
-			    GError **error) G_GNUC_WARN_UNUSED_RESULT;
-gchar *
-fu_hwids_get_guid(FuHwids *self, const gchar *keys, GError **error) G_GNUC_WARN_UNUSED_RESULT;
-GPtrArray *
-fu_hwids_get_guids(FuHwids *self);
-gboolean
-fu_hwids_has_guid(FuHwids *self, const gchar *guid);
-gboolean
-fu_hwids_setup(FuHwids *self, FuSmbios *smbios, GError **error) G_GNUC_WARN_UNUSED_RESULT;

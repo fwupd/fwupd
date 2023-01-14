@@ -147,9 +147,9 @@ static gboolean
 fu_dell_supported(FuPlugin *plugin, GError **error)
 {
 	FuContext *ctx = fu_plugin_get_context(plugin);
+	FuSmbiosChassisKind chassis_kind = fu_context_get_chassis_kind(ctx);
 	g_autoptr(GBytes) de_table = NULL;
 	g_autoptr(GBytes) da_table = NULL;
-	g_autoptr(GBytes) enclosure = NULL;
 	guint8 value = 0;
 	struct da_structure da_values = {0x0};
 
@@ -194,19 +194,8 @@ fu_dell_supported(FuPlugin *plugin, GError **error)
 	}
 
 	/* only run on intended Dell hw types */
-	enclosure = fu_context_get_smbios_data(ctx, FU_SMBIOS_STRUCTURE_TYPE_CHASSIS, error);
-	if (enclosure == NULL)
-		return FALSE;
-	if (!fu_memread_uint8_safe(g_bytes_get_data(enclosure, NULL),
-				   g_bytes_get_size(enclosure),
-				   0x0,
-				   &value,
-				   error)) {
-		g_prefix_error(error, "invalid enclosure data: ");
-		return FALSE;
-	}
 	for (guint i = 0; i < G_N_ELEMENTS(enclosure_allowlist); i++) {
-		if (enclosure_allowlist[i] == value)
+		if (enclosure_allowlist[i] == chassis_kind)
 			return TRUE;
 	}
 

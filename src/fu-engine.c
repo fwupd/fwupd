@@ -6601,17 +6601,16 @@ fu_engine_ensure_security_attrs_tainted(FuEngine *self)
 static gchar *
 fu_engine_attrs_calculate_hsi_for_chassis(FuEngine *self)
 {
-	guint val =
-	    fu_context_get_smbios_integer(self->ctx, FU_SMBIOS_STRUCTURE_TYPE_CHASSIS, 0x05, NULL);
+	FuSmbiosChassisKind chassis_kind = fu_context_get_chassis_kind(self->ctx);
 
 	/* if emulating, force the chassis type to be valid */
-	if (self->host_emulation &&
-	    (val == FU_SMBIOS_CHASSIS_KIND_OTHER || val == FU_SMBIOS_CHASSIS_KIND_UNKNOWN)) {
-		g_debug("forcing chassis kind [0x%x] to be valid", val);
-		val = FU_SMBIOS_CHASSIS_KIND_DESKTOP;
+	if (self->host_emulation && (chassis_kind == FU_SMBIOS_CHASSIS_KIND_OTHER ||
+				     chassis_kind == FU_SMBIOS_CHASSIS_KIND_UNKNOWN)) {
+		g_debug("forcing chassis kind [0x%x] to be valid", chassis_kind);
+		chassis_kind = FU_SMBIOS_CHASSIS_KIND_DESKTOP;
 	}
 
-	switch (val) {
+	switch (chassis_kind) {
 	case FU_SMBIOS_CHASSIS_KIND_DESKTOP:
 	case FU_SMBIOS_CHASSIS_KIND_LOW_PROFILE_DESKTOP:
 	case FU_SMBIOS_CHASSIS_KIND_MINI_TOWER:
@@ -6637,7 +6636,7 @@ fu_engine_attrs_calculate_hsi_for_chassis(FuEngine *self)
 	}
 
 	return g_strdup_printf("HSI:INVALID:chassis[0x%02x] (v%d.%d.%d)",
-			       val,
+			       chassis_kind,
 			       FWUPD_MAJOR_VERSION,
 			       FWUPD_MINOR_VERSION,
 			       FWUPD_MICRO_VERSION);
@@ -7979,7 +7978,7 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 
 	/* load SMBIOS and the hwids */
 	if (flags & FU_ENGINE_LOAD_FLAG_HWINFO) {
-		if (!fu_context_load_hwinfo(self->ctx, error))
+		if (!fu_context_load_hwinfo(self->ctx, FU_CONTEXT_HWID_FLAG_LOAD_ALL, error))
 			return FALSE;
 		self->has_hwinfo = TRUE;
 	}

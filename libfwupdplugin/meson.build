@@ -27,6 +27,12 @@ fwupdplugin_src = [
   'fu-common-guid.c',
   'fu-version-common.c',    # fuzzing
   'fu-context.c',           # fuzzing
+  'fu-context-hwid.c',        # fuzzing
+  'fu-context-hwid-config.c', # fuzzing
+  'fu-context-hwid-dmi.c',    # fuzzing
+  'fu-context-hwid-fdt.c',    # fuzzing
+  'fu-context-hwid-kenv.c',   # fuzzing
+  'fu-context-hwid-smbios.c', # fuzzing
   'fu-device-locker.c',     # fuzzing
   'fu-device.c',            # fuzzing
   'fu-dfu-firmware.c',      # fuzzing
@@ -47,7 +53,6 @@ fwupdplugin_src = [
   'fu-firmware-common.c',   # fuzzing
   'fu-dfuse-firmware.c',    # fuzzing
   'fu-fmap-firmware.c',     # fuzzing
-  'fu-hwids.c',             # fuzzing
   'fu-ihex-firmware.c',     # fuzzing
   'fu-io-channel.c',        # fuzzing
   'fu-plugin.c',
@@ -159,7 +164,6 @@ fwupdplugin_headers = [
   'fu-firmware-common.h',
   'fu-fmap-firmware.h',
   'fu-dfuse-firmware.h',
-  'fu-hwids.h',
   'fu-ihex-firmware.h',
   'fu-io-channel.h',
   'fu-plugin.h',

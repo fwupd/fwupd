@@ -11,6 +11,7 @@
 #include "fu-bios-settings.h"
 #include "fu-common.h"
 #include "fu-firmware.h"
+#include "fu-smbios.h"
 
 #define FU_TYPE_CONTEXT (fu_context_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuContext, fu_context, FU, CONTEXT, GObject)
@@ -127,3 +128,5 @@ GPtrArray *
 fu_context_get_esp_volumes(FuContext *self, GError **error) G_GNUC_WARN_UNUSED_RESULT;
 FuFirmware *
 fu_context_get_fdt(FuContext *self, GError **error) G_GNUC_WARN_UNUSED_RESULT;
+FuSmbiosChassisKind
+fu_context_get_chassis_kind(FuContext *self);
