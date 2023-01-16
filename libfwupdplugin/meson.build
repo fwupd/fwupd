@@ -48,6 +48,11 @@ fwupdplugin_src = [
   'fu-dfuse-firmware.c',    # fuzzing
   'fu-fmap-firmware.c',     # fuzzing
   'fu-hwids.c',             # fuzzing
+  'fu-hwids-config.c',      # fuzzing
+  'fu-hwids-dmi.c',         # fuzzing
+  'fu-hwids-fdt.c',         # fuzzing
+  'fu-hwids-kenv.c',        # fuzzing
+  'fu-hwids-smbios.c',      # fuzzing
   'fu-ihex-firmware.c',     # fuzzing
   'fu-io-channel.c',        # fuzzing
   'fu-plugin.c',
@@ -363,22 +368,22 @@ if get_option('tests')
   test('fwupdplugin-self-test', e, is_parallel: false, timeout: 180, env: env)
 
   install_data([
-      'tests/dmi/class/chassis_type',
-      'tests/dmi/class/sys_vendor',
+      'tests/chassis_type',
+      'tests/sys_vendor',
     ],
-    install_dir: join_paths(installed_test_datadir, 'dmi/class'),
+    install_dir: installed_test_datadir,
   )
   install_data([
       'tests/dmi/tables/DMI',
       'tests/dmi/tables/smbios_entry_point',
     ],
-    install_dir: join_paths(installed_test_datadir, 'dmi/tables'),
+    install_dir: join_paths(installed_test_datadir, 'tests/dmi/tables'),
   )
   install_data([
       'tests/dmi/tables64/DMI',
       'tests/dmi/tables64/smbios_entry_point',
     ],
-    install_dir: join_paths(installed_test_datadir, 'dmi/tables64'),
+    install_dir: join_paths(installed_test_datadir, 'tests/dmi/tables64'),
   )
 endif
 

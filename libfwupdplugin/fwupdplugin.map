@@ -63,8 +63,6 @@ LIBFWUPDPLUGIN_0.9.3 {
     fu_hwids_get_type;
     fu_hwids_get_value;
     fu_hwids_has_guid;
-    fu_hwids_new;
-    fu_hwids_setup;
   local: *;
 } LIBFWUPDPLUGIN_0.8.0;
 
@@ -540,7 +538,6 @@ LIBFWUPDPLUGIN_1.5.6 {
     fu_firmware_strparse_uint32_safe;
     fu_firmware_strparse_uint4_safe;
     fu_firmware_strparse_uint8_safe;
-    fu_hwids_add_smbios_override;
     fu_hwids_get_keys;
     fu_plugin_get_devices;
     fu_plugin_runner_backend_device_added;
@@ -719,7 +716,6 @@ LIBFWUPDPLUGIN_1.6.2 {
     fu_ifd_region_to_name;
     fu_ifd_region_to_string;
     fu_plugin_add_udev_subsystem;
-    fu_smbios_setup_from_kernel;
     fu_udev_device_get_children_with_subsystem;
     fu_udev_device_set_dev;
   local: *;
@@ -1159,6 +1155,8 @@ LIBFWUPDPLUGIN_1.8.10 {
     fu_context_get_smbios;
     fu_context_load_hwinfo;
     fu_context_set_chassis_kind;
+    fu_hwids_add_guid;
+    fu_hwids_add_value;
     fu_pefile_firmware_get_type;
     fu_pefile_firmware_new;
   local: *;

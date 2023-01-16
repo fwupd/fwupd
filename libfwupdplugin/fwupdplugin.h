@@ -45,6 +45,7 @@
 #include <libfwupdplugin/fu-fit-firmware.h>
 #include <libfwupdplugin/fu-fmap-firmware.h>
 #include <libfwupdplugin/fu-hid-device.h>
+#include <libfwupdplugin/fu-hwids.h>
 #include <libfwupdplugin/fu-i2c-device.h>
 #include <libfwupdplugin/fu-ifd-bios.h>
 #include <libfwupdplugin/fu-ifd-firmware.h>
