@@ -694,28 +694,33 @@ fu_context_security_changed(FuContext *self)
 /**
  * fu_context_load_hwinfo:
  * @self: a #FuContext
+ * @flags: a #FuContextHwidFlags, e.g. %FU_CONTEXT_HWID_FLAG_LOAD_SMBIOS
  * @error: (nullable): optional return location for an error
  *
  * Loads all hardware information parts of the context.
  *
  * Returns: %TRUE for success
  *
- * Since: 1.6.0
+ * Since: 1.8.10
  **/
 gboolean
-fu_context_load_hwinfo(FuContext *self, GError **error)
+fu_context_load_hwinfo(FuContext *self, FuContextHwidFlags flags, GError **error)
 {
 	FuContextPrivate *priv = GET_PRIVATE(self);
 	GPtrArray *guids;
-	g_autoptr(GError) error_smbios = NULL;
 	g_autoptr(GError) error_hwids = NULL;
 	g_autoptr(GError) error_bios_settings = NULL;
 
 	g_return_val_if_fail(FU_IS_CONTEXT(self), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
-	if (!fu_smbios_setup(priv->smbios, &error_smbios))
-		g_warning("Failed to load SMBIOS: %s", error_smbios->message);
+	if ((flags & FU_CONTEXT_HWID_FLAG_LOAD_SMBIOS) > 0) {
+		g_autoptr(GError) error_local = NULL;
+		if (!fu_smbios_setup(priv->smbios, &error_local)) {
+			if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED))
+				g_warning("Failed to load SMBIOS: %s", error_local->message);
+		}
+	}
 	if (!fu_hwids_setup(priv->hwids, priv->smbios, &error_hwids))
 		g_warning("Failed to load HWIDs: %s", error_hwids->message);
 	priv->loaded_hwinfo = TRUE;

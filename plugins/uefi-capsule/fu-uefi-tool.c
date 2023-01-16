@@ -336,7 +336,7 @@ main(int argc, char *argv[])
 		g_autoptr(GError) error_local = NULL;
 
 		/* load SMBIOS */
-		if (!fu_context_load_hwinfo(ctx, &error_local)) {
+		if (!fu_context_load_hwinfo(ctx, FU_CONTEXT_HWID_FLAG_LOAD_ALL, &error_local)) {
 			g_printerr("failed: %s\n", error_local->message);
 			return EXIT_FAILURE;
 		}
@@ -464,7 +464,7 @@ main(int argc, char *argv[])
 		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1, "cleanup");
 
 		/* load SMBIOS */
-		if (!fu_context_load_hwinfo(ctx, &error_local)) {
+		if (!fu_context_load_hwinfo(ctx, FU_CONTEXT_HWID_FLAG_LOAD_ALL, &error_local)) {
 			g_printerr("failed: %s\n", error_local->message);
 			return EXIT_FAILURE;
 		}
