@@ -603,7 +603,6 @@ LIBFWUPDPLUGIN_1.6.0 {
     fu_context_get_type;
     fu_context_get_udev_subsystems;
     fu_context_has_hwid_guid;
-    fu_context_load_hwinfo;
     fu_context_load_quirks;
     fu_context_lookup_quirk_by_id;
     fu_context_lookup_quirk_by_id_iter;
@@ -1155,6 +1154,7 @@ LIBFWUPDPLUGIN_1.8.9 {
 LIBFWUPDPLUGIN_1.8.10 {
   global:
     fu_context_get_fdt;
+    fu_context_load_hwinfo;
     fu_pefile_firmware_get_type;
     fu_pefile_firmware_new;
   local: *;
