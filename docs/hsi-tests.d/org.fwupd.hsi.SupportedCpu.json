@@ -15,6 +15,12 @@
   "success-results" : {
     "valid" : "the CPU platform is supported and has HSI tests"
   },
+  "more-information": [
+    "On AMD APUs or CPUs this information is reported on kernel 5.19 or later via the `ccp` kernel module. ",
+    "If the kernel module is enabled but is not being auto-loaded, this is a kernel bug and should be reported to kernel bugzilla. ",
+    "If the kernel module has loaded but you still don't have data this is NOT a fwupd bug. You will have to contact ",
+    "your motherboard or system manufacturer to enable reporting this information."
+  ],
   "hsi-level" : 1,
   "fwupd-version" : "1.8.0"
 }
