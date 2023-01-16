@@ -292,6 +292,12 @@ fu_path_from_kind(FuPathKind path_kind)
 		if (tmp != NULL)
 			return g_strdup(tmp);
 		return g_strdup("/sys/kernel/security");
+	/* /sys/class/dmi/id */
+	case FU_PATH_KIND_SYSFSDIR_DMI:
+		tmp = g_getenv("FWUPD_SYSFSDMIDIR");
+		if (tmp != NULL)
+			return g_strdup(tmp);
+		return g_strdup("/sys/class/dmi/id");
 	/* /sys/firmware/acpi/tables */
 	case FU_PATH_KIND_ACPI_TABLES:
 		tmp = g_getenv("FWUPD_ACPITABLESDIR");
