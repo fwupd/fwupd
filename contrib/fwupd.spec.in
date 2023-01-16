@@ -463,7 +463,8 @@ done
 %if 0%{?have_uefi}
 %{_datadir}/installed-tests/fwupd/efi
 %endif
-%{_datadir}/installed-tests/fwupd/dmi
+%{_datadir}/installed-tests/fwupd/chassis_type
+%{_datadir}/installed-tests/fwupd/sys_vendor
 %{_datadir}/fwupd/device-tests/*.json
 %{_libexecdir}/installed-tests/fwupd/*
 %dir %{_sysconfdir}/fwupd/remotes.d

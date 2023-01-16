@@ -34,7 +34,6 @@
 #include "fu-device-private.h"
 #include "fu-engine.h"
 #include "fu-history.h"
-#include "fu-hwids.h"
 #include "fu-plugin-private.h"
 #include "fu-progressbar.h"
 #include "fu-security-attr-common.h"
@@ -1974,8 +1973,8 @@ fu_util_activate(FuUtilPrivate *priv, gchar **values, GError **error)
 static gboolean
 fu_util_export_hwids(FuUtilPrivate *priv, gchar **values, GError **error)
 {
-	g_autoptr(FuHwids) hwids = fu_hwids_new();
-	g_autoptr(FuSmbios) smbios = fu_smbios_new();
+	FuContext *ctx = fu_engine_get_context(priv->engine);
+	FuHwids *hwids = fu_context_get_hwids(ctx);
 	g_autoptr(GKeyFile) kf = g_key_file_new();
 	g_autoptr(GPtrArray) hwid_keys = NULL;
 
@@ -1989,9 +1988,7 @@ fu_util_export_hwids(FuUtilPrivate *priv, gchar **values, GError **error)
 	}
 
 	/* setup default hwids */
-	if (!fu_smbios_setup(smbios, error))
-		return FALSE;
-	if (!fu_hwids_setup(hwids, smbios, error))
+	if (!fu_context_load_hwinfo(ctx, FU_CONTEXT_HWID_FLAG_LOAD_ALL, error))
 		return FALSE;
 
 	/* save all keys */
@@ -2009,39 +2006,23 @@ fu_util_export_hwids(FuUtilPrivate *priv, gchar **values, GError **error)
 static gboolean
 fu_util_hwids(FuUtilPrivate *priv, gchar **values, GError **error)
 {
-	g_autoptr(FuSmbios) smbios = NULL;
-	g_autoptr(FuHwids) hwids = fu_hwids_new();
+	FuContext *ctx = fu_engine_get_context(priv->engine);
+	FuHwids *hwids = fu_context_get_hwids(ctx);
 	g_autoptr(GPtrArray) hwid_keys = fu_hwids_get_keys(hwids);
 
-	/* read DMI data */
-	if (g_strv_length(values) == 0) {
-		smbios = fu_smbios_new();
-		if (!fu_smbios_setup(smbios, error))
-			return FALSE;
-	} else if (g_strv_length(values) == 1) {
-		/* a keyfile with overrides */
+	/* a keyfile with overrides */
+	if (g_strv_length(values) == 1) {
 		g_autoptr(GKeyFile) kf = g_key_file_new();
-		if (g_key_file_load_from_file(kf, values[0], G_KEY_FILE_NONE, NULL)) {
-			for (guint i = 0; i < hwid_keys->len; i++) {
-				const gchar *hwid_key = g_ptr_array_index(hwid_keys, i);
-				g_autofree gchar *tmp = NULL;
-				tmp = g_key_file_get_string(kf, "HwIds", hwid_key, NULL);
-				fu_hwids_add_smbios_override(hwids, hwid_key, tmp);
-			}
-			/* a DMI blob */
-		} else {
-			smbios = fu_smbios_new();
-			if (!fu_smbios_setup_from_file(smbios, values[0], error))
-				return FALSE;
+		if (!g_key_file_load_from_file(kf, values[0], G_KEY_FILE_NONE, error))
+			return FALSE;
+		for (guint i = 0; i < hwid_keys->len; i++) {
+			const gchar *hwid_key = g_ptr_array_index(hwid_keys, i);
+			g_autofree gchar *tmp = NULL;
+			tmp = g_key_file_get_string(kf, "HwIds", hwid_key, NULL);
+			fu_hwids_add_value(hwids, hwid_key, tmp);
 		}
-	} else {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_ARGS,
-				    "Invalid arguments");
-		return FALSE;
 	}
-	if (!fu_hwids_setup(hwids, smbios, error))
+	if (!fu_context_load_hwinfo(ctx, FU_CONTEXT_HWID_FLAG_LOAD_ALL, error))
 		return FALSE;
 
 	/* show debug output */

@@ -11,7 +11,7 @@
 #include "fu-bios-settings-private.h"
 #include "fu-context-private.h"
 #include "fu-fdt-firmware.h"
-#include "fu-hwids.h"
+#include "fu-hwids-private.h"
 #include "fu-path.h"
 #include "fu-smbios-private.h"
 #include "fu-volume-private.h"
@@ -455,8 +455,11 @@ gchar *
 fu_context_get_hwid_replace_value(FuContext *self, const gchar *keys, GError **error)
 {
 	FuContextPrivate *priv = GET_PRIVATE(self);
+
 	g_return_val_if_fail(FU_IS_CONTEXT(self), NULL);
 	g_return_val_if_fail(keys != NULL, NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
 	if (!priv->loaded_hwinfo) {
 		g_critical("cannot use HWIDs before calling ->load_hwinfo()");
 		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_NOT_INITIALIZED, "no data");
@@ -786,21 +789,64 @@ fu_context_load_hwinfo(FuContext *self, FuContextHwidFlags flags, GError **error
 	g_return_val_if_fail(FU_IS_CONTEXT(self), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
+	if ((flags & FU_CONTEXT_HWID_FLAG_LOAD_CONFIG) > 0) {
+		g_autoptr(GError) error_local = NULL;
+		if (!fu_hwids_config_setup(self, priv->hwids, &error_local)) {
+			if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
+				g_propagate_prefixed_error(error,
+							   g_steal_pointer(&error_local),
+							   "Failed to load HWIDs config: ");
+				return FALSE;
+			}
+		}
+	}
+	if ((flags & FU_CONTEXT_HWID_FLAG_LOAD_DMI) > 0) {
+		g_autoptr(GError) error_local = NULL;
+		if (!fu_hwids_dmi_setup(self, priv->hwids, &error_local)) {
+			if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
+				g_propagate_prefixed_error(error,
+							   g_steal_pointer(&error_local),
+							   "Failed to load HWIDs DMI: ");
+				return FALSE;
+			}
+		}
+	}
+	if ((flags & FU_CONTEXT_HWID_FLAG_LOAD_FDT) > 0) {
+		g_autoptr(GError) error_local = NULL;
+		if (!fu_hwids_fdt_setup(self, priv->hwids, &error_local)) {
+			if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
+				g_propagate_prefixed_error(error,
+							   g_steal_pointer(&error_local),
+							   "Failed to load HWIDs FDT: ");
+				return FALSE;
+			}
+		}
+	}
+	if ((flags & FU_CONTEXT_HWID_FLAG_LOAD_KENV) > 0) {
+		g_autoptr(GError) error_local = NULL;
+		if (!fu_hwids_kenv_setup(self, priv->hwids, &error_local)) {
+			if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
+				g_propagate_prefixed_error(error,
+							   g_steal_pointer(&error_local),
+							   "Failed to load HWIDs kenv: ");
+				return FALSE;
+			}
+		}
+	}
 	if ((flags & FU_CONTEXT_HWID_FLAG_LOAD_SMBIOS) > 0) {
 		g_autoptr(GError) error_local = NULL;
-		if (!fu_smbios_setup(priv->smbios, &error_local)) {
-			if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED))
-				g_warning("Failed to load SMBIOS: %s", error_local->message);
+		if (!fu_hwids_smbios_setup(self, priv->hwids, &error_local)) {
+			if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
+				g_propagate_prefixed_error(error,
+							   g_steal_pointer(&error_local),
+							   "Failed to load SMBIOS: ");
+				return FALSE;
+			}
 		}
-		fu_context_set_chassis_kind(self,
-					    fu_smbios_get_integer(priv->smbios,
-								  FU_SMBIOS_STRUCTURE_TYPE_CHASSIS,
-								  0x05,
-								  NULL));
 	}
-	if (!fu_hwids_setup(priv->hwids, priv->smbios, &error_hwids))
-		g_warning("Failed to load HWIDs: %s", error_hwids->message);
 	priv->loaded_hwinfo = TRUE;
+	if (!fu_hwids_setup(priv->hwids, &error_hwids))
+		g_warning("Failed to load HWIDs: %s", error_hwids->message);
 
 	/* set the hwid flags */
 	guids = fu_context_get_hwid_guids(self);
