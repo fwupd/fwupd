@@ -27,6 +27,7 @@ typedef struct {
 	FuContextFlags flags;
 	FuHwids *hwids;
 	FuSmbios *smbios;
+	FuSmbiosChassisKind chassis_kind;
 	FuQuirks *quirks;
 	GHashTable *runtime_versions;
 	GHashTable *compile_versions;
@@ -293,6 +294,41 @@ fu_context_get_bios_setting_pending_reboot(FuContext *self)
 	g_return_val_if_fail(FU_IS_CONTEXT(self), FALSE);
 	fu_bios_settings_get_pending_reboot(priv->host_bios_settings, &ret, NULL);
 	return ret;
+}
+
+/**
+ * fu_context_get_chassis_kind:
+ * @self: a #FuContext
+ *
+ * Gets the chassis kind, if known.
+ *
+ * Returns: a #FuSmbiosChassisKind, e.g. %FU_SMBIOS_CHASSIS_KIND_LAPTOP
+ *
+ * Since: 1.8.10
+ **/
+FuSmbiosChassisKind
+fu_context_get_chassis_kind(FuContext *self)
+{
+	FuContextPrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_CONTEXT(self), FALSE);
+	return priv->chassis_kind;
+}
+
+/**
+ * fu_context_set_chassis_kind:
+ * @self: a #FuContext
+ * @chassis_kind: a #FuSmbiosChassisKind, e.g. %FU_SMBIOS_CHASSIS_KIND_TABLET
+ *
+ * Sets the chassis kind.
+ *
+ * Since: 1.8.10
+ **/
+void
+fu_context_set_chassis_kind(FuContext *self, FuSmbiosChassisKind chassis_kind)
+{
+	FuContextPrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_CONTEXT(self));
+	priv->chassis_kind = chassis_kind;
 }
 
 /**
@@ -720,6 +756,11 @@ fu_context_load_hwinfo(FuContext *self, FuContextHwidFlags flags, GError **error
 			if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED))
 				g_warning("Failed to load SMBIOS: %s", error_local->message);
 		}
+		fu_context_set_chassis_kind(self,
+					    fu_smbios_get_integer(priv->smbios,
+								  FU_SMBIOS_STRUCTURE_TYPE_CHASSIS,
+								  0x05,
+								  NULL));
 	}
 	if (!fu_hwids_setup(priv->hwids, priv->smbios, &error_hwids))
 		g_warning("Failed to load HWIDs: %s", error_hwids->message);
@@ -1270,6 +1311,7 @@ static void
 fu_context_init(FuContext *self)
 {
 	FuContextPrivate *priv = GET_PRIVATE(self);
+	priv->chassis_kind = FU_SMBIOS_CHASSIS_KIND_UNKNOWN;
 	priv->battery_level = FWUPD_BATTERY_LEVEL_INVALID;
 	priv->battery_threshold = FWUPD_BATTERY_LEVEL_INVALID;
 	priv->smbios = fu_smbios_new();

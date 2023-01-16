@@ -45,3 +45,5 @@ GPtrArray *
 fu_context_get_udev_subsystems(FuContext *self);
 void
 fu_context_add_esp_volume(FuContext *self, FuVolume *volume);
+void
+fu_context_set_chassis_kind(FuContext *self, FuSmbiosChassisKind chassis_kind);
