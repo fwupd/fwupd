@@ -47,5 +47,7 @@ void
 fu_context_add_esp_volume(FuContext *self, FuVolume *volume);
 FuSmbios *
 fu_context_get_smbios(FuContext *self);
+FuHwids *
+fu_context_get_hwids(FuContext *self);
 void
 fu_context_set_chassis_kind(FuContext *self, FuSmbiosChassisKind chassis_kind);
