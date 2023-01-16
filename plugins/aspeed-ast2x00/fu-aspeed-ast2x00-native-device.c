@@ -21,6 +21,7 @@ struct _FuAspeedAst2x00NativeDevice {
 	gboolean superio_disabled;
 	gboolean debug_disabled;
 	gboolean debug_uart_disabled;
+	gboolean wdt_full_reset_disabled;
 };
 
 G_DEFINE_TYPE(FuAspeedAst2x00NativeDevice,
@@ -30,12 +31,14 @@ G_DEFINE_TYPE(FuAspeedAst2x00NativeDevice,
 #define AST_SOC_IO     0x1e600000
 #define AST_SOC_IO_SCU 0x1e6e2000
 #define AST_SOC_IO_LPC 0x1e789000
+#define AST_SOC_IO_WDT 0x1e785000
 #define AST_SOC_IO_LEN 0x00200000
 
 // FIXME move these to the spec
 #define FWUPD_SECURITY_ATTR_ID_ASPEED_ILPC2AHB_READWRITE "org.fwupd.hsi.Aspeed.iLPC2AHB.ReadWrite"
 #define FWUPD_SECURITY_ATTR_ID_ASPEED_ILPC2AHB_READONLY	 "org.fwupd.hsi.Aspeed.iLPC2AHB.ReadOnly"
-#define FWUPD_SECURITY_ATTR_ID_ASPEED_UART_DEBUG	 "org.fwupd.hsi.Aspeed.iLPC2AHB.UartDebug"
+#define FWUPD_SECURITY_ATTR_ID_ASPEED_UART_DEBUG	  "org.fwupd.hsi.Aspeed.iLPC2AHB.Uart.Debug"
+#define FWUPD_SECURITY_ATTR_ID_ASPEED_WATCHDOG_FULL_RESET "org.fwupd.hsi.Aspeed.Watchdog.FullReset"
 
 static void
 fu_aspeed_ast2x00_native_device_to_string(FuDevice *device, guint idt, GString *str)
@@ -50,6 +53,7 @@ fu_aspeed_ast2x00_native_device_to_string(FuDevice *device, guint idt, GString *
 	fu_string_append_kx(str, idt, "SuperioDisabled", self->superio_disabled);
 	fu_string_append_kx(str, idt, "DebugDisabled", self->debug_disabled);
 	fu_string_append_kx(str, idt, "DebugUartDisabled", self->debug_uart_disabled);
+	fu_string_append_kx(str, idt, "WdtFullResetDisabled", self->wdt_full_reset_disabled);
 }
 
 static gboolean
@@ -68,6 +72,10 @@ fu_aspeed_ast2x00_native_device_setup_read_u32(FuAspeedAst2x00NativeDevice *self
 
 #define BIT_IS_SET(val, bit) (((val >> bit) & 0b1) > 0)
 
+#define SCU02C 0x2C
+#define SCU0C8 0xC8
+#define SCU0D8 0xD8
+
 static gboolean
 fu_aspeed_ast2x00_native_device_setup_xx1(FuAspeedAst2x00NativeDevice *self, GError **error)
 {
@@ -85,7 +93,7 @@ fu_aspeed_ast2x00_native_device_setup_xx1(FuAspeedAst2x00NativeDevice *self, GEr
 		self->superio_disabled = BIT_IS_SET(val, 20);
 	} else if (rev == FU_ASPEED_AST2600) {
 		if (!fu_aspeed_ast2x00_native_device_setup_read_u32(self,
-								    AST_SOC_IO_SCU + 0xD8,
+								    AST_SOC_IO_SCU + SCU0D8,
 								    &val,
 								    error))
 			return FALSE;
@@ -111,23 +119,73 @@ fu_aspeed_ast2x00_native_device_setup_xx1(FuAspeedAst2x00NativeDevice *self, GEr
 		self->debug_uart_disabled = TRUE;
 	} else if (rev == FU_ASPEED_AST2500) {
 		if (!fu_aspeed_ast2x00_native_device_setup_read_u32(self,
-								    AST_SOC_IO_SCU + 0x2C,
+								    AST_SOC_IO_SCU + SCU02C,
 								    &val,
 								    error))
 			return FALSE;
 		self->debug_uart_disabled = BIT_IS_SET(val, 10);
 	} else if (rev == FU_ASPEED_AST2600) {
 		if (!fu_aspeed_ast2x00_native_device_setup_read_u32(self,
-								    AST_SOC_IO_SCU + 0xC8,
+								    AST_SOC_IO_SCU + SCU0C8,
 								    &val,
 								    error))
 			return FALSE;
 		if (!fu_aspeed_ast2x00_native_device_setup_read_u32(self,
-								    AST_SOC_IO_SCU + 0xD8,
+								    AST_SOC_IO_SCU + SCU0D8,
 								    &val2,
 								    error))
 			return FALSE;
 		self->debug_uart_disabled = BIT_IS_SET(val, 1) && BIT_IS_SET(val2, 3);
+	}
+
+	if (rev == FU_ASPEED_AST2400) {
+		self->wdt_full_reset_disabled = TRUE;
+		for (guint i = 0x0C; i <= 0x2C; i += 0x20) {
+			if (!fu_aspeed_ast2x00_native_device_setup_read_u32(self,
+									    AST_SOC_IO_WDT + i,
+									    &val,
+									    error))
+				return FALSE;
+			/* not enabled */
+			if (!BIT_IS_SET(val, 0))
+				continue;
+			if (((val >> 5) & 0b11) == 0b01) {
+				self->wdt_full_reset_disabled = FALSE;
+				break;
+			}
+		}
+	} else if (rev == FU_ASPEED_AST2500) {
+		self->wdt_full_reset_disabled = TRUE;
+		for (guint i = 0x0C; i <= 0x4C; i += 0x20) {
+			if (!fu_aspeed_ast2x00_native_device_setup_read_u32(self,
+									    AST_SOC_IO_WDT + i,
+									    &val,
+									    error))
+				return FALSE;
+			/* not enabled */
+			if (!BIT_IS_SET(val, 0))
+				continue;
+			if (((val >> 5) & 0b11) == 0b01) {
+				self->wdt_full_reset_disabled = FALSE;
+				break;
+			}
+		}
+	} else if (rev == FU_ASPEED_AST2600) {
+		self->wdt_full_reset_disabled = TRUE;
+		for (guint i = 0x00C; i <= 0x1CC; i += 0x40) {
+			if (!fu_aspeed_ast2x00_native_device_setup_read_u32(self,
+									    AST_SOC_IO_WDT + i,
+									    &val,
+									    error))
+				return FALSE;
+			/* not enabled */
+			if (!BIT_IS_SET(val, 0))
+				continue;
+			if (((val >> 5) & 0b11) == 0b01) {
+				self->wdt_full_reset_disabled = FALSE;
+				break;
+			}
+		}
 	}
 
 	/* success */
@@ -267,12 +325,35 @@ fu_aspeed_ast2x00_native_device_uart_debug(FuAspeedAst2x00NativeDevice *self,
 }
 
 static void
+fu_aspeed_ast2x00_native_device_watchdog_full_reset(FuAspeedAst2x00NativeDevice *self,
+						    FuSecurityAttrs *attrs)
+{
+	g_autoptr(FwupdSecurityAttr) attr = NULL;
+
+	/* create attr */
+	attr = fu_device_security_attr_new(FU_DEVICE(self),
+					   FWUPD_SECURITY_ATTR_ID_ASPEED_WATCHDOG_FULL_RESET);
+	fu_security_attrs_append(attrs, attr);
+
+	/* success */
+	if (self->wdt_full_reset_disabled) {
+		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
+		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+		return;
+	}
+
+	/* failed */
+	fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_ENABLED);
+}
+
+static void
 fu_aspeed_ast2x00_native_device_add_security_attrs(FuDevice *device, FuSecurityAttrs *attrs)
 {
 	FuAspeedAst2x00NativeDevice *self = FU_ASPEED_AST2X00_NATIVE_DEVICE(device);
 	fu_aspeed_ast2x00_native_device_ilpc2ahb_readonly(self, attrs);
 	fu_aspeed_ast2x00_native_device_ilpc2ahb_readwrite(self, attrs);
 	fu_aspeed_ast2x00_native_device_uart_debug(self, attrs);
+	fu_aspeed_ast2x00_native_device_watchdog_full_reset(self, attrs);
 }
 
 static void
