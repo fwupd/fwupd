@@ -148,6 +148,24 @@ fu_context_get_smbios(FuContext *self)
 }
 
 /**
+ * fu_context_get_hwids:
+ * @self: a #FuContext
+ *
+ * Gets the HWIDs store.
+ *
+ * Returns: (transfer none): a #FuHwids
+ *
+ * Since: 1.8.10
+ **/
+FuHwids *
+fu_context_get_hwids(FuContext *self)
+{
+	FuContextPrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_CONTEXT(self), NULL);
+	return priv->hwids;
+}
+
+/**
  * fu_context_get_smbios_string:
  * @self: a #FuContext
  * @structure_type: a SMBIOS structure type, e.g. %FU_SMBIOS_STRUCTURE_TYPE_BIOS
