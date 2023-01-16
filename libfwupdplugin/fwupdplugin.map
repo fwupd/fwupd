@@ -1155,6 +1155,7 @@ LIBFWUPDPLUGIN_1.8.10 {
   global:
     fu_context_get_chassis_kind;
     fu_context_get_fdt;
+    fu_context_get_smbios;
     fu_context_load_hwinfo;
     fu_context_set_chassis_kind;
     fu_pefile_firmware_get_type;
