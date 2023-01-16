@@ -35,9 +35,37 @@ G_DEFINE_TYPE(FuAspeedAst2x00NativeDevice,
 #define AST_SOC_IO_LEN 0x00200000
 
 // FIXME move these to the spec
+/**
+ * FWUPD_SECURITY_ATTR_ID_ASPEED_ILPC2AHB_READWRITE:
+ *
+ * Host Security ID attribute indicating LPC read/write access is allowed.
+ *
+ * Since: 1.8.10
+ **/
 #define FWUPD_SECURITY_ATTR_ID_ASPEED_ILPC2AHB_READWRITE "org.fwupd.hsi.Aspeed.iLPC2AHB.ReadWrite"
+/**
+ * FWUPD_SECURITY_ATTR_ID_ASPEED_ILPC2AHB_READONLY:
+ *
+ * Host Security ID attribute indicating LPC read access is allowed.
+ *
+ * Since: 1.8.10
+ **/
 #define FWUPD_SECURITY_ATTR_ID_ASPEED_ILPC2AHB_READONLY	 "org.fwupd.hsi.Aspeed.iLPC2AHB.ReadOnly"
+/**
+ * FWUPD_SECURITY_ATTR_ID_ASPEED_UART_DEBUG:
+ *
+ * Host Security ID attribute indicating the debug UART is enabled.
+ *
+ * Since: 1.8.10
+ **/
 #define FWUPD_SECURITY_ATTR_ID_ASPEED_UART_DEBUG	  "org.fwupd.hsi.Aspeed.iLPC2AHB.Uart.Debug"
+/**
+ * FWUPD_SECURITY_ATTR_ID_ASPEED_WATCHDOG_FULL_RESET:
+ *
+ * Host Security ID attribute indicating an insecure watchdog.
+ *
+ * Since: 1.8.10
+ **/
 #define FWUPD_SECURITY_ATTR_ID_ASPEED_WATCHDOG_FULL_RESET "org.fwupd.hsi.Aspeed.Watchdog.FullReset"
 
 static void
