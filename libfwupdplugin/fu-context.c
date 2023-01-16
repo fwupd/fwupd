@@ -130,6 +130,24 @@ fu_context_get_fdt(FuContext *self, GError **error)
 }
 
 /**
+ * fu_context_get_smbios:
+ * @self: a #FuContext
+ *
+ * Gets the SMBIOS store.
+ *
+ * Returns: (transfer none): a #FuSmbios
+ *
+ * Since: 1.8.10
+ **/
+FuSmbios *
+fu_context_get_smbios(FuContext *self)
+{
+	FuContextPrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_CONTEXT(self), NULL);
+	return priv->smbios;
+}
+
+/**
  * fu_context_get_smbios_string:
  * @self: a #FuContext
  * @structure_type: a SMBIOS structure type, e.g. %FU_SMBIOS_STRUCTURE_TYPE_BIOS
