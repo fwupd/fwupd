@@ -891,15 +891,32 @@ fu_plugin_runner_startup(FuPlugin *self, FuProgress *progress, GError **error)
 	/* ensure the configure file is set to the correct permission */
 	if (fu_plugin_has_flag(self, FWUPD_PLUGIN_FLAG_SECURE_CONFIG)) {
 		if (g_file_test(config_filename, G_FILE_TEST_EXISTS)) {
-			gint rc = g_chmod(config_filename, FU_PLUGIN_FILE_MODE_SECURE);
+			GStatBuf st = {0x0};
+			gint rc = g_stat(config_filename, &st);
 			if (rc != 0) {
 				g_set_error(error,
 					    G_IO_ERROR,
 					    G_IO_ERROR_FAILED,
-					    "failed to change permission of %s",
+					    "failed to get permission of %s",
 					    config_filename);
 				fu_plugin_add_flag(self, FWUPD_PLUGIN_FLAG_FAILED_OPEN);
 				return FALSE;
+			}
+			st.st_mode &= 0777;
+			if (st.st_mode != FU_PLUGIN_FILE_MODE_SECURE) {
+				g_debug("mode was 0%o, and needs to be 0%o",
+					st.st_mode,
+					(guint)FU_PLUGIN_FILE_MODE_SECURE);
+				rc = g_chmod(config_filename, FU_PLUGIN_FILE_MODE_SECURE);
+				if (rc != 0) {
+					g_set_error(error,
+						    G_IO_ERROR,
+						    G_IO_ERROR_FAILED,
+						    "failed to change permission of %s",
+						    config_filename);
+					fu_plugin_add_flag(self, FWUPD_PLUGIN_FLAG_FAILED_OPEN);
+					return FALSE;
+				}
 			}
 		}
 	}

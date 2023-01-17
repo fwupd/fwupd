@@ -43,7 +43,9 @@ if get_option('tests')
   install_data(['tests/redfish-smbios.bin'],
     install_dir: join_paths(installed_test_datadir, 'tests'))
   install_data(['tests/redfish.conf'],
-    install_dir: join_paths(installed_test_datadir, 'tests'))
+    install_dir: join_paths(installed_test_datadir, 'tests'),
+    install_mode: 'rw-r-----',
+  )
   install_data(['tests/efi/efivars/RedfishIndications-16faa37e-4b6a-4891-9028-242de65a3b70'],
     install_dir: join_paths(installed_test_datadir, 'tests', 'efi', 'efivars'))
   install_data(['tests/efi/efivars/RedfishOSCredentials-16faa37e-4b6a-4891-9028-242de65a3b70'],
