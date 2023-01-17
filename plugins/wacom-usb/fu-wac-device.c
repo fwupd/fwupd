@@ -182,7 +182,8 @@ fu_wac_device_set_feature_report(FuWacDevice *self,
 					buf,
 					bufsz,
 					FU_WAC_DEVICE_TIMEOUT,
-					flags | FU_HID_DEVICE_FLAG_IS_FEATURE,
+					flags | FU_HID_DEVICE_FLAG_IS_FEATURE |
+					    FU_HID_DEVICE_FLAG_RETRY_FAILURE,
 					error);
 }
 
@@ -920,6 +921,7 @@ fu_wac_device_init(FuWacDevice *self)
 	fu_device_set_install_duration(FU_DEVICE(self), 10);
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_WAC_FIRMWARE);
+	fu_device_retry_set_delay(FU_DEVICE(self), 30); /* ms */
 }
 
 static void
