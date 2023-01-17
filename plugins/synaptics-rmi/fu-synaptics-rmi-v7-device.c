@@ -619,14 +619,11 @@ fu_synaptics_rmi_v7_device_write_firmware(FuDevice *device,
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
 	if (flash->bootloader_id[1] > 8) {
-		/* FIXME: test updating with newer than V8 bootloader, use the daemon-supplied
-		 * numbers and remove GUESSED */
-		fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
 		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 0, "disable-sleep");
 		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_READ, 0, "verify-signature");
-		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 0, "fixed-location-data");
-		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 17, "flash-config");
-		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 0, NULL);
+		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 1, "fixed-location-data");
+		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 8, "flash-config");
+		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 9, NULL);
 		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 81, "core-code");
 		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 1, "core-config");
 		fu_progress_add_step(progress,
@@ -635,14 +632,11 @@ fu_synaptics_rmi_v7_device_write_firmware(FuDevice *device,
 				     "external-touch-afe-config");
 		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 0, "display-config");
 	} else if (flash->bootloader_id[1] == 8) {
-		/* FIXME: test updating with V8 bootloader, use the daemon-supplied numbers and
-		 * remove GUESSED */
-		fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
 		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 0, "disable-sleep");
 		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_READ, 0, "verify-signature");
 		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 0, "fixed-location-data");
-		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 0, NULL);
-		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 17, "flash-config");
+		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 16, NULL);
+		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 0, "flash-config");
 		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 81, "core-code");
 		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 1, "core-config");
 		fu_progress_add_step(progress,
@@ -651,8 +645,6 @@ fu_synaptics_rmi_v7_device_write_firmware(FuDevice *device,
 				     "external-touch-afe-config");
 		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 0, "display-config");
 	} else {
-		/* FIXME: test updating with older bootloader, use the daemon-supplied numbers and
-		 * remove GUESSED */
 		fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
 		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 0, "disable-sleep");
 		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_READ, 2, "verify-signature");
