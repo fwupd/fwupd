@@ -58,7 +58,7 @@ G_DEFINE_TYPE(FuAspeedAst2x00NativeDevice,
  *
  * Since: 1.8.10
  **/
-#define FWUPD_SECURITY_ATTR_ID_ASPEED_UART_DEBUG	  "org.fwupd.hsi.Aspeed.iLPC2AHB.Uart.Debug"
+#define FWUPD_SECURITY_ATTR_ID_ASPEED_UART_DEBUG	  "org.fwupd.hsi.Aspeed.Uart.Debug"
 /**
  * FWUPD_SECURITY_ATTR_ID_ASPEED_WATCHDOG_FULL_RESET:
  *
