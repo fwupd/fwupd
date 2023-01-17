@@ -32,17 +32,17 @@ G_DEFINE_TYPE(FuSynapticsRmiHidDevice, fu_synaptics_rmi_hid_device, FU_TYPE_SYNA
 
 #define RMI_DEVICE_DEFAULT_TIMEOUT 2000
 
-#define HID_RMI4_REPORT_ID	       0
-#define HID_RMI4_READ_INPUT_COUNT      1
-#define HID_RMI4_READ_INPUT_DATA       2
-#define HID_RMI4_READ_OUTPUT_ADDR      2
-#define HID_RMI4_READ_OUTPUT_COUNT     4
-#define HID_RMI4_WRITE_OUTPUT_COUNT    1
-#define HID_RMI4_WRITE_OUTPUT_ADDR     2
-#define HID_RMI4_WRITE_OUTPUT_DATA     4
-#define HID_RMI4_FEATURE_MODE	       1
+#define HID_RMI4_REPORT_ID		0
+#define HID_RMI4_READ_INPUT_COUNT	1
+#define HID_RMI4_READ_INPUT_DATA	2
+#define HID_RMI4_READ_OUTPUT_ADDR	2
+#define HID_RMI4_READ_OUTPUT_COUNT	4
+#define HID_RMI4_WRITE_OUTPUT_COUNT	1
+#define HID_RMI4_WRITE_OUTPUT_ADDR	2
+#define HID_RMI4_WRITE_OUTPUT_DATA	4
+#define HID_RMI4_FEATURE_MODE		1
 #define HID_RMI4_ATTN_INTERRUPT_SOURCES 1
-#define HID_RMI4_ATTN_DATA	       2
+#define HID_RMI4_ATTN_DATA		2
 
 /*
  * This bit disables whatever sleep mode may be selected by the sleep_mode
@@ -559,10 +559,9 @@ static void
 fu_synaptics_rmi_hid_device_set_progress(FuDevice *self, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 2, "detach");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 94, "write");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 2, "attach");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 3, "detach");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 88, "write");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 7, "attach");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 2, "reload");
 }
 
