@@ -14,8 +14,8 @@ if [ -f @localstatedir@/lib/fwupd/uefi_capsule.conf ] &&
 cat << EOF
 menuentry 'Linux Firmware Updater' \$menuentry_id_option 'fwupd' {
 EOF
-      ${grub_probe:?}
-      prepare_grub_to_access_device '`${grub_probe} --target=device \${ESP}` | sed -e "s/^/\t/"'
+      ${grub_probe:?} --version > /dev/null
+      prepare_grub_to_access_device "$(${grub_probe} --target=device ${ESP})" | sed -e "s/^/\t/"
 cat << EOF
 	chainloader ${EFI_PATH}
 }
