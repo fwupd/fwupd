@@ -15,6 +15,7 @@
 gboolean
 fu_hwids_fdt_setup(FuContext *ctx, FuHwids *self, GError **error)
 {
+	g_autofree gchar *chassis_type = NULL;
 	g_auto(GStrv) compatible = NULL;
 	g_autoptr(FuFirmware) fdt_img = NULL;
 	g_autoptr(FuFdtImage) fdt_img_fwver = NULL;
@@ -47,6 +48,26 @@ fu_hwids_fdt_setup(FuContext *ctx, FuHwids *self, GError **error)
 		g_autofree gchar *tmp = NULL;
 		fu_fdt_image_get_attr_str(FU_FDT_IMAGE(fdt_img), map[i].key, &tmp, NULL);
 		fu_hwids_add_value(self, map[i].hwid, tmp);
+	}
+
+	/* chassis kind */
+	fu_fdt_image_get_attr_str(FU_FDT_IMAGE(fdt_img), "chassis-type", &chassis_type, NULL);
+	if (chassis_type != NULL) {
+		struct {
+			FuSmbiosChassisKind chassis_kind;
+			const gchar *dt;
+		} chassis_map[] = {{FU_SMBIOS_CHASSIS_KIND_CONVERTIBLE, "convertible"},
+				   {FU_SMBIOS_CHASSIS_KIND_EMBEDDED_PC, "embedded"},
+				   {FU_SMBIOS_CHASSIS_KIND_HAND_HELD, "handset"},
+				   {FU_SMBIOS_CHASSIS_KIND_LAPTOP, "laptop"},
+				   {FU_SMBIOS_CHASSIS_KIND_TABLET, "tablet"},
+				   {FU_SMBIOS_CHASSIS_KIND_UNKNOWN, NULL}};
+		for (guint i = 0; chassis_map[i].dt != NULL; i++) {
+			if (g_strcmp0(chassis_type, chassis_map[i].dt) == 0) {
+				fu_context_set_chassis_kind(ctx, chassis_map[i].chassis_kind);
+				break;
+			}
+		}
 	}
 
 	/* fallback */
