@@ -1285,12 +1285,16 @@ void
 fu_device_add_backend_tag(FuDevice *self, const gchar *backend_tag)
 {
 	FuDevicePrivate *priv = GET_PRIVATE(self);
+	FuDevice *parent = fu_device_get_parent(self);
 	g_return_if_fail(FU_IS_DEVICE(self));
 	g_return_if_fail(backend_tag != NULL);
 	if (fu_device_has_backend_tag(self, backend_tag))
 		return;
 	g_ptr_array_add(priv->backend_tags, g_strdup(backend_tag));
 	g_object_notify(G_OBJECT(self), "backend-tags");
+
+	if (parent != NULL)
+		fu_device_add_backend_tag(parent, backend_tag);
 }
 
 /**
