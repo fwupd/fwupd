@@ -52,6 +52,7 @@ enum {
 	PROP_LID_STATE,
 	PROP_BATTERY_LEVEL,
 	PROP_BATTERY_THRESHOLD,
+	PROP_FLAGS,
 	PROP_LAST
 };
 
@@ -1092,7 +1093,30 @@ fu_context_add_flag(FuContext *context, FuContextFlags flag)
 {
 	FuContextPrivate *priv = GET_PRIVATE(context);
 	g_return_if_fail(FU_IS_CONTEXT(context));
+	if (priv->flags | flag)
+		return;
 	priv->flags |= flag;
+	g_object_notify(G_OBJECT(context), "flags");
+}
+
+/**
+ * fu_context_remove_flag:
+ * @context: a #FuContext
+ * @flag: the context flag
+ *
+ * Removes a specific flag from the context.
+ *
+ * Since: 1.8.10
+ **/
+void
+fu_context_remove_flag(FuContext *context, FuContextFlags flag)
+{
+	FuContextPrivate *priv = GET_PRIVATE(context);
+	g_return_if_fail(FU_IS_CONTEXT(context));
+	if ((priv->flags | flag) == 0)
+		return;
+	priv->flags &= ~flag;
+	g_object_notify(G_OBJECT(context), "flags");
 }
 
 /**
@@ -1240,6 +1264,9 @@ fu_context_get_property(GObject *object, guint prop_id, GValue *value, GParamSpe
 	case PROP_BATTERY_THRESHOLD:
 		g_value_set_uint(value, priv->battery_threshold);
 		break;
+	case PROP_FLAGS:
+		g_value_set_uint64(value, priv->flags);
+		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
 		break;
@@ -1250,6 +1277,7 @@ static void
 fu_context_set_property(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
 {
 	FuContext *self = FU_CONTEXT(object);
+	FuContextPrivate *priv = GET_PRIVATE(self);
 	switch (prop_id) {
 	case PROP_BATTERY_STATE:
 		fu_context_set_battery_state(self, g_value_get_uint(value));
@@ -1262,6 +1290,9 @@ fu_context_set_property(GObject *object, guint prop_id, const GValue *value, GPa
 		break;
 	case PROP_BATTERY_THRESHOLD:
 		fu_context_set_battery_threshold(self, g_value_get_uint(value));
+		break;
+	case PROP_FLAGS:
+		priv->flags = g_value_get_uint64(value);
 		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
@@ -1365,6 +1396,22 @@ fu_context_class_init(FuContextClass *klass)
 				  FWUPD_BATTERY_LEVEL_INVALID,
 				  G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_BATTERY_THRESHOLD, pspec);
+
+	/**
+	 * FuContext:flags:
+	 *
+	 * The context flags.
+	 *
+	 * Since: 1.8.10
+	 */
+	pspec = g_param_spec_uint64("flags",
+				    NULL,
+				    NULL,
+				    FU_CONTEXT_FLAG_NONE,
+				    G_MAXUINT64,
+				    FU_CONTEXT_FLAG_NONE,
+				    G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
+	g_object_class_install_property(object_class, PROP_FLAGS, pspec);
 
 	/**
 	 * FuContext::security-changed:

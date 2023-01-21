@@ -63,6 +63,8 @@ typedef guint64 FuContextFlags;
 
 void
 fu_context_add_flag(FuContext *context, FuContextFlags flag);
+void
+fu_context_remove_flag(FuContext *context, FuContextFlags flag);
 gboolean
 fu_context_has_flag(FuContext *context, FuContextFlags flag);
 
