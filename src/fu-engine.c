@@ -404,6 +404,16 @@ fu_engine_ensure_device_lid_inhibit(FuEngine *self, FuDevice *device)
 	fu_device_remove_problem(device, FWUPD_DEVICE_PROBLEM_LID_IS_CLOSED);
 }
 
+static void
+fu_engine_ensure_device_system_inhibit(FuEngine *self, FuDevice *device)
+{
+	if (fu_context_has_flag(self->ctx, FU_CONTEXT_FLAG_SYSTEM_INHIBIT)) {
+		fu_device_add_problem(device, FWUPD_DEVICE_PROBLEM_SYSTEM_INHIBIT);
+		return;
+	}
+	fu_device_remove_problem(device, FWUPD_DEVICE_PROBLEM_SYSTEM_INHIBIT);
+}
+
 static gboolean
 fu_engine_acquiesce_timeout_cb(gpointer user_data)
 {
@@ -442,6 +452,7 @@ fu_engine_device_added_cb(FuDeviceList *device_list, FuDevice *device, FuEngine 
 	fu_engine_watch_device(self, device);
 	fu_engine_ensure_device_battery_inhibit(self, device);
 	fu_engine_ensure_device_lid_inhibit(self, device);
+	fu_engine_ensure_device_system_inhibit(self, device);
 	fu_engine_acquiesce_reset(self);
 	g_signal_emit(self, signals[SIGNAL_DEVICE_ADDED], 0, device);
 }
@@ -8331,6 +8342,7 @@ fu_engine_context_battery_changed_cb(FuContext *ctx, GParamSpec *pspec, FuEngine
 		FuDevice *device = g_ptr_array_index(devices, i);
 		fu_engine_ensure_device_battery_inhibit(self, device);
 		fu_engine_ensure_device_lid_inhibit(self, device);
+		fu_engine_ensure_device_system_inhibit(self, device);
 	}
 }
 
@@ -8405,6 +8417,10 @@ fu_engine_init(FuEngine *self)
 			 self);
 	g_signal_connect(FU_CONTEXT(self->ctx),
 			 "notify::battery-threshold",
+			 G_CALLBACK(fu_engine_context_battery_changed_cb),
+			 self);
+	g_signal_connect(FU_CONTEXT(self->ctx),
+			 "notify::flags",
 			 G_CALLBACK(fu_engine_context_battery_changed_cb),
 			 self);
 

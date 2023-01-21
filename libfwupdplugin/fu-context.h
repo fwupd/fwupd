@@ -55,6 +55,15 @@ typedef void (*FuContextLookupIter)(FuContext *self,
 #define FU_CONTEXT_FLAG_SAVE_EVENTS (1u << 0)
 
 /**
+ * FU_CONTEXT_FLAG_SYSTEM_INHIBIT:
+ *
+ * All devices are not updatable due to a system-wide inhibit.
+ *
+ * Since: 1.8.10
+ **/
+#define FU_CONTEXT_FLAG_SYSTEM_INHIBIT (1u << 1)
+
+/**
  * FuContextFlags:
  *
  * The context flags.

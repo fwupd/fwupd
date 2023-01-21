@@ -20,6 +20,8 @@ _fwupdmgr_cmd_list=(
 	'get-updates'
 	'get-upgrades'
 	'get-plugins'
+	'inhibit'
+	'uninhibit'
 	'install'
 	'local-install'
 	'modify-config'

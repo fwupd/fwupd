@@ -5390,6 +5390,168 @@ fwupd_client_upload_bytes_finish(FwupdClient *self, GAsyncResult *res, GError **
 	return g_task_propagate_pointer(G_TASK(res), error);
 }
 
+static void
+fwupd_client_inhibit_cb(GObject *source, GAsyncResult *res, gpointer user_data)
+{
+	g_autofree gchar *inhibit_id = NULL;
+	g_autoptr(GTask) task = G_TASK(user_data);
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GVariant) val = NULL;
+
+	val = g_dbus_proxy_call_finish(G_DBUS_PROXY(source), res, &error);
+	if (val == NULL) {
+		fwupd_client_fixup_dbus_error(error);
+		g_task_return_error(task, g_steal_pointer(&error));
+		return;
+	}
+
+	/* success */
+	g_variant_get(val, "(s)", &inhibit_id);
+	g_task_return_pointer(task, g_steal_pointer(&inhibit_id), g_free);
+}
+
+/**
+ * fwupd_client_inhibit_async:
+ * @self: a #FwupdClient
+ * @reason: (not nullable): the inhibit reason, e.g. `user active`
+ * @cancellable: (nullable): optional #GCancellable
+ * @callback: the function to run on completion
+ * @callback_data: the data to pass to @callback
+ *
+ * Marks all devices as unavailable for update. Update is only available if there is no other
+ * inhibit imposed by other applications or by the system (e.g. low power state).
+ *
+ * The same application can inhibit the system multiple times.
+ *
+ * Since: 1.8.11
+ **/
+void
+fwupd_client_inhibit_async(FwupdClient *self,
+			   const gchar *reason,
+			   GCancellable *cancellable,
+			   GAsyncReadyCallback callback,
+			   gpointer callback_data)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE(self);
+	g_autoptr(GTask) task = NULL;
+
+	g_return_if_fail(FWUPD_IS_CLIENT(self));
+	g_return_if_fail(reason != NULL);
+	g_return_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable));
+	g_return_if_fail(priv->proxy != NULL);
+
+	/* call into daemon */
+	task = g_task_new(self, cancellable, callback, callback_data);
+	g_dbus_proxy_call(priv->proxy,
+			  "Inhibit",
+			  g_variant_new("(s)", reason),
+			  G_DBUS_CALL_FLAGS_NONE,
+			  FWUPD_CLIENT_DBUS_PROXY_TIMEOUT,
+			  cancellable,
+			  fwupd_client_inhibit_cb,
+			  g_steal_pointer(&task));
+}
+
+/**
+ * fwupd_client_inhibit_finish:
+ * @self: a #FwupdClient
+ * @res: (not nullable): the asynchronous result
+ * @error: (nullable): optional return location for an error
+ *
+ * Gets the result of [method@FwupdClient.inhibit_async].
+ *
+ * Returns: (transfer full): a string to use for [method@FwupdClient.uninhibit_async],
+ * or %NULL for failure
+ *
+ * Since: 1.8.11
+ **/
+gchar *
+fwupd_client_inhibit_finish(FwupdClient *self, GAsyncResult *res, GError **error)
+{
+	g_return_val_if_fail(FWUPD_IS_CLIENT(self), NULL);
+	g_return_val_if_fail(g_task_is_valid(res, self), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+	return g_task_propagate_pointer(G_TASK(res), error);
+}
+
+static void
+fwupd_client_uninhibit_cb(GObject *source, GAsyncResult *res, gpointer user_data)
+{
+	g_autoptr(GTask) task = G_TASK(user_data);
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GVariant) val = NULL;
+
+	val = g_dbus_proxy_call_finish(G_DBUS_PROXY(source), res, &error);
+	if (val == NULL) {
+		fwupd_client_fixup_dbus_error(error);
+		g_task_return_error(task, g_steal_pointer(&error));
+		return;
+	}
+
+	/* success */
+	g_task_return_boolean(task, TRUE);
+}
+
+/**
+ * fwupd_client_uninhibit_async:
+ * @self: a #FwupdClient
+ * @uninhibit_id: (not nullable): the inhibit ID
+ * @cancellable: (nullable): optional #GCancellable
+ * @callback: the function to run on completion
+ * @callback_data: the data to pass to @callback
+ *
+ * Removes the inhibit token added by the application.
+ *
+ * Since: 1.8.11
+ **/
+void
+fwupd_client_uninhibit_async(FwupdClient *self,
+			     const gchar *inhibit_id,
+			     GCancellable *cancellable,
+			     GAsyncReadyCallback callback,
+			     gpointer callback_data)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE(self);
+	g_autoptr(GTask) task = NULL;
+
+	g_return_if_fail(FWUPD_IS_CLIENT(self));
+	g_return_if_fail(inhibit_id != NULL);
+	g_return_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable));
+	g_return_if_fail(priv->proxy != NULL);
+
+	/* call into daemon */
+	task = g_task_new(self, cancellable, callback, callback_data);
+	g_dbus_proxy_call(priv->proxy,
+			  "Uninhibit",
+			  g_variant_new("(s)", inhibit_id),
+			  G_DBUS_CALL_FLAGS_NONE,
+			  FWUPD_CLIENT_DBUS_PROXY_TIMEOUT,
+			  cancellable,
+			  fwupd_client_uninhibit_cb,
+			  g_steal_pointer(&task));
+}
+
+/**
+ * fwupd_client_uninhibit_finish:
+ * @self: a #FwupdClient
+ * @res: (not nullable): the asynchronous result
+ * @error: (nullable): optional return location for an error
+ *
+ * Gets the result of [method@FwupdClient.uninhibit_async].
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.8.11
+ **/
+gboolean
+fwupd_client_uninhibit_finish(FwupdClient *self, GAsyncResult *res, GError **error)
+{
+	g_return_val_if_fail(FWUPD_IS_CLIENT(self), FALSE);
+	g_return_val_if_fail(g_task_is_valid(res, self), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+	return g_task_propagate_boolean(G_TASK(res), error);
+}
+
 /**
  * fwupd_client_add_hint:
  * @self: a #FwupdClient
