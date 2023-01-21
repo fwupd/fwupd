@@ -5348,11 +5348,17 @@ fu_engine_add_releases_for_device_component(FuEngine *self,
 
 		/* invalid */
 		locations = fwupd_release_get_locations(FWUPD_RELEASE(release));
-		if (locations->len == 0)
+		if (locations->len == 0) {
+			g_autofree gchar *str = fwupd_release_to_string(FWUPD_RELEASE(release));
+			g_debug("no locations for %s", str);
 			continue;
+		}
 		checksums = fu_release_get_checksums(release);
-		if (checksums->len == 0)
+		if (checksums->len == 0) {
+			g_autofree gchar *str = fwupd_release_to_string(FWUPD_RELEASE(release));
+			g_debug("no locations for %s", str);
 			continue;
+		}
 
 		/* different branch */
 		if (g_strcmp0(fu_release_get_branch(release), fu_device_get_branch(device)) != 0) {
