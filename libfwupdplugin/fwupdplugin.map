@@ -1154,6 +1154,7 @@ LIBFWUPDPLUGIN_1.8.10 {
     fu_context_get_hwids;
     fu_context_get_smbios;
     fu_context_load_hwinfo;
+    fu_context_remove_flag;
     fu_context_set_chassis_kind;
     fu_hwids_add_guid;
     fu_hwids_add_value;
