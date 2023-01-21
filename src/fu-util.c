@@ -51,6 +51,7 @@ typedef enum {
 struct FuUtilPrivate {
 	GCancellable *cancellable;
 	GMainContext *main_ctx;
+	GMainLoop *loop;
 	GOptionContext *context;
 	FwupdInstallFlags flags;
 	FwupdClientDownloadFlags download_flags;
@@ -975,6 +976,48 @@ fu_util_device_test_filename(FuUtilPrivate *priv,
 
 	/* success */
 	return TRUE;
+}
+
+static gboolean
+fu_util_inhibit(FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	const gchar *reason = "not set";
+	g_autofree gchar *inhibit_id = NULL;
+	g_autoptr(GString) str = g_string_new(NULL);
+
+	if (g_strv_length(values) > 0)
+		reason = values[1];
+
+	/* inhibit then wait */
+	inhibit_id = fwupd_client_inhibit(priv->client, reason, priv->cancellable, error);
+	if (inhibit_id == NULL)
+		return FALSE;
+
+	/* TRANSLATORS: the inhibit ID is a short string like dbus-123456 */
+	g_string_append_printf(str, _("Inhibit ID is %s."), inhibit_id);
+	g_string_append(str, "\n");
+	/* TRANSLATORS: CTRL^C [holding control, and then pressing C] will exit the program */
+	g_string_append(str, _("Use CTRL^C to cancel."));
+	/* TRANSLATORS: this CLI tool is now preventing system updates */
+	fu_util_warning_box(_("System Update Inhibited"), str->str, 80);
+	g_main_loop_run(priv->loop);
+	return TRUE;
+}
+
+static gboolean
+fu_util_uninhibit(FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	/* one argument required */
+	if (g_strv_length(values) != 1) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_ARGS,
+				    "Invalid arguments, expected INHIBIT-ID");
+		return FALSE;
+	}
+
+	/* just uninhibit with the token */
+	return fwupd_client_uninhibit(priv->client, values[0], priv->cancellable, error);
 }
 
 static gboolean
@@ -3612,6 +3655,7 @@ fu_util_private_free(FuUtilPrivate *priv)
 	if (priv->current_device != NULL)
 		g_object_unref(priv->current_device);
 	g_ptr_array_unref(priv->post_requests);
+	g_main_loop_unref(priv->loop);
 	g_main_context_unref(priv->main_ctx);
 	g_object_unref(priv->cancellable);
 	g_object_unref(priv->progressbar);
@@ -3987,6 +4031,17 @@ fu_util_setup_interactive(FuUtilPrivate *priv, GError **error)
 	return fu_util_setup_interactive_console(error);
 }
 
+static void
+fu_util_cancelled_cb(GCancellable *cancellable, gpointer user_data)
+{
+	FuUtilPrivate *priv = (FuUtilPrivate *)user_data;
+	if (!g_main_loop_is_running(priv->loop))
+		return;
+	/* TRANSLATORS: this is from ctrl+c */
+	g_print("%s\n", _("Cancelled"));
+	g_main_loop_quit(priv->loop);
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -4220,6 +4275,7 @@ main(int argc, char *argv[])
 
 	/* create helper object */
 	priv->main_ctx = g_main_context_new();
+	priv->loop = g_main_loop_new(priv->main_ctx, FALSE);
 	priv->progressbar = fu_progressbar_new();
 	priv->post_requests = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 	fu_progressbar_set_main_context(priv->progressbar, priv->main_ctx);
@@ -4456,6 +4512,20 @@ main(int argc, char *argv[])
 			      /* TRANSLATORS: command description */
 			      _("Test a device using a JSON manifest"),
 			      fu_util_device_test);
+	fu_util_cmd_array_add(cmd_array,
+			      "inhibit",
+			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			      _("[REASON]"),
+			      /* TRANSLATORS: command description */
+			      _("Inhibit the system to prevent upgrades"),
+			      fu_util_inhibit);
+	fu_util_cmd_array_add(cmd_array,
+			      "uninhibit",
+			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			      _("INHIBIT-ID"),
+			      /* TRANSLATORS: command description */
+			      _("Uninhibit the system to allow upgrades"),
+			      fu_util_uninhibit);
 	fu_util_cmd_array_add(
 	    cmd_array,
 	    "get-bios-settings,get-bios-setting",
@@ -4475,6 +4545,10 @@ main(int argc, char *argv[])
 	/* do stuff on ctrl+c */
 	priv->cancellable = g_cancellable_new();
 	fu_util_setup_signal_handlers(priv);
+	g_signal_connect(G_CANCELLABLE(priv->cancellable),
+			 "cancelled",
+			 G_CALLBACK(fu_util_cancelled_cb),
+			 priv);
 
 	/* sort by command name */
 	fu_util_cmd_array_sort(cmd_array);

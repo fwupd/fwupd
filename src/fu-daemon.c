@@ -51,6 +51,7 @@ struct _FuDaemon {
 	gboolean update_in_progress;
 	gboolean pending_stop;
 	FuDaemonMachineKind machine_kind;
+	GPtrArray *system_inhibits;
 };
 
 G_DEFINE_TYPE(FuDaemon, fu_daemon, G_TYPE_OBJECT)
@@ -1015,6 +1016,51 @@ fu_daemon_schedule_process_quit(FuDaemon *self)
 	self->process_quit_id = g_idle_add(fu_daemon_schedule_process_quit_cb, self);
 }
 
+typedef struct {
+	gchar *id;
+	gchar *sender;
+	guint watcher_id;
+} FuDaemonSystemInhibit;
+
+static void
+fu_daemon_system_inhibit_free(FuDaemonSystemInhibit *inhibit)
+{
+	g_bus_unwatch_name(inhibit->watcher_id);
+	g_free(inhibit->id);
+	g_free(inhibit->sender);
+	g_free(inhibit);
+}
+
+static void
+fu_daemon_ensure_system_inhibit(FuDaemon *self)
+{
+	FuContext *ctx = fu_engine_get_context(self->engine);
+	if (self->system_inhibits->len > 0) {
+		fu_context_add_flag(ctx, FU_CONTEXT_FLAG_SYSTEM_INHIBIT);
+		return;
+	}
+	fu_context_remove_flag(ctx, FU_CONTEXT_FLAG_SYSTEM_INHIBIT);
+}
+
+static void
+fu_daemon_inhibit_name_vanished_cb(GDBusConnection *connection,
+				   const gchar *name,
+				   gpointer user_data)
+{
+	FuDaemon *self = FU_DAEMON(user_data);
+	for (guint i = 0; i < self->system_inhibits->len; i++) {
+		FuDaemonSystemInhibit *inhibit = g_ptr_array_index(self->system_inhibits, i);
+		if (g_strcmp0(inhibit->sender, name) == 0) {
+			g_debug("removing %s as %s vanished without calling Uninhibit",
+				inhibit->id,
+				name);
+			g_ptr_array_remove_index(self->system_inhibits, i);
+			fu_daemon_ensure_system_inhibit(self);
+			break;
+		}
+	}
+}
+
 static void
 fu_daemon_daemon_method_call(GDBusConnection *connection,
 			     const gchar *sender,
@@ -1626,6 +1672,59 @@ fu_daemon_daemon_method_call(GDBusConnection *connection,
 		g_dbus_method_invocation_return_value(invocation, NULL);
 		return;
 	}
+	if (g_strcmp0(method_name, "Inhibit") == 0) {
+		FuDaemonSystemInhibit *inhibit;
+		const gchar *reason = NULL;
+
+		g_variant_get(parameters, "(&s)", &reason);
+		g_debug("Called %s(%s)", method_name, reason);
+
+		/* watch */
+		inhibit = g_new0(FuDaemonSystemInhibit, 1);
+		inhibit->sender = g_strdup(sender);
+		inhibit->id = g_strdup_printf("dbus-%i", g_random_int_range(1, G_MAXINT - 1));
+		inhibit->watcher_id =
+		    g_bus_watch_name_on_connection(self->connection,
+						   sender,
+						   G_BUS_NAME_WATCHER_FLAGS_NONE,
+						   NULL,
+						   fu_daemon_inhibit_name_vanished_cb,
+						   self,
+						   NULL);
+		g_ptr_array_add(self->system_inhibits, inhibit);
+		fu_daemon_ensure_system_inhibit(self);
+		g_dbus_method_invocation_return_value(invocation,
+						      g_variant_new("(s)", inhibit->id));
+		return;
+	}
+	if (g_strcmp0(method_name, "Uninhibit") == 0) {
+		const gchar *inhibit_id = NULL;
+		gboolean found = FALSE;
+
+		g_variant_get(parameters, "(&s)", &inhibit_id);
+		g_debug("Called %s(%s)", method_name, inhibit_id);
+
+		/* find by id, then uninhibit device */
+		for (guint i = 0; i < self->system_inhibits->len; i++) {
+			FuDaemonSystemInhibit *inhibit =
+			    g_ptr_array_index(self->system_inhibits, i);
+			if (g_strcmp0(inhibit->id, inhibit_id) == 0) {
+				g_ptr_array_remove_index(self->system_inhibits, i);
+				fu_daemon_ensure_system_inhibit(self);
+				found = TRUE;
+				break;
+			}
+		}
+		if (!found) {
+			g_dbus_method_invocation_return_error_literal(invocation,
+								      FWUPD_ERROR,
+								      FWUPD_ERROR_NOT_FOUND,
+								      "Cannot find inhibit ID");
+			return;
+		}
+		g_dbus_method_invocation_return_value(invocation, NULL);
+		return;
+	}
 
 	if (g_strcmp0(method_name, "Install") == 0) {
 #ifdef HAVE_GIO_UNIX
@@ -2175,6 +2274,8 @@ fu_daemon_init(FuDaemon *self)
 						   g_free,
 						   (GDestroyNotify)fu_daemon_sender_item_free);
 	self->loop = g_main_loop_new(NULL, FALSE);
+	self->system_inhibits =
+	    g_ptr_array_new_with_free_func((GDestroyNotify)fu_daemon_system_inhibit_free);
 }
 
 static void
@@ -2182,6 +2283,7 @@ fu_daemon_finalize(GObject *obj)
 {
 	FuDaemon *self = FU_DAEMON(obj);
 
+	g_ptr_array_unref(self->system_inhibits);
 	g_hash_table_unref(self->sender_items);
 	if (self->process_quit_id != 0)
 		g_source_remove(self->process_quit_id);

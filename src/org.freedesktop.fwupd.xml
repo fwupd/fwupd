@@ -901,6 +901,52 @@
     </method>
 
     <!--***********************************************************-->
+    <method name='Inhibit'>
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Marks the system as unavailable for update.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
+      <arg type='s' name='reason' direction='in'>
+        <doc:doc>
+          <doc:summary>
+            <doc:para>
+              A reason, e.g. <doc:tt>device is being used to capture content</doc:tt>.
+            </doc:para>
+          </doc:summary>
+        </doc:doc>
+      </arg>
+      <arg type='s' name='inhibit_id' direction='out'>
+        <doc:doc>
+          <doc:summary>
+            <doc:para>The token that was used for inhibiting.</doc:para>
+          </doc:summary>
+        </doc:doc>
+      </arg>
+    </method>
+
+    <!--***********************************************************-->
+    <method name='Uninhibit'>
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Removes the inhibit token added by the application, but only if there is no other
+            inhibit imposed by other applications or by the system (e.g. low power state).
+          </doc:para>
+        </doc:description>
+      </doc:doc>
+      <arg type='s' name='inhibit_id' direction='in'>
+        <doc:doc>
+          <doc:summary>
+            <doc:para>The token to use for uninhibiting.</doc:para>
+          </doc:summary>
+        </doc:doc>
+      </arg>
+    </method>
+
+    <!--***********************************************************-->
     <method name='Quit'>
       <doc:doc>
         <doc:description>

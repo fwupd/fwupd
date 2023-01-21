@@ -376,6 +376,26 @@ GHashTable *
 fwupd_client_get_report_metadata_finish(FwupdClient *self,
 					GAsyncResult *res,
 					GError **error) G_GNUC_WARN_UNUSED_RESULT;
+void
+fwupd_client_inhibit_async(FwupdClient *self,
+			   const gchar *reason,
+			   GCancellable *cancellable,
+			   GAsyncReadyCallback callback,
+			   gpointer callback_data);
+gchar *
+fwupd_client_inhibit_finish(FwupdClient *self,
+			    GAsyncResult *res,
+			    GError **error) G_GNUC_WARN_UNUSED_RESULT;
+void
+fwupd_client_uninhibit_async(FwupdClient *self,
+			     const gchar *inhibit_id,
+			     GCancellable *cancellable,
+			     GAsyncReadyCallback callback,
+			     gpointer callback_data);
+gboolean
+fwupd_client_uninhibit_finish(FwupdClient *self,
+			      GAsyncResult *res,
+			      GError **error) G_GNUC_WARN_UNUSED_RESULT;
 
 FwupdStatus
 fwupd_client_get_status(FwupdClient *self);

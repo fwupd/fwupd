@@ -64,6 +64,8 @@ complete -c fwupdmgr -n '__fish_use_subcommand' -x -a unlock -d 'Unlocks the dev
 complete -c fwupdmgr -n '__fish_use_subcommand' -x -a update -d 'Updates all firmware to latest versions available'
 complete -c fwupdmgr -n '__fish_use_subcommand' -x -a verify -d 'Checks cryptographic hash matches firmware'
 complete -c fwupdmgr -n '__fish_use_subcommand' -x -a verify-update -d 'Update the stored cryptographic hash with current ROM contents'
+complete -c fwupdmgr -n '__fish_use_subcommand' -x -a inhibit -d 'Inhibit the system to prevent upgrades'
+complete -c fwupdmgr -n '__fish_use_subcommand' -x -a uninhibit -d 'Uninhibit the system to allow upgrades'
 
 # commands exclusively consuming device IDs
 set -l deviceid_consumers activate clear-results downgrade get-releases get-results get-updates reinstall switch-branch unlock update verify verify-update

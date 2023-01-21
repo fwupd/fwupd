@@ -66,6 +66,16 @@ fwupd_client_unlock(FwupdClient *self,
 		    const gchar *device_id,
 		    GCancellable *cancellable,
 		    GError **error) G_GNUC_WARN_UNUSED_RESULT;
+gchar *
+fwupd_client_inhibit(FwupdClient *self,
+		     const gchar *reason,
+		     GCancellable *cancellable,
+		     GError **error) G_GNUC_WARN_UNUSED_RESULT;
+gboolean
+fwupd_client_uninhibit(FwupdClient *self,
+		       const gchar *inhibit_id,
+		       GCancellable *cancellable,
+		       GError **error) G_GNUC_WARN_UNUSED_RESULT;
 gboolean
 fwupd_client_modify_config(FwupdClient *self,
 			   const gchar *key,

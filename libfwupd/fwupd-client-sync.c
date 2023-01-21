@@ -673,6 +673,113 @@ fwupd_client_unlock(FwupdClient *self,
 	}
 	return TRUE;
 }
+
+static void
+fwupd_client_inhibit_cb(GObject *source, GAsyncResult *res, gpointer user_data)
+{
+	FwupdClientHelper *helper = (FwupdClientHelper *)user_data;
+	helper->str = fwupd_client_inhibit_finish(FWUPD_CLIENT(source), res, &helper->error);
+	g_main_loop_quit(helper->loop);
+}
+
+/**
+ * fwupd_client_inhibit:
+ * @self: a #FwupdClient
+ * @reason: (not nullable): the inhibit reason, e.g. `user active`
+ * @cancellable: (nullable): optional #GCancellable
+ * @error: (nullable): optional return location for an error
+ *
+ * Marks all devices as unavailable for update. Update is only available if there is no other
+ * inhibit imposed by other applications or by the system (e.g. low power state).
+ *
+ * The same application can inhibit the system multiple times.
+ *
+ * Returns: (transfer full): a string to use for [method@FwupdClient.uninhibit_async],
+ * or %NULL for failure
+ *
+ * Since: 1.8.11
+ **/
+gchar *
+fwupd_client_inhibit(FwupdClient *self,
+		     const gchar *reason,
+		     GCancellable *cancellable,
+		     GError **error)
+{
+	g_autoptr(FwupdClientHelper) helper = NULL;
+
+	g_return_val_if_fail(FWUPD_IS_CLIENT(self), NULL);
+	g_return_val_if_fail(reason != NULL, NULL);
+	g_return_val_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	/* connect */
+	if (!fwupd_client_connect(self, cancellable, error))
+		return NULL;
+
+	/* call async version and run loop until complete */
+	helper = fwupd_client_helper_new(self);
+	fwupd_client_inhibit_async(self, reason, cancellable, fwupd_client_inhibit_cb, helper);
+	g_main_loop_run(helper->loop);
+	if (helper->str == NULL) {
+		g_propagate_error(error, g_steal_pointer(&helper->error));
+		return NULL;
+	}
+	return g_steal_pointer(&helper->str);
+}
+
+static void
+fwupd_client_uninhibit_cb(GObject *source, GAsyncResult *res, gpointer user_data)
+{
+	FwupdClientHelper *helper = (FwupdClientHelper *)user_data;
+	helper->ret = fwupd_client_uninhibit_finish(FWUPD_CLIENT(source), res, &helper->error);
+	g_main_loop_quit(helper->loop);
+}
+
+/**
+ * fwupd_client_uninhibit:
+ * @self: a #FwupdClient
+ * @uninhibit_id: (not nullable): the inhibit ID
+ * @cancellable: (nullable): optional #GCancellable
+ * @error: (nullable): optional return location for an error
+ *
+ * Removes the inhibit token added by the application.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.8.11
+ **/
+gboolean
+fwupd_client_uninhibit(FwupdClient *self,
+		       const gchar *inhibit_id,
+		       GCancellable *cancellable,
+		       GError **error)
+{
+	g_autoptr(FwupdClientHelper) helper = NULL;
+
+	g_return_val_if_fail(FWUPD_IS_CLIENT(self), FALSE);
+	g_return_val_if_fail(inhibit_id != NULL, FALSE);
+	g_return_val_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	/* connect */
+	if (!fwupd_client_connect(self, cancellable, error))
+		return FALSE;
+
+	/* call async version and run loop until complete */
+	helper = fwupd_client_helper_new(self);
+	fwupd_client_uninhibit_async(self,
+				     inhibit_id,
+				     cancellable,
+				     fwupd_client_uninhibit_cb,
+				     helper);
+	g_main_loop_run(helper->loop);
+	if (!helper->ret) {
+		g_propagate_error(error, g_steal_pointer(&helper->error));
+		return FALSE;
+	}
+	return TRUE;
+}
+
 static void
 fwupd_client_modify_config_cb(GObject *source, GAsyncResult *res, gpointer user_data)
 {
