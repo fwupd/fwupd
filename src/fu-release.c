@@ -858,7 +858,7 @@ fu_release_load(FuRelease *self,
 		if (str->len > 0)
 			fwupd_release_set_description(FWUPD_RELEASE(self), str->str);
 	}
-	if (artifact == NULL) {
+	if (fwupd_release_get_locations(FWUPD_RELEASE(self))->len == 0) {
 		tmp = xb_node_query_text(rel, "location", NULL);
 		if (tmp != NULL) {
 			g_autofree gchar *uri = NULL;
@@ -879,7 +879,7 @@ fu_release_load(FuRelease *self,
 			fwupd_release_add_location(FWUPD_RELEASE(self), uri);
 		}
 	}
-	if (artifact == NULL) {
+	if (fwupd_release_get_filename(FWUPD_RELEASE(self)) == NULL) {
 		tmp = xb_node_query_text(rel, "checksum[@target='content']", NULL);
 		if (tmp != NULL)
 			fwupd_release_set_filename(FWUPD_RELEASE(self), tmp);
@@ -890,7 +890,7 @@ fu_release_load(FuRelease *self,
 	tmp = xb_node_query_text(rel, "url[@type='source']", NULL);
 	if (tmp != NULL)
 		fwupd_release_set_source_url(FWUPD_RELEASE(self), tmp);
-	if (artifact == NULL) {
+	if (fwupd_release_get_checksums(FWUPD_RELEASE(self))->len == 0) {
 		g_autoptr(GPtrArray) checksums = NULL;
 		checksums = xb_node_query(rel, "checksum[@target='container']", 0, NULL);
 		if (checksums != NULL) {
@@ -903,7 +903,7 @@ fu_release_load(FuRelease *self,
 			}
 		}
 	}
-	if (artifact == NULL) {
+	if (fwupd_release_get_size(FWUPD_RELEASE(self)) == 0) {
 		tmp64 = xb_node_query_text_as_uint(rel, "size[@type='installed']", NULL);
 		if (tmp64 != G_MAXUINT64)
 			fwupd_release_set_size(FWUPD_RELEASE(self), tmp64);
