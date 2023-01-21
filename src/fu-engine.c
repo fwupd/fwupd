@@ -3773,27 +3773,49 @@ fu_engine_appstream_upgrade_cb(XbBuilderFixup *self,
 	return TRUE;
 }
 
-static XbBuilderSource *
-fu_engine_create_metadata_builder_source(FuEngine *self, const gchar *fn, GError **error)
+static GInputStream *
+fu_engine_builder_cabinet_adapter_cb(XbBuilderSource *source,
+				     XbBuilderSourceCtx *ctx,
+				     gpointer user_data,
+				     GCancellable *cancellable,
+				     GError **error)
 {
+	FuEngine *self = FU_ENGINE(user_data);
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(XbSilo) silo = NULL;
-	g_autoptr(XbBuilderSource) source = xb_builder_source_new();
 	g_autofree gchar *xml = NULL;
 
-	g_debug("building metadata for %s", fn);
-	blob = fu_bytes_get_contents(fn, error);
+	/* convert the CAB into metadata XML */
+	blob = xb_builder_source_ctx_get_bytes(ctx, cancellable, error);
 	if (blob == NULL)
 		return NULL;
-
-	/* convert the silo for the CAB into a XbBuilderSource */
 	silo = fu_engine_get_silo_from_blob(self, blob, error);
 	if (silo == NULL)
 		return NULL;
 	xml = xb_silo_export(silo, XB_NODE_EXPORT_FLAG_NONE, error);
 	if (xml == NULL)
 		return NULL;
-	if (!xb_builder_source_load_xml(source, xml, XB_BUILDER_SOURCE_FLAG_NONE, error))
+	return g_memory_input_stream_new_from_data(g_steal_pointer(&xml), -1, g_free);
+}
+
+static XbBuilderSource *
+fu_engine_create_metadata_builder_source(FuEngine *self, const gchar *fn, GError **error)
+{
+	g_autoptr(GFile) file = g_file_new_for_path(fn);
+	g_autoptr(XbBuilderSource) source = xb_builder_source_new();
+
+	g_debug("using %s as metadata source", fn);
+	xb_builder_source_add_simple_adapter(source,
+					     "application/vnd.ms-cab-compressed",
+					     fu_engine_builder_cabinet_adapter_cb,
+					     self,
+					     NULL);
+	if (!xb_builder_source_load_file(source,
+					 file,
+					 XB_BUILDER_SOURCE_FLAG_WATCH_FILE |
+					     XB_BUILDER_SOURCE_FLAG_WATCH_DIRECTORY,
+					 NULL,
+					 error))
 		return NULL;
 	return g_steal_pointer(&source);
 }
@@ -4216,7 +4238,7 @@ fu_engine_load_metadata_store(FuEngine *self, FuEngineLoadFlags flags, GError **
 
 		/* generate all metadata on demand */
 		if (fwupd_remote_get_kind(remote) == FWUPD_REMOTE_KIND_DIRECTORY) {
-			g_debug("building metadata for remote '%s'", fwupd_remote_get_id(remote));
+			g_debug("loading metadata for remote '%s'", fwupd_remote_get_id(remote));
 			if (!fu_engine_create_metadata(self, builder, remote, &error_local)) {
 				g_warning("failed to generate remote %s: %s",
 					  fwupd_remote_get_id(remote),
