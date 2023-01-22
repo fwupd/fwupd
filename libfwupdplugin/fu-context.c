@@ -1093,7 +1093,7 @@ fu_context_add_flag(FuContext *context, FuContextFlags flag)
 {
 	FuContextPrivate *priv = GET_PRIVATE(context);
 	g_return_if_fail(FU_IS_CONTEXT(context));
-	if (priv->flags | flag)
+	if (priv->flags & flag)
 		return;
 	priv->flags |= flag;
 	g_object_notify(G_OBJECT(context), "flags");
@@ -1113,7 +1113,7 @@ fu_context_remove_flag(FuContext *context, FuContextFlags flag)
 {
 	FuContextPrivate *priv = GET_PRIVATE(context);
 	g_return_if_fail(FU_IS_CONTEXT(context));
-	if ((priv->flags | flag) == 0)
+	if ((priv->flags & flag) == 0)
 		return;
 	priv->flags &= ~flag;
 	g_object_notify(G_OBJECT(context), "flags");

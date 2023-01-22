@@ -416,6 +416,22 @@ fu_smbios3_func(void)
 }
 
 static void
+fu_context_flags_func(void)
+{
+	g_autoptr(FuContext) ctx = fu_context_new();
+
+	g_assert_false(fu_context_has_flag(ctx, FU_CONTEXT_FLAG_SAVE_EVENTS));
+	fu_context_add_flag(ctx, FU_CONTEXT_FLAG_SAVE_EVENTS);
+	g_assert_true(fu_context_has_flag(ctx, FU_CONTEXT_FLAG_SAVE_EVENTS));
+	fu_context_remove_flag(ctx, FU_CONTEXT_FLAG_SAVE_EVENTS);
+	fu_context_remove_flag(ctx, FU_CONTEXT_FLAG_SAVE_EVENTS);
+	g_assert_false(fu_context_has_flag(ctx, FU_CONTEXT_FLAG_SAVE_EVENTS));
+	fu_context_add_flag(ctx, FU_CONTEXT_FLAG_SAVE_EVENTS);
+	fu_context_add_flag(ctx, FU_CONTEXT_FLAG_SAVE_EVENTS);
+	g_assert_true(fu_context_has_flag(ctx, FU_CONTEXT_FLAG_SAVE_EVENTS));
+}
+
+static void
 fu_context_hwids_dmi_func(void)
 {
 	g_autoptr(FuContext) ctx = fu_context_new();
@@ -3790,6 +3806,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/common{strsafe}", fu_strsafe_func);
 	g_test_add_func("/fwupd/efivar", fu_efivar_func);
 	g_test_add_func("/fwupd/hwids", fu_hwids_func);
+	g_test_add_func("/fwupd/context{flags}", fu_context_flags_func);
 	g_test_add_func("/fwupd/context{hwids-dmi}", fu_context_hwids_dmi_func);
 	g_test_add_func("/fwupd/smbios", fu_smbios_func);
 	g_test_add_func("/fwupd/smbios3", fu_smbios3_func);
