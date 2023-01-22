@@ -223,9 +223,9 @@ fu_emmc_device_probe(FuDevice *device, GError **error)
 	fu_device_build_instance_id(device, NULL, "EMMC", "MAN", "OEM", "NAME", "REV", NULL);
 
 	/* this is a (invalid!) instance ID added for legacy compatibility */
-	man_oem_name = g_strdup_printf("EMMC\\%04x&%04x&%s",
-				       (guint)manfid,
-				       (guint)oemid,
+	man_oem_name = g_strdup_printf("EMMC\\%04" G_GUINT64_FORMAT "&%04" G_GUINT64_FORMAT "&%s",
+				       manfid,
+				       oemid,
 				       fu_device_get_name(device));
 	fu_device_add_instance_id(device, man_oem_name);
 
