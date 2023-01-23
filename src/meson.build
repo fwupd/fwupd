@@ -197,6 +197,7 @@ plugins_hdr = custom_target('fwupd-generate-plugins-header',
 fwupdengine = library(
   'fwupdengine',
   resources_src,
+  plugins_hdr,
   sources: fwupd_engine_src,
   install: true,
   install_rpath: libdir_pkg,
