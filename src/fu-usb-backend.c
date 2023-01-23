@@ -76,6 +76,24 @@ fu_usb_backend_context_finalized_cb(gpointer data, GObject *where_the_object_was
 	g_critical("GUsbContext %p was finalized from under our feet!", where_the_object_was);
 }
 
+static void
+fu_usb_backend_context_flags_check(FuUsbBackend *self)
+{
+#if G_USB_CHECK_VERSION(0, 4, 1)
+	FuContext *ctx = fu_backend_get_context(FU_BACKEND(self));
+	if (fu_context_has_flag(ctx, FU_CONTEXT_FLAG_SAVE_EVENTS)) {
+		g_debug("saving FuUsbBackend events");
+		g_usb_context_set_flags(self->usb_ctx, G_USB_CONTEXT_FLAGS_SAVE_EVENTS);
+	}
+#endif
+}
+
+static void
+fu_usb_backend_context_flags_notify_cb(FuContext *ctx, GParamSpec *pspec, FuUsbBackend *self)
+{
+	fu_usb_backend_context_flags_check(self);
+}
+
 static gboolean
 fu_usb_backend_setup(FuBackend *backend, FuProgress *progress, GError **error)
 {
@@ -87,6 +105,11 @@ fu_usb_backend_setup(FuBackend *backend, FuProgress *progress, GError **error)
 		return FALSE;
 	}
 	g_object_weak_ref(G_OBJECT(self->usb_ctx), fu_usb_backend_context_finalized_cb, self);
+	g_signal_connect(fu_backend_get_context(backend),
+			 "notify::flags",
+			 G_CALLBACK(fu_usb_backend_context_flags_notify_cb),
+			 self);
+	fu_usb_backend_context_flags_check(self);
 	return TRUE;
 }
 
@@ -120,21 +143,13 @@ static gboolean
 fu_usb_backend_coldplug(FuBackend *backend, FuProgress *progress, GError **error)
 {
 	FuUsbBackend *self = FU_USB_BACKEND(backend);
-#if G_USB_CHECK_VERSION(0, 4, 0)
-	FuContext *ctx = fu_backend_get_context(backend);
-#endif
+
 	g_autoptr(GPtrArray) usb_devices = NULL;
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "enumerate");
 	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 99, "add-devices");
-
-#if G_USB_CHECK_VERSION(0, 4, 0)
-	/* save events */
-	if (fu_context_has_flag(ctx, FU_CONTEXT_FLAG_SAVE_EVENTS))
-		g_usb_context_set_flags(self->usb_ctx, G_USB_CONTEXT_FLAGS_SAVE_EVENTS);
-#endif
 
 	/* no insight */
 	g_usb_context_enumerate(self->usb_ctx);
