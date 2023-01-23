@@ -1312,6 +1312,10 @@ fu_util_device_flag_to_string(guint64 device_flag)
 		/* TRANSLATORS: firmware payload is unsigned and it is possible to modify it */
 		return _("Unsigned Payload");
 	}
+	if (device_flag == FWUPD_DEVICE_FLAG_EMULATED) {
+		/* TRANSLATORS: this device is not actually real */
+		return _("Emulated");
+	}
 	if (device_flag == FWUPD_DEVICE_FLAG_SKIPS_RESTART) {
 		/* skip */
 		return NULL;

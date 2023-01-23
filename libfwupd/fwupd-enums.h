@@ -528,6 +528,14 @@ typedef enum {
  */
 #define FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD (1llu << 48)
 /**
+ * FWUPD_DEVICE_FLAG_EMULATED:
+ *
+ * The device is emulated and should not be recorded by the backend.
+ *
+ * Since: 1.8.11
+ */
+#define FWUPD_DEVICE_FLAG_EMULATED (1llu << 49)
+/**
  * FWUPD_DEVICE_FLAG_UNKNOWN:
  *
  * This flag is not defined, this typically will happen from mismatched
