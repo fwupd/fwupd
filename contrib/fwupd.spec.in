@@ -496,5 +496,4 @@ done
 %endif
 
 %changelog
-* #LONGDATE# Richard Hughes <richard@hughsie.com> #VERSION#-0.#BUILD##ALPHATAG#
-- Update from git
+%autochangelog
