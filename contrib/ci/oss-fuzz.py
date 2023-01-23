@@ -33,6 +33,7 @@ class Builder:
             "-lffi",
             "-lz",
             "-llzma",
+            "-lzstd",
         ]
 
         # defined in env
