@@ -164,9 +164,9 @@ fu_usb_backend_load(FuBackend *backend,
 		    FuBackendLoadFlags flags,
 		    GError **error)
 {
-#if G_USB_CHECK_VERSION(0, 4, 0)
+#if G_USB_CHECK_VERSION(0, 4, 1)
 	FuUsbBackend *self = FU_USB_BACKEND(backend);
-	return g_usb_context_load(self->usb_ctx, json_object, error);
+	return g_usb_context_load_with_tag(self->usb_ctx, json_object, tag, error);
 #else
 	g_set_error_literal(error,
 			    G_IO_ERROR,
@@ -183,9 +183,9 @@ fu_usb_backend_save(FuBackend *backend,
 		    FuBackendSaveFlags flags,
 		    GError **error)
 {
-#if G_USB_CHECK_VERSION(0, 4, 0)
+#if G_USB_CHECK_VERSION(0, 4, 1)
 	FuUsbBackend *self = FU_USB_BACKEND(backend);
-	return g_usb_context_save(self->usb_ctx, json_builder, error);
+	return g_usb_context_save_with_tag(self->usb_ctx, json_builder, tag, error);
 #else
 	g_set_error_literal(error,
 			    G_IO_ERROR,
