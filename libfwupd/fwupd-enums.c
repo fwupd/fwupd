@@ -209,6 +209,8 @@ fwupd_device_flag_to_string(FwupdDeviceFlags device_flag)
 		return "signed-payload";
 	if (device_flag == FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD)
 		return "unsigned-payload";
+	if (device_flag == FWUPD_DEVICE_FLAG_EMULATED)
+		return "emulated";
 	if (device_flag == FWUPD_DEVICE_FLAG_UNKNOWN)
 		return "unknown";
 	return NULL;
@@ -328,6 +330,8 @@ fwupd_device_flag_from_string(const gchar *device_flag)
 		return FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD;
 	if (g_strcmp0(device_flag, "unsigned-payload") == 0)
 		return FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD;
+	if (g_strcmp0(device_flag, "emulated") == 0)
+		return FWUPD_DEVICE_FLAG_EMULATED;
 	return FWUPD_DEVICE_FLAG_UNKNOWN;
 }
 

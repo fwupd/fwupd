@@ -695,6 +695,12 @@ fu_usb_device_set_dev(FuUsbDevice *device, GUsbDevice *usb_device)
 	}
 
 #ifdef HAVE_GUSB
+#if G_USB_CHECK_VERSION(0, 4, 4)
+	/* propagate emulated flag */
+	if (usb_device != NULL && g_usb_device_is_emulated(usb_device))
+		fu_device_add_flag(FU_DEVICE(device), FWUPD_DEVICE_FLAG_EMULATED);
+#endif
+
 	/* set device ID automatically */
 	fu_device_set_physical_id(FU_DEVICE(device), g_usb_device_get_platform_id(usb_device));
 #endif
