@@ -1023,26 +1023,34 @@ fu_engine_modify_device(FuEngine *self,
 	if (device == NULL)
 		return FALSE;
 
-	/* support adding a subset of device flags */
+	/* support adding and removing a subset of device flags */
 	if (g_strcmp0(key, "Flags") == 0) {
-		FwupdDeviceFlags flag = fwupd_device_flag_from_string(value);
-		if (flag == FWUPD_DEVICE_FLAG_UNKNOWN) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "key %s not a valid flag",
-				    key);
-			return FALSE;
+		if (g_str_has_prefix(value, "~")) {
+			FwupdDeviceFlags flag = fwupd_device_flag_from_string(value + 1);
+			if (flag == FWUPD_DEVICE_FLAG_NOTIFIED) {
+				fu_device_remove_flag(device, flag);
+			} else {
+				g_set_error(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
+					    "flag %s cannot be unset from client",
+					    key);
+				return FALSE;
+			}
+		} else {
+			FwupdDeviceFlags flag = fwupd_device_flag_from_string(value);
+			if (flag == FWUPD_DEVICE_FLAG_REPORTED ||
+			    flag == FWUPD_DEVICE_FLAG_NOTIFIED) {
+				fu_device_add_flag(device, flag);
+			} else {
+				g_set_error(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
+					    "flag %s cannot be set from client",
+					    key);
+				return FALSE;
+			}
 		}
-		if (flag != FWUPD_DEVICE_FLAG_REPORTED && flag != FWUPD_DEVICE_FLAG_NOTIFIED) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "flag %s cannot be set from client",
-				    key);
-			return FALSE;
-		}
-		fu_device_add_flag(device, flag);
 		return fu_history_modify_device(self->history, device, error);
 	}
 
