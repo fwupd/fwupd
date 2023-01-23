@@ -3,7 +3,7 @@
 # This file is distributed under the same license as the fwupd package.
 #
 # Translators:
-# Piotr Drąg <piotrdrag@gmail.com>, 2015-2022
+# Piotr Drąg <piotrdrag@gmail.com>, 2015-2023
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
@@ -51,7 +51,7 @@ msgstr "Aktualizacja aparatu %s"
 #. * the first %s is the device name, e.g. 'Secure Boot`
 #, c-format
 msgid "%s Configuration Update"
-msgstr "Aktualizacja konfiguracji urządzenia %s"
+msgstr "Aktualizacja konfiguracji %s"
 
 #. TRANSLATORS: ME stands for Management Engine, where
 #. * the first %s is the device name, e.g. 'ThinkPad P50`
@@ -84,6 +84,12 @@ msgstr "Aktualizacja urządzenia %s"
 msgid "%s Display Update"
 msgstr "Aktualizacja ekranu %s"
 
+#. TRANSLATORS: Dock refers to the port replicator hardware laptops are
+#. * cradled in, or lowered onto
+#, c-format
+msgid "%s Dock Update"
+msgstr "Aktualizacja stacji dokującej %s"
+
 #. TRANSLATORS: drive refers to a storage device, e.g. SATA disk
 #, c-format
 msgid "%s Drive Update"
@@ -95,6 +101,11 @@ msgstr "Aktualizacja dysku %s"
 msgid "%s Embedded Controller Update"
 msgstr "Aktualizacja wbudowanego kontrolera %s"
 
+#. TRANSLATORS: a device that can read your fingerprint pattern
+#, c-format
+msgid "%s Fingerprint Reader Update"
+msgstr "Aktualizacja czytnika odcisków palców %s"
+
 #. TRANSLATORS: flash refers to solid state storage, e.g. UFS or eMMC
 #, c-format
 msgid "%s Flash Drive Update"
@@ -105,6 +116,12 @@ msgstr "Aktualizacja dysku półprzewodnikowego %s"
 #, c-format
 msgid "%s GPU Update"
 msgstr "Aktualizacja karty graficznej %s"
+
+#. TRANSLATORS: a large pressure-sensitive drawing area typically used
+#. * by artists and digital artists
+#, c-format
+msgid "%s Graphics Tablet Update"
+msgstr "Aktualizacja tabletu graficznego %s"
 
 #. TRANSLATORS: Keyboard refers to an input device for typing
 #, c-format
@@ -161,6 +178,12 @@ msgstr "Aktualizacja kontrolera Thunderbolt %s"
 #, c-format
 msgid "%s Touchpad Update"
 msgstr "Aktualizacja panelu dotykowego %s"
+
+#. TRANSLATORS: Dock refers to the port replicator device connected
+#. * by plugging in a USB cable -- which may or may not also provide power
+#, c-format
+msgid "%s USB Dock Update"
+msgstr "Aktualizacja replikatora portów USB %s"
 
 #. TRANSLATORS: Receiver refers to a radio device, e.g. a tiny Bluetooth
 #. * device that stays in the USB port so the wireless peripheral works
@@ -1333,6 +1356,10 @@ msgstr "Uzyskuje wszystkie urządzenia obsługujące aktualizacje oprogramowania
 #. TRANSLATORS: command description
 msgid "Get all enabled plugins registered with the system"
 msgstr "Uzyskuje wszystkie włączone wtyczki zarejestrowane na komputerze"
+
+#. TRANSLATORS: command description
+msgid "Get device report metadata"
+msgstr "Uzyskuje metadane zgłoszenia urządzenia"
 
 #. TRANSLATORS: command description
 msgid "Gets details about a firmware file"
@@ -2628,6 +2655,10 @@ msgstr "Oprogramowanie sprzętowe od firmy %s nie jest dostarczane przez firmę 
 #. TRANSLATORS: try to help
 msgid "The system clock has not been set correctly and downloading files may fail."
 msgstr "Zegar komputera nie jest poprawnie ustawiony i pobieranie plików może się nie powieść."
+
+#. TRANSLATORS: warning message shown after update has been scheduled
+msgid "The update will continue when the device USB cable has been re-inserted."
+msgstr "Aktualizacja zostanie kontynuowana po ponownym podłączeniu kabla USB urządzenia."
 
 #. TRANSLATORS: warning message shown after update has been scheduled
 msgid "The update will continue when the device USB cable has been unplugged and then re-inserted."

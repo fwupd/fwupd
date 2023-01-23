@@ -3,7 +3,7 @@
 # This file is distributed under the same license as the fwupd package.
 #
 # Translators:
-# Antoni Bella Pérez <antonibella5@yahoo.com>, 2017-2022
+# Antoni Bella Pérez <antonibella5@yahoo.com>, 2017-2023
 # Robert Antoni Buj i Gelonch <rbuj@fedoraproject.org>, 2017
 msgid ""
 msgstr ""
@@ -83,6 +83,12 @@ msgstr "Actualització del dispositiu %s"
 msgid "%s Display Update"
 msgstr "Actualitza la pantalla %s"
 
+#. TRANSLATORS: Dock refers to the port replicator hardware laptops are
+#. * cradled in, or lowered onto
+#, c-format
+msgid "%s Dock Update"
+msgstr "Actualització el moll %s"
+
 #. TRANSLATORS: drive refers to a storage device, e.g. SATA disk
 #, c-format
 msgid "%s Drive Update"
@@ -94,6 +100,11 @@ msgstr "Actualització del controlador %s"
 msgid "%s Embedded Controller Update"
 msgstr "Actualització del controlador incrustat %s"
 
+#. TRANSLATORS: a device that can read your fingerprint pattern
+#, c-format
+msgid "%s Fingerprint Reader Update"
+msgstr "%s actualització del lector d'empremtes"
+
 #. TRANSLATORS: flash refers to solid state storage, e.g. UFS or eMMC
 #, c-format
 msgid "%s Flash Drive Update"
@@ -104,6 +115,12 @@ msgstr "Actualització de la unitat flaix %s"
 #, c-format
 msgid "%s GPU Update"
 msgstr "%s Actualització de la GPU"
+
+#. TRANSLATORS: a large pressure-sensitive drawing area typically used
+#. * by artists and digital artists
+#, c-format
+msgid "%s Graphics Tablet Update"
+msgstr "%s Actualització de la tauleta gràfica"
 
 #. TRANSLATORS: Keyboard refers to an input device for typing
 #, c-format
@@ -160,6 +177,12 @@ msgstr "Actualització del controlador Thunderbolt %s"
 #, c-format
 msgid "%s Touchpad Update"
 msgstr "%s Actualització del ratolí tàctil"
+
+#. TRANSLATORS: Dock refers to the port replicator device connected
+#. * by plugging in a USB cable -- which may or may not also provide power
+#, c-format
+msgid "%s USB Dock Update"
+msgstr "%s actualització del moll USB"
 
 #. TRANSLATORS: Receiver refers to a radio device, e.g. a tiny Bluetooth
 #. * device that stays in the USB port so the wireless peripheral works
@@ -1342,6 +1365,10 @@ msgstr "Obté tots els dispositius que admeten actualitzacions de microprogramar
 #. TRANSLATORS: command description
 msgid "Get all enabled plugins registered with the system"
 msgstr "Obté tots els connectors habilitats registrats amb el sistema."
+
+#. TRANSLATORS: command description
+msgid "Get device report metadata"
+msgstr "Obtén les metadades de l'informe del dispositiu"
 
 #. TRANSLATORS: command description
 msgid "Gets details about a firmware file"
@@ -2712,6 +2739,10 @@ msgstr "El microprogramari des de %s no és proporcionat per %s, el proveïdor d
 #. TRANSLATORS: try to help
 msgid "The system clock has not been set correctly and downloading files may fail."
 msgstr "El rellotge del sistema no s'ha configurat correctament i pot fallar la descàrrega de fitxers."
+
+#. TRANSLATORS: warning message shown after update has been scheduled
+msgid "The update will continue when the device USB cable has been re-inserted."
+msgstr "L'actualització continuarà quan s'hagi tornat a endollar el cable USB del dispositiu."
 
 #. TRANSLATORS: warning message shown after update has been scheduled
 msgid "The update will continue when the device USB cable has been unplugged and then re-inserted."

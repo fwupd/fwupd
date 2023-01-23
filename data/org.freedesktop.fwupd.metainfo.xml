@@ -33,6 +33,36 @@
     <binary>fwupdtool</binary>
   </provides>
   <releases>
+    <release version="1.8.10" date="2023-01-23">
+      <description>
+        <p>
+          This release adds the following features:
+        </p>
+        <ul>
+          <li>Add a PE/COFF firmware parser to allow reading coSWID SBoM data</li>
+          <li>Allow dumping CFI SPI chips using devices like CH341a</li>
+          <li>Refactor the HWIDs functionality to include FDT data</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Add back a legacy eMMC GUID to fix a regression</li>
+          <li>Always search for uSWID SBoM data in the image</li>
+          <li>Do not allow LZX compressed cabinet archives</li>
+          <li>Fallback to the checksum if the metadata artifact is invalid</li>
+          <li>Improve FDT parsing compatibility with new OpenBMC images</li>
+          <li>Never call grub2-probe without arguments</li>
+          <li>Respect user requested paths for the ESP even if they are not volumes</li>
+          <li>Speed up ChromeOS startup by a huge amount when using directory remotes</li>
+          <li>Verify the Synaptics RMI signature in more cases</li>
+        </ul>
+        <p>This release adds support for the following hardware:</p>
+        <ul>
+          <li>Quectel RM520</li>
+          <li>StarBook Mk VI</li>
+          <li>System76 launch_heavy_1</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.8.9" date="2023-01-03">
       <description>
         <p>

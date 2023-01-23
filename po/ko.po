@@ -3,7 +3,7 @@
 # This file is distributed under the same license as the fwupd package.
 #
 # Translators:
-# Seong-ho Cho <darkcircle.0426@gmail.com>, 2017,2019,2021-2022
+# Seong-ho Cho <darkcircle.0426@gmail.com>, 2017,2019,2021-2023
 # Shinjo Park <kde@peremen.name>, 2018-2021
 msgid ""
 msgstr ""
@@ -82,6 +82,12 @@ msgstr "%s 장치 업데이트"
 msgid "%s Display Update"
 msgstr "%s 디스플레이 장치 업데이트"
 
+#. TRANSLATORS: Dock refers to the port replicator hardware laptops are
+#. * cradled in, or lowered onto
+#, c-format
+msgid "%s Dock Update"
+msgstr "%s 도크 업데이트"
+
 #. TRANSLATORS: drive refers to a storage device, e.g. SATA disk
 #, c-format
 msgid "%s Drive Update"
@@ -93,6 +99,11 @@ msgstr "%s 드라이브 업데이트"
 msgid "%s Embedded Controller Update"
 msgstr "%s 임베디드 컨트롤러 업데이트"
 
+#. TRANSLATORS: a device that can read your fingerprint pattern
+#, c-format
+msgid "%s Fingerprint Reader Update"
+msgstr "%s 지문 스캐너 업데이트"
+
 #. TRANSLATORS: flash refers to solid state storage, e.g. UFS or eMMC
 #, c-format
 msgid "%s Flash Drive Update"
@@ -103,6 +114,12 @@ msgstr "%s 플래시 드라이브 업데이트"
 #, c-format
 msgid "%s GPU Update"
 msgstr "%s GPU 장치 업데이트"
+
+#. TRANSLATORS: a large pressure-sensitive drawing area typically used
+#. * by artists and digital artists
+#, c-format
+msgid "%s Graphics Tablet Update"
+msgstr "%s 그래픽 태블릿 업데이트"
 
 #. TRANSLATORS: Keyboard refers to an input device for typing
 #, c-format
@@ -159,6 +176,12 @@ msgstr "%s Thunderbolt 컨트롤러 업데이트"
 #, c-format
 msgid "%s Touchpad Update"
 msgstr "%s 터치패드 업데이트"
+
+#. TRANSLATORS: Dock refers to the port replicator device connected
+#. * by plugging in a USB cable -- which may or may not also provide power
+#, c-format
+msgid "%s USB Dock Update"
+msgstr "%s USB 도크 업데이트"
 
 #. TRANSLATORS: Receiver refers to a radio device, e.g. a tiny Bluetooth
 #. * device that stays in the USB port so the wireless peripheral works
@@ -1331,6 +1354,10 @@ msgstr "펌웨어 업데이트를 지원하는 모든 장치 정보 가져오기
 #. TRANSLATORS: command description
 msgid "Get all enabled plugins registered with the system"
 msgstr "시스템에 등록된 모든 활성 플러그인 가져오기"
+
+#. TRANSLATORS: command description
+msgid "Get device report metadata"
+msgstr "장치 보고서 메타데이터 가져오기"
 
 #. TRANSLATORS: command description
 msgid "Gets details about a firmware file"
@@ -2698,6 +2725,10 @@ msgstr "%s의 펌웨어는 하드웨어 제조사 %s에서 제공하지 않았�
 #. TRANSLATORS: try to help
 msgid "The system clock has not been set correctly and downloading files may fail."
 msgstr "시스템 시계가 올바르게 설정되어 있지 않습니다. 파일 다운로드가 실패할 수도 있습니다."
+
+#. TRANSLATORS: warning message shown after update has been scheduled
+msgid "The update will continue when the device USB cable has been re-inserted."
+msgstr "장치 USB 케이블을 뽑고난 후 다시 연결하면 업데이트를 계속합니다."
 
 #. TRANSLATORS: warning message shown after update has been scheduled
 msgid "The update will continue when the device USB cable has been unplugged and then re-inserted."

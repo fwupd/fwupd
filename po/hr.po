@@ -7,7 +7,7 @@
 # gogo <trebelnik2@gmail.com>, 2016
 # Milo Ivir <mail@milotype.de>, 2020-2021
 # Milo Ivir <mail@milotype.de>, 2021
-# gogo <trebelnik2@gmail.com>, 2016-2022
+# gogo <trebelnik2@gmail.com>, 2016-2023
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
@@ -87,6 +87,12 @@ msgstr "%s nadopuna uređaja"
 msgid "%s Display Update"
 msgstr "%s nadopuna zaslona"
 
+#. TRANSLATORS: Dock refers to the port replicator hardware laptops are
+#. * cradled in, or lowered onto
+#, c-format
+msgid "%s Dock Update"
+msgstr "%s nadopuna doka"
+
 #. TRANSLATORS: drive refers to a storage device, e.g. SATA disk
 #, c-format
 msgid "%s Drive Update"
@@ -98,10 +104,27 @@ msgstr "%s nadopuna diska"
 msgid "%s Embedded Controller Update"
 msgstr "%s nadopuna ugrađenog upravljača"
 
+#. TRANSLATORS: a device that can read your fingerprint pattern
+#, c-format
+msgid "%s Fingerprint Reader Update"
+msgstr "%s nadopuna čitača otisaka prsta"
+
 #. TRANSLATORS: flash refers to solid state storage, e.g. UFS or eMMC
 #, c-format
 msgid "%s Flash Drive Update"
 msgstr "%s nadopuna flash memorije"
+
+#. TRANSLATORS: GPU refers to a Graphics Processing Unit, e.g.
+#. * the "video card"
+#, c-format
+msgid "%s GPU Update"
+msgstr "%s GPU nadopuna"
+
+#. TRANSLATORS: a large pressure-sensitive drawing area typically used
+#. * by artists and digital artists
+#, c-format
+msgid "%s Graphics Tablet Update"
+msgstr "%s nadopuna grafičkog tableta"
 
 #. TRANSLATORS: Keyboard refers to an input device for typing
 #, c-format
@@ -158,6 +181,12 @@ msgstr "%s nadopuna Thunderbolt kontrolera"
 #, c-format
 msgid "%s Touchpad Update"
 msgstr "%s touchpad nadopuna"
+
+#. TRANSLATORS: Dock refers to the port replicator device connected
+#. * by plugging in a USB cable -- which may or may not also provide power
+#, c-format
+msgid "%s USB Dock Update"
+msgstr "%s nadopuna USB doka"
 
 #. TRANSLATORS: Receiver refers to a radio device, e.g. a tiny Bluetooth
 #. * device that stays in the USB port so the wireless peripheral works
@@ -313,6 +342,10 @@ msgstr "AMD firmver zaštita ponavljanja"
 #. TRANSLATORS: Title: if hardware enforces control of SPI writes
 msgid "AMD Firmware Write Protection"
 msgstr "AMD firmver zaštita zpisivanja"
+
+#. TRANSLATORS: Title: if firmware enforces rollback protection
+msgid "AMD Secure Processor Rollback Protection"
+msgstr "Zaštita od vraćanja na stariju inačicu AMD sigurnog procesora"
 
 #. TRANSLATORS: the user needs to do something, e.g. remove the device
 msgid "Action Required:"
@@ -491,6 +524,14 @@ msgstr "Automatsko izvještavanje"
 #. TRANSLATORS: can we JFDI?
 msgid "Automatically upload every time?"
 msgstr "Automatski pošalji svaki put?"
+
+#. TRANSLATORS: Title: if firmware enforces rollback protection
+msgid "BIOS Rollback Protection"
+msgstr "Zaštita od vraćanja na stariju inačicu BIOS-a"
+
+#. TRANSLATORS: Title: if firmware enforces rollback protection
+msgid "BIOS rollback protection"
+msgstr "Zaštita od vraćanja na stariju inačicu BIOS-a"
 
 #. TRANSLATORS: description of a BIOS setting
 msgid "BIOS updates delivered via LVFS or Windows Update"
@@ -826,6 +867,10 @@ msgstr "Onemogućuje zadane udaljene lokacije"
 msgid "Display version"
 msgstr "Prikaži inačicu"
 
+#. TRANSLATORS: the OS the release was tested on
+msgid "Distribution"
+msgstr "Distribucija"
+
 #. TRANSLATORS: command line option
 msgid "Do not check for old metadata"
 msgstr "Ne provjeravaj stare metapodatke"
@@ -857,6 +902,10 @@ msgstr "Nemoj izvoditi provjere sigurnosti uređaja"
 #. TRANSLATORS: command line option
 msgid "Do not prompt for devices"
 msgstr "Ne upitaj za uređaje"
+
+#. TRANSLATORS: command line option
+msgid "Do not search the firmware when parsing"
+msgstr "Ne pretražuj firmver pri obradi"
 
 #. TRANSLATORS: warning message shown after update has been scheduled
 msgid "Do not turn off your computer or remove the AC adaptor while the update is in progress."
@@ -1332,6 +1381,10 @@ msgid "Get all enabled plugins registered with the system"
 msgstr "Prikaži sve omogućene priključke registrirane sa sustavom"
 
 #. TRANSLATORS: command description
+msgid "Get device report metadata"
+msgstr "Preuzmi metapodatke izvještaja uređaja"
+
+#. TRANSLATORS: command description
 msgid "Gets details about a firmware file"
 msgstr "Prikaži pojedinosti datoteke firmvera"
 
@@ -1732,6 +1785,16 @@ msgstr "Zaključano"
 msgid "Low"
 msgstr "Niska"
 
+#. TRANSLATORS: Title: MEI = Intel Management Engine, and key refers
+#. * to the private/public key used to secure loading of firmware
+msgid "MEI Key Manifest"
+msgstr "Manifest MEI ključa"
+
+#. TRANSLATORS: Title: MEI = Intel Management Engine, and key refer
+#. * to the private/public key used to secure loading of firmware
+msgid "MEI key manifest"
+msgstr "Manifest MEI ključa"
+
 #. TRANSLATORS: Title: MEI = Intel Management Engine
 msgid "MEI manufacturing mode"
 msgstr "MEI način rada za proizvođače"
@@ -1910,6 +1973,10 @@ msgstr "U redu"
 msgid "OK!"
 msgstr "U redu!"
 
+#. TRANSLATORS: the firmware old version
+msgid "Old version"
+msgstr "Stara inačica"
+
 #. TRANSLATORS: command line option
 msgid "Only show single PCR value"
 msgstr "Prikaži samo jednu PRC vrijednost"
@@ -1978,6 +2045,10 @@ msgstr "Otklanjanje grešaka platforme"
 msgid "Platform Debugging allows device security features to be disabled. This should only be used by hardware manufacturers."
 msgstr "Otklanjanje grešaka platforme dopušta onemogućavanje sigurnosnih značajki uređaja. Ovo bi trebali koristit samo proizvođači hardvera."
 
+#. TRANSLATORS: Title: Allows debugging of parts using proprietary hardware
+msgid "Platform debugging"
+msgstr "Otklanjanje grešaka platforme"
+
 #. TRANSLATORS: 'recovery key' here refers to a code, rather than a physical
 #. metal thing
 msgid "Please ensure you have the volume recovery key before continuing."
@@ -2045,6 +2116,10 @@ msgstr "Nastavi sa slanjem?"
 msgid "Processor Security Checks"
 msgstr "Sigurnosna provjera procesora"
 
+#. TRANSLATORS: Title: if firmware enforces rollback protection
+msgid "Processor rollback protection"
+msgstr "Zaštita od vraćanja na stariju inačicu procesora"
+
 #. TRANSLATORS: a non-free software license
 msgid "Proprietary"
 msgstr "Vlasnički"
@@ -2055,7 +2130,7 @@ msgstr "Zatraži podršku nadopune firmvera"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "REMOTE-ID"
-msgstr "UDALJENA_LOKACIJA"
+msgstr "UDALJENI-ID"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "REMOTE-ID KEY VALUE"
@@ -2187,6 +2262,10 @@ msgstr "Preuzmi BIOS postavke.  Ako se argumenati ne proslijede, postavke su nep
 #. TRANSLATORS: command description
 msgid "Return all the hardware IDs for the machine"
 msgstr "Vrati sve ID-ove hardvera za uređaj"
+
+#. TRANSLATORS: longer description
+msgid "Rollback Protection prevents device software from being downgraded to an older version that has security problems."
+msgstr "Zaštita od vraćanja na stariju inačicu sprječava softver uređaja da ga vrati na stariju inačicu koja ima sigurnosne probleme."
 
 #. TRANSLATORS: this is shown in the MOTD
 msgid "Run `fwupdmgr get-upgrades` for more information."
@@ -2622,6 +2701,19 @@ msgstr "Odredište"
 msgid "Test a device using a JSON manifest"
 msgstr "Testiraj uređaj koristeći JSON manifest"
 
+#. TRANSLATORS: when the release was tested
+msgid "Tested"
+msgstr "Testirano"
+
+#. TRANSLATORS: the %s is a vendor name, e.g. Lenovo
+#, c-format
+msgid "Tested by %s"
+msgstr "Testirao %s"
+
+#. TRANSLATORS: longer description
+msgid "The Intel Management Engine Key Manifest must be valid so that the device firmware can be trusted by the CPU."
+msgstr "Manifest ključa Intel pogon upravljanja (Intel Management Engine) mora biti valjan tako da firmver uređaja može vjerovati CPU."
+
 #. TRANSLATORS: longer description
 msgid "The Intel Management Engine controls device components and needs to have a recent version to avoid security issues."
 msgstr "Intel pogon upravljanja (Intel Management Engine) upravlja komponentama uređaja i mora biti najnovije inačice kako bi se izbjegli sigurnosni problemi."
@@ -2664,6 +2756,10 @@ msgstr "%s firmver nije isporučen od strane %s dobavljača hardvera."
 #. TRANSLATORS: try to help
 msgid "The system clock has not been set correctly and downloading files may fail."
 msgstr "Sat sustava nije pravilno postavljen i preuzimanje datoteka možda ne uspije."
+
+#. TRANSLATORS: warning message shown after update has been scheduled
+msgid "The update will continue when the device USB cable has been re-inserted."
+msgstr "Nadopuna će se nastaviti kada se kabel USB uređaja ponovno poveže."
 
 #. TRANSLATORS: warning message shown after update has been scheduled
 msgid "The update will continue when the device USB cable has been unplugged and then re-inserted."
@@ -3011,6 +3107,10 @@ msgstr "Provjeravanje…"
 msgid "Version"
 msgstr "Inačica"
 
+#. TRANSLATORS: the fwupd version the release was tested on
+msgid "Version[fwupd]"
+msgstr "Inačica[fwupd]"
+
 #. TRANSLATORS: this is a prefix on the console
 msgid "WARNING:"
 msgstr "UPOZORENJE:"
@@ -3022,6 +3122,11 @@ msgstr "Čekanje…"
 #. TRANSLATORS: command description
 msgid "Watch for hardware changes"
 msgstr "Nadgledaj promjene hardvera"
+
+#. TRANSLATORS: check various UEFI and ACPI tables are unchanged after the
+#. update
+msgid "Will measure elements of system integrity around an update"
+msgstr "Mjerit će elemente integriteta sustava oko nadopune"
 
 #. TRANSLATORS: command description
 msgid "Write firmware from file into device"

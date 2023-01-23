@@ -3,7 +3,7 @@
 # This file is distributed under the same license as the fwupd package.
 #
 # Translators:
-# Anders Jonsson <transifex@norsjovallen.se>, 2017,2019-2022
+# Anders Jonsson <transifex@norsjovallen.se>, 2017,2019-2023
 # Andreas Henriksson <andreas@fatal.se>, 2017
 # Josef Andersson <josef.andersson@fripost.org>, 2015,2017-2018
 # Josef Andersson <l10nl18nsweja@gmail.com>, 2015,2017
@@ -88,6 +88,12 @@ msgstr "%s-enhetsuppdatering"
 msgid "%s Display Update"
 msgstr "%s-skärmuppdatering"
 
+#. TRANSLATORS: Dock refers to the port replicator hardware laptops are
+#. * cradled in, or lowered onto
+#, c-format
+msgid "%s Dock Update"
+msgstr "%s-dockuppdatering"
+
 #. TRANSLATORS: drive refers to a storage device, e.g. SATA disk
 #, c-format
 msgid "%s Drive Update"
@@ -99,6 +105,11 @@ msgstr "%s-enhetsuppdatering"
 msgid "%s Embedded Controller Update"
 msgstr "%s inbäddad styrenhetsuppdatering"
 
+#. TRANSLATORS: a device that can read your fingerprint pattern
+#, c-format
+msgid "%s Fingerprint Reader Update"
+msgstr "%s-fingeravtrycksläsaruppdatering"
+
 #. TRANSLATORS: flash refers to solid state storage, e.g. UFS or eMMC
 #, c-format
 msgid "%s Flash Drive Update"
@@ -109,6 +120,12 @@ msgstr "%s-flashenhetsuppdatering"
 #, c-format
 msgid "%s GPU Update"
 msgstr "%s GPU-uppdatering"
+
+#. TRANSLATORS: a large pressure-sensitive drawing area typically used
+#. * by artists and digital artists
+#, c-format
+msgid "%s Graphics Tablet Update"
+msgstr "%s-ritplatteuppdatering"
 
 #. TRANSLATORS: Keyboard refers to an input device for typing
 #, c-format
@@ -165,6 +182,12 @@ msgstr "%s Thunderbolt-styrenhetsuppdatering"
 #, c-format
 msgid "%s Touchpad Update"
 msgstr "%s-pekplatteuppdatering"
+
+#. TRANSLATORS: Dock refers to the port replicator device connected
+#. * by plugging in a USB cable -- which may or may not also provide power
+#, c-format
+msgid "%s USB Dock Update"
+msgstr "%s USB-dockuppdatering"
 
 #. TRANSLATORS: Receiver refers to a radio device, e.g. a tiny Bluetooth
 #. * device that stays in the USB port so the wireless peripheral works
@@ -1347,6 +1370,10 @@ msgstr "Hämta alla enheter som stödjer uppdateringar av fast programvara"
 #. TRANSLATORS: command description
 msgid "Get all enabled plugins registered with the system"
 msgstr "Erhåll alla aktiverade insticksmoduler som är registrerade i systemet"
+
+#. TRANSLATORS: command description
+msgid "Get device report metadata"
+msgstr "Hämta rapportmetadata för enhet"
 
 #. TRANSLATORS: command description
 msgid "Gets details about a firmware file"
@@ -2717,6 +2744,10 @@ msgstr "Fast programvara från %s levereras inte av %s, hårdvarutillverkaren."
 #. TRANSLATORS: try to help
 msgid "The system clock has not been set correctly and downloading files may fail."
 msgstr "Systemklockan har inte ställts in korrekt och hämtning av filer kan misslyckas."
+
+#. TRANSLATORS: warning message shown after update has been scheduled
+msgid "The update will continue when the device USB cable has been re-inserted."
+msgstr "Uppdateringen kommer fortsätta när enhetens USB-kabel har stoppats in igen."
 
 #. TRANSLATORS: warning message shown after update has been scheduled
 msgid "The update will continue when the device USB cable has been unplugged and then re-inserted."

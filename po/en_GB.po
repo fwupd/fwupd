@@ -4,7 +4,7 @@
 #
 # Translators:
 # Andi Chandler <andi@gowling.com>, 2019-2020,2022
-# Richard Hughes <richard@hughsie.com>, 2015,2017-2022
+# Richard Hughes <richard@hughsie.com>, 2015,2017-2023
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
@@ -83,6 +83,12 @@ msgstr "%s Device Update"
 msgid "%s Display Update"
 msgstr "%s Display Update"
 
+#. TRANSLATORS: Dock refers to the port replicator hardware laptops are
+#. * cradled in, or lowered onto
+#, c-format
+msgid "%s Dock Update"
+msgstr "%s Dock Update"
+
 #. TRANSLATORS: drive refers to a storage device, e.g. SATA disk
 #, c-format
 msgid "%s Drive Update"
@@ -94,10 +100,27 @@ msgstr "%s Drive Update"
 msgid "%s Embedded Controller Update"
 msgstr "%s Embedded Controller Update"
 
+#. TRANSLATORS: a device that can read your fingerprint pattern
+#, c-format
+msgid "%s Fingerprint Reader Update"
+msgstr "%s Fingerprint Reader Update"
+
 #. TRANSLATORS: flash refers to solid state storage, e.g. UFS or eMMC
 #, c-format
 msgid "%s Flash Drive Update"
 msgstr "%s Flash Drive Update"
+
+#. TRANSLATORS: GPU refers to a Graphics Processing Unit, e.g.
+#. * the "video card"
+#, c-format
+msgid "%s GPU Update"
+msgstr "%s GPU Update"
+
+#. TRANSLATORS: a large pressure-sensitive drawing area typically used
+#. * by artists and digital artists
+#, c-format
+msgid "%s Graphics Tablet Update"
+msgstr "%s Graphics Tablet Update"
 
 #. TRANSLATORS: Keyboard refers to an input device for typing
 #, c-format
@@ -154,6 +177,12 @@ msgstr "%s Thunderbolt Controller Update"
 #, c-format
 msgid "%s Touchpad Update"
 msgstr "%s Touchpad Update"
+
+#. TRANSLATORS: Dock refers to the port replicator device connected
+#. * by plugging in a USB cable -- which may or may not also provide power
+#, c-format
+msgid "%s USB Dock Update"
+msgstr "%s USB Dock Update"
 
 #. TRANSLATORS: Receiver refers to a radio device, e.g. a tiny Bluetooth
 #. * device that stays in the USB port so the wireless peripheral works
@@ -826,6 +855,10 @@ msgstr "Disables a given remote"
 msgid "Display version"
 msgstr "Display version"
 
+#. TRANSLATORS: the OS the release was tested on
+msgid "Distribution"
+msgstr "Distribution"
+
 #. TRANSLATORS: command line option
 msgid "Do not check for old metadata"
 msgstr "Do not check for old metadata"
@@ -1332,6 +1365,10 @@ msgstr "Get all devices that support firmware updates"
 #. TRANSLATORS: command description
 msgid "Get all enabled plugins registered with the system"
 msgstr "Get all enabled plugins registered with the system"
+
+#. TRANSLATORS: command description
+msgid "Get device report metadata"
+msgstr "Get device report metadata"
 
 #. TRANSLATORS: command description
 msgid "Gets details about a firmware file"
@@ -1920,6 +1957,10 @@ msgstr "OK"
 #. TRANSLATORS: this is for the device tests
 msgid "OK!"
 msgstr "OK!"
+
+#. TRANSLATORS: the firmware old version
+msgid "Old version"
+msgstr "Old version"
 
 #. TRANSLATORS: command line option
 msgid "Only show single PCR value"
@@ -2643,6 +2684,15 @@ msgstr "Target"
 msgid "Test a device using a JSON manifest"
 msgstr "Test a device using a JSON manifest"
 
+#. TRANSLATORS: when the release was tested
+msgid "Tested"
+msgstr "Tested"
+
+#. TRANSLATORS: the %s is a vendor name, e.g. Lenovo
+#, c-format
+msgid "Tested by %s"
+msgstr "Tested by %s"
+
 #. TRANSLATORS: longer description
 msgid "The Intel Management Engine Key Manifest must be valid so that the device firmware can be trusted by the CPU."
 msgstr "The Intel Management Engine Key Manifest must be valid so that the device firmware can be trusted by the CPU."
@@ -2689,6 +2739,10 @@ msgstr "The firmware from %s is not supplied by %s, the hardware vendor."
 #. TRANSLATORS: try to help
 msgid "The system clock has not been set correctly and downloading files may fail."
 msgstr "The system clock has not been set correctly and downloading files may fail."
+
+#. TRANSLATORS: warning message shown after update has been scheduled
+msgid "The update will continue when the device USB cable has been re-inserted."
+msgstr "The update will continue when the device USB cable has been re-inserted."
 
 #. TRANSLATORS: warning message shown after update has been scheduled
 msgid "The update will continue when the device USB cable has been unplugged and then re-inserted."
@@ -3035,6 +3089,10 @@ msgstr "Verifying…"
 #. TRANSLATORS: the detected version number of the dbx
 msgid "Version"
 msgstr "Version"
+
+#. TRANSLATORS: the fwupd version the release was tested on
+msgid "Version[fwupd]"
+msgstr "Version[fwupd]"
 
 #. TRANSLATORS: this is a prefix on the console
 msgid "WARNING:"
