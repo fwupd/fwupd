@@ -1217,6 +1217,8 @@ fu_device_func(void)
 	g_assert_cmpint(fu_device_get_backend_tags(device)->len, ==, 2);
 	g_assert_true(fu_device_has_backend_tag(device, "foo"));
 	g_assert_false(fu_device_has_backend_tag(device, "bazbazbazbazbaz"));
+	fu_device_remove_backend_tag(device, "foo");
+	g_assert_false(fu_device_has_backend_tag(device, "foo"));
 }
 
 static void
