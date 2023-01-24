@@ -157,7 +157,7 @@ fwupd_enums_func(void)
 	}
 
 	/* bitfield */
-	for (guint64 i = 1; i <= FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD; i *= 2) {
+	for (guint64 i = 1; i <= FWUPD_DEVICE_FLAG_EMULATED; i *= 2) {
 		const gchar *tmp = fwupd_device_flag_to_string(i);
 		if (tmp == NULL)
 			g_warning("missing device flag 0x%x", (guint)i);
