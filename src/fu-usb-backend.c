@@ -81,10 +81,22 @@ fu_usb_backend_context_flags_check(FuUsbBackend *self)
 {
 #if G_USB_CHECK_VERSION(0, 4, 1)
 	FuContext *ctx = fu_backend_get_context(FU_BACKEND(self));
-	if (fu_context_has_flag(ctx, FU_CONTEXT_FLAG_SAVE_EVENTS)) {
-		g_debug("saving FuUsbBackend events");
-		g_usb_context_set_flags(self->usb_ctx, G_USB_CONTEXT_FLAGS_SAVE_EVENTS);
-	}
+	GUsbContextFlags flags = G_USB_CONTEXT_FLAGS_NONE;
+
+	if (self->usb_ctx == NULL)
+		return;
+
+	if (fu_context_has_flag(ctx, FU_CONTEXT_FLAG_SAVE_EVENTS))
+		flags |= G_USB_CONTEXT_FLAGS_SAVE_EVENTS;
+
+#if G_USB_CHECK_VERSION(0, 4, 4)
+	if (fu_context_has_flag(ctx, FU_CONTEXT_FLAG_SAVE_REMOVED_DEVICES))
+		flags |= G_USB_CONTEXT_FLAGS_SAVE_EVENTS;
+#endif
+
+	/* save events */
+	g_debug("saving FuUsbBackend events");
+	g_usb_context_set_flags(self->usb_ctx, flags);
 #endif
 }
 

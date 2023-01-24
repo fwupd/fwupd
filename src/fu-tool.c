@@ -4082,7 +4082,8 @@ main(int argc, char *argv[])
 	priv->engine = fu_engine_new();
 	if (save_backends_fn != NULL) {
 		fu_context_add_flag(fu_engine_get_context(priv->engine),
-				    FU_CONTEXT_FLAG_SAVE_EVENTS);
+				    FU_CONTEXT_FLAG_SAVE_EVENTS |
+					FU_CONTEXT_FLAG_SAVE_REMOVED_DEVICES);
 	}
 	g_signal_connect(FU_ENGINE(priv->engine),
 			 "device-request",

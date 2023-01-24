@@ -64,6 +64,15 @@ typedef void (*FuContextLookupIter)(FuContext *self,
 #define FU_CONTEXT_FLAG_SYSTEM_INHIBIT (1u << 1)
 
 /**
+ * FU_CONTEXT_FLAG_SAVE_REMOVED_DEVICES:
+ *
+ * Save removed devices so that they can be replayed to emulate devices.
+ *
+ * Since: 1.8.11
+ **/
+#define FU_CONTEXT_FLAG_SAVE_REMOVED_DEVICES (1u << 2)
+
+/**
  * FuContextFlags:
  *
  * The context flags.
