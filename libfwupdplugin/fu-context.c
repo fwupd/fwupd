@@ -767,6 +767,8 @@ fu_context_security_changed(FuContext *self)
 	g_signal_emit(self, signals[SIGNAL_SECURITY_CHANGED], 0);
 }
 
+typedef gboolean (*FuContextHwidsSetupFunc)(FuContext *self, FuHwids *hwids, GError **error);
+
 /**
  * fu_context_load_hwinfo:
  * @self: a #FuContext
@@ -786,62 +788,29 @@ fu_context_load_hwinfo(FuContext *self, FuContextHwidFlags flags, GError **error
 	GPtrArray *guids;
 	g_autoptr(GError) error_hwids = NULL;
 	g_autoptr(GError) error_bios_settings = NULL;
+	struct {
+		const gchar *name;
+		FuContextHwidFlags flag;
+		FuContextHwidsSetupFunc func;
+	} hwids_setup_map[] = {{"config", FU_CONTEXT_HWID_FLAG_LOAD_CONFIG, fu_hwids_config_setup},
+			       {"smbios", FU_CONTEXT_HWID_FLAG_LOAD_SMBIOS, fu_hwids_smbios_setup},
+			       {"fdt", FU_CONTEXT_HWID_FLAG_LOAD_FDT, fu_hwids_fdt_setup},
+			       {"kenv", FU_CONTEXT_HWID_FLAG_LOAD_KENV, fu_hwids_kenv_setup},
+			       {"dmi", FU_CONTEXT_HWID_FLAG_LOAD_DMI, fu_hwids_dmi_setup},
+			       {NULL, FU_CONTEXT_HWID_FLAG_NONE, NULL}};
 
 	g_return_val_if_fail(FU_IS_CONTEXT(self), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
-	if ((flags & FU_CONTEXT_HWID_FLAG_LOAD_CONFIG) > 0) {
-		g_autoptr(GError) error_local = NULL;
-		if (!fu_hwids_config_setup(self, priv->hwids, &error_local)) {
-			if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
-				g_propagate_prefixed_error(error,
-							   g_steal_pointer(&error_local),
-							   "Failed to load HWIDs config: ");
-				return FALSE;
-			}
-		}
-	}
-	if ((flags & FU_CONTEXT_HWID_FLAG_LOAD_DMI) > 0) {
-		g_autoptr(GError) error_local = NULL;
-		if (!fu_hwids_dmi_setup(self, priv->hwids, &error_local)) {
-			if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
-				g_propagate_prefixed_error(error,
-							   g_steal_pointer(&error_local),
-							   "Failed to load HWIDs DMI: ");
-				return FALSE;
-			}
-		}
-	}
-	if ((flags & FU_CONTEXT_HWID_FLAG_LOAD_FDT) > 0) {
-		g_autoptr(GError) error_local = NULL;
-		if (!fu_hwids_fdt_setup(self, priv->hwids, &error_local)) {
-			if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
-				g_propagate_prefixed_error(error,
-							   g_steal_pointer(&error_local),
-							   "Failed to load HWIDs FDT: ");
-				return FALSE;
-			}
-		}
-	}
-	if ((flags & FU_CONTEXT_HWID_FLAG_LOAD_KENV) > 0) {
-		g_autoptr(GError) error_local = NULL;
-		if (!fu_hwids_kenv_setup(self, priv->hwids, &error_local)) {
-			if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
-				g_propagate_prefixed_error(error,
-							   g_steal_pointer(&error_local),
-							   "Failed to load HWIDs kenv: ");
-				return FALSE;
-			}
-		}
-	}
-	if ((flags & FU_CONTEXT_HWID_FLAG_LOAD_SMBIOS) > 0) {
-		g_autoptr(GError) error_local = NULL;
-		if (!fu_hwids_smbios_setup(self, priv->hwids, &error_local)) {
-			if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
-				g_propagate_prefixed_error(error,
-							   g_steal_pointer(&error_local),
-							   "Failed to load SMBIOS: ");
-				return FALSE;
+	/* run all the HWID setup funcs */
+	for (guint i = 0; hwids_setup_map[i].name != NULL; i++) {
+		if ((flags & hwids_setup_map[i].flag) > 0) {
+			g_autoptr(GError) error_local = NULL;
+			if (!hwids_setup_map[i].func(self, priv->hwids, &error_local)) {
+				g_debug("failed to load %s: %s",
+					hwids_setup_map[i].name,
+					error_local->message);
+				break;
 			}
 		}
 	}
