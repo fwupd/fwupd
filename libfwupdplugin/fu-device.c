@@ -1294,6 +1294,33 @@ fu_device_add_backend_tag(FuDevice *self, const gchar *backend_tag)
 }
 
 /**
+ * fu_device_remove_backend_tag:
+ * @self: a #FuDevice
+ * @backend_tag: a tag, for example `bootloader` or `runtime-reload`
+ *
+ * Removes a backend tag, which allows the backend to identify the specific device for a specific
+ * phase.
+ *
+ * Since: 1.8.11
+ **/
+void
+fu_device_remove_backend_tag(FuDevice *self, const gchar *backend_tag)
+{
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_DEVICE(self));
+	g_return_if_fail(backend_tag != NULL);
+
+	for (guint i = 0; i < priv->backend_tags->len; i++) {
+		const gchar *backend_tag_tmp = g_ptr_array_index(priv->backend_tags, i);
+		if (g_strcmp0(backend_tag_tmp, backend_tag) == 0) {
+			g_ptr_array_remove_index(priv->backend_tags, i);
+			g_object_notify(G_OBJECT(self), "backend-tags");
+			break;
+		}
+	}
+}
+
+/**
  * fu_device_has_backend_tag:
  * @self: a #FuDevice
  * @backend_tag: a tag, for example `bootloader` or `runtime-reload`
