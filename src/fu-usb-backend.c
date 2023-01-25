@@ -50,7 +50,24 @@ fu_usb_backend_device_notify_flags_cb(FuDevice *device, GParamSpec *pspec, FuBac
 static void
 fu_usb_backend_device_added_cb(GUsbContext *ctx, GUsbDevice *usb_device, FuBackend *backend)
 {
+	FuDevice *device_tmp;
 	g_autoptr(FuUsbDevice) device = NULL;
+
+	/* is emulated? */
+	device_tmp = fu_backend_lookup_by_id(backend, g_usb_device_get_platform_id(usb_device));
+	if (device_tmp != NULL && fu_device_has_flag(device_tmp, FWUPD_DEVICE_FLAG_EMULATED)) {
+		if (g_usb_device_get_vid(usb_device) ==
+			fu_usb_device_get_vid(FU_USB_DEVICE(device_tmp)) &&
+		    g_usb_device_get_pid(usb_device) ==
+			fu_usb_device_get_pid(FU_USB_DEVICE(device_tmp))) {
+			g_debug("replacing GUsbDevice of emulated device %s",
+				fu_device_get_id(device_tmp));
+			fu_usb_device_set_dev(FU_USB_DEVICE(device_tmp), usb_device);
+			return;
+		}
+		g_debug("delayed removal of emulated device as VID:PID changed");
+		fu_backend_device_removed(backend, device_tmp);
+	}
 
 	/* success */
 	device = fu_usb_device_new(fu_backend_get_context(backend), usb_device);
@@ -66,8 +83,14 @@ fu_usb_backend_device_removed_cb(GUsbContext *ctx, GUsbDevice *usb_device, FuBac
 	/* find the device we enumerated */
 	device_tmp =
 	    fu_backend_lookup_by_id(FU_BACKEND(self), g_usb_device_get_platform_id(usb_device));
-	if (device_tmp != NULL)
+	if (device_tmp != NULL) {
+		if (fu_device_has_flag(device_tmp, FWUPD_DEVICE_FLAG_EMULATED)) {
+			g_debug("ignoring removal of emulated device %s",
+				fu_device_get_id(device_tmp));
+			return;
+		}
 		fu_backend_device_removed(backend, device_tmp);
+	}
 }
 
 static void
