@@ -206,7 +206,8 @@ fu_sahara_loader_close(FuSaharaLoader *self, GError **error)
 gboolean
 fu_sahara_loader_qdl_is_open(FuSaharaLoader *self)
 {
-	g_return_val_if_fail(self != NULL, FALSE);
+	if (self == NULL)
+		return FALSE;
 
 	return fu_usb_device_is_open(self->usb_device);
 }
