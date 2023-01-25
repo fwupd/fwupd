@@ -814,6 +814,7 @@ fu_util_device_test_step(FuUtilPrivate *priv,
 {
 	JsonArray *json_array;
 	const gchar *url;
+	const gchar *emulation_url = NULL;
 	const gchar *baseuri = g_getenv("FWUPD_DEVICE_TESTS_BASE_URI");
 	g_autofree gchar *filename = NULL;
 	g_autofree gchar *url_safe = NULL;
@@ -841,6 +842,34 @@ fu_util_device_test_step(FuUtilPrivate *priv,
 	if (filename == NULL) {
 		g_prefix_error(error, "failed to download %s: ", url_safe);
 		return FALSE;
+	}
+
+	/* send this data to the daemon */
+	if (json_object_has_member(json_obj, "emulation-url"))
+		emulation_url = json_object_get_string_member(json_obj, "emulation-url");
+	if (emulation_url != NULL) {
+		g_autofree gchar *emulation_filename = NULL;
+		g_autofree gchar *emulation_safe = NULL;
+		g_autoptr(GBytes) emulation_data = NULL;
+		if (baseuri != NULL) {
+			g_autofree gchar *basename = g_path_get_basename(emulation_url);
+			emulation_safe = g_build_filename(baseuri, basename, NULL);
+		} else {
+			emulation_safe = g_strdup(emulation_url);
+		}
+		emulation_filename = fu_util_download_if_required(priv, emulation_safe, error);
+		if (emulation_filename == NULL) {
+			g_prefix_error(error, "failed to download %s: ", emulation_safe);
+			return FALSE;
+		}
+		emulation_data = fu_bytes_get_contents(emulation_filename, error);
+		if (emulation_data == NULL)
+			return FALSE;
+		if (!fwupd_client_emulate_load(priv->client,
+					       emulation_data,
+					       priv->cancellable,
+					       error))
+			return FALSE;
 	}
 
 	/* log */
@@ -4014,6 +4043,89 @@ fu_util_get_bios_setting(FuUtilPrivate *priv, gchar **values, GError **error)
 }
 
 static gboolean
+fu_util_emulate_add(FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	g_autoptr(FwupdDevice) dev = NULL;
+	g_autofree gchar *cmd = g_strdup_printf("%s emulate-save", g_get_prgname());
+
+	/* set the flag */
+	dev = fu_util_get_device_or_prompt(priv, values, error);
+	if (dev == NULL)
+		return FALSE;
+	if (!fwupd_client_modify_device(priv->client,
+					fwupd_device_get_id(dev),
+					"Flags",
+					"allow-emulate-save",
+					priv->cancellable,
+					error))
+		return FALSE;
+
+	/* TRANSLATORS: these are instructions on how to generate the data, and the %1 is a command
+	 * like 'fwupdmgr emulate-save' */
+	g_print(_("Now unplug and replug the device, do the update, and then call %s"), cmd);
+	g_print("\n");
+	return TRUE;
+}
+
+static gboolean
+fu_util_emulate_remove(FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	g_autoptr(FwupdDevice) dev = NULL;
+
+	/* set the flag */
+	priv->filter_include |= FWUPD_DEVICE_FLAG_ALLOW_EMULATE_SAVE;
+	dev = fu_util_get_device_or_prompt(priv, values, error);
+	if (dev == NULL)
+		return FALSE;
+	return fwupd_client_modify_device(priv->client,
+					  fwupd_device_get_id(dev),
+					  "Flags",
+					  "~allow-emulate-save",
+					  priv->cancellable,
+					  error);
+}
+
+static gboolean
+fu_util_emulate_save(FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	g_autoptr(GBytes) data = NULL;
+
+	/* check args */
+	if (g_strv_length(values) != 1) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_ARGS,
+				    "Invalid arguments, expected FILENAME");
+		return FALSE;
+	}
+
+	/* save */
+	data = fwupd_client_emulate_save(priv->client, priv->cancellable, error);
+	if (data == NULL)
+		return FALSE;
+	return fu_bytes_set_contents(values[0], data, error);
+}
+
+static gboolean
+fu_util_emulate_load(FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	g_autoptr(GBytes) data = NULL;
+
+	/* check args */
+	if (g_strv_length(values) != 1) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_ARGS,
+				    "Invalid arguments, expected FILENAME");
+		return FALSE;
+	}
+	data = fu_bytes_get_contents(values[0], error);
+	if (data == NULL)
+		return FALSE;
+	return fwupd_client_emulate_load(priv->client, data, priv->cancellable, error);
+}
+
+static gboolean
 fu_util_version(FuUtilPrivate *priv, GError **error)
 {
 	g_autoptr(GHashTable) metadata = NULL;
@@ -4562,6 +4674,34 @@ main(int argc, char *argv[])
 			      /* TRANSLATORS: command description */
 			      _("Sets one or more BIOS settings"),
 			      fu_util_set_bios_setting);
+	fu_util_cmd_array_add(cmd_array,
+			      "emulate-load",
+			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			      _("FILENAME"),
+			      /* TRANSLATORS: command description */
+			      _("Load device emulation data"),
+			      fu_util_emulate_load);
+	fu_util_cmd_array_add(cmd_array,
+			      "emulate-save",
+			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			      _("FILENAME"),
+			      /* TRANSLATORS: command description */
+			      _("Save device emulation data"),
+			      fu_util_emulate_save);
+	fu_util_cmd_array_add(cmd_array,
+			      "emulate-add",
+			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			      _("[DEVICE-ID|GUID]"),
+			      /* TRANSLATORS: command description */
+			      _("Adds devices to watch for future emulation"),
+			      fu_util_emulate_add);
+	fu_util_cmd_array_add(cmd_array,
+			      "emulate-remove",
+			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			      _("[DEVICE-ID|GUID]"),
+			      /* TRANSLATORS: command description */
+			      _("Removes devices to watch for future emulation"),
+			      fu_util_emulate_remove);
 
 	/* do stuff on ctrl+c */
 	priv->cancellable = g_cancellable_new();

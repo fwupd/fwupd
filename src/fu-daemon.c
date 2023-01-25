@@ -1399,6 +1399,45 @@ fu_daemon_daemon_method_call(GDBusConnection *connection,
 		g_dbus_method_invocation_return_value(invocation, NULL);
 		return;
 	}
+	if (g_strcmp0(method_name, "EmulateLoad") == 0) {
+		g_autoptr(GBytes) data = NULL;
+
+		g_debug("Called %s()", method_name);
+
+		/* load data into engine */
+		data = g_variant_get_data_as_bytes(g_variant_get_child_value(parameters, 0));
+		if (!fu_engine_emulate_load(self->engine, data, &error)) {
+			g_dbus_method_invocation_return_error(invocation,
+							      FWUPD_ERROR,
+							      FWUPD_ERROR_NOT_SUPPORTED,
+							      "failed to load emulation data: %s",
+							      error->message);
+			return;
+		}
+
+		/* success */
+		g_dbus_method_invocation_return_value(invocation, NULL);
+		return;
+	}
+	if (g_strcmp0(method_name, "EmulateSave") == 0) {
+		g_autoptr(GBytes) data = NULL;
+
+		g_debug("Called %s()", method_name);
+
+		/* save data from engine */
+		data = fu_engine_emulate_save(self->engine, &error);
+		if (data == NULL) {
+			g_dbus_method_invocation_return_error(invocation,
+							      FWUPD_ERROR,
+							      FWUPD_ERROR_NOT_SUPPORTED,
+							      "failed to save emulation data: %s",
+							      error->message);
+			return;
+		}
+		val = g_variant_new_from_bytes(G_VARIANT_TYPE_BYTESTRING, data, FALSE);
+		g_dbus_method_invocation_return_value(invocation, g_variant_new_tuple(&val, 1));
+		return;
+	}
 	if (g_strcmp0(method_name, "ModifyDevice") == 0) {
 		const gchar *device_id;
 		const gchar *key = NULL;

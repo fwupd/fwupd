@@ -94,7 +94,7 @@ static void
 fu_engine_ensure_security_attrs(FuEngine *self);
 
 typedef enum {
-	FU_ENGINE_INSTALL_PHASE_UNKNOWN,
+	FU_ENGINE_INSTALL_PHASE_SETUP,
 	FU_ENGINE_INSTALL_PHASE_WRITE,
 	FU_ENGINE_INSTALL_PHASE_ATTACH,
 	FU_ENGINE_INSTALL_PHASE_DETACH,
@@ -130,6 +130,7 @@ struct _FuEngine {
 	GHashTable *compile_versions;
 	GHashTable *approved_firmware; /* (nullable) */
 	GHashTable *blocked_firmware;  /* (nullable) */
+	GHashTable *emulated_json;     /* (element-type int utf8) */
 	gchar *host_machine_id;
 	JcatContext *jcat_context;
 	gboolean loaded;
@@ -348,6 +349,8 @@ fu_engine_device_request_cb(FuDevice *device, FwupdRequest *request, FuEngine *s
 static const gchar *
 fu_engine_install_phase_to_string(FuEngineInstallPhase phase)
 {
+	if (phase == FU_ENGINE_INSTALL_PHASE_SETUP)
+		return "setup";
 	if (phase == FU_ENGINE_INSTALL_PHASE_WRITE)
 		return "install";
 	if (phase == FU_ENGINE_INSTALL_PHASE_ATTACH)
@@ -741,6 +744,7 @@ gboolean
 fu_engine_modify_config(FuEngine *self, const gchar *key, const gchar *value, GError **error)
 {
 	const gchar *keys[] = {"ArchiveSizeMax",
+			       "AllowEmulation",
 			       "ApprovedFirmware",
 			       "BlockedFirmware",
 			       "DisabledDevices",
@@ -1034,6 +1038,117 @@ fu_engine_modify_bios_settings(FuEngine *self,
 	return TRUE;
 }
 
+static void
+fu_engine_check_context_flag_save_events(FuEngine *self)
+{
+	gboolean any_allow_emulate_save = FALSE;
+	g_autoptr(GPtrArray) devices = fu_device_list_get_all(self->device_list);
+
+	/* are any devices opted in */
+	for (guint i = 0; i < devices->len; i++) {
+		FuDevice *device = g_ptr_array_index(devices, i);
+		if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_ALLOW_EMULATE_SAVE)) {
+			any_allow_emulate_save = TRUE;
+			break;
+		}
+	}
+	if (any_allow_emulate_save && fu_config_get_allow_emulation(self->config)) {
+		fu_context_add_flag(self->ctx, FU_CONTEXT_FLAG_SAVE_EVENTS);
+	} else {
+		fu_context_remove_flag(self->ctx, FU_CONTEXT_FLAG_SAVE_EVENTS);
+	}
+}
+
+static gboolean
+fu_engine_modify_device_flags(FuEngine *self,
+			      const gchar *device_id,
+			      const gchar *value,
+			      GError **error)
+{
+	FuDevice *proxy;
+	g_autoptr(FuDevice) device = NULL;
+	g_autoptr(GError) error_local = NULL;
+
+	/* support adding and removing a subset of device flags */
+	if (g_str_has_prefix(value, "~")) {
+		FwupdDeviceFlags flag = fwupd_device_flag_from_string(value + 1);
+		if (flag == FWUPD_DEVICE_FLAG_NOTIFIED) {
+			device = fu_history_get_device_by_id(self->history, device_id, error);
+			if (device == NULL)
+				return FALSE;
+			fu_device_remove_flag(device, flag);
+		} else if (flag == FWUPD_DEVICE_FLAG_ALLOW_EMULATE_SAVE) {
+			device = fu_device_list_get_by_id(self->device_list, device_id, error);
+			if (device == NULL)
+				return FALSE;
+			proxy = fu_device_get_proxy(device);
+			if (proxy != NULL) {
+				g_set_error(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
+					    "device %s uses a proxy, remove the flag on %s instead",
+					    fu_device_get_id(device),
+					    fu_device_get_id(proxy));
+				return FALSE;
+			}
+			fu_device_remove_flag(device, flag);
+			fu_engine_check_context_flag_save_events(self);
+		} else {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "flag %s cannot be unset from client",
+				    value);
+			return FALSE;
+		}
+	} else {
+		FwupdDeviceFlags flag = fwupd_device_flag_from_string(value);
+		if (flag == FWUPD_DEVICE_FLAG_REPORTED || flag == FWUPD_DEVICE_FLAG_NOTIFIED) {
+			device = fu_history_get_device_by_id(self->history, device_id, error);
+			if (device == NULL)
+				return FALSE;
+			fu_device_add_flag(device, flag);
+		} else if (flag == FWUPD_DEVICE_FLAG_ALLOW_EMULATE_SAVE) {
+			device = fu_device_list_get_by_id(self->device_list, device_id, error);
+			if (device == NULL)
+				return FALSE;
+			proxy = fu_device_get_proxy(device);
+			if (proxy != NULL) {
+				g_set_error(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
+					    "device %s uses a proxy, set the flag on %s instead",
+					    fu_device_get_id(device),
+					    fu_device_get_id(proxy));
+				return FALSE;
+			}
+			fu_device_add_flag(device, flag);
+			fu_engine_check_context_flag_save_events(self);
+		} else {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "flag %s cannot be set from client",
+				    value);
+			return FALSE;
+		}
+	}
+
+	/* save to history database */
+	if (!fu_history_modify_device(self->history, device, &error_local)) {
+		g_autoptr(FwupdRelease) release = fwupd_release_new();
+		if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
+			g_propagate_error(error, g_steal_pointer(&error_local));
+			return FALSE;
+		}
+		if (!fu_history_add_device(self->history, device, release, error))
+			return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
 /**
  * fu_engine_modify_device:
  * @self: a #FuEngine
@@ -1054,45 +1169,8 @@ fu_engine_modify_device(FuEngine *self,
 			const gchar *value,
 			GError **error)
 {
-	g_autoptr(FuDevice) device = NULL;
-
-	/* find the correct device */
-	device = fu_history_get_device_by_id(self->history, device_id, error);
-	if (device == NULL)
-		return FALSE;
-
-	/* support adding and removing a subset of device flags */
-	if (g_strcmp0(key, "Flags") == 0) {
-		if (g_str_has_prefix(value, "~")) {
-			FwupdDeviceFlags flag = fwupd_device_flag_from_string(value + 1);
-			if (flag == FWUPD_DEVICE_FLAG_NOTIFIED) {
-				fu_device_remove_flag(device, flag);
-			} else {
-				g_set_error(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_NOT_SUPPORTED,
-					    "flag %s cannot be unset from client",
-					    key);
-				return FALSE;
-			}
-		} else {
-			FwupdDeviceFlags flag = fwupd_device_flag_from_string(value);
-			if (flag == FWUPD_DEVICE_FLAG_REPORTED ||
-			    flag == FWUPD_DEVICE_FLAG_NOTIFIED) {
-				fu_device_add_flag(device, flag);
-			} else {
-				g_set_error(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_NOT_SUPPORTED,
-					    "flag %s cannot be set from client",
-					    key);
-				return FALSE;
-			}
-		}
-		return fu_history_modify_device(self->history, device, error);
-	}
-
-	/* others invalid */
+	if (g_strcmp0(key, "Flags") == 0)
+		return fu_engine_modify_device_flags(self, device_id, value, error);
 	g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "key %s not supported", key);
 	return FALSE;
 }
@@ -3033,13 +3111,203 @@ fu_engine_get_plugins(FuEngine *self)
 	return fu_plugin_list_get_all(self->plugin_list);
 }
 
+static gboolean
+fu_engine_emulate_load_json(FuEngine *self, const gchar *json, GError **error)
+{
+	JsonNode *root;
+	g_autoptr(JsonParser) parser = json_parser_new();
+
+	/* parse */
+	if (!json_parser_load_from_data(parser, json, -1, error))
+		return FALSE;
+	root = json_parser_get_root(parser);
+
+	/* load into all backends */
+	for (guint i = 0; i < self->backends->len; i++) {
+		FuBackend *backend = g_ptr_array_index(self->backends, i);
+		if (!fu_backend_load(backend,
+				     json_node_get_object(root),
+				     FU_USB_DEVICE_EMULATION_TAG,
+				     FU_BACKEND_LOAD_FLAG_NONE,
+				     error))
+			return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_engine_emulate_load_phase(FuEngine *self, FuEngineInstallPhase phase, GError **error)
+{
+	const gchar *json = g_hash_table_lookup(self->emulated_json, GINT_TO_POINTER(phase));
+	if (json == NULL)
+		return TRUE;
+	return fu_engine_emulate_load_json(self, json, error);
+}
+
+gboolean
+fu_engine_emulate_load(FuEngine *self, GBytes *data, GError **error)
+{
+	gboolean got_json = FALSE;
+	g_autoptr(FuArchive) archive = NULL;
+
+	g_return_val_if_fail(FU_IS_ENGINE(self), FALSE);
+	g_return_val_if_fail(data != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	/* not supported */
+	if (!fu_config_get_allow_emulation(self->config)) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "emulation is not allowed from config");
+		return FALSE;
+	}
+
+	/* load archive */
+	archive = fu_archive_new(data, FU_ARCHIVE_FLAG_NONE, error);
+	if (archive == NULL)
+		return FALSE;
+
+	/* load JSON files from archive */
+	for (guint phase = FU_ENGINE_INSTALL_PHASE_SETUP; phase < FU_ENGINE_INSTALL_PHASE_LAST;
+	     phase++) {
+		g_autofree gchar *fn =
+		    g_strdup_printf("%s.json", fu_engine_install_phase_to_string(phase));
+		g_autofree gchar *json_safe = NULL;
+		GBytes *blob = fu_archive_lookup_by_fn(archive, fn, NULL);
+
+		/* not found */
+		if (blob == NULL)
+			continue;
+		json_safe = g_strndup(g_bytes_get_data(blob, NULL), g_bytes_get_size(blob));
+		got_json = TRUE;
+		g_debug("got emulation for phase %s", fu_engine_install_phase_to_string(phase));
+		if (phase == FU_ENGINE_INSTALL_PHASE_SETUP) {
+			if (!fu_engine_emulate_load_json(self, json_safe, error))
+				return FALSE;
+		} else {
+			g_hash_table_insert(self->emulated_json,
+					    GINT_TO_POINTER(phase),
+					    g_steal_pointer(&json_safe));
+		}
+	}
+	if (!got_json) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "no emulation data found in archive");
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+GBytes *
+fu_engine_emulate_save(FuEngine *self, GError **error)
+{
+	gboolean got_json = FALSE;
+	g_autoptr(FuArchive) archive = fu_archive_new(NULL, FU_ARCHIVE_FLAG_NONE, NULL);
+
+	g_return_val_if_fail(FU_IS_ENGINE(self), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	/* not supported */
+	if (!fu_config_get_allow_emulation(self->config)) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "emulation is not allowed from config");
+		return NULL;
+	}
+
+	/* sanity check */
+	for (guint phase = FU_ENGINE_INSTALL_PHASE_SETUP; phase < FU_ENGINE_INSTALL_PHASE_LAST;
+	     phase++) {
+		const gchar *json =
+		    g_hash_table_lookup(self->emulated_json, GINT_TO_POINTER(phase));
+		g_autofree gchar *fn =
+		    g_strdup_printf("%s.json", fu_engine_install_phase_to_string(phase));
+		g_autoptr(GBytes) blob = NULL;
+
+		/* nothing set */
+		if (json == NULL)
+			continue;
+		got_json = TRUE;
+		blob = g_bytes_new_static(json, strlen(json));
+		fu_archive_add_entry(archive, fn, blob);
+	}
+	if (!got_json) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "no emulation data, perhaps no devices have been added?");
+		return NULL;
+	}
+
+	/* success */
+	return fu_archive_write(archive, FU_ARCHIVE_FORMAT_ZIP, FU_ARCHIVE_COMPRESSION_GZIP, error);
+}
+
+static gboolean
+fu_engine_backends_save_phase(FuEngine *self, GError **error)
+{
+	const gchar *data_old;
+	g_autofree gchar *data_new = NULL;
+	g_autofree gchar *data_new_safe = NULL;
+	g_autoptr(JsonBuilder) json_builder = json_builder_new();
+	g_autoptr(JsonGenerator) json_generator = NULL;
+	g_autoptr(JsonNode) json_root = NULL;
+
+	/* all devices in all backends */
+	for (guint i = 0; i < self->backends->len; i++) {
+		FuBackend *backend = g_ptr_array_index(self->backends, i);
+		if (!fu_backend_save(backend,
+				     json_builder,
+				     FU_USB_DEVICE_EMULATION_TAG,
+				     FU_BACKEND_SAVE_FLAG_NONE,
+				     error))
+			return FALSE;
+	}
+	json_root = json_builder_get_root(json_builder);
+	json_generator = json_generator_new();
+	json_generator_set_pretty(json_generator, TRUE);
+	json_generator_set_root(json_generator, json_root);
+
+	data_old = g_hash_table_lookup(self->emulated_json, GINT_TO_POINTER(self->install_phase));
+	data_new = json_generator_to_data(json_generator, NULL);
+	if (g_strcmp0(data_new, "") == 0) {
+		g_debug("no data for phase %s",
+			fu_engine_install_phase_to_string(self->install_phase));
+		return TRUE;
+	}
+	if (g_strcmp0(data_old, data_new) == 0) {
+		g_debug("JSON unchanged for phase %s",
+			fu_engine_install_phase_to_string(self->install_phase));
+		return TRUE;
+	}
+	data_new_safe = g_strndup(data_new, 1000);
+	g_debug("JSON %s for phase %s: %s...",
+		data_old == NULL ? "added" : "changed",
+		fu_engine_install_phase_to_string(self->install_phase),
+		data_new_safe);
+	g_hash_table_insert(self->emulated_json,
+			    GINT_TO_POINTER(self->install_phase),
+			    g_steal_pointer(&data_new));
+
+	/* success */
+	return TRUE;
+}
+
 /**
  * fu_engine_get_device:
  * @self: a #FuEngine
  * @device_id: a device ID
  * @error: (nullable): optional return location for an error
  *
- * Gets a specific device.
+ * Gets a specific device, optionally loading an emulated phase.
  *
  * Returns: (transfer full): a device, or %NULL if not found
  **/
@@ -3047,6 +3315,17 @@ FuDevice *
 fu_engine_get_device(FuEngine *self, const gchar *device_id, GError **error)
 {
 	g_autoptr(FuDevice) device = NULL;
+
+	/* we are emulating a device */
+	if (self->install_phase != FU_ENGINE_INSTALL_PHASE_SETUP) {
+		g_autoptr(FuDevice) device_old = NULL;
+		device_old = fu_device_list_get_by_id(self->device_list, device_id, NULL);
+		if (device_old != NULL &&
+		    fu_device_has_flag(device_old, FWUPD_DEVICE_FLAG_EMULATED)) {
+			if (!fu_engine_emulate_load_phase(self, self->install_phase, error))
+				return NULL;
+		}
+	}
 
 	/* wait for any device to disconnect and reconnect */
 	if (!fu_device_list_wait_for_replug(self->device_list, error)) {
@@ -3192,6 +3471,12 @@ fu_engine_prepare(FuEngine *self,
 			return FALSE;
 	}
 
+	/* save to emulated phase */
+	if (fu_context_has_flag(self->ctx, FU_CONTEXT_FLAG_SAVE_EVENTS) &&
+	    !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED)) {
+		if (!fu_engine_backends_save_phase(self, error))
+			return FALSE;
+	}
 	return TRUE;
 }
 
@@ -3223,6 +3508,12 @@ fu_engine_cleanup(FuEngine *self,
 			return FALSE;
 	}
 
+	/* save to emulated phase */
+	if (fu_context_has_flag(self->ctx, FU_CONTEXT_FLAG_SAVE_EVENTS) &&
+	    !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED)) {
+		if (!fu_engine_backends_save_phase(self, error))
+			return FALSE;
+	}
 	return TRUE;
 }
 
@@ -3279,6 +3570,13 @@ fu_engine_detach(FuEngine *self,
 		return FALSE;
 	}
 
+	/* save to emulated phase */
+	if (fu_context_has_flag(self->ctx, FU_CONTEXT_FLAG_SAVE_EVENTS) &&
+	    !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED)) {
+		if (!fu_engine_backends_save_phase(self, error))
+			return FALSE;
+	}
+
 	/* success */
 	return TRUE;
 }
@@ -3311,6 +3609,14 @@ fu_engine_attach(FuEngine *self, const gchar *device_id, FuProgress *progress, G
 
 	if (!fu_plugin_runner_attach(plugin, device, progress, error))
 		return FALSE;
+
+	/* save to emulated phase */
+	if (fu_context_has_flag(self->ctx, FU_CONTEXT_FLAG_SAVE_EVENTS) &&
+	    !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED)) {
+		if (!fu_engine_backends_save_phase(self, error))
+			return FALSE;
+	}
+
 	return TRUE;
 }
 
@@ -3390,6 +3696,15 @@ fu_engine_reload(FuEngine *self, const gchar *device_id, GError **error)
 		g_prefix_error(error, "failed to reload device: ");
 		return FALSE;
 	}
+
+	/* save to emulated phase */
+	if (fu_context_has_flag(self->ctx, FU_CONTEXT_FLAG_SAVE_EVENTS) &&
+	    !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED)) {
+		if (!fu_engine_backends_save_phase(self, error))
+			return FALSE;
+	}
+
+	/* success */
 	return TRUE;
 }
 
@@ -3476,6 +3791,15 @@ fu_engine_write_firmware(FuEngine *self,
 			}
 		}
 	}
+
+	/* save to emulated phase */
+	if (fu_context_has_flag(self->ctx, FU_CONTEXT_FLAG_SAVE_EVENTS) &&
+	    !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED)) {
+		if (!fu_engine_backends_save_phase(self, error))
+			return FALSE;
+	}
+
+	/* success */
 	return TRUE;
 }
 
@@ -3637,7 +3961,6 @@ fu_engine_install_blob(FuEngine *self,
 		fu_progress_step_done(progress_local);
 
 		/* the device and plugin both may have changed */
-		fu_engine_set_install_phase(self, FU_ENGINE_INSTALL_PHASE_UNKNOWN);
 		device_tmp = fu_engine_get_device(self, device_id, error);
 		if (device_tmp == NULL) {
 			g_prefix_error(error, "failed to get device after install blob: ");
@@ -3658,6 +3981,9 @@ fu_engine_install_blob(FuEngine *self,
 	if (!fu_engine_cleanup(self, device_id, fu_progress_get_child(progress), flags, error))
 		return FALSE;
 	fu_progress_step_done(progress);
+
+	/* allow capturing setup again */
+	fu_engine_set_install_phase(self, FU_ENGINE_INSTALL_PHASE_SETUP);
 
 	/* make the UI update */
 	fu_engine_emit_device_changed(self, device_id);
@@ -6322,6 +6648,12 @@ fu_engine_device_inherit_history(FuEngine *self, FuDevice *device)
 	if (device_history == NULL)
 		return;
 
+	/* allow emulating this */
+	if (fu_device_has_flag(device_history, FWUPD_DEVICE_FLAG_ALLOW_EMULATE_SAVE)) {
+		fu_context_add_flag(self->ctx, FU_CONTEXT_FLAG_SAVE_EVENTS);
+		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_ALLOW_EMULATE_SAVE);
+	}
+
 	/* the device is still running the old firmware version and so if it
 	 * required activation before, it still requires it now -- note:
 	 * we can't just check for version_new=version to allow for re-installs */
@@ -6468,6 +6800,15 @@ fu_engine_add_device(FuEngine *self, FuDevice *device)
 	/* fixup the name and format as needed from cached metadata */
 	if (component != NULL)
 		fu_engine_md_refresh_device_from_component(self, device, component);
+
+	/* save to emulated phase, but avoid overwriting reload */
+	if (fu_context_has_flag(self->ctx, FU_CONTEXT_FLAG_SAVE_EVENTS) &&
+	    self->install_phase == FU_ENGINE_INSTALL_PHASE_SETUP &&
+	    !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED)) {
+		g_autoptr(GError) error_local = NULL;
+		if (!fu_engine_backends_save_phase(self, &error_local))
+			g_warning("failed to save phase: %s", error_local->message);
+	}
 
 	fu_engine_emit_changed(self);
 }
@@ -8425,22 +8766,6 @@ fu_engine_idle_status_notify_cb(FuIdle *idle, GParamSpec *pspec, FuEngine *self)
 		fu_engine_set_status(self, status);
 }
 
-gboolean
-fu_engine_backends_save(FuEngine *self, JsonBuilder *json_builder, GError **error)
-{
-	json_builder_begin_object(json_builder);
-	json_builder_set_member_name(json_builder, "Backends");
-	json_builder_begin_array(json_builder);
-	for (guint i = 0; i < self->backends->len; i++) {
-		FuBackend *backend = g_ptr_array_index(self->backends, i);
-		if (!fu_backend_save(backend, json_builder, NULL, FU_BACKEND_SAVE_FLAG_NONE, error))
-			return FALSE;
-	}
-	json_builder_end_array(json_builder);
-	json_builder_end_object(json_builder);
-	return TRUE;
-}
-
 static void
 fu_engine_init(FuEngine *self)
 {
@@ -8466,6 +8791,7 @@ fu_engine_init(FuEngine *self)
 	self->runtime_versions = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
 	self->compile_versions = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
 	self->acquiesce_loop = g_main_loop_new(NULL, FALSE);
+	self->emulated_json = g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL, g_free);
 
 	fu_context_set_runtime_versions(self->ctx, self->runtime_versions);
 	fu_context_set_compile_versions(self->ctx, self->compile_versions);
@@ -8624,6 +8950,7 @@ fu_engine_finalize(GObject *obj)
 	g_ptr_array_unref(self->local_monitors);
 	g_hash_table_unref(self->runtime_versions);
 	g_hash_table_unref(self->compile_versions);
+	g_hash_table_unref(self->emulated_json);
 	g_object_unref(self->plugin_list);
 
 	G_OBJECT_CLASS(fu_engine_parent_class)->finalize(obj);

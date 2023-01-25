@@ -8,6 +8,7 @@ if [ "$1" = configure ] && [ -z "$2" ]; then
 	if [ -f /etc/fwupd/daemon.conf ]; then
 		if [ "$CI" = "true" ]; then
 			sed "s,^DisabledPlugins=.*,DisabledPlugins=," -i /etc/fwupd/daemon.conf
+			sed "s,^AllowEmulation=false,AllowEmulation=true," -i /etc/fwupd/daemon.conf
 		else
 			echo "To enable test suite, modify /etc/fwupd/daemon.conf"
 		fi

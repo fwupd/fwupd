@@ -222,9 +222,26 @@ fu_usb_backend_save(FuBackend *backend,
 		    FuBackendSaveFlags flags,
 		    GError **error)
 {
-#if G_USB_CHECK_VERSION(0, 4, 1)
+#if G_USB_CHECK_VERSION(0, 4, 4)
 	FuUsbBackend *self = FU_USB_BACKEND(backend);
-	return g_usb_context_save_with_tag(self->usb_ctx, json_builder, tag, error);
+	guint usb_events_cnt = 0;
+	g_autoptr(GPtrArray) devices = g_usb_context_get_devices(self->usb_ctx);
+
+	for (guint i = 0; i < devices->len; i++) {
+		GUsbDevice *usb_device = g_ptr_array_index(devices, i);
+		g_autoptr(GPtrArray) usb_events = g_usb_device_get_events(usb_device);
+		usb_events_cnt += usb_events->len;
+	}
+	g_debug("%u USB events to save", usb_events_cnt);
+	if (usb_events_cnt == 0)
+		return TRUE;
+	if (!g_usb_context_save_with_tag(self->usb_ctx, json_builder, tag, error))
+		return FALSE;
+	for (guint i = 0; i < devices->len; i++) {
+		GUsbDevice *usb_device = g_ptr_array_index(devices, i);
+		g_usb_device_clear_events(usb_device);
+	}
+	return TRUE;
 #else
 	g_set_error_literal(error,
 			    G_IO_ERROR,

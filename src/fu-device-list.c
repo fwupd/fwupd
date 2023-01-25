@@ -688,6 +688,8 @@ fu_device_list_replace(FuDeviceList *self, FuDeviceItem *item, FuDevice *device)
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 	if (fu_device_has_flag(item->device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD))
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
+	if (fu_device_has_flag(item->device, FWUPD_DEVICE_FLAG_ALLOW_EMULATE_SAVE))
+		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_ALLOW_EMULATE_SAVE);
 
 	/* device won't come back in right mode */
 	if (fu_device_has_flag(item->device, FWUPD_DEVICE_FLAG_WILL_DISAPPEAR)) {

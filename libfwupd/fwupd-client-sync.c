@@ -2524,3 +2524,109 @@ fwupd_client_upload_bytes(FwupdClient *self,
 	}
 	return g_steal_pointer(&helper->bytes);
 }
+
+static void
+fwupd_client_emulate_load_cb(GObject *source, GAsyncResult *res, gpointer user_data)
+{
+	FwupdClientHelper *helper = (FwupdClientHelper *)user_data;
+	helper->ret = fwupd_client_emulate_load_finish(FWUPD_CLIENT(source), res, &helper->error);
+	g_main_loop_quit(helper->loop);
+}
+
+/**
+ * fwupd_client_emulate_load
+ * @self: a #FwupdClient
+ * @data: archive data of JSON files
+ * @cancellable: (nullable): optional #GCancellable
+ * @error: (nullable): optional return location for an error
+ *
+ * Loads an emulated device into the daemon backend that has the phases set by the JSON data,
+ * for instance, having one USB device emulated for the bootloader and another emulated for the
+ * runtime interface.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.8.11
+ **/
+gboolean
+fwupd_client_emulate_load(FwupdClient *self,
+			  GBytes *data,
+			  GCancellable *cancellable,
+			  GError **error)
+{
+	g_autoptr(FwupdClientHelper) helper = NULL;
+
+	g_return_val_if_fail(FWUPD_IS_CLIENT(self), FALSE);
+	g_return_val_if_fail(data != NULL, FALSE);
+	g_return_val_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	/* connect */
+	if (!fwupd_client_connect(self, cancellable, error))
+		return FALSE;
+
+	/* call async version and run loop until complete */
+	helper = fwupd_client_helper_new(self);
+	fwupd_client_emulate_load_async(self,
+					data,
+					cancellable,
+					fwupd_client_emulate_load_cb,
+					helper);
+	g_main_loop_run(helper->loop);
+	if (!helper->ret) {
+		g_propagate_error(error, g_steal_pointer(&helper->error));
+		return FALSE;
+	}
+	return TRUE;
+}
+
+static void
+fwupd_client_emulate_save_cb(GObject *source, GAsyncResult *res, gpointer user_data)
+{
+	FwupdClientHelper *helper = (FwupdClientHelper *)user_data;
+	helper->bytes = fwupd_client_emulate_save_finish(FWUPD_CLIENT(source), res, &helper->error);
+	g_main_loop_quit(helper->loop);
+}
+
+/**
+ * fwupd_client_emulate_save:
+ * @self: a #FwupdClient
+ * @cancellable: (nullable): optional #GCancellable
+ * @error: (nullable): optional return location for an error
+ *
+ * Gets the captured data from all filtered devices for all recorded phases. The data is returned
+ * in a ZIP archive with JSON entries.
+ *
+ * NOTE: Device events are not automatically recorded for all devices. You must call something
+ * like `ModifyDevice(device_id, 'flags','allow-emulate-save')` to start the recording the backend.
+ *
+ * Once the device has been re-inserted then the emulation data will be available using
+ * this API call.
+ *
+ * Returns: (transfer full): archive data
+ *
+ * Since: 1.8.11
+ **/
+GBytes *
+fwupd_client_emulate_save(FwupdClient *self, GCancellable *cancellable, GError **error)
+{
+	g_autoptr(FwupdClientHelper) helper = NULL;
+
+	g_return_val_if_fail(FWUPD_IS_CLIENT(self), NULL);
+	g_return_val_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	/* connect */
+	if (!fwupd_client_connect(self, cancellable, error))
+		return NULL;
+
+	/* call async version and run loop until complete */
+	helper = fwupd_client_helper_new(self);
+	fwupd_client_emulate_save_async(self, cancellable, fwupd_client_emulate_save_cb, helper);
+	g_main_loop_run(helper->loop);
+	if (helper->bytes == NULL) {
+		g_propagate_error(error, g_steal_pointer(&helper->error));
+		return NULL;
+	}
+	return g_steal_pointer(&helper->bytes);
+}

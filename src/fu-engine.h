@@ -250,4 +250,6 @@ fu_engine_modify_bios_settings(FuEngine *self,
 			       gboolean force_ro,
 			       GError **error);
 gboolean
-fu_engine_backends_save(FuEngine *self, JsonBuilder *json_builder, GError **error);
+fu_engine_emulate_load(FuEngine *self, GBytes *data, GError **error);
+GBytes *
+fu_engine_emulate_save(FuEngine *self, GError **error);

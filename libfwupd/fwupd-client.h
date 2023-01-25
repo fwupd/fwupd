@@ -396,6 +396,23 @@ gboolean
 fwupd_client_uninhibit_finish(FwupdClient *self,
 			      GAsyncResult *res,
 			      GError **error) G_GNUC_WARN_UNUSED_RESULT;
+void
+fwupd_client_emulate_load_async(FwupdClient *self,
+				GBytes *data,
+				GCancellable *cancellable,
+				GAsyncReadyCallback callback,
+				gpointer callback_data);
+gboolean
+fwupd_client_emulate_load_finish(FwupdClient *self, GAsyncResult *res, GError **error);
+void
+fwupd_client_emulate_save_async(FwupdClient *self,
+				GCancellable *cancellable,
+				GAsyncReadyCallback callback,
+				gpointer callback_data);
+GBytes *
+fwupd_client_emulate_save_finish(FwupdClient *self,
+				 GAsyncResult *res,
+				 GError **error) G_GNUC_WARN_UNUSED_RESULT;
 
 FwupdStatus
 fwupd_client_get_status(FwupdClient *self);

@@ -250,5 +250,14 @@ fwupd_client_upload_bytes(FwupdClient *self,
 			  FwupdClientUploadFlags flags,
 			  GCancellable *cancellable,
 			  GError **error) G_GNUC_WARN_UNUSED_RESULT;
+gboolean
+fwupd_client_emulate_load(FwupdClient *self,
+			  GBytes *data,
+			  GCancellable *cancellable,
+			  GError **error);
+GBytes *
+fwupd_client_emulate_save(FwupdClient *self,
+			  GCancellable *cancellable,
+			  GError **error) G_GNUC_WARN_UNUSED_RESULT;
 
 G_END_DECLS
