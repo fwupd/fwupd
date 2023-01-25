@@ -7418,7 +7418,7 @@ fu_engine_backend_device_changed_cb(FuBackend *backend, FuDevice *device, FuEngi
 	devices = fu_device_list_get_all(self->device_list);
 	for (guint i = 0; i < devices->len; i++) {
 		FuDevice *device_tmp = g_ptr_array_index(devices, i);
-		if (!FU_IS_UDEV_DEVICE(device_tmp))
+		if (!FU_IS_UDEV_DEVICE(device_tmp) || !FU_IS_UDEV_DEVICE(device))
 			continue;
 		if (g_strcmp0(fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(device_tmp)),
 			      fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(device))) == 0) {
