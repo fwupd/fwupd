@@ -4,6 +4,7 @@
   "steps": [
     {
       "url": "https://fwupd.org/downloads/5d860747c1378ef8921f95e41bbb7055dc9b470043655a65b00157ab74dd12e8-Analogix-ANX7518-fw-1.5.01-rx-1206.cab",
+      "emulation-url": "https://fwupd.org/downloads/63698f1d36491d795f36335a28e301e7484b1735c63aa763c007c149cc74569c-Analogix-ANX7518-fw-1.5.01-rx-1206.zip",
       "components": [
         {
           "version": "0001.1501",
@@ -15,6 +16,7 @@
     },
     {
       "url": "https://fwupd.org/downloads/2e4b5747ea2659ddae893a7b8a238d6d9c3166b426c0d0e5feb308a443662c38-Analogix-ANX7518-fw-1.5.08.cab",
+      "emulation-url": "https://fwupd.org/downloads/ff75670536d3de6def5cb4e6e1377dc1ef132882288dd6ceee37c0aecc3fbda3-Analogix-ANX7518-fw-1.5.08.zip",
       "components": [
         {
           "version": "0001.1508",

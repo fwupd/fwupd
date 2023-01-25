@@ -4,6 +4,7 @@
   "steps": [
     {
       "url": "https://fwupd.org/downloads/f00838f10d6faf58ff57cbfcfca390ed63bd804e4c654f19ff89423b286dc5d2-lda_viking_r_composite.cab",
+      "emulation-url": "https://fwupd.org/downloads/08c477c340e51990fc5df84907149f513aef65ae7f828b469e0a14ac01579a34-lda_viking_r_composite.zip",
       "components": [
         {
           "version": "1.0.1.4",
@@ -15,6 +16,7 @@
     },
     {
       "url": "https://fwupd.org/downloads/43bcfb3278ad2baf918af6abc972e0de9a0de66a25b012177b00d96664819010-lda_viking_r_composite.cab",
+      "emulation-url": "https://fwupd.org/downloads/330411c3eaaba8b7e8b51108fddc614963af5b5fcc0fd328683197491584f387-lda_viking_r_composite2.zip",
       "components": [
         {
           "version": "1.0.1.6",

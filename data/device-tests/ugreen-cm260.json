@@ -3,7 +3,7 @@
   "interactive": false,
   "steps": [
     {
-      "url": "https://fwupd.org/downloads/53cd390673287a99e5d4cc4cf30b5fade0f5e708fe0b1bd424bf36467642d76c-Ugreen-CM260-7.2.1.0.cab",
+      "url": "https://fwupd.org/downloads/de152591660080ed5de8550b1b2dfcd738d1f5a68bd30e5f4c684b39b9ebeeb2-Ugreen-CM260-7.2.1.0.cab",
       "components": [
         {
           "version": "7.2.1.0",
@@ -14,10 +14,10 @@
       ]
     },
     {
-      "url": "https://fwupd.org/downloads/eec2c6216fa86077504587633fc8d018a366a1cfe3df8dd9c575c2e8ef0ef423-Ugreen-CM260-7.2.2.0.cab",
+      "url": "https://fwupd.org/downloads/9480d06d1a3e524609660653fadc337d14d72f362bd2e80b15c5c3c1733f629b-Ugreen-CM260-7.2.2.0.cab",
       "components": [
         {
-          "version": "7.2.1.0",
+          "version": "7.2.2.0",
           "guids": [
             "7afc5bff-be55-5e95-81ca-584f13207b1d"
           ]

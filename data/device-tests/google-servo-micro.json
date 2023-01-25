@@ -4,6 +4,7 @@
   "steps": [
     {
       "url": "https://fwupd.org/downloads/3c3123b6eaa89d5469553b301210a9e4cb06efa98a1cb7c6847a1d10bb0a0c4b-servo_micro_v2.4.0.cab",
+      "emulation-url": "https://fwupd.org/downloads/72f84e212c5c5976bd46ea0fa4f1dda26b4c41f35ac01aaa212867e672690726-servo_micro_v2.4.0.zip",
       "components": [
         {
           "version": "2.4.0",
@@ -15,6 +16,7 @@
     },
     {
       "url": "https://fwupd.org/downloads/1dc362734f138e71fa838ac5503491d297715d7e9bccc0424a62c4a5c68526cc-servo_micro_v2.4.17.cab",
+      "emulation-url": "https://fwupd.org/downloads/b5f152b8e1f814375ae586bdac9536b70b3a9cd1a2a12bf685e8da50eef78f2a-servo_micro_v2.4.17.zip",
       "components": [
         {
           "version": "2.4.17",

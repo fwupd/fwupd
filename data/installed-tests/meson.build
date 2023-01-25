@@ -2,6 +2,7 @@ con2 = configuration_data()
 con2.set('installedtestsdir', installed_test_datadir)
 con2.set('installedtestsbindir', installed_test_bindir)
 con2.set('installedtestsdatadir', installed_test_datadir)
+con2.set('devicetestdir', join_paths(datadir, 'fwupd', 'device-tests'))
 con2.set('bindir', bindir)
 con2.set('libexecdir', libexecdir)
 
@@ -44,9 +45,11 @@ install_data([
   install_dir: installed_test_datadir,
 )
 
-install_data([
-    'fwupd.sh',
-  ],
+configure_file(
+  input: 'fwupd.sh',
+  output: 'fwupd.sh',
+  configuration: con2,
+  install: true,
   install_dir: installed_test_bindir,
 )
 

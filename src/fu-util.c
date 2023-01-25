@@ -689,6 +689,7 @@ typedef struct {
 	guint nr_missing;
 	JsonBuilder *builder;
 	const gchar *name;
+	gboolean use_emulation;
 } FuUtilDeviceTestHelper;
 
 static gboolean
@@ -814,11 +815,44 @@ fu_util_device_test_step(FuUtilPrivate *priv,
 {
 	JsonArray *json_array;
 	const gchar *url;
+	const gchar *emulation_url = NULL;
 	const gchar *baseuri = g_getenv("FWUPD_DEVICE_TESTS_BASE_URI");
 	g_autofree gchar *filename = NULL;
 	g_autofree gchar *url_safe = NULL;
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GError) error_local = NULL;
+
+	/* send this data to the daemon */
+	if (helper->use_emulation) {
+		g_autofree gchar *emulation_filename = NULL;
+		g_autofree gchar *emulation_safe = NULL;
+		g_autoptr(GBytes) emulation_data = NULL;
+
+		/* just ignore anything without emulation data */
+		if (!json_object_has_member(json_obj, "emulation-url"))
+			return TRUE;
+
+		emulation_url = json_object_get_string_member(json_obj, "emulation-url");
+		if (baseuri != NULL) {
+			g_autofree gchar *basename = g_path_get_basename(emulation_url);
+			emulation_safe = g_build_filename(baseuri, basename, NULL);
+		} else {
+			emulation_safe = g_strdup(emulation_url);
+		}
+		emulation_filename = fu_util_download_if_required(priv, emulation_safe, error);
+		if (emulation_filename == NULL) {
+			g_prefix_error(error, "failed to download %s: ", emulation_safe);
+			return FALSE;
+		}
+		emulation_data = fu_bytes_get_contents(emulation_filename, error);
+		if (emulation_data == NULL)
+			return FALSE;
+		if (!fwupd_client_emulation_load(priv->client,
+						 emulation_data,
+						 priv->cancellable,
+						 error))
+			return FALSE;
+	}
 
 	/* download file if required */
 	if (!json_object_has_member(json_obj, "url")) {
@@ -1028,13 +1062,13 @@ fu_util_quit(FuUtilPrivate *priv, gchar **values, GError **error)
 }
 
 static gboolean
-fu_util_device_test(FuUtilPrivate *priv, gchar **values, GError **error)
+fu_util_device_test_full(FuUtilPrivate *priv,
+			 gchar **values,
+			 FuUtilDeviceTestHelper *helper,
+			 GError **error)
 {
 	g_autoptr(JsonBuilder) builder = json_builder_new();
-	FuUtilDeviceTestHelper helper = {.nr_failed = 0,
-					 .nr_success = 0,
-					 .builder = builder,
-					 .name = "Unknown"};
+	helper->builder = builder;
 
 	/* required for interactive devices */
 	priv->current_operation = FU_UTIL_OPERATION_UPDATE;
@@ -1056,7 +1090,7 @@ fu_util_device_test(FuUtilPrivate *priv, gchar **values, GError **error)
 	json_builder_begin_array(builder);
 	for (guint i = 0; values[i] != NULL; i++) {
 		json_builder_begin_object(builder);
-		if (!fu_util_device_test_filename(priv, &helper, values[i], error))
+		if (!fu_util_device_test_filename(priv, helper, values[i], error))
 			return FALSE;
 		json_builder_end_object(builder);
 	}
@@ -1070,23 +1104,23 @@ fu_util_device_test(FuUtilPrivate *priv, gchar **values, GError **error)
 	}
 
 	/* we need all to pass for a zero return code */
-	if (helper.nr_failed > 0) {
+	if (helper->nr_failed > 0) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "Some of the tests failed");
 		return FALSE;
 	}
-	if (helper.nr_missing > 0) {
+	if (helper->nr_missing > 0) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "%u devices required for %u tests were not found",
-			    helper.nr_missing,
+			    helper->nr_missing,
 			    g_strv_length(values));
 		return FALSE;
 	}
-	if (helper.nr_success == 0) {
+	if (helper->nr_success == 0) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
@@ -1100,6 +1134,20 @@ fu_util_device_test(FuUtilPrivate *priv, gchar **values, GError **error)
 
 	/* success */
 	return TRUE;
+}
+
+static gboolean
+fu_util_device_emulate(FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	FuUtilDeviceTestHelper helper = {.use_emulation = TRUE};
+	return fu_util_device_test_full(priv, values, &helper, error);
+}
+
+static gboolean
+fu_util_device_test(FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	FuUtilDeviceTestHelper helper = {.use_emulation = FALSE};
+	return fu_util_device_test_full(priv, values, &helper, error);
 }
 
 static gboolean
@@ -4026,6 +4074,89 @@ fu_util_get_bios_setting(FuUtilPrivate *priv, gchar **values, GError **error)
 }
 
 static gboolean
+fu_util_emulation_tag(FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	g_autoptr(FwupdDevice) dev = NULL;
+	g_autofree gchar *cmd = g_strdup_printf("%s emulation-save", g_get_prgname());
+
+	/* set the flag */
+	dev = fu_util_get_device_or_prompt(priv, values, error);
+	if (dev == NULL)
+		return FALSE;
+	if (!fwupd_client_modify_device(priv->client,
+					fwupd_device_get_id(dev),
+					"Flags",
+					"emulation-tag",
+					priv->cancellable,
+					error))
+		return FALSE;
+
+	/* TRANSLATORS: these are instructions on how to generate the data, and the %1 is a command
+	 * like 'fwupdmgr emulation-save' */
+	g_print(_("Now unplug and replug the device, install the firmware, and then run %s"), cmd);
+	g_print("\n");
+	return TRUE;
+}
+
+static gboolean
+fu_util_emulation_untag(FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	g_autoptr(FwupdDevice) dev = NULL;
+
+	/* set the flag */
+	priv->filter_include |= FWUPD_DEVICE_FLAG_EMULATION_TAG;
+	dev = fu_util_get_device_or_prompt(priv, values, error);
+	if (dev == NULL)
+		return FALSE;
+	return fwupd_client_modify_device(priv->client,
+					  fwupd_device_get_id(dev),
+					  "Flags",
+					  "~emulation-tag",
+					  priv->cancellable,
+					  error);
+}
+
+static gboolean
+fu_util_emulation_save(FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	g_autoptr(GBytes) data = NULL;
+
+	/* check args */
+	if (g_strv_length(values) != 1) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_ARGS,
+				    "Invalid arguments, expected FILENAME");
+		return FALSE;
+	}
+
+	/* save */
+	data = fwupd_client_emulation_save(priv->client, priv->cancellable, error);
+	if (data == NULL)
+		return FALSE;
+	return fu_bytes_set_contents(values[0], data, error);
+}
+
+static gboolean
+fu_util_emulation_load(FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	g_autoptr(GBytes) data = NULL;
+
+	/* check args */
+	if (g_strv_length(values) != 1) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_ARGS,
+				    "Invalid arguments, expected FILENAME");
+		return FALSE;
+	}
+	data = fu_bytes_get_contents(values[0], error);
+	if (data == NULL)
+		return FALSE;
+	return fwupd_client_emulation_load(priv->client, data, priv->cancellable, error);
+}
+
+static gboolean
 fu_util_version(FuUtilPrivate *priv, GError **error)
 {
 	g_autoptr(GHashTable) metadata = NULL;
@@ -4556,6 +4687,13 @@ main(int argc, char *argv[])
 			      _("Test a device using a JSON manifest"),
 			      fu_util_device_test);
 	fu_util_cmd_array_add(cmd_array,
+			      "device-emulate",
+			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			      _("[FILENAME1] [FILENAME2]"),
+			      /* TRANSLATORS: command description */
+			      _("Emulate a device using a JSON manifest"),
+			      fu_util_device_emulate);
+	fu_util_cmd_array_add(cmd_array,
 			      "inhibit",
 			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
 			      _("[REASON]"),
@@ -4590,6 +4728,34 @@ main(int argc, char *argv[])
 			      /* TRANSLATORS: command description */
 			      _("Sets one or more BIOS settings"),
 			      fu_util_set_bios_setting);
+	fu_util_cmd_array_add(cmd_array,
+			      "emulation-load",
+			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			      _("FILENAME"),
+			      /* TRANSLATORS: command description */
+			      _("Load device emulation data"),
+			      fu_util_emulation_load);
+	fu_util_cmd_array_add(cmd_array,
+			      "emulation-save",
+			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			      _("FILENAME"),
+			      /* TRANSLATORS: command description */
+			      _("Save device emulation data"),
+			      fu_util_emulation_save);
+	fu_util_cmd_array_add(cmd_array,
+			      "emulation-tag",
+			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			      _("[DEVICE-ID|GUID]"),
+			      /* TRANSLATORS: command description */
+			      _("Adds devices to watch for future emulation"),
+			      fu_util_emulation_tag);
+	fu_util_cmd_array_add(cmd_array,
+			      "emulation-untag",
+			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			      _("[DEVICE-ID|GUID]"),
+			      /* TRANSLATORS: command description */
+			      _("Removes devices to watch for future emulation"),
+			      fu_util_emulation_untag);
 
 	/* do stuff on ctrl+c */
 	priv->cancellable = g_cancellable_new();

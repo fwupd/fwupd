@@ -50,52 +50,18 @@ fu_usb_backend_device_notify_flags_cb(FuDevice *device, GParamSpec *pspec, FuBac
 static void
 fu_usb_backend_device_added_cb(GUsbContext *ctx, GUsbDevice *usb_device, FuBackend *backend)
 {
-	FuDevice *device_tmp;
-	g_autoptr(FuUsbDevice) device = NULL;
-
-	/* is emulated? */
-	device_tmp = fu_backend_lookup_by_id(backend, g_usb_device_get_platform_id(usb_device));
-	if (device_tmp != NULL && fu_device_has_flag(device_tmp, FWUPD_DEVICE_FLAG_EMULATED)) {
-		GUsbDevice *usb_device_tmp = fu_usb_device_get_dev(FU_USB_DEVICE(device_tmp));
-#if G_USB_CHECK_VERSION(0, 4, 5)
-		if (g_date_time_equal(g_usb_device_get_created(usb_device),
-				      g_usb_device_get_created(usb_device_tmp))) {
-#else
-		if (g_usb_device_get_vid(usb_device) == g_usb_device_get_vid(usb_device_tmp) &&
-		    g_usb_device_get_pid(usb_device) == g_usb_device_get_pid(usb_device_tmp)) {
-#endif
-			g_debug("replacing GUsbDevice of emulated device %s",
-				fu_usb_device_get_platform_id(FU_USB_DEVICE(device_tmp)));
-			fu_usb_device_set_dev(FU_USB_DEVICE(device_tmp), usb_device);
-			fu_backend_device_changed(backend, device_tmp);
-			return;
-		}
-		g_debug("delayed removal as emulated device changed");
-		fu_backend_device_removed(backend, device_tmp);
-	}
-
-	/* success */
-	device = fu_usb_device_new(fu_backend_get_context(backend), usb_device);
+	g_autoptr(FuUsbDevice) device =
+	    fu_usb_device_new(fu_backend_get_context(backend), usb_device);
 	fu_backend_device_added(backend, FU_DEVICE(device));
 }
 
 static void
 fu_usb_backend_device_removed_cb(GUsbContext *ctx, GUsbDevice *usb_device, FuBackend *backend)
 {
-	FuUsbBackend *self = FU_USB_BACKEND(backend);
-	FuDevice *device_tmp;
-
-	/* find the device we enumerated */
-	device_tmp =
-	    fu_backend_lookup_by_id(FU_BACKEND(self), g_usb_device_get_platform_id(usb_device));
-	if (device_tmp != NULL) {
-		if (fu_device_has_flag(device_tmp, FWUPD_DEVICE_FLAG_EMULATED)) {
-			g_debug("ignoring removal of emulated device %s",
-				fu_device_get_id(device_tmp));
-			return;
-		}
-		fu_backend_device_removed(backend, device_tmp);
-	}
+	FuDevice *device =
+	    fu_backend_lookup_by_id(backend, g_usb_device_get_platform_id(usb_device));
+	if (device != NULL)
+		fu_backend_device_removed(backend, device);
 }
 
 static void
@@ -107,13 +73,11 @@ fu_usb_backend_context_finalized_cb(gpointer data, GObject *where_the_object_was
 static void
 fu_usb_backend_context_flags_check(FuUsbBackend *self)
 {
-#if G_USB_CHECK_VERSION(0, 4, 1)
+#if G_USB_CHECK_VERSION(0, 4, 5)
 	FuContext *ctx = fu_backend_get_context(FU_BACKEND(self));
 	GUsbContextFlags usb_flags = G_USB_CONTEXT_FLAGS_NONE;
-#if G_USB_CHECK_VERSION(0, 4, 4)
 	if (g_getenv("FWUPD_BACKEND_VERBOSE") != NULL)
 		usb_flags |= G_USB_CONTEXT_FLAGS_DEBUG;
-#endif
 	if (fu_context_has_flag(ctx, FU_CONTEXT_FLAG_SAVE_EVENTS)) {
 		g_debug("saving FuUsbBackend events");
 		usb_flags |= G_USB_CONTEXT_FLAGS_SAVE_EVENTS;
@@ -213,7 +177,7 @@ fu_usb_backend_load(FuBackend *backend,
 		    FuBackendLoadFlags flags,
 		    GError **error)
 {
-#if G_USB_CHECK_VERSION(0, 4, 1)
+#if G_USB_CHECK_VERSION(0, 4, 5)
 	FuUsbBackend *self = FU_USB_BACKEND(backend);
 	return g_usb_context_load_with_tag(self->usb_ctx, json_object, tag, error);
 #else
@@ -232,9 +196,30 @@ fu_usb_backend_save(FuBackend *backend,
 		    FuBackendSaveFlags flags,
 		    GError **error)
 {
-#if G_USB_CHECK_VERSION(0, 4, 1)
+#if G_USB_CHECK_VERSION(0, 4, 5)
 	FuUsbBackend *self = FU_USB_BACKEND(backend);
-	return g_usb_context_save_with_tag(self->usb_ctx, json_builder, tag, error);
+	guint usb_events_cnt = 0;
+	g_autoptr(GPtrArray) devices = g_usb_context_get_devices(self->usb_ctx);
+
+	for (guint i = 0; i < devices->len; i++) {
+		GUsbDevice *usb_device = g_ptr_array_index(devices, i);
+		g_autoptr(GPtrArray) usb_events = g_usb_device_get_events(usb_device);
+		if (usb_events->len > 0 || g_usb_device_has_tag(usb_device, tag)) {
+			g_debug("%u USB events to save for %s",
+				usb_events->len,
+				g_usb_device_get_platform_id(usb_device));
+		}
+		usb_events_cnt += usb_events->len;
+	}
+	if (usb_events_cnt == 0)
+		return TRUE;
+	if (!g_usb_context_save_with_tag(self->usb_ctx, json_builder, tag, error))
+		return FALSE;
+	for (guint i = 0; i < devices->len; i++) {
+		GUsbDevice *usb_device = g_ptr_array_index(devices, i);
+		g_usb_device_clear_events(usb_device);
+	}
+	return TRUE;
 #else
 	g_set_error_literal(error,
 			    G_IO_ERROR,

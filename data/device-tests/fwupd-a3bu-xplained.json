@@ -4,6 +4,7 @@
   "steps": [
     {
       "url": "https://fwupd.org/downloads/f5bbeaba1037dce31dd12f349e8148ae35f98b61-a3bu-xplained123.cab",
+      "emulation-url": "https://fwupd.org/downloads/01b95b0206f1a42a2bf95a432d162ef1f9f1f71edb5696127c923ceffadfdf68-a3bu-xplained123.zip",
       "components": [
         {
           "version": "1.23",
@@ -15,6 +16,7 @@
     },
     {
       "url": "https://fwupd.org/downloads/24d838541efe0340bf67e1cc5a9b95526e4d3702-a3bu-xplained124.cab",
+      "emulation-url": "https://fwupd.org/downloads/357483755bbc4f3a33c0b5bc05a0ef49654be0a15c14cbde2bdf0cd9c203d632-a3bu-xplained124.zip",
       "components": [
         {
           "version": "1.24",

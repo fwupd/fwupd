@@ -4,6 +4,7 @@
   "steps": [
     {
       "url": "https://fwupd.org/downloads/ff989c4b71c92a4a217dfb2f82c1c87691b8eb31-rts5855_v0.4.cab",
+      "emulation-url": "https://fwupd.org/downloads/75d6c26e3842bbd00991a585078e872cae66c7a81e15c5736fc478ba5ec0f77d-rts5855_v0.4.zip",
       "components": [
         {
           "version": "0.4",

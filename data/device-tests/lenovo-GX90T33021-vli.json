@@ -4,6 +4,7 @@
   "steps": [
     {
       "url": "https://fwupd.org/downloads/2004603b40bd529d85c2fcfcf9d50d77b47229e6564ef0ea9c03633bdccff94d-Lenovo-Travel_Hub_1in3_New.cab",
+      "emulation-url": "https://fwupd.org/downloads/de48f2281354c4479b8b2302cf85b9643b0ca248fcf4beb19a71f5aba7927278-Lenovo-Travel_Hub_1in3_New.zip",
       "components": [
         {
           "name": "tier1",
@@ -16,10 +17,11 @@
     },
     {
       "url": "https://fwupd.org/downloads/5fb4f4dce233626558806c2b7474d3b5ed4f500f6013aa3b376a54322642d449-Lenovo-Travel_Hub_1in3_Old.cab",
+      "emulation-url": "https://fwupd.org/downloads/58221c63de8cdec9b4db3cc72b1e0303b6cfee80b7e7965edad9816c124b0cd7-Lenovo-Travel_Hub_1in3_Old.zip",
       "components": [
         {
           "name": "tier1",
-          "version": "04.33",
+          "version": "4.33",
           "guids": [
             "7636b85e-d79f-5d30-a329-458957958b88"
           ]

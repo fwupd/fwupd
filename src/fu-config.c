@@ -38,6 +38,7 @@ struct _FuConfig {
 	gboolean ignore_power;
 	gboolean only_trusted;
 	gboolean show_device_private;
+	gboolean allow_emulation;
 };
 
 G_DEFINE_TYPE(FuConfig, fu_config, G_TYPE_OBJECT)
@@ -70,6 +71,7 @@ fu_config_reload(FuConfig *self, GError **error)
 	g_autoptr(GError) error_ignore_power = NULL;
 	g_autoptr(GError) error_only_trusted = NULL;
 	g_autoptr(GError) error_show_device_private = NULL;
+	g_autoptr(GError) error_allow_emulation = NULL;
 	g_autoptr(GError) error_enumerate_all = NULL;
 	g_autoptr(GByteArray) buf = g_byte_array_new();
 
@@ -245,6 +247,14 @@ fu_config_reload(FuConfig *self, GError **error)
 		g_debug("failed to read ShowDevicePrivate key: %s",
 			error_show_device_private->message);
 		self->show_device_private = TRUE;
+	}
+
+	/* whether to allow emulation to work */
+	self->allow_emulation =
+	    g_key_file_get_boolean(keyfile, "fwupd", "AllowEmulation", &error_allow_emulation);
+	if (!self->allow_emulation && error_allow_emulation != NULL) {
+		g_debug("failed to read AllowEmulation key: %s", error_allow_emulation->message);
+		self->allow_emulation = FALSE;
 	}
 
 	/* fetch host best known configuration */
@@ -444,6 +454,13 @@ fu_config_get_show_device_private(FuConfig *self)
 {
 	g_return_val_if_fail(FU_IS_CONFIG(self), FALSE);
 	return self->show_device_private;
+}
+
+gboolean
+fu_config_get_allow_emulation(FuConfig *self)
+{
+	g_return_val_if_fail(FU_IS_CONFIG(self), FALSE);
+	return self->allow_emulation;
 }
 
 gboolean

@@ -65,6 +65,7 @@ cp $HOME/rpmbuild/RPMS/*/*.rpm dist
 
 if [ "$CI" = "true" ]; then
 	sed "s,^DisabledPlugins=.*,DisabledPlugins=," -i /etc/fwupd/daemon.conf
+	sed "s,^AllowEmulation=false,AllowEmulation=true," -i /etc/fwupd/daemon.conf
 
 	# set up enough PolicyKit and D-Bus to run the daemon
 	mkdir -p /run/dbus

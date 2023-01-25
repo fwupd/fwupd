@@ -958,6 +958,48 @@
     </method>
 
     <!--***********************************************************-->
+    <method name='EmulationLoad'>
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Load emulation data.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
+      <arg type='ay' name='data' direction='in'>
+        <doc:doc>
+          <doc:summary>
+            <doc:para>
+              JSON data of each phase packaged as a ZIP archive
+              (e.g. <doc:tt>setup.json</doc:tt>, <doc:tt>install.json</doc:tt>, <doc:tt>reload.json</doc:tt>).
+            </doc:para>
+          </doc:summary>
+        </doc:doc>
+      </arg>
+    </method>
+
+    <!--***********************************************************-->
+    <method name='EmulationSave'>
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Return emulation data.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
+      <arg type='ay' name='data' direction='out'>
+        <doc:doc>
+          <doc:summary>
+            <doc:para>
+              JSON data of each phase packaged as a compressed ZIP archive
+              (e.g. <doc:tt>setup.json</doc:tt>, <doc:tt>install.json</doc:tt>, <doc:tt>reload.json</doc:tt>).
+            </doc:para>
+          </doc:summary>
+        </doc:doc>
+      </arg>
+    </method>
+
+    <!--***********************************************************-->
     <signal name='Changed'>
       <doc:doc>
         <doc:description>
