@@ -11,7 +11,7 @@
 #include <gusb.h>
 
 #include "fu-usb-backend.h"
-#include "fu-usb-device.h"
+#include "fu-usb-device-private.h"
 
 struct _FuUsbBackend {
 	FuBackend parent_instance;
@@ -61,8 +61,9 @@ fu_usb_backend_device_added_cb(GUsbContext *ctx, GUsbDevice *usb_device, FuBacke
 		    g_usb_device_get_pid(usb_device) ==
 			fu_usb_device_get_pid(FU_USB_DEVICE(device_tmp))) {
 			g_debug("replacing GUsbDevice of emulated device %s",
-				fu_device_get_id(device_tmp));
+				fu_usb_device_get_platform_id(FU_USB_DEVICE(device_tmp)));
 			fu_usb_device_set_dev(FU_USB_DEVICE(device_tmp), usb_device);
+			fu_backend_device_changed(backend, device_tmp);
 			return;
 		}
 		g_debug("delayed removal of emulated device as VID:PID changed");
