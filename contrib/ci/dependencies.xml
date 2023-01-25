@@ -1256,6 +1256,24 @@
       <package variant="x86_64" />
     </distro>
   </dependency>
+  <dependency id="python3-pefile">
+    <distro id="arch">
+      <package variant="x86_64">python-pefile</package>
+    </distro>
+    <distro id="fedora">
+      <package variant="x86_64"></package>
+    </distro>
+    <distro id="debian">
+      <control />
+      <package variant="x86_64" />
+      <package variant="s390x" />
+      <package variant="i386" />
+    </distro>
+    <distro id="ubuntu">
+      <control />
+      <package variant="x86_64" />
+    </distro>
+  </dependency>
   <dependency id="gi-docgen">
     <distro id="void">
       <package variant="x86_64" />
