@@ -3441,34 +3441,6 @@ fu_util_setup_interactive(FuUtilPrivate *priv, GError **error)
 	return fu_util_setup_interactive_console(error);
 }
 
-static gboolean
-fu_util_backends_save(FuUtilPrivate *priv, const gchar *fn, GError **error)
-{
-	g_autofree gchar *data = NULL;
-	g_autoptr(JsonBuilder) json_builder = json_builder_new();
-	g_autoptr(JsonGenerator) json_generator = NULL;
-	g_autoptr(JsonNode) json_root = NULL;
-
-	/* export as a string */
-	if (!fu_engine_backends_save(priv->engine, json_builder, error))
-		return FALSE;
-	json_root = json_builder_get_root(json_builder);
-	json_generator = json_generator_new();
-	json_generator_set_pretty(json_generator, TRUE);
-	json_generator_set_root(json_generator, json_root);
-	data = json_generator_to_data(json_generator, NULL);
-	if (data == NULL) {
-		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
-				    "Failed to convert to JSON string");
-		return FALSE;
-	}
-
-	/* save to file */
-	return g_file_set_contents(fn, data, -1, error);
-}
-
 static void
 fu_util_print_error(FuUtilPrivate *priv, const GError *error)
 {
@@ -3498,7 +3470,6 @@ main(int argc, char *argv[])
 	g_autoptr(GPtrArray) cmd_array = fu_util_cmd_array_new();
 	g_autofree gchar *cmd_descriptions = NULL;
 	g_autofree gchar *filter = NULL;
-	g_autofree gchar *save_backends_fn = NULL;
 	const GOptionEntry options[] = {
 	    {"version",
 	     '\0',
@@ -3653,15 +3624,6 @@ main(int argc, char *argv[])
 	     N_("Filter with a set of device flags using a ~ prefix to "
 		"exclude, e.g. 'internal,~needs-reboot'"),
 	     NULL},
-	    {"save-backends",
-	     '\0',
-	     0,
-	     G_OPTION_ARG_STRING,
-	     &save_backends_fn,
-	     /* TRANSLATORS: command line option */
-	     N_("Specify a filename to use to save backend events"),
-	     /* TRANSLATORS: filename argument with path */
-	     N_("FILENAME")},
 	    {"json",
 	     '\0',
 	     0,
@@ -4103,10 +4065,6 @@ main(int argc, char *argv[])
 
 	/* load engine */
 	priv->engine = fu_engine_new();
-	if (save_backends_fn != NULL) {
-		fu_context_add_flag(fu_engine_get_context(priv->engine),
-				    FU_CONTEXT_FLAG_SAVE_EVENTS);
-	}
 	g_signal_connect(FU_ENGINE(priv->engine),
 			 "device-request",
 			 G_CALLBACK(fu_util_update_device_request_cb),
@@ -4162,12 +4120,6 @@ main(int argc, char *argv[])
 			g_printerr("%s\n", _("NOTE: This program may only work correctly as root"));
 		}
 #endif
-		return EXIT_FAILURE;
-	}
-
-	/* dump devices */
-	if (save_backends_fn != NULL && !fu_util_backends_save(priv, save_backends_fn, &error)) {
-		g_printerr("%s\n", error->message);
 		return EXIT_FAILURE;
 	}
 

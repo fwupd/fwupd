@@ -4,6 +4,7 @@
   "steps": [
     {
       "url": "https://fwupd.org/downloads/5cbff92158331aeb10008ca36fa918a9637dde7bfe31de3e0523d14090be8977-fakedevice01_dfu.cab",
+      "emulation-url": "https://fwupd.org/downloads/8be5c7f3fe5c399a8699768da3f4ddd2582df19c70e197b852efaa027f42688b-fakedevice01_dfu.zip",
       "components": [
         {
           "version": "0.1",
@@ -16,6 +17,7 @@
     },
     {
       "url": "https://fwupd.org/downloads/8bc3afd07a0af3baaab8b19893791dd3972e8305-fakedevice02_dfu.cab",
+      "emulation-url": "https://fwupd.org/downloads/72c580400020f22929510e9fec43d6781d56af697e72e8d560b45daa57e1817c-fakedevice02_dfu.zip",
       "components": [
         {
           "version": "0.2",

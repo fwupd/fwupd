@@ -688,6 +688,8 @@ fu_device_list_replace(FuDeviceList *self, FuDeviceItem *item, FuDevice *device)
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 	if (fu_device_has_flag(item->device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD))
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
+	if (fu_device_has_flag(item->device, FWUPD_DEVICE_FLAG_EMULATION_TAG))
+		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_EMULATION_TAG);
 
 	/* device won't come back in right mode */
 	if (fu_device_has_flag(item->device, FWUPD_DEVICE_FLAG_WILL_DISAPPEAR)) {
@@ -866,7 +868,8 @@ fu_device_list_get_wait_for_replug(FuDeviceList *self)
 	GPtrArray *devices = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 	for (guint i = 0; i < self->devices->len; i++) {
 		FuDeviceItem *item_tmp = g_ptr_array_index(self->devices, i);
-		if (fu_device_has_flag(item_tmp->device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG))
+		if (fu_device_has_flag(item_tmp->device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG) &&
+		    !fu_device_has_flag(item_tmp->device, FWUPD_DEVICE_FLAG_EMULATED))
 			g_ptr_array_add(devices, g_object_ref(item_tmp->device));
 	}
 	return devices;

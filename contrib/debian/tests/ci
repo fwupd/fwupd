@@ -4,6 +4,7 @@ set -e
 modprobe mtdram 2>&1 || true
 sed "s,^DisabledPlugins=.*,DisabledPlugins=," -i /etc/fwupd/daemon.conf
 sed "s,^VerboseDomains=.*,VerboseDomains=*,"  -i /etc/fwupd/daemon.conf
+sed "s,^AllowEmulation=false,AllowEmulation=true," -i /etc/fwupd/daemon.conf
 sed "s,ConditionVirtualization=.*,," 		\
 	/lib/systemd/system/fwupd.service >	\
 	/etc/systemd/system/fwupd.service

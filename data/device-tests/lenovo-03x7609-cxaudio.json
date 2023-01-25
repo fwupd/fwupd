@@ -5,6 +5,7 @@
   "steps": [
     {
       "url": "https://fwupd.org/downloads/2e0bf8aaf9c63ca11cfe3444d032277c21ec0d678e5963123a8b33e5dcd37d99-Lenovo-ThinkPad-USBCGen2Dock-Firmware-49-0E-14.cab",
+      "emulation-url": "https://fwupd.org/downloads/9b6a1401bbd5ab3304a50a00dfc6d17d853bfbfd63f80c0360774d0e9e46e772-Lenovo-ThinkPad-USBCGen2Dock-Firmware-49-0E-14.zip",
       "components": [
         {
           "name": "cxaudio",

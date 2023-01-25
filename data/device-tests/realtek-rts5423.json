@@ -4,6 +4,7 @@
   "steps": [
     {
       "url": "https://fwupd.org/downloads/460a18d93f5d6118908d8437009ebbd6eceb3c6a0cdfbaf31f8a96df008564da-Realtek-RTS5423-1.56.cab",
+      "emulation-url": "https://fwupd.org/downloads/eaa82f84d31f524f48369c9b46698ff00bf6e398dbb66fb7fed3e6808c69789c-Realtek-RTS5423-1.56.zip",
       "components": [
         {
           "version": "1.56",
@@ -15,6 +16,7 @@
     },
     {
       "url": "https://fwupd.org/downloads/659e721b0efbe2dfc003d3d30ea5b771c00113cc9a162333ee5a8918c4515f69-Realtek-RTS5423-1.57.cab",
+      "emulation-url": "https://fwupd.org/downloads/962e175bf7809183620ecfad90583e912fb0e16a98c44b0ab539468fd340fc8a-Realtek-RTS5423-1.57.zip",
       "components": [
         {
           "version": "1.57",

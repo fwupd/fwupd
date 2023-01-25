@@ -67,6 +67,10 @@ complete -c fwupdmgr -n '__fish_use_subcommand' -x -a verify-update -d 'Update t
 complete -c fwupdmgr -n '__fish_use_subcommand' -x -a inhibit -d 'Inhibit the system to prevent upgrades'
 complete -c fwupdmgr -n '__fish_use_subcommand' -x -a uninhibit -d 'Uninhibit the system to allow upgrades'
 complete -c fwupdmgr -n '__fish_use_subcommand' -x -a quit -d 'Asks the daemon to quit'
+complete -c fwupdmgr -n '__fish_use_subcommand' -x -a emulation-load -d 'Load device emulation data'
+complete -c fwupdmgr -n '__fish_use_subcommand' -x -a emulation-save -d 'Save device emulation data'
+complete -c fwupdmgr -n '__fish_use_subcommand' -x -a emulation-tag -d 'Adds devices to watch for future emulation'
+complete -c fwupdmgr -n '__fish_use_subcommand' -x -a emulation-untag -d 'Removes devices to watch for future emulation'
 
 # commands exclusively consuming device IDs
 set -l deviceid_consumers activate clear-results downgrade get-releases get-results get-updates reinstall switch-branch unlock update verify verify-update

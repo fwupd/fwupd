@@ -4,6 +4,7 @@
   "steps": [
     {
       "url": "https://fwupd.org/downloads/7c260a13ea6df444f7a1fa8fa2bf431876a8c7203b6aeac371564aad30756ff1-Synaptics-Prometheus-10.01.3121519.cab",
+      "emulation-url": "https://fwupd.org/downloads/73877ed7c8c15dac6adf04db32bd5e9f1e702229cfdb266fe98855ee53929cd1-Synaptics-Prometheus-10.01.3121519.zip",
       "components": [
         {
           "version": "10.01.3121519",

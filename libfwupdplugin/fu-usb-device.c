@@ -86,6 +86,18 @@ fu_usb_device_finalize(GObject *object)
 	G_OBJECT_CLASS(fu_usb_device_parent_class)->finalize(object);
 }
 
+#if G_USB_CHECK_VERSION(0, 4, 5)
+static void
+fu_usb_device_flags_notify_cb(FuDevice *device, GParamSpec *pspec, gpointer user_data)
+{
+	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(device));
+	if (usb_device == NULL)
+		return;
+	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATION_TAG))
+		g_usb_device_add_tag(usb_device, FU_USB_DEVICE_EMULATION_TAG);
+}
+#endif
+
 static void
 fu_usb_device_init(FuUsbDevice *device)
 {
@@ -101,6 +113,19 @@ fu_usb_device_init(FuUsbDevice *device)
 				     G_USB_DEVICE_ERROR,
 				     G_USB_DEVICE_ERROR_PERMISSION_DENIED,
 				     NULL);
+#endif
+}
+
+static void
+fu_usb_device_constructed(GObject *obj)
+{
+	FuUsbDevice *self = FU_USB_DEVICE(obj);
+#if G_USB_CHECK_VERSION(0, 4, 5)
+	/* copy this to the GUsbDevice */
+	g_signal_connect(FU_DEVICE(self),
+			 "notify::flags",
+			 G_CALLBACK(fu_usb_device_flags_notify_cb),
+			 NULL);
 #endif
 }
 
@@ -675,7 +700,7 @@ fu_usb_device_set_dev(FuUsbDevice *device, GUsbDevice *usb_device)
 	}
 
 #ifdef HAVE_GUSB
-#if G_USB_CHECK_VERSION(0, 4, 4)
+#if G_USB_CHECK_VERSION(0, 4, 5)
 	/* propagate emulated flag */
 	if (usb_device != NULL && g_usb_device_is_emulated(usb_device))
 		fu_device_add_flag(FU_DEVICE(device), FWUPD_DEVICE_FLAG_EMULATED);
@@ -913,6 +938,7 @@ fu_usb_device_class_init(FuUsbDeviceClass *klass)
 	object_class->finalize = fu_usb_device_finalize;
 	object_class->get_property = fu_usb_device_get_property;
 	object_class->set_property = fu_usb_device_set_property;
+	object_class->constructed = fu_usb_device_constructed;
 	device_class->open = fu_usb_device_open;
 	device_class->setup = fu_usb_device_setup;
 	device_class->ready = fu_usb_device_ready;

@@ -4,6 +4,7 @@
   "steps": [
     {
       "url": "https://fwupd.org/downloads/b6bef375597e848971f230cf992c9740f7bf5b92-at90usbkey123.cab",
+      "emulation-url": "https://fwupd.org/downloads/57c8acd0de45ff01d91da5ecec1f826fbb438cc3f7b11ca732a8fbfdc2ce24e1-at90usbkey123.zip",
       "components": [
         {
           "version": "1.23",
@@ -15,6 +16,7 @@
     },
     {
       "url": "https://fwupd.org/downloads/47807fd4a94a4d5514ac6bf7a73038e00ed63225-at90usbkey124.cab",
+      "emulation-url": "https://fwupd.org/downloads/e65432a2dd63c3ce666cc13a0f5ae13eb6d15cebbc1d022cafcff46b892cdcc4-at90usbkey124.zip",
       "components": [
         {
           "version": "1.24",

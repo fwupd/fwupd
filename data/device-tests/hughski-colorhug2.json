@@ -4,6 +4,7 @@
   "steps": [
     {
       "url": "https://fwupd.org/downloads/170f2c19f17b7819644d3fcc7617621cc3350a04-hughski-colorhug2-2.0.6.cab",
+      "emulation-url": "https://fwupd.org/downloads/5ddb5d8e9ac85ea05b8dafcad638befdf3e70e5e1db0ca47489fa43d93f33a57-hughski-colorhug2-2.0.6.zip",
       "components": [
         {
           "version": "2.0.6",
@@ -15,6 +16,7 @@
     },
     {
       "url": "https://fwupd.org/downloads/e5ad222bdbd3d3d48d8613e67c7e0a0e194f8cd828e33c554d9f05d933e482c7-hughski-colorhug2-2.0.7.cab",
+      "emulation-url": "https://fwupd.org/downloads/29ee025e65b6a469556bbdd819cba665b043244c90c65b9f659933a347f8cf2e-hughski-colorhug2-2.0.7.zip",
       "components": [
         {
           "version": "2.0.7",

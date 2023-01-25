@@ -1316,6 +1316,10 @@ fu_util_device_flag_to_string(guint64 device_flag)
 		/* TRANSLATORS: this device is not actually real */
 		return _("Emulated");
 	}
+	if (device_flag == FWUPD_DEVICE_FLAG_EMULATION_TAG) {
+		/* TRANSLATORS: we're saving all USB events for emulation */
+		return _("Tagged for emulation");
+	}
 	if (device_flag == FWUPD_DEVICE_FLAG_SKIPS_RESTART) {
 		/* skip */
 		return NULL;
