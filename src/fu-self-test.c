@@ -3145,6 +3145,32 @@ _plugin_device_register_cb(FuPlugin *plugin, FuDevice *device, gpointer user_dat
 	fu_plugin_runner_device_register(plugin, device);
 }
 
+static void
+fu_backend_usb_hotplug_cb(FuBackend *backend, FuDevice *device, gpointer user_data)
+{
+	guint *cnt = (guint *)user_data;
+	(*cnt)++;
+}
+
+static void
+fu_backend_usb_load_file(FuBackend *backend, const gchar *fn)
+{
+	gboolean ret;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(JsonParser) parser = json_parser_new();
+
+	ret = json_parser_load_from_file(parser, fn, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = fu_backend_load(backend,
+			      json_node_get_object(json_parser_get_root(parser)),
+			      NULL,
+			      FU_BACKEND_LOAD_FLAG_NONE,
+			      &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+}
+
 /*
  * To generate the fwupd DS20 descriptor in the usb-devices.json file save fw-ds20.builder.xml:
  *
@@ -3174,8 +3200,12 @@ fu_backend_usb_func(gconstpointer user_data)
 #ifdef HAVE_GUSB
 	FuTest *self = (FuTest *)user_data;
 	gboolean ret;
+	guint cnt_added = 0;
+	guint cnt_removed = 0;
 	FuDevice *device_tmp;
 	g_autofree gchar *gusb_emulate_fn = NULL;
+	g_autofree gchar *gusb_emulate_fn2 = NULL;
+	g_autofree gchar *gusb_emulate_fn3 = NULL;
 	g_autofree gchar *devicestr = NULL;
 	g_autoptr(FuBackend) backend = fu_usb_backend_new(self->ctx);
 	g_autoptr(FuDeviceLocker) locker = NULL;
@@ -3183,33 +3213,37 @@ fu_backend_usb_func(gconstpointer user_data)
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(GPtrArray) possible_plugins = NULL;
-	g_autoptr(JsonParser) parser = json_parser_new();
 
-#if !G_USB_CHECK_VERSION(0, 4, 2)
+#if !G_USB_CHECK_VERSION(0, 4, 4)
 	g_test_skip("GUsb version too old");
 	return;
 #endif
+	/* check there were events */
+	g_signal_connect(backend,
+			 "device-added",
+			 G_CALLBACK(fu_backend_usb_hotplug_cb),
+			 &cnt_added);
+	g_signal_connect(backend,
+			 "device-removed",
+			 G_CALLBACK(fu_backend_usb_hotplug_cb),
+			 &cnt_removed);
 
 	/* load the JSON into the backend */
-	gusb_emulate_fn = g_test_build_filename(G_TEST_DIST, "tests", "usb-devices.json", NULL);
-	ret = json_parser_load_from_file(parser, gusb_emulate_fn, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
 	g_assert_cmpstr(fu_backend_get_name(backend), ==, "usb");
 	g_assert_true(fu_backend_get_enabled(backend));
 	ret = fu_backend_setup(backend, progress, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	ret = fu_backend_load(backend,
-			      json_node_get_object(json_parser_get_root(parser)),
-			      NULL,
-			      FU_BACKEND_LOAD_FLAG_NONE,
-			      &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
+	gusb_emulate_fn = g_test_build_filename(G_TEST_DIST, "tests", "usb-devices.json", NULL);
+	g_assert_nonnull(gusb_emulate_fn);
+	fu_backend_usb_load_file(backend, gusb_emulate_fn);
+	g_assert_cmpint(cnt_added, ==, 0);
+	g_assert_cmpint(cnt_removed, ==, 0);
 	ret = fu_backend_coldplug(backend, progress, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
+	g_assert_cmpint(cnt_added, ==, 1);
+	g_assert_cmpint(cnt_removed, ==, 0);
 	devices = fu_backend_get_devices(backend);
 	g_assert_cmpint(devices->len, ==, 1);
 	device_tmp = g_ptr_array_index(devices, 0);
@@ -3217,6 +3251,7 @@ fu_backend_usb_func(gconstpointer user_data)
 	locker = fu_device_locker_new(device_tmp, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(locker);
+	g_assert_true(fu_device_has_flag(device_tmp, FWUPD_DEVICE_FLAG_EMULATED));
 
 	/* for debugging */
 	devicestr = fu_device_to_string(device_tmp);
@@ -3232,6 +3267,22 @@ fu_backend_usb_func(gconstpointer user_data)
 	possible_plugins = fu_device_get_possible_plugins(device_tmp);
 	g_assert_cmpint(possible_plugins->len, ==, 1);
 	g_assert_cmpstr(g_ptr_array_index(possible_plugins, 0), ==, "dfu");
+
+	/* load another device with the same VID:PID, and check that we did not get a replug */
+	gusb_emulate_fn2 =
+	    g_test_build_filename(G_TEST_DIST, "tests", "usb-devices-replace.json", NULL);
+	g_assert_nonnull(gusb_emulate_fn2);
+	fu_backend_usb_load_file(backend, gusb_emulate_fn2);
+	g_assert_cmpint(cnt_added, ==, 1);
+	g_assert_cmpint(cnt_removed, ==, 0);
+
+	/* load another device with a different VID:PID, and check that we *did* get a replug */
+	gusb_emulate_fn3 =
+	    g_test_build_filename(G_TEST_DIST, "tests", "usb-devices-bootloader.json", NULL);
+	g_assert_nonnull(gusb_emulate_fn3);
+	fu_backend_usb_load_file(backend, gusb_emulate_fn3);
+	g_assert_cmpint(cnt_added, ==, 2);
+	g_assert_cmpint(cnt_removed, ==, 1);
 #else
 	g_test_skip("No GUsb support");
 #endif

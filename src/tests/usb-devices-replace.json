@@ -1,0 +1,9 @@
+{
+	"UsbDevices": [
+		{
+			"PlatformId": "usb:01:00:06",
+			"IdVendor": 10047,
+			"IdProduct": 4100
+		}
+	]
+}
