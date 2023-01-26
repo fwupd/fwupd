@@ -562,6 +562,8 @@ fu_device_add_problem(FuDevice *self, FwupdDeviceProblem problem);
 void
 fu_device_remove_problem(FuDevice *self, FwupdDeviceProblem problem);
 gboolean
+fu_device_has_problem(FuDevice *self, FwupdDeviceProblem problem);
+gboolean
 fu_device_has_inhibit(FuDevice *self, const gchar *inhibit_id);
 const gchar *
 fu_device_get_physical_id(FuDevice *self);

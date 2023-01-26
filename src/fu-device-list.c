@@ -609,7 +609,7 @@ fu_device_list_clear_wait_for_replug(FuDeviceList *self, FuDeviceItem *item)
 static void
 fu_device_incorporate_problem_update_in_progress(FuDevice *self, FuDevice *donor)
 {
-	if (fu_device_has_inhibit(donor, "update-in-progress")) {
+	if (fu_device_has_problem(donor, FWUPD_DEVICE_PROBLEM_UPDATE_IN_PROGRESS)) {
 		g_debug("moving inhibit update-in-progress to active device");
 		fu_device_add_problem(self, FWUPD_DEVICE_PROBLEM_UPDATE_IN_PROGRESS);
 		fu_device_remove_problem(donor, FWUPD_DEVICE_PROBLEM_UPDATE_IN_PROGRESS);
