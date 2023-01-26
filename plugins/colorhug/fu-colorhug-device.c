@@ -259,7 +259,7 @@ fu_colorhug_device_set_flash_success(FuColorhugDevice *self, gboolean val, GErro
 	guint8 buf[] = {[0] = val ? 0x01 : 0x00};
 	g_autoptr(GError) error_local = NULL;
 
-	g_debug("setting flash success");
+	g_debug("setting flash success %s", val ? "true" : "false");
 	if (!fu_colorhug_device_msg(self,
 				    CH_CMD_SET_FLASH_SUCCESS,
 				    buf,
