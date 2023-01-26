@@ -164,7 +164,7 @@ fwupd_enums_func(void)
 		g_assert_cmpstr(tmp, !=, NULL);
 		g_assert_cmpint(fwupd_device_flag_from_string(tmp), ==, i);
 	}
-	for (guint64 i = 1; i <= FWUPD_DEVICE_PROBLEM_SYSTEM_INHIBIT; i *= 2) {
+	for (guint64 i = 1; i <= FWUPD_DEVICE_PROBLEM_UPDATE_IN_PROGRESS; i *= 2) {
 		const gchar *tmp = fwupd_device_problem_to_string(i);
 		if (tmp == NULL)
 			g_warning("missing device problem 0x%x", (guint)i);

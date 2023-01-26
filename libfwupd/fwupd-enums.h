@@ -632,6 +632,14 @@ typedef guint64 FwupdDeviceFlags;
  */
 #define FWUPD_DEVICE_PROBLEM_SYSTEM_INHIBIT (1llu << 8)
 /**
+ * FWUPD_DEVICE_PROBLEM_UPDATE_IN_PROGRESS:
+ *
+ * The device cannot be updated as it is already being updated.
+ *
+ * Since 1.8.11
+ */
+#define FWUPD_DEVICE_PROBLEM_UPDATE_IN_PROGRESS (1llu << 9)
+/**
  * FWUPD_DEVICE_PROBLEM_UNKNOWN:
  *
  * This problem is not defined, this typically will happen from mismatched
