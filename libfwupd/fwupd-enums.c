@@ -368,6 +368,8 @@ fwupd_device_problem_to_string(FwupdDeviceProblem device_problem)
 		return "missing-license";
 	if (device_problem == FWUPD_DEVICE_PROBLEM_SYSTEM_INHIBIT)
 		return "system-inhibit";
+	if (device_problem == FWUPD_DEVICE_PROBLEM_UPDATE_IN_PROGRESS)
+		return "update-in-process";
 	if (device_problem == FWUPD_DEVICE_PROBLEM_UNKNOWN)
 		return "unknown";
 	return NULL;
@@ -406,6 +408,8 @@ fwupd_device_problem_from_string(const gchar *device_problem)
 		return FWUPD_DEVICE_PROBLEM_MISSING_LICENSE;
 	if (g_strcmp0(device_problem, "system-inhibit") == 0)
 		return FWUPD_DEVICE_PROBLEM_SYSTEM_INHIBIT;
+	if (g_strcmp0(device_problem, "update-in-process") == 0)
+		return FWUPD_DEVICE_PROBLEM_UPDATE_IN_PROGRESS;
 	return FWUPD_DEVICE_PROBLEM_UNKNOWN;
 }
 

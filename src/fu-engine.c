@@ -3138,7 +3138,7 @@ fu_engine_prepare(FuEngine *self,
 		g_prefix_error(error, "failed to get device before update prepare: ");
 		return FALSE;
 	}
-	fu_device_inhibit(device, "update-in-progress", "An update is in progress");
+	fu_device_add_problem(device, FWUPD_DEVICE_PROBLEM_UPDATE_IN_PROGRESS);
 
 	if (!fu_engine_device_check_power(self, device, flags, error))
 		return FALSE;
@@ -3178,7 +3178,7 @@ fu_engine_cleanup(FuEngine *self,
 		g_prefix_error(error, "failed to get device before update cleanup: ");
 		return FALSE;
 	}
-	fu_device_uninhibit(device, "update-in-progress");
+	fu_device_remove_problem(device, FWUPD_DEVICE_PROBLEM_UPDATE_IN_PROGRESS);
 	str = fu_device_to_string(device);
 	g_debug("cleanup -> %s", str);
 	if (!fu_engine_device_cleanup(self, device, progress, flags, error))

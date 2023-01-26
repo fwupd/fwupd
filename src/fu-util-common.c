@@ -1410,6 +1410,10 @@ fu_util_device_problem_to_string(FwupdClient *client, FwupdDevice *dev, FwupdDev
 		/* TRANSLATORS: an application is preventing system updates */
 		return g_strdup(_("All devices are prevented from update by system inhibit"));
 	}
+	if (problem == FWUPD_DEVICE_PROBLEM_UPDATE_IN_PROGRESS) {
+		/* TRANSLATORS: another application is updating the device already */
+		return g_strdup(_("An update is in progress"));
+	}
 	return NULL;
 }
 
