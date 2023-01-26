@@ -3153,11 +3153,6 @@ fu_engine_prepare(FuEngine *self,
 			return FALSE;
 	}
 
-	/* wait for device to disconnect and reconnect */
-	if (!fu_device_list_wait_for_replug(self->device_list, error)) {
-		g_prefix_error(error, "failed to wait for prepare replug: ");
-		return FALSE;
-	}
 	return TRUE;
 }
 
@@ -3189,11 +3184,6 @@ fu_engine_cleanup(FuEngine *self,
 			return FALSE;
 	}
 
-	/* wait for device to disconnect and reconnect */
-	if (!fu_device_list_wait_for_replug(self->device_list, error)) {
-		g_prefix_error(error, "failed to wait for cleanup replug: ");
-		return FALSE;
-	}
 	return TRUE;
 }
 
