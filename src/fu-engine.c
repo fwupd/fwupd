@@ -5158,14 +5158,22 @@ fu_engine_get_history_set_hsi_attrs(FuEngine *self, FuDevice *device)
 GPtrArray *
 fu_engine_get_history(FuEngine *self, GError **error)
 {
-	g_autoptr(GPtrArray) devices = NULL;
+	g_autoptr(GPtrArray) devices_all = NULL;
+	g_autoptr(GPtrArray) devices =
+	    g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 
 	g_return_val_if_fail(FU_IS_ENGINE(self), NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
-	devices = fu_history_get_devices(self->history, error);
-	if (devices == NULL)
+	devices_all = fu_history_get_devices(self->history, error);
+	if (devices_all == NULL)
 		return NULL;
+	for (guint i = 0; i < devices_all->len; i++) {
+		FuDevice *dev = g_ptr_array_index(devices_all, i);
+		if (fu_device_has_flag(dev, FWUPD_DEVICE_FLAG_EMULATED))
+			continue;
+		g_ptr_array_add(devices, g_object_ref(dev));
+	}
 	if (devices->len == 0) {
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO, "No history");
 		return NULL;
