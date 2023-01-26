@@ -3070,6 +3070,25 @@ fu_device_remove_problem(FuDevice *self, FwupdDeviceProblem problem)
 }
 
 /**
+ * fu_device_has_problem:
+ * @self: a #FuDevice
+ * @problem: a #FwupdDeviceProblem, e.g. %FWUPD_DEVICE_PROBLEM_SYSTEM_POWER_TOO_LOW
+ *
+ * Query if a device has a specific problem.
+ *
+ * Returns: %TRUE if the device has this problem
+ *
+ * Since: 1.8.11
+ **/
+gboolean
+fu_device_has_problem(FuDevice *self, FwupdDeviceProblem problem)
+{
+	g_return_val_if_fail(FU_IS_DEVICE(self), FALSE);
+	g_return_val_if_fail(problem != FWUPD_DEVICE_PROBLEM_UNKNOWN, FALSE);
+	return fu_device_has_inhibit(self, fwupd_device_problem_to_string(problem));
+}
+
+/**
  * fu_device_add_problem:
  * @self: a #FuDevice
  * @problem: a #FwupdDeviceProblem, e.g. %FWUPD_DEVICE_PROBLEM_SYSTEM_POWER_TOO_LOW

@@ -1165,6 +1165,7 @@ LIBFWUPDPLUGIN_1.8.10 {
 
 LIBFWUPDPLUGIN_1.8.11 {
   global:
+    fu_device_has_problem;
     fu_device_remove_backend_tag;
   local: *;
 } LIBFWUPDPLUGIN_1.8.10;
