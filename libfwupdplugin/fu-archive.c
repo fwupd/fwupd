@@ -611,8 +611,13 @@ fu_archive_write(FuArchive *self,
 				    "libarchive startup failed");
 		return NULL;
 	}
-	fu_archive_set_compression(arch, compression);
 	fu_archive_set_format(arch, format);
+	if (format == FU_ARCHIVE_FORMAT_ZIP) {
+		if (compression != FU_ARCHIVE_COMPRESSION_NONE)
+			archive_write_set_options(arch, "zip:compression=deflate");
+	} else {
+		fu_archive_set_compression(arch, compression);
+	}
 	r = archive_write_open(arch, blob, NULL, fu_archive_write_cb, NULL);
 	if (r != 0) {
 		g_set_error(error,
