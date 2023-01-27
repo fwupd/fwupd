@@ -6421,9 +6421,6 @@ fu_engine_add_device(FuEngine *self, FuDevice *device)
 	if (component != NULL)
 		fu_engine_md_refresh_device_from_component(self, device, component);
 
-	/* match the metadata so clients can tell if the device is worthy */
-	fu_engine_ensure_device_supported(self, device);
-
 	fu_engine_emit_changed(self);
 }
 
