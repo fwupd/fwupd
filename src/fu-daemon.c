@@ -787,7 +787,6 @@ fu_daemon_install_with_helper_device(FuMainAuthHelper *helper,
 				     GError **error)
 {
 	FuDaemon *self = helper->self;
-	const gchar *action_id;
 	g_autoptr(FuRelease) release = fu_release_new();
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GPtrArray) releases = NULL;
@@ -885,9 +884,11 @@ fu_daemon_install_with_helper_device(FuMainAuthHelper *helper,
 		}
 
 		/* get the action IDs for the valid device */
-		action_id = fu_release_get_action_id(release_tmp);
-		if (!g_ptr_array_find(helper->action_ids, action_id, NULL))
-			g_ptr_array_add(helper->action_ids, g_strdup(action_id));
+		if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED)) {
+			const gchar *action_id = fu_release_get_action_id(release_tmp);
+			if (!g_ptr_array_find(helper->action_ids, action_id, NULL))
+				g_ptr_array_add(helper->action_ids, g_strdup(action_id));
+		}
 		g_ptr_array_add(helper->releases, g_object_ref(release_tmp));
 	}
 
