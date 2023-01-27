@@ -2967,7 +2967,8 @@ fu_engine_install_release(FuEngine *self,
 		fu_device_set_update_state(device, FWUPD_UPDATE_STATE_SUCCESS);
 
 	/* wait for the system to acquiesce if required */
-	if (fu_device_get_acquiesce_delay(device_orig) > 0) {
+	if (fu_device_get_acquiesce_delay(device_orig) > 0 &&
+	    !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED)) {
 		fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_BUSY);
 		fu_engine_wait_for_acquiesce(self, fu_device_get_acquiesce_delay(device_orig));
 	}
