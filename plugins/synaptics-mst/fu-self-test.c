@@ -29,6 +29,7 @@ _test_add_fake_devices_from_dir(FuPlugin *plugin, const gchar *path)
 	const gchar *basename;
 	gboolean ret;
 	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GDir) dir = g_dir_open(path, 0, &error);
 	g_assert_no_error(error);
@@ -37,13 +38,13 @@ _test_add_fake_devices_from_dir(FuPlugin *plugin, const gchar *path)
 	ret = fu_context_load_quirks(ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	ret = fu_context_load_hwinfo(ctx, FU_CONTEXT_HWID_FLAG_NONE, &error);
+	ret = fu_context_load_hwinfo(ctx, progress, FU_CONTEXT_HWID_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
 	while ((basename = g_dir_read_name(dir)) != NULL) {
 		g_autofree gchar *fn = g_build_filename(path, basename, NULL);
-		g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+		g_autoptr(FuProgress) progress_local = fu_progress_new(G_STRLOC);
 		g_autoptr(FuUdevDevice) dev = NULL;
 		if (!g_str_has_prefix(basename, "drm_dp_aux"))
 			continue;
@@ -60,8 +61,10 @@ _test_add_fake_devices_from_dir(FuPlugin *plugin, const gchar *path)
 				   fn,
 				   NULL);
 		g_debug("creating drm_dp_aux_dev object backed by %s", fn);
-		ret =
-		    fu_plugin_runner_backend_device_added(plugin, FU_DEVICE(dev), progress, &error);
+		ret = fu_plugin_runner_backend_device_added(plugin,
+							    FU_DEVICE(dev),
+							    progress_local,
+							    &error);
 		g_assert_no_error(error);
 		g_assert_true(ret);
 	}
@@ -84,7 +87,7 @@ fu_plugin_synaptics_mst_none_func(void)
 	ret = fu_context_load_quirks(ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	ret = fu_context_load_hwinfo(ctx, FU_CONTEXT_HWID_FLAG_NONE, &error);
+	ret = fu_context_load_hwinfo(ctx, progress, FU_CONTEXT_HWID_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -127,7 +130,7 @@ fu_plugin_synaptics_mst_tb16_func(void)
 	ret = fu_context_load_quirks(ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	ret = fu_context_load_hwinfo(ctx, FU_CONTEXT_HWID_FLAG_NONE, &error);
+	ret = fu_context_load_hwinfo(ctx, progress, FU_CONTEXT_HWID_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 

@@ -8036,7 +8036,10 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 
 	/* load SMBIOS and the hwids */
 	if (flags & FU_ENGINE_LOAD_FLAG_HWINFO) {
-		if (!fu_context_load_hwinfo(self->ctx, FU_CONTEXT_HWID_FLAG_LOAD_ALL, error))
+		if (!fu_context_load_hwinfo(self->ctx,
+					    fu_progress_get_child(progress),
+					    FU_CONTEXT_HWID_FLAG_LOAD_ALL,
+					    error))
 			return FALSE;
 		self->has_hwinfo = TRUE;
 	}

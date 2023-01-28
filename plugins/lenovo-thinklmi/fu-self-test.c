@@ -46,7 +46,7 @@ fu_test_self_init(FuTest *self, GError **error_global)
 				     &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	ret = fu_context_load_hwinfo(ctx, FU_CONTEXT_HWID_FLAG_LOAD_CONFIG, &error);
+	ret = fu_context_load_hwinfo(ctx, progress, FU_CONTEXT_HWID_FLAG_LOAD_CONFIG, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	ret = fu_context_reload_bios_settings(ctx, &error);

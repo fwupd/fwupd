@@ -772,6 +772,7 @@ typedef gboolean (*FuContextHwidsSetupFunc)(FuContext *self, FuHwids *hwids, GEr
 /**
  * fu_context_load_hwinfo:
  * @self: a #FuContext
+ * @progress: a #FuProgress
  * @flags: a #FuContextHwidFlags, e.g. %FU_CONTEXT_HWID_FLAG_LOAD_SMBIOS
  * @error: (nullable): optional return location for an error
  *
@@ -782,7 +783,10 @@ typedef gboolean (*FuContextHwidsSetupFunc)(FuContext *self, FuHwids *hwids, GEr
  * Since: 1.8.10
  **/
 gboolean
-fu_context_load_hwinfo(FuContext *self, FuContextHwidFlags flags, GError **error)
+fu_context_load_hwinfo(FuContext *self,
+		       FuProgress *progress,
+		       FuContextHwidFlags flags,
+		       GError **error)
 {
 	FuContextPrivate *priv = GET_PRIVATE(self);
 	GPtrArray *guids;
@@ -802,6 +806,13 @@ fu_context_load_hwinfo(FuContext *self, FuContextHwidFlags flags, GError **error
 	g_return_val_if_fail(FU_IS_CONTEXT(self), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
+	/* progress */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "hwids-setup-funcs");
+	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "hwids-setup");
+	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 3, "set-flags");
+	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 95, "reload-bios-settings");
+
 	/* run all the HWID setup funcs */
 	for (guint i = 0; hwids_setup_map[i].name != NULL; i++) {
 		if ((flags & hwids_setup_map[i].flag) > 0) {
@@ -815,8 +826,11 @@ fu_context_load_hwinfo(FuContext *self, FuContextHwidFlags flags, GError **error
 		}
 	}
 	priv->loaded_hwinfo = TRUE;
+	fu_progress_step_done(progress);
+
 	if (!fu_hwids_setup(priv->hwids, &error_hwids))
 		g_warning("Failed to load HWIDs: %s", error_hwids->message);
+	fu_progress_step_done(progress);
 
 	/* set the hwid flags */
 	guids = fu_context_get_hwid_guids(self);
@@ -832,10 +846,12 @@ fu_context_load_hwinfo(FuContext *self, FuContextHwidFlags flags, GError **error
 				g_hash_table_add(priv->hwid_flags, g_strdup(values[j]));
 		}
 	}
+	fu_progress_step_done(progress);
 
 	fu_context_add_udev_subsystem(self, "firmware-attributes");
 	if (!fu_context_reload_bios_settings(self, &error_bios_settings))
 		g_debug("%s", error_bios_settings->message);
+	fu_progress_step_done(progress);
 
 	/* always */
 	return TRUE;

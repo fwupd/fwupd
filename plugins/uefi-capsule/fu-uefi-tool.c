@@ -336,7 +336,10 @@ main(int argc, char *argv[])
 		g_autoptr(GError) error_local = NULL;
 
 		/* load SMBIOS */
-		if (!fu_context_load_hwinfo(ctx, FU_CONTEXT_HWID_FLAG_LOAD_ALL, &error_local)) {
+		if (!fu_context_load_hwinfo(ctx,
+					    progress,
+					    FU_CONTEXT_HWID_FLAG_LOAD_ALL,
+					    &error_local)) {
 			g_printerr("failed: %s\n", error_local->message);
 			return EXIT_FAILURE;
 		}
@@ -459,15 +462,20 @@ main(int argc, char *argv[])
 		/* progress */
 		fu_progress_set_id(progress, G_STRLOC);
 		fu_progress_add_flag(progress, FU_PROGRESS_FLAG_NO_PROFILE);
+		fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "hwinfo");
 		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1, "prepare");
 		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 98, NULL);
 		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1, "cleanup");
 
 		/* load SMBIOS */
-		if (!fu_context_load_hwinfo(ctx, FU_CONTEXT_HWID_FLAG_LOAD_ALL, &error_local)) {
+		if (!fu_context_load_hwinfo(ctx,
+					    fu_progress_get_child(progress),
+					    FU_CONTEXT_HWID_FLAG_LOAD_ALL,
+					    &error_local)) {
 			g_printerr("failed: %s\n", error_local->message);
 			return EXIT_FAILURE;
 		}
+		fu_progress_step_done(progress);
 
 		/* type is specified, otherwise use default */
 		if (type != NULL) {

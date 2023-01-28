@@ -435,10 +435,11 @@ static void
 fu_context_hwids_dmi_func(void)
 {
 	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GError) error = NULL;
 	gboolean ret;
 
-	ret = fu_context_load_hwinfo(ctx, FU_CONTEXT_HWID_FLAG_LOAD_DMI, &error);
+	ret = fu_context_load_hwinfo(ctx, progress, FU_CONTEXT_HWID_FLAG_LOAD_DMI, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	if (g_getenv("FWUPD_VERBOSE") != NULL) {
@@ -559,6 +560,7 @@ fu_hwids_func(void)
 {
 	g_autofree gchar *testdatadir = NULL;
 	g_autoptr(FuContext) context = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GError) error = NULL;
 	gboolean ret;
 
@@ -593,7 +595,7 @@ fu_hwids_func(void)
 	(void)g_setenv("FWUPD_SYSFSFWDIR", testdatadir, TRUE);
 
 	context = fu_context_new();
-	ret = fu_context_load_hwinfo(context, FU_CONTEXT_HWID_FLAG_LOAD_SMBIOS, &error);
+	ret = fu_context_load_hwinfo(context, progress, FU_CONTEXT_HWID_FLAG_LOAD_SMBIOS, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
