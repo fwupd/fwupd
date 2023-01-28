@@ -8,6 +8,7 @@
 
 #include "fu-context.h"
 #include "fu-hwids.h"
+#include "fu-progress.h"
 #include "fu-quirks.h"
 #include "fu-volume.h"
 
@@ -26,7 +27,10 @@ fu_context_new(void);
 gboolean
 fu_context_reload_bios_settings(FuContext *self, GError **error);
 gboolean
-fu_context_load_hwinfo(FuContext *self, FuContextHwidFlags flags, GError **error);
+fu_context_load_hwinfo(FuContext *self,
+		       FuProgress *progress,
+		       FuContextHwidFlags flags,
+		       GError **error);
 gboolean
 fu_context_load_quirks(FuContext *self, FuQuirksLoadFlags flags, GError **error);
 void

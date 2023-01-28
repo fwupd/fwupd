@@ -1988,7 +1988,7 @@ fu_util_export_hwids(FuUtilPrivate *priv, gchar **values, GError **error)
 	}
 
 	/* setup default hwids */
-	if (!fu_context_load_hwinfo(ctx, FU_CONTEXT_HWID_FLAG_LOAD_ALL, error))
+	if (!fu_context_load_hwinfo(ctx, priv->progress, FU_CONTEXT_HWID_FLAG_LOAD_ALL, error))
 		return FALSE;
 
 	/* save all keys */
@@ -2022,7 +2022,7 @@ fu_util_hwids(FuUtilPrivate *priv, gchar **values, GError **error)
 			fu_hwids_add_value(hwids, hwid_key, tmp);
 		}
 	}
-	if (!fu_context_load_hwinfo(ctx, FU_CONTEXT_HWID_FLAG_LOAD_ALL, error))
+	if (!fu_context_load_hwinfo(ctx, priv->progress, FU_CONTEXT_HWID_FLAG_LOAD_ALL, error))
 		return FALSE;
 
 	/* show debug output */

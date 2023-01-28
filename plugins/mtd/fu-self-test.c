@@ -32,7 +32,7 @@ fu_test_mtd_device_func(void)
 	ret = fu_context_load_quirks(ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	ret = fu_context_load_hwinfo(ctx, FU_CONTEXT_HWID_FLAG_LOAD_SMBIOS, &error);
+	ret = fu_context_load_hwinfo(ctx, progress, FU_CONTEXT_HWID_FLAG_LOAD_SMBIOS, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
