@@ -427,6 +427,10 @@ fu_quirks_check_silo(FuQuirks *self, GError **error)
 		g_prefix_error(error, "failed to prepare query: ");
 		return FALSE;
 	}
+	if (!xb_silo_query_build_index(self->silo, "quirk/device", "id", error))
+		return FALSE;
+	if (!xb_silo_query_build_index(self->silo, "quirk/device/value", "key", error))
+		return FALSE;
 
 	/* success */
 	return TRUE;
