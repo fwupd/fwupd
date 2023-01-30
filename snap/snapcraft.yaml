@@ -242,6 +242,11 @@ parts:
       - -usr/share/lintian
       - -usr/share/pkgconfig
       - -usr/share/GConf
+      - -usr/lib/dconf
+      - -usr/lib/*/gio/modules/libdconfsettings.so
+      - -usr/lib/systemd/user/dconf.service
+      - -usr/share/dbus-1/services/ca.desrt.dconf.service
+      - -usr/lib/*/libdconf.so.1.0.0
     after: [fwupd]
   fwupd-wrappers:
     plugin: dump
