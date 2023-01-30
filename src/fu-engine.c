@@ -6269,6 +6269,10 @@ fu_engine_device_inherit_history(FuEngine *self, FuDevice *device)
 {
 	g_autoptr(FuDevice) device_history = NULL;
 
+	/* ignore */
+	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED))
+		return;
+
 	/* any success or failed update? */
 	device_history = fu_history_get_device_by_id(self->history, fu_device_get_id(device), NULL);
 	if (device_history == NULL)
