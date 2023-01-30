@@ -2226,6 +2226,7 @@ static gboolean
 fu_util_prompt_warning_bkc(FuUtilPrivate *priv, FwupdDevice *dev, FwupdRelease *rel, GError **error)
 {
 	const gchar *host_bkc = fwupd_client_get_host_bkc(priv->client);
+	g_autofree gchar *cmd = g_strdup_printf("%s sync-bkc", g_get_prgname());
 	g_autoptr(FwupdRelease) rel_bkc = NULL;
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GString) str = g_string_new(NULL);
@@ -2260,7 +2261,7 @@ fu_util_prompt_warning_bkc(FuUtilPrivate *priv, FwupdDevice *dev, FwupdRelease *
 	       command name, e.g. `fwupdmgr sync-bkc` */
 	    _("This device will be reverted back to %s when the %s command is performed."),
 	    fwupd_release_get_version(rel),
-	    "fwupdmgr sync-bkc");
+	    cmd);
 
 	/* TRANSLATORS: the best known configuration is a set of software that we know works well
 	 * together. In the OEM and ODM industries it is often called a BKC */
@@ -4042,6 +4043,15 @@ fu_util_cancelled_cb(GCancellable *cancellable, gpointer user_data)
 	g_main_loop_quit(priv->loop);
 }
 
+static const gchar *
+fu_util_get_prgname(const gchar *argv0)
+{
+	const gchar *prgname = (const gchar *)g_strrstr(argv0, " ");
+	if (prgname != NULL)
+		return prgname + 1;
+	return argv0;
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -4262,12 +4272,13 @@ main(int argc, char *argv[])
 	bindtextdomain(GETTEXT_PACKAGE, FWUPD_LOCALEDIR);
 	bind_textdomain_codeset(GETTEXT_PACKAGE, "UTF-8");
 	textdomain(GETTEXT_PACKAGE);
+	g_set_prgname(fu_util_get_prgname(argv[0]));
 
 	/* ensure D-Bus errors are registered */
 	(void)fwupd_error_quark();
 
 	/* this is an old command which is possibly a symlink */
-	if (g_str_has_suffix(argv[0], "fwupdagent")) {
+	if (g_strcmp0(g_get_prgname(), "fwupdagent") == 0) {
 		g_printerr("INFO: The fwupdagent command is deprecated, "
 			   "use `fwupdmgr --json` instead\n");
 		priv->as_json = TRUE;
@@ -4723,7 +4734,7 @@ main(int argc, char *argv[])
 	fu_util_show_unsupported_warn();
 
 	/* we know the runtime daemon version now */
-	fwupd_client_set_user_agent_for_package(priv->client, "fwupdmgr", PACKAGE_VERSION);
+	fwupd_client_set_user_agent_for_package(priv->client, g_get_prgname(), PACKAGE_VERSION);
 
 	/* check that we have at least this version daemon running */
 	if ((priv->flags & FWUPD_INSTALL_FLAG_FORCE) == 0 &&
@@ -4781,8 +4792,12 @@ main(int argc, char *argv[])
 		else
 			g_printerr("%s\n", error->message);
 		if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_ARGS)) {
-			/* TRANSLATORS: error message explaining command on how to get help */
-			g_printerr("\n%s\n", _("Use fwupdmgr --help for help"));
+			g_autofree gchar *cmd = g_strdup_printf("%s --help", g_get_prgname());
+			g_autoptr(GString) str = g_string_new("\n");
+			/* TRANSLATORS: error message explaining command on how to get help,
+			 * where $1 is something like 'fwupdmgr --help' */
+			g_string_append_printf(str, _("Use %s for help"), cmd);
+			g_printerr("%s\n", str->str);
 		} else if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO))
 			return EXIT_NOTHING_TO_DO;
 		return EXIT_FAILURE;
