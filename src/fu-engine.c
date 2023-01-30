@@ -93,6 +93,17 @@ fu_engine_finalize(GObject *obj);
 static void
 fu_engine_ensure_security_attrs(FuEngine *self);
 
+typedef enum {
+	FU_ENGINE_INSTALL_PHASE_UNKNOWN,
+	FU_ENGINE_INSTALL_PHASE_WRITE,
+	FU_ENGINE_INSTALL_PHASE_ATTACH,
+	FU_ENGINE_INSTALL_PHASE_DETACH,
+	FU_ENGINE_INSTALL_PHASE_PREPARE,
+	FU_ENGINE_INSTALL_PHASE_CLEANUP,
+	FU_ENGINE_INSTALL_PHASE_RELOAD,
+	FU_ENGINE_INSTALL_PHASE_LAST
+} FuEngineInstallPhase;
+
 struct _FuEngine {
 	GObject parent_instance;
 	GPtrArray *backends;
@@ -128,6 +139,7 @@ struct _FuEngine {
 	GMainLoop *acquiesce_loop;
 	guint acquiesce_id;
 	guint acquiesce_delay;
+	FuEngineInstallPhase install_phase;
 };
 
 enum {
@@ -331,6 +343,31 @@ fu_engine_device_request_cb(FuDevice *device, FwupdRequest *request, FuEngine *s
 {
 	g_debug("Emitting DeviceRequest('Message'='%s')", fwupd_request_get_message(request));
 	g_signal_emit(self, signals[SIGNAL_DEVICE_REQUEST], 0, request);
+}
+
+static const gchar *
+fu_engine_install_phase_to_string(FuEngineInstallPhase phase)
+{
+	if (phase == FU_ENGINE_INSTALL_PHASE_WRITE)
+		return "install";
+	if (phase == FU_ENGINE_INSTALL_PHASE_ATTACH)
+		return "attach";
+	if (phase == FU_ENGINE_INSTALL_PHASE_DETACH)
+		return "detach";
+	if (phase == FU_ENGINE_INSTALL_PHASE_PREPARE)
+		return "prepare";
+	if (phase == FU_ENGINE_INSTALL_PHASE_CLEANUP)
+		return "cleanup";
+	if (phase == FU_ENGINE_INSTALL_PHASE_RELOAD)
+		return "reload";
+	return NULL;
+}
+
+static void
+fu_engine_set_install_phase(FuEngine *self, FuEngineInstallPhase install_phase)
+{
+	g_debug("install phase now %s", fu_engine_install_phase_to_string(install_phase));
+	self->install_phase = install_phase;
 }
 
 static void
@@ -3524,6 +3561,7 @@ fu_engine_install_blob(FuEngine *self,
 
 	/* signal to all the plugins the update is about to happen */
 	device_id = g_strdup(fu_device_get_id(device));
+	fu_engine_set_install_phase(self, FU_ENGINE_INSTALL_PHASE_PREPARE);
 	if (!fu_engine_prepare(self, device_id, fu_progress_get_child(progress), flags, error))
 		return FALSE;
 	fu_progress_step_done(progress);
@@ -3563,6 +3601,7 @@ fu_engine_install_blob(FuEngine *self,
 		}
 
 		/* detach to bootloader mode */
+		fu_engine_set_install_phase(self, FU_ENGINE_INSTALL_PHASE_DETACH);
 		if (!fu_engine_detach(self,
 				      device_id,
 				      fu_progress_get_child(progress_local),
@@ -3572,6 +3611,7 @@ fu_engine_install_blob(FuEngine *self,
 		fu_progress_step_done(progress_local);
 
 		/* install */
+		fu_engine_set_install_phase(self, FU_ENGINE_INSTALL_PHASE_WRITE);
 		if (!fu_engine_write_firmware(self,
 					      device_id,
 					      blob_fw,
@@ -3582,6 +3622,7 @@ fu_engine_install_blob(FuEngine *self,
 		fu_progress_step_done(progress_local);
 
 		/* attach into runtime mode */
+		fu_engine_set_install_phase(self, FU_ENGINE_INSTALL_PHASE_ATTACH);
 		if (!fu_engine_attach(self,
 				      device_id,
 				      fu_progress_get_child(progress_local),
@@ -3590,11 +3631,13 @@ fu_engine_install_blob(FuEngine *self,
 		fu_progress_step_done(progress_local);
 
 		/* get the new version number */
+		fu_engine_set_install_phase(self, FU_ENGINE_INSTALL_PHASE_RELOAD);
 		if (!fu_engine_reload(self, device_id, error))
 			return FALSE;
 		fu_progress_step_done(progress_local);
 
 		/* the device and plugin both may have changed */
+		fu_engine_set_install_phase(self, FU_ENGINE_INSTALL_PHASE_UNKNOWN);
 		device_tmp = fu_engine_get_device(self, device_id, error);
 		if (device_tmp == NULL) {
 			g_prefix_error(error, "failed to get device after install blob: ");
@@ -3611,6 +3654,7 @@ fu_engine_install_blob(FuEngine *self,
 	fu_progress_step_done(progress);
 
 	/* signal to all the plugins the update has happened */
+	fu_engine_set_install_phase(self, FU_ENGINE_INSTALL_PHASE_CLEANUP);
 	if (!fu_engine_cleanup(self, device_id, fu_progress_get_child(progress), flags, error))
 		return FALSE;
 	fu_progress_step_done(progress);
