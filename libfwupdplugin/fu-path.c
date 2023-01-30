@@ -418,6 +418,9 @@ fu_path_from_kind(FuPathKind path_kind)
 		return g_build_filename(basedir, "etc", PACKAGE_NAME, NULL);
 	/* /run/lock */
 	case FU_PATH_KIND_LOCKDIR:
+		tmp = g_getenv("FWUPD_LOCKDIR");
+		if (tmp != NULL)
+			return g_strdup(tmp);
 		return g_strdup("/run/lock");
 	/* /sys/class/firmware-attributes */
 	case FU_PATH_KIND_SYSFSDIR_FW_ATTRIB:
