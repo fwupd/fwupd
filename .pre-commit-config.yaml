@@ -1,7 +1,7 @@
 default_stages: [commit]
 repos:
 -   repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.0.1
+    rev: v4.4.0
     hooks:
     -   id: no-commit-to-branch
         args: [--branch, main, --pattern, 1_.*_X]
@@ -12,6 +12,8 @@ repos:
     -   id: check-yaml
         exclude: '.clang-format'
     -   id: check-json
+    -   id: pretty-format-json
+        args: ['--no-sort-keys']
     -   id: check-symlinks
     -   id: check-xml
     -   id: end-of-file-fixer
@@ -23,12 +25,12 @@ repos:
     -   id: mixed-line-ending
         args: [--fix=lf]
 -   repo: https://github.com/codespell-project/codespell
-    rev: v2.1.0
+    rev: v2.2.2
     hooks:
     -   id: codespell
         args: ['--config', './contrib/codespell.cfg', --write-changes]
 -   repo: https://github.com/ambv/black
-    rev: 22.3.0
+    rev: 22.12.0
     hooks:
     - id: black
 -   repo: local
@@ -78,7 +80,7 @@ repos:
       language: script
       entry: ./contrib/ci/check-license.py
 -   repo: https://github.com/igorshubovych/markdownlint-cli
-    rev: v0.27.1
+    rev: v0.33.0
     hooks:
     - id: markdownlint
       args: ['--fix', '--ignore', '.github']

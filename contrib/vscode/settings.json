@@ -1,4 +1,4 @@
 {
-        "editor.tabSize": 8,
-        "mesonbuild.buildFolder": "build"
+  "editor.tabSize": 8,
+  "mesonbuild.buildFolder": "build"
 }

@@ -1,30 +1,29 @@
 {
-	"id": "org.fwupd.hsi.Amd.PlatformRollbackProtection",
-	"name": "AMD Secure Processor Rollback protection",
-	"description": [
-		"AMD SOCs include the ability to prevent a rollback attack by a rollback protection feature on the secure processor.",
-		"This feature prevents an attacker from loading an older firmware onto the part after a security vulnerability has been fixed."
-	],
-	"more-information": [
-		"This particular check is not for the Microsoft Pluton Security processor which is present on some chips.",
-		"End users are not able to directly modify rollback protection, this is controlled by the manufacturer.",
-		"On Lenovo systems it has been reported that if this is disabled it may potentially be enabled by loading 'OS Optimized Defaults' in BIOS setup."
-	],
-	"failure-impact": [
-		"SOCs without this feature may be attacked by an attacker installing an older firmware that takes advantage of a well-known vulnerability."
-	],
-	"failure-results": {
-		"not-enabled": "rollback protection disabled"
-	},
-	"success-results": {
-		"enabled": "rollback protection enabled"
-	},
-	"hsi-level": 4,
-	"references": {
-		"https://www.psacertified.org/blog/anti-rollback-explained/": "Rollback protection",
-		"https://www.amd.com/en/technologies/pro-security": "AMD Secure Processor",
-		"https://forums.lenovo.com/t5/Fedora/AMD-Rollback-protection-not-detected-by-fwupd-on-T14-G3-AMD/m-p/5182708?page=1#5810366":
-		    "Loading OS Optimized Defaults on Lenovo systems"
-	},
-	"fwupd-version": "1.8.0"
+  "id": "org.fwupd.hsi.Amd.PlatformRollbackProtection",
+  "name": "AMD Secure Processor Rollback protection",
+  "description": [
+    "AMD SOCs include the ability to prevent a rollback attack by a rollback protection feature on the secure processor.",
+    "This feature prevents an attacker from loading an older firmware onto the part after a security vulnerability has been fixed."
+  ],
+  "more-information": [
+    "This particular check is not for the Microsoft Pluton Security processor which is present on some chips.",
+    "End users are not able to directly modify rollback protection, this is controlled by the manufacturer.",
+    "On Lenovo systems it has been reported that if this is disabled it may potentially be enabled by loading 'OS Optimized Defaults' in BIOS setup."
+  ],
+  "failure-impact": [
+    "SOCs without this feature may be attacked by an attacker installing an older firmware that takes advantage of a well-known vulnerability."
+  ],
+  "failure-results": {
+    "not-enabled": "rollback protection disabled"
+  },
+  "success-results": {
+    "enabled": "rollback protection enabled"
+  },
+  "hsi-level": 4,
+  "references": {
+    "https://www.psacertified.org/blog/anti-rollback-explained/": "Rollback protection",
+    "https://www.amd.com/en/technologies/pro-security": "AMD Secure Processor",
+    "https://forums.lenovo.com/t5/Fedora/AMD-Rollback-protection-not-detected-by-fwupd-on-T14-G3-AMD/m-p/5182708?page=1#5810366": "Loading OS Optimized Defaults on Lenovo systems"
+  },
+  "fwupd-version": "1.8.0"
 }
