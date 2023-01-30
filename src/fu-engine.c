@@ -3147,11 +3147,11 @@ fu_engine_prepare(FuEngine *self,
 
 	str = fu_device_to_string(device);
 	g_debug("prepare -> %s", str);
-	if (!fu_engine_device_prepare(self, device, progress, flags, error)) // XXXX
+	if (!fu_engine_device_prepare(self, device, progress, flags, error))
 		return FALSE;
 	for (guint j = 0; j < plugins->len; j++) {
 		FuPlugin *plugin_tmp = g_ptr_array_index(plugins, j);
-		if (!fu_plugin_runner_prepare(plugin_tmp, device, progress, flags, error)) // XXX
+		if (!fu_plugin_runner_prepare(plugin_tmp, device, progress, flags, error))
 			return FALSE;
 	}
 
