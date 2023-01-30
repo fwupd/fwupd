@@ -16,4 +16,4 @@ G_DECLARE_FINAL_TYPE(FuTiTps6598xPdDevice,
 		     FuDevice)
 
 FuDevice *
-fu_ti_tps6598x_pd_device_new(FuContext *ctx, guint8 target);
+fu_ti_tps6598x_pd_device_new(FuDevice *proxy, guint8 target);

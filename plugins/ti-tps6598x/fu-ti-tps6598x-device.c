@@ -535,8 +535,7 @@ fu_ti_tps6598x_device_setup(FuDevice *device, GError **error)
 
 	/* create child PD devices */
 	for (guint i = 0; i < FU_TI_TPS6598X_PD_MAX; i++) {
-		g_autoptr(FuDevice) device_pd =
-		    fu_ti_tps6598x_pd_device_new(fu_device_get_context(device), i);
+		g_autoptr(FuDevice) device_pd = fu_ti_tps6598x_pd_device_new(device, i);
 		fu_device_add_child(device, device_pd);
 	}
 
