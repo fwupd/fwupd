@@ -26,6 +26,6 @@
 * Rename fwupd_result_update_*() to fwupd_release_*()
 * Rename fwupd_result_*() to fwupd_device_*()
 * Convert FwupdResult to FwupdDevice in all callbacks
-* Rename fwupd_device_*_provider -> fwupd_device_*_plugin
+* Rename fwupd_device_**provider -> fwupd_device**_plugin
 * Convert hash types sa{sv} -> a{sv}
 * Convert fwupd_client_get_updates() -> fwupd_client_get_upgrades()

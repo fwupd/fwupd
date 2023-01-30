@@ -4,15 +4,15 @@ fwupd wrapper for QubesOS
 
 ## Table of Contents
 
-* [Requirements](#Requirements)
-* [Usage](#Usage)
-* [Installation](#Installation)
-* [Testing](#Testing)
+* [Requirements](#requirements)
+* [Usage](#usage)
+* [Installation](#installation)
+* [Testing](#testing)
 * [Whonix support](doc/whonix.md)
 * [UEFI capsule update](doc/uefi_capsule_update.md)
 * [Heads update](doc/heads_update.md)
 
-## OS Requirements
+## Requirements
 
 **Operating System:** Qubes OS R4.1
 
