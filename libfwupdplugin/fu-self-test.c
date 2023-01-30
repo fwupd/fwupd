@@ -1400,6 +1400,7 @@ static void
 fu_device_flags_func(void)
 {
 	g_autoptr(FuDevice) device = fu_device_new(NULL);
+	g_autoptr(FuDevice) proxy = fu_device_new(NULL);
 
 	/* bitfield */
 	for (guint64 i = 1; i < FU_DEVICE_INTERNAL_FLAG_UNKNOWN; i *= 2) {
@@ -1432,6 +1433,11 @@ fu_device_flags_func(void)
 			FWUPD_DEVICE_FLAG_IS_BOOTLOADER | FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_set_custom_flags(device, "~is-bootloader");
 	g_assert_cmpint(fu_device_get_flags(device), ==, FWUPD_DEVICE_FLAG_UPDATABLE);
+
+	/* setting flags on the proxy should propagate to the device that *uses* the proxy */
+	fu_device_set_proxy(device, proxy);
+	fu_device_add_flag(proxy, FWUPD_DEVICE_FLAG_EMULATED);
+	g_assert_true(fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED));
 }
 
 static void

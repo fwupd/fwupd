@@ -1153,6 +1153,27 @@ fu_device_set_parent(FuDevice *self, FuDevice *parent)
 	g_object_notify(G_OBJECT(self), "parent");
 }
 
+/* if the proxy sets this flag copy it to the logical device */
+static void
+fu_device_incorporate_from_proxy_flags(FuDevice *self, FuDevice *proxy)
+{
+	const FwupdDeviceFlags flags[] = {FWUPD_DEVICE_FLAG_EMULATED,
+					  FWUPD_DEVICE_FLAG_UNREACHABLE};
+	for (guint i = 0; i < G_N_ELEMENTS(flags); i++) {
+		if (fu_device_has_flag(proxy, flags[i])) {
+			g_debug("propagating %s from proxy", fwupd_device_flag_to_string(flags[i]));
+			fu_device_add_flag(self, flags[i]);
+		}
+	}
+}
+
+static void
+fu_device_proxy_flags_notify_cb(FuDevice *proxy, GParamSpec *pspec, gpointer user_data)
+{
+	FuDevice *self = FU_DEVICE(user_data);
+	fu_device_incorporate_from_proxy_flags(self, proxy);
+}
+
 /**
  * fu_device_set_proxy:
  * @self: a #FuDevice
@@ -1178,6 +1199,11 @@ fu_device_set_proxy(FuDevice *self, FuDevice *proxy)
 		if (fu_device_get_physical_id(self) == NULL &&
 		    fu_device_get_physical_id(proxy) != NULL)
 			fu_device_set_physical_id(self, fu_device_get_physical_id(proxy));
+		g_signal_connect(FWUPD_DEVICE(proxy),
+				 "notify::flags",
+				 G_CALLBACK(fu_device_proxy_flags_notify_cb),
+				 self);
+		fu_device_incorporate_from_proxy_flags(self, proxy);
 	}
 
 	if (priv->proxy != NULL)
