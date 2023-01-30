@@ -1210,15 +1210,6 @@ fu_device_func(void)
 	fu_device_add_possible_plugin(device, "test");
 	possible_plugins = fu_device_get_possible_plugins(device);
 	g_assert_cmpint(possible_plugins->len, ==, 1);
-
-	g_assert_cmpint(fu_device_get_backend_tags(device)->len, ==, 0);
-	fu_device_add_backend_tag(device, "foo");
-	fu_device_add_backend_tag(device, "bar");
-	g_assert_cmpint(fu_device_get_backend_tags(device)->len, ==, 2);
-	g_assert_true(fu_device_has_backend_tag(device, "foo"));
-	g_assert_false(fu_device_has_backend_tag(device, "bazbazbazbazbaz"));
-	fu_device_remove_backend_tag(device, "foo");
-	g_assert_false(fu_device_has_backend_tag(device, "foo"));
 }
 
 static void

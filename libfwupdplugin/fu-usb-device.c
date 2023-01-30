@@ -86,27 +86,6 @@ fu_usb_device_finalize(GObject *object)
 	G_OBJECT_CLASS(fu_usb_device_parent_class)->finalize(object);
 }
 
-#if G_USB_CHECK_VERSION(0, 4, 4)
-static void
-fu_usb_device_backend_tags_notify_cb(GObject *object, GParamSpec *pspec, FuUsbDevice *device)
-{
-	FuUsbDevicePrivate *priv = GET_PRIVATE(device);
-	GPtrArray *backend_tags = fu_device_get_backend_tags(FU_DEVICE(device));
-	g_autoptr(GPtrArray) usb_device_tags = g_usb_device_get_tags(priv->usb_device);
-
-	for (guint i = 0; i < usb_device_tags->len; i++) {
-		const gchar *tag = g_ptr_array_index(usb_device_tags, i);
-		if (!fu_device_has_backend_tag(FU_DEVICE(device), tag))
-			g_usb_device_remove_tag(priv->usb_device, tag);
-	}
-	for (guint i = 0; i < backend_tags->len; i++) {
-		const gchar *tag = g_ptr_array_index(backend_tags, i);
-		if (!g_usb_device_has_tag(priv->usb_device, tag))
-			g_usb_device_add_tag(priv->usb_device, tag);
-	}
-}
-#endif
-
 static void
 fu_usb_device_init(FuUsbDevice *device)
 {
@@ -122,14 +101,6 @@ fu_usb_device_init(FuUsbDevice *device)
 				     G_USB_DEVICE_ERROR,
 				     G_USB_DEVICE_ERROR_PERMISSION_DENIED,
 				     NULL);
-#endif
-
-#if G_USB_CHECK_VERSION(0, 4, 4)
-	/* copy this to the GUsbDevice */
-	g_signal_connect(FU_DEVICE(device),
-			 "notify::backend-tags",
-			 G_CALLBACK(fu_usb_device_backend_tags_notify_cb),
-			 device);
 #endif
 }
 

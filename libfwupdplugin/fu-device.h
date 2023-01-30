@@ -546,14 +546,6 @@ fu_device_set_version_from_uint32(FuDevice *self, guint32 version_raw);
 void
 fu_device_set_version_from_uint64(FuDevice *self, guint64 version_raw);
 void
-fu_device_add_backend_tag(FuDevice *self, const gchar *backend_tag);
-void
-fu_device_remove_backend_tag(FuDevice *self, const gchar *backend_tag);
-gboolean
-fu_device_has_backend_tag(FuDevice *self, const gchar *backend_tag);
-GPtrArray *
-fu_device_get_backend_tags(FuDevice *self);
-void
 fu_device_inhibit(FuDevice *self, const gchar *inhibit_id, const gchar *reason);
 void
 fu_device_uninhibit(FuDevice *self, const gchar *inhibit_id);
