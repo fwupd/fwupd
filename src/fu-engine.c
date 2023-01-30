@@ -8100,7 +8100,7 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 	if (host_emulate != NULL) {
 		g_autofree gchar *fn = NULL;
 
-		/* did the user specify an absolue path */
+		/* did the user specify an absolute path */
 		if (g_file_test(host_emulate, G_FILE_TEST_EXISTS)) {
 			fn = g_strdup(host_emulate);
 		} else {
