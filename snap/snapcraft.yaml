@@ -36,8 +36,6 @@ parts:
   build-introspection:
     plugin: nil
     stage-packages:
-      - python3-gi
-      - python3-cairo
       - python3-gi-cairo
     override-stage: |
       craftctl default
@@ -101,7 +99,6 @@ parts:
       - libcairo-dev
       - libefiboot-dev
       - libefivar-dev
-      - libftdi1-dev
       - libgudev-1.0-dev
       - libgcab-dev
       - libglib2.0-dev
@@ -112,7 +109,6 @@ parts:
       - libjcat-dev
       - liblzma-dev
       - libpango1.0-dev
-      - libpci-dev
       - libpolkit-gobject-1-dev
       - libprotobuf-c-dev
       - libsmbios-dev
