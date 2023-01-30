@@ -290,7 +290,7 @@
         </ul>
         <p>This release fixes the following bugs:</p>
         <ul>
-          <li>Do not use CoD even when advertized on non-aarch64 platforms</li>
+          <li>Do not use CoD even when advertised on non-aarch64 platforms</li>
           <li>Fix a crash when updating the Logitech Bolt radio device</li>
           <li>Fix a critical warning when parsing an invalid PHAT record</li>
           <li>Fix a critical warning when parsing invalid FDT firmware</li>
