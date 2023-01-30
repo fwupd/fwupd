@@ -20,6 +20,7 @@ with a non-standard filesystem layout.
 * `FWUPD_DOWNLOAD_VERBOSE` can be used to show wget or curl output
 * `FWUPD_PROFILE` can be used to set the profile traceback threshold value in ms
 * `FWUPD_FUZZER_RUNNING` if the firmware format is being fuzzed
+* `FWUPD_POLKIT_NOCHECK` if we should not check for polkit policies to be installed
 * standard glibc variables like `LANG` are also honored for CLI tools that are translated
 * libcurl respects the session proxy, e.g. `http_proxy`, `all_proxy`, `sftp_proxy` and `no_proxy`
 

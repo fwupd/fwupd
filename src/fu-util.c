@@ -3706,9 +3706,14 @@ static gboolean
 fu_util_check_polkit_actions(GError **error)
 {
 #ifdef HAVE_POLKIT
-	g_autofree gchar *directory = fu_path_from_kind(FU_PATH_KIND_POLKIT_ACTIONS);
-	g_autofree gchar *filename =
-	    g_build_filename(directory, "org.freedesktop.fwupd.policy", NULL);
+	g_autofree gchar *directory = NULL;
+	g_autofree gchar *filename = NULL;
+
+	if (g_getenv("FWUPD_POLKIT_NOCHECK") != NULL)
+		return TRUE;
+
+	directory = fu_path_from_kind(FU_PATH_KIND_POLKIT_ACTIONS);
+	filename = g_build_filename(directory, "org.freedesktop.fwupd.policy", NULL);
 	if (!g_file_test(filename, G_FILE_TEST_IS_REGULAR)) {
 		g_set_error_literal(
 		    error,
