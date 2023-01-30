@@ -51,7 +51,7 @@ parts:
                        -Dbuild=all,
                        -Dintrospection=disabled,
                        -Dman=false,
-                       -Dplugin_flashrom=false,
+                       -Dplugin_flashrom=disabled,
                        -Dplugin_powerd=disabled,
                        -Dudevdir=$CRAFT_STAGE/lib/udev,
                        "-Dgusb:tests=false",
