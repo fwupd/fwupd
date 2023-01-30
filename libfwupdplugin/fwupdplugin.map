@@ -1090,9 +1090,6 @@ LIBFWUPDPLUGIN_1.8.5 {
     fu_context_add_flag;
     fu_context_get_esp_volumes;
     fu_context_has_flag;
-    fu_device_add_backend_tag;
-    fu_device_get_backend_tags;
-    fu_device_has_backend_tag;
     fu_device_set_quirk_kv;
     fu_intel_thunderbolt_firmware_get_type;
     fu_intel_thunderbolt_firmware_new;
@@ -1166,6 +1163,5 @@ LIBFWUPDPLUGIN_1.8.10 {
 LIBFWUPDPLUGIN_1.8.11 {
   global:
     fu_device_has_problem;
-    fu_device_remove_backend_tag;
   local: *;
 } LIBFWUPDPLUGIN_1.8.10;
