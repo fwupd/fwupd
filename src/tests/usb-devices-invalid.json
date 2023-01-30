@@ -1,49 +1,46 @@
 {
-	"UsbDevices": [
-		{
-			"PlatformId": "usb:00",
-			"IdVendor": 10047,
-			"IdProduct": 4100,
-			"Device": 2,
-			"USB": 512,
-			"Manufacturer": 1,
-			"Product": 2,
-			"UsbBosDescriptors": [
-				{
-					"Comment": "version invalid",
-					"DevCapabilityType": 5,
-					"ExtraData": "AGPsCgF09c1SndooUlUNlPAKAAAAIAAqAA=="
-				},
-				{
-					"Comment": "UUID invalid",
-					"DevCapabilityType": 5,
-					"ExtraData": "AAAAAAAAAAAAAAAAAAAAAAAFCAEAIAAqAA=="
-				},
-				{
-					"Comment": "plugin invalid",
-					"DevCapabilityType": 5,
-					"ExtraData": "AGPsCgF09c1SndooUlUNlPAFCAEAIAArAA=="
-				}
-			],
-			"UsbEvents": [
-				{
-					"Id": "GetStringDescriptor:DescIndex=0x02",
-					"Data":
-					    "Q29sb3JIdWcyAEcAAAAAAACwA4pgfwAAAN+Vneb9GHkAAAAAAAAAAEA42QAAAAAAwHVdKPx/AAAAAAAAAAAAAJiCXSj8fwAAR9bLiWB/AADAdV0o/H8AAOrE/IlgfwAAgHW/AAAAAAAQw9UAAAAAAJiCXSj8fwAAytnLiQEAAAA="
-				},
-				{
-					"Comment": "Plugin=dfu\nIcon=computer\n",
-					"Id":
-					    "ControlTransfer:Direction=0x00,RequestType=0x02,Recipient=0x00,Request=0x2a,Value=0x0000,Idx=0x0007,Data=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=,Length=0x20",
-					"Data": "UGx1Z2luPWRmdQpJY29uPWNvbXB1dGVyCgAAAAAAAAA="
-				},
-				{
-					"Comment": "Plugin=XXX",
-					"Id":
-					    "ControlTransfer:Direction=0x00,RequestType=0x02,Recipient=0x00,Request=0x2b,Value=0x0000,Idx=0x0007,Data=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=,Length=0x20",
-					"Data": "UGx1Z2luPVhYWAoAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
-				}
-			]
-		}
-	]
+  "UsbDevices": [
+    {
+      "PlatformId": "usb:00",
+      "IdVendor": 10047,
+      "IdProduct": 4100,
+      "Device": 2,
+      "USB": 512,
+      "Manufacturer": 1,
+      "Product": 2,
+      "UsbBosDescriptors": [
+        {
+          "Comment": "version invalid",
+          "DevCapabilityType": 5,
+          "ExtraData": "AGPsCgF09c1SndooUlUNlPAKAAAAIAAqAA=="
+        },
+        {
+          "Comment": "UUID invalid",
+          "DevCapabilityType": 5,
+          "ExtraData": "AAAAAAAAAAAAAAAAAAAAAAAFCAEAIAAqAA=="
+        },
+        {
+          "Comment": "plugin invalid",
+          "DevCapabilityType": 5,
+          "ExtraData": "AGPsCgF09c1SndooUlUNlPAFCAEAIAArAA=="
+        }
+      ],
+      "UsbEvents": [
+        {
+          "Id": "GetStringDescriptor:DescIndex=0x02",
+          "Data": "Q29sb3JIdWcyAEcAAAAAAACwA4pgfwAAAN+Vneb9GHkAAAAAAAAAAEA42QAAAAAAwHVdKPx/AAAAAAAAAAAAAJiCXSj8fwAAR9bLiWB/AADAdV0o/H8AAOrE/IlgfwAAgHW/AAAAAAAQw9UAAAAAAJiCXSj8fwAAytnLiQEAAAA="
+        },
+        {
+          "Comment": "Plugin=dfu\nIcon=computer\n",
+          "Id": "ControlTransfer:Direction=0x00,RequestType=0x02,Recipient=0x00,Request=0x2a,Value=0x0000,Idx=0x0007,Data=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=,Length=0x20",
+          "Data": "UGx1Z2luPWRmdQpJY29uPWNvbXB1dGVyCgAAAAAAAAA="
+        },
+        {
+          "Comment": "Plugin=XXX",
+          "Id": "ControlTransfer:Direction=0x00,RequestType=0x02,Recipient=0x00,Request=0x2b,Value=0x0000,Idx=0x0007,Data=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=,Length=0x20",
+          "Data": "UGx1Z2luPVhYWAoAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+        }
+      ]
+    }
+  ]
 }

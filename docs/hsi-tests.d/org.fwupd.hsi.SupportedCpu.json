@@ -1,19 +1,19 @@
 {
-  "id" : "org.fwupd.hsi.SupportedCpu",
-  "name" : "Supported CPU",
-  "description" : [
+  "id": "org.fwupd.hsi.SupportedCpu",
+  "name": "Supported CPU",
+  "description": [
     "Most platform checks are specific to the CPU vendor.",
     "To avoid giving a very high HSI result for a platform we do not know how to verify, we include this attribute to ensure that the result is meaningful."
   ],
-  "failure-impact" : [
+  "failure-impact": [
     "If using an unsupported CPU then fwupd is unable to verify the platform security.",
     "You should contact your platform vendor and ask them to contribute HSI tests for this CPU type."
   ],
-  "failure-results" : {
-    "unknown" : "platform security is unknown"
+  "failure-results": {
+    "unknown": "platform security is unknown"
   },
-  "success-results" : {
-    "valid" : "the CPU platform is supported and has HSI tests"
+  "success-results": {
+    "valid": "the CPU platform is supported and has HSI tests"
   },
   "more-information": [
     "On AMD APUs or CPUs this information is reported on kernel 5.19 or later via the `ccp` kernel module. ",
@@ -21,6 +21,6 @@
     "If the kernel module has loaded but you still don't have data this is NOT a fwupd bug. You will have to contact ",
     "your motherboard or system manufacturer to enable reporting this information."
   ],
-  "hsi-level" : 1,
-  "fwupd-version" : "1.8.0"
+  "hsi-level": 1,
+  "fwupd-version": "1.8.0"
 }

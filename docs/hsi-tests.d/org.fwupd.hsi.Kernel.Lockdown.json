@@ -1,19 +1,19 @@
 {
-  "id" : "org.fwupd.hsi.Kernel.Lockdown",
-  "name" : "Kernel Lockdown",
-  "description" : [
+  "id": "org.fwupd.hsi.Kernel.Lockdown",
+  "name": "Kernel Lockdown",
+  "description": [
     "Kernel lockdown is an important mechanism to limit what hardware actions userspace programs can perform.",
     "Turning on this feature means that often-used mechanisms like /dev/mem used to raise privileges or exfiltrate data are no longer available."
   ],
-  "failure-impact" : [
+  "failure-impact": [
     "An unlocked kernel can be easily abused by a malicious userspace program running as root, which can include replacing system firmware."
   ],
-  "failure-results" : {
-    "not-valid" : "could not read lockdown status, perhaps from an old kernel",
-    "not-enabled" : "lockdown is set to `none`"
+  "failure-results": {
+    "not-valid": "could not read lockdown status, perhaps from an old kernel",
+    "not-enabled": "lockdown is set to `none`"
   },
-  "success-results" : {
-    "enabled" : "lockdown is set to either `integrity` or `confidentiality`."
+  "success-results": {
+    "enabled": "lockdown is set to either `integrity` or `confidentiality`."
   },
-  "fwupd-version" : "1.5.0"
+  "fwupd-version": "1.5.0"
 }
