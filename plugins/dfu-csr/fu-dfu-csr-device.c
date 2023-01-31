@@ -315,7 +315,7 @@ fu_dfu_csr_device_download_chunk(FuDfuCsrDevice *self, guint16 idx, GBytes *chun
 	/* wait for hardware */
 	if (fu_device_has_private_flag(FU_DEVICE(self), FU_DFU_CSR_DEVICE_FLAG_REQUIRE_DELAY)) {
 		g_debug("sleeping for %ums", self->dnload_timeout);
-		g_usleep(self->dnload_timeout * 1000);
+		fu_device_sleep(FU_DEVICE(self), self->dnload_timeout);
 	}
 
 	/* get status */
@@ -325,7 +325,7 @@ fu_dfu_csr_device_download_chunk(FuDfuCsrDevice *self, guint16 idx, GBytes *chun
 	/* is still busy */
 	if (self->dfu_state == FU_DFU_STATE_DFU_DNBUSY) {
 		g_debug("busy, so sleeping a bit longer");
-		g_usleep(G_USEC_PER_SEC);
+		fu_device_sleep(FU_DEVICE(self), 1000);
 		if (!fu_dfu_csr_device_get_status(self, error))
 			return FALSE;
 	}

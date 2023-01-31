@@ -53,7 +53,7 @@ fu_rts54hub_rtd21xx_ensure_version_unlocked(FuRts54hubRtd21xxForeground *self, G
 	}
 
 	/* wait for device ready */
-	g_usleep(300000);
+	fu_device_sleep(FU_DEVICE(self), 300); /* ms */
 	if (!fu_rts54hub_rtd21xx_device_i2c_read(FU_RTS54HUB_RTD21XX_DEVICE(self),
 						 UC_ISP_TARGET_ADDR,
 						 0x00,
@@ -83,7 +83,7 @@ fu_rts54hub_rtd21xx_foreground_detach_raw(FuRts54hubRtd21xxForeground *self, GEr
 		return FALSE;
 	}
 	/* wait for device ready */
-	g_usleep(300000);
+	fu_device_sleep(FU_DEVICE(self), 300); /* ms */
 	return TRUE;
 }
 
@@ -153,7 +153,7 @@ fu_rts54hub_rtd21xx_foreground_attach(FuDevice *device, FuProgress *progress, GE
 
 	/* the device needs some time to restart with the new firmware before
 	 * it can be queried again */
-	fu_progress_sleep(progress, 60000);
+	fu_device_sleep_full(device, 60000, progress); /* ms */
 
 	/* success */
 	return TRUE;
@@ -283,7 +283,7 @@ fu_rts54hub_rtd21xx_foreground_write_firmware(FuDevice *device,
 	}
 
 	/* read back 6 bytes data */
-	g_usleep(I2C_DELAY_AFTER_SEND * 40);
+	fu_device_sleep(FU_DEVICE(self), I2C_DELAY_AFTER_SEND * 40);
 	if (!fu_rts54hub_rtd21xx_device_i2c_read(FU_RTS54HUB_RTD21XX_DEVICE(self),
 						 UC_ISP_TARGET_ADDR,
 						 UC_FOREGROUND_STATUS,

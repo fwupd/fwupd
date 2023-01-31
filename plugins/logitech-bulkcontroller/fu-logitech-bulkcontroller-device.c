@@ -818,7 +818,7 @@ fu_logitech_bulkcontroller_device_write_firmware(FuDevice *device,
 	 *  Upload finished: kUpdateStateUpdating->kUpdateStateCurrent (~5minutes)
 	 *  After upload is finished, device reboots itself
 	 */
-	g_usleep(G_TIME_SPAN_SECOND);
+	fu_device_sleep(device, 1000); /* ms */
 	/* save the current firmware version for troubleshooting purpose */
 	old_firmware_version = g_strdup(fu_device_get_version(device));
 	do {
@@ -830,7 +830,7 @@ fu_logitech_bulkcontroller_device_write_firmware(FuDevice *device,
 		} else {
 			query_device = (no_response_count == 0) ? FALSE : TRUE;
 		}
-		g_usleep(500 * G_TIME_SPAN_MILLISECOND);
+		fu_device_sleep(device, 500);
 
 		/* lost Success/Failure message, device rebooting */
 		if (no_response_count == max_no_response_count) {
@@ -879,7 +879,7 @@ fu_logitech_bulkcontroller_device_write_firmware(FuDevice *device,
 			 * device no longer broadcast fu related events, need to query device
 			 * explicitly now
 			 */
-			g_usleep(G_USEC_PER_SEC);
+			fu_device_sleep(device, 1000); /* ms */
 			fu_progress_reset(fu_progress_get_child(progress));
 			continue;
 		}

@@ -40,7 +40,7 @@
 #define REG_QUAD_DISABLE       0x200fc0
 #define REG_HDCP22_DISABLE     0x200f90
 
-#define FLASH_SETTLE_TIME 5000000 /* us */
+#define FLASH_SETTLE_TIME 5000 /* ms */
 
 #define CAYENNE_FIRMWARE_SIZE 0x50000 /* bytes */
 
@@ -344,7 +344,7 @@ fu_synaptics_mst_device_update_esm(FuSynapticsMstDevice *self,
 		}
 
 		g_debug("Waiting for flash clear to settle");
-		g_usleep(FLASH_SETTLE_TIME);
+		fu_device_sleep(FU_DEVICE(self), FLASH_SETTLE_TIME);
 
 		/* write firmware */
 		fu_progress_set_id(progress, G_STRLOC);
@@ -425,7 +425,7 @@ fu_synaptics_mst_device_update_tesla_leaf_firmware(FuSynapticsMstDevice *self,
 		if (!fu_synaptics_mst_device_set_flash_sector_erase(self, 0xffff, 0, error))
 			return FALSE;
 		g_debug("Waiting for flash clear to settle");
-		g_usleep(FLASH_SETTLE_TIME);
+		fu_device_sleep(FU_DEVICE(self), FLASH_SETTLE_TIME);
 
 		fu_progress_set_steps(progress, write_loops);
 		for (guint32 i = 0; i < write_loops; i++) {
@@ -582,7 +582,7 @@ fu_synaptics_mst_device_update_panamera_firmware(FuSynapticsMstDevice *self,
 								    error))
 			return FALSE;
 		g_debug("Waiting for flash clear to settle");
-		g_usleep(FLASH_SETTLE_TIME);
+		fu_device_sleep(FU_DEVICE(self), FLASH_SETTLE_TIME);
 
 		/* write */
 		write_idx = 0;
@@ -622,7 +622,7 @@ fu_synaptics_mst_device_update_panamera_firmware(FuSynapticsMstDevice *self,
 		/* verify CRC */
 		checksum = fu_synaptics_mst_device_get_crc(0, 16, fw_size, payload_data);
 		for (guint32 i = 0; i < 4; i++) {
-			g_usleep(1000); /* wait crc calculation */
+			fu_device_sleep(FU_DEVICE(self), 1); /* wait crc calculation */
 			if (!fu_synaptics_mst_connection_rc_special_get_command(
 				connection,
 				UPDC_CAL_EEPROM_CHECK_CRC16,
@@ -645,7 +645,7 @@ fu_synaptics_mst_device_update_panamera_firmware(FuSynapticsMstDevice *self,
 					    "firmware update fail");
 			return FALSE;
 		}
-		g_usleep(2000);
+		fu_device_sleep(FU_DEVICE(self), 2);
 	}
 
 	/* set tag valid */
@@ -683,7 +683,7 @@ fu_synaptics_mst_device_update_panamera_firmware(FuSynapticsMstDevice *self,
 			g_prefix_error(error, "failed to write tag: ");
 			return FALSE;
 		}
-		g_usleep(200);
+		fu_device_sleep(FU_DEVICE(self), 1); /* ms */
 		if (!fu_synaptics_mst_connection_rc_get_command(
 			connection,
 			UPDC_READ_FROM_EEPROM,
@@ -801,7 +801,7 @@ fu_synaptics_mst_device_panamera_prepare_write(FuSynapticsMstDevice *self, GErro
 	}
 
 	/* wait for ESM exit */
-	g_usleep(200);
+	fu_device_sleep(FU_DEVICE(self), 1); /* ms */
 
 	/* disable QUAD mode */
 	if (!fu_synaptics_mst_connection_rc_get_command(connection,
@@ -889,7 +889,7 @@ fu_synaptics_mst_device_update_cayenne_firmware(FuSynapticsMstDevice *self,
 		if (!fu_synaptics_mst_device_set_flash_sector_erase(self, 0xffff, 0, error))
 			return FALSE;
 		g_debug("Waiting for flash clear to settle");
-		g_usleep(FLASH_SETTLE_TIME);
+		fu_device_sleep(FU_DEVICE(self), FLASH_SETTLE_TIME);
 
 		fu_progress_set_steps(progress, write_loops);
 		for (guint32 i = 0; i < write_loops; i++) {
@@ -1134,7 +1134,7 @@ fu_synaptics_mst_device_write_firmware(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/* wait for flash clear to settle */
-	fu_progress_sleep(fu_progress_get_child(progress), 2000);
+	fu_device_sleep_full(device, 2000, fu_progress_get_child(progress)); /* ms */
 	fu_progress_step_done(progress);
 	return TRUE;
 }

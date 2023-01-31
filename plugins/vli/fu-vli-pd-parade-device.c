@@ -151,7 +151,7 @@ fu_vli_pd_parade_device_read_fw_ver(FuVliPdParadeDevice *self, GError **error)
 		return FALSE;
 	if (!fu_vli_pd_parade_device_set_offset(self, 0x0, error))
 		return FALSE;
-	g_usleep(1000 * 10);
+	fu_device_sleep(FU_DEVICE(self), 10); /* ms */
 	if (!fu_vli_pd_parade_device_i2c_read(self, self->page7, 0x02, buf, 0x1, error))
 		return FALSE;
 	if (buf[0] != 0x01 && buf[0] != 0x02) {
@@ -518,7 +518,7 @@ fu_vli_pd_parade_device_write_firmware(FuDevice *device,
 		return FALSE;
 	if (!fu_vli_pd_parade_device_i2c_write(self, self->page2, 0x82, 0x20, error))
 		return FALSE; /* Reset_CLT2SPI_Interface */
-	g_usleep(1000 * 100);
+	fu_device_sleep(device, 100); /* ms */
 	if (!fu_vli_pd_parade_device_i2c_write(self, self->page2, 0x82, 0x00, error))
 		return FALSE;
 

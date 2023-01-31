@@ -119,7 +119,7 @@ fu_synaptics_rmi_v7_device_detach(FuDevice *device, FuProgress *progress, GError
 		return FALSE;
 	if (!fu_synaptics_rmi_device_poll_wait(self, error))
 		return FALSE;
-	g_usleep(1000 * RMI_F34_ENABLE_WAIT_MS);
+	fu_device_sleep(device, RMI_F34_ENABLE_WAIT_MS);
 	return TRUE;
 }
 
@@ -143,7 +143,7 @@ fu_synaptics_rmi_v7_device_erase_partition(FuSynapticsRmiDevice *self,
 	fu_byte_array_append_uint8(erase_cmd, flash->bootloader_id[0]);
 	fu_byte_array_append_uint8(erase_cmd, flash->bootloader_id[1]);
 
-	g_usleep(1000 * 1000);
+	fu_device_sleep(FU_DEVICE(self), 1000); /* ms */
 	if (!fu_synaptics_rmi_device_write(self,
 					   f34->data_base + 1,
 					   erase_cmd,
@@ -152,7 +152,7 @@ fu_synaptics_rmi_v7_device_erase_partition(FuSynapticsRmiDevice *self,
 		g_prefix_error(error, "failed to unlock erasing: ");
 		return FALSE;
 	}
-	g_usleep(1000 * 100);
+	fu_device_sleep(FU_DEVICE(self), 100); /* ms */
 
 	/* wait for ATTN */
 	if (!fu_synaptics_rmi_device_wait_for_idle(self,
@@ -196,7 +196,7 @@ fu_synaptics_rmi_v7_device_erase_all(FuSynapticsRmiDevice *self, GError **error)
 	/* for BL8 device, we need hold 1 seconds after querying F34 status to
 	 * avoid not get attention by following giving erase command */
 	if (flash->bootloader_id[1] >= 8)
-		g_usleep(1000 * 1000);
+		fu_device_sleep(FU_DEVICE(self), 1000); /* ms */
 	if (!fu_synaptics_rmi_device_write(self,
 					   f34->data_base + 1,
 					   erase_cmd,
@@ -205,7 +205,7 @@ fu_synaptics_rmi_v7_device_erase_all(FuSynapticsRmiDevice *self, GError **error)
 		g_prefix_error(error, "failed to unlock erasing: ");
 		return FALSE;
 	}
-	g_usleep(1000 * 100);
+	fu_device_sleep(FU_DEVICE(self), 100); /* ms */
 	if (flash->bootloader_id[1] >= 8) {
 		/* wait for ATTN */
 		if (!fu_synaptics_rmi_device_wait_for_idle(self,
@@ -229,7 +229,7 @@ fu_synaptics_rmi_v7_device_erase_all(FuSynapticsRmiDevice *self, GError **error)
 		fu_byte_array_append_uint32(erase_config_cmd, 0x0, G_LITTLE_ENDIAN);
 		fu_byte_array_append_uint8(erase_config_cmd, RMI_FLASH_CMD_ERASE);
 
-		g_usleep(1000 * 100);
+		fu_device_sleep(FU_DEVICE(self), 100); /* ms */
 		if (!fu_synaptics_rmi_device_write(self,
 						   f34->data_base + 1,
 						   erase_config_cmd,
@@ -240,7 +240,7 @@ fu_synaptics_rmi_v7_device_erase_all(FuSynapticsRmiDevice *self, GError **error)
 		}
 
 		/* wait for ATTN */
-		g_usleep(1000 * 100);
+		fu_device_sleep(FU_DEVICE(self), 100); /* ms */
 		if (!fu_synaptics_rmi_device_wait_for_idle(
 			self,
 			RMI_F34_ERASE_WAIT_MS,

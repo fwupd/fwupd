@@ -326,7 +326,7 @@ fu_dell_dock_trigger_rc_command(FuDevice *device, GError **error)
 			tmp = result[3];
 			break;
 		}
-		g_usleep(2000);
+		fu_device_sleep(FU_DEVICE(self), 2); /* ms */
 	}
 	switch (tmp) {
 	/* need to enable remote control */
@@ -611,7 +611,7 @@ fu_dell_dock_mst_erase_panamera_bank(FuDevice *device, MSTBank bank, GError **er
 		}
 	}
 	g_debug("MST: Waiting for flash clear to settle");
-	g_usleep(5000000);
+	fu_device_sleep(device, 5000); /* ms */
 
 	return TRUE;
 }
@@ -634,7 +634,7 @@ fu_dell_dock_mst_erase_cayenne(FuDevice *device, GError **error)
 		}
 	}
 	g_debug("MST: Waiting for flash clear to settle");
-	g_usleep(5000000);
+	fu_device_sleep(device, 5000);
 
 	return TRUE;
 }
@@ -697,7 +697,7 @@ fu_dell_dock_mst_stop_esm(FuDevice *device, GError **error)
 		return FALSE;
 
 	/* waiting for ESM exit */
-	g_usleep(200);
+	fu_device_sleep(device, 1);
 
 	/* disable QUAD mode */
 	if (!fu_dell_dock_mst_rc_command(device,

@@ -111,7 +111,7 @@ fu_hailuck_tp_device_write_firmware(FuDevice *device,
 		g_prefix_error(error, "failed to erase: ");
 		return FALSE;
 	}
-	g_usleep(10000);
+	fu_device_sleep(device, 10);
 	fu_progress_step_done(progress);
 
 	/* write */
@@ -151,7 +151,7 @@ fu_hailuck_tp_device_write_firmware(FuDevice *device,
 			g_prefix_error(error, "failed to write block 0x%x: ", i);
 			return FALSE;
 		}
-		g_usleep(150 * 1000);
+		fu_device_sleep(device, 150);
 
 		/* verify block */
 		req.type = FU_HAILUCK_CMD_I2C_VERIFY_BLOCK;
@@ -165,7 +165,7 @@ fu_hailuck_tp_device_write_firmware(FuDevice *device,
 						i + 1,
 						chunks->len);
 	}
-	g_usleep(50 * 1000);
+	fu_device_sleep(device, 50);
 	fu_progress_step_done(progress);
 
 	/* end-program */
@@ -174,7 +174,7 @@ fu_hailuck_tp_device_write_firmware(FuDevice *device,
 		g_prefix_error(error, "failed to end program: ");
 		return FALSE;
 	}
-	g_usleep(50 * 1000);
+	fu_device_sleep(device, 50);
 	fu_progress_step_done(progress);
 
 	/* verify checksum */
@@ -183,7 +183,7 @@ fu_hailuck_tp_device_write_firmware(FuDevice *device,
 		g_prefix_error(error, "failed to verify: ");
 		return FALSE;
 	}
-	g_usleep(50 * 1000);
+	fu_device_sleep(device, 50);
 	fu_progress_step_done(progress);
 
 	/* signal that programming has completed */

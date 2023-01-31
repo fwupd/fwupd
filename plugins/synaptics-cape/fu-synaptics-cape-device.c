@@ -149,7 +149,7 @@ fu_synaptics_cape_device_get_report_intr(FuSynapticsCapeDevice *self,
 					     (guint8 *)data,
 					     sizeof(*data),
 					     &actual_len,
-					     FU_SYNAPTICS_CAPE_DEVICE_USB_CMD_RETRY_TIMEOUT * 1000,
+					     FU_SYNAPTICS_CAPE_DEVICE_USB_CMD_RETRY_TIMEOUT,
 					     NULL,
 					     error)) {
 		g_prefix_error(error, "failed to get report over interrupt ep: ");
@@ -217,7 +217,7 @@ fu_synaptics_cape_device_rc_set_error(const FuCapCmd *rsp, GError **error)
 static gboolean
 fu_synaptics_cape_device_sendcmd_ex(FuSynapticsCapeDevice *self,
 				    FuCapCmd *req,
-				    gulong delay_us,
+				    guint delay_ms,
 				    GError **error)
 {
 	FuCapCmdHidReport report = {0};
@@ -258,8 +258,7 @@ fu_synaptics_cape_device_sendcmd_ex(FuSynapticsCapeDevice *self,
 		return FALSE;
 	}
 
-	if (delay_us > 0)
-		g_usleep(delay_us);
+	fu_device_sleep(FU_DEVICE(self), delay_ms);
 
 	/* waits for the command to complete. There are two approaches to get status from device:
 	 *  1. gets IN_REPORT over interrupt endpoint. device won't reply until a command operation
@@ -310,7 +309,8 @@ fu_synaptics_cape_device_sendcmd_ex(FuSynapticsCapeDevice *self,
 			}
 			if (report.cmd.reply)
 				break;
-			g_usleep(FU_SYNAPTICS_CAPE_DEVICE_USB_CMD_RETRY_INTERVAL * 1000);
+			fu_device_sleep(FU_DEVICE(self),
+					FU_SYNAPTICS_CAPE_DEVICE_USB_CMD_RETRY_INTERVAL);
 		}
 	}
 
@@ -343,7 +343,7 @@ fu_synaptics_cape_device_sendcmd(FuSynapticsCapeDevice *self,
 				 const guint32 cmd_id,
 				 const guint32 *data,
 				 const guint32 data_len,
-				 const gulong delay_us,
+				 const guint delay_ms,
 				 GError **error)
 {
 	FuCapCmd cmd = {0};
@@ -366,7 +366,7 @@ fu_synaptics_cape_device_sendcmd(FuSynapticsCapeDevice *self,
 				    error))
 			return FALSE;
 	}
-	return fu_synaptics_cape_device_sendcmd_ex(self, &cmd, delay_us, error);
+	return fu_synaptics_cape_device_sendcmd_ex(self, &cmd, delay_ms, error);
 }
 
 static void
@@ -399,7 +399,7 @@ fu_synaptics_cape_device_reset(FuSynapticsCapeDevice *self, GError **error)
 		return FALSE;
 	}
 
-	g_usleep(1000 * FU_SYNAPTICS_CAPE_DEVICE_USB_RESET_DELAY_MS);
+	fu_device_sleep(FU_DEVICE(self), FU_SYNAPTICS_CAPE_DEVICE_USB_RESET_DELAY_MS);
 
 	g_debug("reset took %.2lfms", g_timer_elapsed(timer, NULL) * 1000);
 

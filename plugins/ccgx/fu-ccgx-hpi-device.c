@@ -45,13 +45,13 @@ struct _FuCcgxHpiDevice {
 
 G_DEFINE_TYPE(FuCcgxHpiDevice, fu_ccgx_hpi_device, FU_TYPE_USB_DEVICE)
 
-#define HPI_CMD_REG_READ_WRITE_DELAY_US		 10000
-#define HPI_CMD_ENTER_FLASH_MODE_DELAY_US	 20000
+#define HPI_CMD_REG_READ_WRITE_DELAY_MS		 10
+#define HPI_CMD_ENTER_FLASH_MODE_DELAY_MS	 20
 #define HPI_CMD_SETUP_EVENT_WAIT_TIME_MS	 200
 #define HPI_CMD_SETUP_EVENT_CLEAR_TIME_MS	 150
 #define HPI_CMD_COMMAND_RESPONSE_TIME_MS	 500
 #define HPI_CMD_COMMAND_CLEAR_EVENT_TIME_MS	 30
-#define HPI_CMD_RESET_COMPLETE_DELAY_US		 150000
+#define HPI_CMD_RESET_COMPLETE_DELAY_MS		 150
 #define HPI_CMD_RETRY_DELAY			 30 /* ms */
 #define HPI_CMD_RESET_RETRY_CNT			 3
 #define HPI_CMD_ENTER_LEAVE_FLASH_MODE_RETRY_CNT 3
@@ -322,7 +322,7 @@ fu_ccgx_hpi_device_i2c_read(FuCcgxHpiDevice *self,
 	}
 
 	/* 10 msec delay */
-	g_usleep(I2C_READ_WRITE_DELAY_US);
+	fu_device_sleep(FU_DEVICE(self), I2C_READ_WRITE_DELAY_MS);
 	if (!fu_ccgx_hpi_device_wait_for_notify(self, NULL, error)) {
 		g_prefix_error(error, "i2c read error: ");
 		return FALSE;
@@ -374,7 +374,7 @@ fu_ccgx_hpi_device_i2c_write(FuCcgxHpiDevice *self,
 	}
 
 	/* 10 msec delay */
-	g_usleep(I2C_READ_WRITE_DELAY_US);
+	fu_device_sleep(FU_DEVICE(self), I2C_READ_WRITE_DELAY_MS);
 	if (!fu_ccgx_hpi_device_wait_for_notify(self, NULL, error)) {
 		g_prefix_error(error, "i2c wait for notification error: ");
 		return FALSE;
@@ -454,7 +454,7 @@ fu_ccgx_hpi_device_reg_read_cb(FuDevice *device, gpointer user_data, GError **er
 		g_prefix_error(error, "read error: ");
 		return FALSE;
 	}
-	g_usleep(HPI_CMD_REG_READ_WRITE_DELAY_US);
+	fu_device_sleep(FU_DEVICE(self), HPI_CMD_REG_READ_WRITE_DELAY_MS);
 	return TRUE;
 }
 
@@ -496,7 +496,7 @@ fu_ccgx_hpi_device_reg_write_cb(FuDevice *device, gpointer user_data, GError **e
 		g_prefix_error(error, "reg write error: ");
 		return FALSE;
 	}
-	g_usleep(HPI_CMD_REG_READ_WRITE_DELAY_US);
+	fu_device_sleep(FU_DEVICE(self), HPI_CMD_REG_READ_WRITE_DELAY_MS);
 	return TRUE;
 }
 
@@ -539,7 +539,7 @@ fu_ccgx_hpi_device_reg_write_no_resp(FuCcgxHpiDevice *self,
 		g_prefix_error(error, "reg write no-resp error: ");
 		return FALSE;
 	}
-	g_usleep(HPI_CMD_REG_READ_WRITE_DELAY_US);
+	fu_device_sleep(FU_DEVICE(self), HPI_CMD_REG_READ_WRITE_DELAY_MS);
 	return TRUE;
 }
 
@@ -826,7 +826,7 @@ fu_ccgx_hpi_enter_flash_mode_cb(FuDevice *device, gpointer user_data, GError **e
 	}
 
 	/* wait 10 msec */
-	g_usleep(HPI_CMD_ENTER_FLASH_MODE_DELAY_US);
+	fu_device_sleep(FU_DEVICE(self), HPI_CMD_ENTER_FLASH_MODE_DELAY_MS);
 	return TRUE;
 }
 
@@ -877,7 +877,7 @@ fu_ccgx_hpi_leave_flash_mode_cb(FuDevice *device, gpointer user_data, GError **e
 	}
 
 	/* wait 10 msec */
-	g_usleep(HPI_CMD_ENTER_FLASH_MODE_DELAY_US);
+	fu_device_sleep(FU_DEVICE(self), HPI_CMD_ENTER_FLASH_MODE_DELAY_MS);
 	return TRUE;
 }
 
@@ -1483,7 +1483,7 @@ fu_ccgx_hpi_device_setup(FuDevice *device, GError **error)
 		}
 	} else {
 		if (hpi_event == CY_PD_RESP_RESET_COMPLETE)
-			g_usleep(HPI_CMD_RESET_COMPLETE_DELAY_US);
+			fu_device_sleep(FU_DEVICE(self), HPI_CMD_RESET_COMPLETE_DELAY_MS);
 	}
 
 	/* start with no events in the queue */

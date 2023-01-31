@@ -307,7 +307,7 @@ fu_steelseries_sonic_read_from_flash(FuDevice *device,
 			fu_dump_raw(G_LOG_DOMAIN, "ReadFromFlash", data, sizeof(data));
 
 		/* timeout to give some time to read from flash to ram */
-		g_usleep(15000); /* 15 ms */
+		fu_device_sleep(device, 15); /* ms */
 
 		if (!fu_steelseries_sonic_read_from_ram(device,
 							chip,
@@ -317,7 +317,6 @@ fu_steelseries_sonic_read_from_flash(FuDevice *device,
 							fu_progress_get_child(progress),
 							error))
 			return FALSE;
-
 		fu_progress_step_done(progress);
 	}
 
@@ -391,8 +390,7 @@ fu_steelseries_sonic_write_to_ram(FuDevice *device,
 			return FALSE;
 
 		/* timeout to give some time to write to ram */
-		g_usleep(15000); /* 15 ms */
-
+		fu_device_sleep(device, 15); /* ms */
 		fu_progress_step_done(progress);
 	}
 
@@ -474,8 +472,7 @@ fu_steelseries_sonic_write_to_flash(FuDevice *device,
 			return FALSE;
 
 		/* timeout to give some time to write from ram to flash */
-		g_usleep(15000); /* 15 ms */
-
+		fu_device_sleep(device, 15); /* ms */
 		fu_progress_step_done(progress);
 	}
 
@@ -523,8 +520,7 @@ fu_steelseries_sonic_erase(FuDevice *device,
 		return FALSE;
 
 	/* timeout to give some time to erase flash */
-	fu_progress_sleep(fu_progress_get_child(progress), 1000); /* 1 s */
-
+	fu_device_sleep_full(device, 1000, fu_progress_get_child(progress)); /* ms */
 	fu_progress_step_done(progress);
 
 	/* success */
@@ -562,8 +558,7 @@ fu_steelseries_sonic_restart(FuDevice *device,
 		return FALSE;
 
 	/* timeout to give some time to restart chip */
-	fu_progress_sleep(progress, 3000); /* 3 s */
-
+	fu_device_sleep_full(device, 3000, progress); /* ms */
 	fu_progress_step_done(progress);
 
 	/* success */

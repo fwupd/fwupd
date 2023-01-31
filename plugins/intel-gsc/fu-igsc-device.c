@@ -619,7 +619,7 @@ fu_igsc_device_wait_for_reset(FuIgscDevice *self, GError **error)
 						    sizeof(fw_code_version),
 						    NULL))
 			return TRUE;
-		g_usleep(1000 * 100);
+		fu_device_sleep(FU_DEVICE(self), 100);
 	}
 	g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_TIMED_OUT, "device did not reset");
 	return FALSE;

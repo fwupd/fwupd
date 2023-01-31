@@ -94,7 +94,7 @@ fu_hailuck_bl_device_read_block(FuHailuckBlDevice *self,
 		return FALSE;
 
 	/* success */
-	g_usleep(10000);
+	fu_device_sleep(FU_DEVICE(self), 10);
 	return TRUE;
 }
 
@@ -145,7 +145,7 @@ fu_hailuck_bl_device_erase(FuHailuckBlDevice *self, FuProgress *progress, GError
 				      FU_HID_DEVICE_FLAG_IS_FEATURE,
 				      error))
 		return FALSE;
-	fu_progress_sleep(progress, 2000);
+	fu_device_sleep_full(FU_DEVICE(self), 2000, progress);
 	return TRUE;
 }
 
@@ -196,7 +196,7 @@ fu_hailuck_bl_device_write_block(FuHailuckBlDevice *self,
 		return FALSE;
 
 	/* success */
-	g_usleep(10000);
+	fu_device_sleep(FU_DEVICE(self), 10);
 	return TRUE;
 }
 

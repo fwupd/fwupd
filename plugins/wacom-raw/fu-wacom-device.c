@@ -119,8 +119,8 @@ fu_wacom_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 		g_prefix_error(error, "failed to switch to bootloader mode: ");
 		return FALSE;
 	}
-	g_usleep(300 * 1000);
-	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
+	fu_device_sleep(device, 300); /* ms */
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 	return TRUE;
 }
 
@@ -254,7 +254,7 @@ gboolean
 fu_wacom_device_cmd(FuWacomDevice *self,
 		    FuWacomRawRequest *req,
 		    FuWacomRawResponse *rsp,
-		    gulong delay_us,
+		    guint delay_ms,
 		    FuWacomDeviceCmdFlags flags,
 		    GError **error)
 {
@@ -263,8 +263,7 @@ fu_wacom_device_cmd(FuWacomDevice *self,
 		g_prefix_error(error, "failed to send: ");
 		return FALSE;
 	}
-	if (delay_us > 0)
-		g_usleep(delay_us);
+	fu_device_sleep(FU_DEVICE(self), delay_ms);
 	rsp->report_id = FU_WACOM_RAW_BL_REPORT_ID_GET;
 	if (!fu_wacom_device_get_feature(self, (guint8 *)rsp, sizeof(*rsp), error)) {
 		g_prefix_error(error, "failed to receive: ");
@@ -278,8 +277,7 @@ fu_wacom_device_cmd(FuWacomDevice *self,
 	/* wait for the command to complete */
 	if (flags & FU_WACOM_DEVICE_CMD_FLAG_POLL_ON_WAITING && rsp->resp != FU_WACOM_RAW_RC_OK) {
 		for (guint i = 0; i < FU_WACOM_RAW_CMD_RETRIES; i++) {
-			if (delay_us > 0)
-				g_usleep(delay_us);
+			fu_device_sleep(FU_DEVICE(self), delay_ms);
 			if (!fu_wacom_device_get_feature(self, (guint8 *)rsp, sizeof(*rsp), error))
 				return FALSE;
 			if (!fu_wacom_common_check_reply(req, rsp, error))

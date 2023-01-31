@@ -424,7 +424,8 @@ fu_dfu_target_manifest_wait(FuDfuTarget *self, GError **error)
 			return FALSE;
 		}
 
-		g_usleep((fu_dfu_device_get_download_timeout(device) + 1000) * 1000);
+		fu_device_sleep(FU_DEVICE(device),
+				fu_dfu_device_get_download_timeout(device) + 1000);
 		if (!fu_dfu_device_refresh(device, error))
 			return FALSE;
 	}
@@ -456,7 +457,7 @@ fu_dfu_target_check_status(FuDfuTarget *self, GError **error)
 	/* wait for dfuDNBUSY to not be set */
 	while (fu_dfu_device_get_state(device) == FU_DFU_STATE_DFU_DNBUSY) {
 		g_debug("waiting for FU_DFU_STATE_DFU_DNBUSY to clear");
-		g_usleep(fu_dfu_device_get_download_timeout(device) * 1000);
+		fu_device_sleep(FU_DEVICE(device), fu_dfu_device_get_download_timeout(device));
 		if (!fu_dfu_device_refresh(device, error))
 			return FALSE;
 		/* this is a really long time to save fwupd in case
@@ -730,7 +731,7 @@ fu_dfu_target_download_chunk(FuDfuTarget *self,
 		fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_BUSY);
 	if (fu_dfu_device_get_download_timeout(device) > 0) {
 		g_debug("sleeping for %ums…", fu_dfu_device_get_download_timeout(device));
-		g_usleep(fu_dfu_device_get_download_timeout(device) * 1000);
+		fu_device_sleep(FU_DEVICE(device), fu_dfu_device_get_download_timeout(device));
 	}
 
 	/* find out if the write was successful, waiting for BUSY to clear */

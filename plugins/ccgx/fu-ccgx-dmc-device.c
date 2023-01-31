@@ -349,7 +349,7 @@ fu_ccgx_dmc_get_image_write_status_cb(FuDevice *device, gpointer user_data, GErr
 			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "invalid dmc intr req data in image write status = %d",
 			    dmc_int_req.data[0]);
-		g_usleep(DMC_FW_WRITE_STATUS_RETRY_DELAY_MS * 1000);
+		fu_device_sleep(device, DMC_FW_WRITE_STATUS_RETRY_DELAY_MS);
 		return FALSE;
 	}
 	return TRUE;

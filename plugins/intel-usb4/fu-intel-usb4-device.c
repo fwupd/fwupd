@@ -276,7 +276,7 @@ fu_intel_usb4_device_operation(FuDevice *device, guint16 opcode, guint8 *metadat
 						   g_steal_pointer(&error_local),
 						   "maximum tries exceeded: ");
 		}
-		g_usleep((gulong)10000);
+		fu_device_sleep(device, 10); /* ms */
 	}
 	return FALSE;
 }

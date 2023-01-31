@@ -340,7 +340,7 @@ mst_poll_register(FuRealtekMstDevice *self,
 	if (!mst_read_register(self, address, &value, error))
 		return FALSE;
 	while ((value & mask) != expected && g_timer_elapsed(timer, NULL) <= timeout_seconds) {
-		g_usleep(G_TIME_SPAN_MILLISECOND);
+		fu_device_sleep(FU_DEVICE(self), 1); /* ms */
 		if (!mst_read_register(self, address, &value, error))
 			return FALSE;
 	}
@@ -435,7 +435,7 @@ fu_realtek_mst_device_get_dual_bank_info(FuRealtekMstDevice *self,
 		return FALSE;
 
 	/* wait for mode switch to complete */
-	g_usleep(200 * G_TIME_SPAN_MILLISECOND);
+	fu_device_sleep(FU_DEVICE(self), 200); /* ms */
 
 	/* request dual bank state and read back */
 	if (!fu_i2c_device_write(FU_I2C_DEVICE(self), request, sizeof(request), error))
@@ -886,7 +886,7 @@ fu_realtek_mst_device_attach(FuDevice *device, FuProgress *progress, GError **er
 		}
 
 		/* allow device some time to reset */
-		g_usleep(G_USEC_PER_SEC);
+		fu_device_sleep(device, 1000); /* ms */
 
 		/* verify device has exited programming mode and actually reset */
 		if (!mst_read_register(self, REG_MCU_MODE, &value, error))

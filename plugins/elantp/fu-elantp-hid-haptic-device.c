@@ -259,7 +259,7 @@ fu_elantp_hid_haptic_device_get_version(FuDevice *parent,
 		g_prefix_error(error, "failed to write haptic version cmd: ");
 		return FALSE;
 	}
-	g_usleep(ELANTP_DELAY_RESET * 1000);
+	fu_device_sleep(FU_DEVICE(self), ELANTP_DELAY_RESET);
 
 	if (!fu_elantp_hid_haptic_device_read_cmd(parent, 0x0321, buf, sizeof(buf), error)) {
 		g_prefix_error(error, "failed to read haptic version cmd: ");
@@ -276,7 +276,7 @@ fu_elantp_hid_haptic_device_get_version(FuDevice *parent,
 		g_prefix_error(error, "failed to write haptic iap version cmd: ");
 		return FALSE;
 	}
-	g_usleep(ELANTP_DELAY_RESET * 1000);
+	fu_device_sleep(FU_DEVICE(self), ELANTP_DELAY_RESET);
 
 	if (!fu_elantp_hid_haptic_device_read_cmd(parent, 0x0321, buf, sizeof(buf), error)) {
 		g_prefix_error(error, "failed to read haptic iap version cmd: ");
@@ -732,8 +732,9 @@ fu_elantp_hid_haptic_device_write_chunks_cb(FuDevice *device, gpointer user_data
 							  error))
 			return FALSE;
 
-		g_usleep(self->fw_page_size == 512 ? ELANTP_DELAY_WRITE_BLOCK_512 * 1000
-						   : ELANTP_DELAY_WRITE_BLOCK * 1000);
+		fu_device_sleep(device,
+				self->fw_page_size == 512 ? ELANTP_DELAY_WRITE_BLOCK_512
+							  : ELANTP_DELAY_WRITE_BLOCK);
 
 		if (!fu_elantp_hid_haptic_device_write_cmd(FU_DEVICE(parent),
 							   ETP_CMD_I2C_SET_EEPROM_CTRL,
@@ -828,7 +829,7 @@ fu_elantp_hid_haptic_device_write_firmware(FuDevice *device,
 		g_prefix_error(error, "cannot leave EEPROM IAP: ");
 		return FALSE;
 	}
-	g_usleep(ELANTP_DELAY_RESET * 1000);
+	fu_device_sleep(device, ELANTP_DELAY_RESET);
 	if (!fu_elantp_hid_haptic_device_get_checksum(FU_DEVICE(parent), &checksum_device, error)) {
 		g_prefix_error(error, "read device checksum fail: ");
 		return FALSE;
@@ -1044,7 +1045,7 @@ fu_elantp_hid_haptic_device_attach(FuDevice *device, FuProgress *progress, GErro
 		g_prefix_error(error, "cannot reset TP: ");
 		return FALSE;
 	}
-	g_usleep(ELANTP_DELAY_RESET * 1000);
+	fu_device_sleep(device, ELANTP_DELAY_RESET);
 	if (!fu_elantp_hid_haptic_device_write_cmd(FU_DEVICE(parent),
 						   ETP_CMD_I2C_IAP_RESET,
 						   ETP_I2C_ENABLE_REPORT,

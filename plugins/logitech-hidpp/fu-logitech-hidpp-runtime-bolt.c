@@ -463,7 +463,7 @@ fu_logitech_hidpp_runtime_bolt_setup(FuDevice *device, GError **error)
 		/* HID++1.0 devices have to sleep to allow Solaar to talk to
 		 * the device first -- we can't use the SwID as this is a
 		 * HID++2.0 feature */
-		g_usleep(200 * 1000);
+		fu_device_sleep(device, 200); /* ms */
 		if (fu_logitech_hidpp_runtime_bolt_setup_internal(device, &error_local))
 			return TRUE;
 		if (!g_error_matches(error_local, G_IO_ERROR, G_IO_ERROR_INVALID_DATA)) {

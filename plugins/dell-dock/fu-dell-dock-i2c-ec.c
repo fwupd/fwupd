@@ -932,7 +932,7 @@ fu_dell_dock_ec_setup(FuDevice *device, GError **error)
 	if (!fu_dell_dock_ec_query(device, &error_local)) {
 		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_SIGNATURE_INVALID)) {
 			g_warning("%s", error_local->message);
-			g_usleep(2 * G_USEC_PER_SEC);
+			fu_device_sleep(device, 2000); /* ms */
 			if (!fu_dell_dock_ec_query(device, error))
 				return FALSE;
 		} else {

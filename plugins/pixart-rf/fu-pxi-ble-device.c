@@ -554,7 +554,7 @@ fu_pxi_ble_device_fw_ota_init_new(FuPxiBleDevice *self, gsize bufsz, GError **er
 		return FALSE;
 
 	/* delay for BLE device read command */
-	g_usleep(10 * 1000);
+	fu_device_sleep(FU_DEVICE(self), 10); /* ms */
 
 	/* read fw ota init new command */
 	res[0] = PXI_HID_DEV_OTA_FEATURE_REPORT_ID;
@@ -731,7 +731,7 @@ fu_pxi_ble_device_fw_get_info(FuPxiBleDevice *self, GError **error)
 		return FALSE;
 
 	/* delay for BLE device read command */
-	g_usleep(10 * 1000);
+	fu_device_sleep(FU_DEVICE(self), 10); /* ms */
 
 	res[0] = PXI_HID_DEV_OTA_FEATURE_REPORT_ID;
 	res[1] = FU_PXI_DEVICE_CMD_FW_GET_INFO;
@@ -775,7 +775,7 @@ fu_pxi_ble_device_get_model_info(FuPxiBleDevice *self, GError **error)
 		return FALSE;
 
 	/* delay for BLE device read command */
-	g_usleep(10 * 1000);
+	fu_device_sleep(FU_DEVICE(self), 10); /* ms */
 
 	res[0] = PXI_HID_DEV_OTA_FEATURE_REPORT_ID;
 	if (!fu_pxi_ble_device_get_feature(self, res, sizeof(res), error))

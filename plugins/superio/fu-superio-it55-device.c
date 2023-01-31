@@ -320,10 +320,10 @@ fu_superio_it55_device_erase(FuDevice *device, GError **error)
 		    !fu_superio_device_ec_write_cmd(self, 0x00, error))
 			return FALSE;
 
-		g_usleep(1000);
+		fu_device_sleep(device, 1); /* ms */
 	}
 
-	g_usleep(100000);
+	fu_device_sleep(device, 100); /* ms */
 	return TRUE;
 }
 
@@ -417,7 +417,7 @@ fu_superio_it55_device_write_attempt(FuDevice *device,
 			return FALSE;
 	fu_progress_step_done(progress);
 
-	g_usleep(1000);
+	fu_device_sleep(device, 1); /* ms */
 
 	written_fw =
 	    fu_superio_it55_device_get_firmware(device, fu_progress_get_child(progress), error);

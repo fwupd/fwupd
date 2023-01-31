@@ -121,7 +121,7 @@ fu_steelseries_fizz_tunnel_attach(FuDevice *device, FuProgress *progress, GError
 	fu_progress_step_done(progress);
 
 	/* wait for receiver to reset the connection status to 0 */
-	fu_progress_sleep(fu_progress_get_child(progress), 2000); /* 2 s */
+	fu_device_sleep_full(device, 2000, fu_progress_get_child(progress)); /* ms */
 	remove_delay -= 2000;
 	fu_progress_step_done(progress);
 

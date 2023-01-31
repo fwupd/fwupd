@@ -748,7 +748,7 @@ fu_logitech_hidpp_device_setup(FuDevice *device, GError **error)
 		 * BLE devices might not be ready for ping right after
 		 * they come up -> wait a bit before pinging.
 		 */
-		g_usleep(G_USEC_PER_SEC);
+		fu_device_sleep(device, 1000); /* ms */
 	}
 	if (fu_device_has_private_flag(device, FU_LOGITECH_HIDPP_DEVICE_FLAG_FORCE_RECEIVER_ID))
 		priv->device_idx = HIDPP_DEVICE_IDX_RECEIVER;
@@ -963,7 +963,7 @@ fu_logitech_hidpp_device_detach(FuDevice *device, FuProgress *progress, GError *
 			g_prefix_error(error, "failed to put device into DFU mode: ");
 			return FALSE;
 		}
-		g_usleep(200 * 1000);
+		fu_device_sleep(device, 200); /* ms */
 		return fu_logitech_hidpp_device_setup(FU_DEVICE(self), error);
 	}
 
@@ -1276,7 +1276,7 @@ fu_logitech_hidpp_device_attach(FuLogitechHidPpDevice *self,
 		 * Possible race condition: after the device is reset, Linux might enumerate it as
 		 * a different hidraw device depending on timing.
 		 */
-		fu_progress_sleep(progress, 1000); /* ms */
+		fu_device_sleep_full(FU_DEVICE(self), 1000, progress); /* ms */
 	} else {
 		/* device file hasn't been unbound/re-bound, just probe again */
 		if (!fu_device_retry(device, fu_logitech_hidpp_device_reprobe_cb, 10, NULL, error))

@@ -228,7 +228,7 @@ fu_wac_module_set_feature(FuWacModule *self,
 		if (!fu_wac_module_refresh(self, error))
 			return FALSE;
 		if (priv->status == FU_WAC_MODULE_STATUS_BUSY) {
-			g_usleep(10000); /* 10ms */
+			fu_device_sleep(FU_DEVICE(self), 10); /* ms */
 			continue;
 		}
 		if (priv->status == FU_WAC_MODULE_STATUS_OK)

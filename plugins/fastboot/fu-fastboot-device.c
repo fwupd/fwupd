@@ -18,7 +18,6 @@
 #define FASTBOOT_EP_IN			   0x81
 #define FASTBOOT_EP_OUT			   0x01
 #define FASTBOOT_CMD_BUFSZ		   64 /* bytes */
-#define FASTBOOT_US_TO_MS		   1000
 
 struct _FuFastbootDevice {
 	FuUsbDevice parent_instance;
@@ -91,7 +90,7 @@ fu_fastboot_device_write(FuDevice *device, const guint8 *buf, gsize buflen, GErr
 					 error);
 
 	/* give device some time to handle action */
-	g_usleep(self->operation_delay * FASTBOOT_US_TO_MS);
+	fu_device_sleep(device, self->operation_delay);
 
 	if (!ret) {
 		g_prefix_error(error, "failed to do bulk transfer: ");
@@ -159,7 +158,7 @@ fu_fastboot_device_read(FuDevice *device,
 						 NULL,
 						 &error_local);
 		/* give device some time to handle action */
-		g_usleep(self->operation_delay * FASTBOOT_US_TO_MS);
+		fu_device_sleep(device, self->operation_delay);
 
 		if (!ret) {
 			if (g_error_matches(error_local,

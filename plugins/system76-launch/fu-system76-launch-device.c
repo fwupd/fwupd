@@ -166,7 +166,7 @@ fu_system76_launch_device_detach(FuDevice *device, FuProgress *progress, GError 
 
 	/* poll for the user-unlock */
 	do {
-		g_usleep(G_USEC_PER_SEC);
+		fu_device_sleep(device, 1000); /* ms */
 		if (!fu_system76_launch_device_reset(device, &rc, error))
 			return FALSE;
 	} while (rc != 0 &&

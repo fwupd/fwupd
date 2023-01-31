@@ -635,8 +635,8 @@ fu_device_retry_full(FuDevice *self,
 		g_autoptr(GError) error_local = NULL;
 
 		/* delay */
-		if (i > 0 && delay > 0)
-			g_usleep(delay * 1000);
+		if (i > 0)
+			fu_device_sleep(self, delay);
 
 		/* run function, if success return success */
 		if (func(self, user_data, &error_local))
@@ -716,6 +716,49 @@ fu_device_retry(FuDevice *self,
 {
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 	return fu_device_retry_full(self, func, count, priv->retry_delay, user_data, error);
+}
+
+/**
+ * fu_device_sleep:
+ * @self: a #FuDevice
+ * @delay_ms: delay in milliseconds
+ *
+ * Delays program execution up to 100 seconds, unless the device is emulated where no delays is
+ * performed.
+ *
+ * Long unavoidable delays (more than 1 second) should really use `fu_device_sleep_full()` so that
+ * the percentage progress bar is updated.
+ *
+ * Since: 1.8.11
+ **/
+void
+fu_device_sleep(FuDevice *self, guint delay_ms)
+{
+	g_return_if_fail(FU_IS_DEVICE(self));
+	g_return_if_fail(delay_ms < 100000);
+	if (delay_ms > 0 && !fu_device_has_flag(self, FWUPD_DEVICE_FLAG_EMULATED))
+		g_usleep(delay_ms * 1000);
+}
+
+/**
+ * fu_device_sleep_full:
+ * @self: a #FuDevice
+ * @delay_ms: delay in milliseconds
+ * @progress: a #FuProgress
+ *
+ * Delays program execution up to 1000 seconds, unless the device is emulated where no delays is
+ * performed.
+ *
+ * Since: 1.8.11
+ **/
+void
+fu_device_sleep_full(FuDevice *self, guint delay_ms, FuProgress *progress)
+{
+	g_return_if_fail(FU_IS_DEVICE(self));
+	g_return_if_fail(delay_ms < 1000000);
+	g_return_if_fail(FU_IS_PROGRESS(progress));
+	if (delay_ms > 0 && !fu_device_has_flag(self, FWUPD_DEVICE_FLAG_EMULATED))
+		fu_progress_sleep(progress, delay_ms);
 }
 
 static gboolean
