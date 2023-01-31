@@ -629,10 +629,18 @@ fu_history_modify_device(FuHistory *self, FuDevice *device, GError **error)
 	    SQLITE_STATIC);
 	sqlite3_bind_int64(stmt, 7, fu_device_get_modified(device));
 
-	return fu_history_stmt_exec(self, stmt, NULL, error);
-#else
-	return TRUE;
+	if (!fu_history_stmt_exec(self, stmt, NULL, error))
+		return FALSE;
+	if (sqlite3_changes(self->db) == 0) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_FOUND,
+			    "no device %s",
+			    fu_device_get_id(device));
+		return FALSE;
+	}
 #endif
+	return TRUE;
 }
 
 /**
