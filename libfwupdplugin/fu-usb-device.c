@@ -664,7 +664,8 @@ fu_usb_device_set_dev(FuUsbDevice *device, GUsbDevice *usb_device)
 	g_return_if_fail(FU_IS_USB_DEVICE(device));
 
 	/* need to re-probe hardware */
-	fu_device_probe_invalidate(FU_DEVICE(device));
+	if (!fu_device_has_flag(FU_DEVICE(device), FWUPD_DEVICE_FLAG_EMULATED))
+		fu_device_probe_invalidate(FU_DEVICE(device));
 
 	/* allow replacement */
 	g_set_object(&priv->usb_device, usb_device);

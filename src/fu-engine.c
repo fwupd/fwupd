@@ -7480,7 +7480,8 @@ fu_engine_backend_device_changed_cb(FuBackend *backend, FuDevice *device, FuEngi
 			continue;
 		if (g_strcmp0(fu_usb_device_get_platform_id(FU_USB_DEVICE(device_tmp)),
 			      fu_usb_device_get_platform_id(FU_USB_DEVICE(device))) == 0) {
-			g_debug("incorporating new GUsbDevice for %s", fu_device_get_id(device));
+			g_debug("incorporating new GUsbDevice for %s",
+				fu_device_get_id(device_tmp));
 			fu_device_incorporate(device_tmp, device);
 		}
 	}
