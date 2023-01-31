@@ -1915,6 +1915,35 @@ fu_engine_install_duration_func(gconstpointer user_data)
 }
 
 static void
+fu_engine_history_modify_func(gconstpointer user_data)
+{
+	FuTest *self = (FuTest *)user_data;
+	gboolean ret;
+	g_autoptr(FuDevice) device = fu_device_new(self->ctx);
+	g_autoptr(FuHistory) history = fu_history_new();
+	g_autoptr(FuRelease) release = fu_release_new();
+	g_autoptr(GError) error = NULL;
+
+	/* add a new entry */
+	fu_device_set_id(device, "foobarbaz");
+	fu_history_remove_device(history, device, NULL);
+	ret = fu_history_add_device(history, device, FWUPD_RELEASE(release), &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* try to modify something that does exist */
+	ret = fu_history_modify_device(history, device, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* does not exist */
+	fu_device_set_id(device, "DOES-NOT-EXIST");
+	ret = fu_history_modify_device(history, device, &error);
+	g_assert_false(ret);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
+}
+
+static void
 fu_engine_history_func(gconstpointer user_data)
 {
 	FuTest *self = (FuTest *)user_data;
@@ -4892,6 +4921,7 @@ main(int argc, char **argv)
 			     self,
 			     fu_engine_multiple_rels_func);
 	g_test_add_data_func("/fwupd/engine{history-success}", self, fu_engine_history_func);
+	g_test_add_data_func("/fwupd/engine{history-modify}", self, fu_engine_history_modify_func);
 	g_test_add_data_func("/fwupd/engine{history-error}", self, fu_engine_history_error_func);
 	if (g_test_slow()) {
 		g_test_add_data_func("/fwupd/device-list{replug-auto}",
