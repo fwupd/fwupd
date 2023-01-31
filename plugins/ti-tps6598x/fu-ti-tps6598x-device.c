@@ -502,10 +502,6 @@ fu_ti_tps6598x_device_setup(FuDevice *device, GError **error)
 	FuTiTps6598xDevice *self = FU_TI_TPS6598X_DEVICE(device);
 	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
 
-	/* FuUsbDevice->setup */
-	if (!FU_DEVICE_CLASS(fu_ti_tps6598x_device_parent_class)->setup(device, error))
-		return FALSE;
-
 	/* there are two devices with the same VID:PID -- ignore the non-vendor one */
 	if (g_usb_device_get_device_class(usb_device) != G_USB_DEVICE_CLASS_VENDOR_SPECIFIC) {
 		g_set_error(error,
@@ -514,6 +510,10 @@ fu_ti_tps6598x_device_setup(FuDevice *device, GError **error)
 			    "non-vendor specific interface ignored");
 		return FALSE;
 	}
+
+	/* FuUsbDevice->setup */
+	if (!FU_DEVICE_CLASS(fu_ti_tps6598x_device_parent_class)->setup(device, error))
+		return FALSE;
 
 	/* get hardware details */
 	if (!fu_ti_tps6598x_device_ensure_version(self, error)) {
