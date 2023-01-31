@@ -1110,6 +1110,17 @@ fu_util_download(FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 	}
 
+	/* file already exists */
+	basename = g_path_get_basename(values[0]);
+	if ((priv->flags & FWUPD_INSTALL_FLAG_FORCE) == 0 &&
+	    g_file_test(basename, G_FILE_TEST_EXISTS)) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_ARGS,
+			    "%s already exists",
+			    basename);
+		return FALSE;
+	}
 	blob = fwupd_client_download_bytes(priv->client,
 					   values[0],
 					   priv->download_flags,
@@ -1117,7 +1128,6 @@ fu_util_download(FuUtilPrivate *priv, gchar **values, GError **error)
 					   error);
 	if (blob == NULL)
 		return FALSE;
-	basename = g_path_get_basename(values[0]);
 	return g_file_set_contents(basename,
 				   g_bytes_get_data(blob, NULL),
 				   g_bytes_get_size(blob),
