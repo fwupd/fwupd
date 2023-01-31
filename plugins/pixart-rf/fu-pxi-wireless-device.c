@@ -18,7 +18,7 @@
 #include "fu-pxi-receiver-device.h"
 #include "fu-pxi-wireless-device.h"
 
-#define FU_PXI_WIRELESS_DEV_DELAY_US 50000
+#define FU_PXI_WIRELESS_DEV_DELAY_MS 50
 
 struct _FuPxiWirelessDevice {
 	FuDevice parent_instance;
@@ -114,7 +114,7 @@ fu_pxi_wireless_device_get_cmd_response(FuPxiWirelessDevice *device,
 		memset(buf, 0, bufsz);
 		buf[0] = PXI_HID_WIRELESS_DEV_OTA_REPORT_ID;
 
-		g_usleep(5 * 1000);
+		fu_device_sleep(FU_DEVICE(device), 5); /* ms */
 
 		if (!fu_pxi_wireless_device_get_feature(FU_DEVICE(parent), buf, bufsz, error))
 			return FALSE;
@@ -253,7 +253,7 @@ fu_pxi_wireless_device_fw_object_create(FuDevice *device, FuChunk *chk, GError *
 		return FALSE;
 
 	/* delay for wireless module device get command response*/
-	g_usleep(FU_PXI_WIRELESS_DEV_DELAY_US);
+	fu_device_sleep(FU_DEVICE(self), FU_PXI_WIRELESS_DEV_DELAY_MS);
 
 	return fu_pxi_wireless_device_set_feature(FU_DEVICE(parent),
 						  receiver_cmd->data,
@@ -300,7 +300,7 @@ fu_pxi_wireless_device_write_payload(FuDevice *device, FuChunk *chk, GError **er
 		return FALSE;
 
 	/* delay for wireless module device get command response*/
-	g_usleep(FU_PXI_WIRELESS_DEV_DELAY_US);
+	fu_device_sleep(device, FU_PXI_WIRELESS_DEV_DELAY_MS);
 
 	if (!fu_pxi_wireless_device_get_cmd_response(self, buf, sizeof(buf), error))
 		return FALSE;
@@ -437,7 +437,7 @@ fu_pxi_wireless_device_fw_ota_ini_new_check(FuDevice *device, GError **error)
 		return FALSE;
 
 	/* delay for wireless module device get command response*/
-	g_usleep(FU_PXI_WIRELESS_DEV_DELAY_US);
+	fu_device_sleep(device, FU_PXI_WIRELESS_DEV_DELAY_MS);
 
 	if (!fu_pxi_wireless_device_get_cmd_response(self, buf, sizeof(buf), error))
 		return FALSE;
@@ -624,7 +624,7 @@ fu_pxi_wireless_device_write_firmware(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/* send device reset command */
-	g_usleep(FU_PXI_WIRELESS_DEV_DELAY_US);
+	fu_device_sleep(device, FU_PXI_WIRELESS_DEV_DELAY_MS);
 	if (!fu_pxi_wireless_device_reset(device, error))
 		return FALSE;
 	fu_progress_step_done(progress);

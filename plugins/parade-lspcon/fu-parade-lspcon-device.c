@@ -391,7 +391,7 @@ fu_parade_lspcon_flash_wait_ready(FuParadeLspconDevice *self, GError **error)
 
 		/* flash operations generally take between 1ms and 4s; polling
 		 * at 1000 Hz is still quite responsive and not overly slow */
-		g_usleep(G_TIME_SPAN_MILLISECOND);
+		fu_device_sleep(FU_DEVICE(self), 1); /* ms */
 	} while (g_timer_elapsed(timer, NULL) <= 10.0);
 
 	g_set_error_literal(error,
@@ -431,7 +431,7 @@ fu_parade_lspcon_flash_write(FuParadeLspconDevice *self,
 	/* reset clt2SPI, required before write */
 	if (!fu_parade_lspcon_write_register(self, REG_ADDR_CLT2SPI, 0x20, error))
 		return FALSE;
-	g_usleep(100 * G_TIME_SPAN_MILLISECOND);
+	fu_device_sleep(FU_DEVICE(self), 100); /* ms */
 	if (!fu_parade_lspcon_write_register(self, REG_ADDR_CLT2SPI, 0, error))
 		return FALSE;
 

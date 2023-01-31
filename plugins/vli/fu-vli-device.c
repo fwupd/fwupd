@@ -149,7 +149,7 @@ fu_vli_device_spi_wait_finish(FuVliDevice *self, GError **error)
 		} else {
 			cnt = 0;
 		}
-		g_usleep(500 * 1000);
+		fu_device_sleep(FU_DEVICE(self), 500); /* ms */
 	}
 	g_set_error(error, G_IO_ERROR, G_IO_ERROR_FAILED, "failed to wait for SPI");
 	return FALSE;
@@ -267,7 +267,7 @@ fu_vli_device_spi_write_block(FuVliDevice *self,
 		g_prefix_error(error, "SPI data write failed: ");
 		return FALSE;
 	}
-	g_usleep(800);
+	fu_device_sleep(FU_DEVICE(self), 1); /* ms */
 
 	/* verify */
 	if (!fu_vli_device_spi_read_block(self, address, buf_tmp, bufsz, error)) {
@@ -349,7 +349,7 @@ fu_vli_device_spi_erase_all(FuVliDevice *self, FuProgress *progress, GError **er
 		return FALSE;
 	if (!fu_vli_device_spi_chip_erase(self, error))
 		return FALSE;
-	fu_progress_sleep(fu_progress_get_child(progress), 4000);
+	fu_device_sleep_full(FU_DEVICE(self), 4000, fu_progress_get_child(progress)); /* ms */
 	fu_progress_step_done(progress);
 
 	/* verify chip was erased */

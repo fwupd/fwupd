@@ -751,7 +751,7 @@ fu_redfish_device_poll_task(FuRedfishDevice *self,
 
 	/* sleep and then reprobe hardware */
 	do {
-		g_usleep(G_USEC_PER_SEC);
+		fu_device_sleep(FU_DEVICE(self), 1000); /* ms */
 		if (!fu_redfish_device_poll_task_once(self, ctx, error))
 			return FALSE;
 		if (ctx->completed)

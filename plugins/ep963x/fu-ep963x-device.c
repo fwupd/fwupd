@@ -54,7 +54,7 @@ fu_ep963x_device_write(FuEp963xDevice *self,
 		return FALSE;
 
 	/* wait for hardware */
-	g_usleep(100 * 1000);
+	fu_device_sleep(FU_DEVICE(self), 100);
 	return TRUE;
 }
 
@@ -99,7 +99,7 @@ fu_ep963x_device_write_icp(FuEp963xDevice *self,
 			}
 			return TRUE;
 		}
-		g_usleep(100 * 1000);
+		fu_device_sleep(FU_DEVICE(self), 100);
 	}
 
 	/* failed */

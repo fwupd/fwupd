@@ -657,7 +657,7 @@ fu_synaptics_cxaudio_device_write_firmware(FuDevice *device,
 		7,
 		error))
 		return FALSE;
-	g_usleep(10 * 1000);
+	fu_device_sleep(device, 10); /* ms */
 	fu_progress_step_done(progress);
 
 	/* initialize layout signature and version to 0 if transitioning from

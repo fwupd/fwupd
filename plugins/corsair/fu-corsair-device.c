@@ -16,10 +16,10 @@
 
 #define CORSAIR_TRANSACTION_TIMEOUT	    4000
 #define CORSAIR_SUBDEVICE_POLL_PERIOD	    30000
-#define CORSAIR_SUBDEVICE_REBOOT_DELAY	    (4 * G_USEC_PER_SEC)
+#define CORSAIR_SUBDEVICE_REBOOT_DELAY	    4000 /* ms */
 #define CORSAIR_SUBDEVICE_RECONNECT_RETRIES 30
 #define CORSAIR_SUBDEVICE_RECONNECT_PERIOD  1000
-#define CORSAIR_SUBDEVICE_FIRST_POLL_DELAY  (2 * G_USEC_PER_SEC)
+#define CORSAIR_SUBDEVICE_FIRST_POLL_DELAY  2000 /* ms */
 
 struct _FuCorsairDevice {
 	FuUsbDevice parent_instance;
@@ -244,7 +244,7 @@ fu_corsair_device_setup(FuDevice *device, GError **error)
 		/* Give some time to a subdevice to get connected to the receiver.
 		 * Without this delay a subdevice may be not present even if it is
 		 * turned on. */
-		g_usleep(CORSAIR_SUBDEVICE_FIRST_POLL_DELAY);
+		fu_device_sleep(device, CORSAIR_SUBDEVICE_FIRST_POLL_DELAY);
 		if (!fu_corsair_poll_subdevice(device, &subdevice_added, &local_error)) {
 			g_warning("error polling subdevice: %s", local_error->message);
 		} else {
@@ -300,7 +300,7 @@ fu_corsair_reconnect_subdevice(FuDevice *device, GError **error)
 	}
 
 	/* Wait some time to make sure that a subdevice was disconnected. */
-	g_usleep(CORSAIR_SUBDEVICE_REBOOT_DELAY);
+	fu_device_sleep(device, CORSAIR_SUBDEVICE_REBOOT_DELAY);
 
 	if (!fu_device_retry_full(parent,
 				  fu_corsair_is_subdevice_connected_cb,

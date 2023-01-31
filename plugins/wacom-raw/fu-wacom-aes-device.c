@@ -167,7 +167,7 @@ fu_wacom_aes_device_attach(FuDevice *device, FuProgress *progress, GError **erro
 	}
 
 	/* wait for device back to runtime mode */
-	g_usleep(500 * 1000);
+	fu_device_sleep(device, 500); /* ms */
 	fu_device_remove_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 	return TRUE;
 }
@@ -182,13 +182,13 @@ fu_wacom_aes_device_erase_all(FuWacomAesDevice *self, FuProgress *progress, GErr
 	if (!fu_wacom_device_cmd(FU_WACOM_DEVICE(self),
 				 &req,
 				 &rsp,
-				 2000 * 1000, /* this takes a long time */
+				 2000, /* this takes a long time */
 				 FU_WACOM_DEVICE_CMD_FLAG_POLL_ON_WAITING,
 				 error)) {
 		g_prefix_error(error, "failed to send eraseall command: ");
 		return FALSE;
 	}
-	fu_progress_sleep(progress, 2000);
+	fu_device_sleep_full(FU_DEVICE(self), 2000, progress);
 	return TRUE;
 }
 
@@ -234,7 +234,7 @@ fu_wacom_aes_device_write_block(FuWacomAesDevice *self,
 	if (!fu_wacom_device_cmd(FU_WACOM_DEVICE(self),
 				 &req,
 				 &rsp,
-				 1000,
+				 1, /* ms */
 				 FU_WACOM_DEVICE_CMD_FLAG_NONE,
 				 error)) {
 		g_prefix_error(error, "failed to write block %u: ", idx);

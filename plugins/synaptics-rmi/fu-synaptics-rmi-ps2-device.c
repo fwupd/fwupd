@@ -117,7 +117,7 @@ fu_synaptics_rmi_ps2_device_read_ack(FuSynapticsRmiPs2Device *self, guint8 *pbuf
 					    &error_local)) {
 			if (g_error_matches(error_local, G_IO_ERROR, G_IO_ERROR_TIMED_OUT)) {
 				g_warning("read timed out: %u", i);
-				g_usleep(30);
+				fu_device_sleep(FU_DEVICE(self), 1); /* ms */
 				continue;
 			}
 			g_propagate_error(error, g_steal_pointer(&error_local));
@@ -188,17 +188,17 @@ fu_synaptics_rmi_ps2_device_write_byte(FuSynapticsRmiPs2Device *self,
 			if (res == edpsResend) {
 				do_write = TRUE;
 				g_debug("resend");
-				g_usleep(G_USEC_PER_SEC);
+				fu_device_sleep(FU_DEVICE(self), 1000); /* ms */
 				break;
 			}
 			if (res == edpsError) {
 				do_write = TRUE;
 				g_debug("error");
-				g_usleep(1000 * 10);
+				fu_device_sleep(FU_DEVICE(self), 10); /* ms */
 				break;
 			}
 			g_debug("other response: 0x%x", res);
-			g_usleep(1000 * 10);
+			fu_device_sleep(FU_DEVICE(self), 10); /* ms */
 		}
 		if (i >= 3) {
 			if (flags & FU_SYNAPTICS_RMI_DEVICE_FLAG_ALLOW_FAILURE) {
@@ -503,7 +503,7 @@ fu_synaptics_rmi_ps2_device_write_rmi_register(FuSynapticsRmiPs2Device *self,
 	}
 
 	/* success */
-	g_usleep(1000 * 20);
+	fu_device_sleep(FU_DEVICE(self), 20); /* ms */
 	return TRUE;
 }
 
@@ -563,7 +563,7 @@ fu_synaptics_rmi_ps2_device_read_rmi_register(FuSynapticsRmiPs2Device *self,
 	}
 
 	/* success */
-	g_usleep(1000 * 20);
+	fu_device_sleep(FU_DEVICE(self), 20); /* ms */
 	return TRUE;
 }
 
@@ -611,7 +611,7 @@ fu_synaptics_rmi_ps2_device_read_rmi_packet_register(FuSynapticsRmiPs2Device *se
 		fu_byte_array_append_uint8(buf, tmp);
 	}
 
-	g_usleep(1000 * 20);
+	fu_device_sleep(FU_DEVICE(self), 20); /* ms */
 	return g_steal_pointer(&buf);
 }
 
@@ -950,7 +950,7 @@ fu_synaptics_rmi_ps2_device_attach(FuDevice *device, FuProgress *progress, GErro
 	fu_synaptics_rmi_device_set_iepmode(rmi_device, FALSE);
 
 	/* delay after writing */
-	fu_progress_sleep(progress, 2000);
+	fu_device_sleep_full(device, 2000, progress); /* ms */
 
 	/* reset device */
 	if (!fu_synaptics_rmi_device_enter_iep_mode(rmi_device,
@@ -961,9 +961,7 @@ fu_synaptics_rmi_ps2_device_attach(FuDevice *device, FuProgress *progress, GErro
 		g_prefix_error(error, "failed to reset device: ");
 		return FALSE;
 	}
-
-	/* delay after reset */
-	fu_progress_sleep(progress, 5000);
+	fu_device_sleep_full(device, 5000, progress); /* ms */
 
 	/* back to psmouse */
 	if (!fu_udev_device_write_sysfs(FU_UDEV_DEVICE(device), "drvctl", "psmouse", error)) {
@@ -993,7 +991,7 @@ fu_synaptics_rmi_ps2_device_wait_for_attr(FuSynapticsRmiDevice *rmi_device,
 					  guint timeout_ms,
 					  GError **error)
 {
-	g_usleep(1000 * timeout_ms);
+	fu_device_sleep(FU_DEVICE(rmi_device), timeout_ms);
 	return TRUE;
 }
 

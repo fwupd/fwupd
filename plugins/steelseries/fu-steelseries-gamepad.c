@@ -43,7 +43,7 @@ fu_steelseries_gamepad_cmd_erase(FuDevice *device, GError **error)
 	}
 
 	/* timeout to give some time to erase */
-	g_usleep(20000);
+	fu_device_sleep(device, 20); /* ms */
 
 	return TRUE;
 }
@@ -183,7 +183,7 @@ fu_steelseries_gamepad_write_firmware_chunks(FuDevice *device,
 			return FALSE;
 		}
 		/* timeout to give some time to flash the block on device */
-		g_usleep(10000);
+		fu_device_sleep(device, 10); /* ms */
 		fu_progress_step_done(progress);
 	}
 

@@ -903,6 +903,8 @@ fu_progress_step_done(FuProgress *self)
  *
  * Sleeps, setting the device progress from 0..100% as time continues.
  *
+ * NOTE: You should try to avoid calling this function for emulated devices.
+ *
  * Since: 1.7.0
  **/
 void

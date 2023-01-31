@@ -60,7 +60,7 @@ fu_synaptics_rmi_v5_device_detach(FuDevice *device, FuProgress *progress, GError
 		return FALSE;
 	}
 
-	g_usleep(1000 * RMI_F34_ENABLE_WAIT_MS);
+	fu_device_sleep(device, RMI_F34_ENABLE_WAIT_MS);
 	return TRUE;
 }
 
@@ -86,7 +86,7 @@ fu_synaptics_rmi_v5_device_erase_all(FuSynapticsRmiDevice *self, GError **error)
 		g_prefix_error(error, "failed to erase core config: ");
 		return FALSE;
 	}
-	g_usleep(1000 * RMI_F34_ERASE_WAIT_MS);
+	fu_device_sleep(FU_DEVICE(self), RMI_F34_ERASE_WAIT_MS);
 	fu_synaptics_rmi_device_set_iepmode(self, FALSE);
 	if (!fu_synaptics_rmi_device_enter_iep_mode(self,
 						    FU_SYNAPTICS_RMI_DEVICE_FLAG_FORCE,
@@ -429,7 +429,7 @@ fu_synaptics_rmi_v5_device_write_firmware(FuDevice *device,
 			}
 			fu_progress_step_done(progress_child);
 		}
-		g_usleep(1000 * 1000);
+		fu_device_sleep(device, 1000); /* ms */
 	}
 	fu_progress_step_done(progress);
 

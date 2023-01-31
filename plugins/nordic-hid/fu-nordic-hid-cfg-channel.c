@@ -199,7 +199,7 @@ fu_nordic_hid_cfg_channel_receive(FuNordicHidCfgChannel *self,
 		    (recv_msg->recipient | recv_msg->event_id | recv_msg->status |
 		     recv_msg->data_len))
 			break;
-		g_usleep(i * 50);
+		fu_device_sleep(FU_DEVICE(self), 1); /* ms */
 	}
 	if (!fu_memcpy_safe(buf,
 			    bufsz,
@@ -780,7 +780,7 @@ fu_nordic_hid_cfg_channel_dfu_sync_cb(FuDevice *device, gpointer user_data, GErr
 			return FALSE;
 
 		recv_msg->report_id = HID_REPORT_ID;
-		g_usleep(i * 5000);
+		fu_device_sleep(device, 2); /* ms */
 		if (!fu_nordic_hid_cfg_channel_receive(self,
 						       (guint8 *)recv_msg,
 						       sizeof(*recv_msg),

@@ -222,17 +222,17 @@ fu_test_plugin_write_firmware(FuPlugin *plugin,
 	}
 	fu_progress_set_status(progress, FWUPD_STATUS_DECOMPRESSING);
 	for (guint i = 0; i <= self->delay_decompress_ms; i++) {
-		g_usleep(1000);
+		fu_device_sleep(device, 1);
 		fu_progress_set_percentage_full(progress, i, self->delay_decompress_ms);
 	}
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_WRITE);
 	for (guint i = 0; i <= self->delay_write_ms; i++) {
-		g_usleep(1000);
+		fu_device_sleep(device, 1);
 		fu_progress_set_percentage_full(progress, i, self->delay_write_ms);
 	}
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_VERIFY);
 	for (guint i = 0; i <= self->delay_verify_ms; i++) {
-		g_usleep(1000);
+		fu_device_sleep(device, 1);
 		fu_progress_set_percentage_full(progress, i, self->delay_verify_ms);
 	}
 

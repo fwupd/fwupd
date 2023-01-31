@@ -518,8 +518,9 @@ fu_elantp_i2c_device_write_firmware(FuDevice *device,
 
 		if (!fu_elantp_i2c_device_send_cmd(self, blk, blksz, NULL, 0, error))
 			return FALSE;
-		g_usleep(self->fw_page_size == 512 ? ELANTP_DELAY_WRITE_BLOCK_512 * 1000
-						   : ELANTP_DELAY_WRITE_BLOCK * 1000);
+		fu_device_sleep(device,
+				self->fw_page_size == 512 ? ELANTP_DELAY_WRITE_BLOCK_512
+							  : ELANTP_DELAY_WRITE_BLOCK);
 
 		if (!fu_elantp_i2c_device_ensure_iap_ctrl(self, error))
 			return FALSE;
@@ -566,7 +567,9 @@ fu_elantp_i2c_device_write_firmware(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/* wait for a reset */
-	fu_progress_sleep(fu_progress_get_child(progress), ELANTP_DELAY_COMPLETE);
+	fu_device_sleep_full(device,
+			     ELANTP_DELAY_COMPLETE,
+			     fu_progress_get_child(progress)); /* ms */
 	fu_progress_step_done(progress);
 	return TRUE;
 }
@@ -588,7 +591,7 @@ fu_elantp_i2c_device_detach(FuDevice *device, FuProgress *progress, GError **err
 						    ETP_I2C_IAP_RESET,
 						    error))
 			return FALSE;
-		g_usleep(ELANTP_DELAY_RESET * 1000);
+		fu_device_sleep(device, ELANTP_DELAY_RESET);
 	}
 	/* get OSM version */
 	if (!fu_elantp_i2c_device_read_cmd(self,
@@ -684,7 +687,7 @@ fu_elantp_i2c_device_detach(FuDevice *device, FuProgress *progress, GError **err
 	}
 	if (!fu_elantp_i2c_device_write_cmd(self, ETP_CMD_I2C_IAP, self->iap_password, error))
 		return FALSE;
-	g_usleep(ELANTP_DELAY_UNLOCK * 1000);
+	fu_device_sleep(device, ELANTP_DELAY_UNLOCK);
 	if (!fu_elantp_i2c_device_ensure_iap_ctrl(self, error))
 		return FALSE;
 	if ((self->iap_ctrl & ETP_FW_IAP_CHECK_PW) == 0) {
@@ -713,7 +716,7 @@ fu_elantp_i2c_device_attach(FuDevice *device, FuProgress *progress, GError **err
 	/* reset back to runtime */
 	if (!fu_elantp_i2c_device_write_cmd(self, ETP_CMD_I2C_IAP_RESET, ETP_I2C_IAP_RESET, error))
 		return FALSE;
-	g_usleep(ELANTP_DELAY_RESET * 1000);
+	fu_device_sleep(device, ELANTP_DELAY_RESET);
 	if (!fu_elantp_i2c_device_write_cmd(self,
 					    ETP_CMD_I2C_IAP_RESET,
 					    ETP_I2C_ENABLE_REPORT,

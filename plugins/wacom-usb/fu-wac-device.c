@@ -694,7 +694,7 @@ fu_wac_device_add_modules_bluetooth(FuWacDevice *self, GError **error)
 			return FALSE;
 		if (fw_ver != 0)
 			break;
-		g_usleep(G_USEC_PER_SEC);
+		fu_device_sleep(FU_DEVICE(self), 1000); /* ms */
 	}
 
 	/* Success! But legacy bluetooth can't tell us which module the device needs.
@@ -880,7 +880,7 @@ fu_wac_device_close(FuDevice *device, GError **error)
 	 * we take the lock, then cancel the work item which needs to take the
 	 * lock too. This needs to be fixed in the kernel, but for the moment
 	 * this should let the kernel unstick itself. */
-	g_usleep(20 * 1000);
+	fu_device_sleep(device, 20); /* ms */
 
 	/* FuUsbDevice->close */
 	return FU_DEVICE_CLASS(fu_wac_device_parent_class)->close(device, error);

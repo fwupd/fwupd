@@ -21,7 +21,7 @@ G_DEFINE_TYPE(FuVliUsbhubRtd21xxDevice, fu_vli_usbhub_rtd21xx_device, FU_TYPE_DE
 #define I2C_WRITE_REQUEST 0xB2
 #define I2C_READ_REQUEST  0xA5
 
-#define I2C_DELAY_AFTER_SEND 5000 /* us */
+#define I2C_DELAY_AFTER_SEND 5 /* ms */
 
 #define UC_FOREGROUND_TARGET_ADDR     0x3A
 #define UC_FOREGROUND_STATUS	      0x31
@@ -89,7 +89,7 @@ fu_vli_usbhub_device_i2c_write(FuVliUsbhubDevice *self,
 		g_prefix_error(error, "failed to write I2C @0x%02x:%02x: ", target_addr, sub_addr);
 		return FALSE;
 	}
-	g_usleep(I2C_DELAY_AFTER_SEND);
+	fu_device_sleep(FU_DEVICE(self), I2C_DELAY_AFTER_SEND);
 	return TRUE;
 }
 
@@ -187,7 +187,7 @@ fu_vli_usbhub_rtd21xx_ensure_version_unlocked(FuVliUsbhubRtd21xxDevice *self, GE
 	}
 
 	/* wait for device ready */
-	g_usleep(300000);
+	fu_device_sleep(FU_DEVICE(self), 300);
 	if (!fu_vli_usbhub_device_i2c_read(parent,
 					   UC_FOREGROUND_TARGET_ADDR,
 					   0x00,
@@ -365,7 +365,7 @@ fu_vli_usbhub_rtd21xx_device_write_firmware(FuDevice *device,
 	}
 
 	/* read back 6 bytes data */
-	g_usleep(I2C_DELAY_AFTER_SEND * 40);
+	fu_device_sleep(device, I2C_DELAY_AFTER_SEND * 40);
 	if (!fu_vli_usbhub_device_i2c_read(parent,
 					   UC_FOREGROUND_TARGET_ADDR,
 					   UC_FOREGROUND_STATUS,
@@ -486,7 +486,7 @@ fu_vli_usbhub_rtd21xx_device_write_firmware(FuDevice *device,
 
 	/* the device needs some time to restart with the new firmware before
 	 * it can be queried again */
-	fu_progress_sleep(progress, 20000);
+	fu_device_sleep_full(device, 20000, progress); /* ms */
 
 	/* success */
 	fu_progress_step_done(progress);

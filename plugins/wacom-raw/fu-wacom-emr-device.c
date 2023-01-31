@@ -71,7 +71,7 @@ fu_wacom_emr_device_w9013_erase_data(FuWacomEmrDevice *self, GError **error)
 	if (!fu_wacom_device_cmd(FU_WACOM_DEVICE(self),
 				 &req,
 				 &rsp,
-				 50,
+				 1, /* ms */
 				 FU_WACOM_DEVICE_CMD_FLAG_POLL_ON_WAITING,
 				 error)) {
 		g_prefix_error(error, "failed to erase datamem: ");
@@ -96,7 +96,7 @@ fu_wacom_emr_device_w9013_erase_code(FuWacomEmrDevice *self,
 	if (!fu_wacom_device_cmd(FU_WACOM_DEVICE(self),
 				 &req,
 				 &rsp,
-				 50,
+				 1, /* ms */
 				 FU_WACOM_DEVICE_CMD_FLAG_POLL_ON_WAITING,
 				 error)) {
 		g_prefix_error(error, "failed to erase codemem: ");
@@ -118,7 +118,7 @@ fu_wacom_device_w9021_erase_all(FuWacomEmrDevice *self, GError **error)
 	if (!fu_wacom_device_cmd(FU_WACOM_DEVICE(self),
 				 &req,
 				 &rsp,
-				 2000 * 1000, /* this takes a long time */
+				 2000, /* this takes a long time */
 				 FU_WACOM_DEVICE_CMD_FLAG_POLL_ON_WAITING,
 				 error)) {
 		g_prefix_error(error, "failed to send eraseall command: ");
@@ -201,7 +201,7 @@ fu_wacom_emr_device_write_block(FuWacomEmrDevice *self,
 	if (!fu_wacom_device_cmd(FU_WACOM_DEVICE(self),
 				 &req,
 				 &rsp,
-				 50,
+				 1,
 				 FU_WACOM_DEVICE_CMD_FLAG_NONE,
 				 error)) {
 		g_prefix_error(error, "failed to write at 0x%x: ", address);

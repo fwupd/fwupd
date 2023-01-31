@@ -118,7 +118,7 @@ fu_rts54hub_rtd21xx_device_i2c_write(FuRts54hubRtd21xxDevice *self,
 		g_prefix_error(error, "failed to write I2C @0x%02x:%02x: ", target_addr, sub_addr);
 		return FALSE;
 	}
-	g_usleep(I2C_DELAY_AFTER_SEND);
+	fu_device_sleep(FU_DEVICE(self), I2C_DELAY_AFTER_SEND);
 	return TRUE;
 }
 

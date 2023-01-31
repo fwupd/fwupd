@@ -482,7 +482,7 @@ fu_focalfp_hid_device_write_firmware(FuDevice *device,
 	}
 	if (!fu_focalfp_hid_device_erase_flash(self, error))
 		return FALSE;
-	g_usleep(1000 * 1000);
+	fu_device_sleep(device, 1000);
 	if (!fu_focalfp_hid_device_wait_for_upgrade_ready(self, 20, error))
 		return FALSE;
 	fu_progress_step_done(progress);
@@ -497,7 +497,7 @@ fu_focalfp_hid_device_write_firmware(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/* write flash end and check ready (fw calculate checksum) */
-	g_usleep(50 * 1000);
+	fu_device_sleep(device, 50);
 	if (!fu_focalfp_hid_device_wait_for_upgrade_ready(self, 5, error))
 		return FALSE;
 	fu_progress_step_done(progress);
@@ -506,7 +506,7 @@ fu_focalfp_hid_device_write_firmware(FuDevice *device,
 	if (!fu_focalfp_hid_device_checksum_upgrade(self, &checksum, error))
 		return FALSE;
 	if (checksum != fu_focalfp_firmware_get_checksum(FU_FOCALFP_FIRMWARE(firmware))) {
-		g_usleep(500 * 1000);
+		fu_device_sleep(device, 500);
 		g_set_error(error,
 			    G_IO_ERROR,
 			    G_IO_ERROR_INVALID_DATA,
@@ -528,7 +528,7 @@ fu_focalfp_hid_device_reload(FuDevice *device, GError **error)
 	FuFocalfpHidDevice *self = FU_FOCALFP_HID_DEVICE(device);
 	guint8 idbuf[2] = {0x0};
 
-	g_usleep(500 * 1000);
+	fu_device_sleep(device, 500);
 	if (!fu_focalfp_hid_device_read_reg(self, 0x9F, &idbuf[0], error))
 		return FALSE;
 	if (!fu_focalfp_hid_device_read_reg(self, 0xA3, &idbuf[1], error))
@@ -592,7 +592,7 @@ fu_focalfp_hid_device_detach(FuDevice *device, FuProgress *progress, GError **er
 		g_prefix_error(error, "failed to CMD_ENTER_UPGRADE_MODE: ");
 		return FALSE;
 	}
-	g_usleep(200 * 1000);
+	fu_device_sleep(device, 200);
 
 	/* second command : bootloader normal mode --> bootloader upgrade mode */
 	if (!fu_device_retry_full(device,
@@ -604,7 +604,7 @@ fu_focalfp_hid_device_detach(FuDevice *device, FuProgress *progress, GError **er
 		return FALSE;
 
 	/* success */
-	g_usleep(200 * 1000);
+	fu_device_sleep(device, 200);
 	return TRUE;
 }
 
@@ -624,7 +624,7 @@ fu_focalfp_hid_device_attach(FuDevice *device, FuProgress *progress, GError **er
 		return FALSE;
 
 	/* success */
-	g_usleep(500 * 1000);
+	fu_device_sleep(device, 500);
 	return TRUE;
 }
 

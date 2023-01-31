@@ -139,8 +139,7 @@ fu_analogix_device_get_update_status(FuAnalogixDevice *self,
 				*status = status_tmp;
 			return TRUE;
 		}
-		/* wait 1ms */
-		g_usleep(1000);
+		fu_device_sleep(FU_DEVICE(self), 1); /* ms */
 	}
 	g_set_error_literal(error,
 			    FWUPD_ERROR,

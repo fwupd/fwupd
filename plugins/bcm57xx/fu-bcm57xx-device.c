@@ -77,7 +77,7 @@ fu_bcm57xx_device_probe(FuDevice *device, GError **error)
 	fn = g_build_filename(fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(device)), "net", NULL);
 	if (!g_file_test(fn, G_FILE_TEST_EXISTS)) {
 		g_debug("waiting for net devices to appear");
-		g_usleep(50 * 1000);
+		fu_device_sleep(device, 50); /* ms */
 	}
 	ifaces = fu_path_glob(fn, "en*", NULL);
 	if (ifaces == NULL || ifaces->len == 0) {
@@ -325,7 +325,7 @@ fu_bcm57xx_device_activate(FuDevice *device, FuProgress *progress, GError **erro
 
 	/* wait for the device to restart before calling reload() */
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_BUSY);
-	fu_progress_sleep(progress, 5000);
+	fu_device_sleep_full(device, 5000, progress); /* ms */
 	return TRUE;
 }
 

@@ -168,7 +168,7 @@ fu_pxi_receiver_device_fw_ota_ini_new_check(FuPxiReceiverDevice *device, GError 
 		return FALSE;
 
 	/* delay for wireless module device read command */
-	g_usleep(5 * 1000);
+	fu_device_sleep(FU_DEVICE(device), 5); /* ms */
 	buf[0] = PXI_HID_WIRELESS_DEV_OTA_REPORT_ID;
 	if (!fu_pxi_receiver_device_get_feature(self, buf, sizeof(buf), error))
 		return FALSE;
@@ -189,7 +189,7 @@ fu_pxi_receiver_device_get_cmd_response(FuPxiReceiverDevice *device,
 		memset(buf, 0, bufsz);
 		buf[0] = PXI_HID_WIRELESS_DEV_OTA_REPORT_ID;
 
-		g_usleep(5 * 1000);
+		fu_device_sleep(FU_DEVICE(device), 5); /* ms */
 
 		if (!fu_pxi_receiver_device_get_feature(device, buf, bufsz, error))
 			return FALSE;
@@ -483,7 +483,7 @@ fu_pxi_receiver_device_fw_upgrade(FuDevice *device,
 		return FALSE;
 
 	/* delay for wireless module device read command */
-	g_usleep(5 * 1000);
+	fu_device_sleep(device, 5); /* ms */
 
 	if (!fu_pxi_receiver_device_get_cmd_response(self, res, sizeof(res), error))
 		return FALSE;
@@ -592,7 +592,7 @@ fu_pxi_receiver_device_write_firmware(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/* delay for wireless module device read command */
-	g_usleep(5 * 1000);
+	fu_device_sleep(device, 5); /* ms */
 
 	/* send device reset command */
 	if (!fu_pxi_receiver_device_reset(device, error))
@@ -630,7 +630,7 @@ fu_pxi_receiver_device_get_peripheral_info(FuPxiReceiverDevice *device,
 						error))
 		return FALSE;
 
-	g_usleep(5 * 1000);
+	fu_device_sleep(FU_DEVICE(device), 5); /* ms */
 	buf[0] = PXI_HID_WIRELESS_DEV_OTA_REPORT_ID;
 
 	if (!fu_pxi_receiver_device_get_feature(device, buf, sizeof(buf), error))
@@ -711,7 +711,7 @@ fu_pxi_receiver_device_get_peripheral_num(FuPxiReceiverDevice *device,
 						error))
 		return FALSE;
 
-	g_usleep(5 * 1000);
+	fu_device_sleep(FU_DEVICE(device), 5); /* ms */
 
 	buf[0] = PXI_HID_WIRELESS_DEV_OTA_REPORT_ID;
 	if (!fu_pxi_receiver_device_get_feature(device, buf, sizeof(buf), error))

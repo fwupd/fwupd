@@ -157,7 +157,7 @@ fu_vli_usbhub_msp430_device_detach(FuDevice *device, FuProgress *progress, GErro
 		return FALSE;
 
 	/* avoid power instability by waiting T1 */
-	fu_progress_sleep(progress, 1000);
+	fu_device_sleep_full(device, 1000, progress); /* ms */
 
 	/* check the device came back */
 	if (!fu_vli_usbhub_device_i2c_read_status(parent, &status, error)) {
@@ -181,7 +181,7 @@ fu_vli_usbhub_msp430_device_write_firmware_cb(FuDevice *device, gpointer user_da
 	FuVliUsbhubDevice *parent = FU_VLI_USBHUB_DEVICE(fu_device_get_parent(device));
 	FuVliUsbhubI2cStatus status = 0xff;
 
-	g_usleep(5 * 1000);
+	fu_device_sleep(device, 5); /* ms */
 	if (fu_usb_device_get_spec(FU_USB_DEVICE(parent)) >= 0x0300 || req->bufsz <= 32) {
 		if (!fu_vli_usbhub_device_i2c_write_data(parent, 0, 0, req->buf, req->bufsz, error))
 			return FALSE;
@@ -203,7 +203,7 @@ fu_vli_usbhub_msp430_device_write_firmware_cb(FuDevice *device, gpointer user_da
 		return TRUE;
 
 	/* read data to check status */
-	g_usleep(5 * 1000);
+	fu_device_sleep(device, 5); /* ms */
 	if (!fu_vli_usbhub_device_i2c_read_status(parent, &status, error))
 		return FALSE;
 	return fu_vli_usbhub_i2c_check_status(status, error);

@@ -209,7 +209,7 @@ fu_synaptics_rmi_device_reset(FuSynapticsRmiDevice *self, GError **error)
 					   FU_SYNAPTICS_RMI_DEVICE_FLAG_ALLOW_FAILURE,
 					   error))
 		return FALSE;
-	g_usleep(1000 * RMI_F01_DEFAULT_RESET_DELAY_MS);
+	fu_device_sleep(FU_DEVICE(self), RMI_F01_DEFAULT_RESET_DELAY_MS);
 	return TRUE;
 }
 
@@ -641,7 +641,7 @@ fu_synaptics_rmi_device_poll_wait(FuSynapticsRmiDevice *self, GError **error)
 
 	/* try to poll every 20ms for up to 400ms */
 	for (guint i = 0; i < 20; i++) {
-		g_usleep(1000 * 20);
+		fu_device_sleep(FU_DEVICE(self), 20);
 		g_clear_error(&error_local);
 		if (fu_synaptics_rmi_device_poll(self, &error_local))
 			return TRUE;

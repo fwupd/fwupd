@@ -102,7 +102,7 @@ fu_genesys_scaler_device_enter_serial_debug_mode(FuGenesysScalerDevice *self, GE
 		return FALSE;
 	}
 
-	g_usleep(1000); /* 1ms */
+	fu_device_sleep(FU_DEVICE(self), 1); /* ms */
 
 	/* success */
 	return TRUE;
@@ -605,7 +605,7 @@ fu_genesys_scaler_device_pause_r2_cpu(FuGenesysScalerDevice *self, GError **erro
 		return FALSE;
 	}
 
-	g_usleep(200000); /* 200ms */
+	fu_device_sleep(FU_DEVICE(self), 200); /* ms */
 
 	/* success */
 	return TRUE;
@@ -634,8 +634,7 @@ fu_genesys_scaler_device_set_isp_mode(FuDevice *device, gpointer user_data, GErr
 					   error)) {
 		return FALSE;
 	}
-
-	g_usleep(1000); /* 1ms */
+	fu_device_sleep(device, 1); /* ms */
 
 	/* success */
 	return TRUE;
@@ -780,8 +779,7 @@ fu_genesys_scaler_device_get_level(FuGenesysScalerDevice *self, guint8 *level, G
 		g_prefix_error(error, "error getting level: ");
 		return FALSE;
 	}
-
-	g_usleep(100000); /* 100ms */
+	fu_device_sleep(FU_DEVICE(self), 100); /* ms */
 
 	/* success */
 	return TRUE;
@@ -813,7 +811,7 @@ fu_genesys_scaler_device_get_version(FuGenesysScalerDevice *self,
 		return FALSE;
 	}
 
-	g_usleep(100000); /* 100ms */
+	fu_device_sleep(FU_DEVICE(self), 100); /* ms */
 
 	/* success */
 	return TRUE;
@@ -851,7 +849,7 @@ fu_genesys_scaler_device_get_public_key(FuGenesysScalerDevice *self,
 			return FALSE;
 		}
 
-		g_usleep(100000); /* 100ms */
+		fu_device_sleep(FU_DEVICE(self), 100); /* ms */
 	}
 
 	/* success */
@@ -1464,7 +1462,7 @@ fu_genesys_scaler_device_get_ddcci_data(FuGenesysScalerDevice *self,
 		return FALSE;
 	}
 
-	g_usleep(100000); /* 100ms */
+	fu_device_sleep(FU_DEVICE(self), 100); /* 1ms */
 
 	if (!g_usb_device_control_transfer(usb_device,
 					   G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
@@ -1483,7 +1481,7 @@ fu_genesys_scaler_device_get_ddcci_data(FuGenesysScalerDevice *self,
 		return FALSE;
 	}
 
-	g_usleep(100000); /* 100ms */
+	fu_device_sleep(FU_DEVICE(self), 100); /* ms */
 
 	/* success */
 	return TRUE;

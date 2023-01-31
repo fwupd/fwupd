@@ -182,7 +182,7 @@ fu_rts54hid_device_verify_update_fw(FuRts54HidDevice *self, FuProgress *progress
 				      FU_HID_DEVICE_FLAG_NONE,
 				      error))
 		return FALSE;
-	fu_progress_sleep(progress, 4000);
+	fu_device_sleep_full(FU_DEVICE(self), 4000, progress); /* ms */
 	if (!fu_hid_device_get_report(FU_HID_DEVICE(self),
 				      0x0,
 				      buf,

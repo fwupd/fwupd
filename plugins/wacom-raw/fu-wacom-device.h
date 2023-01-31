@@ -35,7 +35,7 @@ gboolean
 fu_wacom_device_cmd(FuWacomDevice *self,
 		    FuWacomRawRequest *req,
 		    FuWacomRawResponse *rsp,
-		    gulong delay_us,
+		    guint delay_ms,
 		    FuWacomDeviceCmdFlags flags,
 		    GError **error);
 gboolean

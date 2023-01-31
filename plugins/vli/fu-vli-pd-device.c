@@ -172,7 +172,7 @@ fu_vli_pd_device_spi_write_status(FuVliDevice *self, guint8 status, GError **err
 	}
 
 	/* Fix_For_GD_&_EN_SPI_Flash */
-	g_usleep(100 * 1000);
+	fu_device_sleep(FU_DEVICE(self), 100); /* ms */
 	return TRUE;
 }
 

@@ -457,7 +457,7 @@ fu_dell_dock_hid_tbt_authenticate(FuDevice *self,
 
 	cmd_buffer.tbt_command = GUINT32_TO_LE(TBT_COMMAND_AUTHENTICATE_STATUS);
 	/* needs at least 2 seconds */
-	g_usleep(2000000);
+	fu_device_sleep(self, 2000);
 	for (gint i = 1; i <= TBT_MAX_RETRIES; i++) {
 		if (!fu_dell_dock_hid_set_report(self, (guint8 *)&cmd_buffer, error)) {
 			g_prefix_error(error, "failed to set check authentication: ");
@@ -474,7 +474,7 @@ fu_dell_dock_hid_tbt_authenticate(FuDevice *self,
 			i,
 			TBT_MAX_RETRIES,
 			result);
-		g_usleep(500000);
+		fu_device_sleep(self, 500); /* ms */
 	}
 	if (result != 0) {
 		g_set_error(error,

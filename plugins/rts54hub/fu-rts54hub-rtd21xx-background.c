@@ -51,7 +51,7 @@ fu_rts54hub_rtd21xx_ensure_version_unlocked(FuRts54hubRtd21xxBackground *self, G
 	}
 
 	/* wait for device ready */
-	g_usleep(300000);
+	fu_device_sleep(FU_DEVICE(self), 300); /* ms */
 	if (!fu_rts54hub_rtd21xx_device_i2c_read(FU_RTS54HUB_RTD21XX_DEVICE(self),
 						 UC_ISP_TARGET_ADDR,
 						 0x00,
@@ -84,7 +84,7 @@ fu_rts54hub_rtd21xx_background_detach_raw(FuRts54hubRtd21xxBackground *self, GEr
 	}
 
 	/* wait for device ready */
-	g_usleep(300000);
+	fu_device_sleep(FU_DEVICE(self), 300); /* ms */
 	return TRUE;
 }
 
@@ -147,7 +147,7 @@ fu_rts54hub_rtd21xx_background_attach(FuDevice *device, FuProgress *progress, GE
 		g_prefix_error(error, "failed to attach: ");
 		return FALSE;
 	}
-	fu_progress_sleep(progress, 1000);
+	fu_device_sleep_full(device, 1000, progress); /* ms */
 
 	/* success */
 	fu_device_remove_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
@@ -236,7 +236,7 @@ fu_rts54hub_rtd21xx_background_write_firmware(FuDevice *device,
 	}
 
 	/* read back 6 bytes data */
-	g_usleep(I2C_DELAY_AFTER_SEND * 40);
+	fu_device_sleep(device, I2C_DELAY_AFTER_SEND * 40);
 	if (!fu_rts54hub_rtd21xx_device_i2c_read(FU_RTS54HUB_RTD21XX_DEVICE(self),
 						 UC_ISP_TARGET_ADDR,
 						 0x00,

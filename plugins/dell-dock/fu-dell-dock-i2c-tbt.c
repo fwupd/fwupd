@@ -105,7 +105,7 @@ fu_dell_dock_tbt_write_fw(FuDevice *device,
 	g_debug("waking Thunderbolt controller");
 	if (!fu_dell_dock_hid_tbt_wake(fu_device_get_proxy(device), &tbt_base_settings, error))
 		return FALSE;
-	g_usleep(2000000);
+	fu_device_sleep(device, 2000);
 
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_WRITE);
 	for (guint i = 0; i < image_size; i += HIDI2C_MAX_WRITE, buffer += HIDI2C_MAX_WRITE) {

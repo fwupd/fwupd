@@ -1174,10 +1174,8 @@ fu_dfu_device_probe(FuDevice *device, GError **error)
 
 	/* hardware from Jabra literally reboots if you try to retry a failed
 	 * write -- there's no way to avoid blocking the daemon like this... */
-	if (fu_device_has_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_ATTACH_EXTRA_RESET)) {
-		g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
-		fu_progress_sleep(progress, 10000);
-	}
+	if (fu_device_has_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_ATTACH_EXTRA_RESET))
+		fu_device_sleep(device, 10000);
 
 	/* success */
 	return TRUE;

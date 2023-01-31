@@ -125,7 +125,7 @@ fu_thunderbolt_device_get_version(FuThunderboltDevice *self, GError **error)
 		if (g_file_get_contents(safe_path, &version_raw, NULL, &error_local))
 			break;
 		g_debug("Attempt %u: Failed to read NVM version", i);
-		g_usleep(TBT_NVM_RETRY_TIMEOUT * 1000);
+		fu_device_sleep(FU_DEVICE(self), TBT_NVM_RETRY_TIMEOUT);
 		/* safe mode probably */
 		if (g_error_matches(error_local, G_IO_ERROR, G_IO_ERROR_WOULD_BLOCK))
 			break;

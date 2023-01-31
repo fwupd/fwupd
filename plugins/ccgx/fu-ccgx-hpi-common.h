@@ -8,7 +8,7 @@
 
 #include <glib.h>
 
-#define I2C_READ_WRITE_DELAY_US 10000 /* 10 msec */
+#define I2C_READ_WRITE_DELAY_MS 10 /* ms */
 
 #define CY_SCB_INDEX_POS	      15
 #define CY_I2C_WRITE_COMMAND_POS      3
