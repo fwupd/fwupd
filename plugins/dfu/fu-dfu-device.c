@@ -725,7 +725,7 @@ fu_dfu_device_refresh(FuDfuDevice *self, GError **error)
 	FuDfuDevicePrivate *priv = GET_PRIVATE(self);
 	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
 	gsize actual_length = 0;
-	guint8 buf[6];
+	guint8 buf[6] = {0x0};
 	g_autoptr(GError) error_local = NULL;
 
 	g_return_val_if_fail(FU_IS_DFU_DEVICE(self), FALSE);
