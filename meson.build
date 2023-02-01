@@ -574,7 +574,7 @@ if polkit.found()
 endif
 if build_standalone
   plugin_quirks = []
-  gcab = find_program('gcab', required: get_option('tests'))
+  gcab = find_program('gcab', native: true, required: get_option('tests'))
   subdir('data')
   subdir('po')
   subdir('libfwupdplugin')
