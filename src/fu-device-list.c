@@ -905,6 +905,13 @@ fu_device_list_wait_for_replug(FuDeviceList *self, GError **error)
 		return TRUE;
 	}
 
+	/* emulated devices don't need to wait for replug */
+	for (guint i = 0; i < devices_wfr1->len; i++) {
+		FuDevice *device_tmp = g_ptr_array_index(devices_wfr1, i);
+		if (fu_device_has_flag(device_tmp, FWUPD_DEVICE_FLAG_EMULATED))
+			fu_device_remove_flag(device_tmp, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+	}
+
 	/* use the maximum of all the devices */
 	for (guint i = 0; i < devices_wfr1->len; i++) {
 		FuDevice *device_tmp = g_ptr_array_index(devices_wfr1, i);
