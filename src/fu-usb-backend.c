@@ -56,17 +56,21 @@ fu_usb_backend_device_added_cb(GUsbContext *ctx, GUsbDevice *usb_device, FuBacke
 	/* is emulated? */
 	device_tmp = fu_backend_lookup_by_id(backend, g_usb_device_get_platform_id(usb_device));
 	if (device_tmp != NULL && fu_device_has_flag(device_tmp, FWUPD_DEVICE_FLAG_EMULATED)) {
-		if (g_usb_device_get_vid(usb_device) ==
-			fu_usb_device_get_vid(FU_USB_DEVICE(device_tmp)) &&
-		    g_usb_device_get_pid(usb_device) ==
-			fu_usb_device_get_pid(FU_USB_DEVICE(device_tmp))) {
+		GUsbDevice *usb_device_tmp = fu_usb_device_get_dev(FU_USB_DEVICE(device_tmp));
+#if G_USB_CHECK_VERSION(0, 4, 5)
+		if (g_date_time_equal(g_usb_device_get_created(usb_device),
+				      g_usb_device_get_created(usb_device_tmp))) {
+#else
+		if (g_usb_device_get_vid(usb_device) == g_usb_device_get_vid(usb_device_tmp) &&
+		    g_usb_device_get_pid(usb_device) == g_usb_device_get_pid(usb_device_tmp)) {
+#endif
 			g_debug("replacing GUsbDevice of emulated device %s",
 				fu_usb_device_get_platform_id(FU_USB_DEVICE(device_tmp)));
 			fu_usb_device_set_dev(FU_USB_DEVICE(device_tmp), usb_device);
 			fu_backend_device_changed(backend, device_tmp);
 			return;
 		}
-		g_debug("delayed removal of emulated device as VID:PID changed");
+		g_debug("delayed removal as emulated device changed");
 		fu_backend_device_removed(backend, device_tmp);
 	}
 
