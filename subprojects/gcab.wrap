@@ -3,7 +3,5 @@ directory = gcab
 url = https://github.com/gnome/gcab
 revision = v1.5
 
-# disabled until we depend on a meson including https://github.com/mesonbuild/meson/pull/10291
-# and https://gitlab.gnome.org/GNOME/gcab/-/merge_requests/10 is merged
-# [provide]
-# program_names = gcab
+[provide]
+program_names = gcab
