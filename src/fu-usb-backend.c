@@ -109,10 +109,16 @@ fu_usb_backend_context_flags_check(FuUsbBackend *self)
 {
 #if G_USB_CHECK_VERSION(0, 4, 1)
 	FuContext *ctx = fu_backend_get_context(FU_BACKEND(self));
+	GUsbContextFlags usb_flags = G_USB_CONTEXT_FLAGS_NONE;
+#if G_USB_CHECK_VERSION(0, 4, 4)
+	if (g_getenv("FWUPD_BACKEND_VERBOSE") != NULL)
+		usb_flags |= G_USB_CONTEXT_FLAGS_DEBUG;
+#endif
 	if (fu_context_has_flag(ctx, FU_CONTEXT_FLAG_SAVE_EVENTS)) {
 		g_debug("saving FuUsbBackend events");
-		g_usb_context_set_flags(self->usb_ctx, G_USB_CONTEXT_FLAGS_SAVE_EVENTS);
+		usb_flags |= G_USB_CONTEXT_FLAGS_SAVE_EVENTS;
 	}
+	g_usb_context_set_flags(self->usb_ctx, usb_flags);
 #endif
 }
 
