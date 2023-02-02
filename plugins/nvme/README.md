@@ -32,6 +32,10 @@ The FRU globally unique identifier (FGUID) is also added from the CNS if set.
 Please refer to this document for more details on how to add support for
 [FGUID](https://nvmexpress.org/wp-content/uploads/NVM_Express_Revision_1.3.pdf).
 
+Additionally, an extra instance IDs containing the version may be added.
+
+* `NVME\VEN_1179&DEV_010F&VER_3B2QGXA7`
+
 Additionally, for NVMe drives with Dell vendor firmware two extra GUIDs are
 added:
 
