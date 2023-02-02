@@ -108,7 +108,17 @@ This plugin uses the following plugin-specific quirks:
 DMC devices need a specified trigger code to request the device to update
 the firmware and the trigger code depends on the devices.
 
+    0x0: Do not update
+    0x1: Update immediately
+    0x2: Update after port disconnected
+
 Since: 1.8.0
+
+### CcgxDmcCompositeVersion
+
+Set the parent composite version, as a 32 bit integer.
+
+Since: 1.8.11
 
 ## External Interface Access
 

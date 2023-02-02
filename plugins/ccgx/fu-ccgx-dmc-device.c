@@ -12,6 +12,7 @@
 #include "fu-ccgx-common.h"
 #include "fu-ccgx-dmc-common.h"
 #include "fu-ccgx-dmc-device.h"
+#include "fu-ccgx-dmc-devx-device.h"
 #include "fu-ccgx-dmc-firmware.h"
 
 #define DMC_FW_WRITE_STATUS_RETRY_COUNT	   3
@@ -21,6 +22,7 @@ struct _FuCcgxDmcDevice {
 	FuUsbDevice parent_instance;
 	FWImageType fw_image_type;
 	DmcDockIdentity dock_id;
+	DmcDockStatus dock_status;
 	guint8 ep_intr_in;
 	guint8 ep_bulk_out;
 	DmcUpdateModel update_model;
@@ -37,10 +39,8 @@ struct _FuCcgxDmcDevice {
 G_DEFINE_TYPE(FuCcgxDmcDevice, fu_ccgx_dmc_device, FU_TYPE_USB_DEVICE)
 
 static gboolean
-fu_ccgx_dmc_device_get_dock_id(FuCcgxDmcDevice *self, DmcDockIdentity *dock_id, GError **error)
+fu_ccgx_dmc_device_ensure_dock_id(FuCcgxDmcDevice *self, GError **error)
 {
-	g_return_val_if_fail(dock_id != NULL, FALSE);
-
 	if (!g_usb_device_control_transfer(fu_usb_device_get_dev(FU_USB_DEVICE(self)),
 					   G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
 					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
@@ -48,8 +48,8 @@ fu_ccgx_dmc_device_get_dock_id(FuCcgxDmcDevice *self, DmcDockIdentity *dock_id, 
 					   DMC_RQT_CODE_DOCK_IDENTITY, /* request */
 					   0,			       /* value */
 					   0,			       /* index */
-					   (guint8 *)dock_id,	       /* data */
-					   sizeof(DmcDockIdentity),    /* length */
+					   (guint8 *)&self->dock_id,   /* data */
+					   sizeof(self->dock_id),      /* length */
 					   NULL,		       /* actual length */
 					   DMC_CONTROL_TRANSFER_DEFAULT_TIMEOUT,
 					   NULL,
@@ -61,41 +61,37 @@ fu_ccgx_dmc_device_get_dock_id(FuCcgxDmcDevice *self, DmcDockIdentity *dock_id, 
 }
 
 static gboolean
-fu_ccgx_dmc_device_get_dock_status(FuCcgxDmcDevice *self,
-				   DmcDockStatus *dock_status,
-				   GError **error)
+fu_ccgx_dmc_device_ensure_status(FuCcgxDmcDevice *self, GError **error)
 {
-	g_return_val_if_fail(dock_status != NULL, FALSE);
-
 	/* read minimum status length */
 	if (!g_usb_device_control_transfer(fu_usb_device_get_dev(FU_USB_DEVICE(self)),
 					   G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
 					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
 					   G_USB_DEVICE_RECIPIENT_DEVICE,
-					   DMC_RQT_CODE_DOCK_STATUS, /* request */
-					   0,			     /* value */
-					   0,			     /* index */
-					   (guint8 *)dock_status,    /* data */
-					   DMC_GET_STATUS_MIN_LEN,   /* length */
-					   NULL,		     /* actual length */
+					   DMC_RQT_CODE_DOCK_STATUS,	 /* request */
+					   0,				 /* value */
+					   0,				 /* index */
+					   (guint8 *)&self->dock_status, /* data */
+					   DMC_GET_STATUS_MIN_LEN,	 /* length */
+					   NULL,			 /* actual length */
 					   DMC_CONTROL_TRANSFER_DEFAULT_TIMEOUT,
 					   NULL,
 					   error)) {
 		g_prefix_error(error, "get_dock_status min size error: ");
 		return FALSE;
 	}
-	if (dock_status->status_length <= sizeof(DmcDockStatus)) {
+	if (self->dock_status.status_length <= sizeof(self->dock_status)) {
 		/* read full status length */
 		if (!g_usb_device_control_transfer(fu_usb_device_get_dev(FU_USB_DEVICE(self)),
 						   G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
 						   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
 						   G_USB_DEVICE_RECIPIENT_DEVICE,
-						   DMC_RQT_CODE_DOCK_STATUS, /* request */
-						   0,			     /* value */
-						   0,			     /* index */
-						   (guint8 *)dock_status,    /* data */
-						   sizeof(DmcDockStatus),    /* length */
-						   NULL,		     /* actual length */
+						   DMC_RQT_CODE_DOCK_STATUS,	 /* request */
+						   0,				 /* value */
+						   0,				 /* index */
+						   (guint8 *)&self->dock_status, /* data */
+						   sizeof(self->dock_status),	 /* length */
+						   NULL,			 /* actual length */
 						   DMC_CONTROL_TRANSFER_DEFAULT_TIMEOUT,
 						   NULL,
 						   error)) {
@@ -103,6 +99,21 @@ fu_ccgx_dmc_device_get_dock_status(FuCcgxDmcDevice *self,
 			return FALSE;
 		}
 	}
+	if (g_getenv("FWUPD_CCGX_VERBOSE") != NULL) {
+		fu_dump_raw(G_LOG_DOMAIN,
+			    "DmcDockStatus",
+			    (const guint8 *)&self->dock_status,
+			    sizeof(self->dock_status));
+	}
+
+	/* add devx children */
+	for (guint i = 0; i < self->dock_status.device_count; i++) {
+		g_autoptr(FuCcgxDmcDevxDevice) devx =
+		    fu_ccgx_dmc_devx_device_new(FU_DEVICE(self), &self->dock_status.devx_status[i]);
+		fu_device_add_child(FU_DEVICE(self), FU_DEVICE(devx));
+	}
+
+	/* success */
 	return TRUE;
 }
 
@@ -319,6 +330,13 @@ fu_ccgx_dmc_device_to_string(FuDevice *device, guint idt, GString *str)
 	fu_string_append_kx(str, idt, "EpBulkOut", self->ep_bulk_out);
 	fu_string_append_kx(str, idt, "EpIntrIn", self->ep_intr_in);
 	fu_string_append_kx(str, idt, "TriggerCode", self->trigger_code);
+	fu_string_append(str,
+			 idt,
+			 "DeviceStatus",
+			 fu_ccgx_dmc_device_status_to_string(self->dock_status.device_status));
+	fu_string_append_kx(str, idt, "DeviceCount", self->dock_status.device_count);
+	fu_string_append_kx(str, idt, "StatusLength", self->dock_status.status_length);
+	fu_string_append_kx(str, idt, "CompositeVersion", self->dock_status.composite_version);
 }
 
 static gboolean
@@ -651,41 +669,44 @@ fu_ccgx_dmc_device_attach(FuDevice *device, FuProgress *progress, GError **error
 	return TRUE;
 }
 
+static void
+fu_ccgx_dmc_device_ensure_factory_version(FuCcgxDmcDevice *self)
+{
+	for (guint i = 0; i < DMC_DOCK_MAX_DEV_COUNT; i++) {
+		DmcDevxStatus *status = &self->dock_status.devx_status[i];
+		guint64 fwver_img1 = fu_memread_uint64(status->fw_version + 0x08, G_LITTLE_ENDIAN);
+		guint64 fwver_img2 = fu_memread_uint64(status->fw_version + 0x10, G_LITTLE_ENDIAN);
+		if (status->device_type == 0x2 && fwver_img1 == fwver_img2 && fwver_img1 != 0) {
+			g_debug("overriding version as device is in factory mode");
+			fu_device_set_version_from_uint32(FU_DEVICE(self), 0x1);
+			return;
+		}
+	}
+}
+
 static gboolean
 fu_ccgx_dmc_device_setup(FuDevice *device, GError **error)
 {
 	FuCcgxDmcDevice *self = FU_CCGX_DMC_DEVICE(device);
-	DmcDockStatus dock_status = {0};
-	DmcDockIdentity dock_id = {0};
 
 	/* FuUsbDevice->setup */
 	if (!FU_DEVICE_CLASS(fu_ccgx_dmc_device_parent_class)->setup(device, error))
 		return FALSE;
 
 	/* get dock identity */
-	if (!fu_ccgx_dmc_device_get_dock_id(self, &dock_id, error))
+	if (!fu_ccgx_dmc_device_ensure_dock_id(self, error))
+		return FALSE;
+	if (!fu_ccgx_dmc_device_ensure_status(self, error))
 		return FALSE;
 
-	/* store dock identity */
-	if (!fu_memcpy_safe((guint8 *)&self->dock_id,
-			    sizeof(DmcDockIdentity),
-			    0x0, /* dst */
-			    (guint8 *)&dock_id,
-			    sizeof(DmcDockIdentity),
-			    0, /* src */
-			    sizeof(DmcDockIdentity),
-			    error))
-		return FALSE;
-
-	/* get dock status */
-	if (!fu_ccgx_dmc_device_get_dock_status(self, &dock_status, error))
-		return FALSE;
-
-	/* set composite version */
-	fu_device_set_version_from_uint32(FU_DEVICE(self), dock_status.composite_version);
+	/* use composite version, but also try to detect "factory mode" where the SPI has been
+	 * imaged but has not been updated manually to the initial version */
+	fu_device_set_version_from_uint32(device, self->dock_status.composite_version);
+	if (fu_device_get_version_raw(device) == 0)
+		fu_ccgx_dmc_device_ensure_factory_version(self);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 
-	if (dock_id.custom_meta_data_flag > 0)
+	if (self->dock_id.custom_meta_data_flag > 0)
 		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 	else
 		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);

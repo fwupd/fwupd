@@ -80,6 +80,7 @@ typedef enum {
 	 * image. Secondary acts as recovery */
 	DMC_IMG_MODE_DUAL_IMG_ASYM,
 	DMC_IMG_MODE_SINGLE_IMG_WITH_RAM_IMG,
+	DMC_IMG_MODE_LAST
 } DmcImgMode;
 
 /* this data type enumerates the dock status */
@@ -120,6 +121,18 @@ typedef enum {
 	/* status code indicating dock FW update FAILED */
 	DMC_DEVICE_STATUS_UPDATE_FAIL = 0xFF
 } DmcDeviceStatus;
+
+typedef enum {
+	DMC_DEVX_DEVICE_TYPE_INVALID = 0x00,
+	DMC_DEVX_DEVICE_TYPE_CCG3 = 0x01,
+	DMC_DEVX_DEVICE_TYPE_DMC = 0x02,
+	DMC_DEVX_DEVICE_TYPE_CCG4 = 0x03,
+	DMC_DEVX_DEVICE_TYPE_CCG5 = 0x04,
+	DMC_DEVX_DEVICE_TYPE_HX3 = 0x05,
+	DMC_DEVX_DEVICE_TYPE_HX3_PD = 0x0A,
+	DMC_DEVX_DEVICE_TYPE_DMC_PD = 0x0B,
+	DMC_DEVX_DEVICE_TYPE_SPI = 0xFF
+} DmcDevxDeviceType;
 
 /* this data type enumerates the request codes for vendor interface */
 typedef enum {
@@ -282,3 +295,11 @@ typedef struct __attribute__((packed)) {
 
 const gchar *
 fu_ccgx_dmc_update_model_type_to_string(DmcUpdateModel val);
+const gchar *
+fu_ccgx_dmc_device_status_to_string(DmcDeviceStatus device_status);
+const gchar *
+fu_ccgx_dmc_devx_device_type_to_string(DmcDevxDeviceType device_type);
+const gchar *
+fu_ccgx_dmc_img_status_to_string(DmcImgStatus img_status);
+const gchar *
+fu_ccgx_dmc_img_mode_to_string(DmcImgMode img_mode);
