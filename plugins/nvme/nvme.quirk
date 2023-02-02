@@ -47,3 +47,8 @@ Flags = signed-payload
 # Solidigm
 [NVME\VEN_025E&DEV_F1AB]
 Flags = needs-shutdown
+
+[NVME\VEN_144D&DEV_A80A&VER_2B2QGXA7]
+Issue = https://www.pugetsystems.com/support/guides/critical-samsung-ssd-firmware-update/
+[NVME\VEN_144D&DEV_A80A&VER_3B2QGXA7]
+Issue = https://www.pugetsystems.com/support/guides/critical-samsung-ssd-firmware-update/
