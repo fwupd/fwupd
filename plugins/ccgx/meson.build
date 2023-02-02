@@ -14,6 +14,7 @@ plugin_builtin_ccgx = static_library('fu_plugin_ccgx',
     'fu-ccgx-hpi-common.c',
     'fu-ccgx-hpi-device.c',
     'fu-ccgx-dmc-device.c',
+    'fu-ccgx-dmc-devx-device.c',
     'fu-ccgx-dmc-firmware.c',   # fuzzing
     'fu-ccgx-dmc-common.c',     # fuzzing
   ],
