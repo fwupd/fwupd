@@ -2,6 +2,7 @@
   "UsbDevices": [
     {
       "PlatformId": "usb:01:00:06",
+      "Created": "2023-02-03T13:39:21.538713Z",
       "IdVendor": 10047,
       "IdProduct": 4100
     }
