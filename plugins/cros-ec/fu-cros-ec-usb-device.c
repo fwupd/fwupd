@@ -348,10 +348,9 @@ fu_cros_ec_usb_device_start_request(FuDevice *device, gpointer user_data, GError
 {
 	FuCrosEcUsbDevice *self = FU_CROS_EC_USB_DEVICE(device);
 	guint8 *start_resp = (guint8 *)user_data;
-	struct update_frame_header ufh;
+	struct update_frame_header ufh = {0x0};
 	gsize rxed_size = 0;
 
-	memset(&ufh, 0, sizeof(ufh));
 	ufh.block_size = GUINT32_TO_BE(sizeof(ufh));
 	if (!fu_cros_ec_usb_device_do_xfer(self,
 					   (const guint8 *)&ufh,
@@ -382,7 +381,7 @@ fu_cros_ec_usb_device_setup(FuDevice *device, GError **error)
 {
 	FuCrosEcUsbDevice *self = FU_CROS_EC_USB_DEVICE(device);
 	guint32 error_code;
-	START_RESP start_resp;
+	START_RESP start_resp = {0x0};
 	g_auto(GStrv) config_split = NULL;
 
 	/* FuUsbDevice->setup */
@@ -801,7 +800,7 @@ fu_cros_ec_usb_device_write_firmware(FuDevice *device,
 	fu_device_remove_private_flag(device, FU_CROS_EC_USB_DEVICE_FLAG_SPECIAL);
 
 	if (fu_device_has_private_flag(device, FU_CROS_EC_USB_DEVICE_FLAG_REBOOTING_TO_RO)) {
-		START_RESP start_resp;
+		START_RESP start_resp = {0x0};
 
 		fu_device_remove_private_flag(device, FU_CROS_EC_USB_DEVICE_FLAG_REBOOTING_TO_RO);
 		if (!fu_cros_ec_usb_device_stay_in_ro(device, error)) {
@@ -1035,11 +1034,10 @@ static void
 fu_cros_ec_usb_device_set_progress(FuDevice *self, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 2, "detach");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 94, "write");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 2, "attach");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 2, "reload");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 1, "detach");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 76, "write");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 1, "attach");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 22, "reload");
 }
 
 static void
