@@ -36,9 +36,6 @@ PenaltyBreakBeforeFirstCallParameter: '15'
 ---
 Language: 'Proto'
 ---
-Language: 'Json'
-BasedOnStyle: llvm
----
 Language: 'Cpp'
 IncludeCategories:
   - Regex:           '^"config.h"$'
