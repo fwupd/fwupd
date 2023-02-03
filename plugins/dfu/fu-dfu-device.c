@@ -289,7 +289,7 @@ fu_dfu_device_add_targets(FuDfuDevice *self, GError **error)
 		}
 		/* parse any interface data */
 		iface_data = g_usb_interface_get_extra(iface);
-		if (g_bytes_get_size(iface_data) > 0) {
+		if (iface_data != NULL && g_bytes_get_size(iface_data) > 0) {
 			if (!fu_dfu_device_parse_iface_data(self, iface_data, &error_local)) {
 				g_warning("failed to parse interface data for %04x:%04x: %s",
 					  g_usb_device_get_vid(usb_device),
