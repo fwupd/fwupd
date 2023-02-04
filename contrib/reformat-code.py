@@ -73,7 +73,7 @@ if __name__ == "__main__":
     if ret.returncode:
         print("Failed to run %s\n%s" % (cmd, ret.stderr.strip()))
         sys.exit(1)
-    cmd = [formatter, "-p1"]
+    cmd = [formatter, "-regex", "^.*\.(c|h|proto)$", "-p1"]
     if args.debug:
         print(cmd)
     ret = subprocess.run(cmd, input=ret.stdout, capture_output=True, text=True)
