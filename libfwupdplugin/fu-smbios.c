@@ -325,7 +325,7 @@ fu_smbios_setup_from_path(FuSmbios *self, const gchar *path, GError **error)
 	dmi_fn = g_build_filename(path, "DMI", NULL);
 	if (!g_file_get_contents(dmi_fn, &dmi_raw, &sz, error))
 		return FALSE;
-	if (sz != self->structure_table_len) {
+	if (sz > self->structure_table_len) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_FILE,
