@@ -1274,6 +1274,11 @@
       <package variant="x86_64" />
     </distro>
   </dependency>
+  <dependency id="python3-uswid">
+    <distro id="fedora">
+      <package variant="x86_64"></package>
+    </distro>
+  </dependency>
   <dependency id="gi-docgen">
     <distro id="void">
       <package variant="x86_64" />
