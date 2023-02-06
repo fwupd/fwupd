@@ -110,6 +110,48 @@ fwupd_client_connect(FwupdClient *self, GCancellable *cancellable, GError **erro
 }
 
 static void
+fwupd_client_quit_cb(GObject *source, GAsyncResult *res, gpointer user_data)
+{
+	FwupdClientHelper *helper = (FwupdClientHelper *)user_data;
+	helper->ret = fwupd_client_quit_finish(FWUPD_CLIENT(source), res, &helper->error);
+	g_main_loop_quit(helper->loop);
+}
+
+/**
+ * fwupd_client_quit: (skip)
+ * @self: a #FwupdClient
+ * @cancellable: (nullable): optional #GCancellable
+ * @error: (nullable): optional return location for an error
+ *
+ * Asks the daemon to quit. This can only be called by the root user.
+ *
+ * NOTE: This will only actually quit if an install is not already in progress.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.8.11
+ **/
+gboolean
+fwupd_client_quit(FwupdClient *self, GCancellable *cancellable, GError **error)
+{
+	g_autoptr(FwupdClientHelper) helper = NULL;
+
+	g_return_val_if_fail(FWUPD_IS_CLIENT(self), FALSE);
+	g_return_val_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	/* call async version and run loop until complete */
+	helper = fwupd_client_helper_new(self);
+	fwupd_client_quit_async(self, cancellable, fwupd_client_quit_cb, helper);
+	g_main_loop_run(helper->loop);
+	if (!helper->ret) {
+		g_propagate_error(error, g_steal_pointer(&helper->error));
+		return FALSE;
+	}
+	return TRUE;
+}
+
+static void
 fwupd_client_get_devices_cb(GObject *source, GAsyncResult *res, gpointer user_data)
 {
 	FwupdClientHelper *helper = (FwupdClientHelper *)user_data;

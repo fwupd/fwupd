@@ -1021,6 +1021,13 @@ fu_util_uninhibit(FuUtilPrivate *priv, gchar **values, GError **error)
 }
 
 static gboolean
+fu_util_quit(FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	/* success */
+	return fwupd_client_quit(priv->client, priv->cancellable, error);
+}
+
+static gboolean
 fu_util_device_test(FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(JsonBuilder) builder = json_builder_new();
@@ -4552,6 +4559,12 @@ main(int argc, char *argv[])
 			      /* TRANSLATORS: command description */
 			      _("Uninhibit the system to allow upgrades"),
 			      fu_util_uninhibit);
+	fu_util_cmd_array_add(cmd_array,
+			      "quit",
+			      NULL,
+			      /* TRANSLATORS: command description */
+			      _("Asks the daemon to quit"),
+			      fu_util_quit);
 	fu_util_cmd_array_add(
 	    cmd_array,
 	    "get-bios-settings,get-bios-setting",

@@ -14,6 +14,10 @@ gboolean
 fwupd_client_connect(FwupdClient *self,
 		     GCancellable *cancellable,
 		     GError **error) G_GNUC_WARN_UNUSED_RESULT;
+gboolean
+fwupd_client_quit(FwupdClient *self,
+		  GCancellable *cancellable,
+		  GError **error) G_GNUC_WARN_UNUSED_RESULT;
 GPtrArray *
 fwupd_client_get_devices(FwupdClient *self,
 			 GCancellable *cancellable,

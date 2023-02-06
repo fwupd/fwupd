@@ -26,6 +26,7 @@ _fwupdmgr_cmd_list=(
 	'local-install'
 	'modify-config'
 	'modify-remote'
+	'quit'
 	'reinstall'
 	'refresh'
 	'report-history'

@@ -907,6 +907,9 @@ LIBFWUPD_1.8.11 {
     fwupd_client_inhibit;
     fwupd_client_inhibit_async;
     fwupd_client_inhibit_finish;
+    fwupd_client_quit;
+    fwupd_client_quit_async;
+    fwupd_client_quit_finish;
     fwupd_client_uninhibit;
     fwupd_client_uninhibit_async;
     fwupd_client_uninhibit_finish;
