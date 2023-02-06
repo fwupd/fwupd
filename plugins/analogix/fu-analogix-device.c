@@ -208,11 +208,6 @@ fu_analogix_device_find_interface(FuUsbDevice *device, GError **error)
 		if (g_usb_interface_get_class(intf) == BILLBOARD_CLASS &&
 		    g_usb_interface_get_subclass(intf) == BILLBOARD_SUBCLASS &&
 		    g_usb_interface_get_protocol(intf) == BILLBOARD_PROTOCOL) {
-			g_autoptr(GPtrArray) endpoints = NULL;
-
-			endpoints = g_usb_interface_get_endpoints(intf);
-			if (endpoints == NULL)
-				continue;
 			fu_usb_device_add_interface(FU_USB_DEVICE(self),
 						    g_usb_interface_get_number(intf));
 			return TRUE;
