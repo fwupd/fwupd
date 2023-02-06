@@ -42,11 +42,12 @@ void
 fu_tpm_device_add_checksum(FuTpmDevice *self, guint idx, const gchar *checksum)
 {
 	FuTpmDevicePrivate *priv = GET_PRIVATE(self);
-	FuTpmDevicePcrItem *item = g_new0(FuTpmDevicePcrItem, 1);
+	FuTpmDevicePcrItem *item;
 
 	g_return_if_fail(FU_IS_TPM_DEVICE(self));
 	g_return_if_fail(checksum != NULL);
 
+	item = g_new0(FuTpmDevicePcrItem, 1);
 	item->idx = idx;
 	item->checksum = g_strdup(checksum);
 	g_debug("added PCR-%02u=%s", item->idx, item->checksum);
