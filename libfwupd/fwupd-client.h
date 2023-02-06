@@ -82,6 +82,15 @@ fwupd_client_connect_finish(FwupdClient *self,
 gboolean
 fwupd_client_disconnect(FwupdClient *self, GError **error) G_GNUC_WARN_UNUSED_RESULT;
 void
+fwupd_client_quit_async(FwupdClient *self,
+			GCancellable *cancellable,
+			GAsyncReadyCallback callback,
+			gpointer callback_data);
+gboolean
+fwupd_client_quit_finish(FwupdClient *self,
+			 GAsyncResult *res,
+			 GError **error) G_GNUC_WARN_UNUSED_RESULT;
+void
 fwupd_client_get_devices_async(FwupdClient *self,
 			       GCancellable *cancellable,
 			       GAsyncReadyCallback callback,

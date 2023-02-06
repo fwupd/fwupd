@@ -20,7 +20,7 @@ rc=$?; if [ $rc != 0 ]; then exit $rc; fi
 
 # ---
 echo "Shutting down P2P daemon..."
-gdbus call --system --dest org.freedesktop.fwupd --object-path / --method org.freedesktop.fwupd.Quit
+fwupdmgr quit
 
 # success!
 exit 0
