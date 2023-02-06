@@ -899,7 +899,6 @@ fu_wistron_dock_device_attach(FuDevice *device, FuProgress *progress, GError **e
 	    request,
 	    "The update will continue when the device USB cable has been unplugged.");
 	fu_device_emit_request(device, request);
-	fu_progress_step_done(progress);
 
 	/* set a timeout, which will trigger as we're waiting for the device --
 	 * no sync sleep is possible as the device will re-enumerate one more time */
