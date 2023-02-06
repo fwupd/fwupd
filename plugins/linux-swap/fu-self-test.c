@@ -36,6 +36,7 @@ fu_linux_swap_plain_func(void)
 			      &error);
 	if (g_error_matches(error, G_IO_ERROR, G_IO_ERROR_NOT_FOUND) ||
 	    g_error_matches(error, G_IO_ERROR, G_IO_ERROR_NOT_DIRECTORY) ||
+	    g_error_matches(error, G_DBUS_ERROR, G_DBUS_ERROR_SPAWN_EXEC_FAILED) ||
 	    g_error_matches(error, G_IO_ERROR, G_IO_ERROR_INVALID_ARGUMENT)) {
 		g_test_skip(error->message);
 		return;
@@ -65,6 +66,7 @@ fu_linux_swap_encrypted_func(void)
 			      &error);
 	if (g_error_matches(error, G_IO_ERROR, G_IO_ERROR_NOT_FOUND) ||
 	    g_error_matches(error, G_DBUS_ERROR, G_DBUS_ERROR_SERVICE_UNKNOWN) ||
+	    g_error_matches(error, G_DBUS_ERROR, G_DBUS_ERROR_SPAWN_EXEC_FAILED) ||
 	    g_error_matches(error, G_IO_ERROR, G_IO_ERROR_INVALID_ARGUMENT)) {
 		g_test_skip(error->message);
 		return;
