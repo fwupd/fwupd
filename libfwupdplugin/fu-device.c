@@ -5245,6 +5245,8 @@ fu_device_incorporate_from_component(FuDevice *self, XbNode *component)
  *
  * Emit a request from a plugin to the client.
  *
+ * If the device is emulated then this request is ignored.
+ *
  * Since: 1.6.2
  **/
 void
@@ -5266,6 +5268,14 @@ fu_device_emit_request(FuDevice *self, FwupdRequest *request)
 	}
 	if (fwupd_request_get_kind(request) >= FWUPD_REQUEST_KIND_LAST) {
 		g_critical("invalid request kind");
+		return;
+	}
+
+	/* ignore */
+	if (fu_device_has_flag(self, FWUPD_DEVICE_FLAG_EMULATED)) {
+		g_debug("ignoring device %s request of %s as emulated",
+			fu_device_get_id(self),
+			fwupd_request_get_id(request));
 		return;
 	}
 
