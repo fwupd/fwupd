@@ -3031,6 +3031,24 @@ fu_util_print_builder(JsonBuilder *builder, GError **error)
 	return TRUE;
 }
 
+void
+fu_util_print_error_as_json(const GError *error)
+{
+	g_autoptr(JsonBuilder) builder = json_builder_new();
+	json_builder_begin_object(builder);
+	json_builder_set_member_name(builder, "Error");
+	json_builder_begin_object(builder);
+	json_builder_set_member_name(builder, "Domain");
+	json_builder_add_string_value(builder, g_quark_to_string(error->domain));
+	json_builder_set_member_name(builder, "Code");
+	json_builder_add_int_value(builder, error->code);
+	json_builder_set_member_name(builder, "Message");
+	json_builder_add_string_value(builder, error->message);
+	json_builder_end_object(builder);
+	json_builder_end_object(builder);
+	fu_util_print_builder(builder, NULL);
+}
+
 typedef enum {
 	FU_UTIL_DEPENDENCY_KIND_UNKNOWN,
 	FU_UTIL_DEPENDENCY_KIND_RUNTIME,

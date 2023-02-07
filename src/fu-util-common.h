@@ -157,6 +157,8 @@ gboolean
 fu_util_setup_interactive_console(GError **error);
 gboolean
 fu_util_print_builder(JsonBuilder *builder, GError **error);
+void
+fu_util_print_error_as_json(const GError *error);
 gchar *
 fu_util_project_versions_to_string(GHashTable *metadata);
 gboolean
