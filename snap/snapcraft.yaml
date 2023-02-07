@@ -40,6 +40,8 @@ apps:
     slots: [fwupd]
     completer:
       share/bash-completion/completions/fwupdtool
+    environment:
+      FWUPD_HOSTDIR: /var/lib/snapd/hostfs
   fwupd:
     command: fwupd.wrapper
     daemon: dbus
@@ -48,6 +50,8 @@ apps:
     daemon-scope: system
     activates-on:
       - fwupd-dbus
+    environment:
+      FWUPD_HOSTDIR: /var/lib/snapd/hostfs
   fwupdmgr:
     command: fwupdmgr.wrapper
     plugs: [fwupdmgr, network, polkit]

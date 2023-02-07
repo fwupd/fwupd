@@ -144,23 +144,27 @@ static gchar *
 fwupd_get_os_release_filename(void)
 {
 #ifndef _WIN32
+	const gchar *hostdir = g_getenv("FWUPD_HOSTDIR");
 	const gchar *sysconfdir = g_getenv("FWUPD_SYSCONFDIR");
 	g_autofree gchar *fn1 = NULL;
 
+	if (hostdir == NULL)
+		hostdir = "/";
+
 	/* override */
 	if (sysconfdir != NULL) {
-		g_autofree gchar *fn2 = g_build_filename(sysconfdir, "os-release", NULL);
+		g_autofree gchar *fn2 = g_build_filename(hostdir, sysconfdir, "os-release", NULL);
 		if (g_file_test(fn2, G_FILE_TEST_EXISTS))
 			return g_steal_pointer(&fn2);
 	}
 
 	/* host locations */
 	if (g_strcmp0(sysconfdir, "/etc") != 0) {
-		g_autofree gchar *fn2 = g_strdup("/etc/os-release");
+		g_autofree gchar *fn2 = g_build_filename(hostdir, "/etc/os-release", NULL);
 		if (g_file_test(fn2, G_FILE_TEST_EXISTS))
 			return g_steal_pointer(&fn2);
 	}
-	fn1 = g_strdup("/usr/lib/os-release");
+	fn1 = g_build_filename(hostdir, "/usr/lib/os-release", NULL);
 	if (g_file_test(fn1, G_FILE_TEST_EXISTS))
 		return g_steal_pointer(&fn1);
 #endif
