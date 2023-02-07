@@ -70,6 +70,8 @@ fu_engine_update_motd(FuEngine *self, GError **error)
 			g_autoptr(GPtrArray) rels = NULL;
 
 			/* get the releases for this device */
+			if (!fu_device_has_flag(dev, FWUPD_DEVICE_FLAG_UPDATABLE))
+				continue;
 			rels =
 			    fu_engine_get_upgrades(self, request, fwupd_device_get_id(dev), NULL);
 			if (rels == NULL)
@@ -80,6 +82,8 @@ fu_engine_update_motd(FuEngine *self, GError **error)
 			for (guint i = 0; i < devices->len; i++) {
 				FwupdDevice *dev = g_ptr_array_index(devices, i);
 				g_autoptr(FwupdRelease) rel = NULL;
+				if (!fu_device_has_flag(dev, FWUPD_DEVICE_FLAG_UPDATABLE))
+					continue;
 				rel = fu_engine_get_release_with_tag(self,
 								     request,
 								     dev,
