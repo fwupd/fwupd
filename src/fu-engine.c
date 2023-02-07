@@ -5923,6 +5923,15 @@ fu_engine_get_upgrades(FuEngine *self,
 	if (device == NULL)
 		return NULL;
 
+	/* there is no point checking each release */
+	if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE)) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOTHING_TO_DO,
+				    "Device is not updatable");
+		return NULL;
+	}
+
 	/* don't show upgrades again until we reboot */
 	if (fu_device_get_update_state(device) == FWUPD_UPDATE_STATE_NEEDS_REBOOT) {
 		g_set_error_literal(error,
