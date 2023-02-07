@@ -80,6 +80,7 @@ for details.
 * `FWUPD_DATADIR_QUIRKS`
 * `FWUPD_EFIAPPDIR`
 * `FWUPD_FIRMWARESEARCH`
+* `FWUPD_HOSTDIR` looks for host OS `os-release` in this sysroot, default is /
 * `FWUPD_LIBDIR_PKG`
 * `FWUPD_LOCALSTATEDIR`
 * `FWUPD_LOCALSTATEDIR_QUIRKS`
