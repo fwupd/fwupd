@@ -141,3 +141,13 @@ Summary = Dock Management Controller Device
 CcgxDmcTriggerCode = 0x01
 CcgxImageKind = dmc-composite
 RemoveDelay = 732000
+
+# Caldigit ElementHub
+[USB\VID_2188&PID_0035]
+Plugin = ccgx
+GType = FuCcgxDmcDevice
+CcgxDmcTriggerCode = 0x01
+CcgxImageKind = dmc-composite
+RemoveDelay = 732000
+[USB\VID_2188&PID_0035&CID_05&VER_3.3.1.69]
+CcgxDmcCompositeVersion = 15
