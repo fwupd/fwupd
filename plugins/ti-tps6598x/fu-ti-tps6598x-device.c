@@ -90,7 +90,7 @@ fu_ti_tps6598x_device_usbep_read(FuTiTps6598xDevice *self,
 				 guint8 length,
 				 GError **error)
 {
-	g_autoptr(GByteArray) buf = g_byte_array_new();
+	g_autoptr(GByteArray) buf = NULL;
 
 	/* first byte is length */
 	buf = fu_ti_tps6598x_device_usbep_read_raw(self, addr, length, error);
