@@ -170,7 +170,7 @@ fu_uefi_grub_device_write_firmware(FuDevice *device,
 		return FALSE;
 
 	/* if secure boot was turned on this might need to be installed separately */
-	source_app = fu_uefi_get_built_app_path(error);
+	source_app = fu_uefi_get_built_app_path("fwupd", error);
 	if (source_app == NULL)
 		return FALSE;
 

@@ -278,13 +278,14 @@ fu_uefi_bootmgr_bootnext(FuDevice *device,
 	g_autofree guint8 *opt = NULL;
 	g_autofree gchar *source_app = NULL;
 	g_autofree gchar *target_app = NULL;
+	g_autofree gchar *source_shim = NULL;
 
 	/* skip for self tests */
 	if (g_getenv("FWUPD_UEFI_TEST") != NULL)
 		return TRUE;
 
 	/* if secure boot was turned on this might need to be installed separately */
-	source_app = fu_uefi_get_built_app_path(error);
+	source_app = fu_uefi_get_built_app_path("fwupd", error);
 	if (source_app == NULL)
 		return FALSE;
 
@@ -292,19 +293,16 @@ fu_uefi_bootmgr_bootnext(FuDevice *device,
 	secure_boot = fu_efivar_secure_boot_enabled(NULL);
 	if (secure_boot) {
 		/* test to make sure shim is there if we need it */
+		source_shim = fu_uefi_get_built_app_path("shim", error);
+
 		shim_app = fu_uefi_get_esp_app_path(device, esp_path, "shim", error);
 		if (shim_app == NULL)
 			return FALSE;
 
-		/* try to fallback to use UEFI removable path if the shim path doesn't exist */
-		if (!g_file_test(shim_app, G_FILE_TEST_EXISTS)) {
-			if (fu_device_has_private_flag(
-				device,
-				FU_UEFI_DEVICE_FLAG_FALLBACK_TO_REMOVABLE_PATH)) {
-				g_free(shim_app);
-				shim_app =
-				    fu_uefi_get_fallback_app_path(device, esp_path, "boot", error);
-				if (shim_app == NULL)
+		/* copy in an updated shim if we have one */
+		if (g_file_test(source_shim, G_FILE_TEST_EXISTS)) {
+			if (!fu_uefi_cmp_asset(source_shim, shim_app)) {
+				if (!fu_uefi_copy_asset(source_shim, shim_app, error))
 					return FALSE;
 			}
 		}
