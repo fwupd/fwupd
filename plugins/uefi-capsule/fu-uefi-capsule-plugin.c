@@ -111,7 +111,7 @@ fu_uefi_capsule_plugin_fwupd_efi_probe(FuUefiCapsulePlugin *self, GError **error
 	g_autofree gchar *fn = NULL;
 
 	/* find the app binary */
-	fn = fu_uefi_get_built_app_path(error);
+	fn = fu_uefi_get_built_app_path("fwupd", error);
 	if (fn == NULL)
 		return FALSE;
 	self->fwupd_efi_file = g_file_new_for_path(fn);

@@ -85,8 +85,21 @@ fu_uefi_get_esp_app_path(FuDevice *device, const gchar *esp_path, const gchar *c
 	return g_strdup_printf("%s/%s%s.efi", base, cmd, suffix);
 }
 
+/**
+ * fu_uefi_get_built_app_path:
+ * @basename: the prefix for the binary
+ * @error: (nullable): optional return location for an error
+ *
+ * Gets the path intended to be used for an EFI binary on the local system.
+ * The binary is matched against the correct architecture and if secure
+ * boot is enabled.
+ *
+ * Returns: The full path to the binary, or %NULL if not found
+ *
+ * Since: 1.8.1
+ **/
 gchar *
-fu_uefi_get_built_app_path(GError **error)
+fu_uefi_get_built_app_path(const gchar *binary, GError **error)
 {
 	const gchar *suffix;
 	g_autofree gchar *prefix = NULL;
@@ -100,7 +113,7 @@ fu_uefi_get_built_app_path(GError **error)
 		return NULL;
 	prefix = fu_path_from_kind(FU_PATH_KIND_EFIAPPDIR);
 
-	source_path = g_strdup_printf("%s/fwupd%s.efi", prefix, suffix);
+	source_path = g_strdup_printf("%s/%s%s.efi", prefix, binary, suffix);
 	source_path_signed = g_strdup_printf("%s.signed", source_path);
 
 	source_path_exists = g_file_test(source_path, G_FILE_TEST_EXISTS);
