@@ -172,6 +172,35 @@ fu_strstrip(const gchar *str)
 }
 
 /**
+ * fu_strdup:
+ * @str: a string, e.g. ` test `
+ * @bufsz: the maximum size of @str
+ * @offset: the offset to start copying from
+ *
+ * Copies a string from a buffer of a specified size up to (but not including) `NUL`.
+ *
+ * Returns: (transfer full): a #GString, possibly of zero size.
+ *
+ * Since: 1.8.11
+ **/
+GString *
+fu_strdup(const gchar *str, gsize bufsz, gsize offset)
+{
+	GString *substr;
+
+	g_return_val_if_fail(str != NULL, NULL);
+	g_return_val_if_fail(offset < bufsz, NULL);
+
+	substr = g_string_new(NULL);
+	while (offset < bufsz) {
+		if (str[offset] == '\0')
+			break;
+		g_string_append_c(substr, str[offset++]);
+	}
+	return substr;
+}
+
+/**
  * fu_string_replace:
  * @string: the #GString to operate on
  * @search: the text to search for

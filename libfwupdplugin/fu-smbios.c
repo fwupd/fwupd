@@ -98,14 +98,21 @@ fu_smbios_setup_from_data(FuSmbios *self, const guint8 *buf, gsize sz, GError **
 		if (!fu_memread_uint16_safe(buf, sz, i + 0x2, &str_handle, G_LITTLE_ENDIAN, error))
 			return FALSE;
 
-		/* invalid */
-		if (str_len == 0x00)
-			break;
+		/* sanity check */
+		if (str_len < 4) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "structure smaller than allowed @0x%x",
+				    (guint)i);
+			return FALSE;
+		}
 		if (i + str_len >= sz) {
-			g_set_error_literal(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_INVALID_FILE,
-					    "structure larger than available data");
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "structure larger than available data @0x%x",
+				    (guint)i);
 			return FALSE;
 		}
 
@@ -118,22 +125,21 @@ fu_smbios_setup_from_data(FuSmbios *self, const guint8 *buf, gsize sz, GError **
 		g_byte_array_append(item->buf, buf + i, str_len);
 		g_ptr_array_add(self->items, item);
 
-		/* jump to the end of the struct */
+		/* jump to the end of the formatted area of the struct */
 		i += str_len;
-		if (buf[i] == '\0' && buf[i + 1] == '\0') {
-			i++;
-			continue;
-		}
 
 		/* add strings from table */
-		for (gsize start_offset = i; i < sz; i++) {
-			if (buf[i] == '\0') {
-				if (start_offset == i)
-					break;
-				g_ptr_array_add(item->strings,
-						g_strdup((const gchar *)&buf[start_offset]));
-				start_offset = i + 1;
-			}
+		while (i < sz) {
+			GString *str;
+
+			/* end of string section */
+			if (item->strings->len > 0 && buf[i] == 0x0)
+				break;
+
+			/* copy into string table */
+			str = fu_strdup((const gchar *)buf, sz, i);
+			i += str->len + 1;
+			g_ptr_array_add(item->strings, g_string_free(str, FALSE));
 		}
 	}
 	return TRUE;

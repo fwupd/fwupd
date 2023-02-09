@@ -1165,5 +1165,6 @@ LIBFWUPDPLUGIN_1.8.11 {
     fu_device_has_problem;
     fu_device_sleep;
     fu_device_sleep_full;
+    fu_strdup;
   local: *;
 } LIBFWUPDPLUGIN_1.8.10;

@@ -33,6 +33,8 @@ gchar **
 fu_strsplit(const gchar *str, gsize sz, const gchar *delimiter, gint max_tokens);
 gchar *
 fu_strjoin(const gchar *separator, GPtrArray *array);
+GString *
+fu_strdup(const gchar *str, gsize bufsz, gsize offset);
 
 /**
  * FuStrsplitFunc:
