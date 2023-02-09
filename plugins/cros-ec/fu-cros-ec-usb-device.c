@@ -702,9 +702,9 @@ fu_cros_ec_usb_device_send_subcommand(FuDevice *device,
 static gboolean
 fu_cros_ec_usb_device_reset_to_ro(FuDevice *device, GError **error)
 {
-	guint8 response;
+	guint8 response = 0x0;
 	guint16 subcommand = UPDATE_EXTRA_CMD_IMMEDIATE_RESET;
-	guint8 command_body[2]; /* Max command body size. */
+	guint8 command_body[2] = {0x0}; /* max command body size */
 	gsize command_body_size = 0;
 	gsize response_size = 1;
 	g_autoptr(GError) error_local = NULL;
@@ -729,9 +729,9 @@ fu_cros_ec_usb_device_reset_to_ro(FuDevice *device, GError **error)
 static gboolean
 fu_cros_ec_usb_device_jump_to_rw(FuDevice *device)
 {
-	guint8 response;
+	guint8 response = 0x0;
 	guint16 subcommand = UPDATE_EXTRA_CMD_JUMP_TO_RW;
-	guint8 command_body[2]; /* Max command body size. */
+	guint8 command_body[2] = {0x0}; /* max command body size */
 	gsize command_body_size = 0;
 	gsize response_size = 1;
 
@@ -767,9 +767,9 @@ static gboolean
 fu_cros_ec_usb_device_stay_in_ro(FuDevice *device, GError **error)
 {
 	gsize response_size = 1;
-	guint8 response;
+	guint8 response = 0x0;
 	guint16 subcommand = UPDATE_EXTRA_CMD_STAY_IN_RO;
-	guint8 command_body[2]; /* Max command body size. */
+	guint8 command_body[2] = {0x0}; /* max command body size */
 	gsize command_body_size = 0;
 
 	if (!fu_cros_ec_usb_device_send_subcommand(device,
