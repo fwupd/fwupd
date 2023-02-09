@@ -16,4 +16,4 @@ G_DECLARE_FINAL_TYPE(FuWacModuleBluetooth,
 		     FuWacModule)
 
 FuWacModule *
-fu_wac_module_bluetooth_new(FuContext *context, GUsbDevice *usb_device);
+fu_wac_module_bluetooth_new(FuDevice *proxy);

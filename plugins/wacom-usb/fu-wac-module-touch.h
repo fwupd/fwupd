@@ -12,4 +12,4 @@
 G_DECLARE_FINAL_TYPE(FuWacModuleTouch, fu_wac_module_touch, FU, WAC_MODULE_TOUCH, FuWacModule)
 
 FuWacModule *
-fu_wac_module_touch_new(FuContext *context, GUsbDevice *usb_device);
+fu_wac_module_touch_new(FuDevice *proxy);
