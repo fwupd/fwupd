@@ -122,6 +122,7 @@ parts:
       sed -i 's!SystemdService=\(.*\)!SystemdService=snap.fwupd.fwupd.service!' \
               ${CRAFT_PART_INSTALL}/share/dbus-1/system-services/org.freedesktop.fwupd.service
       cp -R /usr/libexec/fwupd/efi ${CRAFT_PART_INSTALL}/libexec/fwupd
+      cp /usr/lib/shim/shimx64.efi.signed ${CRAFT_PART_INSTALL}/libexec/fwupd/efi/
       sed -i 's,^MetadataURI=.*$,MetadataURI=file:///var/snap/fwupd/common,' "${CRAFT_PART_INSTALL}/etc/fwupd/remotes.d/vendor-directory.conf"
     override-pull: |
       craftctl default
@@ -168,6 +169,7 @@ parts:
       - python3-cairo
       - python3-gi
       - protobuf-c-compiler
+      - shim-signed
       - systemd
       - uuid-dev
     stage-packages:
