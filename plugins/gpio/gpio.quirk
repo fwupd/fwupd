@@ -1,3 +1,11 @@
 # match all devices with this udev subsystem
 [GPIO]
 Plugin = gpio
+
+[GPIO\ID_AMDI0030:00]
+Name = GPIO controller
+ParentGuid = cpu
+
+[GPIO\ID_AMDI0031:00]
+Name = GPIO controller
+ParentGuid = cpu
