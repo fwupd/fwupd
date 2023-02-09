@@ -29,7 +29,6 @@
 #define FU_WAC_MODULE_STATUS_ERR_WRONG_IMAGE	    14
 
 typedef struct {
-	GUsbDevice *usb_device;
 	guint8 fw_type;
 	guint8 command;
 	guint8 status;
@@ -38,7 +37,7 @@ typedef struct {
 G_DEFINE_TYPE_WITH_PRIVATE(FuWacModule, fu_wac_module, FU_TYPE_DEVICE)
 #define GET_PRIVATE(o) (fu_wac_module_get_instance_private(o))
 
-enum { PROP_0, PROP_FW_TYPE, PROP_USB_DEVICE, PROP_LAST };
+enum { PROP_0, PROP_FW_TYPE, PROP_LAST };
 
 static const gchar *
 fu_wac_module_fw_type_to_string(guint8 fw_type)
@@ -278,9 +277,6 @@ fu_wac_module_get_property(GObject *object, guint prop_id, GValue *value, GParam
 	case PROP_FW_TYPE:
 		g_value_set_uint(value, priv->fw_type);
 		break;
-	case PROP_USB_DEVICE:
-		g_value_set_object(value, priv->usb_device);
-		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
 		break;
@@ -295,9 +291,6 @@ fu_wac_module_set_property(GObject *object, guint prop_id, const GValue *value, 
 	switch (prop_id) {
 	case PROP_FW_TYPE:
 		priv->fw_type = g_value_get_uint(value);
-		break;
-	case PROP_USB_DEVICE:
-		g_set_object(&priv->usb_device, g_value_get_object(value));
 		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
@@ -319,21 +312,22 @@ fu_wac_module_constructed(GObject *object)
 {
 	FuWacModule *self = FU_WAC_MODULE(object);
 	FuWacModulePrivate *priv = GET_PRIVATE(self);
+	FuDevice *proxy = fu_device_get_proxy(FU_DEVICE(self));
 	g_autofree gchar *devid = NULL;
 	g_autofree gchar *vendor_id = NULL;
 
 	/* set vendor ID */
-	vendor_id = g_strdup_printf("USB:0x%04X", g_usb_device_get_vid(priv->usb_device));
+	vendor_id = g_strdup_printf("USB:0x%04X", fu_usb_device_get_vid(FU_USB_DEVICE(proxy)));
 	fu_device_add_vendor_id(FU_DEVICE(self), vendor_id);
 
 	/* set USB physical and logical IDs */
-	fu_device_set_physical_id(FU_DEVICE(self), g_usb_device_get_platform_id(priv->usb_device));
+	fu_device_set_physical_id(FU_DEVICE(self), fu_device_get_physical_id(proxy));
 	fu_device_set_logical_id(FU_DEVICE(self), fu_wac_module_fw_type_to_string(priv->fw_type));
 
 	/* append the firmware kind to the generated GUID */
 	devid = g_strdup_printf("USB\\VID_%04X&PID_%04X-%s",
-				g_usb_device_get_vid(priv->usb_device),
-				g_usb_device_get_pid(priv->usb_device),
+				fu_usb_device_get_vid(FU_USB_DEVICE(proxy)),
+				fu_usb_device_get_pid(FU_USB_DEVICE(proxy)),
 				fu_wac_module_fw_type_to_string(priv->fw_type));
 	fu_device_add_instance_id(FU_DEVICE(self), devid);
 
@@ -351,16 +345,6 @@ fu_wac_module_set_progress(FuDevice *self, FuProgress *progress)
 }
 
 static void
-fu_wac_module_finalize(GObject *object)
-{
-	FuWacModule *self = FU_WAC_MODULE(object);
-	FuWacModulePrivate *priv = GET_PRIVATE(self);
-	if (priv->usb_device != NULL)
-		g_object_unref(priv->usb_device);
-	G_OBJECT_CLASS(fu_wac_module_parent_class)->finalize(object);
-}
-
-static void
 fu_wac_module_class_init(FuWacModuleClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
@@ -370,18 +354,6 @@ fu_wac_module_class_init(FuWacModuleClass *klass)
 	/* properties */
 	object_class->get_property = fu_wac_module_get_property;
 	object_class->set_property = fu_wac_module_set_property;
-
-	/**
-	 * FuWacModule:usb-device:
-	 *
-	 * The parent USB device to use.
-	 */
-	pspec = g_param_spec_object("usb-device",
-				    NULL,
-				    NULL,
-				    G_USB_TYPE_DEVICE,
-				    G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_NAME);
-	g_object_class_install_property(object_class, PROP_USB_DEVICE, pspec);
 
 	/**
 	 * FuWacModule:fw-type:
@@ -398,7 +370,6 @@ fu_wac_module_class_init(FuWacModuleClass *klass)
 	g_object_class_install_property(object_class, PROP_FW_TYPE, pspec);
 
 	object_class->constructed = fu_wac_module_constructed;
-	object_class->finalize = fu_wac_module_finalize;
 	klass_device->to_string = fu_wac_module_to_string;
 	klass_device->cleanup = fu_wac_module_cleanup;
 	klass_device->set_progress = fu_wac_module_set_progress;

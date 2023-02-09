@@ -13,4 +13,4 @@
 G_DECLARE_FINAL_TYPE(FuWacModuleScaler, fu_wac_module_scaler, FU, WAC_MODULE_SCALER, FuWacModule)
 
 FuWacModule *
-fu_wac_module_scaler_new(FuContext *context, GUsbDevice *usb_device);
+fu_wac_module_scaler_new(FuDevice *proxy);

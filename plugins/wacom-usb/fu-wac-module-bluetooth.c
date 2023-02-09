@@ -222,14 +222,12 @@ fu_wac_module_bluetooth_class_init(FuWacModuleBluetoothClass *klass)
 }
 
 FuWacModule *
-fu_wac_module_bluetooth_new(FuContext *context, GUsbDevice *usb_device)
+fu_wac_module_bluetooth_new(FuDevice *proxy)
 {
 	FuWacModule *module = NULL;
 	module = g_object_new(FU_TYPE_WAC_MODULE_BLUETOOTH,
-			      "context",
-			      context,
-			      "usb-device",
-			      usb_device,
+			      "proxy",
+			      proxy,
 			      "fw-type",
 			      FU_WAC_MODULE_FW_TYPE_BLUETOOTH,
 			      NULL);
