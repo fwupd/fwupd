@@ -94,6 +94,7 @@ parts:
                        -Dplugin_flashrom=disabled,
                        -Dplugin_powerd=disabled,
                        -Dudevdir=$CRAFT_STAGE/lib/udev,
+                       -Defi_os_dir=fwupd,
                        "-Dgusb:tests=false",
                        "-Dgusb:docs=false",
                        "-Dgusb:introspection=false",
