@@ -1378,6 +1378,12 @@ fu_device_add_child(FuDevice *self, FuDevice *child)
 		}
 	}
 
+	/* ensure child has the parent acquiesce delay */
+	for (guint i = 0; i < children->len; i++) {
+		FuDevice *child_tmp = g_ptr_array_index(children, i);
+		fu_device_set_acquiesce_delay(child_tmp, priv->acquiesce_delay);
+	}
+
 	/* copy from main device if unset */
 	if (fu_device_get_physical_id(child) == NULL && fu_device_get_physical_id(self) != NULL)
 		fu_device_set_physical_id(child, fu_device_get_physical_id(self));
