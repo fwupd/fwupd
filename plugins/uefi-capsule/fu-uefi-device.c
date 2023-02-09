@@ -759,9 +759,6 @@ fu_uefi_device_init(FuUefiDevice *self)
 					FU_UEFI_DEVICE_FLAG_USE_SHIM_FOR_SB,
 					"use-shim-for-sb");
 	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_UEFI_DEVICE_FLAG_FALLBACK_TO_REMOVABLE_PATH,
-					"fallback-to-removable-path");
-	fu_device_register_private_flag(FU_DEVICE(self),
 					FU_UEFI_DEVICE_FLAG_NO_RT_SET_VARIABLE,
 					"no-rt-set-variable");
 	fu_device_register_private_flag(FU_DEVICE(self),
