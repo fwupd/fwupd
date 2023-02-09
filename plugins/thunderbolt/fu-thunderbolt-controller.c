@@ -288,6 +288,7 @@ fu_thunderbolt_controller_setup(FuDevice *device, GError **error)
 
 		} else {
 			device_id = g_strdup("TBT-fixed");
+			fu_device_add_parent_guid(device, "cpu");
 		}
 		fu_device_add_instance_id(device, device_id);
 		if (domain_id != NULL)
