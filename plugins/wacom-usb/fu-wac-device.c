@@ -173,9 +173,6 @@ fu_wac_device_set_feature_report(FuWacDevice *self,
 				 FuHidDeviceFlags flags,
 				 GError **error)
 {
-	/* hit hardware */
-	if (g_getenv("FWUPD_WAC_EMULATE") != NULL)
-		return TRUE;
 	return fu_hid_device_set_report(FU_HID_DEVICE(self),
 					buf[0],
 					buf,
