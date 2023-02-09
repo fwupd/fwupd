@@ -67,12 +67,6 @@ typedef enum {
  */
 #define FU_UEFI_DEVICE_FLAG_SUPPORTS_BOOT_ORDER_LOCK (1 << 3)
 /**
- * FU_UEFI_DEVICE_FLAG_FALLBACK_TO_REMOVABLE_PATH:
- *
- * Try to fallback to use UEFI removable path if the shim path doesn't exist.
- */
-#define FU_UEFI_DEVICE_FLAG_FALLBACK_TO_REMOVABLE_PATH (1 << 4)
-/**
  * FU_UEFI_DEVICE_FLAG_USE_SHIM_FOR_SB:
  *
  * Use shim to load fwupdx64.efi when SecureBoot is turned on.

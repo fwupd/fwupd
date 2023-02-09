@@ -436,7 +436,6 @@ static void
 fu_uefi_capsule_plugin_load_config(FuPlugin *plugin, FuDevice *device)
 {
 	gboolean disable_shim;
-	gboolean fallback_removable_path;
 	guint64 sz_reqd = 0;
 	g_autofree gchar *require_esp_free_space = NULL;
 	g_autoptr(GError) error_local = NULL;
@@ -454,12 +453,6 @@ fu_uefi_capsule_plugin_load_config(FuPlugin *plugin, FuDevice *device)
 	disable_shim = fu_plugin_get_config_value_boolean(plugin, "DisableShimForSecureBoot");
 	if (!disable_shim)
 		fu_device_add_private_flag(device, FU_UEFI_DEVICE_FLAG_USE_SHIM_FOR_SB);
-
-	/* check if using UEFI removable path */
-	fallback_removable_path =
-	    fu_plugin_get_config_value_boolean(plugin, "FallbacktoRemovablePath");
-	if (fallback_removable_path)
-		fu_device_add_private_flag(device, FU_UEFI_DEVICE_FLAG_FALLBACK_TO_REMOVABLE_PATH);
 }
 
 static gboolean
