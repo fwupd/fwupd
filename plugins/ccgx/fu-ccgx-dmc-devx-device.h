@@ -20,3 +20,5 @@ G_DECLARE_FINAL_TYPE(FuCcgxDmcDevxDevice,
 
 FuCcgxDmcDevxDevice *
 fu_ccgx_dmc_devx_device_new(FuDevice *proxy, DmcDevxStatus *status);
+guint
+fu_ccgx_dmc_devx_device_get_remove_delay(FuCcgxDmcDevxDevice *self);
