@@ -215,6 +215,12 @@ fu_strdup(const gchar *str, gsize bufsz, gsize offset)
 guint
 fu_string_replace(GString *string, const gchar *search, const gchar *replace)
 {
+#if GLIB_CHECK_VERSION(2, 68, 0)
+	g_return_val_if_fail(string != NULL, 0);
+	g_return_val_if_fail(search != NULL, 0);
+	g_return_val_if_fail(replace != NULL, 0);
+	return g_string_replace(string, search, replace, 0);
+#else
 	gchar *tmp;
 	guint count = 0;
 	gsize search_idx = 0;
@@ -263,6 +269,7 @@ fu_string_replace(GString *string, const gchar *search, const gchar *replace)
 	} while (TRUE);
 
 	return count;
+#endif
 }
 
 /**
