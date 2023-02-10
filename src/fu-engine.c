@@ -85,6 +85,8 @@
 
 #define MINIMUM_BATTERY_PERCENTAGE_FALLBACK 10
 
+#define FU_ENGINE_UPDATE_MOTD_DELAY 5 /* s */
+
 #define FU_ENGINE_MAX_METADATA_SIZE  0x2000000 /* 32MB */
 #define FU_ENGINE_MAX_SIGNATURE_SIZE 0x100000  /* 1MB */
 
@@ -139,6 +141,7 @@ struct _FuEngine {
 	GMainLoop *acquiesce_loop;
 	guint acquiesce_id;
 	guint acquiesce_delay;
+	guint update_motd_id;
 	FuEngineInstallPhase install_phase;
 };
 
@@ -156,6 +159,28 @@ static guint signals[SIGNAL_LAST] = {0};
 
 G_DEFINE_TYPE(FuEngine, fu_engine, G_TYPE_OBJECT)
 
+static gboolean
+fu_engine_update_motd_timeout_cb(gpointer user_data)
+{
+	FuEngine *self = FU_ENGINE(user_data);
+	g_autoptr(GError) error_local = NULL;
+	if (!fu_engine_update_motd(self, &error_local))
+		g_debug("failed to update MOTD: %s", error_local->message);
+	self->update_motd_id = 0;
+	return G_SOURCE_REMOVE;
+}
+
+static void
+fu_engine_update_motd_reset(FuEngine *self)
+{
+	g_debug("resetting update motd timeout");
+	if (self->update_motd_id != 0)
+		g_source_remove(self->update_motd_id);
+	self->update_motd_id = g_timeout_add_seconds(FU_ENGINE_UPDATE_MOTD_DELAY,
+						     fu_engine_update_motd_timeout_cb,
+						     self);
+}
+
 static void
 fu_engine_emit_changed(FuEngine *self)
 {
@@ -169,11 +194,8 @@ fu_engine_emit_changed(FuEngine *self)
 	fu_engine_idle_reset(self);
 
 	/* update the motd */
-	if (fu_config_get_update_motd(self->config)) {
-		g_autoptr(GError) error_local = NULL;
-		if (!fu_engine_update_motd(self, &error_local))
-			g_debug("failed to update MOTD: %s", error_local->message);
-	}
+	if (fu_config_get_update_motd(self->config))
+		fu_engine_update_motd_reset(self);
 
 	/* update the list of devices */
 	if (!fu_engine_update_devices_file(self, &error))
@@ -5580,7 +5602,7 @@ fu_engine_get_releases_for_device(FuEngine *self,
 
 		/* nothing found */
 		if (components == NULL) {
-			g_debug("%s", error_local->message);
+			g_debug("%s was not found: %s", guid, error_local->message);
 			continue;
 		}
 
@@ -8598,6 +8620,8 @@ fu_engine_finalize(GObject *obj)
 		g_hash_table_unref(self->blocked_firmware);
 	if (self->acquiesce_id != 0)
 		g_source_remove(self->acquiesce_id);
+	if (self->update_motd_id != 0)
+		g_source_remove(self->update_motd_id);
 	g_main_loop_unref(self->acquiesce_loop);
 
 	g_free(self->host_machine_id);
