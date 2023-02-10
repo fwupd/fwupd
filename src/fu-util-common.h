@@ -13,6 +13,8 @@
 #include "fwupd-bios-setting-private.h"
 #include "fwupd-security-attr-private.h"
 
+#include "fu-console.h"
+
 /* this is only valid for tools */
 #define FWUPD_ERROR_INVALID_ARGS (FWUPD_ERROR_LAST + 1)
 
@@ -33,44 +35,26 @@ typedef enum {
 	FU_SECURITY_ATTR_TO_STRING_FLAG_LAST
 } FuSecurityAttrToStringFlags;
 
-typedef enum {
-	FU_UTIL_TERM_COLOR_BLACK = 30,
-	FU_UTIL_TERM_COLOR_RED = 31,
-	FU_UTIL_TERM_COLOR_GREEN = 32,
-	FU_UTIL_TERM_COLOR_YELLOW = 33,
-	FU_UTIL_TERM_COLOR_BLUE = 34,
-	FU_UTIL_TERM_COLOR_MAGENTA = 35,
-	FU_UTIL_TERM_COLOR_CYAN = 36,
-	FU_UTIL_TERM_COLOR_WHITE = 37,
-} FuUtilTermColor;
-
 void
-fu_util_print_data(const gchar *title, const gchar *msg);
-gchar *
-fu_util_term_format(const gchar *text, FuUtilTermColor fg_color);
-guint
-fu_util_prompt_for_number(guint maxnum);
-gboolean
-fu_util_prompt_for_boolean(gboolean def);
-
-void
-fu_util_print_tree(FwupdClient *client, GNode *n);
+fu_util_print_tree(FuConsole *console, FwupdClient *client, GNode *n);
 gboolean
 fu_util_is_interesting_device(FwupdDevice *dev);
 gchar *
 fu_util_get_user_cache_path(const gchar *fn);
 
-void
-fu_util_warning_box(const gchar *title, const gchar *body, guint width);
 gboolean
-fu_util_prompt_warning(FwupdDevice *device,
+fu_util_prompt_warning(FuConsole *console,
+		       FwupdDevice *device,
 		       FwupdRelease *release,
 		       const gchar *machine,
 		       GError **error);
 gboolean
-fu_util_prompt_warning_fde(FwupdDevice *dev, GError **error);
+fu_util_prompt_warning_fde(FuConsole *console, FwupdDevice *dev, GError **error);
 gboolean
-fu_util_prompt_complete(FwupdDeviceFlags flags, gboolean prompt, GError **error);
+fu_util_prompt_complete(FuConsole *console,
+			FwupdDeviceFlags flags,
+			gboolean prompt,
+			GError **error);
 gboolean
 fu_util_update_reboot(GError **error);
 
@@ -145,21 +129,20 @@ gint
 fu_util_device_order_sort_cb(gconstpointer a, gconstpointer b);
 
 gboolean
-fu_util_switch_branch_warning(FwupdDevice *dev,
+fu_util_switch_branch_warning(FuConsole *console,
+			      FwupdDevice *dev,
 			      FwupdRelease *rel,
 			      gboolean assume_yes,
 			      GError **error);
 void
-fu_util_show_unsupported_warn(void);
+fu_util_show_unsupported_warning(FuConsole *console);
 gboolean
 fu_util_is_url(const gchar *perhaps_url);
 gboolean
-fu_util_setup_interactive_console(GError **error);
-gboolean
-fu_util_print_builder(JsonBuilder *builder, GError **error);
+fu_util_print_builder(FuConsole *console, JsonBuilder *builder, GError **error);
 void
-fu_util_print_error_as_json(const GError *error);
+fu_util_print_error_as_json(FuConsole *console, const GError *error);
 gchar *
 fu_util_project_versions_to_string(GHashTable *metadata);
 gboolean
-fu_util_project_versions_as_json(GHashTable *metadata, GError **error);
+fu_util_project_versions_as_json(FuConsole *console, GHashTable *metadata, GError **error);

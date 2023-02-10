@@ -30,13 +30,13 @@
 
 #include "fu-bios-settings-private.h"
 #include "fu-cabinet.h"
+#include "fu-console.h"
 #include "fu-context-private.h"
 #include "fu-debug.h"
 #include "fu-device-private.h"
 #include "fu-engine.h"
 #include "fu-history.h"
 #include "fu-plugin-private.h"
-#include "fu-progressbar.h"
 #include "fu-security-attr-common.h"
 #include "fu-security-attrs-private.h"
 #include "fu-smbios-private.h"
@@ -66,7 +66,7 @@ struct FuUtilPrivate {
 	FuEngine *engine;
 	FuEngineRequest *request;
 	FuProgress *progress;
-	FuProgressbar *progressbar;
+	FuConsole *console;
 	FwupdClient *client;
 	gboolean as_json;
 	gboolean no_reboot_check;
@@ -94,9 +94,9 @@ fu_util_client_notify_cb(GObject *object, GParamSpec *pspec, FuUtilPrivate *priv
 {
 	if (priv->as_json)
 		return;
-	fu_progressbar_update(priv->progressbar,
-			      fwupd_client_get_status(priv->client),
-			      fwupd_client_get_percentage(priv->client));
+	fu_console_set_progress(priv->console,
+				fwupd_client_get_status(priv->client),
+				fwupd_client_get_percentage(priv->client));
 }
 
 static void
@@ -125,7 +125,6 @@ fu_util_show_plugin_warnings(FuUtilPrivate *priv)
 	for (guint i = 0; i < 64; i++) {
 		FwupdPluginFlags flag = (guint64)1 << i;
 		const gchar *tmp;
-		g_autofree gchar *fmt = NULL;
 		g_autofree gchar *url = NULL;
 		g_autoptr(GString) str = g_string_new(NULL);
 		if ((flags & flag) == 0)
@@ -133,17 +132,11 @@ fu_util_show_plugin_warnings(FuUtilPrivate *priv)
 		tmp = fu_util_plugin_flag_to_string((guint64)1 << i);
 		if (tmp == NULL)
 			continue;
-		/* TRANSLATORS: this is a prefix on the console */
-		fmt = fu_util_term_format(_("WARNING:"), FU_UTIL_TERM_COLOR_RED);
-		g_string_append_printf(str, "%s %s\n", fmt, tmp);
-
+		fu_console_print_full(priv->console, FU_CONSOLE_PRINT_FLAG_WARNING, "%s\n", tmp);
 		url = g_strdup_printf("https://github.com/fwupd/fwupd/wiki/PluginFlag:%s",
 				      fwupd_plugin_flag_to_string(flag));
-		g_string_append(str, "  ");
 		/* TRANSLATORS: %s is a link to a website */
-		g_string_append_printf(str, _("See %s for more information."), url);
-		g_string_append(str, "\n");
-		g_printerr("%s", str->str);
+		fu_console_print(priv->console, _("See %s for more information."), url);
 	}
 }
 
@@ -234,7 +227,7 @@ fu_util_start_engine(FuUtilPrivate *priv,
 	if (!fu_engine_load(priv->engine, flags, progress, error))
 		return FALSE;
 	fu_util_show_plugin_warnings(priv);
-	fu_util_show_unsupported_warn();
+	fu_util_show_unsupported_warning(priv->console);
 
 	/* copy properties from engine to client */
 	g_object_set(priv->client,
@@ -270,7 +263,7 @@ fu_util_cancelled_cb(GCancellable *cancellable, gpointer user_data)
 {
 	FuUtilPrivate *priv = (FuUtilPrivate *)user_data;
 	/* TRANSLATORS: this is when a device ctrl+c's a watch */
-	g_print("%s\n", _("Cancelled"));
+	fu_console_print_literal(priv->console, _("Cancelled"));
 	g_main_loop_quit(priv->loop);
 }
 
@@ -290,7 +283,7 @@ fu_util_smbios_dump(FuUtilPrivate *priv, gchar **values, GError **error)
 	if (!fu_smbios_setup_from_file(smbios, values[0], error))
 		return FALSE;
 	tmp = fu_firmware_to_string(FU_FIRMWARE(smbios));
-	g_print("%s\n", tmp);
+	fu_console_print_literal(priv->console, tmp);
 	return TRUE;
 }
 
@@ -332,8 +325,8 @@ fu_util_private_free(FuUtilPrivate *priv)
 		g_main_loop_unref(priv->loop);
 	if (priv->cancellable != NULL)
 		g_object_unref(priv->cancellable);
-	if (priv->progressbar != NULL)
-		g_object_unref(priv->progressbar);
+	if (priv->console != NULL)
+		g_object_unref(priv->console);
 	if (priv->progress != NULL)
 		g_object_unref(priv->progress);
 	if (priv->context != NULL)
@@ -366,9 +359,9 @@ fu_util_update_device_request_cb(FwupdClient *client, FwupdRequest *request, FuU
 		g_autofree gchar *tmp = NULL;
 
 		/* TRANSLATORS: the user needs to do something, e.g. remove the device */
-		fmt = fu_util_term_format(_("Action Required:"), FU_UTIL_TERM_COLOR_RED);
+		fmt = fu_console_color_format(_("Action Required:"), FU_CONSOLE_COLOR_RED);
 		tmp = g_strdup_printf("%s %s", fmt, fwupd_request_get_message(request));
-		fu_progressbar_set_title(priv->progressbar, tmp);
+		fu_console_set_progress_title(priv->console, tmp);
 	}
 
 	/* save for later */
@@ -395,7 +388,7 @@ fu_main_engine_status_changed_cb(FuEngine *engine, FwupdStatus status, FuUtilPri
 {
 	if (priv->as_json)
 		return;
-	fu_progressbar_update(priv->progressbar, status, 0);
+	fu_console_set_progress(priv->console, status, 0);
 }
 
 static void
@@ -403,7 +396,7 @@ fu_util_progress_percentage_changed_cb(FuProgress *progress, guint percentage, F
 {
 	if (priv->as_json)
 		return;
-	fu_progressbar_update(priv->progressbar, fu_progress_get_status(progress), percentage);
+	fu_console_set_progress(priv->console, fu_progress_get_status(progress), percentage);
 }
 
 static void
@@ -411,7 +404,7 @@ fu_util_progress_status_changed_cb(FuProgress *progress, FwupdStatus status, FuU
 {
 	if (priv->as_json)
 		return;
-	fu_progressbar_update(priv->progressbar, status, fu_progress_get_percentage(progress));
+	fu_console_set_progress(priv->console, status, fu_progress_get_percentage(progress));
 }
 
 static gboolean
@@ -445,7 +438,7 @@ fu_util_get_plugins_as_json(FuUtilPrivate *priv, GPtrArray *plugins, GError **er
 	}
 	json_builder_end_array(builder);
 	json_builder_end_object(builder);
-	return fu_util_print_builder(builder, error);
+	return fu_util_print_builder(priv->console, builder, error);
 }
 
 static gboolean
@@ -467,11 +460,11 @@ fu_util_get_plugins(FuUtilPrivate *priv, gchar **values, GError **error)
 	for (guint i = 0; i < plugins->len; i++) {
 		FuPlugin *plugin = g_ptr_array_index(plugins, i);
 		g_autofree gchar *str = fu_util_plugin_to_string(FWUPD_PLUGIN(plugin), 0);
-		g_print("%s\n", str);
+		fu_console_print_literal(priv->console, str);
 	}
 	if (plugins->len == 0) {
 		/* TRANSLATORS: nothing found */
-		g_print("%s\n", _("No plugins found"));
+		fu_console_print_literal(priv->console, _("No plugins found"));
 	}
 
 	return TRUE;
@@ -531,8 +524,12 @@ fu_util_prompt_for_device(FuUtilPrivate *priv, GPtrArray *devices_opt, GError **
 	if (devices_filtered->len == 1) {
 		dev = g_ptr_array_index(devices_filtered, 0);
 		if (!priv->as_json) {
-			/* TRANSLATORS: device has been chosen by the daemon for the user */
-			g_print("%s: %s\n", _("Selected device"), fu_device_get_name(dev));
+			fu_console_print(
+			    priv->console,
+			    "%s: %s",
+			    /* TRANSLATORS: device has been chosen by the daemon for the user */
+			    _("Selected device"),
+			    fu_device_get_name(dev));
 		}
 		return g_object_ref(dev);
 	}
@@ -547,14 +544,18 @@ fu_util_prompt_for_device(FuUtilPrivate *priv, GPtrArray *devices_opt, GError **
 	}
 
 	/* TRANSLATORS: get interactive prompt */
-	g_print("%s\n", _("Choose a device:"));
+	fu_console_print_literal(priv->console, _("Choose a device:"));
 	/* TRANSLATORS: this is to abort the interactive prompt */
-	g_print("0.\t%s\n", _("Cancel"));
+	fu_console_print(priv->console, "0.\t%s", _("Cancel"));
 	for (guint i = 0; i < devices_filtered->len; i++) {
 		dev = g_ptr_array_index(devices_filtered, i);
-		g_print("%u.\t%s (%s)\n", i + 1, fu_device_get_id(dev), fu_device_get_name(dev));
+		fu_console_print(priv->console,
+				 "%u.\t%s (%s)",
+				 i + 1,
+				 fu_device_get_id(dev),
+				 fu_device_get_name(dev));
 	}
-	idx = fu_util_prompt_for_number(devices_filtered->len);
+	idx = fu_console_input_uint(priv->console, devices_filtered->len);
 	if (idx == 0) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -666,20 +667,23 @@ fu_util_get_updates(FuUtilPrivate *priv, gchar **values, GError **error)
 
 	/* devices that have no updates available for whatever reason */
 	if (devices_no_support->len > 0) {
-		/* TRANSLATORS: message letting the user know no device upgrade
-		 * available due to missing on LVFS */
-		g_printerr("%s\n", _("Devices with no available firmware updates: "));
+		fu_console_print_literal(priv->console,
+					 /* TRANSLATORS: message letting the user know no device
+					  * upgrade available due to missing on LVFS */
+					 _("Devices with no available firmware updates: "));
 		for (guint i = 0; i < devices_no_support->len; i++) {
 			FwupdDevice *dev = g_ptr_array_index(devices_no_support, i);
-			g_printerr(" • %s\n", fwupd_device_get_name(dev));
+			fu_console_print(priv->console, " • %s", fwupd_device_get_name(dev));
 		}
 	}
 	if (devices_no_upgrades->len > 0) {
-		/* TRANSLATORS: message letting the user know no device upgrade available */
-		g_printerr("%s\n", _("Devices with the latest available firmware version:"));
+		fu_console_print_literal(
+		    priv->console,
+		    /* TRANSLATORS: message letting the user know no device upgrade available */
+		    _("Devices with the latest available firmware version:"));
 		for (guint i = 0; i < devices_no_upgrades->len; i++) {
 			FwupdDevice *dev = g_ptr_array_index(devices_no_upgrades, i);
-			g_printerr(" • %s\n", fwupd_device_get_name(dev));
+			fu_console_print(priv->console, " • %s", fwupd_device_get_name(dev));
 		}
 	}
 
@@ -692,7 +696,7 @@ fu_util_get_updates(FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 	}
 
-	fu_util_print_tree(priv->client, root);
+	fu_util_print_tree(priv->console, priv->client, root);
 	return TRUE;
 }
 
@@ -750,7 +754,7 @@ fu_util_get_details(FuUtilPrivate *priv, gchar **values, GError **error)
 		if (rel != NULL)
 			g_node_append_data(child, rel);
 	}
-	fu_util_print_tree(priv->client, root);
+	fu_util_print_tree(priv->console, priv->client, root);
 
 	return TRUE;
 }
@@ -771,7 +775,7 @@ fu_util_get_device_flags(FuUtilPrivate *priv, gchar **values, GError **error)
 		g_string_append(str, " ~");
 		g_string_append(str, tmp);
 	}
-	g_print("%s\n", str->str);
+	fu_console_print_literal(priv->console, str->str);
 
 	return TRUE;
 }
@@ -817,11 +821,12 @@ fu_util_get_devices(FuUtilPrivate *priv, gchar **values, GError **error)
 
 	/* print */
 	if (g_node_n_children(root) == 0) {
-		/* TRANSLATORS: nothing attached that can be upgraded */
-		g_print("%s\n", _("No hardware detected with firmware update capability"));
+		fu_console_print_literal(priv->console,
+					 /* TRANSLATORS: nothing attached that can be upgraded */
+					 _("No hardware detected with firmware update capability"));
 		return TRUE;
 	}
-	fu_util_print_tree(priv->client, root);
+	fu_util_print_tree(priv->console, priv->client, root);
 
 	return TRUE;
 }
@@ -854,19 +859,19 @@ fu_util_update_device_changed_cb(FwupdClient *client, FwupdDevice *device, FuUti
 		return;
 	}
 
-	/* show message in progressbar */
+	/* show message in console */
 	if (priv->current_operation == FU_UTIL_OPERATION_UPDATE) {
 		/* TRANSLATORS: %1 is a device name */
 		str = g_strdup_printf(_("Updating %s…"), fwupd_device_get_name(device));
-		fu_progressbar_set_title(priv->progressbar, str);
+		fu_console_set_progress_title(priv->console, str);
 	} else if (priv->current_operation == FU_UTIL_OPERATION_INSTALL) {
 		/* TRANSLATORS: %1 is a device name  */
 		str = g_strdup_printf(_("Installing on %s…"), fwupd_device_get_name(device));
-		fu_progressbar_set_title(priv->progressbar, str);
+		fu_console_set_progress_title(priv->console, str);
 	} else if (priv->current_operation == FU_UTIL_OPERATION_READ) {
 		/* TRANSLATORS: %1 is a device name  */
 		str = g_strdup_printf(_("Reading from %s…"), fwupd_device_get_name(device));
-		fu_progressbar_set_title(priv->progressbar, str);
+		fu_console_set_progress_title(priv->console, str);
 	} else {
 		g_warning("no FuUtilOperation set");
 	}
@@ -879,7 +884,7 @@ fu_util_display_current_message(FuUtilPrivate *priv)
 	/* print all POST requests */
 	for (guint i = 0; i < priv->post_requests->len; i++) {
 		FwupdRequest *request = g_ptr_array_index(priv->post_requests, i);
-		g_print("%s\n", fu_util_request_get_message(request));
+		fu_console_print_literal(priv->console, fu_util_request_get_message(request));
 	}
 }
 
@@ -984,7 +989,7 @@ fu_util_install_blob(FuUtilPrivate *priv, gchar **values, GError **error)
 	fu_util_display_current_message(priv);
 
 	/* success */
-	return fu_util_prompt_complete(priv->completion_flags, TRUE, error);
+	return fu_util_prompt_complete(priv->console, priv->completion_flags, TRUE, error);
 }
 
 static gboolean
@@ -1251,7 +1256,7 @@ fu_util_install(FuUtilPrivate *priv, gchar **values, GError **error)
 		if (device == NULL)
 			return FALSE;
 		if (!priv->no_safety_check) {
-			if (!fu_util_prompt_warning_fde(FWUPD_DEVICE(device), error))
+			if (!fu_util_prompt_warning_fde(priv->console, FWUPD_DEVICE(device), error))
 				return FALSE;
 		}
 		devices_possible =
@@ -1381,7 +1386,7 @@ fu_util_install(FuUtilPrivate *priv, gchar **values, GError **error)
 	}
 
 	/* success */
-	return fu_util_prompt_complete(priv->completion_flags, TRUE, error);
+	return fu_util_prompt_complete(priv->console, priv->completion_flags, TRUE, error);
 }
 
 static gboolean
@@ -1510,13 +1515,14 @@ fu_util_update(FuUtilPrivate *priv, gchar **values, GError **error)
 			continue;
 		if (!fwupd_device_has_flag(dev, FWUPD_DEVICE_FLAG_SUPPORTED)) {
 			if (!no_updates_header) {
-				g_printerr("%s\n",
-					   /* TRANSLATORS: message letting the user know no device
-					    * upgrade available due to missing on LVFS */
-					   _("Devices with no available firmware updates: "));
+				fu_console_print_literal(
+				    priv->console,
+				    /* TRANSLATORS: message letting the user know no
+				     * device upgrade available due to missing on LVFS */
+				    _("Devices with no available firmware updates: "));
 				no_updates_header = TRUE;
 			}
-			g_printerr(" • %s\n", fwupd_device_get_name(dev));
+			fu_console_print(priv->console, " • %s", fwupd_device_get_name(dev));
 			continue;
 		}
 		if (!fu_util_filter_device(priv, dev))
@@ -1525,14 +1531,14 @@ fu_util_update(FuUtilPrivate *priv, gchar **values, GError **error)
 		rels = fu_engine_get_upgrades(priv->engine, priv->request, device_id, &error_local);
 		if (rels == NULL) {
 			if (!latest_header) {
-				g_printerr(
-				    "%s\n",
+				fu_console_print_literal(
+				    priv->console,
 				    /* TRANSLATORS: message letting the user know no device upgrade
 				     * available */
 				    _("Devices with the latest available firmware version:"));
 				latest_header = TRUE;
 			}
-			g_printerr(" • %s\n", fwupd_device_get_name(dev));
+			fu_console_print(priv->console, " • %s", fwupd_device_get_name(dev));
 			/* discard the actual reason from user, but leave for debugging */
 			g_debug("%s", error_local->message);
 			continue;
@@ -1544,14 +1550,14 @@ fu_util_update(FuUtilPrivate *priv, gchar **values, GError **error)
 			    g_strdup_printf("%s %s",
 					    fu_engine_get_host_vendor(priv->engine),
 					    fu_engine_get_host_product(priv->engine));
-			if (!fu_util_prompt_warning(dev, rel, title, error))
+			if (!fu_util_prompt_warning(priv->console, dev, rel, title, error))
 				return FALSE;
-			if (!fu_util_prompt_warning_fde(dev, error))
+			if (!fu_util_prompt_warning_fde(priv->console, dev, error))
 				return FALSE;
 		}
 
 		if (!fu_util_install_release(priv, rel, &error_local)) {
-			g_printerr("%s\n", error_local->message);
+			fu_console_print_literal(priv->console, error_local->message);
 			continue;
 		}
 		fu_util_display_current_message(priv);
@@ -1563,7 +1569,7 @@ fu_util_update(FuUtilPrivate *priv, gchar **values, GError **error)
 		return TRUE;
 	}
 
-	return fu_util_prompt_complete(priv->completion_flags, TRUE, error);
+	return fu_util_prompt_complete(priv->console, priv->completion_flags, TRUE, error);
 }
 
 static gboolean
@@ -1633,7 +1639,7 @@ fu_util_reinstall(FuUtilPrivate *priv, gchar **values, GError **error)
 		return TRUE;
 	}
 
-	return fu_util_prompt_complete(priv->completion_flags, TRUE, error);
+	return fu_util_prompt_complete(priv->console, priv->completion_flags, TRUE, error);
 }
 
 static gboolean
@@ -1861,7 +1867,7 @@ fu_util_get_report_metadata(FuUtilPrivate *priv, gchar **values, GError **error)
 	fu_progress_step_done(priv->progress);
 
 	/* display */
-	g_print("\n%s", str->str);
+	fu_console_print_literal(priv->console, str->str);
 
 	/* success */
 	return TRUE;
@@ -1951,8 +1957,12 @@ fu_util_activate(FuUtilPrivate *priv, gchar **values, GError **error)
 		if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION))
 			continue;
 		has_pending = TRUE;
-		/* TRANSLATORS: shown when shutting down to switch to the new version */
-		g_print("%s %s…\n", _("Activating firmware update"), fu_device_get_name(device));
+		fu_console_print(
+		    priv->console,
+		    "%s %s…",
+		    /* TRANSLATORS: shown when shutting down to switch to the new version */
+		    _("Activating firmware update"),
+		    fu_device_get_name(device));
 		if (!fu_engine_activate(priv->engine,
 					fu_device_get_id(device),
 					fu_progress_get_child(priv->progress),
@@ -2030,8 +2040,8 @@ fu_util_hwids(FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 
 	/* show debug output */
-	g_print("Computer Information\n");
-	g_print("--------------------\n");
+	fu_console_print_literal(priv->console, "Computer Information");
+	fu_console_print_literal(priv->console, "--------------------");
 	for (guint i = 0; i < hwid_keys->len; i++) {
 		const gchar *hwid_key = g_ptr_array_index(hwid_keys, i);
 		const gchar *value = fu_hwids_get_value(hwids, hwid_key);
@@ -2040,15 +2050,15 @@ fu_util_hwids(FuUtilPrivate *priv, gchar **values, GError **error)
 		if (g_strcmp0(hwid_key, FU_HWIDS_KEY_BIOS_MAJOR_RELEASE) == 0 ||
 		    g_strcmp0(hwid_key, FU_HWIDS_KEY_BIOS_MINOR_RELEASE) == 0) {
 			guint64 val = g_ascii_strtoull(value, NULL, 16);
-			g_print("%s: %" G_GUINT64_FORMAT "\n", hwid_key, val);
+			fu_console_print(priv->console, "%s: %" G_GUINT64_FORMAT, hwid_key, val);
 		} else {
-			g_print("%s: %s\n", hwid_key, value);
+			fu_console_print(priv->console, "%s: %s", hwid_key, value);
 		}
 	}
 
 	/* show GUIDs */
-	g_print("\nHardware IDs\n");
-	g_print("------------\n");
+	fu_console_print_literal(priv->console, "Hardware IDs");
+	fu_console_print_literal(priv->console, "------------");
 	for (guint i = 0; i < 15; i++) {
 		const gchar *keys = NULL;
 		g_autofree gchar *guid = NULL;
@@ -2062,14 +2072,14 @@ fu_util_hwids(FuUtilPrivate *priv, gchar **values, GError **error)
 		keys = fu_hwids_get_replace_keys(hwids, key);
 		guid = fu_hwids_get_guid(hwids, key, &error_local);
 		if (guid == NULL) {
-			g_print("%s\n", error_local->message);
+			fu_console_print_literal(priv->console, error_local->message);
 			continue;
 		}
 
 		/* show what makes up the GUID */
 		keysv = g_strsplit(keys, "&", -1);
 		keys_str = g_strjoinv(" + ", keysv);
-		g_print("{%s}   <- %s\n", guid, keys_str);
+		fu_console_print(priv->console, "{%s}   <- %s", guid, keys_str);
 	}
 
 	return TRUE;
@@ -2098,7 +2108,7 @@ fu_util_self_sign(FuUtilPrivate *priv, gchar **values, GError **error)
 				  error);
 	if (sig == NULL)
 		return FALSE;
-	g_print("%s\n", sig);
+	fu_console_print_literal(priv->console, sig);
 	return TRUE;
 }
 
@@ -2108,7 +2118,7 @@ fu_util_device_added_cb(FwupdClient *client, FwupdDevice *device, gpointer user_
 	FuUtilPrivate *priv = (FuUtilPrivate *)user_data;
 	g_autofree gchar *tmp = fu_util_device_to_string(priv->client, device, 0);
 	/* TRANSLATORS: this is when a device is hotplugged */
-	g_print("%s\n%s", _("Device added:"), tmp);
+	fu_console_print(priv->console, "%s\n%s", _("Device added:"), tmp);
 }
 
 static void
@@ -2117,7 +2127,7 @@ fu_util_device_removed_cb(FwupdClient *client, FwupdDevice *device, gpointer use
 	FuUtilPrivate *priv = (FuUtilPrivate *)user_data;
 	g_autofree gchar *tmp = fu_util_device_to_string(priv->client, device, 0);
 	/* TRANSLATORS: this is when a device is hotplugged */
-	g_print("%s\n%s", _("Device removed:"), tmp);
+	fu_console_print(priv->console, "%s\n%s", _("Device removed:"), tmp);
 }
 
 static void
@@ -2126,14 +2136,15 @@ fu_util_device_changed_cb(FwupdClient *client, FwupdDevice *device, gpointer use
 	FuUtilPrivate *priv = (FuUtilPrivate *)user_data;
 	g_autofree gchar *tmp = fu_util_device_to_string(priv->client, device, 0);
 	/* TRANSLATORS: this is when a device has been updated */
-	g_print("%s\n%s", _("Device changed:"), tmp);
+	fu_console_print(priv->console, "%s\n%s", _("Device changed:"), tmp);
 }
 
 static void
 fu_util_changed_cb(FwupdClient *client, gpointer user_data)
 {
+	FuUtilPrivate *priv = (FuUtilPrivate *)user_data;
 	/* TRANSLATORS: this is when the daemon state changes */
-	g_print("%s\n", _("Changed"));
+	fu_console_print_literal(priv->console, _("Changed"));
 }
 
 static gboolean
@@ -2183,11 +2194,11 @@ fu_util_get_firmware_types(FuUtilPrivate *priv, gchar **values, GError **error)
 	firmware_types = fu_context_get_firmware_gtype_ids(fu_engine_get_context(priv->engine));
 	for (guint i = 0; i < firmware_types->len; i++) {
 		const gchar *id = g_ptr_array_index(firmware_types, i);
-		g_print("%s\n", id);
+		fu_console_print_literal(priv->console, id);
 	}
 	if (firmware_types->len == 0) {
 		/* TRANSLATORS: nothing found */
-		g_print("%s\n", _("No firmware IDs found"));
+		fu_console_print_literal(priv->console, _("No firmware IDs found"));
 		return TRUE;
 	}
 
@@ -2202,14 +2213,14 @@ fu_util_prompt_for_firmware_type(FuUtilPrivate *priv, GError **error)
 	firmware_types = fu_context_get_firmware_gtype_ids(fu_engine_get_context(priv->engine));
 
 	/* TRANSLATORS: get interactive prompt */
-	g_print("%s\n", _("Choose a firmware type:"));
+	fu_console_print_literal(priv->console, _("Choose a firmware type:"));
 	/* TRANSLATORS: this is to abort the interactive prompt */
-	g_print("0.\t%s\n", _("Cancel"));
+	fu_console_print(priv->console, "0.\t%s", _("Cancel"));
 	for (guint i = 0; i < firmware_types->len; i++) {
 		const gchar *id = g_ptr_array_index(firmware_types, i);
-		g_print("%u.\t%s\n", i + 1, id);
+		fu_console_print(priv->console, "%u.\t%s", i + 1, id);
 	}
-	idx = fu_util_prompt_for_number(firmware_types->len);
+	idx = fu_console_input_uint(priv->console, firmware_types->len);
 	if (idx == 0) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -2289,7 +2300,7 @@ fu_util_firmware_parse(FuUtilPrivate *priv, gchar **values, GError **error)
 	}
 
 	str = fu_firmware_to_string(firmware);
-	g_print("%s", str);
+	fu_console_print_literal(priv->console, str);
 	return TRUE;
 }
 
@@ -2350,7 +2361,7 @@ fu_util_firmware_export(FuUtilPrivate *priv, gchar **values, GError **error)
 	str = fu_firmware_export_to_xml(firmware, flags, error);
 	if (str == NULL)
 		return FALSE;
-	g_print("%s", str);
+	fu_console_print_literal(priv->console, str);
 	return TRUE;
 }
 
@@ -2406,7 +2417,7 @@ fu_util_firmware_extract(FuUtilPrivate *priv, gchar **values, GError **error)
 	if (!fu_firmware_parse(firmware, blob, priv->flags, error))
 		return FALSE;
 	str = fu_firmware_to_string(firmware);
-	g_print("%s", str);
+	fu_console_print_literal(priv->console, str);
 	images = fu_firmware_get_images(firmware);
 	for (guint i = 0; i < images->len; i++) {
 		FuFirmware *img = g_ptr_array_index(images, i);
@@ -2431,7 +2442,7 @@ fu_util_firmware_extract(FuUtilPrivate *priv, gchar **values, GError **error)
 			fn = g_strdup_printf("img-0x%x.fw", i);
 		}
 		/* TRANSLATORS: decompressing images from a container firmware */
-		g_print("%s : %s\n", _("Writing file:"), fn);
+		fu_console_print(priv->console, "%s : %s", _("Writing file:"), fn);
 		if (!fu_bytes_set_contents(fn, blob_img, error))
 			return FALSE;
 	}
@@ -2531,7 +2542,7 @@ fu_util_firmware_build(FuUtilPrivate *priv, gchar **values, GError **error)
 	if (!fu_firmware_parse(firmware_dst, blob_dst, priv->flags, error))
 		return FALSE;
 	str = fu_firmware_to_string(firmware_dst);
-	g_print("%s", str);
+	fu_console_print_literal(priv->console, str);
 
 	/* success */
 	return TRUE;
@@ -2611,7 +2622,7 @@ fu_util_firmware_convert(FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 	}
 	str_src = fu_firmware_to_string(firmware_src);
-	g_print("%s", str_src);
+	fu_console_print_literal(priv->console, str_src);
 
 	/* copy images */
 	firmware_dst = g_object_new(gtype_dst, NULL);
@@ -2642,7 +2653,7 @@ fu_util_firmware_convert(FuUtilPrivate *priv, gchar **values, GError **error)
 	if (!fu_bytes_set_contents(values[1], blob_dst, error))
 		return FALSE;
 	str_dst = fu_firmware_to_string(firmware_dst);
-	g_print("%s", str_dst);
+	fu_console_print_literal(priv->console, str_dst);
 
 	/* success */
 	return TRUE;
@@ -2753,7 +2764,7 @@ fu_util_firmware_patch(FuUtilPrivate *priv, gchar **values, GError **error)
 	if (!fu_bytes_set_contents(values[0], blob_dst, error))
 		return FALSE;
 	str = fu_firmware_to_string(firmware);
-	g_print("%s", str);
+	fu_console_print_literal(priv->console, str);
 
 	/* success */
 	return TRUE;
@@ -2801,7 +2812,7 @@ fu_util_verify_update(FuUtilPrivate *priv, gchar **values, GError **error)
 
 	/* show checksums */
 	str = fu_device_to_string(dev);
-	g_print("%s\n", str);
+	fu_console_print_literal(priv->console, str);
 	return TRUE;
 }
 
@@ -2874,7 +2885,7 @@ fu_util_get_history(FuUtilPrivate *priv, gchar **values, GError **error)
 			continue;
 		}
 	}
-	fu_util_print_tree(priv->client, root);
+	fu_util_print_tree(priv->console, priv->client, root);
 
 	return TRUE;
 }
@@ -2987,7 +2998,7 @@ fu_util_get_remotes(FuUtilPrivate *priv, gchar **values, GError **error)
 		FwupdRemote *remote_tmp = g_ptr_array_index(remotes, i);
 		g_node_append_data(root, remote_tmp);
 	}
-	fu_util_print_tree(priv->client, root);
+	fu_util_print_tree(priv->console, priv->client, root);
 
 	return TRUE;
 }
@@ -3051,17 +3062,18 @@ fu_util_security(FuUtilPrivate *priv, gchar **values, GError **error)
 		str = fu_security_attrs_to_json_string(attrs, error);
 		if (str == NULL)
 			return FALSE;
-		g_print("%s\n", str);
+		fu_console_print_literal(priv->console, str);
 		return TRUE;
 	}
 
-	g_print("%s \033[1m%s\033[0m\n",
-		/* TRANSLATORS: this is a string like 'HSI:2-U' */
-		_("Host Security ID:"),
-		fu_engine_get_host_security_id(priv->engine));
+	fu_console_print(priv->console,
+			 "%s \033[1m%s\033[0m",
+			 /* TRANSLATORS: this is a string like 'HSI:2-U' */
+			 _("Host Security ID:"),
+			 fu_engine_get_host_security_id(priv->engine));
 
 	str = fu_util_security_attrs_to_string(items, flags);
-	g_print("%s\n", str);
+	fu_console_print_literal(priv->console, str);
 
 	/* print the "when" */
 	events = fu_engine_get_host_security_events(priv->engine, 10, error);
@@ -3071,7 +3083,7 @@ fu_util_security(FuUtilPrivate *priv, gchar **values, GError **error)
 	if (events_array->len > 0) {
 		g_autofree gchar *estr = fu_util_security_events_to_string(events_array, flags);
 		if (estr != NULL)
-			g_print("%s\n", estr);
+			fu_console_print_literal(priv->console, estr);
 	}
 
 	/* print the "also" */
@@ -3081,7 +3093,7 @@ fu_util_security(FuUtilPrivate *priv, gchar **values, GError **error)
 	if (devices->len > 0) {
 		g_autofree gchar *estr = fu_util_security_issues_to_string(devices);
 		if (estr != NULL)
-			g_print("%s\n", estr);
+			fu_console_print_literal(priv->console, estr);
 	}
 
 	/* success */
@@ -3102,20 +3114,23 @@ fu_util_prompt_for_volume(FuUtilPrivate *priv, GError **error)
 		return NULL;
 	if (volumes->len == 1) {
 		volume = g_ptr_array_index(volumes, 0);
-		/* TRANSLATORS: Volume has been chosen by the user */
-		g_print("%s: %s\n", _("Selected volume"), fu_volume_get_id(volume));
+		fu_console_print(priv->console,
+				 "%s: %s",
+				 /* TRANSLATORS: Volume has been chosen by the user */
+				 _("Selected volume"),
+				 fu_volume_get_id(volume));
 		return g_object_ref(volume);
 	}
 
 	/* TRANSLATORS: get interactive prompt */
-	g_print("%s\n", _("Choose a volume:"));
+	fu_console_print_literal(priv->console, _("Choose a volume:"));
 	/* TRANSLATORS: this is to abort the interactive prompt */
-	g_print("0.\t%s\n", _("Cancel"));
+	fu_console_print(priv->console, "0.\t%s", _("Cancel"));
 	for (guint i = 0; i < volumes->len; i++) {
 		volume = g_ptr_array_index(volumes, i);
-		g_print("%u.\t%s\n", i + 1, fu_volume_get_id(volume));
+		fu_console_print(priv->console, "%u.\t%s", i + 1, fu_volume_get_id(volume));
 	}
-	idx = fu_util_prompt_for_number(volumes->len);
+	idx = fu_console_input_uint(priv->console, volumes->len);
 	if (idx == 0) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -3167,7 +3182,7 @@ fu_util_esp_list(FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 	for (guint i = 0; i < files->len; i++) {
 		const gchar *fn = g_ptr_array_index(files, i);
-		g_print("%s\n", fn);
+		fu_console_print_literal(priv->console, fn);
 	}
 	return TRUE;
 }
@@ -3238,14 +3253,17 @@ fu_util_switch_branch(FuUtilPrivate *priv, gchar **values, GError **error)
 
 		/* TRANSLATORS: get interactive prompt, where branch is the
 		 * supplier of the firmware, e.g. "non-free" or "free" */
-		g_print("%s\n", _("Choose a branch:"));
+		fu_console_print_literal(priv->console, _("Choose a branch:"));
 		/* TRANSLATORS: this is to abort the interactive prompt */
-		g_print("0.\t%s\n", _("Cancel"));
+		fu_console_print(priv->console, "0.\t%s", _("Cancel"));
 		for (guint i = 0; i < branches->len; i++) {
 			const gchar *branch_tmp = g_ptr_array_index(branches, i);
-			g_print("%u.\t%s\n", i + 1, fu_util_branch_for_display(branch_tmp));
+			fu_console_print(priv->console,
+					 "%u.\t%s",
+					 i + 1,
+					 fu_util_branch_for_display(branch_tmp));
 		}
-		idx = fu_util_prompt_for_number(branches->len);
+		idx = fu_console_input_uint(priv->console, branches->len);
 		if (idx == 0) {
 			g_set_error_literal(error,
 					    FWUPD_ERROR,
@@ -3285,7 +3303,7 @@ fu_util_switch_branch(FuUtilPrivate *priv, gchar **values, GError **error)
 	}
 
 	/* we're switching branch */
-	if (!fu_util_switch_branch_warning(FWUPD_DEVICE(dev), rel, FALSE, error))
+	if (!fu_util_switch_branch_warning(priv->console, FWUPD_DEVICE(dev), rel, FALSE, error))
 		return FALSE;
 
 	/* update the console if composite devices are also updated */
@@ -3306,7 +3324,7 @@ fu_util_switch_branch(FuUtilPrivate *priv, gchar **values, GError **error)
 		return TRUE;
 	}
 
-	return fu_util_prompt_complete(priv->completion_flags, TRUE, error);
+	return fu_util_prompt_complete(priv->console, priv->completion_flags, TRUE, error);
 }
 
 static gboolean
@@ -3340,7 +3358,7 @@ fu_util_set_bios_setting(FuUtilPrivate *priv, gchar **input, GError **error)
 			    g_strdup_printf(_("Set BIOS setting '%s' using '%s'."),
 					    (const gchar *)key,
 					    (const gchar *)value);
-			g_print("\n%s\n", msg);
+			fu_console_print_literal(priv->console, msg);
 		}
 	}
 	priv->completion_flags |= FWUPD_DEVICE_FLAG_NEEDS_REBOOT;
@@ -3350,7 +3368,7 @@ fu_util_set_bios_setting(FuUtilPrivate *priv, gchar **input, GError **error)
 		return TRUE;
 	}
 
-	return fu_util_prompt_complete(priv->completion_flags, TRUE, error);
+	return fu_util_prompt_complete(priv->console, priv->completion_flags, TRUE, error);
 }
 
 static gboolean
@@ -3371,13 +3389,13 @@ fu_util_get_bios_setting(FuUtilPrivate *priv, gchar **values, GError **error)
 	attrs = fu_context_get_bios_settings(ctx);
 	items = fu_bios_settings_get_all(attrs);
 	if (priv->as_json)
-		return fu_util_get_bios_setting_as_json(values, items, error);
+		return fu_util_get_bios_setting_as_json(priv->console, values, items, error);
 
 	for (guint i = 0; i < items->len; i++) {
 		FwupdBiosSetting *attr = g_ptr_array_index(items, i);
 		if (fu_util_bios_setting_matches_args(attr, values)) {
 			g_autofree gchar *tmp = fu_util_bios_setting_to_string(attr, 0);
-			g_print("%s\n", tmp);
+			fu_console_print_literal(priv->console, tmp);
 			found = TRUE;
 		}
 	}
@@ -3393,8 +3411,9 @@ fu_util_get_bios_setting(FuUtilPrivate *priv, gchar **values, GError **error)
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_ARGS,
+			    "%s: '%s'",
 			    /* TRANSLATORS: error message */
-			    "Unable to find attribute '%s'",
+			    _("Unable to find attribute"),
 			    values[0]);
 		return FALSE;
 	}
@@ -3422,9 +3441,9 @@ fu_util_version(FuUtilPrivate *priv, GError **error)
 
 	/* dump to the screen in the most appropriate format */
 	if (priv->as_json)
-		return fu_util_project_versions_as_json(metadata, error);
+		return fu_util_project_versions_as_json(priv->console, metadata, error);
 	str = fu_util_project_versions_to_string(metadata);
-	g_print("%s", str);
+	fu_console_print_literal(priv->console, str);
 	return TRUE;
 }
 
@@ -3442,17 +3461,17 @@ fu_util_setup_interactive(FuUtilPrivate *priv, GError **error)
 		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED, "using --json");
 		return FALSE;
 	}
-	return fu_util_setup_interactive_console(error);
+	return fu_console_setup(priv->console, error);
 }
 
 static void
 fu_util_print_error(FuUtilPrivate *priv, const GError *error)
 {
 	if (priv->as_json) {
-		fu_util_print_error_as_json(error);
+		fu_util_print_error_as_json(priv->console, error);
 		return;
 	}
-	g_printerr("%s\n", error->message);
+	fu_console_print_full(priv->console, FU_CONSOLE_PRINT_FLAG_STDERR, "%s\n", error->message);
 }
 
 int
@@ -3652,9 +3671,9 @@ main(int argc, char *argv[])
 	/* create helper object */
 	priv->main_ctx = g_main_context_new();
 	priv->loop = g_main_loop_new(priv->main_ctx, FALSE);
-	priv->progressbar = fu_progressbar_new();
+	priv->console = fu_console_new();
 	priv->post_requests = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
-	fu_progressbar_set_main_context(priv->progressbar, priv->main_ctx);
+	fu_console_set_main_context(priv->console, priv->main_ctx);
 	priv->request = fu_engine_request_new(FU_ENGINE_REQUEST_KIND_ACTIVE);
 
 	/* used for monitoring and downloading */
@@ -4001,7 +4020,7 @@ main(int argc, char *argv[])
 			FWUPD_FEATURE_FLAG_COMMUNITY_TEXT | FWUPD_FEATURE_FLAG_SHOW_PROBLEMS |
 			FWUPD_FEATURE_FLAG_REQUESTS);
 	}
-	fu_progressbar_set_interactive(priv->progressbar, priv->interactive);
+	fu_console_set_interactive(priv->console, priv->interactive);
 
 	/* get a list of the commands */
 	priv->context = g_option_context_new(NULL);
@@ -4019,23 +4038,24 @@ main(int argc, char *argv[])
 	g_option_context_add_group(priv->context, fu_debug_get_option_group());
 	ret = g_option_context_parse(priv->context, &argc, &argv, &error);
 	if (!ret) {
-		/* TRANSLATORS: the user didn't read the man page */
-		g_print("%s: %s\n", _("Failed to parse arguments"), error->message);
+		fu_console_print(priv->console,
+				 "%s: %s",
+				 /* TRANSLATORS: the user didn't read the man page */
+				 _("Failed to parse arguments"),
+				 error->message);
 		return EXIT_FAILURE;
 	}
 	fu_progress_set_profile(priv->progress, g_getenv("FWUPD_VERBOSE") != NULL);
 
 	/* allow disabling SSL strict mode for broken corporate proxies */
 	if (priv->disable_ssl_strict) {
-		g_autofree gchar *fmt = NULL;
-		/* TRANSLATORS: this is a prefix on the console */
-		fmt = fu_util_term_format(_("WARNING:"), FU_UTIL_TERM_COLOR_RED);
-		g_printerr("%s %s\n",
-			   fmt,
-			   /* TRANSLATORS: try to help */
-			   _("Ignoring SSL strict checks, "
-			     "to do this automatically in the future "
-			     "export DISABLE_SSL_STRICT in your environment"));
+		fu_console_print_full(priv->console,
+				      FU_CONSOLE_PRINT_FLAG_WARNING,
+				      "%s\n",
+				      /* TRANSLATORS: try to help */
+				      _("Ignoring SSL strict checks, "
+					"to do this automatically in the future "
+					"export DISABLE_SSL_STRICT in your environment"));
 		(void)g_setenv("DISABLE_SSL_STRICT", "1", TRUE);
 	}
 
@@ -4112,8 +4132,9 @@ main(int argc, char *argv[])
 #endif
 		fu_util_print_error(priv, error);
 		if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_ARGS)) {
-			/* TRANSLATORS: error message explaining command on how to get help */
-			g_printerr("\n%s\n", _("Use fwupdtool --help for help"));
+			fu_console_print_literal(priv->console,
+						 /* TRANSLATORS: explain how to get help */
+						 _("Use fwupdtool --help for help"));
 		} else if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO)) {
 			g_debug("%s\n", error->message);
 			return EXIT_NOTHING_TO_DO;
@@ -4121,8 +4142,12 @@ main(int argc, char *argv[])
 #ifdef HAVE_GETUID
 		/* if not root, then notify users on the error path */
 		if (priv->interactive && (getuid() != 0 || geteuid() != 0)) {
-			/* TRANSLATORS: we're poking around as a power user */
-			g_printerr("%s\n", _("NOTE: This program may only work correctly as root"));
+			fu_console_print_full(priv->console,
+					      FU_CONSOLE_PRINT_FLAG_STDERR |
+						  FU_CONSOLE_PRINT_FLAG_WARNING,
+					      "%s\n",
+					      /* TRANSLATORS: we're poking around as a power user */
+					      _("This program may only work correctly as root"));
 		}
 #endif
 		return EXIT_FAILURE;
@@ -4132,7 +4157,7 @@ main(int argc, char *argv[])
 	if (fu_progress_get_profile(priv->progress)) {
 		g_autofree gchar *str = fu_progress_traceback(priv->progress);
 		if (str != NULL)
-			g_print("\n%s\n", str);
+			fu_console_print_literal(priv->console, str);
 	}
 
 	/* success */

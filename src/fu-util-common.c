@@ -20,11 +20,7 @@
 #include <curl/curl.h>
 #endif
 
-#ifdef _WIN32
-#include <wchar.h>
-#include <windows.h>
-#endif
-
+#include "fu-console.h"
 #include "fu-device-private.h"
 #include "fu-security-attr-common.h"
 #include "fu-util-common.h"
@@ -45,7 +41,7 @@ fu_util_get_systemd_unit(void)
 }
 
 gchar *
-fu_util_term_format(const gchar *text, FuUtilTermColor fg_color)
+fu_console_color_format(const gchar *text, FuConsoleColor fg_color)
 {
 	if (g_getenv("NO_COLOR") != NULL)
 		return g_strdup(text);
@@ -94,79 +90,15 @@ fu_util_using_correct_daemon(GError **error)
 	return TRUE;
 }
 
-void
-fu_util_print_data(const gchar *title, const gchar *msg)
-{
-	gsize title_len;
-	g_auto(GStrv) lines = NULL;
-
-	if (msg == NULL)
-		return;
-	g_print("%s:", title);
-
-	/* pad */
-	title_len = fu_strwidth(title) + 1;
-	lines = g_strsplit(msg, "\n", -1);
-	for (guint j = 0; lines[j] != NULL; j++) {
-		for (gsize i = title_len; i < 25; i++)
-			g_print(" ");
-		g_print("%s\n", lines[j]);
-		title_len = 0;
-	}
-}
-
-guint
-fu_util_prompt_for_number(guint maxnum)
-{
-	gint retval;
-	guint answer = 0;
-
-	do {
-		char buffer[64];
-
-		/* swallow the \n at end of line too */
-		if (!fgets(buffer, sizeof(buffer), stdin))
-			break;
-		if (strlen(buffer) == sizeof(buffer) - 1)
-			continue;
-
-		/* get a number */
-		retval = sscanf(buffer, "%u", &answer);
-
-		/* positive */
-		if (retval == 1 && answer <= maxnum)
-			break;
-
-		/* TRANSLATORS: the user isn't reading the question */
-		g_print(_("Please enter a number from 0 to %u: "), maxnum);
-	} while (TRUE);
-	return answer;
-}
-
-gboolean
-fu_util_prompt_for_boolean(gboolean def)
-{
-	do {
-		char buffer[4];
-		if (!fgets(buffer, sizeof(buffer), stdin))
-			continue;
-		if (strlen(buffer) == sizeof(buffer) - 1)
-			continue;
-		if (g_strcmp0(buffer, "\n") == 0)
-			return def;
-		buffer[0] = g_ascii_toupper(buffer[0]);
-		if (g_strcmp0(buffer, "Y\n") == 0)
-			return TRUE;
-		if (g_strcmp0(buffer, "N\n") == 0)
-			return FALSE;
-	} while (TRUE);
-	return FALSE;
-}
+typedef struct {
+	FwupdClient *client;
+	FuConsole *console;
+} FuUtilPrintTreeHelper;
 
 static gboolean
 fu_util_traverse_tree(GNode *n, gpointer data)
 {
-	FwupdClient *client = FWUPD_CLIENT(data);
+	FuUtilPrintTreeHelper *helper = (FuUtilPrintTreeHelper *)data;
 	guint idx = g_node_depth(n) - 1;
 	g_autofree gchar *tmp = NULL;
 	g_auto(GStrv) split = NULL;
@@ -174,7 +106,7 @@ fu_util_traverse_tree(GNode *n, gpointer data)
 	/* get split lines */
 	if (FWUPD_IS_DEVICE(n->data)) {
 		FwupdDevice *dev = FWUPD_DEVICE(n->data);
-		tmp = fu_util_device_to_string(client, dev, idx);
+		tmp = fu_util_device_to_string(helper->client, dev, idx);
 	} else if (FWUPD_IS_REMOTE(n->data)) {
 		FwupdRemote *remote = FWUPD_REMOTE(n->data);
 		tmp = fu_util_remote_to_string(remote, idx);
@@ -186,9 +118,10 @@ fu_util_traverse_tree(GNode *n, gpointer data)
 
 	/* root node */
 	if (n->data == NULL && g_getenv("FWUPD_VERBOSE") == NULL) {
-		g_autofree gchar *str = g_strdup_printf("%s %s",
-							fwupd_client_get_host_vendor(client),
-							fwupd_client_get_host_product(client));
+		g_autofree gchar *str =
+		    g_strdup_printf("%s %s",
+				    fwupd_client_get_host_vendor(helper->client),
+				    fwupd_client_get_host_product(helper->client));
 		g_print("%s\n│\n", str);
 		return FALSE;
 	}
@@ -227,22 +160,23 @@ fu_util_traverse_tree(GNode *n, gpointer data)
 
 		/* empty line */
 		if (split[i][0] == '\0') {
-			g_print("%s\n", str->str);
+			fu_console_print_literal(helper->console, str->str);
 			continue;
 		}
 
 		/* dump to the console */
 		g_string_append(str, split[i] + (idx * 2));
-		g_print("%s\n", str->str);
+		fu_console_print_literal(helper->console, str->str);
 	}
 
 	return FALSE;
 }
 
 void
-fu_util_print_tree(FwupdClient *client, GNode *n)
+fu_util_print_tree(FuConsole *console, FwupdClient *client, GNode *n)
 {
-	g_node_traverse(n, G_PRE_ORDER, G_TRAVERSE_ALL, -1, fu_util_traverse_tree, client);
+	FuUtilPrintTreeHelper helper = {.client = client, .console = console};
+	g_node_traverse(n, G_PRE_ORDER, G_TRAVERSE_ALL, -1, fu_util_traverse_tree, &helper);
 }
 
 static gboolean
@@ -420,7 +354,8 @@ fu_util_get_release_description_with_fallback(FwupdRelease *rel)
 }
 
 gboolean
-fu_util_prompt_warning(FwupdDevice *device,
+fu_util_prompt_warning(FuConsole *console,
+		       FwupdDevice *device,
 		       FwupdRelease *release,
 		       const gchar *machine,
 		       GError **error)
@@ -507,13 +442,10 @@ fu_util_prompt_warning(FwupdDevice *device,
 			}
 		}
 	}
-	fu_util_warning_box(title->str, str->str, 80);
+	fu_console_box(console, title->str, str->str, 80);
 
-	/* ask for confirmation */
-	g_print("\n%s [Y|n]: ",
-		/* TRANSLATORS: prompt to apply the update */
-		_("Perform operation?"));
-	if (!fu_util_prompt_for_boolean(TRUE)) {
+	/* TRANSLATORS: prompt to apply the update */
+	if (!fu_console_input_bool(console, TRUE, "%s", _("Perform operation?"))) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOTHING_TO_DO,
@@ -526,28 +458,31 @@ fu_util_prompt_warning(FwupdDevice *device,
 }
 
 gboolean
-fu_util_prompt_complete(FwupdDeviceFlags flags, gboolean prompt, GError **error)
+fu_util_prompt_complete(FuConsole *console, FwupdDeviceFlags flags, gboolean prompt, GError **error)
 {
 	if (flags & FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN) {
 		if (prompt) {
-			g_print("\n%s %s [y|N]: ",
-				/* TRANSLATORS: explain why we want to shutdown */
-				_("An update requires the system to shutdown to complete."),
-				/* TRANSLATORS: shutdown to apply the update */
-				_("Shutdown now?"));
-			if (!fu_util_prompt_for_boolean(FALSE))
+			if (!fu_console_input_bool(console,
+						   FALSE,
+						   "%s %s",
+						   /* TRANSLATORS: explain why */
+						   _("An update requires the system to shutdown "
+						     "to complete."),
+						   /* TRANSLATORS: shutdown to apply the update */
+						   _("Shutdown now?")))
 				return TRUE;
 		}
 		return fu_util_update_shutdown(error);
 	}
 	if (flags & FWUPD_DEVICE_FLAG_NEEDS_REBOOT) {
 		if (prompt) {
-			g_print("\n%s %s [y|N]: ",
-				/* TRANSLATORS: explain why we want to reboot */
-				_("An update requires a reboot to complete."),
-				/* TRANSLATORS: reboot to apply the update */
-				_("Restart now?"));
-			if (!fu_util_prompt_for_boolean(FALSE))
+			if (!fu_console_input_bool(console,
+						   FALSE,
+						   "%s %s",
+						   /* TRANSLATORS: explain why we want to reboot */
+						   _("An update requires a reboot to complete."),
+						   /* TRANSLATORS: reboot to apply the update */
+						   _("Restart now?")))
 				return TRUE;
 		}
 		return fu_util_update_reboot(error);
@@ -847,116 +782,6 @@ fu_util_release_get_name(FwupdRelease *release)
 	 * is updating the system, the device, or a device class, or something else --
 	 * the first %s is the device name, e.g. 'ThinkPad P50` */
 	return g_strdup_printf(_("%s Update"), name);
-}
-
-static GPtrArray *
-fu_util_strsplit_words(const gchar *text, guint line_len)
-{
-	g_auto(GStrv) tokens = NULL;
-	g_autoptr(GPtrArray) lines = g_ptr_array_new_with_free_func(g_free);
-	g_autoptr(GString) curline = g_string_new(NULL);
-
-	/* sanity check */
-	if (text == NULL || text[0] == '\0')
-		return NULL;
-	if (line_len == 0)
-		return NULL;
-
-	/* tokenize the string */
-	tokens = g_strsplit(text, " ", -1);
-	for (guint i = 0; tokens[i] != NULL; i++) {
-		/* current line plus new token is okay */
-		if (curline->len + fu_strwidth(tokens[i]) < line_len) {
-			g_string_append_printf(curline, "%s ", tokens[i]);
-			continue;
-		}
-
-		/* too long, so remove space, add newline and dump */
-		if (curline->len > 0)
-			g_string_truncate(curline, curline->len - 1);
-		g_ptr_array_add(lines, g_strdup(curline->str));
-		g_string_truncate(curline, 0);
-		g_string_append_printf(curline, "%s ", tokens[i]);
-	}
-
-	/* any incomplete line? */
-	if (curline->len > 0) {
-		g_string_truncate(curline, curline->len - 1);
-		g_ptr_array_add(lines, g_strdup(curline->str));
-	}
-	return g_steal_pointer(&lines);
-}
-
-static void
-fu_util_warning_box_line(const gchar *start,
-			 const gchar *text,
-			 const gchar *end,
-			 const gchar *padding,
-			 guint width)
-{
-	guint offset = 0;
-	if (start != NULL) {
-		offset += fu_strwidth(start);
-		g_print("%s", start);
-	}
-	if (text != NULL) {
-		offset += fu_strwidth(text);
-		g_print("%s", text);
-	}
-	if (end != NULL)
-		offset += fu_strwidth(end);
-	for (guint i = offset; i < width; i++)
-		g_print("%s", padding);
-	if (end != NULL)
-		g_print("%s\n", end);
-}
-
-void
-fu_util_warning_box(const gchar *title, const gchar *body, guint width)
-{
-	/* nothing to do */
-	if (title == NULL && body == NULL)
-		return;
-
-	/* header */
-	fu_util_warning_box_line("╔", NULL, "╗", "═", width);
-
-	/* optional title */
-	if (title != NULL) {
-		g_autoptr(GPtrArray) lines = fu_util_strsplit_words(title, width - 4);
-		for (guint j = 0; j < lines->len; j++) {
-			const gchar *line = g_ptr_array_index(lines, j);
-			fu_util_warning_box_line("║ ", line, " ║", " ", width);
-		}
-	}
-
-	/* join */
-	if (title != NULL && body != NULL)
-		fu_util_warning_box_line("╠", NULL, "╣", "═", width);
-
-	/* optional body */
-	if (body != NULL) {
-		gboolean has_nonempty = FALSE;
-		g_auto(GStrv) split = g_strsplit(body, "\n", -1);
-		for (guint i = 0; split[i] != NULL; i++) {
-			g_autoptr(GPtrArray) lines = fu_util_strsplit_words(split[i], width - 4);
-			if (lines == NULL) {
-				if (has_nonempty) {
-					fu_util_warning_box_line("║ ", NULL, " ║", " ", width);
-					has_nonempty = FALSE;
-				}
-				continue;
-			}
-			for (guint j = 0; j < lines->len; j++) {
-				const gchar *line = g_ptr_array_index(lines, j);
-				fu_util_warning_box_line("║ ", line, " ║", " ", width);
-			}
-			has_nonempty = TRUE;
-		}
-	}
-
-	/* footer */
-	fu_util_warning_box_line("╚", NULL, "╝", "═", width);
 }
 
 gboolean
@@ -1561,7 +1386,7 @@ fu_util_device_to_string(FwupdClient *client, FwupdDevice *dev, guint idt)
 			tmp = fwupd_device_get_update_message(dev);
 			if (tmp != NULL) {
 				g_autofree gchar *color =
-				    fu_util_term_format(tmp, FU_UTIL_TERM_COLOR_BLUE);
+				    fu_console_color_format(tmp, FU_CONSOLE_COLOR_BLUE);
 				fu_string_append(
 				    str,
 				    idt + 1,
@@ -1596,7 +1421,8 @@ fu_util_device_to_string(FwupdClient *client, FwupdDevice *dev, guint idt)
 	if (fwupd_device_get_problems(dev) == FWUPD_DEVICE_PROBLEM_NONE) {
 		tmp = fwupd_device_get_update_error(dev);
 		if (tmp != NULL) {
-			g_autofree gchar *color = fu_util_term_format(tmp, FU_UTIL_TERM_COLOR_RED);
+			g_autofree gchar *color =
+			    fu_console_color_format(tmp, FU_CONSOLE_COLOR_RED);
 			/* TRANSLATORS: error message from last update attempt */
 			fu_string_append(str, idt + 1, _("Update Error"), color);
 		}
@@ -1615,7 +1441,7 @@ fu_util_device_to_string(FwupdClient *client, FwupdDevice *dev, guint idt)
 			if (desc == NULL)
 				continue;
 			bullet = g_strdup_printf("• %s", desc);
-			color = fu_util_term_format(bullet, FU_UTIL_TERM_COLOR_RED);
+			color = fu_console_color_format(bullet, FU_CONSOLE_COLOR_RED);
 			fu_string_append(str, idt + 1, tmp, color);
 			tmp = NULL;
 		}
@@ -1780,12 +1606,12 @@ fu_util_plugin_flag_to_cli_text(FwupdPluginFlags plugin_flag)
 	case FWUPD_PLUGIN_FLAG_MODULAR:
 	case FWUPD_PLUGIN_FLAG_MEASURE_SYSTEM_INTEGRITY:
 	case FWUPD_PLUGIN_FLAG_SECURE_CONFIG:
-		return fu_util_term_format(fu_util_plugin_flag_to_string(plugin_flag),
-					   FU_UTIL_TERM_COLOR_GREEN);
+		return fu_console_color_format(fu_util_plugin_flag_to_string(plugin_flag),
+					       FU_CONSOLE_COLOR_GREEN);
 	case FWUPD_PLUGIN_FLAG_DISABLED:
 	case FWUPD_PLUGIN_FLAG_NO_HARDWARE:
-		return fu_util_term_format(fu_util_plugin_flag_to_string(plugin_flag),
-					   FU_UTIL_TERM_COLOR_BLACK);
+		return fu_console_color_format(fu_util_plugin_flag_to_string(plugin_flag),
+					       FU_CONSOLE_COLOR_BLACK);
 	case FWUPD_PLUGIN_FLAG_LEGACY_BIOS:
 	case FWUPD_PLUGIN_FLAG_CAPSULES_UNSUPPORTED:
 	case FWUPD_PLUGIN_FLAG_UNLOCK_REQUIRED:
@@ -1793,8 +1619,8 @@ fu_util_plugin_flag_to_cli_text(FwupdPluginFlags plugin_flag)
 	case FWUPD_PLUGIN_FLAG_EFIVAR_NOT_MOUNTED:
 	case FWUPD_PLUGIN_FLAG_ESP_NOT_FOUND:
 	case FWUPD_PLUGIN_FLAG_KERNEL_TOO_OLD:
-		return fu_util_term_format(fu_util_plugin_flag_to_string(plugin_flag),
-					   FU_UTIL_TERM_COLOR_RED);
+		return fu_console_color_format(fu_util_plugin_flag_to_string(plugin_flag),
+					       FU_CONSOLE_COLOR_RED);
 	default:
 		break;
 	}
@@ -2334,16 +2160,16 @@ fu_security_attr_append_str(FwupdSecurityAttr *attr,
 	for (guint i = fu_strwidth(name); i < 30; i++)
 		g_string_append(str, " ");
 	if (fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_OBSOLETED)) {
-		g_autofree gchar *fmt = fu_util_term_format(fu_security_attr_get_result(attr),
-							    FU_UTIL_TERM_COLOR_YELLOW);
+		g_autofree gchar *fmt = fu_console_color_format(fu_security_attr_get_result(attr),
+								FU_CONSOLE_COLOR_YELLOW);
 		g_string_append(str, fmt);
 	} else if (fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS)) {
-		g_autofree gchar *fmt = fu_util_term_format(fu_security_attr_get_result(attr),
-							    FU_UTIL_TERM_COLOR_GREEN);
+		g_autofree gchar *fmt = fu_console_color_format(fu_security_attr_get_result(attr),
+								FU_CONSOLE_COLOR_GREEN);
 		g_string_append(str, fmt);
 	} else {
-		g_autofree gchar *fmt =
-		    fu_util_term_format(fu_security_attr_get_result(attr), FU_UTIL_TERM_COLOR_RED);
+		g_autofree gchar *fmt = fu_console_color_format(fu_security_attr_get_result(attr),
+								FU_CONSOLE_COLOR_RED);
 		g_string_append(str, fmt);
 	}
 	if ((flags & FU_SECURITY_ATTR_TO_STRING_FLAG_SHOW_URLS) > 0 &&
@@ -2545,9 +2371,9 @@ fu_util_security_events_to_string(GPtrArray *events, FuSecurityAttrToStringFlags
 		if (eventstr == NULL)
 			continue;
 		if (fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS)) {
-			check = fu_util_term_format("✔", FU_UTIL_TERM_COLOR_GREEN);
+			check = fu_console_color_format("✔", FU_CONSOLE_COLOR_GREEN);
 		} else {
-			check = fu_util_term_format("✘", FU_UTIL_TERM_COLOR_RED);
+			check = fu_console_color_format("✘", FU_CONSOLE_COLOR_RED);
 		}
 		if (str->len == 0) {
 			/* TRANSLATORS: title for host security events */
@@ -2820,7 +2646,8 @@ fu_util_device_order_sort_cb(gconstpointer a, gconstpointer b)
 }
 
 gboolean
-fu_util_switch_branch_warning(FwupdDevice *dev,
+fu_util_switch_branch_warning(FuConsole *console,
+			      FwupdDevice *dev,
 			      FwupdRelease *rel,
 			      gboolean assume_yes,
 			      GError **error)
@@ -2863,13 +2690,14 @@ fu_util_switch_branch_warning(FwupdDevice *dev,
 	title = g_strdup_printf(_("Switch branch from %s to %s?"),
 				fu_util_branch_for_display(fwupd_device_get_branch(dev)),
 				fu_util_branch_for_display(fwupd_release_get_branch(rel)));
-	fu_util_warning_box(title, desc_full->str, 80);
+	fu_console_box(console, title, desc_full->str, 80);
 	if (!assume_yes) {
-		/* ask for permission */
-		g_print("\n%s [y|N]: ",
-			/* TRANSLATORS: should the branch be changed */
-			_("Do you understand the consequences of changing the firmware branch?"));
-		if (!fu_util_prompt_for_boolean(FALSE)) {
+		if (!fu_console_input_bool(console,
+					   FALSE,
+					   "%s",
+					   /* TRANSLATORS: should the branch be changed */
+					   _("Do you understand the consequences "
+					     "of changing the firmware branch?"))) {
 			g_set_error_literal(error,
 					    FWUPD_ERROR,
 					    FWUPD_ERROR_NOTHING_TO_DO,
@@ -2881,7 +2709,7 @@ fu_util_switch_branch_warning(FwupdDevice *dev,
 }
 
 gboolean
-fu_util_prompt_warning_fde(FwupdDevice *dev, GError **error)
+fu_util_prompt_warning_fde(FuConsole *console, FwupdDevice *dev, GError **error)
 {
 	const gchar *url = "https://github.com/fwupd/fwupd/wiki/Full-Disk-Encryption-Detected";
 	g_autoptr(GString) str = g_string_new(NULL);
@@ -2904,13 +2732,10 @@ fu_util_prompt_warning_fde(FwupdDevice *dev, GError **error)
 			       _("See %s for more details."),
 			       url);
 	/* TRANSLATORS: title text, shown as a warning */
-	fu_util_warning_box(_("Full Disk Encryption Detected"), str->str, 80);
+	fu_console_box(console, _("Full Disk Encryption Detected"), str->str, 80);
 
-	/* ask for confirmation */
-	g_print("\n%s [Y|n]: ",
-		/* TRANSLATORS: prompt to apply the update */
-		_("Perform operation?"));
-	if (!fu_util_prompt_for_boolean(TRUE)) {
+	/* TRANSLATORS: prompt to apply the update */
+	if (!fu_console_input_bool(console, TRUE, "%s", _("Perform operation?"))) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOTHING_TO_DO,
@@ -2921,19 +2746,17 @@ fu_util_prompt_warning_fde(FwupdDevice *dev, GError **error)
 }
 
 void
-fu_util_show_unsupported_warn(void)
+fu_util_show_unsupported_warning(FuConsole *console)
 {
 #ifndef SUPPORTED_BUILD
-	g_autofree gchar *fmt = NULL;
-
 	if (g_getenv("FWUPD_SUPPORTED") != NULL)
 		return;
 	/* TRANSLATORS: this is a prefix on the console */
-	fmt = fu_util_term_format(_("WARNING:"), FU_UTIL_TERM_COLOR_YELLOW);
-	g_printerr("%s %s\n",
-		   fmt,
-		   /* TRANSLATORS: unsupported build of the package */
-		   _("This package has not been validated, it may not work properly."));
+	fu_console_print_full(console,
+			      FU_CONSOLE_PRINT_FLAG_WARNING | FU_CONSOLE_PRINT_FLAG_STDERR,
+			      "%s\n",
+			      /* TRANSLATORS: unsupported build of the package */
+			      _("This package has not been validated, it may not work properly."));
 #endif
 }
 
@@ -2954,67 +2777,7 @@ fu_util_is_url(const gchar *perhaps_url)
 }
 
 gboolean
-fu_util_setup_interactive_console(GError **error)
-{
-#ifdef _WIN32
-	HANDLE hOut;
-	DWORD dwMode = 0;
-
-	/* enable VT sequences */
-	hOut = GetStdHandle(STD_OUTPUT_HANDLE);
-	if (hOut == INVALID_HANDLE_VALUE) {
-		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
-			    "failed to get stdout [%u]",
-			    (guint)GetLastError());
-		return FALSE;
-	}
-	if (!GetConsoleMode(hOut, &dwMode)) {
-		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
-			    "failed to get mode [%u]",
-			    (guint)GetLastError());
-		return FALSE;
-	}
-	dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
-	if (!SetConsoleMode(hOut, dwMode)) {
-		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
-			    "failed to set mode [%u]",
-			    (guint)GetLastError());
-		return FALSE;
-	}
-	if (!SetConsoleOutputCP(CP_UTF8)) {
-		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
-			    "failed to set output UTF-8 [%u]",
-			    (guint)GetLastError());
-		return FALSE;
-	}
-	if (!SetConsoleCP(CP_UTF8)) {
-		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
-			    "failed to set UTF-8 [%u]",
-			    (guint)GetLastError());
-		return FALSE;
-	}
-#else
-	if (isatty(fileno(stdout)) == 0) {
-		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED, "not a TTY");
-		return FALSE;
-	}
-#endif
-	/* success */
-	return TRUE;
-}
-
-gboolean
-fu_util_print_builder(JsonBuilder *builder, GError **error)
+fu_util_print_builder(FuConsole *console, JsonBuilder *builder, GError **error)
 {
 	g_autofree gchar *data = NULL;
 	g_autoptr(JsonGenerator) json_generator = NULL;
@@ -3035,12 +2798,12 @@ fu_util_print_builder(JsonBuilder *builder, GError **error)
 	}
 
 	/* just print */
-	g_print("%s\n", data);
+	fu_console_print_literal(console, data);
 	return TRUE;
 }
 
 void
-fu_util_print_error_as_json(const GError *error)
+fu_util_print_error_as_json(FuConsole *console, const GError *error)
 {
 	g_autoptr(JsonBuilder) builder = json_builder_new();
 	json_builder_begin_object(builder);
@@ -3054,7 +2817,7 @@ fu_util_print_error_as_json(const GError *error)
 	json_builder_add_string_value(builder, error->message);
 	json_builder_end_object(builder);
 	json_builder_end_object(builder);
-	fu_util_print_builder(builder, NULL);
+	fu_util_print_builder(console, builder, NULL);
 }
 
 typedef enum {
@@ -3104,7 +2867,7 @@ fu_util_print_version_key_valid(const gchar *key)
 }
 
 gboolean
-fu_util_project_versions_as_json(GHashTable *metadata, GError **error)
+fu_util_project_versions_as_json(FuConsole *console, GHashTable *metadata, GError **error)
 {
 	GHashTableIter iter;
 	const gchar *key;
@@ -3138,7 +2901,7 @@ fu_util_project_versions_as_json(GHashTable *metadata, GError **error)
 	}
 	json_builder_end_array(builder);
 	json_builder_end_object(builder);
-	return fu_util_print_builder(builder, error);
+	return fu_util_print_builder(console, builder, error);
 }
 
 gchar *

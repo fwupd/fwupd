@@ -80,7 +80,7 @@ endif
 fwupdutil = library(
   'fwupdutil',
   sources: [
-    'fu-progressbar.c',
+    'fu-console.c',
     'fu-security-attr-common.c',
     'fu-util-bios-setting.c',
     'fu-util-common.c',
