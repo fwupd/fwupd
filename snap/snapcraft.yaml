@@ -54,7 +54,7 @@ apps:
       FWUPD_HOSTDIR: /var/lib/snapd/hostfs
   fwupdmgr:
     command: fwupdmgr.wrapper
-    plugs: [fwupdmgr, network, polkit]
+    plugs: [fwupdmgr, network, polkit, shutdown]
     completer:
       share/bash-completion/completions/fwupdmgr
   fwupdagent:
