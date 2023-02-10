@@ -206,6 +206,24 @@ fu_ccgx_dmc_devx_device_type_to_name(DmcDevxDeviceType device_type)
 	return "Unknown";
 }
 
+guint
+fu_ccgx_dmc_devx_device_get_remove_delay(FuCcgxDmcDevxDevice *self)
+{
+	guint remove_delay = 0;
+
+	g_return_val_if_fail(FU_IS_CCGX_DMC_DEVX_DEVICE(self), G_MAXUINT);
+
+	switch (self->status.device_type) {
+	case DMC_DEVX_DEVICE_TYPE_DMC:
+		remove_delay = 40 * 1000;
+		break;
+	default:
+		remove_delay = 30 * 1000;
+		break;
+	}
+	return remove_delay;
+}
+
 static gboolean
 fu_ccgx_dmc_devx_device_probe(FuDevice *device, GError **error)
 {

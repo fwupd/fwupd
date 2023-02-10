@@ -63,6 +63,8 @@ fu_ccgx_dmc_device_ensure_dock_id(FuCcgxDmcDevice *self, GError **error)
 static gboolean
 fu_ccgx_dmc_device_ensure_status(FuCcgxDmcDevice *self, GError **error)
 {
+	guint remove_delay = 20 * 1000; /* guard band */
+
 	/* read minimum status length */
 	if (!g_usb_device_control_transfer(fu_usb_device_get_dev(FU_USB_DEVICE(self)),
 					   G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
@@ -110,7 +112,14 @@ fu_ccgx_dmc_device_ensure_status(FuCcgxDmcDevice *self, GError **error)
 	for (guint i = 0; i < self->dock_status.device_count; i++) {
 		g_autoptr(FuCcgxDmcDevxDevice) devx =
 		    fu_ccgx_dmc_devx_device_new(FU_DEVICE(self), &self->dock_status.devx_status[i]);
+		remove_delay += fu_ccgx_dmc_devx_device_get_remove_delay(devx);
 		fu_device_add_child(FU_DEVICE(self), FU_DEVICE(devx));
+	}
+
+	/* ensure the remove delay is set */
+	if (fu_device_get_remove_delay(FU_DEVICE(self)) == 0) {
+		g_debug("autosetting remove delay to %ums using DMC devx components", remove_delay);
+		fu_device_set_remove_delay(FU_DEVICE(self), remove_delay);
 	}
 
 	/* success */
