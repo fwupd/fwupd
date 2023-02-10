@@ -21,6 +21,7 @@
 #include "fu-bios-settings-private.h"
 #include "fu-cabinet-common.h"
 #include "fu-config.h"
+#include "fu-console.h"
 #include "fu-context-private.h"
 #include "fu-device-list.h"
 #include "fu-device-private.h"
@@ -28,7 +29,6 @@
 #include "fu-history.h"
 #include "fu-plugin-list.h"
 #include "fu-plugin-private.h"
-#include "fu-progressbar.h"
 #include "fu-release-common.h"
 #include "fu-security-attr-common.h"
 #include "fu-smbios-private.h"
@@ -4089,31 +4089,31 @@ fu_memcpy_func(gconstpointer user_data)
 }
 
 static void
-fu_progressbar_func(gconstpointer user_data)
+fu_console_func(gconstpointer user_data)
 {
-	g_autoptr(FuProgressbar) progressbar = fu_progressbar_new();
+	g_autoptr(FuConsole) console = fu_console_new();
 
-	fu_progressbar_set_length_status(progressbar, 20);
-	fu_progressbar_set_length_percentage(progressbar, 50);
+	fu_console_set_status_length(console, 20);
+	fu_console_set_percentage_length(console, 50);
 
 	g_print("\n");
 	for (guint i = 0; i < 100; i++) {
-		fu_progressbar_update(progressbar, FWUPD_STATUS_DECOMPRESSING, i);
+		fu_console_set_progress(console, FWUPD_STATUS_DECOMPRESSING, i);
 		g_usleep(10000);
 	}
-	fu_progressbar_update(progressbar, FWUPD_STATUS_IDLE, 0);
+	fu_console_set_progress(console, FWUPD_STATUS_IDLE, 0);
 	for (guint i = 0; i < 100; i++) {
 		guint pc = (i > 25 && i < 75) ? 0 : i;
-		fu_progressbar_update(progressbar, FWUPD_STATUS_LOADING, pc);
+		fu_console_set_progress(console, FWUPD_STATUS_LOADING, pc);
 		g_usleep(10000);
 	}
-	fu_progressbar_update(progressbar, FWUPD_STATUS_IDLE, 0);
+	fu_console_set_progress(console, FWUPD_STATUS_IDLE, 0);
 
 	for (guint i = 0; i < 5000; i++) {
-		fu_progressbar_update(progressbar, FWUPD_STATUS_LOADING, 0);
+		fu_console_set_progress(console, FWUPD_STATUS_LOADING, 0);
 		g_usleep(1000);
 	}
-	fu_progressbar_update(progressbar, FWUPD_STATUS_IDLE, 0);
+	fu_console_set_progress(console, FWUPD_STATUS_IDLE, 0);
 }
 
 static gint
@@ -4889,7 +4889,7 @@ main(int argc, char **argv)
 
 	/* tests go here */
 	if (g_test_slow()) {
-		g_test_add_data_func("/fwupd/progressbar", self, fu_progressbar_func);
+		g_test_add_data_func("/fwupd/console", self, fu_console_func);
 	}
 	g_test_add_data_func("/fwupd/backend{usb}", self, fu_backend_usb_func);
 	g_test_add_data_func("/fwupd/backend{usb-invalid}", self, fu_backend_usb_invalid_func);
