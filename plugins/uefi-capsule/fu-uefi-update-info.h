@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <glib-object.h>
+
 #define FU_TYPE_UEFI_UPDATE_INFO (fu_uefi_update_info_get_type())
 G_DECLARE_FINAL_TYPE(FuUefiUpdateInfo, fu_uefi_update_info, FU, UEFI_UPDATE_INFO, GObject)
 

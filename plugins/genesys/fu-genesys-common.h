@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <glib.h>
+
 typedef struct {
 	guint8 N[0x206];
 	guint8 E[0x00c];

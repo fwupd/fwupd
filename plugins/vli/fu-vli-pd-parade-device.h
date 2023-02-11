@@ -8,6 +8,7 @@
 
 #include <fwupdplugin.h>
 
+#include "fu-vli-device.h"
 #include "fu-vli-pd-common.h"
 
 #define FU_TYPE_VLI_PD_PARADE_DEVICE (fu_vli_pd_parade_device_get_type())

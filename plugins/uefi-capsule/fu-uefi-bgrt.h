@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <glib-object.h>
+
 #define FU_TYPE_UEFI_BGRT (fu_uefi_bgrt_get_type())
 G_DECLARE_FINAL_TYPE(FuUefiBgrt, fu_uefi_bgrt, FU, UEFI_BGRT, GObject)
 

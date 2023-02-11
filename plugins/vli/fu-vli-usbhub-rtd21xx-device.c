@@ -9,7 +9,6 @@
 
 #include <fwupdplugin.h>
 
-#include "fu-vli-usbhub-device.h"
 #include "fu-vli-usbhub-rtd21xx-device.h"
 
 struct _FuVliUsbhubRtd21xxDevice {

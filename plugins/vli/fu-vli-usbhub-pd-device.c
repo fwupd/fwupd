@@ -12,7 +12,6 @@
 #include "fu-vli-pd-common.h"
 #include "fu-vli-pd-firmware.h"
 #include "fu-vli-usbhub-common.h"
-#include "fu-vli-usbhub-device.h"
 #include "fu-vli-usbhub-pd-device.h"
 
 struct _FuVliUsbhubPdDevice {
