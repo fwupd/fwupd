@@ -3331,7 +3331,7 @@ fu_engine_backends_save_phase(FuEngine *self, GError **error)
 		return TRUE;
 	}
 	if (g_getenv("FWUPD_BACKEND_VERBOSE") != NULL) {
-		g_autofree gchar *data_new_safe = data_new_safe = g_strndup(data_new, 8000);
+		g_autofree gchar *data_new_safe = g_strndup(data_new, 8000);
 		g_debug("JSON %s for phase %s: %s...",
 			data_old == NULL ? "added" : "changed",
 			fu_engine_install_phase_to_string(self->install_phase),
