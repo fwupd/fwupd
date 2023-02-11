@@ -144,9 +144,6 @@ add_project_arguments('-DFWUPD_COMPILATION', language: 'c')
 # Needed for realpath(), syscall(), cfmakeraw(), etc.
 add_project_arguments('-D_DEFAULT_SOURCE', language: 'c')
 
-# do not use deprecated symbols or defines internally
-add_project_arguments('-DFWUPD_DISABLE_DEPRECATED', language: 'c')
-
 # needed for symlink() and BYTE_ORDER
 add_project_arguments('-D_BSD_SOURCE', language: 'c')
 add_project_arguments('-D__BSD_VISIBLE', language: 'c')
