@@ -78,8 +78,4 @@
 #include <libfwupdplugin/fu-version-common.h>
 #include <libfwupdplugin/fu-volume.h>
 
-#ifndef FWUPD_DISABLE_DEPRECATED
-#include <libfwupdplugin/fu-deprecated.h>
-#endif
-
 #undef __FWUPDPLUGIN_H_INSIDE__
