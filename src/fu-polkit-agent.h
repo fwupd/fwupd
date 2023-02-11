@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include <glib.h>
+
 gboolean
 fu_polkit_agent_open(GError **error);
 void

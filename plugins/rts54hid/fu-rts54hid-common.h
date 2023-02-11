@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include <glib.h>
+
 #define FU_RTS54HID_TRANSFER_BLOCK_SIZE 0x80
 #define FU_RTS54FU_HID_REPORT_LENGTH	0xc0
 

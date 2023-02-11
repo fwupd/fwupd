@@ -10,7 +10,6 @@
 #include <fwupdplugin.h>
 
 #include "fu-vli-usbhub-common.h"
-#include "fu-vli-usbhub-device.h"
 #include "fu-vli-usbhub-i2c-common.h"
 #include "fu-vli-usbhub-msp430-device.h"
 

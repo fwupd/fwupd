@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <glib-object.h>
+
 #include "fwupd-enums.h"
 
 G_BEGIN_DECLS

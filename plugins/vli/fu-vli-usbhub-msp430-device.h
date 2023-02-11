@@ -8,6 +8,8 @@
 
 #include <fwupdplugin.h>
 
+#include "fu-vli-usbhub-device.h"
+
 #define FU_TYPE_VLI_USBHUB_MSP430_DEVICE (fu_vli_usbhub_msp430_device_get_type())
 G_DECLARE_FINAL_TYPE(FuVliUsbhubMsp430Device,
 		     fu_vli_usbhub_msp430_device,
