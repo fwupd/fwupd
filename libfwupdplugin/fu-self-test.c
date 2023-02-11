@@ -2544,7 +2544,7 @@ fu_firmware_archive_func(void)
 							"*.bin.asc",
 							&error);
 	g_assert_no_error(error);
-	g_assert_nonnull(img_bin);
+	g_assert_nonnull(img_asc);
 	img_both =
 	    fu_archive_firmware_get_image_fnmatch(FU_ARCHIVE_FIRMWARE(firmware), "*.bin*", &error);
 	g_assert_error(error, G_IO_ERROR, G_IO_ERROR_INVALID_ARGUMENT);
