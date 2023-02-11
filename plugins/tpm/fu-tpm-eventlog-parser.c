@@ -206,6 +206,7 @@ fu_tpm_eventlog_parser_parse_blob_v2(const guint8 *buf,
 			item->kind = event_type;
 			item->checksum_sha1 = g_steal_pointer(&checksum_sha1);
 			item->checksum_sha256 = g_steal_pointer(&checksum_sha256);
+			item->checksum_sha384 = g_steal_pointer(&checksum_sha384);
 			if (datasz > 0) {
 				g_autofree guint8 *data = g_malloc0(datasz);
 				if (!fu_memcpy_safe(data,
