@@ -397,7 +397,7 @@ fwupd_client_set_battery_threshold(FwupdClient *self, guint32 battery_threshold)
 static void
 fwupd_client_properties_changed_cb(GDBusProxy *proxy,
 				   GVariant *changed_properties,
-				   const GStrv invalidated_properties,
+				   GStrv invalidated_properties,
 				   FwupdClient *self)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE(self);
