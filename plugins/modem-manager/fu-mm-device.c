@@ -561,11 +561,9 @@ fu_mm_device_probe(FuDevice *device, GError **error)
 {
 	FuMmDevice *self = FU_MM_DEVICE(device);
 
-	if (self->omodem) {
+	if (self->omodem)
 		return fu_mm_device_probe_default(device, error);
-	} else {
-		return fu_mm_device_probe_udev(device, error);
-	}
+	return fu_mm_device_probe_udev(device, error);
 }
 
 #if MM_CHECK_VERSION(1, 17, 2)
@@ -1253,9 +1251,8 @@ fu_mm_device_write_firmware_mbim_qdu(FuDevice *device,
 			    "[%s] MD5 not matched",
 			    filename);
 		return FALSE;
-	} else {
-		g_debug("[%s] MD5 matched", filename);
 	}
+	g_debug("[%s] MD5 matched", filename);
 
 	/* autosuspend delay updated for a proper firmware update */
 	fu_mm_utils_get_port_info(self->port_mbim, NULL, &device_sysfs_path, NULL, NULL);

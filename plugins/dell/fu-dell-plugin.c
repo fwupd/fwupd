@@ -427,9 +427,10 @@ fu_dell_plugin_backend_device_added(FuPlugin *plugin, FuDevice *device, GError *
 			dock_info->flash_pkg_version = 0;
 			continue;
 		}
+
 		/* if invalid version, don't mark device for updates */
-		else if (dock_info->components[i].fw_version == 0 ||
-			 dock_info->components[i].fw_version == 0xffffffff) {
+		if (dock_info->components[i].fw_version == 0 ||
+		    dock_info->components[i].fw_version == 0xffffffff) {
 			old_ec = TRUE;
 			continue;
 		}

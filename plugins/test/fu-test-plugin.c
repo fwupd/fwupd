@@ -242,7 +242,8 @@ fu_test_plugin_write_firmware(FuPlugin *plugin,
 		if (g_strcmp0(fu_device_get_logical_id(device), "child1") == 0) {
 			fu_device_set_version(device, "2");
 			return TRUE;
-		} else if (g_strcmp0(fu_device_get_logical_id(device), "child2") == 0) {
+		}
+		if (g_strcmp0(fu_device_get_logical_id(device), "child2") == 0) {
 			fu_device_set_version(device, "11");
 			return TRUE;
 		}

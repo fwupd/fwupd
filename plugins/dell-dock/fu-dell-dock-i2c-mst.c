@@ -406,7 +406,7 @@ fu_dell_dock_mst_check_type(FuDevice *device)
 		tmp = g_ptr_array_index(instance_ids, i);
 		if (g_strcmp0(tmp, DELL_DOCK_VMM6210_INSTANCE_ID) == 0)
 			return Cayenne_mst;
-		else if (g_strcmp0(tmp, DELL_DOCK_VM5331_INSTANCE_ID) == 0)
+		if (g_strcmp0(tmp, DELL_DOCK_VM5331_INSTANCE_ID) == 0)
 			return Panamera_mst;
 	}
 	return Unknown;
@@ -1121,7 +1121,8 @@ fu_dell_dock_mst_set_quirk_kv(FuDevice *device,
 			return FALSE;
 		self->blob_build_offset = tmp;
 		return TRUE;
-	} else if (g_strcmp0(key, "DellDockInstallDurationI2C") == 0) {
+	}
+	if (g_strcmp0(key, "DellDockInstallDurationI2C") == 0) {
 		if (!fu_strtoull(value, &tmp, 0, 60 * 60 * 24, error))
 			return FALSE;
 		fu_device_set_install_duration(device, tmp);

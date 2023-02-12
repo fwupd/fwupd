@@ -488,7 +488,8 @@ sync_device_removed(FuPlugin *plugin, FuDevice *device, gpointer user_data)
 	if (target == NULL) {
 		g_warning("Got device that could not be matched: %s", uuid);
 		return;
-	} else if (target->fu_device == NULL) {
+	}
+	if (target->fu_device == NULL) {
 		g_warning("Got remove event for out-of-tree device %s", uuid);
 		return;
 	}

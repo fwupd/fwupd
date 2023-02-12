@@ -563,27 +563,25 @@ fu_logitech_hidpp_device_fetch_battery_level(FuLogitechHidPpDevice *self, GError
 				}
 			}
 			return TRUE;
-		} else {
-			/* fall back to the legacy Battery Level feature */
-			idx = fu_logitech_hidpp_device_feature_get_idx(
-			    self,
-			    HIDPP_FEATURE_BATTERY_LEVEL_STATUS);
-			if (idx != 0x00) {
-				g_autoptr(FuLogitechHidPpHidppMsg) msg =
-				    fu_logitech_hidpp_msg_new();
-				msg->report_id = HIDPP_REPORT_ID_SHORT;
-				msg->device_id = priv->device_idx;
-				msg->sub_id = idx;
-				msg->function_id = 0x00 << 4; /* GetBatteryLevelStatus */
-				msg->hidpp_version = priv->hidpp_version;
-				if (!fu_logitech_hidpp_transfer(priv->io_channel, msg, error)) {
-					g_prefix_error(error, "failed to get battery info: ");
-					return FALSE;
-				}
-				if (msg->data[0] != 0x00)
-					fu_device_set_battery_level(FU_DEVICE(self), msg->data[0]);
-				return TRUE;
+		}
+
+		/* fall back to the legacy Battery Level feature */
+		idx = fu_logitech_hidpp_device_feature_get_idx(self,
+							       HIDPP_FEATURE_BATTERY_LEVEL_STATUS);
+		if (idx != 0x00) {
+			g_autoptr(FuLogitechHidPpHidppMsg) msg = fu_logitech_hidpp_msg_new();
+			msg->report_id = HIDPP_REPORT_ID_SHORT;
+			msg->device_id = priv->device_idx;
+			msg->sub_id = idx;
+			msg->function_id = 0x00 << 4; /* GetBatteryLevelStatus */
+			msg->hidpp_version = priv->hidpp_version;
+			if (!fu_logitech_hidpp_transfer(priv->io_channel, msg, error)) {
+				g_prefix_error(error, "failed to get battery info: ");
+				return FALSE;
 			}
+			if (msg->data[0] != 0x00)
+				fu_device_set_battery_level(FU_DEVICE(self), msg->data[0]);
+			return TRUE;
 		}
 	}
 
@@ -1147,9 +1145,8 @@ fu_logitech_hidpp_device_write_firmware_pkt(FuLogitechHidPpDevice *self,
 				continue;
 			}
 			return TRUE;
-		} else {
-			g_debug("got wrong packet, continue to wait...");
 		}
+		g_debug("got wrong packet, continue to wait...");
 	}
 
 	/* nothing in the queue */

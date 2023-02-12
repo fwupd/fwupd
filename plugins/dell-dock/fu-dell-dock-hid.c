@@ -377,7 +377,7 @@ fu_dell_dock_hid_tbt_map_error(guint32 code)
 {
 	if (code == 1)
 		return g_strerror(EINVAL);
-	else if (code == 2)
+	if (code == 2)
 		return g_strerror(EPERM);
 
 	return g_strerror(EIO);

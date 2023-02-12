@@ -92,14 +92,10 @@ fu_device_locker_close(FuDeviceLocker *self, GError **error)
 				    G_USB_DEVICE_ERROR_NO_DEVICE)) {
 			g_debug("ignoring: %s", error_local->message);
 			return TRUE;
-		} else {
-			g_propagate_error(error, g_steal_pointer(&error_local));
-			return FALSE;
 		}
-#else
+#endif
 		g_propagate_error(error, g_steal_pointer(&error_local));
 		return FALSE;
-#endif
 	}
 	self->device_open = FALSE;
 	return TRUE;

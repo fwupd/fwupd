@@ -409,9 +409,8 @@ fu_corsair_bp_attach(FuDevice *device, FuProgress *progress, GError **error)
 	if (self->is_legacy_attach) {
 		guint8 cmd[FU_CORSAIR_MAX_CMD_SIZE] = {0x08, 0x10, 0x01, 0x00, 0x03, 0x00, 0x01};
 		return fu_corsair_bp_command(self, cmd, CORSAIR_TRANSACTION_TIMEOUT, FALSE, error);
-	} else {
-		return fu_corsair_bp_set_mode(self, FU_CORSAIR_DEVICE_MODE_APPLICATION, error);
 	}
+	return fu_corsair_bp_set_mode(self, FU_CORSAIR_DEVICE_MODE_APPLICATION, error);
 }
 
 static gboolean
