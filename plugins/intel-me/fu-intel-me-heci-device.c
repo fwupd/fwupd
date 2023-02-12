@@ -120,7 +120,7 @@ fu_intel_me_heci_device_read_file(FuIntelMeHeciDevice *self, const gchar *filena
 			    sizeof(hdr_req),
 			    error))
 		return NULL;
-	if (!fu_intel_me_mkhi_verify_header(hdr_req, hdr_res, error))
+	if (!fu_intel_me_mkhi_verify_header(&hdr_req, &hdr_res, error))
 		return NULL;
 	return fu_intel_me_heci_device_read_file_response(buf_res, datasz_req, error);
 }
@@ -171,7 +171,7 @@ fu_intel_me_heci_device_read_file_ex(FuIntelMeHeciDevice *self,
 			    sizeof(hdr_req),
 			    error))
 		return NULL;
-	if (!fu_intel_me_mkhi_verify_header(hdr_req, hdr_res, error))
+	if (!fu_intel_me_mkhi_verify_header(&hdr_req, &hdr_res, error))
 		return NULL;
 	return fu_intel_me_heci_device_read_file_response(buf_res, datasz_req, error);
 }
