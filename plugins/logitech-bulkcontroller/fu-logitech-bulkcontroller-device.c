@@ -562,7 +562,6 @@ fu_logitech_bulkcontroller_device_sync_cb(GObject *source_object,
 	}
 
 	g_main_loop_quit(helper->loop);
-	return;
 }
 
 static gboolean
