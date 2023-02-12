@@ -87,7 +87,7 @@ fu_bluez_device_get_uuid_helper(FuBluezDevice *self, const gchar *uuid, GError *
 static void
 fu_bluez_device_signal_cb(GDBusProxy *proxy,
 			  GVariant *changed_properties,
-			  const GStrv invalidated_properties,
+			  GStrv invalidated_properties,
 			  FuBluezDeviceUuidHelper *uuid_helper)
 {
 	g_signal_emit(uuid_helper->self, signals[SIGNAL_CHANGED], 0, uuid_helper->uuid);
