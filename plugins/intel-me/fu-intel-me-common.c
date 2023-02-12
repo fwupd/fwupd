@@ -32,36 +32,36 @@ fu_intel_me_mkhi_result_to_error(FuMkhiResult result, GError **error)
 }
 
 gboolean
-fu_intel_me_mkhi_verify_header(const FuMkhiHeader hdr_req,
-			       const FuMkhiHeader hdr_res,
+fu_intel_me_mkhi_verify_header(const FuMkhiHeader *hdr_req,
+			       const FuMkhiHeader *hdr_res,
 			       GError **error)
 {
-	if (hdr_req.group_id != hdr_res.group_id) {
+	if (hdr_req->group_id != hdr_res->group_id) {
 		g_set_error(error,
 			    G_IO_ERROR,
 			    G_IO_ERROR_INVALID_DATA,
 			    "invalid response group ID, requested 0x%x and got 0x%x",
-			    hdr_req.group_id,
-			    hdr_res.group_id);
+			    hdr_req->group_id,
+			    hdr_res->group_id);
 		return FALSE;
 	}
-	if (hdr_req.command != hdr_res.command) {
+	if (hdr_req->command != hdr_res->command) {
 		g_set_error(error,
 			    G_IO_ERROR,
 			    G_IO_ERROR_INVALID_DATA,
 			    "invalid response command, requested 0x%x and got 0x%x",
-			    (guint)hdr_req.command,
-			    (guint)hdr_res.command);
+			    (guint)hdr_req->command,
+			    (guint)hdr_res->command);
 		return FALSE;
 	}
-	if (!hdr_res.is_resp) {
+	if (!hdr_res->is_resp) {
 		g_set_error_literal(error,
 				    G_IO_ERROR,
 				    G_IO_ERROR_INVALID_DATA,
 				    "invalid response group ID, not a response!");
 		return FALSE;
 	}
-	return fu_intel_me_mkhi_result_to_error(hdr_res.result, error);
+	return fu_intel_me_mkhi_result_to_error(hdr_res->result, error);
 }
 
 GString *
