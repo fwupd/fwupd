@@ -55,14 +55,12 @@ fu_thunderbolt_controller_kind_to_string(FuThunderboltController *self)
 	if (self->controller_kind == FU_THUNDERBOLT_CONTROLLER_KIND_HOST) {
 		if (self->gen >= 4)
 			return "USB4 host controller";
-		else
-			return "Thunderbolt host controller";
+		return "Thunderbolt host controller";
 	}
 	if (self->controller_kind == FU_THUNDERBOLT_CONTROLLER_KIND_DEVICE) {
 		if (self->gen >= 4)
 			return "USB4 device controller";
-		else
-			return "Thunderbolt device controller";
+		return "Thunderbolt device controller";
 	}
 	return "Unknown";
 }

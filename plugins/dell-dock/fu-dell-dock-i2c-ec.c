@@ -350,7 +350,8 @@ fu_dell_dock_is_valid_dock(FuDevice *device, GError **error)
 	if (self->base_type == DOCK_BASE_TYPE_SALOMON) {
 		fu_device_add_instance_id(device, DELL_DOCK_EC_INSTANCE_ID);
 		return TRUE;
-	} else if (self->base_type == DOCK_BASE_TYPE_ATOMIC) {
+	}
+	if (self->base_type == DOCK_BASE_TYPE_ATOMIC) {
 		fu_device_add_instance_id(device, DELL_DOCK_ATOMIC_EC_INSTANCE_ID);
 		return TRUE;
 	}

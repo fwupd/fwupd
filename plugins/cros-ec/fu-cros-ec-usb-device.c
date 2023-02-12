@@ -975,7 +975,9 @@ fu_cros_ec_usb_device_detach(FuDevice *device, FuProgress *progress, GError **er
 		g_debug("skipping immediate reboot in case of already in bootloader");
 		/* in RO so skip reboot */
 		return TRUE;
-	} else if (self->targ.common.flash_protection != 0x0) {
+	}
+
+	if (self->targ.common.flash_protection != 0x0) {
 		/* in RW, and RO region is write protected, so jump to RO */
 		fu_device_add_private_flag(device, FU_CROS_EC_USB_DEVICE_FLAG_RO_WRITTEN);
 		fu_device_set_remove_delay(device, CROS_EC_REMOVE_DELAY_RE_ENUMERATE);

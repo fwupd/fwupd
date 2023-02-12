@@ -819,11 +819,10 @@ fu_device_list_add(FuDeviceList *self, FuDevice *device)
 			fu_device_list_replace(self, item, device);
 			fu_device_uninhibit(device, "unconnected");
 			return;
-		} else {
-			g_debug("not adding matching %s for device add, use "
-				"FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID if required",
-				fu_device_get_id(item->device));
 		}
+		g_debug("not adding matching %s for device add, use "
+			"FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID if required",
+			fu_device_get_id(item->device));
 	}
 
 	/* add helper */

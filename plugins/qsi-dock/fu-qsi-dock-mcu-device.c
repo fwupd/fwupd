@@ -138,7 +138,9 @@ fu_qsi_dock_mcu_device_enumerate_children(FuQsiDockMcuDevice *self, GError **err
 			g_debug("ignoring %s --> %s", components[i].name, version);
 
 			continue;
-		} else if (g_strcmp0(components[i].name, "MCU") == 0) {
+		}
+
+		if (g_strcmp0(components[i].name, "MCU") == 0) {
 			if ((val[0] == 0x00 && val[1] == 0x00) ||
 			    (val[0] == 0xFF && val[1] == 0xFF)) {
 				g_debug("ignoring %s", components[i].name);

@@ -915,7 +915,8 @@ fu_engine_validate_bios_setting_input(FwupdBiosSetting *attr, const gchar **valu
 			    "%s is read only",
 			    fwupd_bios_setting_get_name(attr));
 		return FALSE;
-	} else if (fwupd_bios_setting_get_kind(attr) == FWUPD_BIOS_SETTING_KIND_INTEGER) {
+	}
+	if (fwupd_bios_setting_get_kind(attr) == FWUPD_BIOS_SETTING_KIND_INTEGER) {
 		if (!fu_strtoull(*value, &tmp, 0, G_MAXUINT64, error))
 			return FALSE;
 		if (tmp < fwupd_bios_setting_get_lower_bound(attr)) {

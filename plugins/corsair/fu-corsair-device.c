@@ -455,7 +455,8 @@ fu_corsair_set_quirk_kv(FuDevice *device, const gchar *key, const gchar *value, 
 				    G_IO_ERROR_INVALID_DATA,
 				    "unsupported device in quirk");
 		return FALSE;
-	} else if (g_strcmp0(key, "CorsairVendorInterfaceId") == 0) {
+	}
+	if (g_strcmp0(key, "CorsairVendorInterfaceId") == 0) {
 		/* clapped to uint8 because bNumInterfaces is 8 bits long */
 		if (!fu_strtoull(value, &vendor_interface, 0, 255, error)) {
 			g_prefix_error(error, "cannot parse CorsairVendorInterface: ");
@@ -463,7 +464,8 @@ fu_corsair_set_quirk_kv(FuDevice *device, const gchar *key, const gchar *value, 
 		}
 		self->vendor_interface = vendor_interface;
 		return TRUE;
-	} else if (g_strcmp0(key, "CorsairSubdeviceId") == 0) {
+	}
+	if (g_strcmp0(key, "CorsairSubdeviceId") == 0) {
 		self->subdevice_id = g_strdup(value);
 		return TRUE;
 	}

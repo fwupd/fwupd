@@ -397,9 +397,13 @@ GBytes *
 fu_uefi_device_fixup_firmware(FuUefiDevice *self, GBytes *fw, GError **error)
 {
 	FuUefiDevicePrivate *priv = GET_PRIVATE(self);
+	efi_capsule_header_t header = {0x0};
+	fwupd_guid_t esrt_guid = {0x0};
+	guint hdrsize = getpagesize();
 	gsize bufsz;
 	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
 	g_autofree gchar *guid_new = NULL;
+	g_autoptr(GByteArray) buf_hdr = g_byte_array_new();
 
 	priv->missing_header = FALSE;
 
@@ -417,38 +421,33 @@ fu_uefi_device_fixup_firmware(FuUefiDevice *self, GBytes *fw, GError **error)
 	if (g_strcmp0(fu_uefi_device_get_guid(self), guid_new) == 0) {
 		g_debug("ESRT matches payload GUID");
 		return g_bytes_ref(fw);
-	} else if (g_strcmp0(guid_new, FU_EFI_FMP_CAPSULE_GUID) == 0 ||
-		   fu_device_has_private_flag(FU_DEVICE(self),
-					      FU_UEFI_DEVICE_FLAG_NO_CAPSULE_HEADER_FIXUP)) {
-		return g_bytes_ref(fw);
-	} else {
-		guint hdrsize = getpagesize();
-		fwupd_guid_t esrt_guid = {0x0};
-		efi_capsule_header_t header = {0x0};
-		g_autoptr(GByteArray) buf_hdr = g_byte_array_new();
-
-		g_debug("missing or invalid embedded capsule header");
-		priv->missing_header = TRUE;
-
-		/* create a fake header with plausible contents */
-		header.flags = priv->capsule_flags;
-		header.header_size = hdrsize;
-		header.capsule_image_size = bufsz + hdrsize;
-		if (!fwupd_guid_from_string(fu_uefi_device_get_guid(self),
-					    &esrt_guid,
-					    FWUPD_GUID_FLAG_MIXED_ENDIAN,
-					    error)) {
-			g_prefix_error(error, "Invalid ESRT GUID: ");
-			return NULL;
-		}
-		memcpy(&header.guid, &esrt_guid, sizeof(fwupd_guid_t));
-
-		/* prepend the header to the payload */
-		g_byte_array_append(buf_hdr, (const guint8 *)&header, sizeof(header));
-		fu_byte_array_set_size(buf_hdr, hdrsize, 0x00);
-		g_byte_array_append(buf_hdr, buf, bufsz);
-		return g_byte_array_free_to_bytes(g_steal_pointer(&buf_hdr));
 	}
+	if (g_strcmp0(guid_new, FU_EFI_FMP_CAPSULE_GUID) == 0 ||
+	    fu_device_has_private_flag(FU_DEVICE(self),
+				       FU_UEFI_DEVICE_FLAG_NO_CAPSULE_HEADER_FIXUP)) {
+		return g_bytes_ref(fw);
+	}
+
+	/* create a fake header with plausible contents */
+	g_debug("missing or invalid embedded capsule header");
+	priv->missing_header = TRUE;
+	header.flags = priv->capsule_flags;
+	header.header_size = hdrsize;
+	header.capsule_image_size = bufsz + hdrsize;
+	if (!fwupd_guid_from_string(fu_uefi_device_get_guid(self),
+				    &esrt_guid,
+				    FWUPD_GUID_FLAG_MIXED_ENDIAN,
+				    error)) {
+		g_prefix_error(error, "Invalid ESRT GUID: ");
+		return NULL;
+	}
+	memcpy(&header.guid, &esrt_guid, sizeof(fwupd_guid_t));
+
+	/* prepend the header to the payload */
+	g_byte_array_append(buf_hdr, (const guint8 *)&header, sizeof(header));
+	fu_byte_array_set_size(buf_hdr, hdrsize, 0x00);
+	g_byte_array_append(buf_hdr, buf, bufsz);
+	return g_byte_array_free_to_bytes(g_steal_pointer(&buf_hdr));
 }
 
 gboolean
