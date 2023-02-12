@@ -1421,7 +1421,7 @@ fu_genesys_scaler_device_write_flash(FuGenesysScalerDevice *self,
 }
 
 static guint8
-fu_genesys_scaler_device_calculate_checksum(guint8 *buf, gsize bufsz)
+fu_genesys_scaler_device_calculate_checksum(const guint8 *buf, gsize bufsz)
 {
 	guint8 checksum = 0x00;
 
