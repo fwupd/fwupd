@@ -222,7 +222,9 @@ fu_usi_dock_mcu_device_enumerate_children(FuUsiDockMcuDevice *self, GError **err
 				g_debug("ignoring %s --> %s", components[i].name, version);
 			}
 			continue;
-		} else if (g_strcmp0(components[i].name, "DMC") == 0) {
+		}
+
+		if (g_strcmp0(components[i].name, "DMC") == 0) {
 			if ((val[2] == 0x00 && val[3] == 0x00 && val[4] == 0x00) ||
 			    (val[2] == 0xFF && val[3] == 0xFF && val[4] == 0xFF)) {
 				g_debug("ignoring %s", components[i].name);
