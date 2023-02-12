@@ -230,9 +230,6 @@ fu_srec_firmware_tokenize_cb(GString *token, guint token_idx, gpointer user_data
 	/* set each command settings */
 	switch (rec_kind) {
 	case FU_FIRMWARE_SREC_RECORD_KIND_S0_HEADER:
-		addrsz = 2;
-		require_data = TRUE;
-		break;
 	case FU_FIRMWARE_SREC_RECORD_KIND_S1_DATA_16:
 		addrsz = 2;
 		require_data = TRUE;

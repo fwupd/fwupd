@@ -142,9 +142,8 @@ fu_redfish_request_load_json(FuRedfishRequest *self, GByteArray *buf, GError **e
 			error_code = FWUPD_ERROR_AUTH_EXPIRED;
 		else if (g_strcmp0(id, "SMC.1.0.OemLicenseNotPassed") == 0)
 			error_code = FWUPD_ERROR_NOT_SUPPORTED;
-		else if (g_strcmp0(id, "SMC.1.0.OemFirmwareAlreadyInUpdateMode") == 0)
-			error_code = FWUPD_ERROR_ALREADY_PENDING;
-		else if (g_strcmp0(id, "SMC.1.0.OemBiosUpdateIsInProgress") == 0)
+		else if (g_strcmp0(id, "SMC.1.0.OemFirmwareAlreadyInUpdateMode") == 0 ||
+			 g_strcmp0(id, "SMC.1.0.OemBiosUpdateIsInProgress") == 0)
 			error_code = FWUPD_ERROR_ALREADY_PENDING;
 		g_set_error_literal(error, FWUPD_ERROR, error_code, msg);
 		return FALSE;

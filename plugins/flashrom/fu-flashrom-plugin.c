@@ -57,7 +57,6 @@ fu_flashrom_plugin_debug_cb(enum flashrom_log_level lvl, const char *fmt, va_lis
 			g_debug("%s", str);
 		break;
 	case FLASHROM_MSG_SPEW:
-		break;
 	default:
 		break;
 	}
