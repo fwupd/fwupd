@@ -2300,6 +2300,10 @@ fu_util_request_get_message(FwupdRequest *req)
 			return _("Do not turn off your computer or remove the AC adaptor "
 				 "while the update is in progress.");
 		}
+		if (g_strcmp0(fwupd_request_get_id(req), FWUPD_REQUEST_ID_REPLUG_INSTALL) == 0) {
+			/* TRANSLATORS: message shown after device has been marked for emulation */
+			return _("Unplug and replug the device, then install the firmware.");
+		}
 	}
 	return fwupd_request_get_message(req);
 }

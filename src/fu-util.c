@@ -95,10 +95,6 @@ fu_util_client_notify_cb(GObject *object, GParamSpec *pspec, FuUtilPrivate *priv
 static void
 fu_util_update_device_request_cb(FwupdClient *client, FwupdRequest *request, FuUtilPrivate *priv)
 {
-	/* action has not been assigned yet */
-	if (priv->current_operation == FU_UTIL_OPERATION_UNKNOWN)
-		return;
-
 	/* nothing sensible to show */
 	if (fwupd_request_get_message(request) == NULL)
 		return;
@@ -4077,25 +4073,17 @@ static gboolean
 fu_util_emulation_tag(FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(FwupdDevice) dev = NULL;
-	g_autofree gchar *cmd = g_strdup_printf("%s emulation-save", g_get_prgname());
 
 	/* set the flag */
 	dev = fu_util_get_device_or_prompt(priv, values, error);
 	if (dev == NULL)
 		return FALSE;
-	if (!fwupd_client_modify_device(priv->client,
-					fwupd_device_get_id(dev),
-					"Flags",
-					"emulation-tag",
-					priv->cancellable,
-					error))
-		return FALSE;
-
-	/* TRANSLATORS: these are instructions on how to generate the data, and the %1 is a command
-	 * like 'fwupdmgr emulation-save' */
-	g_print(_("Now unplug and replug the device, install the firmware, and then run %s"), cmd);
-	g_print("\n");
-	return TRUE;
+	return fwupd_client_modify_device(priv->client,
+					  fwupd_device_get_id(dev),
+					  "Flags",
+					  "emulation-tag",
+					  priv->cancellable,
+					  error);
 }
 
 static gboolean
