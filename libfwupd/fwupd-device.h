@@ -236,6 +236,10 @@ FwupdStatus
 fwupd_device_get_status(FwupdDevice *self);
 void
 fwupd_device_set_status(FwupdDevice *self, FwupdStatus status);
+guint
+fwupd_device_get_percentage(FwupdDevice *self);
+void
+fwupd_device_set_percentage(FwupdDevice *self, guint percentage);
 void
 fwupd_device_add_release(FwupdDevice *self, FwupdRelease *release);
 GPtrArray *

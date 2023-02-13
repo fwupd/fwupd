@@ -205,6 +205,10 @@ fu_device_new(FuContext *ctx);
 #define fu_device_get_flashes_left(d)	    fwupd_device_get_flashes_left(FWUPD_DEVICE(d))
 #define fu_device_get_install_duration(d)   fwupd_device_get_install_duration(FWUPD_DEVICE(d))
 #define fu_device_get_release_default(d)    fwupd_device_get_release_default(FWUPD_DEVICE(d))
+#define fu_device_get_status(d)		    fwupd_device_get_status(FWUPD_DEVICE(d))
+#define fu_device_set_status(d, v)	    fwupd_device_set_status(FWUPD_DEVICE(d), v)
+#define fu_device_get_percentage(d)	    fwupd_device_get_percentage(FWUPD_DEVICE(d))
+#define fu_device_set_percentage(d, v)	    fwupd_device_set_percentage(FWUPD_DEVICE(d), v)
 
 /**
  * FuDeviceInternalFlags:

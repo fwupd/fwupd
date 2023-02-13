@@ -29,6 +29,7 @@ fwupdplugin_src = [
   'fu-context.c',           # fuzzing
   'fu-device-locker.c',     # fuzzing
   'fu-device.c',            # fuzzing
+  'fu-device-progress.c',
   'fu-dfu-firmware.c',      # fuzzing
   'fu-fdt-firmware.c',      # fuzzing
   'fu-fdt-image.c',         # fuzzing
@@ -189,6 +190,7 @@ fwupdplugin_headers_private = [
   'fu-backend-private.h',
   'fu-context-private.h',
   'fu-device-private.h',
+  'fu-device-progress.h',
   'fu-kenv.h',
   'fu-plugin-private.h',
   'fu-bios-settings-private.h',
