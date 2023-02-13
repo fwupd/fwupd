@@ -5569,7 +5569,7 @@ fwupd_client_uninhibit_cb(GObject *source, GAsyncResult *res, gpointer user_data
 /**
  * fwupd_client_uninhibit_async:
  * @self: a #FwupdClient
- * @uninhibit_id: (not nullable): the inhibit ID
+ * @inhibit_id: (not nullable): the inhibit ID
  * @cancellable: (nullable): optional #GCancellable
  * @callback: the function to run on completion
  * @callback_data: the data to pass to @callback
