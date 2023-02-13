@@ -22,6 +22,7 @@
 #include <unistd.h>
 
 #include "fwupd-bios-setting-private.h"
+#include "fwupd-client-private.h"
 #include "fwupd-common-private.h"
 #include "fwupd-device-private.h"
 #include "fwupd-enums-private.h"
@@ -3657,6 +3658,7 @@ main(int argc, char *argv[])
 	/* used for monitoring and downloading */
 	priv->client = fwupd_client_new();
 	fwupd_client_set_main_context(priv->client, priv->main_ctx);
+	fwupd_client_set_daemon_version(priv->client, PACKAGE_VERSION);
 	fwupd_client_set_user_agent_for_package(priv->client, "fwupdtool", PACKAGE_VERSION);
 	g_signal_connect(FWUPD_CLIENT(priv->client),
 			 "notify::percentage",

@@ -321,7 +321,16 @@ fwupd_client_set_host_security_id(FwupdClient *self, const gchar *host_security_
 	fwupd_client_object_notify(self, "host-security-id");
 }
 
-static void
+/**
+ * fwupd_client_set_daemon_version:
+ * @self: a #FwupdClient
+ * @daemon_version: A semantic version, e.g. "1.2.3"
+ *
+ * Sets the daemon version number.
+ *
+ * Since: 1.8.11
+ **/
+void
 fwupd_client_set_daemon_version(FwupdClient *self, const gchar *daemon_version)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE(self);
@@ -5035,6 +5044,7 @@ fwupd_client_set_user_agent_for_package(FwupdClient *self,
 	g_return_if_fail(FWUPD_IS_CLIENT(self));
 	g_return_if_fail(package_name != NULL);
 	g_return_if_fail(package_version != NULL);
+	g_return_if_fail(priv->daemon_version != NULL);
 
 	/* application name and version */
 	g_string_append_printf(str, "%s/%s", package_name, package_version);

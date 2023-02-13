@@ -435,6 +435,8 @@ guint
 fwupd_client_get_percentage(FwupdClient *self);
 const gchar *
 fwupd_client_get_daemon_version(FwupdClient *self);
+void
+fwupd_client_set_daemon_version(FwupdClient *self, const gchar *daemon_version);
 const gchar *
 fwupd_client_get_host_bkc(FwupdClient *self);
 const gchar *
