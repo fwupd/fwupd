@@ -20,20 +20,6 @@ struct _FuLogitechHidppPlugin {
 
 G_DEFINE_TYPE(FuLogitechHidppPlugin, fu_logitech_hidpp_plugin, FU_TYPE_PLUGIN)
 
-static gboolean
-fu_logitech_hidpp_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
-{
-	/* check the kernel has CONFIG_HIDRAW */
-	if (!g_file_test("/sys/class/hidraw", G_FILE_TEST_IS_DIR)) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "no kernel support for CONFIG_HIDRAW");
-		return FALSE;
-	}
-	return TRUE;
-}
-
 static void
 fu_logitech_hidpp_plugin_init(FuLogitechHidppPlugin *self)
 {
@@ -57,8 +43,6 @@ fu_logitech_hidpp_plugin_constructed(GObject *obj)
 static void
 fu_logitech_hidpp_plugin_class_init(FuLogitechHidppPluginClass *klass)
 {
-	FuPluginClass *plugin_class = FU_PLUGIN_CLASS(klass);
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	object_class->constructed = fu_logitech_hidpp_plugin_constructed;
-	plugin_class->startup = fu_logitech_hidpp_plugin_startup;
 }
