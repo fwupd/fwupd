@@ -11,13 +11,13 @@
 #include "fu-ebitdo-common.h"
 
 const gchar *
-fu_ebitdo_pkt_type_to_string(FuEbitdoPktType cmd)
+fu_ebitdo_pkt_type_to_string(FuEbitdoPktType type)
 {
-	if (cmd == FU_EBITDO_PKT_TYPE_USER_CMD)
+	if (type == FU_EBITDO_PKT_TYPE_USER_CMD)
 		return "user-cmd";
-	if (cmd == FU_EBITDO_PKT_TYPE_USER_DATA)
+	if (type == FU_EBITDO_PKT_TYPE_USER_DATA)
 		return "user-data";
-	if (cmd == FU_EBITDO_PKT_TYPE_MID_CMD)
+	if (type == FU_EBITDO_PKT_TYPE_MID_CMD)
 		return "mid-cmd";
 	return NULL;
 }

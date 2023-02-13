@@ -161,7 +161,7 @@ gboolean
 fu_engine_composite_cleanup(FuEngine *self, GPtrArray *devices, GError **error);
 gboolean
 fu_engine_install_release(FuEngine *self,
-			  FuRelease *task,
+			  FuRelease *release,
 			  GBytes *blob_cab,
 			  FuProgress *progress,
 			  FwupdInstallFlags flags,
@@ -203,7 +203,7 @@ fu_engine_self_sign(FuEngine *self, const gchar *value, JcatSignFlags flags, GEr
 gboolean
 fu_engine_modify_config(FuEngine *self, const gchar *key, const gchar *value, GError **error);
 FuContext *
-fu_engine_get_context(FuEngine *engine);
+fu_engine_get_context(FuEngine *self);
 void
 fu_engine_md_refresh_device_from_component(FuEngine *self, FuDevice *device, XbNode *component);
 GPtrArray *
@@ -225,7 +225,7 @@ fu_engine_get_details_for_bytes(FuEngine *self,
 				GBytes *blob,
 				GError **error);
 gboolean
-fu_engine_check_trust(FuEngine *self, FuRelease *task, GError **error);
+fu_engine_check_trust(FuEngine *self, FuRelease *release, GError **error);
 gboolean
 fu_engine_check_requirements(FuEngine *self,
 			     FuRelease *release,

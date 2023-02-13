@@ -5223,7 +5223,7 @@ fu_device_incorporate_flag(FuDevice *self, FuDevice *donor, FwupdDeviceFlags fla
 
 /**
  * fu_device_incorporate_from_component: (skip):
- * @device: a device
+ * @self: a device
  * @component: a Xmlb node
  *
  * Copy all properties from the donor AppStream component.

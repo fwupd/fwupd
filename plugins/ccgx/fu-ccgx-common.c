@@ -66,11 +66,11 @@ fu_ccgx_fw_image_type_from_string(const gchar *val)
 }
 
 FWMode
-fu_ccgx_fw_mode_get_alternate(FWMode fw_mode)
+fu_ccgx_fw_mode_get_alternate(FWMode val)
 {
-	if (fw_mode == FW_MODE_FW1)
+	if (val == FW_MODE_FW1)
 		return FW_MODE_FW2;
-	if (fw_mode == FW_MODE_FW2)
+	if (val == FW_MODE_FW2)
 		return FW_MODE_FW1;
 	return FW_MODE_BOOT;
 }

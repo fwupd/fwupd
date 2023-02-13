@@ -236,9 +236,9 @@ fu_hailuck_tp_device_class_init(FuHailuckTpDeviceClass *klass)
 }
 
 FuHailuckTpDevice *
-fu_hailuck_tp_device_new(FuDevice *device)
+fu_hailuck_tp_device_new(FuDevice *parent)
 {
 	FuHailuckTpDevice *self;
-	self = g_object_new(FU_TYPE_HAILUCK_TP_DEVICE, "parent", device, NULL);
+	self = g_object_new(FU_TYPE_HAILUCK_TP_DEVICE, "parent", parent, NULL);
 	return FU_HAILUCK_TP_DEVICE(self);
 }

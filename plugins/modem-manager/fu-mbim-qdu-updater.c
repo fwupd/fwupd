@@ -505,10 +505,10 @@ fu_mbim_qdu_updater_class_init(FuMbimQduUpdaterClass *klass)
 }
 
 FuMbimQduUpdater *
-fu_mbim_qdu_updater_new(const gchar *path)
+fu_mbim_qdu_updater_new(const gchar *mbim_port)
 {
 	FuMbimQduUpdater *self = g_object_new(FU_TYPE_MBIM_QDU_UPDATER, NULL);
-	self->mbim_port = g_strdup(path);
+	self->mbim_port = g_strdup(mbim_port);
 	return self;
 }
 

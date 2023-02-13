@@ -82,7 +82,7 @@ fu_uefi_get_bitmap_size(const guint8 *buf,
 gboolean
 fu_uefi_get_framebuffer_size(guint32 *width, guint32 *height, GError **error);
 gchar *
-fu_uefi_get_esp_path_for_os(FuDevice *device, const gchar *esp_path);
+fu_uefi_get_esp_path_for_os(FuDevice *device, const gchar *base);
 guint64
 fu_uefi_read_file_as_uint64(const gchar *path, const gchar *attr_name);
 gboolean

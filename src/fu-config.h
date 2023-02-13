@@ -33,7 +33,7 @@ fu_config_get_approved_firmware(FuConfig *self);
 GPtrArray *
 fu_config_get_blocked_firmware(FuConfig *self);
 guint
-fu_config_get_uri_scheme_prio(FuConfig *self, const gchar *protocol);
+fu_config_get_uri_scheme_prio(FuConfig *self, const gchar *scheme);
 gboolean
 fu_config_get_update_motd(FuConfig *self);
 gboolean

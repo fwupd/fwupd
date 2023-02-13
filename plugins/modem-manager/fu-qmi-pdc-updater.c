@@ -786,9 +786,9 @@ fu_qmi_pdc_updater_class_init(FuQmiPdcUpdaterClass *klass)
 }
 
 FuQmiPdcUpdater *
-fu_qmi_pdc_updater_new(const gchar *path)
+fu_qmi_pdc_updater_new(const gchar *qmi_port)
 {
 	FuQmiPdcUpdater *self = g_object_new(FU_TYPE_QMI_PDC_UPDATER, NULL);
-	self->qmi_port = g_strdup(path);
+	self->qmi_port = g_strdup(qmi_port);
 	return self;
 }
