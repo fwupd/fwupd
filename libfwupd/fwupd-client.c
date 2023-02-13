@@ -5152,6 +5152,16 @@ fwupd_client_download_http(FwupdClient *self, CURL *curl, const gchar *url, GErr
 		return NULL;
 	}
 	if (status_code >= 400) {
+		g_autofree gchar *str = g_strndup((const gchar *)buf->data, MIN(buf->len, 4000));
+		if (g_str_is_ascii(str)) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "Failed to download, server response was %u: %s",
+				    (guint)status_code,
+				    str);
+			return NULL;
+		}
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_FILE,
