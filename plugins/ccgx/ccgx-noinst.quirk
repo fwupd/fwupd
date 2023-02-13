@@ -3,7 +3,6 @@
 Plugin = ccgx
 GType = FuCcgxDmcDevice
 CcgxDmcTriggerCode = 1
-CcgxImageKind = dmc-composite
 RemoveDelay = 732000
 
 # Any EVB board that uses CYUSB4357
@@ -11,5 +10,4 @@ RemoveDelay = 732000
 Plugin = ccgx
 GType = FuCcgxDmcDevice
 CcgxDmcTriggerCode = 1
-CcgxImageKind = dmc-composite
 RemoveDelay = 732000
