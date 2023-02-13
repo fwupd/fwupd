@@ -39,9 +39,6 @@ fu_mm_shadow_device_new(FuMmDevice *device);
 FuMmDevice *
 fu_mm_device_udev_new(FuContext *ctx, MMManager *manager, FuMmDevice *shadow_device);
 void
-fu_mm_device_udev_add_port(FuMmDevice *device,
-			   const gchar *subsystem,
-			   const gchar *path,
-			   gint ifnum);
+fu_mm_device_udev_add_port(FuMmDevice *self, const gchar *subsystem, const gchar *path, gint ifnum);
 
 #endif /* __FU_MM_DEVICE_H */

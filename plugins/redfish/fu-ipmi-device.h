@@ -26,7 +26,7 @@ fu_ipmi_device_set_user_password(FuIpmiDevice *self,
 				 const gchar *password,
 				 GError **error);
 gboolean
-fu_ipmi_device_set_user_enable(FuIpmiDevice *self, guint8 user_id, gboolean enable, GError **error);
+fu_ipmi_device_set_user_enable(FuIpmiDevice *self, guint8 user_id, gboolean value, GError **error);
 gboolean
 fu_ipmi_device_set_user_priv(FuIpmiDevice *self,
 			     guint8 user_id,
