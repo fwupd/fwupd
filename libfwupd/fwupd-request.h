@@ -93,6 +93,16 @@ typedef enum {
 #define FWUPD_REQUEST_ID_DO_NOT_POWER_OFF "org.freedesktop.fwupd.request.do-not-power-off"
 
 /**
+ * FWUPD_REQUEST_ID_REPLUG_INSTALL:
+ *
+ * Show the user a message to replug the device and then install the firmware, e.g.
+ * "Unplug and replug the device, then install the firmware."
+ *
+ * Since 1.8.11
+ */
+#define FWUPD_REQUEST_ID_REPLUG_INSTALL "org.freedesktop.fwupd.replug-install"
+
+/**
  * FWUPD_REQUEST_FLAG_NONE:
  *
  * No flags are set.

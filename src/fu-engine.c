@@ -1114,6 +1114,19 @@ fu_engine_remove_device_flag(FuEngine *self,
 	return FALSE;
 }
 
+static void
+fu_engine_emit_device_request_replug_and_install(FuEngine *self, FuDevice *device)
+{
+	g_autoptr(FwupdRequest) request = fwupd_request_new();
+	fwupd_request_set_id(request, FWUPD_REQUEST_ID_REPLUG_INSTALL);
+	fwupd_request_set_device_id(request, fu_device_get_id(device));
+	fwupd_request_set_kind(request, FWUPD_REQUEST_KIND_IMMEDIATE);
+	fwupd_request_add_flag(request, FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE);
+	fwupd_request_set_message(request,
+				  "Unplug and replug the device, then install the firmware.");
+	g_signal_emit(self, signals[SIGNAL_DEVICE_REQUEST], 0, request);
+}
+
 static gboolean
 fu_engine_add_device_flag(FuEngine *self,
 			  const gchar *device_id,
@@ -1147,6 +1160,7 @@ fu_engine_add_device_flag(FuEngine *self,
 		g_hash_table_insert(self->emulation_backend_ids,
 				    g_strdup(fu_device_get_backend_id(device)),
 				    GUINT_TO_POINTER(1));
+		fu_engine_emit_device_request_replug_and_install(self, device);
 		return TRUE;
 	}
 	g_set_error_literal(error,
