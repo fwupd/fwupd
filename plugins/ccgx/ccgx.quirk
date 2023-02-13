@@ -60,7 +60,6 @@ ParentGuid = USB\VID_17EF&PID_30AF
 Name = ThinkPad Universal USB-C Dock
 Flags = has-manual-replug
 CcgxDmcTriggerCode = 0x02
-CcgxImageKind = dmc-composite
 InstallDuration = 60
 
 [USB\VID_17EF&PID_3105]
@@ -71,7 +70,6 @@ ParentGuid = USB\VID_17EF&PID_30AF
 Name = ThinkPad Universal USB-C Dock
 Flags = has-manual-replug
 CcgxDmcTriggerCode = 0x02
-CcgxImageKind = dmc-composite
 InstallDuration = 60
 
 # HP USB-C Dock G5
@@ -83,7 +81,6 @@ ParentGuid = USB\VID_03F0&PID_0363
 Vendor = HP
 Name = USB-C Dock G5
 CcgxDmcTriggerCode = 0x01
-CcgxImageKind = dmc-composite
 InstallDuration = 233
 RemoveDelay = 203000
 
@@ -96,7 +93,6 @@ ParentGuid = USB\VID_03F0&PID_096B
 Vendor = HP
 Name = USB-C/A Universal Dock G2
 CcgxDmcTriggerCode = 0x01
-CcgxImageKind = dmc-composite
 InstallDuration = 180
 RemoveDelay = 162000
 
@@ -120,7 +116,6 @@ ParentGuid = USB\VID_03F0&PID_2488
 Vendor = HP
 Name = Thunderbolt Dock G4
 CcgxDmcTriggerCode = 0x01
-CcgxImageKind = dmc-composite
 InstallDuration = 898
 RemoveDelay = 732000
 
@@ -130,7 +125,6 @@ Plugin = ccgx
 GType = FuCcgxDmcDevice
 Summary = Dock Management Controller Device
 CcgxDmcTriggerCode = 0x01
-CcgxImageKind = dmc-composite
 RemoveDelay = 732000
 
 # Anker Thunderbolt4 Mini Dock
@@ -139,7 +133,6 @@ Plugin = ccgx
 GType = FuCcgxDmcDevice
 Summary = Dock Management Controller Device
 CcgxDmcTriggerCode = 0x01
-CcgxImageKind = dmc-composite
 RemoveDelay = 732000
 
 # Caldigit ElementHub
@@ -147,6 +140,5 @@ RemoveDelay = 732000
 Plugin = ccgx
 GType = FuCcgxDmcDevice
 CcgxDmcTriggerCode = 0x01
-CcgxImageKind = dmc-composite
 [USB\VID_2188&PID_0035&CID_05&VER_3.3.1.69]
 CcgxDmcCompositeVersion = 15
