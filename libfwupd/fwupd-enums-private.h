@@ -339,6 +339,14 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_RESULT_KEY_STATUS "Status"
 /**
+ * FWUPD_RESULT_KEY_PERCENTAGE:
+ *
+ * Result key to represent progress percentage, typically installation or verification
+ *
+ * The D-Bus type signature string is 'u' i.e. a unsigned 32 bit integer.
+ **/
+#define FWUPD_RESULT_KEY_PERCENTAGE "Percentage"
+/**
  * FWUPD_RESULT_KEY_SUMMARY:
  *
  * Result key to represent Summary

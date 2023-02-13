@@ -919,5 +919,7 @@ LIBFWUPD_1.8.11 {
     fwupd_client_uninhibit;
     fwupd_client_uninhibit_async;
     fwupd_client_uninhibit_finish;
+    fwupd_device_get_percentage;
+    fwupd_device_set_percentage;
   local: *;
 } LIBFWUPD_1.8.8;

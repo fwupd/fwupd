@@ -1163,6 +1163,8 @@ LIBFWUPDPLUGIN_1.8.10 {
 LIBFWUPDPLUGIN_1.8.11 {
   global:
     fu_device_has_problem;
+    fu_device_progress_get_type;
+    fu_device_progress_new;
     fu_device_sleep;
     fu_device_sleep_full;
     fu_strdup;

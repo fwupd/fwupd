@@ -69,6 +69,7 @@ typedef struct {
 	gchar *update_message;
 	gchar *update_image;
 	FwupdStatus status;
+	guint percentage;
 	GPtrArray *releases;
 	FwupdDevice *parent; /* noref */
 } FwupdDevicePrivate;
@@ -79,6 +80,7 @@ enum {
 	PROP_FLAGS,
 	PROP_PROTOCOL,
 	PROP_STATUS,
+	PROP_PERCENTAGE,
 	PROP_PARENT,
 	PROP_UPDATE_STATE,
 	PROP_UPDATE_MESSAGE,
@@ -2228,6 +2230,12 @@ fwupd_device_to_variant_full(FwupdDevice *self, FwupdDeviceFlags flags)
 				      FWUPD_RESULT_KEY_STATUS,
 				      g_variant_new_uint32(priv->status));
 	}
+	if (priv->percentage != 0) {
+		g_variant_builder_add(&builder,
+				      "{sv}",
+				      FWUPD_RESULT_KEY_PERCENTAGE,
+				      g_variant_new_uint32(priv->percentage));
+	}
 	if (priv->version_format != FWUPD_VERSION_FORMAT_UNKNOWN) {
 		g_variant_builder_add(&builder,
 				      "{sv}",
@@ -2451,6 +2459,10 @@ fwupd_device_from_key_value(FwupdDevice *self, const gchar *key, GVariant *value
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_STATUS) == 0) {
 		fwupd_device_set_status(self, g_variant_get_uint32(value));
+		return;
+	}
+	if (g_strcmp0(key, FWUPD_RESULT_KEY_PERCENTAGE) == 0) {
+		fwupd_device_set_percentage(self, g_variant_get_uint32(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_VERSION_FORMAT) == 0) {
@@ -2868,6 +2880,44 @@ fwupd_device_set_status(FwupdDevice *self, FwupdStatus status)
 	g_object_notify(G_OBJECT(self), "status");
 }
 
+/**
+ * fwupd_device_get_percentage:
+ * @self: a #FwupdDevice
+ *
+ * Returns the percentage completion of the device.
+ *
+ * Returns: the percentage value
+ *
+ * Since: 1.8.11
+ **/
+guint
+fwupd_device_get_percentage(FwupdDevice *self)
+{
+	FwupdDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_DEVICE(self), 0);
+	return priv->percentage;
+}
+
+/**
+ * fwupd_device_set_percentage:
+ * @self: a #FwupdDevice
+ * @percentage: the percentage value
+ *
+ * Sets the percentage completion of the device.
+ *
+ * Since: 1.8.11
+ **/
+void
+fwupd_device_set_percentage(FwupdDevice *self, guint percentage)
+{
+	FwupdDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FWUPD_IS_DEVICE(self));
+	if (priv->percentage == percentage)
+		return;
+	priv->percentage = percentage;
+	g_object_notify(G_OBJECT(self), "percentage");
+}
+
 static void
 fwupd_pad_kv_ups(GString *str, const gchar *key, FwupdUpdateState value)
 {
@@ -3048,6 +3098,8 @@ fwupd_device_to_json_full(FwupdDevice *self, JsonBuilder *builder, FwupdDeviceFl
 					  priv->update_state);
 	if (priv->status > 0)
 		fwupd_common_json_add_int(builder, FWUPD_RESULT_KEY_STATUS, priv->status);
+	if (priv->percentage > 0)
+		fwupd_common_json_add_int(builder, FWUPD_RESULT_KEY_PERCENTAGE, priv->percentage);
 	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_UPDATE_ERROR, priv->update_error);
 	fwupd_common_json_add_string(builder,
 				     FWUPD_RESULT_KEY_UPDATE_MESSAGE,
@@ -3274,6 +3326,11 @@ fwupd_device_from_json(FwupdDevice *self, JsonNode *json_node, GError **error)
 		    json_object_get_string_member_with_default(obj, FWUPD_RESULT_KEY_STATUS, NULL);
 		fwupd_device_set_status(self, fwupd_status_from_string(tmp));
 	}
+	if (json_object_has_member(obj, FWUPD_RESULT_KEY_PERCENTAGE)) {
+		gint64 tmp =
+		    json_object_get_int_member_with_default(obj, FWUPD_RESULT_KEY_PERCENTAGE, 0);
+		fwupd_device_set_percentage(self, tmp);
+	}
 	if (json_object_has_member(obj, FWUPD_RESULT_KEY_UPDATE_ERROR)) {
 		const gchar *tmp =
 		    json_object_get_string_member_with_default(obj,
@@ -3437,6 +3494,8 @@ fwupd_device_to_string(FwupdDevice *self)
 				 FWUPD_RESULT_KEY_STATUS,
 				 fwupd_status_to_string(priv->status));
 	}
+	if (priv->percentage != 0)
+		fwupd_pad_kv_int(str, FWUPD_RESULT_KEY_PERCENTAGE, priv->percentage);
 
 	/* show instance IDs optionally mapped to GUIDs, and also "standalone" GUIDs */
 	guid_helpers = g_ptr_array_new_with_free_func((GDestroyNotify)fwupd_device_guid_helper_new);
@@ -3578,6 +3637,9 @@ fwupd_device_get_property(GObject *object, guint prop_id, GValue *value, GParamS
 	case PROP_STATUS:
 		g_value_set_uint(value, priv->status);
 		break;
+	case PROP_PERCENTAGE:
+		g_value_set_uint(value, priv->percentage);
+		break;
 	case PROP_PARENT:
 		g_value_set_object(value, priv->parent);
 		break;
@@ -3624,6 +3686,9 @@ fwupd_device_set_property(GObject *object, guint prop_id, const GValue *value, G
 		break;
 	case PROP_STATUS:
 		fwupd_device_set_status(self, g_value_get_uint(value));
+		break;
+	case PROP_PERCENTAGE:
+		fwupd_device_set_percentage(self, g_value_get_uint(value));
 		break;
 	case PROP_PARENT:
 		fwupd_device_set_parent(self, g_value_get_object(value));
@@ -3731,6 +3796,22 @@ fwupd_device_class_init(FwupdDeviceClass *klass)
 				  FWUPD_STATUS_UNKNOWN,
 				  G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_STATUS, pspec);
+
+	/**
+	 * FwupdDevice:percentage:
+	 *
+	 * The current device percentage.
+	 *
+	 * Since: 1.8.11
+	 */
+	pspec = g_param_spec_uint("percentage",
+				  NULL,
+				  NULL,
+				  0,
+				  100,
+				  0,
+				  G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
+	g_object_class_install_property(object_class, PROP_PERCENTAGE, pspec);
 
 	/**
 	 * FwupdDevice:parent:

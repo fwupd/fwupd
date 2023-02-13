@@ -45,6 +45,7 @@
 #include "fu-debug.h"
 #include "fu-device-list.h"
 #include "fu-device-private.h"
+#include "fu-device-progress.h"
 #include "fu-engine-helper.h"
 #include "fu-engine-request.h"
 #include "fu-engine.h"
@@ -1241,6 +1242,7 @@ fu_engine_verify_update(FuEngine *self,
 	g_autoptr(XbBuilderNode) release = NULL;
 	g_autoptr(XbBuilderNode) releases = NULL;
 	g_autoptr(XbSilo) silo = NULL;
+	g_autoptr(FuDeviceProgress) device_progress = NULL;
 
 	g_return_val_if_fail(FU_IS_ENGINE(self), FALSE);
 	g_return_val_if_fail(device_id != NULL, FALSE);
@@ -1250,6 +1252,7 @@ fu_engine_verify_update(FuEngine *self,
 	device = fu_device_list_get_by_id(self->device_list, device_id, error);
 	if (device == NULL)
 		return FALSE;
+	device_progress = fu_device_progress_new(device, progress);
 
 	/* get the plugin */
 	plugin =
@@ -3910,6 +3913,7 @@ fu_engine_install_blob(FuEngine *self,
 	guint retries = 0;
 	g_autofree gchar *device_id = NULL;
 	g_autoptr(GTimer) timer = g_timer_new();
+	g_autoptr(FuDeviceProgress) device_progress = fu_device_progress_new(device, progress);
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);

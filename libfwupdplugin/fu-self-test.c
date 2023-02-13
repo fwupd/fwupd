@@ -21,6 +21,7 @@
 #include "fu-context-private.h"
 #include "fu-coswid-firmware.h"
 #include "fu-device-private.h"
+#include "fu-device-progress.h"
 #include "fu-plugin-private.h"
 #include "fu-security-attrs-private.h"
 #include "fu-smbios-private.h"
@@ -929,6 +930,32 @@ fu_plugin_quirks_append_cb(FuQuirks *quirks,
 		return;
 	}
 	g_assert_not_reached();
+}
+
+static void
+fu_plugin_device_progress_func(void)
+{
+	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuDevice) device = fu_device_new(ctx);
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(FuDeviceProgress) device_progress = fu_device_progress_new(device, progress);
+
+	/* proxy */
+	fu_progress_set_percentage(progress, 50);
+	fu_progress_set_status(progress, FWUPD_STATUS_SHUTDOWN);
+	g_assert_cmpint(fu_device_get_percentage(device), ==, 50);
+	g_assert_cmpint(fu_device_get_status(device), ==, FWUPD_STATUS_SHUTDOWN);
+
+	/* clear */
+	g_clear_object(&device_progress);
+	g_assert_cmpint(fu_device_get_percentage(device), ==, 0);
+	g_assert_cmpint(fu_device_get_status(device), ==, FWUPD_STATUS_IDLE);
+
+	/* do not proxy */
+	fu_progress_set_percentage(progress, 100);
+	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_BUSY);
+	g_assert_cmpint(fu_device_get_percentage(device), ==, 0);
+	g_assert_cmpint(fu_device_get_status(device), ==, FWUPD_STATUS_IDLE);
 }
 
 static void
@@ -3858,5 +3885,6 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/device{retry-failed}", fu_device_retry_failed_func);
 	g_test_add_func("/fwupd/device{retry-hardware}", fu_device_retry_hardware_func);
 	g_test_add_func("/fwupd/device{cfi-device}", fu_device_cfi_device_func);
+	g_test_add_func("/fwupd/device{progress}", fu_plugin_device_progress_func);
 	return g_test_run();
 }
