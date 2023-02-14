@@ -1998,6 +1998,8 @@ fu_util_export_hwids(FuUtilPrivate *priv, gchar **values, GError **error)
 	for (guint i = 0; i < hwid_keys->len; i++) {
 		const gchar *hwid_key = g_ptr_array_index(hwid_keys, i);
 		const gchar *value = fu_hwids_get_value(hwids, hwid_key);
+		if (value == NULL)
+			continue;
 		g_key_file_set_string(kf, "HwIds", hwid_key, value);
 	}
 
