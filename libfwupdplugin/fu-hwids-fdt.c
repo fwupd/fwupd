@@ -73,12 +73,14 @@ fu_hwids_fdt_setup(FuContext *ctx, FuHwids *self, GError **error)
 	}
 
 	/* fallback */
-	if (g_strv_length(compatible) > 0)
-		fu_hwids_add_value(self, FU_HWIDS_KEY_MANUFACTURER, compatible[0]);
+	if (g_strv_length(compatible) > 0) {
+		g_auto(GStrv) compatible0 = g_strsplit(compatible[0], ",", -1);
+		fu_hwids_add_value(self, FU_HWIDS_KEY_MANUFACTURER, compatible0[0]);
+		if (g_strv_length(compatible0) > 1)
+			fu_hwids_add_value(self, FU_HWIDS_KEY_PRODUCT_NAME, compatible0[1]);
+	}
 	if (g_strv_length(compatible) > 1)
-		fu_hwids_add_value(self, FU_HWIDS_KEY_PRODUCT_NAME, compatible[1]);
-	if (g_strv_length(compatible) > 2)
-		fu_hwids_add_value(self, FU_HWIDS_KEY_FAMILY, compatible[2]);
+		fu_hwids_add_value(self, FU_HWIDS_KEY_FAMILY, compatible[1]);
 	if (fu_context_get_chassis_kind(ctx) == FU_SMBIOS_CHASSIS_KIND_UNKNOWN) {
 		if (fu_fdt_image_get_attr_str(FU_FDT_IMAGE(fdt_img), "battery", NULL, NULL))
 			fu_context_set_chassis_kind(ctx, FU_SMBIOS_CHASSIS_KIND_PORTABLE);
