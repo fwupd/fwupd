@@ -1,0 +1,17 @@
+{
+  "name": "HP 910 White BT Mouse",
+  "interactive": false,
+  "steps": [
+    {
+      "url": "https://fwupd.org/downloads/85bf9dca11caefcdc58112e2f0487a8596971e3a078d01ead7547ab792d51378-hp-910-white-bt-mouse-2.2.0.cab",
+      "components": [
+        {
+          "version": "2.2.0",
+          "guids": [
+            "3d9c8d7e-6b08-5e16-92bc-bd34ec06174b"
+          ]
+        }
+      ]
+    }
+  ]
+}

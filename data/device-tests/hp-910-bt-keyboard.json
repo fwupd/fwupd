@@ -1,0 +1,17 @@
+{
+  "name": "HP 910 White BT Keyboard (US)",
+  "interactive": false,
+  "steps": [
+    {
+      "url": "https://fwupd.org/downloads/57a202956b7dedef59e5a396d3593237f0789730426571d2f53df2747ccef860-HP-910-white-bt-keyboard-us-2.2.3.cab",
+      "components": [
+        {
+          "version": "2.2.3",
+          "guids": [
+            "7300b3c6-d58f-5527-815d-be4c72753e67"
+          ]
+        }
+      ]
+    }
+  ]
+}
