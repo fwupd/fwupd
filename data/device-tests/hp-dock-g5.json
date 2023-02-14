@@ -4,6 +4,7 @@
   "steps": [
     {
       "url": "https://fwupd.org/downloads/eb866447bb755c00e748cce14918dcbfaec0ec123237daefce5876c769c2bf92-HP-USBC_DOCK_G5-V1.0.11.0.cab",
+      "emulation-url": "https://fwupd.org/downloads/1cd36afb2da2ec2c43c346076d494180ee8f8f236671985cccd3b82601349bc7-HP-USBC_DOCK_G5-V1.0.11.0.zip",
       "components": [
         {
           "version": "1.0.11.0",
@@ -15,6 +16,7 @@
     },
     {
       "url": "https://fwupd.org/downloads/c15a0df7386812781d1f376fe54729e64f69b2a8a6c4b580914d4f6740e4fcc3-HP-USBC_DOCK_G5-V1.0.13.0.cab",
+      "emulation-url": "https://fwupd.org/downloads/5d35b4edc89fd01b7e6f7e7101cbf076fe4f712bdd817540351573c9fcafe01a-HP-USBC_DOCK_G5-V1.0.13.0.zip",
       "components": [
         {
           "version": "1.0.13.0",
