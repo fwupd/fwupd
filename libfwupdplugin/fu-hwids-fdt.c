@@ -47,6 +47,8 @@ fu_hwids_fdt_setup(FuContext *ctx, FuHwids *self, GError **error)
 	for (guint i = 0; map[i].key != NULL; i++) {
 		g_autofree gchar *tmp = NULL;
 		fu_fdt_image_get_attr_str(FU_FDT_IMAGE(fdt_img), map[i].key, &tmp, NULL);
+		if (tmp == NULL)
+			continue;
 		fu_hwids_add_value(self, map[i].hwid, tmp);
 	}
 
