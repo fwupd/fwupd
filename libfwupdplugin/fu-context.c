@@ -821,7 +821,7 @@ fu_context_load_hwinfo(FuContext *self,
 				g_debug("failed to load %s: %s",
 					hwids_setup_map[i].name,
 					error_local->message);
-				break;
+				continue;
 			}
 		}
 	}
