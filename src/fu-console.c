@@ -671,7 +671,7 @@ fu_console_set_progress(FuConsole *self, FwupdStatus status, guint percentage)
 	self->percentage = percentage;
 
 	/* dumb */
-	if (!self->interactive) {
+	if (!self->interactive && percentage != 0 && status != FWUPD_STATUS_IDLE) {
 		g_printerr("%s: %u%%\n", fu_console_status_to_string(status), percentage);
 		return;
 	}
