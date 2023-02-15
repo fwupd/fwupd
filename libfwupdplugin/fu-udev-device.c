@@ -463,6 +463,20 @@ fu_udev_device_probe(FuDevice *device, GError **error)
 		}
 	}
 
+	/* if the device is a GPU try to fetch it from vbios_version */
+	if (g_strcmp0(priv->subsystem, "pci") == 0 &&
+	    fu_udev_device_is_pci_base_cls(FU_UDEV_DEVICE(device), FU_PCI_BASE_CLS_DISPLAY) &&
+	    fu_device_get_version(device) == NULL) {
+		const gchar *version;
+
+		version = g_udev_device_get_sysfs_attr(priv->udev_device, "vbios_version");
+		if (version != NULL) {
+			fu_device_set_version(device, version);
+			fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_PLAIN);
+			fu_device_add_icon(FU_DEVICE(self), "video-display");
+		}
+	}
+
 	/* set the version if the revision has been set */
 	if (fu_device_get_version(device) == NULL &&
 	    fu_device_get_version_format(device) == FWUPD_VERSION_FORMAT_UNKNOWN) {
@@ -997,6 +1011,43 @@ fu_udev_device_get_number(FuUdevDevice *self)
 	}
 #endif
 	return G_MAXUINT64;
+}
+
+/**
+ * fu_udev_device_is_pci_base_cls:
+ * @self: a #FuUdevDevice
+ * @cls: #FuPciBaseCls type
+ *
+ * Determines whether the device matches a given pci base class type
+ *
+ * Since: 1.8.11
+ **/
+gboolean
+fu_udev_device_is_pci_base_cls(FuUdevDevice *self, FuPciBaseCls cls)
+{
+	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_UDEV_DEVICE(self), FALSE);
+	return (priv->class >> 16) == cls;
+}
+
+/**
+ * fu_udev_device_get_cls:
+ * @self: a #FuUdevDevice
+ *
+ * Gets the PCI class for a device.
+ *
+ * The class consists of a base class and subclass.
+ *
+ * Returns: a PCI class
+ *
+ * Since: 1.8.11
+ **/
+guint32
+fu_udev_device_get_cls(FuUdevDevice *self)
+{
+	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_UDEV_DEVICE(self), 0x0000);
+	return priv->class;
 }
 
 /**
