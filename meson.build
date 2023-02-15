@@ -590,25 +590,25 @@ if build_standalone
   ]
   subdir('plugins')
   subdir('src')
-endif
-subdir('docs')
+  subdir('docs')
 
-# append all the quirks into one big file and gzip it -- lzma is smaller, but needs libxmlb 0.3.3
-builtin_quirk = custom_target('builtin-quirk',
-  input: plugin_quirks,
-  output: 'builtin.quirk',
-  capture: true,
-  command: ['cat', '@INPUT@'],
-)
-gzip = find_program('gzip')
-custom_target('builtin-quirk-gz',
-  input: builtin_quirk,
-  output: 'builtin.quirk.gz',
-  capture: true,
-  command: [gzip, '-n', '-k', '--stdout', '@INPUT@'],
-  install: true,
-  install_dir: join_paths(datadir, 'fwupd', 'quirks.d'),
-)
+  # append all the quirks into one big file and gzip it -- lzma is smaller, but needs libxmlb 0.3.3
+  builtin_quirk = custom_target('builtin-quirk',
+    input: plugin_quirks,
+    output: 'builtin.quirk',
+    capture: true,
+    command: ['cat', '@INPUT@'],
+  )
+  gzip = find_program('gzip')
+  custom_target('builtin-quirk-gz',
+    input: builtin_quirk,
+    output: 'builtin.quirk.gz',
+    capture: true,
+    command: [gzip, '-n', '-k', '--stdout', '@INPUT@'],
+    install: true,
+    install_dir: join_paths(datadir, 'fwupd', 'quirks.d'),
+  )
+endif
 
 if build_daemon and libsystemd.found() and offline.allowed()
   install_symlink('fwupd-offline-update.service',
