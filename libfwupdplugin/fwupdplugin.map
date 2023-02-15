@@ -1168,5 +1168,7 @@ LIBFWUPDPLUGIN_1.8.11 {
     fu_device_sleep;
     fu_device_sleep_full;
     fu_strdup;
+    fu_udev_device_get_cls;
+    fu_udev_device_is_pci_base_cls;
   local: *;
 } LIBFWUPDPLUGIN_1.8.10;
