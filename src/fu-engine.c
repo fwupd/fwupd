@@ -449,7 +449,8 @@ fu_engine_ensure_device_battery_inhibit(FuEngine *self, FuDevice *device)
 	} else {
 		fu_device_remove_problem(device, FWUPD_DEVICE_PROBLEM_REQUIRE_AC_POWER);
 	}
-	if (fu_context_get_battery_level(self->ctx) != FWUPD_BATTERY_LEVEL_INVALID &&
+	if (!fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_IGNORE_SYSTEM_POWER) &&
+	    fu_context_get_battery_level(self->ctx) != FWUPD_BATTERY_LEVEL_INVALID &&
 	    fu_context_get_battery_threshold(self->ctx) != FWUPD_BATTERY_LEVEL_INVALID &&
 	    fu_context_get_battery_level(self->ctx) < fu_context_get_battery_threshold(self->ctx)) {
 		fu_device_add_problem(device, FWUPD_DEVICE_PROBLEM_SYSTEM_POWER_TOO_LOW);
@@ -3485,7 +3486,8 @@ fu_engine_device_check_power(FuEngine *self,
 	}
 
 	/* not enough just in case */
-	if (fu_context_get_battery_level(self->ctx) != FWUPD_BATTERY_LEVEL_INVALID &&
+	if (!fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_IGNORE_SYSTEM_POWER) &&
+	    fu_context_get_battery_level(self->ctx) != FWUPD_BATTERY_LEVEL_INVALID &&
 	    fu_context_get_battery_threshold(self->ctx) != FWUPD_BATTERY_LEVEL_INVALID &&
 	    fu_context_get_battery_level(self->ctx) < fu_context_get_battery_threshold(self->ctx)) {
 		g_set_error(error,

@@ -470,6 +470,16 @@ typedef guint64 FuDeviceInternalFlags;
  */
 #define FU_DEVICE_INTERNAL_FLAG_ONLY_WAIT_FOR_REPLUG (1ull << 25)
 
+/**
+ * FU_DEVICE_INTERNAL_FLAG_IGNORE_SYSTEM_POWER:
+ *
+ * Allow updating firmware when the system power is otherwise too low.
+ * This is only really useful when updating the system battery firmware.
+ *
+ * Since: 1.8.11
+ */
+#define FU_DEVICE_INTERNAL_FLAG_IGNORE_SYSTEM_POWER (1ull << 26)
+
 /* accessors */
 gchar *
 fu_device_to_string(FuDevice *self);
