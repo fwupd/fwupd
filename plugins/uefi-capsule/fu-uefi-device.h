@@ -134,3 +134,5 @@ GBytes *
 fu_uefi_device_fixup_firmware(FuUefiDevice *self, GBytes *fw, GError **error);
 void
 fu_uefi_device_set_status(FuUefiDevice *self, FuUefiDeviceStatus status);
+void
+fu_uefi_device_set_require_esp_free_space(FuUefiDevice *self, gsize require_esp_free_space);
