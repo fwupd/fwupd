@@ -37,7 +37,7 @@ gboolean
 fu_console_setup(FuConsole *self, GError **error);
 
 guint
-fu_console_input_uint(FuConsole *self, guint maxnum);
+fu_console_input_uint(FuConsole *self, guint maxnum, const gchar *format, ...) G_GNUC_PRINTF(3, 4);
 gboolean
 fu_console_input_bool(FuConsole *self, gboolean def, const gchar *format, ...) G_GNUC_PRINTF(3, 4);
 

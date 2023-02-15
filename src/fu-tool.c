@@ -543,8 +543,6 @@ fu_util_prompt_for_device(FuUtilPrivate *priv, GPtrArray *devices_opt, GError **
 		return NULL;
 	}
 
-	/* TRANSLATORS: get interactive prompt */
-	fu_console_print_literal(priv->console, _("Choose a device:"));
 	/* TRANSLATORS: this is to abort the interactive prompt */
 	fu_console_print(priv->console, "0.\t%s", _("Cancel"));
 	for (guint i = 0; i < devices_filtered->len; i++) {
@@ -555,7 +553,9 @@ fu_util_prompt_for_device(FuUtilPrivate *priv, GPtrArray *devices_opt, GError **
 				 fu_device_get_id(dev),
 				 fu_device_get_name(dev));
 	}
-	idx = fu_console_input_uint(priv->console, devices_filtered->len);
+
+	/* TRANSLATORS: get interactive prompt */
+	idx = fu_console_input_uint(priv->console, devices_filtered->len, "%s", _("Choose device"));
 	if (idx == 0) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -2212,15 +2212,14 @@ fu_util_prompt_for_firmware_type(FuUtilPrivate *priv, GError **error)
 	guint idx;
 	firmware_types = fu_context_get_firmware_gtype_ids(fu_engine_get_context(priv->engine));
 
-	/* TRANSLATORS: get interactive prompt */
-	fu_console_print_literal(priv->console, _("Choose a firmware type:"));
 	/* TRANSLATORS: this is to abort the interactive prompt */
 	fu_console_print(priv->console, "0.\t%s", _("Cancel"));
 	for (guint i = 0; i < firmware_types->len; i++) {
 		const gchar *id = g_ptr_array_index(firmware_types, i);
 		fu_console_print(priv->console, "%u.\t%s", i + 1, id);
 	}
-	idx = fu_console_input_uint(priv->console, firmware_types->len);
+	/* TRANSLATORS: get interactive prompt */
+	idx = fu_console_input_uint(priv->console, firmware_types->len, "%s", _("Choose firmware"));
 	if (idx == 0) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -3122,15 +3121,14 @@ fu_util_prompt_for_volume(FuUtilPrivate *priv, GError **error)
 		return g_object_ref(volume);
 	}
 
-	/* TRANSLATORS: get interactive prompt */
-	fu_console_print_literal(priv->console, _("Choose a volume:"));
 	/* TRANSLATORS: this is to abort the interactive prompt */
 	fu_console_print(priv->console, "0.\t%s", _("Cancel"));
 	for (guint i = 0; i < volumes->len; i++) {
 		volume = g_ptr_array_index(volumes, i);
 		fu_console_print(priv->console, "%u.\t%s", i + 1, fu_volume_get_id(volume));
 	}
-	idx = fu_console_input_uint(priv->console, volumes->len);
+	/* TRANSLATORS: get interactive prompt */
+	idx = fu_console_input_uint(priv->console, volumes->len, "%s", _("Choose volume"));
 	if (idx == 0) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -3251,9 +3249,6 @@ fu_util_switch_branch(FuUtilPrivate *priv, gchar **values, GError **error)
 	} else {
 		guint idx;
 
-		/* TRANSLATORS: get interactive prompt, where branch is the
-		 * supplier of the firmware, e.g. "non-free" or "free" */
-		fu_console_print_literal(priv->console, _("Choose a branch:"));
 		/* TRANSLATORS: this is to abort the interactive prompt */
 		fu_console_print(priv->console, "0.\t%s", _("Cancel"));
 		for (guint i = 0; i < branches->len; i++) {
@@ -3263,7 +3258,9 @@ fu_util_switch_branch(FuUtilPrivate *priv, gchar **values, GError **error)
 					 i + 1,
 					 fu_util_branch_for_display(branch_tmp));
 		}
-		idx = fu_console_input_uint(priv->console, branches->len);
+		/* TRANSLATORS: get interactive prompt, where branch is the
+		 * supplier of the firmware, e.g. "non-free" or "free" */
+		idx = fu_console_input_uint(priv->console, branches->len, "%s", _("Choose branch"));
 		if (idx == 0) {
 			g_set_error_literal(error,
 					    FWUPD_ERROR,

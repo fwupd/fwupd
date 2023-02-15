@@ -231,8 +231,6 @@ fu_util_prompt_for_device(FuUtilPrivate *priv, GPtrArray *devices, GError **erro
 		return NULL;
 	}
 
-	/* TRANSLATORS: get interactive prompt */
-	fu_console_print_literal(priv->console, _("Choose a device:"));
 	/* TRANSLATORS: this is to abort the interactive prompt */
 	fu_console_print(priv->console, "0.\t%s", _("Cancel"));
 	for (guint i = 0; i < devices_filtered->len; i++) {
@@ -243,7 +241,8 @@ fu_util_prompt_for_device(FuUtilPrivate *priv, GPtrArray *devices, GError **erro
 				 fwupd_device_get_id(dev),
 				 fwupd_device_get_name(dev));
 	}
-	idx = fu_console_input_uint(priv->console, devices_filtered->len);
+	/* TRANSLATORS: get interactive prompt */
+	idx = fu_console_input_uint(priv->console, devices_filtered->len, "%s", _("Choose device"));
 	if (idx == 0) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -1964,8 +1963,6 @@ fu_util_prompt_for_release(FuUtilPrivate *priv, GPtrArray *rels, GError **error)
 		return g_object_ref(rel);
 	}
 
-	/* TRANSLATORS: get interactive prompt */
-	fu_console_print_literal(priv->console, _("Choose a release:"));
 	/* TRANSLATORS: this is to abort the interactive prompt */
 	fu_console_print(priv->console, "0.\t%s", _("Cancel"));
 	for (guint i = 0; i < rels->len; i++) {
@@ -1975,7 +1972,8 @@ fu_util_prompt_for_release(FuUtilPrivate *priv, GPtrArray *rels, GError **error)
 				 i + 1,
 				 fwupd_release_get_version(rel_tmp));
 	}
-	idx = fu_console_input_uint(priv->console, rels->len);
+	/* TRANSLATORS: get interactive prompt */
+	idx = fu_console_input_uint(priv->console, rels->len, "%s", _("Choose release"));
 	if (idx == 0) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -2953,9 +2951,6 @@ fu_util_switch_branch(FuUtilPrivate *priv, gchar **values, GError **error)
 	} else {
 		guint idx;
 
-		/* TRANSLATORS: get interactive prompt, where branch is the
-		 * supplier of the firmware, e.g. "non-free" or "free" */
-		fu_console_print_literal(priv->console, _("Choose a branch:"));
 		/* TRANSLATORS: this is to abort the interactive prompt */
 		fu_console_print(priv->console, "0.\t%s", _("Cancel"));
 		for (guint i = 0; i < branches->len; i++) {
@@ -2965,7 +2960,9 @@ fu_util_switch_branch(FuUtilPrivate *priv, gchar **values, GError **error)
 					 i + 1,
 					 fu_util_branch_for_display(branch_tmp));
 		}
-		idx = fu_console_input_uint(priv->console, branches->len);
+		/* TRANSLATORS: get interactive prompt, where branch is the
+		 * supplier of the firmware, e.g. "non-free" or "free" */
+		idx = fu_console_input_uint(priv->console, branches->len, "%s", _("Choose branch"));
 		if (idx == 0) {
 			g_set_error_literal(error,
 					    FWUPD_ERROR,
