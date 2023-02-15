@@ -30,6 +30,10 @@ Flags = no-coalesce
 [90706264-e399-575b-a9fb-077ead03b9b4]
 Flags = no-coalesce
 
+# Lenovo T14 Gen 2 Battery
+[f7576b01-100e-4ec1-96cf-ccb69f4ce87e]
+Flags = ignore-system-power
+
 # Dynabook (né Toshiba) X30, X40
 [28108d08-5027-42c2-a5b8-92d6ede9b97b]
 VersionFormat = bcd
