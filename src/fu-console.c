@@ -138,11 +138,18 @@ fu_console_print_kv(FuConsole *self, const gchar *title, const gchar *msg)
 }
 
 guint
-fu_console_input_uint(FuConsole *self, guint maxnum)
+fu_console_input_uint(FuConsole *self, guint maxnum, const gchar *format, ...)
 {
 	gint retval;
 	guint answer = 0;
+	va_list args;
+	g_autofree gchar *tmp = NULL;
 
+	va_start(args, format);
+	tmp = g_strdup_vprintf(format, args);
+	va_end(args);
+
+	fu_console_print_full(self, FU_CONSOLE_PRINT_FLAG_NONE, "%s [0-%u]: ", tmp, maxnum);
 	do {
 		char buffer[64];
 
