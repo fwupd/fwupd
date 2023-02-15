@@ -16,7 +16,16 @@ if [ "$QUBES" = "true" ]; then
     QUBES_MACRO=(--define "qubes_packages 1")
 fi
 
+# smoke test something small with no auto-deps
 meson setup .. \
+    -Dbuild=library \
+    -Dauto_features=disabled \
+    -Dtests=false
+ninja-build
+rm -rf *
+
+# do the full-fat build
+meson setup \
     -Ddocs=disabled \
     -Dman=true \
     -Dtests=true \
