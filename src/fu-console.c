@@ -173,15 +173,16 @@ fu_console_input_bool(FuConsole *self, gboolean def, const gchar *format, ...)
 {
 	va_list args;
 	g_autofree gchar *tmp = NULL;
-	g_autoptr(GString) str = g_string_new(NULL);
 
 	va_start(args, format);
 	tmp = g_strdup_vprintf(format, args);
 	va_end(args);
 
-	g_string_append_printf(str, "%s [%s]: ", tmp, def ? "Y|n" : "y|N");
-	fu_console_print_literal(self, str->str);
-
+	fu_console_print_full(self,
+			      FU_CONSOLE_PRINT_FLAG_NONE,
+			      "%s [%s]: ",
+			      tmp,
+			      def ? "Y|n" : "y|N");
 	do {
 		char buffer[4];
 		if (!fgets(buffer, sizeof(buffer), stdin))
