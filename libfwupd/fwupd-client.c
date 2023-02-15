@@ -5134,6 +5134,7 @@ fwupd_client_download_http(FwupdClient *self, CURL *curl, const gchar *url, GErr
 	(void)curl_easy_setopt(curl, CURLOPT_WRITEDATA, buf);
 	res = curl_easy_perform(curl);
 	fwupd_client_set_status(self, FWUPD_STATUS_IDLE);
+	fwupd_client_set_percentage(self, 100);
 	if (res != CURLE_OK) {
 		if (errbuf[0] != '\0') {
 			g_set_error(error,
