@@ -119,8 +119,8 @@ fu_usb_device_init(FuUsbDevice *device)
 static void
 fu_usb_device_constructed(GObject *obj)
 {
-	FuUsbDevice *self = FU_USB_DEVICE(obj);
 #if G_USB_CHECK_VERSION(0, 4, 5)
+	FuUsbDevice *self = FU_USB_DEVICE(obj);
 	/* copy this to the GUsbDevice */
 	g_signal_connect(FU_DEVICE(self),
 			 "notify::flags",
