@@ -19,6 +19,7 @@ plugins = [
   'acpi-ivrs',
   'acpi-phat',
   'amd-pmc',
+  'amd-gpu',
   'analogix',
   'android-boot',
   'ata',
