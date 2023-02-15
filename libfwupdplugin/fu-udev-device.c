@@ -36,6 +36,7 @@
 
 typedef struct {
 	GUdevDevice *udev_device;
+	guint32 class;
 	guint16 vendor;
 	guint16 model;
 	guint16 subsystem_vendor;
@@ -178,6 +179,8 @@ fu_udev_device_to_string(FuDevice *device, guint idt, GString *str)
 		fu_string_append_kx(str, idt, "SubsystemVendor", priv->subsystem_vendor);
 		fu_string_append_kx(str, idt, "SubsystemModel", priv->subsystem_model);
 	}
+	if (priv->class != 0x0)
+		fu_string_append_kx(str, idt, "Class", priv->class);
 	if (priv->revision != 0x0)
 		fu_string_append_kx(str, idt, "Revision", priv->revision);
 	if (priv->subsystem != NULL)
@@ -373,6 +376,7 @@ fu_udev_device_set_vendor_from_udev_device(FuUdevDevice *self, GUdevDevice *udev
 	priv->vendor = fu_udev_device_get_sysfs_attr_as_uint16(udev_device, "vendor");
 	priv->model = fu_udev_device_get_sysfs_attr_as_uint16(udev_device, "device");
 	priv->revision = fu_udev_device_get_sysfs_attr_as_uint8(udev_device, "revision");
+	priv->class = fu_udev_device_get_sysfs_attr_as_uint32(udev_device, "class");
 	priv->subsystem_vendor =
 	    fu_udev_device_get_sysfs_attr_as_uint16(udev_device, "subsystem_vendor");
 	priv->subsystem_model =
