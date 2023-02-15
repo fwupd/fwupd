@@ -61,9 +61,6 @@ typedef struct __attribute__((__packed__)) {
 	guint32 status;
 } efi_update_info_t;
 
-/* the biggest size SPI part currently seen */
-#define FU_UEFI_COMMON_REQUIRED_ESP_FREE_SPACE (32 * 1024 * 1024)
-
 gchar *
 fu_uefi_get_fallback_app_path(FuDevice *device,
 			      const gchar *esp_path,

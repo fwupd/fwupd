@@ -437,7 +437,7 @@ fu_uefi_capsule_plugin_load_config(FuPlugin *plugin, FuDevice *device)
 {
 	gboolean disable_shim;
 	gboolean fallback_removable_path;
-	guint64 sz_reqd = FU_UEFI_COMMON_REQUIRED_ESP_FREE_SPACE;
+	guint64 sz_reqd = 0;
 	g_autofree gchar *require_esp_free_space = NULL;
 	g_autoptr(GError) error_local = NULL;
 
@@ -448,7 +448,7 @@ fu_uefi_capsule_plugin_load_config(FuPlugin *plugin, FuDevice *device)
 			g_warning("invalid ESP free space specified: %s", error_local->message);
 		}
 	}
-	fu_device_set_metadata_integer(device, "RequireESPFreeSpace", sz_reqd);
+	fu_uefi_device_set_require_esp_free_space(FU_UEFI_DEVICE(device), sz_reqd);
 
 	/* shim used for SB or not? */
 	disable_shim = fu_plugin_get_config_value_boolean(plugin, "DisableShimForSecureBoot");

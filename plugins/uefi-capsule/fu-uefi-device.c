@@ -30,6 +30,7 @@ typedef struct {
 	guint64 fmp_hardware_instance;
 	gboolean missing_header;
 	gboolean automounted_esp;
+	gsize require_esp_free_space;
 } FuUefiDevicePrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE(FuUefiDevice, fu_uefi_device, FU_TYPE_DEVICE)
@@ -134,10 +135,7 @@ fu_uefi_device_to_string(FuDevice *device, guint idt, GString *str)
 	if (priv->esp != NULL) {
 		fu_string_append(str, idt, "EspId", fu_volume_get_id(priv->esp));
 	}
-	fu_string_append_ku(str,
-			    idt,
-			    "RequireESPFreeSpace",
-			    fu_device_get_metadata_integer(device, "RequireESPFreeSpace"));
+	fu_string_append_ku(str, idt, "RequireESPFreeSpace", priv->require_esp_free_space);
 }
 
 static void
@@ -252,6 +250,14 @@ fu_uefi_device_set_status(FuUefiDevice *self, FuUefiDeviceStatus status)
 		err_msg = g_strdup_printf("failed to update to %s: %s", version_str, tmp);
 	}
 	fu_device_set_update_error(FU_DEVICE(self), err_msg);
+}
+
+void
+fu_uefi_device_set_require_esp_free_space(FuUefiDevice *self, gsize require_esp_free_space)
+{
+	FuUefiDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_UEFI_DEVICE(self));
+	priv->require_esp_free_space = require_esp_free_space;
 }
 
 guint32
@@ -496,19 +502,6 @@ fu_uefi_device_write_update_info(FuUefiDevice *self,
 }
 
 static gboolean
-fu_uefi_device_check_esp_free(FuDevice *device, GError **error)
-{
-	FuUefiDevice *self = FU_UEFI_DEVICE(device);
-	FuUefiDevicePrivate *priv = GET_PRIVATE(self);
-	guint64 sz_reqd = fu_device_get_metadata_integer(device, "RequireESPFreeSpace");
-	if (sz_reqd == G_MAXUINT) {
-		g_debug("maximum size is not configured");
-		return TRUE;
-	}
-	return fu_volume_check_free_space(priv->esp, sz_reqd, error);
-}
-
-static gboolean
 fu_uefi_check_asset(FuDevice *device, GError **error)
 {
 	g_autofree gchar *source_app = fu_uefi_get_built_app_path(error);
@@ -572,8 +565,6 @@ fu_uefi_device_prepare(FuDevice *device,
 
 	/* sanity checks */
 	if (!fu_uefi_device_cleanup_esp(device, error))
-		return FALSE;
-	if (!fu_uefi_device_check_esp_free(device, error))
 		return FALSE;
 	if (!fu_uefi_check_asset(device, error))
 		return FALSE;
@@ -675,6 +666,29 @@ fu_uefi_device_get_esp_path(FuUefiDevice *self)
 {
 	FuUefiDevicePrivate *priv = GET_PRIVATE(self);
 	return fu_volume_get_mount_point(priv->esp);
+}
+
+static FuFirmware *
+fu_uefi_device_prepare_firmware(FuDevice *device,
+				GBytes *fw,
+				FwupdInstallFlags flags,
+				GError **error)
+{
+	FuUefiDevice *self = FU_UEFI_DEVICE(device);
+	FuUefiDevicePrivate *priv = GET_PRIVATE(self);
+	gsize sz_reqd = priv->require_esp_free_space;
+
+	/* check there is enough space in the ESP */
+	if (sz_reqd == 0) {
+		g_debug("required ESP free space is not configured, using 2 x %uMB + 20MB",
+			(guint)g_bytes_get_size(fw) / (1024 * 1024));
+		sz_reqd = g_bytes_get_size(fw) * 2 + (20u * 1024 * 1024);
+	}
+	if (!fu_volume_check_free_space(priv->esp, sz_reqd, error))
+		return NULL;
+
+	/* success */
+	return fu_firmware_new_from_bytes(fw);
 }
 
 static void
@@ -781,6 +795,7 @@ fu_uefi_device_class_init(FuUefiDeviceClass *klass)
 	object_class->finalize = fu_uefi_device_finalize;
 	klass_device->to_string = fu_uefi_device_to_string;
 	klass_device->probe = fu_uefi_device_probe;
+	klass_device->prepare_firmware = fu_uefi_device_prepare_firmware;
 	klass_device->prepare = fu_uefi_device_prepare;
 	klass_device->cleanup = fu_uefi_device_cleanup;
 	klass_device->report_metadata_pre = fu_uefi_device_report_metadata_pre;
