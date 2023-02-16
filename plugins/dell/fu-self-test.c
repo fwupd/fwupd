@@ -276,6 +276,7 @@ fu_dell_plugin_dock_func(gconstpointer user_data)
 	DOCK_INFO *dock_info;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(FuUsbDevice) fake_usb_device = NULL;
 	gulong added_id;
 	gulong register_id;
@@ -300,6 +301,7 @@ fu_dell_plugin_dock_func(gconstpointer user_data)
 					FALSE);
 	ret = fu_dell_plugin_backend_device_added(self->plugin_dell,
 						  FU_DEVICE(fake_usb_device),
+						  progress,
 						  &error);
 	g_assert_false(ret);
 	g_clear_error(&error);
@@ -316,6 +318,7 @@ fu_dell_plugin_dock_func(gconstpointer user_data)
 					FALSE);
 	ret = fu_dell_plugin_backend_device_added(self->plugin_dell,
 						  FU_DEVICE(fake_usb_device),
+						  progress,
 						  &error);
 	g_assert_true(ret);
 	g_clear_error(&error);
@@ -353,6 +356,7 @@ fu_dell_plugin_dock_func(gconstpointer user_data)
 					FALSE);
 	ret = fu_dell_plugin_backend_device_added(self->plugin_dell,
 						  FU_DEVICE(fake_usb_device),
+						  progress,
 						  NULL);
 	g_assert_true(ret);
 	g_assert_cmpint(devices->len, ==, 4);
@@ -391,6 +395,7 @@ fu_dell_plugin_dock_func(gconstpointer user_data)
 					FALSE);
 	ret = fu_dell_plugin_backend_device_added(self->plugin_dell,
 						  FU_DEVICE(fake_usb_device),
+						  progress,
 						  NULL);
 	g_assert_true(ret);
 	g_assert_cmpint(devices->len, ==, 3);
@@ -427,6 +432,7 @@ fu_dell_plugin_dock_func(gconstpointer user_data)
 					FALSE);
 	ret = fu_dell_plugin_backend_device_added(self->plugin_dell,
 						  FU_DEVICE(fake_usb_device),
+						  progress,
 						  &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -464,6 +470,7 @@ fu_dell_plugin_dock_func(gconstpointer user_data)
 					FALSE);
 	ret = fu_dell_plugin_backend_device_added(self->plugin_dell,
 						  FU_DEVICE(fake_usb_device),
+						  progress,
 						  &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -495,6 +502,7 @@ fu_dell_plugin_dock_func(gconstpointer user_data)
 					FALSE);
 	ret = fu_dell_plugin_backend_device_added(self->plugin_dell,
 						  FU_DEVICE(fake_usb_device),
+						  progress,
 						  &error);
 	g_assert_false(ret);
 	g_assert_cmpint(devices->len, ==, 0);

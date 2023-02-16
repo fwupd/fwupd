@@ -21,7 +21,10 @@ fu_dell_plugin_inject_fake_data(FuPlugin *plugin,
 gboolean
 fu_dell_plugin_detect_tpm(FuPlugin *plugin, GError **error);
 gboolean
-fu_dell_plugin_backend_device_added(FuPlugin *plugin, FuDevice *device, GError **error);
+fu_dell_plugin_backend_device_added(FuPlugin *plugin,
+				    FuDevice *device,
+				    FuProgress *progress,
+				    GError **error);
 
 /* These are nodes that will indicate information about
  * the TPM status

@@ -118,7 +118,10 @@ fu_dell_dock_plugin_get_ec(GPtrArray *devices)
 }
 
 static gboolean
-fu_dell_dock_plugin_backend_device_added(FuPlugin *plugin, FuDevice *device, GError **error)
+fu_dell_dock_plugin_backend_device_added(FuPlugin *plugin,
+					 FuDevice *device,
+					 FuProgress *progress,
+					 GError **error)
 {
 	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(FuDellDockHub) hub = NULL;

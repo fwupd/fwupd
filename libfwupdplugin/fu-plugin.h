@@ -186,13 +186,17 @@ struct _FuPluginClass {
 	 * backend_device_added
 	 * @self: a #FuPlugin
 	 * @device: a device
+	 * @progress: a #FuProgress
 	 * @error: (nullable): optional return location for an error
 	 *
 	 * Function to run after a device is added by a backend, e.g. by USB or Udev.
 	 *
 	 * Since: 1.7.2
 	 **/
-	gboolean (*backend_device_added)(FuPlugin *self, FuDevice *device, GError **error);
+	gboolean (*backend_device_added)(FuPlugin *self,
+					 FuDevice *device,
+					 FuProgress *progress,
+					 GError **error);
 	/**
 	 * backend_device_changed
 	 * @self: a #FuPlugin

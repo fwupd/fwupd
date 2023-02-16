@@ -499,7 +499,10 @@ fu_mm_plugin_attach(FuPlugin *plugin, FuDevice *device, FuProgress *progress, GE
 }
 
 static gboolean
-fu_mm_plugin_backend_device_added(FuPlugin *plugin, FuDevice *device, GError **error)
+fu_mm_plugin_backend_device_added(FuPlugin *plugin,
+				  FuDevice *device,
+				  FuProgress *progress,
+				  GError **error)
 {
 	FuDevice *device_tmp;
 	g_autoptr(GUdevDevice) udev_device = NULL;

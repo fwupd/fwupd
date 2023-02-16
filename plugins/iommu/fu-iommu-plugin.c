@@ -23,7 +23,10 @@ fu_iommu_plugin_to_string(FuPlugin *plugin, guint idt, GString *str)
 }
 
 static gboolean
-fu_iommu_plugin_backend_device_added(FuPlugin *plugin, FuDevice *device, GError **error)
+fu_iommu_plugin_backend_device_added(FuPlugin *plugin,
+				     FuDevice *device,
+				     FuProgress *progress,
+				     GError **error)
 {
 	FuIommuPlugin *self = FU_IOMMU_PLUGIN(plugin);
 
