@@ -156,7 +156,10 @@ fu_plugin_add_security_attr_smm_bwp(FuPlugin *plugin, FuSecurityAttrs *attrs)
 }
 
 static gboolean
-fu_pci_bcr_plugin_backend_device_added(FuPlugin *plugin, FuDevice *device, GError **error)
+fu_pci_bcr_plugin_backend_device_added(FuPlugin *plugin,
+				       FuDevice *device,
+				       FuProgress *progress,
+				       GError **error)
 {
 	FuPciBcrPlugin *self = FU_PCI_BCR_PLUGIN(plugin);
 	FuDevice *device_msf;

@@ -313,7 +313,10 @@ fu_plugin_dock_node(FuPlugin *plugin,
 }
 
 gboolean
-fu_dell_plugin_backend_device_added(FuPlugin *plugin, FuDevice *device, GError **error)
+fu_dell_plugin_backend_device_added(FuPlugin *plugin,
+				    FuDevice *device,
+				    FuProgress *progress,
+				    GError **error)
 {
 	FuDellPlugin *self = FU_DELL_PLUGIN(plugin);
 	FwupdVersionFormat version_format = FWUPD_VERSION_FORMAT_DELL_BIOS;

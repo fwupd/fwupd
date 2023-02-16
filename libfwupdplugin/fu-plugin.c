@@ -1668,7 +1668,7 @@ fu_plugin_runner_backend_device_added(FuPlugin *self,
 		return FALSE;
 	}
 	g_debug("backend_device_added(%s)", fu_plugin_get_name(self));
-	if (!vfuncs->backend_device_added(self, device, &error_local)) {
+	if (!vfuncs->backend_device_added(self, device, progress, &error_local)) {
 		if (error_local == NULL) {
 			g_critical("unset plugin error in backend_device_added(%s)",
 				   fu_plugin_get_name(self));

@@ -158,7 +158,10 @@ fu_msr_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 }
 
 static gboolean
-fu_msr_plugin_backend_device_added(FuPlugin *plugin, FuDevice *device, GError **error)
+fu_msr_plugin_backend_device_added(FuPlugin *plugin,
+				   FuDevice *device,
+				   FuProgress *progress,
+				   GError **error)
 {
 	FuMsrPlugin *self = FU_MSR_PLUGIN(plugin);
 	FuDevice *device_cpu = fu_plugin_cache_lookup(plugin, "cpu");

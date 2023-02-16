@@ -88,7 +88,10 @@ fu_synaptics_mst_plugin_backend_device_changed(FuPlugin *plugin, FuDevice *devic
 }
 
 static gboolean
-fu_synaptics_mst_plugin_backend_device_added(FuPlugin *plugin, FuDevice *device, GError **error)
+fu_synaptics_mst_plugin_backend_device_added(FuPlugin *plugin,
+					     FuDevice *device,
+					     FuProgress *progress,
+					     GError **error)
 {
 	FuSynapticsMstPlugin *self = FU_SYNAPTICS_MST_PLUGIN(plugin);
 	FuContext *ctx = fu_plugin_get_context(plugin);
@@ -99,10 +102,16 @@ fu_synaptics_mst_plugin_backend_device_added(FuPlugin *plugin, FuDevice *device,
 	if (!FU_IS_UDEV_DEVICE(device))
 		return TRUE;
 
+	/* progress */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1, "open");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 99, "rescan");
+
 	dev = fu_synaptics_mst_device_new(FU_UDEV_DEVICE(device));
 	locker = fu_device_locker_new(dev, error);
 	if (locker == NULL)
 		return FALSE;
+	fu_progress_step_done(progress);
 
 	/* for SynapticsMstDeviceKind=system devices */
 	fu_synaptics_mst_device_set_system_type(
@@ -112,6 +121,7 @@ fu_synaptics_mst_plugin_backend_device_added(FuPlugin *plugin, FuDevice *device,
 	/* this might fail if there is nothing connected */
 	fu_synaptics_mst_plugin_device_rescan(self, FU_DEVICE(dev));
 	g_ptr_array_add(self->devices, g_steal_pointer(&dev));
+	fu_progress_step_done(progress);
 	return TRUE;
 }
 

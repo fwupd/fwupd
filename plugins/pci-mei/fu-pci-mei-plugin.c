@@ -158,7 +158,10 @@ fu_mei_parse_fwvers(FuPlugin *plugin, const gchar *fwvers, GError **error)
 }
 
 static gboolean
-fu_pci_mei_plugin_backend_device_added(FuPlugin *plugin, FuDevice *device, GError **error)
+fu_pci_mei_plugin_backend_device_added(FuPlugin *plugin,
+				       FuDevice *device,
+				       FuProgress *progress,
+				       GError **error)
 {
 	FuPciMeiPlugin *self = FU_PCI_MEI_PLUGIN(plugin);
 	const gchar *fwvers;
