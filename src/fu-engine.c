@@ -6822,11 +6822,11 @@ fu_engine_add_device(FuEngine *self, FuDevice *device)
 	/* check if the device needs emulation-tag */
 	fu_engine_ensure_device_emulation_tag(self, device);
 
-	/* set or clear the SUPPORTED flag */
-	fu_engine_ensure_device_supported(self, device);
-
 	/* fixup the name and format as needed */
 	fu_engine_md_refresh_device_from_component(self, device, component);
+
+	/* set or clear the SUPPORTED flag */
+	fu_engine_ensure_device_supported(self, device);
 
 	/* adopt any required children, which may or may not already exist */
 	fu_engine_adopt_children(self, device);
@@ -6867,10 +6867,6 @@ fu_engine_add_device(FuEngine *self, FuDevice *device)
 
 	/* fix order */
 	fu_device_list_depsolve_order(self->device_list, device);
-
-	/* fixup the name and format as needed from cached metadata */
-	if (component != NULL)
-		fu_engine_md_refresh_device_from_component(self, device, component);
 
 	/* save to emulated phase, but avoid overwriting reload */
 	if (fu_context_has_flag(self->ctx, FU_CONTEXT_FLAG_SAVE_EVENTS) &&
