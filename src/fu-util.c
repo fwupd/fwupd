@@ -820,6 +820,47 @@ fu_util_device_test_component(FuUtilPrivate *priv,
 }
 
 static gboolean
+fu_util_emulation_load_with_fallback(FuUtilPrivate *priv, GBytes *emulation_data, GError **error)
+{
+	g_autoptr(GError) error_local = NULL;
+
+	/* load data, but handle the case when emulation is disabled */
+	if (!fwupd_client_emulation_load(priv->client,
+					 emulation_data,
+					 priv->cancellable,
+					 &error_local)) {
+		if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
+			g_propagate_error(error, g_steal_pointer(&error_local));
+			return FALSE;
+		}
+		/* TRANSLATORS:  */
+		if (!priv->assume_yes) {
+			if (!fu_console_input_bool(priv->console,
+						   TRUE,
+						   "%s %s",
+						   /* ability to load emulated devices is opt-in */
+						   _("Device emulation is not enabled."),
+						   /* TRANSLATORS: we can do this live */
+						   _("Do you want to enable it now?"))) {
+				g_propagate_error(error, g_steal_pointer(&error_local));
+				return FALSE;
+			}
+		}
+		if (!fwupd_client_modify_config(priv->client,
+						"AllowEmulation",
+						"true",
+						priv->cancellable,
+						error))
+			return FALSE;
+	} else {
+		return TRUE;
+	}
+
+	/* lets try again */
+	return fwupd_client_emulation_load(priv->client, emulation_data, priv->cancellable, error);
+}
+
+static gboolean
 fu_util_device_test_step(FuUtilPrivate *priv,
 			 FuUtilDeviceTestHelper *helper,
 			 JsonObject *json_obj,
@@ -859,10 +900,7 @@ fu_util_device_test_step(FuUtilPrivate *priv,
 		emulation_data = fu_bytes_get_contents(emulation_filename, error);
 		if (emulation_data == NULL)
 			return FALSE;
-		if (!fwupd_client_emulation_load(priv->client,
-						 emulation_data,
-						 priv->cancellable,
-						 error))
+		if (!fu_util_emulation_load_with_fallback(priv, emulation_data, error))
 			return FALSE;
 	}
 
@@ -4183,7 +4221,7 @@ fu_util_emulation_load(FuUtilPrivate *priv, gchar **values, GError **error)
 	data = fu_bytes_get_contents(values[0], error);
 	if (data == NULL)
 		return FALSE;
-	return fwupd_client_emulation_load(priv->client, data, priv->cancellable, error);
+	return fu_util_emulation_load_with_fallback(priv, data, error);
 }
 
 static gboolean
