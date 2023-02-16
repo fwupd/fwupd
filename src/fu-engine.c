@@ -4512,6 +4512,23 @@ fu_engine_md_refresh_device_name_category(FuEngine *self, FuDevice *device, XbNo
 		fu_device_remove_internal_flag(device,
 					       FU_DEVICE_INTERNAL_FLAG_MD_SET_NAME_CATEGORY);
 	}
+
+	/* batteries updated using capsules should ignore the system power restriction */
+	if (g_strcmp0(fu_device_get_plugin(device), "uefi_capsule") == 0) {
+		gboolean is_battery = FALSE;
+		for (guint i = 0; i < cats->len; i++) {
+			XbNode *n = g_ptr_array_index(cats, i);
+			if (g_strcmp0(xb_node_get_text(n), "X-Battery") == 0) {
+				is_battery = TRUE;
+				break;
+			}
+		}
+		if (is_battery) {
+			g_debug("ignoring system power for %s battery", fu_device_get_id(device));
+			fu_device_add_internal_flag(device,
+						    FU_DEVICE_INTERNAL_FLAG_IGNORE_SYSTEM_POWER);
+		}
+	}
 }
 
 static void
