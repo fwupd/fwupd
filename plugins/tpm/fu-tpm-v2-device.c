@@ -103,7 +103,7 @@ static const gchar *
 fu_tpm_v2_device_convert_manufacturer(const gchar *manufacturer)
 {
 	if (g_strcmp0(manufacturer, "AMD") == 0)
-		return "AMD";
+		return "Advanced Micro Devices, Inc.";
 	if (g_strcmp0(manufacturer, "ATML") == 0)
 		return "Atmel";
 	if (g_strcmp0(manufacturer, "BRCM") == 0)

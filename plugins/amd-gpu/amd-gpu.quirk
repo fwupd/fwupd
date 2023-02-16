@@ -1,2 +1,2 @@
 [PCI\DRIVER_amdgpu]
-Plugin = amdgpu
+Plugin = amd_gpu
