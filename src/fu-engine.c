@@ -5894,6 +5894,11 @@ fu_engine_add_releases_for_device_component(FuEngine *self,
 
 		/* success */
 		g_ptr_array_add(releases, g_steal_pointer(&release));
+
+		/* if we're only checking for SUPPORTED then *any* release is good enough */
+		if (fu_engine_request_get_kind(request) == FU_ENGINE_REQUEST_KIND_ONLY_SUPPORTED &&
+		    releases->len > 0)
+			break;
 	}
 
 	/* success */
@@ -5988,6 +5993,11 @@ fu_engine_get_releases_for_device(FuEngine *self,
 				continue;
 			}
 		}
+
+		/* if we're only checking for SUPPORTED then *any* release is good enough */
+		if (fu_engine_request_get_kind(request) == FU_ENGINE_REQUEST_KIND_ONLY_SUPPORTED &&
+		    releases->len > 0)
+			break;
 	}
 
 	/* are there multiple branches available */
