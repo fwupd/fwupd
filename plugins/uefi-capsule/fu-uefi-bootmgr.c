@@ -292,15 +292,13 @@ fu_uefi_bootmgr_bootnext(FuDevice *device,
 	/* test if we should use shim */
 	secure_boot = fu_efivar_secure_boot_enabled(NULL);
 	if (secure_boot) {
-		/* test to make sure shim is there if we need it */
-		source_shim = fu_uefi_get_built_app_path("shim", error);
-
 		shim_app = fu_uefi_get_esp_app_path(device, esp_path, "shim", error);
 		if (shim_app == NULL)
 			return FALSE;
 
 		/* copy in an updated shim if we have one */
-		if (g_file_test(source_shim, G_FILE_TEST_EXISTS)) {
+		source_shim = fu_uefi_get_built_app_path("shim", NULL);
+		if (source_shim != NULL) {
 			if (!fu_uefi_cmp_asset(source_shim, shim_app)) {
 				if (!fu_uefi_copy_asset(source_shim, shim_app, error))
 					return FALSE;
