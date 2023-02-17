@@ -3813,7 +3813,7 @@ fu_engine_write_firmware(FuEngine *self,
 		g_autoptr(GError) error_attach = NULL;
 		g_autoptr(GError) error_cleanup = NULL;
 
-		/* attack back into runtime then cleanup */
+		/* attach back into runtime then cleanup */
 		fu_engine_set_install_phase(self, FU_ENGINE_INSTALL_PHASE_ATTACH);
 		fu_progress_reset(progress);
 		if (!fu_plugin_runner_attach(plugin, device, progress, &error_attach)) {
