@@ -69,3 +69,73 @@ For example:
     Decompressing…           [***************************************]
     Waiting…                 [***************************************]
     Hughski ColorHug2: OK!
+
+## Pcap file conversion
+
+Emulation can also be used during the development phase of the plugin if the hardware is not
+available or to reduce the number of write cycles on the device and the testing time. But this
+requires a way to create the emulation file while fwupd does not yet support the hardware.
+
+This can be done by converting a pcap file generated using WireShark, on Windows or Linux, while
+performing the device firmware update process using the official update program. The saved pcap
+file should contain all the events of the device plugin before the update starts until it ends.
+
+Since the pcap file contains the firmware uploaded to the device, it is closely related to the
+firmware file and both the pcap and firmware files must be provided to the plugin developer.
+
+### Record USB events to pcap file
+
+#### Linux setup
+
+Check if you belong to the wireshark group with:
+
+    groups $USER
+
+To add yourself to the wireshark group, run the below command, then logout and login:
+
+    sudo usermod -a -G wireshark $USER
+
+Depending on the distribution used, you may have to load the USBmon kernel module using:
+
+    sudo modprobe usbmon
+
+You may also need to adjust the permissions with which usbmon instances are created:
+
+    echo 'SUBSYSTEM=="usbmon", GROUP="wireshark", MODE="640"' | sudo tee /etc/udev/rules.d/50-accessible-usbmon.rules
+    sudo udevadm control --reload-rules
+    sudo udevadm trigger
+
+If USBmon is builtin, you may need to reboot.
+
+### WireShark record of USB events
+
+Start WireShark and open *Capture→Options…* menu (or Ctrl+K). This brings up the *Capture Interfaces*
+window then select the USB interface to record packets:
+
+* USBPcap[x] on Windows,
+* usbmon[x] on Linux, usbmon0 interface can be used to capture packets on all buses.
+
+When recording firmware update that uses big packets, it may be relevant to increase the packet snaplen
+by double clicking on the value in the *Snaplen* column of the selected interface and changing the value.
+
+Click on the *Start* button then plugin the device to record and start the firmware update process.
+Once done, save the USB packets from WireShark to a pcap file.
+
+### Convert pcap file to emulation file
+
+To convert this file, the `contrib/pcap2emulation.py` tool is used to generate a json file for each
+series of USB events between the "GET DESCRIPTOR DEVICE" events, limited to a set of VendorIDs (and
+if necessary ProductIDs).
+Depending on the device there should be 2 (setup.json and reload.json) or 3 (setup.json,
+install.json and reload.json) phase files, which are zipped in the emulation file.
+
+For example:
+
+    # convert the pcap file for the CalDigit dock with VendorID and ProductID 0451:ace1
+    contrib/pcap2emulation.py CalDigit.pcapng /tmp/caldigit 0451:ace1
+    # this will generate /tmp/caldigit.zip
+    # the new emulation file can be used for emulation
+    fwupdmgr modify-config AllowEmulation true
+    fwupdmgr emulation-load /tmp/caldigit.zip
+    fwupdmgr get-devices --filter emulated
+    fwupdmgr modify-config AllowEmulation false
