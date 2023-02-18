@@ -3797,7 +3797,8 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/plugin{quirks-append}", fu_plugin_quirks_append_func);
 	g_test_add_func("/fwupd/common{strnsplit}", fu_strsplit_func);
 	g_test_add_func("/fwupd/common{memmem}", fu_common_memmem_func);
-	g_test_add_func("/fwupd/progress", fu_progress_func);
+	if (g_test_slow())
+		g_test_add_func("/fwupd/progress", fu_progress_func);
 	g_test_add_func("/fwupd/progress{child}", fu_progress_child_func);
 	g_test_add_func("/fwupd/progress{child-finished}", fu_progress_child_finished);
 	g_test_add_func("/fwupd/progress{parent-1-step}", fu_progress_parent_one_step_proxy_func);
