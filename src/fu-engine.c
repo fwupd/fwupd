@@ -8558,6 +8558,7 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 	fu_context_add_firmware_gtype(self->ctx, "srec", FU_TYPE_SREC_FIRMWARE);
 	fu_context_add_firmware_gtype(self->ctx, "archive", FU_TYPE_ARCHIVE_FIRMWARE);
 	fu_context_add_firmware_gtype(self->ctx, "smbios", FU_TYPE_SMBIOS);
+	fu_context_add_firmware_gtype(self->ctx, "acpi-table", FU_TYPE_ACPI_TABLE);
 	fu_context_add_firmware_gtype(self->ctx, "efi-firmware-file", FU_TYPE_EFI_FIRMWARE_FILE);
 	fu_context_add_firmware_gtype(self->ctx,
 				      "efi-firmware-filesystem",
