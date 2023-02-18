@@ -1162,6 +1162,12 @@ LIBFWUPDPLUGIN_1.8.10 {
 
 LIBFWUPDPLUGIN_1.8.11 {
   global:
+    fu_acpi_table_get_oem_id;
+    fu_acpi_table_get_oem_revision;
+    fu_acpi_table_get_oem_table_id;
+    fu_acpi_table_get_revision;
+    fu_acpi_table_get_type;
+    fu_acpi_table_new;
     fu_device_has_problem;
     fu_device_progress_get_type;
     fu_device_progress_new;

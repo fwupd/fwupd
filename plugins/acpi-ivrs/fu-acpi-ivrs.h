@@ -7,10 +7,10 @@
 
 #pragma once
 
-#include <gio/gio.h>
+#include <fwupdplugin.h>
 
 #define FU_TYPE_ACPI_IVRS (fu_acpi_ivrs_get_type())
-G_DECLARE_FINAL_TYPE(FuAcpiIvrs, fu_acpi_ivrs, FU, ACPI_IVRS, GObject)
+G_DECLARE_FINAL_TYPE(FuAcpiIvrs, fu_acpi_ivrs, FU, ACPI_IVRS, FuAcpiTable)
 
 FuAcpiIvrs *
 fu_acpi_ivrs_new(GBytes *blob, GError **error);

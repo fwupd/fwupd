@@ -9,6 +9,7 @@ fwupdplugin_version_h = configure_file(
 )
 
 fwupdplugin_src = [
+  'fu-acpi-table.c',        # fuzzing
   'fu-archive.c',
   'fu-backend.c',
   'fu-bluez-device.c',
@@ -112,6 +113,7 @@ else
 endif
 
 fwupdplugin_headers = [
+  'fu-acpi-table.h',
   'fu-archive.h',
   'fu-backend.h',
   'fu-bluez-device.h',

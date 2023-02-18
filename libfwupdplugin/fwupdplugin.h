@@ -9,6 +9,7 @@
 #define __FWUPDPLUGIN_H_INSIDE__
 
 #include <fwupd.h>
+#include <libfwupdplugin/fu-acpi-table.h>
 #include <libfwupdplugin/fu-archive-firmware.h>
 #include <libfwupdplugin/fu-archive.h>
 #include <libfwupdplugin/fu-backend.h>
