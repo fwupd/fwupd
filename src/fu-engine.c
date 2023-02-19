@@ -4946,6 +4946,7 @@ fu_engine_update_metadata_bytes(FuEngine *self,
 	FwupdKeyringKind keyring_kind;
 	FwupdRemote *remote;
 	JcatVerifyFlags jcat_flags = JCAT_VERIFY_FLAG_REQUIRE_SIGNATURE;
+	g_autofree gchar *content_type = NULL;
 	g_autoptr(JcatFile) jcat_file = jcat_file_new();
 
 	g_return_val_if_fail(FU_IS_ENGINE(self), FALSE);
@@ -4970,6 +4971,20 @@ fu_engine_update_metadata_bytes(FuEngine *self,
 			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "remote %s not enabled",
 			    remote_id);
+		return FALSE;
+	}
+
+	/* check for xz payload */
+	content_type = g_content_type_guess(NULL,
+					    (const guchar *)g_bytes_get_data(bytes_raw, NULL),
+					    g_bytes_get_size(bytes_raw),
+					    NULL);
+	if (content_type != NULL && g_strcmp0(content_type, "application/x-xz") != 0) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "only application/x-xz payload supported, got %s",
+			    content_type);
 		return FALSE;
 	}
 
