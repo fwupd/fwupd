@@ -8,11 +8,14 @@
 # SPDX-License-Identifier: LGPL-2.1+
 #
 
+import base64
 import glob
 import grp
 import hashlib
+import itertools
 import os
 import shutil
+import struct
 import subprocess
 import tempfile
 
@@ -90,6 +93,68 @@ class FwupdReceiveUpdates:
             self.clean_cache()
             raise Exception("jcat-tool: Verification failed")
 
+    def _crc24(self, data):
+        """Calculate CRC-24
+
+        Checksum calculation for PGP armored signature. This algorithm isn't
+        available in Python standard library, but it's simple enough to
+        implement here. It doesn't need to be fast, nor side-channel resistant.
+        """
+        crc = 0xB704CE  # crc24_init
+        for b in data:
+            crc ^= b << 16
+            for i in range(8):
+                crc <<= 1
+                if crc & 0x1000000:
+                    crc ^= 0x1864CFB  # crc24_poly
+        return crc
+
+    def _pgp_parse(self, signature_path):
+        """Verifies if GPG signature is correctly formatted
+
+        Verify if signature is well formed - sqv will verify if the signature
+        itself correct, but may accept extra data in the signature packets
+        that could later confuse GnuPG used by fwupd.
+        Verify also armor checksum, as sqv doesn't do that.
+        """
+
+        # sigparse expects binary format, so decode base64 first
+        with open(signature_path, "rb") as sig:
+            data = sig.read(4096)  # arbitrary size limit
+            if sig.read(1) != b"":
+                raise Exception("pgp: signature too big")
+            lines = data.splitlines()
+            # format described in RFC-4880 ch 6
+            if lines[0:2] != [b"-----BEGIN PGP SIGNATURE-----", b""]:
+                raise Exception("pgp: invalid header")
+            if lines[-1] != b"-----END PGP SIGNATURE-----":
+                raise Exception("pgp: invalid footer")
+            checksum = lines[-2]
+            if checksum[0] != ord("=") or len(checksum) != 5:
+                raise Exception("pgp: invalid checksum format")
+            base64_data = b"".join(lines[2:-2])
+            data = base64.b64decode(base64_data, validate=True)
+            crc = base64.b64decode(checksum[1:], validate=True)
+            crc = struct.unpack(">I", b"\0" + crc)[0]
+            if crc != self._crc24(data):
+                raise Exception("pgp: invalid checksum")
+            with tempfile.NamedTemporaryFile() as tmp:
+                tmp.write(data)
+                tmp.flush()
+                p = subprocess.Popen(["sigparse", tmp.name], stderr=subprocess.PIPE)
+                _, stderr = p.communicate()
+                if p.returncode != 0:
+                    raise Exception("pgp: invalid signature format: " + stderr.decode())
+        # reconstruct armored data to ensure its canonical form
+        with open(signature_path, "wb") as sig:
+            sig.write(b"-----BEGIN PGP SIGNATURE-----\n")
+            sig.write(b"\n")
+            encoded = iter(base64.b64encode(data))
+            while line := bytes(itertools.islice(encoded, 76)):
+                sig.write(line + b"\n")
+            sig.write(checksum + b"\n")
+            sig.write(b"-----END PGP SIGNATURE-----\n")
+
     def _pgp_verification(self, signature_path, file_path):
         """Verifies GPG signature.
 
@@ -98,6 +163,11 @@ class FwupdReceiveUpdates:
         file_path -- absolute path to the signed file location
         """
         assert file_path.startswith("/"), "bad file path {file_path!r}"
+        try:
+            self._pgp_parse(signature_path)
+        except Exception:
+            self.clean_cache()
+            raise
         cmd_verify = [
             "sqv",
             "--keyring",
