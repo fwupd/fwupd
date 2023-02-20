@@ -35,7 +35,7 @@ typedef enum {
  * @self: a #FuQuirks
  * @key: a key
  * @value: a value
- * @user_data: user data
+ * @user_data: (closure): user data
  *
  * The quirks iteration callback.
  */

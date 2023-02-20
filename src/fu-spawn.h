@@ -11,7 +11,7 @@
 /**
  * FuSpawnOutputHandler:
  * @line: text data
- * @user_data: user data
+ * @user_data: (closure): user data
  *
  * The process spawn iteration callback.
  */
@@ -20,7 +20,7 @@ typedef void (*FuSpawnOutputHandler)(const gchar *line, gpointer user_data);
 gboolean
 fu_spawn_sync(const gchar *const *argv,
 	      FuSpawnOutputHandler handler_cb,
-	      gpointer handler_user_data,
+	      gpointer user_data,
 	      guint timeout_ms,
 	      GCancellable *cancellable,
 	      GError **error) G_GNUC_WARN_UNUSED_RESULT;

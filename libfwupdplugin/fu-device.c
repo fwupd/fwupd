@@ -603,7 +603,7 @@ fu_device_retry_set_delay(FuDevice *self, guint delay)
 /**
  * fu_device_retry_full:
  * @self: a #FuDevice
- * @func: (scope async): a function to execute
+ * @func: (scope async) (closure user_data): a function to execute
  * @count: the number of tries to try the function
  * @delay: the delay between each try in ms
  * @user_data: (nullable): a helper to pass to @func
@@ -695,7 +695,7 @@ fu_device_retry_full(FuDevice *self,
 /**
  * fu_device_retry:
  * @self: a #FuDevice
- * @func: (scope async): a function to execute
+ * @func: (scope async) (closure user_data): a function to execute
  * @count: the number of tries to try the function
  * @user_data: (nullable): a helper to pass to @func
  * @error: (nullable): optional return location for an error

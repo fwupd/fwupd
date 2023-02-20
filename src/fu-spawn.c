@@ -12,7 +12,7 @@
 
 typedef struct {
 	FuSpawnOutputHandler handler_cb;
-	gpointer handler_user_data;
+	gpointer user_data;
 	GMainLoop *loop;
 	GSource *source;
 	GInputStream *stream;
@@ -56,7 +56,7 @@ fu_spawn_source_pollable_cb(GObject *stream, gpointer user_data)
 		for (guint i = 0; split[i] != NULL; i++) {
 			if (split[i][0] == '\0')
 				continue;
-			helper->handler_cb(split[i], helper->handler_user_data);
+			helper->handler_cb(split[i], helper->user_data);
 		}
 	}
 
@@ -122,8 +122,8 @@ fu_spawn_cancelled_cb(GCancellable *cancellable, FuSpawnHelper *helper)
 /**
  * fu_spawn_sync:
  * @argv: the argument list to run
- * @handler_cb: (scope call) (nullable): optional #FuSpawnOutputHandler
- * @handler_user_data: (nullable): the user data to pass to @handler_cb
+ * @handler_cb: (scope call) (closure user_data) (nullable): optional #FuSpawnOutputHandler
+ * @user_data: (nullable): the user data to pass to @handler_cb
  * @timeout_ms: a timeout in ms, or 0 for no limit
  * @cancellable: (nullable): optional #GCancellable
  * @error: (nullable): optional return location for an error
@@ -138,7 +138,7 @@ fu_spawn_cancelled_cb(GCancellable *cancellable, FuSpawnHelper *helper)
 gboolean
 fu_spawn_sync(const gchar *const *argv,
 	      FuSpawnOutputHandler handler_cb,
-	      gpointer handler_user_data,
+	      gpointer user_data,
 	      guint timeout_ms,
 	      GCancellable *cancellable,
 	      GError **error)
@@ -168,7 +168,7 @@ fu_spawn_sync(const gchar *const *argv,
 	/* watch for process to exit */
 	helper = g_new0(FuSpawnHelper, 1);
 	helper->handler_cb = handler_cb;
-	helper->handler_user_data = handler_user_data;
+	helper->user_data = user_data;
 	helper->loop = g_main_loop_new(NULL, FALSE);
 	helper->stream = g_subprocess_get_stdout_pipe(subprocess);
 

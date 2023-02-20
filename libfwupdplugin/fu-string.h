@@ -40,7 +40,7 @@ fu_strdup(const gchar *str, gsize bufsz, gsize offset);
  * FuStrsplitFunc:
  * @token: a #GString
  * @token_idx: the token number
- * @user_data: user data
+ * @user_data: (closure): user data
  * @error: a #GError or NULL
  *
  * The fu_strsplit_full() iteration callback.

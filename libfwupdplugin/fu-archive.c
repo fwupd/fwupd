@@ -290,7 +290,7 @@ fu_archive_lookup_by_fn(FuArchive *self, const gchar *fn, GError **error)
 /**
  * fu_archive_iterate:
  * @self: a #FuArchive
- * @callback: (scope call): a #FuArchiveIterateFunc.
+ * @callback: (scope call) (closure user_data): a #FuArchiveIterateFunc.
  * @user_data: user data
  * @error: (nullable): optional return location for an error
  *
