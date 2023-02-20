@@ -59,6 +59,8 @@
 /* Default length for NVM READ */
 #define NVM_READ_LENGTH 0x224
 
+#define FU_INTEL_USB4_DEVICE_REMOVE_DELAY 60000 /* ms */
+
 struct mbox_regx {
 	guint16 opcode;
 	guint8 rsvd;
@@ -565,6 +567,7 @@ fu_intel_usb4_device_init(FuIntelUsb4Device *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PAIR);
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_INHERIT_ACTIVATION);
+	fu_device_set_remove_delay(FU_DEVICE(self), FU_INTEL_USB4_DEVICE_REMOVE_DELAY);
 }
 
 static void
