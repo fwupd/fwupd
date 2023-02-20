@@ -39,12 +39,9 @@ except ModuleNotFoundError:
 FWUPD_DOM0_DIR = "/var/cache/fwupd/qubes"
 FWUPD_DOM0_METADATA_DIR = os.path.join(FWUPD_DOM0_DIR, "metadata")
 FWUPD_DOM0_UPDATES_DIR = os.path.join(FWUPD_DOM0_DIR, "updates")
-FWUPD_DOM0_METADATA_SIGNATURE = os.path.join(
-    FWUPD_DOM0_METADATA_DIR, "firmware.xml.gz.asc"
-)
-FWUPD_DOM0_METADATA_FILE = os.path.join(FWUPD_DOM0_METADATA_DIR, "firmware.xml.gz")
-FWUPD_DOM0_METADATA_JCAT = os.path.join(FWUPD_DOM0_METADATA_DIR, "firmware.xml.gz.jcat")
 FWUPD_DOWNLOAD_PREFIX = "https://fwupd.org/downloads/"
+METADATA_URL = "https://fwupd.org/downloads/firmware.xml.gz"
+METADATA_URL_JCAT = "https://fwupd.org/downloads/firmware.xml.gz.jcat"
 
 FWUPDMGR = "/bin/fwupdmgr"
 
@@ -90,6 +87,8 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
         whonix -- Flag enforces downloading the metadata updates via Tor
         metadata_url -- Download metadata from the custom url
         """
+        if not metadata_url:
+            raise Exception("missing metadata URL")
         self.download_metadata(whonix=whonix, metadata_url=metadata_url)
         self.handle_metadata_update(self.updatevm, metadata_url=metadata_url)
         if not os.path.exists(self.metadata_file):
@@ -102,14 +101,14 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
         whonix -- Flag enforces downloading the metadata updates via Tor
         metadata_url -- Use custom metadata from the url
         """
-        if metadata_url:
-            metadata_name = metadata_url.replace(FWUPD_DOWNLOAD_PREFIX, "")
-            self.metadata_file = os.path.join(FWUPD_DOM0_METADATA_DIR, metadata_name)
-            self.metadata_file_jcat = self.metadata_file + ".jcat"
+        if not metadata_url:
+            metadata_url = METADATA_URL
+        metadata_name = os.path.basename(metadata_url)
+        self.metadata_file = os.path.join(FWUPD_DOM0_METADATA_DIR, metadata_name)
+        self.metadata_file_jcat = self.metadata_file + ".jcat"
+        if 'testing' in metadata_url:
             self.lvfs = "lvfs-testing"
         else:
-            self.metadata_file = FWUPD_DOM0_METADATA_FILE
-            self.metadata_file_jcat = FWUPD_DOM0_METADATA_JCAT
             self.lvfs = "lvfs"
         self._download_metadata(whonix=whonix, metadata_url=metadata_url)
         cmd_refresh = [
@@ -536,13 +535,10 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
         whonix -- Flag enforces downloading the metadata updates via Tor
         metadata_url -- Use custom metadata from the url
         """
-        if metadata_url:
-            custom_metadata_name = metadata_url.replace(FWUPD_DOWNLOAD_PREFIX, "")
-            self.metadata_file = os.path.join(
-                FWUPD_DOM0_METADATA_DIR, custom_metadata_name
-            )
-        else:
-            self.metadata_file = FWUPD_DOM0_METADATA_FILE
+        if not metadata_url:
+            metadata_url = METADATA_URL
+        metadata_name = os.path.basename(metadata_url)
+        self.metadata_file = os.path.join(FWUPD_DOM0_METADATA_DIR, metadata_name)
         self._get_hwids()
         if device is None:
             device = self._get_hwid_device()

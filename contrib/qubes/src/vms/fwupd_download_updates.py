@@ -81,7 +81,7 @@ class DownloadData(FwupdVmCommon):
         """Downloads default metadata and its signatures"""
         if url is not None:
             self.custom_url = url
-            custom_metadata_name = url.replace(FWUPD_DOWNLOAD_PREFIX, "")
+            custom_metadata_name = os.path.basename(url)
             self.metadata_file = os.path.join(
                 FWUPD_VM_METADATA_DIR, custom_metadata_name
             )
