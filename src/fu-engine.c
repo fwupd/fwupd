@@ -1922,13 +1922,19 @@ fu_engine_check_requirement_firmware(FuEngine *self,
 		FuDevice *child = NULL;
 		FuDevice *parent = fu_device_get_parent(device_actual);
 		GPtrArray *children;
+
+		/* no parent, so look for GUIDs on this device */
 		if (parent == NULL) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "No parent specified for device %s",
-				    fu_device_get_name(device_actual));
-			return FALSE;
+			if (!fu_device_has_guids_any(device_actual, guids)) {
+				g_set_error(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
+					    "No GUID of %s on self device %s",
+					    xb_node_get_text(req),
+					    fu_device_get_name(device_actual));
+				return FALSE;
+			}
+			return TRUE;
 		}
 		children = fu_device_get_children(parent);
 		for (guint i = 0; i < children->len; i++) {
