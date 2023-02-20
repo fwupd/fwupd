@@ -58,7 +58,15 @@ class FwupdHeads:
         """
         Parse metadata info.
         """
-        cmd_metadata = ["zcat", metadata_file]
+        metadata_ext = os.path.splitext(metadata_file)[-1]
+        if metadata_ext == ".xz":
+            cmd_metadata = ["xzcat", metadata_file]
+        elif metadata_ext == ".gz":
+            cmd_metadata = ["zcat", metadata_file]
+        else:
+            raise NotImplementedError(
+                "Unsupported metadata compression " + metadata_ext
+            )
         p = subprocess.Popen(cmd_metadata, stdout=subprocess.PIPE)
         self.metadata_info = p.communicate()[0].decode()
         if p.returncode != 0:
