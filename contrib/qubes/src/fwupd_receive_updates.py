@@ -23,14 +23,10 @@ FWUPD_DOM0_DIR = "/var/cache/fwupd/qubes"
 FWUPD_DOM0_UPDATES_DIR = os.path.join(FWUPD_DOM0_DIR, "updates")
 FWUPD_DOM0_UNTRUSTED_DIR = os.path.join(FWUPD_DOM0_UPDATES_DIR, "untrusted")
 FWUPD_DOM0_METADATA_DIR = os.path.join(FWUPD_DOM0_DIR, "metadata")
-FWUPD_DOM0_METADATA_FILE = os.path.join(FWUPD_DOM0_METADATA_DIR, "firmware.xml.gz")
-FWUPD_DOM0_METADATA_JCAT = os.path.join(FWUPD_DOM0_METADATA_DIR, "firmware.xml.gz.jcat")
 
 FWUPD_VM_DIR = "/home/user/.cache/fwupd"
 FWUPD_VM_UPDATES_DIR = os.path.join(FWUPD_VM_DIR, "updates")
 FWUPD_VM_METADATA_DIR = os.path.join(FWUPD_VM_DIR, "metadata")
-FWUPD_VM_METADATA_FILE = os.path.join(FWUPD_VM_METADATA_DIR, "firmware.xml.gz")
-FWUPD_VM_METADATA_JCAT = os.path.join(FWUPD_VM_METADATA_DIR, "firmware.xml.gz.jcat")
 FWUPD_PKI = "/etc/pki/fwupd"
 FWUPD_PKI_PGP = "/etc/pki/fwupd/GPG-KEY-Linux-Vendor-Firmware-Service"
 FWUPD_DOWNLOAD_PREFIX = "https://fwupd.org/downloads/"
@@ -254,22 +250,16 @@ class FwupdReceiveUpdates:
             self.arch_path = os.path.join(FWUPD_DOM0_UPDATES_DIR, filename)
             shutil.move(dom0_firmware_untrusted_path, self.arch_path)
 
-    def handle_metadata_update(self, updatevm, metadata_url=None):
+    def handle_metadata_update(self, updatevm, metadata_url):
         """Copies metadata files from the updateVM.
 
         Keyword argument:
         updatevm -- update VM name
         """
-        if metadata_url:
-            metadata_name = metadata_url.replace(FWUPD_DOWNLOAD_PREFIX, "")
-            self.metadata_file = os.path.join(FWUPD_DOM0_METADATA_DIR, metadata_name)
-        else:
-            metadata_name = "firmware.xml.gz"
-            self.metadata_file = FWUPD_DOM0_METADATA_FILE
+        metadata_name = os.path.basename(metadata_url)
+        self.metadata_file = os.path.join(FWUPD_DOM0_METADATA_DIR, metadata_name)
         self.metadata_file_jcat = self.metadata_file + ".jcat"
-        self.metadata_file_updatevm = self.metadata_file.replace(
-            FWUPD_DOM0_METADATA_DIR, FWUPD_VM_METADATA_DIR
-        )
+        self.metadata_file_updatevm = os.path.join(FWUPD_VM_METADATA_DIR, metadata_name)
         self._create_dirs(FWUPD_DOM0_METADATA_DIR, FWUPD_DOM0_UNTRUSTED_DIR)
         with tempfile.TemporaryDirectory(dir=FWUPD_DOM0_UNTRUSTED_DIR) as tmpdir:
             cmd_copy_metadata_file = [

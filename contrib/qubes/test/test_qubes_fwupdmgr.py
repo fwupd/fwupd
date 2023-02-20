@@ -72,7 +72,7 @@ class TestQubesFwupdmgr(unittest.TestCase):
     @unittest.skipUnless("qubes" in platform.release(), "Requires Qubes OS")
     def test_download_metadata(self):
         self.q.metadata_file = FWUPD_DOM0_METADATA_FILE
-        self.q._download_metadata()
+        self.q._download_metadata(metadata_url=qfwupd.METADATA_URL)
         self.assertTrue(
             os.path.exists(FWUPD_DOM0_METADATA_FILE),
             msg="Metadata update file does not exist",
@@ -113,7 +113,7 @@ class TestQubesFwupdmgr(unittest.TestCase):
 
     @unittest.skipUnless("qubes" in platform.release(), "Requires Qubes OS")
     def test_refresh_metadata_dom0(self):
-        self.q.refresh_metadata()
+        self.q.refresh_metadata(metadata_url=qfwupd.METADATA_URL)
         self.assertEqual(
             self.q.output,
             "Successfully refreshed metadata manually\n",
@@ -131,7 +131,7 @@ class TestQubesFwupdmgr(unittest.TestCase):
 
     @unittest.skipUnless(check_whonix_updatevm(), "Requires sys-whonix")
     def test_refresh_metadata_whonix(self):
-        self.q.refresh_metadata(whonix=True)
+        self.q.refresh_metadata(whonix=True, metadata_url=qfwupd.METADATA_URL)
         self.assertEqual(
             self.q.output,
             "Successfully refreshed metadata manually\n",
