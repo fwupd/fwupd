@@ -132,6 +132,7 @@ parts:
       - curl
       - fwupd-signed
       - fwupd-unsigned
+      - git
       - gettext
       - gcab
       - gnu-efi
