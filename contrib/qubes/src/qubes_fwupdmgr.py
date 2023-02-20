@@ -40,8 +40,8 @@ FWUPD_DOM0_DIR = "/var/cache/fwupd/qubes"
 FWUPD_DOM0_METADATA_DIR = os.path.join(FWUPD_DOM0_DIR, "metadata")
 FWUPD_DOM0_UPDATES_DIR = os.path.join(FWUPD_DOM0_DIR, "updates")
 FWUPD_DOWNLOAD_PREFIX = "https://fwupd.org/downloads/"
-METADATA_URL = "https://fwupd.org/downloads/firmware.xml.gz"
-METADATA_URL_JCAT = "https://fwupd.org/downloads/firmware.xml.gz.jcat"
+METADATA_URL = "https://fwupd.org/downloads/firmware.xml.xz"
+METADATA_URL_JCAT = "https://fwupd.org/downloads/firmware.xml.xz.jcat"
 
 FWUPDMGR = "/bin/fwupdmgr"
 
