@@ -546,6 +546,16 @@ fu_intel_usb4_device_to_string(FuDevice *device, guint idt, GString *str)
 }
 
 static void
+fu_thunderbolt_device_set_progress(FuDevice *self, FuProgress *progress)
+{
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0, "detach");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 78, "write");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 22, "attach");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 0, "reload");
+}
+
+static void
 fu_intel_usb4_device_init(FuIntelUsb4Device *self)
 {
 	self->intf_nr = GR_USB_INTERFACE_NUMBER;
@@ -566,4 +576,5 @@ fu_intel_usb4_device_class_init(FuIntelUsb4DeviceClass *klass)
 	klass_device->prepare_firmware = fu_intel_usb4_device_prepare_firmware;
 	klass_device->write_firmware = fu_intel_usb4_device_write_firmware;
 	klass_device->activate = fu_intel_usb4_device_activate;
+	klass_device->set_progress = fu_thunderbolt_device_set_progress;
 }
