@@ -9022,6 +9022,12 @@ fu_engine_init(FuEngine *self)
 					    JCAT_MAJOR_VERSION,
 					    JCAT_MINOR_VERSION,
 					    JCAT_MICRO_VERSION));
+	g_hash_table_insert(self->compile_versions,
+			    g_strdup("com.hughsie.libxmlb"),
+			    g_strdup_printf("%i.%i.%i",
+					    XMLB_MAJOR_VERSION,
+					    XMLB_MINOR_VERSION,
+					    XMLB_MICRO_VERSION));
 
 	/* register /org/freedesktop/fwupd globally */
 	g_resources_register(fu_get_resource());
