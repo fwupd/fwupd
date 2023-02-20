@@ -167,6 +167,12 @@ fu_engine_update_motd_timeout_cb(gpointer user_data)
 {
 	FuEngine *self = FU_ENGINE(user_data);
 	g_autoptr(GError) error_local = NULL;
+
+	/* busy */
+	if (fu_idle_has_inhibit(self->idle, "update"))
+		return G_SOURCE_CONTINUE;
+
+	/* update now */
 	if (!fu_engine_update_motd(self, &error_local))
 		g_debug("failed to update MOTD: %s", error_local->message);
 	self->update_motd_id = 0;
