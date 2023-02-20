@@ -36,6 +36,9 @@ fu_redfish_plugin_to_string(FuPlugin *plugin, guint idt, GString *str)
 		g_autofree gchar *smbios = fu_firmware_to_string(FU_FIRMWARE(self->smbios));
 		fu_string_append(str, idt, "Smbios", smbios);
 	}
+	fu_string_append(str, idt, "Vendor", fu_redfish_backend_get_vendor(self->backend));
+	fu_string_append(str, idt, "Version", fu_redfish_backend_get_version(self->backend));
+	fu_string_append(str, idt, "UUID", fu_redfish_backend_get_uuid(self->backend));
 }
 
 static gchar *
@@ -345,9 +348,14 @@ fu_redfish_plugin_ipmi_create_user(FuPlugin *plugin, GError **error)
 	/* wait for Redfish to sync */
 	g_usleep(2 * G_USEC_PER_SEC);
 
+	/* XCC is the only BMC implementation that does not map the user_ids 1:1 */
+	if (fu_context_has_hwid_guid(fu_plugin_get_context(plugin),
+				     "42f00735-c9ab-5374-bd63-a5deee5881e0"))
+		user_id -= 1;
+
 	/* now use Redfish to change the temporary password to the actual password */
 	request = fu_redfish_backend_request_new(self->backend);
-	uri = g_strdup_printf("/redfish/v1/AccountService/Accounts/%u", (guint)user_id - 1);
+	uri = g_strdup_printf("/redfish/v1/AccountService/Accounts/%u", (guint)user_id);
 	json_builder_begin_object(builder);
 	json_builder_set_member_name(builder, "Password");
 	json_builder_add_string_value(builder, password_new);
