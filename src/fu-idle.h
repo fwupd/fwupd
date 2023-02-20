@@ -15,6 +15,8 @@ FuIdle *
 fu_idle_new(void);
 guint32
 fu_idle_inhibit(FuIdle *self, const gchar *reason);
+gboolean
+fu_idle_has_inhibit(FuIdle *self, const gchar *reason);
 void
 fu_idle_uninhibit(FuIdle *self, guint32 token);
 void

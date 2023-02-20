@@ -148,6 +148,23 @@ fu_idle_inhibit(FuIdle *self, const gchar *reason)
 	return item->token;
 }
 
+gboolean
+fu_idle_has_inhibit(FuIdle *self, const gchar *reason)
+{
+	g_autoptr(GRWLockWriterLocker) locker = g_rw_lock_reader_locker_new(&self->items_mutex);
+
+	g_return_val_if_fail(FU_IS_IDLE(self), FALSE);
+	g_return_val_if_fail(reason != NULL, FALSE);
+	g_return_val_if_fail(locker != NULL, FALSE);
+
+	for (guint i = 0; i < self->items->len; i++) {
+		FuIdleItem *item = g_ptr_array_index(self->items, i);
+		if (g_strcmp0(item->reason, reason) == 0)
+			return TRUE;
+	}
+	return FALSE;
+}
+
 void
 fu_idle_set_timeout(FuIdle *self, guint timeout)
 {
