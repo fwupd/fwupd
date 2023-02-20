@@ -24,6 +24,9 @@ struct _FuRedfishBackend {
 	gchar *username;
 	gchar *password;
 	guint port;
+	gchar *vendor;
+	gchar *version;
+	gchar *uuid;
 	gchar *update_uri_path;
 	gchar *push_uri_path;
 	gboolean use_https;
@@ -36,6 +39,24 @@ struct _FuRedfishBackend {
 };
 
 G_DEFINE_TYPE(FuRedfishBackend, fu_redfish_backend, FU_TYPE_BACKEND)
+
+const gchar *
+fu_redfish_backend_get_vendor(FuRedfishBackend *self)
+{
+	return self->vendor;
+}
+
+const gchar *
+fu_redfish_backend_get_version(FuRedfishBackend *self)
+{
+	return self->version;
+}
+
+const gchar *
+fu_redfish_backend_get_uuid(FuRedfishBackend *self)
+{
+	return self->uuid;
+}
 
 FuRedfishRequest *
 fu_redfish_backend_request_new(FuRedfishBackend *self)
@@ -334,7 +355,6 @@ fu_redfish_backend_setup(FuBackend *backend, FuProgress *progress, GError **erro
 	JsonObject *json_update_service = NULL;
 	const gchar *data_id;
 	const gchar *version = NULL;
-	const gchar *uuid = NULL;
 	g_autoptr(FuRedfishRequest) request = fu_redfish_backend_request_new(self);
 
 	/* sanity check */
@@ -359,10 +379,18 @@ fu_redfish_backend_setup(FuBackend *backend, FuProgress *progress, GError **erro
 	} else if (json_object_has_member(json_obj, "RedfishVersion")) {
 		version = json_object_get_string_member(json_obj, "RedfishVersion");
 	}
-	if (json_object_has_member(json_obj, "UUID"))
-		uuid = json_object_get_string_member(json_obj, "UUID");
-	g_debug("Version: %s", version);
-	g_debug("UUID: %s", uuid);
+	if (version != NULL) {
+		g_free(self->version);
+		self->version = g_strdup(version);
+	}
+	if (json_object_has_member(json_obj, "UUID")) {
+		g_free(self->uuid);
+		self->uuid = g_strdup(json_object_get_string_member(json_obj, "UUID"));
+	}
+	if (json_object_has_member(json_obj, "Vendor")) {
+		g_free(self->vendor);
+		self->vendor = g_strdup(json_object_get_string_member(json_obj, "Vendor"));
+	}
 
 	if (json_object_has_member(json_obj, "UpdateService"))
 		json_update_service = json_object_get_object_member(json_obj, "UpdateService");
@@ -477,6 +505,9 @@ fu_redfish_backend_finalize(GObject *object)
 	g_free(self->hostname);
 	g_free(self->username);
 	g_free(self->password);
+	g_free(self->vendor);
+	g_free(self->version);
+	g_free(self->uuid);
 	G_OBJECT_CLASS(fu_redfish_backend_parent_class)->finalize(object);
 }
 
