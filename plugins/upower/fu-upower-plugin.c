@@ -39,36 +39,36 @@ fu_upower_plugin_rescan_devices(FuPlugin *plugin)
 	/* check that we "have" a battery */
 	type_val = g_dbus_proxy_get_cached_property(self->proxy, "Type");
 	if (type_val == NULL || g_variant_get_uint32(type_val) == 0) {
-		fu_context_set_battery_state(ctx, FU_BATTERY_STATE_UNKNOWN);
+		fu_context_set_power_state(ctx, FU_POWER_STATE_UNKNOWN);
 		fu_context_set_battery_level(ctx, FWUPD_BATTERY_LEVEL_INVALID);
 		return;
 	}
 	state_val = g_dbus_proxy_get_cached_property(self->proxy, "State");
 	if (state_val == NULL || g_variant_get_uint32(state_val) == 0) {
 		g_warning("failed to query power state");
-		fu_context_set_battery_state(ctx, FU_BATTERY_STATE_UNKNOWN);
+		fu_context_set_power_state(ctx, FU_POWER_STATE_UNKNOWN);
 		fu_context_set_battery_level(ctx, FWUPD_BATTERY_LEVEL_INVALID);
 		return;
 	}
 
-	/* map from UpDeviceState to FuBatteryState */
+	/* map from UpDeviceState to FuPowerState */
 	switch (g_variant_get_uint32(state_val)) {
 	case UP_DEVICE_STATE_CHARGING:
 	case UP_DEVICE_STATE_PENDING_CHARGE:
-		fu_context_set_battery_state(ctx, FU_BATTERY_STATE_CHARGING);
+		fu_context_set_power_state(ctx, FU_POWER_STATE_AC_CHARGING);
 		break;
 	case UP_DEVICE_STATE_DISCHARGING:
 	case UP_DEVICE_STATE_PENDING_DISCHARGE:
-		fu_context_set_battery_state(ctx, FU_BATTERY_STATE_DISCHARGING);
+		fu_context_set_power_state(ctx, FU_POWER_STATE_BATTERY_DISCHARGING);
 		break;
 	case UP_DEVICE_STATE_EMPTY:
-		fu_context_set_battery_state(ctx, FU_BATTERY_STATE_EMPTY);
+		fu_context_set_power_state(ctx, FU_POWER_STATE_BATTERY_EMPTY);
 		break;
 	case UP_DEVICE_STATE_FULLY_CHARGED:
-		fu_context_set_battery_state(ctx, FU_BATTERY_STATE_FULLY_CHARGED);
+		fu_context_set_power_state(ctx, FU_POWER_STATE_AC_FULLY_CHARGED);
 		break;
 	default:
-		fu_context_set_battery_state(ctx, FU_BATTERY_STATE_UNKNOWN);
+		fu_context_set_power_state(ctx, FU_POWER_STATE_UNKNOWN);
 		break;
 	}
 

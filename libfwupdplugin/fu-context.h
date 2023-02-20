@@ -111,10 +111,10 @@ fu_context_add_quirk_key(FuContext *self, const gchar *key);
 void
 fu_context_security_changed(FuContext *self);
 
-FuBatteryState
-fu_context_get_battery_state(FuContext *self);
+FuPowerState
+fu_context_get_power_state(FuContext *self);
 void
-fu_context_set_battery_state(FuContext *self, FuBatteryState battery_state);
+fu_context_set_power_state(FuContext *self, FuPowerState power_state);
 FuLidState
 fu_context_get_lid_state(FuContext *self);
 void

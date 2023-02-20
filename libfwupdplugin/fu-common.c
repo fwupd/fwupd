@@ -219,34 +219,58 @@ fu_common_align_up(gsize value, guint8 alignment)
 }
 
 /**
- * fu_battery_state_to_string:
- * @battery_state: a battery state, e.g. %FU_BATTERY_STATE_FULLY_CHARGED
+ * fu_power_state_to_string:
+ * @power_state: a power state, e.g. %FU_POWER_STATE_AC_FULLY_CHARGED
  *
  * Converts an enumerated type to a string.
  *
  * Returns: a string, or %NULL for invalid
  *
- * Since: 1.6.0
+ * Since: 1.8.11
  **/
 const gchar *
-fu_battery_state_to_string(FuBatteryState battery_state)
+fu_power_state_to_string(FuPowerState power_state)
 {
-	if (battery_state == FU_BATTERY_STATE_UNKNOWN)
+	if (power_state == FU_POWER_STATE_UNKNOWN)
 		return "unknown";
-	if (battery_state == FU_BATTERY_STATE_CHARGING)
-		return "charging";
-	if (battery_state == FU_BATTERY_STATE_DISCHARGING)
-		return "discharging";
-	if (battery_state == FU_BATTERY_STATE_EMPTY)
-		return "empty";
-	if (battery_state == FU_BATTERY_STATE_FULLY_CHARGED)
-		return "fully-charged";
+	if (power_state == FU_POWER_STATE_BATTERY)
+		return "battery";
+	if (power_state == FU_POWER_STATE_BATTERY_DISCHARGING)
+		return "battery-discharging";
+	if (power_state == FU_POWER_STATE_BATTERY_EMPTY)
+		return "battery-empty";
+	if (power_state == FU_POWER_STATE_AC)
+		return "ac";
+	if (power_state == FU_POWER_STATE_AC_CHARGING)
+		return "ac-charging";
+	if (power_state == FU_POWER_STATE_AC_FULLY_CHARGED)
+		return "ac-fully-charged";
 	return NULL;
 }
 
 /**
+ * fu_power_state_is_ac:
+ * @power_state: a power state, e.g. %FU_POWER_STATE_AC_FULLY_CHARGED
+ *
+ * Determines if the power state can be considered "on AC power".
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.8.11
+ **/
+gboolean
+fu_power_state_is_ac(FuPowerState power_state)
+{
+	if (power_state == FU_POWER_STATE_UNKNOWN || power_state == FU_POWER_STATE_AC ||
+	    power_state == FU_POWER_STATE_AC_CHARGING ||
+	    power_state == FU_POWER_STATE_AC_FULLY_CHARGED)
+		return TRUE;
+	return FALSE;
+}
+
+/**
  * fu_lid_state_to_string:
- * @lid_state: a battery state, e.g. %FU_LID_STATE_CLOSED
+ * @lid_state: a lid state, e.g. %FU_LID_STATE_CLOSED
  *
  * Converts an enumerated type to a string.
  *

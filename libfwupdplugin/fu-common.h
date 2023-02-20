@@ -32,24 +32,34 @@ typedef enum {
 } FuCpuVendor;
 
 /**
- * FuBatteryState:
- * @FU_BATTERY_STATE_UNKNOWN:		Unknown
- * @FU_BATTERY_STATE_CHARGING:		Charging
- * @FU_BATTERY_STATE_DISCHARGING:	Discharging
- * @FU_BATTERY_STATE_EMPTY:		Empty
- * @FU_BATTERY_STATE_FULLY_CHARGED:	Fully charged
+ * FuPowerState:
+ * @FU_POWER_STATE_UNKNOWN:		Unknown
+ * @FU_POWER_STATE_AC:			On AC power
+ * @FU_POWER_STATE_AC_CHARGING:		Charging on AC
+ * @FU_POWER_STATE_AC_FULLY_CHARGED:	Fully charged on AC
+ * @FU_POWER_STATE_BATTERY:		On system battery
+ * @FU_POWER_STATE_BATTERY_DISCHARGING:	System battery discharging
+ * @FU_POWER_STATE_BATTERY_EMPTY:	System battery empty
  *
- * The device battery state.
+ * The system power state.
+ *
+ * This does not have to be exactly what the battery is doing, but is supposed to represent the
+ * 40,000ft view of the system power state.
+ *
+ * For example, it is perfectly correct to set %FU_POWER_STATE_AC if the system is connected to
+ * AC power, but the battery cells are discharging for health or for other performance reasons.
  **/
 typedef enum {
-	FU_BATTERY_STATE_UNKNOWN,
-	FU_BATTERY_STATE_CHARGING,
-	FU_BATTERY_STATE_DISCHARGING,
-	FU_BATTERY_STATE_EMPTY,
-	FU_BATTERY_STATE_FULLY_CHARGED,
+	FU_POWER_STATE_UNKNOWN,
+	FU_POWER_STATE_AC,
+	FU_POWER_STATE_AC_CHARGING,
+	FU_POWER_STATE_AC_FULLY_CHARGED,
+	FU_POWER_STATE_BATTERY,
+	FU_POWER_STATE_BATTERY_DISCHARGING,
+	FU_POWER_STATE_BATTERY_EMPTY,
 	/*< private >*/
-	FU_BATTERY_STATE_LAST
-} FuBatteryState;
+	FU_POWER_STATE_LAST
+} FuPowerState;
 
 /**
  * FuLidState:
@@ -82,7 +92,9 @@ fu_common_check_full_disk_encryption(GError **error);
 gsize
 fu_common_align_up(gsize value, guint8 alignment);
 const gchar *
-fu_battery_state_to_string(FuBatteryState battery_state);
+fu_power_state_to_string(FuPowerState power_state);
+gboolean
+fu_power_state_is_ac(FuPowerState power_state);
 const gchar *
 fu_lid_state_to_string(FuLidState lid_state);
 
