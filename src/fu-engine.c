@@ -443,14 +443,13 @@ fu_engine_watch_device(FuEngine *self, FuDevice *device)
 }
 
 static void
-fu_engine_ensure_device_battery_inhibit(FuEngine *self, FuDevice *device)
+fu_engine_ensure_device_power_inhibit(FuEngine *self, FuDevice *device)
 {
 	if (fu_config_get_ignore_power(self->config))
 		return;
 
 	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_REQUIRE_AC) &&
-	    (fu_context_get_battery_state(self->ctx) == FU_BATTERY_STATE_DISCHARGING ||
-	     fu_context_get_battery_state(self->ctx) == FU_BATTERY_STATE_EMPTY)) {
+	    !fu_power_state_is_ac(fu_context_get_power_state(self->ctx))) {
 		fu_device_add_problem(device, FWUPD_DEVICE_PROBLEM_REQUIRE_AC_POWER);
 	} else {
 		fu_device_remove_problem(device, FWUPD_DEVICE_PROBLEM_REQUIRE_AC_POWER);
@@ -522,7 +521,7 @@ static void
 fu_engine_device_added_cb(FuDeviceList *device_list, FuDevice *device, FuEngine *self)
 {
 	fu_engine_watch_device(self, device);
-	fu_engine_ensure_device_battery_inhibit(self, device);
+	fu_engine_ensure_device_power_inhibit(self, device);
 	fu_engine_ensure_device_lid_inhibit(self, device);
 	fu_engine_ensure_device_system_inhibit(self, device);
 	fu_engine_acquiesce_reset(self);
@@ -3487,8 +3486,7 @@ fu_engine_device_check_power(FuEngine *self,
 
 	/* not charging */
 	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_REQUIRE_AC) &&
-	    (fu_context_get_battery_state(self->ctx) == FU_BATTERY_STATE_DISCHARGING ||
-	     fu_context_get_battery_state(self->ctx) == FU_BATTERY_STATE_EMPTY)) {
+	    !fu_power_state_is_ac(fu_context_get_power_state(self->ctx))) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_AC_POWER_REQUIRED,
@@ -8871,14 +8869,14 @@ fu_engine_add_runtime_version(FuEngine *self, const gchar *component_id, const g
 }
 
 static void
-fu_engine_context_battery_changed_cb(FuContext *ctx, GParamSpec *pspec, FuEngine *self)
+fu_engine_context_power_changed_cb(FuContext *ctx, GParamSpec *pspec, FuEngine *self)
 {
 	g_autoptr(GPtrArray) devices = fu_device_list_get_all(self->device_list);
 
 	/* apply policy on any existing devices */
 	for (guint i = 0; i < devices->len; i++) {
 		FuDevice *device = g_ptr_array_index(devices, i);
-		fu_engine_ensure_device_battery_inhibit(self, device);
+		fu_engine_ensure_device_power_inhibit(self, device);
 		fu_engine_ensure_device_lid_inhibit(self, device);
 		fu_engine_ensure_device_system_inhibit(self, device);
 	}
@@ -8928,24 +8926,24 @@ fu_engine_init(FuEngine *self)
 			 G_CALLBACK(fu_engine_context_security_changed_cb),
 			 self);
 	g_signal_connect(FU_CONTEXT(self->ctx),
-			 "notify::battery-state",
-			 G_CALLBACK(fu_engine_context_battery_changed_cb),
+			 "notify::power-state",
+			 G_CALLBACK(fu_engine_context_power_changed_cb),
 			 self);
 	g_signal_connect(FU_CONTEXT(self->ctx),
 			 "notify::lid-state",
-			 G_CALLBACK(fu_engine_context_battery_changed_cb),
+			 G_CALLBACK(fu_engine_context_power_changed_cb),
 			 self);
 	g_signal_connect(FU_CONTEXT(self->ctx),
 			 "notify::battery-level",
-			 G_CALLBACK(fu_engine_context_battery_changed_cb),
+			 G_CALLBACK(fu_engine_context_power_changed_cb),
 			 self);
 	g_signal_connect(FU_CONTEXT(self->ctx),
 			 "notify::battery-threshold",
-			 G_CALLBACK(fu_engine_context_battery_changed_cb),
+			 G_CALLBACK(fu_engine_context_power_changed_cb),
 			 self);
 	g_signal_connect(FU_CONTEXT(self->ctx),
 			 "notify::flags",
-			 G_CALLBACK(fu_engine_context_battery_changed_cb),
+			 G_CALLBACK(fu_engine_context_power_changed_cb),
 			 self);
 
 	g_signal_connect(FU_CONFIG(self->config),

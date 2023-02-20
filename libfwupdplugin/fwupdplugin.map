@@ -573,7 +573,6 @@ LIBFWUPDPLUGIN_1.5.8 {
 
 LIBFWUPDPLUGIN_1.6.0 {
   global:
-    fu_battery_state_to_string;
     fu_byte_array_align_up;
     fu_bytes_get_data_safe;
     fu_cabinet_add_file;
@@ -587,7 +586,6 @@ LIBFWUPDPLUGIN_1.6.0 {
     fu_context_add_runtime_version;
     fu_context_add_udev_subsystem;
     fu_context_get_battery_level;
-    fu_context_get_battery_state;
     fu_context_get_battery_threshold;
     fu_context_get_firmware_gtype_by_id;
     fu_context_get_firmware_gtype_ids;
@@ -606,7 +604,6 @@ LIBFWUPDPLUGIN_1.6.0 {
     fu_context_new;
     fu_context_security_changed;
     fu_context_set_battery_level;
-    fu_context_set_battery_state;
     fu_context_set_battery_threshold;
     fu_context_set_compile_versions;
     fu_context_set_runtime_versions;
@@ -1168,11 +1165,15 @@ LIBFWUPDPLUGIN_1.8.11 {
     fu_acpi_table_get_revision;
     fu_acpi_table_get_type;
     fu_acpi_table_new;
+    fu_context_get_power_state;
+    fu_context_set_power_state;
     fu_device_has_problem;
     fu_device_progress_get_type;
     fu_device_progress_new;
     fu_device_sleep;
     fu_device_sleep_full;
+    fu_power_state_is_ac;
+    fu_power_state_to_string;
     fu_strdup;
     fu_udev_device_get_cls;
     fu_udev_device_is_pci_base_cls;

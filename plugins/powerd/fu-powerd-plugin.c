@@ -16,6 +16,14 @@ struct _FuPowerdPlugin {
 
 G_DEFINE_TYPE(FuPowerdPlugin, fu_powerd_plugin, FU_TYPE_PLUGIN)
 
+typedef enum {
+	FU_POWERD_BATTERY_STATE_UNKNOWN,
+	FU_POWERD_BATTERY_STATE_CHARGING,
+	FU_POWERD_BATTERY_STATE_DISCHARGING,
+	FU_POWERD_BATTERY_STATE_EMPTY,
+	FU_POWERD_BATTERY_STATE_FULLY_CHARGED,
+} FuPowerdBatteryState;
+
 static gboolean
 fu_powerd_plugin_create_suspend_file(GError **error)
 {
@@ -66,9 +74,25 @@ fu_powerd_plugin_rescan(FuPlugin *plugin, GVariant *parameters)
 	/* checking if percentage is invalid */
 	if (current_level < 1 || current_level > 100)
 		current_level = FWUPD_BATTERY_LEVEL_INVALID;
-
-	fu_context_set_battery_state(ctx, current_state);
 	fu_context_set_battery_level(ctx, current_level);
+
+	switch (current_state) {
+	case FU_POWERD_BATTERY_STATE_CHARGING:
+		fu_context_set_power_state(ctx, FU_POWER_STATE_AC_CHARGING);
+		break;
+	case FU_POWERD_BATTERY_STATE_DISCHARGING:
+		fu_context_set_power_state(ctx, FU_POWER_STATE_BATTERY_DISCHARGING);
+		break;
+	case FU_POWERD_BATTERY_STATE_EMPTY:
+		fu_context_set_power_state(ctx, FU_POWER_STATE_BATTERY_EMPTY);
+		break;
+	case FU_POWERD_BATTERY_STATE_FULLY_CHARGED:
+		fu_context_set_power_state(ctx, FU_POWER_STATE_AC_FULLY_CHARGED);
+		break;
+	default:
+		fu_context_set_power_state(ctx, FU_POWER_STATE_UNKNOWN);
+		break;
+	}
 }
 
 static void

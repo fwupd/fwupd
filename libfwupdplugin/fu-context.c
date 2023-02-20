@@ -35,7 +35,7 @@ typedef struct {
 	GPtrArray *esp_volumes;
 	GHashTable *firmware_gtypes;
 	GHashTable *hwid_flags; /* str: */
-	FuBatteryState battery_state;
+	FuPowerState power_state;
 	FuLidState lid_state;
 	guint battery_level;
 	guint battery_threshold;
@@ -48,7 +48,7 @@ enum { SIGNAL_SECURITY_CHANGED, SIGNAL_LAST };
 
 enum {
 	PROP_0,
-	PROP_BATTERY_STATE,
+	PROP_POWER_STATE,
 	PROP_LID_STATE,
 	PROP_BATTERY_LEVEL,
 	PROP_BATTERY_THRESHOLD,
@@ -907,42 +907,42 @@ fu_context_load_quirks(FuContext *self, FuQuirksLoadFlags flags, GError **error)
 }
 
 /**
- * fu_context_get_battery_state:
+ * fu_context_get_power_state:
  * @self: a #FuContext
  *
  * Gets if the system is on battery power, e.g. UPS or laptop battery.
  *
- * Returns: a battery state, e.g. %FU_BATTERY_STATE_DISCHARGING
+ * Returns: a power state, e.g. %FU_POWER_STATE_BATTERY_DISCHARGING
  *
- * Since: 1.6.0
+ * Since: 1.8.11
  **/
-FuBatteryState
-fu_context_get_battery_state(FuContext *self)
+FuPowerState
+fu_context_get_power_state(FuContext *self)
 {
 	FuContextPrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FU_IS_CONTEXT(self), FALSE);
-	return priv->battery_state;
+	return priv->power_state;
 }
 
 /**
- * fu_context_set_battery_state:
+ * fu_context_set_power_state:
  * @self: a #FuContext
- * @battery_state: a battery state, e.g. %FU_BATTERY_STATE_DISCHARGING
+ * @power_state: a power state, e.g. %FU_POWER_STATE_BATTERY_DISCHARGING
  *
  * Sets if the system is on battery power, e.g. UPS or laptop battery.
  *
- * Since: 1.6.0
+ * Since: 1.8.11
  **/
 void
-fu_context_set_battery_state(FuContext *self, FuBatteryState battery_state)
+fu_context_set_power_state(FuContext *self, FuPowerState power_state)
 {
 	FuContextPrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FU_IS_CONTEXT(self));
-	if (priv->battery_state == battery_state)
+	if (priv->power_state == power_state)
 		return;
-	priv->battery_state = battery_state;
-	g_debug("battery state now %s", fu_battery_state_to_string(battery_state));
-	g_object_notify(G_OBJECT(self), "battery-state");
+	priv->power_state = power_state;
+	g_debug("power state now %s", fu_power_state_to_string(power_state));
+	g_object_notify(G_OBJECT(self), "power-state");
 }
 
 /**
@@ -951,7 +951,7 @@ fu_context_set_battery_state(FuContext *self, FuBatteryState battery_state)
  *
  * Gets the laptop lid state, if applicable.
  *
- * Returns: a battery state, e.g. %FU_LID_STATE_CLOSED
+ * Returns: a lid state, e.g. %FU_LID_STATE_CLOSED
  *
  * Since: 1.7.4
  **/
@@ -966,7 +966,7 @@ fu_context_get_lid_state(FuContext *self)
 /**
  * fu_context_set_lid_state:
  * @self: a #FuContext
- * @lid_state: a battery state, e.g. %FU_LID_STATE_CLOSED
+ * @lid_state: a lid state, e.g. %FU_LID_STATE_CLOSED
  *
  * Sets the laptop lid state, if applicable.
  *
@@ -1237,8 +1237,8 @@ fu_context_get_property(GObject *object, guint prop_id, GValue *value, GParamSpe
 	FuContext *self = FU_CONTEXT(object);
 	FuContextPrivate *priv = GET_PRIVATE(self);
 	switch (prop_id) {
-	case PROP_BATTERY_STATE:
-		g_value_set_uint(value, priv->battery_state);
+	case PROP_POWER_STATE:
+		g_value_set_uint(value, priv->power_state);
 		break;
 	case PROP_LID_STATE:
 		g_value_set_uint(value, priv->lid_state);
@@ -1264,8 +1264,8 @@ fu_context_set_property(GObject *object, guint prop_id, const GValue *value, GPa
 	FuContext *self = FU_CONTEXT(object);
 	FuContextPrivate *priv = GET_PRIVATE(self);
 	switch (prop_id) {
-	case PROP_BATTERY_STATE:
-		fu_context_set_battery_state(self, g_value_get_uint(value));
+	case PROP_POWER_STATE:
+		fu_context_set_power_state(self, g_value_get_uint(value));
 		break;
 	case PROP_LID_STATE:
 		fu_context_set_lid_state(self, g_value_get_uint(value));
@@ -1319,20 +1319,20 @@ fu_context_class_init(FuContextClass *klass)
 	object_class->set_property = fu_context_set_property;
 
 	/**
-	 * FuContext:battery-state:
+	 * FuContext:power-state:
 	 *
-	 * The system battery state.
+	 * The system power state.
 	 *
-	 * Since: 1.6.0
+	 * Since: 1.8.11
 	 */
-	pspec = g_param_spec_uint("battery-state",
+	pspec = g_param_spec_uint("power-state",
 				  NULL,
 				  NULL,
-				  FU_BATTERY_STATE_UNKNOWN,
-				  FU_BATTERY_STATE_LAST,
-				  FU_BATTERY_STATE_UNKNOWN,
+				  FU_POWER_STATE_UNKNOWN,
+				  FU_POWER_STATE_LAST,
+				  FU_POWER_STATE_UNKNOWN,
 				  G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
-	g_object_class_install_property(object_class, PROP_BATTERY_STATE, pspec);
+	g_object_class_install_property(object_class, PROP_POWER_STATE, pspec);
 
 	/**
 	 * FuContext:lid-state:
