@@ -434,7 +434,7 @@ fu_strsplit(const gchar *str, gsize sz, const gchar *delimiter, gint max_tokens)
  * @str: a string to split
  * @sz: size of @str, or -1 for unknown
  * @delimiter: a string which specifies the places at which to split the string
- * @callback: (scope call): a #FuStrsplitFunc.
+ * @callback: (scope call) (closure user_data): a #FuStrsplitFunc.
  * @user_data: user data
  * @error: (nullable): optional return location for an error
  *

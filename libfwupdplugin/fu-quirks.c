@@ -506,7 +506,7 @@ fu_quirks_lookup_by_id(FuQuirks *self, const gchar *guid, const gchar *key)
  * fu_quirks_lookup_by_id_iter:
  * @self: a #FuQuirks
  * @guid: GUID to lookup
- * @iter_cb: (scope async): a function to call for each result
+ * @iter_cb: (scope call) (closure user_data): a function to call for each result
  * @user_data: user data passed to @iter_cb
  *
  * Looks up all entries in the hardware database using a GUID value.

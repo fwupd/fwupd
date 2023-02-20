@@ -855,7 +855,7 @@ fwupd_client_connect_get_connection_cb(GObject *source, GAsyncResult *res, gpoin
  * fwupd_client_connect_async:
  * @self: a #FwupdClient
  * @cancellable: (nullable): optional #GCancellable
- * @callback: the function to run on completion
+ * @callback: (scope async) (closure callback_data): the function to run on completion
  * @callback_data: the data to pass to @callback
  *
  * Sets up the client ready for use. This is probably the first method you call
@@ -1006,7 +1006,7 @@ fwupd_client_quit_cb(GObject *source, GAsyncResult *res, gpointer user_data)
  * fwupd_client_quit_async:
  * @self: a #FwupdClient
  * @cancellable: (nullable): optional #GCancellable
- * @callback: the function to run on completion
+ * @callback: (scope async) (closure callback_data): the function to run on completion
  * @callback_data: the data to pass to @callback
  *
  * Asks the daemon to quit. This can only be called by the root user.
@@ -1112,7 +1112,7 @@ fwupd_client_get_host_security_attrs_cb(GObject *source, GAsyncResult *res, gpoi
  * fwupd_client_get_host_security_attrs_async:
  * @self: a #FwupdClient
  * @cancellable: (nullable): optional #GCancellable
- * @callback: the function to run on completion
+ * @callback: (scope async) (closure callback_data): the function to run on completion
  * @callback_data: the data to pass to @callback
  *
  * Gets all the host security attributes from the daemon.
@@ -1191,7 +1191,7 @@ fwupd_client_modify_bios_setting_cb(GObject *source, GAsyncResult *res, gpointer
  * @self: a #FwupdClient
  * @settings: (transfer container): BIOS settings
  * @cancellable: (nullable): optional #GCancellable
- * @callback: the function to run on completion
+ * @callback: (scope async) (closure callback_data): the function to run on completion
  * @callback_data: the data to pass to @callback
  *
  * Modifies a BIOS setting using kernel API.
@@ -1282,7 +1282,7 @@ fwupd_client_get_bios_settings_cb(GObject *source, GAsyncResult *res, gpointer u
  * fwupd_client_get_bios_settings_async:
  * @self: a #FwupdClient
  * @cancellable: (nullable): optional #GCancellable
- * @callback: the function to run on completion
+ * @callback: (scope async) (closure callback_data): the function to run on completion
  * @callback_data: the data to pass to @callback
  *
  * Gets all the host security attributes from the daemon.
@@ -1363,7 +1363,7 @@ fwupd_client_get_host_security_events_cb(GObject *source, GAsyncResult *res, gpo
  * @self: a #FwupdClient
  * @limit: maximum number of events, or 0 for no limit
  * @cancellable: (nullable): optional #GCancellable
- * @callback: the function to run on completion
+ * @callback: (scope async) (closure callback_data): the function to run on completion
  * @callback_data: the data to pass to @callback
  *
  * Gets all the host security events from the daemon.
@@ -1465,7 +1465,7 @@ fwupd_client_get_report_metadata_cb(GObject *source, GAsyncResult *res, gpointer
  * fwupd_client_get_report_metadata_async:
  * @self: a #FwupdClient
  * @cancellable: (nullable): optional #GCancellable
- * @callback: the function to run on completion
+ * @callback: (scope async) (closure callback_data): the function to run on completion
  * @callback_data: the data to pass to @callback
  *
  * Gets all the report metadata from the daemon.
@@ -1545,7 +1545,7 @@ fwupd_client_get_devices_cb(GObject *source, GAsyncResult *res, gpointer user_da
  * fwupd_client_get_devices_async:
  * @self: a #FwupdClient
  * @cancellable: (nullable): optional #GCancellable
- * @callback: the function to run on completion
+ * @callback: (scope async) (closure callback_data): the function to run on completion
  * @callback_data: the data to pass to @callback
  *
  * Gets all the devices registered with the daemon.
@@ -1625,7 +1625,7 @@ fwupd_client_get_plugins_cb(GObject *source, GAsyncResult *res, gpointer user_da
  * fwupd_client_get_plugins_async:
  * @self: a #FwupdClient
  * @cancellable: (nullable): optional #GCancellable
- * @callback: the function to run on completion
+ * @callback: (scope async) (closure callback_data): the function to run on completion
  * @callback_data: the data to pass to @callback
  *
  * Gets all the plugins being used by the daemon.
@@ -1705,7 +1705,7 @@ fwupd_client_get_history_cb(GObject *source, GAsyncResult *res, gpointer user_da
  * fwupd_client_get_history_async:
  * @self: a #FwupdClient
  * @cancellable: (nullable): optional #GCancellable
- * @callback: the function to run on completion
+ * @callback: (scope async) (closure callback_data): the function to run on completion
  * @callback_data: the data to pass to @callback
  *
  * Gets all the history.
@@ -1815,7 +1815,7 @@ fwupd_client_get_device_by_id_cb(GObject *source, GAsyncResult *res, gpointer us
  * @self: a #FwupdClient
  * @device_id: (not nullable): the device ID
  * @cancellable: (nullable): optional #GCancellable
- * @callback: the function to run on completion
+ * @callback: (scope async) (closure callback_data): the function to run on completion
  * @callback_data: the data to pass to @callback
  *
  * Gets a device by it's device ID.
@@ -1913,7 +1913,7 @@ fwupd_client_get_devices_by_guid_cb(GObject *source, GAsyncResult *res, gpointer
  * @self: a #FwupdClient
  * @guid: the GUID, e.g. `e22c4520-43dc-5bb3-8245-5787fead9b63`
  * @cancellable: (nullable): optional #GCancellable
- * @callback: the function to run on completion
+ * @callback: (scope async) (closure callback_data): the function to run on completion
  * @callback_data: the data to pass to @callback
  *
  * Gets any devices that provide a specific GUID. An error is returned if no
@@ -1994,7 +1994,7 @@ fwupd_client_get_releases_cb(GObject *source, GAsyncResult *res, gpointer user_d
  * @self: a #FwupdClient
  * @device_id: (not nullable): the device ID
  * @cancellable: (nullable): optional #GCancellable
- * @callback: the function to run on completion
+ * @callback: (scope async) (closure callback_data): the function to run on completion
  * @callback_data: the data to pass to @callback
  *
  * Gets all the releases for a specific device
@@ -2077,7 +2077,7 @@ fwupd_client_get_downgrades_cb(GObject *source, GAsyncResult *res, gpointer user
  * @self: a #FwupdClient
  * @device_id: (not nullable): the device ID
  * @cancellable: (nullable): optional #GCancellable
- * @callback: the function to run on completion
+ * @callback: (scope async) (closure callback_data): the function to run on completion
  * @callback_data: the data to pass to @callback
  *
  * Gets all the downgrades for a specific device.
@@ -2160,7 +2160,7 @@ fwupd_client_get_upgrades_cb(GObject *source, GAsyncResult *res, gpointer user_d
  * @self: a #FwupdClient
  * @device_id: (not nullable): the device ID
  * @cancellable: (nullable): optional #GCancellable
- * @callback: the function to run on completion
+ * @callback: (scope async) (closure callback_data): the function to run on completion
  * @callback_data: the data to pass to @callback
  *
  * Gets all the upgrades for a specific device.
@@ -2242,7 +2242,7 @@ fwupd_client_modify_config_cb(GObject *source, GAsyncResult *res, gpointer user_
  * @key: config key, e.g. `DisabledPlugins`
  * @value: config value, e.g. `*`
  * @cancellable: (nullable): optional #GCancellable
- * @callback: the function to run on completion
+ * @callback: (scope async) (closure callback_data): the function to run on completion
  * @callback_data: the data to pass to @callback
  *
  * Modifies a daemon config option.
@@ -2323,7 +2323,7 @@ fwupd_client_activate_cb(GObject *source, GAsyncResult *res, gpointer user_data)
  * @self: a #FwupdClient
  * @device_id: a device
  * @cancellable: (nullable): optional #GCancellable
- * @callback: the function to run on completion
+ * @callback: (scope async) (closure callback_data): the function to run on completion
  * @callback_data: the data to pass to @callback
  *
  * Activates up a device, which normally means the device switches to a new
@@ -2402,7 +2402,7 @@ fwupd_client_verify_cb(GObject *source, GAsyncResult *res, gpointer user_data)
  * @self: a #FwupdClient
  * @device_id: (not nullable): the device ID
  * @cancellable: (nullable): optional #GCancellable
- * @callback: the function to run on completion
+ * @callback: (scope async) (closure callback_data): the function to run on completion
  * @callback_data: the data to pass to @callback
  *
  * Verify a specific device.
@@ -2480,7 +2480,7 @@ fwupd_client_verify_update_cb(GObject *source, GAsyncResult *res, gpointer user_
  * @self: a #FwupdClient
  * @device_id: (not nullable): the device ID
  * @cancellable: (nullable): optional #GCancellable
- * @callback: the function to run on completion
+ * @callback: (scope async) (closure callback_data): the function to run on completion
  * @callback_data: the data to pass to @callback
  *
  * Update the verification record for a specific device.
@@ -2558,7 +2558,7 @@ fwupd_client_unlock_cb(GObject *source, GAsyncResult *res, gpointer user_data)
  * @self: a #FwupdClient
  * @device_id: (not nullable): the device ID
  * @cancellable: (nullable): optional #GCancellable
- * @callback: the function to run on completion
+ * @callback: (scope async) (closure callback_data): the function to run on completion
  * @callback_data: the data to pass to @callback
  *
  * Unlocks a specific device so firmware can be read or wrote.
@@ -2636,7 +2636,7 @@ fwupd_client_clear_results_cb(GObject *source, GAsyncResult *res, gpointer user_
  * @self: a #FwupdClient
  * @device_id: a device
  * @cancellable: (nullable): optional #GCancellable
- * @callback: the function to run on completion
+ * @callback: (scope async) (closure callback_data): the function to run on completion
  * @callback_data: the data to pass to @callback
  *
  * Clears the results for a specific device.
@@ -2716,7 +2716,7 @@ fwupd_client_get_results_cb(GObject *source, GAsyncResult *res, gpointer user_da
  * @self: a #FwupdClient
  * @device_id: (not nullable): the device ID
  * @cancellable: (nullable): optional #GCancellable
- * @callback: the function to run on completion
+ * @callback: (scope async) (closure callback_data): the function to run on completion
  * @callback_data: the data to pass to @callback
  *
  * Gets the results of a previous firmware update for a specific device.
@@ -2888,7 +2888,7 @@ fwupd_client_install_stream_async(FwupdClient *self,
  * @bytes: cabinet archive
  * @install_flags: install flags, e.g. %FWUPD_INSTALL_FLAG_ALLOW_REINSTALL
  * @cancellable: (nullable): optional #GCancellable
- * @callback: the function to run on completion
+ * @callback: (scope async) (closure callback_data): the function to run on completion
  * @callback_data: the data to pass to @callback
  *
  * Install firmware onto a specific device.
@@ -2971,7 +2971,7 @@ fwupd_client_install_bytes_finish(FwupdClient *self, GAsyncResult *res, GError *
  * @filename: the filename to install
  * @install_flags: install flags, e.g. %FWUPD_INSTALL_FLAG_ALLOW_REINSTALL
  * @cancellable: (nullable): optional #GCancellable
- * @callback: the function to run on completion
+ * @callback: (scope async) (closure callback_data): the function to run on completion
  * @callback_data: the data to pass to @callback
  *
  * Install firmware onto a specific device.
@@ -3271,7 +3271,7 @@ fwupd_client_filter_locations(GPtrArray *locations,
  * @install_flags: install flags, e.g. %FWUPD_INSTALL_FLAG_ALLOW_REINSTALL
  * @download_flags: download flags, e.g. %FWUPD_CLIENT_DOWNLOAD_FLAG_DISABLE_IPFS
  * @cancellable: (nullable): optional #GCancellable
- * @callback: the function to run on completion
+ * @callback: (scope async) (closure callback_data): the function to run on completion
  * @callback_data: the data to pass to @callback
  *
  * Installs a new release on a device, downloading the firmware if required.
@@ -3339,7 +3339,7 @@ fwupd_client_install_release2_async(FwupdClient *self,
  * @release: (not nullable): a release
  * @install_flags: install flags, e.g. %FWUPD_INSTALL_FLAG_ALLOW_REINSTALL
  * @cancellable: (nullable): optional #GCancellable
- * @callback: the function to run on completion
+ * @callback: (scope async) (closure callback_data): the function to run on completion
  * @callback_data: the data to pass to @callback
  *
  * Installs a new release on a device, downloading the firmware if required.
@@ -3460,7 +3460,7 @@ fwupd_client_get_details_stream_async(FwupdClient *self,
  * @self: a #FwupdClient
  * @bytes: firmware archive
  * @cancellable: (nullable): optional #GCancellable
- * @callback: the function to run on completion
+ * @callback: (scope async) (closure callback_data): the function to run on completion
  * @callback_data: the data to pass to @callback
  *
  * Gets details about a specific firmware file.
@@ -3833,7 +3833,7 @@ fwupd_client_update_metadata_stream_async(FwupdClient *self,
  * @metadata: XML metadata data
  * @signature: signature data
  * @cancellable: (nullable): optional #GCancellable
- * @callback: the function to run on completion
+ * @callback: (scope async) (closure callback_data): the function to run on completion
  * @callback_data: the data to pass to @callback
  *
  * Updates the metadata. This allows a session process to download the metadata
@@ -4038,7 +4038,7 @@ fwupd_client_refresh_remote_signature_cb(GObject *source, GAsyncResult *res, gpo
  * @self: a #FwupdClient
  * @remote: a #FwupdRemote
  * @cancellable: (nullable): optional #GCancellable
- * @callback: the function to run on completion
+ * @callback: (scope async) (closure callback_data): the function to run on completion
  * @callback_data: the data to pass to @callback
  *
  * Refreshes a remote by downloading new metadata.
@@ -4135,7 +4135,7 @@ fwupd_client_get_remotes_cb(GObject *source, GAsyncResult *res, gpointer user_da
  * fwupd_client_get_remotes_async:
  * @self: a #FwupdClient
  * @cancellable: (nullable): optional #GCancellable
- * @callback: the function to run on completion
+ * @callback: (scope async) (closure callback_data): the function to run on completion
  * @callback_data: the data to pass to @callback
  *
  * Gets the list of remotes that have been configured for the system.
@@ -4219,7 +4219,7 @@ fwupd_client_get_approved_firmware_cb(GObject *source, GAsyncResult *res, gpoint
  * fwupd_client_get_approved_firmware_async:
  * @self: a #FwupdClient
  * @cancellable: (nullable): optional #GCancellable
- * @callback: the function to run on completion
+ * @callback: (scope async) (closure callback_data): the function to run on completion
  * @callback_data: the data to pass to @callback
  *
  * Gets the list of approved firmware.
@@ -4298,7 +4298,7 @@ fwupd_client_set_approved_firmware_cb(GObject *source, GAsyncResult *res, gpoint
  * @self: a #FwupdClient
  * @checksums: (element-type utf8): firmware checksums
  * @cancellable: (nullable): optional #GCancellable
- * @callback: the function to run on completion
+ * @callback: (scope async) (closure callback_data): the function to run on completion
  * @callback_data: the data to pass to @callback
  *
  * Sets the list of approved firmware.
@@ -4386,7 +4386,7 @@ fwupd_client_get_blocked_firmware_cb(GObject *source, GAsyncResult *res, gpointe
  * fwupd_client_get_blocked_firmware_async:
  * @self: a #FwupdClient
  * @cancellable: (nullable): optional #GCancellable
- * @callback: the function to run on completion
+ * @callback: (scope async) (closure callback_data): the function to run on completion
  * @callback_data: the data to pass to @callback
  *
  * Gets the list of blocked firmware.
@@ -4465,7 +4465,7 @@ fwupd_client_set_blocked_firmware_cb(GObject *source, GAsyncResult *res, gpointe
  * @self: a #FwupdClient
  * @checksums: (element-type utf8): firmware checksums
  * @cancellable: (nullable): optional #GCancellable
- * @callback: the function to run on completion
+ * @callback: (scope async) (closure callback_data): the function to run on completion
  * @callback_data: the data to pass to @callback
  *
  * Sets the list of blocked firmware.
@@ -4548,7 +4548,7 @@ fwupd_client_set_feature_flags_cb(GObject *source, GAsyncResult *res, gpointer u
  * @self: a #FwupdClient
  * @feature_flags: feature flags, e.g. %FWUPD_FEATURE_FLAG_UPDATE_TEXT
  * @cancellable: (nullable): optional #GCancellable
- * @callback: the function to run on completion
+ * @callback: (scope async) (closure callback_data): the function to run on completion
  * @callback_data: the data to pass to @callback
  *
  * Sets the features the client supports. This allows firmware to depend on
@@ -4630,7 +4630,7 @@ fwupd_client_self_sign_cb(GObject *source, GAsyncResult *res, gpointer user_data
  * @value: a string to sign, typically a JSON blob
  * @flags: signing flags, e.g. %FWUPD_SELF_SIGN_FLAG_ADD_TIMESTAMP
  * @cancellable: (nullable): optional #GCancellable
- * @callback: the function to run on completion
+ * @callback: (scope async) (closure callback_data): the function to run on completion
  * @callback_data: the data to pass to @callback
  *
  * Signs the data using the client self-signed certificate.
@@ -4727,7 +4727,7 @@ fwupd_client_modify_remote_cb(GObject *source, GAsyncResult *res, gpointer user_
  * @key: the key, e.g. `Enabled`
  * @value: the key, e.g. `true`
  * @cancellable: (nullable): optional #GCancellable
- * @callback: the function to run on completion
+ * @callback: (scope async) (closure callback_data): the function to run on completion
  * @callback_data: the data to pass to @callback
  *
  * Modifies a system remote in a specific way.
@@ -4811,7 +4811,7 @@ fwupd_client_modify_device_cb(GObject *source, GAsyncResult *res, gpointer user_
  * @key: (not nullable): the key, e.g. `Flags`
  * @value: (not nullable): the value, e.g. `reported`
  * @cancellable: (nullable): optional #GCancellable
- * @callback: the function to run on completion
+ * @callback: (scope async) (closure callback_data): the function to run on completion
  * @callback_data: the data to pass to @callback
  *
  * Modifies a device in a specific way. Not all properties on the #FwupdDevice
@@ -4916,7 +4916,7 @@ fwupd_client_get_remote_by_id_cb(GObject *source, GAsyncResult *res, gpointer us
  * @self: a #FwupdClient
  * @remote_id: (not nullable): the remote ID, e.g. `lvfs-testing`
  * @cancellable: (nullable): optional #GCancellable
- * @callback: the function to run on completion
+ * @callback: (scope async) (closure callback_data): the function to run on completion
  * @callback_data: the data to pass to @callback
  *
  * Gets a specific remote that has been configured for the system.
@@ -5275,7 +5275,7 @@ fwupd_client_download_bytes2_async(FwupdClient *self,
  * @url: (not nullable): the remote URL
  * @flags: download flags, e.g. %FWUPD_CLIENT_DOWNLOAD_FLAG_NONE
  * @cancellable: (nullable): optional #GCancellable
- * @callback: the function to run on completion
+ * @callback: (scope async) (closure callback_data): the function to run on completion
  * @callback_data: the data to pass to @callback
  *
  * Downloads data from a remote server. The [method@Client.set_user_agent] function
@@ -5384,7 +5384,7 @@ fwupd_client_upload_bytes_thread_cb(GTask *task,
  * @signature: (nullable): signature string
  * @flags: download flags, e.g. %FWUPD_CLIENT_DOWNLOAD_FLAG_NONE
  * @cancellable: (nullable): optional #GCancellable
- * @callback: the function to run on completion
+ * @callback: (scope async) (closure callback_data): the function to run on completion
  * @callback_data: the data to pass to @callback
  *
  * Uploads data to a remote server. The [method@Client.set_user_agent] function
@@ -5510,7 +5510,7 @@ fwupd_client_inhibit_cb(GObject *source, GAsyncResult *res, gpointer user_data)
  * @self: a #FwupdClient
  * @reason: (not nullable): the inhibit reason, e.g. `user active`
  * @cancellable: (nullable): optional #GCancellable
- * @callback: the function to run on completion
+ * @callback: (scope async) (closure callback_data): the function to run on completion
  * @callback_data: the data to pass to @callback
  *
  * Marks all devices as unavailable for update. Update is only available if there is no other
@@ -5592,7 +5592,7 @@ fwupd_client_uninhibit_cb(GObject *source, GAsyncResult *res, gpointer user_data
  * @self: a #FwupdClient
  * @inhibit_id: (not nullable): the inhibit ID
  * @cancellable: (nullable): optional #GCancellable
- * @callback: the function to run on completion
+ * @callback: (scope async) (closure callback_data): the function to run on completion
  * @callback_data: the data to pass to @callback
  *
  * Removes the inhibit token added by the application.
@@ -5691,7 +5691,7 @@ fwupd_client_emulation_load_cb(GObject *source, GAsyncResult *res, gpointer user
  * @self: a #FwupdClient
  * @data: archive data of JSON files
  * @cancellable: (nullable): optional #GCancellable
- * @callback: the function to run on completion
+ * @callback: (scope async) (closure callback_data): the function to run on completion
  * @callback_data: the data to pass to @callback
  *
  * Loads an emulated device into the daemon backend that has the phases set by the JSON data,
@@ -5774,7 +5774,7 @@ fwupd_client_emulation_save_cb(GObject *source, GAsyncResult *res, gpointer user
  * fwupd_client_emulation_save_async:
  * @self: a #FwupdClient
  * @cancellable: (nullable): optional #GCancellable
- * @callback: the function to run on completion
+ * @callback: (scope async) (closure callback_data): the function to run on completion
  * @callback_data: the data to pass to @callback
  *
  * Gets the captured data from all filtered devices for all recorded phases. The data is returned

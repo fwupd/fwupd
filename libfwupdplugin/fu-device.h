@@ -123,7 +123,7 @@ typedef enum {
 /**
  * FuDeviceRetryFunc:
  * @self: a #FuDevice
- * @user_data: user data
+ * @user_data: (closure): user data
  * @error: (nullable): optional return location for an error
  *
  * The device retry iteration callback.
