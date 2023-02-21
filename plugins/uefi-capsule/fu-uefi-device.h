@@ -84,6 +84,12 @@ typedef enum {
  * Do not prepend a plausible missing capsule header.
  */
 #define FU_UEFI_DEVICE_FLAG_NO_CAPSULE_HEADER_FIXUP (1 << 7)
+/**
+ * FU_UEFI_DEVICE_FLAG_ENABLE_EFI_DEBUGGING:
+ *
+ * Enable debugging the EFI binary.
+ */
+#define FU_UEFI_DEVICE_FLAG_ENABLE_EFI_DEBUGGING (1 << 8)
 
 FuUefiDeviceKind
 fu_uefi_device_kind_from_string(const gchar *kind);
@@ -130,3 +136,5 @@ void
 fu_uefi_device_set_status(FuUefiDevice *self, FuUefiDeviceStatus status);
 void
 fu_uefi_device_set_require_esp_free_space(FuUefiDevice *self, gsize require_esp_free_space);
+gboolean
+fu_uefi_device_perhaps_enable_debugging(FuUefiDevice *self, GError **error);
