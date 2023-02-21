@@ -437,6 +437,7 @@ static void
 fu_uefi_capsule_plugin_load_config(FuPlugin *plugin, FuDevice *device)
 {
 	gboolean disable_shim;
+	gboolean enable_efi_debugging;
 	guint64 sz_reqd = 0;
 	g_autofree gchar *require_esp_free_space = NULL;
 	g_autoptr(GError) error_local = NULL;
@@ -454,6 +455,11 @@ fu_uefi_capsule_plugin_load_config(FuPlugin *plugin, FuDevice *device)
 	disable_shim = fu_plugin_get_config_value_boolean(plugin, "DisableShimForSecureBoot");
 	if (!disable_shim)
 		fu_device_add_private_flag(device, FU_UEFI_DEVICE_FLAG_USE_SHIM_FOR_SB);
+
+	/* enable the fwupd.efi debug log? */
+	enable_efi_debugging = fu_plugin_get_config_value_boolean(plugin, "EnableEfiDebugging");
+	if (enable_efi_debugging)
+		fu_device_add_private_flag(device, FU_UEFI_DEVICE_FLAG_ENABLE_EFI_DEBUGGING);
 }
 
 static gboolean

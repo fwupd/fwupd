@@ -650,11 +650,77 @@ fu_uefi_device_probe(FuDevice *device, GError **error)
 	return TRUE;
 }
 
+static void
+fu_uefi_device_capture_efi_debugging(FuDevice *device)
+{
+	gsize sz = 0;
+	g_autofree gchar *str = NULL;
+	g_autofree guint16 *buf_ucs2 = NULL;
+	g_autofree guint8 *buf = NULL;
+	g_autoptr(GError) error_local = NULL;
+
+	/* get the EFI variable contents */
+	if (!fu_efivar_get_data(FU_EFIVAR_GUID_FWUPDATE,
+				"FWUPDATE_DEBUG_LOG",
+				&buf,
+				&sz,
+				NULL,
+				&error_local)) {
+		fu_device_set_update_error(device, error_local->message);
+		return;
+	}
+
+	/* convert from UCS-2 to UTF-8, carefully */
+	buf_ucs2 = g_new0(guint16, (sz / 2) + 1);
+	memcpy(buf_ucs2, buf, sz);
+	str = g_utf16_to_utf8(buf_ucs2, sz / 2, NULL, NULL, &error_local);
+	if (str == NULL) {
+		fu_device_set_update_error(device, error_local->message);
+		return;
+	}
+
+	/* success */
+	fu_device_set_update_error(device, str);
+}
+
+gboolean
+fu_uefi_device_perhaps_enable_debugging(FuUefiDevice *self, GError **error)
+{
+	if (fu_device_has_private_flag(FU_DEVICE(self), FU_UEFI_DEVICE_FLAG_ENABLE_EFI_DEBUGGING)) {
+		const guint8 data = 1;
+		if (!fu_efivar_set_data(FU_EFIVAR_GUID_FWUPDATE,
+					"FWUPDATE_VERBOSE",
+					&data,
+					sizeof(data),
+					FU_EFIVAR_ATTR_NON_VOLATILE |
+					    FU_EFIVAR_ATTR_BOOTSERVICE_ACCESS |
+					    FU_EFIVAR_ATTR_RUNTIME_ACCESS,
+					error)) {
+			g_prefix_error(error, "failed to enable debugging: ");
+			return FALSE;
+		}
+		return TRUE;
+	}
+
+	/* unset this */
+	if (fu_efivar_exists(FU_EFIVAR_GUID_FWUPDATE, "FWUPDATE_VERBOSE")) {
+		if (!fu_efivar_delete(FU_EFIVAR_GUID_FWUPDATE, "FWUPDATE_VERBOSE", error))
+			return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
 static gboolean
 fu_uefi_device_get_results(FuDevice *device, GError **error)
 {
 	FuUefiDevice *self = FU_UEFI_DEVICE(device);
 	FuUefiDevicePrivate *priv = GET_PRIVATE(self);
+
+	/* capture EFI binary debug output */
+	if (fu_device_has_private_flag(device, FU_UEFI_DEVICE_FLAG_ENABLE_EFI_DEBUGGING))
+		fu_uefi_device_capture_efi_debugging(device);
 
 	/* just set the update error */
 	fu_uefi_device_set_status(self, priv->last_attempt_status);
@@ -764,6 +830,9 @@ fu_uefi_device_init(FuUefiDevice *self)
 	fu_device_register_private_flag(FU_DEVICE(self),
 					FU_UEFI_DEVICE_FLAG_NO_CAPSULE_HEADER_FIXUP,
 					"no-capsule-header-fixup");
+	fu_device_register_private_flag(FU_DEVICE(self),
+					FU_UEFI_DEVICE_FLAG_ENABLE_EFI_DEBUGGING,
+					"enable-debugging");
 }
 
 static void

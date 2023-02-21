@@ -155,11 +155,11 @@ fu_uefi_grub_device_write_firmware(FuDevice *device,
 	if (g_getenv("FWUPD_UEFI_TEST") != NULL)
 		return TRUE;
 
-	/* delete the logs to save space; use fwupdate to debug the EFI binary */
-	if (fu_efivar_exists(FU_EFIVAR_GUID_FWUPDATE, "FWUPDATE_VERBOSE")) {
-		if (!fu_efivar_delete(FU_EFIVAR_GUID_FWUPDATE, "FWUPDATE_VERBOSE", error))
-			return FALSE;
-	}
+	/* enable debugging in the EFI binary */
+	if (!fu_uefi_device_perhaps_enable_debugging(self, error))
+		return FALSE;
+
+	/* delete the old log to save space */
 	if (fu_efivar_exists(FU_EFIVAR_GUID_FWUPDATE, "FWUPDATE_DEBUG_LOG")) {
 		if (!fu_efivar_delete(FU_EFIVAR_GUID_FWUPDATE, "FWUPDATE_DEBUG_LOG", error))
 			return FALSE;
