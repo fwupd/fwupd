@@ -42,11 +42,20 @@ fu_dfu_tool = executable(
 )
 endif
 
-if get_option('compat_cli') and get_option('man')
-  configure_file(
-    input: 'dfu-tool.1',
+if get_option('compat_cli') and pandoc.found()
+  conf_man = configuration_data()
+  conf_man.set('PACKAGE_VERSION', fwupd_version)
+  dfu_tool_md = configure_file(
+    input: 'dfu-tool.md',
+    output: 'dfu-tool.md',
+    configuration: conf_man,
+  )
+  custom_target('dfu-tool.1',
+    input: dfu_tool_md,
     output: 'dfu-tool.1',
-    configuration: conf,
+    command: [
+      pandoc, '--standalone', '--to', 'man', '@INPUT@', '-o', '@OUTPUT@',
+    ],
     install: true,
     install_dir: join_paths(mandir, 'man1'),
   )

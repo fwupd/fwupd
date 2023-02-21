@@ -273,6 +273,9 @@ if libgcab.type_name() == 'pkgconfig'
   endif
 endif
 
+# manpages
+pandoc = find_program('pandoc', required: get_option('man'))
+
 bashcomp = dependency('bash-completion', required: false)
 python3 = import('python').find_installation('python3')
 

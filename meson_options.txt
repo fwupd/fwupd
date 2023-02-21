@@ -5,7 +5,7 @@ option('firmware-packager', type : 'boolean', value : true, description : 'enabl
 option('docs', type : 'feature', description : 'Build developer documentation', deprecated: {'docgen': 'enabled', 'none': 'disabled'})
 option('introspection', type : 'feature', description : 'generate GObject Introspection data', deprecated: {'true': 'enabled', 'false': 'disabled'})
 option('lvfs', type : 'combo', choices : ['true', 'false', 'disabled'], value : 'true', description : 'install LVFS remotes')
-option('man', type : 'boolean', value : true, description : 'enable man pages')
+option('man', type : 'feature', deprecated: {'true': 'enabled', 'false': 'disabled'}, description : 'man pages')
 option('libarchive', type : 'feature', description : 'libarchive support', deprecated: {'true': 'enabled', 'false': 'disabled'})
 option('gudev', type : 'feature', description : 'GUdev support', deprecated: {'true': 'enabled', 'false': 'disabled'})
 option('gusb', type : 'feature', description : 'GUsb support', deprecated: {'true': 'enabled', 'false': 'disabled'})
