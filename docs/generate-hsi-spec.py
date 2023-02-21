@@ -86,6 +86,12 @@ if __name__ == "__main__":
             for url, title in item["references"].items():
                 tmp += ["- [{}]({})".format(title, url)]
             txt += ["\n".join(tmp)]
+        if "requires" in item:
+            txt += ["**Hardware requirements:**"]
+            if "CPUID\\VID_GenuineIntel" in item["requires"]:
+                txt += ["This attribute will only be available when using Intel CPUs."]
+            elif "CPUID\\VID_AuthenticAMD" in item["requires"]:
+                txt += ["This attribute will only be available when using AMD CPUs."]
         if "more-information" in item:
             txt += ["**More information:**"]
             for para in item["more-information"]:

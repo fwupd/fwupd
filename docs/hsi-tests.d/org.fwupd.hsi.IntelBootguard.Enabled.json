@@ -22,5 +22,8 @@
   "references": {
     "https://github.com/coreboot/coreboot/blob/master/src/soc/intel/jasperlake/include/soc/me.h": "Coreboot documentation"
   },
+  "requires": [
+    "CPUID\\VID_GenuineIntel"
+  ],
   "fwupd-version": "1.5.0"
 }

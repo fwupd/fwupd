@@ -18,5 +18,8 @@
   "references": {
     "https://en.wikipedia.org/wiki/Supervisor_Mode_Access_Prevention": "SMAP Wikipedia Page"
   },
+  "requires": [
+    "CPUID\\VID_GenuineIntel"
+  ],
   "fwupd-version": "1.5.0"
 }

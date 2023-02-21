@@ -20,5 +20,8 @@
   "references": {
     "https://www.intel.com/content/dam/www/public/us/en/documents/datasheets/6-chipset-c200-chipset-datasheet.pdf": "Intel C200 Datasheet"
   },
+  "requires": [
+    "CPUID\\VID_GenuineIntel"
+  ],
   "fwupd-version": "1.5.0"
 }

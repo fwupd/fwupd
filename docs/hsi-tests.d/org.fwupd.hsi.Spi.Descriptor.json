@@ -17,5 +17,8 @@
     "locked": "the SPI BAR is locked and read only from all regions"
   },
   "hsi-level": 1,
+  "requires": [
+    "CPUID\\VID_GenuineIntel"
+  ],
   "fwupd-version": "1.6.0"
 }

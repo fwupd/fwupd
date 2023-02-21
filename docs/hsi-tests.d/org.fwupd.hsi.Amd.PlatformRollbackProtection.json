@@ -25,5 +25,8 @@
     "https://www.amd.com/en/technologies/pro-security": "AMD Secure Processor",
     "https://forums.lenovo.com/t5/Fedora/AMD-Rollback-protection-not-detected-by-fwupd-on-T14-G3-AMD/m-p/5182708?page=1#5810366": "Loading OS Optimized Defaults on Lenovo systems"
   },
+  "requires": [
+    "CPUID\\VID_AuthenticAMD"
+  ],
   "fwupd-version": "1.8.0"
 }

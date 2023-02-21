@@ -15,5 +15,8 @@
     "valid": "ACM protected"
   },
   "hsi-level": 2,
+  "requires": [
+    "CPUID\\VID_GenuineIntel"
+  ],
   "fwupd-version": "1.5.0"
 }

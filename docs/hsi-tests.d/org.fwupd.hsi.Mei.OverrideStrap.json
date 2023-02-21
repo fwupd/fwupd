@@ -18,5 +18,8 @@
   "references": {
     "https://chromium.googlesource.com/chromiumos/third_party/flashrom/+/master/Documentation/mysteries_intel.txt": "Chromium documentation for Intel ME"
   },
+  "requires": [
+    "CPUID\\VID_GenuineIntel"
+  ],
   "fwupd-version": "1.5.0"
 }

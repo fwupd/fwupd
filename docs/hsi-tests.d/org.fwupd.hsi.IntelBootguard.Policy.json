@@ -15,5 +15,8 @@
     "valid": "error enforce policy is set to shutdown"
   },
   "hsi-level": 3,
+  "requires": [
+    "CPUID\\VID_GenuineIntel"
+  ],
   "fwupd-version": "1.5.0"
 }

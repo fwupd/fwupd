@@ -14,5 +14,8 @@
     "enabled": "SPI protections enabled"
   },
   "hsi-level": 3,
+  "requires": [
+    "CPUID\\VID_AuthenticAMD"
+  ],
   "fwupd-version": "1.8.0"
 }

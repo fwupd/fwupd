@@ -17,5 +17,8 @@
   "references": {
     "https://software.intel.com/sites/default/files/managed/4d/2a/control-flow-enforcement-technology-preview.pdf": "Intel CET Technology Preview"
   },
+  "requires": [
+    "CPUID\\VID_GenuineIntel"
+  ],
   "fwupd-version": "1.5.0"
 }
