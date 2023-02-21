@@ -1,0 +1,28 @@
+{
+  "name": "CalDigit Element Hub",
+  "interactive": false,
+  "steps": [
+    {
+      "url": "https://fwupd.org/downloads/e903db0409f07995f74d5fbf47a18ec8b87eb936f98412e04fb33577444fb2ac-CalDigit-TS4_TBT38.cab",
+      "components": [
+        {
+          "version": "38.0",
+          "guids": [
+            "6c67279d-c348-5610-a7ee-0f97836a898d"
+          ]
+        }
+      ]
+    },
+    {
+      "url": "https://fwupd.org/downloads/78f0eb25da781a88a2a9a1191a32b6c7f8c8a61664a42dcb6b156a1b87d525e4-CalDigit-TS4_TBT39.cab",
+      "components": [
+        {
+          "version": "39.82",
+          "guids": [
+            "6c67279d-c348-5610-a7ee-0f97836a898d"
+          ]
+        }
+      ]
+    }
+  ]
+}
