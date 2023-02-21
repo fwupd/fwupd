@@ -17,5 +17,6 @@ meson build \
  -Dconsolekit=disabled \
  -Dsystemd=disabled \
  -Doffline=disabled \
+ -Dcompat_cli=true \
  -Delogind=enabled
 ninja -C build test -v
