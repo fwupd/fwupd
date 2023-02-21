@@ -577,9 +577,19 @@ fu_util_get_devices(FuUtilPrivate *priv, gchar **values, GError **error)
 	g_autoptr(GPtrArray) devs = NULL;
 
 	/* get results from daemon */
-	devs = fwupd_client_get_devices(priv->client, priv->cancellable, error);
-	if (devs == NULL)
-		return FALSE;
+	if (g_strv_length(values) > 0) {
+		devs = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
+		for (guint i = 0; values[i] != NULL; i++) {
+			FwupdDevice *device = fu_util_get_device_by_id(priv, values[i], error);
+			if (device == NULL)
+				return FALSE;
+			g_ptr_array_add(devs, device);
+		}
+	} else {
+		devs = fwupd_client_get_devices(priv->client, priv->cancellable, error);
+		if (devs == NULL)
+			return FALSE;
+	}
 
 	/* not for human consumption */
 	if (priv->as_json)

@@ -811,9 +811,20 @@ fu_util_get_devices(FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 
 	/* get devices and build tree */
-	devs = fu_engine_get_devices(priv->engine, error);
-	if (devs == NULL)
-		return FALSE;
+	if (g_strv_length(values) > 0) {
+		devs = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
+		for (guint i = 0; values[i] != NULL; i++) {
+			FuDevice *device = fu_util_get_device(priv, values[i], error);
+			if (device == NULL)
+				return FALSE;
+			g_ptr_array_add(devs, device);
+		}
+	} else {
+		devs = fu_engine_get_devices(priv->engine, error);
+		if (devs == NULL)
+			return FALSE;
+	}
+
 	if (devs->len > 0) {
 		fwupd_device_array_ensure_parents(devs);
 		fu_util_build_device_tree(priv, root, devs, NULL);
