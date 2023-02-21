@@ -254,13 +254,15 @@ if get_option('man')
       install: true,
       install_dir: join_paths(mandir, 'man1'),
     )
-    configure_file(
-      input: 'fwupdagent.1',
-      output: 'fwupdagent.1',
-      configuration: conf,
-      install: true,
-      install_dir: join_paths(mandir, 'man1'),
-    )
+    if get_option('compat_cli')
+      configure_file(
+        input: 'fwupdagent.1',
+        output: 'fwupdagent.1',
+        configuration: conf,
+        install: true,
+        install_dir: join_paths(mandir, 'man1'),
+      )
+    endif
   endif
   if build_standalone
     configure_file(
