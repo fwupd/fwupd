@@ -28,9 +28,6 @@ plugs:
     action-prefix: org.freedesktop.fwupd
 
 apps:
-  dfu-tool:
-    command: dfu-tool.wrapper
-    plugs: [fwupdmgr, network]
   dbxtool:
     command: dbxtool.wrapper
     plugs: [fwupdmgr, network]
@@ -57,9 +54,6 @@ apps:
     plugs: [fwupdmgr, network, polkit, shutdown]
     completer:
       share/bash-completion/completions/fwupdmgr
-  fwupdagent:
-    command: fwupdagent.wrapper
-    plugs: [fwupdmgr, network]
 
 parts:
   #needed for UEFI plugin to build UX labels
@@ -293,13 +287,11 @@ parts:
     plugin: dump
     source: contrib/snap
     stage:
-    - dfu-tool.wrapper
     - dbxtool.wrapper
     - fwupd-command
     - fwupdtool.wrapper
     - fwupd.wrapper
     - fwupdmgr.wrapper
-    - fwupdagent.wrapper
 
   policy:
     plugin: nil
