@@ -20,5 +20,8 @@
     "https://malware.news/t/intel-me-manufacturing-mode-obscured-dangers-and-their-relationship-to-apple-macbook-vulnerability-cve-2018-4251/23214": "ME Manufacturing Mode: obscured dangers",
     "https://www.intel.com/content/www/us/en/security-center/advisory/intel-sa-00086.html": "Intel security advisory SA-00086"
   },
+  "requires": [
+    "CPUID\\VID_GenuineIntel"
+  ],
   "fwupd-version": "1.5.0"
 }
