@@ -94,29 +94,71 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
         if not os.path.exists(self.metadata_file):
             raise FileNotFoundError("Metadata file does not exist")
 
-    def refresh_metadata(self, whonix=False, metadata_url=None):
+    def get_remotes(self):
+        """Get metadata URLs for all enabled remotes"""
+
+        if hasattr(self, "_remotes_cache"):
+            return self._remotes_cache
+
+        remotes_json = subprocess.check_output(
+            [
+                FWUPDMGR,
+                "get-remotes",
+                "--json",
+            ]
+        ).decode()
+        remotes_list = json.loads(remotes_json)["Remotes"]
+        remotes = {}
+        for remote in remotes_list:
+            name = remote["Id"]
+            # skip disabled
+            if remote.get("Enabled", "true") != "true":
+                continue
+            # skip local - for metadata refresh, we only care about those
+            # actually needing refreshing
+            if remote.get("Kind") != "download":
+                continue
+            # skip unsupported keyring kind
+            if remote.get("KeyringKind") not in ("jcat",):
+                print(
+                    "Skipping remote '{}' due to unsupported keyring type '{}'".format(
+                        name, remote.get("KeyringKind")
+                    )
+                )
+            assert "MetadataUri" in remote
+            remotes[name] = remote["MetadataUri"]
+
+        self._remotes_cache = remotes
+        return self._remotes_cache
+
+    def refresh_metadata(self, whonix=False, metadata_url=None, remote_name=None):
         """Updates metadata with downloaded files.
 
         Keyword arguments:
         whonix -- Flag enforces downloading the metadata updates via Tor
         metadata_url -- Use custom metadata from the url
+        remote_name -- Set refreshed metadata to this remote
         """
         if not metadata_url:
-            metadata_url = METADATA_URL
+            if remote_name:
+                metadata_url = self.get_remotes()[remote_name]
+            else:
+                raise Exception("missing metadata URL")
         metadata_name = os.path.basename(metadata_url)
         self.metadata_file = os.path.join(FWUPD_DOM0_METADATA_DIR, metadata_name)
         self.metadata_file_jcat = self.metadata_file + ".jcat"
-        if 'testing' in metadata_url:
-            self.lvfs = "lvfs-testing"
-        else:
-            self.lvfs = "lvfs"
+        if not remote_name:
+            if "testing" in metadata_url:
+                remote_name = "lvfs-testing"
+            else:
+                remote_name = "lvfs"
         self._download_metadata(whonix=whonix, metadata_url=metadata_url)
         cmd_refresh = [
             FWUPDMGR,
             "refresh",
             self.metadata_file,
             self.metadata_file_jcat,
-            self.lvfs,
+            remote_name,
         ]
         p = subprocess.Popen(cmd_refresh, stdout=subprocess.PIPE)
         output = p.communicate()[0].decode()
@@ -125,6 +167,18 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
             raise Exception("fwupd-qubes: Refresh failed")
         if not output != "Successfully refreshed metadata manually":
             raise Exception("Manual metadata refresh failed!!!")
+
+    def refresh_metadata_all(self, whonix=False):
+        """Refresh metadata for all 'download' remotes
+
+        Keyword arguments:
+        whonix -- Flag enforces downloading the metadata updates via Tor
+        """
+        for name, url in self.get_remotes().items():
+            try:
+                self.refresh_metadata(whonix=whonix, remote_name=name, metadata_url=url)
+            except Exception as e:
+                print("Failed to refresh remote '{}': {}".format(name, e))
 
     def _get_dom0_updates(self):
         """Gathers information about available updates."""
@@ -521,9 +575,9 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
         if os.path.exists(BIOS_UPDATE_FLAG):
             print("BIOS was updated. Refreshing metadata...")
             if "--whonix" in sys.argv:
-                self.refresh_metadata(whonix=True)
+                self.refresh_metadata_all(whonix=True)
             else:
-                self.refresh_metadata()
+                self.refresh_metadata_all()
             os.remove(BIOS_UPDATE_FLAG)
 
     def heads_update(self, device=None, whonix=False, metadata_url=None):
@@ -619,7 +673,10 @@ def main():
     q.refresh_metadata_after_bios_update()
 
     if not os.path.exists(FWUPD_DOM0_DIR):
-        q.refresh_metadata(whonix=whonix, metadata_url=metadata_url)
+        if metadata_url:
+            q.refresh_metadata(whonix=whonix, metadata_url=metadata_url)
+        else:
+            q.refresh_metadata_all(whonix=whonix)
 
     if sys.argv[1] == "get-updates":
         q.get_updates_qubes()
@@ -632,7 +689,10 @@ def main():
     elif sys.argv[1] == "clean":
         q.clean_cache()
     elif sys.argv[1] == "refresh":
-        q.refresh_metadata(metadata_url=metadata_url, whonix=whonix)
+        if metadata_url:
+            q.refresh_metadata(whonix=whonix, metadata_url=metadata_url)
+        else:
+            q.refresh_metadata_all(whonix=whonix)
     elif sys.argv[1] == "update-heads":
         q.heads_update(device=device_override, metadata_url=metadata_url, whonix=whonix)
     else:
