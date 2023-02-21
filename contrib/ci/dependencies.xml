@@ -1078,6 +1078,24 @@
       <package variant="x86_64" />
     </distro>
   </dependency>
+  <!-- not including void as we need to test it not existing -->
+  <dependency id="pandoc">
+    <distro id="debian">
+      <control />
+      <package variant="x86_64" />
+      <package variant="i386" />
+    </distro>
+    <distro id="ubuntu">
+      <control />
+      <package variant="x86_64" />
+    </distro>
+    <distro id="fedora">
+      <package variant="x86_64" />
+    </distro>
+    <distro id="arch">
+      <package variant="x86_64">pandoc-cli</package>
+    </distro>
+  </dependency>
   <dependency id="pkg-config">
     <distro id="debian">
       <control />
