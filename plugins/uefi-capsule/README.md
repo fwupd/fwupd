@@ -41,6 +41,41 @@ This plugin supports the following protocol ID:
 
 * `org.uefi.capsule`
 
+## Version Format
+
+The ESRT table is the way the firmware tells fwupd about what devices are updatable. Unfortunately
+the information it contains is minimal:
+
+* GUID of the sub-component
+* Enumerated result of the last update
+* Firmware version as a **32 bit unsigned number**
+
+By default, we show the ESRT devices as decimal or hexadecimal numbers as different vendors format
+the number in different ways. When fwupd gets information about how to format the *raw* version
+is converts the number into a more familiar form.
+
+When the hardware GUID is static, a quirk may be appropriate, for example:
+
+    [28108d08-5027-42c2-a5b8-92d6ede9b97b]
+    VersionFormat = quad
+
+As the GUID may be model specific, the daemon also reads the metadata and copies the version format
+from that. This means that `fwupdmgr get-devices` may return the UEFI device as a number initially,
+then once `fwupdmgr refresh` has completed it may start showing the exact same device as `A.B.C.D`,
+aka `quad` format.
+
+The two main formats used by vendors are `triplet`, `quad` and `dell-bios`.
+
+    0xAABBCCDD -> 0xAA.0xBB.0xCCCC is `triplet`, used for Lenovo
+    0xAABBCCDD -> 0xAA.0xBB.0xCC.0xDD is `quad`, used for HP
+    0xAABBCCDD -> 0xBB.0xCC.0xDD is `dell-bios`, used for Dell
+
+There are more details about firmware version formats and a full list of all the different allowed
+values on the [LVFS](https://lvfs.readthedocs.io/en/latest/metainfo.html#version-format).
+
+NOTE: Firmware can require either the `quad` or `triplet` string version format, but it may be more
+portable to depend on the number -- which will also work if the metadata has not been refreshed yet.
+
 ## Update Behavior
 
 ### Capsule update on-disk
