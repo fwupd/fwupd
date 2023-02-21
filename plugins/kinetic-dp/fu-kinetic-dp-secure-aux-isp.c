@@ -276,10 +276,9 @@ fu_kinetic_dp_secure_aux_isp_write_dpcd_reply_data_reg(FuKineticDpConnection *se
 
 	if (fu_kinetic_dp_connection_write(self,
 					   DPCD_ADDR_ISP_REPLY_LEN_REG,
-					   &len, // FIXME: this seems wrong
+					   (const guint8 *)(&len),
 					   DPCD_SIZE_ISP_REPLY_LEN_REG,
-					   error) &&
-	    res)
+					   error) && res)
 		ret = TRUE;
 
 	return ret;
