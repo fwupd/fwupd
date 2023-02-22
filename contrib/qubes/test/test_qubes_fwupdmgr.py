@@ -67,7 +67,11 @@ class TestQubesFwupdmgr(unittest.TestCase):
         self.q = qfwupd.QubesFwupdmgr()
         self.maxDiff = 2000
         self.captured_output = io.StringIO()
+        self.orig_stdout = sys.stdout
         sys.stdout = self.captured_output
+
+    def tearDown(self):
+        sys.stdout = self.orig_stdout
 
     @unittest.skipUnless("qubes" in platform.release(), "Requires Qubes OS")
     def test_download_metadata(self):
@@ -115,17 +119,18 @@ class TestQubesFwupdmgr(unittest.TestCase):
     def test_refresh_metadata_dom0(self):
         self.q.refresh_metadata(metadata_url=qfwupd.METADATA_URL)
         self.assertEqual(
-            self.q.output,
-            "Successfully refreshed metadata manually\n",
+            self.captured_output.getvalue().strip(),
+            "Successfully refreshed metadata manually",
             msg="Metadata refresh failed.",
         )
 
     @unittest.skipUnless("qubes" in platform.release(), "Requires Qubes OS")
+    @unittest.expectedFailure  # fwupd refuses metadata downgrade
     def test_refresh_metadata_dom0_custom(self):
         self.q.refresh_metadata(metadata_url=CUSTOM_METADATA)
         self.assertEqual(
-            self.q.output,
-            "Successfully refreshed metadata manually\n",
+            self.captured_output.getvalue().strip(),
+            "Successfully refreshed metadata manually",
             msg="Metadata refresh failed.",
         )
 
@@ -133,8 +138,8 @@ class TestQubesFwupdmgr(unittest.TestCase):
     def test_refresh_metadata_whonix(self):
         self.q.refresh_metadata(whonix=True, metadata_url=qfwupd.METADATA_URL)
         self.assertEqual(
-            self.q.output,
-            "Successfully refreshed metadata manually\n",
+            self.captured_output.getvalue().strip(),
+            "Successfully refreshed metadata manually",
             msg="Metadata refresh failed.",
         )
 
