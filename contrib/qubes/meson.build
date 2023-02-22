@@ -1,6 +1,7 @@
 install_data([
   'src/__init__.py',
   'src/fwupd_receive_updates.py',
+  'src/qubes_fwupd_common.py',
   'src/qubes_fwupd_heads.py',
   'src/qubes_fwupd_update.py',
   'src/qubes_fwupdmgr.py',

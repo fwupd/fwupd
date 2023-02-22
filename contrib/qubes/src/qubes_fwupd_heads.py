@@ -13,13 +13,12 @@ import os
 import shutil
 import xml.etree.ElementTree as ET
 from packaging.version import Version
+from qubes_fwupd_common import EXIT_CODES, create_dirs
 
 FWUPDTOOL = "/bin/fwupdtool"
 
 BOOT = "/boot"
 HEADS_UPDATES_DIR = os.path.join(BOOT, "updates")
-
-EXIT_CODES = {"ERROR": 1, "SUCCESS": 0, "NOTHING_TO_DO": 2}
 
 
 class FwupdHeads:
@@ -119,8 +118,7 @@ class FwupdHeads:
         heads_boot_path = os.path.join(HEADS_UPDATES_DIR, self.heads_update_version)
 
         heads_update_path = os.path.join(heads_boot_path, "firmware.rom")
-        if not os.path.exists(HEADS_UPDATES_DIR):
-            os.mkdir(HEADS_UPDATES_DIR)
+        create_dirs(HEADS_UPDATES_DIR)
         if os.path.exists(heads_update_path):
             print(f"Heads Update == {self.heads_update_version} " "already downloaded.")
             return EXIT_CODES["NOTHING_TO_DO"]
