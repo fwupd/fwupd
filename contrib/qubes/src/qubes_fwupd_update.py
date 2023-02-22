@@ -7,11 +7,11 @@
 # SPDX-License-Identifier: LGPL-2.1+
 #
 
-import grp
 import os
 import re
 import shlex
 import subprocess
+from qubes_fwupd_common import create_dirs
 
 FWUPD_DOM0_DIR = "/var/cache/fwupd/qubes"
 FWUPD_VM_DOWNLOAD = "/usr/libexec/qubes-fwupd/fwupd_download_updates.py"
@@ -20,8 +20,6 @@ FWUPD_DOWNLOAD_PREFIX = "https://fwupd.org/downloads/"
 
 SPECIAL_CHAR_REGEX = re.compile(r"%20|&|\||#")
 UPDATEVM_REGEX = re.compile(r"^sys-")
-
-WARNING_COLOR = "\033[93m"
 
 run_cmd = (
     "qvm-run",
@@ -50,27 +48,6 @@ def run_in_tty(updatevm, args, **kwargs):
 
 
 class FwupdUpdate:
-    def _create_dirs(self, *args):
-        """Method creates directories.
-
-        Keyword arguments:
-        *args -- paths to be created
-        """
-        qubes_gid = grp.getgrnam("qubes").gr_gid
-        self.old_umask = os.umask(0o002)
-        if args is None:
-            raise Exception("Creating directories failed, no paths given.")
-        for file_path in args:
-            if not os.path.exists(file_path):
-                os.makedirs(file_path)
-                os.chown(file_path, -1, qubes_gid)
-            elif os.stat(file_path).st_gid != qubes_gid:
-                print(
-                    f"{WARNING_COLOR}Warning: You should move a personal files"
-                    f" from {file_path}. Cleaning cache will cause lose of "
-                    f"the personal data!!{WARNING_COLOR}"
-                )
-
     def _specify_updatevm(self):
         cmd_updatevm = ["qubes-prefs", "--force-root", "updatevm"]
         p = subprocess.Popen(cmd_updatevm, stdout=subprocess.PIPE)
@@ -102,7 +79,7 @@ class FwupdUpdate:
         if not self._check_updatevm():
             raise Exception(f"{self.updatevm} is not running!!")
         if not os.path.exists(FWUPD_DOM0_DIR):
-            self._create_dirs(FWUPD_DOM0_DIR)
+            create_dirs(FWUPD_DOM0_DIR)
         cmd_metadata = [FWUPD_VM_DOWNLOAD, "--metadata"]
         if metadata_url:
             cmd_metadata.append("--url=" + metadata_url)
@@ -126,7 +103,7 @@ class FwupdUpdate:
         if not self._check_updatevm():
             raise Exception(f"{self.updatevm} is not running!!")
         if not os.path.exists(FWUPD_DOM0_DIR):
-            self._create_dirs(FWUPD_DOM0_DIR)
+            create_dirs(FWUPD_DOM0_DIR)
         self.arch_name = os.path.basename(url)
         self.arch_path = os.path.join(FWUPD_DOM0_UPDATES_DIR, self.arch_name)
         if not os.path.exists(self.arch_path):

@@ -472,6 +472,7 @@ done
 %{_datadir}/qubes-fwupd/src/fwupd_receive_updates.py
 %{_sbindir}/qubes-fwupdmgr
 %{_datadir}/qubes-fwupd/src/qubes_fwupdmgr.py
+%{_datadir}/qubes-fwupd/src/qubes_fwupd_common.py
 %{_datadir}/qubes-fwupd/src/qubes_fwupd_heads.py
 %{_datadir}/qubes-fwupd/src/qubes_fwupd_update.py
 %{_datadir}/qubes-fwupd/src/__init__.py

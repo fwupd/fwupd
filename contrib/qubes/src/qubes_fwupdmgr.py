@@ -31,6 +31,7 @@ try:
     from qubes_fwupd_heads import FwupdHeads
     from qubes_fwupd_update import FwupdUpdate, run_in_tty
     from fwupd_receive_updates import FwupdReceiveUpdates
+    from qubes_fwupd_common import EXIT_CODES, create_dirs
 except ModuleNotFoundError:
     raise ModuleNotFoundError(
         "qubes-fwupd modules not found.  You may need to reinstall package."
@@ -75,8 +76,6 @@ HELP = {
     ],
     "Help": [{"-h --help": "Show help options\n"}],
 }
-
-EXIT_CODES = {"ERROR": 1, "SUCCESS": 0, "NOTHING_TO_DO": 2}
 
 
 class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
@@ -627,15 +626,14 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
     def validate_dom0_dirs(self):
         """Validates and creates directories"""
         if not os.path.exists(FWUPD_DOM0_DIR):
-            self._create_dirs(FWUPD_DOM0_DIR)
+            create_dirs(FWUPD_DOM0_DIR)
         if os.path.exists(FWUPD_DOM0_METADATA_DIR):
             shutil.rmtree(FWUPD_DOM0_METADATA_DIR)
-            self._create_dirs(FWUPD_DOM0_METADATA_DIR)
+            create_dirs(FWUPD_DOM0_METADATA_DIR)
         else:
-            self._create_dirs(FWUPD_DOM0_METADATA_DIR)
+            create_dirs(FWUPD_DOM0_METADATA_DIR)
         if not os.path.exists(FWUPD_DOM0_UPDATES_DIR):
-            self._create_dirs(FWUPD_DOM0_UPDATES_DIR)
-        os.umask(self.old_umask)
+            create_dirs(FWUPD_DOM0_UPDATES_DIR)
 
 
 def main():

@@ -10,7 +10,6 @@
 
 import base64
 import glob
-import grp
 import hashlib
 import itertools
 import os
@@ -18,6 +17,7 @@ import shutil
 import struct
 import subprocess
 import tempfile
+from qubes_fwupd_common import EXIT_CODES, create_dirs
 
 FWUPD_DOM0_DIR = "/var/cache/fwupd/qubes"
 FWUPD_DOM0_UPDATES_DIR = os.path.join(FWUPD_DOM0_DIR, "updates")
@@ -31,7 +31,6 @@ FWUPD_PKI = "/etc/pki/fwupd"
 FWUPD_PKI_PGP = "/etc/pki/fwupd/GPG-KEY-Linux-Vendor-Firmware-Service"
 FWUPD_DOWNLOAD_PREFIX = "https://fwupd.org/downloads/"
 HEADS_UPDATES_DIR = "/boot/updates"
-WARNING_COLOR = "\033[93m"
 
 
 class FwupdReceiveUpdates:
@@ -47,27 +46,6 @@ class FwupdReceiveUpdates:
         if c_sha != sha:
             self.clean_cache()
             raise ValueError(f"Computed checksum {c_sha} did NOT match {sha}.")
-
-    def _create_dirs(self, *args):
-        """Method creates directories.
-
-        Keyword arguments:
-        *args -- paths to be created
-        """
-        qubes_gid = grp.getgrnam("qubes").gr_gid
-        self.old_umask = os.umask(0o002)
-        if args is None:
-            raise Exception("Creating directories failed, no paths given.")
-        for file_path in args:
-            if not os.path.exists(file_path):
-                os.makedirs(file_path, mode=0o0775)
-                os.chown(file_path, -1, qubes_gid)
-            elif os.stat(file_path).st_gid != qubes_gid:
-                print(
-                    f"{WARNING_COLOR}Warning: You should move a personal files"
-                    f" from {file_path}. Cleaning cache will cause lose of "
-                    f"the personal data!!{WARNING_COLOR}"
-                )
 
     def _jcat_verification(self, file_path, file_directory):
         """Verifies sha1 and sha256 checksum, GPG signature,
@@ -218,7 +196,7 @@ class FwupdReceiveUpdates:
         sha -- SHA256 checksum of the firmware update archive
         filename -- name of the firmware update archive
         """
-        self._create_dirs(FWUPD_DOM0_UPDATES_DIR, FWUPD_DOM0_UNTRUSTED_DIR)
+        create_dirs(FWUPD_DOM0_UPDATES_DIR, FWUPD_DOM0_UNTRUSTED_DIR)
 
         with tempfile.TemporaryDirectory(dir=FWUPD_DOM0_UNTRUSTED_DIR) as tmpdir:
             dom0_firmware_untrusted_path = os.path.join(tmpdir, filename)
@@ -245,7 +223,6 @@ class FwupdReceiveUpdates:
 
             self._check_shasum(dom0_firmware_untrusted_path, sha)
             # jcat verification will be done by fwupd itself
-            os.umask(self.old_umask)
             self.arch_name = filename
             self.arch_path = os.path.join(FWUPD_DOM0_UPDATES_DIR, filename)
             shutil.move(dom0_firmware_untrusted_path, self.arch_path)
@@ -260,7 +237,7 @@ class FwupdReceiveUpdates:
         self.metadata_file = os.path.join(FWUPD_DOM0_METADATA_DIR, metadata_name)
         self.metadata_file_jcat = self.metadata_file + ".jcat"
         self.metadata_file_updatevm = os.path.join(FWUPD_VM_METADATA_DIR, metadata_name)
-        self._create_dirs(FWUPD_DOM0_METADATA_DIR, FWUPD_DOM0_UNTRUSTED_DIR)
+        create_dirs(FWUPD_DOM0_METADATA_DIR, FWUPD_DOM0_UNTRUSTED_DIR)
         with tempfile.TemporaryDirectory(dir=FWUPD_DOM0_UNTRUSTED_DIR) as tmpdir:
             cmd_copy_metadata_file = [
                 "qvm-run",
