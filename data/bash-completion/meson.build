@@ -15,11 +15,7 @@ if bashcomp.found()
   )
 
   if build_daemon
-    binaries = ['fwupdmgr']
-    if get_option('compat_cli')
-      binaries += ['fwupdagent']
-    endif
-    install_data(binaries,
+    install_data(['fwupdmgr'],
       install_dir: completions_dir,
     )
   endif # build_daemon
