@@ -116,7 +116,7 @@ fu_common_is_live_media(void)
 		return TRUE;
 	if (!g_file_get_contents("/proc/cmdline", &buf, &bufsz, NULL))
 		return FALSE;
-	if (bufsz == 0)
+	if (bufsz <= 1)
 		return FALSE;
 	tokens = fu_strsplit(buf, bufsz - 1, " ", -1);
 	for (guint i = 0; args[i] != NULL; i++) {
