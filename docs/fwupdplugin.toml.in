@@ -48,6 +48,7 @@ content_files = [
   "ds20.md",
   "hwids.md",
   "bios-settings.md",
+  "only-trusted.md",
   @plugin_readme_outputs@,
 ]
 content_images = [
