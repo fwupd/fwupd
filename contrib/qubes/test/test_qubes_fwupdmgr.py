@@ -371,11 +371,10 @@ class TestQubesFwupdmgr(unittest.TestCase):
         user_input = ["1", "6", "sth", "2.2.1", "", " ", "\0", "2"]
         with patch("builtins.input", side_effect=user_input):
             downgrade_list = self.q._parse_downgrades(GET_DEVICES)
-            downgrade_dict = {"dom0": downgrade_list}
-            key, device_choice, downgrade_choice = self.q._user_input(
+            downgrade_dict = downgrade_list
+            device_choice, downgrade_choice = self.q._user_input(
                 downgrade_dict, downgrade=True
             )
-        self.assertEqual(key, "dom0")
         self.assertEqual(device_choice, 0)
         self.assertEqual(downgrade_choice, 1)
 
