@@ -27,7 +27,7 @@ class DownloadData(FwupdVmCommon):
             metadata_url = METADATA_URL
         else:
             metadata_url = self.custom_url
-        cmd_metadata = ["wget", "-P", FWUPD_VM_METADATA_DIR, metadata_url]
+        cmd_metadata = ["wget", "-O", self.metadata_file, metadata_url]
         p = subprocess.Popen(cmd_metadata)
         p.wait()
         if p.returncode != 0:
@@ -52,6 +52,19 @@ class DownloadData(FwupdVmCommon):
             raise FileNotFoundError(
                 "fwupd-qubes: Downloaded metadata file does not exist"
             )
+        environ = os.environ.copy()
+        environ["LC_ALL"] = "C"
+        cmd_info = ["jcat-tool", "info", f"{self.metadata_file}.jcat"]
+        info_stdout = subprocess.check_output(cmd_info, env=environ).decode()
+        info_id_line = [line for line in info_stdout.splitlines() if "ID:" in line]
+        if info_id_line:
+            info_id = info_id_line[0].split(":", 1)[1].strip()
+        else:
+            info_id = None
+        if info_id and info_id != os.path.basename(metadata_url):
+            # fetch the file referenced in jcat, to workaround CDN being few
+            # hours out of sync
+            self.custom_url = os.path.dirname(metadata_url) + "/" + info_id
         cmd_export = [
             "jcat-tool",
             f"--prefix={FWUPD_VM_METADATA_DIR}/",
@@ -59,8 +72,6 @@ class DownloadData(FwupdVmCommon):
             "export",
             f"{self.metadata_file}.jcat",
         ]
-        environ = os.environ.copy()
-        environ["LC_ALL"] = "C"
         p = subprocess.Popen(cmd_export, stdout=subprocess.PIPE, env=environ)
         stdout, _ = p.communicate()
         if p.returncode != 0:
@@ -89,8 +100,8 @@ class DownloadData(FwupdVmCommon):
             self.custom_url = None
             self.metadata_file = os.path.join(FWUPD_VM_METADATA_DIR, "firmware.xml.gz")
         self.validate_vm_dirs()
-        self._download_metadata_file()
         self._download_metadata_jcat()
+        self._download_metadata_file()
 
     def download_updates(self, url, sha):
         """
