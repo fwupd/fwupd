@@ -696,33 +696,43 @@ fu_engine_load_release(FuEngine *self,
 static const gchar *
 fu_engine_get_remote_id_for_checksum(FuEngine *self, const gchar *csum)
 {
-	g_autoptr(XbNode) key = NULL;
 #if LIBXMLB_CHECK_VERSION(0, 3, 0)
 	g_auto(XbQueryContext) context = XB_QUERY_CONTEXT_INIT();
-
 	xb_query_context_set_flags(&context, XB_QUERY_FLAG_USE_INDEXES);
 	xb_value_bindings_bind_str(xb_query_context_get_bindings(&context), 0, csum, NULL);
-	key = xb_silo_query_first_with_context(self->silo,
-					       self->query_container_checksum1,
-					       &context,
-					       NULL);
-	if (key != NULL)
-		return xb_node_get_text(key);
-	key = xb_silo_query_first_with_context(self->silo,
-					       self->query_container_checksum2,
-					       &context,
-					       NULL);
-	if (key != NULL)
-		return xb_node_get_text(key);
+	if (self->query_container_checksum1 != NULL) {
+		g_autoptr(XbNode) key =
+		    xb_silo_query_first_with_context(self->silo,
+						     self->query_container_checksum1,
+						     &context,
+						     NULL);
+		if (key != NULL)
+			return xb_node_get_text(key);
+	}
+	if (self->query_container_checksum2 != NULL) {
+		g_autoptr(XbNode) key =
+		    xb_silo_query_first_with_context(self->silo,
+						     self->query_container_checksum2,
+						     &context,
+						     NULL);
+		if (key != NULL)
+			return xb_node_get_text(key);
+	}
 #else
-	xb_query_bind_str(self->query_container_checksum1, 0, csum, NULL);
-	key = xb_silo_query_first_full(self->silo, self->query_container_checksum1, NULL);
-	if (key != NULL)
-		return xb_node_get_text(key);
-	xb_query_bind_str(self->query_container_checksum2, 0, csum, NULL);
-	key = xb_silo_query_first_full(self->silo, self->query_container_checksum2, NULL);
-	if (key != NULL)
-		return xb_node_get_text(key);
+	if (self->query_container_checksum1 != NULL) {
+		g_autoptr(XbNode) key = NULL;
+		xb_query_bind_str(self->query_container_checksum1, 0, csum, NULL);
+		key = xb_silo_query_first_full(self->silo, self->query_container_checksum1, NULL);
+		if (key != NULL)
+			return xb_node_get_text(key);
+	}
+	if (self->query_container_checksum2 != NULL) {
+		g_autoptr(XbNode) key = NULL;
+		xb_query_bind_str(self->query_container_checksum2, 0, csum, NULL);
+		key = xb_silo_query_first_full(self->silo, self->query_container_checksum2, NULL);
+		if (key != NULL)
+			return xb_node_get_text(key);
+	}
 #endif
 
 	/* failed */
