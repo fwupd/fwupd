@@ -7,6 +7,7 @@
 # gk <genghiskhan@gmx.ca>, 2015
 # עומר א״ש <omeritzicschwartz@gmail.com>, 2021
 # Yaron Shahrabani <sh.yaron@gmail.com>, 2021
+# Yosef Or Boczko <yoseforb@gmail.com>, 2023
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
@@ -223,7 +224,7 @@ msgstr "לאפשר מעבר ענפי קושחה"
 msgid "An update requires a reboot to complete."
 msgstr "נדרשת הפעלה מחדש להשלמת עדכון."
 
-#. TRANSLATORS: explain why we want to shutdown
+#. TRANSLATORS: explain why
 msgid "An update requires the system to shutdown to complete."
 msgstr "נדרש כיבוי המערכת כדי להשלים עדכון."
 
@@ -287,6 +288,10 @@ msgstr "נדרש אימות כדי לשנות מרוחק מוגדר לעדכונ
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify daemon configuration"
 msgstr "נדרש אימות לשינוי הגדרות הסוכן"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to read BIOS settings"
+msgstr "נדרשת אימות על מנת לקרוא הגדרות BIOS"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to set the list of approved firmware"
@@ -353,6 +358,7 @@ msgid "Cancel"
 msgstr "ביטול"
 
 #. TRANSLATORS: this is when a device ctrl+c's a watch
+#. TRANSLATORS: this is from ctrl+c
 msgid "Cancelled"
 msgstr "בוטל"
 
@@ -367,27 +373,6 @@ msgstr "בודק שהגיבוב הקריפטוגרפי תואם לקושחה"
 #. TRANSLATORS: remote checksum
 msgid "Checksum"
 msgstr "סכום ביקורת"
-
-#. TRANSLATORS: get interactive prompt, where branch is the
-#. * supplier of the firmware, e.g. "non-free" or "free"
-msgid "Choose a branch:"
-msgstr "נא לבחור ענף:"
-
-#. TRANSLATORS: get interactive prompt
-msgid "Choose a device:"
-msgstr "נא לבחור התקן:"
-
-#. TRANSLATORS: get interactive prompt
-msgid "Choose a firmware type:"
-msgstr "נא לבחור סוג קושחה"
-
-#. TRANSLATORS: get interactive prompt
-msgid "Choose a release:"
-msgstr "נא לבחור מהדורה:"
-
-#. TRANSLATORS: get interactive prompt
-msgid "Choose a volume:"
-msgstr "נא לבחור כרך:"
 
 #. TRANSLATORS: error message
 msgid "Command not found"
@@ -480,14 +465,14 @@ msgstr "התקנים שעודכנו כראוי:"
 msgid "Devices that were not updated correctly:"
 msgstr "התקנים שלא עודכנו כראוי:"
 
-#. TRANSLATORS: message letting the user know no device upgrade
-#. * available due to missing on LVFS
 #. TRANSLATORS: message letting the user know no device
 #. * upgrade available due to missing on LVFS
-#. TRANSLATORS: message letting the user know no device upgrade
-#. * available due to missing on LVFS
+#. TRANSLATORS: message letting the user know no
+#. * device upgrade available due to missing on LVFS
 #. TRANSLATORS: message letting the user know no device
 #. * upgrade available due to missing on LVFS
+#. TRANSLATORS: message letting the user know no
+#. * device upgrade available due to missing on LVFS
 msgid "Devices with no available firmware updates: "
 msgstr "התקנים ללא עדכוני קושחה זמינים:"
 
@@ -545,7 +530,7 @@ msgstr "האם השלכות מעבר ענף הקושחה ברורות לך?"
 msgid "Do you want to disable this feature for future updates?"
 msgstr "להשבתי את היכולת הזאת לעדכונים עתידיים?"
 
-#. TRANSLATORS: ask the user if we can update the metadata
+#. TRANSLATORS: ask if we can update the metadata
 msgid "Do you want to refresh this remote now?"
 msgstr "לרענן את המרוחק הזה כעת?"
 
@@ -667,6 +652,7 @@ msgid "Failed to apply update"
 msgstr "החלת העדכון נכשלה"
 
 #. TRANSLATORS: we could not talk to the fwupd daemon
+#. TRANSLATORS: could not contact the fwupd service over D-Bus
 msgid "Failed to connect to daemon"
 msgstr "החיבור לסוכן נכשל"
 
@@ -867,6 +853,12 @@ msgstr "התקנת מקטע בינרי של קושחה על התקן"
 #. TRANSLATORS: command description
 msgid "Install a firmware file on this hardware"
 msgstr "מתקין קובץ קושחה בחומרה זו"
+
+msgid "Install old version of signed system firmware"
+msgstr "התקנת גרסה ישנה של קושחת מערכת חתומה"
+
+msgid "Install old version of unsigned system firmware"
+msgstr "התקנת גרסה ישנה של קושחת מערכת שלא נחתמה"
 
 msgid "Install signed device firmware"
 msgstr "התקנת קושחת התקן חתומה"
@@ -1101,6 +1093,10 @@ msgid "OK"
 msgstr "אישור"
 
 #. TRANSLATORS: command line option
+msgid "Only show single PCR value"
+msgstr "הצגת ערך PCR יחיד"
+
+#. TRANSLATORS: command line option
 msgid "Only use IPFS when downloading files"
 msgstr "להשתמש ב־IPFS רק בעת הורדת קבצים"
 
@@ -1254,7 +1250,7 @@ msgstr "החומרה הנדרשת לא נמצאה"
 msgid "Requires a bootloader"
 msgstr "דורש מנהל טעינה"
 
-#. TRANSLATORS: metadata is downloaded from the Internet
+#. TRANSLATORS: metadata is downloaded
 msgid "Requires internet connection"
 msgstr "דורש חיבור לאינטרנט"
 
@@ -1262,7 +1258,7 @@ msgstr "דורש חיבור לאינטרנט"
 msgid "Restart now?"
 msgstr "להפעיל כעת מחדש?"
 
-#. TRANSLATORS: configuration changes only take effect on restart
+#. TRANSLATORS: changes only take effect on restart
 msgid "Restart the daemon to make the change effective?"
 msgstr "להפעיל את הסוכן מחדש כדי שהשינויים ייכנסו לתוקף?"
 
@@ -1462,7 +1458,7 @@ msgstr "בדיקת התקן עם מניפסט JSON"
 
 #. TRANSLATORS: do not translate the variables marked using $
 msgid "The LVFS is a free service that operates as an independent legal entity and has no connection with $OS_RELEASE:NAME$. Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices. All firmware is provided only by the original equipment manufacturer."
-msgstr "LVFS הוא שירות חינמי שמתפקד כיישות חוקית בלתי תלוי ואין לה שום קשר עם $OS_RELEASE:NAME$. יתכן כי המפיץ שלך לא אימת ברמת תאימות אף אחד מעדכוני הקושחה מול המערכת שלך או ההתקנים המחוברים אליה. כל הקושחה מסופקת אך ורק על ידי יצרני הציוד המקוריים."
+msgstr "‏LVFS הוא שירות חינמי שמתפקד כיישות חוקית בלתי תלוי ואין לה שום קשר עם $OS_RELEASE:NAME$. יתכן כי המפיץ שלך לא אימת ברמת תאימות אף אחד מעדכוני הקושחה מול המערכת שלך או ההתקנים המחוברים אליה. כל הקושחה מסופקת אך ורק על ידי יצרני הציוד המקוריים."
 
 #. TRANSLATORS: %1 is the firmware vendor, %2 is the device vendor name
 #, c-format
@@ -1616,7 +1612,7 @@ msgstr "מצב עדכון"
 msgid "Update failure is a known issue, visit this URL for more information:"
 msgstr "כשל בעדכון זאת תקלה מוכרת, יש לבקר בכתובת למידע נוסף:"
 
-#. TRANSLATORS: ask the user if we can update the metadata
+#. TRANSLATORS: ask if we can update metadata
 msgid "Update now?"
 msgstr "לעדכן עכשיו?"
 
@@ -1660,11 +1656,7 @@ msgstr "להעלות דוח עכשיו?"
 msgid "Urgency"
 msgstr "דחיפות"
 
-#. TRANSLATORS: error message explaining command on how to get help
-msgid "Use fwupdmgr --help for help"
-msgstr "יש להשתמש ב־fwupdmgr --help לקבלת עזרה"
-
-#. TRANSLATORS: error message explaining command on how to get help
+#. TRANSLATORS: explain how to get help
 msgid "Use fwupdtool --help for help"
 msgstr "יש להשתמש ב־fwupdtool --help לקבלת עזרה"
 
@@ -1699,10 +1691,6 @@ msgstr "מתבצע אימות…"
 #. TRANSLATORS: the detected version number of the dbx
 msgid "Version"
 msgstr "גרסה"
-
-#. TRANSLATORS: this is a prefix on the console
-msgid "WARNING:"
-msgstr "אזהרה:"
 
 #. TRANSLATORS: waiting for device to do something
 msgid "Waiting…"

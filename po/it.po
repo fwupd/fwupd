@@ -373,7 +373,7 @@ msgstr "Ramo alternativo"
 msgid "An update requires a reboot to complete."
 msgstr "Per essere completato, un aggiornamento richiede un riavvio."
 
-#. TRANSLATORS: explain why we want to shutdown
+#. TRANSLATORS: explain why
 msgid "An update requires the system to shutdown to complete."
 msgstr "Per essere completato, un aggiornamento richiede lo spegnimento del sistema."
 
@@ -533,6 +533,7 @@ msgid "Cancel"
 msgstr "Annulla"
 
 #. TRANSLATORS: this is when a device ctrl+c's a watch
+#. TRANSLATORS: this is from ctrl+c
 msgid "Cancelled"
 msgstr "Annullato"
 
@@ -555,27 +556,6 @@ msgstr "Verifica che l'hash crittografico corrisponda col firmware"
 #. TRANSLATORS: remote checksum
 msgid "Checksum"
 msgstr "Codice di controllo"
-
-#. TRANSLATORS: get interactive prompt, where branch is the
-#. * supplier of the firmware, e.g. "non-free" or "free"
-msgid "Choose a branch:"
-msgstr "Scegliere un ramo:"
-
-#. TRANSLATORS: get interactive prompt
-msgid "Choose a device:"
-msgstr "Scegliere un dispositivo:"
-
-#. TRANSLATORS: get interactive prompt
-msgid "Choose a firmware type:"
-msgstr "Scegliere un tipo di firmware:"
-
-#. TRANSLATORS: get interactive prompt
-msgid "Choose a release:"
-msgstr "Scegliere un rilascio:"
-
-#. TRANSLATORS: get interactive prompt
-msgid "Choose a volume:"
-msgstr "Scegliere un volume:"
 
 #. TRANSLATORS: command description
 msgid "Clears the results from the last update"
@@ -643,8 +623,8 @@ msgid "Details"
 msgstr "Dettagli"
 
 #. TRANSLATORS: the best known configuration is a set of software that we know
-#. works well
-#. * together. In the OEM and ODM industries it is often called a BKC
+#. works
+#. * well together. In the OEM and ODM industries it is often called a BKC
 msgid "Deviate from the best known configuration?"
 msgstr "Allontanarsi dalla migliore configurazione nota?"
 
@@ -747,14 +727,14 @@ msgstr "Dispositivi aggiornati con successo:"
 msgid "Devices that were not updated correctly:"
 msgstr "Dispositivi non aggiornati correttamente:"
 
-#. TRANSLATORS: message letting the user know no device upgrade
-#. * available due to missing on LVFS
 #. TRANSLATORS: message letting the user know no device
 #. * upgrade available due to missing on LVFS
-#. TRANSLATORS: message letting the user know no device upgrade
-#. * available due to missing on LVFS
+#. TRANSLATORS: message letting the user know no
+#. * device upgrade available due to missing on LVFS
 #. TRANSLATORS: message letting the user know no device
 #. * upgrade available due to missing on LVFS
+#. TRANSLATORS: message letting the user know no
+#. * device upgrade available due to missing on LVFS
 msgid "Devices with no available firmware updates: "
 msgstr "Dispositivi senza aggiornamenti firmware:"
 
@@ -831,7 +811,7 @@ msgstr "Le conseguenze del cambio di ramo del firmware sono state comprese?"
 msgid "Do you want to disable this feature for future updates?"
 msgstr "Disabilitare questa funzionalità per i prossimi aggiornamenti?"
 
-#. TRANSLATORS: ask the user if we can update the metadata
+#. TRANSLATORS: ask if we can update the metadata
 msgid "Do you want to refresh this remote now?"
 msgstr "Aggiornare questo remoto ora?"
 
@@ -974,7 +954,6 @@ msgid "FILE [DEVICE-ID|GUID]"
 msgstr "FILE [ID-DISPOSITIVO|GUID]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-#. TRANSLATORS: filename argument with path
 msgid "FILENAME"
 msgstr "NOMEFILE"
 
@@ -1024,6 +1003,7 @@ msgid "Failed to apply update"
 msgstr "Applicazione aggiornamento non riuscita"
 
 #. TRANSLATORS: we could not talk to the fwupd daemon
+#. TRANSLATORS: could not contact the fwupd service over D-Bus
 msgid "Failed to connect to daemon"
 msgstr "Connessione al demone non riuscita"
 
@@ -1597,10 +1577,6 @@ msgstr "Controlla il demone per gli eventi"
 msgid "Mounts the ESP"
 msgstr "Monta l'ESP"
 
-#. TRANSLATORS: we're poking around as a power user
-msgid "NOTE: This program may only work correctly as root"
-msgstr "Nota: questo programma potrebbe funzionare correttamente solo come root"
-
 #. TRANSLATORS: Requires a reboot to apply firmware or to reload hardware
 msgid "Needs a reboot after installation"
 msgstr "Necessita un riavvio dopo l'installazione"
@@ -1920,7 +1896,7 @@ msgstr "L'hardware richiesto non è stato trovato"
 msgid "Requires a bootloader"
 msgstr "Richiede un bootloader"
 
-#. TRANSLATORS: metadata is downloaded from the Internet
+#. TRANSLATORS: metadata is downloaded
 msgid "Requires internet connection"
 msgstr "Richiede una connessione a Internet"
 
@@ -1928,7 +1904,7 @@ msgstr "Richiede una connessione a Internet"
 msgid "Restart now?"
 msgstr "Riavviare ora?"
 
-#. TRANSLATORS: configuration changes only take effect on restart
+#. TRANSLATORS: changes only take effect on restart
 msgid "Restart the daemon to make the change effective?"
 msgstr "Riavviare il demone per applicare le modifiche?"
 
@@ -2564,7 +2540,7 @@ msgstr "Stato aggiornamento"
 msgid "Update failure is a known issue, visit this URL for more information:"
 msgstr "Questo è un problema noto, consultare il seguente URL per maggiori informazioni:"
 
-#. TRANSLATORS: ask the user if we can update the metadata
+#. TRANSLATORS: ask if we can update metadata
 msgid "Update now?"
 msgstr "Aggiornare ora?"
 
@@ -2620,11 +2596,7 @@ msgstr "Inviare resoconti sul firmware aiuta gli sviluppatori a identificare vel
 msgid "Urgency"
 msgstr "Urgenza"
 
-#. TRANSLATORS: error message explaining command on how to get help
-msgid "Use fwupdmgr --help for help"
-msgstr "Usare «fwupdmgr --help» per maggiori informazioni"
-
-#. TRANSLATORS: error message explaining command on how to get help
+#. TRANSLATORS: explain how to get help
 msgid "Use fwupdtool --help for help"
 msgstr "Usare «fwupdtool --help» per maggiori informazioni"
 
@@ -2666,10 +2638,6 @@ msgstr "Verifica…"
 #. TRANSLATORS: the detected version number of the dbx
 msgid "Version"
 msgstr "Versione"
-
-#. TRANSLATORS: this is a prefix on the console
-msgid "WARNING:"
-msgstr "Attenzione:"
 
 #. TRANSLATORS: waiting for device to do something
 msgid "Waiting…"

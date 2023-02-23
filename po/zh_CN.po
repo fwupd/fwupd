@@ -273,7 +273,7 @@ msgstr "允许切换固件分支"
 msgid "An update requires a reboot to complete."
 msgstr "更新需要重启设备才能完成。"
 
-#. TRANSLATORS: explain why we want to shutdown
+#. TRANSLATORS: explain why
 msgid "An update requires the system to shutdown to complete."
 msgstr "更新需要系统关机才能完成。"
 
@@ -411,6 +411,7 @@ msgid "Cancel"
 msgstr "取消"
 
 #. TRANSLATORS: this is when a device ctrl+c's a watch
+#. TRANSLATORS: this is from ctrl+c
 msgid "Cancelled"
 msgstr "已取消"
 
@@ -433,27 +434,6 @@ msgstr "检查加密哈希与固件是否匹配"
 #. TRANSLATORS: remote checksum
 msgid "Checksum"
 msgstr "校验和"
-
-#. TRANSLATORS: get interactive prompt, where branch is the
-#. * supplier of the firmware, e.g. "non-free" or "free"
-msgid "Choose a branch:"
-msgstr "选择分支："
-
-#. TRANSLATORS: get interactive prompt
-msgid "Choose a device:"
-msgstr "选择设备："
-
-#. TRANSLATORS: get interactive prompt
-msgid "Choose a firmware type:"
-msgstr "选择固件类型："
-
-#. TRANSLATORS: get interactive prompt
-msgid "Choose a release:"
-msgstr "选择发行版本："
-
-#. TRANSLATORS: get interactive prompt
-msgid "Choose a volume:"
-msgstr "选择卷："
 
 #. TRANSLATORS: command description
 msgid "Clears the results from the last update"
@@ -590,14 +570,14 @@ msgstr "成功更新的设备："
 msgid "Devices that were not updated correctly:"
 msgstr "未正确更新的设备："
 
-#. TRANSLATORS: message letting the user know no device upgrade
-#. * available due to missing on LVFS
 #. TRANSLATORS: message letting the user know no device
 #. * upgrade available due to missing on LVFS
-#. TRANSLATORS: message letting the user know no device upgrade
-#. * available due to missing on LVFS
+#. TRANSLATORS: message letting the user know no
+#. * device upgrade available due to missing on LVFS
 #. TRANSLATORS: message letting the user know no device
 #. * upgrade available due to missing on LVFS
+#. TRANSLATORS: message letting the user know no
+#. * device upgrade available due to missing on LVFS
 msgid "Devices with no available firmware updates: "
 msgstr "无固件更新可用的设备："
 
@@ -666,7 +646,7 @@ msgstr "你清楚更改固件分支的后果吗？"
 msgid "Do you want to disable this feature for future updates?"
 msgstr "你要在将来的更新中禁用此功能吗？"
 
-#. TRANSLATORS: ask the user if we can update the metadata
+#. TRANSLATORS: ask if we can update the metadata
 msgid "Do you want to refresh this remote now?"
 msgstr "你要现在刷新这个远程库吗？"
 
@@ -794,7 +774,6 @@ msgid "FILE [DEVICE-ID|GUID]"
 msgstr "文件 [设备ID|GUID]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-#. TRANSLATORS: filename argument with path
 msgid "FILENAME"
 msgstr "文件名"
 
@@ -836,6 +815,7 @@ msgid "Failed to apply update"
 msgstr "应用更新失败"
 
 #. TRANSLATORS: we could not talk to the fwupd daemon
+#. TRANSLATORS: could not contact the fwupd service over D-Bus
 msgid "Failed to connect to daemon"
 msgstr "连接到守护进程失败"
 
@@ -1589,7 +1569,7 @@ msgstr "所需设备未找到"
 msgid "Requires a bootloader"
 msgstr "需要引导程序"
 
-#. TRANSLATORS: metadata is downloaded from the Internet
+#. TRANSLATORS: metadata is downloaded
 msgid "Requires internet connection"
 msgstr "需要互联网连接"
 
@@ -1597,7 +1577,7 @@ msgstr "需要互联网连接"
 msgid "Restart now?"
 msgstr "要现在重启设备吗？"
 
-#. TRANSLATORS: configuration changes only take effect on restart
+#. TRANSLATORS: changes only take effect on restart
 msgid "Restart the daemon to make the change effective?"
 msgstr "重启守护进程以让更改生效？"
 
@@ -2104,7 +2084,7 @@ msgstr "更新状态"
 msgid "Update failure is a known issue, visit this URL for more information:"
 msgstr "更新失败为已知问题，请访问此 URL 以获取详情："
 
-#. TRANSLATORS: ask the user if we can update the metadata
+#. TRANSLATORS: ask if we can update metadata
 msgid "Update now?"
 msgstr "现在更新吗？"
 
@@ -2156,11 +2136,7 @@ msgstr "上传固件报告可帮助硬件供应商尽快确定真实设备上更
 msgid "Urgency"
 msgstr "紧急性"
 
-#. TRANSLATORS: error message explaining command on how to get help
-msgid "Use fwupdmgr --help for help"
-msgstr "使用 fwupdmgr --help 获取帮助信息"
-
-#. TRANSLATORS: error message explaining command on how to get help
+#. TRANSLATORS: explain how to get help
 msgid "Use fwupdtool --help for help"
 msgstr "使用 fwupdtool --help 获取帮助信息"
 
@@ -2202,10 +2178,6 @@ msgstr "正在验证…"
 #. TRANSLATORS: the detected version number of the dbx
 msgid "Version"
 msgstr "版本"
-
-#. TRANSLATORS: this is a prefix on the console
-msgid "WARNING:"
-msgstr "警告："
 
 #. TRANSLATORS: waiting for device to do something
 msgid "Waiting…"

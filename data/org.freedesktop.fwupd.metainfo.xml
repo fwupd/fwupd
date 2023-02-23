@@ -33,6 +33,51 @@
     <binary>fwupdtool</binary>
   </provides>
   <releases>
+    <release version="1.8.11" date="2023-02-23">
+      <description>
+        <p>
+          This release adds the following features:
+        </p>
+        <ul>
+          <li>Add support for replaying USB devices so they can be emulated in CI</li>
+          <li>Allow desktop software to inhibit the system to prevent updates</li>
+          <li>Allow using requirements with depth=0 and no parent</li>
+          <li>Auto-set the CCGX remove-delay now we parse DMC subcomponents</li>
+          <li>Detect and warn users with the broken NVMe firmware 3B2QGXA7</li>
+          <li>Print errors as JSON objects when using fwupdmgr --json</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Allow installing battery firmware updates even when the power is too low</li>
+          <li>Correctly fall back to the compatible vendor when FDT vendor is missing</li>
+          <li>Detect CCGX factory mode and set a non-zero version</li>
+          <li>Detect fixed Insyde firmware that can actually use Capsule-on-Disk</li>
+          <li>Do not make any of the HWIDs setup failures fatal</li>
+          <li>Fix a critical warning when parsing an empty kernel cmdline</li>
+          <li>Fix a small memory leak when installing TPS6598x firmware</li>
+          <li>Fix compiling with -Dbuild=library for Flathub</li>
+          <li>Fix fwupdtool firmware-convert to work with image-less formats</li>
+          <li>Fix regression in downloading files in fwupdtool</li>
+          <li>Fix SMBIOS struct parsing when the tag section ends with NUL</li>
+          <li>Indicate HSI attributes that will only be returned for specific CPU vendors</li>
+          <li>Only accept application/x-xz compression for the metadata payload</li>
+          <li>Only offset the IPMI user ID when using Lenovo XCC</li>
+          <li>Prefer the Intel USB4 plugin over the Thunderbolt plugin when required</li>
+          <li>Require at least twice the capsule size in the ESP when updating</li>
+          <li>Save all the device flags in the pending database correctly</li>
+          <li>Set the device percentage and status for the duration of the update</li>
+          <li>Show the 4XX download failure in the CLI error output</li>
+          <li>Speed up regenerating the MOTD when installing composite devices</li>
+          <li>Use an updated shim if provided during for capsule update</li>
+          <li>Use strict snap confinement</li>
+        </ul>
+        <p>This release adds support for the following hardware:</p>
+        <ul>
+          <li>CalDigit Element Hub</li>
+          <li>CalDigit TS4 Dock</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.8.10" date="2023-01-23">
       <description>
         <p>

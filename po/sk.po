@@ -45,6 +45,7 @@ msgid "Authentication is required to update the firmware on this machine"
 msgstr "Na aktualizovanie firmvéru v tomto počítači je potrebné overenie totožnosti"
 
 #. TRANSLATORS: this is when a device ctrl+c's a watch
+#. TRANSLATORS: this is from ctrl+c
 msgid "Cancelled"
 msgstr "Zrušené"
 

@@ -110,7 +110,7 @@ msgstr "Alias de %s"
 msgid "An update requires a reboot to complete."
 msgstr "Une mise à jour nécessite un redémarrage pour se terminer."
 
-#. TRANSLATORS: explain why we want to shutdown
+#. TRANSLATORS: explain why
 msgid "An update requires the system to shutdown to complete."
 msgstr "Une mise à jour nécessite que le système soit éteint pour se terminer."
 
@@ -194,6 +194,7 @@ msgid "Cancel"
 msgstr "Annuler"
 
 #. TRANSLATORS: this is when a device ctrl+c's a watch
+#. TRANSLATORS: this is from ctrl+c
 msgid "Cancelled"
 msgstr "Annulé"
 
@@ -212,23 +213,6 @@ msgstr "Vérifie que l'empreinte cryptographique correspond au micrologiciel"
 #. TRANSLATORS: remote checksum
 msgid "Checksum"
 msgstr "Somme de contrôle"
-
-#. TRANSLATORS: get interactive prompt, where branch is the
-#. * supplier of the firmware, e.g. "non-free" or "free"
-msgid "Choose a branch:"
-msgstr "Choisir une branche :"
-
-#. TRANSLATORS: get interactive prompt
-msgid "Choose a device:"
-msgstr "Choisissez un appareil :"
-
-#. TRANSLATORS: get interactive prompt
-msgid "Choose a firmware type:"
-msgstr "Choisissez un type de micrologiciel :"
-
-#. TRANSLATORS: get interactive prompt
-msgid "Choose a volume:"
-msgstr "Choisir un volume :"
 
 #. TRANSLATORS: error message
 msgid "Command not found"
@@ -775,7 +759,7 @@ msgstr "Le matériel requis n'a pas été trouvé"
 msgid "Restart now?"
 msgstr "Redémarrer maintenant ?"
 
-#. TRANSLATORS: configuration changes only take effect on restart
+#. TRANSLATORS: changes only take effect on restart
 msgid "Restart the daemon to make the change effective?"
 msgstr "Redémarrer le service pour rendre la modification effective ?"
 
@@ -1012,7 +996,7 @@ msgstr "État de mise à jour"
 msgid "Update failure is a known issue, visit this URL for more information:"
 msgstr "Cet échec de mise à jour est un problème connu, visitez cette URL pour plus d'informations :"
 
-#. TRANSLATORS: ask the user if we can update the metadata
+#. TRANSLATORS: ask if we can update metadata
 msgid "Update now?"
 msgstr "Mettre à jour maintenant ?"
 
@@ -1038,10 +1022,6 @@ msgstr "Mise à jour de %s…"
 #. TRANSLATORS: how important the release is
 msgid "Urgency"
 msgstr "Urgence"
-
-#. TRANSLATORS: error message explaining command on how to get help
-msgid "Use fwupdmgr --help for help"
-msgstr "Utilisez fwupdmgr --help pour obtenir de l'aide"
 
 #. TRANSLATORS: remote filename base
 msgid "Username"
@@ -1070,10 +1050,6 @@ msgstr "Vérification…"
 #. TRANSLATORS: the detected version number of the dbx
 msgid "Version"
 msgstr "Version"
-
-#. TRANSLATORS: this is a prefix on the console
-msgid "WARNING:"
-msgstr "ATTENTION :"
 
 #. TRANSLATORS: waiting for device to do something
 msgid "Waiting…"

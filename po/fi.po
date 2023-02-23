@@ -327,7 +327,7 @@ msgstr "Vaihtoehtoinen haara"
 msgid "An update requires a reboot to complete."
 msgstr "Päivitys vaatii uudelleenkäynnistyksen."
 
-#. TRANSLATORS: explain why we want to shutdown
+#. TRANSLATORS: explain why
 msgid "An update requires the system to shutdown to complete."
 msgstr "Päivitys edellyttää järjestelmän sammuttamista."
 
@@ -482,6 +482,7 @@ msgid "Cancel"
 msgstr "Peru"
 
 #. TRANSLATORS: this is when a device ctrl+c's a watch
+#. TRANSLATORS: this is from ctrl+c
 msgid "Cancelled"
 msgstr "Peruttu"
 
@@ -504,27 +505,6 @@ msgstr "Tarkistaa, että kryptografinen tiiviste vastaa laiteohjelmistoa"
 #. TRANSLATORS: remote checksum
 msgid "Checksum"
 msgstr "Tarkistussumma"
-
-#. TRANSLATORS: get interactive prompt, where branch is the
-#. * supplier of the firmware, e.g. "non-free" or "free"
-msgid "Choose a branch:"
-msgstr "Valitse haara:"
-
-#. TRANSLATORS: get interactive prompt
-msgid "Choose a device:"
-msgstr "Valitse laite:"
-
-#. TRANSLATORS: get interactive prompt
-msgid "Choose a firmware type:"
-msgstr "Valitse laiteohjelmiston tyyppi:"
-
-#. TRANSLATORS: get interactive prompt
-msgid "Choose a release:"
-msgstr "Valitse julkaisu:"
-
-#. TRANSLATORS: get interactive prompt
-msgid "Choose a volume:"
-msgstr "Valitse asema:"
 
 #. TRANSLATORS: command description
 msgid "Clears the results from the last update"
@@ -685,14 +665,14 @@ msgstr "Onnistuneesti päivitetyt laitteet:"
 msgid "Devices that were not updated correctly:"
 msgstr "Laitteet, joita ei päivitetty oikein:"
 
-#. TRANSLATORS: message letting the user know no device upgrade
-#. * available due to missing on LVFS
 #. TRANSLATORS: message letting the user know no device
 #. * upgrade available due to missing on LVFS
-#. TRANSLATORS: message letting the user know no device upgrade
-#. * available due to missing on LVFS
+#. TRANSLATORS: message letting the user know no
+#. * device upgrade available due to missing on LVFS
 #. TRANSLATORS: message letting the user know no device
 #. * upgrade available due to missing on LVFS
+#. TRANSLATORS: message letting the user know no
+#. * device upgrade available due to missing on LVFS
 msgid "Devices with no available firmware updates: "
 msgstr "Laitteet, joille ei ole saatavilla laiteohjelmiston päivityksiä:"
 
@@ -769,7 +749,7 @@ msgstr "Ymmärrätkö laiteohjelmiston haaran vaihtamisen seuraukset?"
 msgid "Do you want to disable this feature for future updates?"
 msgstr "Haluatko poistaa tämän ominaisuuden käytöstä tulevia päivityksiä varten?"
 
-#. TRANSLATORS: ask the user if we can update the metadata
+#. TRANSLATORS: ask if we can update the metadata
 msgid "Do you want to refresh this remote now?"
 msgstr "Haluatko päivittää tämän lähteen nyt?"
 
@@ -912,7 +892,6 @@ msgid "FILE [DEVICE-ID|GUID]"
 msgstr "TIEDOSTO [LAITETUNNUS|GUID]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-#. TRANSLATORS: filename argument with path
 msgid "FILENAME"
 msgstr "TIEDOSTONIMI"
 
@@ -958,6 +937,7 @@ msgid "Failed to apply update"
 msgstr "Päivityksen asentaminen epäonnistui"
 
 #. TRANSLATORS: we could not talk to the fwupd daemon
+#. TRANSLATORS: could not contact the fwupd service over D-Bus
 msgid "Failed to connect to daemon"
 msgstr "Yhteys taustaprosessiin epäonnistui"
 
@@ -1537,10 +1517,6 @@ msgstr "Seuraa tapahtumien taustaprosessia"
 msgid "Mounts the ESP"
 msgstr "Liitä ESP"
 
-#. TRANSLATORS: we're poking around as a power user
-msgid "NOTE: This program may only work correctly as root"
-msgstr "HUOMAA: Tämä ohjelma toimii oikein vain root-käyttäjän oikeuksin"
-
 #. TRANSLATORS: Requires a reboot to apply firmware or to reload hardware
 msgid "Needs a reboot after installation"
 msgstr "Tarvitsee uudelleenkäynnistyksen asennuksen jälkeen"
@@ -1852,7 +1828,7 @@ msgstr "Vaadittavaa laitteistoa ei löytynyt"
 msgid "Requires a bootloader"
 msgstr "Vaatii käynnistyslataimen"
 
-#. TRANSLATORS: metadata is downloaded from the Internet
+#. TRANSLATORS: metadata is downloaded
 msgid "Requires internet connection"
 msgstr "Vaatii internetyhteyden"
 
@@ -1860,7 +1836,7 @@ msgstr "Vaatii internetyhteyden"
 msgid "Restart now?"
 msgstr "Käynnistetäänkö uudelleen nyt?"
 
-#. TRANSLATORS: configuration changes only take effect on restart
+#. TRANSLATORS: changes only take effect on restart
 msgid "Restart the daemon to make the change effective?"
 msgstr "Käynnistetäänkö taustaprosessi uudelleen, jotta muutos tulee voimaan?"
 
@@ -2423,7 +2399,7 @@ msgstr "Päivityksen tila"
 msgid "Update failure is a known issue, visit this URL for more information:"
 msgstr "Päivityksen epäonnistuminen on tunnettu ongelma. Saat lisätietoja tästä URL-osoitteesta:"
 
-#. TRANSLATORS: ask the user if we can update the metadata
+#. TRANSLATORS: ask if we can update metadata
 msgid "Update now?"
 msgstr "Päivitetäänkö nyt?"
 
@@ -2479,11 +2455,7 @@ msgstr "Laiteohjelmistoraporttien lähettäminen auttaa laitteistotoimittajia tu
 msgid "Urgency"
 msgstr "Kiireellisyys"
 
-#. TRANSLATORS: error message explaining command on how to get help
-msgid "Use fwupdmgr --help for help"
-msgstr "Suorita fwupdmgr --help nähdäksesi ohjeet"
-
-#. TRANSLATORS: error message explaining command on how to get help
+#. TRANSLATORS: explain how to get help
 msgid "Use fwupdtool --help for help"
 msgstr "Suorita fwupdtool --help nähdäksesi ohjeet"
 
@@ -2525,10 +2497,6 @@ msgstr "Vahvistetaan…"
 #. TRANSLATORS: the detected version number of the dbx
 msgid "Version"
 msgstr "Versio"
-
-#. TRANSLATORS: this is a prefix on the console
-msgid "WARNING:"
-msgstr "VAROITUS:"
 
 #. TRANSLATORS: waiting for device to do something
 msgid "Waiting…"

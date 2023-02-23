@@ -417,7 +417,7 @@ msgstr "Alternativni ogranak"
 msgid "An update requires a reboot to complete."
 msgstr "Nadopuna zahtijeva ponovno pokretanje za završetak."
 
-#. TRANSLATORS: explain why we want to shutdown
+#. TRANSLATORS: explain why
 msgid "An update requires the system to shutdown to complete."
 msgstr "Nadopuna zahtijeva potpuno isključivanje sustava."
 
@@ -585,6 +585,7 @@ msgid "Cancel"
 msgstr "Odustani"
 
 #. TRANSLATORS: this is when a device ctrl+c's a watch
+#. TRANSLATORS: this is from ctrl+c
 msgid "Cancelled"
 msgstr "Prekinuto"
 
@@ -607,27 +608,6 @@ msgstr "Provjeri podudarnost kriptografske jedinstvene vrijednosti firmvera"
 #. TRANSLATORS: remote checksum
 msgid "Checksum"
 msgstr "Kontrolni zbroj"
-
-#. TRANSLATORS: get interactive prompt, where branch is the
-#. * supplier of the firmware, e.g. "non-free" or "free"
-msgid "Choose a branch:"
-msgstr "Odaberi granu:"
-
-#. TRANSLATORS: get interactive prompt
-msgid "Choose a device:"
-msgstr "Odaberite uređaj:"
-
-#. TRANSLATORS: get interactive prompt
-msgid "Choose a firmware type:"
-msgstr "Odaberi vrstu firmvera:"
-
-#. TRANSLATORS: get interactive prompt
-msgid "Choose a release:"
-msgstr "Odaberi izdanje:"
-
-#. TRANSLATORS: get interactive prompt
-msgid "Choose a volume:"
-msgstr "Odaberite uređaj:"
 
 #. TRANSLATORS: get interactive prompt
 msgid "Choose the ESP:"
@@ -707,8 +687,8 @@ msgid "Details"
 msgstr "Pojedinosti"
 
 #. TRANSLATORS: the best known configuration is a set of software that we know
-#. works well
-#. * together. In the OEM and ODM industries it is often called a BKC
+#. works
+#. * well together. In the OEM and ODM industries it is often called a BKC
 msgid "Deviate from the best known configuration?"
 msgstr "Odustani od najbolje poznatog podešavanja?"
 
@@ -827,14 +807,14 @@ msgstr "Uređaji koji su uspješno nadopunjeni:"
 msgid "Devices that were not updated correctly:"
 msgstr "Uređaji koji nisu ispravno nadopunjeni:"
 
-#. TRANSLATORS: message letting the user know no device upgrade
-#. * available due to missing on LVFS
 #. TRANSLATORS: message letting the user know no device
 #. * upgrade available due to missing on LVFS
-#. TRANSLATORS: message letting the user know no device upgrade
-#. * available due to missing on LVFS
+#. TRANSLATORS: message letting the user know no
+#. * device upgrade available due to missing on LVFS
 #. TRANSLATORS: message letting the user know no device
 #. * upgrade available due to missing on LVFS
+#. TRANSLATORS: message letting the user know no
+#. * device upgrade available due to missing on LVFS
 msgid "Devices with no available firmware updates: "
 msgstr "Uređaji bez dostupnih nadopuna firmvera: "
 
@@ -923,7 +903,7 @@ msgstr "Razumijete li posljedice promjene ogranka firmvera?"
 msgid "Do you want to disable this feature for future updates?"
 msgstr "Želite li onemogućiti ovu značajku za buduće nadopune?"
 
-#. TRANSLATORS: ask the user if we can update the metadata
+#. TRANSLATORS: ask if we can update the metadata
 msgid "Do you want to refresh this remote now?"
 msgstr "Želite li odmah provjeriti ovu udaljenu lokaciju?"
 
@@ -1081,7 +1061,6 @@ msgid "FILE [DEVICE-ID|GUID]"
 msgstr "DATOTEKA [UREĐAJ-ID|GUID]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-#. TRANSLATORS: filename argument with path
 msgid "FILENAME"
 msgstr "NAZIV DATOTEKE"
 
@@ -1131,11 +1110,11 @@ msgid "Failed to apply update"
 msgstr "Neuspjela primjena nadopune"
 
 #. TRANSLATORS: error message for Windows
-#, c-format
 msgid "Failed to connect to Windows service, please ensure it's running."
 msgstr "Neuspjelo povezivanje s Windows uslugom, provjerite je li pokrenuta."
 
 #. TRANSLATORS: we could not talk to the fwupd daemon
+#. TRANSLATORS: could not contact the fwupd service over D-Bus
 msgid "Failed to connect to daemon"
 msgstr "Neuspjelo povezivanje s pozadinskim programom"
 
@@ -1880,10 +1859,6 @@ msgstr "Nadgledaj događaje pozadinskim programom"
 msgid "Mounts the ESP"
 msgstr "Montira ESP"
 
-#. TRANSLATORS: we're poking around as a power user
-msgid "NOTE: This program may only work correctly as root"
-msgstr "NAPOMENA: Ovaj program može samo raditi samo s korijenskim ovlastima"
-
 #. TRANSLATORS: Requires a reboot to apply firmware or to reload hardware
 msgid "Needs a reboot after installation"
 msgstr "Potrebno je ponovno pokretanje nakon instalacije"
@@ -2239,7 +2214,7 @@ msgstr "Potreban hardver nije pronađen"
 msgid "Requires a bootloader"
 msgstr "Zahtijeva učitača pokretanja"
 
-#. TRANSLATORS: metadata is downloaded from the Internet
+#. TRANSLATORS: metadata is downloaded
 msgid "Requires internet connection"
 msgstr "Potreban je pristup internetu"
 
@@ -2247,7 +2222,7 @@ msgstr "Potreban je pristup internetu"
 msgid "Restart now?"
 msgstr "Ponovno pokreni odmah?"
 
-#. TRANSLATORS: configuration changes only take effect on restart
+#. TRANSLATORS: changes only take effect on restart
 msgid "Restart the daemon to make the change effective?"
 msgstr "Ponovno pokreni pozadinski program kako bi se promjene primijenile?"
 
@@ -2503,10 +2478,6 @@ msgstr "Izvor"
 
 msgid "Specify Vendor/Product ID(s) of DFU device"
 msgstr "Odredi ID-ove Proizvođača/Proizvoda DFU uređaja"
-
-#. TRANSLATORS: command line option
-msgid "Specify a filename to use to save backend events"
-msgstr "Odredi naziv datoteke za spremanje pozadinskih događaja"
 
 #. TRANSLATORS: command line option
 msgid "Specify the dbx database file"
@@ -3004,7 +2975,7 @@ msgstr "Stanje nadopune"
 msgid "Update failure is a known issue, visit this URL for more information:"
 msgstr "Neuspješna nadopuna je poznat problem, posjetite ovaj URL za više informacija:"
 
-#. TRANSLATORS: ask the user if we can update the metadata
+#. TRANSLATORS: ask if we can update metadata
 msgid "Update now?"
 msgstr "Nadopuni odmah?"
 
@@ -3060,11 +3031,7 @@ msgstr "Slanje izvještaja firmvera pomaže proizvođačima hardvera brzo otkriv
 msgid "Urgency"
 msgstr "Hitnost"
 
-#. TRANSLATORS: error message explaining command on how to get help
-msgid "Use fwupdmgr --help for help"
-msgstr "Koristite fwupdmgr --help za prikaz pomoći"
-
-#. TRANSLATORS: error message explaining command on how to get help
+#. TRANSLATORS: explain how to get help
 msgid "Use fwupdtool --help for help"
 msgstr "Koristite fwupdtool --help za prikaz pomoći"
 
@@ -3110,10 +3077,6 @@ msgstr "Inačica"
 #. TRANSLATORS: the fwupd version the release was tested on
 msgid "Version[fwupd]"
 msgstr "Inačica[fwupd]"
-
-#. TRANSLATORS: this is a prefix on the console
-msgid "WARNING:"
-msgstr "UPOZORENJE:"
 
 #. TRANSLATORS: waiting for device to do something
 msgid "Waiting…"

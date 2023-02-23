@@ -49,6 +49,7 @@ msgid "Authentication is required to update the stored checksums for the device"
 msgstr "Om de opgeslagen controlesommen op het apparaat bij te werken moet u toestemming verlenen"
 
 #. TRANSLATORS: this is when a device ctrl+c's a watch
+#. TRANSLATORS: this is from ctrl+c
 msgid "Cancelled"
 msgstr "Geannuleerd"
 

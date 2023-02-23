@@ -67,6 +67,7 @@ msgid "Cancel"
 msgstr "Kanselleer"
 
 #. TRANSLATORS: this is when a device ctrl+c's a watch
+#. TRANSLATORS: this is from ctrl+c
 msgid "Cancelled"
 msgstr "Gekanselleer"
 
@@ -77,14 +78,6 @@ msgstr "Verander"
 #. TRANSLATORS: remote checksum
 msgid "Checksum"
 msgstr "Kontrolesom"
-
-#. TRANSLATORS: get interactive prompt
-msgid "Choose a device:"
-msgstr "Kies 'n toestel:"
-
-#. TRANSLATORS: get interactive prompt
-msgid "Choose a release:"
-msgstr "Kies 'n vrystelling:"
 
 #. TRANSLATORS: error message
 msgid "Command not found"
@@ -221,7 +214,7 @@ msgstr "Lees tans…"
 msgid "Reinstalling %s with %s... "
 msgstr "Herinstalleer tans %s met %s… "
 
-#. TRANSLATORS: metadata is downloaded from the Internet
+#. TRANSLATORS: metadata is downloaded
 msgid "Requires internet connection"
 msgstr "Internetverbinding is nodig"
 
@@ -262,7 +255,7 @@ msgstr "Tipe"
 msgid "Unknown"
 msgstr "Onbekend"
 
-#. TRANSLATORS: ask the user if we can update the metadata
+#. TRANSLATORS: ask if we can update metadata
 msgid "Update now?"
 msgstr "Werk nou by?"
 

@@ -85,7 +85,6 @@ msgid "Enabling this functionality is done at your own risk, which means you hav
 msgstr "この機能を有効にすることは、お客様自身の責任で行ってください。つまり、これらの更新によって発生した問題については、製造元のメーカーに連絡する必要があります。更新プロセス自体に関する問題だけを $OS_RELEASE:BUG_REPORT_URL$ へ提出してください。"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-#. TRANSLATORS: filename argument with path
 msgid "FILENAME"
 msgstr "ファイル名"
 

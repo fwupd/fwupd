@@ -208,7 +208,7 @@ msgstr "Leisti iš naujo įdiegti esamas programinės aparatinės įrangos versi
 msgid "An update requires a reboot to complete."
 msgstr "Atnaujinimo užbaigimui, reikia paleisti sistemą iš naujo."
 
-#. TRANSLATORS: explain why we want to shutdown
+#. TRANSLATORS: explain why
 msgid "An update requires the system to shutdown to complete."
 msgstr "Atnaujinimo užbaigimui, reikia išjungti sistemą."
 
@@ -302,6 +302,7 @@ msgid "Cancel"
 msgstr "Atsisakyti"
 
 #. TRANSLATORS: this is when a device ctrl+c's a watch
+#. TRANSLATORS: this is from ctrl+c
 msgid "Cancelled"
 msgstr "Atsisakyta"
 
@@ -316,14 +317,6 @@ msgstr "Pakeistas"
 #. TRANSLATORS: remote checksum
 msgid "Checksum"
 msgstr "Kontrolinė suma"
-
-#. TRANSLATORS: get interactive prompt
-msgid "Choose a device:"
-msgstr "Pasirinkite įrenginį:"
-
-#. TRANSLATORS: get interactive prompt
-msgid "Choose a release:"
-msgstr "Pasirinkite laidą:"
 
 #. TRANSLATORS: command description
 msgid "Clears the results from the last update"
@@ -402,14 +395,14 @@ msgstr "Įrenginiai, kurie buvo sėkmingai atnaujinti:"
 msgid "Devices that were not updated correctly:"
 msgstr "Įrenginiai, kurie nebuvo teisingai atnaujinti:"
 
-#. TRANSLATORS: message letting the user know no device upgrade
-#. * available due to missing on LVFS
 #. TRANSLATORS: message letting the user know no device
 #. * upgrade available due to missing on LVFS
-#. TRANSLATORS: message letting the user know no device upgrade
-#. * available due to missing on LVFS
+#. TRANSLATORS: message letting the user know no
+#. * device upgrade available due to missing on LVFS
 #. TRANSLATORS: message letting the user know no device
 #. * upgrade available due to missing on LVFS
+#. TRANSLATORS: message letting the user know no
+#. * device upgrade available due to missing on LVFS
 msgid "Devices with no available firmware updates: "
 msgstr "Įrenginiai, neturintys prieinamų programinės aparatinės įrangos atnaujinimų: "
 
@@ -546,7 +539,6 @@ msgid "FILE [DEVICE-ID|GUID]"
 msgstr "FAILAS [ĮRENGINIO-ID|GUID]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-#. TRANSLATORS: filename argument with path
 msgid "FILENAME"
 msgstr "FAILO-PAVADINIMAS"
 
@@ -580,6 +572,7 @@ msgid "Failed to apply update"
 msgstr "Nepavyko pritaikyti atnaujinimo"
 
 #. TRANSLATORS: we could not talk to the fwupd daemon
+#. TRANSLATORS: could not contact the fwupd service over D-Bus
 msgid "Failed to connect to daemon"
 msgstr "Nepavyko prisijungti prie tarnybos"
 
@@ -1033,7 +1026,7 @@ msgstr "Pakeisti duomenis esamame programinės aparatinės įrangos faile"
 msgid "Report URI"
 msgstr "Ataskaitų URI"
 
-#. TRANSLATORS: metadata is downloaded from the Internet
+#. TRANSLATORS: metadata is downloaded
 msgid "Requires internet connection"
 msgstr "Reikalauja interneto ryšio"
 
@@ -1041,7 +1034,7 @@ msgstr "Reikalauja interneto ryšio"
 msgid "Restart now?"
 msgstr "Paleisti iš naujo dabar?"
 
-#. TRANSLATORS: configuration changes only take effect on restart
+#. TRANSLATORS: changes only take effect on restart
 msgid "Restart the daemon to make the change effective?"
 msgstr "Paleisti tarnybą iš naujo, kad pakeitimas įsigaliotų?"
 
@@ -1316,7 +1309,7 @@ msgstr "Atnaujinimo būsena"
 msgid "Update failure is a known issue, visit this URL for more information:"
 msgstr "Atnaujinimo nesėkmė yra žinoma problema, išsamesnei informacijai apsilankykite šiame URL:"
 
-#. TRANSLATORS: ask the user if we can update the metadata
+#. TRANSLATORS: ask if we can update metadata
 msgid "Update now?"
 msgstr "Atnaujinti dabar?"
 
@@ -1386,10 +1379,6 @@ msgstr "Patikrinama…"
 #. TRANSLATORS: the detected version number of the dbx
 msgid "Version"
 msgstr "Versija"
-
-#. TRANSLATORS: this is a prefix on the console
-msgid "WARNING:"
-msgstr "ĮSPĖJIMAS:"
 
 #. TRANSLATORS: waiting for device to do something
 msgid "Waiting…"

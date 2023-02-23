@@ -140,6 +140,7 @@ msgid "Cancel"
 msgstr "Cancelar"
 
 #. TRANSLATORS: this is when a device ctrl+c's a watch
+#. TRANSLATORS: this is from ctrl+c
 msgid "Cancelled"
 msgstr "Cancelado"
 
@@ -150,22 +151,6 @@ msgstr "Non foi posíbel aplicar as actualizacións no soporte multimedia"
 #. TRANSLATORS: this is when the daemon state changes
 msgid "Changed"
 msgstr "Cambiado"
-
-#. TRANSLATORS: get interactive prompt
-msgid "Choose a device:"
-msgstr "Seleccione un dispositivo:"
-
-#. TRANSLATORS: get interactive prompt
-msgid "Choose a firmware type:"
-msgstr "Escolla o tipo de firmware:"
-
-#. TRANSLATORS: get interactive prompt
-msgid "Choose a release:"
-msgstr "Escolla a publicación:"
-
-#. TRANSLATORS: get interactive prompt
-msgid "Choose a volume:"
-msgstr "Escolla un volume:"
 
 #. TRANSLATORS: error message
 msgid "Command not found"
@@ -310,6 +295,7 @@ msgid "Failed to apply update"
 msgstr "Produciuse un fallo ao aplicar a actualización"
 
 #. TRANSLATORS: we could not talk to the fwupd daemon
+#. TRANSLATORS: could not contact the fwupd service over D-Bus
 msgid "Failed to connect to daemon"
 msgstr "Produciuse un fallo ao conectarse ao demoni"
 
@@ -694,11 +680,11 @@ msgstr "Reinstalando %s con %s... "
 msgid "Replace data in an existing firmware file"
 msgstr "Substituír datos nun ficheiro de firmware existente"
 
-#. TRANSLATORS: metadata is downloaded from the Internet
+#. TRANSLATORS: metadata is downloaded
 msgid "Requires internet connection"
 msgstr "Require conexión a internet"
 
-#. TRANSLATORS: configuration changes only take effect on restart
+#. TRANSLATORS: changes only take effect on restart
 msgid "Restart the daemon to make the change effective?"
 msgstr "Desexa reiniciar o demonio para facer o cambio efectivo?"
 
@@ -887,7 +873,7 @@ msgstr "Desbloqueado"
 msgid "Unset the debugging flag during update"
 msgstr "Quitar a bandeira de depuración durante a actualización"
 
-#. TRANSLATORS: ask the user if we can update the metadata
+#. TRANSLATORS: ask if we can update metadata
 msgid "Update now?"
 msgstr "Actualizar agora"
 
@@ -917,7 +903,7 @@ msgstr "Actualizando %s…"
 msgid "Upload report now?"
 msgstr "Desexa subir o informe agora?"
 
-#. TRANSLATORS: error message explaining command on how to get help
+#. TRANSLATORS: explain how to get help
 msgid "Use fwupdtool --help for help"
 msgstr "Usar fwupdtool --help para obter axuda"
 

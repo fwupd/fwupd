@@ -74,6 +74,12 @@ msgstr "%s მოწყობილობის განახლება"
 msgid "%s Display Update"
 msgstr "%s ეკრანის განახლება"
 
+#. TRANSLATORS: Dock refers to the port replicator hardware laptops are
+#. * cradled in, or lowered onto
+#, c-format
+msgid "%s Dock Update"
+msgstr "%s დოკის განახლება"
+
 #. TRANSLATORS: drive refers to a storage device, e.g. SATA disk
 #, c-format
 msgid "%s Drive Update"
@@ -89,6 +95,12 @@ msgstr "%s ჩადგმული კონტროლერის გან�
 #, c-format
 msgid "%s Flash Drive Update"
 msgstr "%s Flash დისკის განახლება"
+
+#. TRANSLATORS: GPU refers to a Graphics Processing Unit, e.g.
+#. * the "video card"
+#, c-format
+msgid "%s GPU Update"
+msgstr "%s GPU -ის განახლება"
 
 #. TRANSLATORS: Keyboard refers to an input device for typing
 #, c-format
@@ -145,6 +157,12 @@ msgstr "%s Thunderbolt კონტროლერის განახლე�
 #, c-format
 msgid "%s Touchpad Update"
 msgstr "%s თაჩპედის განახლება"
+
+#. TRANSLATORS: Dock refers to the port replicator device connected
+#. * by plugging in a USB cable -- which may or may not also provide power
+#, c-format
+msgid "%s USB Dock Update"
+msgstr "%s USB დოკის განახლება"
 
 #. TRANSLATORS: Receiver refers to a radio device, e.g. a tiny Bluetooth
 #. * device that stays in the USB port so the wireless peripheral works
@@ -282,6 +300,7 @@ msgid "Cancel"
 msgstr "გაუქმება"
 
 #. TRANSLATORS: this is when a device ctrl+c's a watch
+#. TRANSLATORS: this is from ctrl+c
 msgid "Cancelled"
 msgstr "შეწყვეტილია"
 
@@ -292,19 +311,6 @@ msgstr "შეცვლილია"
 #. TRANSLATORS: remote checksum
 msgid "Checksum"
 msgstr "საკონტროლო რიცხვი"
-
-#. TRANSLATORS: get interactive prompt, where branch is the
-#. * supplier of the firmware, e.g. "non-free" or "free"
-msgid "Choose a branch:"
-msgstr "აირჩიეთ ბრენჩი:"
-
-#. TRANSLATORS: get interactive prompt
-msgid "Choose a firmware type:"
-msgstr "აირჩიეთ მიკროკოდის ტიპი:"
-
-#. TRANSLATORS: get interactive prompt
-msgid "Choose a volume:"
-msgstr "აირჩიეთ ტომი:"
 
 #. TRANSLATORS: get interactive prompt
 msgid "Choose the ESP:"
@@ -441,7 +447,7 @@ msgstr "ვერსის ჩვენება"
 msgid "Distribution"
 msgstr "გავრცელება"
 
-#. TRANSLATORS: ask the user if we can update the metadata
+#. TRANSLATORS: ask if we can update the metadata
 msgid "Do you want to refresh this remote now?"
 msgstr "გნებავთ ეს დაშორებული ახლა განაახლოთ?"
 
@@ -508,7 +514,6 @@ msgid "FILE"
 msgstr "FILE"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-#. TRANSLATORS: filename argument with path
 msgid "FILENAME"
 msgstr "ფაილის სახელი"
 
@@ -812,6 +817,10 @@ msgstr[1] "საკითხები"
 msgid "Keyring"
 msgstr "ბრელოკი"
 
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "LOCATION"
+msgstr "მდებარეობა"
+
 #. TRANSLATORS: the original time/date the device was modified
 msgid "Last modified"
 msgstr "ბოლო ცვლილება"
@@ -834,7 +843,7 @@ msgstr "Linux Swap"
 
 #. TRANSLATORS: Title: if it's tainted or not
 msgid "Linux kernel"
-msgstr "Linux kernel"
+msgstr "Linux-ის ბირთვი"
 
 #. TRANSLATORS: Title: lockdown is a security mode of the kernel
 msgid "Linux kernel lockdown"
@@ -940,7 +949,7 @@ msgstr "მხარდაუჭერელია"
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "OK"
-msgstr "OK"
+msgstr "დიახ"
 
 #. TRANSLATORS: this is for the device tests
 msgid "OK!"
@@ -961,7 +970,7 @@ msgstr "ბილიკი"
 
 #. TRANSLATORS: remote filename base
 msgid "Password"
-msgstr "Password"
+msgstr "პაროლი"
 
 msgid "Payload"
 msgstr "შემცველობა"
@@ -986,6 +995,10 @@ msgstr "პლატფორმის გამართვა"
 #. metal thing
 msgid "Please ensure you have the volume recovery key before continuing."
 msgstr "გაგრძელების წინ დარწმუნდით, რომ ტომის აღდგენის გასაღები ნამდვილად გაქვთ."
+
+#. TRANSLATORS: Possible values for a bios setting
+msgid "Possible Values"
+msgstr "შესაძლო მნიშვნელობები"
 
 #. TRANSLATORS: Title: DMA as in https://en.wikipedia.org/wiki/DMA_attack
 msgid "Pre-boot DMA Protection"
@@ -1090,6 +1103,10 @@ msgstr "არჩეული ტომი"
 #. TRANSLATORS: serial number of hardware
 msgid "Serial Number"
 msgstr "სერიული ნომერი"
+
+#. TRANSLATORS: description of a BIOS setting
+msgid "Settings will apply after system reboots"
+msgstr "პარამეტრები მხოლოდ სისტემის გადატვირთვის შემდეგ გადატარდება"
 
 #. TRANSLATORS: command line option
 msgid "Show all results"
@@ -1292,7 +1309,7 @@ msgstr "ასლის განახლება"
 msgid "Update Message"
 msgstr "განახლების შეტყობინება"
 
-#. TRANSLATORS: ask the user if we can update the metadata
+#. TRANSLATORS: ask if we can update metadata
 msgid "Update now?"
 msgstr "განვაახლო ახლა?"
 
@@ -1342,10 +1359,6 @@ msgstr "შემოწმება…"
 #. TRANSLATORS: the detected version number of the dbx
 msgid "Version"
 msgstr "ვერსია"
-
-#. TRANSLATORS: this is a prefix on the console
-msgid "WARNING:"
-msgstr "გაფთხილება:"
 
 #. TRANSLATORS: waiting for device to do something
 msgid "Waiting…"

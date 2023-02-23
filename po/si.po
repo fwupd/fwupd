@@ -348,7 +348,7 @@ msgstr "විකල්ප ශාඛාව"
 msgid "An update requires a reboot to complete."
 msgstr "යාවත්කාලීනයක් සම්පූර්ණ කිරීමට නැවත පණගැන්වීමක් අවශ්‍ය වේ."
 
-#. TRANSLATORS: explain why we want to shutdown
+#. TRANSLATORS: explain why
 msgid "An update requires the system to shutdown to complete."
 msgstr "යාවත්කාලීනයක් සම්පූර්ණ කිරීමට පද්ධතිය වසා දැමීම අවශ්‍ය වේ."
 
@@ -495,6 +495,7 @@ msgid "Cancel"
 msgstr "අවලංගු කරන්න"
 
 #. TRANSLATORS: this is when a device ctrl+c's a watch
+#. TRANSLATORS: this is from ctrl+c
 msgid "Cancelled"
 msgstr "අවලංගු කෙරිණි"
 
@@ -517,27 +518,6 @@ msgstr "ගුප්ත ලේඛන හැෂ් ගැලපීම් ස්�
 #. TRANSLATORS: remote checksum
 msgid "Checksum"
 msgstr "චෙක්සම්"
-
-#. TRANSLATORS: get interactive prompt, where branch is the
-#. * supplier of the firmware, e.g. "non-free" or "free"
-msgid "Choose a branch:"
-msgstr "ශාඛාවක් තෝරන්න:"
-
-#. TRANSLATORS: get interactive prompt
-msgid "Choose a device:"
-msgstr "උපාංගයක් තෝරන්න:"
-
-#. TRANSLATORS: get interactive prompt
-msgid "Choose a firmware type:"
-msgstr "ස්ථිරාංග වර්ගයක් තෝරන්න:"
-
-#. TRANSLATORS: get interactive prompt
-msgid "Choose a release:"
-msgstr "නිකුතුවක් තෝරන්න:"
-
-#. TRANSLATORS: get interactive prompt
-msgid "Choose a volume:"
-msgstr "පරිමාවක් තෝරන්න:"
 
 #. TRANSLATORS: command description
 msgid "Clears the results from the last update"
@@ -601,8 +581,8 @@ msgid "Details"
 msgstr "විස්තර"
 
 #. TRANSLATORS: the best known configuration is a set of software that we know
-#. works well
-#. * together. In the OEM and ODM industries it is often called a BKC
+#. works
+#. * well together. In the OEM and ODM industries it is often called a BKC
 msgid "Deviate from the best known configuration?"
 msgstr "හොඳින්ම දන්නා වින්‍යාසයෙන් බැහැර වන්නද?"
 
@@ -709,14 +689,14 @@ msgstr "සාර්ථකව යාවත්කාලීන කරන ලද �
 msgid "Devices that were not updated correctly:"
 msgstr "නිවැරදිව යාවත්කාලීන නොකළ උපාංග:"
 
-#. TRANSLATORS: message letting the user know no device upgrade
-#. * available due to missing on LVFS
 #. TRANSLATORS: message letting the user know no device
 #. * upgrade available due to missing on LVFS
-#. TRANSLATORS: message letting the user know no device upgrade
-#. * available due to missing on LVFS
+#. TRANSLATORS: message letting the user know no
+#. * device upgrade available due to missing on LVFS
 #. TRANSLATORS: message letting the user know no device
 #. * upgrade available due to missing on LVFS
+#. TRANSLATORS: message letting the user know no
+#. * device upgrade available due to missing on LVFS
 msgid "Devices with no available firmware updates: "
 msgstr "පවතින ස්ථිරාංග යාවත්කාලීන නොමැති උපාංග: "
 
@@ -793,7 +773,7 @@ msgstr "ස්ථිරාංග ශාඛාව වෙනස් කිරීම
 msgid "Do you want to disable this feature for future updates?"
 msgstr "ඔබට අනාගත යාවත්කාලීන සඳහා මෙම විශේෂාංගය අබල කිරීමට අවශ්‍යද?"
 
-#. TRANSLATORS: ask the user if we can update the metadata
+#. TRANSLATORS: ask if we can update the metadata
 msgid "Do you want to refresh this remote now?"
 msgstr "ඔබට දැන් මෙම දුරස්ථ පාලකය නැවුම් කිරීමට අවශ්‍යද?"
 
@@ -929,7 +909,6 @@ msgid "FILE [DEVICE-ID|GUID]"
 msgstr "ගොනුව [උපාංගය-ID|මාර්ගෝපදේශය]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-#. TRANSLATORS: filename argument with path
 msgid "FILENAME"
 msgstr "ගොනුවේ නම"
 
@@ -979,6 +958,7 @@ msgid "Failed to apply update"
 msgstr "යාවත්කාලය යෙදීමට අසමත් විය"
 
 #. TRANSLATORS: we could not talk to the fwupd daemon
+#. TRANSLATORS: could not contact the fwupd service over D-Bus
 msgid "Failed to connect to daemon"
 msgstr "ඩීමන් වෙත සම්බන්ධ වීමට අසමත් විය"
 
@@ -1518,10 +1498,6 @@ msgstr "සිදුවීම් සඳහා ඩීමන් නිරීක්
 msgid "Mounts the ESP"
 msgstr "ESP සවි කරයි"
 
-#. TRANSLATORS: we're poking around as a power user
-msgid "NOTE: This program may only work correctly as root"
-msgstr "සටහන: මෙම වැඩසටහන නිවැරදිව ක්‍රියා කළ හැක්කේ root ලෙස පමණි"
-
 #. TRANSLATORS: Requires a reboot to apply firmware or to reload hardware
 msgid "Needs a reboot after installation"
 msgstr "ස්ථාපනය කිරීමෙන් පසු නැවත ආරම්භ කිරීම අවශ්ය වේ"
@@ -1829,7 +1805,7 @@ msgstr "අවශ්‍ය දෘඩාංග හමු නොවීය"
 msgid "Requires a bootloader"
 msgstr "ඇරඹුම් කාරකයක් අවශ්‍ය වේ"
 
-#. TRANSLATORS: metadata is downloaded from the Internet
+#. TRANSLATORS: metadata is downloaded
 msgid "Requires internet connection"
 msgstr "අන්තර්ජාල සම්බන්ධතාව අවශ්‍යයි"
 
@@ -1837,7 +1813,7 @@ msgstr "අන්තර්ජාල සම්බන්ධතාව අවශ්�
 msgid "Restart now?"
 msgstr "දැන් නැවත ආරම්භ කරන්නද?"
 
-#. TRANSLATORS: configuration changes only take effect on restart
+#. TRANSLATORS: changes only take effect on restart
 msgid "Restart the daemon to make the change effective?"
 msgstr "වෙනස් කිරීම ඵලදායී කිරීමට ඩීමන් නැවත ආරම්භ කරන්නද?"
 
@@ -2431,7 +2407,7 @@ msgstr "තත්වය යාවත්කාලීන කරන්න"
 msgid "Update failure is a known issue, visit this URL for more information:"
 msgstr "යාවත්කාලීන අසාර්ථක වීම දන්නා ගැටළුවකි, වැඩිදුර තොරතුරු සඳහා මෙම URL වෙත පිවිසෙන්න:"
 
-#. TRANSLATORS: ask the user if we can update the metadata
+#. TRANSLATORS: ask if we can update metadata
 msgid "Update now?"
 msgstr "දැන් යාවත්කාලීන කරන්න?"
 
@@ -2487,11 +2463,7 @@ msgstr "ස්ථිරාංග වාර්තා උඩුගත කිරී
 msgid "Urgency"
 msgstr "හදිසිය"
 
-#. TRANSLATORS: error message explaining command on how to get help
-msgid "Use fwupdmgr --help for help"
-msgstr "උදව් සඳහා fwupdmgr --help භාවිතා කරන්න"
-
-#. TRANSLATORS: error message explaining command on how to get help
+#. TRANSLATORS: explain how to get help
 msgid "Use fwupdtool --help for help"
 msgstr "උදව් සඳහා fwupdtool --help භාවිතා කරන්න"
 
@@ -2533,10 +2505,6 @@ msgstr "සත්‍යාපනය…"
 #. TRANSLATORS: the detected version number of the dbx
 msgid "Version"
 msgstr "අනුවාදය"
-
-#. TRANSLATORS: this is a prefix on the console
-msgid "WARNING:"
-msgstr "අවවාදය:"
 
 #. TRANSLATORS: waiting for device to do something
 msgid "Waiting…"

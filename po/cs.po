@@ -401,7 +401,7 @@ msgstr "Alternativní větev"
 msgid "An update requires a reboot to complete."
 msgstr "Některá z aktualizací vyžaduje pro dokončení restart počítače."
 
-#. TRANSLATORS: explain why we want to shutdown
+#. TRANSLATORS: explain why
 msgid "An update requires the system to shutdown to complete."
 msgstr "Některá z aktualizací vyžaduje pro dokončení vypnutí počítače."
 
@@ -570,6 +570,7 @@ msgid "Cancel"
 msgstr "Storno"
 
 #. TRANSLATORS: this is when a device ctrl+c's a watch
+#. TRANSLATORS: this is from ctrl+c
 msgid "Cancelled"
 msgstr "Zrušeno"
 
@@ -592,27 +593,6 @@ msgstr "Zkontrolovat zda se kryptografický otisk shoduje s firmware"
 #. TRANSLATORS: remote checksum
 msgid "Checksum"
 msgstr "Kontrolní součet"
-
-#. TRANSLATORS: get interactive prompt, where branch is the
-#. * supplier of the firmware, e.g. "non-free" or "free"
-msgid "Choose a branch:"
-msgstr "Zvolte větev firmware:"
-
-#. TRANSLATORS: get interactive prompt
-msgid "Choose a device:"
-msgstr "Vyberte zařízení:"
-
-#. TRANSLATORS: get interactive prompt
-msgid "Choose a firmware type:"
-msgstr "Zvolte typ firmware:"
-
-#. TRANSLATORS: get interactive prompt
-msgid "Choose a release:"
-msgstr "Vyberte verzi:"
-
-#. TRANSLATORS: get interactive prompt
-msgid "Choose a volume:"
-msgstr "Zvolte svazek:"
 
 #. TRANSLATORS: get interactive prompt
 msgid "Choose the ESP:"
@@ -692,8 +672,8 @@ msgid "Details"
 msgstr "Podrobnosti"
 
 #. TRANSLATORS: the best known configuration is a set of software that we know
-#. works well
-#. * together. In the OEM and ODM industries it is often called a BKC
+#. works
+#. * well together. In the OEM and ODM industries it is often called a BKC
 msgid "Deviate from the best known configuration?"
 msgstr "Odchýlit se od osvědčené kombinace verzí firmwarů všech zařízení?"
 
@@ -812,14 +792,14 @@ msgstr "Zařízení, která byla úspěšně aktualizována:"
 msgid "Devices that were not updated correctly:"
 msgstr "Zařízení, která nebyla úspěšně aktualizována:"
 
-#. TRANSLATORS: message letting the user know no device upgrade
-#. * available due to missing on LVFS
 #. TRANSLATORS: message letting the user know no device
 #. * upgrade available due to missing on LVFS
-#. TRANSLATORS: message letting the user know no device upgrade
-#. * available due to missing on LVFS
+#. TRANSLATORS: message letting the user know no
+#. * device upgrade available due to missing on LVFS
 #. TRANSLATORS: message letting the user know no device
 #. * upgrade available due to missing on LVFS
+#. TRANSLATORS: message letting the user know no
+#. * device upgrade available due to missing on LVFS
 msgid "Devices with no available firmware updates: "
 msgstr "Zařízení, pro která nejsou k dispozici aktualizace firmware:"
 
@@ -908,7 +888,7 @@ msgstr "Rozumíte důsledkům změny větve firmwaru?"
 msgid "Do you want to disable this feature for future updates?"
 msgstr "Chcete pro budoucí aktualizace tuto funkci vypnout?"
 
-#. TRANSLATORS: ask the user if we can update the metadata
+#. TRANSLATORS: ask if we can update the metadata
 msgid "Do you want to refresh this remote now?"
 msgstr "Chcete nyní tento vzdálený zdroj znovu načíst?"
 
@@ -1066,7 +1046,6 @@ msgid "FILE [DEVICE-ID|GUID]"
 msgstr "SOUBOR [IDENTIF-ZAŘÍZENÍ|GUID]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-#. TRANSLATORS: filename argument with path
 msgid "FILENAME"
 msgstr "SOUBOR"
 
@@ -1116,11 +1095,11 @@ msgid "Failed to apply update"
 msgstr "Aktualizaci se nepodařilo provést"
 
 #. TRANSLATORS: error message for Windows
-#, c-format
 msgid "Failed to connect to Windows service, please ensure it's running."
 msgstr "Nepodařilo se připojit k Windows službě – zajistěte, že je spuštěná."
 
 #. TRANSLATORS: we could not talk to the fwupd daemon
+#. TRANSLATORS: could not contact the fwupd service over D-Bus
 msgid "Failed to connect to daemon"
 msgstr "Nepodařilo se spojit s procesem služby"
 
@@ -1864,10 +1843,6 @@ msgstr "Sledovat události v procesu služby"
 msgid "Mounts the ESP"
 msgstr "Připojit ESP oddíl"
 
-#. TRANSLATORS: we're poking around as a power user
-msgid "NOTE: This program may only work correctly as root"
-msgstr "POZN.: Tento program může správně fungovat jen pod uživatelem root"
-
 #. TRANSLATORS: Requires a reboot to apply firmware or to reload hardware
 msgid "Needs a reboot after installation"
 msgstr "Po instalaci vyžaduje restart"
@@ -2223,7 +2198,7 @@ msgstr "Požadovaný hardware nenalezen"
 msgid "Requires a bootloader"
 msgstr "Vyžaduje ruční přepnutí do zavaděče firmware"
 
-#. TRANSLATORS: metadata is downloaded from the Internet
+#. TRANSLATORS: metadata is downloaded
 msgid "Requires internet connection"
 msgstr "Vyžaduje připojení k Internetu"
 
@@ -2231,7 +2206,7 @@ msgstr "Vyžaduje připojení k Internetu"
 msgid "Restart now?"
 msgstr "Restartovat nyní?"
 
-#. TRANSLATORS: configuration changes only take effect on restart
+#. TRANSLATORS: changes only take effect on restart
 msgid "Restart the daemon to make the change effective?"
 msgstr "Restartovat proces služby, aby se změny uplatnily?"
 
@@ -2487,10 +2462,6 @@ msgstr "Zdroj"
 
 msgid "Specify Vendor/Product ID(s) of DFU device"
 msgstr "Zadejte identifikátor(y) výrobce/produktu DFU zařízení"
-
-#. TRANSLATORS: command line option
-msgid "Specify a filename to use to save backend events"
-msgstr "Zadejte soubor který použít pro uložení událostí v podpůrné vrstvě"
 
 #. TRANSLATORS: command line option
 msgid "Specify the dbx database file"
@@ -2986,7 +2957,7 @@ msgstr "Stav aktualizace"
 msgid "Update failure is a known issue, visit this URL for more information:"
 msgstr "Problém s nezdařenou aktualizací je už znám, další informace naleznete na této adrese:"
 
-#. TRANSLATORS: ask the user if we can update the metadata
+#. TRANSLATORS: ask if we can update metadata
 msgid "Update now?"
 msgstr "Aktualizovat nyní?"
 
@@ -3042,11 +3013,7 @@ msgstr "Posíláním hlášení o firmwarech pomůžete výrobcům hardwaru rych
 msgid "Urgency"
 msgstr "Naléhavost"
 
-#. TRANSLATORS: error message explaining command on how to get help
-msgid "Use fwupdmgr --help for help"
-msgstr "Nápovědu si zobrazíte použitím příkazu fwupdmgr --help"
-
-#. TRANSLATORS: error message explaining command on how to get help
+#. TRANSLATORS: explain how to get help
 msgid "Use fwupdtool --help for help"
 msgstr "Nápovědu obdržíte spuštěním fwupdtool --help"
 
@@ -3092,10 +3059,6 @@ msgstr "Verze"
 #. TRANSLATORS: the fwupd version the release was tested on
 msgid "Version[fwupd]"
 msgstr "Verze[fwupd]"
-
-#. TRANSLATORS: this is a prefix on the console
-msgid "WARNING:"
-msgstr "VAROVÁNÍ:"
 
 #. TRANSLATORS: waiting for device to do something
 msgid "Waiting…"

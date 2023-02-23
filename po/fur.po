@@ -130,7 +130,7 @@ msgstr "Permet di cambiâ ram dal firmware"
 msgid "An update requires a reboot to complete."
 msgstr "Un inzornament al à bisugne che si torni a inviâ il computer par finî."
 
-#. TRANSLATORS: explain why we want to shutdown
+#. TRANSLATORS: explain why
 msgid "An update requires the system to shutdown to complete."
 msgstr "Un inzornament, par completâsi, al à bisugne che si distudedi il sisteme."
 
@@ -249,6 +249,7 @@ msgid "Cancel"
 msgstr "Anule"
 
 #. TRANSLATORS: this is when a device ctrl+c's a watch
+#. TRANSLATORS: this is from ctrl+c
 msgid "Cancelled"
 msgstr "Anulât"
 
@@ -267,27 +268,6 @@ msgstr "Modificât"
 #. TRANSLATORS: remote checksum
 msgid "Checksum"
 msgstr "Checksum"
-
-#. TRANSLATORS: get interactive prompt, where branch is the
-#. * supplier of the firmware, e.g. "non-free" or "free"
-msgid "Choose a branch:"
-msgstr "Sielç un ram:"
-
-#. TRANSLATORS: get interactive prompt
-msgid "Choose a device:"
-msgstr "Sielç un dispositîf:"
-
-#. TRANSLATORS: get interactive prompt
-msgid "Choose a firmware type:"
-msgstr "Sielç un gjenar di firmware:"
-
-#. TRANSLATORS: get interactive prompt
-msgid "Choose a release:"
-msgstr "Sielç une publicazion:"
-
-#. TRANSLATORS: get interactive prompt
-msgid "Choose a volume:"
-msgstr "Sielç un volum:"
 
 #. TRANSLATORS: get interactive prompt
 msgid "Choose the ESP:"
@@ -376,14 +356,14 @@ msgstr "Dispositîfs che a son stâts inzornâts cun sucès:"
 msgid "Devices that were not updated correctly:"
 msgstr "Dispositîfs che no son stâts inzornâts ben:"
 
-#. TRANSLATORS: message letting the user know no device upgrade
-#. * available due to missing on LVFS
 #. TRANSLATORS: message letting the user know no device
 #. * upgrade available due to missing on LVFS
-#. TRANSLATORS: message letting the user know no device upgrade
-#. * available due to missing on LVFS
+#. TRANSLATORS: message letting the user know no
+#. * device upgrade available due to missing on LVFS
 #. TRANSLATORS: message letting the user know no device
 #. * upgrade available due to missing on LVFS
+#. TRANSLATORS: message letting the user know no
+#. * device upgrade available due to missing on LVFS
 msgid "Devices with no available firmware updates: "
 msgstr "Dispositîfs cence inzornaments firmware disponibii:"
 
@@ -427,7 +407,7 @@ msgstr "No sta eseguî i controi di sigurece dal dispositîf"
 msgid "Do not prompt for devices"
 msgstr "No sta domandâ dispositîfs"
 
-#. TRANSLATORS: ask the user if we can update the metadata
+#. TRANSLATORS: ask if we can update the metadata
 msgid "Do you want to refresh this remote now?"
 msgstr "Desideristu inzornâ cheste sorzint esterne cumò?"
 
@@ -545,7 +525,6 @@ msgid "Exit after the engine has loaded"
 msgstr "Jes dopo che il motôr al à cjariât"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-#. TRANSLATORS: filename argument with path
 msgid "FILENAME"
 msgstr "NONFILE"
 
@@ -554,6 +533,7 @@ msgid "Failed to apply update"
 msgstr "Impussibil aplicâ l'inzornament"
 
 #. TRANSLATORS: we could not talk to the fwupd daemon
+#. TRANSLATORS: could not contact the fwupd service over D-Bus
 msgid "Failed to connect to daemon"
 msgstr "No si è rivâts a conetisi al demoni"
 
@@ -1038,10 +1018,6 @@ msgstr "Modifiche la configurazion dal demoni"
 msgid "Monitor the daemon for events"
 msgstr "Monitore il demoni pai events"
 
-#. TRANSLATORS: we're poking around as a power user
-msgid "NOTE: This program may only work correctly as root"
-msgstr "NOTE: Chest program al pues lavorâ ben dome come root"
-
 #. TRANSLATORS: the update state of the specific device
 msgid "Needs reboot"
 msgstr " Al necessite di tornâ a inviâ il sisteme"
@@ -1269,7 +1245,7 @@ msgstr "Segnalât su servidôr esterni"
 msgid "Request canceled"
 msgstr "Richieste anulade"
 
-#. TRANSLATORS: metadata is downloaded from the Internet
+#. TRANSLATORS: metadata is downloaded
 msgid "Requires internet connection"
 msgstr "Al à bisugne de conession a internet"
 
@@ -1277,7 +1253,7 @@ msgstr "Al à bisugne de conession a internet"
 msgid "Restart now?"
 msgstr "Tornâ a inviâ cumò?"
 
-#. TRANSLATORS: configuration changes only take effect on restart
+#. TRANSLATORS: changes only take effect on restart
 msgid "Restart the daemon to make the change effective?"
 msgstr "Tornâ a inviâ il demoni par rindi efetive la modifiche?"
 
@@ -1691,7 +1667,7 @@ msgstr "Stât inzornament"
 msgid "Update failure is a known issue, visit this URL for more information:"
 msgstr "Il faliment dal inzornament al è un probleme cognossût, visite chest URL par vê plui informazions:"
 
-#. TRANSLATORS: ask the user if we can update the metadata
+#. TRANSLATORS: ask if we can update metadata
 msgid "Update now?"
 msgstr "Inzornâ cumò?"
 

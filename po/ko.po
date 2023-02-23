@@ -398,7 +398,7 @@ msgstr "대체 브랜치"
 msgid "An update requires a reboot to complete."
 msgstr "업데이트를 완료하려면 다시 시작해야 합니다."
 
-#. TRANSLATORS: explain why we want to shutdown
+#. TRANSLATORS: explain why
 msgid "An update requires the system to shutdown to complete."
 msgstr "업데이트를 완료하려면 시스템을 종료해야 합니다."
 
@@ -564,6 +564,7 @@ msgid "Cancel"
 msgstr "취소"
 
 #. TRANSLATORS: this is when a device ctrl+c's a watch
+#. TRANSLATORS: this is from ctrl+c
 msgid "Cancelled"
 msgstr "취소함"
 
@@ -586,27 +587,6 @@ msgstr "암호화 해시가 펌웨어와 일치하는지 확인"
 #. TRANSLATORS: remote checksum
 msgid "Checksum"
 msgstr "체크섬"
-
-#. TRANSLATORS: get interactive prompt, where branch is the
-#. * supplier of the firmware, e.g. "non-free" or "free"
-msgid "Choose a branch:"
-msgstr "브랜치 선택:"
-
-#. TRANSLATORS: get interactive prompt
-msgid "Choose a device:"
-msgstr "장치를 선택하십시오:"
-
-#. TRANSLATORS: get interactive prompt
-msgid "Choose a firmware type:"
-msgstr "펌웨어 종류를 선택하십시오:"
-
-#. TRANSLATORS: get interactive prompt
-msgid "Choose a release:"
-msgstr "출시 버전을 선택하십시오:"
-
-#. TRANSLATORS: get interactive prompt
-msgid "Choose a volume:"
-msgstr "볼륨 선택:"
 
 #. TRANSLATORS: get interactive prompt
 msgid "Choose the ESP:"
@@ -686,8 +666,8 @@ msgid "Details"
 msgstr "자세한 정보"
 
 #. TRANSLATORS: the best known configuration is a set of software that we know
-#. works well
-#. * together. In the OEM and ODM industries it is often called a BKC
+#. works
+#. * well together. In the OEM and ODM industries it is often called a BKC
 msgid "Deviate from the best known configuration?"
 msgstr "최적의 설정에서 벗어납니까?"
 
@@ -806,14 +786,14 @@ msgstr "성공적으로 업데이트된 장치:"
 msgid "Devices that were not updated correctly:"
 msgstr "올바르게 업데이트되지 않은 장치:"
 
-#. TRANSLATORS: message letting the user know no device upgrade
-#. * available due to missing on LVFS
 #. TRANSLATORS: message letting the user know no device
 #. * upgrade available due to missing on LVFS
-#. TRANSLATORS: message letting the user know no device upgrade
-#. * available due to missing on LVFS
+#. TRANSLATORS: message letting the user know no
+#. * device upgrade available due to missing on LVFS
 #. TRANSLATORS: message letting the user know no device
 #. * upgrade available due to missing on LVFS
+#. TRANSLATORS: message letting the user know no
+#. * device upgrade available due to missing on LVFS
 msgid "Devices with no available firmware updates: "
 msgstr "펌웨어 업데이트를 사용할 수 없는 장치:"
 
@@ -902,7 +882,7 @@ msgstr "펌웨어 브랜치 변경 조건을 이해했습니까?"
 msgid "Do you want to disable this feature for future updates?"
 msgstr "다음에 업데이트할 때 이 기능을 비활성화하시겠습니까?"
 
-#. TRANSLATORS: ask the user if we can update the metadata
+#. TRANSLATORS: ask if we can update the metadata
 msgid "Do you want to refresh this remote now?"
 msgstr "원격 저장소를 새로 고치시겠습니까?"
 
@@ -1060,7 +1040,6 @@ msgid "FILE [DEVICE-ID|GUID]"
 msgstr "FILE [DEVICE-ID|GUID]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-#. TRANSLATORS: filename argument with path
 msgid "FILENAME"
 msgstr "FILENAME"
 
@@ -1110,11 +1089,11 @@ msgid "Failed to apply update"
 msgstr "업데이트를 적용할 수 없음"
 
 #. TRANSLATORS: error message for Windows
-#, c-format
 msgid "Failed to connect to Windows service, please ensure it's running."
 msgstr "윈도우 서비스 연결 실패. 실행중인지 확인하십시오."
 
 #. TRANSLATORS: we could not talk to the fwupd daemon
+#. TRANSLATORS: could not contact the fwupd service over D-Bus
 msgid "Failed to connect to daemon"
 msgstr "데몬에 연결할 수 없음"
 
@@ -1853,10 +1832,6 @@ msgstr "데몬 이벤트 감시"
 msgid "Mounts the ESP"
 msgstr "ESP 마운트"
 
-#. TRANSLATORS: we're poking around as a power user
-msgid "NOTE: This program may only work correctly as root"
-msgstr "참고: 이 프로그램은 루트 계정에서만 제대로 동작합니다"
-
 #. TRANSLATORS: Requires a reboot to apply firmware or to reload hardware
 msgid "Needs a reboot after installation"
 msgstr "설치 후 다시 시작 필요함"
@@ -2212,7 +2187,7 @@ msgstr "필요한 하드웨어를 찾을 수 없음"
 msgid "Requires a bootloader"
 msgstr "부트로더 모드 진입 필요함"
 
-#. TRANSLATORS: metadata is downloaded from the Internet
+#. TRANSLATORS: metadata is downloaded
 msgid "Requires internet connection"
 msgstr "인터넷 연결 필요"
 
@@ -2220,7 +2195,7 @@ msgstr "인터넷 연결 필요"
 msgid "Restart now?"
 msgstr "지금 다시 시작하시겠습니까?"
 
-#. TRANSLATORS: configuration changes only take effect on restart
+#. TRANSLATORS: changes only take effect on restart
 msgid "Restart the daemon to make the change effective?"
 msgstr "데몬을 다시 시작하여 변경 사항을 적용하시겠습니까?"
 
@@ -2476,10 +2451,6 @@ msgstr "원본"
 
 msgid "Specify Vendor/Product ID(s) of DFU device"
 msgstr "DFU 장치의 제조사/제품 ID 지정"
-
-#. TRANSLATORS: command line option
-msgid "Specify a filename to use to save backend events"
-msgstr "백엔드 동작 상태를 저장할 때 사용할 파일이름 지정"
 
 #. TRANSLATORS: command line option
 msgid "Specify the dbx database file"
@@ -2973,7 +2944,7 @@ msgstr "업데이트 상태"
 msgid "Update failure is a known issue, visit this URL for more information:"
 msgstr "알 수 없는 이유로 업데이트가 실패했습니다. 더 많은 정보를 보려면 다음 URL을 참조하십시오:"
 
-#. TRANSLATORS: ask the user if we can update the metadata
+#. TRANSLATORS: ask if we can update metadata
 msgid "Update now?"
 msgstr "지금 업데이트하시겠습니까?"
 
@@ -3029,11 +3000,7 @@ msgstr "펌웨어 보고서를 업로드하면 하드웨어 제작사에서 실�
 msgid "Urgency"
 msgstr "중요도"
 
-#. TRANSLATORS: error message explaining command on how to get help
-msgid "Use fwupdmgr --help for help"
-msgstr "도움말을 보려면 fwupdmgr --help 명령을 사용하십시오"
-
-#. TRANSLATORS: error message explaining command on how to get help
+#. TRANSLATORS: explain how to get help
 msgid "Use fwupdtool --help for help"
 msgstr "도움말을 보려면 fwupdtool --help를 실행하십시오"
 
@@ -3079,10 +3046,6 @@ msgstr "버전"
 #. TRANSLATORS: the fwupd version the release was tested on
 msgid "Version[fwupd]"
 msgstr "버전[fwupd]"
-
-#. TRANSLATORS: this is a prefix on the console
-msgid "WARNING:"
-msgstr "경고:"
 
 #. TRANSLATORS: waiting for device to do something
 msgid "Waiting…"

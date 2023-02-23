@@ -91,6 +91,7 @@ msgid "Cancel"
 msgstr "取消"
 
 #. TRANSLATORS: this is when a device ctrl+c's a watch
+#. TRANSLATORS: this is from ctrl+c
 msgid "Cancelled"
 msgstr "已取消"
 
@@ -101,14 +102,6 @@ msgstr "已變更"
 #. TRANSLATORS: remote checksum
 msgid "Checksum"
 msgstr "校驗計算碼"
-
-#. TRANSLATORS: get interactive prompt
-msgid "Choose a device:"
-msgstr "選擇裝置："
-
-#. TRANSLATORS: get interactive prompt
-msgid "Choose a release:"
-msgstr "選擇發行版："
 
 #. TRANSLATORS: command description
 msgid "Clears the results from the last update"
@@ -492,7 +485,7 @@ msgstr "取代既有韌體檔案中的資料"
 msgid "Report URI"
 msgstr "報告 URI"
 
-#. TRANSLATORS: metadata is downloaded from the Internet
+#. TRANSLATORS: metadata is downloaded
 msgid "Requires internet connection"
 msgstr "必須有網際網路連線"
 
@@ -603,7 +596,7 @@ msgstr "取消更新期間的除錯旗標設定"
 msgid "Update failure is a known issue, visit this URL for more information:"
 msgstr "更新失敗是已知議題，請造訪此 URL 瞭解更多資訊："
 
-#. TRANSLATORS: ask the user if we can update the metadata
+#. TRANSLATORS: ask if we can update metadata
 msgid "Update now?"
 msgstr "是否立刻更更新？"
 

@@ -179,7 +179,7 @@ msgstr "A meglévő firmware verziók újratelepítésének engedélyezése"
 msgid "An update requires a reboot to complete."
 msgstr "Egy frissítés újraindítást igényel a befejezéshez."
 
-#. TRANSLATORS: explain why we want to shutdown
+#. TRANSLATORS: explain why
 msgid "An update requires the system to shutdown to complete."
 msgstr "Egy frissítés a rendszer újraindítását igényel a befejezéshez."
 
@@ -263,6 +263,7 @@ msgid "Cancel"
 msgstr "Mégse"
 
 #. TRANSLATORS: this is when a device ctrl+c's a watch
+#. TRANSLATORS: this is from ctrl+c
 msgid "Cancelled"
 msgstr "Megszakítva"
 
@@ -277,18 +278,6 @@ msgstr "Ellenőrzi, hogy a kriptográfiai hash egyezik-e a firmware-rel"
 #. TRANSLATORS: remote checksum
 msgid "Checksum"
 msgstr "Ellenőrzőösszeg"
-
-#. TRANSLATORS: get interactive prompt
-msgid "Choose a device:"
-msgstr "Válasszon eszközt:"
-
-#. TRANSLATORS: get interactive prompt
-msgid "Choose a firmware type:"
-msgstr "Válasszon firmware típust:"
-
-#. TRANSLATORS: get interactive prompt
-msgid "Choose a release:"
-msgstr "Válasszon kiadást:"
 
 #. TRANSLATORS: command description
 msgid "Clears the results from the last update"
@@ -500,6 +489,7 @@ msgid "Exit after the engine has loaded"
 msgstr "Kilépés a motor betöltődése után"
 
 #. TRANSLATORS: we could not talk to the fwupd daemon
+#. TRANSLATORS: could not contact the fwupd service over D-Bus
 msgid "Failed to connect to daemon"
 msgstr "A démonhoz kapcsolódás sikertelen"
 
@@ -920,7 +910,7 @@ msgstr "Jelentve a távoli kiszolgálónak"
 msgid "Requires a bootloader"
 msgstr "Rendszerbetöltő szükséges"
 
-#. TRANSLATORS: metadata is downloaded from the Internet
+#. TRANSLATORS: metadata is downloaded
 msgid "Requires internet connection"
 msgstr "Internetkapcsolat szükséges"
 
@@ -928,7 +918,7 @@ msgstr "Internetkapcsolat szükséges"
 msgid "Restart now?"
 msgstr "Újraindítja most?"
 
-#. TRANSLATORS: configuration changes only take effect on restart
+#. TRANSLATORS: changes only take effect on restart
 msgid "Restart the daemon to make the change effective?"
 msgstr "Újraindítja a démont a változás életbe léptetéséhez?"
 
@@ -1185,7 +1175,7 @@ msgstr "Frissítés állapota"
 msgid "Update failure is a known issue, visit this URL for more information:"
 msgstr "A feltöltési hiba ismert probléma, további információkért látogassa meg ezt az URL-t:"
 
-#. TRANSLATORS: ask the user if we can update the metadata
+#. TRANSLATORS: ask if we can update metadata
 msgid "Update now?"
 msgstr "Frissíti most?"
 

@@ -359,6 +359,10 @@ msgstr "Activating firmware update"
 msgid "Activating firmware update for"
 msgstr "Activating firmware update for"
 
+#. TRANSLATORS: command description
+msgid "Adds devices to watch for future emulation"
+msgstr "Adds devices to watch for future emulation"
+
 #. TRANSLATORS: the age of the metadata
 msgid "Age"
 msgstr "Age"
@@ -379,6 +383,10 @@ msgstr "All TPM PCRs are now valid"
 #. TRANSLATORS: HSI event title
 msgid "All TPM PCRs are valid"
 msgstr "All TPM PCRs are valid"
+
+#. TRANSLATORS: an application is preventing system updates
+msgid "All devices are prevented from update by system inhibit"
+msgstr "All devices are prevented from update by system inhibit"
 
 #. TRANSLATORS: on some systems certain devices have to have matching
 #. versions,
@@ -402,11 +410,15 @@ msgstr "Allow switching firmware branch"
 msgid "Alternate branch"
 msgstr "Alternate branch"
 
+#. TRANSLATORS: another application is updating the device already
+msgid "An update is in progress"
+msgstr "An update is in progress"
+
 #. TRANSLATORS: explain why we want to reboot
 msgid "An update requires a reboot to complete."
 msgstr "An update requires a reboot to complete."
 
-#. TRANSLATORS: explain why we want to shutdown
+#. TRANSLATORS: explain why
 msgid "An update requires the system to shutdown to complete."
 msgstr "An update requires the system to shutdown to complete."
 
@@ -440,6 +452,10 @@ msgstr[1] "Approved firmware:"
 #. TRANSLATORS: stop nagging the user
 msgid "Ask again next time?"
 msgstr "Ask again next time?"
+
+#. TRANSLATORS: command description
+msgid "Asks the daemon to quit"
+msgstr "Asks the daemon to quit"
 
 #. TRANSLATORS: command description
 msgid "Attach to firmware mode"
@@ -573,6 +589,7 @@ msgid "Cancel"
 msgstr "Cancel"
 
 #. TRANSLATORS: this is when a device ctrl+c's a watch
+#. TRANSLATORS: this is from ctrl+c
 msgid "Cancelled"
 msgstr "Cancelled"
 
@@ -598,28 +615,28 @@ msgstr "Checksum"
 
 #. TRANSLATORS: get interactive prompt, where branch is the
 #. * supplier of the firmware, e.g. "non-free" or "free"
-msgid "Choose a branch:"
-msgstr "Choose a branch:"
+msgid "Choose branch"
+msgstr "Choose branch"
 
 #. TRANSLATORS: get interactive prompt
-msgid "Choose a device:"
-msgstr "Choose a device:"
+msgid "Choose device"
+msgstr "Choose device"
 
 #. TRANSLATORS: get interactive prompt
-msgid "Choose a firmware type:"
-msgstr "Choose a firmware type:"
+msgid "Choose firmware"
+msgstr "Choose firmware"
 
 #. TRANSLATORS: get interactive prompt
-msgid "Choose a release:"
-msgstr "Choose a release:"
-
-#. TRANSLATORS: get interactive prompt
-msgid "Choose a volume:"
-msgstr "Choose a volume:"
+msgid "Choose release"
+msgstr "Choose release"
 
 #. TRANSLATORS: get interactive prompt
 msgid "Choose the ESP:"
 msgstr "Choose the ESP:"
+
+#. TRANSLATORS: get interactive prompt
+msgid "Choose volume"
+msgstr "Choose volume"
 
 #. TRANSLATORS: command description
 msgid "Clears the results from the last update"
@@ -695,8 +712,8 @@ msgid "Details"
 msgstr "Details"
 
 #. TRANSLATORS: the best known configuration is a set of software that we know
-#. works well
-#. * together. In the OEM and ODM industries it is often called a BKC
+#. works
+#. * well together. In the OEM and ODM industries it is often called a BKC
 msgid "Deviate from the best known configuration?"
 msgstr "Deviate from the best known configuration?"
 
@@ -732,6 +749,10 @@ msgstr "Device cannot be used while the lid is closed"
 #. TRANSLATORS: this is when a device has been updated
 msgid "Device changed:"
 msgstr "Device changed:"
+
+#. ability to load emulated devices is opt-in
+msgid "Device emulation is not enabled."
+msgstr "Device emulation is not enabled."
 
 #. TRANSLATORS: a version check is required for all firmware
 msgid "Device firmware is required to have a version check"
@@ -815,14 +836,14 @@ msgstr "Devices that have been updated successfully:"
 msgid "Devices that were not updated correctly:"
 msgstr "Devices that were not updated correctly:"
 
-#. TRANSLATORS: message letting the user know no device upgrade
-#. * available due to missing on LVFS
 #. TRANSLATORS: message letting the user know no device
 #. * upgrade available due to missing on LVFS
-#. TRANSLATORS: message letting the user know no device upgrade
-#. * available due to missing on LVFS
+#. TRANSLATORS: message letting the user know no
+#. * device upgrade available due to missing on LVFS
 #. TRANSLATORS: message letting the user know no device
 #. * upgrade available due to missing on LVFS
+#. TRANSLATORS: message letting the user know no
+#. * device upgrade available due to missing on LVFS
 msgid "Devices with no available firmware updates: "
 msgstr "Devices with no available firmware updates: "
 
@@ -911,7 +932,11 @@ msgstr "Do you understand the consequences of changing the firmware branch?"
 msgid "Do you want to disable this feature for future updates?"
 msgstr "Do you want to disable this feature for future updates?"
 
-#. TRANSLATORS: ask the user if we can update the metadata
+#. TRANSLATORS: we can do this live
+msgid "Do you want to enable it now?"
+msgstr "Do you want to enable it now?"
+
+#. TRANSLATORS: ask if we can update the metadata
 msgid "Do you want to refresh this remote now?"
 msgstr "Do you want to refresh this remote now?"
 
@@ -973,6 +998,14 @@ msgstr "ESP specified was not valid"
 #. TRANSLATORS: longer description
 msgid "Each system should have tests to ensure firmware security."
 msgstr "Each system should have tests to ensure firmware security."
+
+#. TRANSLATORS: command description
+msgid "Emulate a device using a JSON manifest"
+msgstr "Emulate a device using a JSON manifest"
+
+#. TRANSLATORS: this device is not actually real
+msgid "Emulated"
+msgstr "Emulated"
 
 #. TRANSLATORS: Title: if we are emulating a different host
 msgid "Emulated host"
@@ -1069,7 +1102,6 @@ msgid "FILE [DEVICE-ID|GUID]"
 msgstr "FILE [DEVICE-ID|GUID]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-#. TRANSLATORS: filename argument with path
 msgid "FILENAME"
 msgstr "FILENAME"
 
@@ -1119,11 +1151,11 @@ msgid "Failed to apply update"
 msgstr "Failed to apply update"
 
 #. TRANSLATORS: error message for Windows
-#, c-format
 msgid "Failed to connect to Windows service, please ensure it's running."
 msgstr "Failed to connect to Windows service, please ensure it's running."
 
 #. TRANSLATORS: we could not talk to the fwupd daemon
+#. TRANSLATORS: could not contact the fwupd service over D-Bus
 msgid "Failed to connect to daemon"
 msgstr "Failed to connect to daemon"
 
@@ -1171,6 +1203,10 @@ msgstr "Failed to parse local dbx"
 #. TRANSLATORS: we could not reboot for some reason
 msgid "Failed to reboot"
 msgstr "Failed to reboot"
+
+#. TRANSLATORS: a feature is something like "can show an image"
+msgid "Failed to set front-end features"
+msgstr "Failed to set front-end features"
 
 #. TRANSLATORS: we could not talk to plymouth
 msgid "Failed to set splash mode"
@@ -1423,9 +1459,17 @@ msgstr "Host Security Events"
 msgid "Host Security ID (HSI) is not supported"
 msgstr "Host Security ID (HSI) is not supported"
 
+#. TRANSLATORS: success, so say thank you to the user
+msgid "Host Security ID attributes uploaded successfully, thanks!"
+msgstr "Host Security ID attributes uploaded successfully, thanks!"
+
 #. TRANSLATORS: this is a string like 'HSI:2-U'
 msgid "Host Security ID:"
 msgstr "Host Security ID:"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "INHIBIT-ID"
+msgstr "INHIBIT-ID"
 
 #. TRANSLATORS: Title:
 #. * https://en.wikipedia.org/wiki/Input%E2%80%93output_memory_management_unit
@@ -1472,6 +1516,15 @@ msgstr "Ignore validation safety checks"
 #. TRANSLATORS: try to help
 msgid "Ignoring SSL strict checks, to do this automatically in the future export DISABLE_SSL_STRICT in your environment"
 msgstr "Ignoring SSL strict checks, to do this automatically in the future export DISABLE_SSL_STRICT in your environment"
+
+#. TRANSLATORS: the inhibit ID is a short string like dbus-123456
+#, c-format
+msgid "Inhibit ID is %s."
+msgstr "Inhibit ID is %s."
+
+#. TRANSLATORS: command description
+msgid "Inhibit the system to prevent upgrades"
+msgstr "Inhibit the system to prevent upgrades"
 
 #. TRANSLATORS: length of time the update takes to apply
 msgid "Install Duration"
@@ -1754,6 +1807,10 @@ msgstr "List the available firmware types"
 msgid "Lists files on the ESP"
 msgstr "Lists files on the ESP"
 
+#. TRANSLATORS: command description
+msgid "Load device emulation data"
+msgstr "Load device emulation data"
+
 #. TRANSLATORS: the plugin was created from a .so object, and was not built-in
 msgid "Loaded from an external module"
 msgstr "Loaded from an external module"
@@ -1864,10 +1921,6 @@ msgstr "Monitor the daemon for events"
 #. TRANSLATORS: command description
 msgid "Mounts the ESP"
 msgstr "Mounts the ESP"
-
-#. TRANSLATORS: we're poking around as a power user
-msgid "NOTE: This program may only work correctly as root"
-msgstr "NOTE: This program may only work correctly as root"
 
 #. TRANSLATORS: Requires a reboot to apply firmware or to reload hardware
 msgid "Needs a reboot after installation"
@@ -2197,6 +2250,10 @@ msgid "Remote ID"
 msgstr "Remote ID"
 
 #. TRANSLATORS: command description
+msgid "Removes devices to watch for future emulation"
+msgstr "Removes devices to watch for future emulation"
+
+#. TRANSLATORS: command description
 msgid "Replace data in an existing firmware file"
 msgstr "Replace data in an existing firmware file"
 
@@ -2224,7 +2281,7 @@ msgstr "Required hardware was not found"
 msgid "Requires a bootloader"
 msgstr "Requires a bootloader"
 
-#. TRANSLATORS: metadata is downloaded from the Internet
+#. TRANSLATORS: metadata is downloaded
 msgid "Requires internet connection"
 msgstr "Requires internet connection"
 
@@ -2232,7 +2289,7 @@ msgstr "Requires internet connection"
 msgid "Restart now?"
 msgstr "Restart now?"
 
-#. TRANSLATORS: configuration changes only take effect on restart
+#. TRANSLATORS: changes only take effect on restart
 msgid "Restart the daemon to make the change effective?"
 msgstr "Restart the daemon to make the change effective?"
 
@@ -2320,6 +2377,10 @@ msgstr "SUBSYSTEM DRIVER [DEVICE-ID|GUID]"
 #. TRANSLATORS: command description
 msgid "Save a file that allows generation of hardware IDs"
 msgstr "Save a file that allows generation of hardware IDs"
+
+#. TRANSLATORS: command description
+msgid "Save device emulation data"
+msgstr "Save device emulation data"
 
 #. TRANSLATORS: Scalar increment for integer BIOS setting
 msgid "Scalar Increment"
@@ -2490,10 +2551,6 @@ msgid "Specify Vendor/Product ID(s) of DFU device"
 msgstr "Specify Vendor/Product ID(s) of DFU device"
 
 #. TRANSLATORS: command line option
-msgid "Specify a filename to use to save backend events"
-msgstr "Specify a filename to use to save backend events"
-
-#. TRANSLATORS: command line option
 msgid "Specify the dbx database file"
 msgstr "Specify the dbx database file"
 
@@ -2616,6 +2673,10 @@ msgstr "Switch the firmware branch on the device"
 msgid "Sync firmware versions to the host best known configuration"
 msgstr "Sync firmware versions to the host best known configuration"
 
+#. TRANSLATORS: this CLI tool is now preventing system updates
+msgid "System Update Inhibited"
+msgstr "System Update Inhibited"
+
 #. TRANSLATORS: as in laptop battery power
 msgid "System power is too low to perform the update"
 msgstr "System power is too low to perform the update"
@@ -2672,6 +2733,10 @@ msgid "Tag"
 msgid_plural "Tags"
 msgstr[0] "Tag"
 msgstr[1] "Tags"
+
+#. TRANSLATORS: we're saving all USB events for emulation
+msgid "Tagged for emulation"
+msgstr "Tagged for emulation"
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Tainted"
@@ -2920,6 +2985,10 @@ msgstr "Unblocks a specific firmware from being installed"
 msgid "Unencrypted"
 msgstr "Unencrypted"
 
+#. TRANSLATORS: command description
+msgid "Uninhibit the system to allow upgrades"
+msgstr "Uninhibit the system to allow upgrades"
+
 #. TRANSLATORS: current daemon status is unknown
 #. TRANSLATORS: we don't know the license of the update
 #. TRANSLATORS: unknown release urgency
@@ -2944,6 +3013,10 @@ msgstr "Unlocks the device for firmware access"
 #. TRANSLATORS: command description
 msgid "Unmounts the ESP"
 msgstr "Unmounts the ESP"
+
+#. TRANSLATORS: message shown after device has been marked for emulation
+msgid "Unplug and replug the device, then install the firmware."
+msgstr "Unplug and replug the device, then install the firmware."
 
 #. TRANSLATORS: command line option
 msgid "Unset the debugging flag during update"
@@ -2987,7 +3060,7 @@ msgstr "Update State"
 msgid "Update failure is a known issue, visit this URL for more information:"
 msgstr "Update failure is a known issue, visit this URL for more information:"
 
-#. TRANSLATORS: ask the user if we can update the metadata
+#. TRANSLATORS: ask if we can update metadata
 msgid "Update now?"
 msgstr "Update now?"
 
@@ -3035,6 +3108,12 @@ msgstr "Upgrade %s from %s to %s?"
 msgid "Upload report now?"
 msgstr "Upload report now?"
 
+#. TRANSLATORS: ask the user to share, %s is something
+#. * like: "Linux Vendor Firmware Service"
+#, c-format
+msgid "Upload these anonymous results to the %s to help other users?"
+msgstr "Upload these anonymous results to the %s to help other users?"
+
 #. TRANSLATORS: explain why we want to upload
 msgid "Uploading firmware reports helps hardware vendors to quickly identify failing and successful updates on real devices."
 msgstr "Uploading firmware reports helps hardware vendors to quickly identify failing and successful updates on real devices."
@@ -3043,11 +3122,18 @@ msgstr "Uploading firmware reports helps hardware vendors to quickly identify fa
 msgid "Urgency"
 msgstr "Urgency"
 
-#. TRANSLATORS: error message explaining command on how to get help
-msgid "Use fwupdmgr --help for help"
-msgstr "Use fwupdmgr --help for help"
+#. TRANSLATORS: explain how to get help,
+#. * where $1 is something like 'fwupdmgr --help'
+#, c-format
+msgid "Use %s for help"
+msgstr "Use %s for help"
 
-#. TRANSLATORS: error message explaining command on how to get help
+#. TRANSLATORS: CTRL^C [holding control, and then pressing C] will exit the
+#. program
+msgid "Use CTRL^C to cancel."
+msgstr "Use CTRL^C to cancel."
+
+#. TRANSLATORS: explain how to get help
 msgid "Use fwupdtool --help for help"
 msgstr "Use fwupdtool --help for help"
 
@@ -3095,8 +3181,8 @@ msgid "Version[fwupd]"
 msgstr "Version[fwupd]"
 
 #. TRANSLATORS: this is a prefix on the console
-msgid "WARNING:"
-msgstr "WARNING:"
+msgid "WARNING"
+msgstr "WARNING"
 
 #. TRANSLATORS: waiting for device to do something
 msgid "Waiting…"
@@ -3170,6 +3256,10 @@ msgstr "[FILE FILE_SIG REMOTE-ID]"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[FILENAME1] [FILENAME2]"
 msgstr "[FILENAME1] [FILENAME2]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[REASON]"
+msgstr "[REASON]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[SETTING1] [ SETTING2]..."

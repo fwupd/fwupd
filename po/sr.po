@@ -71,6 +71,7 @@ msgid "Authentication is required to update the stored checksums for the device"
 msgstr "Потребна је пријава за ажурирање причуваних сума провере за уређај"
 
 #. TRANSLATORS: this is when a device ctrl+c's a watch
+#. TRANSLATORS: this is from ctrl+c
 msgid "Cancelled"
 msgstr "Отказао"
 
@@ -81,14 +82,6 @@ msgstr "Променио"
 #. TRANSLATORS: remote checksum
 msgid "Checksum"
 msgstr "Чек-сума"
-
-#. TRANSLATORS: get interactive prompt
-msgid "Choose a device:"
-msgstr "Изаберите уређај:"
-
-#. TRANSLATORS: get interactive prompt
-msgid "Choose a release:"
-msgstr "Изаберите издање:"
 
 #. TRANSLATORS: command description
 msgid "Clears the results from the last update"
@@ -367,7 +360,7 @@ msgstr "Замењује податке у постојећој датотеци
 msgid "Report URI"
 msgstr "URI извештаја"
 
-#. TRANSLATORS: metadata is downloaded from the Internet
+#. TRANSLATORS: metadata is downloaded
 msgid "Requires internet connection"
 msgstr "Захтева везу са интернетом"
 
@@ -443,7 +436,7 @@ msgstr "Откључава уређај за приступ фирмверу"
 msgid "Update failure is a known issue, visit this URL for more information:"
 msgstr "Узрок неуспеха ажурирања је познат, погледајте ову адресу за више података:"
 
-#. TRANSLATORS: ask the user if we can update the metadata
+#. TRANSLATORS: ask if we can update metadata
 msgid "Update now?"
 msgstr "Ажурирати сада?"
 

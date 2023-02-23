@@ -276,7 +276,7 @@ msgstr "Tillad skift af firmwaregren"
 msgid "An update requires a reboot to complete."
 msgstr "For at fuldføre en opdatering skal systemet genstartes."
 
-#. TRANSLATORS: explain why we want to shutdown
+#. TRANSLATORS: explain why
 msgid "An update requires the system to shutdown to complete."
 msgstr "For at fuldføre en opdatering skal systemet lukkes ned."
 
@@ -415,6 +415,7 @@ msgid "Cancel"
 msgstr "Annuller"
 
 #. TRANSLATORS: this is when a device ctrl+c's a watch
+#. TRANSLATORS: this is from ctrl+c
 msgid "Cancelled"
 msgstr "Annulleret"
 
@@ -437,27 +438,6 @@ msgstr "Tjekker om den kryptografiske hash passer med firmwaren"
 #. TRANSLATORS: remote checksum
 msgid "Checksum"
 msgstr "Checksum"
-
-#. TRANSLATORS: get interactive prompt, where branch is the
-#. * supplier of the firmware, e.g. "non-free" or "free"
-msgid "Choose a branch:"
-msgstr "Vælg en gren:"
-
-#. TRANSLATORS: get interactive prompt
-msgid "Choose a device:"
-msgstr "Vælg en enhed:"
-
-#. TRANSLATORS: get interactive prompt
-msgid "Choose a firmware type:"
-msgstr "Vælg en firmwaretype:"
-
-#. TRANSLATORS: get interactive prompt
-msgid "Choose a release:"
-msgstr "Vælg en udgivelse:"
-
-#. TRANSLATORS: get interactive prompt
-msgid "Choose a volume:"
-msgstr "Vælg et diskområde:"
 
 #. TRANSLATORS: command description
 msgid "Clears the results from the last update"
@@ -594,14 +574,14 @@ msgstr "Enheder som det lykkedes at opdatere:"
 msgid "Devices that were not updated correctly:"
 msgstr "Enheder som ikke blev opdateret korrekt:"
 
-#. TRANSLATORS: message letting the user know no device upgrade
-#. * available due to missing on LVFS
 #. TRANSLATORS: message letting the user know no device
 #. * upgrade available due to missing on LVFS
-#. TRANSLATORS: message letting the user know no device upgrade
-#. * available due to missing on LVFS
+#. TRANSLATORS: message letting the user know no
+#. * device upgrade available due to missing on LVFS
 #. TRANSLATORS: message letting the user know no device
 #. * upgrade available due to missing on LVFS
+#. TRANSLATORS: message letting the user know no
+#. * device upgrade available due to missing on LVFS
 msgid "Devices with no available firmware updates: "
 msgstr "Enheder uden nogen tilgængelige firmwareopdateringer: "
 
@@ -670,7 +650,7 @@ msgstr "Forstår du de konsekvenser som er forbundet med ændring af firmwaregre
 msgid "Do you want to disable this feature for future updates?"
 msgstr "Vil du deaktivere funktionaliteten for fremtidige opdateringer?"
 
-#. TRANSLATORS: ask the user if we can update the metadata
+#. TRANSLATORS: ask if we can update the metadata
 msgid "Do you want to refresh this remote now?"
 msgstr "Vil du opdatere fjernen nu?"
 
@@ -798,7 +778,6 @@ msgid "FILE [DEVICE-ID|GUID]"
 msgstr "FIL [ENHEDS-ID|GUID]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-#. TRANSLATORS: filename argument with path
 msgid "FILENAME"
 msgstr "FILNAVN"
 
@@ -840,6 +819,7 @@ msgid "Failed to apply update"
 msgstr "Kunne ikke anvende opdatering"
 
 #. TRANSLATORS: we could not talk to the fwupd daemon
+#. TRANSLATORS: could not contact the fwupd service over D-Bus
 msgid "Failed to connect to daemon"
 msgstr "Kunne ikke oprette forbindelse til dæmonen"
 
@@ -1578,7 +1558,7 @@ msgstr "Det krævede hardware blev ikke fundet"
 msgid "Requires a bootloader"
 msgstr "Kræver en opstartsindlæser"
 
-#. TRANSLATORS: metadata is downloaded from the Internet
+#. TRANSLATORS: metadata is downloaded
 msgid "Requires internet connection"
 msgstr "Kræver internetforbindelse"
 
@@ -1586,7 +1566,7 @@ msgstr "Kræver internetforbindelse"
 msgid "Restart now?"
 msgstr "Genstart nu?"
 
-#. TRANSLATORS: configuration changes only take effect on restart
+#. TRANSLATORS: changes only take effect on restart
 msgid "Restart the daemon to make the change effective?"
 msgstr "Genstart dæmonen så ændringerne kan træde i kraft?"
 
@@ -2071,7 +2051,7 @@ msgstr "Opdateringstilstand"
 msgid "Update failure is a known issue, visit this URL for more information:"
 msgstr "Opdateringer som mislykkes er et velkendt problem. Besøg URL'en for mere information:"
 
-#. TRANSLATORS: ask the user if we can update the metadata
+#. TRANSLATORS: ask if we can update metadata
 msgid "Update now?"
 msgstr "Opdater nu?"
 
@@ -2123,11 +2103,7 @@ msgstr "Upload af firmwarerapporter hjælper hardwareproducenter til hurtigt at 
 msgid "Urgency"
 msgstr "Vigtighed"
 
-#. TRANSLATORS: error message explaining command on how to get help
-msgid "Use fwupdmgr --help for help"
-msgstr "Brug fwupdmgr --help for hjælp"
-
-#. TRANSLATORS: error message explaining command on how to get help
+#. TRANSLATORS: explain how to get help
 msgid "Use fwupdtool --help for help"
 msgstr "Brug fwupdtool --help for hjælp"
 
@@ -2169,10 +2145,6 @@ msgstr "Verificerer …"
 #. TRANSLATORS: the detected version number of the dbx
 msgid "Version"
 msgstr "Version"
-
-#. TRANSLATORS: this is a prefix on the console
-msgid "WARNING:"
-msgstr "ADVARSEL:"
 
 #. TRANSLATORS: waiting for device to do something
 msgid "Waiting…"

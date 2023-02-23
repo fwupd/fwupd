@@ -1,8 +1,9 @@
 [main]
 host = https://www.transifex.com
 
-[fwupd.main]
+[o:freedesktop:p:fwupd:r:main]
 file_filter = po/<lang>.po
 source_file = po/fwupd.pot
 source_lang = en
-type = PO
+type        = PO
+
