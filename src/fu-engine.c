@@ -4137,6 +4137,9 @@ static gboolean
 fu_engine_create_silo_index(FuEngine *self, GError **error)
 {
 	g_autoptr(GPtrArray) components = NULL;
+	g_autoptr(GError) error_container_checksum1 = NULL;
+	g_autoptr(GError) error_container_checksum2 = NULL;
+	g_autoptr(GError) error_tag_by_guid_version = NULL;
 
 	/* print what we've got */
 	components = xb_silo_query(self->silo, "components/component[@type='firmware']", 0, NULL);
@@ -4183,22 +4186,18 @@ fu_engine_create_silo_index(FuEngine *self, GError **error)
 			      "checksum[@target='container'][text()=?]/../../"
 			      "../../custom/value[@key='fwupd::RemoteId']",
 			      XB_QUERY_FLAG_OPTIMIZE,
-			      error);
-	if (self->query_container_checksum1 == NULL) {
-		g_prefix_error(error, "failed to prepare query: ");
-		return FALSE;
-	}
+			      &error_container_checksum1);
+	if (self->query_container_checksum1 == NULL)
+		g_debug("ignoring prepared query: %s", error_container_checksum1->message);
 	self->query_container_checksum2 =
 	    xb_query_new_full(self->silo,
 			      "components/component[@type='firmware']/releases/release/"
 			      "artifacts/artifact[@type='binary']/checksum[text()=?]/../../"
 			      "../../../../custom/value[@key='fwupd::RemoteId']",
 			      XB_QUERY_FLAG_OPTIMIZE,
-			      error);
-	if (self->query_container_checksum2 == NULL) {
-		g_prefix_error(error, "failed to prepare query: ");
-		return FALSE;
-	}
+			      &error_container_checksum2);
+	if (self->query_container_checksum2 == NULL)
+		g_debug("ignoring prepared query: %s", error_container_checksum2->message);
 
 	/* prepare tag query with bound GUID parameter */
 	self->query_tag_by_guid_version =
@@ -4207,9 +4206,9 @@ fu_engine_create_silo_index(FuEngine *self, GError **error)
 			      "firmware[text()=?]/../../releases/release[@version=?]/../../"
 			      "tags/tag",
 			      XB_QUERY_FLAG_OPTIMIZE,
-			      error);
+			      &error_tag_by_guid_version);
 	if (self->query_tag_by_guid_version == NULL)
-		return FALSE;
+		g_debug("ignoring prepared query: %s", error_tag_by_guid_version->message);
 
 	/* success */
 	return TRUE;
