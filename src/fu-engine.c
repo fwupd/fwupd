@@ -4267,8 +4267,12 @@ fu_engine_create_metadata_builder_source(FuEngine *self, const gchar *fn, GError
 					     NULL);
 	if (!xb_builder_source_load_file(source,
 					 file,
+#if LIBJCAT_CHECK_VERSION(0, 2, 0)
 					 XB_BUILDER_SOURCE_FLAG_WATCH_FILE |
 					     XB_BUILDER_SOURCE_FLAG_WATCH_DIRECTORY,
+#else
+					 XB_BUILDER_SOURCE_FLAG_WATCH_FILE,
+#endif
 					 NULL,
 					 error))
 		return NULL;
