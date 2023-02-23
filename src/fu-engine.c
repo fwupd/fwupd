@@ -8390,7 +8390,6 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 	FuPlugin *plugin_uefi;
 	FuQuirksLoadFlags quirks_flags = FU_QUIRKS_LOAD_FLAG_NONE;
 	const gchar *host_emulate = g_getenv("FWUPD_HOST_EMULATE");
-	guint backend_cnt = 0;
 	g_autoptr(GPtrArray) checksums_approved = NULL;
 	g_autoptr(GPtrArray) checksums_blocked = NULL;
 	g_autoptr(GError) error_quirks = NULL;
@@ -8651,14 +8650,6 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 					error_backend->message);
 				continue;
 			}
-			backend_cnt++;
-		}
-		if (backend_cnt == 0) {
-			g_set_error_literal(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_NOT_SUPPORTED,
-					    "all backends failed setup");
-			return FALSE;
 		}
 	}
 	fu_progress_step_done(progress);
