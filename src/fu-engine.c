@@ -4147,6 +4147,12 @@ fu_engine_create_silo_index(FuEngine *self, GError **error)
 		return TRUE;
 	g_debug("%u components now in silo", components->len);
 
+	/* clear old prepared queries */
+	g_clear_object(&self->query_component_by_guid);
+	g_clear_object(&self->query_container_checksum1);
+	g_clear_object(&self->query_container_checksum2);
+	g_clear_object(&self->query_tag_by_guid_version);
+
 	/* build the index */
 	if (!xb_silo_query_build_index(self->silo, "components/component", "type", error))
 		return FALSE;
