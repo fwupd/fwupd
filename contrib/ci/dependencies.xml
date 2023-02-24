@@ -354,6 +354,21 @@
       <package variant="x86_64" />
     </distro>
   </dependency>
+  <dependency id="libjaylink-dev">
+    <distro id="debian">
+      <control>
+        <exclusive>ia64</exclusive>
+      </control>
+      <package variant="x86_64" />
+      <package variant="i386" />
+    </distro>
+    <distro id="ubuntu">
+      <control>
+        <exclusive>ia64</exclusive>
+      </control>
+      <package variant="x86_64" />
+    </distro>
+  </dependency>
   <dependency id="libflashrom-dev">
     <distro id="fedora">
       <package variant="x86_64">flashrom-devel</package>
