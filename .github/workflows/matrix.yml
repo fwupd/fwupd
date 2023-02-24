@@ -33,8 +33,7 @@ jobs:
           python3 -m pip install --user "meson >= 0.60.0"
       - name: Build
         run: |
-          ./contrib/build-openbmc.sh
-          ninja -C ..
+          ./contrib/build-openbmc.sh --prefix=/home/runner/.root
 
   macos:
     runs-on: macos-12
