@@ -1,7 +1,10 @@
 #!/bin/sh
 
-meson setup ../ \
+rm -rf build
+
+meson setup build \
     -Dauto_features=disabled \
+    -Ddocs=disabled \
     -Dbash_completion=false \
     -Dcompat_cli=false \
     -Dfish_completion=false \
@@ -13,3 +16,7 @@ meson setup ../ \
     -Dudevdir=/tmp \
     -Dsystemd_root_prefix=/tmp \
     $@
+
+ninja install -C build
+build/src/fwupdtool get-devices --verbose
+test $? -eq 2 || exit 1
