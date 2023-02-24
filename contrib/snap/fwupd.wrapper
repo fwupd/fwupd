@@ -1,2 +1,5 @@
 #!/bin/sh
+# don't update between versions, we want to preserve previous data
+[ ! -d "$SNAP_USER_DATA/etc" ] && [ -d "$SNAP/etc" ] && cp -R "$SNAP/etc" "$SNAP_USER_DATA"
+[ ! -d "$SNAP_USER_DATA/var" ] && [ -d "$SNAP/var" ] && cp -R "$SNAP/var" "$SNAP_USER_DATA"
 exec "$SNAP/fwupd-command" $SNAP/libexec/fwupd/fwupd $@

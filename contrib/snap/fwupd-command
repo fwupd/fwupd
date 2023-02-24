@@ -18,10 +18,6 @@ else
   ARCH="$SNAP_ARCH-linux-gnu"
 fi
 
-# don't update between versions, we want to preserve previous data
-[ ! -d "$SNAP_USER_DATA/etc" ] && [ -d "$SNAP/etc" ] && cp -R "$SNAP/etc" "$SNAP_USER_DATA"
-[ ! -d "$SNAP_USER_DATA/var" ] && [ -d "$SNAP/var" ] && cp -R "$SNAP/var" "$SNAP_USER_DATA"
-
 # re-generate gio modules in local cache
 needs_update=true
 if [ -f $SNAP_USER_DATA/.last_revision ]; then
