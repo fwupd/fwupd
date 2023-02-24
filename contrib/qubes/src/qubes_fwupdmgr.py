@@ -62,7 +62,7 @@ HELP = {
             "get-updates": "Get the list of updates for connected hardware",
             "refresh": "Refresh metadata from remote server",
             "update": "Update chosen device to latest firmware version",
-            "update-heads": "Updates heads firmware to the latest version",
+            "update-heads": "Updates heads firmware to the latest version (EXPERIMENTAL, not fully supported yet)",
             "downgrade": "Downgrade chosen device to chosen firmware version",
             "clean": "Delete all cached update files\n",
         }
