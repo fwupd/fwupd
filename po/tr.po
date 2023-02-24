@@ -378,7 +378,7 @@ msgstr "Aygıt, kurulumdan önce donanım yazılımını yedekleyecek"
 #. TRANSLATORS: message letting the user know no
 #. * device upgrade available due to missing on LVFS
 msgid "Devices with no available firmware updates: "
-msgstr "Donanım yazılımı güncellemesi olmayan aygıtlar:"
+msgstr "Donanım yazılımı güncellemesi olmayan aygıtlar: "
 
 #. TRANSLATORS: message letting the user know no device upgrade available
 #. TRANSLATORS: message letting the user know no device upgrade
@@ -1181,7 +1181,7 @@ msgstr "Tüm aygıtlar başarıyla etkinleştirildi"
 #. TRANSLATORS: success message -- where 'metadata' is information
 #. * about available firmware on the remote server
 msgid "Successfully downloaded new metadata: "
-msgstr "Yeni üst veri başarıyla indirildi:"
+msgstr "Yeni üst veri başarıyla indirildi: "
 
 #. TRANSLATORS: success message
 msgid "Successfully installed firmware"

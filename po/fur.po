@@ -365,7 +365,7 @@ msgstr "Dispositîfs che no son stâts inzornâts ben:"
 #. TRANSLATORS: message letting the user know no
 #. * device upgrade available due to missing on LVFS
 msgid "Devices with no available firmware updates: "
-msgstr "Dispositîfs cence inzornaments firmware disponibii:"
+msgstr "Dispositîfs cence inzornaments firmware disponibii: "
 
 #. TRANSLATORS: Suffix: the HSI result
 #. TRANSLATORS: Plugin is inactive and not used
@@ -1422,7 +1422,7 @@ msgstr "Sorzint esterne disabilitade cun sucès"
 #. TRANSLATORS: success message -- where 'metadata' is information
 #. * about available firmware on the remote server
 msgid "Successfully downloaded new metadata: "
-msgstr "Gnûf metadât discjariât cun sucès:"
+msgstr "Gnûf metadât discjariât cun sucès: "
 
 #. TRANSLATORS: success message
 msgid "Successfully enabled and refreshed remote"

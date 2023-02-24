@@ -801,7 +801,7 @@ msgstr "Zařízení, která nebyla úspěšně aktualizována:"
 #. TRANSLATORS: message letting the user know no
 #. * device upgrade available due to missing on LVFS
 msgid "Devices with no available firmware updates: "
-msgstr "Zařízení, pro která nejsou k dispozici aktualizace firmware:"
+msgstr "Zařízení, pro která nejsou k dispozici aktualizace firmware: "
 
 #. TRANSLATORS: message letting the user know no device upgrade available
 #. TRANSLATORS: message letting the user know no device upgrade
@@ -2016,7 +2016,7 @@ msgstr "Než budete pokračovat, zajistěte si, abyste měli k dispozici záchra
 #. TRANSLATORS: the user isn't reading the question
 #, c-format
 msgid "Please enter a number from 0 to %u: "
-msgstr "Zadejte prosím číslo od 0 do %u:"
+msgstr "Zadejte prosím číslo od 0 do %u: "
 
 #. TRANSLATORS: Failed to open plugin, hey Arch users
 msgid "Plugin dependencies missing"
@@ -2490,7 +2490,7 @@ msgstr "Vzdálený zdroj úspěšně zakázán"
 #. TRANSLATORS: success message -- where 'metadata' is information
 #. * about available firmware on the remote server
 msgid "Successfully downloaded new metadata: "
-msgstr "Nová metadata úspěšně stažena:"
+msgstr "Nová metadata úspěšně stažena: "
 
 #. TRANSLATORS: success message
 msgid "Successfully enabled and refreshed remote"

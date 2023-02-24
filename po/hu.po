@@ -826,7 +826,7 @@ msgstr "Százalék kész"
 #. TRANSLATORS: the user isn't reading the question
 #, c-format
 msgid "Please enter a number from 0 to %u: "
-msgstr "Adjon meg egy számot 0 és %u között:"
+msgstr "Adjon meg egy számot 0 és %u között: "
 
 #. TRANSLATORS: version number of previous firmware
 msgid "Previous version"
@@ -1051,7 +1051,7 @@ msgstr "Távoli tároló sikeresen letiltva"
 #. TRANSLATORS: success message -- where 'metadata' is information
 #. * about available firmware on the remote server
 msgid "Successfully downloaded new metadata: "
-msgstr "Új metaadatok sikeresen letöltve:"
+msgstr "Új metaadatok sikeresen letöltve: "
 
 #. TRANSLATORS: success message
 msgid "Successfully enabled remote"

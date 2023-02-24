@@ -349,7 +349,7 @@ msgstr "펌웨어 업데이트 활성화 중"
 
 #. TRANSLATORS: shown when shutting down to switch to the new version
 msgid "Activating firmware update for"
-msgstr "다음 장치의 펌웨어 업데이트 활성화 중:"
+msgstr "다음 장치의 펌웨어 업데이트 활성화 중: "
 
 #. TRANSLATORS: the age of the metadata
 msgid "Age"
@@ -795,7 +795,7 @@ msgstr "올바르게 업데이트되지 않은 장치:"
 #. TRANSLATORS: message letting the user know no
 #. * device upgrade available due to missing on LVFS
 msgid "Devices with no available firmware updates: "
-msgstr "펌웨어 업데이트를 사용할 수 없는 장치:"
+msgstr "펌웨어 업데이트를 사용할 수 없는 장치: "
 
 #. TRANSLATORS: message letting the user know no device upgrade available
 #. TRANSLATORS: message letting the user know no device upgrade
@@ -2005,7 +2005,7 @@ msgstr "계속하시 전 볼륨 복원 키가 있는지 확인하십시오."
 #. TRANSLATORS: the user isn't reading the question
 #, c-format
 msgid "Please enter a number from 0 to %u: "
-msgstr "0에서 %u까지의 숫자 중 하나를 입력하십시오:"
+msgstr "0에서 %u까지의 숫자 중 하나를 입력하십시오: "
 
 #. TRANSLATORS: Failed to open plugin, hey Arch users
 msgid "Plugin dependencies missing"
@@ -2479,7 +2479,7 @@ msgstr "원격 저장소를 비활성화함"
 #. TRANSLATORS: success message -- where 'metadata' is information
 #. * about available firmware on the remote server
 msgid "Successfully downloaded new metadata: "
-msgstr "새 메타데이터를 다운로드함:"
+msgstr "새 메타데이터를 다운로드함: "
 
 #. TRANSLATORS: success message
 msgid "Successfully enabled and refreshed remote"

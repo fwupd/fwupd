@@ -664,7 +664,7 @@ msgstr "Dispositivos que não foram atualizados com sucesso:"
 #. TRANSLATORS: message letting the user know no
 #. * device upgrade available due to missing on LVFS
 msgid "Devices with no available firmware updates: "
-msgstr "Dispositivos com nenhuma atualização de firmware disponível:"
+msgstr "Dispositivos com nenhuma atualização de firmware disponível: "
 
 #. TRANSLATORS: message letting the user know no device upgrade available
 #. TRANSLATORS: message letting the user know no device upgrade
@@ -2009,7 +2009,7 @@ msgstr "Remoto desabilitado com sucesso"
 #. TRANSLATORS: success message -- where 'metadata' is information
 #. * about available firmware on the remote server
 msgid "Successfully downloaded new metadata: "
-msgstr "Baixados com sucesso novos metadados:"
+msgstr "Baixados com sucesso novos metadados: "
 
 #. TRANSLATORS: success message
 msgid "Successfully enabled and refreshed remote"

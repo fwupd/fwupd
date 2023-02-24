@@ -736,7 +736,7 @@ msgstr "Dispositivi non aggiornati correttamente:"
 #. TRANSLATORS: message letting the user know no
 #. * device upgrade available due to missing on LVFS
 msgid "Devices with no available firmware updates: "
-msgstr "Dispositivi senza aggiornamenti firmware:"
+msgstr "Dispositivi senza aggiornamenti firmware: "
 
 #. TRANSLATORS: message letting the user know no device upgrade available
 #. TRANSLATORS: message letting the user know no device upgrade
@@ -1738,7 +1738,7 @@ msgstr "Assicurarsi di avere la chiave di ripristino prima di continuare."
 #. TRANSLATORS: the user isn't reading the question
 #, c-format
 msgid "Please enter a number from 0 to %u: "
-msgstr "Inserire un numero tra 0 e %u:"
+msgstr "Inserire un numero tra 0 e %u: "
 
 #. TRANSLATORS: Failed to open plugin, hey Arch users
 msgid "Plugin dependencies missing"
@@ -2172,7 +2172,7 @@ msgstr "Remoto disabilitato con successo"
 #. TRANSLATORS: success message -- where 'metadata' is information
 #. * about available firmware on the remote server
 msgid "Successfully downloaded new metadata: "
-msgstr "Nuovi metadati scaricati con successo:"
+msgstr "Nuovi metadati scaricati con successo: "
 
 #. TRANSLATORS: success message
 msgid "Successfully enabled and refreshed remote"

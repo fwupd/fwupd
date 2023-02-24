@@ -474,7 +474,7 @@ msgstr "התקנים שלא עודכנו כראוי:"
 #. TRANSLATORS: message letting the user know no
 #. * device upgrade available due to missing on LVFS
 msgid "Devices with no available firmware updates: "
-msgstr "התקנים ללא עדכוני קושחה זמינים:"
+msgstr "התקנים ללא עדכוני קושחה זמינים: "
 
 #. TRANSLATORS: message letting the user know no device upgrade available
 #. TRANSLATORS: message letting the user know no device upgrade
@@ -1139,7 +1139,7 @@ msgstr "לבצע פעולה?"
 #. TRANSLATORS: the user isn't reading the question
 #, c-format
 msgid "Please enter a number from 0 to %u: "
-msgstr "נא למלא מספר מ־0 עד %u:"
+msgstr "נא למלא מספר מ־0 עד %u: "
 
 #. TRANSLATORS: Failed to open plugin, hey Arch users
 msgid "Plugin dependencies missing"
@@ -1393,7 +1393,7 @@ msgstr "כל ההתקנים הופעלו בהצלחה"
 #. TRANSLATORS: success message -- where 'metadata' is information
 #. * about available firmware on the remote server
 msgid "Successfully downloaded new metadata: "
-msgstr "נתוני על חדשים התקבלו בהצלחה:"
+msgstr "נתוני על חדשים התקבלו בהצלחה: "
 
 #. TRANSLATORS: success message
 msgid "Successfully enabled remote"

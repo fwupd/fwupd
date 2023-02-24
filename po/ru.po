@@ -513,7 +513,7 @@ msgstr "Устройства, которые не были правильно о
 #. TRANSLATORS: message letting the user know no
 #. * device upgrade available due to missing on LVFS
 msgid "Devices with no available firmware updates: "
-msgstr "Устройства без доступных обновлений прошивки:"
+msgstr "Устройства без доступных обновлений прошивки: "
 
 #. TRANSLATORS: message letting the user know no device upgrade available
 #. TRANSLATORS: message letting the user know no device upgrade
@@ -1248,7 +1248,7 @@ msgstr "Прежде чем продолжить, убедитесь, что у 
 #. TRANSLATORS: the user isn't reading the question
 #, c-format
 msgid "Please enter a number from 0 to %u: "
-msgstr "Пожалуйста, введите число от 0 до %u:"
+msgstr "Пожалуйста, введите число от 0 до %u: "
 
 #. TRANSLATORS: Possible values for a bios setting
 msgid "Possible Values"
@@ -1575,7 +1575,7 @@ msgstr "Удалённый репозиторий успешно отключе�
 #. TRANSLATORS: success message -- where 'metadata' is information
 #. * about available firmware on the remote server
 msgid "Successfully downloaded new metadata: "
-msgstr "Успешно загружены новые метаданные:"
+msgstr "Успешно загружены новые метаданные: "
 
 #. TRANSLATORS: success message
 msgid "Successfully enabled and refreshed remote"

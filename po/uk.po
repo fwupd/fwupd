@@ -862,7 +862,7 @@ msgstr "Пристрої, для яких не вдалося оновити д�
 #. TRANSLATORS: message letting the user know no
 #. * device upgrade available due to missing on LVFS
 msgid "Devices with no available firmware updates: "
-msgstr "Пристрої, для яких немає оновлень мікропрограми:"
+msgstr "Пристрої, для яких немає оновлень мікропрограми: "
 
 #. TRANSLATORS: message letting the user know no device upgrade available
 #. TRANSLATORS: message letting the user know no device upgrade
@@ -2600,7 +2600,7 @@ msgstr "Успішно вимкнено запис віддаленого схо
 #. TRANSLATORS: success message -- where 'metadata' is information
 #. * about available firmware on the remote server
 msgid "Successfully downloaded new metadata: "
-msgstr "Успішно отримано нові метадані:"
+msgstr "Успішно отримано нові метадані: "
 
 #. TRANSLATORS: success message
 msgid "Successfully enabled and refreshed remote"

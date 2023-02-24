@@ -674,7 +674,7 @@ msgstr "Laitteet, joita ei päivitetty oikein:"
 #. TRANSLATORS: message letting the user know no
 #. * device upgrade available due to missing on LVFS
 msgid "Devices with no available firmware updates: "
-msgstr "Laitteet, joille ei ole saatavilla laiteohjelmiston päivityksiä:"
+msgstr "Laitteet, joille ei ole saatavilla laiteohjelmiston päivityksiä: "
 
 #. TRANSLATORS: message letting the user know no device upgrade available
 #. TRANSLATORS: message letting the user know no device upgrade
@@ -1670,7 +1670,7 @@ msgstr "Varmista, että sinulla on aseman palautusavain ennen kuin jatkat."
 #. TRANSLATORS: the user isn't reading the question
 #, c-format
 msgid "Please enter a number from 0 to %u: "
-msgstr "Anna numero 0 -%u"
+msgstr "Anna numero 0 - %u: "
 
 #. TRANSLATORS: Failed to open plugin, hey Arch users
 msgid "Plugin dependencies missing"

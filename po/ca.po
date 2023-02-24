@@ -845,7 +845,7 @@ msgstr "Els dispositius que no s'han actualitzat correctament:"
 #. TRANSLATORS: message letting the user know no
 #. * device upgrade available due to missing on LVFS
 msgid "Devices with no available firmware updates: "
-msgstr "Dispositius sense actualitzacions de microprogramari disponibles:"
+msgstr "Dispositius sense actualitzacions de microprogramari disponibles: "
 
 #. TRANSLATORS: message letting the user know no device upgrade available
 #. TRANSLATORS: message letting the user know no device upgrade
@@ -2577,7 +2577,7 @@ msgstr "El remot s'ha inhabilitat correctament"
 #. TRANSLATORS: success message -- where 'metadata' is information
 #. * about available firmware on the remote server
 msgid "Successfully downloaded new metadata: "
-msgstr "S'han baixat les metadades noves amb èxit:"
+msgstr "S'han baixat les metadades noves amb èxit: "
 
 #. TRANSLATORS: success message
 msgid "Successfully enabled and refreshed remote"

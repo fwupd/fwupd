@@ -692,7 +692,7 @@ msgstr "Effectuer l'opération ?"
 #. TRANSLATORS: the user isn't reading the question
 #, c-format
 msgid "Please enter a number from 0 to %u: "
-msgstr "Veuillez saisir un nombre de 0 à %u :"
+msgstr "Veuillez saisir un nombre de 0 à %u: "
 
 #. TRANSLATORS: Failed to open plugin, hey Arch users
 msgid "Plugin dependencies missing"
