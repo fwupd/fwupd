@@ -17,8 +17,10 @@ appstream-util appdata-to-news ../data/org.freedesktop.fwupd.metainfo.xml > NEWS
 Update translations:
 
 ninja-build fwupd-pot
+cd ..
 tx push --source
 tx pull --all --force --minimum-perc=5
+cd build
 ninja-build fix-translations
 git add ../po/*.po
 

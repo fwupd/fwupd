@@ -33,6 +33,15 @@
     <binary>fwupdtool</binary>
   </provides>
   <releases>
+    <release version="1.8.12" date="2023-02-24">
+      <description>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Allow setting the package user agent before the client has connected</li>
+          <li>Fix a small memory leak when refreshing metadata</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.8.11" date="2023-02-23">
       <description>
         <p>

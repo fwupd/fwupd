@@ -2973,6 +2973,10 @@ msgstr "Wersja"
 msgid "Version[fwupd]"
 msgstr "Wersja[fwupd]"
 
+#. TRANSLATORS: this is a prefix on the console
+msgid "WARNING"
+msgstr "OSTRZEŻENIE"
+
 #. TRANSLATORS: waiting for device to do something
 msgid "Waiting…"
 msgstr "Oczekiwanie…"
