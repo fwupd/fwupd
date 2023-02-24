@@ -72,6 +72,8 @@ typedef struct {
 	GMutex proxy_mutex; /* for @proxy */
 	GDBusProxy *proxy;
 	GProxyResolver *proxy_resolver;
+	gchar *package_name;
+	gchar *package_version;
 	gchar *user_agent;
 	GHashTable *hints; /* str:str */
 #ifdef SOUP_SESSION_COMPAT
@@ -266,6 +268,31 @@ fwupd_client_signal_emit_object(FwupdClient *self, guint signal_id, GObject *pay
 }
 
 static void
+fwupd_client_rebuild_user_agent(FwupdClient *self)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE(self);
+	g_autoptr(GString) str = g_string_new(NULL);
+	g_autofree gchar *system = NULL;
+
+	/* application name and version */
+	if (priv->package_name != NULL && priv->package_version != NULL)
+		g_string_append_printf(str, "%s/%s ", priv->package_name, priv->package_version);
+
+	/* system information */
+	system = fwupd_build_user_agent_system();
+	if (system != NULL)
+		g_string_append_printf(str, "(%s) ", system);
+
+	/* platform, unless the application name is fwupd itself */
+	if (priv->daemon_version != NULL && g_strcmp0(priv->package_name, "fwupd") != 0)
+		g_string_append_printf(str, "fwupd/%s", priv->daemon_version);
+
+	/* success */
+	g_free(priv->user_agent);
+	priv->user_agent = g_string_free(g_steal_pointer(&str), FALSE);
+}
+
+static void
 fwupd_client_set_host_vendor(FwupdClient *self, const gchar *host_vendor)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE(self);
@@ -342,6 +369,7 @@ fwupd_client_set_daemon_version(FwupdClient *self, const gchar *daemon_version)
 	g_free(priv->daemon_version);
 	priv->daemon_version = g_strdup(daemon_version);
 	fwupd_client_object_notify(self, "daemon-version");
+	fwupd_client_rebuild_user_agent(self);
 }
 
 static void
@@ -5038,29 +5066,16 @@ fwupd_client_set_user_agent_for_package(FwupdClient *self,
 					const gchar *package_version)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE(self);
-	g_autoptr(GString) str = g_string_new(NULL);
-	g_autofree gchar *system = NULL;
 
 	g_return_if_fail(FWUPD_IS_CLIENT(self));
 	g_return_if_fail(package_name != NULL);
 	g_return_if_fail(package_version != NULL);
-	g_return_if_fail(priv->daemon_version != NULL);
 
-	/* application name and version */
-	g_string_append_printf(str, "%s/%s", package_name, package_version);
-
-	/* system information */
-	system = fwupd_build_user_agent_system();
-	if (system != NULL)
-		g_string_append_printf(str, " (%s)", system);
-
-	/* platform, which in our case is just fwupd */
-	if (g_strcmp0(package_name, "fwupd") != 0)
-		g_string_append_printf(str, " fwupd/%s", priv->daemon_version);
-
-	/* success */
-	g_free(priv->user_agent);
-	priv->user_agent = g_string_free(g_steal_pointer(&str), FALSE);
+	g_free(priv->package_name);
+	g_free(priv->package_version);
+	priv->package_name = g_strdup(package_name);
+	priv->package_version = g_strdup(package_version);
+	fwupd_client_rebuild_user_agent(self);
 }
 
 #ifdef HAVE_LIBCURL
@@ -6346,6 +6361,8 @@ fwupd_client_finalize(GObject *object)
 
 	g_clear_pointer(&priv->main_ctx, g_main_context_unref);
 	g_free(priv->user_agent);
+	g_free(priv->package_name);
+	g_free(priv->package_version);
 	g_free(priv->daemon_version);
 	g_free(priv->host_bkc);
 	g_free(priv->host_vendor);
