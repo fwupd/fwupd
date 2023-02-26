@@ -72,6 +72,9 @@ override_dh_install:
 	#install docs (maybe)
 	[ ! -d debian/tmp/usr/share/doc ] || dh_install -pfwupd-doc usr/share/doc
 
+	#install devices-tests (maybe)
+	[ ! -d debian/tmp/usr/share/fwupd/device-tests/ ] || dh_install -pfwupd-tests usr/share/fwupd/device-tests
+
 	dh_missing -a --fail-missing
 
 	#this is placed in fwupd-tests
