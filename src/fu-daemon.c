@@ -1408,8 +1408,8 @@ fu_daemon_daemon_method_call(GDBusConnection *connection,
 		data = g_variant_get_data_as_bytes(g_variant_get_child_value(parameters, 0));
 		if (!fu_engine_emulation_load(self->engine, data, &error)) {
 			g_dbus_method_invocation_return_error(invocation,
-							      FWUPD_ERROR,
-							      FWUPD_ERROR_NOT_SUPPORTED,
+							      error->domain,
+							      error->code,
 							      "failed to load emulation data: %s",
 							      error->message);
 			return;
