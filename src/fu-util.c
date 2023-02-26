@@ -63,6 +63,7 @@ struct FuUtilPrivate {
 	gboolean no_unreported_check;
 	gboolean no_safety_check;
 	gboolean no_device_prompt;
+	gboolean no_emulation_check;
 	gboolean assume_yes;
 	gboolean sign;
 	gboolean show_all;
@@ -839,7 +840,8 @@ fu_util_emulation_load_with_fallback(FuUtilPrivate *priv, GBytes *emulation_data
 					 emulation_data,
 					 priv->cancellable,
 					 &error_local)) {
-		if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
+		if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED) ||
+		    priv->no_emulation_check) {
 			g_propagate_error(error, g_steal_pointer(&error_local));
 			return FALSE;
 		}
@@ -4855,6 +4857,7 @@ main(int argc, char *argv[])
 		priv->no_safety_check = TRUE;
 		priv->no_remote_check = TRUE;
 		priv->no_device_prompt = TRUE;
+		priv->no_emulation_check = TRUE;
 	} else {
 		is_interactive = TRUE;
 	}
