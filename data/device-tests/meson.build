@@ -1,3 +1,4 @@
+if gusb.version().version_compare ('>= 0.4.5')
 install_data([
     '8bitdo-nes30pro.json',
     '8bitdo-sf30pro.json',
@@ -45,3 +46,5 @@ install_data([
   ],
   install_dir: join_paths(datadir, 'fwupd', 'device-tests'),
 )
+endif
+
