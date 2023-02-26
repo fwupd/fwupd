@@ -10,6 +10,19 @@ run_test()
         fi
 }
 
+run_device_tests()
+{
+	if [ -d @devicetestdir@ ]; then
+		# grab device tests from the CDN to avoid incrementing the download counter
+		export FWUPD_DEVICE_TESTS_BASE_URI=http://cdn.fwupd.org/downloads
+		for f in `grep --files-with-matches -r emulation-url @devicetestdir@`; do
+		        echo "Emulating for $f"
+		        fwupdmgr device-emulate --no-unreported-check --no-remote-check --no-metadata-check "$f"
+		        rc=$?; if [ $rc != 0 ]; then exit $rc; fi
+		done
+	fi
+}
+
 run_test acpi-dmar-self-test
 run_test acpi-facp-self-test
 run_test acpi-phat-self-test
@@ -25,14 +38,7 @@ run_test uefi-dbx-self-test
 run_test synaptics-prometheus-self-test
 run_test dfu-self-test
 run_test mtd-self-test
-
-# grab device tests from the CDN to avoid incrementing the download counter
-export FWUPD_DEVICE_TESTS_BASE_URI=http://cdn.fwupd.org/downloads
-for f in `grep --files-with-matches -r emulation-url @devicetestdir@`; do
-        echo "Emulating for $f"
-        fwupdmgr device-emulate --no-unreported-check --no-remote-check --no-metadata-check "$f"
-        rc=$?; if [ $rc != 0 ]; then exit $rc; fi
-done
+run_device_tests
 
 # success!
 exit 0
