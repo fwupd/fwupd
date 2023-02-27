@@ -298,7 +298,7 @@ fu_config_monitor_changed_cb(GFileMonitor *monitor,
 	FuConfig *self = FU_CONFIG(user_data);
 	g_autoptr(GError) error = NULL;
 	g_autofree gchar *fn = g_file_get_path(file);
-	g_debug("%s changed, reloading all configs", fn);
+	g_info("%s changed, reloading all configs", fn);
 	if (!fu_config_reload(self, &error))
 		g_warning("failed to rescan daemon config: %s", error->message);
 	fu_config_emit_changed(self);

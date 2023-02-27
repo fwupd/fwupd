@@ -28,7 +28,7 @@ fu_thunderbolt_plugin_safe_kernel(FuPlugin *plugin, GError **error)
 
 	minimum_kernel = fu_plugin_get_config_value(plugin, "MinimumKernelVersion");
 	if (minimum_kernel == NULL) {
-		g_debug("Ignoring kernel safety checks");
+		g_debug("ignoring kernel safety checks");
 		return TRUE;
 	}
 	return fu_kernel_check_version(minimum_kernel, error);
@@ -54,7 +54,7 @@ fu_thunderbolt_plugin_device_registered(FuPlugin *plugin, FuDevice *device)
 	/* Operating system will handle finishing updates later */
 	if (fu_plugin_get_config_value_boolean(plugin, "DelayedActivation") &&
 	    !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE)) {
-		g_debug("Turning on delayed activation for %s", fu_device_get_name(device));
+		g_info("turning on delayed activation for %s", fu_device_get_name(device));
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE);
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_SKIPS_RESTART);
 		fu_device_remove_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID);

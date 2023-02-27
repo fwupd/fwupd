@@ -87,7 +87,7 @@ fu_dell_dock_status_write(FuDevice *device,
 			    error))
 		return FALSE;
 	dynamic_version = fu_dell_dock_status_ver_string(status_version);
-	g_debug("writing status firmware version %s", dynamic_version);
+	g_info("writing status firmware version %s", dynamic_version);
 
 	parent = fu_device_get_parent(device);
 	if (!fu_dell_dock_ec_commit_package(parent, fw, error))

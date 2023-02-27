@@ -304,8 +304,7 @@ fu_mei_device_connect(FuMeiDevice *self, guchar req_protocol_version, GError **e
 
 	if (!fwupd_guid_from_string(priv->uuid, &guid_le, FWUPD_GUID_FLAG_MIXED_ENDIAN, error))
 		return FALSE;
-	if (g_getenv("FU_MEI_DEVICE_DEBUG") != NULL)
-		fu_dump_raw(G_LOG_DOMAIN, "guid_le", (guint8 *)&guid_le, sizeof(guid_le));
+	fu_dump_raw(G_LOG_DOMAIN, "guid_le", (guint8 *)&guid_le, sizeof(guid_le));
 	memcpy(&data.in_client_uuid, &guid_le, sizeof(guid_le));
 	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
 				  IOCTL_MEI_CONNECT_CLIENT,
@@ -377,8 +376,7 @@ fu_mei_device_read(FuMeiDevice *self,
 			    strerror(errno));
 		return FALSE;
 	}
-	if (g_getenv("FU_MEI_DEVICE_DEBUG") != NULL)
-		fu_dump_raw(G_LOG_DOMAIN, "read", buf, rc);
+	fu_dump_raw(G_LOG_DOMAIN, "read", buf, rc);
 	if (bytes_read != NULL)
 		*bytes_read = (gsize)rc;
 	return TRUE;
@@ -419,8 +417,7 @@ fu_mei_device_write(FuMeiDevice *self,
 	tv.tv_sec = timeout_ms / 1000;
 	tv.tv_usec = (timeout_ms % 1000) * 1000000;
 
-	if (g_getenv("FU_MEI_DEVICE_DEBUG") != NULL)
-		fu_dump_raw(G_LOG_DOMAIN, "write", buf, bufsz);
+	fu_dump_raw(G_LOG_DOMAIN, "write", buf, bufsz);
 	written = write(fd, buf, bufsz);
 	if (written < 0) {
 		g_set_error(error,

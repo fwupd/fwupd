@@ -22,7 +22,7 @@ fu_usi_dock_dmc_device_parent_notify_cb(FuDevice *device, GParamSpec *pspec, gpo
 		g_autoptr(GError) error = NULL;
 
 		/* slightly odd: the MCU device uses the DMC version number */
-		g_debug("absorbing DMC version into MCU");
+		g_info("absorbing DMC version into MCU");
 		fu_device_set_version_format(parent, fu_device_get_version_format(device));
 		fu_device_set_version(parent, fu_device_get_version(device));
 		fu_device_set_serial(parent, fu_device_get_serial(device));

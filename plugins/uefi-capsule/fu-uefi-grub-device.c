@@ -89,8 +89,7 @@ fu_uefi_grub_device_mkconfig(FuDevice *device,
 			  NULL,
 			  error))
 		return FALSE;
-	if (g_getenv("FWUPD_UPDATE_CAPSULE_VERBOSE") != NULL)
-		g_debug("%s", output);
+	g_debug("%s", output);
 
 	/* make fwupd default */
 	argv_reboot[0] = grub_reboot;

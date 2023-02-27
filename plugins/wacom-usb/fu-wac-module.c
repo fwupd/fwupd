@@ -148,11 +148,9 @@ fu_wac_module_refresh(FuWacModule *self, GError **error)
 	if (priv->command != buf[2] || priv->status != buf[3]) {
 		priv->command = buf[2];
 		priv->status = buf[3];
-		if (g_getenv("FWUPD_WACOM_VERBOSE") != NULL) {
-			g_debug("command: %s, status: %s",
-				fu_wac_module_command_to_string(priv->command),
-				fu_wac_module_status_to_string(priv->status));
-		}
+		g_debug("command: %s, status: %s",
+			fu_wac_module_command_to_string(priv->command),
+			fu_wac_module_status_to_string(priv->status));
 	}
 
 	/* success */

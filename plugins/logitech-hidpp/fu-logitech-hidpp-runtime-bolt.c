@@ -187,7 +187,7 @@ fu_logitech_hidpp_runtime_bolt_poll_peripherals(FuDevice *device)
 
 		name = fu_logitech_hidpp_runtime_bolt_query_device_name(self, i, &error_local);
 		if (name == NULL) {
-			g_debug("Can't query paired device name for slot %u", i);
+			g_debug("cannot query paired device name for slot %u", i);
 			continue;
 		}
 

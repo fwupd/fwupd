@@ -224,15 +224,12 @@ fu_efi_signature_list_get_version(FuEfiSignatureList *self)
 	for (guint i = 0; i < sigs->len; i++) {
 		FuEfiSignature *sig = g_ptr_array_index(sigs, i);
 		if (fu_efi_signature_get_kind(sig) != FU_EFI_SIGNATURE_KIND_SHA256) {
-			if (g_getenv("FWUPD_EFI_SIGNATURE_VERBOSE") != NULL)
-				g_debug("ignoring dbx certificate");
+			g_debug("ignoring dbx certificate in position %u", i);
 			continue;
 		}
 		if (!g_strv_contains(valid_owners, fu_efi_signature_get_owner(sig))) {
-			if (g_getenv("FWUPD_EFI_SIGNATURE_VERBOSE") != NULL) {
-				g_debug("ignoring non-Microsoft dbx hash: %s",
-					fu_efi_signature_get_owner(sig));
-			}
+			g_debug("ignoring non-Microsoft dbx hash: %s",
+				fu_efi_signature_get_owner(sig));
 			continue;
 		}
 
@@ -274,11 +271,11 @@ fu_efi_signature_list_get_version(FuEfiSignatureList *self)
 	for (guint i = 0; checksum_last != NULL && known_checksums[i].checksum != NULL; i++) {
 		if (g_strcmp0(checksum_last, known_checksums[i].checksum) == 0) {
 			if (csum_cnt != known_checksums[i].version) {
-				g_debug("fixing signature list version from %u to %u as "
-					"last dbx checksum was %s",
-					csum_cnt,
-					known_checksums[i].version,
-					checksum_last);
+				g_info("fixing signature list version from %u to %u as "
+				       "last dbx checksum was %s",
+				       csum_cnt,
+				       known_checksums[i].version,
+				       checksum_last);
 				csum_cnt = known_checksums[i].version;
 			}
 			break;

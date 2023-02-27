@@ -98,8 +98,7 @@ fu_focalfp_hid_device_io(FuFocalfpHidDevice *self,
 		if (!fu_memcpy_safe(buf, sizeof(buf), 0x04, wbuf, wbufsz, 0x00, wbufsz, error))
 			return FALSE;
 		buf[cmdlen] = fu_focaltp_buffer_generate_checksum(&buf[1], cmdlen - 1);
-		if (g_getenv("FWUPD_FOCALFP_VERBOSE") != NULL)
-			fu_dump_raw(G_LOG_DOMAIN, "SetReport", buf, sizeof(buf));
+		fu_dump_raw(G_LOG_DOMAIN, "SetReport", buf, sizeof(buf));
 		if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
 					  HIDIOCSFEATURE(cmdlen + 1),
 					  buf,
@@ -121,8 +120,7 @@ fu_focalfp_hid_device_io(FuFocalfpHidDevice *self,
 					  error)) {
 			return FALSE;
 		}
-		if (g_getenv("FWUPD_FOCALFP_VERBOSE") != NULL)
-			fu_dump_raw(G_LOG_DOMAIN, "GetReport", buf, sizeof(buf));
+		fu_dump_raw(G_LOG_DOMAIN, "GetReport", buf, sizeof(buf));
 		if (!fu_memcpy_safe(rbuf, rbufsz, 0x0, buf, sizeof(buf), 0x00, rbufsz, error))
 			return FALSE;
 	}

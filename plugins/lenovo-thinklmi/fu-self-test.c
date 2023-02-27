@@ -32,6 +32,15 @@ _plugin_device_added_cb(FuPlugin *plugin, FuDevice *device, gpointer user_data)
 }
 
 static gboolean
+fu_test_fatal_handler_cb(const gchar *log_domain,
+			 GLogLevelFlags log_level,
+			 const gchar *message,
+			 gpointer user_data)
+{
+	return log_level >= G_LOG_LEVEL_MESSAGE;
+}
+
+static gboolean
 fu_test_self_init(FuTest *self, GError **error_global)
 {
 	gboolean ret;
@@ -39,7 +48,11 @@ fu_test_self_init(FuTest *self, GError **error_global)
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GError) error = NULL;
 
+#if GLIB_CHECK_VERSION(2, 64, 0)
 	g_test_expect_message("FuBiosSettings", G_LOG_LEVEL_WARNING, "*KERNEL*BUG*");
+#endif
+
+	g_test_log_set_fatal_handler(fu_test_fatal_handler_cb, NULL);
 
 	ret = fu_context_load_quirks(ctx,
 				     FU_QUIRKS_LOAD_FLAG_NO_CACHE | FU_QUIRKS_LOAD_FLAG_NO_VERIFY,
@@ -52,7 +65,9 @@ fu_test_self_init(FuTest *self, GError **error_global)
 	ret = fu_context_reload_bios_settings(ctx, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
+#if GLIB_CHECK_VERSION(2, 64, 0)
 	g_test_assert_expected_messages();
+#endif
 
 	self->plugin_uefi_capsule =
 	    fu_plugin_new_from_gtype(fu_uefi_capsule_plugin_get_type(), ctx);

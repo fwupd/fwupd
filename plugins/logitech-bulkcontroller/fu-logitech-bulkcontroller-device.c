@@ -426,6 +426,7 @@ fu_logitech_bulkcontroller_device_sync_cb(GObject *source_object,
 	guint64 cmd_res = 0x0;
 	guint32 response_length = 0;
 	guint8 ack_payload[SYNC_ACK_PAYLOAD_LENGTH] = {0};
+	g_autofree gchar *strsafe = NULL;
 	g_autoptr(GByteArray) buf_ack = g_byte_array_new();
 	g_autoptr(GError) error_local = NULL;
 
@@ -479,8 +480,7 @@ fu_logitech_bulkcontroller_device_sync_cb(GObject *source_object,
 		return;
 	}
 
-	if (g_getenv("FWUPD_LOGITECH_BULKCONTROLLER_VERBOSE") != NULL)
-		g_debug("Received 0x%x message on sync interface", cmd_tmp);
+	g_debug("received 0x%x message on sync interface", cmd_tmp);
 	switch (cmd_tmp) {
 	case CMD_ACK:
 		if (!fu_strtoull((const char *)ack_payload,
@@ -521,14 +521,11 @@ fu_logitech_bulkcontroller_device_sync_cb(GObject *source_object,
 		g_byte_array_append(helper->device_response,
 				    helper->buf_pkt->data + SYNC_PACKET_HEADER_SIZE,
 				    response_length);
-		if (g_getenv("FWUPD_LOGITECH_BULKCONTROLLER_VERBOSE") != NULL) {
-			g_autofree gchar *strsafe =
-			    fu_strsafe((const gchar *)helper->device_response->data,
-				       helper->device_response->len);
-			g_debug("Received data on sync interface. length: %u, buffer: %s",
-				helper->device_response->len,
-				strsafe);
-		}
+		strsafe = fu_strsafe((const gchar *)helper->device_response->data,
+				     helper->device_response->len);
+		g_debug("received data on sync interface. length: %u, buffer: %s",
+			helper->device_response->len,
+			strsafe);
 		fu_byte_array_append_uint32(buf_ack, cmd_tmp, G_LITTLE_ENDIAN);
 		if (!fu_logitech_bulkcontroller_device_send_sync_cmd(self,
 								     CMD_ACK,
@@ -623,6 +620,7 @@ static gboolean
 fu_logitech_bulkcontroller_device_get_data(FuDevice *device, gboolean send_req, GError **error)
 {
 	FuLogitechBulkcontrollerDevice *self = FU_LOGITECH_BULKCONTROLLER_DEVICE(device);
+	g_autofree gchar *strsafe = NULL;
 	g_autoptr(GByteArray) decoded_pkt = g_byte_array_new();
 	g_autoptr(GByteArray) device_response = g_byte_array_new();
 	FuLogitechBulkcontrollerProtoId proto_id = kProtoId_UnknownId;
@@ -665,14 +663,11 @@ fu_logitech_bulkcontroller_device_get_data(FuDevice *device, gboolean send_req, 
 		g_prefix_error(error, "failed to unpack packet for device info request: ");
 		return FALSE;
 	}
-	if (g_getenv("FWUPD_LOGITECH_BULKCONTROLLER_VERBOSE") != NULL) {
-		g_autofree gchar *strsafe =
-		    fu_strsafe((const gchar *)decoded_pkt->data, decoded_pkt->len);
-		g_debug("Received device response: id: %u, length %u, data: %s",
-			proto_id,
-			device_response->len,
-			strsafe);
-	}
+	strsafe = fu_strsafe((const gchar *)decoded_pkt->data, decoded_pkt->len);
+	g_debug("received device response: id: %u, length %u, data: %s",
+		proto_id,
+		device_response->len,
+		strsafe);
 	if (proto_id != kProtoId_GetDeviceInfoResponse && proto_id != kProtoId_KongEvent) {
 		g_set_error_literal(error,
 				    G_IO_ERROR,
@@ -849,12 +844,10 @@ fu_logitech_bulkcontroller_device_write_firmware(FuDevice *device,
 
 		/* device responsive, no error and not rebooting yet */
 		no_response_count = 0;
-		if (g_getenv("FWUPD_LOGITECH_BULKCONTROLLER_VERBOSE") != NULL) {
-			g_debug("firmware update status: %s. progress: %u",
-				fu_logitech_bulkcontroller_device_update_state_to_string(
-				    self->update_status),
-				self->update_progress);
-		}
+		g_debug(
+		    "firmware update status: %s. progress: %u",
+		    fu_logitech_bulkcontroller_device_update_state_to_string(self->update_status),
+		    self->update_progress);
 
 		/* existing device image version is same as newly pushed image */
 		if (self->update_status == kUpdateStateError) {
@@ -865,12 +858,10 @@ fu_logitech_bulkcontroller_device_write_firmware(FuDevice *device,
 			return FALSE;
 		}
 		if (self->update_status == kUpdateStateCurrent) {
-			if (g_getenv("FWUPD_LOGITECH_BULKCONTROLLER_VERBOSE") != NULL) {
-				g_debug("new firmware version: %s, old firmware version: %s, "
-					"rebooting...",
-					fu_device_get_version(device),
-					old_firmware_version);
-			}
+			g_debug("new firmware version: %s, old firmware version: %s, "
+				"rebooting...",
+				fu_device_get_version(device),
+				old_firmware_version);
 			break;
 		}
 		if (self->update_progress == 100) {
@@ -911,6 +902,7 @@ fu_logitech_bulkcontroller_device_get_handshake_cb(FuDevice *device,
 {
 	FuLogitechBulkcontrollerDevice *self = FU_LOGITECH_BULKCONTROLLER_DEVICE(device);
 	FuLogitechBulkcontrollerProtoId proto_id = kProtoId_UnknownId;
+	g_autofree gchar *strsafe = NULL;
 	g_autoptr(GByteArray) decoded_pkt = g_byte_array_new();
 	g_autoptr(GByteArray) device_response = g_byte_array_new();
 	g_autoptr(GError) error_local = NULL;
@@ -918,8 +910,7 @@ fu_logitech_bulkcontroller_device_get_handshake_cb(FuDevice *device,
 	if (!fu_logitech_bulkcontroller_device_startlistening_sync(self,
 								   device_response,
 								   &error_local)) {
-		if (g_getenv("FWUPD_LOGITECH_BULKCONTROLLER_VERBOSE") != NULL)
-			g_debug("failed to receive data packet for handshake request");
+		g_debug("failed to receive data packet for handshake request");
 		g_set_error_literal(error,
 				    G_IO_ERROR,
 				    G_IO_ERROR_FAILED,
@@ -929,8 +920,7 @@ fu_logitech_bulkcontroller_device_get_handshake_cb(FuDevice *device,
 
 	/* handle error scenario, e.g. CMD_UNINIT_BUFFER arrived before CMD_BUFFER_READ */
 	if (device_response->len == 0) {
-		if (g_getenv("FWUPD_LOGITECH_BULKCONTROLLER_VERBOSE") != NULL)
-			g_debug("failed to receive expected packet for handshake request");
+		g_debug("failed to receive expected packet for handshake request");
 		g_set_error_literal(error,
 				    G_IO_ERROR,
 				    G_IO_ERROR_FAILED,
@@ -943,8 +933,7 @@ fu_logitech_bulkcontroller_device_get_handshake_cb(FuDevice *device,
 						   &proto_id,
 						   &error_local);
 	if (decoded_pkt == NULL) {
-		if (g_getenv("FWUPD_LOGITECH_BULKCONTROLLER_VERBOSE") != NULL)
-			g_debug("failed to unpack packet for handshake request");
+		g_debug("failed to unpack packet for handshake request");
 		g_set_error_literal(error,
 				    G_IO_ERROR,
 				    G_IO_ERROR_FAILED,
@@ -952,14 +941,11 @@ fu_logitech_bulkcontroller_device_get_handshake_cb(FuDevice *device,
 		return FALSE;
 	}
 
-	if (g_getenv("FWUPD_LOGITECH_BULKCONTROLLER_VERBOSE") != NULL) {
-		g_autofree gchar *strsafe =
-		    fu_strsafe((const gchar *)decoded_pkt->data, decoded_pkt->len);
-		g_debug("Received initialization response: id: %u, length %u, data: %s",
-			proto_id,
-			device_response->len,
-			strsafe);
-	}
+	strsafe = fu_strsafe((const gchar *)decoded_pkt->data, decoded_pkt->len);
+	g_debug("received initialization response: id: %u, length %u, data: %s",
+		proto_id,
+		device_response->len,
+		strsafe);
 
 	/* skip optional initialization events -- not an error if these events are missed */
 	if (proto_id != kProtoId_HandshakeEvent) {
@@ -979,6 +965,7 @@ static gboolean
 fu_logitech_bulkcontroller_device_set_time(FuDevice *device, GError **error)
 {
 	FuLogitechBulkcontrollerDevice *self = FU_LOGITECH_BULKCONTROLLER_DEVICE(device);
+	g_autofree gchar *strsafe = NULL;
 	g_autoptr(GByteArray) device_request = g_byte_array_new();
 	g_autoptr(GByteArray) decoded_pkt = g_byte_array_new();
 	g_autoptr(GByteArray) device_response = g_byte_array_new();
@@ -1013,15 +1000,12 @@ fu_logitech_bulkcontroller_device_set_time(FuDevice *device, GError **error)
 		g_prefix_error(error, "failed to unpack packet for set device time request: ");
 		return FALSE;
 	}
-	if (g_getenv("FWUPD_LOGITECH_BULKCONTROLLER_VERBOSE") != NULL) {
-		g_autofree gchar *strsafe =
-		    fu_strsafe((const gchar *)decoded_pkt->data, decoded_pkt->len);
-		g_debug("Received device response while processing set device time request: id: "
-			"%u, length %u, data: %s",
-			proto_id,
-			device_response->len,
-			strsafe);
-	}
+	strsafe = fu_strsafe((const gchar *)decoded_pkt->data, decoded_pkt->len);
+	g_debug("received device response while processing set device time request: id: "
+		"%u, length %u, data: %s",
+		proto_id,
+		device_response->len,
+		strsafe);
 	if (proto_id != kProtoId_Ack) {
 		g_set_error_literal(error,
 				    G_IO_ERROR,
@@ -1038,6 +1022,7 @@ static gboolean
 fu_logitech_bulkcontroller_device_setup(FuDevice *device, GError **error)
 {
 	FuLogitechBulkcontrollerDevice *self = FU_LOGITECH_BULKCONTROLLER_DEVICE(device);
+	g_autofree gchar *strsafe = NULL;
 	g_autoptr(GByteArray) device_request = g_byte_array_new();
 	g_autoptr(GByteArray) decoded_pkt = g_byte_array_new();
 	g_autoptr(GByteArray) device_response = g_byte_array_new();
@@ -1095,14 +1080,11 @@ fu_logitech_bulkcontroller_device_setup(FuDevice *device, GError **error)
 		g_prefix_error(error, "failed to unpack packet for transition mode request: ");
 		return FALSE;
 	}
-	if (g_getenv("FWUPD_LOGITECH_BULKCONTROLLER_VERBOSE") != NULL) {
-		g_autofree gchar *strsafe =
-		    fu_strsafe((const gchar *)decoded_pkt->data, decoded_pkt->len);
-		g_debug("Received transition mode response: id: %u, length %u, data: %s",
-			proto_id,
-			device_response->len,
-			strsafe);
-	}
+	strsafe = fu_strsafe((const gchar *)decoded_pkt->data, decoded_pkt->len);
+	g_debug("received transition mode response: id: %u, length %u, data: %s",
+		proto_id,
+		device_response->len,
+		strsafe);
 	if (proto_id != kProtoId_TransitionToDeviceModeResponse) {
 		g_set_error_literal(error,
 				    G_IO_ERROR,
@@ -1129,11 +1111,7 @@ fu_logitech_bulkcontroller_device_setup(FuDevice *device, GError **error)
 			       "failed to retrieve error code for transition mode request: ");
 		return FALSE;
 	}
-	if (g_getenv("FWUPD_LOGITECH_BULKCONTROLLER_VERBOSE") != NULL) {
-		g_debug("Received transition mode response. Success: %u, Error: %u",
-			success,
-			error_code);
-	}
+	g_debug("received transition mode response. success: %u, error: %u", success, error_code);
 	if (!success) {
 		g_set_error(error,
 			    G_IO_ERROR,

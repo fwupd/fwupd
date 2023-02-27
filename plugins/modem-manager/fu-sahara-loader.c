@@ -233,9 +233,7 @@ fu_sahara_loader_qdl_read(FuSaharaLoader *self, GError **error)
 	}
 
 	g_byte_array_set_size(buf, actual_len);
-
-	if (g_getenv("FWUPD_MODEM_MANAGER_VERBOSE") != NULL)
-		g_debug("received %" G_GSIZE_FORMAT " bytes", actual_len);
+	g_debug("received %" G_GSIZE_FORMAT " bytes", actual_len);
 
 	return g_steal_pointer(&buf);
 #else
@@ -321,12 +319,10 @@ fu_sahara_loader_write_prog(FuSaharaLoader *self,
 
 	g_return_val_if_fail(offset + length <= sz, FALSE);
 
-	if (g_getenv("FWUPD_MODEM_MANAGER_VERBOSE") != NULL) {
-		g_debug("SENDING --> RAW_DATA: %u bytes (offset = %u, total = %" G_GSIZE_FORMAT ")",
-			length,
-			offset,
-			sz);
-	}
+	g_debug("SENDING --> RAW_DATA: %u bytes (offset = %u, total = %" G_GSIZE_FORMAT ")",
+		length,
+		offset,
+		sz);
 	return fu_sahara_loader_qdl_write(self, &data[offset], length, error);
 }
 
@@ -338,8 +334,7 @@ fu_sahara_loader_send_packet(FuSaharaLoader *self, GByteArray *pkt, GError **err
 
 	g_return_val_if_fail(pkt != NULL, FALSE);
 
-	if (g_getenv("FWUPD_MODEM_MANAGER_VERBOSE") != NULL)
-		fu_dump_raw(G_LOG_DOMAIN, "tx packet", pkt->data, pkt->len);
+	fu_dump_raw(G_LOG_DOMAIN, "tx packet", pkt->data, pkt->len);
 	return fu_sahara_loader_qdl_write(self, data, sz, error);
 }
 
@@ -429,8 +424,7 @@ fu_sahara_loader_send_reset_packet(FuSaharaLoader *self, GError **error)
 		return FALSE;
 	}
 
-	if (g_getenv("FWUPD_MODEM_MANAGER_VERBOSE") != NULL)
-		g_debug("reset succeeded");
+	g_debug("reset succeeded");
 	return TRUE;
 }
 
@@ -451,8 +445,7 @@ fu_sahara_loader_wait_hello_rsp(FuSaharaLoader *self, GError **error)
 
 	g_return_val_if_fail(rx_packet != NULL, FALSE);
 
-	if (g_getenv("FWUPD_MODEM_MANAGER_VERBOSE") != NULL)
-		fu_dump_raw(G_LOG_DOMAIN, "rx packet", rx_packet->data, rx_packet->len);
+	fu_dump_raw(G_LOG_DOMAIN, "rx packet", rx_packet->data, rx_packet->len);
 
 	if (sahara_packet_get_command_id(rx_packet) != SAHARA_HELLO_ID) {
 		g_set_error(error,
@@ -474,8 +467,7 @@ fu_sahara_loader_run(FuSaharaLoader *self, GBytes *prog, GError **error)
 {
 	g_return_val_if_fail(prog != NULL, FALSE);
 
-	if (g_getenv("FWUPD_MODEM_MANAGER_VERBOSE") != NULL)
-		g_debug("STATE -- SAHARA_WAIT_HELLO");
+	g_debug("STATE -- SAHARA_WAIT_HELLO");
 	if (!fu_sahara_loader_wait_hello_rsp(self, error))
 		return FALSE;
 
@@ -486,8 +478,7 @@ fu_sahara_loader_run(FuSaharaLoader *self, GBytes *prog, GError **error)
 		g_autoptr(GByteArray) tx_packet = NULL;
 		g_autoptr(GError) error_local = NULL;
 
-		if (g_getenv("FWUPD_MODEM_MANAGER_VERBOSE") != NULL)
-			g_debug("STATE -- SAHARA_WAIT_COMMAND");
+		g_debug("STATE -- SAHARA_WAIT_COMMAND");
 		rx_packet = fu_sahara_loader_qdl_read(self, error);
 		if (rx_packet == NULL)
 			break;
@@ -498,10 +489,7 @@ fu_sahara_loader_run(FuSaharaLoader *self, GBytes *prog, GError **error)
 				    "Received packet length is not matching");
 			break;
 		}
-
-		if (g_getenv("FWUPD_MODEM_MANAGER_VERBOSE") != NULL) {
-			fu_dump_raw(G_LOG_DOMAIN, "rx_packet", rx_packet->data, rx_packet->len);
-		}
+		fu_dump_raw(G_LOG_DOMAIN, "rx_packet", rx_packet->data, rx_packet->len);
 
 		command_id = sahara_packet_get_command_id(rx_packet);
 		pkt = (struct sahara_packet *)(rx_packet->data);

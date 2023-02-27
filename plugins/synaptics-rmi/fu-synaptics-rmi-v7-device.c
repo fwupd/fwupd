@@ -329,8 +329,8 @@ fu_synaptics_rmi_v7_device_write_partition_signature(FuSynapticsRmiDevice *self,
 	}
 
 	/* write partition signature */
-	g_debug("writing partition signature %s…",
-		rmi_firmware_partition_id_to_string(partition_id));
+	g_info("writing partition signature %s…",
+	       rmi_firmware_partition_id_to_string(partition_id));
 
 	fu_byte_array_append_uint16(req_offset, 0x0, G_LITTLE_ENDIAN);
 	if (!fu_synaptics_rmi_device_write(self,
@@ -402,7 +402,7 @@ fu_synaptics_rmi_v7_device_write_partition(FuSynapticsRmiDevice *self,
 		return FALSE;
 
 	/* write partition id */
-	g_debug("writing partition %s…", rmi_firmware_partition_id_to_string(partition_id));
+	g_info("writing partition %s…", rmi_firmware_partition_id_to_string(partition_id));
 	fu_byte_array_append_uint8(req_partition_id, partition_id);
 	if (!fu_synaptics_rmi_device_write(self,
 					   f34->data_base + 0x1,
@@ -594,7 +594,7 @@ fu_synaptics_rmi_v7_device_secure_check(FuSynapticsRmiDevice *self,
 			g_prefix_error(error, "%s secure check failed: ", id);
 			return FALSE;
 		}
-		g_debug("%s signature verified successfully", id);
+		g_info("%s signature verified successfully", id);
 	}
 	return TRUE;
 }
@@ -887,14 +887,7 @@ fu_synaptics_rmi_device_read_flash_config_v7(FuSynapticsRmiDevice *self, GError 
 	}
 
 	/* debugging */
-	if (g_getenv("FWUPD_SYNAPTICS_RMI_VERBOSE") != NULL) {
-		fu_dump_full(G_LOG_DOMAIN,
-			     "FlashConfig",
-			     res->data,
-			     res->len,
-			     80,
-			     FU_DUMP_FLAGS_NONE);
-	}
+	fu_dump_full(G_LOG_DOMAIN, "FlashConfig", res->data, res->len, 80, FU_DUMP_FLAGS_NONE);
 
 	if ((res->data[0] & 0x0f) == 1)
 		partition_size = sizeof(RmiPartitionTbl) + 2;

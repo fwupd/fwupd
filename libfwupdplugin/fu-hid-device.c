@@ -285,11 +285,9 @@ fu_hid_device_set_report_internal(FuHidDevice *self, FuHidDeviceRetryHelper *hel
 
 	/* what method do we use? */
 	if (priv->flags & FU_HID_DEVICE_FLAG_USE_INTERRUPT_TRANSFER) {
-		if (g_getenv("FU_HID_DEVICE_VERBOSE") != NULL) {
-			g_autofree gchar *title = NULL;
-			title = g_strdup_printf("HID::SetReport [EP=0x%02x]", priv->ep_addr_out);
-			fu_dump_raw(G_LOG_DOMAIN, title, helper->buf, helper->bufsz);
-		}
+		g_autofree gchar *title =
+		    g_strdup_printf("HID::SetReport [EP=0x%02x]", priv->ep_addr_out);
+		fu_dump_raw(G_LOG_DOMAIN, title, helper->buf, helper->bufsz);
 		if (!g_usb_device_interrupt_transfer(usb_device,
 						     priv->ep_addr_out,
 						     helper->buf,
@@ -302,18 +300,16 @@ fu_hid_device_set_report_internal(FuHidDevice *self, FuHidDeviceRetryHelper *hel
 		}
 	} else {
 		guint16 wvalue = (FU_HID_REPORT_TYPE_OUTPUT << 8) | helper->value;
+		g_autofree gchar *title = NULL;
 
 		/* special case */
 		if (helper->flags & FU_HID_DEVICE_FLAG_IS_FEATURE)
 			wvalue = (FU_HID_REPORT_TYPE_FEATURE << 8) | helper->value;
 
-		if (g_getenv("FU_HID_DEVICE_VERBOSE") != NULL) {
-			g_autofree gchar *title = NULL;
-			title = g_strdup_printf("HID::SetReport [wValue=0x%04x, wIndex=%u]",
-						wvalue,
-						priv->interface);
-			fu_dump_raw(G_LOG_DOMAIN, title, helper->buf, helper->bufsz);
-		}
+		title = g_strdup_printf("HID::SetReport [wValue=0x%04x, wIndex=%u]",
+					wvalue,
+					priv->interface);
+		fu_dump_raw(G_LOG_DOMAIN, title, helper->buf, helper->bufsz);
 		if (!g_usb_device_control_transfer(usb_device,
 						   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
 						   G_USB_DEVICE_REQUEST_TYPE_CLASS,
@@ -415,6 +411,7 @@ fu_hid_device_get_report_internal(FuHidDevice *self, FuHidDeviceRetryHelper *hel
 
 	/* what method do we use? */
 	if (priv->flags & FU_HID_DEVICE_FLAG_USE_INTERRUPT_TRANSFER) {
+		g_autofree gchar *title = NULL;
 		if (!g_usb_device_interrupt_transfer(usb_device,
 						     priv->ep_addr_in,
 						     helper->buf,
@@ -425,25 +422,20 @@ fu_hid_device_get_report_internal(FuHidDevice *self, FuHidDeviceRetryHelper *hel
 						     error)) {
 			return FALSE;
 		}
-		if (g_getenv("FU_HID_DEVICE_VERBOSE") != NULL) {
-			g_autofree gchar *title = NULL;
-			title = g_strdup_printf("HID::GetReport [EP=0x%02x]", priv->ep_addr_in);
-			fu_dump_raw(G_LOG_DOMAIN, title, helper->buf, helper->bufsz);
-		}
+		title = g_strdup_printf("HID::GetReport [EP=0x%02x]", priv->ep_addr_in);
+		fu_dump_raw(G_LOG_DOMAIN, title, helper->buf, helper->bufsz);
 	} else {
 		guint16 wvalue = (FU_HID_REPORT_TYPE_INPUT << 8) | helper->value;
+		g_autofree gchar *title = NULL;
 
 		/* special case */
 		if (helper->flags & FU_HID_DEVICE_FLAG_IS_FEATURE)
 			wvalue = (FU_HID_REPORT_TYPE_FEATURE << 8) | helper->value;
 
-		if (g_getenv("FU_HID_DEVICE_VERBOSE") != NULL) {
-			g_autofree gchar *title = NULL;
-			title = g_strdup_printf("HID::GetReport [wValue=0x%04x, wIndex=%u]",
-						wvalue,
-						priv->interface);
-			fu_dump_raw(G_LOG_DOMAIN, title, helper->buf, helper->bufsz);
-		}
+		title = g_strdup_printf("HID::GetReport [wValue=0x%04x, wIndex=%u]",
+					wvalue,
+					priv->interface);
+		fu_dump_raw(G_LOG_DOMAIN, title, helper->buf, helper->bufsz);
 		if (!g_usb_device_control_transfer(usb_device,
 						   G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
 						   G_USB_DEVICE_REQUEST_TYPE_CLASS,
@@ -460,13 +452,7 @@ fu_hid_device_get_report_internal(FuHidDevice *self, FuHidDeviceRetryHelper *hel
 			g_prefix_error(error, "failed to GetReport: ");
 			return FALSE;
 		}
-		if (g_getenv("FU_HID_DEVICE_VERBOSE") != NULL) {
-			g_autofree gchar *title = NULL;
-			title = g_strdup_printf("HID::GetReport [wValue=0x%04x, wIndex=%u]",
-						wvalue,
-						priv->interface);
-			fu_dump_raw(G_LOG_DOMAIN, title, helper->buf, actual_len);
-		}
+		fu_dump_raw(G_LOG_DOMAIN, title, helper->buf, actual_len);
 	}
 	if ((helper->flags & FU_HID_DEVICE_FLAG_ALLOW_TRUNC) == 0 && actual_len != helper->bufsz) {
 		g_set_error(error,

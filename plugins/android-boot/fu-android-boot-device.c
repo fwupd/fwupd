@@ -200,8 +200,7 @@ fu_android_boot_device_erase(FuAndroidBootDevice *self, FuProgress *progress, GE
 
 	chunks = fu_chunk_array_new(buf, bufsz, 0x0, 0x0, 10 * 1024);
 
-	if (g_getenv("FWUPD_ANDROID_BOOT_VERBOSE") != NULL)
-		fu_dump_raw(G_LOG_DOMAIN, "erase", buf, bufsz);
+	fu_dump_raw(G_LOG_DOMAIN, "erase", buf, bufsz);
 
 	if (!fu_android_boot_device_write(self, chunks, progress, error))
 		return FALSE;
@@ -263,9 +262,7 @@ fu_android_boot_device_write_firmware(FuDevice *device,
 	fw = fu_firmware_get_bytes(firmware, error);
 	if (fw == NULL)
 		return FALSE;
-
-	if (g_getenv("FWUPD_ANDROID_BOOT_VERBOSE") != NULL)
-		fu_dump_bytes(G_LOG_DOMAIN, "write", fw);
+	fu_dump_bytes(G_LOG_DOMAIN, "write", fw);
 
 	chunks = fu_chunk_array_new_from_bytes(fw, 0x0, 0x0, 10 * 1024);
 

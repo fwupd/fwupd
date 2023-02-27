@@ -54,7 +54,7 @@ fu_remote_list_monitor_changed_cb(GFileMonitor *monitor,
 	FuRemoteList *self = FU_REMOTE_LIST(user_data);
 	g_autoptr(GError) error = NULL;
 	g_autofree gchar *filename = g_file_get_path(file);
-	g_debug("%s changed, reloading all remotes", filename);
+	g_info("%s changed, reloading all remotes", filename);
 	if (!fu_remote_list_reload(self, &error))
 		g_warning("failed to rescan remotes: %s", error->message);
 	fu_remote_list_emit_changed(self);
@@ -214,7 +214,7 @@ fu_remote_list_add_for_path(FuRemoteList *self, const gchar *path, GError **erro
 		fwupd_remote_set_remotes_dir(remote, remotesdir);
 
 		/* load from keyfile */
-		g_debug("loading remote from %s", filename);
+		g_info("loading remote from %s", filename);
 		if (!fwupd_remote_load_from_filename(remote, filename, NULL, error)) {
 			g_prefix_error(error, "failed to load %s: ", filename);
 			return FALSE;
@@ -377,6 +377,7 @@ fu_remote_list_reload(FuRemoteList *self, GError **error)
 	guint depsolve_check;
 	g_autofree gchar *remotesdir = NULL;
 	g_autofree gchar *remotesdir_mut = NULL;
+	g_autoptr(GString) str = g_string_new(NULL);
 
 	/* clear */
 	g_ptr_array_set_size(self->array, 0);
@@ -408,6 +409,16 @@ fu_remote_list_reload(FuRemoteList *self, GError **error)
 
 	/* order these by priority, then name */
 	g_ptr_array_sort(self->array, fu_remote_list_sort_cb);
+
+	/* print to the console */
+	for (guint i = 0; i < self->array->len; i++) {
+		FwupdRemote *remote = g_ptr_array_index(self->array, i);
+		if (fwupd_remote_get_enabled(remote))
+			g_string_append_printf(str, "%s, ", fwupd_remote_get_id(remote));
+	}
+	if (str->len > 2)
+		g_string_truncate(str, str->len - 2);
+	g_info("enabled remotes: %s", str->str);
 
 	/* success */
 	return TRUE;

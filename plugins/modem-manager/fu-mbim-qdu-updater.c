@@ -54,7 +54,7 @@ fu_mbim_qdu_updater_mbim_device_open_ready(GObject *mbim_device,
 		}
 
 		/* retry */
-		g_debug("error: couldn't open mbim device: %s", ctx->error->message);
+		g_debug("couldn't open mbim device: %s", ctx->error->message);
 		g_clear_error(&ctx->error);
 		fu_mbim_qdu_updater_mbim_device_open_attempt(ctx);
 		return;
@@ -189,7 +189,7 @@ fu_mbim_qdu_updater_caps_query_ready(MbimDevice *device, GAsyncResult *res, gpoi
 	if (!response || !mbim_message_response_get_result(response,
 							   MBIM_MESSAGE_TYPE_COMMAND_DONE,
 							   &ctx->error)) {
-		g_debug("error: operation failed: %s", ctx->error->message);
+		g_debug("operation failed: %s", ctx->error->message);
 		g_main_loop_quit(ctx->mainloop);
 		return;
 	}
@@ -208,7 +208,7 @@ fu_mbim_qdu_updater_caps_query_ready(MbimDevice *device, GAsyncResult *res, gpoi
 						     &firmware_version,
 						     NULL,
 						     &ctx->error)) {
-		g_debug("error: couldn't parse response message: %s", ctx->error->message);
+		g_debug("couldn't parse response message: %s", ctx->error->message);
 		g_main_loop_quit(ctx->mainloop);
 		return;
 	}
@@ -280,14 +280,14 @@ fu_mbim_qdu_updater_file_write_ready(MbimDevice *device, GAsyncResult *res, gpoi
 	if (!response || !mbim_message_response_get_result(response,
 							   MBIM_MESSAGE_TYPE_COMMAND_DONE,
 							   &ctx->error)) {
-		g_debug("error: operation failed: %s", ctx->error->message);
+		g_debug("operation failed: %s", ctx->error->message);
 		g_ptr_array_unref(ctx->chunks);
 		g_main_loop_quit(ctx->mainloop);
 		return;
 	}
 
 	if (!mbim_message_qdu_file_write_response_parse(response, &ctx->error)) {
-		g_debug("error: couldn't parse response message: %s", ctx->error->message);
+		g_debug("couldn't parse response message: %s", ctx->error->message);
 		g_ptr_array_unref(ctx->chunks);
 		g_main_loop_quit(ctx->mainloop);
 		return;
@@ -329,7 +329,7 @@ fu_mbim_qdu_updater_file_open_ready(MbimDevice *device, GAsyncResult *res, gpoin
 	if (!response || !mbim_message_response_get_result(response,
 							   MBIM_MESSAGE_TYPE_COMMAND_DONE,
 							   &ctx->error)) {
-		g_debug("error: operation failed: %s", ctx->error->message);
+		g_debug("operation failed: %s", ctx->error->message);
 		g_main_loop_quit(ctx->mainloop);
 		return;
 	}
@@ -338,7 +338,7 @@ fu_mbim_qdu_updater_file_open_ready(MbimDevice *device, GAsyncResult *res, gpoin
 						       &out_max_transfer_size,
 						       NULL,
 						       &ctx->error)) {
-		g_debug("error: couldn't parse response message: %s", ctx->error->message);
+		g_debug("couldn't parse response message: %s", ctx->error->message);
 		g_main_loop_quit(ctx->mainloop);
 		return;
 	}
@@ -370,7 +370,7 @@ fu_mbim_qdu_updater_session_ready(MbimDevice *device, GAsyncResult *res, gpointe
 	if (!response || !mbim_message_response_get_result(response,
 							   MBIM_MESSAGE_TYPE_COMMAND_DONE,
 							   &ctx->error)) {
-		g_debug("error: operation failed: %s", ctx->error->message);
+		g_debug("operation failed: %s", ctx->error->message);
 		g_main_loop_quit(ctx->mainloop);
 		return;
 	}
@@ -383,7 +383,7 @@ fu_mbim_qdu_updater_session_ready(MbimDevice *device, GAsyncResult *res, gpointe
 							    NULL,
 							    NULL,
 							    &ctx->error)) {
-		g_debug("error: couldn't parse response message: %s", ctx->error->message);
+		g_debug("couldn't parse response message: %s", ctx->error->message);
 		g_main_loop_quit(ctx->mainloop);
 		return;
 	}

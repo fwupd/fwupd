@@ -195,11 +195,10 @@ fu_bios_setting_fixup_lenovo_thinklmi_bug(FwupdBiosSetting *attr, GError **error
 	g_autoptr(GString) right_str = NULL;
 	g_auto(GStrv) vals = NULL;
 
-	if (g_getenv("FWUPD_BIOS_SETTING_VERBOSE") != NULL) {
-		g_debug("Processing %s: (%s)",
-			fwupd_bios_setting_get_name(attr),
-			fwupd_bios_setting_get_current_value(attr));
-	}
+	/* debug */
+	g_debug("processing %s: (%s)",
+		fwupd_bios_setting_get_name(attr),
+		fwupd_bios_setting_get_current_value(attr));
 
 	/* We have read only */
 	tmp = g_strrstr(current_value, LENOVO_READ_ONLY_NEEDLE);
@@ -286,21 +285,14 @@ fu_bios_setting_set_type(FuBiosSettings *self, FwupdBiosSetting *attr, GError **
 	}
 
 	if (g_strcmp0(data, "enumeration") == 0 || kernel_bug) {
-		if (!fu_bios_setting_set_enumeration_attrs(attr, &error_local)) {
-			if (g_getenv("FWUPD_BIOS_SETTING_VERBOSE") != NULL)
-				g_debug("failed to add enumeration attrs: %s",
-					error_local->message);
-		}
+		if (!fu_bios_setting_set_enumeration_attrs(attr, &error_local))
+			g_debug("failed to add enumeration attrs: %s", error_local->message);
 	} else if (g_strcmp0(data, "integer") == 0) {
-		if (!fu_bios_setting_set_integer_attrs(attr, &error_local)) {
-			if (g_getenv("FWUPD_BIOS_SETTING_VERBOSE") != NULL)
-				g_debug("failed to add integer attrs: %s", error_local->message);
-		}
+		if (!fu_bios_setting_set_integer_attrs(attr, &error_local))
+			g_debug("failed to add integer attrs: %s", error_local->message);
 	} else if (g_strcmp0(data, "string") == 0) {
-		if (!fu_bios_setting_set_string_attrs(attr, &error_local)) {
-			if (g_getenv("FWUPD_BIOS_SETTING_VERBOSE") != NULL)
-				g_debug("failed to add string attrs: %s", error_local->message);
-		}
+		if (!fu_bios_setting_set_string_attrs(attr, &error_local))
+			g_debug("failed to add string attrs: %s", error_local->message);
 	}
 	return TRUE;
 }
@@ -419,10 +411,10 @@ fu_bios_settings_combination_fixups(FuBiosSettings *self)
 	if (thinklmi_sb != NULL && thinklmi_3rd != NULL) {
 		const gchar *val = fwupd_bios_setting_get_current_value(thinklmi_3rd);
 		if (g_strcmp0(val, "Disable") == 0) {
-			g_debug("Disabling changing %s since %s is %s",
-				fwupd_bios_setting_get_name(thinklmi_sb),
-				fwupd_bios_setting_get_name(thinklmi_3rd),
-				val);
+			g_info("Disabling changing %s since %s is %s",
+			       fwupd_bios_setting_get_name(thinklmi_sb),
+			       fwupd_bios_setting_get_name(thinklmi_3rd),
+			       val);
 			fwupd_bios_setting_set_read_only(thinklmi_sb, TRUE);
 		}
 	}
@@ -499,7 +491,7 @@ fu_bios_settings_setup(FuBiosSettings *self, GError **error)
 			}
 		} while (++count);
 	} while (TRUE);
-	g_debug("loaded %u BIOS settings", count);
+	g_info("loaded %u BIOS settings", count);
 
 	fu_bios_settings_combination_fixups(self);
 

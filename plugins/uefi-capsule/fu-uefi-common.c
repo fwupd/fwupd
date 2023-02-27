@@ -266,7 +266,7 @@ fu_uefi_get_esp_path_for_os(FuDevice *device, const gchar *base)
 			g_autofree gchar *id_like_path =
 			    g_build_filename(base, "EFI", split[i], NULL);
 			if (g_file_test(id_like_path, G_FILE_TEST_IS_DIR)) {
-				g_debug("Using ID_LIKE key from os-release");
+				g_debug("using ID_LIKE key from os-release");
 				return g_steal_pointer(&id_like_path);
 			}
 		}

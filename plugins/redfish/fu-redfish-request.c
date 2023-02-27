@@ -69,6 +69,8 @@ static gboolean
 fu_redfish_request_load_json(FuRedfishRequest *self, GByteArray *buf, GError **error)
 {
 	JsonNode *json_root;
+	g_autoptr(GString) str = g_string_new(NULL);
+	g_autoptr(JsonGenerator) json_generator = json_generator_new();
 
 	/* load */
 	if (buf->data == NULL || buf->len == 0) {
@@ -99,14 +101,10 @@ fu_redfish_request_load_json(FuRedfishRequest *self, GByteArray *buf, GError **e
 	}
 
 	/* dump for humans */
-	if (g_getenv("FWUPD_REDFISH_VERBOSE") != NULL) {
-		g_autoptr(GString) str = g_string_new(NULL);
-		g_autoptr(JsonGenerator) json_generator = json_generator_new();
-		json_generator_set_pretty(json_generator, TRUE);
-		json_generator_set_root(json_generator, json_root);
-		json_generator_to_gstring(json_generator, str);
-		g_debug("response: %s", str->str);
-	}
+	json_generator_set_pretty(json_generator, TRUE);
+	json_generator_set_root(json_generator, json_root);
+	json_generator_to_gstring(json_generator, str);
+	g_debug("response: %s", str->str);
 
 	/* unauthorized */
 	if (json_object_has_member(self->json_obj, "error")) {
@@ -160,6 +158,7 @@ fu_redfish_request_perform(FuRedfishRequest *self,
 			   GError **error)
 {
 	CURLcode res;
+	g_autofree gchar *str = NULL;
 #ifdef HAVE_LIBCURL_7_62_0
 	g_autoptr(curlptr) uri_str = NULL;
 #else
@@ -199,11 +198,8 @@ fu_redfish_request_perform(FuRedfishRequest *self,
 #endif
 	res = curl_easy_perform(self->curl);
 	curl_easy_getinfo(self->curl, CURLINFO_RESPONSE_CODE, &self->status_code);
-	if (g_getenv("FWUPD_REDFISH_VERBOSE") != NULL) {
-		g_autofree gchar *str = NULL;
-		str = g_strndup((const gchar *)self->buf->data, self->buf->len);
-		g_debug("%s: %s [%li]", uri_str, str, self->status_code);
-	}
+	str = g_strndup((const gchar *)self->buf->data, self->buf->len);
+	g_debug("%s: %s [%li]", uri_str, str, self->status_code);
 
 	/* check result */
 	if (res != CURLE_OK) {
@@ -258,8 +254,7 @@ fu_redfish_request_perform_full(FuRedfishRequest *self,
 	json_generator_set_pretty(json_generator, TRUE);
 	json_generator_set_root(json_generator, json_root);
 	json_generator_to_gstring(json_generator, str);
-	if (g_getenv("FWUPD_REDFISH_VERBOSE") != NULL)
-		g_debug("request to %s: %s", path, str->str);
+	g_debug("request to %s: %s", path, str->str);
 
 	/* patch */
 	(void)curl_easy_setopt(self->curl, CURLOPT_CUSTOMREQUEST, request);

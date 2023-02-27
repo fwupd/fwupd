@@ -1172,7 +1172,7 @@ fwupd_remote_load_signature_jcat(FwupdRemote *self, JcatFile *jcat_file, GError 
 	baseuri = g_path_get_dirname(priv->metadata_uri);
 	metadata_uri = g_build_path("/", baseuri, id, NULL);
 	if (g_strcmp0(metadata_uri, priv->metadata_uri) != 0) {
-		g_debug("changing metadata URI from %s to %s", priv->metadata_uri, metadata_uri);
+		g_info("changing metadata URI from %s to %s", priv->metadata_uri, metadata_uri);
 		g_free(priv->metadata_uri);
 		priv->metadata_uri = g_steal_pointer(&metadata_uri);
 	}

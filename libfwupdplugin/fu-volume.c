@@ -524,6 +524,7 @@ fu_volume_new_by_kind(const gchar *kind, GError **error)
 	for (guint i = 0; i < devices->len; i++) {
 		GDBusProxy *proxy_blk = g_ptr_array_index(devices, i);
 		const gchar *type_str;
+		g_autofree gchar *id_type = NULL;
 		g_autoptr(FuVolume) vol = NULL;
 		g_autoptr(GDBusProxy) proxy_part = NULL;
 		g_autoptr(GDBusProxy) proxy_fs = NULL;
@@ -572,14 +573,12 @@ fu_volume_new_by_kind(const gchar *kind, GError **error)
 
 		/* convert reported type to GPT type */
 		type_str = fu_volume_kind_convert_to_gpt(type_str);
-		if (g_getenv("FWUPD_VERBOSE") != NULL) {
-			g_autofree gchar *id_type = fu_volume_get_id_type(vol);
-			g_debug("device %s, type: %s, internal: %d, fs: %s",
-				g_dbus_proxy_get_object_path(proxy_blk),
-				type_str,
-				fu_volume_is_internal(vol),
-				id_type);
-		}
+		id_type = fu_volume_get_id_type(vol);
+		g_debug("device %s, type: %s, internal: %d, fs: %s",
+			g_dbus_proxy_get_object_path(proxy_blk),
+			type_str,
+			fu_volume_is_internal(vol),
+			id_type);
 		if (g_strcmp0(type_str, kind) != 0)
 			continue;
 		g_ptr_array_add(volumes, g_steal_pointer(&vol));
@@ -726,7 +725,7 @@ fu_volume_new_esp_for_path(const gchar *esp_path, GError **error)
 			return g_object_ref(vol);
 	}
 	if (g_file_test(esp_path, G_FILE_TEST_IS_DIR)) {
-		g_debug("Using user requested path %s for ESP", esp_path);
+		g_info("using user requested path %s for ESP", esp_path);
 		return fu_volume_new_from_mount_path(esp_path);
 	}
 	g_set_error(error,

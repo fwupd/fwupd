@@ -101,12 +101,10 @@ fu_ccgx_dmc_device_ensure_status(FuCcgxDmcDevice *self, GError **error)
 			return FALSE;
 		}
 	}
-	if (g_getenv("FWUPD_CCGX_VERBOSE") != NULL) {
-		fu_dump_raw(G_LOG_DOMAIN,
-			    "DmcDockStatus",
-			    (const guint8 *)&self->dock_status,
-			    sizeof(self->dock_status));
-	}
+	fu_dump_raw(G_LOG_DOMAIN,
+		    "DmcDockStatus",
+		    (const guint8 *)&self->dock_status,
+		    sizeof(self->dock_status));
 
 	/* add devx children */
 	for (guint i = 0; i < self->dock_status.device_count; i++) {
@@ -686,7 +684,7 @@ fu_ccgx_dmc_device_ensure_factory_version(FuCcgxDmcDevice *self)
 		guint64 fwver_img1 = fu_memread_uint64(status->fw_version + 0x08, G_LITTLE_ENDIAN);
 		guint64 fwver_img2 = fu_memread_uint64(status->fw_version + 0x10, G_LITTLE_ENDIAN);
 		if (status->device_type == 0x2 && fwver_img1 == fwver_img2 && fwver_img1 != 0) {
-			g_debug("overriding version as device is in factory mode");
+			g_info("overriding version as device is in factory mode");
 			fu_device_set_version_from_uint32(FU_DEVICE(self), 0x1);
 			return;
 		}

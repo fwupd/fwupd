@@ -154,8 +154,7 @@ fu_nordic_hid_cfg_channel_send(FuNordicHidCfgChannel *self,
 	FuUdevDevice *udev_device = fu_nordic_hid_cfg_channel_get_udev_device(self, error);
 	if (udev_device == NULL)
 		return FALSE;
-	if (g_getenv("FWUPD_NORDIC_HID_VERBOSE") != NULL)
-		fu_dump_raw(G_LOG_DOMAIN, "Sent", buf, bufsz);
+	fu_dump_raw(G_LOG_DOMAIN, "Sent", buf, bufsz);
 	if (!fu_udev_device_ioctl(udev_device,
 				  HIDIOCSFEATURE(bufsz),
 				  buf,
@@ -212,8 +211,7 @@ fu_nordic_hid_cfg_channel_receive(FuNordicHidCfgChannel *self,
 		return FALSE;
 	}
 
-	if (g_getenv("FWUPD_NORDIC_HID_VERBOSE") != NULL)
-		fu_dump_raw(G_LOG_DOMAIN, "Received", buf, bufsz);
+	fu_dump_raw(G_LOG_DOMAIN, "Received", buf, bufsz);
 	/*
 	 * [TODO]: Possibly add the report-id fix for Bluez versions < 5.56:
 	 * https://github.com/bluez/bluez/commit/35a2c50437cca4d26ac6537ce3a964bb509c9b62
@@ -460,8 +458,7 @@ fu_nordic_hid_cfg_channel_add_peers(FuNordicHidCfgChannel *self, GError **error)
 		if (res->data[8] == INVALID_PEER_ID)
 			return TRUE;
 
-		if (g_getenv("FWUPD_NORDIC_HID_VERBOSE") != NULL)
-			g_debug("detected peer: 0x%02x", res->data[8]);
+		g_debug("detected peer: 0x%02x", res->data[8]);
 
 		peer = fu_nordic_hid_cfg_channel_new(res->data[8]);
 		/* prohibit to close parent's communication descriptor */
@@ -528,8 +525,8 @@ fu_nordic_hid_cfg_channel_get_bl_name(FuNordicHidCfgChannel *self, GError **erro
 			return FALSE;
 		}
 		self->bl_name = fu_strsafe((const gchar *)res->data, res->data_len);
-	} else if (g_getenv("FWUPD_NORDIC_HID_VERBOSE") != NULL) {
-		g_debug("the board have no support of bootloader runtime detection");
+	} else {
+		g_debug("the board has no support of bootloader runtime detection");
 	}
 
 	if (self->bl_name == NULL) {

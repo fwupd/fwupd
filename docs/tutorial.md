@@ -803,12 +803,8 @@ device will only be updatable when all of them are removed.
 
 ## Debugging tips
 
-The most important rule when debugging is using the `--verbose` flag
-when running fwupd or fwupdtool. Besides that, there are many
-environment variables that allow some debug traces to be printed
-conditionally, for example: `FWUPD_PROBE_VERBOSE`,
-`FU_HID_DEVICE_VERBOSE`, `FWUPD_DEVICE_LIST_VERBOSE` and many other
-plugin-specific envvars.
+The most important rule when debugging is using the `--verbose` and
+duplicate `--verbose` flag when running fwupd or fwupdtool.
 
 ### Adding debug messages
 

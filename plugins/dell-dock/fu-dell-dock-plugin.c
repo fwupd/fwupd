@@ -188,9 +188,9 @@ fu_dell_dock_plugin_separate_activation(FuPlugin *plugin)
 		    fu_device_has_flag(device_ec, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION)) {
 			fu_device_remove_flag(FU_DEVICE(device_ec),
 					      FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
-			g_debug("activate for %s is inhibited by %s",
-				fu_device_get_name(device_ec),
-				fu_device_get_name(device_usb4));
+			g_info("activate for %s is inhibited by %s",
+			       fu_device_get_name(device_ec),
+			       fu_device_get_name(device_usb4));
 		}
 	}
 }

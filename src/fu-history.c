@@ -218,7 +218,7 @@ fu_history_migrate_database_v1(FuHistory *self, GError **error)
 {
 	gint rc;
 
-	g_debug("migrating v1 database by recreating table");
+	g_info("migrating v1 database by recreating table");
 	/* rename the table to something out the way */
 	rc = sqlite3_exec(self->db, "ALTER TABLE history RENAME TO history_old;", NULL, NULL, NULL);
 	if (rc != SQLITE_OK) {
@@ -386,9 +386,9 @@ fu_history_create_or_migrate(FuHistory *self, guint schema_ver, GError **error)
 	g_autoptr(sqlite3_stmt) stmt = NULL;
 
 	if (schema_ver == 0)
-		g_debug("building initial database");
+		g_info("building initial database");
 	else if (schema_ver > 1)
-		g_debug("migrating v%u database by altering", schema_ver);
+		g_info("migrating v%u database by altering", schema_ver);
 
 	switch (schema_ver) {
 	/* create initial up-to-date database or migrate */

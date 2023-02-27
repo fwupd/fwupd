@@ -57,8 +57,7 @@ fu_vli_usbhub_device_i2c_read(FuVliUsbhubDevice *self,
 		g_prefix_error(error, "failed to read I2C: ");
 		return FALSE;
 	}
-	if (g_getenv("FWUPD_VLI_USBHUB_VERBOSE") != NULL)
-		fu_dump_raw(G_LOG_DOMAIN, "I2cReadData", buf, bufsz);
+	fu_dump_raw(G_LOG_DOMAIN, "I2cReadData", buf, bufsz);
 	return TRUE;
 }
 
@@ -85,8 +84,7 @@ fu_vli_usbhub_device_i2c_write_data(FuVliUsbhubDevice *self,
 {
 	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
 	guint16 value = (((guint16)disable_start_bit) << 8) | disable_end_bit;
-	if (g_getenv("FWUPD_VLI_USBHUB_VERBOSE") != NULL)
-		fu_dump_raw(G_LOG_DOMAIN, "I2cWriteData", buf, bufsz);
+	fu_dump_raw(G_LOG_DOMAIN, "I2cWriteData", buf, bufsz);
 	if (!g_usb_device_control_transfer(usb_device,
 					   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
 					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,

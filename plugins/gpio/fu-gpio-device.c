@@ -93,7 +93,7 @@ fu_gpio_device_unassign(FuGpioDevice *self, GError **error)
 {
 	if (self->fd < 0)
 		return TRUE;
-	g_debug("unsetting %s", fu_device_get_logical_id(FU_DEVICE(self)));
+	g_info("unsetting %s", fu_device_get_logical_id(FU_DEVICE(self)));
 	if (!g_close(self->fd, error))
 		return FALSE;
 	self->fd = -1;
@@ -125,10 +125,10 @@ fu_gpio_device_assign_full(FuGpioDevice *self, guint64 line, gboolean value, GEr
 		return FALSE;
 
 	/* slightly weird API, but roll with it */
-	g_debug("setting %s:0x%02x → %i",
-		fu_device_get_logical_id(FU_DEVICE(self)),
-		(guint)line,
-		value);
+	g_info("setting %s:0x%02x → %i",
+	       fu_device_get_logical_id(FU_DEVICE(self)),
+	       (guint)line,
+	       value);
 	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
 				  GPIO_V2_GET_LINE_IOCTL,
 				  (guint8 *)&req,

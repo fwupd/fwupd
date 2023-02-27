@@ -670,7 +670,7 @@ fu_device_retry_full(FuDevice *self,
 
 		/* show recoverable error on the console */
 		if (priv->retry_recs->len == 0) {
-			g_debug("failed on try %u of %u: %s", i + 1, count, error_local->message);
+			g_info("failed on try %u of %u: %s", i + 1, count, error_local->message);
 			continue;
 		}
 
@@ -1178,11 +1178,11 @@ fu_device_set_parent(FuDevice *self, FuDevice *parent)
 
 	/* debug */
 	if (parent != NULL) {
-		g_debug("setting parent of %s [%s] to be %s [%s]",
-			fu_device_get_name(self),
-			fu_device_get_id(self),
-			fu_device_get_name(parent),
-			fu_device_get_id(parent));
+		g_info("setting parent of %s [%s] to be %s [%s]",
+		       fu_device_get_name(self),
+		       fu_device_get_id(self),
+		       fu_device_get_name(parent),
+		       fu_device_get_id(parent));
 	}
 
 	/* set the composite ID on the children and grandchildren */
@@ -4158,7 +4158,7 @@ fu_device_write_firmware(FuDevice *self,
 	if (firmware == NULL)
 		return FALSE;
 	str = fu_firmware_to_string(firmware);
-	g_debug("installing onto %s:\n%s", fu_device_get_id(self), str);
+	g_info("installing onto %s:\n%s", fu_device_get_id(self), str);
 
 	/* call vfunc */
 	if (!klass->write_firmware(self, firmware, progress, flags, error))
@@ -5309,9 +5309,9 @@ fu_device_emit_request(FuDevice *self, FwupdRequest *request)
 
 	/* ignore */
 	if (fu_device_has_flag(self, FWUPD_DEVICE_FLAG_EMULATED)) {
-		g_debug("ignoring device %s request of %s as emulated",
-			fu_device_get_id(self),
-			fwupd_request_get_id(request));
+		g_info("ignoring device %s request of %s as emulated",
+		       fu_device_get_id(self),
+		       fwupd_request_get_id(request));
 		return;
 	}
 

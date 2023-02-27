@@ -86,8 +86,8 @@ fu_scsi_device_probe(FuDevice *device, GError **error)
 		guint64 ufs_features = 0;
 
 		/* check if this is a UFS device */
-		g_debug("found ufshci controller at %s",
-			fu_udev_device_get_sysfs_path(ufshci_parent));
+		g_info("found ufshci controller at %s",
+		       fu_udev_device_get_sysfs_path(ufshci_parent));
 		if (fu_udev_device_get_sysfs_attr_uint64(ufshci_parent,
 							 "device_descriptor/ufs_features",
 							 &ufs_features,
@@ -205,8 +205,7 @@ fu_scsi_device_send_scsi_cmd_v3(FuScsiDevice *self,
 	io_hdr.sbp = sense_buffer;
 	io_hdr.timeout = 60000; /* ms */
 
-	if (g_getenv("FWUPD_SCSI_VERBOSE") != NULL)
-		g_debug("cmd=0x%x len=0x%x", cdb[0], (guint)bufsz);
+	g_debug("cmd=0x%x len=0x%x", cdb[0], (guint)bufsz);
 	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
 				  SG_IO,
 				  (guint8 *)&io_hdr,

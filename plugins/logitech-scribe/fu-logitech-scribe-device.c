@@ -243,11 +243,9 @@ fu_logitech_scribe_device_query_data_size(FuLogitechScribeDevice *self,
 	size_query.size = kDefaultUvcGetLenQueryControlSize;
 	size_query.data = size_data;
 
-	if (g_getenv("FWUPD_LOGITECH_SCRIBE_VERBOSE") != NULL) {
-		g_debug("data size query request, unit: 0x%x selector: 0x%x",
-			(guchar)unit_id,
-			(guchar)control_selector);
-	}
+	g_debug("data size query request, unit: 0x%x selector: 0x%x",
+		(guchar)unit_id,
+		(guchar)control_selector);
 
 	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
 				  UVCIOC_CTRL_QUERY,
@@ -258,16 +256,11 @@ fu_logitech_scribe_device_query_data_size(FuLogitechScribeDevice *self,
 		return FALSE;
 	/* convert the data byte to int */
 	*data_size = size_data[1] << 8 | size_data[0];
-	if (g_getenv("FWUPD_LOGITECH_SCRIBE_VERBOSE") != NULL) {
-		g_debug("data size query response, size: %u unit: 0x%x selector: 0x%x",
-			*data_size,
-			(guchar)unit_id,
-			(guchar)control_selector);
-		fu_dump_raw(G_LOG_DOMAIN,
-			    "UVC_GET_LEN",
-			    size_data,
-			    kDefaultUvcGetLenQueryControlSize);
-	}
+	g_debug("data size query response, size: %u unit: 0x%x selector: 0x%x",
+		*data_size,
+		(guchar)unit_id,
+		(guchar)control_selector);
+	fu_dump_raw(G_LOG_DOMAIN, "UVC_GET_LEN", size_data, kDefaultUvcGetLenQueryControlSize);
 
 	/* success */
 	return TRUE;
@@ -283,13 +276,10 @@ fu_logitech_scribe_device_get_xu_control(FuLogitechScribeDevice *self,
 {
 	struct uvc_xu_control_query control_query;
 
-	if (g_getenv("FWUPD_LOGITECH_SCRIBE_VERBOSE") != NULL) {
-		g_debug("get xu control request, size: %" G_GUINT16_FORMAT
-			" unit: 0x%x selector: 0x%x",
-			data_size,
-			(guchar)unit_id,
-			(guchar)control_selector);
-	}
+	g_debug("get xu control request, size: %" G_GUINT16_FORMAT " unit: 0x%x selector: 0x%x",
+		data_size,
+		(guchar)unit_id,
+		(guchar)control_selector);
 	control_query.unit = unit_id;
 	control_query.selector = control_selector;
 	control_query.query = UVC_GET_CUR;
@@ -302,13 +292,12 @@ fu_logitech_scribe_device_get_xu_control(FuLogitechScribeDevice *self,
 				  FU_LOGITECH_SCRIBE_DEVICE_IOCTL_TIMEOUT,
 				  error))
 		return FALSE;
-	if (g_getenv("FWUPD_LOGITECH_SCRIBE_VERBOSE") != NULL) {
-		g_debug("received get xu control response, size: %u unit: 0x%x selector: 0x%x",
-			data_size,
-			(guchar)unit_id,
-			(guchar)control_selector);
-		fu_dump_raw(G_LOG_DOMAIN, "UVC_GET_CUR", data, data_size);
-	}
+	g_debug("received get xu control response, size: %u unit: 0x%x selector: 0x%x",
+		data_size,
+		(guchar)unit_id,
+		(guchar)control_selector);
+	fu_dump_raw(G_LOG_DOMAIN, "UVC_GET_CUR", data, data_size);
+
 	/* success */
 	return TRUE;
 }

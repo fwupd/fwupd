@@ -257,8 +257,7 @@ fu_vli_device_spi_write_block(FuVliDevice *self,
 	}
 
 	/* write */
-	if (g_getenv("FWUPD_VLI_USBHUB_VERBOSE") != NULL)
-		g_debug("writing 0x%x block @0x%x", (guint)bufsz, address);
+	g_debug("writing 0x%x block @0x%x", (guint)bufsz, address);
 	if (!fu_vli_device_spi_write_enable(self, error)) {
 		g_prefix_error(error, "enabling SPI write failed: ");
 		return FALSE;
@@ -390,8 +389,7 @@ fu_vli_device_spi_erase(FuVliDevice *self,
 	fu_progress_set_steps(progress, chunks->len);
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index(chunks, i);
-		if (g_getenv("FWUPD_VLI_USBHUB_VERBOSE") != NULL)
-			g_debug("erasing @0x%x", fu_chunk_get_address(chk));
+		g_debug("erasing @0x%x", fu_chunk_get_address(chk));
 		if (!fu_vli_device_spi_erase_sector(FU_VLI_DEVICE(self),
 						    fu_chunk_get_address(chk),
 						    error)) {
@@ -560,8 +558,7 @@ fu_vli_device_spi_read_flash_id(FuVliDevice *self, GError **error)
 		g_prefix_error(error, "failed to read chip ID: ");
 		return FALSE;
 	}
-	if (g_getenv("FWUPD_VLI_USBHUB_VERBOSE") != NULL)
-		fu_dump_raw(G_LOG_DOMAIN, "SpiCmdReadId", buf, sizeof(buf));
+	fu_dump_raw(G_LOG_DOMAIN, "SpiCmdReadId", buf, sizeof(buf));
 	if (priv->spi_cmd_read_id_sz == 4) {
 		if (!fu_memread_uint32_safe(buf,
 					    sizeof(buf),

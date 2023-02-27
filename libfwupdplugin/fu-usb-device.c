@@ -226,8 +226,7 @@ fu_usb_device_query_hub(FuUsbDevice *self, GError **error)
 		g_prefix_error(error, "failed to get USB descriptor: ");
 		return FALSE;
 	}
-	if (g_getenv("FU_USB_DEVICE_DEBUG") != NULL)
-		fu_dump_raw(G_LOG_DOMAIN, "HUB_DT", data, sz);
+	fu_dump_raw(G_LOG_DOMAIN, "HUB_DT", data, sz);
 
 	/* for USB 3: size is fixed as max ports is 15,
 	 * for USB 2: size is variable as max ports is 255 */
@@ -386,6 +385,7 @@ fu_usb_device_setup(FuDevice *device, GError **error)
 		if (g_usb_bos_descriptor_get_capability(bos) == 0x5 &&
 		    g_bytes_get_size(extra) > 0) {
 			g_autoptr(FuFirmware) ds20 = NULL;
+			g_autofree gchar *str = NULL;
 			g_autoptr(GError) error_ds20 = NULL;
 
 			ds20 = fu_firmware_new_from_gtypes(extra,
@@ -405,10 +405,8 @@ fu_usb_device_setup(FuDevice *device, GError **error)
 				g_warning("failed to get DS20 data: %s", error_ds20->message);
 				continue;
 			}
-			if (g_getenv("FU_USB_DEVICE_DEBUG") != NULL) {
-				g_autofree gchar *str = fu_firmware_to_string(ds20);
-				g_debug("DS20: %s", str);
-			}
+			str = fu_firmware_to_string(ds20);
+			g_debug("DS20: %s", str);
 		}
 	}
 #endif

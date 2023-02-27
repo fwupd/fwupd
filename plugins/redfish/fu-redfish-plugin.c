@@ -263,11 +263,9 @@ fu_redfish_plugin_autoconnect_network_device(FuRedfishPlugin *self, GError **err
 		FuRedfishNetworkDeviceState state = FU_REDFISH_NETWORK_DEVICE_STATE_UNKNOWN;
 		if (!fu_redfish_network_device_get_state(device, &state, error))
 			return FALSE;
-		if (g_getenv("FWUPD_REDFISH_VERBOSE") != NULL) {
-			g_debug("device state is now %s [%u]",
-				fu_redfish_network_device_state_to_string(state),
-				state);
-		}
+		g_info("device state is now %s [%u]",
+		       fu_redfish_network_device_state_to_string(state),
+		       state);
 		if (state == FU_REDFISH_NETWORK_DEVICE_STATE_DISCONNECTED) {
 			if (!fu_redfish_network_device_connect(device, error))
 				return FALSE;
@@ -463,7 +461,7 @@ fu_redfish_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error
 			return FALSE;
 		}
 		if (!fu_plugin_get_config_value_boolean(plugin, "IpmiDisableCreateUser")) {
-			g_debug("attempting to create user using IPMI");
+			g_info("attempting to create user using IPMI");
 			if (!fu_redfish_plugin_ipmi_create_user(plugin, error))
 				return FALSE;
 		}

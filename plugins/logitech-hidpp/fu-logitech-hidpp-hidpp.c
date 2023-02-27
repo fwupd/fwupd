@@ -53,6 +53,8 @@ fu_logitech_hidpp_msg_to_string(FuLogitechHidPpHidppMsg *msg)
 	if (!fu_logitech_hidpp_msg_is_error(msg, &error)) {
 		g_string_append_printf(str, "error:       %s\n", error->message);
 	}
+	if (str->len > 0)
+		g_string_truncate(str, str->len - 1);
 	return g_string_free(g_steal_pointer(&str), FALSE);
 }
 
@@ -64,6 +66,7 @@ fu_logitech_hidpp_send(FuIOChannel *io_channel,
 {
 	gsize len = fu_logitech_hidpp_msg_get_payload_length(msg);
 	FuIOChannelFlags write_flags = FU_IO_CHANNEL_FLAG_FLUSH_INPUT;
+	g_autofree gchar *str = NULL;
 
 	/* only for HID++2.0 */
 	if (msg->hidpp_version >= 2.f)
@@ -74,13 +77,11 @@ fu_logitech_hidpp_send(FuIOChannel *io_channel,
 		msg->report_id = HIDPP_REPORT_ID_LONG;
 		len = 20;
 	}
+	fu_dump_raw(G_LOG_DOMAIN, "host->device", (guint8 *)msg, len);
 
-	/* detailed debugging */
-	if (g_getenv("FWUPD_LOGITECH_HIDPP_VERBOSE") != NULL) {
-		g_autofree gchar *str = fu_logitech_hidpp_msg_to_string(msg);
-		fu_dump_raw(G_LOG_DOMAIN, "host->device", (guint8 *)msg, len);
-		g_print("%s", str);
-	}
+	/* debugging */
+	str = fu_logitech_hidpp_msg_to_string(msg);
+	g_debug("%s", str);
 
 	/* only use blocking IO when it will be a short timeout for reboot */
 	if ((msg->flags & FU_UNIFYING_HIDPP_MSG_FLAG_LONGER_TIMEOUT) == 0)
@@ -103,6 +104,7 @@ fu_logitech_hidpp_receive(FuIOChannel *io_channel,
 			  GError **error)
 {
 	gsize read_size = 0;
+	g_autofree gchar *str = NULL;
 
 	if (!fu_io_channel_read_raw(io_channel,
 				    (guint8 *)msg,
@@ -116,8 +118,7 @@ fu_logitech_hidpp_receive(FuIOChannel *io_channel,
 	}
 
 	/* check long enough, but allow returning oversize packets */
-	if (g_getenv("FWUPD_LOGITECH_HIDPP_VERBOSE") != NULL)
-		fu_dump_raw(G_LOG_DOMAIN, "device->host", (guint8 *)msg, read_size);
+	fu_dump_raw(G_LOG_DOMAIN, "device->host", (guint8 *)msg, read_size);
 	if (read_size < fu_logitech_hidpp_msg_get_payload_length(msg)) {
 		g_set_error(error,
 			    G_IO_ERROR,
@@ -129,11 +130,9 @@ fu_logitech_hidpp_receive(FuIOChannel *io_channel,
 		return FALSE;
 	}
 
-	/* detailed debugging */
-	if (g_getenv("FWUPD_LOGITECH_HIDPP_VERBOSE") != NULL) {
-		g_autofree gchar *str = fu_logitech_hidpp_msg_to_string(msg);
-		g_print("%s", str);
-	}
+	/* debugging */
+	str = fu_logitech_hidpp_msg_to_string(msg);
+	g_debug("%s", str);
 
 	/* success */
 	return TRUE;

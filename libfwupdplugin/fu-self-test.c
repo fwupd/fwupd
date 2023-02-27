@@ -370,8 +370,7 @@ fu_smbios_func(void)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	dump = fu_firmware_to_string(FU_FIRMWARE(smbios));
-	if (g_getenv("FWUPD_VERBOSE") != NULL)
-		g_debug("%s", dump);
+	g_debug("%s", dump);
 
 	/* test for missing table */
 	str = fu_smbios_get_string(smbios, 0xff, 0, &error);
@@ -396,6 +395,7 @@ fu_smbios3_func(void)
 {
 	const gchar *str;
 	gboolean ret;
+	g_autofree gchar *dump = NULL;
 	g_autofree gchar *path = NULL;
 	g_autoptr(FuSmbios) smbios = NULL;
 	g_autoptr(GError) error = NULL;
@@ -405,10 +405,8 @@ fu_smbios3_func(void)
 	ret = fu_smbios_setup_from_path(smbios, path, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	if (g_getenv("FWUPD_VERBOSE") != NULL) {
-		g_autofree gchar *dump = fu_firmware_to_string(FU_FIRMWARE(smbios));
-		g_debug("%s", dump);
-	}
+	dump = fu_firmware_to_string(FU_FIRMWARE(smbios));
+	g_debug("%s", dump);
 
 	/* get vendor */
 	str = fu_smbios_get_string(smbios, FU_SMBIOS_STRUCTURE_TYPE_BIOS, 0x04, &error);
@@ -435,6 +433,7 @@ fu_context_flags_func(void)
 static void
 fu_context_hwids_dmi_func(void)
 {
+	g_autofree gchar *dump = NULL;
 	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GError) error = NULL;
@@ -443,11 +442,8 @@ fu_context_hwids_dmi_func(void)
 	ret = fu_context_load_hwinfo(ctx, progress, FU_CONTEXT_HWID_FLAG_LOAD_DMI, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	if (g_getenv("FWUPD_VERBOSE") != NULL) {
-		g_autofree gchar *dump =
-		    fu_firmware_to_string(FU_FIRMWARE(fu_context_get_smbios(ctx)));
-		g_debug("%s", dump);
-	}
+	dump = fu_firmware_to_string(FU_FIRMWARE(fu_context_get_smbios(ctx)));
+	g_debug("%s", dump);
 
 	g_assert_cmpstr(fu_context_get_hwid_value(ctx, FU_HWIDS_KEY_MANUFACTURER), ==, "FwupdTest");
 	g_assert_cmpuint(fu_context_get_chassis_kind(ctx), ==, 16);

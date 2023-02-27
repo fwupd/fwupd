@@ -121,12 +121,10 @@ fu_redfish_network_device_connect(FuRedfishNetworkDevice *self, GError **error)
 		FuRedfishNetworkDeviceState state = FU_REDFISH_NETWORK_DEVICE_STATE_UNKNOWN;
 		if (!fu_redfish_network_device_get_state(self, &state, error))
 			return FALSE;
-		if (g_getenv("FWUPD_REDFISH_VERBOSE") != NULL) {
-			g_debug("%s device state is now %s [%u]",
-				self->object_path,
-				fu_redfish_network_device_state_to_string(state),
-				state);
-		}
+		g_debug("%s device state is now %s [%u]",
+			self->object_path,
+			fu_redfish_network_device_state_to_string(state),
+			state);
 		if (state == FU_REDFISH_NETWORK_DEVICE_STATE_ACTIVATED)
 			return TRUE;
 		g_usleep(50 * 1000);

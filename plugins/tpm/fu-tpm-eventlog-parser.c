@@ -219,8 +219,7 @@ fu_tpm_eventlog_parser_parse_blob_v2(const guint8 *buf,
 						    error))
 					return NULL;
 				item->blob = g_bytes_new_take(g_steal_pointer(&data), datasz);
-				if (g_getenv("FWUPD_TPM_EVENTLOG_VERBOSE") != NULL)
-					fu_dump_bytes(G_LOG_DOMAIN, "TpmEvent", item->blob);
+				fu_dump_bytes(G_LOG_DOMAIN, "TpmEvent", item->blob);
 			}
 			g_ptr_array_add(items, g_steal_pointer(&item));
 		}
@@ -323,8 +322,7 @@ fu_tpm_eventlog_parser_new(const guint8 *buf,
 						    error))
 					return NULL;
 				item->blob = g_bytes_new_take(g_steal_pointer(&data), datasz);
-				if (g_getenv("FWUPD_TPM_EVENTLOG_VERBOSE") != NULL)
-					fu_dump_bytes(G_LOG_DOMAIN, "TpmEvent", item->blob);
+				fu_dump_bytes(G_LOG_DOMAIN, "TpmEvent", item->blob);
 			}
 			g_ptr_array_add(items, g_steal_pointer(&item));
 		}

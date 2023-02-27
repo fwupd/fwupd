@@ -904,9 +904,9 @@ fu_plugin_runner_startup(FuPlugin *self, FuProgress *progress, GError **error)
 			}
 			st.st_mode &= 0777;
 			if (st.st_mode != FU_PLUGIN_FILE_MODE_SECURE) {
-				g_debug("mode was 0%o, and needs to be 0%o",
-					st.st_mode,
-					(guint)FU_PLUGIN_FILE_MODE_SECURE);
+				g_info("mode was 0%o, and needs to be 0%o",
+				       st.st_mode,
+				       (guint)FU_PLUGIN_FILE_MODE_SECURE);
 				rc = g_chmod(config_filename, FU_PLUGIN_FILE_MODE_SECURE);
 				if (rc != 0) {
 					g_set_error(error,
@@ -1597,7 +1597,7 @@ fu_plugin_backend_device_added(FuPlugin *self,
 		fu_device_convert_instance_ids(dev);
 		if (!fu_plugin_check_supported_device(self, dev)) {
 			g_autofree gchar *guids = fu_device_get_guids_as_str(dev);
-			g_debug("%s has no updates, so ignoring device", guids);
+			g_info("%s has no updates, so ignoring device", guids);
 			fu_progress_finished(progress);
 			return TRUE;
 		}

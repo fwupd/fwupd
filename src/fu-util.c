@@ -1647,7 +1647,7 @@ fu_util_get_device_or_prompt(FuUtilPrivate *priv, gchar **values, GError **error
 	if (g_strv_length(values) >= 1) {
 		if (g_strv_length(values) > 1) {
 			for (guint i = 1; i < g_strv_length(values); i++)
-				g_debug("Ignoring extra input %s", values[i]);
+				g_debug("ignoring extra input %s", values[i]);
 		}
 		return fu_util_get_device_by_id(priv, values[0], error);
 	}
@@ -4850,7 +4850,7 @@ main(int argc, char *argv[])
 
 	/* non-TTY consoles cannot answer questions */
 	if (!fu_util_setup_interactive(priv, &error_console)) {
-		g_debug("failed to initialize interactive console: %s", error_console->message);
+		g_info("failed to initialize interactive console: %s", error_console->message);
 		priv->no_unreported_check = TRUE;
 		priv->no_metadata_check = TRUE;
 		priv->no_reboot_check = TRUE;

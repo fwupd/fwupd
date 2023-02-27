@@ -90,7 +90,7 @@ fu_dell_dock_hub_write_fw(FuDevice *device,
 	dynamic_version = g_strdup_printf("%02x.%02x",
 					  data[self->blob_major_offset],
 					  data[self->blob_minor_offset]);
-	g_debug("writing hub firmware version %s", dynamic_version);
+	g_info("writing hub firmware version %s", dynamic_version);
 
 	if (!fu_dell_dock_set_power(device, self->unlock_target, TRUE, error))
 		return FALSE;

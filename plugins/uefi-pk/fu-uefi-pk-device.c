@@ -55,7 +55,7 @@ fu_uefi_pk_device_parse_buf(FuUefiPkDevice *self, const gchar *buf, gsize bufsz,
 	/* look for things that should not exist */
 	for (guint i = 0; needles[i] != NULL; i++) {
 		if (g_strstr_len(buf, bufsz, needles[i]) != NULL) {
-			g_debug("got %s, marking unsafe", buf);
+			g_info("got %s, marking unsafe", buf);
 			self->has_pk_test_key = TRUE;
 			break;
 		}
@@ -124,8 +124,7 @@ fu_uefi_pk_device_parse_signature(FuUefiPkDevice *self, FuEfiSignature *sig, GEr
 
 	/* look in issuer */
 	if (gnutls_x509_crt_get_issuer_dn(crt, buf, &bufsz) == GNUTLS_E_SUCCESS) {
-		if (g_getenv("FWUPD_UEFI_PK_VERBOSE") != NULL)
-			g_debug("PK issuer: %s", buf);
+		g_debug("PK issuer: %s", buf);
 		if (!fu_uefi_pk_device_parse_buf(self, buf, bufsz, error))
 			return FALSE;
 	}
@@ -134,8 +133,7 @@ fu_uefi_pk_device_parse_signature(FuUefiPkDevice *self, FuEfiSignature *sig, GEr
 	subject = (gnutls_datum_t *)gnutls_malloc(sizeof(gnutls_datum_t));
 	if (gnutls_x509_crt_get_subject(crt, &dn) == GNUTLS_E_SUCCESS) {
 		gnutls_x509_dn_get_str(dn, subject);
-		if (g_getenv("FWUPD_UEFI_PK_VERBOSE") != NULL)
-			g_debug("PK subject: %s", subject->data);
+		g_debug("PK subject: %s", subject->data);
 		if (!fu_uefi_pk_device_parse_buf(self,
 						 (const gchar *)subject->data,
 						 subject->size,

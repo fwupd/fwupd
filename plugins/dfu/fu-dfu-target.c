@@ -694,9 +694,7 @@ fu_dfu_target_download_chunk(FuDfuTarget *self,
 	gsize actual_length;
 
 	/* low level packet debugging */
-	if (g_getenv("FWUPD_DFU_VERBOSE") != NULL)
-		fu_dump_bytes(G_LOG_DOMAIN, "Message", bytes);
-
+	fu_dump_bytes(G_LOG_DOMAIN, "Message", bytes);
 	if (!g_usb_device_control_transfer(usb_device,
 					   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
 					   G_USB_DEVICE_REQUEST_TYPE_CLASS,
@@ -786,8 +784,7 @@ fu_dfu_target_upload_chunk(FuDfuTarget *self,
 	}
 
 	/* low level packet debugging */
-	if (g_getenv("FWUPD_DFU_VERBOSE") != NULL)
-		fu_dump_raw(G_LOG_DOMAIN, "Message", buf, actual_length);
+	fu_dump_raw(G_LOG_DOMAIN, "Message", buf, actual_length);
 
 	return g_bytes_new_take(buf, actual_length);
 }

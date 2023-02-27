@@ -165,8 +165,7 @@ fu_redfish_smc_device_write_firmware(FuDevice *device,
 	curl_mime_name(part, "UpdateParameters");
 	(void)curl_mime_type(part, "application/json");
 	(void)curl_mime_data(part, params->str, CURL_ZERO_TERMINATED);
-	if (g_getenv("FWUPD_REDFISH_VERBOSE") != NULL)
-		g_debug("request: %s", params->str);
+	g_debug("request: %s", params->str);
 
 	part = curl_mime_addpart(mime);
 	curl_mime_name(part, "UpdateFile");

@@ -179,8 +179,7 @@ fu_fdt_firmware_parse_dt_struct(FuFdtFirmware *self, GBytes *fw, GBytes *strtab,
 	g_autoptr(FuFirmware) firmware_current = g_object_ref(FU_FIRMWARE(self));
 
 	/* debug */
-	if (g_getenv("FU_FDT_FIRMWARE_VERBOSE") != NULL)
-		fu_dump_bytes(G_LOG_DOMAIN, "dt_struct", fw);
+	fu_dump_bytes(G_LOG_DOMAIN, "dt_struct", fw);
 
 	/* parse */
 	while (offset < bufsz) {
@@ -190,8 +189,7 @@ fu_fdt_firmware_parse_dt_struct(FuFdtFirmware *self, GBytes *fw, GBytes *strtab,
 		offset = fu_common_align_up(offset, FU_FIRMWARE_ALIGNMENT_4);
 		if (!fu_memread_uint32_safe(buf, bufsz, offset, &token, G_BIG_ENDIAN, error))
 			return FALSE;
-		if (g_getenv("FU_FDT_FIRMWARE_VERBOSE") != NULL)
-			g_debug("token: 0x%x", token);
+		g_debug("token: 0x%x", token);
 		offset += sizeof(guint32);
 
 		/* nothing to do */
@@ -352,8 +350,7 @@ fu_fdt_firmware_parse_mem_rsvmap(FuFdtFirmware *self,
 					    G_BIG_ENDIAN,
 					    error))
 			return FALSE;
-		if (g_getenv("FU_FDT_FIRMWARE_VERBOSE") != NULL)
-			g_debug("mem_rsvmap: 0x%x, 0x%x", (guint)address, (guint)size);
+		g_debug("mem_rsvmap: 0x%x, 0x%x", (guint)address, (guint)size);
 		if (address == 0x0 && size == 0x0)
 			break;
 	}
@@ -540,8 +537,7 @@ fu_fdt_firmware_append_to_strtab(FuFdtFirmwareBuildHelper *helper, const gchar *
 	if (g_hash_table_lookup_extended(helper->strtab, key, NULL, &tmp))
 		return GPOINTER_TO_UINT(tmp);
 
-	if (g_getenv("FU_FDT_FIRMWARE_VERBOSE") != NULL)
-		g_debug("adding strtab: %s", key);
+	g_debug("adding strtab: %s", key);
 	offset = helper->dt_strings->len;
 	g_byte_array_append(helper->dt_strings, (const guint8 *)key, strlen(key));
 	fu_byte_array_append_uint8(helper->dt_strings, 0x0);

@@ -224,7 +224,7 @@ fu_thunderbolt_controller_setup(FuDevice *device, GError **error)
 	self->gen =
 	    fu_thunderbolt_udev_get_attr_uint16(FU_UDEV_DEVICE(self), "generation", &error_gen);
 	if (self->gen == 0)
-		g_debug("Unable to read generation: %s", error_gen->message);
+		g_debug("unable to read generation: %s", error_gen->message);
 
 	if (self->controller_kind == FU_THUNDERBOLT_CONTROLLER_KIND_HOST) {
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_INTERNAL);

@@ -241,8 +241,7 @@ fu_fit_firmware_verify_image(FuFirmware *firmware,
 		if (blob == NULL)
 			return FALSE;
 	}
-	if (g_getenv("FU_FDT_FIRMWARE_VERBOSE") != NULL)
-		fu_dump_bytes(G_LOG_DOMAIN, "data", blob);
+	fu_dump_bytes(G_LOG_DOMAIN, "data", blob);
 
 	/* verify any hashes we recognize */
 	if ((flags & FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM) == 0) {

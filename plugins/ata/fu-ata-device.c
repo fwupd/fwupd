@@ -548,12 +548,9 @@ fu_ata_device_command(FuAtaDevice *self,
 	cdb[7] = tf->lbah;
 	cdb[8] = tf->dev;
 	cdb[9] = tf->command;
-	if (g_getenv("FWUPD_ATA_VERBOSE") != NULL) {
-		fu_dump_raw(G_LOG_DOMAIN, "CDB", cdb, sizeof(cdb));
-		if (dxfer_direction == SG_DXFER_TO_DEV && dxferp != NULL) {
-			fu_dump_raw(G_LOG_DOMAIN, "outgoing_data", dxferp, dxfer_len);
-		}
-	}
+	fu_dump_raw(G_LOG_DOMAIN, "CDB", cdb, sizeof(cdb));
+	if (dxfer_direction == SG_DXFER_TO_DEV && dxferp != NULL)
+		fu_dump_raw(G_LOG_DOMAIN, "outgoing_data", dxferp, dxfer_len);
 
 	/* hit hardware */
 	io_hdr.interface_id = 'S';
@@ -573,14 +570,12 @@ fu_ata_device_command(FuAtaDevice *self,
 				  FU_ATA_DEVICE_IOCTL_TIMEOUT,
 				  error))
 		return FALSE;
-	if (g_getenv("FWUPD_ATA_VERBOSE") != NULL) {
-		g_debug("ATA_%u status=0x%x, host_status=0x%x, driver_status=0x%x",
-			io_hdr.cmd_len,
-			io_hdr.status,
-			io_hdr.host_status,
-			io_hdr.driver_status);
-		fu_dump_raw(G_LOG_DOMAIN, "SB", sb, sizeof(sb));
-	}
+	g_debug("ATA_%u status=0x%x, host_status=0x%x, driver_status=0x%x",
+		io_hdr.cmd_len,
+		io_hdr.status,
+		io_hdr.host_status,
+		io_hdr.driver_status);
+	fu_dump_raw(G_LOG_DOMAIN, "SB", sb, sizeof(sb));
 
 	/* error check */
 	if (io_hdr.status && io_hdr.status != SG_CHECK_CONDITION) {
@@ -616,18 +611,16 @@ fu_ata_device_command(FuAtaDevice *self,
 	tf->lbah = sb[8 + 11];
 	tf->dev = sb[8 + 12];
 	tf->status = sb[8 + 13];
-	if (g_getenv("FWUPD_ATA_VERBOSE") != NULL) {
-		g_debug("ATA_%u stat=%02x err=%02x nsect=%02x lbal=%02x "
-			"lbam=%02x lbah=%02x dev=%02x",
-			io_hdr.cmd_len,
-			tf->status,
-			tf->error,
-			tf->nsect,
-			tf->lbal,
-			tf->lbam,
-			tf->lbah,
-			tf->dev);
-	}
+	g_debug("ATA_%u stat=%02x err=%02x nsect=%02x lbal=%02x "
+		"lbam=%02x lbah=%02x dev=%02x",
+		io_hdr.cmd_len,
+		tf->status,
+		tf->error,
+		tf->nsect,
+		tf->lbal,
+		tf->lbam,
+		tf->lbah,
+		tf->dev);
 
 	/* io error */
 	if (tf->status & (ATA_STAT_ERR | ATA_STAT_DRQ)) {
@@ -660,8 +653,7 @@ fu_ata_device_setup(FuDevice *device, GError **error)
 		g_prefix_error(error, "failed to IDENTIFY: ");
 		return FALSE;
 	}
-	if (g_getenv("FWUPD_ATA_VERBOSE") != NULL)
-		fu_dump_raw(G_LOG_DOMAIN, "IDENTIFY", id, sizeof(id));
+	fu_dump_raw(G_LOG_DOMAIN, "IDENTIFY", id, sizeof(id));
 	if (!fu_ata_device_parse_id(self, id, sizeof(id), error))
 		return FALSE;
 

@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#define G_LOG_DOMAIN "FuFirmware"
+#define G_LOG_DOMAIN "FuUsbDeviceDs20"
 
 #include "config.h"
 
@@ -109,8 +109,7 @@ fu_usb_device_ds20_apply_to_device(FuUsbDeviceDs20 *self, FuUsbDevice *device, G
 	}
 
 	/* debug */
-	if (g_getenv("FWUPD_VERBOSE") != NULL)
-		fu_dump_raw(G_LOG_DOMAIN, "PlatformCapabilityOs20", buf, actual_length);
+	fu_dump_raw(G_LOG_DOMAIN, "PlatformCapabilityOs20", buf, actual_length);
 
 	/* FuUsbDeviceDs20->parse */
 	blob = g_bytes_new_take(g_steal_pointer(&buf), actual_length);

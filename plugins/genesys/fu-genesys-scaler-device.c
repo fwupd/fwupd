@@ -1564,12 +1564,10 @@ fu_genesys_scaler_device_probe(FuDevice *device, GError **error)
 		return FALSE;
 	if (memcmp(self->public_key.N, "N = ", 4) != 0 ||
 	    memcmp(self->public_key.E, "E = ", 4) != 0) {
-		if (g_getenv("FWUPD_GENESYS_SCALER_VERBOSE") != NULL) {
-			fu_dump_raw(G_LOG_DOMAIN,
-				    "PublicKey",
-				    (const guint8 *)&self->public_key,
-				    sizeof(self->public_key));
-		}
+		fu_dump_raw(G_LOG_DOMAIN,
+			    "PublicKey",
+			    (const guint8 *)&self->public_key,
+			    sizeof(self->public_key));
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_SIGNATURE_INVALID,
@@ -1715,12 +1713,10 @@ fu_genesys_scaler_device_prepare_firmware(FuDevice *device,
 	    fu_firmware_get_image_by_id_bytes(firmware, FU_FIRMWARE_ID_SIGNATURE, error);
 	if (blob_public_key == NULL)
 		return NULL;
-	if (g_getenv("FWUPD_GENESYS_SCALER_VERBOSE") != NULL) {
-		fu_dump_raw(G_LOG_DOMAIN,
-			    "PublicKey",
-			    g_bytes_get_data(blob_public_key, NULL),
-			    g_bytes_get_size(blob_public_key));
-	}
+	fu_dump_raw(G_LOG_DOMAIN,
+		    "PublicKey",
+		    g_bytes_get_data(blob_public_key, NULL),
+		    g_bytes_get_size(blob_public_key));
 	if (memcmp(g_bytes_get_data(blob_public_key, NULL),
 		   &self->public_key,
 		   sizeof(self->public_key)) != 0 &&

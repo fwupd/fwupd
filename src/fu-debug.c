@@ -20,23 +20,39 @@
 
 typedef struct {
 	GOptionGroup *group;
-	gboolean verbose;
+	GLogLevelFlags log_level;
 	gboolean console;
 	gboolean no_timestamp;
 	gboolean no_domain;
-	gchar **plugin_verbose;
 	gchar **daemon_verbose;
 #ifdef _WIN32
 	HANDLE event_source;
 #endif
 } FuDebug;
 
+static const gchar *
+fu_debug_log_level_to_string(GLogLevelFlags log_level)
+{
+	if (log_level == G_LOG_LEVEL_ERROR)
+		return "error";
+	if (log_level == G_LOG_LEVEL_CRITICAL)
+		return "critical";
+	if (log_level == G_LOG_LEVEL_WARNING)
+		return "warning";
+	if (log_level == G_LOG_LEVEL_MESSAGE)
+		return "message";
+	if (log_level == G_LOG_LEVEL_INFO)
+		return "info";
+	if (log_level == G_LOG_LEVEL_DEBUG)
+		return "debug";
+	return NULL;
+}
+
 static void
 fu_debug_free(FuDebug *self)
 {
 	g_option_group_set_parse_hooks(self->group, NULL, NULL);
 	g_option_group_unref(self->group);
-	g_strfreev(self->plugin_verbose);
 	g_strfreev(self->daemon_verbose);
 #ifdef _WIN32
 	DeregisterEventSource(self->event_source);
@@ -47,25 +63,16 @@ fu_debug_free(FuDebug *self)
 static gboolean
 fu_debug_filter_cb(FuDebug *self, const gchar *log_domain, GLogLevelFlags log_level)
 {
-	const gchar *domains = g_getenv("FWUPD_VERBOSE");
-	g_auto(GStrv) domains_str = NULL;
-
-	/* include important things by default only */
-	if (domains == NULL) {
-		if (log_level == G_LOG_LEVEL_INFO || log_level == G_LOG_LEVEL_CRITICAL ||
-		    log_level == G_LOG_LEVEL_WARNING || log_level == G_LOG_LEVEL_ERROR) {
-			return TRUE;
-		}
-		return FALSE;
-	}
-
-	/* everything */
-	if (g_strcmp0(domains, "*") == 0)
+	/* trivial */
+	if (log_level <= self->log_level)
 		return TRUE;
 
 	/* filter on domain */
-	domains_str = g_strsplit(domains, ",", -1);
-	return g_strv_contains((const gchar *const *)domains_str, log_domain);
+	if (self->daemon_verbose != NULL && log_domain != NULL)
+		return g_strv_contains((const char *const *)self->daemon_verbose, log_domain);
+
+	/* nope */
+	return FALSE;
 }
 
 #ifdef _WIN32
@@ -193,15 +200,37 @@ fu_debug_handler_cb(const gchar *log_domain,
 }
 
 static gboolean
+fu_debug_verbose_arg_cb(const gchar *option_name,
+			const gchar *value,
+			gpointer user_data,
+			GError **error)
+{
+	FuDebug *self = (FuDebug *)user_data;
+	if (self->log_level == G_LOG_LEVEL_MESSAGE) {
+		self->log_level = G_LOG_LEVEL_INFO;
+		return TRUE;
+	}
+	if (self->log_level == G_LOG_LEVEL_INFO) {
+		self->log_level = G_LOG_LEVEL_DEBUG;
+		return TRUE;
+	}
+	g_set_error_literal(error,
+			    G_OPTION_ERROR,
+			    G_OPTION_ERROR_FAILED,
+			    "No further debug level supported");
+	return FALSE;
+}
+
+static gboolean
 fu_debug_pre_parse_hook(GOptionContext *context, GOptionGroup *group, gpointer data, GError **error)
 {
 	FuDebug *self = (FuDebug *)data;
-	const GOptionEntry main_entries[] = {
+	const GOptionEntry entries[] = {
 	    {"verbose",
 	     'v',
-	     0,
-	     G_OPTION_ARG_NONE,
-	     &self->verbose,
+	     G_OPTION_FLAG_NO_ARG,
+	     G_OPTION_ARG_CALLBACK,
+	     (GOptionArgFunc)fu_debug_verbose_arg_cb,
 	     /* TRANSLATORS: turn on all debugging */
 	     N_("Show debugging information for all domains"),
 	     NULL},
@@ -221,14 +250,6 @@ fu_debug_pre_parse_hook(GOptionContext *context, GOptionGroup *group, gpointer d
 	     /* TRANSLATORS: turn on all debugging */
 	     N_("Do not include log domain prefix"),
 	     NULL},
-	    {"plugin-verbose",
-	     '\0',
-	     0,
-	     G_OPTION_ARG_STRING_ARRAY,
-	     &self->plugin_verbose,
-	     /* TRANSLATORS: this is for plugin development */
-	     N_("Show plugin verbose information"),
-	     "PLUGIN-NAME"},
 	    {"daemon-verbose",
 	     '\0',
 	     0,
@@ -239,8 +260,11 @@ fu_debug_pre_parse_hook(GOptionContext *context, GOptionGroup *group, gpointer d
 	     "DOMAIN"},
 	    {NULL}};
 
-	/* add main entry */
-	g_option_context_add_main_entries(context, main_entries, NULL);
+	/* set from FuConfig */
+	if (g_strcmp0(g_getenv("FWUPD_VERBOSE"), "*") == 0)
+		self->log_level = G_LOG_LEVEL_DEBUG;
+
+	g_option_group_add_entries(group, entries);
 	return TRUE;
 }
 
@@ -252,34 +276,19 @@ fu_debug_post_parse_hook(GOptionContext *context,
 {
 	FuDebug *self = (FuDebug *)data;
 
-	/* verbose? */
-	if (self->verbose) {
-		(void)g_setenv("FWUPD_VERBOSE", "*", TRUE);
-	} else if (self->daemon_verbose != NULL) {
-		g_autofree gchar *str = g_strjoinv(",", self->daemon_verbose);
-		(void)g_setenv("FWUPD_VERBOSE", str, TRUE);
-	}
+	/* for compat */
+	if (self->log_level == G_LOG_LEVEL_DEBUG)
+		(void)g_setenv("FWUPD_VERBOSE", "1", TRUE);
 
-	/* redirect all domains to be able to change FWUPD_VERBOSE at runtime */
+	/* redirect all domains */
 	g_log_set_default_handler(fu_debug_handler_cb, self);
 
 	/* are we on an actual TTY? */
 	self->console = (isatty(fileno(stderr)) == 1);
-	g_debug("Verbose debugging %s (on console %i)",
-		self->verbose ? "enabled" : "disabled",
-		self->console);
+	g_info("verbose to %s (on console %i)",
+	       fu_debug_log_level_to_string(self->log_level),
+	       self->console);
 
-	/* allow each plugin to be extra verbose */
-	if (self->plugin_verbose != NULL) {
-		for (guint i = 0; self->plugin_verbose[i] != NULL; i++) {
-			g_autofree gchar *name_caps = NULL;
-			g_autofree gchar *varname = NULL;
-			name_caps = g_ascii_strup(self->plugin_verbose[i], -1);
-			varname = g_strdup_printf("FWUPD_%s_VERBOSE", name_caps);
-			g_debug("setting %s=1", varname);
-			(void)g_setenv(varname, "1", TRUE);
-		}
-	}
 	return TRUE;
 }
 
@@ -324,6 +333,7 @@ GOptionGroup *
 fu_debug_get_option_group(void)
 {
 	FuDebug *self = g_new0(FuDebug, 1);
+	self->log_level = G_LOG_LEVEL_MESSAGE;
 	self->group = g_option_group_new("debug",
 					 /* TRANSLATORS: for the --verbose arg */
 					 _("Debugging Options"),

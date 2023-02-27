@@ -159,7 +159,7 @@ locate_i2c_bus(const GPtrArray *i2c_devices)
 		}
 
 		bus_device = g_object_ref(g_ptr_array_index(i2c_buses, 0));
-		g_debug("Found I2C bus at %s, using this device",
+		g_debug("found I2C bus at %s, using this device",
 			fu_udev_device_get_sysfs_path(bus_device));
 		return bus_device;
 	}
@@ -188,7 +188,7 @@ fu_realtek_mst_device_use_aux_dev(FuRealtekMstDevice *self, GError **error)
 
 		device = fu_udev_device_new(fu_device_get_context(FU_DEVICE(self)), element->data);
 		if (bus_device != NULL) {
-			g_debug("Ignoring additional aux device %s",
+			g_debug("ignoring additional aux device %s",
 				fu_udev_device_get_sysfs_path(device));
 			continue;
 		}
@@ -230,7 +230,7 @@ fu_realtek_mst_device_use_drm_card(FuRealtekMstDevice *self, GError **error)
 		drm_device =
 		    fu_udev_device_new(fu_device_get_context(FU_DEVICE(self)), element->data);
 		if (bus_device != NULL) {
-			g_debug("Ignoring additional drm device %s",
+			g_debug("ignoring additional drm device %s",
 				fu_udev_device_get_sysfs_path(drm_device));
 			continue;
 		}
@@ -510,15 +510,15 @@ fu_realtek_mst_device_probe_version(FuDevice *device, GError **error)
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_DUAL_IMAGE);
 	fu_device_uninhibit(device, "dual-bank");
 
-	g_debug("device is currently running from bank %u", info.active_bank);
+	g_info("device is currently running from bank %u", info.active_bank);
 	g_return_val_if_fail(info.active_bank <= FLASH_BANK_MAX_VALUE, FALSE);
 	self->active_bank = info.active_bank;
 
-	g_debug("firmware version reports user1 %d.%d, user2 %d.%d",
-		info.user1_version[0],
-		info.user1_version[1],
-		info.user2_version[0],
-		info.user2_version[1]);
+	g_info("firmware version reports user1 %d.%d, user2 %d.%d",
+	       info.user1_version[0],
+	       info.user1_version[1],
+	       info.user2_version[0],
+	       info.user2_version[1]);
 	if (info.active_bank == FLASH_BANK_USER1)
 		active_version = info.user1_version;
 	else if (info.active_bank == FLASH_BANK_USER2)

@@ -649,6 +649,7 @@ fu_wistron_dock_device_ensure_wdit(FuWistronDockDevice *self, GError **error)
 	guint16 usb_pid = 0x0;
 	guint16 usb_vid = 0x0;
 	guint32 version_raw = 0;
+	guint8 device_cnt = 0x0;
 	guint8 update_state = 0x0;
 	guint8 buf[FU_WISTRON_DOCK_WDIT_SIZE + 1] = {FU_WISTRON_DOCK_ID_DOCK_WDIT};
 
@@ -759,22 +760,19 @@ fu_wistron_dock_device_ensure_wdit(FuWistronDockDevice *self, GError **error)
 	fu_device_set_version_from_uint32(FU_DEVICE(self), version_raw);
 
 	/* for debugging only */
-	if (g_getenv("FWUPD_WISTRON_DOCK_VERBOSE") != NULL) {
-		guint8 device_cnt = 0x0;
-		if (!fu_memread_uint8_safe(buf,
-					   sizeof(buf),
-					   G_STRUCT_OFFSET(FuWistronDockWdit, device_cnt),
-					   &device_cnt,
-					   error))
-			return FALSE;
-		if (!fu_wistron_dock_device_parse_wdit_img(self,
-							   buf,
-							   sizeof(buf),
-							   MIN(device_cnt, 32),
-							   error)) {
-			g_prefix_error(error, "failed to parse imgs: ");
-			return FALSE;
-		}
+	if (!fu_memread_uint8_safe(buf,
+				   sizeof(buf),
+				   G_STRUCT_OFFSET(FuWistronDockWdit, device_cnt),
+				   &device_cnt,
+				   error))
+		return FALSE;
+	if (!fu_wistron_dock_device_parse_wdit_img(self,
+						   buf,
+						   sizeof(buf),
+						   MIN(device_cnt, 32),
+						   error)) {
+		g_prefix_error(error, "failed to parse imgs: ");
+		return FALSE;
 	}
 
 	/* adding the MCU while flashing the device, ignore until it comes back in runtime mode */

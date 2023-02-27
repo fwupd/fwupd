@@ -156,7 +156,7 @@ fu_vli_usbhub_pd_device_prepare_firmware(FuDevice *device,
 	}
 
 	/* we could check this against flags */
-	g_debug("parsed version: %s", fu_firmware_get_version(firmware));
+	g_info("parsed version: %s", fu_firmware_get_version(firmware));
 	return g_steal_pointer(&firmware);
 }
 
