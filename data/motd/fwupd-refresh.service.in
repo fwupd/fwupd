@@ -1,6 +1,7 @@
 [Unit]
 Description=Refresh fwupd metadata and update motd
 Documentation=man:fwupdmgr(1)
+Wants=network-online.target
 After=network-online.target
 
 [Service]
