@@ -64,7 +64,7 @@ fu_bluez_backend_object_properties_changed(FuBluezBackend *self, GDBusProxy *pro
 			   "proxy",
 			   proxy,
 			   NULL);
-	g_debug("adding suitable BlueZ device: %s", path);
+	g_info("adding suitable BlueZ device: %s", path);
 	fu_backend_device_added(FU_BACKEND(self), FU_DEVICE(dev));
 }
 
@@ -111,7 +111,7 @@ fu_bluez_backend_object_removed_cb(GDBusObjectManager *manager,
 	device_tmp = fu_backend_lookup_by_id(FU_BACKEND(self), path);
 	if (device_tmp == NULL)
 		return;
-	g_debug("removing BlueZ device: %s", path);
+	g_info("removing BlueZ device: %s", path);
 	fu_backend_device_removed(FU_BACKEND(self), device_tmp);
 }
 

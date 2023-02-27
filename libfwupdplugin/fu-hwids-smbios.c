@@ -132,7 +132,7 @@ fu_hwids_smbios_setup(FuContext *ctx, FuHwids *self, GError **error)
 			g_debug("ignoring %s: %s", map[i].key, error_local->message);
 			continue;
 		}
-		g_debug("smbios property %s=%s", map[i].key, contents);
+		g_info("SMBIOS %s=%s", map[i].key, contents);
 
 		/* weirdly, remove leading zeros */
 		contents_hdr = contents;

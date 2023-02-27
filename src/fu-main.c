@@ -54,7 +54,7 @@ fu_main_argv_changed_cb(GFileMonitor *monitor,
 			gpointer user_data)
 {
 	FuDaemon *daemon = FU_DAEMON(user_data);
-	g_debug("binary changed, shutting down");
+	g_info("binary changed, shutting down");
 	fu_daemon_stop(daemon);
 }
 
@@ -64,7 +64,7 @@ fu_main_memory_monitor_warning_cb(GMemoryMonitor *memory_monitor,
 				  GMemoryMonitorWarningLevel level,
 				  FuDaemon *daemon)
 {
-	g_debug("OOM event, shutting down");
+	g_info("OOM event, shutting down");
 	fu_daemon_stop(daemon);
 }
 #endif

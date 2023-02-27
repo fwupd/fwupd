@@ -49,8 +49,7 @@ fu_redfish_network_device_match_device(FuRedfishNetworkMatchHelper *helper,
 		mac_addr = g_variant_get_string(hw_address, NULL);
 
 		/* verify */
-		if (g_getenv("FWUPD_REDFISH_VERBOSE") != NULL)
-			g_debug("mac_addr=%s", mac_addr);
+		g_debug("mac_addr=%s", mac_addr);
 		if (g_strcmp0(mac_addr, helper->mac_addr) == 0)
 			helper->device = fu_redfish_network_device_new(object_path);
 	}
@@ -84,8 +83,7 @@ fu_redfish_network_device_match_device(FuRedfishNetworkMatchHelper *helper,
 			pid = g_ascii_strtoull(tmp, NULL, 16);
 
 		/* verify */
-		if (g_getenv("FWUPD_REDFISH_VERBOSE") != NULL)
-			g_debug("%s: 0x%04x, 0x%04x", sysfs_path, vid, pid);
+		g_debug("%s: 0x%04x, 0x%04x", sysfs_path, vid, pid);
 		if (vid == helper->vid && pid == helper->pid)
 			helper->device = fu_redfish_network_device_new(object_path);
 #else
@@ -157,8 +155,7 @@ fu_redfish_network_device_match(FuRedfishNetworkMatchHelper *helper, GError **er
 	/* look at each device */
 	g_variant_get(devices, "(^ao)", &paths);
 	for (guint i = 0; paths[i] != NULL; i++) {
-		if (g_getenv("FWUPD_REDFISH_VERBOSE") != NULL)
-			g_debug("device %u: %s", i, paths[i]);
+		g_debug("device %u: %s", i, paths[i]);
 		if (!fu_redfish_network_device_match_device(helper, paths[i], error))
 			return FALSE;
 		if (helper->device != NULL)

@@ -504,8 +504,7 @@ fu_dfu_target_avr_setup(FuDfuTarget *target, GError **error)
 
 	/* get data back */
 	buf = g_bytes_get_data(chunk_sig, &sz);
-	if (g_getenv("FWUPD_DFU_VERBOSE") != NULL)
-		fu_dump_bytes(G_LOG_DOMAIN, "AVR:CID", chunk_sig);
+	fu_dump_bytes(G_LOG_DOMAIN, "AVR:CID", chunk_sig);
 	if (sz != 4) {
 		g_set_error(error,
 			    FWUPD_ERROR,

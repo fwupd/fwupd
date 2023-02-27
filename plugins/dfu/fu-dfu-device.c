@@ -308,14 +308,14 @@ fu_dfu_device_add_targets(FuDfuDevice *self, GError **error)
 			priv->version = priv->force_version;
 		if (priv->version == FU_DFU_FIRMARE_VERSION_DFU_1_0 ||
 		    priv->version == FU_DFU_FIRMARE_VERSION_DFU_1_1) {
-			g_debug("DFU v1.1");
+			g_info("DFU v1.1");
 		} else if (priv->version == FU_DFU_FIRMARE_VERSION_ATMEL_AVR) {
-			g_debug("AVR-DFU support");
+			g_info("AVR-DFU support");
 			priv->version = FU_DFU_FIRMARE_VERSION_ATMEL_AVR;
 		} else if (priv->version == FU_DFU_FIRMARE_VERSION_DFUSE) {
-			g_debug("STM-DFU support");
+			g_info("STM-DFU support");
 		} else if (priv->version == 0x0101) {
-			g_debug("DFU v1.1 assumed");
+			g_info("DFU v1.1 assumed");
 			priv->version = FU_DFU_FIRMARE_VERSION_DFU_1_1;
 		} else {
 			g_warning("DFU version 0x%04x invalid, v1.1 assumed", priv->version);
@@ -780,7 +780,7 @@ fu_dfu_device_refresh(FuDfuDevice *self, GError **error)
 	/* some devices use the wrong state value */
 	if (fu_device_has_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_FORCE_DFU_MODE) &&
 	    fu_dfu_device_get_state(self) != FU_DFU_STATE_DFU_IDLE) {
-		g_debug("quirking device into DFU mode");
+		g_info("quirking device into DFU mode");
 		fu_dfu_device_set_state(self, FU_DFU_STATE_DFU_IDLE);
 	} else {
 		fu_dfu_device_set_state(self, buf[4]);
@@ -888,7 +888,7 @@ fu_dfu_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 
 	/* do a host reset */
 	if (!fu_device_has_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_WILL_DETACH)) {
-		g_debug("doing device reset as host will not self-reset");
+		g_info("doing device reset as host will not self-reset");
 		if (!fu_dfu_device_reset(self, progress, error))
 			return FALSE;
 	}
@@ -1075,8 +1075,7 @@ fu_dfu_device_open(FuDevice *device, GError **error)
 		    g_usb_device_get_string_descriptor_bytes(usb_device, idx, langid, error);
 		if (serial_blob == NULL)
 			return FALSE;
-		if (g_getenv("FWUPD_DFU_VERBOSE") != NULL)
-			fu_dump_bytes(G_LOG_DOMAIN, "GD32 serial", serial_blob);
+		fu_dump_bytes(G_LOG_DOMAIN, "GD32 serial", serial_blob);
 		buf = g_bytes_get_data(serial_blob, &bufsz);
 		if (bufsz < 2) {
 			g_set_error_literal(error,
@@ -1167,9 +1166,9 @@ fu_dfu_device_probe(FuDevice *device, GError **error)
 
 	/* check capabilities */
 	if (!fu_device_has_private_flag(device, FU_DFU_DEVICE_FLAG_CAN_DOWNLOAD)) {
-		g_debug("%04x:%04x is missing download capability",
-			g_usb_device_get_vid(usb_device),
-			g_usb_device_get_pid(usb_device));
+		g_info("%04x:%04x is missing download capability",
+		       g_usb_device_get_vid(usb_device),
+		       g_usb_device_get_pid(usb_device));
 	}
 
 	/* hardware from Jabra literally reboots if you try to retry a failed
@@ -1250,7 +1249,7 @@ fu_dfu_device_attach(FuDevice *device, FuProgress *progress, GError **error)
 	/* normal DFU mode just needs a bus reset */
 	if (fu_device_has_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_NO_BUS_RESET_ATTACH) &&
 	    fu_device_has_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_WILL_DETACH)) {
-		g_debug("Bus reset is not required. Device will reboot to normal");
+		g_info("bus reset is not required; device will reboot to normal");
 	} else if (!fu_dfu_target_attach(target, progress, error)) {
 		g_prefix_error(error, "failed to attach target: ");
 		return FALSE;

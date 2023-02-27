@@ -81,14 +81,12 @@ fu_synaprom_device_cmd_send(FuSynapromDevice *device,
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 25, NULL);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 75, NULL);
 
-	if (g_getenv("FWUPD_SYNAPROM_VERBOSE") != NULL) {
-		fu_dump_full(G_LOG_DOMAIN,
-			     "REQST",
-			     request->data,
-			     request->len,
-			     16,
-			     FU_DUMP_FLAGS_SHOW_ADDRESSES);
-	}
+	fu_dump_full(G_LOG_DOMAIN,
+		     "REQST",
+		     request->data,
+		     request->len,
+		     16,
+		     FU_DUMP_FLAGS_SHOW_ADDRESSES);
 	ret = g_usb_device_bulk_transfer(usb_device,
 					 FU_SYNAPROM_USB_REQUEST_EP,
 					 request->data,
@@ -124,14 +122,12 @@ fu_synaprom_device_cmd_send(FuSynapromDevice *device,
 		g_prefix_error(error, "failed to reply: ");
 		return FALSE;
 	}
-	if (g_getenv("FWUPD_SYNAPROM_VERBOSE") != NULL) {
-		fu_dump_full(G_LOG_DOMAIN,
-			     "REPLY",
-			     reply->data,
-			     actual_len,
-			     16,
-			     FU_DUMP_FLAGS_SHOW_ADDRESSES);
-	}
+	fu_dump_full(G_LOG_DOMAIN,
+		     "REPLY",
+		     reply->data,
+		     actual_len,
+		     16,
+		     FU_DUMP_FLAGS_SHOW_ADDRESSES);
 	fu_progress_step_done(progress);
 
 	/* parse as FuSynapromReplyGeneric */
@@ -201,12 +197,12 @@ fu_synaprom_device_setup(FuDevice *device, GError **error)
 	}
 	memcpy(&pkt, reply->data, sizeof(pkt));
 	product = GUINT32_FROM_LE(pkt.product);
-	g_debug("product ID is %u, version=%u.%u, buildnum=%u prod=%i",
-		product,
-		pkt.vmajor,
-		pkt.vminor,
-		GUINT32_FROM_LE(pkt.buildnum),
-		pkt.security[1] & FU_SYNAPROM_SECURITY1_PROD_SENSOR);
+	g_info("product ID is %u, version=%u.%u, buildnum=%u prod=%i",
+	       product,
+	       pkt.vmajor,
+	       pkt.vminor,
+	       GUINT32_FROM_LE(pkt.buildnum),
+	       pkt.security[1] & FU_SYNAPROM_SECURITY1_PROD_SENSOR);
 	fu_synaprom_device_set_version(self, pkt.vmajor, pkt.vminor, GUINT32_FROM_LE(pkt.buildnum));
 
 	/* get serial number */

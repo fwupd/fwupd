@@ -143,27 +143,6 @@ fu_udev_device_get_sysfs_attr_as_uint8(GUdevDevice *udev_device, const gchar *na
 	return tmp64;
 }
 
-static void
-fu_udev_device_to_string_raw(GUdevDevice *udev_device, guint idt, GString *str)
-{
-	const gchar *const *keys;
-	if (udev_device == NULL)
-		return;
-	keys = g_udev_device_get_property_keys(udev_device);
-	for (guint i = 0; keys[i] != NULL; i++) {
-		fu_string_append(str,
-				 idt,
-				 keys[i],
-				 g_udev_device_get_property(udev_device, keys[i]));
-	}
-	keys = g_udev_device_get_sysfs_attr_keys(udev_device);
-	for (guint i = 0; keys[i] != NULL; i++) {
-		fu_string_append(str,
-				 idt,
-				 keys[i],
-				 g_udev_device_get_sysfs_attr(udev_device, keys[i]));
-	}
-}
 #endif
 
 static void
@@ -197,15 +176,6 @@ fu_udev_device_to_string(FuDevice *device, guint idt, GString *str)
 				 idt,
 				 "SysfsPath",
 				 g_udev_device_get_sysfs_path(priv->udev_device));
-	}
-	if (g_getenv("FU_UDEV_DEVICE_DEBUG") != NULL) {
-		g_autoptr(GUdevDevice) udev_parent = NULL;
-		fu_udev_device_to_string_raw(priv->udev_device, idt, str);
-		udev_parent = g_udev_device_get_parent(priv->udev_device);
-		if (udev_parent != NULL) {
-			fu_string_append(str, idt, "Parent", NULL);
-			fu_udev_device_to_string_raw(udev_parent, idt + 1, str);
-		}
 	}
 #endif
 }

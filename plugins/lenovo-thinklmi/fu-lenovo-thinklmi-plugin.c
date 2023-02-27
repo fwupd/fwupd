@@ -42,7 +42,7 @@ fu_lenovo_thinklmi_plugin_cpu_registered(FuContext *ctx, FuDevice *device)
 		FwupdBiosSetting *attr = fu_context_get_bios_setting(ctx, BIOS_SETTING_SLEEP_MODE);
 
 		if (attr != NULL) {
-			g_debug("Setting %s to read-only", fwupd_bios_setting_get_name(attr));
+			g_debug("setting %s to read-only", fwupd_bios_setting_get_name(attr));
 			fwupd_bios_setting_set_read_only(attr, TRUE);
 		}
 	}

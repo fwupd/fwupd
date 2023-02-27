@@ -265,21 +265,19 @@ fu_synaptics_rmi_device_scan_pdt(FuSynapticsRmiDevice *self, GError **error)
 	}
 
 	/* for debug */
-	if (g_getenv("FWUPD_SYNAPTICS_RMI_VERBOSE") != NULL) {
-		for (guint i = 0; i < priv->functions->len; i++) {
-			FuSynapticsRmiFunction *func = g_ptr_array_index(priv->functions, i);
-			g_debug("PDT-%02u fn:0x%02x vr:%d sc:%d ms:0x%x "
-				"db:0x%02x cb:0x%02x cm:0x%02x qb:0x%02x",
-				i,
-				func->function_number,
-				func->function_version,
-				func->interrupt_source_count,
-				func->interrupt_mask,
-				func->data_base,
-				func->control_base,
-				func->command_base,
-				func->query_base);
-		}
+	for (guint i = 0; i < priv->functions->len; i++) {
+		FuSynapticsRmiFunction *func = g_ptr_array_index(priv->functions, i);
+		g_debug("PDT-%02u fn:0x%02x vr:%d sc:%d ms:0x%x "
+			"db:0x%02x cb:0x%02x cm:0x%02x qb:0x%02x",
+			i,
+			func->function_number,
+			func->function_version,
+			func->interrupt_source_count,
+			func->interrupt_mask,
+			func->data_base,
+			func->control_base,
+			func->command_base,
+			func->query_base);
 	}
 
 	/* success */

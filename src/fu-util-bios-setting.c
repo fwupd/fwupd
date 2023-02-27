@@ -91,15 +91,12 @@ fu_util_bios_setting_to_string(FwupdBiosSetting *setting, guint idt)
 {
 	const gchar *tmp;
 	FwupdBiosSettingKind type;
+	g_autofree gchar *debug_str = NULL;
 	g_autofree gchar *current_value = NULL;
 	g_autoptr(GString) str = g_string_new(NULL);
 
-	if (g_getenv("FWUPD_VERBOSE") != NULL) {
-		g_autofree gchar *debug_str = NULL;
-		debug_str = fwupd_bios_setting_to_string(setting);
-		g_debug("%s", debug_str);
-		return NULL;
-	}
+	debug_str = fwupd_bios_setting_to_string(setting);
+	g_debug("%s", debug_str);
 	tmp = fwupd_bios_setting_get_name(setting);
 	fu_string_append(str, idt, tmp, NULL);
 

@@ -66,14 +66,7 @@ goodixmoc_device_cmd_send(FuGoodixMocDevice *self,
 		g_prefix_error(error, "failed to req: ");
 		return FALSE;
 	}
-	if (g_getenv("FWUPD_GOODIXFP_VERBOSE") != NULL) {
-		fu_dump_full(G_LOG_DOMAIN,
-			     "REQST",
-			     buf->data,
-			     buf->len,
-			     16,
-			     FU_DUMP_FLAGS_SHOW_ADDRESSES);
-	}
+	fu_dump_full(G_LOG_DOMAIN, "REQST", buf->data, buf->len, 16, FU_DUMP_FLAGS_SHOW_ADDRESSES);
 
 	/* send data */
 	if (!g_usb_device_bulk_transfer(usb_device,
@@ -134,14 +127,12 @@ goodixmoc_device_cmd_recv(FuGoodixMocDevice *self,
 		/* receive zero length package */
 		if (actual_len == 0)
 			continue;
-		if (g_getenv("FWUPD_GOODIXFP_VERBOSE") != NULL) {
-			fu_dump_full(G_LOG_DOMAIN,
-				     "REPLY",
-				     reply->data,
-				     actual_len,
-				     16,
-				     FU_DUMP_FLAGS_SHOW_ADDRESSES);
-		}
+		fu_dump_full(G_LOG_DOMAIN,
+			     "REPLY",
+			     reply->data,
+			     actual_len,
+			     16,
+			     FU_DUMP_FLAGS_SHOW_ADDRESSES);
 
 		/* parse package header */
 		if (!fu_memread_uint8_safe(reply->data, reply->len, 0x0, &header_cmd0, error))

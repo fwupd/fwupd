@@ -350,9 +350,9 @@ fu_cabinet_parse_release(FuCabinet *self, XbNode *release, GError **error)
 						       JCAT_VERIFY_FLAG_REQUIRE_SIGNATURE,
 						   &error_local);
 		if (results == NULL) {
-			g_debug("failed to verify payload %s: %s", basename, error_local->message);
+			g_info("failed to verify payload %s: %s", basename, error_local->message);
 		} else {
-			g_debug("verified payload %s: %u", basename, results->len);
+			g_info("verified payload %s: %u", basename, results->len);
 			release_flags |= FWUPD_RELEASE_FLAG_TRUSTED_PAYLOAD;
 		}
 
@@ -383,11 +383,11 @@ fu_cabinet_parse_release(FuCabinet *self, XbNode *release, GError **error)
 							       JCAT_VERIFY_FLAG_REQUIRE_SIGNATURE,
 							       &error_local);
 			if (jcat_result == NULL) {
-				g_debug("failed to verify payload %s using detached: %s",
-					basename,
-					error_local->message);
+				g_info("failed to verify payload %s using detached: %s",
+				       basename,
+				       error_local->message);
 			} else {
-				g_debug("verified payload %s using detached", basename);
+				g_info("verified payload %s using detached", basename);
 				release_flags |= FWUPD_RELEASE_FLAG_TRUSTED_PAYLOAD;
 			}
 		}
@@ -602,7 +602,7 @@ fu_cabinet_build_silo_metainfo(FuCabinet *self, GCabFile *cabfile, GError **erro
 	/* validate against the Jcat file */
 	item = jcat_file_get_item_by_id(self->jcat_file, fn, NULL);
 	if (item == NULL) {
-		g_debug("failed to verify %s: no JcatItem", fn);
+		g_info("failed to verify %s: no JcatItem", fn);
 	} else {
 		g_autoptr(GError) error_local = NULL;
 		g_autoptr(GPtrArray) results = NULL;
@@ -613,15 +613,15 @@ fu_cabinet_build_silo_metainfo(FuCabinet *self, GCabFile *cabfile, GError **erro
 						       JCAT_VERIFY_FLAG_REQUIRE_SIGNATURE,
 						   &error_local);
 		if (results == NULL) {
-			g_debug("failed to verify %s: %s", fn, error_local->message);
+			g_info("failed to verify %s: %s", fn, error_local->message);
 		} else {
-			g_debug("verified metadata %s: %u", fn, results->len);
+			g_info("verified metadata %s: %u", fn, results->len);
 			release_flags |= FWUPD_RELEASE_FLAG_TRUSTED_METADATA;
 		}
 	}
 
 	/* actually parse the XML now */
-	g_debug("processing file: %s", fn);
+	g_info("processing file: %s", fn);
 	if (!fu_cabinet_build_silo_file(self, cabfile, release_flags, error)) {
 		g_prefix_error(error,
 			       "%s could not be loaded: ",
@@ -1127,7 +1127,7 @@ fu_cabinet_parse(FuCabinet *self, GBytes *data, FuCabinetParseFlags flags, GErro
 		}
 		for (guint j = 0; j < releases->len; j++) {
 			XbNode *rel = g_ptr_array_index(releases, j);
-			g_debug("processing release: %s", xb_node_get_attr(rel, "version"));
+			g_info("processing release: %s", xb_node_get_attr(rel, "version"));
 			if (!fu_cabinet_parse_release(self, rel, error))
 				return FALSE;
 		}

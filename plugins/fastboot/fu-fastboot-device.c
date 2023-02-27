@@ -51,20 +51,6 @@ fu_fastboot_device_probe(FuDevice *device, GError **error)
 	return TRUE;
 }
 
-static void
-fu_fastboot_buffer_dump(const gchar *title, const guint8 *buf, gsize sz)
-{
-	if (g_getenv("FWUPD_FASTBOOT_VERBOSE") == NULL)
-		return;
-	g_print("%s (%" G_GSIZE_FORMAT "):\n", title, sz);
-	for (gsize i = 0; i < sz; i++) {
-		g_print("%02x[%c] ", buf[i], g_ascii_isprint(buf[i]) ? buf[i] : '?');
-		if (i > 0 && (i + 1) % 256 == 0)
-			g_print("\n");
-	}
-	g_print("\n");
-}
-
 static gboolean
 fu_fastboot_device_write(FuDevice *device, const guint8 *buf, gsize buflen, GError **error)
 {
@@ -75,11 +61,10 @@ fu_fastboot_device_write(FuDevice *device, const guint8 *buf, gsize buflen, GErr
 	g_autofree guint8 *buf2 = NULL;
 
 	/* make mutable */
+	fu_dump_raw(G_LOG_DOMAIN, "writing", buf, buflen);
 	buf2 = fu_memdup_safe(buf, buflen, error);
 	if (buf2 == NULL)
 		return FALSE;
-
-	fu_fastboot_buffer_dump("writing", buf, buflen);
 	ret = g_usb_device_bulk_transfer(usb_device,
 					 FASTBOOT_EP_OUT,
 					 buf2,
@@ -172,7 +157,7 @@ fu_fastboot_device_read(FuDevice *device,
 						   "failed to do bulk transfer: ");
 			return FALSE;
 		}
-		fu_fastboot_buffer_dump("read", buf, actual_len);
+		fu_dump_raw(G_LOG_DOMAIN, "read", buf, actual_len);
 		if (actual_len < 4) {
 			g_set_error(error,
 				    G_IO_ERROR,
@@ -333,7 +318,7 @@ fu_fastboot_device_setup(FuDevice *device, GError **error)
 	if (!fu_fastboot_device_getvar(device, "version", &version, error))
 		return FALSE;
 	if (version != NULL && version[0] != '\0')
-		g_debug("fastboot version=%s", version);
+		g_info("fastboot version %s", version);
 
 	/* bootloader version */
 	if (!fu_fastboot_device_getvar(device, "version-bootloader", &version_bootloader, error))

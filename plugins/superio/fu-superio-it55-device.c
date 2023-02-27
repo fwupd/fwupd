@@ -564,7 +564,7 @@ fu_superio_it55_device_prepare_firmware(FuDevice *device,
 	if (date == NULL)
 		date = g_strdup("(unknown build date)");
 
-	g_debug("New firmware: %s %s built on %s", prj_name, version, date);
+	g_debug("new firmware: %s %s built on %s", prj_name, version, date);
 	if (g_strcmp0(prj_name, self->prj_name) != 0) {
 		g_set_error(error,
 			    FWUPD_ERROR,

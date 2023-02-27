@@ -73,10 +73,8 @@ fu_ebitdo_device_send(FuEbitdoDevice *self,
 	}
 
 	/* debug */
-	if (g_getenv("FWUPD_EBITDO_VERBOSE") != NULL) {
-		fu_dump_raw(G_LOG_DOMAIN, "->DEVICE", packet, (gsize)hdr->pkt_len + 1);
-		fu_ebitdo_dump_pkt(hdr);
-	}
+	fu_dump_raw(G_LOG_DOMAIN, "->DEVICE", packet, (gsize)hdr->pkt_len + 1);
+	fu_ebitdo_dump_pkt(hdr);
 
 	/* get data from device */
 	if (!g_usb_device_interrupt_transfer(usb_device,
@@ -131,10 +129,8 @@ fu_ebitdo_device_receive(FuEbitdoDevice *self, guint8 *out, gsize out_len, GErro
 	}
 
 	/* debug */
-	if (g_getenv("FWUPD_EBITDO_VERBOSE") != NULL) {
-		fu_dump_raw(G_LOG_DOMAIN, "<-DEVICE", packet, actual_length);
-		fu_ebitdo_dump_pkt(hdr);
-	}
+	fu_dump_raw(G_LOG_DOMAIN, "<-DEVICE", packet, actual_length);
+	fu_ebitdo_dump_pkt(hdr);
 
 	/* get-version (bootloader) */
 	if (hdr->type == FU_EBITDO_PKT_TYPE_USER_CMD &&
@@ -525,12 +521,10 @@ fu_ebitdo_device_write_firmware(FuDevice *device,
 	chunks = fu_chunk_array_new_from_bytes(fw_payload, 0x0, 0x0, 32);
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index(chunks, i);
-		if (g_getenv("FWUPD_EBITDO_VERBOSE") != NULL) {
-			g_debug("writing %u bytes to 0x%04x of 0x%04x",
-				fu_chunk_get_data_sz(chk),
-				fu_chunk_get_address(chk),
-				fu_chunk_get_data_sz(chk));
-		}
+		g_debug("writing %u bytes to 0x%04x of 0x%04x",
+			fu_chunk_get_data_sz(chk),
+			fu_chunk_get_address(chk),
+			fu_chunk_get_data_sz(chk));
 		if (!fu_ebitdo_device_send(self,
 					   FU_EBITDO_PKT_TYPE_USER_CMD,
 					   FU_EBITDO_PKT_CMD_UPDATE_FIRMWARE_DATA,

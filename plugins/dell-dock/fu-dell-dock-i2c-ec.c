@@ -225,7 +225,7 @@ fu_dell_dock_ec_needs_tbt(FuDevice *device)
 	if (self->data->module_type != MODULE_TYPE_130_TBT &&
 	    self->data->module_type != MODULE_TYPE_45_TBT)
 		return FALSE;
-	g_debug("found thunderbolt dock, port mode: %d", port0_tbt_mode);
+	g_info("found thunderbolt dock, port mode: %d", port0_tbt_mode);
 
 	return !port0_tbt_mode;
 }
@@ -409,10 +409,10 @@ fu_dell_dock_ec_get_dock_info(FuDevice *device, GError **error)
 			    "No bridge devices detected, dock may be booting up");
 		return FALSE;
 	}
-	g_debug("%u devices [%u->%u]",
-		header->total_devices,
-		header->first_index,
-		header->last_index);
+	g_info("%u devices [%u->%u]",
+	       header->total_devices,
+	       header->first_index,
+	       header->last_index);
 	device_entry =
 	    (FuDellDockEcQueryEntry *)((guint8 *)header + sizeof(FuDellDockDockInfoHeader));
 	for (guint i = 0; i < header->total_devices; i++) {
@@ -689,9 +689,9 @@ fu_dell_dock_ec_reboot_dock(FuDevice *device, GError **error)
 
 	g_return_val_if_fail(device != NULL, FALSE);
 
-	g_debug("activating passive flow (%x) for %s",
-		self->passive_flow,
-		fu_device_get_name(device));
+	g_info("activating passive flow (%x) for %s",
+	       self->passive_flow,
+	       fu_device_get_name(device));
 	return fu_dell_dock_ec_write(device, 3, (guint8 *)&cmd, error);
 }
 
@@ -814,7 +814,7 @@ fu_dell_dock_ec_write_fw(FuDevice *device,
 	data = g_bytes_get_data(fw, &fw_size);
 	write_size = (fw_size / HIDI2C_MAX_WRITE) >= 1 ? HIDI2C_MAX_WRITE : fw_size;
 	dynamic_version = g_strndup((gchar *)data + self->blob_version_offset, 11);
-	g_debug("writing EC firmware version %s", dynamic_version);
+	g_info("writing EC firmware version %s", dynamic_version);
 
 	/* meet the minimum EC version */
 	if ((flags & FWUPD_INSTALL_FLAG_FORCE) == 0 &&
@@ -830,7 +830,7 @@ fu_dell_dock_ec_write_fw(FuDevice *device,
 		return FALSE;
 	}
 
-	g_debug("writing EC firmware version %s", dynamic_version);
+	g_info("writing EC firmware version %s", dynamic_version);
 	if (!fu_dell_dock_ec_modify_lock(device, self->unlock_target, TRUE, error))
 		return FALSE;
 

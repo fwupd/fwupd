@@ -185,7 +185,7 @@ validate_firmware_update_method(MMModemFirmwareUpdateMethod methods, GError **er
 	methods_str = mm_modem_firmware_update_method_build_string_from_mask(methods);
 	for (guint i = 0; i < G_N_ELEMENTS(supported_combinations); i++) {
 		if (supported_combinations[i] == methods) {
-			g_debug("valid firmware update combination: %s", methods_str);
+			g_info("valid firmware update combination: %s", methods_str);
 			return TRUE;
 		}
 	}
@@ -596,8 +596,7 @@ fu_mm_device_qcdm_cmd(FuMmDevice *self, const guint8 *cmd, gsize cmd_len, GError
 
 	/* command */
 	qcdm_req = g_bytes_new(cmd, cmd_len);
-	if (g_getenv("FWUPD_MODEM_MANAGER_VERBOSE") != NULL)
-		fu_dump_bytes(G_LOG_DOMAIN, "writing", qcdm_req);
+	fu_dump_bytes(G_LOG_DOMAIN, "writing", qcdm_req);
 	if (!fu_io_channel_write_bytes(self->io_channel,
 				       qcdm_req,
 				       1500,
@@ -617,8 +616,7 @@ fu_mm_device_qcdm_cmd(FuMmDevice *self, const guint8 *cmd, gsize cmd_len, GError
 		g_prefix_error(error, "failed to read qcdm response: ");
 		return FALSE;
 	}
-	if (g_getenv("FWUPD_MODEM_MANAGER_VERBOSE") != NULL)
-		fu_dump_bytes(G_LOG_DOMAIN, "read", qcdm_res);
+	fu_dump_bytes(G_LOG_DOMAIN, "read", qcdm_res);
 
 	/* command == response */
 	if (g_bytes_compare(qcdm_res, qcdm_req) != 0) {
@@ -651,8 +649,7 @@ fu_mm_device_at_cmd_cb(FuDevice *device, gpointer user_data, GError **error)
 
 	/* command */
 	at_req = g_bytes_new(cmd_cr, strlen(cmd_cr));
-	if (g_getenv("FWUPD_MODEM_MANAGER_VERBOSE") != NULL)
-		fu_dump_bytes(G_LOG_DOMAIN, "writing", at_req);
+	fu_dump_bytes(G_LOG_DOMAIN, "writing", at_req);
 	if (!fu_io_channel_write_bytes(self->io_channel,
 				       at_req,
 				       1500,
@@ -664,7 +661,7 @@ fu_mm_device_at_cmd_cb(FuDevice *device, gpointer user_data, GError **error)
 
 	/* AT command has no response, return TRUE */
 	if (!helper->has_response) {
-		g_debug("No response expected for AT command: '%s', assuming succeed", helper->cmd);
+		g_debug("no response expected for AT command: '%s', assuming succeed", helper->cmd);
 		return TRUE;
 	}
 
@@ -678,8 +675,7 @@ fu_mm_device_at_cmd_cb(FuDevice *device, gpointer user_data, GError **error)
 		g_prefix_error(error, "failed to read response for %s: ", helper->cmd);
 		return FALSE;
 	}
-	if (g_getenv("FWUPD_MODEM_MANAGER_VERBOSE") != NULL)
-		fu_dump_bytes(G_LOG_DOMAIN, "read", at_res);
+	fu_dump_bytes(G_LOG_DOMAIN, "read", at_res);
 	buf = g_bytes_get_data(at_res, &bufsz);
 	if (bufsz < 6) {
 		g_set_error(error,
@@ -718,7 +714,7 @@ fu_mm_device_at_cmd_cb(FuDevice *device, gpointer user_data, GError **error)
 			if (g_strcmp0(parts[j], "") != 0 && g_strcmp0(parts[j], "OK") != 0) {
 				/* Set branch */
 				fu_device_set_branch(FU_DEVICE(self), parts[j]);
-				g_debug("Firmware branch reported as '%s'", parts[j]);
+				g_info("firmware branch reported as '%s'", parts[j]);
 				break;
 			}
 		}
@@ -1800,9 +1796,9 @@ fu_mm_device_setup_branch_at(FuMmDevice *self, GError **error)
 		return FALSE;
 
 	if (fu_device_get_branch(self) != NULL)
-		g_debug("using firmware branch: %s", fu_device_get_branch(self));
+		g_info("using firmware branch: %s", fu_device_get_branch(self));
 	else
-		g_debug("using firmware branch: default");
+		g_info("using firmware branch: default");
 
 	return TRUE;
 }

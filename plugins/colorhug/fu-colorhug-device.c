@@ -96,8 +96,7 @@ fu_colorhug_device_msg(FuColorhugDevice *self,
 	}
 
 	/* request */
-	if (g_getenv("FWUPD_COLORHUG_VERBOSE") != NULL)
-		fu_dump_raw(G_LOG_DOMAIN, "REQ", buf, ibufsz + 1);
+	fu_dump_raw(G_LOG_DOMAIN, "REQ", buf, ibufsz + 1);
 	if (!g_usb_device_interrupt_transfer(usb_device,
 					     CH_USB_HID_EP_OUT,
 					     buf,
@@ -146,8 +145,7 @@ fu_colorhug_device_msg(FuColorhugDevice *self,
 					   "failed to get reply: ");
 		return FALSE;
 	}
-	if (g_getenv("FWUPD_COLORHUG_VERBOSE") != NULL)
-		fu_dump_raw(G_LOG_DOMAIN, "RES", buf, actual_length);
+	fu_dump_raw(G_LOG_DOMAIN, "RES", buf, actual_length);
 
 	/* old bootloaders do not return the full block */
 	if (actual_length != CH_USB_HID_EP_SIZE && actual_length != 2 &&

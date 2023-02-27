@@ -782,8 +782,7 @@ fu_bcm57xx_recovery_device_open(FuDevice *device, GError **error)
 		}
 
 		/* mmap */
-		if (g_getenv("FWUPD_BCM57XX_VERBOSE") != NULL)
-			g_debug("mapping BAR[%u] %s for 0x%x bytes", i, fn, (guint)st.st_size);
+		g_debug("mapping BAR[%u] %s for 0x%x bytes", i, fn, (guint)st.st_size);
 		self->bar[i].buf =
 		    (guint8 *)mmap(0, st.st_size, PROT_READ | PROT_WRITE, MAP_SHARED, memfd, 0);
 		self->bar[i].bufsz = st.st_size;
@@ -820,8 +819,7 @@ fu_bcm57xx_recovery_device_close(FuDevice *device, GError **error)
 	for (guint i = 0; i < FU_BCM57XX_BAR_MAX; i++) {
 		if (self->bar[i].buf == NULL)
 			continue;
-		if (g_getenv("FWUPD_BCM57XX_VERBOSE") != NULL)
-			g_debug("unmapping BAR[%u]", i);
+		g_debug("unmapping BAR[%u]", i);
 		munmap(self->bar[i].buf, self->bar[i].bufsz);
 		self->bar[i].buf = NULL;
 		self->bar[i].bufsz = 0;

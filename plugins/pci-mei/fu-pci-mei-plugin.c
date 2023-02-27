@@ -147,13 +147,11 @@ fu_mei_parse_fwvers(FuPlugin *plugin, const gchar *fwvers, GError **error)
 		self->issue = fu_mei_common_is_txe_vulnerable(&self->vers);
 	else if (self->family == FU_MEI_FAMILY_SPS)
 		self->issue = fu_mei_common_is_sps_vulnerable(&self->vers);
-	if (g_getenv("FWUPD_MEI_VERBOSE") != NULL) {
-		g_debug("%s version parsed as %u.%u.%u",
-			fu_mei_common_family_to_string(self->family),
-			self->vers.major,
-			self->vers.minor,
-			self->vers.hotfix);
-	}
+	g_debug("%s version parsed as %u.%u.%u",
+		fu_mei_common_family_to_string(self->family),
+		self->vers.major,
+		self->vers.minor,
+		self->vers.hotfix);
 	return TRUE;
 }
 

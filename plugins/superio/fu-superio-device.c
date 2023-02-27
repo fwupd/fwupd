@@ -110,8 +110,7 @@ fu_superio_device_regdump(FuSuperioDevice *self, guint8 ldn, GError **error)
 		g_string_append_printf(str, "IOBAD1:0x%04x ", iobad1);
 	if (ldnstr != NULL)
 		g_string_append_printf(str, "(%s)", ldnstr);
-	if (g_getenv("FWUPD_SUPERIO_VERBOSE") != NULL)
-		fu_dump_raw(G_LOG_DOMAIN, str->str, buf, sizeof(buf));
+	fu_dump_raw(G_LOG_DOMAIN, str->str, buf, sizeof(buf));
 	return TRUE;
 }
 

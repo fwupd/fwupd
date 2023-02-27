@@ -378,7 +378,7 @@ fu_vli_usbhub_device_attach(FuDevice *device, FuProgress *progress, GError **err
 		guint8 tmp = 0x0;
 
 		/* set GPIOB output enable */
-		g_debug("using GPIO reset for %s", fu_device_get_id(device));
+		g_info("using GPIO reset for %s", fu_device_get_id(device));
 		if (!fu_vli_usbhub_device_read_reg(FU_VLI_USBHUB_DEVICE(proxy),
 						   VL817_ADDR_GPIO_OUTPUT_ENABLE,
 						   &tmp,
@@ -492,44 +492,42 @@ fu_vli_usbhub_device_guess_kind(FuVliUsbhubDevice *self, GError **error)
 		g_prefix_error(error, "Read_ChipVer failed: ");
 		return FALSE;
 	}
+	g_debug("chipver = 0x%02x", chipver);
 	if (!fu_vli_usbhub_device_read_reg(self, 0xf63f, &chipver2, error)) {
 		g_prefix_error(error, "Read_ChipVer2 failed: ");
 		return FALSE;
 	}
+	g_debug("chipver2 = 0x%02x", chipver2);
 	if (!fu_vli_usbhub_device_read_reg(self, 0xf800, &b811P812, error)) {
 		g_prefix_error(error, "Read_811P812 failed: ");
 		return FALSE;
 	}
+	g_debug("b811P812 = 0x%02x", b811P812);
 	if (!fu_vli_usbhub_device_read_reg(self, 0xf88e, &chipid1, error)) {
 		g_prefix_error(error, "Read_ChipID1 failed: ");
 		return FALSE;
 	}
+	g_debug("chipid1 = 0x%02x", chipid1);
 	if (!fu_vli_usbhub_device_read_reg(self, 0xf88f, &chipid2, error)) {
 		g_prefix_error(error, "Read_ChipID2 failed: ");
 		return FALSE;
 	}
+	g_debug("chipid2 = 0x%02x", chipid2);
 	if (!fu_vli_usbhub_device_read_reg(self, 0xf64e, &chipid12, error)) {
 		g_prefix_error(error, "Read_ChipID12 failed: ");
 		return FALSE;
 	}
+	g_debug("chipid12 = 0x%02x", chipid12);
 	if (!fu_vli_usbhub_device_read_reg(self, 0xf64f, &chipid22, error)) {
 		g_prefix_error(error, "Read_ChipID22 failed: ");
 		return FALSE;
 	}
+	g_debug("chipid22 = 0x%02x", chipid22);
 	if (!fu_vli_usbhub_device_read_reg(self, 0xf651, &pkgtype, error)) {
 		g_prefix_error(error, "Read_820Q7Q8 failed: ");
 		return FALSE;
 	}
-	if (g_getenv("FWUPD_VLI_USBHUB_VERBOSE") != NULL) {
-		g_debug("chipver = 0x%02x", chipver);
-		g_debug("chipver2 = 0x%02x", chipver2);
-		g_debug("b811P812 = 0x%02x", b811P812);
-		g_debug("chipid1 = 0x%02x", chipid1);
-		g_debug("chipid2 = 0x%02x", chipid2);
-		g_debug("chipid12 = 0x%02x", chipid12);
-		g_debug("chipid22 = 0x%02x", chipid22);
-		g_debug("pkgtype = 0x%02x", pkgtype);
-	}
+	g_debug("pkgtype = 0x%02x", pkgtype);
 
 	if (chipid2 == 0x35 && chipid1 == 0x07) {
 		fu_vli_device_set_kind(FU_VLI_DEVICE(self), FU_VLI_DEVICE_KIND_VL210);
@@ -853,7 +851,7 @@ fu_vli_usbhub_device_prepare_firmware(FuDevice *device,
 	}
 
 	/* we could check this against flags */
-	g_debug("parsed version: %s", fu_firmware_get_version(firmware));
+	g_info("parsed version: %s", fu_firmware_get_version(firmware));
 	return g_steal_pointer(&firmware);
 }
 
@@ -1043,7 +1041,7 @@ fu_vli_usbhub_device_update_v2(FuVliUsbhubDevice *self,
 
 		/* copy the header from the backup zone */
 	} else {
-		g_debug("HD1 was invalid, reading backup");
+		g_info("HD1 was invalid, reading backup");
 		if (!fu_vli_device_spi_read_block(FU_VLI_DEVICE(self),
 						  VLI_USBHUB_FLASHMAP_ADDR_HD1_BACKUP,
 						  (guint8 *)&self->hd1_hdr,
@@ -1055,7 +1053,7 @@ fu_vli_usbhub_device_update_v2(FuVliUsbhubDevice *self,
 			return FALSE;
 		}
 		if (!fu_vli_usbhub_device_hd1_is_valid(&self->hd1_hdr)) {
-			g_debug("backup header is also invalid, starting recovery");
+			g_info("backup header is also invalid, starting recovery");
 			return fu_vli_usbhub_device_update_v2_recovery(self, fw, progress, error);
 		}
 		if (!fu_vli_usbhub_device_hd1_recover(self, &self->hd1_hdr, progress, error)) {

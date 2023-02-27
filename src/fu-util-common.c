@@ -73,11 +73,11 @@ fu_util_using_correct_daemon(GError **error)
 
 	default_target = fu_systemd_get_default_target(&error_local);
 	if (default_target == NULL) {
-		g_debug("Systemd isn't accessible: %s\n", error_local->message);
+		g_info("systemd is not accessible: %s", error_local->message);
 		return TRUE;
 	}
 	if (!fu_systemd_unit_check_exists(target, &error_local)) {
-		g_debug("wrong target: %s\n", error_local->message);
+		g_info("wrong target: %s", error_local->message);
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_ARGS,
@@ -113,7 +113,7 @@ fu_util_traverse_tree(GNode *n, gpointer data)
 	} else if (FWUPD_IS_RELEASE(n->data)) {
 		FwupdRelease *release = FWUPD_RELEASE(n->data);
 		tmp = fu_util_release_to_string(release, idx);
-		g_debug("%s", tmp);
+		g_info("%s", tmp);
 	}
 
 	/* root node */
@@ -1265,7 +1265,7 @@ fu_util_device_to_string(FwupdClient *client, FwupdDevice *dev, guint idt)
 	if (g_getenv("FWUPD_VERBOSE") != NULL) {
 		g_autofree gchar *debug_str = NULL;
 		debug_str = fwupd_device_to_string(dev);
-		g_debug("%s", debug_str);
+		g_info("%s", debug_str);
 		return NULL;
 	}
 
@@ -2348,7 +2348,7 @@ fu_util_security_events_to_string(GPtrArray *events, FuSecurityAttrToStringFlags
 		for (guint i = 0; i < events->len; i++) {
 			FwupdSecurityAttr *attr = g_ptr_array_index(events, i);
 			g_autofree gchar *tmp = fwupd_security_attr_to_string(attr);
-			g_debug("%s", tmp);
+			g_info("%s", tmp);
 		}
 	}
 
@@ -2595,7 +2595,7 @@ fu_util_send_report(FwupdClient *client,
 
 	/* server wanted us to see the message */
 	if (server_msg != NULL) {
-		g_debug("server message: %s", server_msg);
+		g_info("server message: %s", server_msg);
 		if (g_strstr_len(server_msg, -1, "known issue") != NULL &&
 		    json_object_has_member(json_object, "uri")) {
 			if (uri != NULL)

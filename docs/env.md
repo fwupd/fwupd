@@ -14,10 +14,8 @@ with a non-standard filesystem layout.
 * `FWUPD_DEVICE_TESTS_BASE_URI` sets the base URI when downloading firmware for the device-tests
 * `FWUPD_SUPPORTED` overrides the `-Dsupported_build` meson option at runtime
 * `FWUPD_VERBOSE` is set when running `--verbose`
-* `FWUPD_BACKEND_VERBOSE` can be used to show detailed plugin and backend debugging
 * `FWUPD_XMLB_VERBOSE` can be set to show Xmlb silo regeneration and quirk matches
 * `FWUPD_DBUS_SOCKET` is used to set the socket filename if running without a dbus-daemon
-* `FWUPD_DOWNLOAD_VERBOSE` can be used to show wget or curl output
 * `FWUPD_PROFILE` can be used to set the profile traceback threshold value in ms
 * `FWUPD_FUZZER_RUNNING` if the firmware format is being fuzzed
 * `FWUPD_POLKIT_NOCHECK` if we should not check for polkit policies to be installed
@@ -34,25 +32,6 @@ with a non-standard filesystem layout.
 * `CI_NETWORK` if CI is running with network access
 * `TPM_SERVER_RUNNING` if an emulated TPM is running
 
-## Shared libfwupdplugin
-
-* `FU_HID_DEVICE_VERBOSE` shows HID traffic
-* `FU_SREC_FIRMWARE_VERBOSE` shows more information about parsing Motorola S-record files
-* `FU_IHEX_FIRMWARE_VERBOSE` shows more information about parsing Intel hex files
-* `FU_UDEV_DEVICE_DEBUG` shows more information about UDEV devices, including parents
-* `FU_USB_DEVICE_DEBUG` shows more information about USB devices
-* `FU_MEI_DEVICE_DEBUG` shows MEI reads and writes
-* `FWUPD_DEVICE_LIST_VERBOSE` display devices being added and removed from the list
-* `FWUPD_PROBE_VERBOSE` dump the detected devices to the console, even if not supported by fwupd
-* `FWUPD_BIOS_SETTING_VERBOSE` be verbose while parsing BIOS settings
-* `FWUPD_EFI_SIGNATURE_VERBOSE` be verbose while parsing EFI signatures
-
-## Plugins
-
-Most plugins read a plugin-specific runtime key to increase verbosity more than the usual `VERBOSE`.
-This can be also used when using fwupdtool e.g. using `--plugin-verbose=dell` will set the
-environment variable of `FWUPD_DELL_VERBOSE` automatically.
-
 Other variables, include:
 
 * `FWUPD_DELL_FAKE_SMBIOS` if set, use fake SMBIOS information for tests
@@ -66,7 +45,6 @@ Other variables, include:
 * `FWUPD_TEST_PLUGIN_XML` used by the test plugin to load XML state out-of-band before startup
 * `FWUPD_UEFI_CAPSULE_RECREATE_COD_DATA` if set, write the files in the example COD tree in srcdir
 * `FWUPD_UEFI_TEST` used by the UEFI plugins to disable specific sanity checks during self tests
-* `FWUPD_WAC_EMULATE` emulates a fake device for testing
 
 ## File system overrides
 

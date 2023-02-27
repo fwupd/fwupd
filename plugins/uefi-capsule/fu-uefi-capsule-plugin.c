@@ -334,7 +334,7 @@ fu_uefi_capsule_plugin_update_splash(FuPlugin *plugin, FuDevice *device, GError 
 
 	/* no UX capsule support, so deleting var if it exists */
 	if (fu_device_has_private_flag(device, FU_UEFI_DEVICE_FLAG_NO_UX_CAPSULE)) {
-		g_debug("not providing UX capsule");
+		g_info("not providing UX capsule");
 		return fu_efivar_delete(FU_EFIVAR_GUID_FWUPDATE, "fwupd-ux-capsule", error);
 	}
 
@@ -426,9 +426,8 @@ fu_uefi_capsule_plugin_write_firmware(FuPlugin *plugin,
 
 	/* perform the update */
 	fu_progress_set_status(progress, FWUPD_STATUS_SCHEDULING);
-	if (!fu_uefi_capsule_plugin_update_splash(plugin, device, &error_splash)) {
-		g_debug("failed to upload UEFI UX capsule text: %s", error_splash->message);
-	}
+	if (!fu_uefi_capsule_plugin_update_splash(plugin, device, &error_splash))
+		g_info("failed to upload UEFI UX capsule text: %s", error_splash->message);
 
 	return fu_device_write_firmware(device, blob_fw, progress, flags, error);
 }
@@ -488,7 +487,7 @@ fu_uefi_capsule_plugin_is_esp_linux(FuVolume *esp, GError **error)
 		g_autofree gchar *basename = g_path_get_basename(fn);
 		g_autofree gchar *basename_lower = g_utf8_strdown(basename, -1);
 		if (g_strv_contains((const gchar *const *)basenames, basename_lower)) {
-			g_debug("found %s which indicates a Linux ESP, using %s", fn, mount_point);
+			g_info("found %s which indicates a Linux ESP, using %s", fn, mount_point);
 			return TRUE;
 		}
 	}
@@ -521,7 +520,7 @@ fu_uefi_capsule_plugin_get_default_esp(FuPlugin *plugin, GError **error)
 				g_string_append_c(str, ',');
 			g_string_append(str, fu_volume_get_id(vol));
 		}
-		g_debug("more than one ESP possible: %s", str->str);
+		g_info("more than one ESP possible: %s", str->str);
 	}
 
 	/* we found more than one: lets look for something plausible */
@@ -768,7 +767,7 @@ fu_uefi_capsule_plugin_unlock(FuPlugin *plugin, FuDevice *device, GError **error
 	}
 
 	/* for unlocking TPM1.2 <-> TPM2.0 switching */
-	g_debug("Unlocking upgrades for: %s (%s)",
+	g_debug("unlocking upgrades for: %s (%s)",
 		fu_device_get_name(device),
 		fu_device_get_id(device));
 	device_alt = fu_device_get_alternate(device);
@@ -780,7 +779,7 @@ fu_uefi_capsule_plugin_unlock(FuPlugin *plugin, FuDevice *device, GError **error
 			    fu_device_get_name(device));
 		return FALSE;
 	}
-	g_debug("Preventing upgrades for: %s (%s)",
+	g_debug("preventing upgrades for: %s (%s)",
 		fu_device_get_name(device_alt),
 		fu_device_get_id(device_alt));
 
@@ -986,7 +985,7 @@ fu_uefi_capsule_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError *
 	if (!fu_uefi_bgrt_setup(self->bgrt, &error_local))
 		g_debug("BGRT setup failed: %s", error_local->message);
 	str = fu_uefi_bgrt_get_supported(self->bgrt) ? "Enabled" : "Disabled";
-	g_debug("UX Capsule support : %s", str);
+	g_info("UX capsule support : %s", str);
 	fu_plugin_add_report_metadata(plugin, "UEFIUXCapsule", str);
 	fu_progress_step_done(progress);
 

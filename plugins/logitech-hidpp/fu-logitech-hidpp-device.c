@@ -204,7 +204,7 @@ fu_logitech_hidpp_device_ping(FuLogitechHidPpDevice *self, GError **error)
 	if (priv->device_idx == HIDPP_DEVICE_IDX_UNSET &&
 	    msg->device_id != HIDPP_DEVICE_IDX_UNSET) {
 		priv->device_idx = msg->device_id;
-		g_debug("Device index is %02x", priv->device_idx);
+		g_debug("device index is %02x", priv->device_idx);
 	}
 
 	/* format version in BCD format */
@@ -852,7 +852,7 @@ fu_logitech_hidpp_device_setup(FuDevice *device, GError **error)
 	if (idx != 0x00) {
 		fu_device_add_flag(FU_DEVICE(device), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 		if (fu_device_get_version(device) == NULL) {
-			g_debug("repairing device in bootloader mode");
+			g_info("repairing device in bootloader mode");
 			fu_device_set_version(FU_DEVICE(device), "MPK00.00_B0000");
 		}
 		/* we do not actually know which protocol when in recovery mode,
@@ -1128,8 +1128,7 @@ fu_logitech_hidpp_device_write_firmware_pkt(FuLogitechHidPpDevice *self,
 				    G_BIG_ENDIAN,
 				    error))
 		return FALSE;
-	if (g_getenv("FWUPD_LOGITECH_HIDPP_VERBOSE") != NULL)
-		g_debug("packet_cnt=0x%04x", packet_cnt);
+	g_debug("packet_cnt=0x%04x", packet_cnt);
 	if (fu_logitech_hidpp_device_check_status(msg->data[4], &error_local))
 		return TRUE;
 
@@ -1201,8 +1200,7 @@ fu_logitech_hidpp_device_write_firmware(FuDevice *device,
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_WRITE);
 	for (gsize i = 0; i < sz / 16; i++) {
 		/* send packet and wait for reply */
-		if (g_getenv("FWUPD_LOGITECH_HIDPP_VERBOSE") != NULL)
-			g_debug("send data at addr=0x%04x", (guint)i * 16);
+		g_debug("send data at addr=0x%04x", (guint)i * 16);
 		if (!fu_logitech_hidpp_device_write_firmware_pkt(self,
 								 idx,
 								 cmd,

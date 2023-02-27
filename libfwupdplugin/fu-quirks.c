@@ -281,8 +281,7 @@ fu_quirks_add_quirks_for_path(FuQuirks *self, XbBuilder *builder, const gchar *p
 	g_autoptr(GDir) dir = NULL;
 	g_autoptr(GPtrArray) filenames = g_ptr_array_new_with_free_func(g_free);
 
-	if (g_getenv("FWUPD_VERBOSE") != NULL)
-		g_debug("loading quirks from %s", path);
+	g_info("loading quirks from %s", path);
 
 	/* add valid files to the array */
 	if (!g_file_test(path, G_FILE_TEST_EXISTS))
@@ -399,7 +398,7 @@ fu_quirks_check_silo(FuQuirks *self, GError **error)
 		g_autofree gchar *str = NULL;
 		g_ptr_array_sort(self->invalid_keys, fu_quirks_strcasecmp_cb);
 		str = fu_strjoin(",", self->invalid_keys);
-		g_debug("invalid key names: %s", str);
+		g_info("invalid key names: %s", str);
 	}
 
 	/* check if there is any quirk data to load, as older libxmlb versions will not be able to

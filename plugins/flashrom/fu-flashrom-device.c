@@ -233,7 +233,7 @@ fu_flashrom_device_write_firmware(FuDevice *device,
 
 	/* Check if CMOS needs a reset */
 	if (fu_device_has_private_flag(device, FU_FLASHROM_DEVICE_FLAG_RESET_CMOS)) {
-		g_debug("Attempting CMOS Reset");
+		g_debug("attempting CMOS reset");
 		if (!fu_flashrom_cmos_reset(error)) {
 			g_prefix_error(error, "failed CMOS reset: ");
 			return FALSE;

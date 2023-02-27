@@ -39,8 +39,7 @@ fu_fresco_pd_device_transfer_read(FuFrescoPdDevice *self,
 	g_return_val_if_fail(bufsz != 0, FALSE);
 
 	/* to device */
-	if (g_getenv("FWUPD_FRESCO_PD_VERBOSE") != NULL)
-		fu_dump_raw(G_LOG_DOMAIN, "read", buf, bufsz);
+	fu_dump_raw(G_LOG_DOMAIN, "read", buf, bufsz);
 	if (!g_usb_device_control_transfer(usb_device,
 					   G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
 					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
@@ -85,8 +84,7 @@ fu_fresco_pd_device_transfer_write(FuFrescoPdDevice *self,
 	g_return_val_if_fail(bufsz != 0, FALSE);
 
 	/* to device */
-	if (g_getenv("FWUPD_FRESCO_PD_VERBOSE") != NULL)
-		fu_dump_raw(G_LOG_DOMAIN, "write", buf, bufsz);
+	fu_dump_raw(G_LOG_DOMAIN, "write", buf, bufsz);
 	if (!g_usb_device_control_transfer(usb_device,
 					   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
 					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,

@@ -301,13 +301,11 @@ fu_srec_firmware_tokenize_cb(GString *token, guint token_idx, gpointer user_data
 	default:
 		g_assert_not_reached();
 	}
-	if (g_getenv("FU_SREC_FIRMWARE_VERBOSE") != NULL) {
-		g_debug("line %03u S%u addr:0x%04x datalen:0x%02x",
-			token_idx + 1,
-			rec_kind,
-			rec_addr32,
-			(guint)rec_count - addrsz - 1);
-	}
+	g_debug("line %03u S%u addr:0x%04x datalen:0x%02x",
+		token_idx + 1,
+		rec_kind,
+		rec_addr32,
+		(guint)rec_count - addrsz - 1);
 	if (require_data && rec_count == addrsz) {
 		g_set_error(error,
 			    FWUPD_ERROR,

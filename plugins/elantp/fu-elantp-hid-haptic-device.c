@@ -82,9 +82,7 @@ fu_elantp_hid_haptic_device_send_cmd(FuDevice *self,
 	g_autofree guint8 *buf = NULL;
 	gsize bufsz = rxsz + 3;
 
-	if (g_getenv("FWUPD_ELANTP_VERBOSE") != NULL)
-		fu_dump_raw(G_LOG_DOMAIN, "SetReport", tx, txsz);
-
+	fu_dump_raw(G_LOG_DOMAIN, "SetReport", tx, txsz);
 	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
 				  HIDIOCSFEATURE(txsz),
 				  (guint8 *)tx,
@@ -106,9 +104,7 @@ fu_elantp_hid_haptic_device_send_cmd(FuDevice *self,
 				  FU_ELANTP_DEVICE_IOCTL_TIMEOUT,
 				  error))
 		return FALSE;
-
-	if (g_getenv("FWUPD_ELANTP_VERBOSE") != NULL)
-		fu_dump_raw(G_LOG_DOMAIN, "GetReport", buf, bufsz);
+	fu_dump_raw(G_LOG_DOMAIN, "GetReport", buf, bufsz);
 
 	/* success */
 	return fu_memcpy_safe(rx,

@@ -58,8 +58,6 @@ void
 fu_wac_buffer_dump(const gchar *title, guint8 cmd, const guint8 *buf, gsize sz)
 {
 	g_autofree gchar *tmp = NULL;
-	if (g_getenv("FWUPD_WACOM_USB_VERBOSE") == NULL)
-		return;
 	tmp = g_strdup_printf("%s %s (%" G_GSIZE_FORMAT ")",
 			      title,
 			      fu_wac_report_id_to_string(cmd),

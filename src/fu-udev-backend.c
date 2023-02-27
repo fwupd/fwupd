@@ -65,9 +65,7 @@ fu_udev_backend_device_remove(FuUdevBackend *self, GUdevDevice *udev_device)
 	device_tmp =
 	    fu_backend_lookup_by_id(FU_BACKEND(self), g_udev_device_get_sysfs_path(udev_device));
 	if (device_tmp != NULL) {
-		if (g_getenv("FWUPD_PROBE_VERBOSE") != NULL) {
-			g_debug("UDEV %s removed", g_udev_device_get_sysfs_path(udev_device));
-		}
+		g_debug("UDEV %s removed", g_udev_device_get_sysfs_path(udev_device));
 		fu_backend_device_removed(FU_BACKEND(self), device_tmp);
 	}
 }
@@ -159,8 +157,7 @@ fu_udev_backend_coldplug_subsystem(FuUdevBackend *self,
 	g_autolist(GObject) devices = NULL;
 
 	devices = g_udev_client_query_by_subsystem(self->gudev_client, subsystem);
-	if (g_getenv("FWUPD_PROBE_VERBOSE") != NULL)
-		g_debug("%u devices with subsystem %s", g_list_length(devices), subsystem);
+	g_debug("%u devices with subsystem %s", g_list_length(devices), subsystem);
 
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_name(progress, subsystem);

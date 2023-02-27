@@ -344,7 +344,7 @@ fu_mm_plugin_setup_manager(FuPlugin *plugin)
 		return;
 	}
 
-	g_debug("ModemManager %s is available", version);
+	g_info("ModemManager %s is available", version);
 
 	g_signal_connect(G_DBUS_OBJECT_MANAGER(self->manager),
 			 "object-added",

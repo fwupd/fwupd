@@ -235,8 +235,7 @@ fu_nvme_device_parse_cns(FuNvmeDevice *self, const guint8 *buf, gsize sz, GError
 	fawr = (buf[260] & 0x10) >> 4;
 	nfws = (buf[260] & 0x0e) >> 1;
 	s1ro = buf[260] & 0x01;
-	if (g_getenv("FWUPD_NVME_VERBOSE") != NULL)
-		g_debug("fawr: %u, nr fw slots: %u, slot1 r/o: %u", fawr, nfws, s1ro);
+	g_debug("fawr: %u, nr fw slots: %u, slot1 r/o: %u", fawr, nfws, s1ro);
 
 	/* FRU globally unique identifier (FGUID) */
 	gu = fu_nvme_device_get_guid_safe(buf, 127);
@@ -254,20 +253,6 @@ fu_nvme_device_parse_cns(FuNvmeDevice *self, const guint8 *buf, gsize sz, GError
 		fu_device_add_instance_id(FU_DEVICE(self), mn);
 	}
 	return TRUE;
-}
-
-static void
-fu_nvme_device_dump(const gchar *title, const guint8 *buf, gsize sz)
-{
-	if (g_getenv("FWUPD_NVME_VERBOSE") == NULL)
-		return;
-	g_print("%s (%" G_GSIZE_FORMAT "):", title, sz);
-	for (gsize i = 0; i < sz; i++) {
-		if (i % 64 == 0)
-			g_print("\naddr 0x%04x: ", (guint)i);
-		g_print("%02x", buf[i]);
-	}
-	g_print("\n");
 }
 
 /*
@@ -344,7 +329,7 @@ fu_nvme_device_setup(FuDevice *device, GError **error)
 			       fu_device_get_physical_id(FU_DEVICE(self)));
 		return FALSE;
 	}
-	fu_nvme_device_dump("CNS", buf, sizeof(buf));
+	fu_dump_raw(G_LOG_DOMAIN, "CNS", buf, sizeof(buf));
 	if (!fu_nvme_device_parse_cns(self, buf, sizeof(buf), error))
 		return FALSE;
 

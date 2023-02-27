@@ -276,6 +276,7 @@ fu_genesys_usbhub_device_cfi_setup(FuGenesysUsbhubDevice *self, GError **error)
 		for (guint8 j = 0; j < G_N_ELEMENTS(rdid_dummy_addr); j++) {
 			guint16 val = ((guint16)rdid_cmd[i] << 8) | rdid_dummy_addr[j];
 			guint8 buf[2 * 3] = {0}; /* 2 x 3-bytes JEDEC-ID-bytes */
+			guint len;
 			g_autoptr(GError) error_local = NULL;
 			g_autoptr(FuCfiDevice) cfi_device = NULL;
 			g_autofree gchar *flash_id = NULL;
@@ -311,23 +312,19 @@ fu_genesys_usbhub_device_cfi_setup(FuGenesysUsbhubDevice *self, GError **error)
 			if (fu_device_get_name(FU_DEVICE(cfi_device)) == NULL)
 				continue;
 
-			if (g_getenv("FWUPD_GENESYS_USBHUB_VERBOSE") != NULL) {
-				guint len;
+			/*
+			 * The USB vendor command loops over the JEDEC-ID-bytes.
+			 *
+			 * Therefore, the CFI is 3-bytes long if the first 3-bytes are
+			 * identical to the last 3-bytes.
+			 */
+			if (buf[0] == buf[3] && buf[1] == buf[4] && buf[2] == buf[5])
+				len = 3;
+			else
+				len = 2;
 
-				/*
-				 * The USB vendor command loops over the JEDEC-ID-bytes.
-				 *
-				 * Therefore, the CFI is 3-bytes long if the first 3-bytes are
-				 * identical to the last 3-bytes.
-				 */
-				if (buf[0] == buf[3] && buf[1] == buf[4] && buf[2] == buf[5])
-					len = 3;
-				else
-					len = 2;
-
-				fu_dump_raw(G_LOG_DOMAIN, "Flash ID", buf, len);
-				g_debug("CFI: %s", fu_device_get_name(FU_DEVICE(cfi_device)));
-			}
+			fu_dump_raw(G_LOG_DOMAIN, "Flash ID", buf, len);
+			g_debug("CFI: %s", fu_device_get_name(FU_DEVICE(cfi_device)));
 
 			return g_steal_pointer(&cfi_device);
 		}
@@ -798,12 +795,10 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 		g_prefix_error(error, "failed to get static tool info from device: ");
 		return FALSE;
 	}
-	if (g_getenv("FWUPD_GENESYS_USBHUB_VERBOSE") != NULL) {
-		fu_dump_raw(G_LOG_DOMAIN,
-			    "Static info",
-			    (guint8 *)&self->static_ts,
-			    sizeof(FuGenesysStaticToolString));
-	}
+	fu_dump_raw(G_LOG_DOMAIN,
+		    "Static info",
+		    (guint8 *)&self->static_ts,
+		    sizeof(FuGenesysStaticToolString));
 
 	if (memcmp(self->static_ts.mask_project_ic_type, "3521", 4) == 0) {
 		self->chip.model = ISP_MODEL_HUB_GL3521;
@@ -846,12 +841,10 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 		g_prefix_error(error, "failed to get dynamic tool info from device: ");
 		return FALSE;
 	}
-	if (g_getenv("FWUPD_GENESYS_USBHUB_VERBOSE") != NULL) {
-		fu_dump_raw(G_LOG_DOMAIN,
-			    "Dynamic info",
-			    (guint8 *)&self->dynamic_ts,
-			    sizeof(FuGenesysDynamicToolString));
-	}
+	fu_dump_raw(G_LOG_DOMAIN,
+		    "Dynamic info",
+		    (guint8 *)&self->dynamic_ts,
+		    sizeof(FuGenesysDynamicToolString));
 
 	fw_buf =
 	    g_usb_device_get_string_descriptor_bytes_full(usb_device,
@@ -870,12 +863,10 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 		g_prefix_error(error, "failed to get firmware info from device: ");
 		return FALSE;
 	}
-	if (g_getenv("FWUPD_GENESYS_USBHUB_VERBOSE") != NULL) {
-		fu_dump_raw(G_LOG_DOMAIN,
-			    "Fw info",
-			    (guint8 *)&self->fwinfo_ts,
-			    sizeof(FuGenesysFirmwareInfoToolString));
-	}
+	fu_dump_raw(G_LOG_DOMAIN,
+		    "Fw info",
+		    (guint8 *)&self->fwinfo_ts,
+		    sizeof(FuGenesysFirmwareInfoToolString));
 
 	tool_string_version = fu_genesys_tsdigit_value(self->static_ts.tool_string_version);
 	if (tool_string_version >= TOOL_STRING_VERSION_VENDOR_SUPPORT) {
@@ -897,12 +888,10 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 			g_prefix_error(error, "failed to get vendor support info from device: ");
 			return FALSE;
 		}
-		if (g_getenv("FWUPD_GENESYS_USBHUB_VERBOSE") != NULL) {
-			fu_dump_raw(G_LOG_DOMAIN,
-				    "Vendor support",
-				    (guint8 *)&self->vs_ts,
-				    sizeof(FuGenesysVendorSupportToolString));
-		}
+		fu_dump_raw(G_LOG_DOMAIN,
+			    "Vendor support",
+			    (guint8 *)&self->vs_ts,
+			    sizeof(FuGenesysVendorSupportToolString));
 	}
 
 	if (fu_device_has_private_flag(device, FU_GENESYS_USBHUB_FLAG_HAS_PUBLIC_KEY)) {
@@ -1157,8 +1146,7 @@ fu_genesys_usbhub_device_prepare_firmware(FuDevice *device,
 		gsize bufsz = 0;
 		const guint8 *buf = g_bytes_get_data(fw, &bufsz);
 
-		if (g_getenv("FWUPD_GENESYS_USBHUB_VERBOSE") != NULL)
-			fu_dump_raw(G_LOG_DOMAIN, "PublicKey", buf, bufsz);
+		fu_dump_raw(G_LOG_DOMAIN, "PublicKey", buf, bufsz);
 		if (memcmp(buf + fu_firmware_get_size(firmware),
 			   &self->public_key,
 			   sizeof(self->public_key)) != 0 &&

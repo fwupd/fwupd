@@ -415,7 +415,7 @@ fu_msr_plugin_safe_kernel_for_sme(FuPlugin *plugin, GError **error)
 	g_autofree gchar *min = fu_plugin_get_config_value(plugin, "MinimumSmeKernelVersion");
 
 	if (min == NULL) {
-		g_debug("Ignoring kernel safety checks");
+		g_debug("ignoring kernel safety checks");
 		return TRUE;
 	}
 	return fu_kernel_check_version(min, error);
@@ -475,7 +475,7 @@ fu_plugin_add_security_attr_amd_sme_enabled(FuPlugin *plugin, FuSecurityAttrs *a
 	}
 
 	if (!fu_msr_plugin_safe_kernel_for_sme(plugin, &error_local)) {
-		g_debug("Unable to properly detect SME: %s", error_local->message);
+		g_debug("unable to properly detect SME: %s", error_local->message);
 		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_UNKNOWN);
 		return;
 	}

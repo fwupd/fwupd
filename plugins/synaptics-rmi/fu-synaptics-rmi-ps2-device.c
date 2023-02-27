@@ -699,9 +699,7 @@ fu_synaptics_rmi_ps2_device_read(FuSynapticsRmiDevice *rmi_device,
 		break;
 	}
 	dump = g_strdup_printf("R %x", addr);
-	if (g_getenv("FWUPD_SYNAPTICS_RMI_VERBOSE") != NULL) {
-		fu_dump_full(G_LOG_DOMAIN, dump, buf->data, buf->len, 80, FU_DUMP_FLAGS_NONE);
-	}
+	fu_dump_full(G_LOG_DOMAIN, dump, buf->data, buf->len, 80, FU_DUMP_FLAGS_NONE);
 	return g_steal_pointer(&buf);
 }
 
@@ -713,6 +711,7 @@ fu_synaptics_rmi_ps2_device_read_packet_register(FuSynapticsRmiDevice *rmi_devic
 {
 	FuSynapticsRmiPs2Device *self = FU_SYNAPTICS_RMI_PS2_DEVICE(rmi_device);
 	g_autoptr(GByteArray) buf = NULL;
+	g_autofree gchar *dump = g_strdup_printf("R %x", addr);
 
 	if (!fu_synaptics_rmi_device_set_page(rmi_device, addr >> 8, error)) {
 		g_prefix_error(error, "failed to set RMI page: ");
@@ -725,10 +724,7 @@ fu_synaptics_rmi_ps2_device_read_packet_register(FuSynapticsRmiDevice *rmi_devic
 		return NULL;
 	}
 
-	if (g_getenv("FWUPD_SYNAPTICS_RMI_VERBOSE") != NULL) {
-		g_autofree gchar *dump = g_strdup_printf("R %x", addr);
-		fu_dump_full(G_LOG_DOMAIN, dump, buf->data, buf->len, 80, FU_DUMP_FLAGS_NONE);
-	}
+	fu_dump_full(G_LOG_DOMAIN, dump, buf->data, buf->len, 80, FU_DUMP_FLAGS_NONE);
 	return g_steal_pointer(&buf);
 }
 
@@ -740,6 +736,8 @@ fu_synaptics_rmi_ps2_device_write(FuSynapticsRmiDevice *rmi_device,
 				  GError **error)
 {
 	FuSynapticsRmiPs2Device *self = FU_SYNAPTICS_RMI_PS2_DEVICE(rmi_device);
+	g_autofree gchar *str = g_strdup_printf("W %x", addr);
+
 	if (!fu_synaptics_rmi_device_set_page(rmi_device, addr >> 8, error)) {
 		g_prefix_error(error, "failed to set RMI page: ");
 		return FALSE;
@@ -754,10 +752,7 @@ fu_synaptics_rmi_ps2_device_write(FuSynapticsRmiDevice *rmi_device,
 		g_prefix_error(error, "failed to write register %x: ", addr);
 		return FALSE;
 	}
-	if (g_getenv("FWUPD_SYNAPTICS_RMI_VERBOSE") != NULL) {
-		g_autofree gchar *str = g_strdup_printf("W %x", addr);
-		fu_dump_full(G_LOG_DOMAIN, str, req->data, req->len, 80, FU_DUMP_FLAGS_NONE);
-	}
+	fu_dump_full(G_LOG_DOMAIN, str, req->data, req->len, 80, FU_DUMP_FLAGS_NONE);
 	return TRUE;
 }
 

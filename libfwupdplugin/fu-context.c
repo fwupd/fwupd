@@ -577,7 +577,7 @@ fu_context_add_udev_subsystem(FuContext *self, const gchar *subsystem)
 		if (g_strcmp0(subsystem_tmp, subsystem) == 0)
 			return;
 	}
-	g_debug("added udev subsystem watch of %s", subsystem);
+	g_info("added udev subsystem watch of %s", subsystem);
 	g_ptr_array_add(priv->udev_subsystems, g_strdup(subsystem));
 }
 
@@ -818,9 +818,9 @@ fu_context_load_hwinfo(FuContext *self,
 		if ((flags & hwids_setup_map[i].flag) > 0) {
 			g_autoptr(GError) error_local = NULL;
 			if (!hwids_setup_map[i].func(self, priv->hwids, &error_local)) {
-				g_debug("failed to load %s: %s",
-					hwids_setup_map[i].name,
-					error_local->message);
+				g_info("failed to load %s: %s",
+				       hwids_setup_map[i].name,
+				       error_local->message);
 				continue;
 			}
 		}
@@ -941,7 +941,7 @@ fu_context_set_power_state(FuContext *self, FuPowerState power_state)
 	if (priv->power_state == power_state)
 		return;
 	priv->power_state = power_state;
-	g_debug("power state now %s", fu_power_state_to_string(power_state));
+	g_info("power state now %s", fu_power_state_to_string(power_state));
 	g_object_notify(G_OBJECT(self), "power-state");
 }
 
@@ -980,7 +980,7 @@ fu_context_set_lid_state(FuContext *self, FuLidState lid_state)
 	if (priv->lid_state == lid_state)
 		return;
 	priv->lid_state = lid_state;
-	g_debug("lid state now %s", fu_lid_state_to_string(lid_state));
+	g_info("lid state now %s", fu_lid_state_to_string(lid_state));
 	g_object_notify(G_OBJECT(self), "lid-state");
 }
 
@@ -1020,7 +1020,7 @@ fu_context_set_battery_level(FuContext *self, guint battery_level)
 	if (priv->battery_level == battery_level)
 		return;
 	priv->battery_level = battery_level;
-	g_debug("battery level now %u", battery_level);
+	g_info("battery level now %u", battery_level);
 	g_object_notify(G_OBJECT(self), "battery-level");
 }
 
@@ -1060,7 +1060,7 @@ fu_context_set_battery_threshold(FuContext *self, guint battery_threshold)
 	if (priv->battery_threshold == battery_threshold)
 		return;
 	priv->battery_threshold = battery_threshold;
-	g_debug("battery threshold now %u", battery_threshold);
+	g_info("battery threshold now %u", battery_threshold);
 	g_object_notify(G_OBJECT(self), "battery-threshold");
 }
 

@@ -215,11 +215,11 @@ fu_util_start_engine(FuUtilPrivate *priv,
 	}
 #ifdef HAVE_SYSTEMD
 	if (getuid() != 0 || geteuid() != 0) {
-		g_debug("not attempting to stop daemon when running as user");
+		g_info("not attempting to stop daemon when running as user");
 	} else {
 		g_autoptr(GError) error_local = NULL;
 		if (!fu_systemd_unit_stop(fu_util_get_systemd_unit(), &error_local))
-			g_debug("Failed to stop daemon: %s", error_local->message);
+			g_info("failed to stop daemon: %s", error_local->message);
 	}
 #endif
 	flags |= FU_ENGINE_LOAD_FLAG_NO_IDLE_SOURCES;
@@ -292,7 +292,7 @@ static gboolean
 fu_util_sigint_cb(gpointer user_data)
 {
 	FuUtilPrivate *priv = (FuUtilPrivate *)user_data;
-	g_debug("Handling SIGINT");
+	g_info("handling SIGINT");
 	g_cancellable_cancel(priv->cancellable);
 	return FALSE;
 }
@@ -2946,7 +2946,7 @@ fu_util_refresh_remote(FuUtilPrivate *priv, FwupdRemote *remote, GError **error)
 		return FALSE;
 
 	/* send to daemon */
-	g_debug("updating %s", fwupd_remote_get_id(remote));
+	g_info("updating %s", fwupd_remote_get_id(remote));
 	return fu_engine_update_metadata_bytes(priv->engine,
 					       fwupd_remote_get_id(remote),
 					       bytes_raw,
@@ -4014,7 +4014,7 @@ main(int argc, char *argv[])
 
 	/* non-TTY consoles cannot answer questions */
 	if (!fu_util_setup_interactive(priv, &error_console)) {
-		g_debug("failed to initialize interactive console: %s", error_console->message);
+		g_info("failed to initialize interactive console: %s", error_console->message);
 		priv->no_reboot_check = TRUE;
 		priv->no_safety_check = TRUE;
 		priv->no_device_prompt = TRUE;
@@ -4144,7 +4144,7 @@ main(int argc, char *argv[])
 						 /* TRANSLATORS: explain how to get help */
 						 _("Use fwupdtool --help for help"));
 		} else if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO)) {
-			g_debug("%s\n", error->message);
+			g_info("%s\n", error->message);
 			return EXIT_NOTHING_TO_DO;
 		}
 #ifdef HAVE_GETUID

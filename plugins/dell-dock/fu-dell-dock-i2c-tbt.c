@@ -75,7 +75,7 @@ fu_dell_dock_tbt_write_fw(FuDevice *device,
 	dynamic_version = g_strdup_printf("%02x.%02x",
 					  buffer[self->blob_major_offset],
 					  buffer[self->blob_minor_offset]);
-	g_debug("writing Thunderbolt firmware version %s", dynamic_version);
+	g_info("writing Thunderbolt firmware version %s", dynamic_version);
 	g_debug("Total Image size: %" G_GSIZE_FORMAT, image_size);
 
 	memcpy(&start_offset, buffer, sizeof(guint32));
@@ -127,7 +127,7 @@ fu_dell_dock_tbt_write_fw(FuDevice *device,
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_BUSY);
 
 	if (fu_dell_dock_ec_tbt_passive(fu_device_get_parent(device))) {
-		g_debug("using passive flow for Thunderbolt");
+		g_info("using passive flow for Thunderbolt");
 	} else if (!fu_dell_dock_hid_tbt_authenticate(fu_device_get_proxy(device),
 						      &tbt_base_settings,
 						      error)) {

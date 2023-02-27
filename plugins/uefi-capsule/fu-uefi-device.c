@@ -435,7 +435,7 @@ fu_uefi_device_fixup_firmware(FuUefiDevice *self, GBytes *fw, GError **error)
 	}
 
 	/* create a fake header with plausible contents */
-	g_debug("missing or invalid embedded capsule header");
+	g_info("missing or invalid embedded capsule header");
 	priv->missing_header = TRUE;
 	header.flags = priv->capsule_flags;
 	header.header_size = hdrsize;
@@ -746,8 +746,8 @@ fu_uefi_device_prepare_firmware(FuDevice *device,
 
 	/* check there is enough space in the ESP */
 	if (sz_reqd == 0) {
-		g_debug("required ESP free space is not configured, using 2 x %uMB + 20MB",
-			(guint)g_bytes_get_size(fw) / (1024 * 1024));
+		g_info("required ESP free space is not configured, using 2 x %uMB + 20MB",
+		       (guint)g_bytes_get_size(fw) / (1024 * 1024));
 		sz_reqd = g_bytes_get_size(fw) * 2 + (20u * 1024 * 1024);
 	}
 	if (!fu_volume_check_free_space(priv->esp, sz_reqd, error))

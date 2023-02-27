@@ -257,7 +257,6 @@ fu_ihex_firmware_parse(FuFirmware *firmware,
 	guint32 addr_last = 0x0;
 	guint32 img_addr = G_MAXUINT32;
 	guint32 seg_addr = 0x0;
-	gboolean is_debug = g_getenv("FU_IHEX_FIRMWARE_VERBOSE") != NULL;
 	g_autoptr(GBytes) img_bytes = NULL;
 	g_autoptr(GByteArray) buf = g_byte_array_new();
 
@@ -269,11 +268,9 @@ fu_ihex_firmware_parse(FuFirmware *firmware,
 		guint32 len_hole;
 
 		/* debug */
-		if (is_debug) {
-			g_debug("%s:", fu_ihex_firmware_record_type_to_string(rcd->record_type));
-			g_debug("  length:\t0x%02x", rcd->data->len);
-			g_debug("  addr:\t0x%08x", addr);
-		}
+		g_debug("%s:", fu_ihex_firmware_record_type_to_string(rcd->record_type));
+		g_debug("length:\t0x%02x", rcd->data->len);
+		g_debug("addr:\t0x%08x", addr);
 
 		/* sanity check */
 		if (rcd->record_type != FU_IHEX_FIRMWARE_RECORD_TYPE_EOF && rcd->data->len == 0) {
@@ -374,8 +371,7 @@ fu_ihex_firmware_parse(FuFirmware *firmware,
 						    error))
 				return FALSE;
 			abs_addr = (guint32)addr16 << 16;
-			if (is_debug)
-				g_debug("  abs_addr:\t0x%02x on line %u", abs_addr, rcd->ln);
+			g_debug("abs_addr:\t0x%02x on line %u", abs_addr, rcd->ln);
 			break;
 		case FU_IHEX_FIRMWARE_RECORD_TYPE_START_LINEAR:
 			if (!fu_memread_uint32_safe(rcd->data->data,
@@ -385,8 +381,7 @@ fu_ihex_firmware_parse(FuFirmware *firmware,
 						    G_BIG_ENDIAN,
 						    error))
 				return FALSE;
-			if (is_debug)
-				g_debug("  abs_addr:\t0x%08x on line %u", abs_addr, rcd->ln);
+			g_debug("abs_addr:\t0x%08x on line %u", abs_addr, rcd->ln);
 			break;
 		case FU_IHEX_FIRMWARE_RECORD_TYPE_EXTENDED_SEGMENT:
 			if (!fu_memread_uint16_safe(rcd->data->data,
@@ -398,8 +393,7 @@ fu_ihex_firmware_parse(FuFirmware *firmware,
 				return FALSE;
 			/* segment base address, so ~1Mb addressable */
 			seg_addr = (guint32)addr16 * 16;
-			if (is_debug)
-				g_debug("  seg_addr:\t0x%08x on line %u", seg_addr, rcd->ln);
+			g_debug("seg_addr:\t0x%08x on line %u", seg_addr, rcd->ln);
 			break;
 		case FU_IHEX_FIRMWARE_RECORD_TYPE_START_SEGMENT:
 			/* initial content of the CS:IP registers */
@@ -410,8 +404,7 @@ fu_ihex_firmware_parse(FuFirmware *firmware,
 						    G_BIG_ENDIAN,
 						    error))
 				return FALSE;
-			if (is_debug)
-				g_debug("  seg_addr:\t0x%02x on line %u", seg_addr, rcd->ln);
+			g_debug("seg_addr:\t0x%02x on line %u", seg_addr, rcd->ln);
 			break;
 		case FU_IHEX_FIRMWARE_RECORD_TYPE_SIGNATURE:
 			if (got_sig) {

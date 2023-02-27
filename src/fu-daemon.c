@@ -996,7 +996,7 @@ fu_daemon_schedule_process_quit_cb(gpointer user_data)
 {
 	FuDaemon *self = FU_DAEMON(user_data);
 
-	g_debug("daemon asked to quit, shutting down");
+	g_info("daemon asked to quit, shutting down");
 	self->process_quit_id = 0;
 	g_main_loop_quit(self->loop);
 	return G_SOURCE_REMOVE;
@@ -2130,7 +2130,7 @@ fu_daemon_dbus_connection_closed_cb(GDBusConnection *connection,
 				    gpointer user_data)
 {
 	FuDaemon *self = FU_DAEMON(user_data);
-	g_debug("client connection closed: %s", error != NULL ? error->message : "unknown");
+	g_info("client connection closed: %s", error != NULL ? error->message : "unknown");
 	g_clear_object(&self->connection);
 }
 

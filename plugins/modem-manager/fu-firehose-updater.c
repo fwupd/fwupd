@@ -65,15 +65,11 @@ fu_firehose_updater_log_message(const gchar *action, GBytes *msg)
 	gsize msg_size;
 	g_autofree gchar *msg_strsafe = NULL;
 
-	if (g_getenv("FWUPD_MODEM_MANAGER_VERBOSE") == NULL)
-		return;
-
 	msg_data = (const gchar *)g_bytes_get_data(msg, &msg_size);
 	if (msg_size > G_MAXINT)
 		return;
 
 	msg_strsafe = fu_strsafe(msg_data, msg_size);
-
 	g_debug("%s: %.*s", action, (gint)msg_size, msg_strsafe);
 }
 

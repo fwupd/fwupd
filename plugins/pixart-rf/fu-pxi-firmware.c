@@ -94,9 +94,7 @@ fu_pxi_firmware_parse(FuFirmware *firmware,
 		g_prefix_error(error, "failed to read fw header: ");
 		return FALSE;
 	}
-	if (g_getenv("FWUPD_PIXART_RF_VERBOSE") != NULL) {
-		fu_dump_raw(G_LOG_DOMAIN, "fw header", fw_header, sizeof(fw_header));
-	}
+	fu_dump_raw(G_LOG_DOMAIN, "fw header", fw_header, sizeof(fw_header));
 
 	/* set fw version */
 	version_raw = (((guint32)(fw_header[0] - '0')) << 16) +

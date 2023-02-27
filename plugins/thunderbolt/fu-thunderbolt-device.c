@@ -124,7 +124,7 @@ fu_thunderbolt_device_get_version(FuThunderboltDevice *self, GError **error)
 		 * kernel only returns -ENODATA or -EAGAIN */
 		if (g_file_get_contents(safe_path, &version_raw, NULL, &error_local))
 			break;
-		g_debug("Attempt %u: Failed to read NVM version", i);
+		g_debug("attempt %u: failed to read NVM version", i);
 		fu_device_sleep(FU_DEVICE(self), TBT_NVM_RETRY_TIMEOUT);
 		/* safe mode probably */
 		if (g_error_matches(error_local, G_IO_ERROR, G_IO_ERROR_WOULD_BLOCK))
@@ -373,7 +373,7 @@ fu_thunderbolt_device_write_firmware(FuDevice *device,
 
 	/* using an active delayed activation flow later (either shutdown or another plugin) */
 	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_SKIPS_RESTART)) {
-		g_debug("Skipping Thunderbolt reset per quirk request");
+		g_debug("skipping Thunderbolt reset per quirk request");
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
 		return TRUE;
 	}

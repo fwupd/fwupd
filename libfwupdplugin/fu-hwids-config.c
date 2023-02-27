@@ -27,7 +27,7 @@ fu_hwids_config_setup(FuContext *ctx, FuHwids *self, GError **error)
 	for (guint i = 0; i < fns->len; i++) {
 		const gchar *fn = g_ptr_array_index(fns, i);
 		if (g_file_test(fn, G_FILE_TEST_EXISTS)) {
-			g_debug("loading HwId overrides from %s", fn);
+			g_info("loading HwId overrides from %s", fn);
 			if (!g_key_file_load_from_file(kf, fn, G_KEY_FILE_NONE, error))
 				return FALSE;
 		} else {

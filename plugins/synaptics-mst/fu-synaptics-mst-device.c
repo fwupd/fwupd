@@ -344,7 +344,7 @@ fu_synaptics_mst_device_update_esm(FuSynapticsMstDevice *self,
 			}
 		}
 
-		g_debug("Waiting for flash clear to settle");
+		g_debug("waiting for flash clear to settle");
 		fu_device_sleep(FU_DEVICE(self), FLASH_SETTLE_TIME);
 
 		/* write firmware */
@@ -425,7 +425,7 @@ fu_synaptics_mst_device_update_tesla_leaf_firmware(FuSynapticsMstDevice *self,
 
 		if (!fu_synaptics_mst_device_set_flash_sector_erase(self, 0xffff, 0, error))
 			return FALSE;
-		g_debug("Waiting for flash clear to settle");
+		g_debug("waiting for flash clear to settle");
 		fu_device_sleep(FU_DEVICE(self), FLASH_SETTLE_TIME);
 
 		fu_progress_set_steps(progress, write_loops);
@@ -556,7 +556,7 @@ fu_synaptics_mst_device_update_panamera_firmware(FuSynapticsMstDevice *self,
 	/* Current max firmware size is 104K */
 	if (fw_size < payload_len)
 		fw_size = 104 * 1024;
-	g_debug("Calculated fw size as %u", fw_size);
+	g_debug("Ccalculated fw size as %u", fw_size);
 
 	/* Update firmware */
 	write_loops = fw_size / unit_sz;
@@ -582,7 +582,7 @@ fu_synaptics_mst_device_update_panamera_firmware(FuSynapticsMstDevice *self,
 								    erase_offset,
 								    error))
 			return FALSE;
-		g_debug("Waiting for flash clear to settle");
+		g_debug("waiting for flash clear to settle");
 		fu_device_sleep(FU_DEVICE(self), FLASH_SETTLE_TIME);
 
 		/* write */
@@ -889,7 +889,7 @@ fu_synaptics_mst_device_update_cayenne_firmware(FuSynapticsMstDevice *self,
 
 		if (!fu_synaptics_mst_device_set_flash_sector_erase(self, 0xffff, 0, error))
 			return FALSE;
-		g_debug("Waiting for flash clear to settle");
+		g_debug("waiting for flash clear to settle");
 		fu_device_sleep(FU_DEVICE(self), FLASH_SETTLE_TIME);
 
 		fu_progress_set_steps(progress, write_loops);

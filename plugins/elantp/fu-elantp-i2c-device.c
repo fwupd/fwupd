@@ -134,7 +134,7 @@ fu_elantp_i2c_device_probe(FuDevice *device, GError **error)
 				return FALSE;
 			}
 
-			g_debug("Found I2C bus at %s, using this device",
+			g_debug("found I2C bus at %s, using this device",
 				fu_udev_device_get_sysfs_path(bus_device));
 			self->bind_path =
 			    g_build_filename("/sys/bus/i2c/drivers",
@@ -175,16 +175,14 @@ fu_elantp_i2c_device_send_cmd(FuElantpI2cDevice *self,
 			      gssize rxsz,
 			      GError **error)
 {
-	if (g_getenv("FWUPD_ELANTP_VERBOSE") != NULL)
-		fu_dump_raw(G_LOG_DOMAIN, "Write", tx, txsz);
+	fu_dump_raw(G_LOG_DOMAIN, "Write", tx, txsz);
 	if (!fu_udev_device_pwrite(FU_UDEV_DEVICE(self), 0, tx, txsz, error))
 		return FALSE;
 	if (rxsz == 0)
 		return TRUE;
 	if (!fu_udev_device_pread(FU_UDEV_DEVICE(self), 0, rx, rxsz, error))
 		return FALSE;
-	if (g_getenv("FWUPD_ELANTP_VERBOSE") != NULL)
-		fu_dump_raw(G_LOG_DOMAIN, "Read", rx, rxsz);
+	fu_dump_raw(G_LOG_DOMAIN, "Read", rx, rxsz);
 	return TRUE;
 }
 
@@ -585,7 +583,7 @@ fu_elantp_i2c_device_detach(FuDevice *device, FuProgress *progress, GError **err
 
 	/* sanity check */
 	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
-		g_debug("in bootloader mode, reset IC");
+		g_info("in bootloader mode, reset IC");
 		if (!fu_elantp_i2c_device_write_cmd(self,
 						    ETP_CMD_I2C_IAP_RESET,
 						    ETP_I2C_IAP_RESET,

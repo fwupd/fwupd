@@ -75,9 +75,7 @@ fu_usb_backend_context_flags_check(FuUsbBackend *self)
 {
 #if G_USB_CHECK_VERSION(0, 4, 5)
 	FuContext *ctx = fu_backend_get_context(FU_BACKEND(self));
-	GUsbContextFlags usb_flags = G_USB_CONTEXT_FLAGS_NONE;
-	if (g_getenv("FWUPD_BACKEND_VERBOSE") != NULL)
-		usb_flags |= G_USB_CONTEXT_FLAGS_DEBUG;
+	GUsbContextFlags usb_flags = G_USB_CONTEXT_FLAGS_DEBUG;
 	if (fu_context_has_flag(ctx, FU_CONTEXT_FLAG_SAVE_EVENTS)) {
 		g_debug("saving FuUsbBackend events");
 		usb_flags |= G_USB_CONTEXT_FLAGS_SAVE_EVENTS;
@@ -205,9 +203,9 @@ fu_usb_backend_save(FuBackend *backend,
 		GUsbDevice *usb_device = g_ptr_array_index(devices, i);
 		g_autoptr(GPtrArray) usb_events = g_usb_device_get_events(usb_device);
 		if (usb_events->len > 0 || g_usb_device_has_tag(usb_device, tag)) {
-			g_debug("%u USB events to save for %s",
-				usb_events->len,
-				g_usb_device_get_platform_id(usb_device));
+			g_info("%u USB events to save for %s",
+			       usb_events->len,
+			       g_usb_device_get_platform_id(usb_device));
 		}
 		usb_events_cnt += usb_events->len;
 	}

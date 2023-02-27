@@ -542,7 +542,7 @@ fu_parade_lspcon_device_reload(FuDevice *device, GError **error)
 	/* determine active partition for flashing later */
 	if (!fu_parade_lspcon_probe_active_flash_partition(self, &self->active_partition, error))
 		return FALSE;
-	g_debug("device reports running from partition %d", self->active_partition);
+	g_info("device reports running from partition %d", self->active_partition);
 	if (self->active_partition < 1 || self->active_partition > 3) {
 		g_set_error(error,
 			    FWUPD_ERROR,

@@ -49,7 +49,7 @@ fu_pci_bcr_plugin_device_registered(FuPlugin *plugin, FuDevice *dev)
 	    g_strcmp0(fu_device_get_plugin(dev), "flashrom") == 0) {
 		guint tmp = fu_device_get_metadata_integer(dev, "PciBcrAddr");
 		if (tmp != G_MAXUINT && self->bcr_addr != tmp) {
-			g_debug("overriding BCR addr from 0x%02x to 0x%02x", self->bcr_addr, tmp);
+			g_info("overriding BCR addr from 0x%02x to 0x%02x", self->bcr_addr, tmp);
 			self->bcr_addr = tmp;
 		}
 	}

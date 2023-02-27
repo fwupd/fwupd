@@ -63,9 +63,9 @@ fu_plugin_list_rules_changed_cb(FuPlugin *plugin, gpointer user_data)
 			continue;
 		if (fu_plugin_has_flag(dep, FWUPD_PLUGIN_FLAG_DISABLED))
 			continue;
-		g_debug("late disabling %s as conflicts with %s",
-			fu_plugin_get_name(dep),
-			fu_plugin_get_name(plugin));
+		g_info("late disabling %s as conflicts with %s",
+		       fu_plugin_get_name(dep),
+		       fu_plugin_get_name(plugin));
 		fu_plugin_add_flag(dep, FWUPD_PLUGIN_FLAG_DISABLED);
 	}
 }
@@ -176,10 +176,10 @@ fu_plugin_list_depsolve(FuPluginList *self, GError **error)
 				const gchar *plugin_name = g_ptr_array_index(deps, j);
 				dep = fu_plugin_list_find_by_name(self, plugin_name, NULL);
 				if (dep == NULL) {
-					g_debug("cannot find plugin '%s' "
-						"requested by '%s'",
-						plugin_name,
-						fu_plugin_get_name(plugin));
+					g_info("cannot find plugin '%s' "
+					       "requested by '%s'",
+					       plugin_name,
+					       fu_plugin_get_name(plugin));
 					continue;
 				}
 				if (fu_plugin_has_flag(dep, FWUPD_PLUGIN_FLAG_DISABLED))
@@ -206,10 +206,10 @@ fu_plugin_list_depsolve(FuPluginList *self, GError **error)
 				const gchar *plugin_name = g_ptr_array_index(deps, j);
 				dep = fu_plugin_list_find_by_name(self, plugin_name, NULL);
 				if (dep == NULL) {
-					g_debug("cannot find plugin '%s' "
-						"requested by '%s'",
-						plugin_name,
-						fu_plugin_get_name(plugin));
+					g_info("cannot find plugin '%s' "
+					       "requested by '%s'",
+					       plugin_name,
+					       fu_plugin_get_name(plugin));
 					continue;
 				}
 				if (fu_plugin_has_flag(dep, FWUPD_PLUGIN_FLAG_DISABLED))
@@ -238,10 +238,10 @@ fu_plugin_list_depsolve(FuPluginList *self, GError **error)
 				const gchar *plugin_name = g_ptr_array_index(deps, j);
 				dep = fu_plugin_list_find_by_name(self, plugin_name, NULL);
 				if (dep == NULL) {
-					g_debug("cannot find plugin '%s' "
-						"referenced by '%s'",
-						plugin_name,
-						fu_plugin_get_name(plugin));
+					g_info("cannot find plugin '%s' "
+					       "referenced by '%s'",
+					       plugin_name,
+					       fu_plugin_get_name(plugin));
 					continue;
 				}
 				if (fu_plugin_has_flag(dep, FWUPD_PLUGIN_FLAG_DISABLED))
@@ -286,9 +286,9 @@ fu_plugin_list_depsolve(FuPluginList *self, GError **error)
 				continue;
 			if (fu_plugin_has_flag(dep, FWUPD_PLUGIN_FLAG_DISABLED))
 				continue;
-			g_debug("disabling %s as conflicts with %s",
-				fu_plugin_get_name(dep),
-				fu_plugin_get_name(plugin));
+			g_info("disabling %s as conflicts with %s",
+			       fu_plugin_get_name(dep),
+			       fu_plugin_get_name(plugin));
 			fu_plugin_add_flag(dep, FWUPD_PLUGIN_FLAG_DISABLED);
 		}
 	}

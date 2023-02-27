@@ -386,6 +386,8 @@ fu_bcm57xx_device_prepare_firmware(FuDevice *device,
 				   GError **error)
 {
 	guint dict_cnt = 0;
+	g_autofree gchar *str_existing = NULL;
+	g_autofree gchar *str_proposed = NULL;
 	g_autoptr(GBytes) fw_old = NULL;
 	g_autoptr(FuFirmware) firmware = fu_bcm57xx_firmware_new();
 	g_autoptr(FuFirmware) firmware_tmp = fu_bcm57xx_firmware_new();
@@ -429,10 +431,8 @@ fu_bcm57xx_device_prepare_firmware(FuDevice *device,
 		g_prefix_error(error, "failed to parse existing firmware: ");
 		return NULL;
 	}
-	if (g_getenv("FWUPD_BCM57XX_VERBOSE") != NULL) {
-		g_autofree gchar *str = fu_firmware_to_string(firmware);
-		g_debug("existing device firmware: %s", str);
-	}
+	str_existing = fu_firmware_to_string(firmware);
+	g_info("existing device firmware: %s", str_existing);
 
 	/* merge in all the provided images into the existing firmware */
 	img_stage1 = fu_firmware_get_image_by_id(firmware_tmp, "stage1", NULL);
@@ -454,10 +454,8 @@ fu_bcm57xx_device_prepare_firmware(FuDevice *device,
 			dict_cnt++;
 		}
 	}
-	if (g_getenv("FWUPD_BCM57XX_VERBOSE") != NULL) {
-		g_autofree gchar *str = fu_firmware_to_string(firmware);
-		g_debug("proposed device firmware: %s", str);
-	}
+	str_proposed = fu_firmware_to_string(firmware);
+	g_info("proposed device firmware: %s", str_proposed);
 
 	/* success */
 	return g_steal_pointer(&firmware);
@@ -543,7 +541,7 @@ fu_bcm57xx_device_setup(FuDevice *device, GError **error)
 	/* device is in recovery mode */
 	if (self->ethtool_iface == NULL) {
 		g_autoptr(FuDeviceLocker) locker = NULL;
-		g_debug("device in recovery mode, use alternate device");
+		g_info("device in recovery mode, use alternate device");
 		locker = fu_device_locker_new(FU_DEVICE(self->recovery), error);
 		if (locker == NULL)
 			return FALSE;

@@ -219,12 +219,10 @@ fu_uf2_firmware_parse_chunk(FuUf2Firmware *self, FuChunk *chk, GByteArray *tmp, 
 	}
 
 	/* dump */
-	if (g_getenv("FWUPD_U2F_VERBOSE") != NULL) {
-		g_debug("block: 0x%x/0x%x @0x%x", blockcnt, blocktotal - 1, addr);
-		g_debug("family_id: 0x%x", family_id);
-		g_debug("flags: 0x%x", flags);
-		g_debug("datasz: 0x%x", datasz);
-	}
+	g_debug("block: 0x%x/0x%x @0x%x", blockcnt, blocktotal - 1, addr);
+	g_debug("family_id: 0x%x", family_id);
+	g_debug("flags: 0x%x", flags);
+	g_debug("datasz: 0x%x", datasz);
 
 	/* success */
 	return TRUE;
