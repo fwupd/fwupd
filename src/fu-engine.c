@@ -2014,7 +2014,17 @@ static gboolean
 fu_engine_check_requirement_id(FuEngine *self, XbNode *req, GError **error)
 {
 	g_autoptr(GError) error_local = NULL;
-	const gchar *version = g_hash_table_lookup(self->runtime_versions, xb_node_get_text(req));
+	const gchar *version;
+
+	/* sanity check */
+	if (xb_node_get_text(req) == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "no requirement value supplied");
+		return FALSE;
+	}
+	version = g_hash_table_lookup(self->runtime_versions, xb_node_get_text(req));
 	if (version == NULL) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -2056,6 +2066,15 @@ fu_engine_check_requirement_hardware(FuEngine *self, XbNode *req, GError **error
 {
 	g_auto(GStrv) hwid_split = NULL;
 
+	/* sanity check */
+	if (xb_node_get_text(req) == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "no requirement value supplied");
+		return FALSE;
+	}
+
 	/* split and treat as OR */
 	hwid_split = g_strsplit(xb_node_get_text(req), "|", -1);
 	for (guint i = 0; hwid_split[i] != NULL; i++) {
@@ -2082,6 +2101,15 @@ fu_engine_check_requirement_client(FuEngine *self,
 {
 	FwupdFeatureFlags flags;
 	g_auto(GStrv) feature_split = NULL;
+
+	/* sanity check */
+	if (xb_node_get_text(req) == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "no requirement value supplied");
+		return FALSE;
+	}
 
 	/* split and treat as AND */
 	feature_split = g_strsplit(xb_node_get_text(req), "|", -1);
