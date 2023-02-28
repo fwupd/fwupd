@@ -738,6 +738,9 @@ fu_uefi_device_init(FuUefiDevice *self)
 	fu_device_register_private_flag(FU_DEVICE(self),
 					FU_UEFI_DEVICE_FLAG_ENABLE_EFI_DEBUGGING,
 					"enable-debugging");
+	fu_device_register_private_flag(FU_DEVICE(self),
+					FU_UEFI_DEVICE_FLAG_COD_INDEXED_FILENAME,
+					"cod-indexed-filename");
 }
 
 static void

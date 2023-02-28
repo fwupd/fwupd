@@ -9,7 +9,6 @@
 #include "fu-acpi-uefi.h"
 #include "fu-uefi-struct.h"
 
-#define FU_EFI_INSYDE_GUID	 "9d4bf935-a674-4710-ba02-bf0aa1758c7b"
 #define INSYDE_QUIRK_COD_WORKING 0x1
 
 struct _FuAcpiUefi {
@@ -155,11 +154,21 @@ fu_acpi_uefi_new(void)
 gboolean
 fu_acpi_uefi_cod_functional(FuAcpiUefi *self, GError **error)
 {
+	g_return_val_if_fail(FU_IS_ACPI_UEFI(self), FALSE);
 	if (!self->is_insyde || self->insyde_cod_status > 0)
 		return TRUE;
 	g_set_error_literal(error,
 			    G_IO_ERROR,
 			    G_IO_ERROR_NOT_SUPPORTED,
 			    "Capsule-on-Disk may have a firmware bug");
+	return FALSE;
+}
+
+gboolean
+fu_acpi_uefi_cod_indexed_filename(FuAcpiUefi *self)
+{
+	g_return_val_if_fail(FU_IS_ACPI_UEFI(self), FALSE);
+	if (self->is_insyde)
+		return TRUE;
 	return FALSE;
 }

@@ -142,6 +142,15 @@ option *EspLocation* in `/etc/fwupd/fwupd.conf`.
 
 Setting an invalid directory will disable the fwupd plugin.
 
+## Quirk Use
+
+This plugin uses the following plugin-specific quirks:
+
+### `Flags=cod-indexed-filename`
+
+Use a Capsule-on-Disk filename of `CapsuleUpdateFileXXXX.bin` rather than including the ESRT GUID.
+This alternative format may be needed for some early InsydeH2O firmwares.
+
 ## External Interface Access
 
 This plugin requires:
