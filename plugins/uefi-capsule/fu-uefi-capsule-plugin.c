@@ -23,6 +23,7 @@
 struct _FuUefiCapsulePlugin {
 	FuPlugin parent_instance;
 	FuUefiBgrt *bgrt;
+	FuFirmware *acpi_uefi; /* optional */
 	FuVolume *esp;
 	FuBackend *backend;
 	GFile *fwupd_efi_file;
@@ -724,6 +725,7 @@ fu_uefi_capsule_plugin_get_name_for_type(FuPlugin *plugin, FuUefiDeviceKind devi
 static gboolean
 fu_uefi_capsule_plugin_coldplug_device(FuPlugin *plugin, FuUefiDevice *dev, GError **error)
 {
+	FuUefiCapsulePlugin *self = FU_UEFI_CAPSULE_PLUGIN(plugin);
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	FuUefiDeviceKind device_kind;
 
@@ -746,6 +748,13 @@ fu_uefi_capsule_plugin_coldplug_device(FuPlugin *plugin, FuUefiDevice *dev, GErr
 		fu_device_add_private_flag(FU_DEVICE(dev), FU_UEFI_DEVICE_FLAG_NO_UX_CAPSULE);
 	if (fu_context_has_hwid_flag(ctx, "no-lid-closed"))
 		fu_device_add_internal_flag(FU_DEVICE(dev), FU_DEVICE_INTERNAL_FLAG_NO_LID_CLOSED);
+
+	/* detected InsydeH2O */
+	if (self->acpi_uefi != NULL &&
+	    fu_acpi_uefi_cod_indexed_filename(FU_ACPI_UEFI(self->acpi_uefi))) {
+		fu_device_add_private_flag(FU_DEVICE(dev),
+					   FU_UEFI_DEVICE_FLAG_COD_INDEXED_FILENAME);
+	}
 
 	/* set fallback name if nothing else is set */
 	device_kind = fu_uefi_device_get_kind(dev);
@@ -791,6 +800,23 @@ fu_uefi_capsule_plugin_test_secure_boot(FuPlugin *plugin)
 }
 
 static gboolean
+fu_uefi_capsule_plugin_parse_acpi_uefi(FuUefiCapsulePlugin *self, GError **error)
+{
+	g_autofree gchar *fn = NULL;
+	g_autofree gchar *path = NULL;
+	g_autoptr(GBytes) blob = NULL;
+
+	/* if we have a table, parse it and validate it */
+	path = fu_path_from_kind(FU_PATH_KIND_ACPI_TABLES);
+	fn = g_build_filename(path, "UEFI", NULL);
+	blob = fu_bytes_get_contents(fn, error);
+	if (blob == NULL)
+		return FALSE;
+	self->acpi_uefi = fu_acpi_uefi_new();
+	return fu_firmware_parse(self->acpi_uefi, blob, FWUPD_INSTALL_FLAG_NONE, error);
+}
+
+static gboolean
 fu_uefi_capsule_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 {
 	FuUefiCapsulePlugin *self = FU_UEFI_CAPSULE_PLUGIN(plugin);
@@ -799,6 +825,7 @@ fu_uefi_capsule_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **
 	g_autofree gchar *esp_path = NULL;
 	g_autofree gchar *nvram_total_str = NULL;
 	g_autoptr(GError) error_local = NULL;
+	g_autoptr(GError) error_acpi_uefi = NULL;
 
 	/* don't let user's environment influence test suite failures */
 	if (g_getenv("FWUPD_UEFI_TEST") != NULL)
@@ -853,6 +880,10 @@ fu_uefi_capsule_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **
 			return FALSE;
 		}
 	}
+
+	/* we use this both for quirking the CoD implementation sanity and the CoD filename */
+	if (!fu_uefi_capsule_plugin_parse_acpi_uefi(self, &error_acpi_uefi))
+		g_debug("failed to load ACPI UEFI table: %s", error_acpi_uefi->message);
 
 	/* test for invalid ESP in coldplug, and set the update-error rather
 	 * than showing no output if the plugin had self-disabled here */
@@ -956,15 +987,11 @@ fu_plugin_uefi_update_state_notify_cb(GObject *object, GParamSpec *pspec, FuPlug
 }
 
 static gboolean
-fu_uefi_capsule_plugin_check_cod_support(FuPlugin *plugin, GError **error)
+fu_uefi_capsule_plugin_check_cod_support(FuUefiCapsulePlugin *self, GError **error)
 {
 	gsize bufsz = 0;
 	guint64 value = 0;
-	g_autofree gchar *fn = NULL;
-	g_autofree gchar *path = NULL;
 	g_autofree guint8 *buf = NULL;
-	g_autoptr(FuFirmware) acpi_uefi = NULL;
-	g_autoptr(GBytes) blob = NULL;
 
 	if (!fu_efivar_get_data(FU_EFIVAR_GUID_EFI_GLOBAL,
 				"OsIndicationsSupported",
@@ -986,19 +1013,9 @@ fu_uefi_capsule_plugin_check_cod_support(FuPlugin *plugin, GError **error)
 	}
 
 	/* no table, nothing to check */
-	path = fu_path_from_kind(FU_PATH_KIND_ACPI_TABLES);
-	fn = g_build_filename(path, "UEFI", NULL);
-	if (!g_file_test(fn, G_FILE_TEST_EXISTS))
+	if (self->acpi_uefi == NULL)
 		return TRUE;
-
-	/* if we have a table, parse it and validate it */
-	blob = fu_bytes_get_contents(fn, error);
-	if (blob == NULL)
-		return FALSE;
-	acpi_uefi = fu_acpi_uefi_new();
-	if (!fu_firmware_parse(acpi_uefi, blob, FWUPD_INSTALL_FLAG_NONE, error))
-		return FALSE;
-	return fu_acpi_uefi_cod_functional(FU_ACPI_UEFI(acpi_uefi), error);
+	return fu_acpi_uefi_cod_functional(FU_ACPI_UEFI(self->acpi_uefi), error);
 }
 
 static gboolean
@@ -1044,7 +1061,7 @@ fu_uefi_capsule_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError *
 		"DisableCapsuleUpdateOnDisk",
 		FU_UEFI_CAPSULE_CONFIG_DEFAULT_DISABLE_CAPSULE_UPDATE_ON_DISK)) {
 		g_autoptr(GError) error_cod = NULL;
-		if (!fu_uefi_capsule_plugin_check_cod_support(plugin, &error_cod)) {
+		if (!fu_uefi_capsule_plugin_check_cod_support(self, &error_cod)) {
 			g_debug("not using CapsuleOnDisk support: %s", error_cod->message);
 		} else {
 			fu_uefi_backend_set_device_gtype(FU_UEFI_BACKEND(self->backend),
@@ -1150,6 +1167,8 @@ fu_uefi_capsule_finalize(GObject *obj)
 		g_object_unref(self->esp);
 	if (self->fwupd_efi_file != NULL)
 		g_object_unref(self->fwupd_efi_file);
+	if (self->acpi_uefi != NULL)
+		g_object_unref(self->acpi_uefi);
 	if (self->fwupd_efi_monitor != NULL) {
 		g_file_monitor_cancel(self->fwupd_efi_monitor);
 		g_object_unref(self->fwupd_efi_monitor);

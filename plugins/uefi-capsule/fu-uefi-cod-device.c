@@ -134,6 +134,39 @@ fu_uefi_cod_device_get_results(FuDevice *device, GError **error)
 	return TRUE;
 }
 
+static gchar *
+fu_uefi_cod_device_get_indexed_filename(FuUefiDevice *self, GError **error)
+{
+	g_autofree gchar *esp_path = fu_volume_get_mount_point(fu_uefi_device_get_esp(self));
+	for (guint i = 0; i < 0xFFFF; i++) {
+		g_autofree gchar *basename = g_strdup_printf("CapsuleUpdateFile%04X.bin", i);
+		g_autofree gchar *cod_path =
+		    g_build_filename(esp_path, "EFI", "UpdateCapsule", basename, NULL);
+		if (!g_file_test(cod_path, G_FILE_TEST_EXISTS))
+			return g_steal_pointer(&cod_path);
+	}
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "all potential CapsuleUpdateFile file names are taken");
+	return NULL;
+}
+
+static gchar *
+fu_uefi_cod_device_get_filename(FuUefiDevice *self, GError **error)
+{
+	g_autofree gchar *esp_path = fu_volume_get_mount_point(fu_uefi_device_get_esp(self));
+	g_autofree gchar *basename = NULL;
+
+	/* InsydeH2O */
+	if (fu_device_has_private_flag(FU_DEVICE(self), FU_UEFI_DEVICE_FLAG_COD_INDEXED_FILENAME))
+		return fu_uefi_cod_device_get_indexed_filename(self, error);
+
+	/* fallback */
+	basename = g_strdup_printf("fwupd-%s.cap", fu_uefi_device_get_guid(self));
+	return g_build_filename(esp_path, "EFI", "UpdateCapsule", basename, NULL);
+}
+
 static gboolean
 fu_uefi_cod_device_write_firmware(FuDevice *device,
 				  FuFirmware *firmware,
@@ -142,7 +175,6 @@ fu_uefi_cod_device_write_firmware(FuDevice *device,
 				  GError **error)
 {
 	FuUefiDevice *self = FU_UEFI_DEVICE(device);
-	g_autofree gchar *basename = NULL;
 	g_autofree gchar *cod_path = NULL;
 	g_autofree gchar *esp_path = fu_volume_get_mount_point(fu_uefi_device_get_esp(self));
 	g_autoptr(GBytes) fw = NULL;
@@ -160,8 +192,10 @@ fu_uefi_cod_device_write_firmware(FuDevice *device,
 	fw = fu_firmware_get_bytes(firmware, error);
 	if (fw == NULL)
 		return FALSE;
-	basename = g_strdup_printf("fwupd-%s.cap", fu_uefi_device_get_guid(self));
-	cod_path = g_build_filename(esp_path, "EFI", "UpdateCapsule", basename, NULL);
+	cod_path = fu_uefi_cod_device_get_filename(self, error);
+	if (cod_path == NULL)
+		return FALSE;
+	g_info("using %s", cod_path);
 	if (!fu_path_mkdir_parent(cod_path, error))
 		return FALSE;
 	if (!fu_bytes_set_contents(cod_path, fw, error))
