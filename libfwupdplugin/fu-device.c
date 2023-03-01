@@ -243,6 +243,8 @@ fu_device_internal_flag_to_string(FuDeviceInternalFlags flag)
 		return "ignore-system-power";
 	if (flag == FU_DEVICE_INTERNAL_FLAG_NO_PROBE_COMPLETE)
 		return "no-probe-complete";
+	if (flag == FU_DEVICE_INTERNAL_FLAG_SAVE_INTO_BACKUP_REMOTE)
+		return "save-into-backup-remote";
 	return NULL;
 }
 
@@ -315,6 +317,8 @@ fu_device_internal_flag_from_string(const gchar *flag)
 		return FU_DEVICE_INTERNAL_FLAG_IGNORE_SYSTEM_POWER;
 	if (g_strcmp0(flag, "no-probe-complete") == 0)
 		return FU_DEVICE_INTERNAL_FLAG_NO_PROBE_COMPLETE;
+	if (g_strcmp0(flag, "save-into-backup-remote") == 0)
+		return FU_DEVICE_INTERNAL_FLAG_SAVE_INTO_BACKUP_REMOTE;
 	return FU_DEVICE_INTERNAL_FLAG_UNKNOWN;
 }
 

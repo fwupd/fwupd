@@ -924,3 +924,12 @@ LIBFWUPD_1.8.11 {
     fwupd_device_set_percentage;
   local: *;
 } LIBFWUPD_1.8.8;
+
+LIBFWUPD_1.8.13 {
+  global:
+    fwupd_remote_save_to_filename;
+    fwupd_remote_set_enabled;
+    fwupd_remote_set_metadata_uri;
+    fwupd_remote_set_title;
+  local: *;
+} LIBFWUPD_1.8.11;

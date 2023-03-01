@@ -19,6 +19,15 @@ fwupd_remote_load_from_filename(FwupdRemote *self,
 				const gchar *filename,
 				GCancellable *cancellable,
 				GError **error);
+gboolean
+fwupd_remote_save_to_filename(FwupdRemote *self,
+			      const gchar *filename,
+			      GCancellable *cancellable,
+			      GError **error);
+void
+fwupd_remote_set_enabled(FwupdRemote *self, gboolean enabled);
+void
+fwupd_remote_set_title(FwupdRemote *self, const gchar *title);
 void
 fwupd_remote_set_priority(FwupdRemote *self, gint priority);
 void
@@ -27,6 +36,8 @@ void
 fwupd_remote_set_checksum(FwupdRemote *self, const gchar *checksum);
 void
 fwupd_remote_set_filename_cache(FwupdRemote *self, const gchar *filename);
+void
+fwupd_remote_set_metadata_uri(FwupdRemote *self, const gchar *metadata_uri);
 void
 fwupd_remote_set_mtime(FwupdRemote *self, guint64 mtime);
 gchar **

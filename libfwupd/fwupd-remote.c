@@ -152,10 +152,21 @@ fwupd_remote_set_username(FwupdRemote *self, const gchar *username)
 	priv->username = g_strdup(username);
 }
 
-static void
+/**
+ * fwupd_remote_set_title:
+ * @self: a #FwupdRemote
+ * @title: (nullable): title text, e.g. "Backup"
+ *
+ * Sets the remote title.
+ *
+ * Since: 1.8.13
+ **/
+void
 fwupd_remote_set_title(FwupdRemote *self, const gchar *title)
 {
 	FwupdRemotePrivate *priv = GET_PRIVATE(self);
+
+	g_return_if_fail(FWUPD_IS_REMOTE(self));
 
 	/* not changed */
 	if (g_strcmp0(priv->title, title) == 0)
@@ -179,6 +190,8 @@ fwupd_remote_set_agreement(FwupdRemote *self, const gchar *agreement)
 {
 	FwupdRemotePrivate *priv = GET_PRIVATE(self);
 
+	g_return_if_fail(FWUPD_IS_REMOTE(self));
+
 	/* not changed */
 	if (g_strcmp0(priv->agreement, agreement) == 0)
 		return;
@@ -200,6 +213,8 @@ void
 fwupd_remote_set_checksum(FwupdRemote *self, const gchar *checksum)
 {
 	FwupdRemotePrivate *priv = GET_PRIVATE(self);
+
+	g_return_if_fail(FWUPD_IS_REMOTE(self));
 
 	/* not changed */
 	if (g_strcmp0(priv->checksum, checksum) == 0)
@@ -242,6 +257,7 @@ void
 fwupd_remote_set_keyring_kind(FwupdRemote *self, FwupdKeyringKind keyring_kind)
 {
 	FwupdRemotePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FWUPD_IS_REMOTE(self));
 	priv->keyring_kind = keyring_kind;
 }
 
@@ -273,6 +289,7 @@ void
 fwupd_remote_set_filename_source(FwupdRemote *self, const gchar *filename_source)
 {
 	FwupdRemotePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FWUPD_IS_REMOTE(self));
 	if (priv->filename_source == filename_source)
 		return;
 	g_free(priv->filename_source);
@@ -368,12 +385,24 @@ fwupd_remote_build_uri(FwupdRemote *self, const gchar *url, GError **error)
 #endif
 }
 
-/* note, this has to be set before username and password */
-static void
+/**
+ * fwupd_remote_set_metadata_uri:
+ * @self: a #FwupdRemote
+ * @metadata_uri: (nullable): metadata URI
+ *
+ * Sets the remote metadata URI.
+ *
+ * NOTE: This has to be set before the username and password.
+ *
+ * Since: 1.8.13
+ **/
+void
 fwupd_remote_set_metadata_uri(FwupdRemote *self, const gchar *metadata_uri)
 {
 	FwupdRemotePrivate *priv = GET_PRIVATE(self);
 	const gchar *suffix;
+
+	g_return_if_fail(FWUPD_IS_REMOTE(self));
 
 	/* save this so we can export the object as a GVariant */
 	priv->metadata_uri = g_strdup(metadata_uri);
@@ -730,6 +759,76 @@ fwupd_remote_load_from_filename(FwupdRemote *self,
 	/* success */
 	fwupd_remote_set_filename_source(self, filename);
 	return TRUE;
+}
+
+/**
+ * fwupd_remote_save_to_filename:
+ * @self: a #FwupdRemote
+ * @filename: (not nullable): a filename
+ * @cancellable: (nullable): optional #GCancellable
+ * @error: (nullable): optional return location for an error
+ *
+ * Saves metadata about the remote to a keyfile.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.8.13
+ **/
+gboolean
+fwupd_remote_save_to_filename(FwupdRemote *self,
+			      const gchar *filename,
+			      GCancellable *cancellable,
+			      GError **error)
+{
+	FwupdRemotePrivate *priv = GET_PRIVATE(self);
+	const gchar *group = "fwupd Remote";
+	g_autoptr(GKeyFile) kf = g_key_file_new();
+
+	g_return_val_if_fail(FWUPD_IS_REMOTE(self), FALSE);
+	g_return_val_if_fail(filename != NULL, FALSE);
+	g_return_val_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	/* optional keys */
+	if (priv->keyring_kind != FWUPD_KEYRING_KIND_UNKNOWN) {
+		g_key_file_set_string(kf,
+				      group,
+				      "Keyring",
+				      fwupd_keyring_kind_to_string(priv->keyring_kind));
+	}
+	if (priv->metadata_uri != NULL)
+		g_key_file_set_string(kf, group, "MetadataURI", priv->metadata_uri);
+	if (priv->title != NULL)
+		g_key_file_set_string(kf, group, "Title", priv->title);
+	if (priv->report_uri != NULL)
+		g_key_file_set_string(kf, group, "ReportURI", priv->report_uri);
+	if (priv->security_report_uri != NULL)
+		g_key_file_set_string(kf, group, "SecurityReportURI", priv->security_report_uri);
+	if (priv->username != NULL)
+		g_key_file_set_string(kf, group, "Username", priv->username);
+	if (priv->password != NULL)
+		g_key_file_set_string(kf, group, "Password", priv->password);
+	if (priv->firmware_base_uri != NULL)
+		g_key_file_set_string(kf, group, "FirmwareBaseURI", priv->firmware_base_uri);
+	if (priv->order_after != NULL) {
+		g_autofree gchar *str = g_strjoinv(";", priv->order_after);
+		g_key_file_set_string(kf, group, "OrderAfter", str);
+	}
+	if (priv->order_before != NULL) {
+		g_autofree gchar *str = g_strjoinv(";", priv->order_before);
+		g_key_file_set_string(kf, group, "OrderBefore", str);
+	}
+	if (priv->enabled)
+		g_key_file_set_boolean(kf, group, "Enabled", TRUE);
+	if (priv->approval_required)
+		g_key_file_set_boolean(kf, group, "ApprovalRequired", TRUE);
+	if (priv->automatic_reports)
+		g_key_file_set_boolean(kf, group, "AutomaticReports", TRUE);
+	if (priv->automatic_security_reports)
+		g_key_file_set_boolean(kf, group, "AutomaticSecurityReports", TRUE);
+
+	/* save file */
+	return g_key_file_save_to_file(kf, filename, error);
 }
 
 /**
@@ -1303,6 +1402,23 @@ fwupd_remote_get_enabled(FwupdRemote *self)
 	FwupdRemotePrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FWUPD_IS_REMOTE(self), FALSE);
 	return priv->enabled;
+}
+
+/**
+ * fwupd_remote_set_enabled:
+ * @self: a #FwupdRemote
+ * @enabled: boolean
+ *
+ * Sets if the remote is enabled and should be used.
+ *
+ * Since: 1.8.13
+ **/
+void
+fwupd_remote_set_enabled(FwupdRemote *self, gboolean enabled)
+{
+	FwupdRemotePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FWUPD_IS_REMOTE(self));
+	priv->enabled = enabled;
 }
 
 /**
