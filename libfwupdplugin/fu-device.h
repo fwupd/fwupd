@@ -493,6 +493,20 @@ typedef guint64 FuDeviceInternalFlags;
  */
 #define FU_DEVICE_INTERNAL_FLAG_NO_PROBE_COMPLETE (1ull << 27)
 
+/**
+ * FU_DEVICE_INTERNAL_FLAG_SAVE_INTO_BACKUP_REMOTE:
+ *
+ * Save the cabinet archive to persistent storage remote before starting the update process.
+ *
+ * This is useful when the network device is being updated, and different blobs inside the archive
+ * could be required in different scenarios. For instance, if the user installs a firmware update
+ * for a specific network device and then changes the SIM -- it might be they need the archive
+ * again and have no internet access.
+ *
+ * Since: 1.8.13
+ */
+#define FU_DEVICE_INTERNAL_FLAG_SAVE_INTO_BACKUP_REMOTE (1ull << 28)
+
 /* accessors */
 gchar *
 fu_device_to_string(FuDevice *self);

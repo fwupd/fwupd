@@ -2999,6 +2999,47 @@ fu_engine_schedule_update(FuEngine *self,
 	return fu_engine_offline_setup(error);
 }
 
+static gboolean
+fu_engine_save_into_backup_remote(FuEngine *self, GBytes *fw, GError **error)
+{
+	FwupdRemote *remote_tmp = fu_remote_list_get_by_id(self->remote_list, "backup");
+	g_autofree gchar *localstatepkg = fu_path_from_kind(FU_PATH_KIND_LOCALSTATEDIR_PKG);
+	g_autofree gchar *backupdir = g_build_filename(localstatepkg, "backup", NULL);
+	g_autofree gchar *backupdir_uri = g_strdup_printf("file://%s", backupdir);
+	g_autofree gchar *remotes_path = fu_path_from_kind(FU_PATH_KIND_LOCALSTATEDIR_REMOTES);
+	g_autofree gchar *remotes_fn = g_build_filename(remotes_path, "backup.conf", NULL);
+	g_autofree gchar *archive_checksum = g_compute_checksum_for_bytes(G_CHECKSUM_SHA256, fw);
+	g_autofree gchar *archive_basename = g_strdup_printf("%s.cab", archive_checksum);
+	g_autofree gchar *archive_fn = g_build_filename(backupdir, archive_basename, NULL);
+	g_autoptr(FwupdRemote) remote = fwupd_remote_new();
+
+	/* save archive if required */
+	if (!g_file_test(archive_fn, G_FILE_TEST_EXISTS)) {
+		g_info("saving archive to %s", archive_fn);
+		if (!fu_bytes_set_contents(archive_fn, fw, error))
+			return FALSE;
+	}
+
+	/* already exists as an enabled remote */
+	if (remote_tmp != NULL && fwupd_remote_get_enabled(remote_tmp))
+		return TRUE;
+
+	/* just enable */
+	if (remote_tmp != NULL) {
+		g_info("enabling remote %s", fwupd_remote_get_id(remote_tmp));
+		fwupd_remote_set_enabled(remote_tmp, TRUE);
+		return fwupd_remote_save_to_filename(remote_tmp, remotes_fn, NULL, error);
+	}
+
+	/* create a new remote we can use for re-installing */
+	g_info("creating new backup remote");
+	fwupd_remote_set_enabled(remote, TRUE);
+	fwupd_remote_set_keyring_kind(remote, FWUPD_KEYRING_KIND_NONE);
+	fwupd_remote_set_title(remote, "Backup");
+	fwupd_remote_set_metadata_uri(remote, backupdir_uri);
+	return fwupd_remote_save_to_filename(remote, remotes_fn, NULL, error);
+}
+
 /**
  * fu_engine_install_release:
  * @self: a #FuEngine
@@ -3067,6 +3108,12 @@ fu_engine_install_release(FuEngine *self,
 		tmp = fwupd_release_get_detach_image(FWUPD_RELEASE(release));
 		if (tmp != NULL)
 			fu_device_set_update_image(device, tmp);
+	}
+
+	/* save to persistent storage so that the device can recover without a network */
+	if (fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_SAVE_INTO_BACKUP_REMOTE)) {
+		if (!fu_engine_save_into_backup_remote(self, blob_cab, error))
+			return FALSE;
 	}
 
 	/* schedule this for the next reboot if not in system-update.target,
