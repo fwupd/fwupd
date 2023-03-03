@@ -332,7 +332,7 @@ done
 %systemd_postun_with_restart fwupd.service
 
 %files -f %{name}.lang
-%doc README.md AUTHORS
+%doc README.md
 %license COPYING
 %config(noreplace)%{_sysconfdir}/fwupd/daemon.conf
 %if 0%{?have_uefi}
