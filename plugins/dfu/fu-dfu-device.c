@@ -761,6 +761,15 @@ fu_dfu_device_refresh(FuDfuDevice *self, GError **error)
 					   priv->timeout_ms,
 					   NULL, /* cancellable */
 					   &error_local)) {
+		/* got STALL */
+		if (g_error_matches(error_local,
+				    G_USB_DEVICE_ERROR,
+				    G_USB_DEVICE_ERROR_NOT_SUPPORTED)) {
+			g_info("GetStatus not implemented, assuming appIDLE");
+			fu_dfu_device_set_status(self, FU_DFU_STATUS_OK);
+			fu_dfu_device_set_state(self, FU_DFU_STATE_APP_IDLE);
+			return TRUE;
+		}
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
