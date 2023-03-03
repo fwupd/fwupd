@@ -245,53 +245,30 @@ fwupdtool = executable(
   install_dir: bindir
 )
 
-if pandoc.found()
-  conf_man = configuration_data()
-  conf_man.set('PACKAGE_VERSION', fwupd_version)
+if get_option('man')
   if build_daemon
-    fwupdmgr_md = configure_file(
-      input: 'fwupdmgr.md',
-      output: 'fwupdmgr.md',
-      configuration: conf_man,
-    )
-    custom_target('fwupdmgr.1',
-      input: fwupdmgr_md,
+    configure_file(
+      input: 'fwupdmgr.1',
       output: 'fwupdmgr.1',
-      command: [
-        pandoc, '--standalone', '--to', 'man', '@INPUT@', '-o', '@OUTPUT@',
-      ],
+      configuration: conf,
       install: true,
       install_dir: join_paths(mandir, 'man1'),
     )
-  endif
-  if build_daemon and get_option('compat_cli')
-    fwupdagent_md = configure_file(
-      input: 'fwupdagent.md',
-      output: 'fwupdagent.md',
-      configuration: conf_man,
-    )
-    custom_target('fwupdagent.1',
-      input: fwupdagent_md,
-      output: 'fwupdagent.1',
-      command: [
-        pandoc, '--standalone', '--to', 'man', '@INPUT@', '-o', '@OUTPUT@',
-      ],
-      install: true,
-      install_dir: join_paths(mandir, 'man1'),
-    )
+    if get_option('compat_cli')
+      configure_file(
+        input: 'fwupdagent.1',
+        output: 'fwupdagent.1',
+        configuration: conf,
+        install: true,
+        install_dir: join_paths(mandir, 'man1'),
+      )
+    endif
   endif
   if build_standalone
-    fwupdtool_md = configure_file(
-      input: 'fwupdtool.md',
-      output: 'fwupdtool.md',
-      configuration: conf_man,
-    )
-    custom_target('fwupdtool.1',
-      input: fwupdtool_md,
+    configure_file(
+      input: 'fwupdtool.1',
       output: 'fwupdtool.1',
-      command: [
-        pandoc, '--standalone', '--to', 'man', '@INPUT@', '-o', '@OUTPUT@',
-      ],
+      configuration: conf,
       install: true,
       install_dir: join_paths(mandir, 'man1'),
     )

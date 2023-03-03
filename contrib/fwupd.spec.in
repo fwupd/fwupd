@@ -77,7 +77,6 @@ BuildRequires: libarchive-devel
 BuildRequires: libcbor-devel
 BuildRequires: gobject-introspection-devel
 BuildRequires: gcab
-BuildRequires: pandoc
 %ifarch %{valgrind_arches}
 BuildRequires: valgrind
 BuildRequires: valgrind-devel
