@@ -151,6 +151,28 @@ fu_dfu_device_get_download_timeout(FuDfuDevice *self)
 	return priv->dnload_timeout;
 }
 
+static void
+fu_dfu_device_set_download_timeout(FuDfuDevice *self, guint dnload_timeout)
+{
+	FuDfuDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_DFU_DEVICE(self));
+
+	/* quirked */
+	if (fu_device_has_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_IGNORE_POLLTIMEOUT)) {
+		g_debug("ignoring dnload-timeout, using default of %ums", priv->dnload_timeout);
+		return;
+	}
+	if (dnload_timeout == 0 &&
+	    !fu_device_has_private_flag(FU_DEVICE(self),
+					FU_DFU_DEVICE_FLAG_ALLOW_ZERO_POLLTIMEOUT)) {
+		g_debug("no dnload-timeout, using default of %ums", priv->dnload_timeout);
+		return;
+	}
+
+	/* use what the device says */
+	priv->dnload_timeout = dnload_timeout;
+}
+
 /**
  * fu_dfu_device_set_transfer_size:
  * @self: a #FuDfuDevice
@@ -797,17 +819,7 @@ fu_dfu_device_refresh(FuDfuDevice *self, GError **error)
 
 	/* status or state changed */
 	fu_dfu_device_set_status(self, buf[0]);
-	if (fu_device_has_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_IGNORE_POLLTIMEOUT)) {
-		priv->dnload_timeout = DFU_DEVICE_DNLOAD_TIMEOUT_DEFAULT;
-	} else {
-		priv->dnload_timeout = fu_memread_uint24(&buf[1], G_LITTLE_ENDIAN);
-		if (priv->dnload_timeout == 0 &&
-		    !fu_device_has_private_flag(FU_DEVICE(self),
-						FU_DFU_DEVICE_FLAG_ALLOW_ZERO_POLLTIMEOUT)) {
-			priv->dnload_timeout = DFU_DEVICE_DNLOAD_TIMEOUT_DEFAULT;
-			g_debug("no dnload-timeout, using default of %ums", priv->dnload_timeout);
-		}
-	}
+	fu_dfu_device_set_download_timeout(self, fu_memread_uint24(&buf[1], G_LITTLE_ENDIAN));
 	g_debug("refreshed status=%s and state=%s (dnload=%u)",
 		fu_dfu_status_to_string(priv->status),
 		fu_dfu_state_to_string(priv->state),
@@ -1694,6 +1706,7 @@ fu_dfu_device_init(FuDfuDevice *self)
 	priv->timeout_ms = 1500;
 	priv->transfer_size = 64;
 	priv->force_version = G_MAXUINT16;
+	priv->dnload_timeout = DFU_DEVICE_DNLOAD_TIMEOUT_DEFAULT;
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_ADD_COUNTERPART_GUIDS);
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID);
