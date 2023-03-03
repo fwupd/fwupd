@@ -1,0 +1,29 @@
+.TH "fwupdmgr" "1" "" @PACKAGE_VERSION@ "fwupdmgr man page"
+.hy
+.SH NAME
+.PP
+\f[B]fwupdmgr\f[R] \[em] firmware update manager client utility
+.SH SYNOPSIS
+.PP
+\f[B]fwupdmgr\f[R] [CMD]
+.SH DESCRIPTION
+.PP
+fwupdmgr is a command line fwupd client intended to be used
+interactively.
+The terminal output between versions of fwupd is not guaranteed to be
+stable, but if you plan on parsing the results then adding
+\f[B]--json\f[R] might be just what you need.
+.SH OPTIONS
+.PP
+The fwupdmgr command takes various options depending on the action.
+Run \f[B]fwupdmgr --help\f[R] for the full list.
+.SH EXIT STATUS
+.PP
+Commands that successfully execute will return \[lq]0\[rq], but commands
+that have no actions but successfully execute will return \[lq]2\[rq].
+.SH BUGS
+.PP
+See GitHub Issues: <https://github.com/fwupd/fwupd/issues>
+.SH SEE ALSO
+.PP
+fwupdtool(1)

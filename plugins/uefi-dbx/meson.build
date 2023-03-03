@@ -56,20 +56,11 @@ dbxtool = executable(
   c_args: cargs,
 )
 
-if pandoc.found()
-  conf_man = configuration_data()
-  conf_man.set('PACKAGE_VERSION', fwupd_version)
-  dbxtool_md = configure_file(
-    input: 'dbxtool.md',
-    output: 'dbxtool.md',
-    configuration: conf_man,
-  )
-  custom_target('dbxtool.1',
-    input: dbxtool_md,
+if get_option('man')
+  configure_file(
+    input: 'dbxtool.1',
     output: 'dbxtool.1',
-    command: [
-      pandoc, '--standalone', '--to', 'man', '@INPUT@', '-o', '@OUTPUT@',
-    ],
+    configuration: conf,
     install: true,
     install_dir: join_paths(mandir, 'man1'),
   )
