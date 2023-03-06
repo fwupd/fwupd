@@ -253,7 +253,7 @@ fu_kernel_get_cmdline(GError **error)
 	if (!g_file_get_contents("/proc/cmdline", &buf, &bufsz, error))
 		return NULL;
 	hash = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
-	if (bufsz > 0) {
+	if (bufsz > 1) {
 		g_auto(GStrv) tokens = fu_strsplit(buf, bufsz - 1, " ", -1);
 		for (guint i = 0; tokens[i] != NULL; i++) {
 			g_auto(GStrv) kv = NULL;
