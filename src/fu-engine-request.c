@@ -20,6 +20,28 @@ struct _FuEngineRequest {
 
 G_DEFINE_TYPE(FuEngineRequest, fu_engine_request, G_TYPE_OBJECT)
 
+static const gchar *
+fu_engine_request_kind_to_string(FuEngineRequestKind request_kind)
+{
+	if (request_kind == FU_ENGINE_REQUEST_KIND_ACTIVE)
+		return "active";
+	if (request_kind == FU_ENGINE_REQUEST_KIND_ONLY_SUPPORTED)
+		return "only-supported";
+	return NULL;
+}
+
+void
+fu_engine_request_add_string(FuEngineRequest *self, guint idt, GString *str)
+{
+	g_return_if_fail(FU_IS_ENGINE_REQUEST(self));
+	if (self->kind != FU_ENGINE_REQUEST_KIND_UNKNOWN)
+		fu_string_append(str, idt, "Kind", fu_engine_request_kind_to_string(self->kind));
+	fu_string_append_kx(str, idt, "FeatureFlags", self->feature_flags);
+	fu_string_append_kx(str, idt, "DeviceFlags", self->device_flags);
+	if (self->locale != NULL)
+		fu_string_append(str, idt, "Locale", self->locale);
+}
+
 FwupdFeatureFlags
 fu_engine_request_get_feature_flags(FuEngineRequest *self)
 {
