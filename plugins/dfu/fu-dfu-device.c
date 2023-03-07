@@ -1339,7 +1339,7 @@ fu_dfu_device_upload(FuDfuDevice *self,
 
 		/* ignore some target types */
 		if (g_strcmp0(fu_device_get_name(FU_DEVICE(target)), "Option Bytes") == 0) {
-			g_debug("ignoring target %s", fu_device_get_name(target));
+			g_debug("ignoring target %s", fu_device_get_name(FU_DEVICE(target)));
 			continue;
 		}
 		if (!fu_dfu_target_upload(target,
