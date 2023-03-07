@@ -738,6 +738,20 @@ fu_release_check_requirements(FuRelease *self,
 			return FALSE;
 		}
 	}
+
+	/* do not require signatures for anything installed to the immutable datadir */
+	if (self->trust_flags == FWUPD_RELEASE_FLAG_NONE && self->remote != NULL) {
+		if (fwupd_remote_get_keyring_kind(self->remote) == FWUPD_KEYRING_KIND_NONE &&
+		    (fwupd_remote_get_kind(self->remote) == FWUPD_REMOTE_KIND_LOCAL ||
+		     fwupd_remote_get_kind(self->remote) == FWUPD_REMOTE_KIND_DIRECTORY)) {
+			g_info("remote %s has kind=%s and Keyring=none and so marking as trusted",
+			       fwupd_remote_get_id(self->remote),
+			       fwupd_remote_kind_to_string(fwupd_remote_get_kind(self->remote)));
+			self->trust_flags = FWUPD_RELEASE_FLAG_TRUSTED_PAYLOAD |
+					    FWUPD_RELEASE_FLAG_TRUSTED_METADATA;
+		}
+	}
+
 	return TRUE;
 }
 
