@@ -38,6 +38,62 @@ struct _FuRelease {
 
 G_DEFINE_TYPE(FuRelease, fu_release, FWUPD_TYPE_RELEASE)
 
+static gchar *
+fu_release_flags_to_string(FwupdReleaseFlags release_flags)
+{
+	g_autoptr(GString) str = g_string_new(NULL);
+	for (guint i = 0; i < 64; i++) {
+		if ((release_flags & ((guint64)1 << i)) == 0)
+			continue;
+		if (str->len > 0)
+			g_string_append(str, "|");
+		g_string_append(str, fwupd_release_flag_to_string((guint64)1 << i));
+	}
+	if (str->len == 0)
+		g_string_append(str, fwupd_release_flag_to_string(FWUPD_RELEASE_FLAG_NONE));
+	return g_string_free(g_steal_pointer(&str), FALSE);
+}
+
+gchar *
+fu_release_to_string(FuRelease *self)
+{
+	const guint idt = 1;
+	g_autofree gchar *tmp = NULL;
+	g_autofree gchar *trust_flags_str = fu_release_flags_to_string(self->trust_flags);
+	g_autoptr(GString) str = g_string_new(NULL);
+
+	g_return_val_if_fail(FU_IS_RELEASE(self), NULL);
+
+	/* parent */
+	tmp = fwupd_release_to_string(FWUPD_RELEASE(self));
+	if (tmp != NULL && tmp[0] != '\0')
+		g_string_append(str, tmp);
+
+	/* instance */
+	if (self->request != NULL) {
+		fu_string_append(str, idt, "Request", NULL);
+		fu_engine_request_add_string(self->request, idt + 1, str);
+	}
+	if (self->device != NULL)
+		fu_string_append(str, idt, "Device", fu_device_get_id(self->device));
+	if (self->remote != NULL)
+		fu_string_append(str, idt, "Remote", fwupd_remote_get_id(self->remote));
+	fu_string_append_kb(str, idt, "HasConfig", self->config != NULL);
+	if (self->blob_fw != NULL)
+		fu_string_append_kx(str, idt, "BlobFwSz", g_bytes_get_size(self->blob_fw));
+	if (self->update_request_id != NULL)
+		fu_string_append(str, idt, "UpdateRequestId", self->update_request_id);
+	fu_string_append(str, idt, "TrustFlags", trust_flags_str);
+	fu_string_append_kb(str, idt, "IsDowngrade", self->is_downgrade);
+	if (self->soft_reqs != NULL)
+		fu_string_append_kx(str, idt, "SoftReqs", self->soft_reqs->len);
+	if (self->hard_reqs != NULL)
+		fu_string_append_kx(str, idt, "HardReqs", self->hard_reqs->len);
+	if (self->priority != 0)
+		fu_string_append_kx(str, idt, "Priority", self->priority);
+	return g_string_free(g_steal_pointer(&str), FALSE);
+}
+
 /**
  * fu_release_set_request:
  * @self: a #FuRelease
