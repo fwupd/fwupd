@@ -235,6 +235,8 @@ void
 fu_engine_set_silo(FuEngine *self, XbSilo *silo);
 XbNode *
 fu_engine_get_component_by_guids(FuEngine *self, FuDevice *device);
+gchar *
+fu_engine_get_remote_id_for_blob(FuEngine *self, GBytes *blob);
 gboolean
 fu_engine_schedule_update(FuEngine *self,
 			  FuDevice *device,
