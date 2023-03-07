@@ -24,6 +24,13 @@ typedef enum {
 	FU_POWERD_BATTERY_STATE_FULLY_CHARGED,
 } FuPowerdBatteryState;
 
+typedef enum {
+	FU_POWERD_EXTERNAL_POWER_UNKNOWN,
+	FU_POWERD_EXTERNAL_POWER_AC,
+	FU_POWERD_EXTERNAL_POWER_USB,
+	FU_POWERD_EXTERNAL_POWER_DISCONNECTED
+} FuPowerdExternal;
+
 static gboolean
 fu_powerd_plugin_create_suspend_file(GError **error)
 {
@@ -76,6 +83,24 @@ fu_powerd_plugin_rescan(FuPlugin *plugin, GVariant *parameters)
 		current_level = FWUPD_BATTERY_LEVEL_INVALID;
 	fu_context_set_battery_level(ctx, current_level);
 
+	/* plugged in */
+	if (power_type == FU_POWERD_EXTERNAL_POWER_AC ||
+	    power_type == FU_POWERD_EXTERNAL_POWER_USB) {
+		switch (current_state) {
+		case FU_POWERD_BATTERY_STATE_CHARGING:
+			fu_context_set_power_state(ctx, FU_POWER_STATE_AC_CHARGING);
+			break;
+		case FU_POWERD_BATTERY_STATE_FULLY_CHARGED:
+			fu_context_set_power_state(ctx, FU_POWER_STATE_AC_FULLY_CHARGED);
+			break;
+		default:
+			fu_context_set_power_state(ctx, FU_POWER_STATE_AC);
+			break;
+		}
+		return;
+	}
+
+	/* fallback */
 	switch (current_state) {
 	case FU_POWERD_BATTERY_STATE_CHARGING:
 		fu_context_set_power_state(ctx, FU_POWER_STATE_AC_CHARGING);
