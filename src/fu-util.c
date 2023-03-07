@@ -769,7 +769,7 @@ fu_util_device_test_component(FuUtilPrivate *priv,
 			return FALSE;
 		}
 		device_tmp = g_ptr_array_index(devices, 0);
-		if (protocol != NULL && !fu_device_has_protocol(device_tmp, protocol))
+		if (protocol != NULL && !fwupd_device_has_protocol(device_tmp, protocol))
 			continue;
 		device = g_object_ref(device_tmp);
 		json_builder_add_string_value(helper->builder, guid);
@@ -796,10 +796,10 @@ fu_util_device_test_component(FuUtilPrivate *priv,
 		const gchar *version = json_object_get_string_member(json_obj, "version");
 		json_builder_set_member_name(helper->builder, "version");
 		json_builder_add_string_value(helper->builder, version);
-		if (g_strcmp0(version, fu_device_get_version(device)) != 0) {
+		if (g_strcmp0(version, fwupd_device_get_version(device)) != 0) {
 			g_autofree gchar *str = NULL;
 			str = g_strdup_printf("version did not match: got %s, expected %s",
-					      fu_device_get_version(device),
+					      fwupd_device_get_version(device),
 					      version);
 			if (!priv->as_json) {
 				g_autofree gchar *msg = NULL;
@@ -808,7 +808,7 @@ fu_util_device_test_component(FuUtilPrivate *priv,
 				    /* TRANSLATORS: this is for the device tests, %1 is the device
 				     * version, %2 is what we expected */
 				    _("The device version did not match: got %s, expected %s"),
-				    fu_device_get_version(device),
+				    fwupd_device_get_version(device),
 				    version);
 				msg = fu_console_color_format(str2, FU_CONSOLE_COLOR_RED);
 				fu_console_print(priv->console, "%s: %s", name, msg);
@@ -1691,7 +1691,7 @@ fu_util_get_release_for_device_version(FuUtilPrivate *priv,
 		    FWUPD_ERROR_NOT_SUPPORTED,
 		    "Unable to locate release %s for %s",
 		    version,
-		    fu_device_get_name(device));
+		    fwupd_device_get_name(device));
 	return NULL;
 }
 
@@ -1724,7 +1724,7 @@ fu_util_verify_update(FuUtilPrivate *priv, gchar **values, GError **error)
 					fwupd_device_get_id(dev),
 					priv->cancellable,
 					error)) {
-		g_prefix_error(error, "failed to verify update %s: ", fu_device_get_name(dev));
+		g_prefix_error(error, "failed to verify update %s: ", fwupd_device_get_name(dev));
 		return FALSE;
 	}
 
@@ -2049,7 +2049,7 @@ fu_util_verify(FuUtilPrivate *priv, gchar **values, GError **error)
 				 fwupd_device_get_id(dev),
 				 priv->cancellable,
 				 error)) {
-		g_prefix_error(error, "failed to verify %s: ", fu_device_get_name(dev));
+		g_prefix_error(error, "failed to verify %s: ", fwupd_device_get_name(dev));
 		return FALSE;
 	}
 
@@ -2605,7 +2605,7 @@ fu_util_update(FuUtilPrivate *priv, gchar **values, GError **error)
 	for (guint i = 0; i < devices->len; i++) {
 		FwupdDevice *dev = g_ptr_array_index(devices, i);
 		FwupdRelease *rel;
-		const gchar *device_id = fu_device_get_id(dev);
+		const gchar *device_id = fwupd_device_get_id(dev);
 		g_autoptr(GPtrArray) rels = NULL;
 		g_autoptr(GError) error_local = NULL;
 		gboolean dev_skip_byid = TRUE;
@@ -2871,7 +2871,8 @@ fu_util_reinstall(FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 
 	/* try to lookup/match release from client */
-	rel = fu_util_get_release_for_device_version(priv, dev, fu_device_get_version(dev), error);
+	rel =
+	    fu_util_get_release_for_device_version(priv, dev, fwupd_device_get_version(dev), error);
 	if (rel == NULL)
 		return FALSE;
 
@@ -3024,12 +3025,12 @@ fu_util_switch_branch(FuUtilPrivate *priv, gchar **values, GError **error)
 	}
 
 	/* sanity check */
-	if (g_strcmp0(branch, fu_device_get_branch(dev)) == 0) {
+	if (g_strcmp0(branch, fwupd_device_get_branch(dev)) == 0) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "Device %s is already on branch %s",
-			    fu_device_get_name(dev),
+			    fwupd_device_get_name(dev),
 			    fu_util_branch_for_display(branch));
 		return FALSE;
 	}
@@ -3089,8 +3090,8 @@ fu_util_activate(FuUtilPrivate *priv, gchar **values, GError **error)
 		if (devices == NULL)
 			return FALSE;
 		for (guint i = 0; i < devices->len; i++) {
-			FuDevice *device = g_ptr_array_index(devices, i);
-			if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION)) {
+			FwupdDevice *device = g_ptr_array_index(devices, i);
+			if (fwupd_device_has_flag(device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION)) {
 				has_pending = TRUE;
 				break;
 			}
@@ -3127,7 +3128,7 @@ fu_util_activate(FuUtilPrivate *priv, gchar **values, GError **error)
 		FwupdDevice *device = g_ptr_array_index(devices, i);
 		if (!fu_util_filter_device(priv, device))
 			continue;
-		if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION))
+		if (!fwupd_device_has_flag(device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION))
 			continue;
 		fu_console_print(
 		    priv->console,
