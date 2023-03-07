@@ -2565,6 +2565,10 @@ fu_device_set_name(FuDevice *self, const gchar *value)
 
 	/* overwriting? */
 	value_safe = fu_device_sanitize_name(value);
+	if (value_safe == NULL) {
+		g_info("ignoring name value: '%s'", value);
+		return;
+	}
 	if (g_strcmp0(value_safe, fu_device_get_name(self)) == 0)
 		return;
 
