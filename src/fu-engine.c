@@ -2186,6 +2186,9 @@ fu_engine_check_requirement(FuEngine *self,
 gboolean
 fu_engine_check_trust(FuEngine *self, FuRelease *release, GError **error)
 {
+	g_autofree gchar *str = fu_release_to_string(release);
+
+	g_debug("checking trust of %s", str);
 	if (fu_config_get_only_trusted(self->config) &&
 	    (fu_release_get_trust_flags(release) & FWUPD_TRUST_FLAG_PAYLOAD) == 0) {
 		g_autofree gchar *sysconfdir = fu_path_from_kind(FU_PATH_KIND_SYSCONFDIR_PKG);
