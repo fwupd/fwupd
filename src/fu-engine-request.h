@@ -19,6 +19,8 @@ typedef enum {
 
 FuEngineRequest *
 fu_engine_request_new(FuEngineRequestKind kind);
+void
+fu_engine_request_add_string(FuEngineRequest *self, guint idt, GString *str);
 FuEngineRequestKind
 fu_engine_request_get_kind(FuEngineRequest *self);
 FwupdFeatureFlags
