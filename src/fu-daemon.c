@@ -794,6 +794,11 @@ fu_daemon_install_with_helper_device(FuMainAuthHelper *helper,
 	/* is this component valid for the device */
 	fu_release_set_device(release, device);
 	fu_release_set_request(release, helper->request);
+	if (helper->remote_id != NULL) {
+		fu_release_set_remote(
+		    release,
+		    fu_engine_get_remote_by_id(self->engine, helper->remote_id, NULL));
+	}
 	if (!fu_release_load(release,
 			     component,
 			     NULL,
@@ -935,6 +940,7 @@ fu_daemon_install_with_helper(FuMainAuthHelper *helper_ref, GError **error)
 	helper->action_ids = g_ptr_array_new_with_free_func(g_free);
 	helper->releases = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 	helper->errors = g_ptr_array_new_with_free_func((GDestroyNotify)g_error_free);
+	helper->remote_id = fu_engine_get_remote_id_for_blob(self->engine, helper->blob_cab);
 
 	/* do any devices pass the requirements */
 	for (guint i = 0; i < components->len; i++) {

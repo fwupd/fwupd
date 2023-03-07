@@ -739,6 +739,24 @@ fu_engine_get_remote_id_for_checksum(FuEngine *self, const gchar *csum)
 	return NULL;
 }
 
+/* does this exist in any enabled remote */
+gchar *
+fu_engine_get_remote_id_for_blob(FuEngine *self, GBytes *blob)
+{
+	GChecksumType checksum_types[] = {G_CHECKSUM_SHA256, G_CHECKSUM_SHA1, 0};
+
+	g_return_val_if_fail(FU_IS_ENGINE(self), NULL);
+	g_return_val_if_fail(blob != NULL, NULL);
+
+	for (guint i = 0; checksum_types[i] != 0; i++) {
+		g_autofree gchar *csum = g_compute_checksum_for_bytes(checksum_types[i], blob);
+		const gchar *remote_id = fu_engine_get_remote_id_for_checksum(self, csum);
+		if (remote_id != NULL)
+			return g_strdup(remote_id);
+	}
+	return NULL;
+}
+
 /**
  * fu_engine_unlock:
  * @self: a #FuEngine
