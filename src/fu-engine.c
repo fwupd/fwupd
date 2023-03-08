@@ -4449,7 +4449,9 @@ fu_engine_ensure_device_supported(FuEngine *self, FuDevice *device)
 	g_autoptr(FuEngineRequest) request = NULL;
 
 	/* all flags set */
-	request = fu_engine_request_new(FU_ENGINE_REQUEST_KIND_ONLY_SUPPORTED);
+	request = fu_engine_request_new();
+	fu_engine_request_add_flag(request, FU_ENGINE_REQUEST_FLAG_NO_REQUIREMENTS);
+	fu_engine_request_add_flag(request, FU_ENGINE_REQUEST_FLAG_ANY_RELEASE);
 	fu_engine_request_set_feature_flags(request, ~0);
 
 	/* get all releases that pass the requirements */
@@ -5782,7 +5784,7 @@ fu_engine_add_releases_for_device_component(FuEngine *self,
 		g_ptr_array_add(releases, g_steal_pointer(&release));
 
 		/* if we're only checking for SUPPORTED then *any* release is good enough */
-		if (fu_engine_request_get_kind(request) == FU_ENGINE_REQUEST_KIND_ONLY_SUPPORTED &&
+		if (fu_engine_request_has_flag(request, FU_ENGINE_REQUEST_FLAG_ANY_RELEASE) &&
 		    releases->len > 0)
 			break;
 	}
@@ -5881,7 +5883,7 @@ fu_engine_get_releases_for_device(FuEngine *self,
 		}
 
 		/* if we're only checking for SUPPORTED then *any* release is good enough */
-		if (fu_engine_request_get_kind(request) == FU_ENGINE_REQUEST_KIND_ONLY_SUPPORTED &&
+		if (fu_engine_request_has_flag(request, FU_ENGINE_REQUEST_FLAG_ANY_RELEASE) &&
 		    releases->len > 0)
 			break;
 	}

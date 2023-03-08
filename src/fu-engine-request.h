@@ -12,17 +12,19 @@
 G_DECLARE_FINAL_TYPE(FuEngineRequest, fu_engine_request, FU, ENGINE_REQUEST, GObject)
 
 typedef enum {
-	FU_ENGINE_REQUEST_KIND_UNKNOWN,
-	FU_ENGINE_REQUEST_KIND_ACTIVE,
-	FU_ENGINE_REQUEST_KIND_ONLY_SUPPORTED,
-} FuEngineRequestKind;
+	FU_ENGINE_REQUEST_FLAG_NONE = 0,
+	FU_ENGINE_REQUEST_FLAG_NO_REQUIREMENTS = 1 << 0,
+	FU_ENGINE_REQUEST_FLAG_ANY_RELEASE = 1 << 1,
+} FuEngineRequestFlags;
 
 FuEngineRequest *
-fu_engine_request_new(FuEngineRequestKind kind);
+fu_engine_request_new(void);
 void
 fu_engine_request_add_string(FuEngineRequest *self, guint idt, GString *str);
-FuEngineRequestKind
-fu_engine_request_get_kind(FuEngineRequest *self);
+void
+fu_engine_request_add_flag(FuEngineRequest *self, FuEngineRequestFlags flag);
+gboolean
+fu_engine_request_has_flag(FuEngineRequest *self, FuEngineRequestFlags flag);
 FwupdFeatureFlags
 fu_engine_request_get_feature_flags(FuEngineRequest *self);
 void
