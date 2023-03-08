@@ -20,10 +20,13 @@ fu_release_new(void);
 #define fu_release_get_version(r)     fwupd_release_get_version(FWUPD_RELEASE(r))
 #define fu_release_get_branch(r)      fwupd_release_get_branch(FWUPD_RELEASE(r))
 #define fu_release_get_checksums(r)   fwupd_release_get_checksums(FWUPD_RELEASE(r))
+#define fu_release_get_flags(r)	      fwupd_release_get_flags(FWUPD_RELEASE(r))
 #define fu_release_add_flag(r, v)     fwupd_release_add_flag(FWUPD_RELEASE(r), v)
+#define fu_release_has_flag(r, v)     fwupd_release_has_flag(FWUPD_RELEASE(r), v)
 #define fu_release_add_tag(r, v)      fwupd_release_add_tag(FWUPD_RELEASE(r), v)
 #define fu_release_add_metadata(r, v) fwupd_release_add_metadata(FWUPD_RELEASE(r), v)
 #define fu_release_set_branch(r, v)   fwupd_release_set_branch(FWUPD_RELEASE(r), v)
+#define fu_release_set_flags(r, v)    fwupd_release_set_flags(FWUPD_RELEASE(r), v)
 
 gchar *
 fu_release_to_string(FuRelease *self);
@@ -55,8 +58,8 @@ fu_release_load(FuRelease *self,
 		XbNode *rel,
 		FwupdInstallFlags flags,
 		GError **error);
-FwupdReleaseFlags
-fu_release_get_trust_flags(FuRelease *self);
+gboolean
+fu_release_ensure_trust_flags(FuRelease *self, XbNode *rel, GError **error);
 const gchar *
 fu_release_get_action_id(FuRelease *self);
 gint

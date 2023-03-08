@@ -52,7 +52,6 @@
 #include "fu-history.h"
 #include "fu-idle.h"
 #include "fu-kenv.h"
-#include "fu-keyring-utils.h"
 #include "fu-mutex.h"
 #include "fu-plugin-builtin.h"
 #include "fu-plugin-list.h"
@@ -2208,7 +2207,7 @@ fu_engine_check_trust(FuEngine *self, FuRelease *release, GError **error)
 
 	g_debug("checking trust of %s", str);
 	if (fu_config_get_only_trusted(self->config) &&
-	    (fu_release_get_trust_flags(release) & FWUPD_TRUST_FLAG_PAYLOAD) == 0) {
+	    !fu_release_has_flag(release, FWUPD_RELEASE_FLAG_TRUSTED_PAYLOAD)) {
 		g_autofree gchar *sysconfdir = fu_path_from_kind(FU_PATH_KIND_SYSCONFDIR_PKG);
 		g_autofree gchar *fn = g_build_filename(sysconfdir, "daemon.conf", NULL);
 		g_set_error(error,
@@ -5030,7 +5029,6 @@ fu_engine_get_result_from_component(FuEngine *self,
 				    XbNode *component,
 				    GError **error)
 {
-	FwupdReleaseFlags release_flags = FWUPD_RELEASE_FLAG_NONE;
 	g_autofree gchar *description_xpath = NULL;
 	g_autoptr(FuDevice) dev = NULL;
 	g_autoptr(FuRelease) release = NULL;
@@ -5098,18 +5096,6 @@ fu_engine_get_result_from_component(FuEngine *self,
 	release = fu_release_new();
 	fu_release_set_device(release, dev);
 	fu_release_set_request(release, request);
-	if (!fu_engine_load_release(self,
-				    release,
-				    component,
-				    NULL,
-				    FWUPD_INSTALL_FLAG_IGNORE_VID_PID,
-				    &error_reqs)) {
-		if (!fu_device_has_inhibit(dev, "not-found"))
-			fu_device_inhibit(dev, "failed-reqs", error_reqs->message);
-		/* continue */
-	}
-
-	/* verify trust */
 #if LIBXMLB_CHECK_VERSION(0, 2, 0)
 	query = xb_query_new_full(xb_node_get_silo(component),
 				  "releases/release",
@@ -5129,15 +5115,16 @@ fu_engine_get_result_from_component(FuEngine *self,
 			    error_local->message);
 		return NULL;
 	}
-	if (!fu_keyring_get_release_flags(rel, &release_flags, &error_local)) {
-		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
-			g_warning("Ignoring verification: %s", error_local->message);
-		} else {
-			g_propagate_error(error, g_steal_pointer(&error_local));
-			return NULL;
-		}
+	if (!fu_engine_load_release(self,
+				    release,
+				    component,
+				    rel,
+				    FWUPD_INSTALL_FLAG_IGNORE_VID_PID,
+				    &error_reqs)) {
+		if (!fu_device_has_inhibit(dev, "not-found"))
+			fu_device_inhibit(dev, "failed-reqs", error_reqs->message);
+		/* continue */
 	}
-	fwupd_release_set_flags(FWUPD_RELEASE(release), release_flags);
 
 	/* create a result with all the metadata in */
 	description_xpath = fu_engine_request_get_localized_xpath(request, "description");
@@ -5148,9 +5135,6 @@ fu_engine_get_result_from_component(FuEngine *self,
 		if (xml != NULL)
 			fu_device_set_description(dev, xml);
 	}
-
-	/* refresh the device to the new version format too */
-	fu_device_ensure_from_component(dev, component);
 
 	/* success */
 	fu_device_add_release(dev, FWUPD_RELEASE(release));
@@ -6719,10 +6703,6 @@ fu_engine_add_device(FuEngine *self, FuDevice *device)
 
 	/* check if the device needs emulation-tag */
 	fu_engine_ensure_device_emulation_tag(self, device);
-
-	/* fixup the name and format as needed */
-	if (component != NULL)
-		fu_device_ensure_from_component(device, component);
 
 	/* set or clear the SUPPORTED flag */
 	fu_engine_ensure_device_supported(self, device);

@@ -821,9 +821,6 @@ fu_daemon_install_with_helper_device(FuMainAuthHelper *helper,
 		return TRUE;
 	}
 
-	/* possibly update version format */
-	fu_device_ensure_from_component(device, component);
-
 	/* sync update message from CAB */
 	fu_device_incorporate_from_component(device, component);
 

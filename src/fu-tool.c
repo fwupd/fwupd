@@ -1321,23 +1321,9 @@ fu_util_install(FuUtilPrivate *priv, gchar **values, GError **error)
 			}
 			if (!fu_engine_check_requirements(priv->engine,
 							  release,
-							  priv->flags | FWUPD_INSTALL_FLAG_FORCE,
-							  &error_local)) {
-				g_debug("first pass requirement on %s:%s failed: %s",
-					fu_device_get_id(device),
-					xb_node_query_text(component, "id", NULL),
-					error_local->message);
-				g_ptr_array_add(errors, g_steal_pointer(&error_local));
-				continue;
-			}
-
-			/* make a second pass using possibly updated version format now */
-			fu_device_ensure_from_component(device, component);
-			if (!fu_engine_check_requirements(priv->engine,
-							  release,
 							  priv->flags,
 							  &error_local)) {
-				g_debug("second pass requirement on %s:%s failed: %s",
+				g_debug("requirement on %s:%s failed: %s",
 					fu_device_get_id(device),
 					xb_node_query_text(component, "id", NULL),
 					error_local->message);
