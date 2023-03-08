@@ -204,8 +204,6 @@ gboolean
 fu_engine_modify_config(FuEngine *self, const gchar *key, const gchar *value, GError **error);
 FuContext *
 fu_engine_get_context(FuEngine *self);
-void
-fu_engine_md_refresh_device_from_component(FuEngine *self, FuDevice *device, XbNode *component);
 GPtrArray *
 fu_engine_get_releases_for_device(FuEngine *self,
 				  FuEngineRequest *request,
