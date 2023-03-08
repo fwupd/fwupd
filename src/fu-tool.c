@@ -3682,7 +3682,7 @@ main(int argc, char *argv[])
 	priv->console = fu_console_new();
 	priv->post_requests = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 	fu_console_set_main_context(priv->console, priv->main_ctx);
-	priv->request = fu_engine_request_new(FU_ENGINE_REQUEST_KIND_ACTIVE);
+	priv->request = fu_engine_request_new();
 
 	/* used for monitoring and downloading */
 	priv->client = fwupd_client_new();

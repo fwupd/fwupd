@@ -174,7 +174,7 @@ fu_engine_requirements_missing_func(gconstpointer user_data)
 	g_autoptr(XbNode) component = NULL;
 	g_autoptr(XbSilo) silo = NULL;
 	g_autoptr(FuEngine) engine = fu_engine_new();
-	g_autoptr(FuEngineRequest) request = fu_engine_request_new(FU_ENGINE_REQUEST_KIND_ACTIVE);
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new();
 	g_autoptr(FuRelease) release = fu_release_new();
 	g_autoptr(GError) error = NULL;
 	const gchar *xml = "<component>"
@@ -214,7 +214,7 @@ fu_engine_requirements_soft_func(gconstpointer user_data)
 	g_autoptr(XbNode) component = NULL;
 	g_autoptr(XbSilo) silo = NULL;
 	g_autoptr(FuEngine) engine = fu_engine_new();
-	g_autoptr(FuEngineRequest) request = fu_engine_request_new(FU_ENGINE_REQUEST_KIND_ACTIVE);
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new();
 	g_autoptr(FuRelease) release = fu_release_new();
 	g_autoptr(GError) error = NULL;
 	const gchar *xml = "<component>"
@@ -254,7 +254,7 @@ fu_engine_requirements_client_fail_func(gconstpointer user_data)
 	g_autoptr(XbNode) component = NULL;
 	g_autoptr(XbSilo) silo = NULL;
 	g_autoptr(FuEngine) engine = fu_engine_new();
-	g_autoptr(FuEngineRequest) request = fu_engine_request_new(FU_ENGINE_REQUEST_KIND_ACTIVE);
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new();
 	g_autoptr(FuRelease) release = fu_release_new();
 	g_autoptr(GError) error = NULL;
 	const gchar *xml = "<component>"
@@ -291,7 +291,7 @@ fu_engine_requirements_client_invalid_func(gconstpointer user_data)
 	g_autoptr(XbNode) component = NULL;
 	g_autoptr(XbSilo) silo = NULL;
 	g_autoptr(FuEngine) engine = fu_engine_new();
-	g_autoptr(FuEngineRequest) request = fu_engine_request_new(FU_ENGINE_REQUEST_KIND_ACTIVE);
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new();
 	g_autoptr(FuRelease) release = fu_release_new();
 	g_autoptr(GError) error = NULL;
 	const gchar *xml = "<component>"
@@ -328,7 +328,7 @@ fu_engine_requirements_client_pass_func(gconstpointer user_data)
 	g_autoptr(XbNode) component = NULL;
 	g_autoptr(XbSilo) silo = NULL;
 	g_autoptr(FuEngine) engine = fu_engine_new();
-	g_autoptr(FuEngineRequest) request = fu_engine_request_new(FU_ENGINE_REQUEST_KIND_ACTIVE);
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new();
 	g_autoptr(FuRelease) release = fu_release_new();
 	g_autoptr(GError) error = NULL;
 	const gchar *xml = "<component>"
@@ -367,7 +367,7 @@ fu_engine_requirements_version_require_func(gconstpointer user_data)
 	FuTest *self = (FuTest *)user_data;
 	gboolean ret;
 	g_autoptr(FuDevice) device = fu_device_new(self->ctx);
-	g_autoptr(FuEngineRequest) request = fu_engine_request_new(FU_ENGINE_REQUEST_KIND_ACTIVE);
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new();
 	g_autoptr(FuRelease) release = fu_release_new();
 	g_autoptr(GError) error = NULL;
 	g_autoptr(XbNode) component = NULL;
@@ -417,7 +417,7 @@ fu_engine_requirements_version_lowest_func(gconstpointer user_data)
 	FuTest *self = (FuTest *)user_data;
 	gboolean ret;
 	g_autoptr(FuDevice) device = fu_device_new(self->ctx);
-	g_autoptr(FuEngineRequest) request = fu_engine_request_new(FU_ENGINE_REQUEST_KIND_ACTIVE);
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new();
 	g_autoptr(FuRelease) release = fu_release_new();
 	g_autoptr(GError) error = NULL;
 	g_autoptr(XbNode) component = NULL;
@@ -467,7 +467,7 @@ fu_engine_requirements_unsupported_func(gconstpointer user_data)
 	g_autoptr(XbNode) component = NULL;
 	g_autoptr(XbSilo) silo = NULL;
 	g_autoptr(FuEngine) engine = fu_engine_new();
-	g_autoptr(FuEngineRequest) request = fu_engine_request_new(FU_ENGINE_REQUEST_KIND_ACTIVE);
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new();
 	g_autoptr(FuRelease) release = fu_release_new();
 	g_autoptr(GError) error = NULL;
 	const gchar *xml = "<component>"
@@ -508,7 +508,7 @@ fu_engine_requirements_child_func(gconstpointer user_data)
 	g_autoptr(FuDevice) device = fu_device_new(self->ctx);
 	g_autoptr(FuDevice) child = fu_device_new(NULL);
 	g_autoptr(FuEngine) engine = fu_engine_new();
-	g_autoptr(FuEngineRequest) request = fu_engine_request_new(FU_ENGINE_REQUEST_KIND_ACTIVE);
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new();
 	g_autoptr(FuRelease) release = fu_release_new();
 	g_autoptr(GError) error = NULL;
 	g_autoptr(XbNode) component = NULL;
@@ -568,7 +568,7 @@ fu_engine_requirements_child_fail_func(gconstpointer user_data)
 	g_autoptr(FuDevice) device = fu_device_new(self->ctx);
 	g_autoptr(FuDevice) child = fu_device_new(NULL);
 	g_autoptr(FuEngine) engine = fu_engine_new();
-	g_autoptr(FuEngineRequest) request = fu_engine_request_new(FU_ENGINE_REQUEST_KIND_ACTIVE);
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new();
 	g_autoptr(FuRelease) release = fu_release_new();
 	g_autoptr(GError) error = NULL;
 	g_autoptr(XbNode) component = NULL;
@@ -628,7 +628,7 @@ fu_engine_requirements_func(gconstpointer user_data)
 	gboolean ret;
 	g_autoptr(FuEngine) engine = fu_engine_new();
 	g_autoptr(FuRelease) release = fu_release_new();
-	g_autoptr(FuEngineRequest) request = fu_engine_request_new(FU_ENGINE_REQUEST_KIND_ACTIVE);
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new();
 	g_autoptr(GError) error = NULL;
 	g_autoptr(XbNode) component = NULL;
 	g_autoptr(XbSilo) silo = NULL;
@@ -670,7 +670,7 @@ fu_engine_requirements_device_func(gconstpointer user_data)
 	gboolean ret;
 	g_autoptr(FuDevice) device = fu_device_new(self->ctx);
 	g_autoptr(FuEngine) engine = fu_engine_new();
-	g_autoptr(FuEngineRequest) request = fu_engine_request_new(FU_ENGINE_REQUEST_KIND_ACTIVE);
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new();
 	g_autoptr(FuRelease) release = fu_release_new();
 	g_autoptr(GError) error = NULL;
 	g_autoptr(XbNode) component = NULL;
@@ -732,7 +732,7 @@ fu_engine_requirements_device_plain_func(gconstpointer user_data)
 	gboolean ret;
 	g_autoptr(FuDevice) device = fu_device_new(self->ctx);
 	g_autoptr(FuEngine) engine = fu_engine_new();
-	g_autoptr(FuEngineRequest) request = fu_engine_request_new(FU_ENGINE_REQUEST_KIND_ACTIVE);
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new();
 	g_autoptr(FuRelease) release = fu_release_new();
 	g_autoptr(GError) error = NULL;
 	g_autoptr(XbNode) component = NULL;
@@ -782,7 +782,7 @@ fu_engine_requirements_version_format_func(gconstpointer user_data)
 	FuTest *self = (FuTest *)user_data;
 	gboolean ret;
 	g_autoptr(FuDevice) device = fu_device_new(self->ctx);
-	g_autoptr(FuEngineRequest) request = fu_engine_request_new(FU_ENGINE_REQUEST_KIND_ACTIVE);
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new();
 	g_autoptr(FuRelease) release = fu_release_new();
 	g_autoptr(GError) error = NULL;
 	g_autoptr(XbNode) component = NULL;
@@ -833,7 +833,7 @@ fu_engine_requirements_only_upgrade_func(gconstpointer user_data)
 	FuTest *self = (FuTest *)user_data;
 	gboolean ret;
 	g_autoptr(FuDevice) device = fu_device_new(self->ctx);
-	g_autoptr(FuEngineRequest) request = fu_engine_request_new(FU_ENGINE_REQUEST_KIND_ACTIVE);
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new();
 	g_autoptr(FuRelease) release = fu_release_new();
 	g_autoptr(GError) error = NULL;
 	g_autoptr(XbNode) component = NULL;
@@ -882,7 +882,7 @@ fu_engine_requirements_sibling_device_func(gconstpointer user_data)
 	g_autoptr(FuDevice) unrelated_device3 = fu_device_new(self->ctx);
 	g_autoptr(FuDevice) parent = fu_device_new(self->ctx);
 	g_autoptr(FuEngine) engine = fu_engine_new();
-	g_autoptr(FuEngineRequest) request = fu_engine_request_new(FU_ENGINE_REQUEST_KIND_ACTIVE);
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new();
 	g_autoptr(FuRelease) release1 = fu_release_new();
 	g_autoptr(FuRelease) release2 = fu_release_new();
 	g_autoptr(GError) error = NULL;
@@ -994,7 +994,7 @@ fu_engine_requirements_other_device_func(gconstpointer user_data)
 	g_autoptr(FuDevice) device1 = fu_device_new(self->ctx);
 	g_autoptr(FuDevice) device2 = fu_device_new(self->ctx);
 	g_autoptr(FuEngine) engine = fu_engine_new();
-	g_autoptr(FuEngineRequest) request = fu_engine_request_new(FU_ENGINE_REQUEST_KIND_ACTIVE);
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new();
 	g_autoptr(FuRelease) release = fu_release_new();
 	g_autoptr(GError) error = NULL;
 	g_autoptr(XbNode) component = NULL;
@@ -1063,7 +1063,7 @@ fu_engine_requirements_protocol_check_func(gconstpointer user_data)
 	g_autoptr(FuDevice) device1 = fu_device_new(self->ctx);
 	g_autoptr(FuDevice) device2 = fu_device_new(self->ctx);
 	g_autoptr(FuEngine) engine = fu_engine_new();
-	g_autoptr(FuEngineRequest) request = fu_engine_request_new(FU_ENGINE_REQUEST_KIND_ACTIVE);
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new();
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(FuRelease) release1 = fu_release_new();
 	g_autoptr(FuRelease) release2 = fu_release_new();
@@ -1152,7 +1152,7 @@ fu_engine_requirements_parent_device_func(gconstpointer user_data)
 	g_autoptr(FuDevice) device1 = fu_device_new(self->ctx);
 	g_autoptr(FuDevice) device2 = fu_device_new(self->ctx);
 	g_autoptr(FuEngine) engine = fu_engine_new();
-	g_autoptr(FuEngineRequest) request = fu_engine_request_new(FU_ENGINE_REQUEST_KIND_ACTIVE);
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new();
 	g_autoptr(FuRelease) release = fu_release_new();
 	g_autoptr(GError) error = NULL;
 	g_autoptr(XbNode) component = NULL;
@@ -1461,7 +1461,7 @@ fu_engine_require_hwid_func(gconstpointer user_data)
 	g_autofree gchar *filename = NULL;
 	g_autoptr(FuDevice) device = fu_device_new(self->ctx);
 	g_autoptr(FuEngine) engine = fu_engine_new();
-	g_autoptr(FuEngineRequest) request = fu_engine_request_new(FU_ENGINE_REQUEST_KIND_ACTIVE);
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new();
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(FuRelease) release = fu_release_new();
 	g_autoptr(GBytes) blob_cab = NULL;
@@ -1542,7 +1542,7 @@ fu_engine_get_details_added_func(gconstpointer user_data)
 	g_autofree gchar *filename = NULL;
 	g_autoptr(FuDevice) device = fu_device_new(self->ctx);
 	g_autoptr(FuEngine) engine = fu_engine_new();
-	g_autoptr(FuEngineRequest) request = fu_engine_request_new(FU_ENGINE_REQUEST_KIND_ACTIVE);
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new();
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GBytes) blob_cab = NULL;
 	g_autoptr(GError) error = NULL;
@@ -1602,7 +1602,7 @@ fu_engine_get_details_missing_func(gconstpointer user_data)
 	gboolean ret;
 	g_autofree gchar *filename = NULL;
 	g_autoptr(FuEngine) engine = fu_engine_new();
-	g_autoptr(FuEngineRequest) request = fu_engine_request_new(FU_ENGINE_REQUEST_KIND_ACTIVE);
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new();
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GBytes) blob_cab = NULL;
 	g_autoptr(GError) error = NULL;
@@ -1648,7 +1648,7 @@ fu_engine_downgrade_func(gconstpointer user_data)
 	gboolean ret;
 	g_autoptr(FuDevice) device = fu_device_new(self->ctx);
 	g_autoptr(FuEngine) engine = fu_engine_new();
-	g_autoptr(FuEngineRequest) request = fu_engine_request_new(FU_ENGINE_REQUEST_KIND_ACTIVE);
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new();
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
@@ -1837,7 +1837,7 @@ fu_engine_install_duration_func(gconstpointer user_data)
 	gboolean ret;
 	g_autoptr(FuDevice) device = fu_device_new(self->ctx);
 	g_autoptr(FuEngine) engine = fu_engine_new();
-	g_autoptr(FuEngineRequest) request = fu_engine_request_new(FU_ENGINE_REQUEST_KIND_ACTIVE);
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new();
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
@@ -2107,7 +2107,7 @@ fu_engine_multiple_rels_func(gconstpointer user_data)
 	g_autoptr(XbNode) component = NULL;
 	g_autoptr(XbSilo) silo_empty = xb_silo_new();
 	g_autoptr(XbSilo) silo = NULL;
-	g_autoptr(FuEngineRequest) request = fu_engine_request_new(FU_ENGINE_REQUEST_KIND_ACTIVE);
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new();
 	g_autoptr(GPtrArray) releases = NULL;
 	g_autoptr(GPtrArray) rels = NULL;
 #if LIBXMLB_CHECK_VERSION(0, 2, 0)
@@ -3739,7 +3739,7 @@ fu_plugin_composite_func(gconstpointer user_data)
 	GError *error = NULL;
 	gboolean ret;
 	g_autoptr(FuEngine) engine = fu_engine_new();
-	g_autoptr(FuEngineRequest) request = fu_engine_request_new(FU_ENGINE_REQUEST_KIND_ACTIVE);
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new();
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GPtrArray) components = NULL;
 	g_autoptr(GPtrArray) devices = NULL;

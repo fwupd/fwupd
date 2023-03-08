@@ -1095,7 +1095,7 @@ fu_release_load(FuRelease *self,
 
 	/* check requirements for device */
 	if (self->device != NULL && self->request != NULL &&
-	    fu_engine_request_get_kind(self->request) == FU_ENGINE_REQUEST_KIND_ACTIVE) {
+	    !fu_engine_request_has_flag(self->request, FU_ENGINE_REQUEST_FLAG_NO_REQUIREMENTS)) {
 		if (!fu_release_check_requirements(self, component, rel, install_flags, error))
 			return FALSE;
 	}

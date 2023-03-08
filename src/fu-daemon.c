@@ -236,7 +236,7 @@ fu_daemon_create_request(FuDaemon *self, const gchar *sender, GError **error)
 	FuDaemonSenderItem *sender_item;
 	FwupdDeviceFlags device_flags = FWUPD_DEVICE_FLAG_NONE;
 	guint calling_uid = 0;
-	g_autoptr(FuEngineRequest) request = fu_engine_request_new(FU_ENGINE_REQUEST_KIND_ACTIVE);
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new();
 	g_autoptr(GVariant) value = NULL;
 
 	/* if using FWUPD_DBUS_SOCKET... */
