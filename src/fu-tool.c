@@ -1332,7 +1332,7 @@ fu_util_install(FuUtilPrivate *priv, gchar **values, GError **error)
 			}
 
 			/* make a second pass using possibly updated version format now */
-			fu_engine_md_refresh_device_from_component(priv->engine, device, component);
+			fu_device_ensure_from_component(device, component);
 			if (!fu_engine_check_requirements(priv->engine,
 							  release,
 							  priv->flags,

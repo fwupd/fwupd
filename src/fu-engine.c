@@ -4483,258 +4483,6 @@ fu_engine_ensure_device_supported(FuEngine *self, FuDevice *device)
 }
 
 static void
-fu_engine_md_refresh_device_name(FuEngine *self, FuDevice *device, XbNode *component)
-{
-	const gchar *name = NULL;
-
-	/* require data */
-	if (component == NULL)
-		return;
-
-	/* copy 1:1 */
-	name = xb_node_query_text(component, "name", NULL);
-	if (name != NULL) {
-		fu_device_set_name(device, name);
-		fu_device_remove_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_MD_SET_NAME);
-	}
-}
-
-static void
-fu_engine_md_refresh_device_vendor(FuEngine *self, FuDevice *device, XbNode *component)
-{
-	const gchar *vendor = NULL;
-
-	/* require data */
-	if (component == NULL)
-		return;
-
-	/* copy 1:1 */
-	vendor = xb_node_query_text(component, "developer_name", NULL);
-	if (vendor != NULL) {
-		fu_device_set_vendor(device, vendor);
-		fu_device_remove_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_MD_SET_VENDOR);
-	}
-}
-
-static void
-fu_engine_md_refresh_device_signed(FuEngine *self, FuDevice *device, XbNode *component)
-{
-	const gchar *value = NULL;
-
-	/* require data */
-	if (component == NULL)
-		return;
-
-	/* already set, possibly by a quirk */
-	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD) ||
-	    fu_device_has_flag(device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD))
-		return;
-
-	/* copy 1:1 */
-	value = xb_node_query_text(component, "custom/value[@key='LVFS::DeviceIntegrity']", NULL);
-	if (value != NULL) {
-		if (g_strcmp0(value, "signed") == 0) {
-			fu_device_add_flag(device, FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
-		} else if (g_strcmp0(value, "unsigned") == 0) {
-			fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
-		} else {
-			g_warning("payload value unexpected: %s, expected signed|unsigned", value);
-		}
-		fu_device_remove_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_MD_SET_VENDOR);
-	}
-}
-
-static void
-fu_engine_md_refresh_device_icon(FuEngine *self, FuDevice *device, XbNode *component)
-{
-	const gchar *icon = NULL;
-
-	/* require data */
-	if (component == NULL)
-		return;
-
-	/* copy 1:1 */
-	icon = xb_node_query_text(component, "icon", NULL);
-	if (icon != NULL) {
-		fu_device_add_icon(device, icon);
-		fu_device_remove_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_MD_SET_ICON);
-	}
-}
-
-static const gchar *
-fu_common_device_category_to_name(const gchar *cat)
-{
-	if (g_strcmp0(cat, "X-EmbeddedController") == 0)
-		return "Embedded Controller";
-	if (g_strcmp0(cat, "X-ManagementEngine") == 0)
-		return "Intel Management Engine";
-	if (g_strcmp0(cat, "X-CorporateManagementEngine") == 0)
-		return "Intel Management Engine";
-	if (g_strcmp0(cat, "X-ConsumerManagementEngine") == 0)
-		return "Intel Management Engine";
-	if (g_strcmp0(cat, "X-ThunderboltController") == 0)
-		return "Thunderbolt Controller";
-	if (g_strcmp0(cat, "X-PlatformSecurityProcessor") == 0)
-		return "Platform Security Processor";
-	if (g_strcmp0(cat, "X-CpuMicrocode") == 0)
-		return "CPU Microcode";
-	if (g_strcmp0(cat, "X-Battery") == 0)
-		return "Battery";
-	if (g_strcmp0(cat, "X-Camera") == 0)
-		return "Camera";
-	if (g_strcmp0(cat, "X-TPM") == 0)
-		return "TPM";
-	if (g_strcmp0(cat, "X-Touchpad") == 0)
-		return "Touchpad";
-	if (g_strcmp0(cat, "X-Mouse") == 0)
-		return "Mouse";
-	if (g_strcmp0(cat, "X-Keyboard") == 0)
-		return "Keyboard";
-	if (g_strcmp0(cat, "X-VideoDisplay") == 0)
-		return "Display";
-	if (g_strcmp0(cat, "X-BaseboardManagementController") == 0)
-		return "BMC";
-	if (g_strcmp0(cat, "X-UsbReceiver") == 0)
-		return "USB Receiver";
-	if (g_strcmp0(cat, "X-Gpu") == 0)
-		return "GPU";
-	if (g_strcmp0(cat, "X-Dock") == 0)
-		return "Dock";
-	if (g_strcmp0(cat, "X-UsbDock") == 0)
-		return "USB Dock";
-	if (g_strcmp0(cat, "X-FingerprintReader") == 0)
-		return "Fingerprint Reader";
-	if (g_strcmp0(cat, "X-GraphicsTablet") == 0)
-		return "Graphics Tablet";
-	return NULL;
-}
-
-static void
-fu_engine_md_refresh_device_name_category(FuEngine *self, FuDevice *device, XbNode *component)
-{
-	const gchar *name = NULL;
-	g_autoptr(GPtrArray) cats = NULL;
-
-	/* require data */
-	if (component == NULL)
-		return;
-
-	/* get AppStream and safe-compat categories */
-	cats = xb_node_query(component, "categories/category|X-categories/category", 0, NULL);
-	if (cats == NULL)
-		return;
-	for (guint i = 0; i < cats->len; i++) {
-		XbNode *n = g_ptr_array_index(cats, i);
-		name = fu_common_device_category_to_name(xb_node_get_text(n));
-		if (name != NULL)
-			break;
-	}
-	if (name != NULL) {
-		fu_device_set_name(device, name);
-		fu_device_remove_internal_flag(device,
-					       FU_DEVICE_INTERNAL_FLAG_MD_SET_NAME_CATEGORY);
-	}
-
-	/* batteries updated using capsules should ignore the system power restriction */
-	if (g_strcmp0(fu_device_get_plugin(device), "uefi_capsule") == 0) {
-		gboolean is_battery = FALSE;
-		for (guint i = 0; i < cats->len; i++) {
-			XbNode *n = g_ptr_array_index(cats, i);
-			if (g_strcmp0(xb_node_get_text(n), "X-Battery") == 0) {
-				is_battery = TRUE;
-				break;
-			}
-		}
-		if (is_battery) {
-			g_info("ignoring system power for %s battery", fu_device_get_id(device));
-			fu_device_add_internal_flag(device,
-						    FU_DEVICE_INTERNAL_FLAG_IGNORE_SYSTEM_POWER);
-		}
-	}
-}
-
-static void
-_g_ptr_array_reverse(GPtrArray *array)
-{
-	guint last_idx = array->len - 1;
-	for (guint i = 0; i < array->len / 2; i++) {
-		gpointer tmp = array->pdata[i];
-		array->pdata[i] = array->pdata[last_idx - i];
-		array->pdata[last_idx - i] = tmp;
-	}
-}
-
-static void
-fu_engine_md_refresh_device_verfmt(FuEngine *self, FuDevice *device, XbNode *component)
-{
-	FwupdVersionFormat verfmt = FWUPD_VERSION_FORMAT_UNKNOWN;
-	g_autoptr(GPtrArray) verfmts = NULL;
-
-	/* require data */
-	if (component == NULL)
-		return;
-
-	/* get metadata */
-	verfmts = xb_node_query(component, "custom/value[@key='LVFS::VersionFormat']", 0, NULL);
-	if (verfmts == NULL)
-		return;
-	_g_ptr_array_reverse(verfmts);
-	for (guint i = 0; i < verfmts->len; i++) {
-		XbNode *value = g_ptr_array_index(verfmts, i);
-		verfmt = fwupd_version_format_from_string(xb_node_get_text(value));
-		if (verfmt != FWUPD_VERSION_FORMAT_UNKNOWN)
-			break;
-	}
-
-	/* found and different to existing */
-	if (verfmt != FWUPD_VERSION_FORMAT_UNKNOWN &&
-	    fu_device_get_version_format(device) != verfmt) {
-		fu_device_set_version_format(device, verfmt);
-		if (fu_device_get_version_raw(device) != 0x0) {
-			g_autofree gchar *version = NULL;
-			version = fu_version_from_uint32(fu_device_get_version_raw(device), verfmt);
-			fu_device_set_version(device, version);
-		}
-		if (fu_device_get_version_lowest_raw(device) != 0x0) {
-			g_autofree gchar *version = NULL;
-			version = fu_version_from_uint32(fu_device_get_version_lowest_raw(device),
-							 verfmt);
-			fu_device_set_version_lowest(device, version);
-		}
-		if (fu_device_get_version_bootloader_raw(device) != 0x0) {
-			g_autofree gchar *version = NULL;
-			version =
-			    fu_version_from_uint32(fu_device_get_version_bootloader_raw(device),
-						   verfmt);
-			fu_device_set_version_bootloader(device, version);
-		}
-	}
-
-	/* do not try to do this again */
-	fu_device_remove_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_MD_SET_VERFMT);
-}
-
-void
-fu_engine_md_refresh_device_from_component(FuEngine *self, FuDevice *device, XbNode *component)
-{
-	/* set the name */
-	if (fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_MD_SET_NAME))
-		fu_engine_md_refresh_device_name(self, device, component);
-	if (fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_MD_SET_NAME_CATEGORY))
-		fu_engine_md_refresh_device_name_category(self, device, component);
-	if (fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_MD_SET_ICON))
-		fu_engine_md_refresh_device_icon(self, device, component);
-	if (fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_MD_SET_VENDOR))
-		fu_engine_md_refresh_device_vendor(self, device, component);
-	if (fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_MD_SET_SIGNED))
-		fu_engine_md_refresh_device_signed(self, device, component);
-
-	/* fix the version */
-	if (fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_MD_SET_VERFMT))
-		fu_engine_md_refresh_device_verfmt(self, device, component);
-}
-
-static void
 fu_engine_md_refresh_devices(FuEngine *self)
 {
 	g_autoptr(GPtrArray) devices = fu_device_list_get_all(self->device_list);
@@ -4746,7 +4494,8 @@ fu_engine_md_refresh_devices(FuEngine *self)
 		fu_engine_ensure_device_supported(self, device);
 
 		/* fixup the name and format as needed */
-		fu_engine_md_refresh_device_from_component(self, device, component);
+		if (component != NULL)
+			fu_device_ensure_from_component(device, component);
 	}
 }
 
@@ -5399,7 +5148,7 @@ fu_engine_get_result_from_component(FuEngine *self,
 	}
 
 	/* refresh the device to the new version format too */
-	fu_engine_md_refresh_device_from_component(self, dev, component);
+	fu_device_ensure_from_component(dev, component);
 
 	/* success */
 	fu_device_add_release(dev, FWUPD_RELEASE(release));
@@ -5486,8 +5235,6 @@ fu_engine_get_details_for_bytes(FuEngine *self,
 			fwupd_release_set_remote_id(rel, remote_id);
 			fu_device_add_flag(dev, FWUPD_DEVICE_FLAG_SUPPORTED);
 		}
-		if (fu_device_has_internal_flag(dev, FU_DEVICE_INTERNAL_FLAG_MD_SET_VERFMT))
-			fu_engine_md_refresh_device_verfmt(self, dev, component);
 
 		/* add the checksum of the container blob */
 		for (guint j = 0; j < checksums->len; j++) {
@@ -6972,7 +6719,8 @@ fu_engine_add_device(FuEngine *self, FuDevice *device)
 	fu_engine_ensure_device_emulation_tag(self, device);
 
 	/* fixup the name and format as needed */
-	fu_engine_md_refresh_device_from_component(self, device, component);
+	if (component != NULL)
+		fu_device_ensure_from_component(device, component);
 
 	/* set or clear the SUPPORTED flag */
 	fu_engine_ensure_device_supported(self, device);

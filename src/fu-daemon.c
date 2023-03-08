@@ -822,7 +822,7 @@ fu_daemon_install_with_helper_device(FuMainAuthHelper *helper,
 	}
 
 	/* possibly update version format */
-	fu_engine_md_refresh_device_from_component(self->engine, device, component);
+	fu_device_ensure_from_component(device, component);
 
 	/* sync update message from CAB */
 	fu_device_incorporate_from_component(device, component);

@@ -1185,3 +1185,9 @@ LIBFWUPDPLUGIN_1.8.12 {
     fu_device_probe_complete;
   local: *;
 } LIBFWUPDPLUGIN_1.8.11;
+
+LIBFWUPDPLUGIN_1.8.13 {
+  global:
+    fu_device_ensure_from_component;
+  local: *;
+} LIBFWUPDPLUGIN_1.8.12;

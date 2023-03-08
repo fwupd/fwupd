@@ -41,6 +41,8 @@ fu_device_ensure_id(FuDevice *self, GError **error) G_GNUC_WARN_UNUSED_RESULT;
 void
 fu_device_incorporate_from_component(FuDevice *self, XbNode *component);
 void
+fu_device_ensure_from_component(FuDevice *self, XbNode *component);
+void
 fu_device_convert_instance_ids(FuDevice *self);
 gchar *
 fu_device_get_guids_as_str(FuDevice *self);
