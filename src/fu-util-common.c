@@ -122,7 +122,8 @@ fu_util_traverse_tree(GNode *n, gpointer data)
 		    g_strdup_printf("%s %s",
 				    fwupd_client_get_host_vendor(helper->client),
 				    fwupd_client_get_host_product(helper->client));
-		g_print("%s\n│\n", str);
+		fu_console_print_literal(helper->console, str);
+		fu_console_print_literal(helper->console, "│");
 		return FALSE;
 	}
 
