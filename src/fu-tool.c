@@ -704,7 +704,7 @@ fu_util_get_details(FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(GPtrArray) array = NULL;
 	g_autoptr(GNode) root = g_node_new(NULL);
-	gint fd;
+	g_autoptr(GBytes) blob = NULL;
 
 	/* load engine */
 	if (!fu_util_start_engine(priv,
@@ -727,19 +727,12 @@ fu_util_get_details(FuUtilPrivate *priv, gchar **values, GError **error)
 	priv->show_all = TRUE;
 
 	/* open file */
-	fd = open(values[0], O_RDONLY);
-	if (fd < 0) {
+	blob = fu_bytes_get_contents(values[0], error);
+	if (blob == NULL) {
 		fu_util_maybe_prefix_sandbox_error(values[0], error);
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_FILE,
-			    "failed to open %s",
-			    values[0]);
 		return FALSE;
 	}
-	array = fu_engine_get_details(priv->engine, priv->request, fd, error);
-	close(fd);
-
+	array = fu_engine_get_details_for_bytes(priv->engine, priv->request, blob, error);
 	if (array == NULL)
 		return FALSE;
 	for (guint i = 0; i < array->len; i++) {
