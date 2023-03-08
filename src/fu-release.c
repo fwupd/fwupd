@@ -9,7 +9,6 @@
 #include "config.h"
 
 #include "fu-device-private.h"
-#include "fu-keyring-utils.h"
 #include "fu-release-common.h"
 #include "fu-release.h"
 
@@ -29,8 +28,6 @@ struct _FuRelease {
 	FuConfig *config;
 	GBytes *blob_fw;
 	gchar *update_request_id;
-	FwupdReleaseFlags trust_flags;
-	gboolean is_downgrade;
 	GPtrArray *soft_reqs; /* nullable, element-type XbNode */
 	GPtrArray *hard_reqs; /* nullable, element-type XbNode */
 	guint64 priority;
@@ -38,28 +35,11 @@ struct _FuRelease {
 
 G_DEFINE_TYPE(FuRelease, fu_release, FWUPD_TYPE_RELEASE)
 
-static gchar *
-fu_release_flags_to_string(FwupdReleaseFlags release_flags)
-{
-	g_autoptr(GString) str = g_string_new(NULL);
-	for (guint i = 0; i < 64; i++) {
-		if ((release_flags & ((guint64)1 << i)) == 0)
-			continue;
-		if (str->len > 0)
-			g_string_append(str, "|");
-		g_string_append(str, fwupd_release_flag_to_string((guint64)1 << i));
-	}
-	if (str->len == 0)
-		g_string_append(str, fwupd_release_flag_to_string(FWUPD_RELEASE_FLAG_NONE));
-	return g_string_free(g_steal_pointer(&str), FALSE);
-}
-
 gchar *
 fu_release_to_string(FuRelease *self)
 {
 	const guint idt = 1;
 	g_autofree gchar *tmp = NULL;
-	g_autofree gchar *trust_flags_str = fu_release_flags_to_string(self->trust_flags);
 	g_autoptr(GString) str = g_string_new(NULL);
 
 	g_return_val_if_fail(FU_IS_RELEASE(self), NULL);
@@ -83,8 +63,6 @@ fu_release_to_string(FuRelease *self)
 		fu_string_append_kx(str, idt, "BlobFwSz", g_bytes_get_size(self->blob_fw));
 	if (self->update_request_id != NULL)
 		fu_string_append(str, idt, "UpdateRequestId", self->update_request_id);
-	fu_string_append(str, idt, "TrustFlags", trust_flags_str);
-	fu_string_append_kb(str, idt, "IsDowngrade", self->is_downgrade);
 	if (self->soft_reqs != NULL)
 		fu_string_append_kx(str, idt, "SoftReqs", self->soft_reqs->len);
 	if (self->hard_reqs != NULL)
@@ -715,8 +693,10 @@ fu_release_check_requirements(FuRelease *self,
 			    fu_release_get_version(self));
 		return FALSE;
 	}
-	self->is_downgrade = vercmp > 0;
-	if (self->is_downgrade && (install_flags & FWUPD_INSTALL_FLAG_ALLOW_OLDER) == 0 &&
+	if (vercmp > 0)
+		fu_release_add_flag(self, FWUPD_RELEASE_FLAG_IS_DOWNGRADE);
+	if (fu_release_has_flag(self, FWUPD_RELEASE_FLAG_IS_DOWNGRADE) &&
+	    (install_flags & FWUPD_INSTALL_FLAG_ALLOW_OLDER) == 0 &&
 	    (install_flags & FWUPD_INSTALL_FLAG_ALLOW_BRANCH_SWITCH) == 0) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -727,31 +707,7 @@ fu_release_check_requirements(FuRelease *self,
 		return FALSE;
 	}
 
-	/* verify */
-	if (!fu_keyring_get_release_flags(rel, &self->trust_flags, &error_local)) {
-		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
-			g_warning("Ignoring verification for %s: %s",
-				  fu_device_get_name(self->device),
-				  error_local->message);
-		} else {
-			g_propagate_error(error, g_steal_pointer(&error_local));
-			return FALSE;
-		}
-	}
-
-	/* do not require signatures for anything installed to the immutable datadir */
-	if (self->trust_flags == FWUPD_RELEASE_FLAG_NONE && self->remote != NULL) {
-		if (fwupd_remote_get_keyring_kind(self->remote) == FWUPD_KEYRING_KIND_NONE &&
-		    (fwupd_remote_get_kind(self->remote) == FWUPD_REMOTE_KIND_LOCAL ||
-		     fwupd_remote_get_kind(self->remote) == FWUPD_REMOTE_KIND_DIRECTORY)) {
-			g_info("remote %s has kind=%s and Keyring=none and so marking as trusted",
-			       fwupd_remote_get_id(self->remote),
-			       fwupd_remote_kind_to_string(fwupd_remote_get_kind(self->remote)));
-			self->trust_flags = FWUPD_RELEASE_FLAG_TRUSTED_PAYLOAD |
-					    FWUPD_RELEASE_FLAG_TRUSTED_METADATA;
-		}
-	}
-
+	/* success */
 	return TRUE;
 }
 
@@ -863,6 +819,12 @@ fu_release_load(FuRelease *self,
 	} else {
 		rel = g_object_ref(rel_optional);
 	}
+
+	/* use the metadata to set the device attributes */
+	if (!fu_release_ensure_trust_flags(self, rel, error))
+		return FALSE;
+	if (self->device != NULL && fu_release_has_flag(self, FWUPD_RELEASE_FLAG_TRUSTED_METADATA))
+		fu_device_ensure_from_component(self->device, component);
 
 	/* the version is fixed up with the device format */
 	tmp = xb_node_get_attr(rel, "version");
@@ -1105,21 +1067,56 @@ fu_release_load(FuRelease *self,
 }
 
 /**
- * fu_release_get_trust_flags:
- * @self: a #FuRelease
+ * fu_release_ensure_trust_flags:
+ * @release: the release node
+ * @error: (nullable): optional return location for an error
  *
- * Gets the trust flags for this task.
+ * Uses the correct keyring to get the trust flags for a given release.
  *
- * NOTE: This is only set after fu_release_load() has been called successfully, and
- * is only valid when a request has been set.
- *
- * Returns: the #FwupdReleaseFlags, e.g. #FWUPD_TRUST_FLAG_PAYLOAD
+ * Returns: %FALSE on error
  **/
-FwupdReleaseFlags
-fu_release_get_trust_flags(FuRelease *self)
+gboolean
+fu_release_ensure_trust_flags(FuRelease *self, XbNode *rel, GError **error)
 {
+	GBytes *blob;
+
 	g_return_val_if_fail(FU_IS_RELEASE(self), FALSE);
-	return self->trust_flags;
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	/* populated from an actual cab archive */
+	blob = g_object_get_data(G_OBJECT(rel), "fwupd::ReleaseFlags");
+	if (blob != NULL) {
+		FwupdReleaseFlags flags = FWUPD_RELEASE_FLAG_NONE;
+		if (!fu_memcpy_safe((guint8 *)&flags,
+				    sizeof(flags),
+				    0x0, /* dst */
+				    g_bytes_get_data(blob, NULL),
+				    g_bytes_get_size(blob),
+				    0x0, /* src */
+				    sizeof(flags),
+				    error))
+			return FALSE;
+		if (flags & FWUPD_RELEASE_FLAG_TRUSTED_PAYLOAD)
+			fu_release_add_flag(self, FWUPD_RELEASE_FLAG_TRUSTED_PAYLOAD);
+		if (flags & FWUPD_RELEASE_FLAG_TRUSTED_METADATA)
+			fu_release_add_flag(self, FWUPD_RELEASE_FLAG_TRUSTED_METADATA);
+	}
+
+	/* do not require signatures for anything installed to the immutable datadir */
+	if (fu_release_get_flags(self) == FWUPD_RELEASE_FLAG_NONE && self->remote != NULL) {
+		if (fwupd_remote_get_keyring_kind(self->remote) == FWUPD_KEYRING_KIND_NONE &&
+		    (fwupd_remote_get_kind(self->remote) == FWUPD_REMOTE_KIND_LOCAL ||
+		     fwupd_remote_get_kind(self->remote) == FWUPD_REMOTE_KIND_DIRECTORY)) {
+			g_info("remote %s has kind=%s and Keyring=none and so marking as trusted",
+			       fwupd_remote_get_id(self->remote),
+			       fwupd_remote_kind_to_string(fwupd_remote_get_kind(self->remote)));
+			fu_release_add_flag(self, FWUPD_RELEASE_FLAG_TRUSTED_PAYLOAD);
+			fu_release_add_flag(self, FWUPD_RELEASE_FLAG_TRUSTED_METADATA);
+		}
+	}
+
+	/* success */
+	return TRUE;
 }
 
 /**
@@ -1135,23 +1132,23 @@ fu_release_get_action_id(FuRelease *self)
 {
 	/* relax authentication checks for removable devices */
 	if (!fu_device_has_flag(self->device, FWUPD_DEVICE_FLAG_INTERNAL)) {
-		if (self->is_downgrade) {
-			if (self->trust_flags & FWUPD_TRUST_FLAG_PAYLOAD)
+		if (fu_release_has_flag(self, FWUPD_RELEASE_FLAG_IS_DOWNGRADE)) {
+			if (fu_release_has_flag(self, FWUPD_RELEASE_FLAG_TRUSTED_PAYLOAD))
 				return "org.freedesktop.fwupd.downgrade-hotplug-trusted";
 			return "org.freedesktop.fwupd.downgrade-hotplug";
 		}
-		if (self->trust_flags & FWUPD_TRUST_FLAG_PAYLOAD)
+		if (fu_release_has_flag(self, FWUPD_RELEASE_FLAG_TRUSTED_PAYLOAD))
 			return "org.freedesktop.fwupd.update-hotplug-trusted";
 		return "org.freedesktop.fwupd.update-hotplug";
 	}
 
 	/* internal device */
-	if (self->is_downgrade) {
-		if (self->trust_flags & FWUPD_TRUST_FLAG_PAYLOAD)
+	if (fu_release_has_flag(self, FWUPD_RELEASE_FLAG_IS_DOWNGRADE)) {
+		if (fu_release_has_flag(self, FWUPD_RELEASE_FLAG_TRUSTED_PAYLOAD))
 			return "org.freedesktop.fwupd.downgrade-internal-trusted";
 		return "org.freedesktop.fwupd.downgrade-internal";
 	}
-	if (self->trust_flags & FWUPD_TRUST_FLAG_PAYLOAD)
+	if (fu_release_has_flag(self, FWUPD_RELEASE_FLAG_TRUSTED_PAYLOAD))
 		return "org.freedesktop.fwupd.update-internal-trusted";
 	return "org.freedesktop.fwupd.update-internal";
 }
@@ -1188,7 +1185,7 @@ fu_release_compare(FuRelease *release1, FuRelease *release2)
 static void
 fu_release_init(FuRelease *self)
 {
-	self->trust_flags = FWUPD_TRUST_FLAG_NONE;
+	fu_release_set_flags(self, FWUPD_RELEASE_FLAG_NONE);
 }
 
 static void

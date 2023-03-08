@@ -47,7 +47,6 @@ fwupd_engine_src = [
   'fu-polkit-authority.c',
   'fu-release.c',
   'fu-release-common.c',
-  'fu-keyring-utils.c',
   'fu-plugin-list.c',
   'fu-remote-list.c',
   'fu-security-attr-common.c',
