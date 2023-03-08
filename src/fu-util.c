@@ -3313,7 +3313,6 @@ fu_util_upload_security(FuUtilPrivate *priv, GPtrArray *attrs, GError **error)
 		return TRUE;
 	}
 	if (!priv->assume_yes && !fwupd_remote_get_automatic_security_reports(remote)) {
-		g_autofree gchar *tmp = NULL;
 		if (!fu_console_input_bool(priv->console,
 					   FALSE,
 					   /* TRANSLATORS: ask the user to share, %s is something

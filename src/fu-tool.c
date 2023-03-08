@@ -126,7 +126,6 @@ fu_util_show_plugin_warnings(FuUtilPrivate *priv)
 		FwupdPluginFlags flag = (guint64)1 << i;
 		const gchar *tmp;
 		g_autofree gchar *url = NULL;
-		g_autoptr(GString) str = g_string_new(NULL);
 		if ((flags & flag) == 0)
 			continue;
 		tmp = fu_util_plugin_flag_to_string((guint64)1 << i);

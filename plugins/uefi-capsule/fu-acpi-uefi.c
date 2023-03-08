@@ -97,7 +97,6 @@ fu_acpi_uefi_parse(FuFirmware *firmware,
 	fwupd_guid_t guid = {0x0};
 	gsize bufsz = 0;
 	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
-	g_autofree gchar *guidstr = NULL;
 
 	/* FuAcpiTable->parse */
 	if (!FU_FIRMWARE_CLASS(fu_acpi_uefi_parent_class)
