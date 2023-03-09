@@ -157,6 +157,27 @@ fu_wac_module_refresh(FuWacModule *self, GError **error)
 	return TRUE;
 }
 
+static gboolean
+fu_wac_module_refresh_cb(FuDevice *device, gpointer user_data, GError **error)
+{
+	FuWacModule *self = FU_WAC_MODULE(device);
+	FuWacModulePrivate *priv = GET_PRIVATE(self);
+
+	if (!fu_wac_module_refresh(self, error))
+		return FALSE;
+	if (priv->status != FU_WAC_MODULE_STATUS_OK) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "Failed to SetFeature: %s",
+			    fu_wac_module_status_to_string(priv->status));
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
 gboolean
 fu_wac_module_set_feature(FuWacModule *self,
 			  guint8 command,
@@ -169,7 +190,9 @@ fu_wac_module_set_feature(FuWacModule *self,
 	FuWacModulePrivate *priv = GET_PRIVATE(self);
 	const guint8 *data;
 	gsize len = 0;
-	guint busy_poll_loops = busy_timeout / 100;
+	guint delay_ms =
+	    fu_device_has_flag(FU_DEVICE(parent_device), FWUPD_DEVICE_FLAG_EMULATED) ? 10 : 100;
+	guint busy_poll_loops = busy_timeout / delay_ms;
 	guint8 buf[] = {[0] = FU_WAC_REPORT_ID_MODULE,
 			[1] = priv->fw_type,
 			[2] = command,
@@ -221,33 +244,13 @@ fu_wac_module_set_feature(FuWacModule *self,
 	}
 
 	/* wait for hardware */
-	for (guint i = 0; i < busy_poll_loops; i++) {
-		if (!fu_wac_module_refresh(self, error))
-			return FALSE;
-		if (priv->status == FU_WAC_MODULE_STATUS_BUSY) {
-			fu_device_sleep(FU_DEVICE(self), 10); /* ms */
-			continue;
-		}
-		if (priv->status == FU_WAC_MODULE_STATUS_OK)
-			break;
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INTERNAL,
-			    "Failed to SetFeature: %s",
-			    fu_wac_module_status_to_string(priv->status));
+	if (!fu_device_retry_full(FU_DEVICE(self),
+				  fu_wac_module_refresh_cb,
+				  busy_poll_loops,
+				  delay_ms,
+				  NULL,
+				  error))
 		return FALSE;
-	}
-
-	/* too many retries */
-	if (priv->status != FU_WAC_MODULE_STATUS_OK) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INTERNAL,
-			    "Timed out after %u loops with status %s",
-			    busy_poll_loops,
-			    fu_wac_module_status_to_string(priv->status));
-		return FALSE;
-	}
 
 	/* success */
 	return TRUE;
