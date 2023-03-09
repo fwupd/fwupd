@@ -77,7 +77,9 @@ fu_tpm_device_1_2_func(void)
 static void
 fu_tpm_device_2_0_func(void)
 {
+	gboolean ret;
 	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(FuTpmDevice) device = fu_tpm_v2_device_new(ctx);
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) pcr0s = NULL;
@@ -93,16 +95,19 @@ fu_tpm_device_2_0_func(void)
 		return;
 	}
 #endif
-
-	if (!fu_device_setup(FU_DEVICE(device), &error)) {
-		if (tpm_server_running == NULL &&
-		    g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
-			g_test_skip("no physical or simulated TPM 2.0 device available");
-			g_unsetenv("FWUPD_FORCE_TPM2");
-			return;
-		}
+	fu_device_set_physical_id(FU_DEVICE(device), "dummy");
+	locker = fu_device_locker_new(FU_DEVICE(device), &error);
+	if (locker == NULL && tpm_server_running == NULL &&
+	    g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
+		g_test_skip("no physical or simulated TPM 2.0 device available");
+		g_unsetenv("FWUPD_FORCE_TPM2");
+		return;
 	}
 	g_assert_no_error(error);
+	g_assert_nonnull(locker);
+	ret = fu_device_setup(FU_DEVICE(device), &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
 	pcr0s = fu_tpm_device_get_checksums(device, 0);
 	g_assert_nonnull(pcr0s);
 	g_assert_cmpint(pcr0s->len, >=, 1);
