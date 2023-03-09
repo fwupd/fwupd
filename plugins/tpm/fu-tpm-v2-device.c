@@ -223,6 +223,55 @@ fu_tpm_v2_device_setup_pcrs(FuTpmV2Device *self, ESYS_CONTEXT *ctx, GError **err
 }
 
 static gboolean
+fu_tpm_v2_device_ensure_commands(FuTpmV2Device *self, ESYS_CONTEXT *ctx, GError **error)
+{
+	gboolean seen_upgrade_data = FALSE;
+	gboolean seen_upgrade_start = FALSE;
+	TSS2_RC rc;
+	g_autofree TPMS_CAPABILITY_DATA *capability = NULL;
+	g_autoptr(GString) str = g_string_new(NULL);
+
+	rc = Esys_GetCapability(ctx,
+				ESYS_TR_NONE,
+				ESYS_TR_NONE,
+				ESYS_TR_NONE,
+				TPM2_CAP_COMMANDS,
+				TPM2_CC_FIRST,
+				TPM2_MAX_CAP_CC,
+				NULL,
+				&capability);
+	if (rc != TSS2_RC_SUCCESS) {
+		g_set_error_literal(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_NOT_SUPPORTED,
+				    "capability request failed for TPM2_CAP_COMMANDS");
+		return FALSE;
+	}
+	for (guint i = 0; i < capability->data.ppCommands.count; i++) {
+		guint cap_cmd = capability->data.ppCommands.commandCodes[i] & 0xFFFF;
+
+		if (str->len > 0)
+			g_string_append(str, ", ");
+		g_string_append_printf(str, "0x%04x", cap_cmd);
+
+		/* ones we care about */
+		if (cap_cmd == TPM2_CC_FieldUpgradeStart) {
+			seen_upgrade_start = TRUE;
+		} else if (cap_cmd == TPM2_CC_FieldUpgradeData) {
+			seen_upgrade_data = TRUE;
+		}
+	}
+	g_debug("CAP_COMMANDS: %s", str->str);
+
+	/* both available */
+	if (seen_upgrade_start && seen_upgrade_data)
+		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_tpm_v2_device_setup(FuDevice *device, GError **error)
 {
 	FuTpmV2Device *self = FU_TPM_V2_DEVICE(device);
@@ -315,6 +364,10 @@ fu_tpm_v2_device_setup(FuDevice *device, GError **error)
 		return FALSE;
 	version_raw = ((guint64)version1) << 32 | ((guint64)version2);
 	fu_device_set_version_from_uint64(device, version_raw);
+
+	/* get capabilities */
+	if (!fu_tpm_v2_device_ensure_commands(self, ctx, error))
+		return FALSE;
 
 	/* get PCRs */
 	return fu_tpm_v2_device_setup_pcrs(self, ctx, error);
