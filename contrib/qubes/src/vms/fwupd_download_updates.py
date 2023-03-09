@@ -27,7 +27,7 @@ class DownloadData(FwupdVmCommon):
             metadata_url = METADATA_URL
         else:
             metadata_url = self.custom_url
-        cmd_metadata = ["wget", "-O", self.metadata_file, metadata_url]
+        cmd_metadata = ["curl", "-fL", "-o", self.metadata_file, "--", metadata_url]
         p = subprocess.Popen(cmd_metadata)
         p.wait()
         if p.returncode != 0:
@@ -43,7 +43,14 @@ class DownloadData(FwupdVmCommon):
             metadata_url = METADATA_URL
         else:
             metadata_url = self.custom_url
-        cmd_metadata = ["wget", "-P", FWUPD_VM_METADATA_DIR, f"{metadata_url}.jcat"]
+        cmd_metadata = [
+            "curl",
+            "-fL",
+            "-o",
+            f"{self.metadata_file}.jcat",
+            "--",
+            f"{metadata_url}.jcat",
+        ]
         p = subprocess.Popen(cmd_metadata)
         p.wait()
         if p.returncode != 0:
@@ -113,7 +120,7 @@ class DownloadData(FwupdVmCommon):
         self.validate_vm_dirs()
         self.arch_name = os.path.basename(url)
         update_path = os.path.join(FWUPD_VM_UPDATES_DIR, self.arch_name)
-        cmd_update = ["wget", "-O", update_path, url]
+        cmd_update = ["curl", "-fL", "-o", update_path, "--", url]
         p = subprocess.Popen(cmd_update)
         p.wait()
         if p.returncode != 0:
