@@ -12,16 +12,10 @@
 
 struct _FuTpmV2Device {
 	FuTpmDevice parent_instance;
+	ESYS_CONTEXT *esys_context;
 };
 
 G_DEFINE_TYPE(FuTpmV2Device, fu_tpm_v2_device, FU_TYPE_TPM_DEVICE)
-
-static void
-Esys_Finalize_autoptr_cleanup(ESYS_CONTEXT *esys_context)
-{
-	Esys_Finalize(&esys_context);
-}
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(ESYS_CONTEXT, Esys_Finalize_autoptr_cleanup)
 
 static gboolean
 fu_tpm_v2_device_probe(FuDevice *device, GError **error)
@@ -30,14 +24,14 @@ fu_tpm_v2_device_probe(FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_tpm_v2_device_get_uint32(ESYS_CONTEXT *ctx, guint32 query, guint32 *val, GError **error)
+fu_tpm_v2_device_get_uint32(FuTpmV2Device *self, guint32 query, guint32 *val, GError **error)
 {
 	TSS2_RC rc;
 	g_autofree TPMS_CAPABILITY_DATA *capability = NULL;
 
 	g_return_val_if_fail(val != NULL, FALSE);
 
-	rc = Esys_GetCapability(ctx,
+	rc = Esys_GetCapability(self->esys_context,
 				ESYS_TR_NONE,
 				ESYS_TR_NONE,
 				ESYS_TR_NONE,
@@ -77,14 +71,14 @@ fu_tpm_v2_device_get_uint32(ESYS_CONTEXT *ctx, guint32 query, guint32 *val, GErr
 }
 
 static gchar *
-fu_tpm_v2_device_get_string(ESYS_CONTEXT *ctx, guint32 query, GError **error)
+fu_tpm_v2_device_get_string(FuTpmV2Device *self, guint32 query, GError **error)
 {
 	guint32 val_be = 0;
 	guint32 val;
 	gchar result[5] = {'\0'};
 
 	/* return four bytes */
-	if (!fu_tpm_v2_device_get_uint32(ctx, query, &val_be, error))
+	if (!fu_tpm_v2_device_get_uint32(self, query, &val_be, error))
 		return NULL;
 	val = GUINT32_FROM_BE(val_be);
 	memcpy(result, (gchar *)&val, 4);
@@ -148,7 +142,7 @@ fu_tpm_v2_device_convert_manufacturer(const gchar *manufacturer)
 }
 
 static gboolean
-fu_tpm_v2_device_setup_pcrs(FuTpmV2Device *self, ESYS_CONTEXT *ctx, GError **error)
+fu_tpm_v2_device_setup_pcrs(FuTpmV2Device *self, GError **error)
 {
 	TSS2_RC rc;
 	g_autofree TPMS_CAPABILITY_DATA *capability_data = NULL;
@@ -158,7 +152,7 @@ fu_tpm_v2_device_setup_pcrs(FuTpmV2Device *self, ESYS_CONTEXT *ctx, GError **err
 	g_autofree TPML_DIGEST *pcr_values = NULL;
 
 	/* get hash algorithms supported by the TPM */
-	rc = Esys_GetCapability(ctx,
+	rc = Esys_GetCapability(self->esys_context,
 				ESYS_TR_NONE,
 				ESYS_TR_NONE,
 				ESYS_TR_NONE,
@@ -185,7 +179,7 @@ fu_tpm_v2_device_setup_pcrs(FuTpmV2Device *self, ESYS_CONTEXT *ctx, GError **err
 		pcr_selection_in.pcrSelections[i].pcrSelect[0] = 0b00000001;
 	}
 
-	rc = Esys_PCR_Read(ctx,
+	rc = Esys_PCR_Read(self->esys_context,
 			   ESYS_TR_NONE,
 			   ESYS_TR_NONE,
 			   ESYS_TR_NONE,
@@ -223,7 +217,7 @@ fu_tpm_v2_device_setup_pcrs(FuTpmV2Device *self, ESYS_CONTEXT *ctx, GError **err
 }
 
 static gboolean
-fu_tpm_v2_device_ensure_commands(FuTpmV2Device *self, ESYS_CONTEXT *ctx, GError **error)
+fu_tpm_v2_device_ensure_commands(FuTpmV2Device *self, GError **error)
 {
 	gboolean seen_upgrade_data = FALSE;
 	gboolean seen_upgrade_start = FALSE;
@@ -231,7 +225,7 @@ fu_tpm_v2_device_ensure_commands(FuTpmV2Device *self, ESYS_CONTEXT *ctx, GError 
 	g_autofree TPMS_CAPABILITY_DATA *capability = NULL;
 	g_autoptr(GString) str = g_string_new(NULL);
 
-	rc = Esys_GetCapability(ctx,
+	rc = Esys_GetCapability(self->esys_context,
 				ESYS_TR_NONE,
 				ESYS_TR_NONE,
 				ESYS_TR_NONE,
@@ -259,6 +253,8 @@ fu_tpm_v2_device_ensure_commands(FuTpmV2Device *self, ESYS_CONTEXT *ctx, GError 
 			seen_upgrade_start = TRUE;
 		} else if (cap_cmd == TPM2_CC_FieldUpgradeData) {
 			seen_upgrade_data = TRUE;
+		} else if (cap_cmd == TPM2_CC_FirmwareRead) {
+			fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
 		}
 	}
 	g_debug("CAP_COMMANDS: %s", str->str);
@@ -289,22 +285,12 @@ fu_tpm_v2_device_setup(FuDevice *device, GError **error)
 	g_autofree gchar *model = NULL;
 	g_autofree gchar *vendor_id = NULL;
 	g_autofree gchar *family = NULL;
-	g_autoptr(ESYS_CONTEXT) ctx = NULL;
 
 	/* suppress warning messages about missing TCTI libraries for tpm2-tss <2.3 */
 	if (g_getenv("FWUPD_UEFI_VERBOSE") == NULL)
 		(void)g_setenv("TSS2_LOG", "esys+none,tcti+none", FALSE);
 
-	/* setup TSS */
-	rc = Esys_Initialize(&ctx, NULL, NULL);
-	if (rc != TSS2_RC_SUCCESS) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_FOUND,
-				    "failed to initialize TPM library");
-		return FALSE;
-	}
-	rc = Esys_Startup(ctx, TPM2_SU_CLEAR);
+	rc = Esys_Startup(self->esys_context, TPM2_SU_CLEAR);
 	if (rc != TSS2_RC_SUCCESS) {
 		g_set_error_literal(error,
 				    G_IO_ERROR,
@@ -314,31 +300,31 @@ fu_tpm_v2_device_setup(FuDevice *device, GError **error)
 	}
 
 	/* lookup guaranteed details from TPM */
-	family = fu_tpm_v2_device_get_string(ctx, TPM2_PT_FAMILY_INDICATOR, error);
+	family = fu_tpm_v2_device_get_string(self, TPM2_PT_FAMILY_INDICATOR, error);
 	if (family == NULL) {
 		g_prefix_error(error, "failed to read TPM family: ");
 		return FALSE;
 	}
 	fu_tpm_device_set_family(FU_TPM_DEVICE(self), family);
-	manufacturer = fu_tpm_v2_device_get_string(ctx, TPM2_PT_MANUFACTURER, error);
+	manufacturer = fu_tpm_v2_device_get_string(self, TPM2_PT_MANUFACTURER, error);
 	if (manufacturer == NULL) {
 		g_prefix_error(error, "failed to read TPM manufacturer: ");
 		return FALSE;
 	}
-	model1 = fu_tpm_v2_device_get_string(ctx, TPM2_PT_VENDOR_STRING_1, error);
+	model1 = fu_tpm_v2_device_get_string(self, TPM2_PT_VENDOR_STRING_1, error);
 	if (model1 == NULL) {
 		g_prefix_error(error, "failed to read TPM vendor string: ");
 		return FALSE;
 	}
-	if (!fu_tpm_v2_device_get_uint32(ctx, TPM2_PT_VENDOR_TPM_TYPE, &tpm_type, error)) {
+	if (!fu_tpm_v2_device_get_uint32(self, TPM2_PT_VENDOR_TPM_TYPE, &tpm_type, error)) {
 		g_prefix_error(error, "failed to read TPM type: ");
 		return FALSE;
 	}
 
 	/* these are not guaranteed by spec and may be NULL */
-	model2 = fu_tpm_v2_device_get_string(ctx, TPM2_PT_VENDOR_STRING_2, error);
-	model3 = fu_tpm_v2_device_get_string(ctx, TPM2_PT_VENDOR_STRING_3, error);
-	model4 = fu_tpm_v2_device_get_string(ctx, TPM2_PT_VENDOR_STRING_4, error);
+	model2 = fu_tpm_v2_device_get_string(self, TPM2_PT_VENDOR_STRING_2, error);
+	model3 = fu_tpm_v2_device_get_string(self, TPM2_PT_VENDOR_STRING_3, error);
+	model4 = fu_tpm_v2_device_get_string(self, TPM2_PT_VENDOR_STRING_4, error);
 	model = g_strjoin("", model1, model2, model3, model4, NULL);
 
 	/* add GUIDs to daemon */
@@ -358,24 +344,213 @@ fu_tpm_v2_device_setup(FuDevice *device, GError **error)
 	fu_device_set_vendor(device, tmp != NULL ? tmp : manufacturer);
 
 	/* get version */
-	if (!fu_tpm_v2_device_get_uint32(ctx, TPM2_PT_FIRMWARE_VERSION_1, &version1, error))
+	if (!fu_tpm_v2_device_get_uint32(self, TPM2_PT_FIRMWARE_VERSION_1, &version1, error))
 		return FALSE;
-	if (!fu_tpm_v2_device_get_uint32(ctx, TPM2_PT_FIRMWARE_VERSION_2, &version2, error))
+	if (!fu_tpm_v2_device_get_uint32(self, TPM2_PT_FIRMWARE_VERSION_2, &version2, error))
 		return FALSE;
 	version_raw = ((guint64)version1) << 32 | ((guint64)version2);
 	fu_device_set_version_from_uint64(device, version_raw);
 
 	/* get capabilities */
-	if (!fu_tpm_v2_device_ensure_commands(self, ctx, error))
+	if (!fu_tpm_v2_device_ensure_commands(self, error))
 		return FALSE;
 
 	/* get PCRs */
-	return fu_tpm_v2_device_setup_pcrs(self, ctx, error);
+	return fu_tpm_v2_device_setup_pcrs(self, error);
+}
+
+static gboolean
+fu_tpm_v2_device_upgrade_data(FuTpmV2Device *self, GBytes *fw, FuProgress *progress, GError **error)
+{
+	TPMT_HA *first_digest;
+	TPMT_HA *next_digest;
+	TSS2_RC rc;
+	g_autoptr(GPtrArray) chunks = NULL;
+
+	chunks = fu_chunk_array_new_from_bytes(fw, 0x0, 0x0, TPM2_MAX_DIGEST_BUFFER);
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_set_steps(progress, chunks->len);
+	for (guint i = 0; i < chunks->len; i++) {
+		FuChunk *chk = g_ptr_array_index(chunks, i);
+		TPM2B_MAX_BUFFER data = {.size = g_bytes_get_size(fw)};
+		if (!fu_memcpy_safe((guint8 *)data.buffer,
+				    sizeof(data.buffer),
+				    0x0, /* dst */
+				    fu_chunk_get_data(chk),
+				    fu_chunk_get_data_sz(chk),
+				    0x0, /* src */
+				    fu_chunk_get_data_sz(chk),
+				    error))
+			return FALSE;
+
+		rc = Esys_FieldUpgradeData(self->esys_context,
+					   ESYS_TR_NONE,
+					   ESYS_TR_NONE,
+					   ESYS_TR_NONE,
+					   &data,
+					   &next_digest,
+					   &first_digest);
+		if (rc == TPM2_RC_COMMAND_CODE ||
+		    (rc == (TPM2_RC_COMMAND_CODE | TSS2_RESMGR_RC_LAYER)) ||
+		    (rc == (TPM2_RC_COMMAND_CODE | TSS2_RESMGR_TPM_RC_LAYER))) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "TPM2_FieldUpgradeData not supported: 0x%x",
+				    rc);
+			return FALSE;
+		}
+
+		/* update progress */
+		fu_progress_step_done(progress);
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_tpm_v2_device_write_firmware(FuDevice *device,
+				FuFirmware *firmware,
+				FuProgress *progress,
+				FwupdInstallFlags flags,
+				GError **error)
+{
+	FuTpmV2Device *self = FU_TPM_V2_DEVICE(device);
+	TPM2B_DIGEST digest = {0x0};
+	TSS2_RC rc;
+	g_autoptr(GBytes) fw = NULL;
+
+	/* progress */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1, NULL);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 99, NULL);
+
+	/* validate the signature and that the authorization is valid */
+	rc = Esys_FieldUpgradeStart(self->esys_context,
+				    ESYS_TR_NONE, /* TODO: authorization */
+				    ESYS_TR_NONE, /* TODO: keyHandle */
+				    ESYS_TR_PASSWORD,
+				    ESYS_TR_NONE,
+				    ESYS_TR_NONE,
+				    &digest,
+				    NULL);
+	if (rc == TPM2_RC_SIGNATURE) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "the signature check failed");
+		return FALSE;
+	}
+	if (rc == TPM2_RC_COMMAND_CODE || (rc == (TPM2_RC_COMMAND_CODE | TSS2_RESMGR_RC_LAYER)) ||
+	    (rc == (TPM2_RC_COMMAND_CODE | TSS2_RESMGR_TPM_RC_LAYER))) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "TPM2_FieldUpgradeStart not supported: 0x%x",
+			    rc);
+		return FALSE;
+	}
+
+	/* deploy data to device */
+	fw = fu_firmware_get_bytes(firmware, error);
+	if (fw == NULL)
+		return FALSE;
+	if (!fu_tpm_v2_device_upgrade_data(self, fw, fu_progress_get_child(progress), error))
+		return FALSE;
+
+	/* success! */
+	return TRUE;
+}
+
+static GBytes *
+fu_tpm_v2_device_dump_firmware(FuDevice *device, FuProgress *progress, GError **error)
+{
+	FuTpmV2Device *self = FU_TPM_V2_DEVICE(device);
+	TSS2_RC rc;
+	guint chunks_max = fu_device_get_firmware_size_max(device) / TPM2_MAX_DIGEST_BUFFER;
+	g_autoptr(GByteArray) buf = NULL;
+
+	/* keep reading chunks until we get a zero sized response */
+	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_READ);
+	for (guint i = 0; i < chunks_max; i++) {
+		g_autofree TPM2B_MAX_BUFFER **data = g_new0(TPM2B_MAX_BUFFER *, 1);
+
+		g_debug("getting firmware chunk 0x%x", i);
+		rc = Esys_FirmwareRead(self->esys_context,
+				       ESYS_TR_NONE,
+				       ESYS_TR_NONE,
+				       ESYS_TR_NONE,
+				       i /* seqnum */,
+				       (TPM2B_MAX_BUFFER **)&data);
+		if (rc == TPM2_RC_COMMAND_CODE ||
+		    (rc == (TPM2_RC_COMMAND_CODE | TSS2_RESMGR_RC_LAYER)) ||
+		    (rc == (TPM2_RC_COMMAND_CODE | TSS2_RESMGR_TPM_RC_LAYER))) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "TPM2_FirmwareRead not supported: 0x%x",
+				    rc);
+			return NULL;
+		}
+		if (data[0] == NULL) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INTERNAL,
+					    "no data returned");
+			return NULL;
+		}
+		if (data[0]->size == 0)
+			break;
+
+		/* yes, the blocks are returned in reverse order */
+		g_byte_array_prepend(buf, data[0]->buffer, data[0]->size);
+		Esys_Free(data[0]);
+	}
+
+	/* success */
+	return g_byte_array_free_to_bytes(g_steal_pointer(&buf));
+}
+
+static gboolean
+fu_tpm_v2_device_open(FuDevice *device, GError **error)
+{
+	FuTpmV2Device *self = FU_TPM_V2_DEVICE(device);
+	TSS2_RC rc;
+
+	/* setup TSS */
+	rc = Esys_Initialize(&self->esys_context, NULL, NULL);
+	if (rc != TSS2_RC_SUCCESS) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_FOUND,
+				    "failed to initialize TPM library");
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_tpm_v2_device_close(FuDevice *device, GError **error)
+{
+	FuTpmV2Device *self = FU_TPM_V2_DEVICE(device);
+	Esys_Finalize(&self->esys_context);
+	return TRUE;
 }
 
 static void
 fu_tpm_v2_device_init(FuTpmV2Device *self)
 {
+	fu_device_add_protocol(FU_DEVICE(self), "org.trustedcomputinggroup.tpm2");
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_REQUIRE_AC);
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SELF_RECOVERY);
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_AFFECTS_FDE);
+	fu_device_set_firmware_size_max(FU_DEVICE(self), 32 * 1024 * 1024);
 }
 
 static void
@@ -384,6 +559,10 @@ fu_tpm_v2_device_class_init(FuTpmV2DeviceClass *klass)
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
 	klass_device->setup = fu_tpm_v2_device_setup;
 	klass_device->probe = fu_tpm_v2_device_probe;
+	klass_device->open = fu_tpm_v2_device_open;
+	klass_device->close = fu_tpm_v2_device_close;
+	klass_device->write_firmware = fu_tpm_v2_device_write_firmware;
+	klass_device->dump_firmware = fu_tpm_v2_device_dump_firmware;
 }
 
 FuTpmDevice *
