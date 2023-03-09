@@ -162,14 +162,14 @@ fu_wac_module_set_feature(FuWacModule *self,
 			  guint8 command,
 			  GBytes *blob, /* optional */
 			  FuProgress *progress,
-			  guint busy_timeout,
+			  guint busy_timeout, /* ms */
 			  GError **error)
 {
 	FuWacDevice *parent_device = FU_WAC_DEVICE(fu_device_get_parent(FU_DEVICE(self)));
 	FuWacModulePrivate *priv = GET_PRIVATE(self);
 	const guint8 *data;
 	gsize len = 0;
-	guint busy_poll_loops = busy_timeout * 100;
+	guint busy_poll_loops = busy_timeout / 100;
 	guint8 buf[] = {[0] = FU_WAC_REPORT_ID_MODULE,
 			[1] = priv->fw_type,
 			[2] = command,
