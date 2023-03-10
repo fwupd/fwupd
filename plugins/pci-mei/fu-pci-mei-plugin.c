@@ -428,8 +428,10 @@ fu_plugin_add_security_attrs_bootguard_policy(FuPlugin *plugin, FuSecurityAttrs 
 		return;
 	}
 
-	/* policy must be to immediately shutdown */
-	if (self->hfsts6.fields.error_enforce_policy != ME_HFS_ENFORCEMENT_POLICY_SHUTDOWN_NOW) {
+	/* policy must be to immediately shutdown or after 30 mins -- the latter isn't ideal but
+	 * we've been testing for this accidentally for a long time now */
+	if (self->hfsts6.fields.error_enforce_policy != ME_HFS_ENFORCEMENT_POLICY_SHUTDOWN_NOW &&
+	    self->hfsts6.fields.error_enforce_policy != ME_HFS_ENFORCEMENT_POLICY_SHUTDOWN_30MINS) {
 		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
 		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM);
 		return;
