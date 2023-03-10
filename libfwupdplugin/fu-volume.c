@@ -24,12 +24,20 @@
 
 struct _FuVolume {
 	GObject parent_instance;
+	gchar *partition_kind;
 	GDBusProxy *proxy_blk;
 	GDBusProxy *proxy_fs;
 	gchar *mount_path; /* only when mounted ourselves */
 };
 
-enum { PROP_0, PROP_MOUNT_PATH, PROP_PROXY_BLOCK, PROP_PROXY_FILESYSTEM, PROP_LAST };
+enum {
+	PROP_0,
+	PROP_PARTITION_KIND,
+	PROP_MOUNT_PATH,
+	PROP_PROXY_BLOCK,
+	PROP_PROXY_FILESYSTEM,
+	PROP_LAST
+};
 
 G_DEFINE_TYPE(FuVolume, fu_volume, G_TYPE_OBJECT)
 
@@ -37,6 +45,7 @@ static void
 fu_volume_finalize(GObject *obj)
 {
 	FuVolume *self = FU_VOLUME(obj);
+	g_free(self->partition_kind);
 	g_free(self->mount_path);
 	if (self->proxy_blk != NULL)
 		g_object_unref(self->proxy_blk);
@@ -50,6 +59,9 @@ fu_volume_get_property(GObject *object, guint prop_id, GValue *value, GParamSpec
 {
 	FuVolume *self = FU_VOLUME(object);
 	switch (prop_id) {
+	case PROP_PARTITION_KIND:
+		g_value_set_string(value, self->partition_kind);
+		break;
 	case PROP_MOUNT_PATH:
 		g_value_set_string(value, self->mount_path);
 		break;
@@ -70,6 +82,9 @@ fu_volume_set_property(GObject *object, guint prop_id, const GValue *value, GPar
 {
 	FuVolume *self = FU_VOLUME(object);
 	switch (prop_id) {
+	case PROP_PARTITION_KIND:
+		self->partition_kind = g_value_dup_string(value);
+		break;
 	case PROP_MOUNT_PATH:
 		self->mount_path = g_value_dup_string(value);
 		break;
@@ -139,6 +154,21 @@ fu_volume_class_init(FuVolumeClass *klass)
 				NULL,
 				G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_MOUNT_PATH, pspec);
+
+	/**
+	 * FuVolume:partition-kind:
+	 *
+	 * The partition kind.
+	 *
+	 * Since: 1.8.13
+	 */
+	pspec =
+	    g_param_spec_string("partition-kind",
+				NULL,
+				NULL,
+				NULL,
+				G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
+	g_object_class_install_property(object_class, PROP_PARTITION_KIND, pspec);
 }
 
 static void
@@ -165,6 +195,26 @@ fu_volume_get_id(FuVolume *self)
 	if (self->proxy_blk != NULL)
 		return g_dbus_proxy_get_object_path(self->proxy_blk);
 	return NULL;
+}
+
+/**
+ * fu_volume_get_partition_kind:
+ * @self: a @FuVolume
+ *
+ * Gets the partition kind of the volume mount point.
+ *
+ * NOTE: If you want this to be converted to a GPT-style GUID then use
+ * fu_volume_kind_convert_to_gpt() on the return value of this function.
+ *
+ * Returns: partition kind, e.g. `0x06`, `vfat` or a GUID like `FU_VOLUME_KIND_ESP`
+ *
+ * Since: 1.8.13
+ **/
+const gchar *
+fu_volume_get_partition_kind(FuVolume *self)
+{
+	g_return_val_if_fail(FU_IS_VOLUME(self), NULL);
+	return self->partition_kind;
 }
 
 /**
@@ -565,6 +615,8 @@ fu_volume_new_by_kind(const gchar *kind, GError **error)
 			continue;
 		}
 		vol = g_object_new(FU_TYPE_VOLUME,
+				   "partition-kind",
+				   type_str,
 				   "proxy-block",
 				   proxy_blk,
 				   "proxy-filesystem",
