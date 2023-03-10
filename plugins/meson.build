@@ -111,6 +111,10 @@ plugins = [
   'wistron-dock',
 ]
 
+if get_option('plugin_vendor_example')
+  plugins += 'vendor-example'
+endif
+
 foreach plugin: plugins
   subdir(plugin)
 endforeach

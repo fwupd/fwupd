@@ -1,0 +1,7 @@
+# {{Example}}
+{%- if Parent in ['Usb', 'Hid'] %}
+[USB\VID_TODO&PID_TODO]
+{%- else %}
+[{{PARENT}}\ID_XXX]
+{%- endif %}
+Plugin = {{vendor}}_{{example}}

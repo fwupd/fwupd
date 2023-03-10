@@ -1,0 +1,109 @@
+/*
+ * Copyright (C) {{Year}} {{Author}} <{{Email}}>
+ *
+ * SPDX-License-Identifier: LGPL-2.1+
+ */
+
+#include "config.h"
+
+#include <fwupdplugin.h>
+
+#include "fu-{{vendor}}-{{example}}-firmware.h"
+
+struct _Fu{{Vendor}}{{Example}}Firmware {
+	FuFirmware parent_instance;
+	guint16 start_addr;
+};
+
+G_DEFINE_TYPE(Fu{{Vendor}}{{Example}}Firmware, fu_{{vendor}}_{{example}}_firmware, FU_TYPE_FIRMWARE)
+
+static void
+fu__{{vendor}}_{{example}}_firmware_export(FuFirmware *firmware,
+				   FuFirmwareExportFlags flags,
+				   XbBuilderNode *bn)
+{
+	Fu{{Vendor}}{{Example}}Firmware *self = FU_{{VENDOR}}_{{EXAMPLE}}_FIRMWARE(firmware);
+	fu_xmlb_builder_insert_kx(bn, "start_addr", self->start_addr);
+}
+
+static gboolean
+fu__{{vendor}}_{{example}}_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
+{
+	Fu{{Vendor}}{{Example}}Firmware *self = FU_{{VENDOR}}_{{EXAMPLE}}_FIRMWARE(firmware);
+	guint64 tmp;
+
+	/* TODO: load from .builder.xml */
+	tmp = xb_node_query_text_as_uint(n, "start_addr", NULL);
+	if (tmp != G_MAXUINT64 && tmp <= G_MAXUINT16)
+		self->start_addr = tmp;
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_{{vendor}}_{{example}}_firmware_parse(FuFirmware *firmware,
+				 GBytes *fw,
+				 gsize offset,
+				 FwupdInstallFlags flags,
+				 GError **error)
+{
+	Fu{{Vendor}}{{Example}}Firmware *self = FU_{{VENDOR}}_{{EXAMPLE}}_FIRMWARE(firmware);
+
+	/* TODO: parse firmware into images */
+	self->start_addr = 0x1234;
+	fu_firmware_set_version(firmware, "1.2.3");
+	fu_firmware_set_bytes(firmware, fw);
+	return TRUE;
+}
+
+static GBytes *
+fu_{{vendor}}_{{example}}_firmware_write(FuFirmware *firmware, GError **error)
+{
+	Fu{{Vendor}}{{Example}}Firmware *self = FU_{{VENDOR}}_{{EXAMPLE}}_FIRMWARE(firmware);
+	g_autoptr(GByteArray) buf = g_byte_array_new();
+	g_autoptr(GBytes) fw = NULL;
+
+	/* data first */
+	fw = fu_firmware_get_bytes_with_patches(firmware, error);
+	if (fw == NULL)
+		return NULL;
+
+	/* TODO: write to the buffer with the correct format */
+	g_assert(self != NULL);
+	fu_byte_array_append_bytes(buf, fw);
+
+	/* success */
+	return g_byte_array_free_to_bytes(g_steal_pointer(&buf));
+}
+
+guint16
+fu_{{vendor}}_{{example}}_firmware_get_start_addr(Fu{{Vendor}}{{Example}}Firmware *self)
+{
+	g_return_val_if_fail(FU_IS_{{VENDOR}}_{{EXAMPLE}}_FIRMWARE(self), G_MAXUINT16);
+	return self->start_addr;
+}
+
+static void
+fu_{{vendor}}_{{example}}_firmware_init(Fu{{Vendor}}{{Example}}Firmware *self)
+{
+	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_STORED_SIZE);
+	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_CHECKSUM);
+	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_VID_PID);
+}
+
+static void
+fu_{{vendor}}_{{example}}_firmware_class_init(Fu{{Vendor}}{{Example}}FirmwareClass *klass)
+{
+	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
+	klass_firmware->parse = fu_{{vendor}}_{{example}}_firmware_parse;
+	klass_firmware->write = fu_{{vendor}}_{{example}}_firmware_write;
+	klass_firmware->build = fu__{{vendor}}_{{example}}_firmware_build;
+	klass_firmware->export = fu__{{vendor}}_{{example}}_firmware_export;
+}
+
+FuFirmware *
+fu_{{vendor}}_{{example}}_firmware_new(void)
+{
+	return FU_FIRMWARE(g_object_new(FU_TYPE_{{VENDOR}}_{{EXAMPLE}}_FIRMWARE, NULL));
+}

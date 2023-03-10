@@ -1,0 +1,21 @@
+/*
+ * Copyright (C) {{Year}} {{Author}} <{{Email}}>
+ *
+ * SPDX-License-Identifier: LGPL-2.1+
+ */
+
+#pragma once
+
+#include <fwupdplugin.h>
+
+#define FU_TYPE_{{VENDOR}}_{{EXAMPLE}}_FIRMWARE (fu_{{vendor}}_{{example}}_firmware_get_type())
+G_DECLARE_FINAL_TYPE(Fu{{Vendor}}{{Example}}Firmware,
+		     fu_{{vendor}}_{{example}}_firmware,
+		     FU,
+		     {{VENDOR}}_{{EXAMPLE}}_FIRMWARE,
+		     FuFirmware)
+
+FuFirmware *
+fu_{{vendor}}_{{example}}_firmware_new(void);
+guint16
+fu_{{vendor}}_{{example}}_firmware_get_start_addr(Fu{{Vendor}}{{Example}}Firmware *self);

@@ -1,0 +1,23 @@
+{%- if Parent in ['Usb', 'Hid'] -%}
+if gusb.found()
+{%- elif Parent == 'Udev' -%}
+if gudev.found()
+{%- endif %}
+cargs = ['-DG_LOG_DOMAIN="FuPlugin{{Vendor}}{{Example}}"']
+
+plugin_quirks += files('{{vendor}}-{{example}}.quirk')
+plugin_builtins += static_library('fu_plugin_{{vendor}}_{{example}}',
+  sources: [
+    'fu-{{vendor}}-{{example}}-common.c',
+    'fu-{{vendor}}-{{example}}-device.c',
+    'fu-{{vendor}}-{{example}}-firmware.c',
+    'fu-{{vendor}}-{{example}}-plugin.c',
+  ],
+  include_directories: plugin_incdirs,
+  link_with: plugin_libs,
+  c_args: cargs,
+  dependencies: plugin_deps,
+)
+{%- if Parent in ['Usb', 'Hid', 'Udev'] %}
+endif
+{%- endif %}

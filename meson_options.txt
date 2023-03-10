@@ -48,6 +48,7 @@ option('plugin_mtd', type : 'feature', description : 'MTD support', deprecated: 
 option('plugin_flashrom', type : 'feature', description : 'flashrom support', deprecated: {'true': 'enabled', 'false': 'disabled'})
 option('plugin_intel_me', type : 'feature', description : 'enable Intel ME support')
 option('plugin_intel_spi', type : 'boolean', value : false, description : 'enable Intel SPI support')
+option('plugin_vendor_example', type : 'boolean', value : false, description : 'enable vendor example support')
 option('plugin_uf2', type : 'feature', description : 'support for UF2', deprecated: {'true': 'enabled', 'false': 'disabled'})
 option('plugin_upower', type : 'feature', description : 'support for UPower', deprecated: {'true': 'enabled', 'false': 'disabled'})
 option('plugin_powerd', type : 'feature', description : 'support for powerd', deprecated: {'true': 'enabled', 'false': 'disabled'})
