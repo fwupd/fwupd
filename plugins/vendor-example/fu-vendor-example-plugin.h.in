@@ -1,0 +1,15 @@
+/*
+ * Copyright (C) {{Year}} {{Author}} <{{Email}}>
+ *
+ * SPDX-License-Identifier: LGPL-2.1+
+ */
+
+#pragma once
+
+#include <fwupdplugin.h>
+
+G_DECLARE_FINAL_TYPE(Fu{{Vendor}}{{Example}}Plugin,
+		     fu_{{vendor}}_{{example}}_plugin,
+		     FU,
+		     {{VENDOR}}_{{EXAMPLE}}_PLUGIN,
+		     FuPlugin)

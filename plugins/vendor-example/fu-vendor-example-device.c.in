@@ -1,0 +1,355 @@
+/*
+ * Copyright (C) {{Year}} {{Author}} <{{Email}}>
+ *
+ * SPDX-License-Identifier: LGPL-2.1+
+ */
+
+#include "config.h"
+
+#include "fu-{{vendor}}-{{example}}-common.h"
+#include "fu-{{vendor}}-{{example}}-device.h"
+#include "fu-{{vendor}}-{{example}}-firmware.h"
+
+/* this can be set using Flags=example in the quirk file  */
+#define FU_{{VENDOR}}_{{EXAMPLE}}_DEVICE_FLAG_EXAMPLE (1 << 0)
+
+struct _Fu{{Vendor}}{{Example}}Device {
+	Fu{{Parent}}Device parent_instance;
+	guint16 start_addr;
+};
+
+G_DEFINE_TYPE(Fu{{Vendor}}{{Example}}Device, fu_{{vendor}}_{{example}}_device, FU_TYPE_{{PARENT}}_DEVICE)
+
+static void
+fu_{{vendor}}_{{example}}_device_to_string(FuDevice *device, guint idt, GString *str)
+{
+	Fu{{Vendor}}{{Example}}Device *self = FU_{{VENDOR}}_{{EXAMPLE}}_DEVICE(device);
+	FU_DEVICE_CLASS(fu_{{vendor}}_{{example}}_device_parent_class)->to_string(device, idt, str);
+	fu_string_append_kx(str, idt, "StartAddr", self->start_addr);
+}
+
+/* TODO: this is only required if the device instance state is required elsewhere */
+guint16
+fu_{{vendor}}_{{example}}_device_get_start_addr(Fu{{Vendor}}{{Example}}Device *self)
+{
+	g_return_val_if_fail(FU_IS_{{VENDOR}}_{{EXAMPLE}}_DEVICE(self), G_MAXUINT16);
+	return self->start_addr;
+}
+
+static gboolean
+fu_{{vendor}}_{{example}}_device_detach(FuDevice *device, FuProgress *progress, GError **error)
+{
+	Fu{{Vendor}}{{Example}}Device *self = FU_{{VENDOR}}_{{EXAMPLE}}_DEVICE(device);
+
+	/* sanity check */
+	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
+		g_debug("already in bootloader mode, skipping");
+		return TRUE;
+	}
+
+	/* TODO: switch the device into bootloader mode */
+	g_assert(self != NULL);
+
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+	return TRUE;
+}
+
+static gboolean
+fu_{{vendor}}_{{example}}_device_attach(FuDevice *device, FuProgress *progress, GError **error)
+{
+	Fu{{Vendor}}{{Example}}Device *self = FU_{{VENDOR}}_{{EXAMPLE}}_DEVICE(device);
+
+	/* sanity check */
+	if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
+		g_debug("already in runtime mode, skipping");
+		return TRUE;
+	}
+
+	/* TODO: switch the device into runtime mode */
+	g_assert(self != NULL);
+
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+	return TRUE;
+}
+
+static gboolean
+fu_{{vendor}}_{{example}}_device_reload(FuDevice *device, GError **error)
+{
+	Fu{{Vendor}}{{Example}}Device *self = FU_{{VENDOR}}_{{EXAMPLE}}_DEVICE(device);
+	/* TODO: reprobe the hardware, or delete this vfunc to use ->setup() as a fallback */
+	g_assert(self != NULL);
+	return TRUE;
+}
+
+static gboolean
+fu_{{vendor}}_{{example}}_device_probe(FuDevice *device, GError **error)
+{
+	Fu{{Vendor}}{{Example}}Device *self = FU_{{VENDOR}}_{{EXAMPLE}}_DEVICE(device);
+
+	/* Fu{{Parent}}Device->probe */
+	if (!FU_DEVICE_CLASS(fu_{{vendor}}_{{example}}_device_parent_class)->probe(device, error))
+		return FALSE;
+
+	/* TODO: probe the device for properties available before it is opened */
+	if (fu_device_has_private_flag(device, FU_{{VENDOR}}_{{EXAMPLE}}_DEVICE_FLAG_EXAMPLE))
+		self->start_addr = 0x100;
+
+{%- if Parent == 'Udev' -%}
+	/* get from sysfs */
+	return fu_udev_device_set_physical_id(FU_UDEV_DEVICE(device), "pci", error);
+{%- else %}
+	/* success */
+	return TRUE;
+{%- endif %}
+}
+
+static gboolean
+fu_{{vendor}}_{{example}}_device_setup(FuDevice *device, GError **error)
+{
+	Fu{{Vendor}}{{Example}}Device *self = FU_{{VENDOR}}_{{EXAMPLE}}_DEVICE(device);
+	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(device));
+
+	/* {{Parent}}Device->setup */
+	if (!FU_DEVICE_CLASS(fu_{{vendor}}_{{example}}_device_parent_class)->setup(device, error))
+		return FALSE;
+
+	/* TODO: get the version and other properties from the hardware while open */
+	g_assert(self != NULL);
+	g_assert(usb_device != NULL);
+	fu_device_set_version(device, "1.2.3");
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_{{vendor}}_{{example}}_device_prepare(FuDevice *device,
+				 FuProgress *progress,
+				 FwupdInstallFlags flags,
+				 GError **error)
+{
+	Fu{{Vendor}}{{Example}}Device *self = FU_{{VENDOR}}_{{EXAMPLE}}_DEVICE(device);
+	/* TODO: anything the device has to do before the update starts */
+	g_assert(self != NULL);
+	return TRUE;
+}
+
+static gboolean
+fu_{{vendor}}_{{example}}_device_cleanup(FuDevice *device,
+				 FuProgress *progress,
+				 FwupdInstallFlags flags,
+				 GError **error)
+{
+	Fu{{Vendor}}{{Example}}Device *self = FU_{{VENDOR}}_{{EXAMPLE}}_DEVICE(device);
+	/* TODO: anything the device has to do when the update has completed */
+	g_assert(self != NULL);
+	return TRUE;
+}
+
+static FuFirmware *
+fu_{{vendor}}_{{example}}_device_prepare_firmware(FuDevice *device,
+					  GBytes *fw,
+					  FwupdInstallFlags flags,
+					  GError **error)
+{
+	Fu{{Vendor}}{{Example}}Device *self = FU_{{VENDOR}}_{{EXAMPLE}}_DEVICE(device);
+	g_autoptr(FuFirmware) firmware = fu_{{vendor}}_{{example}}_firmware_new();
+
+	/* TODO: you do not need to use this vfunc if not checking attributes */
+	if (self->start_addr !=
+	    fu_{{vendor}}_{{example}}_firmware_get_start_addr(FU_{{VENDOR}}_{{EXAMPLE}}_FIRMWARE(firmware))) {
+		g_set_error(
+		    error,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_INVALID_FILE,
+		    "start address mismatch, got 0x%04x, expected 0x%04x",
+		    fu_{{vendor}}_{{example}}_firmware_get_start_addr(FU_{{VENDOR}}_{{EXAMPLE}}_FIRMWARE(firmware)),
+		    self->start_addr);
+		return NULL;
+	}
+
+	if (!fu_firmware_parse(firmware, fw, flags, error))
+		return NULL;
+	return g_steal_pointer(&firmware);
+}
+
+static gboolean
+fu_{{vendor}}_{{example}}_device_write_blocks(Fu{{Vendor}}{{Example}}Device *self,
+				      GPtrArray *chunks,
+				      FuProgress *progress,
+				      GError **error)
+{
+	/* progress */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_set_steps(progress, chunks->len);
+	for (guint i = 0; i < chunks->len; i++) {
+		FuChunk *chk = g_ptr_array_index(chunks, i);
+
+		/* TODO: send to hardware */
+		g_assert(chk != NULL);
+
+{%- if Parent == 'Hid' %}
+		guint8 buf[64] = { 0x12, 0x24, 0x0 }; /* TODO: this is the preamble */
+
+		/* TODO: copy in payload */
+		if (!fu_memcpy_safe(buf, sizeof(buf), 0x2, /* TODO: copy to dst at offset */
+				    fu_chunk_get_data(chk),
+				    fu_chunk_get_data_sz(chk),
+				    0x0, /* src */
+				    fu_chunk_get_data_sz(chk),
+				    error))
+			return FALSE;
+		if (!fu_hid_device_set_report(FU_HID_DEVICE(self),
+					      0x01,
+					      buf,
+					      sizeof(bufsz),
+					      5000, /* ms */
+					      FU_HID_DEVICE_FLAG_NONE,
+					      error)) {
+			g_prefix_error(error, "failed to send packet: ");
+			return FALSE;
+		}
+		if (!fu_hid_device_get_report(FU_HID_DEVICE(self),
+					      0x01,
+					      buf,
+					      sizeof(bufsz),
+					      5000, /* ms */
+					      FU_HID_DEVICE_FLAG_NONE,
+					      error)) {
+			g_prefix_error(error, "failed to receive packet: ");
+			return FALSE;
+		}
+{%- endif %}
+
+		/* update progress */
+		fu_progress_step_done(progress);
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_{{vendor}}_{{example}}_device_write_firmware(FuDevice *device,
+					FuFirmware *firmware,
+					FuProgress *progress,
+					FwupdInstallFlags flags,
+					GError **error)
+{
+	Fu{{Vendor}}{{Example}}Device *self = FU_{{VENDOR}}_{{EXAMPLE}}_DEVICE(device);
+	g_autoptr(GBytes) fw = NULL;
+	g_autoptr(GPtrArray) chunks = NULL;
+
+	/* progress */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 44, NULL);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 35, NULL);
+
+	/* get default image */
+	fw = fu_firmware_get_bytes(firmware, error);
+	if (fw == NULL)
+		return FALSE;
+
+	/* write each block */
+	chunks = fu_chunk_array_new_from_bytes(fw,
+					       self->start_addr,
+					       0x00, /* page_sz */
+					       64 /* block_size */);
+	if (!fu_{{vendor}}_{{example}}_device_write_blocks(self,
+						   chunks,
+						   fu_progress_get_child(progress),
+						   error))
+		return FALSE;
+	fu_progress_step_done(progress);
+
+	/* TODO: verify each block */
+	fu_progress_step_done(progress);
+
+	/* success! */
+	return TRUE;
+}
+
+static gboolean
+fu_{{vendor}}_{{example}}_device_set_quirk_kv(FuDevice *device,
+				      const gchar *key,
+				      const gchar *value,
+				      GError **error)
+{
+	Fu{{Vendor}}{{Example}}Device *self = FU_{{VENDOR}}_{{EXAMPLE}}_DEVICE(device);
+
+	/* TODO: parse value from quirk file */
+	if (g_strcmp0(key, "{{Vendor}}{{Example}}StartAddr") == 0) {
+		guint64 tmp = 0;
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT16, error))
+			return FALSE;
+		self->start_addr = tmp;
+		return TRUE;
+	}
+
+	/* failed */
+	g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED, "quirk key not supported");
+	return FALSE;
+}
+
+static void
+fu_{{vendor}}_{{example}}_device_set_progress(FuDevice *self, FuProgress *progress)
+{
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0, "detach");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 57, "write");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0, "attach");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 43, "reload");
+}
+
+static void
+fu_{{vendor}}_{{example}}_device_init(Fu{{Vendor}}{{Example}}Device *self)
+{
+	self->start_addr = 0x5000;
+	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_TRIPLET);
+	fu_device_add_protocol(FU_DEVICE(self), "com.{{vendor}}.{{example}}");
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
+	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_ONLY_WAIT_FOR_REPLUG);
+	fu_device_register_private_flag(FU_DEVICE(self),
+					FU_{{VENDOR}}_{{EXAMPLE}}_DEVICE_FLAG_EXAMPLE,
+					"example");
+{%- if Parent == 'Usb' %}
+	fu_usb_device_add_interface(FU_USB_DEVICE(self), 0x01);
+{%- endif %}
+{%- if Parent == 'Hid' %}
+	fu_hid_device_add_flag(FU_HID_DEVICE(self), FU_HID_DEVICE_FLAG_RETRY_FAILURE);
+{%- endif %}
+}
+
+static void
+fu_{{vendor}}_{{example}}_device_finalize(GObject *object)
+{
+	Fu{{Vendor}}{{Example}}Device *self = FU_{{VENDOR}}_{{EXAMPLE}}_DEVICE(object);
+
+	/* TODO: free any allocated instance state here */
+	g_assert(self != NULL);
+
+	G_OBJECT_CLASS(fu_{{vendor}}_{{example}}_device_parent_class)->finalize(object);
+}
+
+static void
+fu_{{vendor}}_{{example}}_device_class_init(Fu{{Vendor}}{{Example}}DeviceClass *klass)
+{
+	GObjectClass *object_class = G_OBJECT_CLASS(klass);
+	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
+	object_class->finalize = fu_{{vendor}}_{{example}}_device_finalize;
+	klass_device->to_string = fu_{{vendor}}_{{example}}_device_to_string;
+	klass_device->probe = fu_{{vendor}}_{{example}}_device_probe;
+	klass_device->setup = fu_{{vendor}}_{{example}}_device_setup;
+	klass_device->reload = fu_{{vendor}}_{{example}}_device_reload;
+	klass_device->prepare = fu_{{vendor}}_{{example}}_device_prepare;
+	klass_device->cleanup = fu_{{vendor}}_{{example}}_device_cleanup;
+	klass_device->attach = fu_{{vendor}}_{{example}}_device_attach;
+	klass_device->detach = fu_{{vendor}}_{{example}}_device_detach;
+	klass_device->prepare_firmware = fu_{{vendor}}_{{example}}_device_prepare_firmware;
+	klass_device->write_firmware = fu_{{vendor}}_{{example}}_device_write_firmware;
+	klass_device->set_quirk_kv = fu_{{vendor}}_{{example}}_device_set_quirk_kv;
+	klass_device->set_progress = fu_{{vendor}}_{{example}}_device_set_progress;
+}

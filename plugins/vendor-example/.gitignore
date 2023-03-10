@@ -1,0 +1,11 @@
+README.md
+fu-vendor-example-common.c
+fu-vendor-example-common.h
+fu-vendor-example-device.c
+fu-vendor-example-device.h
+fu-vendor-example-firmware.c
+fu-vendor-example-firmware.h
+fu-vendor-example-plugin.c
+fu-vendor-example-plugin.h
+meson.build
+vendor-example.quirk

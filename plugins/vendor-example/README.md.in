@@ -1,0 +1,61 @@
+---
+title: Plugin: {{Vendor}} {{Example}}
+---
+
+## Introduction
+
+The {{Example}} is a bla bla bla.
+
+## Firmware Format
+
+The daemon will decompress the cabinet archive and extract a firmware blob in
+a packed binary file format.
+
+This plugin supports the following protocol ID:
+
+* `com.{{vendor}}.{{example}}`
+
+## GUID Generation
+
+{% if Parent == 'Usb' -%}
+These devices use the standard USB DeviceInstanceId values, e.g.
+
+* `USB\ID_XXX`
+* `USB\VID_273F&PID_1001&REV_0001`
+* `USB\VID_273F&PID_1001`
+* `USB\VID_273F`
+{%- else -%}
+These devices use the standard TODO DeviceInstanceId values, e.g.
+
+* `TODO\VID_XXX`
+{%- endif %}
+
+## Update Behavior
+
+The device is updated by bla bla bla.
+
+## Vendor ID Security
+
+{% if Parent in ['Usb', 'Hid'] -%}
+The vendor ID is set from the USB vendor, in this instance set to `USB:0x273F`
+{%- else -%}
+The vendor ID is set from the TODO vendor, in this instance set to `TODO:0x273F`
+{%- endif %}
+
+## Quirk Use
+
+This plugin uses the following plugin-specific quirks:
+
+### {{Vendor}}{{Example}}StartAddr
+
+The bla bla bla.
+
+Since: 1.8.TODO
+
+## External Interface Access
+
+{% if Parent in ['Usb', 'Hid'] -%}
+This plugin requires read/write access to `/dev/bus/usb`.
+{%- else -%}
+This plugin requires read/write access to `TODO`.
+{%- endif %}

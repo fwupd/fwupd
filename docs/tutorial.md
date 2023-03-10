@@ -657,6 +657,24 @@ The default implementation returns a checksum of the payload data of a
 `FuFirmware` object. Subclass it only if the checksum of your firmware
 needs to be computed differently.
 
+### Generating a skeleton
+
+Rather than copy-and-pasting from other plugins, or using the `FuDeviceClass`
+as a guide we have also provided a script that can generate a plugin skeleton.
+
+This skeleton contains all the parts typically needed by a plugin, and plugin
+developers might find it easier to delete unneeded code rather then trying to
+copy and paste the correct code from other plugins.
+
+To use this, navivate to the root directory and run:
+
+    ./contrib/create-plugin.py \
+        --vendor VendorName \
+        --example ProductName \
+        --parent Usb \
+        --author "Your Name" \
+        --email "your@email.com"
+
 ### Device identification
 
 A device is identified in fwupd by its physical and logical ids. A

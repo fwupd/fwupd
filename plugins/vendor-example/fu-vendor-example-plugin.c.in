@@ -1,0 +1,39 @@
+/*
+ * Copyright (C) {{Year}} {{Author}} <{{Email}}>
+ *
+ * SPDX-License-Identifier: LGPL-2.1+
+ */
+
+#include "config.h"
+
+#include "fu-{{vendor}}-{{example}}-device.h"
+#include "fu-{{vendor}}-{{example}}-firmware.h"
+#include "fu-{{vendor}}-{{example}}-plugin.h"
+
+struct _Fu{{Vendor}}{{Example}}Plugin {
+	FuPlugin parent_instance;
+};
+
+G_DEFINE_TYPE(Fu{{Vendor}}{{Example}}Plugin, fu_{{vendor}}_{{example}}_plugin, FU_TYPE_PLUGIN)
+
+static void
+fu_{{vendor}}_{{example}}_plugin_init(Fu{{Vendor}}{{Example}}Plugin *self)
+{
+}
+
+static void
+fu_{{vendor}}_{{example}}_plugin_constructed(GObject *obj)
+{
+	FuPlugin *plugin = FU_PLUGIN(obj);
+	FuContext *ctx = fu_plugin_get_context(plugin);
+	fu_context_add_quirk_key(ctx, "{{Vendor}}{{Example}}StartAddr");
+	fu_plugin_add_device_gtype(plugin, FU_TYPE_{{VENDOR}}_{{EXAMPLE}}_DEVICE);
+	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_{{VENDOR}}_{{EXAMPLE}}_FIRMWARE);
+}
+
+static void
+fu_{{vendor}}_{{example}}_plugin_class_init(Fu{{Vendor}}{{Example}}PluginClass *klass)
+{
+	GObjectClass *object_class = G_OBJECT_CLASS(klass);
+	object_class->constructed = fu_{{vendor}}_{{example}}_plugin_constructed;
+}
