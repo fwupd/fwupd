@@ -16,6 +16,7 @@
 #include "fu-ifwi-cpd-firmware.h"
 #include "fu-mem.h"
 #include "fu-string.h"
+#include "fu-struct.h"
 
 /**
  * FuIfwiCpdFirmware:
@@ -39,17 +40,6 @@ G_DEFINE_TYPE_WITH_PRIVATE(FuIfwiCpdFirmware, fu_ifwi_cpd_firmware, FU_TYPE_FIRM
 
 #define FU_IFWI_CPD_FIRMWARE_HEADER_MARKER 0x44504324
 #define FU_IFWI_CPD_FIRMWARE_ENTRIES_MAX   1024
-
-typedef struct __attribute__((packed)) {
-	guint32 header_marker;
-	guint32 num_of_entries;
-	guint8 header_version;
-	guint8 entry_version;
-	guint8 header_length;
-	guint8 checksum;
-	guint32 partition_name;
-	guint32 crc32;
-} FuIfwiCpdHeader;
 
 typedef struct __attribute__((packed)) {
 	gchar name[12];
@@ -140,29 +130,19 @@ fu_ifwi_cpd_firmware_parse_manifest(FuFirmware *firmware, GBytes *fw, GError **e
 		g_autoptr(FuFirmware) img = fu_firmware_new();
 
 		/* set the extension type as the index */
-		if (!fu_memread_uint32_safe(
-			buf,
-			bufsz,
-			offset + G_STRUCT_OFFSET(FuIfwiCpdManifestExtHeader, extension_type),
-			&extension_type,
-			G_LITTLE_ENDIAN,
-			error))
+		if (!fu_struct_unpack_from("<LL",
+					   error,
+					   buf,
+					   bufsz,
+					   &offset,
+					   &extension_type,
+					   &extension_length))
 			return FALSE;
-		if (extension_type == 0x0)
+		if (extension_type == 0x0 || extension_length == 0x0)
 			break;
 		fu_firmware_set_idx(img, extension_type);
 
 		/* add data section */
-		if (!fu_memread_uint32_safe(
-			buf,
-			bufsz,
-			offset + G_STRUCT_OFFSET(FuIfwiCpdManifestExtHeader, extension_length),
-			&extension_length,
-			G_LITTLE_ENDIAN,
-			error))
-			return FALSE;
-		if (extension_length == 0x0)
-			break;
 		if (extension_length < sizeof(FuIfwiCpdManifestExtHeader)) {
 			g_set_error(error,
 				    G_IO_ERROR,
@@ -196,7 +176,7 @@ fu_ifwi_cpd_firmware_check_magic(FuFirmware *firmware, GBytes *fw, gsize offset,
 
 	if (!fu_memread_uint32_safe(g_bytes_get_data(fw, NULL),
 				    g_bytes_get_size(fw),
-				    offset + G_STRUCT_OFFSET(FuIfwiCpdHeader, header_marker),
+				    offset,
 				    &magic,
 				    G_LITTLE_ENDIAN,
 				    error)) {
@@ -233,41 +213,23 @@ fu_ifwi_cpd_firmware_parse(FuFirmware *firmware,
 	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
 
 	/* other header fields */
-	if (!fu_memread_uint8_safe(buf,
+	if (!fu_struct_unpack_from("<LLBBBBLL",
+				   error,
+				   buf,
 				   bufsz,
-				   offset + G_STRUCT_OFFSET(FuIfwiCpdHeader, header_version),
+				   &offset,
+				   NULL, /* header_marker */
+				   &num_of_entries,
 				   &priv->header_version,
-				   error))
-		return FALSE;
-	if (!fu_memread_uint8_safe(buf,
-				   bufsz,
-				   offset + G_STRUCT_OFFSET(FuIfwiCpdHeader, entry_version),
 				   &priv->entry_version,
-				   error))
-		return FALSE;
-	if (!fu_memread_uint8_safe(buf,
-				   bufsz,
-				   offset + G_STRUCT_OFFSET(FuIfwiCpdHeader, header_length),
 				   &header_length,
-				   error))
-		return FALSE;
-	if (!fu_memread_uint32_safe(buf,
-				    bufsz,
-				    offset + G_STRUCT_OFFSET(FuIfwiCpdHeader, partition_name),
-				    &partition_name,
-				    G_LITTLE_ENDIAN,
-				    error))
+				   NULL, /* checksum */
+				   &partition_name,
+				   NULL)) /* crc32 */
 		return FALSE;
 	fu_firmware_set_idx(firmware, partition_name);
 
 	/* read out entries */
-	if (!fu_memread_uint32_safe(buf,
-				    bufsz,
-				    offset + G_STRUCT_OFFSET(FuIfwiCpdHeader, num_of_entries),
-				    &num_of_entries,
-				    G_LITTLE_ENDIAN,
-				    error))
-		return FALSE;
 	if (num_of_entries > FU_IFWI_CPD_FIRMWARE_ENTRIES_MAX) {
 		g_set_error(error,
 			    G_IO_ERROR,
@@ -348,22 +310,26 @@ fu_ifwi_cpd_firmware_write(FuFirmware *firmware, GError **error)
 {
 	FuIfwiCpdFirmware *self = FU_IFWI_CPD_FIRMWARE(firmware);
 	FuIfwiCpdFirmwarePrivate *priv = GET_PRIVATE(self);
-	g_autoptr(GByteArray) buf = g_byte_array_new();
+	g_autoptr(GByteArray) buf = NULL;
 	g_autoptr(GPtrArray) imgs = fu_firmware_get_images(firmware);
 	gsize offset = 0;
 
 	/* write the header */
-	fu_byte_array_append_uint32(buf, FU_IFWI_CPD_FIRMWARE_HEADER_MARKER, G_LITTLE_ENDIAN);
-	fu_byte_array_append_uint32(buf, imgs->len, G_LITTLE_ENDIAN);
-	fu_byte_array_append_uint8(buf, priv->header_version);
-	fu_byte_array_append_uint8(buf, priv->entry_version);
-	fu_byte_array_append_uint8(buf, sizeof(FuIfwiCpdHeader));
-	fu_byte_array_append_uint8(buf, 0x0); /* checksum */
-	fu_byte_array_append_uint32(buf, fu_firmware_get_idx(firmware), G_LITTLE_ENDIAN);
-	fu_byte_array_append_uint32(buf, 0x0, G_LITTLE_ENDIAN); /* crc32 */
+	buf = fu_struct_pack("<LLBBBBLL",
+			     error,
+			     FU_IFWI_CPD_FIRMWARE_HEADER_MARKER,
+			     imgs->len,
+			     priv->header_version,
+			     priv->entry_version,
+			     fu_struct_size("<LLBBBBLL", NULL),
+			     0x0, /* checksum */
+			     (guint)fu_firmware_get_idx(firmware),
+			     0x0); /* crc32 */
+	if (buf == NULL)
+		return NULL;
 
 	/* fixup the image offsets */
-	offset += sizeof(FuIfwiCpdHeader);
+	offset += buf->len;
 	offset += sizeof(FuIfwiCpdEntry) * imgs->len;
 	for (guint i = 0; i < imgs->len; i++) {
 		FuFirmware *img = g_ptr_array_index(imgs, i);
@@ -380,11 +346,10 @@ fu_ifwi_cpd_firmware_write(FuFirmware *firmware, GError **error)
 	/* add entry headers */
 	for (guint i = 0; i < imgs->len; i++) {
 		FuFirmware *img = g_ptr_array_index(imgs, i);
-		const gchar *id = fu_firmware_get_id(img);
-		gchar name[12] = {0x0};
+		g_autoptr(GByteArray) buf_hdr = NULL;
 
 		/* sanity check */
-		if (id == NULL) {
+		if (fu_firmware_get_id(img) == NULL) {
 			g_set_error(error,
 				    G_IO_ERROR,
 				    G_IO_ERROR_INVALID_DATA,
@@ -392,23 +357,15 @@ fu_ifwi_cpd_firmware_write(FuFirmware *firmware, GError **error)
 				    (guint)fu_firmware_get_idx(img));
 			return NULL;
 		}
-
-		/* copy id into name */
-		if (!fu_memcpy_safe((guint8 *)name,
-				    sizeof(name),
-				    0x0, /* dst */
-				    (const guint8 *)id,
-				    strlen(id),
-				    0x0, /* src */
-				    strlen(id),
-				    error)) {
+		buf_hdr = fu_struct_pack("<12sLLL",
+					 error,
+					 fu_firmware_get_id(img),
+					 (guint)fu_firmware_get_offset(img),
+					 fu_firmware_get_size(img),
+					 0x0); /* reserved */
+		if (buf_hdr == NULL)
 			return NULL;
-		}
-
-		g_byte_array_append(buf, (const guint8 *)name, sizeof(name));
-		fu_byte_array_append_uint32(buf, fu_firmware_get_offset(img), G_LITTLE_ENDIAN);
-		fu_byte_array_append_uint32(buf, fu_firmware_get_size(img), G_LITTLE_ENDIAN);
-		fu_byte_array_append_uint32(buf, 0x0, G_LITTLE_ENDIAN); /* reserved */
+		g_byte_array_append(buf, buf_hdr->data, buf_hdr->len);
 	}
 
 	/* add entry data */

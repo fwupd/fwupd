@@ -12,6 +12,7 @@
 #include "fu-efi-firmware-filesystem.h"
 #include "fu-efi-firmware-volume.h"
 #include "fu-mem.h"
+#include "fu-struct.h"
 
 /**
  * FuEfiFirmwareVolume:
@@ -31,17 +32,6 @@ G_DEFINE_TYPE_WITH_PRIVATE(FuEfiFirmwareVolume, fu_efi_firmware_volume, FU_TYPE_
 #define FU_EFI_FIRMWARE_VOLUME_SIGNATURE 0x4856465F
 #define FU_EFI_FIRMWARE_VOLUME_REVISION	 0x02
 
-#define FU_EFI_FIRMWARE_VOLUME_OFFSET_ZERO_VECTOR 0x00
-#define FU_EFI_FIRMWARE_VOLUME_OFFSET_GUID	  0x10
-#define FU_EFI_FIRMWARE_VOLUME_OFFSET_LENGTH	  0x20
-#define FU_EFI_FIRMWARE_VOLUME_OFFSET_SIGNATURE	  0x28
-#define FU_EFI_FIRMWARE_VOLUME_OFFSET_ATTRS	  0x2C
-#define FU_EFI_FIRMWARE_VOLUME_OFFSET_HDR_LEN	  0x30
-#define FU_EFI_FIRMWARE_VOLUME_OFFSET_CHECKSUM	  0x32
-#define FU_EFI_FIRMWARE_VOLUME_OFFSET_EXT_HDR	  0x34
-#define FU_EFI_FIRMWARE_VOLUME_OFFSET_RESERVED	  0x36
-#define FU_EFI_FIRMWARE_VOLUME_OFFSET_REVISION	  0x37
-#define FU_EFI_FIRMWARE_VOLUME_OFFSET_BLOCK_MAP	  0x38
 #define FU_EFI_FIRMWARE_VOLUME_SIZE		  0x40
 
 static void
@@ -64,7 +54,7 @@ fu_efi_firmware_volume_check_magic(FuFirmware *firmware, GBytes *fw, gsize offse
 
 	if (!fu_memread_uint32_safe(g_bytes_get_data(fw, NULL),
 				    g_bytes_get_size(fw),
-				    offset + FU_EFI_FIRMWARE_VOLUME_OFFSET_SIGNATURE,
+				    offset + 0x28,
 				    &magic,
 				    G_LITTLE_ENDIAN,
 				    error)) {
@@ -104,35 +94,32 @@ fu_efi_firmware_volume_parse(FuFirmware *firmware,
 	guint64 fv_length = 0;
 	guint8 alignment;
 	guint8 revision = 0;
+	gboolean offset_header = offset;
 	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
 	g_autofree gchar *guid_str = NULL;
 	g_autoptr(GBytes) blob = NULL;
 
-	/* guid */
-	if (!fu_memcpy_safe((guint8 *)&guid,
-			    sizeof(guid),
-			    0x0, /* dst */
-			    buf,
-			    bufsz,
-			    offset + FU_EFI_FIRMWARE_VOLUME_OFFSET_GUID, /* src */
-			    sizeof(guid),
-			    error)) {
-		g_prefix_error(error, "failed to read GUID: ");
+	/* parse */
+	if (!fu_struct_unpack_from("<[16xGQLLHHHxB]",
+				   error,
+				   buf,
+				   bufsz,
+				   &offset,
+				   &guid,
+				   &fv_length,
+				   NULL, /* signature */
+				   &attrs,
+				   &hdr_length,
+				   &checksum,
+				   &ext_hdr,
+				   &revision))
 		return FALSE;
-	}
+
+	/* guid */
 	guid_str = fwupd_guid_to_string(&guid, FWUPD_GUID_FLAG_MIXED_ENDIAN);
 	g_debug("volume GUID: %s [%s]", guid_str, fu_efi_guid_to_name(guid_str));
 
 	/* length */
-	if (!fu_memread_uint64_safe(buf,
-				    bufsz,
-				    offset + FU_EFI_FIRMWARE_VOLUME_OFFSET_LENGTH,
-				    &fv_length,
-				    G_LITTLE_ENDIAN,
-				    error)) {
-		g_prefix_error(error, "failed to read length: ");
-		return FALSE;
-	}
 	if (fv_length == 0x0) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -141,15 +128,8 @@ fu_efi_firmware_volume_parse(FuFirmware *firmware,
 		return FALSE;
 	}
 	fu_firmware_set_size(firmware, fv_length);
-	if (!fu_memread_uint32_safe(buf,
-				    bufsz,
-				    offset + FU_EFI_FIRMWARE_VOLUME_OFFSET_ATTRS,
-				    &attrs,
-				    G_LITTLE_ENDIAN,
-				    error)) {
-		g_prefix_error(error, "failed to read attrs: ");
-		return FALSE;
-	}
+
+	/* attrs */
 	alignment = (attrs & 0x00ff0000) >> 16;
 	if (alignment > FU_FIRMWARE_ALIGNMENT_2G) {
 		g_set_error(error,
@@ -162,15 +142,6 @@ fu_efi_firmware_volume_parse(FuFirmware *firmware,
 	}
 	fu_firmware_set_alignment(firmware, alignment);
 	priv->attrs = attrs & 0xffff;
-	if (!fu_memread_uint16_safe(buf,
-				    bufsz,
-				    offset + FU_EFI_FIRMWARE_VOLUME_OFFSET_HDR_LEN,
-				    &hdr_length,
-				    G_LITTLE_ENDIAN,
-				    error)) {
-		g_prefix_error(error, "failed to read hdr_length: ");
-		return FALSE;
-	}
 	if (hdr_length < FU_EFI_FIRMWARE_VOLUME_SIZE || hdr_length > fv_length) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -178,30 +149,6 @@ fu_efi_firmware_volume_parse(FuFirmware *firmware,
 				    "invalid volume header length");
 		return FALSE;
 	}
-	if (!fu_memread_uint16_safe(buf,
-				    bufsz,
-				    offset + FU_EFI_FIRMWARE_VOLUME_OFFSET_CHECKSUM,
-				    &checksum,
-				    G_LITTLE_ENDIAN,
-				    error)) {
-		g_prefix_error(error, "failed to read checksum: ");
-		return FALSE;
-	}
-	if (!fu_memread_uint16_safe(buf,
-				    bufsz,
-				    offset + FU_EFI_FIRMWARE_VOLUME_OFFSET_EXT_HDR,
-				    &ext_hdr,
-				    G_LITTLE_ENDIAN,
-				    error)) {
-		g_prefix_error(error, "failed to read ext_hdr: ");
-		return FALSE;
-	}
-	if (!fu_memread_uint8_safe(buf,
-				   bufsz,
-				   offset + FU_EFI_FIRMWARE_VOLUME_OFFSET_REVISION,
-				   &revision,
-				   error))
-		return FALSE;
 	if (revision != FU_EFI_FIRMWARE_VOLUME_REVISION) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -219,7 +166,7 @@ fu_efi_firmware_volume_parse(FuFirmware *firmware,
 			guint16 checksum_tmp = 0;
 			if (!fu_memread_uint16_safe(buf,
 						    bufsz,
-						    offset + j,
+						    offset_header + j,
 						    &checksum_tmp,
 						    G_LITTLE_ENDIAN,
 						    error)) {
@@ -240,10 +187,10 @@ fu_efi_firmware_volume_parse(FuFirmware *firmware,
 	}
 
 	/* add image */
-	blob = fu_bytes_new_offset(fw, offset + hdr_length, fv_length - hdr_length, error);
+	blob = fu_bytes_new_offset(fw, offset_header + hdr_length, fv_length - hdr_length, error);
 	if (blob == NULL)
 		return FALSE;
-	fu_firmware_set_offset(firmware, offset);
+	fu_firmware_set_offset(firmware, offset_header);
 	fu_firmware_set_id(firmware, guid_str);
 	fu_firmware_set_size(firmware, fv_length);
 
@@ -259,25 +206,17 @@ fu_efi_firmware_volume_parse(FuFirmware *firmware,
 	}
 
 	/* skip the blockmap */
-	offset += FU_EFI_FIRMWARE_VOLUME_OFFSET_BLOCK_MAP;
 	while (offset < bufsz) {
 		guint32 num_blocks = 0;
 		guint32 length = 0;
-		if (!fu_memread_uint32_safe(buf,
-					    bufsz,
-					    offset,
-					    &num_blocks,
-					    G_LITTLE_ENDIAN,
-					    error))
+		if (!fu_struct_unpack_from("<[LL]",
+					   error,
+					   buf,
+					   bufsz,
+					   &offset,
+					   &num_blocks,
+					   &length))
 			return FALSE;
-		if (!fu_memread_uint32_safe(buf,
-					    bufsz,
-					    offset + sizeof(guint32),
-					    &length,
-					    G_LITTLE_ENDIAN,
-					    error))
-			return FALSE;
-		offset += 2 * sizeof(guint32);
 		if (num_blocks == 0x0 && length == 0x0)
 			break;
 		blockmap_sz += (gsize)num_blocks * (gsize)length;
@@ -299,7 +238,7 @@ fu_efi_firmware_volume_write(FuFirmware *firmware, GError **error)
 {
 	FuEfiFirmwareVolume *self = FU_EFI_FIRMWARE_VOLUME(firmware);
 	FuEfiFirmwareVolumePrivate *priv = GET_PRIVATE(self);
-	g_autoptr(GByteArray) buf = g_byte_array_new();
+	g_autoptr(GByteArray) buf = NULL;
 	fwupd_guid_t guid = {0x0};
 	guint16 checksum = 0;
 	guint32 hdr_length = 0x48;
@@ -316,22 +255,10 @@ fu_efi_firmware_volume_write(FuFirmware *firmware, GError **error)
 			    fu_firmware_get_alignment(firmware));
 		return NULL;
 	}
-
-	/* zero vector */
-	for (guint i = 0; i < 0x10; i++)
-		fu_byte_array_append_uint8(buf, 0x0);
-
-	/* GUID */
 	if (fu_firmware_get_id(firmware) == NULL) {
 		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "no GUID set for EFI FV");
 		return NULL;
 	}
-	if (!fwupd_guid_from_string(fu_firmware_get_id(firmware),
-				    &guid,
-				    FWUPD_GUID_FLAG_MIXED_ENDIAN,
-				    error))
-		return NULL;
-	g_byte_array_append(buf, (const guint8 *)&guid, sizeof(guid));
 
 	/* length */
 	img = fu_firmware_get_image_by_id(firmware, NULL, NULL);
@@ -350,31 +277,25 @@ fu_efi_firmware_volume_write(FuFirmware *firmware, GError **error)
 	}
 	fv_length = fu_common_align_up(hdr_length + g_bytes_get_size(img_blob),
 				       fu_firmware_get_alignment(firmware));
-	fu_byte_array_append_uint64(buf, fv_length, G_LITTLE_ENDIAN);
 
-	/* signature */
-	fu_byte_array_append_uint32(buf, FU_EFI_FIRMWARE_VOLUME_SIGNATURE, G_LITTLE_ENDIAN);
-
-	/* attributes */
-	fu_byte_array_append_uint32(buf,
-				    priv->attrs |
-					((guint32)fu_firmware_get_alignment(firmware) << 16),
-				    G_LITTLE_ENDIAN);
-
-	/* header length */
-	fu_byte_array_append_uint16(buf, hdr_length, G_LITTLE_ENDIAN);
-
-	/* checksum (will fixup) */
-	fu_byte_array_append_uint16(buf, 0x0, G_LITTLE_ENDIAN);
-
-	/* ext header offset */
-	fu_byte_array_append_uint16(buf, 0x0, G_LITTLE_ENDIAN);
-
-	/* reserved */
-	fu_byte_array_append_uint8(buf, 0x0);
-
-	/* revision */
-	fu_byte_array_append_uint8(buf, FU_EFI_FIRMWARE_VOLUME_REVISION);
+	/* write header */
+	if (!fwupd_guid_from_string(fu_firmware_get_id(firmware),
+				    &guid,
+				    FWUPD_GUID_FLAG_MIXED_ENDIAN,
+				    error))
+		return NULL;
+	buf = fu_struct_pack("<16xGQLLHHHxB",
+			     error,
+			     guid,
+			     fv_length,
+			     FU_EFI_FIRMWARE_VOLUME_SIGNATURE,
+			     priv->attrs | ((guint32)fu_firmware_get_alignment(firmware) << 16),
+			     hdr_length,
+			     0x0, /* checksum (will fixup) */
+			     0x0, /* ext header offset */
+			     FU_EFI_FIRMWARE_VOLUME_REVISION);
+	if (buf == NULL)
+		return NULL;
 
 	/* blockmap */
 	fu_byte_array_append_uint32(buf, fv_length, G_LITTLE_ENDIAN);

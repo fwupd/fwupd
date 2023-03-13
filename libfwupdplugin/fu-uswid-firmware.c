@@ -14,6 +14,7 @@
 #include "fu-coswid-firmware.h"
 #include "fu-mem.h"
 #include "fu-string.h"
+#include "fu-struct.h"
 #include "fu-uswid-firmware.h"
 
 /**
@@ -38,30 +39,22 @@ G_DEFINE_TYPE_WITH_PRIVATE(FuUswidFirmware, fu_uswid_firmware, FU_TYPE_FIRMWARE)
 
 #define USWID_HEADER_FLAG_COMPRESSED 0x01
 
-typedef struct __attribute__((packed)) {
-	guint8 magic[16];
-	guint8 hdrver;
-	guint16 hdrsz;
-	guint32 payloadsz;
-	guint8 flags;
-} FuUswidFirmwareHdr;
-
-const guint8 USWID_HEADER_MAGIC[] = {0x53,
-				     0x42,
-				     0x4F,
-				     0x4D,
-				     0xD6,
-				     0xBA,
-				     0x2E,
-				     0xAC,
-				     0xA3,
-				     0xE6,
-				     0x7A,
-				     0x52,
-				     0xAA,
-				     0xEE,
-				     0x3B,
-				     0xAF};
+const fwupd_guid_t USWID_HEADER_MAGIC = {0x53,
+					 0x42,
+					 0x4F,
+					 0x4D,
+					 0xD6,
+					 0xBA,
+					 0x2E,
+					 0xAC,
+					 0xA3,
+					 0xE6,
+					 0x7A,
+					 0x52,
+					 0xAA,
+					 0xEE,
+					 0x3B,
+					 0xAF};
 
 static void
 fu_uswid_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
@@ -116,13 +109,19 @@ fu_uswid_firmware_parse(FuFirmware *firmware,
 	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
 	g_autoptr(GBytes) payload = NULL;
 
-	/* hdrver */
-	if (!fu_memread_uint8_safe(buf,
+	if (!fu_struct_unpack_from("<GBHLB",
+				   error,
+				   buf,
 				   bufsz,
-				   offset + G_STRUCT_OFFSET(FuUswidFirmwareHdr, hdrver),
+				   &offset,
+				   NULL, /* magic */
 				   &priv->hdrver,
-				   error))
+				   &hdrsz,
+				   &payloadsz,
+				   &uswid_flags))
 		return FALSE;
+
+	/* hdrver */
 	if (priv->hdrver < USWID_HEADER_VERSION_V1) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -132,13 +131,6 @@ fu_uswid_firmware_parse(FuFirmware *firmware,
 	}
 
 	/* hdrsz */
-	if (!fu_memread_uint16_safe(buf,
-				    bufsz,
-				    offset + G_STRUCT_OFFSET(FuUswidFirmwareHdr, hdrsz),
-				    &hdrsz,
-				    G_LITTLE_ENDIAN,
-				    error))
-		return FALSE;
 	if (hdrsz < USWID_HEADER_SIZE_V1) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -148,13 +140,6 @@ fu_uswid_firmware_parse(FuFirmware *firmware,
 	}
 
 	/* payloadsz */
-	if (!fu_memread_uint32_safe(buf,
-				    bufsz,
-				    offset + G_STRUCT_OFFSET(FuUswidFirmwareHdr, payloadsz),
-				    &payloadsz,
-				    G_LITTLE_ENDIAN,
-				    error))
-		return FALSE;
 	if (payloadsz == 0x0) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -165,15 +150,8 @@ fu_uswid_firmware_parse(FuFirmware *firmware,
 	fu_firmware_set_size(firmware, hdrsz + payloadsz);
 
 	/* flags */
-	if (priv->hdrver >= 0x02) {
-		if (!fu_memread_uint8_safe(buf,
-					   bufsz,
-					   offset + G_STRUCT_OFFSET(FuUswidFirmwareHdr, flags),
-					   &uswid_flags,
-					   error))
-			return FALSE;
+	if (priv->hdrver >= 0x02)
 		priv->compressed = (uswid_flags & USWID_HEADER_FLAG_COMPRESSED) > 0;
-	}
 
 	/* zlib stream */
 	if (priv->compressed) {
@@ -241,7 +219,7 @@ fu_uswid_firmware_write(FuFirmware *firmware, GError **error)
 {
 	FuUswidFirmware *self = FU_USWID_FIRMWARE(firmware);
 	FuUswidFirmwarePrivate *priv = GET_PRIVATE(self);
-	g_autoptr(GByteArray) buf = g_byte_array_new();
+	g_autoptr(GByteArray) buf = NULL;
 	g_autoptr(GByteArray) payload = g_byte_array_new();
 	g_autoptr(GBytes) payload_blob = NULL;
 	g_autoptr(GPtrArray) images = fu_firmware_get_images(firmware);
@@ -272,10 +250,14 @@ fu_uswid_firmware_write(FuFirmware *firmware, GError **error)
 	}
 
 	/* header then CBOR blob */
-	g_byte_array_append(buf, USWID_HEADER_MAGIC, sizeof(USWID_HEADER_MAGIC));
-	fu_byte_array_append_uint8(buf, priv->hdrver);
-	fu_byte_array_append_uint16(buf, fu_uswid_firmware_calculate_hdrsz(self), G_LITTLE_ENDIAN);
-	fu_byte_array_append_uint32(buf, g_bytes_get_size(payload_blob), G_LITTLE_ENDIAN);
+	buf = fu_struct_pack("<GBHL",
+			     error,
+			     USWID_HEADER_MAGIC,
+			     priv->hdrver,
+			     fu_uswid_firmware_calculate_hdrsz(self),
+			     g_bytes_get_size(payload_blob));
+	if (buf == NULL)
+		return NULL;
 	if (priv->hdrver >= 2) {
 		guint8 flags = 0;
 		if (priv->compressed)

@@ -17,6 +17,7 @@
 #include "fu-mem.h"
 #include "fu-oprom-firmware.h"
 #include "fu-string.h"
+#include "fu-struct.h"
 
 /**
  * FuOpromFirmware:
@@ -39,36 +40,6 @@ G_DEFINE_TYPE_WITH_PRIVATE(FuOpromFirmware, fu_oprom_firmware, FU_TYPE_FIRMWARE)
 #define FU_OPROM_FIRMWARE_PCI_DATA_SIGNATURE	   0x52494350 /* "PCIR" */
 #define FU_OPROM_FIRMWARE_ALIGN_LEN		   512u
 #define FU_OPROM_FIRMWARE_LAST_IMAGE_INDICATOR_BIT (1u << 7)
-
-typedef struct __attribute__((packed)) {
-	guint16 signature;
-	guint16 image_size; /* of 512 bytes */
-	guint32 init_func_entry_point;
-	guint16 subsystem;
-	guint16 machine_type;
-	guint16 compression_type;
-	guint8 reserved[8];
-	guint16 efi_image_offset;
-	guint16 pci_header_offset;
-	guint16 expansion_header_offset;
-} FuOpromFirmwareHeader2;
-
-typedef struct __attribute__((packed)) {
-	guint32 signature;
-	guint16 vendor_id;
-	guint16 device_id;
-	guint16 device_list_pointer;
-	guint16 structure_length;
-	guint8 structure_revision;
-	guint8 class_code[3];
-	guint16 image_length; /* of 512 bytes */
-	guint16 image_revision;
-	guint8 code_type;
-	guint8 indicator;
-	guint16 max_runtime_image_length;
-	guint16 conf_util_code_header_pointer;
-	guint16 dmtf_clp_entry_point_pointer;
-} FuOpromFirmwarePciData;
 
 /**
  * fu_oprom_firmware_get_machine_type:
@@ -141,12 +112,7 @@ fu_oprom_firmware_check_magic(FuFirmware *firmware, GBytes *fw, gsize offset, GE
 	guint16 signature = 0;
 	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
 
-	if (!fu_memread_uint16_safe(buf,
-				    bufsz,
-				    offset + G_STRUCT_OFFSET(FuOpromFirmwareHeader2, signature),
-				    &signature,
-				    G_LITTLE_ENDIAN,
-				    error)) {
+	if (!fu_memread_uint16_safe(buf, bufsz, offset, &signature, G_LITTLE_ENDIAN, error)) {
 		g_prefix_error(error, "failed to read magic: ");
 		return FALSE;
 	}
@@ -182,37 +148,20 @@ fu_oprom_firmware_parse(FuFirmware *firmware,
 	guint8 code_type = 0;
 
 	/* parse header */
-	if (!fu_memread_uint16_safe(buf,
-				    bufsz,
-				    offset + G_STRUCT_OFFSET(FuOpromFirmwareHeader2, subsystem),
-				    &priv->subsystem,
-				    G_LITTLE_ENDIAN,
-				    error))
-		return FALSE;
-	if (!fu_memread_uint16_safe(buf,
-				    bufsz,
-				    offset +
-					G_STRUCT_OFFSET(FuOpromFirmwareHeader2, compression_type),
-				    &priv->compression_type,
-				    G_LITTLE_ENDIAN,
-				    error))
-		return FALSE;
-	if (!fu_memread_uint16_safe(buf,
-				    bufsz,
-				    offset + G_STRUCT_OFFSET(FuOpromFirmwareHeader2, machine_type),
-				    &priv->machine_type,
-				    G_LITTLE_ENDIAN,
-				    error))
-		return FALSE;
-
-	/* get PCI offset */
-	if (!fu_memread_uint16_safe(buf,
-				    bufsz,
-				    offset +
-					G_STRUCT_OFFSET(FuOpromFirmwareHeader2, pci_header_offset),
-				    &pci_header_offset,
-				    G_LITTLE_ENDIAN,
-				    error))
+	if (!fu_struct_unpack_from("<HHLHHH8xHHH",
+				   error,
+				   buf,
+				   bufsz,
+				   &offset,
+				   NULL, /* signature */
+				   NULL, /* image_size */
+				   NULL, /* init_func_entry_point */
+				   &priv->subsystem,
+				   &priv->machine_type,
+				   &priv->compression_type,
+				   NULL, /* efi_image_offset */
+				   &pci_header_offset,
+				   &expansion_header_offset))
 		return FALSE;
 	if (pci_header_offset == 0x0) {
 		g_set_error(error,
@@ -224,12 +173,25 @@ fu_oprom_firmware_parse(FuFirmware *firmware,
 
 	/* verify signature */
 	offset += pci_header_offset;
-	if (!fu_memread_uint32_safe(buf,
-				    bufsz,
-				    offset + G_STRUCT_OFFSET(FuOpromFirmwarePciData, signature),
-				    &pci_signature,
-				    G_LITTLE_ENDIAN,
-				    error))
+	if (!fu_struct_unpack_from("<LHHHHB3BHHBBHHH",
+				   error,
+				   buf,
+				   bufsz,
+				   &offset,
+				   &pci_signature,
+				   NULL,	  /* vendor_id */
+				   NULL,	  /* device_id */
+				   NULL,	  /* device_list_pointer */
+				   NULL,	  /* structure_length */
+				   NULL,	  /* structure_revision */
+				   NULL,	  /* class_code[3] */
+				   &image_length, /* of 512 bytes */
+				   NULL,	  /* image_revision */
+				   &code_type,
+				   NULL,  /* indicator */
+				   NULL,  /* max_runtime_image_length */
+				   NULL,  /* conf_util_code_header_pointer */
+				   NULL)) /* dmtf_clp_entry_point_pointer */
 		return FALSE;
 	if (pci_signature != FU_OPROM_FIRMWARE_PCI_DATA_SIGNATURE) {
 		g_set_error(error,
@@ -242,13 +204,6 @@ fu_oprom_firmware_parse(FuFirmware *firmware,
 	}
 
 	/* get length */
-	if (!fu_memread_uint16_safe(buf,
-				    bufsz,
-				    offset + G_STRUCT_OFFSET(FuOpromFirmwarePciData, image_length),
-				    &image_length,
-				    G_LITTLE_ENDIAN,
-				    error))
-		return FALSE;
 	if (image_length == 0x0) {
 		g_set_error(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA, "invalid image length");
 		return FALSE;
@@ -256,23 +211,9 @@ fu_oprom_firmware_parse(FuFirmware *firmware,
 	fu_firmware_set_size(firmware, image_length * FU_OPROM_FIRMWARE_ALIGN_LEN);
 
 	/* get code type */
-	if (!fu_memread_uint8_safe(buf,
-				   bufsz,
-				   offset + G_STRUCT_OFFSET(FuOpromFirmwarePciData, code_type),
-				   &code_type,
-				   error))
-		return FALSE;
 	fu_firmware_set_idx(firmware, code_type);
 
 	/* get CPD offset */
-	if (!fu_memread_uint16_safe(
-		buf,
-		bufsz,
-		G_STRUCT_OFFSET(FuOpromFirmwareHeader2, expansion_header_offset),
-		&expansion_header_offset,
-		G_LITTLE_ENDIAN,
-		error))
-		return FALSE;
 	if (expansion_header_offset != 0x0) {
 		g_autoptr(FuFirmware) img = NULL;
 		g_autoptr(GBytes) blob = NULL;
@@ -312,10 +253,13 @@ fu_oprom_firmware_write(FuFirmware *firmware, GError **error)
 	FuOpromFirmwarePrivate *priv = GET_PRIVATE(self);
 	gsize image_size = 0;
 	g_autoptr(GByteArray) buf = g_byte_array_new();
+	g_autoptr(GByteArray) buf_hdr = NULL;
+	g_autoptr(GByteArray) buf_sect = NULL;
 	g_autoptr(GBytes) blob_cpd = NULL;
 
 	/* the smallest each image (and header) can be is 512 bytes */
-	image_size += fu_common_align_up(sizeof(FuOpromFirmwareHeader2), FU_FIRMWARE_ALIGNMENT_512);
+	image_size +=
+	    fu_common_align_up(fu_struct_size("<HHLHHH8xHHH", NULL), FU_FIRMWARE_ALIGNMENT_512);
 	blob_cpd = fu_firmware_get_image_by_id_bytes(firmware, "cpd", NULL);
 	if (blob_cpd != NULL) {
 		image_size +=
@@ -323,37 +267,41 @@ fu_oprom_firmware_write(FuFirmware *firmware, GError **error)
 	}
 
 	/* write the header */
-	fu_byte_array_append_uint16(buf, FU_OPROM_HEADER_SIGNATURE, G_LITTLE_ENDIAN);
-	fu_byte_array_append_uint16(buf, image_size / FU_OPROM_FIRMWARE_ALIGN_LEN, G_LITTLE_ENDIAN);
-	fu_byte_array_append_uint32(buf, 0x0, G_LITTLE_ENDIAN); /* init_func_entry_point */
-	fu_byte_array_append_uint16(buf, priv->subsystem, G_LITTLE_ENDIAN);
-	fu_byte_array_append_uint16(buf, priv->machine_type, G_LITTLE_ENDIAN);
-	fu_byte_array_append_uint16(buf, priv->compression_type, G_LITTLE_ENDIAN);
-	fu_byte_array_append_uint64(buf, 0x0, G_LITTLE_ENDIAN); /* reserved */
-	fu_byte_array_append_uint16(buf, 0x0, G_LITTLE_ENDIAN); /* efi_image_offset */
-	fu_byte_array_append_uint16(buf,
-				    sizeof(FuOpromFirmwareHeader2),
-				    G_LITTLE_ENDIAN); /* pci_header_offset */
-	fu_byte_array_append_uint16(buf,
-				    blob_cpd != NULL ? image_size - FU_OPROM_FIRMWARE_ALIGN_LEN
-						     : 0x0,
-				    G_LITTLE_ENDIAN); /* expansion_header_offset */
-	g_assert(buf->len == sizeof(FuOpromFirmwareHeader2));
+	buf_hdr = fu_struct_pack("<HHLHHH8xHHH",
+				 error,
+				 FU_OPROM_HEADER_SIGNATURE,
+				 image_size / FU_OPROM_FIRMWARE_ALIGN_LEN, /* of 512 bytes */
+				 0x0, /* init_func_entry_point */
+				 priv->subsystem,
+				 priv->machine_type,
+				 priv->compression_type,
+				 0x0,				       /* efi_image_offset */
+				 fu_struct_size("<HHLHHH8xHHH", NULL), /* pci_header_offset */
+				 blob_cpd != NULL ? image_size - FU_OPROM_FIRMWARE_ALIGN_LEN
+						  : 0x0 /* expansion_header_offset */
+	);
+	if (buf_hdr == NULL)
+		return NULL;
+	g_byte_array_append(buf, buf_hdr->data, buf_hdr->len);
 
 	/* add PCI section */
-	fu_byte_array_append_uint32(buf, FU_OPROM_FIRMWARE_PCI_DATA_SIGNATURE, G_LITTLE_ENDIAN);
-	fu_byte_array_append_uint16(buf, 0x8086, G_LITTLE_ENDIAN); /* vendor_id */
-	fu_byte_array_append_uint16(buf, 0x0, G_LITTLE_ENDIAN);	   /* device_id */
-	fu_byte_array_append_uint16(buf, 0x0, G_LITTLE_ENDIAN);	   /* device_list_pointer */
-	fu_byte_array_append_uint16(buf, 0x0, G_LITTLE_ENDIAN);	   /* structure_length */
-	fu_byte_array_append_uint32(buf, 0x0, G_LITTLE_ENDIAN);	   /* structure_revision */
-	fu_byte_array_append_uint16(buf, image_size / FU_OPROM_FIRMWARE_ALIGN_LEN, G_LITTLE_ENDIAN);
-	fu_byte_array_append_uint16(buf, 0x0, G_LITTLE_ENDIAN); /* image_revision */
-	fu_byte_array_append_uint8(buf, fu_firmware_get_idx(firmware));
-	fu_byte_array_append_uint8(buf, FU_OPROM_FIRMWARE_LAST_IMAGE_INDICATOR_BIT);
-	fu_byte_array_append_uint16(buf, 0x0, G_LITTLE_ENDIAN); /* max_runtime_image_length */
-	fu_byte_array_append_uint16(buf, 0x0, G_LITTLE_ENDIAN); /* conf_util_code_header_pointer */
-	fu_byte_array_append_uint16(buf, 0x0, G_LITTLE_ENDIAN); /* dmtf_clp_entry_point_pointer */
+	buf_sect = fu_struct_pack("<LHHHHLHHBBHHH",
+				  error,
+				  FU_OPROM_FIRMWARE_PCI_DATA_SIGNATURE,
+				  0x8086, /* vendor_id */
+				  0x0,	  /* device_id */
+				  0x0,	  /* device_list_pointer */
+				  0x0,	  /* structure_length */
+				  0x0,	  /* structure_revision */
+				  image_size / FU_OPROM_FIRMWARE_ALIGN_LEN,
+				  0x0, /* image_revision */
+				  (guint)fu_firmware_get_idx(firmware),
+				  FU_OPROM_FIRMWARE_LAST_IMAGE_INDICATOR_BIT,
+				  0x0, /* max_runtime_image_length */
+				  0x0, /* conf_util_code_header_pointer */
+				  0x0  /* dmtf_clp_entry_point_pointer */
+	);
+	g_byte_array_append(buf, buf_sect->data, buf_sect->len);
 	fu_byte_array_align_up(buf, FU_FIRMWARE_ALIGNMENT_512, 0xFF);
 
 	/* add CPD */

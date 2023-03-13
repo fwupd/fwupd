@@ -13,6 +13,7 @@
 #include "fu-common.h"
 #include "fu-mem.h"
 #include "fu-string.h"
+#include "fu-struct.h"
 
 /**
  * FuCfuOffer:
@@ -425,39 +426,34 @@ fu_cfu_offer_parse(FuFirmware *firmware,
 	FuCfuOffer *self = FU_CFU_OFFER(firmware);
 	FuCfuOfferPrivate *priv = GET_PRIVATE(self);
 	gsize bufsz = 0;
-	guint8 tmp = 0;
-	guint32 tmp32 = 0;
+	guint32 version_raw = 0;
+	guint8 component_flags = 0;
+	guint8 milestone = 0;
+	guint8 product_info = 0;
 	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
 
 	/* component info */
-	if (!fu_memread_uint8_safe(buf, bufsz, 0x0, &priv->segment_number, error))
+	if (!fu_struct_unpack_from("<BBBBLLBBH",
+				   error,
+				   buf,
+				   bufsz,
+				   &offset,
+				   &priv->segment_number,
+				   &component_flags,
+				   &priv->component_id,
+				   &priv->token,
+				   &version_raw,
+				   &priv->hw_variant,
+				   &product_info,
+				   &milestone,
+				   &priv->product_id))
 		return FALSE;
-	if (!fu_memread_uint8_safe(buf, bufsz, 0x1, &tmp, error))
-		return FALSE;
-	priv->force_ignore_version = (tmp & 0b1) > 0;
-	priv->force_immediate_reset = (tmp & 0b10) > 0;
-	if (!fu_memread_uint8_safe(buf, bufsz, 0x2, &priv->component_id, error))
-		return FALSE;
-	if (!fu_memread_uint8_safe(buf, bufsz, 0x3, &priv->token, error))
-		return FALSE;
-
-	/* version */
-	if (!fu_memread_uint32_safe(buf, bufsz, 0x4, &tmp32, G_LITTLE_ENDIAN, error))
-		return FALSE;
-	fu_firmware_set_version_raw(firmware, tmp32);
-	if (!fu_memread_uint32_safe(buf, bufsz, 0x8, &priv->hw_variant, G_LITTLE_ENDIAN, error))
-		return FALSE;
-
-	/* product info */
-	if (!fu_memread_uint8_safe(buf, bufsz, 0xC, &tmp, error))
-		return FALSE;
-	priv->protocol_revision = (tmp >> 4) & 0b1111;
-	priv->bank = (tmp >> 2) & 0b11;
-	if (!fu_memread_uint8_safe(buf, bufsz, 0xD, &tmp, error))
-		return FALSE;
-	priv->milestone = (tmp >> 5) & 0b111;
-	if (!fu_memread_uint16_safe(buf, bufsz, 0xE, &priv->product_id, G_LITTLE_ENDIAN, error))
-		return FALSE;
+	priv->force_ignore_version = (component_flags & 0b1) > 0;
+	priv->force_immediate_reset = (component_flags & 0b10) > 0;
+	fu_firmware_set_version_raw(firmware, version_raw);
+	priv->protocol_revision = (product_info >> 4) & 0b1111;
+	priv->bank = (product_info >> 2) & 0b11;
+	priv->milestone = (milestone >> 5) & 0b111;
 
 	/* success */
 	return TRUE;
@@ -468,23 +464,20 @@ fu_cfu_offer_write(FuFirmware *firmware, GError **error)
 {
 	FuCfuOffer *self = FU_CFU_OFFER(firmware);
 	FuCfuOfferPrivate *priv = GET_PRIVATE(self);
-	g_autoptr(GByteArray) buf = g_byte_array_new();
+	g_autoptr(GByteArray) buf = NULL;
 
-	/* component info */
-	fu_byte_array_append_uint8(buf, priv->segment_number);
-	fu_byte_array_append_uint8(buf,
-				   priv->force_ignore_version | (priv->force_immediate_reset << 1));
-	fu_byte_array_append_uint8(buf, priv->component_id);
-	fu_byte_array_append_uint8(buf, priv->token);
-
-	/* version */
-	fu_byte_array_append_uint32(buf, fu_firmware_get_version_raw(firmware), G_LITTLE_ENDIAN);
-	fu_byte_array_append_uint32(buf, priv->hw_variant, G_LITTLE_ENDIAN);
-
-	/* product info */
-	fu_byte_array_append_uint8(buf, (priv->protocol_revision << 4) | (priv->bank << 2));
-	fu_byte_array_append_uint8(buf, priv->milestone << 5);
-	fu_byte_array_append_uint16(buf, priv->product_id, G_LITTLE_ENDIAN);
+	/* component info, version, product info */
+	buf = fu_struct_pack("<BBBBLLBBH",
+			     error,
+			     priv->segment_number,
+			     priv->force_ignore_version | (priv->force_immediate_reset << 1),
+			     priv->component_id,
+			     priv->token,
+			     (guint)fu_firmware_get_version_raw(firmware),
+			     priv->hw_variant,
+			     (priv->protocol_revision << 4) | (priv->bank << 2),
+			     priv->milestone << 5,
+			     priv->product_id);
 
 	/* success */
 	return g_byte_array_free_to_bytes(g_steal_pointer(&buf));

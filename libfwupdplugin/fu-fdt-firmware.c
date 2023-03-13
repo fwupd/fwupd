@@ -16,6 +16,7 @@
 #include "fu-fdt-firmware.h"
 #include "fu-fdt-image.h"
 #include "fu-mem.h"
+#include "fu-struct.h"
 
 /**
  * FuFdtFirmware:
@@ -34,29 +35,6 @@ typedef struct {
 
 G_DEFINE_TYPE_WITH_PRIVATE(FuFdtFirmware, fu_fdt_firmware, FU_TYPE_FIRMWARE)
 #define GET_PRIVATE(o) (fu_fdt_firmware_get_instance_private(o))
-
-typedef struct __attribute__((packed)) {
-	guint32 magic;
-	guint32 totalsize;
-	guint32 off_dt_struct;
-	guint32 off_dt_strings;
-	guint32 off_mem_rsvmap;
-	guint32 version;
-	guint32 last_comp_version;
-	guint32 boot_cpuid_phys;
-	guint32 size_dt_strings;
-	guint32 size_dt_struct;
-} FuFdtHeader;
-
-typedef struct __attribute__((packed)) {
-	guint64 address;
-	guint64 size;
-} FuFdtReserveEntry;
-
-typedef struct __attribute__((packed)) {
-	guint32 len;
-	guint32 nameoff;
-} FuFdtProp;
 
 #define FDT_MAGIC      0xD00DFEED
 #define FDT_BEGIN_NODE 0x00000001
@@ -268,24 +246,15 @@ fu_fdt_firmware_parse_dt_struct(FuFdtFirmware *self, GBytes *fw, GBytes *strtab,
 				return FALSE;
 			}
 
-			/* parse */
-			if (!fu_memread_uint32_safe(buf,
-						    bufsz,
-						    offset + G_STRUCT_OFFSET(FuFdtProp, len),
-						    &prop_len,
-						    G_BIG_ENDIAN,
-						    error))
-				return FALSE;
-			if (!fu_memread_uint32_safe(buf,
-						    bufsz,
-						    offset + G_STRUCT_OFFSET(FuFdtProp, nameoff),
-						    &prop_nameoff,
-						    G_BIG_ENDIAN,
-						    error))
-				return FALSE;
-			offset += sizeof(FuFdtProp);
-
 			/* add property */
+			if (!fu_struct_unpack_from(">[LL]",
+						   error,
+						   buf,
+						   bufsz,
+						   &offset,
+						   &prop_len,
+						   &prop_nameoff))
+				return FALSE;
 			str = fu_string_new_safe(g_bytes_get_data(strtab, NULL),
 						 g_bytes_get_size(strtab),
 						 prop_nameoff,
@@ -333,22 +302,11 @@ fu_fdt_firmware_parse_mem_rsvmap(FuFdtFirmware *self,
 				 GError **error)
 {
 	/* parse */
-	for (; offset < bufsz; offset += sizeof(FuFdtReserveEntry)) {
+	for (; offset < bufsz;) {
 		guint64 address = 0;
 		guint64 size = 0;
-		if (!fu_memread_uint64_safe(buf,
-					    bufsz,
-					    offset + G_STRUCT_OFFSET(FuFdtReserveEntry, address),
-					    &address,
-					    G_BIG_ENDIAN,
-					    error))
-			return FALSE;
-		if (!fu_memread_uint64_safe(buf,
-					    bufsz,
-					    offset + G_STRUCT_OFFSET(FuFdtReserveEntry, size),
-					    &size,
-					    G_BIG_ENDIAN,
-					    error))
+
+		if (!fu_struct_unpack_from(">[QQ]", error, buf, bufsz, &offset, &address, &size))
 			return FALSE;
 		g_debug("mem_rsvmap: 0x%x, 0x%x", (guint)address, (guint)size);
 		if (address == 0x0 && size == 0x0)
@@ -366,7 +324,7 @@ fu_fdt_firmware_check_magic(FuFirmware *firmware, GBytes *fw, gsize offset, GErr
 
 	if (!fu_memread_uint32_safe(g_bytes_get_data(fw, NULL),
 				    g_bytes_get_size(fw),
-				    offset + G_STRUCT_OFFSET(FuFdtHeader, magic),
+				    offset,
 				    &magic,
 				    G_BIG_ENDIAN,
 				    error)) {
@@ -408,12 +366,21 @@ fu_fdt_firmware_parse(FuFirmware *firmware,
 	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
 
 	/* sanity check */
-	if (!fu_memread_uint32_safe(buf,
-				    bufsz,
-				    offset + G_STRUCT_OFFSET(FuFdtHeader, totalsize),
-				    &totalsize,
-				    G_BIG_ENDIAN,
-				    error))
+	if (!fu_struct_unpack_from(">LLLLLLLLLL",
+				   error,
+				   buf,
+				   bufsz,
+				   &offset,
+				   NULL, /* magic */
+				   &totalsize,
+				   &off_dt_struct,
+				   &off_dt_strings,
+				   &off_mem_rsvmap,
+				   &version,
+				   &last_comp_version,
+				   &priv->cpuid,
+				   &size_dt_strings,
+				   &size_dt_struct))
 		return FALSE;
 	if (totalsize > bufsz) {
 		g_set_error(error,
@@ -427,41 +394,6 @@ fu_fdt_firmware_parse(FuFirmware *firmware,
 	fu_firmware_set_size(firmware, totalsize);
 
 	/* read header */
-	if (!fu_memread_uint32_safe(buf,
-				    bufsz,
-				    offset + G_STRUCT_OFFSET(FuFdtHeader, off_dt_strings),
-				    &off_dt_strings,
-				    G_BIG_ENDIAN,
-				    error))
-		return FALSE;
-	if (!fu_memread_uint32_safe(buf,
-				    bufsz,
-				    offset + G_STRUCT_OFFSET(FuFdtHeader, size_dt_strings),
-				    &size_dt_strings,
-				    G_BIG_ENDIAN,
-				    error))
-		return FALSE;
-	if (!fu_memread_uint32_safe(buf,
-				    bufsz,
-				    offset + G_STRUCT_OFFSET(FuFdtHeader, off_dt_struct),
-				    &off_dt_struct,
-				    G_BIG_ENDIAN,
-				    error))
-		return FALSE;
-	if (!fu_memread_uint32_safe(buf,
-				    bufsz,
-				    offset + G_STRUCT_OFFSET(FuFdtHeader, size_dt_struct),
-				    &size_dt_struct,
-				    G_BIG_ENDIAN,
-				    error))
-		return FALSE;
-	if (!fu_memread_uint32_safe(buf,
-				    bufsz,
-				    offset + G_STRUCT_OFFSET(FuFdtHeader, off_mem_rsvmap),
-				    &off_mem_rsvmap,
-				    G_BIG_ENDIAN,
-				    error))
-		return FALSE;
 	if (off_mem_rsvmap != 0x0) {
 		if (!fu_fdt_firmware_parse_mem_rsvmap(self,
 						      buf,
@@ -470,20 +402,6 @@ fu_fdt_firmware_parse(FuFirmware *firmware,
 						      error))
 			return FALSE;
 	}
-	if (!fu_memread_uint32_safe(buf,
-				    bufsz,
-				    offset + G_STRUCT_OFFSET(FuFdtHeader, boot_cpuid_phys),
-				    &priv->cpuid,
-				    G_BIG_ENDIAN,
-				    error))
-		return FALSE;
-	if (!fu_memread_uint32_safe(buf,
-				    bufsz,
-				    offset + G_STRUCT_OFFSET(FuFdtHeader, last_comp_version),
-				    &last_comp_version,
-				    G_BIG_ENDIAN,
-				    error))
-		return FALSE;
 	if (last_comp_version < FDT_LAST_COMP_VERSION) {
 		g_set_error(error,
 			    G_IO_ERROR,
@@ -493,13 +411,6 @@ fu_fdt_firmware_parse(FuFirmware *firmware,
 			    (guint)FDT_LAST_COMP_VERSION);
 		return FALSE;
 	}
-	if (!fu_memread_uint32_safe(buf,
-				    bufsz,
-				    offset + G_STRUCT_OFFSET(FuFdtHeader, version),
-				    &version,
-				    G_BIG_ENDIAN,
-				    error))
-		return FALSE;
 	fu_firmware_set_version_raw(firmware, version);
 
 	/* parse device tree struct */
@@ -612,8 +523,8 @@ fu_fdt_firmware_write(FuFirmware *firmware, GError **error)
 	guint32 off_dt_struct;
 	guint32 off_dt_strings;
 	guint32 off_mem_rsvmap;
-	guint32 totalsize;
 	g_autoptr(GByteArray) buf = g_byte_array_new();
+	g_autoptr(GByteArray) buf_hdr = NULL;
 	g_autoptr(GByteArray) dt_strings = g_byte_array_new();
 	g_autoptr(GByteArray) dt_struct = g_byte_array_new();
 	g_autoptr(GByteArray) mem_rsvmap = g_byte_array_new();
@@ -626,7 +537,8 @@ fu_fdt_firmware_write(FuFirmware *firmware, GError **error)
 	};
 
 	/* mem_rsvmap */
-	off_mem_rsvmap = fu_common_align_up(sizeof(FuFdtHeader), FU_FIRMWARE_ALIGNMENT_4);
+	off_mem_rsvmap =
+	    fu_common_align_up(fu_struct_size(">LLLLLLLLLL", NULL), FU_FIRMWARE_ALIGNMENT_4);
 	fu_byte_array_append_uint64(mem_rsvmap, 0x0, G_BIG_ENDIAN);
 	fu_byte_array_append_uint64(mem_rsvmap, 0x0, G_BIG_ENDIAN);
 
@@ -651,17 +563,19 @@ fu_fdt_firmware_write(FuFirmware *firmware, GError **error)
 	    fu_common_align_up(off_dt_struct + dt_struct->len, FU_FIRMWARE_ALIGNMENT_4);
 
 	/* write header */
-	totalsize = off_dt_strings + dt_strings->len;
-	fu_byte_array_append_uint32(buf, FDT_MAGIC, G_BIG_ENDIAN);
-	fu_byte_array_append_uint32(buf, totalsize, G_BIG_ENDIAN);
-	fu_byte_array_append_uint32(buf, off_dt_struct, G_BIG_ENDIAN);
-	fu_byte_array_append_uint32(buf, off_dt_strings, G_BIG_ENDIAN);
-	fu_byte_array_append_uint32(buf, off_mem_rsvmap, G_BIG_ENDIAN);
-	fu_byte_array_append_uint32(buf, fu_firmware_get_version_raw(firmware), G_BIG_ENDIAN);
-	fu_byte_array_append_uint32(buf, FDT_LAST_COMP_VERSION, G_BIG_ENDIAN);
-	fu_byte_array_append_uint32(buf, priv->cpuid, G_BIG_ENDIAN);
-	fu_byte_array_append_uint32(buf, dt_strings->len, G_BIG_ENDIAN);
-	fu_byte_array_append_uint32(buf, dt_struct->len, G_BIG_ENDIAN);
+	buf_hdr = fu_struct_pack(">LLLLLLLLLL",
+				 error,
+				 FDT_MAGIC,
+				 off_dt_strings + dt_strings->len,
+				 off_dt_struct,
+				 off_dt_strings,
+				 off_mem_rsvmap,
+				 (guint)fu_firmware_get_version_raw(firmware),
+				 FDT_LAST_COMP_VERSION,
+				 priv->cpuid,
+				 dt_strings->len,
+				 dt_struct->len);
+	g_byte_array_append(buf, buf_hdr->data, buf_hdr->len);
 	fu_byte_array_align_up(buf, FU_FIRMWARE_ALIGNMENT_4, 0x0);
 
 	/* write mem_rsvmap, dt_struct, dt_strings */

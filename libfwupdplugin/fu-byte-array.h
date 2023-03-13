@@ -19,6 +19,8 @@ fu_byte_array_append_uint8(GByteArray *array, guint8 data);
 void
 fu_byte_array_append_uint16(GByteArray *array, guint16 data, FuEndianType endian);
 void
+fu_byte_array_append_uint24(GByteArray *array, guint32 data, FuEndianType endian);
+void
 fu_byte_array_append_uint32(GByteArray *array, guint32 data, FuEndianType endian);
 void
 fu_byte_array_append_uint64(GByteArray *array, guint64 data, FuEndianType endian);

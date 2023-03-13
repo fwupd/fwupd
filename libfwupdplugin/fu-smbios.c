@@ -24,6 +24,7 @@
 #include "fu-path.h"
 #include "fu-smbios-private.h"
 #include "fu-string.h"
+#include "fu-struct.h"
 
 /**
  * FuSmbios:
@@ -90,15 +91,16 @@ fu_smbios_setup_from_data(FuSmbios *self, const guint8 *buf, gsize sz, GError **
 		guint8 str_len = 0;
 		guint8 str_type = 0;
 
-		/* le */
-		if (!fu_memread_uint8_safe(buf, sz, i + 0x0, &str_type, error))
-			return FALSE;
-		if (!fu_memread_uint8_safe(buf, sz, i + 0x1, &str_len, error))
-			return FALSE;
-		if (!fu_memread_uint16_safe(buf, sz, i + 0x2, &str_handle, G_LITTLE_ENDIAN, error))
-			return FALSE;
-
 		/* sanity check */
+		if (!fu_struct_unpack_from("<BBH",
+					   error,
+					   buf,
+					   sz,
+					   &i,
+					   &str_type,
+					   &str_len,
+					   &str_handle))
+			return FALSE;
 		if (str_len < 4) {
 			g_set_error(error,
 				    FWUPD_ERROR,

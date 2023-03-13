@@ -31,7 +31,6 @@
 #define FU_TPM_EVENTLOG_V2_IDX_PCR	    0x00
 #define FU_TPM_EVENTLOG_V2_IDX_TYPE	    0x04
 #define FU_TPM_EVENTLOG_V2_IDX_DIGEST_COUNT 0x08
-#define FU_TPM_EVENTLOG_V2_SIZE		    0x0c
 
 static void
 fu_tpm_eventlog_parser_item_free(FuTpmEventlogItem *item)
@@ -107,30 +106,17 @@ fu_tpm_eventlog_parser_parse_blob_v2(const guint8 *buf,
 		g_autoptr(GBytes) checksum_sha384 = NULL;
 
 		/* read entry */
-		if (!fu_memread_uint32_safe(buf,
-					    bufsz,
-					    idx + FU_TPM_EVENTLOG_V2_IDX_PCR,
-					    &pcr,
-					    G_LITTLE_ENDIAN,
-					    error))
-			return NULL;
-		if (!fu_memread_uint32_safe(buf,
-					    bufsz,
-					    idx + FU_TPM_EVENTLOG_V2_IDX_TYPE,
-					    &event_type,
-					    G_LITTLE_ENDIAN,
-					    error))
-			return NULL;
-		if (!fu_memread_uint32_safe(buf,
-					    bufsz,
-					    idx + FU_TPM_EVENTLOG_V2_IDX_DIGEST_COUNT,
-					    &digestcnt,
-					    G_LITTLE_ENDIAN,
-					    error))
+		if (!fu_struct_unpack_from("<[LLL]",
+					   error,
+					   buf,
+					   bufsz,
+					   &idx,
+					   &pcr,
+					   &event_type,
+					   &digestcnt))
 			return NULL;
 
 		/* read checksum block */
-		idx += FU_TPM_EVENTLOG_V2_SIZE;
 		for (guint i = 0; i < digestcnt; i++) {
 			guint16 alg_type = 0;
 			guint32 alg_size = 0;

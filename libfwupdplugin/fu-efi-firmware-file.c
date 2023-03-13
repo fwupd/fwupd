@@ -12,7 +12,7 @@
 #include "fu-efi-firmware-common.h"
 #include "fu-efi-firmware-file.h"
 #include "fu-efi-firmware-section.h"
-#include "fu-mem.h"
+#include "fu-struct.h"
 #include "fu-sum.h"
 
 /**
@@ -161,23 +161,23 @@ fu_efi_firmware_file_parse(FuFirmware *firmware,
 	g_autoptr(GBytes) blob = NULL;
 
 	/* header */
-	if (!fu_memcpy_safe((guint8 *)&guid,
-			    sizeof(guid),
-			    0x0, /* dst */
-			    buf,
-			    bufsz,
-			    FU_EFI_FIRMWARE_FILE_OFFSET_NAME, /* src */
-			    sizeof(guid),
-			    error))
+	if (!fu_struct_unpack_from("<GBBBBTB",
+				   error,
+				   buf,
+				   bufsz,
+				   &offset,
+				   &guid,
+				   &hdr_checksum,
+				   &data_checksum,
+				   &priv->type,
+				   &priv->attrib,
+				   &size, /* 24 bits */
+				   &img_state))
 		return FALSE;
 	guid_str = fwupd_guid_to_string(&guid, FWUPD_GUID_FLAG_MIXED_ENDIAN);
 	fu_firmware_set_id(firmware, guid_str);
-	if (!fu_memread_uint8_safe(buf,
-				   bufsz,
-				   FU_EFI_FIRMWARE_FILE_OFFSET_STATE,
-				   &img_state,
-				   error))
-		return FALSE;
+
+	/* sanity check */
 	if (img_state != 0xF8) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -187,38 +187,6 @@ fu_efi_firmware_file_parse(FuFirmware *firmware,
 			    (guint)0xF8);
 		return FALSE;
 	}
-	if (!fu_memread_uint8_safe(buf,
-				   bufsz,
-				   FU_EFI_FIRMWARE_FILE_OFFSET_HDR_CHECKSUM,
-				   &hdr_checksum,
-				   error))
-		return FALSE;
-	if (!fu_memread_uint8_safe(buf,
-				   bufsz,
-				   FU_EFI_FIRMWARE_FILE_OFFSET_DATA_CHECKSUM,
-				   &data_checksum,
-				   error))
-		return FALSE;
-	if (!fu_memread_uint8_safe(buf,
-				   bufsz,
-				   FU_EFI_FIRMWARE_FILE_OFFSET_TYPE,
-				   &priv->type,
-				   error))
-		return FALSE;
-	if (!fu_memread_uint8_safe(buf,
-				   bufsz,
-				   FU_EFI_FIRMWARE_FILE_OFFSET_ATTRS,
-				   &priv->attrib,
-				   error))
-		return FALSE;
-	if (!fu_memread_uint32_safe(buf,
-				    bufsz, /* uint24_t! */
-				    FU_EFI_FIRMWARE_FILE_OFFSET_SIZE,
-				    &size,
-				    G_LITTLE_ENDIAN,
-				    error))
-		return FALSE;
-	size &= 0xFFFFFF;
 	if (size < FU_EFI_FIRMWARE_FILE_SIZE) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -329,7 +297,7 @@ fu_efi_firmware_file_write(FuFirmware *firmware, GError **error)
 	FuEfiFirmwareFile *self = FU_EFI_FIRMWARE_FILE(firmware);
 	FuEfiFirmwareFilePrivate *priv = GET_PRIVATE(self);
 	fwupd_guid_t guid = {0x0};
-	g_autoptr(GByteArray) buf = g_byte_array_new();
+	g_autoptr(GByteArray) buf = NULL;
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GBytes) hdr_blob = NULL;
 
@@ -344,15 +312,17 @@ fu_efi_firmware_file_write(FuFirmware *firmware, GError **error)
 				    FWUPD_GUID_FLAG_MIXED_ENDIAN,
 				    error))
 		return NULL;
-	g_byte_array_append(buf, (guint8 *)&guid, sizeof(guid));
-	fu_byte_array_append_uint8(buf, 0x0); /* hdr_checksum */
-	fu_byte_array_append_uint8(buf, 0x100 - fu_sum8_bytes(blob));
-	fu_byte_array_append_uint8(buf, priv->type);   /* data_checksum */
-	fu_byte_array_append_uint8(buf, priv->attrib); /* data_checksum */
-	fu_byte_array_append_uint32(buf,
-				    g_bytes_get_size(blob) + FU_EFI_FIRMWARE_FILE_SIZE,
-				    G_LITTLE_ENDIAN);
-	buf->data[FU_EFI_FIRMWARE_FILE_OFFSET_STATE] = 0xF8; /* overwrite the LSB of size */
+	buf = fu_struct_pack("<GBBBBTB",
+			     error,
+			     guid,
+			     0x0, /* hdr_checksum */
+			     0x100 - fu_sum8_bytes(blob),
+			     priv->type,
+			     priv->attrib,
+			     g_bytes_get_size(blob) + FU_EFI_FIRMWARE_FILE_SIZE,
+			     0xF8);
+	if (buf == NULL)
+		return NULL;
 
 	/* fix up header checksum */
 	hdr_blob = g_bytes_new(buf->data, buf->len);

@@ -48,30 +48,17 @@ fu_acpi_phat_version_element_parse(FuFirmware *firmware,
 
 	/* hardcoded */
 	fu_firmware_set_size(firmware, 28);
-
-	if (!fu_memcpy_safe((guint8 *)&component_id,
-			    sizeof(component_id),
-			    0x0, /* dst */
-			    buf,
-			    bufsz,
-			    0, /* src */
-			    sizeof(component_id),
-			    error))
+	if (!fu_struct_unpack_from("<GQ4s",
+				   error,
+				   buf,
+				   bufsz,
+				   &offset,
+				   &component_id,
+				   &version_value,
+				   &producer_id))
 		return FALSE;
 	self->guid = fwupd_guid_to_string(&component_id, FWUPD_GUID_FLAG_MIXED_ENDIAN);
-
-	if (!fu_memread_uint64_safe(buf, bufsz, 16, &version_value, G_LITTLE_ENDIAN, error))
-		return FALSE;
 	fu_firmware_set_version_raw(firmware, version_value);
-	if (!fu_memcpy_safe((guint8 *)producer_id,
-			    sizeof(producer_id),
-			    0x0, /* dst */
-			    buf,
-			    bufsz,
-			    24, /* src */
-			    sizeof(producer_id),
-			    error))
-		return FALSE;
 	if (memcmp(producer_id, "\0\0\0\0", 4) == 0) {
 		g_set_error(error,
 			    G_IO_ERROR,
@@ -88,33 +75,20 @@ fu_acpi_phat_version_element_write(FuFirmware *firmware, GError **error)
 {
 	FuAcpiPhatVersionElement *self = FU_ACPI_PHAT_VERSION_ELEMENT(firmware);
 	fwupd_guid_t guid = {0x0};
-	guint8 producer_id[4] = {'\0'};
-	g_autoptr(GByteArray) buf = g_byte_array_new();
+	g_autoptr(GByteArray) buf = NULL;
 
 	/* component ID */
 	if (self->guid != NULL) {
 		if (!fwupd_guid_from_string(self->guid, &guid, FWUPD_GUID_FLAG_MIXED_ENDIAN, error))
 			return NULL;
 	}
-	g_byte_array_append(buf, guid, sizeof(guid));
-
-	/* version value */
-	fu_byte_array_append_uint64(buf, fu_firmware_get_version_raw(firmware), G_LITTLE_ENDIAN);
-
-	/* producer ID */
-	if (self->producer_id != NULL) {
-		gsize producer_idsz = strlen(self->producer_id);
-		if (!fu_memcpy_safe(producer_id,
-				    sizeof(producer_id),
-				    0x0, /* dst */
-				    (const guint8 *)self->producer_id,
-				    producer_idsz,
-				    0x0, /* src */
-				    producer_idsz,
-				    error))
-			return NULL;
-	}
-	g_byte_array_append(buf, producer_id, sizeof(producer_id));
+	buf = fu_struct_pack("<GQ4s",
+			     error,
+			     guid,
+			     fu_firmware_get_version_raw(firmware),
+			     self->producer_id);
+	if (buf == NULL)
+		return NULL;
 
 	/* success */
 	return g_byte_array_free_to_bytes(g_steal_pointer(&buf));

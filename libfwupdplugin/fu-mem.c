@@ -34,7 +34,8 @@ fu_memwrite_uint16(guint8 *buf, guint16 val_native, FuEndianType endian)
 		val_hw = GUINT16_TO_LE(val_native);
 		break;
 	default:
-		g_assert_not_reached();
+		val_hw = val_native;
+		break;
 	}
 	memcpy(buf, &val_hw, sizeof(val_hw));
 }
@@ -89,7 +90,8 @@ fu_memwrite_uint32(guint8 *buf, guint32 val_native, FuEndianType endian)
 		val_hw = GUINT32_TO_LE(val_native);
 		break;
 	default:
-		g_assert_not_reached();
+		val_hw = val_native;
+		break;
 	}
 	memcpy(buf, &val_hw, sizeof(val_hw));
 }
@@ -116,7 +118,8 @@ fu_memwrite_uint64(guint8 *buf, guint64 val_native, FuEndianType endian)
 		val_hw = GUINT64_TO_LE(val_native);
 		break;
 	default:
-		g_assert_not_reached();
+		val_hw = val_native;
+		break;
 	}
 	memcpy(buf, &val_hw, sizeof(val_hw));
 }
@@ -145,7 +148,8 @@ fu_memread_uint16(const guint8 *buf, FuEndianType endian)
 		val_native = GUINT16_FROM_LE(val_hw);
 		break;
 	default:
-		g_assert_not_reached();
+		val_native = val_hw;
+		break;
 	}
 	return val_native;
 }
@@ -176,7 +180,8 @@ fu_memread_uint24(const guint8 *buf, FuEndianType endian)
 		val_native = GUINT32_FROM_LE(val_hw);
 		break;
 	default:
-		g_assert_not_reached();
+		val_native = val_hw;
+		break;
 	}
 	return val_native;
 }
@@ -205,7 +210,8 @@ fu_memread_uint32(const guint8 *buf, FuEndianType endian)
 		val_native = GUINT32_FROM_LE(val_hw);
 		break;
 	default:
-		g_assert_not_reached();
+		val_native = val_hw;
+		break;
 	}
 	return val_native;
 }
@@ -234,7 +240,8 @@ fu_memread_uint64(const guint8 *buf, FuEndianType endian)
 		val_native = GUINT64_FROM_LE(val_hw);
 		break;
 	default:
-		g_assert_not_reached();
+		val_native = val_hw;
+		break;
 	}
 	return val_native;
 }

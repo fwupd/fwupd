@@ -72,6 +72,7 @@
 #include <libfwupdplugin/fu-smbios.h>
 #include <libfwupdplugin/fu-srec-firmware.h>
 #include <libfwupdplugin/fu-string.h>
+#include <libfwupdplugin/fu-struct.h>
 #include <libfwupdplugin/fu-sum.h>
 #include <libfwupdplugin/fu-udev-device.h>
 #include <libfwupdplugin/fu-usb-device.h>

@@ -139,7 +139,7 @@ fu_acpi_phat_health_record_write(FuFirmware *firmware, GError **error)
 	fwupd_guid_t guid = {0x0};
 	glong device_path_utf16sz = 0;
 	g_autofree gunichar2 *device_path_utf16 = NULL;
-	g_autoptr(GByteArray) buf = g_byte_array_new();
+	g_autoptr(GByteArray) buf = NULL;
 
 	/* convert device path ahead of time to get total record length */
 	if (self->device_path != NULL) {
@@ -150,23 +150,25 @@ fu_acpi_phat_health_record_write(FuFirmware *firmware, GError **error)
 		device_path_utf16sz *= 2;
 	}
 
-	/* data record */
-	fu_byte_array_append_uint16(buf, FU_ACPI_PHAT_RECORD_TYPE_HEALTH, G_LITTLE_ENDIAN);
-	fu_byte_array_append_uint16(buf, 28 + device_path_utf16sz, G_LITTLE_ENDIAN);
-	fu_byte_array_append_uint8(buf, fu_firmware_get_version_raw(firmware));
-	fu_byte_array_append_uint8(buf, 0x00);
-	fu_byte_array_append_uint8(buf, 0x00);
-	fu_byte_array_append_uint8(buf, self->am_healthy);
-
 	/* device signature */
 	if (self->guid != NULL) {
 		if (!fwupd_guid_from_string(self->guid, &guid, FWUPD_GUID_FLAG_MIXED_ENDIAN, error))
 			return NULL;
 	}
-	g_byte_array_append(buf, guid, sizeof(guid));
 
-	/* device-specific data unsupported */
-	fu_byte_array_append_uint32(buf, 0x0, G_LITTLE_ENDIAN);
+	/* data record */
+	buf = fu_struct_pack("<HHBBBBGL",
+			     error,
+			     FU_ACPI_PHAT_RECORD_TYPE_HEALTH,
+			     28 + device_path_utf16sz,
+			     (guint)fu_firmware_get_version_raw(firmware),
+			     0x00,
+			     0x00,
+			     self->am_healthy,
+			     guid,
+			     0x0); /* device-specific data */
+	if (buf == NULL)
+		return NULL;
 
 	/* device path */
 	if (self->device_path != NULL) {

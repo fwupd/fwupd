@@ -16,6 +16,7 @@
 #include "fu-crc.h"
 #include "fu-dfu-firmware-private.h"
 #include "fu-mem.h"
+#include "fu-struct.h"
 
 /**
  * FuDfuFirmware:
@@ -196,16 +197,6 @@ fu_dfu_firmware_set_version(FuDfuFirmware *self, guint16 version)
 	priv->dfu_version = version;
 }
 
-typedef struct __attribute__((packed)) {
-	guint16 release;
-	guint16 pid;
-	guint16 vid;
-	guint16 ver;
-	guint8 sig[3];
-	guint8 len;
-	guint32 crc;
-} FuDfuFirmwareFooter;
-
 static gboolean
 fu_dfu_firmware_check_magic(FuFirmware *firmware, GBytes *fw, gsize offset, GError **error)
 {
@@ -217,7 +208,7 @@ fu_dfu_firmware_check_magic(FuFirmware *firmware, GBytes *fw, gsize offset, GErr
 			    0x0, /* dst */
 			    g_bytes_get_data(fw, NULL),
 			    g_bytes_get_size(fw),
-			    g_bytes_get_size(fw) - G_STRUCT_OFFSET(FuDfuFirmwareFooter, sig),
+			    g_bytes_get_size(fw) - 0x08,
 			    sizeof(magic),
 			    error))
 		return FALSE;
@@ -240,53 +231,47 @@ fu_dfu_firmware_parse_footer(FuDfuFirmware *self,
 			     GError **error)
 {
 	FuDfuFirmwarePrivate *priv = GET_PRIVATE(self);
-	FuDfuFirmwareFooter ftr;
-	gsize len;
-	guint32 crc;
-	guint32 crc_new;
-	const guint8 *data = g_bytes_get_data(fw, &len);
+	gsize bufsz = 0;
+	guint32 crc = 0;
+	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
+	gsize offset = bufsz - 0x10;
+
+	if (!fu_struct_unpack_from("<HHHH3BBL",
+				   error,
+				   buf,
+				   bufsz,
+				   &offset,
+				   &priv->release,
+				   &priv->pid,
+				   &priv->vid,
+				   &priv->dfu_version,
+				   NULL,
+				   &priv->footer_len,
+				   &crc))
+		return FALSE;
 
 	/* verify the checksum */
-	if (!fu_memcpy_safe((guint8 *)&ftr,
-			    sizeof(FuDfuFirmwareFooter),
-			    0x0, /* dst */
-			    data,
-			    len,
-			    len - sizeof(FuDfuFirmwareFooter), /* src */
-			    sizeof(FuDfuFirmwareFooter),
-			    error)) {
-		g_prefix_error(error, "failed to read magic: ");
-		return FALSE;
-	}
-	crc = GUINT32_FROM_LE(ftr.crc);
 	if ((flags & FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM) == 0) {
-		crc_new = ~fu_crc32(data, len - 4);
+		guint32 crc_new = ~fu_crc32(buf, bufsz - 4);
 		if (crc != crc_new) {
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INTERNAL,
 				    "CRC failed, expected %04x, got %04x",
 				    crc_new,
-				    GUINT32_FROM_LE(ftr.crc));
+				    crc);
 			return FALSE;
 		}
 	}
 
-	/* set from footer */
-	priv->vid = GUINT16_FROM_LE(ftr.vid);
-	priv->pid = GUINT16_FROM_LE(ftr.pid);
-	priv->release = GUINT16_FROM_LE(ftr.release);
-	priv->dfu_version = GUINT16_FROM_LE(ftr.ver);
-	priv->footer_len = ftr.len;
-
 	/* check reported length */
-	if (priv->footer_len > len) {
+	if (priv->footer_len > bufsz) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
-			    "reported footer size %04x larger than file %04x",
+			    "reported footer size 0x%04x larger than file 0x%04x",
 			    (guint)priv->footer_len,
-			    (guint)len);
+			    (guint)bufsz);
 		return FALSE;
 	}
 
@@ -319,26 +304,29 @@ fu_dfu_firmware_parse(FuFirmware *firmware,
 }
 
 GBytes *
-fu_dfu_firmware_append_footer(FuDfuFirmware *self, GBytes *contents, GError **error)
+fu_dfu_firmware_append_footer(FuDfuFirmware *self, GBytes *fw, GError **error)
 {
 	FuDfuFirmwarePrivate *priv = GET_PRIVATE(self);
-	GByteArray *buf = g_byte_array_new();
-	const guint8 *blob;
-	gsize blobsz = 0;
+	g_autoptr(GByteArray) buf = g_byte_array_new();
+	g_autoptr(GByteArray) buf_hdr = NULL;
 
-	/* add the raw firmware data */
-	blob = g_bytes_get_data(contents, &blobsz);
-	g_byte_array_append(buf, blob, blobsz);
+	/* prepend the raw firmware data */
+	fu_byte_array_append_bytes(buf, fw);
 
-	/* append footer */
-	fu_byte_array_append_uint16(buf, priv->release, G_LITTLE_ENDIAN);
-	fu_byte_array_append_uint16(buf, priv->pid, G_LITTLE_ENDIAN);
-	fu_byte_array_append_uint16(buf, priv->vid, G_LITTLE_ENDIAN);
-	fu_byte_array_append_uint16(buf, priv->dfu_version, G_LITTLE_ENDIAN);
-	g_byte_array_append(buf, (const guint8 *)"UFD", 3);
-	fu_byte_array_append_uint8(buf, sizeof(FuDfuFirmwareFooter));
+	/* build footer */
+	buf_hdr = fu_struct_pack("<HHHH3sB",
+				 error,
+				 priv->release,
+				 priv->pid,
+				 priv->vid,
+				 priv->dfu_version,
+				 "UFD",
+				 0x10);
+	if (buf_hdr == NULL)
+		return NULL;
+	g_byte_array_append(buf, buf_hdr->data, buf_hdr->len);
 	fu_byte_array_append_uint32(buf, ~fu_crc32(buf->data, buf->len), G_LITTLE_ENDIAN);
-	return g_byte_array_free_to_bytes(buf);
+	return g_byte_array_free_to_bytes(g_steal_pointer(&buf));
 }
 
 static GBytes *

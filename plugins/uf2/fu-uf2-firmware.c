@@ -38,7 +38,8 @@ fu_uf2_firmware_parse_chunk(FuUf2Firmware *self, FuChunk *chk, GByteArray *tmp, 
 {
 	gsize bufsz = fu_chunk_get_data_sz(chk);
 	const guint8 *buf = fu_chunk_get_data(chk);
-	guint32 magic = 0;
+	guint32 magic0 = 0;
+	guint32 magic1 = 0;
 	guint32 flags = 0;
 	guint32 addr = 0;
 	guint32 datasz = 0;
@@ -57,30 +58,38 @@ fu_uf2_firmware_parse_chunk(FuUf2Firmware *self, FuChunk *chk, GByteArray *tmp, 
 	}
 
 	/* check magic */
-	if (!fu_memread_uint32_safe(buf, bufsz, 0x000, &magic, G_LITTLE_ENDIAN, error))
+	if (!fu_struct_unpack_from("<LLLLLLLL",
+				   error,
+				   buf,
+				   bufsz,
+				   NULL, /* offset */
+				   &magic0,
+				   &magic1,
+				   &flags,
+				   &addr,
+				   &datasz,
+				   &blockcnt,
+				   &blocktotal,
+				   &family_id))
 		return FALSE;
-	if (magic != FU_UF2_FIRMWARE_MAGIC_START0) {
+	if (magic0 != FU_UF2_FIRMWARE_MAGIC_START0) {
 		g_set_error(error,
 			    G_IO_ERROR,
 			    G_IO_ERROR_INVALID_DATA,
 			    "magic bytes #1 failed, expected 0x%08x bytes and got 0x%08x",
 			    FU_UF2_FIRMWARE_MAGIC_START0,
-			    magic);
+			    magic0);
 		return FALSE;
 	}
-	if (!fu_memread_uint32_safe(buf, bufsz, 0x004, &magic, G_LITTLE_ENDIAN, error))
-		return FALSE;
-	if (magic != FU_UF2_FIRMWARE_MAGIC_START1) {
+	if (magic1 != FU_UF2_FIRMWARE_MAGIC_START1) {
 		g_set_error(error,
 			    G_IO_ERROR,
 			    G_IO_ERROR_INVALID_DATA,
 			    "magic bytes #2 failed, expected 0x%08x bytes and got 0x%08x",
 			    FU_UF2_FIRMWARE_MAGIC_START1,
-			    magic);
+			    magic1);
 		return FALSE;
 	}
-	if (!fu_memread_uint32_safe(buf, bufsz, 0x008, &flags, G_LITTLE_ENDIAN, error))
-		return FALSE;
 	if (flags & FU_UF2_FIRMWARE_BLOCK_FLAG_IS_CONTAINER) {
 		g_set_error_literal(error,
 				    G_IO_ERROR,
@@ -88,10 +97,6 @@ fu_uf2_firmware_parse_chunk(FuUf2Firmware *self, FuChunk *chk, GByteArray *tmp, 
 				    "container U2F firmware not supported");
 		return FALSE;
 	}
-	if (!fu_memread_uint32_safe(buf, bufsz, 0x00C, &addr, G_LITTLE_ENDIAN, error))
-		return FALSE;
-	if (!fu_memread_uint32_safe(buf, bufsz, 0x010, &datasz, G_LITTLE_ENDIAN, error))
-		return FALSE;
 	if (datasz > 476) {
 		g_set_error(error,
 			    G_IO_ERROR,
@@ -100,8 +105,6 @@ fu_uf2_firmware_parse_chunk(FuUf2Firmware *self, FuChunk *chk, GByteArray *tmp, 
 			    datasz);
 		return FALSE;
 	}
-	if (!fu_memread_uint32_safe(buf, bufsz, 0x014, &blockcnt, G_LITTLE_ENDIAN, error))
-		return FALSE;
 	if (blockcnt != fu_chunk_get_idx(chk)) {
 		g_set_error(error,
 			    G_IO_ERROR,
@@ -111,8 +114,6 @@ fu_uf2_firmware_parse_chunk(FuUf2Firmware *self, FuChunk *chk, GByteArray *tmp, 
 			    blockcnt);
 		return FALSE;
 	}
-	if (!fu_memread_uint32_safe(buf, bufsz, 0x018, &blocktotal, G_LITTLE_ENDIAN, error))
-		return FALSE;
 	if (blocktotal == 0) {
 		g_set_error_literal(error,
 				    G_IO_ERROR,
@@ -120,8 +121,6 @@ fu_uf2_firmware_parse_chunk(FuUf2Firmware *self, FuChunk *chk, GByteArray *tmp, 
 				    "block count invalid, expected > 0");
 		return FALSE;
 	}
-	if (!fu_memread_uint32_safe(buf, bufsz, 0x01C, &family_id, G_LITTLE_ENDIAN, error))
-		return FALSE;
 	if (flags & FU_UF2_FIRMWARE_BLOCK_FLAG_HAS_FAMILY) {
 		if (family_id == 0) {
 			g_set_error_literal(error,
@@ -156,7 +155,7 @@ fu_uf2_firmware_parse_chunk(FuUf2Firmware *self, FuChunk *chk, GByteArray *tmp, 
 			guint32 tag = 0;
 
 			/* [SZ][TAG][TAG][TAG][TAG][DATA....] */
-			if (!fu_memread_uint8_safe(buf, bufsz, offset, &sz, error))
+			if (!fu_struct_unpack_from("<BT", error, buf, bufsz, &offset, &sz, &tag))
 				return FALSE;
 			if (sz < 4) {
 				g_set_error_literal(error,
@@ -165,14 +164,6 @@ fu_uf2_firmware_parse_chunk(FuUf2Firmware *self, FuChunk *chk, GByteArray *tmp, 
 						    "invalid extension tag size");
 				return FALSE;
 			}
-			if (!fu_memread_uint32_safe(buf,
-						    bufsz,
-						    offset,
-						    &tag,
-						    G_LITTLE_ENDIAN,
-						    error))
-				return FALSE;
-			tag &= 0xFFFFFF;
 			if (tag == FU_U2F_FIRMWARE_TAG_VERSION) {
 				g_autofree gchar *utf8buf = g_malloc0(sz);
 				if (!fu_memcpy_safe((guint8 *)utf8buf,
@@ -206,15 +197,15 @@ fu_uf2_firmware_parse_chunk(FuUf2Firmware *self, FuChunk *chk, GByteArray *tmp, 
 			offset += sz;
 		}
 	}
-	if (!fu_memread_uint32_safe(buf, bufsz, 0x1FC, &magic, G_LITTLE_ENDIAN, error))
+	if (!fu_memread_uint32_safe(buf, bufsz, 0x1FC, &magic0, G_LITTLE_ENDIAN, error))
 		return FALSE;
-	if (magic != FU_UF2_FIRMWARE_MAGIC_END) {
+	if (magic0 != FU_UF2_FIRMWARE_MAGIC_END) {
 		g_set_error(error,
 			    G_IO_ERROR,
 			    G_IO_ERROR_INVALID_DATA,
 			    "magic bytes #3 failed, expected 0x%08x bytes and got 0x%08x",
 			    FU_UF2_FIRMWARE_MAGIC_END,
-			    magic);
+			    magic0);
 		return FALSE;
 	}
 

@@ -22,24 +22,6 @@ struct _FuSynapticsCapeFirmware {
 	guint16 pid;
 };
 
-/* firmware update command structure, little endian */
-typedef struct __attribute__((packed)) {
-	guint32 vid;		/* USB vendor id */
-	guint32 pid;		/* USB product id */
-	guint32 fw_update_type; /* firmware update type */
-	guint32 fw_signature;	/* firmware identifier */
-	guint32 crc_value;	/* used to detect accidental changes to fw data */
-} FuCapeHidFwCmdUpdateStartPar;
-
-typedef struct __attribute__((packed)) {
-	FuCapeHidFwCmdUpdateStartPar par;
-	guint16 version_w; /* firmware version is four parts number "z.y.x.w", this is last part */
-	guint16 version_x; /* firmware version, third part */
-	guint16 version_y; /* firmware version, second part */
-	guint16 version_z; /* firmware version, first part */
-	guint32 reserved3;
-} FuCapeHidFileHeader;
-
 G_DEFINE_TYPE(FuSynapticsCapeFirmware, fu_synaptics_cape_firmware, FU_TYPE_FIRMWARE)
 
 guint16
@@ -67,94 +49,6 @@ fu_synaptics_cape_firmware_export(FuFirmware *firmware,
 }
 
 static gboolean
-fu_synaptics_cape_firmware_parse_header(FuSynapticsCapeFirmware *self,
-					FuFirmware *firmware,
-					GBytes *fw,
-					GError **error)
-{
-	gsize bufsz = 0x0;
-	guint16 version_w = 0;
-	guint16 version_x = 0;
-	guint16 version_y = 0;
-	guint16 version_z = 0;
-	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
-	g_autofree gchar *version_str = NULL;
-	g_autoptr(FuFirmware) img_hdr = fu_firmware_new();
-	g_autoptr(GBytes) fw_hdr = NULL;
-
-	g_return_val_if_fail(FU_IS_SYNAPTICS_CAPE_FIRMWARE(self), FALSE);
-	g_return_val_if_fail(fw != NULL, FALSE);
-	g_return_val_if_fail(firmware != NULL, FALSE);
-	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
-
-	/* the input fw image size should be the same as header size */
-	if (bufsz < sizeof(FuCapeHidFileHeader)) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_FILE,
-				    "not enough data to parse header");
-		return FALSE;
-	}
-
-	if (!fu_memread_uint16_safe(buf,
-				    bufsz,
-				    FW_CAPE_HID_HEADER_OFFSET_VID,
-				    &self->vid,
-				    G_LITTLE_ENDIAN,
-				    error))
-		return FALSE;
-	if (!fu_memread_uint16_safe(buf,
-				    bufsz,
-				    FW_CAPE_HID_HEADER_OFFSET_PID,
-				    &self->pid,
-				    G_LITTLE_ENDIAN,
-				    error))
-		return FALSE;
-	if (!fu_memread_uint16_safe(buf,
-				    bufsz,
-				    FW_CAPE_HID_HEADER_OFFSET_VER_W,
-				    &version_w,
-				    G_LITTLE_ENDIAN,
-				    error))
-		return FALSE;
-	if (!fu_memread_uint16_safe(buf,
-				    bufsz,
-				    FW_CAPE_HID_HEADER_OFFSET_VER_X,
-				    &version_x,
-				    G_LITTLE_ENDIAN,
-				    error))
-		return FALSE;
-	if (!fu_memread_uint16_safe(buf,
-				    bufsz,
-				    FW_CAPE_HID_HEADER_OFFSET_VER_Y,
-				    &version_y,
-				    G_LITTLE_ENDIAN,
-				    error))
-		return FALSE;
-	if (!fu_memread_uint16_safe(buf,
-				    bufsz,
-				    FW_CAPE_HID_HEADER_OFFSET_VER_Z,
-				    &version_z,
-				    G_LITTLE_ENDIAN,
-				    error))
-		return FALSE;
-
-	version_str = g_strdup_printf("%u.%u.%u.%u", version_z, version_y, version_x, version_w);
-	fu_firmware_set_version(FU_FIRMWARE(self), version_str);
-
-	fw_hdr = fu_bytes_new_offset(fw, 0, sizeof(FuCapeHidFwCmdUpdateStartPar), error);
-	if (fw_hdr == NULL)
-		return FALSE;
-
-	fu_firmware_set_id(img_hdr, FU_FIRMWARE_ID_HEADER);
-	fu_firmware_set_bytes(img_hdr, fw_hdr);
-	fu_firmware_add_image(firmware, img_hdr);
-
-	/* success */
-	return TRUE;
-}
-
-static gboolean
 fu_synaptics_cape_firmware_parse(FuFirmware *firmware,
 				 GBytes *fw,
 				 gsize offset,
@@ -162,20 +56,19 @@ fu_synaptics_cape_firmware_parse(FuFirmware *firmware,
 				 GError **error)
 {
 	FuSynapticsCapeFirmware *self = FU_SYNAPTICS_CAPE_FIRMWARE(firmware);
-	const gsize bufsz = g_bytes_get_size(fw);
-	const gsize headsz = sizeof(FuCapeHidFileHeader);
-	g_autoptr(GBytes) fw_header = NULL;
+	gsize bufsz = 0x0;
+	gsize offset_local = offset;
+	guint16 version_w = 0;
+	guint16 version_x = 0;
+	guint16 version_y = 0;
+	guint16 version_z = 0;
+	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
+	g_autofree gchar *version_str = NULL;
+	g_autoptr(FuFirmware) img_hdr = fu_firmware_new();
 	g_autoptr(GBytes) fw_body = NULL;
+	g_autoptr(GBytes) fw_hdr = NULL;
 
-	/* check minimum size */
-	if (bufsz < sizeof(FuCapeHidFileHeader)) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_FILE,
-				    "not enough data to parse header, size ");
-		return FALSE;
-	}
-
+	/* check alignment */
 	if ((guint32)bufsz % 4 != 0) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -183,14 +76,40 @@ fu_synaptics_cape_firmware_parse(FuFirmware *firmware,
 				    "data not aligned to 32 bits");
 		return FALSE;
 	}
-
-	fw_header = fu_bytes_new_offset(fw, 0x0, headsz, error);
-	if (fw_header == NULL)
+	if (!fu_struct_unpack_from("<[LLLLL]",
+				   error,
+				   buf,
+				   bufsz,
+				   &offset,
+				   &self->vid,
+				   &self->pid,
+				   NULL,  /* firmware update type */
+				   NULL,  /* firmware identifier */
+				   NULL)) /* crc value */
 		return FALSE;
-	if (!fu_synaptics_cape_firmware_parse_header(self, firmware, fw_header, error))
+	fw_hdr = fu_bytes_new_offset(fw, offset_local, offset - offset_local, error);
+	if (fw_hdr == NULL)
 		return FALSE;
+	fu_firmware_set_id(img_hdr, FU_FIRMWARE_ID_HEADER);
+	fu_firmware_set_bytes(img_hdr, fw_hdr);
+	fu_firmware_add_image(firmware, img_hdr);
 
-	fw_body = fu_bytes_new_offset(fw, headsz, bufsz - headsz, error);
+	if (!fu_struct_unpack_from("<[HHHHL]",
+				   error,
+				   buf,
+				   bufsz,
+				   &offset,
+				   &version_w,
+				   &version_x,
+				   &version_y,
+				   &version_z,
+				   NULL)) /* reserved3 */
+		return FALSE;
+	version_str = g_strdup_printf("%u.%u.%u.%u", version_z, version_y, version_x, version_w);
+	fu_firmware_set_version(FU_FIRMWARE(self), version_str);
+
+	/* body */
+	fw_body = fu_bytes_new_offset(fw, offset, bufsz - offset, error);
 	if (fw_body == NULL)
 		return FALSE;
 	fu_firmware_set_id(firmware, FU_FIRMWARE_ID_PAYLOAD);

@@ -3767,6 +3767,144 @@ fu_progress_child_finished(void)
 	fu_progress_step_done(progress);
 }
 
+static void
+fu_struct_fmt_func(void)
+{
+	struct {
+		const gchar *fmt;
+		gsize size;
+	} map[] = {{"", 0},
+		   {"<", 0},
+		   {"B", 1},
+		   {">BBB", 3},
+		   {"<HH", 4},
+		   {"<[H]H", 4},
+		   {"!LLLL", 16},
+		   {"Q", 8},
+		   {"QxQ", 17},
+		   {"32B2H", 32 + 4},
+		   {"20s", 20},
+		   {"123Y", G_MAXSIZE},
+		   {"0B", G_MAXSIZE},
+		   {"s", G_MAXSIZE},
+		   {NULL, 0}};
+	for (guint i = 0; map[i].fmt != NULL; i++)
+		g_assert_cmpint(fu_struct_size(map[i].fmt, NULL), ==, map[i].size);
+}
+
+static void
+fu_struct_uint_func(void)
+{
+	g_autoptr(GByteArray) buf = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autofree gchar *buf_str = NULL;
+	guint8 buf2[5] = {0xFF};
+	guint8 val_b = 0x0;
+	guint16 val_h = 0x0;
+	gboolean ret;
+
+	/* packing */
+	buf = fu_struct_pack(">BH", &error, 0x12, 0x3456);
+	g_assert_no_error(error);
+	g_assert_nonnull(buf);
+	buf_str = fu_byte_array_to_string(buf);
+	g_assert_cmpstr(buf_str, ==, "123456");
+	ret = fu_struct_pack_into(">BH", &error, buf2, sizeof(buf2), 0x1, 0x12, 0x3456);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* unpacking */
+	ret = fu_struct_unpack(">BH", &error, buf, &val_b, &val_h);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(val_b, ==, 0x12);
+	g_assert_cmpint(val_h, ==, 0x3456);
+}
+
+static void
+fu_struct_array_func(void)
+{
+	g_autoptr(GError) error = NULL;
+	guint8 bufarr_dst[3] = {0xFF};
+	guint8 bufarr_src[3] = {0x65, 0x43, 0x21};
+	gboolean ret;
+	gsize offset = 0;
+
+	/* pack and unpack arrays */
+	ret = fu_struct_pack_into(">3B", &error, bufarr_dst, sizeof(bufarr_dst), 0x0, bufarr_src);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(bufarr_dst[0], ==, 0x65);
+	g_assert_cmpint(bufarr_dst[1], ==, 0x43);
+	g_assert_cmpint(bufarr_dst[2], ==, 0x21);
+	ret = fu_struct_unpack_from(">3B",
+				    &error,
+				    bufarr_src,
+				    sizeof(bufarr_src),
+				    &offset,
+				    &bufarr_dst);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(offset, ==, 0);
+	g_assert_cmpint(bufarr_dst[0], ==, 0x65);
+	g_assert_cmpint(bufarr_dst[1], ==, 0x43);
+	g_assert_cmpint(bufarr_dst[2], ==, 0x21);
+}
+
+static void
+fu_struct_string_func(void)
+{
+	gboolean ret;
+	gsize offset = 0;
+	guint8 buf_dst[3] = {0xFF};
+	guint8 buf_str[3] = {0xFF};
+	g_autoptr(GError) error = NULL;
+
+	/* strings */
+	ret = fu_struct_pack_into(">3s", &error, buf_str, sizeof(buf_str), 0x0, "X");
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(buf_str[0], ==, 'X');
+	g_assert_cmpint(buf_str[1], ==, '\0');
+	g_assert_cmpint(buf_str[2], ==, '\0');
+	ret = fu_struct_unpack_from(">[3s]", &error, buf_str, sizeof(buf_str), &offset, &buf_dst);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(offset, ==, 3);
+	g_assert_cmpint(buf_dst[0], ==, 'X');
+	g_assert_cmpint(buf_dst[1], ==, '\0');
+	g_assert_cmpint(buf_dst[2], ==, '\0');
+}
+
+static void
+fu_struct_guid_func(void)
+{
+	fwupd_guid_t guid = {0x0};
+	gboolean ret;
+	g_autofree gchar *guid_str = NULL;
+	g_autofree gchar *buf_str = NULL;
+	g_autoptr(GByteArray) buf = NULL;
+	g_autoptr(GError) error = NULL;
+
+	ret = fwupd_guid_from_string("6de5d951-d755-576b-bd09-c5cf66b27234",
+				     &guid,
+				     FWUPD_GUID_FLAG_MIXED_ENDIAN,
+				     &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	buf = fu_struct_pack("G", &error, guid);
+	g_assert_no_error(error);
+	g_assert_nonnull(buf);
+	buf_str = fu_byte_array_to_string(buf);
+	g_assert_cmpstr(buf_str, ==, "51d9e56d55d76b57bd09c5cf66b27234");
+
+	ret = fu_struct_unpack_from("G", &error, buf->data, buf->len, NULL, &guid);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	guid_str = fwupd_guid_to_string(&guid, FWUPD_GUID_FLAG_MIXED_ENDIAN);
+	g_assert_cmpstr(guid_str, ==, "6de5d951-d755-576b-bd09-c5cf66b27234");
+}
+
 int
 main(int argc, char **argv)
 {
@@ -3790,6 +3928,11 @@ main(int argc, char **argv)
 	(void)g_setenv("FWUPD_LOCALSTATEDIR", "/tmp/fwupd-self-test/var", TRUE);
 	(void)g_setenv("FWUPD_PROFILE", "1", TRUE);
 
+	g_test_add_func("/fwupd/struct{fmt}", fu_struct_fmt_func);
+	g_test_add_func("/fwupd/struct{uint}", fu_struct_uint_func);
+	g_test_add_func("/fwupd/struct{array}", fu_struct_array_func);
+	g_test_add_func("/fwupd/struct{guid}", fu_struct_guid_func);
+	g_test_add_func("/fwupd/struct{string}", fu_struct_string_func);
 	g_test_add_func("/fwupd/plugin{quirks-append}", fu_plugin_quirks_append_func);
 	g_test_add_func("/fwupd/common{strnsplit}", fu_strsplit_func);
 	g_test_add_func("/fwupd/common{memmem}", fu_common_memmem_func);

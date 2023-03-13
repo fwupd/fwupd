@@ -16,6 +16,7 @@
 #include "fu-efi-signature-list.h"
 #include "fu-efi-signature-private.h"
 #include "fu-mem.h"
+#include "fu-struct.h"
 
 /**
  * FuEfiSignatureList:
@@ -110,30 +111,23 @@ fu_efi_signature_list_parse_list(FuEfiSignatureList *self,
 	g_autofree gchar *sig_type = NULL;
 
 	/* read EFI_SIGNATURE_LIST */
-	if (!fu_memcpy_safe((guint8 *)&guid,
-			    sizeof(guid),
-			    0x0, /* dst */
-			    buf,
-			    bufsz,
-			    *offset, /* src */
-			    sizeof(guid),
-			    error)) {
-		g_prefix_error(error, "failed to read GUID header: ");
+	if (!fu_struct_unpack_from("<[GLLL]",
+				   error,
+				   buf,
+				   bufsz,
+				   offset,
+				   &guid,
+				   &sig_list_size,
+				   &sig_header_size,
+				   &sig_size))
 		return FALSE;
-	}
+
 	sig_type = fwupd_guid_to_string(&guid, FWUPD_GUID_FLAG_MIXED_ENDIAN);
 	if (g_strcmp0(sig_type, "c1c41626-504c-4092-aca9-41f936934328") == 0) {
 		sig_kind = FU_EFI_SIGNATURE_KIND_SHA256;
 	} else if (g_strcmp0(sig_type, "a5c059a1-94e4-4aa7-87b5-ab155c2bf072") == 0) {
 		sig_kind = FU_EFI_SIGNATURE_KIND_X509;
 	}
-	if (!fu_memread_uint32_safe(buf,
-				    bufsz,
-				    *offset + 0x10,
-				    &sig_list_size,
-				    G_LITTLE_ENDIAN,
-				    error))
-		return FALSE;
 	if (sig_list_size < 0x1c || sig_list_size > 1024 * 1024) {
 		g_set_error(error,
 			    G_IO_ERROR,
@@ -142,13 +136,6 @@ fu_efi_signature_list_parse_list(FuEfiSignatureList *self,
 			    sig_list_size);
 		return FALSE;
 	}
-	if (!fu_memread_uint32_safe(buf,
-				    bufsz,
-				    *offset + 0x14,
-				    &sig_header_size,
-				    G_LITTLE_ENDIAN,
-				    error))
-		return FALSE;
 	if (sig_header_size > 1024 * 1024) {
 		g_set_error(error,
 			    G_IO_ERROR,
@@ -157,8 +144,6 @@ fu_efi_signature_list_parse_list(FuEfiSignatureList *self,
 			    sig_size);
 		return FALSE;
 	}
-	if (!fu_memread_uint32_safe(buf, bufsz, *offset + 0x18, &sig_size, G_LITTLE_ENDIAN, error))
-		return FALSE;
 	if (sig_size < sizeof(fwupd_guid_t) || sig_size > 1024 * 1024) {
 		g_set_error(error,
 			    G_IO_ERROR,
@@ -169,7 +154,7 @@ fu_efi_signature_list_parse_list(FuEfiSignatureList *self,
 	}
 
 	/* header is typically unused */
-	offset_tmp = *offset + 0x1c + sig_header_size;
+	offset_tmp = *offset + sig_header_size;
 	for (guint i = 0; i < (sig_list_size - 0x1c) / sig_size; i++) {
 		if (!fu_efi_signature_list_parse_item(self,
 						      sig_kind,
@@ -347,29 +332,19 @@ fu_efi_signature_list_parse(FuFirmware *firmware,
 static GBytes *
 fu_efi_signature_list_write(FuFirmware *firmware, GError **error)
 {
-	GByteArray *buf = g_byte_array_new();
+	GByteArray *buf;
+	fwupd_guid_t sig_owner = {0x1};
+	fwupd_guid_t sig_data = {0x2};
 
-	/* SignatureType */
-	for (guint i = 0; i < 16; i++)
-		fu_byte_array_append_uint8(buf, 0x0);
-
-	/* SignatureListSize */
-	fu_byte_array_append_uint32(buf, 16 + 4 + 4 + 4 + 16 + 32, G_LITTLE_ENDIAN);
-
-	/* SignatureHeaderSize */
-	fu_byte_array_append_uint32(buf, 0, G_LITTLE_ENDIAN);
-
-	/* SignatureSize */
-	fu_byte_array_append_uint32(buf, 16 + 32, G_LITTLE_ENDIAN);
-
-	/* SignatureOwner */
-	for (guint i = 0; i < 16; i++)
-		fu_byte_array_append_uint8(buf, '1');
-
-	/* SignatureData */
-	for (guint i = 0; i < 16; i++)
-		fu_byte_array_append_uint8(buf, '2');
-
+	buf = fu_struct_pack("<16xLLLGG",
+			     error,
+			     16 + 4 + 4 + 4 + 16 + 32, /* SignatureListSize */
+			     0,			       /* SignatureHeaderSize */
+			     16 + 32,		       /* SignatureSize */
+			     sig_owner,		       /* SignatureOwner */
+			     sig_data);		       /* SignatureData */
+	if (buf == NULL)
+		return NULL;
 	return g_byte_array_free_to_bytes(buf);
 }
 
