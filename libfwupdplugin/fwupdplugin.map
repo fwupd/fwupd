@@ -1188,6 +1188,7 @@ LIBFWUPDPLUGIN_1.8.12 {
 
 LIBFWUPDPLUGIN_1.8.13 {
   global:
+    fu_byte_array_append_uint24;
     fu_device_ensure_from_component;
     fu_volume_get_partition_kind;
   local: *;
