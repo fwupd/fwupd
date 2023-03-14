@@ -66,6 +66,24 @@ fu_byte_array_append_uint16(GByteArray *array, guint16 data, FuEndianType endian
 }
 
 /**
+ * fu_byte_array_append_uint24:
+ * @array: a #GByteArray
+ * @data: value
+ * @endian: endian type, e.g. #G_LITTLE_ENDIAN
+ *
+ * Adds a 24 bit integer to a byte array.
+ *
+ * Since: 1.8.13
+ **/
+void
+fu_byte_array_append_uint24(GByteArray *array, guint32 data, FuEndianType endian)
+{
+	guint8 buf[3];
+	fu_memwrite_uint24(buf, data, endian);
+	g_byte_array_append(array, buf, sizeof(buf));
+}
+
+/**
  * fu_byte_array_append_uint32:
  * @array: a #GByteArray
  * @data: value
