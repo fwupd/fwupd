@@ -12,11 +12,11 @@ const gchar *
 fu_ccgx_dmc_update_model_type_to_string(DmcUpdateModel val)
 {
 	if (val == DMC_UPDATE_MODEL_NONE)
-		return "None";
+		return "none";
 	if (val == DMC_UPDATE_MODEL_DOWNLOAD_TRIGGER)
-		return "Download Trigger";
+		return "download-trigger";
 	if (val == DMC_UPDATE_MODEL_PENDING_RESET)
-		return "Pending Reset";
+		return "pending-reset";
 	return NULL;
 }
 
