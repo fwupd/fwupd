@@ -303,3 +303,7 @@ const gchar *
 fu_ccgx_dmc_img_status_to_string(DmcImgStatus img_status);
 const gchar *
 fu_ccgx_dmc_img_mode_to_string(DmcImgMode img_mode);
+const gchar *
+fu_ccgx_dmc_int_opcode_to_string(DmcIntOpcode int_opcode);
+const gchar *
+fu_ccgx_dmc_fwct_analysis_status_to_string(DmcFwctAnalysisStatus fwct_analysis_status);
