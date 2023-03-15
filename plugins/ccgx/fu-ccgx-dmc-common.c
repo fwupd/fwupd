@@ -131,3 +131,35 @@ fu_ccgx_dmc_img_status_to_string(DmcImgStatus img_status)
 		return "not-supported";
 	return NULL;
 }
+
+const gchar *
+fu_ccgx_dmc_int_opcode_to_string(DmcIntOpcode int_opcode)
+{
+	if (int_opcode == DMC_INT_OPCODE_FW_UPGRADE_RQT)
+		return "fw-upgrade-rqt";
+	if (int_opcode == DMC_INT_OPCODE_FW_UPGRADE_STATUS)
+		return "fw-upgrade-status";
+	if (int_opcode == DMC_INT_OPCODE_IMG_WRITE_STATUS)
+		return "img-write-status";
+	if (int_opcode == DMC_INT_OPCODE_REENUM)
+		return "reenum";
+	if (int_opcode == DMC_INT_OPCODE_FWCT_ANALYSIS_STATUS)
+		return "fwct-analysis-status";
+	return NULL;
+}
+
+const gchar *
+fu_ccgx_dmc_fwct_analysis_status_to_string(DmcFwctAnalysisStatus fwct_analysis_status)
+{
+	if (fwct_analysis_status == DMC_FWCT_ANALYSIS_STATUS_INVALID_FWCT)
+		return "invalid-fwct";
+	if (fwct_analysis_status == DMC_FWCT_ANALYSIS_STATUS_INVALID_DOCK_IDENTITY)
+		return "invalid-dock-identity";
+	if (fwct_analysis_status == DMC_FWCT_ANALYSIS_STATUS_INVALID_COMPOSITE_VERSION)
+		return "invalid-composite-version";
+	if (fwct_analysis_status == DMC_FWCT_ANALYSIS_STATUS_AUTHENTICATION_FAILED)
+		return "authentication-failed";
+	if (fwct_analysis_status == DMC_FWCT_ANALYSIS_STATUS_INVALID_ALGORITHM)
+		return "invalid-algorithm";
+	return NULL;
+}

@@ -257,6 +257,8 @@ fu_ccgx_dmc_device_send_fwct(FuCcgxDmcDevice *self,
 static gboolean
 fu_ccgx_dmc_device_read_intr_req(FuCcgxDmcDevice *self, DmcIntRqt *intr_rqt, GError **error)
 {
+	g_autofree gchar *title = NULL;
+
 	g_return_val_if_fail(intr_rqt != NULL, FALSE);
 
 	if (!g_usb_device_interrupt_transfer(fu_usb_device_get_dev(FU_USB_DEVICE(self)),
@@ -270,6 +272,15 @@ fu_ccgx_dmc_device_read_intr_req(FuCcgxDmcDevice *self, DmcIntRqt *intr_rqt, GEr
 		g_prefix_error(error, "read intr rqt error: ");
 		return FALSE;
 	}
+
+	/* success */
+	title = g_strdup_printf("DmcIntRqt-opcode=0%02x[%s]",
+				intr_rqt->opcode,
+				fu_ccgx_dmc_int_opcode_to_string(intr_rqt->opcode));
+	fu_dump_raw(G_LOG_DOMAIN,
+		    title,
+		    intr_rqt->data,
+		    MIN(intr_rqt->length, sizeof(intr_rqt->data)));
 	return TRUE;
 }
 
@@ -354,16 +365,18 @@ fu_ccgx_dmc_get_image_write_status_cb(FuDevice *device, gpointer user_data, GErr
 
 	/* get interrupt request */
 	if (!fu_ccgx_dmc_device_read_intr_req(self, &dmc_int_req, error)) {
-		g_prefix_error(error, "read intr req error in image write status: ");
+		g_prefix_error(error, "failed to read intr req in image write status: ");
 		return FALSE;
 	}
+
 	/* check opcode for fw write */
 	if (dmc_int_req.opcode != DMC_INT_OPCODE_IMG_WRITE_STATUS) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "invalid dmc intr req opcode in image write status = %d",
-			    dmc_int_req.opcode);
+			    "invalid intr req opcode in image write status: %u [%s]",
+			    dmc_int_req.opcode,
+			    fu_ccgx_dmc_int_opcode_to_string(dmc_int_req.opcode));
 		return FALSE;
 	}
 
@@ -372,7 +385,7 @@ fu_ccgx_dmc_get_image_write_status_cb(FuDevice *device, gpointer user_data, GErr
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "invalid dmc intr req data in image write status = %d",
+			    "invalid intr req data in image write status = %u",
 			    dmc_int_req.data[0]);
 		fu_device_sleep(device, DMC_FW_WRITE_STATUS_RETRY_DELAY_MS);
 		return FALSE;
@@ -552,6 +565,7 @@ fu_ccgx_dmc_write_firmware(FuDevice *device,
 		}
 
 		/* write image */
+		g_debug("writing image index %u/%u", img_index, image_records->len - 1);
 		img_rcd = g_ptr_array_index(image_records, img_index);
 		if (!fu_ccgx_dmc_write_firmware_image(device,
 						      img_rcd,
@@ -563,18 +577,21 @@ fu_ccgx_dmc_write_firmware(FuDevice *device,
 	}
 	if (dmc_int_rqt.opcode != DMC_INT_OPCODE_FW_UPGRADE_STATUS) {
 		if (dmc_int_rqt.opcode == DMC_INT_OPCODE_FWCT_ANALYSIS_STATUS) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "fwct analysis failed with status = %d",
-				    dmc_int_rqt.data[0]);
+			g_set_error(
+			    error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "invalid fwct analysis failed with status 0x%02x[%s]",
+			    dmc_int_rqt.data[0],
+			    fu_ccgx_dmc_fwct_analysis_status_to_string(dmc_int_rqt.data[0]));
 			return FALSE;
 		}
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "invalid dmc intr req opcode = %d with status = %d",
+			    "invalid dmc intr req opcode 0x%02x[%s] with status 0x%02x",
 			    dmc_int_rqt.opcode,
+			    fu_ccgx_dmc_int_opcode_to_string(dmc_int_rqt.opcode),
 			    dmc_int_rqt.data[0]);
 		return FALSE;
 	}
