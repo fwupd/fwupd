@@ -14,6 +14,7 @@
 #include "fu-coswid-firmware.h"
 #include "fu-mem.h"
 #include "fu-string.h"
+#include "fu-struct.h"
 #include "fu-uswid-firmware.h"
 
 /**
@@ -33,35 +34,25 @@ G_DEFINE_TYPE_WITH_PRIVATE(FuUswidFirmware, fu_uswid_firmware, FU_TYPE_FIRMWARE)
 #define GET_PRIVATE(o) (fu_uswid_firmware_get_instance_private(o))
 
 #define USWID_HEADER_VERSION_V1 1
-#define USWID_HEADER_SIZE_V1	23
-#define USWID_HEADER_SIZE_V2	24
 
 #define USWID_HEADER_FLAG_COMPRESSED 0x01
 
-typedef struct __attribute__((packed)) {
-	guint8 magic[16];
-	guint8 hdrver;
-	guint16 hdrsz;
-	guint32 payloadsz;
-	guint8 flags;
-} FuUswidFirmwareHdr;
-
-const guint8 USWID_HEADER_MAGIC[] = {0x53,
-				     0x42,
-				     0x4F,
-				     0x4D,
-				     0xD6,
-				     0xBA,
-				     0x2E,
-				     0xAC,
-				     0xA3,
-				     0xE6,
-				     0x7A,
-				     0x52,
-				     0xAA,
-				     0xEE,
-				     0x3B,
-				     0xAF};
+const fwupd_guid_t USWID_HEADER_MAGIC = {0x53,
+					 0x42,
+					 0x4F,
+					 0x4D,
+					 0xD6,
+					 0xBA,
+					 0x2E,
+					 0xAC,
+					 0xA3,
+					 0xE6,
+					 0x7A,
+					 0x52,
+					 0xAA,
+					 0xEE,
+					 0x3B,
+					 0xAF};
 
 static void
 fu_uswid_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
@@ -109,20 +100,19 @@ fu_uswid_firmware_parse(FuFirmware *firmware,
 {
 	FuUswidFirmware *self = FU_USWID_FIRMWARE(firmware);
 	FuUswidFirmwarePrivate *priv = GET_PRIVATE(self);
-	guint16 hdrsz = 0;
-	guint32 payloadsz = 0;
-	guint8 uswid_flags = 0;
+	FuStruct *st = fu_struct_lookup(self, "UswidFirmwareHdr");
+	guint16 hdrsz;
+	guint32 payloadsz;
 	gsize bufsz;
 	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
 	g_autoptr(GBytes) payload = NULL;
 
-	/* hdrver */
-	if (!fu_memread_uint8_safe(buf,
-				   bufsz,
-				   offset + G_STRUCT_OFFSET(FuUswidFirmwareHdr, hdrver),
-				   &priv->hdrver,
-				   error))
+	/* unpack */
+	if (!fu_struct_unpack_full(st, buf, bufsz, offset, FU_STRUCT_FLAG_NONE, error))
 		return FALSE;
+
+	/* hdrver */
+	priv->hdrver = fu_struct_get_u8(st, "hdrver");
 	if (priv->hdrver < USWID_HEADER_VERSION_V1) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -131,30 +121,9 @@ fu_uswid_firmware_parse(FuFirmware *firmware,
 		return FALSE;
 	}
 
-	/* hdrsz */
-	if (!fu_memread_uint16_safe(buf,
-				    bufsz,
-				    offset + G_STRUCT_OFFSET(FuUswidFirmwareHdr, hdrsz),
-				    &hdrsz,
-				    G_LITTLE_ENDIAN,
-				    error))
-		return FALSE;
-	if (hdrsz < USWID_HEADER_SIZE_V1) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "header size is invalid");
-		return FALSE;
-	}
-
-	/* payloadsz */
-	if (!fu_memread_uint32_safe(buf,
-				    bufsz,
-				    offset + G_STRUCT_OFFSET(FuUswidFirmwareHdr, payloadsz),
-				    &payloadsz,
-				    G_LITTLE_ENDIAN,
-				    error))
-		return FALSE;
+	/* hdrsz+payloadsz */
+	hdrsz = fu_struct_get_u16(st, "hdrsz");
+	payloadsz = fu_struct_get_u32(st, "payloadsz");
 	if (payloadsz == 0x0) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -166,12 +135,7 @@ fu_uswid_firmware_parse(FuFirmware *firmware,
 
 	/* flags */
 	if (priv->hdrver >= 0x02) {
-		if (!fu_memread_uint8_safe(buf,
-					   bufsz,
-					   offset + G_STRUCT_OFFSET(FuUswidFirmwareHdr, flags),
-					   &uswid_flags,
-					   error))
-			return FALSE;
+		guint8 uswid_flags = fu_struct_get_u32(st, "flags");
 		priv->compressed = (uswid_flags & USWID_HEADER_FLAG_COMPRESSED) > 0;
 	}
 
@@ -227,24 +191,20 @@ fu_uswid_firmware_parse(FuFirmware *firmware,
 	return TRUE;
 }
 
-static guint8
-fu_uswid_firmware_calculate_hdrsz(FuUswidFirmware *self)
-{
-	FuUswidFirmwarePrivate *priv = GET_PRIVATE(self);
-	if (priv->hdrver == 0x1)
-		return USWID_HEADER_SIZE_V1;
-	return USWID_HEADER_SIZE_V2;
-}
-
 static GBytes *
 fu_uswid_firmware_write(FuFirmware *firmware, GError **error)
 {
 	FuUswidFirmware *self = FU_USWID_FIRMWARE(firmware);
 	FuUswidFirmwarePrivate *priv = GET_PRIVATE(self);
-	g_autoptr(GByteArray) buf = g_byte_array_new();
+	FuStruct *st = fu_struct_lookup(self, "UswidFirmwareHdr");
+	g_autoptr(GByteArray) buf = NULL;
 	g_autoptr(GByteArray) payload = g_byte_array_new();
 	g_autoptr(GBytes) payload_blob = NULL;
 	g_autoptr(GPtrArray) images = fu_firmware_get_images(firmware);
+
+	/* header then CBOR blob */
+	if (priv->hdrver < 2)
+		st = fu_struct_lookup(self, "UswidFirmwareHdrLegacy");
 
 	/* generate early so we know the size */
 	for (guint i = 0; i < images->len; i++) {
@@ -271,17 +231,17 @@ fu_uswid_firmware_write(FuFirmware *firmware, GError **error)
 		payload_blob = g_byte_array_free_to_bytes(g_steal_pointer(&payload));
 	}
 
-	/* header then CBOR blob */
-	g_byte_array_append(buf, USWID_HEADER_MAGIC, sizeof(USWID_HEADER_MAGIC));
-	fu_byte_array_append_uint8(buf, priv->hdrver);
-	fu_byte_array_append_uint16(buf, fu_uswid_firmware_calculate_hdrsz(self), G_LITTLE_ENDIAN);
-	fu_byte_array_append_uint32(buf, g_bytes_get_size(payload_blob), G_LITTLE_ENDIAN);
+	/* pack */
+	fu_struct_set_guid(st, "magic", &USWID_HEADER_MAGIC);
+	fu_struct_set_u8(st, "hdrver", priv->hdrver);
+	fu_struct_set_u32(st, "payloadsz", g_bytes_get_size(payload_blob));
 	if (priv->hdrver >= 2) {
 		guint8 flags = 0;
 		if (priv->compressed)
 			flags |= USWID_HEADER_FLAG_COMPRESSED;
-		fu_byte_array_append_uint8(buf, flags);
+		fu_struct_set_u8(st, "flags", 0x0);
 	}
+	buf = fu_struct_pack(st);
 	fu_byte_array_append_bytes(buf, payload_blob);
 
 	/* success */
@@ -320,6 +280,21 @@ fu_uswid_firmware_init(FuUswidFirmware *self)
 	priv->compressed = FALSE;
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_STORED_SIZE);
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_ALWAYS_SEARCH);
+	fu_struct_register(self,
+			   "UswidFirmwareHdr {"
+			   "    magic: guid,"
+			   "    hdrver: u8,"
+			   "    hdrsz: u16le: $struct_size,"
+			   "    payloadsz: u32le,"
+			   "    flags: u8,"
+			   "}");
+	fu_struct_register(self,
+			   "UswidFirmwareHdrLegacy {"
+			   "    magic: guid,"
+			   "    hdrver: u8,"
+			   "    hdrsz: u16le: $struct_size,"
+			   "    payloadsz: u32le,"
+			   "}");
 }
 
 static void

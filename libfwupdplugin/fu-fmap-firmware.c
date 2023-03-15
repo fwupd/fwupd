@@ -10,7 +10,7 @@
 #include "fu-bytes.h"
 #include "fu-common.h"
 #include "fu-fmap-firmware.h"
-#include "fu-mem.h"
+#include "fu-struct.h"
 
 /**
  * FuFmapFirmware:
@@ -20,7 +20,6 @@
  * See also: [class@FuFirmware]
  */
 
-#define FMAP_SIGNATURE "__FMAP__"
 #define FMAP_AREANAME  "FMAP"
 
 G_DEFINE_TYPE(FuFmapFirmware, fu_fmap_firmware, FU_TYPE_FIRMWARE)
@@ -28,29 +27,13 @@ G_DEFINE_TYPE(FuFmapFirmware, fu_fmap_firmware, FU_TYPE_FIRMWARE)
 static gboolean
 fu_fmap_firmware_check_magic(FuFirmware *firmware, GBytes *fw, gsize offset, GError **error)
 {
-	guint8 magic[8] = {0x0};
-
-	if (!fu_memcpy_safe(magic,
-			    sizeof(magic),
-			    0, /* dst */
-			    g_bytes_get_data(fw, NULL),
-			    g_bytes_get_size(fw),
-			    offset,
-			    sizeof(magic),
-			    error)) {
-		g_prefix_error(error, "failed to read magic: ");
-		return FALSE;
-	}
-	if (memcmp(magic, FMAP_SIGNATURE, sizeof(magic)) != 0) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_FILE,
-				    "invalid magic for file");
-		return FALSE;
-	}
-
-	/* success */
-	return TRUE;
+	FuStruct *st_hdr = fu_struct_lookup(firmware, "FmapHdr");
+	return fu_struct_unpack_full(st_hdr,
+				     g_bytes_get_data(fw, NULL),
+				     g_bytes_get_size(fw),
+				     offset,
+				     FU_STRUCT_FLAG_ONLY_CONSTANTS,
+				     error);
 }
 
 static gboolean
@@ -61,90 +44,67 @@ fu_fmap_firmware_parse(FuFirmware *firmware,
 		       GError **error)
 {
 	FuFmapFirmwareClass *klass_firmware = FU_FMAP_FIRMWARE_GET_CLASS(firmware);
+	FuStruct *st_area = fu_struct_lookup(firmware, "FmapArea");
+	FuStruct *st_hdr = fu_struct_lookup(firmware, "FmapHdr");
 	gsize bufsz;
+	guint32 nareas;
 	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
-	FuFmap fmap;
 
-	/* corrupt */
-	if (g_bytes_get_size(fw) < sizeof(FuFmap)) {
-		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
-				    "firmware too small for fmap");
+	/* parse */
+	if (!fu_struct_unpack_full(st_hdr, buf, bufsz, offset, FU_STRUCT_FLAG_NONE, error))
 		return FALSE;
-	}
+	fu_firmware_set_addr(firmware, fu_struct_get_u64(st_hdr, "base"));
 
-	/* load header */
-	if (!fu_memcpy_safe((guint8 *)&fmap,
-			    sizeof(fmap),
-			    0x0, /* dst */
-			    buf,
-			    bufsz,
-			    offset, /* src */
-			    sizeof(fmap),
-			    error))
-		return FALSE;
-	fu_firmware_set_addr(firmware, GUINT64_FROM_LE(fmap.base));
-
-	if (GUINT32_FROM_LE(fmap.size) != bufsz) {
+	if (fu_struct_get_u32(st_hdr, "size") != bufsz) {
 		g_set_error(error,
 			    G_IO_ERROR,
 			    G_IO_ERROR_INVALID_DATA,
 			    "file size incorrect, expected 0x%04x got 0x%04x",
-			    (guint)fmap.size,
+			    fu_struct_get_u32(st_hdr, "size"),
 			    (guint)bufsz);
 		return FALSE;
 	}
-	if (GUINT16_FROM_LE(fmap.nareas) < 1) {
-		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
-			    "number of areas too small, got %" G_GUINT16_FORMAT,
-			    GUINT16_FROM_LE(fmap.nareas));
+	nareas = fu_struct_get_u16(st_hdr, "nareas");
+	if (nareas < 1) {
+		g_set_error_literal(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_INVALID_DATA,
+				    "number of areas invalid");
 		return FALSE;
 	}
-	offset += sizeof(fmap);
-
-	for (gsize i = 0; i < GUINT16_FROM_LE(fmap.nareas); i++) {
-		FuFmapArea area;
+	offset += fu_struct_size(st_hdr);
+	for (gsize i = 0; i < nareas; i++) {
+		guint32 area_offset;
+		guint32 area_size;
 		g_autoptr(FuFirmware) img = NULL;
 		g_autoptr(GBytes) bytes = NULL;
 		g_autofree gchar *area_name = NULL;
 
 		/* load area */
-		if (!fu_memcpy_safe((guint8 *)&area,
-				    sizeof(area),
-				    0x0, /* dst */
-				    buf,
-				    bufsz,
-				    offset, /* src */
-				    sizeof(area),
-				    error))
+		if (!fu_struct_unpack_full(st_area, buf, bufsz, offset, FU_STRUCT_FLAG_NONE, error))
 			return FALSE;
-
-		/* skip */
-		if (area.size == 0)
+		area_size = fu_struct_get_u32(st_area, "size");
+		if (area_size == 0)
 			continue;
-
-		bytes = fu_bytes_new_offset(fw,
-					    (gsize)GUINT32_FROM_LE(area.offset),
-					    (gsize)GUINT32_FROM_LE(area.size),
-					    error);
+		area_offset = fu_struct_get_u32(st_area, "offset");
+		bytes = fu_bytes_new_offset(fw, (gsize)area_offset, (gsize)area_size, error);
 		if (bytes == NULL)
 			return FALSE;
-		area_name = g_strndup((const gchar *)area.name, FU_FMAP_FIRMWARE_STRLEN);
+		area_name = fu_struct_get_string(st_area, "name");
 		img = fu_firmware_new_from_bytes(bytes);
 		fu_firmware_set_id(img, area_name);
 		fu_firmware_set_idx(img, i + 1);
-		fu_firmware_set_addr(img, GUINT32_FROM_LE(area.offset));
+		fu_firmware_set_addr(img, area_offset);
 		fu_firmware_add_image(firmware, img);
 
 		if (g_strcmp0(area_name, FMAP_AREANAME) == 0) {
 			g_autofree gchar *version = NULL;
-			version = g_strdup_printf("%d.%d", fmap.ver_major, fmap.ver_minor);
+			version = g_strdup_printf("%d.%d",
+						  fu_struct_get_u8(st_hdr, "ver_major"),
+						  fu_struct_get_u8(st_hdr, "ver_minor"));
 			fu_firmware_set_version(img, version);
 		}
-		offset += sizeof(area);
+		offset += fu_struct_size(st_area);
 	}
 
 	/* subclassed */
@@ -160,26 +120,19 @@ fu_fmap_firmware_parse(FuFirmware *firmware,
 static GBytes *
 fu_fmap_firmware_write(FuFirmware *firmware, GError **error)
 {
+	FuStruct *st_area = fu_struct_lookup(firmware, "FmapArea");
+	FuStruct *st_hdr = fu_struct_lookup(firmware, "FmapHdr");
 	gsize total_sz;
 	gsize offset;
 	g_autoptr(GPtrArray) images = fu_firmware_get_images(firmware);
 	g_autoptr(GByteArray) buf = g_byte_array_new();
-	FuFmap hdr = {
-	    .signature = {FMAP_SIGNATURE},
-	    .ver_major = 0x1,
-	    .ver_minor = 0x1,
-	    .base = GUINT64_TO_LE(fu_firmware_get_addr(firmware)),
-	    .size = 0x0,
-	    .name = "",
-	    .nareas = GUINT16_TO_LE(images->len),
-	};
 
 	/* pad to offset */
 	if (fu_firmware_get_offset(firmware) > 0)
 		fu_byte_array_set_size(buf, fu_firmware_get_offset(firmware), 0x00);
 
 	/* add header */
-	total_sz = offset = sizeof(hdr) + (sizeof(FuFmapArea) * images->len);
+	total_sz = offset = fu_struct_size(st_hdr) + (fu_struct_size(st_area) * images->len);
 	for (guint i = 0; i < images->len; i++) {
 		FuFirmware *img = g_ptr_array_index(images, i);
 		g_autoptr(GBytes) fw = fu_firmware_get_bytes_with_patches(img, error);
@@ -187,23 +140,24 @@ fu_fmap_firmware_write(FuFirmware *firmware, GError **error)
 			return NULL;
 		total_sz += g_bytes_get_size(fw);
 	}
-	hdr.size = GUINT32_TO_LE(fu_firmware_get_offset(firmware) + total_sz);
-	g_byte_array_append(buf, (const guint8 *)&hdr, sizeof(hdr));
+
+	/* header */
+	fu_struct_set_u64(st_hdr, "base", fu_firmware_get_addr(firmware));
+	fu_struct_set_u16(st_hdr, "nareas", images->len);
+	fu_struct_set_u32(st_hdr, "size", fu_firmware_get_offset(firmware) + total_sz);
+	fu_struct_pack_into(st_hdr, buf);
 
 	/* add each area */
 	for (guint i = 0; i < images->len; i++) {
 		FuFirmware *img = g_ptr_array_index(images, i);
-		const gchar *id = fu_firmware_get_id(img);
 		g_autoptr(GBytes) fw = fu_firmware_get_bytes_with_patches(img, NULL);
-		FuFmapArea area = {
-		    .offset = GUINT32_TO_LE(fu_firmware_get_offset(firmware) + offset),
-		    .size = GUINT32_TO_LE(g_bytes_get_size(fw)),
-		    .name = {""},
-		    .flags = 0x0,
-		};
-		if (id != NULL)
-			strncpy((gchar *)area.name, id, sizeof(area.name) - 1);
-		g_byte_array_append(buf, (const guint8 *)&area, sizeof(area));
+		fu_struct_set_u32(st_area, "offset", fu_firmware_get_offset(firmware) + offset);
+		fu_struct_set_u32(st_area, "size", g_bytes_get_size(fw));
+		if (fu_firmware_get_id(img) != NULL) {
+			if (!fu_struct_set_string(st_area, "name", fu_firmware_get_id(img), error))
+				return NULL;
+		}
+		fu_struct_pack_into(st_area, buf);
 		offset += g_bytes_get_size(fw);
 	}
 
@@ -221,6 +175,23 @@ fu_fmap_firmware_write(FuFirmware *firmware, GError **error)
 static void
 fu_fmap_firmware_init(FuFmapFirmware *self)
 {
+	fu_struct_register(self,
+			   "FmapHdr {"
+			   "    signature: 8s:: __FMAP__,"
+			   "    ver_major: u8: 0x1,"
+			   "    ver_minor: u8: 0x1,"
+			   "    base: u64le," /* address of the firmware binary */
+			   "    size: u32le," /* bytes */
+			   "    name: 32s,"
+			   "    nareas: u16le," /* number of areas */
+			   "}");
+	fu_struct_register(self,
+			   "FmapArea {"		/* area of volatile and static regions */
+			   "    offset: u32le," /* offset relative to base */
+			   "    size: u32le,"	/* bytes */
+			   "    name: 32s,"	/* descriptive name */
+			   "    flags: u16le,"
+			   "}");
 }
 
 static void

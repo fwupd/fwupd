@@ -16,10 +16,6 @@ struct _FuUf2Firmware {
 
 G_DEFINE_TYPE(FuUf2Firmware, fu_uf2_firmware, FU_TYPE_FIRMWARE)
 
-#define FU_UF2_FIRMWARE_MAGIC_START0 0x0A324655u
-#define FU_UF2_FIRMWARE_MAGIC_START1 0x9E5D5157u
-#define FU_UF2_FIRMWARE_MAGIC_END    0x0AB16F30u
-
 #define FU_UF2_FIRMWARE_BLOCK_FLAG_NONE		     0x00000000
 #define FU_UF2_FIRMWARE_BLOCK_FLAG_NOFLASH	     0x00000001
 #define FU_UF2_FIRMWARE_BLOCK_FLAG_IS_CONTAINER	     0x00001000
@@ -36,51 +32,21 @@ G_DEFINE_TYPE(FuUf2Firmware, fu_uf2_firmware, FU_TYPE_FIRMWARE)
 static gboolean
 fu_uf2_firmware_parse_chunk(FuUf2Firmware *self, FuChunk *chk, GByteArray *tmp, GError **error)
 {
+	FuStruct *st = fu_struct_lookup(self, "Uf2FirmwareBlock");
 	gsize bufsz = fu_chunk_get_data_sz(chk);
 	const guint8 *buf = fu_chunk_get_data(chk);
-	guint32 magic = 0;
 	guint32 flags = 0;
-	guint32 addr = 0;
 	guint32 datasz = 0;
-	guint32 blockcnt = 0;
-	guint32 blocktotal = 0;
-	guint32 family_id = 0;
 
-	/* sanity check */
-	if (bufsz != 512) {
-		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
-			    "chunk size invalid, expected 512 bytes and got %u",
-			    fu_chunk_get_data_sz(chk));
+	/* parse */
+	if (!fu_struct_unpack_full(st,
+				   fu_chunk_get_data(chk),
+				   fu_chunk_get_data_sz(chk),
+				   0, /* offset */
+				   FU_STRUCT_FLAG_NONE,
+				   error))
 		return FALSE;
-	}
-
-	/* check magic */
-	if (!fu_memread_uint32_safe(buf, bufsz, 0x000, &magic, G_LITTLE_ENDIAN, error))
-		return FALSE;
-	if (magic != FU_UF2_FIRMWARE_MAGIC_START0) {
-		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
-			    "magic bytes #1 failed, expected 0x%08x bytes and got 0x%08x",
-			    FU_UF2_FIRMWARE_MAGIC_START0,
-			    magic);
-		return FALSE;
-	}
-	if (!fu_memread_uint32_safe(buf, bufsz, 0x004, &magic, G_LITTLE_ENDIAN, error))
-		return FALSE;
-	if (magic != FU_UF2_FIRMWARE_MAGIC_START1) {
-		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
-			    "magic bytes #2 failed, expected 0x%08x bytes and got 0x%08x",
-			    FU_UF2_FIRMWARE_MAGIC_START1,
-			    magic);
-		return FALSE;
-	}
-	if (!fu_memread_uint32_safe(buf, bufsz, 0x008, &flags, G_LITTLE_ENDIAN, error))
-		return FALSE;
+	flags = fu_struct_get_u32(st, "flags");
 	if (flags & FU_UF2_FIRMWARE_BLOCK_FLAG_IS_CONTAINER) {
 		g_set_error_literal(error,
 				    G_IO_ERROR,
@@ -88,11 +54,8 @@ fu_uf2_firmware_parse_chunk(FuUf2Firmware *self, FuChunk *chk, GByteArray *tmp, 
 				    "container U2F firmware not supported");
 		return FALSE;
 	}
-	if (!fu_memread_uint32_safe(buf, bufsz, 0x00C, &addr, G_LITTLE_ENDIAN, error))
-		return FALSE;
-	if (!fu_memread_uint32_safe(buf, bufsz, 0x010, &datasz, G_LITTLE_ENDIAN, error))
-		return FALSE;
-	if (datasz > 476) {
+	datasz = fu_struct_get_u32(st, "payload_size");
+	if (datasz > fu_struct_get_id_size(st, "data")) {
 		g_set_error(error,
 			    G_IO_ERROR,
 			    G_IO_ERROR_INVALID_DATA,
@@ -100,30 +63,24 @@ fu_uf2_firmware_parse_chunk(FuUf2Firmware *self, FuChunk *chk, GByteArray *tmp, 
 			    datasz);
 		return FALSE;
 	}
-	if (!fu_memread_uint32_safe(buf, bufsz, 0x014, &blockcnt, G_LITTLE_ENDIAN, error))
-		return FALSE;
-	if (blockcnt != fu_chunk_get_idx(chk)) {
+	if (fu_struct_get_u32(st, "block_no") != fu_chunk_get_idx(chk)) {
 		g_set_error(error,
 			    G_IO_ERROR,
 			    G_IO_ERROR_INVALID_DATA,
 			    "block count invalid, expected 0x%04x and got 0x%04x",
 			    fu_chunk_get_idx(chk),
-			    blockcnt);
+			    fu_struct_get_u32(st, "block_no"));
 		return FALSE;
 	}
-	if (!fu_memread_uint32_safe(buf, bufsz, 0x018, &blocktotal, G_LITTLE_ENDIAN, error))
-		return FALSE;
-	if (blocktotal == 0) {
+	if (fu_struct_get_u32(st, "num_blocks") == 0) {
 		g_set_error_literal(error,
 				    G_IO_ERROR,
 				    G_IO_ERROR_INVALID_DATA,
 				    "block count invalid, expected > 0");
 		return FALSE;
 	}
-	if (!fu_memread_uint32_safe(buf, bufsz, 0x01C, &family_id, G_LITTLE_ENDIAN, error))
-		return FALSE;
 	if (flags & FU_UF2_FIRMWARE_BLOCK_FLAG_HAS_FAMILY) {
-		if (family_id == 0) {
+		if (fu_struct_get_u32(st, "family_id") == 0) {
 			g_set_error_literal(error,
 					    G_IO_ERROR,
 					    G_IO_ERROR_INVALID_DATA,
@@ -134,12 +91,12 @@ fu_uf2_firmware_parse_chunk(FuUf2Firmware *self, FuChunk *chk, GByteArray *tmp, 
 
 	/* assume first chunk is representative of firmware */
 	if (fu_chunk_get_idx(chk) == 0) {
-		fu_firmware_set_addr(FU_FIRMWARE(self), addr);
-		fu_firmware_set_idx(FU_FIRMWARE(self), family_id);
+		fu_firmware_set_addr(FU_FIRMWARE(self), fu_struct_get_u32(st, "target_addr"));
+		fu_firmware_set_idx(FU_FIRMWARE(self), fu_struct_get_u32(st, "family_id"));
 	}
 
 	/* just append raw data */
-	g_byte_array_append(tmp, buf + 0x020, datasz);
+	g_byte_array_append(tmp, fu_struct_get_u8ptr(st, "data", NULL), datasz);
 	if (flags & FU_UF2_FIRMWARE_BLOCK_FLAG_HAS_MD5) {
 		if (datasz < 24) {
 			g_set_error_literal(error,
@@ -150,7 +107,7 @@ fu_uf2_firmware_parse_chunk(FuUf2Firmware *self, FuChunk *chk, GByteArray *tmp, 
 		}
 	}
 	if (flags & FU_UF2_FIRMWARE_BLOCK_FLAG_HAS_EXTENSION_TAG) {
-		gsize offset = 0x20 + datasz;
+		gsize offset = fu_struct_get_id_offset(st, "data");
 		while (offset < bufsz) {
 			guint8 sz = 0;
 			guint32 tag = 0;
@@ -206,23 +163,6 @@ fu_uf2_firmware_parse_chunk(FuUf2Firmware *self, FuChunk *chk, GByteArray *tmp, 
 			offset += sz;
 		}
 	}
-	if (!fu_memread_uint32_safe(buf, bufsz, 0x1FC, &magic, G_LITTLE_ENDIAN, error))
-		return FALSE;
-	if (magic != FU_UF2_FIRMWARE_MAGIC_END) {
-		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
-			    "magic bytes #3 failed, expected 0x%08x bytes and got 0x%08x",
-			    FU_UF2_FIRMWARE_MAGIC_END,
-			    magic);
-		return FALSE;
-	}
-
-	/* dump */
-	g_debug("block: 0x%x/0x%x @0x%x", blockcnt, blocktotal - 1, addr);
-	g_debug("family_id: 0x%x", family_id);
-	g_debug("flags: 0x%x", flags);
-	g_debug("datasz: 0x%x", datasz);
 
 	/* success */
 	return TRUE;
@@ -257,47 +197,28 @@ fu_uf2_firmware_parse(FuFirmware *firmware,
 static GByteArray *
 fu_uf2_firmware_write_chunk(FuUf2Firmware *self, FuChunk *chk, guint chk_len, GError **error)
 {
+	FuStruct *st = fu_struct_lookup(self, "Uf2FirmwareBlock");
 	guint32 addr = fu_firmware_get_addr(FU_FIRMWARE(self));
-	guint32 family_id = fu_firmware_get_idx(FU_FIRMWARE(self));
 	guint32 flags = FU_UF2_FIRMWARE_BLOCK_FLAG_NONE;
-	g_autoptr(GByteArray) buf = g_byte_array_new();
-	g_autoptr(GByteArray) datapad = g_byte_array_new();
-
-	/* sanity check */
-	if (fu_chunk_get_data_sz(chk) > 476) {
-		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
-			    "chunk size invalid, expected < 476 bytes and got %u",
-			    fu_chunk_get_data_sz(chk));
-		return NULL;
-	}
-
-	/* pad out data */
-	g_byte_array_append(datapad, fu_chunk_get_data(chk), fu_chunk_get_data_sz(chk));
-	fu_byte_array_set_size(datapad, 476, 0x0);
 
 	/* optional */
-	if (family_id > 0)
+	if (fu_firmware_get_idx(FU_FIRMWARE(self)) > 0)
 		flags |= FU_UF2_FIRMWARE_BLOCK_FLAG_HAS_FAMILY;
 
 	/* offset from base address */
 	addr += fu_chunk_get_idx(chk) * fu_chunk_get_data_sz(chk);
 
 	/* build UF2 packet */
-	fu_byte_array_append_uint32(buf, FU_UF2_FIRMWARE_MAGIC_START0, G_LITTLE_ENDIAN);
-	fu_byte_array_append_uint32(buf, FU_UF2_FIRMWARE_MAGIC_START1, G_LITTLE_ENDIAN);
-	fu_byte_array_append_uint32(buf, flags, G_LITTLE_ENDIAN);
-	fu_byte_array_append_uint32(buf, addr, G_LITTLE_ENDIAN);
-	fu_byte_array_append_uint32(buf, fu_chunk_get_data_sz(chk), G_LITTLE_ENDIAN);
-	fu_byte_array_append_uint32(buf, fu_chunk_get_idx(chk), G_LITTLE_ENDIAN);
-	fu_byte_array_append_uint32(buf, chk_len, G_LITTLE_ENDIAN);
-	fu_byte_array_append_uint32(buf, family_id, G_LITTLE_ENDIAN);
-	g_byte_array_append(buf, datapad->data, datapad->len);
-	fu_byte_array_append_uint32(buf, FU_UF2_FIRMWARE_MAGIC_END, G_LITTLE_ENDIAN);
+	fu_struct_set_u32(st, "flags", flags);
+	fu_struct_set_u32(st, "target_addr", addr);
+	fu_struct_set_u32(st, "payload_size", fu_chunk_get_data_sz(chk));
+	fu_struct_set_u32(st, "block_no", fu_chunk_get_idx(chk));
+	fu_struct_set_u32(st, "num_blocks", chk_len);
+	fu_struct_set_u32(st, "family_id", fu_firmware_get_idx(FU_FIRMWARE(self)));
+	fu_struct_set_u8ptr(st, "data", fu_chunk_get_data(chk), fu_chunk_get_data_sz(chk));
 
 	/* success */
-	return g_steal_pointer(&buf);
+	return fu_struct_pack(st);
 }
 
 static GBytes *
@@ -331,6 +252,19 @@ fu_uf2_firmware_write(FuFirmware *firmware, GError **error)
 static void
 fu_uf2_firmware_init(FuUf2Firmware *self)
 {
+	fu_struct_register(self,
+			   "Uf2FirmwareBlock {"
+			   "    magic0: u32le:: 0x0A324655,"
+			   "    magic1: u32le:: 0x9E5D5157,"
+			   "    flags: u32le,"
+			   "    target_addr: u32le,"
+			   "    payload_size: u32le,"
+			   "    block_no: u32le,"
+			   "    num_blocks: u32le,"
+			   "    family_id: u32le,"
+			   "    data: 476u8,"
+			   "    magic_end: u32le:: 0x0AB16F30,"
+			   "}");
 }
 
 static void

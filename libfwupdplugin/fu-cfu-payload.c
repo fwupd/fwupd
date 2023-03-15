@@ -12,7 +12,7 @@
 #include "fu-bytes.h"
 #include "fu-cfu-payload.h"
 #include "fu-common.h"
-#include "fu-mem.h"
+#include "fu-struct.h"
 
 /**
  * FuCfuPayload:
@@ -35,32 +35,24 @@ fu_cfu_payload_parse(FuFirmware *firmware,
 		     FwupdInstallFlags flags,
 		     GError **error)
 {
+	FuStruct *st = fu_struct_lookup(firmware, "CfuPayload");
 	gsize bufsz = 0;
 	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
 
 	/* process into chunks */
 	while (offset < bufsz) {
-		guint32 chunk_addr = 0;
 		guint8 chunk_size = 0;
 		g_autoptr(FuChunk) chk = NULL;
 		g_autoptr(GBytes) blob = NULL;
-
-		/* read chunk header */
-		if (!fu_memread_uint32_safe(buf,
-					    bufsz,
-					    offset,
-					    &chunk_addr,
-					    G_LITTLE_ENDIAN,
-					    error))
+		if (!fu_struct_unpack_full(st, buf, bufsz, offset, FU_STRUCT_FLAG_NONE, error))
 			return FALSE;
-		if (!fu_memread_uint8_safe(buf, bufsz, offset + 0x4, &chunk_size, error))
-			return FALSE;
-		offset += 0x5;
+		offset += fu_struct_size(st);
+		chunk_size = fu_struct_get_u8(st, "size");
 		blob = fu_bytes_new_offset(fw, offset, chunk_size, error);
 		if (blob == NULL)
 			return FALSE;
 		chk = fu_chunk_bytes_new(blob);
-		fu_chunk_set_address(chk, chunk_addr);
+		fu_chunk_set_address(chk, fu_struct_get_u32(st, "addr"));
 		fu_firmware_add_chunk(firmware, chk);
 
 		/* next! */
@@ -92,6 +84,11 @@ fu_cfu_payload_write(FuFirmware *firmware, GError **error)
 static void
 fu_cfu_payload_init(FuCfuPayload *self)
 {
+	fu_struct_register(self,
+			   "CfuPayload {"
+			   "    addr: u32le,"
+			   "    size: u8,"
+			   "}");
 }
 
 static void

@@ -859,6 +859,13 @@ fu_synaptics_rmi_device_init(FuSynapticsRmiDevice *self)
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_TRIPLET);
 	priv->current_page = 0xfe;
 	priv->functions = g_ptr_array_new_with_free_func(g_free);
+	fu_struct_register(self,
+			   "RmiPartitionTbl {"
+			   "    partition_id: u16le,"
+			   "    partition_len: u16le,"
+			   "    partition_addr: u16le,"
+			   "    partition_prop: u16le,"
+			   "}");
 }
 
 static void

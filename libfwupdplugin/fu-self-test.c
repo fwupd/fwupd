@@ -3489,6 +3489,14 @@ fu_firmware_builder_round_trip_func(void)
 		g_assert_true(ret);
 		csum1 = fu_firmware_get_checksum(firmware1, G_CHECKSUM_SHA1, &error);
 		g_assert_no_error(error);
+		if (g_strcmp0(csum1, map[i].checksum) != 0) {
+			const gchar *filename_out = "/tmp/foo.bin";
+			g_autoptr(GFile) file = g_file_new_for_path(filename_out);
+			ret = fu_firmware_write_file(firmware1, file, &error);
+			g_assert_no_error(error);
+			g_assert_true(ret);
+			g_debug("did not build %s into %s", filename, filename_out);
+		}
 		g_assert_cmpstr(csum1, ==, map[i].checksum);
 
 		/* ensure we can write and then parse what we just wrote */
@@ -3767,6 +3775,85 @@ fu_progress_child_finished(void)
 	fu_progress_step_done(progress);
 }
 
+static void
+fu_plugin_struct_func(void)
+{
+	gboolean ret;
+	g_autoptr(FuStruct) st = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GByteArray) buf1 = NULL;
+	g_autofree gchar *str1 = NULL;
+	g_autofree gchar *oem_id = NULL;
+	g_autofree gchar *oem_table_id = NULL;
+	g_autofree gchar *tmp = NULL;
+
+	/* size */
+	st = fu_struct_new("AcpiTableHdr {"
+			   "    signature: u32be:: 0x12345678,"
+			   "    length: u32le: $struct_size,"
+			   "    revision: u8,"
+			   "    checksum: u8,"
+			   "    oem_id: 6s,"
+			   "    oem_table_id: 8s,"
+			   "    oem_revision: u32le,"
+			   "    asl_compiler_id: 4s,"
+			   "    asl_compiler_revision: u32le,"
+			   "}",
+			   &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(st);
+	g_assert_cmpint(fu_struct_size(st), ==, 36);
+	g_assert_cmpstr(fu_struct_get_name(st), ==, "AcpiTableHdr");
+	tmp = fu_struct_to_string(st);
+	g_assert_cmpstr(tmp,
+			==,
+			"AcpiTableHdr {\n"
+			"    signature: u32be:: 0x12345678, // @0x0000\n"
+			"    length: u32le: $struct_size, // @0x0004\n"
+			"    revision: u8, // @0x0008\n"
+			"    checksum: u8, // @0x0009\n"
+			"    oem_id: 6s, // @0x000a\n"
+			"    oem_table_id: 8s, // @0x0010\n"
+			"    oem_revision: u32le, // @0x0018\n"
+			"    asl_compiler_id: 4s, // @0x001c\n"
+			"    asl_compiler_revision: u32le, // @0x0020\n"
+			"}");
+
+	/* getters and setters */
+	fu_struct_set_u8(st, "revision", 0xFF);
+	fu_struct_set_u32(st, "length", 0xDEAD);
+	fu_struct_set_string_literal(st, "oem_id", "ABCDEF");
+	fu_struct_set_string_literal(st, "oem_table_id", "X");
+	g_assert_cmpint(fu_struct_get_u8(st, "revision"), ==, 0xFF);
+	g_assert_cmpint(fu_struct_get_u32(st, "length"), ==, 0xDEAD);
+
+	/* pack */
+	buf1 = fu_struct_pack(st);
+	str1 = fu_byte_array_to_string(buf1);
+	g_assert_cmpstr(str1,
+			==,
+			"12345678adde0000ff004142434445465800000000000000000000000000000000000000");
+
+	/* unpack */
+	fu_struct_set_u8(st, "revision", 0x0);
+	fu_struct_set_u32(st, "length", 0x0);
+	ret = fu_struct_unpack_full(st, buf1->data, buf1->len, 0x0, FU_STRUCT_FLAG_NONE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(fu_struct_get_u8(st, "revision"), ==, 0xFF);
+	g_assert_cmpint(fu_struct_get_u32(st, "length"), ==, 0xDEAD);
+	oem_id = fu_struct_get_string(st, "oem_id");
+	g_assert_cmpstr(oem_id, ==, "ABCDEF");
+	oem_table_id = fu_struct_get_string(st, "oem_table_id");
+	g_assert_cmpstr(oem_table_id, ==, "X");
+
+	/* unpack failing signature */
+	buf1->data[0] = 0xFF;
+	ret = fu_struct_unpack_full(st, buf1->data, buf1->len, 0x0, FU_STRUCT_FLAG_NONE, &error);
+	g_assert_error(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA);
+	g_assert_false(ret);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -3790,6 +3877,7 @@ main(int argc, char **argv)
 	(void)g_setenv("FWUPD_LOCALSTATEDIR", "/tmp/fwupd-self-test/var", TRUE);
 	(void)g_setenv("FWUPD_PROFILE", "1", TRUE);
 
+	g_test_add_func("/fwupd/struct", fu_plugin_struct_func);
 	g_test_add_func("/fwupd/plugin{quirks-append}", fu_plugin_quirks_append_func);
 	g_test_add_func("/fwupd/common{strnsplit}", fu_strsplit_func);
 	g_test_add_func("/fwupd/common{memmem}", fu_common_memmem_func);

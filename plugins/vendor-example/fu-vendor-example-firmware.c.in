@@ -49,9 +49,14 @@ fu_{{vendor}}_{{example}}_firmware_parse(FuFirmware *firmware,
 				 GError **error)
 {
 	Fu{{Vendor}}{{Example}}Firmware *self = FU_{{VENDOR}}_{{EXAMPLE}}_FIRMWARE(firmware);
+	FuStruct *st = fu_struct_lookup(self, "{{Vendor}}{{Example}}");
+
+	/* unpack */
+	if (!fu_struct_unpack_full(st, buf, bufsz, offset, error))
+		return FALSE;
+	self->start_addr = fu_struct_get_u16(st, "start_addr");
 
 	/* TODO: parse firmware into images */
-	self->start_addr = 0x1234;
 	fu_firmware_set_version(firmware, "1.2.3");
 	fu_firmware_set_bytes(firmware, fw);
 	return TRUE;
@@ -61,7 +66,8 @@ static GBytes *
 fu_{{vendor}}_{{example}}_firmware_write(FuFirmware *firmware, GError **error)
 {
 	Fu{{Vendor}}{{Example}}Firmware *self = FU_{{VENDOR}}_{{EXAMPLE}}_FIRMWARE(firmware);
-	g_autoptr(GByteArray) buf = g_byte_array_new();
+	FuStruct *st = fu_struct_lookup(self, "{{Vendor}}{{Example}}");
+	g_autoptr(GByteArray) buf = NULL;
 	g_autoptr(GBytes) fw = NULL;
 
 	/* data first */
@@ -70,7 +76,8 @@ fu_{{vendor}}_{{example}}_firmware_write(FuFirmware *firmware, GError **error)
 		return NULL;
 
 	/* TODO: write to the buffer with the correct format */
-	g_assert(self != NULL);
+	fu_struct_set_u16(st, "start_addr", self->start_addr);
+	buf = fu_struct_pack(st);
 	fu_byte_array_append_bytes(buf, fw);
 
 	/* success */
@@ -90,6 +97,11 @@ fu_{{vendor}}_{{example}}_firmware_init(Fu{{Vendor}}{{Example}}Firmware *self)
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_STORED_SIZE);
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_CHECKSUM);
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_VID_PID);
+	fu_struct_register(self,
+			   "{{Vendor}}{{Example}} {"
+			   "    signature: u16le:: 0xDEAD,"
+			   "    start_addr: u16le: 0x1000,"
+			   "}");
 }
 
 static void

@@ -12,7 +12,7 @@
 #include "fu-efi-firmware-common.h"
 #include "fu-efi-firmware-file.h"
 #include "fu-efi-firmware-section.h"
-#include "fu-mem.h"
+#include "fu-struct.h"
 #include "fu-sum.h"
 
 /**
@@ -55,15 +55,6 @@ G_DEFINE_TYPE_WITH_PRIVATE(FuEfiFirmwareFile, fu_efi_firmware_file, FU_TYPE_FIRM
 #define FU_EFI_FIRMWARE_FILE_TYPE_MM_STANDALONE		0x0E
 #define FU_EFI_FIRMWARE_FILE_TYPE_MM_CORE_STANDALONE	0x0F
 #define FU_EFI_FIRMWARE_FILE_TYPE_FFS_PAD		0xF0
-
-#define FU_EFI_FIRMWARE_FILE_OFFSET_NAME	  0x00
-#define FU_EFI_FIRMWARE_FILE_OFFSET_HDR_CHECKSUM  0x10
-#define FU_EFI_FIRMWARE_FILE_OFFSET_DATA_CHECKSUM 0x11
-#define FU_EFI_FIRMWARE_FILE_OFFSET_TYPE	  0x12
-#define FU_EFI_FIRMWARE_FILE_OFFSET_ATTRS	  0x13
-#define FU_EFI_FIRMWARE_FILE_OFFSET_SIZE	  0x14
-#define FU_EFI_FIRMWARE_FILE_OFFSET_STATE	  0x17
-#define FU_EFI_FIRMWARE_FILE_SIZE		  0x18
 
 static const gchar *
 fu_efi_firmware_file_type_to_string(guint8 type)
@@ -124,17 +115,18 @@ fu_efi_firmware_file_export(FuFirmware *firmware, FuFirmwareExportFlags flags, X
 }
 
 static guint8
-fu_efi_firmware_file_hdr_checksum8(GBytes *blob)
+fu_efi_firmware_file_hdr_checksum8(FuEfiFirmwareFile *self, GBytes *blob)
 {
+	FuStruct *st = fu_struct_lookup(self, "EfiFirmwareFile");
 	gsize bufsz = 0;
 	guint8 checksum = 0;
 	const guint8 *buf = g_bytes_get_data(blob, &bufsz);
 	for (gsize i = 0; i < bufsz; i++) {
-		if (i == FU_EFI_FIRMWARE_FILE_OFFSET_HDR_CHECKSUM)
+		if (i == fu_struct_get_id_offset(st, "hdr_checksum"))
 			continue;
-		if (i == FU_EFI_FIRMWARE_FILE_OFFSET_DATA_CHECKSUM)
+		if (i == fu_struct_get_id_offset(st, "data_checksum"))
 			continue;
-		if (i == FU_EFI_FIRMWARE_FILE_OFFSET_STATE)
+		if (i == fu_struct_get_id_offset(st, "state"))
 			continue;
 		checksum += buf[i];
 	}
@@ -150,76 +142,23 @@ fu_efi_firmware_file_parse(FuFirmware *firmware,
 {
 	FuEfiFirmwareFile *self = FU_EFI_FIRMWARE_FILE(firmware);
 	FuEfiFirmwareFilePrivate *priv = GET_PRIVATE(self);
+	FuStruct *st = fu_struct_lookup(self, "EfiFirmwareFile");
 	gsize bufsz = 0;
 	guint32 size = 0x0;
-	guint8 data_checksum = 0x0;
-	guint8 hdr_checksum = 0x0;
-	guint8 img_state = 0x0;
-	fwupd_guid_t guid = {0x0};
 	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
 	g_autofree gchar *guid_str = NULL;
 	g_autoptr(GBytes) blob = NULL;
 
-	/* header */
-	if (!fu_memcpy_safe((guint8 *)&guid,
-			    sizeof(guid),
-			    0x0, /* dst */
-			    buf,
-			    bufsz,
-			    FU_EFI_FIRMWARE_FILE_OFFSET_NAME, /* src */
-			    sizeof(guid),
-			    error))
+	/* parse */
+	if (!fu_struct_unpack_full(st, buf, bufsz, offset, FU_STRUCT_FLAG_NONE, error))
 		return FALSE;
-	guid_str = fwupd_guid_to_string(&guid, FWUPD_GUID_FLAG_MIXED_ENDIAN);
+	priv->type = fu_struct_get_u8(st, "type");
+	priv->attrib = fu_struct_get_u8(st, "attrs");
+	guid_str =
+	    fwupd_guid_to_string(fu_struct_get_guid(st, "name"), FWUPD_GUID_FLAG_MIXED_ENDIAN);
 	fu_firmware_set_id(firmware, guid_str);
-	if (!fu_memread_uint8_safe(buf,
-				   bufsz,
-				   FU_EFI_FIRMWARE_FILE_OFFSET_STATE,
-				   &img_state,
-				   error))
-		return FALSE;
-	if (img_state != 0xF8) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INTERNAL,
-			    "state invalid, got 0x%x, expected 0x%x",
-			    img_state,
-			    (guint)0xF8);
-		return FALSE;
-	}
-	if (!fu_memread_uint8_safe(buf,
-				   bufsz,
-				   FU_EFI_FIRMWARE_FILE_OFFSET_HDR_CHECKSUM,
-				   &hdr_checksum,
-				   error))
-		return FALSE;
-	if (!fu_memread_uint8_safe(buf,
-				   bufsz,
-				   FU_EFI_FIRMWARE_FILE_OFFSET_DATA_CHECKSUM,
-				   &data_checksum,
-				   error))
-		return FALSE;
-	if (!fu_memread_uint8_safe(buf,
-				   bufsz,
-				   FU_EFI_FIRMWARE_FILE_OFFSET_TYPE,
-				   &priv->type,
-				   error))
-		return FALSE;
-	if (!fu_memread_uint8_safe(buf,
-				   bufsz,
-				   FU_EFI_FIRMWARE_FILE_OFFSET_ATTRS,
-				   &priv->attrib,
-				   error))
-		return FALSE;
-	if (!fu_memread_uint32_safe(buf,
-				    bufsz, /* uint24_t! */
-				    FU_EFI_FIRMWARE_FILE_OFFSET_SIZE,
-				    &size,
-				    G_LITTLE_ENDIAN,
-				    error))
-		return FALSE;
-	size &= 0xFFFFFF;
-	if (size < FU_EFI_FIRMWARE_FILE_SIZE) {
+	size = fu_struct_get_u24(st, "size");
+	if (size < fu_struct_size(st)) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
@@ -233,26 +172,23 @@ fu_efi_firmware_file_parse(FuFirmware *firmware,
 		guint8 hdr_checksum_verify;
 		g_autoptr(GBytes) hdr_blob = NULL;
 
-		hdr_blob = fu_bytes_new_offset(fw, 0x0, FU_EFI_FIRMWARE_FILE_SIZE, error);
+		hdr_blob = fu_bytes_new_offset(fw, 0x0, fu_struct_size(st), error);
 		if (hdr_blob == NULL)
 			return FALSE;
-		hdr_checksum_verify = fu_efi_firmware_file_hdr_checksum8(hdr_blob);
-		if (hdr_checksum_verify != hdr_checksum) {
+		hdr_checksum_verify = fu_efi_firmware_file_hdr_checksum8(self, hdr_blob);
+		if (hdr_checksum_verify != fu_struct_get_u8(st, "hdr_checksum")) {
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_FILE,
 				    "checksum invalid, got %02x, expected %02x",
 				    hdr_checksum_verify,
-				    hdr_checksum);
+				    fu_struct_get_u8(st, "hdr_checksum"));
 			return FALSE;
 		}
 	}
 
 	/* add simple blob */
-	blob = fu_bytes_new_offset(fw,
-				   FU_EFI_FIRMWARE_FILE_SIZE,
-				   size - FU_EFI_FIRMWARE_FILE_SIZE,
-				   error);
+	blob = fu_bytes_new_offset(fw, fu_struct_size(st), size - fu_struct_size(st), error);
 	if (blob == NULL)
 		return FALSE;
 
@@ -268,13 +204,13 @@ fu_efi_firmware_file_parse(FuFirmware *firmware,
 	if ((priv->attrib & FU_EFI_FIRMWARE_FILE_ATTRIB_CHECKSUM) > 0 &&
 	    (flags & FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM) == 0) {
 		guint8 data_checksum_verify = 0x100 - fu_sum8_bytes(blob);
-		if (data_checksum_verify != data_checksum) {
+		if (data_checksum_verify != fu_struct_get_u8(st, "data_checksum")) {
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_FILE,
 				    "checksum invalid, got %02x, expected %02x",
 				    data_checksum_verify,
-				    data_checksum);
+				    fu_struct_get_u8(st, "data_checksum"));
 			return FALSE;
 		}
 	}
@@ -328,8 +264,9 @@ fu_efi_firmware_file_write(FuFirmware *firmware, GError **error)
 {
 	FuEfiFirmwareFile *self = FU_EFI_FIRMWARE_FILE(firmware);
 	FuEfiFirmwareFilePrivate *priv = GET_PRIVATE(self);
+	FuStruct *st = fu_struct_lookup(firmware, "EfiFirmwareFile");
 	fwupd_guid_t guid = {0x0};
-	g_autoptr(GByteArray) buf = g_byte_array_new();
+	g_autoptr(GByteArray) buf = NULL;
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GBytes) hdr_blob = NULL;
 
@@ -337,27 +274,23 @@ fu_efi_firmware_file_write(FuFirmware *firmware, GError **error)
 	blob = fu_efi_firmware_file_write_sections(firmware, error);
 	if (blob == NULL)
 		return NULL;
-
-	/* header */
 	if (!fwupd_guid_from_string(fu_firmware_get_id(firmware),
 				    &guid,
 				    FWUPD_GUID_FLAG_MIXED_ENDIAN,
 				    error))
 		return NULL;
-	g_byte_array_append(buf, (guint8 *)&guid, sizeof(guid));
-	fu_byte_array_append_uint8(buf, 0x0); /* hdr_checksum */
-	fu_byte_array_append_uint8(buf, 0x100 - fu_sum8_bytes(blob));
-	fu_byte_array_append_uint8(buf, priv->type);   /* data_checksum */
-	fu_byte_array_append_uint8(buf, priv->attrib); /* data_checksum */
-	fu_byte_array_append_uint32(buf,
-				    g_bytes_get_size(blob) + FU_EFI_FIRMWARE_FILE_SIZE,
-				    G_LITTLE_ENDIAN);
-	buf->data[FU_EFI_FIRMWARE_FILE_OFFSET_STATE] = 0xF8; /* overwrite the LSB of size */
+	fu_struct_set_u8ptr(st, "name", guid, sizeof(guid));
+	fu_struct_set_u8(st, "hdr_checksum", 0x0);
+	fu_struct_set_u8(st, "data_checksum", 0x100 - fu_sum8_bytes(blob));
+	fu_struct_set_u8(st, "type", priv->type);
+	fu_struct_set_u8(st, "attrs", priv->attrib);
+	fu_struct_set_u24(st, "size", g_bytes_get_size(blob) + fu_struct_size(st));
 
 	/* fix up header checksum */
+	buf = fu_struct_pack(st);
 	hdr_blob = g_bytes_new(buf->data, buf->len);
-	buf->data[FU_EFI_FIRMWARE_FILE_OFFSET_HDR_CHECKSUM] =
-	    fu_efi_firmware_file_hdr_checksum8(hdr_blob);
+	buf->data[fu_struct_get_id_offset(st, "hdr_checksum")] =
+	    fu_efi_firmware_file_hdr_checksum8(self, hdr_blob);
 
 	/* payload */
 	fu_byte_array_append_bytes(buf, blob);
@@ -392,6 +325,16 @@ fu_efi_firmware_file_init(FuEfiFirmwareFile *self)
 	priv->attrib = FU_EFI_FIRMWARE_FILE_ATTRIB_NONE;
 	priv->type = FU_EFI_FIRMWARE_FILE_TYPE_RAW;
 	fu_firmware_set_alignment(FU_FIRMWARE(self), FU_FIRMWARE_ALIGNMENT_8);
+	fu_struct_register(self,
+			   "EfiFirmwareFile {"
+			   "    name: guid,"
+			   "    hdr_checksum: u8,"
+			   "    data_checksum: u8,"
+			   "    type: u8,"
+			   "    attrs: u8,"
+			   "    size: u24le,"
+			   "    state: u8:: 0xF8,"
+			   "}");
 }
 
 static void

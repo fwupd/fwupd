@@ -7,8 +7,7 @@
 #include "config.h"
 
 #include "fu-acpi-table.h"
-#include "fu-mem.h"
-#include "fu-string.h"
+#include "fu-struct.h"
 #include "fu-sum.h"
 
 /**
@@ -29,19 +28,6 @@ typedef struct {
 G_DEFINE_TYPE_WITH_PRIVATE(FuAcpiTable, fu_acpi_table, FU_TYPE_FIRMWARE)
 
 #define GET_PRIVATE(o) (fu_acpi_table_get_instance_private(o))
-
-/* almost all ACPI tables have this structure */
-typedef struct __attribute__((packed)) {
-	gchar signature[4];
-	guint32 length;
-	guint8 revision;
-	guint8 checksum;
-	gchar oem_id[6];
-	gchar oem_table_id[8];
-	guint32 oem_revision;
-	gchar asl_compiler_id[4];
-	guint32 asl_compiler_revision;
-} FuAcpiTableHdr;
 
 static void
 fu_acpi_table_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
@@ -135,37 +121,25 @@ fu_acpi_table_parse(FuFirmware *firmware,
 {
 	FuAcpiTable *self = FU_ACPI_TABLE(firmware);
 	FuAcpiTablePrivate *priv = GET_PRIVATE(self);
-	gchar oem_id[6] = {'\0'};
-	gchar oem_table_id[8] = {'\0'};
-	gchar signature[4] = {'\0'};
+	FuStruct *st = fu_struct_lookup(self, "AcpiTableHdr");
 	gsize bufsz = 0;
-	guint32 length = 0;
-	guint8 checksum = 0;
+	guint32 length;
 	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
 	g_autofree gchar *id = NULL;
 
-	/* signature */
-	if (!fu_memcpy_safe((guint8 *)signature,
-			    sizeof(signature),
-			    0x0, /* dst */
-			    buf,
-			    bufsz,
-			    offset + G_STRUCT_OFFSET(FuAcpiTableHdr, signature), /* src */
-			    sizeof(signature),
-			    error))
+	/* unpack */
+	if (!fu_struct_unpack_full(st, buf, bufsz, offset, FU_STRUCT_FLAG_NONE, error))
 		return FALSE;
-	id = fu_strsafe(signature, sizeof(signature));
+	id = fu_struct_get_string(st, "signature");
 	fu_firmware_set_id(FU_FIRMWARE(self), id);
+	priv->revision = fu_struct_get_u8(st, "revision");
+	priv->oem_id = fu_struct_get_string(st, "oem_id");
+	priv->oem_table_id = fu_struct_get_string(st, "oem_table_id");
+	priv->oem_revision = fu_struct_get_u32(st, "oem_revision");
 
 	/* length */
-	if (!fu_memread_uint32_safe(buf,
-				    bufsz,
-				    offset + G_STRUCT_OFFSET(FuAcpiTableHdr, length),
-				    &length,
-				    G_LITTLE_ENDIAN,
-				    error))
-		return FALSE;
-	if (length > bufsz || length < sizeof(FuAcpiTableHdr)) {
+	length = fu_struct_get_u32(st, "length");
+	if (length > bufsz || length < fu_struct_size(st)) {
 		g_set_error(error,
 			    G_IO_ERROR,
 			    G_IO_ERROR_INVALID_DATA,
@@ -176,24 +150,11 @@ fu_acpi_table_parse(FuFirmware *firmware,
 	}
 	fu_firmware_set_size(firmware, length);
 
-	/* revision */
-	if (!fu_memread_uint8_safe(buf,
-				   bufsz,
-				   offset + G_STRUCT_OFFSET(FuAcpiTableHdr, revision),
-				   &priv->revision,
-				   error))
-		return FALSE;
-
 	/* checksum */
-	if (!fu_memread_uint8_safe(buf,
-				   bufsz,
-				   offset + G_STRUCT_OFFSET(FuAcpiTableHdr, checksum),
-				   &checksum,
-				   error))
-		return FALSE;
 	if ((flags & FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM) == 0) {
 		guint8 checksum_actual = fu_sum8(buf, length);
 		if (checksum_actual != 0x0) {
+			guint8 checksum = fu_struct_get_u8(st, "checksum");
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INTERNAL,
@@ -204,39 +165,6 @@ fu_acpi_table_parse(FuFirmware *firmware,
 		}
 	}
 
-	/* OEM ID */
-	if (!fu_memcpy_safe((guint8 *)oem_id,
-			    sizeof(oem_id),
-			    0x0, /* dst */
-			    buf,
-			    bufsz,
-			    offset + G_STRUCT_OFFSET(FuAcpiTableHdr, oem_id), /* src */
-			    sizeof(oem_id),
-			    error))
-		return FALSE;
-	priv->oem_id = fu_strsafe(oem_id, sizeof(oem_id));
-
-	/* OEM table ID */
-	if (!fu_memcpy_safe((guint8 *)oem_table_id,
-			    sizeof(oem_table_id),
-			    0x0, /* dst */
-			    buf,
-			    bufsz,
-			    offset + G_STRUCT_OFFSET(FuAcpiTableHdr, oem_table_id), /* src */
-			    sizeof(oem_table_id),
-			    error))
-		return FALSE;
-	priv->oem_table_id = fu_strsafe(oem_table_id, sizeof(oem_table_id));
-
-	/* OEM revision */
-	if (!fu_memread_uint32_safe(buf,
-				    bufsz,
-				    offset + G_STRUCT_OFFSET(FuAcpiTableHdr, oem_revision),
-				    &priv->oem_revision,
-				    G_LITTLE_ENDIAN,
-				    error))
-		return FALSE;
-
 	/* success */
 	return TRUE;
 }
@@ -245,6 +173,18 @@ static void
 fu_acpi_table_init(FuAcpiTable *self)
 {
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_CHECKSUM);
+	fu_struct_register(self,
+			   "AcpiTableHdr {"
+			   "    signature: 4s,"
+			   "    length: u32le,"
+			   "    revision: u8,"
+			   "    checksum: u8,"
+			   "    oem_id: 6s,"
+			   "    oem_table_id: 8s,"
+			   "    oem_revision: u32le,"
+			   "    asl_compiler_id: 4s,"
+			   "    asl_compiler_revision: u32le,"
+			   "}");
 }
 
 static void

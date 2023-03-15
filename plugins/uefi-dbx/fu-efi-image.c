@@ -21,11 +21,6 @@ typedef struct {
 	gchar *name;
 } FuEfiImageRegion;
 
-typedef struct __attribute__((packed)) {
-	guint32 addr;
-	guint32 size;
-} FuEfiImageDataDirEntry;
-
 G_DEFINE_TYPE(FuEfiImage, fu_efi_image, G_TYPE_OBJECT)
 
 #define _DOS_OFFSET_SIGNATURE	 0x00
@@ -109,6 +104,7 @@ fu_efi_image_new(GBytes *data, GError **error)
 	g_autoptr(FuEfiImage) self = g_object_new(FU_TYPE_EFI_IMAGE, NULL);
 	g_autoptr(GChecksum) checksum = g_checksum_new(G_CHECKSUM_SHA256);
 	g_autoptr(GPtrArray) checksum_regions = NULL;
+	FuStruct *st_ent = fu_struct_lookup(self, "EfiImageDataDirEntry");
 
 	/* verify this is a DOS file */
 	buf = fu_bytes_get_data_safe(data, &bufsz, error);
@@ -268,12 +264,12 @@ fu_efi_image_new(GBytes *data, GError **error)
 				    "cksum->datadir[DEBUG]",
 				    checksum_offset + sizeof(guint32),
 				    data_dir_debug_offset);
-	image_bytes += r->size + sizeof(FuEfiImageDataDirEntry);
+	image_bytes += r->size + fu_struct_size(st_ent);
 
 	/* third region: end of checksum_offset to end of headers */
 	r = fu_efi_image_add_region(checksum_regions,
 				    "datadir[DEBUG]->headers",
-				    data_dir_debug_offset + sizeof(FuEfiImageDataDirEntry),
+				    data_dir_debug_offset + fu_struct_size(st_ent),
 				    header_size);
 	image_bytes += r->size;
 
@@ -381,4 +377,9 @@ fu_efi_image_class_init(FuEfiImageClass *klass)
 static void
 fu_efi_image_init(FuEfiImage *self)
 {
+	fu_struct_register(self,
+			   "EfiImageDataDirEntry {"
+			   "    addr: u32le,"
+			   "    size: u32le,"
+			   "}");
 }

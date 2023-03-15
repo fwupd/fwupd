@@ -42,31 +42,33 @@ fu_vli_usbhub_pd_device_to_string(FuDevice *device, guint idt, GString *str)
 static gboolean
 fu_vli_usbhub_pd_device_setup(FuDevice *device, GError **error)
 {
-	FuVliPdHdr hdr = {0x0};
 	FuVliUsbhubPdDevice *self = FU_VLI_USBHUB_PD_DEVICE(device);
 	FuVliUsbhubDevice *parent = FU_VLI_USBHUB_DEVICE(fu_device_get_parent(device));
+	g_autoptr(FuFirmware) firmware = fu_vli_pd_firmware_new();
+	FuStruct *st = fu_struct_lookup(firmware, "VliPdHdr");
 	const gchar *name;
 	guint32 fwver;
+	g_autofree guint8 *buf = g_malloc0(fu_struct_size(st));
 
 	/* legacy location */
 	if (!fu_vli_device_spi_read_block(FU_VLI_DEVICE(parent),
 					  VLI_USBHUB_FLASHMAP_ADDR_PD_LEGACY +
 					      VLI_USBHUB_PD_FLASHMAP_ADDR_LEGACY,
-					  (guint8 *)&hdr,
-					  sizeof(hdr),
+					  buf,
+					  fu_struct_size(st),
 					  error)) {
 		g_prefix_error(error, "failed to read legacy PD header: ");
 		return FALSE;
 	}
 
 	/* new location */
-	if (GUINT16_FROM_LE(hdr.vid) != 0x2109) {
-		g_debug("PD VID was 0x%04x trying new location", GUINT16_FROM_LE(hdr.vid));
+	if (fu_struct_get_u16(st, "vid") != 0x2109) {
+		g_debug("PD VID was 0x%04x trying new location", fu_struct_get_u16(st, "vid"));
 		if (!fu_vli_device_spi_read_block(FU_VLI_DEVICE(parent),
 						  VLI_USBHUB_FLASHMAP_ADDR_PD +
 						      VLI_USBHUB_PD_FLASHMAP_ADDR,
-						  (guint8 *)&hdr,
-						  sizeof(hdr),
+						  buf,
+						  fu_struct_size(st),
 						  error)) {
 			g_prefix_error(error, "failed to read PD header: ");
 			return FALSE;
@@ -74,13 +76,13 @@ fu_vli_usbhub_pd_device_setup(FuDevice *device, GError **error)
 	}
 
 	/* just empty space */
-	if (hdr.fwver == G_MAXUINT32) {
+	fwver = fu_struct_get_u32(st, "fwver");
+	if (fwver == G_MAXUINT32) {
 		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "no PD device header found");
 		return FALSE;
 	}
 
 	/* get version */
-	fwver = GUINT32_FROM_BE(hdr.fwver);
 	self->device_kind = fu_vli_pd_common_guess_device_kind(fwver);
 	if (self->device_kind == FU_VLI_DEVICE_KIND_UNKNOWN) {
 		g_set_error(error,
@@ -97,8 +99,8 @@ fu_vli_usbhub_pd_device_setup(FuDevice *device, GError **error)
 	fu_device_set_version_from_uint32(device, fwver);
 
 	/* add standard GUIDs in order of priority */
-	fu_device_add_instance_u16(device, "VID", GUINT16_FROM_LE(hdr.vid));
-	fu_device_add_instance_u16(device, "PID", GUINT16_FROM_LE(hdr.pid));
+	fu_device_add_instance_u16(device, "VID", fu_struct_get_u16(st, "vid"));
+	fu_device_add_instance_u16(device, "PID", fu_struct_get_u16(st, "pid"));
 	fu_device_add_instance_u8(device, "APP", fwver & 0xff);
 	fu_device_add_instance_str(device, "DEV", name);
 	if (!fu_device_build_instance_id_quirk(device, error, "USB", "VID", NULL))

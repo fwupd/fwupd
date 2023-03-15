@@ -6,8 +6,6 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
 #include "fu-redfish-common.h"
 #include "fu-redfish-smbios.h"
 
@@ -22,22 +20,6 @@ struct _FuRedfishSmbios {
 };
 
 G_DEFINE_TYPE(FuRedfishSmbios, fu_redfish_smbios, FU_TYPE_FIRMWARE)
-
-typedef struct __attribute__((packed)) {
-	guint8 service_uuid[16];
-	guint8 host_ip_assignment_type;
-	guint8 host_ip_address_format;
-	guint8 host_ip_address[16];
-	guint8 host_ip_mask[16];
-	guint8 service_ip_assignment_type;
-	guint8 service_ip_address_format;
-	guint8 service_ip_address[16];
-	guint8 service_ip_mask[16];
-	guint16 service_ip_port;
-	guint32 service_ip_vlan_id;
-	guint8 service_hostname_len;
-	/* optional service_hostname goes here */
-} FuRedfishProtocolOverIp;
 
 guint16
 fu_redfish_smbios_get_port(FuRedfishSmbios *self)
@@ -221,49 +203,24 @@ fu_redfish_smbios_parse_interface_data(FuRedfishSmbios *self,
 static gboolean
 fu_redfish_smbios_parse_over_ip(FuRedfishSmbios *self, GBytes *fw, gsize offset, GError **error)
 {
+	FuStruct *st_pto = fu_struct_lookup(self, "RedfishProtocolOverIp");
 	gsize bufsz = 0;
 	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
-	guint8 hostname_length = 0x0;
-	guint8 service_ip_address_format = 0x0;
-	guint16 service_ip_port = 0x0;
-	guint8 service_ip_address[16] = {0x0};
+	guint8 hostname_length;
+	guint8 service_ip_address_format;
 
-	/* port */
-	if (!fu_memread_uint16_safe(buf,
-				    bufsz,
-				    offset +
-					G_STRUCT_OFFSET(FuRedfishProtocolOverIp, service_ip_port),
-				    &service_ip_port,
-				    G_LITTLE_ENDIAN,
-				    error))
+	/* port + IP address */
+	if (!fu_struct_unpack_full(st_pto, buf, bufsz, offset, FU_STRUCT_FLAG_NONE, error))
 		return FALSE;
-	fu_redfish_smbios_set_port(self, service_ip_port);
-
-	/* IP address */
-	if (!fu_memcpy_safe(
-		service_ip_address,
-		sizeof(service_ip_address),
-		0x0, /* dst */
-		buf,
-		bufsz,
-		offset + G_STRUCT_OFFSET(FuRedfishProtocolOverIp, service_ip_address), /* src */
-		sizeof(service_ip_address),
-		error))
-		return FALSE;
-	if (!fu_memread_uint8_safe(
-		buf,
-		bufsz,
-		offset + G_STRUCT_OFFSET(FuRedfishProtocolOverIp, service_ip_address_format),
-		&service_ip_address_format,
-		error))
-		return FALSE;
+	fu_redfish_smbios_set_port(self, fu_struct_get_u16(st_pto, "service_ip_port"));
+	service_ip_address_format = fu_struct_get_u8(st_pto, "service_ip_address_format");
 	if (service_ip_address_format == REDFISH_IP_ADDRESS_FORMAT_V4) {
-		g_autofree gchar *tmp = NULL;
-		tmp = fu_redfish_common_buffer_to_ipv4(service_ip_address);
+		const guint8 *ip_address = fu_struct_get_u8ptr(st_pto, "service_ip_address", NULL);
+		g_autofree gchar *tmp = fu_redfish_common_buffer_to_ipv4(ip_address);
 		fu_redfish_smbios_set_ip_addr(self, tmp);
 	} else if (service_ip_address_format == REDFISH_IP_ADDRESS_FORMAT_V6) {
-		g_autofree gchar *tmp = NULL;
-		tmp = fu_redfish_common_buffer_to_ipv6(service_ip_address);
+		const guint8 *ip_address = fu_struct_get_u8ptr(st_pto, "service_ip_address", NULL);
+		g_autofree gchar *tmp = fu_redfish_common_buffer_to_ipv6(ip_address);
 		fu_redfish_smbios_set_ip_addr(self, tmp);
 	} else {
 		g_set_error_literal(error,
@@ -274,13 +231,7 @@ fu_redfish_smbios_parse_over_ip(FuRedfishSmbios *self, GBytes *fw, gsize offset,
 	}
 
 	/* hostname */
-	if (!fu_memread_uint8_safe(
-		buf,
-		bufsz,
-		offset + G_STRUCT_OFFSET(FuRedfishProtocolOverIp, service_hostname_len),
-		&hostname_length,
-		error))
-		return FALSE;
+	hostname_length = fu_struct_get_u8(st_pto, "service_hostname_len");
 	if (hostname_length > 0) {
 		g_autofree gchar *hostname = g_malloc0(hostname_length + 1);
 		if (!fu_memcpy_safe((guint8 *)hostname,
@@ -288,7 +239,7 @@ fu_redfish_smbios_parse_over_ip(FuRedfishSmbios *self, GBytes *fw, gsize offset,
 				    0x0, /* dst */
 				    buf,
 				    bufsz,
-				    offset + sizeof(FuRedfishProtocolOverIp), /* src */
+				    offset + fu_struct_size(st_pto), /* src */
 				    hostname_length,
 				    error))
 			return FALSE;
@@ -382,8 +333,8 @@ fu_redfish_smbios_parse(FuFirmware *firmware,
 static GBytes *
 fu_redfish_smbios_write(FuFirmware *firmware, GError **error)
 {
-	FuRedfishProtocolOverIp proto = {0x0};
 	FuRedfishSmbios *self = FU_REDFISH_SMBIOS(firmware);
+	FuStruct *st_pto = fu_struct_lookup(self, "RedfishProtocolOverIp");
 	gsize hostname_sz = 0;
 	g_autoptr(GByteArray) buf = g_byte_array_new();
 
@@ -405,42 +356,15 @@ fu_redfish_smbios_write(FuFirmware *firmware, GError **error)
 
 	/* protocol record */
 	fu_byte_array_append_uint8(buf, REDFISH_PROTOCOL_REDFISH_OVER_IP);
-	fu_byte_array_append_uint8(buf, sizeof(FuRedfishProtocolOverIp) + hostname_sz);
-	if (!fu_memwrite_uint16_safe((guint8 *)&proto,
-				     sizeof(proto),
-				     G_STRUCT_OFFSET(FuRedfishProtocolOverIp, service_ip_port),
-				     self->port,
-				     G_LITTLE_ENDIAN,
-				     error))
-		return NULL;
-	if (!fu_memwrite_uint8_safe(
-		(guint8 *)&proto,
-		sizeof(proto),
-		G_STRUCT_OFFSET(FuRedfishProtocolOverIp, service_ip_address_format),
-		REDFISH_IP_ADDRESS_FORMAT_V4,
-		error))
-		return NULL;
-	if (!fu_memwrite_uint8_safe(
-		(guint8 *)&proto,
-		sizeof(proto),
-		G_STRUCT_OFFSET(FuRedfishProtocolOverIp, service_ip_assignment_type),
-		REDFISH_IP_ASSIGNMENT_TYPE_STATIC,
-		error))
-		return NULL;
+	fu_byte_array_append_uint8(buf, fu_struct_size(st_pto) + hostname_sz);
+
 	if (self->hostname != NULL)
 		hostname_sz = strlen(self->hostname);
-	if (hostname_sz > 0) {
-		if (!fu_memwrite_uint8_safe(
-			(guint8 *)&proto,
-			sizeof(proto),
-			G_STRUCT_OFFSET(FuRedfishProtocolOverIp, service_hostname_len),
-			hostname_sz,
-			error)) {
-			g_prefix_error(error, "cannot write length: ");
-			return NULL;
-		}
-	}
-	g_byte_array_append(buf, (guint8 *)&proto, sizeof(proto));
+	fu_struct_set_u16(st_pto, "service_ip_port", self->port);
+	fu_struct_set_u8(st_pto, "service_ip_address_format", REDFISH_IP_ADDRESS_FORMAT_V4);
+	fu_struct_set_u32(st_pto, "service_ip_assignment_type", REDFISH_IP_ASSIGNMENT_TYPE_STATIC);
+	fu_struct_set_u8(st_pto, "service_hostname_len", hostname_sz);
+	fu_struct_pack_into(st_pto, buf);
 	if (hostname_sz > 0)
 		g_byte_array_append(buf, (guint8 *)self->hostname, hostname_sz);
 	return g_byte_array_free_to_bytes(g_steal_pointer(&buf));
@@ -459,6 +383,22 @@ fu_redfish_smbios_finalize(GObject *object)
 static void
 fu_redfish_smbios_init(FuRedfishSmbios *self)
 {
+	fu_struct_register(self,
+			   "RedfishProtocolOverIp {"
+			   "    service_uuid: 16u8,"
+			   "    host_ip_assignment_type: u8,"
+			   "    host_ip_address_format: u8,"
+			   "    host_ip_address: 16u8,"
+			   "    host_ip_mask: 16u8,"
+			   "    service_ip_assignment_type: u8,"
+			   "    service_ip_address_format: u8,"
+			   "    service_ip_address: 16u8,"
+			   "    service_ip_mask: 16u8,"
+			   "    service_ip_port: u16le,"
+			   "    service_ip_vlan_id: u32le,"
+			   "    service_hostname_len: u8,"
+			   /* optional service_hostname goes here */
+			   "}");
 }
 
 static void

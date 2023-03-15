@@ -12,6 +12,8 @@
 #include "fu-efi-firmware-filesystem.h"
 #include "fu-efi-firmware-volume.h"
 #include "fu-mem.h"
+#include "fu-struct.h"
+#include "fu-sum.h"
 
 /**
  * FuEfiFirmwareVolume:
@@ -28,21 +30,7 @@ typedef struct {
 G_DEFINE_TYPE_WITH_PRIVATE(FuEfiFirmwareVolume, fu_efi_firmware_volume, FU_TYPE_FIRMWARE)
 #define GET_PRIVATE(o) (fu_efi_firmware_volume_get_instance_private(o))
 
-#define FU_EFI_FIRMWARE_VOLUME_SIGNATURE 0x4856465F
 #define FU_EFI_FIRMWARE_VOLUME_REVISION	 0x02
-
-#define FU_EFI_FIRMWARE_VOLUME_OFFSET_ZERO_VECTOR 0x00
-#define FU_EFI_FIRMWARE_VOLUME_OFFSET_GUID	  0x10
-#define FU_EFI_FIRMWARE_VOLUME_OFFSET_LENGTH	  0x20
-#define FU_EFI_FIRMWARE_VOLUME_OFFSET_SIGNATURE	  0x28
-#define FU_EFI_FIRMWARE_VOLUME_OFFSET_ATTRS	  0x2C
-#define FU_EFI_FIRMWARE_VOLUME_OFFSET_HDR_LEN	  0x30
-#define FU_EFI_FIRMWARE_VOLUME_OFFSET_CHECKSUM	  0x32
-#define FU_EFI_FIRMWARE_VOLUME_OFFSET_EXT_HDR	  0x34
-#define FU_EFI_FIRMWARE_VOLUME_OFFSET_RESERVED	  0x36
-#define FU_EFI_FIRMWARE_VOLUME_OFFSET_REVISION	  0x37
-#define FU_EFI_FIRMWARE_VOLUME_OFFSET_BLOCK_MAP	  0x38
-#define FU_EFI_FIRMWARE_VOLUME_SIZE		  0x40
 
 static void
 fu_ifd_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
@@ -60,29 +48,13 @@ fu_ifd_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuil
 static gboolean
 fu_efi_firmware_volume_check_magic(FuFirmware *firmware, GBytes *fw, gsize offset, GError **error)
 {
-	guint32 magic = 0;
-
-	if (!fu_memread_uint32_safe(g_bytes_get_data(fw, NULL),
-				    g_bytes_get_size(fw),
-				    offset + FU_EFI_FIRMWARE_VOLUME_OFFSET_SIGNATURE,
-				    &magic,
-				    G_LITTLE_ENDIAN,
-				    error)) {
-		g_prefix_error(error, "failed to read magic: ");
-		return FALSE;
-	}
-	if (magic != FU_EFI_FIRMWARE_VOLUME_SIGNATURE) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_FILE,
-			    "EFI FV signature invalid, got 0x%x, expected 0x%x",
-			    magic,
-			    (guint)FU_EFI_FIRMWARE_VOLUME_SIGNATURE);
-		return FALSE;
-	}
-
-	/* success */
-	return TRUE;
+	FuStruct *st_hdr = fu_struct_lookup(firmware, "EfiFirmwareVolumeHdr");
+	return fu_struct_unpack_full(st_hdr,
+				     g_bytes_get_data(fw, NULL),
+				     g_bytes_get_size(fw),
+				     offset,
+				     FU_STRUCT_FLAG_ONLY_CONSTANTS,
+				     error);
 }
 
 static gboolean
@@ -94,11 +66,10 @@ fu_efi_firmware_volume_parse(FuFirmware *firmware,
 {
 	FuEfiFirmwareVolume *self = FU_EFI_FIRMWARE_VOLUME(firmware);
 	FuEfiFirmwareVolumePrivate *priv = GET_PRIVATE(self);
-	fwupd_guid_t guid = {0x0};
+	FuStruct *st_hdr = fu_struct_lookup(firmware, "EfiFirmwareVolumeHdr");
+	FuStruct *st_blk = fu_struct_lookup(firmware, "EfiFirmwareVolumeBlockMap");
 	gsize blockmap_sz = 0;
 	gsize bufsz = 0;
-	guint16 checksum = 0;
-	guint16 ext_hdr = 0;
 	guint16 hdr_length = 0;
 	guint32 attrs = 0;
 	guint64 fv_length = 0;
@@ -108,31 +79,17 @@ fu_efi_firmware_volume_parse(FuFirmware *firmware,
 	g_autofree gchar *guid_str = NULL;
 	g_autoptr(GBytes) blob = NULL;
 
-	/* guid */
-	if (!fu_memcpy_safe((guint8 *)&guid,
-			    sizeof(guid),
-			    0x0, /* dst */
-			    buf,
-			    bufsz,
-			    offset + FU_EFI_FIRMWARE_VOLUME_OFFSET_GUID, /* src */
-			    sizeof(guid),
-			    error)) {
-		g_prefix_error(error, "failed to read GUID: ");
+	/* parse */
+	if (!fu_struct_unpack_full(st_hdr, buf, bufsz, offset, FU_STRUCT_FLAG_NONE, error))
 		return FALSE;
-	}
-	guid_str = fwupd_guid_to_string(&guid, FWUPD_GUID_FLAG_MIXED_ENDIAN);
+
+	/* guid */
+	guid_str =
+	    fwupd_guid_to_string(fu_struct_get_guid(st_hdr, "guid"), FWUPD_GUID_FLAG_MIXED_ENDIAN);
 	g_debug("volume GUID: %s [%s]", guid_str, fu_efi_guid_to_name(guid_str));
 
 	/* length */
-	if (!fu_memread_uint64_safe(buf,
-				    bufsz,
-				    offset + FU_EFI_FIRMWARE_VOLUME_OFFSET_LENGTH,
-				    &fv_length,
-				    G_LITTLE_ENDIAN,
-				    error)) {
-		g_prefix_error(error, "failed to read length: ");
-		return FALSE;
-	}
+	fv_length = fu_struct_get_u64(st_hdr, "length");
 	if (fv_length == 0x0) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -141,15 +98,7 @@ fu_efi_firmware_volume_parse(FuFirmware *firmware,
 		return FALSE;
 	}
 	fu_firmware_set_size(firmware, fv_length);
-	if (!fu_memread_uint32_safe(buf,
-				    bufsz,
-				    offset + FU_EFI_FIRMWARE_VOLUME_OFFSET_ATTRS,
-				    &attrs,
-				    G_LITTLE_ENDIAN,
-				    error)) {
-		g_prefix_error(error, "failed to read attrs: ");
-		return FALSE;
-	}
+	attrs = fu_struct_get_u32(st_hdr, "attrs");
 	alignment = (attrs & 0x00ff0000) >> 16;
 	if (alignment > FU_FIRMWARE_ALIGNMENT_2G) {
 		g_set_error(error,
@@ -162,46 +111,15 @@ fu_efi_firmware_volume_parse(FuFirmware *firmware,
 	}
 	fu_firmware_set_alignment(firmware, alignment);
 	priv->attrs = attrs & 0xffff;
-	if (!fu_memread_uint16_safe(buf,
-				    bufsz,
-				    offset + FU_EFI_FIRMWARE_VOLUME_OFFSET_HDR_LEN,
-				    &hdr_length,
-				    G_LITTLE_ENDIAN,
-				    error)) {
-		g_prefix_error(error, "failed to read hdr_length: ");
-		return FALSE;
-	}
-	if (hdr_length < FU_EFI_FIRMWARE_VOLUME_SIZE || hdr_length > fv_length) {
+	hdr_length = fu_struct_get_u16(st_hdr, "hdr_len");
+	if (hdr_length < fu_struct_size(st_hdr) || hdr_length > fv_length || hdr_length > bufsz) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INTERNAL,
 				    "invalid volume header length");
 		return FALSE;
 	}
-	if (!fu_memread_uint16_safe(buf,
-				    bufsz,
-				    offset + FU_EFI_FIRMWARE_VOLUME_OFFSET_CHECKSUM,
-				    &checksum,
-				    G_LITTLE_ENDIAN,
-				    error)) {
-		g_prefix_error(error, "failed to read checksum: ");
-		return FALSE;
-	}
-	if (!fu_memread_uint16_safe(buf,
-				    bufsz,
-				    offset + FU_EFI_FIRMWARE_VOLUME_OFFSET_EXT_HDR,
-				    &ext_hdr,
-				    G_LITTLE_ENDIAN,
-				    error)) {
-		g_prefix_error(error, "failed to read ext_hdr: ");
-		return FALSE;
-	}
-	if (!fu_memread_uint8_safe(buf,
-				   bufsz,
-				   offset + FU_EFI_FIRMWARE_VOLUME_OFFSET_REVISION,
-				   &revision,
-				   error))
-		return FALSE;
+	revision = fu_struct_get_u8(st_hdr, "revision");
 	if (revision != FU_EFI_FIRMWARE_VOLUME_REVISION) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -214,27 +132,14 @@ fu_efi_firmware_volume_parse(FuFirmware *firmware,
 
 	/* verify checksum */
 	if ((flags & FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM) == 0) {
-		guint16 checksum_verify = 0;
-		for (guint j = 0; j < hdr_length; j += sizeof(guint16)) {
-			guint16 checksum_tmp = 0;
-			if (!fu_memread_uint16_safe(buf,
-						    bufsz,
-						    offset + j,
-						    &checksum_tmp,
-						    G_LITTLE_ENDIAN,
-						    error)) {
-				g_prefix_error(error, "failed to hdr checksum 0x%x: ", j);
-				return FALSE;
-			}
-			checksum_verify += checksum_tmp;
-		}
+		guint16 checksum_verify = fu_sum16w(buf, hdr_length, G_LITTLE_ENDIAN);
 		if (checksum_verify != 0) {
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_FILE,
 				    "checksum invalid, got %02x, expected %02x",
 				    checksum_verify,
-				    checksum);
+				    fu_struct_get_u16(st_hdr, "checksum"));
 			return FALSE;
 		}
 	}
@@ -259,25 +164,15 @@ fu_efi_firmware_volume_parse(FuFirmware *firmware,
 	}
 
 	/* skip the blockmap */
-	offset += FU_EFI_FIRMWARE_VOLUME_OFFSET_BLOCK_MAP;
+	offset += fu_struct_size(st_hdr);
 	while (offset < bufsz) {
-		guint32 num_blocks = 0;
-		guint32 length = 0;
-		if (!fu_memread_uint32_safe(buf,
-					    bufsz,
-					    offset,
-					    &num_blocks,
-					    G_LITTLE_ENDIAN,
-					    error))
+		guint32 num_blocks;
+		guint32 length;
+		if (!fu_struct_unpack_full(st_blk, buf, bufsz, offset, FU_STRUCT_FLAG_NONE, error))
 			return FALSE;
-		if (!fu_memread_uint32_safe(buf,
-					    bufsz,
-					    offset + sizeof(guint32),
-					    &length,
-					    G_LITTLE_ENDIAN,
-					    error))
-			return FALSE;
-		offset += 2 * sizeof(guint32);
+		num_blocks = fu_struct_get_u32(st_blk, "num_blocks");
+		length = fu_struct_get_u32(st_blk, "length");
+		offset += fu_struct_size(st_blk);
 		if (num_blocks == 0x0 && length == 0x0)
 			break;
 		blockmap_sz += (gsize)num_blocks * (gsize)length;
@@ -299,7 +194,9 @@ fu_efi_firmware_volume_write(FuFirmware *firmware, GError **error)
 {
 	FuEfiFirmwareVolume *self = FU_EFI_FIRMWARE_VOLUME(firmware);
 	FuEfiFirmwareVolumePrivate *priv = GET_PRIVATE(self);
-	g_autoptr(GByteArray) buf = g_byte_array_new();
+	FuStruct *st_hdr = fu_struct_lookup(firmware, "EfiFirmwareVolumeHdr");
+	FuStruct *st_blk = fu_struct_lookup(firmware, "EfiFirmwareVolumeBlockMap");
+	g_autoptr(GByteArray) buf = NULL;
 	fwupd_guid_t guid = {0x0};
 	guint16 checksum = 0;
 	guint32 hdr_length = 0x48;
@@ -317,10 +214,6 @@ fu_efi_firmware_volume_write(FuFirmware *firmware, GError **error)
 		return NULL;
 	}
 
-	/* zero vector */
-	for (guint i = 0; i < 0x10; i++)
-		fu_byte_array_append_uint8(buf, 0x0);
-
 	/* GUID */
 	if (fu_firmware_get_id(firmware) == NULL) {
 		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "no GUID set for EFI FV");
@@ -331,7 +224,6 @@ fu_efi_firmware_volume_write(FuFirmware *firmware, GError **error)
 				    FWUPD_GUID_FLAG_MIXED_ENDIAN,
 				    error))
 		return NULL;
-	g_byte_array_append(buf, (const guint8 *)&guid, sizeof(guid));
 
 	/* length */
 	img = fu_firmware_get_image_by_id(firmware, NULL, NULL);
@@ -348,55 +240,31 @@ fu_efi_firmware_volume_write(FuFirmware *firmware, GError **error)
 			return NULL;
 		}
 	}
+
+	/* pack */
+	fu_struct_set_guid(st_hdr, "guid", &guid);
 	fv_length = fu_common_align_up(hdr_length + g_bytes_get_size(img_blob),
 				       fu_firmware_get_alignment(firmware));
-	fu_byte_array_append_uint64(buf, fv_length, G_LITTLE_ENDIAN);
-
-	/* signature */
-	fu_byte_array_append_uint32(buf, FU_EFI_FIRMWARE_VOLUME_SIGNATURE, G_LITTLE_ENDIAN);
-
-	/* attributes */
-	fu_byte_array_append_uint32(buf,
-				    priv->attrs |
-					((guint32)fu_firmware_get_alignment(firmware) << 16),
-				    G_LITTLE_ENDIAN);
-
-	/* header length */
-	fu_byte_array_append_uint16(buf, hdr_length, G_LITTLE_ENDIAN);
-
-	/* checksum (will fixup) */
-	fu_byte_array_append_uint16(buf, 0x0, G_LITTLE_ENDIAN);
-
-	/* ext header offset */
-	fu_byte_array_append_uint16(buf, 0x0, G_LITTLE_ENDIAN);
-
-	/* reserved */
-	fu_byte_array_append_uint8(buf, 0x0);
-
-	/* revision */
-	fu_byte_array_append_uint8(buf, FU_EFI_FIRMWARE_VOLUME_REVISION);
+	fu_struct_set_u64(st_hdr, "length", fv_length);
+	fu_struct_set_u32(st_hdr,
+			  "attrs",
+			  priv->attrs | ((guint32)fu_firmware_get_alignment(firmware) << 16));
+	fu_struct_set_u16(st_hdr, "hdr_len", hdr_length);
+	buf = fu_struct_pack(st_hdr);
 
 	/* blockmap */
-	fu_byte_array_append_uint32(buf, fv_length, G_LITTLE_ENDIAN);
-	fu_byte_array_append_uint32(buf, 0x1, G_LITTLE_ENDIAN);
-	fu_byte_array_append_uint32(buf, 0x0, G_LITTLE_ENDIAN);
-	fu_byte_array_append_uint32(buf, 0x0, G_LITTLE_ENDIAN);
+	fu_struct_set_u32(st_blk, "num_blocks", fv_length);
+	fu_struct_set_u32(st_blk, "length", 0x1);
+	fu_struct_pack_into(st_blk, buf);
+	fu_struct_set_u32(st_blk, "num_blocks", 0x0);
+	fu_struct_set_u32(st_blk, "length", 0x0);
+	fu_struct_pack_into(st_blk, buf);
 
 	/* fix up checksum */
-	for (guint j = buf->len - hdr_length; j < buf->len; j += sizeof(guint16)) {
-		guint16 checksum_tmp = 0;
-		if (!fu_memread_uint16_safe(buf->data,
-					    buf->len,
-					    j,
-					    &checksum_tmp,
-					    G_LITTLE_ENDIAN,
-					    error))
-			return NULL;
-		checksum += checksum_tmp;
-	}
+	checksum = fu_sum16w(buf->data, buf->len, G_LITTLE_ENDIAN);
 	if (!fu_memwrite_uint16_safe(buf->data,
 				     buf->len,
-				     buf->len - 0x16,
+				     fu_struct_get_id_offset(st_hdr, "checksum"),
 				     0x10000 - checksum,
 				     G_LITTLE_ENDIAN,
 				     error))
@@ -415,6 +283,24 @@ fu_efi_firmware_volume_init(FuEfiFirmwareVolume *self)
 {
 	FuEfiFirmwareVolumePrivate *priv = GET_PRIVATE(self);
 	priv->attrs = 0xfeff;
+	fu_struct_register(self,
+			   "EfiFirmwareVolumeHdr {"
+			   "    zero_vector: guid,"
+			   "    guid: guid,"
+			   "    length: u64le,"
+			   "    signature: u32le:: 0x4856465F,"
+			   "    attrs: u32le,"
+			   "    hdr_len: u16le,"
+			   "    checksum: u16le,"
+			   "    ext_hdr: u16le,"
+			   "    reserved: u8,"
+			   "    revision: u8: 0x02,"
+			   "}");
+	fu_struct_register(self,
+			   "EfiFirmwareVolumeBlockMap {"
+			   "    num_blocks: u32le,"
+			   "    length: u32le,"
+			   "}");
 }
 
 static void

@@ -11,8 +11,8 @@
 #include "fu-byte-array.h"
 #include "fu-cfu-offer.h"
 #include "fu-common.h"
-#include "fu-mem.h"
 #include "fu-string.h"
+#include "fu-struct.h"
 
 /**
  * FuCfuOffer:
@@ -425,39 +425,33 @@ fu_cfu_offer_parse(FuFirmware *firmware,
 	FuCfuOffer *self = FU_CFU_OFFER(firmware);
 	FuCfuOfferPrivate *priv = GET_PRIVATE(self);
 	gsize bufsz = 0;
-	guint8 tmp = 0;
-	guint32 tmp32 = 0;
+	guint8 flags1;
+	guint8 flags2;
+	guint8 flags3;
 	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
+	FuStruct *st = fu_struct_lookup(firmware, "CfuOffer");
+
+	/* parse */
+	if (!fu_struct_unpack_full(st, buf, bufsz, offset, FU_STRUCT_FLAG_NONE, error))
+		return FALSE;
+	priv->segment_number = fu_struct_get_u8(st, "segment_number");
+	priv->component_id = fu_struct_get_u8(st, "component_id");
+	priv->token = fu_struct_get_u8(st, "token");
+	priv->hw_variant = fu_struct_get_u32(st, "hw_variant");
+	priv->product_id = fu_struct_get_u16(st, "product_id");
+	fu_firmware_set_version_raw(firmware, fu_struct_get_u32(st, "version_raw"));
 
 	/* component info */
-	if (!fu_memread_uint8_safe(buf, bufsz, 0x0, &priv->segment_number, error))
-		return FALSE;
-	if (!fu_memread_uint8_safe(buf, bufsz, 0x1, &tmp, error))
-		return FALSE;
-	priv->force_ignore_version = (tmp & 0b1) > 0;
-	priv->force_immediate_reset = (tmp & 0b10) > 0;
-	if (!fu_memread_uint8_safe(buf, bufsz, 0x2, &priv->component_id, error))
-		return FALSE;
-	if (!fu_memread_uint8_safe(buf, bufsz, 0x3, &priv->token, error))
-		return FALSE;
-
-	/* version */
-	if (!fu_memread_uint32_safe(buf, bufsz, 0x4, &tmp32, G_LITTLE_ENDIAN, error))
-		return FALSE;
-	fu_firmware_set_version_raw(firmware, tmp32);
-	if (!fu_memread_uint32_safe(buf, bufsz, 0x8, &priv->hw_variant, G_LITTLE_ENDIAN, error))
-		return FALSE;
+	flags1 = fu_struct_get_u8(st, "flags1");
+	priv->force_ignore_version = (flags1 & 0b1) > 0;
+	priv->force_immediate_reset = (flags1 & 0b10) > 0;
 
 	/* product info */
-	if (!fu_memread_uint8_safe(buf, bufsz, 0xC, &tmp, error))
-		return FALSE;
-	priv->protocol_revision = (tmp >> 4) & 0b1111;
-	priv->bank = (tmp >> 2) & 0b11;
-	if (!fu_memread_uint8_safe(buf, bufsz, 0xD, &tmp, error))
-		return FALSE;
-	priv->milestone = (tmp >> 5) & 0b111;
-	if (!fu_memread_uint16_safe(buf, bufsz, 0xE, &priv->product_id, G_LITTLE_ENDIAN, error))
-		return FALSE;
+	flags2 = fu_struct_get_u8(st, "flags2");
+	priv->protocol_revision = (flags2 >> 4) & 0b1111;
+	priv->bank = (flags2 >> 2) & 0b11;
+	flags3 = fu_struct_get_u8(st, "flags3");
+	priv->milestone = (flags3 >> 5) & 0b111;
 
 	/* success */
 	return TRUE;
@@ -468,26 +462,27 @@ fu_cfu_offer_write(FuFirmware *firmware, GError **error)
 {
 	FuCfuOffer *self = FU_CFU_OFFER(firmware);
 	FuCfuOfferPrivate *priv = GET_PRIVATE(self);
-	g_autoptr(GByteArray) buf = g_byte_array_new();
+	FuStruct *st = fu_struct_lookup(firmware, "CfuOffer");
 
 	/* component info */
-	fu_byte_array_append_uint8(buf, priv->segment_number);
-	fu_byte_array_append_uint8(buf,
-				   priv->force_ignore_version | (priv->force_immediate_reset << 1));
-	fu_byte_array_append_uint8(buf, priv->component_id);
-	fu_byte_array_append_uint8(buf, priv->token);
+	fu_struct_set_u8(st, "segment_number", priv->segment_number);
+	fu_struct_set_u8(st,
+			 "flags1",
+			 priv->force_ignore_version | (priv->force_immediate_reset << 1));
+	fu_struct_set_u8(st, "component_id", priv->component_id);
+	fu_struct_set_u8(st, "token", priv->token);
 
 	/* version */
-	fu_byte_array_append_uint32(buf, fu_firmware_get_version_raw(firmware), G_LITTLE_ENDIAN);
-	fu_byte_array_append_uint32(buf, priv->hw_variant, G_LITTLE_ENDIAN);
+	fu_struct_set_u32(st, "version_raw", fu_firmware_get_version_raw(firmware));
+	fu_struct_set_u32(st, "hw_variant", priv->hw_variant);
 
 	/* product info */
-	fu_byte_array_append_uint8(buf, (priv->protocol_revision << 4) | (priv->bank << 2));
-	fu_byte_array_append_uint8(buf, priv->milestone << 5);
-	fu_byte_array_append_uint16(buf, priv->product_id, G_LITTLE_ENDIAN);
+	fu_struct_set_u8(st, "flags2", (priv->protocol_revision << 4) | (priv->bank << 2));
+	fu_struct_set_u8(st, "flags3", priv->milestone << 5);
+	fu_struct_set_u16(st, "product_id", priv->product_id);
 
 	/* success */
-	return g_byte_array_free_to_bytes(g_steal_pointer(&buf));
+	return fu_struct_pack_bytes(st);
 }
 
 static gboolean
@@ -542,6 +537,18 @@ static void
 fu_cfu_offer_init(FuCfuOffer *self)
 {
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_VID_PID);
+	fu_struct_register(self,
+			   "CfuOffer {"
+			   "    segment_number: u8,"
+			   "    flags1: u8,"
+			   "    component_id: u8,"
+			   "    token: u8,"
+			   "    version_raw: u32le,"
+			   "    hw_variant: u32le,"
+			   "    flags2: u8,"
+			   "    flags3: u8,"
+			   "    product_id: u16le,"
+			   "}");
 }
 
 static void

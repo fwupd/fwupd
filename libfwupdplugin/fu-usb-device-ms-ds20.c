@@ -8,7 +8,7 @@
 
 #include "config.h"
 
-#include "fu-mem.h"
+#include "fu-struct.h"
 #include "fu-usb-device-ms-ds20.h"
 
 struct _FuUsbDeviceMsDs20 {
@@ -57,29 +57,21 @@ fu_usb_device_ms_ds20_parse(FuUsbDeviceDs20 *self,
 			    FuUsbDevice *device,
 			    GError **error)
 {
+	FuStruct *st = fu_struct_lookup(self, "MsDs20Entry");
 	gsize bufsz = 0;
 	const guint8 *buf = g_bytes_get_data(blob, &bufsz);
 
 	/* get length and type only */
 	for (gsize offset = 0; offset < bufsz;) {
-		guint16 desc_sz = 0;
-		guint16 desc_type = 0;
-		if (!fu_memread_uint16_safe(buf,
-					    bufsz,
-					    offset + 0x0,
-					    &desc_sz,
-					    G_LITTLE_ENDIAN,
-					    error))
+		guint16 desc_sz;
+		guint16 desc_type;
+
+		if (!fu_struct_unpack_full(st, buf, bufsz, offset, FU_STRUCT_FLAG_NONE, error))
 			return FALSE;
+		desc_sz = fu_struct_get_u16(st, "size");
 		if (desc_sz == 0)
 			break;
-		if (!fu_memread_uint16_safe(buf,
-					    bufsz,
-					    offset + 0x2,
-					    &desc_type,
-					    G_LITTLE_ENDIAN,
-					    error))
-			return FALSE;
+		desc_type = fu_struct_get_u16(st, "type");
 		g_debug("USB OS descriptor type 0x%04x [%s], length 0x%04x",
 			desc_type,
 			fu_usb_device_os20_type_to_string(desc_type),
@@ -103,6 +95,11 @@ fu_usb_device_ms_ds20_init(FuUsbDeviceMsDs20 *self)
 {
 	fu_firmware_set_version_raw(FU_FIRMWARE(self), 0x06030000); /* Windows 8.1 */
 	fu_firmware_set_id(FU_FIRMWARE(self), "d8dd60df-4589-4cc7-9cd2-659d9e648a9f");
+	fu_struct_register(self,
+			   "MsDs20Entry {"
+			   "    size: u16le,"
+			   "    type: u16le,"
+			   "}");
 }
 
 /**

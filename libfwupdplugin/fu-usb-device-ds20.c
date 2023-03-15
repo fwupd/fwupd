@@ -11,7 +11,7 @@
 #include "fu-byte-array.h"
 #include "fu-bytes.h"
 #include "fu-dump.h"
-#include "fu-mem.h"
+#include "fu-struct.h"
 #include "fu-usb-device-ds20.h"
 
 /**
@@ -29,7 +29,7 @@ typedef struct {
 G_DEFINE_TYPE_WITH_PRIVATE(FuUsbDeviceDs20, fu_usb_device_ds20, FU_TYPE_FIRMWARE)
 #define GET_PRIVATE(o) (fu_usb_device_ds20_get_instance_private(o))
 
-typedef struct __attribute__((packed)) {
+typedef struct {
 	guint32 platform_ver;
 	guint16 total_length;
 	guint8 vendor_code;
@@ -126,22 +126,19 @@ fu_usb_device_ds20_apply_to_device(FuUsbDeviceDs20 *self, FuUsbDevice *device, G
 static gboolean
 fu_usb_device_ds20_check_magic(FuFirmware *firmware, GBytes *fw, gsize offset, GError **error)
 {
-	fwupd_guid_t guid = {0x0};
+	FuStruct *st = fu_struct_lookup(firmware, "UsbDeviceDs20");
 	g_autofree gchar *guid_str = NULL;
 
-	/* parse GUID */
-	if (!fu_memcpy_safe((guint8 *)&guid,
-			    sizeof(guid),
-			    0x0, /* dst */
-			    g_bytes_get_data(fw, NULL),
-			    g_bytes_get_size(fw),
-			    offset + 0x1, /* src */
-			    sizeof(guid),
-			    error))
-		return FALSE;
-
 	/* matches the correct UUID */
-	guid_str = fwupd_guid_to_string(&guid, FWUPD_GUID_FLAG_MIXED_ENDIAN);
+	if (!fu_struct_unpack_full(st,
+				   g_bytes_get_data(fw, NULL),
+				   g_bytes_get_size(fw),
+				   offset,
+				   FU_STRUCT_FLAG_NONE,
+				   error))
+		return FALSE;
+	guid_str =
+	    fwupd_guid_to_string(fu_struct_get_guid(st, "guid"), FWUPD_GUID_FLAG_MIXED_ENDIAN);
 	if (g_strcmp0(guid_str, fu_firmware_get_id(firmware)) != 0) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -176,62 +173,30 @@ fu_usb_device_ds20_parse(FuFirmware *firmware,
 {
 	FuUsbDeviceDs20 *self = FU_USB_DEVICE_DS20(firmware);
 	FuUsbDeviceDs20Private *priv = GET_PRIVATE(self);
-	const guint8 *buf;
+	FuStruct *st = fu_struct_lookup(self, "UsbDeviceDs20");
 	gsize bufsz = 0;
+	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
 	guint version_lowest = fu_firmware_get_version_raw(firmware);
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GPtrArray) dsinfos = g_ptr_array_new_with_free_func(g_free);
 
-	/* cut out the data */
-	blob = fu_bytes_new_offset(fw,
-				   1 + sizeof(fwupd_guid_t),
-				   g_bytes_get_size(fw) - (1 + sizeof(fwupd_guid_t)),
-				   error);
-	if (blob == NULL)
-		return FALSE;
-	buf = g_bytes_get_data(blob, &bufsz);
-	for (gsize off = 0; off < bufsz; off += sizeof(FuUsbDeviceDs20Item)) {
-		FuUsbDeviceDs20Item *dsinfo = g_new0(FuUsbDeviceDs20Item, 1);
-		guint16 total_length = 0;
-		guint32 platform_ver = 0;
+	for (gsize off = 0; off < bufsz; off += fu_struct_size(st)) {
+		g_autofree FuUsbDeviceDs20Item *dsinfo = g_new0(FuUsbDeviceDs20Item, 1);
 
-		g_ptr_array_add(dsinfos, dsinfo);
-		if (!fu_memread_uint32_safe(buf,
-					    bufsz,
-					    off +
-						G_STRUCT_OFFSET(FuUsbDeviceDs20Item, platform_ver),
-					    &platform_ver,
-					    G_LITTLE_ENDIAN,
-					    error))
+		/* parse */
+		if (!fu_struct_unpack_full(st, buf, bufsz, off, FU_STRUCT_FLAG_NONE, error))
 			return FALSE;
-		if (!fu_memread_uint16_safe(buf,
-					    bufsz,
-					    off +
-						G_STRUCT_OFFSET(FuUsbDeviceDs20Item, total_length),
-					    &total_length,
-					    G_LITTLE_ENDIAN,
-					    error))
-			return FALSE;
-		if (!fu_memread_uint8_safe(buf,
-					   bufsz,
-					   off + G_STRUCT_OFFSET(FuUsbDeviceDs20Item, vendor_code),
-					   &dsinfo->vendor_code,
-					   error))
-			return FALSE;
-		if (!fu_memread_uint8_safe(buf,
-					   bufsz,
-					   off + G_STRUCT_OFFSET(FuUsbDeviceDs20Item, alt_code),
-					   &dsinfo->alt_code,
-					   error))
-			return FALSE;
-		dsinfo->platform_ver = platform_ver;
-		dsinfo->total_length = total_length;
+		dsinfo->platform_ver = fu_struct_get_u32(st, "platform_ver");
+		dsinfo->total_length = fu_struct_get_u16(st, "total_length");
+		dsinfo->vendor_code = fu_struct_get_u8(st, "vendor_code");
+		dsinfo->alt_code = fu_struct_get_u8(st, "alt_code");
 		g_debug("PlatformVersion=0x%08x, TotalLength=0x%04x, VendorCode=0x%02x, "
 			"AltCode=0x%02x",
 			dsinfo->platform_ver,
 			dsinfo->total_length,
 			dsinfo->vendor_code,
 			dsinfo->alt_code);
+		g_ptr_array_add(dsinfos, g_steal_pointer(&dsinfo));
 	}
 
 	/* sort by platform_ver, highest first */
@@ -276,34 +241,35 @@ fu_usb_device_ds20_parse(FuFirmware *firmware,
 static GBytes *
 fu_usb_device_ds20_write(FuFirmware *firmware, GError **error)
 {
+	FuStruct *st = fu_struct_lookup(firmware, "UsbDeviceDs20");
 	fwupd_guid_t guid = {0x0};
-	g_autoptr(GByteArray) buf = g_byte_array_new();
 
-	/* bReserved */
-	fu_byte_array_append_uint8(buf, 0x0);
-
-	/* PlatformCapabilityUUID */
+	/* pack */
 	if (!fwupd_guid_from_string(fu_firmware_get_id(firmware),
 				    &guid,
 				    FWUPD_GUID_FLAG_MIXED_ENDIAN,
 				    error))
 		return NULL;
-	g_byte_array_append(buf, (const guint8 *)&guid, sizeof(guid));
-
-	/* CapabilityData */
-	fu_byte_array_append_uint32(buf, fu_firmware_get_version_raw(firmware), G_LITTLE_ENDIAN);
-	fu_byte_array_append_uint16(buf, fu_firmware_get_size(firmware), G_LITTLE_ENDIAN);
-	fu_byte_array_append_uint8(buf, fu_firmware_get_idx(firmware));
-	fu_byte_array_append_uint8(buf, 0x0); /* AltCode */
-
-	/* success */
-	return g_byte_array_free_to_bytes(g_steal_pointer(&buf));
+	fu_struct_set_guid(st, "guid", &guid);
+	fu_struct_set_u32(st, "platform_ver", fu_firmware_get_version_raw(firmware));
+	fu_struct_set_u16(st, "total_length", fu_firmware_get_size(firmware));
+	fu_struct_set_u8(st, "vendor_code", fu_firmware_get_idx(firmware));
+	return fu_struct_pack_bytes(st);
 }
 
 static void
 fu_usb_device_ds20_init(FuUsbDeviceDs20 *self)
 {
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_STORED_SIZE);
+	fu_struct_register(self,
+			   "UsbDeviceDs20 {"
+			   "    reserved: u8,"
+			   "    guid: guid,"
+			   "    platform_ver: u32le,"
+			   "    total_length: u16le,"
+			   "    vendor_code: u8,"
+			   "    alt_code: u8,"
+			   "}");
 }
 
 static void

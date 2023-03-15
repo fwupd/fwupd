@@ -18,13 +18,6 @@ struct _FuIgscOpromDevice {
 	guint16 major_version;
 };
 
-typedef struct __attribute__((packed)) {
-	guint16 major;
-	guint16 minor;
-	guint16 hotfix;
-	guint16 build;
-} FuIgscOpromVersion;
-
 G_DEFINE_TYPE(FuIgscOpromDevice, fu_igsc_oprom_device, FU_TYPE_DEVICE)
 
 static void
@@ -79,24 +72,27 @@ fu_igsc_oprom_device_setup(FuDevice *device, GError **error)
 {
 	FuIgscOpromDevice *self = FU_IGSC_OPROM_DEVICE(device);
 	FuIgscDevice *igsc_parent = FU_IGSC_DEVICE(fu_device_get_parent(device));
-	FuIgscOpromVersion oprom_ver = {0x0};
+	FuStruct *st_opv = fu_struct_lookup(self, "IgscOpromVersion");
 	g_autofree gchar *version = NULL;
+	guint8 buf[8] = {0x0};
 
 	/* get version */
 	if (!fu_igsc_device_get_version_raw(igsc_parent,
 					    self->partition_version,
-					    (guint8 *)&oprom_ver,
-					    sizeof(oprom_ver),
+					    buf,
+					    sizeof(buf),
 					    error)) {
 		g_prefix_error(error, "failed to get oprom version: ");
 		return FALSE;
 	}
-	self->major_version = oprom_ver.major;
+	if (!fu_struct_unpack_full(st_opv, buf, sizeof(buf), 0x0, FU_STRUCT_FLAG_NONE, error))
+		return FALSE;
+	self->major_version = fu_struct_get_u16(st_opv, "major");
 	version = g_strdup_printf("%u.%u.%u.%u",
-				  oprom_ver.major,
-				  oprom_ver.minor,
-				  oprom_ver.hotfix,
-				  oprom_ver.build);
+				  self->major_version,
+				  fu_struct_get_u16(st_opv, "minor"),
+				  fu_struct_get_u16(st_opv, "hotfix"),
+				  fu_struct_get_u16(st_opv, "build"));
 	fu_device_set_version(device, version);
 
 	/* success */
@@ -255,6 +251,13 @@ fu_igsc_oprom_device_init(FuIgscOpromDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_QUAD);
 	fu_device_add_protocol(FU_DEVICE(self), "com.intel.gsc");
+	fu_struct_register(self,
+			   "IgscOpromVersion {"
+			   "    major: u16le,"
+			   "    minor: u16le,"
+			   "    hotfix: u16le,"
+			   "    build: u16le,"
+			   "}");
 }
 
 static void

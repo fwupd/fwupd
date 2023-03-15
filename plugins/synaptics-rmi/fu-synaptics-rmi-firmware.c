@@ -8,8 +8,6 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
 #include <string.h>
 
 #include "fu-synaptics-rmi-common.h"
@@ -37,33 +35,10 @@ struct _FuSynapticsRmiFirmware {
 
 G_DEFINE_TYPE(FuSynapticsRmiFirmware, fu_synaptics_rmi_firmware, FU_TYPE_FIRMWARE)
 
-#define RMI_IMG_CHECKSUM_OFFSET		  0x00
-#define RMI_IMG_IO_OFFSET		  0x06
-#define RMI_IMG_BOOTLOADER_VERSION_OFFSET 0x07
-#define RMI_IMG_IMAGE_SIZE_OFFSET	  0x08
-#define RMI_IMG_CONFIG_SIZE_OFFSET	  0x0c
-#define RMI_IMG_PACKAGE_ID_OFFSET	  0x1a
-#define RMI_IMG_FW_BUILD_ID_OFFSET	  0x50
-#define RMI_IMG_SIGNATURE_SIZE_OFFSET	  0x54
-#define RMI_IMG_PRODUCT_ID_OFFSET	  0x10
-#define RMI_IMG_PRODUCT_INFO_OFFSET	  0x1e
 #define RMI_IMG_FW_OFFSET		  0x100
 
 #define RMI_IMG_V10_CNTR_ADDR_OFFSET 0x0c
 #define RMI_IMG_MAX_CONTAINERS	     1024
-
-typedef struct __attribute__((packed)) {
-	guint32 content_checksum;
-	guint16 container_id;
-	guint8 minor_version;
-	guint8 major_version;
-	guint32 signature_size;
-	guint32 container_option_flags;
-	guint32 content_options_length;
-	guint32 content_options_address;
-	guint32 content_length;
-	guint32 content_address;
-} RmiFirmwareContainerDescriptor;
 
 typedef enum {
 	RMI_FIRMWARE_CONTAINER_ID_TOP_LEVEL = 0,
@@ -145,7 +120,7 @@ rmi_firmware_container_id_to_string(RmiFirmwareContainerId container_id)
 	if (container_id == RMI_FIRMWARE_CONTAINER_ID_UTILITY_PARAMETER)
 		return "utility-parameter";
 	if (container_id == RMI_FIRMWARE_CONTAINER_ID_FIXED_LOCATION_DATA)
-		return "fixed-location-data";
+		return "fixed-location-buf";
 	return NULL;
 }
 
@@ -154,13 +129,13 @@ fu_synaptics_rmi_firmware_add_image(FuFirmware *firmware,
 				    const gchar *id,
 				    GBytes *fw,
 				    gsize offset,
-				    gsize sz,
+				    gsize bufsz,
 				    GError **error)
 {
 	g_autoptr(GBytes) bytes = NULL;
 	g_autoptr(FuFirmware) img = NULL;
 
-	bytes = fu_bytes_new_offset(fw, offset, sz, error);
+	bytes = fu_bytes_new_offset(fw, offset, bufsz, error);
 	if (bytes == NULL)
 		return FALSE;
 	img = fu_firmware_new_from_bytes(bytes);
@@ -174,7 +149,7 @@ fu_synaptics_rmi_firmware_add_image_v10(FuFirmware *firmware,
 					const gchar *id,
 					GBytes *fw,
 					gsize offset,
-					gsize sz,
+					gsize bufsz,
 					gsize sig_sz,
 					GError **error)
 {
@@ -182,10 +157,10 @@ fu_synaptics_rmi_firmware_add_image_v10(FuFirmware *firmware,
 	g_autoptr(FuFirmware) img = NULL;
 	g_autofree gchar *sig_id = NULL;
 
-	if (!fu_synaptics_rmi_firmware_add_image(firmware, id, fw, offset, sz, error))
+	if (!fu_synaptics_rmi_firmware_add_image(firmware, id, fw, offset, bufsz, error))
 		return FALSE;
 	if (sig_sz != 0) {
-		bytes = fu_bytes_new_offset(fw, offset + sz, sig_sz, error);
+		bytes = fu_bytes_new_offset(fw, offset + bufsz, sig_sz, error);
 		if (bytes == NULL)
 			return FALSE;
 		img = fu_firmware_new_from_bytes(bytes);
@@ -219,36 +194,29 @@ static gboolean
 fu_synaptics_rmi_firmware_parse_v10(FuFirmware *firmware, GBytes *fw, GError **error)
 {
 	FuSynapticsRmiFirmware *self = FU_SYNAPTICS_RMI_FIRMWARE(firmware);
-	RmiFirmwareContainerDescriptor desc = {0x0};
+	FuStruct *st_dsc = fu_struct_lookup(self, "RmiContainerDescriptor");
 	guint16 container_id;
 	guint32 cntrs_len;
 	guint32 offset;
 	guint32 cntr_addr;
 	guint8 product_id[RMI_PRODUCT_ID_LENGTH] = {0x0};
-	gsize sz = 0;
-	const guint8 *data = g_bytes_get_data(fw, &sz);
+	gsize bufsz = 0;
+	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
 	guint32 signature_size;
 
-	if (!fu_memread_uint32_safe(data,
-				    sz,
+	if (!fu_memread_uint32_safe(buf,
+				    bufsz,
 				    RMI_IMG_V10_CNTR_ADDR_OFFSET,
 				    &cntr_addr,
 				    G_LITTLE_ENDIAN,
 				    error))
 		return FALSE;
-	g_debug("v10 RmiFirmwareContainerDescriptor at 0x%x", cntr_addr);
-	if (!fu_memcpy_safe((guint8 *)&desc,
-			    sizeof(desc),
-			    0x0, /* dst */
-			    data,
-			    sz,
-			    cntr_addr, /* src */
-			    sizeof(desc),
-			    error)) {
-		g_prefix_error(error, "RmiFirmwareContainerDescriptor invalid: ");
+	g_debug("v10 RmiContainerDescriptor at 0x%x", cntr_addr);
+	if (!fu_struct_unpack_full(st_dsc, buf, bufsz, cntr_addr, FU_STRUCT_FLAG_NONE, error)) {
+		g_prefix_error(error, "RmiContainerDescriptor invalid: ");
 		return FALSE;
 	}
-	container_id = GUINT16_FROM_LE(desc.container_id);
+	container_id = fu_struct_get_u16(st_dsc, "container_id");
 	if (container_id != RMI_FIRMWARE_CONTAINER_ID_TOP_LEVEL) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -258,17 +226,17 @@ fu_synaptics_rmi_firmware_parse_v10(FuFirmware *firmware, GBytes *fw, GError **e
 			    (guint)RMI_FIRMWARE_CONTAINER_ID_TOP_LEVEL);
 		return FALSE;
 	}
-	offset = GUINT32_FROM_LE(desc.content_address);
-	if (offset > sz - sizeof(guint32) - sizeof(desc)) {
+	offset = fu_struct_get_u32(st_dsc, "content_address");
+	if (offset > bufsz - sizeof(guint32) - fu_struct_size(st_dsc)) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_FILE,
 			    "image offset invalid, got 0x%x, size 0x%x",
 			    (guint)offset,
-			    (guint)sz);
+			    (guint)bufsz);
 		return FALSE;
 	}
-	cntrs_len = GUINT32_FROM_LE(desc.content_length) / 4;
+	cntrs_len = fu_struct_get_u32(st_dsc, "content_length") / 4;
 	if (cntrs_len > RMI_IMG_MAX_CONTAINERS) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -284,50 +252,44 @@ fu_synaptics_rmi_firmware_parse_v10(FuFirmware *firmware, GBytes *fw, GError **e
 		guint32 content_addr;
 		guint32 addr;
 		guint32 length;
-		if (!fu_memread_uint32_safe(data, sz, offset, &addr, G_LITTLE_ENDIAN, error))
+		if (!fu_memread_uint32_safe(buf, bufsz, offset, &addr, G_LITTLE_ENDIAN, error))
 			return FALSE;
-		g_debug("parsing RmiFirmwareContainerDescriptor at 0x%x", addr);
-		if (!fu_memcpy_safe((guint8 *)&desc,
-				    sizeof(desc),
-				    0x0, /* dst */
-				    data,
-				    sz,
-				    addr, /* src */
-				    sizeof(desc),
-				    error))
+		g_debug("parsing RmiContainerDescriptor at 0x%x", addr);
+
+		if (!fu_struct_unpack_full(st_dsc, buf, bufsz, addr, FU_STRUCT_FLAG_NONE, error))
 			return FALSE;
-		container_id = GUINT16_FROM_LE(desc.container_id);
-		content_addr = GUINT32_FROM_LE(desc.content_address);
-		length = GUINT32_FROM_LE(desc.content_length);
-		signature_size = GUINT32_FROM_LE(desc.signature_size);
-		g_debug("RmiFirmwareContainerDescriptor 0x%02x @ 0x%x (len 0x%x) sig_size 0x%x",
+		container_id = fu_struct_get_u16(st_dsc, "container_id");
+		content_addr = fu_struct_get_u32(st_dsc, "content_address");
+		length = fu_struct_get_u32(st_dsc, "content_length");
+		signature_size = fu_struct_get_u32(st_dsc, "signature_size");
+		g_debug("RmiContainerDescriptor 0x%02x @ 0x%x (len 0x%x) sig_size 0x%x",
 			container_id,
 			content_addr,
 			length,
 			signature_size);
-		if (length == 0 || length > sz) {
+		if (length == 0 || length > bufsz) {
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_FILE,
 				    "length invalid, length 0x%x, size 0x%x",
 				    (guint)length,
-				    (guint)sz);
+				    (guint)bufsz);
 			return FALSE;
 		}
-		if (content_addr > sz - length) {
+		if (content_addr > bufsz - length) {
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_FILE,
 				    "address invalid, got 0x%x (length 0x%x), size 0x%x",
 				    (guint)content_addr,
 				    (guint)length,
-				    (guint)sz);
+				    (guint)bufsz);
 			return FALSE;
 		}
 		switch (container_id) {
 		case RMI_FIRMWARE_CONTAINER_ID_BL:
-			if (!fu_memread_uint8_safe(data,
-						   sz,
+			if (!fu_memread_uint8_safe(buf,
+						   bufsz,
 						   content_addr,
 						   &self->bootloader_version,
 						   error))
@@ -367,7 +329,7 @@ fu_synaptics_rmi_firmware_parse_v10(FuFirmware *firmware, GBytes *fw, GError **e
 			break;
 		case RMI_FIRMWARE_CONTAINER_ID_FIXED_LOCATION_DATA:
 			if (!fu_synaptics_rmi_firmware_add_image_v10(firmware,
-								     "fixed-location-data",
+								     "fixed-location-buf",
 								     fw,
 								     content_addr,
 								     length,
@@ -407,15 +369,15 @@ fu_synaptics_rmi_firmware_parse_v10(FuFirmware *firmware, GBytes *fw, GError **e
 			}
 			g_clear_pointer(&self->product_id, g_free);
 			self->io = 1;
-			if (!fu_memread_uint32_safe(data,
-						    sz,
+			if (!fu_memread_uint32_safe(buf,
+						    bufsz,
 						    content_addr,
 						    &self->package_id,
 						    G_LITTLE_ENDIAN,
 						    error))
 				return FALSE;
-			if (!fu_memread_uint32_safe(data,
-						    sz,
+			if (!fu_memread_uint32_safe(buf,
+						    bufsz,
 						    content_addr + 0x04,
 						    &self->build_id,
 						    G_LITTLE_ENDIAN,
@@ -424,8 +386,8 @@ fu_synaptics_rmi_firmware_parse_v10(FuFirmware *firmware, GBytes *fw, GError **e
 			if (!fu_memcpy_safe(product_id,
 					    sizeof(product_id),
 					    0x0, /* dst */
-					    data,
-					    sz,
+					    buf,
+					    bufsz,
 					    content_addr + 0x18, /* src */
 					    sizeof(product_id),
 					    error))
@@ -450,24 +412,20 @@ static gboolean
 fu_synaptics_rmi_firmware_parse_v0x(FuFirmware *firmware, GBytes *fw, GError **error)
 {
 	FuSynapticsRmiFirmware *self = FU_SYNAPTICS_RMI_FIRMWARE(firmware);
+	FuStruct *st_img = fu_struct_lookup(self, "RmiImg");
 	guint32 cfg_sz;
-	guint32 img_sz = 0;
-	guint32 sig_offset = 0;
-	gsize sz = 0;
-	const guint8 *data = g_bytes_get_data(fw, &sz);
+	guint32 img_sz;
+	gsize bufsz = 0;
+	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
 
 	/* main firmware */
-	if (!fu_memread_uint32_safe(data,
-				    sz,
-				    RMI_IMG_IMAGE_SIZE_OFFSET,
-				    &img_sz,
-				    G_LITTLE_ENDIAN,
-				    error))
+	if (!fu_struct_unpack_full(st_img, buf, bufsz, 0x0, FU_STRUCT_FLAG_NONE, error))
 		return FALSE;
+	img_sz = fu_struct_get_u32(st_img, "image_size");
 	if (img_sz > 0) {
 		/* payload, then signature appended */
 		if (self->sig_size > 0) {
-			sig_offset = img_sz - self->sig_size;
+			guint32 sig_offset = img_sz - self->sig_size;
 			if (!fu_synaptics_rmi_firmware_add_image(firmware,
 								 "sig",
 								 fw,
@@ -486,13 +444,7 @@ fu_synaptics_rmi_firmware_parse_v0x(FuFirmware *firmware, GBytes *fw, GError **e
 	}
 
 	/* config */
-	if (!fu_memread_uint32_safe(data,
-				    sz,
-				    RMI_IMG_CONFIG_SIZE_OFFSET,
-				    &cfg_sz,
-				    G_LITTLE_ENDIAN,
-				    error))
-		return FALSE;
+	cfg_sz = fu_struct_get_u32(st_img, "config_size");
 	if (cfg_sz > 0) {
 		if (!fu_synaptics_rmi_firmware_add_image(firmware,
 							 "config",
@@ -513,37 +465,26 @@ fu_synaptics_rmi_firmware_parse(FuFirmware *firmware,
 				GError **error)
 {
 	FuSynapticsRmiFirmware *self = FU_SYNAPTICS_RMI_FIRMWARE(firmware);
-	gsize sz = 0;
-	guint32 checksum_calculated;
-	guint32 firmware_size = 0;
-	const guint8 *data = g_bytes_get_data(fw, &sz);
+	FuStruct *st_img = fu_struct_lookup(self, "RmiImg");
+	gsize bufsz = 0;
+	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
 
-	/* check minimum size */
-	if (sz < RMI_IMG_FW_OFFSET) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_FILE,
-				    "not enough data to parse header");
+	/* sanity check */
+	if (!fu_struct_unpack_full(st_img, buf, bufsz, 0x0, FU_STRUCT_FLAG_NONE, error))
 		return FALSE;
-	}
-	if (sz % 2 != 0) {
+	if (bufsz % 2 != 0) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_FILE,
-				    "data not aligned to 16 bits");
+				    "buf not aligned to 16 bits");
 		return FALSE;
 	}
 
 	/* verify checksum */
-	if (!fu_memread_uint32_safe(data,
-				    sz,
-				    RMI_IMG_CHECKSUM_OFFSET,
-				    &self->checksum,
-				    G_LITTLE_ENDIAN,
-				    error))
-		return FALSE;
-	checksum_calculated = fu_synaptics_rmi_generate_checksum(data + 4, sz - 4);
+	self->checksum = fu_struct_get_u32(st_img, "checksum");
 	if ((flags & FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM) == 0) {
+		guint32 checksum_calculated =
+		    fu_synaptics_rmi_generate_checksum(buf + 4, bufsz - 4);
 		if (self->checksum != checksum_calculated) {
 			g_set_error(error,
 				    FWUPD_ERROR,
@@ -557,41 +498,15 @@ fu_synaptics_rmi_firmware_parse(FuFirmware *firmware,
 
 	/* parse legacy image */
 	g_clear_pointer(&self->product_id, g_free);
-	self->io = data[RMI_IMG_IO_OFFSET];
-	self->bootloader_version = data[RMI_IMG_BOOTLOADER_VERSION_OFFSET];
+	self->io = fu_struct_get_u8(st_img, "io_offset");
+	self->bootloader_version = fu_struct_get_u8(st_img, "bootloader_version");
 	if (self->io == 1) {
-		if (!fu_memread_uint32_safe(data,
-					    sz,
-					    RMI_IMG_FW_BUILD_ID_OFFSET,
-					    &self->build_id,
-					    G_LITTLE_ENDIAN,
-					    error))
-			return FALSE;
-		if (!fu_memread_uint32_safe(data,
-					    sz,
-					    RMI_IMG_PACKAGE_ID_OFFSET,
-					    &self->package_id,
-					    G_LITTLE_ENDIAN,
-					    error))
-			return FALSE;
+		self->build_id = fu_struct_get_u8(st_img, "fw_build_id");
+		self->package_id = fu_struct_get_u8(st_img, "package_id");
 	}
-	self->product_id =
-	    g_strndup((const gchar *)data + RMI_IMG_PRODUCT_ID_OFFSET, RMI_PRODUCT_ID_LENGTH);
-	if (!fu_memread_uint16_safe(data,
-				    sz,
-				    RMI_IMG_PRODUCT_INFO_OFFSET,
-				    &self->product_info,
-				    G_LITTLE_ENDIAN,
-				    error))
-		return FALSE;
-	if (!fu_memread_uint32_safe(data,
-				    sz,
-				    RMI_IMG_IMAGE_SIZE_OFFSET,
-				    &firmware_size,
-				    G_LITTLE_ENDIAN,
-				    error))
-		return FALSE;
-	fu_firmware_set_size(firmware, firmware_size);
+	self->product_id = fu_struct_get_string(st_img, "product_id");
+	self->product_info = fu_struct_get_u16(st_img, "product_info");
+	fu_firmware_set_size(firmware, fu_struct_get_u32(st_img, "image_size"));
 
 	/* parse partitions, but ignore lockdown */
 	switch (self->bootloader_version) {
@@ -600,15 +515,8 @@ fu_synaptics_rmi_firmware_parse(FuFirmware *firmware,
 	case 4:
 	case 5:
 	case 6:
-		if ((self->io & 0x10) >> 1) {
-			if (!fu_memread_uint32_safe(data,
-						    sz,
-						    RMI_IMG_SIGNATURE_SIZE_OFFSET,
-						    &self->sig_size,
-						    G_LITTLE_ENDIAN,
-						    error))
-				return FALSE;
-		}
+		if ((self->io & 0x10) >> 1)
+			self->sig_size = fu_struct_get_u32(st_img, "signature_size");
 		if (!fu_synaptics_rmi_firmware_parse_v0x(firmware, fw, error))
 			return FALSE;
 		self->kind = RMI_FIRMWARE_KIND_0X;
@@ -642,10 +550,11 @@ static GBytes *
 fu_synaptics_rmi_firmware_write_v0x(FuFirmware *firmware, GError **error)
 {
 	FuSynapticsRmiFirmware *self = FU_SYNAPTICS_RMI_FIRMWARE(firmware);
+	FuStruct *st_img = fu_struct_lookup(self, "RmiImg");
 	gsize bufsz = 0;
 	guint32 csum;
 	g_autoptr(FuFirmware) img = NULL;
-	g_autoptr(GByteArray) buf = g_byte_array_new();
+	g_autoptr(GByteArray) buf = NULL;
 	g_autoptr(GBytes) buf_blob = NULL;
 
 	/* default image */
@@ -658,32 +567,26 @@ fu_synaptics_rmi_firmware_write_v0x(FuFirmware *firmware, GError **error)
 	bufsz = g_bytes_get_size(buf_blob);
 
 	/* create empty block */
-	fu_byte_array_set_size(buf, RMI_IMG_FW_OFFSET + 0x4 + bufsz, 0x00);
-	buf->data[RMI_IMG_IO_OFFSET] = 0x0;		    /* no build_id or package_id */
-	buf->data[RMI_IMG_BOOTLOADER_VERSION_OFFSET] = 0x2; /* not hierarchical */
+	fu_struct_set_u8(st_img, "bootloader_version", 0x2); /* not hierarchical */
 	if (self->product_id != NULL) {
-		gsize product_id_sz = strlen(self->product_id);
-		if (!fu_memcpy_safe(buf->data,
-				    buf->len,
-				    RMI_IMG_PRODUCT_ID_OFFSET, /* dst */
-				    (const guint8 *)self->product_id,
-				    product_id_sz,
-				    0x0, /* src */
-				    product_id_sz,
-				    error))
+		if (!fu_struct_set_string(st_img, "product_id", self->product_id, error))
 			return NULL;
 	}
-	fu_memwrite_uint16(buf->data + RMI_IMG_PRODUCT_INFO_OFFSET, 0x1234, G_LITTLE_ENDIAN);
-	fu_memwrite_uint32(buf->data + RMI_IMG_IMAGE_SIZE_OFFSET, bufsz, G_LITTLE_ENDIAN);
-	fu_memwrite_uint32(buf->data + RMI_IMG_CONFIG_SIZE_OFFSET, bufsz, G_LITTLE_ENDIAN);
-	fu_memwrite_uint32(buf->data + RMI_IMG_FW_OFFSET + 0x0, 0xdead, G_LITTLE_ENDIAN); /* img */
+	fu_struct_set_u32(st_img, "product_info", 0x1234);
+	fu_struct_set_u32(st_img, "image_size", bufsz);
+	fu_struct_set_u32(st_img, "config_size", bufsz);
+	buf = fu_struct_pack(st_img);
+	fu_byte_array_set_size(buf, RMI_IMG_FW_OFFSET + 0x4 + bufsz, 0x00);
+	fu_memwrite_uint32(buf->data + RMI_IMG_FW_OFFSET, 0xDEAD, G_LITTLE_ENDIAN); /* img */
 	fu_memwrite_uint32(buf->data + RMI_IMG_FW_OFFSET + bufsz,
 			   0xbeef,
 			   G_LITTLE_ENDIAN); /* config */
 
 	/* fixup checksum */
 	csum = fu_synaptics_rmi_generate_checksum(buf->data + 4, buf->len - 4);
-	fu_memwrite_uint32(buf->data + RMI_IMG_CHECKSUM_OFFSET, csum, G_LITTLE_ENDIAN);
+	fu_memwrite_uint32(buf->data + fu_struct_get_id_offset(st_img, "checksum"),
+			   csum,
+			   G_LITTLE_ENDIAN);
 
 	/* success */
 	return g_byte_array_free_to_bytes(g_steal_pointer(&buf));
@@ -693,26 +596,20 @@ static GBytes *
 fu_synaptics_rmi_firmware_write_v10(FuFirmware *firmware, GError **error)
 {
 	FuSynapticsRmiFirmware *self = FU_SYNAPTICS_RMI_FIRMWARE(firmware);
+	FuStruct *st_dsc = fu_struct_lookup(self, "RmiContainerDescriptor");
+	FuStruct *st_img = fu_struct_lookup(self, "RmiImg");
 	gsize bufsz;
 	guint32 csum;
 	g_autoptr(FuFirmware) img = NULL;
-	g_autoptr(GByteArray) buf = g_byte_array_new();
+	g_autoptr(GByteArray) buf = NULL;
+	g_autoptr(GByteArray) desc_hdr = NULL;
+	g_autoptr(GByteArray) desc = NULL;
 	g_autoptr(GBytes) buf_blob = NULL;
+	guint32 offset_table[] = {
+	    GUINT32_TO_LE(RMI_IMG_FW_OFFSET + 0x24)}; /* offset to first descriptor */
 
 	/* header | desc_hdr | offset_table | desc | flash_config |
 	 *        \0x0       \0x20          \0x24  \0x44          |0x48 */
-	RmiFirmwareContainerDescriptor desc_hdr = {
-	    .container_id = GUINT16_TO_LE(RMI_FIRMWARE_CONTAINER_ID_TOP_LEVEL),
-	    .content_length = GUINT32_TO_LE(0x1 * 4), /* size of offset table in bytes */
-	    .content_address = GUINT32_TO_LE(RMI_IMG_FW_OFFSET + 0x20), /* offset to table */
-	};
-	guint32 offset_table[] = {
-	    GUINT32_TO_LE(RMI_IMG_FW_OFFSET + 0x24)}; /* offset to first descriptor */
-	RmiFirmwareContainerDescriptor desc = {
-	    .container_id = GUINT16_TO_LE(RMI_FIRMWARE_CONTAINER_ID_FLASH_CONFIG),
-	    .content_length = GUINT32_TO_LE(0x0),
-	    .content_address = GUINT32_TO_LE(RMI_IMG_FW_OFFSET + 0x44),
-	};
 
 	/* default image */
 	img = fu_firmware_get_image_by_id(firmware, "ui", error);
@@ -722,44 +619,48 @@ fu_synaptics_rmi_firmware_write_v10(FuFirmware *firmware, GError **error)
 	if (buf_blob == NULL)
 		return NULL;
 	bufsz = g_bytes_get_size(buf_blob);
-	desc.content_length = GUINT32_TO_LE(bufsz);
 
 	/* create empty block */
-	fu_byte_array_set_size(buf, RMI_IMG_FW_OFFSET + 0x48, 0x00);
-	buf->data[RMI_IMG_IO_OFFSET] = 0x1;
-	buf->data[RMI_IMG_BOOTLOADER_VERSION_OFFSET] = 16; /* hierarchical */
+	fu_struct_set_u8(st_img, "io_offset", 0x1);
+	fu_struct_set_u8(st_img, "bootloader_version", 16); /* hierarchical */
 	if (self->product_id != NULL) {
-		gsize product_id_sz = strlen(self->product_id);
-		if (!fu_memcpy_safe(buf->data,
-				    buf->len,
-				    RMI_IMG_PRODUCT_ID_OFFSET, /* dst */
-				    (const guint8 *)self->product_id,
-				    product_id_sz,
-				    0x0, /* src */
-				    product_id_sz,
-				    error))
+		if (!fu_struct_set_string(st_img, "product_id", self->product_id, error))
 			return NULL;
 	}
-	fu_memwrite_uint32(buf->data + RMI_IMG_FW_BUILD_ID_OFFSET, 0x1234, G_LITTLE_ENDIAN);
-	fu_memwrite_uint32(buf->data + RMI_IMG_PACKAGE_ID_OFFSET, 0x4321, G_LITTLE_ENDIAN);
-	fu_memwrite_uint16(buf->data + RMI_IMG_PRODUCT_INFO_OFFSET, 0x3456, G_LITTLE_ENDIAN);
-	fu_memwrite_uint32(buf->data + RMI_IMG_IMAGE_SIZE_OFFSET, bufsz, G_LITTLE_ENDIAN);
-	fu_memwrite_uint32(buf->data + RMI_IMG_CONFIG_SIZE_OFFSET, bufsz, G_LITTLE_ENDIAN);
+	fu_struct_set_u32(st_img, "fw_build_id", 0x1234);
+	fu_struct_set_u32(st_img, "package_id", 0x4321);
+	fu_struct_set_u32(st_img, "product_info", 0x3456);
+	fu_struct_set_u32(st_img, "image_size", bufsz);
+	fu_struct_set_u32(st_img, "config_size", bufsz);
+	buf = fu_struct_pack(st_img);
+	fu_byte_array_set_size(buf, RMI_IMG_FW_OFFSET + 0x48, 0x00);
 	fu_memwrite_uint32(buf->data + RMI_IMG_V10_CNTR_ADDR_OFFSET,
 			   RMI_IMG_FW_OFFSET,
 			   G_LITTLE_ENDIAN);
 
 	/* hierarchical section */
-	memcpy(buf->data + RMI_IMG_FW_OFFSET + 0x00, &desc_hdr, sizeof(desc_hdr));
+	fu_struct_set_u16(st_dsc, "container_id", RMI_FIRMWARE_CONTAINER_ID_TOP_LEVEL);
+	fu_struct_set_u32(st_dsc, "content_length", 0x1 * 4); /* size of offset table in bytes */
+	fu_struct_set_u32(st_dsc,
+			  "content_address",
+			  RMI_IMG_FW_OFFSET + 0x20); /* offset to table */
+	desc_hdr = fu_struct_pack(st_dsc);
+	memcpy(buf->data + RMI_IMG_FW_OFFSET + 0x00, desc_hdr->data, desc_hdr->len);
 	memcpy(buf->data + RMI_IMG_FW_OFFSET + 0x20, offset_table, sizeof(offset_table));
-	memcpy(buf->data + RMI_IMG_FW_OFFSET + 0x24, &desc, sizeof(desc));
+	fu_struct_set_u16(st_dsc, "container_id", RMI_FIRMWARE_CONTAINER_ID_FLASH_CONFIG);
+	fu_struct_set_u32(st_dsc, "content_length", bufsz);
+	fu_struct_set_u32(st_dsc, "content_address", RMI_IMG_FW_OFFSET + 0x44);
+	desc = fu_struct_pack(st_dsc);
+	memcpy(buf->data + RMI_IMG_FW_OFFSET + 0x24, desc->data, desc->len);
 	fu_memwrite_uint32(buf->data + RMI_IMG_FW_OFFSET + 0x44,
-			   0xfeed,
+			   0xFEED,
 			   G_LITTLE_ENDIAN); /* flash_config */
 
 	/* fixup checksum */
 	csum = fu_synaptics_rmi_generate_checksum(buf->data + 4, buf->len - 4);
-	fu_memwrite_uint32(buf->data + RMI_IMG_CHECKSUM_OFFSET, csum, G_LITTLE_ENDIAN);
+	fu_memwrite_uint32(buf->data + fu_struct_get_id_offset(st_img, "checksum"),
+			   csum,
+			   G_LITTLE_ENDIAN);
 
 	/* success */
 	return g_byte_array_free_to_bytes(g_steal_pointer(&buf));
@@ -818,6 +719,34 @@ static void
 fu_synaptics_rmi_firmware_init(FuSynapticsRmiFirmware *self)
 {
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_CHECKSUM);
+	fu_struct_register(self,
+			   "RmiImg {"
+			   "    checksum: u32le,"
+			   "    reserved1: 2u8,"
+			   "    io_offset: u8,"
+			   "    bootloader_version: u8,"
+			   "    image_size: u32le,"
+			   "    config_size: u32le,"
+			   "    product_id: 10s,"
+			   "    package_id: u32le,"
+			   "    product_info: u32le,"
+			   "    reserved3: 46u8,"
+			   "    fw_build_id: u32le,"
+			   "    signature_size: u32le,"
+			   "}");
+	fu_struct_register(self,
+			   "RmiContainerDescriptor {"
+			   "    content_checksum: u32le,"
+			   "    container_id: u16le,"
+			   "    minor_version: u8,"
+			   "    major_version: u8,"
+			   "    signature_size: u32le,"
+			   "    container_option_flags: u32le,"
+			   "    content_options_length: u32le,"
+			   "    content_options_address: u32le,"
+			   "    content_length: u32le,"
+			   "    content_address: u32le,"
+			   "}");
 }
 
 static void

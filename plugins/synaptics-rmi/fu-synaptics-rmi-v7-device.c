@@ -803,18 +803,10 @@ fu_synaptics_rmi_v7_device_write_firmware(FuDevice *device,
 	return TRUE;
 }
 
-typedef struct __attribute__((packed)) {
-	guint16 partition_id;
-	guint16 partition_len;
-	guint16 partition_addr;
-	guint16 partition_prop;
-} RmiPartitionTbl;
-
-G_STATIC_ASSERT(sizeof(RmiPartitionTbl) == 8);
-
 static gboolean
 fu_synaptics_rmi_device_read_flash_config_v7(FuSynapticsRmiDevice *self, GError **error)
 {
+	FuStruct *st_prt = fu_struct_lookup(self, "RmiPartitionTbl");
 	FuSynapticsRmiFlash *flash = fu_synaptics_rmi_device_get_flash(self);
 	FuSynapticsRmiFunction *f34;
 	g_autoptr(GByteArray) req_addr_zero = g_byte_array_new();
@@ -822,7 +814,7 @@ fu_synaptics_rmi_device_read_flash_config_v7(FuSynapticsRmiDevice *self, GError 
 	g_autoptr(GByteArray) req_partition_id = g_byte_array_new();
 	g_autoptr(GByteArray) req_transfer_length = g_byte_array_new();
 	g_autoptr(GByteArray) res = NULL;
-	gsize partition_size = sizeof(RmiPartitionTbl);
+	gsize partition_size = fu_struct_size(st_prt);
 
 	/* f34 */
 	f34 = fu_synaptics_rmi_device_get_function(self, 0x34, error);
@@ -890,36 +882,35 @@ fu_synaptics_rmi_device_read_flash_config_v7(FuSynapticsRmiDevice *self, GError 
 	fu_dump_full(G_LOG_DOMAIN, "FlashConfig", res->data, res->len, 80, FU_DUMP_FLAGS_NONE);
 
 	if ((res->data[0] & 0x0f) == 1)
-		partition_size = sizeof(RmiPartitionTbl) + 2;
+		partition_size += 0x2;
 
 	/* parse the config length */
 	for (guint i = 0x2; i < res->len; i += partition_size) {
-		RmiPartitionTbl tbl;
-		if (!fu_memcpy_safe((guint8 *)&tbl,
-				    sizeof(tbl),
-				    0x0, /* dst */
-				    res->data,
-				    res->len,
-				    i, /* src */
-				    sizeof(tbl),
-				    error))
+		guint16 partition_id;
+		if (!fu_struct_unpack_full(st_prt,
+					   res->data,
+					   res->len,
+					   i,
+					   FU_STRUCT_FLAG_NONE,
+					   error))
 			return FALSE;
+		partition_id = fu_struct_get_u16(st_prt, "partition_id");
 		g_debug("found partition %s (0x%02x)",
-			rmi_firmware_partition_id_to_string(tbl.partition_id),
-			tbl.partition_id);
-		if (tbl.partition_id == RMI_PARTITION_ID_CORE_CONFIG) {
-			flash->block_count_cfg = tbl.partition_len;
+			rmi_firmware_partition_id_to_string(partition_id),
+			partition_id);
+		if (partition_id == RMI_PARTITION_ID_CORE_CONFIG) {
+			flash->block_count_cfg = fu_struct_get_u16(st_prt, "partition_len");
 			continue;
 		}
-		if (tbl.partition_id == RMI_PARTITION_ID_CORE_CODE) {
-			flash->block_count_fw = tbl.partition_len;
+		if (partition_id == RMI_PARTITION_ID_CORE_CODE) {
+			flash->block_count_fw = fu_struct_get_u16(st_prt, "partition_len");
 			continue;
 		}
-		if (tbl.partition_id == RMI_PARTITION_ID_PUBKEY) {
+		if (partition_id == RMI_PARTITION_ID_PUBKEY) {
 			flash->has_pubkey = TRUE;
 			continue;
 		}
-		if (tbl.partition_id == RMI_PARTITION_ID_NONE)
+		if (partition_id == RMI_PARTITION_ID_NONE)
 			break;
 	}
 

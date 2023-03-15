@@ -18,20 +18,7 @@
 #define FU_TPM_EVENTLOG_V1_IDX_EVENT_SIZE 0x1c
 #define FU_TPM_EVENTLOG_V1_SIZE		  0x20
 
-#define FU_TPM_EVENTLOG_V2_HDR_IDX_SIGNATURE	      0x00
-#define FU_TPM_EVENTLOG_V2_HDR_IDX_PLATFORM_CLASS     0x10
-#define FU_TPM_EVENTLOG_V2_HDR_IDX_SPEC_VERSION_MINOR 0x14
-#define FU_TPM_EVENTLOG_V2_HDR_IDX_SPEC_VERSION_MAJOR 0X15
-#define FU_TPM_EVENTLOG_V2_HDR_IDX_SPEC_ERRATA	      0x16
-#define FU_TPM_EVENTLOG_V2_HDR_IDX_UINTN_SIZE	      0x17
-#define FU_TPM_EVENTLOG_V2_HDR_IDX_NUMBER_OF_ALGS     0x18
-
 #define FU_TPM_EVENTLOG_V2_HDR_SIGNATURE "Spec ID Event03"
-
-#define FU_TPM_EVENTLOG_V2_IDX_PCR	    0x00
-#define FU_TPM_EVENTLOG_V2_IDX_TYPE	    0x04
-#define FU_TPM_EVENTLOG_V2_IDX_DIGEST_COUNT 0x08
-#define FU_TPM_EVENTLOG_V2_SIZE		    0x0c
 
 static void
 fu_tpm_eventlog_parser_item_free(FuTpmEventlogItem *item)
@@ -87,6 +74,17 @@ fu_tpm_eventlog_parser_parse_blob_v2(const guint8 *buf,
 {
 	guint32 hdrsz = 0x0;
 	g_autoptr(GPtrArray) items = NULL;
+	g_autoptr(FuStruct) st = NULL;
+
+	/* define struct */
+	st = fu_struct_new("TpmEventLog2 {"
+			   "    pcr: u32le,"
+			   "    type: u32le,"
+			   "    digest_count: u32le,"
+			   "}",
+			   error);
+	if (st == NULL)
+		return NULL;
 
 	/* advance over the header block */
 	if (!fu_memread_uint32_safe(buf,
@@ -98,39 +96,20 @@ fu_tpm_eventlog_parser_parse_blob_v2(const guint8 *buf,
 		return NULL;
 	items = g_ptr_array_new_with_free_func((GDestroyNotify)fu_tpm_eventlog_parser_item_free);
 	for (gsize idx = FU_TPM_EVENTLOG_V1_SIZE + hdrsz; idx < bufsz;) {
-		guint32 pcr = 0;
-		guint32 event_type = 0;
-		guint32 digestcnt = 0;
+		guint32 pcr;
+		guint32 digestcnt;
 		guint32 datasz = 0;
 		g_autoptr(GBytes) checksum_sha1 = NULL;
 		g_autoptr(GBytes) checksum_sha256 = NULL;
 		g_autoptr(GBytes) checksum_sha384 = NULL;
 
-		/* read entry */
-		if (!fu_memread_uint32_safe(buf,
-					    bufsz,
-					    idx + FU_TPM_EVENTLOG_V2_IDX_PCR,
-					    &pcr,
-					    G_LITTLE_ENDIAN,
-					    error))
-			return NULL;
-		if (!fu_memread_uint32_safe(buf,
-					    bufsz,
-					    idx + FU_TPM_EVENTLOG_V2_IDX_TYPE,
-					    &event_type,
-					    G_LITTLE_ENDIAN,
-					    error))
-			return NULL;
-		if (!fu_memread_uint32_safe(buf,
-					    bufsz,
-					    idx + FU_TPM_EVENTLOG_V2_IDX_DIGEST_COUNT,
-					    &digestcnt,
-					    G_LITTLE_ENDIAN,
-					    error))
+		/* parse */
+		if (!fu_struct_unpack_full(st, buf, bufsz, idx, FU_STRUCT_FLAG_NONE, error))
 			return NULL;
 
 		/* read checksum block */
-		idx += FU_TPM_EVENTLOG_V2_SIZE;
+		idx += fu_struct_size(st);
+		digestcnt = fu_struct_get_u32(st, "digest_count");
 		for (guint i = 0; i < digestcnt; i++) {
 			guint16 alg_type = 0;
 			guint32 alg_size = 0;
@@ -197,13 +176,14 @@ fu_tpm_eventlog_parser_parse_blob_v2(const guint8 *buf,
 
 		/* save blob if PCR=0 */
 		idx += sizeof(datasz);
+		pcr = fu_struct_get_u32(st, "pcr");
 		if (pcr == ESYS_TR_PCR0 || flags & FU_TPM_EVENTLOG_PARSER_FLAG_ALL_PCRS) {
 			g_autoptr(FuTpmEventlogItem) item = NULL;
 
 			/* build item */
 			item = g_new0(FuTpmEventlogItem, 1);
 			item->pcr = pcr;
-			item->kind = event_type;
+			item->kind = fu_struct_get_u32(st, "type");
 			item->checksum_sha1 = g_steal_pointer(&checksum_sha1);
 			item->checksum_sha256 = g_steal_pointer(&checksum_sha256);
 			item->checksum_sha384 = g_steal_pointer(&checksum_sha384);

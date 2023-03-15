@@ -18,12 +18,6 @@ struct _FuAcpiUefi {
 	gchar *guid;
 };
 
-typedef struct __attribute__((packed)) {
-	gchar signature[6];
-	guint32 size;  /* le */
-	guint32 flags; /* le */
-} FuAcpiInsydeQuirkSection;
-
 G_DEFINE_TYPE(FuAcpiUefi, fu_acpi_uefi, FU_TYPE_ACPI_TABLE)
 
 static void
@@ -46,10 +40,9 @@ fu_acpi_uefi_parse_insyde(FuAcpiUefi *self,
 			  gsize offset,
 			  GError **error)
 {
+	FuStruct *st_qrk = fu_struct_lookup(self, "AcpiInsydeQuirkSection");
 	const gchar *needle = "$QUIRK";
 	gsize data_offset = 0;
-	guint32 flags = 0;
-	guint32 size = 0;
 
 	if (!fu_memmem_safe(buf,
 			    bufsz,
@@ -61,28 +54,18 @@ fu_acpi_uefi_parse_insyde(FuAcpiUefi *self,
 		return FALSE;
 	}
 	offset += data_offset;
-	if (!fu_memread_uint32_safe(buf,
-				    bufsz,
-				    offset + G_STRUCT_OFFSET(FuAcpiInsydeQuirkSection, size),
-				    &size,
-				    G_LITTLE_ENDIAN,
-				    error))
+
+	/* parse */
+	if (!fu_struct_unpack_full(st_qrk, buf, bufsz, offset, FU_STRUCT_FLAG_NONE, error))
 		return FALSE;
-	if (size < sizeof(FuAcpiInsydeQuirkSection)) {
+	if (fu_struct_get_u32(st_qrk, "size") < fu_struct_size(st_qrk)) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_READ,
 				    "$QUIRK structure is too small");
 		return FALSE;
 	}
-	if (!fu_memread_uint32_safe(buf,
-				    bufsz,
-				    offset + G_STRUCT_OFFSET(FuAcpiInsydeQuirkSection, flags),
-				    &flags,
-				    G_LITTLE_ENDIAN,
-				    error))
-		return FALSE;
-	self->insyde_cod_status = flags & INSYDE_QUIRK_COD_WORKING;
+	self->insyde_cod_status = fu_struct_get_u32(st_qrk, "flags") & INSYDE_QUIRK_COD_WORKING;
 	return TRUE;
 }
 
@@ -140,6 +123,12 @@ fu_acpi_uefi_parse(FuFirmware *firmware,
 static void
 fu_acpi_uefi_init(FuAcpiUefi *self)
 {
+	fu_struct_register(self,
+			   "AcpiInsydeQuirkSection {"
+			   "    signature: 6s,"
+			   "    size: u32le,"
+			   "    flags: u32le,"
+			   "}");
 }
 
 static void
