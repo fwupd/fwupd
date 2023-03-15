@@ -360,9 +360,13 @@ fu_engine_history_notify_cb(FuDevice *device, GParamSpec *pspec, FuEngine *self)
 	if (self->write_history) {
 		g_autoptr(GError) error_local = NULL;
 		if (!fu_history_modify_device(self->history, device, &error_local)) {
-			g_warning("failed to record history for %s: %s",
-				  fu_device_get_id(device),
-				  error_local->message);
+			if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
+				g_debug("ignoring: %s", error_local->message);
+			} else {
+				g_warning("failed to record history for %s: %s",
+					  fu_device_get_id(device),
+					  error_local->message);
+			}
 		}
 	}
 	fu_engine_emit_device_changed(self, fu_device_get_id(device));
