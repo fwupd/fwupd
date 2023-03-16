@@ -218,6 +218,12 @@ fu_efi_signature_list_get_version(FuEfiSignatureList *self)
 	    {"90aec5c4995674a849c1d1384463f3b02b5aa625a5c320fc4fe7d9bb58a62398", 217},
 	    /* DBXUpdate-20220812.aa64.bin - only X509 certificates removed */
 	    /* DBXUpdate-20220812.ia32.bin - only X509 certificates removed */
+	    /* DBXUpdate-20230314.aa64.bin */
+	    {"f4dc5a40d2a9dbdab210bae0c508e053ae986c4da42d68760a1655d6fbaec051", 22},
+	    /* DBXUpdate-20230314.ia32.bin */
+	    {"c4ebdc43048c43f5f11c59ead051a3585a07fafce985cfed8b27b73a5492f9b2", 57},
+	    /* DBXUpdate-20230314.x64.bin */
+	    {"6a0e824654b7479152058cf738a378e629483874b6dbd67e0d8c3327b2fcac64", 220},
 	    {NULL, 0}};
 
 	sigs = fu_firmware_get_images(FU_FIRMWARE(self));
