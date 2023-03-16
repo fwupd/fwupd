@@ -4372,8 +4372,7 @@ fu_engine_create_metadata_builder_source(FuEngine *self, const gchar *fn, GError
 
 	g_info("using %s as metadata source", fn);
 	xb_builder_source_add_simple_adapter(source,
-					     "application/vnd.ms-cab-compressed,"
-					     "application/octet-stream",
+					     "application/vnd.ms-cab-compressed",
 					     fu_engine_builder_cabinet_adapter_cb,
 					     self,
 					     NULL);
