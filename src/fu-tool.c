@@ -1800,6 +1800,7 @@ fu_util_report_metadata_to_string(GHashTable *metadata, guint idt, GString *str)
 static gboolean
 fu_util_get_report_metadata(FuUtilPrivate *priv, gchar **values, GError **error)
 {
+	GPtrArray *plugins;
 	g_autoptr(GHashTable) metadata = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(GString) str = g_string_new(NULL);
@@ -1852,6 +1853,17 @@ fu_util_get_report_metadata(FuUtilPrivate *priv, gchar **values, GError **error)
 			fu_string_append(str, 1, "post", NULL);
 			fu_util_report_metadata_to_string(metadata_post, 3, str);
 		}
+	}
+
+	/* plugin metadata */
+	plugins = fu_engine_get_plugins(priv->engine);
+	for (guint i = 0; i < plugins->len; i++) {
+		FuPlugin *plugin = g_ptr_array_index(plugins, i);
+		if (fu_plugin_has_flag(plugin, FWUPD_PLUGIN_FLAG_DISABLED))
+			continue;
+		if (fu_plugin_get_report_metadata(plugin) == NULL)
+			continue;
+		fu_util_report_metadata_to_string(fu_plugin_get_report_metadata(plugin), 3, str);
 	}
 	fu_progress_step_done(priv->progress);
 
