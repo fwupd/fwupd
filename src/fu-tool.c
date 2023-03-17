@@ -1789,8 +1789,9 @@ fu_util_attach(FuUtilPrivate *priv, gchar **values, GError **error)
 static void
 fu_util_report_metadata_to_string(GHashTable *metadata, guint idt, GString *str)
 {
-	g_autoptr(GList) keys = g_hash_table_get_keys(metadata);
-	for (GList *l = g_list_sort(keys, (GCompareFunc)g_strcmp0); l != NULL; l = l->next) {
+	g_autoptr(GList) keys =
+	    g_list_sort(g_hash_table_get_keys(metadata), (GCompareFunc)g_strcmp0);
+	for (GList *l = keys; l != NULL; l = l->next) {
 		const gchar *key = l->data;
 		const gchar *value = g_hash_table_lookup(metadata, key);
 		fu_string_append(str, idt, key, value);
