@@ -13,7 +13,6 @@ G_DECLARE_DERIVABLE_TYPE(FuTpmDevice, fu_tpm_device, FU, TPM_DEVICE, FuUdevDevic
 
 struct _FuTpmDeviceClass {
 	FuDeviceClass parent_class;
-	gpointer __reserved[31];
 };
 
 void
