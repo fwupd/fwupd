@@ -44,6 +44,8 @@ fu_wac_module_fw_type_to_string(guint8 fw_type)
 {
 	if (fw_type == FU_WAC_MODULE_FW_TYPE_TOUCH)
 		return "touch";
+	if (fw_type == FU_WAC_MODULE_FW_TYPE_TOUCH_ID7)
+		return "touch-id7";
 	if (fw_type == FU_WAC_MODULE_FW_TYPE_BLUETOOTH)
 		return "bluetooth";
 	if (fw_type == FU_WAC_MODULE_FW_TYPE_BLUETOOTH_ID6)
