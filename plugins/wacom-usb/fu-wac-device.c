@@ -17,6 +17,7 @@
 #include "fu-wac-module-bluetooth.h"
 #include "fu-wac-module-scaler.h"
 #include "fu-wac-module-touch.h"
+#include "fu-wac-module-touch-id7.h"
 
 typedef struct {
 	guint32 start_addr;
@@ -784,6 +785,15 @@ fu_wac_device_add_modules(FuWacDevice *self, GError **error)
 			fu_device_set_name(FU_DEVICE(module), name);
 			fu_device_set_version_from_uint16(FU_DEVICE(module), ver);
 			break;
+		case FU_WAC_MODULE_FW_TYPE_TOUCH_ID7:
+			module = fu_wac_module_touch_id7_new(FU_DEVICE(self));
+			name = g_strdup_printf("%s [Touch Module]",
+					       fu_device_get_name(FU_DEVICE(self)));
+			fu_device_add_child(FU_DEVICE(self), FU_DEVICE(module));
+			fu_device_set_name(FU_DEVICE(module), name);
+			fu_device_set_summary(FU_DEVICE(module), "ID7");
+			fu_device_set_version_from_uint16(FU_DEVICE(module), ver);
+			break;
 		case FU_WAC_MODULE_FW_TYPE_BLUETOOTH:
 			module = fu_wac_module_bluetooth_new(FU_DEVICE(self));
 			name = g_strdup_printf("%s [Bluetooth Module]",
@@ -794,10 +804,11 @@ fu_wac_device_add_modules(FuWacDevice *self, GError **error)
 			break;
 		case FU_WAC_MODULE_FW_TYPE_BLUETOOTH_ID6:
 			module = fu_wac_module_bluetooth_id6_new(FU_DEVICE(self));
-			name = g_strdup_printf("%s [Bluetooth Module (ID6)]",
+			name = g_strdup_printf("%s [Bluetooth Module]",
 					       fu_device_get_name(FU_DEVICE(self)));
 			fu_device_add_child(FU_DEVICE(self), FU_DEVICE(module));
 			fu_device_set_name(FU_DEVICE(module), name);
+			fu_device_set_summary(FU_DEVICE(module), "ID6");
 			fu_device_set_version_from_uint16(FU_DEVICE(module), ver);
 			break;
 		case FU_WAC_MODULE_FW_TYPE_SCALER:
