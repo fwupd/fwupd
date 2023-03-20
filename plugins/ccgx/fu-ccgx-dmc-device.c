@@ -274,7 +274,7 @@ fu_ccgx_dmc_device_read_intr_req(FuCcgxDmcDevice *self, DmcIntRqt *intr_rqt, GEr
 	}
 
 	/* success */
-	title = g_strdup_printf("DmcIntRqt-opcode=0%02x[%s]",
+	title = g_strdup_printf("DmcIntRqt-opcode=0x%02x[%s]",
 				intr_rqt->opcode,
 				fu_ccgx_dmc_int_opcode_to_string(intr_rqt->opcode));
 	fu_dump_raw(G_LOG_DOMAIN,
