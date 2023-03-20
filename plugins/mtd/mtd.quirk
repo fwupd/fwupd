@@ -14,3 +14,7 @@ Flags = no-probe
 Flags = no-probe
 [MTD\NAME_i915.spi.1024.OptionROM]
 Flags = no-probe
+
+# Intel SPI Controller
+[MTD\NAME_0000:00:1f.5]
+Name = Internal SPI Controller
