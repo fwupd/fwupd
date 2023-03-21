@@ -24,7 +24,7 @@ The daemon will decompress the cabinet archive and extract a firmware blob of un
 
 This plugin supports the following protocol ID:
 
-- `com.winchiphead.ch341a`
+- `org.jedec.cfi`
 
 ## GUID Generation
 
