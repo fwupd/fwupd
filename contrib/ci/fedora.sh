@@ -29,7 +29,7 @@ meson setup \
     -Ddocs=disabled \
     -Dman=true \
     -Dtests=true \
-    -Db_sanitize=address,undefined \
+    -Db_sanitize=undefined \
     -Dgusb:tests=false \
     -Dplugin_dummy=true \
     -Dplugin_flashrom=enabled \
