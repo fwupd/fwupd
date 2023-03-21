@@ -720,13 +720,23 @@ static void
 fu_qmi_pdc_updater_set_selected_config(ActivateContext *ctx)
 {
 	g_autoptr(QmiMessagePdcSetSelectedConfigInput) input = NULL;
-	QmiConfigTypeAndId type_and_id;
-
-	type_and_id.config_type = QMI_PDC_CONFIGURATION_TYPE_SOFTWARE;
-	type_and_id.id = ctx->digest;
+#if !QMI_CHECK_VERSION(1, 18, 0)
+	QmiConfigTypeAndId type_and_id = {
+	    .config_type = QMI_PDC_CONFIGURATION_TYPE_SOFTWARE,
+	    .id = ctx->digest,
+	};
+#endif
 
 	input = qmi_message_pdc_set_selected_config_input_new();
+#if QMI_CHECK_VERSION(1, 18, 0)
+	qmi_message_pdc_set_selected_config_input_set_type_with_id_v2(
+	    input,
+	    QMI_PDC_CONFIGURATION_TYPE_SOFTWARE,
+	    ctx->digest,
+	    NULL);
+#else
 	qmi_message_pdc_set_selected_config_input_set_type_with_id(input, &type_and_id, NULL);
+#endif
 	qmi_message_pdc_set_selected_config_input_set_token(input, ctx->token++, NULL);
 
 	g_debug("selecting current configuration...");
