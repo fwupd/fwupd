@@ -467,6 +467,10 @@ fu_test_self_free(FuTest *self)
 {
 	if (self->plugin != NULL)
 		g_object_unref(self->plugin);
+	if (self->smc_plugin != NULL)
+		g_object_unref(self->smc_plugin);
+	if (self->unlicensed_plugin != NULL)
+		g_object_unref(self->unlicensed_plugin);
 	g_free(self);
 }
 
