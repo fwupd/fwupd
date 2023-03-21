@@ -252,7 +252,8 @@ fu_coswid_firmware_write_tag_string(cbor_item_t *root, FuCoswidTag tag, const gc
 {
 	g_autoptr(cbor_item_t) key = cbor_build_uint8(tag);
 	g_autoptr(cbor_item_t) val = cbor_build_string(item);
-	cbor_map_add(root, (struct cbor_pair){.key = key, .value = val});
+	if (!cbor_map_add(root, (struct cbor_pair){.key = key, .value = val}))
+		g_critical("failed to push to indefinite map");
 }
 
 static void
@@ -260,7 +261,8 @@ fu_coswid_firmware_write_tag_bool(cbor_item_t *root, FuCoswidTag tag, gboolean i
 {
 	g_autoptr(cbor_item_t) key = cbor_build_uint8(tag);
 	g_autoptr(cbor_item_t) val = cbor_build_bool(item);
-	cbor_map_add(root, (struct cbor_pair){.key = key, .value = val});
+	if (!cbor_map_add(root, (struct cbor_pair){.key = key, .value = val}))
+		g_critical("failed to push to indefinite map");
 }
 
 static void
@@ -268,7 +270,8 @@ fu_coswid_firmware_write_tag_uint16(cbor_item_t *root, FuCoswidTag tag, guint16 
 {
 	g_autoptr(cbor_item_t) key = cbor_build_uint8(tag);
 	g_autoptr(cbor_item_t) val = cbor_build_uint16(item);
-	cbor_map_add(root, (struct cbor_pair){.key = key, .value = val});
+	if (!cbor_map_add(root, (struct cbor_pair){.key = key, .value = val}))
+		g_critical("failed to push to indefinite map");
 }
 
 static void
@@ -282,14 +285,16 @@ fu_coswid_firmware_write_tag_int8(cbor_item_t *root, FuCoswidTag tag, gint8 item
 		cbor_set_uint8(val, 0xFF - item);
 		cbor_mark_negint(val);
 	}
-	cbor_map_add(root, (struct cbor_pair){.key = key, .value = val});
+	if (!cbor_map_add(root, (struct cbor_pair){.key = key, .value = val}))
+		g_critical("failed to push to indefinite map");
 }
 
 static void
 fu_coswid_firmware_write_tag_item(cbor_item_t *root, FuCoswidTag tag, cbor_item_t *item)
 {
 	g_autoptr(cbor_item_t) key = cbor_build_uint8(tag);
-	cbor_map_add(root, (struct cbor_pair){.key = key, .value = item});
+	if (!cbor_map_add(root, (struct cbor_pair){.key = key, .value = item}))
+		g_critical("failed to push to indefinite map");
 }
 #endif
 
@@ -361,12 +366,14 @@ fu_coswid_firmware_write(FuFirmware *firmware, GError **error)
 			for (guint j = 0; entity->roles[j] != FU_COSWID_ENTITY_ROLE_UNKNOWN; j++) {
 				g_autoptr(cbor_item_t) item_role =
 				    cbor_build_uint8(entity->roles[j]);
-				cbor_array_push(item_roles, item_role);
+				if (!cbor_array_push(item_roles, item_role))
+					g_critical("failed to push to indefinite array");
 			}
 			fu_coswid_firmware_write_tag_item(item_entity,
 							  FU_COSWID_TAG_ROLE,
 							  item_roles);
-			cbor_array_push(item_entities, item_entity);
+			if (!cbor_array_push(item_entities, item_entity))
+				g_critical("failed to push to indefinite array");
 		}
 		fu_coswid_firmware_write_tag_item(root, FU_COSWID_TAG_ENTITY, item_entities);
 	}
@@ -383,7 +390,8 @@ fu_coswid_firmware_write(FuFirmware *firmware, GError **error)
 								    link->href);
 			}
 			fu_coswid_firmware_write_tag_int8(item_link, FU_COSWID_TAG_REL, link->rel);
-			cbor_array_push(item_links, item_link);
+			if (!cbor_array_push(item_links, item_link))
+				g_critical("failed to push to indefinite array");
 		}
 		fu_coswid_firmware_write_tag_item(root, FU_COSWID_TAG_LINK, item_links);
 	}
