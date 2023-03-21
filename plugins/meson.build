@@ -28,6 +28,7 @@ plugins = [
   'ccgx',
   'cfu',
   'ch341a',
+  'ch347',
   'colorhug',
   'corsair',
   'cpu',
