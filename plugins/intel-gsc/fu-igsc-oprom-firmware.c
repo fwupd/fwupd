@@ -7,22 +7,21 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
 #include "fu-igsc-oprom-firmware.h"
+#include "fu-igsc-struct.h"
 
 struct _FuIgscOpromFirmware {
 	FuOpromFirmware parent_instance;
 	guint16 major_version;
-	GPtrArray *device_infos; /* of igsc_fwdata_device_info */
+	GPtrArray *device_infos; /* of FuIgscFwdataDeviceInfo */
 };
 
-struct igsc_fwdata_device_info {
+typedef struct {
 	guint16 vendor_id; /* may be 0x0 */
 	guint16 device_id; /* may be 0x0 */
 	guint16 subsys_vendor_id;
 	guint16 subsys_device_id;
-};
+} FuIgscFwdataDeviceInfo;
 
 G_DEFINE_TYPE(FuIgscOpromFirmware, fu_igsc_oprom_firmware, FU_TYPE_OPROM_FIRMWARE)
 
@@ -59,7 +58,7 @@ fu_igsc_oprom_firmware_match_device(FuIgscOpromFirmware *self,
 	g_return_val_if_fail(FU_IS_IGSC_OPROM_FIRMWARE(self), FALSE);
 
 	for (guint i = 0; i < self->device_infos->len; i++) {
-		struct igsc_fwdata_device_info *info = g_ptr_array_index(self->device_infos, i);
+		FuIgscFwdataDeviceInfo *info = g_ptr_array_index(self->device_infos, i);
 		if (info->vendor_id == 0x0 && info->device_id == 0x0 &&
 		    info->subsys_vendor_id == subsys_vendor_id &&
 		    info->subsys_device_id == subsys_device_id)
@@ -89,18 +88,6 @@ fu_igsc_oprom_firmware_match_device(FuIgscOpromFirmware *self,
 #define MFT_EXT_TYPE_IFWI_PART_MAN	 22
 #define MFT_EXT_TYPE_DEVICE_ID_ARRAY	 55
 
-struct oprom_subsystem_device_id {
-	guint16 subsys_vendor_id;
-	guint16 subsys_device_id;
-} __attribute__((packed));
-
-struct oprom_subsystem_device_4ids {
-	guint16 vendor_id;
-	guint16 device_id;
-	guint16 subsys_vendor_id;
-	guint16 subsys_device_id;
-} __attribute__((packed));
-
 static gboolean
 fu_igsc_oprom_firmware_parse_extension(FuIgscOpromFirmware *self, FuFirmware *fw, GError **error)
 {
@@ -116,50 +103,41 @@ fu_igsc_oprom_firmware_parse_extension(FuIgscOpromFirmware *self, FuFirmware *fw
 
 	if (fu_firmware_get_idx(fw) == MFT_EXT_TYPE_DEVICE_TYPE) {
 		for (gsize offset = 0; offset < bufsz;
-		     offset += sizeof(struct oprom_subsystem_device_id)) {
-			struct igsc_fwdata_device_info device_info = {0x0};
-			if (!fu_memread_uint16_safe(
-				buf,
-				bufsz,
-				offset + G_STRUCT_OFFSET(struct oprom_subsystem_device_id,
-							 subsys_vendor_id),
-				&device_info.subsys_vendor_id,
-				G_LITTLE_ENDIAN,
-				error))
+		     offset += FU_STRUCT_IGSC_OPROM_SUBSYSTEM_DEVICE_ID_SIZE) {
+			g_autofree FuIgscFwdataDeviceInfo *info = g_new0(FuIgscFwdataDeviceInfo, 1);
+			g_autoptr(GByteArray) st = NULL;
+			st = fu_struct_igsc_oprom_subsystem_device_id_parse(buf,
+									    bufsz,
+									    offset,
+									    error);
+			if (st == NULL)
 				return FALSE;
-			if (!fu_memread_uint16_safe(
-				buf,
-				bufsz,
-				offset + G_STRUCT_OFFSET(struct oprom_subsystem_device_id,
-							 subsys_device_id),
-				&device_info.subsys_device_id,
-				G_LITTLE_ENDIAN,
-				error))
-				return FALSE;
-			g_ptr_array_add(self->device_infos,
-					fu_memdup_safe((const guint8 *)&device_info,
-						       sizeof(device_info),
-						       NULL));
+			info->subsys_vendor_id =
+			    fu_struct_igsc_oprom_subsystem_device_id_get_subsys_vendor_id(st);
+			info->subsys_device_id =
+			    fu_struct_igsc_oprom_subsystem_device_id_get_subsys_device_id(st);
+			g_ptr_array_add(self->device_infos, g_steal_pointer(&info));
 		}
 	} else if (fu_firmware_get_idx(fw) == MFT_EXT_TYPE_DEVICE_ID_ARRAY) {
 		for (gsize offset = 0; offset < bufsz;
-		     offset += sizeof(struct oprom_subsystem_device_4ids)) {
-			struct igsc_fwdata_device_info device_info = {0x0};
-			if (!fu_memcpy_safe((guint8 *)&device_info,
-					    sizeof(device_info),
-					    0x0, /* dst */
-					    buf,
-					    bufsz,
-					    offset, /* src */
-					    sizeof(device_info),
-					    error)) {
-				g_prefix_error(error, "no ext header: ");
+		     offset += FU_STRUCT_IGSC_OPROM_SUBSYSTEM_DEVICE4_ID_SIZE) {
+			g_autofree FuIgscFwdataDeviceInfo *info = g_new0(FuIgscFwdataDeviceInfo, 1);
+			g_autoptr(GByteArray) st = NULL;
+			st = fu_struct_igsc_oprom_subsystem_device4_id_parse(buf,
+									     bufsz,
+									     offset,
+									     error);
+			if (st == NULL)
 				return FALSE;
-			}
-			g_ptr_array_add(self->device_infos,
-					fu_memdup_safe((const guint8 *)&device_info,
-						       sizeof(device_info),
-						       NULL));
+			info->vendor_id =
+			    fu_struct_igsc_oprom_subsystem_device4_id_get_vendor_id(st);
+			info->device_id =
+			    fu_struct_igsc_oprom_subsystem_device4_id_get_device_id(st);
+			info->subsys_vendor_id =
+			    fu_struct_igsc_oprom_subsystem_device4_id_get_subsys_vendor_id(st);
+			info->subsys_device_id =
+			    fu_struct_igsc_oprom_subsystem_device4_id_get_subsys_device_id(st);
+			g_ptr_array_add(self->device_infos, g_steal_pointer(&info));
 		}
 	}
 

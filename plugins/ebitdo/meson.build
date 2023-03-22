@@ -3,6 +3,9 @@ cargs = ['-DG_LOG_DOMAIN="FuPluginEbitdo"']
 
 plugin_quirks += files('ebitdo.quirk')
 plugin_builtins += static_library('fu_plugin_ebitdo',
+  structgen.process(
+    'fu-ebitdo.struct',         # fuzzing
+  ),
   sources: [
     'fu-ebitdo-plugin.c',
     'fu-ebitdo-common.c',

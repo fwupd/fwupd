@@ -1,0 +1,13 @@
+struct SynapromMfwHdr {
+    product: u32le
+    id: u32le: 0xFF		// MFW unique id used for compat verification
+    buildtime: u32le: 0xFF	// unix-style
+    buildnum: u32le: 0xFF
+    vmajor: u8: 10		// major version
+    vminor: u8: 1		// minor version
+    unused: 6u8
+}
+struct SynapromHdr {
+    tag: u16le
+    bufsz: u32le
+}

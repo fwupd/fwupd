@@ -3,6 +3,7 @@ cargs = ['-DG_LOG_DOMAIN="FuPluginWistronDock"']
 
 plugin_quirks += files('wistron-dock.quirk')
 plugin_builtins += static_library('fu_plugin_wistron_dock',
+  structgen.process('fu-wistron-dock.struct'),
   sources: [
     'fu-wistron-dock-common.c',
     'fu-wistron-dock-device.c',

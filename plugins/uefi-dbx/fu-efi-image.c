@@ -8,6 +8,7 @@
 
 #include <fwupdplugin.h>
 
+#include "fu-efi-image-struct.h"
 #include "fu-efi-image.h"
 
 struct _FuEfiImage {
@@ -20,11 +21,6 @@ typedef struct {
 	gsize size;
 	gchar *name;
 } FuEfiImageRegion;
-
-typedef struct __attribute__((packed)) {
-	guint32 addr;
-	guint32 size;
-} FuEfiImageDataDirEntry;
 
 G_DEFINE_TYPE(FuEfiImage, fu_efi_image, G_TYPE_OBJECT)
 
@@ -268,12 +264,12 @@ fu_efi_image_new(GBytes *data, GError **error)
 				    "cksum->datadir[DEBUG]",
 				    checksum_offset + sizeof(guint32),
 				    data_dir_debug_offset);
-	image_bytes += r->size + sizeof(FuEfiImageDataDirEntry);
+	image_bytes += r->size + FU_STRUCT_EFI_IMAGE_DATA_DIR_ENTRY_SIZE;
 
 	/* third region: end of checksum_offset to end of headers */
 	r = fu_efi_image_add_region(checksum_regions,
 				    "datadir[DEBUG]->headers",
-				    data_dir_debug_offset + sizeof(FuEfiImageDataDirEntry),
+				    data_dir_debug_offset + FU_STRUCT_EFI_IMAGE_DATA_DIR_ENTRY_SIZE,
 				    header_size);
 	image_bytes += r->size;
 

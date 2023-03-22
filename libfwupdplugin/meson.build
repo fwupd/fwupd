@@ -8,6 +8,20 @@ fwupdplugin_version_h = configure_file(
   configuration: conf
 )
 
+fwupdplugin_structs = structgen.process(
+  'fu-acpi-table.struct',   # fuzzing
+  'fu-cfu.struct',          # fuzzing
+  'fu-dfu.struct',          # fuzzing
+  'fu-efi.struct',          # fuzzing
+  'fu-fdt.struct',          # fuzzing
+  'fu-fmap.struct',         # fuzzing
+  'fu-ifwi.struct',         # fuzzing
+  'fu-oprom.struct',        # fuzzing
+  'fu-smbios.struct',       # fuzzing
+  'fu-usb-device-ds20.struct', # fuzzing
+  'fu-uswid.struct',        # fuzzing
+)
+
 fwupdplugin_src = [
   'fu-acpi-table.c',        # fuzzing
   'fu-archive.c',
@@ -243,6 +257,7 @@ fwupdplugin_mapfile = 'fwupdplugin.map'
 vflag = '-Wl,--version-script,@0@/@1@'.format(meson.current_source_dir(), fwupdplugin_mapfile)
 fwupdplugin = library(
   'fwupdplugin',
+  fwupdplugin_structs,
   sources: [
     fwupdplugin_src,
     fwupdplugin_headers,
@@ -351,6 +366,7 @@ if get_option('tests')
   e = executable(
     'fwupdplugin-self-test',
     installed_firmware_zip,
+    structgen.process('fu-self-test.struct'),
     sources: [
       'fu-self-test.c'
     ],

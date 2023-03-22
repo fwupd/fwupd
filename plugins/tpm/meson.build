@@ -9,6 +9,7 @@ cargs = ['-DG_LOG_DOMAIN="FuPluginTpm"']
 plugin_quirks += files('tpm.quirk')
 
 plugin_builtin_tpm = static_library('fu_plugin_tpm',
+  structgen.process('fu-tpm.struct'),
   sources: [
     'fu-tpm-plugin.c',
     'fu-tpm-device.c',

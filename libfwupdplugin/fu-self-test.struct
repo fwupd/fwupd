@@ -1,0 +1,11 @@
+struct SelfTest {
+    signature: u32be:: 0x12345678
+    length: u32le: $struct_size			// bytes
+    revision: u8
+    owner: guid
+    oem_id: 6s:: ABCDEF
+    oem_table_id: 8s
+    oem_revision: u32le
+    asl_compiler_id: 4s
+    asl_compiler_revision: u32le
+}

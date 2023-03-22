@@ -1,0 +1,5 @@
+struct AcpiInsydeQuirk {
+    signature: 6s
+    size: u32le
+    flags: u32le
+}

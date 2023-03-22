@@ -14,7 +14,7 @@
 #include "fu-byte-array.h"
 #include "fu-bytes.h"
 #include "fu-ifwi-cpd-firmware.h"
-#include "fu-mem.h"
+#include "fu-ifwi-struct.h"
 #include "fu-string.h"
 
 /**
@@ -37,45 +37,7 @@ typedef struct {
 G_DEFINE_TYPE_WITH_PRIVATE(FuIfwiCpdFirmware, fu_ifwi_cpd_firmware, FU_TYPE_FIRMWARE)
 #define GET_PRIVATE(o) (fu_ifwi_cpd_firmware_get_instance_private(o))
 
-#define FU_IFWI_CPD_FIRMWARE_HEADER_MARKER 0x44504324
-#define FU_IFWI_CPD_FIRMWARE_ENTRIES_MAX   1024
-
-typedef struct __attribute__((packed)) {
-	guint32 header_marker;
-	guint32 num_of_entries;
-	guint8 header_version;
-	guint8 entry_version;
-	guint8 header_length;
-	guint8 checksum;
-	guint32 partition_name;
-	guint32 crc32;
-} FuIfwiCpdHeader;
-
-typedef struct __attribute__((packed)) {
-	gchar name[12];
-	guint32 offset;
-	guint32 length;
-	guint8 reserved1[4];
-} FuIfwiCpdEntry;
-
-typedef struct __attribute__((packed)) {
-	guint32 header_type;
-	guint32 header_length; /* dwords */
-	guint32 header_version;
-	guint32 flags;
-	guint32 vendor;
-	guint32 date;
-	guint32 size; /* dwords */
-	guint32 id;
-	guint32 rsvd;
-	guint64 version;
-	guint32 svn;
-} FuIfwiCpdManifestHeader;
-
-typedef struct __attribute__((packed)) {
-	guint32 extension_type;
-	guint32 extension_length;
-} FuIfwiCpdManifestExtHeader;
+#define FU_IFWI_CPD_FIRMWARE_ENTRIES_MAX 1024
 
 static void
 fu_ifwi_cpd_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
@@ -90,30 +52,19 @@ static gboolean
 fu_ifwi_cpd_firmware_parse_manifest(FuFirmware *firmware, GBytes *fw, GError **error)
 {
 	gsize bufsz = 0;
-	guint32 header_length = 0;
-	guint32 size = 0;
-	guint64 version = 0;
+	guint32 size;
 	gsize offset = 0;
 	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
+	g_autoptr(GByteArray) st_mhd = NULL;
 
 	/* raw version */
-	if (!fu_memread_uint64_safe(buf,
-				    bufsz,
-				    G_STRUCT_OFFSET(FuIfwiCpdManifestHeader, version),
-				    &version,
-				    G_LITTLE_ENDIAN,
-				    error))
+	st_mhd = fu_struct_ifwi_cpd_manifest_parse(buf, bufsz, offset, error);
+	if (st_mhd == NULL)
 		return FALSE;
-	fu_firmware_set_version_raw(firmware, version);
+	fu_firmware_set_version_raw(firmware, fu_struct_ifwi_cpd_manifest_get_version(st_mhd));
 
 	/* verify the size */
-	if (!fu_memread_uint32_safe(buf,
-				    bufsz,
-				    G_STRUCT_OFFSET(FuIfwiCpdManifestHeader, size),
-				    &size,
-				    G_LITTLE_ENDIAN,
-				    error))
-		return FALSE;
+	size = fu_struct_ifwi_cpd_manifest_get_size(st_mhd);
 	if (size * 4 != bufsz) {
 		g_set_error(error,
 			    G_IO_ERROR,
@@ -125,45 +76,28 @@ fu_ifwi_cpd_firmware_parse_manifest(FuFirmware *firmware, GBytes *fw, GError **e
 	}
 
 	/* parse extensions */
-	if (!fu_memread_uint32_safe(buf,
-				    bufsz,
-				    G_STRUCT_OFFSET(FuIfwiCpdManifestHeader, header_length),
-				    &header_length,
-				    G_LITTLE_ENDIAN,
-				    error))
-		return FALSE;
-	offset += header_length * 4;
+	offset += fu_struct_ifwi_cpd_manifest_get_header_length(st_mhd) * 4;
 	while (offset < bufsz) {
 		guint32 extension_type = 0;
 		guint32 extension_length = 0;
-		g_autoptr(GBytes) blob = NULL;
 		g_autoptr(FuFirmware) img = fu_firmware_new();
+		g_autoptr(GByteArray) st_mex = NULL;
+		g_autoptr(GBytes) blob = NULL;
 
 		/* set the extension type as the index */
-		if (!fu_memread_uint32_safe(
-			buf,
-			bufsz,
-			offset + G_STRUCT_OFFSET(FuIfwiCpdManifestExtHeader, extension_type),
-			&extension_type,
-			G_LITTLE_ENDIAN,
-			error))
+		st_mex = fu_struct_ifwi_cpd_manifest_ext_parse(buf, bufsz, offset, error);
+		if (st_mex == NULL)
 			return FALSE;
+		extension_type = fu_struct_ifwi_cpd_manifest_ext_get_extension_type(st_mex);
 		if (extension_type == 0x0)
 			break;
 		fu_firmware_set_idx(img, extension_type);
 
 		/* add data section */
-		if (!fu_memread_uint32_safe(
-			buf,
-			bufsz,
-			offset + G_STRUCT_OFFSET(FuIfwiCpdManifestExtHeader, extension_length),
-			&extension_length,
-			G_LITTLE_ENDIAN,
-			error))
-			return FALSE;
+		extension_length = fu_struct_ifwi_cpd_manifest_ext_get_extension_length(st_mex);
 		if (extension_length == 0x0)
 			break;
-		if (extension_length < sizeof(FuIfwiCpdManifestExtHeader)) {
+		if (extension_length < st_mex->len) {
 			g_set_error(error,
 				    G_IO_ERROR,
 				    G_IO_ERROR_INVALID_DATA,
@@ -172,8 +106,8 @@ fu_ifwi_cpd_firmware_parse_manifest(FuFirmware *firmware, GBytes *fw, GError **e
 			return FALSE;
 		}
 		blob = fu_bytes_new_offset(fw,
-					   offset + sizeof(FuIfwiCpdManifestExtHeader),
-					   extension_length - sizeof(FuIfwiCpdManifestExtHeader),
+					   offset + st_mex->len,
+					   extension_length - st_mex->len,
 					   error);
 		if (blob == NULL)
 			return FALSE;
@@ -192,29 +126,10 @@ fu_ifwi_cpd_firmware_parse_manifest(FuFirmware *firmware, GBytes *fw, GError **e
 static gboolean
 fu_ifwi_cpd_firmware_check_magic(FuFirmware *firmware, GBytes *fw, gsize offset, GError **error)
 {
-	guint32 magic = 0;
-
-	if (!fu_memread_uint32_safe(g_bytes_get_data(fw, NULL),
-				    g_bytes_get_size(fw),
-				    offset + G_STRUCT_OFFSET(FuIfwiCpdHeader, header_marker),
-				    &magic,
-				    G_LITTLE_ENDIAN,
-				    error)) {
-		g_prefix_error(error, "failed to read magic: ");
-		return FALSE;
-	}
-	if (magic != FU_IFWI_CPD_FIRMWARE_HEADER_MARKER) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_FILE,
-			    "invalid CPD header marker 0x%x, expected 0x%x",
-			    magic,
-			    (guint)FU_IFWI_CPD_FIRMWARE_HEADER_MARKER);
-		return FALSE;
-	}
-
-	/* success */
-	return TRUE;
+	return fu_struct_ifwi_cpd_validate(g_bytes_get_data(fw, NULL),
+					   g_bytes_get_size(fw),
+					   offset,
+					   error);
 }
 
 static gboolean
@@ -226,48 +141,21 @@ fu_ifwi_cpd_firmware_parse(FuFirmware *firmware,
 {
 	FuIfwiCpdFirmware *self = FU_IFWI_CPD_FIRMWARE(firmware);
 	FuIfwiCpdFirmwarePrivate *priv = GET_PRIVATE(self);
+	g_autoptr(GByteArray) st_hdr = NULL;
 	gsize bufsz = 0;
-	guint32 num_of_entries = 0;
-	guint32 partition_name = 0;
-	guint8 header_length = 0;
+	guint32 num_of_entries;
 	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
 
 	/* other header fields */
-	if (!fu_memread_uint8_safe(buf,
-				   bufsz,
-				   offset + G_STRUCT_OFFSET(FuIfwiCpdHeader, header_version),
-				   &priv->header_version,
-				   error))
+	st_hdr = fu_struct_ifwi_cpd_parse(buf, bufsz, offset, error);
+	if (st_hdr == NULL)
 		return FALSE;
-	if (!fu_memread_uint8_safe(buf,
-				   bufsz,
-				   offset + G_STRUCT_OFFSET(FuIfwiCpdHeader, entry_version),
-				   &priv->entry_version,
-				   error))
-		return FALSE;
-	if (!fu_memread_uint8_safe(buf,
-				   bufsz,
-				   offset + G_STRUCT_OFFSET(FuIfwiCpdHeader, header_length),
-				   &header_length,
-				   error))
-		return FALSE;
-	if (!fu_memread_uint32_safe(buf,
-				    bufsz,
-				    offset + G_STRUCT_OFFSET(FuIfwiCpdHeader, partition_name),
-				    &partition_name,
-				    G_LITTLE_ENDIAN,
-				    error))
-		return FALSE;
-	fu_firmware_set_idx(firmware, partition_name);
+	priv->header_version = fu_struct_ifwi_cpd_get_header_version(st_hdr);
+	priv->entry_version = fu_struct_ifwi_cpd_get_entry_version(st_hdr);
+	fu_firmware_set_idx(firmware, fu_struct_ifwi_cpd_get_partition_name(st_hdr));
 
 	/* read out entries */
-	if (!fu_memread_uint32_safe(buf,
-				    bufsz,
-				    offset + G_STRUCT_OFFSET(FuIfwiCpdHeader, num_of_entries),
-				    &num_of_entries,
-				    G_LITTLE_ENDIAN,
-				    error))
-		return FALSE;
+	num_of_entries = fu_struct_ifwi_cpd_get_num_of_entries(st_hdr);
 	if (num_of_entries > FU_IFWI_CPD_FIRMWARE_ENTRIES_MAX) {
 		g_set_error(error,
 			    G_IO_ERROR,
@@ -277,66 +165,49 @@ fu_ifwi_cpd_firmware_parse(FuFirmware *firmware,
 			    (guint)FU_IFWI_CPD_FIRMWARE_ENTRIES_MAX);
 		return FALSE;
 	}
-	offset += header_length;
+	offset += fu_struct_ifwi_cpd_get_header_length(st_hdr);
 	for (guint32 i = 0; i < num_of_entries; i++) {
-		gchar name[12] = {0x0};
-		g_autoptr(FuFirmware) img = fu_firmware_new();
-		g_autoptr(GBytes) img_blob = NULL;
-		g_autofree gchar *id = NULL;
 		guint32 img_offset = 0;
-		guint32 img_length = 0;
+		g_autofree gchar *id = NULL;
+		g_autoptr(FuFirmware) img = fu_firmware_new();
+		g_autoptr(GByteArray) st_ent = NULL;
+		g_autoptr(GBytes) img_blob = NULL;
 
 		/* the IDX is the position in the file */
 		fu_firmware_set_idx(img, i);
 
-		/* copy name as id */
-		if (!fu_memcpy_safe((guint8 *)name,
-				    sizeof(name),
-				    0x0, /* dst */
-				    buf,
-				    bufsz,
-				    offset + G_STRUCT_OFFSET(FuIfwiCpdEntry, name), /* src */
-				    sizeof(name),
-				    error)) {
+		st_ent = fu_struct_ifwi_cpd_entry_parse(buf, bufsz, offset, error);
+		if (st_ent == NULL)
 			return FALSE;
-		}
-		id = fu_strsafe(name, sizeof(name));
+
+		/* copy name as id */
+		id = fu_struct_ifwi_cpd_entry_get_name(st_ent);
 		fu_firmware_set_id(img, id);
 
 		/* copy offset, ignoring huffman and reserved bits */
-		if (!fu_memread_uint32_safe(buf,
-					    bufsz,
-					    offset + G_STRUCT_OFFSET(FuIfwiCpdEntry, offset),
-					    &img_offset,
-					    G_LITTLE_ENDIAN,
-					    error))
-			return FALSE;
+		img_offset = fu_struct_ifwi_cpd_entry_get_offset(st_ent);
 		img_offset &= 0x1FFFFFF;
 		fu_firmware_set_offset(img, img_offset);
 
 		/* copy data */
-		if (!fu_memread_uint32_safe(buf,
-					    bufsz,
-					    offset + G_STRUCT_OFFSET(FuIfwiCpdEntry, length),
-					    &img_length,
-					    G_LITTLE_ENDIAN,
-					    error))
-			return FALSE;
-		img_blob = fu_bytes_new_offset(fw, img_offset, img_length, error);
+		img_blob = fu_bytes_new_offset(fw,
+					       img_offset,
+					       fu_struct_ifwi_cpd_entry_get_length(st_ent),
+					       error);
 		if (img_blob == NULL)
 			return FALSE;
 		fu_firmware_set_bytes(img, img_blob);
 
 		/* read the manifest */
 		if (i == FU_IFWI_CPD_FIRMWARE_IDX_MANIFEST &&
-		    g_bytes_get_size(img_blob) > sizeof(FuIfwiCpdManifestHeader)) {
+		    g_bytes_get_size(img_blob) > FU_STRUCT_IFWI_CPD_MANIFEST_SIZE) {
 			if (!fu_ifwi_cpd_firmware_parse_manifest(img, img_blob, error))
 				return FALSE;
 		}
 
 		/* success */
 		fu_firmware_add_image(firmware, img);
-		offset += sizeof(FuIfwiCpdEntry);
+		offset += st_ent->len;
 	}
 
 	/* success */
@@ -348,26 +219,25 @@ fu_ifwi_cpd_firmware_write(FuFirmware *firmware, GError **error)
 {
 	FuIfwiCpdFirmware *self = FU_IFWI_CPD_FIRMWARE(firmware);
 	FuIfwiCpdFirmwarePrivate *priv = GET_PRIVATE(self);
-	g_autoptr(GByteArray) buf = g_byte_array_new();
-	g_autoptr(GPtrArray) imgs = fu_firmware_get_images(firmware);
 	gsize offset = 0;
+	g_autoptr(GByteArray) buf = fu_struct_ifwi_cpd_new();
+	g_autoptr(GPtrArray) imgs = fu_firmware_get_images(firmware);
 
 	/* write the header */
-	fu_byte_array_append_uint32(buf, FU_IFWI_CPD_FIRMWARE_HEADER_MARKER, G_LITTLE_ENDIAN);
-	fu_byte_array_append_uint32(buf, imgs->len, G_LITTLE_ENDIAN);
-	fu_byte_array_append_uint8(buf, priv->header_version);
-	fu_byte_array_append_uint8(buf, priv->entry_version);
-	fu_byte_array_append_uint8(buf, sizeof(FuIfwiCpdHeader));
-	fu_byte_array_append_uint8(buf, 0x0); /* checksum */
-	fu_byte_array_append_uint32(buf, fu_firmware_get_idx(firmware), G_LITTLE_ENDIAN);
-	fu_byte_array_append_uint32(buf, 0x0, G_LITTLE_ENDIAN); /* crc32 */
+	fu_struct_ifwi_cpd_set_num_of_entries(buf, imgs->len);
+	fu_struct_ifwi_cpd_set_header_version(buf, priv->header_version);
+	fu_struct_ifwi_cpd_set_entry_version(buf, priv->entry_version);
+	fu_struct_ifwi_cpd_set_checksum(buf, 0x0);
+	fu_struct_ifwi_cpd_set_partition_name(buf, fu_firmware_get_idx(firmware));
+	fu_struct_ifwi_cpd_set_crc32(buf, 0x0);
 
 	/* fixup the image offsets */
-	offset += sizeof(FuIfwiCpdHeader);
-	offset += sizeof(FuIfwiCpdEntry) * imgs->len;
+	offset += buf->len;
+	offset += FU_STRUCT_IFWI_CPD_ENTRY_SIZE * imgs->len;
 	for (guint i = 0; i < imgs->len; i++) {
 		FuFirmware *img = g_ptr_array_index(imgs, i);
 		g_autoptr(GBytes) blob = NULL;
+
 		blob = fu_firmware_get_bytes(img, error);
 		if (blob == NULL) {
 			g_prefix_error(error, "image 0x%x: ", i);
@@ -380,11 +250,10 @@ fu_ifwi_cpd_firmware_write(FuFirmware *firmware, GError **error)
 	/* add entry headers */
 	for (guint i = 0; i < imgs->len; i++) {
 		FuFirmware *img = g_ptr_array_index(imgs, i);
-		const gchar *id = fu_firmware_get_id(img);
-		gchar name[12] = {0x0};
+		g_autoptr(GByteArray) st_ent = fu_struct_ifwi_cpd_entry_new();
 
 		/* sanity check */
-		if (id == NULL) {
+		if (fu_firmware_get_id(img) == NULL) {
 			g_set_error(error,
 				    G_IO_ERROR,
 				    G_IO_ERROR_INVALID_DATA,
@@ -392,23 +261,11 @@ fu_ifwi_cpd_firmware_write(FuFirmware *firmware, GError **error)
 				    (guint)fu_firmware_get_idx(img));
 			return NULL;
 		}
-
-		/* copy id into name */
-		if (!fu_memcpy_safe((guint8 *)name,
-				    sizeof(name),
-				    0x0, /* dst */
-				    (const guint8 *)id,
-				    strlen(id),
-				    0x0, /* src */
-				    strlen(id),
-				    error)) {
+		if (!fu_struct_ifwi_cpd_entry_set_name(st_ent, fu_firmware_get_id(img), error))
 			return NULL;
-		}
-
-		g_byte_array_append(buf, (const guint8 *)name, sizeof(name));
-		fu_byte_array_append_uint32(buf, fu_firmware_get_offset(img), G_LITTLE_ENDIAN);
-		fu_byte_array_append_uint32(buf, fu_firmware_get_size(img), G_LITTLE_ENDIAN);
-		fu_byte_array_append_uint32(buf, 0x0, G_LITTLE_ENDIAN); /* reserved */
+		fu_struct_ifwi_cpd_entry_set_offset(st_ent, fu_firmware_get_offset(img));
+		fu_struct_ifwi_cpd_entry_set_length(st_ent, fu_firmware_get_size(img));
+		g_byte_array_append(buf, st_ent->data, st_ent->len);
 	}
 
 	/* add entry data */

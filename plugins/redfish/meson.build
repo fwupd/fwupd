@@ -10,6 +10,9 @@ if have_linux_ipmi
 endif
 
 plugin_builtin_redfish = static_library('fu_plugin_redfish',
+  structgen.process(
+    'fu-redfish-smbios.struct', # fuzzing
+  ),
   sources: [
     'fu-redfish-plugin.c',
     'fu-redfish-backend.c',

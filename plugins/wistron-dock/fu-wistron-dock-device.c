@@ -9,6 +9,7 @@
 
 #include "fu-wistron-dock-common.h"
 #include "fu-wistron-dock-device.h"
+#include "fu-wistron-dock-struct.h"
 
 struct _FuWistronDockDevice {
 	FuHidDevice parent_instance;
@@ -518,124 +519,50 @@ fu_wistron_dock_device_ensure_userinfo(FuWistronDockDevice *self, GError **error
 	return TRUE;
 }
 
-typedef struct __attribute__((packed)) {
-	guint8 hid_id;
-	gchar tag_id[2];
-	guint16 vid;
-	guint16 pid;
-	guint8 imgmode;
-	guint8 update_state;
-	guint8 status_code;
-	guint32 composite_version;
-	guint8 device_cnt;
-	guint8 reserved;
-} FuWistronDockWdit;
-
-typedef struct __attribute__((packed)) {
-	guint8 comp_id;
-	guint8 mode;
-	guint8 status;
-	guint8 _reserved;
-	guint32 version_build;
-	guint32 version1;
-	guint32 version2;
-	gchar name[32];
-} FuWistronDockWditImg;
-
 static gboolean
 fu_wistron_dock_device_parse_wdit_img(FuWistronDockDevice *self,
 				      const guint8 *buf,
 				      gsize bufsz,
+				      gsize offset,
 				      guint8 device_cnt,
 				      GError **error)
 {
-	gsize offset = sizeof(FuWistronDockWdit) + 1;
 	for (guint j = 0; j < device_cnt; j++) {
 		guint32 version_raw = 0;
-		guint8 comp_id = 0;
-		guint8 mode = 0;
-		guint8 status = 0;
-		gchar name_tmp[32] = {0x0};
+		guint8 status;
 		g_autofree gchar *name = NULL;
 		g_autofree gchar *version0 = NULL;
 		g_autofree gchar *version1 = NULL;
 		g_autofree gchar *version2 = NULL;
+		g_autoptr(GByteArray) st = NULL;
 
-		/* id */
-		if (!fu_memread_uint8_safe(buf,
-					   bufsz,
-					   offset + G_STRUCT_OFFSET(FuWistronDockWditImg, comp_id),
-					   &comp_id,
-					   error))
-			return FALSE;
-
-		/* mode: 0=single, 1=dual-s, 2=dual-a */
-		if (!fu_memread_uint8_safe(buf,
-					   bufsz,
-					   offset + G_STRUCT_OFFSET(FuWistronDockWditImg, mode),
-					   &mode,
-					   error))
-			return FALSE;
-
-		/* status: 0=unknown, 1=valid, 2=invalid */
-		if (!fu_memread_uint8_safe(buf,
-					   bufsz,
-					   offset + G_STRUCT_OFFSET(FuWistronDockWditImg, status),
-					   &status,
-					   error))
+		/* parse */
+		st = fu_struct_wistron_dock_wdit_img_parse(buf, bufsz, offset, error);
+		if (st == NULL)
 			return FALSE;
 
 		/* versions */
-		if (!fu_memread_uint32_safe(
-			buf,
-			bufsz,
-			offset + G_STRUCT_OFFSET(FuWistronDockWditImg, version_build),
-			&version_raw,
-			G_BIG_ENDIAN,
-			error))
-			return FALSE;
+		version_raw = fu_struct_wistron_dock_wdit_img_get_version_build(st);
 		if (version_raw != 0)
 			version0 = fu_version_from_uint32(version_raw, FWUPD_VERSION_FORMAT_QUAD);
-		if (!fu_memread_uint32_safe(buf,
-					    bufsz,
-					    offset +
-						G_STRUCT_OFFSET(FuWistronDockWditImg, version1),
-					    &version_raw,
-					    G_BIG_ENDIAN,
-					    error))
-			return FALSE;
+		version_raw = fu_struct_wistron_dock_wdit_img_get_version1(st);
 		if (version_raw != 0)
 			version1 = fu_version_from_uint32(version_raw, FWUPD_VERSION_FORMAT_QUAD);
-		if (!fu_memread_uint32_safe(buf,
-					    bufsz,
-					    offset +
-						G_STRUCT_OFFSET(FuWistronDockWditImg, version2),
-					    &version_raw,
-					    G_BIG_ENDIAN,
-					    error))
-			return FALSE;
+		version_raw = fu_struct_wistron_dock_wdit_img_get_version2(st);
 		if (version_raw != 0)
 			version2 = fu_version_from_uint32(version_raw, FWUPD_VERSION_FORMAT_QUAD);
 
 		/* name */
-		if (!fu_memcpy_safe((guint8 *)&name_tmp,
-				    sizeof(name_tmp),
-				    0x0,
-				    buf,
-				    bufsz,
-				    offset + G_STRUCT_OFFSET(FuWistronDockWditImg, name),
-				    sizeof(name_tmp),
-				    error))
-			return FALSE;
-		name = fu_strsafe(name_tmp, sizeof(name_tmp));
+		name = fu_struct_wistron_dock_wdit_img_get_name(st);
+		status = fu_struct_wistron_dock_wdit_img_get_status(st);
 		g_debug("%s: bld:%s, img1:%s, img2:%s", name, version0, version1, version2);
 		g_debug(" - comp-id:%u, mode:%u, status:%u/%u",
-			comp_id,
-			mode,
+			fu_struct_wistron_dock_wdit_img_get_comp_id(st),
+			fu_struct_wistron_dock_wdit_img_get_mode(st),
 			(guint)status & 0x0F,
 			(guint)(status & 0xF0) >> 4);
 
-		offset += sizeof(FuWistronDockWditImg);
+		offset += st->len;
 	}
 
 	/* success */
@@ -645,13 +572,9 @@ fu_wistron_dock_device_parse_wdit_img(FuWistronDockDevice *self,
 static gboolean
 fu_wistron_dock_device_ensure_wdit(FuWistronDockDevice *self, GError **error)
 {
-	guint16 tag_id = 0x0;
-	guint16 usb_pid = 0x0;
-	guint16 usb_vid = 0x0;
-	guint32 version_raw = 0;
-	guint8 device_cnt = 0x0;
 	guint8 update_state = 0x0;
 	guint8 buf[FU_WISTRON_DOCK_WDIT_SIZE + 1] = {FU_WISTRON_DOCK_ID_DOCK_WDIT};
+	g_autoptr(GByteArray) st = NULL;
 
 	/* get WDIT */
 	if (!fu_hid_device_get_report(FU_HID_DEVICE(self),
@@ -664,70 +587,44 @@ fu_wistron_dock_device_ensure_wdit(FuWistronDockDevice *self, GError **error)
 					  FU_HID_DEVICE_FLAG_ALLOW_TRUNC,
 				      error))
 		return FALSE;
-	if (!fu_memread_uint16_safe(buf,
-				    sizeof(buf),
-				    G_STRUCT_OFFSET(FuWistronDockWdit, tag_id),
-				    &tag_id,
-				    G_BIG_ENDIAN,
-				    error))
+
+	/* unpack */
+	st = fu_struct_wistron_dock_wdit_parse(buf, sizeof(buf), 0x0, error);
+	if (st == NULL)
 		return FALSE;
-	if (tag_id != FU_WISTRON_DOCK_WDIT_TAG_ID) {
+	if (fu_struct_wistron_dock_wdit_get_tag_id(st) != FU_WISTRON_DOCK_WDIT_TAG_ID) {
 		g_set_error(error,
 			    G_IO_ERROR,
 			    G_IO_ERROR_INVALID_DATA,
 			    "WDIT tag invalid, expected 0x%x, got 0x%x",
 			    (guint)FU_WISTRON_DOCK_WDIT_TAG_ID,
-			    tag_id);
+			    fu_struct_wistron_dock_wdit_get_tag_id(st));
 		return FALSE;
 	}
 
 	/* verify VID & PID */
-	if (!fu_memread_uint16_safe(buf,
-				    sizeof(buf),
-				    G_STRUCT_OFFSET(FuWistronDockWdit, vid),
-				    &usb_vid,
-				    G_LITTLE_ENDIAN,
-				    error))
-		return FALSE;
-	if (!fu_memread_uint16_safe(buf,
-				    sizeof(buf),
-				    G_STRUCT_OFFSET(FuWistronDockWdit, pid),
-				    &usb_pid,
-				    G_LITTLE_ENDIAN,
-				    error))
-		return FALSE;
-	if (usb_vid != fu_usb_device_get_vid(FU_USB_DEVICE(self)) ||
-	    usb_pid != fu_usb_device_get_pid(FU_USB_DEVICE(self))) {
+	if (fu_struct_wistron_dock_wdit_get_vid(st) != fu_usb_device_get_vid(FU_USB_DEVICE(self)) ||
+	    fu_struct_wistron_dock_wdit_get_pid(st) != fu_usb_device_get_pid(FU_USB_DEVICE(self))) {
 		g_set_error(error,
 			    G_IO_ERROR,
 			    G_IO_ERROR_INVALID_DATA,
 			    "USB VID:PID invalid, expected %04X:%04X, got %04X:%04X",
 			    (guint)fu_usb_device_get_vid(FU_USB_DEVICE(self)),
 			    (guint)fu_usb_device_get_pid(FU_USB_DEVICE(self)),
-			    usb_vid,
-			    usb_pid);
+			    fu_struct_wistron_dock_wdit_get_vid(st),
+			    fu_struct_wistron_dock_wdit_get_pid(st));
 		return FALSE;
 	}
 
 	/* image mode */
-	if (!fu_memread_uint8_safe(buf,
-				   sizeof(buf),
-				   G_STRUCT_OFFSET(FuWistronDockWdit, imgmode),
-				   &self->imgmode,
-				   error))
-		return FALSE;
+	self->imgmode = fu_struct_wistron_dock_wdit_get_imgmode(st);
 	if (self->imgmode == 0)
 		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	else if (self->imgmode == 1)
 		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 
 	/* update state */
-	if (!fu_memread_uint8_safe(buf,
-				   sizeof(buf),
-				   G_STRUCT_OFFSET(FuWistronDockWdit, update_state),
-				   &update_state,
-				   error))
-		return FALSE;
+	update_state = fu_struct_wistron_dock_wdit_get_update_state(st);
 	self->update_phase = (update_state & 0xF0) >> 4;
 	if (self->update_phase == FU_WISTRON_DOCK_UPDATE_PHASE_DOWNLOAD)
 		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
@@ -740,37 +637,22 @@ fu_wistron_dock_device_ensure_wdit(FuWistronDockDevice *self, GError **error)
 		g_warning("unknown component_idx 0x%02x", self->component_idx);
 
 	/* status code */
-	if (!fu_memread_uint8_safe(buf,
-				   sizeof(buf),
-				   G_STRUCT_OFFSET(FuWistronDockWdit, status_code),
-				   &self->status_code,
-				   error))
-		return FALSE;
+	self->status_code = fu_struct_wistron_dock_wdit_get_status_code(st);
 	if (fu_wistron_dock_status_code_to_string(self->status_code) == NULL)
 		g_warning("unknown status_code 0x%02x", self->status_code);
 
 	/* composite version */
-	if (!fu_memread_uint32_safe(buf,
-				    sizeof(buf),
-				    G_STRUCT_OFFSET(FuWistronDockWdit, composite_version),
-				    &version_raw,
-				    G_BIG_ENDIAN,
-				    error))
-		return FALSE;
-	fu_device_set_version_from_uint32(FU_DEVICE(self), version_raw);
+	fu_device_set_version_from_uint32(FU_DEVICE(self),
+					  fu_struct_wistron_dock_wdit_get_composite_version(st));
 
 	/* for debugging only */
-	if (!fu_memread_uint8_safe(buf,
-				   sizeof(buf),
-				   G_STRUCT_OFFSET(FuWistronDockWdit, device_cnt),
-				   &device_cnt,
-				   error))
-		return FALSE;
-	if (!fu_wistron_dock_device_parse_wdit_img(self,
-						   buf,
-						   sizeof(buf),
-						   MIN(device_cnt, 32),
-						   error)) {
+	if (!fu_wistron_dock_device_parse_wdit_img(
+		self,
+		buf,
+		sizeof(buf),
+		st->len + 0x1,
+		MIN(fu_struct_wistron_dock_wdit_get_device_cnt(st), 32),
+		error)) {
 		g_prefix_error(error, "failed to parse imgs: ");
 		return FALSE;
 	}

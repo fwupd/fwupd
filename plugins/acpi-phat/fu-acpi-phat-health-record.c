@@ -6,11 +6,8 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
-#include <string.h>
-
 #include "fu-acpi-phat-health-record.h"
+#include "fu-acpi-phat-struct.h"
 #include "fu-acpi-phat.h"
 
 struct _FuAcpiPhatHealthRecord {
@@ -45,14 +42,16 @@ fu_acpi_phat_health_record_parse(FuFirmware *firmware,
 {
 	FuAcpiPhatHealthRecord *self = FU_ACPI_PHAT_HEALTH_RECORD(firmware);
 	gsize bufsz = 0;
-	guint16 rcdlen = 0;
-	guint32 dataoff = 0x0;
+	guint16 rcdlen;
+	guint32 dataoff;
 	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
-	fwupd_guid_t guid = {0x0};
+	g_autoptr(GByteArray) st = NULL;
 
-	/* record length */
-	if (!fu_memread_uint16_safe(buf, bufsz, 2, &rcdlen, G_LITTLE_ENDIAN, error))
+	/* sanity check record length */
+	st = fu_struct_acpi_phat_health_record_parse(buf, bufsz, offset, error);
+	if (st == NULL)
 		return FALSE;
+	rcdlen = fu_struct_acpi_phat_health_record_get_rcdlen(st);
 	if (rcdlen != bufsz) {
 		g_set_error(error,
 			    G_IO_ERROR,
@@ -61,28 +60,13 @@ fu_acpi_phat_health_record_parse(FuFirmware *firmware,
 			    rcdlen);
 		return FALSE;
 	}
-
-	/* am healthy */
-	if (!fu_memread_uint8_safe(buf, bufsz, 7, &self->am_healthy, error))
-		return FALSE;
-
-	/* device signature */
-	if (!fu_memcpy_safe((guint8 *)&guid,
-			    sizeof(guid),
-			    0x0, /* dst */
-			    buf,
-			    bufsz,
-			    8, /* src */
-			    sizeof(guid),
-			    error))
-		return FALSE;
-	self->guid = fwupd_guid_to_string(&guid, FWUPD_GUID_FLAG_MIXED_ENDIAN);
-
-	/* read the data offset to work out the size of the middle part */
-	if (!fu_memread_uint32_safe(buf, bufsz, 24, &dataoff, G_LITTLE_ENDIAN, error))
-		return FALSE;
+	self->am_healthy = fu_struct_acpi_phat_health_record_get_flags(st);
+	self->guid =
+	    fwupd_guid_to_string(fu_struct_acpi_phat_health_record_get_device_signature(st),
+				 FWUPD_GUID_FLAG_MIXED_ENDIAN);
 
 	/* device path */
+	dataoff = fu_struct_acpi_phat_health_record_get_device_specific_data(st);
 	if (bufsz > 28) {
 		gsize ubufsz; /* bytes */
 		g_autofree gunichar2 *ubuf = NULL;
@@ -136,10 +120,9 @@ static GBytes *
 fu_acpi_phat_health_record_write(FuFirmware *firmware, GError **error)
 {
 	FuAcpiPhatHealthRecord *self = FU_ACPI_PHAT_HEALTH_RECORD(firmware);
-	fwupd_guid_t guid = {0x0};
 	glong device_path_utf16sz = 0;
 	g_autofree gunichar2 *device_path_utf16 = NULL;
-	g_autoptr(GByteArray) buf = g_byte_array_new();
+	g_autoptr(GByteArray) st = fu_struct_acpi_phat_health_record_new();
 
 	/* convert device path ahead of time to get total record length */
 	if (self->device_path != NULL) {
@@ -151,30 +134,22 @@ fu_acpi_phat_health_record_write(FuFirmware *firmware, GError **error)
 	}
 
 	/* data record */
-	fu_byte_array_append_uint16(buf, FU_ACPI_PHAT_RECORD_TYPE_HEALTH, G_LITTLE_ENDIAN);
-	fu_byte_array_append_uint16(buf, 28 + device_path_utf16sz, G_LITTLE_ENDIAN);
-	fu_byte_array_append_uint8(buf, fu_firmware_get_version_raw(firmware));
-	fu_byte_array_append_uint8(buf, 0x00);
-	fu_byte_array_append_uint8(buf, 0x00);
-	fu_byte_array_append_uint8(buf, self->am_healthy);
-
-	/* device signature */
 	if (self->guid != NULL) {
+		fwupd_guid_t guid = {0x0};
 		if (!fwupd_guid_from_string(self->guid, &guid, FWUPD_GUID_FLAG_MIXED_ENDIAN, error))
 			return NULL;
+		fu_struct_acpi_phat_health_record_set_device_signature(st, &guid);
 	}
-	g_byte_array_append(buf, guid, sizeof(guid));
-
-	/* device-specific data unsupported */
-	fu_byte_array_append_uint32(buf, 0x0, G_LITTLE_ENDIAN);
+	fu_struct_acpi_phat_health_record_set_rcdlen(st, st->len + device_path_utf16sz);
+	fu_struct_acpi_phat_health_record_set_version(st, fu_firmware_get_version_raw(firmware));
+	fu_struct_acpi_phat_health_record_set_flags(st, self->am_healthy);
 
 	/* device path */
-	if (self->device_path != NULL) {
-		g_byte_array_append(buf, (const guint8 *)device_path_utf16, device_path_utf16sz);
-	}
+	if (self->device_path != NULL)
+		g_byte_array_append(st, (const guint8 *)device_path_utf16, device_path_utf16sz);
 
 	/* success */
-	return g_byte_array_free_to_bytes(g_steal_pointer(&buf));
+	return g_byte_array_free_to_bytes(g_steal_pointer(&st));
 }
 
 static void

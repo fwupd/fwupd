@@ -10,6 +10,7 @@
 #include "fu-igsc-device.h"
 #include "fu-igsc-oprom-device.h"
 #include "fu-igsc-oprom-firmware.h"
+#include "fu-igsc-struct.h"
 
 struct _FuIgscOpromDevice {
 	FuDevice parent_instance;
@@ -17,13 +18,6 @@ struct _FuIgscOpromDevice {
 	enum gsc_fwu_heci_partition_version partition_version;
 	guint16 major_version;
 };
-
-typedef struct __attribute__((packed)) {
-	guint16 major;
-	guint16 minor;
-	guint16 hotfix;
-	guint16 build;
-} FuIgscOpromVersion;
 
 G_DEFINE_TYPE(FuIgscOpromDevice, fu_igsc_oprom_device, FU_TYPE_DEVICE)
 
@@ -79,24 +73,28 @@ fu_igsc_oprom_device_setup(FuDevice *device, GError **error)
 {
 	FuIgscOpromDevice *self = FU_IGSC_OPROM_DEVICE(device);
 	FuIgscDevice *igsc_parent = FU_IGSC_DEVICE(fu_device_get_parent(device));
-	FuIgscOpromVersion oprom_ver = {0x0};
+	guint8 buf[8] = {0x0};
 	g_autofree gchar *version = NULL;
+	g_autoptr(GByteArray) st = NULL;
 
 	/* get version */
 	if (!fu_igsc_device_get_version_raw(igsc_parent,
 					    self->partition_version,
-					    (guint8 *)&oprom_ver,
-					    sizeof(oprom_ver),
+					    buf,
+					    sizeof(buf),
 					    error)) {
 		g_prefix_error(error, "failed to get oprom version: ");
 		return FALSE;
 	}
-	self->major_version = oprom_ver.major;
+	st = fu_struct_igsc_oprom_version_parse(buf, sizeof(buf), 0x0, error);
+	if (st == NULL)
+		return FALSE;
+	self->major_version = fu_struct_igsc_oprom_version_get_major(st);
 	version = g_strdup_printf("%u.%u.%u.%u",
-				  oprom_ver.major,
-				  oprom_ver.minor,
-				  oprom_ver.hotfix,
-				  oprom_ver.build);
+				  self->major_version,
+				  fu_struct_igsc_oprom_version_get_minor(st),
+				  fu_struct_igsc_oprom_version_get_hotfix(st),
+				  fu_struct_igsc_oprom_version_get_build(st));
 	fu_device_set_version(device, version);
 
 	/* success */

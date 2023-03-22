@@ -8,7 +8,7 @@
 
 #include "config.h"
 
-#include "fu-mem.h"
+#include "fu-usb-device-ds20-struct.h"
 #include "fu-usb-device-ms-ds20.h"
 
 struct _FuUsbDeviceMsDs20 {
@@ -62,24 +62,17 @@ fu_usb_device_ms_ds20_parse(FuUsbDeviceDs20 *self,
 
 	/* get length and type only */
 	for (gsize offset = 0; offset < bufsz;) {
-		guint16 desc_sz = 0;
-		guint16 desc_type = 0;
-		if (!fu_memread_uint16_safe(buf,
-					    bufsz,
-					    offset + 0x0,
-					    &desc_sz,
-					    G_LITTLE_ENDIAN,
-					    error))
+		guint16 desc_sz;
+		guint16 desc_type;
+		g_autoptr(GByteArray) st = NULL;
+
+		st = fu_struct_ms_ds20_parse(buf, bufsz, offset, error);
+		if (st == NULL)
 			return FALSE;
+		desc_sz = fu_struct_ms_ds20_get_size(st);
 		if (desc_sz == 0)
 			break;
-		if (!fu_memread_uint16_safe(buf,
-					    bufsz,
-					    offset + 0x2,
-					    &desc_type,
-					    G_LITTLE_ENDIAN,
-					    error))
-			return FALSE;
+		desc_type = fu_struct_ms_ds20_get_type(st);
 		g_debug("USB OS descriptor type 0x%04x [%s], length 0x%04x",
 			desc_type,
 			fu_usb_device_os20_type_to_string(desc_type),

@@ -1,0 +1,5 @@
+struct VliPdHdr {
+    fwver: u32be
+    vid: u16le
+    pid: u16le
+}

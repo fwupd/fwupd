@@ -24,6 +24,7 @@
 #include "fu-device-progress.h"
 #include "fu-plugin-private.h"
 #include "fu-security-attrs-private.h"
+#include "fu-self-test-struct.h"
 #include "fu-smbios-private.h"
 
 static GMainLoop *_test_loop = NULL;
@@ -3767,6 +3768,56 @@ fu_progress_child_finished(void)
 	fu_progress_step_done(progress);
 }
 
+static void
+fu_plugin_struct_func(void)
+{
+	gboolean ret;
+	g_autoptr(GByteArray) st = fu_struct_self_test_new();
+	g_autoptr(GByteArray) st2 = NULL;
+	g_autoptr(GByteArray) st3 = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autofree gchar *str1 = NULL;
+	g_autofree gchar *oem_table_id = NULL;
+
+	/* size */
+	g_assert_cmpint(st->len, ==, 51);
+
+	/* getters and setters */
+	fu_struct_self_test_set_revision(st, 0xFF);
+	fu_struct_self_test_set_length(st, 0xDEAD);
+	ret = fu_struct_self_test_set_oem_table_id(st, "X", &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(fu_struct_self_test_get_revision(st), ==, 0xFF);
+	g_assert_cmpint(fu_struct_self_test_get_length(st), ==, 0xDEAD);
+
+	/* pack */
+	str1 = fu_byte_array_to_string(st);
+	g_assert_cmpstr(str1,
+			==,
+			"12345678adde0000ff000000000000000000000000000000004142434445465800000000"
+			"000000000000000000000000000000");
+
+	/* parse */
+	st2 = fu_struct_self_test_parse(st->data, st->len, 0x0, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(st2);
+	g_assert_cmpint(fu_struct_self_test_get_revision(st2), ==, 0xFF);
+	g_assert_cmpint(fu_struct_self_test_get_length(st2), ==, 0xDEAD);
+	oem_table_id = fu_struct_self_test_get_oem_table_id(st2);
+	g_assert_cmpstr(oem_table_id, ==, "X");
+
+	/* parse failing signature */
+	st->data[0] = 0xFF;
+	st3 = fu_struct_self_test_parse(st->data, st->len, 0x0, &error);
+	g_assert_error(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA);
+	g_assert_null(st3);
+	g_clear_error(&error);
+	ret = fu_struct_self_test_validate(st->data, st->len, 0x0, &error);
+	g_assert_error(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA);
+	g_assert_false(ret);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -3791,6 +3842,7 @@ main(int argc, char **argv)
 	(void)g_setenv("FWUPD_LOCALSTATEDIR", "/tmp/fwupd-self-test/var", TRUE);
 	(void)g_setenv("FWUPD_PROFILE", "1", TRUE);
 
+	g_test_add_func("/fwupd/struct", fu_plugin_struct_func);
 	g_test_add_func("/fwupd/plugin{quirks-append}", fu_plugin_quirks_append_func);
 	g_test_add_func("/fwupd/common{strnsplit}", fu_strsplit_func);
 	g_test_add_func("/fwupd/common{memmem}", fu_common_memmem_func);

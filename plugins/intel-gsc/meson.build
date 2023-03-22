@@ -5,7 +5,8 @@ cargs = ['-DG_LOG_DOMAIN="FuPluginIgsc"']
 
 plugin_quirks += files('igsc.quirk')
 plugin_builtins += static_library('fu_plugin_igsc',
-  sources : [
+  structgen.process('fu-igsc.struct'),
+  sources: [
     'fu-igsc-plugin.c',
     'fu-igsc-device.c',
     'fu-igsc-code-firmware.c',

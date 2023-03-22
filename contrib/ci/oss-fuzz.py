@@ -156,6 +156,27 @@ class Builder:
             sys.exit(1)
         return os.path.join(self.builddir, "{}".format(dst))
 
+    def generate_struct(self, src: str) -> str:
+
+        fn_root = os.path.basename(src).replace(".struct", "")
+        fulldst_c = os.path.join(self.builddir, f"{fn_root}-struct.c")
+        fulldst_h = os.path.join(self.builddir, f"{fn_root}-struct.h")
+        try:
+            subprocess.run(
+                [
+                    "fwupd/libfwupdplugin/generate-struct.py",
+                    src,
+                    fulldst_c,
+                    fulldst_h,
+                ],
+                cwd=self.srcdir,
+                check=True,
+            )
+        except subprocess.CalledProcessError as e:
+            print(e)
+            sys.exit(1)
+        return fulldst_c
+
     def link(self, objs: List[str], dst: str) -> None:
         """link multiple objects into a binary"""
         argv = [self.cxx] + self.cxxflags
@@ -345,7 +366,10 @@ def _build(bld: Builder) -> None:
     for path in ["fwupd/libfwupd", "fwupd/libfwupdplugin"]:
         bld.add_src_includedir(path)
         for src in bld.grep_meson(path):
-            built_objs.append(bld.compile(src))
+            if src.endswith(".c"):
+                built_objs.append(bld.compile(src))
+            elif src.endswith(".struct"):
+                built_objs.append(bld.compile(bld.generate_struct(src)))
 
     # dummy binary entrypoint
     if "LIB_FUZZING_ENGINE" in os.environ:
@@ -415,7 +439,10 @@ def _build(bld: Builder) -> None:
     ]:
         fuzz_objs = []
         for obj in bld.grep_meson("fwupd/plugins/{}".format(fzr.srcdir)):
-            fuzz_objs.append(bld.compile(obj))
+            if obj.endswith(".c"):
+                fuzz_objs.append(bld.compile(obj))
+            elif obj.endswith(".struct"):
+                fuzz_objs.append(bld.compile(bld.generate_struct(obj)))
         src = bld.substitute(
             "fwupd/libfwupdplugin/fu-fuzzer-firmware.c.in",
             {

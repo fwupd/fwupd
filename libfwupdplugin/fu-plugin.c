@@ -47,8 +47,8 @@ typedef struct {
 	GHashTable *runtime_versions;
 	GHashTable *compile_versions;
 	FuContext *ctx;
-	GArray *device_gtypes; /* (nullable): of #GType */
-	GHashTable *cache;     /* (nullable): platform_id:GObject */
+	GArray *device_gtypes;	     /* (nullable): of #GType */
+	GHashTable *cache;	     /* (nullable): platform_id:GObject */
 	GHashTable *report_metadata; /* (nullable): key:value */
 	GFileMonitor *config_monitor;
 	FuPluginData *data;
