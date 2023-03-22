@@ -1,0 +1,16 @@
+struct IgscOpromVersion {
+    major: u16le
+    minor: u16le
+    hotfix: u16le
+    build: u16le
+}
+struct IgscOpromSubsystemDeviceId {
+    subsys_vendor_id: u16le
+    subsys_device_id: u16le
+}
+struct IgscOpromSubsystemDevice4Id {
+    vendor_id: u16le
+    device_id: u16le
+    subsys_vendor_id: u16le
+    subsys_device_id: u16le
+}

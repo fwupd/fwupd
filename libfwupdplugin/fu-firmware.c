@@ -27,7 +27,7 @@
 typedef struct {
 	FuFirmwareFlags flags;
 	FuFirmware *parent; /* noref */
-	GPtrArray *images; /* FuFirmware */
+	GPtrArray *images;  /* FuFirmware */
 	gchar *version;
 	guint64 version_raw;
 	GBytes *bytes;

@@ -565,6 +565,13 @@ else
   run_sanitize_unsafe_tests = true
 endif
 
+# take foo.struct and generate foo-struct.c and foo-struct.h files like protobuf_c
+structgenpy = find_program(join_paths(meson.project_source_root(), 'libfwupdplugin', 'generate-struct.py'))
+structgen = generator(structgenpy,
+  output  : ['@BASENAME@-struct.c', '@BASENAME@-struct.h'],
+  arguments : ['@INPUT@', '@OUTPUT0@', '@OUTPUT1@'],
+)
+
 subdir('libfwupd')
 if polkit.found()
   subdir('policy')

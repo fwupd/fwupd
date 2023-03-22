@@ -14,7 +14,7 @@
 #include "fu-byte-array.h"
 #include "fu-bytes.h"
 #include "fu-ifwi-fpt-firmware.h"
-#include "fu-mem.h"
+#include "fu-ifwi-struct.h"
 #include "fu-string.h"
 
 /**
@@ -31,63 +31,17 @@
 
 G_DEFINE_TYPE(FuIfwiFptFirmware, fu_ifwi_fpt_firmware, FU_TYPE_FIRMWARE)
 
-#define FU_IFWI_FPT_HEADER_MARKER  0x54504624 /* "$FPT" */
 #define FU_IFWI_FPT_HEADER_VERSION 0x20
 #define FU_IFWI_FPT_ENTRY_VERSION  0x10
 #define FU_IFWI_FPT_MAX_ENTRIES	   56
 
-typedef struct __attribute__((packed)) {
-	guint32 header_marker;
-	guint32 num_of_entries;
-	guint8 header_version;
-	guint8 entry_version;
-	guint8 header_length; /* bytes */
-	guint8 flags;
-	guint16 ticks_to_add;
-	guint16 tokens_to_add;
-	guint32 uma_size;
-	guint32 crc32;
-	guint16 fitc_major;
-	guint16 fitc_minor;
-	guint16 fitc_hotfix;
-	guint16 fitc_build;
-} FuIfwiFptHeader;
-
-typedef struct __attribute__((packed)) {
-	guint32 partition_name;
-	guint8 reserved1[4];
-	guint32 offset;
-	guint32 length; /* bytes */
-	guint8 reserved2[12];
-	guint32 partition_type; /* 0 for code, 1 for data, 2 for GLUT */
-} FuIfwiFptEntry;
-
 static gboolean
 fu_ifwi_fpt_firmware_check_magic(FuFirmware *firmware, GBytes *fw, gsize offset, GError **error)
 {
-	guint32 magic = 0;
-
-	if (!fu_memread_uint32_safe(g_bytes_get_data(fw, NULL),
-				    g_bytes_get_size(fw),
-				    offset + G_STRUCT_OFFSET(FuIfwiFptHeader, header_marker),
-				    &magic,
-				    G_LITTLE_ENDIAN,
-				    error)) {
-		g_prefix_error(error, "failed to read magic: ");
-		return FALSE;
-	}
-	if (magic != FU_IFWI_FPT_HEADER_MARKER) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_FILE,
-			    "invalid FPT header marker 0x%x, expected 0x%x",
-			    magic,
-			    (guint)FU_IFWI_FPT_HEADER_MARKER);
-		return FALSE;
-	}
-
-	/* success */
-	return TRUE;
+	return fu_struct_ifwi_fpt_validate(g_bytes_get_data(fw, NULL),
+					   g_bytes_get_size(fw),
+					   offset,
+					   error);
 }
 
 static gboolean
@@ -98,20 +52,15 @@ fu_ifwi_fpt_firmware_parse(FuFirmware *firmware,
 			   GError **error)
 {
 	gsize bufsz = 0;
-	guint32 num_of_entries = 0;
-	guint8 header_length = 0;
-	guint8 header_version = 0;
-	guint8 entry_version = 0;
+	guint32 num_of_entries;
 	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
+	g_autoptr(GByteArray) st_hdr = NULL;
 
 	/* sanity check */
-	if (!fu_memread_uint32_safe(buf,
-				    bufsz,
-				    offset + G_STRUCT_OFFSET(FuIfwiFptHeader, num_of_entries),
-				    &num_of_entries,
-				    G_LITTLE_ENDIAN,
-				    error))
+	st_hdr = fu_struct_ifwi_fpt_parse(buf, bufsz, offset, error);
+	if (st_hdr == NULL)
 		return FALSE;
+	num_of_entries = fu_struct_ifwi_fpt_get_num_of_entries(st_hdr);
 	if (num_of_entries > FU_IFWI_FPT_MAX_ENTRIES) {
 		g_set_error(error,
 			    G_IO_ERROR,
@@ -120,62 +69,31 @@ fu_ifwi_fpt_firmware_parse(FuFirmware *firmware,
 			    num_of_entries);
 		return FALSE;
 	}
-	if (!fu_memread_uint8_safe(buf,
-				   bufsz,
-				   offset + G_STRUCT_OFFSET(FuIfwiFptHeader, header_version),
-				   &header_version,
-				   error))
-		return FALSE;
-	if (header_version < FU_IFWI_FPT_HEADER_VERSION) {
+	if (fu_struct_ifwi_fpt_get_header_version(st_hdr) < FU_IFWI_FPT_HEADER_VERSION) {
 		g_set_error(error,
 			    G_IO_ERROR,
 			    G_IO_ERROR_INVALID_DATA,
 			    "invalid FPT header version: 0x%x",
-			    header_version);
-		return FALSE;
-	}
-	if (!fu_memread_uint8_safe(buf,
-				   bufsz,
-				   offset + G_STRUCT_OFFSET(FuIfwiFptHeader, entry_version),
-				   &entry_version,
-				   error))
-		return FALSE;
-	if (entry_version != FU_IFWI_FPT_ENTRY_VERSION) {
-		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
-			    "invalid FPT entry version: 0x%x, expected 0x%x",
-			    entry_version,
-			    (guint)FU_IFWI_FPT_ENTRY_VERSION);
+			    fu_struct_ifwi_fpt_get_header_version(st_hdr));
 		return FALSE;
 	}
 
 	/* offset by header length */
-	if (!fu_memread_uint8_safe(buf,
-				   bufsz,
-				   offset + G_STRUCT_OFFSET(FuIfwiFptHeader, header_length),
-				   &header_length,
-				   error))
-		return FALSE;
-	offset += header_length;
+	offset += fu_struct_ifwi_fpt_get_header_length(st_hdr);
 
 	/* read out entries */
 	for (guint i = 0; i < num_of_entries; i++) {
-		guint32 data_length = 0;
-		guint32 data_offset = 0;
-		guint32 partition_name = 0;
+		guint32 data_length;
+		guint32 partition_name;
 		g_autofree gchar *id = NULL;
 		g_autoptr(FuFirmware) img = fu_firmware_new();
+		g_autoptr(GByteArray) st_ent = NULL;
 
 		/* read IDX */
-		if (!fu_memread_uint32_safe(buf,
-					    bufsz,
-					    offset +
-						G_STRUCT_OFFSET(FuIfwiFptEntry, partition_name),
-					    &partition_name,
-					    G_LITTLE_ENDIAN,
-					    error))
+		st_ent = fu_struct_ifwi_fpt_entry_parse(buf, bufsz, offset, error);
+		if (st_ent == NULL)
 			return FALSE;
+		partition_name = fu_struct_ifwi_fpt_entry_get_partition_name(st_ent);
 		fu_firmware_set_idx(img, partition_name);
 
 		/* convert to text form for convenience */
@@ -183,25 +101,11 @@ fu_ifwi_fpt_firmware_parse(FuFirmware *firmware,
 		if (id != NULL)
 			fu_firmware_set_id(img, id);
 
-		/* read offset and length */
-		if (!fu_memread_uint32_safe(buf,
-					    bufsz,
-					    offset + G_STRUCT_OFFSET(FuIfwiFptEntry, offset),
-					    &data_offset,
-					    G_LITTLE_ENDIAN,
-					    error))
-			return FALSE;
-		if (!fu_memread_uint32_safe(buf,
-					    bufsz,
-					    offset + G_STRUCT_OFFSET(FuIfwiFptEntry, length),
-					    &data_length,
-					    G_LITTLE_ENDIAN,
-					    error))
-			return FALSE;
-
 		/* get data at offset using zero-copy */
+		data_length = fu_struct_ifwi_fpt_entry_get_length(st_ent);
 		if (data_length != 0x0) {
 			g_autoptr(GBytes) blob = NULL;
+			guint32 data_offset = fu_struct_ifwi_fpt_entry_get_offset(st_ent);
 			blob = fu_bytes_new_offset(fw, data_offset, data_length, error);
 			if (blob == NULL)
 				return FALSE;
@@ -211,7 +115,7 @@ fu_ifwi_fpt_firmware_parse(FuFirmware *firmware,
 		fu_firmware_add_image(firmware, img);
 
 		/* next */
-		offset += sizeof(FuIfwiFptEntry);
+		offset += st_ent->len;
 	}
 
 	/* success */
@@ -222,12 +126,12 @@ static GBytes *
 fu_ifwi_fpt_firmware_write(FuFirmware *firmware, GError **error)
 {
 	gsize offset = 0;
-	g_autoptr(GByteArray) buf = g_byte_array_new();
+	g_autoptr(GByteArray) buf = fu_struct_ifwi_fpt_new();
 	g_autoptr(GPtrArray) imgs = fu_firmware_get_images(firmware);
 
 	/* fixup the image offsets */
-	offset += sizeof(FuIfwiFptHeader);
-	offset += sizeof(FuIfwiFptEntry) * imgs->len;
+	offset += buf->len;
+	offset += FU_STRUCT_IFWI_FPT_ENTRY_SIZE * imgs->len;
 	for (guint i = 0; i < imgs->len; i++) {
 		FuFirmware *img = g_ptr_array_index(imgs, i);
 		g_autoptr(GBytes) blob = NULL;
@@ -241,32 +145,16 @@ fu_ifwi_fpt_firmware_write(FuFirmware *firmware, GError **error)
 	}
 
 	/* write the header */
-	fu_byte_array_append_uint32(buf, FU_IFWI_FPT_HEADER_MARKER, G_LITTLE_ENDIAN);
-	fu_byte_array_append_uint32(buf, imgs->len, G_LITTLE_ENDIAN);
-	fu_byte_array_append_uint8(buf, FU_IFWI_FPT_HEADER_VERSION);
-	fu_byte_array_append_uint8(buf, FU_IFWI_FPT_ENTRY_VERSION);
-	fu_byte_array_append_uint8(buf, sizeof(FuIfwiFptHeader));
-	fu_byte_array_append_uint8(buf, 0x0);			/* flags */
-	fu_byte_array_append_uint16(buf, 0x0, G_LITTLE_ENDIAN); /* ticks_to_add */
-	fu_byte_array_append_uint16(buf, 0x0, G_LITTLE_ENDIAN); /* tokens_to_add */
-	fu_byte_array_append_uint32(buf, 0x0, G_LITTLE_ENDIAN); /* uma_size */
-	fu_byte_array_append_uint32(buf, 0x0, G_LITTLE_ENDIAN); /* crc32 */
-	fu_byte_array_append_uint16(buf, 0x0, G_LITTLE_ENDIAN); /* fitc_major */
-	fu_byte_array_append_uint16(buf, 0x0, G_LITTLE_ENDIAN); /* fitc_minor */
-	fu_byte_array_append_uint16(buf, 0x0, G_LITTLE_ENDIAN); /* fitc_hotfix */
-	fu_byte_array_append_uint16(buf, 0x0, G_LITTLE_ENDIAN); /* fitc_build */
+	fu_struct_ifwi_fpt_set_num_of_entries(buf, imgs->len);
 
 	/* add entries */
 	for (guint i = 0; i < imgs->len; i++) {
 		FuFirmware *img = g_ptr_array_index(imgs, i);
-		fu_byte_array_append_uint32(buf, fu_firmware_get_idx(img), G_LITTLE_ENDIAN);
-		fu_byte_array_append_uint32(buf, 0x0, G_LITTLE_ENDIAN); /* reserved1 */
-		fu_byte_array_append_uint32(buf, fu_firmware_get_offset(img), G_LITTLE_ENDIAN);
-		fu_byte_array_append_uint32(buf, fu_firmware_get_size(img), G_LITTLE_ENDIAN);
-		fu_byte_array_append_uint32(buf, 0x0, G_LITTLE_ENDIAN); /* reserved2 */
-		fu_byte_array_append_uint32(buf, 0x0, G_LITTLE_ENDIAN); /* reserved2 */
-		fu_byte_array_append_uint32(buf, 0x0, G_LITTLE_ENDIAN); /* reserved2 */
-		fu_byte_array_append_uint32(buf, 0x0, G_LITTLE_ENDIAN); /* partition_type */
+		g_autoptr(GByteArray) st_ent = fu_struct_ifwi_fpt_entry_new();
+		fu_struct_ifwi_fpt_entry_set_partition_name(st_ent, fu_firmware_get_idx(img));
+		fu_struct_ifwi_fpt_entry_set_offset(st_ent, fu_firmware_get_offset(img));
+		fu_struct_ifwi_fpt_entry_set_length(st_ent, fu_firmware_get_size(img));
+		g_byte_array_append(buf, st_ent->data, st_ent->len);
 	}
 
 	/* add entry data */

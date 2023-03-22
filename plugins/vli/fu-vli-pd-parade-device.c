@@ -517,7 +517,7 @@ fu_vli_pd_parade_device_write_firmware(FuDevice *device,
 	if (!fu_vli_pd_parade_device_enable_mapping(self, error))
 		return FALSE;
 	if (!fu_vli_pd_parade_device_i2c_write(self, self->page2, 0x82, 0x20, error))
-		return FALSE; /* Reset_CLT2SPI_Interface */
+		return FALSE;	      /* Reset_CLT2SPI_Interface */
 	fu_device_sleep(device, 100); /* ms */
 	if (!fu_vli_pd_parade_device_i2c_write(self, self->page2, 0x82, 0x00, error))
 		return FALSE;

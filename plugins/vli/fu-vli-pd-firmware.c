@@ -11,11 +11,13 @@
 
 #include "fu-vli-pd-common.h"
 #include "fu-vli-pd-firmware.h"
+#include "fu-vli-struct.h"
 
 struct _FuVliPdFirmware {
 	FuFirmwareClass parent_instance;
 	FuVliDeviceKind device_kind;
-	FuVliPdHdr hdr;
+	guint16 vid;
+	guint16 pid;
 };
 
 G_DEFINE_TYPE(FuVliPdFirmware, fu_vli_pd_firmware, FU_TYPE_FIRMWARE)
@@ -31,26 +33,26 @@ guint16
 fu_vli_pd_firmware_get_vid(FuVliPdFirmware *self)
 {
 	g_return_val_if_fail(FU_IS_VLI_PD_FIRMWARE(self), 0);
-	return GUINT16_FROM_LE(self->hdr.vid);
+	return self->vid;
 }
 
 guint16
 fu_vli_pd_firmware_get_pid(FuVliPdFirmware *self)
 {
 	g_return_val_if_fail(FU_IS_VLI_PD_FIRMWARE(self), 0);
-	return GUINT16_FROM_LE(self->hdr.pid);
+	return self->pid;
 }
 
 static gboolean
 fu_vli_pd_firmware_validate_header(FuVliPdFirmware *self)
 {
-	if (GUINT16_FROM_LE(self->hdr.vid) == 0x2109)
+	if (self->vid == 0x2109)
 		return TRUE;
-	if (GUINT16_FROM_LE(self->hdr.vid) == 0x17EF)
+	if (self->vid == 0x17EF)
 		return TRUE;
-	if (GUINT16_FROM_LE(self->hdr.vid) == 0x2D01)
+	if (self->vid == 0x2D01)
 		return TRUE;
-	if (GUINT16_FROM_LE(self->hdr.vid) == 0x06C4)
+	if (self->vid == 0x06C4)
 		return TRUE;
 	return FALSE;
 }
@@ -78,34 +80,29 @@ fu_vli_pd_firmware_parse(FuFirmware *firmware,
 	guint32 fwver;
 	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
 	g_autofree gchar *fwver_str = NULL;
+	g_autoptr(GByteArray) st = NULL;
 
-	/* map header from new offset location */
-	if (!fu_memcpy_safe((guint8 *)&self->hdr,
-			    sizeof(self->hdr),
-			    0x0,
-			    buf,
-			    bufsz,
-			    VLI_USBHUB_PD_FLASHMAP_ADDR,
-			    sizeof(self->hdr),
-			    error)) {
+	/* parse */
+	st = fu_struct_vli_pd_hdr_parse(buf, bufsz, VLI_USBHUB_PD_FLASHMAP_ADDR, error);
+	if (st == NULL) {
 		g_prefix_error(error, "failed to read header: ");
 		return FALSE;
 	}
+	self->vid = fu_struct_vli_pd_hdr_get_vid(st);
 
 	/* fall back to legacy location */
 	if (!fu_vli_pd_firmware_validate_header(self)) {
-		if (!fu_memcpy_safe((guint8 *)&self->hdr,
-				    sizeof(self->hdr),
-				    0x0,
-				    buf,
-				    bufsz,
-				    VLI_USBHUB_PD_FLASHMAP_ADDR_LEGACY,
-				    sizeof(self->hdr),
-				    error)) {
+		g_byte_array_unref(st);
+		st = fu_struct_vli_pd_hdr_parse(buf,
+						bufsz,
+						VLI_USBHUB_PD_FLASHMAP_ADDR_LEGACY,
+						error);
+		if (st == NULL) {
 			g_prefix_error(error, "failed to read header: ");
 			return FALSE;
 		}
 	}
+	self->vid = fu_struct_vli_pd_hdr_get_vid(st);
 
 	/* urgh, not found */
 	if (!fu_vli_pd_firmware_validate_header(self)) {
@@ -117,7 +114,7 @@ fu_vli_pd_firmware_parse(FuFirmware *firmware,
 	}
 
 	/* guess device kind from fwver */
-	fwver = GUINT32_FROM_BE(self->hdr.fwver);
+	fwver = fu_struct_vli_pd_hdr_get_fwver(st);
 	self->device_kind = fu_vli_pd_common_guess_device_kind(fwver);
 	if (self->device_kind == FU_VLI_DEVICE_KIND_UNKNOWN) {
 		g_set_error(error,

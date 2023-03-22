@@ -1,0 +1,5 @@
+struct TpmEventLog2 {
+    pcr: u32le
+    type: u32le
+    digest_count: u32le
+}

@@ -239,33 +239,18 @@ fu_synaprom_device_setup(FuDevice *device, GError **error)
 FuFirmware *
 fu_synaprom_device_prepare_fw(FuDevice *device, GBytes *fw, FwupdInstallFlags flags, GError **error)
 {
-	FuSynapromFirmwareMfwHeader hdr;
-	guint32 product;
-	g_autoptr(GBytes) blob = NULL;
+	guint32 product_id;
 	g_autoptr(FuFirmware) firmware = fu_synaprom_firmware_new();
 
-	/* parse the firmware */
+	/* check the update header product and version */
 	if (!fu_firmware_parse(firmware, fw, flags, error))
 		return NULL;
-
-	/* check the update header product and version */
-	blob = fu_firmware_get_image_by_id_bytes(firmware, "mfw-update-header", error);
-	if (blob == NULL)
-		return NULL;
-	if (g_bytes_get_size(blob) != sizeof(hdr)) {
-		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
-				    "MFW metadata is invalid");
-		return NULL;
-	}
-	memcpy(&hdr, g_bytes_get_data(blob, NULL), sizeof(hdr));
-	product = GUINT32_FROM_LE(hdr.product);
-	if (product != FU_SYNAPROM_PRODUCT_PROMETHEUS) {
+	product_id = fu_synaprom_firmware_get_product_id(FU_SYNAPROM_FIRMWARE(firmware));
+	if (product_id != FU_SYNAPROM_PRODUCT_PROMETHEUS) {
 		if (flags & FWUPD_INSTALL_FLAG_IGNORE_VID_PID) {
 			g_warning("MFW metadata not compatible, "
 				  "got 0x%02x expected 0x%02x",
-				  product,
+				  product_id,
 				  (guint)FU_SYNAPROM_PRODUCT_PROMETHEUS);
 		} else {
 			g_set_error(error,
@@ -273,7 +258,7 @@ fu_synaprom_device_prepare_fw(FuDevice *device, GBytes *fw, FwupdInstallFlags fl
 				    G_IO_ERROR_NOT_SUPPORTED,
 				    "MFW metadata not compatible, "
 				    "got 0x%02x expected 0x%02x",
-				    product,
+				    product_id,
 				    (guint)FU_SYNAPROM_PRODUCT_PROMETHEUS);
 			return NULL;
 		}

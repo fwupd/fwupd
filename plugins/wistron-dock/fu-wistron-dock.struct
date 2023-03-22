@@ -1,0 +1,22 @@
+struct WistronDockWdit {
+    hid_id: u8
+    tag_id: u16be
+    vid: u16le
+    pid: u16le
+    imgmode: u8
+    update_state: u8
+    status_code: u8
+    composite_version: u32be
+    device_cnt: u8
+    reserved: u8
+}
+struct WistronDockWditImg {
+    comp_id: u8
+    mode: u8   // 0=single, 1=dual-s, 2=dual-a
+    status: u8 // 0=unknown, 1=valid, 2=invalid
+    reserved: u8
+    version_build: u32be
+    version1: u32be
+    version2: u32be
+    name: 32s
+}

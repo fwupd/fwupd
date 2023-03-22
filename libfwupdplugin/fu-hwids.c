@@ -32,10 +32,10 @@
 
 struct _FuHwids {
 	GObject parent_instance;
-	GHashTable *hash_values;	  /* BiosVersion->"1.2.3 " */
-	GHashTable *hash_values_display;  /* BiosVersion->"1.2.3" */
-	GHashTable *hash_guid;		  /* a-c-b-d->1 */
-	GPtrArray *array_guids;		  /* a-c-b-d */
+	GHashTable *hash_values;	 /* BiosVersion->"1.2.3 " */
+	GHashTable *hash_values_display; /* BiosVersion->"1.2.3" */
+	GHashTable *hash_guid;		 /* a-c-b-d->1 */
+	GPtrArray *array_guids;		 /* a-c-b-d */
 };
 
 G_DEFINE_TYPE(FuHwids, fu_hwids, G_TYPE_OBJECT)

@@ -3,6 +3,9 @@ cargs = ['-DG_LOG_DOMAIN="FuPluginSynapticsPrometheus"']
 
 plugin_quirks += files('synaptics-prometheus.quirk')
 plugin_builtin_synaprom = static_library('fu_plugin_synaprom',
+  structgen.process(
+    'fu-synaprom.struct',           # fuzzing
+  ),
   sources: [
     'fu-synaprom-plugin.c',
     'fu-synaprom-common.c',

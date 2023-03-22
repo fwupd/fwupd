@@ -8,8 +8,7 @@
 
 #include <fwupdplugin.h>
 
-#include <string.h>
-
+#include "fu-acpi-phat-struct.h"
 #include "fu-acpi-phat-version-element.h"
 
 struct _FuAcpiPhatVersionElement {
@@ -40,46 +39,20 @@ fu_acpi_phat_version_element_parse(FuFirmware *firmware,
 				   GError **error)
 {
 	FuAcpiPhatVersionElement *self = FU_ACPI_PHAT_VERSION_ELEMENT(firmware);
-	fwupd_guid_t component_id = {0x0};
-	gchar producer_id[4] = {'\0'};
 	gsize bufsz = 0;
-	guint64 version_value = 0;
 	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
+	g_autoptr(GByteArray) st = NULL;
 
-	/* hardcoded */
-	fu_firmware_set_size(firmware, 28);
-
-	if (!fu_memcpy_safe((guint8 *)&component_id,
-			    sizeof(component_id),
-			    0x0, /* dst */
-			    buf,
-			    bufsz,
-			    0, /* src */
-			    sizeof(component_id),
-			    error))
+	/* unpack */
+	st = fu_struct_acpi_phat_version_element_parse(buf, bufsz, offset, error);
+	if (st == NULL)
 		return FALSE;
-	self->guid = fwupd_guid_to_string(&component_id, FWUPD_GUID_FLAG_MIXED_ENDIAN);
-
-	if (!fu_memread_uint64_safe(buf, bufsz, 16, &version_value, G_LITTLE_ENDIAN, error))
-		return FALSE;
-	fu_firmware_set_version_raw(firmware, version_value);
-	if (!fu_memcpy_safe((guint8 *)producer_id,
-			    sizeof(producer_id),
-			    0x0, /* dst */
-			    buf,
-			    bufsz,
-			    24, /* src */
-			    sizeof(producer_id),
-			    error))
-		return FALSE;
-	if (memcmp(producer_id, "\0\0\0\0", 4) == 0) {
-		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
-			    "PHAT version element invalid");
-		return FALSE;
-	}
-	self->producer_id = fu_strsafe((const gchar *)producer_id, sizeof(producer_id));
+	fu_firmware_set_size(firmware, st->len);
+	self->guid = fwupd_guid_to_string(fu_struct_acpi_phat_version_element_get_component_id(st),
+					  FWUPD_GUID_FLAG_MIXED_ENDIAN);
+	self->producer_id = fu_struct_acpi_phat_version_element_get_producer_id(st);
+	fu_firmware_set_version_raw(firmware,
+				    fu_struct_acpi_phat_version_element_get_version_value(st));
 	return TRUE;
 }
 
@@ -87,37 +60,23 @@ static GBytes *
 fu_acpi_phat_version_element_write(FuFirmware *firmware, GError **error)
 {
 	FuAcpiPhatVersionElement *self = FU_ACPI_PHAT_VERSION_ELEMENT(firmware);
-	fwupd_guid_t guid = {0x0};
-	guint8 producer_id[4] = {'\0'};
-	g_autoptr(GByteArray) buf = g_byte_array_new();
+	g_autoptr(GByteArray) st = fu_struct_acpi_phat_version_element_new();
 
-	/* component ID */
+	/* pack */
 	if (self->guid != NULL) {
+		fwupd_guid_t guid = {0x0};
 		if (!fwupd_guid_from_string(self->guid, &guid, FWUPD_GUID_FLAG_MIXED_ENDIAN, error))
 			return NULL;
+		fu_struct_acpi_phat_version_element_set_component_id(st, &guid);
 	}
-	g_byte_array_append(buf, guid, sizeof(guid));
-
-	/* version value */
-	fu_byte_array_append_uint64(buf, fu_firmware_get_version_raw(firmware), G_LITTLE_ENDIAN);
-
-	/* producer ID */
-	if (self->producer_id != NULL) {
-		gsize producer_idsz = strlen(self->producer_id);
-		if (!fu_memcpy_safe(producer_id,
-				    sizeof(producer_id),
-				    0x0, /* dst */
-				    (const guint8 *)self->producer_id,
-				    producer_idsz,
-				    0x0, /* src */
-				    producer_idsz,
-				    error))
-			return NULL;
-	}
-	g_byte_array_append(buf, producer_id, sizeof(producer_id));
+	fu_struct_acpi_phat_version_element_set_version_value(
+	    st,
+	    fu_firmware_get_version_raw(firmware));
+	if (!fu_struct_acpi_phat_version_element_set_producer_id(st, self->producer_id, error))
+		return NULL;
 
 	/* success */
-	return g_byte_array_free_to_bytes(g_steal_pointer(&buf));
+	return g_byte_array_free_to_bytes(g_steal_pointer(&st));
 }
 
 static void

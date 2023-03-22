@@ -531,15 +531,6 @@ fu_synaptics_cape_device_prepare_firmware(FuDevice *device,
 		return NULL;
 	}
 
-	/* checks file size */
-	if (bufsz < FW_CAPE_HID_HEADER_SIZE * 2) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_FILE,
-				    "file size is too small");
-		return NULL;
-	}
-
 	/* uses second partition if active partition is 1 */
 	if (self->active_partition == 1)
 		offset = bufsz / 2;

@@ -29,6 +29,7 @@ else
 endif
 
 plugin_builtin_uefi_capsule = static_library('fu_plugin_uefi_capsule',
+  structgen.process('fu-acpi-uefi.struct'),
   sources: [
     'fu-uefi-capsule-plugin.c',
     'fu-uefi-bgrt.c',
@@ -57,6 +58,7 @@ plugin_builtins += plugin_builtin_uefi_capsule
 if get_option('compat_cli')
 fwupdate = executable(
   'fwupdate',
+  structgen.process('fu-acpi-uefi.struct'),
   sources: [
     'fu-uefi-tool.c',
   ],

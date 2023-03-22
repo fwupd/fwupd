@@ -6,10 +6,7 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
-#include <string.h>
-
+#include "fu-acpi-phat-struct.h"
 #include "fu-acpi-phat-version-element.h"
 #include "fu-acpi-phat-version-record.h"
 #include "fu-acpi-phat.h"
@@ -30,16 +27,22 @@ fu_acpi_phat_version_record_parse(FuFirmware *firmware,
 	gsize bufsz = 0;
 	guint32 record_count = 0;
 	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
+	g_autoptr(GByteArray) st = NULL;
 
-	if (!fu_memread_uint32_safe(buf, bufsz, offset + 8, &record_count, G_LITTLE_ENDIAN, error))
+	st = fu_struct_acpi_phat_version_record_parse(buf, bufsz, offset, error);
+	if (st == NULL)
 		return FALSE;
+	record_count = fu_struct_acpi_phat_version_record_get_record_count(st);
 	for (guint32 i = 0; i < record_count; i++) {
 		g_autoptr(FuFirmware) firmware_tmp = fu_acpi_phat_version_element_new();
 		g_autoptr(GBytes) fw_tmp = NULL;
-		fw_tmp = fu_bytes_new_offset(fw, offset + 12, 28, error);
+		fw_tmp = fu_bytes_new_offset(fw,
+					     offset + st->len,
+					     FU_STRUCT_ACPI_PHAT_VERSION_ELEMENT_SIZE,
+					     error);
 		if (fw_tmp == NULL)
 			return FALSE;
-		fu_firmware_set_offset(firmware_tmp, offset + 12);
+		fu_firmware_set_offset(firmware_tmp, offset + st->len);
 		if (!fu_firmware_parse(firmware_tmp,
 				       fw_tmp,
 				       flags | FWUPD_INSTALL_FLAG_NO_SEARCH,
@@ -54,8 +57,8 @@ fu_acpi_phat_version_record_parse(FuFirmware *firmware,
 static GBytes *
 fu_acpi_phat_version_record_write(FuFirmware *firmware, GError **error)
 {
-	g_autoptr(GByteArray) buf = g_byte_array_new();
 	g_autoptr(GByteArray) buf2 = g_byte_array_new();
+	g_autoptr(GByteArray) st = fu_struct_acpi_phat_version_record_new();
 	g_autoptr(GPtrArray) images = fu_firmware_get_images(firmware);
 
 	/* write each element so we get the image size */
@@ -68,17 +71,13 @@ fu_acpi_phat_version_record_write(FuFirmware *firmware, GError **error)
 	}
 
 	/* data record */
-	fu_byte_array_append_uint16(buf, FU_ACPI_PHAT_RECORD_TYPE_VERSION, G_LITTLE_ENDIAN);
-	fu_byte_array_append_uint16(buf, 12 + buf2->len, G_LITTLE_ENDIAN);
-	fu_byte_array_append_uint8(buf, fu_firmware_get_version_raw(firmware));
-	fu_byte_array_append_uint8(buf, 0x00);
-	fu_byte_array_append_uint8(buf, 0x00);
-	fu_byte_array_append_uint8(buf, 0x00);
-	fu_byte_array_append_uint32(buf, images->len, G_LITTLE_ENDIAN);
+	fu_struct_acpi_phat_version_record_set_rcdlen(st, st->len + buf2->len);
+	fu_struct_acpi_phat_version_record_set_version(st, fu_firmware_get_version_raw(firmware));
+	fu_struct_acpi_phat_version_record_set_record_count(st, images->len);
 
 	/* element data */
-	g_byte_array_append(buf, buf2->data, buf2->len);
-	return g_byte_array_free_to_bytes(g_steal_pointer(&buf));
+	g_byte_array_append(st, buf2->data, buf2->len);
+	return g_byte_array_free_to_bytes(g_steal_pointer(&st));
 }
 
 static void
