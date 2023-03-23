@@ -14,11 +14,12 @@
 #include "fu-synaptics-cape-firmware.h"
 
 /* defines timings */
-#define FU_SYNAPTICS_CAPE_DEVICE_USB_CMD_WRITE_TIMEOUT	20    /* ms */
-#define FU_SYNAPTICS_CAPE_DEVICE_USB_CMD_READ_TIMEOUT	30    /* ms */
-#define FU_SYNAPTICS_CAPE_DEVICE_USB_CMD_RETRY_INTERVAL 10    /* ms */
-#define FU_SYNAPTICS_CAPE_DEVICE_USB_CMD_RETRY_TIMEOUT	300   /* ms */
-#define FU_SYNAPTICS_CAPE_DEVICE_USB_RESET_DELAY_MS	3000  /* ms */
+#define FU_SYNAPTICS_CAPE_DEVICE_USB_CMD_WRITE_TIMEOUT	20   /* ms */
+#define FU_SYNAPTICS_CAPE_DEVICE_USB_CMD_READ_TIMEOUT	30   /* ms */
+#define FU_SYNAPTICS_CAPE_DEVICE_USB_CMD_RETRY_INTERVAL 10   /* ms */
+#define FU_SYNAPTICS_CAPE_DEVICE_USB_CMD_RETRY_TIMEOUT	300  /* ms */
+#define FU_SYNAPTICS_CAPE_DEVICE_USB_CMD_INTR_TIMEOUT	5000 /* ms */
+#define FU_SYNAPTICS_CAPE_DEVICE_USB_RESET_DELAY_MS	3000 /* ms */
 
 /* defines CAPE command constant values and macro */
 #define FU_SYNAPTICS_CAPE_DEVICE_GOLEM_REPORT_ID 1 /* HID report id */
@@ -147,7 +148,7 @@ fu_synaptics_cape_device_get_report_intr(FuSynapticsCapeDevice *self,
 					     (guint8 *)data,
 					     sizeof(*data),
 					     &actual_len,
-					     FU_SYNAPTICS_CAPE_DEVICE_USB_CMD_RETRY_TIMEOUT,
+					     FU_SYNAPTICS_CAPE_DEVICE_USB_CMD_INTR_TIMEOUT,
 					     NULL,
 					     error)) {
 		g_prefix_error(error, "failed to get report over interrupt ep: ");
