@@ -14,6 +14,7 @@
 #include <string.h>
 
 #include "fwupd-bios-setting-private.h"
+#include "fwupd-remote-private.h"
 #include "fwupd-security-attr-private.h"
 
 #include "../plugins/test/fu-test-plugin.h"
@@ -1820,6 +1821,104 @@ fu_engine_downgrade_func(gconstpointer user_data)
 	g_assert_cmpint(releases_dg->len, ==, 1);
 	rel = FWUPD_RELEASE(g_ptr_array_index(releases_dg, 0));
 	g_assert_cmpstr(fwupd_release_get_version(rel), ==, "1.2.2");
+}
+
+static void
+fu_engine_md_verfmt_func(gconstpointer user_data)
+{
+	FuTest *self = (FuTest *)user_data;
+	FwupdRemote *remote;
+	gboolean ret;
+	g_autoptr(FuDevice) device = fu_device_new(self->ctx);
+	g_autoptr(FuEngine) engine = fu_engine_new();
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new();
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GPtrArray) devices = NULL;
+	g_autoptr(GPtrArray) releases = NULL;
+	g_autoptr(XbSilo) silo_empty = xb_silo_new();
+
+	/* ensure empty tree */
+	fu_self_test_mkroot();
+
+	/* no metadata in daemon */
+	fu_engine_set_silo(engine, silo_empty);
+
+	/* write the main file */
+	ret = g_file_set_contents(
+	    "/tmp/fwupd-self-test/stable.xml",
+	    "<components>"
+	    "  <component type=\"firmware\">"
+	    "    <id>test</id>"
+	    "    <name>Test Device</name>"
+	    "    <provides>"
+	    "      <firmware type=\"flashed\">aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee</firmware>"
+	    "    </provides>"
+	    "    <releases>"
+	    "      <release version=\"1.2.3\" date=\"2017-09-15\">"
+	    "        <size type=\"installed\">123</size>"
+	    "        <size type=\"download\">456</size>"
+	    "        <location>https://test.org/foo.cab</location>"
+	    "        <checksum filename=\"foo.cab\" target=\"container\" "
+	    "type=\"md5\">deadbeefdeadbeefdeadbeefdeadbeef</checksum>"
+	    "        <checksum filename=\"firmware.bin\" target=\"content\" "
+	    "type=\"md5\">deadbeefdeadbeefdeadbeefdeadbeef</checksum>"
+	    "      </release>"
+	    "    </releases>"
+	    "    <custom>"
+	    "      <value key=\"LVFS::VersionFormat\">triplet</value>"
+	    "    </custom>"
+	    "  </component>"
+	    "</components>",
+	    -1,
+	    &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	ret = fu_engine_load(engine,
+			     FU_ENGINE_LOAD_FLAG_REMOTES | FU_ENGINE_LOAD_FLAG_NO_CACHE,
+			     progress,
+			     &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_test_assert_expected_messages();
+
+	/* pretend this has a signature */
+	remote = fu_engine_get_remote_by_id(engine, "stable", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(remote);
+	fwupd_remote_set_keyring_kind(remote, FWUPD_KEYRING_KIND_JCAT);
+
+	/* add a device with no defined version format */
+	fu_device_set_version(device, "16908291");
+	fu_device_set_version_raw(device, 0x01020003);
+	fu_device_add_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_MD_SET_VERFMT);
+	fu_device_set_id(device, "test_device");
+	fu_device_add_vendor_id(device, "USB:FFFF");
+	fu_device_add_protocol(device, "com.acme");
+	fu_device_set_name(device, "Test Device");
+	fu_device_add_guid(device, "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee");
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
+	fu_engine_add_device(engine, device);
+
+	/* ensure the version format was set from the metadata */
+	g_assert_cmpint(fu_device_get_version_format(device), ==, FWUPD_VERSION_FORMAT_TRIPLET);
+	g_assert_cmpstr(fu_device_get_version(device), ==, "1.2.3");
+
+	/* ensure the device was added */
+	devices = fu_engine_get_devices(engine, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(devices);
+	g_assert_cmpint(devices->len, ==, 1);
+	g_assert_true(fu_device_has_flag(device, FWUPD_DEVICE_FLAG_SUPPORTED));
+	g_assert_true(fu_device_has_flag(device, FWUPD_DEVICE_FLAG_REGISTERED));
+
+	/* ensure the releases are set */
+	releases = fu_engine_get_releases(engine, request, fu_device_get_id(device), &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(releases);
+	g_assert_cmpint(releases->len, ==, 1);
 }
 
 static void
@@ -4937,6 +5036,7 @@ main(int argc, char **argv)
 	g_test_add_data_func("/fwupd/engine{history-inherit}", self, fu_engine_history_inherit);
 	g_test_add_data_func("/fwupd/engine{partial-hash}", self, fu_engine_partial_hash_func);
 	g_test_add_data_func("/fwupd/engine{downgrade}", self, fu_engine_downgrade_func);
+	g_test_add_data_func("/fwupd/engine{md-verfmt}", self, fu_engine_md_verfmt_func);
 	g_test_add_data_func("/fwupd/engine{requirements-success}",
 			     self,
 			     fu_engine_requirements_func);
