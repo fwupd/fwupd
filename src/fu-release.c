@@ -820,6 +820,14 @@ fu_release_load(FuRelease *self,
 		rel = g_object_ref(rel_optional);
 	}
 
+	/* find the remote */
+	tmp = xb_node_query_text(component, "../custom/value[@key='fwupd::RemoteId']", NULL);
+	if (tmp != NULL)
+		fwupd_release_set_remote_id(FWUPD_RELEASE(self), tmp);
+	tmp = xb_node_query_text(component, "../custom/value[@key='LVFS::Distributor']", NULL);
+	if (g_strcmp0(tmp, "community") == 0)
+		fwupd_release_add_flag(FWUPD_RELEASE(self), FWUPD_RELEASE_FLAG_IS_COMMUNITY);
+
 	/* use the metadata to set the device attributes */
 	if (!fu_release_ensure_trust_flags(self, rel, error))
 		return FALSE;
@@ -844,14 +852,6 @@ fu_release_load(FuRelease *self,
 
 	/* optional release ID -- currently a integer but maybe namespaced in the future */
 	fwupd_release_set_id(FWUPD_RELEASE(self), xb_node_get_attr(rel, "id"));
-
-	/* find the remote */
-	tmp = xb_node_query_text(component, "../custom/value[@key='fwupd::RemoteId']", NULL);
-	if (tmp != NULL)
-		fwupd_release_set_remote_id(FWUPD_RELEASE(self), tmp);
-	tmp = xb_node_query_text(component, "../custom/value[@key='LVFS::Distributor']", NULL);
-	if (g_strcmp0(tmp, "community") == 0)
-		fwupd_release_add_flag(FWUPD_RELEASE(self), FWUPD_RELEASE_FLAG_IS_COMMUNITY);
 
 	/* this is the more modern way to do this */
 	artifact = xb_node_query_first(rel, "artifacts/artifact[@type='binary']", NULL);
@@ -1111,6 +1111,11 @@ fu_release_ensure_trust_flags(FuRelease *self, XbNode *rel, GError **error)
 			       fwupd_remote_get_id(self->remote),
 			       fwupd_remote_kind_to_string(fwupd_remote_get_kind(self->remote)));
 			fu_release_add_flag(self, FWUPD_RELEASE_FLAG_TRUSTED_PAYLOAD);
+			fu_release_add_flag(self, FWUPD_RELEASE_FLAG_TRUSTED_METADATA);
+		} else if (fwupd_remote_get_keyring_kind(self->remote) != FWUPD_KEYRING_KIND_NONE) {
+			g_info("remote %s has kind=%s and so marking as trusted",
+			       fwupd_remote_get_id(self->remote),
+			       fwupd_remote_kind_to_string(fwupd_remote_get_kind(self->remote)));
 			fu_release_add_flag(self, FWUPD_RELEASE_FLAG_TRUSTED_METADATA);
 		}
 	}
