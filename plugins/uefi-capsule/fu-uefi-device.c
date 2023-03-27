@@ -162,7 +162,7 @@ fu_uefi_device_report_metadata_pre(FuDevice *device, GHashTable *metadata)
 			    g_strdup(priv->missing_header ? "True" : "False"));
 
 	/* where and how the ESP was mounted during installation */
-	g_hash_table_insert(metadata, g_strdup("EspPath"), fu_volume_get_mount_point(priv->esp));
+	g_hash_table_insert(metadata, g_strdup("EspPath"), mount_point);
 	if (fu_volume_get_partition_kind(priv->esp) != NULL) {
 		g_hash_table_insert(metadata,
 				    g_strdup("EspKind"),
