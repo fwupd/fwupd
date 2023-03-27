@@ -26,28 +26,6 @@
 #include "fu-udev-device-private.h"
 
 static gchar *
-udev_mock_add_domain(UMockdevTestbed *bed, int id)
-{
-	gchar *path;
-	g_autofree gchar *name = NULL;
-
-	name = g_strdup_printf("domain%d", id);
-	path = umockdev_testbed_add_device(bed,
-					   "thunderbolt",
-					   name,
-					   NULL,
-					   "security",
-					   "secure",
-					   NULL,
-					   "DEVTYPE",
-					   "thunderbolt_domain",
-					   NULL);
-
-	g_assert_nonnull(path);
-	return path;
-}
-
-static gchar *
 udev_mock_add_nvmem(UMockdevTestbed *bed, gboolean active, const char *parent, int id)
 {
 	g_autofree gchar *name = NULL;
@@ -585,7 +563,6 @@ static gboolean
 mock_tree_attach(MockTree *root, UMockdevTestbed *bed, FuPlugin *plugin)
 {
 	root->bed = g_object_ref(bed);
-	root->sysfs_parent = udev_mock_add_domain(bed, root->device->domain_id);
 	root->sysfs_parent = udev_mock_add_usb4_port(bed, 1);
 	g_assert_nonnull(root->sysfs_parent);
 
