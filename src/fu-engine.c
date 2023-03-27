@@ -1245,6 +1245,11 @@ fu_engine_modify_device(FuEngine *self,
 			const gchar *value,
 			GError **error)
 {
+	g_return_val_if_fail(FU_IS_ENGINE(self), FALSE);
+	g_return_val_if_fail(device_id != NULL, FALSE);
+	g_return_val_if_fail(key != NULL, FALSE);
+	g_return_val_if_fail(value != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 	if (g_strcmp0(key, "Flags") == 0)
 		return fu_engine_modify_device_flags(self, device_id, value, error);
 	g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "key %s not supported", key);

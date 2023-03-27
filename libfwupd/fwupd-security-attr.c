@@ -454,7 +454,7 @@ fwupd_security_attr_set_appstream_id(FwupdSecurityAttr *self, const gchar *appst
 		return;
 
 	/* sanity check */
-	if (!g_str_has_prefix(appstream_id, "org.fwupd.hsi."))
+	if (appstream_id != NULL && !g_str_has_prefix(appstream_id, "org.fwupd.hsi."))
 		g_critical("HSI attributes need to have a 'org.fwupd.hsi.' prefix");
 
 	g_free(priv->appstream_id);

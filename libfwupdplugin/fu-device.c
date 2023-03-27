@@ -3593,6 +3593,8 @@ fu_device_set_custom_flag(FuDevice *self, const gchar *hint)
 	FuDeviceInternalFlags internal_flag;
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 
+	g_return_if_fail(hint != NULL);
+
 	/* is this a negated device flag */
 	if (g_str_has_prefix(hint, "~")) {
 		flag = fwupd_device_flag_from_string(hint + 1);
