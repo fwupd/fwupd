@@ -768,7 +768,7 @@ fu_volume_new_esp_for_path(const gchar *esp_path, GError **error)
 	basename = g_path_get_basename(esp_path);
 	for (guint i = 0; i < volumes->len; i++) {
 		FuVolume *vol = g_ptr_array_index(volumes, i);
-		const gchar *mount_point = fu_volume_get_mount_point(vol);
+		g_autofree gchar *mount_point = fu_volume_get_mount_point(vol);
 		g_autofree gchar *vol_basename = NULL;
 		if (mount_point == NULL)
 			continue;
