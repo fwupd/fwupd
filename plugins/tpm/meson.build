@@ -50,7 +50,10 @@ if get_option('tests')
       fwupdplugin,
       plugin_builtin_tpm,
     ],
-    c_args: cargs
+    c_args: [
+      cargs,
+      '-DSRCDIR="' + meson.current_source_dir() + '"',
+    ],
   )
   test('tpm-self-test', e, env: env)
 endif

@@ -39,7 +39,10 @@ if get_option('tests')
       plugin_libs,
       plugin_builtin_logitech_hidpp,
     ],
-    c_args: cargs,
+    c_args: [
+      cargs,
+      '-DSRCDIR="' + meson.current_source_dir() + '"',
+    ],
   )
   test('logitech-hidpp-self-test', e, env: env)
 endif

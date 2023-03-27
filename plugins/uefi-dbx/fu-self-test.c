@@ -43,6 +43,7 @@ fu_efi_image_func(void)
 int
 main(int argc, char **argv)
 {
+	(void)g_setenv("G_TEST_SRCDIR", SRCDIR, FALSE);
 	g_test_init(&argc, &argv, NULL);
 
 	/* only critical and error are fatal */

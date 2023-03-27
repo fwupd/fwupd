@@ -346,6 +346,7 @@ if get_option('tests')
       plugin_libs,
     ],
     c_args: [
+      '-DSRCDIR="' + meson.current_source_dir() + '"',
     ],
   )
   test('fu-self-test', e, is_parallel: false, timeout: 180, env: env)

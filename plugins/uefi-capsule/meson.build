@@ -143,7 +143,10 @@ if get_option('tests')
       fwupdplugin,
       plugin_builtin_uefi_capsule,
     ],
-    c_args: cargs
+    c_args: [
+      cargs,
+      '-DSRCDIR="' + meson.current_source_dir() + '"',
+    ],
   )
   test('uefi-self-test', e, env: env)
 

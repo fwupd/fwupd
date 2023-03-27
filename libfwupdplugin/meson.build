@@ -366,6 +366,7 @@ if get_option('tests')
       fwupdplugin
     ],
     c_args: [
+      '-DSRCDIR="' + meson.current_source_dir() + '"',
     ],
   )
   test('fwupdplugin-self-test', e, is_parallel: false, timeout: 180, env: env)

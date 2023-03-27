@@ -48,10 +48,13 @@ if get_option('tests')
       plugin_libs,
       plugin_builtin_vli,
     ],
-    c_args: cargs,
     install: true,
     install_rpath: libdir_pkg,
     install_dir: installed_test_bindir,
+    c_args: [
+      cargs,
+      '-DSRCDIR="' + meson.current_source_dir() + '"',
+    ],
   )
   test('vli-self-test', e, env: env)  # added to installed-tests
 endif

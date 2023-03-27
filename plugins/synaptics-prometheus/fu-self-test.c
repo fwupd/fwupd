@@ -116,6 +116,7 @@ fu_synaprom_firmware_xml_func(void)
 int
 main(int argc, char **argv)
 {
+	(void)g_setenv("G_TEST_SRCDIR", SRCDIR, FALSE);
 	g_test_init(&argc, &argv, NULL);
 	g_log_set_fatal_mask(NULL, G_LOG_LEVEL_ERROR | G_LOG_LEVEL_CRITICAL);
 	g_test_add_func("/synaprom/firmware", fu_test_synaprom_firmware_func);
