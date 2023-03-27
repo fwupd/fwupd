@@ -348,6 +348,13 @@ fu_wac_firmware_write(FuFirmware *firmware, GError **error)
 	g_autoptr(GByteArray) buf_hdr = g_byte_array_new();
 
 	/* fw header */
+	if (images->len == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "no firmware images found");
+		return NULL;
+	}
 	for (guint i = 0; i < images->len; i++) {
 		FuFirmware *img = g_ptr_array_index(images, i);
 		fu_byte_array_append_uint32(buf_hdr, fu_firmware_get_addr(img), G_BIG_ENDIAN);
