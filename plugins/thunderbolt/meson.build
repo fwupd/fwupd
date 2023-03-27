@@ -44,7 +44,10 @@ if get_option('tests') and run_sanitize_unsafe_tests and umockdev.found() and gi
       fwupdplugin,
       plugin_builtin_thunderbolt,
     ],
-    c_args: cargs
+    c_args: [
+      cargs,
+      '-DSRCDIR="' + meson.current_source_dir() + '"',
+    ],
   )
   if get_option('b_sanitize') == 'address'
     env.prepend('LD_PRELOAD', 'libasan.so.5', 'libumockdev-preload.so.0', separator: ' ')

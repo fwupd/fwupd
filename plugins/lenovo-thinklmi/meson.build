@@ -35,6 +35,7 @@ if get_option('tests') and efiboot.found() and efivar.found()
     ],
     c_args: [
       cargs,
+      '-DSRCDIR="' + meson.current_source_dir() + '"',
     ],
   )
   test('lenovo-thinklmi-self-test', e, env: env)

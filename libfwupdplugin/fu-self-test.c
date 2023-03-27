@@ -3772,6 +3772,7 @@ main(int argc, char **argv)
 {
 	g_autofree gchar *testdatadir = NULL;
 
+	(void)g_setenv("G_TEST_SRCDIR", SRCDIR, FALSE);
 	g_test_init(&argc, &argv, NULL);
 	g_type_ensure(FU_TYPE_IFD_BIOS);
 

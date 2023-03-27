@@ -129,6 +129,7 @@ fu_bcm57xx_firmware_xml_func(void)
 int
 main(int argc, char **argv)
 {
+	(void)g_setenv("G_TEST_SRCDIR", SRCDIR, FALSE);
 	g_test_init(&argc, &argv, NULL);
 	g_type_ensure(FU_TYPE_BCM57XX_STAGE1_IMAGE);
 	g_type_ensure(FU_TYPE_BCM57XX_STAGE2_IMAGE);

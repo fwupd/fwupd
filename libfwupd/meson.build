@@ -206,6 +206,7 @@ if get_option('tests')
     link_with: fwupd,
     c_args: [
       '-DG_LOG_DOMAIN="Fwupd"',
+      '-DSRCDIR="' + meson.current_source_dir() + '"',
       '-DLOCALSTATEDIR="' + localstatedir + '"',
     ],
   )

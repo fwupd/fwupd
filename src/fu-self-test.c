@@ -4859,6 +4859,7 @@ main(int argc, char **argv)
 	g_autoptr(GError) error = NULL;
 	g_autoptr(FuTest) self = g_new0(FuTest, 1);
 
+	(void)g_setenv("G_TEST_SRCDIR", SRCDIR, FALSE);
 	g_test_init(&argc, &argv, NULL);
 
 	/* only critical and error are fatal */

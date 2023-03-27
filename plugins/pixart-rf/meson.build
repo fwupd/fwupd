@@ -38,6 +38,9 @@ if get_option('tests')
     install: true,
     install_rpath: libdir_pkg,
     install_dir: installed_test_bindir,
+    c_args: [
+      '-DSRCDIR="' + meson.current_source_dir() + '"',
+    ],
   )
   test('pxi-self-test', e, env: env)
 endif
