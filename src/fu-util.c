@@ -1743,12 +1743,14 @@ fu_util_download_metadata_enable_lvfs(FuUtilPrivate *priv, GError **error)
 	remote = fwupd_client_get_remote_by_id(priv->client, "lvfs", priv->cancellable, error);
 	if (remote == NULL)
 		return TRUE;
-	fu_console_print(priv->console,
-			 /* TRANSLATORS: explain why no metadata available */
-			 _("No remotes are currently enabled so no metadata is available."));
-	fu_console_print(priv->console,
-			 /* TRANSLATORS: explain why no metadata available */
-			 _("Metadata can be obtained from the Linux Vendor Firmware Service."));
+	fu_console_print_literal(
+	    priv->console,
+	    /* TRANSLATORS: explain why no metadata available */
+	    _("No remotes are currently enabled so no metadata is available."));
+	fu_console_print_literal(
+	    priv->console,
+	    /* TRANSLATORS: explain why no metadata available */
+	    _("Metadata can be obtained from the Linux Vendor Firmware Service."));
 
 	/* TRANSLATORS: Turn on the remote */
 	if (!fu_console_input_bool(priv->console, TRUE, "%s", _("Enable this remote?")))
