@@ -172,7 +172,7 @@ Name = GD25Q32C
 FirmwareSizeMax = 0x400000
 [CFI\FLASHID_C84018]
 Name = GD25Q127C
-FirmwareSizeMax = 0x8000000
+FirmwareSizeMax = 0x1000000
 
 # Nantronics
 [CFI\FLASHID_D5]
