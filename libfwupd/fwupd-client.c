@@ -1105,6 +1105,8 @@ fwupd_client_fixup_dbus_error(GError *error)
 
 	/* parse the remote error */
 	name = g_dbus_error_get_remote_error(error);
+	if (name == NULL)
+		return;
 	if (g_str_has_prefix(name, FWUPD_DBUS_INTERFACE)) {
 		error->domain = FWUPD_ERROR;
 		error->code = fwupd_error_from_string(name);
@@ -3184,6 +3186,8 @@ fwupd_client_is_url_http(const gchar *perhaps_url)
 static gboolean
 fwupd_client_is_url_ipfs(const gchar *perhaps_url)
 {
+	if (perhaps_url == NULL)
+		return FALSE;
 	return g_str_has_prefix(perhaps_url, "ipfs://") || g_str_has_prefix(perhaps_url, "ipns://");
 }
 

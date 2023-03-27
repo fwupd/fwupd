@@ -641,6 +641,13 @@ fu_cabinet_build_jcat_folder(FuCabinet *self, GCabFolder *cabfolder, GError **er
 	for (GSList *l = cabfiles; l != NULL; l = l->next) {
 		GCabFile *cabfile = GCAB_FILE(l->data);
 		const gchar *fn = gcab_file_get_extract_name(cabfile);
+		if (fn == NULL) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_FILE,
+					    "no extraction name set");
+			return FALSE;
+		}
 		if (g_str_has_suffix(fn, ".jcat")) {
 			GBytes *data_jcat = gcab_file_get_bytes(cabfile);
 			g_autoptr(GInputStream) istream = NULL;
@@ -664,6 +671,13 @@ fu_cabinet_build_silo_folder(FuCabinet *self, GCabFolder *cabfolder, GError **er
 	for (GSList *l = cabfiles; l != NULL; l = l->next) {
 		GCabFile *cabfile = GCAB_FILE(l->data);
 		const gchar *fn = gcab_file_get_extract_name(cabfile);
+		if (fn == NULL) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_FILE,
+					    "no extraction name set");
+			return FALSE;
+		}
 		if (!g_str_has_suffix(fn, ".metainfo.xml"))
 			continue;
 		if (!fu_cabinet_build_silo_metainfo(self, cabfile, error))
