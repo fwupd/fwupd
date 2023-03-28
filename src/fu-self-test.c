@@ -1911,6 +1911,11 @@ fu_engine_history_modify_func(gconstpointer user_data)
 	g_autoptr(FuRelease) release = fu_release_new();
 	g_autoptr(GError) error = NULL;
 
+#ifndef HAVE_SQLITE
+	g_test_skip("no sqlite support");
+	return;
+#endif
+
 	/* add a new entry */
 	fu_device_set_id(device, "foobarbaz");
 	fu_history_remove_device(history, device, NULL);
