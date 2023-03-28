@@ -12,12 +12,17 @@
 #include <string.h>
 
 #include "fu-synaptics-cxaudio-firmware.h"
+#include "fu-synaptics-cxaudio-struct.h"
 
 struct _FuSynapticsCxaudioFirmware {
 	FuSrecFirmwareClass parent_instance;
 	FuSynapticsCxaudioFileKind file_kind;
 	FuSynapticsCxaudioDeviceKind device_kind;
-	FuSynapticsCxaudioEepromCustomInfo cinfo;
+	guint8 layout_signature;
+	guint8 layout_version;
+	guint16 vendor_id;
+	guint16 product_id;
+	guint16 revision_id;
 };
 
 G_DEFINE_TYPE(FuSynapticsCxaudioFirmware, fu_synaptics_cxaudio_firmware, FU_TYPE_SREC_FIRMWARE)
@@ -40,7 +45,7 @@ guint8
 fu_synaptics_cxaudio_firmware_get_layout_version(FuSynapticsCxaudioFirmware *self)
 {
 	g_return_val_if_fail(FU_IS_SYNAPTICS_CXAUDIO_FIRMWARE(self), 0);
-	return self->cinfo.LayoutVersion;
+	return self->layout_version;
 }
 
 static void
@@ -51,12 +56,12 @@ fu_synaptics_cxaudio_firmware_export(FuFirmware *firmware,
 	FuSynapticsCxaudioFirmware *self = FU_SYNAPTICS_CXAUDIO_FIRMWARE(firmware);
 	fu_xmlb_builder_insert_kx(bn, "file_kind", self->file_kind);
 	fu_xmlb_builder_insert_kx(bn, "device_kind", self->device_kind);
-	fu_xmlb_builder_insert_kx(bn, "layout_signature", self->cinfo.LayoutSignature);
-	fu_xmlb_builder_insert_kx(bn, "layout_version", self->cinfo.LayoutVersion);
-	if (self->cinfo.LayoutVersion >= 1) {
-		fu_xmlb_builder_insert_kx(bn, "vid", self->cinfo.VendorID);
-		fu_xmlb_builder_insert_kx(bn, "pid", self->cinfo.ProductID);
-		fu_xmlb_builder_insert_kx(bn, "rev", self->cinfo.RevisionID);
+	fu_xmlb_builder_insert_kx(bn, "layout_signature", self->layout_signature);
+	fu_xmlb_builder_insert_kx(bn, "layout_version", self->layout_version);
+	if (self->layout_version >= 1) {
+		fu_xmlb_builder_insert_kx(bn, "vid", self->vendor_id);
+		fu_xmlb_builder_insert_kx(bn, "pid", self->product_id);
+		fu_xmlb_builder_insert_kx(bn, "rev", self->revision_id);
 	}
 }
 
@@ -153,7 +158,10 @@ fu_synaptics_cxaudio_firmware_parse(FuFirmware *firmware,
 	FuSynapticsCxaudioFirmware *self = FU_SYNAPTICS_CXAUDIO_FIRMWARE(firmware);
 	GPtrArray *records = fu_srec_firmware_get_records(FU_SREC_FIRMWARE(firmware));
 	guint8 dev_kind_candidate = G_MAXUINT8;
-	g_autofree guint8 *shadow = g_malloc0(FU_SYNAPTICS_CXAUDIO_EEPROM_SHADOW_SIZE);
+	g_autoptr(GByteArray) st = NULL;
+	g_autoptr(GByteArray) st_sig = NULL;
+	g_autoptr(GByteArray) st_pat = NULL;
+	guint8 shadow[FU_SYNAPTICS_CXAUDIO_EEPROM_SHADOW_SIZE] = {0x0};
 
 	/* copy shadow EEPROM */
 	for (guint i = 0; i < records->len; i++) {
@@ -171,7 +179,7 @@ fu_synaptics_cxaudio_firmware_parse(FuFirmware *firmware,
 			return FALSE;
 		}
 		if (!fu_memcpy_safe(shadow,
-				    FU_SYNAPTICS_CXAUDIO_EEPROM_SHADOW_SIZE,
+				    sizeof(shadow),
 				    rcd->addr, /* dst */
 				    rcd->buf->data,
 				    rcd->buf->len,
@@ -182,24 +190,41 @@ fu_synaptics_cxaudio_firmware_parse(FuFirmware *firmware,
 	}
 
 	/* parse EEPROM map */
-	if (!fu_memcpy_safe((guint8 *)&self->cinfo,
-			    sizeof(FuSynapticsCxaudioEepromCustomInfo),
-			    0x0, /* dst */
-			    shadow,
-			    FU_SYNAPTICS_CXAUDIO_EEPROM_SHADOW_SIZE,
-			    FU_SYNAPTICS_CXAUDIO_EEPROM_CUSTOM_INFO_OFFSET, /* src */
-			    sizeof(FuSynapticsCxaudioEepromCustomInfo),
-			    error))
+	st = fu_struct_synaptics_cxaudio_custom_info_parse(
+	    shadow,
+	    sizeof(shadow),
+	    FU_SYNAPTICS_CXAUDIO_EEPROM_CUSTOM_INFO_OFFSET,
+	    error);
+	if (st == NULL)
 		return FALSE;
+	self->layout_signature = fu_struct_synaptics_cxaudio_custom_info_get_layout_signature(st);
+	self->layout_version = fu_struct_synaptics_cxaudio_custom_info_get_layout_version(st);
+	self->vendor_id = fu_struct_synaptics_cxaudio_custom_info_get_vendor_id(st);
+	self->product_id = fu_struct_synaptics_cxaudio_custom_info_get_product_id(st);
+	self->revision_id = fu_struct_synaptics_cxaudio_custom_info_get_revision_id(st);
 
 	/* just layout version byte is not enough in case of old CX20562 patch
 	 * files that could have non-zero value of the Layout version */
-	if (shadow[FU_SYNAPTICS_CXAUDIO_FIRMWARE_SIGNATURE_OFFSET] ==
+	st_sig = fu_struct_synaptics_cxaudio_validity_signature_parse(
+	    shadow,
+	    sizeof(shadow),
+	    FU_SYNAPTICS_CXAUDIO_EEPROM_VALIDITY_SIGNATURE_OFFSET,
+	    error);
+	if (st_sig == NULL)
+		return FALSE;
+	st_pat = fu_struct_synaptics_cxaudio_patch_info_parse(
+	    shadow,
+	    sizeof(shadow),
+	    FU_SYNAPTICS_CXAUDIO_EEPROM_PATCH_INFO_OFFSET,
+	    error);
+	if (st_pat == NULL)
+		return FALSE;
+	if (fu_struct_synaptics_cxaudio_validity_signature_get_magic_byte(st_sig) ==
 	    FU_SYNAPTICS_CXAUDIO_SIGNATURE_BYTE) {
 		self->device_kind = FU_SYNAPTICS_CXAUDIO_DEVICE_KIND_CX2070x;
 		self->file_kind = FU_SYNAPTICS_CXAUDIO_FILE_KIND_CX2070X_FW;
 		g_debug("FileKind: CX2070x (FW)");
-	} else if (shadow[FU_SYNAPTICS_CXAUDIO_EEPROM_PATCH_SIGNATURE_ADDRESS] ==
+	} else if (fu_struct_synaptics_cxaudio_patch_info_get_patch_signature(st_pat) ==
 		   FU_SYNAPTICS_CXAUDIO_SIGNATURE_PATCH_BYTE) {
 		self->device_kind = FU_SYNAPTICS_CXAUDIO_DEVICE_KIND_CX2070x;
 		self->file_kind = FU_SYNAPTICS_CXAUDIO_FILE_KIND_CX2070X_PATCH;
@@ -274,7 +299,9 @@ fu_synaptics_cxaudio_firmware_parse(FuFirmware *firmware,
 	}
 
 	/* ignore records with protected content */
-	if (self->cinfo.LayoutVersion >= 1) {
+	if (self->layout_version >= 1) {
+		guint16 serial_number_string_address =
+		    fu_struct_synaptics_cxaudio_custom_info_get_serial_number_string_address(st);
 		g_autoptr(GPtrArray) badblocks = g_ptr_array_new_with_free_func(g_free);
 
 		/* add standard ranges to ignore */
@@ -282,27 +309,34 @@ fu_synaptics_cxaudio_firmware_parse(FuFirmware *firmware,
 		fu_synaptics_cxaudio_firmware_badblock_add(
 		    badblocks,
 		    "application status",
-		    FU_SYNAPTICS_CXAUDIO_EEPROM_APP_STATUS_ADDRESS,
-		    1);
+		    FU_SYNAPTICS_CXAUDIO_EEPROM_CUSTOM_INFO_OFFSET +
+			FU_STRUCT_SYNAPTICS_CXAUDIO_CUSTOM_INFO_OFFSET_APPLICATION_STATUS,
+		    sizeof(guint8));
 		fu_synaptics_cxaudio_firmware_badblock_add(
 		    badblocks,
 		    "boot bytes",
 		    FU_SYNAPTICS_CXAUDIO_EEPROM_VALIDITY_SIGNATURE_OFFSET,
-		    sizeof(FuSynapticsCxaudioEepromValiditySignature) + 1);
+		    FU_STRUCT_SYNAPTICS_CXAUDIO_VALIDITY_SIGNATURE_SIZE + 1);
 
 		/* serial number address and also string pointer itself if set */
-		if (self->cinfo.SerialNumberStringAddress != 0x0) {
-			FuSynapticsCxaudioEepromPtr addr_tmp;
-			FuSynapticsCxaudioEepromPtr addr_str;
-			addr_tmp = FU_SYNAPTICS_CXAUDIO_EEPROM_CUSTOM_INFO_OFFSET +
-				   G_STRUCT_OFFSET(FuSynapticsCxaudioEepromCustomInfo,
-						   SerialNumberStringAddress);
-			fu_synaptics_cxaudio_firmware_badblock_add(
-			    badblocks,
-			    "serial number",
-			    addr_tmp,
-			    sizeof(FuSynapticsCxaudioEepromPtr));
-			memcpy(&addr_str, shadow + addr_tmp, sizeof(addr_str));
+		if (serial_number_string_address != 0x0) {
+			guint16 addr_tmp;
+			guint16 addr_str = 0;
+
+			addr_tmp =
+			    FU_SYNAPTICS_CXAUDIO_EEPROM_CUSTOM_INFO_OFFSET +
+			    FU_STRUCT_SYNAPTICS_CXAUDIO_CUSTOM_INFO_OFFSET_SERIAL_NUMBER_STRING_ADDRESS;
+			fu_synaptics_cxaudio_firmware_badblock_add(badblocks,
+								   "serial number",
+								   addr_tmp,
+								   sizeof(guint16));
+			if (!fu_memread_uint16_safe(shadow,
+						    sizeof(shadow),
+						    addr_tmp,
+						    &addr_str,
+						    G_LITTLE_ENDIAN,
+						    error))
+				return FALSE;
 			fu_synaptics_cxaudio_firmware_badblock_add(badblocks,
 								   "serial number data",
 								   addr_str,
