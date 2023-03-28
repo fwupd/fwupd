@@ -3174,6 +3174,7 @@ _plugin_device_register_cb(FuPlugin *plugin, FuDevice *device, gpointer user_dat
 	fu_plugin_runner_device_register(plugin, device);
 }
 
+#ifdef HAVE_GUSB
 static void
 fu_backend_usb_hotplug_cb(FuBackend *backend, FuDevice *device, gpointer user_data)
 {
@@ -3199,6 +3200,7 @@ fu_backend_usb_load_file(FuBackend *backend, const gchar *fn)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 }
+#endif
 
 /*
  * To generate the fwupd DS20 descriptor in the usb-devices.json file save fw-ds20.builder.xml:
