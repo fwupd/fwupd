@@ -2101,6 +2101,11 @@ fu_engine_multiple_rels_func(gconstpointer user_data)
 	g_autoptr(XbQuery) query = NULL;
 #endif
 
+#ifndef HAVE_LIBARCHIVE
+	g_test_skip("no libarchive support");
+	return;
+#endif
+
 	/* ensure empty tree */
 	fu_self_test_mkroot();
 
