@@ -44,13 +44,11 @@ if get_option('tests')
       fwupdplugin,
       plugin_builtin_synaptics_mst,
     ],
-    c_args: [
-      cargs,
-    ],
     install: true,
     install_rpath: libdir_pkg,
     install_dir: installed_test_bindir,
     c_args: [
+      cargs,
       '-DSRCDIR="' + meson.current_source_dir() + '"',
     ],
   )
