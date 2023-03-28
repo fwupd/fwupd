@@ -14,6 +14,7 @@
 #include "fu-synaptics-cxaudio-common.h"
 #include "fu-synaptics-cxaudio-device.h"
 #include "fu-synaptics-cxaudio-firmware.h"
+#include "fu-synaptics-cxaudio-struct.h"
 
 struct _FuSynapticsCxaudioDevice {
 	FuHidDevice parent_instance;
@@ -104,7 +105,7 @@ fu_synaptics_cxaudio_device_operation(FuSynapticsCxaudioDevice *self,
 				      FuSynapticsCxaudioMemKind mem_kind,
 				      guint32 addr,
 				      guint8 *buf,
-				      guint32 bufsz,
+				      gsize bufsz,
 				      FuSynapticsCxaudioOperationFlags flags,
 				      GError **error)
 {
@@ -287,16 +288,18 @@ fu_synaptics_cxaudio_device_eeprom_read_string(FuSynapticsCxaudioDevice *self,
 					       guint32 address,
 					       GError **error)
 {
-	FuSynapticsCxaudioEepromStringHeader header = {0};
+	guint8 buf[FU_STRUCT_SYNAPTICS_CXAUDIO_STRING_HEADER_SIZE] = {0};
+	guint8 header_length;
 	g_autofree gchar *str = NULL;
+	g_autoptr(GByteArray) st = NULL;
 
 	/* read header */
 	if (!fu_synaptics_cxaudio_device_operation(self,
 						   FU_SYNAPTICS_CXAUDIO_OPERATION_READ,
 						   FU_SYNAPTICS_CXAUDIO_MEM_KIND_EEPROM,
 						   address,
-						   (guint8 *)&header,
-						   sizeof(header),
+						   buf,
+						   sizeof(buf),
 						   FU_SYNAPTICS_CXAUDIO_OPERATION_FLAG_NONE,
 						   error)) {
 		g_prefix_error(error, "failed to read EEPROM string header @0x%x: ", address);
@@ -304,14 +307,11 @@ fu_synaptics_cxaudio_device_eeprom_read_string(FuSynapticsCxaudioDevice *self,
 	}
 
 	/* sanity check */
-	if (header.Type != FU_SYNAPTICS_CXAUDIO_DEVICE_CAPABILITIES_BYTE) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "EEPROM string header type invalid");
+	st = fu_struct_synaptics_cxaudio_string_header_parse(buf, sizeof(buf), 0x0, error);
+	if (st == NULL)
 		return NULL;
-	}
-	if (header.Length < sizeof(header)) {
+	header_length = fu_struct_synaptics_cxaudio_string_header_get_length(st);
+	if (header_length < st->len) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
@@ -320,13 +320,13 @@ fu_synaptics_cxaudio_device_eeprom_read_string(FuSynapticsCxaudioDevice *self,
 	}
 
 	/* allocate buffer + NUL terminator */
-	str = g_malloc0(header.Length - sizeof(header) + 1);
+	str = g_malloc0(header_length - st->len + 1);
 	if (!fu_synaptics_cxaudio_device_operation(self,
 						   FU_SYNAPTICS_CXAUDIO_OPERATION_READ,
 						   FU_SYNAPTICS_CXAUDIO_MEM_KIND_EEPROM,
-						   address + sizeof(header),
+						   address + sizeof(buf),
 						   (guint8 *)str,
-						   header.Length - sizeof(header),
+						   header_length - sizeof(buf),
 						   FU_SYNAPTICS_CXAUDIO_OPERATION_FLAG_NONE,
 						   error)) {
 		g_prefix_error(error, "failed to read EEPROM string @0x%x: ", address);
@@ -383,10 +383,9 @@ fu_synaptics_cxaudio_device_setup(FuDevice *device, GError **error)
 {
 	FuSynapticsCxaudioDevice *self = FU_SYNAPTICS_CXAUDIO_DEVICE(device);
 	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(device));
-	FuSynapticsCxaudioEepromCustomInfo cinfo = {0x0};
 	guint32 addr = FU_SYNAPTICS_CXAUDIO_EEPROM_CPX_PATCH_VERSION_ADDRESS;
 	guint8 chip_id_offset = 0x0;
-	guint8 sigbuf[2] = {0x0};
+	guint8 sigbuf[FU_STRUCT_SYNAPTICS_CXAUDIO_VALIDITY_SIGNATURE_SIZE] = {0x0};
 	guint8 verbuf_fw[4] = {0x0};
 	guint8 verbuf_patch[3] = {0x0};
 	g_autofree gchar *cap_str = NULL;
@@ -394,6 +393,9 @@ fu_synaptics_cxaudio_device_setup(FuDevice *device, GError **error)
 	g_autofree gchar *summary = NULL;
 	g_autofree gchar *version_fw = NULL;
 	g_autofree gchar *version_patch = NULL;
+	g_autoptr(GByteArray) st_inf = NULL;
+	g_autoptr(GByteArray) st_sig = NULL;
+	guint8 cinfo[FU_STRUCT_SYNAPTICS_CXAUDIO_CUSTOM_INFO_SIZE] = {0x0};
 
 	/* FuUsbDevice->setup */
 	if (!FU_DEVICE_CLASS(fu_synaptics_cxaudio_device_parent_class)->setup(device, error))
@@ -456,18 +458,28 @@ fu_synaptics_cxaudio_device_setup(FuDevice *device, GError **error)
 	}
 
 	/* check magic byte */
-	if (sigbuf[0] != FU_SYNAPTICS_CXAUDIO_MAGIC_BYTE) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "EEPROM magic byte invalid, got 0x%02x expected 0x%02x",
-			    sigbuf[0],
-			    (guint)FU_SYNAPTICS_CXAUDIO_MAGIC_BYTE);
+	st_sig = fu_struct_synaptics_cxaudio_validity_signature_parse(sigbuf,
+								      sizeof(sigbuf),
+								      0x0,
+								      error);
+	if (st_sig == NULL)
+		return FALSE;
+	if (fu_struct_synaptics_cxaudio_validity_signature_get_magic_byte(st_sig) !=
+	    FU_STRUCT_SYNAPTICS_CXAUDIO_VALIDITY_SIGNATURE_DEFAULT_MAGIC_BYTE) {
+		g_set_error(
+		    error,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_NOT_SUPPORTED,
+		    "EEPROM magic byte invalid, got 0x%02x expected 0x%02x",
+		    fu_struct_synaptics_cxaudio_validity_signature_get_magic_byte(st_sig),
+		    (guint)FU_STRUCT_SYNAPTICS_CXAUDIO_VALIDITY_SIGNATURE_DEFAULT_MAGIC_BYTE);
 		return FALSE;
 	}
 
 	/* calculate EEPROM size */
-	self->eeprom_sz = (guint32)1 << (sigbuf[1] + 8);
+	self->eeprom_sz =
+	    (guint32)1
+	    << (fu_struct_synaptics_cxaudio_validity_signature_get_eeprom_size_code(st_sig) + 8);
 	if (!fu_synaptics_cxaudio_device_operation(self,
 						   FU_SYNAPTICS_CXAUDIO_OPERATION_READ,
 						   FU_SYNAPTICS_CXAUDIO_MEM_KIND_EEPROM,
@@ -491,37 +503,34 @@ fu_synaptics_cxaudio_device_setup(FuDevice *device, GError **error)
 						   FU_SYNAPTICS_CXAUDIO_OPERATION_READ,
 						   FU_SYNAPTICS_CXAUDIO_MEM_KIND_EEPROM,
 						   FU_SYNAPTICS_CXAUDIO_EEPROM_CUSTOM_INFO_OFFSET,
-						   (guint8 *)&cinfo,
+						   cinfo,
 						   sizeof(cinfo),
 						   FU_SYNAPTICS_CXAUDIO_OPERATION_FLAG_NONE,
 						   error)) {
 		g_prefix_error(error, "failed to read EEPROM custom info: ");
 		return FALSE;
 	}
-	if (cinfo.LayoutSignature == FU_SYNAPTICS_CXAUDIO_SIGNATURE_BYTE)
-		self->eeprom_layout_version = cinfo.LayoutVersion;
-	g_debug("CpxPatchVersion: %u.%u.%u",
-		cinfo.CpxPatchVersion[0],
-		cinfo.CpxPatchVersion[1],
-		cinfo.CpxPatchVersion[2]);
-	g_debug("SpxPatchVersion: %u.%u.%u.%u",
-		cinfo.SpxPatchVersion[0],
-		cinfo.SpxPatchVersion[1],
-		cinfo.SpxPatchVersion[2],
-		cinfo.SpxPatchVersion[3]);
-	g_debug("VendorID: 0x%04x", cinfo.VendorID);
-	g_debug("ProductID: 0x%04x", cinfo.ProductID);
-	g_debug("RevisionID: 0x%04x", cinfo.RevisionID);
-	g_debug("ApplicationStatus: 0x%02x", cinfo.ApplicationStatus);
+
+	/* parse */
+	st_inf = fu_struct_synaptics_cxaudio_custom_info_parse(cinfo, sizeof(cinfo), 0x0, error);
+	if (st_inf == NULL)
+		return FALSE;
+	if (fu_struct_synaptics_cxaudio_custom_info_get_layout_signature(st_inf) ==
+	    FU_SYNAPTICS_CXAUDIO_SIGNATURE_BYTE)
+		self->eeprom_layout_version =
+		    fu_struct_synaptics_cxaudio_custom_info_get_layout_version(st_inf);
 
 	/* serial number, which also allows us to recover it after write */
 	if (self->eeprom_layout_version >= 0x01) {
-		self->serial_number_set = cinfo.SerialNumberStringAddress != 0x0;
+		guint16 serial_number_string_address =
+		    fu_struct_synaptics_cxaudio_custom_info_get_serial_number_string_address(
+			st_inf);
+		self->serial_number_set = serial_number_string_address != 0x0;
 		if (self->serial_number_set) {
 			g_autofree gchar *tmp = NULL;
 			tmp = fu_synaptics_cxaudio_device_eeprom_read_string(
 			    self,
-			    cinfo.SerialNumberStringAddress,
+			    serial_number_string_address,
 			    error);
 			if (tmp == NULL)
 				return FALSE;
@@ -673,7 +682,8 @@ fu_synaptics_cxaudio_device_write_firmware(FuDevice *device,
 			self,
 			FU_SYNAPTICS_CXAUDIO_OPERATION_WRITE,
 			FU_SYNAPTICS_CXAUDIO_MEM_KIND_EEPROM,
-			FU_SYNAPTICS_CXAUDIO_EEPROM_LAYOUT_SIGNATURE_ADDRESS,
+			FU_SYNAPTICS_CXAUDIO_EEPROM_CUSTOM_INFO_OFFSET +
+			    FU_STRUCT_SYNAPTICS_CXAUDIO_CUSTOM_INFO_OFFSET_LAYOUT_SIGNATURE,
 			&value,
 			sizeof(value),
 			FU_SYNAPTICS_CXAUDIO_OPERATION_FLAG_NONE,
@@ -685,7 +695,8 @@ fu_synaptics_cxaudio_device_write_firmware(FuDevice *device,
 			self,
 			FU_SYNAPTICS_CXAUDIO_OPERATION_WRITE,
 			FU_SYNAPTICS_CXAUDIO_MEM_KIND_EEPROM,
-			FU_SYNAPTICS_CXAUDIO_EEPROM_LAYOUT_VERSION_ADDRESS,
+			FU_SYNAPTICS_CXAUDIO_EEPROM_CUSTOM_INFO_OFFSET +
+			    FU_STRUCT_SYNAPTICS_CXAUDIO_CUSTOM_INFO_OFFSET_LAYOUT_VERSION,
 			&value,
 			sizeof(value),
 			FU_SYNAPTICS_CXAUDIO_OPERATION_FLAG_NONE,
@@ -693,7 +704,6 @@ fu_synaptics_cxaudio_device_write_firmware(FuDevice *device,
 			g_prefix_error(error, "failed to initialize layout signature: ");
 			return FALSE;
 		}
-		g_debug("initialized layout signature");
 	}
 	fu_progress_step_done(progress);
 
@@ -727,28 +737,35 @@ fu_synaptics_cxaudio_device_write_firmware(FuDevice *device,
 	/* in case of a full FW upgrade invalidate the old FW patch (if any)
 	 * as it may have not been done by the S37 file */
 	if (file_kind == FU_SYNAPTICS_CXAUDIO_FILE_KIND_CX2070X_FW) {
-		FuSynapticsCxaudioEepromPatchInfo pinfo = {0};
+		guint8 buf[FU_STRUCT_SYNAPTICS_CXAUDIO_PATCH_INFO_SIZE] = {0};
+		g_autoptr(GByteArray) st_pat = NULL;
+
 		if (!fu_synaptics_cxaudio_device_operation(
 			self,
 			FU_SYNAPTICS_CXAUDIO_OPERATION_READ,
 			FU_SYNAPTICS_CXAUDIO_MEM_KIND_EEPROM,
 			FU_SYNAPTICS_CXAUDIO_EEPROM_PATCH_INFO_OFFSET,
-			(guint8 *)&pinfo,
-			sizeof(pinfo),
+			buf,
+			sizeof(buf),
 			FU_SYNAPTICS_CXAUDIO_OPERATION_FLAG_NONE,
 			error)) {
 			g_prefix_error(error, "failed to read EEPROM patch info: ");
 			return FALSE;
 		}
-		if (pinfo.PatchSignature == FU_SYNAPTICS_CXAUDIO_SIGNATURE_PATCH_BYTE) {
-			memset(&pinfo, 0x0, sizeof(pinfo));
+		st_pat = fu_struct_synaptics_cxaudio_patch_info_parse(buf, sizeof(buf), 0x0, error);
+		if (st_pat == NULL)
+			return FALSE;
+		if (fu_struct_synaptics_cxaudio_patch_info_get_patch_signature(st_pat) ==
+		    FU_SYNAPTICS_CXAUDIO_SIGNATURE_PATCH_BYTE) {
+			fu_struct_synaptics_cxaudio_patch_info_set_patch_signature(st_pat, 0x0);
+			fu_struct_synaptics_cxaudio_patch_info_set_patch_address(st_pat, 0x0);
 			if (!fu_synaptics_cxaudio_device_operation(
 				self,
 				FU_SYNAPTICS_CXAUDIO_OPERATION_WRITE,
 				FU_SYNAPTICS_CXAUDIO_MEM_KIND_EEPROM,
 				FU_SYNAPTICS_CXAUDIO_EEPROM_PATCH_INFO_OFFSET,
-				(guint8 *)&pinfo,
-				sizeof(pinfo),
+				st_pat->data,
+				st_pat->len,
 				FU_SYNAPTICS_CXAUDIO_OPERATION_FLAG_NONE,
 				error)) {
 				g_prefix_error(error, "failed to write empty EEPROM patch info: ");

@@ -3,6 +3,7 @@ cargs = ['-DG_LOG_DOMAIN="FuPluginSynapticsCxaudio"']
 
 plugin_quirks += files('synaptics-cxaudio.quirk')
 plugin_builtins += static_library('fu_plugin_synaptics_cxaudio',
+  structgen.process('fu-synaptics-cxaudio.struct'),
   sources: [
     'fu-synaptics-cxaudio-plugin.c',
     'fu-synaptics-cxaudio-device.c',
