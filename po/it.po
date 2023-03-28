@@ -2087,10 +2087,6 @@ msgstr "Mostra maggiori informazioni di debug"
 msgid "Show history of firmware updates"
 msgstr "Mostra la cronologia degli aggiornamenti firmware"
 
-#. TRANSLATORS: this is for plugin development
-msgid "Show plugin verbose information"
-msgstr "Mostra informazioni dettagliate del plugin"
-
 #. TRANSLATORS: command line option
 msgid "Show the calculated version of the dbx"
 msgstr "Mostra la versione calcolata del dbx"

@@ -1498,10 +1498,6 @@ msgstr "Показать дополнительную отладочную ин�
 msgid "Show history of firmware updates"
 msgstr "Показать историю обновлений прошивки"
 
-#. TRANSLATORS: this is for plugin development
-msgid "Show plugin verbose information"
-msgstr "Показать подробную информацию о плагине"
-
 #. TRANSLATORS: command line option
 msgid "Show the calculated version of the dbx"
 msgstr "Показать рассчитанную версию dbx"

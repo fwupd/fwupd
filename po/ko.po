@@ -2394,10 +2394,6 @@ msgstr "추가 디버깅 정보 표시"
 msgid "Show history of firmware updates"
 msgstr "펌웨어 업데이트 기록 보기"
 
-#. TRANSLATORS: this is for plugin development
-msgid "Show plugin verbose information"
-msgstr "자세한 플러그인 정보 표시"
-
 #. TRANSLATORS: command line option
 msgid "Show the calculated version of the dbx"
 msgstr "dbx의 계산된 버전 표시"

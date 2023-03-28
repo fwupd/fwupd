@@ -994,10 +994,6 @@ msgstr "További hibakeresési információk megjelenítése"
 msgid "Show history of firmware updates"
 msgstr "Firmware frissítési előzmények megtekintése"
 
-#. TRANSLATORS: this is for plugin development
-msgid "Show plugin verbose information"
-msgstr "Bővítmény bőbeszédű információinak megjelenítése"
-
 #. TRANSLATORS: command line option
 msgid "Show the debug log from the last attempted update"
 msgstr "A legutóbb megpróbált frissítés hibakeresési naplójának megjelenítése"

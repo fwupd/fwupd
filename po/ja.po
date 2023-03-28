@@ -3,7 +3,7 @@
 # This file is distributed under the same license as the fwupd package.
 #
 # Translators:
-# Green, 2021
+# Green <usergreen@users.osdn.me>, 2021
 # Nobuhiro Iwamatsu <iwamatsu@nigauri.org>, 2021
 # Takuro Onoue <kusanaginoturugi@gmail.com>, 2021
 # YOSHIDUMI, Rentaro, 2021

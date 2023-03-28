@@ -2492,10 +2492,6 @@ msgstr "Mostra informació de depuració addicional."
 msgid "Show history of firmware updates"
 msgstr "Mostra l'historial de les actualitzacions de microprogramari."
 
-#. TRANSLATORS: this is for plugin development
-msgid "Show plugin verbose information"
-msgstr "Mostra la informació detallada del connector"
-
 #. TRANSLATORS: command line option
 msgid "Show the calculated version of the dbx"
 msgstr "Mostra la versió calculada de la dbx."

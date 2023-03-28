@@ -1111,10 +1111,6 @@ msgstr "Rodyti papildomą derinimo informaciją"
 msgid "Show history of firmware updates"
 msgstr "Rodyti programinės aparatinės įrangos atnaujinimų istoriją"
 
-#. TRANSLATORS: this is for plugin development
-msgid "Show plugin verbose information"
-msgstr "Rodyti išsamią įskiepio informaciją"
-
 #. TRANSLATORS: command line option
 msgid "Show the calculated version of the dbx"
 msgstr "Rodyti apskaičiuotą dbx versiją"

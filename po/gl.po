@@ -748,10 +748,6 @@ msgstr "Mostrar información de depuración adicional"
 msgid "Show history of firmware updates"
 msgstr "Mostrar o historial das actualizacións de firmware"
 
-#. TRANSLATORS: this is for plugin development
-msgid "Show plugin verbose information"
-msgstr "Mostrar información de depuración do engadido"
-
 #. TRANSLATORS: command line option
 msgid "Show the calculated version of the dbx"
 msgstr "Mostrar a versión calculada do dbx"

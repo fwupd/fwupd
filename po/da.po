@@ -1691,10 +1691,6 @@ msgstr "Vis ekstra fejlsøgningsinformation"
 msgid "Show history of firmware updates"
 msgstr "Vis historik over firmwareopdateringer"
 
-#. TRANSLATORS: this is for plugin development
-msgid "Show plugin verbose information"
-msgstr "Vis uddybende information om plugin"
-
 #. TRANSLATORS: command line option
 msgid "Show the calculated version of the dbx"
 msgstr "Vis den udregnede version af dbx'en"

@@ -2497,10 +2497,6 @@ msgstr "Visa extra felsökningsinformation"
 msgid "Show history of firmware updates"
 msgstr "Visa historik över uppdateringar för fast programvara"
 
-#. TRANSLATORS: this is for plugin development
-msgid "Show plugin verbose information"
-msgstr "Visa utförlig information om insticksmodul"
-
 #. TRANSLATORS: command line option
 msgid "Show the calculated version of the dbx"
 msgstr "Visa den beräknade versionen av dbx"

@@ -1128,10 +1128,6 @@ msgstr "Ek hata ayıklama bilgilerini göster"
 msgid "Show history of firmware updates"
 msgstr "Donanım yazılımı güncellemelerinin geçmişini göster"
 
-#. TRANSLATORS: this is for plugin development
-msgid "Show plugin verbose information"
-msgstr "Eklenti ayrıntılı bilgilerini göster"
-
 #. TRANSLATORS: command line option
 msgid "Show the debug log from the last attempted update"
 msgstr "Son denenen güncellemedeki hata ayıklama günlüğünü göster"

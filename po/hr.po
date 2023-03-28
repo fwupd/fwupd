@@ -6,6 +6,7 @@
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2016
 # gogo <trebelnik2@gmail.com>, 2016
 # Milo Ivir <mail@milotype.de>, 2020-2021
+# Milo Ivir <mail@milotype.de>, 2023
 # Milo Ivir <mail@milotype.de>, 2021
 # gogo <trebelnik2@gmail.com>, 2016-2023
 msgid ""
@@ -413,6 +414,10 @@ msgstr "Dopusti prebacivanje između firmver grana"
 msgid "Alternate branch"
 msgstr "Alternativni ogranak"
 
+#. TRANSLATORS: another application is updating the device already
+msgid "An update is in progress"
+msgstr "Sprovodi se aktualiziranje"
+
 #. TRANSLATORS: explain why we want to reboot
 msgid "An update requires a reboot to complete."
 msgstr "Nadopuna zahtijeva ponovno pokretanje za završetak."
@@ -609,6 +614,23 @@ msgstr "Provjeri podudarnost kriptografske jedinstvene vrijednosti firmvera"
 msgid "Checksum"
 msgstr "Kontrolni zbroj"
 
+#. TRANSLATORS: get interactive prompt, where branch is the
+#. * supplier of the firmware, e.g. "non-free" or "free"
+msgid "Choose branch"
+msgstr "Odaberi granu"
+
+#. TRANSLATORS: get interactive prompt
+msgid "Choose device"
+msgstr "Odaberi uređaj"
+
+#. TRANSLATORS: get interactive prompt
+msgid "Choose firmware"
+msgstr "Odaberi firmver"
+
+#. TRANSLATORS: get interactive prompt
+msgid "Choose release"
+msgstr "Odaberi izdanje"
+
 #. TRANSLATORS: get interactive prompt
 msgid "Choose the ESP:"
 msgstr "Odaberi ESP:"
@@ -724,6 +746,10 @@ msgstr "Uređaj se ne može koristiti dok je poklopac zaslona zatvoren"
 #. TRANSLATORS: this is when a device has been updated
 msgid "Device changed:"
 msgstr "Uređaj promijenjen:"
+
+#. ability to load emulated devices is opt-in
+msgid "Device emulation is not enabled."
+msgstr "Emulacija uređaja nije aktivirana."
 
 #. TRANSLATORS: a version check is required for all firmware
 msgid "Device firmware is required to have a version check"
@@ -903,6 +929,10 @@ msgstr "Razumijete li posljedice promjene ogranka firmvera?"
 msgid "Do you want to disable this feature for future updates?"
 msgstr "Želite li onemogućiti ovu značajku za buduće nadopune?"
 
+#. TRANSLATORS: we can do this live
+msgid "Do you want to enable it now?"
+msgstr "Želiš li je sada aktivirati?"
+
 #. TRANSLATORS: ask if we can update the metadata
 msgid "Do you want to refresh this remote now?"
 msgstr "Želite li odmah provjeriti ovu udaljenu lokaciju?"
@@ -965,6 +995,14 @@ msgstr "Određeni ESP nije ispravan"
 #. TRANSLATORS: longer description
 msgid "Each system should have tests to ensure firmware security."
 msgstr "Svaki uređaj bi se trebao testirati firmver, kako bi se osigurala sigurnost firmvera."
+
+#. TRANSLATORS: command description
+msgid "Emulate a device using a JSON manifest"
+msgstr "Emuliraj uređaj koristeći JSON manifest"
+
+#. TRANSLATORS: this device is not actually real
+msgid "Emulated"
+msgstr "Emulirano"
 
 #. TRANSLATORS: Title: if we are emulating a different host
 msgid "Emulated host"
@@ -1748,6 +1786,10 @@ msgstr "Prikaži dostupne vrste firmvera"
 msgid "Lists files on the ESP"
 msgstr "Prikazuje datoteke na ESP-u"
 
+#. TRANSLATORS: command description
+msgid "Load device emulation data"
+msgstr "Učitaj emulirane podatke uređaja"
+
 #. TRANSLATORS: the plugin was created from a .so object, and was not built-in
 msgid "Loaded from an external module"
 msgstr "Učitano iz vanjskog modula"
@@ -2311,6 +2353,10 @@ msgstr "UPRAVLJAČKI PROGRAM PODSUSTAVA [UREĐAJ-ID|GUID]"
 msgid "Save a file that allows generation of hardware IDs"
 msgstr "Spremi datoteku koja omogućuje stvaranje ID-ova hardvera"
 
+#. TRANSLATORS: command description
+msgid "Save device emulation data"
+msgstr "Spremi emulirane podatke uređaja"
+
 #. TRANSLATORS: Scalar increment for integer BIOS setting
 msgid "Scalar Increment"
 msgstr "Skalarni umnožak"
@@ -2420,10 +2466,6 @@ msgstr "Prikaži dodatne informacije otklanjanja grešaka"
 #. TRANSLATORS: command description
 msgid "Show history of firmware updates"
 msgstr "Prikaži povijest nadopune metapodataka"
-
-#. TRANSLATORS: this is for plugin development
-msgid "Show plugin verbose information"
-msgstr "Prikaži dodatne informacije priključka"
 
 #. TRANSLATORS: command line option
 msgid "Show the calculated version of the dbx"
@@ -2660,6 +2702,10 @@ msgid_plural "Tags"
 msgstr[0] "Oznaka"
 msgstr[1] "Oznake"
 msgstr[2] "Oznake"
+
+#. TRANSLATORS: we're saving all USB events for emulation
+msgid "Tagged for emulation"
+msgstr "Označeno za emulaciju"
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Tainted"
@@ -2933,6 +2979,10 @@ msgstr "Otključava uređaj za pristup firmveru"
 msgid "Unmounts the ESP"
 msgstr "Demontira ESP"
 
+#. TRANSLATORS: message shown after device has been marked for emulation
+msgid "Unplug and replug the device, then install the firmware."
+msgstr "Idključi i ponovo uključi urađaj, zatim instaliraj firmver."
+
 #. TRANSLATORS: command line option
 msgid "Unset the debugging flag during update"
 msgstr "Ukloni oznaku otklanjanja grešaka tijekom nadopune"
@@ -3031,6 +3081,17 @@ msgstr "Slanje izvještaja firmvera pomaže proizvođačima hardvera brzo otkriv
 msgid "Urgency"
 msgstr "Hitnost"
 
+#. TRANSLATORS: explain how to get help,
+#. * where $1 is something like 'fwupdmgr --help'
+#, c-format
+msgid "Use %s for help"
+msgstr "Koristi %s za pomoć"
+
+#. TRANSLATORS: CTRL^C [holding control, and then pressing C] will exit the
+#. program
+msgid "Use CTRL^C to cancel."
+msgstr "Koristi CTRL^C za prekidanje."
+
 #. TRANSLATORS: explain how to get help
 msgid "Use fwupdtool --help for help"
 msgstr "Koristite fwupdtool --help za prikaz pomoći"
@@ -3077,6 +3138,10 @@ msgstr "Inačica"
 #. TRANSLATORS: the fwupd version the release was tested on
 msgid "Version[fwupd]"
 msgstr "Inačica[fwupd]"
+
+#. TRANSLATORS: this is a prefix on the console
+msgid "WARNING"
+msgstr "UPOZORENJE"
 
 #. TRANSLATORS: waiting for device to do something
 msgid "Waiting…"
@@ -3150,6 +3215,10 @@ msgstr "[DATOTEKA POTPIS_DATOTEKE ID-UDALJENE_LOKACIJE]"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[FILENAME1] [FILENAME2]"
 msgstr "[NAZIV DATOTEKE1] [NAZIV DATOTEKE2]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[REASON]"
+msgstr "[RAZLOG]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[SETTING1] [ SETTING2]..."

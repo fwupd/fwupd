@@ -537,10 +537,6 @@ msgstr "顯示額外除錯資訊"
 msgid "Show history of firmware updates"
 msgstr "顯示韌體更新的歷史"
 
-#. TRANSLATORS: this is for plugin development
-msgid "Show plugin verbose information"
-msgstr "顯示插件詳盡資訊"
-
 #. TRANSLATORS: command line option
 msgid "Show the debug log from the last attempted update"
 msgstr "顯示從上次試圖更新起的除錯紀錄"

@@ -404,10 +404,6 @@ msgstr "Прикажи додатне податке за отклањање п�
 msgid "Show history of firmware updates"
 msgstr "Прикажи историјат ажурирања фирмвера"
 
-#. TRANSLATORS: this is for plugin development
-msgid "Show plugin verbose information"
-msgstr "Прикажи опширне податке о прикључку"
-
 #. TRANSLATORS: one line summary of device
 msgid "Summary"
 msgstr "Сажетак"

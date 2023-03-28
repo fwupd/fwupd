@@ -33,6 +33,43 @@
     <binary>fwupdtool</binary>
   </provides>
   <releases>
+    <release version="1.8.13" date="2023-03-28">
+      <description>
+        <p>
+          This release adds the following features:
+        </p>
+        <ul>
+          <li>Add pcap converter which allows emulating devices from a Wireshark dump</li>
+          <li>Add the ability to dump TPM firmware for future use</li>
+          <li>Optionally retain firmware in a backup remote</li>
+          <li>Record the ESP type in the firmware report sent to the LVFS</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Accept application/octet-stream for archives when the mime database is missing</li>
+          <li>Add the latest dbx version version fixups as Microsoft removed another entry</li>
+          <li>Assume DFU appIDLE if GetStatus is not implemented</li>
+          <li>Do not require signatures for local or directory remotes</li>
+          <li>Do not use pandoc to build the man pages</li>
+          <li>Enhance Qubes functionality to use JCat</li>
+          <li>Fix a CCGX 'usbfs: process did not claim interface 1 before use' warning</li>
+          <li>Fix a compile warning when using a new libqmi version</li>
+          <li>Fix a critical warning when parsing an empty kernel cmdline</li>
+          <li>Fix a synaptics-cape regression where the firmware pauses for INTR</li>
+          <li>Fix the defines for HFSTS6 enforcement policy</li>
+          <li>Fix the i2c name properly for ElanTP hardware</li>
+          <li>Fix the name of the MTD Intel SPI controller</li>
+          <li>Set the release remote when installing archives</li>
+          <li>Use the powerd power type information to better set AC levels</li>
+        </ul>
+        <p>This release adds support for the following hardware:</p>
+        <ul>
+          <li>Framework Audio Card</li>
+          <li>Lenovo ThinkPad TBT3-TR Gen 2</li>
+          <li>Wacom Intuos BT S Gen 3</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.8.12" date="2023-02-24">
       <description>
         <p>This release fixes the following bugs:</p>

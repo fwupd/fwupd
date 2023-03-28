@@ -5,7 +5,7 @@
 # Translators:
 # dhead666 <myfoolishgames@gmail.com>, 2015
 # gk <genghiskhan@gmx.ca>, 2015
-# עומר א״ש <omeritzicschwartz@gmail.com>, 2021
+# 63f334ffc0709ba0fc2361b80bf3c0f0_00ffd1e <ab96c93ca0ac55ba7fa06385427e60dd_878890>, 2021
 # Yaron Shahrabani <sh.yaron@gmail.com>, 2021
 # Yosef Or Boczko <yoseforb@gmail.com>, 2023
 msgid ""

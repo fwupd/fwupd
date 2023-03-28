@@ -2492,10 +2492,6 @@ msgstr "Show extra debugging information"
 msgid "Show history of firmware updates"
 msgstr "Show history of firmware updates"
 
-#. TRANSLATORS: this is for plugin development
-msgid "Show plugin verbose information"
-msgstr "Show plugin verbose information"
-
 #. TRANSLATORS: command line option
 msgid "Show the calculated version of the dbx"
 msgstr "Show the calculated version of the dbx"

@@ -1963,10 +1963,6 @@ msgstr "අමතර දෝශ නිරාකරණ තොරතුරු ප�
 msgid "Show history of firmware updates"
 msgstr "ස්ථිරාංග යාවත්කාලීන ඉතිහාසය පෙන්වන්න"
 
-#. TRANSLATORS: this is for plugin development
-msgid "Show plugin verbose information"
-msgstr "ප්ලගින වාචික තොරතුරු පෙන්වන්න"
-
 #. TRANSLATORS: command line option
 msgid "Show the calculated version of the dbx"
 msgstr "dbx හි ගණනය කළ අනුවාදය පෙන්වන්න"

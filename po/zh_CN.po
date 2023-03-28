@@ -1714,10 +1714,6 @@ msgstr "显示额外调试信息"
 msgid "Show history of firmware updates"
 msgstr "显示固件更新历史"
 
-#. TRANSLATORS: this is for plugin development
-msgid "Show plugin verbose information"
-msgstr "显示插件详细回显信息"
-
 #. TRANSLATORS: command line option
 msgid "Show the calculated version of the dbx"
 msgstr "显示 dbx 的计算版本"

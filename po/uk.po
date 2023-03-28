@@ -2515,10 +2515,6 @@ msgstr "Показати додаткові діагностичні дані"
 msgid "Show history of firmware updates"
 msgstr "Показати журнал оновлень мікропрограми"
 
-#. TRANSLATORS: this is for plugin development
-msgid "Show plugin verbose information"
-msgstr "Показати докладні відомості щодо додатків"
-
 #. TRANSLATORS: command line option
 msgid "Show the calculated version of the dbx"
 msgstr "Вивести обчислену версію dbx"

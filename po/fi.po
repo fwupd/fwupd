@@ -1988,10 +1988,6 @@ msgstr "Näytä ylimääräiset virheenkorjaustiedot"
 msgid "Show history of firmware updates"
 msgstr "Näytä laiteohjelmistopäivitysten historia"
 
-#. TRANSLATORS: this is for plugin development
-msgid "Show plugin verbose information"
-msgstr "Näytä liitännäisten täydelliset tiedot"
-
 #. TRANSLATORS: command line option
 msgid "Show the calculated version of the dbx"
 msgstr "Näytä dbx:n laskettu versio"
