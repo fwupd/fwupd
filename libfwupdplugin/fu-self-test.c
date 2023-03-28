@@ -2547,6 +2547,11 @@ fu_firmware_archive_func(void)
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GFile) file = NULL;
 
+#ifndef HAVE_LIBARCHIVE
+	g_test_skip("no libarchive support");
+	return;
+#endif
+
 	fn = g_test_build_filename(G_TEST_BUILT, "tests", "firmware.zip", NULL);
 	file = g_file_new_for_path(fn);
 	ret = fu_firmware_parse_file(firmware, file, FWUPD_INSTALL_FLAG_NONE, &error);
