@@ -164,6 +164,7 @@ class Builder:
         try:
             subprocess.run(
                 [
+                    "python",
                     "fwupd/libfwupdplugin/generate-struct.py",
                     src,
                     fulldst_c,
