@@ -41,44 +41,42 @@ fu_test_fatal_handler_cb(const gchar *log_domain,
 }
 
 static gboolean
-fu_test_self_init(FuTest *self, GError **error_global)
+fu_test_self_init(FuTest *self, GError **error)
 {
 	gboolean ret;
 	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
-	g_autoptr(GError) error = NULL;
-
-#if GLIB_CHECK_VERSION(2, 64, 0)
-	g_test_expect_message("FuBiosSettings", G_LOG_LEVEL_WARNING, "*KERNEL*BUG*");
-#endif
 
 	g_test_log_set_fatal_handler(fu_test_fatal_handler_cb, NULL);
 
 	ret = fu_context_load_quirks(ctx,
 				     FU_QUIRKS_LOAD_FLAG_NO_CACHE | FU_QUIRKS_LOAD_FLAG_NO_VERIFY,
-				     &error);
-	g_assert_no_error(error);
+				     error);
+	g_assert_no_error(*error);
 	g_assert_true(ret);
-	ret = fu_context_load_hwinfo(ctx, progress, FU_CONTEXT_HWID_FLAG_LOAD_CONFIG, &error);
-	g_assert_no_error(error);
+	ret = fu_context_load_hwinfo(ctx, progress, FU_CONTEXT_HWID_FLAG_LOAD_CONFIG, error);
+	g_assert_no_error(*error);
 	g_assert_true(ret);
-	ret = fu_context_reload_bios_settings(ctx, &error);
-	g_assert_no_error(error);
+	ret = fu_context_reload_bios_settings(ctx, error);
+#ifdef FU_THINKLMI_COMPAT
+	g_assert_no_error(*error);
 	g_assert_true(ret);
-#if GLIB_CHECK_VERSION(2, 64, 0)
-	g_test_assert_expected_messages();
+#else
+	g_assert_error(*error, G_FILE_ERROR, G_FILE_ERROR_NOENT);
+	g_assert_false(ret);
+	return FALSE;
 #endif
 
 	self->plugin_uefi_capsule =
 	    fu_plugin_new_from_gtype(fu_uefi_capsule_plugin_get_type(), ctx);
-	ret = fu_plugin_runner_startup(self->plugin_uefi_capsule, progress, &error);
-	g_assert_no_error(error);
+	ret = fu_plugin_runner_startup(self->plugin_uefi_capsule, progress, error);
+	g_assert_no_error(*error);
 	g_assert_true(ret);
 
 	self->plugin_lenovo_thinklmi =
 	    fu_plugin_new_from_gtype(fu_lenovo_thinklmi_plugin_get_type(), ctx);
-	ret = fu_plugin_runner_startup(self->plugin_lenovo_thinklmi, progress, &error);
-	g_assert_no_error(error);
+	ret = fu_plugin_runner_startup(self->plugin_lenovo_thinklmi, progress, error);
+	g_assert_no_error(*error);
 	g_assert_true(ret);
 	self->ctx = fu_plugin_get_context(self->plugin_lenovo_thinklmi);
 	return TRUE;

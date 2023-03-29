@@ -171,10 +171,6 @@ fu_bios_setting_set_current_value(FwupdBiosSetting *attr, GError **error)
 	return TRUE;
 }
 
-#define LENOVO_POSSIBLE_NEEDLE	"[Optional:"
-#define LENOVO_READ_ONLY_NEEDLE "[Status:ShowOnly]"
-#define LENOVO_EXCLUDED		"[Excluded from boot order:"
-
 static void
 fu_bios_setting_set_read_only(FuBiosSettings *self, FwupdBiosSetting *attr)
 {
@@ -185,6 +181,11 @@ fu_bios_setting_set_read_only(FuBiosSettings *self, FwupdBiosSetting *attr)
 			fwupd_bios_setting_set_read_only(attr, TRUE);
 	}
 }
+
+#ifdef FU_THINKLMI_COMPAT
+#define LENOVO_POSSIBLE_NEEDLE	"[Optional:"
+#define LENOVO_READ_ONLY_NEEDLE "[Status:ShowOnly]"
+#define LENOVO_EXCLUDED		"[Excluded from boot order:"
 
 static gboolean
 fu_bios_setting_fixup_lenovo_thinklmi_bug(FwupdBiosSetting *attr, GError **error)
@@ -261,6 +262,7 @@ fu_bios_settings_run_folder_fixups(FwupdBiosSetting *attr, GError **error)
 		return fu_bios_setting_fixup_lenovo_thinklmi_bug(attr, error);
 	return TRUE;
 }
+#endif
 
 static gboolean
 fu_bios_setting_set_type(FuBiosSettings *self, FwupdBiosSetting *attr, GError **error)
@@ -275,13 +277,14 @@ fu_bios_setting_set_type(FuBiosSettings *self, FwupdBiosSetting *attr, GError **
 
 	/* lenovo thinklmi seems to be missing it even though it's mandatory :/ */
 	if (!fu_bios_setting_get_key(attr, "type", &data, &error_key)) {
-#if GLIB_CHECK_VERSION(2, 64, 0)
-		g_warning_once("KERNEL BUG: 'type' attribute not exported: (%s)",
-			       error_key->message);
-#else
-		g_debug("KERNEL BUG: 'type' attribute not exported: (%s)", error_key->message);
-#endif
+#ifdef FU_THINKLMI_COMPAT
+		g_print("Utilizing think-lmi compatibility for kernels less than 6.3\n");
 		kernel_bug = TRUE;
+#else
+		g_debug("%s", error_key->message);
+		g_propagate_error(error, g_steal_pointer(&error_key));
+		return FALSE;
+#endif
 	}
 
 	if (g_strcmp0(data, "enumeration") == 0 || kernel_bug) {
@@ -334,8 +337,10 @@ fu_bios_settings_set_folder_attributes(FuBiosSettings *self, FwupdBiosSetting *a
 		return FALSE;
 	if (!fu_bios_setting_set_description(self, attr, &error_local))
 		g_debug("%s", error_local->message);
+#ifdef FU_THINKLMI_COMPAT
 	if (!fu_bios_settings_run_folder_fixups(attr, error))
 		return FALSE;
+#endif
 	fu_bios_setting_set_read_only(self, attr);
 	return TRUE;
 }

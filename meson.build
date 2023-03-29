@@ -488,6 +488,11 @@ if get_option('supported_build').disable_auto_if(not tag).allowed()
     conf.set('SUPPORTED_BUILD', '1')
 endif
 
+# compatibility with behavior in < kernel 6.3
+if get_option('thinklmi_compat')
+  conf.set('FU_THINKLMI_COMPAT', '1')
+endif
+
 gnome = import('gnome')
 i18n = import('i18n')
 

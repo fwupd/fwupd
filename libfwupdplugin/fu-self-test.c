@@ -3146,11 +3146,10 @@ fu_bios_settings_load_func(void)
 	test_dir = g_test_build_filename(G_TEST_DIST, "tests", "bios-attrs", "lenovo-p620", NULL);
 	(void)g_setenv("FWUPD_SYSFSFWATTRIBDIR", test_dir, TRUE);
 
-	g_test_expect_message("FuBiosSettings", G_LOG_LEVEL_WARNING, "*BUG*");
 	ret = fu_context_reload_bios_settings(ctx, &error);
+#ifdef FU_THINKLMI_COMPAT
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	g_test_assert_expected_messages();
 
 	p620_settings = fu_context_get_bios_settings(ctx);
 	p620_items = fu_bios_settings_get_all(p620_settings);
@@ -3201,6 +3200,13 @@ fu_bios_settings_load_func(void)
 		g_debug("%s", tmp);
 		g_assert_null(g_strrstr(tmp, "[Status"));
 	}
+#else
+	g_assert_error(error, G_FILE_ERROR, G_FILE_ERROR_NOENT);
+	g_assert_false(ret);
+	g_clear_error(&error);
+#endif
+	g_free(test_dir);
+
 
 	g_free(test_dir);
 
@@ -3209,6 +3215,7 @@ fu_bios_settings_load_func(void)
 	    g_test_build_filename(G_TEST_DIST, "tests", "bios-attrs", "lenovo-p14s-gen1", NULL);
 	(void)g_setenv("FWUPD_SYSFSFWATTRIBDIR", test_dir, TRUE);
 	ret = fu_context_reload_bios_settings(ctx, &error);
+#ifdef FU_THINKLMI_COMPAT
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -3241,7 +3248,11 @@ fu_bios_settings_load_func(void)
 	g_assert_nonnull(setting);
 	ret = fwupd_bios_setting_get_read_only(setting);
 	g_assert_true(ret);
-
+#else
+	g_assert_error(error, G_FILE_ERROR, G_FILE_ERROR_NOENT);
+	g_assert_false(ret);
+	g_clear_error(&error);
+#endif
 	g_free(test_dir);
 
 	/* load BIOS settings from a Dell XPS 9310 */
