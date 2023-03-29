@@ -474,7 +474,15 @@ if __name__ == "__main__":
     # install missing deps here rather than patching the Dockerfile in oss-fuzz
     try:
         subprocess.check_call(
-            ["apt-get", "install", "-y", "liblzma-dev", "libzstd-dev", "libcbor-dev"],
+            [
+                "apt-get",
+                "install",
+                "-y",
+                "liblzma-dev",
+                "libzstd-dev",
+                "libcbor-dev",
+                "python3",
+            ],
             stdout=open(os.devnull, "wb"),
         )
     except FileNotFoundError:
