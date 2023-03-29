@@ -22,3 +22,7 @@ The vendor ID is set from the BIOS vendor, for example `DMI:LENOVO`
 ## External Interface Access
 
 This plugin requires no extra access.
+
+## Version Considerations
+
+This plugin has been available since fwupd version `1.3.1`.

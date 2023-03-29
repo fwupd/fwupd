@@ -69,3 +69,7 @@ The vendor ID is set from the udev vendor, for example set to `NVME:0x1179`
 ## External Interface Access
 
 This plugin requires ioctl `NVME_IOCTL_ADMIN_CMD` access.
+
+## Version Considerations
+
+This plugin has been available since fwupd version `1.1.2`.

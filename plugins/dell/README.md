@@ -191,3 +191,7 @@ transport hub (MST) and thunderbolt NVM.
 ## External Interface Access
 
 This plugin requires read/write access to `/dev/wmi/dell-smbios` and `/sys/bus/platform/devices/dcdbas`.
+
+## Version Considerations
+
+This plugin has been available since fwupd version `0.8.0`.

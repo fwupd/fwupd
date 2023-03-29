@@ -61,3 +61,7 @@ The vendor ID is set from the USB vendor.
 
 This plugin requires permission to mount, write a file and unmount the mass
 storage device.
+
+## Version Considerations
+
+This plugin has been available since fwupd version `1.7.4`.

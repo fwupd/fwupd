@@ -38,3 +38,7 @@ The vendor ID is set from the PCI vendor, in this instance set to `PCI:0x14E4`
 ## External Interface Access
 
 This plugin requires the `SIOCETHTOOL` ioctl interface.
+
+## Version Considerations
+
+This plugin has been available since fwupd version `1.5.0`.

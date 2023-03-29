@@ -62,3 +62,7 @@ Since: 1.2.4
 ## External Interface Access
 
 This plugin requires the `SG_IO` ioctl interface.
+
+## Version Considerations
+
+This plugin has been available since fwupd version `1.2.4`.

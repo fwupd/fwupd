@@ -52,3 +52,7 @@ part of the device's name as read from sysfs.
 This plugin requires access to the DisplayPort aux channel to read DPCD, such
 as `/dev/drm_dp_aux0` as well as the i2c bus attached to the device, such as
 `/dev/i2c-7`.
+
+## Version Considerations
+
+This plugin has been available since fwupd version `1.6.2`.

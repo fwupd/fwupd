@@ -67,3 +67,7 @@ Since: 1.6.2
 ## External Interface Access
 
 This plugin requires access to raw system memory via `inb`/`outb`.
+
+## Version Considerations
+
+This plugin has been available since fwupd version `1.1.2`.

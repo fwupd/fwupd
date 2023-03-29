@@ -53,3 +53,7 @@ The vendor ID is specified by system firmware (such as ACPI tables).
 
 This plugin requires access to i2c buses associated with the specified
 DisplayPort aux channel, usually `/dev/i2c-5` or similar.
+
+## Version Considerations
+
+This plugin has been available since fwupd version `1.6.2`.

@@ -93,3 +93,7 @@ the other flash chip parameters. For example:
 ## External Interface Access
 
 This plugin requires read/write access to `/dev/bus/usb`.
+
+## Version Considerations
+
+This plugin has been available since fwupd version `1.3.3`.

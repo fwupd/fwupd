@@ -59,3 +59,7 @@ This plugin requires read/write access to `/dev/bus/usb`.
 {%- else -%}
 This plugin requires read/write access to `TODO`.
 {%- endif %}
+
+## Version Considerations
+
+This plugin has been available since fwupd version `SET_VERSION_HERE`.

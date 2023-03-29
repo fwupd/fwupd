@@ -13,3 +13,7 @@ This protocol does not create a device and thus requires no vendor ID set.
 ## External Interface Access
 
 This plugin requires access to the dbus interface `org.freedesktop.UPower`.
+
+## Version Considerations
+
+This plugin has been available since fwupd version `0.8.0`.

@@ -106,3 +106,7 @@ Since: 1.5.6
 ## External Interface Access
 
 This plugin requires read/write access to `/dev/bus/usb`.
+
+## Version Considerations
+
+This plugin has been available since fwupd version `0.8.0`.

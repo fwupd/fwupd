@@ -47,3 +47,7 @@ The vendor ID is hardcoded to `UEFI:Microsoft` for all devices.
 This plugin requires:
 
 * read/write access to `/sys/firmware/efi/efivars`
+
+## Version Considerations
+
+This plugin has been available since fwupd version `1.5.0`.

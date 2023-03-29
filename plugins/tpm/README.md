@@ -59,3 +59,7 @@ The vendor ID is set from the TPM vendor, e.g. `TPM:STM`
 
 This plugin uses the tpm2-tss library to access the TPM.  It requires access to `/sys/class/tpm`
 and optionally requires read only access to `/sys/kernel/security/tpm0/binary_bios_measurements`.
+
+## Version Considerations
+
+This plugin has been available since fwupd version `1.3.6`.

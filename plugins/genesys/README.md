@@ -158,3 +158,7 @@ The vendor ID is set from the USB vendor, for example set to `USB:0x03F0` for HP
 This plugin requires read/write access to `/dev/bus/usb`.
 
 [1]: https://github.com/hughsie/libgusb/commit/4e118c154dde70e196c4381bd97790a9413c3552
+
+## Version Considerations
+
+This plugin has been available since fwupd version `1.7.6`.

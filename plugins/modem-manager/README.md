@@ -94,3 +94,7 @@ Update protocol: `com.qualcomm.firehose`
 ## External Interface Access
 
 This plugin requires read/write access to `/dev/bus/usb` and `/dev/bus/pci`.
+
+## Version Considerations
+
+This plugin has been available since fwupd version `1.2.6`.

@@ -20,3 +20,7 @@ The device is not upgradable and thus requires no vendor ID set.
 ## External Interface Access
 
 This plugin requires read access to the rom file of PCI devices (`/sys/class/pci_bus/*/device/rom`)
+
+## Version Considerations
+
+This plugin has been available since fwupd version `1.3.3`.

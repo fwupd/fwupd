@@ -38,3 +38,7 @@ The vendor ID is set from the USB vendor, in this instance set to `USB:0x06CB`
 ## External Interface Access
 
 This plugin requires read/write access to `/dev/bus/usb`.
+
+## Version Considerations
+
+This plugin has been available since fwupd version `1.2.9`.

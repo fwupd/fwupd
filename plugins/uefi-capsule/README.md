@@ -150,3 +150,8 @@ This plugin requires:
 * read access to `/sys/firmware/efi/esrt/`
 * read access to `/sys/firmware/efi/fw_platform_size`
 * read/write access to `/sys/firmware/efi/efivars`
+
+## Version Considerations
+
+This plugin has been available since fwupd version `0.8.0` but was renamed to the current name in
+`1.5.5`.

@@ -37,3 +37,7 @@ The vendor ID is set from the USB vendor, in this instance set to `USB:0x8087`
 ## External Interface Access
 
 This plugin requires read/write access to `/dev/bus/usb`.
+
+## Version Considerations
+
+This plugin has been available since fwupd version `1.8.5`.

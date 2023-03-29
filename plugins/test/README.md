@@ -22,3 +22,7 @@ The fake device is only for local testing and thus requires no vendor ID set.
 ## External Interface Access
 
 This plugin requires no extra access.
+
+## Version Considerations
+
+This plugin has been available since fwupd version `0.8.0`.
