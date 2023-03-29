@@ -105,3 +105,7 @@ at the end so the format is "TBT-vvvvdddd-native".
 ## External Interface Access
 
 This plugin requires read/write access to `/sys/bus/thunderbolt`.
+
+## Version Considerations
+
+This plugin has been available since fwupd version `0.8.0`.

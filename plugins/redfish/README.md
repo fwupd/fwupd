@@ -110,3 +110,7 @@ curl -k https://192.168.0.133:443/redfish/v1/
 ## External Interface Access
 
 This requires HTTP access to a given URL.
+
+## Version Considerations
+
+This plugin has been available since fwupd version `1.1.0`.

@@ -10,3 +10,7 @@ called the System Management Unit on kernels that support exporting this informa
 ## External Interface Access
 
 This plugin requires read only access to attributes located within `/sys/bus/platform/drivers/amd_pmc`.
+
+## Version Considerations
+
+This plugin has been available since fwupd version `1.8.5`.

@@ -36,3 +36,7 @@ The vendor ID is set from the system vendor, for example `DMI:LENOVO`
 ## External Interface Access
 
 This plugin requires read/write access to `/dev/mtd`.
+
+## Version Considerations
+
+This plugin has been available since fwupd version `1.7.2`.

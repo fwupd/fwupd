@@ -30,3 +30,7 @@ The devices are not upgradable and thus require no vendor ID set.
 ## External Interface Access
 
 This plugin requires `ioctl(IOCTL_MEI_CONNECT_CLIENT)` to `/dev/mei0`.
+
+## Version Considerations
+
+This plugin has been available since fwupd version `1.8.7`.

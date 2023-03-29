@@ -16,3 +16,7 @@ The result will be stored in a security attribute for HSI.
 ## External Interface Access
 
 This plugin requires read access to `/sys/class/msr`.
+
+## Version Considerations
+
+This plugin has been available since fwupd version `1.5.0`.

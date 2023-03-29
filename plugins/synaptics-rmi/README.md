@@ -38,3 +38,7 @@ This plugin supports the following protocol ID:
 ## External Interface Access
 
 This plugin requires ioctl access to `HIDIOCSFEATURE` and `HIDIOCGFEATURE`.
+
+## Version Considerations
+
+This plugin has been available since fwupd version `1.3.3`.

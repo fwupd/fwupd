@@ -21,3 +21,7 @@ for more information.
 ## External Interface Access
 
 This plugin requires read access to `/sys/firmware/acpi/tables`.
+
+## Version Considerations
+
+This plugin has been available since fwupd version `1.6.1`.

@@ -11,3 +11,7 @@ The result will be stored in an security attribute for HSI.
 
 This plugin requires read access to `/dev/port` and thus will not work if the
 kernel is locked down.
+
+## Version Considerations
+
+This plugin has been available since fwupd version `1.6.0`.

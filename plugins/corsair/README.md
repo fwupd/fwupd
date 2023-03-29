@@ -60,3 +60,7 @@ This flag handles cases if device reports incorrect firmware version in bootload
 ### Flags:is-subdevice
 
 This flag tells device that it is a child device. All subdevice behavior tweaks will be applied.
+
+## Version Considerations
+
+This plugin has been available since fwupd version `1.8.0`.

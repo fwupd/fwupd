@@ -20,7 +20,7 @@ This plugin supports the following protocol ID:
 
 These devices use the standard UDEV DeviceInstanceId values, e.g.
 
-* `VIDEO4LINUX\VEN_046D&DEV_08E2'
+* `VIDEO4LINUX\VEN_046D&DEV_08E2`
 
 ## Quirk Use
 
@@ -39,5 +39,9 @@ The vendor ID is set from the USB vendor, in this instance set to `USB:0x046D`
 
 ## External Interface Access
 
-This plugin requires read access to `/dev/bus/usb`, '/dev/video0'.
+This plugin requires read access to `/dev/bus/usb`, `/dev/video0`.
 This plugin requires the `UVCIOC_CTRL_QUERY` ioctl interface.
+
+## Version Considerations
+
+This plugin has been available since fwupd version `1.8.8`.

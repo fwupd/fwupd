@@ -44,3 +44,7 @@ This plugin uses the following plugin-specific quirks:
 ## External Interface Access
 
 This plugin requires ioctl access to `HIDIOCSFEATURE` and `HIDIOCGFEATURE`.
+
+## Version Considerations
+
+This plugin has been available since fwupd version `1.8.6`.

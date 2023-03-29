@@ -34,3 +34,7 @@ Since: 1.7.6
 
 This plugin requires ioctl `GPIO_GET_CHIPINFO_IOCTL` and `GPIO_V2_GET_LINE_IOCTL`
 access on `/dev/gpiochip*` devices.
+
+## Version Considerations
+
+This plugin has been available since fwupd version `1.7.6`.

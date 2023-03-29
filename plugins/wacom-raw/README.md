@@ -58,3 +58,7 @@ The vendor ID is set from the udev vendor, in this instance set to `HIDRAW:0x056
 ## External Interface Access
 
 This plugin requires ioctl `HIDIOCSFEATURE` access.
+
+## Version Considerations
+
+This plugin has been available since fwupd version `1.2.4`.

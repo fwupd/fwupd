@@ -51,3 +51,7 @@ This plugin requires:
 
 * read/write access to `/dev/wmi/dell-smbios` and `/sys/bus/platform/devices/dcdbas`.
 * read access to `/sys/firmware/efi/esrt`.
+
+## Version Considerations
+
+This plugin has been available since fwupd version `1.1.0`.

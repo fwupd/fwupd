@@ -92,3 +92,7 @@ Here is a sample list of systems known to support them however:
 ## External Interface Access
 
 This plugin requires read/write access to `/dev/drm_dp_aux*`.
+
+## Version Considerations
+
+This plugin has been available since fwupd version `1.3.6`.

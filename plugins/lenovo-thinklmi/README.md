@@ -12,3 +12,7 @@ allow UEFI capsule updates using the thinklmi kernel module.
 This plugin requires:
 
 * read access to `/sys/class/firmware-attributes`.
+
+## Version Considerations
+
+This plugin has been available since fwupd version `1.6.2`.

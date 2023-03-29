@@ -34,3 +34,7 @@ The vendor ID is set from the vendor, for example set to `SCSI:HP`
 
 This plugin requires only reading from sysfs for enumeration, but requires using a `sg_io ioctl`
 for UFS updates.
+
+## Version Considerations
+
+This plugin has been available since fwupd version `1.7.6`.

@@ -265,3 +265,7 @@ on LVFS. At present the selection mechanism only works within the FIT
 configuration. This probably needs to use the `<firmware type="flashed">` piece
 of the xml file to specify an identifier for the family of boards supported by
 the update.
+
+## Version Considerations
+
+This plugin has been available since fwupd version `1.8.2`.

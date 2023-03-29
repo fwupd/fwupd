@@ -58,3 +58,7 @@ to `HIDRAW:0x1915`.
 ## External Interface Access
 
 This plugin requires ioctl `HIDIOCSFEATURE` and `HIDIOCGFEATURE` access.
+
+## Version Considerations
+
+This plugin has been available since fwupd version `1.7.3`.

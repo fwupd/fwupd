@@ -16,3 +16,7 @@ cause an HSI-1 failure.
 This plugin requires:
 
 * read access to `/sys/firmware/efi/efivars`
+
+## Version Considerations
+
+This plugin has been available since fwupd version `1.5.5`.

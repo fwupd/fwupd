@@ -19,3 +19,7 @@ These devices add extra instance IDs from the CPUID values, e.g.
 ## External Interface Access
 
 This plugin requires no extra access.
+
+## Version Considerations
+
+This plugin has been available since fwupd version `1.4.0`.

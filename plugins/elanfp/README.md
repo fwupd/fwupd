@@ -26,3 +26,7 @@ These devices use the standard USB DeviceInstanceId values, e.g.
 ## Vendor ID Security
 
 The vendor ID is set from the USB vendor, in this instance set to `USB:0x04F3`
+
+## Version Considerations
+
+This plugin has been available since fwupd version `1.7.0`.

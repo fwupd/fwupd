@@ -73,3 +73,7 @@ The vendor ID is set from the BIOS vendor, for example `DMI:Google`
 
 This plugin requires access to all interfaces that `libflashrom` has been compiled for.
 This typically is `/sys/bus/spi` but there may be other interfaces as well.
+
+## Version Considerations
+
+This plugin has been available since fwupd version `1.1.2`.

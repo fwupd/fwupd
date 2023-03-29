@@ -38,3 +38,7 @@ in runtime mode and `USB:0x03EB` in bootloader mode.
 ## External Interface Access
 
 This plugin requires read/write access to `/dev/bus/usb`.
+
+## Version Considerations
+
+This plugin has been available since fwupd version `1.0.2`.

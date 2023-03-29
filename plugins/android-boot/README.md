@@ -53,3 +53,7 @@ The vendor ID is set through the `android-boot.quirk` file.
 ## External Interface Access
 
 This plugin requires read/write access to `/dev/block`.
+
+## Version Considerations
+
+This plugin has been available since fwupd version `1.8.5`.
