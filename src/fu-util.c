@@ -1262,10 +1262,10 @@ fu_util_local_install(FuUtilPrivate *priv, gchar **values, GError **error)
 	if (g_strv_length(values) == 1) {
 		id = FWUPD_DEVICE_ID_ANY;
 	} else if (g_strv_length(values) == 2) {
-		id = values[1];
-		dev = fu_util_get_device_by_id(priv, id, error);
+		dev = fu_util_get_device_by_id(priv, values[1], error);
 		if (dev == NULL)
 			return FALSE;
+		id = fwupd_device_get_id(dev);
 	} else {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
