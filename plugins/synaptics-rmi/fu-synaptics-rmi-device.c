@@ -11,6 +11,7 @@
 #include "fu-synaptics-rmi-common.h"
 #include "fu-synaptics-rmi-firmware.h"
 #include "fu-synaptics-rmi-ps2-device.h"
+#include "fu-synaptics-rmi-struct.h"
 #include "fu-synaptics-rmi-v5-device.h"
 #include "fu-synaptics-rmi-v6-device.h"
 #include "fu-synaptics-rmi-v7-device.h"
