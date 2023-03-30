@@ -1193,3 +1193,10 @@ LIBFWUPDPLUGIN_1.8.13 {
     fu_volume_get_partition_kind;
   local: *;
 } LIBFWUPDPLUGIN_1.8.12;
+
+LIBFWUPDPLUGIN_1.8.14 {
+  global:
+    fu_memchk_read;
+    fu_memchk_write;
+  local: *;
+} LIBFWUPDPLUGIN_1.8.13;

@@ -425,23 +425,19 @@ class Generator:
         str_c += f"}}\n"
 
         # _parse()
-        str_c += f"GByteArray *\n"
-        str_c += f"{name_snake}_parse(const guint8 *buf, gsize bufsz, gsize offset, GError **error)\n"
-        str_c += f"{{\n"
-        str_c += f"    g_autoptr(GByteArray) st = g_byte_array_new();\n"
-        str_c += f"    g_return_val_if_fail(buf != NULL, NULL);\n"
-        str_c += f"    g_return_val_if_fail(error == NULL || *error == NULL, NULL);\n"
-        str_c += f"    if (offset + {size} > bufsz) {{\n"
-        str_c += f"            g_set_error(error,\n"
-        str_c += f"                        G_IO_ERROR,\n"
-        str_c += f"                        G_IO_ERROR_INVALID_DATA,\n"
-        str_c += f'                        "cannot parse buffer of size 0x%x at offset 0x%x for struct {name} of size 0x%x",\n'
-        str_c += f"                        (guint) bufsz,\n"
-        str_c += f"                        (guint) offset,\n"
-        str_c += f"                        (guint) {size});\n"
-        str_c += f"            return NULL;\n"
-        str_c += f"    }}\n"
-        str_c += f"    g_byte_array_append(st, buf + offset, {size});\n"
+        str_c += f"""
+GByteArray *
+{name_snake}_parse(const guint8 *buf, gsize bufsz, gsize offset, GError **error)
+{{
+    g_autoptr(GByteArray) st = g_byte_array_new();
+    g_return_val_if_fail(buf != NULL, NULL);
+    g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+    if (!fu_memchk_read(bufsz, offset, {size}, error)) {{
+            g_prefix_error(error, "invalid struct {name}: ");
+            return NULL;
+    }}
+    g_byte_array_append(st, buf + offset, {size});
+"""
         for item in items:
             if item.constant:
                 if item.type == Type.STRING:
@@ -461,24 +457,18 @@ class Generator:
 
         # _validate()
         if has_constant:
-            str_c += f"gboolean\n"
-            str_c += f"{name_snake}_validate(const guint8 *buf, gsize bufsz, gsize offset, GError **error)\n"
-            str_c += f"{{\n"
-            str_c += f"    GByteArray st = {{.data = (guint8 *) buf + offset, .len = bufsz - offset, }};\n"
-            str_c += f"    g_return_val_if_fail(buf != NULL, FALSE);\n"
-            str_c += (
-                f"    g_return_val_if_fail(error == NULL || *error == NULL, FALSE);\n"
-            )
-            str_c += f"    if (offset + {size} > bufsz) {{\n"
-            str_c += f"            g_set_error(error,\n"
-            str_c += f"                        G_IO_ERROR,\n"
-            str_c += f"                        G_IO_ERROR_INVALID_DATA,\n"
-            str_c += f'                        "cannot parse buffer of size 0x%x at offset 0x%x for struct {name} of size 0x%x",\n'
-            str_c += f"                        (guint) bufsz,\n"
-            str_c += f"                        (guint) offset,\n"
-            str_c += f"                        (guint) {size});\n"
-            str_c += f"            return FALSE;\n"
-            str_c += f"    }}\n"
+            str_c += f"""
+gboolean
+{name_snake}_validate(const guint8 *buf, gsize bufsz, gsize offset, GError **error)
+{{
+    GByteArray st = {{.data = (guint8 *) buf + offset, .len = bufsz - offset, }};
+    g_return_val_if_fail(buf != NULL, FALSE);
+    g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+    if (!fu_memchk_read(bufsz, offset, {size}, error)) {{
+            g_prefix_error(error, "invalid struct {name}: ");
+            return FALSE;
+    }}
+"""
             for item in items:
                 if not item.constant:
                     continue
@@ -518,7 +508,7 @@ typedef guint8 fwupd_guid_t[16];
         dst_c = f"""/* auto-generated, do not modify */
 #include "{self.basename}"
 #include "fu-byte-array.h"
-#include "fu-mem.h"
+#include "fu-mem-private.h"
 #include "fu-string.h"
 """
 

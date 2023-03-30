@@ -10,7 +10,7 @@
 
 #include "fwupd-error.h"
 
-#include "fu-mem.h"
+#include "fu-mem-private.h"
 
 /**
  * fu_memwrite_uint16:
@@ -298,6 +298,98 @@ fu_memcmp_safe(const guint8 *buf1, gsize bufsz1, const guint8 *buf2, gsize bufsz
 }
 
 /**
+ * fu_memchk_read:
+ * @bufsz: maximum size of a buffer, typically `sizeof(buf)`
+ * @offset: offset in bytes
+ * @n: number of bytes
+ * @error: (nullable): optional return location for an error
+ *
+ * Works out if reading from a buffer is safe. Providing the buffer sizes allows us to check for
+ * buffer overflow.
+ *
+ * You don't need to use this function in "obviously correct" cases, nor should
+ * you use it when performance is a concern. Only us it when you're not sure if
+ * malicious data from a device or firmware could cause memory corruption.
+ *
+ * Returns: %TRUE if the access is safe, %FALSE otherwise
+ *
+ * Since: 1.8.14
+ **/
+gboolean
+fu_memchk_read(gsize bufsz, gsize offset, gsize n, GError **error)
+{
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+	if (n == 0)
+		return TRUE;
+	if (n > bufsz) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_READ,
+			    "attempted to read 0x%02x bytes from buffer of 0x%02x",
+			    (guint)n,
+			    (guint)bufsz);
+		return FALSE;
+	}
+	if (offset > bufsz || n + offset > bufsz) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_READ,
+			    "attempted to read 0x%02x bytes at offset 0x%02x from buffer of 0x%02x",
+			    (guint)n,
+			    (guint)offset,
+			    (guint)bufsz);
+		return FALSE;
+	}
+	return TRUE;
+}
+
+/**
+ * fu_memchk_write:
+ * @bufsz: maximum size of a buffer, typically `sizeof(buf)`
+ * @offset: offset in bytes
+ * @n: number of bytes
+ * @error: (nullable): optional return location for an error
+ *
+ * Works out if writing to a buffer is safe. Providing the buffer sizes allows us to check for
+ * buffer overflow.
+ *
+ * You don't need to use this function in "obviously correct" cases, nor should
+ * you use it when performance is a concern. Only us it when you're not sure if
+ * malicious data from a device or firmware could cause memory corruption.
+ *
+ * Returns: %TRUE if the access is safe, %FALSE otherwise
+ *
+ * Since: 1.8.14
+ **/
+gboolean
+fu_memchk_write(gsize bufsz, gsize offset, gsize n, GError **error)
+{
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+	if (n == 0)
+		return TRUE;
+	if (n > bufsz) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_WRITE,
+			    "attempted to write 0x%02x bytes to buffer of 0x%02x",
+			    (guint)n,
+			    (guint)bufsz);
+		return FALSE;
+	}
+	if (offset > bufsz || n + offset > bufsz) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_WRITE,
+			    "attempted to write 0x%02x bytes at offset 0x%02x to buffer of 0x%02x",
+			    (guint)n,
+			    (guint)offset,
+			    (guint)bufsz);
+		return FALSE;
+	}
+	return TRUE;
+}
+
+/**
  * fu_memcpy_safe:
  * @dst: destination buffer
  * @dst_sz: maximum size of @dst, typically `sizeof(dst)`
@@ -337,49 +429,10 @@ fu_memcpy_safe(guint8 *dst,
 	g_return_val_if_fail(src != NULL, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
-	if (n == 0)
-		return TRUE;
-
-	if (n > src_sz) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_READ,
-			    "attempted to read 0x%02x bytes from buffer of 0x%02x",
-			    (guint)n,
-			    (guint)src_sz);
+	if (!fu_memchk_read(src_sz, src_offset, n, error))
 		return FALSE;
-	}
-	if (src_offset > src_sz || n + src_offset > src_sz) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_READ,
-			    "attempted to read 0x%02x bytes at offset 0x%02x from buffer of 0x%02x",
-			    (guint)n,
-			    (guint)src_offset,
-			    (guint)src_sz);
+	if (!fu_memchk_write(dst_sz, dst_offset, n, error))
 		return FALSE;
-	}
-	if (n > dst_sz) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_WRITE,
-			    "attempted to write 0x%02x bytes to buffer of 0x%02x",
-			    (guint)n,
-			    (guint)dst_sz);
-		return FALSE;
-	}
-	if (dst_offset > dst_sz || n + dst_offset > dst_sz) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_WRITE,
-			    "attempted to write 0x%02x bytes at offset 0x%02x to buffer of 0x%02x",
-			    (guint)n,
-			    (guint)dst_offset,
-			    (guint)dst_sz);
-		return FALSE;
-	}
-
-	/* phew! */
 	memcpy(dst + dst_offset, src + src_offset, n);
 	return TRUE;
 }
