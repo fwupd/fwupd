@@ -208,6 +208,7 @@ fwupdplugin_headers_private = [
   'fu-device-private.h',
   'fu-device-progress.h',
   'fu-kenv.h',
+  'fu-mem-private.h',
   'fu-plugin-private.h',
   'fu-bios-settings-private.h',
   'fu-security-attrs-private.h',
