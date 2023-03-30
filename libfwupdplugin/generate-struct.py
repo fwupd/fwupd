@@ -195,8 +195,14 @@ void {name_snake}_set_{self.element_id}(GByteArray *st, {self.type_glib} value);
 {"static " if self.constant else ""}gboolean
 {name_snake}_set_{self.element_id}(GByteArray *st, const gchar *value, GError **error)
 {{
-    gsize len = strlen(value);
+    gsize len;
     g_return_val_if_fail(st != NULL, FALSE);
+    g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+    if (value == NULL) {{
+        memset(st->data + {self.offset}, 0x0, {self.size});
+        return TRUE;
+    }}
+    len = strlen(value);
     return fu_memcpy_safe(st->data, st->len, {self.offset}, (const guint8 *)value, len, 0x0, len, error);
 }}
 """
@@ -217,6 +223,7 @@ void {name_snake}_set_{self.element_id}(GByteArray *st, {self.type_glib} value);
 {{
     g_return_val_if_fail(st != NULL, FALSE);
     g_return_val_if_fail(buf != NULL, FALSE);
+    g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
     return fu_memcpy_safe(st->data, st->len, {self.offset}, buf, bufsz, 0x0, bufsz, error);
 }}
 """
