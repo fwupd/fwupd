@@ -105,11 +105,13 @@ fu_efi_firmware_volume_parse(FuFirmware *firmware,
 	fu_firmware_set_alignment(firmware, alignment);
 	priv->attrs = attrs & 0xffff;
 	hdr_length = fu_struct_efi_volume_get_hdr_len(st_hdr);
-	if (hdr_length < st_hdr->len || hdr_length > fv_length || hdr_length > bufsz) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INTERNAL,
-				    "invalid volume header length");
+	if (hdr_length < st_hdr->len || hdr_length > fv_length || hdr_length > bufsz ||
+	    hdr_length % 2 != 0) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "invalid volume header length 0x%x",
+			    (guint)hdr_length);
 		return FALSE;
 	}
 
