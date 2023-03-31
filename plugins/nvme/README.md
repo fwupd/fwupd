@@ -61,6 +61,7 @@ Since: 1.1.3
 ### Flags
 
 * `force-align` if image should be padded, since 1.2.4
+* `commit-ca3` download and activate immediately, since 1.8.15
 
 ## Vendor ID Security
 

@@ -29,6 +29,8 @@ Flags = signed-payload
 # SK Hynix
 [NVME\VEN_1C5C]
 Flags = signed-payload
+[NVME\VEN_1C5C&DEV_1D59]
+Flags = commit-ca3
 
 # Kingston
 [NVME\VEN_2646&DEV_5013]
