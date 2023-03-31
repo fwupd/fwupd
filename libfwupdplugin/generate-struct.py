@@ -215,7 +215,7 @@ void {name_snake}_set_{self.element_id}(GByteArray *st, {self.type_glib} value);
 {{
     g_return_val_if_fail(st != NULL, NULL);
     if (bufsz != NULL)
-        *bufsz = st->len;
+        *bufsz = {self.size};
     return st->data + {self.offset};
 }}
 {"static " if self.constant else ""}gboolean
