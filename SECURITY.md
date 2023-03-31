@@ -5,15 +5,16 @@ If you have any concerns please let us know.
 
 ## Supported Versions
 
-The `main`, and `1.7.x`, branches are fully supported by the upstream authors.
-Additionally, the `1.5.x` and `1.6.x` branches are supported for security fixes.
+The `main`, and `1.8.x`, branches are fully supported by the upstream authors.
+Additionally, the `1.6.x` and `1.7.x` branches are supported for security fixes.
 
 | Version | Supported          |
 | ------- | ------------------ |
+| 1.9.x   | :heavy_check_mark: |
 | 1.8.x   | :heavy_check_mark: |
-| 1.7.x   | :heavy_check_mark: |
+| 1.7.x   | :white_check_mark: |
 | 1.6.x   | :white_check_mark: |
-| 1.5.x   | :white_check_mark: |
+| 1.5.x   | :x:                |
 | 1.4.x   | :x:                |
 | 1.3.x   | :x:                |
 | 1.2.x   | :x:                |
