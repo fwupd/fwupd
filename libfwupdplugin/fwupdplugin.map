@@ -1194,7 +1194,7 @@ LIBFWUPDPLUGIN_1.8.13 {
   local: *;
 } LIBFWUPDPLUGIN_1.8.12;
 
-LIBFWUPDPLUGIN_1.8.14 {
+LIBFWUPDPLUGIN_1.9.1 {
   global:
     fu_cfi_device_send_command;
     fu_memchk_read;

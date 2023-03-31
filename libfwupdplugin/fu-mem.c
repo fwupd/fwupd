@@ -313,7 +313,7 @@ fu_memcmp_safe(const guint8 *buf1, gsize bufsz1, const guint8 *buf2, gsize bufsz
  *
  * Returns: %TRUE if the access is safe, %FALSE otherwise
  *
- * Since: 1.8.14
+ * Since: 1.9.1
  **/
 gboolean
 fu_memchk_read(gsize bufsz, gsize offset, gsize n, GError **error)
@@ -359,7 +359,7 @@ fu_memchk_read(gsize bufsz, gsize offset, gsize n, GError **error)
  *
  * Returns: %TRUE if the access is safe, %FALSE otherwise
  *
- * Since: 1.8.14
+ * Since: 1.9.1
  **/
 gboolean
 fu_memchk_write(gsize bufsz, gsize offset, gsize n, GError **error)

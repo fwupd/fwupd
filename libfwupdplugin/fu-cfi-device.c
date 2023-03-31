@@ -599,7 +599,7 @@ fu_cfi_device_to_string(FuDevice *device, guint idt, GString *str)
  *
  * Returns: %TRUE on success
  *
- * Since: 1.8.14
+ * Since: 1.9.1
  **/
 gboolean
 fu_cfi_device_send_command(FuCfiDevice *self,
