@@ -24,7 +24,7 @@
   "hsi-level": 3,
   "references": {
     "https://en.wikipedia.org/wiki/Input%E2%80%93output_memory_management_unit": "IOMMU Wikipedia Page",
-    "https://www.amd.com/system/files/TechDocs/48882_IOMMU.pdf": "AMD IVRS Specification"
+    "https://www.amd.com/en/support/tech-docs/amd-io-virtualization-technology-iommu-specification": "AMD I/O Virtualization Technology (IOMMU) Specification"
   },
   "more-information": [
     "This attribute was previously known as `org.fwupd.hsi.AcpiDmar` in 1.5.0, but was renamed in 1.8.0 to support other vendors."
