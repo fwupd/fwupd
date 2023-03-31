@@ -513,6 +513,8 @@ typedef guint8 fwupd_guid_t[16];
 
         # body
         dst_c = f"""/* auto-generated, do not modify */
+#include "config.h"
+
 #include "{self.basename}"
 #include "fu-byte-array.h"
 #include "fu-mem-private.h"
