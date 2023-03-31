@@ -402,6 +402,12 @@ class Generator:
         for item in items:
             str_h += f"#define {name_snake.upper()}_OFFSET_{item.element_id.upper()} 0x{item.offset:x}\n"
         str_h += f"#define {name_snake.upper()}_SIZE 0x{size:x}\n"
+        for item in items:
+            if item.default and not item.constant:
+                if item.type == Type.STRING:
+                    str_h += f'#define {name_snake.upper()}_DEFAULT_{item.element_id.upper()} "{item.default}"\n"'
+                else:
+                    str_h += f"#define {name_snake.upper()}_DEFAULT_{item.element_id.upper()} {item.default}\n"
         # print(str_h)
 
         # code
