@@ -437,12 +437,57 @@ class Generator:
         str_c += f"    return st;\n"
         str_c += f"}}\n"
 
+        # _to_string()
+        str_c += "static gchar *\n"
+        str_c += f"{name_snake}_to_string(GByteArray *st)\n"
+        str_c += "{\n"
+        str_c += f'    g_autoptr(GString) str = g_string_new("{name}:\\n");\n'
+        str_c += "    g_return_val_if_fail(st != NULL, NULL);\n"
+        for item in items:
+            if not item.enabled:
+                continue
+            if not item.multiplier and item.type in [
+                Type.U8,
+                Type.U16,
+                Type.U24,
+                Type.U32,
+                Type.U64,
+            ]:
+                str_c += f'    g_string_append_printf(str, "  {item.element_id}: 0x%x\\n", (guint) {name_snake}_get_{item.element_id}(st));\n'
+            elif item.type == Type.GUID:
+                str_c += f"""    {{
+        g_autofree gchar *tmp = fwupd_guid_to_string({name_snake}_get_{item.element_id}(st), FWUPD_GUID_FLAG_MIXED_ENDIAN);
+        g_string_append_printf(str, "  {item.element_id}: %s\\n", tmp);
+    }}
+"""
+            elif item.type == Type.STRING:
+                str_c += f"""    {{
+        g_autofree gchar *tmp = {name_snake}_get_{item.element_id}(st);
+        g_string_append_printf(str, "  {item.element_id}: %s\\n", tmp);
+    }}
+"""
+            else:
+                str_c += f"""    {{
+        g_autoptr(GString) tmp = g_string_new(NULL);
+        gsize bufsz = 0;
+        const guint8 *buf = {name_snake}_get_{item.element_id}(st, &bufsz);
+        for (gsize i = 0; i < bufsz; i++)
+            g_string_append_printf(tmp, "%02X", buf[i]);
+        g_string_append_printf(str, "  {item.element_id}: 0x%s\\n", tmp->str);
+    }}
+"""
+        str_c += "    if (str->len > 0)\n"
+        str_c += "        g_string_set_size(str, str->len - 1);\n"
+        str_c += "    return g_string_free(g_steal_pointer(&str), FALSE);\n"
+        str_c += "}\n"
+
         # _parse()
         str_c += f"""
 GByteArray *
 {name_snake}_parse(const guint8 *buf, gsize bufsz, gsize offset, GError **error)
 {{
     g_autoptr(GByteArray) st = g_byte_array_new();
+    g_autofree gchar *str = NULL;
     g_return_val_if_fail(buf != NULL, NULL);
     g_return_val_if_fail(error == NULL || *error == NULL, NULL);
     if (!fu_memchk_read(bufsz, offset, {size}, error)) {{
@@ -465,6 +510,8 @@ GByteArray *
                 str_c += f'                                "constant {name}.{item.element_id} was not valid, expected {item.constant}");\n'
                 str_c += "            return NULL;\n"
                 str_c += "    }\n"
+        str_c += f"    str = {name_snake}_to_string(st);\n"
+        str_c += '    g_debug("%s", str);\n'
         str_c += "    return g_steal_pointer(&st);\n"
         str_c += "}\n"
 
@@ -513,8 +560,7 @@ gboolean
         # header
         dst_h = """/* auto-generated, do not modify */
 #pragma once
-#include <glib.h>
-typedef guint8 fwupd_guid_t[16];
+#include <fwupd-common.h>
 """
 
         # body
@@ -525,6 +571,11 @@ typedef guint8 fwupd_guid_t[16];
 #include "fu-byte-array.h"
 #include "fu-mem-private.h"
 #include "fu-string.h"
+
+#ifdef G_LOG_DOMAIN
+  #undef G_LOG_DOMAIN
+#endif
+#define G_LOG_DOMAIN "FuStruct"
 """
 
         for line in contents.split("\n"):
