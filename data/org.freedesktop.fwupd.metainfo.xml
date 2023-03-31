@@ -33,6 +33,15 @@
     <binary>fwupdtool</binary>
   </provides>
   <releases>
+    <release version="1.8.14" date="2023-03-31">
+      <description>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Fix possible crash when getting UEFI report metadata</li>
+          <li>Fix 'fwupdmgr install FILE GUID'</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.8.13" date="2023-03-28">
       <description>
         <p>
