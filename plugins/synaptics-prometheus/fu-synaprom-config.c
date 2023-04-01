@@ -12,50 +12,13 @@
 #include "fu-synaprom-common.h"
 #include "fu-synaprom-config.h"
 #include "fu-synaprom-firmware.h"
+#include "fu-synaprom-struct.h"
 
 struct _FuSynapromConfig {
 	FuDevice parent_instance;
 	guint32 configid1; /* config ID1 */
 	guint32 configid2; /* config ID2 */
 };
-
-/* Iotas can exceed the size of available RAM in the part.
- * In order to allow the host to read them the IOTA_FIND command supports
- * transferring iotas with multiple commands */
-typedef struct __attribute__((packed)) {
-	guint16 itype;	  /* type of iotas to find */
-	guint16 flags;	  /* flags, see below */
-	guint8 maxniotas; /* maximum number of iotas to return, 0 = unlimited */
-	guint8 firstidx;  /* first index of iotas to return */
-	guint8 dummy[2];
-	guint32 offset; /* byte offset of data to return */
-	guint32 nbytes; /* maximum number of bytes to return */
-} FuSynapromCmdIotaFind;
-
-/* this is followed by a chain of iotas, as follows */
-typedef struct __attribute__((packed)) {
-	guint16 status;
-	guint32 fullsize;
-	guint16 nbytes;
-	guint16 itype;
-} FuSynapromReplyIotaFindHdr;
-
-/* this iota contains the configuration id and version */
-typedef struct __attribute__((packed)) {
-	guint32 config_id1; /* YYMMDD */
-	guint32 config_id2; /* HHMMSS */
-	guint16 version;
-	guint16 unused[3];
-} FuSynapromIotaConfigVersion;
-
-/* le */
-typedef struct __attribute__((packed)) {
-	guint32 product;
-	guint32 id1;	 /* verification ID */
-	guint32 id2;	 /* verification ID */
-	guint16 version; /* config version */
-	guint8 unused[2];
-} FuSynapromFirmwareCfgHeader;
 
 #define FU_SYNAPROM_CMD_IOTA_FIND_FLAGS_ALLIOTAS 0x0001	     /* itype ignored*/
 #define FU_SYNAPROM_CMD_IOTA_FIND_FLAGS_READMAX	 0x0002	     /* nbytes ignored */
@@ -70,21 +33,21 @@ fu_synaprom_config_setup(FuDevice *device, GError **error)
 {
 	FuDevice *parent = fu_device_get_parent(device);
 	FuSynapromConfig *self = FU_SYNAPROM_CONFIG(device);
-	FuSynapromCmdIotaFind cmd = {0x0};
-	FuSynapromIotaConfigVersion cfg;
-	FuSynapromReplyIotaFindHdr hdr;
 	g_autofree gchar *configid1_str = NULL;
 	g_autofree gchar *configid2_str = NULL;
 	g_autofree gchar *version = NULL;
 	g_autoptr(GByteArray) reply = NULL;
 	g_autoptr(GByteArray) request = NULL;
+	g_autoptr(GByteArray) st_cfg = NULL;
+	g_autoptr(GByteArray) st_hdr = NULL;
+	g_autoptr(GByteArray) st_cmd = fu_struct_synaprom_cmd_iota_find_new();
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 
 	/* get IOTA */
-	cmd.itype = GUINT16_TO_LE((guint16)FU_SYNAPROM_IOTA_ITYPE_CONFIG_VERSION);
-	cmd.flags = GUINT16_TO_LE((guint16)FU_SYNAPROM_CMD_IOTA_FIND_FLAGS_READMAX);
-	request = fu_synaprom_request_new(FU_SYNAPROM_CMD_IOTA_FIND, &cmd, sizeof(cmd));
-	reply = fu_synaprom_reply_new(sizeof(FuSynapromReplyIotaFindHdr) +
+	fu_struct_synaprom_cmd_iota_find_set_itype(st_cmd, FU_SYNAPROM_IOTA_ITYPE_CONFIG_VERSION);
+	fu_struct_synaprom_cmd_iota_find_set_flags(st_cmd, FU_SYNAPROM_CMD_IOTA_FIND_FLAGS_READMAX);
+	request = fu_synaprom_request_new(FU_SYNAPROM_CMD_IOTA_FIND, st_cmd->data, st_cmd->len);
+	reply = fu_synaprom_reply_new(FU_STRUCT_SYNAPROM_REPLY_IOTA_FIND_HDR_SIZE +
 				      FU_SYNAPROM_MAX_IOTA_READ_SIZE);
 	if (!fu_synaprom_device_cmd_send(FU_SYNAPROM_DEVICE(parent),
 					 request,
@@ -93,7 +56,8 @@ fu_synaprom_config_setup(FuDevice *device, GError **error)
 					 5000,
 					 error))
 		return FALSE;
-	if (reply->len < sizeof(hdr) + sizeof(cfg)) {
+	if (reply->len < FU_STRUCT_SYNAPROM_REPLY_IOTA_FIND_HDR_SIZE +
+			     FU_STRUCT_SYNAPROM_IOTA_CONFIG_VERSION_SIZE) {
 		g_set_error(error,
 			    G_IO_ERROR,
 			    G_IO_ERROR_NOT_SUPPORTED,
@@ -101,30 +65,26 @@ fu_synaprom_config_setup(FuDevice *device, GError **error)
 			    reply->len);
 		return FALSE;
 	}
-	memcpy(&hdr, reply->data, sizeof(hdr));
-	if (GUINT32_FROM_LE(hdr.itype) != FU_SYNAPROM_IOTA_ITYPE_CONFIG_VERSION) {
+	st_hdr = fu_struct_synaprom_reply_iota_find_hdr_parse(reply->data, reply->len, 0x0, error);
+	if (st_hdr == NULL)
+		return FALSE;
+	if (fu_struct_synaprom_reply_iota_find_hdr_get_itype(st_hdr) !=
+	    FU_SYNAPROM_IOTA_ITYPE_CONFIG_VERSION) {
 		g_set_error(error,
 			    G_IO_ERROR,
 			    G_IO_ERROR_NOT_SUPPORTED,
 			    "CFG iota had invalid itype: 0x%04x",
-			    GUINT32_FROM_LE(hdr.itype));
+			    fu_struct_synaprom_reply_iota_find_hdr_get_itype(st_hdr));
 		return FALSE;
 	}
-	if (!fu_memcpy_safe((guint8 *)&cfg,
-			    sizeof(cfg),
-			    0x0, /* dst */
-			    reply->data,
-			    reply->len,
-			    sizeof(hdr), /* src */
-			    sizeof(cfg),
-			    error))
+	st_cfg = fu_struct_synaprom_iota_config_version_parse(reply->data,
+							      reply->len,
+							      st_hdr->len,
+							      error);
+	if (st_cfg == NULL)
 		return FALSE;
-	self->configid1 = GUINT32_FROM_LE(cfg.config_id1);
-	self->configid2 = GUINT32_FROM_LE(cfg.config_id2);
-	g_debug("id1=%u, id2=%u, ver=%u",
-		self->configid1,
-		self->configid2,
-		GUINT16_FROM_LE(cfg.version));
+	self->configid1 = fu_struct_synaprom_iota_config_version_get_config_id1(st_cfg);
+	self->configid2 = fu_struct_synaprom_iota_config_version_get_config_id2(st_cfg);
 
 	/* we should have made these a %08% uint32_t... */
 	configid1_str = g_strdup_printf("%u", self->configid1);
@@ -137,7 +97,8 @@ fu_synaprom_config_setup(FuDevice *device, GError **error)
 		return FALSE;
 
 	/* no downgrades are allowed */
-	version = g_strdup_printf("%04u", GUINT16_FROM_LE(cfg.version));
+	version =
+	    g_strdup_printf("%04u", fu_struct_synaprom_iota_config_version_get_version(st_cfg));
 	fu_device_set_version(FU_DEVICE(self), version);
 	fu_device_set_version_lowest(FU_DEVICE(self), version);
 	return TRUE;
@@ -150,12 +111,9 @@ fu_synaprom_config_prepare_firmware(FuDevice *device,
 				    GError **error)
 {
 	FuSynapromConfig *self = FU_SYNAPROM_CONFIG(device);
-	FuSynapromFirmwareCfgHeader hdr;
+	g_autoptr(GByteArray) st_hdr = NULL;
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(FuFirmware) firmware = fu_synaprom_firmware_new();
-	guint32 product;
-	guint32 id1;
-	guint32 id2;
 
 	/* parse the firmware */
 	if (!fu_firmware_parse(firmware, fw, flags, error))
@@ -165,20 +123,19 @@ fu_synaprom_config_prepare_firmware(FuDevice *device,
 	blob = fu_firmware_get_image_by_id_bytes(firmware, "cfg-update-header", error);
 	if (blob == NULL)
 		return NULL;
-	if (g_bytes_get_size(blob) != sizeof(hdr)) {
-		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
-				    "CFG metadata is invalid");
+	st_hdr = fu_struct_synaprom_cfg_hdr_parse(g_bytes_get_data(blob, NULL),
+						  g_bytes_get_size(blob),
+						  0x0,
+						  error);
+	if (st_hdr == NULL) {
+		g_prefix_error(error, "CFG metadata is invalid: ");
 		return NULL;
 	}
-	memcpy(&hdr, g_bytes_get_data(blob, NULL), sizeof(hdr));
-	product = GUINT32_FROM_LE(hdr.product);
-	if (product != FU_SYNAPROM_PRODUCT_PROMETHEUS) {
+	if (fu_struct_synaprom_cfg_hdr_get_product(st_hdr) != FU_SYNAPROM_PRODUCT_PROMETHEUS) {
 		if (flags & FWUPD_INSTALL_FLAG_IGNORE_VID_PID) {
 			g_warning("CFG metadata not compatible, "
 				  "got 0x%02x expected 0x%02x",
-				  product,
+				  fu_struct_synaprom_cfg_hdr_get_product(st_hdr),
 				  (guint)FU_SYNAPROM_PRODUCT_PROMETHEUS);
 		} else {
 			g_set_error(error,
@@ -186,19 +143,18 @@ fu_synaprom_config_prepare_firmware(FuDevice *device,
 				    G_IO_ERROR_NOT_SUPPORTED,
 				    "CFG metadata not compatible, "
 				    "got 0x%02x expected 0x%02x",
-				    product,
+				    fu_struct_synaprom_cfg_hdr_get_product(st_hdr),
 				    (guint)FU_SYNAPROM_PRODUCT_PROMETHEUS);
 			return NULL;
 		}
 	}
-	id1 = GUINT32_FROM_LE(hdr.id1);
-	id2 = GUINT32_FROM_LE(hdr.id2);
-	if (id1 != self->configid1 || id2 != self->configid2) {
+	if (fu_struct_synaprom_cfg_hdr_get_id1(st_hdr) != self->configid1 ||
+	    fu_struct_synaprom_cfg_hdr_get_id2(st_hdr) != self->configid2) {
 		if (flags & FWUPD_INSTALL_FLAG_IGNORE_VID_PID) {
 			g_warning("CFG version not compatible, "
 				  "got %u:%u expected %u:%u",
-				  id1,
-				  id2,
+				  fu_struct_synaprom_cfg_hdr_get_id1(st_hdr),
+				  fu_struct_synaprom_cfg_hdr_get_id2(st_hdr),
 				  self->configid1,
 				  self->configid2);
 		} else {
@@ -207,8 +163,8 @@ fu_synaprom_config_prepare_firmware(FuDevice *device,
 				    G_IO_ERROR_NOT_SUPPORTED,
 				    "CFG version not compatible, "
 				    "got %u:%u expected %u:%u",
-				    id1,
-				    id2,
+				    fu_struct_synaprom_cfg_hdr_get_id1(st_hdr),
+				    fu_struct_synaprom_cfg_hdr_get_id2(st_hdr),
 				    self->configid1,
 				    self->configid2);
 			return NULL;
