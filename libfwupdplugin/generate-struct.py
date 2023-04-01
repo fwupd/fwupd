@@ -395,6 +395,7 @@ class Generator:
         str_h += f"GByteArray* {name_snake}_new(void);\n"
         str_h += f"GByteArray* {name_snake}_parse(const guint8 *buf, gsize bufsz, gsize offset, GError **error);\n"
         str_h += f"gboolean {name_snake}_validate(const guint8 *buf, gsize bufsz, gsize offset, GError **error);\n"
+        str_h += f"gchar *{name_snake}_to_string(GByteArray *st);\n"
         for item in items:
             if not item.enabled:
                 continue
@@ -442,7 +443,7 @@ class Generator:
         str_c += f"}}\n"
 
         # _to_string()
-        str_c += "static gchar *\n"
+        str_c += "gchar *\n"
         str_c += f"{name_snake}_to_string(GByteArray *st)\n"
         str_c += "{\n"
         str_c += f'    g_autoptr(GString) str = g_string_new("{name}:\\n");\n'

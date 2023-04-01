@@ -11,6 +11,7 @@
 
 #include <string.h>
 
+#include "fu-vli-struct.h"
 #include "fu-vli-usbhub-common.h"
 #include "fu-vli-usbhub-device.h"
 #include "fu-vli-usbhub-firmware.h"
@@ -22,8 +23,8 @@ struct _FuVliUsbhubDevice {
 	FuVliDevice parent_instance;
 	gboolean disable_powersave;
 	guint8 update_protocol;
-	FuVliUsbhubHeader hd1_hdr; /* factory */
-	FuVliUsbhubHeader hd2_hdr; /* update */
+	GByteArray *st_hd1; /* factory */
+	GByteArray *st_hd2; /* update */
 };
 
 G_DEFINE_TYPE(FuVliUsbhubDevice, fu_vli_usbhub_device, FU_TYPE_VLI_DEVICE)
@@ -82,13 +83,20 @@ fu_vli_usbhub_device_to_string(FuDevice *device, guint idt, GString *str)
 	fu_string_append_kb(str, idt, "DisablePowersave", self->disable_powersave);
 	fu_string_append_kx(str, idt, "UpdateProtocol", self->update_protocol);
 	if (self->update_protocol >= 0x2) {
-		fu_string_append(str, idt, "H1Hdr@0x0", NULL);
-		fu_vli_usbhub_header_to_string(&self->hd1_hdr, idt + 1, str);
-		if (self->hd2_hdr.dev_id != 0xffff) {
-			fu_string_append(str, idt, "H2Hdr@0x1000", NULL);
-			fu_vli_usbhub_header_to_string(&self->hd2_hdr, idt + 1, str);
+		g_autofree gchar *st_hd1str = fu_struct_vli_usbhub_hdr_to_string(self->st_hd1);
+		fu_string_append(str, idt, "H1Hdr@0x0", st_hd1str);
+		if (fu_struct_vli_usbhub_hdr_get_dev_id(self->st_hd2) != 0xFFFF) {
+			g_autofree gchar *st_hd2str =
+			    fu_struct_vli_usbhub_hdr_to_string(self->st_hd2);
+			fu_string_append(str, idt, "H2Hdr@0x1000", st_hd2str);
 		}
 	}
+}
+
+static guint8
+fu_vli_usbhub_header_crc8(GByteArray *hdr)
+{
+	return ~fu_crc8(hdr->data, hdr->len - 1);
 }
 
 static gboolean
@@ -721,16 +729,16 @@ fu_vli_usbhub_device_ready(FuDevice *device, GError **error)
 	if (fu_device_has_private_flag(device, FU_VLI_USBHUB_DEVICE_FLAG_UNLOCK_LEGACY813) &&
 	    !fu_vli_device_spi_read_block(FU_VLI_DEVICE(self),
 					  0x0,
-					  (guint8 *)&self->hd1_hdr,
-					  sizeof(self->hd1_hdr),
+					  self->st_hd1->data,
+					  self->st_hd1->len,
 					  &error_tmp)) {
 		g_warning("failed to read, trying to unlock 813: %s", error_tmp->message);
 		if (!fu_vli_usbhub_device_vdr_unlock_813(self, error))
 			return FALSE;
 		if (!fu_vli_device_spi_read_block(FU_VLI_DEVICE(self),
 						  0x0,
-						  (guint8 *)&self->hd1_hdr,
-						  sizeof(self->hd1_hdr),
+						  self->st_hd1->data,
+						  self->st_hd1->len,
 						  error)) {
 			g_prefix_error(error, "813 unlock fail: ");
 			return FALSE;
@@ -746,15 +754,15 @@ fu_vli_usbhub_device_ready(FuDevice *device, GError **error)
 	/* read HD1 (factory) header */
 	if (!fu_vli_device_spi_read_block(FU_VLI_DEVICE(self),
 					  VLI_USBHUB_FLASHMAP_ADDR_HD1,
-					  (guint8 *)&self->hd1_hdr,
-					  sizeof(self->hd1_hdr),
+					  self->st_hd1->data,
+					  self->st_hd1->len,
 					  error)) {
 		g_prefix_error(error, "failed to read HD1 header: ");
 		return FALSE;
 	}
 
 	/* detect update protocol from the device ID */
-	switch (GUINT16_FROM_BE(self->hd1_hdr.dev_id) >> 8) {
+	switch (fu_struct_vli_usbhub_hdr_get_dev_id(self->st_hd1) >> 8) {
 	/* VL810~VL813 */
 	case 0x0d:
 		self->update_protocol = 0x1;
@@ -777,7 +785,7 @@ fu_vli_usbhub_device_ready(FuDevice *device, GError **error)
 			    G_IO_ERROR,
 			    G_IO_ERROR_NOT_SUPPORTED,
 			    "hardware is not supported, dev_id=0x%x",
-			    (guint)GUINT16_FROM_BE(self->hd1_hdr.dev_id));
+			    (guint)fu_struct_vli_usbhub_hdr_get_dev_id(self->st_hd1));
 		return FALSE;
 	}
 
@@ -785,8 +793,8 @@ fu_vli_usbhub_device_ready(FuDevice *device, GError **error)
 	if (self->update_protocol >= 0x2) {
 		if (!fu_vli_device_spi_read_block(FU_VLI_DEVICE(self),
 						  VLI_USBHUB_FLASHMAP_ADDR_HD2,
-						  (guint8 *)&self->hd2_hdr,
-						  sizeof(self->hd2_hdr),
+						  self->st_hd2->data,
+						  self->st_hd2->len,
 						  error)) {
 			g_prefix_error(error, "failed to read HD2 header: ");
 			return FALSE;
@@ -822,7 +830,6 @@ fu_vli_usbhub_device_prepare_firmware(FuDevice *device,
 {
 	FuVliUsbhubDevice *self = FU_VLI_USBHUB_DEVICE(device);
 	FuVliDeviceKind device_kind;
-	guint16 device_id;
 	g_autoptr(FuFirmware) firmware = fu_vli_usbhub_firmware_new();
 
 	/* check is compatible with firmware */
@@ -839,14 +846,14 @@ fu_vli_usbhub_device_prepare_firmware(FuDevice *device,
 				fu_vli_device_get_kind(FU_VLI_DEVICE(self))));
 		return NULL;
 	}
-	device_id = fu_vli_usbhub_firmware_get_device_id(FU_VLI_USBHUB_FIRMWARE(firmware));
-	if (GUINT16_FROM_BE(self->hd1_hdr.dev_id) != device_id) {
+	if (fu_struct_vli_usbhub_hdr_get_dev_id(self->st_hd1) !=
+	    fu_vli_usbhub_firmware_get_device_id(FU_VLI_USBHUB_FIRMWARE(firmware))) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_FILE,
 			    "firmware incompatible, got 0x%04x, expected 0x%04x",
-			    device_id,
-			    (guint)GUINT16_FROM_BE(self->hd1_hdr.dev_id));
+			    fu_vli_usbhub_firmware_get_device_id(FU_VLI_USBHUB_FIRMWARE(firmware)),
+			    (guint)fu_struct_vli_usbhub_hdr_get_dev_id(self->st_hd1));
 		return NULL;
 	}
 
@@ -943,25 +950,25 @@ fu_vli_usbhub_device_update_v2_recovery(FuVliUsbhubDevice *self,
 }
 
 static gboolean
-fu_vli_usbhub_device_hd1_is_valid(FuVliUsbhubHeader *hdr)
+fu_vli_usbhub_device_hd1_is_valid(GByteArray *hdr)
 {
-	if (hdr->prev_ptr != VLI_USBHUB_FLASHMAP_IDX_INVALID)
+	if (fu_struct_vli_usbhub_hdr_get_prev_ptr(hdr) != VLI_USBHUB_FLASHMAP_IDX_INVALID)
 		return FALSE;
-	if (hdr->checksum != fu_vli_usbhub_header_crc8(hdr))
+	if (fu_struct_vli_usbhub_hdr_get_checksum(hdr) != fu_vli_usbhub_header_crc8(hdr))
 		return FALSE;
 	return TRUE;
 }
 
 static gboolean
 fu_vli_usbhub_device_hd1_recover(FuVliUsbhubDevice *self,
-				 FuVliUsbhubHeader *hdr,
+				 GByteArray *hdr,
 				 FuProgress *progress,
 				 GError **error)
 {
 	/* point to HD2, i.e. updated firmware */
-	if (hdr->next_ptr != VLI_USBHUB_FLASHMAP_IDX_HD2) {
-		hdr->next_ptr = VLI_USBHUB_FLASHMAP_IDX_HD2;
-		hdr->checksum = fu_vli_usbhub_header_crc8(hdr);
+	if (fu_struct_vli_usbhub_hdr_get_next_ptr(hdr) != VLI_USBHUB_FLASHMAP_IDX_HD2) {
+		fu_struct_vli_usbhub_hdr_set_next_ptr(hdr, VLI_USBHUB_FLASHMAP_IDX_HD2);
+		fu_struct_vli_usbhub_hdr_set_checksum(hdr, fu_vli_usbhub_header_crc8(hdr));
 	}
 
 	/* write new header block */
@@ -975,8 +982,8 @@ fu_vli_usbhub_device_hd1_recover(FuVliUsbhubDevice *self,
 	}
 	if (!fu_vli_device_spi_write_block(FU_VLI_DEVICE(self),
 					   VLI_USBHUB_FLASHMAP_ADDR_HD1,
-					   (const guint8 *)hdr,
-					   sizeof(FuVliUsbhubHeader),
+					   hdr->data,
+					   hdr->len,
 					   progress,
 					   error)) {
 		g_prefix_error(error,
@@ -986,7 +993,8 @@ fu_vli_usbhub_device_hd1_recover(FuVliUsbhubDevice *self,
 	}
 
 	/* update the cached copy */
-	memcpy(&self->hd1_hdr, hdr, sizeof(self->hd1_hdr));
+	g_byte_array_unref(self->st_hd1);
+	self->st_hd1 = g_byte_array_ref(hdr);
 	return TRUE;
 }
 
@@ -1002,7 +1010,7 @@ fu_vli_usbhub_device_update_v2(FuVliUsbhubDevice *self,
 	guint32 hd2_fw_addr;
 	guint32 hd2_fw_offset;
 	const guint8 *buf_fw;
-	FuVliUsbhubHeader hdr = {0x0};
+	g_autoptr(GByteArray) st_hd = NULL;
 	g_autoptr(GBytes) fw = NULL;
 
 	/* simple image */
@@ -1011,9 +1019,10 @@ fu_vli_usbhub_device_update_v2(FuVliUsbhubDevice *self,
 		return FALSE;
 
 	/* root header is valid */
-	if (fu_vli_usbhub_device_hd1_is_valid(&self->hd1_hdr)) {
+	if (fu_vli_usbhub_device_hd1_is_valid(self->st_hd1)) {
 		/* no update has ever been done */
-		if (self->hd1_hdr.next_ptr != VLI_USBHUB_FLASHMAP_IDX_HD2) {
+		if (fu_struct_vli_usbhub_hdr_get_next_ptr(self->st_hd1) !=
+		    VLI_USBHUB_FLASHMAP_IDX_HD2) {
 			/* backup HD1 before recovering */
 			if (!fu_vli_device_spi_erase_sector(FU_VLI_DEVICE(self),
 							    VLI_USBHUB_FLASHMAP_ADDR_HD2,
@@ -1023,15 +1032,15 @@ fu_vli_usbhub_device_update_v2(FuVliUsbhubDevice *self,
 			}
 			if (!fu_vli_device_spi_write_block(FU_VLI_DEVICE(self),
 							   VLI_USBHUB_FLASHMAP_ADDR_HD1_BACKUP,
-							   (const guint8 *)&self->hd1_hdr,
-							   sizeof(hdr),
+							   self->st_hd1->data,
+							   self->st_hd1->len,
 							   progress,
 							   error)) {
 				g_prefix_error(error, "failed to write block at header 1: ");
 				return FALSE;
 			}
 			if (!fu_vli_usbhub_device_hd1_recover(self,
-							      &self->hd1_hdr,
+							      self->st_hd1,
 							      progress,
 							      error)) {
 				g_prefix_error(error, "failed to write header: ");
@@ -1039,31 +1048,31 @@ fu_vli_usbhub_device_update_v2(FuVliUsbhubDevice *self,
 			}
 		}
 
-		/* copy the header from the backup zone */
 	} else {
+		/* copy the header from the backup zone */
 		g_info("HD1 was invalid, reading backup");
 		if (!fu_vli_device_spi_read_block(FU_VLI_DEVICE(self),
 						  VLI_USBHUB_FLASHMAP_ADDR_HD1_BACKUP,
-						  (guint8 *)&self->hd1_hdr,
-						  sizeof(hdr),
+						  self->st_hd1->data,
+						  self->st_hd1->len,
 						  error)) {
 			g_prefix_error(error,
 				       "failed to read root header from 0x%x: ",
 				       (guint)VLI_USBHUB_FLASHMAP_ADDR_HD1_BACKUP);
 			return FALSE;
 		}
-		if (!fu_vli_usbhub_device_hd1_is_valid(&self->hd1_hdr)) {
+		if (!fu_vli_usbhub_device_hd1_is_valid(self->st_hd1)) {
 			g_info("backup header is also invalid, starting recovery");
 			return fu_vli_usbhub_device_update_v2_recovery(self, fw, progress, error);
 		}
-		if (!fu_vli_usbhub_device_hd1_recover(self, &self->hd1_hdr, progress, error)) {
+		if (!fu_vli_usbhub_device_hd1_recover(self, self->st_hd1, progress, error)) {
 			g_prefix_error(error, "failed to get root header in backup zone: ");
 			return FALSE;
 		}
 	}
 
 	/* align the update fw address to the sector after the factory size */
-	hd1_fw_sz = GUINT16_FROM_BE(self->hd1_hdr.usb3_fw_sz);
+	hd1_fw_sz = fu_struct_vli_usbhub_hdr_get_usb3_fw_sz(self->st_hd1);
 	if (hd1_fw_sz > 0xF000) {
 		g_set_error(error,
 			    G_IO_ERROR,
@@ -1077,9 +1086,11 @@ fu_vli_usbhub_device_update_v2(FuVliUsbhubDevice *self,
 
 	/* get the size and offset of the update firmware */
 	buf_fw = g_bytes_get_data(fw, &buf_fwsz);
-	memcpy(&hdr, buf_fw, sizeof(hdr));
-	hd2_fw_sz = GUINT16_FROM_BE(hdr.usb3_fw_sz);
-	hd2_fw_offset = GUINT16_FROM_BE(hdr.usb3_fw_addr);
+	st_hd = fu_struct_vli_usbhub_hdr_parse(buf_fw, buf_fwsz, 0x0, error);
+	if (st_hd == NULL)
+		return FALSE;
+	hd2_fw_sz = fu_struct_vli_usbhub_hdr_get_usb3_fw_sz(st_hd);
+	hd2_fw_offset = fu_struct_vli_usbhub_hdr_get_usb3_fw_addr(st_hd);
 	g_debug("FW2 @0x%x (length 0x%x, offset 0x%x)", hd2_fw_addr, hd2_fw_sz, hd2_fw_offset);
 
 	/* progress */
@@ -1109,25 +1120,12 @@ fu_vli_usbhub_device_update_v2(FuVliUsbhubDevice *self,
 	}
 	fu_progress_step_done(progress);
 
-	/* map into header */
-	if (!fu_memcpy_safe((guint8 *)&self->hd2_hdr,
-			    sizeof(hdr),
-			    0x0,
-			    buf_fw,
-			    buf_fwsz,
-			    0x0,
-			    sizeof(hdr),
-			    error)) {
-		g_prefix_error(error, "failed to read header: ");
-		return FALSE;
-	}
-
 	/* write new HD2 */
-	self->hd2_hdr.usb3_fw_addr = GUINT16_TO_BE(hd2_fw_addr & 0xffff);
-	self->hd2_hdr.usb3_fw_addr_high = (guint8)(hd2_fw_addr >> 16);
-	self->hd2_hdr.prev_ptr = VLI_USBHUB_FLASHMAP_IDX_HD1;
-	self->hd2_hdr.next_ptr = VLI_USBHUB_FLASHMAP_IDX_INVALID;
-	self->hd2_hdr.checksum = fu_vli_usbhub_header_crc8(&self->hd2_hdr);
+	fu_struct_vli_usbhub_hdr_set_usb3_fw_addr(st_hd, hd2_fw_addr & 0xFFFF);
+	fu_struct_vli_usbhub_hdr_set_usb3_fw_addr_high(st_hd, hd2_fw_addr >> 16);
+	fu_struct_vli_usbhub_hdr_set_prev_ptr(st_hd, VLI_USBHUB_FLASHMAP_IDX_HD1);
+	fu_struct_vli_usbhub_hdr_set_next_ptr(st_hd, VLI_USBHUB_FLASHMAP_IDX_INVALID);
+	fu_struct_vli_usbhub_hdr_set_checksum(st_hd, fu_vli_usbhub_header_crc8(st_hd));
 	if (!fu_vli_device_spi_erase_sector(FU_VLI_DEVICE(self),
 					    VLI_USBHUB_FLASHMAP_ADDR_HD2,
 					    error)) {
@@ -1136,8 +1134,8 @@ fu_vli_usbhub_device_update_v2(FuVliUsbhubDevice *self,
 	}
 	if (!fu_vli_device_spi_write_block(FU_VLI_DEVICE(self),
 					   VLI_USBHUB_FLASHMAP_ADDR_HD2,
-					   (const guint8 *)&self->hd2_hdr,
-					   sizeof(self->hd2_hdr),
+					   st_hd->data,
+					   st_hd->len,
 					   fu_progress_get_child(progress),
 					   error)) {
 		g_prefix_error(error, "failed to write HD2: ");
@@ -1146,6 +1144,8 @@ fu_vli_usbhub_device_update_v2(FuVliUsbhubDevice *self,
 	fu_progress_step_done(progress);
 
 	/* success */
+	g_byte_array_unref(self->st_hd2);
+	self->st_hd2 = g_byte_array_ref(st_hd);
 	return TRUE;
 }
 
@@ -1206,6 +1206,8 @@ fu_vli_usbhub_device_set_progress(FuDevice *self, FuProgress *progress)
 static void
 fu_vli_usbhub_device_init(FuVliUsbhubDevice *self)
 {
+	self->st_hd1 = fu_struct_vli_usbhub_hdr_new();
+	self->st_hd2 = fu_struct_vli_usbhub_hdr_new();
 	fu_device_add_icon(FU_DEVICE(self), "usb-hub");
 	fu_device_add_protocol(FU_DEVICE(self), "com.vli.usbhub");
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_USE_PROXY_FALLBACK);
@@ -1231,10 +1233,21 @@ fu_vli_usbhub_device_init(FuVliUsbhubDevice *self)
 }
 
 static void
+fu_vli_usbhub_device_finalize(GObject *obj)
+{
+	FuVliUsbhubDevice *self = FU_VLI_USBHUB_DEVICE(obj);
+	g_object_unref(self->st_hd1);
+	g_object_unref(self->st_hd2);
+	G_OBJECT_CLASS(fu_vli_usbhub_device_parent_class)->finalize(obj);
+}
+
+static void
 fu_vli_usbhub_device_class_init(FuVliUsbhubDeviceClass *klass)
 {
+	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
 	FuVliDeviceClass *klass_vli_device = FU_VLI_DEVICE_CLASS(klass);
+	object_class->finalize = fu_vli_usbhub_device_finalize;
 	klass_device->probe = fu_vli_usbhub_device_probe;
 	klass_device->dump_firmware = fu_vli_usbhub_device_dump_firmware;
 	klass_device->write_firmware = fu_vli_usbhub_device_write_firmware;
