@@ -7,6 +7,7 @@
 #include "config.h"
 
 #include "fu-tpm-eventlog-common.h"
+#include "fu-tpm-struct.h"
 
 const gchar *
 fu_tpm_eventlog_pcr_to_string(gint pcr)
@@ -149,11 +150,6 @@ fu_tpm_eventlog_blobstr(GBytes *blob)
 			       g_bytes_get_size(blob));
 }
 
-typedef struct __attribute__((packed)) {
-	guint8 Signature[16];
-	guint8 StartupLocality;
-} TCG_EfiStartupLocalityEvent;
-
 GPtrArray *
 fu_tpm_eventlog_calc_checksums(GPtrArray *items, guint8 pcr, GError **error)
 {
@@ -186,17 +182,19 @@ fu_tpm_eventlog_calc_checksums(GPtrArray *items, guint8 pcr, GError **error)
 
 		/* if TXT is enabled then the first event for PCR0 should be a StartupLocality */
 		if (item->kind == EV_NO_ACTION && item->pcr == 0 && item->blob != NULL && i == 0) {
-			gsize bufsz;
-			const guint8 *buf = g_bytes_get_data(item->blob, &bufsz);
-			if (bufsz == sizeof(TCG_EfiStartupLocalityEvent)) {
-				/* the final byte indicates the locality from which TPM2_Startup()
-				 * was issued -- which is the initial value of PCR0 */
-				if (strncmp((const char *)buf, "StartupLocality", bufsz - 2) == 0) {
-					digest_sha384[TPM2_SHA384_DIGEST_SIZE - 1] = buf[bufsz - 1];
-					digest_sha256[TPM2_SHA256_DIGEST_SIZE - 1] = buf[bufsz - 1];
-					digest_sha1[TPM2_SHA1_DIGEST_SIZE - 1] = buf[bufsz - 1];
-					continue;
-				}
+			g_autoptr(GByteArray) st_loc = NULL;
+			st_loc = fu_struct_tpm_efi_startup_locality_event_parse(
+			    g_bytes_get_data(item->blob, NULL),
+			    g_bytes_get_size(item->blob),
+			    0x0,
+			    NULL);
+			if (st_loc != NULL) {
+				guint8 locality =
+				    fu_struct_tpm_efi_startup_locality_event_get_locality(st_loc);
+				digest_sha384[TPM2_SHA384_DIGEST_SIZE - 1] = locality;
+				digest_sha256[TPM2_SHA256_DIGEST_SIZE - 1] = locality;
+				digest_sha1[TPM2_SHA1_DIGEST_SIZE - 1] = locality;
+				continue;
 			}
 		}
 
