@@ -11,6 +11,11 @@ struct EfiSection {
     size: u24le
     type: u8
 }
+struct EfiSectionGuidDefined {
+    name: guid
+    offset: u16le
+    attr: u16le
+}
 struct EfiVolume {
     zero_vector: guid
     guid: guid
