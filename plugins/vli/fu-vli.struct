@@ -3,3 +3,21 @@ struct VliPdHdr {
     vid: u16le
     pid: u16le
 }
+struct VliUsbhubHdr {
+    dev_id: u16be
+    strapping1: u8
+    strapping2: u8
+    usb3_fw_addr: u16be
+    usb3_fw_sz: u16be
+    usb2_fw_addr: u16be
+    usb2_fw_sz: u16be
+    usb3_fw_addr_high: u8
+    _unknown_0d: 3u8
+    usb2_fw_addr_high: u8
+    _unknown_11: 10u8
+    inverse_pe41: u8
+    prev_ptr: u8        // addr / 0x20
+    next_ptr: u8        // addr / 0x20
+    variant: u8
+    checksum: u8
+}
