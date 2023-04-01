@@ -400,9 +400,13 @@ class Generator:
                 continue
             str_h += item.generate_h_glib(name_snake)
         for item in items:
+            if not item.enabled:
+                continue
             str_h += f"#define {name_snake.upper()}_OFFSET_{item.element_id.upper()} 0x{item.offset:x}\n"
         str_h += f"#define {name_snake.upper()}_SIZE 0x{size:x}\n"
         for item in items:
+            if not item.enabled:
+                continue
             if item.default and not item.constant:
                 if item.type == Type.STRING:
                     str_h += f'#define {name_snake.upper()}_DEFAULT_{item.element_id.upper()} "{item.default}"\n"'
