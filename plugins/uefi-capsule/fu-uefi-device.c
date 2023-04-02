@@ -16,6 +16,7 @@
 #include "fu-uefi-common.h"
 #include "fu-uefi-device.h"
 #include "fu-uefi-devpath.h"
+#include "fu-uefi-struct.h"
 
 typedef struct {
 	FuVolume *esp;
@@ -324,10 +325,10 @@ fu_uefi_device_load_update_info(FuUefiDevice *self, GError **error)
 gboolean
 fu_uefi_device_clear_status(FuUefiDevice *self, GError **error)
 {
-	efi_update_info_t info;
 	gsize datasz = 0;
 	g_autofree gchar *varname = fu_uefi_device_build_varname(self);
 	g_autofree guint8 *data = NULL;
+	g_autoptr(GByteArray) st_inf = NULL;
 
 	g_return_val_if_fail(FU_IS_UEFI_DEVICE(self), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
@@ -335,18 +336,15 @@ fu_uefi_device_clear_status(FuUefiDevice *self, GError **error)
 	/* get the existing status */
 	if (!fu_efivar_get_data(FU_EFIVAR_GUID_FWUPDATE, varname, &data, &datasz, NULL, error))
 		return FALSE;
-	if (datasz < sizeof(efi_update_info_t)) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INTERNAL,
-				    "EFI variable is corrupt");
+	st_inf = fu_struct_efi_update_info_parse(data, datasz, 0x0, error);
+	if (st_inf == NULL) {
+		g_prefix_error(error, "EFI variable is corrupt: ");
 		return FALSE;
 	}
 
-	/* just copy the efi_update_info_t, ignore devpath then save it back */
-	memcpy(&info, data, sizeof(info));
-	info.status = FU_UEFI_DEVICE_STATUS_SUCCESS;
-	memcpy(data, &info, sizeof(info));
+	/* just copy the new EfiUpdateInfo and save it back */
+	fu_struct_efi_update_info_set_status(st_inf, FU_UEFI_DEVICE_STATUS_SUCCESS);
+	memcpy(data, st_inf->data, st_inf->len);
 	return fu_efivar_set_data(FU_EFIVAR_GUID_FWUPDATE,
 				  varname,
 				  data,
@@ -420,13 +418,12 @@ GBytes *
 fu_uefi_device_fixup_firmware(FuUefiDevice *self, GBytes *fw, GError **error)
 {
 	FuUefiDevicePrivate *priv = GET_PRIVATE(self);
-	efi_capsule_header_t header = {0x0};
 	fwupd_guid_t esrt_guid = {0x0};
 	guint hdrsize = getpagesize();
 	gsize bufsz;
 	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
 	g_autofree gchar *guid_new = NULL;
-	g_autoptr(GByteArray) buf_hdr = g_byte_array_new();
+	g_autoptr(GByteArray) st_cap = fu_struct_efi_capsule_header_new();
 
 	priv->missing_header = FALSE;
 
@@ -454,9 +451,9 @@ fu_uefi_device_fixup_firmware(FuUefiDevice *self, GBytes *fw, GError **error)
 	/* create a fake header with plausible contents */
 	g_info("missing or invalid embedded capsule header");
 	priv->missing_header = TRUE;
-	header.flags = priv->capsule_flags;
-	header.header_size = hdrsize;
-	header.capsule_image_size = bufsz + hdrsize;
+	fu_struct_efi_capsule_header_set_flags(st_cap, priv->capsule_flags);
+	fu_struct_efi_capsule_header_set_header_size(st_cap, hdrsize);
+	fu_struct_efi_capsule_header_set_image_size(st_cap, bufsz + hdrsize);
 	if (!fwupd_guid_from_string(fu_uefi_device_get_guid(self),
 				    &esrt_guid,
 				    FWUPD_GUID_FLAG_MIXED_ENDIAN,
@@ -464,34 +461,26 @@ fu_uefi_device_fixup_firmware(FuUefiDevice *self, GBytes *fw, GError **error)
 		g_prefix_error(error, "Invalid ESRT GUID: ");
 		return NULL;
 	}
-	memcpy(&header.guid, &esrt_guid, sizeof(fwupd_guid_t));
+	fu_struct_efi_capsule_header_set_guid(st_cap, &esrt_guid);
 
-	/* prepend the header to the payload */
-	g_byte_array_append(buf_hdr, (const guint8 *)&header, sizeof(header));
-	fu_byte_array_set_size(buf_hdr, hdrsize, 0x00);
-	g_byte_array_append(buf_hdr, buf, bufsz);
-	return g_byte_array_free_to_bytes(g_steal_pointer(&buf_hdr));
+	/* pad to the headersize then add the payload */
+	fu_byte_array_set_size(st_cap, hdrsize, 0x00);
+	g_byte_array_append(st_cap, buf, bufsz);
+	return g_byte_array_free_to_bytes(g_steal_pointer(&st_cap));
 }
 
 gboolean
 fu_uefi_device_write_update_info(FuUefiDevice *self,
 				 const gchar *filename,
 				 const gchar *varname,
-				 const gchar *guid,
+				 const gchar *guid_str,
 				 GError **error)
 {
 	FuUefiDevicePrivate *priv = GET_PRIVATE(self);
 	gsize dp_bufsz = 0;
-	g_autoptr(GByteArray) buf = g_byte_array_new();
+	fwupd_guid_t guid = {0x0};
 	g_autofree guint8 *dp_buf = NULL;
-	efi_update_info_t info = {
-	    .update_info_version = 0x7,
-	    .guid = {0x0},
-	    .capsule_flags = priv->capsule_flags,
-	    .hw_inst = priv->fmp_hardware_instance,
-	    .time_attempted = {0x0},
-	    .status = FU_UEFI_UPDATE_INFO_STATUS_ATTEMPT_UPDATE,
-	};
+	g_autoptr(GByteArray) st_inf = fu_struct_efi_update_info_new();
 
 	/* set the body as the device path */
 	if (g_getenv("FWUPD_UEFI_TEST") != NULL) {
@@ -505,14 +494,17 @@ fu_uefi_device_write_update_info(FuUefiDevice *self,
 		return FALSE;
 
 	/* save this header and body to the hardware */
-	if (!fwupd_guid_from_string(guid, &info.guid, FWUPD_GUID_FLAG_MIXED_ENDIAN, error))
+	if (!fwupd_guid_from_string(guid_str, &guid, FWUPD_GUID_FLAG_MIXED_ENDIAN, error))
 		return FALSE;
-	g_byte_array_append(buf, (const guint8 *)&info, sizeof(info));
-	g_byte_array_append(buf, dp_buf, dp_bufsz);
+	fu_struct_efi_update_info_set_flags(st_inf, priv->capsule_flags);
+	fu_struct_efi_update_info_set_hw_inst(st_inf, priv->fmp_hardware_instance);
+	fu_struct_efi_update_info_set_status(st_inf, FU_UEFI_UPDATE_INFO_STATUS_ATTEMPT_UPDATE);
+	fu_struct_efi_update_info_set_guid(st_inf, &guid);
+	g_byte_array_append(st_inf, dp_buf, dp_bufsz);
 	return fu_efivar_set_data(FU_EFIVAR_GUID_FWUPDATE,
 				  varname,
-				  buf->data,
-				  buf->len,
+				  st_inf->data,
+				  st_inf->len,
 				  FU_EFIVAR_ATTR_NON_VOLATILE | FU_EFIVAR_ATTR_BOOTSERVICE_ACCESS |
 				      FU_EFIVAR_ATTR_RUNTIME_ACCESS,
 				  error);
