@@ -11,6 +11,7 @@
 
 #include "fu-igsc-aux-firmware.h"
 #include "fu-igsc-heci.h"
+#include "fu-igsc-struct.h"
 
 struct _FuIgscAuxFirmware {
 	FuIfwiFptFirmware parent_instance;
@@ -129,7 +130,7 @@ fu_igsc_aux_firmware_parse_version(FuIgscAuxFirmware *self, GError **error)
 			    0x0, /* dst */
 			    buf,
 			    bufsz,
-			    sizeof(struct gsc_fwu_heci_image_metadata), /* src */
+			    FU_STRUCT_IGSC_FWU_HECI_IMAGE_METADATA_SIZE, /* src */
 			    sizeof(version),
 			    error)) {
 		g_prefix_error(error, "no version: ");

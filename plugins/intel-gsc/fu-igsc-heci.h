@@ -158,7 +158,3 @@ struct gsc_fwu_heci_no_update_req {
 	struct gsc_fwu_heci_header header;
 	guint32 reserved;
 } __attribute__((packed));
-
-struct gsc_fwu_heci_image_metadata {
-	guint32 metadata_format_version;
-} __attribute__((packed));
