@@ -19,48 +19,6 @@
 
 #define EFI_OS_INDICATIONS_FILE_CAPSULE_DELIVERY_SUPPORTED 0x0000000000000004ULL
 
-#ifndef HAVE_EFI_TIME_T
-typedef struct __attribute__((__packed__)) {
-	guint16 year;
-	guint8 month;
-	guint8 day;
-	guint8 hour;
-	guint8 minute;
-	guint8 second;
-	guint8 pad1;
-	guint32 nanosecond;
-	guint16 timezone;
-	guint8 daylight;
-	guint8 pad2;
-} efi_time_t;
-#endif
-
-typedef struct __attribute__((__packed__)) {
-	fwupd_guid_t guid;
-	guint32 header_size;
-	guint32 flags;
-	guint32 capsule_image_size;
-} efi_capsule_header_t;
-
-typedef struct __attribute__((__packed__)) {
-	guint8 version;
-	guint8 checksum;
-	guint8 image_type;
-	guint8 reserved;
-	guint32 mode;
-	guint32 x_offset;
-	guint32 y_offset;
-} efi_ux_capsule_header_t;
-
-typedef struct __attribute__((__packed__)) {
-	guint32 update_info_version;
-	fwupd_guid_t guid;
-	guint32 capsule_flags;
-	guint64 hw_inst;
-	efi_time_t time_attempted;
-	guint32 status;
-} efi_update_info_t;
-
 gchar *
 fu_uefi_get_fallback_app_path(FuDevice *device,
 			      const gchar *esp_path,

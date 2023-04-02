@@ -6,8 +6,8 @@
 
 #include "config.h"
 
-#include "fu-acpi-uefi-struct.h"
 #include "fu-acpi-uefi.h"
+#include "fu-uefi-struct.h"
 
 #define FU_EFI_INSYDE_GUID	 "9d4bf935-a674-4710-ba02-bf0aa1758c7b"
 #define INSYDE_QUIRK_COD_WORKING 0x1

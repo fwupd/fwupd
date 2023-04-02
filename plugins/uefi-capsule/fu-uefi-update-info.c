@@ -10,6 +10,7 @@
 
 #include "fu-uefi-common.h"
 #include "fu-uefi-devpath.h"
+#include "fu-uefi-struct.h"
 #include "fu-uefi-update-info.h"
 
 #define EFIDP_MEDIA_TYPE 0x04
@@ -70,31 +71,28 @@ fu_uefi_update_info_parse_dp(const guint8 *buf, gsize sz, GError **error)
 }
 
 gboolean
-fu_uefi_update_info_parse(FuUefiUpdateInfo *self, const guint8 *buf, gsize sz, GError **error)
+fu_uefi_update_info_parse(FuUefiUpdateInfo *self, const guint8 *buf, gsize bufsz, GError **error)
 {
-	efi_update_info_t info;
-	fwupd_guid_t guid_tmp;
+	g_autoptr(GByteArray) st_inf = NULL;
 
 	g_return_val_if_fail(FU_IS_UEFI_UPDATE_INFO(self), FALSE);
 
-	if (sz < sizeof(efi_update_info_t)) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INTERNAL,
-				    "EFI variable is corrupt");
+	st_inf = fu_struct_efi_update_info_parse(buf, bufsz, 0x0, error);
+	if (st_inf == NULL) {
+		g_prefix_error(error, "EFI variable is corrupt: ");
 		return FALSE;
 	}
-	memcpy(&info, buf, sizeof(info));
-	self->version = info.update_info_version;
-	self->capsule_flags = info.capsule_flags;
-	self->hw_inst = info.hw_inst;
-	self->status = info.status;
-	memcpy(&guid_tmp, &info.guid, sizeof(fwupd_guid_t));
-	self->guid = fwupd_guid_to_string(&guid_tmp, FWUPD_GUID_FLAG_MIXED_ENDIAN);
-	if (sz > sizeof(efi_update_info_t)) {
-		self->capsule_fn = fu_uefi_update_info_parse_dp(buf + sizeof(efi_update_info_t),
-								sz - sizeof(efi_update_info_t),
-								error);
+	self->version = fu_struct_efi_update_info_get_version(st_inf);
+	self->capsule_flags = fu_struct_efi_update_info_get_flags(st_inf);
+	self->hw_inst = fu_struct_efi_update_info_get_hw_inst(st_inf);
+	self->status = fu_struct_efi_update_info_get_status(st_inf);
+	self->guid = fwupd_guid_to_string(fu_struct_efi_update_info_get_guid(st_inf),
+					  FWUPD_GUID_FLAG_MIXED_ENDIAN);
+	if (bufsz > FU_STRUCT_EFI_UPDATE_INFO_SIZE) {
+		self->capsule_fn =
+		    fu_uefi_update_info_parse_dp(buf + FU_STRUCT_EFI_UPDATE_INFO_SIZE,
+						 bufsz - FU_STRUCT_EFI_UPDATE_INFO_SIZE,
+						 error);
 		if (self->capsule_fn == NULL)
 			return FALSE;
 	}

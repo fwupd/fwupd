@@ -18,6 +18,7 @@
 #include "fu-uefi-cod-device.h"
 #include "fu-uefi-common.h"
 #include "fu-uefi-grub-device.h"
+#include "fu-uefi-struct.h"
 
 struct _FuUefiCapsulePlugin {
 	FuPlugin parent_instance;
@@ -223,16 +224,13 @@ fu_uefi_capsule_plugin_write_splash_data(FuUefiCapsulePlugin *self,
 	gssize size;
 	guint32 height, width;
 	guint8 csum = 0;
-	efi_ux_capsule_header_t header = {0};
-	efi_capsule_header_t capsule_header = {.flags =
-						   EFI_CAPSULE_HEADER_FLAGS_PERSIST_ACROSS_RESET,
-					       .guid = {0x0},
-					       .header_size = sizeof(efi_capsule_header_t),
-					       .capsule_image_size = 0};
+	fwupd_guid_t guid = {0x0};
 	g_autofree gchar *esp_path = NULL;
 	g_autofree gchar *fn = NULL;
 	g_autofree gchar *directory = NULL;
 	g_autofree gchar *basename = NULL;
+	g_autoptr(GByteArray) st_cap = fu_struct_efi_capsule_header_new();
+	g_autoptr(GByteArray) st_uxh = fu_struct_efi_ux_capsule_header_new();
 	g_autoptr(GFile) ofile = NULL;
 	g_autoptr(GOutputStream) ostream = NULL;
 
@@ -261,40 +259,39 @@ fu_uefi_capsule_plugin_write_splash_data(FuUefiCapsulePlugin *self,
 	if (ostream == NULL)
 		return FALSE;
 
+	fu_struct_efi_capsule_header_set_flags(st_cap,
+					       EFI_CAPSULE_HEADER_FLAGS_PERSIST_ACROSS_RESET);
 	if (!fwupd_guid_from_string(FU_EFIVAR_GUID_UX_CAPSULE,
-				    &capsule_header.guid,
+				    &guid,
 				    FWUPD_GUID_FLAG_MIXED_ENDIAN,
 				    error))
 		return FALSE;
-	capsule_header.capsule_image_size =
-	    g_bytes_get_size(blob) + sizeof(efi_capsule_header_t) + sizeof(efi_ux_capsule_header_t);
+	fu_struct_efi_capsule_header_set_guid(st_cap, &guid);
+	fu_struct_efi_capsule_header_set_image_size(st_cap,
+						    g_bytes_get_size(blob) +
+							FU_STRUCT_EFI_CAPSULE_HEADER_SIZE +
+							FU_STRUCT_EFI_UX_CAPSULE_HEADER_SIZE);
 
-	header.version = 1;
-	header.image_type = 0;
-	header.reserved = 0;
-	header.x_offset = (screen_x / 2) - (width / 2);
+	fu_struct_efi_ux_capsule_header_set_x_offset(st_uxh, (screen_x / 2) - (width / 2));
 	if (screen_y == fu_uefi_bgrt_get_height(self->bgrt)) {
-		header.y_offset = (gdouble)screen_y * 0.8f;
+		fu_struct_efi_ux_capsule_header_set_y_offset(st_uxh, (gdouble)screen_y * 0.8f);
 	} else {
-		header.y_offset =
-		    fu_uefi_bgrt_get_yoffset(self->bgrt) + fu_uefi_bgrt_get_height(self->bgrt);
+		fu_struct_efi_ux_capsule_header_set_y_offset(
+		    st_uxh,
+		    fu_uefi_bgrt_get_yoffset(self->bgrt) + fu_uefi_bgrt_get_height(self->bgrt));
 	};
 
 	/* header, payload and image has to add to zero */
-	csum += fu_sum8((guint8 *)&capsule_header, sizeof(capsule_header));
-	csum += fu_sum8((guint8 *)&header, sizeof(header));
+	csum += fu_sum8(st_cap->data, st_cap->len);
+	csum += fu_sum8(st_uxh->data, st_uxh->len);
 	csum += fu_sum8_bytes(blob);
-	header.checksum = 0x100 - csum;
+	fu_struct_efi_ux_capsule_header_set_checksum(st_uxh, 0x100 - csum);
 
 	/* write capsule file */
-	size = g_output_stream_write(ostream,
-				     &capsule_header,
-				     capsule_header.header_size,
-				     NULL,
-				     error);
+	size = g_output_stream_write(ostream, st_cap->data, st_cap->len, NULL, error);
 	if (size < 0)
 		return FALSE;
-	size = g_output_stream_write(ostream, &header, sizeof(header), NULL, error);
+	size = g_output_stream_write(ostream, st_uxh->data, st_uxh->len, NULL, error);
 	if (size < 0)
 		return FALSE;
 	size = g_output_stream_write_bytes(ostream, blob, NULL, error);
