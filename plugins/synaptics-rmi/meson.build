@@ -6,7 +6,9 @@ cargs = ['-DG_LOG_DOMAIN="FuPluginSynapticsRmi"']
 
 plugin_quirks += files('synaptics-rmi.quirk')
 plugin_builtin_synaptics_rmi = static_library('fu_plugin_synaptics_rmi',
-  structgen.process('fu-synaptics-rmi.struct'),
+  structgen.process(
+    'fu-synaptics-rmi.struct',        # fuzzing
+  ),
   sources: [
     'fu-synaptics-rmi-plugin.c',
     'fu-synaptics-rmi-common.c',      # fuzzing
