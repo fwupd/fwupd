@@ -518,9 +518,7 @@ static void
 fu_msr_plugin_class_init(FuMsrPluginClass *klass)
 {
 	FuPluginClass *plugin_class = FU_PLUGIN_CLASS(klass);
-	GObjectClass *object_class = G_OBJECT_CLASS(klass);
-
-	object_class->constructed = fu_msr_plugin_constructed;
+	plugin_class->constructed = fu_msr_plugin_constructed;
 	plugin_class->to_string = fu_msr_plugin_to_string;
 	plugin_class->startup = fu_msr_plugin_startup;
 	plugin_class->backend_device_added = fu_msr_plugin_backend_device_added;

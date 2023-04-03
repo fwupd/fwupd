@@ -1042,8 +1042,8 @@ fu_dell_plugin_class_init(FuDellPluginClass *klass)
 	FuPluginClass *plugin_class = FU_PLUGIN_CLASS(klass);
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 
-	object_class->constructed = fu_dell_plugin_constructed;
 	object_class->finalize = fu_dell_finalize;
+	plugin_class->constructed = fu_dell_plugin_constructed;
 	plugin_class->to_string = fu_dell_plugin_to_string;
 	plugin_class->startup = fu_dell_plugin_startup;
 	plugin_class->coldplug = fu_dell_plugin_coldplug;

@@ -37,6 +37,6 @@ fu_igsc_constructed(GObject *obj)
 static void
 fu_igsc_plugin_class_init(FuIgscPluginClass *klass)
 {
-	GObjectClass *object_class = G_OBJECT_CLASS(klass);
-	object_class->constructed = fu_igsc_constructed;
+	FuPluginClass *plugin_class = FU_PLUGIN_CLASS(klass);
+	plugin_class->constructed = fu_igsc_constructed;
 }

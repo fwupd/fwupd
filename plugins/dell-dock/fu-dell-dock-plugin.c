@@ -346,8 +346,7 @@ static void
 fu_dell_dock_plugin_class_init(FuDellDockPluginClass *klass)
 {
 	FuPluginClass *plugin_class = FU_PLUGIN_CLASS(klass);
-	GObjectClass *object_class = G_OBJECT_CLASS(klass);
-	object_class->constructed = fu_dell_dock_plugin_constructed;
+	plugin_class->constructed = fu_dell_dock_plugin_constructed;
 	plugin_class->device_registered = fu_dell_dock_plugin_device_registered;
 	plugin_class->backend_device_added = fu_dell_dock_plugin_backend_device_added;
 	plugin_class->backend_device_removed = fu_dell_dock_plugin_backend_device_removed;

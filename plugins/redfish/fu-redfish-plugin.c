@@ -616,7 +616,8 @@ fu_redfish_finalize(GObject *obj)
 	FuRedfishPlugin *self = FU_REDFISH_PLUGIN(obj);
 	if (self->smbios != NULL)
 		g_object_unref(self->smbios);
-	g_object_unref(self->backend);
+	if (self->backend != NULL)
+		g_object_unref(self->backend);
 	G_OBJECT_CLASS(fu_redfish_plugin_parent_class)->finalize(obj);
 }
 
@@ -626,8 +627,8 @@ fu_redfish_plugin_class_init(FuRedfishPluginClass *klass)
 	FuPluginClass *plugin_class = FU_PLUGIN_CLASS(klass);
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 
-	object_class->constructed = fu_redfish_plugin_constructed;
 	object_class->finalize = fu_redfish_finalize;
+	plugin_class->constructed = fu_redfish_plugin_constructed;
 	plugin_class->to_string = fu_redfish_plugin_to_string;
 	plugin_class->startup = fu_redfish_plugin_startup;
 	plugin_class->coldplug = fu_redfish_plugin_coldplug;

@@ -134,7 +134,20 @@ fu_plugin_get_name(FuPlugin *self)
 void
 fu_plugin_set_name(FuPlugin *self, const gchar *name)
 {
+	FuPluginPrivate *priv = GET_PRIVATE(self);
+
 	g_return_if_fail(FU_IS_PLUGIN(self));
+	g_return_if_fail(!priv->done_init);
+
+	if (g_strcmp0(name, fwupd_plugin_get_name(FWUPD_PLUGIN(self))) == 0) {
+		g_critical("plugin name set to original value: %s", name);
+		return;
+	}
+	if (fwupd_plugin_get_name(FWUPD_PLUGIN(self)) != NULL) {
+		g_debug("overwriting plugin name %s -> %s",
+			fwupd_plugin_get_name(FWUPD_PLUGIN(self)),
+			name);
+	}
 	fwupd_plugin_set_name(FWUPD_PLUGIN(self), name);
 }
 

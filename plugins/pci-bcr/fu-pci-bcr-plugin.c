@@ -237,8 +237,7 @@ static void
 fu_pci_bcr_plugin_class_init(FuPciBcrPluginClass *klass)
 {
 	FuPluginClass *plugin_class = FU_PLUGIN_CLASS(klass);
-	GObjectClass *object_class = G_OBJECT_CLASS(klass);
-	object_class->constructed = fu_pci_bcr_plugin_constructed;
+	plugin_class->constructed = fu_pci_bcr_plugin_constructed;
 	plugin_class->to_string = fu_pci_bcr_plugin_to_string;
 	plugin_class->add_security_attrs = fu_pci_bcr_plugin_add_security_attrs;
 	plugin_class->device_registered = fu_pci_bcr_plugin_device_registered;

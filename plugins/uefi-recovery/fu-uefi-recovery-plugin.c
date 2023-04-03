@@ -72,9 +72,8 @@ fu_uefi_recovery_plugin_init(FuUefiRecoveryPlugin *self)
 static void
 fu_uefi_recovery_plugin_class_init(FuUefiRecoveryPluginClass *klass)
 {
-	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	FuPluginClass *plugin_class = FU_PLUGIN_CLASS(klass);
-	object_class->constructed = fu_uefi_recovery_plugin_constructed;
+	plugin_class->constructed = fu_uefi_recovery_plugin_constructed;
 	plugin_class->coldplug = fu_uefi_recovery_plugin_coldplug;
 	plugin_class->startup = fu_uefi_recovery_plugin_startup;
 }

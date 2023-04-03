@@ -1033,8 +1033,10 @@ fu_uefi_capsule_finalize(GObject *obj)
 		g_file_monitor_cancel(self->fwupd_efi_monitor);
 		g_object_unref(self->fwupd_efi_monitor);
 	}
-	g_object_unref(self->backend);
-	g_object_unref(self->bgrt);
+	if (self->backend != NULL)
+		g_object_unref(self->backend);
+	if (self->bgrt != NULL)
+		g_object_unref(self->bgrt);
 	G_OBJECT_CLASS(fu_uefi_capsule_plugin_parent_class)->finalize(obj);
 }
 
@@ -1044,8 +1046,8 @@ fu_uefi_capsule_plugin_class_init(FuUefiCapsulePluginClass *klass)
 	FuPluginClass *plugin_class = FU_PLUGIN_CLASS(klass);
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 
-	object_class->constructed = fu_uefi_capsule_plugin_constructed;
 	object_class->finalize = fu_uefi_capsule_finalize;
+	plugin_class->constructed = fu_uefi_capsule_plugin_constructed;
 	plugin_class->to_string = fu_uefi_capsule_plugin_to_string;
 	plugin_class->clear_results = fu_uefi_capsule_plugin_clear_results;
 	plugin_class->add_security_attrs = fu_uefi_capsule_plugin_add_security_attrs;

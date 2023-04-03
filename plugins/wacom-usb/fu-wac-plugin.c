@@ -39,10 +39,16 @@ fu_wac_plugin_init(FuWacPlugin *self)
 }
 
 static void
-fu_wac_plugin_constructed(GObject *obj)
+fu_wac_plugin_object_constructed(GObject *obj)
 {
 	FuPlugin *plugin = FU_PLUGIN(obj);
 	fu_plugin_set_name(plugin, "wacom_usb");
+}
+
+static void
+fu_wac_plugin_constructed(GObject *obj)
+{
+	FuPlugin *plugin = FU_PLUGIN(obj);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_WAC_DEVICE);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_WAC_ANDROID_DEVICE);
 	fu_plugin_add_firmware_gtype(plugin, "wacom", FU_TYPE_WAC_FIRMWARE);
@@ -53,7 +59,7 @@ fu_wac_plugin_class_init(FuWacPluginClass *klass)
 {
 	FuPluginClass *plugin_class = FU_PLUGIN_CLASS(klass);
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
-
-	object_class->constructed = fu_wac_plugin_constructed;
+	object_class->constructed = fu_wac_plugin_object_constructed;
+	plugin_class->constructed = fu_wac_plugin_constructed;
 	plugin_class->write_firmware = fu_wac_plugin_write_firmware;
 }

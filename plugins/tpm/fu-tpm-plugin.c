@@ -388,8 +388,8 @@ fu_tpm_plugin_class_init(FuTpmPluginClass *klass)
 	FuPluginClass *plugin_class = FU_PLUGIN_CLASS(klass);
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 
-	object_class->constructed = fu_tpm_plugin_constructed;
 	object_class->finalize = fu_tpm_finalize;
+	plugin_class->constructed = fu_tpm_plugin_constructed;
 	plugin_class->to_string = fu_tpm_plugin_to_string;
 	plugin_class->startup = fu_tpm_plugin_startup;
 	plugin_class->coldplug = fu_tpm_plugin_coldplug;

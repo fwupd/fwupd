@@ -92,9 +92,7 @@ static void
 fu_iommu_plugin_class_init(FuIommuPluginClass *klass)
 {
 	FuPluginClass *plugin_class = FU_PLUGIN_CLASS(klass);
-	GObjectClass *object_class = G_OBJECT_CLASS(klass);
-
-	object_class->constructed = fu_iommu_plugin_constructed;
+	plugin_class->constructed = fu_iommu_plugin_constructed;
 	plugin_class->to_string = fu_iommu_plugin_to_string;
 	plugin_class->backend_device_added = fu_iommu_plugin_backend_device_added;
 	plugin_class->add_security_attrs = fu_iommu_plugin_add_security_attrs;

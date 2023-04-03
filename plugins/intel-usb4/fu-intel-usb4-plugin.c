@@ -62,7 +62,6 @@ static void
 fu_intel_usb4_plugin_class_init(FuIntelUsb4PluginClass *klass)
 {
 	FuPluginClass *plugin_class = FU_PLUGIN_CLASS(klass);
-	GObjectClass *object_class = G_OBJECT_CLASS(klass);
-	object_class->constructed = fu_intel_usb4_plugin_constructed;
+	plugin_class->constructed = fu_intel_usb4_plugin_constructed;
 	plugin_class->device_registered = fu_intel_usb4_plugin_device_registered;
 }

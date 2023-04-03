@@ -50,8 +50,6 @@ static void
 fu_intel_spi_plugin_class_init(FuIntelSpiPluginClass *klass)
 {
 	FuPluginClass *plugin_class = FU_PLUGIN_CLASS(klass);
-	GObjectClass *object_class = G_OBJECT_CLASS(klass);
-
-	object_class->constructed = fu_intel_spi_plugin_constructed;
+	plugin_class->constructed = fu_intel_spi_plugin_constructed;
 	plugin_class->startup = fu_intel_spi_plugin_startup;
 }
