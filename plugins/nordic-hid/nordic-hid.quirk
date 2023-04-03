@@ -4,14 +4,17 @@ Plugin = nordic_hid
 GType = FuNordicHidCfgChannel
 #NordicHidBootloader = B0
 #NordicHidBootloader = MCUBOOT
+NordicHidGeneration = default
 
 # Nordic Semiconductor ASA Keyboard nRF52 Desktop
 [HIDRAW\VEN_1915&DEV_52DD]
 Plugin = nordic_hid
 GType = FuNordicHidCfgChannel
+NordicHidGeneration = default
 
 # Nordic Semiconductor ASA Dongle nRF52 Desktop
 [HIDRAW\VEN_1915&DEV_52DC]
 Plugin = nordic_hid
 GType = FuNordicHidCfgChannel
 NordicHidBootloader = B0
+NordicHidGeneration = default

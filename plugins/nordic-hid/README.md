@@ -30,8 +30,19 @@ This plugin supports the following protocol ID:
 
 ## GUID Generation
 
-For GUID generation the standard HIDRAW DeviceInstanceId values are used
-with the addition of the target board and bootloader name:
+For GUID generation the target board name, bootloader name and generation are used in addition to standard HIDRAW DeviceInstanceId values.
+The generation string is an application-specific property that allows to distinguish configurations
+that use the same board and bootloader, but are not interoperable.
+
+GUID examples:
+
+* `HIDRAW\VEN_1915&DEV_52DE&BOARD_nrf52840dk&BL_B0&GEN_default` -> b76d19e5-d745-5c0b-b870-b1b6d78e3c63
+* `HIDRAW\VEN_1915&DEV_52DE&BOARD_nrf52840dk&BL_MCUBOOT&GEN_office` -> 1728d5e4-e535-57f9-addc-a6c3765f81db
+
+Because handling of the generation parameter was introduced later, it is not supported by older versions of fwupd.
+To ensure compatibility with firmware updates that were released before introducing the support for the generation parameter, devices with the `default` generation report an additional GUID that omits the generation parameter.
+
+GUID examples (devices with generation set to `default` or without support for the generation parameter):
 
 * `HIDRAW\VEN_1915&DEV_52DE&BOARD_nrf52840dk&BL_B0` -> 22952036-c346-5755-9646-7bf766b28922
 * `HIDRAW\VEN_1915&DEV_52DE&BOARD_nrf52840dk&BL_MCUBOOT` -> 43b38427-fdf5-5400-a23c-f3eb7ea00e7c
@@ -44,6 +55,13 @@ This plugin uses the following plugin-specific quirks:
 
 Explicitly set the expected bootloader type: "B0" or "MCUBOOT"
 This quirk must be set for devices without support of `bootloader variant` DFU option.
+
+### NordicHidGeneration
+
+Explicitly set the expected generation.
+Only the `default` generation can be set by the quirk file.
+Other values can only be provided by device.
+This quirk must be set for devices that do not support the `devinfo` DFU option.
 
 ## Update Behavior
 
