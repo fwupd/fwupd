@@ -22,10 +22,16 @@ fu_synaprom_plugin_init(FuSynapromPlugin *self)
 }
 
 static void
-fu_synaprom_plugin_constructed(GObject *obj)
+fu_synaprom_plugin_object_constructed(GObject *obj)
 {
 	FuPlugin *plugin = FU_PLUGIN(obj);
 	fu_plugin_set_name(plugin, "synaptics_prometheus");
+}
+
+static void
+fu_synaprom_plugin_constructed(GObject *obj)
+{
+	FuPlugin *plugin = FU_PLUGIN(obj);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_SYNAPROM_DEVICE);
 	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_SYNAPROM_FIRMWARE);
 }
@@ -33,6 +39,8 @@ fu_synaprom_plugin_constructed(GObject *obj)
 static void
 fu_synaprom_plugin_class_init(FuSynapromPluginClass *klass)
 {
+	FuPluginClass *plugin_class = FU_PLUGIN_CLASS(klass);
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
-	object_class->constructed = fu_synaprom_plugin_constructed;
+	object_class->constructed = fu_synaprom_plugin_object_constructed;
+	plugin_class->constructed = fu_synaprom_plugin_constructed;
 }

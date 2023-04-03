@@ -129,8 +129,6 @@ static void
 fu_superio_plugin_class_init(FuSuperioPluginClass *klass)
 {
 	FuPluginClass *plugin_class = FU_PLUGIN_CLASS(klass);
-	GObjectClass *object_class = G_OBJECT_CLASS(klass);
-
-	object_class->constructed = fu_superio_plugin_constructed;
+	plugin_class->constructed = fu_superio_plugin_constructed;
 	plugin_class->coldplug = fu_superio_plugin_coldplug;
 }

@@ -33,6 +33,6 @@ fu_fastboot_plugin_constructed(GObject *obj)
 static void
 fu_fastboot_plugin_class_init(FuFastbootPluginClass *klass)
 {
-	GObjectClass *object_class = G_OBJECT_CLASS(klass);
-	object_class->constructed = fu_fastboot_plugin_constructed;
+	FuPluginClass *plugin_class = FU_PLUGIN_CLASS(klass);
+	plugin_class->constructed = fu_fastboot_plugin_constructed;
 }

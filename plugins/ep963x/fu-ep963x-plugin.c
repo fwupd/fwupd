@@ -22,10 +22,16 @@ fu_ep963x_plugin_init(FuEp963XPlugin *self)
 }
 
 static void
-fu_ep963x_plugin_constructed(GObject *obj)
+fu_ep963x_plugin_object_constructed(GObject *obj)
 {
 	FuPlugin *plugin = FU_PLUGIN(obj);
 	fu_plugin_set_name(plugin, "ep963x");
+}
+
+static void
+fu_ep963x_plugin_constructed(GObject *obj)
+{
+	FuPlugin *plugin = FU_PLUGIN(obj);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_EP963X_DEVICE);
 	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_EP963X_FIRMWARE);
 }
@@ -33,6 +39,8 @@ fu_ep963x_plugin_constructed(GObject *obj)
 static void
 fu_ep963x_plugin_class_init(FuEp963XPluginClass *klass)
 {
+	FuPluginClass *plugin_class = FU_PLUGIN_CLASS(klass);
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
-	object_class->constructed = fu_ep963x_plugin_constructed;
+	object_class->constructed = fu_ep963x_plugin_object_constructed;
+	plugin_class->constructed = fu_ep963x_plugin_constructed;
 }

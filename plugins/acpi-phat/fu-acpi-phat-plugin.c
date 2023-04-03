@@ -58,8 +58,6 @@ static void
 fu_acpi_phat_plugin_class_init(FuAcpiPhatPluginClass *klass)
 {
 	FuPluginClass *plugin_class = FU_PLUGIN_CLASS(klass);
-	GObjectClass *object_class = G_OBJECT_CLASS(klass);
-
-	object_class->constructed = fu_acpi_phat_plugin_constructed;
+	plugin_class->constructed = fu_acpi_phat_plugin_constructed;
 	plugin_class->coldplug = fu_acpi_phat_plugin_coldplug;
 }

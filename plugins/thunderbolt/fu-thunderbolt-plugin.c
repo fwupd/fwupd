@@ -114,9 +114,7 @@ static void
 fu_thunderbolt_plugin_class_init(FuThunderboltPluginClass *klass)
 {
 	FuPluginClass *plugin_class = FU_PLUGIN_CLASS(klass);
-	GObjectClass *object_class = G_OBJECT_CLASS(klass);
-
-	object_class->constructed = fu_thunderbolt_plugin_constructed;
+	plugin_class->constructed = fu_thunderbolt_plugin_constructed;
 	plugin_class->startup = fu_thunderbolt_plugin_startup;
 	plugin_class->device_registered = fu_thunderbolt_plugin_device_registered;
 	plugin_class->device_created = fu_thunderbolt_plugin_device_created;

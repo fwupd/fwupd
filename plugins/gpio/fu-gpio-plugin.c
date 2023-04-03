@@ -185,8 +185,8 @@ fu_gpio_plugin_class_init(FuGpioPluginClass *klass)
 	FuPluginClass *plugin_class = FU_PLUGIN_CLASS(klass);
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 
-	object_class->constructed = fu_gpio_plugin_constructed;
 	object_class->finalize = fu_gpio_finalize;
+	plugin_class->constructed = fu_gpio_plugin_constructed;
 	plugin_class->to_string = fu_gpio_plugin_to_string;
 	plugin_class->prepare = fu_gpio_plugin_prepare;
 	plugin_class->cleanup = fu_gpio_plugin_cleanup;
