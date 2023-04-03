@@ -519,16 +519,13 @@ fu_nordic_hid_cfg_channel_get_bl_name(FuNordicHidCfgChannel *self, GError **erro
 			return FALSE;
 
 		/* check if not set via quirk */
-		if (self->bl_name != NULL &&
-		    strncmp(self->bl_name, (const char *)res->data, res->data_len) != 0) {
-			g_set_error(
-			    error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
-			    "bootloader in quirk file is '%s' while the board is supporting '%s'",
-			    self->bl_name,
-			    g_strndup((const gchar *)res->data, res->data_len));
-			return FALSE;
+		if (self->bl_name != NULL) {
+			g_autofree gchar *tmp = g_strndup((const gchar *)res->data, res->data_len);
+
+			g_debug("Bootloader readout '%s' overrides bootloader from quirk '%s'",
+				tmp,
+				self->bl_name);
+			g_free(self->bl_name);
 		}
 		self->bl_name = fu_strsafe((const gchar *)res->data, res->data_len);
 	} else {
