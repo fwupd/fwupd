@@ -94,6 +94,9 @@ struct _FuNordicHidCfgChannel {
 	FuUdevDevice parent_instance;
 	gchar *board_name;
 	gchar *bl_name;
+	gchar *generation;
+	guint16 vid;
+	guint16 pid;
 	guint8 flash_area_id;
 	guint32 flashed_image_len;
 	guint8 peer_id;
@@ -541,6 +544,67 @@ fu_nordic_hid_cfg_channel_get_bl_name(FuNordicHidCfgChannel *self, GError **erro
 	return TRUE;
 }
 
+static gboolean
+fu_nordic_hid_cfg_channel_get_devinfo(FuNordicHidCfgChannel *self, GError **error)
+{
+	guint8 event_id = 0;
+	g_autoptr(FuNordicCfgChannelMsg) res = g_new0(FuNordicCfgChannelMsg, 1);
+
+	/* query for the devinfo if the board supports it */
+	if (fu_nordic_hid_cfg_channel_get_event_id(self, "dfu", "devinfo", &event_id)) {
+		gchar *generation;
+
+		if (!fu_nordic_hid_cfg_channel_cmd_send(self,
+							"dfu",
+							"devinfo",
+							CONFIG_STATUS_FETCH,
+							NULL,
+							0,
+							error))
+			return FALSE;
+		if (!fu_nordic_hid_cfg_channel_cmd_receive(self, CONFIG_STATUS_SUCCESS, res, error))
+			return FALSE;
+
+		if (!fu_memread_uint16_safe(res->data,
+					    REPORT_SIZE,
+					    0x00,
+					    &self->vid,
+					    G_LITTLE_ENDIAN,
+					    error))
+			return FALSE;
+		if (!fu_memread_uint16_safe(res->data,
+					    REPORT_SIZE,
+					    0x02,
+					    &self->pid,
+					    G_LITTLE_ENDIAN,
+					    error))
+			return FALSE;
+
+		generation = fu_strsafe((const gchar *)&res->data[0x04], res->data_len - 0x04);
+		/* check if not set via quirk */
+		if (self->generation != NULL) {
+			g_debug("generation readout '%s' overrides generation from quirk '%s'",
+				generation,
+				self->generation);
+			g_free(self->generation);
+		}
+		self->generation = generation;
+	} else {
+		g_debug("the board has no support of devinfo runtime detection");
+	}
+
+	if (self->generation == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "the generation is not detected nor set via quirk");
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
 /*
  * NOTE:
  * For devices connected directly to the host,
@@ -944,6 +1008,9 @@ fu_nordic_hid_cfg_channel_setup(FuDevice *device, GError **error)
 	/* detect bootloader type */
 	if (!fu_nordic_hid_cfg_channel_get_bl_name(self, error))
 		return FALSE;
+	/* detect vendor ID, product ID and generation */
+	if (!fu_nordic_hid_cfg_channel_get_devinfo(self, error))
+		return FALSE;
 	/* set the physical id based on name, HW id and bootloader type of the board
 	 * to detect if the device is connected via several interfaces */
 	if (!fu_nordic_hid_cfg_channel_get_hwid(self, error))
@@ -965,14 +1032,44 @@ fu_nordic_hid_cfg_channel_setup(FuDevice *device, GError **error)
 	/* generate IDs */
 	fu_device_add_instance_strsafe(device, "BOARD", self->board_name);
 	fu_device_add_instance_strsafe(device, "BL", self->bl_name);
-	return fu_device_build_instance_id(device,
-					   error,
-					   "HIDRAW",
-					   "VEN",
-					   "DEV",
-					   "BOARD",
-					   "BL",
-					   NULL);
+	fu_device_add_instance_strsafe(device, "GEN", self->generation);
+
+	if (self->vid != 0x00 && self->pid != 0x00) {
+		fu_device_add_instance_u16(device, "VEN", self->vid);
+		fu_device_add_instance_u16(device, "DEV", self->pid);
+	}
+
+	/* For the default generation, generate GUID without the generation parameter.
+	 * Required for compatibility with already released application images.
+	 */
+	if (g_strcmp0(self->generation, "default") == 0) {
+		if (!fu_device_build_instance_id(device,
+						 error,
+						 "HIDRAW",
+						 "VEN",
+						 "DEV",
+						 "BOARD",
+						 "BL",
+						 NULL)) {
+			g_prefix_error(error, "failed to add ID without generation: ");
+			return FALSE;
+		}
+	}
+
+	if (!fu_device_build_instance_id(device,
+					 error,
+					 "HIDRAW",
+					 "VEN",
+					 "DEV",
+					 "BOARD",
+					 "BL",
+					 "GEN",
+					 NULL)) {
+		g_prefix_error(error, "failed to add complete ID: ");
+		return FALSE;
+	}
+
+	return TRUE;
 }
 
 static void
@@ -999,8 +1096,13 @@ static void
 fu_nordic_hid_cfg_channel_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuNordicHidCfgChannel *self = FU_NORDIC_HID_CFG_CHANNEL(device);
+	if (self->vid != 0x00 && self->pid != 0x00) {
+		fu_string_append_kx(str, idt, "VendorId", self->vid);
+		fu_string_append_kx(str, idt, "ProductId", self->pid);
+	}
 	fu_string_append(str, idt, "BoardName", self->board_name);
 	fu_string_append(str, idt, "Bootloader", self->bl_name);
+	fu_string_append(str, idt, "Generation", self->generation);
 	fu_string_append_kx(str, idt, "FlashAreaId", self->flash_area_id);
 	fu_string_append_kx(str, idt, "FlashedImageLen", self->flashed_image_len);
 	fu_string_append_kx(str, idt, "PeerId", self->peer_id);
@@ -1180,6 +1282,18 @@ fu_nordic_hid_cfg_channel_set_quirk_kv(FuDevice *device,
 		return TRUE;
 	}
 
+	if (g_strcmp0(key, "NordicHidGeneration") == 0) {
+		if (g_strcmp0(value, "default") != 0) {
+			g_set_error_literal(error,
+					    G_IO_ERROR,
+					    G_IO_ERROR_INVALID_DATA,
+					    "can be only 'default' in quirk");
+			return FALSE;
+		}
+		self->generation = g_strdup("default");
+		return TRUE;
+	}
+
 	/* failed */
 	g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED, "quirk key not supported");
 	return FALSE;
@@ -1191,6 +1305,7 @@ fu_nordic_hid_cfg_channel_finalize(GObject *object)
 	FuNordicHidCfgChannel *self = FU_NORDIC_HID_CFG_CHANNEL(object);
 	g_free(self->board_name);
 	g_free(self->bl_name);
+	g_free(self->generation);
 	g_ptr_array_unref(self->modules);
 	G_OBJECT_CLASS(fu_nordic_hid_cfg_channel_parent_class)->finalize(object);
 }
