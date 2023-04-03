@@ -3136,10 +3136,12 @@ fu_bios_settings_load_func(void)
 	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(GError) error = NULL;
 	g_autoptr(FuBiosSettings) p620_settings = NULL;
+	g_autoptr(FuBiosSettings) p620_6_3_settings = NULL;
 	g_autoptr(FuBiosSettings) p14s_settings = NULL;
 	g_autoptr(FuBiosSettings) xp29310_settings = NULL;
 	g_autoptr(GPtrArray) p14s_items = NULL;
 	g_autoptr(GPtrArray) p620_items = NULL;
+	g_autoptr(GPtrArray) p620_6_3_items = NULL;
 	g_autoptr(GPtrArray) xps9310_items = NULL;
 
 	/* load BIOS settings from a Lenovo P620 (with thinklmi driver problems) */
@@ -3193,13 +3195,22 @@ fu_bios_settings_load_func(void)
 			g_assert_cmpstr(possible, ==, "Automatic");
 	}
 
-	/* check no BIOS settings have [Status in them */
+	/* check BIOS settings that should be read only */
 	for (guint i = 0; i < p620_items->len; i++) {
+		const gchar *name;
+		gboolean ro;
+
 		setting = g_ptr_array_index(p620_items, i);
+		ro = fwupd_bios_setting_get_read_only(setting);
 		tmp = fwupd_bios_setting_get_current_value(setting);
-		g_debug("%s", tmp);
-		g_assert_null(g_strrstr(tmp, "[Status"));
+		name = fwupd_bios_setting_get_name(setting);
+		g_debug("%s: %s", name, tmp);
+		if ((g_strcmp0(name, "pending_reboot") == 0) || (g_strrstr(tmp, "[Status") != NULL))
+			g_assert_true(ro);
+		else
+			g_assert_false(ro);
 	}
+
 #else
 	g_assert_error(error, G_FILE_ERROR, G_FILE_ERROR_NOENT);
 	g_assert_false(ret);
@@ -3207,6 +3218,72 @@ fu_bios_settings_load_func(void)
 #endif
 	g_free(test_dir);
 
+	/* load BIOS settings from a Lenovo P620 running 6.3 */
+	test_dir =
+	    g_test_build_filename(G_TEST_DIST, "tests", "bios-attrs", "lenovo-p620-6.3", NULL);
+	(void)g_setenv("FWUPD_SYSFSFWATTRIBDIR", test_dir, TRUE);
+
+	ret = fu_context_reload_bios_settings(ctx, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	p620_6_3_settings = fu_context_get_bios_settings(ctx);
+	p620_6_3_items = fu_bios_settings_get_all(p620_6_3_settings);
+	g_assert_cmpint(p620_6_3_items->len, ==, 5);
+
+	/* make sure nothing pending */
+	ret = fu_context_get_bios_setting_pending_reboot(ctx);
+	g_assert_false(ret);
+
+	/* check a BIOS setting reads from kernel 6.3 as expected by fwupd */
+	setting = fu_context_get_bios_setting(ctx, "com.thinklmi.AMDMemoryGuard");
+	g_assert_nonnull(setting);
+	tmp = fwupd_bios_setting_get_name(setting);
+	g_assert_cmpstr(tmp, ==, "AMDMemoryGuard");
+	tmp = fwupd_bios_setting_get_description(setting);
+	g_assert_cmpstr(tmp, ==, "AMDMemoryGuard");
+	tmp = fwupd_bios_setting_get_current_value(setting);
+	g_assert_cmpstr(tmp, ==, "Disable");
+	values = fwupd_bios_setting_get_possible_values(setting);
+	for (guint i = 0; i < values->len; i++) {
+		const gchar *possible = g_ptr_array_index(values, i);
+		if (i == 0)
+			g_assert_cmpstr(possible, ==, "Disable");
+		if (i == 1)
+			g_assert_cmpstr(possible, ==, "Enable");
+	}
+
+	/* try to read an BIOS setting known to have ][Status] to make sure we worked
+	 * around the thinklmi bug sufficiently
+	 */
+	setting = fu_context_get_bios_setting(ctx, "com.thinklmi.StartupSequence");
+	g_assert_nonnull(setting);
+	tmp = fwupd_bios_setting_get_current_value(setting);
+	g_assert_cmpstr(tmp, ==, "Primary");
+	values = fwupd_bios_setting_get_possible_values(setting);
+	for (guint i = 0; i < values->len; i++) {
+		const gchar *possible = g_ptr_array_index(values, i);
+		if (i == 0)
+			g_assert_cmpstr(possible, ==, "Primary");
+		if (i == 1)
+			g_assert_cmpstr(possible, ==, "Automatic");
+	}
+
+	/* check BIOS settings that should be read only */
+	for (guint i = 0; i < p620_6_3_items->len; i++) {
+		const gchar *name;
+		gboolean ro;
+
+		setting = g_ptr_array_index(p620_6_3_items, i);
+		ro = fwupd_bios_setting_get_read_only(setting);
+		tmp = fwupd_bios_setting_get_current_value(setting);
+		name = fwupd_bios_setting_get_name(setting);
+		g_debug("%s: %s", name, tmp);
+		if ((g_strcmp0(name, "pending_reboot") == 0) || (g_strrstr(tmp, "[Status") != NULL))
+			g_assert_true(ro);
+		else
+			g_assert_false(ro);
+	}
 
 	g_free(test_dir);
 

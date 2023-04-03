@@ -17,6 +17,8 @@
 #include "fu-path.h"
 #include "fu-string.h"
 
+#define LENOVO_READ_ONLY_NEEDLE "[Status:ShowOnly]"
+
 struct _FuBiosSettings {
 	GObject parent_instance;
 	GHashTable *descriptions;
@@ -174,18 +176,21 @@ fu_bios_setting_set_current_value(FwupdBiosSetting *attr, GError **error)
 static void
 fu_bios_setting_set_read_only(FuBiosSettings *self, FwupdBiosSetting *attr)
 {
+	const gchar *tmp;
 	if (fwupd_bios_setting_get_kind(attr) == FWUPD_BIOS_SETTING_KIND_ENUMERATION) {
 		const gchar *value =
 		    g_hash_table_lookup(self->read_only, fwupd_bios_setting_get_id(attr));
 		if (g_strcmp0(value, fwupd_bios_setting_get_current_value(attr)) == 0)
 			fwupd_bios_setting_set_read_only(attr, TRUE);
 	}
+	tmp = g_strrstr(fwupd_bios_setting_get_current_value(attr), LENOVO_READ_ONLY_NEEDLE);
+	if (tmp != NULL)
+		fwupd_bios_setting_set_read_only(attr, TRUE);
 }
 
 #ifdef FU_THINKLMI_COMPAT
-#define LENOVO_POSSIBLE_NEEDLE	"[Optional:"
-#define LENOVO_READ_ONLY_NEEDLE "[Status:ShowOnly]"
-#define LENOVO_EXCLUDED		"[Excluded from boot order:"
+#define LENOVO_POSSIBLE_NEEDLE "[Optional:"
+#define LENOVO_EXCLUDED	       "[Excluded from boot order:"
 
 static gboolean
 fu_bios_setting_fixup_lenovo_thinklmi_bug(FwupdBiosSetting *attr, GError **error)
@@ -201,14 +206,7 @@ fu_bios_setting_fixup_lenovo_thinklmi_bug(FwupdBiosSetting *attr, GError **error
 		fwupd_bios_setting_get_name(attr),
 		fwupd_bios_setting_get_current_value(attr));
 
-	/* We have read only */
-	tmp = g_strrstr(current_value, LENOVO_READ_ONLY_NEEDLE);
-	if (tmp != NULL) {
-		fwupd_bios_setting_set_read_only(attr, TRUE);
-		str = g_string_new_len(current_value, tmp - current_value);
-	} else {
-		str = g_string_new(current_value);
-	}
+	str = g_string_new(current_value);
 
 	/* empty string */
 	if (str->len == 0)
