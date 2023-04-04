@@ -47,7 +47,7 @@ Plugin = steelseries
 GType = FuSteelseriesFizz
 Name = Aerox 3 Wireless Mouse
 Icon = input-mouse
-CounterpartGuid = USB\VID_103B&PID_1839,HIDRAW\VEN_0111&DEV_183A
+CounterpartGuid = USB\VID_1038&PID_1839,HIDRAW\VEN_0111&DEV_183A
 FirmwareSize = 0x27000
 
 [USB\VID_1038&PID_183B]
