@@ -21,6 +21,7 @@ fu_config_finalize(GObject *obj);
 
 struct _FuConfig {
 	GObject parent_instance;
+	GHashTable *os_release;	      /* (element-type utf-8 utf-8) */
 	GPtrArray *monitors;	      /* (element-type GFileMonitor) */
 	GPtrArray *disabled_devices;  /* (element-type utf-8) */
 	GPtrArray *disabled_plugins;  /* (element-type utf-8) */
@@ -28,6 +29,7 @@ struct _FuConfig {
 	GPtrArray *blocked_firmware;  /* (element-type utf-8) */
 	GPtrArray *uri_schemes;	      /* (element-type utf-8) */
 	GPtrArray *filenames;	      /* (element-type utf-8) */
+	GPtrArray *trusted_reports;   /* (element-type FwupdReport) */
 	GArray *trusted_uids;	      /* (elementy type guint64) */
 	guint64 archive_size_max;
 	guint idle_timeout;
@@ -50,6 +52,58 @@ fu_config_emit_changed(FuConfig *self)
 	g_signal_emit(self, signals[SIGNAL_CHANGED], 0);
 }
 
+static FwupdReport *
+fu_config_report_from_spec(FuConfig *self, const gchar *report_spec, GError **error)
+{
+	g_auto(GStrv) parts = g_strsplit(report_spec, "&", -1);
+	g_autoptr(FwupdReport) report = fwupd_report_new();
+
+	for (guint i = 0; parts[i] != NULL; i++) {
+		const gchar *value = NULL;
+		g_auto(GStrv) kv = g_strsplit(parts[i], "=", 2);
+		if (g_strv_length(kv) != 2) {
+			g_set_error(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_INVALID_DATA,
+				    "failed to parse report specifier key=value %s",
+				    parts[i]);
+			return NULL;
+		}
+		if (g_str_has_prefix(kv[1], "$"))
+			value = g_hash_table_lookup(self->os_release, kv[1] + 1);
+		if (value == NULL)
+			value = kv[1];
+		if (g_strcmp0(kv[0], "VendorId") == 0) {
+			guint64 tmp = 0;
+			if (g_strcmp0(value, "$OEM") == 0) {
+				fwupd_report_add_flag(report, FWUPD_REPORT_FLAG_FROM_OEM);
+			} else {
+				if (!fu_strtoull(value, &tmp, 0, G_MAXUINT32, error)) {
+					g_prefix_error(error, "failed to parse '%s': ", value);
+					return NULL;
+				}
+				fwupd_report_set_vendor_id(report, tmp);
+			}
+		} else if (g_strcmp0(kv[0], "DistroId") == 0) {
+			fwupd_report_set_distro_id(report, value);
+		} else if (g_strcmp0(kv[0], "DistroVariant") == 0) {
+			fwupd_report_set_distro_variant(report, value);
+		} else if (g_strcmp0(kv[0], "DistroVersion") == 0) {
+			fwupd_report_set_distro_version(report, value);
+		} else {
+			g_set_error(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_INVALID_DATA,
+				    "failed to parse report specifier key %s",
+				    kv[0]);
+			return NULL;
+		}
+	}
+
+	/* success */
+	return g_steal_pointer(&report);
+}
+
 static gboolean
 fu_config_reload(FuConfig *self, GError **error)
 {
@@ -60,6 +114,7 @@ fu_config_reload(FuConfig *self, GError **error)
 	g_auto(GStrv) uri_schemes = NULL;
 	g_auto(GStrv) devices = NULL;
 	g_auto(GStrv) uids = NULL;
+	g_auto(GStrv) report_specs = NULL;
 	g_auto(GStrv) plugins = NULL;
 	g_autofree gchar *domains = NULL;
 	g_autofree gchar *host_bkc = NULL;
@@ -74,6 +129,11 @@ fu_config_reload(FuConfig *self, GError **error)
 	g_autoptr(GError) error_allow_emulation = NULL;
 	g_autoptr(GError) error_enumerate_all = NULL;
 	g_autoptr(GByteArray) buf = g_byte_array_new();
+
+	/* used for substitutions */
+	self->os_release = fwupd_get_os_release(error);
+	if (self->os_release == NULL)
+		return FALSE;
 
 	/* we have to load each file into a buffer as g_key_file_load_from_file() clears the
 	 * GKeyFile state before loading each file, and we want to allow the mutable version to be
@@ -285,6 +345,23 @@ fu_config_reload(FuConfig *self, GError **error)
 		}
 	}
 
+	/* get trusted reports */
+	g_ptr_array_set_size(self->trusted_reports, 0);
+	report_specs = g_key_file_get_string_list(keyfile,
+						  "fwupd",
+						  "TrustedReports",
+						  NULL, /* length */
+						  NULL);
+	if (report_specs != NULL) {
+		for (guint i = 0; report_specs[i] != NULL; i++) {
+			FwupdReport *report =
+			    fu_config_report_from_spec(self, report_specs[i], error);
+			if (report == NULL)
+				return FALSE;
+			g_ptr_array_add(self->trusted_reports, report);
+		}
+	}
+
 	return TRUE;
 }
 
@@ -381,6 +458,13 @@ fu_config_get_trusted_uids(FuConfig *self)
 {
 	g_return_val_if_fail(FU_IS_CONFIG(self), NULL);
 	return self->trusted_uids;
+}
+
+GPtrArray *
+fu_config_get_trusted_reports(FuConfig *self)
+{
+	g_return_val_if_fail(FU_IS_CONFIG(self), NULL);
+	return self->trusted_reports;
 }
 
 GPtrArray *
@@ -517,6 +601,7 @@ fu_config_init(FuConfig *self)
 	self->approved_firmware = g_ptr_array_new_with_free_func(g_free);
 	self->blocked_firmware = g_ptr_array_new_with_free_func(g_free);
 	self->trusted_uids = g_array_new(FALSE, FALSE, sizeof(guint64));
+	self->trusted_reports = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 	self->uri_schemes = g_ptr_array_new_with_free_func(g_free);
 	self->monitors = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 }
@@ -526,6 +611,8 @@ fu_config_finalize(GObject *obj)
 {
 	FuConfig *self = FU_CONFIG(obj);
 
+	if (self->os_release != NULL)
+		g_hash_table_unref(self->os_release);
 	for (guint i = 0; i < self->monitors->len; i++) {
 		GFileMonitor *monitor = g_ptr_array_index(self->monitors, i);
 		g_file_monitor_cancel(monitor);
@@ -537,6 +624,7 @@ fu_config_finalize(GObject *obj)
 	g_ptr_array_unref(self->approved_firmware);
 	g_ptr_array_unref(self->blocked_firmware);
 	g_ptr_array_unref(self->uri_schemes);
+	g_ptr_array_unref(self->trusted_reports);
 	g_array_unref(self->trusted_uids);
 	g_free(self->host_bkc);
 	g_free(self->esp_location);

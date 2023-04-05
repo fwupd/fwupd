@@ -662,6 +662,58 @@ fu_engine_release_remote_id_changed_cb(FuRelease *release, GParamSpec *pspec, Fu
 }
 
 static gboolean
+fu_engine_compare_report_trusted(FwupdReport *report_trusted, FwupdReport *report)
+{
+	if (fwupd_report_has_flag(report, FWUPD_REPORT_FLAG_FROM_OEM) &&
+	    !fwupd_report_has_flag(report_trusted, FWUPD_REPORT_FLAG_FROM_OEM))
+		return FALSE;
+	if (fwupd_report_get_vendor_id(report_trusted) != 0) {
+		if (fwupd_report_get_vendor_id(report_trusted) !=
+		    fwupd_report_get_vendor_id(report))
+			return FALSE;
+	}
+	if (fwupd_report_get_distro_id(report_trusted) != 0) {
+		if (g_strcmp0(fwupd_report_get_distro_id(report_trusted),
+			      fwupd_report_get_distro_id(report)) != 0)
+			return FALSE;
+	}
+	if (fwupd_report_get_distro_version(report_trusted) != 0) {
+		if (g_strcmp0(fwupd_report_get_distro_version(report_trusted),
+			      fwupd_report_get_distro_version(report)) != 0)
+			return FALSE;
+	}
+	if (fwupd_report_get_distro_variant(report_trusted) != 0) {
+		if (g_strcmp0(fwupd_report_get_distro_variant(report_trusted),
+			      fwupd_report_get_distro_variant(report)) != 0)
+			return FALSE;
+	}
+	return TRUE;
+}
+
+static void
+fu_engine_add_trusted_report(FuEngine *self, FuRelease *release)
+{
+	GPtrArray *reports = fu_release_get_reports(release);
+	GPtrArray *trusted_reports = fu_config_get_trusted_reports(self->config);
+
+	for (guint i = 0; i < reports->len; i++) {
+		FwupdReport *report = g_ptr_array_index(reports, i);
+		for (guint j = 0; j < trusted_reports->len; j++) {
+			FwupdReport *trusted_report = g_ptr_array_index(reports, j);
+			if (fu_engine_compare_report_trusted(trusted_report, report)) {
+				g_autofree gchar *str = fwupd_report_to_string(trusted_report);
+				g_debug("add trusted-report to %s:%s as trusted: %s",
+					fu_release_get_appstream_id(release),
+					fu_release_get_version(release),
+					str);
+				fu_release_add_flag(release, FWUPD_RELEASE_FLAG_TRUSTED_REPORT);
+				return;
+			}
+		}
+	}
+}
+
+static gboolean
 fu_engine_load_release(FuEngine *self,
 		       FuRelease *release,
 		       XbNode *component,
@@ -689,6 +741,9 @@ fu_engine_load_release(FuEngine *self,
 	/* add any client-side BKC tags */
 	if (!fu_engine_add_local_release_metadata(self, release, error))
 		return FALSE;
+
+	/* add the trusted report metadata if appropriate */
+	fu_engine_add_trusted_report(self, release);
 
 	/* success */
 	return TRUE;
