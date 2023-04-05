@@ -933,3 +933,9 @@ LIBFWUPD_1.8.13 {
     fwupd_remote_set_title;
   local: *;
 } LIBFWUPD_1.8.11;
+
+LIBFWUPD_1.9.1 {
+  global:
+    fwupd_remote_build_report_uri;
+  local: *;
+} LIBFWUPD_1.8.13;

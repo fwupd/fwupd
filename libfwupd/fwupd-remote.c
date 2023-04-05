@@ -309,15 +309,26 @@ fwupd_remote_get_suffix_for_keyring_kind(FwupdKeyringKind keyring_kind)
 }
 
 static gchar *
-fwupd_remote_build_uri(FwupdRemote *self, const gchar *url, GError **error)
+fwupd_remote_build_uri(FwupdRemote *self,
+		       const gchar *base_uri,
+		       const gchar *url_noauth,
+		       GError **error)
 {
 	FwupdRemotePrivate *priv = GET_PRIVATE(self);
 #ifdef HAVE_LIBCURL_7_62_0
+	g_autofree gchar *url = NULL;
 	g_autoptr(curlptr) tmp_uri = NULL;
 	g_autoptr(CURLU) uri = curl_url();
 
+	/* the LVFS can't accept basic auth on an endpoint not expecting authentication */
+	if (priv->username != NULL || priv->password != NULL) {
+		url = g_strdup_printf("%s/auth", url_noauth);
+	} else {
+		url = g_strdup(url_noauth);
+	}
+
 	/* create URI, substituting if required */
-	if (priv->firmware_base_uri != NULL) {
+	if (base_uri != NULL) {
 		g_autofree gchar *basename = NULL;
 		g_autofree gchar *path_new = NULL;
 		g_autoptr(curlptr) path = NULL;
@@ -378,14 +389,14 @@ fwupd_remote_build_uri(FwupdRemote *self, const gchar *url, GError **error)
 	return g_strdup(tmp_uri);
 #else
 	if (priv->firmware_base_uri != NULL) {
-		g_autofree gchar *basename = g_path_get_basename(url);
+		g_autofree gchar *basename = g_path_get_basename(url_noauth);
 		return g_build_filename(priv->firmware_base_uri, basename, NULL);
 	}
-	if (g_strstr_len(url, -1, "/") == NULL) {
+	if (g_strstr_len(url_noauth, -1, "/") == NULL) {
 		g_autofree gchar *basename = g_path_get_dirname(priv->metadata_uri);
-		return g_build_filename(basename, url, NULL);
+		return g_build_filename(basename, url_noauth, NULL);
 	}
-	return g_strdup(url);
+	return g_strdup(url_noauth);
 #endif
 }
 
@@ -1189,10 +1200,31 @@ fwupd_remote_get_checksum(FwupdRemote *self)
 gchar *
 fwupd_remote_build_firmware_uri(FwupdRemote *self, const gchar *url, GError **error)
 {
+	FwupdRemotePrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FWUPD_IS_REMOTE(self), NULL);
 	g_return_val_if_fail(url != NULL, NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
-	return fwupd_remote_build_uri(self, url, error);
+	return fwupd_remote_build_uri(self, priv->firmware_base_uri, url, error);
+}
+
+/**
+ * fwupd_remote_build_report_uri:
+ * @self: a #FwupdRemote
+ * @error: (nullable): optional return location for an error
+ *
+ * Builds a URI for the URL using the username and password set for the remote.
+ *
+ * Returns: (transfer full): a URI, or %NULL for error
+ *
+ * Since: 1.9.1
+ **/
+gchar *
+fwupd_remote_build_report_uri(FwupdRemote *self, GError **error)
+{
+	FwupdRemotePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_REMOTE(self), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+	return fwupd_remote_build_uri(self, NULL, priv->report_uri, error);
 }
 
 /**

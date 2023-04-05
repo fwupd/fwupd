@@ -102,6 +102,8 @@ gchar *
 fwupd_remote_build_firmware_uri(FwupdRemote *self,
 				const gchar *url,
 				GError **error) G_GNUC_WARN_UNUSED_RESULT;
+gchar *
+fwupd_remote_build_report_uri(FwupdRemote *self, GError **error) G_GNUC_WARN_UNUSED_RESULT;
 gboolean
 fwupd_remote_load_signature(FwupdRemote *self,
 			    const gchar *filename,

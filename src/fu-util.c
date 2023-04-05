@@ -1362,6 +1362,7 @@ fu_util_report_history_for_remote(FuUtilPrivate *priv,
 				  GError **error)
 {
 	g_autofree gchar *data = NULL;
+	g_autofree gchar *report_uri = NULL;
 	g_autofree gchar *sig = NULL;
 	g_autofree gchar *uri = NULL;
 	g_autoptr(FwupdRemote) remote = NULL;
@@ -1387,10 +1388,11 @@ fu_util_report_history_for_remote(FuUtilPrivate *priv,
 		return FALSE;
 
 	/* ask for permission */
+	report_uri = fwupd_remote_build_report_uri(remote, error);
+	if (report_uri == NULL)
+		return FALSE;
 	if (!priv->assume_yes && !fwupd_remote_get_automatic_reports(remote)) {
-		fu_console_print_kv(priv->console,
-				    _("Target"),
-				    fwupd_remote_get_report_uri(remote));
+		fu_console_print_kv(priv->console, _("Target"), report_uri);
 		fu_console_print_kv(priv->console, _("Payload"), data);
 		if (sig != NULL)
 			fu_console_print_kv(priv->console, _("Signature"), sig);
@@ -1404,12 +1406,7 @@ fu_util_report_history_for_remote(FuUtilPrivate *priv,
 	}
 
 	/* POST request and parse reply */
-	if (!fu_util_send_report(priv->client,
-				 fwupd_remote_get_report_uri(remote),
-				 data,
-				 sig,
-				 &uri,
-				 error))
+	if (!fu_util_send_report(priv->client, report_uri, data, sig, &uri, error))
 		return FALSE;
 
 	/* server wanted us to see a message */
