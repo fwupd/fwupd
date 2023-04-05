@@ -8732,6 +8732,9 @@ fu_engine_init(FuEngine *self)
 	fu_context_set_runtime_versions(self->ctx, self->runtime_versions);
 	fu_context_set_compile_versions(self->ctx, self->compile_versions);
 
+	/* for debugging */
+	g_info("starting fwupd %s…", VERSION);
+
 	g_signal_connect(FU_CONTEXT(self->ctx),
 			 "security-changed",
 			 G_CALLBACK(fu_engine_context_security_changed_cb),
