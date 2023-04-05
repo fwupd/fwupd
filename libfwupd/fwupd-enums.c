@@ -774,6 +774,8 @@ fwupd_release_flag_to_string(FwupdReleaseFlags release_flag)
 		return "is-alternate-branch";
 	if (release_flag == FWUPD_RELEASE_FLAG_IS_COMMUNITY)
 		return "is-community";
+	if (release_flag == FWUPD_RELEASE_FLAG_TRUSTED_REPORT)
+		return "trusted-report";
 	return NULL;
 }
 
@@ -806,6 +808,8 @@ fwupd_release_flag_from_string(const gchar *release_flag)
 		return FWUPD_RELEASE_FLAG_IS_ALTERNATE_BRANCH;
 	if (g_strcmp0(release_flag, "is-community") == 0)
 		return FWUPD_RELEASE_FLAG_IS_COMMUNITY;
+	if (g_strcmp0(release_flag, "trusted-report") == 0)
+		return FWUPD_RELEASE_FLAG_TRUSTED_REPORT;
 	return FWUPD_RELEASE_FLAG_NONE;
 }
 

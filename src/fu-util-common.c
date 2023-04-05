@@ -1749,6 +1749,10 @@ fu_util_release_flag_to_string(FwupdReleaseFlags release_flag)
 		/* TRANSLATORS: is not supported by the vendor */
 		return _("Community supported");
 	}
+	if (release_flag == FWUPD_RELEASE_FLAG_TRUSTED_REPORT) {
+		/* TRANSLATORS: someone we trust has tested this */
+		return _("Tested by trusted vendor");
+	}
 
 	/* fall back for unknown types */
 	return fwupd_release_flag_to_string(release_flag);
