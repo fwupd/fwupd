@@ -56,6 +56,16 @@ from the PackageKit Coding Style.
 
 * Pointers should be checked for NULL explicitly, e.g. `foo != NULL` not `!foo`
 
+* Use the correct debug level:
+
+  * `g_debug()` -- low level plugin and daemon development, typically only useful to programmers
+  * `g_info()` -- generally useful messages, typically shown when using `--verbose`
+  * `g_message()` -- important messages, typically shown in service output
+  * `g_warning()` -- warning messages, typically shown in service output
+  * `g_critical()` -- critical messages, typically shown before the daemon aborts
+
+**NOTE:** Do not use `g_error()` -- it's not appropriate to abort the daemon on error.
+
 `./contrib/reformat-code.py` can be used in order to get automated
 formatting. Calling the script without arguments formats the current
 patch while passing commits will do formatting on everything changed since that
