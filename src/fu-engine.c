@@ -863,6 +863,8 @@ fu_engine_modify_remote(FuEngine *self,
 	    "MetadataURI",
 	    "ReportURI",
 	    "SecurityReportURI",
+	    "Username",
+	    "Password",
 	    NULL,
 	};
 
