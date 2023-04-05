@@ -276,7 +276,11 @@ fu_bios_setting_set_type(FuBiosSettings *self, FwupdBiosSetting *attr, GError **
 	/* lenovo thinklmi seems to be missing it even though it's mandatory :/ */
 	if (!fu_bios_setting_get_key(attr, "type", &data, &error_key)) {
 #ifdef FU_THINKLMI_COMPAT
-		g_print("Utilizing think-lmi compatibility for kernels less than 6.3\n");
+		static gboolean kernel_bug_notified = FALSE;
+		if (!kernel_bug_notified) {
+			g_info("using think-lmi compatibility for kernels less than 6.3");
+			kernel_bug_notified = TRUE;
+		}
 		kernel_bug = TRUE;
 #else
 		g_debug("%s", error_key->message);
