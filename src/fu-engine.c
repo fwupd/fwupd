@@ -5862,6 +5862,7 @@ fu_engine_get_releases_for_device(FuEngine *self,
 		}
 
 		/* find all the releases that pass all the requirements */
+		g_debug("%s matched %u components", guid, components->len);
 		for (guint i = 0; i < components->len; i++) {
 			XbNode *component = XB_NODE(g_ptr_array_index(components, i));
 			g_autoptr(GError) error_tmp = NULL;
@@ -5875,6 +5876,7 @@ fu_engine_get_releases_for_device(FuEngine *self,
 				continue;
 			}
 		}
+		g_debug("%s matched %u releases", guid, releases->len);
 
 		/* if we're only checking for SUPPORTED then *any* release is good enough */
 		if (fu_engine_request_has_flag(request, FU_ENGINE_REQUEST_FLAG_ANY_RELEASE) &&
