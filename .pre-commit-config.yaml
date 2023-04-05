@@ -55,6 +55,10 @@ repos:
       name: check for superfluous includes
       language: script
       entry: ./contrib/ci/check-headers.py
+    - id: check-source
+      name: check source code for common issues
+      language: script
+      entry: ./contrib/ci/check-source.py
     - id: check-quirks
       name: check quirk style
       language: script

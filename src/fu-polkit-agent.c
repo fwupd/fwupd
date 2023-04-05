@@ -82,7 +82,7 @@ fork_agent(pid_t *pid, const char *path, ...)
 		 * keep an unused copy of stdin around. */
 		fd = open("/dev/tty", O_WRONLY);
 		if (fd < 0) {
-			g_error("Failed to open /dev/tty: %m");
+			g_critical("Failed to open /dev/tty: %m");
 			_exit(EXIT_FAILURE);
 		}
 		if (!stdout_is_tty)
