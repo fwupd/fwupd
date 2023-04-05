@@ -3257,7 +3257,16 @@ fwupd_client_install_release_remote_cb(GObject *source, GAsyncResult *res, gpoin
 				return;
 			}
 			g_ptr_array_add(uris_built, g_steal_pointer(&uri_str));
+		} else {
+			g_debug("do not how to handle URI %s", uri_tmp);
 		}
+	}
+	if (uris_built->len == 0) {
+		g_task_return_new_error(task,
+					FWUPD_ERROR,
+					FWUPD_ERROR_INVALID_FILE,
+					"No URIs to download");
+		return;
 	}
 
 	/* download file */
