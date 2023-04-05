@@ -365,11 +365,15 @@ fwupd_remote_build_uri(FwupdRemote *self, const gchar *url, GError **error)
 		}
 	}
 
-	/* set the username and password */
-	if (priv->username != NULL)
-		(void)curl_url_set(uri, CURLUPART_USER, priv->username, 0);
-	if (priv->password != NULL)
-		(void)curl_url_set(uri, CURLUPART_PASSWORD, priv->password, 0);
+	/* set the escaped username and password */
+	if (priv->username != NULL) {
+		g_autofree gchar *user_escaped = g_uri_escape_string(priv->username, NULL, FALSE);
+		(void)curl_url_set(uri, CURLUPART_USER, user_escaped, 0);
+	}
+	if (priv->password != NULL) {
+		g_autofree gchar *pass_escaped = g_uri_escape_string(priv->password, NULL, FALSE);
+		(void)curl_url_set(uri, CURLUPART_PASSWORD, pass_escaped, 0);
+	}
 	(void)curl_url_get(uri, CURLUPART_URL, &tmp_uri, 0);
 	return g_strdup(tmp_uri);
 #else
