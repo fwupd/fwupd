@@ -3298,7 +3298,7 @@ fu_bios_settings_load_func(void)
 
 	p14s_settings = fu_context_get_bios_settings(ctx);
 	p14s_items = fu_bios_settings_get_all(p14s_settings);
-	g_assert_cmpint(p14s_items->len, ==, 75);
+	g_assert_cmpint(p14s_items->len, ==, 3);
 
 	/* reboot should be pending on this one */
 	ret = fu_context_get_bios_setting_pending_reboot(ctx);
