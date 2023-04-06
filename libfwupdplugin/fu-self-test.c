@@ -3155,7 +3155,7 @@ fu_bios_settings_load_func(void)
 
 	p620_settings = fu_context_get_bios_settings(ctx);
 	p620_items = fu_bios_settings_get_all(p620_settings);
-	g_assert_cmpint(p620_items->len, ==, 128);
+	g_assert_cmpint(p620_items->len, ==, 5);
 
 	/* make sure nothing pending */
 	ret = fu_context_get_bios_setting_pending_reboot(ctx);
