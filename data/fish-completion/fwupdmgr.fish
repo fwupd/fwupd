@@ -50,7 +50,7 @@ complete -c fwupdmgr -n '__fish_use_subcommand' -x -a get-releases -d 'Gets the 
 complete -c fwupdmgr -n '__fish_use_subcommand' -x -a get-remotes -d 'Gets the configured remotes'
 complete -c fwupdmgr -n '__fish_use_subcommand' -x -a get-results -d 'Gets the results from the last update'
 complete -c fwupdmgr -n '__fish_use_subcommand' -x -a get-updates -d 'Gets the list of updates for connected hardware'
-complete -c fwupdmgr -n '__fish_use_subcommand' -x -a install -d 'Install a firmware file on this hardware'
+complete -c fwupdmgr -n '__fish_use_subcommand' -x -a install -d 'Install a firmware file in cabinet format on this hardware'
 complete -c fwupdmgr -n '__fish_use_subcommand' -x -a modify-config -d 'Modifies a daemon configuration value'
 complete -c fwupdmgr -n '__fish_use_subcommand' -x -a modify-remote -d 'Modifies a given remote'
 complete -c fwupdmgr -n '__fish_use_subcommand' -x -a refresh -d 'Refresh metadata from remote server'

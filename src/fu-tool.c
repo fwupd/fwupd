@@ -3757,7 +3757,7 @@ main(int argc, char *argv[])
 			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
 			      _("FILENAME DEVICE-ID"),
 			      /* TRANSLATORS: command description */
-			      _("Install a firmware blob on a device"),
+			      _("Install a raw firmware blob on a device"),
 			      fu_util_install_blob);
 	fu_util_cmd_array_add(cmd_array,
 			      "install",
