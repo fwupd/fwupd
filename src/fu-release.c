@@ -1083,6 +1083,13 @@ fu_release_ensure_trust_flags(FuRelease *self, XbNode *rel, GError **error)
 	g_return_val_if_fail(FU_IS_RELEASE(self), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
+	/* in the self tests */
+	if (g_getenv("FWUPD_SELF_TEST") != NULL) {
+		fu_release_add_flag(self, FWUPD_RELEASE_FLAG_TRUSTED_PAYLOAD);
+		fu_release_add_flag(self, FWUPD_RELEASE_FLAG_TRUSTED_METADATA);
+		return TRUE;
+	}
+
 	/* populated from an actual cab archive */
 	blob = g_object_get_data(G_OBJECT(rel), "fwupd::ReleaseFlags");
 	if (blob != NULL) {

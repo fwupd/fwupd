@@ -1455,6 +1455,67 @@ fu_engine_device_unlock_func(gconstpointer user_data)
 }
 
 static void
+fu_engine_device_md_set_flags_func(gconstpointer user_data)
+{
+	FuTest *self = (FuTest *)user_data;
+	gboolean ret;
+	g_autoptr(FuDevice) device = fu_device_new(self->ctx);
+	g_autoptr(FuEngine) engine = fu_engine_new();
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(GError) error = NULL;
+	g_autoptr(XbBuilder) builder = xb_builder_new();
+	g_autoptr(XbBuilderSource) source = xb_builder_source_new();
+	g_autoptr(XbSilo) silo = NULL;
+	const gchar *xml =
+	    "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+	    "<components version=\"0.9\">\n"
+	    "  <component type=\"firmware\">\n"
+	    "    <id>org.fwupd.8330a096d9f1af8567c7374cb8403e1ce9cf3163.device</id>\n"
+	    "    <provides>\n"
+	    "      <firmware type=\"flashed\">2d47f29b-83a2-4f31-a2e8-63474f4d4c2e</firmware>\n"
+	    "    </provides>\n"
+	    "    <releases>\n"
+	    "      <release version=\"1\" />\n"
+	    "    </releases>\n"
+	    "    <custom>\n"
+	    "      <value key=\"LVFS::DeviceFlags\">save-into-backup-remote</value>\n"
+	    "    </custom>\n"
+	    "  </component>\n"
+	    "</components>\n";
+
+	/* load engine to get FuConfig set up */
+	ret = fu_engine_load(engine, FU_ENGINE_LOAD_FLAG_NO_CACHE, progress, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* add the XML metadata */
+	ret = xb_builder_source_load_xml(source, xml, XB_BUILDER_SOURCE_FLAG_NONE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	xb_builder_import_source(builder, source);
+	silo = xb_builder_compile(builder, XB_BUILDER_COMPILE_FLAG_NONE, NULL, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(silo);
+	fu_engine_set_silo(engine, silo);
+
+	/* add a dummy device */
+	fu_device_set_id(device, "UEFI-dummy-dev0");
+	fu_device_set_version(device, "0");
+	fu_device_add_vendor_id(device, "USB:FFFF");
+	fu_device_add_protocol(device, "com.acme");
+	fu_device_add_guid(device, "2d47f29b-83a2-4f31-a2e8-63474f4d4c2e");
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
+	fu_device_add_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_MD_SET_FLAGS);
+	fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_PLAIN);
+	fu_engine_add_device(engine, device);
+
+	/* check the flag got set */
+	g_assert_true(
+	    fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_SAVE_INTO_BACKUP_REMOTE));
+}
+
+static void
 fu_engine_require_hwid_func(gconstpointer user_data)
 {
 	FuTest *self = (FuTest *)user_data;
@@ -4972,6 +5033,7 @@ main(int argc, char **argv)
 	(void)g_setenv("FWUPD_OFFLINE_TRIGGER", "/tmp/fwupd-self-test/system-update", TRUE);
 	(void)g_setenv("FWUPD_LOCALSTATEDIR", "/tmp/fwupd-self-test/var", TRUE);
 	(void)g_setenv("FWUPD_SYSFSFWATTRIBDIR", testdatadir, TRUE);
+	(void)g_setenv("FWUPD_SELF_TEST", "1", TRUE);
 
 	/* ensure empty tree */
 	fu_self_test_mkroot();
@@ -5015,6 +5077,9 @@ main(int argc, char **argv)
 			     self,
 			     fu_engine_get_details_missing_func);
 	g_test_add_data_func("/fwupd/engine{device-unlock}", self, fu_engine_device_unlock_func);
+	g_test_add_data_func("/fwupd/engine{device-md-set-flags}",
+			     self,
+			     fu_engine_device_md_set_flags_func);
 	g_test_add_data_func("/fwupd/engine{multiple-releases}",
 			     self,
 			     fu_engine_multiple_rels_func);

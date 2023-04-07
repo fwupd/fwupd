@@ -507,6 +507,18 @@ typedef guint64 FuDeviceInternalFlags;
  */
 #define FU_DEVICE_INTERNAL_FLAG_SAVE_INTO_BACKUP_REMOTE (1ull << 28)
 
+/**
+ * FU_DEVICE_INTERNAL_FLAG_MD_SET_FLAGS:
+ *
+ * Set the device flags from the metadata if available.
+ *
+ * NOTE: These flags should only affect device update, and should never be used to affect
+ * enumeration.
+ *
+ * Since: 1.9.1
+ */
+#define FU_DEVICE_INTERNAL_FLAG_MD_SET_FLAGS (1ull << 29)
+
 /* accessors */
 gchar *
 fu_device_to_string(FuDevice *self);

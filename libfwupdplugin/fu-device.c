@@ -245,6 +245,8 @@ fu_device_internal_flag_to_string(FuDeviceInternalFlags flag)
 		return "no-probe-complete";
 	if (flag == FU_DEVICE_INTERNAL_FLAG_SAVE_INTO_BACKUP_REMOTE)
 		return "save-into-backup-remote";
+	if (flag == FU_DEVICE_INTERNAL_FLAG_MD_SET_FLAGS)
+		return "md-set-flags";
 	return NULL;
 }
 
@@ -319,6 +321,8 @@ fu_device_internal_flag_from_string(const gchar *flag)
 		return FU_DEVICE_INTERNAL_FLAG_NO_PROBE_COMPLETE;
 	if (g_strcmp0(flag, "save-into-backup-remote") == 0)
 		return FU_DEVICE_INTERNAL_FLAG_SAVE_INTO_BACKUP_REMOTE;
+	if (g_strcmp0(flag, "md-set-flags") == 0)
+		return FU_DEVICE_INTERNAL_FLAG_MD_SET_FLAGS;
 	return FU_DEVICE_INTERNAL_FLAG_UNKNOWN;
 }
 
@@ -5348,6 +5352,17 @@ fu_device_ensure_from_component_icon(FuDevice *self, XbNode *component)
 	}
 }
 
+static void
+fu_device_ensure_from_component_flags(FuDevice *self, XbNode *component)
+{
+	const gchar *tmp =
+	    xb_node_query_text(component, "custom/value[@key='LVFS::DeviceFlags']", NULL);
+	if (tmp != NULL) {
+		fu_device_set_custom_flag(self, tmp);
+		fu_device_remove_internal_flag(self, FU_DEVICE_INTERNAL_FLAG_MD_SET_FLAGS);
+	}
+}
+
 static const gchar *
 fu_device_category_to_name(const gchar *cat)
 {
@@ -5519,6 +5534,8 @@ fu_device_ensure_from_component(FuDevice *self, XbNode *component)
 		fu_device_ensure_from_component_signed(self, component);
 	if (fu_device_has_internal_flag(self, FU_DEVICE_INTERNAL_FLAG_MD_SET_VERFMT))
 		fu_device_ensure_from_component_verfmt(self, component);
+	if (fu_device_has_internal_flag(self, FU_DEVICE_INTERNAL_FLAG_MD_SET_FLAGS))
+		fu_device_ensure_from_component_flags(self, component);
 }
 
 /**
