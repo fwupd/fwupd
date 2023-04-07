@@ -4565,7 +4565,7 @@ main(int argc, char *argv[])
 			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
 			      _("FILE [DEVICE-ID|GUID]"),
 			      /* TRANSLATORS: command description */
-			      _("Install a firmware file on this hardware"),
+			      _("Install a firmware file in cabinet format on this hardware"),
 			      fu_util_local_install);
 	fu_util_cmd_array_add(cmd_array,
 			      "get-details",
