@@ -16,8 +16,8 @@
 #include "fu-wac-module-bluetooth-id6.h"
 #include "fu-wac-module-bluetooth.h"
 #include "fu-wac-module-scaler.h"
-#include "fu-wac-module-touch.h"
 #include "fu-wac-module-touch-id7.h"
+#include "fu-wac-module-touch.h"
 
 typedef struct {
 	guint32 start_addr;
