@@ -181,10 +181,10 @@ fu_wac_module_touch_id7_write_block(FuWacModule *self,
 	/* generate chunks off of the raw block data */
 	fu_wac_module_touch_id7_read_block_header(&block_hdr, info);
 	chunks = fu_chunk_array_new(info->data,
-			       block_hdr.blockSize,
-			       block_hdr.blockStart,
-			       0x0,  /* page_sz */
-			       FU_WAC_MODULE_CHUNK_SIZE); /* packet_sz */
+				    block_hdr.blockSize,
+				    block_hdr.blockStart,
+				    0x0,		       /* page_sz */
+				    FU_WAC_MODULE_CHUNK_SIZE); /* packet_sz */
 
 	/* write data */
 	for (guint i = 0; i < chunks->len; i++) {
@@ -200,11 +200,11 @@ fu_wac_module_touch_id7_write_block(FuWacModule *self,
 		memcpy(&buf[11], fu_chunk_get_data(chk), FU_WAC_MODULE_CHUNK_SIZE);
 		blob_chunk = g_bytes_new(buf, sizeof(buf));
 		if (!fu_wac_module_set_feature(self,
-						FU_WAC_MODULE_COMMAND_DATA,
-						blob_chunk,
-						fu_progress_get_child(progress),
-						FU_WAC_MODULE_WRITE_TIMEOUT,
-						error)) {
+					       FU_WAC_MODULE_COMMAND_DATA,
+					       blob_chunk,
+					       fu_progress_get_child(progress),
+					       FU_WAC_MODULE_WRITE_TIMEOUT,
+					       error)) {
 			g_prefix_error(error, "failed to write block %u: ", info->op_id);
 			return FALSE;
 		}
@@ -214,8 +214,8 @@ fu_wac_module_touch_id7_write_block(FuWacModule *self,
 		/* rough estimate based on file size with some added to handle the extra firmware
 		 * record start and end commands */
 		fu_progress_set_percentage_full(fu_progress_get_child(progress),
-							info->op_id,
-							info->len / FU_WAC_MODULE_CHUNK_SIZE + 10);
+						info->op_id,
+						info->len / FU_WAC_MODULE_CHUNK_SIZE + 10);
 	}
 
 	/* incrementing data to the next block */
@@ -254,11 +254,11 @@ fu_wac_module_touch_id7_write_record(FuWacModule *self,
 						 command);
 	startSubBlob = g_bytes_new(command, sizeof(command));
 	if (!fu_wac_module_set_feature(self,
-					FU_WAC_MODULE_COMMAND_DATA,
-					startSubBlob,
-					fu_progress_get_child(progress),
-					FU_WAC_MODULE_ERASE_TIMEOUT,
-					error))
+				       FU_WAC_MODULE_COMMAND_DATA,
+				       startSubBlob,
+				       fu_progress_get_child(progress),
+				       FU_WAC_MODULE_ERASE_TIMEOUT,
+				       error))
 		return FALSE;
 
 	info->op_id++;
@@ -277,11 +277,11 @@ fu_wac_module_touch_id7_write_record(FuWacModule *self,
 
 	endSubBlob = g_bytes_new(command, sizeof(command));
 	if (!fu_wac_module_set_feature(self,
-					FU_WAC_MODULE_COMMAND_DATA,
-					endSubBlob,
-					fu_progress_get_child(progress),
-					FU_WAC_MODULE_ERASE_TIMEOUT,
-					error))
+				       FU_WAC_MODULE_COMMAND_DATA,
+				       endSubBlob,
+				       fu_progress_get_child(progress),
+				       FU_WAC_MODULE_ERASE_TIMEOUT,
+				       error))
 		return FALSE;
 
 	info->op_id++;
@@ -299,10 +299,10 @@ fu_wac_module_touch_id7_write_record(FuWacModule *self,
  */
 static gboolean
 fu_wac_module_touch_id7_write_firmware(FuDevice *device,
-				   FuFirmware *firmware,
-				   FuProgress *progress,
-				   FwupdInstallFlags flags,
-				   GError **error)
+				       FuFirmware *firmware,
+				       FuProgress *progress,
+				       FwupdInstallFlags flags,
+				       GError **error)
 {
 	FuWacModule *self = FU_WAC_MODULE(device);
 	g_autoptr(GBytes) fwRead = NULL;
