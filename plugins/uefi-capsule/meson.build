@@ -58,7 +58,7 @@ plugin_builtins += plugin_builtin_uefi_capsule
 if get_option('compat_cli')
 fwupdate = executable(
   'fwupdate',
-  structgen.process('fu-acpi-uefi.struct'),
+  structgen.process('fu-uefi.struct'),
   sources: [
     'fu-uefi-tool.c',
   ],
