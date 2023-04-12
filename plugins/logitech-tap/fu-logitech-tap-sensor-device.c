@@ -225,7 +225,7 @@ fu_logitech_tap_sensor_device_set_version(FuDevice *device, GError **error)
 	fwversion =
 	    (get_data[4] << 24) + (get_data[3] << 16) + (get_data[2] << 8) + get_data[1];
 	fu_device_set_version_from_uint32(device, fwversion);
-	
+
 	/* success */
 	return TRUE;
 }
@@ -235,7 +235,7 @@ fu_logitech_tap_sensor_device_set_serial(FuDevice *device, GError **error)
 {
 	FuLogitechTapSensorDevice *self = FU_LOGITECH_TAP_SENSOR_DEVICE(device);
 	g_autoptr(GString) serial_number = g_string_new(NULL);
-	guint8 set_data[HID_SET_DATA_LEN] = {kHidMcuCmdSetSerialNumber, kHidMcuSerialNumberSetReportByte1, 
+	guint8 set_data[HID_SET_DATA_LEN] = {kHidMcuCmdSetSerialNumber, kHidMcuSerialNumberSetReportByte1,
 	kHidMcuSerialNumberSetReportByte2, kHidMcuSerialNumberSetReportByte3, kHidMcuSerialNumberSetReportByte4};
 
 	g_debug("get sensor serial number");
@@ -256,12 +256,12 @@ fu_logitech_tap_sensor_device_set_serial(FuDevice *device, GError **error)
 							  HID_GET_DATA_LEN,
 						      error))
 	        return FALSE;
-	    g_string_append_printf(serial_number, "%c%c%c%c", (guchar)get_data[1], 
+	    g_string_append_printf(serial_number, "%c%c%c%c", (guchar)get_data[1],
 	       (guchar)get_data[2], (guchar)get_data[3], (guchar)get_data[4]);
 	}
-		
+
     fu_device_set_serial(device, serial_number->str);
-	
+
 	/* success */
 	return TRUE;
 }
@@ -307,7 +307,7 @@ fu_logitech_tap_sensor_device_probe(FuDevice *device, GError **error)
 		return FALSE;
 	}
 
-	/* set the physical ID */ 
+	/* set the physical ID */
 	return fu_udev_device_set_physical_id(FU_UDEV_DEVICE(device), "hid", error);
 #else
     /* failed */

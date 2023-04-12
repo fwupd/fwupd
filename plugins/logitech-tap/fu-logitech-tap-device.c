@@ -24,7 +24,7 @@ fu_logitech_tap_device_write_firmware(FuDevice *device,
 	g_autofree gchar *old_firmware_version = NULL;
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GPtrArray) chunks = NULL;
-	
+
 	/* save the current firmware version for troubleshooting purpose */
 	old_firmware_version = g_strdup(fu_device_get_version(device));
 
