@@ -1,7 +1,7 @@
 # Installed tests
 
 A test suite that can be used to interact with a fake device is installed when
-configured with `-Ddaemon=true` and `-Dtests=true`.
+configured with `-Dbuild=all` and `-Dtests=true`.
 
 By default this test suite is disabled.
 
