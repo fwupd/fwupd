@@ -293,6 +293,7 @@ class Pcap2Emulation:
             pcap_data = json.loads(line)
             if "layers" in pcap_data:
                 layers = pcap_data["layers"]
+                usb_port = None
 
                 if (
                     layers["frame"]["frame_frame_cap_len"]
