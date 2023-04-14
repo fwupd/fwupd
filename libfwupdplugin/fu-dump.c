@@ -33,6 +33,11 @@ fu_dump_full(const gchar *log_domain,
 {
 	g_autoptr(GString) str = g_string_new(NULL);
 
+	/* this is CPU intensive enough to pre-filter here rather than building
+	 * the string and handling in a GLogFunc */
+	if (g_getenv("FWUPD_VERBOSE") == NULL)
+		return;
+
 	/* optional */
 	if (title != NULL)
 		g_string_append_printf(str, "%s:", title);
