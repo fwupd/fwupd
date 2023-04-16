@@ -2207,6 +2207,32 @@ fu_util_get_firmware_types(FuUtilPrivate *priv, gchar **values, GError **error)
 	return TRUE;
 }
 
+static gboolean
+fu_util_get_firmware_gtypes(FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	g_autoptr(GArray) firmware_types = NULL;
+
+	/* load engine */
+	if (!fu_engine_load(priv->engine,
+			    FU_ENGINE_LOAD_FLAG_READONLY | FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS,
+			    priv->progress,
+			    error))
+		return FALSE;
+
+	firmware_types = fu_context_get_firmware_gtypes(fu_engine_get_context(priv->engine));
+	for (guint i = 0; i < firmware_types->len; i++) {
+		GType gtype = g_array_index(firmware_types, GType, i);
+		fu_console_print_literal(priv->console, g_type_name(gtype));
+	}
+	if (firmware_types->len == 0) {
+		/* TRANSLATORS: nothing found */
+		fu_console_print_literal(priv->console, _("No firmware found"));
+		return TRUE;
+	}
+
+	return TRUE;
+}
+
 static gchar *
 fu_util_prompt_for_firmware_type(FuUtilPrivate *priv, GError **error)
 {
@@ -3927,6 +3953,12 @@ main(int argc, char *argv[])
 			      /* TRANSLATORS: command description */
 			      _("List the available firmware types"),
 			      fu_util_get_firmware_types);
+	fu_util_cmd_array_add(cmd_array,
+			      "get-firmware-gtypes",
+			      NULL,
+			      /* TRANSLATORS: command description */
+			      _("List the available firmware GTypes"),
+			      fu_util_get_firmware_gtypes);
 	fu_util_cmd_array_add(cmd_array,
 			      "get-remotes",
 			      NULL,

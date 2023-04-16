@@ -33,7 +33,7 @@ typedef struct {
 	GHashTable *compile_versions;
 	GPtrArray *udev_subsystems;
 	GPtrArray *esp_volumes;
-	GHashTable *firmware_gtypes;
+	GHashTable *firmware_gtypes; /* utf8:GType */
 	GHashTable *hwid_flags; /* str: */
 	FuPowerState power_state;
 	FuLidState lid_state;
@@ -675,6 +675,32 @@ fu_context_get_firmware_gtype_ids(FuContext *self)
 		g_ptr_array_add(firmware_gtypes, g_strdup(id));
 	}
 	g_ptr_array_sort(firmware_gtypes, fu_context_gtypes_sort_cb);
+	return firmware_gtypes;
+}
+
+/**
+ * fu_context_get_firmware_gtypes:
+ * @self: a #FuContext
+ *
+ * Returns all the firmware #GType's.
+ *
+ * Returns: (transfer none) (element-type GType): Firmware types
+ *
+ * Since: 1.9.1
+ **/
+GArray *
+fu_context_get_firmware_gtypes(FuContext *self)
+{
+	FuContextPrivate *priv = GET_PRIVATE(self);
+	GArray *firmware_gtypes = g_array_new(FALSE, FALSE, sizeof(GType));
+	g_autoptr(GList) values = g_hash_table_get_values(priv->firmware_gtypes);
+
+	g_return_val_if_fail(FU_IS_CONTEXT(self), NULL);
+
+	for (GList *l = values; l != NULL; l = l->next) {
+		GType gtype = GPOINTER_TO_SIZE(l->data);
+		g_array_append_val(firmware_gtypes, gtype);
+	}
 	return firmware_gtypes;
 }
 

@@ -17,6 +17,7 @@ _fwupdtool_cmd_list=(
 	'get-upgrades'
 	'get-details'
 	'get-firmware-types'
+	'get-firmware-gtypes'
 	'get-device-flags'
 	'get-devices'
 	'get-history'
