@@ -3,6 +3,9 @@ cargs = ['-DG_LOG_DOMAIN="FuPluginWacomUsb"']
 
 plugin_quirks += files('wacom-usb.quirk')
 plugin_builtin_wac = static_library('fu_plugin_wac',
+  structgen.process(
+    'fu-wac.struct',              # fuzzing
+  ),
   sources: [
     'fu-wac-common.c',
     'fu-wac-android-device.c',

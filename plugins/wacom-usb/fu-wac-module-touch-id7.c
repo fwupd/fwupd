@@ -13,6 +13,7 @@
 
 #include "fu-wac-device.h"
 #include "fu-wac-module-touch-id7.h"
+#include "fu-wac-struct.h"
 
 struct _FuWacModuleTouchId7 {
 	FuWacModule parent_instance;
@@ -20,35 +21,27 @@ struct _FuWacModuleTouchId7 {
 
 typedef struct {
 	guint32 op_id;
-	const guint8 *data;
-	gsize len;
+	const guint8 *buf;
+	gsize bufsz;
+	gsize offset;
 } WtaInfo;
 
 typedef struct {
-	guint32 headerSize;
-	guint16 firmwareNumber;
+	guint32 header_size;
+	guint16 firmware_number;
 } WtaFileHeader;
 
 typedef struct {
-	guint32 fileNameLength;
-	guint32 startAddress;
-	guint8 IC_ID;
-	guint8 MA_ID;
-	guint32 blockCount;
+	guint32 file_name_length;
+	guint32 start_address;
+	guint8 ic_id;
+	guint8 ma_id;
+	guint32 block_count;
 } WtaRecordHeader;
-
-typedef struct {
-	guint32 blockStart;
-	guint32 blockSize;
-} WtaBlockHeader;
 
 G_DEFINE_TYPE(FuWacModuleTouchId7, fu_wac_module_touch_id7, FU_TYPE_WAC_MODULE)
 
 /**
- * fu_wac_module_touch_id7_read_file_header:
- * @header: A #WtaFileHeader
- * @info: A #WtaInfo
- *
  * Read and advance past a WTA file header.
  *
  * File Header format:
@@ -61,22 +54,33 @@ G_DEFINE_TYPE(FuWacModuleTouchId7, fu_wac_module_touch_id7, FU_TYPE_WAC_MODULE)
  * }
  *
  */
-static void
-fu_wac_module_touch_id7_read_file_header(WtaFileHeader *header, WtaInfo *info)
+static gboolean
+fu_wac_module_touch_id7_read_file_header(WtaFileHeader *header, WtaInfo *info, GError **error)
 {
-	info->data += 4;
+	info->offset += 4;
 
-	header->headerSize = fu_memread_uint32(info->data, G_LITTLE_ENDIAN);
-	info->data += header->headerSize - 8;
+	if (!fu_memread_uint32_safe(info->buf,
+				    info->bufsz,
+				    info->offset,
+				    &header->header_size,
+				    G_LITTLE_ENDIAN,
+				    error))
+		return FALSE;
+	info->offset += header->header_size - 8;
 
-	header->firmwareNumber = fu_memread_uint16(info->data, G_LITTLE_ENDIAN);
-	info->data += 16;
+	if (!fu_memread_uint16_safe(info->buf,
+				    info->bufsz,
+				    info->offset,
+				    &header->firmware_number,
+				    G_LITTLE_ENDIAN,
+				    error))
+		return FALSE;
+	info->offset += 16;
+	return TRUE;
 }
 
 /**
  * fu_wac_module_touch_id7_read_record_header:
- * @header: A #WtaRecordHeader
- * @info: A #WtaInfo
  *
  * Read and advance past a WTA record header.
  *
@@ -96,47 +100,46 @@ fu_wac_module_touch_id7_read_file_header(WtaFileHeader *header, WtaInfo *info)
  * }
  *
  */
-static void
-fu_wac_module_touch_id7_read_record_header(WtaRecordHeader *header, WtaInfo *info)
+static gboolean
+fu_wac_module_touch_id7_read_record_header(WtaRecordHeader *header, WtaInfo *info, GError **error)
 {
-	header->fileNameLength = fu_memread_uint32(info->data, G_LITTLE_ENDIAN);
-	info->data += header->fileNameLength + 8;
+	if (!fu_memread_uint32_safe(info->buf,
+				    info->bufsz,
+				    info->offset,
+				    &header->file_name_length,
+				    G_LITTLE_ENDIAN,
+				    error))
+		return FALSE;
+	info->offset += header->file_name_length + 8;
 
-	header->startAddress = fu_memread_uint32(info->data, G_LITTLE_ENDIAN);
-	info->data += 8;
+	if (!fu_memread_uint32_safe(info->buf,
+				    info->bufsz,
+				    info->offset,
+				    &header->start_address,
+				    G_LITTLE_ENDIAN,
+				    error))
+		return FALSE;
+	info->offset += 8;
 
-	header->IC_ID = info->data[0];
-	info->data += 1;
+	if (!fu_memread_uint8_safe(info->buf, info->bufsz, info->offset, &header->ic_id, error))
+		return FALSE;
+	info->offset += 1;
 
-	header->MA_ID = info->data[0];
-	info->data += 3;
+	if (!fu_memread_uint8_safe(info->buf, info->bufsz, info->offset, &header->ma_id, error))
+		return FALSE;
+	info->offset += 3;
 
-	header->blockCount = fu_memread_uint32(info->data, G_LITTLE_ENDIAN);
-	info->data += 4;
-}
+	if (!fu_memread_uint32_safe(info->buf,
+				    info->bufsz,
+				    info->offset,
+				    &header->block_count,
+				    G_LITTLE_ENDIAN,
+				    error))
+		return FALSE;
+	info->offset += 4;
 
-/**
- * fu_wac_module_touch_id7_read_block_header:
- * @header: A #WtaBlockHeader
- * @info: A #WtaInfo
- *
- * Read and advance past a WTA block header.
- *
- * Block Header format:
- * {
- *   u32:    Start Address
- *   u32:    Data Block Size
- * }
- *
- */
-static void
-fu_wac_module_touch_id7_read_block_header(WtaBlockHeader *header, WtaInfo *info)
-{
-	header->blockStart = fu_memread_uint32(info->data, G_LITTLE_ENDIAN);
-	info->data += 4;
-
-	header->blockSize = fu_memread_uint32(info->data, G_LITTLE_ENDIAN);
-	info->data += 4;
+	/* success */
+	return TRUE;
 }
 
 /**
@@ -156,10 +159,10 @@ fu_wac_module_touch_id7_generate_command(const WtaRecordHeader *header,
 					 guint8 *buf)
 {
 	buf[0] = cmd;
-	buf[1] = header->IC_ID;
-	buf[2] = header->MA_ID;
+	buf[1] = header->ic_id;
+	buf[2] = header->ma_id;
 	fu_memwrite_uint32(&buf[3], op_id, G_LITTLE_ENDIAN);
-	fu_memwrite_uint32(&buf[7], header->startAddress, G_LITTLE_ENDIAN);
+	fu_memwrite_uint32(&buf[7], header->start_address, G_LITTLE_ENDIAN);
 }
 
 /**
@@ -176,13 +179,16 @@ fu_wac_module_touch_id7_write_block(FuWacModule *self,
 				    GError **error)
 {
 	g_autoptr(GPtrArray) chunks = NULL;
-	WtaBlockHeader block_hdr;
+	g_autoptr(GByteArray) st_blk = NULL;
 
 	/* generate chunks off of the raw block data */
-	fu_wac_module_touch_id7_read_block_header(&block_hdr, info);
-	chunks = fu_chunk_array_new(info->data,
-				    block_hdr.blockSize,
-				    block_hdr.blockStart,
+	st_blk = fu_struct_wta_block_header_parse(info->buf, info->bufsz, info->offset, error);
+	if (st_blk == NULL)
+		return FALSE;
+	info->offset += FU_STRUCT_WTA_BLOCK_HEADER_SIZE;
+	chunks = fu_chunk_array_new(info->buf + info->offset,
+				    fu_struct_wta_block_header_get_block_size(st_blk),
+				    fu_struct_wta_block_header_get_block_start(st_blk),
 				    0x0,		       /* page_sz */
 				    FU_WAC_MODULE_CHUNK_SIZE); /* packet_sz */
 
@@ -193,8 +199,8 @@ fu_wac_module_touch_id7_write_block(FuWacModule *self,
 		g_autoptr(GBytes) blob_chunk = NULL;
 
 		buf[0] = FU_WAC_MODULE_COMMAND_DATA;
-		buf[1] = record_hdr->IC_ID;
-		buf[2] = record_hdr->MA_ID;
+		buf[1] = record_hdr->ic_id;
+		buf[2] = record_hdr->ma_id;
 		fu_memwrite_uint32(&buf[3], info->op_id, G_LITTLE_ENDIAN);
 		fu_memwrite_uint32(&buf[7], fu_chunk_get_address(chk), G_LITTLE_ENDIAN);
 		memcpy(&buf[11], fu_chunk_get_data(chk), FU_WAC_MODULE_CHUNK_SIZE);
@@ -215,11 +221,11 @@ fu_wac_module_touch_id7_write_block(FuWacModule *self,
 		 * record start and end commands */
 		fu_progress_set_percentage_full(fu_progress_get_child(progress),
 						info->op_id,
-						info->len / FU_WAC_MODULE_CHUNK_SIZE + 10);
+						info->bufsz / FU_WAC_MODULE_CHUNK_SIZE + 10);
 	}
 
 	/* incrementing data to the next block */
-	info->data += block_hdr.blockSize;
+	info->offset += fu_struct_wta_block_header_get_block_size(st_blk);
 
 	return TRUE;
 }
@@ -240,22 +246,23 @@ fu_wac_module_touch_id7_write_record(FuWacModule *self,
 				     FuProgress *progress,
 				     GError **error)
 {
-	WtaRecordHeader record_hdr;
-	g_autoptr(GBytes) startSubBlob = NULL;
-	g_autoptr(GBytes) endSubBlob = NULL;
+	WtaRecordHeader record_hdr = {0x0};
+	g_autoptr(GBytes) blob_start = NULL;
+	g_autoptr(GBytes) blob_end = NULL;
 	guint8 command[11];
 
-	fu_wac_module_touch_id7_read_record_header(&record_hdr, info);
+	if (!fu_wac_module_touch_id7_read_record_header(&record_hdr, info, error))
+		return FALSE;
 
 	/* start firmware record command */
 	fu_wac_module_touch_id7_generate_command(&record_hdr,
 						 FU_WAC_MODULE_COMMAND_START,
 						 info->op_id,
 						 command);
-	startSubBlob = g_bytes_new(command, sizeof(command));
+	blob_start = g_bytes_new(command, sizeof(command));
 	if (!fu_wac_module_set_feature(self,
 				       FU_WAC_MODULE_COMMAND_DATA,
-				       startSubBlob,
+				       blob_start,
 				       fu_progress_get_child(progress),
 				       FU_WAC_MODULE_ERASE_TIMEOUT,
 				       error))
@@ -264,7 +271,7 @@ fu_wac_module_touch_id7_write_record(FuWacModule *self,
 	info->op_id++;
 
 	/* write each block */
-	for (guint32 i = 0; i < record_hdr.blockCount; i++) {
+	for (guint32 i = 0; i < record_hdr.block_count; i++) {
 		if (!fu_wac_module_touch_id7_write_block(self, info, progress, &record_hdr, error))
 			return FALSE;
 	}
@@ -275,10 +282,10 @@ fu_wac_module_touch_id7_write_record(FuWacModule *self,
 						 info->op_id,
 						 command);
 
-	endSubBlob = g_bytes_new(command, sizeof(command));
+	blob_end = g_bytes_new(command, sizeof(command));
 	if (!fu_wac_module_set_feature(self,
 				       FU_WAC_MODULE_COMMAND_DATA,
-				       endSubBlob,
+				       blob_end,
 				       fu_progress_get_child(progress),
 				       FU_WAC_MODULE_ERASE_TIMEOUT,
 				       error))
@@ -305,7 +312,7 @@ fu_wac_module_touch_id7_write_firmware(FuDevice *device,
 				       GError **error)
 {
 	FuWacModule *self = FU_WAC_MODULE(device);
-	g_autoptr(GBytes) fwRead = NULL;
+	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GPtrArray) chunks = NULL;
 	WtaInfo info;
 	WtaFileHeader file_hdr;
@@ -319,8 +326,8 @@ fu_wac_module_touch_id7_write_firmware(FuDevice *device,
 
 	g_debug("using element at addr 0x%0x", (guint)fu_firmware_get_addr(firmware));
 
-	fwRead = fu_firmware_get_bytes(firmware, error);
-	if (fwRead == NULL)
+	blob = fu_firmware_get_bytes(firmware, error);
+	if (blob == NULL)
 		return FALSE;
 
 	/* start, which will erase the module */
@@ -334,20 +341,20 @@ fu_wac_module_touch_id7_write_firmware(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/* set basic info */
-	info.data = g_bytes_get_data(fwRead, &info.len);
+	info.offset = 0x0;
+	info.buf = g_bytes_get_data(blob, &info.bufsz);
 	info.op_id = 1;
-
-	fu_wac_module_touch_id7_read_file_header(&file_hdr, &info);
+	if (!fu_wac_module_touch_id7_read_file_header(&file_hdr, &info, error))
+		return FALSE;
 
 	/* write each firmware record */
-	for (int x = 0; x < file_hdr.firmwareNumber; x++) {
+	for (guint i = 0; i < file_hdr.firmware_number; i++) {
 		if (!fu_wac_module_touch_id7_write_record(self, &info, progress, error))
 			return FALSE;
 
 		/* increment data to the next firmware record */
-		info.data += 14;
+		info.offset += 14;
 	}
-
 	fu_progress_step_done(progress);
 
 	/* end */

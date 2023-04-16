@@ -1,0 +1,4 @@
+struct WtaBlockHeader {
+    block_start: u32le
+    block_size: u32le
+}
