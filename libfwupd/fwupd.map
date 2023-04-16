@@ -937,5 +937,12 @@ LIBFWUPD_1.8.13 {
 LIBFWUPD_1.9.1 {
   global:
     fwupd_remote_build_report_uri;
+    fwupd_report_add_flag;
+    fwupd_report_flag_from_string;
+    fwupd_report_flag_to_string;
+    fwupd_report_get_flags;
+    fwupd_report_has_flag;
+    fwupd_report_remove_flag;
+    fwupd_report_set_flags;
   local: *;
 } LIBFWUPD_1.8.13;

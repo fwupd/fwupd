@@ -34,9 +34,10 @@ typedef struct {
 	gchar *distro_version;
 	GHashTable *metadata;
 	gchar *distro_variant;
+	FwupdReportFlags flags;
 } FwupdReportPrivate;
 
-enum { PROP_0, PROP_REMOTE_ID, PROP_LAST };
+enum { PROP_0, PROP_FLAGS, PROP_LAST };
 
 G_DEFINE_TYPE_WITH_PRIVATE(FwupdReport, fwupd_report, G_TYPE_OBJECT)
 #define GET_PRIVATE(o) (fwupd_report_get_instance_private(o))
@@ -491,6 +492,12 @@ fwupd_report_to_variant(FwupdReport *self)
 				      FWUPD_RESULT_KEY_METADATA,
 				      fwupd_hash_kv_to_variant(priv->metadata));
 	}
+	if (priv->flags > 0) {
+		g_variant_builder_add(&builder,
+				      "{sv}",
+				      FWUPD_RESULT_KEY_FLAGS,
+				      g_variant_new_uint64(priv->flags));
+	}
 	return g_variant_new("a{sv}", &builder);
 }
 
@@ -528,6 +535,10 @@ fwupd_report_from_key_value(FwupdReport *self, const gchar *key, GVariant *value
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_VERSION_OLD) == 0) {
 		fwupd_report_set_version_old(self, g_variant_get_string(value, NULL));
+		return;
+	}
+	if (g_strcmp0(key, FWUPD_RESULT_KEY_FLAGS) == 0) {
+		fwupd_report_set_flags(self, g_variant_get_uint64(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_METADATA) == 0) {
@@ -568,6 +579,19 @@ fwupd_report_to_json(FwupdReport *self, JsonBuilder *builder)
 	if (priv->vendor_id > 0)
 		fwupd_common_json_add_int(builder, FWUPD_RESULT_KEY_VENDOR_ID, priv->vendor_id);
 
+	if (priv->flags != FWUPD_REPORT_FLAG_NONE) {
+		json_builder_set_member_name(builder, FWUPD_RESULT_KEY_FLAGS);
+		json_builder_begin_array(builder);
+		for (guint i = 0; i < 64; i++) {
+			const gchar *tmp;
+			if ((priv->flags & ((guint64)1 << i)) == 0)
+				continue;
+			tmp = fwupd_report_flag_to_string((guint64)1 << i);
+			json_builder_add_string_value(builder, tmp);
+		}
+		json_builder_end_array(builder);
+	}
+
 	/* metadata */
 	keys = g_hash_table_get_keys(priv->metadata);
 	for (GList *l = keys; l != NULL; l = l->next) {
@@ -575,6 +599,23 @@ fwupd_report_to_json(FwupdReport *self, JsonBuilder *builder)
 		const gchar *value = g_hash_table_lookup(priv->metadata, key);
 		fwupd_common_json_add_string(builder, key, value);
 	}
+}
+
+static void
+fwupd_pad_kv_dfl(GString *str, const gchar *key, guint64 report_flags)
+{
+	g_autoptr(GString) tmp = g_string_new("");
+	for (guint i = 0; i < 64; i++) {
+		if ((report_flags & ((guint64)1 << i)) == 0)
+			continue;
+		g_string_append_printf(tmp, "%s|", fwupd_report_flag_to_string((guint64)1 << i));
+	}
+	if (tmp->len == 0) {
+		g_string_append(tmp, fwupd_report_flag_to_string(0));
+	} else {
+		g_string_truncate(tmp, tmp->len - 1);
+	}
+	fwupd_pad_kv_str(str, key, tmp->str);
 }
 
 /**
@@ -604,6 +645,7 @@ fwupd_report_to_string(FwupdReport *self)
 	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_VERSION_OLD, priv->version_old);
 	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_VENDOR, priv->vendor);
 	fwupd_pad_kv_int(str, FWUPD_RESULT_KEY_VENDOR_ID, priv->vendor_id);
+	fwupd_pad_kv_dfl(str, FWUPD_RESULT_KEY_FLAGS, priv->flags);
 
 	/* metadata */
 	keys = g_hash_table_get_keys(priv->metadata);
@@ -614,6 +656,176 @@ fwupd_report_to_string(FwupdReport *self)
 	}
 
 	return g_string_free(str, FALSE);
+}
+
+/**
+ * fwupd_report_get_flags:
+ * @self: a #FwupdReport
+ *
+ * Gets the report flags.
+ *
+ * Returns: report flags, or 0 if unset
+ *
+ * Since: 1.9.1
+ **/
+guint64
+fwupd_report_get_flags(FwupdReport *self)
+{
+	FwupdReportPrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_REPORT(self), 0);
+	return priv->flags;
+}
+
+/**
+ * fwupd_report_set_flags:
+ * @self: a #FwupdReport
+ * @flags: report flags, e.g. %FWUPD_REPORT_FLAG_FROM_OEM
+ *
+ * Sets the report flags.
+ *
+ * Since: 1.9.1
+ **/
+void
+fwupd_report_set_flags(FwupdReport *self, guint64 flags)
+{
+	FwupdReportPrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FWUPD_IS_REPORT(self));
+	if (priv->flags == flags)
+		return;
+	priv->flags = flags;
+	g_object_notify(G_OBJECT(self), "flags");
+}
+
+/**
+ * fwupd_report_add_flag:
+ * @self: a #FwupdReport
+ * @flag: the #FwupdReportFlags
+ *
+ * Adds a specific report flag to the report.
+ *
+ * Since: 1.9.1
+ **/
+void
+fwupd_report_add_flag(FwupdReport *self, FwupdReportFlags flag)
+{
+	FwupdReportPrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FWUPD_IS_REPORT(self));
+	if (flag == 0)
+		return;
+	if ((priv->flags & flag) > 0)
+		return;
+	priv->flags |= flag;
+	g_object_notify(G_OBJECT(self), "flags");
+}
+
+/**
+ * fwupd_report_remove_flag:
+ * @self: a #FwupdReport
+ * @flag: a report flag
+ *
+ * Removes a specific report flag from the report.
+ *
+ * Since: 1.9.1
+ **/
+void
+fwupd_report_remove_flag(FwupdReport *self, FwupdReportFlags flag)
+{
+	FwupdReportPrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FWUPD_IS_REPORT(self));
+	if (flag == 0)
+		return;
+	if ((priv->flags & flag) == 0)
+		return;
+	priv->flags &= ~flag;
+	g_object_notify(G_OBJECT(self), "flags");
+}
+
+/**
+ * fwupd_report_has_flag:
+ * @self: a #FwupdReport
+ * @flag: a report flag
+ *
+ * Finds if the report has a specific report flag.
+ *
+ * Returns: %TRUE if the flag is set
+ *
+ * Since: 1.9.1
+ **/
+gboolean
+fwupd_report_has_flag(FwupdReport *self, FwupdReportFlags flag)
+{
+	FwupdReportPrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_REPORT(self), FALSE);
+	return (priv->flags & flag) > 0;
+}
+
+/**
+ * fwupd_report_flag_to_string:
+ * @report_flag: report flags, e.g. %FWUPD_REPORT_FLAG_FROM_OEM
+ *
+ * Converts an enumerated report flag to a string.
+ *
+ * Returns: identifier string
+ *
+ * Since: 1.9.1
+ **/
+const gchar *
+fwupd_report_flag_to_string(FwupdReportFlags report_flag)
+{
+	if (report_flag == FWUPD_REPORT_FLAG_NONE)
+		return "none";
+	if (report_flag == FWUPD_REPORT_FLAG_FROM_OEM)
+		return "from-oem";
+	return NULL;
+}
+
+/**
+ * fwupd_report_flag_from_string:
+ * @report_flag: (nullable): a string, e.g. `from-oem`
+ *
+ * Converts a string to an enumerated report flag.
+ *
+ * Returns: enumerated value
+ *
+ * Since: 1.9.1
+ **/
+FwupdReportFlags
+fwupd_report_flag_from_string(const gchar *report_flag)
+{
+	if (g_strcmp0(report_flag, "none") == 0)
+		return FWUPD_REPORT_FLAG_NONE;
+	if (g_strcmp0(report_flag, "from-oem") == 0)
+		return FWUPD_REPORT_FLAG_FROM_OEM;
+	return FWUPD_REPORT_FLAG_UNKNOWN;
+}
+
+static void
+fwupd_report_get_property(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
+{
+	FwupdReport *self = FWUPD_REPORT(object);
+	FwupdReportPrivate *priv = GET_PRIVATE(self);
+	switch (prop_id) {
+	case PROP_FLAGS:
+		g_value_set_uint64(value, priv->flags);
+		break;
+	default:
+		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
+		break;
+	}
+}
+
+static void
+fwupd_report_set_property(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
+{
+	FwupdReport *self = FWUPD_REPORT(object);
+	switch (prop_id) {
+	case PROP_FLAGS:
+		fwupd_report_set_flags(self, g_value_get_uint64(value));
+		break;
+	default:
+		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
+		break;
+	}
 }
 
 static void
@@ -644,7 +856,27 @@ static void
 fwupd_report_class_init(FwupdReportClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
+	GParamSpec *pspec;
+
 	object_class->finalize = fwupd_report_finalize;
+	object_class->get_property = fwupd_report_get_property;
+	object_class->set_property = fwupd_report_set_property;
+
+	/**
+	 * FwupdReport:flags:
+	 *
+	 * The report flags.
+	 *
+	 * Since: 1.9.1
+	 */
+	pspec = g_param_spec_uint64("flags",
+				    NULL,
+				    NULL,
+				    FWUPD_REPORT_FLAG_NONE,
+				    FWUPD_REPORT_FLAG_UNKNOWN,
+				    FWUPD_REPORT_FLAG_NONE,
+				    G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
+	g_object_class_install_property(object_class, PROP_FLAGS, pspec);
 }
 
 static void
