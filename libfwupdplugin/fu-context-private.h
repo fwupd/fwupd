@@ -41,6 +41,8 @@ void
 fu_context_add_firmware_gtype(FuContext *self, const gchar *id, GType gtype);
 GPtrArray *
 fu_context_get_firmware_gtype_ids(FuContext *self);
+GArray *
+fu_context_get_firmware_gtypes(FuContext *self);
 GType
 fu_context_get_firmware_gtype_by_id(FuContext *self, const gchar *id);
 void
