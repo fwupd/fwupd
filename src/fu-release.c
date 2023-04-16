@@ -323,6 +323,10 @@ fu_release_load_test_result(FuRelease *self, XbNode *n, GError **error)
 	if (custom != NULL) {
 		for (guint i = 0; i < custom->len; i++) {
 			XbNode *c = g_ptr_array_index(custom, i);
+			if (g_strcmp0(xb_node_get_attr(c, "key"), "FromOEM") == 0) {
+				fwupd_report_add_flag(report, FWUPD_REPORT_FLAG_FROM_OEM);
+				continue;
+			}
 			fwupd_report_add_metadata_item(report,
 						       xb_node_get_attr(c, "key"),
 						       xb_node_get_text(c));

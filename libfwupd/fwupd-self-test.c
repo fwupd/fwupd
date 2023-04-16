@@ -809,6 +809,7 @@ fwupd_report_func(void)
 				    "  VersionOld:           1.2.3\n"
 				    "  Vendor:               acme\n"
 				    "  VendorId:             2468\n"
+				    "  Flags:                none\n"
 				    "  foo:                  bar\n"
 				    "  baz:                  bam\n",
 				    &error);
