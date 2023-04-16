@@ -29,6 +29,22 @@ In the event the firmware has multiple child images then the device GUIDs are us
 
 The MTD device is erased in chunks, written and then read back to verify.
 
+Although fwupd can read and write a raw image to the MTD partition there is no automatic way to
+get the *existing* version number. By providing the `GType` fwupd can read the MTD partition and
+discover additional metadata about the image. For instance, adding a quirk like:
+
+    [MTD\VENDOR_PINE64&PRODUCT_PinePhone-Pro&NAME_spi1.0]
+    FirmwareGType = FuUswidFirmware
+
+... and then append or insert the image into the MTD image with prepared SBoM metadata:
+
+    pip install uswid
+    uswid --load uswid.ini --save metadata.uswid
+
+This would allow fwupd to read the MTD image data, look for a [uSWID](https://github.com/hughsie/python-uswid)
+data section and then parse the metadata from that. Any of the firmware formats supported by
+`fwupdtool get-firmware-gtypes` that can provide a version can be used.
+
 ## Vendor ID Security
 
 The vendor ID is set from the system vendor, for example `DMI:LENOVO`
