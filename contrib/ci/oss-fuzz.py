@@ -277,7 +277,9 @@ class Fuzzer:
 
     @property
     def new_gtype(self) -> str:
-        return "fu_{}_new".format(self.pattern).replace("-", "_")
+        return "g_object_new(FU_TYPE_{}, NULL)".format(
+            self.pattern.replace("-", "_").upper()
+        )
 
     @property
     def header(self) -> str:
