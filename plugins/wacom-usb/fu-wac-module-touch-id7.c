@@ -313,7 +313,6 @@ fu_wac_module_touch_id7_write_firmware(FuDevice *device,
 {
 	FuWacModule *self = FU_WAC_MODULE(device);
 	g_autoptr(GBytes) blob = NULL;
-	g_autoptr(GPtrArray) chunks = NULL;
 	WtaInfo info;
 	WtaFileHeader file_hdr;
 
