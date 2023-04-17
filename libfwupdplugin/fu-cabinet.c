@@ -687,7 +687,7 @@ fu_cabinet_build_silo_folder(FuCabinet *self, GCabFolder *cabfolder, GError **er
 }
 
 static gboolean
-fu_cabinet_build_silo(FuCabinet *self, GBytes *data, GError **error)
+fu_cabinet_build_silo(FuCabinet *self, GError **error)
 {
 	GPtrArray *folders;
 	g_autoptr(XbBuilderFixup) fixup1 = NULL;
@@ -1099,7 +1099,7 @@ fu_cabinet_parse(FuCabinet *self, GBytes *data, FuCabinetParseFlags flags, GErro
 	/* build xmlb silo */
 	self->container_checksum = g_compute_checksum_for_bytes(G_CHECKSUM_SHA1, data);
 	self->container_checksum_alt = g_compute_checksum_for_bytes(G_CHECKSUM_SHA256, data);
-	if (!fu_cabinet_build_silo(self, data, error))
+	if (!fu_cabinet_build_silo(self, error))
 		return FALSE;
 
 	/* sanity check */
