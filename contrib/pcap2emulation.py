@@ -103,7 +103,7 @@ class Pcap2Emulation:
             phase_path = "{}-{}.json".format(path, phase)
             with open(phase_path, "w") as dump_file:
                 json.dump(
-                    {"UsbDevices": [self.phases[phase]]},
+                    self.phases[phase],
                     dump_file,
                     indent=2,
                     separators=(",", " : "),
