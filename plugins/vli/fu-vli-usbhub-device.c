@@ -1236,8 +1236,8 @@ static void
 fu_vli_usbhub_device_finalize(GObject *obj)
 {
 	FuVliUsbhubDevice *self = FU_VLI_USBHUB_DEVICE(obj);
-	g_object_unref(self->st_hd1);
-	g_object_unref(self->st_hd2);
+	g_byte_array_unref(self->st_hd1);
+	g_byte_array_unref(self->st_hd2);
 	G_OBJECT_CLASS(fu_vli_usbhub_device_parent_class)->finalize(obj);
 }
 
