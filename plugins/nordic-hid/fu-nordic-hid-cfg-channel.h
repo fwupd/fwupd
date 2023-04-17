@@ -14,6 +14,3 @@ G_DECLARE_FINAL_TYPE(FuNordicHidCfgChannel,
 		     FU,
 		     NORDIC_HID_CFG_CHANNEL,
 		     FuUdevDevice)
-
-FuNordicHidCfgChannel *
-fu_nordic_hid_cfg_channel_new(guint8 id);

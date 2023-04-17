@@ -14,6 +14,3 @@ G_DECLARE_FINAL_TYPE(FuNordicHidFirmwareB0,
 		     FU,
 		     NORDIC_HID_FIRMWARE_B0,
 		     FuNordicHidFirmware)
-
-FuFirmware *
-fu_nordic_hid_firmware_b0_new(void);

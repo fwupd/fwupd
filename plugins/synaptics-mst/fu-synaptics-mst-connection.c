@@ -155,7 +155,7 @@ fu_synaptics_mst_connection_read(FuSynapticsMstConnection *self,
 	return fu_synaptics_mst_connection_bus_read(self, offset, buf, length, error);
 }
 
-gboolean
+static gboolean
 fu_synaptics_mst_connection_write(FuSynapticsMstConnection *self,
 				  guint32 offset,
 				  const guint8 *buf,

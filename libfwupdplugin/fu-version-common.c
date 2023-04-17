@@ -17,7 +17,7 @@
 
 #define FU_COMMON_VERSION_DECODE_BCD(val) ((((val) >> 4) & 0x0f) * 10 + ((val)&0x0f))
 
-gchar *
+static gchar *
 fu_common_version_ensure_semver(const gchar *version);
 
 /**
@@ -353,7 +353,7 @@ fu_version_ensure_semver(const gchar *version, FwupdVersionFormat fmt)
  *
  * Returns: a version number, e.g. `1.2.3`, or %NULL if the version was not valid
  */
-gchar *
+static gchar *
 fu_common_version_ensure_semver(const gchar *version)
 {
 	gboolean dot_valid = FALSE;

@@ -77,13 +77,6 @@ fu_synaptics_mst_connection_read(FuSynapticsMstConnection *self,
 				 GError **error);
 
 gboolean
-fu_synaptics_mst_connection_write(FuSynapticsMstConnection *self,
-				  guint32 offset,
-				  const guint8 *buf,
-				  guint32 length,
-				  GError **error);
-
-gboolean
 fu_synaptics_mst_connection_rc_set_command(FuSynapticsMstConnection *self,
 					   guint32 rc_cmd,
 					   guint32 length,

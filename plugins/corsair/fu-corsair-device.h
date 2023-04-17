@@ -17,6 +17,3 @@ G_DECLARE_FINAL_TYPE(FuCorsairDevice, fu_corsair_device, FU, CORSAIR_DEVICE, FuU
 struct _FuCorsairDeviceClass {
 	FuUsbDeviceClass parent_class;
 };
-
-FuCorsairDevice *
-fu_corsair_device_new(FuCorsairDevice *parent, FuCorsairBp *bp);

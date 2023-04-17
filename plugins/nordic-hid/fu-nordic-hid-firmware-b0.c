@@ -152,9 +152,3 @@ fu_nordic_hid_firmware_b0_class_init(FuNordicHidFirmwareB0Class *klass)
 	klass_firmware->parse = fu_nordic_hid_firmware_b0_parse;
 	klass_firmware->write = fu_nordic_hid_firmware_b0_write;
 }
-
-FuFirmware *
-fu_nordic_hid_firmware_b0_new(void)
-{
-	return FU_FIRMWARE(g_object_new(FU_TYPE_NORDIC_HID_FIRMWARE_B0, NULL));
-}

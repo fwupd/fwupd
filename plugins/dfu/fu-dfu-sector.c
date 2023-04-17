@@ -5,8 +5,6 @@
  */
 
 /**
- * FuDfuSector:
- *
  * This object represents an sector of memory at a specific address on the
  * device itself.
  *
@@ -15,8 +13,6 @@
  *
  * You can think of these objects as flash segments on devices, where a
  * complete block can be erased and then written to.
- *
- * See also: [class@FuChunk]
  */
 
 #include "config.h"
@@ -51,19 +47,6 @@ fu_dfu_sector_init(FuDfuSector *self)
 {
 }
 
-/**
- * fu_dfu_sector_new: (skip)
- * address: the address for the sector
- * size: the size of this sector
- * size_left: the size of the rest of the sector
- * zone: the zone of memory the setor belongs
- * number: the sector number in the zone
- * cap: the #FuDfuSectorCap
- *
- * Creates a new DFU sector object.
- *
- * Returns: a new #FuDfuSector
- **/
 FuDfuSector *
 fu_dfu_sector_new(guint32 address,
 		  guint32 size,
@@ -85,14 +68,6 @@ fu_dfu_sector_new(guint32 address,
 	return self;
 }
 
-/**
- * fu_dfu_sector_get_address:
- * @self: a #FuDfuSector
- *
- * Gets the alternate setting.
- *
- * Returns: integer, or 0x00 for unset
- **/
 guint32
 fu_dfu_sector_get_address(FuDfuSector *self)
 {
@@ -101,14 +76,6 @@ fu_dfu_sector_get_address(FuDfuSector *self)
 	return priv->address;
 }
 
-/**
- * fu_dfu_sector_get_size:
- * @self: a #FuDfuSector
- *
- * Gets the sector size.
- *
- * Returns: integer, or 0x00 for unset
- **/
 guint32
 fu_dfu_sector_get_size(FuDfuSector *self)
 {
@@ -117,30 +84,6 @@ fu_dfu_sector_get_size(FuDfuSector *self)
 	return priv->size;
 }
 
-/**
- * fu_dfu_sector_get_size_left:
- * @self: a #FuDfuSector
- *
- * Gets the size of the rest of the sector.
- *
- * Returns: integer, or 0x00 for unset
- **/
-guint32
-fu_dfu_sector_get_size_left(FuDfuSector *self)
-{
-	FuDfuSectorPrivate *priv = GET_PRIVATE(self);
-	g_return_val_if_fail(FU_IS_DFU_SECTOR(self), 0x00);
-	return priv->size_left;
-}
-
-/**
- * fu_dfu_sector_get_zone:
- * @self: a #FuDfuSector
- *
- * Gets the sector zone number.
- *
- * Returns: integer, or 0x00 for unset
- **/
 guint16
 fu_dfu_sector_get_zone(FuDfuSector *self)
 {
@@ -149,32 +92,8 @@ fu_dfu_sector_get_zone(FuDfuSector *self)
 	return priv->zone;
 }
 
-/**
- * fu_dfu_sector_get_number:
- * @self: a #FuDfuSector
- *
- * Gets the sector index number.
- *
- * Returns: integer, or 0x00 for unset
- **/
-guint16
-fu_dfu_sector_get_number(FuDfuSector *self)
-{
-	FuDfuSectorPrivate *priv = GET_PRIVATE(self);
-	g_return_val_if_fail(FU_IS_DFU_SECTOR(self), 0x00);
-	return priv->number;
-}
-
-/**
- * fu_dfu_sector_get_id:
- * @self: a #FuDfuSector
- *
- * Gets the sector ID which is a combination of the zone and sector number.
- * You can use this number to check if the segment is the 'same' as the last
- * written or read sector.
- *
- * Returns: integer ID, or 0x00 for unset
- **/
+/* use this number to check if the segment is the 'same' as the last
+ * written or read sector */
 guint32
 fu_dfu_sector_get_id(FuDfuSector *self)
 {
@@ -183,15 +102,6 @@ fu_dfu_sector_get_id(FuDfuSector *self)
 	return (((guint32)priv->zone) << 16) | priv->number;
 }
 
-/**
- * fu_dfu_sector_has_cap:
- * @self: a #FuDfuSector
- * @cap: a #FuDfuSectorCap, e.g. %DFU_SECTOR_CAP_ERASABLE
- *
- * Finds out if the sector has the required capability.
- *
- * Returns: %TRUE if the sector has the capability
- **/
 gboolean
 fu_dfu_sector_has_cap(FuDfuSector *self, FuDfuSectorCap cap)
 {
@@ -213,14 +123,6 @@ fu_dfu_sector_cap_to_string(FuDfuSectorCap cap)
 	return g_string_free(str, FALSE);
 }
 
-/**
- * fu_dfu_sector_to_string:
- * @self: a #FuDfuSector
- *
- * Returns a string representation of the object.
- *
- * Returns: NULL terminated string, or %NULL for invalid
- **/
 gchar *
 fu_dfu_sector_to_string(FuDfuSector *self)
 {

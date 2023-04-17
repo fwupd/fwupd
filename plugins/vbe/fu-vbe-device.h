@@ -16,8 +16,6 @@ struct _FuVbeDeviceClass {
 };
 
 FuFdtImage *
-fu_vbe_device_get_fdt_root(FuVbeDevice *self);
-FuFdtImage *
 fu_vbe_device_get_fdt_node(FuVbeDevice *self);
 gchar **
 fu_vbe_device_get_compatible(FuVbeDevice *self);

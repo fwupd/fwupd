@@ -12,7 +12,7 @@
 
 #include "fu-wac-common.h"
 
-const gchar *
+static const gchar *
 fu_wac_report_id_to_string(guint8 report_id)
 {
 	if (report_id == FU_WAC_REPORT_ID_FW_DESCRIPTOR)

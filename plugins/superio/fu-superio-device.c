@@ -44,7 +44,7 @@ fu_superio_device_io_read(FuSuperioDevice *self, guint8 addr, guint8 *data, GErr
 	return TRUE;
 }
 
-gboolean
+static gboolean
 fu_superio_device_io_read16(FuSuperioDevice *self, guint8 addr, guint16 *data, GError **error)
 {
 	guint8 msb;

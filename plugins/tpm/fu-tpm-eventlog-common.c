@@ -41,20 +41,6 @@ fu_tpm_eventlog_pcr_to_string(gint pcr)
 	return "Undefined";
 }
 
-const gchar *
-fu_tpm_eventlog_hash_to_string(TPM2_ALG_ID hash_kind)
-{
-	if (hash_kind == TPM2_ALG_SHA1)
-		return "SHA1";
-	if (hash_kind == TPM2_ALG_SHA256)
-		return "SHA256";
-	if (hash_kind == TPM2_ALG_SHA384)
-		return "SHA384";
-	if (hash_kind == TPM2_ALG_SHA512)
-		return "SHA512";
-	return NULL;
-}
-
 guint32
 fu_tpm_eventlog_hash_get_size(TPM2_ALG_ID hash_kind)
 {

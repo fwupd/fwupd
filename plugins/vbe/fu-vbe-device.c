@@ -34,14 +34,6 @@ fu_vbe_device_to_string(FuDevice *device, guint idt, GString *str)
 }
 
 FuFdtImage *
-fu_vbe_device_get_fdt_root(FuVbeDevice *self)
-{
-	FuVbeDevicePrivate *priv = GET_PRIVATE(self);
-	g_return_val_if_fail(FU_IS_VBE_DEVICE(self), NULL);
-	return priv->fdt_root;
-}
-
-FuFdtImage *
 fu_vbe_device_get_fdt_node(FuVbeDevice *self)
 {
 	FuVbeDevicePrivate *priv = GET_PRIVATE(self);
