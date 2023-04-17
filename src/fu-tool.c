@@ -3446,6 +3446,62 @@ fu_util_get_bios_setting(FuUtilPrivate *priv, gchar **values, GError **error)
 }
 
 static gboolean
+fu_util_build_cabinet(FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	g_autoptr(GBytes) cab_blob = NULL;
+	g_autoptr(FuCabinet) cab_file = fu_cabinet_new();
+
+	/* sanity check */
+	if (g_strv_length(values) < 3) {
+		g_set_error_literal(
+		    error,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_NOTHING_TO_DO,
+		    /* TRANSLATORS: error message */
+		    _("Invalid arguments, expected at least ARCHIVE FIRMWARE METAINFO"));
+		return FALSE;
+	}
+
+	/* file already exists */
+	if ((priv->flags & FWUPD_INSTALL_FLAG_FORCE) == 0 &&
+	    g_file_test(values[0], G_FILE_TEST_EXISTS)) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_ARGS,
+				    "Filename already exists");
+		return FALSE;
+	}
+
+	/* add each file */
+	for (guint i = 1; values[i] != NULL; i++) {
+		g_autoptr(GBytes) blob = NULL;
+		g_autofree gchar *basename = g_path_get_basename(values[i]);
+		blob = fu_bytes_get_contents(values[i], error);
+		if (blob == NULL)
+			return FALSE;
+		if (g_bytes_get_size(blob) == 0) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_ARGS,
+				    "%s has zero size",
+				    values[i]);
+			return FALSE;
+		}
+		fu_cabinet_add_file(cab_file, basename, blob);
+	}
+
+	/* sanity check JCat and XML MetaInfo files */
+	if (!fu_cabinet_parse(cab_file, NULL, FU_CABINET_PARSE_FLAG_NONE, error))
+		return FALSE;
+
+	/* export */
+	cab_blob = fu_cabinet_export(cab_file, FU_CABINET_EXPORT_FLAG_NONE, error);
+	if (cab_blob == NULL)
+		return FALSE;
+	return fu_bytes_set_contents(values[0], cab_blob, error);
+}
+
+static gboolean
 fu_util_version(FuUtilPrivate *priv, GError **error)
 {
 	g_autoptr(GHashTable) metadata = NULL;
@@ -4023,6 +4079,13 @@ main(int argc, char *argv[])
 			      /* TRANSLATORS: command description */
 			      _("Set a BIOS setting"),
 			      fu_util_set_bios_setting);
+	fu_util_cmd_array_add(cmd_array,
+			      "build-cabinet",
+			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			      _("ARCHIVE FIRMWARE METAINFO [FIRMWARE] [METAINFO] [JCATFILE]"),
+			      /* TRANSLATORS: command description */
+			      _("Build a cabinet archive from a firmware blob and XML metadata"),
+			      fu_util_build_cabinet);
 
 	/* do stuff on ctrl+c */
 	priv->cancellable = g_cancellable_new();
