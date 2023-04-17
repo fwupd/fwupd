@@ -1070,7 +1070,7 @@ fu_cabinet_sign(FuCabinet *self,
 /**
  * fu_cabinet_parse:
  * @self: a #FuCabinet
- * @data: cabinet archive
+ * @data: (nullable): optional cabinet archive data
  * @flags: parse flags, e.g. %FU_CABINET_PARSE_FLAG_NONE
  * @error: (nullable): optional return location for an error
  *
@@ -1088,17 +1088,19 @@ fu_cabinet_parse(FuCabinet *self, GBytes *data, FuCabinetParseFlags flags, GErro
 	g_autoptr(XbQuery) query = NULL;
 
 	g_return_val_if_fail(FU_IS_CABINET(self), FALSE);
-	g_return_val_if_fail(data != NULL, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 	g_return_val_if_fail(self->silo == NULL, FALSE);
 
-	/* decompress */
-	if (!fu_cabinet_decompress(self, data, error))
-		return FALSE;
+	/* decompress and calculate container hashes */
+	if (data != NULL) {
+		if (!fu_cabinet_decompress(self, data, error))
+			return FALSE;
+		self->container_checksum = g_compute_checksum_for_bytes(G_CHECKSUM_SHA1, data);
+		self->container_checksum_alt =
+		    g_compute_checksum_for_bytes(G_CHECKSUM_SHA256, data);
+	}
 
 	/* build xmlb silo */
-	self->container_checksum = g_compute_checksum_for_bytes(G_CHECKSUM_SHA1, data);
-	self->container_checksum_alt = g_compute_checksum_for_bytes(G_CHECKSUM_SHA256, data);
 	if (!fu_cabinet_build_silo(self, error))
 		return FALSE;
 
