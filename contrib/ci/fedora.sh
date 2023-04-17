@@ -29,6 +29,7 @@ meson setup \
     -Ddocs=disabled \
     -Dman=true \
     -Dtests=true \
+    -Dcompat_cli=true \
     -Db_sanitize=undefined \
     -Dgusb:tests=false \
     -Dplugin_dummy=true \
@@ -37,6 +38,8 @@ meson setup \
     -Dplugin_uefi_capsule=enabled \
     -Dplugin_dell=enabled \
     -Dplugin_synaptics_mst=enabled $@
+ninja-build
+../contrib/ci/check-unused.py
 ninja-build dist
 popd
 VERSION=`meson introspect build --projectinfo | jq -r .version`
