@@ -11,7 +11,7 @@
 int
 LLVMFuzzerTestOneInput(const guint8 *data, gsize size)
 {
-	g_autoptr(FuFirmware) firmware = FU_FIRMWARE(@FIRMWARENEW@());
+	g_autoptr(FuFirmware) firmware = FU_FIRMWARE(@FIRMWARENEW@);
 	g_autoptr(GBytes) fw = g_bytes_new(data, size);
 	gboolean ret;
 
@@ -20,7 +20,7 @@ LLVMFuzzerTestOneInput(const guint8 *data, gsize size)
 	ret = fu_firmware_parse(firmware, fw, FWUPD_INSTALL_FLAG_NONE, NULL);
 	if (!ret && fu_firmware_has_flag(firmware, FU_FIRMWARE_FLAG_HAS_CHECKSUM)) {
 		g_clear_object(&firmware);
-		firmware = FU_FIRMWARE(@FIRMWARENEW@());
+		firmware = FU_FIRMWARE(@FIRMWARENEW@);
 		ret = fu_firmware_parse(firmware,
 					fw,
 					FWUPD_INSTALL_FLAG_NO_SEARCH |
