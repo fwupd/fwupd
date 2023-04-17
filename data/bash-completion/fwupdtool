@@ -1,5 +1,6 @@
 _fwupdtool_cmd_list=(
 	'activate'
+	'build-cabinet'
 	'clear-history'
 	'esp-list'
 	'esp-mount'
