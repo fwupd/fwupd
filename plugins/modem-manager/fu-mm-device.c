@@ -136,34 +136,6 @@ fu_mm_device_get_update_methods(FuMmDevice *device)
 	return device->update_methods;
 }
 
-const gchar *
-fu_mm_device_get_detach_fastboot_at(FuMmDevice *device)
-{
-	g_return_val_if_fail(FU_IS_MM_DEVICE(device), NULL);
-	return device->detach_fastboot_at;
-}
-
-gint
-fu_mm_device_get_port_at_ifnum(FuMmDevice *device)
-{
-	g_return_val_if_fail(FU_IS_MM_DEVICE(device), -1);
-	return device->port_at_ifnum;
-}
-
-gint
-fu_mm_device_get_port_qmi_ifnum(FuMmDevice *device)
-{
-	g_return_val_if_fail(FU_IS_MM_DEVICE(device), -1);
-	return device->port_qmi_ifnum;
-}
-
-gint
-fu_mm_device_get_port_mbim_ifnum(FuMmDevice *device)
-{
-	g_return_val_if_fail(FU_IS_MM_DEVICE(device), -1);
-	return device->port_mbim_ifnum;
-}
-
 static gboolean
 validate_firmware_update_method(MMModemFirmwareUpdateMethod methods, GError **error)
 {
@@ -1896,11 +1868,11 @@ fu_mm_device_incorporate(FuDevice *device, FuDevice *donor_device)
 	FuMmDevice *donor = FU_MM_DEVICE(donor_device);
 
 	self->update_methods = fu_mm_device_get_update_methods(donor);
-	self->detach_fastboot_at = g_strdup(fu_mm_device_get_detach_fastboot_at(donor));
+	self->detach_fastboot_at = g_strdup(donor->detach_fastboot_at);
 	self->inhibition_uid = g_strdup(fu_mm_device_get_inhibition_uid(donor));
-	self->port_at_ifnum = fu_mm_device_get_port_at_ifnum(donor);
-	self->port_qmi_ifnum = fu_mm_device_get_port_qmi_ifnum(donor);
-	self->port_mbim_ifnum = fu_mm_device_get_port_mbim_ifnum(donor);
+	self->port_at_ifnum = donor->port_at_ifnum;
+	self->port_qmi_ifnum = donor->port_qmi_ifnum;
+	self->port_mbim_ifnum = donor->port_mbim_ifnum;
 	g_set_object(&self->manager, donor->manager);
 }
 
@@ -2015,13 +1987,6 @@ fu_mm_shadow_device_new(FuMmDevice *device)
 				     NULL);
 	fu_device_incorporate(FU_DEVICE(shadow_device), FU_DEVICE(device));
 	return shadow_device;
-}
-
-FuUsbDevice *
-fu_mm_device_get_usb_device(FuMmDevice *self)
-{
-	g_return_val_if_fail(FU_IS_MM_DEVICE(self), NULL);
-	return self->usb_device;
 }
 
 void

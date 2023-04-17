@@ -242,7 +242,7 @@ fu_sahara_loader_qdl_read(FuSaharaLoader *self, GError **error)
 #endif
 }
 
-gboolean
+static gboolean
 fu_sahara_loader_qdl_write(FuSaharaLoader *self, const guint8 *data, gsize sz, GError **error)
 {
 #ifdef HAVE_GUSB

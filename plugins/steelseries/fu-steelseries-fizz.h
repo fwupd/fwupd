@@ -61,30 +61,6 @@ fu_steelseries_fizz_new(FuDevice *self);
 gchar *
 fu_steelseries_fizz_get_version(FuDevice *device, gboolean tunnel, GError **error);
 gboolean
-fu_steelseries_fizz_read_fs(FuDevice *device,
-			    gboolean tunnel,
-			    guint8 fs,
-			    guint8 id,
-			    guint8 *buf,
-			    gsize bufsz,
-			    FuProgress *progress,
-			    GError **error);
-gboolean
-fu_steelseries_fizz_write_fs(FuDevice *device,
-			     gboolean tunnel,
-			     guint8 fs,
-			     guint8 id,
-			     const guint8 *buf,
-			     gsize bufsz,
-			     FuProgress *progress,
-			     GError **error);
-gboolean
-fu_steelseries_fizz_erase_fs(FuDevice *device,
-			     gboolean tunnel,
-			     guint8 fs,
-			     guint8 id,
-			     GError **error);
-gboolean
 fu_steelseries_fizz_reset(FuDevice *device, gboolean tunnel, guint8 mode, GError **error);
 gboolean
 fu_steelseries_fizz_get_crc32_fs(FuDevice *device,
@@ -116,7 +92,5 @@ fu_steelseries_fizz_get_battery_level(FuDevice *device,
 				      gboolean tunnel,
 				      guint8 *level,
 				      GError **error);
-gboolean
-fu_steelseries_fizz_get_paired_status(FuDevice *device, guint8 *status, GError **error);
 gboolean
 fu_steelseries_fizz_get_connection_status(FuDevice *device, guint8 *status, GError **error);

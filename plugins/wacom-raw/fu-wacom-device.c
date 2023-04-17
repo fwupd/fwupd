@@ -47,13 +47,6 @@ fu_wacom_device_get_block_sz(FuWacomDevice *self)
 	return priv->flash_block_size;
 }
 
-guint
-fu_wacom_device_get_base_addr(FuWacomDevice *self)
-{
-	FuWacomDevicePrivate *priv = GET_PRIVATE(self);
-	return priv->flash_base_addr;
-}
-
 gboolean
 fu_wacom_device_check_mpu(FuWacomDevice *self, GError **error)
 {

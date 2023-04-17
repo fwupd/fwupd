@@ -30,15 +30,6 @@ fu_logitech_hidpp_runtime_get_io_channel(FuLogitechHidPpRuntime *self)
 	return priv->io_channel;
 }
 
-void
-fu_logitech_hidpp_runtime_set_io_channel(FuLogitechHidPpRuntime *self, FuIOChannel *io_channel)
-{
-	FuLogitechHidPpRuntimePrivate *priv;
-	g_return_if_fail(FU_IS_HIDPP_RUNTIME(self));
-	priv = GET_PRIVATE(self);
-	priv->io_channel = io_channel;
-}
-
 guint8
 fu_logitech_hidpp_runtime_get_version_bl_major(FuLogitechHidPpRuntime *self)
 {
@@ -46,16 +37,6 @@ fu_logitech_hidpp_runtime_get_version_bl_major(FuLogitechHidPpRuntime *self)
 	g_return_val_if_fail(FU_IS_HIDPP_RUNTIME(self), 0);
 	priv = GET_PRIVATE(self);
 	return priv->version_bl_major;
-}
-
-void
-fu_logitech_hidpp_runtime_set_version_bl_major(FuLogitechHidPpRuntime *self,
-					       guint8 version_bl_major)
-{
-	FuLogitechHidPpRuntimePrivate *priv;
-	g_return_if_fail(FU_IS_HIDPP_RUNTIME(self));
-	priv = GET_PRIVATE(self);
-	priv->version_bl_major = version_bl_major;
 }
 
 static void

@@ -19,8 +19,6 @@ guint16
 fu_elantp_firmware_get_ic_type(FuElantpFirmware *self);
 guint16
 fu_elantp_firmware_get_iap_addr(FuElantpFirmware *self);
-guint16
-fu_elantp_firmware_get_iap_ver(FuElantpFirmware *self);
 gboolean
 fu_elantp_firmware_get_forcetable_support(FuElantpFirmware *self);
 guint32

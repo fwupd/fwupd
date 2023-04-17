@@ -219,7 +219,7 @@ fu_steelseries_fizz_get_version(FuDevice *device, gboolean tunnel, GError **erro
 	return fu_strsafe((const gchar *)data, sizeof(data));
 }
 
-gboolean
+static gboolean
 fu_steelseries_fizz_write_fs(FuDevice *device,
 			     gboolean tunnel,
 			     guint8 fs,
@@ -303,7 +303,7 @@ fu_steelseries_fizz_write_fs(FuDevice *device,
 	return TRUE;
 }
 
-gboolean
+static gboolean
 fu_steelseries_fizz_erase_fs(FuDevice *device,
 			     gboolean tunnel,
 			     guint8 fs,
@@ -443,7 +443,7 @@ fu_steelseries_fizz_get_crc32_fs(FuDevice *device,
 	return TRUE;
 }
 
-gboolean
+static gboolean
 fu_steelseries_fizz_read_fs(FuDevice *device,
 			    gboolean tunnel,
 			    guint8 fs,
@@ -567,7 +567,7 @@ fu_steelseries_fizz_get_battery_level(FuDevice *device,
 	return TRUE;
 }
 
-gboolean
+static gboolean
 fu_steelseries_fizz_get_paired_status(FuDevice *device, guint8 *status, GError **error)
 {
 	guint8 data[STEELSERIES_BUFFER_CONTROL_SIZE] = {0};

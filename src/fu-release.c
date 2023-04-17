@@ -35,6 +35,9 @@ struct _FuRelease {
 
 G_DEFINE_TYPE(FuRelease, fu_release, FWUPD_TYPE_RELEASE)
 
+static gboolean
+fu_release_ensure_trust_flags(FuRelease *self, XbNode *rel, GError **error);
+
 gchar *
 fu_release_to_string(FuRelease *self)
 {
@@ -1066,16 +1069,7 @@ fu_release_load(FuRelease *self,
 	return TRUE;
 }
 
-/**
- * fu_release_ensure_trust_flags:
- * @release: the release node
- * @error: (nullable): optional return location for an error
- *
- * Uses the correct keyring to get the trust flags for a given release.
- *
- * Returns: %FALSE on error
- **/
-gboolean
+static gboolean
 fu_release_ensure_trust_flags(FuRelease *self, XbNode *rel, GError **error)
 {
 	GBytes *blob;

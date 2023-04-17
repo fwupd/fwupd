@@ -99,6 +99,7 @@ fu_ep963x_device_write_icp(FuEp963xDevice *self,
 			}
 			return TRUE;
 		}
+		g_debug("SMBUS: %s [0x%x]", fu_ep963x_smbus_strerror(bufhw[7]), bufhw[7]);
 		fu_device_sleep(FU_DEVICE(self), 100);
 	}
 

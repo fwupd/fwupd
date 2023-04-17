@@ -17,6 +17,3 @@ G_DECLARE_FINAL_TYPE(FuElanfpFirmware, fu_elanfp_firmware, FU, ELANFP_FIRMWARE, 
 #define FU_ELANTP_FIRMWARE_IDX_CFU_PAYLOAD_A   0x74
 #define FU_ELANTP_FIRMWARE_IDX_CFU_PAYLOAD_B   0x75
 #define FU_ELANTP_FIRMWARE_IDX_END	       0xFF
-
-FuFirmware *
-fu_elanfp_firmware_new(void);

@@ -29,20 +29,6 @@ fu_vli_pd_firmware_get_kind(FuVliPdFirmware *self)
 	return self->device_kind;
 }
 
-guint16
-fu_vli_pd_firmware_get_vid(FuVliPdFirmware *self)
-{
-	g_return_val_if_fail(FU_IS_VLI_PD_FIRMWARE(self), 0);
-	return self->vid;
-}
-
-guint16
-fu_vli_pd_firmware_get_pid(FuVliPdFirmware *self)
-{
-	g_return_val_if_fail(FU_IS_VLI_PD_FIRMWARE(self), 0);
-	return self->pid;
-}
-
 static gboolean
 fu_vli_pd_firmware_validate_header(FuVliPdFirmware *self)
 {
@@ -64,8 +50,8 @@ fu_vli_pd_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbB
 	fu_xmlb_builder_insert_kv(bn,
 				  "device_kind",
 				  fu_vli_common_device_kind_to_string(self->device_kind));
-	fu_xmlb_builder_insert_kx(bn, "vid", fu_vli_pd_firmware_get_vid(self));
-	fu_xmlb_builder_insert_kx(bn, "pid", fu_vli_pd_firmware_get_pid(self));
+	fu_xmlb_builder_insert_kx(bn, "vid", self->vid);
+	fu_xmlb_builder_insert_kx(bn, "pid", self->pid);
 }
 
 static gboolean

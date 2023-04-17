@@ -74,14 +74,6 @@ fu_logitech_hidpp_device_set_hidpp_pid(FuLogitechHidPpDevice *self, guint16 hidp
 	priv->hidpp_pid = hidpp_pid;
 }
 
-const gchar *
-fu_logitech_hidpp_device_get_model_id(FuLogitechHidPpDevice *self)
-{
-	FuLogitechHidPpDevicePrivate *priv = GET_PRIVATE(self);
-	g_return_val_if_fail(FU_IS_HIDPP_DEVICE(self), NULL);
-	return priv->model_id;
-}
-
 static void
 fu_logitech_hidpp_device_set_model_id(FuLogitechHidPpDevice *self, const gchar *model_id)
 {

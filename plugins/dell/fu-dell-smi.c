@@ -49,7 +49,7 @@ fu_dell_clear_smi(FuDellSmiObj *obj)
 	return TRUE;
 }
 
-gboolean
+static gboolean
 fu_dell_execute_smi(FuDellSmiObj *obj)
 {
 	gint ret;
@@ -65,7 +65,7 @@ fu_dell_execute_smi(FuDellSmiObj *obj)
 	return TRUE;
 }
 
-guint32
+static guint32
 fu_dell_get_res(FuDellSmiObj *smi_obj, guint8 arg)
 {
 	if (smi_obj->fake_smbios)
@@ -91,7 +91,7 @@ fu_dell_execute_simple_smi(FuDellSmiObj *obj, guint16 class, guint16 select)
 }
 #pragma GCC diagnostic pop
 
-gboolean
+static gboolean
 fu_dell_detect_dock(FuDellSmiObj *smi_obj, guint32 *location)
 {
 	struct dock_count_in *count_args;
@@ -190,29 +190,4 @@ fu_dell_get_dock_type(guint8 type)
 	}
 
 	return NULL;
-}
-
-gboolean
-fu_dell_toggle_dock_mode(FuDellSmiObj *smi_obj,
-			 guint32 new_mode,
-			 guint32 dock_location,
-			 GError **error)
-{
-	/* Put into mode to accept AR/MST */
-	fu_dell_clear_smi(smi_obj);
-	smi_obj->input[0] = DACI_DOCK_ARG_MODE;
-	smi_obj->input[1] = dock_location;
-	smi_obj->input[2] = new_mode;
-
-	if (!fu_dell_execute_simple_smi(smi_obj, DACI_DOCK_CLASS, DACI_DOCK_SELECT))
-		return FALSE;
-	if (smi_obj->output[1] != 0) {
-		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
-			    "Failed to set dock flash mode: %u",
-			    smi_obj->output[1]);
-		return FALSE;
-	}
-	return TRUE;
 }

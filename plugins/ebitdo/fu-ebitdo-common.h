@@ -57,7 +57,5 @@ typedef enum {
 
 const gchar *
 fu_ebitdo_pkt_cmd_to_string(FuEbitdoPktCmd cmd);
-const gchar *
-fu_ebitdo_pkt_type_to_string(FuEbitdoPktType type);
 void
 fu_ebitdo_dump_pkt(FuEbitdoPkt *hdr);

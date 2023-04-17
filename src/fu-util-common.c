@@ -32,6 +32,11 @@
 #define SYSTEMD_FWUPD_UNIT	"fwupd.service"
 #define SYSTEMD_SNAP_FWUPD_UNIT "snap.fwupd.fwupd.service"
 
+static gchar *
+fu_util_remote_to_string(FwupdRemote *remote, guint idt);
+static gchar *
+fu_util_release_to_string(FwupdRelease *rel, guint idt);
+
 const gchar *
 fu_util_get_systemd_unit(void)
 {
@@ -631,7 +636,7 @@ fu_util_branch_for_display(const gchar *branch)
 	return branch;
 }
 
-gchar *
+static gchar *
 fu_util_release_get_name(FwupdRelease *release)
 {
 	const gchar *name = fwupd_release_get_name(release);
@@ -1788,16 +1793,7 @@ fu_util_report_add_string(FwupdReport *report, guint idt, GString *str)
 	}
 }
 
-gchar *
-fu_util_report_to_string(FwupdReport *report, guint idt)
-{
-	g_autoptr(GString) str = g_string_new(NULL);
-	g_return_val_if_fail(FWUPD_IS_RELEASE(report), NULL);
-	fu_util_report_add_string(report, idt, str);
-	return g_string_free(g_steal_pointer(&str), FALSE);
-}
-
-gchar *
+static gchar *
 fu_util_release_to_string(FwupdRelease *rel, guint idt)
 {
 	const gchar *title;
@@ -1807,11 +1803,12 @@ fu_util_release_to_string(FwupdRelease *rel, guint idt)
 	GPtrArray *reports = fwupd_release_get_reports(rel);
 	guint64 flags = fwupd_release_get_flags(rel);
 	g_autofree gchar *desc_fb = NULL;
+	g_autofree gchar *name = fu_util_release_get_name(rel);
 	g_autoptr(GString) str = g_string_new(NULL);
 
 	g_return_val_if_fail(FWUPD_IS_RELEASE(rel), NULL);
 
-	fu_string_append(str, idt, fwupd_release_get_name(rel), NULL);
+	fu_string_append(str, idt, name, NULL);
 
 	/* TRANSLATORS: version number of new firmware */
 	fu_string_append(str, idt + 1, _("New version"), fwupd_release_get_version(rel));
@@ -1972,7 +1969,7 @@ fu_util_release_to_string(FwupdRelease *rel, guint idt)
 	return g_string_free(g_steal_pointer(&str), FALSE);
 }
 
-gchar *
+static gchar *
 fu_util_remote_to_string(FwupdRemote *remote, guint idt)
 {
 	FwupdRemoteKind kind = fwupd_remote_get_kind(remote);

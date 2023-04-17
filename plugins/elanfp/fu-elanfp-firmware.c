@@ -245,9 +245,3 @@ fu_elanfp_firmware_class_init(FuElanfpFirmwareClass *klass)
 	klass_firmware->export = fu_elanfp_firmware_export;
 	klass_firmware->build = fu_elanfp_firmware_build;
 }
-
-FuFirmware *
-fu_elanfp_firmware_new(void)
-{
-	return FU_FIRMWARE(g_object_new(FU_TYPE_ELANFP_FIRMWARE, NULL));
-}

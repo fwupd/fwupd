@@ -32,8 +32,6 @@ fu_remote_list_new(void);
 gboolean
 fu_remote_list_load(FuRemoteList *self, FuRemoteListLoadFlags flags, GError **error);
 gboolean
-fu_remote_list_reload(FuRemoteList *self, GError **error);
-gboolean
 fu_remote_list_set_key_value(FuRemoteList *self,
 			     const gchar *remote_id,
 			     const gchar *key,

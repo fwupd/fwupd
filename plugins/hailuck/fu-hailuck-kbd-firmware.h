@@ -14,6 +14,3 @@ G_DECLARE_FINAL_TYPE(FuHailuckKbdFirmware,
 		     FU,
 		     HAILUCK_KBD_FIRMWARE,
 		     FuIhexFirmware)
-
-FuFirmware *
-fu_hailuck_kbd_firmware_new(void);

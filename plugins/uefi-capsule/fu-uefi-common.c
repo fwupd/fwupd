@@ -60,21 +60,6 @@ fu_uefi_bootmgr_get_suffix(GError **error)
 }
 
 gchar *
-fu_uefi_get_fallback_app_path(FuDevice *device,
-			      const gchar *esp_path,
-			      const gchar *cmd,
-			      GError **error)
-{
-	const gchar *suffix = fu_uefi_bootmgr_get_suffix(error);
-	g_autofree gchar *base = NULL;
-	if (suffix == NULL)
-		return NULL;
-
-	base = g_build_filename(esp_path, "EFI", "boot", NULL);
-	return g_strdup_printf("%s/%s%s.efi", base, cmd, suffix);
-}
-
-gchar *
 fu_uefi_get_esp_app_path(FuDevice *device, const gchar *esp_path, const gchar *cmd, GError **error)
 {
 	const gchar *suffix = fu_uefi_bootmgr_get_suffix(error);

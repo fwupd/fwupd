@@ -473,7 +473,7 @@ fu_synaptics_rmi_v7_device_write_partition(FuSynapticsRmiDevice *self,
 	return TRUE;
 }
 
-GBytes *
+static GBytes *
 fu_synaptics_rmi_v7_device_get_pubkey(FuSynapticsRmiDevice *self, GError **error)
 {
 	FuSynapticsRmiFlash *flash = fu_synaptics_rmi_device_get_flash(self);
@@ -553,7 +553,7 @@ fu_synaptics_rmi_v7_device_get_pubkey(FuSynapticsRmiDevice *self, GError **error
 	return g_byte_array_free_to_bytes(g_steal_pointer(&pubkey));
 }
 
-gboolean
+static gboolean
 fu_synaptics_rmi_v7_device_secure_check(FuSynapticsRmiDevice *self,
 					FuFirmware *firmware,
 					GError **error)

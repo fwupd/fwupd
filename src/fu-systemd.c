@@ -138,50 +138,6 @@ fu_systemd_unit_stop(const gchar *unit, GError **error)
 }
 
 gboolean
-fu_systemd_unit_enable(const gchar *unit, GError **error)
-{
-	const gchar *units[] = {unit, NULL};
-	g_autoptr(GDBusProxy) proxy_manager = NULL;
-	g_autoptr(GVariant) val = NULL;
-
-	g_return_val_if_fail(unit != NULL, FALSE);
-
-	proxy_manager = fu_systemd_get_manager(error);
-	if (proxy_manager == NULL)
-		return FALSE;
-	val = g_dbus_proxy_call_sync(proxy_manager,
-				     "EnableUnitFiles",
-				     g_variant_new("(^asbb)", units, TRUE, TRUE),
-				     G_DBUS_CALL_FLAGS_NONE,
-				     -1,
-				     NULL,
-				     error);
-	return val != NULL;
-}
-
-gboolean
-fu_systemd_unit_disable(const gchar *unit, GError **error)
-{
-	const gchar *units[] = {unit, NULL};
-	g_autoptr(GDBusProxy) proxy_manager = NULL;
-	g_autoptr(GVariant) val = NULL;
-
-	g_return_val_if_fail(unit != NULL, FALSE);
-
-	proxy_manager = fu_systemd_get_manager(error);
-	if (proxy_manager == NULL)
-		return FALSE;
-	val = g_dbus_proxy_call_sync(proxy_manager,
-				     "DisableUnitFiles",
-				     g_variant_new("(^asb)", units, TRUE),
-				     G_DBUS_CALL_FLAGS_NONE,
-				     -1,
-				     NULL,
-				     error);
-	return val != NULL;
-}
-
-gboolean
 fu_systemd_unit_check_exists(const gchar *unit, GError **error)
 {
 	g_autoptr(GDBusProxy) proxy_manager = NULL;

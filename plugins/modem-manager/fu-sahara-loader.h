@@ -20,8 +20,6 @@ fu_sahara_loader_qdl_is_open(FuSaharaLoader *self);
 GByteArray *
 fu_sahara_loader_qdl_read(FuSaharaLoader *self, GError **error);
 gboolean
-fu_sahara_loader_qdl_write(FuSaharaLoader *self, const guint8 *data, gsize sz, GError **error);
-gboolean
 fu_sahara_loader_qdl_write_bytes(FuSaharaLoader *self, GBytes *bytes, GError **error);
 
 gboolean

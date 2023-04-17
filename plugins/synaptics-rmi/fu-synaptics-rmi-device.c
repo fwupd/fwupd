@@ -182,13 +182,6 @@ fu_synaptics_rmi_device_set_iepmode(FuSynapticsRmiDevice *self, gboolean iepmode
 }
 
 gboolean
-fu_synaptics_rmi_device_get_iepmode(FuSynapticsRmiDevice *self)
-{
-	FuSynapticsRmiDevicePrivate *priv = GET_PRIVATE(self);
-	return priv->in_iep_mode;
-}
-
-gboolean
 fu_synaptics_rmi_device_write_bus_select(FuSynapticsRmiDevice *self, guint8 bus, GError **error)
 {
 	FuSynapticsRmiDeviceClass *klass_rmi = FU_SYNAPTICS_RMI_DEVICE_GET_CLASS(self);
@@ -304,13 +297,6 @@ fu_synaptics_rmi_device_set_max_page(FuSynapticsRmiDevice *self, guint8 max_page
 {
 	FuSynapticsRmiDevicePrivate *priv = GET_PRIVATE(self);
 	priv->max_page = max_page;
-}
-
-guint8
-fu_synaptics_rmi_device_get_max_page(FuSynapticsRmiDevice *self)
-{
-	FuSynapticsRmiDevicePrivate *priv = GET_PRIVATE(self);
-	return priv->max_page;
 }
 
 static void

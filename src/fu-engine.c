@@ -6100,7 +6100,7 @@ fu_engine_get_blocked_firmware(FuEngine *self)
 	return checksums;
 }
 
-void
+static void
 fu_engine_add_blocked_firmware(FuEngine *self, const gchar *checksum)
 {
 	if (self->blocked_firmware == NULL) {

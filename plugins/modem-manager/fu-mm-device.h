@@ -17,20 +17,10 @@ G_DECLARE_FINAL_TYPE(FuMmDevice, fu_mm_device, FU, MM_DEVICE, FuDevice)
 
 FuMmDevice *
 fu_mm_device_new(FuContext *ctx, MMManager *manager, MMObject *omodem);
-FuUsbDevice *
-fu_mm_device_get_usb_device(FuMmDevice *self);
 void
 fu_mm_device_set_usb_device(FuMmDevice *self, FuUsbDevice *usb_device);
 const gchar *
 fu_mm_device_get_inhibition_uid(FuMmDevice *device);
-const gchar *
-fu_mm_device_get_detach_fastboot_at(FuMmDevice *device);
-gint
-fu_mm_device_get_port_at_ifnum(FuMmDevice *device);
-gint
-fu_mm_device_get_port_qmi_ifnum(FuMmDevice *device);
-gint
-fu_mm_device_get_port_mbim_ifnum(FuMmDevice *device);
 MMModemFirmwareUpdateMethod
 fu_mm_device_get_update_methods(FuMmDevice *device);
 

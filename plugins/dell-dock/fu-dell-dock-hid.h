@@ -58,9 +58,6 @@ gboolean
 fu_dell_dock_hid_raise_mcu_clock(FuDevice *self, gboolean enable, GError **error);
 
 gboolean
-fu_dell_dock_hid_get_ec_status(FuDevice *self, guint8 *status1, guint8 *status2, GError **error);
-
-gboolean
 fu_dell_dock_hid_erase_bank(FuDevice *self, guint8 idx, GError **error);
 
 gboolean

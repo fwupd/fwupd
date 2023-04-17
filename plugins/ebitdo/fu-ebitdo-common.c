@@ -10,7 +10,7 @@
 
 #include "fu-ebitdo-common.h"
 
-const gchar *
+static const gchar *
 fu_ebitdo_pkt_type_to_string(FuEbitdoPktType type)
 {
 	if (type == FU_EBITDO_PKT_TYPE_USER_CMD)

@@ -44,6 +44,8 @@
 #include "fu-dfu-target-private.h" /* waive-pre-commit */
 #include "fu-dfu-target-stm.h"
 
+static gboolean
+fu_dfu_device_clear_status(FuDfuDevice *self, GError **error);
 static void
 fu_dfu_device_finalize(GObject *object);
 
@@ -604,22 +606,6 @@ fu_dfu_device_get_runtime_pid(FuDfuDevice *self)
 	return priv->runtime_pid;
 }
 
-/**
- * fu_dfu_device_get_runtime_release:
- * @self: a #FuDfuDevice
- *
- * Gets the runtime release number in BCD format.
- *
- * Returns: release number, or 0xffff for unknown
- **/
-guint16
-fu_dfu_device_get_runtime_release(FuDfuDevice *self)
-{
-	FuDfuDevicePrivate *priv = GET_PRIVATE(self);
-	g_return_val_if_fail(FU_IS_DFU_DEVICE(self), 0xffff);
-	return priv->runtime_release;
-}
-
 const gchar *
 fu_dfu_device_get_chip_id(FuDfuDevice *self)
 {
@@ -628,7 +614,7 @@ fu_dfu_device_get_chip_id(FuDfuDevice *self)
 	return priv->chip_id;
 }
 
-void
+static void
 fu_dfu_device_set_chip_id(FuDfuDevice *self, const gchar *chip_id)
 {
 	FuDfuDevicePrivate *priv = GET_PRIVATE(self);
@@ -980,23 +966,11 @@ fu_dfu_device_abort(FuDfuDevice *self, GError **error)
 	return TRUE;
 }
 
-/**
- * fu_dfu_device_clear_status:
- * @self: a #FuDfuDevice
- * @error: (nullable): optional return location for an error
- *
- * Clears any error status on the DFU device.
- *
- * Returns: %TRUE for success
- **/
-gboolean
+static gboolean
 fu_dfu_device_clear_status(FuDfuDevice *self, GError **error)
 {
 	FuDfuDevicePrivate *priv = GET_PRIVATE(self);
 	g_autoptr(GError) error_local = NULL;
-
-	g_return_val_if_fail(FU_IS_DFU_DEVICE(self), FALSE);
-	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* the device has no DFU runtime, so cheat */
 	if (priv->state == FU_DFU_STATE_APP_IDLE &&

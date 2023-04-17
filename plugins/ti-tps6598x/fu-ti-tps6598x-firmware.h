@@ -15,6 +15,3 @@ G_DECLARE_FINAL_TYPE(FuTiTps6598xFirmware,
 		     FU,
 		     TI_TPS6598X_FIRMWARE,
 		     FuFirmware)
-
-FuFirmware *
-fu_ti_tps6598x_firmware_new(void);

@@ -10,6 +10,14 @@
 
 #include "fu-cpu-device.h"
 
+typedef enum {
+	FU_CPU_DEVICE_FLAG_NONE = 0,
+	FU_CPU_DEVICE_FLAG_SHSTK = 1 << 0,
+	FU_CPU_DEVICE_FLAG_IBT = 1 << 1,
+	FU_CPU_DEVICE_FLAG_TME = 1 << 2,
+	FU_CPU_DEVICE_FLAG_SMAP = 1 << 3,
+} FuCpuDeviceFlag;
+
 struct _FuCpuDevice {
 	FuDevice parent_instance;
 	FuCpuDeviceFlag flags;
@@ -17,7 +25,7 @@ struct _FuCpuDevice {
 
 G_DEFINE_TYPE(FuCpuDevice, fu_cpu_device, FU_TYPE_DEVICE)
 
-gboolean
+static gboolean
 fu_cpu_device_has_flag(FuCpuDevice *self, FuCpuDeviceFlag flag)
 {
 	return (self->flags & flag) > 0;

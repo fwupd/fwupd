@@ -20,11 +20,6 @@
 #define EFI_OS_INDICATIONS_FILE_CAPSULE_DELIVERY_SUPPORTED 0x0000000000000004ULL
 
 gchar *
-fu_uefi_get_fallback_app_path(FuDevice *device,
-			      const gchar *esp_path,
-			      const gchar *cmd,
-			      GError **error);
-gchar *
 fu_uefi_get_esp_app_path(FuDevice *device, const gchar *esp_path, const gchar *cmd, GError **error);
 gchar *
 fu_uefi_get_built_app_path(const gchar *binary, GError **error);
