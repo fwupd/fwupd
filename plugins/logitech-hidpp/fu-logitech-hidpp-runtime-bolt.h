@@ -14,6 +14,3 @@ G_DECLARE_FINAL_TYPE(FuLogitechHidPpRuntimeBolt,
 		     FU,
 		     HIDPP_RUNTIME_BOLT,
 		     FuLogitechHidPpRuntime)
-
-void
-fu_logitech_hidpp_runtime_bolt_poll_peripherals(FuDevice *device);

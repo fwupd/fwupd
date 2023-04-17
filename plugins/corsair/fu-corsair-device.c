@@ -30,6 +30,9 @@ struct _FuCorsairDevice {
 };
 G_DEFINE_TYPE(FuCorsairDevice, fu_corsair_device, FU_TYPE_USB_DEVICE)
 
+static FuCorsairDevice *
+fu_corsair_device_new(FuCorsairDevice *parent, FuCorsairBp *bp);
+
 static gboolean
 fu_corsair_device_probe(FuDevice *device, GError **error)
 {
@@ -560,7 +563,7 @@ fu_corsair_device_init(FuCorsairDevice *device)
 	fu_device_add_protocol(FU_DEVICE(device), "com.corsair.bp");
 }
 
-FuCorsairDevice *
+static FuCorsairDevice *
 fu_corsair_device_new(FuCorsairDevice *parent, FuCorsairBp *bp)
 {
 	FuCorsairDevice *self = NULL;

@@ -163,9 +163,3 @@ fu_nordic_hid_firmware_mcuboot_class_init(FuNordicHidFirmwareMcubootClass *klass
 	klass_firmware->parse = fu_nordic_hid_firmware_mcuboot_parse;
 	klass_firmware->write = fu_nordic_hid_firmware_mcuboot_write;
 }
-
-FuFirmware *
-fu_nordic_hid_firmware_mcuboot_new(void)
-{
-	return FU_FIRMWARE(g_object_new(FU_TYPE_NORDIC_HID_FIRMWARE_MCUBOOT, NULL));
-}

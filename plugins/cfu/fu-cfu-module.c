@@ -32,12 +32,6 @@ fu_cfu_module_get_component_id(FuCfuModule *self)
 	return self->component_id;
 }
 
-guint8
-fu_cfu_module_get_bank(FuCfuModule *self)
-{
-	return self->bank;
-}
-
 gboolean
 fu_cfu_module_setup(FuCfuModule *self, const guint8 *buf, gsize bufsz, gsize offset, GError **error)
 {

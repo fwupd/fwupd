@@ -28,6 +28,4 @@ fu_superio_device_reg_write(FuSuperioDevice *self, guint8 address, guint8 data, 
 gboolean
 fu_superio_device_io_read(FuSuperioDevice *self, guint8 addr, guint8 *data, GError **error);
 gboolean
-fu_superio_device_io_read16(FuSuperioDevice *self, guint8 addr, guint16 *data, GError **error);
-gboolean
 fu_superio_device_io_write(FuSuperioDevice *self, guint8 addr, guint8 data, GError **error);

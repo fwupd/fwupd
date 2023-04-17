@@ -173,7 +173,7 @@ fu_logitech_hidpp_runtime_bolt_update_paired_device(FuLogitechHidPpRuntimeBolt *
 	return TRUE;
 }
 
-void
+static void
 fu_logitech_hidpp_runtime_bolt_poll_peripherals(FuDevice *device)
 {
 	FuLogitechHidPpRuntime *self = FU_HIDPP_RUNTIME(device);

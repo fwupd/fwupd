@@ -37,7 +37,5 @@
 #define FU_WAC_REPORT_ID_GET_CURRENT_FIRMWARE_IDX     0xe2 /* GET_FEATURE */
 #define FU_WAC_REPORT_ID_MODULE			      0xe4
 
-const gchar *
-fu_wac_report_id_to_string(guint8 report_id);
 void
 fu_wac_buffer_dump(const gchar *title, guint8 cmd, const guint8 *buf, gsize sz);

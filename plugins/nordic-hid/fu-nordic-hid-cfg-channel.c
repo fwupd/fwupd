@@ -102,6 +102,9 @@ struct _FuNordicHidCfgChannel {
 
 G_DEFINE_TYPE(FuNordicHidCfgChannel, fu_nordic_hid_cfg_channel, FU_TYPE_UDEV_DEVICE)
 
+static FuNordicHidCfgChannel *
+fu_nordic_hid_cfg_channel_new(guint8 id);
+
 static void
 fu_nordic_hid_cfg_channel_module_option_free(FuNordicCfgChannelModuleOption *opt)
 {
@@ -1224,7 +1227,7 @@ fu_nordic_hid_cfg_channel_init(FuNordicHidCfgChannel *self)
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_NORDIC_HID_ARCHIVE);
 }
 
-FuNordicHidCfgChannel *
+static FuNordicHidCfgChannel *
 fu_nordic_hid_cfg_channel_new(guint8 id)
 {
 	FuNordicHidCfgChannel *self = g_object_new(FU_TYPE_NORDIC_HID_CFG_CHANNEL, NULL);

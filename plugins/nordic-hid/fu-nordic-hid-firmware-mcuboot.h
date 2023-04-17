@@ -14,6 +14,3 @@ G_DECLARE_FINAL_TYPE(FuNordicHidFirmwareMcuboot,
 		     FU,
 		     NORDIC_HID_FIRMWARE_MCUBOOT,
 		     FuNordicHidFirmware)
-
-FuFirmware *
-fu_nordic_hid_firmware_mcuboot_new(void);

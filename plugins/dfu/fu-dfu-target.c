@@ -654,33 +654,6 @@ fu_dfu_target_setup(FuDfuTarget *self, GError **error)
 	return TRUE;
 }
 
-/**
- * fu_dfu_target_mass_erase:
- * @self: a #FuDfuTarget
- * @error: (nullable): optional return location for an error
- *
- * Mass erases the device clearing all SRAM and EEPROM memory.
- *
- * IMPORTANT: This only works on STM32 devices from ST and AVR32 devices from Atmel.
- *
- * Returns: %TRUE for success
- **/
-gboolean
-fu_dfu_target_mass_erase(FuDfuTarget *self, FuProgress *progress, GError **error)
-{
-	FuDfuTargetClass *klass = FU_DFU_TARGET_GET_CLASS(self);
-	if (!fu_dfu_target_setup(self, error))
-		return FALSE;
-	if (klass->mass_erase == NULL) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "mass erase not supported");
-		return FALSE;
-	}
-	return klass->mass_erase(self, progress, error);
-}
-
 gboolean
 fu_dfu_target_download_chunk(FuDfuTarget *self,
 			     guint16 index,

@@ -73,5 +73,3 @@ fu_dfu_target_download(FuDfuTarget *self,
 		       FuProgress *progress,
 		       FuDfuTargetTransferFlags flags,
 		       GError **error);
-gboolean
-fu_dfu_target_mass_erase(FuDfuTarget *self, FuProgress *progress, GError **error);

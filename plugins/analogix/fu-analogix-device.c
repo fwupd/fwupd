@@ -134,6 +134,9 @@ fu_analogix_device_get_update_status(FuAnalogixDevice *self,
 						sizeof(status_tmp),
 						error))
 			return FALSE;
+		g_debug("status now: %s [0x%x]",
+			fu_analogix_update_status_to_string(status_tmp),
+			status_tmp);
 		if ((status_tmp != UPDATE_STATUS_ERROR) && (status_tmp != UPDATE_STATUS_INVALID)) {
 			if (status != NULL)
 				*status = status_tmp;

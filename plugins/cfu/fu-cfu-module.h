@@ -13,8 +13,6 @@ G_DECLARE_FINAL_TYPE(FuCfuModule, fu_cfu_module, FU, CFU_MODULE, FuDevice)
 
 guint8
 fu_cfu_module_get_component_id(FuCfuModule *self);
-guint8
-fu_cfu_module_get_bank(FuCfuModule *self);
 gboolean
 fu_cfu_module_setup(FuCfuModule *self,
 		    const guint8 *buf,

@@ -52,8 +52,6 @@ typedef struct {
 
 const gchar *
 fu_tpm_eventlog_pcr_to_string(gint pcr);
-const gchar *
-fu_tpm_eventlog_hash_to_string(TPM2_ALG_ID hash_kind);
 guint32
 fu_tpm_eventlog_hash_get_size(TPM2_ALG_ID hash_kind);
 const gchar *

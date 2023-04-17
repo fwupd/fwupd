@@ -50,8 +50,6 @@ guint32
 fu_dfu_sector_get_size_left(FuDfuSector *self);
 guint16
 fu_dfu_sector_get_zone(FuDfuSector *self);
-guint16
-fu_dfu_sector_get_number(FuDfuSector *self);
 gboolean
 fu_dfu_sector_has_cap(FuDfuSector *self, FuDfuSectorCap cap);
 gchar *
