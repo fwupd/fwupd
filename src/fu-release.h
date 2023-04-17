@@ -58,8 +58,6 @@ fu_release_load(FuRelease *self,
 		XbNode *rel,
 		FwupdInstallFlags flags,
 		GError **error);
-gboolean
-fu_release_ensure_trust_flags(FuRelease *self, XbNode *rel, GError **error);
 const gchar *
 fu_release_get_action_id(FuRelease *self);
 gint

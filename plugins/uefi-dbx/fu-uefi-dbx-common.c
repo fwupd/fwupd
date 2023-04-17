@@ -11,7 +11,7 @@
 #include "fu-efi-image.h"
 #include "fu-uefi-dbx-common.h"
 
-gchar *
+static gchar *
 fu_uefi_dbx_get_authenticode_hash(const gchar *fn, GError **error)
 {
 	g_autoptr(FuEfiImage) img = NULL;

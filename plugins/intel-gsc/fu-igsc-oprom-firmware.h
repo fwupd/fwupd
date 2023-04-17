@@ -16,9 +16,6 @@ G_DECLARE_FINAL_TYPE(FuIgscOpromFirmware,
 		     IGSC_OPROM_FIRMWARE,
 		     FuOpromFirmware)
 
-FuFirmware *
-fu_igsc_oprom_firmware_new(void);
-
 guint16
 fu_igsc_oprom_firmware_get_major_version(FuIgscOpromFirmware *self);
 gboolean

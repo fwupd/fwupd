@@ -85,8 +85,6 @@ typedef enum {
 void
 fu_synaptics_rmi_device_set_iepmode(FuSynapticsRmiDevice *self, gboolean iepmode);
 gboolean
-fu_synaptics_rmi_device_get_iepmode(FuSynapticsRmiDevice *self);
-gboolean
 fu_synaptics_rmi_device_set_page(FuSynapticsRmiDevice *self, guint8 page, GError **error);
 gboolean
 fu_synaptics_rmi_device_write_bootloader_id(FuSynapticsRmiDevice *self, GError **error);
@@ -131,8 +129,6 @@ guint16
 fu_synaptics_rmi_device_get_sig_size(FuSynapticsRmiDevice *self);
 void
 fu_synaptics_rmi_device_set_max_page(FuSynapticsRmiDevice *self, guint8 max_page);
-guint8
-fu_synaptics_rmi_device_get_max_page(FuSynapticsRmiDevice *self);
 gboolean
 fu_synaptics_rmi_device_enter_iep_mode(FuSynapticsRmiDevice *self,
 				       FuSynapticsRmiDeviceFlags flags,

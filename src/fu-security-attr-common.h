@@ -20,8 +20,6 @@ const gchar *
 fu_security_attr_get_description(FwupdSecurityAttr *attr);
 const gchar *
 fu_security_attr_get_result(FwupdSecurityAttr *attr);
-void
-fu_security_attrs_to_json(FuSecurityAttrs *attrs, JsonBuilder *builder);
 gchar *
 fu_security_attrs_to_json_string(FuSecurityAttrs *attrs, GError **error);
 gboolean

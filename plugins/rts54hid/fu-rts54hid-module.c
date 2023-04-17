@@ -267,11 +267,3 @@ fu_rts54hid_module_class_init(FuRts54HidModuleClass *klass)
 	klass_device->to_string = fu_rts54hid_module_to_string;
 	klass_device->set_quirk_kv = fu_rts54hid_module_set_quirk_kv;
 }
-
-FuRts54HidModule *
-fu_rts54hid_module_new(void)
-{
-	FuRts54HidModule *self = NULL;
-	self = g_object_new(FU_TYPE_RTS54HID_MODULE, NULL);
-	return self;
-}

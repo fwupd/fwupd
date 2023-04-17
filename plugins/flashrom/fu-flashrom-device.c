@@ -394,16 +394,10 @@ fu_flashrom_device_new(FuContext *ctx, struct flashrom_flashctx *flashctx, FuIfd
 				      NULL));
 }
 
-FuIfdRegion
-fu_flashrom_device_get_region(FuFlashromDevice *self)
-{
-	return self->region;
-}
-
 gboolean
 fu_flashrom_device_unlock(FuFlashromDevice *self, GError **error)
 {
-	if (fu_flashrom_device_get_region(self) == FU_IFD_REGION_ME &&
+	if (self->region == FU_IFD_REGION_ME &&
 	    fu_device_has_private_flag(FU_DEVICE(self), FU_FLASHROM_DEVICE_FLAG_FN_M_ME_UNLOCK)) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,

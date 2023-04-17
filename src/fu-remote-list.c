@@ -24,6 +24,8 @@ enum { SIGNAL_CHANGED, SIGNAL_LAST };
 
 static guint signals[SIGNAL_LAST] = {0};
 
+static gboolean
+fu_remote_list_reload(FuRemoteList *self, GError **error);
 static void
 fu_remote_list_finalize(GObject *obj);
 
@@ -371,7 +373,7 @@ fu_remote_list_depsolve_with_direction(FuRemoteList *self, gint inc)
 	return cnt;
 }
 
-gboolean
+static gboolean
 fu_remote_list_reload(FuRemoteList *self, GError **error)
 {
 	guint depsolve_check;

@@ -67,29 +67,14 @@ typedef enum _CABLE_TYPE {
 gboolean
 fu_dell_clear_smi(FuDellSmiObj *obj);
 
-guint32
-fu_dell_get_res(FuDellSmiObj *smi_obj, guint8 arg);
-
-gboolean
-fu_dell_execute_smi(FuDellSmiObj *obj);
-
 gboolean
 fu_dell_execute_simple_smi(FuDellSmiObj *obj, guint16 class, guint16 select);
-
-gboolean
-fu_dell_detect_dock(FuDellSmiObj *obj, guint32 *location);
 
 gboolean
 fu_dell_query_dock(FuDellSmiObj *smi_obj, DOCK_UNION *buf);
 
 const gchar *
 fu_dell_get_dock_type(guint8 type);
-
-gboolean
-fu_dell_toggle_dock_mode(FuDellSmiObj *smi_obj,
-			 guint32 new_mode,
-			 guint32 dock_location,
-			 GError **error);
 
 /* SMI return values used */
 #define SMI_SUCCESS	   0

@@ -23,10 +23,5 @@ gboolean
 fu_logitech_hidpp_runtime_enable_notifications(FuLogitechHidPpRuntime *self, GError **error);
 FuIOChannel *
 fu_logitech_hidpp_runtime_get_io_channel(FuLogitechHidPpRuntime *self);
-void
-fu_logitech_hidpp_runtime_set_io_channel(FuLogitechHidPpRuntime *self, FuIOChannel *io_channel);
 guint8
 fu_logitech_hidpp_runtime_get_version_bl_major(FuLogitechHidPpRuntime *self);
-void
-fu_logitech_hidpp_runtime_set_version_bl_major(FuLogitechHidPpRuntime *self,
-					       guint8 version_bl_major);

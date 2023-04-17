@@ -91,9 +91,3 @@ fu_focalfp_firmware_class_init(FuFocalfpFirmwareClass *klass)
 	klass_firmware->parse = fu_focalfp_firmware_parse;
 	klass_firmware->export = fu_focalfp_firmware_export;
 }
-
-FuFirmware *
-fu_focalfp_firmware_new(void)
-{
-	return FU_FIRMWARE(g_object_new(FU_TYPE_FOCALFP_FIRMWARE, NULL));
-}

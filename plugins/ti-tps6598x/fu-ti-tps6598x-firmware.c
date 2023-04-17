@@ -153,9 +153,3 @@ fu_ti_tps6598x_firmware_class_init(FuTiTps6598xFirmwareClass *klass)
 	klass_firmware->parse = fu_ti_tps6598x_firmware_parse;
 	klass_firmware->write = fu_ti_tps6598x_firmware_write;
 }
-
-FuFirmware *
-fu_ti_tps6598x_firmware_new(void)
-{
-	return FU_FIRMWARE(g_object_new(FU_TYPE_TI_TPS6598X_FIRMWARE, NULL));
-}

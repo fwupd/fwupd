@@ -280,11 +280,3 @@ fu_wacom_emr_device_class_init(FuWacomEmrDeviceClass *klass)
 	klass_device->attach = fu_wacom_emr_device_attach;
 	klass_wac_device->write_firmware = fu_wacom_emr_device_write_firmware;
 }
-
-FuWacomEmrDevice *
-fu_wacom_emr_device_new(FuUdevDevice *device)
-{
-	FuWacomEmrDevice *self = g_object_new(FU_TYPE_WACOM_EMR_DEVICE, NULL);
-	fu_device_incorporate(FU_DEVICE(self), FU_DEVICE(device));
-	return self;
-}

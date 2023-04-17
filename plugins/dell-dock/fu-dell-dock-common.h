@@ -47,5 +47,3 @@
 
 gboolean
 fu_dell_dock_set_power(FuDevice *device, guint8 target, gboolean enabled, GError **error);
-void
-fu_dell_dock_will_replug(FuDevice *device);

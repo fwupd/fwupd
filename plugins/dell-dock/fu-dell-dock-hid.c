@@ -176,36 +176,6 @@ fu_dell_dock_hid_raise_mcu_clock(FuDevice *self, gboolean enable, GError **error
 }
 
 gboolean
-fu_dell_dock_hid_get_ec_status(FuDevice *self, guint8 *status1, guint8 *status2, GError **error)
-{
-	FuHIDCmdBuffer cmd_buffer = {
-	    .cmd = HUB_CMD_WRITE_DATA,
-	    .ext = HUB_EXT_READ_STATUS,
-	    .cmd_data0 = 0,
-	    .cmd_data1 = 0,
-	    .cmd_data2 = 0,
-	    .cmd_data3 = 0,
-	    .bufferlen = GUINT16_TO_LE(27),
-	    .parameters = {.i2ctargetaddr = 0, .regaddrlen = 0, .i2cspeed = 0},
-	    .extended_cmdarea[0 ... 52] = 0,
-	};
-
-	if (!fu_dell_dock_hid_set_report(self, (guint8 *)&cmd_buffer, error)) {
-		g_prefix_error(error, "failed to get EC status: ");
-		return FALSE;
-	}
-	if (!fu_dell_dock_hid_get_report(self, cmd_buffer.data, error)) {
-		g_prefix_error(error, "failed to get EC status: ");
-		return FALSE;
-	}
-
-	*status1 = cmd_buffer.data[25];
-	*status2 = cmd_buffer.data[26];
-
-	return TRUE;
-}
-
-gboolean
 fu_dell_dock_hid_erase_bank(FuDevice *self, guint8 idx, GError **error)
 {
 	FuHIDCmdBuffer cmd_buffer = {

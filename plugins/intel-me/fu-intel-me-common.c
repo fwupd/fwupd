@@ -8,7 +8,7 @@
 
 #include "fu-intel-me-common.h"
 
-gboolean
+static gboolean
 fu_intel_me_mkhi_result_to_error(FuMkhiResult result, GError **error)
 {
 	if (result == MKHI_STATUS_SUCCESS)

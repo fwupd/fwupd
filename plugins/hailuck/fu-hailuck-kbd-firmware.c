@@ -95,9 +95,3 @@ fu_hailuck_kbd_firmware_class_init(FuHailuckKbdFirmwareClass *klass)
 	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
 	klass_firmware->parse = fu_hailuck_kbd_firmware_parse;
 }
-
-FuFirmware *
-fu_hailuck_kbd_firmware_new(void)
-{
-	return FU_FIRMWARE(g_object_new(FU_TYPE_HAILUCK_KBD_FIRMWARE, NULL));
-}

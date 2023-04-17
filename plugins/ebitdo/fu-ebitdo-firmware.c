@@ -102,9 +102,3 @@ fu_ebitdo_firmware_class_init(FuEbitdoFirmwareClass *klass)
 	klass_firmware->parse = fu_ebitdo_firmware_parse;
 	klass_firmware->write = fu_ebitdo_firmware_write;
 }
-
-FuFirmware *
-fu_ebitdo_firmware_new(void)
-{
-	return FU_FIRMWARE(g_object_new(FU_TYPE_EBITDO_FIRMWARE, NULL));
-}

@@ -194,8 +194,6 @@ void
 fu_engine_set_approved_firmware(FuEngine *self, GPtrArray *checksums);
 GPtrArray *
 fu_engine_get_blocked_firmware(FuEngine *self);
-void
-fu_engine_add_blocked_firmware(FuEngine *self, const gchar *checksum);
 gboolean
 fu_engine_set_blocked_firmware(FuEngine *self, GPtrArray *checksums, GError **error);
 gchar *

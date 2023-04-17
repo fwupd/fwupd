@@ -14,6 +14,9 @@
 #include "fu-security-attr-common.h"
 #include "fu-security-attrs-private.h"
 
+static void
+fu_security_attrs_to_json(FuSecurityAttrs *attrs, JsonBuilder *builder);
+
 gchar *
 fu_security_attr_get_name(FwupdSecurityAttr *attr)
 {
@@ -686,7 +689,7 @@ fu_security_attrs_to_json_string(FuSecurityAttrs *attrs, GError **error)
 	return g_steal_pointer(&data);
 }
 
-void
+static void
 fu_security_attrs_to_json(FuSecurityAttrs *attrs, JsonBuilder *builder)
 {
 	g_autoptr(GPtrArray) items = NULL;

@@ -83,9 +83,3 @@ fu_ep963x_firmware_class_init(FuEp963xFirmwareClass *klass)
 	klass_firmware->check_magic = fu_ep963x_firmware_check_magic;
 	klass_firmware->parse = fu_ep963x_firmware_parse;
 }
-
-FuFirmware *
-fu_ep963x_firmware_new(void)
-{
-	return FU_FIRMWARE(g_object_new(FU_TYPE_EP963X_FIRMWARE, NULL));
-}

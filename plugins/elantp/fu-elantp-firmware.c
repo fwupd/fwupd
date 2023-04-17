@@ -52,13 +52,6 @@ fu_elantp_firmware_get_iap_addr(FuElantpFirmware *self)
 	return self->iap_addr;
 }
 
-guint16
-fu_elantp_firmware_get_iap_ver(FuElantpFirmware *self)
-{
-	g_return_val_if_fail(FU_IS_ELANTP_FIRMWARE(self), 0);
-	return self->iap_ver;
-}
-
 gboolean
 fu_elantp_firmware_get_forcetable_support(FuElantpFirmware *self)
 {

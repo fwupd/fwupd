@@ -13,6 +13,3 @@ G_DECLARE_FINAL_TYPE(FuAnalogixFirmware,
 		     FU,
 		     ANALOGIX_FIRMWARE,
 		     FuIhexFirmware)
-
-FuFirmware *
-fu_analogix_firmware_new(void);

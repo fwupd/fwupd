@@ -18,8 +18,6 @@ fu_idle_inhibit(FuIdle *self, const gchar *reason);
 gboolean
 fu_idle_has_inhibit(FuIdle *self, const gchar *reason);
 void
-fu_idle_uninhibit(FuIdle *self, guint32 token);
-void
 fu_idle_set_timeout(FuIdle *self, guint timeout);
 void
 fu_idle_reset(FuIdle *self);

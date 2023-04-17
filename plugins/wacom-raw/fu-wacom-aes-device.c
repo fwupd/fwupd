@@ -296,11 +296,3 @@ fu_wacom_aes_device_class_init(FuWacomAesDeviceClass *klass)
 	klass_device->attach = fu_wacom_aes_device_attach;
 	klass_wac_device->write_firmware = fu_wacom_aes_device_write_firmware;
 }
-
-FuWacomAesDevice *
-fu_wacom_aes_device_new(FuUdevDevice *device)
-{
-	FuWacomAesDevice *self = g_object_new(FU_TYPE_WACOM_AES_DEVICE, NULL);
-	fu_device_incorporate(FU_DEVICE(self), FU_DEVICE(device));
-	return self;
-}

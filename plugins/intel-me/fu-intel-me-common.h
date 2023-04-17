@@ -57,8 +57,6 @@ typedef enum {
 GString *
 fu_intel_me_convert_checksum(GByteArray *buf, GError **error);
 gboolean
-fu_intel_me_mkhi_result_to_error(FuMkhiResult result, GError **error);
-gboolean
 fu_intel_me_mkhi_verify_header(const FuMkhiHeader *hdr_req,
 			       const FuMkhiHeader *hdr_res,
 			       GError **error);

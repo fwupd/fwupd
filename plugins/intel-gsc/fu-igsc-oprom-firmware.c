@@ -242,9 +242,3 @@ fu_igsc_oprom_firmware_class_init(FuIgscOpromFirmwareClass *klass)
 	klass_firmware->parse = fu_igsc_oprom_firmware_parse;
 	klass_firmware->export = fu_igsc_oprom_firmware_export;
 }
-
-FuFirmware *
-fu_igsc_oprom_firmware_new(void)
-{
-	return FU_FIRMWARE(g_object_new(FU_TYPE_IGSC_OPROM_FIRMWARE, NULL));
-}

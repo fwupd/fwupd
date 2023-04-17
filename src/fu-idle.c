@@ -109,7 +109,7 @@ fu_idle_reset(FuIdle *self)
 		fu_idle_start(self);
 }
 
-void
+static void
 fu_idle_uninhibit(FuIdle *self, guint32 token)
 {
 	g_autoptr(GRWLockWriterLocker) locker = g_rw_lock_writer_locker_new(&self->items_mutex);
