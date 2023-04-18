@@ -9,6 +9,7 @@
 #include "fu-{{vendor}}-{{example}}-common.h"
 #include "fu-{{vendor}}-{{example}}-device.h"
 #include "fu-{{vendor}}-{{example}}-firmware.h"
+#include "fu-{{vendor}}-{{example}}-struct.h"
 
 /* this can be set using Flags=example in the quirk file  */
 #define FU_{{VENDOR}}_{{EXAMPLE}}_DEVICE_FLAG_EXAMPLE (1 << 0)
@@ -202,7 +203,7 @@ fu_{{vendor}}_{{example}}_device_write_blocks(Fu{{Vendor}}{{Example}}Device *sel
 		if (!fu_hid_device_set_report(FU_HID_DEVICE(self),
 					      0x01,
 					      buf,
-					      sizeof(bufsz),
+					      sizeof(buf),
 					      5000, /* ms */
 					      FU_HID_DEVICE_FLAG_NONE,
 					      error)) {
@@ -212,7 +213,7 @@ fu_{{vendor}}_{{example}}_device_write_blocks(Fu{{Vendor}}{{Example}}Device *sel
 		if (!fu_hid_device_get_report(FU_HID_DEVICE(self),
 					      0x01,
 					      buf,
-					      sizeof(bufsz),
+					      sizeof(buf),
 					      5000, /* ms */
 					      FU_HID_DEVICE_FLAG_NONE,
 					      error)) {

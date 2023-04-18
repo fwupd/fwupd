@@ -9,6 +9,7 @@
 #include <fwupdplugin.h>
 
 #include "fu-{{vendor}}-{{example}}-firmware.h"
+#include "fu-{{vendor}}-{{example}}-struct.h"
 
 struct _Fu{{Vendor}}{{Example}}Firmware {
 	FuFirmware parent_instance;

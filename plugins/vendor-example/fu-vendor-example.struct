@@ -1,0 +1,4 @@
+struct {{Vendor}}{{Example}} {
+	signature: u8:: 0xDE
+	address: u16le
+}
