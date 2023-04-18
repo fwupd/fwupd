@@ -38,12 +38,18 @@ def _convert_md_to_man(data: str) -> str:
     sections = data.split("\n\n")
     troff_lines: List[str] = []
 
+    # ignore the docgen header
+    if sections[0].startswith("---"):
+        sections = sections[1:]
+
     # header
     split = sections[0].split(" ", maxsplit=4)
     if split[0] != "%" or split[3] != "|":
         print(
             "no man header detected, expected something like "
-            "'% fwupdagent(1) 1.2.5 | fwupdagent man page'"
+            "'% fwupdagent(1) 1.2.5 | fwupdagent man page' and got {}".format(
+                sections[0]
+            )
         )
         sys.exit(1)
     man_cmd = split[1][:-3]
@@ -67,8 +73,8 @@ def _convert_md_to_man(data: str) -> str:
         for line_tmp in lines:
             if line_tmp.startswith("| "):
                 line_tmp = line_tmp[2:]
-            if line_tmp.startswith("    "):
-                line_tmp = line_tmp[4:]
+            if line_tmp.startswith("  "):
+                line_tmp = line_tmp[2:]
                 sectalign = 8
             line_tmp = line_tmp.replace("\\-", "-")
             line += line_tmp

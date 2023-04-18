@@ -3528,7 +3528,7 @@ fu_util_sync_bkc(FuUtilPrivate *priv, gchar **values, GError **error)
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "No HostBkc set in daemon.conf");
+				    "No HostBkc set in fwupd.conf");
 		return FALSE;
 	}
 	devices = fwupd_client_get_devices(priv->client, NULL, error);
@@ -4696,7 +4696,7 @@ main(int argc, char *argv[])
 			      "modify-config",
 			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
 			      _("KEY,VALUE"),
-			      /* TRANSLATORS: sets something in daemon.conf */
+			      /* TRANSLATORS: sets something in the daemon configuration file */
 			      _("Modifies a daemon configuration value"),
 			      fu_util_modify_config);
 	fu_util_cmd_array_add(cmd_array,

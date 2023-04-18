@@ -38,3 +38,4 @@ SEE ALSO
 ========
 
 fwupdtool(1)
+fwupd.conf(5)

@@ -2,9 +2,9 @@
 set -e
 # try loading the mtdram module to run our mtd tests
 modprobe mtdram 2>&1 || true
-sed "s,^DisabledPlugins=.*,DisabledPlugins=," -i /etc/fwupd/daemon.conf
-sed "s,^VerboseDomains=.*,VerboseDomains=*,"  -i /etc/fwupd/daemon.conf
-sed "s,^AllowEmulation=false,AllowEmulation=true," -i /etc/fwupd/daemon.conf
+sed "s,^DisabledPlugins=.*,DisabledPlugins=," -i /etc/fwupd/fwupd.conf
+sed "s,^VerboseDomains=.*,VerboseDomains=*,"  -i /etc/fwupd/fwupd.conf
+sed "s,^AllowEmulation=false,AllowEmulation=true," -i /etc/fwupd/fwupd.conf
 sed "s,ConditionVirtualization=.*,," 		\
 	/lib/systemd/system/fwupd.service >	\
 	/etc/systemd/system/fwupd.service

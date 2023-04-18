@@ -9,9 +9,6 @@ install_data(['fwupd-msr.conf'],
 )
 endif
 
-install_data(['msr.conf'],
-  install_dir: join_paths(sysconfdir, 'fwupd')
-)
 plugin_builtins += static_library('fu_plugin_msr',
   sources: [
     'fu-msr-plugin.c',

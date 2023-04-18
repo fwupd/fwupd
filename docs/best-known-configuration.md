@@ -31,7 +31,7 @@ let us know by [opening an issue](https://gitlab.com/fwupd/lvfs-website/-/issues
 ## Client
 
 When provisioning the client machine, we can set the BKC by setting `HostBkc=vendor-2021q1` in
-`/etc/fwupd/daemon.conf`.
+`/etc/fwupd/fwupd.conf`.
 Then any invocation of `fwupdmgr sync-bkc` will install or downgrade firmware on all compatible
 devices (UEFI, RAID, network adapter, & SAS HBA etc.) to make the system match a compatible set.
 

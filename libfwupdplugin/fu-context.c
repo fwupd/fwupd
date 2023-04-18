@@ -9,6 +9,7 @@
 #include "config.h"
 
 #include "fu-bios-settings-private.h"
+#include "fu-config-private.h"
 #include "fu-context-private.h"
 #include "fu-fdt-firmware.h"
 #include "fu-hwids-private.h"
@@ -26,6 +27,7 @@
 typedef struct {
 	FuContextFlags flags;
 	FuHwids *hwids;
+	FuConfig *config;
 	FuSmbios *smbios;
 	FuSmbiosChassisKind chassis_kind;
 	FuQuirks *quirks;
@@ -164,6 +166,24 @@ fu_context_get_hwids(FuContext *self)
 	FuContextPrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FU_IS_CONTEXT(self), NULL);
 	return priv->hwids;
+}
+
+/**
+ * fu_context_get_config:
+ * @self: a #FuContext
+ *
+ * Gets the system config.
+ *
+ * Returns: (transfer none): a #FuHwids
+ *
+ * Since: 1.9.1
+ **/
+FuConfig *
+fu_context_get_config(FuContext *self)
+{
+	FuContextPrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_CONTEXT(self), NULL);
+	return priv->config;
 }
 
 /**
@@ -839,6 +859,10 @@ fu_context_load_hwinfo(FuContext *self,
 	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 3, "set-flags");
 	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 95, "reload-bios-settings");
 
+	/* required always */
+	if (!fu_config_load(priv->config, error))
+		return FALSE;
+
 	/* run all the HWID setup funcs */
 	for (guint i = 0; hwids_setup_map[i].name != NULL; i++) {
 		if ((flags & hwids_setup_map[i].flag) > 0) {
@@ -1324,6 +1348,7 @@ fu_context_finalize(GObject *object)
 	if (priv->fdt != NULL)
 		g_object_unref(priv->fdt);
 	g_object_unref(priv->hwids);
+	g_object_unref(priv->config);
 	g_hash_table_unref(priv->hwid_flags);
 	g_object_unref(priv->quirks);
 	g_object_unref(priv->smbios);
@@ -1456,6 +1481,7 @@ fu_context_init(FuContext *self)
 	priv->battery_threshold = FWUPD_BATTERY_LEVEL_INVALID;
 	priv->smbios = fu_smbios_new();
 	priv->hwids = fu_hwids_new();
+	priv->config = fu_config_new();
 	priv->hwid_flags = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
 	priv->udev_subsystems = g_ptr_array_new_with_free_func(g_free);
 	priv->firmware_gtypes = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);

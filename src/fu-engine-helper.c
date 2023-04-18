@@ -156,7 +156,7 @@ fu_engine_update_devices_file(FuEngine *self, GError **error)
 	g_autofree gchar *directory = NULL;
 	g_autofree gchar *target = NULL;
 
-	if (fu_config_get_show_device_private(fu_engine_get_config(self)))
+	if (fu_engine_config_get_show_device_private(fu_engine_get_config(self)))
 		flags |= FWUPD_DEVICE_FLAG_TRUSTED;
 
 	builder = json_builder_new();

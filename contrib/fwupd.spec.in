@@ -336,14 +336,7 @@ done
 %files -f %{name}.lang
 %doc README.md
 %license COPYING
-%config(noreplace)%{_sysconfdir}/fwupd/daemon.conf
-%if 0%{?have_uefi}
-%config(noreplace)%{_sysconfdir}/fwupd/uefi_capsule.conf
-%endif
-%config(noreplace)%{_sysconfdir}/fwupd/redfish.conf
-%if 0%{?have_thunderbolt}
-%config(noreplace)%{_sysconfdir}/fwupd/thunderbolt.conf
-%endif
+%config(noreplace)%{_sysconfdir}/fwupd/fwupd.conf
 %dir %{_libexecdir}/fwupd
 %{_libexecdir}/fwupd/fwupd
 %ifarch i686 x86_64
@@ -370,7 +363,6 @@ done
 %{_sysconfdir}/pki/fwupd-metadata
 %if 0%{?have_msr}
 /usr/lib/modules-load.d/fwupd-msr.conf
-%config(noreplace)%{_sysconfdir}/fwupd/msr.conf
 %endif
 %{_datadir}/dbus-1/system.d/org.freedesktop.fwupd.conf
 %{_datadir}/bash-completion/completions/fwupdmgr
@@ -390,6 +382,7 @@ done
 %{_mandir}/man1/dbxtool.*
 %endif
 %{_mandir}/man1/fwupdmgr.1*
+%{_mandir}/man5/*
 %{_datadir}/metainfo/org.freedesktop.fwupd.metainfo.xml
 %{_datadir}/icons/hicolor/scalable/apps/org.freedesktop.fwupd.svg
 %{_datadir}/fwupd/firmware_packager.py

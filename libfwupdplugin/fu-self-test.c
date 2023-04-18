@@ -645,12 +645,13 @@ fu_plugin_config_func(void)
 	gboolean ret;
 	gint rc;
 	g_autofree gchar *conf_dir = NULL;
-	g_autofree gchar *conf_file = NULL;
 	g_autofree gchar *fn = NULL;
 	g_autofree gchar *testdatadir = NULL;
 	g_autofree gchar *value = NULL;
 	g_autofree gchar *value_missing = NULL;
-	g_autoptr(FuPlugin) plugin = fu_plugin_new(NULL);
+	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuPlugin) plugin = fu_plugin_new(ctx);
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GError) error = NULL;
 
 	/* this is a build file */
@@ -660,13 +661,17 @@ fu_plugin_config_func(void)
 
 	/* remove existing file */
 	fu_plugin_set_name(plugin, "test");
-	conf_file = g_strdup_printf("%s.conf", fu_plugin_get_name(plugin));
-	fn = g_build_filename(conf_dir, conf_file, NULL);
+	fn = g_build_filename(conf_dir, "fwupd.conf", NULL);
 	ret = fu_path_mkdir_parent(fn, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	g_remove(fn);
 	ret = g_file_set_contents(fn, "", -1, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* load context */
+	ret = fu_context_load_hwinfo(ctx, progress, FU_CONTEXT_HWID_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -676,10 +681,10 @@ fu_plugin_config_func(void)
 	g_assert_true(ret);
 	g_assert_true(g_file_test(fn, G_FILE_TEST_EXISTS));
 
-	/* check it is world readable */
+	/* check it is only readable by the user/group */
 	rc = g_stat(fn, &statbuf);
 	g_assert_cmpint(rc, ==, 0);
-	g_assert_cmpint(statbuf.st_mode & 0777, ==, 0644);
+	g_assert_cmpint(statbuf.st_mode & 0777, ==, 0640);
 
 	/* read back the value */
 	value_missing = fu_plugin_get_config_value(plugin, "NotGoingToExist", "Foo");
@@ -687,15 +692,6 @@ fu_plugin_config_func(void)
 	value = fu_plugin_get_config_value(plugin, "Key", "Foo");
 	g_assert_cmpstr(value, ==, "True");
 	g_assert_true(fu_plugin_get_config_value_boolean(plugin, "Key", FALSE));
-
-	/* write it private, i.e. only readable by the user/group */
-	fu_plugin_add_flag(plugin, FWUPD_PLUGIN_FLAG_SECURE_CONFIG);
-	ret = fu_plugin_set_config_value(plugin, "Key", "False", &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
-	rc = g_stat(fn, &statbuf);
-	g_assert_cmpint(rc, ==, 0);
-	g_assert_cmpint(statbuf.st_mode & 0777, ==, 0640);
 }
 
 static void

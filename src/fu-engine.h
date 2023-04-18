@@ -13,7 +13,7 @@
 #include "fwupd-device.h"
 #include "fwupd-enums.h"
 
-#include "fu-config.h"
+#include "fu-engine-config.h"
 #include "fu-release.h"
 
 #define FU_TYPE_ENGINE (fu_engine_get_type())
@@ -67,7 +67,7 @@ const gchar *
 fu_engine_get_host_security_id(FuEngine *self);
 XbSilo *
 fu_engine_get_silo_from_blob(FuEngine *self, GBytes *blob_cab, GError **error);
-FuConfig *
+FuEngineConfig *
 fu_engine_get_config(FuEngine *self);
 GPtrArray *
 fu_engine_get_plugins(FuEngine *self);

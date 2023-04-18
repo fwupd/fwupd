@@ -36,10 +36,10 @@ endif
 
 fwupd_engine_src = [
   'fu-cabinet-common.c',
-  'fu-config.c',
   'fu-debug.c',
   'fu-device-list.c',
   'fu-engine.c',
+  'fu-engine-config.c',
   'fu-engine-helper.c',
   'fu-engine-request.c',
   'fu-history.c',

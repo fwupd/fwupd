@@ -30,6 +30,7 @@ fwupdplugin_src = [
   'fu-cabinet.c',
   'fu-chunk.c',             # fuzzing
   'fu-common.c',            # fuzzing
+  'fu-config.c',            # fuzzing
   'fu-sum.c',               # fuzzing
   'fu-crc.c',               # fuzzing
   'fu-mem.c',               # fuzzing
@@ -134,6 +135,7 @@ fwupdplugin_headers = [
   'fu-cabinet.h',
   'fu-chunk.h',
   'fu-common.h',
+  'fu-config.h',
   'fu-byte-array.h',
   'fu-string.h',
   'fu-sum.h',
@@ -205,6 +207,7 @@ fwupdplugin_headers = [
 fwupdplugin_headers_private = [
   'fu-backend-private.h',
   'fu-context-private.h',
+  'fu-config-private.h',
   'fu-device-private.h',
   'fu-device-progress.h',
   'fu-kenv.h',

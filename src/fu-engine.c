@@ -40,6 +40,7 @@
 #include "fu-backend-private.h"
 #include "fu-bios-settings-private.h"
 #include "fu-cabinet.h"
+#include "fu-config-private.h"
 #include "fu-context-private.h"
 #include "fu-coswid-firmware.h"
 #include "fu-debug.h"
@@ -109,7 +110,7 @@ typedef enum {
 struct _FuEngine {
 	GObject parent_instance;
 	GPtrArray *backends;
-	FuConfig *config;
+	FuEngineConfig *config;
 	FuRemoteList *remote_list;
 	FuDeviceList *device_list;
 	gboolean only_trusted;
@@ -202,7 +203,7 @@ fu_engine_emit_changed(FuEngine *self)
 	fu_engine_idle_reset(self);
 
 	/* update the motd */
-	if (fu_config_get_update_motd(self->config))
+	if (fu_engine_config_get_update_motd(self->config))
 		fu_engine_update_motd_reset(self);
 
 	/* update the list of devices */
@@ -448,7 +449,7 @@ fu_engine_watch_device(FuEngine *self, FuDevice *device)
 static void
 fu_engine_ensure_device_power_inhibit(FuEngine *self, FuDevice *device)
 {
-	if (fu_config_get_ignore_power(self->config))
+	if (fu_engine_config_get_ignore_power(self->config))
 		return;
 
 	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_REQUIRE_AC) &&
@@ -694,7 +695,7 @@ static void
 fu_engine_add_trusted_report(FuEngine *self, FuRelease *release)
 {
 	GPtrArray *reports = fu_release_get_reports(release);
-	GPtrArray *trusted_reports = fu_config_get_trusted_reports(self->config);
+	GPtrArray *trusted_reports = fu_engine_config_get_trusted_reports(self->config);
 
 	for (guint i = 0; i < reports->len; i++) {
 		FwupdReport *report = g_ptr_array_index(reports, i);
@@ -887,7 +888,7 @@ fu_engine_modify_config(FuEngine *self, const gchar *key, const gchar *value, GE
 	}
 
 	/* modify, effective next reboot */
-	return fu_config_set_key_value(self->config, key, value, error);
+	return fu_config_set_value(FU_CONFIG(self->config), "fwupd", key, value, error);
 }
 
 /**
@@ -1160,7 +1161,7 @@ static void
 fu_engine_check_context_flag_save_events(FuEngine *self)
 {
 	if (g_hash_table_size(self->emulation_backend_ids) > 0 &&
-	    fu_config_get_allow_emulation(self->config)) {
+	    fu_engine_config_get_allow_emulation(self->config)) {
 		fu_context_add_flag(self->ctx, FU_CONTEXT_FLAG_SAVE_EVENTS);
 	} else {
 		fu_context_remove_flag(self->ctx, FU_CONTEXT_FLAG_SAVE_EVENTS);
@@ -2272,7 +2273,7 @@ fu_engine_check_trust(FuEngine *self, FuRelease *release, GError **error)
 	g_autofree gchar *str = fu_release_to_string(release);
 
 	g_debug("checking trust of %s", str);
-	if (fu_config_get_only_trusted(self->config) &&
+	if (fu_engine_config_get_only_trusted(self->config) &&
 	    !fu_release_has_flag(release, FWUPD_RELEASE_FLAG_TRUSTED_PAYLOAD)) {
 		g_autofree gchar *sysconfdir = fu_path_from_kind(FU_PATH_KIND_SYSCONFDIR_PKG);
 		g_autofree gchar *fn = g_build_filename(sysconfdir, "daemon.conf", NULL);
@@ -2607,7 +2608,7 @@ fu_engine_get_report_metadata(FuEngine *self, GError **error)
 #endif
 
 	/* find out what BKC is being targeted to understand "odd" upgrade paths */
-	tmp = fu_config_get_host_bkc(self->config);
+	tmp = fu_engine_config_get_host_bkc(self->config);
 	if (tmp != NULL)
 		g_hash_table_insert(hash, g_strdup("HostBkc"), g_strdup(tmp));
 
@@ -3385,7 +3386,7 @@ fu_engine_emulation_load(FuEngine *self, GBytes *data, GError **error)
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* not supported */
-	if (!fu_config_get_allow_emulation(self->config)) {
+	if (!fu_engine_config_get_allow_emulation(self->config)) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
@@ -3449,7 +3450,7 @@ fu_engine_emulation_save(FuEngine *self, GError **error)
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
 	/* not supported */
-	if (!fu_config_get_allow_emulation(self->config)) {
+	if (!fu_engine_config_get_allow_emulation(self->config)) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
@@ -3649,7 +3650,7 @@ fu_engine_device_check_power(FuEngine *self,
 			  configfile);
 	}
 
-	if (fu_config_get_ignore_power(self->config))
+	if (fu_engine_config_get_ignore_power(self->config))
 		return TRUE;
 
 	/* not charging */
@@ -4724,15 +4725,15 @@ fu_engine_load_metadata_store(FuEngine *self, FuEngineLoadFlags flags, GError **
 }
 
 static void
-fu_engine_config_changed_cb(FuConfig *config, FuEngine *self)
+fu_engine_config_changed_cb(FuEngineConfig *config, FuEngine *self)
 {
-	fu_idle_set_timeout(self->idle, fu_config_get_idle_timeout(config));
+	fu_idle_set_timeout(self->idle, fu_engine_config_get_idle_timeout(config));
 
 	/* allow changing the hardcoded ESP location */
-	if (fu_config_get_esp_location(config) != NULL) {
+	if (fu_engine_config_get_esp_location(config) != NULL) {
 		g_autoptr(GError) error = NULL;
 		g_autoptr(FuVolume) vol = NULL;
-		vol = fu_volume_new_esp_for_path(fu_config_get_esp_location(config), &error);
+		vol = fu_volume_new_esp_for_path(fu_engine_config_get_esp_location(config), &error);
 		if (vol == NULL) {
 			g_warning("not adding changed EspLocation: %s", error->message);
 		} else {
@@ -5083,7 +5084,7 @@ fu_engine_get_silo_from_blob(FuEngine *self, GBytes *blob_cab, GError **error)
 
 	/* load file */
 	fu_engine_set_status(self, FWUPD_STATUS_DECOMPRESSING);
-	fu_cabinet_set_size_max(cabinet, fu_config_get_archive_size_max(self->config));
+	fu_cabinet_set_size_max(cabinet, fu_engine_config_get_archive_size_max(self->config));
 	fu_cabinet_set_jcat_context(cabinet, self->jcat_context);
 	if (!fu_cabinet_parse(cabinet, blob_cab, FU_CABINET_PARSE_FLAG_NONE, error))
 		return NULL;
@@ -5356,7 +5357,9 @@ fu_engine_get_details(FuEngine *self, FuEngineRequest *request, gint fd, GError 
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
 	/* get all components */
-	blob = fu_bytes_get_contents_fd(fd, fu_config_get_archive_size_max(self->config), error);
+	blob = fu_bytes_get_contents_fd(fd,
+					fu_engine_config_get_archive_size_max(self->config),
+					error);
 	if (blob == NULL)
 		return NULL;
 	return fu_engine_get_details_for_bytes(self, request, blob, error);
@@ -6708,7 +6711,7 @@ fu_engine_add_device(FuEngine *self, FuDevice *device)
 	}
 
 	/* is this GUID disabled */
-	disabled_devices = fu_config_get_disabled_devices(self->config);
+	disabled_devices = fu_engine_config_get_disabled_devices(self->config);
 	for (guint i = 0; i < disabled_devices->len; i++) {
 		const gchar *disabled_guid = g_ptr_array_index(disabled_devices, i);
 		for (guint j = 0; j < device_guids->len; j++) {
@@ -6916,7 +6919,7 @@ fu_engine_is_uid_trusted(FuEngine *self, guint64 calling_uid)
 	if (calling_uid == 0)
 		return TRUE;
 
-	trusted = fu_config_get_trusted_uids(self->config);
+	trusted = fu_engine_config_get_trusted_uids(self->config);
 	for (guint i = 0; i < trusted->len; i++) {
 		if (calling_uid == g_array_index(trusted, guint64, i))
 			return TRUE;
@@ -6927,7 +6930,7 @@ fu_engine_is_uid_trusted(FuEngine *self, guint64 calling_uid)
 static gboolean
 fu_engine_is_plugin_name_disabled(FuEngine *self, const gchar *name)
 {
-	GPtrArray *disabled = fu_config_get_disabled_plugins(self->config);
+	GPtrArray *disabled = fu_engine_config_get_disabled_plugins(self->config);
 	for (guint i = 0; i < disabled->len; i++) {
 		const gchar *name_tmp = g_ptr_array_index(disabled, i);
 		if (g_strcmp0(name_tmp, name) == 0)
@@ -6966,7 +6969,7 @@ fu_engine_plugin_check_supported_cb(FuPlugin *plugin, const gchar *guid, FuEngin
 	g_autoptr(XbNode) n = NULL;
 	g_autofree gchar *xpath = NULL;
 
-	if (fu_config_get_enumerate_all_devices(self->config))
+	if (fu_engine_config_get_enumerate_all_devices(self->config))
 		return TRUE;
 
 	xpath = g_strdup_printf("components/component[@type='firmware']/"
@@ -6976,7 +6979,7 @@ fu_engine_plugin_check_supported_cb(FuPlugin *plugin, const gchar *guid, FuEngin
 	return n != NULL;
 }
 
-FuConfig *
+FuEngineConfig *
 fu_engine_get_config(FuEngine *self)
 {
 	g_return_val_if_fail(FU_IS_ENGINE(self), NULL);
@@ -7012,9 +7015,9 @@ const gchar *
 fu_engine_get_host_bkc(FuEngine *self)
 {
 	g_return_val_if_fail(FU_IS_ENGINE(self), NULL);
-	if (fu_config_get_host_bkc(self->config) == NULL)
+	if (fu_engine_config_get_host_bkc(self->config) == NULL)
 		return "";
-	return fu_config_get_host_bkc(self->config);
+	return fu_engine_config_get_host_bkc(self->config);
 }
 
 #ifdef HAVE_HSI
@@ -7022,7 +7025,7 @@ static void
 fu_engine_ensure_security_attrs_tainted(FuEngine *self)
 {
 	gboolean disabled_plugins = FALSE;
-	GPtrArray *disabled = fu_config_get_disabled_plugins(self->config);
+	GPtrArray *disabled = fu_engine_config_get_disabled_plugins(self->config);
 	g_autoptr(FwupdSecurityAttr) attr =
 	    fwupd_security_attr_new(FWUPD_SECURITY_ATTR_ID_FWUPD_PLUGINS);
 	fwupd_security_attr_set_plugin(attr, "core");
@@ -8329,16 +8332,17 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 		return FALSE;
 
 	/* read config file */
-	if (!fu_config_load(self->config, error)) {
+	if (!fu_config_load(FU_CONFIG(self->config), error)) {
 		g_prefix_error(error, "Failed to load config: ");
 		return FALSE;
 	}
 	fu_progress_step_done(progress);
 
 	/* set the hardcoded ESP */
-	if (fu_config_get_esp_location(self->config) != NULL) {
+	if (fu_engine_config_get_esp_location(self->config) != NULL) {
 		g_autoptr(FuVolume) vol = NULL;
-		vol = fu_volume_new_esp_for_path(fu_config_get_esp_location(self->config), error);
+		vol = fu_volume_new_esp_for_path(fu_engine_config_get_esp_location(self->config),
+						 error);
 		if (vol == NULL)
 			return FALSE;
 		fu_context_add_esp_volume(self->ctx, vol);
@@ -8363,12 +8367,12 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 	fu_progress_step_done(progress);
 
 	/* get hardcoded approved and blocked firmware */
-	checksums_approved = fu_config_get_approved_firmware(self->config);
+	checksums_approved = fu_engine_config_get_approved_firmware(self->config);
 	for (guint i = 0; i < checksums_approved->len; i++) {
 		const gchar *csum = g_ptr_array_index(checksums_approved, i);
 		fu_engine_add_approved_firmware(self, csum);
 	}
-	checksums_blocked = fu_config_get_blocked_firmware(self->config);
+	checksums_blocked = fu_engine_config_get_blocked_firmware(self->config);
 	for (guint i = 0; i < checksums_blocked->len; i++) {
 		const gchar *csum = g_ptr_array_index(checksums_blocked, i);
 		fu_engine_add_blocked_firmware(self, csum);
@@ -8403,16 +8407,21 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 	if (plugin_uefi != NULL) {
 		const gchar *tmp =
 		    fu_plugin_get_config_value(plugin_uefi, "OverrideESPMountPoint", NULL);
-		if (tmp != NULL && g_strcmp0(tmp, fu_config_get_esp_location(self->config)) != 0) {
+		if (tmp != NULL &&
+		    g_strcmp0(tmp, fu_engine_config_get_esp_location(self->config)) != 0) {
 			g_info("migrating OverrideESPMountPoint=%s to EspLocation", tmp);
-			if (!fu_config_set_key_value(self->config, "EspLocation", tmp, error))
+			if (!fu_config_set_value(FU_CONFIG(self->config),
+						 "fwupd",
+						 "EspLocation",
+						 tmp,
+						 error))
 				return FALSE;
 		}
 	}
 
 	/* set up idle exit */
 	if ((flags & FU_ENGINE_LOAD_FLAG_NO_IDLE_SOURCES) == 0)
-		fu_idle_set_timeout(self->idle, fu_config_get_idle_timeout(self->config));
+		fu_idle_set_timeout(self->idle, fu_engine_config_get_idle_timeout(self->config));
 
 	/* on a read-only filesystem don't care about the cache GUID */
 	if (flags & FU_ENGINE_LOAD_FLAG_READONLY)
@@ -8763,7 +8772,7 @@ fu_engine_init(FuEngine *self)
 	g_autofree gchar *pkidir_md = NULL;
 	g_autofree gchar *sysconfdir = NULL;
 	self->percentage = 0;
-	self->config = fu_config_new();
+	self->config = fu_engine_config_new();
 	self->remote_list = fu_remote_list_new();
 	self->device_list = fu_device_list_new();
 	self->ctx = fu_context_new();
@@ -8906,6 +8915,7 @@ fu_engine_finalize(GObject *obj)
 		FuPlugin *plugin = g_ptr_array_index(plugins, i);
 		g_signal_handlers_disconnect_by_data(plugin, self);
 	}
+	g_signal_handlers_disconnect_by_data(self->config, self);
 	for (guint i = 0; i < self->local_monitors->len; i++) {
 		GFileMonitor *monitor = g_ptr_array_index(self->local_monitors, i);
 		g_file_monitor_cancel(monitor);

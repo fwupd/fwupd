@@ -18,9 +18,6 @@ plugin_builtin_thunderbolt = static_library('fu_plugin_thunderbolt',
 )
 plugin_builtins += plugin_builtin_thunderbolt
 
-install_data(['thunderbolt.conf'],
-  install_dir: join_paths(sysconfdir, 'fwupd')
-)
 # we use functions from 2.52 in the tests
 if get_option('tests') and run_sanitize_unsafe_tests and umockdev.found() and gio.version().version_compare('>= 2.52')
   env = environment()

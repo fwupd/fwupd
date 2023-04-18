@@ -106,6 +106,7 @@ main(int argc, char **argv)
 	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
 	(void)g_setenv("FWUPD_SYSFSFWDIR", testdatadir, TRUE);
 	(void)g_setenv("FWUPD_SYSFSFWATTRIBDIR", testdatadir, TRUE);
+	(void)g_setenv("CONFIGURATION_DIRECTORY", testdatadir, TRUE);
 
 	g_log_set_fatal_mask(NULL, G_LOG_LEVEL_ERROR | G_LOG_LEVEL_CRITICAL);
 	g_test_add_func("/mtd/device", fu_test_mtd_device_func);
