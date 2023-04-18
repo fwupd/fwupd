@@ -80,10 +80,13 @@ fwupdate = executable(
 endif
 
 if get_option('compat_cli') and get_option('man')
-  configure_file(
-    input: 'fwupdate.1',
+  custom_target('fwupdate.1',
+    input: 'fwupdate.md',
     output: 'fwupdate.1',
-    configuration: conf,
+    command: [
+      generate_man, '@INPUT@', '-o', '@OUTPUT@',
+      '--replace', '@PACKAGE_VERSION@', fwupd_version,
+    ],
     install: true,
     install_dir: join_paths(mandir, 'man1'),
   )

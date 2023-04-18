@@ -61,10 +61,13 @@ dbxtool = executable(
 )
 
 if get_option('man')
-  configure_file(
-    input: 'dbxtool.1',
+  custom_target('dbxtool.1',
+    input: 'dbxtool.md',
     output: 'dbxtool.1',
-    configuration: conf,
+    command: [
+      generate_man, '@INPUT@', '-o', '@OUTPUT@',
+      '--replace', '@PACKAGE_VERSION@', fwupd_version,
+    ],
     install: true,
     install_dir: join_paths(mandir, 'man1'),
   )
