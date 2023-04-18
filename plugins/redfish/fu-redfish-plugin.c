@@ -65,7 +65,7 @@ fu_redfish_plugin_change_expired(FuPlugin *plugin, GError **error)
 	g_autoptr(JsonBuilder) builder = json_builder_new();
 
 	/* select correct, falling back to default for old fwupd versions */
-	uri = fu_plugin_get_config_value(plugin, "UserUri");
+	uri = fu_plugin_get_config_value(plugin, "UserUri", NULL);
 	if (uri == NULL) {
 		uri = g_strdup("/redfish/v1/AccountService/Accounts/2");
 		if (!fu_plugin_set_config_value(plugin, "UserUri", uri, error))
@@ -383,7 +383,6 @@ static gboolean
 fu_redfish_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 {
 	FuRedfishPlugin *self = FU_REDFISH_PLUGIN(plugin);
-	g_autofree gchar *ca_check_str = NULL;
 	g_autofree gchar *password = NULL;
 	g_autofree gchar *redfish_uri = NULL;
 	g_autofree gchar *username = NULL;
@@ -400,7 +399,7 @@ fu_redfish_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error
 	}
 
 	/* override with the conf file */
-	redfish_uri = fu_plugin_get_config_value(plugin, "Uri");
+	redfish_uri = fu_plugin_get_config_value(plugin, "Uri", NULL);
 	if (redfish_uri != NULL) {
 		const gchar *ip_str = NULL;
 		g_auto(GStrv) split = NULL;
@@ -435,17 +434,15 @@ fu_redfish_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error
 		}
 		fu_redfish_backend_set_port(self->backend, port);
 	}
-	username = fu_plugin_get_config_value(plugin, "Username");
+	username = fu_plugin_get_config_value(plugin, "Username", NULL);
 	if (username != NULL)
 		fu_redfish_backend_set_username(self->backend, username);
-	password = fu_plugin_get_config_value(plugin, "Password");
+	password = fu_plugin_get_config_value(plugin, "Password", NULL);
 	if (password != NULL)
 		fu_redfish_backend_set_password(self->backend, password);
-	ca_check_str = fu_plugin_get_config_value(plugin, "CACheck");
-	if (ca_check_str != NULL) {
-		gboolean ca_check = fu_plugin_get_config_value_boolean(plugin, "CACheck");
-		fu_redfish_backend_set_cacheck(self->backend, ca_check);
-	}
+	fu_redfish_backend_set_cacheck(
+	    self->backend,
+	    fu_plugin_get_config_value_boolean(plugin, "CACheck", FALSE));
 	if (fu_context_has_hwid_flag(fu_plugin_get_context(plugin), "wildcard-targets"))
 		fu_redfish_backend_set_wildcard_targets(self->backend, TRUE);
 
@@ -460,7 +457,7 @@ fu_redfish_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error
 					    "and no vendor quirk for 'ipmi-create-user'");
 			return FALSE;
 		}
-		if (!fu_plugin_get_config_value_boolean(plugin, "IpmiDisableCreateUser")) {
+		if (!fu_plugin_get_config_value_boolean(plugin, "IpmiDisableCreateUser", FALSE)) {
 			g_info("attempting to create user using IPMI");
 			if (!fu_redfish_plugin_ipmi_create_user(plugin, error))
 				return FALSE;
@@ -550,13 +547,9 @@ fu_redfish_plugin_cleanup(FuPlugin *plugin,
 	fu_progress_step_done(progress);
 
 	/* read the config file to work out how long to wait */
-	restart_timeout_str = fu_plugin_get_config_value(plugin, "ManagerResetTimeout");
-	if (restart_timeout_str != NULL)
-		fu_strtoull(restart_timeout_str, &reset_timeout, 1, 86400, NULL);
-	if (reset_timeout == 0) {
-		g_warning("no valid ManagerResetTimeout, falling back to default");
-		reset_timeout = 1800;
-	}
+	restart_timeout_str = fu_plugin_get_config_value(plugin, "ManagerResetTimeout", "1800");
+	if (!fu_strtoull(restart_timeout_str, &reset_timeout, 1, 86400, error))
+		return FALSE;
 
 	/* wait for the BMC to come back */
 	if (!fu_device_retry_full(device,
