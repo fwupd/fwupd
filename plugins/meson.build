@@ -23,6 +23,7 @@ plugins = [
   'analogix',
   'android-boot',
   'ata',
+  'aver-hid',
   'bcm57xx',
   'bios',
   'ccgx',
