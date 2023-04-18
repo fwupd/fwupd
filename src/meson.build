@@ -246,28 +246,37 @@ fwupdtool = executable(
 
 if get_option('man')
   if build_daemon
-    configure_file(
-      input: 'fwupdmgr.1',
+    custom_target('fwupdmgr.1',
+      input: 'fwupdmgr.md',
       output: 'fwupdmgr.1',
-      configuration: conf,
+      command: [
+        generate_man, '@INPUT@', '-o', '@OUTPUT@',
+        '--replace', '@PACKAGE_VERSION@', fwupd_version,
+      ],
       install: true,
       install_dir: join_paths(mandir, 'man1'),
     )
-    if get_option('compat_cli')
-      configure_file(
-        input: 'fwupdagent.1',
-        output: 'fwupdagent.1',
-        configuration: conf,
-        install: true,
-        install_dir: join_paths(mandir, 'man1'),
-      )
-    endif
+  endif
+  if build_daemon and get_option('compat_cli')
+    custom_target('fwupdagent.1',
+      input: 'fwupdagent.md',
+      output: 'fwupdagent.1',
+      command: [
+        generate_man, '@INPUT@', '-o', '@OUTPUT@',
+        '--replace', '@PACKAGE_VERSION@', fwupd_version,
+      ],
+      install: true,
+      install_dir: join_paths(mandir, 'man1'),
+    )
   endif
   if build_standalone
-    configure_file(
-      input: 'fwupdtool.1',
+    custom_target('fwupdtool.1',
+      input: 'fwupdtool.md',
       output: 'fwupdtool.1',
-      configuration: conf,
+      command: [
+        generate_man, '@INPUT@', '-o', '@OUTPUT@',
+        '--replace', '@PACKAGE_VERSION@', fwupd_version,
+      ],
       install: true,
       install_dir: join_paths(mandir, 'man1'),
     )

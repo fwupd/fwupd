@@ -43,10 +43,13 @@ fu_dfu_tool = executable(
 endif
 
 if get_option('compat_cli') and get_option('man')
-  configure_file(
-    input: 'dfu-tool.1',
+  custom_target('dfu-tool.1',
+    input: 'dfu-tool.md',
     output: 'dfu-tool.1',
-    configuration: conf,
+    command: [
+      generate_man, '@INPUT@', '-o', '@OUTPUT@',
+      '--replace', '@PACKAGE_VERSION@', fwupd_version,
+    ],
     install: true,
     install_dir: join_paths(mandir, 'man1'),
   )
