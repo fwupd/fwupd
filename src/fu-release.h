@@ -8,7 +8,7 @@
 
 #include <fwupdplugin.h>
 
-#include "fu-config.h"
+#include "fu-engine-config.h"
 #include "fu-engine-request.h"
 
 #define FU_TYPE_RELEASE (fu_release_get_type())
@@ -52,7 +52,7 @@ fu_release_set_device(FuRelease *self, FuDevice *device);
 void
 fu_release_set_remote(FuRelease *self, FwupdRemote *remote);
 void
-fu_release_set_config(FuRelease *self, FuConfig *config);
+fu_release_set_config(FuRelease *self, FuEngineConfig *config);
 
 gboolean
 fu_release_load(FuRelease *self,

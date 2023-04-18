@@ -98,7 +98,7 @@ to only firmware that have been tested specifically in your organization.
 
 The list of approved updates can be enabled by adding `ApprovalRequired=true`
 to the remote configuration file, e.g. `lvfs.conf`. Once enabled, the
-list of approved updates can be set in `daemon.conf` using a comma-delimited list.
+list of approved updates can be set in `fwupd.conf` using a comma-delimited list.
 
 For example:
 

@@ -43,3 +43,4 @@ SEE ALSO
 ========
 
 fwupdmgr(1)
+fwupd.conf(5)

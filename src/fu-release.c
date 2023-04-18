@@ -25,7 +25,7 @@ struct _FuRelease {
 	FuEngineRequest *request;
 	FuDevice *device;
 	FwupdRemote *remote;
-	FuConfig *config;
+	FuEngineConfig *config;
 	GBytes *blob_fw;
 	gchar *update_request_id;
 	GPtrArray *soft_reqs; /* nullable, element-type XbNode */
@@ -225,13 +225,13 @@ fu_release_set_remote(FuRelease *self, FwupdRemote *remote)
 /**
  * fu_release_set_config:
  * @self: a #FuRelease
- * @config: (nullable): a #FuConfig
+ * @config: (nullable): a #FuEngineConfig
  *
  * Sets the config to use when loading. The config may be used for things like ordering attributes
  *like protocol priority.
  **/
 void
-fu_release_set_config(FuRelease *self, FuConfig *config)
+fu_release_set_config(FuRelease *self, FuEngineConfig *config)
 {
 	g_return_if_fail(FU_IS_RELEASE(self));
 	g_set_object(&self->config, config);
@@ -371,7 +371,8 @@ fu_release_load_artifact(FuRelease *self, XbNode *artifact, GError **error)
 			/* check the scheme is allowed */
 			scheme = fu_release_uri_get_scheme(xb_node_get_text(n));
 			if (scheme != NULL) {
-				guint prio = fu_config_get_uri_scheme_prio(self->config, scheme);
+				guint prio =
+				    fu_engine_config_get_uri_scheme_prio(self->config, scheme);
 				if (prio == G_MAXUINT)
 					continue;
 			}
@@ -427,8 +428,8 @@ fu_release_scheme_compare_cb(gconstpointer a, gconstpointer b, gpointer user_dat
 	const gchar *location2 = *((const gchar **)b);
 	g_autofree gchar *scheme1 = fu_release_uri_get_scheme(location1);
 	g_autofree gchar *scheme2 = fu_release_uri_get_scheme(location2);
-	guint prio1 = fu_config_get_uri_scheme_prio(self->config, scheme1);
-	guint prio2 = fu_config_get_uri_scheme_prio(self->config, scheme2);
+	guint prio1 = fu_engine_config_get_uri_scheme_prio(self->config, scheme1);
+	guint prio2 = fu_engine_config_get_uri_scheme_prio(self->config, scheme2);
 	if (prio1 < prio2)
 		return -1;
 	if (prio1 > prio2)

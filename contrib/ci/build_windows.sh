@@ -76,7 +76,7 @@ ninja -C "$build" -v install
 
 #disable motd for Windows
 cd $root
-sed -i 's,UpdateMotd=.*,UpdateMotd=false,' "$DESTDIR/etc/fwupd/daemon.conf"
+sed -i 's,UpdateMotd=.*,UpdateMotd=false,' "$DESTDIR/etc/fwupd/fwupd.conf"
 
 # create a setup binary
 CERTDIR=/etc/pki/tls/certs

@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "fu-config.h"
 #include "fu-context.h"
 #include "fu-hwids.h"
 #include "fu-progress.h"
@@ -55,5 +56,7 @@ FuSmbios *
 fu_context_get_smbios(FuContext *self);
 FuHwids *
 fu_context_get_hwids(FuContext *self);
+FuConfig *
+fu_context_get_config(FuContext *self);
 void
 fu_context_set_chassis_kind(FuContext *self, FuSmbiosChassisKind chassis_kind);

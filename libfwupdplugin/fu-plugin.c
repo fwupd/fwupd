@@ -11,12 +11,12 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <fwupd.h>
-#include <glib/gstdio.h>
 #include <gmodule.h>
 #include <string.h>
 #include <unistd.h>
 
 #include "fu-bytes.h"
+#include "fu-config.h"
 #include "fu-context-private.h"
 #include "fu-device-private.h"
 #include "fu-kernel.h"
@@ -84,9 +84,6 @@ typedef gboolean (*FuPluginFlaggedDeviceFunc)(FuPlugin *self,
 					      FwupdInstallFlags flags,
 					      GError **error);
 typedef gboolean (*FuPluginDeviceArrayFunc)(FuPlugin *self, GPtrArray *devices, GError **error);
-
-#define FU_PLUGIN_FILE_MODE_NONSECURE 0644
-#define FU_PLUGIN_FILE_MODE_SECURE    0640
 
 /**
  * fu_plugin_is_open:
@@ -292,14 +289,6 @@ fu_plugin_guess_name_from_fn(const gchar *filename)
 	name = g_strdup(str + strlen(prefix));
 	g_strdelimit(name, ".", '\0');
 	return name;
-}
-
-static gchar *
-fu_plugin_get_config_filename(FuPlugin *self)
-{
-	g_autofree gchar *conf_dir = fu_path_from_kind(FU_PATH_KIND_SYSCONFDIR_PKG);
-	g_autofree gchar *conf_file = g_strdup_printf("%s.conf", fu_plugin_get_name(self));
-	return g_build_filename(conf_dir, conf_file, NULL);
 }
 
 /**
@@ -885,7 +874,8 @@ fu_plugin_runner_startup(FuPlugin *self, FuProgress *progress, GError **error)
 {
 	FuPluginPrivate *priv = GET_PRIVATE(self);
 	FuPluginVfuncs *vfuncs = fu_plugin_get_vfuncs(self);
-	g_autofree gchar *config_filename = fu_plugin_get_config_filename(self);
+	g_autofree gchar *conf_dir = fu_path_from_kind(FU_PATH_KIND_SYSCONFDIR_PKG);
+	g_autofree gchar *config_filename = g_build_filename(conf_dir, "fwupd.conf", NULL);
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GFile) file = g_file_new_for_path(config_filename);
 
@@ -900,39 +890,6 @@ fu_plugin_runner_startup(FuPlugin *self, FuProgress *progress, GError **error)
 	/* not enabled */
 	if (fu_plugin_has_flag(self, FWUPD_PLUGIN_FLAG_DISABLED))
 		return TRUE;
-
-	/* ensure the configure file is set to the correct permission */
-	if (fu_plugin_has_flag(self, FWUPD_PLUGIN_FLAG_SECURE_CONFIG)) {
-		if (g_file_test(config_filename, G_FILE_TEST_EXISTS)) {
-			GStatBuf st = {0x0};
-			gint rc = g_stat(config_filename, &st);
-			if (rc != 0) {
-				g_set_error(error,
-					    G_IO_ERROR,
-					    G_IO_ERROR_FAILED,
-					    "failed to get permission of %s",
-					    config_filename);
-				fu_plugin_add_flag(self, FWUPD_PLUGIN_FLAG_FAILED_OPEN);
-				return FALSE;
-			}
-			st.st_mode &= 0777;
-			if (st.st_mode != FU_PLUGIN_FILE_MODE_SECURE) {
-				g_info("mode was 0%o, and needs to be 0%o",
-				       st.st_mode,
-				       (guint)FU_PLUGIN_FILE_MODE_SECURE);
-				rc = g_chmod(config_filename, FU_PLUGIN_FILE_MODE_SECURE);
-				if (rc != 0) {
-					g_set_error(error,
-						    G_IO_ERROR,
-						    G_IO_ERROR_FAILED,
-						    "failed to change permission of %s",
-						    config_filename);
-					fu_plugin_add_flag(self, FWUPD_PLUGIN_FLAG_FAILED_OPEN);
-					return FALSE;
-				}
-			}
-		}
-	}
 
 	/* optional */
 	if (vfuncs->startup != NULL) {
@@ -2420,18 +2377,13 @@ fu_plugin_get_report_metadata(FuPlugin *self)
 gchar *
 fu_plugin_get_config_value(FuPlugin *self, const gchar *key, const gchar *value_default)
 {
-	g_autofree gchar *conf_path = fu_plugin_get_config_filename(self);
-	g_autofree gchar *value = NULL;
-	g_autoptr(GKeyFile) keyfile = NULL;
-	if (!g_file_test(conf_path, G_FILE_TEST_IS_REGULAR))
-		return g_strdup(value_default);
-	keyfile = g_key_file_new();
-	if (!g_key_file_load_from_file(keyfile, conf_path, G_KEY_FILE_NONE, NULL))
-		return g_strdup(value_default);
-	value = g_key_file_get_string(keyfile, fu_plugin_get_name(self), key, NULL);
-	if (value == NULL)
-		return g_strdup(value_default);
-	return g_steal_pointer(&value);
+	FuPluginPrivate *priv = fu_plugin_get_instance_private(self);
+	FuConfig *config = fu_context_get_config(priv->ctx);
+	if (config == NULL) {
+		g_critical("cannot get config value with no loaded context!");
+		return NULL;
+	}
+	return fu_config_get_value(config, fu_plugin_get_name(self), key, value_default);
 }
 
 /**
@@ -2499,38 +2451,6 @@ g_file_set_contents_full(const gchar *filename,
 }
 #endif
 
-static gboolean
-fu_plugin_set_config_value_internal(FuPlugin *self,
-				    const gchar *key,
-				    const gchar *value,
-				    guint32 mode,
-				    GError **error)
-{
-	g_autofree gchar *conf_path = fu_plugin_get_config_filename(self);
-	g_autofree gchar *data = NULL;
-	g_autoptr(GKeyFile) keyfile = g_key_file_new();
-
-	g_return_val_if_fail(FU_IS_PLUGIN(self), FALSE);
-	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
-
-	if (!g_file_test(conf_path, G_FILE_TEST_EXISTS)) {
-		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "%s is missing", conf_path);
-		return FALSE;
-	}
-	if (!g_key_file_load_from_file(keyfile, conf_path, G_KEY_FILE_KEEP_COMMENTS, error))
-		return FALSE;
-	g_key_file_set_string(keyfile, fu_plugin_get_name(self), key, value);
-	data = g_key_file_to_data(keyfile, NULL, error);
-	if (data == NULL)
-		return FALSE;
-	return g_file_set_contents_full(conf_path,
-					data,
-					-1,
-					G_FILE_SET_CONTENTS_CONSISTENT,
-					mode,
-					error);
-}
-
 /**
  * fu_plugin_set_config_value:
  * @self: a #FuPlugin
@@ -2547,23 +2467,19 @@ fu_plugin_set_config_value_internal(FuPlugin *self,
 gboolean
 fu_plugin_set_config_value(FuPlugin *self, const gchar *key, const gchar *value, GError **error)
 {
+	FuPluginPrivate *priv = fu_plugin_get_instance_private(self);
+	FuConfig *config = fu_context_get_config(priv->ctx);
 	g_return_val_if_fail(FU_IS_PLUGIN(self), FALSE);
 	g_return_val_if_fail(key != NULL, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
-
-	/* when removing fu_plugin_set_secure_config_value() just remove this instead */
-	if (fu_plugin_has_flag(self, FWUPD_PLUGIN_FLAG_SECURE_CONFIG)) {
-		return fu_plugin_set_config_value_internal(self,
-							   key,
-							   value,
-							   FU_PLUGIN_FILE_MODE_SECURE,
-							   error);
+	if (config == NULL) {
+		g_set_error_literal(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_FAILED,
+				    "cannot get config value with no loaded context");
+		return FALSE;
 	}
-	return fu_plugin_set_config_value_internal(self,
-						   key,
-						   value,
-						   FU_PLUGIN_FILE_MODE_NONSECURE,
-						   error);
+	return fu_config_set_value(config, fu_plugin_get_name(self), key, value, error);
 }
 
 /**
@@ -2581,10 +2497,13 @@ fu_plugin_set_config_value(FuPlugin *self, const gchar *key, const gchar *value,
 gboolean
 fu_plugin_get_config_value_boolean(FuPlugin *self, const gchar *key, gboolean value_default)
 {
-	g_autofree gchar *tmp = fu_plugin_get_config_value(self, key, NULL);
-	if (tmp == NULL)
+	FuPluginPrivate *priv = fu_plugin_get_instance_private(self);
+	FuConfig *config = fu_context_get_config(priv->ctx);
+	if (config == NULL) {
+		g_critical("cannot get config value with no loaded context!");
 		return value_default;
-	return g_ascii_strcasecmp(tmp, "true") == 0;
+	}
+	return fu_config_get_value_bool(config, fu_plugin_get_name(self), key, value_default);
 }
 
 /**

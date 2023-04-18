@@ -1198,6 +1198,15 @@ LIBFWUPDPLUGIN_1.9.1 {
   global:
     fu_bytes_get_contents_stream_full;
     fu_cfi_device_send_command;
+    fu_config_get_type;
+    fu_config_get_value;
+    fu_config_get_value_bool;
+    fu_config_get_value_strv;
+    fu_config_get_value_u64;
+    fu_config_load;
+    fu_config_new;
+    fu_config_set_value;
+    fu_context_get_config;
     fu_context_get_firmware_gtypes;
     fu_memchk_read;
     fu_memchk_write;

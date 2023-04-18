@@ -11,6 +11,21 @@ foreach plugin: plugins
   plugin_readme_outputs += '"@0@"'.format(plugin_readme_output)
 endforeach
 
+
+if build_standalone and get_option('man')
+  custom_target('fwupd.conf.5',
+    input: 'fwupd.conf.md',
+    output: 'fwupd.conf.5',
+    command: [
+      generate_man, '@INPUT@', '-o', '@OUTPUT@',
+      '--replace', '@PACKAGE_VERSION@', fwupd_version,
+      '--replace', '@SYSCONFDIR@', sysconfdir,
+    ],
+    install: true,
+    install_dir: join_paths(mandir, 'man5'),
+  )
+endif
+
 if build_docs and introspection.allowed()
   toml_conf = configuration_data()
   docgen_version = source_version

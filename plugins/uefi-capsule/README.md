@@ -138,7 +138,7 @@ support on the device by using the `unlock` command.
 Since version 1.1.0 fwupd will autodetect the ESP if it is mounted on
 `/boot/efi`, `/boot`, or `/efi`, and UDisks is available on the system. In
 other cases the mount point of the ESP needs to be manually specified using the
-option *EspLocation* in `/etc/fwupd/daemon.conf`.
+option *EspLocation* in `/etc/fwupd/fwupd.conf`.
 
 Setting an invalid directory will disable the fwupd plugin.
 
