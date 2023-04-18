@@ -276,6 +276,7 @@ fu_dell_dock_plugin_composite_cleanup(FuPlugin *plugin, GPtrArray *devices, GErr
 	for (guint i = 0; i < devices->len; i++) {
 		dev = g_ptr_array_index(devices, i);
 		if ((g_strcmp0(fu_device_get_plugin(dev), "thunderbolt") == 0 ||
+		     g_strcmp0(fu_device_get_plugin(dev), "intel_usb4") == 0 ||
 		     g_strcmp0(fu_device_get_plugin(dev), "dell_dock") == 0) &&
 		    fu_device_has_flag(dev, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION)) {
 			/* the kernel and/or thunderbolt plugin have been configured to let HW
