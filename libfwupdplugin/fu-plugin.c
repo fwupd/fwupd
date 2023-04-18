@@ -2411,22 +2411,27 @@ fu_plugin_get_report_metadata(FuPlugin *self)
  * fu_plugin_get_config_value:
  * @self: a #FuPlugin
  * @key: a settings key
+ * @value_default: the default value of the key if not found
  *
- * Return the value of a key if it's been configured
+ * Return the value of a key, falling back to the default value.
  *
  * Since: 1.0.6
  **/
 gchar *
-fu_plugin_get_config_value(FuPlugin *self, const gchar *key)
+fu_plugin_get_config_value(FuPlugin *self, const gchar *key, const gchar *value_default)
 {
 	g_autofree gchar *conf_path = fu_plugin_get_config_filename(self);
+	g_autofree gchar *value = NULL;
 	g_autoptr(GKeyFile) keyfile = NULL;
 	if (!g_file_test(conf_path, G_FILE_TEST_IS_REGULAR))
-		return NULL;
+		return g_strdup(value_default);
 	keyfile = g_key_file_new();
 	if (!g_key_file_load_from_file(keyfile, conf_path, G_KEY_FILE_NONE, NULL))
-		return NULL;
-	return g_key_file_get_string(keyfile, fu_plugin_get_name(self), key, NULL);
+		return g_strdup(value_default);
+	value = g_key_file_get_string(keyfile, fu_plugin_get_name(self), key, NULL);
+	if (value == NULL)
+		return g_strdup(value_default);
+	return g_steal_pointer(&value);
 }
 
 /**
@@ -2565,6 +2570,7 @@ fu_plugin_set_config_value(FuPlugin *self, const gchar *key, const gchar *value,
  * fu_plugin_get_config_value_boolean:
  * @self: a #FuPlugin
  * @key: a settings key
+ * @value_default: the default value of the key if not found
  *
  * Return the boolean value of a key if it's been configured
  *
@@ -2573,11 +2579,11 @@ fu_plugin_set_config_value(FuPlugin *self, const gchar *key, const gchar *value,
  * Since: 1.4.0
  **/
 gboolean
-fu_plugin_get_config_value_boolean(FuPlugin *self, const gchar *key)
+fu_plugin_get_config_value_boolean(FuPlugin *self, const gchar *key, gboolean value_default)
 {
-	g_autofree gchar *tmp = fu_plugin_get_config_value(self, key);
+	g_autofree gchar *tmp = fu_plugin_get_config_value(self, key, NULL);
 	if (tmp == NULL)
-		return FALSE;
+		return value_default;
 	return g_ascii_strcasecmp(tmp, "true") == 0;
 }
 

@@ -649,6 +649,7 @@ fu_plugin_config_func(void)
 	g_autofree gchar *fn = NULL;
 	g_autofree gchar *testdatadir = NULL;
 	g_autofree gchar *value = NULL;
+	g_autofree gchar *value_missing = NULL;
 	g_autoptr(FuPlugin) plugin = fu_plugin_new(NULL);
 	g_autoptr(GError) error = NULL;
 
@@ -681,9 +682,11 @@ fu_plugin_config_func(void)
 	g_assert_cmpint(statbuf.st_mode & 0777, ==, 0644);
 
 	/* read back the value */
-	value = fu_plugin_get_config_value(plugin, "Key");
+	value_missing = fu_plugin_get_config_value(plugin, "NotGoingToExist", "Foo");
+	g_assert_cmpstr(value_missing, ==, "Foo");
+	value = fu_plugin_get_config_value(plugin, "Key", "Foo");
 	g_assert_cmpstr(value, ==, "True");
-	g_assert_true(fu_plugin_get_config_value_boolean(plugin, "Key"));
+	g_assert_true(fu_plugin_get_config_value_boolean(plugin, "Key", FALSE));
 
 	/* write it private, i.e. only readable by the user/group */
 	fu_plugin_add_flag(plugin, FWUPD_PLUGIN_FLAG_SECURE_CONFIG);

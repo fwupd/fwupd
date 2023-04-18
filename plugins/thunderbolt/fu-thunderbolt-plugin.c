@@ -24,14 +24,9 @@ G_DEFINE_TYPE(FuThunderboltPlugin, fu_thunderbolt_plugin, FU_TYPE_PLUGIN)
 static gboolean
 fu_thunderbolt_plugin_safe_kernel(FuPlugin *plugin, GError **error)
 {
-	g_autofree gchar *minimum_kernel = NULL;
-
-	minimum_kernel = fu_plugin_get_config_value(plugin, "MinimumKernelVersion");
-	if (minimum_kernel == NULL) {
-		g_debug("ignoring kernel safety checks");
-		return TRUE;
-	}
-	return fu_kernel_check_version(minimum_kernel, error);
+	g_autofree gchar *min =
+	    fu_plugin_get_config_value(plugin, "MinimumKernelVersion", "4.13.0");
+	return fu_kernel_check_version(min, error);
 }
 
 static gboolean
@@ -40,7 +35,7 @@ fu_thunderbolt_plugin_device_created(FuPlugin *plugin, FuDevice *dev, GError **e
 	fu_plugin_add_rule(plugin,
 			   FU_PLUGIN_RULE_INHIBITS_IDLE,
 			   "thunderbolt requires device wakeup");
-	if (fu_plugin_get_config_value_boolean(plugin, "RetimerOfflineMode"))
+	if (fu_plugin_get_config_value_boolean(plugin, "RetimerOfflineMode", FALSE))
 		fu_device_add_private_flag(dev, FU_THUNDERBOLT_DEVICE_FLAG_FORCE_ENUMERATION);
 	return TRUE;
 }
@@ -52,7 +47,7 @@ fu_thunderbolt_plugin_device_registered(FuPlugin *plugin, FuDevice *device)
 		return;
 
 	/* Operating system will handle finishing updates later */
-	if (fu_plugin_get_config_value_boolean(plugin, "DelayedActivation") &&
+	if (fu_plugin_get_config_value_boolean(plugin, "DelayedActivation", FALSE) &&
 	    !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE)) {
 		g_info("turning on delayed activation for %s", fu_device_get_name(device));
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE);

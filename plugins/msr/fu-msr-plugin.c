@@ -412,12 +412,8 @@ fu_plugin_add_security_attr_dci_locked(FuPlugin *plugin, FuSecurityAttrs *attrs)
 static gboolean
 fu_msr_plugin_safe_kernel_for_sme(FuPlugin *plugin, GError **error)
 {
-	g_autofree gchar *min = fu_plugin_get_config_value(plugin, "MinimumSmeKernelVersion");
-
-	if (min == NULL) {
-		g_debug("ignoring kernel safety checks");
-		return TRUE;
-	}
+	g_autofree gchar *min =
+	    fu_plugin_get_config_value(plugin, "MinimumSmeKernelVersion", "5.18.0");
 	return fu_kernel_check_version(min, error);
 }
 

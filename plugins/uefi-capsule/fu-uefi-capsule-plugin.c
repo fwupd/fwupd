@@ -432,29 +432,22 @@ fu_uefi_capsule_plugin_write_firmware(FuPlugin *plugin,
 static void
 fu_uefi_capsule_plugin_load_config(FuPlugin *plugin, FuDevice *device)
 {
-	gboolean disable_shim;
-	gboolean enable_efi_debugging;
 	guint64 sz_reqd = 0;
 	g_autofree gchar *require_esp_free_space = NULL;
 	g_autoptr(GError) error_local = NULL;
 
 	/* parse free space needed for ESP */
-	require_esp_free_space = fu_plugin_get_config_value(plugin, "RequireESPFreeSpace");
-	if (require_esp_free_space != NULL) {
-		if (!fu_strtoull(require_esp_free_space, &sz_reqd, 0, G_MAXUINT64, &error_local)) {
-			g_warning("invalid ESP free space specified: %s", error_local->message);
-		}
-	}
+	require_esp_free_space = fu_plugin_get_config_value(plugin, "RequireESPFreeSpace", "0x0");
+	if (!fu_strtoull(require_esp_free_space, &sz_reqd, 0, G_MAXUINT64, &error_local))
+		g_warning("invalid ESP free space specified: %s", error_local->message);
 	fu_uefi_device_set_require_esp_free_space(FU_UEFI_DEVICE(device), sz_reqd);
 
 	/* shim used for SB or not? */
-	disable_shim = fu_plugin_get_config_value_boolean(plugin, "DisableShimForSecureBoot");
-	if (!disable_shim)
+	if (!fu_plugin_get_config_value_boolean(plugin, "DisableShimForSecureBoot", FALSE))
 		fu_device_add_private_flag(device, FU_UEFI_DEVICE_FLAG_USE_SHIM_FOR_SB);
 
 	/* enable the fwupd.efi debug log? */
-	enable_efi_debugging = fu_plugin_get_config_value_boolean(plugin, "EnableEfiDebugging");
-	if (enable_efi_debugging)
+	if (fu_plugin_get_config_value_boolean(plugin, "EnableEfiDebugging", FALSE))
 		fu_device_add_private_flag(device, FU_UEFI_DEVICE_FLAG_ENABLE_EFI_DEBUGGING);
 }
 
@@ -702,7 +695,7 @@ fu_uefi_capsule_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **
 		return TRUE;
 
 	/* use GRUB to load updates */
-	if (fu_plugin_get_config_value_boolean(plugin, "EnableGrubChainLoad")) {
+	if (fu_plugin_get_config_value_boolean(plugin, "EnableGrubChainLoad", FALSE)) {
 		fu_uefi_backend_set_device_gtype(FU_UEFI_BACKEND(self->backend),
 						 FU_TYPE_UEFI_GRUB_DEVICE);
 	}
@@ -728,7 +721,7 @@ fu_uefi_capsule_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **
 	fu_plugin_add_report_metadata(plugin, "EfivarNvramUsed", nvram_total_str);
 
 	/* override the default ESP path */
-	esp_path = fu_plugin_get_config_value(plugin, "OverrideESPMountPoint");
+	esp_path = fu_plugin_get_config_value(plugin, "OverrideESPMountPoint", NULL);
 	if (esp_path != NULL) {
 		self->esp = fu_volume_new_esp_for_path(esp_path, error);
 		if (self->esp == NULL) {
@@ -919,7 +912,7 @@ fu_uefi_capsule_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError *
 	fu_progress_step_done(progress);
 
 	/* firmware may lie */
-	if (!fu_plugin_get_config_value_boolean(plugin, "DisableCapsuleUpdateOnDisk")) {
+	if (!fu_plugin_get_config_value_boolean(plugin, "DisableCapsuleUpdateOnDisk", FALSE)) {
 		g_autoptr(GError) error_cod = NULL;
 		if (!fu_uefi_capsule_plugin_check_cod_support(plugin, &error_cod)) {
 			g_debug("not using CapsuleOnDisk support: %s", error_cod->message);
