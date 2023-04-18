@@ -210,6 +210,6 @@ VendorId = TBT:0x00D4
 ParentGuid = USB\VID_413C&PID_B06E&hub&embedded
 FirmwareSizeMin = 0x40000
 FirmwareSizeMax = 0x80000
-Flags = skips-restart,dual-image
+Flags = skips-restart,dual-image,usable-during-update
 Icon = thunderbolt
 InstallDuration = 46
