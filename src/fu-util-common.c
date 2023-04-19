@@ -1249,6 +1249,10 @@ fu_util_device_problem_to_string(FwupdClient *client, FwupdDevice *dev, FwupdDev
 		/* TRANSLATORS: another application is updating the device already */
 		return g_strdup(_("An update is in progress"));
 	}
+	if (problem == FWUPD_DEVICE_PROBLEM_IN_USE) {
+		/* TRANSLATORS: device cannot be interrupted, for instance taking a phone call */
+		return g_strdup(_("Device is in use"));
+	}
 	return NULL;
 }
 
