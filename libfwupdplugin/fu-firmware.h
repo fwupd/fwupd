@@ -202,6 +202,8 @@ typedef guint64 FuFirmwareFlags;
 #define FU_FIRMWARE_ALIGNMENT_2G   0x1F
 #define FU_FIRMWARE_ALIGNMENT_4G   0x20
 
+#define FU_FIRMWARE_SEARCH_MAGIC_BUFSZ_MAX (32 * 1024 * 1024)
+
 const gchar *
 fu_firmware_flag_to_string(FuFirmwareFlags flag);
 FuFirmwareFlags

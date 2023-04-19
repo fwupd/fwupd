@@ -19,6 +19,9 @@ fu_bytes_get_contents_stream(GInputStream *stream,
 			     gsize count,
 			     GError **error) G_GNUC_WARN_UNUSED_RESULT;
 GBytes *
+fu_bytes_get_contents_stream_full(GInputStream *stream, gsize offset, gsize count, GError **error)
+    G_GNUC_WARN_UNUSED_RESULT;
+GBytes *
 fu_bytes_get_contents_fd(gint fd, gsize count, GError **error) G_GNUC_WARN_UNUSED_RESULT;
 GBytes *
 fu_bytes_align(GBytes *bytes, gsize blksz, gchar padval);

@@ -47,8 +47,6 @@ G_DEFINE_TYPE_WITH_PRIVATE(FuFirmware, fu_firmware, G_TYPE_OBJECT)
 
 enum { PROP_0, PROP_PARENT, PROP_LAST };
 
-#define FU_FIRMWARE_SEARCH_MAGIC_BUFSZ_MAX (32 * 1024 * 1024)
-
 /**
  * fu_firmware_flag_to_string:
  * @flag: a #FuFirmwareFlags, e.g. %FU_FIRMWARE_FLAG_DEDUPE_ID
