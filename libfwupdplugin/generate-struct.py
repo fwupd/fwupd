@@ -48,6 +48,7 @@ from typing import Optional, List, Tuple
 #
 # - `default`: set as the default
 # - `constant`: set as the default, and is **also** verified during unpacking.
+# - `padding`: initialize with a padding byte, typically 0xFF
 
 
 class Endian(Enum):
@@ -72,6 +73,7 @@ class Item:
         self.type: Type = Type.U8
         self.default: Optional[str] = None
         self.constant: Optional[str] = None
+        self.padding: Optional[str] = None
         self.endian: Endian = Endian.NATIVE
         self.multiplier: int = 0
         self.offset: int = 0
@@ -315,6 +317,17 @@ void {name_snake}_set_{self.element_id}(GByteArray *st, {self.type_glib} value);
 
         self.default = self._parse_default(val)
 
+    def parse_padding(self, val: str) -> None:
+
+        if self.type == Type.U8 and self.multiplier:
+            if not val.startswith("0x"):
+                raise ValueError(f"0x prefix for hex number expected, got: {val}")
+            if len(val) != 4:
+                raise ValueError(f"data has to be one byte only")
+            self.padding = val
+            return
+        raise ValueError(f"do not know how to parse value for type: {self.type}")
+
     def parse_constant(self, val: str) -> None:
 
         self.default = self._parse_default(val)
@@ -357,6 +370,8 @@ void {name_snake}_set_{self.element_id}(GByteArray *st, {self.type_glib} value);
             tmp += f": default={self.default}"
         elif self.constant:
             tmp += f": const={self.constant}"
+        elif self.padding:
+            tmp += f": padding={self.padding}"
         return tmp
 
 
@@ -429,6 +444,12 @@ class Generator:
         str_c += f"{{\n"
         str_c += f"    GByteArray *st = g_byte_array_new();\n"
         str_c += f"    fu_byte_array_set_size(st, {size}, 0x0);\n"
+        for item in items:
+            if not item.padding:
+                continue
+            str_c += (
+                f"    memset(st->data + {item.offset}, {item.padding}, {item.size});\n"
+            )
         for item in items:
             if not item.default:
                 continue
@@ -634,6 +655,8 @@ gboolean
                     item.parse_constant(value)
                 elif key == "default":
                     item.parse_default(value)
+                elif key == "padding":
+                    item.parse_padding(value)
                 else:
                     raise ValueError(f"invalid struct line: {line}")
             offset += item.size
