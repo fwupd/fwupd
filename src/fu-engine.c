@@ -7381,11 +7381,8 @@ fu_engine_load_plugins(FuEngine *self,
 		       FuProgress *progress,
 		       GError **error)
 {
-	const gchar *fn;
-	g_autoptr(GDir) dir = NULL;
-	g_autoptr(GPtrArray) filenames = g_ptr_array_new_with_free_func(g_free);
 	g_autofree gchar *plugin_path = NULL;
-	g_autofree gchar *suffix = g_strdup_printf(".%s", G_MODULE_SUFFIX);
+	g_autoptr(GPtrArray) filenames = NULL;
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
@@ -7396,15 +7393,9 @@ fu_engine_load_plugins(FuEngine *self,
 
 	/* search */
 	plugin_path = fu_path_from_kind(FU_PATH_KIND_LIBDIR_PKG);
-	dir = g_dir_open(plugin_path, 0, error);
-	if (dir == NULL)
+	filenames = fu_path_get_files(plugin_path, error);
+	if (filenames == NULL)
 		return FALSE;
-	while ((fn = g_dir_read_name(dir)) != NULL) {
-		/* ignore non-plugins */
-		if (!g_str_has_suffix(fn, suffix))
-			continue;
-		g_ptr_array_add(filenames, g_build_filename(plugin_path, fn, NULL));
-	}
 	fu_progress_step_done(progress);
 
 	/* load */
