@@ -3892,7 +3892,7 @@ fu_plugin_struct_func(void)
 	g_assert_cmpstr(str1,
 			==,
 			"12345678adde0000ff000000000000000000000000000000004142434445465800000000"
-			"000000000000000000000000000000");
+			"00000000000000dfdfdfdf00000000");
 
 	/* parse */
 	st2 = fu_struct_self_test_parse(st->data, st->len, 0x0, &error);
