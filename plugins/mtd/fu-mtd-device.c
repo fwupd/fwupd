@@ -15,6 +15,8 @@
 struct _FuMtdDevice {
 	FuUdevDevice parent_instance;
 	guint64 erasesize;
+	guint64 metadata_offset;
+	guint64 metadata_size;
 };
 
 G_DEFINE_TYPE(FuMtdDevice, fu_mtd_device, FU_TYPE_UDEV_DEVICE)
@@ -27,25 +29,25 @@ fu_mtd_device_to_string(FuDevice *device, guint idt, GString *str)
 	FuMtdDevice *self = FU_MTD_DEVICE(device);
 	if (self->erasesize > 0)
 		fu_string_append_kx(str, idt, "EraseSize", self->erasesize);
+	fu_string_append_kx(str, idt, "MetadataOffset", self->metadata_offset);
+	fu_string_append_kx(str, idt, "MetadataSize", self->metadata_size);
 }
 
 static gboolean
-fu_mtd_device_setup(FuDevice *device, GError **error)
+fu_mtd_device_metadata_load(FuMtdDevice *self, GError **error)
 {
 	GPtrArray *instance_ids;
-	GType firmware_gtype = fu_device_get_firmware_gtype(device);
+	GType firmware_gtype = fu_device_get_firmware_gtype(FU_DEVICE(self));
 	const gchar *fn;
 	g_autoptr(FuFirmware) firmware_child = NULL;
 	g_autoptr(FuFirmware) firmware = NULL;
+	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GFile) file = NULL;
+	g_autoptr(GFileInputStream) input = NULL;
 	g_autoptr(GPtrArray) imgs = NULL;
 
-	/* nothing to do */
-	if (firmware_gtype == G_TYPE_INVALID)
-		return TRUE;
-
-	/* read entire contents */
-	fn = fu_udev_device_get_device_file(FU_UDEV_DEVICE(device));
+	/* read contents at the search offset */
+	fn = fu_udev_device_get_device_file(FU_UDEV_DEVICE(self));
 	if (fn == NULL) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -54,13 +56,28 @@ fu_mtd_device_setup(FuDevice *device, GError **error)
 		return FALSE;
 	}
 	file = g_file_new_for_path(fn);
-	firmware = g_object_new(firmware_gtype, NULL);
-	if (!fu_firmware_parse_file(firmware, file, FWUPD_INSTALL_FLAG_NONE, error))
+	input = g_file_read(file, NULL, error);
+	if (input == NULL) {
+		g_prefix_error(error, "failed to open device: ");
 		return FALSE;
+	}
+	blob = fu_bytes_get_contents_stream_full(G_INPUT_STREAM(input),
+						 self->metadata_offset,
+						 self->metadata_size,
+						 error);
+	if (blob == NULL) {
+		g_prefix_error(error, "failed to read from stream: ");
+		return FALSE;
+	}
+	firmware = g_object_new(firmware_gtype, NULL);
+	if (!fu_firmware_parse(firmware, blob, FWUPD_INSTALL_FLAG_NONE, error)) {
+		g_prefix_error(error, "failed to parse image: ");
+		return FALSE;
+	}
 
 	/* find the firmware child that matches any of the device GUID, then use the first
 	 * child that have a version, and finally use the main firmware as a fallback */
-	instance_ids = fu_device_get_instance_ids(device);
+	instance_ids = fu_device_get_instance_ids(FU_DEVICE(self));
 	for (guint i = 0; i < instance_ids->len; i++) {
 		const gchar *instance_id = g_ptr_array_index(instance_ids, i);
 		g_autofree gchar *guid = fwupd_guid_hash_string(instance_id);
@@ -82,9 +99,30 @@ fu_mtd_device_setup(FuDevice *device, GError **error)
 
 	/* copy over the version */
 	if (fu_firmware_get_version(firmware_child) != NULL)
-		fu_device_set_version(device, fu_firmware_get_version(firmware_child));
-	if (fu_firmware_get_version_raw(firmware_child) != G_MAXUINT64)
-		fu_device_set_version_raw(device, fu_firmware_get_version_raw(firmware_child));
+		fu_device_set_version(FU_DEVICE(self), fu_firmware_get_version(firmware_child));
+	if (fu_firmware_get_version_raw(firmware_child) != G_MAXUINT64) {
+		fu_device_set_version_raw(FU_DEVICE(self),
+					  fu_firmware_get_version_raw(firmware_child));
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_mtd_device_setup(FuDevice *device, GError **error)
+{
+	FuMtdDevice *self = FU_MTD_DEVICE(device);
+	GType firmware_gtype = fu_device_get_firmware_gtype(device);
+	g_autoptr(GError) error_local = NULL;
+
+	/* nothing to do */
+	if (firmware_gtype == G_TYPE_INVALID)
+		return TRUE;
+	if (!fu_mtd_device_metadata_load(self, &error_local)) {
+		g_warning("no version metadata found: %s", error_local->message);
+		return TRUE;
+	}
 
 	/* success */
 	return TRUE;
@@ -403,9 +441,36 @@ fu_mtd_device_write_firmware(FuDevice *device,
 	return TRUE;
 }
 
+static gboolean
+fu_mtd_device_set_quirk_kv(FuDevice *device, const gchar *key, const gchar *value, GError **error)
+{
+	FuMtdDevice *self = FU_MTD_DEVICE(device);
+
+	/* load from quirks */
+	if (g_strcmp0(key, "MtdMetadataOffset") == 0) {
+		if (!fu_strtoull(value, &self->metadata_offset, 0x0, G_MAXUINT32, error))
+			return FALSE;
+		return TRUE;
+	}
+	if (g_strcmp0(key, "MtdMetadataSize") == 0) {
+		if (!fu_strtoull(value,
+				 &self->metadata_size,
+				 0x100,
+				 FU_FIRMWARE_SEARCH_MAGIC_BUFSZ_MAX,
+				 error))
+			return FALSE;
+		return TRUE;
+	}
+
+	/* failed */
+	g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED, "quirk key not supported");
+	return FALSE;
+}
+
 static void
 fu_mtd_device_init(FuMtdDevice *self)
 {
+	self->metadata_size = FU_FIRMWARE_SEARCH_MAGIC_BUFSZ_MAX;
 	fu_device_set_summary(FU_DEVICE(self), "Memory Technology Device");
 	fu_device_add_protocol(FU_DEVICE(self), "org.infradead.mtd");
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INTERNAL);
@@ -428,4 +493,5 @@ fu_mtd_device_class_init(FuMtdDeviceClass *klass)
 	klass_device->to_string = fu_mtd_device_to_string;
 	klass_device->dump_firmware = fu_mtd_device_dump_firmware;
 	klass_device->write_firmware = fu_mtd_device_write_firmware;
+	klass_device->set_quirk_kv = fu_mtd_device_set_quirk_kv;
 }

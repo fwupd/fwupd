@@ -31,6 +31,9 @@ fu_mtd_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 static void
 fu_mtd_plugin_init(FuMtdPlugin *self)
 {
+	FuContext *ctx = fu_plugin_get_context(FU_PLUGIN(self));
+	fu_context_add_quirk_key(ctx, "MtdMetadataOffset");
+	fu_context_add_quirk_key(ctx, "MtdMetadataSize");
 }
 
 static void

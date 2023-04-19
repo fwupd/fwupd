@@ -174,6 +174,73 @@ fu_bytes_get_contents_stream(GInputStream *stream, gsize count, GError **error)
 }
 
 /**
+ * fu_bytes_get_contents_stream_full:
+ * @stream: input stream
+ * @offset: the offset to read from
+ * @count: the maximum number of bytes to read up to
+ * @error: (nullable): optional return location for an error
+ *
+ * Reads a blob from a specific input stream.
+ *
+ * NOTE: if the input stream can provide more data than @offset+@count it will be truncated.
+ *
+ * Returns: (transfer full): a #GBytes, or %NULL
+ *
+ * Since: 1.9.1
+ **/
+GBytes *
+fu_bytes_get_contents_stream_full(GInputStream *stream, gsize offset, gsize count, GError **error)
+{
+	guint8 tmp[0x8000] = {0x0};
+	g_autoptr(GByteArray) buf = g_byte_array_new();
+	g_autoptr(GError) error_local = NULL;
+
+	g_return_val_if_fail(G_IS_INPUT_STREAM(stream), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	/* this is invalid */
+	if (count == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "A maximum read size must be specified");
+		return NULL;
+	}
+
+	/* seek */
+	if (offset > 0) {
+		if (!g_seekable_can_seek(G_SEEKABLE(stream))) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
+					    "input stream is not seekable");
+			return NULL;
+		}
+		if (!g_seekable_seek(G_SEEKABLE(stream), offset, G_SEEK_CUR, NULL, error))
+			return NULL;
+	}
+
+	/* read from stream in 32kB chunks */
+	while (TRUE) {
+		gssize sz;
+		sz = g_input_stream_read(stream, tmp, sizeof(tmp), NULL, &error_local);
+		if (sz == 0)
+			break;
+		if (sz < 0) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_FILE,
+					    error_local->message);
+			return NULL;
+		}
+		g_byte_array_append(buf, tmp, sz);
+		if (buf->len >= count)
+			break;
+	}
+	return g_byte_array_free_to_bytes(g_steal_pointer(&buf));
+}
+
+/**
  * fu_bytes_align:
  * @bytes: data blob
  * @blksz: block size in bytes

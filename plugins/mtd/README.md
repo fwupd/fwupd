@@ -45,6 +45,25 @@ This would allow fwupd to read the MTD image data, look for a [uSWID](https://gi
 data section and then parse the metadata from that. Any of the firmware formats supported by
 `fwupdtool get-firmware-gtypes` that can provide a version can be used.
 
+## Quirk Use
+
+This plugin uses the following plugin-specific quirks:
+
+### MtdMetadataOffset
+
+The offset to start searching within the MTD partition when using `FirmwareGType`. This is provided
+to avoid dumping a huge amount of MTD data to access a tiny chunk of data that will not be before a
+known offset.
+
+Since: 1.9.1
+
+### MtdMetadataSize
+
+The size of data to read from the MTD partition when using `FirmwareGType`. This is provided to
+avoid dumping a huge amount of MTD data to access a tiny chunk of data.
+
+Since: 1.9.1
+
 ## Vendor ID Security
 
 The vendor ID is set from the system vendor, for example `DMI:LENOVO`
