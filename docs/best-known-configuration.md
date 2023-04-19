@@ -1,4 +1,6 @@
-# Best Known Configuration
+---
+title: Best Known Configuration
+---
 
 ## Introduction
 
