@@ -1,5 +1,5 @@
 struct AcpiPhatHealthRecord {
-    signature: u16le: 0x1
+    signature: u16le: default=0x1
     rcdlen: u16le
     version: u8
     reserved: 2u8
@@ -13,7 +13,7 @@ struct AcpiPhatVersionElement {
     producer_id: 4s
 }
 struct AcpiPhatVersionRecord {
-    signature: u16le: 0x0
+    signature: u16le: default=0x0
     rcdlen: u16le
     version: u8
     reserved: 3u8

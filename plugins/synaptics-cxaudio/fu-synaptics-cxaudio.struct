@@ -15,10 +15,10 @@ struct SynapticsCxaudioCustomInfo {
 }
 struct SynapticsCxaudioStringHeader {
 	length: u8
-	type: u8:: 0x03
+	type: u8: const=0x03
 }
 struct SynapticsCxaudioValiditySignature {
-	magic_byte: u8: 0x4C	// 'L'
+	magic_byte: u8: default=0x4C	// 'L'
 	eeprom_size_code: u8
 }
 struct SynapticsCxaudioPatchInfo {

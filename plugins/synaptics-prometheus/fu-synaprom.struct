@@ -1,10 +1,10 @@
 struct SynapromMfwHdr {
     product: u32le
-    id: u32le: 0xFF		// MFW unique id used for compat verification
-    buildtime: u32le: 0xFF	// unix-style
-    buildnum: u32le: 0xFF
-    vmajor: u8: 10		// major version
-    vminor: u8: 1		// minor version
+    id: u32le: default=0xFF		// MFW unique id used for compat verification
+    buildtime: u32le: default=0xFF	// unix-style
+    buildnum: u32le: default=0xFF
+    vmajor: u8: default=10		// major version
+    vminor: u8: default=1		// minor version
     unused: 6u8
 }
 struct SynapromHdr {
@@ -12,15 +12,15 @@ struct SynapromHdr {
     bufsz: u32le
 }
 struct SynapromCfgHdr {
-    product: u32le: 65 // Prometheus (b1422)
+    product: u32le: default=65 // Prometheus (b1422)
     id1: u32le
     id2: u32le
     version: u16le
     _unused: 2u8
 }
 struct SynapromIotaConfigVersion {
-    config_id1: u32le: // YYMMDD
-    config_id2: u32le: // HHMMSS
+    config_id1: u32le // YYMMDD
+    config_id2: u32le // HHMMSS
     version: u16le
     _unused: 3u16
 }

@@ -5,7 +5,7 @@ struct EfiFile {
     type: u8
     attrs: u8
     size: u24le
-    state: u8:: 0xF8
+    state: u8: const=0xF8
 }
 struct EfiSection {
     size: u24le
@@ -20,13 +20,13 @@ struct EfiVolume {
     zero_vector: guid
     guid: guid
     length: u64le
-    signature: u32le:: 0x4856465F
+    signature: u32le: const=0x4856465F
     attrs: u32le
     hdr_len: u16le
     checksum: u16le
     ext_hdr: u16le
     reserved: u8
-    revision: u8:: 0x02
+    revision: u8: const=0x02
 }
 struct EfiVolumeBlockMap {
     num_blocks: u32le
