@@ -2924,6 +2924,8 @@ fu_device_problem_to_inhibit_reason(FuDevice *self, guint64 device_problem)
 		return g_strdup("Device is emulated");
 	if (device_problem == FWUPD_DEVICE_PROBLEM_UPDATE_IN_PROGRESS)
 		return g_strdup("An update is in progress");
+	if (device_problem == FWUPD_DEVICE_PROBLEM_IN_USE)
+		return g_strdup("Device is in use");
 	if (device_problem == FWUPD_DEVICE_PROBLEM_MISSING_LICENSE)
 		return g_strdup("Device does not have the necessary license installed");
 	if (device_problem == FWUPD_DEVICE_PROBLEM_SYSTEM_POWER_TOO_LOW) {
