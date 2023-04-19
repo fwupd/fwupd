@@ -1,5 +1,5 @@
 struct EfiUxCapsuleHeader {
-    version: u8:: 0x01
+    version: u8: const=0x01
     checksum: u8
     image_type: u8
     _reserved: u8
@@ -9,12 +9,12 @@ struct EfiUxCapsuleHeader {
 }
 struct EfiCapsuleHeader {
     guid: guid
-    header_size: u32le: $struct_size
+    header_size: u32le: default=$struct_size
     flags: u32le
     image_size: u32le
 }
 struct EfiUpdateInfo {
-    version: u32le: 0x7
+    version: u32le: default=0x7
     guid: guid
     flags: u32le
     hw_inst: u64le

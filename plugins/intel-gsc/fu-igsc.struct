@@ -15,7 +15,7 @@ struct IgscOpromSubsystemDevice4Id {
     subsys_device_id: u16le
 }
 struct IgscFwuGwsImageInfo {
-    format_version: u32le:: 0x1
+    format_version: u32le: const=0x1
     instance_id: u32le
     _reserved: 14u32
 }
@@ -40,10 +40,10 @@ struct IgscFwuIupData {
     vcn: u32le
 }
 struct IgscFwuHeciImageMetadata {
-    version_format: u32le: 0x1
+    version_format: u32le: default=0x1
 }
 struct IgscFwuImageMetadataV1 {
-    version_format: u32le: 0x1  // struct IgscFwuHeciImageMetadata
+    version_format: u32le: default=0x1  // struct IgscFwuHeciImageMetadata
     project: 4s
     version_hotfix: u16         // version of the overall IFWI image, i.e. the combination of IPs
     version_build: u16

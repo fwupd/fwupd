@@ -22,7 +22,7 @@ from typing import Optional, List, Tuple
 #    struct UswidHdr {
 #        magic: guid
 #        hdrver: u8
-#        hdrsz: u16le: $struct_size
+#        hdrsz: u16le: default=$struct_size
 #        payloadsz: u32le
 #        flags: u8
 #    }
@@ -44,9 +44,10 @@ from typing import Optional, List, Tuple
 # - string values
 # - integer values, specified with a `0x` prefix for base-16 and with no prefix for base-10
 #
-# Any default value prefixed with an additional `:` is set as the default, and is **also**
-# verified during unpacking.
-# This is suitable for constant signature fields where there is no other valid value.
+# Per-field metadata:
+#
+# - `default`: set as the default
+# - `constant`: set as the default, and is **also** verified during unpacking.
 
 
 class Endian(Enum):
@@ -353,9 +354,9 @@ void {name_snake}_set_{self.element_id}(GByteArray *st, {self.type_glib} value);
         if self.endian != Endian.NATIVE:
             tmp += str(self.endian)
         if self.default:
-            tmp += f": {self.default}"
+            tmp += f": default={self.default}"
         elif self.constant:
-            tmp += f":: {self.constant}"
+            tmp += f": const={self.constant}"
         return tmp
 
 
@@ -615,7 +616,7 @@ gboolean
                 continue
 
             # split into sections
-            parts = line.replace(" ", "").split(":")
+            parts = line.replace(" ", "").split(":", maxsplit=3)
             if len(parts) == 1:
                 raise ValueError(f"invalid struct line: {line}")
 
@@ -624,10 +625,17 @@ gboolean
             item.offset = offset
             item.element_id = parts[0]
             item.parse_type(parts[1])
-            if len(parts) >= 3 and parts[2]:
-                item.parse_default(parts[2])
-            if len(parts) >= 4 and parts[3]:
-                item.parse_constant(parts[3])
+            for part in parts[2:]:
+                try:
+                    key, value = tuple(part.split("=", maxsplit=1))
+                except ValueError as e:
+                    raise ValueError(f"invalid struct line: {line}") from e
+                if key == "const":
+                    item.parse_constant(value)
+                elif key == "default":
+                    item.parse_default(value)
+                else:
+                    raise ValueError(f"invalid struct line: {line}")
             offset += item.size
             items.append(item)
 

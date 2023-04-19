@@ -1,7 +1,7 @@
 struct Fmap {
-    signature: 8s:: __FMAP__
-    ver_major: u8: 0x1
-    ver_minor: u8: 0x1
+    signature: 8s: const=__FMAP__
+    ver_major: u8: default=0x1
+    ver_minor: u8: default=0x1
     base: u64le			// address of the firmware binary
     size: u32le			// bytes
     name: 32s

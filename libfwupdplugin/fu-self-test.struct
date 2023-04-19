@@ -1,9 +1,9 @@
 struct SelfTest {
-    signature: u32be:: 0x12345678
-    length: u32le: $struct_size			// bytes
+    signature: u32be: const=0x12345678
+    length: u32le: default=$struct_size // bytes
     revision: u8
     owner: guid
-    oem_id: 6s:: ABCDEF
+    oem_id: 6s: const=ABCDEF
     oem_table_id: 8s
     oem_revision: u32le
     asl_compiler_id: 4s
