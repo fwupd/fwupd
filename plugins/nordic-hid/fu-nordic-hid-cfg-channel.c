@@ -767,7 +767,7 @@ fu_nordic_hid_cfg_channel_dfu_fwinfo(FuNordicHidCfgChannel *self, GError **error
 	}
 	/* set the target flash ID area */
 	self->flash_area_id = res->data[0] ^ 1;
-	/* always use the bank 0 for MCUBOOT bootloader */
+	/* always use the bank 0 for MCUBOOT bootloader that swaps images */
 	if (g_strcmp0(self->bl_name, "MCUBOOT") == 0)
 		self->flash_area_id = 0;
 
@@ -1276,11 +1276,13 @@ fu_nordic_hid_cfg_channel_set_quirk_kv(FuDevice *device,
 			self->bl_name = g_strdup("B0");
 		else if (g_strcmp0(value, "MCUBOOT") == 0)
 			self->bl_name = g_strdup("MCUBOOT");
+		else if (g_strcmp0(value, "MCUBOOT+XIP") == 0)
+			self->bl_name = g_strdup("MCUBOOT+XIP");
 		else {
 			g_set_error_literal(error,
 					    G_IO_ERROR,
 					    G_IO_ERROR_INVALID_DATA,
-					    "must be 'B0' or 'MCUBOOT'");
+					    "must be 'B0', 'MCUBOOT' or 'MCUBOOT+XIP'");
 			return FALSE;
 		}
 		return TRUE;
