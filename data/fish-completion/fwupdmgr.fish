@@ -45,6 +45,7 @@ complete -c fwupdmgr -n '__fish_use_subcommand' -x -a get-bios-setting -d 'Retri
 complete -c fwupdmgr -n '__fish_use_subcommand' -x -a get-details -d 'Gets details about a firmware file'
 complete -c fwupdmgr -n '__fish_use_subcommand' -x -a get-devices -d 'Get all devices that support firmware updates'
 complete -c fwupdmgr -n '__fish_use_subcommand' -x -a get-history -d 'Show history of firmware updates'
+complete -c fwupdmgr -n '__fish_use_subcommand' -x -a get-plugins -d 'Get all enabled plugins registered with the system'
 complete -c fwupdmgr -n '__fish_use_subcommand' -x -a get-releases -d 'Gets the releases for a device'
 complete -c fwupdmgr -n '__fish_use_subcommand' -x -a get-remotes -d 'Gets the configured remotes'
 complete -c fwupdmgr -n '__fish_use_subcommand' -x -a get-results -d 'Gets the results from the last update'
