@@ -1,13 +1,13 @@
 name: Continuous Integration
 on:
   push:
-    branches: [ main ]
+    branches: [ 1_8_X ]
 
 jobs:
   snap:
     uses: ./.github/workflows/snap.yml
     with:
-      deploy: true
+      deploy: false
       channel: edge
     secrets: inherit
 
