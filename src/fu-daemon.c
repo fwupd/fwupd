@@ -1571,7 +1571,7 @@ fu_daemon_daemon_method_call(GDBusConnection *connection,
 					  g_steal_pointer(&helper));
 		return;
 	}
-	if (g_strcmp0(method_name, "ModifyDaemonConfig") == 0) {
+	if (g_strcmp0(method_name, "ModifyConfig") == 0) {
 		g_autofree gchar *key = NULL;
 		g_autofree gchar *value = NULL;
 		g_autoptr(FuMainAuthHelper) helper = NULL;
