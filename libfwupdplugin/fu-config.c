@@ -466,6 +466,7 @@ fu_config_finalize(GObject *obj)
 		g_file_monitor_cancel(monitor);
 	}
 	g_key_file_unref(priv->keyfile);
+	g_ptr_array_unref(priv->filenames);
 	g_ptr_array_unref(priv->monitors);
 	G_OBJECT_CLASS(fu_config_parent_class)->finalize(obj);
 }
