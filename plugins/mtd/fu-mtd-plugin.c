@@ -31,15 +31,15 @@ fu_mtd_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 static void
 fu_mtd_plugin_init(FuMtdPlugin *self)
 {
-	FuContext *ctx = fu_plugin_get_context(FU_PLUGIN(self));
-	fu_context_add_quirk_key(ctx, "MtdMetadataOffset");
-	fu_context_add_quirk_key(ctx, "MtdMetadataSize");
 }
 
 static void
 fu_mtd_plugin_constructed(GObject *obj)
 {
 	FuPlugin *plugin = FU_PLUGIN(obj);
+	FuContext *ctx = fu_plugin_get_context(plugin);
+	fu_context_add_quirk_key(ctx, "MtdMetadataOffset");
+	fu_context_add_quirk_key(ctx, "MtdMetadataSize");
 	fu_plugin_add_udev_subsystem(plugin, "mtd");
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_MTD_DEVICE);
 }
