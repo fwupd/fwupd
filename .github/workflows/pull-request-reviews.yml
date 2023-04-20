@@ -1,7 +1,7 @@
 name: Pull Request reviews
 on:
   pull_request:
-    branches: [ main ]
+    branches: [ 1_8_X ]
 
 permissions:
   contents: read # to fetch code (actions/checkout)
