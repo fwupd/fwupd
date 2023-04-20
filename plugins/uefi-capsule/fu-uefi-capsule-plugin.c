@@ -31,6 +31,13 @@ struct _FuUefiCapsulePlugin {
 
 G_DEFINE_TYPE(FuUefiCapsulePlugin, fu_uefi_capsule_plugin, FU_TYPE_PLUGIN)
 
+/* defaults changed here will also be reflected in the fwupd.conf man page */
+#define FU_UEFI_CAPSULE_CONFIG_DEFAULT_ENABLE_GRUB_CHAIN_LOAD	      FALSE
+#define FU_UEFI_CAPSULE_CONFIG_DEFAULT_DISABLE_SHIM_FOR_SECURE_BOOT   FALSE
+#define FU_UEFI_CAPSULE_CONFIG_DEFAULT_REQUIRE_ESP_FREE_SPACE	      "0" /* in MB */
+#define FU_UEFI_CAPSULE_CONFIG_DEFAULT_DISABLE_CAPSULE_UPDATE_ON_DISK FALSE
+#define FU_UEFI_CAPSULE_CONFIG_DEFAULT_ENABLE_EFI_DEBUGGING	      FALSE
+
 static void
 fu_uefi_capsule_plugin_to_string(FuPlugin *plugin, guint idt, GString *str)
 {
@@ -437,17 +444,25 @@ fu_uefi_capsule_plugin_load_config(FuPlugin *plugin, FuDevice *device)
 	g_autoptr(GError) error_local = NULL;
 
 	/* parse free space needed for ESP */
-	require_esp_free_space = fu_plugin_get_config_value(plugin, "RequireESPFreeSpace", "0x0");
+	require_esp_free_space =
+	    fu_plugin_get_config_value(plugin,
+				       "RequireESPFreeSpace",
+				       FU_UEFI_CAPSULE_CONFIG_DEFAULT_REQUIRE_ESP_FREE_SPACE);
 	if (!fu_strtoull(require_esp_free_space, &sz_reqd, 0, G_MAXUINT64, &error_local))
 		g_warning("invalid ESP free space specified: %s", error_local->message);
 	fu_uefi_device_set_require_esp_free_space(FU_UEFI_DEVICE(device), sz_reqd);
 
 	/* shim used for SB or not? */
-	if (!fu_plugin_get_config_value_boolean(plugin, "DisableShimForSecureBoot", FALSE))
+	if (!fu_plugin_get_config_value_boolean(
+		plugin,
+		"DisableShimForSecureBoot",
+		FU_UEFI_CAPSULE_CONFIG_DEFAULT_DISABLE_SHIM_FOR_SECURE_BOOT))
 		fu_device_add_private_flag(device, FU_UEFI_DEVICE_FLAG_USE_SHIM_FOR_SB);
 
 	/* enable the fwupd.efi debug log? */
-	if (fu_plugin_get_config_value_boolean(plugin, "EnableEfiDebugging", FALSE))
+	if (fu_plugin_get_config_value_boolean(plugin,
+					       "EnableEfiDebugging",
+					       FU_UEFI_CAPSULE_CONFIG_DEFAULT_ENABLE_EFI_DEBUGGING))
 		fu_device_add_private_flag(device, FU_UEFI_DEVICE_FLAG_ENABLE_EFI_DEBUGGING);
 }
 
@@ -695,7 +710,10 @@ fu_uefi_capsule_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **
 		return TRUE;
 
 	/* use GRUB to load updates */
-	if (fu_plugin_get_config_value_boolean(plugin, "EnableGrubChainLoad", FALSE)) {
+	if (fu_plugin_get_config_value_boolean(
+		plugin,
+		"EnableGrubChainLoad",
+		FU_UEFI_CAPSULE_CONFIG_DEFAULT_ENABLE_GRUB_CHAIN_LOAD)) {
 		fu_uefi_backend_set_device_gtype(FU_UEFI_BACKEND(self->backend),
 						 FU_TYPE_UEFI_GRUB_DEVICE);
 	}
@@ -912,7 +930,10 @@ fu_uefi_capsule_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError *
 	fu_progress_step_done(progress);
 
 	/* firmware may lie */
-	if (!fu_plugin_get_config_value_boolean(plugin, "DisableCapsuleUpdateOnDisk", FALSE)) {
+	if (!fu_plugin_get_config_value_boolean(
+		plugin,
+		"DisableCapsuleUpdateOnDisk",
+		FU_UEFI_CAPSULE_CONFIG_DEFAULT_DISABLE_CAPSULE_UPDATE_ON_DISK)) {
 		g_autoptr(GError) error_cod = NULL;
 		if (!fu_uefi_capsule_plugin_check_cod_support(plugin, &error_cod)) {
 			g_debug("not using CapsuleOnDisk support: %s", error_cod->message);

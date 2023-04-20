@@ -1,4 +1,4 @@
-% dbxtool(1) @PACKAGE_VERSION@ | dbxtool man page
+% dbxtool(1) {{PACKAGE_VERSION}} | dbxtool man page
 
 NAME
 ====

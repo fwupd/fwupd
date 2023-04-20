@@ -17,15 +17,21 @@ struct _FuThunderboltPlugin {
 
 G_DEFINE_TYPE(FuThunderboltPlugin, fu_thunderbolt_plugin, FU_TYPE_PLUGIN)
 
-/*5 seconds sleep until retimer is available                                       \
-				     after nvm update*/
+/* 5 seconds sleep until retimer is available after nvm update */
 #define FU_THUNDERBOLT_RETIMER_CLEANUP_DELAY 5000000
+
+/* defaults changed here will also be reflected in the fwupd.conf man page */
+#define FU_THUNDERBOLT_CONFIG_DEFAULT_MINIMUM_KERNEL_VERSION "4.13.0"
+#define FU_THUNDERBOLT_CONFIG_DEFAULT_DELAYED_ACTIVATION     FALSE
+#define FU_THUNDERBOLT_CONFIG_DEFAULT_RETIMER_OFFLINE_MODE   FALSE
 
 static gboolean
 fu_thunderbolt_plugin_safe_kernel(FuPlugin *plugin, GError **error)
 {
 	g_autofree gchar *min =
-	    fu_plugin_get_config_value(plugin, "MinimumKernelVersion", "4.13.0");
+	    fu_plugin_get_config_value(plugin,
+				       "MinimumKernelVersion",
+				       FU_THUNDERBOLT_CONFIG_DEFAULT_MINIMUM_KERNEL_VERSION);
 	return fu_kernel_check_version(min, error);
 }
 
@@ -35,7 +41,9 @@ fu_thunderbolt_plugin_device_created(FuPlugin *plugin, FuDevice *dev, GError **e
 	fu_plugin_add_rule(plugin,
 			   FU_PLUGIN_RULE_INHIBITS_IDLE,
 			   "thunderbolt requires device wakeup");
-	if (fu_plugin_get_config_value_boolean(plugin, "RetimerOfflineMode", FALSE))
+	if (fu_plugin_get_config_value_boolean(plugin,
+					       "RetimerOfflineMode",
+					       FU_THUNDERBOLT_CONFIG_DEFAULT_RETIMER_OFFLINE_MODE))
 		fu_device_add_private_flag(dev, FU_THUNDERBOLT_DEVICE_FLAG_FORCE_ENUMERATION);
 	return TRUE;
 }
@@ -47,7 +55,9 @@ fu_thunderbolt_plugin_device_registered(FuPlugin *plugin, FuDevice *device)
 		return;
 
 	/* Operating system will handle finishing updates later */
-	if (fu_plugin_get_config_value_boolean(plugin, "DelayedActivation", FALSE) &&
+	if (fu_plugin_get_config_value_boolean(plugin,
+					       "DelayedActivation",
+					       FU_THUNDERBOLT_CONFIG_DEFAULT_DELAYED_ACTIVATION) &&
 	    !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE)) {
 		g_info("turning on delayed activation for %s", fu_device_get_name(device));
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE);

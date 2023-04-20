@@ -66,7 +66,7 @@ if get_option('man')
     output: 'dbxtool.1',
     command: [
       generate_man, '@INPUT@', '-o', '@OUTPUT@',
-      '--replace', '@PACKAGE_VERSION@', fwupd_version,
+      '--replace', 'PACKAGE_VERSION', fwupd_version,
     ],
     install: true,
     install_dir: join_paths(mandir, 'man1'),

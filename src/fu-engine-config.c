@@ -29,6 +29,19 @@ struct _FuEngineConfig {
 
 G_DEFINE_TYPE(FuEngineConfig, fu_engine_config, FU_TYPE_CONFIG)
 
+/* defaults changed here will also be reflected in the fwupd.conf man page */
+#define FU_DAEMON_CONFIG_DEFAULT_DISABLED_PLUGINS      "test;test_ble"
+#define FU_DAEMON_CONFIG_DEFAULT_URI_SCHEMES	       "file;https;http;ipfs"
+#define FU_DAEMON_CONFIG_DEFAULT_UPDATE_MOTD	       TRUE
+#define FU_DAEMON_CONFIG_DEFAULT_IGNORE_POWER	       FALSE
+#define FU_DAEMON_CONFIG_DEFAULT_ONLY_TRUSTED	       TRUE
+#define FU_DAEMON_CONFIG_DEFAULT_SHOW_DEVICE_PRIVATE   TRUE
+#define FU_DAEMON_CONFIG_DEFAULT_ALLOW_EMULATION       FALSE
+#define FU_DAEMON_CONFIG_DEFAULT_ENUMERATE_ALL_DEVICES TRUE
+#define FU_DAEMON_CONFIG_DEFAULT_TRUSTED_UIDS	       NULL
+#define FU_DAEMON_CONFIG_DEFAULT_HOST_BKC	       NULL
+#define FU_DAEMON_CONFIG_DEFAULT_TRUSTED_REPORTS       "VendorId=$OEM"
+
 static FwupdReport *
 fu_engine_config_report_from_spec(FuEngineConfig *self, const gchar *report_spec, GError **error)
 {
@@ -105,8 +118,10 @@ fu_engine_config_reload(FuEngineConfig *self)
 
 	/* get disabled plugins */
 	g_ptr_array_set_size(self->disabled_plugins, 0);
-	plugins =
-	    fu_config_get_value_strv(FU_CONFIG(self), "fwupd", "DisabledPlugins", "test;test_ble");
+	plugins = fu_config_get_value_strv(FU_CONFIG(self),
+					   "fwupd",
+					   "DisabledPlugins",
+					   FU_DAEMON_CONFIG_DEFAULT_DISABLED_PLUGINS);
 	if (plugins != NULL) {
 		for (guint i = 0; plugins[i] != NULL; i++)
 			g_ptr_array_add(self->disabled_plugins, g_strdup(plugins[i]));
@@ -135,7 +150,7 @@ fu_engine_config_reload(FuEngineConfig *self)
 	uri_schemes = fu_config_get_value_strv(FU_CONFIG(self),
 					       "fwupd",
 					       "UriSchemes",
-					       "file;https;http;ipfs");
+					       FU_DAEMON_CONFIG_DEFAULT_URI_SCHEMES);
 	if (uri_schemes != NULL) {
 		for (guint i = 0; uri_schemes[i] != NULL; i++)
 			g_ptr_array_add(self->uri_schemes, g_strdup(uri_schemes[i]));
@@ -147,7 +162,10 @@ fu_engine_config_reload(FuEngineConfig *self)
 		(void)g_setenv("FWUPD_VERBOSE", domains, TRUE);
 
 	/* fetch host best known configuration */
-	host_bkc = fu_config_get_value(FU_CONFIG(self), "fwupd", "HostBkc", NULL);
+	host_bkc = fu_config_get_value(FU_CONFIG(self),
+				       "fwupd",
+				       "HostBkc",
+				       FU_DAEMON_CONFIG_DEFAULT_HOST_BKC);
 	if (host_bkc != NULL && host_bkc[0] != '\0')
 		self->host_bkc = g_steal_pointer(&host_bkc);
 
@@ -158,7 +176,10 @@ fu_engine_config_reload(FuEngineConfig *self)
 
 	/* get trusted uids */
 	g_array_set_size(self->trusted_uids, 0);
-	uids = fu_config_get_value_strv(FU_CONFIG(self), "fwupd", "TrustedUids", NULL);
+	uids = fu_config_get_value_strv(FU_CONFIG(self),
+					"fwupd",
+					"TrustedUids",
+					FU_DAEMON_CONFIG_DEFAULT_TRUSTED_UIDS);
 	if (uids != NULL) {
 		for (guint i = 0; uids[i] != NULL; i++) {
 			guint64 val = 0;
@@ -175,8 +196,10 @@ fu_engine_config_reload(FuEngineConfig *self)
 
 	/* get trusted reports */
 	g_ptr_array_set_size(self->trusted_reports, 0);
-	report_specs =
-	    fu_config_get_value_strv(FU_CONFIG(self), "fwupd", "TrustedReports", "VendorId=$OEM");
+	report_specs = fu_config_get_value_strv(FU_CONFIG(self),
+						"fwupd",
+						"TrustedReports",
+						FU_DAEMON_CONFIG_DEFAULT_TRUSTED_REPORTS);
 	if (report_specs != NULL) {
 		for (guint i = 0; report_specs[i] != NULL; i++) {
 			g_autoptr(GError) error_local = NULL;
@@ -277,37 +300,55 @@ fu_engine_config_get_approved_firmware(FuEngineConfig *self)
 gboolean
 fu_engine_config_get_update_motd(FuEngineConfig *self)
 {
-	return fu_config_get_value_bool(FU_CONFIG(self), "fwupd", "UpdateMotd", TRUE);
+	return fu_config_get_value_bool(FU_CONFIG(self),
+					"fwupd",
+					"UpdateMotd",
+					FU_DAEMON_CONFIG_DEFAULT_UPDATE_MOTD);
 }
 
 gboolean
 fu_engine_config_get_ignore_power(FuEngineConfig *self)
 {
-	return fu_config_get_value_bool(FU_CONFIG(self), "fwupd", "IgnorePower", FALSE);
+	return fu_config_get_value_bool(FU_CONFIG(self),
+					"fwupd",
+					"IgnorePower",
+					FU_DAEMON_CONFIG_DEFAULT_IGNORE_POWER);
 }
 
 gboolean
 fu_engine_config_get_only_trusted(FuEngineConfig *self)
 {
-	return fu_config_get_value_bool(FU_CONFIG(self), "fwupd", "OnlyTrusted", TRUE);
+	return fu_config_get_value_bool(FU_CONFIG(self),
+					"fwupd",
+					"OnlyTrusted",
+					FU_DAEMON_CONFIG_DEFAULT_ONLY_TRUSTED);
 }
 
 gboolean
 fu_engine_config_get_show_device_private(FuEngineConfig *self)
 {
-	return fu_config_get_value_bool(FU_CONFIG(self), "fwupd", "ShowDevicePrivate", TRUE);
+	return fu_config_get_value_bool(FU_CONFIG(self),
+					"fwupd",
+					"ShowDevicePrivate",
+					FU_DAEMON_CONFIG_DEFAULT_SHOW_DEVICE_PRIVATE);
 }
 
 gboolean
 fu_engine_config_get_allow_emulation(FuEngineConfig *self)
 {
-	return fu_config_get_value_bool(FU_CONFIG(self), "fwupd", "AllowEmulation", FALSE);
+	return fu_config_get_value_bool(FU_CONFIG(self),
+					"fwupd",
+					"AllowEmulation",
+					FU_DAEMON_CONFIG_DEFAULT_ALLOW_EMULATION);
 }
 
 gboolean
 fu_engine_config_get_enumerate_all_devices(FuEngineConfig *self)
 {
-	return fu_config_get_value_bool(FU_CONFIG(self), "fwupd", "EnumerateAllDevices", TRUE);
+	return fu_config_get_value_bool(FU_CONFIG(self),
+					"fwupd",
+					"EnumerateAllDevices",
+					FU_DAEMON_CONFIG_DEFAULT_ENUMERATE_ALL_DEVICES);
 }
 
 const gchar *
