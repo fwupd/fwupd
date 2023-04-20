@@ -420,6 +420,8 @@ class Generator:
             if not item.enabled:
                 continue
             str_h += f"#define {name_snake.upper()}_OFFSET_{item.element_id.upper()} 0x{item.offset:x}\n"
+            if item.multiplier:
+                str_h += f"#define {name_snake.upper()}_SIZE_{item.element_id.upper()} 0x{item.size:x}\n"
         str_h += f"#define {name_snake.upper()}_SIZE 0x{size:x}\n"
         for item in items:
             if not item.enabled:
