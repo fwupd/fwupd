@@ -161,6 +161,7 @@ The `[daemon]` section can contain the following parameters:
 
 * `DistroId=$ID,DistroVersion=$VERSION_ID`
 
+{% if plugin_uefi_capsule %}
 UEFI_CAPSULE PARAMETERS
 -----------------------
 
@@ -192,7 +193,9 @@ The `[uefi_capsule]` section can contain the following parameters:
 
   This value also has no affect when using Capsule-on-Disk as the EFI helper binary is
   not being used.
+{% endif %}
 
+{% if plugin_msr %}
 MSR PARAMETERS
 --------------
 
@@ -204,7 +207,9 @@ The `[msr]` section can contain the following parameter:
 
   This only needs to be modified by enterprise kernels that have cherry picked the feature into a
   kernel with an old version number.
+{% endif %}
 
+{% if plugin_redfish %}
 REDFISH PARAMETERS
 ------------------
 
@@ -235,6 +240,7 @@ The `[redfish]` section can contain the following parameters:
 **ManagerResetTimeout={{FU_REDFISH_CONFIG_DEFAULT_MANAGER_RESET_TIMEOUT}}**
 
   Amount of time in seconds to wait for a BMC restart.
+{% endif %}
 
 THUNDERBOLT PARAMETERS
 ----------------------

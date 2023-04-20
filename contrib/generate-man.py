@@ -77,6 +77,8 @@ def _convert_md_to_man(data: str) -> str:
         # join long lines
         line = ""
         for line_tmp in lines:
+            if not line_tmp:
+                continue
             if line_tmp.startswith("| "):
                 line_tmp = line_tmp[2:]
             if line_tmp.startswith("  "):
