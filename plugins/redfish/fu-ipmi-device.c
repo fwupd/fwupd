@@ -88,18 +88,22 @@ fu_ipmi_device_send(FuIpmiDevice *self,
 		    gsize bufsz,
 		    GError **error)
 {
-	g_autofree guint8 *buf2 = fu_memdup_safe(buf, bufsz, NULL);
 	struct ipmi_system_interface_addr addr = {.addr_type = IPMI_SYSTEM_INTERFACE_ADDR_TYPE,
 						  .channel = IPMI_BMC_CHANNEL};
 	struct ipmi_req req = {
 	    .addr = (guint8 *)&addr,
 	    .addr_len = sizeof(addr),
 	    .msgid = self->seq++,
-	    .msg.data = buf2,
 	    .msg.data_len = (guint16)bufsz,
 	    .msg.netfn = netfn,
 	    .msg.cmd = cmd,
 	};
+	g_autofree guint8 *buf2 = NULL;
+
+	buf2 = fu_memdup_safe(buf, bufsz, error);
+	if (buf2 == NULL)
+		return FALSE;
+	req.msg.data = buf2;
 	fu_dump_raw(G_LOG_DOMAIN, "ipmi-send", buf2, bufsz);
 	return fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
 				    IPMICTL_SEND_COMMAND,
