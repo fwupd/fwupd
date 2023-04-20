@@ -1,4 +1,4 @@
-% fwupdtool(1) @PACKAGE_VERSION@ | standalone firmware update utility man page
+% fwupdtool(1) {{PACKAGE_VERSION}} | standalone firmware update utility man page
 
 NAME
 ====

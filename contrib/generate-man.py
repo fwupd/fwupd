@@ -1,13 +1,15 @@
 #!/usr/bin/python3
-# pylint: disable=invalid-name,missing-docstring
+# pylint: disable=invalid-name,missing-docstring,consider-using-f-string
 #
 # Copyright (C) 2023 Richard Hughes <richard@hughsie.com>
 #
 # SPDX-License-Identifier: LGPL-2.1+
 
+import os
 import sys
 import argparse
-from typing import List
+from typing import List, Dict
+from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 
 def _is_md_title(line: str) -> bool:
@@ -19,7 +21,7 @@ def _is_md_title(line: str) -> bool:
     return True
 
 
-def _replace_bookend(line: str, search: str, replace_l: str, replace_r: str) -> None:
+def _replace_bookend(line: str, search: str, replace_l: str, replace_r: str) -> str:
 
     try:
         while line.find(search) != -1:
@@ -80,6 +82,8 @@ def _convert_md_to_man(data: str) -> str:
             if line_tmp.startswith("  "):
                 line_tmp = line_tmp[2:]
                 sectalign = 8
+            elif line_tmp.startswith("* "):
+                sectalign = 8
             line_tmp = line_tmp.replace("\\-", "-")
             line += line_tmp
             if line_tmp.endswith("."):
@@ -103,6 +107,30 @@ def _convert_md_to_man(data: str) -> str:
     return "\n".join(troff_lines)
 
 
+def _add_defines(defines: Dict[str, str], fn: str) -> None:
+    with open(fn, "rb") as f:
+        for line in f.read().decode().split("\n"):
+            if not line.startswith("#define"):
+                continue
+            if line.find("_CONFIG_DEFAULT_") == -1:
+                continue
+            sections: List[str] = []
+            for section in line[7:].split(" "):
+                section = section.strip()
+                if section:
+                    if section == "TRUE":
+                        section = "true"
+                    if section == "FALSE":
+                        section = "false"
+                    if section == "NULL":
+                        section = ""
+                    if section.startswith('"') and section.endswith('"'):
+                        section = section[1:-1]
+                    sections.append(section)
+            if len(sections) >= 2:
+                defines[sections[0]] = sections[1]
+
+
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
@@ -110,18 +138,39 @@ if __name__ == "__main__":
     parser.add_argument(
         "-r", "--replace", action="append", nargs=2, metavar=("symbol", "version")
     )
+    parser.add_argument("-d", "--defines", action="append")
     args, argv = parser.parse_known_args()
     if len(argv) != 1:
         print(f"usage: {sys.argv[0]} MARKDOWN [-o TROFF]\n")
         sys.exit(1)
 
-    with open(argv[0], "rb") as f_in:
-        out = _convert_md_to_man(f_in.read().decode())
-        if args.replace:
-            for key, value in args.replace:
-                out = out.replace(key, value)
-        if args.output:
-            with open(args.output, "wb") as f_out:
-                f_out.write(out.encode())
-        else:
-            print(out)
+    # load in #defines to populate the defaults
+    subst: Dict[str, str] = {}
+    if args.defines:
+        for fn_define in args.defines:
+            try:
+                _add_defines(subst, fn_define)
+            except FileNotFoundError:
+                print(f"{fn_define} not found")
+                sys.exit(1)
+
+    # static defines
+    if args.replace:
+        for key, value in args.replace:
+            subst[key] = value
+
+    # use Jinja2 to process as a template
+    env = Environment(
+        loader=FileSystemLoader(os.path.dirname(argv[0])),
+        autoescape=select_autoescape(),
+        keep_trailing_newline=True,
+    )
+    template = env.get_template(os.path.basename(argv[0]))
+    out = _convert_md_to_man(template.render(subst))
+
+    # success
+    if args.output:
+        with open(args.output, "wb") as f_out:
+            f_out.write(out.encode())
+    else:
+        print(out)

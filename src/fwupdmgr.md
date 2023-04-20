@@ -1,4 +1,4 @@
-% fwupdmgr(1) @PACKAGE_VERSION@ | fwupdmgr man page
+% fwupdmgr(1) {{PACKAGE_VERSION}} | fwupdmgr man page
 
 NAME
 ====

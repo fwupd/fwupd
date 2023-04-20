@@ -1,4 +1,4 @@
-% dfu-tool(1) @PACKAGE_VERSION@ | dfu-tool man page
+% dfu-tool(1) {{PACKAGE_VERSION}} | dfu-tool man page
 
 NAME
 ====

@@ -1,4 +1,4 @@
-% fwupdagent(1) @PACKAGE_VERSION@ | fwupdagent man page
+% fwupdagent(1) {{PACKAGE_VERSION}} | fwupdagent man page
 
 NAME
 ====
