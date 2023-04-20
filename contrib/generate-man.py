@@ -21,15 +21,19 @@ def _is_md_title(line: str) -> bool:
 
 def _replace_bookend(line: str, search: str, replace_l: str, replace_r: str) -> None:
 
-    while line.find(search) != -1:
-        it = iter(line.split(search, maxsplit=2))
-        line = ""
-        for token_before in it:
-            line += token_before
-            line += replace_l
-            line += next(it)  # token_mid
-            line += replace_r
-            line += next(it)  # token_after
+    try:
+        while line.find(search) != -1:
+            it = iter(line.split(search, maxsplit=2))
+            line_tmp: str = ""
+            for token_before in it:
+                line_tmp += token_before
+                line_tmp += replace_l
+                line_tmp += next(it)  # token_mid
+                line_tmp += replace_r
+                line_tmp += next(it)  # token_after
+            line = line_tmp
+    except StopIteration:
+        pass
     return line
 
 
