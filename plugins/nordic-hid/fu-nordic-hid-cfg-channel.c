@@ -1034,10 +1034,9 @@ fu_nordic_hid_cfg_channel_setup(FuDevice *device, GError **error)
 	fu_device_add_instance_strsafe(device, "BL", self->bl_name);
 	fu_device_add_instance_strsafe(device, "GEN", self->generation);
 
-	if (self->vid != 0x00 && self->pid != 0x00) {
-		fu_device_add_instance_u16(device, "VEN", self->vid);
-		fu_device_add_instance_u16(device, "DEV", self->pid);
-	}
+	/* peripherals without devinfo really do use hardcoded VID and PID of 0x0000 */
+	fu_device_add_instance_u16(device, "VEN", self->vid);
+	fu_device_add_instance_u16(device, "DEV", self->pid);
 
 	/* For the default generation, generate GUID without the generation parameter.
 	 * Required for compatibility with already released application images.
@@ -1096,10 +1095,8 @@ static void
 fu_nordic_hid_cfg_channel_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuNordicHidCfgChannel *self = FU_NORDIC_HID_CFG_CHANNEL(device);
-	if (self->vid != 0x00 && self->pid != 0x00) {
-		fu_string_append_kx(str, idt, "VendorId", self->vid);
-		fu_string_append_kx(str, idt, "ProductId", self->pid);
-	}
+	fu_string_append_kx(str, idt, "VendorId", self->vid);
+	fu_string_append_kx(str, idt, "ProductId", self->pid);
 	fu_string_append(str, idt, "BoardName", self->board_name);
 	fu_string_append(str, idt, "Bootloader", self->bl_name);
 	fu_string_append(str, idt, "Generation", self->generation);
