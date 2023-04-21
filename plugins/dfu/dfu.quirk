@@ -488,15 +488,15 @@ DfuForceVersion = 0x0
 [USB\VID_10A5&PID_9800]
 DfuForceVersion = 0x0
 
-# HID OMNIKEY card readers 
-[USB\VID_076B] 
-Vendor = HID OMNIKEY 
-[USB\VID_076B&PID_5127] 
-Plugin = dfu 
-Name = 5127 CK 
-[USB\VID_076B&PID_5427]  
-Plugin = dfu 
+# HID OMNIKEY card readers
+[USB\VID_076B]
+Vendor = HID OMNIKEY
+[USB\VID_076B&PID_5127]
+Plugin = dfu
+Name = 5127 CK
+[USB\VID_076B&PID_5427]
+Plugin = dfu
 Name = 5427 CK
-[USB\VID_076B&PID_502A] 
-Name = 5025-CL 
+[USB\VID_076B&PID_502A]
+Name = 5025-CL
 Flags = ~updatable
