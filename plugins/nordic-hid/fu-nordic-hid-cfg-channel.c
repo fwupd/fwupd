@@ -1034,7 +1034,11 @@ fu_nordic_hid_cfg_channel_setup(FuDevice *device, GError **error)
 	fu_device_add_instance_strsafe(device, "BL", self->bl_name);
 	fu_device_add_instance_strsafe(device, "GEN", self->generation);
 
-	if (self->vid != 0x00 && self->pid != 0x00) {
+	/* If available, use VID and PID fetched in devinfo. Otherwise, use hardcoded VID and PID of
+	 * 0x00 only for devices connected via dongle. This prevents from inheriting VID and PID of
+	 * the dongle.
+	 */
+	if ((self->vid != 0x00 && self->pid != 0x00) || (self->peer_id != 0)) {
 		fu_device_add_instance_u16(device, "VEN", self->vid);
 		fu_device_add_instance_u16(device, "DEV", self->pid);
 	}
