@@ -7,8 +7,8 @@ struct CfuOffer {
     flags1: u8
     component_id: u8
     token: u8
-    version_raw: u32le
-    hw_variant: u32le
+    version: u32le
+    compat_variant_mask: u32le
     flags2: u8
     flags3: u8
     product_id: u16le

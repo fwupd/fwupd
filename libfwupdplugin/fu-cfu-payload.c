@@ -76,8 +76,10 @@ fu_cfu_payload_write(FuFirmware *firmware, GError **error)
 		return NULL;
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index(chunks, i);
-		fu_byte_array_append_uint32(buf, fu_chunk_get_address(chk), G_LITTLE_ENDIAN);
-		fu_byte_array_append_uint8(buf, fu_chunk_get_data_sz(chk));
+		g_autoptr(GByteArray) st = fu_struct_cfu_payload_new();
+		fu_struct_cfu_payload_set_addr(st, fu_chunk_get_address(chk));
+		fu_struct_cfu_payload_set_size(st, fu_chunk_get_data_sz(chk));
+		g_byte_array_append(buf, st->data, st->len);
 		g_byte_array_append(buf, fu_chunk_get_data(chk), fu_chunk_get_data_sz(chk));
 	}
 	return g_byte_array_free_to_bytes(g_steal_pointer(&buf));
