@@ -438,9 +438,9 @@ fu_cfu_offer_parse(FuFirmware *firmware,
 	priv->segment_number = fu_struct_cfu_offer_get_segment_number(st);
 	priv->component_id = fu_struct_cfu_offer_get_component_id(st);
 	priv->token = fu_struct_cfu_offer_get_token(st);
-	priv->hw_variant = fu_struct_cfu_offer_get_hw_variant(st);
+	priv->hw_variant = fu_struct_cfu_offer_get_compat_variant_mask(st);
 	priv->product_id = fu_struct_cfu_offer_get_product_id(st);
-	fu_firmware_set_version_raw(firmware, fu_struct_cfu_offer_get_version_raw(st));
+	fu_firmware_set_version_raw(firmware, fu_struct_cfu_offer_get_version(st));
 
 	/* component info */
 	flags1 = fu_struct_cfu_offer_get_flags1(st);
@@ -474,8 +474,8 @@ fu_cfu_offer_write(FuFirmware *firmware, GError **error)
 	fu_struct_cfu_offer_set_token(st, priv->token);
 
 	/* version */
-	fu_struct_cfu_offer_set_version_raw(st, fu_firmware_get_version_raw(firmware));
-	fu_struct_cfu_offer_set_hw_variant(st, priv->hw_variant);
+	fu_struct_cfu_offer_set_version(st, fu_firmware_get_version_raw(firmware));
+	fu_struct_cfu_offer_set_compat_variant_mask(st, priv->hw_variant);
 
 	/* product info */
 	fu_struct_cfu_offer_set_flags2(st, (priv->protocol_revision << 4) | (priv->bank << 2));

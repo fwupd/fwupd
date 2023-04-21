@@ -9,6 +9,7 @@
 #include <fwupdplugin.h>
 
 #include "fu-cfu-module.h"
+#include "fu-cfu-struct.h"
 
 struct _FuCfuModule {
 	FuDevice parent_instance;
@@ -37,15 +38,16 @@ fu_cfu_module_setup(FuCfuModule *self, const guint8 *buf, gsize bufsz, gsize off
 {
 	FuDevice *device = FU_DEVICE(self);
 	FuDevice *parent = fu_device_get_proxy(device);
-	guint32 version_raw = 0;
-	guint8 tmp = 0;
 	g_autofree gchar *logical_id = NULL;
+	g_autoptr(GByteArray) st = NULL;
 
-	/* component ID */
-	if (!fu_memread_uint8_safe(buf, bufsz, offset + 0x5, &self->component_id, error))
+	/* parse */
+	st = fu_struct_cfu_rsp_get_firmware_version_component_parse(buf, bufsz, offset, error);
+	if (st == NULL)
 		return FALSE;
 
 	/* these GUIDs may cause the name or version-format to be overwritten */
+	self->component_id = fu_struct_cfu_rsp_get_firmware_version_component_get_component_id(st);
 	fu_device_add_instance_u8(device, "CID", self->component_id);
 	if (!fu_device_build_instance_id(device, error, "HIDRAW", "VEN", "DEV", NULL))
 		return FALSE;
@@ -53,9 +55,7 @@ fu_cfu_module_setup(FuCfuModule *self, const guint8 *buf, gsize bufsz, gsize off
 		return FALSE;
 
 	/* bank */
-	if (!fu_memread_uint8_safe(buf, bufsz, offset + 0x4, &tmp, error))
-		return FALSE;
-	self->bank = tmp & 0b11;
+	self->bank = fu_struct_cfu_rsp_get_firmware_version_component_get_flags(st) & 0b11;
 	fu_device_add_instance_u4(device, "BANK", self->bank);
 	if (!fu_device_build_instance_id(device,
 					 error,
@@ -78,9 +78,9 @@ fu_cfu_module_setup(FuCfuModule *self, const guint8 *buf, gsize bufsz, gsize off
 	}
 
 	/* version */
-	if (!fu_memread_uint32_safe(buf, bufsz, offset, &version_raw, G_LITTLE_ENDIAN, error))
-		return FALSE;
-	fu_device_set_version_from_uint32(device, version_raw);
+	fu_device_set_version_from_uint32(
+	    device,
+	    fu_struct_cfu_rsp_get_firmware_version_component_get_fw_version(st));
 
 	/* logical ID */
 	logical_id = g_strdup_printf("CID:0x%02x,BANK:0x%02x", self->component_id, self->bank);
