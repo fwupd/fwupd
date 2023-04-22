@@ -46,6 +46,10 @@ def test_files() -> int:
             continue
         if symb.startswith("fu_struct_"):
             continue
+        if symb.endswith("_to_string"):
+            continue
+        if symb.endswith("_from_string"):
+            continue
         if symb.find("__proto__") != -1:
             continue
         if symb in ["main", "fu_plugin_init_vfuncs"]:
