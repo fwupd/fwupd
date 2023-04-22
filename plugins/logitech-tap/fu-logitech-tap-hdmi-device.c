@@ -248,8 +248,7 @@ fu_logitech_tap_hdmi_device_ait_finalize_update(FuLogitechTapHdmiDevice *self,
 
 	g_debug("Ait finalize update request");
 
-  fu_device_sleep(FU_DEVICE(self), 2*kLogiDefaultAitSleepIntervalMs); /* 2 sec */
-   fu_device_sleep(FU_DEVICE(self), 2*kLogiDefaultAitSleepIntervalMs); /* 2 sec */
+	fu_device_sleep(FU_DEVICE(self), 4 * kLogiDefaultAitSleepIntervalMs); /* 4 sec */
 	if (!fu_logitech_tap_hdmi_device_set_xu_control(self,
 			kLogiUnitIdVidCapExtension,
 			kLogiTapUvcXuAitCustomCsSetMmp,
