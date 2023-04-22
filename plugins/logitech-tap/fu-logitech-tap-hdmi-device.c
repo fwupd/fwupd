@@ -18,6 +18,7 @@
 
 #include <string.h>
 
+#include "fu-logitech-tap-common.h"
 #include "fu-logitech-tap-hdmi-device.h"
 
 #define FU_LOGITECH_TAP_HDMI_DEVICE_IOCTL_TIMEOUT 5000 /* ms */
@@ -145,12 +146,6 @@ fu_logitech_tap_hdmi_device_set_xu_control(FuLogitechTapHdmiDevice *self,
 {
 	struct uvc_xu_control_query control_query;
 
-	g_debug("set xu control request, size: %" G_GUINT16_FORMAT
-			" unit: 0x%x selector: 0x%x",
-			data_size,
-			(guchar)unit_id,
-			(guchar)control_selector);
-
 	control_query.unit = unit_id;
 	control_query.selector = control_selector;
 	control_query.query = UVC_SET_CUR;
@@ -169,7 +164,6 @@ fu_logitech_tap_hdmi_device_set_xu_control(FuLogitechTapHdmiDevice *self,
 			data_size,
 			(guchar)unit_id,
 			(guchar)control_selector);
-	fu_dump_raw(G_LOG_DOMAIN, "UVC_SET_CURRes", control_query.data, control_query.size);
 
 	/* success */
 	return TRUE;
@@ -254,7 +248,8 @@ fu_logitech_tap_hdmi_device_ait_finalize_update(FuLogitechTapHdmiDevice *self,
 
 	g_debug("Ait finalize update request");
 
-  fu_device_sleep(FU_DEVICE(self), kLogiDefaultAitSleepIntervalMs); /* ms */
+  fu_device_sleep(FU_DEVICE(self), 2*kLogiDefaultAitSleepIntervalMs); /* 2 sec */
+   fu_device_sleep(FU_DEVICE(self), 2*kLogiDefaultAitSleepIntervalMs); /* 2 sec */
 	if (!fu_logitech_tap_hdmi_device_set_xu_control(self,
 			kLogiUnitIdVidCapExtension,
 			kLogiTapUvcXuAitCustomCsSetMmp,
@@ -263,13 +258,13 @@ fu_logitech_tap_hdmi_device_ait_finalize_update(FuLogitechTapHdmiDevice *self,
 			error))
     	return FALSE;
 
-  fu_device_sleep(FU_DEVICE(self), kLogiDefaultAitSleepIntervalMs); /* ms */
+  fu_device_sleep(FU_DEVICE(self), kLogiDefaultAitSleepIntervalMs); /* 1 sec */
  /* poll for burning fw result or return failure if it hits max polling */
  for (int pass = 0;; pass++) {
   g_autofree guint8 *mmp_get_data = NULL;
   guint16 data_len = 0;
 
-  fu_device_sleep(FU_DEVICE(self), kLogiDefaultAitSleepIntervalMs); /* ms */
+  fu_device_sleep(FU_DEVICE(self), kLogiDefaultAitSleepIntervalMs); /* 1 sec */
   duration_ms = duration_ms + kLogiDefaultAitSleepIntervalMs;
 	if (!fu_logitech_tap_hdmi_device_query_data_size(self,
 			kLogiUnitIdVidCapExtension,
@@ -322,7 +317,8 @@ fu_logitech_tap_hdmi_device_write_firmware(FuDevice *device,
     FuLogitechTapHdmiDevice *self = FU_LOGITECH_TAP_HDMI_DEVICE(device);
 
 	g_debug("write HDMI firmware");
-
+	/* flushes image */
+	
     /* init */
 	if (!fu_logitech_tap_hdmi_device_ait_initiate_update(self,
 			error))
@@ -334,7 +330,7 @@ fu_logitech_tap_hdmi_device_write_firmware(FuDevice *device,
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index(chunks, i);
 		g_autoptr(GByteArray) data_pkt = g_byte_array_new();
-		/* device expect fixed size buffer, so cannot leverage actual size here: fu_chunk_get_data_sz(chk) */
+		/* device expect fixed size buffer, so cannot leverage actual size here: fu_chunk_get_data_sz(chk) */ 
 		g_byte_array_append(data_pkt, fu_chunk_get_data(chk), kLogiDefaultImageBlockSize);
 		if (!fu_logitech_tap_hdmi_device_set_xu_control(self,
 			kLogiUnitIdVidCapExtension,
@@ -346,10 +342,13 @@ fu_logitech_tap_hdmi_device_write_firmware(FuDevice *device,
 		fu_progress_step_done(progress);
 	}
 
-	/* uninit */
+	/* uninit */ 
 	if (!fu_logitech_tap_hdmi_device_ait_finalize_update(self,
 			error))
 		return FALSE;
+
+	/* signal for sensor device to trigger composite device reboot */
+	fu_device_add_private_flag(device, FU_LOGITECH_TAP_HDMI_DEVICE_FLAG_NEEDS_REBOOT);
 	return TRUE;
 }
 
@@ -409,6 +408,8 @@ fu_logitech_tap_hdmi_device_set_version(FuDevice *device, GError **error)
 static gboolean
 fu_logitech_tap_hdmi_device_setup(FuDevice *device, GError **error)
 {
+	/* setup device identifier so plugin can disntiguish device during composite_cleaup */
+	fu_device_add_private_flag(device, FU_LOGITECH_TAP_DEVICE_TYPE_HDMI);
 	return fu_logitech_tap_hdmi_device_set_version(device, error);
 }
 

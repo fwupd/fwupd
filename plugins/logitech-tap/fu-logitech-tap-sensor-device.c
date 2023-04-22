@@ -19,6 +19,7 @@
 
 #include <string.h>
 
+#include "fu-logitech-tap-common.h"
 #include "fu-logitech-tap-sensor-device.h"
 
 #define FU_LOGITECH_TAP_SENSOR_DEVICE_IOCTL_TIMEOUT 50000 /* ms */
@@ -132,9 +133,8 @@ fu_logitech_tap_sensor_device_set_tde(FuDevice *device, const guchar tde_mode, G
 	return TRUE;
 }
 
-static gboolean
+gboolean
 fu_logitech_tap_sensor_device_reboot_device(FuDevice *device,
-				   FuProgress *progress,
 				   GError **error)
 {
     FuLogitechTapSensorDevice *self = FU_LOGITECH_TAP_SENSOR_DEVICE(device);
@@ -143,8 +143,19 @@ fu_logitech_tap_sensor_device_reboot_device(FuDevice *device,
  	guint8 PWR = 45;
  	guint8 RST = 46;
  	guint8 set_data[HID_SET_DATA_LEN] = {kHidReportIdMcuSetCmd, pinclr, PWR, 0, 0};
+    g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 
 	g_debug("trigger device reboot");
+
+	/* progress */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 100, "attach");
+	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_RESTART);
+
+	/* need to reopen the device, as at composite_cleaup time, device is already closed */
+	if (!fu_device_open(FU_DEVICE(device), error))
+		return FALSE;
+
 	/* enable TDE mode */
 	if (!fu_logitech_tap_sensor_device_set_tde(device, kHidMcuTdeModeEnable, error))
 		return FALSE;
@@ -168,7 +179,7 @@ fu_logitech_tap_sensor_device_reboot_device(FuDevice *device,
 		fu_logitech_tap_sensor_device_set_tde(device, kHidMcuTdeModeDisable, error);
 		return FALSE;
 	}
-	fu_device_sleep(FU_DEVICE(self), 4000); /* 2 sec */
+	fu_device_sleep(FU_DEVICE(self), 2000); /* 2 sec */
     set_data[1] = pinset;
     set_data[2] = PWR;
 	if (!fu_logitech_tap_sensor_device_set_feature(self,
@@ -179,7 +190,7 @@ fu_logitech_tap_sensor_device_reboot_device(FuDevice *device,
 		fu_logitech_tap_sensor_device_set_tde(device, kHidMcuTdeModeDisable, error);
 		return FALSE;
 	}
-	fu_device_sleep(FU_DEVICE(self), 4000); /* 2 sec */
+	fu_device_sleep(FU_DEVICE(self), 2000); /* 2 sec */
     set_data[1] = pinset;
     set_data[2] = RST;
 	if (!fu_logitech_tap_sensor_device_set_feature(self,
@@ -194,6 +205,8 @@ fu_logitech_tap_sensor_device_reboot_device(FuDevice *device,
 	/* disable TDE mode */
 	if (!fu_logitech_tap_sensor_device_set_tde(device, kHidMcuTdeModeDisable, error))
 		return FALSE;
+
+	fu_progress_step_done(progress);
 
     /* success */
 	return TRUE;
@@ -285,6 +298,8 @@ fu_logitech_tap_sensor_device_setup(FuDevice *device, GError **error)
 	if (!fu_logitech_tap_sensor_device_set_tde(device, kHidMcuTdeModeDisable, error))
 		return FALSE;
 
+	/* setup device identifier so plugin can disntiguish device during composite_cleaup */
+	fu_device_add_private_flag(device, FU_LOGITECH_TAP_DEVICE_TYPE_SENSOR);
 	return TRUE;
 }
 
@@ -324,8 +339,8 @@ fu_logitech_tap_sensor_device_set_progress(FuDevice *self, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0, "detach");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 100, "write");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0, "attach");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 0, "write");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 100, "attach");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 0, "reload");
 }
 
@@ -349,10 +364,8 @@ fu_logitech_tap_sensor_device_class_init(FuLogitechTapSensorDeviceClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
-	FuLogitechTapDeviceClass *klass_logitech_tap_device = FU_LOGITECH_TAP_DEVICE_CLASS(klass);
     object_class->finalize = fu_logitech_tap_sensor_device_finalize;
 	klass_device->probe = fu_logitech_tap_sensor_device_probe;
 	klass_device->setup = fu_logitech_tap_sensor_device_setup;
 	klass_device->set_progress = fu_logitech_tap_sensor_device_set_progress;
-	klass_logitech_tap_device->reboot_device = fu_logitech_tap_sensor_device_reboot_device;
 }

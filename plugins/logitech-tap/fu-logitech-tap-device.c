@@ -32,25 +32,19 @@ fu_logitech_tap_device_write_firmware(FuDevice *device,
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 52, "write");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 48, "attach");
-
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 100, "write");
+	
 	/* get image */
 	fw = fu_firmware_get_bytes(firmware, error);
 	if (fw == NULL)
 		return FALSE;
+	
+	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_WRITE);
 	chunks = fu_chunk_array_new_from_bytes(fw, 0x0, 0x0, 32);
 
 	/* write */
 	if ((klass->write_firmware != NULL) && (!klass->write_firmware(device,
 						chunks,
-						fu_progress_get_child(progress),
-						error)))
-		return FALSE;
-	fu_progress_step_done(progress);
-
-	/* restart */
-	if ((klass->reboot_device != NULL) && (!klass->reboot_device(device,
 						fu_progress_get_child(progress),
 						error)))
 		return FALSE;

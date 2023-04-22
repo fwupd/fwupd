@@ -17,7 +17,4 @@ struct _FuLogitechTapDeviceClass {
 				   GPtrArray *chunks,
 				   FuProgress *progress,
 				   GError **error);
-	gboolean (*reboot_device)(FuDevice *self,
-				   FuProgress *progress,
-				   GError **error);
 };
