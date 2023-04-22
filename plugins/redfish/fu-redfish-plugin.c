@@ -16,6 +16,7 @@
 #include "fu-redfish-network.h"
 #include "fu-redfish-plugin.h"
 #include "fu-redfish-smbios.h"
+#include "fu-redfish-struct.h"
 
 #define FU_REDFISH_PLUGIN_CLEANUP_RETRIES_DELAY 10 /* seconds */
 

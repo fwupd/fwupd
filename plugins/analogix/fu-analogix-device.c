@@ -10,6 +10,7 @@
 #include "fu-analogix-common.h"
 #include "fu-analogix-device.h"
 #include "fu-analogix-firmware.h"
+#include "fu-analogix-struct.h"
 
 struct _FuAnalogixDevice {
 	FuUsbDevice parent_instance;
@@ -121,11 +122,11 @@ fu_analogix_device_receive(FuAnalogixDevice *self,
 
 static gboolean
 fu_analogix_device_get_update_status(FuAnalogixDevice *self,
-				     AnxUpdateStatus *status,
+				     FuAnalogixUpdateStatus *status,
 				     GError **error)
 {
 	for (guint i = 0; i < 3000; i++) {
-		guint8 status_tmp = UPDATE_STATUS_INVALID;
+		guint8 status_tmp = FU_ANALOGIX_UPDATE_STATUS_INVALID;
 		if (!fu_analogix_device_receive(self,
 						ANX_BB_RQT_GET_UPDATE_STATUS,
 						0,
@@ -137,7 +138,8 @@ fu_analogix_device_get_update_status(FuAnalogixDevice *self,
 		g_debug("status now: %s [0x%x]",
 			fu_analogix_update_status_to_string(status_tmp),
 			status_tmp);
-		if ((status_tmp != UPDATE_STATUS_ERROR) && (status_tmp != UPDATE_STATUS_INVALID)) {
+		if ((status_tmp != FU_ANALOGIX_UPDATE_STATUS_ERROR) &&
+		    (status_tmp != FU_ANALOGIX_UPDATE_STATUS_INVALID)) {
 			if (status != NULL)
 				*status = status_tmp;
 			return TRUE;
@@ -250,7 +252,7 @@ fu_analogix_device_write_chunks(FuAnalogixDevice *self,
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, chunks->len);
 	for (guint i = 0; i < chunks->len; i++) {
-		AnxUpdateStatus status = UPDATE_STATUS_INVALID;
+		FuAnalogixUpdateStatus status = FU_ANALOGIX_UPDATE_STATUS_INVALID;
 		FuChunk *chk = g_ptr_array_index(chunks, i);
 		if (!fu_analogix_device_send(self,
 					     ANX_BB_RQT_SEND_UPDATE_DATA,
@@ -280,7 +282,7 @@ fu_analogix_device_write_image(FuAnalogixDevice *self,
 			       FuProgress *progress,
 			       GError **error)
 {
-	AnxUpdateStatus status = UPDATE_STATUS_INVALID;
+	FuAnalogixUpdateStatus status = FU_ANALOGIX_UPDATE_STATUS_INVALID;
 	guint8 buf_init[4] = {0x0};
 	g_autoptr(GBytes) block_bytes = NULL;
 	g_autoptr(GPtrArray) chunks = NULL;

@@ -9,7 +9,7 @@ plugin_quirks += files([
   'vli-lenovo.quirk',
   'vli-samsung.quirk',
   ])
-plugin_builtin_vli = static_library('fu_plugin_vli',
+plugin_builtins += static_library('fu_plugin_vli',
   structgen.process('fu-vli.struct'),
   sources: [
     'fu-vli-plugin.c',
@@ -31,31 +31,4 @@ plugin_builtin_vli = static_library('fu_plugin_vli',
   c_args: cargs,
   dependencies: plugin_deps,
 )
-plugin_builtins += plugin_builtin_vli
-
-if get_option('tests')
-  env = environment()
-  env.set('G_TEST_SRCDIR', meson.current_source_dir())
-  env.set('G_TEST_BUILDDIR', meson.current_build_dir())
-  e = executable(
-    'vli-self-test',
-    sources: [
-      'fu-self-test.c',
-    ],
-    include_directories: plugin_incdirs,
-    dependencies: plugin_deps,
-    link_with: [
-      plugin_libs,
-      plugin_builtin_vli,
-    ],
-    install: true,
-    install_rpath: libdir_pkg,
-    install_dir: installed_test_bindir,
-    c_args: [
-      cargs,
-      '-DSRCDIR="' + meson.current_source_dir() + '"',
-    ],
-  )
-  test('vli-self-test', e, env: env)  # added to installed-tests
-endif
 endif

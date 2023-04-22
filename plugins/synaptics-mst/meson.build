@@ -5,6 +5,9 @@ cargs = ['-DG_LOG_DOMAIN="FuPluginSynapticsMST"']
 plugin_quirks += files('synaptics-mst.quirk')
 
 plugin_builtin_synaptics_mst = static_library('fu_plugin_synaptics_mst',
+  structgen.process(
+    'fu-synaptics-mst.struct', # fuzzing
+  ),
   sources: [
     'fu-synaptics-mst-plugin.c',
     'fu-synaptics-mst-common.c',

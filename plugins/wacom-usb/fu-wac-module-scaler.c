@@ -11,6 +11,7 @@
 #include "fu-wac-common.h"
 #include "fu-wac-device.h"
 #include "fu-wac-module-scaler.h"
+#include "fu-wac-struct.h"
 
 struct _FuWacModuleScaler {
 	FuWacModule parent_instance;

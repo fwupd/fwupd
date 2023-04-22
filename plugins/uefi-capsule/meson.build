@@ -130,6 +130,7 @@ if get_option('tests')
   env.set('FWUPD_LOCALSTATEDIR', '/tmp/fwupd-self-test/var')
   e = executable(
     'uefi-self-test',
+    structgen.process('fu-uefi.struct'),
     sources: [
       'fu-self-test.c',
     ],

@@ -24,8 +24,8 @@ struct _FuCcgxHpiDevice {
 	guint16 fw_app_type;
 	guint8 hpi_addrsz; /* hpiv1: 1 byte, hpiv2: 2 byte	*/
 	guint8 num_ports;  /* max number of ports	*/
-	FWMode fw_mode;
-	FWImageType fw_image_type;
+	FuCcgxFwMode fw_mode;
+	FuCcgxImageType fw_image_type;
 	guint8 target_address;
 	guint8 ep_bulk_in;
 	guint8 ep_bulk_out;
@@ -68,11 +68,11 @@ fu_ccgx_hpi_device_to_string(FuDevice *device, guint idt, GString *str)
 	fu_string_append_kx(str, idt, "FwAppType", self->fw_app_type);
 	fu_string_append_kx(str, idt, "HpiAddrsz", self->hpi_addrsz);
 	fu_string_append_kx(str, idt, "NumPorts", self->num_ports);
-	fu_string_append(str, idt, "FWMode", fu_ccgx_fw_mode_to_string(self->fw_mode));
+	fu_string_append(str, idt, "FuCcgxFwMode", fu_ccgx_fw_mode_to_string(self->fw_mode));
 	fu_string_append(str,
 			 idt,
 			 "FwImageType",
-			 fu_ccgx_fw_image_type_to_string(self->fw_image_type));
+			 fu_ccgx_image_type_to_string(self->fw_image_type));
 	fu_string_append_kx(str, idt, "EpBulkIn", self->ep_bulk_in);
 	fu_string_append_kx(str, idt, "EpBulkOut", self->ep_bulk_out);
 	fu_string_append_kx(str, idt, "EpIntrIn", self->ep_intr_in);
@@ -1044,7 +1044,7 @@ fu_ccgx_hpi_device_detach(FuDevice *device, FuProgress *progress, GError **error
 
 	/* not required */
 	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER) ||
-	    self->fw_image_type == FW_IMAGE_TYPE_DUAL_SYMMETRIC)
+	    self->fw_image_type == FU_CCGX_IMAGE_TYPE_DUAL_SYMMETRIC)
 		return TRUE;
 
 	/* jump to Alt FW */
@@ -1097,7 +1097,7 @@ fu_ccgx_hpi_device_prepare_firmware(FuDevice *device,
 				    GError **error)
 {
 	FuCcgxHpiDevice *self = FU_CCGX_HPI_DEVICE(device);
-	FWMode fw_mode;
+	FuCcgxFwMode fw_mode;
 	guint16 fw_app_type;
 	guint16 fw_silicon_id;
 	g_autoptr(FuFirmware) firmware = fu_ccgx_firmware_new();
@@ -1134,7 +1134,7 @@ fu_ccgx_hpi_device_prepare_firmware(FuDevice *device,
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "FWMode mismatch, expected %s, got %s",
+			    "FuCcgxFwMode mismatch, expected %s, got %s",
 			    fu_ccgx_fw_mode_to_string(fu_ccgx_fw_mode_get_alternate(self->fw_mode)),
 			    fu_ccgx_fw_mode_to_string(fw_mode));
 		return NULL;
@@ -1144,7 +1144,7 @@ fu_ccgx_hpi_device_prepare_firmware(FuDevice *device,
 
 static gboolean
 fu_ccgx_hpi_get_metadata_offset(FuCcgxHpiDevice *self,
-				FWMode fw_mode,
+				FuCcgxFwMode fw_mode,
 				guint32 *addr,
 				guint32 *offset,
 				GError **error)
@@ -1177,10 +1177,10 @@ fu_ccgx_hpi_get_metadata_offset(FuCcgxHpiDevice *self,
 
 	/* get the row offset in the flash */
 	switch (fw_mode) {
-	case FW_MODE_FW1:
+	case FU_CCGX_FW_MODE_FW1:
 		*addr = addr_max - 1;
 		break;
-	case FW_MODE_FW2:
+	case FU_CCGX_FW_MODE_FW2:
 		*addr = addr_max - 2;
 		break;
 	default:
@@ -1196,7 +1196,7 @@ fu_ccgx_hpi_get_metadata_offset(FuCcgxHpiDevice *self,
 /* this will only work after fu_ccgx_hpi_enter_flash_mode() has been used */
 static gboolean
 fu_ccgx_hpi_load_metadata(FuCcgxHpiDevice *self,
-			  FWMode fw_mode,
+			  FuCcgxFwMode fw_mode,
 			  CCGxMetaData *metadata,
 			  GError **error)
 {
@@ -1225,7 +1225,7 @@ fu_ccgx_hpi_load_metadata(FuCcgxHpiDevice *self,
 /* this will only work after fu_ccgx_hpi_enter_flash_mode() has been used */
 static gboolean
 fu_ccgx_hpi_save_metadata(FuCcgxHpiDevice *self,
-			  FWMode fw_mode,
+			  FuCcgxFwMode fw_mode,
 			  CCGxMetaData *metadata,
 			  GError **error)
 {
@@ -1267,7 +1267,7 @@ fu_ccgx_hpi_write_firmware(FuDevice *device,
 	FuCcgxHpiDevice *self = FU_CCGX_HPI_DEVICE(device);
 	CCGxMetaData metadata = {0x0};
 	GPtrArray *records = fu_ccgx_firmware_get_records(FU_CCGX_FIRMWARE(firmware));
-	FWMode fw_mode_alt = fu_ccgx_fw_mode_get_alternate(self->fw_mode);
+	FuCcgxFwMode fw_mode_alt = fu_ccgx_fw_mode_get_alternate(self->fw_mode);
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
 	/* progress */
@@ -1408,7 +1408,7 @@ fu_ccgx_hpi_device_setup(FuDevice *device, GError **error)
 	}
 	self->hpi_addrsz = mode & 0x80 ? 2 : 1;
 	self->num_ports = (mode >> 2) & 0x03 ? 2 : 1;
-	self->fw_mode = (FWMode)(mode & 0x03);
+	self->fw_mode = (FuCcgxFwMode)(mode & 0x03);
 	fu_device_set_logical_id(device, fu_ccgx_fw_mode_to_string(self->fw_mode));
 	fu_device_add_instance_str(device, "MODE", fu_device_get_logical_id(device));
 
@@ -1417,9 +1417,9 @@ fu_ccgx_hpi_device_setup(FuDevice *device, GError **error)
 		return FALSE;
 
 	/* get correct version if not in boot mode */
-	if (self->fw_mode != FW_MODE_BOOT) {
+	if (self->fw_mode != FU_CCGX_FW_MODE_BOOT) {
 		guint16 bufsz;
-		guint32 versions[FW_MODE_LAST] = {0x0};
+		guint32 versions[FU_CCGX_FW_MODE_LAST] = {0x0};
 		guint8 bufver[HPI_DEVICE_VERSION_SIZE_HPIV2] = {0x0};
 
 		bufsz = self->hpi_addrsz == 1 ? HPI_DEVICE_VERSION_SIZE_HPIV1
@@ -1433,7 +1433,7 @@ fu_ccgx_hpi_device_setup(FuDevice *device, GError **error)
 		if (!fu_memread_uint32_safe(bufver,
 					    sizeof(bufver),
 					    0x0c,
-					    &versions[FW_MODE_FW1],
+					    &versions[FU_CCGX_FW_MODE_FW1],
 					    G_LITTLE_ENDIAN,
 					    error))
 			return FALSE;
@@ -1442,7 +1442,7 @@ fu_ccgx_hpi_device_setup(FuDevice *device, GError **error)
 		if (!fu_memread_uint32_safe(bufver,
 					    sizeof(bufver),
 					    0x14,
-					    &versions[FW_MODE_FW2],
+					    &versions[FU_CCGX_FW_MODE_FW2],
 					    G_LITTLE_ENDIAN,
 					    error))
 			return FALSE;
@@ -1461,7 +1461,7 @@ fu_ccgx_hpi_device_setup(FuDevice *device, GError **error)
 	}
 
 	/* not supported in boot mode */
-	if (self->fw_mode == FW_MODE_BOOT) {
+	if (self->fw_mode == FU_CCGX_FW_MODE_BOOT) {
 		fu_device_inhibit(device, "device-in-boot-mode", "Not supported in BOOT mode");
 	} else {
 		fu_device_uninhibit(device, "device-in-boot-mode");
@@ -1518,8 +1518,8 @@ fu_ccgx_hpi_device_set_quirk_kv(FuDevice *device,
 		return TRUE;
 	}
 	if (g_strcmp0(key, "CcgxImageKind") == 0) {
-		self->fw_image_type = fu_ccgx_fw_image_type_from_string(value);
-		if (self->fw_image_type != FW_IMAGE_TYPE_UNKNOWN)
+		self->fw_image_type = fu_ccgx_image_type_from_string(value);
+		if (self->fw_image_type != FU_CCGX_IMAGE_TYPE_UNKNOWN)
 			return TRUE;
 		g_set_error_literal(error,
 				    G_IO_ERROR,

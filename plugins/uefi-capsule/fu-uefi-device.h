@@ -19,28 +19,6 @@ struct _FuUefiDeviceClass {
 	FuDeviceClass parent_class;
 };
 
-typedef enum {
-	FU_UEFI_DEVICE_KIND_UNKNOWN,
-	FU_UEFI_DEVICE_KIND_SYSTEM_FIRMWARE,
-	FU_UEFI_DEVICE_KIND_DEVICE_FIRMWARE,
-	FU_UEFI_DEVICE_KIND_UEFI_DRIVER,
-	FU_UEFI_DEVICE_KIND_FMP,
-	FU_UEFI_DEVICE_KIND_DELL_TPM_FIRMWARE,
-	FU_UEFI_DEVICE_KIND_LAST
-} FuUefiDeviceKind;
-
-typedef enum {
-	FU_UEFI_DEVICE_STATUS_SUCCESS = 0x00,
-	FU_UEFI_DEVICE_STATUS_ERROR_UNSUCCESSFUL = 0x01,
-	FU_UEFI_DEVICE_STATUS_ERROR_INSUFFICIENT_RESOURCES = 0x02,
-	FU_UEFI_DEVICE_STATUS_ERROR_INCORRECT_VERSION = 0x03,
-	FU_UEFI_DEVICE_STATUS_ERROR_INVALID_FORMAT = 0x04,
-	FU_UEFI_DEVICE_STATUS_ERROR_AUTH_ERROR = 0x05,
-	FU_UEFI_DEVICE_STATUS_ERROR_PWR_EVT_AC = 0x06,
-	FU_UEFI_DEVICE_STATUS_ERROR_PWR_EVT_BATT = 0x07,
-	FU_UEFI_DEVICE_STATUS_LAST
-} FuUefiDeviceStatus;
-
 /**
  * FU_UEFI_DEVICE_FLAG_NO_UX_CAPSULE:
  *
@@ -91,9 +69,6 @@ typedef enum {
  */
 #define FU_UEFI_DEVICE_FLAG_ENABLE_EFI_DEBUGGING (1 << 8)
 
-FuUefiDeviceKind
-fu_uefi_device_kind_from_string(const gchar *kind);
-
 void
 fu_uefi_device_set_esp(FuUefiDevice *self, FuVolume *esp);
 gboolean
@@ -118,10 +93,6 @@ guint64
 fu_uefi_device_get_hardware_instance(FuUefiDevice *self);
 FuUefiDeviceStatus
 fu_uefi_device_get_status(FuUefiDevice *self);
-const gchar *
-fu_uefi_device_kind_to_string(FuUefiDeviceKind kind);
-const gchar *
-fu_uefi_device_status_to_string(FuUefiDeviceStatus status);
 FuUefiUpdateInfo *
 fu_uefi_device_load_update_info(FuUefiDevice *self, GError **error);
 gboolean

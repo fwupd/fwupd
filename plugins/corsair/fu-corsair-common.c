@@ -8,27 +8,6 @@
 
 #include "fu-corsair-common.h"
 
-FuCorsairDeviceKind
-fu_corsair_device_type_from_string(const gchar *kind)
-{
-	if (g_strcmp0(kind, "mouse") == 0)
-		return FU_CORSAIR_DEVICE_MOUSE;
-	if (g_strcmp0(kind, "receiver") == 0)
-		return FU_CORSAIR_DEVICE_RECEIVER;
-	return FU_CORSAIR_DEVICE_UNKNOWN;
-}
-
-const gchar *
-fu_corsair_device_type_to_string(FuCorsairDeviceKind type)
-{
-	if (type == FU_CORSAIR_DEVICE_MOUSE)
-		return "mouse";
-	if (type == FU_CORSAIR_DEVICE_RECEIVER)
-		return "receiver";
-
-	return "unknown";
-}
-
 guint32
 fu_corsair_calculate_crc(const guint8 *data, guint32 data_len)
 {

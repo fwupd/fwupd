@@ -11,48 +11,7 @@
 #include <string.h>
 
 #include "fu-wac-common.h"
-
-static const gchar *
-fu_wac_report_id_to_string(guint8 report_id)
-{
-	if (report_id == FU_WAC_REPORT_ID_FW_DESCRIPTOR)
-		return "FwDescriptor";
-	if (report_id == FU_WAC_REPORT_ID_SWITCH_TO_FLASH_LOADER)
-		return "SwitchToFlashLoader";
-	if (report_id == FU_WAC_REPORT_ID_QUIT_AND_RESET)
-		return "QuitAndReset";
-	if (report_id == FU_WAC_REPORT_ID_READ_BLOCK_DATA)
-		return "ReadBlockData";
-	if (report_id == FU_WAC_REPORT_ID_WRITE_BLOCK)
-		return "WriteBlock";
-	if (report_id == FU_WAC_REPORT_ID_ERASE_BLOCK)
-		return "EraseBlock";
-	if (report_id == FU_WAC_REPORT_ID_SET_READ_ADDRESS)
-		return "SetReadAddress";
-	if (report_id == FU_WAC_REPORT_ID_GET_STATUS)
-		return "GetStatus";
-	if (report_id == FU_WAC_REPORT_ID_UPDATE_RESET)
-		return "UpdateReset";
-	if (report_id == FU_WAC_REPORT_ID_WRITE_WORD)
-		return "WriteWord";
-	if (report_id == FU_WAC_REPORT_ID_GET_PARAMETERS)
-		return "GetParameters";
-	if (report_id == FU_WAC_REPORT_ID_GET_FLASH_DESCRIPTOR)
-		return "GetFlashDescriptor";
-	if (report_id == FU_WAC_REPORT_ID_GET_CHECKSUMS)
-		return "GetChecksums";
-	if (report_id == FU_WAC_REPORT_ID_SET_CHECKSUM_FOR_BLOCK)
-		return "SetChecksumForBlock";
-	if (report_id == FU_WAC_REPORT_ID_CALCULATE_CHECKSUM_FOR_BLOCK)
-		return "CalculateChecksumForBlock";
-	if (report_id == FU_WAC_REPORT_ID_WRITE_CHECKSUM_TABLE)
-		return "WriteChecksumTable";
-	if (report_id == FU_WAC_REPORT_ID_GET_CURRENT_FIRMWARE_IDX)
-		return "GetCurrentFirmwareIdx";
-	if (report_id == FU_WAC_REPORT_ID_MODULE)
-		return "Module";
-	return NULL;
-}
+#include "fu-wac-struct.h"
 
 void
 fu_wac_buffer_dump(const gchar *title, guint8 cmd, const guint8 *buf, gsize sz)

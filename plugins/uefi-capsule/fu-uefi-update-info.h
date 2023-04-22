@@ -8,16 +8,10 @@
 
 #include <glib-object.h>
 
+#include "fu-uefi-struct.h"
+
 #define FU_TYPE_UEFI_UPDATE_INFO (fu_uefi_update_info_get_type())
 G_DECLARE_FINAL_TYPE(FuUefiUpdateInfo, fu_uefi_update_info, FU, UEFI_UPDATE_INFO, GObject)
-
-typedef enum {
-	FU_UEFI_UPDATE_INFO_STATUS_ATTEMPT_UPDATE = 0x00000001,
-	FU_UEFI_UPDATE_INFO_STATUS_ATTEMPTED = 0x00000002,
-} FuUefiUpdateInfoStatus;
-
-const gchar *
-fu_uefi_update_info_status_to_string(FuUefiUpdateInfoStatus status);
 
 FuUefiUpdateInfo *
 fu_uefi_update_info_new(void);

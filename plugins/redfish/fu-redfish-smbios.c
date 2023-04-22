@@ -7,8 +7,8 @@
 #include "config.h"
 
 #include "fu-redfish-common.h"
-#include "fu-redfish-smbios-struct.h"
 #include "fu-redfish-smbios.h"
+#include "fu-redfish-struct.h"
 
 struct _FuRedfishSmbios {
 	FuFirmwareClass parent_instance;

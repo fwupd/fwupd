@@ -9,6 +9,7 @@
 #include <scsi/sg.h>
 
 #include "fu-scsi-device.h"
+#include "fu-scsi-struct.h"
 
 struct _FuScsiDevice {
 	FuUdevDevice parent_instance;
@@ -147,42 +148,6 @@ fu_scsi_device_prepare_firmware(FuDevice *device,
 	return g_steal_pointer(&firmware);
 }
 
-static const gchar *
-fu_scsi_device_sense_key_to_string(guint8 key)
-{
-	if (key == 0x00)
-		return "no-sense";
-	if (key == 0x01)
-		return "recovered-error";
-	if (key == 0x02)
-		return "not-ready";
-	if (key == 0x03)
-		return "medium-error";
-	if (key == 0x04)
-		return "hardware-error";
-	if (key == 0x05)
-		return "illegal-request";
-	if (key == 0x06)
-		return "unit-attention";
-	if (key == 0x07)
-		return "data-protect";
-	if (key == 0x08)
-		return "blank-check";
-	if (key == 0x09)
-		return "vendor-specific";
-	if (key == 0x0A)
-		return "copy-aborted";
-	if (key == 0x0B)
-		return "aborted-command";
-	if (key == 0x0C)
-		return "equal";
-	if (key == 0x0D)
-		return "volume-overflow";
-	if (key == 0x0E)
-		return "miscompare";
-	return NULL;
-}
-
 static gboolean
 fu_scsi_device_send_scsi_cmd_v3(FuScsiDevice *self,
 				const guint8 *cdb,
@@ -220,7 +185,7 @@ fu_scsi_device_send_scsi_cmd_v3(FuScsiDevice *self,
 			    G_IO_ERROR_FAILED,
 			    "Command fail with status %x, senseKey %s, asc 0x%02x, ascq 0x%02x",
 			    io_hdr.status,
-			    fu_scsi_device_sense_key_to_string(sense_buffer[2]),
+			    fu_scsi_sense_key_to_string(sense_buffer[2]),
 			    sense_buffer[12],
 			    sense_buffer[13]);
 		return FALSE;

@@ -21,30 +21,11 @@ struct _FuSynapromFirmware {
 
 G_DEFINE_TYPE(FuSynapromFirmware, fu_synaprom_firmware, FU_TYPE_FIRMWARE)
 
-#define FU_SYNAPROM_FIRMWARE_TAG_MFW_HEADER  0x0001
-#define FU_SYNAPROM_FIRMWARE_TAG_MFW_PAYLOAD 0x0002
-#define FU_SYNAPROM_FIRMWARE_TAG_CFG_HEADER  0x0003
-#define FU_SYNAPROM_FIRMWARE_TAG_CFG_PAYLOAD 0x0004
-
 /* use only first 12 bit of 16 bits as tag value */
 #define FU_SYNAPROM_FIRMWARE_TAG_MAX 0xfff0
 #define FU_SYNAPROM_FIRMWARE_SIGSIZE 0x0100
 
 #define FU_SYNAPROM_FIRMWARE_COUNT_MAX 64
-
-static const gchar *
-fu_synaprom_firmware_tag_to_string(guint16 tag)
-{
-	if (tag == FU_SYNAPROM_FIRMWARE_TAG_MFW_HEADER)
-		return "mfw-update-header";
-	if (tag == FU_SYNAPROM_FIRMWARE_TAG_MFW_PAYLOAD)
-		return "mfw-update-payload";
-	if (tag == FU_SYNAPROM_FIRMWARE_TAG_CFG_HEADER)
-		return "cfg-update-header";
-	if (tag == FU_SYNAPROM_FIRMWARE_TAG_CFG_PAYLOAD)
-		return "cfg-update-payload";
-	return NULL;
-}
 
 guint32
 fu_synaprom_firmware_get_product_id(FuSynapromFirmware *self)
@@ -137,7 +118,7 @@ fu_synaprom_firmware_parse(FuFirmware *firmware,
 		fu_firmware_add_image(firmware, img);
 
 		/* metadata */
-		if (tag == FU_SYNAPROM_FIRMWARE_TAG_MFW_HEADER) {
+		if (tag == FU_SYNAPROM_FIRMWARE_TAG_MFW_UPDATE_HEADER) {
 			g_autofree gchar *version = NULL;
 			g_autoptr(GByteArray) st_mfw = NULL;
 			st_mfw = fu_struct_synaprom_mfw_hdr_parse(buf, bufsz, offset, error);
@@ -177,7 +158,7 @@ fu_synaprom_firmware_write(FuFirmware *firmware, GError **error)
 	g_autoptr(GBytes) payload = NULL;
 
 	/* add header */
-	fu_struct_synaprom_hdr_set_tag(st_hdr, FU_SYNAPROM_FIRMWARE_TAG_MFW_HEADER);
+	fu_struct_synaprom_hdr_set_tag(st_hdr, FU_SYNAPROM_FIRMWARE_TAG_MFW_UPDATE_HEADER);
 	fu_struct_synaprom_hdr_set_bufsz(st_hdr, st_mfw->len);
 	g_byte_array_append(buf, st_hdr->data, st_hdr->len);
 	fu_struct_synaprom_mfw_hdr_set_product(st_mfw, self->product_id);
@@ -187,7 +168,7 @@ fu_synaprom_firmware_write(FuFirmware *firmware, GError **error)
 	payload = fu_firmware_get_bytes_with_patches(firmware, error);
 	if (payload == NULL)
 		return NULL;
-	fu_struct_synaprom_hdr_set_tag(st_hdr, FU_SYNAPROM_FIRMWARE_TAG_MFW_PAYLOAD);
+	fu_struct_synaprom_hdr_set_tag(st_hdr, FU_SYNAPROM_FIRMWARE_TAG_MFW_UPDATE_PAYLOAD);
 	fu_struct_synaprom_hdr_set_bufsz(st_hdr, g_bytes_get_size(payload));
 	g_byte_array_append(buf, st_hdr->data, st_hdr->len);
 	fu_byte_array_append_bytes(buf, payload);

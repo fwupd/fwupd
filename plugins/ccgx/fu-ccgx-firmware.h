@@ -28,5 +28,5 @@ guint16
 fu_ccgx_firmware_get_app_type(FuCcgxFirmware *self);
 guint16
 fu_ccgx_firmware_get_silicon_id(FuCcgxFirmware *self);
-FWMode
+FuCcgxFwMode
 fu_ccgx_firmware_get_fw_mode(FuCcgxFirmware *self);

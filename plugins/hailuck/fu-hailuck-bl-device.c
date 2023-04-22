@@ -11,6 +11,7 @@
 #include "fu-hailuck-bl-device.h"
 #include "fu-hailuck-common.h"
 #include "fu-hailuck-kbd-firmware.h"
+#include "fu-hailuck-struct.h"
 
 struct _FuHailuckBlDevice {
 	FuHidDevice parent_instance;

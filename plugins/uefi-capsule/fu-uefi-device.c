@@ -62,62 +62,6 @@ fu_uefi_device_set_esp(FuUefiDevice *self, FuVolume *esp)
 	g_set_object(&priv->esp, esp);
 }
 
-const gchar *
-fu_uefi_device_kind_to_string(FuUefiDeviceKind kind)
-{
-	if (kind == FU_UEFI_DEVICE_KIND_UNKNOWN)
-		return "unknown";
-	if (kind == FU_UEFI_DEVICE_KIND_SYSTEM_FIRMWARE)
-		return "system-firmware";
-	if (kind == FU_UEFI_DEVICE_KIND_DEVICE_FIRMWARE)
-		return "device-firmware";
-	if (kind == FU_UEFI_DEVICE_KIND_UEFI_DRIVER)
-		return "uefi-driver";
-	if (kind == FU_UEFI_DEVICE_KIND_FMP)
-		return "fmp";
-	if (kind == FU_UEFI_DEVICE_KIND_DELL_TPM_FIRMWARE)
-		return "dell-tpm-firmware";
-	return NULL;
-}
-
-FuUefiDeviceKind
-fu_uefi_device_kind_from_string(const gchar *kind)
-{
-	if (g_strcmp0(kind, "system-firmware") == 0)
-		return FU_UEFI_DEVICE_KIND_SYSTEM_FIRMWARE;
-	if (g_strcmp0(kind, "device-firmware") == 0)
-		return FU_UEFI_DEVICE_KIND_DEVICE_FIRMWARE;
-	if (g_strcmp0(kind, "uefi-driver") == 0)
-		return FU_UEFI_DEVICE_KIND_UEFI_DRIVER;
-	if (g_strcmp0(kind, "fmp") == 0)
-		return FU_UEFI_DEVICE_KIND_FMP;
-	if (g_strcmp0(kind, "dell-tpm-firmware") == 0)
-		return FU_UEFI_DEVICE_KIND_DELL_TPM_FIRMWARE;
-	return FU_UEFI_DEVICE_KIND_UNKNOWN;
-}
-
-const gchar *
-fu_uefi_device_status_to_string(FuUefiDeviceStatus status)
-{
-	if (status == FU_UEFI_DEVICE_STATUS_SUCCESS)
-		return "success";
-	if (status == FU_UEFI_DEVICE_STATUS_ERROR_UNSUCCESSFUL)
-		return "unsuccessful";
-	if (status == FU_UEFI_DEVICE_STATUS_ERROR_INSUFFICIENT_RESOURCES)
-		return "insufficient resources";
-	if (status == FU_UEFI_DEVICE_STATUS_ERROR_INCORRECT_VERSION)
-		return "incorrect version";
-	if (status == FU_UEFI_DEVICE_STATUS_ERROR_INVALID_FORMAT)
-		return "invalid firmware format";
-	if (status == FU_UEFI_DEVICE_STATUS_ERROR_AUTH_ERROR)
-		return "authentication signing error";
-	if (status == FU_UEFI_DEVICE_STATUS_ERROR_PWR_EVT_AC)
-		return "AC power required";
-	if (status == FU_UEFI_DEVICE_STATUS_ERROR_PWR_EVT_BATT)
-		return "battery level is too low";
-	return NULL;
-}
-
 static void
 fu_uefi_device_to_string(FuDevice *device, guint idt, GString *str)
 {

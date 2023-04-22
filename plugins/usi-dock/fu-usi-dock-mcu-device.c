@@ -11,6 +11,7 @@
 #include "fu-usi-dock-common.h"
 #include "fu-usi-dock-dmc-device.h"
 #include "fu-usi-dock-mcu-device.h"
+#include "fu-usi-dock-struct.h"
 
 struct _FuUsiDockMcuDevice {
 	FuHidDevice parent_instance;
@@ -512,7 +513,7 @@ fu_usi_dock_mcu_device_wait_for_spi_ready_cb(FuDevice *device, gpointer user_dat
 					 sizeof(val),
 					 error))
 		return FALSE;
-	if (val != SPI_STATE_READY) {
+	if (val != FU_USI_DOCK_SPI_STATE_READY) {
 		g_set_error(error,
 			    G_IO_ERROR,
 			    G_IO_ERROR_BUSY,
@@ -543,7 +544,7 @@ fu_usi_dock_mcu_device_wait_for_spi_initial_ready_cb(FuDevice *device,
 					 sizeof(val),
 					 error))
 		return FALSE;
-	if (val != SPI_STATE_READY) {
+	if (val != FU_USI_DOCK_SPI_STATE_READY) {
 		g_set_error(error,
 			    G_IO_ERROR,
 			    G_IO_ERROR_BUSY,

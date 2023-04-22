@@ -41,3 +41,9 @@ struct SynapromCmdIotaFind {
     offset: u32le   // byte offset of data to return
     nbytes: u32le   // maximum number of bytes to return
 }
+enum SynapromFirmwareTag {
+    MfwUpdateHeader  = 0x0001,
+    MfwUpdatePayload = 0x0002,
+    CfgUpdateHeader  = 0x0003,
+    CfgUpdatePayload = 0x0004,
+}

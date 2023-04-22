@@ -40,7 +40,7 @@ fu_vli_usbhub_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags,
 	FuVliUsbhubFirmware *self = FU_VLI_USBHUB_FIRMWARE(firmware);
 	fu_xmlb_builder_insert_kv(bn,
 				  "device_kind",
-				  fu_vli_common_device_kind_to_string(self->device_kind));
+				  fu_vli_device_kind_to_string(self->device_kind));
 }
 
 static gboolean

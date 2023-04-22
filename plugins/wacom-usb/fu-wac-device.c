@@ -18,6 +18,7 @@
 #include "fu-wac-module-scaler.h"
 #include "fu-wac-module-touch-id7.h"
 #include "fu-wac-module-touch.h"
+#include "fu-wac-struct.h"
 
 typedef struct {
 	guint32 start_addr;

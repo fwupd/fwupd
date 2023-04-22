@@ -18,6 +18,7 @@
 #include "fu-redfish-network.h"
 #include "fu-redfish-plugin.h"
 #include "fu-redfish-smc-device.h"
+#include "fu-redfish-struct.h"
 
 typedef struct {
 	FuPlugin *plugin;

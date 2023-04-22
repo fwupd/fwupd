@@ -9,6 +9,7 @@ cargs = ['-DG_LOG_DOMAIN="FuPluginIntelSpi"']
 
 plugin_quirks += files('intel-spi.quirk')
 plugin_builtins += static_library('fu_plugin_intel_spi',
+  structgen.process('fu-intel-spi.struct'),
   sources: [
     'fu-ifd-device.c',
     'fu-intel-spi-common.c',

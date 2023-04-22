@@ -11,7 +11,7 @@ endif
 
 plugin_builtin_redfish = static_library('fu_plugin_redfish',
   structgen.process(
-    'fu-redfish-smbios.struct', # fuzzing
+    'fu-redfish.struct',       # fuzzing
   ),
   sources: [
     'fu-redfish-plugin.c',
@@ -54,6 +54,7 @@ if get_option('tests')
   env.set('FWUPD_LOCALSTATEDIR', '/tmp/fwupd-self-test/var')
   e = executable(
     'redfish-self-test',
+    structgen.process('fu-redfish.struct'),
     sources: [
       'fu-self-test.c',
     ],

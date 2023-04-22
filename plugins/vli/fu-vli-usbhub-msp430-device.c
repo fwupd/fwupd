@@ -9,6 +9,7 @@
 
 #include <fwupdplugin.h>
 
+#include "fu-vli-struct.h"
 #include "fu-vli-usbhub-common.h"
 #include "fu-vli-usbhub-i2c-common.h"
 #include "fu-vli-usbhub-msp430-device.h"
@@ -292,11 +293,11 @@ fu_vli_usbhub_msp430_device_probe(FuDevice *device, GError **error)
 	FuVliDeviceKind device_kind = FU_VLI_DEVICE_KIND_MSP430;
 	FuVliUsbhubDevice *parent = FU_VLI_USBHUB_DEVICE(fu_device_get_parent(device));
 
-	fu_device_set_name(device, fu_vli_common_device_kind_to_string(device_kind));
+	fu_device_set_name(device, fu_vli_device_kind_to_string(device_kind));
 	fu_device_set_physical_id(device, fu_device_get_physical_id(FU_DEVICE(parent)));
 
 	/* add instance ID */
-	fu_device_add_instance_str(device, "I2C", fu_vli_common_device_kind_to_string(device_kind));
+	fu_device_add_instance_str(device, "I2C", fu_vli_device_kind_to_string(device_kind));
 	return fu_device_build_instance_id(device, error, "USB", "VID", "PID", NULL);
 }
 

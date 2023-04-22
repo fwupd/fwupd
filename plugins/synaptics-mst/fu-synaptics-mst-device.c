@@ -16,6 +16,7 @@
 #include "fu-synaptics-mst-connection.h"
 #include "fu-synaptics-mst-device.h"
 #include "fu-synaptics-mst-firmware.h"
+#include "fu-synaptics-mst-struct.h"
 
 #define FU_SYNAPTICS_MST_ID_CTRL_SIZE	 0x1000
 #define SYNAPTICS_UPDATE_ENUMERATE_TRIES 3

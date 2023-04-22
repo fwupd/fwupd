@@ -64,21 +64,6 @@
 #define FIRMWARE_IDX_I225   0x40
 #define FIRMWARE_IDX_MCU    0x80
 
-typedef enum {
-	SPI_STATE_NONE,
-	SPI_STATE_SWITCH_SUCCESS,
-	SPI_STATE_SWITCH_FAIL,
-	SPI_STATE_CMD_SUCCESS,
-	SPI_STATE_CMD_FAIL,
-	SPI_STATE_RW_SUCCESS,
-	SPI_STATE_RW_FAIL,
-	SPI_STATE_READY,
-	SPI_STATE_BUSY,
-	SPI_STATE_TIMEOUT,
-	SPI_STATE_FLASH_FOUND,
-	SPI_STATE_FLASH_NOT_FOUND,
-} SPI_BUS_STATE;
-
 typedef struct {
 	guint8 DMC[5];
 	guint8 PD[5];
@@ -104,5 +89,3 @@ typedef struct {
 
 const gchar *
 fu_usi_dock_idx_to_string(guint8 val);
-const gchar *
-fu_usi_dock_spi_state_to_string(guint8 val);

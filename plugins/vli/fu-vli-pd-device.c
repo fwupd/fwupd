@@ -12,6 +12,7 @@
 #include "fu-vli-pd-device.h"
 #include "fu-vli-pd-firmware.h"
 #include "fu-vli-pd-parade-device.h"
+#include "fu-vli-struct.h"
 
 struct _FuVliPdDevice {
 	FuVliDevice parent_instance;
@@ -419,13 +420,13 @@ fu_vli_pd_device_prepare_firmware(FuDevice *device,
 		return NULL;
 	device_kind = fu_vli_pd_firmware_get_kind(FU_VLI_PD_FIRMWARE(firmware));
 	if (fu_vli_device_get_kind(FU_VLI_DEVICE(self)) != device_kind) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_FILE,
-			    "firmware incompatible, got %s, expected %s",
-			    fu_vli_common_device_kind_to_string(device_kind),
-			    fu_vli_common_device_kind_to_string(
-				fu_vli_device_get_kind(FU_VLI_DEVICE(self))));
+		g_set_error(
+		    error,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_INVALID_FILE,
+		    "firmware incompatible, got %s, expected %s",
+		    fu_vli_device_kind_to_string(device_kind),
+		    fu_vli_device_kind_to_string(fu_vli_device_get_kind(FU_VLI_DEVICE(self))));
 		return NULL;
 	}
 
