@@ -84,14 +84,14 @@ fu_logitech_tap_hdmi_device_query_data_size(FuLogitechTapHdmiDevice *self,
 
 	/* convert the data byte to int */
 	*data_size = size_data[1] << 8 | size_data[0];
-		g_debug("data size query response, size: %u unit: 0x%x selector: 0x%x",
-			*data_size,
-			(guchar)unit_id,
-			(guchar)control_selector);
-		fu_dump_raw(G_LOG_DOMAIN,
-			    "UVC_GET_LENRes",
-			    size_query.data,
-			    kDefaultUvcGetLenQueryControlSize);
+	g_debug("data size query response, size: %u unit: 0x%x selector: 0x%x",
+		*data_size,
+		(guchar)unit_id,
+		(guchar)control_selector);
+	fu_dump_raw(G_LOG_DOMAIN,
+		    "UVC_GET_LENRes",
+		    size_query.data,
+		    kDefaultUvcGetLenQueryControlSize);
 
 	/* success */
 	return TRUE;
@@ -257,51 +257,52 @@ fu_logitech_tap_hdmi_device_ait_finalize_update(FuLogitechTapHdmiDevice *self,
 			error))
     	return FALSE;
 
-  fu_device_sleep(FU_DEVICE(self), kLogiDefaultAitSleepIntervalMs); /* 1 sec */
- /* poll for burning fw result or return failure if it hits max polling */
- for (int pass = 0;; pass++) {
-  g_autofree guint8 *mmp_get_data = NULL;
-  guint16 data_len = 0;
+	fu_device_sleep(FU_DEVICE(self), kLogiDefaultAitSleepIntervalMs); /* 1 sec */
+	/* poll for burning fw result or return failure if it hits max polling */
+	for (int pass = 0;; pass++) {
+		g_autofree guint8 *mmp_get_data = NULL;
+		guint16 data_len = 0;
 
-  fu_device_sleep(FU_DEVICE(self), kLogiDefaultAitSleepIntervalMs); /* 1 sec */
-  duration_ms = duration_ms + kLogiDefaultAitSleepIntervalMs;
-	if (!fu_logitech_tap_hdmi_device_query_data_size(self,
+		fu_device_sleep(FU_DEVICE(self), kLogiDefaultAitSleepIntervalMs); /* 1 sec */
+		duration_ms = duration_ms + kLogiDefaultAitSleepIntervalMs;
+		if (!fu_logitech_tap_hdmi_device_query_data_size(
+			self,
 			kLogiUnitIdVidCapExtension,
 			kLogiTapUvcXuAitCustomCsGetMmpResult,
 			&data_len,
 			error))
-		return FALSE;
-	mmp_get_data = g_malloc0(data_len);
-	if (!fu_logitech_tap_hdmi_device_get_xu_control(self,
+			return FALSE;
+		mmp_get_data = g_malloc0(data_len);
+		if (!fu_logitech_tap_hdmi_device_get_xu_control(
+			self,
 			kLogiUnitIdVidCapExtension,
 			kLogiTapUvcXuAitCustomCsGetMmpResult,
 			data_len,
 			(guchar *)mmp_get_data,
 			error))
-    	return FALSE;
-	if (mmp_get_data[0] == kLogiDefaultAitSuccessValue) {
-		if (pass == 0)
-		  g_usleep(8 * G_USEC_PER_SEC);
-		break;
+			return FALSE;
+		if (mmp_get_data[0] == kLogiDefaultAitSuccessValue) {
+			if (pass == 0)
+				g_usleep(8 * G_USEC_PER_SEC);
+			break;
+		} else if (mmp_get_data[0] == kLogiDefaultAitFailureValue) {
+			g_set_error(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_FAILED,
+				    "failed to finalize image burning, invalid result data: 0x%x",
+				    (guchar)mmp_get_data[0]);
+			return FALSE;
+		}
+		if (duration_ms > kLogiDefaultAitFinalizeMaxPollingDurationMs) {
+			/* if device never returns 0x82 or 0x00, bail out */
+			g_set_error(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_FAILED,
+				    "failed to finalize image burning, duration_ms: %u",
+				    duration_ms);
+			return FALSE;
+		}
 	}
-   else if (mmp_get_data[0] == kLogiDefaultAitFailureValue) {
-	g_set_error(error,
-			G_IO_ERROR,
-			G_IO_ERROR_FAILED,
-			"failed to finalize image burning, invalid result data: 0x%x",
-			(guchar)mmp_get_data[0]);
-    return FALSE;
-   }
-  if (duration_ms > kLogiDefaultAitFinalizeMaxPollingDurationMs) {
-   /* if device never returns 0x82 or 0x00, bail out */
-   	g_set_error(error,
-			G_IO_ERROR,
-			G_IO_ERROR_FAILED,
-			"failed to finalize image burning, duration_ms: %u",
-			duration_ms);
-   return FALSE;
-  }
- }
 
 	/* success */
 	return TRUE;
@@ -379,11 +380,11 @@ fu_logitech_tap_hdmi_device_set_version(FuDevice *device, GError **error)
 						       error))
 		return FALSE;
 	if (data_len > XU_INPUT_DATA_LEN) {
-				g_set_error(error,
-			G_IO_ERROR,
-			G_IO_ERROR_FAILED,
-			"version query packet was too large at 0x%x bytes: ",
-			data_len);
+		g_set_error(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_FAILED,
+			    "version query packet was too large at 0x%x bytes: ",
+			    data_len);
 		return FALSE;
 	}
 
