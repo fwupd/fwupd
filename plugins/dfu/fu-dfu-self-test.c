@@ -15,15 +15,6 @@
 #include "fu-dfu-sector.h"
 #include "fu-dfu-target-private.h"
 
-static void
-fu_dfu_enums_func(void)
-{
-	for (guint i = 0; i < FU_DFU_STATE_LAST; i++)
-		g_assert_cmpstr(fu_dfu_state_to_string(i), !=, NULL);
-	for (guint i = 0; i < FU_DFU_STATUS_LAST; i++)
-		g_assert_cmpstr(fu_dfu_status_to_string(i), !=, NULL);
-}
-
 static gboolean
 fu_test_compare_lines(const gchar *txt1, const gchar *txt2, GError **error)
 {
@@ -166,7 +157,6 @@ main(int argc, char **argv)
 	(void)g_setenv("FWUPD_SYSFSFWATTRIBDIR", testdatadir, TRUE);
 
 	/* tests go here */
-	g_test_add_func("/dfu/enums", fu_dfu_enums_func);
 	g_test_add_func("/dfu/target(DfuSe}", fu_dfu_target_dfuse_func);
 	return g_test_run();
 }

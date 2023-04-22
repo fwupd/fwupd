@@ -12,6 +12,7 @@
 
 #include "fu-dfu-common.h"
 #include "fu-dfu-csr-device.h"
+#include "fu-dfu-struct.h"
 
 /**
  * FU_DFU_CSR_DEVICE_FLAG_REQUIRE_DELAY:
