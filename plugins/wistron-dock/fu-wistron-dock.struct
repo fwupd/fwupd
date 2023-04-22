@@ -20,3 +20,22 @@ struct WistronDockWditImg {
     version2: u32be
     name: 32s
 }
+enum WistronDockUpdatePhase {
+    Download = 0x1,
+    Deploy = 0x2,
+}
+enum WistronDockStatusCode {
+    Enter = 0x1,
+    Prepare = 0x2,
+    Updating = 0x3,
+    Complete = 0x4, // unplug cable to trigger update
+}
+enum WistronDockComponentIdx {
+    Mcu   = 0x0,
+    Pd    = 0x1,
+    Audio = 0x2,
+    Usb   = 0x3,
+    Mst   = 0x4,
+    Spi   = 0xA,
+    Dock  = 0xF,
+}

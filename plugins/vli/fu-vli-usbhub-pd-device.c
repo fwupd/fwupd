@@ -26,10 +26,7 @@ static void
 fu_vli_usbhub_pd_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuVliUsbhubPdDevice *self = FU_VLI_USBHUB_PD_DEVICE(device);
-	fu_string_append(str,
-			 idt,
-			 "DeviceKind",
-			 fu_vli_common_device_kind_to_string(self->device_kind));
+	fu_string_append(str, idt, "DeviceKind", fu_vli_device_kind_to_string(self->device_kind));
 	fu_string_append_kx(str,
 			    idt,
 			    "FwOffset",
@@ -100,7 +97,7 @@ fu_vli_usbhub_pd_device_setup(FuDevice *device, GError **error)
 			    fwver);
 		return FALSE;
 	}
-	name = fu_vli_common_device_kind_to_string(self->device_kind);
+	name = fu_vli_device_kind_to_string(self->device_kind);
 	fu_device_set_name(device, name);
 
 	/* use header to populate device info */
@@ -160,8 +157,8 @@ fu_vli_usbhub_pd_device_prepare_firmware(FuDevice *device,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_FILE,
 			    "firmware incompatible, got %s, expected %s",
-			    fu_vli_common_device_kind_to_string(device_kind),
-			    fu_vli_common_device_kind_to_string(self->device_kind));
+			    fu_vli_device_kind_to_string(device_kind),
+			    fu_vli_device_kind_to_string(self->device_kind));
 		return NULL;
 	}
 

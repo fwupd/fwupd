@@ -837,13 +837,13 @@ fu_vli_usbhub_device_prepare_firmware(FuDevice *device,
 		return NULL;
 	device_kind = fu_vli_usbhub_firmware_get_device_kind(FU_VLI_USBHUB_FIRMWARE(firmware));
 	if (fu_vli_device_get_kind(FU_VLI_DEVICE(self)) != device_kind) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_FILE,
-			    "firmware incompatible, got %s, expected %s",
-			    fu_vli_common_device_kind_to_string(device_kind),
-			    fu_vli_common_device_kind_to_string(
-				fu_vli_device_get_kind(FU_VLI_DEVICE(self))));
+		g_set_error(
+		    error,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_INVALID_FILE,
+		    "firmware incompatible, got %s, expected %s",
+		    fu_vli_device_kind_to_string(device_kind),
+		    fu_vli_device_kind_to_string(fu_vli_device_get_kind(FU_VLI_DEVICE(self))));
 		return NULL;
 	}
 	if (fu_struct_vli_usbhub_hdr_get_dev_id(self->st_hd1) !=

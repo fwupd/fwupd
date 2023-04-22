@@ -8,6 +8,7 @@
 
 #include "fu-hailuck-common.h"
 #include "fu-hailuck-kbd-device.h"
+#include "fu-hailuck-struct.h"
 #include "fu-hailuck-tp-device.h"
 
 struct _FuHailuckKbdDevice {

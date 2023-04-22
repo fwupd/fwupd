@@ -13,6 +13,7 @@
 
 #include "fu-wac-common.h"
 #include "fu-wac-firmware.h"
+#include "fu-wac-struct.h"
 
 static void
 fu_wac_firmware_parse_func(void)

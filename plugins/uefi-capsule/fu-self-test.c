@@ -159,18 +159,10 @@ fu_uefi_cod_device_func(void)
 	g_assert_cmpint(fu_device_get_update_state(dev), ==, FWUPD_UPDATE_STATE_FAILED_TRANSIENT);
 	g_assert_cmpstr(fu_device_get_update_error(dev),
 			==,
-			"failed to update to 0: battery level is too low");
+			"failed to update to 0: error-pwr-evt-batt");
 	g_assert_cmpint(fu_uefi_device_get_status(FU_UEFI_DEVICE(dev)),
 			==,
 			FU_UEFI_DEVICE_STATUS_ERROR_PWR_EVT_BATT);
-}
-
-static void
-fu_uefi_device_func(void)
-{
-	/* check enums all converted */
-	for (guint i = 0; i < FU_UEFI_DEVICE_STATUS_LAST; i++)
-		g_assert_nonnull(fu_uefi_device_status_to_string(i));
 }
 
 static void
@@ -303,7 +295,6 @@ main(int argc, char **argv)
 	g_test_add_func("/uefi/bgrt", fu_uefi_bgrt_func);
 	g_test_add_func("/uefi/framebuffer", fu_uefi_framebuffer_func);
 	g_test_add_func("/uefi/bitmap", fu_uefi_bitmap_func);
-	g_test_add_func("/uefi/device", fu_uefi_device_func);
 	g_test_add_func("/uefi/cod-device", fu_uefi_cod_device_func);
 	g_test_add_func("/uefi/update-info", fu_uefi_update_info_func);
 	g_test_add_func("/uefi/plugin", fu_uefi_plugin_func);

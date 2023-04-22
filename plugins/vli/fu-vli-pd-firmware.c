@@ -49,7 +49,7 @@ fu_vli_pd_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbB
 	FuVliPdFirmware *self = FU_VLI_PD_FIRMWARE(firmware);
 	fu_xmlb_builder_insert_kv(bn,
 				  "device_kind",
-				  fu_vli_common_device_kind_to_string(self->device_kind));
+				  fu_vli_device_kind_to_string(self->device_kind));
 	fu_xmlb_builder_insert_kx(bn, "vid", self->vid);
 	fu_xmlb_builder_insert_kx(bn, "pid", self->pid);
 }

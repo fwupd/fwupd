@@ -42,13 +42,3 @@ typedef enum {
 	ANX_BB_WVAL_UPDATE_SECURE_TX = 0x08,
 	ANX_BB_WVAL_UPDATE_SECURE_RX = 0x09,
 } AnxwValCode;
-
-typedef enum {
-	UPDATE_STATUS_INVALID,
-	UPDATE_STATUS_START,
-	UPDATE_STATUS_FINISH,
-	UPDATE_STATUS_ERROR = 0xFF,
-} AnxUpdateStatus;
-
-const gchar *
-fu_analogix_update_status_to_string(AnxUpdateStatus status);

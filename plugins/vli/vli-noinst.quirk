@@ -73,40 +73,40 @@ GType = FuVliUsbhubDevice
 Flags = usb2
 
 # Generic PD
-VliDeviceKind = VL100
+VliDeviceKind = vl100
 [USB\VID_2109&PID_0100]
 Plugin = vli
 GType = FuVliPdDevice
-VliDeviceKind = VL100
+VliDeviceKind = vl100
 [USB\VID_2109&PID_0101]
 Plugin = vli
 GType = FuVliPdDevice
-VliDeviceKind = VL101
+VliDeviceKind = vl101
 [USB\VID_2109&PID_0102]
 Plugin = vli
 GType = FuVliPdDevice
-VliDeviceKind = VL102
+VliDeviceKind = vl102
 [USB\VID_2109&PID_0103]
 Plugin = vli
 GType = FuVliPdDevice
 Flags = dual-image
-VliDeviceKind = VL103
+VliDeviceKind = vl103
 [USB\VID_2109&PID_0104]
 Plugin = vli
 GType = FuVliPdDevice
-VliDeviceKind = VL104
+VliDeviceKind = vl104
 [USB\VID_2109&PID_0105]
 Plugin = vli
 GType = FuVliPdDevice
-VliDeviceKind = VL105
+VliDeviceKind = vl105
 [USB\VID_2109&PID_0106]
 Plugin = vli
 GType = FuVliPdDevice
-VliDeviceKind = VL106
+VliDeviceKind = vl106
 [USB\VID_2109&PID_0107]
 Plugin = vli
 GType = FuVliPdDevice
-VliDeviceKind = VL107
+VliDeviceKind = vl107
 
 # Generic devices
 [USB\VID_2109&PID_D101]

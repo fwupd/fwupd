@@ -6,6 +6,9 @@ plugin_quirks += files([
   'ccgx.quirk',
   ])
 plugin_builtin_ccgx = static_library('fu_plugin_ccgx',
+  structgen.process(
+    'fu-ccgx.struct',           # fuzzing
+  ),
   sources: [
     'fu-ccgx-plugin.c',
     'fu-ccgx-common.c',         # fuzzing
@@ -36,6 +39,7 @@ if get_option('tests')
   env.set('G_TEST_BUILDDIR', meson.current_build_dir())
   e = executable(
     'ccgx-self-test',
+    structgen.process('fu-ccgx.struct'),
     sources: [
       'fu-self-test.c',
     ],

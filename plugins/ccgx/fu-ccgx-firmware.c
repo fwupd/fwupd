@@ -19,7 +19,7 @@ struct _FuCcgxFirmware {
 	GPtrArray *records;
 	guint16 app_type;
 	guint16 silicon_id;
-	FWMode fw_mode;
+	FuCcgxFwMode fw_mode;
 };
 
 G_DEFINE_TYPE(FuCcgxFirmware, fu_ccgx_firmware, FU_TYPE_FIRMWARE)
@@ -50,7 +50,7 @@ fu_ccgx_firmware_get_silicon_id(FuCcgxFirmware *self)
 	return self->silicon_id;
 }
 
-FWMode
+FuCcgxFwMode
 fu_ccgx_firmware_get_fw_mode(FuCcgxFirmware *self)
 {
 	g_return_val_if_fail(FU_IS_CCGX_FIRMWARE(self), 0);
@@ -278,13 +278,13 @@ fu_ccgx_firmware_parse_md_block(FuCcgxFirmware *self, FwupdInstallFlags flags, G
 		fu_firmware_set_version_raw(FU_FIRMWARE(self), version);
 	}
 
-	/* work out the FWMode */
+	/* work out the FuCcgxFwMode */
 	if (self->records->len > 0) {
 		rcd = g_ptr_array_index(self->records, self->records->len - 1);
 		if ((rcd->row_number & 0xFF) == 0xFF) /* last row */
-			self->fw_mode = FW_MODE_FW1;
+			self->fw_mode = FU_CCGX_FW_MODE_FW1;
 		if ((rcd->row_number & 0xFF) == 0xFE) /* penultimate row */
-			self->fw_mode = FW_MODE_FW2;
+			self->fw_mode = FU_CCGX_FW_MODE_FW2;
 	}
 	return TRUE;
 }

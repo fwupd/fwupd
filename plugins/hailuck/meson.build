@@ -3,8 +3,8 @@ cargs = ['-DG_LOG_DOMAIN="FuPluginNovatek"']
 
 plugin_quirks += files('hailuck.quirk')
 plugin_builtins += static_library('fu_plugin_hailuck',
+  structgen.process('fu-hailuck.struct'),
   sources: [
-    'fu-hailuck-common.c',
     'fu-hailuck-bl-device.c',
     'fu-hailuck-kbd-device.c',
     'fu-hailuck-kbd-firmware.c',  # fuzzing

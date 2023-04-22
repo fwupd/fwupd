@@ -34,6 +34,7 @@ if get_option('tests')
   env.set('G_TEST_BUILDDIR', meson.current_build_dir())
   e = executable(
     'wacom-usb-self-test',
+    structgen.process('fu-wac.struct'),
     sources: [
       'fu-self-test.c',
     ],

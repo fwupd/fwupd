@@ -41,90 +41,6 @@ G_DEFINE_TYPE(FuSynapticsRmiFirmware, fu_synaptics_rmi_firmware, FU_TYPE_FIRMWAR
 #define RMI_IMG_V10_CNTR_ADDR_OFFSET 0x0c
 #define RMI_IMG_MAX_CONTAINERS	     1024
 
-typedef enum {
-	RMI_FIRMWARE_CONTAINER_ID_TOP_LEVEL = 0,
-	RMI_FIRMWARE_CONTAINER_ID_UI,
-	RMI_FIRMWARE_CONTAINER_ID_UI_CONFIG,
-	RMI_FIRMWARE_CONTAINER_ID_BL,
-	RMI_FIRMWARE_CONTAINER_ID_BL_IMAGE,
-	RMI_FIRMWARE_CONTAINER_ID_BL_CONFIG,
-	RMI_FIRMWARE_CONTAINER_ID_BL_LOCKDOWN_INFO,
-	RMI_FIRMWARE_CONTAINER_ID_PERMANENT_CONFIG,
-	RMI_FIRMWARE_CONTAINER_ID_GUEST_CODE,
-	RMI_FIRMWARE_CONTAINER_ID_BL_PROTOCOL_DESCRIPTOR,
-	RMI_FIRMWARE_CONTAINER_ID_UI_PROTOCOL_DESCRIPTOR,
-	RMI_FIRMWARE_CONTAINER_ID_RMI_SELF_DISCOVERY,
-	RMI_FIRMWARE_CONTAINER_ID_RMI_PAGE_CONTENT,
-	RMI_FIRMWARE_CONTAINER_ID_GENERAL_INFORMATION,
-	RMI_FIRMWARE_CONTAINER_ID_DEVICE_CONFIG,
-	RMI_FIRMWARE_CONTAINER_ID_FLASH_CONFIG,
-	RMI_FIRMWARE_CONTAINER_ID_GUEST_SERIALIZATION,
-	RMI_FIRMWARE_CONTAINER_ID_GLOBAL_PARAMETERS,
-	RMI_FIRMWARE_CONTAINER_ID_CORE_CODE,
-	RMI_FIRMWARE_CONTAINER_ID_CORE_CONFIG,
-	RMI_FIRMWARE_CONTAINER_ID_DISPLAY_CONFIG,
-	RMI_FIRMWARE_CONTAINER_ID_EXTERNAL_TOUCH_AFE_CONFIG,
-	RMI_FIRMWARE_CONTAINER_ID_UTILITY,
-	RMI_FIRMWARE_CONTAINER_ID_UTILITY_PARAMETER,
-	RMI_FIRMWARE_CONTAINER_ID_FIXED_LOCATION_DATA = 27,
-} RmiFirmwareContainerId;
-
-static const gchar *
-rmi_firmware_container_id_to_string(RmiFirmwareContainerId container_id)
-{
-	if (container_id == RMI_FIRMWARE_CONTAINER_ID_TOP_LEVEL)
-		return "top-level";
-	if (container_id == RMI_FIRMWARE_CONTAINER_ID_UI)
-		return "ui";
-	if (container_id == RMI_FIRMWARE_CONTAINER_ID_UI_CONFIG)
-		return "ui-config";
-	if (container_id == RMI_FIRMWARE_CONTAINER_ID_BL)
-		return "bl";
-	if (container_id == RMI_FIRMWARE_CONTAINER_ID_BL_IMAGE)
-		return "bl-image";
-	if (container_id == RMI_FIRMWARE_CONTAINER_ID_BL_CONFIG)
-		return "bl-config";
-	if (container_id == RMI_FIRMWARE_CONTAINER_ID_BL_LOCKDOWN_INFO)
-		return "bl-lockdown-info";
-	if (container_id == RMI_FIRMWARE_CONTAINER_ID_PERMANENT_CONFIG)
-		return "permanent-config";
-	if (container_id == RMI_FIRMWARE_CONTAINER_ID_GUEST_CODE)
-		return "guest-code";
-	if (container_id == RMI_FIRMWARE_CONTAINER_ID_BL_PROTOCOL_DESCRIPTOR)
-		return "bl-protocol-descriptor";
-	if (container_id == RMI_FIRMWARE_CONTAINER_ID_UI_PROTOCOL_DESCRIPTOR)
-		return "ui-protocol-descriptor";
-	if (container_id == RMI_FIRMWARE_CONTAINER_ID_RMI_SELF_DISCOVERY)
-		return "rmi-self-discovery";
-	if (container_id == RMI_FIRMWARE_CONTAINER_ID_RMI_PAGE_CONTENT)
-		return "rmi-page-content";
-	if (container_id == RMI_FIRMWARE_CONTAINER_ID_GENERAL_INFORMATION)
-		return "general-information";
-	if (container_id == RMI_FIRMWARE_CONTAINER_ID_DEVICE_CONFIG)
-		return "device-config";
-	if (container_id == RMI_FIRMWARE_CONTAINER_ID_FLASH_CONFIG)
-		return "flash-config";
-	if (container_id == RMI_FIRMWARE_CONTAINER_ID_GUEST_SERIALIZATION)
-		return "guest-serialization";
-	if (container_id == RMI_FIRMWARE_CONTAINER_ID_GLOBAL_PARAMETERS)
-		return "global-parameters";
-	if (container_id == RMI_FIRMWARE_CONTAINER_ID_CORE_CODE)
-		return "core-code";
-	if (container_id == RMI_FIRMWARE_CONTAINER_ID_CORE_CONFIG)
-		return "core-config";
-	if (container_id == RMI_FIRMWARE_CONTAINER_ID_DISPLAY_CONFIG)
-		return "display-config";
-	if (container_id == RMI_FIRMWARE_CONTAINER_ID_EXTERNAL_TOUCH_AFE_CONFIG)
-		return "external-touch-afe-config";
-	if (container_id == RMI_FIRMWARE_CONTAINER_ID_UTILITY)
-		return "utility";
-	if (container_id == RMI_FIRMWARE_CONTAINER_ID_UTILITY_PARAMETER)
-		return "utility-parameter";
-	if (container_id == RMI_FIRMWARE_CONTAINER_ID_FIXED_LOCATION_DATA)
-		return "fixed-location-data";
-	return NULL;
-}
-
 static gboolean
 fu_synaptics_rmi_firmware_add_image(FuFirmware *firmware,
 				    const gchar *id,
@@ -219,13 +135,13 @@ fu_synaptics_rmi_firmware_parse_v10(FuFirmware *firmware, GBytes *fw, GError **e
 		return FALSE;
 	}
 	container_id = fu_struct_rmi_container_descriptor_get_container_id(st_dsc);
-	if (container_id != RMI_FIRMWARE_CONTAINER_ID_TOP_LEVEL) {
+	if (container_id != FU_RMI_CONTAINER_ID_TOP_LEVEL) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_FILE,
 			    "toplevel container_id invalid, got 0x%x expected 0x%x",
 			    (guint)container_id,
-			    (guint)RMI_FIRMWARE_CONTAINER_ID_TOP_LEVEL);
+			    (guint)FU_RMI_CONTAINER_ID_TOP_LEVEL);
 		return FALSE;
 	}
 	offset = fu_struct_rmi_container_descriptor_get_content_address(st_dsc);
@@ -292,7 +208,7 @@ fu_synaptics_rmi_firmware_parse_v10(FuFirmware *firmware, GBytes *fw, GError **e
 			return FALSE;
 		}
 		switch (container_id) {
-		case RMI_FIRMWARE_CONTAINER_ID_BL:
+		case FU_RMI_CONTAINER_ID_BL:
 			if (!fu_memread_uint8_safe(buf,
 						   bufsz,
 						   content_addr,
@@ -300,8 +216,8 @@ fu_synaptics_rmi_firmware_parse_v10(FuFirmware *firmware, GBytes *fw, GError **e
 						   error))
 				return FALSE;
 			break;
-		case RMI_FIRMWARE_CONTAINER_ID_UI:
-		case RMI_FIRMWARE_CONTAINER_ID_CORE_CODE:
+		case FU_RMI_CONTAINER_ID_UI:
+		case FU_RMI_CONTAINER_ID_CORE_CODE:
 			if (!fu_synaptics_rmi_firmware_add_image_v10(firmware,
 								     "ui",
 								     fw,
@@ -311,7 +227,7 @@ fu_synaptics_rmi_firmware_parse_v10(FuFirmware *firmware, GBytes *fw, GError **e
 								     error))
 				return FALSE;
 			break;
-		case RMI_FIRMWARE_CONTAINER_ID_FLASH_CONFIG:
+		case FU_RMI_CONTAINER_ID_FLASH_CONFIG:
 			if (!fu_synaptics_rmi_firmware_add_image_v10(firmware,
 								     "flash-config",
 								     fw,
@@ -321,8 +237,8 @@ fu_synaptics_rmi_firmware_parse_v10(FuFirmware *firmware, GBytes *fw, GError **e
 								     error))
 				return FALSE;
 			break;
-		case RMI_FIRMWARE_CONTAINER_ID_UI_CONFIG:
-		case RMI_FIRMWARE_CONTAINER_ID_CORE_CONFIG:
+		case FU_RMI_CONTAINER_ID_UI_CONFIG:
+		case FU_RMI_CONTAINER_ID_CORE_CONFIG:
 			if (!fu_synaptics_rmi_firmware_add_image_v10(firmware,
 								     "config",
 								     fw,
@@ -332,7 +248,7 @@ fu_synaptics_rmi_firmware_parse_v10(FuFirmware *firmware, GBytes *fw, GError **e
 								     error))
 				return FALSE;
 			break;
-		case RMI_FIRMWARE_CONTAINER_ID_FIXED_LOCATION_DATA:
+		case FU_RMI_CONTAINER_ID_FIXED_LOCATION_DATA:
 			if (!fu_synaptics_rmi_firmware_add_image_v10(firmware,
 								     "fixed-location-data",
 								     fw,
@@ -342,7 +258,7 @@ fu_synaptics_rmi_firmware_parse_v10(FuFirmware *firmware, GBytes *fw, GError **e
 								     error))
 				return FALSE;
 			break;
-		case RMI_FIRMWARE_CONTAINER_ID_EXTERNAL_TOUCH_AFE_CONFIG:
+		case FU_RMI_CONTAINER_ID_EXTERNAL_TOUCH_AFE_CONFIG:
 			if (!fu_synaptics_rmi_firmware_add_image_v10(firmware,
 								     "afe-config",
 								     fw,
@@ -352,7 +268,7 @@ fu_synaptics_rmi_firmware_parse_v10(FuFirmware *firmware, GBytes *fw, GError **e
 								     error))
 				return FALSE;
 			break;
-		case RMI_FIRMWARE_CONTAINER_ID_DISPLAY_CONFIG:
+		case FU_RMI_CONTAINER_ID_DISPLAY_CONFIG:
 			if (!fu_synaptics_rmi_firmware_add_image_v10(firmware,
 								     "display-config",
 								     fw,
@@ -362,7 +278,7 @@ fu_synaptics_rmi_firmware_parse_v10(FuFirmware *firmware, GBytes *fw, GError **e
 								     error))
 				return FALSE;
 			break;
-		case RMI_FIRMWARE_CONTAINER_ID_GENERAL_INFORMATION:
+		case FU_RMI_CONTAINER_ID_GENERAL_INFORMATION:
 			if (length < 0x18 + RMI_PRODUCT_ID_LENGTH) {
 				g_set_error(error,
 					    FWUPD_ERROR,
@@ -400,7 +316,7 @@ fu_synaptics_rmi_firmware_parse_v10(FuFirmware *firmware, GBytes *fw, GError **e
 			break;
 		default:
 			g_debug("unsupported container %s [0x%02x]",
-				rmi_firmware_container_id_to_string(container_id),
+				fu_rmi_container_id_to_string(container_id),
 				container_id);
 			break;
 		}
@@ -613,8 +529,7 @@ fu_synaptics_rmi_firmware_write_v10(FuFirmware *firmware, GError **error)
 	 *        \0x0       \0x20          \0x24  \0x44          |0x48 */
 	guint32 offset_table[] = {
 	    GUINT32_TO_LE(RMI_IMG_FW_OFFSET + 0x24)}; /* offset to first descriptor */
-	fu_struct_rmi_container_descriptor_set_container_id(desc,
-							    RMI_FIRMWARE_CONTAINER_ID_FLASH_CONFIG);
+	fu_struct_rmi_container_descriptor_set_container_id(desc, FU_RMI_CONTAINER_ID_FLASH_CONFIG);
 	fu_struct_rmi_container_descriptor_set_content_address(desc, RMI_IMG_FW_OFFSET + 0x44);
 
 	/* default image */
@@ -662,7 +577,7 @@ fu_synaptics_rmi_firmware_write_v10(FuFirmware *firmware, GError **error)
 
 	/* hierarchical section */
 	fu_struct_rmi_container_descriptor_set_container_id(desc_hdr,
-							    RMI_FIRMWARE_CONTAINER_ID_TOP_LEVEL);
+							    FU_RMI_CONTAINER_ID_TOP_LEVEL);
 	fu_struct_rmi_container_descriptor_set_content_length(desc_hdr, 0x1 * 4); /* bytes */
 	fu_struct_rmi_container_descriptor_set_content_address(desc_hdr,
 							       RMI_IMG_FW_OFFSET +

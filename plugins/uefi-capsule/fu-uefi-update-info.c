@@ -28,16 +28,6 @@ struct _FuUefiUpdateInfo {
 
 G_DEFINE_TYPE(FuUefiUpdateInfo, fu_uefi_update_info, G_TYPE_OBJECT)
 
-const gchar *
-fu_uefi_update_info_status_to_string(FuUefiUpdateInfoStatus status)
-{
-	if (status == FU_UEFI_UPDATE_INFO_STATUS_ATTEMPT_UPDATE)
-		return "attempt-update";
-	if (status == FU_UEFI_UPDATE_INFO_STATUS_ATTEMPTED)
-		return "attempted";
-	return "unknown";
-}
-
 static gchar *
 fu_uefi_update_info_parse_dp(const guint8 *buf, gsize sz, GError **error)
 {

@@ -8,6 +8,8 @@
 
 #include <glib-object.h>
 
+#include "fu-ccgx-struct.h"
+
 /* metadata valid signature "CY" */
 #define CCGX_METADATA_VALID_SIG 0x4359
 
@@ -23,26 +25,7 @@ typedef struct __attribute__((packed)) {
 	guint32 boot_seq;	/* boot sequence number */
 } CCGxMetaData;
 
-/* firmware mode in device */
-typedef enum { FW_MODE_BOOT = 0, FW_MODE_FW1, FW_MODE_FW2, FW_MODE_LAST } FWMode;
-
-/* firmware image type */
-typedef enum {
-	FW_IMAGE_TYPE_UNKNOWN = 0,
-	FW_IMAGE_TYPE_SINGLE,
-	FW_IMAGE_TYPE_DUAL_SYMMETRIC,		/* A/B runtime */
-	FW_IMAGE_TYPE_DUAL_ASYMMETRIC,		/* A=bootloader (fixed), B=runtime */
-	FW_IMAGE_TYPE_DUAL_ASYMMETRIC_VARIABLE, /* A=bootloader (variable), B=runtime */
-	FW_IMAGE_TYPE_DMC_COMPOSITE,		/* composite firmware image for dmc */
-} FWImageType;
-
 gchar *
 fu_ccgx_version_to_string(guint32 val);
-const gchar *
-fu_ccgx_fw_mode_to_string(FWMode val);
-FWMode
-fu_ccgx_fw_mode_get_alternate(FWMode val);
-const gchar *
-fu_ccgx_fw_image_type_to_string(FWImageType val);
-FWImageType
-fu_ccgx_fw_image_type_from_string(const gchar *val);
+FuCcgxFwMode
+fu_ccgx_fw_mode_get_alternate(FuCcgxFwMode val);

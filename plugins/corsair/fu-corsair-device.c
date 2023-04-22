@@ -11,6 +11,7 @@
 #include "fu-corsair-bp.h"
 #include "fu-corsair-common.h"
 #include "fu-corsair-device.h"
+#include "fu-corsair-struct.h"
 
 #define CORSAIR_DEFAULT_VENDOR_INTERFACE_ID 1
 
@@ -427,7 +428,7 @@ fu_corsair_device_to_string(FuDevice *device, guint idt, GString *str)
 	fu_string_append(str,
 			 idt,
 			 "DeviceKind",
-			 fu_corsair_device_type_to_string(self->device_kind));
+			 fu_corsair_device_kind_to_string(self->device_kind));
 
 	fu_device_add_string(FU_DEVICE(self->bp), idt, str);
 }
@@ -449,8 +450,8 @@ fu_corsair_set_quirk_kv(FuDevice *device, const gchar *key, const gchar *value, 
 	guint64 vendor_interface;
 
 	if (g_strcmp0(key, "CorsairDeviceKind") == 0) {
-		self->device_kind = fu_corsair_device_type_from_string(value);
-		if (self->device_kind != FU_CORSAIR_DEVICE_UNKNOWN)
+		self->device_kind = fu_corsair_device_kind_from_string(value);
+		if (self->device_kind != FU_CORSAIR_DEVICE_KIND_UNKNOWN)
 			return TRUE;
 
 		g_set_error_literal(error,
@@ -541,7 +542,7 @@ fu_corsair_device_init(FuCorsairDevice *device)
 {
 	FuCorsairDevice *self = FU_CORSAIR_DEVICE(device);
 
-	self->device_kind = FU_CORSAIR_DEVICE_MOUSE;
+	self->device_kind = FU_CORSAIR_DEVICE_KIND_MOUSE;
 	self->vendor_interface = CORSAIR_DEFAULT_VENDOR_INTERFACE_ID;
 
 	fu_device_register_private_flag(FU_DEVICE(device),

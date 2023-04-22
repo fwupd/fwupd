@@ -21,6 +21,7 @@
 #include "fu-ifd-device.h"
 #include "fu-intel-spi-common.h"
 #include "fu-intel-spi-device.h"
+#include "fu-intel-spi-struct.h"
 #include "fu-pci-device.h"
 
 struct _FuIntelSpiDevice {

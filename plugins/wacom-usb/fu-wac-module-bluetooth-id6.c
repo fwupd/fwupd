@@ -12,6 +12,7 @@
 #include "fu-wac-common.h"
 #include "fu-wac-device.h"
 #include "fu-wac-module-bluetooth-id6.h"
+#include "fu-wac-struct.h"
 
 struct _FuWacModuleBluetoothId6 {
 	FuWacModule parent_instance;

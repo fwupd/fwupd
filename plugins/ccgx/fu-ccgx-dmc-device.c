@@ -20,7 +20,7 @@
 
 struct _FuCcgxDmcDevice {
 	FuUsbDevice parent_instance;
-	FWImageType fw_image_type;
+	FuCcgxImageType fw_image_type;
 	DmcDockIdentity dock_id;
 	DmcDockStatus dock_status;
 	guint8 ep_intr_in;
@@ -339,11 +339,11 @@ fu_ccgx_dmc_device_to_string(FuDevice *device, guint idt, GString *str)
 			 idt,
 			 "UpdateModel",
 			 fu_ccgx_dmc_update_model_type_to_string(self->update_model));
-	if (self->fw_image_type != FW_IMAGE_TYPE_UNKNOWN) {
+	if (self->fw_image_type != FU_CCGX_IMAGE_TYPE_UNKNOWN) {
 		fu_string_append(str,
 				 idt,
 				 "FwImageType",
-				 fu_ccgx_fw_image_type_to_string(self->fw_image_type));
+				 fu_ccgx_image_type_to_string(self->fw_image_type));
 	}
 	fu_string_append_kx(str, idt, "EpBulkOut", self->ep_bulk_out);
 	fu_string_append_kx(str, idt, "EpIntrIn", self->ep_intr_in);
@@ -754,8 +754,8 @@ fu_ccgx_dmc_device_set_quirk_kv(FuDevice *device,
 		return TRUE;
 	}
 	if (g_strcmp0(key, "CcgxImageKind") == 0) {
-		self->fw_image_type = fu_ccgx_fw_image_type_from_string(value);
-		if (self->fw_image_type != FW_IMAGE_TYPE_UNKNOWN)
+		self->fw_image_type = fu_ccgx_image_type_from_string(value);
+		if (self->fw_image_type != FU_CCGX_IMAGE_TYPE_UNKNOWN)
 			return TRUE;
 		g_set_error_literal(error,
 				    G_IO_ERROR,
@@ -783,7 +783,7 @@ fu_ccgx_dmc_device_init(FuCcgxDmcDevice *self)
 {
 	self->ep_intr_in = DMC_INTERRUPT_PIPE_ID;
 	self->ep_bulk_out = DMC_BULK_PIPE_ID;
-	self->fw_image_type = FW_IMAGE_TYPE_DMC_COMPOSITE;
+	self->fw_image_type = FU_CCGX_IMAGE_TYPE_DMC_COMPOSITE;
 	fu_device_add_protocol(FU_DEVICE(self), "com.cypress.ccgx.dmc");
 	fu_device_add_protocol(FU_DEVICE(self), "com.infineon.ccgx.dmc");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_QUAD);

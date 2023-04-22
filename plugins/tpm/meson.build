@@ -38,6 +38,7 @@ if get_option('tests')
   env.set('FWUPD_LOCALSTATEDIR', '/tmp/fwupd-self-test/var')
   e = executable(
     'tpm-self-test',
+    structgen.process('fu-tpm.struct'),
     sources: [
       'fu-self-test.c',
     ],
@@ -61,6 +62,7 @@ endif
 
 executable(
   'fwupdtpmevlog',
+  structgen.process('fu-tpm.struct'),
   sources: [
     'fu-tpm-eventlog.c',
   ],

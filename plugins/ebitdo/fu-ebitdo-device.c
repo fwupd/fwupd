@@ -13,6 +13,7 @@
 #include "fu-ebitdo-common.h"
 #include "fu-ebitdo-device.h"
 #include "fu-ebitdo-firmware.h"
+#include "fu-ebitdo-struct.h"
 
 struct _FuEbitdoDevice {
 	FuUsbDevice parent_instance;
