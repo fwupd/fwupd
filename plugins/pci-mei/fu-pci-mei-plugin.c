@@ -7,6 +7,7 @@
 #include "config.h"
 
 #include "fu-mei-common.h"
+#include "fu-mei-struct.h"
 #include "fu-pci-mei-plugin.h"
 
 struct _FuPciMeiPlugin {
@@ -148,7 +149,7 @@ fu_mei_parse_fwvers(FuPlugin *plugin, const gchar *fwvers, GError **error)
 	else if (self->family == FU_MEI_FAMILY_SPS)
 		self->issue = fu_mei_common_is_sps_vulnerable(&self->vers);
 	g_debug("%s version parsed as %u.%u.%u",
-		fu_mei_common_family_to_string(self->family),
+		fu_mei_family_to_string(self->family),
 		self->vers.major,
 		self->vers.minor,
 		self->vers.hotfix);
@@ -241,9 +242,7 @@ fu_plugin_add_security_attrs_manufacturing_mode(FuPlugin *plugin, FuSecurityAttr
 	}
 
 	/* Manufacturing Mode */
-	fwupd_security_attr_add_metadata(attr,
-					 "kind",
-					 fu_mei_common_family_to_string(self->family));
+	fwupd_security_attr_add_metadata(attr, "kind", fu_mei_family_to_string(self->family));
 	if (self->hfsts1.fields.mfg_mode) {
 		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_LOCKED);
 		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM);
@@ -272,10 +271,8 @@ fu_plugin_add_security_attrs_override_strap(FuPlugin *plugin, FuSecurityAttrs *a
 	}
 
 	/* Flash Descriptor Security Override Strap */
-	fwupd_security_attr_add_metadata(attr,
-					 "kind",
-					 fu_mei_common_family_to_string(self->family));
-	if (self->hfsts1.fields.operation_mode == ME_HFS_MODE_OVER_JMPR) {
+	fwupd_security_attr_add_metadata(attr, "kind", fu_mei_family_to_string(self->family));
+	if (self->hfsts1.fields.operation_mode == FU_ME_HFS_MODE_OVERRIDE_JUMPER) {
 		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_LOCKED);
 		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM);
 		return;
@@ -430,8 +427,9 @@ fu_plugin_add_security_attrs_bootguard_policy(FuPlugin *plugin, FuSecurityAttrs 
 
 	/* policy must be to immediately shutdown or after 30 mins -- the latter isn't ideal but
 	 * we've been testing for this accidentally for a long time now */
-	if (self->hfsts6.fields.error_enforce_policy != ME_HFS_ENFORCEMENT_POLICY_SHUTDOWN_NOW &&
-	    self->hfsts6.fields.error_enforce_policy != ME_HFS_ENFORCEMENT_POLICY_SHUTDOWN_30MINS) {
+	if (self->hfsts6.fields.error_enforce_policy != FU_ME_HFS_ENFORCEMENT_POLICY_SHUTDOWN_NOW &&
+	    self->hfsts6.fields.error_enforce_policy !=
+		FU_ME_HFS_ENFORCEMENT_POLICY_SHUTDOWN_30MINS) {
 		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
 		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM);
 		return;
@@ -521,9 +519,7 @@ fu_plugin_add_security_attrs_mei_version(FuPlugin *plugin, FuSecurityAttrs *attr
 		return;
 	}
 	fwupd_security_attr_add_metadata(attr, "version", version);
-	fwupd_security_attr_add_metadata(attr,
-					 "kind",
-					 fu_mei_common_family_to_string(self->family));
+	fwupd_security_attr_add_metadata(attr, "kind", fu_mei_family_to_string(self->family));
 
 	/* Flash Descriptor Security Override Strap */
 	if (self->issue == FU_MEI_ISSUE_VULNERABLE) {
