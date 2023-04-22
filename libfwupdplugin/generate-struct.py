@@ -12,12 +12,12 @@ import argparse
 from enum import Enum
 from typing import Optional, List, Tuple
 
-# This script builds source files that describe a structure.
+# This script builds source files that describe a structure or enumeration.
 #
 # This is a very smart structure that supports endian conversion, arrays, GUIDs, strings, default
 # and constant data of variable size.
 #
-# In most cases the smart structure will be defined in a `.struct` file:
+# In most cases the structure or enumeration will be defined in a `.struct` file:
 #
 #    struct UswidHdr {
 #        magic: guid
@@ -27,7 +27,15 @@ from typing import Optional, List, Tuple
 #        flags: u8
 #    }
 #
-# The types currently supported are:
+#    enum MeiFamily {
+#        Unknown
+#        Sps
+#        Txe
+#        Me
+#        Csme
+#    }
+#
+# The struct types currently supported are:
 #
 # - `u8`: a #guint8
 # - `u16`: a #guint16
@@ -67,8 +75,45 @@ class Type(Enum):
     GUID = "guid"
 
 
-class Item:
-    def __init__(self):
+# convert a CamelCase name into snake_case
+def _camel_to_snake(name: str) -> str:
+
+    # specified as all caps
+    if name.upper() == name:
+        return name.lower()
+
+    name_snake: str = ""
+    for char in name:
+        if char.islower() or char.isnumeric():
+            name_snake += char
+            continue
+        if char == "_":
+            name_snake += char
+            continue
+        if name_snake:
+            name_snake += "_"
+        name_snake += char.lower()
+    return name_snake
+
+
+class EnumItem:
+    def __init__(self) -> None:
+        self.name: str = ""
+        self.default: Optional[str] = None
+
+    def c_define(self, name: str) -> str:
+        name_snake = _camel_to_snake(name)
+        return "FU_{}_{}".format(
+            name_snake.upper(), _camel_to_snake(self.name).replace("-", "_").upper()
+        )
+
+    @property
+    def value(self) -> str:
+        return _camel_to_snake(self.name).replace("_", "-")
+
+
+class StructItem:
+    def __init__(self) -> None:
         self.element_id: str = ""
         self.type: Type = Type.U8
         self.default: Optional[str] = None
@@ -375,25 +420,49 @@ void {name_snake}_set_{self.element_id}(GByteArray *st, {self.type_glib} value);
         return tmp
 
 
-# convert a CamelCase name into snake_case
-def _camel_to_snake(name: str) -> str:
-
-    name_snake: str = ""
-    for char in name:
-        if char.islower() or char.isnumeric():
-            name_snake += char
-            continue
-        if name_snake:
-            name_snake += "_"
-        name_snake += char.lower()
-    return name_snake
-
-
 class Generator:
-    def __init__(self, basename):
+    def __init__(self, basename) -> None:
         self.basename: str = basename
 
-    def _process_items(self, name: str, items: List[Item]) -> Tuple[str, str]:
+    def _process_enums(self, name: str, items: List[EnumItem]) -> Tuple[str, str]:
+
+        name_snake = _camel_to_snake(name)
+
+        # header
+        str_h = ""
+        str_h += "\ntypedef enum {\n"
+        for item in items:
+            if item.default:
+                str_h += f"    {item.c_define(name)} = {item.default},\n"
+            else:
+                str_h += f"    {item.c_define(name)},\n"
+        str_h += f"}} Fu{name};\n"
+        str_h += f"const gchar *fu_{name_snake}_to_string(Fu{name} val);\n"
+        str_h += f"Fu{name} fu_{name_snake}_from_string(const gchar *val);\n"
+
+        # code
+        str_c = ""
+        str_c += "\nconst gchar *\n"
+        str_c += f"fu_{name_snake}_to_string(Fu{name} val)\n"
+        str_c += "{\n"
+        for item in items:
+            str_c += f"    if (val == {item.c_define(name)})\n"
+            str_c += f'        return "{item.value}";\n'
+        str_c += "    return NULL;\n"
+        str_c += "}\n"
+        str_c += f"\nFu{name}\n"
+        str_c += f"fu_{name_snake}_from_string(const gchar *val)\n"
+        str_c += "{\n"
+        for item in items:
+            str_c += f'    if (g_strcmp0(val, "{item.value}") == 0)\n'
+            str_c += f"        return {item.c_define(name)};\n"
+        str_c += f"    return {items[0].c_define(name)};\n"
+        str_c += "}\n"
+
+        # success
+        return str_c, str_h
+
+    def _process_structs(self, name: str, items: List[StructItem]) -> Tuple[str, str]:
 
         # useful constants
         name_snake = f"fu_struct_{_camel_to_snake(name)}"
@@ -583,7 +652,8 @@ gboolean
 
     def process_input(self, contents: str) -> Tuple[str, str]:
         name = None
-        items: List[Item] = []
+        enum_items: List[EnumItem] = []
+        struct_items: List[StructItem] = []
         offset: int = 0
 
         # header
@@ -607,6 +677,7 @@ gboolean
 #define G_LOG_DOMAIN "FuStruct"
 """
 
+        mode: Optional[str] = None
         for line in contents.split("\n"):
 
             # remove comments and indent
@@ -616,53 +687,73 @@ gboolean
 
             # start of structure
             if line.startswith("struct ") and line.endswith("{"):
+                mode = "struct"
                 name = line[6:-1].strip()
                 continue
+            if line.startswith("enum ") and line.endswith("{"):
+                mode = "enum"
+                name = line[4:-1].strip()
+                continue
 
-            # not in the structure
-            if not name:
+            # not in object
+            if not mode:
                 continue
 
             # end of structure
             if line.startswith("}"):
-                for item in items:
-                    if item.default == "$struct_size":
-                        item.default = str(offset)
-                    if item.constant == "$struct_size":
-                        item.constant = str(offset)
-                str_c, str_h = self._process_items(name, items)
+                if name and struct_items:
+                    for item in struct_items:
+                        if item.default == "$struct_size":
+                            item.default = str(offset)
+                        if item.constant == "$struct_size":
+                            item.constant = str(offset)
+                    str_c, str_h = self._process_structs(name, struct_items)
+                if name and enum_items:
+                    str_c, str_h = self._process_enums(name, enum_items)
                 dst_c += str_c
                 dst_h += str_h
+                mode = None
                 name = None
-                items = []
+                struct_items = []
+                enum_items = []
                 offset = 0
                 continue
 
-            # split into sections
-            parts = line.replace(" ", "").split(":", maxsplit=3)
-            if len(parts) == 1:
-                raise ValueError(f"invalid struct line: {line}")
+            # split enumeration into sections
+            if mode == "enum":
+                enum_item = EnumItem()
+                parts = line.replace(" ", "").replace(",", "").split("=", maxsplit=2)
+                enum_item.name = parts[0]
+                if len(parts) > 1:
+                    enum_item.default = parts[1]
+                enum_items.append(enum_item)
 
-            # parse one element
-            item = Item()
-            item.offset = offset
-            item.element_id = parts[0]
-            item.parse_type(parts[1])
-            for part in parts[2:]:
-                try:
-                    key, value = tuple(part.split("=", maxsplit=1))
-                except ValueError as e:
-                    raise ValueError(f"invalid struct line: {line}") from e
-                if key == "const":
-                    item.parse_constant(value)
-                elif key == "default":
-                    item.parse_default(value)
-                elif key == "padding":
-                    item.parse_padding(value)
-                else:
+            # split structure into sections
+            if mode == "struct":
+                parts = line.replace(" ", "").split(":", maxsplit=3)
+                if len(parts) == 1:
                     raise ValueError(f"invalid struct line: {line}")
-            offset += item.size
-            items.append(item)
+
+                # parse one element
+                item = StructItem()
+                item.offset = offset
+                item.element_id = parts[0]
+                item.parse_type(parts[1])
+                for part in parts[2:]:
+                    try:
+                        key, value = tuple(part.split("=", maxsplit=1))
+                    except ValueError as e:
+                        raise ValueError(f"invalid struct line: {line}") from e
+                    if key == "const":
+                        item.parse_constant(value)
+                    elif key == "default":
+                        item.parse_default(value)
+                    elif key == "padding":
+                        item.parse_padding(value)
+                    else:
+                        raise ValueError(f"invalid struct line: {line}")
+                offset += item.size
+                struct_items.append(item)
 
         # success
         return dst_c, dst_h
