@@ -27,6 +27,7 @@
 #include "fu-dfu-common.h"
 #include "fu-dfu-device.h"
 #include "fu-dfu-sector.h"
+#include "fu-dfu-struct.h"
 #include "fu-dfu-target-private.h" /* waive-pre-commit */
 
 #define DFU_TARGET_MANIFEST_MAX_POLLING_TRIES 200

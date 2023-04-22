@@ -11,6 +11,7 @@
 #include <gusb.h>
 
 #include "fu-dfu-common.h"
+#include "fu-dfu-struct.h"
 #include "fu-dfu-target.h"
 
 #define FU_TYPE_DFU_DEVICE (fu_dfu_device_get_type())
