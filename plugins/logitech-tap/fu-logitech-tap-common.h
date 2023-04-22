@@ -31,4 +31,3 @@
 
 gboolean
 fu_logitech_tap_sensor_device_reboot_device(FuDevice *device, GError **error);
-
