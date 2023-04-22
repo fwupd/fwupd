@@ -7,20 +7,7 @@
 #include "config.h"
 
 #include "fu-mei-common.h"
-
-const gchar *
-fu_mei_common_family_to_string(FuMeiFamily family)
-{
-	if (family == FU_MEI_FAMILY_SPS)
-		return "SPS";
-	if (family == FU_MEI_FAMILY_TXE)
-		return "TXE";
-	if (family == FU_MEI_FAMILY_ME)
-		return "ME";
-	if (family == FU_MEI_FAMILY_CSME)
-		return "CSME";
-	return "AMT";
-}
+#include "fu-mei-struct.h"
 
 static gint
 fu_mei_common_cmp_version(FuMeiVersion *vers1, FuMeiVersion *vers2)
@@ -160,64 +147,30 @@ fu_mei_common_is_sps_vulnerable(FuMeiVersion *vers)
 	return FU_MEI_ISSUE_PATCHED;
 }
 
-/* HFS1[3:0] Current Working State Values */
-static const char *me_cws_values[] = {
-    [ME_HFS_CWS_RESET] = "reset",
-    [ME_HFS_CWS_INIT] = "initializing",
-    [ME_HFS_CWS_REC] = "recovery",
-    [ME_HFS_CWS_TEST] = "test",
-    [ME_HFS_CWS_DISABLED] = "disabled",
-    [ME_HFS_CWS_NORMAL] = "normal",
-    [ME_HFS_CWS_WAIT] = "wait",
-    [ME_HFS_CWS_TRANS] = "transition",
-    [ME_HFS_CWS_INVALID] = "invalid",
-};
-
-/* HFS1[8:6] Current Operation State Values */
-static const char *me_opstate_values[] = {
-    [ME_HFS_STATE_PREBOOT] = "preboot",
-    [ME_HFS_STATE_M0_UMA] = "m0-with-uma",
-    [ME_HFS_STATE_M3] = "m3-without-uma",
-    [ME_HFS_STATE_M0] = "m0-without-uma",
-    [ME_HFS_STATE_BRINGUP] = "bring-up",
-    [ME_HFS_STATE_ERROR] = "error",
-};
-
-/* HFS[19:16] Current Operation Mode Values */
-static const char *me_opmode_values[] = {
-    [ME_HFS_MODE_NORMAL] = "normal",
-    [ME_HFS_MODE_DEBUG] = "debug",
-    [ME_HFS_MODE_DIS] = "disable",
-    [ME_HFS_MODE_OVER_JMPR] = "override-jumper",
-    [ME_HFS_MODE_OVER_MEI] = "override-mei",
-    [ME_HFS_MODE_UNKNOWN_6] = "unknown-6",
-    [ME_HFS_MODE_MAYBE_SPS] = "maybe-sps",
-};
-
-/* HFS[15:12] Error Code Values */
-static const char *me_error_values[] = {
-    [ME_HFS_ERROR_NONE] = "no-error",
-    [ME_HFS_ERROR_UNCAT] = "uncategorized-failure",
-    [ME_HFS_ERROR_DISABLED] = "disabled",
-    [ME_HFS_ERROR_IMAGE] = "image-failure",
-    [ME_HFS_ERROR_DEBUG] = "debug-failure",
-};
-
 void
 fu_mei_hfsts1_to_string(FuMeiHfsts1 hfsts1, guint idt, GString *str)
 {
-	fu_string_append(str, idt, "WorkingState", me_cws_values[hfsts1.fields.working_state]);
+	fu_string_append(str,
+			 idt,
+			 "WorkingState",
+			 fu_me_hfs_cws_to_string(hfsts1.fields.working_state));
 	fu_string_append_kb(str, idt, "MfgMode", hfsts1.fields.mfg_mode);
 	fu_string_append_kb(str, idt, "FptBad", hfsts1.fields.fpt_bad);
 	fu_string_append(str,
 			 idt,
 			 "OperationState",
-			 me_opstate_values[hfsts1.fields.operation_state]);
+			 fu_me_hfs_state_to_string(hfsts1.fields.operation_state));
 	fu_string_append_kb(str, idt, "FwInitComplete", hfsts1.fields.fw_init_complete);
 	fu_string_append_kb(str, idt, "FtBupLdFlr", hfsts1.fields.ft_bup_ld_flr);
 	fu_string_append_kb(str, idt, "UpdateInProgress", hfsts1.fields.update_in_progress);
-	fu_string_append(str, idt, "ErrorCode", me_error_values[hfsts1.fields.error_code]);
-	fu_string_append(str, idt, "OperationMode", me_opmode_values[hfsts1.fields.operation_mode]);
+	fu_string_append(str,
+			 idt,
+			 "ErrorCode",
+			 fu_me_hfs_error_to_string(hfsts1.fields.error_code));
+	fu_string_append(str,
+			 idt,
+			 "OperationMode",
+			 fu_me_hfs_mode_to_string(hfsts1.fields.operation_mode));
 	fu_string_append_kx(str, idt, "ResetCount", hfsts1.fields.reset_count);
 	fu_string_append_kb(str, idt, "BootOptions_present", hfsts1.fields.boot_options_present);
 	fu_string_append_kb(str, idt, "BistFinished", hfsts1.fields.bist_finished);
