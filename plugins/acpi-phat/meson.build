@@ -2,8 +2,8 @@ if get_option('plugin_acpi_phat').disable_auto_if(host_machine.system() != 'linu
 cargs = ['-DG_LOG_DOMAIN="FuPluginAcpiPhat"']
 
 plugin_builtin_acpi_phat = static_library('fu_plugin_acpi_phat',
-  structgen.process(
-    'fu-acpi-phat.struct',            # fuzzing
+  rustgen.process(
+    'fu-acpi-phat.rs',            # fuzzing
   ),
   sources: [
     'fu-acpi-phat-plugin.c',

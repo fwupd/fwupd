@@ -3,7 +3,7 @@ cargs = ['-DG_LOG_DOMAIN="FuPluginCorsair"']
 
 plugin_quirks += join_paths(meson.current_source_dir(), 'corsair.quirk')
 plugin_builtins += static_library('fu_plugin_corsair',
-  structgen.process('fu-corsair.struct'),
+  rustgen.process('fu-corsair.rs'),
   sources: [
     'fu-corsair-plugin.c',
     'fu-corsair-common.c',

@@ -3,7 +3,7 @@ cargs = ['-DG_LOG_DOMAIN="FuPluginAnalogix"']
 
 plugin_quirks += files('analogix.quirk')
 plugin_builtins += static_library('fu_plugin_analogix',
-  structgen.process('fu-analogix.struct'),
+  rustgen.process('fu-analogix.rs'),
   sources: [
     'fu-analogix-plugin.c',
     'fu-analogix-device.c',

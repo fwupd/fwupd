@@ -29,7 +29,7 @@ else
 endif
 
 plugin_builtin_uefi_capsule = static_library('fu_plugin_uefi_capsule',
-  structgen.process('fu-uefi.struct'),
+  rustgen.process('fu-uefi.rs'),
   sources: [
     'fu-uefi-capsule-plugin.c',
     'fu-uefi-bgrt.c',
@@ -58,7 +58,7 @@ plugin_builtins += plugin_builtin_uefi_capsule
 if get_option('compat_cli')
 fwupdate = executable(
   'fwupdate',
-  structgen.process('fu-uefi.struct'),
+  rustgen.process('fu-uefi.rs'),
   sources: [
     'fu-uefi-tool.c',
   ],
@@ -130,7 +130,7 @@ if get_option('tests')
   env.set('FWUPD_LOCALSTATEDIR', '/tmp/fwupd-self-test/var')
   e = executable(
     'uefi-self-test',
-    structgen.process('fu-uefi.struct'),
+    rustgen.process('fu-uefi.rs'),
     sources: [
       'fu-self-test.c',
     ],

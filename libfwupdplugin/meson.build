@@ -8,18 +8,18 @@ fwupdplugin_version_h = configure_file(
   configuration: conf
 )
 
-fwupdplugin_structs = structgen.process(
-  'fu-acpi-table.struct',   # fuzzing
-  'fu-cfu.struct',          # fuzzing
-  'fu-dfu.struct',          # fuzzing
-  'fu-efi.struct',          # fuzzing
-  'fu-fdt.struct',          # fuzzing
-  'fu-fmap.struct',         # fuzzing
-  'fu-ifwi.struct',         # fuzzing
-  'fu-oprom.struct',        # fuzzing
-  'fu-smbios.struct',       # fuzzing
-  'fu-usb-device-ds20.struct', # fuzzing
-  'fu-uswid.struct',        # fuzzing
+fwupdplugin_structs = rustgen.process(
+  'fu-acpi-table.rs',   # fuzzing
+  'fu-cfu.rs',          # fuzzing
+  'fu-dfu.rs',          # fuzzing
+  'fu-efi.rs',          # fuzzing
+  'fu-fdt.rs',          # fuzzing
+  'fu-fmap.rs',         # fuzzing
+  'fu-ifwi.rs',         # fuzzing
+  'fu-oprom.rs',        # fuzzing
+  'fu-smbios.rs',       # fuzzing
+  'fu-usb-device-ds20.rs', # fuzzing
+  'fu-uswid.rs',        # fuzzing
 )
 
 fwupdplugin_src = [
@@ -370,7 +370,7 @@ if get_option('tests')
   e = executable(
     'fwupdplugin-self-test',
     installed_firmware_zip,
-    structgen.process('fu-self-test.struct'),
+    rustgen.process('fu-self-test.rs'),
     sources: [
       'fu-self-test.c'
     ],

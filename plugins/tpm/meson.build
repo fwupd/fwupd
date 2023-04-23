@@ -9,7 +9,7 @@ cargs = ['-DG_LOG_DOMAIN="FuPluginTpm"']
 plugin_quirks += files('tpm.quirk')
 
 plugin_builtin_tpm = static_library('fu_plugin_tpm',
-  structgen.process('fu-tpm.struct'),
+  rustgen.process('fu-tpm.rs'),
   sources: [
     'fu-tpm-plugin.c',
     'fu-tpm-device.c',
@@ -38,7 +38,7 @@ if get_option('tests')
   env.set('FWUPD_LOCALSTATEDIR', '/tmp/fwupd-self-test/var')
   e = executable(
     'tpm-self-test',
-    structgen.process('fu-tpm.struct'),
+    rustgen.process('fu-tpm.rs'),
     sources: [
       'fu-self-test.c',
     ],
@@ -62,7 +62,7 @@ endif
 
 executable(
   'fwupdtpmevlog',
-  structgen.process('fu-tpm.struct'),
+  rustgen.process('fu-tpm.rs'),
   sources: [
     'fu-tpm-eventlog.c',
   ],

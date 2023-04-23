@@ -4,7 +4,7 @@ cargs = ['-DG_LOG_DOMAIN="FuPluginScsi"']
 
 plugin_quirks += files('scsi.quirk')
 plugin_builtins += static_library('fu_plugin_scsi',
-  structgen.process('fu-scsi.struct'),
+  rustgen.process('fu-scsi.rs'),
   sources: [
     'fu-scsi-plugin.c',
     'fu-scsi-device.c',

@@ -10,7 +10,7 @@ plugin_quirks += files([
   'vli-samsung.quirk',
   ])
 plugin_builtins += static_library('fu_plugin_vli',
-  structgen.process('fu-vli.struct'),
+  rustgen.process('fu-vli.rs'),
   sources: [
     'fu-vli-plugin.c',
     'fu-vli-common.c',
