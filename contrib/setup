@@ -115,6 +115,11 @@ check_markdown()
     python3 $HELPER test-markdown
 }
 
+check_jinja2()
+{
+    python3 $HELPER test-jinja2
+}
+
 check_meson()
 {
     python3 $HELPER test-meson
@@ -173,6 +178,7 @@ if [ -t 2 ]; then
     rename_branch
 fi
 check_markdown
+check_jinja2
 setup_vscode
 setup_git
 check_meson

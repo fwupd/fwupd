@@ -1,0 +1,19 @@
+const gchar *
+{{name_snake}}_to_string({{name}} val)
+{
+{%- for item in items %}
+    if (val == {{item.c_define(name)}})
+        return "{{item.value}}";
+{%- endfor %}
+    return NULL;
+}
+
+{{name}}
+{{name_snake}}_from_string(const gchar *val)
+{
+{%- for item in items %}
+    if (g_strcmp0(val, "{{item.value}}") == 0)
+        return {{item.c_define(name)}};
+{%- endfor %}
+    return {{items[0].c_define(name)}};
+}

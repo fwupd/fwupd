@@ -559,6 +559,13 @@ if build_docs and gidocgen_dep.version().version_compare('< 2022.2')
   ).allowed()
 endif
 
+jinja2 = run_command(
+  [python3, '-c', 'import jinja2; print(jinja2.__version__)'],
+)
+if jinja2.stderr().strip() != ''
+  error('Python module jinja2 not found')
+endif
+
 # using "meson configure -Db_sanitize=address,undefined" is super useful in finding corruption,
 # but it does not work with our GMainContext-abuse tests...
 if get_option('b_sanitize') in ['address,undefined', 'address', 'undefined', 'leak']
@@ -568,10 +575,14 @@ else
 endif
 
 # take foo.rs and generate foo-struct.c and foo-struct.h files like protobuf_c
-rustgenpy = find_program(join_paths(meson.project_source_root(), 'libfwupdplugin', 'rustgen.py'))
-rustgen = generator(rustgenpy,
+rustgen = generator(python3,
   output  : ['@BASENAME@-struct.c', '@BASENAME@-struct.h'],
-  arguments : ['@INPUT@', '@OUTPUT0@', '@OUTPUT1@'],
+  arguments : [
+    join_paths(meson.project_source_root(), 'libfwupdplugin', 'rustgen.py'),
+    '@INPUT@',
+    '@OUTPUT0@',
+    '@OUTPUT1@',
+  ],
 )
 
 subdir('libfwupd')

@@ -1,0 +1,12 @@
+/* auto-generated, do not modify */
+#include "config.h"
+
+#include "{{basename}}"
+#include "fu-byte-array.h"
+#include "fu-mem-private.h"
+#include "fu-string.h"
+
+#ifdef G_LOG_DOMAIN
+  #undef G_LOG_DOMAIN
+#endif
+#define G_LOG_DOMAIN "FuStruct"

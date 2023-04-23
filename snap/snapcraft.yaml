@@ -163,6 +163,7 @@ parts:
       - pkg-config
       - python3-cairo
       - python3-gi
+      - python3-jinja2
       - protobuf-c-compiler
       - shim-signed
       - systemd
