@@ -1294,6 +1294,15 @@
       <package variant="x86_64"></package>
     </distro>
   </dependency>
+  <dependency id="python3-jinja2">
+    <distro id="fedora">
+      <package variant="x86_64" />
+      <package variant="mingw64" />
+    </distro>
+    <distro id="ubuntu">
+      <package variant="x86_64" />
+    </distro>
+  </dependency>
   <dependency id="gi-docgen">
     <distro id="void">
       <package variant="x86_64" />

@@ -39,7 +39,9 @@ jobs:
     runs-on: macos-12
     steps:
     - name: install dependencies
-      run: brew install meson gcab libusb gobject-introspection sqlite libarchive json-glib curl gnutls protobuf-c vala
+      run: |
+        brew install meson gcab libusb gobject-introspection sqlite libarchive json-glib curl gnutls protobuf-c vala
+        python3 -m pip install --user jinja2
     - uses: actions/checkout@v3
     - name: configure
       run: ./contrib/ci/build_macos.sh

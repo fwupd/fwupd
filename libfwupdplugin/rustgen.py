@@ -12,10 +12,12 @@ import argparse
 from enum import Enum
 from typing import Optional, List, Tuple
 
+from jinja2 import Environment, FileSystemLoader, select_autoescape
+
 # This script builds source files that describe a structure or enumeration.
 #
-# This is a very smart structure that supports endian conversion, arrays, GUIDs, strings, default
-# and constant data of variable size.
+# Structures supports endian conversion, arrays, GUIDs, strings, default and
+# constant data of variable size.
 #
 # In most cases the structure or enumeration will be defined in a `.rs` file:
 #
@@ -103,7 +105,7 @@ class EnumItem:
 
     def c_define(self, name: str) -> str:
         name_snake = _camel_to_snake(name)
-        return "FU_{}_{}".format(
+        return "{}_{}".format(
             name_snake.upper(), _camel_to_snake(self.name).replace("-", "_").upper()
         )
 
@@ -160,15 +162,15 @@ class StructItem:
     def type_glib(self) -> str:
         if self.type == Type.U8:
             return "guint8"
-        elif self.type == Type.U16:
+        if self.type == Type.U16:
             return "guint16"
-        elif self.type == Type.U24:
+        if self.type == Type.U24:
             return "guint32"
-        elif self.type == Type.U32:
+        if self.type == Type.U32:
             return "guint32"
-        elif self.type == Type.U64:
+        if self.type == Type.U64:
             return "guint64"
-        elif self.type == Type.STRING:
+        if self.type == Type.STRING:
             return "gchar"
         if self.type == Type.GUID:
             return "fwupd_guid_t"
@@ -178,161 +180,12 @@ class StructItem:
     def type_mem(self) -> str:
         if self.type == Type.U16:
             return "uint16"
-        elif self.type == Type.U24:
+        if self.type == Type.U24:
             return "uint24"
-        elif self.type == Type.U32:
+        if self.type == Type.U32:
             return "uint32"
-        elif self.type == Type.U64:
+        if self.type == Type.U64:
             return "uint64"
-        return ""
-
-    def generate_h_glib(self, name_snake: str) -> str:
-
-        # constants do not need getters and setters as they're, well, constant
-        if self.constant:
-            return ""
-
-        # string
-        if self.type == Type.STRING:
-            return f"""
-gchar *{name_snake}_get_{self.element_id}(GByteArray *st);
-gboolean {name_snake}_set_{self.element_id}(GByteArray *st, const gchar *value, GError **error);
-"""
-
-        # data blob
-        if self.type == Type.U8 and self.multiplier:
-            return f"""
-const guint8 *{name_snake}_get_{self.element_id}(GByteArray *st, gsize *bufsz);
-gboolean {name_snake}_set_{self.element_id}(GByteArray *st, const guint8 *buf, gsize bufsz, GError **error);
-"""
-
-        # GUID
-        if self.type == Type.GUID:
-            return f"""
-const fwupd_guid_t *{name_snake}_get_{self.element_id}(GByteArray *st);
-void {name_snake}_set_{self.element_id}(GByteArray *st, const fwupd_guid_t *value);
-"""
-
-        # uint
-        if not self.multiplier and self.type in [
-            Type.U8,
-            Type.U16,
-            Type.U24,
-            Type.U32,
-            Type.U64,
-        ]:
-            return f"""
-{self.type_glib} {name_snake}_get_{self.element_id}(GByteArray *st);
-void {name_snake}_set_{self.element_id}(GByteArray *st, {self.type_glib} value);
-"""
-
-        # fallback
-        return ""
-
-    def generate_c_glib(self, name_snake: str) -> str:
-
-        # string
-        if self.type == Type.STRING:
-            return f"""
-{"G_GNUC_UNUSED static " if self.constant else ""}gchar *
-{name_snake}_get_{self.element_id}(GByteArray *st)
-{{
-    g_return_val_if_fail(st != NULL, NULL);
-    return fu_strsafe((const gchar *) (st->data + {self.offset}), {self.size});
-}}
-{"static " if self.constant else ""}gboolean
-{name_snake}_set_{self.element_id}(GByteArray *st, const gchar *value, GError **error)
-{{
-    gsize len;
-    g_return_val_if_fail(st != NULL, FALSE);
-    g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
-    if (value == NULL) {{
-        memset(st->data + {self.offset}, 0x0, {self.size});
-        return TRUE;
-    }}
-    len = strlen(value);
-    return fu_memcpy_safe(st->data, st->len, {self.offset}, (const guint8 *)value, len, 0x0, len, error);
-}}
-"""
-
-        # data blob
-        if self.type == Type.U8 and self.multiplier:
-            return f"""
-{"static " if self.constant else ""}const guint8 *
-{name_snake}_get_{self.element_id}(GByteArray *st, gsize *bufsz)
-{{
-    g_return_val_if_fail(st != NULL, NULL);
-    if (bufsz != NULL)
-        *bufsz = {self.size};
-    return st->data + {self.offset};
-}}
-{"static " if self.constant else ""}gboolean
-{name_snake}_set_{self.element_id}(GByteArray *st, const guint8 *buf, gsize bufsz, GError **error)
-{{
-    g_return_val_if_fail(st != NULL, FALSE);
-    g_return_val_if_fail(buf != NULL, FALSE);
-    g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
-    return fu_memcpy_safe(st->data, st->len, {self.offset}, buf, bufsz, 0x0, bufsz, error);
-}}
-"""
-
-        # GUID
-        if self.type == Type.GUID:
-            return f"""
-{"static " if self.constant else ""}const fwupd_guid_t *
-{name_snake}_get_{self.element_id}(GByteArray *st)
-{{
-    g_return_val_if_fail(st != NULL, NULL);
-    return (const fwupd_guid_t *) (st->data + {self.offset});
-}}
-{"static " if self.constant else ""}void
-{name_snake}_set_{self.element_id}(GByteArray *st, const fwupd_guid_t *value)
-{{
-    g_return_if_fail(st != NULL);
-    g_return_if_fail(value != NULL);
-    memcpy(st->data + {self.offset}, value, sizeof(*value));
-}}
-"""
-
-        # U8
-        if self.type == Type.U8:
-            return f"""
-{"static " if self.constant else ""}guint8
-{name_snake}_get_{self.element_id}(GByteArray *st)
-{{
-    g_return_val_if_fail(st != NULL, 0x0);
-    return st->data[{self.offset}];
-}}
-{"static " if self.constant else ""}void
-{name_snake}_set_{self.element_id}(GByteArray *st, guint8 value)
-{{
-    g_return_if_fail(st != NULL);
-    st->data[{self.offset}] = value;
-}}
-"""
-        # uint
-        if not self.multiplier and self.type in [
-            Type.U16,
-            Type.U24,
-            Type.U32,
-            Type.U64,
-        ]:
-            return f"""
-{"static " if self.constant else ""}{self.type_glib}
-{name_snake}_get_{self.element_id}(GByteArray *st)
-{{
-    g_return_val_if_fail(st != NULL, 0x0);
-    return fu_memread_{self.type_mem}(st->data + {self.offset}, {self.endian_glib});
-}}
-{"static " if self.constant else ""}void
-{name_snake}_set_{self.element_id}(GByteArray *st, {self.type_glib} value)
-{{
-    g_return_if_fail(st != NULL);
-    fu_memwrite_{self.type_mem}(st->data + {self.offset}, value, {self.endian_glib});
-}}
-"""
-
-        # fallback
         return ""
 
     def _parse_default(self, val: str) -> str:
@@ -368,7 +221,7 @@ void {name_snake}_set_{self.element_id}(GByteArray *st, {self.type_glib} value);
             if not val.startswith("0x"):
                 raise ValueError(f"0x prefix for hex number expected, got: {val}")
             if len(val) != 4:
-                raise ValueError(f"data has to be one byte only")
+                raise ValueError("data has to be one byte only")
             self.padding = val
             return
         raise ValueError(f"do not know how to parse value for type: {self.type}")
@@ -423,49 +276,28 @@ void {name_snake}_set_{self.element_id}(GByteArray *st, {self.type_glib} value);
 class Generator:
     def __init__(self, basename) -> None:
         self.basename: str = basename
+        self._env = Environment(
+            loader=FileSystemLoader(os.path.dirname(__file__)),
+            autoescape=select_autoescape(),
+            keep_trailing_newline=True,
+        )
 
     def _process_enums(self, name: str, items: List[EnumItem]) -> Tuple[str, str]:
 
-        name_snake = _camel_to_snake(name)
-
-        # header
-        str_h = ""
-        str_h += "\ntypedef enum {\n"
-        for item in items:
-            if item.default:
-                str_h += f"    {item.c_define(name)} = {item.default},\n"
-            else:
-                str_h += f"    {item.c_define(name)},\n"
-        str_h += f"}} Fu{name};\n"
-        str_h += f"const gchar *fu_{name_snake}_to_string(Fu{name} val);\n"
-        str_h += f"Fu{name} fu_{name_snake}_from_string(const gchar *val);\n"
-
-        # code
-        str_c = ""
-        str_c += "\nconst gchar *\n"
-        str_c += f"fu_{name_snake}_to_string(Fu{name} val)\n"
-        str_c += "{\n"
-        for item in items:
-            str_c += f"    if (val == {item.c_define(name)})\n"
-            str_c += f'        return "{item.value}";\n'
-        str_c += "    return NULL;\n"
-        str_c += "}\n"
-        str_c += f"\nFu{name}\n"
-        str_c += f"fu_{name_snake}_from_string(const gchar *val)\n"
-        str_c += "{\n"
-        for item in items:
-            str_c += f'    if (g_strcmp0(val, "{item.value}") == 0)\n'
-            str_c += f"        return {item.c_define(name)};\n"
-        str_c += f"    return {items[0].c_define(name)};\n"
-        str_c += "}\n"
-
-        # success
-        return str_c, str_h
+        # render
+        subst = {
+            "Type": Type,
+            "name": f"Fu{name}",
+            "name_snake": f"fu_{_camel_to_snake(name)}",
+            "items": items,
+        }
+        template_h = self._env.get_template(os.path.basename("fu-rustgen-enum.h.in"))
+        template_c = self._env.get_template(os.path.basename("fu-rustgen-enum.c.in"))
+        return template_c.render(subst), template_h.render(subst)
 
     def _process_structs(self, name: str, items: List[StructItem]) -> Tuple[str, str]:
 
         # useful constants
-        name_snake = f"fu_struct_{_camel_to_snake(name)}"
         size: int = 0
         for item in items:
             size += item.size
@@ -475,180 +307,18 @@ class Generator:
                 has_constant = True
                 break
 
-        # header
-        str_h = ""
-        str_h += f"GByteArray* {name_snake}_new(void);\n"
-        str_h += f"GByteArray* {name_snake}_parse(const guint8 *buf, gsize bufsz, gsize offset, GError **error);\n"
-        str_h += f"gboolean {name_snake}_validate(const guint8 *buf, gsize bufsz, gsize offset, GError **error);\n"
-        str_h += f"gchar *{name_snake}_to_string(GByteArray *st);\n"
-        for item in items:
-            if not item.enabled:
-                continue
-            str_h += item.generate_h_glib(name_snake)
-        for item in items:
-            if not item.enabled:
-                continue
-            str_h += f"#define {name_snake.upper()}_OFFSET_{item.element_id.upper()} 0x{item.offset:x}\n"
-            if item.multiplier:
-                str_h += f"#define {name_snake.upper()}_SIZE_{item.element_id.upper()} 0x{item.size:x}\n"
-        str_h += f"#define {name_snake.upper()}_SIZE 0x{size:x}\n"
-        for item in items:
-            if not item.enabled:
-                continue
-            if item.default and not item.constant:
-                if item.type == Type.STRING:
-                    str_h += f'#define {name_snake.upper()}_DEFAULT_{item.element_id.upper()} "{item.default}"\n"'
-                else:
-                    str_h += f"#define {name_snake.upper()}_DEFAULT_{item.element_id.upper()} {item.default}\n"
-        # print(str_h)
-
-        # code
-        str_c = ""
-        for item in items:
-            if not item.enabled:
-                continue
-            str_c += item.generate_c_glib(name_snake)
-
-        # _new()
-        str_c += f"GByteArray *\n"
-        str_c += f"{name_snake}_new(void)\n"
-        str_c += f"{{\n"
-        str_c += f"    GByteArray *st = g_byte_array_new();\n"
-        str_c += f"    fu_byte_array_set_size(st, {size}, 0x0);\n"
-        for item in items:
-            if not item.padding:
-                continue
-            str_c += (
-                f"    memset(st->data + {item.offset}, {item.padding}, {item.size});\n"
-            )
-        for item in items:
-            if not item.default:
-                continue
-            if item.type == Type.STRING:
-                str_c += f'    {name_snake}_set_{item.element_id}(st, "{item.default}", NULL);\n'
-            elif item.type == Type.GUID:
-                str_c += f'    {name_snake}_set_{item.element_id}(st, (fwupd_guid_t *) "{item.default}");\n'
-            else:
-                str_c += (
-                    f"    {name_snake}_set_{item.element_id}(st, {item.default});\n"
-                )
-        str_c += f"    return st;\n"
-        str_c += f"}}\n"
-
-        # _to_string()
-        str_c += "gchar *\n"
-        str_c += f"{name_snake}_to_string(GByteArray *st)\n"
-        str_c += "{\n"
-        str_c += f'    g_autoptr(GString) str = g_string_new("{name}:\\n");\n'
-        str_c += "    g_return_val_if_fail(st != NULL, NULL);\n"
-        for item in items:
-            if not item.enabled:
-                continue
-            if not item.multiplier and item.type in [
-                Type.U8,
-                Type.U16,
-                Type.U24,
-                Type.U32,
-                Type.U64,
-            ]:
-                str_c += f'    g_string_append_printf(str, "  {item.element_id}: 0x%x\\n", (guint) {name_snake}_get_{item.element_id}(st));\n'
-            elif item.type == Type.GUID:
-                str_c += f"""    {{
-        g_autofree gchar *tmp = fwupd_guid_to_string({name_snake}_get_{item.element_id}(st), FWUPD_GUID_FLAG_MIXED_ENDIAN);
-        g_string_append_printf(str, "  {item.element_id}: %s\\n", tmp);
-    }}
-"""
-            elif item.type == Type.STRING:
-                str_c += f"""    {{
-        g_autofree gchar *tmp = {name_snake}_get_{item.element_id}(st);
-        g_string_append_printf(str, "  {item.element_id}: %s\\n", tmp);
-    }}
-"""
-            else:
-                str_c += f"""    {{
-        g_autoptr(GString) tmp = g_string_new(NULL);
-        gsize bufsz = 0;
-        const guint8 *buf = {name_snake}_get_{item.element_id}(st, &bufsz);
-        for (gsize i = 0; i < bufsz; i++)
-            g_string_append_printf(tmp, "%02X", buf[i]);
-        g_string_append_printf(str, "  {item.element_id}: 0x%s\\n", tmp->str);
-    }}
-"""
-        str_c += "    if (str->len > 0)\n"
-        str_c += "        g_string_set_size(str, str->len - 1);\n"
-        str_c += "    return g_string_free(g_steal_pointer(&str), FALSE);\n"
-        str_c += "}\n"
-
-        # _parse()
-        str_c += f"""
-GByteArray *
-{name_snake}_parse(const guint8 *buf, gsize bufsz, gsize offset, GError **error)
-{{
-    g_autoptr(GByteArray) st = g_byte_array_new();
-    g_autofree gchar *str = NULL;
-    g_return_val_if_fail(buf != NULL, NULL);
-    g_return_val_if_fail(error == NULL || *error == NULL, NULL);
-    if (!fu_memchk_read(bufsz, offset, {size}, error)) {{
-            g_prefix_error(error, "invalid struct {name}: ");
-            return NULL;
-    }}
-    g_byte_array_append(st, buf + offset, {size});
-"""
-        for item in items:
-            if item.constant:
-                if item.type == Type.STRING:
-                    str_c += f'    if (strncmp((const gchar *) (st->data + {item.offset}), "{item.constant}", {item.size}) != 0) {{\n'
-                elif item.type == Type.GUID:
-                    str_c += f'    if (memcmp(st->data + {item.offset}, "{item.constant}", {item.size}) != 0) {{\n'
-                else:
-                    str_c += f"    if ({name_snake}_get_{item.element_id}(st) != {item.constant}) {{\n"
-                str_c += "            g_set_error_literal(error,\n"
-                str_c += "                                G_IO_ERROR,\n"
-                str_c += "                                G_IO_ERROR_INVALID_DATA,\n"
-                str_c += f'                                "constant {name}.{item.element_id} was not valid, expected {item.constant}");\n'
-                str_c += "            return NULL;\n"
-                str_c += "    }\n"
-        str_c += f"    str = {name_snake}_to_string(st);\n"
-        str_c += '    g_debug("%s", str);\n'
-        str_c += "    return g_steal_pointer(&st);\n"
-        str_c += "}\n"
-
-        # _validate()
-        if has_constant:
-            str_c += f"""
-gboolean
-{name_snake}_validate(const guint8 *buf, gsize bufsz, gsize offset, GError **error)
-{{
-    GByteArray st = {{.data = (guint8 *) buf + offset, .len = bufsz - offset, }};
-    g_return_val_if_fail(buf != NULL, FALSE);
-    g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
-    if (!fu_memchk_read(bufsz, offset, {size}, error)) {{
-            g_prefix_error(error, "invalid struct {name}: ");
-            return FALSE;
-    }}
-"""
-            for item in items:
-                if not item.constant:
-                    continue
-                if item.type == Type.STRING:
-                    str_c += f'    if (strncmp((const gchar *) (st.data + {item.offset}), "{item.constant}", {item.size}) != 0) {{\n'
-                elif item.type == Type.GUID or (
-                    item.type == Type.U8 and item.multiplier
-                ):
-                    str_c += f'    if (memcmp({name_snake}_get_{item.element_id}(&st), "{item.constant}", {item.size}) != 0) {{\n'
-                else:
-                    str_c += f"    if ({name_snake}_get_{item.element_id}(&st) != {item.constant}) {{\n"
-                str_c += f"            g_set_error_literal(error,\n"
-                str_c += f"                                G_IO_ERROR,\n"
-                str_c += f"                                G_IO_ERROR_INVALID_DATA,\n"
-                str_c += f'                                "constant {name}.{item.element_id} was not valid");\n'
-                str_c += f"            return FALSE;\n"
-                str_c += f"    }}\n"
-            str_c += f"    return TRUE;\n"
-            str_c += f"}}\n"
-
-        # success
-        return str_c, str_h
+        # render
+        subst = {
+            "Type": Type,
+            "name": f"Fu{name}",
+            "name_snake": f"fu_struct_{_camel_to_snake(name)}",
+            "items": items,
+            "size": size,
+            "has_constant": has_constant,
+        }
+        template_h = self._env.get_template(os.path.basename("fu-rustgen-struct.h.in"))
+        template_c = self._env.get_template(os.path.basename("fu-rustgen-struct.c.in"))
+        return template_c.render(subst), template_h.render(subst)
 
     def process_input(self, contents: str) -> Tuple[str, str]:
         name = None
@@ -657,25 +327,13 @@ gboolean
         offset: int = 0
 
         # header
-        dst_h = """/* auto-generated, do not modify */
-#pragma once
-#include <fwupd-common.h>
-"""
-
-        # body
-        dst_c = f"""/* auto-generated, do not modify */
-#include "config.h"
-
-#include "{self.basename}"
-#include "fu-byte-array.h"
-#include "fu-mem-private.h"
-#include "fu-string.h"
-
-#ifdef G_LOG_DOMAIN
-  #undef G_LOG_DOMAIN
-#endif
-#define G_LOG_DOMAIN "FuStruct"
-"""
+        subst = {
+            "basename": self.basename,
+        }
+        template_h = self._env.get_template(os.path.basename("fu-rustgen.h.in"))
+        template_c = self._env.get_template(os.path.basename("fu-rustgen.c.in"))
+        dst_h = template_h.render(subst)
+        dst_c = template_c.render(subst)
 
         mode: Optional[str] = None
         for line in contents.split("\n"):

@@ -1,0 +1,11 @@
+typedef enum {
+{%- for item in items %}
+{%- if item.default %}
+    {{item.c_define(name)}} = {{item.default}},
+{%- else %}
+    {{item.c_define(name)}},
+{%- endif %}
+{%- endfor %}
+} {{name}};
+const gchar *{{name_snake}}_to_string({{name}} val);
+{{name}} {{name_snake}}_from_string(const gchar *val);
