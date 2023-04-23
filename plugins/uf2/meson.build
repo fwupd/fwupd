@@ -5,8 +5,8 @@ cargs = ['-DG_LOG_DOMAIN="FuPluginUf2"']
 
 plugin_quirks += files('uf2.quirk')
 plugin_builtin_uf2 = static_library('fu_plugin_uf2',
-  structgen.process(
-    'fu-uf2.struct',          # fuzzing
+  rustgen.process(
+    'fu-uf2.rs',          # fuzzing
   ),
   sources: [
     'fu-uf2-plugin.c',

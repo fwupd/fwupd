@@ -3,7 +3,7 @@ cargs = ['-DG_LOG_DOMAIN="FuPluginLogitechHidPp"']
 
 plugin_quirks += files('logitech-hidpp.quirk')
 plugin_builtin_logitech_hidpp = static_library('fu_plugin_logitech_hidpp',
-  structgen.process('fu-logitech-hidpp.struct'),
+  rustgen.process('fu-logitech-hidpp.rs'),
   sources: [
     'fu-logitech-hidpp-plugin.c',
     'fu-logitech-hidpp-bootloader.c',

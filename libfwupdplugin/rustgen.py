@@ -17,7 +17,7 @@ from typing import Optional, List, Tuple
 # This is a very smart structure that supports endian conversion, arrays, GUIDs, strings, default
 # and constant data of variable size.
 #
-# In most cases the structure or enumeration will be defined in a `.struct` file:
+# In most cases the structure or enumeration will be defined in a `.rs` file:
 #
 #    struct UswidHdr {
 #        magic: guid
@@ -28,20 +28,20 @@ from typing import Optional, List, Tuple
 #    }
 #
 #    enum MeiFamily {
-#        Unknown
-#        Sps
-#        Txe
-#        Me
-#        Csme
+#        Unknown,
+#        Sps,
+#        Txe,
+#        Me,
+#        Csme,
 #    }
 #
 # The struct types currently supported are:
 #
 # - `u8`: a #guint8
-# - `u16`: a #guint16
+# - `u16le`: a #guint16
 # - `u24`: a 24 bit number represented as a #guint32
-# - `u32`:  #guint32
-# - `u64`:  #guint64
+# - `u32le`:  little endian #guint32
+# - `u64be`:  big endian #guint64
 # - `s`: a string
 # - `guid`: a packed GUID
 #

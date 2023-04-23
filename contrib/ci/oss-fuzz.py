@@ -156,16 +156,16 @@ class Builder:
             sys.exit(1)
         return os.path.join(self.builddir, "{}".format(dst))
 
-    def generate_struct(self, src: str) -> str:
+    def rustgen(self, src: str) -> str:
 
-        fn_root = os.path.basename(src).replace(".struct", "")
+        fn_root = os.path.basename(src).replace(".rs", "")
         fulldst_c = os.path.join(self.builddir, f"{fn_root}-struct.c")
         fulldst_h = os.path.join(self.builddir, f"{fn_root}-struct.h")
         try:
             subprocess.run(
                 [
                     "python",
-                    "fwupd/libfwupdplugin/generate-struct.py",
+                    "fwupd/libfwupdplugin/rustgen.py",
                     src,
                     fulldst_c,
                     fulldst_h,
@@ -371,8 +371,8 @@ def _build(bld: Builder) -> None:
         for src in bld.grep_meson(path):
             if src.endswith(".c"):
                 built_objs.append(bld.compile(src))
-            elif src.endswith(".struct"):
-                built_objs.append(bld.compile(bld.generate_struct(src)))
+            elif src.endswith(".rs"):
+                built_objs.append(bld.compile(bld.rustgen(src)))
 
     # dummy binary entrypoint
     if "LIB_FUZZING_ENGINE" in os.environ:
@@ -444,8 +444,8 @@ def _build(bld: Builder) -> None:
         for obj in bld.grep_meson("fwupd/plugins/{}".format(fzr.srcdir)):
             if obj.endswith(".c"):
                 fuzz_objs.append(bld.compile(obj))
-            elif obj.endswith(".struct"):
-                fuzz_objs.append(bld.compile(bld.generate_struct(obj)))
+            elif obj.endswith(".rs"):
+                fuzz_objs.append(bld.compile(bld.rustgen(obj)))
         src = bld.substitute(
             "fwupd/libfwupdplugin/fu-fuzzer-firmware.c.in",
             {

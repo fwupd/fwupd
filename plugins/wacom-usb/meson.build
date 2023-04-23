@@ -3,8 +3,8 @@ cargs = ['-DG_LOG_DOMAIN="FuPluginWacomUsb"']
 
 plugin_quirks += files('wacom-usb.quirk')
 plugin_builtin_wac = static_library('fu_plugin_wac',
-  structgen.process(
-    'fu-wac.struct',              # fuzzing
+  rustgen.process(
+    'fu-wac.rs',              # fuzzing
   ),
   sources: [
     'fu-wac-common.c',
@@ -34,7 +34,7 @@ if get_option('tests')
   env.set('G_TEST_BUILDDIR', meson.current_build_dir())
   e = executable(
     'wacom-usb-self-test',
-    structgen.process('fu-wac.struct'),
+    rustgen.process('fu-wac.rs'),
     sources: [
       'fu-self-test.c',
     ],
