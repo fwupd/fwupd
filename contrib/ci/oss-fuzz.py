@@ -484,6 +484,7 @@ if __name__ == "__main__":
                 "libzstd-dev",
                 "libcbor-dev",
                 "python3",
+                "python3-jinja2",
             ],
             stdout=open(os.devnull, "wb"),
         )
