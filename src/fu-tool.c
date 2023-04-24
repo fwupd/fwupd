@@ -47,8 +47,9 @@
 #include "fu-systemd.h"
 #endif
 
-/* custom return code */
+/* custom return codes */
 #define EXIT_NOTHING_TO_DO 2
+#define EXIT_NOT_FOUND	   3
 
 typedef enum {
 	FU_UTIL_OPERATION_UNKNOWN,
@@ -4232,6 +4233,9 @@ main(int argc, char *argv[])
 		} else if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO)) {
 			g_info("%s\n", error->message);
 			return EXIT_NOTHING_TO_DO;
+		} else if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
+			g_info("%s\n", error->message);
+			return EXIT_NOT_FOUND;
 		}
 #ifdef HAVE_GETUID
 		/* if not root, then notify users on the error path */
