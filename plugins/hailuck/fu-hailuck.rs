@@ -1,3 +1,4 @@
+#[derive(ToString)]
 enum HailuckCmd {
     Erase             = 0x45,
     ReadBlockStart    = 0x52,

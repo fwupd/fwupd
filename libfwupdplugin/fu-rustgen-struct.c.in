@@ -1,3 +1,5 @@
+/* getters */
+{%- if 'Getters' in derives %}
 {%- for item in items | selectattr('enabled') %}
 {%- if item.type == Type.STRING %}
 {{"G_GNUC_UNUSED static " if item.constant else ""}}gchar *
@@ -6,6 +8,44 @@
     g_return_val_if_fail(st != NULL, NULL);
     return fu_strsafe((const gchar *) (st->data + {{item.offset}}), {{item.size}});
 }
+{%- elif item.type == Type.U8 and item.multiplier %}
+{{"static " if item.constant else ""}}const guint8 *
+{{name_snake}}_get_{{item.element_id}}(GByteArray *st, gsize *bufsz)
+{
+    g_return_val_if_fail(st != NULL, NULL);
+    if (bufsz != NULL)
+        *bufsz = {{item.size}};
+    return st->data + {{item.offset}};
+}
+{%- elif item.type == Type.GUID %}
+{{"static " if item.constant else ""}}const fwupd_guid_t *
+{{name_snake}}_get_{{item.element_id}}(GByteArray *st)
+{
+    g_return_val_if_fail(st != NULL, NULL);
+    return (const fwupd_guid_t *) (st->data + {{item.offset}});
+}
+{%- elif item.type == Type.U8 %}
+{{"static " if item.constant else ""}}guint8
+{{name_snake}}_get_{{item.element_id}}(GByteArray *st)
+{
+    g_return_val_if_fail(st != NULL, 0x0);
+    return st->data[{{item.offset}}];
+}
+{%- elif not item.multiplier and item.type in [Type.U16, Type.U24, Type.U32, Type.U64] %}
+{{"static " if item.constant else ""}}{{item.type_glib}}
+{{name_snake}}_get_{{item.element_id}}(GByteArray *st)
+{
+    g_return_val_if_fail(st != NULL, 0x0);
+    return fu_memread_{{item.type_mem}}(st->data + {{item.offset}}, {{item.endian_glib}});
+}
+{%- endif %}
+{%- endfor %}
+{%- endif %}
+
+/* setters */
+{%- for item in items | selectattr('enabled') %}
+{%- if 'Setters' in derives or ('New' in derives and item.default) %}
+{%- if item.type == Type.STRING %}
 {{"static " if item.constant else ""}}gboolean
 {{name_snake}}_set_{{item.element_id}}(GByteArray *st, const gchar *value, GError **error)
 {
@@ -19,16 +59,7 @@
     len = strlen(value);
     return fu_memcpy_safe(st->data, st->len, {{item.offset}}, (const guint8 *)value, len, 0x0, len, error);
 }
-
 {%- elif item.type == Type.U8 and item.multiplier %}
-{{"static " if item.constant else ""}}const guint8 *
-{{name_snake}}_get_{{item.element_id}}(GByteArray *st, gsize *bufsz)
-{
-    g_return_val_if_fail(st != NULL, NULL);
-    if (bufsz != NULL)
-        *bufsz = {{item.size}};
-    return st->data + {{item.offset}};
-}
 {{"static " if item.constant else ""}}gboolean
 {{name_snake}}_set_{{item.element_id}}(GByteArray *st, const guint8 *buf, gsize bufsz, GError **error)
 {
@@ -37,14 +68,7 @@
     g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
     return fu_memcpy_safe(st->data, st->len, {{item.offset}}, buf, bufsz, 0x0, bufsz, error);
 }
-
 {%- elif item.type == Type.GUID %}
-{{"static " if item.constant else ""}}const fwupd_guid_t *
-{{name_snake}}_get_{{item.element_id}}(GByteArray *st)
-{
-    g_return_val_if_fail(st != NULL, NULL);
-    return (const fwupd_guid_t *) (st->data + {{item.offset}});
-}
 {{"static " if item.constant else ""}}void
 {{name_snake}}_set_{{item.element_id}}(GByteArray *st, const fwupd_guid_t *value)
 {
@@ -52,28 +76,14 @@
     g_return_if_fail(value != NULL);
     memcpy(st->data + {{item.offset}}, value, sizeof(*value));
 }
-
 {%- elif item.type == Type.U8 %}
-{{"static " if item.constant else ""}}guint8
-{{name_snake}}_get_{{item.element_id}}(GByteArray *st)
-{
-    g_return_val_if_fail(st != NULL, 0x0);
-    return st->data[{{item.offset}}];
-}
 {{"static " if item.constant else ""}}void
 {{name_snake}}_set_{{item.element_id}}(GByteArray *st, guint8 value)
 {
     g_return_if_fail(st != NULL);
     st->data[{{item.offset}}] = value;
 }
-
 {%- elif not item.multiplier and item.type in [Type.U16, Type.U24, Type.U32, Type.U64] %}
-{{"static " if item.constant else ""}}{{item.type_glib}}
-{{name_snake}}_get_{{item.element_id}}(GByteArray *st)
-{
-    g_return_val_if_fail(st != NULL, 0x0);
-    return fu_memread_{{item.type_mem}}(st->data + {{item.offset}}, {{item.endian_glib}});
-}
 {{"static " if item.constant else ""}}void
 {{name_snake}}_set_{{item.element_id}}(GByteArray *st, {{item.type_glib}} value)
 {
@@ -81,8 +91,10 @@
     fu_memwrite_{{item.type_mem}}(st->data + {{item.offset}}, value, {{item.endian_glib}});
 }
 {%- endif %}
+{%- endif %}
 {%- endfor %}
 
+{%- if 'New' in derives %}
 GByteArray *
 {{name_snake}}_new(void)
 {
@@ -102,6 +114,7 @@ GByteArray *
 {%- endfor %}
     return st;
 }
+{%- endif %}
 
 gchar *
 {{name_snake}}_to_string(GByteArray *st)
@@ -137,6 +150,7 @@ gchar *
     return g_string_free(g_steal_pointer(&str), FALSE);
 }
 
+{%- if 'Parse' in derives %}
 GByteArray *
 {{name_snake}}_parse(const guint8 *buf, gsize bufsz, gsize offset, GError **error)
 {
@@ -168,12 +182,15 @@ GByteArray *
     g_debug("%s", str);
     return g_steal_pointer(&st);
 }
+{%- endif %}
 
-{%- if has_constant %}
+{%- if 'Validate' in derives %}
 gboolean
 {{name_snake}}_validate(const guint8 *buf, gsize bufsz, gsize offset, GError **error)
 {
+{%- if has_constant %}
     GByteArray st = {.data = (guint8 *) buf + offset, .len = bufsz - offset, };
+{%- endif %}
     g_return_val_if_fail(buf != NULL, FALSE);
     g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
     if (!fu_memchk_read(bufsz, offset, {{size}}, error)) {

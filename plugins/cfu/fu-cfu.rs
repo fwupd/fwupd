@@ -1,14 +1,17 @@
+#[derive(New, Validate, Parse)]
 struct CfuRspGetFirmwareVersion {
     component_cnt: u8
     _reserved: u16le
     flags: u8
 }
+#[derive(New, Validate, Parse)]
 struct CfuRspGetFirmwareVersionComponent {
     fw_version: u32le
     flags: u8
     component_id: u8
     _vendor_specific: u16le
 }
+#[derive(Parse)]
 struct CfuRspFirmwareUpdateOffer {
     _reserved1: 3u8
     token: u8
@@ -18,12 +21,14 @@ struct CfuRspFirmwareUpdateOffer {
     status: u8
     _reserved3: 3u8
 }
+#[derive(New, Getters)]
 struct CfuReqFirmwareUpdateContent {
     flags: u8
     data_length: u8
     seq_number: u16le
     address: u32le
 }
+#[derive(New, Getters)]
 struct CfuRspFirmwareUpdateContent {
     seq_number: u16le
     _reserved1: u16le

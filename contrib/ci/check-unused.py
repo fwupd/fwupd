@@ -6,6 +6,7 @@
 # SPDX-License-Identifier: LGPL-2.1+
 
 import glob
+import fnmatch
 import sys
 import subprocess
 
@@ -44,11 +45,11 @@ def test_files() -> int:
             continue
         if symb.endswith("_get_type"):
             continue
-        if symb.startswith("fu_struct_"):
+        if fnmatch.fnmatch(symb, "fu_struct_*_set_*"):
             continue
-        if symb.endswith("_to_string"):
+        if fnmatch.fnmatch(symb, "fu_struct_*_get_*"):
             continue
-        if symb.endswith("_from_string"):
+        if fnmatch.fnmatch(symb, "fu_struct_*_to_string"):
             continue
         if symb.find("__proto__") != -1:
             continue

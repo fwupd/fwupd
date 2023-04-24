@@ -1,3 +1,4 @@
+#[derive(New, Parse)]
 struct AcpiPhatHealthRecord {
     signature: u16le: default=0x1
     rcdlen: u16le
@@ -7,11 +8,13 @@ struct AcpiPhatHealthRecord {
     device_signature: guid
     device_specific_data: u32le
 }
+#[derive(New, Parse)]
 struct AcpiPhatVersionElement {
     component_id: guid
     version_value: u64le
     producer_id: 4s
 }
+#[derive(New, Parse)]
 struct AcpiPhatVersionRecord {
     signature: u16le: default=0x0
     rcdlen: u16le

@@ -1,3 +1,4 @@
+{%- if 'ToString' in derives %}
 const gchar *
 {{name_snake}}_to_string({{name}} val)
 {
@@ -7,7 +8,9 @@ const gchar *
 {%- endfor %}
     return NULL;
 }
+{%- endif %}
 
+{%- if 'FromString' in derives %}
 {{name}}
 {{name_snake}}_from_string(const gchar *val)
 {
@@ -17,3 +20,4 @@ const gchar *
 {%- endfor %}
     return {{items[0].c_define(name)}};
 }
+{%- endif %}

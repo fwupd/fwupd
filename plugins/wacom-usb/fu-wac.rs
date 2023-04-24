@@ -1,7 +1,9 @@
+#[derive(Parse)]
 struct WtaBlockHeader {
     block_start: u32le
     block_size: u32le
 }
+#[derive(ToString)]
 enum WacReportId {
     FwDescriptor              = 0xCB, // GET_FEATURE
     SwitchToFlashLoader       = 0xCC, // SET_FEATURE
@@ -22,6 +24,7 @@ enum WacReportId {
     GetCurrentFirmwareIdx     = 0xE2, // GET_FEATURE
     Module                    = 0xE4,
 }
+#[derive(ToString)]
 enum WacModuleFwType {
     Touch         = 0x00,
     Bluetooth     = 0x01,
@@ -32,11 +35,13 @@ enum WacModuleFwType {
     TouchId7      = 0x07,
     Main          = 0x3F,
 }
+#[derive(ToString)]
 enum WacModuleCommand {
     Start = 0x01,
     Data  = 0x02,
     End   = 0x03,
 }
+#[derive(ToString)]
 enum WacModuleStatus {
     Ok,
     Busy,

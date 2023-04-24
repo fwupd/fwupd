@@ -1,8 +1,10 @@
+#[derive(Parse)]
 struct VliPdHdr {
     fwver: u32be
     vid: u16le
     pid: u16le
 }
+#[derive(New, Parse)]
 struct VliUsbhubHdr {
     dev_id: u16be
     strapping1: u8
@@ -21,6 +23,7 @@ struct VliUsbhubHdr {
     variant: u8
     checksum: u8
 }
+#[derive(ToString, FromString)]
 enum VliDeviceKind {
     Unknown = 0x0,
     Vl100 = 0x0100,

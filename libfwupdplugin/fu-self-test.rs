@@ -1,3 +1,4 @@
+#[derive(New, Validate, Parse)]
 struct SelfTest {
     signature: u32be: const=0x12345678
     length: u32le: default=$struct_size // bytes

@@ -1,25 +1,41 @@
+{%- if 'New' in derives %}
 GByteArray *{{name_snake}}_new(void);
+{%- endif %}
+{%- if 'Parse' in derives %}
 GByteArray *{{name_snake}}_parse(const guint8 *buf, gsize bufsz, gsize offset, GError **error);
+{%- endif %}
+{%- if 'Validate' in derives %}
 gboolean {{name_snake}}_validate(const guint8 *buf, gsize bufsz, gsize offset, GError **error);
+{%- endif %}
 gchar *{{name_snake}}_to_string(GByteArray *st);
 
-{%- for item in items %}
-{%- if item.enabled and not item.constant %}
+{%- if 'Getters' in derives %}
+{%- for item in items | selectattr('enabled') | rejectattr('constant') %}
 {%- if item.type == Type.STRING %}
 gchar *{{name_snake}}_get_{{item.element_id}}(GByteArray *st);
-gboolean {{name_snake}}_set_{{item.element_id}}(GByteArray *st, const gchar *value, GError **error);
 {%- elif item.type == Type.U8 and item.multiplier %}
 const guint8 *{{name_snake}}_get_{{item.element_id}}(GByteArray *st, gsize *bufsz);
-gboolean {{name_snake}}_set_{{item.element_id}}(GByteArray *st, const guint8 *buf, gsize bufsz, GError **error);
 {%- elif item.type == Type.GUID %}
 const fwupd_guid_t *{{name_snake}}_get_{{item.element_id}}(GByteArray *st);
-void {{name_snake}}_set_{{item.element_id}}(GByteArray *st, const fwupd_guid_t *value);
 {%- elif not item.multiplier and item.type in [Type.U8, Type.U16, Type.U24, Type.U32, Type.U64] %}
 {{item.type_glib}} {{name_snake}}_get_{{item.element_id}}(GByteArray *st);
-void {{name_snake}}_set_{{item.element_id}}(GByteArray *st, {{item.type_glib}} value);
-{%- endif %}
 {%- endif %}
 {%- endfor %}
+{%- endif %}
+
+{%- if 'Setters' in derives %}
+{%- for item in items | selectattr('enabled') | rejectattr('constant') %}
+{%- if item.type == Type.STRING %}
+gboolean {{name_snake}}_set_{{item.element_id}}(GByteArray *st, const gchar *value, GError **error);
+{%- elif item.type == Type.U8 and item.multiplier %}
+gboolean {{name_snake}}_set_{{item.element_id}}(GByteArray *st, const guint8 *buf, gsize bufsz, GError **error);
+{%- elif item.type == Type.GUID %}
+void {{name_snake}}_set_{{item.element_id}}(GByteArray *st, const fwupd_guid_t *value);
+{%- elif not item.multiplier and item.type in [Type.U8, Type.U16, Type.U24, Type.U32, Type.U64] %}
+void {{name_snake}}_set_{{item.element_id}}(GByteArray *st, {{item.type_glib}} value);
+{%- endif %}
+{%- endfor %}
+{%- endif %}
 
 {%- for item in items | selectattr('enabled') %}
 #define {{name_snake.upper()}}_OFFSET_{{item.element_id.upper()}} 0x{{'{:x}'.format(item.offset)}}

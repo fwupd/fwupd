@@ -1,3 +1,4 @@
+#[derive(New, Parse)]
 struct Uf2 {
     magic0: u32le: const=0x0A324655
     magic1: u32le: const=0x9E5D5157

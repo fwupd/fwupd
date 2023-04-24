@@ -1,3 +1,4 @@
+#[derive(ToString)]
 enum LogitechHidppFeature {
     Root                  = 0x0000,
     IFeatureSet           = 0x0001,

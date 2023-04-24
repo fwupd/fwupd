@@ -1,3 +1,4 @@
+#[derive(ToString)]
 enum AnalogixUpdateStatus {
     Invalid,
     Start,

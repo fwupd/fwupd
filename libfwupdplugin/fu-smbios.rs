@@ -1,3 +1,4 @@
+#[derive(New, Validate, Parse)]
 struct SmbiosEp32 {
     anchor_str: 4s
     entry_point_csum: u8
@@ -14,6 +15,7 @@ struct SmbiosEp32 {
     number_smbios_structs: u16le
     smbios_bcd_rev: u8
 }
+#[derive(New, Validate, Parse)]
 struct SmbiosEp64 {
     anchor_str: 5s
     entry_point_csum: u8
@@ -26,6 +28,7 @@ struct SmbiosEp64 {
     structure_table_len: u32le
     structure_table_addr: u64le
 }
+#[derive(New, Validate, Parse)]
 struct SmbiosStructure {
     type: u8
     length: u8

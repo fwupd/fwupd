@@ -1,3 +1,4 @@
+#[derive(ToString)]
 enum UsiDockSpiState {
     None,
     SwitchSuccess,

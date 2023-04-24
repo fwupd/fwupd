@@ -1,3 +1,4 @@
+#[derive(ToString)]
 enum MeiFamily {
     Unknown,
     Sps,
@@ -7,6 +8,7 @@ enum MeiFamily {
 }
 
 # HFS1[3:0] Current Working State Values
+#[derive(ToString)]
 enum MeHfsCws {
     Reset,
     Initializing,
@@ -20,6 +22,7 @@ enum MeHfsCws {
 }
 
 # HFS1[8:6] Current Operation State Values
+#[derive(ToString)]
 enum MeHfsState {
     Preboot,
     M0WithUma = 1,
@@ -30,6 +33,7 @@ enum MeHfsState {
 }
 
 # HFS[19:16] Current Operation Mode Values
+#[derive(ToString)]
 enum MeHfsMode {
     Normal,
     Debug = 2,
@@ -41,6 +45,7 @@ enum MeHfsMode {
 }
 
 # HFS[15:12] Error Code Values
+#[derive(ToString)]
 enum MeHfsError {
     NoError,
     UncategorizedFailure,

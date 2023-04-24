@@ -1,3 +1,4 @@
+#[derive(New, Getters)]
 struct EfiUxCapsuleHeader {
     version: u8: const=0x01
     checksum: u8
@@ -7,12 +8,14 @@ struct EfiUxCapsuleHeader {
     x_offset: u32le
     y_offset: u32le
 }
+#[derive(New, Getters)]
 struct EfiCapsuleHeader {
     guid: guid
     header_size: u32le: default=$struct_size
     flags: u32le
     image_size: u32le
 }
+#[derive(New, Parse)]
 struct EfiUpdateInfo {
     version: u32le: default=0x7
     guid: guid
@@ -22,16 +25,19 @@ struct EfiUpdateInfo {
     status: u32le
     // EFI_DEVICE_PATH goes here
 }
+#[derive(Parse)]
 struct AcpiInsydeQuirk {
     signature: 6s
     size: u32le
     flags: u32le
 }
+#[derive(ToString)]
 enum UefiUpdateInfoStatus {
     Unknown,
     AttemptUpdate,
     Attempted,
 }
+#[derive(ToString, FromString)]
 enum UefiDeviceKind {
     Unknown,
     SystemFirmware,
@@ -41,6 +47,7 @@ enum UefiDeviceKind {
     DellTpmFirmware,
     Last,
 }
+#[derive(ToString)]
 enum UefiDeviceStatus {
     Success = 0x00,
     ErrorUnsuccessful = 0x01,

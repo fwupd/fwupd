@@ -1,3 +1,4 @@
+#[derive(New, Validate, Parse)]
 struct Oprom {
     signature: u16le: const=0xAA55
     image_size: u16le		// of 512 bytes
@@ -10,6 +11,7 @@ struct Oprom {
     pci_header_offset: u16le: default=$struct_size
     expansion_header_offset: u16le
 }
+#[derive(New, Validate, Parse)]
 struct OpromPci {
     signature: u32le: const=0x52494350
     vendor_id: u16le

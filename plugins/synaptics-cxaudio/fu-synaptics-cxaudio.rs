@@ -1,3 +1,4 @@
+#[derive(Parse)]
 struct SynapticsCxaudioCustomInfo {
 	patch_version_string_address: u16le
 	cpx_patch_version: 3u8
@@ -13,14 +14,17 @@ struct SynapticsCxaudioCustomInfo {
 	product_string_address: u16le
 	serial_number_string_address: u16le
 }
+#[derive(Parse)]
 struct SynapticsCxaudioStringHeader {
 	length: u8
 	type: u8: const=0x03
 }
+#[derive(Parse)]
 struct SynapticsCxaudioValiditySignature {
 	magic_byte: u8: default=0x4C	// 'L'
 	eeprom_size_code: u8
 }
+#[derive(Parse, Setters)]
 struct SynapticsCxaudioPatchInfo {
 	patch_signature: u8
 	patch_address: u16le
