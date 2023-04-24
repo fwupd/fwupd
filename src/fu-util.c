@@ -37,8 +37,9 @@
 #include "fu-systemd.h"
 #endif
 
-/* custom return code */
+/* custom return codes */
 #define EXIT_NOTHING_TO_DO 2
+#define EXIT_NOT_FOUND	   3
 
 typedef enum {
 	FU_UTIL_OPERATION_UNKNOWN,
@@ -1114,6 +1115,93 @@ fu_util_uninhibit(FuUtilPrivate *priv, gchar **values, GError **error)
 
 	/* just uninhibit with the token */
 	return fwupd_client_uninhibit(priv->client, values[0], priv->cancellable, error);
+}
+
+typedef struct {
+	FuUtilPrivate *priv;
+	const gchar *value;
+	FwupdDevice *device; /* no-ref */
+} FuUtilWaitHelper;
+
+static void
+fu_util_device_wait_added_cb(FwupdClient *client, FwupdDevice *device, FuUtilWaitHelper *helper)
+{
+	FuUtilPrivate *priv = helper->priv;
+	if (g_strcmp0(fwupd_device_get_id(device), helper->value) == 0 ||
+	    fwupd_device_has_guid(device, helper->value)) {
+		helper->device = device;
+		g_main_loop_quit(priv->loop);
+		return;
+	}
+}
+
+static gboolean
+fu_util_device_wait_timeout_cb(gpointer user_data)
+{
+	FuUtilPrivate *priv = (FuUtilPrivate *)user_data;
+	g_main_loop_quit(priv->loop);
+	return G_SOURCE_REMOVE;
+}
+
+static gboolean
+fu_util_device_wait(FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	g_autoptr(FwupdDevice) device = NULL;
+	g_autoptr(GPtrArray) devices = NULL;
+	g_autoptr(GSource) source = g_timeout_source_new_seconds(30);
+	g_autoptr(GTimer) timer = g_timer_new();
+	FuUtilWaitHelper helper = {.priv = priv, .value = values[0]};
+
+	/* one argument required */
+	if (g_strv_length(values) != 1) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_ARGS,
+				    "Invalid arguments, expected GUID|DEVICE-ID");
+		return FALSE;
+	}
+
+	/* check if the device already exists */
+	device = fwupd_client_get_device_by_id(priv->client, helper.value, NULL, NULL);
+	if (device != NULL) {
+		/* TRANSLATORS: the device is already connected */
+		fu_console_print_literal(priv->console, _("Device already exists"));
+		return TRUE;
+	}
+	devices = fwupd_client_get_devices_by_guid(priv->client, helper.value, NULL, NULL);
+	if (devices != NULL) {
+		/* TRANSLATORS: the device is already connected */
+		fu_console_print_literal(priv->console, _("Device already exists"));
+		return TRUE;
+	}
+
+	/* wait for device to show up */
+	fu_console_set_progress(priv->console, FWUPD_STATUS_IDLE, 0);
+	g_signal_connect(FWUPD_CLIENT(priv->client),
+			 "device-added",
+			 G_CALLBACK(fu_util_device_wait_added_cb),
+			 &helper);
+	g_source_set_callback(source, fu_util_device_wait_timeout_cb, priv, NULL);
+	g_source_attach(source, priv->main_ctx);
+	g_main_loop_run(priv->loop);
+
+	/* timed out */
+	if (helper.device == NULL) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_ARGS,
+			    "Stopped waiting for %s after %.0fms",
+			    helper.value,
+			    g_timer_elapsed(timer, NULL) * 1000.f);
+		return FALSE;
+	}
+
+	/* success */
+	fu_console_print(priv->console,
+			 /* TRANSLATORS: the device showed up in time */
+			 _("Successfully waited %.0fms for device"),
+			 g_timer_elapsed(timer, NULL) * 1000.f);
+	return TRUE;
 }
 
 static gboolean
@@ -4787,6 +4875,13 @@ main(int argc, char *argv[])
 			      _("Uninhibit the system to allow upgrades"),
 			      fu_util_uninhibit);
 	fu_util_cmd_array_add(cmd_array,
+			      "device-wait",
+			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			      _("GUID|DEVICE-ID"),
+			      /* TRANSLATORS: command description */
+			      _("Wait for a device to appear"),
+			      fu_util_device_wait);
+	fu_util_cmd_array_add(cmd_array,
 			      "quit",
 			      NULL,
 			      /* TRANSLATORS: command description */
@@ -5086,6 +5181,8 @@ main(int argc, char *argv[])
 			fu_console_print_literal(priv->console, str->str);
 		} else if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO))
 			return EXIT_NOTHING_TO_DO;
+		else if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND))
+			return EXIT_NOT_FOUND;
 		return EXIT_FAILURE;
 	}
 

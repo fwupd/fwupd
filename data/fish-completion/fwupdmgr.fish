@@ -38,6 +38,7 @@ complete -c fwupdmgr -n '__fish_use_subcommand' -x -a block-firmware -d 'Blocks 
 complete -c fwupdmgr -n '__fish_use_subcommand' -x -a clear-results -d 'Clears the results from the last update'
 complete -c fwupdmgr -n '__fish_use_subcommand' -x -a disable-remote -d 'Disables a given remote'
 complete -c fwupdmgr -n '__fish_use_subcommand' -x -a downgrade -d 'Downgrades the firmware on a device'
+complete -c fwupdmgr -n '__fish_use_subcommand' -x -a device-wait -d 'Wait for a device to appear'
 complete -c fwupdmgr -n '__fish_use_subcommand' -x -a enable-remote -d 'Enables a given remote'
 complete -c fwupdmgr -n '__fish_use_subcommand' -x -a get-approved-firmware -d 'Gets the list of approved firmware'
 complete -c fwupdmgr -n '__fish_use_subcommand' -x -a get-blocked-firmware -d 'Gets the list of blocked firmware'
