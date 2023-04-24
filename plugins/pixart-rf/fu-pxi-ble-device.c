@@ -17,6 +17,7 @@
 #include "fu-pxi-ble-device.h"
 #include "fu-pxi-common.h"
 #include "fu-pxi-firmware.h"
+#include "fu-pxi-struct.h"
 
 #define PXI_HID_DEV_OTA_INPUT_REPORT_ID	     0x05
 #define PXI_HID_DEV_OTA_RETRANSMIT_REPORT_ID 0x06
@@ -557,12 +558,12 @@ fu_pxi_ble_device_fw_ota_init_new(FuPxiBleDevice *self, gsize bufsz, GError **er
 	/* shared state */
 	if (!fu_pxi_ota_fw_state_parse(&self->fwstate, res, sizeof(res), 0x05, error))
 		return FALSE;
-	if (self->fwstate.spec_check_result != OTA_SPEC_CHECK_OK) {
+	if (self->fwstate.spec_check_result != FU_PXI_OTA_SPEC_CHECK_RESULT_OK) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_READ,
 			    "FwInitNew spec check fail: %s [0x%02x]",
-			    fu_pxi_spec_check_result_to_string(self->fwstate.spec_check_result),
+			    fu_pxi_ota_spec_check_result_to_string(self->fwstate.spec_check_result),
 			    self->fwstate.spec_check_result);
 		return FALSE;
 	}
