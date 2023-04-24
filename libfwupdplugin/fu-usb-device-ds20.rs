@@ -1,3 +1,4 @@
+#[derive(New, Validate, Parse)]
 struct Ds20 {
     _reserved: u8
     guid: guid
@@ -6,6 +7,7 @@ struct Ds20 {
     vendor_code: u8
     alt_code: u8
 }
+#[derive(New, Validate, Parse)]
 struct MsDs20 {
     size: u16le
     type: u16le

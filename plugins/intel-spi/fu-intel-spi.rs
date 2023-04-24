@@ -1,3 +1,4 @@
+#[derive(ToString, FromString)]
 enum IntelSpiKind {
     Unknown,
     Apl,

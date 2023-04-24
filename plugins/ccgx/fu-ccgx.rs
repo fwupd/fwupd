@@ -1,3 +1,4 @@
+#[derive(ToString, FromString)]
 enum CcgxImageType {
     Unknown,
     Single,
@@ -6,6 +7,7 @@ enum CcgxImageType {
     DualAsymmetricVariable, // A=bootloader (variable) B=runtime
     DmcComposite,           // composite firmware image for dmc
 }
+#[derive(ToString)]
 enum CcgxFwMode {
     Boot,
     Fw1,

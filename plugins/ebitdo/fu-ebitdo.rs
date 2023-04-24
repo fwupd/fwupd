@@ -1,14 +1,17 @@
+#[derive(New, Parse)]
 struct EbitdoHdr {
     version: u32le
     destination_addr: u32le
     destination_len: u32le
     reserved: 4u32le
 }
+#[derive(ToString)]
 enum EbitdoPktType {
     UserCmd = 0x00,
     UserData = 0x01,
     MidCmd = 0x02,
 }
+#[derive(ToString)]
 enum EbitdoPktCmd {
     FwUpdateData       = 0x00, // update firmware data
     FwUpdateHeader     = 0x01, // update firmware header

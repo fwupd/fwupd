@@ -7,5 +7,9 @@ typedef enum {
 {%- endif %}
 {%- endfor %}
 } {{name}};
+{%- if 'ToString' in derives %}
 const gchar *{{name_snake}}_to_string({{name}} val);
+{%- endif %}
+{%- if 'FromString' in derives %}
 {{name}} {{name_snake}}_from_string(const gchar *val);
+{%- endif %}

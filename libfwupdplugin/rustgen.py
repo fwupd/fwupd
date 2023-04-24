@@ -21,6 +21,7 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 #
 # In most cases the structure or enumeration will be defined in a `.rs` file:
 #
+#    #[derive(New, Validate, Parse)]
 #    struct UswidHdr {
 #        magic: guid
 #        hdrver: u8
@@ -29,6 +30,7 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 #        flags: u8
 #    }
 #
+#    #[derive(ToString, FromString)]
 #    enum MeiFamily {
 #        Unknown,
 #        Sps,
@@ -282,7 +284,9 @@ class Generator:
             keep_trailing_newline=True,
         )
 
-    def _process_enums(self, name: str, items: List[EnumItem]) -> Tuple[str, str]:
+    def _process_enums(
+        self, name: str, items: List[EnumItem], derives: List[str]
+    ) -> Tuple[str, str]:
 
         # render
         subst = {
@@ -290,12 +294,15 @@ class Generator:
             "name": f"Fu{name}",
             "name_snake": f"fu_{_camel_to_snake(name)}",
             "items": items,
+            "derives": derives,
         }
         template_h = self._env.get_template(os.path.basename("fu-rustgen-enum.h.in"))
         template_c = self._env.get_template(os.path.basename("fu-rustgen-enum.c.in"))
         return template_c.render(subst), template_h.render(subst)
 
-    def _process_structs(self, name: str, items: List[StructItem]) -> Tuple[str, str]:
+    def _process_structs(
+        self, name: str, items: List[StructItem], derives: List[str]
+    ) -> Tuple[str, str]:
 
         # useful constants
         size: int = 0
@@ -313,6 +320,7 @@ class Generator:
             "name": f"Fu{name}",
             "name_snake": f"fu_struct_{_camel_to_snake(name)}",
             "items": items,
+            "derives": derives,
             "size": size,
             "has_constant": has_constant,
         }
@@ -324,6 +332,7 @@ class Generator:
         name = None
         enum_items: List[EnumItem] = []
         struct_items: List[StructItem] = []
+        derives: List[str] = []
         offset: int = 0
 
         # header
@@ -353,6 +362,16 @@ class Generator:
                 name = line[4:-1].strip()
                 continue
 
+            # what should we build
+            if line.startswith("#[derive("):
+                for derive in line[9:-2].replace(" ", "").split(","):
+                    if derive == "Parse":
+                        derives.append("Getters")
+                    if derive == "New":
+                        derives.append("Setters")
+                    derives.append(derive)
+                continue
+
             # not in object
             if not mode:
                 continue
@@ -365,15 +384,16 @@ class Generator:
                             item.default = str(offset)
                         if item.constant == "$struct_size":
                             item.constant = str(offset)
-                    str_c, str_h = self._process_structs(name, struct_items)
+                    str_c, str_h = self._process_structs(name, struct_items, derives)
                 if name and enum_items:
-                    str_c, str_h = self._process_enums(name, enum_items)
+                    str_c, str_h = self._process_enums(name, enum_items, derives)
                 dst_c += str_c
                 dst_h += str_h
                 mode = None
                 name = None
-                struct_items = []
-                enum_items = []
+                struct_items.clear()
+                enum_items.clear()
+                derives.clear()
                 offset = 0
                 continue
 

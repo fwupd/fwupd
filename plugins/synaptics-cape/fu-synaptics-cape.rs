@@ -1,3 +1,4 @@
+#[derive(New, Parse)]
 struct SynapticsCapeFileHdr {
     vid: u32le
     pid: u32le

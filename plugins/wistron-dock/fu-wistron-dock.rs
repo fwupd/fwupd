@@ -1,3 +1,4 @@
+#[derive(Parse)]
 struct WistronDockWdit {
     hid_id: u8
     tag_id: u16be
@@ -10,6 +11,7 @@ struct WistronDockWdit {
     device_cnt: u8
     reserved: u8
 }
+#[derive(Parse)]
 struct WistronDockWditImg {
     comp_id: u8
     mode: u8   // 0=single, 1=dual-s, 2=dual-a
@@ -20,16 +22,19 @@ struct WistronDockWditImg {
     version2: u32be
     name: 32s
 }
+#[derive(ToString)]
 enum WistronDockUpdatePhase {
     Download = 0x1,
     Deploy = 0x2,
 }
+#[derive(ToString)]
 enum WistronDockStatusCode {
     Enter = 0x1,
     Prepare = 0x2,
     Updating = 0x3,
     Complete = 0x4, // unplug cable to trigger update
 }
+#[derive(ToString)]
 enum WistronDockComponentIdx {
     Mcu   = 0x0,
     Pd    = 0x1,

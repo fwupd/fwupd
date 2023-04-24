@@ -1,3 +1,4 @@
+#[derive(New, Validate, Parse)]
 struct AcpiTable {
     signature: 4s
     length: u32le

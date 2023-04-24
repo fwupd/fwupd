@@ -1,3 +1,4 @@
+#[derive(New, Validate, Parse)]
 struct Fmap {
     signature: 8s: const=__FMAP__
     ver_major: u8: default=0x1
@@ -7,6 +8,7 @@ struct Fmap {
     name: 32s
     nareas: u16le		// number of areas
 }
+#[derive(New, Validate, Parse)]
 struct FmapArea {		// area of volatile and static regions
     offset: u32le		// offset relative to base
     size: u32le			// bytes

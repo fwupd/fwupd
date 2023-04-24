@@ -1,7 +1,9 @@
+#[derive(New, Validate, Parse)]
 struct CfuPayload {
     addr: u32le
     size: u8
 }
+#[derive(New, Validate, Parse)]
 struct CfuOffer {
     segment_number: u8
     flags1: u8

@@ -1,12 +1,15 @@
+#[derive(Parse)]
 struct TpmEventLog2 {
     pcr: u32le
     type: u32le
     digest_count: u32le
 }
+#[derive(Parse)]
 struct TpmEfiStartupLocalityEvent {
     signature: 16s: const=StartupLocality
     locality: u8    // from which TPM2_Startup() was issued -- which is the initial value of PCR0
 }
+#[derive(ToString)]
 enum TpmEventlogItemKind {
     EV_PREBOOT_CERT = 0x00000000,
     EV_POST_CODE = 0x00000001,

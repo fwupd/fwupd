@@ -1,3 +1,4 @@
+#[derive(New, Parse)]
 struct RedfishProtocolOverIp {
     service_uuid: guid
     host_ip_assignment_type: u8
@@ -13,6 +14,7 @@ struct RedfishProtocolOverIp {
     service_hostname_len: u8
 // optional service_hostname goes here
 }
+#[derive(ToString)]
 enum RedfishNetworkDeviceState {
     Unknown = 0,
     Unmanaged = 10,

@@ -1,3 +1,4 @@
+#[derive(New, Validate, Parse)]
 struct EfiFile {
     name: guid
     hdr_checksum: u8
@@ -7,15 +8,18 @@ struct EfiFile {
     size: u24le
     state: u8: const=0xF8
 }
+#[derive(New, Validate, Parse)]
 struct EfiSection {
     size: u24le
     type: u8
 }
+#[derive(New, Validate, Parse)]
 struct EfiSectionGuidDefined {
     name: guid
     offset: u16le
     attr: u16le
 }
+#[derive(New, Validate, Parse)]
 struct EfiVolume {
     zero_vector: guid
     guid: guid
@@ -28,10 +32,12 @@ struct EfiVolume {
     reserved: u8
     revision: u8: const=0x02
 }
+#[derive(New, Validate, Parse)]
 struct EfiVolumeBlockMap {
     num_blocks: u32le
     length: u32le
 }
+#[derive(New, Validate, Parse)]
 struct EfiSignatureList {
     type: guid
     list_size: u32le

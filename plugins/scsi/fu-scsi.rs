@@ -1,3 +1,4 @@
+#[derive(ToString)]
 enum ScsiSenseKey {
     NoSense = 0x00,
     RecoveredError = 0x01,
