@@ -14,54 +14,6 @@ from typing import Optional, List, Tuple
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
-# This script builds source files that describe a structure or enumeration.
-#
-# Structures supports endian conversion, arrays, GUIDs, strings, default and
-# constant data of variable size.
-#
-# In most cases the structure or enumeration will be defined in a `.rs` file:
-#
-#    #[derive(New, Validate, Parse)]
-#    struct UswidHdr {
-#        magic: guid
-#        hdrver: u8
-#        hdrsz: u16le: default=$struct_size
-#        payloadsz: u32le
-#        flags: u8
-#    }
-#
-#    #[derive(ToString, FromString)]
-#    enum MeiFamily {
-#        Unknown,
-#        Sps,
-#        Txe,
-#        Me,
-#        Csme,
-#    }
-#
-# The struct types currently supported are:
-#
-# - `u8`: a #guint8
-# - `u16le`: a #guint16
-# - `u24`: a 24 bit number represented as a #guint32
-# - `u32le`:  little endian #guint32
-# - `u64be`:  big endian #guint64
-# - `s`: a string
-# - `guid`: a packed GUID
-#
-# Additionally, default values can be auto-populated:
-#
-# - `$struct_size`: the struct size, e.g. the value of `fu_struct_size()`
-# - `$struct_offset`: the internal offset in the struct
-# - string values
-# - integer values, specified with a `0x` prefix for base-16 and with no prefix for base-10
-#
-# Per-field metadata:
-#
-# - `default`: set as the default
-# - `constant`: set as the default, and is **also** verified during unpacking.
-# - `padding`: initialize with a padding byte, typically 0xFF
-
 
 class Endian(Enum):
     NATIVE = "native"
