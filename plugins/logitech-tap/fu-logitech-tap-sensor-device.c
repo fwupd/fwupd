@@ -186,11 +186,11 @@ fu_logitech_tap_sensor_device_reboot_device(FuDevice *device, GError **error)
 		return FALSE;
 
 	/* enable/disable TDE mode */
-	locker = fu_device_locker_new_full(
-	    device,
-	    (FuDeviceLockerFunc)fu_logitech_tap_sensor_device_enable_tde,
-	    (FuDeviceLockerFunc)fu_logitech_tap_sensor_device_disable_tde,
-	    error);
+	locker =
+	    fu_device_locker_new_full(device,
+				      (FuDeviceLockerFunc)fu_logitech_tap_sensor_device_enable_tde,
+				      (FuDeviceLockerFunc)fu_logitech_tap_sensor_device_disable_tde,
+				      error);
 	if (locker == NULL)
 		return FALSE;
 
@@ -267,7 +267,7 @@ static gboolean
 fu_logitech_tap_sensor_device_set_serial(FuDevice *device, GError **error)
 {
 	FuLogitechTapSensorDevice *self = FU_LOGITECH_TAP_SENSOR_DEVICE(device);
-		g_autoptr(FuDeviceLocker) locker = NULL;
+	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(GString) serial_number = g_string_new(NULL);
 	guint8 set_data[HID_SET_DATA_LEN] = {kHidMcuCmdSetSerialNumber,
 					     kHidMcuSerialNumberSetReportByte1,
@@ -276,13 +276,13 @@ fu_logitech_tap_sensor_device_set_serial(FuDevice *device, GError **error)
 					     kHidMcuSerialNumberSetReportByte4};
 
 	g_debug("get sensor serial number");
-	
+
 	/* enable/disable TDE mode */
-	locker = fu_device_locker_new_full(
-	    device,
-	    (FuDeviceLockerFunc)fu_logitech_tap_sensor_device_enable_tde,
-	    (FuDeviceLockerFunc)fu_logitech_tap_sensor_device_disable_tde,
-	    error);
+	locker =
+	    fu_device_locker_new_full(device,
+				      (FuDeviceLockerFunc)fu_logitech_tap_sensor_device_enable_tde,
+				      (FuDeviceLockerFunc)fu_logitech_tap_sensor_device_disable_tde,
+				      error);
 	if (locker == NULL)
 		return FALSE;
 
@@ -317,7 +317,7 @@ fu_logitech_tap_sensor_device_set_serial(FuDevice *device, GError **error)
 
 static gboolean
 fu_logitech_tap_sensor_device_setup(FuDevice *device, GError **error)
-{	
+{
 	if (!fu_logitech_tap_sensor_device_set_version(device, error))
 		return FALSE;
 
