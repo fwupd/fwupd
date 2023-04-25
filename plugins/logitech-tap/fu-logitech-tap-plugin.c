@@ -8,8 +8,8 @@
 
 #include "fu-logitech-tap-common.h"
 #include "fu-logitech-tap-hdmi-device.h"
-#include "fu-logitech-tap-sensor-device.h"
 #include "fu-logitech-tap-plugin.h"
+#include "fu-logitech-tap-sensor-device.h"
 
 struct _FuLogitechTapPlugin {
 	FuPlugin parent_instance;
@@ -23,22 +23,24 @@ fu_logitech_tap_plugin_composite_cleanup(FuPlugin *plugin, GPtrArray *devices, G
 	gboolean needs_reboot = FALSE;
 	GPtrArray *plugin_devices = fu_plugin_get_devices(plugin);
 
-	/* check if HDMI firmware successfully upgraded and signal for SENSOR to trigger composite reboot is set */
+	/* check if HDMI firmware successfully upgraded and signal for SENSOR to trigger composite
+	 * reboot is set */
 	for (guint i = 0; i < devices->len; i++) {
 		FuDevice *dev = g_ptr_array_index(devices, i);
 
 		if ((g_strcmp0(fu_device_get_plugin(dev), "logitech_tap") == 0) &&
-			(fu_device_has_private_flag(dev, FU_LOGITECH_TAP_DEVICE_TYPE_HDMI)) &&
-			(fu_device_has_private_flag(dev, FU_LOGITECH_TAP_HDMI_DEVICE_FLAG_NEEDS_REBOOT))) { 
-				needs_reboot = TRUE;
-				g_debug("device needs reboot");
+		    (fu_device_has_private_flag(dev, FU_LOGITECH_TAP_DEVICE_TYPE_HDMI)) &&
+		    (fu_device_has_private_flag(dev,
+						FU_LOGITECH_TAP_HDMI_DEVICE_FLAG_NEEDS_REBOOT))) {
+			needs_reboot = TRUE;
+			g_debug("device needs reboot");
 			break;
 		}
 	}
 	if (needs_reboot) {
 		for (guint i = 0; i < plugin_devices->len; i++) {
 			FuDevice *dev = g_ptr_array_index(plugin_devices, i);
-			
+
 			if (fu_device_has_private_flag(dev, FU_LOGITECH_TAP_DEVICE_TYPE_SENSOR)) {
 				if (!fu_logitech_tap_sensor_device_reboot_device(dev, error))
 					return FALSE;
