@@ -842,6 +842,17 @@ fu_context_security_changed(FuContext *self)
 
 typedef gboolean (*FuContextHwidsSetupFunc)(FuContext *self, FuHwids *hwids, GError **error);
 
+static void
+fu_context_hwid_quirk_cb(FuContext *self, const gchar *key, const gchar *value, gpointer user_data)
+{
+	FuContextPrivate *priv = GET_PRIVATE(self);
+	if (value != NULL) {
+		g_auto(GStrv) values = g_strsplit(value, ",", -1);
+		for (guint j = 0; values[j] != NULL; j++)
+			g_hash_table_add(priv->hwid_flags, g_strdup(values[j]));
+	}
+}
+
 /**
  * fu_context_load_hwinfo:
  * @self: a #FuContext
@@ -913,15 +924,11 @@ fu_context_load_hwinfo(FuContext *self,
 	guids = fu_context_get_hwid_guids(self);
 	for (guint i = 0; i < guids->len; i++) {
 		const gchar *guid = g_ptr_array_index(guids, i);
-		const gchar *value;
-
-		/* does prefixed quirk exist */
-		value = fu_context_lookup_quirk_by_id(self, guid, FU_QUIRKS_FLAGS);
-		if (value != NULL) {
-			g_auto(GStrv) values = g_strsplit(value, ",", -1);
-			for (guint j = 0; values[j] != NULL; j++)
-				g_hash_table_add(priv->hwid_flags, g_strdup(values[j]));
-		}
+		fu_context_lookup_quirk_by_id_iter(self,
+						   guid,
+						   FU_QUIRKS_FLAGS,
+						   fu_context_hwid_quirk_cb,
+						   NULL);
 	}
 	fu_progress_step_done(progress);
 
