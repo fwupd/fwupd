@@ -23,7 +23,6 @@ G_DEFINE_TYPE(FuThunderboltPlugin, fu_thunderbolt_plugin, FU_TYPE_PLUGIN)
 /* defaults changed here will also be reflected in the fwupd.conf man page */
 #define FU_THUNDERBOLT_CONFIG_DEFAULT_MINIMUM_KERNEL_VERSION "4.13.0"
 #define FU_THUNDERBOLT_CONFIG_DEFAULT_DELAYED_ACTIVATION     FALSE
-#define FU_THUNDERBOLT_CONFIG_DEFAULT_RETIMER_OFFLINE_MODE   FALSE
 
 static gboolean
 fu_thunderbolt_plugin_safe_kernel(FuPlugin *plugin, GError **error)
@@ -38,12 +37,11 @@ fu_thunderbolt_plugin_safe_kernel(FuPlugin *plugin, GError **error)
 static gboolean
 fu_thunderbolt_plugin_device_created(FuPlugin *plugin, FuDevice *dev, GError **error)
 {
+	FuContext *ctx = fu_plugin_get_context(plugin);
 	fu_plugin_add_rule(plugin,
 			   FU_PLUGIN_RULE_INHIBITS_IDLE,
 			   "thunderbolt requires device wakeup");
-	if (fu_plugin_get_config_value_boolean(plugin,
-					       "RetimerOfflineMode",
-					       FU_THUNDERBOLT_CONFIG_DEFAULT_RETIMER_OFFLINE_MODE))
+	if (fu_context_has_hwid_flag(ctx, "retimer-offline-mode"))
 		fu_device_add_private_flag(dev, FU_THUNDERBOLT_DEVICE_FLAG_FORCE_ENUMERATION);
 	return TRUE;
 }

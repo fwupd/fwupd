@@ -271,10 +271,6 @@ The `[thunderbolt]` section can contain the following parameters:
 
   Forces delaying activation until shutdown/logout/reboot.
 
-**RetimerOfflineMode={{FU_THUNDERBOLT_CONFIG_DEFAULT_RETIMER_OFFLINE_MODE}}**
-
-  Uses offline mode interface to update retimers.
-
 NOTES
 -----
 
