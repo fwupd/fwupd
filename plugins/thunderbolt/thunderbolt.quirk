@@ -5,3 +5,11 @@ GType = FuThunderboltController
 [THUNDERBOLT\TYPE_THUNDERBOLT_RETIMER]
 Plugin = thunderbolt
 GType = FuThunderboltRetimer
+
+# Google Redrix
+[​af1d04d1-fbe9-5197-973d-fdc9310a33bd]
+Flags = retimer-offline-mode
+
+# Google Rex
+[​​fe682559-28dc-58b3-bf61-aa8414d9f363]
+Flags = retimer-offline-mode
