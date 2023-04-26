@@ -505,6 +505,7 @@ fu_quirks_lookup_by_id(FuQuirks *self, const gchar *guid, const gchar *key)
  * fu_quirks_lookup_by_id_iter:
  * @self: a #FuQuirks
  * @guid: GUID to lookup
+ * @key: (nullable): an ID to match the entry, e.g. `Name`, or %NULL for all keys
  * @iter_cb: (scope call) (closure user_data): a function to call for each result
  * @user_data: user data passed to @iter_cb
  *
@@ -517,6 +518,7 @@ fu_quirks_lookup_by_id(FuQuirks *self, const gchar *guid, const gchar *key)
 gboolean
 fu_quirks_lookup_by_id_iter(FuQuirks *self,
 			    const gchar *guid,
+			    const gchar *key,
 			    FuQuirksIter iter_cb,
 			    gpointer user_data)
 {
@@ -544,13 +546,30 @@ fu_quirks_lookup_by_id_iter(FuQuirks *self,
 #if LIBXMLB_CHECK_VERSION(0, 3, 0)
 	xb_query_context_set_flags(&context, XB_QUERY_FLAG_USE_INDEXES);
 	xb_value_bindings_bind_str(xb_query_context_get_bindings(&context), 0, guid, NULL);
-	results = xb_silo_query_with_context(self->silo, self->query_vs, &context, &error);
-#else
-	if (!xb_query_bind_str(self->query_vs, 0, guid, &error)) {
-		g_warning("failed to bind 0: %s", error->message);
-		return FALSE;
+	if (key != NULL) {
+		xb_value_bindings_bind_str(xb_query_context_get_bindings(&context), 1, key, NULL);
+		results = xb_silo_query_with_context(self->silo, self->query_kv, &context, &error);
+	} else {
+		results = xb_silo_query_with_context(self->silo, self->query_vs, &context, &error);
 	}
-	results = xb_silo_query_full(self->silo, self->query_vs, &error);
+#else
+	if (key != NULL) {
+		if (!xb_query_bind_str(self->query_kv, 0, guid, &error)) {
+			g_warning("failed to bind 0: %s", error->message);
+			return FALSE;
+		}
+		if (!xb_query_bind_str(self->query_kv, 1, key, &error)) {
+			g_warning("failed to bind 1: %s", error->message);
+			return FALSE;
+		}
+		results = xb_silo_query_full(self->silo, self->query_kv, &error);
+	} else {
+		if (!xb_query_bind_str(self->query_vs, 0, guid, &error)) {
+			g_warning("failed to bind 0: %s", error->message);
+			return FALSE;
+		}
+		results = xb_silo_query_full(self->silo, self->query_vs, &error);
+	}
 #endif
 
 	if (results == NULL) {

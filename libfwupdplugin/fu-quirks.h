@@ -55,6 +55,7 @@ fu_quirks_lookup_by_id(FuQuirks *self, const gchar *guid, const gchar *key);
 gboolean
 fu_quirks_lookup_by_id_iter(FuQuirks *self,
 			    const gchar *guid,
+			    const gchar *key,
 			    FuQuirksIter iter_cb,
 			    gpointer user_data);
 void

@@ -968,6 +968,7 @@ fu_plugin_quirks_append_func(void)
 	g_assert_true(ret);
 	ret = fu_quirks_lookup_by_id_iter(quirks,
 					  "b19d1c67-a29a-51ce-9cae-f7b40fe5505b",
+					  NULL,
 					  fu_plugin_quirks_append_cb,
 					  &helper);
 	g_assert_true(ret);
