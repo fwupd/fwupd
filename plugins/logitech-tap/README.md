@@ -6,7 +6,7 @@ title: Plugin: Logitech Tap — Video Collaboration
 
 This plugin can upgrade the firmware on Logitech Video Collaboration products
 (Tap), using ioctl.
-                
+
 ## Firmware Format
 
 The daemon will decompress the cabinet archive and extract a firmware blob in
@@ -14,7 +14,7 @@ a packed binary file format.
 
 This plugin supports the following protocol ID:
 
-* `logitech.hardware.tap`
+* `com.logitech.hardware.tap`
 
 ## GUID Generation
 

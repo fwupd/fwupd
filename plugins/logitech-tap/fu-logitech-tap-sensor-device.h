@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Richard Hughes <richard@hughsie.com>
+ * Copyright (c) 1999-2023 Logitech, Inc.
  *
  * SPDX-License-Identifier: LGPL-2.1+
  */

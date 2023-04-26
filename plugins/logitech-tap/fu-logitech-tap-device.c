@@ -1,6 +1,5 @@
 /*
  * Copyright (c) 1999-2023 Logitech, Inc.
- * Copyright (C) 2023 Richard Hughes <richard@hughsie.com>
  *
  * SPDX-License-Identifier: LGPL-2.1+
  */
@@ -65,7 +64,7 @@ fu_logitech_tap_device_set_progress(FuDevice *self, FuProgress *progress)
 static void
 fu_logitech_tap_device_init(FuLogitechTapDevice *self)
 {
-	fu_device_add_protocol(FU_DEVICE(self), "logitech.hardware.tap");
+	fu_device_add_protocol(FU_DEVICE(self), "com.logitech.hardware.tap");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);

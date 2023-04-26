@@ -1,6 +1,5 @@
 /*
  * Copyright (c) 1999-2023 Logitech, Inc.
- * Copyright (C) 2023 Richard Hughes <richard@hughsie.com>
  *
  * SPDX-License-Identifier: LGPL-2.1+
  */
@@ -134,7 +133,7 @@ fu_logitech_tap_sensor_device_enable_tde(FuDevice *device, GError **error)
 
 	/* enable/disable TDE mode */
 	if (!fu_logitech_tap_sensor_device_set_feature(self,
-						       (guchar *)set_data,
+						       (guint8 *)set_data,
 						       HID_SET_DATA_LEN,
 						       error))
 		return FALSE;
@@ -155,7 +154,7 @@ fu_logitech_tap_sensor_device_disable_tde(FuDevice *device, GError **error)
 
 	/* enable/disable TDE mode */
 	if (!fu_logitech_tap_sensor_device_set_feature(self,
-						       (guchar *)set_data,
+						       (guint8 *)set_data,
 						       HID_SET_DATA_LEN,
 						       error))
 		return FALSE;
@@ -168,7 +167,7 @@ gboolean
 fu_logitech_tap_sensor_device_reboot_device(FuDevice *device, GError **error)
 {
 	FuLogitechTapSensorDevice *self = FU_LOGITECH_TAP_SENSOR_DEVICE(device);
-	gint8 pinclr = 05;
+	guint8 pinclr = 05;
 	guint8 pinset = 06;
 	guint8 PWR = 45;
 	guint8 RST = 46;
@@ -181,7 +180,7 @@ fu_logitech_tap_sensor_device_reboot_device(FuDevice *device, GError **error)
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 100, "attach");
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_RESTART);
 
-	/* need to reopen the device, as at composite_cleaup time, device is already closed */
+	/* need to reopen the device, as at composite_cleanup time, device is already closed */
 	if (!fu_device_open(FU_DEVICE(device), error))
 		return FALSE;
 
@@ -196,7 +195,7 @@ fu_logitech_tap_sensor_device_reboot_device(FuDevice *device, GError **error)
 
 	/* setup HID report for power cycle */
 	if (!fu_logitech_tap_sensor_device_set_feature(self,
-						       (guchar *)set_data,
+						       (guint8 *)set_data,
 						       HID_SET_DATA_LEN,
 						       error))
 		return FALSE;
@@ -204,7 +203,7 @@ fu_logitech_tap_sensor_device_reboot_device(FuDevice *device, GError **error)
 	set_data[1] = pinclr;
 	set_data[2] = RST;
 	if (!fu_logitech_tap_sensor_device_set_feature(self,
-						       (guchar *)set_data,
+						       (guint8 *)set_data,
 						       HID_SET_DATA_LEN,
 						       error))
 		return FALSE;
@@ -213,7 +212,7 @@ fu_logitech_tap_sensor_device_reboot_device(FuDevice *device, GError **error)
 	set_data[1] = pinset;
 	set_data[2] = PWR;
 	if (!fu_logitech_tap_sensor_device_set_feature(self,
-						       (guchar *)set_data,
+						       (guint8 *)set_data,
 						       HID_SET_DATA_LEN,
 						       error))
 		return FALSE;
@@ -222,7 +221,7 @@ fu_logitech_tap_sensor_device_reboot_device(FuDevice *device, GError **error)
 	set_data[1] = pinset;
 	set_data[2] = RST;
 	if (!fu_logitech_tap_sensor_device_set_feature(self,
-						       (guchar *)set_data,
+						       (guint8 *)set_data,
 						       HID_SET_DATA_LEN,
 						       error))
 		return FALSE;
@@ -237,7 +236,7 @@ static gboolean
 fu_logitech_tap_sensor_device_set_version(FuDevice *device, GError **error)
 {
 	FuLogitechTapSensorDevice *self = FU_LOGITECH_TAP_SENSOR_DEVICE(device);
-	guint32 fwversion = 0;
+	guint32 version = 0;
 	guint8 set_data[HID_SET_DATA_LEN] = {kHidReportIdAppSetCmd, kColossusAppCmdGetVer, 0, 0, 0};
 	guint8 get_data[HID_GET_DATA_LEN] = {kHidReportIdAppGetCmd, 0, 0, 0, 0};
 
@@ -245,19 +244,25 @@ fu_logitech_tap_sensor_device_set_version(FuDevice *device, GError **error)
 
 	/* setup HID report to query current device version */
 	if (!fu_logitech_tap_sensor_device_set_feature(self,
-						       (guchar *)set_data,
+						       (guint8 *)set_data,
 						       HID_SET_DATA_LEN,
 						       error))
 		return FALSE;
 	if (!fu_logitech_tap_sensor_device_get_feature(self,
-						       (guchar *)get_data,
+						       (guint8 *)get_data,
 						       HID_GET_DATA_LEN,
 						       error))
 		return FALSE;
 
 	/* little-endian data. MinorVersion byte 3, MajorVersion byte 4, BuildVersion byte 2 & 1 */
-	fwversion = (get_data[4] << 24) + (get_data[3] << 16) + (get_data[2] << 8) + get_data[1];
-	fu_device_set_version_from_uint32(device, fwversion);
+	if (!fu_memread_uint32_safe(get_data,
+				    sizeof(get_data),
+				    0x01,
+				    &version,
+				    G_LITTLE_ENDIAN,
+				    error))
+		return FALSE;
+	fu_device_set_version_from_uint32(device, version);
 
 	/* success */
 	return TRUE;
@@ -288,7 +293,7 @@ fu_logitech_tap_sensor_device_set_serial(FuDevice *device, GError **error)
 
 	/* setup HID report for serial number */
 	if (!fu_logitech_tap_sensor_device_set_feature(self,
-						       (guchar *)set_data,
+						       (guint8 *)set_data,
 						       HID_SET_DATA_LEN,
 						       error))
 		return FALSE;
@@ -298,7 +303,7 @@ fu_logitech_tap_sensor_device_set_serial(FuDevice *device, GError **error)
 	for (int index = 1; index <= 3; index++) {
 		guint8 get_data[HID_GET_DATA_LEN] = {kHidMcuCmdGetSerialNumber, 0, 0, 0, 0};
 		if (!fu_logitech_tap_sensor_device_get_feature(self,
-							       (guchar *)get_data,
+							       (guint8 *)get_data,
 							       HID_GET_DATA_LEN,
 							       error))
 			return FALSE;
@@ -325,8 +330,8 @@ fu_logitech_tap_sensor_device_setup(FuDevice *device, GError **error)
 	if (!fu_logitech_tap_sensor_device_set_serial(device, error))
 		return FALSE;
 
-	/* setup device identifier so plugin can disntiguish device during composite_cleaup */
-	fu_device_add_private_flag(device, FU_LOGITECH_TAP_DEVICE_TYPE_SENSOR);
+	/* setup device identifier so plugin can distinguish device during composite_cleanup */
+	fu_device_add_private_flag(device, FU_LOGITECH_TAP_DEVICE_FLAG_TYPE_SENSOR);
 	return TRUE;
 }
 
@@ -338,7 +343,7 @@ fu_logitech_tap_sensor_device_probe(FuDevice *device, GError **error)
 		return FALSE;
 	}
 
-	/* ignore unsupported susbystems */
+	/* ignore unsupported subsystems */
 	if (g_strcmp0(fu_udev_device_get_subsystem(FU_UDEV_DEVICE(device)), "hidraw") != 0) {
 		g_set_error(error,
 			    FWUPD_ERROR,
