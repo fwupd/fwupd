@@ -772,6 +772,22 @@ fu_context_lookup_quirk_by_id(FuContext *self, const gchar *guid, const gchar *k
 	return fu_quirks_lookup_by_id(priv->quirks, guid, key);
 }
 
+typedef struct {
+	FuContext *self; /* noref */
+	FuContextLookupIter iter_cb;
+	gpointer user_data;
+} FuContextQuirkLookupHelper;
+
+static void
+fu_context_lookup_quirk_by_id_iter_cb(FuQuirks *self,
+				      const gchar *key,
+				      const gchar *value,
+				      gpointer user_data)
+{
+	FuContextQuirkLookupHelper *helper = (FuContextQuirkLookupHelper *)user_data;
+	helper->iter_cb(helper->self, key, value, helper->user_data);
+}
+
 /**
  * fu_context_lookup_quirk_by_id_iter:
  * @self: a #FuContext
@@ -788,14 +804,23 @@ fu_context_lookup_quirk_by_id(FuContext *self, const gchar *guid, const gchar *k
 gboolean
 fu_context_lookup_quirk_by_id_iter(FuContext *self,
 				   const gchar *guid,
+				   const gchar *key,
 				   FuContextLookupIter iter_cb,
 				   gpointer user_data)
 {
 	FuContextPrivate *priv = GET_PRIVATE(self);
+	FuContextQuirkLookupHelper helper = {
+	    .self = self,
+	    .iter_cb = iter_cb,
+	    .user_data = user_data,
+	};
 	g_return_val_if_fail(FU_IS_CONTEXT(self), FALSE);
 	g_return_val_if_fail(guid != NULL, FALSE);
 	g_return_val_if_fail(iter_cb != NULL, FALSE);
-	return fu_quirks_lookup_by_id_iter(priv->quirks, guid, (FuQuirksIter)iter_cb, user_data);
+	return fu_quirks_lookup_by_id_iter(priv->quirks,
+					   guid,
+					   fu_context_lookup_quirk_by_id_iter_cb,
+					   &helper);
 }
 
 /**
