@@ -104,6 +104,7 @@ fu_context_lookup_quirk_by_id(FuContext *self, const gchar *guid, const gchar *k
 gboolean
 fu_context_lookup_quirk_by_id_iter(FuContext *self,
 				   const gchar *guid,
+				   const gchar *key,
 				   FuContextLookupIter iter_cb,
 				   gpointer user_data);
 void

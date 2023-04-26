@@ -792,6 +792,7 @@ fu_context_lookup_quirk_by_id_iter_cb(FuQuirks *self,
  * fu_context_lookup_quirk_by_id_iter:
  * @self: a #FuContext
  * @guid: GUID to lookup
+ * @key: (nullable): an ID to match the entry, e.g. `Name`, or %NULL for all keys
  * @iter_cb: (scope call) (closure user_data): a function to call for each result
  * @user_data: user data passed to @iter_cb
  *
@@ -819,6 +820,7 @@ fu_context_lookup_quirk_by_id_iter(FuContext *self,
 	g_return_val_if_fail(iter_cb != NULL, FALSE);
 	return fu_quirks_lookup_by_id_iter(priv->quirks,
 					   guid,
+					   key,
 					   fu_context_lookup_quirk_by_id_iter_cb,
 					   &helper);
 }
