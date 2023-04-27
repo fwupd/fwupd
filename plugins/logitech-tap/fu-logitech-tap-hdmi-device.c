@@ -291,15 +291,12 @@ fu_logitech_tap_hdmi_device_ait_finalize_update(FuLogitechTapHdmiDevice *self, G
 }
 
 static gboolean
-fu_logitech_tap_hdmi_device_write_firmware(FuDevice *device,
-					   GPtrArray *chunks,
-					   FuProgress *progress,
-					   GError **error)
+fu_logitech_tap_hdmi_device_write_fw(FuDevice *device,
+				     GPtrArray *chunks,
+				     FuProgress *progress,
+				     GError **error)
 {
 	FuLogitechTapHdmiDevice *self = FU_LOGITECH_TAP_HDMI_DEVICE(device);
-
-	g_debug("write HDMI firmware");
-	/* flushes image */
 
 	/* init */
 	if (!fu_logitech_tap_hdmi_device_ait_initiate_update(self, error))
@@ -330,6 +327,46 @@ fu_logitech_tap_hdmi_device_write_firmware(FuDevice *device,
 
 	/* signal for sensor device to trigger composite device reboot */
 	fu_device_add_private_flag(device, FU_LOGITECH_TAP_HDMI_DEVICE_FLAG_NEEDS_REBOOT);
+	return TRUE;
+}
+
+static gboolean
+fu_logitech_tap_hdmi_device_write_firmware(FuDevice *device,
+					   FuFirmware *firmware,
+					   FuProgress *progress,
+					   FwupdInstallFlags flags,
+					   GError **error)
+{
+	g_autofree gchar *old_firmware_version = NULL;
+	g_autoptr(GBytes) fw = NULL;
+	g_autoptr(GPtrArray) chunks = NULL;
+
+	/* save the current firmware version for troubleshooting purpose */
+	old_firmware_version = g_strdup(fu_device_get_version(device));
+
+	g_debug("update %s firmware", old_firmware_version);
+
+	/* progress */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 100, "write");
+
+	/* get image */
+	fw = fu_firmware_get_bytes(firmware, error);
+	if (fw == NULL)
+		return FALSE;
+
+	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_WRITE);
+	chunks = fu_chunk_array_new_from_bytes(fw, 0x0, 0x0, 32);
+
+	/* write */
+	if (!fu_logitech_tap_hdmi_device_write_fw(device,
+						  chunks,
+						  fu_progress_get_child(progress),
+						  error))
+		return FALSE;
+	fu_progress_step_done(progress);
+
+	/* success */
 	return TRUE;
 }
 
@@ -476,10 +513,10 @@ fu_logitech_tap_hdmi_device_class_init(FuLogitechTapHdmiDeviceClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
-	FuLogitechTapDeviceClass *klass_logitech_tap_device = FU_LOGITECH_TAP_DEVICE_CLASS(klass);
+
 	object_class->finalize = fu_logitech_tap_hdmi_device_finalize;
 	klass_device->probe = fu_logitech_tap_hdmi_device_probe;
 	klass_device->setup = fu_logitech_tap_hdmi_device_setup;
 	klass_device->set_progress = fu_logitech_tap_hdmi_device_set_progress;
-	klass_logitech_tap_device->write_firmware = fu_logitech_tap_hdmi_device_write_firmware;
+	klass_device->write_firmware = fu_logitech_tap_hdmi_device_write_firmware;
 }

@@ -25,7 +25,9 @@
 #define HID_SET_DATA_LEN			    5
 #define HID_GET_DATA_LEN			    5
 
-#define HID_IOC_GINPUT(len) _IOC(_IOC_READ, 'H', 0x0A, len)
+#ifndef HIDIOCGINPUT
+#define HIDIOCGINPUT(len) _IOC(_IOC_READ, 'H', 0x0A, len)
+#endif
 
 /* device version */
 const guchar kHidReportIdAppSetCmd = 0x1b;
@@ -91,7 +93,7 @@ fu_logitech_tap_sensor_device_get_feature(FuLogitechTapSensorDevice *self,
 	g_autoptr(GError) error_local = NULL;
 	fu_dump_raw(G_LOG_DOMAIN, "HidGetFeatureReq", data, datasz);
 
-	/* try HID_IOC_GINPUT aka HIDIOCGINPUT request in case of failure */
+	/* try HIDIOCGINPUT request in case of failure */
 	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
 				  HIDIOCGFEATURE(datasz),
 				  data,
@@ -100,7 +102,7 @@ fu_logitech_tap_sensor_device_get_feature(FuLogitechTapSensorDevice *self,
 				  &error_local)) {
 		g_debug("failed to send get request, retrying: %s", error_local->message);
 		if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
-					  HID_IOC_GINPUT(datasz),
+					  HIDIOCGINPUT(datasz),
 					  data,
 					  NULL,
 					  FU_LOGITECH_TAP_SENSOR_DEVICE_IOCTL_TIMEOUT,
@@ -240,8 +242,6 @@ fu_logitech_tap_sensor_device_set_version(FuDevice *device, GError **error)
 	guint8 set_data[HID_SET_DATA_LEN] = {kHidReportIdAppSetCmd, kColossusAppCmdGetVer, 0, 0, 0};
 	guint8 get_data[HID_GET_DATA_LEN] = {kHidReportIdAppGetCmd, 0, 0, 0, 0};
 
-	g_debug("get sensor firmware version");
-
 	/* setup HID report to query current device version */
 	if (!fu_logitech_tap_sensor_device_set_feature(self,
 						       (guint8 *)set_data,
@@ -339,9 +339,8 @@ static gboolean
 fu_logitech_tap_sensor_device_probe(FuDevice *device, GError **error)
 {
 	/* FuUdevDevice->probe */
-	if (!FU_DEVICE_CLASS(fu_logitech_tap_sensor_device_parent_class)->probe(device, error)) {
+	if (!FU_DEVICE_CLASS(fu_logitech_tap_sensor_device_parent_class)->probe(device, error))
 		return FALSE;
-	}
 
 	/* ignore unsupported subsystems */
 	if (g_strcmp0(fu_udev_device_get_subsystem(FU_UDEV_DEVICE(device)), "hidraw") != 0) {

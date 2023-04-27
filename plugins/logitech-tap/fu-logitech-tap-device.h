@@ -17,8 +17,4 @@ G_DECLARE_DERIVABLE_TYPE(FuLogitechTapDevice,
 
 struct _FuLogitechTapDeviceClass {
 	FuUdevDeviceClass parent_class;
-	gboolean (*write_firmware)(FuDevice *self,
-				   GPtrArray *chunks,
-				   FuProgress *progress,
-				   GError **error);
 };

@@ -67,12 +67,12 @@ fu_logitech_tap_plugin_device_registered(FuPlugin *plugin, FuDevice *device)
 		return;
 	if (fu_device_has_private_flag(device, FU_LOGITECH_TAP_DEVICE_FLAG_TYPE_HDMI)) {
 		g_set_object(&self->hdmi_device, device);
-		if (self->sensor_device)
+		if (self->sensor_device != NULL)
 			fu_device_set_proxy(self->hdmi_device, self->sensor_device);
 	}
 	if (fu_device_has_private_flag(device, FU_LOGITECH_TAP_DEVICE_FLAG_TYPE_SENSOR)) {
 		g_set_object(&self->sensor_device, device);
-		if (self->hdmi_device)
+		if (self->hdmi_device != NULL)
 			fu_device_set_proxy(self->hdmi_device, self->sensor_device);
 	}
 }
