@@ -119,7 +119,7 @@ GByteArray *
 gchar *
 {{name_snake}}_to_string(GByteArray *st)
 {
-    g_autoptr(GString) str = g_string_new("{name}:\n");
+    g_autoptr(GString) str = g_string_new("{{name}}:\n");
     g_return_val_if_fail(st != NULL, NULL);
 {%- for item in items | selectattr('enabled') %}
 {%- if not item.multiplier and item.type in [Type.U8, Type.U16, Type.U24, Type.U32, Type.U64] %}
