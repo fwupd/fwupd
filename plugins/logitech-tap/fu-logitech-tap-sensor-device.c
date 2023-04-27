@@ -169,10 +169,10 @@ gboolean
 fu_logitech_tap_sensor_device_reboot_device(FuDevice *device, GError **error)
 {
 	FuLogitechTapSensorDevice *self = FU_LOGITECH_TAP_SENSOR_DEVICE(device);
-	guint8 pinclr = 05;
-	guint8 pinset = 06;
-	guint8 PWR = 45;
-	guint8 RST = 46;
+	const guint8 pinclr = 05;
+	const guint8 pinset = 06;
+	const guint8 PWR = 45;
+	const guint8 RST = 46;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 	guint8 set_data[HID_SET_DATA_LEN] = {kHidReportIdMcuSetCmd, pinclr, PWR, 0, 0};
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
@@ -280,8 +280,6 @@ fu_logitech_tap_sensor_device_set_serial(FuDevice *device, GError **error)
 					     kHidMcuSerialNumberSetReportByte3,
 					     kHidMcuSerialNumberSetReportByte4};
 
-	g_debug("get sensor serial number");
-
 	/* enable/disable TDE mode */
 	locker =
 	    fu_device_locker_new_full(device,
@@ -330,8 +328,6 @@ fu_logitech_tap_sensor_device_setup(FuDevice *device, GError **error)
 	if (!fu_logitech_tap_sensor_device_set_serial(device, error))
 		return FALSE;
 
-	/* setup device identifier so plugin can distinguish device during composite_cleanup */
-	fu_device_add_private_flag(device, FU_LOGITECH_TAP_DEVICE_FLAG_TYPE_SENSOR);
 	return TRUE;
 }
 
@@ -374,6 +370,8 @@ fu_logitech_tap_sensor_device_init(FuLogitechTapSensorDevice *self)
 				 FU_UDEV_DEVICE_FLAG_OPEN_READ | FU_UDEV_DEVICE_FLAG_OPEN_WRITE |
 				     FU_UDEV_DEVICE_FLAG_OPEN_NONBLOCK |
 				     FU_UDEV_DEVICE_FLAG_IOCTL_RETRY);
+	/* setup device identifier so plugin can distinguish device during composite_cleanup */
+	fu_device_add_private_flag(FU_DEVICE(self), FU_LOGITECH_TAP_DEVICE_FLAG_TYPE_SENSOR);
 }
 
 static void

@@ -175,8 +175,6 @@ fu_logitech_tap_hdmi_device_ait_initiate_update(FuLogitechTapHdmiDevice *self, G
 	guint8 ait_initiate_update[XU_INPUT_DATA_LEN] =
 	    {kLogiTapAitSetMmpCmdFwBurning, 0, 0, kLogiTapVideoAitInitiateSetMMPData, 0, 0, 0, 0};
 
-	g_debug("Ait initiate update request");
-
 	if (!fu_logitech_tap_hdmi_device_set_xu_control(self,
 							kLogiUnitIdVidCapExtension,
 							kLogiTapUvcXuAitCustomCsSetMmp,
@@ -227,8 +225,6 @@ fu_logitech_tap_hdmi_device_ait_finalize_update(FuLogitechTapHdmiDevice *self, G
 	guint duration_ms = 0;
 	guint8 ait_finalize_update[XU_INPUT_DATA_LEN] =
 	    {kLogiTapAitSetMmpCmdFwBurning, kLogiTapVideoAitInitiateSetMMPData, 0, 0, 0, 0, 0, 0};
-
-	g_debug("Ait finalize update request");
 
 	fu_device_sleep(FU_DEVICE(self), 4 * kLogiDefaultAitSleepIntervalMs); /* 4 sec */
 	if (!fu_logitech_tap_hdmi_device_set_xu_control(self,
@@ -307,15 +303,24 @@ fu_logitech_tap_hdmi_device_write_fw(FuDevice *device,
 	fu_progress_set_steps(progress, chunks->len);
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index(chunks, i);
-		g_autoptr(GByteArray) data_pkt = g_byte_array_new();
-		/* device expect fixed size buffer, so cannot leverage actual size here:
-		 * fu_chunk_get_data_sz(chk) */
-		g_byte_array_append(data_pkt, fu_chunk_get_data(chk), kLogiDefaultImageBlockSize);
+		/* if needed, pad the last block to kLogiDefaultImageBlockSize size,
+		 * so that device always gets each block of kLogiDefaultImageBlockSize */
+		g_autofree guint8 *data_pkt = g_malloc0(kLogiDefaultImageBlockSize);
+
+		if (!fu_memcpy_safe(data_pkt,
+				    kLogiDefaultImageBlockSize,
+				    0x0,
+				    fu_chunk_get_data(chk),
+				    fu_chunk_get_data_sz(chk),
+				    0x0,
+				    fu_chunk_get_data_sz(chk),
+				    error))
+			return FALSE;
 		if (!fu_logitech_tap_hdmi_device_set_xu_control(self,
 								kLogiUnitIdVidCapExtension,
 								kLogiUvcXuAitCustomCsSetFwData,
-								data_pkt->len,
-								(guchar *)data_pkt->data,
+								kLogiDefaultImageBlockSize,
+								(guchar *)data_pkt,
 								error))
 			return FALSE;
 		fu_progress_step_done(progress);
@@ -356,7 +361,7 @@ fu_logitech_tap_hdmi_device_write_firmware(FuDevice *device,
 		return FALSE;
 
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_WRITE);
-	chunks = fu_chunk_array_new_from_bytes(fw, 0x0, 0x0, 32);
+	chunks = fu_chunk_array_new_from_bytes(fw, 0x0, 0x0, kLogiDefaultImageBlockSize);
 
 	/* write */
 	if (!fu_logitech_tap_hdmi_device_write_fw(device,
@@ -376,11 +381,10 @@ fu_logitech_tap_hdmi_device_set_version(FuDevice *device, GError **error)
 	FuLogitechTapHdmiDevice *self = FU_LOGITECH_TAP_HDMI_DEVICE(device);
 	guint16 data_len = 0;
 	g_autofree guint8 *query_data = NULL;
-	g_autofree gchar *version_str = NULL;
 	guint8 set_data[XU_INPUT_DATA_LEN] = {kLogiTapHdmiVerSetData, 0, 0, 0, 0, 0, 0, 0};
-
-	g_debug("get HDMI firmware version");
-
+	guint16 build = 0;
+	guint16 minor = 0;
+	guint16 major = 0;
 	if (!fu_logitech_tap_hdmi_device_set_xu_control(self,
 							kLogiUnitIdVidCapExtension,
 							kLogiTapCameraVersionSelector,
@@ -389,7 +393,6 @@ fu_logitech_tap_hdmi_device_set_version(FuDevice *device, GError **error)
 							error))
 		return FALSE;
 
-	data_len = 0;
 	/* query current device version */
 	if (!fu_logitech_tap_hdmi_device_query_data_size(self,
 							 kLogiUnitIdVidCapExtension,
@@ -415,13 +418,30 @@ fu_logitech_tap_hdmi_device_set_version(FuDevice *device, GError **error)
 							error))
 		return FALSE;
 
-	/*  little-endian data. MajorVersion byte 3&2, MinorVersion byte 5&4, BuildVersion byte 7&6
+	/* map endian data. MajorVersion byte2 3&2, MinorVersion bytes 5&4, BuildVersion bytes 7&6
 	 */
-	version_str = g_strdup_printf("%i.%i.%i",
-				      query_data[3] + query_data[2] * 100,
-				      query_data[5] + query_data[4] * 100,
-				      query_data[7] + query_data[6] * 100);
-	fu_device_set_version(device, version_str);
+	if (!fu_memread_uint16_safe(query_data,
+				    sizeof(query_data),
+				    0x2,
+				    &major,
+				    G_BIG_ENDIAN,
+				    error))
+		return FALSE;
+	if (!fu_memread_uint16_safe(query_data,
+				    sizeof(query_data),
+				    0x4,
+				    &minor,
+				    G_BIG_ENDIAN,
+				    error))
+		return FALSE;
+	if (!fu_memread_uint16_safe(query_data,
+				    sizeof(query_data),
+				    0x6,
+				    &build,
+				    G_BIG_ENDIAN,
+				    error))
+		return FALSE;
+	fu_device_set_version(device, g_strdup_printf("%i.%i.%i", major, minor, build));
 
 	/* success */
 	return TRUE;
@@ -430,8 +450,6 @@ fu_logitech_tap_hdmi_device_set_version(FuDevice *device, GError **error)
 static gboolean
 fu_logitech_tap_hdmi_device_setup(FuDevice *device, GError **error)
 {
-	/* setup device identifier so plugin can distinguish device during composite_cleanup */
-	fu_device_add_private_flag(device, FU_LOGITECH_TAP_DEVICE_FLAG_TYPE_HDMI);
 	return fu_logitech_tap_hdmi_device_set_version(device, error);
 }
 
@@ -443,9 +461,8 @@ fu_logitech_tap_hdmi_device_probe(FuDevice *device, GError **error)
 	GUdevDevice *udev_device = fu_udev_device_get_dev(FU_UDEV_DEVICE(device));
 
 	/* FuUdevDevice->probe */
-	if (!FU_DEVICE_CLASS(fu_logitech_tap_hdmi_device_parent_class)->probe(device, error)) {
+	if (!FU_DEVICE_CLASS(fu_logitech_tap_hdmi_device_parent_class)->probe(device, error))
 		return FALSE;
-	}
 
 	/* ignore unsupported subsystems */
 	if (g_strcmp0(fu_udev_device_get_subsystem(FU_UDEV_DEVICE(device)), "video4linux") != 0) {
@@ -500,6 +517,8 @@ fu_logitech_tap_hdmi_device_init(FuLogitechTapHdmiDevice *self)
 				 FU_UDEV_DEVICE_FLAG_OPEN_READ | FU_UDEV_DEVICE_FLAG_OPEN_WRITE |
 				     FU_UDEV_DEVICE_FLAG_OPEN_NONBLOCK |
 				     FU_UDEV_DEVICE_FLAG_IOCTL_RETRY);
+	/* setup device identifier so plugin can distinguish device during composite_cleanup */
+	fu_device_add_private_flag(FU_DEVICE(self), FU_LOGITECH_TAP_DEVICE_FLAG_TYPE_HDMI);
 }
 
 static void
