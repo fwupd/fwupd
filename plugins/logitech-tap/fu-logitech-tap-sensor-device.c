@@ -299,7 +299,7 @@ fu_logitech_tap_sensor_device_set_serial(FuDevice *device, GError **error)
 		return FALSE;
 	fu_device_sleep(FU_DEVICE(self), kLogiDefaultSensorSleepIntervalMs); /* 50 ms */
 	/* serial number is a 12-byte-string that is stored in MCU  */
-	/* each get request fetchs 1 word (4 bytes), so iterate 3 times */
+	/* each get request fetches 1 word (4 bytes), so iterate 3 times */
 	for (int index = 1; index <= 3; index++) {
 		guint8 get_data[HID_GET_DATA_LEN] = {kHidMcuCmdGetSerialNumber, 0, 0, 0, 0};
 		if (!fu_logitech_tap_sensor_device_get_feature(self,
