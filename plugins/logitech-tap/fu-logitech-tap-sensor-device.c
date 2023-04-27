@@ -25,7 +25,7 @@
 #define HID_SET_DATA_LEN			    5
 #define HID_GET_DATA_LEN			    5
 
-#define HIDIOCGINPUT(len) _IOC(_IOC_READ, 'H', 0x0A, len)
+#define HID_IOC_GINPUT(len) _IOC(_IOC_READ, 'H', 0x0A, len)
 
 /* device version */
 const guchar kHidReportIdAppSetCmd = 0x1b;
@@ -91,7 +91,7 @@ fu_logitech_tap_sensor_device_get_feature(FuLogitechTapSensorDevice *self,
 	g_autoptr(GError) error_local = NULL;
 	fu_dump_raw(G_LOG_DOMAIN, "HidGetFeatureReq", data, datasz);
 
-	/* try HIDIOCGINPUT request in case of failure */
+	/* try HID_IOC_GINPUT aka HIDIOCGINPUT request in case of failure */
 	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
 				  HIDIOCGFEATURE(datasz),
 				  data,
@@ -100,7 +100,7 @@ fu_logitech_tap_sensor_device_get_feature(FuLogitechTapSensorDevice *self,
 				  &error_local)) {
 		g_debug("failed to send get request, retrying: %s", error_local->message);
 		if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
-					  HIDIOCGINPUT(datasz),
+					  HID_IOC_GINPUT(datasz),
 					  data,
 					  NULL,
 					  FU_LOGITECH_TAP_SENSOR_DEVICE_IOCTL_TIMEOUT,
