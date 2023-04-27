@@ -4556,6 +4556,9 @@ fu_engine_load_metadata_store(FuEngine *self, FuEngineLoadFlags flags, GError **
 	/* clear existing silo */
 	g_clear_object(&self->silo);
 
+	/* invalidate the cache if the fwupd version changes */
+	xb_builder_append_guid(builder, SOURCE_VERSION);
+
 	/* verbose profiling */
 	if (g_getenv("FWUPD_XMLB_VERBOSE") != NULL) {
 		xb_builder_set_profile_flags(builder,
