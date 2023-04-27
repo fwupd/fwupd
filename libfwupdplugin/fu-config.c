@@ -175,6 +175,45 @@ fu_config_reload(FuConfig *self, GError **error)
 		const gchar *fn_default = g_ptr_array_index(priv->filenames, 0);
 		g_autofree gchar *data = NULL;
 
+		/* do not write empty keys migrated from daemon.conf */
+		struct {
+			const gchar *group;
+			const gchar *key;
+			const gchar *value;
+		} key_values[] = {{"fwupd", "ApprovedFirmware", ""},
+				  {"fwupd", "ArchiveSizeMax", "0"},
+				  {"fwupd", "BlockedFirmware", ""},
+				  {"fwupd", "DisabledDevices", ""},
+				  {"fwupd", "EnumerateAllDevices", "false"},
+				  {"fwupd", "EspLocation", ""},
+				  {"fwupd", "HostBkc", ""},
+				  {"fwupd", "IdleTimeout", "7200"},
+				  {"fwupd", "IgnorePower", ""},
+				  {"fwupd", "ShowDevicePrivate", "true"},
+				  {"fwupd", "TrustedUids", ""},
+				  {"fwupd", "UpdateMotd", "true"},
+				  {"fwupd", "UriSchemes", ""},
+				  {"fwupd", "VerboseDomains", ""},
+				  {"redfish", "IpmiDisableCreateUser", "False"},
+				  {"redfish", "ManagerResetTimeout", "1800"},
+				  {NULL, NULL, NULL}};
+		for (guint i = 0; key_values[i].group != NULL; i++) {
+			g_autofree gchar *value = g_key_file_get_value(priv->keyfile,
+								       key_values[i].group,
+								       key_values[i].key,
+								       NULL);
+			if (g_strcmp0(value, key_values[i].value) == 0) {
+				g_debug("not migrating default value of [%s] %s=%s",
+					key_values[i].group,
+					key_values[i].key,
+					key_values[i].value);
+				g_key_file_remove_key(priv->keyfile,
+						      key_values[i].group,
+						      key_values[i].key,
+						      NULL);
+			}
+		}
+
 		/* make sure we can save the new file first */
 		data = g_key_file_to_data(priv->keyfile, NULL, error);
 		if (data == NULL)
