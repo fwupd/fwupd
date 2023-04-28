@@ -320,6 +320,7 @@ class Generator:
                     if derive == "Parse":
                         derives.append("Getters")
                     if derive == "New":
+                        derives.append("Getters")
                         derives.append("Setters")
                     derives.append(derive)
                 continue

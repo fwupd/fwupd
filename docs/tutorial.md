@@ -933,7 +933,7 @@ There are traits that control the generation of struct code. These include:
 - `Getters`: for `fu_struct_example_get_XXXX()`, to get access to field values
 - `Setters`: for `fu_struct_example_set_XXXX()`, to set specific field values
 
-`Getters` is implied by `Parse`, and `Setters` is implied by `New`.
+`Getters` is implied by `Parse`, and `[Getters,Setters]` is implied by `New`.
 
 Regardless of traits used, the header offset addresses are defined, for instance:
 
