@@ -315,6 +315,10 @@ static gboolean
 fu_logitech_scribe_device_probe(FuDevice *device, GError **error)
 {
 #if G_USB_CHECK_VERSION(0, 3, 3)
+	const gchar *id_v4l_capabilities;
+	const gchar *index;
+	GUdevDevice *udev_device = fu_udev_device_get_dev(FU_UDEV_DEVICE(device));
+
 	/* check is valid */
 	if (g_strcmp0(fu_udev_device_get_subsystem(FU_UDEV_DEVICE(device)), "video4linux") != 0) {
 		g_set_error(error,
@@ -325,14 +329,27 @@ fu_logitech_scribe_device_probe(FuDevice *device, GError **error)
 		return FALSE;
 	}
 
-	/* only enumerate number 0. Ignore siblings like video1/video2/video3 etc */
-	if (fu_udev_device_get_number(FU_UDEV_DEVICE(device)) != 0) {
+	/* only interested in video capture device */
+	id_v4l_capabilities = g_udev_device_get_property(udev_device, "ID_V4L_CAPABILITIES");
+	if (g_strcmp0(id_v4l_capabilities, ":capture:") != 0) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "only device 0 supported on multi-device card");
+				    "only video capture device are supported");
 		return FALSE;
 	}
+
+	/* interested in lowest index only e,g, video0, ignore low format siblings like
+	 * video1/video2/video3 etc */
+	index = g_udev_device_get_sysfs_attr(udev_device, "index");
+	if (g_strcmp0(index, "0") != 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "only device with lower index supported");
+		return FALSE;
+	};
+
 	/* set the physical ID */
 	return fu_udev_device_set_physical_id(FU_UDEV_DEVICE(device), "video4linux", error);
 #else
