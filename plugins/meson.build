@@ -67,6 +67,7 @@ plugins = [
   'logitech-hidpp',
   'logitech-bulkcontroller',
   'logitech-scribe',
+  'logitech-tap',
   'modem-manager',
   'msr',
   'mtd',

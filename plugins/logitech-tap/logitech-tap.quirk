@@ -1,0 +1,11 @@
+# Logitech Flare PIR Sensor
+[HIDRAW\VEN_046D&DEV_0872]
+Plugin = logitech_tap
+GType = FuLogitechTapSensorDevice
+
+# Logitech Tap HDMI Capture
+[VIDEO4LINUX\VEN_046D&DEV_0876]
+Plugin = logitech_tap
+GType = FuLogitechTapHdmiDevice
+InstallDuration = 120
+RemoveDelay = 120000
