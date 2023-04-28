@@ -14,3 +14,5 @@ G_DECLARE_FINAL_TYPE(FuLogitechTapSensorDevice,
 		     FU,
 		     LOGITECH_TAP_SENSOR_DEVICE,
 		     FuLogitechTapDevice)
+gboolean
+fu_logitech_tap_sensor_device_reboot_device(FuLogitechTapSensorDevice *self, GError **error);

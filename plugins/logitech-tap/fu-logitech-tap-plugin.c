@@ -6,15 +6,14 @@
 
 #include "config.h"
 
-#include "fu-logitech-tap-common.h"
 #include "fu-logitech-tap-hdmi-device.h"
 #include "fu-logitech-tap-plugin.h"
 #include "fu-logitech-tap-sensor-device.h"
 
 struct _FuLogitechTapPlugin {
 	FuPlugin parent_instance;
-	FuDevice *hdmi_device;
-	FuDevice *sensor_device;
+	FuDevice *hdmi_device;	 /* ref */
+	FuDevice *sensor_device; /* ref */
 };
 
 G_DEFINE_TYPE(FuLogitechTapPlugin, fu_logitech_tap_plugin, FU_TYPE_PLUGIN)
@@ -30,13 +29,14 @@ fu_logitech_tap_plugin_composite_cleanup(FuPlugin *plugin, GPtrArray *devices, G
 		FuDevice *dev = g_ptr_array_index(devices, i);
 
 		if ((g_strcmp0(fu_device_get_plugin(dev), "logitech_tap") == 0) &&
-		    (fu_device_has_private_flag(dev, FU_LOGITECH_TAP_DEVICE_FLAG_TYPE_HDMI)) &&
+		    (FU_IS_LOGITECH_TAP_HDMI_DEVICE(dev)) &&
 		    (fu_device_has_private_flag(dev,
 						FU_LOGITECH_TAP_HDMI_DEVICE_FLAG_NEEDS_REBOOT)) &&
 		    self->hdmi_device != NULL) {
 			g_debug("device needs reboot");
-			if (!fu_logitech_tap_sensor_device_reboot_device(fu_device_get_proxy(dev),
-									 error))
+			if (!fu_logitech_tap_sensor_device_reboot_device(
+				FU_LOGITECH_TAP_SENSOR_DEVICE(fu_device_get_proxy(dev)),
+				error))
 				return FALSE;
 			break;
 		}
@@ -65,12 +65,12 @@ fu_logitech_tap_plugin_device_registered(FuPlugin *plugin, FuDevice *device)
 	FuLogitechTapPlugin *self = FU_LOGITECH_TAP_PLUGIN(plugin);
 	if (g_strcmp0(fu_device_get_plugin(device), "logitech_tap") != 0)
 		return;
-	if (fu_device_has_private_flag(device, FU_LOGITECH_TAP_DEVICE_FLAG_TYPE_HDMI)) {
+	if (FU_IS_LOGITECH_TAP_HDMI_DEVICE(device)) {
 		g_set_object(&self->hdmi_device, device);
 		if (self->sensor_device != NULL)
 			fu_device_set_proxy(self->hdmi_device, self->sensor_device);
 	}
-	if (fu_device_has_private_flag(device, FU_LOGITECH_TAP_DEVICE_FLAG_TYPE_SENSOR)) {
+	if (FU_IS_LOGITECH_TAP_SENSOR_DEVICE(device)) {
 		g_set_object(&self->sensor_device, device);
 		if (self->hdmi_device != NULL)
 			fu_device_set_proxy(self->hdmi_device, self->sensor_device);
