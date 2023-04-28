@@ -23,7 +23,6 @@ fu_pci_psp_device_probe(FuDevice *device, GError **error)
 	const gchar *tee_version;
 	g_autoptr(GError) error_boot = NULL;
 	g_autoptr(GError) error_tee = NULL;
-	g_autoptr(FuUdevDevice) udev_parent = NULL;
 
 	bootloader_version = fu_udev_device_get_sysfs_attr(FU_UDEV_DEVICE(device),
 							   "bootloader_version",
