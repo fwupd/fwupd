@@ -33,7 +33,6 @@ struct _FuRemoteList {
 	GObject parent_instance;
 	GPtrArray *array;	  /* (element-type FwupdRemote) */
 	GPtrArray *monitors;	  /* (element-type GFileMonitor) */
-	GHashTable *hash_unfound; /* utf8 : NULL */
 	XbSilo *silo;
 };
 
@@ -334,14 +333,13 @@ fu_remote_list_sort_cb(gconstpointer a, gconstpointer b)
 }
 
 static guint
-fu_remote_list_depsolve_with_direction(FuRemoteList *self, gint inc)
+fu_remote_list_depsolve_order_before(FuRemoteList *self)
 {
 	guint cnt = 0;
 
 	for (guint i = 0; i < self->array->len; i++) {
 		FwupdRemote *remote = g_ptr_array_index(self->array, i);
-		gchar **order = inc < 0 ? fwupd_remote_get_order_after(remote)
-					: fwupd_remote_get_order_before(remote);
+		gchar **order = fwupd_remote_get_order_before(remote);
 		if (order == NULL)
 			continue;
 		for (guint j = 0; order[j] != NULL; j++) {
@@ -352,21 +350,48 @@ fu_remote_list_depsolve_with_direction(FuRemoteList *self, gint inc)
 			}
 			remote2 = fu_remote_list_get_by_id(self, order[j]);
 			if (remote2 == NULL) {
-				if (g_hash_table_contains(self->hash_unfound, order[j]))
-					continue;
 				g_debug("ignoring unfound remote %s", order[j]);
-				g_hash_table_insert(self->hash_unfound, g_strdup(order[j]), NULL);
 				continue;
 			}
 			if (fwupd_remote_get_priority(remote) > fwupd_remote_get_priority(remote2))
 				continue;
-			g_debug("ordering %s=%s+%i",
+			g_debug("ordering %s=%s+1",
 				fwupd_remote_get_id(remote),
-				fwupd_remote_get_id(remote2),
-				inc);
-			fwupd_remote_set_priority(remote, fwupd_remote_get_priority(remote2) + inc);
+				fwupd_remote_get_id(remote2));
+			fwupd_remote_set_priority(remote, fwupd_remote_get_priority(remote2) + 1);
+			cnt++;
+		}
+	}
+	return cnt;
+}
 
-			/* increment changes counter */
+static guint
+fu_remote_list_depsolve_order_after(FuRemoteList *self)
+{
+	guint cnt = 0;
+
+	for (guint i = 0; i < self->array->len; i++) {
+		FwupdRemote *remote = g_ptr_array_index(self->array, i);
+		gchar **order = fwupd_remote_get_order_after(remote);
+		if (order == NULL)
+			continue;
+		for (guint j = 0; order[j] != NULL; j++) {
+			FwupdRemote *remote2;
+			if (g_strcmp0(order[j], fwupd_remote_get_id(remote)) == 0) {
+				g_debug("ignoring self-dep remote %s", order[j]);
+				continue;
+			}
+			remote2 = fu_remote_list_get_by_id(self, order[j]);
+			if (remote2 == NULL) {
+				g_debug("ignoring unfound remote %s", order[j]);
+				continue;
+			}
+			if (fwupd_remote_get_priority(remote) < fwupd_remote_get_priority(remote2))
+				continue;
+			g_debug("ordering %s=%s+1",
+				fwupd_remote_get_id(remote2),
+				fwupd_remote_get_id(remote));
+			fwupd_remote_set_priority(remote2, fwupd_remote_get_priority(remote) + 1);
 			cnt++;
 		}
 	}
@@ -396,8 +421,8 @@ fu_remote_list_reload(FuRemoteList *self, GError **error)
 	/* depsolve */
 	for (depsolve_check = 0; depsolve_check < 100; depsolve_check++) {
 		guint cnt = 0;
-		cnt += fu_remote_list_depsolve_with_direction(self, 1);
-		cnt += fu_remote_list_depsolve_with_direction(self, -1);
+		cnt += fu_remote_list_depsolve_order_before(self);
+		cnt += fu_remote_list_depsolve_order_after(self);
 		if (cnt == 0)
 			break;
 	}
@@ -415,11 +440,15 @@ fu_remote_list_reload(FuRemoteList *self, GError **error)
 	/* print to the console */
 	for (guint i = 0; i < self->array->len; i++) {
 		FwupdRemote *remote = g_ptr_array_index(self->array, i);
-		if (fwupd_remote_get_enabled(remote))
-			g_string_append_printf(str, "%s, ", fwupd_remote_get_id(remote));
+		if (!fwupd_remote_get_enabled(remote))
+			continue;
+		if (str->len > 0)
+			g_string_append(str, ", ");
+		g_string_append_printf(str,
+				       "%s[%i]",
+				       fwupd_remote_get_id(remote),
+				       fwupd_remote_get_priority(remote));
 	}
-	if (str->len > 2)
-		g_string_truncate(str, str->len - 2);
 	g_info("enabled remotes: %s", str->str);
 
 	/* success */
@@ -560,7 +589,6 @@ fu_remote_list_init(FuRemoteList *self)
 	self->array = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 	self->monitors =
 	    g_ptr_array_new_with_free_func((GDestroyNotify)fu_remote_list_monitor_unref);
-	self->hash_unfound = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
 }
 
 static void
@@ -571,7 +599,6 @@ fu_remote_list_finalize(GObject *obj)
 		g_object_unref(self->silo);
 	g_ptr_array_unref(self->array);
 	g_ptr_array_unref(self->monitors);
-	g_hash_table_unref(self->hash_unfound);
 	G_OBJECT_CLASS(fu_remote_list_parent_class)->finalize(obj);
 }
 
