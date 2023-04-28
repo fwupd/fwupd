@@ -418,28 +418,12 @@ fu_logitech_tap_hdmi_device_set_version(FuDevice *device, GError **error)
 							error))
 		return FALSE;
 
-	/* map endian data. MajorVersion byte2 3&2, MinorVersion bytes 5&4, BuildVersion bytes 7&6
-	 */
-	if (!fu_memread_uint16_safe(query_data,
-				    sizeof(query_data),
-				    0x2,
-				    &major,
-				    G_BIG_ENDIAN,
-				    error))
+	/* MajorVersion byte2 3&2, MinorVersion bytes 5&4, BuildVersion bytes 7&6 */
+	if (!fu_memread_uint16_safe(query_data, data_len, 0x2, &major, G_BIG_ENDIAN, error))
 		return FALSE;
-	if (!fu_memread_uint16_safe(query_data,
-				    sizeof(query_data),
-				    0x4,
-				    &minor,
-				    G_BIG_ENDIAN,
-				    error))
+	if (!fu_memread_uint16_safe(query_data, data_len, 0x4, &minor, G_BIG_ENDIAN, error))
 		return FALSE;
-	if (!fu_memread_uint16_safe(query_data,
-				    sizeof(query_data),
-				    0x6,
-				    &build,
-				    G_BIG_ENDIAN,
-				    error))
+	if (!fu_memread_uint16_safe(query_data, data_len, 0x6, &build, G_BIG_ENDIAN, error))
 		return FALSE;
 	fu_device_set_version(device, g_strdup_printf("%i.%i.%i", major, minor, build));
 
