@@ -120,6 +120,15 @@ The `[daemon]` section can contain the following parameters:
 
   Deduplicate duplicate releases by the archive checksum are available from more than one source.
 
+**ReleasePriority={{FU_DAEMON_CONFIG_DEFAULT_RELEASE_PRIORITY}}**
+
+  When the same version release is available from more than one source this option can be used to
+  either prefer the local version (avoiding a potentially expensive download) or to prefer the
+  remote version (which may have updated metadata such as release notes).
+
+  The possible options are `local` or `remote` or empty to not make any adjustment to the policy,
+  relying on the `OrderAfter` and `OrderBefore` sections in the remote.
+
 **EspLocation=**
 
   Override the location used for the EFI system partition (ESP) path.

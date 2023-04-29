@@ -4768,6 +4768,23 @@ fu_engine_remote_list_changed_cb(FuRemoteList *remote_list, FuEngine *self)
 	fu_engine_metadata_changed(self);
 }
 
+static void
+fu_engine_remote_list_added_cb(FuRemoteList *remote_list, FwupdRemote *remote, FuEngine *self)
+{
+	FuReleasePriority priority = fu_engine_config_get_release_priority(self->config);
+	if (priority == FU_RELEASE_PRIORITY_LOCAL &&
+	    fwupd_remote_get_kind(remote) != FWUPD_REMOTE_KIND_DOWNLOAD) {
+		g_debug("priority local and %s is not download remote, so bumping",
+			fwupd_remote_get_id(remote));
+		fwupd_remote_set_priority(remote, fwupd_remote_get_priority(remote) + 1000);
+	} else if (priority == FU_RELEASE_PRIORITY_REMOTE &&
+		   fwupd_remote_get_kind(remote) == FWUPD_REMOTE_KIND_DOWNLOAD) {
+		g_debug("priority remote and %s is download remote, so bumping",
+			fwupd_remote_get_id(remote));
+		fwupd_remote_set_priority(remote, fwupd_remote_get_priority(remote) + 1000);
+	}
+}
+
 static gint
 fu_engine_sort_jcat_results_timestamp_cb(gconstpointer a, gconstpointer b)
 {
@@ -8850,6 +8867,10 @@ fu_engine_init(FuEngine *self)
 	g_signal_connect(FU_REMOTE_LIST(self->remote_list),
 			 "changed",
 			 G_CALLBACK(fu_engine_remote_list_changed_cb),
+			 self);
+	g_signal_connect(FU_REMOTE_LIST(self->remote_list),
+			 "added",
+			 G_CALLBACK(fu_engine_remote_list_added_cb),
 			 self);
 
 	g_signal_connect(FU_IDLE(self->idle),
