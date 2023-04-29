@@ -41,6 +41,7 @@ G_DEFINE_TYPE(FuEngineConfig, fu_engine_config, FU_TYPE_CONFIG)
 #define FU_DAEMON_CONFIG_DEFAULT_TRUSTED_UIDS	       NULL
 #define FU_DAEMON_CONFIG_DEFAULT_HOST_BKC	       NULL
 #define FU_DAEMON_CONFIG_DEFAULT_TRUSTED_REPORTS       "VendorId=$OEM"
+#define FU_DAEMON_CONFIG_DEFAULT_RELEASE_DEDUPE	       TRUE
 
 static FwupdReport *
 fu_engine_config_report_from_spec(FuEngineConfig *self, const gchar *report_spec, GError **error)
@@ -340,6 +341,15 @@ fu_engine_config_get_allow_emulation(FuEngineConfig *self)
 					"fwupd",
 					"AllowEmulation",
 					FU_DAEMON_CONFIG_DEFAULT_ALLOW_EMULATION);
+}
+
+gboolean
+fu_engine_config_get_release_dedupe(FuEngineConfig *self)
+{
+	return fu_config_get_value_bool(FU_CONFIG(self),
+					"fwupd",
+					"ReleaseDedupe",
+					FU_DAEMON_CONFIG_DEFAULT_RELEASE_DEDUPE);
 }
 
 gboolean

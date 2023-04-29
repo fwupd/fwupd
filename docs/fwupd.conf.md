@@ -116,6 +116,10 @@ The `[daemon]` section can contain the following parameters:
 
   A host best known configuration is used when using `fwupdmgr sync` which can downgrade firmware to factory versions or upgrade firmware to a supported config level. e.g. **vendor-factory-2021q1**
 
+**ReleaseDedupe={{FU_DAEMON_CONFIG_DEFAULT_RELEASE_DEDUPE}}**
+
+  Deduplicate duplicate releases by the archive checksum are available from more than one source.
+
 **EspLocation=**
 
   Override the location used for the EFI system partition (ESP) path.
