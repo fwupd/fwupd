@@ -43,6 +43,8 @@ gboolean
 fu_engine_config_get_show_device_private(FuEngineConfig *self);
 gboolean
 fu_engine_config_get_allow_emulation(FuEngineConfig *self);
+gboolean
+fu_engine_config_get_release_dedupe(FuEngineConfig *self);
 const gchar *
 fu_engine_config_get_host_bkc(FuEngineConfig *self);
 const gchar *

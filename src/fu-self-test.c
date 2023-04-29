@@ -1754,7 +1754,7 @@ fu_engine_downgrade_func(gconstpointer user_data)
 	    "        <size type=\"download\">456</size>"
 	    "        <location>https://test.org/foo.cab</location>"
 	    "        <checksum filename=\"foo.cab\" target=\"container\" "
-	    "type=\"md5\">deadbeefdeadbeefdeadbeefdeadbeef</checksum>"
+	    "type=\"md5\">deadbeefdeadbeefdeadbeefdead1111</checksum>"
 	    "        <checksum filename=\"firmware.bin\" target=\"content\" "
 	    "type=\"md5\">deadbeefdeadbeefdeadbeefdeadbeef</checksum>"
 	    "      </release>"
@@ -1763,7 +1763,7 @@ fu_engine_downgrade_func(gconstpointer user_data)
 	    "        <size type=\"download\">456</size>"
 	    "        <location>https://test.org/foo.cab</location>"
 	    "        <checksum filename=\"foo.cab\" target=\"container\" "
-	    "type=\"md5\">deadbeefdeadbeefdeadbeefdeadbeef</checksum>"
+	    "type=\"md5\">deadbeefdeadbeefdeadbeefdead2222</checksum>"
 	    "        <checksum filename=\"firmware.bin\" target=\"content\" "
 	    "type=\"md5\">deadbeefdeadbeefdeadbeefdeadbeef</checksum>"
 	    "      </release>"
@@ -1791,7 +1791,7 @@ fu_engine_downgrade_func(gconstpointer user_data)
 	    "        <size type=\"download\">456</size>"
 	    "        <location>https://test.org/foo.cab</location>"
 	    "        <checksum filename=\"foo.cab\" target=\"container\" "
-	    "type=\"md5\">deadbeefdeadbeefdeadbeefdeadbeef</checksum>"
+	    "type=\"md5\">deadbeefdeadbeefdeadbeefdead3333</checksum>"
 	    "        <checksum filename=\"firmware.bin\" target=\"content\" "
 	    "type=\"md5\">deadbeefdeadbeefdeadbeefdeadbeef</checksum>"
 	    "      </release>"
@@ -1800,7 +1800,7 @@ fu_engine_downgrade_func(gconstpointer user_data)
 	    "        <size type=\"download\">456</size>"
 	    "        <location>https://test.org/foo.cab</location>"
 	    "        <checksum filename=\"foo.cab\" target=\"container\" "
-	    "type=\"md5\">deadbeefdeadbeefdeadbeefdeadbeef</checksum>"
+	    "type=\"md5\">deadbeefdeadbeefdeadbeefdead4444</checksum>"
 	    "        <checksum filename=\"firmware.bin\" target=\"content\" "
 	    "type=\"md5\">deadbeefdeadbeefdeadbeefdeadbeef</checksum>"
 	    "      </release>"
@@ -1863,7 +1863,10 @@ fu_engine_downgrade_func(gconstpointer user_data)
 	g_clear_error(&error);
 
 	/* retry with approved firmware set */
-	fu_engine_add_approved_firmware(engine, "deadbeefdeadbeefdeadbeefdeadbeef");
+	fu_engine_add_approved_firmware(engine, "deadbeefdeadbeefdeadbeefdead1111");
+	fu_engine_add_approved_firmware(engine, "deadbeefdeadbeefdeadbeefdead2222");
+	fu_engine_add_approved_firmware(engine, "deadbeefdeadbeefdeadbeefdead3333");
+	fu_engine_add_approved_firmware(engine, "deadbeefdeadbeefdeadbeefdead4444");
 	fu_engine_add_approved_firmware(engine, "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
 
 	/* upgrades */
@@ -2062,6 +2065,89 @@ fu_engine_install_duration_func(gconstpointer user_data)
 	g_assert_cmpint(releases->len, ==, 1);
 	rel = FWUPD_RELEASE(g_ptr_array_index(releases, 0));
 	g_assert_cmpint(fwupd_release_get_install_duration(rel), ==, 120);
+}
+
+static void
+fu_engine_release_dedupe_func(gconstpointer user_data)
+{
+	FuTest *self = (FuTest *)user_data;
+	gboolean ret;
+	g_autoptr(FuDevice) device = fu_device_new(self->ctx);
+	g_autoptr(FuEngine) engine = fu_engine_new();
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new();
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GPtrArray) devices = NULL;
+	g_autoptr(GPtrArray) releases = NULL;
+	g_autoptr(XbSilo) silo_empty = xb_silo_new();
+
+	/* ensure empty tree */
+	fu_self_test_mkroot();
+
+	/* no metadata in daemon */
+	fu_engine_set_silo(engine, silo_empty);
+
+	/* write the main file */
+	ret = g_file_set_contents(
+	    "/tmp/fwupd-self-test/stable.xml",
+	    "<components>"
+	    "  <component type=\"firmware\">"
+	    "    <id>test</id>"
+	    "    <provides>"
+	    "      <firmware type=\"flashed\">aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee</firmware>"
+	    "    </provides>"
+	    "    <releases>"
+	    "      <release version=\"1.2.3\" date=\"2017-09-15\" install_duration=\"120\">"
+	    "        <location>https://test.org/foo.cab</location>"
+	    "        <checksum filename=\"foo.cab\" target=\"container\" "
+	    "type=\"md5\">deadbeefdeadbeefdeadbeefdeadbeef</checksum>"
+	    "        <checksum filename=\"firmware.bin\" target=\"content\" "
+	    "type=\"md5\">deadbeefdeadbeefdeadbeefdeadbeef</checksum>"
+	    "      </release>"
+	    "      <release version=\"1.2.3\" date=\"2017-09-15\" install_duration=\"120\">"
+	    "        <location>https://test.org/foo.cab</location>"
+	    "        <checksum filename=\"foo.cab\" target=\"container\" "
+	    "type=\"md5\">deadbeefdeadbeefdeadbeefdeadbeef</checksum>"
+	    "        <checksum filename=\"firmware.bin\" target=\"content\" "
+	    "type=\"md5\">deadbeefdeadbeefdeadbeefdeadbeef</checksum>"
+	    "      </release>"
+	    "    </releases>"
+	    "  </component>"
+	    "</components>",
+	    -1,
+	    &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	ret = fu_engine_load(engine,
+			     FU_ENGINE_LOAD_FLAG_REMOTES | FU_ENGINE_LOAD_FLAG_NO_CACHE,
+			     progress,
+			     &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* add a device so we can get the install duration */
+	fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_TRIPLET);
+	fu_device_set_version(device, "1.2.3");
+	fu_device_set_id(device, "test_device");
+	fu_device_add_vendor_id(device, "USB:FFFF");
+	fu_device_add_protocol(device, "com.acme");
+	fu_device_add_guid(device, "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee");
+	fu_device_set_install_duration(device, 999);
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
+	fu_engine_add_device(engine, device);
+	devices = fu_engine_get_devices(engine, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(devices);
+	g_assert_cmpint(devices->len, ==, 1);
+	g_assert_true(fu_device_has_flag(device, FWUPD_DEVICE_FLAG_SUPPORTED));
+
+	/* check the release install duration */
+	releases = fu_engine_get_releases(engine, request, fu_device_get_id(device), &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(releases);
+	g_assert_cmpint(releases->len, ==, 1);
 }
 
 static void
@@ -5281,6 +5367,7 @@ main(int argc, char **argv)
 	g_test_add_data_func("/fwupd/engine{install-duration}",
 			     self,
 			     fu_engine_install_duration_func);
+	g_test_add_data_func("/fwupd/engine{release-dedupe}", self, fu_engine_release_dedupe_func);
 	g_test_add_data_func("/fwupd/engine{generate-md}", self, fu_engine_generate_md_func);
 	g_test_add_data_func("/fwupd/engine{requirements-other-device}",
 			     self,

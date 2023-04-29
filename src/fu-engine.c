@@ -5991,6 +5991,7 @@ fu_engine_get_releases(FuEngine *self,
 {
 	g_autoptr(FuDevice) device = NULL;
 	g_autoptr(GPtrArray) releases = NULL;
+	g_autoptr(GPtrArray) releases_deduped = NULL;
 
 	g_return_val_if_fail(FU_IS_ENGINE(self), NULL);
 	g_return_val_if_fail(device_id != NULL, NULL);
@@ -6013,7 +6014,38 @@ fu_engine_get_releases(FuEngine *self,
 		return NULL;
 	}
 	g_ptr_array_sort_with_data(releases, fu_engine_sort_releases_cb, device);
-	return g_steal_pointer(&releases);
+
+	/* dedupe by container checksum */
+	if (fu_engine_config_get_release_dedupe(self->config)) {
+		g_autoptr(GHashTable) checksums = g_hash_table_new(g_str_hash, g_str_equal);
+		releases_deduped = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
+		for (guint i = 0; i < releases->len; i++) {
+			FuRelease *rel = g_ptr_array_index(releases, i);
+			GPtrArray *csums = fu_release_get_checksums(rel);
+			gboolean found = FALSE;
+
+			/* find existing */
+			for (guint j = 0; j < csums->len; j++) {
+				const gchar *csum = g_ptr_array_index(csums, j);
+				if (g_hash_table_contains(checksums, csum)) {
+					found = TRUE;
+					break;
+				}
+				g_hash_table_add(checksums, (gpointer)csum);
+			}
+			if (found) {
+				g_debug("found higher priority release for %s, skipping",
+					fu_release_get_version(rel));
+				continue;
+			}
+			g_ptr_array_add(releases_deduped, g_object_ref(rel));
+		}
+	} else {
+		releases_deduped = g_ptr_array_ref(releases);
+	}
+
+	/* success */
+	return g_steal_pointer(&releases_deduped);
 }
 
 /**
