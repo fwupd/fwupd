@@ -8,6 +8,8 @@
 
 #include <fwupdplugin.h>
 
+#include "fu-engine-struct.h"
+
 #define FU_TYPE_ENGINE_CONFIG (fu_engine_config_get_type())
 G_DECLARE_FINAL_TYPE(FuEngineConfig, fu_engine_config, FU, ENGINE_CONFIG, FuConfig)
 
@@ -45,6 +47,8 @@ gboolean
 fu_engine_config_get_allow_emulation(FuEngineConfig *self);
 gboolean
 fu_engine_config_get_release_dedupe(FuEngineConfig *self);
+FuReleasePriority
+fu_engine_config_get_release_priority(FuEngineConfig *self);
 const gchar *
 fu_engine_config_get_host_bkc(FuEngineConfig *self);
 const gchar *

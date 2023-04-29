@@ -20,7 +20,7 @@
 
 #include "fu-remote-list.h"
 
-enum { SIGNAL_CHANGED, SIGNAL_LAST };
+enum { SIGNAL_CHANGED, SIGNAL_ADDED, SIGNAL_LAST };
 
 static guint signals[SIGNAL_LAST] = {0};
 
@@ -43,6 +43,13 @@ fu_remote_list_emit_changed(FuRemoteList *self)
 {
 	g_debug("::remote_list changed");
 	g_signal_emit(self, signals[SIGNAL_CHANGED], 0);
+}
+
+static void
+fu_remote_list_emit_added(FuRemoteList *self, FwupdRemote *remote)
+{
+	g_debug("::remote_list changed");
+	g_signal_emit(self, signals[SIGNAL_ADDED], 0, remote);
 }
 
 static void
@@ -266,6 +273,7 @@ fu_remote_list_add_for_path(FuRemoteList *self, const gchar *path, GError **erro
 
 		/* set mtime */
 		fwupd_remote_set_mtime(remote, _fwupd_remote_get_mtime(remote));
+		fu_remote_list_emit_added(self, remote);
 		g_ptr_array_add(self->array, g_steal_pointer(&remote));
 	}
 	return TRUE;
@@ -574,6 +582,21 @@ fu_remote_list_class_init(FuRemoteListClass *klass)
 					       g_cclosure_marshal_VOID__VOID,
 					       G_TYPE_NONE,
 					       0);
+	/**
+	 * FuRemoteList::added:
+	 * @self: the #FuRemoteList instance that emitted the signal
+	 * @remote: the #FwupdRemote that was added
+	 **/
+	signals[SIGNAL_ADDED] = g_signal_new("added",
+					     G_TYPE_FROM_CLASS(object_class),
+					     G_SIGNAL_RUN_LAST,
+					     0,
+					     NULL,
+					     NULL,
+					     g_cclosure_marshal_generic,
+					     G_TYPE_NONE,
+					     1,
+					     FWUPD_TYPE_REMOTE);
 }
 
 static void

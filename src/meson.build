@@ -193,8 +193,18 @@ plugins_hdr = custom_target('fwupd-generate-plugins-header',
 )
 
 # build all the plugins and engine into one installed library
+fwupdengine_rs = custom_target('fu-engine-rs',
+  input: 'fu-engine.rs',
+  output: ['fu-engine-struct.c', 'fu-engine-struct.h'],
+  command: [
+    python3,
+    join_paths(meson.project_source_root(), 'libfwupdplugin', 'rustgen.py'),
+    '@INPUT@', '@OUTPUT0@', '@OUTPUT1@',
+  ],
+)
 fwupdengine = library(
   'fwupdengine',
+  fwupdengine_rs,
   resources_src,
   plugins_hdr,
   sources: fwupd_engine_src,
@@ -216,6 +226,7 @@ fwupdengine = library(
 
 fwupdtool = executable(
   'fwupdtool',
+  fwupdengine_rs,
   resources_src,
   plugins_hdr,
   export_dynamic: true,
@@ -294,6 +305,7 @@ endif
 
 executable(
   'fwupd',
+  fwupdengine_rs,
   resources_src,
   plugins_hdr,
   sources: [
@@ -331,6 +343,7 @@ if get_option('tests')
   env.set('FWUPD_LOCALSTATEDIR', '/tmp/fwupd-self-test/var')
   e = executable(
     'fu-self-test',
+    fwupdengine_rs,
     resources_src,
     colorhug_test_firmware,
     hwid_test_firmware,
