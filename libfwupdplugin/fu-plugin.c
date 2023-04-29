@@ -62,7 +62,6 @@ enum {
 	SIGNAL_DEVICE_REMOVED,
 	SIGNAL_DEVICE_REGISTER,
 	SIGNAL_RULES_CHANGED,
-	SIGNAL_CONFIG_CHANGED,
 	SIGNAL_CHECK_SUPPORTED,
 	SIGNAL_LAST
 };
@@ -485,19 +484,6 @@ fu_plugin_device_child_removed_cb(FuDevice *device, FuDevice *child, FuPlugin *s
 	fu_plugin_device_remove(self, child);
 }
 
-static void
-fu_plugin_config_monitor_changed_cb(GFileMonitor *monitor,
-				    GFile *file,
-				    GFile *other_file,
-				    GFileMonitorEvent event_type,
-				    gpointer user_data)
-{
-	FuPlugin *self = FU_PLUGIN(user_data);
-	g_autofree gchar *fn = g_file_get_path(file);
-	g_debug("%s changed, sending signal", fn);
-	g_signal_emit(self, signals[SIGNAL_CONFIG_CHANGED], 0);
-}
-
 /**
  * fu_plugin_device_add:
  * @self: a #FuPlugin
@@ -872,12 +858,9 @@ fu_plugin_device_read_firmware(FuPlugin *self,
 gboolean
 fu_plugin_runner_startup(FuPlugin *self, FuProgress *progress, GError **error)
 {
-	FuPluginPrivate *priv = GET_PRIVATE(self);
 	FuPluginVfuncs *vfuncs = fu_plugin_get_vfuncs(self);
 	g_autofree gchar *conf_dir = fu_path_from_kind(FU_PATH_KIND_SYSCONFDIR_PKG);
-	g_autofree gchar *config_filename = g_build_filename(conf_dir, "fwupd.conf", NULL);
 	g_autoptr(GError) error_local = NULL;
-	g_autoptr(GFile) file = g_file_new_for_path(config_filename);
 
 	g_return_val_if_fail(FU_IS_PLUGIN(self), FALSE);
 
@@ -910,15 +893,6 @@ fu_plugin_runner_startup(FuPlugin *self, FuProgress *progress, GError **error)
 			return FALSE;
 		}
 	}
-
-	/* create a monitor on the config file */
-	priv->config_monitor = g_file_monitor_file(file, G_FILE_MONITOR_NONE, NULL, error);
-	if (priv->config_monitor == NULL)
-		return FALSE;
-	g_signal_connect(G_FILE_MONITOR(priv->config_monitor),
-			 "changed",
-			 G_CALLBACK(fu_plugin_config_monitor_changed_cb),
-			 self);
 
 	/* success */
 	return TRUE;
@@ -2706,25 +2680,6 @@ fu_plugin_class_init(FuPluginClass *klass)
 						     g_cclosure_marshal_VOID__VOID,
 						     G_TYPE_NONE,
 						     0);
-	/**
-	 * FuPlugin::config-changed:
-	 * @self: the #FuPlugin instance that emitted the signal
-	 *
-	 * The ::config-changed signal is emitted when one or more config files have changed which
-	 * may affect how the daemon should be run.
-	 *
-	 * Since: 1.7.0
-	 **/
-	signals[SIGNAL_CONFIG_CHANGED] =
-	    g_signal_new("config-changed",
-			 G_TYPE_FROM_CLASS(object_class),
-			 G_SIGNAL_RUN_LAST,
-			 G_STRUCT_OFFSET(FuPluginClass, _config_changed),
-			 NULL,
-			 NULL,
-			 g_cclosure_marshal_VOID__VOID,
-			 G_TYPE_NONE,
-			 0);
 
 	/**
 	 * FuPlugin:context:
