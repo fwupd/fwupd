@@ -7,7 +7,7 @@ struct SelfTest {
     length: u32le: default=$struct_size, // bytes
     revision: u8,
     owner: Guid,
-    oem_id: [char; 6]: const=ABCDEF,
+    oem_id: [char; 6]: const="ABCDEF",
     oem_table_id: [char; 8],
     oem_revision: u32le,
     asl_compiler_id: [u8; 4]: padding=0xDF,
