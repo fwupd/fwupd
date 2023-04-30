@@ -11,6 +11,6 @@ struct Uf2 {
     block_no: u32le,
     num_blocks: u32le,
     family_id: u32le,
-    data: 476u8,
+    data: [u8; 476],
     magic_end: u32le: const=0x0AB16F30,
 }

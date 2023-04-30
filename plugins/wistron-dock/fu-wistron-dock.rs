@@ -23,7 +23,7 @@ struct WistronDockWditImg {
     version_build: u32be,
     version1: u32be,
     version2: u32be,
-    name: 32char,
+    name: [char; 32],
 }
 #[derive(ToString)]
 enum WistronDockUpdatePhase {

@@ -7,23 +7,23 @@ struct DfuFtr {
     pid: u16le,
     vid: u16le,
     ver: u16le,
-    sig: 3char: const=UFD,
+    sig: [char; 3]: const=UFD,
     len: u8: default=$struct_size,
     crc: u32le,
 }
 #[derive(New, Validate, Parse)]
 struct DfuseHdr {
-    sig: 5char: const=DfuSe,
+    sig: [char; 5]: const=DfuSe,
     ver: u8: const=0x01,
     image_size: u32le,
     targets: u8,
 }
 #[derive(New, Validate, Parse)]
 struct DfuseImage {
-    sig: 6char: const=Target,
+    sig: [char; 6]: const=Target,
     alt_setting: u8,
     target_named: u32le,
-    target_name: 255char,
+    target_name: [char; 255],
     target_size: u32le,
     chunks: u32le,
 }

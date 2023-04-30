@@ -17,9 +17,9 @@ struct VliUsbhubHdr {
     usb2_fw_addr: u16be,
     usb2_fw_sz: u16be,
     usb3_fw_addr_high: u8,
-    _unknown_0d: 3u8,
+    _unknown_0d: [u8; 3],
     usb2_fw_addr_high: u8,
-    _unknown_11: 10u8,
+    _unknown_11: [u8; 10],
     inverse_pe41: u8,
     prev_ptr: u8,        // addr / 0x20
     next_ptr: u8,        // addr / 0x20

@@ -187,29 +187,26 @@ class StructItem:
 
     def parse_type(self, val: str) -> None:
 
-        # get the integer multiplier
-        split_index = 0
-        for char in val:
-            if not char.isnumeric():
-                break
-            split_index += 1
-        if split_index:
-            self.multiplier = int(val[:split_index])
+        # is array
+        if val.startswith("[") and val.endswith("]"):
+            typestr, multiplier = val[1:-1].split(";", maxsplit=1)
+            self.multiplier = int(multiplier)
+        else:
+            typestr = val
 
         # find the type
         try:
-            val2 = val[split_index:]
-            if val2.endswith("be"):
+            if typestr.endswith("be"):
                 self.endian = Endian.BIG
-                val2 = val2[:-2]
-            elif val2.endswith("le"):
+                typestr = typestr[:-2]
+            elif typestr.endswith("le"):
                 self.endian = Endian.LITTLE
-                val2 = val2[:-2]
-            self.type = Type(val2)
+                typestr = typestr[:-2]
+            self.type = Type(typestr)
             if self.type == Type.GUID:
                 self.multiplier = 16
         except ValueError as e:
-            raise ValueError(f"invalid type: {val2}") from e
+            raise ValueError(f"invalid type: {typestr}") from e
 
     def __str__(self) -> str:
         tmp = f"{self.element_id}: "

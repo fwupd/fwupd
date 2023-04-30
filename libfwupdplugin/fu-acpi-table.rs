@@ -3,13 +3,13 @@
 
 #[derive(New, Validate, Parse)]
 struct AcpiTable {
-    signature: 4char,
+    signature: [char; 4],
     length: u32le,
     revision: u8,
     checksum: u8,
-    oem_id: 6char,
-    oem_table_id: 8char,
+    oem_id: [char; 6],
+    oem_table_id: [char; 8],
     oem_revision: u32be,
-    _asl_compiler_id: 4char,
+    _asl_compiler_id: [char; 4],
     _asl_compiler_revision: u32le,
 }
