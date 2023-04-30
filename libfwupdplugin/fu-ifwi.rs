@@ -14,7 +14,7 @@ struct IfwiCpd {
 }
 #[derive(New, Validate, Parse)]
 struct IfwiCpdEntry {
-    name: 12s,
+    name: 12char,
     offset: u32le,
     length: u32le,
     _reserved1: 4u8,

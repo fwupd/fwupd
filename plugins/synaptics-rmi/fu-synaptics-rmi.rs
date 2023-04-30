@@ -16,7 +16,7 @@ struct RmiImg {
     bootloader_version: u8,
     image_size: u32le,
     config_size: u32le,
-    product_id: 10s,
+    product_id: 10char,
     package_id: u32le,
     product_info: u32le,
     _reserved3: 46u8,
