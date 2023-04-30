@@ -9,7 +9,7 @@ struct TpmEventLog2 {
 }
 #[derive(Parse)]
 struct TpmEfiStartupLocalityEvent {
-    signature: 16s: const=StartupLocality,
+    signature: 16char: const=StartupLocality,
     locality: u8,    // from which TPM2_Startup() was issued -- which is the initial value of PCR0
 }
 #[derive(ToString)]

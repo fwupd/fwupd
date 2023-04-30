@@ -55,7 +55,7 @@ struct IgscFwuHeciImageMetadata {
 #[derive(Parse)]
 struct IgscFwuImageMetadataV1 {
     version_format: u32le: default=0x1,  // struct IgscFwuHeciImageMetadata
-    project: 4s,
+    project: 4char,
     version_hotfix: u16,         // version of the overall IFWI image, i.e. the combination of IPs
     version_build: u16,
     // struct IgscFwuFwImageData

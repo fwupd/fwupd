@@ -887,14 +887,14 @@ The struct types currently supported are:
 - `u24`: a 24 bit number represented as a `guint32`
 - `u32le`:  little endian `guint32`
 - `u64be`:  big endian `guint64`
-- `s`: a `NUL`-terminated string
+- `char`: a `NUL`-terminated string
 - `Guid`: a GUID
 
 Arrays of types are also allowed, with the number of items added before the type, for example:
 
 - `buf: 12u8` for a C array of `guint8 buf[12] = {0};`
 - `val: 7u64be`  for a C array of `guint64 val[7] = {0};`
-- `str: 4s: default=ABCD` for a C array of `gchar buf[4] = {'A','B','C','D'};`
+- `str: 4char: default=ABCD` for a C array of `gchar buf[4] = {'A','B','C','D'};`
   -- NOTE: `fu_struct_example_get_str()` would return a `NUL`-terminated string of `ABCD\0`.
 
 Additionally, default or constant values can be auto-populated:

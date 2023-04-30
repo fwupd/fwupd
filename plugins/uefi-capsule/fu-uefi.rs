@@ -30,7 +30,7 @@ struct EfiUpdateInfo {
 }
 #[derive(Parse)]
 struct AcpiInsydeQuirk {
-    signature: 6s,
+    signature: 6char,
     size: u32le,
     flags: u32le,
 }

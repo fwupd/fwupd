@@ -15,7 +15,7 @@ struct AcpiPhatHealthRecord {
 struct AcpiPhatVersionElement {
     component_id: Guid,
     version_value: u64le,
-    producer_id: 4s,
+    producer_id: 4char,
 }
 #[derive(New, Parse)]
 struct AcpiPhatVersionRecord {
