@@ -3,7 +3,7 @@
 
 #[derive(New, Parse)]
 struct RedfishProtocolOverIp {
-    service_uuid: guid,
+    service_uuid: Guid,
     host_ip_assignment_type: u8,
     host_ip_address_format: u8,
     host_ip_address: 16u8,

@@ -13,7 +13,7 @@ struct EfiUxCapsuleHeader {
 }
 #[derive(New, Getters)]
 struct EfiCapsuleHeader {
-    guid: guid,
+    guid: Guid,
     header_size: u32le: default=$struct_size,
     flags: u32le,
     image_size: u32le,
@@ -21,7 +21,7 @@ struct EfiCapsuleHeader {
 #[derive(New, Parse)]
 struct EfiUpdateInfo {
     version: u32le: default=0x7,
-    guid: guid,
+    guid: Guid,
     flags: u32le,
     hw_inst: u64le,
     time_attempted: 16u8, // a EFI_TIME_T

@@ -8,12 +8,12 @@ struct AcpiPhatHealthRecord {
     version: u8,
     reserved: 2u8,
     flags: u8,
-    device_signature: guid,
+    device_signature: Guid,
     device_specific_data: u32le,
 }
 #[derive(New, Parse)]
 struct AcpiPhatVersionElement {
-    component_id: guid,
+    component_id: Guid,
     version_value: u64le,
     producer_id: 4s,
 }

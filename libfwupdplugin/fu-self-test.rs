@@ -6,7 +6,7 @@ struct SelfTest {
     signature: u32be: const=0x12345678,
     length: u32le: default=$struct_size, // bytes
     revision: u8,
-    owner: guid,
+    owner: Guid,
     oem_id: 6s: const=ABCDEF,
     oem_table_id: 8s,
     oem_revision: u32le,

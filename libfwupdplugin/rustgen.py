@@ -28,7 +28,7 @@ class Type(Enum):
     U32 = "u32"
     U64 = "u64"
     STRING = "s"
-    GUID = "guid"
+    GUID = "Guid"
 
 
 # convert a CamelCase name into snake_case
