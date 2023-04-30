@@ -16,13 +16,13 @@ struct CfuRspGetFirmwareVersionComponent {
 }
 #[derive(Parse)]
 struct CfuRspFirmwareUpdateOffer {
-    _reserved1: 3u8,
+    _reserved1: [u8; 3],
     token: u8,
-    _reserved2: 4u8,
+    _reserved2: [u8; 4],
     rr_code: u8,
-    _reserved3: 3u8,
+    _reserved3: [u8; 3],
     status: u8,
-    _reserved3: 3u8,
+    _reserved3: [u8; 3],
 }
 #[derive(New, Getters)]
 struct CfuReqFirmwareUpdateContent {
@@ -36,7 +36,7 @@ struct CfuRspFirmwareUpdateContent {
     seq_number: u16le,
     _reserved1: u16le,
     status: u8,
-    _reserved2: 3u8,
-    _reserved3: 4u8,
-    _reserved4: 4u8,
+    _reserved2: [u8; 3],
+    _reserved3: [u8; 4],
+    _reserved4: [u8; 4],
 }

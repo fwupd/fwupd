@@ -24,7 +24,7 @@ struct IgscOpromSubsystemDevice4Id {
 struct IgscFwuGwsImageInfo {
     format_version: u32le: const=0x1,
     instance_id: u32le,
-    _reserved: 14u32,
+    _reserved: [u32; 14],
 }
 /* represents a GSC FW sub-partition such as FTPR, RBEP */
 #[derive(Getters)]
@@ -55,7 +55,7 @@ struct IgscFwuHeciImageMetadata {
 #[derive(Parse)]
 struct IgscFwuImageMetadataV1 {
     version_format: u32le: default=0x1,  // struct IgscFwuHeciImageMetadata
-    project: 4char,
+    project: [char; 4],
     version_hotfix: u16,         // version of the overall IFWI image, i.e. the combination of IPs
     version_build: u16,
     // struct IgscFwuFwImageData

@@ -11,15 +11,15 @@ struct RmiPartitionTbl {
 #[derive(New, Parse)]
 struct RmiImg {
     checksum: u32le,
-    _reserved1: 2u8,
+    _reserved1: [u8; 2],
     io_offset: u8,
     bootloader_version: u8,
     image_size: u32le,
     config_size: u32le,
-    product_id: 10char,
+    product_id: [char; 10],
     package_id: u32le,
     product_info: u32le,
-    _reserved3: 46u8,
+    _reserved3: [u8; 46],
     fw_build_id: u32le,
     signature_size: u32le,
 }

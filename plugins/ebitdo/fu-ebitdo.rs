@@ -6,7 +6,7 @@ struct EbitdoHdr {
     version: u32le,
     destination_addr: u32le,
     destination_len: u32le,
-    reserved: 4u32le,
+    reserved: [u32le; 4],
 }
 #[derive(ToString)]
 enum EbitdoPktType {

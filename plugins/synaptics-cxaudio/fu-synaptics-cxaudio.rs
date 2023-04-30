@@ -4,8 +4,8 @@
 #[derive(Parse)]
 struct SynapticsCxaudioCustomInfo {
     patch_version_string_address: u16le,
-    cpx_patch_version: 3u8,
-    spx_patch_version: 4u8,
+    cpx_patch_version: [u8; 3],
+    spx_patch_version: [u8; 4],
     layout_signature: u8,
     layout_version: u8,
     application_status: u8,

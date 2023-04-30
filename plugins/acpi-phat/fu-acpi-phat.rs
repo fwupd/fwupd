@@ -6,7 +6,7 @@ struct AcpiPhatHealthRecord {
     signature: u16le: default=0x1,
     rcdlen: u16le,
     version: u8,
-    reserved: 2u8,
+    reserved: [u8; 2],
     flags: u8,
     device_signature: Guid,
     device_specific_data: u32le,
@@ -15,13 +15,13 @@ struct AcpiPhatHealthRecord {
 struct AcpiPhatVersionElement {
     component_id: Guid,
     version_value: u64le,
-    producer_id: 4char,
+    producer_id: [char; 4],
 }
 #[derive(New, Parse)]
 struct AcpiPhatVersionRecord {
     signature: u16le: default=0x0,
     rcdlen: u16le,
     version: u8,
-    reserved: 3u8,
+    reserved: [u8; 3],
     record_count: u32le,
 }

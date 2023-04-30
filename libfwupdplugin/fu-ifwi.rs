@@ -14,10 +14,10 @@ struct IfwiCpd {
 }
 #[derive(New, Validate, Parse)]
 struct IfwiCpdEntry {
-    name: 12char,
+    name: [char; 12],
     offset: u32le,
     length: u32le,
-    _reserved1: 4u8,
+    _reserved1: [u8; 4],
 }
 #[derive(New, Validate, Parse)]
 struct IfwiCpdManifest {
@@ -58,9 +58,9 @@ struct IfwiFpt {
 #[derive(New, Validate, Parse)]
 struct IfwiFptEntry {
     partition_name: u32le,
-    _reserved1: 4u8,
+    _reserved1: [u8; 4],
     offset: u32le,
     length: u32le,		// bytes
-    _reserved2: 12u8,
+    _reserved2: [u8; 12],
     partition_type: u32le,	// 0 for code, 1 for data, 2 for GLUT
 }

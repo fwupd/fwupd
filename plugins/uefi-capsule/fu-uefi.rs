@@ -24,13 +24,13 @@ struct EfiUpdateInfo {
     guid: Guid,
     flags: u32le,
     hw_inst: u64le,
-    time_attempted: 16u8, // a EFI_TIME_T
+    time_attempted: [u8; 16], // a EFI_TIME_T
     status: u32le,
     // EFI_DEVICE_PATH goes here
 }
 #[derive(Parse)]
 struct AcpiInsydeQuirk {
-    signature: 6char,
+    signature: [char; 6],
     size: u32le,
     flags: u32le,
 }

@@ -9,7 +9,7 @@ struct SynapromMfwHdr {
     buildnum: u32le: default=0xFF,
     vmajor: u8: default=10,			// major version
     vminor: u8: default=1,			// minor version
-    unused: 6u8,
+    unused: [u8; 6],
 }
 #[derive(New, Parse)]
 struct SynapromHdr {
@@ -22,14 +22,14 @@ struct SynapromCfgHdr {
     id1: u32le,
     id2: u32le,
     version: u16le,
-    _unused: 2u8,
+    _unused: [u8; 2],
 }
 #[derive(Parse)]
 struct SynapromIotaConfigVersion {
     config_id1: u32le, // YYMMDD
     config_id2: u32le, // HHMMSS
     version: u16le,
-    _unused: 3u16,
+    _unused: [u16; 3],
 }
 #[derive(Parse)]
 struct SynapromReplyIotaFindHdr {
@@ -46,7 +46,7 @@ struct SynapromCmdIotaFind {
     flags: u16le,
     maxniotas: u8,   // maximum number of iotas to return, 0 = unlimited
     firstidx: u8,    // first index of iotas to return
-    _dummy: 2u8,
+    _dummy: [u8; 2],
     offset: u32le,   // byte offset of data to return
     nbytes: u32le,   // maximum number of bytes to return
 }

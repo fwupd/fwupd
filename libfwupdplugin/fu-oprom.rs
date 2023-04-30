@@ -9,7 +9,7 @@ struct Oprom {
     subsystem: u16le,
     machine_type: u16le,
     compression_type: u16le,
-    _reserved: 8u8,
+    _reserved: [u8; 8],
     efi_image_offset: u16le,
     pci_header_offset: u16le: default=$struct_size,
     expansion_header_offset: u16le,
