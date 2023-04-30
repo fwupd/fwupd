@@ -1,7 +1,7 @@
 #[derive(Parse)]
 struct WtaBlockHeader {
-    block_start: u32le
-    block_size: u32le
+    block_start: u32le,
+    block_size: u32le,
 }
 #[derive(ToString)]
 enum WacReportId {

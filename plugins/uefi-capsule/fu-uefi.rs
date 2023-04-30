@@ -1,35 +1,35 @@
 #[derive(New, Getters)]
 struct EfiUxCapsuleHeader {
-    version: u8: const=0x01
-    checksum: u8
-    image_type: u8
-    _reserved: u8
-    mode: u32le
-    x_offset: u32le
-    y_offset: u32le
+    version: u8: const=0x01,
+    checksum: u8,
+    image_type: u8,
+    _reserved: u8,
+    mode: u32le,
+    x_offset: u32le,
+    y_offset: u32le,
 }
 #[derive(New, Getters)]
 struct EfiCapsuleHeader {
-    guid: guid
-    header_size: u32le: default=$struct_size
-    flags: u32le
-    image_size: u32le
+    guid: guid,
+    header_size: u32le: default=$struct_size,
+    flags: u32le,
+    image_size: u32le,
 }
 #[derive(New, Parse)]
 struct EfiUpdateInfo {
-    version: u32le: default=0x7
-    guid: guid
-    flags: u32le
-    hw_inst: u64le
-    time_attempted: 16u8 // a EFI_TIME_T
-    status: u32le
+    version: u32le: default=0x7,
+    guid: guid,
+    flags: u32le,
+    hw_inst: u64le,
+    time_attempted: 16u8, // a EFI_TIME_T
+    status: u32le,
     // EFI_DEVICE_PATH goes here
 }
 #[derive(Parse)]
 struct AcpiInsydeQuirk {
-    signature: 6s
-    size: u32le
-    flags: u32le
+    signature: 6s,
+    size: u32le,
+    flags: u32le,
 }
 #[derive(ToString)]
 enum UefiUpdateInfoStatus {

@@ -864,11 +864,11 @@ rustc*, so small differences may be noticeable.
 
     #[derive(New, Validate, Parse)]
     struct ExampleHdr {
-        magic: guid
-        hdrver: u8
-        hdrsz: u16le: default=$struct_size
-        payloadsz: u32le
-        flags: u8
+        magic: guid,
+        hdrver: u8,
+        hdrsz: u16le: default=$struct_size,
+        payloadsz: u32le,
+        flags: u8,
     }
 
     #[derive(ToString, FromString)]
