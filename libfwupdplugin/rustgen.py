@@ -350,10 +350,15 @@ class Generator:
                 offset = 0
                 continue
 
+            # check for trailing comma
+            if not line.endswith(","):
+                raise ValueError(f"invalid struct line: {line} -- needs trailing comma")
+            line = line[:-1]
+
             # split enumeration into sections
             if mode == "enum":
                 enum_item = EnumItem()
-                parts = line.replace(" ", "").replace(",", "").split("=", maxsplit=2)
+                parts = line.replace(" ", "").split("=", maxsplit=2)
                 enum_item.name = parts[0]
                 if len(parts) > 1:
                     enum_item.default = parts[1]
