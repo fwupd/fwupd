@@ -4,7 +4,7 @@
 #[derive(New, Validate, Parse)]
 struct Ds20 {
     _reserved: u8,
-    guid: guid,
+    guid: Guid,
     platform_ver: u32le,
     total_length: u16le,
     vendor_code: u8,

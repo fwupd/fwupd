@@ -3,7 +3,7 @@
 
 #[derive(New, Validate, Parse)]
 struct EfiFile {
-    name: guid,
+    name: Guid,
     hdr_checksum: u8,
     data_checksum: u8,
     type: u8,
@@ -18,14 +18,14 @@ struct EfiSection {
 }
 #[derive(New, Validate, Parse)]
 struct EfiSectionGuidDefined {
-    name: guid,
+    name: Guid,
     offset: u16le,
     attr: u16le,
 }
 #[derive(New, Validate, Parse)]
 struct EfiVolume {
-    zero_vector: guid,
-    guid: guid,
+    zero_vector: Guid,
+    guid: Guid,
     length: u64le,
     signature: u32le: const=0x4856465F,
     attrs: u32le,
@@ -42,7 +42,7 @@ struct EfiVolumeBlockMap {
 }
 #[derive(New, Validate, Parse)]
 struct EfiSignatureList {
-    type: guid,
+    type: Guid,
     list_size: u32le,
     header_size: u32le,
     size: u32le,

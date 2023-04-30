@@ -864,7 +864,7 @@ rustc*, so small differences may be noticeable.
 
     #[derive(New, Validate, Parse)]
     struct ExampleHdr {
-        magic: guid,
+        magic: Guid,
         hdrver: u8,
         hdrsz: u16le: default=$struct_size,
         payloadsz: u32le,
@@ -888,7 +888,7 @@ The struct types currently supported are:
 - `u32le`:  little endian `guint32`
 - `u64be`:  big endian `guint64`
 - `s`: a `NUL`-terminated string
-- `guid`: a GUID
+- `Guid`: a GUID
 
 Arrays of types are also allowed, with the number of items added before the type, for example:
 
