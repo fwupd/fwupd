@@ -1,3 +1,6 @@
+// Copyright (C) 2023 Richard Hughes <richard@hughsie.com>
+// SPDX-License-Identifier: LGPL-2.1+
+
 #[derive(New, Validate, Parse)]
 struct Fdt {
     magic: u32be: const=0xD00DFEED,

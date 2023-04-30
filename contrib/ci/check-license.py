@@ -23,7 +23,7 @@ def test_files() -> int:
     rc: int = 0
     build_dirs = [os.path.dirname(cf) for cf in glob.glob("**/config.h")]
 
-    for fn in glob.glob("**/*.[c|h|py|sh]", recursive=True):
+    for fn in glob.glob("**/*.[c|h|py|sh|rs]", recursive=True):
         if "meson-private" in fn:
             continue
         if os.path.isdir(fn):
