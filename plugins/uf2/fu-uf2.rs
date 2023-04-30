@@ -1,3 +1,6 @@
+// Copyright (C) 2023 Richard Hughes <richard@hughsie.com>
+// SPDX-License-Identifier: LGPL-2.1+
+
 #[derive(New, Parse)]
 struct Uf2 {
     magic0: u32le: const=0x0A324655,

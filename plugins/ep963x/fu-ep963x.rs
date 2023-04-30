@@ -1,3 +1,6 @@
+// Copyright (C) 2023 Richard Hughes <richard@hughsie.com>
+// SPDX-License-Identifier: LGPL-2.1+
+
 // byte = 0x07
 #[derive(ToString)]
 enum Ep963xSmbusError {
