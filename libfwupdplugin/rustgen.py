@@ -145,7 +145,9 @@ class StructItem:
     def _parse_default(self, val: str) -> str:
 
         if self.type == Type.STRING:
-            return val
+            if val.startswith('"') and val.endswith('"'):
+                return val[1:-1]
+            raise ValueError(f"string default {val} needs double quotes")
         if self.type == Type.GUID or (self.type == Type.U8 and self.multiplier):
             if not val.startswith("0x"):
                 raise ValueError(f"0x prefix for hex number expected, got: {val}")
