@@ -5380,8 +5380,10 @@ main(int argc, char **argv)
 	g_test_add_data_func("/fwupd/history{migrate}", self, fu_history_migrate_func);
 	g_test_add_data_func("/fwupd/plugin-list", self, fu_plugin_list_func);
 	g_test_add_data_func("/fwupd/plugin-list{depsolve}", self, fu_plugin_list_depsolve_func);
-	g_test_add_func("/fwupd/spawn", fu_spawn_func);
-	g_test_add_func("/fwupd/spawn-timeout", fu_spawn_timeout_func);
+	if (g_test_slow()) {
+		g_test_add_func("/fwupd/spawn", fu_spawn_func);
+		g_test_add_func("/fwupd/spawn-timeout", fu_spawn_timeout_func);
+	}
 	g_test_add_func("/fwupd/common{cab-success}", fu_common_store_cab_func);
 	g_test_add_func("/fwupd/common{cab-success-artifact}", fu_common_store_cab_artifact_func);
 	g_test_add_func("/fwupd/common{cab-success-unsigned}", fu_common_store_cab_unsigned_func);
