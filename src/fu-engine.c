@@ -2276,7 +2276,7 @@ fu_engine_check_trust(FuEngine *self, FuRelease *release, GError **error)
 	if (fu_engine_config_get_only_trusted(self->config) &&
 	    !fu_release_has_flag(release, FWUPD_RELEASE_FLAG_TRUSTED_PAYLOAD)) {
 		g_autofree gchar *sysconfdir = fu_path_from_kind(FU_PATH_KIND_SYSCONFDIR_PKG);
-		g_autofree gchar *fn = g_build_filename(sysconfdir, "daemon.conf", NULL);
+		g_autofree gchar *fn = g_build_filename(sysconfdir, "fwupd.conf", NULL);
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_FILE,
@@ -3644,7 +3644,7 @@ fu_engine_device_check_power(FuEngine *self,
 {
 	if (flags & FWUPD_INSTALL_FLAG_IGNORE_POWER) {
 		g_autofree gchar *configdir = fu_path_from_kind(FU_PATH_KIND_SYSCONFDIR_PKG);
-		g_autofree gchar *configfile = g_build_filename(configdir, "daemon.conf", NULL);
+		g_autofree gchar *configfile = g_build_filename(configdir, "fwupd.conf", NULL);
 		g_warning("Ignoring deprecated flag provided by client "
 			  "'FWUPD_INSTALL_FLAG_IGNORE_POWER'. To ignore power levels, modify %s",
 			  configfile);
@@ -8442,7 +8442,7 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 	}
 	fu_progress_step_done(progress);
 
-	/* migrate per-plugin settings into daemon.conf */
+	/* migrate per-plugin settings into fwupd.conf */
 	plugin_uefi = fu_plugin_list_find_by_name(self->plugin_list, "uefi_capsule", NULL);
 	if (plugin_uefi != NULL) {
 		const gchar *tmp =
