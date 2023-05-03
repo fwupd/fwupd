@@ -859,7 +859,6 @@ gboolean
 fu_plugin_runner_startup(FuPlugin *self, FuProgress *progress, GError **error)
 {
 	FuPluginVfuncs *vfuncs = fu_plugin_get_vfuncs(self);
-	g_autofree gchar *conf_dir = fu_path_from_kind(FU_PATH_KIND_SYSCONFDIR_PKG);
 	g_autoptr(GError) error_local = NULL;
 
 	g_return_val_if_fail(FU_IS_PLUGIN(self), FALSE);
