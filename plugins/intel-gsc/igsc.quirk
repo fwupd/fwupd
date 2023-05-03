@@ -61,22 +61,22 @@ Flags = has-aux,has-oprom
 Name = DG2_SOC1
 Flags = has-aux,has-oprom
 [MEI\VEN_8086&DEV_5690]
-Name = DG2_SOC1
+Name = Arc A770M
 Flags = has-aux,has-oprom
 [MEI\VEN_8086&DEV_5691]
-Name = DG2_SOC1
+Name = Arc A730M
 Flags = has-aux,has-oprom
 [MEI\VEN_8086&DEV_5692]
-Name = DG2_SOC1
+Name = Arc A550M
 Flags = has-aux,has-oprom
 [MEI\VEN_8086&DEV_56A0]
-Name = DG2_SOC1
+Name = Arc A770
 Flags = has-aux,has-oprom
 [MEI\VEN_8086&DEV_56A1]
-Name = DG2_SOC1
+Name = Arc A750
 Flags = has-aux,has-oprom
 [MEI\VEN_8086&DEV_56A2]
-Name = DG2_SOC1
+Name = Arc A580
 Flags = has-aux,has-oprom
 [MEI\VEN_8086&DEV_56C0]
 Name = DG2_SOC1
@@ -89,19 +89,19 @@ Flags = has-aux,has-oprom
 Name = DG2_SOC2
 Flags = has-aux,has-oprom
 [MEI\VEN_8086&DEV_5693]
-Name = DG2_SOC2
+Name = Arc A370M
 Flags = has-aux,has-oprom
 [MEI\VEN_8086&DEV_5694]
-Name = DG2_SOC2
+Name = Arc A350M
 Flags = has-aux,has-oprom
 [MEI\VEN_8086&DEV_5695]
-Name = DG2_SOC2
+Name = Iris(R) Xe MAX A200M
 Flags = has-aux,has-oprom
 [MEI\VEN_8086&DEV_56A5]
-Name = DG2_SOC2
+Name = Arc A380
 Flags = has-aux,has-oprom
 [MEI\VEN_8086&DEV_56A6]
-Name = DG2_SOC2
+Name = Arc A310
 Flags = has-aux,has-oprom
 [MEI\VEN_8086&DEV_56A7]
 Name = DG2_SOC2
