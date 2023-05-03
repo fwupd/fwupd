@@ -1400,8 +1400,6 @@ fu_device_private_flags_func(void)
 	g_assert_cmpint(fu_device_get_private_flags(device), ==, TEST_FLAG_FOO);
 	fu_device_set_custom_flags(device, "baz");
 	g_assert_cmpint(fu_device_get_private_flags(device), ==, TEST_FLAG_FOO);
-	fu_device_add_private_flag(device, TEST_FLAG_BAZ);
-	g_assert_cmpint(fu_device_get_private_flags(device), ==, TEST_FLAG_FOO | TEST_FLAG_BAZ);
 
 	tmp = fu_device_to_string(device);
 	g_assert_cmpstr(tmp,
@@ -4010,7 +4008,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/device{instance-ids}", fu_device_instance_ids_func);
 	g_test_add_func("/fwupd/device{composite-id}", fu_device_composite_id_func);
 	g_test_add_func("/fwupd/device{flags}", fu_device_flags_func);
-	g_test_add_func("/fwupd/device{custom-flags}", fu_device_private_flags_func);
+	g_test_add_func("/fwupd/device{private-flags}", fu_device_private_flags_func);
 	g_test_add_func("/fwupd/device{inhibit}", fu_device_inhibit_func);
 	g_test_add_func("/fwupd/device{inhibit-updateable}", fu_device_inhibit_updateable_func);
 	g_test_add_func("/fwupd/device{parent}", fu_device_parent_func);

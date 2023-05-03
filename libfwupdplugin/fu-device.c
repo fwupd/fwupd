@@ -97,6 +97,11 @@ typedef struct {
 	gchar *reason;
 } FuDeviceInhibit;
 
+typedef struct {
+	guint64 value;
+	gchar *value_str;
+} FuDevicePrivateFlagItem;
+
 enum {
 	PROP_0,
 	PROP_PHYSICAL_ID,
@@ -114,6 +119,9 @@ static guint signals[SIGNAL_LAST] = {0};
 
 G_DEFINE_TYPE_WITH_PRIVATE(FuDevice, fu_device, FWUPD_TYPE_DEVICE)
 #define GET_PRIVATE(o) (fu_device_get_instance_private(o))
+
+static FuDevicePrivateFlagItem *
+fu_device_private_flag_item_find_by_val(FuDevice *self, guint64 value);
 
 static void
 fu_device_get_property(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
@@ -425,6 +433,13 @@ fu_device_add_private_flag(FuDevice *self, guint64 flag)
 {
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FU_IS_DEVICE(self));
+#ifndef SUPPORTED_BUILD
+	if (fu_device_private_flag_item_find_by_val(self, flag) == NULL) {
+		g_critical("%s flag 0x%x is unknown -- use fu_device_register_private_flag()",
+			   G_OBJECT_TYPE_NAME(self),
+			   (guint)flag);
+	}
+#endif
 	priv->private_flags |= flag;
 }
 
@@ -442,6 +457,13 @@ fu_device_remove_private_flag(FuDevice *self, guint64 flag)
 {
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FU_IS_DEVICE(self));
+#ifndef SUPPORTED_BUILD
+	if (fu_device_private_flag_item_find_by_val(self, flag) == NULL) {
+		g_critical("%s flag 0x%x is unknown -- use fu_device_register_private_flag()",
+			   G_OBJECT_TYPE_NAME(self),
+			   (guint)flag);
+	}
+#endif
 	priv->private_flags &= ~flag;
 }
 
@@ -459,6 +481,13 @@ fu_device_has_private_flag(FuDevice *self, guint64 flag)
 {
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FU_IS_DEVICE(self), FALSE);
+#ifndef SUPPORTED_BUILD
+	if (fu_device_private_flag_item_find_by_val(self, flag) == NULL) {
+		g_critical("%s flag 0x%x is unknown -- use fu_device_register_private_flag()",
+			   G_OBJECT_TYPE_NAME(self),
+			   (guint)flag);
+	}
+#endif
 	return (priv->private_flags & flag) > 0;
 }
 
@@ -3500,11 +3529,6 @@ fu_device_add_flag(FuDevice *self, FwupdDeviceFlags flag)
 		fu_device_add_problem(self, FWUPD_DEVICE_PROBLEM_UNREACHABLE);
 }
 
-typedef struct {
-	guint64 value;
-	gchar *value_str;
-} FuDevicePrivateFlagItem;
-
 static void
 fu_device_private_flag_item_free(FuDevicePrivateFlagItem *item)
 {
@@ -3546,7 +3570,8 @@ fu_device_private_flag_item_find_by_val(FuDevice *self, guint64 value)
  * @value: an integer value
  * @value_str: a string that represents @value
  *
- * Registers a private device flag so that it can be set from quirk files.
+ * Registers a private device flag so that it can be set from quirk files and printed
+ * correctly in debug output.
  *
  * Since: 1.6.2
  **/
