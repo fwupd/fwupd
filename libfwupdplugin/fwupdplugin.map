@@ -1194,6 +1194,12 @@ LIBFWUPDPLUGIN_1.8.13 {
   local: *;
 } LIBFWUPDPLUGIN_1.8.12;
 
+LIBFWUPDPLUGIN_1.8.15 {
+  global:
+    fu_device_get_instance_str;
+  local: *;
+} LIBFWUPDPLUGIN_1.8.13;
+
 LIBFWUPDPLUGIN_1.9.1 {
   global:
     fu_bytes_get_contents_stream_full;
@@ -1211,4 +1217,4 @@ LIBFWUPDPLUGIN_1.9.1 {
     fu_memchk_read;
     fu_memchk_write;
   local: *;
-} LIBFWUPDPLUGIN_1.8.13;
+} LIBFWUPDPLUGIN_1.8.15;

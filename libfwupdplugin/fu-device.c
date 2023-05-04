@@ -5166,10 +5166,23 @@ fu_device_unbind_driver(FuDevice *self, GError **error)
 	return klass->unbind_driver(self, error);
 }
 
-static const gchar *
-fu_device_instance_lookup(FuDevice *self, const gchar *key)
+/**
+ * fu_device_get_instance_str:
+ * @self: a #FuDevice
+ * @key: (not nullable): a key, e.g. `REV`
+ *
+ * Looks up an instance ID by a key.
+ *
+ * Returns: (nullable) (transfer none): The instance key, or %NULL.
+ *
+ * Since: 1.8.15
+ **/
+const gchar *
+fu_device_get_instance_str(FuDevice *self, const gchar *key)
 {
 	FuDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_DEVICE(self), NULL);
+	g_return_val_if_fail(key != NULL, NULL);
 	return g_hash_table_lookup(priv->instance_hash, key);
 }
 
@@ -5248,7 +5261,7 @@ fu_device_incorporate(FuDevice *self, FuDevice *donor)
 	/* copy all instance ID keys if not already set */
 	g_hash_table_iter_init(&iter, priv_donor->instance_hash);
 	while (g_hash_table_iter_next(&iter, &key, &value)) {
-		if (fu_device_instance_lookup(self, key) == NULL)
+		if (fu_device_get_instance_str(self, key) == NULL)
 			fu_device_add_instance_str(self, key, value);
 	}
 
@@ -5859,11 +5872,11 @@ fu_device_build_instance_id(FuDevice *self, GError **error, const gchar *subsyst
 		const gchar *value;
 		if (key == NULL)
 			break;
-		value = fu_device_instance_lookup(self, key);
+		value = fu_device_get_instance_str(self, key);
 		if (value == NULL && parent != NULL)
-			value = fu_device_instance_lookup(parent, key);
+			value = fu_device_get_instance_str(parent, key);
 		if (value == NULL && priv->proxy != NULL)
-			value = fu_device_instance_lookup(priv->proxy, key);
+			value = fu_device_get_instance_str(priv->proxy, key);
 		if (value == NULL) {
 			g_set_error(error,
 				    G_IO_ERROR,

@@ -794,6 +794,8 @@ fu_device_emit_request(FuDevice *self, FwupdRequest *request);
 FwupdSecurityAttr *
 fu_device_security_attr_new(FuDevice *self, const gchar *appstream_id);
 
+const gchar *
+fu_device_get_instance_str(FuDevice *self, const gchar *key);
 void
 fu_device_add_instance_str(FuDevice *self, const gchar *key, const gchar *value);
 void
