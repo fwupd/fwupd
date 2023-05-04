@@ -76,6 +76,7 @@ typedef struct {
 
 enum {
 	PROP_0,
+	PROP_VERSION,
 	PROP_VERSION_FORMAT,
 	PROP_FLAGS,
 	PROP_PROTOCOL,
@@ -1108,6 +1109,7 @@ fwupd_device_set_version(FwupdDevice *self, const gchar *version)
 
 	g_free(priv->version);
 	priv->version = g_strdup(version);
+	g_object_notify(G_OBJECT(self), "version");
 }
 
 /**
@@ -3613,6 +3615,9 @@ fwupd_device_get_property(GObject *object, guint prop_id, GValue *value, GParamS
 	FwupdDevice *self = FWUPD_DEVICE(object);
 	FwupdDevicePrivate *priv = GET_PRIVATE(self);
 	switch (prop_id) {
+	case PROP_VERSION:
+		g_value_set_string(value, priv->version);
+		break;
 	case PROP_VERSION_FORMAT:
 		g_value_set_uint(value, priv->version_format);
 		break;
@@ -3663,6 +3668,9 @@ fwupd_device_set_property(GObject *object, guint prop_id, const GValue *value, G
 {
 	FwupdDevice *self = FWUPD_DEVICE(object);
 	switch (prop_id) {
+	case PROP_VERSION:
+		fwupd_device_set_version(self, g_value_get_string(value));
+		break;
 	case PROP_VERSION_FORMAT:
 		fwupd_device_set_version_format(self, g_value_get_uint(value));
 		break;
@@ -3717,6 +3725,20 @@ fwupd_device_class_init(FwupdDeviceClass *klass)
 	object_class->finalize = fwupd_device_finalize;
 	object_class->get_property = fwupd_device_get_property;
 	object_class->set_property = fwupd_device_set_property;
+
+	/**
+	 * FwupdDevice:version:
+	 *
+	 * The device version.
+	 *
+	 * Since: 1.8.15
+	 */
+	pspec = g_param_spec_string("version",
+				    NULL,
+				    NULL,
+				    NULL,
+				    G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
+	g_object_class_install_property(object_class, PROP_VERSION, pspec);
 
 	/**
 	 * FwupdDevice:version-format:
