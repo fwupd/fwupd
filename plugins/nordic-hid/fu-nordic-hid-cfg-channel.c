@@ -417,9 +417,46 @@ fu_nordic_hid_cfg_channel_cmd_receive(FuNordicHidCfgChannel *self,
 }
 
 static gboolean
+fu_nordic_hid_cfg_channel_get_peer_list_cb(FuDevice *device, gpointer user_data, GError **error)
+{
+	FuNordicHidCfgChannel *self = FU_NORDIC_HID_CFG_CHANNEL(device);
+	g_autoptr(FuNordicCfgChannelMsg) res = g_new0(FuNordicCfgChannelMsg, 1);
+	g_autoptr(FuNordicHidCfgChannel) peer = NULL;
+
+	if (!fu_nordic_hid_cfg_channel_cmd_send(self,
+						NULL,
+						NULL,
+						CONFIG_STATUS_GET_PEER,
+						NULL,
+						0,
+						error)) {
+		g_prefix_error(error, "failed to send GET_PEER: ");
+		return FALSE;
+	}
+	if (!fu_nordic_hid_cfg_channel_cmd_receive(self, CONFIG_STATUS_SUCCESS, res, error)) {
+		g_prefix_error(error, "failed to receive GET_PEER: ");
+		return FALSE;
+	}
+
+	/* end of the list */
+	if (res->data[8] == INVALID_PEER_ID)
+		return TRUE;
+
+	g_debug("detected peer: 0x%02x", res->data[8]);
+	peer = fu_nordic_hid_cfg_channel_new(res->data[8]);
+
+	/* prohibit to close parent's communication descriptor */
+	fu_device_add_internal_flag(FU_DEVICE(peer), FU_DEVICE_INTERNAL_FLAG_USE_PARENT_FOR_OPEN);
+	fu_device_add_child(FU_DEVICE(self), FU_DEVICE(peer));
+
+	/* not the end of the list yet */
+	g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_NONE, "more peers to detect");
+	return FALSE;
+}
+
+static gboolean
 fu_nordic_hid_cfg_channel_add_peers(FuNordicHidCfgChannel *self, GError **error)
 {
-	guint cnt = 0;
 	g_autoptr(FuNordicCfgChannelMsg) res = g_new0(FuNordicCfgChannelMsg, 1);
 	g_autoptr(GError) error_local = NULL;
 
@@ -442,40 +479,15 @@ fu_nordic_hid_cfg_channel_add_peers(FuNordicHidCfgChannel *self, GError **error)
 		return TRUE;
 	}
 
-	/* Peers available */
+	/* poll until the end of the list */
 	if (!fu_nordic_hid_cfg_channel_cmd_receive(self, CONFIG_STATUS_SUCCESS, res, error))
 		return FALSE;
-
-	while (cnt++ <= 0xFF) {
-		g_autoptr(FuNordicHidCfgChannel) peer = NULL;
-
-		if (!fu_nordic_hid_cfg_channel_cmd_send(self,
-							NULL,
-							NULL,
-							CONFIG_STATUS_GET_PEER,
-							NULL,
-							0,
-							error))
-			return FALSE;
-		if (!fu_nordic_hid_cfg_channel_cmd_receive(self, CONFIG_STATUS_SUCCESS, res, error))
-			return FALSE;
-
-		/* end of the list */
-		if (res->data[8] == INVALID_PEER_ID)
-			return TRUE;
-
-		g_debug("detected peer: 0x%02x", res->data[8]);
-
-		peer = fu_nordic_hid_cfg_channel_new(res->data[8]);
-		/* prohibit to close parent's communication descriptor */
-		fu_device_add_internal_flag(FU_DEVICE(peer),
-					    FU_DEVICE_INTERNAL_FLAG_USE_PARENT_FOR_OPEN);
-		/* probe&setup are the part of adding child */
-		fu_device_add_child(FU_DEVICE(self), FU_DEVICE(peer));
-	}
-
-	g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_BROKEN_PIPE, "too many peers detected");
-	return FALSE;
+	return fu_device_retry_full(FU_DEVICE(self),
+				    fu_nordic_hid_cfg_channel_get_peer_list_cb,
+				    0xFF,
+				    0, /* ms */
+				    NULL,
+				    error);
 }
 
 static gboolean
