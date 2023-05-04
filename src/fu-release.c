@@ -330,6 +330,12 @@ fu_release_load_test_result(FuRelease *self, XbNode *n, GError **error)
 				fwupd_report_add_flag(report, FWUPD_REPORT_FLAG_FROM_OEM);
 				continue;
 			}
+			if (xb_node_get_attr(c, "key") == NULL || xb_node_get_text(c) == NULL) {
+				g_debug("ignoring metadata: %s=%s",
+					xb_node_get_attr(c, "key"),
+					xb_node_get_text(c));
+				continue;
+			}
 			fwupd_report_add_metadata_item(report,
 						       xb_node_get_attr(c, "key"),
 						       xb_node_get_text(c));
