@@ -88,7 +88,8 @@ fu_wac_module_refresh_cb(FuDevice *device, gpointer user_data, GError **error)
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
-			    "refresh returned status %s",
+			    "refresh returned status 0x%x [%s]",
+			    priv->status,
 			    fu_wac_module_status_to_string(priv->status));
 		return FALSE;
 	}
@@ -110,7 +111,7 @@ fu_wac_module_set_feature(FuWacModule *self,
 	const guint8 *data;
 	gsize len = 0;
 	guint delay_ms =
-	    fu_device_has_flag(FU_DEVICE(parent_device), FWUPD_DEVICE_FLAG_EMULATED) ? 10 : 20;
+	    fu_device_has_flag(FU_DEVICE(parent_device), FWUPD_DEVICE_FLAG_EMULATED) ? 10 : 250;
 	guint busy_poll_loops = busy_timeout / delay_ms;
 	guint8 buf[] = {[0] = FU_WAC_REPORT_ID_MODULE,
 			[1] = priv->fw_type,
@@ -163,13 +164,18 @@ fu_wac_module_set_feature(FuWacModule *self,
 	}
 
 	/* wait for hardware */
+	fu_device_sleep(FU_DEVICE(self), 80); /* ms */
 	if (!fu_device_retry_full(FU_DEVICE(self),
 				  fu_wac_module_refresh_cb,
 				  busy_poll_loops,
 				  delay_ms,
 				  NULL,
-				  error))
+				  error)) {
+		g_prefix_error(error,
+			       "failed to set feature %s: ",
+			       fu_wac_module_command_to_string(command));
 		return FALSE;
+	}
 
 	/* success */
 	return TRUE;
