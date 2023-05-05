@@ -25,6 +25,8 @@ G_DEFINE_TYPE(FuWacModuleBluetoothId6, fu_wac_module_bluetooth_id6, FU_TYPE_WAC_
 #define FU_WAC_MODULE_BLUETOOTH_ID6_START_NORMAL    0x00
 #define FU_WAC_MODULE_BLUETOOTH_ID6_START_FULLERASE 0xFE
 
+#define FU_WAC_MODULE_BLUETOOTH_ID6_WRITE_TIMEOUT 8000 /* ms */
+
 static guint8
 fu_wac_module_bluetooth_id6_reverse_bits(guint8 value)
 {
@@ -75,7 +77,7 @@ fu_wac_module_bluetooth_id6_write_blob(FuWacModule *self,
 					       FU_WAC_MODULE_COMMAND_DATA,
 					       blob_chunk,
 					       fu_progress_get_child(progress),
-					       FU_WAC_MODULE_WRITE_TIMEOUT,
+					       FU_WAC_MODULE_BLUETOOTH_ID6_WRITE_TIMEOUT,
 					       error)) {
 			g_prefix_error(error, "failed to write block %u of %u: ", i, chunks->len);
 			return FALSE;
