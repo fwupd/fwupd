@@ -2454,6 +2454,7 @@ fu_engine_get_proc_cmdline(GError **error)
 	    "crashkernel",
 	    "cryptdevice",
 	    "cryptkey",
+	    "dm",
 	    "earlycon",
 	    "earlyprintk",
 	    "ether",
