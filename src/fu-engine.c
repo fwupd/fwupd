@@ -2465,6 +2465,10 @@ fu_engine_get_proc_cmdline(GError **error)
 	while (g_hash_table_iter_next(&iter, &key, &value)) {
 		if (cmdline_safe->len > 0)
 			g_string_append(cmdline_safe, " ");
+		if (value == NULL) {
+			g_string_append(cmdline_safe, (gchar *)key);
+			continue;
+		}
 		g_string_append_printf(cmdline_safe, "%s=%s", (gchar *)key, (gchar *)value);
 	}
 
