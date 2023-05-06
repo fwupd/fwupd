@@ -1214,6 +1214,7 @@ LIBFWUPDPLUGIN_1.9.1 {
     fu_config_set_value;
     fu_context_get_config;
     fu_context_get_firmware_gtypes;
+    fu_kernel_parse_cmdline;
     fu_memchk_read;
     fu_memchk_write;
   local: *;
