@@ -231,6 +231,51 @@ fu_kernel_reset_firmware_search_path(GError **error)
 }
 
 /**
+ * fu_kernel_parse_cmdline:
+ * @buf: (not nullable): cmdline to parse
+ * @bufsz: size of @bufsz
+ *
+ * Parses all the kernel key/values into a hash table, respecting double quotes when required.
+ *
+ * Returns: (transfer container) (element-type utf8 utf8): keys from the cmdline
+ *
+ * Since: 1.9.1
+ **/
+GHashTable *
+fu_kernel_parse_cmdline(const gchar *buf, gsize bufsz)
+{
+	gboolean is_escape = FALSE;
+	g_autoptr(GHashTable) hash = NULL;
+	g_autoptr(GString) acc = g_string_new(NULL);
+
+	g_return_val_if_fail(buf != NULL, NULL);
+
+	hash = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
+	if (bufsz == 0)
+		return g_steal_pointer(&hash);
+	for (gsize i = 0; i < bufsz; i++) {
+		if (!is_escape && buf[i] == ' ' && acc->len > 0) {
+			g_auto(GStrv) kv = g_strsplit(acc->str, "=", 2);
+			g_hash_table_insert(hash, g_strdup(kv[0]), g_strdup(kv[1]));
+			g_string_set_size(acc, 0);
+			continue;
+		}
+		if (buf[i] == '"') {
+			is_escape = !is_escape;
+			continue;
+		}
+		g_string_append_c(acc, buf[i]);
+	}
+	if (acc->len > 0) {
+		g_auto(GStrv) kv = g_strsplit(acc->str, "=", 2);
+		g_hash_table_insert(hash, g_strdup(kv[0]), g_strdup(kv[1]));
+	}
+
+	/* success */
+	return g_steal_pointer(&hash);
+}
+
+/**
  * fu_kernel_get_cmdline:
  * @error: (nullable): optional return location for an error
  *
@@ -246,26 +291,12 @@ fu_kernel_get_cmdline(GError **error)
 #ifdef __linux__
 	gsize bufsz = 0;
 	g_autofree gchar *buf = NULL;
-	g_autoptr(GHashTable) hash = NULL;
 
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
 	if (!g_file_get_contents("/proc/cmdline", &buf, &bufsz, error))
 		return NULL;
-	hash = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
-	if (bufsz > 1) {
-		g_auto(GStrv) tokens = fu_strsplit(buf, bufsz - 1, " ", -1);
-		for (guint i = 0; tokens[i] != NULL; i++) {
-			g_auto(GStrv) kv = NULL;
-			if (strlen(tokens[i]) == 0)
-				continue;
-			kv = g_strsplit(tokens[i], "=", 2);
-			g_hash_table_insert(hash, g_strdup(kv[0]), g_strdup(kv[1]));
-		}
-	}
-
-	/* success */
-	return g_steal_pointer(&hash);
+	return fu_kernel_parse_cmdline(buf, bufsz);
 #else
 	g_set_error_literal(error,
 			    FWUPD_ERROR,

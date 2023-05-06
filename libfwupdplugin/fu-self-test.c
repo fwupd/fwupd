@@ -392,6 +392,23 @@ fu_smbios_func(void)
 }
 
 static void
+fu_kernel_func(void)
+{
+	const gchar *buf = "key=val foo bar=\"baz baz baz\" tail";
+	g_autoptr(GHashTable) hash = NULL;
+
+	hash = fu_kernel_parse_cmdline(buf, strlen(buf));
+	g_assert_nonnull(hash);
+	g_assert_true(g_hash_table_contains(hash, "key"));
+	g_assert_cmpstr(g_hash_table_lookup(hash, "key"), ==, "val");
+	g_assert_true(g_hash_table_contains(hash, "foo"));
+	g_assert_cmpstr(g_hash_table_lookup(hash, "foo"), ==, NULL);
+	g_assert_true(g_hash_table_contains(hash, "bar"));
+	g_assert_cmpstr(g_hash_table_lookup(hash, "bar"), ==, "baz baz baz");
+	g_assert_true(g_hash_table_contains(hash, "tail"));
+}
+
+static void
 fu_smbios3_func(void)
 {
 	const gchar *str;
@@ -3979,6 +3996,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/context{hwids-dmi}", fu_context_hwids_dmi_func);
 	g_test_add_func("/fwupd/smbios", fu_smbios_func);
 	g_test_add_func("/fwupd/smbios3", fu_smbios3_func);
+	g_test_add_func("/fwupd/kernel", fu_kernel_func);
 	g_test_add_func("/fwupd/firmware", fu_firmware_func);
 	g_test_add_func("/fwupd/firmware{common}", fu_firmware_common_func);
 	g_test_add_func("/fwupd/firmware{archive}", fu_firmware_archive_func);
