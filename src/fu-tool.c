@@ -223,6 +223,7 @@ fu_util_start_engine(FuUtilPrivate *priv,
 #endif
 	flags |= FU_ENGINE_LOAD_FLAG_NO_IDLE_SOURCES;
 	flags |= FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS;
+	flags |= FU_ENGINE_LOAD_FLAG_HWINFO;
 	if (!fu_engine_load(priv->engine, flags, progress, error))
 		return FALSE;
 	fu_util_show_plugin_warnings(priv);
@@ -446,7 +447,7 @@ fu_util_get_plugins(FuUtilPrivate *priv, gchar **values, GError **error)
 	GPtrArray *plugins;
 
 	/* load engine */
-	if (!fu_util_start_engine(priv, FU_ENGINE_LOAD_FLAG_HWINFO, priv->progress, error))
+	if (!fu_util_start_engine(priv, FU_ENGINE_LOAD_FLAG_NONE, priv->progress, error))
 		return FALSE;
 
 	/* print */
@@ -600,8 +601,7 @@ fu_util_get_updates(FuUtilPrivate *priv, gchar **values, GError **error)
 
 	/* load engine */
 	if (!fu_util_start_engine(priv,
-				  FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_HWINFO |
-				      FU_ENGINE_LOAD_FLAG_REMOTES,
+				  FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_REMOTES,
 				  priv->progress,
 				  error))
 		return FALSE;
@@ -708,8 +708,7 @@ fu_util_get_details(FuUtilPrivate *priv, gchar **values, GError **error)
 
 	/* load engine */
 	if (!fu_util_start_engine(priv,
-				  FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_HWINFO |
-				      FU_ENGINE_LOAD_FLAG_REMOTES,
+				  FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_REMOTES,
 				  priv->progress,
 				  error))
 		return FALSE;
@@ -796,8 +795,7 @@ fu_util_get_devices(FuUtilPrivate *priv, gchar **values, GError **error)
 
 	/* load engine */
 	if (!fu_util_start_engine(priv,
-				  FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_HWINFO |
-				      FU_ENGINE_LOAD_FLAG_REMOTES,
+				  FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_REMOTES,
 				  priv->progress,
 				  error))
 		return FALSE;
@@ -923,8 +921,7 @@ fu_util_install_blob(FuUtilPrivate *priv, gchar **values, GError **error)
 
 	/* load engine */
 	if (!fu_util_start_engine(priv,
-				  FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_HWINFO |
-				      FU_ENGINE_LOAD_FLAG_REMOTES,
+				  FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_REMOTES,
 				  fu_progress_get_child(priv->progress),
 				  error))
 		return FALSE;
@@ -1075,7 +1072,7 @@ fu_util_firmware_dump(FuUtilPrivate *priv, gchar **values, GError **error)
 
 	/* load engine */
 	if (!fu_util_start_engine(priv,
-				  FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_HWINFO,
+				  FU_ENGINE_LOAD_FLAG_COLDPLUG,
 				  fu_progress_get_child(priv->progress),
 				  error))
 		return FALSE;
@@ -1150,7 +1147,7 @@ fu_util_firmware_read(FuUtilPrivate *priv, gchar **values, GError **error)
 
 	/* load engine */
 	if (!fu_util_start_engine(priv,
-				  FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_HWINFO,
+				  FU_ENGINE_LOAD_FLAG_COLDPLUG,
 				  fu_progress_get_child(priv->progress),
 				  error))
 		return FALSE;
@@ -1241,8 +1238,7 @@ fu_util_install(FuUtilPrivate *priv, gchar **values, GError **error)
 
 	/* load engine */
 	if (!fu_util_start_engine(priv,
-				  FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_HWINFO |
-				      FU_ENGINE_LOAD_FLAG_REMOTES,
+				  FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_REMOTES,
 				  fu_progress_get_child(priv->progress),
 				  error))
 		return FALSE;
@@ -1450,8 +1446,7 @@ fu_util_update(FuUtilPrivate *priv, gchar **values, GError **error)
 	}
 
 	if (!fu_util_start_engine(priv,
-				  FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_HWINFO |
-				      FU_ENGINE_LOAD_FLAG_REMOTES,
+				  FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_REMOTES,
 				  priv->progress,
 				  error))
 		return FALSE;
@@ -1577,8 +1572,7 @@ fu_util_reinstall(FuUtilPrivate *priv, gchar **values, GError **error)
 	}
 
 	if (!fu_util_start_engine(priv,
-				  FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_HWINFO |
-				      FU_ENGINE_LOAD_FLAG_REMOTES,
+				  FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_REMOTES,
 				  priv->progress,
 				  error))
 		return FALSE;
@@ -1644,8 +1638,7 @@ fu_util_detach(FuUtilPrivate *priv, gchar **values, GError **error)
 
 	/* load engine */
 	if (!fu_util_start_engine(priv,
-				  FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_HWINFO |
-				      FU_ENGINE_LOAD_FLAG_REMOTES,
+				  FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_REMOTES,
 				  fu_progress_get_child(priv->progress),
 				  error))
 		return FALSE;
@@ -1681,8 +1674,7 @@ fu_util_unbind_driver(FuUtilPrivate *priv, gchar **values, GError **error)
 
 	/* load engine */
 	if (!fu_util_start_engine(priv,
-				  FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_HWINFO |
-				      FU_ENGINE_LOAD_FLAG_REMOTES,
+				  FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_REMOTES,
 				  priv->progress,
 				  error))
 		return FALSE;
@@ -1711,8 +1703,7 @@ fu_util_bind_driver(FuUtilPrivate *priv, gchar **values, GError **error)
 
 	/* load engine */
 	if (!fu_util_start_engine(priv,
-				  FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_HWINFO |
-				      FU_ENGINE_LOAD_FLAG_REMOTES,
+				  FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_REMOTES,
 				  priv->progress,
 				  error))
 		return FALSE;
@@ -1754,8 +1745,7 @@ fu_util_attach(FuUtilPrivate *priv, gchar **values, GError **error)
 
 	/* load engine */
 	if (!fu_util_start_engine(priv,
-				  FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_HWINFO |
-				      FU_ENGINE_LOAD_FLAG_REMOTES,
+				  FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_REMOTES,
 				  fu_progress_get_child(priv->progress),
 				  error))
 		return FALSE;
@@ -1813,7 +1803,7 @@ fu_util_get_report_metadata(FuUtilPrivate *priv, gchar **values, GError **error)
 
 	/* load engine */
 	if (!fu_util_start_engine(priv,
-				  FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_HWINFO,
+				  FU_ENGINE_LOAD_FLAG_COLDPLUG,
 				  fu_progress_get_child(priv->progress),
 				  error))
 		return FALSE;
@@ -1922,7 +1912,7 @@ fu_util_activate(FuUtilPrivate *priv, gchar **values, GError **error)
 	/* load engine */
 	if (!fu_util_start_engine(priv,
 				  FU_ENGINE_LOAD_FLAG_READONLY | FU_ENGINE_LOAD_FLAG_COLDPLUG |
-				      FU_ENGINE_LOAD_FLAG_REMOTES | FU_ENGINE_LOAD_FLAG_HWINFO |
+				      FU_ENGINE_LOAD_FLAG_REMOTES |
 				      FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS,
 				  fu_progress_get_child(priv->progress),
 				  error))
@@ -2784,8 +2774,7 @@ fu_util_verify_update(FuUtilPrivate *priv, gchar **values, GError **error)
 
 	/* load engine */
 	if (!fu_util_start_engine(priv,
-				  FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_HWINFO |
-				      FU_ENGINE_LOAD_FLAG_REMOTES,
+				  FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_REMOTES,
 				  fu_progress_get_child(priv->progress),
 				  error))
 		return FALSE;
@@ -2825,8 +2814,7 @@ fu_util_get_history(FuUtilPrivate *priv, gchar **values, GError **error)
 
 	/* load engine */
 	if (!fu_util_start_engine(priv,
-				  FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_HWINFO |
-				      FU_ENGINE_LOAD_FLAG_REMOTES,
+				  FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_REMOTES,
 				  priv->progress,
 				  error))
 		return FALSE;
@@ -2952,8 +2940,7 @@ fu_util_refresh(FuUtilPrivate *priv, gchar **values, GError **error)
 
 	/* load engine */
 	if (!fu_util_start_engine(priv,
-				  FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_HWINFO |
-				      FU_ENGINE_LOAD_FLAG_REMOTES,
+				  FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_REMOTES,
 				  priv->progress,
 				  error))
 		return FALSE;
@@ -3025,8 +3012,7 @@ fu_util_security(FuUtilPrivate *priv, gchar **values, GError **error)
 #endif /* HAVE_HSI */
 
 	if (!fu_util_start_engine(priv,
-				  FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_HWINFO |
-				      FU_ENGINE_LOAD_FLAG_REMOTES,
+				  FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_REMOTES,
 				  priv->progress,
 				  error))
 		return FALSE;
@@ -3204,8 +3190,7 @@ fu_util_switch_branch(FuUtilPrivate *priv, gchar **values, GError **error)
 
 	/* load engine */
 	if (!fu_util_start_engine(priv,
-				  FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_HWINFO |
-				      FU_ENGINE_LOAD_FLAG_REMOTES,
+				  FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_REMOTES,
 				  priv->progress,
 				  error))
 		return FALSE;
@@ -3334,10 +3319,7 @@ fu_util_set_bios_setting(FuUtilPrivate *priv, gchar **input, GError **error)
 	if (settings == NULL)
 		return FALSE;
 
-	if (!fu_util_start_engine(priv,
-				  FU_ENGINE_LOAD_FLAG_HWINFO | FU_ENGINE_LOAD_FLAG_COLDPLUG,
-				  priv->progress,
-				  error))
+	if (!fu_util_start_engine(priv, FU_ENGINE_LOAD_FLAG_COLDPLUG, priv->progress, error))
 		return FALSE;
 
 	if (!fu_engine_modify_bios_settings(priv->engine, settings, FALSE, error)) {
@@ -3379,10 +3361,7 @@ fu_util_get_bios_setting(FuUtilPrivate *priv, gchar **values, GError **error)
 	gboolean found = FALSE;
 
 	/* load engine */
-	if (!fu_util_start_engine(priv,
-				  FU_ENGINE_LOAD_FLAG_HWINFO | FU_ENGINE_LOAD_FLAG_COLDPLUG,
-				  priv->progress,
-				  error))
+	if (!fu_util_start_engine(priv, FU_ENGINE_LOAD_FLAG_COLDPLUG, priv->progress, error))
 		return FALSE;
 
 	attrs = fu_context_get_bios_settings(ctx);
@@ -3427,7 +3406,7 @@ fu_util_version(FuUtilPrivate *priv, GError **error)
 
 	/* load engine */
 	if (!fu_util_start_engine(priv,
-				  FU_ENGINE_LOAD_FLAG_READONLY | FU_ENGINE_LOAD_FLAG_HWINFO |
+				  FU_ENGINE_LOAD_FLAG_READONLY |
 				      FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS,
 				  priv->progress,
 				  error))
