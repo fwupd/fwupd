@@ -9,6 +9,7 @@
 #include "config.h"
 
 #include <glib/gi18n.h>
+#include <glib/gstdio.h>
 #include <xmlb.h>
 
 #ifdef HAVE_INOTIFY_H
@@ -186,6 +187,45 @@ _fwupd_remote_build_component_id(FwupdRemote *remote)
 }
 
 static gboolean
+fu_remote_list_cleanup_remote(FwupdRemote *remote, GError **error)
+{
+	const gchar *fn_cache = fwupd_remote_get_filename_cache(remote);
+	g_autofree gchar *dirname = NULL;
+	g_autoptr(GPtrArray) files = NULL;
+
+	/* sanity check */
+	if (fn_cache == NULL)
+		return TRUE;
+	if (!g_str_has_suffix(fn_cache, ".xz"))
+		return TRUE;
+
+	/* get all files */
+	dirname = g_path_get_dirname(fn_cache);
+	files = fu_path_get_files(dirname, NULL);
+	if (files == NULL)
+		return TRUE;
+
+	/* delete any obsolete ones */
+	for (guint i = 0; i < files->len; i++) {
+		const gchar *fn = g_ptr_array_index(files, i);
+		if (g_strstr_len(fn, -1, ".gz") != NULL) {
+			g_info("deleting obsolete %s", fn);
+			if (g_unlink(fn) == -1) {
+				g_set_error(error,
+					    G_IO_ERROR,
+					    G_IO_ERROR_FAILED,
+					    "failed to delete obsolete %s",
+					    fn);
+				return FALSE;
+			}
+		}
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_remote_list_add_for_path(FuRemoteList *self, const gchar *path, GError **error)
 {
 	const gchar *tmp;
@@ -230,6 +270,13 @@ fu_remote_list_add_for_path(FuRemoteList *self, const gchar *path, GError **erro
 		if (!fwupd_remote_setup(remote, error)) {
 			g_prefix_error(error, "failed to setup %s: ", filename);
 			return FALSE;
+		}
+
+		/* delete the obsolete .gz files if the remote is now set up to use .xz */
+		if (fwupd_remote_get_enabled(remote) &&
+		    fwupd_remote_get_kind(remote) == FWUPD_REMOTE_KIND_DOWNLOAD) {
+			if (!fu_remote_list_cleanup_remote(remote, error))
+				return FALSE;
 		}
 
 		/* watch the remote_list file and the XML file itself */
