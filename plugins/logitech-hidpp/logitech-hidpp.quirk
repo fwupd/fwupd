@@ -60,6 +60,23 @@ FirmwareSizeMin = 0x4000
 CounterpartGuid = HIDRAW\VEN_046D&DEV_C52B
 InstallDuration = 18
 
+# Texas Pico (another variant) / C-U0016
+[USB\VID_046D&PID_AAE5]
+Plugin = logitech_hidpp
+GType = FuLogitechHidPpBootloaderTexas
+FirmwareSizeMin = 0x4000
+CounterpartGuid = HIDRAW\VEN_046D&DEV_C52B
+InstallDuration = 18
+
+# Texas Unknown
+# https://github.com/Logitech/fw_updates/blob/1ddde61310573ecea54c4204b401393a90f4bbae/RQR24/RQR24.11/RQR24.11_B0036.txt#L22
+[USB\VID_046D&PID_AAF8]
+Plugin = logitech_hidpp
+GType = FuLogitechHidPpBootloaderTexas
+FirmwareSizeMin = 0x4000
+CounterpartGuid = HIDRAW\VEN_046D&DEV_C52B
+InstallDuration = 18
+
 # K780 (through Unifying receiver)
 [HIDRAW\VEN_046D&DEV_405B]
 Plugin = logitech_hidpp
