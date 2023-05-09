@@ -224,6 +224,12 @@ fu_efi_signature_list_get_version(FuEfiSignatureList *self)
 	    {"c4ebdc43048c43f5f11c59ead051a3585a07fafce985cfed8b27b73a5492f9b2", 57},
 	    /* DBXUpdate-20230314.x64.bin */
 	    {"6a0e824654b7479152058cf738a378e629483874b6dbd67e0d8c3327b2fcac64", 220},
+	    /* DBXUpdate-20230509.aa64.bin */
+	    {"ab311e737112e4d34abf545836bc671637663e93738cefa37405214ce8c92a58", 26},
+	    /* DBXUpdate-20230509.ia32.bin */
+	    {"490c927242cc6227ca439a7e9aa9d771ad4d1686eede1f331cbb6c69e9be746e", 89},
+	    /* DBXUpdate-20230509.x64.bin */
+	    {"13a1f37bedfb5417b6b737e2a3816c8fd587d74d836914b2b2edc9fd6ca30e58", 371},
 	    {NULL, 0}};
 
 	sigs = fu_firmware_get_images(FU_FIRMWARE(self));
@@ -267,12 +273,7 @@ fu_efi_signature_list_get_version(FuEfiSignatureList *self)
 	 * the new update at all.
 	 *
 	 * In these cases look at the *last* dbx checksum and compare to the set we know to see if
-	 * we need to artificially lower the reported version. This isn't helped by having *zero*
-	 * visibility in the reason that entries were removed or added.
-	 *
-	 * This also fixes the DBX update 20200729 which added 4 duplicate entries, which should be
-	 * rectified during the SetVariable(), so they're only really a problem for transactional
-	 * size limits. But we all noticed that load-bearing *should* word there, didn't we.
+	 * we need to artificially lower the reported version.
 	 */
 	for (guint i = 0; checksum_last != NULL && known_checksums[i].checksum != NULL; i++) {
 		if (g_strcmp0(checksum_last, known_checksums[i].checksum) == 0) {
