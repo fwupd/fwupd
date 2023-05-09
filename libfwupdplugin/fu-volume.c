@@ -757,11 +757,12 @@ fu_volume_new_esp_for_path(const gchar *esp_path, GError **error)
 	g_return_val_if_fail(esp_path != NULL, NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
+	/* check if it's a valid directory already */
+	if (g_file_test(esp_path, G_FILE_TEST_IS_DIR))
+		return fu_volume_new_from_mount_path(esp_path);
+
 	volumes = fu_volume_new_by_kind(FU_VOLUME_KIND_ESP, &error_local);
 	if (volumes == NULL) {
-		/* check if it's a valid directory already */
-		if (g_file_test(esp_path, G_FILE_TEST_IS_DIR))
-			return fu_volume_new_from_mount_path(esp_path);
 		g_propagate_error(error, g_steal_pointer(&error_local));
 		return NULL;
 	}
