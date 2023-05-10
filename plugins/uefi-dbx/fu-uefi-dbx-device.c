@@ -57,6 +57,7 @@ fu_uefi_dbx_device_set_version_number(FuDevice *device, GError **error)
 {
 	g_autoptr(GBytes) dbx_blob = NULL;
 	g_autoptr(FuFirmware) dbx = fu_efi_signature_list_new();
+	g_autoptr(GPtrArray) sigs = NULL;
 
 	/* use the number of checksums in the dbx as a version number, ignoring
 	 * some owners that do not make sense */
@@ -65,6 +66,17 @@ fu_uefi_dbx_device_set_version_number(FuDevice *device, GError **error)
 		return FALSE;
 	if (!fu_firmware_parse(dbx, dbx_blob, FWUPD_INSTALL_FLAG_NO_SEARCH, error))
 		return FALSE;
+
+	/* add the last checksum to the device */
+	sigs = fu_firmware_get_images(dbx);
+	if (sigs->len > 0) {
+		FuEfiSignature *sig = g_ptr_array_index(sigs, sigs->len - 1);
+		g_autofree gchar *csum =
+		    fu_firmware_get_checksum(FU_FIRMWARE(sig), G_CHECKSUM_SHA256, NULL);
+		if (csum != NULL)
+			fu_device_add_checksum(device, csum);
+	}
+
 	fu_device_set_version(device, fu_firmware_get_version(dbx));
 	return TRUE;
 }
@@ -159,6 +171,21 @@ fu_uefi_dbx_device_init(FuUefiDbxDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_ONLY_VERSION_UPGRADE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE);
+	/*
+	 * Microsoft seems to actually remove checksums in UEFI dbx updates, which I'm guessing is
+	 * a result from OEM pressure about SPI usage -- but local dbx updates are append-only.
+	 *
+	 * That means that if you remove hashes then you can have a different set of dbx checksums
+	 * on your machine depending on whether you went A->B->C->D or A->D...
+	 *
+	 * If we use the metric of "count the number of SHA256 checksums from MS" then we might
+	 * overcount (due to the now-removed entries) -- in some cases enough to not actually apply
+	 * the new update at all.
+	 *
+	 * In these cases look at the *last* dbx checksum and compare to the set we know to see if
+	 * we need to artificially lower the reported version.
+	 */
+	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_MD_SET_VERSION);
 	fu_device_add_parent_guid(FU_DEVICE(self), "main-system-firmware");
 	if (!fu_common_is_live_media())
 		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);

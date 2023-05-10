@@ -732,6 +732,29 @@ fu_release_set_priority(FuRelease *self, guint64 priority)
 	self->priority = priority;
 }
 
+static void
+fu_release_ensure_device_version(FuRelease *self, XbNode *rel)
+{
+	const gchar *rel_version = xb_node_get_attr(rel, "version");
+	g_autoptr(GPtrArray) device_checksums = NULL;
+
+	/* sanity check */
+	if (rel_version == NULL)
+		return;
+	device_checksums = xb_node_query(rel, "checksum[@target='device']", 0, NULL);
+	if (device_checksums == NULL)
+		return;
+	for (guint i = 0; i < device_checksums->len; i++) {
+		XbNode *device_checksum = g_ptr_array_index(device_checksums, i);
+		if (!fu_device_has_checksum(self->device, xb_node_get_text(device_checksum)))
+			continue;
+		fu_device_set_version(self->device, rel_version);
+		fu_device_remove_internal_flag(self->device,
+					       FU_DEVICE_INTERNAL_FLAG_MD_SET_VERSION);
+		break;
+	}
+}
+
 /**
  * fu_release_load:
  * @self: a #FuRelease
@@ -847,6 +870,11 @@ fu_release_load(FuRelease *self,
 		return FALSE;
 	if (self->device != NULL && fu_release_has_flag(self, FWUPD_RELEASE_FLAG_TRUSTED_METADATA))
 		fu_device_ensure_from_component(self->device, component);
+
+	/* use the metadata to set the device version */
+	if (self->device != NULL &&
+	    fu_device_has_internal_flag(self->device, FU_DEVICE_INTERNAL_FLAG_MD_SET_VERSION))
+		fu_release_ensure_device_version(self, rel);
 
 	/* the version is fixed up with the device format */
 	tmp = xb_node_get_attr(rel, "version");
