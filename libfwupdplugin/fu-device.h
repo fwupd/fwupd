@@ -519,6 +519,15 @@ typedef guint64 FuDeviceInternalFlags;
  */
 #define FU_DEVICE_INTERNAL_FLAG_MD_SET_FLAGS (1ull << 29)
 
+/**
+ * FU_DEVICE_INTERNAL_FLAG_MD_SET_VERSION:
+ *
+ * Set the device version from the device metadata checksum if available.
+ *
+ * Since: 1.9.1
+ */
+#define FU_DEVICE_INTERNAL_FLAG_MD_SET_VERSION (1ull << 30)
+
 /* accessors */
 gchar *
 fu_device_to_string(FuDevice *self);
