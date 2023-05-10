@@ -66,8 +66,13 @@ fu_uefi_dbx_device_set_version_number(FuDevice *device, GError **error)
 	if (!fu_firmware_parse(dbx, dbx_blob, FWUPD_INSTALL_FLAG_NO_SEARCH, error))
 		return FALSE;
 	fu_device_set_version(device, fu_firmware_get_version(dbx));
-	fu_device_set_version_lowest(device, fu_firmware_get_version(dbx));
 	return TRUE;
+}
+
+static void
+fu_uefi_dbx_device_version_notify_cb(FuDevice *device, GParamSpec *pspec, gpointer user_data)
+{
+	fu_device_set_version_lowest(device, fu_device_get_version(device));
 }
 
 static FuFirmware *
@@ -157,6 +162,10 @@ fu_uefi_dbx_device_init(FuUefiDbxDevice *self)
 	fu_device_add_parent_guid(FU_DEVICE(self), "main-system-firmware");
 	if (!fu_common_is_live_media())
 		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
+	g_signal_connect(FWUPD_DEVICE(self),
+			 "notify::version",
+			 G_CALLBACK(fu_uefi_dbx_device_version_notify_cb),
+			 NULL);
 }
 
 static void
