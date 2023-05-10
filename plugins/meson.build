@@ -50,6 +50,7 @@ plugins = [
   'fresco-pd',
   'genesys',
   'goodix-moc',
+  'goodix-tp',
   'gpio',
   'hailuck',
   'intel-gsc',
