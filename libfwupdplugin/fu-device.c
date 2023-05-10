@@ -255,6 +255,8 @@ fu_device_internal_flag_to_string(FuDeviceInternalFlags flag)
 		return "save-into-backup-remote";
 	if (flag == FU_DEVICE_INTERNAL_FLAG_MD_SET_FLAGS)
 		return "md-set-flags";
+	if (flag == FU_DEVICE_INTERNAL_FLAG_MD_SET_VERSION)
+		return "md-set-version";
 	return NULL;
 }
 
@@ -331,6 +333,8 @@ fu_device_internal_flag_from_string(const gchar *flag)
 		return FU_DEVICE_INTERNAL_FLAG_SAVE_INTO_BACKUP_REMOTE;
 	if (g_strcmp0(flag, "md-set-flags") == 0)
 		return FU_DEVICE_INTERNAL_FLAG_MD_SET_FLAGS;
+	if (g_strcmp0(flag, "md-set-version") == 0)
+		return FU_DEVICE_INTERNAL_FLAG_MD_SET_VERSION;
 	return FU_DEVICE_INTERNAL_FLAG_UNKNOWN;
 }
 
