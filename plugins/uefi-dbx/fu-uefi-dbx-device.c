@@ -185,6 +185,7 @@ fu_uefi_dbx_device_init(FuUefiDbxDevice *self)
 	 * In these cases look at the *last* dbx checksum and compare to the set we know to see if
 	 * we need to artificially lower the reported version.
 	 */
+	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_MD_ONLY_CHECKSUM);
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_MD_SET_VERSION);
 	fu_device_add_parent_guid(FU_DEVICE(self), "main-system-firmware");
 	if (!fu_common_is_live_media())

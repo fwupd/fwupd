@@ -1105,8 +1105,7 @@ fu_cabinet_parse(FuCabinet *self, GBytes *data, FuCabinetParseFlags flags, GErro
 		return FALSE;
 
 	/* sanity check */
-	components =
-	    xb_silo_query(self->silo, "components/component[@type='firmware']", 0, &error_local);
+	components = xb_silo_query(self->silo, "components/component", 0, &error_local);
 	if (components == NULL) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -1132,6 +1131,8 @@ fu_cabinet_parse(FuCabinet *self, GBytes *data, FuCabinetParseFlags flags, GErro
 	for (guint i = 0; i < components->len; i++) {
 		XbNode *component = g_ptr_array_index(components, i);
 		g_autoptr(GPtrArray) releases = NULL;
+		if (g_strcmp0(xb_node_get_attr(component, "type"), "generic") == 0)
+			continue;
 		releases = xb_node_query_full(component, query, &error_local);
 		if (releases == NULL) {
 			g_set_error(error,
