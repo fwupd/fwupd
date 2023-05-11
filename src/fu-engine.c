@@ -4326,7 +4326,7 @@ fu_engine_create_silo_index(FuEngine *self, GError **error)
 				       error))
 		return FALSE;
 	if (!xb_silo_query_build_index(self->silo,
-				       "components/component[@type='firmware']/provides/firmware",
+				       "components/component/provides/firmware",
 				       NULL,
 				       error))
 		return FALSE;
@@ -4339,8 +4339,7 @@ fu_engine_create_silo_index(FuEngine *self, GError **error)
 	/* create prepared queries to save time later */
 	self->query_component_by_guid =
 	    xb_query_new_full(self->silo,
-			      "components/component[@type='firmware']/"
-			      "provides/firmware[@type=$'flashed'][text()=?]/"
+			      "components/component/provides/firmware[@type=$'flashed'][text()=?]/"
 			      "../..",
 			      XB_QUERY_FLAG_OPTIMIZE,
 			      error);
@@ -4568,7 +4567,8 @@ fu_engine_md_refresh_devices(FuEngine *self)
 		fu_engine_ensure_device_supported(self, device);
 
 		/* fixup the name and format as needed */
-		if (component != NULL)
+		if (component != NULL &&
+		    !fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_MD_ONLY_CHECKSUM))
 			fu_device_ensure_from_component(device, component);
 	}
 }
@@ -5887,7 +5887,6 @@ fu_engine_get_releases_for_device(FuEngine *self,
 				  GError **error)
 {
 	GPtrArray *device_guids;
-	const gchar *version;
 	g_autoptr(GPtrArray) branches = NULL;
 	g_autoptr(GPtrArray) releases = NULL;
 
@@ -5898,10 +5897,16 @@ fu_engine_get_releases_for_device(FuEngine *self,
 	}
 
 	/* get device version */
-	version = fu_device_get_version(device);
-	if (version == NULL) {
-		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no version set");
-		return NULL;
+	if (!fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_MD_SET_VERSION) &&
+	    !fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_MD_SET_FLAGS)) {
+		const gchar *version = fu_device_get_version(device);
+		if (version == NULL) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "no version set");
+			return NULL;
+		}
 	}
 
 	/* only show devices that can be updated */

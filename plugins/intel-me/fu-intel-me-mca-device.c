@@ -11,7 +11,6 @@
 
 struct _FuIntelMeMcaDevice {
 	FuIntelMeHeciDevice parent_instance;
-	gboolean using_leaked_km;
 };
 
 G_DEFINE_TYPE(FuIntelMeMcaDevice, fu_intel_me_mca_device, FU_TYPE_INTEL_ME_HECI_DEVICE)
@@ -75,13 +74,6 @@ fu_intel_me_mca_device_setup(FuDevice *device, GError **error)
 				    0x40005B00, /* TigerLake: 1st OEM Public Key Hash */
 				    0x40005C00 /* TigerLake: 2nd OEM Public Key Hash */,
 				    G_MAXUINT32};
-	const gchar *leaked_kms[] = {"05a92e16da51d10882bfa7e3ba449184ce48e94fa9903e07983d2112ab"
-				     "54ecf20fbb07512cea2c13b167c0e252c6a704",
-				     "2e357bca116cf3da637bb5803be3550873eddb5a4431a49df1770aca83"
-				     "5d94853b458239d207653dce277910d9e5aa0b",
-				     "b52a825cf0be60027f12a226226b055ed68efaa9273695d45d859c0ed3"
-				     "3d063143974f4b4c59fabfc5afeadab0b00f09",
-				     NULL};
 
 	/* look for all the possible OEM Public Key hashes using the CML+ method */
 	for (guint i = 0; file_ids[i] != G_MAXUINT32; i++) {
@@ -118,14 +110,6 @@ fu_intel_me_mca_device_setup(FuDevice *device, GError **error)
 		return FALSE;
 	}
 
-	/* check for any of the leaked keys */
-	for (guint i = 0; leaked_kms[i] != NULL; i++) {
-		if (fu_device_has_checksum(self, leaked_kms[i])) {
-			self->using_leaked_km = TRUE;
-			break;
-		}
-	}
-
 	/* success */
 	return TRUE;
 }
@@ -146,7 +130,7 @@ fu_intel_me_mca_device_add_security_attrs(FuDevice *device, FuSecurityAttrs *att
 		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA);
 		return;
 	}
-	if (self->using_leaked_km) {
+	if (fu_device_has_private_flag(device, FU_INTEL_ME_HECI_DEVICE_FLAG_LEAKED_KM)) {
 		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
 		return;
 	}
@@ -162,6 +146,8 @@ fu_intel_me_mca_device_init(FuIntelMeMcaDevice *self)
 	fu_device_set_logical_id(FU_DEVICE(self), "MCA");
 	fu_device_set_name(FU_DEVICE(self), "BootGuard Configuration");
 	fu_device_add_parent_guid(FU_DEVICE(self), "main-system-firmware");
+	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_MD_ONLY_CHECKSUM);
+	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_MD_SET_FLAGS);
 }
 
 static void
