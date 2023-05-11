@@ -110,6 +110,8 @@ enum {
 	PROP_CONTEXT,
 	PROP_PROXY,
 	PROP_PARENT,
+	PROP_INTERNAL_FLAGS,
+	PROP_PRIVATE_FLAGS,
 	PROP_LAST
 };
 
@@ -147,6 +149,12 @@ fu_device_get_property(GObject *object, guint prop_id, GValue *value, GParamSpec
 	case PROP_PARENT:
 		g_value_set_object(value, fu_device_get_parent(self));
 		break;
+	case PROP_INTERNAL_FLAGS:
+		g_value_set_uint64(value, fu_device_get_internal_flags(self));
+		break;
+	case PROP_PRIVATE_FLAGS:
+		g_value_set_uint64(value, fu_device_get_private_flags(self));
+		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
 		break;
@@ -175,6 +183,12 @@ fu_device_set_property(GObject *object, guint prop_id, const GValue *value, GPar
 		break;
 	case PROP_PARENT:
 		fu_device_set_parent(self, g_value_get_object(value));
+		break;
+	case PROP_INTERNAL_FLAGS:
+		fu_device_set_internal_flags(self, g_value_get_uint64(value));
+		break;
+	case PROP_PRIVATE_FLAGS:
+		fu_device_set_private_flags(self, g_value_get_uint64(value));
 		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
@@ -353,6 +367,7 @@ fu_device_add_internal_flag(FuDevice *self, FuDeviceInternalFlags flag)
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FU_IS_DEVICE(self));
 	priv->internal_flags |= flag;
+	g_object_notify(G_OBJECT(self), "internal-flags");
 }
 
 /**
@@ -370,6 +385,7 @@ fu_device_remove_internal_flag(FuDevice *self, FuDeviceInternalFlags flag)
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FU_IS_DEVICE(self));
 	priv->internal_flags &= ~flag;
+	g_object_notify(G_OBJECT(self), "internal-flags");
 }
 
 /**
@@ -421,6 +437,7 @@ fu_device_set_internal_flags(FuDevice *self, FuDeviceInternalFlags flags)
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FU_IS_DEVICE(self));
 	priv->internal_flags = flags;
+	g_object_notify(G_OBJECT(self), "internal-flags");
 }
 
 /**
@@ -445,6 +462,7 @@ fu_device_add_private_flag(FuDevice *self, guint64 flag)
 	}
 #endif
 	priv->private_flags |= flag;
+	g_object_notify(G_OBJECT(self), "private-flags");
 }
 
 /**
@@ -469,6 +487,7 @@ fu_device_remove_private_flag(FuDevice *self, guint64 flag)
 	}
 #endif
 	priv->private_flags &= ~flag;
+	g_object_notify(G_OBJECT(self), "private-flags");
 }
 
 /**
@@ -550,6 +569,7 @@ fu_device_set_private_flags(FuDevice *self, guint64 flag)
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FU_IS_DEVICE(self));
 	priv->private_flags = flag;
+	g_object_notify(G_OBJECT(self), "private-flags");
 }
 
 /**
@@ -3626,7 +3646,6 @@ fu_device_set_custom_flag(FuDevice *self, const gchar *hint)
 	FwupdDeviceFlags flag;
 	FuDevicePrivateFlagItem *item;
 	FuDeviceInternalFlags internal_flag;
-	FuDevicePrivate *priv = GET_PRIVATE(self);
 
 	g_return_if_fail(hint != NULL);
 
@@ -3644,7 +3663,7 @@ fu_device_set_custom_flag(FuDevice *self, const gchar *hint)
 		}
 		item = fu_device_private_flag_item_find_by_str(self, hint + 1);
 		if (item != NULL) {
-			priv->private_flags &= ~item->value;
+			fu_device_remove_private_flag(self, item->value);
 			return;
 		}
 		return;
@@ -3663,7 +3682,7 @@ fu_device_set_custom_flag(FuDevice *self, const gchar *hint)
 	}
 	item = fu_device_private_flag_item_find_by_str(self, hint);
 	if (item != NULL) {
-		priv->private_flags |= item->value;
+		fu_device_add_private_flag(self, item->value);
 		return;
 	}
 }
@@ -6150,6 +6169,38 @@ fu_device_class_init(FuDeviceClass *klass)
 				    FU_TYPE_DEVICE,
 				    G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_PARENT, pspec);
+
+	/**
+	 * FuDevice:internal-flags:
+	 *
+	 * The device internal flags.
+	 *
+	 * Since: 1.9.1
+	 */
+	pspec = g_param_spec_uint64("internal-flags",
+				    NULL,
+				    NULL,
+				    0,
+				    G_MAXUINT64,
+				    0,
+				    G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
+	g_object_class_install_property(object_class, PROP_INTERNAL_FLAGS, pspec);
+
+	/**
+	 * FuDevice:private-flags:
+	 *
+	 * The device private flags.
+	 *
+	 * Since: 1.9.1
+	 */
+	pspec = g_param_spec_uint64("private-flags",
+				    NULL,
+				    NULL,
+				    0,
+				    G_MAXUINT64,
+				    0,
+				    G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
+	g_object_class_install_property(object_class, PROP_PRIVATE_FLAGS, pspec);
 }
 
 static void
