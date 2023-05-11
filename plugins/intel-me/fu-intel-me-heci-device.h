@@ -19,6 +19,8 @@ struct _FuIntelMeHeciDeviceClass {
 	FuMeiDeviceClass parent_class;
 };
 
+#define FU_INTEL_ME_HECI_DEVICE_FLAG_LEAKED_KM (1 << 0)
+
 GByteArray *
 fu_intel_me_heci_device_read_file(FuIntelMeHeciDevice *self, const gchar *filename, GError **error);
 GByteArray *

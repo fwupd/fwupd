@@ -271,6 +271,8 @@ fu_device_internal_flag_to_string(FuDeviceInternalFlags flag)
 		return "md-set-flags";
 	if (flag == FU_DEVICE_INTERNAL_FLAG_MD_SET_VERSION)
 		return "md-set-version";
+	if (flag == FU_DEVICE_INTERNAL_FLAG_MD_ONLY_CHECKSUM)
+		return "md-only-checksum";
 	return NULL;
 }
 
@@ -349,6 +351,8 @@ fu_device_internal_flag_from_string(const gchar *flag)
 		return FU_DEVICE_INTERNAL_FLAG_MD_SET_FLAGS;
 	if (g_strcmp0(flag, "md-set-version") == 0)
 		return FU_DEVICE_INTERNAL_FLAG_MD_SET_VERSION;
+	if (g_strcmp0(flag, "md-only-checksum") == 0)
+		return FU_DEVICE_INTERNAL_FLAG_MD_ONLY_CHECKSUM;
 	return FU_DEVICE_INTERNAL_FLAG_UNKNOWN;
 }
 
