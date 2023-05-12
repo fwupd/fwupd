@@ -33,6 +33,25 @@
     <binary>fwupdtool</binary>
   </provides>
   <releases>
+    <release version="1.8.15" date="2023-05-12">
+      <description>
+        <p>This stable release fixes the following bugs:</p>
+        <ul>
+          <li>Add the latest dbx fixups for BlackLotus</li>
+          <li>Allow fwupd-refresh.timer trigger once per hour</li>
+          <li>Fix a crash when converting HFSTS1 values</li>
+          <li>Fix the version detection for SteelSeries Bluetooth mode</li>
+          <li>Invalidate the XMLb cache when installing new fwupd versions</li>
+          <li>Trigger the passive flow for usb4 from dell-dock</li>
+        </ul>
+        <p>This release adds support for the following hardware:</p>
+        <ul>
+          <li>More Logitech Unifying receivers</li>
+          <li>Nordic MCUboot</li>
+          <li>nRF52 Desktop Keyboard</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.8.14" date="2023-03-31">
       <description>
         <p>This release fixes the following bugs:</p>
