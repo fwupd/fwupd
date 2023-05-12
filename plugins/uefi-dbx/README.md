@@ -33,6 +33,30 @@ certificates found in the system KEK and optionally the EFI architecture. e.g.
 
 ...where `arch` is typically one of `IA32`, `X64`, `ARM` or `AA64`
 
+## Metadata
+
+Microsoft actually removes checksums in some UEFI dbx updates, which is probably a result of OEM
+pressure about SPI usage -- but local dbx updates are append-only.
+This means that if you remove hashes then you can have a different number of dbx checksums on your
+machine depending on whether you went `A→B→C→D` or `A→D`...
+As we count the number of SHA256 checksums to build the *dbx version number* then we might overcount
+(due to the now-removed entries) -- in some cases enough to not actually apply the new update at all.
+
+In these cases we look at the *last-entry* dbx checksum and compare to the set we know, to see if
+fwupd needs to artificially lower the reported version.
+This dbx *last-entry* checksum is added to the LVFS metadata and is copied to the device object
+when the exact checksum matches.
+This ensures the locally reported version number always matches what a factory install using just
+the new dbx would report.
+
+The `org.linuxfoundation.dbx.*.firmware` components will match against a hash of the system PK.
+The latest cabinet archive can also be installed into the `vendor-firmware`
+remote found in `/usr/share/fwupd/remotes.d/vendor/firmware/` which allows the version-fixup to work
+even when offline -- although using the LVFS source is recommended for most users.
+
+Both reported versions and *last-entry checksums* can be found from the
+`fwupdtool firmware-parse DBXUpdate-$VERSION$.x64.bin efi-signature-list` command.
+
 ## Update Behavior
 
 The firmware is deployed when the machine is in normal runtime mode, but it is
