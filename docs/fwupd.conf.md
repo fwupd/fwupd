@@ -281,3 +281,4 @@ SEE ALSO
 --------
 
 `fwupdmgr(1)`
+`fwupd-remotes.d(5)`
