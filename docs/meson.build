@@ -32,6 +32,18 @@ if build_standalone and get_option('man')
     install: true,
     install_dir: join_paths(mandir, 'man5'),
   )
+  custom_target('fwupd-remotes.d.5',
+    input: 'fwupd-remotes.d.md',
+    output: 'fwupd-remotes.d.5',
+    command: [
+      generate_man, '@INPUT@', '-o', '@OUTPUT@',
+      '--replace', 'PACKAGE_VERSION', fwupd_version,
+      '--replace', 'SYSCONFDIR', sysconfdir,
+      '--replace', 'LOCALSTATEDIR', localstatedir,
+    ],
+    install: true,
+    install_dir: join_paths(mandir, 'man5'),
+  )
 endif
 
 if build_docs and introspection.allowed()
