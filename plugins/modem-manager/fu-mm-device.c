@@ -171,6 +171,377 @@ validate_firmware_update_method(MMModemFirmwareUpdateMethod methods, GError **er
 }
 
 static gboolean
+fu_mm_device_at_cmd_get_buf(FuDevice *device, const gchar *cmd, GString *reply, GError **error)
+{
+	FuMmDevice *self = FU_MM_DEVICE(device);
+	const gchar *buf;
+	gsize bufsz = 0;
+	g_autoptr(GBytes) at_req = NULL;
+	g_autoptr(GBytes) at_res = NULL;
+	g_autofree gchar *cmd_cr = g_strdup_printf("%s\r\n", cmd);
+
+	/* command */
+	at_req = g_bytes_new(cmd_cr, strlen(cmd_cr));
+	fu_dump_bytes(G_LOG_DOMAIN, "writing", at_req);
+	if (!fu_io_channel_write_bytes(self->io_channel,
+				       at_req,
+				       1500,
+				       FU_IO_CHANNEL_FLAG_FLUSH_INPUT,
+				       error)) {
+		g_prefix_error(error, "failed to write %s: ", cmd);
+		return FALSE;
+	}
+
+	/* response */
+	at_res = fu_io_channel_read_bytes(self->io_channel,
+					  -1,
+					  1500,
+					  FU_IO_CHANNEL_FLAG_SINGLE_SHOT,
+					  error);
+	if (at_res == NULL) {
+		g_prefix_error(error, "failed to read response for %s: ", cmd);
+		return FALSE;
+	}
+
+	fu_dump_bytes(G_LOG_DOMAIN, "read", at_res);
+	buf = g_bytes_get_data(at_res, &bufsz);
+
+	/* the first time the modem returns may be the command itself with one \n missing. */
+	if (g_strrstr(buf, cmd) != NULL && bufsz == strlen(cmd) + 1) {
+		at_res = fu_io_channel_read_bytes(self->io_channel,
+						  -1,
+						  1500,
+						  FU_IO_CHANNEL_FLAG_SINGLE_SHOT,
+						  error);
+		if (at_res == NULL) {
+			g_prefix_error(error, "failed to read response for %s: ", cmd);
+			return FALSE;
+		}
+		buf = g_bytes_get_data(at_res, &bufsz);
+	}
+
+	if (bufsz < 6) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "failed to read valid response for %s",
+			    cmd);
+		return FALSE;
+	}
+
+	/* return error if AT command failed */
+	if (g_strrstr(buf, "\r\nOK\r\n") == NULL) {
+		g_autofree gchar *tmp = g_strndup(buf + 2, bufsz - 4);
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "failed to read valid response for %s: %s",
+			    cmd,
+			    tmp);
+		return FALSE;
+	}
+	g_string_assign(reply, buf);
+	return TRUE;
+}
+
+static gboolean
+fu_mm_device_io_open(FuMmDevice *self, GError **error);
+
+static gboolean
+fu_mm_device_io_close(FuMmDevice *self, GError **error);
+
+typedef struct {
+	const gchar *cmd;
+	GString *reply;
+} FuMmDeviceAtCmdGetBufHelper;
+
+static gboolean
+fu_mm_device_at_cmd_get_buf_cb(FuDevice *device, gpointer user_data, GError **error)
+{
+	FuMmDeviceAtCmdGetBufHelper *helper = (FuMmDeviceAtCmdGetBufHelper *)user_data;
+	g_autoptr(FuDeviceLocker) locker = NULL;
+
+	locker = fu_device_locker_new_full(device,
+					   (FuDeviceLockerFunc)fu_mm_device_io_open,
+					   (FuDeviceLockerFunc)fu_mm_device_io_close,
+					   NULL);
+
+	return fu_mm_device_at_cmd_get_buf(device, helper->cmd, helper->reply, error);
+}
+
+static gboolean
+fu_mm_device_at_cmd_get_version_fibocom(FuDevice *device,
+					const gchar *cmd,
+					const gchar *regex_char,
+					gchar **version)
+{
+	/* the fibocom modem obtains the device version through AT */
+	g_autoptr(GString) reply = g_string_new("");
+	g_autoptr(GRegex) regex = NULL;
+	g_autoptr(GError) error_regex = NULL;
+	g_autoptr(GError) error_at = NULL;
+	g_autoptr(GMatchInfo) match_info = NULL;
+	g_autofree gchar *word = NULL;
+
+	FuMmDeviceAtCmdGetBufHelper helper = {.cmd = cmd, .reply = reply};
+
+	if (!fu_device_retry_full(device,
+				  fu_mm_device_at_cmd_get_buf_cb,
+				  FU_MM_DEVICE_AT_RETRIES,
+				  FU_MM_DEVICE_AT_DELAY,
+				  &helper,
+				  &error_at)) {
+		g_debug("AT command failed (%s)", error_at->message);
+	}
+
+	if (reply->len == 0) {
+		*version = g_strdup("NONE");
+		g_debug("No version");
+		return FALSE;
+	}
+
+	regex = g_regex_new(regex_char, 0, 0, &error_regex);
+	if (regex == NULL) {
+		g_debug("%s", error_regex->message);
+	} else {
+		g_regex_match(regex, reply->str, 0, &match_info);
+		if (g_match_info_matches(match_info)) {
+			word = g_match_info_fetch(match_info, 0);
+		} else {
+			g_debug("Not Found Version");
+		}
+	}
+
+	if (word == NULL) {
+		*version = g_strdup("NONE");
+		g_debug("No version");
+		return FALSE;
+	}
+
+	*version = g_strdup(word);
+	return TRUE;
+}
+
+static gboolean
+fu_mm_device_create_child_device_fibocom(FuDevice *device,
+					 const gchar *device_id,
+					 const gchar *name,
+					 const gchar *version,
+					 const gchar *id)
+{
+	/* create child device to record the version numbers of different partitions */
+	FuMmDevice *self = FU_MM_DEVICE(device);
+	MMModem *modem = mm_object_peek_modem(self->omodem);
+
+	FuDevice *device_child = fu_device_new(fu_device_get_context(device));
+	fu_device_add_instance_id(device_child, device_id);
+	fu_device_set_vendor(device_child, mm_modem_get_manufacturer(modem));
+	fu_device_set_name(device_child, name);
+	fu_device_set_version(device_child, version);
+	fu_device_set_id(device_child, id);
+	fu_device_set_physical_id(device_child, device_id);
+	if (!fu_device_setup(device_child, NULL)) {
+		g_debug("create child device %s fail", name);
+		return FALSE;
+	}
+	fu_device_add_child(device, device_child);
+	return TRUE;
+}
+
+static gboolean
+fu_mm_device_probe_fibocom(FuDevice *device, GError **error)
+{
+	FuMmDevice *self = FU_MM_DEVICE(device);
+	MMModem *modem = mm_object_peek_modem(self->omodem);
+	MMModemPortInfo *ports = NULL;
+	const gchar *device_id = "USB\\VID_2CB7&PID_01A2";
+	g_autofree gchar *version = NULL;
+	g_autofree gchar *version_modem = NULL;
+	g_autofree gchar *version_ap = NULL;
+	g_autofree gchar *version_oem = NULL;
+	g_autofree gchar *version_op = NULL;
+	g_autofree gchar *version_dev = NULL;
+	guint n_ports = 0;
+	GPtrArray *vendors;
+	g_autoptr(MMFirmwareUpdateSettings) update_settings = NULL;
+	g_autofree gchar *device_sysfs_path = NULL;
+	g_autofree gchar *device_bus = NULL;
+	const gchar *mccmnc_id = "generic";
+	g_autoptr(MMSim) modem_sim = NULL;
+	g_autoptr(GError) error_sim = NULL;
+	const gchar *regex_list[] = {
+	    "\\d{5}.\\d{4}.\\d{2}.\\d{2}.\\d{2}.\\d{2}_\\d{4}.\\d{4}.\\d{3}.\\d{3}.\\d{3}_\\w\\d{"
+	    "2}",
+	    "\\d{5}.\\d{4}.\\d{2}.\\d{2}.\\d{2}.\\d{2}",
+	    "\\w\\d{2}",
+	    "\\d{4}.\\d{4}.\\d{3}",
+	    "\\d{3}.\\d{3}",
+	    "\\d{4}.\\d{4}.\\d{4}.\\d{4}_\\d{2}.\\d{2}",
+	};
+
+	self->inhibition_uid = mm_modem_dup_device(modem);
+
+	modem_sim = mm_modem_get_sim_sync(modem, NULL, &error_sim);
+
+	if (modem_sim == NULL) {
+		g_debug("No sim: %s", error_sim->message);
+	} else {
+		mccmnc_id = mm_sim_get_operator_identifier(modem_sim);
+		if (mccmnc_id == NULL) {
+			mccmnc_id = "generic";
+		}
+		g_debug("sim id: %s", mccmnc_id);
+	}
+
+	self->update_methods = MM_MODEM_FIRMWARE_UPDATE_METHOD_FASTBOOT;
+	self->detach_fastboot_at = g_strdup_printf("at+syscmd=sys_reboot bootloader");
+
+	if (!mm_modem_get_device(modem)) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "failed to get device");
+		return FALSE;
+	}
+
+	if (!mm_modem_get_ports(modem, &ports, &n_ports)) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "failed to get port information");
+		return FALSE;
+	}
+
+	for (guint i = 0; i < n_ports; i++) {
+		if (ports[i].type == MM_MODEM_PORT_TYPE_AT) {
+			self->port_at = g_strdup_printf("/dev/%s", ports[i].name);
+			break;
+		}
+	}
+	if (self->port_at == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "failed to find AT port");
+		return FALSE;
+	}
+
+	fu_mm_device_at_cmd_get_version_fibocom(device, "at+gtpkgver?", regex_list[0], &version);
+	fu_mm_device_at_cmd_get_version_fibocom(device, "at+cgmr?", regex_list[1], &version_modem);
+	fu_mm_device_at_cmd_get_version_fibocom(device,
+						"at+gtsapfwver?",
+						regex_list[2],
+						&version_ap);
+	fu_mm_device_at_cmd_get_version_fibocom(device,
+						"at+gtcfgelemver?",
+						regex_list[3],
+						&version_oem);
+	fu_mm_device_at_cmd_get_version_fibocom(device,
+						"at+gtcustpackver?",
+						regex_list[4],
+						&version_op);
+
+	if (!fu_mm_device_at_cmd_get_version_fibocom(device,
+						     "at+gtdevpackver?",
+						     regex_list[5],
+						     &version_dev)) {
+		g_info("No dev ");
+	}
+
+	g_debug("version: %s", version);
+	g_debug("modem version: %s", version_modem);
+	g_debug("ap version: %s", version_ap);
+	g_debug("oem version: %s", version_oem);
+	g_debug("op version: %s", version_op);
+
+	if (version_dev) {
+		g_debug("dev version: %s", version_dev);
+	}
+	g_debug("sim mccmnc id: %s", mccmnc_id);
+
+	fu_device_add_protocol(device, "com.google.fastboot");
+	if (self->port_at != NULL) {
+		fu_mm_utils_get_port_info(self->port_at,
+					  &device_bus,
+					  &device_sysfs_path,
+					  &self->port_at_ifnum,
+					  NULL);
+	}
+
+	fu_device_set_physical_id(device, device_sysfs_path);
+	fu_device_set_vendor(device, mm_modem_get_manufacturer(modem));
+	fu_device_set_name(device, mm_modem_get_model(modem));
+	/* the version is controlled by the child device */
+	fu_device_set_version(device, "1");
+	fu_device_add_instance_id(device, device_id);
+
+	vendors = fu_device_get_vendor_ids(device);
+	if (vendors == NULL || vendors->len == 0) {
+		g_autofree gchar *path = NULL;
+		g_autofree gchar *value_str = NULL;
+		g_autoptr(GError) error_local = NULL;
+
+		if (g_strcmp0(device_bus, "USB") == 0)
+			path = g_build_filename(device_sysfs_path, "idVendor", NULL);
+		else if (g_strcmp0(device_bus, "PCI") == 0)
+			path = g_build_filename(device_sysfs_path, "vendor", NULL);
+
+		if (path == NULL) {
+			g_warning("failed to set vendor ID: unsupported bus: %s", device_bus);
+		} else if (!g_file_get_contents(path, &value_str, NULL, &error_local)) {
+			g_warning("failed to set vendor ID: %s", error_local->message);
+		} else {
+			guint64 value_int;
+
+			/* note: the string value may be prefixed with '0x' (e.g. when reading
+			 * the PCI 'vendor' attribute, or not prefixed with anything, as in the
+			 * USB 'idVendor' attribute. */
+			value_int = g_ascii_strtoull(value_str, NULL, 16);
+			if (value_int > G_MAXUINT16) {
+				g_warning("failed to set vendor ID: invalid value: %s", value_str);
+			} else {
+				g_autofree gchar *vendor_id =
+				    g_strdup_printf("%s:0x%04X", device_bus, (guint)value_int);
+				fu_device_add_vendor_id(device, vendor_id);
+			}
+		}
+	}
+
+	fu_mm_device_create_child_device_fibocom(device,
+						 "USB\\VID_2CB7&PID_01A2&FIRMWARE_MODEM",
+						 "FM101 Modem",
+						 version_modem,
+						 "FM101-MODEM");
+	fu_mm_device_create_child_device_fibocom(device,
+						 "USB\\VID_2CB7&PID_01A2&FIRMWARE_AP",
+						 "FM101 AP",
+						 version_ap,
+						 "FM101-AP");
+	fu_mm_device_create_child_device_fibocom(device,
+						 "USB\\VID_2CB7&PID_01A2&FIRMWARE_OEM",
+						 "FM101 OEM",
+						 version_oem,
+						 "FM101-OEM");
+	fu_mm_device_create_child_device_fibocom(device,
+						 "USB\\VID_2CB7&PID_01A2&FIRMWARE_OP",
+						 "FM101 OP",
+						 version_op,
+						 "FM101-OP");
+	fu_mm_device_create_child_device_fibocom(device,
+						 "USB\\VID_2CB7&PID_01A2&FIRMWARE_DEV",
+						 "FM101 DEV",
+						 version_dev,
+						 "FM101-DEV");
+	fu_mm_device_create_child_device_fibocom(device,
+						 "USB\\VID_2CB7&PID_01A2&MCCMNC",
+						 "FM101 SIM",
+						 mccmnc_id,
+						 "FM101-SIM");
+
+	return TRUE;
+}
+
+static gboolean
 fu_mm_device_probe_default(FuDevice *device, GError **error)
 {
 	FuMmDevice *self = FU_MM_DEVICE(device);
@@ -188,6 +559,10 @@ fu_mm_device_probe_default(FuDevice *device, GError **error)
 	/* inhibition uid is the modem interface 'Device' property, which may
 	 * be the device sysfs path or a different user-provided id */
 	self->inhibition_uid = mm_modem_dup_device(modem);
+
+	if (g_strcmp0("Fibocom Wireless Inc.", mm_modem_get_manufacturer(modem)) == 0) {
+		return fu_mm_device_probe_fibocom(device, error);
+	}
 
 	/* find out what update methods we should use */
 	modem_fw = mm_object_peek_modem_firmware(self->omodem);
@@ -649,6 +1024,21 @@ fu_mm_device_at_cmd_cb(FuDevice *device, gpointer user_data, GError **error)
 	}
 	fu_dump_bytes(G_LOG_DOMAIN, "read", at_res);
 	buf = g_bytes_get_data(at_res, &bufsz);
+
+	/* the first time the modem returns may be the command itself with one \n missing. */
+	if (g_strrstr(buf, helper->cmd) != NULL && bufsz == strlen(helper->cmd) + 1) {
+		at_res = fu_io_channel_read_bytes(self->io_channel,
+						  -1,
+						  1500,
+						  FU_IO_CHANNEL_FLAG_SINGLE_SHOT,
+						  error);
+		if (at_res == NULL) {
+			g_prefix_error(error, "failed to read response for %s: ", helper->cmd);
+			return FALSE;
+		}
+		buf = g_bytes_get_data(at_res, &bufsz);
+	}
+
 	if (bufsz < 6) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -1845,6 +2235,11 @@ fu_mm_device_setup_secboot_status(FuDevice *device)
 	if (fu_device_has_vendor_id(device, "USB:0x2C7C") ||
 	    fu_device_has_vendor_id(device, "PCI:0x1EAC"))
 		fu_mm_device_setup_secboot_status_quectel(self);
+	else if (fu_device_has_vendor_id(device, "USB:0x2CB7")) {
+		fu_device_remove_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_REQUIRE_AC);
+		fu_device_add_internal_flag(FU_DEVICE(self),
+					    FU_DEVICE_INTERNAL_FLAG_SAVE_INTO_BACKUP_REMOTE);
+	}
 }
 
 static gboolean

@@ -32,6 +32,8 @@ struct FuPluginData {
 	 * ourselves to recreate a functional device object even without MM
 	 */
 	FuMmDevice *shadow_device;
+
+	gboolean uninhibit_flag;
 };
 
 typedef FuPluginData FuModemManagerPlugin;
@@ -155,6 +157,10 @@ fu_mm_plugin_udev_device_port_added(FuPlugin *plugin,
 		return;
 	}
 
+	if (self->uninhibit_flag) {
+		fu_mm_plugin_uninhibit_device(plugin);
+	}
+
 	/* create device and add to cache */
 	dev = fu_mm_device_udev_new(fu_plugin_get_context(plugin),
 				    self->manager,
@@ -217,6 +223,11 @@ fu_mm_plugin_inhibit_device(FuPlugin *plugin, FuDevice *device, GError **error)
 	static const gchar *subsystems[] = {"tty", "usbmisc", "wwan", NULL};
 	FuModemManagerPlugin *self = FU_MODEM_MANAGER_PLUGIN(plugin);
 	g_autoptr(FuMmDevice) shadow_device = NULL;
+
+	self->uninhibit_flag = FALSE;
+	if (fu_device_has_vendor_id(FU_MM_DEVICE(device), "USB:0x2CB7")) {
+		self->uninhibit_flag = TRUE;
+	}
 
 	fu_mm_plugin_uninhibit_device(plugin);
 
