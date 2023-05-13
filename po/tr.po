@@ -13,7 +13,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"Language-Team: Turkish (http://www.transifex.com/freedesktop/fwupd/language/tr/)\n"
+"Language-Team: Turkish (http://app.transifex.com/freedesktop/fwupd/language/tr/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -202,6 +202,10 @@ msgid_plural "Approved firmware:"
 msgstr[0] "Onaylı ürün yazılımı:"
 msgstr[1] "Onaylı donanım yazılımı:"
 
+#. TRANSLATORS: command description
+msgid "Asks the daemon to quit"
+msgstr "Arkaplan hizmetinden çıkmasını ister"
+
 #. TRANSLATORS: waiting for user to authenticate
 msgid "Authenticating…"
 msgstr "Kimlik doğrulanıyor…"
@@ -220,7 +224,7 @@ msgstr "Donanım yazılımı güncellemeleri için kullanılan uzak yapılandır
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify daemon configuration"
-msgstr "Artalan süreci yapılandırmasını değiştirmek için kimlik doğrulama gerekir"
+msgstr "Arkaplan hizmeti yapılandırmasını değiştirmek için kimlik doğrulama gerekir"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to set the list of approved firmware"
@@ -522,7 +526,7 @@ msgstr "Başarısız"
 #. TRANSLATORS: we could not talk to the fwupd daemon
 #. TRANSLATORS: could not contact the fwupd service over D-Bus
 msgid "Failed to connect to daemon"
-msgstr "Artalan sürecine bağlanamadı"
+msgstr "Arkaplan hizmetine bağlanamadı"
 
 #. TRANSLATORS: we could not get the devices to update offline
 msgid "Failed to get pending devices"
@@ -574,7 +578,7 @@ msgstr "Donanım Yazılımı Güncelleme D-Bus Hizmeti"
 
 #. TRANSLATORS: program name
 msgid "Firmware Update Daemon"
-msgstr "Donanım Yazılımı Güncelleme Artalan Süreci"
+msgstr "Donanım Yazılımı Güncelleme Arkaplan Hizmeti"
 
 #. TRANSLATORS: program name
 msgid "Firmware Utility"
@@ -664,14 +668,6 @@ msgstr "Dosyaları indirirken katı SSL kontrollerini yoksay"
 #. TRANSLATORS: length of time the update takes to apply
 msgid "Install Duration"
 msgstr "Kurulum Süresi"
-
-#. TRANSLATORS: command description
-msgid "Install a firmware blob on a device"
-msgstr "Aygıta donanım yazılımı blobʼu kur"
-
-#. TRANSLATORS: command description
-msgid "Install a firmware file on this hardware"
-msgstr "Bu donanıma donanım yazılımı dosyası kur"
 
 #. TRANSLATORS: command description
 msgid "Install a specific firmware on a device, all possible devices will also be installed once the CAB matches"
@@ -826,17 +822,21 @@ msgstr "Asgari Sürüm"
 #. TRANSLATORS: error message
 #, c-format
 msgid "Mismatched daemon and client, use %s instead"
-msgstr "Artalan süreci ile istemci uyuşmadı, bunun yerine %s kullanın"
+msgstr "Arkaplan hizmeti ile istemci uyuşmadı, bunun yerine %s kullanın"
+
+#. TRANSLATORS: sets something in the daemon configuration file
+msgid "Modifies a daemon configuration value"
+msgstr "Bir arkaplan hizmeti yapılandırma değerini değiştirir"
 
 msgid "Modify a configured remote"
 msgstr "Uzak yapılandırmayı değiştir"
 
 msgid "Modify daemon configuration"
-msgstr "Artalan süreci yapılandırmasını değiştir"
+msgstr "Arkaplan hizmeti yapılandırmasını değiştir"
 
 #. TRANSLATORS: command description
 msgid "Monitor the daemon for events"
-msgstr "Olaylar için artalan sürecini gözetle"
+msgstr "Olaylar için arkaplan hizmetini gözetle"
 
 #. TRANSLATORS: Requires a reboot to apply firmware or to reload hardware
 msgid "Needs a reboot after installation"
@@ -1033,7 +1033,7 @@ msgstr "Yeniden başlatılsın mı?"
 
 #. TRANSLATORS: changes only take effect on restart
 msgid "Restart the daemon to make the change effective?"
-msgstr "Değişikliklerin etkili olması için artalan süreci yeniden başlatılsın mı?"
+msgstr "Değişikliklerin etkili olması için arkaplan hizmeti yeniden başlatılsın mı?"
 
 #. TRANSLATORS: restarting the device to pick up new F/W
 msgid "Restarting device…"
@@ -1102,11 +1102,11 @@ msgstr "Sonuçları göster"
 
 #. TRANSLATORS: command line option
 msgid "Show client and daemon versions"
-msgstr "İstemci ve artalan süreci sürümlerini göster"
+msgstr "İstemci ve arkaplan hizmeti sürümlerini göster"
 
 #. TRANSLATORS: this is for daemon development
 msgid "Show daemon verbose information for a particular domain"
-msgstr "Belirli bir alan için artalan süreci ayrıntılı bilgilerini göster"
+msgstr "Belirli bir alan için arkaplan hizmeti ayrıntılı bilgilerini göster"
 
 #. TRANSLATORS: turn on all debugging
 msgid "Show debugging information for all domains"
@@ -1234,6 +1234,10 @@ msgstr "TPM v2.0"
 msgid "Target"
 msgstr "Hedef"
 
+#. TRANSLATORS: the user is SOL for support...
+msgid "The daemon has loaded 3rd party code and is no longer supported by the upstream developers!"
+msgstr "Arkaplan hizmeti 3. taraf kodu yükledi ve artık upstream geliştiricileri tarafından desteklenmiyor!"
+
 #. TRANSLATORS: now list devices with unfixed high-priority issues
 msgid "There are devices with issues:"
 msgstr "Sorunlu aygıtlar var:"
@@ -1252,7 +1256,7 @@ msgstr "Bu yazılım ambargo edilmemiş, ancak donanım satıcısı tarafından 
 
 #. TRANSLATORS: CLI description
 msgid "This tool allows an administrator to query and control the fwupd daemon, allowing them to perform actions such as installing or downgrading firmware."
-msgstr "Bu araç, yöneticinin fwupd hizmetini sorgulamasına ve denetlemesine izin vererek, yöneticinin donanım yazılımı kurulması ya da düşürülmesi gibi eylemleri gerçekleştirmesine olanak tanır."
+msgstr "Bu araç, yöneticinin fwupd arkaplan hizmetini sorgulamasına ve denetlemesine izin vererek, yöneticinin donanım yazılımı kurulması ya da düşürülmesi gibi eylemleri gerçekleştirmesini sağlar."
 
 #. TRANSLATORS: CLI description
 msgid "This tool allows an administrator to use the fwupd plugins without being installed on the host system."
@@ -1318,7 +1322,7 @@ msgstr "Güncelleme sırasında hata ayıklama bayrağını ayarlama"
 #. TRANSLATORS: error message
 #, c-format
 msgid "Unsupported daemon version %s, client version is %s"
-msgstr "Desteklenmeyen artalan süreci sürümü %s, istemci sürümü %s"
+msgstr "Desteklenmeyen arkaplan hizmeti sürümü %s, istemci sürümü %s"
 
 #. TRANSLATORS: Device is updatable in this or any other mode
 msgid "Updatable"

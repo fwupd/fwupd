@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"Language-Team: Russian (http://www.transifex.com/freedesktop/fwupd/language/ru/)\n"
+"Language-Team: Russian (http://app.transifex.com/freedesktop/fwupd/language/ru/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -901,14 +901,6 @@ msgstr "Игнорировать строгие проверки SSL при за
 #. TRANSLATORS: length of time the update takes to apply
 msgid "Install Duration"
 msgstr "Продолжительность установки"
-
-#. TRANSLATORS: command description
-msgid "Install a firmware blob on a device"
-msgstr "Установить двоичную прошивку на устройство"
-
-#. TRANSLATORS: command description
-msgid "Install a firmware file on this hardware"
-msgstr "Установить файл прошивки на это оборудование"
 
 msgid "Install old version of signed system firmware"
 msgstr "Установить старую версию подписанной системной прошивки"

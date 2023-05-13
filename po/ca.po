@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"Language-Team: Catalan (http://www.transifex.com/freedesktop/fwupd/language/ca/)\n"
+"Language-Team: Catalan (http://app.transifex.com/freedesktop/fwupd/language/ca/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -336,6 +336,10 @@ msgstr "Protecció d'escriptura del microprogramari d'AMD"
 msgid "AMD Secure Processor Rollback Protection"
 msgstr "Protecció contra la reversió del processador segur d'AMD"
 
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "ARCHIVE FIRMWARE METAINFO [FIRMWARE] [METAINFO] [JCATFILE]"
+msgstr "ARXIU MICROPROGRAMARI METAINFO [MICROPROGRAMARI] [METAINFO] [FITXER_JCAT]"
+
 #. TRANSLATORS: the user needs to do something, e.g. remove the device
 msgid "Action Required:"
 msgstr "Acció requerida:"
@@ -581,6 +585,10 @@ msgid "Branch"
 msgstr "Branca"
 
 #. TRANSLATORS: command description
+msgid "Build a cabinet archive from a firmware blob and XML metadata"
+msgstr "Construeix un arxiu Cabinet a partir d’un blob de microprogramari i metadades XML"
+
+#. TRANSLATORS: command description
 msgid "Build a firmware file"
 msgstr "Construeix un fitxer de microprogramari."
 
@@ -729,6 +737,10 @@ msgstr "ID del dispositiu"
 msgid "Device added:"
 msgstr "S'ha afegit el dispositiu:"
 
+#. TRANSLATORS: the device is already connected
+msgid "Device already exists"
+msgstr "El dispositiu ja existeix"
+
 #. TRANSLATORS: for example the batteries *inside* the Bluetooth mouse
 msgid "Device battery power is too low"
 msgstr "L'energia de la bateria del dispositiu és massa baixa"
@@ -761,6 +773,10 @@ msgstr "És obligatori el microprogramari del dispositiu per a comprovar la vers
 #. TRANSLATORS: emulated means we are pretending to be a different model
 msgid "Device is emulated"
 msgstr "El dispositiu està emulat"
+
+#. TRANSLATORS: device cannot be interrupted, for instance taking a phone call
+msgid "Device is in use"
+msgstr "El dispositiu està en ús"
 
 #. TRANSLATORS: Is locked and can be unlocked
 msgid "Device is locked"
@@ -985,7 +1001,7 @@ msgstr "S'està descarregant..."
 
 #. TRANSLATORS: command description
 msgid "Dump SMBIOS data from a file"
-msgstr "Bolca les dades al SMBIOS des d'un fitxer."
+msgstr "Aboca les dades al SMBIOS des d'un fitxer."
 
 #. TRANSLATORS: length of time the update takes to apply
 msgid "Duration"
@@ -1387,6 +1403,10 @@ msgctxt "A single GUID"
 msgid "GUID"
 msgstr "GUID"
 
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "GUID|DEVICE-ID"
+msgstr "GUID|DISPOSITIU"
+
 msgid "Get BIOS settings"
 msgstr "Obtén les opcions de configuració del BIOS"
 
@@ -1531,12 +1551,12 @@ msgid "Install Duration"
 msgstr "Durada de la instal·lació"
 
 #. TRANSLATORS: command description
-msgid "Install a firmware blob on a device"
-msgstr "Instal·la un blob de microprogramari en un dispositiu."
+msgid "Install a firmware file in cabinet format on this hardware"
+msgstr "Instal·la en aquest maquinari un fitxer de microprogramari en el format Cabinet"
 
 #. TRANSLATORS: command description
-msgid "Install a firmware file on this hardware"
-msgstr "Instal·la un fitxer de microprogramari en aquest maquinari."
+msgid "Install a raw firmware blob on a device"
+msgstr "Instal·la un blob de microprogramari RAW en un dispositiu"
 
 #. TRANSLATORS: command description
 msgid "Install a specific firmware on a device, all possible devices will also be installed once the CAB matches"
@@ -1693,6 +1713,10 @@ msgstr "No vàlid"
 msgid "Invalid arguments"
 msgstr "Arguments no vàlids"
 
+#. TRANSLATORS: error message
+msgid "Invalid arguments, expected at least ARCHIVE FIRMWARE METAINFO"
+msgstr "Arguments no vàlids, com a mínim s'esperaven ARXIU MICROPROGRAMARI METAINFO"
+
 #. TRANSLATORS: version is older
 msgid "Is downgrade"
 msgstr "Està desactualitzada"
@@ -1800,6 +1824,10 @@ msgid "List supported firmware updates"
 msgstr "Llista les actualitzacions de microprogramari compatibles"
 
 #. TRANSLATORS: command description
+msgid "List the available firmware GTypes"
+msgstr "Llista els GTipus de microprogramari disponibles"
+
+#. TRANSLATORS: command description
 msgid "List the available firmware types"
 msgstr "Llista els tipus de microprogramari disponibles."
 
@@ -1900,7 +1928,7 @@ msgstr "Valor mínim"
 msgid "Mismatched daemon and client, use %s instead"
 msgstr "El dimoni i el client no coincideixin, useu %s en el seu lloc"
 
-#. TRANSLATORS: sets something in daemon.conf
+#. TRANSLATORS: sets something in the daemon configuration file
 msgid "Modifies a daemon configuration value"
 msgstr "Modifica un valor de la configuració del dimoni"
 
@@ -1951,6 +1979,10 @@ msgstr "No hi ha cap desactualització per a %s"
 #. TRANSLATORS: nothing found
 msgid "No firmware IDs found"
 msgstr "No s'ha trobat cap ID de microprogramari"
+
+#. TRANSLATORS: nothing found
+msgid "No firmware found"
+msgstr "No s'ha trobat cap microprogramari"
 
 #. TRANSLATORS: nothing attached that can be upgraded
 msgid "No hardware detected with firmware update capability"
@@ -2073,7 +2105,7 @@ msgstr "Percentatge completat"
 
 #. TRANSLATORS: prompt to apply the update
 msgid "Perform operation?"
-msgstr "Voleu realitzar l'operació?"
+msgstr "Voleu efectuar l'operació?"
 
 #. TRANSLATORS: Title: Allows debugging of parts using proprietary hardware
 msgid "Platform Debugging"
@@ -2307,7 +2339,7 @@ msgstr "Retorna tots els ID del maquinari de la màquina."
 
 #. TRANSLATORS: longer description
 msgid "Rollback Protection prevents device software from being downgraded to an older version that has security problems."
-msgstr "La protecció contra la reversió evita que el programari del dispositiu torni a una versió anterior que potser contingui problemes de seguretat."
+msgstr "La protecció contra la reversió evita que el programari del dispositiu torni a una versió anterior que potser conté problemes de seguretat."
 
 #. TRANSLATORS: this is shown in the MOTD
 msgid "Run `fwupdmgr get-upgrades` for more information."
@@ -2615,6 +2647,11 @@ msgstr[1] "S'han enviat %u informes correctament"
 msgid "Successfully verified device checksums"
 msgstr "S'han verificat correctament les sumes de verificació del dispositiu"
 
+#. TRANSLATORS: the device showed up in time
+#, c-format
+msgid "Successfully waited %.0fms for device"
+msgstr "S'han esperat amb èxit %.0f per al dispositiu"
+
 #. TRANSLATORS: one line summary of device
 msgid "Summary"
 msgstr "Resum"
@@ -2753,6 +2790,10 @@ msgstr "Provada"
 #, c-format
 msgid "Tested by %s"
 msgstr "Provada per %s"
+
+#. TRANSLATORS: someone we trust has tested this
+msgid "Tested by trusted vendor"
+msgstr "Provat per un venedor de confiança"
 
 #. TRANSLATORS: longer description
 msgid "The Intel Management Engine Key Manifest must be valid so that the device firmware can be trusted by the CPU."
@@ -3179,6 +3220,10 @@ msgstr "Versió[fwupd]"
 #. TRANSLATORS: this is a prefix on the console
 msgid "WARNING"
 msgstr "AVÍS"
+
+#. TRANSLATORS: command description
+msgid "Wait for a device to appear"
+msgstr "Espereu fins que aparegui un dispositiu"
 
 #. TRANSLATORS: waiting for device to do something
 msgid "Waiting…"

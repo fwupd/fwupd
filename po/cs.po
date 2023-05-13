@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"Language-Team: Czech (http://www.transifex.com/freedesktop/fwupd/language/cs/)\n"
+"Language-Team: Czech (http://app.transifex.com/freedesktop/fwupd/language/cs/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -354,6 +354,10 @@ msgstr "AMD – zamezení zápisu firmware"
 msgid "AMD Secure Processor Rollback Protection"
 msgstr "AMD zamezení instalace starší verze na procesoru"
 
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "ARCHIVE FIRMWARE METAINFO [FIRMWARE] [METAINFO] [JCATFILE]"
+msgstr "ARCHIV FIRMWARE METAINFO [FIRMWARE] [METAINFO] [JCATSOUBOR]"
+
 #. TRANSLATORS: the user needs to do something, e.g. remove the device
 msgid "Action Required:"
 msgstr "Vyžadovaná akce:"
@@ -601,6 +605,10 @@ msgid "Branch"
 msgstr "Větev"
 
 #. TRANSLATORS: command description
+msgid "Build a cabinet archive from a firmware blob and XML metadata"
+msgstr "Sestavit cab archiv z binárního souboru s firmwarem a XML metadat"
+
+#. TRANSLATORS: command description
 msgid "Build a firmware file"
 msgstr "Sestavit soubor s firmware"
 
@@ -749,6 +757,10 @@ msgstr "Identifikátor zařízení"
 msgid "Device added:"
 msgstr "Přidáno zařízení:"
 
+#. TRANSLATORS: the device is already connected
+msgid "Device already exists"
+msgstr "Zařízení už existuje"
+
 #. TRANSLATORS: for example the batteries *inside* the Bluetooth mouse
 msgid "Device battery power is too low"
 msgstr "Akumulátor/baterie v zařízení je příliš vybitý"
@@ -781,6 +793,10 @@ msgstr "Je třeba, aby firmware zařízení měl kontrolu verze"
 #. TRANSLATORS: emulated means we are pretending to be a different model
 msgid "Device is emulated"
 msgstr "Zařízení je emulováno"
+
+#. TRANSLATORS: device cannot be interrupted, for instance taking a phone call
+msgid "Device is in use"
+msgstr "Zařízení je používáno"
 
 #. TRANSLATORS: Is locked and can be unlocked
 msgid "Device is locked"
@@ -1411,6 +1427,10 @@ msgctxt "A single GUID"
 msgid "GUID"
 msgstr "GUID"
 
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "GUID|DEVICE-ID"
+msgstr "GUID|ID-ZARIZENI"
+
 msgid "Get BIOS settings"
 msgstr "Získat nastavení BIOS"
 
@@ -1555,12 +1575,12 @@ msgid "Install Duration"
 msgstr "Délka instalace"
 
 #. TRANSLATORS: command description
-msgid "Install a firmware blob on a device"
-msgstr "Nainstalovat na zařízení binární soubor s firmwarem"
+msgid "Install a firmware file in cabinet format on this hardware"
+msgstr "Nainstalovat soubor s firmwarem (ve formátu cab) na tento hardware"
 
 #. TRANSLATORS: command description
-msgid "Install a firmware file on this hardware"
-msgstr "Nainstalovat soubor s firmwarem na tento hardware"
+msgid "Install a raw firmware blob on a device"
+msgstr "Nainstalovat na zařízení holý binární soubor s firmwarem"
 
 #. TRANSLATORS: command description
 msgid "Install a specific firmware on a device, all possible devices will also be installed once the CAB matches"
@@ -1717,6 +1737,10 @@ msgstr "Neplatné"
 msgid "Invalid arguments"
 msgstr "Neplatné argumenty"
 
+#. TRANSLATORS: error message
+msgid "Invalid arguments, expected at least ARCHIVE FIRMWARE METAINFO"
+msgstr "Neplatný argument – očekáváno přinjemenším ARCHIVE FIRMWARE METAINFO"
+
 #. TRANSLATORS: version is older
 msgid "Is downgrade"
 msgstr "Je starší verzí"
@@ -1826,6 +1850,10 @@ msgid "List supported firmware updates"
 msgstr "Vypsat podporované aktualizace firmwarů"
 
 #. TRANSLATORS: command description
+msgid "List the available firmware GTypes"
+msgstr "Vypsat GTypy firmware, které jsou k dispozici"
+
+#. TRANSLATORS: command description
 msgid "List the available firmware types"
 msgstr "Vypsat typy firmwaru, které jsou k dispozici"
 
@@ -1926,7 +1954,7 @@ msgstr "Nejnižší platná hodnota"
 msgid "Mismatched daemon and client, use %s instead"
 msgstr "Nesoulad verzí procesu služby a klienta, namísto toho použijte %s"
 
-#. TRANSLATORS: sets something in daemon.conf
+#. TRANSLATORS: sets something in the daemon configuration file
 msgid "Modifies a daemon configuration value"
 msgstr "Změnit hodnotu v nastavení procesu služby"
 
@@ -1977,6 +2005,10 @@ msgstr "Pro %s nejsou k dispozici žádné starší verze"
 #. TRANSLATORS: nothing found
 msgid "No firmware IDs found"
 msgstr "Nenalezeny žádné identifikátory firmware"
+
+#. TRANSLATORS: nothing found
+msgid "No firmware found"
+msgstr "Nenalezen žádný firmware"
 
 #. TRANSLATORS: nothing attached that can be upgraded
 msgid "No hardware detected with firmware update capability"
@@ -2643,6 +2675,11 @@ msgstr[3] "Úspěšně odeslána %u hlášení"
 msgid "Successfully verified device checksums"
 msgstr "Kontrolní součty pro zařízení úspěšně ověřeny"
 
+#. TRANSLATORS: the device showed up in time
+#, c-format
+msgid "Successfully waited %.0fms for device"
+msgstr "Úspěšně počkáno %.0fms na zařízení"
+
 #. TRANSLATORS: one line summary of device
 msgid "Summary"
 msgstr "Souhrn"
@@ -2783,6 +2820,10 @@ msgstr "Vyzkoušeno"
 #, c-format
 msgid "Tested by %s"
 msgstr "Vyzkoušeno výrobcem %s"
+
+#. TRANSLATORS: someone we trust has tested this
+msgid "Tested by trusted vendor"
+msgstr "Vyzkoušeno důvěryhodným výrobcem"
 
 #. TRANSLATORS: longer description
 msgid "The Intel Management Engine Key Manifest must be valid so that the device firmware can be trusted by the CPU."
@@ -3209,6 +3250,10 @@ msgstr "Verze[fwupd]"
 #. TRANSLATORS: this is a prefix on the console
 msgid "WARNING"
 msgstr "VAROVÁNÍ"
+
+#. TRANSLATORS: command description
+msgid "Wait for a device to appear"
+msgstr "Počkat až se zařízení objeví"
 
 #. TRANSLATORS: waiting for device to do something
 msgid "Waiting…"

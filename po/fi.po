@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"Language-Team: Finnish (http://www.transifex.com/freedesktop/fwupd/language/fi/)\n"
+"Language-Team: Finnish (http://app.transifex.com/freedesktop/fwupd/language/fi/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -1227,14 +1227,6 @@ msgstr "Ohitetaan tiukat SSL-tarkistukset. Jos haluat tehdä tämän jatkossa au
 msgid "Install Duration"
 msgstr "Asennuksen kesto"
 
-#. TRANSLATORS: command description
-msgid "Install a firmware blob on a device"
-msgstr "Asenna laiteohjelmisto (\"blob\") laitteeseen"
-
-#. TRANSLATORS: command description
-msgid "Install a firmware file on this hardware"
-msgstr "Asenna laiteohjelmistotiedosto tähän laitteistoon"
-
 msgid "Install old version of signed system firmware"
 msgstr "Asenna allekirjoitetun järjestelmän firmware:n vanha versio"
 
@@ -1495,7 +1487,7 @@ msgstr "Vähimmäisarvo"
 msgid "Mismatched daemon and client, use %s instead"
 msgstr "Taustaprosessi ja asiakasohjelma eivät vastaa toisiaan, käytä sen sijaan %s"
 
-#. TRANSLATORS: sets something in daemon.conf
+#. TRANSLATORS: sets something in the daemon configuration file
 msgid "Modifies a daemon configuration value"
 msgstr "Muokkaa taustaprosessin asetusarvoa"
 

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"Language-Team: Slovak (http://www.transifex.com/freedesktop/fwupd/language/sk/)\n"
+"Language-Team: Slovak (http://app.transifex.com/freedesktop/fwupd/language/sk/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -150,10 +150,6 @@ msgstr "Získa zoznam aktualizácií pre pripojený hardvér"
 #. TRANSLATORS: command description
 msgid "Gets the results from the last update"
 msgstr "Získa výsledky z poslednej aktualizácie"
-
-#. TRANSLATORS: command description
-msgid "Install a firmware file on this hardware"
-msgstr "Nainštaluje súbor firmvéru do tohoto hardvéru"
 
 msgid "Install signed device firmware"
 msgstr "Nainštaluje podpísaný firmvér zariadenia"

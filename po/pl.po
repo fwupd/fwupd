@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"Language-Team: Polish (http://www.transifex.com/freedesktop/fwupd/language/pl/)\n"
+"Language-Team: Polish (http://app.transifex.com/freedesktop/fwupd/language/pl/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -351,6 +351,10 @@ msgstr "Ochrona przed zapisem oprogramowania sprzętowego AMD"
 msgid "AMD Secure Processor Rollback Protection"
 msgstr "Ochrona procesora zabezpieczeń AMD przed wycofaniem"
 
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "ARCHIVE FIRMWARE METAINFO [FIRMWARE] [METAINFO] [JCATFILE]"
+msgstr "ARCHIWUM OPROGRAMOWANIE-SPRZĘTOWE METAINFO [OPROGRAMOWANIE-SPRZĘTOWE] [METAINFO] [PLIK-JCAT]"
+
 #. TRANSLATORS: the user needs to do something, e.g. remove the device
 msgid "Action Required:"
 msgstr "Wymagane działanie:"
@@ -598,6 +602,10 @@ msgid "Branch"
 msgstr "Gałąź"
 
 #. TRANSLATORS: command description
+msgid "Build a cabinet archive from a firmware blob and XML metadata"
+msgstr "Buduje archiwum CAB z zamkniętego oprogramowania sprzętowego i metadanych XML"
+
+#. TRANSLATORS: command description
 msgid "Build a firmware file"
 msgstr "Buduje plik oprogramowania sprzętowego"
 
@@ -746,6 +754,10 @@ msgstr "Identyfikator urządzenia"
 msgid "Device added:"
 msgstr "Dodano urządzenie:"
 
+#. TRANSLATORS: the device is already connected
+msgid "Device already exists"
+msgstr "Urządzenie już istnieje"
+
 #. TRANSLATORS: for example the batteries *inside* the Bluetooth mouse
 msgid "Device battery power is too low"
 msgstr "Poziom naładowania akumulatora urządzenia jest za niski"
@@ -778,6 +790,10 @@ msgstr "Oprogramowanie sprzętowe urządzenia musi mieć test wersji"
 #. TRANSLATORS: emulated means we are pretending to be a different model
 msgid "Device is emulated"
 msgstr "Urządzenie jest emulowane"
+
+#. TRANSLATORS: device cannot be interrupted, for instance taking a phone call
+msgid "Device is in use"
+msgstr "Urządzenie jest używane"
 
 #. TRANSLATORS: Is locked and can be unlocked
 msgid "Device is locked"
@@ -1378,6 +1394,10 @@ msgctxt "A single GUID"
 msgid "GUID"
 msgstr "GUID"
 
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "GUID|DEVICE-ID"
+msgstr "GUID|IDENTYFIKATOR-URZĄDZENIA"
+
 msgid "Get BIOS settings"
 msgstr "Uzyskanie ustawień BIOS-u"
 
@@ -1518,12 +1538,12 @@ msgid "Install Duration"
 msgstr "Czas trwania instalacji"
 
 #. TRANSLATORS: command description
-msgid "Install a firmware blob on a device"
-msgstr "Instaluje zamknięte oprogramowanie sprzętowe na urządzeniu"
+msgid "Install a firmware file in cabinet format on this hardware"
+msgstr "Instaluje plik oprogramowania sprzętowego w formacie CAB na tym sprzęcie"
 
 #. TRANSLATORS: command description
-msgid "Install a firmware file on this hardware"
-msgstr "Instaluje plik oprogramowania sprzętowego na tym sprzęcie"
+msgid "Install a raw firmware blob on a device"
+msgstr "Instaluje surowe zamknięte oprogramowanie sprzętowe na urządzeniu"
 
 #. TRANSLATORS: command description
 msgid "Install a specific firmware on a device, all possible devices will also be installed once the CAB matches"
@@ -1661,6 +1681,10 @@ msgstr "Nieprawidłowe"
 msgid "Invalid arguments"
 msgstr "Nieprawidłowe parametry"
 
+#. TRANSLATORS: error message
+msgid "Invalid arguments, expected at least ARCHIVE FIRMWARE METAINFO"
+msgstr "Nieprawidłowe parametry, oczekiwano co najmniej ARCHIWUM OPROGRAMOWANIE-SPRZĘTOWE METAINFO"
+
 #. TRANSLATORS: version is older
 msgid "Is downgrade"
 msgstr "Jest instalacją poprzedniej wersji"
@@ -1760,6 +1784,10 @@ msgid "List supported firmware updates"
 msgstr "Wyświetla listę obsługiwanych aktualizacji oprogramowania sprzętowego"
 
 #. TRANSLATORS: command description
+msgid "List the available firmware GTypes"
+msgstr "Wyświetla listę GType dostępnego oprogramowania sprzętowego"
+
+#. TRANSLATORS: command description
 msgid "List the available firmware types"
 msgstr "Wyświetla listę dostępnych typów oprogramowania sprzętowego"
 
@@ -1856,7 +1884,7 @@ msgstr "Minimalna wartość"
 msgid "Mismatched daemon and client, use %s instead"
 msgstr "Niezgodna usługa i klient, proszę użyć %s zamiast tego"
 
-#. TRANSLATORS: sets something in daemon.conf
+#. TRANSLATORS: sets something in the daemon configuration file
 msgid "Modifies a daemon configuration value"
 msgstr "Modyfikuje wartość konfiguracji usługi"
 
@@ -1907,6 +1935,10 @@ msgstr "Brak poprzednich wersji dla urządzenia %s"
 #. TRANSLATORS: nothing found
 msgid "No firmware IDs found"
 msgstr "Nie odnaleziono identyfikatorów oprogramowania sprzętowego"
+
+#. TRANSLATORS: nothing found
+msgid "No firmware found"
+msgstr "Nie odnaleziono oprogramowania sprzętowego"
 
 #. TRANSLATORS: nothing attached that can be upgraded
 msgid "No hardware detected with firmware update capability"
@@ -2561,6 +2593,11 @@ msgstr[3] "Pomyślnie wysłano %u zgłoszeń"
 msgid "Successfully verified device checksums"
 msgstr "Pomyślnie sprawdzono poprawność sum kontrolnych urządzenia"
 
+#. TRANSLATORS: the device showed up in time
+#, c-format
+msgid "Successfully waited %.0fms for device"
+msgstr "Pomyślnie odczekano %.0f ms na urządzenie"
+
 #. TRANSLATORS: one line summary of device
 msgid "Summary"
 msgstr "Podsumowanie"
@@ -2689,6 +2726,10 @@ msgstr "Przetestowane"
 #, c-format
 msgid "Tested by %s"
 msgstr "Przetestowane przez: %s"
+
+#. TRANSLATORS: someone we trust has tested this
+msgid "Tested by trusted vendor"
+msgstr "Przetestowane przez zaufanego dostawcę"
 
 #. TRANSLATORS: do not translate the variables marked using $
 msgid "The LVFS is a free service that operates as an independent legal entity and has no connection with $OS_RELEASE:NAME$. Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices. All firmware is provided only by the original equipment manufacturer."
@@ -3091,6 +3132,10 @@ msgstr "Wersja[fwupd]"
 #. TRANSLATORS: this is a prefix on the console
 msgid "WARNING"
 msgstr "OSTRZEŻENIE"
+
+#. TRANSLATORS: command description
+msgid "Wait for a device to appear"
+msgstr "Odczekuje na pojawienie się urządzenia"
 
 #. TRANSLATORS: waiting for device to do something
 msgid "Waiting…"

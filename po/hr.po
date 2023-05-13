@@ -13,7 +13,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"Language-Team: Croatian (http://www.transifex.com/freedesktop/fwupd/language/hr/)\n"
+"Language-Team: Croatian (http://app.transifex.com/freedesktop/fwupd/language/hr/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -1509,14 +1509,6 @@ msgid "Install Duration"
 msgstr "Trajanje instalacije"
 
 #. TRANSLATORS: command description
-msgid "Install a firmware blob on a device"
-msgstr "Instaliraj blob firmvera na uređaj"
-
-#. TRANSLATORS: command description
-msgid "Install a firmware file on this hardware"
-msgstr "Instaliraj datoteku firmvera na ovaj uređaj"
-
-#. TRANSLATORS: command description
 msgid "Install a specific firmware on a device, all possible devices will also be installed once the CAB matches"
 msgstr "Instaliraj određeni firmver na uređaj, svi mogući uređaji će biti instalirani jednom kada se CAB podudara"
 
@@ -1879,7 +1871,7 @@ msgstr "Najmanja vrijednost"
 msgid "Mismatched daemon and client, use %s instead"
 msgstr "Pozadinski program i klijent se ne podudaraju, umjesto koristite %s"
 
-#. TRANSLATORS: sets something in daemon.conf
+#. TRANSLATORS: sets something in the daemon configuration file
 msgid "Modifies a daemon configuration value"
 msgstr "Mijenja vrijednost podešavanja pozadinskog programa"
 

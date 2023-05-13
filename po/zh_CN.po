@@ -13,7 +13,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"Language-Team: Chinese (China) (http://www.transifex.com/freedesktop/fwupd/language/zh_CN/)\n"
+"Language-Team: Chinese (China) (http://app.transifex.com/freedesktop/fwupd/language/zh_CN/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -1078,14 +1078,6 @@ msgstr "正在忽略 SSL 严格检查，要在之后自动应用这一选项请�
 msgid "Install Duration"
 msgstr "安装时长"
 
-#. TRANSLATORS: command description
-msgid "Install a firmware blob on a device"
-msgstr "在设备上安装固件比特块"
-
-#. TRANSLATORS: command description
-msgid "Install a firmware file on this hardware"
-msgstr "在此硬件上安装固件文件"
-
 msgid "Install old version of signed system firmware"
 msgstr "安装旧版本的已签名系统固件"
 
@@ -1289,7 +1281,7 @@ msgstr "最小版本"
 msgid "Mismatched daemon and client, use %s instead"
 msgstr "守护进程与客户端不匹配，使用 %s 来代替"
 
-#. TRANSLATORS: sets something in daemon.conf
+#. TRANSLATORS: sets something in the daemon configuration file
 msgid "Modifies a daemon configuration value"
 msgstr "修改守护进程的配置值"
 

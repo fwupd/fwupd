@@ -14,7 +14,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"Language-Team: Swedish (http://www.transifex.com/freedesktop/fwupd/language/sv/)\n"
+"Language-Team: Swedish (http://app.transifex.com/freedesktop/fwupd/language/sv/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -341,6 +341,10 @@ msgstr "Skrivskydd för AMD:s fasta programvara"
 msgid "AMD Secure Processor Rollback Protection"
 msgstr "Säkert AMD-tillbakarullningsskydd för processorn"
 
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "ARCHIVE FIRMWARE METAINFO [FIRMWARE] [METAINFO] [JCATFILE]"
+msgstr "ARKIV FAST_PROGRAMVARA METAINFO [FAST_PROGRAMVARA] [METAINFO] [JCAT-FIL]"
+
 #. TRANSLATORS: the user needs to do something, e.g. remove the device
 msgid "Action Required:"
 msgstr "Åtgärd krävs:"
@@ -586,6 +590,10 @@ msgid "Branch"
 msgstr "Gren"
 
 #. TRANSLATORS: command description
+msgid "Build a cabinet archive from a firmware blob and XML metadata"
+msgstr "Bygg ett kabinettarkiv från en fast programvaru-blob och XML-metadata"
+
+#. TRANSLATORS: command description
 msgid "Build a firmware file"
 msgstr "Bygg en fast programvarufil"
 
@@ -734,6 +742,10 @@ msgstr "Enhets-ID"
 msgid "Device added:"
 msgstr "Enhet tillagd:"
 
+#. TRANSLATORS: the device is already connected
+msgid "Device already exists"
+msgstr "Enheten finns redan"
+
 #. TRANSLATORS: for example the batteries *inside* the Bluetooth mouse
 msgid "Device battery power is too low"
 msgstr "Enheten har för lite batteri"
@@ -766,6 +778,10 @@ msgstr "Fast programvara för enhet krävs för att ha en versionskontroll"
 #. TRANSLATORS: emulated means we are pretending to be a different model
 msgid "Device is emulated"
 msgstr "Enheten är emulerad"
+
+#. TRANSLATORS: device cannot be interrupted, for instance taking a phone call
+msgid "Device is in use"
+msgstr "Enheten används"
 
 #. TRANSLATORS: Is locked and can be unlocked
 msgid "Device is locked"
@@ -1392,6 +1408,10 @@ msgctxt "A single GUID"
 msgid "GUID"
 msgstr "GUID"
 
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "GUID|DEVICE-ID"
+msgstr "GUID|ENHETS-ID"
+
 msgid "Get BIOS settings"
 msgstr "Erhåll BIOS-inställningar"
 
@@ -1536,12 +1556,12 @@ msgid "Install Duration"
 msgstr "Installationstid"
 
 #. TRANSLATORS: command description
-msgid "Install a firmware blob on a device"
-msgstr "Installera en fast programvaru-blob på en enhet"
+msgid "Install a firmware file in cabinet format on this hardware"
+msgstr "Installera en fast programvarufil i kabinettformat på denna hårdvara"
 
 #. TRANSLATORS: command description
-msgid "Install a firmware file on this hardware"
-msgstr "Installera en fast programvarufil på denna hårdvara"
+msgid "Install a raw firmware blob on a device"
+msgstr "Installera en rå fast programvaru-blob på en enhet"
 
 #. TRANSLATORS: command description
 msgid "Install a specific firmware on a device, all possible devices will also be installed once the CAB matches"
@@ -1698,6 +1718,10 @@ msgstr "Ogiltig"
 msgid "Invalid arguments"
 msgstr "Ogiltiga argument"
 
+#. TRANSLATORS: error message
+msgid "Invalid arguments, expected at least ARCHIVE FIRMWARE METAINFO"
+msgstr "Ogiltiga argument, förväntade åtminstone ARKIV FAST_PROGRAMVARA METAINFO"
+
 #. TRANSLATORS: version is older
 msgid "Is downgrade"
 msgstr "Är nedgradering"
@@ -1805,6 +1829,10 @@ msgid "List supported firmware updates"
 msgstr "Lista uppdateringar för fast programvara som stöds"
 
 #. TRANSLATORS: command description
+msgid "List the available firmware GTypes"
+msgstr "Lista tillgängliga GType-typer för fast programvara"
+
+#. TRANSLATORS: command description
 msgid "List the available firmware types"
 msgstr "Lista de tillgängliga typerna av fast programvara"
 
@@ -1905,7 +1933,7 @@ msgstr "Lägsta värde"
 msgid "Mismatched daemon and client, use %s instead"
 msgstr "Demon och klient stämmer inte, använd %s istället"
 
-#. TRANSLATORS: sets something in daemon.conf
+#. TRANSLATORS: sets something in the daemon configuration file
 msgid "Modifies a daemon configuration value"
 msgstr "Modifierar ett konfigurationsvärde för demonen"
 
@@ -1956,6 +1984,10 @@ msgstr "Inga nedgraderingar för %s"
 #. TRANSLATORS: nothing found
 msgid "No firmware IDs found"
 msgstr "Inget fast programvaru-ID hittat"
+
+#. TRANSLATORS: nothing found
+msgid "No firmware found"
+msgstr "Ingen fast programvara hittades"
 
 #. TRANSLATORS: nothing attached that can be upgraded
 msgid "No hardware detected with firmware update capability"
@@ -2620,6 +2652,11 @@ msgstr[1] "Skickade framgångsrikt %u rapporter"
 msgid "Successfully verified device checksums"
 msgstr "Verifierade framgångsrikt enhetskontrollsummor"
 
+#. TRANSLATORS: the device showed up in time
+#, c-format
+msgid "Successfully waited %.0fms for device"
+msgstr "Väntade %.0fms på enhet"
+
 #. TRANSLATORS: one line summary of device
 msgid "Summary"
 msgstr "Sammanfattning"
@@ -2758,6 +2795,10 @@ msgstr "Testad"
 #, c-format
 msgid "Tested by %s"
 msgstr "Testad av %s"
+
+#. TRANSLATORS: someone we trust has tested this
+msgid "Tested by trusted vendor"
+msgstr "Testad av en betrodd leverantör"
 
 #. TRANSLATORS: longer description
 msgid "The Intel Management Engine Key Manifest must be valid so that the device firmware can be trusted by the CPU."
@@ -3184,6 +3225,10 @@ msgstr "Version[fwupd]"
 #. TRANSLATORS: this is a prefix on the console
 msgid "WARNING"
 msgstr "VARNING"
+
+#. TRANSLATORS: command description
+msgid "Wait for a device to appear"
+msgstr "Vänta på att en enhet ska dyka upp"
 
 #. TRANSLATORS: waiting for device to do something
 msgid "Waiting…"
