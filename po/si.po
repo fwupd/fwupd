@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"Language-Team: Sinhala (http://www.transifex.com/freedesktop/fwupd/language/si/)\n"
+"Language-Team: Sinhala (http://app.transifex.com/freedesktop/fwupd/language/si/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -1236,14 +1236,6 @@ msgstr "SSL දැඩි චෙක්පත් නොසලකා හැරී�
 msgid "Install Duration"
 msgstr "ස්ථාපන කාලය"
 
-#. TRANSLATORS: command description
-msgid "Install a firmware blob on a device"
-msgstr "උපාංගයක ස්ථිරාංග බ්ලොබ් එකක් ස්ථාපනය කරන්න"
-
-#. TRANSLATORS: command description
-msgid "Install a firmware file on this hardware"
-msgstr "මෙම දෘඪාංගයේ ස්ථිරාංග ගොනුවක් ස්ථාපනය කරන්න"
-
 msgid "Install old version of signed system firmware"
 msgstr "අත්සන් කළ පද්ධති ස්ථිරාංගයේ පැරණි අනුවාදය ස්ථාපනය කරන්න"
 
@@ -1476,7 +1468,7 @@ msgstr "අවම අනුවාදය"
 msgid "Mismatched daemon and client, use %s instead"
 msgstr "නොගැලපෙන ඩීමන් සහ සේවාදායකයා, ඒ වෙනුවට %s භාවිතා කරන්න"
 
-#. TRANSLATORS: sets something in daemon.conf
+#. TRANSLATORS: sets something in the daemon configuration file
 msgid "Modifies a daemon configuration value"
 msgstr "ඩීමන් වින්‍යාස අගයක් වෙනස් කරයි"
 

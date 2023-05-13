@@ -12,7 +12,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"Language-Team: Hebrew (http://www.transifex.com/freedesktop/fwupd/language/he/)\n"
+"Language-Team: Hebrew (http://app.transifex.com/freedesktop/fwupd/language/he/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -845,14 +845,6 @@ msgstr "התעלמות מאימות בדיקות בטיחות"
 #. TRANSLATORS: length of time the update takes to apply
 msgid "Install Duration"
 msgstr "משך התקנה"
-
-#. TRANSLATORS: command description
-msgid "Install a firmware blob on a device"
-msgstr "התקנת מקטע בינרי של קושחה על התקן"
-
-#. TRANSLATORS: command description
-msgid "Install a firmware file on this hardware"
-msgstr "מתקין קובץ קושחה בחומרה זו"
 
 msgid "Install old version of signed system firmware"
 msgstr "התקנת גרסה ישנה של קושחת מערכת חתומה"

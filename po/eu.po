@@ -3,59 +3,180 @@
 # This file is distributed under the same license as the fwupd package.
 #
 # Translators:
-# assar <asier.sarasua@gmail.com>, 2017
+# assar <asier.sarasua@gmail.com>, 2017,2023
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"Language-Team: Basque (http://www.transifex.com/freedesktop/fwupd/language/eu/)\n"
+"Language-Team: Basque (http://app.transifex.com/freedesktop/fwupd/language/eu/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Language: eu\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#. TRANSLATORS: this is when a device is hotplugged
-msgid "Added"
-msgstr "Gehitua"
+#. TRANSLATORS: more than a minute
+#, c-format
+msgid "%.0f minute remaining"
+msgid_plural "%.0f minutes remaining"
+msgstr[0] "Minutu%.0f falta da"
+msgstr[1] "%.0f minutu falta dira"
 
-#. TRANSLATORS: this is when a device is hotplugged
+#. TRANSLATORS: waiting for user to authenticate
+msgid "Authenticating…"
+msgstr "Autentifikatzen…"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to modify daemon configuration"
+msgstr "Autentifikazioa behar da daemon-aren konfigurazioa aldatzeko"
+
+#. TRANSLATORS: this is to abort the interactive prompt
+msgid "Cancel"
+msgstr "Utzi"
+
 #. TRANSLATORS: this is when the daemon state changes
 msgid "Changed"
 msgstr "Aldatua"
+
+#. TRANSLATORS: get interactive prompt, where branch is the
+#. * supplier of the firmware, e.g. "non-free" or "free"
+msgid "Choose branch"
+msgstr "Aukeratu adarra"
+
+#. TRANSLATORS: get interactive prompt
+msgid "Choose volume"
+msgstr "Aukeratu bolumena"
 
 #. TRANSLATORS: error message
 msgid "Command not found"
 msgstr "Ez da komandoa aurkitu"
 
-#. TRANSLATORS: detected a DFU device
+#. TRANSLATORS: decompressing the firmware file
+msgid "Decompressing…"
+msgstr "Deskonprimatzen…"
+
+#. TRANSLATORS: command line option
+msgid "Device update method"
+msgstr "Gailua eguneratzeko metodoa"
+
+#. TRANSLATORS: command line option
+msgid "Display version"
+msgstr "Bistaratze-bertsioa"
+
+#. TRANSLATORS: success
+#. success
+msgid "Done!"
+msgstr "Egina!"
+
+#. TRANSLATORS: downloading from a remote server
+msgid "Downloading…"
+msgstr "Deskargatzen…"
+
+msgid "Enable"
+msgstr "Gaitu"
+
+#. TRANSLATORS: Suffix: the HSI result
+#. TRANSLATORS: Plugin is active and in use
+#. TRANSLATORS: if the remote is enabled
+msgid "Enabled"
+msgstr "Gaituta"
+
+#. TRANSLATORS: erasing contents of the flash chips
+msgid "Erasing…"
+msgstr "Ezabatzen…"
+
+#. TRANSLATORS: failed to read measurements file
+msgid "Failed to parse file"
+msgstr "Huts egin du fitxategiaren analisiak"
+
+#. TRANSLATORS: Suffix: the HSI result
 msgid "Found"
 msgstr "Aurkitua"
 
-#. TRANSLATORS: Appstream ID for the hardware type
-msgid "ID"
-msgstr "IDa"
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgctxt "A single GUID"
+msgid "GUID"
+msgstr "GUIDa"
 
-#. TRANSLATORS: interface name, e.g. "Flash"
-#. TRANSLATORS: device name, e.g. 'ColorHug2'
-#. TRANSLATORS: section header for the release name
-msgid "Name"
-msgstr "Izena"
+msgid "Get BIOS settings"
+msgstr "Eskuratu BIOSaren ezarpenak"
 
-#. TRANSLATORS: DFU protocol version, e.g. 1.1
-msgid "Protocol"
-msgstr "Protokoloa"
+#. TRANSLATORS: daemon is inactive
+msgid "Idle…"
+msgstr "Inaktibo…"
 
-#. TRANSLATORS: these are areas of memory on the chip
-msgid "Region"
-msgstr "Eskualdea"
+#. TRANSLATORS: console message when no Plymouth is installed
+msgid "Installing Firmware…"
+msgstr "Firmwarea instalatzen…"
 
-#. TRANSLATORS: this is when a device is hotplugged
-msgid "Removed"
-msgstr "Kendua"
+#. TRANSLATORS: this is shown when updating the firmware after the reboot
+msgid "Installing firmware update…"
+msgstr "Firmwarearen eguneratzea instalatzen..."
 
-#. TRANSLATORS: probably not run as root...
-#. TRANSLATORS: device has failed to report status
-#. TRANSLATORS: device status, e.g. "OK"
-msgid "Status"
-msgstr "Egoera"
+#. TRANSLATORS: time remaining for completing firmware flash
+msgid "Less than one minute remaining"
+msgstr "Minutu bat baino gutxiago falta da"
+
+#. TRANSLATORS: parsing the firmware information
+msgid "Loading…"
+msgstr "Kargatzen…"
+
+msgid "Modify daemon configuration"
+msgstr "Aldatu daemon-aren konfigurazioa"
+
+msgid "Print the version number"
+msgstr "Inprimatu bertsio-zenbakia"
+
+#. TRANSLATORS: reading from the flash chips
+msgid "Reading…"
+msgstr "Irakurtzen…"
+
+#. TRANSLATORS: console message when not using plymouth
+msgid "Rebooting…"
+msgstr "Berrabiarazten…"
+
+#. TRANSLATORS: we asked the user to choose an option and they declined
+msgid "Request canceled"
+msgstr "Eskaria utzi da"
+
+#. TRANSLATORS: restarting the device to pick up new F/W
+msgid "Restarting device…"
+msgstr "Gailua berrabiarazten…"
+
+#. TRANSLATORS: scheduling an update to be done on the next boot
+msgid "Scheduling…"
+msgstr "Programatzen…"
+
+#. TRANSLATORS: Volume has been chosen by the user
+msgid "Selected volume"
+msgstr "Hautatutako bolumena"
+
+#. TRANSLATORS: command line option
+msgid "Show all results"
+msgstr "Erakutsi emaitza guztiak"
+
+#. TRANSLATORS: command line option
+msgid "Show devices that are not updatable"
+msgstr "Erakutsi eguneragarriak ez diren gailuak"
+
+#. TRANSLATORS: current daemon status is unknown
+#. TRANSLATORS: we don't know the license of the update
+#. TRANSLATORS: unknown release urgency
+msgid "Unknown"
+msgstr "Ezezaguna"
+
+#. TRANSLATORS: verifying we wrote the firmware correctly
+msgid "Verifying…"
+msgstr "Egiaztatzen…"
+
+#. TRANSLATORS: this is a prefix on the console
+msgid "WARNING"
+msgstr "ABISUA"
+
+#. TRANSLATORS: waiting for device to do something
+msgid "Waiting…"
+msgstr "Itxaroten…"
+
+#. TRANSLATORS: writing to the flash chips
+msgid "Writing…"
+msgstr "Idazten…"

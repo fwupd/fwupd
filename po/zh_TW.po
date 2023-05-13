@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"Language-Team: Chinese (Taiwan) (http://www.transifex.com/freedesktop/fwupd/language/zh_TW/)\n"
+"Language-Team: Chinese (Taiwan) (http://app.transifex.com/freedesktop/fwupd/language/zh_TW/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -331,14 +331,6 @@ msgstr "取得上次更新的結果"
 #. TRANSLATORS: daemon is inactive
 msgid "Idle…"
 msgstr "閒置…"
-
-#. TRANSLATORS: command description
-msgid "Install a firmware blob on a device"
-msgstr "在裝置上安裝韌體 blob"
-
-#. TRANSLATORS: command description
-msgid "Install a firmware file on this hardware"
-msgstr "在此硬體安裝韌體檔案"
 
 msgid "Install signed device firmware"
 msgstr "安裝已簽署的裝置韌體"

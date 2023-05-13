@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"Language-Team: Hungarian (http://www.transifex.com/freedesktop/fwupd/language/hu/)\n"
+"Language-Team: Hungarian (http://app.transifex.com/freedesktop/fwupd/language/hu/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -635,14 +635,6 @@ msgstr "Biztonsági ellenőrzések mellőzése"
 #. TRANSLATORS: length of time the update takes to apply
 msgid "Install Duration"
 msgstr "Telepítés hossza"
-
-#. TRANSLATORS: command description
-msgid "Install a firmware blob on a device"
-msgstr "Firmware blob telepítése egy eszközre"
-
-#. TRANSLATORS: command description
-msgid "Install a firmware file on this hardware"
-msgstr "Egy firmware fájl telepítése ezen a hardveren"
 
 msgid "Install signed device firmware"
 msgstr "Aláírt eszköz firmware telepítése"

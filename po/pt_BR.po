@@ -12,7 +12,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"Language-Team: Portuguese (Brazil) (http://www.transifex.com/freedesktop/fwupd/language/pt_BR/)\n"
+"Language-Team: Portuguese (Brazil) (http://app.transifex.com/freedesktop/fwupd/language/pt_BR/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -1204,14 +1204,6 @@ msgstr "Ignorando as verificações estritas de SSL; para fazer isso automaticam
 msgid "Install Duration"
 msgstr "Duração de instalação"
 
-#. TRANSLATORS: command description
-msgid "Install a firmware blob on a device"
-msgstr "Instala um blob de firmware em um dispositivo"
-
-#. TRANSLATORS: command description
-msgid "Install a firmware file on this hardware"
-msgstr "Instala um arquivo de firmware neste periférico"
-
 msgid "Install old version of signed system firmware"
 msgstr "Instalar versão antiga do firmware do sistema assinado"
 
@@ -1449,7 +1441,7 @@ msgstr "Versão mínima"
 msgid "Mismatched daemon and client, use %s instead"
 msgstr "Daemon e cliente incompatíveis, use %s"
 
-#. TRANSLATORS: sets something in daemon.conf
+#. TRANSLATORS: sets something in the daemon configuration file
 msgid "Modifies a daemon configuration value"
 msgstr "Modifica um valor de configuração do daemon"
 

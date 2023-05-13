@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"Language-Team: Friulian (http://www.transifex.com/freedesktop/fwupd/language/fur/)\n"
+"Language-Team: Friulian (http://app.transifex.com/freedesktop/fwupd/language/fur/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -767,14 +767,6 @@ msgstr "In polse…"
 msgid "Ignore validation safety checks"
 msgstr "Ignore la covalide dai controi di sigurece"
 
-#. TRANSLATORS: command description
-msgid "Install a firmware blob on a device"
-msgstr "Instale un binari firmware suntun dispositîf"
-
-#. TRANSLATORS: command description
-msgid "Install a firmware file on this hardware"
-msgstr "Instale un file firmware su chest hardware"
-
 msgid "Install old version of signed system firmware"
 msgstr "Instale la version vecje dal firmware di sisteme firmât"
 
@@ -1000,7 +992,7 @@ msgstr "URI metadata"
 msgid "Minimum Version"
 msgstr "Version minime"
 
-#. TRANSLATORS: sets something in daemon.conf
+#. TRANSLATORS: sets something in the daemon configuration file
 msgid "Modifies a daemon configuration value"
 msgstr "Al modifiche un valôr di configurazion dal demoni"
 

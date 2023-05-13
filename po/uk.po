@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"Language-Team: Ukrainian (http://www.transifex.com/freedesktop/fwupd/language/uk/)\n"
+"Language-Team: Ukrainian (http://app.transifex.com/freedesktop/fwupd/language/uk/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -351,6 +351,10 @@ msgstr "Захист від запису мікропрограми AMD"
 msgid "AMD Secure Processor Rollback Protection"
 msgstr "Захист від відновлення попередніх станів процесора AMD"
 
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "ARCHIVE FIRMWARE METAINFO [FIRMWARE] [METAINFO] [JCATFILE]"
+msgstr "АРХІВ МІКРОПРОГРАМА МЕТАІНФО [МІКРОПРОГРАМА] [МЕТАІНФО] [ФАЙЛJCAT]"
+
 #. TRANSLATORS: the user needs to do something, e.g. remove the device
 msgid "Action Required:"
 msgstr "Потрібна дія:"
@@ -598,6 +602,10 @@ msgid "Branch"
 msgstr "Гілка"
 
 #. TRANSLATORS: command description
+msgid "Build a cabinet archive from a firmware blob and XML metadata"
+msgstr "Зібрати архів cab з бінарної мікропрограми та метаданих XML"
+
+#. TRANSLATORS: command description
 msgid "Build a firmware file"
 msgstr "Зібрати файл мікропрограми"
 
@@ -746,6 +754,10 @@ msgstr "Ід. пристрою"
 msgid "Device added:"
 msgstr "Додано пристрій:"
 
+#. TRANSLATORS: the device is already connected
+msgid "Device already exists"
+msgstr "Пристрій вже існує"
+
 #. TRANSLATORS: for example the batteries *inside* the Bluetooth mouse
 msgid "Device battery power is too low"
 msgstr "Рівень заряду акумулятора пристрою є надто низьким"
@@ -778,6 +790,10 @@ msgstr "Для перевірки версії потрібна мікропро
 #. TRANSLATORS: emulated means we are pretending to be a different model
 msgid "Device is emulated"
 msgstr "Емульований пристрій"
+
+#. TRANSLATORS: device cannot be interrupted, for instance taking a phone call
+msgid "Device is in use"
+msgstr "Пристрій використано сторонніми засобами"
 
 #. TRANSLATORS: Is locked and can be unlocked
 msgid "Device is locked"
@@ -1408,6 +1424,10 @@ msgctxt "A single GUID"
 msgid "GUID"
 msgstr "GUID"
 
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "GUID|DEVICE-ID"
+msgstr "GUID|ІД-ПРИСТРОЮ"
+
 msgid "Get BIOS settings"
 msgstr "Отримання параметрів BIOS"
 
@@ -1552,12 +1572,12 @@ msgid "Install Duration"
 msgstr "Тривалість встановлення"
 
 #. TRANSLATORS: command description
-msgid "Install a firmware blob on a device"
-msgstr "Встановити бінарну мікропрограму на пристрій"
+msgid "Install a firmware file in cabinet format on this hardware"
+msgstr "Встановити файл мікропрограми у форматі cab на це обладнання"
 
 #. TRANSLATORS: command description
-msgid "Install a firmware file on this hardware"
-msgstr "Встановити файл мікропрограми на це обладнання"
+msgid "Install a raw firmware blob on a device"
+msgstr "Встановити просту бінарну мікропрограму на пристрій"
 
 #. TRANSLATORS: command description
 msgid "Install a specific firmware on a device, all possible devices will also be installed once the CAB matches"
@@ -1714,6 +1734,10 @@ msgstr "Некоректна"
 msgid "Invalid arguments"
 msgstr "Некоректні аргументи"
 
+#. TRANSLATORS: error message
+msgid "Invalid arguments, expected at least ARCHIVE FIRMWARE METAINFO"
+msgstr "Некоректні аргументи. Мало бути вказано принаймні АРХІВ МІКРОПРОГРАМА МЕТАІНФО"
+
 #. TRANSLATORS: version is older
 msgid "Is downgrade"
 msgstr "Є старішою версією"
@@ -1823,6 +1847,10 @@ msgid "List supported firmware updates"
 msgstr "Показати список підтримуваних оновлень мікропрограми"
 
 #. TRANSLATORS: command description
+msgid "List the available firmware GTypes"
+msgstr "Вивести список доступних GType мікропрограми"
+
+#. TRANSLATORS: command description
 msgid "List the available firmware types"
 msgstr "Вивести список доступних типів мікропрограм"
 
@@ -1923,7 +1951,7 @@ msgstr "Мінімальне значення"
 msgid "Mismatched daemon and client, use %s instead"
 msgstr "Невідповідність фонової служби і клієнта, скористайтеся краще %s"
 
-#. TRANSLATORS: sets something in daemon.conf
+#. TRANSLATORS: sets something in the daemon configuration file
 msgid "Modifies a daemon configuration value"
 msgstr "Змінює значення налаштувань фонової служби"
 
@@ -1974,6 +2002,10 @@ msgstr "Немає знижень версії для %s"
 #. TRANSLATORS: nothing found
 msgid "No firmware IDs found"
 msgstr "Не знайдено ідентифікаторів мікропрограм"
+
+#. TRANSLATORS: nothing found
+msgid "No firmware found"
+msgstr "Не знайдено мікропрограми"
 
 #. TRANSLATORS: nothing attached that can be upgraded
 msgid "No hardware detected with firmware update capability"
@@ -2640,6 +2672,11 @@ msgstr[3] "Успішно вивантажено %u звіт"
 msgid "Successfully verified device checksums"
 msgstr "Успішно перевірено контрольні суми пристрою"
 
+#. TRANSLATORS: the device showed up in time
+#, c-format
+msgid "Successfully waited %.0fms for device"
+msgstr "Успішне очікування %.0fмс на пристрій"
+
 #. TRANSLATORS: one line summary of device
 msgid "Summary"
 msgstr "Резюме"
@@ -2780,6 +2817,10 @@ msgstr "Перевірено"
 #, c-format
 msgid "Tested by %s"
 msgstr "Перевірено %s"
+
+#. TRANSLATORS: someone we trust has tested this
+msgid "Tested by trusted vendor"
+msgstr "Перевірено надійним постачальником"
 
 #. TRANSLATORS: longer description
 msgid "The Intel Management Engine Key Manifest must be valid so that the device firmware can be trusted by the CPU."
@@ -3206,6 +3247,10 @@ msgstr "Версія[fwupd]"
 #. TRANSLATORS: this is a prefix on the console
 msgid "WARNING"
 msgstr "УВАГА"
+
+#. TRANSLATORS: command description
+msgid "Wait for a device to appear"
+msgstr "Очікувати на появу пристрою"
 
 #. TRANSLATORS: waiting for device to do something
 msgid "Waiting…"
