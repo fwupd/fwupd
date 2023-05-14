@@ -4114,6 +4114,15 @@ fwupd_client_refresh_remote_async(FwupdClient *self,
 			     g_steal_pointer(&data),
 			     (GDestroyNotify)fwupd_client_refresh_remote_data_free);
 
+	/* nothing to do */
+	if (fwupd_remote_get_kind(remote) != FWUPD_REMOTE_KIND_DOWNLOAD) {
+		g_debug("ignoring %s as %s",
+			fwupd_remote_get_id(remote),
+			fwupd_remote_kind_to_string(fwupd_remote_get_kind(remote)));
+		g_task_return_boolean(task, TRUE);
+		return;
+	}
+
 	/* sanity check */
 	if (fwupd_remote_get_metadata_uri_sig(remote) == NULL ||
 	    fwupd_remote_get_metadata_uri(remote) == NULL) {
