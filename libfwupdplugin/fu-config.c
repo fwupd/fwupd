@@ -26,9 +26,15 @@ static guint signals[SIGNAL_LAST] = {0};
 #define FU_CONFIG_FILE_MODE_SECURE 0640
 
 typedef struct {
+	gchar *filename;
+	GFile *file;
+	GFileMonitor *monitor; /* nullable */
+	gboolean is_writable;
+} FuConfigItem;
+
+typedef struct {
 	GKeyFile *keyfile;
-	GPtrArray *filenames; /* (element-type utf-8) */
-	GPtrArray *monitors;  /* (element-type GFileMonitor) */
+	GPtrArray *items; /* (element-type FuConfigItem) */
 } FuConfigPrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE(FuConfig, fu_config, G_TYPE_OBJECT)
@@ -75,6 +81,20 @@ g_file_set_contents_full(const gchar *filename,
 #endif
 
 static void
+fu_config_item_free(FuConfigItem *item)
+{
+	if (item->monitor != NULL) {
+		g_file_monitor_cancel(item->monitor);
+		g_object_unref(item->monitor);
+	}
+	g_object_unref(item->file);
+	g_free(item->filename);
+	g_free(item);
+}
+
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuConfigItem, fu_config_item_free)
+
+static void
 fu_config_emit_changed(FuConfig *self)
 {
 	g_debug("::configuration changed");
@@ -101,47 +121,51 @@ fu_config_reload(FuConfig *self, GError **error)
 				   "uefi_capsule.conf",
 				   NULL};
 
-	/* ensure the config files are set to the correct permissions */
-	for (guint i = 0; i < priv->filenames->len; i++) {
-		const gchar *fn = g_ptr_array_index(priv->filenames, i);
-		if (g_file_test(fn, G_FILE_TEST_EXISTS)) {
-			GStatBuf st = {0x0};
-			gint rc = g_stat(fn, &st);
-			if (rc != 0) {
-				g_set_error(error,
-					    G_IO_ERROR,
-					    G_IO_ERROR_FAILED,
-					    "failed to get permission of %s",
-					    fn);
+	/* ensure mutable config files are set to the correct permissions */
+	for (guint i = 0; i < priv->items->len; i++) {
+		FuConfigItem *item = g_ptr_array_index(priv->items, i);
+		guint32 st_mode;
+		g_autoptr(GFileInfo) info = NULL;
+
+		/* check permissions */
+		if (!item->is_writable) {
+			g_debug("skipping mode check for %s as not writable", item->filename);
+			continue;
+		}
+		info = g_file_query_info(item->file,
+					 G_FILE_ATTRIBUTE_UNIX_MODE,
+					 G_FILE_QUERY_INFO_NONE,
+					 NULL,
+					 error);
+		if (info == NULL)
+			return FALSE;
+		st_mode = g_file_info_get_attribute_uint32(info, G_FILE_ATTRIBUTE_UNIX_MODE) & 0777;
+		if (st_mode != FU_CONFIG_FILE_MODE_SECURE) {
+			g_info("fixing %s from mode 0%o to 0%o",
+			       item->filename,
+			       st_mode,
+			       (guint)FU_CONFIG_FILE_MODE_SECURE);
+			g_file_info_set_attribute_uint32(info,
+							 G_FILE_ATTRIBUTE_UNIX_MODE,
+							 FU_CONFIG_FILE_MODE_SECURE);
+			if (!g_file_set_attributes_from_info(item->file,
+							     info,
+							     G_FILE_QUERY_INFO_NONE,
+							     NULL,
+							     error))
 				return FALSE;
-			}
-			st.st_mode &= 0777;
-			if (st.st_mode != FU_CONFIG_FILE_MODE_SECURE) {
-				g_info("mode was 0%o, and needs to be 0%o",
-				       st.st_mode,
-				       (guint)FU_CONFIG_FILE_MODE_SECURE);
-				rc = g_chmod(fn, FU_CONFIG_FILE_MODE_SECURE);
-				if (rc != 0) {
-					g_set_error(error,
-						    G_IO_ERROR,
-						    G_IO_ERROR_FAILED,
-						    "failed to change permission of %s",
-						    fn);
-					return FALSE;
-				}
-			}
 		}
 	}
 
 	/* we have to load each file into a buffer as g_key_file_load_from_file() clears the
 	 * GKeyFile state before loading each file, and we want to allow the mutable version to be
 	 * incomplete and just *override* a specific option */
-	for (guint i = 0; i < priv->filenames->len; i++) {
-		const gchar *fn = g_ptr_array_index(priv->filenames, i);
-		g_autofree gchar *dirname = g_path_get_dirname(fn);
-		g_debug("trying to load config values from %s", fn);
-		if (g_file_test(fn, G_FILE_TEST_EXISTS)) {
-			g_autoptr(GBytes) blob = fu_bytes_get_contents(fn, error);
+	for (guint i = 0; i < priv->items->len; i++) {
+		FuConfigItem *item = g_ptr_array_index(priv->items, i);
+		g_autofree gchar *dirname = g_path_get_dirname(item->filename);
+		g_debug("trying to load config values from %s", item->filename);
+		if (g_file_query_exists(item->file, NULL)) {
+			g_autoptr(GBytes) blob = fu_bytes_get_contents(item->filename, error);
 			if (blob == NULL)
 				return FALSE;
 			fu_byte_array_append_bytes(buf, blob);
@@ -172,7 +196,8 @@ fu_config_reload(FuConfig *self, GError **error)
 
 	/* migration needed */
 	if (legacy_cfg_files->len > 0) {
-		const gchar *fn_default = g_ptr_array_index(priv->filenames, 0);
+		FuConfigItem *item = g_ptr_array_index(priv->items, 0);
+		const gchar *fn_default = item->filename;
 		g_autofree gchar *data = NULL;
 
 		/* do not write empty keys migrated from daemon.conf */
@@ -286,7 +311,6 @@ fu_config_set_value(FuConfig *self,
 		    GError **error)
 {
 	FuConfigPrivate *priv = GET_PRIVATE(self);
-	const gchar *fn;
 	g_autofree gchar *data = NULL;
 
 	g_return_val_if_fail(FU_IS_CONFIG(self), FALSE);
@@ -295,25 +319,33 @@ fu_config_set_value(FuConfig *self,
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* sanity check */
-	if (priv->filenames->len == 0) {
+	if (priv->items->len == 0) {
 		g_set_error(error, G_IO_ERROR, G_IO_ERROR_NOT_INITIALIZED, "no config to load");
 		return FALSE;
 	}
 
-	/* only write the file in /etc */
-	fn = g_ptr_array_index(priv->filenames, 0);
+	/* only write the file to a mutable location */
 	g_key_file_set_string(priv->keyfile, section, key, value);
 	data = g_key_file_to_data(priv->keyfile, NULL, error);
 	if (data == NULL)
 		return FALSE;
-	if (!g_file_set_contents_full(fn,
-				      data,
-				      -1,
-				      G_FILE_SET_CONTENTS_CONSISTENT,
-				      FU_CONFIG_FILE_MODE_SECURE, /* only readable by root */
-				      error))
-		return FALSE;
-	return fu_config_reload(self, error);
+	for (guint i = 0; i < priv->items->len; i++) {
+		FuConfigItem *item = g_ptr_array_index(priv->items, i);
+		if (!item->is_writable)
+			continue;
+		if (!g_file_set_contents_full(item->filename,
+					      data,
+					      -1,
+					      G_FILE_SET_CONTENTS_CONSISTENT,
+					      FU_CONFIG_FILE_MODE_SECURE, /* only for root */
+					      error))
+			return FALSE;
+		return fu_config_reload(self, error);
+	}
+
+	/* failed */
+	g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_PERMISSION_DENIED, "no writable config");
+	return FALSE;
 }
 
 /**
@@ -438,6 +470,34 @@ fu_config_get_value_u64(FuConfig *self,
 	return value;
 }
 
+static gboolean
+fu_config_add_location(FuConfig *self, const gchar *dirname, GError **error)
+{
+	FuConfigPrivate *priv = GET_PRIVATE(self);
+	g_autoptr(FuConfigItem) item = g_new0(FuConfigItem, 1);
+	item->filename = g_build_filename(dirname, "fwupd.conf", NULL);
+	item->file = g_file_new_for_path(item->filename);
+
+	/* is writable */
+	if (g_file_query_exists(item->file, NULL)) {
+		g_autoptr(GFileInfo) info = g_file_query_info(item->file,
+							      G_FILE_ATTRIBUTE_ACCESS_CAN_WRITE,
+							      G_FILE_QUERY_INFO_NONE,
+							      NULL,
+							      error);
+		if (info == NULL)
+			return FALSE;
+		item->is_writable =
+		    g_file_info_get_attribute_boolean(info, G_FILE_ATTRIBUTE_ACCESS_CAN_WRITE);
+		if (!item->is_writable)
+			g_debug("config %s is immutable", item->filename);
+	}
+
+	/* success */
+	g_ptr_array_add(priv->items, g_steal_pointer(&item));
+	return TRUE;
+}
+
 /**
  * fu_config_load:
  * @self: a #FuConfig
@@ -457,28 +517,27 @@ fu_config_load(FuConfig *self, GError **error)
 	g_autofree gchar *configdir = fu_path_from_kind(FU_PATH_KIND_SYSCONFDIR_PKG);
 
 	g_return_val_if_fail(FU_IS_CONFIG(self), FALSE);
-	g_return_val_if_fail(priv->filenames->len == 0, FALSE);
+	g_return_val_if_fail(priv->items->len == 0, FALSE);
 
 	/* load the main daemon config file */
-	g_ptr_array_add(priv->filenames, g_build_filename(configdir, "fwupd.conf", NULL));
-	g_ptr_array_add(priv->filenames, g_build_filename(configdir_mut, "fwupd.conf", NULL));
+	if (!fu_config_add_location(self, configdir, error))
+		return FALSE;
+	if (!fu_config_add_location(self, configdir_mut, error))
+		return FALSE;
 	if (!fu_config_reload(self, error))
 		return FALSE;
 
 	/* set up a notify watches */
-	for (guint i = 0; i < priv->filenames->len; i++) {
-		const gchar *fn = g_ptr_array_index(priv->filenames, i);
-		g_autoptr(GFile) file = g_file_new_for_path(fn);
-		g_autoptr(GFileMonitor) monitor = NULL;
-
-		monitor = g_file_monitor(file, G_FILE_MONITOR_NONE, NULL, error);
-		if (monitor == NULL)
+	for (guint i = 0; i < priv->items->len; i++) {
+		FuConfigItem *item = g_ptr_array_index(priv->items, i);
+		g_autoptr(GFile) file = g_file_new_for_path(item->filename);
+		item->monitor = g_file_monitor(file, G_FILE_MONITOR_NONE, NULL, error);
+		if (item->monitor == NULL)
 			return FALSE;
-		g_signal_connect(G_FILE_MONITOR(monitor),
+		g_signal_connect(G_FILE_MONITOR(item->monitor),
 				 "changed",
 				 G_CALLBACK(fu_config_monitor_changed_cb),
 				 self);
-		g_ptr_array_add(priv->monitors, g_steal_pointer(&monitor));
 	}
 
 	/* success */
@@ -491,8 +550,7 @@ fu_config_init(FuConfig *self)
 {
 	FuConfigPrivate *priv = GET_PRIVATE(self);
 	priv->keyfile = g_key_file_new();
-	priv->filenames = g_ptr_array_new_with_free_func(g_free);
-	priv->monitors = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
+	priv->items = g_ptr_array_new_with_free_func((GDestroyNotify)fu_config_item_free);
 }
 
 static void
@@ -500,13 +558,8 @@ fu_config_finalize(GObject *obj)
 {
 	FuConfig *self = FU_CONFIG(obj);
 	FuConfigPrivate *priv = GET_PRIVATE(self);
-	for (guint i = 0; i < priv->monitors->len; i++) {
-		GFileMonitor *monitor = g_ptr_array_index(priv->monitors, i);
-		g_file_monitor_cancel(monitor);
-	}
 	g_key_file_unref(priv->keyfile);
-	g_ptr_array_unref(priv->filenames);
-	g_ptr_array_unref(priv->monitors);
+	g_ptr_array_unref(priv->items);
 	G_OBJECT_CLASS(fu_config_parent_class)->finalize(obj);
 }
 
