@@ -6,3 +6,9 @@ Plugin = fastboot
 [USB\VID_18D1&PID_D00D]
 FastbootBlockSize = 16384
 FastbootOperationDelay = 250
+
+# Fibocom device fastboot
+[USB\VID_2CB7&PID_D00D]
+FastbootBlockSize = 16384
+FastbootOperationDelay = 0
+Plugin = fibocom

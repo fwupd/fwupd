@@ -31,8 +31,17 @@ fu_fastboot_plugin_constructed(GObject *obj)
 }
 
 static void
+fu_fastboot_plugin_device_added(FuPlugin *self, FuDevice *device)
+{
+	if (fu_device_has_vendor_id(device, "USB:0x2CB7")) {
+		fu_device_set_plugin(device, "fibocom");
+	}
+}
+
+static void
 fu_fastboot_plugin_class_init(FuFastbootPluginClass *klass)
 {
 	FuPluginClass *plugin_class = FU_PLUGIN_CLASS(klass);
 	plugin_class->constructed = fu_fastboot_plugin_constructed;
+	plugin_class->device_added = fu_fastboot_plugin_device_added;
 }
