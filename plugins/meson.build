@@ -44,6 +44,7 @@ plugins = [
   'emmc',
   'ep963x',
   'fastboot',
+  'fibocom',
   'flashrom',
   'focalfp',
   'fpc',
