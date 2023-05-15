@@ -123,7 +123,7 @@ fu_efi_firmware_decompress_lzma(GBytes *blob, GError **error)
 			    rc);
 		return NULL;
 	}
-	return g_byte_array_free_to_bytes(g_steal_pointer(&buf));
+	return g_bytes_new(buf->data, buf->len);
 #else
 	g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED, "missing lzma support");
 	return NULL;

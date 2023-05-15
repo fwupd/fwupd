@@ -340,11 +340,12 @@ fu_wac_firmware_calc_checksum(GByteArray *buf)
 	return fu_sum8(buf->data, buf->len) ^ 0xFF;
 }
 
-static GBytes *
+static GByteArray *
 fu_wac_firmware_write(FuFirmware *firmware, GError **error)
 {
 	g_autoptr(GPtrArray) images = fu_firmware_get_images(firmware);
 	g_autoptr(GString) str = g_string_new(NULL);
+	g_autoptr(GByteArray) buf = g_byte_array_new();
 	g_autoptr(GByteArray) buf_hdr = g_byte_array_new();
 
 	/* fw header */
@@ -388,7 +389,8 @@ fu_wac_firmware_write(FuFirmware *firmware, GError **error)
 	}
 
 	/* success */
-	return g_string_free_to_bytes(g_steal_pointer(&str));
+	g_byte_array_append(buf, (const guint8 *)str->str, str->len);
+	return g_steal_pointer(&buf);
 }
 
 static void

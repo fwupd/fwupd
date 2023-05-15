@@ -74,11 +74,11 @@ fu_intel_thunderbolt_firmware_parse(FuFirmware *firmware,
 	    ->parse(firmware, fw, offset + farb_pointer, flags, error);
 }
 
-static GBytes *
+static GByteArray *
 fu_intel_thunderbolt_firmware_write(FuFirmware *firmware, GError **error)
 {
 	g_autoptr(GByteArray) buf = g_byte_array_new();
-	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GByteArray) buf_nvm = NULL;
 
 	/* sanity check */
 	if (fu_firmware_get_offset(firmware) < 0x08) {
@@ -94,12 +94,14 @@ fu_intel_thunderbolt_firmware_write(FuFirmware *firmware, GError **error)
 	fu_byte_array_set_size(buf, fu_firmware_get_offset(firmware), 0x00);
 
 	/* FuIntelThunderboltNvm->write */
-	blob =
+	buf_nvm =
 	    FU_FIRMWARE_CLASS(fu_intel_thunderbolt_firmware_parent_class)->write(firmware, error);
-	fu_byte_array_append_bytes(buf, blob);
+	if (buf_nvm == NULL)
+		return NULL;
+	g_byte_array_append(buf, buf_nvm->data, buf_nvm->len);
 
 	/* success */
-	return g_byte_array_free_to_bytes(g_steal_pointer(&buf));
+	return g_steal_pointer(&buf);
 }
 
 static void

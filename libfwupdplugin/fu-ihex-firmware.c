@@ -512,9 +512,10 @@ fu_ihex_firmware_image_to_string(GBytes *bytes,
 	return TRUE;
 }
 
-static GBytes *
+static GByteArray *
 fu_ihex_firmware_write(FuFirmware *firmware, GError **error)
 {
+	g_autoptr(GByteArray) buf = g_byte_array_new();
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(FuFirmware) img_sig = NULL;
 	g_autoptr(GString) str = g_string_new("");
@@ -546,7 +547,8 @@ fu_ihex_firmware_write(FuFirmware *firmware, GError **error)
 
 	/* add EOF */
 	fu_ihex_firmware_emit_chunk(str, 0x0, FU_IHEX_FIRMWARE_RECORD_TYPE_EOF, NULL, 0);
-	return g_bytes_new(str->str, str->len);
+	g_byte_array_append(buf, (const guint8 *)str->str, str->len);
+	return g_steal_pointer(&buf);
 }
 
 static void

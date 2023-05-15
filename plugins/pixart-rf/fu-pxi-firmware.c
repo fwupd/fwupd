@@ -136,7 +136,7 @@ fu_pxi_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
 	return TRUE;
 }
 
-static GBytes *
+static GByteArray *
 fu_pxi_firmware_write(FuFirmware *firmware, GError **error)
 {
 	FuPxiFirmware *self = FU_PXI_FIRMWARE(firmware);
@@ -202,7 +202,7 @@ fu_pxi_firmware_write(FuFirmware *firmware, GError **error)
 	}
 
 	g_byte_array_append(buf, fw_header, sizeof(fw_header));
-	return g_byte_array_free_to_bytes(g_steal_pointer(&buf));
+	return g_steal_pointer(&buf);
 }
 
 static void

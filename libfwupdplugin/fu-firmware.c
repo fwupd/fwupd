@@ -598,7 +598,7 @@ fu_firmware_get_bytes_with_patches(FuFirmware *self, GError **error)
 	}
 
 	/* success */
-	return g_byte_array_free_to_bytes(g_steal_pointer(&buf));
+	return g_bytes_new(buf->data, buf->len);
 }
 
 /**
@@ -1261,8 +1261,12 @@ fu_firmware_write(FuFirmware *self, GError **error)
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
 	/* subclassed */
-	if (klass->write != NULL)
-		return klass->write(self, error);
+	if (klass->write != NULL) {
+		g_autoptr(GByteArray) buf = klass->write(self, error);
+		if (buf == NULL)
+			return NULL;
+		return g_bytes_new(buf->data, buf->len);
+	}
 
 	/* just add default blob */
 	return fu_firmware_get_bytes_with_patches(self, error);

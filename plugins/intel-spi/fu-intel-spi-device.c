@@ -439,7 +439,7 @@ fu_intel_spi_device_dump(FuIntelSpiDevice *self,
 	}
 
 	/* success */
-	return g_byte_array_free_to_bytes(g_steal_pointer(&buf));
+	return g_bytes_new(buf->data, buf->len);
 }
 
 static GBytes *

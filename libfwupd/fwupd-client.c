@@ -5221,7 +5221,7 @@ fwupd_client_download_http(FwupdClient *self, CURL *curl, const gchar *url, GErr
 		return NULL;
 	}
 
-	return g_byte_array_free_to_bytes(g_steal_pointer(&buf));
+	return g_bytes_new(buf->data, buf->len);
 }
 
 static void
@@ -5411,7 +5411,7 @@ fwupd_client_upload_bytes_thread_cb(GTask *task,
 		return;
 	}
 	g_task_return_pointer(task,
-			      g_byte_array_free_to_bytes(g_steal_pointer(&buf)),
+			      g_bytes_new(buf->data, buf->len),
 			      (GDestroyNotify)g_bytes_unref);
 }
 #endif

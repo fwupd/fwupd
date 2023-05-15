@@ -829,7 +829,7 @@ fu_cfi_device_read_firmware(FuCfiDevice *self, gsize bufsz, FuProgress *progress
 	}
 
 	/* success */
-	return g_byte_array_free_to_bytes(g_steal_pointer(&buf));
+	return g_bytes_new(buf->data, buf->len);
 }
 
 static GBytes *

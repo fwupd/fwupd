@@ -458,7 +458,7 @@ fu_cfu_offer_parse(FuFirmware *firmware,
 	return TRUE;
 }
 
-static GBytes *
+static GByteArray *
 fu_cfu_offer_write(FuFirmware *firmware, GError **error)
 {
 	FuCfuOffer *self = FU_CFU_OFFER(firmware);
@@ -483,7 +483,7 @@ fu_cfu_offer_write(FuFirmware *firmware, GError **error)
 	fu_struct_cfu_offer_set_product_id(st, priv->product_id);
 
 	/* success */
-	return g_byte_array_free_to_bytes(g_steal_pointer(&st));
+	return g_steal_pointer(&st);
 }
 
 static gboolean

@@ -256,10 +256,10 @@ fu_efi_firmware_file_write_sections(FuFirmware *firmware, GError **error)
 	}
 
 	/* success */
-	return g_byte_array_free_to_bytes(g_steal_pointer(&buf));
+	return g_bytes_new(buf->data, buf->len);
 }
 
-static GBytes *
+static GByteArray *
 fu_efi_firmware_file_write(FuFirmware *firmware, GError **error)
 {
 	FuEfiFirmwareFile *self = FU_EFI_FIRMWARE_FILE(firmware);
@@ -291,7 +291,7 @@ fu_efi_firmware_file_write(FuFirmware *firmware, GError **error)
 
 	/* success */
 	fu_byte_array_append_bytes(st, blob);
-	return g_byte_array_free_to_bytes(g_steal_pointer(&st));
+	return g_steal_pointer(&st);
 }
 
 static gboolean

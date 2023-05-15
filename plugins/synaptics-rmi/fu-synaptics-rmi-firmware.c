@@ -469,7 +469,7 @@ fu_synaptics_rmi_firmware_get_sig_size(FuSynapticsRmiFirmware *self)
 	return self->sig_size;
 }
 
-static GBytes *
+static GByteArray *
 fu_synaptics_rmi_firmware_write_v0x(FuFirmware *firmware, GError **error)
 {
 	FuSynapticsRmiFirmware *self = FU_SYNAPTICS_RMI_FIRMWARE(firmware);
@@ -510,10 +510,10 @@ fu_synaptics_rmi_firmware_write_v0x(FuFirmware *firmware, GError **error)
 	fu_memwrite_uint32(buf->data + FU_STRUCT_RMI_IMG_OFFSET_CHECKSUM, csum, G_LITTLE_ENDIAN);
 
 	/* success */
-	return g_byte_array_free_to_bytes(g_steal_pointer(&buf));
+	return g_steal_pointer(&buf);
 }
 
-static GBytes *
+static GByteArray *
 fu_synaptics_rmi_firmware_write_v10(FuFirmware *firmware, GError **error)
 {
 	FuSynapticsRmiFirmware *self = FU_SYNAPTICS_RMI_FIRMWARE(firmware);
@@ -594,7 +594,7 @@ fu_synaptics_rmi_firmware_write_v10(FuFirmware *firmware, GError **error)
 	fu_memwrite_uint32(buf->data + FU_STRUCT_RMI_IMG_OFFSET_CHECKSUM, csum, G_LITTLE_ENDIAN);
 
 	/* success */
-	return g_byte_array_free_to_bytes(g_steal_pointer(&buf));
+	return g_steal_pointer(&buf);
 }
 
 static gboolean
@@ -630,7 +630,7 @@ fu_synaptics_rmi_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
 	return TRUE;
 }
 
-static GBytes *
+static GByteArray *
 fu_synaptics_rmi_firmware_write(FuFirmware *firmware, GError **error)
 {
 	FuSynapticsRmiFirmware *self = FU_SYNAPTICS_RMI_FIRMWARE(firmware);

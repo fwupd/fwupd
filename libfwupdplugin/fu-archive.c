@@ -574,7 +574,7 @@ fu_archive_write_cb(struct archive *arch, void *user_data, const void *buf, gsiz
  *
  * Since: 1.8.1
  **/
-GBytes *
+GByteArray *
 fu_archive_write(FuArchive *self,
 		 FuArchiveFormat format,
 		 FuArchiveCompression compression,
@@ -674,7 +674,7 @@ fu_archive_write(FuArchive *self,
 	}
 
 	/* success */
-	return g_byte_array_free_to_bytes(g_steal_pointer(&blob));
+	return g_steal_pointer(&blob);
 #else
 	g_set_error_literal(error,
 			    FWUPD_ERROR,

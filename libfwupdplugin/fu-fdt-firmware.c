@@ -490,7 +490,7 @@ fu_fdt_firmware_write_image(FuFdtFirmware *self,
 	return TRUE;
 }
 
-static GBytes *
+static GByteArray *
 fu_fdt_firmware_write(FuFirmware *firmware, GError **error)
 {
 	FuFdtFirmware *self = FU_FDT_FIRMWARE(firmware);
@@ -554,7 +554,7 @@ fu_fdt_firmware_write(FuFirmware *firmware, GError **error)
 	fu_byte_array_align_up(st_hdr, FU_FIRMWARE_ALIGNMENT_4, 0x0);
 
 	/* success */
-	return g_byte_array_free_to_bytes(g_steal_pointer(&st_hdr));
+	return g_steal_pointer(&st_hdr);
 }
 
 static gboolean

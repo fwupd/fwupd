@@ -313,7 +313,7 @@ fu_ch341a_cfi_device_read_firmware(FuCh341aCfiDevice *self,
 	}
 
 	/* success */
-	return g_byte_array_free_to_bytes(g_steal_pointer(&blob));
+	return g_bytes_new(blob->data, blob->len);
 }
 
 static gboolean

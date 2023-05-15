@@ -36,7 +36,7 @@ fu_bcm57xx_stage2_image_parse(FuFirmware *image,
 	return TRUE;
 }
 
-static GBytes *
+static GByteArray *
 fu_bcm57xx_stage2_image_write(FuFirmware *image, GError **error)
 {
 	const guint8 *buf;
@@ -60,7 +60,7 @@ fu_bcm57xx_stage2_image_write(FuFirmware *image, GError **error)
 
 	/* add CRC */
 	fu_byte_array_append_uint32(blob, fu_bcm57xx_nvram_crc(buf, bufsz), G_LITTLE_ENDIAN);
-	return g_byte_array_free_to_bytes(g_steal_pointer(&blob));
+	return g_steal_pointer(&blob);
 }
 
 static void

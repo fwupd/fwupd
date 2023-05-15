@@ -124,7 +124,7 @@ fu_ccgx_firmware_add_record(FuCcgxFirmware *self,
 		fu_byte_array_append_uint8(data, tmp);
 		checksum_calc += tmp;
 	}
-	rcd->data = g_byte_array_free_to_bytes(g_steal_pointer(&data));
+	rcd->data = g_bytes_new(data->data, data->len);
 
 	/* verify 2s complement checksum */
 	if ((flags & FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM) == 0) {
@@ -417,7 +417,7 @@ fu_ccgx_firmware_write_record(GString *str,
 			       (guint)((guint8)~checksum_calc));
 }
 
-static GBytes *
+static GByteArray *
 fu_ccgx_firmware_write(FuFirmware *firmware, GError **error)
 {
 	FuCcgxFirmware *self = FU_CCGX_FIRMWARE(firmware);
@@ -425,6 +425,7 @@ fu_ccgx_firmware_write(FuFirmware *firmware, GError **error)
 	gsize fwbufsz = 0;
 	guint8 checksum_img = 0xff;
 	const guint8 *fwbuf;
+	g_autoptr(GByteArray) buf = g_byte_array_new();
 	g_autoptr(GByteArray) mdbuf = g_byte_array_new();
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GPtrArray) chunks = NULL;
@@ -480,7 +481,9 @@ fu_ccgx_firmware_write(FuFirmware *firmware, GError **error)
 				      mdbuf->data,
 				      mdbuf->len);
 
-	return g_string_free_to_bytes(g_steal_pointer(&str));
+	/* success */
+	g_byte_array_append(buf, (const guint8 *)str->str, str->len);
+	return g_steal_pointer(&buf);
 }
 
 static gboolean

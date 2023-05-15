@@ -54,7 +54,7 @@ struct _FuFirmwareClass {
 			  gsize offset,
 			  FwupdInstallFlags flags,
 			  GError **error) G_GNUC_WARN_UNUSED_RESULT;
-	GBytes *(*write)(FuFirmware *self, GError **error)G_GNUC_WARN_UNUSED_RESULT;
+	GByteArray *(*write)(FuFirmware *self, GError **error)G_GNUC_WARN_UNUSED_RESULT;
 	void (*export)(FuFirmware *self, FuFirmwareExportFlags flags, XbBuilderNode *bn);
 	gboolean (*tokenize)(FuFirmware *self, GBytes *fw, FwupdInstallFlags flags, GError **error)
 	    G_GNUC_WARN_UNUSED_RESULT;

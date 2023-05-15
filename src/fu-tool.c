@@ -2697,7 +2697,7 @@ fu_util_hex_string_to_bytes(const gchar *val, GError **error)
 			return NULL;
 		fu_byte_array_append_uint8(buf, tmp);
 	}
-	return g_byte_array_free_to_bytes(g_steal_pointer(&buf));
+	return g_bytes_new(buf->data, buf->len);
 }
 
 static gboolean

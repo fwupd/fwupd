@@ -247,7 +247,7 @@ fu_efi_signature_list_parse(FuFirmware *firmware,
 	return TRUE;
 }
 
-static GBytes *
+static GByteArray *
 fu_efi_signature_list_write(FuFirmware *firmware, GError **error)
 {
 	g_autoptr(GByteArray) buf = fu_struct_efi_signature_list_new();
@@ -263,7 +263,7 @@ fu_efi_signature_list_write(FuFirmware *firmware, GError **error)
 	for (guint i = 0; i < 16; i++)
 		fu_byte_array_append_uint8(buf, '2');
 
-	return g_byte_array_free_to_bytes(g_steal_pointer(&buf));
+	return g_steal_pointer(&buf);
 }
 
 /**

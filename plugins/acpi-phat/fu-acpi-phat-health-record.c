@@ -116,7 +116,7 @@ fu_acpi_phat_health_record_parse(FuFirmware *firmware,
 	return TRUE;
 }
 
-static GBytes *
+static GByteArray *
 fu_acpi_phat_health_record_write(FuFirmware *firmware, GError **error)
 {
 	FuAcpiPhatHealthRecord *self = FU_ACPI_PHAT_HEALTH_RECORD(firmware);
@@ -149,7 +149,7 @@ fu_acpi_phat_health_record_write(FuFirmware *firmware, GError **error)
 		g_byte_array_append(st, (const guint8 *)device_path_utf16, device_path_utf16sz);
 
 	/* success */
-	return g_byte_array_free_to_bytes(g_steal_pointer(&st));
+	return g_steal_pointer(&st);
 }
 
 static void

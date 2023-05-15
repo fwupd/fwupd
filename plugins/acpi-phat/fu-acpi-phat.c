@@ -222,7 +222,7 @@ fu_acpi_phat_parse(FuFirmware *firmware,
 	return TRUE;
 }
 
-static GBytes *
+static GByteArray *
 fu_acpi_phat_write(FuFirmware *firmware, GError **error)
 {
 	FuAcpiPhat *self = FU_ACPI_PHAT(firmware);
@@ -285,7 +285,7 @@ fu_acpi_phat_write(FuFirmware *firmware, GError **error)
 	buf->data[9] = 0xFF - fu_sum8(buf->data, buf->len);
 
 	/* success */
-	return g_byte_array_free_to_bytes(g_steal_pointer(&buf));
+	return g_steal_pointer(&buf);
 }
 
 static gboolean

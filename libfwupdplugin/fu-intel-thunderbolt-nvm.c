@@ -712,7 +712,7 @@ fu_intel_thunderbolt_nvm_parse(FuFirmware *firmware,
 }
 
 /* can only write version 3 NVM */
-static GBytes *
+static GByteArray *
 fu_intel_thunderbolt_nvm_write(FuFirmware *firmware, GError **error)
 {
 	FuIntelThunderboltNvm *self = FU_INTEL_THUNDERBOLT_NVM(firmware);
@@ -815,7 +815,7 @@ fu_intel_thunderbolt_nvm_write(FuFirmware *firmware, GError **error)
 		return NULL;
 
 	/* success */
-	return g_byte_array_free_to_bytes(g_steal_pointer(&buf));
+	return g_steal_pointer(&buf);
 }
 
 static gboolean

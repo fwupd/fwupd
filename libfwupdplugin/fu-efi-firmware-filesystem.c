@@ -64,7 +64,7 @@ fu_efi_firmware_filesystem_parse(FuFirmware *firmware,
 	return TRUE;
 }
 
-static GBytes *
+static GByteArray *
 fu_efi_firmware_filesystem_write(FuFirmware *firmware, GError **error)
 {
 	g_autoptr(GByteArray) buf = g_byte_array_new();
@@ -93,7 +93,7 @@ fu_efi_firmware_filesystem_write(FuFirmware *firmware, GError **error)
 	}
 
 	/* success */
-	return g_byte_array_free_to_bytes(g_steal_pointer(&buf));
+	return g_steal_pointer(&buf);
 }
 
 static void

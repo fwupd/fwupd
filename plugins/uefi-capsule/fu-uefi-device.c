@@ -410,7 +410,7 @@ fu_uefi_device_fixup_firmware(FuUefiDevice *self, GBytes *fw, GError **error)
 	/* pad to the headersize then add the payload */
 	fu_byte_array_set_size(st_cap, hdrsize, 0x00);
 	g_byte_array_append(st_cap, buf, bufsz);
-	return g_byte_array_free_to_bytes(g_steal_pointer(&st_cap));
+	return g_bytes_new(st_cap->data, st_cap->len);
 }
 
 gboolean

@@ -336,7 +336,7 @@ fu_redfish_smbios_parse(FuFirmware *firmware,
 	return TRUE;
 }
 
-static GBytes *
+static GByteArray *
 fu_redfish_smbios_write(FuFirmware *firmware, GError **error)
 {
 	FuRedfishSmbios *self = FU_REDFISH_SMBIOS(firmware);
@@ -377,7 +377,7 @@ fu_redfish_smbios_write(FuFirmware *firmware, GError **error)
 	g_byte_array_append(buf, st->data, st->len);
 	if (hostname_sz > 0)
 		g_byte_array_append(buf, (guint8 *)self->hostname, hostname_sz);
-	return g_byte_array_free_to_bytes(g_steal_pointer(&buf));
+	return g_steal_pointer(&buf);
 }
 
 static void

@@ -192,7 +192,7 @@ fu_archive_firmware_get_image_fnmatch(FuArchiveFirmware *self, const gchar *patt
 	return g_steal_pointer(&img_match);
 }
 
-static GBytes *
+static GByteArray *
 fu_archive_firmware_write(FuFirmware *firmware, GError **error)
 {
 	FuArchiveFirmware *self = FU_ARCHIVE_FIRMWARE(firmware);
