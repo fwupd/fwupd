@@ -42,7 +42,7 @@ Case is not significant in boolean values, but is preserved in string values.
 DAEMON PARAMETERS
 -----------------
 
-The `[daemon]` section can contain the following parameters:
+The `[fwupd]` section can contain the following parameters:
 
 **DisabledDevices=**
 
