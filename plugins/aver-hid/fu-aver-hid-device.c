@@ -29,7 +29,7 @@ fu_aver_hid_device_transfer(FuAverHidDevice *self, GByteArray *req, GByteArray *
 				      req->data,
 				      req->len,
 				      FU_AVER_HID_DEVICE_TIMEOUT,
-				      FU_HID_DEVICE_FLAG_USE_INTERRUPT_TRANSFER,
+				      FU_HID_DEVICE_FLAG_NONE,
 				      error)) {
 		g_prefix_error(error, "failed to send packet: ");
 		return FALSE;
@@ -39,7 +39,7 @@ fu_aver_hid_device_transfer(FuAverHidDevice *self, GByteArray *req, GByteArray *
 				      res->data,
 				      res->len,
 				      FU_AVER_HID_DEVICE_TIMEOUT,
-				      FU_HID_DEVICE_FLAG_USE_INTERRUPT_TRANSFER,
+				      FU_HID_DEVICE_FLAG_NONE,
 				      error)) {
 		g_prefix_error(error, "failed to receive packet: ");
 		return FALSE;
