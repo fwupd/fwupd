@@ -1,3 +1,2 @@
 [HIDRAW\VEN_27C6]
 Plugin = goodixtp
-GType = FuGoodixtpHidDevice

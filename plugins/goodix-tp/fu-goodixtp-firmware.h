@@ -9,16 +9,21 @@
 #include <fwupdplugin.h>
 
 #define FU_TYPE_GOODIXTP_FIRMWARE (fu_goodixtp_firmware_get_type())
-G_DECLARE_FINAL_TYPE(FuGoodixtpFirmware, fu_goodixtp_firmware, FU, GOODIXTP_FIRMWARE, FuFirmware)
+G_DECLARE_DERIVABLE_TYPE(FuGoodixtpFirmware,
+			 fu_goodixtp_firmware,
+			 FU,
+			 GOODIXTP_FIRMWARE,
+			 FuFirmware)
 
-FuFirmware *
-fu_goodixtp_firmware_new(void);
+struct _FuGoodixtpFirmwareClass {
+	FuFirmwareClass parent_class;
+};
 
-gint
+guint32
 fu_goodixtp_firmware_get_version(FuGoodixtpFirmware *self);
 
-gboolean
-fu_goodixtp_firmware_has_config(FuGoodixtpFirmware *self);
+void
+fu_goodixtp_firmware_set_version(FuGoodixtpFirmware *self, guint32 version);
 
 guint8 *
 fu_goodixtp_firmware_get_data(FuGoodixtpFirmware *self);
@@ -29,9 +34,9 @@ fu_goodixtp_firmware_get_len(FuGoodixtpFirmware *self);
 guint32
 fu_goodixtp_firmware_get_addr(FuGoodixtpFirmware *self, gint index);
 
-gboolean
-fu_goodixtp_frmware_parse(FuFirmware *firmware,
-			  GBytes *fw,
-			  gint ic_type,
-			  guint8 sensor_id,
-			  GError **error);
+void
+fu_goodixtp_add_chunk_data(FuGoodixtpFirmware *self,
+			   guint8 type,
+			   guint32 addr,
+			   guint8 *data,
+			   gint dataLen);

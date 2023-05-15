@@ -6,7 +6,15 @@
 
 #include "config.h"
 
+#include "fu-goodixtp-brlb-device.h"
+#include "fu-goodixtp-brlb-firmware.h"
 #include "fu-goodixtp-common.h"
+
+struct _FuGoodixtpBrlbDevice {
+	FuGoodixtpHidDevice parent_instance;
+};
+
+G_DEFINE_TYPE(FuGoodixtpBrlbDevice, fu_goodixtp_brlb_device, FU_TYPE_GOODIXTP_HID_DEVICE)
 
 static gboolean
 read_pkg(FuDevice *device, guint32 addr, guint8 *buf, guint32 len, GError **error)
@@ -25,10 +33,10 @@ read_pkg(FuDevice *device, guint32 addr, guint8 *buf, guint32 len, GError **erro
 	HidBuf[9] = addr & 0xFF;
 	HidBuf[10] = (len >> 8) & 0xFF;
 	HidBuf[11] = len & 0xFF;
-	if (!set_report(device, HidBuf, 12, error))
+	if (!fu_goodixtp_hid_device_set_report(device, HidBuf, 12, error))
 		return FALSE;
 
-	if (!get_report(device, HidBuf, error))
+	if (!fu_goodixtp_hid_device_get_report(device, HidBuf, error))
 		return FALSE;
 
 	if (HidBuf[3] != 0 || HidBuf[4] != len) {
@@ -99,7 +107,7 @@ hid_write(FuDevice *device, guint32 addr, guint8 *buf, guint32 len, GError **err
 		HidBuf[10] = (transfer_length >> 8) & 0xFF;
 		HidBuf[11] = transfer_length & 0xFF;
 		memcpy(&HidBuf[12], &buf[pos], transfer_length);
-		if (!set_report(device, HidBuf, transfer_length + 12, error))
+		if (!fu_goodixtp_hid_device_set_report(device, HidBuf, transfer_length + 12, error))
 			return FALSE;
 		pos += transfer_length;
 		current_addr += transfer_length;
@@ -118,7 +126,7 @@ send_cmd(FuDevice *device, guint8 cmd, guint8 *data, guint32 dataLen, GError **e
 	HidBuf[3] = 0x00;
 	HidBuf[4] = (guint8)dataLen;
 	memcpy(&HidBuf[5], data, dataLen);
-	if (!set_report(device, HidBuf, dataLen + 5, error)) {
+	if (!fu_goodixtp_hid_device_set_report(device, HidBuf, dataLen + 5, error)) {
 		g_debug("send cmd[%x] failed,", cmd);
 		return FALSE;
 	}
@@ -128,7 +136,7 @@ send_cmd(FuDevice *device, guint8 cmd, guint8 *data, guint32 dataLen, GError **e
 static gboolean
 brlb_get_version(FuDevice *device, gpointer user_data, GError **error)
 {
-	struct goodix_version_t *ver = (struct goodix_version_t *)user_data;
+	struct FuGoodixVersion *ver = (struct FuGoodixVersion *)user_data;
 	guint8 tempBuf[14] = {0};
 	guint8 vice_ver;
 	guint8 inter_ver;
@@ -150,7 +158,7 @@ brlb_get_version(FuDevice *device, gpointer user_data, GError **error)
 
 	ver->cfg_id = fu_memread_uint32(tempBuf, G_LITTLE_ENDIAN);
 	ver->cfg_ver = tempBuf[4];
-	ver->version = (vice_ver << 16) | (inter_ver << 8) | ver->cfg_ver;
+	ver->ver_num = (vice_ver << 16) | (inter_ver << 8) | ver->cfg_ver;
 
 	return TRUE;
 }
@@ -229,7 +237,7 @@ brlb_update_prepare(FuDevice *device, GError **error)
 static gboolean
 load_sub_firmware_cb(FuDevice *parent, gpointer user_data, GError **error)
 {
-	struct transfer_data_t *pkg = (struct transfer_data_t *)user_data;
+	struct FuGoodixTransferData *pkg = (struct FuGoodixTransferData *)user_data;
 	guint32 checksum = 0;
 	guint8 cmdBuf[10] = {0};
 	guint8 flag;
@@ -286,7 +294,7 @@ load_sub_firmware_cb(FuDevice *parent, gpointer user_data, GError **error)
 static gboolean
 brlb_update_process(FuDevice *device, guint32 flash_addr, guint8 *buf, guint32 len, GError **error)
 {
-	struct transfer_data_t pkg;
+	struct FuGoodixTransferData pkg;
 
 	pkg.addr = flash_addr;
 	pkg.buf = buf;
@@ -313,9 +321,111 @@ brlb_update_finish(FuDevice *device, GError **error)
 	return TRUE;
 }
 
-struct goodix_hw_ops_t brlb_hw_ops = {
-    .get_version = brlb_get_version,
-    .update_prepare = brlb_update_prepare,
-    .update_process = brlb_update_process,
-    .update_finish = brlb_update_finish,
-};
+static gboolean
+fu_goodixtp_brlb_device_setup(FuDevice *device, GError **error)
+{
+	FuGoodixtpHidDevice *self = FU_GOODIXTP_HID_DEVICE(device);
+	struct FuGoodixVersion tmp_ver;
+
+	if (!brlb_get_version(device, &tmp_ver, error)) {
+		g_prefix_error(error, "brlb read version failed,");
+		return FALSE;
+	}
+	fu_goodixtp_hid_device_set_version(self, &tmp_ver);
+	fu_device_set_version_from_uint32(device, tmp_ver.ver_num);
+	return TRUE;
+}
+
+static FuFirmware *
+fu_goodixtp_brlb_device_prepare_firmware(FuDevice *device,
+					 GBytes *fw,
+					 FwupdInstallFlags flags,
+					 GError **error)
+{
+	FuGoodixtpHidDevice *self = FU_GOODIXTP_HID_DEVICE(device);
+	g_autoptr(FuFirmware) firmware = fu_goodixtp_brlb_firmware_new();
+	if (!fu_goodixtp_brlb_firmware_parse(FU_GOODIXTP_FIRMWARE(firmware),
+					     fw,
+					     fu_goodixtp_hid_device_get_sensor_id(self),
+					     error))
+		return NULL;
+	return g_steal_pointer(&firmware);
+}
+
+static gboolean
+fu_goodixtp_brlb_device_write_firmware(FuDevice *device,
+				       FuFirmware *firmware,
+				       FuProgress *progress,
+				       FwupdInstallFlags flags,
+				       GError **error)
+{
+	FuGoodixtpFirmware *firmware_goodixtp = FU_GOODIXTP_FIRMWARE(firmware);
+	guint8 *buf = fu_goodixtp_firmware_get_data(firmware_goodixtp);
+	gint bufsz = fu_goodixtp_firmware_get_len(firmware_goodixtp);
+	guint32 fw_ver = fu_goodixtp_firmware_get_version(firmware_goodixtp);
+	struct FuGoodixVersion ic_ver;
+	g_autoptr(GPtrArray) chunks = NULL;
+
+	/* progress */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 10, "prepare");
+	fu_progress_add_step(progress, FWUPD_STATUS_DOWNLOADING, 85, "download");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 5, "reload");
+
+	if (!brlb_update_prepare(device, error))
+		return FALSE;
+	fu_progress_step_done(progress);
+	chunks = fu_chunk_array_new(buf, bufsz, 0x0, 0x0, RAM_BUFFER_SIZE);
+	for (gint i = 0; i < (gint)chunks->len; i++) {
+		FuChunk *chk = g_ptr_array_index(chunks, i);
+		guint32 addr = fu_goodixtp_firmware_get_addr(firmware_goodixtp, i);
+		if (!brlb_update_process(device,
+					 addr,
+					 (guint8 *)fu_chunk_get_data(chk),
+					 fu_chunk_get_data_sz(chk),
+					 error)) {
+			return FALSE;
+		}
+		fu_device_sleep(device, 20);
+		fu_progress_set_percentage_full(fu_progress_get_child(progress),
+						(gsize)i + 1,
+						(gsize)chunks->len);
+	}
+	fu_progress_step_done(progress);
+
+	if (!brlb_update_finish(device, error))
+		return FALSE;
+	if (!brlb_get_version(device, &ic_ver, error))
+		return FALSE;
+	fu_progress_step_done(progress);
+
+	if (ic_ver.ver_num != fw_ver) {
+		g_debug("update failed chip_ver:%x != bin_ver:%x",
+			(guint)ic_ver.ver_num,
+			(guint)fw_ver);
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "update failed chip_ver:%x != bin_ver:%x",
+			    (guint)ic_ver.ver_num,
+			    (guint)fw_ver);
+		return FALSE;
+	}
+	return TRUE;
+}
+
+static void
+fu_goodixtp_brlb_device_init(FuGoodixtpBrlbDevice *self)
+{
+}
+
+static void
+fu_goodixtp_brlb_device_class_init(FuGoodixtpBrlbDeviceClass *klass)
+{
+	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
+	klass_device->setup = fu_goodixtp_brlb_device_setup;
+	klass_device->reload = fu_goodixtp_brlb_device_setup;
+	klass_device->prepare_firmware = fu_goodixtp_brlb_device_prepare_firmware;
+	klass_device->write_firmware = fu_goodixtp_brlb_device_write_firmware;
+}
