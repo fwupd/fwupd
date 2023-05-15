@@ -2,9 +2,6 @@ name: Snap workflow
 on:
   workflow_call:
     inputs:
-      channel:
-        required: true
-        type: string
       deploy:
         required: true
         type: boolean
@@ -14,10 +11,18 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       snap_name: ${{ steps.snapcraft.outputs.snap }}
+      channel: ${{ steps.channel.outputs.channel }}
     steps:
     - uses: actions/checkout@v3
       with:
         fetch-depth: 0
+    - id: channel
+      run: |
+        if git describe --exact-match; then
+          echo "::set-output name=channel::candidate"
+        else
+          echo "::set-output name=channel::edge"
+        fi
     - uses: snapcore/action-build@v1
       id: snapcraft
     - uses: actions/upload-artifact@v3
@@ -39,4 +44,4 @@ jobs:
         SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.STORE_LOGIN }}
       with:
         snap: ${{ needs.build-snap.outputs.snap_name }}
-        release: ${{ inputs.channel }}
+        release: ${{ needs.build-snap.outputs.channel }}
