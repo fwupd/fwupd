@@ -8,7 +8,6 @@ jobs:
     uses: ./.github/workflows/snap.yml
     with:
       deploy: true
-      channel: edge
     secrets: inherit
 
   matrix:
