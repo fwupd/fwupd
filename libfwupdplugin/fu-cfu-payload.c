@@ -65,7 +65,7 @@ fu_cfu_payload_parse(FuFirmware *firmware,
 	return TRUE;
 }
 
-static GBytes *
+static GByteArray *
 fu_cfu_payload_write(FuFirmware *firmware, GError **error)
 {
 	g_autoptr(GByteArray) buf = g_byte_array_new();
@@ -82,7 +82,7 @@ fu_cfu_payload_write(FuFirmware *firmware, GError **error)
 		g_byte_array_append(buf, st->data, st->len);
 		g_byte_array_append(buf, fu_chunk_get_data(chk), fu_chunk_get_data_sz(chk));
 	}
-	return g_byte_array_free_to_bytes(g_steal_pointer(&buf));
+	return g_steal_pointer(&buf);
 }
 
 static void

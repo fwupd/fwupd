@@ -545,9 +545,10 @@ fu_srec_firmware_write_line(GString *str,
 	g_string_append_printf(str, "%02X\n", csum);
 }
 
-static GBytes *
+static GByteArray *
 fu_srec_firmware_write(FuFirmware *firmware, GError **error)
 {
+	g_autoptr(GByteArray) buf = g_byte_array_new();
 	g_autoptr(GString) str = g_string_new(NULL);
 	g_autoptr(GBytes) buf_blob = NULL;
 	const gchar *id = fu_firmware_get_id(firmware);
@@ -602,7 +603,8 @@ fu_srec_firmware_write(FuFirmware *firmware, GError **error)
 	fu_srec_firmware_write_line(str, kind_term, 0x0, NULL, 0);
 
 	/* success */
-	return g_string_free_to_bytes(g_steal_pointer(&str));
+	g_byte_array_append(buf, (const guint8 *)str->str, str->len);
+	return g_steal_pointer(&buf);
 }
 
 static void

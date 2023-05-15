@@ -3448,7 +3448,7 @@ GBytes *
 fu_engine_emulation_save(FuEngine *self, GError **error)
 {
 	gboolean got_json = FALSE;
-	g_autoptr(GBytes) bytes = NULL;
+	g_autoptr(GByteArray) buf = NULL;
 	g_autoptr(FuArchive) archive = fu_archive_new(NULL, FU_ARCHIVE_FLAG_NONE, NULL);
 
 	g_return_val_if_fail(FU_IS_ENGINE(self), NULL);
@@ -3488,14 +3488,13 @@ fu_engine_emulation_save(FuEngine *self, GError **error)
 	}
 
 	/* write  */
-	bytes =
-	    fu_archive_write(archive, FU_ARCHIVE_FORMAT_ZIP, FU_ARCHIVE_COMPRESSION_GZIP, error);
-	if (bytes == NULL)
+	buf = fu_archive_write(archive, FU_ARCHIVE_FORMAT_ZIP, FU_ARCHIVE_COMPRESSION_GZIP, error);
+	if (buf == NULL)
 		return NULL;
 
 	/* success */
 	g_hash_table_remove_all(self->emulation_phases);
-	return g_steal_pointer(&bytes);
+	return g_bytes_new(buf->data, buf->len);
 }
 
 static gboolean

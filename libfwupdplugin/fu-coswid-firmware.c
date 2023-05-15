@@ -298,7 +298,7 @@ fu_coswid_firmware_write_tag_item(cbor_item_t *root, FuCoswidTag tag, cbor_item_
 }
 #endif
 
-static GBytes *
+static GByteArray *
 fu_coswid_firmware_write(FuFirmware *firmware, GError **error)
 {
 #ifdef HAVE_CBOR
@@ -405,7 +405,7 @@ fu_coswid_firmware_write(FuFirmware *firmware, GError **error)
 				    "CBOR allocation failure");
 		return NULL;
 	}
-	return g_bytes_new(buf, buflen);
+	return g_byte_array_new_take(g_steal_pointer(&buf), buflen);
 #else
 	g_set_error_literal(error,
 			    G_IO_ERROR,

@@ -100,7 +100,7 @@ fu_synaptics_cape_firmware_parse(FuFirmware *firmware,
 	return TRUE;
 }
 
-static GBytes *
+static GByteArray *
 fu_synaptics_cape_firmware_write(FuFirmware *firmware, GError **error)
 {
 	FuSynapticsCapeFirmware *self = FU_SYNAPTICS_CAPE_FIRMWARE(firmware);
@@ -124,7 +124,7 @@ fu_synaptics_cape_firmware_write(FuFirmware *firmware, GError **error)
 	fu_byte_array_append_bytes(buf, payload);
 	fu_byte_array_align_up(buf, FU_FIRMWARE_ALIGNMENT_32, 0xFF);
 
-	return g_byte_array_free_to_bytes(g_steal_pointer(&buf));
+	return g_steal_pointer(&buf);
 }
 
 static gboolean

@@ -495,7 +495,7 @@ fu_synaptics_rmi_v7_device_get_pubkey(FuSynapticsRmiDevice *self, GError **error
 		fu_byte_array_append_uint8(pubkey, res->data[res->len - i - 1]);
 
 	/* success */
-	return g_byte_array_free_to_bytes(g_steal_pointer(&pubkey));
+	return g_bytes_new(pubkey->data, pubkey->len);
 }
 
 static gboolean

@@ -391,7 +391,7 @@ fu_ccgx_dmc_firmware_parse(FuFirmware *firmware,
 	return TRUE;
 }
 
-static GBytes *
+static GByteArray *
 fu_ccgx_dmc_firmware_write(FuFirmware *firmware, GError **error)
 {
 	g_autoptr(GByteArray) buf = g_byte_array_new();
@@ -497,7 +497,7 @@ fu_ccgx_dmc_firmware_write(FuFirmware *firmware, GError **error)
 			return NULL;
 	}
 
-	return g_byte_array_free_to_bytes(g_steal_pointer(&buf));
+	return g_steal_pointer(&buf);
 }
 
 static void

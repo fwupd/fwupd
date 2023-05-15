@@ -287,7 +287,7 @@ fu_ifd_firmware_check_jedec_cmd(FuIfdFirmware *self, guint8 cmd)
 	return TRUE;
 }
 
-static GBytes *
+static GByteArray *
 fu_ifd_firmware_write(FuFirmware *firmware, GError **error)
 {
 	FuIfdFirmware *self = FU_IFD_FIRMWARE(firmware);
@@ -305,7 +305,7 @@ fu_ifd_firmware_write(FuFirmware *firmware, GError **error)
 		fu_byte_array_set_size(buf_desc, FU_IFD_SIZE, 0x00);
 
 		/* success */
-		blob_desc = g_byte_array_free_to_bytes(g_steal_pointer(&buf_desc));
+		blob_desc = g_bytes_new(buf_desc->data, buf_desc->len);
 		img_desc = fu_firmware_new_from_bytes(blob_desc);
 		fu_firmware_set_addr(img_desc, 0x0);
 		fu_firmware_set_idx(img_desc, FU_IFD_REGION_DESC);
@@ -427,7 +427,7 @@ fu_ifd_firmware_write(FuFirmware *firmware, GError **error)
 	}
 
 	/* success */
-	return g_byte_array_free_to_bytes(g_steal_pointer(&buf));
+	return g_steal_pointer(&buf);
 }
 
 static gboolean

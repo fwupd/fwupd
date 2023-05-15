@@ -233,7 +233,7 @@ fu_usb_device_ds20_parse(FuFirmware *firmware,
 	return FALSE;
 }
 
-static GBytes *
+static GByteArray *
 fu_usb_device_ds20_write(FuFirmware *firmware, GError **error)
 {
 	g_autoptr(GByteArray) st = fu_struct_ds20_new();
@@ -249,7 +249,7 @@ fu_usb_device_ds20_write(FuFirmware *firmware, GError **error)
 	fu_struct_ds20_set_platform_ver(st, fu_firmware_get_version_raw(firmware));
 	fu_struct_ds20_set_total_length(st, fu_firmware_get_size(firmware));
 	fu_struct_ds20_set_vendor_code(st, fu_firmware_get_idx(firmware));
-	return g_byte_array_free_to_bytes(g_steal_pointer(&st));
+	return g_steal_pointer(&st);
 }
 
 static void

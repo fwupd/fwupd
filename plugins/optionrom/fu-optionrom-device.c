@@ -110,7 +110,7 @@ fu_optionrom_device_dump_firmware(FuDevice *device, FuProgress *progress, GError
 			    buf->len);
 		return NULL;
 	}
-	return g_byte_array_free_to_bytes(g_steal_pointer(&buf));
+	return g_bytes_new(buf->data, buf->len);
 }
 
 static void

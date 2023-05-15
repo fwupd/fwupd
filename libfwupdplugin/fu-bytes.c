@@ -170,7 +170,7 @@ fu_bytes_get_contents_stream(GInputStream *stream, gsize count, GError **error)
 			return NULL;
 		}
 	}
-	return g_byte_array_free_to_bytes(g_steal_pointer(&buf));
+	return g_bytes_new(buf->data, buf->len);
 }
 
 /**
@@ -237,7 +237,7 @@ fu_bytes_get_contents_stream_full(GInputStream *stream, gsize offset, gsize coun
 		if (buf->len >= count)
 			break;
 	}
-	return g_byte_array_free_to_bytes(g_steal_pointer(&buf));
+	return g_bytes_new(buf->data, buf->len);
 }
 
 /**

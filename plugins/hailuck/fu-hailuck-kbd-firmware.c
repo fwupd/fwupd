@@ -79,7 +79,7 @@ fu_hailuck_kbd_firmware_parse(FuFirmware *firmware,
 	}
 
 	/* whole image */
-	fw_new = g_byte_array_free_to_bytes(g_steal_pointer(&buf));
+	fw_new = g_bytes_new(buf->data, buf->len);
 	fu_firmware_set_bytes(firmware, fw_new);
 	return TRUE;
 }

@@ -156,7 +156,7 @@ fu_uswid_firmware_parse(FuFirmware *firmware,
 	return TRUE;
 }
 
-static GBytes *
+static GByteArray *
 fu_uswid_firmware_write(FuFirmware *firmware, GError **error)
 {
 	FuUswidFirmware *self = FU_USWID_FIRMWARE(firmware);
@@ -188,7 +188,7 @@ fu_uswid_firmware_write(FuFirmware *firmware, GError **error)
 		if (payload_blob == NULL)
 			return NULL;
 	} else {
-		payload_blob = g_byte_array_free_to_bytes(g_steal_pointer(&payload));
+		payload_blob = g_bytes_new(payload->data, payload->len);
 	}
 
 	/* pack */
@@ -206,7 +206,7 @@ fu_uswid_firmware_write(FuFirmware *firmware, GError **error)
 	fu_byte_array_append_bytes(buf, payload_blob);
 
 	/* success */
-	return g_byte_array_free_to_bytes(g_steal_pointer(&buf));
+	return g_steal_pointer(&buf);
 }
 
 static gboolean

@@ -148,7 +148,7 @@ fu_synaprom_firmware_parse(FuFirmware *firmware,
 	return TRUE;
 }
 
-static GBytes *
+static GByteArray *
 fu_synaprom_firmware_write(FuFirmware *firmware, GError **error)
 {
 	FuSynapromFirmware *self = FU_SYNAPROM_FIRMWARE(firmware);
@@ -176,7 +176,7 @@ fu_synaprom_firmware_write(FuFirmware *firmware, GError **error)
 	/* add signature */
 	for (guint i = 0; i < FU_SYNAPROM_FIRMWARE_SIGSIZE; i++)
 		fu_byte_array_append_uint8(buf, 0xff);
-	return g_byte_array_free_to_bytes(g_steal_pointer(&buf));
+	return g_steal_pointer(&buf);
 }
 
 static gboolean

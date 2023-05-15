@@ -557,7 +557,7 @@ fu_vli_pd_parade_device_write_firmware(FuDevice *device,
 						i + 1,
 						blocks->len);
 	}
-	fw_verify = g_byte_array_free_to_bytes(g_steal_pointer(&buf_verify));
+	fw_verify = g_bytes_new(buf_verify->data, buf_verify->len);
 	if (!fu_bytes_compare(fw, fw_verify, error))
 		return FALSE;
 	fu_progress_step_done(progress);
@@ -663,7 +663,7 @@ fu_vli_pd_parade_device_dump_firmware(FuDevice *device, FuProgress *progress, GE
 			return NULL;
 		fu_progress_step_done(progress);
 	}
-	return g_byte_array_free_to_bytes(g_steal_pointer(&fw));
+	return g_bytes_new(fw->data, fw->len);
 }
 
 static gboolean

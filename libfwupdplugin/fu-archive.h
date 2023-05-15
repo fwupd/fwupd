@@ -135,7 +135,7 @@ void
 fu_archive_add_entry(FuArchive *self, const gchar *fn, GBytes *blob);
 GBytes *
 fu_archive_lookup_by_fn(FuArchive *self, const gchar *fn, GError **error) G_GNUC_WARN_UNUSED_RESULT;
-GBytes *
+GByteArray *
 fu_archive_write(FuArchive *self,
 		 FuArchiveFormat format,
 		 FuArchiveCompression compression,

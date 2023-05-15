@@ -54,7 +54,7 @@ fu_acpi_phat_version_record_parse(FuFirmware *firmware,
 	return TRUE;
 }
 
-static GBytes *
+static GByteArray *
 fu_acpi_phat_version_record_write(FuFirmware *firmware, GError **error)
 {
 	g_autoptr(GByteArray) buf2 = g_byte_array_new();
@@ -77,7 +77,7 @@ fu_acpi_phat_version_record_write(FuFirmware *firmware, GError **error)
 
 	/* element data */
 	g_byte_array_append(st, buf2->data, buf2->len);
-	return g_byte_array_free_to_bytes(g_steal_pointer(&st));
+	return g_steal_pointer(&st);
 }
 
 static void
