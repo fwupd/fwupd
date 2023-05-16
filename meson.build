@@ -561,6 +561,7 @@ endif
 
 jinja2 = run_command(
   [python3, '-c', 'import jinja2; print(jinja2.__version__)'],
+  check: true,
 )
 if jinja2.stderr().strip() != ''
   error('Python module jinja2 not found')
