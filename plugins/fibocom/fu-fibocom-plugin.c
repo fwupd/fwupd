@@ -12,7 +12,7 @@ struct _FuFibocomPlugin {
 	FuPlugin parent_instance;
 
 	/* fibocom modem needs to be marked When is flash finished */
-	int fibocom_flash_end;
+	gint fibocom_flash_end;
 };
 
 G_DEFINE_TYPE(FuFibocomPlugin, fu_fibocom_plugin, FU_TYPE_PLUGIN)

@@ -12,3 +12,4 @@ FastbootOperationDelay = 250
 FastbootBlockSize = 16384
 FastbootOperationDelay = 0
 Plugin = fibocom
+
