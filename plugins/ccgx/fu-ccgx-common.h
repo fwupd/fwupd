@@ -27,5 +27,7 @@ typedef struct __attribute__((packed)) {
 
 gchar *
 fu_ccgx_version_to_string(guint32 val);
+gchar *
+fu_ccgx_detailed_version_to_string(guint32 val);
 FuCcgxFwMode
 fu_ccgx_fw_mode_get_alternate(FuCcgxFwMode val);
