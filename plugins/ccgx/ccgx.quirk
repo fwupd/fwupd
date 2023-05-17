@@ -1,3 +1,13 @@
+# Framework HDMI Expansion Card
+[USB\VID_32AC&PID_0002]
+Plugin = ccgx
+GType = FuCcgxPureHidDevice
+
+# Framework DisplayPort Expansion Card
+[USB\VID_32AC&PID_0003]
+Plugin = ccgx
+GType = FuCcgxPureHidDevice
+
 # Lenovo ThinkPad USB-C Dock Gen2
 [USB\VID_17EF&PID_A38F]
 Plugin = ccgx
