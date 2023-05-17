@@ -11,5 +11,5 @@ GType = FuThunderboltRetimer
 Flags = retimer-offline-mode
 
 # Google Rex
-[​​fe682559-28dc-58b3-bf61-aa8414d9f363]
-Flags = retimer-offline-mode
+#[​​fe682559-28dc-58b3-bf61-aa8414d9f363]
+#Flags = retimer-offline-mode
