@@ -24,15 +24,15 @@ fu_ccgx_version_to_string(guint32 val)
 gchar *
 fu_ccgx_detailed_version_to_string(guint32 val)
 {
-	/* 16 bits: application type [LSB]
-	 *  8 bits: build number
+	/* 16 bits: build number
+	 *  8 bits: patch version
 	 *  4 bits: minor version
 	 *  4 bits: major version [MSB] */
 	return g_strdup_printf("%u.%u.%u Build %u",
 			       (val >> 28) & 0x0f,
 			       (val >> 24) & 0x0f,
 			       (val >> 16) & 0xff,
-			       val & 0xff);
+			       val & 0xffff);
 }
 
 FuCcgxFwMode

@@ -22,12 +22,10 @@
 struct _FuCcgxPureHidDevice {
 	FuHidDevice parent_instance;
 	guint8 operating_mode;
+	guint32 versions[FU_CCGX_FW_MODE_LAST];
 	//guint8 bootloader_info;
 	//guint8 bootmode_reason;
-	//guint32 silicon_id;
-	//bl_version: // [u8; 8],
-	//image_1_ver: // [u8; 8],
-	//image_2_ver: // [u8; 8],
+	guint32 silicon_id;
 	//guint32 image_1_row;
 	//guint32 image_2_row;
 	//device_uid: // [u8; 6],
@@ -139,6 +137,10 @@ fu_ccgx_pure_hid_get_fw_info(FuDevice *device, gpointer user_data, GError **erro
 	info = (HidFwInfo *)(void *)buf;
 
 	self->operating_mode = info->operating_mode;
+	self->silicon_id = info->silicon_id;
+	self->versions[FU_CCGX_FW_MODE_BOOT] = info->bl_version;
+	self->versions[FU_CCGX_FW_MODE_FW1] = info->image_1_ver;
+	self->versions[FU_CCGX_FW_MODE_FW2] = info->image_2_ver;
 	g_debug("Report ID:       0x%02x", info->report_id);
 	g_debug("Signature:       0x%02x", info->signature);
 	g_debug("Operating Mode:  0x%02x", info->operating_mode);
@@ -182,9 +184,18 @@ fu_ccgx_pure_hid_device_detach(FuDevice *device, FuProgress *progress, GError **
 	return TRUE;
 }
 
+static void
+fu_ccgx_pure_hid_device_set_version_raw(FuCcgxPureHidDevice *self, guint32 version_raw)
+{
+	g_autofree gchar *version = fu_ccgx_detailed_version_to_string(version_raw);
+	fu_device_set_version(FU_DEVICE(self), version);
+	fu_device_set_version_raw(FU_DEVICE(self), version_raw);
+}
+
 static gboolean
 fu_ccgx_pure_hid_device_setup(FuDevice *device, GError **error)
 {
+	FuCcgxPureHidDevice *self = FU_CCGX_PURE_HID_DEVICE(device);
 	g_debug("Setup Start");
 
 	/* FuUsbDevice->setup */
@@ -198,6 +209,30 @@ fu_ccgx_pure_hid_device_setup(FuDevice *device, GError **error)
 	/* set summary */
 	//summary = g_strdup_printf("CX%u USB audio device", self->chip_id);
 	//fu_device_set_summary(device, summary);
+
+	fu_device_set_logical_id(device, fu_ccgx_fw_mode_to_string(self->operating_mode));
+	fu_device_add_instance_str(device, "MODE", fu_device_get_logical_id(device));
+
+	fu_device_add_instance_u16(FU_DEVICE(self), "SID", self->silicon_id);
+	fu_device_build_instance_id_quirk(FU_DEVICE(self), NULL, "CCGX", "SID", NULL);
+
+	//self->fw_app_type = versions[self->operating_mode] & 0xffff;
+	//fu_device_add_instance_u16(device, "APP", self->fw_app_type);
+
+	if (self->operating_mode == FU_CCGX_FW_MODE_BOOT) {
+		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
+	} else {
+		fu_device_remove_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
+	}
+
+	/* if running in bootloader force an upgrade to any version */
+	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
+		fu_ccgx_pure_hid_device_set_version_raw(self, 0x0);
+	} else {
+		fu_ccgx_pure_hid_device_set_version_raw(self, self->versions[self->operating_mode]);
+	}
+	
+	fu_device_set_version_bootloader(FU_DEVICE(device), fu_ccgx_detailed_version_to_string(self->versions[FU_CCGX_FW_MODE_BOOT]));
 
 	g_debug("Setup End");
 
@@ -399,9 +434,30 @@ fu_ccgx_pure_hid_device_init(FuCcgxPureHidDevice *self)
 }
 
 static void
+fu_ccgx_pure_hid_device_to_string(FuDevice *device, guint idt, GString *str)
+{
+	FuCcgxPureHidDevice *self = FU_CCGX_PURE_HID_DEVICE(device);
+	//fu_string_append_kx(str, idt, "ScbIndex", self->scb_index);
+	fu_string_append_kx(str, idt, "SiliconId", self->silicon_id);
+	//fu_string_append_kx(str, idt, "FwAppType", self->fw_app_type);
+	//fu_string_append_kx(str, idt, "HpiAddrsz", self->hpi_addrsz);
+	//fu_string_append_kx(str, idt, "NumPorts", self->num_ports);
+	fu_string_append(str, idt, "FuCcgxFwMode", fu_ccgx_fw_mode_to_string(self->operating_mode));
+	//fu_string_append(str,
+	//		 idt,
+	//		 "FwImageType",
+	//		 fu_ccgx_image_type_to_string(self->fw_image_type));
+	//if (self->flash_row_size > 0)
+	//	fu_string_append_kx(str, idt, "CcgxFlashRowSize", self->flash_row_size);
+	//if (self->flash_size > 0)
+	//	fu_string_append_kx(str, idt, "CcgxFlashSize", self->flash_size);
+}
+
+static void
 fu_ccgx_pure_hid_device_class_init(FuCcgxPureHidDeviceClass *klass)
 {
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
+	klass_device->to_string = fu_ccgx_pure_hid_device_to_string;
 	klass_device->detach = fu_ccgx_pure_hid_device_detach;
 	klass_device->setup = fu_ccgx_pure_hid_device_setup;
 	klass_device->write_firmware = fu_ccgx_pure_hid_device_write_firmware;
