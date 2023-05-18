@@ -14,7 +14,7 @@ G_DECLARE_FINAL_TYPE(FuSynapticsCapeFirmware,
 		     fu_synaptics_cape_firmware,
 		     FU,
 		     SYNAPTICS_CAPE_FIRMWARE,
-		     FuSrecFirmware)
+		     FuFirmware)
 
 FuFirmware *
 fu_synaptics_cape_firmware_new(void);
