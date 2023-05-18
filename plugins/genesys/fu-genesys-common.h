@@ -20,6 +20,15 @@ typedef struct {
 } FuGenesysWaitFlashRegisterHelper;
 
 typedef enum {
+	FW_TYPE_HUB,
+	FW_TYPE_INT_PD,
+	FW_TYPE_EXT_PD,
+	FW_TYPE_DEVICE_BRIDGE,
+
+	FW_TYPE_COUNT
+} FuGenesysFw;
+
+typedef enum {
 	ISP_MODEL_UNKNOWN,
 
 	/* hub */
