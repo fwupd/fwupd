@@ -36,7 +36,7 @@ fu_ccgx_plugin_constructed(GObject *obj)
 	fu_context_add_quirk_key(ctx, "CcgxDmcTriggerCode");
 	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_CCGX_FIRMWARE);
 	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_CCGX_DMC_FIRMWARE);
-	//fu_plugin_add_device_gtype(plugin, FU_TYPE_CCGX_HID_DEVICE);
+	fu_plugin_add_device_gtype(plugin, FU_TYPE_CCGX_HID_DEVICE);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_CCGX_PURE_HID_DEVICE);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_CCGX_HPI_DEVICE);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_CCGX_DMC_DEVICE);
