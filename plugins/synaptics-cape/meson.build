@@ -3,9 +3,6 @@ cargs = ['-DG_LOG_DOMAIN="FuPluginSynapticsCape"']
 
 plugin_quirks += files('synaptics-cape.quirk')
 plugin_builtins += static_library('fu_plugin_synaptics_cape',
-  rustgen.process(
-    'fu-synaptics-cape.rs',     # fuzzing
-  ),
   sources: [
     'fu-synaptics-cape-plugin.c',
     'fu-synaptics-cape-device.c',

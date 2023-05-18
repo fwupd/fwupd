@@ -1,7 +1,3 @@
-# Framework Audio Card
-[USB\VID_32AC&PID_0010]
-Guid = SYNAPTICS_CAPE\CX31993
-
 # EPOS Raw Plus
 [USB\VID_1395&PID_0280]
 Guid = SYNAPTICS_CAPE\CX31993
@@ -100,6 +96,18 @@ Flags = use-in-report-interrupt
 Guid = SYNAPTICS_CAPE\CX31993
 Flags = use-in-report-interrupt
 
+[USB\VID_1395&PID_0780]
+Guid = SYNAPTICS_CAPE\CX20889
+
+[USB\VID_1395&PID_0781]
+Guid = SYNAPTICS_CAPE\CX20889
+
+[USB\VID_1395&PID_0782]
+Guid = SYNAPTICS_CAPE\CX20889
+
+[USB\VID_1395&PID_0783]
+Guid = SYNAPTICS_CAPE\CX20889
+
 # USB audio codec USB receiver
 [SYNAPTICS_CAPE\CX31993]
 Plugin = synaptics_cape
@@ -107,4 +115,8 @@ Icon = usb-receiver
 
 # USB audio codec Hifi
 [SYNAPTICS_CAPE\CX31988]
+Plugin = synaptics_cape
+
+# USB audio DSP codec.
+[SYNAPTICS_CAPE\CX20889]
 Plugin = synaptics_cape
