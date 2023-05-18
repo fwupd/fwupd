@@ -29,6 +29,8 @@ struct _FuCcgxPureHidDevice {
 	//guint32 image_1_row;
 	//guint32 image_2_row;
 	//device_uid: // [u8; 6],
+	guint32 flash_row_size;
+	guint32 flash_size;
 };
 G_DEFINE_TYPE(FuCcgxPureHidDevice, fu_ccgx_pure_hid_device, FU_TYPE_HID_DEVICE)
 
@@ -118,6 +120,7 @@ fu_ccgx_pure_hid_get_fw_info(FuDevice *device, gpointer user_data, GError **erro
 	gsize bufsz = 0x40;
 	g_autofree guint8 *buf = g_malloc0(bufsz);
 	HidFwInfo *info;
+	g_autofree gchar *bl_ver;
 	g_autofree gchar *ver1;
 	g_autofree gchar *ver2;
 	g_debug("get fw info");
@@ -147,16 +150,12 @@ fu_ccgx_pure_hid_get_fw_info(FuDevice *device, gpointer user_data, GError **erro
 	g_debug("Bootloader Info: 0x%02x", info->bootloader_info);
 	g_debug("Bootmode Reason: 0x%02x", info->bootmode_reason);
 	g_debug("Silicon ID:      0x%08x", info->silicon_id);
-	g_debug("BL Version:      0x%08x", info->bl_version);
-	//g_debug("Image 1 Ver:     0x%08x", info->image_1_ver);
-	//g_debug("Image 2 Ver:     0x%08x", info->image_2_ver);
+	bl_ver = fu_ccgx_detailed_version_to_string(info->bl_version);
+	g_debug("BL Version:      %s (0x%08x)", bl_ver, info->bl_version);
 	ver1 = fu_ccgx_detailed_version_to_string(info->image_1_ver);
-	fu_device_set_version(FU_DEVICE(device), ver1);
-	fu_device_set_version(FU_DEVICE(device), ver1);
-	fu_device_set_version_raw(FU_DEVICE(device), info->image_1_ver);
-	g_debug("Image 1 Ver:     %s", ver1);
+	g_debug("Image 1 Ver:     %s (0x%08x)", ver1, info->image_1_ver);
 	ver2 = fu_ccgx_detailed_version_to_string(info->image_2_ver);
-	g_debug("Image 2 Ver:     %s", ver2);
+	g_debug("Image 2 Ver:     %s (0x%08x)", ver2, info->image_2_ver);
 	g_debug("Image 1 Row:     0x%08x", info->image_1_row);
 	g_debug("Image 2 Row:     0x%08x", info->image_2_row);
 	g_debug("Device UID:      0x%012x", (guint32)info->device_uid[0]);
@@ -184,14 +183,6 @@ fu_ccgx_pure_hid_device_detach(FuDevice *device, FuProgress *progress, GError **
 	return TRUE;
 }
 
-static void
-fu_ccgx_pure_hid_device_set_version_raw(FuCcgxPureHidDevice *self, guint32 version_raw)
-{
-	g_autofree gchar *version = fu_ccgx_detailed_version_to_string(version_raw);
-	fu_device_set_version(FU_DEVICE(self), version);
-	fu_device_set_version_raw(FU_DEVICE(self), version_raw);
-}
-
 static gboolean
 fu_ccgx_pure_hid_device_setup(FuDevice *device, GError **error)
 {
@@ -216,9 +207,6 @@ fu_ccgx_pure_hid_device_setup(FuDevice *device, GError **error)
 	fu_device_add_instance_u16(FU_DEVICE(self), "SID", self->silicon_id);
 	fu_device_build_instance_id_quirk(FU_DEVICE(self), NULL, "CCGX", "SID", NULL);
 
-	//self->fw_app_type = versions[self->operating_mode] & 0xffff;
-	//fu_device_add_instance_u16(device, "APP", self->fw_app_type);
-
 	if (self->operating_mode == FU_CCGX_FW_MODE_BOOT) {
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 	} else {
@@ -227,12 +215,13 @@ fu_ccgx_pure_hid_device_setup(FuDevice *device, GError **error)
 
 	/* if running in bootloader force an upgrade to any version */
 	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
-		fu_ccgx_pure_hid_device_set_version_raw(self, 0x0);
+		fu_device_set_version_from_uint32(FU_DEVICE(self), 0x0);
 	} else {
-		fu_ccgx_pure_hid_device_set_version_raw(self, self->versions[self->operating_mode]);
+		fu_device_set_version_from_uint32(FU_DEVICE(self), self->versions[self->operating_mode]);
 	}
 	
-	fu_device_set_version_bootloader(FU_DEVICE(device), fu_ccgx_detailed_version_to_string(self->versions[FU_CCGX_FW_MODE_BOOT]));
+	fu_device_set_version_bootloader_raw(FU_DEVICE(self), self->versions[FU_CCGX_FW_MODE_BOOT]);
+	fu_device_set_version_bootloader(FU_DEVICE(device), fu_version_from_uint32(self->versions[FU_CCGX_FW_MODE_BOOT], fu_device_get_version_format(self)));
 
 	g_debug("Setup End");
 
@@ -431,26 +420,60 @@ fu_ccgx_pure_hid_device_init(FuCcgxPureHidDevice *self)
 	fu_device_add_protocol(FU_DEVICE(self), "com.infineon.ccgx");
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_INTEL_ME2);
 }
 
 static void
 fu_ccgx_pure_hid_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuCcgxPureHidDevice *self = FU_CCGX_PURE_HID_DEVICE(device);
-	//fu_string_append_kx(str, idt, "ScbIndex", self->scb_index);
 	fu_string_append_kx(str, idt, "SiliconId", self->silicon_id);
-	//fu_string_append_kx(str, idt, "FwAppType", self->fw_app_type);
-	//fu_string_append_kx(str, idt, "HpiAddrsz", self->hpi_addrsz);
-	//fu_string_append_kx(str, idt, "NumPorts", self->num_ports);
 	fu_string_append(str, idt, "FuCcgxFwMode", fu_ccgx_fw_mode_to_string(self->operating_mode));
-	//fu_string_append(str,
-	//		 idt,
-	//		 "FwImageType",
-	//		 fu_ccgx_image_type_to_string(self->fw_image_type));
-	//if (self->flash_row_size > 0)
-	//	fu_string_append_kx(str, idt, "CcgxFlashRowSize", self->flash_row_size);
-	//if (self->flash_size > 0)
-	//	fu_string_append_kx(str, idt, "CcgxFlashSize", self->flash_size);
+	if (self->flash_row_size > 0)
+		fu_string_append_kx(str, idt, "CcgxFlashRowSize", self->flash_row_size);
+	if (self->flash_size > 0)
+		fu_string_append_kx(str, idt, "CcgxFlashSize", self->flash_size);
+}
+
+static gboolean
+fu_ccgx_pure_hid_device_set_quirk_kv(FuDevice *device,
+				const gchar *key,
+				const gchar *value,
+				GError **error)
+{
+	FuCcgxPureHidDevice *self = FU_CCGX_PURE_HID_DEVICE(device);
+	guint64 tmp = 0;
+
+	if (g_strcmp0(key, "SiliconId") == 0) {
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT16, error))
+			return FALSE;
+		self->silicon_id = tmp;
+		return TRUE;
+	}
+	if (g_strcmp0(key, "CcgxFlashRowSize") == 0) {
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT32, error))
+			return FALSE;
+		self->flash_row_size = tmp;
+		return TRUE;
+	}
+	if (g_strcmp0(key, "CcgxFlashSize") == 0) {
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT32, error))
+			return FALSE;
+		self->flash_size = tmp;
+		return TRUE;
+	}
+	//if (g_strcmp0(key, "CcgxImageKind") == 0) {
+	//	self->fw_image_type = fu_ccgx_image_type_from_string(value);
+	//	if (self->fw_image_type != FU_CCGX_IMAGE_TYPE_UNKNOWN)
+	//		return TRUE;
+	//	g_set_error_literal(error,
+	//			    G_IO_ERROR,
+	//			    G_IO_ERROR_INVALID_DATA,
+	//			    "invalid CcgxImageKind");
+	//	return FALSE;
+	//}
+	g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED, "no supported");
+	return FALSE;
 }
 
 static void
@@ -462,4 +485,5 @@ fu_ccgx_pure_hid_device_class_init(FuCcgxPureHidDeviceClass *klass)
 	klass_device->setup = fu_ccgx_pure_hid_device_setup;
 	klass_device->write_firmware = fu_ccgx_pure_hid_device_write_firmware;
 	//klass_device->set_progress = fu_ccgx_pure_hid_device_set_progress;
+	klass_device->set_quirk_kv = fu_ccgx_pure_hid_device_set_quirk_kv;
 }
