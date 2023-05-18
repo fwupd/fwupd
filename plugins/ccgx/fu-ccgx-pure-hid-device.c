@@ -19,6 +19,15 @@
 #define FW2_METADATA 0x03FE
 #define WRITE_HEADER_SIZE 4
 
+/**
+ * FU_CCGX_PURE_HID_DEVICE_IS_IN_RESTART:
+ *
+ * Device is in restart and should not be closed manually.
+ *
+ * Since: 1.7.0
+ */
+#define FU_CCGX_PURE_HID_DEVICE_IS_IN_RESTART (1 << 0)
+
 struct _FuCcgxPureHidDevice {
 	FuHidDevice parent_instance;
 	guint8 operating_mode;
@@ -170,17 +179,33 @@ fu_ccgx_pure_hid_get_fw_info_wrapper(FuDevice *device, gpointer user_data, GErro
 	return fu_ccgx_pure_hid_get_fw_info(device, user_data, error);
 }
 
+//static gboolean
+//fu_ccgx_pure_hid_device_detach(FuDevice *device, FuProgress *progress, GError **error)
+//{
+//	// Reset already done in fw update function. Takes a few seconds (roughly 4 to 5)
+//	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+//	fu_device_add_private_flag(device, FU_CCGX_PURE_HID_DEVICE_IS_IN_RESTART);
+//
+//	return TRUE;
+//}
+
 static gboolean
-fu_ccgx_pure_hid_device_detach(FuDevice *device, FuProgress *progress, GError **error)
+fu_ccgx_pure_hid_device_attach(FuDevice *device, FuProgress *progress, GError **error)
 {
-	//if (!fu_device_retry(device,
-	//		     fu_ccgx_pure_hid_device_enable_hpi_mode_cb,
-	//		     FU_CCGX_PURE_HID_DEVICE_RETRY_CNT,
-	//		     NULL,
-	//		     error))
-	//	return FALSE;
-	//fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+	fu_device_remove_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+	fu_device_remove_private_flag(device, FU_CCGX_PURE_HID_DEVICE_IS_IN_RESTART);
 	return TRUE;
+}
+
+static gboolean
+fu_ccgx_pure_hid_device_close(FuDevice *device, GError **error)
+{
+	/* do not close handle when device restarts */
+	if (fu_device_has_private_flag(device, FU_CCGX_PURE_HID_DEVICE_IS_IN_RESTART))
+		return TRUE;
+
+	/* FuUsbDevice->close */
+	return FU_DEVICE_CLASS(fu_ccgx_pure_hid_device_parent_class)->close(device, error);
 }
 
 static gboolean
@@ -222,6 +247,11 @@ fu_ccgx_pure_hid_device_setup(FuDevice *device, GError **error)
 	
 	fu_device_set_version_bootloader_raw(FU_DEVICE(self), self->versions[FU_CCGX_FW_MODE_BOOT]);
 	fu_device_set_version_bootloader(FU_DEVICE(device), fu_version_from_uint32(self->versions[FU_CCGX_FW_MODE_BOOT], fu_device_get_version_format(self)));
+
+	/* ensure the remove delay is set */
+	if (fu_device_get_remove_delay(FU_DEVICE(self)) == 0) {
+		fu_device_set_remove_delay(FU_DEVICE(self), 5000);
+	}
 
 	g_debug("Setup End");
 
@@ -376,6 +406,9 @@ fu_ccgx_pure_hid_device_write_firmware(FuDevice *device,
 			g_debug("Flashing Image 1");
 			fu_ccgx_pure_hid_flash_firmware_image(device, fw1_binary, fw_size, FW1_START, FW1_METADATA, 1, error);
 
+			fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+			fu_device_add_private_flag(device, FU_CCGX_PURE_HID_DEVICE_IS_IN_RESTART);
+
 			// TODO: Wait 5s
 			// TODO: Refresh HID devices
 			//fu_ccgx_pure_hid_magic_unlock(device, user_data, error);
@@ -386,6 +419,9 @@ fu_ccgx_pure_hid_device_write_firmware(FuDevice *device,
 			// Update Image 2
 			g_debug("Flashing Image 2");
 			fu_ccgx_pure_hid_flash_firmware_image(device, fw2_binary, fw_size, FW2_START, FW2_METADATA, 2, error);
+
+			fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+			fu_device_add_private_flag(device, FU_CCGX_PURE_HID_DEVICE_IS_IN_RESTART);
 
 			// TODO: Wait 5s
 			// TODO: Refresh HID devices
@@ -402,16 +438,16 @@ fu_ccgx_pure_hid_device_write_firmware(FuDevice *device,
 	return TRUE;
 }
 
-//static void
-//fu_ccgx_pure_hid_device_set_progress(FuDevice *self, FuProgress *progress)
-//{
-//	fu_progress_set_id(progress, G_STRLOC);
-//	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
-//	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0, "detach");
-//	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 98, "write");
-//	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0, "attach");
-//	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 2, "reload");
-//}
+static void
+fu_ccgx_pure_hid_device_set_progress(FuDevice *self, FuProgress *progress)
+{
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 25, "detach");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 50, "write");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 25, "attach");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 50, "reload");
+}
 
 static void
 fu_ccgx_pure_hid_device_init(FuCcgxPureHidDevice *self)
@@ -420,7 +456,12 @@ fu_ccgx_pure_hid_device_init(FuCcgxPureHidDevice *self)
 	fu_device_add_protocol(FU_DEVICE(self), "com.infineon.ccgx");
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_DUAL_IMAGE);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_INTEL_ME2);
+	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID);
+	fu_device_register_private_flag(FU_DEVICE(self),
+					FU_CCGX_PURE_HID_DEVICE_IS_IN_RESTART,
+					"is-in-restart");
 }
 
 static void
@@ -481,9 +522,13 @@ fu_ccgx_pure_hid_device_class_init(FuCcgxPureHidDeviceClass *klass)
 {
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
 	klass_device->to_string = fu_ccgx_pure_hid_device_to_string;
-	klass_device->detach = fu_ccgx_pure_hid_device_detach;
+	klass_device->attach = fu_ccgx_pure_hid_device_attach;
+	//klass_device->detach = fu_ccgx_pure_hid_device_detach;
 	klass_device->setup = fu_ccgx_pure_hid_device_setup;
 	klass_device->write_firmware = fu_ccgx_pure_hid_device_write_firmware;
-	//klass_device->set_progress = fu_ccgx_pure_hid_device_set_progress;
+	klass_device->set_progress = fu_ccgx_pure_hid_device_set_progress;
 	klass_device->set_quirk_kv = fu_ccgx_pure_hid_device_set_quirk_kv;
+	klass_device->close = fu_ccgx_pure_hid_device_close;
+	// TODO: Check firmware file
+	//klass_device->prepare_firmware = fu_ccgx_pure_hid_device_prepare_firmware;
 }
