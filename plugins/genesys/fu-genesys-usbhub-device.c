@@ -657,6 +657,84 @@ fu_genesys_tsdigit_value(gchar c)
 }
 
 static gboolean
+fu_genesys_usbhub_device_verify_model_and_generate_spec(FuGenesysUsbhubDevice *self, GError **error)
+{
+	const guint8 *project_ic_type = self->static_ts.mask_project_ic_type;
+
+	if (memcmp(project_ic_type, "3521", 4) == 0) {
+		self->spec.chip.model = ISP_MODEL_HUB_GL3521;
+	} else if (memcmp(project_ic_type, "3523", 4) == 0) {
+		self->spec.chip.model = ISP_MODEL_HUB_GL3523;
+	} else if (memcmp(project_ic_type, "3590", 4) == 0) {
+		self->spec.chip.model = ISP_MODEL_HUB_GL3590;
+	} else if (memcmp(project_ic_type, "3525", 4) == 0) {
+		self->spec.chip.model = ISP_MODEL_HUB_GL3525;
+	} else {
+		g_autofree gchar *ic_type = NULL;
+		ic_type = fu_strsafe((const gchar *)&self->static_ts.mask_project_ic_type,
+				     sizeof(self->static_ts.mask_project_ic_type));
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "IC type %s not supported",
+			    ic_type);
+		return FALSE;
+	}
+
+	self->spec.chip.revision = 10 * (project_ic_type[4] - '0') + (project_ic_type[5] - '0');
+
+	/* setup firmware parameters */
+	switch (self->spec.chip.model) {
+	case ISP_MODEL_HUB_GL3521:
+		self->spec.support_dual_bank = FALSE;
+		self->spec.support_code_size = FALSE;
+		self->spec.fw_bank_addr[FW_BANK_1][FW_TYPE_HUB] = 0x0000;
+		self->spec.fw_data_total_count[FW_TYPE_HUB] = 0x5000;
+		break;
+	case ISP_MODEL_HUB_GL3523:
+		self->spec.support_dual_bank = TRUE;
+		self->spec.fw_bank_addr[FW_BANK_1][FW_TYPE_HUB] = 0x0000;
+		self->spec.fw_bank_addr[FW_BANK_2][FW_TYPE_HUB] = 0x8000;
+
+		if (self->spec.chip.revision == 50) {
+			self->spec.support_code_size = TRUE;
+			self->spec.fw_data_total_count[FW_TYPE_HUB] = 0x8000;
+		} else {
+			self->spec.support_code_size = FALSE;
+			self->spec.fw_data_total_count[FW_TYPE_HUB] = 0x6000;
+		}
+		break;
+	case ISP_MODEL_HUB_GL3590:
+		self->spec.support_dual_bank = TRUE;
+		self->spec.support_code_size = TRUE;
+		self->spec.fw_bank_addr[FW_BANK_1][FW_TYPE_HUB] = 0x0000;
+		self->spec.fw_bank_addr[FW_BANK_2][FW_TYPE_HUB] = 0x10000;
+		self->spec.fw_bank_addr[FW_BANK_1][FW_TYPE_DEVICE_BRIDGE] = 0x20000;
+		self->spec.fw_bank_addr[FW_BANK_2][FW_TYPE_DEVICE_BRIDGE] = 0x30000;
+		self->spec.fw_data_total_count[FW_TYPE_HUB] = 0x10000;
+		self->spec.fw_data_total_count[FW_TYPE_DEVICE_BRIDGE] = 0x10000;
+		break;
+	case ISP_MODEL_HUB_GL3525:
+		self->spec.support_dual_bank = TRUE;
+		self->spec.support_code_size = TRUE;
+		self->spec.fw_bank_addr[FW_BANK_1][FW_TYPE_HUB] = 0x0000;
+		self->spec.fw_bank_addr[FW_BANK_2][FW_TYPE_HUB] = 0xB000;
+		self->spec.fw_bank_addr[FW_BANK_1][FW_TYPE_INT_PD] = 0x16000;
+		self->spec.fw_bank_addr[FW_BANK_2][FW_TYPE_INT_PD] = 0x23000;
+		self->spec.fw_bank_addr[FW_BANK_1][FW_TYPE_DEVICE_BRIDGE] = 0x30000;
+		self->spec.fw_bank_addr[FW_BANK_2][FW_TYPE_DEVICE_BRIDGE] = 0x38000;
+		self->spec.fw_data_total_count[FW_TYPE_HUB] = 0xB000;
+		self->spec.fw_data_total_count[FW_TYPE_INT_PD] = 0xD000;
+		self->spec.fw_data_total_count[FW_TYPE_DEVICE_BRIDGE] = 0x8000;
+		break;
+	default:
+		break;
+	}
+
+	return TRUE;
+}
+
+static gboolean
 fu_genesys_usbhub_device_get_bonding_and_flash_dump_location_bit(FuGenesysUsbhubDevice *self,
 								 GError **error)
 {
@@ -785,11 +863,9 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(device));
 	guint32 block_size;
 	guint32 sector_size;
-	guint64 revision_tmp = 0;
 	guint16 version_raw;
 	guint8 static_idx = 0;
 	guint8 dynamic_idx = 0;
-	gchar rev[3] = {0};
 	gint tool_string_version = 0;
 	g_autoptr(GBytes) static_buf = NULL;
 	g_autoptr(GBytes) dynamic_buf = NULL;
@@ -843,31 +919,9 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 		    (guint8 *)&self->static_ts,
 		    sizeof(FuGenesysStaticToolString));
 
-	if (memcmp(self->static_ts.mask_project_ic_type, "3521", 4) == 0) {
-		self->spec.chip.model = ISP_MODEL_HUB_GL3521;
-	} else if (memcmp(self->static_ts.mask_project_ic_type, "3523", 4) == 0) {
-		self->spec.chip.model = ISP_MODEL_HUB_GL3523;
-	} else if (memcmp(self->static_ts.mask_project_ic_type, "3590", 4) == 0) {
-		self->spec.chip.model = ISP_MODEL_HUB_GL3590;
-	} else if (memcmp(self->static_ts.mask_project_ic_type, "3525", 4) == 0) {
-		self->spec.chip.model = ISP_MODEL_HUB_GL3525;
-	} else {
-		ic_type = fu_strsafe((const gchar *)&self->static_ts.mask_project_ic_type,
-				     sizeof(self->static_ts.mask_project_ic_type));
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "IC type %s not supported",
-			    ic_type);
+	/* generate model spec */
+	if (!fu_genesys_usbhub_device_verify_model_and_generate_spec(self, error))
 		return FALSE;
-	}
-	memcpy(rev, &self->static_ts.mask_project_ic_type[4], 2);
-
-	if (!fu_strtoull(rev, &revision_tmp, 0, G_MAXINT32, error)) {
-		g_prefix_error(error, "failed to parse %s: ", rev);
-		return FALSE;
-	}
-	self->spec.chip.revision = revision_tmp;
 
 	dynamic_buf =
 	    g_usb_device_get_string_descriptor_bytes_full(usb_device,
@@ -970,53 +1024,6 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 	}
 
 	/* setup firmware parameters */
-	switch (self->spec.chip.model) {
-	case ISP_MODEL_HUB_GL3521:
-		self->spec.support_dual_bank = FALSE;
-		self->spec.support_code_size = FALSE;
-		self->spec.fw_bank_addr[FW_BANK_1][FW_TYPE_HUB] = 0x0000;
-		self->spec.fw_data_total_count[FW_TYPE_HUB] = 0x5000;
-		break;
-	case ISP_MODEL_HUB_GL3523: {
-		self->spec.support_dual_bank = TRUE;
-		self->spec.fw_bank_addr[FW_BANK_1][FW_TYPE_HUB] = 0x0000;
-		self->spec.fw_bank_addr[FW_BANK_2][FW_TYPE_HUB] = 0x8000;
-
-		if (self->spec.chip.revision == 50) {
-			self->spec.support_code_size = TRUE;
-			self->spec.fw_data_total_count[FW_TYPE_HUB] = 0x8000;
-		} else {
-			self->spec.support_code_size = FALSE;
-			self->spec.fw_data_total_count[FW_TYPE_HUB] = 0x6000;
-		}
-		break;
-	}
-	case ISP_MODEL_HUB_GL3590:
-		self->spec.support_dual_bank = TRUE;
-		self->spec.support_code_size = TRUE;
-		self->spec.fw_bank_addr[FW_BANK_1][FW_TYPE_HUB] = 0x0000;
-		self->spec.fw_bank_addr[FW_BANK_2][FW_TYPE_HUB] = 0x10000;
-		self->spec.fw_bank_addr[FW_BANK_1][FW_TYPE_DEVICE_BRIDGE] = 0x20000;
-		self->spec.fw_bank_addr[FW_BANK_2][FW_TYPE_DEVICE_BRIDGE] = 0x30000;
-		self->spec.fw_data_total_count[FW_TYPE_HUB] = 0x10000;
-		self->spec.fw_data_total_count[FW_TYPE_DEVICE_BRIDGE] = 0x10000;
-		break;
-	case ISP_MODEL_HUB_GL3525:
-		self->spec.support_dual_bank = TRUE;
-		self->spec.support_code_size = TRUE;
-		self->spec.fw_bank_addr[FW_BANK_1][FW_TYPE_HUB] = 0x0000;
-		self->spec.fw_bank_addr[FW_BANK_2][FW_TYPE_HUB] = 0xB000;
-		self->spec.fw_bank_addr[FW_BANK_1][FW_TYPE_INT_PD] = 0x16000;
-		self->spec.fw_bank_addr[FW_BANK_2][FW_TYPE_INT_PD] = 0x23000;
-		self->spec.fw_bank_addr[FW_BANK_1][FW_TYPE_DEVICE_BRIDGE] = 0x30000;
-		self->spec.fw_bank_addr[FW_BANK_2][FW_TYPE_DEVICE_BRIDGE] = 0x38000;
-		self->spec.fw_data_total_count[FW_TYPE_HUB] = 0xB000;
-		self->spec.fw_data_total_count[FW_TYPE_INT_PD] = 0xD000;
-		self->spec.fw_data_total_count[FW_TYPE_DEVICE_BRIDGE] = 0x8000;
-		break;
-	default:
-		break;
-	}
 	if (fu_device_has_private_flag(device, FU_GENESYS_USBHUB_FLAG_HAS_PUBLIC_KEY))
 		self->extend_size = GL3523_PUBLIC_KEY_LEN + GL3523_SIG_LEN;
 
