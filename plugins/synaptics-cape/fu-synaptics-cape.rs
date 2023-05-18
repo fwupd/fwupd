@@ -15,6 +15,7 @@ struct SynapticsCapeHidHdr {
     reserved: u32le,
 }
 
+#[derive(New, Parse)]
 struct SynapticsCapeSnglHdr {
     magic: u32le,
     file_crc: u32le,
@@ -30,6 +31,13 @@ struct SynapticsCapeSnglHdr {
     _reserved: [u8; 8],
     machine_name: [char; 16],
     time_stamp: [char; 16],
+}
+
+struct SynapticsCapeSnglFile {
+    Id: u32le,
+    Crc: u32le,
+    File: u32le,
+    Size: u32le,
 }
 
 enum SynapticsCapeSnglImgTypeId {

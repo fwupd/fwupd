@@ -11,6 +11,7 @@ plugin_builtins += static_library('fu_plugin_synaptics_cape',
     'fu-synaptics-cape-device.c',
     'fu-synaptics-cape-firmware.c',     # fuzzing
     'fu-synaptics-cape-hid-firmware.c', # fuzzing
+    'fu-synaptics-cape-sngl-firmware.c', # fuzzing
   ],
   include_directories: plugin_incdirs,
   link_with: plugin_libs,
