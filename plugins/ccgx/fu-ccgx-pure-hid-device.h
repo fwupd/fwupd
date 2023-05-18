@@ -13,9 +13,15 @@
 G_DECLARE_FINAL_TYPE(FuCcgxPureHidDevice, fu_ccgx_pure_hid_device, FU, CCGX_PURE_HID_DEVICE, FuHidDevice)
 
 typedef enum {
-        INFO_E0    = 0xE0,
-        COMMAND_E0 = 0xE1,
-        WRITE_E2   = 0xE2,
-        READ_E3    = 0xE3,
-        Custom     = 0xE4,
+        CCGX_HID_INFO_E0    = 0xE0,
+        CCGX_HID_COMMAND_E1 = 0xE1,
+        CCGX_HID_WRITE_E2   = 0xE2,
+        CCGX_HID_READ_E3    = 0xE3,
+        CCGX_HID_CUSTOM     = 0xE4,
 } CcgHidReport;
+
+typedef enum {
+        CCGX_HID_CMD_JUMP = 0x01,
+        CCGX_HID_CMD_FLASH = 0x02,
+        CCGX_HID_CMD_MODE = 0x06,
+} CcgHidCommand;
