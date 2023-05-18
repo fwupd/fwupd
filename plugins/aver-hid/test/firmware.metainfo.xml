@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="firmware">
+  <id>com.aver.hid.firmware</id>
+  <name>FONE540</name>
+  <summary>System firmware for AVer FONE540</summary>
+  <description>
+    <p>AVer Fone540 can be updated using fwupd with plugin aver-hid.</p>
+  </description>
+  <icon type="stock">audio-card</icon>
+  <provides>
+    <!-- this is a suitable HWID, found using `fwupdmgr hwids` -->
+    <firmware type="flashed">36fc9e60-c465-11cf-8056-444553540000</firmware>
+  </provides>
+  <url type="homepage">https://www.aver.com/</url>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>LicenseRef-proprietary</project_license>
+  <developer_name>AVer Information Inc.</developer_name>
+  <categories>
+    <category>X-Device</category>
+  </categories>
+  <releases>
+    <release urgency="high" version="0.0.7004.07" date="2022-10-26">
+      <checksum filename="0.0.7004.07.dat" target="content"/>
+      <description>
+        <p>
+          This release updates firmware to 0.0.7004.07.
+        </p>
+      </description>
+    </release>
+  </releases>
+  <requires>
+    <id compare="ge" version="1.8.2">org.freedesktop.fwupd</id>
+  </requires>
+  <custom>
+    <value key="LVFS::VersionFormat">plain</value>
+        <!--<value key="LVFS::UpdateProtocol">com.aver.hid</value>-->
+  </custom>
+</component>

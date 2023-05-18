@@ -25,6 +25,7 @@ fu_aver_hid_firmware_parse_archive_cb(FuArchive *self,
 	if (g_str_has_suffix(filename, ".dat")) {
 		g_autofree gchar *version = g_strndup(filename, strlen(filename) - 4);
 		fu_firmware_set_version(firmware, version);
+		fu_firmware_set_filename(firmware, filename);
 	}
 	return TRUE;
 }
