@@ -11,7 +11,7 @@
 #include <string.h>
 
 #include "fu-synaptics-cape-device.h"
-#include "fu-synaptics-cape-firmware.h"
+#include "fu-synaptics-cape-hid-firmware.h"
 
 /* defines timings */
 #define FU_SYNAPTICS_CAPE_DEVICE_USB_CMD_WRITE_TIMEOUT	20   /* ms */
@@ -561,7 +561,7 @@ fu_synaptics_cape_device_prepare_firmware(FuDevice *device,
 {
 	FuSynapticsCapeDevice *self = FU_SYNAPTICS_CAPE_DEVICE(device);
 	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
-	g_autoptr(FuFirmware) firmware = fu_synaptics_cape_firmware_new();
+	g_autoptr(FuFirmware) firmware = fu_synaptics_cape_hid_firmware_new();
 	gsize offset = 0;
 	g_autoptr(GBytes) new_fw = NULL;
 
