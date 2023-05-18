@@ -116,6 +116,7 @@ GByteArray *
 }
 {%- endif %}
 
+{%- if derives %}
 gchar *
 {{name_snake}}_to_string(GByteArray *st)
 {
@@ -149,6 +150,7 @@ gchar *
         g_string_set_size(str, str->len - 1);
     return g_string_free(g_steal_pointer(&str), FALSE);
 }
+{%- endif %}
 
 {%- if 'Parse' in derives %}
 GByteArray *

@@ -7,7 +7,9 @@ GByteArray *{{name_snake}}_parse(const guint8 *buf, gsize bufsz, gsize offset, G
 {%- if 'Validate' in derives %}
 gboolean {{name_snake}}_validate(const guint8 *buf, gsize bufsz, gsize offset, GError **error);
 {%- endif %}
+{%- if derives %}
 gchar *{{name_snake}}_to_string(GByteArray *st);
+{%- endif %}
 
 {%- if 'Getters' in derives %}
 {%- for item in items | selectattr('enabled') | rejectattr('constant') %}
