@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: LGPL-2.1+
 
 #[derive(New, Parse)]
-struct SynapticsCapeFileHdr {
+struct SynapticsCapeHidHdr {
     vid: u32le,
     pid: u32le,
     update_type: u32le,

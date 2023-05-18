@@ -1,4 +1,4 @@
-<firmware gtype="FuSynapticsCapeFirmware">
+<firmware gtype="FuSynapticsCapeHidFirmware">
   <flags>has-vid-pid</flags>
   <id>payload</id>
   <version>8.41.24.0</version>
