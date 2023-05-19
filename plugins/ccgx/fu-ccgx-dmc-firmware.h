@@ -9,8 +9,6 @@
 
 #include <fwupdplugin.h>
 
-#include "fu-ccgx-dmc-common.h"
-
 #define FU_TYPE_CCGX_DMC_FIRMWARE (fu_ccgx_dmc_firmware_get_type())
 G_DECLARE_FINAL_TYPE(FuCcgxDmcFirmware, fu_ccgx_dmc_firmware, FU, CCGX_DMC_FIRMWARE, FuFirmware)
 

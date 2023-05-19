@@ -166,7 +166,6 @@ static gboolean
 fu_ccgx_firmware_parse_md_block(FuCcgxFirmware *self, FwupdInstallFlags flags, GError **error)
 {
 	FuCcgxFirmwareRecord *rcd;
-	CCGxMetaData metadata;
 	const guint8 *buf;
 	gsize bufsz = 0;
 	gsize md_offset = 0;
@@ -174,6 +173,7 @@ fu_ccgx_firmware_parse_md_block(FuCcgxFirmware *self, FwupdInstallFlags flags, G
 	guint32 rcd_version_idx = 0;
 	guint32 version = 0;
 	guint8 checksum_calc = 0;
+	g_autoptr(GByteArray) st_metadata = NULL;
 
 	/* sanity check */
 	if (self->records->len == 0) {
@@ -204,25 +204,20 @@ fu_ccgx_firmware_parse_md_block(FuCcgxFirmware *self, FwupdInstallFlags flags, G
 	default:
 		break;
 	}
-	if (!fu_memcpy_safe((guint8 *)&metadata,
-			    sizeof(metadata),
-			    0x0, /* dst */
-			    buf,
-			    bufsz,
-			    md_offset,
-			    sizeof(metadata),
-			    error)) /* src */
-		return FALSE;
 
-	/* sanity check */
-	if (metadata.metadata_valid != CCGX_METADATA_VALID_SIG) {
+	/* parse */
+	st_metadata = fu_struct_ccgx_metadata_hdr_parse(buf, bufsz, md_offset, error);
+	if (st_metadata == NULL)
+		return FALSE;
+	if (fu_struct_ccgx_metadata_hdr_get_metadata_valid(st_metadata) !=
+	    FU_STRUCT_CCGX_METADATA_HDR_DEFAULT_METADATA_VALID) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "invalid metadata 0x@%x, expected 0x%04x, got 0x%04x",
 			    (guint)md_offset,
-			    (guint)CCGX_METADATA_VALID_SIG,
-			    (guint)metadata.metadata_valid);
+			    (guint)FU_STRUCT_CCGX_METADATA_HDR_DEFAULT_METADATA_VALID,
+			    (guint)fu_struct_ccgx_metadata_hdr_get_metadata_valid(st_metadata));
 		return FALSE;
 	}
 	for (guint i = 0; i < self->records->len - 1; i++) {
@@ -230,24 +225,24 @@ fu_ccgx_firmware_parse_md_block(FuCcgxFirmware *self, FwupdInstallFlags flags, G
 		checksum_calc += fu_sum8_bytes(rcd->data);
 		fw_size += g_bytes_get_size(rcd->data);
 	}
-	if (fw_size != metadata.fw_size) {
+	if (fw_size != fu_struct_ccgx_metadata_hdr_get_fw_size(st_metadata)) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_FILE,
 			    "firmware size invalid, got %02x, expected %02x",
 			    fw_size,
-			    metadata.fw_size);
+			    fu_struct_ccgx_metadata_hdr_get_fw_size(st_metadata));
 		return FALSE;
 	}
 	checksum_calc = 1 + ~checksum_calc;
 	if ((flags & FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM) == 0) {
-		if (metadata.fw_checksum != checksum_calc) {
+		if (fu_struct_ccgx_metadata_hdr_get_fw_checksum(st_metadata) != checksum_calc) {
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_FILE,
 				    "checksum invalid, got %02x, expected %02x",
 				    checksum_calc,
-				    metadata.fw_checksum);
+				    fu_struct_ccgx_metadata_hdr_get_fw_checksum(st_metadata));
 			return FALSE;
 		}
 	}
@@ -421,12 +416,12 @@ static GByteArray *
 fu_ccgx_firmware_write(FuFirmware *firmware, GError **error)
 {
 	FuCcgxFirmware *self = FU_CCGX_FIRMWARE(firmware);
-	CCGxMetaData metadata = {0x0};
 	gsize fwbufsz = 0;
 	guint8 checksum_img = 0xff;
 	const guint8 *fwbuf;
 	g_autoptr(GByteArray) buf = g_byte_array_new();
 	g_autoptr(GByteArray) mdbuf = g_byte_array_new();
+	g_autoptr(GByteArray) st_metadata = fu_struct_ccgx_metadata_hdr_new();
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GPtrArray) chunks = NULL;
 	g_autoptr(GString) str = g_string_new(NULL);
@@ -457,22 +452,21 @@ fu_ccgx_firmware_write(FuFirmware *firmware, GError **error)
 	fwbuf = g_bytes_get_data(fw, &fwbufsz);
 	for (guint j = 0; j < fwbufsz; j++)
 		checksum_img += fwbuf[j];
-	metadata.fw_checksum = ~checksum_img;
-	metadata.fw_entry = 0x0; /* unknown */
-	metadata.last_boot_row = 0x13;
-	metadata.fw_size = fwbufsz;
-	metadata.metadata_valid = CCGX_METADATA_VALID_SIG;
-	metadata.boot_seq = 0x0; /* unknown */
 
 	/* copy into place */
 	fu_byte_array_set_size(mdbuf, 0x80, 0x00);
+	fu_struct_ccgx_metadata_hdr_set_fw_checksum(st_metadata, ~checksum_img);
+	fu_struct_ccgx_metadata_hdr_set_fw_entry(st_metadata, 0x0); /* unknown */
+	fu_struct_ccgx_metadata_hdr_set_last_boot_row(st_metadata, 0x13);
+	fu_struct_ccgx_metadata_hdr_set_fw_size(st_metadata, fwbufsz);
+	fu_struct_ccgx_metadata_hdr_set_boot_seq(st_metadata, 0x0); /* unknown */
 	if (!fu_memcpy_safe(mdbuf->data,
 			    mdbuf->len,
 			    0x40, /* dst */
-			    (const guint8 *)&metadata,
-			    sizeof(metadata),
+			    st_metadata->data,
+			    st_metadata->len,
 			    0x0, /* src */
-			    sizeof(metadata),
+			    st_metadata->len,
 			    error))
 		return NULL;
 	fu_ccgx_firmware_write_record(str,

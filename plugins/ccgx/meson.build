@@ -8,18 +8,17 @@ plugin_quirks += files([
 plugin_builtin_ccgx = static_library('fu_plugin_ccgx',
   rustgen.process(
     'fu-ccgx.rs',           # fuzzing
+    'fu-ccgx-dmc.rs',       # fuzzing
   ),
   sources: [
     'fu-ccgx-plugin.c',
     'fu-ccgx-common.c',         # fuzzing
     'fu-ccgx-firmware.c',       # fuzzing
     'fu-ccgx-hid-device.c',
-    'fu-ccgx-hpi-common.c',
     'fu-ccgx-hpi-device.c',
     'fu-ccgx-dmc-device.c',
     'fu-ccgx-dmc-devx-device.c',
     'fu-ccgx-dmc-firmware.c',   # fuzzing
-    'fu-ccgx-dmc-common.c',     # fuzzing
   ],
   include_directories: plugin_incdirs,
   link_with: plugin_libs,
