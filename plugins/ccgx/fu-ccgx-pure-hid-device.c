@@ -167,11 +167,11 @@ fu_ccgx_pure_hid_get_fw_info(FuDevice *device, gpointer user_data, GError **erro
 	g_debug("Bootloader Info: 0x%02x", info->bootloader_info);
 	g_debug("Bootmode Reason: 0x%02x", info->bootmode_reason);
 	g_debug("Silicon ID:      0x%08x", info->silicon_id);
-	bl_ver = fu_ccgx_detailed_version_to_string(info->bl_version);
+	bl_ver = fu_version_from_uint32(info->bl_version, fu_device_get_version_format(self));
 	g_debug("BL Version:      %s (0x%08x)", bl_ver, info->bl_version);
-	ver1 = fu_ccgx_detailed_version_to_string(info->image_1_ver);
+	ver1 = fu_version_from_uint32(info->image_1_ver, fu_device_get_version_format(self));
 	g_debug("Image 1 Ver:     %s (0x%08x)", ver1, info->image_1_ver);
-	ver2 = fu_ccgx_detailed_version_to_string(info->image_2_ver);
+	ver2 = fu_version_from_uint32(info->image_2_ver, fu_device_get_version_format(self));
 	g_debug("Image 2 Ver:     %s (0x%08x)", ver2, info->image_2_ver);
 	g_debug("Image 1 Row:     0x%08x", info->image_1_row);
 	g_debug("Image 2 Row:     0x%08x", info->image_2_row);
