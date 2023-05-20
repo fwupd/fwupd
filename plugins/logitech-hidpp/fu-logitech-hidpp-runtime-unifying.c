@@ -10,11 +10,11 @@
 #include "fu-logitech-hidpp-hidpp.h"
 #include "fu-logitech-hidpp-runtime-unifying.h"
 
-struct _FuLogitechHidPpRuntimeUnifying {
-	FuLogitechHidPpRuntime parent_instance;
+struct _FuLogitechHidppRuntimeUnifying {
+	FuLogitechHidppRuntime parent_instance;
 };
 
-G_DEFINE_TYPE(FuLogitechHidPpRuntimeUnifying,
+G_DEFINE_TYPE(FuLogitechHidppRuntimeUnifying,
 	      fu_logitech_hidpp_runtime_unifying,
 	      FU_TYPE_HIDPP_RUNTIME)
 #define GET_PRIVATE(o) (fu_logitech_hidpp_runtime_unifying_get_instance_private(o))
@@ -22,8 +22,8 @@ G_DEFINE_TYPE(FuLogitechHidPpRuntimeUnifying,
 static gboolean
 fu_logitech_hidpp_runtime_unifying_detach(FuDevice *device, FuProgress *progress, GError **error)
 {
-	FuLogitechHidPpRuntime *self = FU_HIDPP_RUNTIME(device);
-	g_autoptr(FuLogitechHidPpHidppMsg) msg = fu_logitech_hidpp_msg_new();
+	FuLogitechHidppRuntime *self = FU_HIDPP_RUNTIME(device);
+	g_autoptr(FuLogitechHidppHidppMsg) msg = fu_logitech_hidpp_msg_new();
 	g_autoptr(GError) error_local = NULL;
 
 	msg->report_id = HIDPP_REPORT_ID_SHORT;
@@ -34,10 +34,10 @@ fu_logitech_hidpp_runtime_unifying_detach(FuDevice *device, FuProgress *progress
 	msg->data[1] = 'C';
 	msg->data[2] = 'P';
 	msg->hidpp_version = 1;
-	msg->flags = FU_UNIFYING_HIDPP_MSG_FLAG_LONGER_TIMEOUT;
+	msg->flags = FU_LOGITECH_HIDPP_HIDPP_MSG_FLAG_LONGER_TIMEOUT;
 	if (!fu_logitech_hidpp_send(fu_logitech_hidpp_runtime_get_io_channel(self),
 				    msg,
-				    FU_UNIFYING_DEVICE_TIMEOUT_MS,
+				    FU_LOGITECH_HIDPP_DEVICE_TIMEOUT_MS,
 				    &error_local)) {
 		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_WRITE)) {
 			g_debug("failed to detach to bootloader: %s", error_local->message);
@@ -54,14 +54,14 @@ fu_logitech_hidpp_runtime_unifying_detach(FuDevice *device, FuProgress *progress
 static gboolean
 fu_logitech_hidpp_runtime_unifying_setup_internal(FuDevice *device, GError **error)
 {
-	FuLogitechHidPpRuntime *self = FU_HIDPP_RUNTIME(device);
+	FuLogitechHidppRuntime *self = FU_HIDPP_RUNTIME(device);
 	guint8 config[10];
 	g_autofree gchar *version_fw = NULL;
 
 	/* read all 10 bytes of the version register */
 	memset(config, 0x00, sizeof(config));
 	for (guint i = 0x01; i < 0x05; i++) {
-		g_autoptr(FuLogitechHidPpHidppMsg) msg = fu_logitech_hidpp_msg_new();
+		g_autoptr(FuLogitechHidppHidppMsg) msg = fu_logitech_hidpp_msg_new();
 
 		/* workaround a bug in the 12.01 firmware, which fails with
 		 * INVALID_VALUE when reading MCU1_HW_VERSION */
@@ -164,7 +164,7 @@ fu_logitech_hidpp_runtime_unifying_set_progress(FuDevice *self, FuProgress *prog
 }
 
 static void
-fu_logitech_hidpp_runtime_unifying_class_init(FuLogitechHidPpRuntimeUnifyingClass *klass)
+fu_logitech_hidpp_runtime_unifying_class_init(FuLogitechHidppRuntimeUnifyingClass *klass)
 {
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
 
@@ -174,6 +174,6 @@ fu_logitech_hidpp_runtime_unifying_class_init(FuLogitechHidPpRuntimeUnifyingClas
 }
 
 static void
-fu_logitech_hidpp_runtime_unifying_init(FuLogitechHidPpRuntimeUnifying *self)
+fu_logitech_hidpp_runtime_unifying_init(FuLogitechHidppRuntimeUnifying *self)
 {
 }

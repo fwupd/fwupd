@@ -9,8 +9,8 @@
 #include "fu-logitech-hidpp-runtime.h"
 
 #define FU_TYPE_HIDPP_RUNTIME_BOLT (fu_logitech_hidpp_runtime_bolt_get_type())
-G_DECLARE_FINAL_TYPE(FuLogitechHidPpRuntimeBolt,
+G_DECLARE_FINAL_TYPE(FuLogitechHidppRuntimeBolt,
 		     fu_logitech_hidpp_runtime_bolt,
 		     FU,
 		     HIDPP_RUNTIME_BOLT,
-		     FuLogitechHidPpRuntime)
+		     FuLogitechHidppRuntime)
