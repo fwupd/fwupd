@@ -9,19 +9,19 @@
 #include <fwupdplugin.h>
 
 #define FU_TYPE_HIDPP_RUNTIME (fu_logitech_hidpp_runtime_get_type())
-G_DECLARE_DERIVABLE_TYPE(FuLogitechHidPpRuntime,
+G_DECLARE_DERIVABLE_TYPE(FuLogitechHidppRuntime,
 			 fu_logitech_hidpp_runtime,
 			 FU,
 			 HIDPP_RUNTIME,
 			 FuUdevDevice)
 
-struct _FuLogitechHidPpRuntimeClass {
+struct _FuLogitechHidppRuntimeClass {
 	FuUdevDeviceClass parent_class;
 };
 
 gboolean
-fu_logitech_hidpp_runtime_enable_notifications(FuLogitechHidPpRuntime *self, GError **error);
+fu_logitech_hidpp_runtime_enable_notifications(FuLogitechHidppRuntime *self, GError **error);
 FuIOChannel *
-fu_logitech_hidpp_runtime_get_io_channel(FuLogitechHidPpRuntime *self);
+fu_logitech_hidpp_runtime_get_io_channel(FuLogitechHidppRuntime *self);
 guint8
-fu_logitech_hidpp_runtime_get_version_bl_major(FuLogitechHidPpRuntime *self);
+fu_logitech_hidpp_runtime_get_version_bl_major(FuLogitechHidppRuntime *self);
