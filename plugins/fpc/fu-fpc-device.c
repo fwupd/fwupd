@@ -9,6 +9,7 @@
 #include <fwupdplugin.h>
 
 #include "fu-fpc-device.h"
+#include "fu-fpc-struct.h"
 
 #define FPC_USB_INTERFACE	     0
 #define FPC_USB_TRANSFER_TIMEOUT     1500 /* ms */
@@ -74,14 +75,6 @@ struct _FuFpcDevice {
 };
 
 G_DEFINE_TYPE(FuFpcDevice, fu_fpc_device, FU_TYPE_USB_DEVICE)
-
-typedef struct __attribute__((packed)) {
-	guint8 bstatus;
-	guint8 bmax_payload_size;
-	guint8 reserved[2];
-	guint8 bstate;
-	guint8 reserved2;
-} FuFpcDfuStatus;
 
 static gboolean
 fu_fpc_device_dfu_cmd(FuFpcDevice *self,
@@ -273,16 +266,16 @@ fu_fpc_device_setup_version(FuFpcDevice *self, GError **error)
 }
 
 static gboolean
-fu_fpc_device_check_dfu_status(FuDevice *device, gpointer user_data, GError **error)
+fu_fpc_device_check_dfu_status_cb(FuDevice *device, gpointer user_data, GError **error)
 {
 	FuFpcDevice *self = FU_FPC_DEVICE(device);
-	FuFpcDfuStatus *dfu_status = (FuFpcDfuStatus *)user_data;
+	g_autoptr(GByteArray) dfu_status = fu_struct_fpc_dfu_new();
 
 	if (!fu_fpc_device_dfu_cmd(self,
 				   FPC_CMD_DFU_GETSTATUS,
 				   0x0000,
-				   (guint8 *)dfu_status,
-				   sizeof(FuFpcDfuStatus),
+				   dfu_status->data,
+				   dfu_status->len,
 				   TRUE,
 				   FALSE,
 				   error)) {
@@ -290,16 +283,23 @@ fu_fpc_device_check_dfu_status(FuDevice *device, gpointer user_data, GError **er
 		return FALSE;
 	}
 
-	if (dfu_status->bstatus != 0 || dfu_status->bstate == FPC_DFU_DNBUSY) {
+	if (fu_struct_fpc_dfu_get_status(dfu_status) != 0 ||
+	    fu_struct_fpc_dfu_get_state(dfu_status) == FPC_DFU_DNBUSY) {
 		/* device is not in correct status/state */
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_WRITE,
 			    "dfu status error [0x%x, 0x%x]",
-			    dfu_status->bstatus,
-			    dfu_status->bstate);
+			    fu_struct_fpc_dfu_get_status(dfu_status),
+			    fu_struct_fpc_dfu_get_state(dfu_status));
 		return FALSE;
 	}
+
+	if (fu_struct_fpc_dfu_get_max_payload_size(dfu_status) > 0 ||
+	    fu_device_has_private_flag(FU_DEVICE(self), FU_FPC_DEVICE_FLAG_RTS_DEVICE))
+		self->max_block_size = FPC_FLASH_BLOCK_SIZE_4096;
+	else
+		self->max_block_size = FPC_FLASH_BLOCK_SIZE_DEFAULT;
 
 	return TRUE;
 }
@@ -307,8 +307,6 @@ fu_fpc_device_check_dfu_status(FuDevice *device, gpointer user_data, GError **er
 static gboolean
 fu_fpc_device_update_init(FuFpcDevice *self, GError **error)
 {
-	FuFpcDfuStatus dfu_status = {0};
-
 	if (!fu_device_has_private_flag(FU_DEVICE(self), FU_FPC_DEVICE_FLAG_LEGACY_DFU)) {
 		if (!fu_fpc_device_dfu_cmd(self,
 					   FPC_CMD_DFU_CLRSTATUS,
@@ -322,22 +320,12 @@ fu_fpc_device_update_init(FuFpcDevice *self, GError **error)
 			return FALSE;
 		}
 	}
-
-	if (!fu_device_retry_full(FU_DEVICE(self),
-				  fu_fpc_device_check_dfu_status,
-				  FPC_DFU_MAX_ATTEMPTS,
-				  20,
-				  (gpointer)&dfu_status,
-				  error))
-		return FALSE;
-
-	if (dfu_status.bmax_payload_size > 0 ||
-	    fu_device_has_private_flag(FU_DEVICE(self), FU_FPC_DEVICE_FLAG_RTS_DEVICE))
-		self->max_block_size = FPC_FLASH_BLOCK_SIZE_4096;
-	else
-		self->max_block_size = FPC_FLASH_BLOCK_SIZE_DEFAULT;
-
-	return TRUE;
+	return fu_device_retry_full(FU_DEVICE(self),
+				    fu_fpc_device_check_dfu_status_cb,
+				    FPC_DFU_MAX_ATTEMPTS,
+				    20,
+				    NULL,
+				    error);
 }
 
 static void
@@ -429,7 +417,6 @@ fu_fpc_device_write_firmware(FuDevice *device,
 			     GError **error)
 {
 	FuFpcDevice *self = FU_FPC_DEVICE(device);
-	FuFpcDfuStatus dfu_status = {0};
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GPtrArray) chunks = NULL;
@@ -486,10 +473,10 @@ fu_fpc_device_write_firmware(FuDevice *device,
 		}
 
 		if (!fu_device_retry_full(device,
-					  fu_fpc_device_check_dfu_status,
+					  fu_fpc_device_check_dfu_status_cb,
 					  FPC_DFU_MAX_ATTEMPTS,
 					  20,
-					  (gpointer)&dfu_status,
+					  NULL,
 					  &error_local)) {
 			g_set_error(error,
 				    FWUPD_ERROR,
@@ -522,10 +509,10 @@ fu_fpc_device_write_firmware(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	if (!fu_device_retry_full(device,
-				  fu_fpc_device_check_dfu_status,
+				  fu_fpc_device_check_dfu_status_cb,
 				  FPC_DFU_MAX_ATTEMPTS,
 				  20,
-				  (gpointer)&dfu_status,
+				  NULL,
 				  error))
 		return FALSE;
 
