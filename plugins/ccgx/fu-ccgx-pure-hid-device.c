@@ -25,7 +25,7 @@
  *
  * Device is in restart and should not be closed manually.
  *
- * Since: 1.7.0
+ * Since: 1.9.2
  */
 #define FU_CCGX_PURE_HID_DEVICE_IS_IN_RESTART (1 << 0)
 
@@ -107,7 +107,7 @@ static gboolean
 fu_ccgx_pure_hid_magic_unlock(FuDevice *device, gpointer user_data, GError **error)
 {
 	guint8 magic_buf[8] = {CCGX_HID_CUSTOM, 0x42, 0x43, 0x59, 0x00, 0x00, 0x00, 0x0B};
-	gboolean err;
+	g_autoptr(GError) error_local = NULL;
 	g_debug("magic unlock");
 
 	if (!fu_hid_device_set_report(FU_HID_DEVICE(device),
@@ -123,9 +123,10 @@ fu_ccgx_pure_hid_magic_unlock(FuDevice *device, gpointer user_data, GError **err
 
 
 	g_debug("bridge mode");
-	err = fu_ccgx_pure_hid_command(device, CCGX_HID_CMD_MODE, CY_PD_BRIDGE_MODE_CMD_SIG, NULL);
-	// Ignoring error. This always fails but has the correct behavior
-	err = err;
+	if (!fu_ccgx_pure_hid_command(device, CCGX_HID_CMD_MODE, CY_PD_BRIDGE_MODE_CMD_SIG, &error_local)) {
+		// Ignoring error. This always fails but has the correct behavior
+		g_debug("Set HID report bridge mode failed, which is expected. Error: %s", error_local->message);
+	}
 
 	return TRUE;
 }
@@ -134,19 +135,18 @@ static gboolean
 fu_ccgx_pure_hid_get_fw_info(FuDevice *device, gpointer user_data, GError **error)
 {
 	FuCcgxPureHidDevice *self = FU_CCGX_PURE_HID_DEVICE(device);
-	gsize bufsz = 0x40;
-	g_autofree guint8 *buf = g_malloc0(bufsz);
-	HidFwInfo *info;
-	g_autofree gchar *bl_ver;
-	g_autofree gchar *ver1;
-	g_autofree gchar *ver2;
+	guint8 buf[0x40] = {0};
+	HidFwInfo *info = NULL;
+	g_autofree gchar *bl_ver = NULL;
+	g_autofree gchar *ver1 = NULL;
+	g_autofree gchar *ver2 = NULL;
 	g_debug("get fw info");
 
 	buf[0] = CCGX_HID_INFO_E0;
 	if (!fu_hid_device_get_report(FU_HID_DEVICE(device),
 				      buf[0],
 				      buf,
-				      bufsz,
+				      sizeof(buf),
 				      FU_CCGX_PURE_HID_DEVICE_TIMEOUT,
 				      FU_HID_DEVICE_FLAG_IS_FEATURE,
 				      error))
@@ -154,7 +154,7 @@ fu_ccgx_pure_hid_get_fw_info(FuDevice *device, gpointer user_data, GError **erro
 
 	fu_ccgx_pure_hid_flashing_mode(device, user_data, error);
 
-	info = (HidFwInfo *)(void *)buf;
+	info = (HidFwInfo *)&buf[0];
 
 	self->operating_mode = info->operating_mode;
 	self->silicon_id = info->silicon_id;
@@ -406,7 +406,8 @@ fu_ccgx_pure_hid_device_write_firmware(FuDevice *device,
 		case FU_CCGX_FW_MODE_FW2:
 			// Update Image 1
 			g_debug("Flashing Image 1");
-			fu_ccgx_pure_hid_flash_firmware_image(device, fw1_binary, fw_size, FW1_START, FW1_METADATA, 1, error);
+			if (!fu_ccgx_pure_hid_flash_firmware_image(device, fw1_binary, fw_size, FW1_START, FW1_METADATA, 1, error))
+				return FALSE;
 
 			g_debug("Add wait for replug");
 			fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
@@ -421,7 +422,8 @@ fu_ccgx_pure_hid_device_write_firmware(FuDevice *device,
 		case FU_CCGX_FW_MODE_FW1:
 			// Update Image 2
 			g_debug("Flashing Image 2");
-			fu_ccgx_pure_hid_flash_firmware_image(device, fw2_binary, fw_size, FW2_START, FW2_METADATA, 2, error);
+			if (!fu_ccgx_pure_hid_flash_firmware_image(device, fw2_binary, fw_size, FW2_START, FW2_METADATA, 2, error))
+				return FALSE;
 
 			g_debug("Add wait for replug");
 			fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
@@ -435,8 +437,9 @@ fu_ccgx_pure_hid_device_write_firmware(FuDevice *device,
 			break;
 		default:
 			// Invalid value
-			g_assert(self->operating_mode < FU_CCGX_FW_MODE_LAST);
-			break;
+			// TODO: error = "";
+			//g_assert(self->operating_mode < FU_CCGX_FW_MODE_LAST);
+			return FALSE;
 	}
 
 	return TRUE;
