@@ -8,7 +8,15 @@ struct EbitdoHdr {
     destination_len: u32le,
     reserved: [u32le; 4],
 }
-#[derive(ToString)]
+#[derive(New, Parse)]
+struct EbitdoPkt {
+    pkt_len: u8,
+    type: u8,       // FuEbitdoPktType
+    subtype: u8,    // FuEbitdoPktCmd
+    cmd_len: u16le,
+    cmd: u8,        // FuEbitdoPktCmd
+    payload_len: u16le, // optional
+}
 enum EbitdoPktType {
     UserCmd = 0x00,
     UserData = 0x01,

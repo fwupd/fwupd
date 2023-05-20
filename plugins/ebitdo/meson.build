@@ -8,7 +8,6 @@ plugin_builtins += static_library('fu_plugin_ebitdo',
   ),
   sources: [
     'fu-ebitdo-plugin.c',
-    'fu-ebitdo-common.c',
     'fu-ebitdo-device.c',
     'fu-ebitdo-firmware.c',     # fuzzing
   ],

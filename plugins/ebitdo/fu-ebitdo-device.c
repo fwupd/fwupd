@@ -10,7 +10,6 @@
 
 #include <string.h>
 
-#include "fu-ebitdo-common.h"
 #include "fu-ebitdo-device.h"
 #include "fu-ebitdo-firmware.h"
 #include "fu-ebitdo-struct.h"
@@ -22,6 +21,13 @@ struct _FuEbitdoDevice {
 
 G_DEFINE_TYPE(FuEbitdoDevice, fu_ebitdo_device, FU_TYPE_USB_DEVICE)
 
+#define FU_EBITDO_USB_TIMEOUT		5000 /* ms */
+#define FU_EBITDO_USB_BOOTLOADER_EP_IN	0x82
+#define FU_EBITDO_USB_BOOTLOADER_EP_OUT 0x01
+#define FU_EBITDO_USB_RUNTIME_EP_IN	0x81
+#define FU_EBITDO_USB_RUNTIME_EP_OUT	0x02
+#define FU_EBITDO_USB_EP_SIZE		64 /* bytes */
+
 static gboolean
 fu_ebitdo_device_send(FuEbitdoDevice *self,
 		      FuEbitdoPktType type,
@@ -32,11 +38,12 @@ fu_ebitdo_device_send(FuEbitdoDevice *self,
 		      GError **error)
 {
 	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
-	guint8 packet[FU_EBITDO_USB_EP_SIZE] = {0};
 	gsize actual_length;
 	guint8 ep_out = FU_EBITDO_USB_RUNTIME_EP_OUT;
+	g_autoptr(GByteArray) st_hdr = fu_struct_ebitdo_pkt_new();
 	g_autoptr(GError) error_local = NULL;
-	FuEbitdoPkt *hdr = (FuEbitdoPkt *)packet;
+
+	fu_byte_array_set_size(st_hdr, FU_EBITDO_USB_EP_SIZE, 0x0);
 
 	/* different */
 	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER))
@@ -49,39 +56,36 @@ fu_ebitdo_device_send(FuEbitdoDevice *self,
 	}
 
 	/* packet[0] is the total length of the packet */
-	hdr->type = type;
-	hdr->subtype = subtype;
+	fu_struct_ebitdo_pkt_set_type(st_hdr, type);
+	fu_struct_ebitdo_pkt_set_subtype(st_hdr, subtype);
 
 	/* do we have a payload */
 	if (in_len > 0) {
-		hdr->cmd_len = GUINT16_TO_LE(in_len + 3);
-		hdr->cmd = cmd;
-		hdr->payload_len = GUINT16_TO_LE(in_len);
-		if (!fu_memcpy_safe(packet,
-				    sizeof(packet),
-				    0x08, /* dst */
+		fu_struct_ebitdo_pkt_set_cmd_len(st_hdr, in_len + 3);
+		fu_struct_ebitdo_pkt_set_cmd(st_hdr, cmd);
+		fu_struct_ebitdo_pkt_set_payload_len(st_hdr, in_len);
+		if (!fu_memcpy_safe(st_hdr->data,
+				    st_hdr->len,
+				    FU_STRUCT_EBITDO_PKT_SIZE, /* dst */
 				    in,
 				    in_len,
 				    0x0, /* src */
 				    in_len,
 				    error))
 			return FALSE;
-		hdr->pkt_len = (guint8)(in_len + 7);
+		fu_struct_ebitdo_pkt_set_pkt_len(st_hdr, in_len + 7);
 	} else {
-		hdr->cmd_len = GUINT16_TO_LE(in_len + 1);
-		hdr->cmd = cmd;
-		hdr->pkt_len = 5;
+		fu_struct_ebitdo_pkt_set_cmd_len(st_hdr, in_len + 1);
+		fu_struct_ebitdo_pkt_set_cmd(st_hdr, cmd);
+		fu_struct_ebitdo_pkt_set_pkt_len(st_hdr, 5);
 	}
-
-	/* debug */
-	fu_dump_raw(G_LOG_DOMAIN, "->DEVICE", packet, (gsize)hdr->pkt_len + 1);
-	fu_ebitdo_dump_pkt(hdr);
+	fu_dump_raw(G_LOG_DOMAIN, "->DEVICE", st_hdr->data, st_hdr->len);
 
 	/* get data from device */
 	if (!g_usb_device_interrupt_transfer(usb_device,
 					     ep_out,
-					     packet,
-					     FU_EBITDO_USB_EP_SIZE,
+					     st_hdr->data,
+					     st_hdr->len,
 					     &actual_length,
 					     FU_EBITDO_USB_TIMEOUT,
 					     NULL, /* cancellable */
@@ -104,8 +108,8 @@ fu_ebitdo_device_receive(FuEbitdoDevice *self, guint8 *out, gsize out_len, GErro
 	guint8 packet[FU_EBITDO_USB_EP_SIZE] = {0};
 	gsize actual_length;
 	guint8 ep_in = FU_EBITDO_USB_RUNTIME_EP_IN;
+	g_autoptr(GByteArray) st_hdr = NULL;
 	g_autoptr(GError) error_local = NULL;
-	FuEbitdoPkt *hdr = (FuEbitdoPkt *)packet;
 
 	/* different */
 	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER))
@@ -115,7 +119,7 @@ fu_ebitdo_device_receive(FuEbitdoDevice *self, guint8 *out, gsize out_len, GErro
 	if (!g_usb_device_interrupt_transfer(usb_device,
 					     ep_in,
 					     packet,
-					     FU_EBITDO_USB_EP_SIZE,
+					     sizeof(packet),
 					     &actual_length,
 					     FU_EBITDO_USB_TIMEOUT,
 					     NULL, /* cancellable */
@@ -131,21 +135,23 @@ fu_ebitdo_device_receive(FuEbitdoDevice *self, guint8 *out, gsize out_len, GErro
 
 	/* debug */
 	fu_dump_raw(G_LOG_DOMAIN, "<-DEVICE", packet, actual_length);
-	fu_ebitdo_dump_pkt(hdr);
+	st_hdr = fu_struct_ebitdo_pkt_parse(packet, sizeof(packet), 0x0, error);
+	if (st_hdr == NULL)
+		return FALSE;
 
 	/* get-version (bootloader) */
-	if (hdr->type == FU_EBITDO_PKT_TYPE_USER_CMD &&
-	    hdr->subtype == FU_EBITDO_PKT_CMD_UPDATE_FIRMWARE_DATA &&
-	    hdr->cmd == FU_EBITDO_PKT_CMD_FW_GET_VERSION) {
+	if (fu_struct_ebitdo_pkt_get_type(st_hdr) == FU_EBITDO_PKT_TYPE_USER_CMD &&
+	    fu_struct_ebitdo_pkt_get_subtype(st_hdr) == FU_EBITDO_PKT_CMD_UPDATE_FIRMWARE_DATA &&
+	    fu_struct_ebitdo_pkt_get_cmd(st_hdr) == FU_EBITDO_PKT_CMD_FW_GET_VERSION) {
 		if (out != NULL) {
-			if (hdr->payload_len < out_len) {
+			if (fu_struct_ebitdo_pkt_get_payload_len(st_hdr) < out_len) {
 				g_set_error(error,
 					    G_IO_ERROR,
 					    G_IO_ERROR_INVALID_DATA,
 					    "payload too small, expected %" G_GSIZE_FORMAT
 					    " got %u",
 					    out_len,
-					    hdr->payload_len);
+					    fu_struct_ebitdo_pkt_get_payload_len(st_hdr));
 				return FALSE;
 			}
 			if (!fu_memcpy_safe(out,
@@ -153,7 +159,7 @@ fu_ebitdo_device_receive(FuEbitdoDevice *self, guint8 *out, gsize out_len, GErro
 					    0x0, /* dst */
 					    packet,
 					    sizeof(packet),
-					    sizeof(FuEbitdoPkt), /* src */
+					    FU_STRUCT_EBITDO_PKT_SIZE, /* src */
 					    out_len,
 					    error))
 				return FALSE;
@@ -162,7 +168,7 @@ fu_ebitdo_device_receive(FuEbitdoDevice *self, guint8 *out, gsize out_len, GErro
 	}
 
 	/* get-version (firmware) -- not a packet, just raw data! */
-	if (hdr->pkt_len == FU_EBITDO_PKT_CMD_GET_VERSION_RESPONSE) {
+	if (fu_struct_ebitdo_pkt_get_pkt_len(st_hdr) == FU_EBITDO_PKT_CMD_GET_VERSION_RESPONSE) {
 		if (out != NULL) {
 			if (out_len != 4) {
 				g_set_error(error,
@@ -186,17 +192,17 @@ fu_ebitdo_device_receive(FuEbitdoDevice *self, guint8 *out, gsize out_len, GErro
 	}
 
 	/* verification-id response */
-	if (hdr->type == FU_EBITDO_PKT_TYPE_USER_CMD &&
-	    hdr->subtype == FU_EBITDO_PKT_CMD_VERIFICATION_ID) {
+	if (fu_struct_ebitdo_pkt_get_type(st_hdr) == FU_EBITDO_PKT_TYPE_USER_CMD &&
+	    fu_struct_ebitdo_pkt_get_subtype(st_hdr) == FU_EBITDO_PKT_CMD_VERIFICATION_ID) {
 		if (out != NULL) {
-			if (hdr->cmd_len != out_len) {
+			if (fu_struct_ebitdo_pkt_get_cmd_len(st_hdr) != out_len) {
 				g_set_error(error,
 					    G_IO_ERROR,
 					    G_IO_ERROR_INVALID_DATA,
 					    "outbuf size wrong, expected %" G_GSIZE_FORMAT
 					    " got %i",
 					    out_len,
-					    hdr->cmd_len);
+					    fu_struct_ebitdo_pkt_get_cmd_len(st_hdr));
 				return FALSE;
 			}
 			if (!fu_memcpy_safe(out,
@@ -204,8 +210,8 @@ fu_ebitdo_device_receive(FuEbitdoDevice *self, guint8 *out, gsize out_len, GErro
 					    0x0, /* dst */
 					    packet,
 					    sizeof(packet),
-					    sizeof(FuEbitdoPkt) - 3, /* src */
-					    hdr->cmd_len,
+					    FU_STRUCT_EBITDO_PKT_SIZE - 3, /* src */
+					    fu_struct_ebitdo_pkt_get_cmd_len(st_hdr),
 					    error))
 				return FALSE;
 		}
@@ -213,14 +219,16 @@ fu_ebitdo_device_receive(FuEbitdoDevice *self, guint8 *out, gsize out_len, GErro
 	}
 
 	/* update-firmware-data */
-	if (hdr->type == FU_EBITDO_PKT_TYPE_USER_CMD &&
-	    hdr->subtype == FU_EBITDO_PKT_CMD_UPDATE_FIRMWARE_DATA && hdr->payload_len == 0x00) {
-		if (hdr->cmd != FU_EBITDO_PKT_CMD_ACK) {
-			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
-				    "write failed, got %s",
-				    fu_ebitdo_pkt_cmd_to_string(hdr->cmd));
+	if (fu_struct_ebitdo_pkt_get_type(st_hdr) == FU_EBITDO_PKT_TYPE_USER_CMD &&
+	    fu_struct_ebitdo_pkt_get_subtype(st_hdr) == FU_EBITDO_PKT_CMD_UPDATE_FIRMWARE_DATA &&
+	    fu_struct_ebitdo_pkt_get_payload_len(st_hdr) == 0x00) {
+		if (fu_struct_ebitdo_pkt_get_cmd(st_hdr) != FU_EBITDO_PKT_CMD_ACK) {
+			g_set_error(
+			    error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_INVALID_DATA,
+			    "write failed, got %s",
+			    fu_ebitdo_pkt_cmd_to_string(fu_struct_ebitdo_pkt_get_cmd(st_hdr)));
 			return FALSE;
 		}
 		return TRUE;
