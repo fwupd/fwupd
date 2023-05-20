@@ -11,6 +11,7 @@
 #include "fu-igsc-code-firmware.h"
 #include "fu-igsc-device.h"
 #include "fu-igsc-oprom-device.h"
+#include "fu-igsc-struct.h"
 
 struct _FuIgscDevice {
 	FuMeiDevice parent_instance;
@@ -28,12 +29,6 @@ struct _FuIgscDevice {
 #define FU_IGSC_DEVICE_MEI_READ_TIMEOUT	 480000 /* 480 sec */
 
 G_DEFINE_TYPE(FuIgscDevice, fu_igsc_device, FU_TYPE_MEI_DEVICE)
-
-struct igsc_fw_version {
-	char project[4]; /* project code name */
-	guint16 hotfix;
-	guint16 build;
-} __attribute__((packed));
 
 #define GSC_FWU_STATUS_SUCCESS			      0x0
 #define GSC_FWU_STATUS_SIZE_ERROR		      0x5
@@ -376,23 +371,21 @@ fu_igsc_device_setup(FuDevice *device, GError **error)
 	FuIgscDevice *self = FU_IGSC_DEVICE(device);
 	FuContext *ctx = fu_device_get_context(FU_DEVICE(self));
 	g_autofree gchar *version = NULL;
-	struct igsc_fw_version fw_code_version;
+	g_autoptr(GByteArray) fw_code_version = fu_struct_igsc_fw_version_new();
 
 	/* get current version */
 	if (!fu_igsc_device_get_version_raw(self,
 					    GSC_FWU_HECI_PART_VERSION_GFX_FW,
-					    (guint8 *)&fw_code_version,
-					    sizeof(fw_code_version),
+					    fw_code_version->data,
+					    fw_code_version->len,
 					    error)) {
 		g_prefix_error(error, "cannot cannot get fw version: ");
 		return FALSE;
 	}
-	self->project = g_strdup_printf("%c%c%c%c",
-					fw_code_version.project[0],
-					fw_code_version.project[1],
-					fw_code_version.project[2],
-					fw_code_version.project[3]);
-	version = g_strdup_printf("%u.%u", fw_code_version.hotfix, fw_code_version.build);
+	self->project = fu_struct_igsc_fw_version_get_project(fw_code_version);
+	version = g_strdup_printf("%u.%u",
+				  fu_struct_igsc_fw_version_get_hotfix(fw_code_version),
+				  fu_struct_igsc_fw_version_get_build(fw_code_version));
 	fu_device_set_version(device, version);
 
 	/* get hardware SKU if supported */
@@ -611,12 +604,12 @@ fu_igsc_device_write_chunks(FuIgscDevice *self,
 static gboolean
 fu_igsc_device_wait_for_reset(FuIgscDevice *self, GError **error)
 {
-	struct igsc_fw_version fw_code_version;
+	g_autoptr(GByteArray) fw_code_version = fu_struct_igsc_fw_version_new();
 	for (guint i = 0; i < 20; i++) {
 		if (!fu_igsc_device_get_version_raw(self,
 						    GSC_FWU_HECI_PART_VERSION_GFX_FW,
-						    (guint8 *)&fw_code_version,
-						    sizeof(fw_code_version),
+						    fw_code_version->data,
+						    fw_code_version->len,
 						    NULL))
 			return TRUE;
 		fu_device_sleep(FU_DEVICE(self), 100);

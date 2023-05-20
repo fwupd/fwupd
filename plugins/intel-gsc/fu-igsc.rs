@@ -8,6 +8,14 @@ struct IgscOpromVersion {
     hotfix: u16le,
     build: u16le,
 }
+
+#[derive(New, Getters)]
+struct IgscFwVersion {
+    project: [char; 4], // project code name
+    hotfix: u16le,
+    build: u16le,
+}
+
 #[derive(Parse)]
 struct IgscOpromSubsystemDeviceId {
     subsys_vendor_id: u16le,
