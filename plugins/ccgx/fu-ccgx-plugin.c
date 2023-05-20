@@ -10,9 +10,9 @@
 #include "fu-ccgx-dmc-firmware.h"
 #include "fu-ccgx-firmware.h"
 #include "fu-ccgx-hid-device.h"
-#include "fu-ccgx-pure-hid-device.h"
 #include "fu-ccgx-hpi-device.h"
 #include "fu-ccgx-plugin.h"
+#include "fu-ccgx-pure-hid-device.h"
 
 struct _FuCcgxPlugin {
 	FuPlugin parent_instance;
