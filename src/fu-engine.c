@@ -3659,6 +3659,7 @@ fu_engine_device_check_power(FuEngine *self,
 
 	/* not charging */
 	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_REQUIRE_AC) &&
+	    !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED) &&
 	    !fu_power_state_is_ac(fu_context_get_power_state(self->ctx))) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
