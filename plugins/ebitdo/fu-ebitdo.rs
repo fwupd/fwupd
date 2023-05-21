@@ -8,21 +8,14 @@ struct EbitdoHdr {
     destination_len: u32le,
     reserved: [u32le; 4],
 }
-#[derive(New, Parse)]
-struct EbitdoPkt {
-    pkt_len: u8,
-    type: u8,       // FuEbitdoPktType
-    subtype: u8,    // FuEbitdoPktCmd
-    cmd_len: u16le,
-    cmd: u8,        // FuEbitdoPktCmd
-    payload_len: u16le, // optional
-}
+#[repr(u8)]
 enum EbitdoPktType {
     UserCmd = 0x00,
     UserData = 0x01,
     MidCmd = 0x02,
 }
 #[derive(ToString)]
+#[repr(u8)]
 enum EbitdoPktCmd {
     FwUpdateData       = 0x00, // update firmware data
     FwUpdateHeader     = 0x01, // update firmware header
@@ -42,4 +35,13 @@ enum EbitdoPktCmd {
     TransferTimeout    = 0x1d, // send or receive data timeout
     GetVersion         = 0x21, // get fw ver joystick mode
     GetVersionResponse = 0x22, // get fw version response
+}
+#[derive(New, Parse)]
+struct EbitdoPkt {
+    pkt_len: u8,
+    type: EbitdoPktType,
+    subtype: u8,
+    cmd_len: u16le,
+    cmd: EbitdoPktCmd,
+    payload_len: u16le, // optional
 }

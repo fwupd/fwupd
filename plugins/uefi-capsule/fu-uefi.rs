@@ -18,6 +18,15 @@ struct EfiCapsuleHeader {
     flags: u32le,
     image_size: u32le,
 }
+
+#[derive(ToString)]
+#[repr(u32le)]
+enum UefiUpdateInfoStatus {
+    Unknown,
+    AttemptUpdate,
+    Attempted,
+}
+
 #[derive(New, Parse)]
 struct EfiUpdateInfo {
     version: u32le: default=0x7,
@@ -25,7 +34,7 @@ struct EfiUpdateInfo {
     flags: u32le,
     hw_inst: u64le,
     time_attempted: [u8; 16], // a EFI_TIME_T
-    status: u32le,
+    status: UefiUpdateInfoStatus,
     // EFI_DEVICE_PATH goes here
 }
 #[derive(Parse)]
@@ -33,12 +42,6 @@ struct AcpiInsydeQuirk {
     signature: [char; 6],
     size: u32le,
     flags: u32le,
-}
-#[derive(ToString)]
-enum UefiUpdateInfoStatus {
-    Unknown,
-    AttemptUpdate,
-    Attempted,
 }
 #[derive(ToString, FromString)]
 enum UefiDeviceKind {

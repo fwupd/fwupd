@@ -1,18 +1,8 @@
 // Copyright (C) 2023 Richard Hughes <richard@hughsie.com>
 // SPDX-License-Identifier: LGPL-2.1+
 
-#[derive(Parse)]
-struct TpmEventLog2 {
-    pcr: u32le,
-    type: u32le,
-    digest_count: u32le,
-}
-#[derive(Parse)]
-struct TpmEfiStartupLocalityEvent {
-    signature: [char; 16]: const="StartupLocality",
-    locality: u8,    // from which TPM2_Startup() was issued -- which is the initial value of PCR0
-}
 #[derive(ToString)]
+#[repr(u32le)]
 enum TpmEventlogItemKind {
     EV_PREBOOT_CERT = 0x00000000,
     EV_POST_CODE = 0x00000001,
@@ -42,4 +32,17 @@ enum TpmEventlogItemKind {
     EV_EFI_HANDOFF_TABLES = 0x80000009,
     EV_EFI_HCRTM_EVENT = 0x80000010,
     EV_EFI_VARIABLE_AUTHORITY = 0x800000e0,
+}
+
+#[derive(Parse)]
+struct TpmEventLog2 {
+    pcr: u32le,
+    type: TpmEventlogItemKind,
+    digest_count: u32le,
+}
+
+#[derive(Parse)]
+struct TpmEfiStartupLocalityEvent {
+    signature: [char; 16]: const="StartupLocality",
+    locality: u8,    // from which TPM2_Startup() was issued -- which is the initial value of PCR0
 }

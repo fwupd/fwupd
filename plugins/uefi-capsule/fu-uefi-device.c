@@ -287,7 +287,7 @@ fu_uefi_device_clear_status(FuUefiDevice *self, GError **error)
 	}
 
 	/* just copy the new EfiUpdateInfo and save it back */
-	fu_struct_efi_update_info_set_status(st_inf, FU_UEFI_DEVICE_STATUS_SUCCESS);
+	fu_struct_efi_update_info_set_status(st_inf, FU_UEFI_UPDATE_INFO_STATUS_UNKNOWN);
 	memcpy(data, st_inf->data, st_inf->len);
 	return fu_efivar_set_data(FU_EFIVAR_GUID_FWUPDATE,
 				  varname,
