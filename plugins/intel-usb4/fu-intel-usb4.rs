@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LGPL-2.1+
 
 // hub operation
+#[repr(u16le)]
 enum IntelUsb4Opcode {
     NVM_WRITE       = 0x20,
     NVM_AUTH_WRITE  = 0x21,
@@ -12,7 +13,7 @@ enum IntelUsb4Opcode {
 
 #[derive(New, Parse)]
 struct IntelUsb4Mbox {
-    opcode: u16le,
+    opcode: IntelUsb4Opcode,
     _rsvd: u8,
     status: u8,
 }

@@ -10,7 +10,7 @@ import sys
 import argparse
 
 from enum import Enum
-from typing import Optional, List, Tuple
+from typing import Optional, List, Tuple, Dict
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
@@ -72,6 +72,7 @@ class StructItem:
     def __init__(self) -> None:
         self.element_id: str = ""
         self.type: Type = Type.U8
+        self.custom_type = None
         self.default: Optional[str] = None
         self.constant: Optional[str] = None
         self.padding: Optional[str] = None
@@ -114,6 +115,8 @@ class StructItem:
 
     @property
     def type_glib(self) -> str:
+        if self.custom_type:
+            return self.custom_type
         if self.type == Type.U8:
             return "guint8"
         if self.type == Type.U16:
@@ -187,7 +190,7 @@ class StructItem:
         self.default = self._parse_default(val)
         self.constant = self.default
 
-    def parse_type(self, val: str) -> None:
+    def parse_type(self, val: str, reprs: Optional[Dict[str, str]]) -> None:
 
         # is array
         if val.startswith("[") and val.endswith("]"):
@@ -197,6 +200,10 @@ class StructItem:
             typestr = val
 
         # find the type
+        if reprs:
+            if typestr in reprs:
+                self.custom_type = f"Fu{typestr}"
+                typestr = reprs[typestr]
         try:
             if typestr.endswith("be"):
                 self.endian = Endian.BIG
@@ -281,6 +288,8 @@ class Generator:
 
     def process_input(self, contents: str) -> Tuple[str, str]:
         name = None
+        enum_type: Optional[str] = None
+        enum_reprs: Dist[str, str] = {}
         enum_items: List[EnumItem] = []
         struct_items: List[StructItem] = []
         derives: List[str] = []
@@ -311,7 +320,13 @@ class Generator:
             if line.startswith("enum ") and line.endswith("{"):
                 mode = "enum"
                 name = line[4:-1].strip()
+                if enum_type:
+                    enum_reprs[name] = enum_type
                 continue
+
+            # the enum type
+            if line.startswith("#[repr(") and line.endswith(")]"):
+                enum_type = line[7:-2]
 
             # what should we build
             if line.startswith("#[derive("):
@@ -344,6 +359,7 @@ class Generator:
                 mode = None
                 name = None
                 struct_items.clear()
+                enum_type = None
                 enum_items.clear()
                 derives.clear()
                 offset = 0
@@ -373,7 +389,7 @@ class Generator:
                 item = StructItem()
                 item.offset = offset
                 item.element_id = parts[0]
-                item.parse_type(parts[1])
+                item.parse_type(parts[1], reprs=enum_reprs)
                 for part in parts[2:]:
                     try:
                         key, value = tuple(part.split("=", maxsplit=1))

@@ -872,12 +872,17 @@ rustc*, so small differences may be noticeable.
     }
 
     #[derive(ToString, FromString)]
+    #[repr(u8)] // optional, and only required if using the enum as a struct item type
     enum ExampleFamily {
         Unknown,
         Sps,
         Txe = 0x5,
         Me,
         Csme,
+    }
+    struct ExamplePacket {
+        family: ExampleFamily,
+        data: [u8; 254],
     }
 
 The struct types currently supported are:

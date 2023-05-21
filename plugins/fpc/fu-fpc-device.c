@@ -36,8 +36,6 @@
 #define FPC_DEVICE_NORMAL_MODE_CLASS 0xFF
 #define FPC_DEVICE_NORMAL_MODE_PORT  0xFF
 
-#define FPC_DFU_DNBUSY 0x04
-
 /**
  * FU_FPC_DEVICE_FLAG_MOH_DEVICE:
  *
@@ -276,7 +274,7 @@ fu_fpc_device_check_dfu_status_cb(FuDevice *device, gpointer user_data, GError *
 	}
 
 	if (fu_struct_fpc_dfu_get_status(dfu_status) != 0 ||
-	    fu_struct_fpc_dfu_get_state(dfu_status) == FPC_DFU_DNBUSY) {
+	    fu_struct_fpc_dfu_get_state(dfu_status) == FU_FPC_DFU_STATE_DNBUSY) {
 		/* device is not in correct status/state */
 		g_set_error(error,
 			    FWUPD_ERROR,

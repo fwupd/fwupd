@@ -25,7 +25,7 @@
     return (const fwupd_guid_t *) (st->data + {{item.offset}});
 }
 {%- elif item.type == Type.U8 %}
-{{"static " if item.constant else ""}}guint8
+{{"static " if item.constant else ""}}{{item.type_glib}}
 {{name_snake}}_get_{{item.element_id}}(GByteArray *st)
 {
     g_return_val_if_fail(st != NULL, 0x0);
@@ -78,7 +78,7 @@
 }
 {%- elif item.type == Type.U8 %}
 {{"static " if item.constant else ""}}void
-{{name_snake}}_set_{{item.element_id}}(GByteArray *st, guint8 value)
+{{name_snake}}_set_{{item.element_id}}(GByteArray *st, {{item.type_glib}} value)
 {
     g_return_if_fail(st != NULL);
     st->data[{{item.offset}}] = value;
