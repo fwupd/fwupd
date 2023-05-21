@@ -21,7 +21,6 @@ enum CcgxImageType {
     DualSymmetric,          // A/B runtime
     DualAsymmetric,         // A=bootloader (fixed) B=runtime
     DualAsymmetricVariable, // A=bootloader (variable) B=runtime
-    DmcComposite,           // composite firmware image for dmc
 }
 #[derive(ToString)]
 enum CcgxFwMode {

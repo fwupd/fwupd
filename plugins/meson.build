@@ -27,6 +27,7 @@ plugins = [
   'bcm57xx',
   'bios',
   'ccgx',
+  'ccgx-dmc',
   'cfu',
   'ch341a',
   'ch347',
