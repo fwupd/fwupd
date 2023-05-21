@@ -7,9 +7,6 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
-#include "fu-ccgx-common.h"
 #include "fu-ccgx-dmc-device.h"
 #include "fu-ccgx-dmc-devx-device.h"
 #include "fu-ccgx-dmc-firmware.h"
@@ -30,7 +27,6 @@
 
 struct _FuCcgxDmcDevice {
 	FuUsbDevice parent_instance;
-	FuCcgxImageType fw_image_type;
 	FuCcgxDmcDeviceStatus device_status;
 	guint8 ep_intr_in;
 	guint8 ep_bulk_out;
@@ -370,12 +366,6 @@ fu_ccgx_dmc_device_to_string(FuDevice *device, guint idt, GString *str)
 			 idt,
 			 "UpdateModel",
 			 fu_ccgx_dmc_update_model_to_string(self->update_model));
-	if (self->fw_image_type != FU_CCGX_IMAGE_TYPE_UNKNOWN) {
-		fu_string_append(str,
-				 idt,
-				 "FwImageType",
-				 fu_ccgx_image_type_to_string(self->fw_image_type));
-	}
 	fu_string_append_kx(str, idt, "EpBulkOut", self->ep_bulk_out);
 	fu_string_append_kx(str, idt, "EpIntrIn", self->ep_intr_in);
 	fu_string_append_kx(str, idt, "TriggerCode", self->trigger_code);
@@ -783,23 +773,12 @@ fu_ccgx_dmc_device_set_quirk_kv(FuDevice *device,
 				GError **error)
 {
 	FuCcgxDmcDevice *self = FU_CCGX_DMC_DEVICE(device);
-	guint64 tmp;
-
 	if (g_strcmp0(key, "CcgxDmcTriggerCode") == 0) {
+		guint64 tmp = 0;
 		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT16, error))
 			return FALSE;
 		self->trigger_code = tmp;
 		return TRUE;
-	}
-	if (g_strcmp0(key, "CcgxImageKind") == 0) {
-		self->fw_image_type = fu_ccgx_image_type_from_string(value);
-		if (self->fw_image_type != FU_CCGX_IMAGE_TYPE_UNKNOWN)
-			return TRUE;
-		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
-				    "invalid CcgxImageKind");
-		return FALSE;
 	}
 	g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED, "no supported");
 	return FALSE;
@@ -821,7 +800,6 @@ fu_ccgx_dmc_device_init(FuCcgxDmcDevice *self)
 {
 	self->ep_intr_in = DMC_INTERRUPT_PIPE_ID;
 	self->ep_bulk_out = DMC_BULK_PIPE_ID;
-	self->fw_image_type = FU_CCGX_IMAGE_TYPE_DMC_COMPOSITE;
 	fu_device_add_protocol(FU_DEVICE(self), "com.cypress.ccgx.dmc");
 	fu_device_add_protocol(FU_DEVICE(self), "com.infineon.ccgx.dmc");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_QUAD);

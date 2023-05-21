@@ -1,20 +1,16 @@
 if gusb.found()
-cargs = ['-DG_LOG_DOMAIN="FuPluginCcgx"']
+cargs = ['-DG_LOG_DOMAIN="FuPluginCcgxDmc"']
 
-plugin_quirks += files([
-  'ccgx-ids.quirk',
-  'ccgx.quirk',
-  ])
-plugin_builtin_ccgx = static_library('fu_plugin_ccgx',
+plugin_quirks += files(['ccgx-dmc.quirk'])
+plugin_builtin_ccgx_dmc = static_library('fu_plugin_ccgx_dmc',
   rustgen.process(
-    'fu-ccgx.rs',           # fuzzing
+    'fu-ccgx-dmc.rs',       # fuzzing
   ),
   sources: [
-    'fu-ccgx-plugin.c',
-    'fu-ccgx-common.c',         # fuzzing
-    'fu-ccgx-firmware.c',       # fuzzing
-    'fu-ccgx-hid-device.c',
-    'fu-ccgx-hpi-device.c',
+    'fu-ccgx-dmc-plugin.c',
+    'fu-ccgx-dmc-device.c',
+    'fu-ccgx-dmc-devx-device.c',
+    'fu-ccgx-dmc-firmware.c',   # fuzzing
   ],
   include_directories: plugin_incdirs,
   link_with: plugin_libs,
@@ -24,17 +20,17 @@ plugin_builtin_ccgx = static_library('fu_plugin_ccgx',
     gudev,
   ],
 )
-plugin_builtins += plugin_builtin_ccgx
+plugin_builtins += plugin_builtin_ccgx_dmc
 
 if get_option('tests')
-  install_data(['tests/ccgx.builder.xml'],
+  install_data(['tests/ccgx-dmc.builder.xml'],
     install_dir: join_paths(installed_test_datadir, 'tests'))
   env = environment()
   env.set('G_TEST_SRCDIR', meson.current_source_dir())
   env.set('G_TEST_BUILDDIR', meson.current_build_dir())
   e = executable(
-    'ccgx-self-test',
-    rustgen.process('fu-ccgx.rs'),
+    'ccgx-dmc-self-test',
+    rustgen.process('fu-ccgx-dmc.rs'),
     sources: [
       'fu-self-test.c',
     ],
@@ -42,7 +38,7 @@ if get_option('tests')
     dependencies: plugin_deps,
     link_with: [
       plugin_libs,
-      plugin_builtin_ccgx,
+      plugin_builtin_ccgx_dmc,
     ],
     install: true,
     install_rpath: libdir_pkg,
@@ -51,6 +47,6 @@ if get_option('tests')
       '-DSRCDIR="' + meson.current_source_dir() + '"',
     ],
   )
-  test('ccgx-self-test', e, env: env)
+  test('ccgx-dmc-self-test', e, env: env)
 endif
 endif

@@ -6,10 +6,12 @@
 
 #include "config.h"
 
-#include "fu-ccgx-firmware.h"
+#include <fwupdplugin.h>
+
+#include "fu-ccgx-dmc-firmware.h"
 
 static void
-fu_ccgx_firmware_xml_func(void)
+fu_ccgx_dmc_firmware_xml_func(void)
 {
 	gboolean ret;
 	g_autofree gchar *filename = NULL;
@@ -17,12 +19,12 @@ fu_ccgx_firmware_xml_func(void)
 	g_autofree gchar *csum2 = NULL;
 	g_autofree gchar *xml_out = NULL;
 	g_autofree gchar *xml_src = NULL;
-	g_autoptr(FuFirmware) firmware1 = fu_ccgx_firmware_new();
-	g_autoptr(FuFirmware) firmware2 = fu_ccgx_firmware_new();
+	g_autoptr(FuFirmware) firmware1 = fu_ccgx_dmc_firmware_new();
+	g_autoptr(FuFirmware) firmware2 = fu_ccgx_dmc_firmware_new();
 	g_autoptr(GError) error = NULL;
 
 	/* build and write */
-	filename = g_test_build_filename(G_TEST_DIST, "tests", "ccgx.builder.xml", NULL);
+	filename = g_test_build_filename(G_TEST_DIST, "tests", "ccgx-dmc.builder.xml", NULL);
 	ret = g_file_get_contents(filename, &xml_src, NULL, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -53,6 +55,6 @@ main(int argc, char **argv)
 	g_log_set_fatal_mask(NULL, G_LOG_LEVEL_ERROR | G_LOG_LEVEL_CRITICAL);
 
 	/* tests go here */
-	g_test_add_func("/ccgx/firmware{xml}", fu_ccgx_firmware_xml_func);
+	g_test_add_func("/ccgx-dmc/firmware{xml}", fu_ccgx_dmc_firmware_xml_func);
 	return g_test_run();
 }

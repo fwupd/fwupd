@@ -1,13 +1,11 @@
 # Any EVB board that uses CY7C65219
 [USB\VID_04B4&PID_5220]
-Plugin = ccgx
-GType = FuCcgxDmcDevice
+Plugin = ccgx_dmc
 CcgxDmcTriggerCode = 1
 RemoveDelay = 732000
 
 # Any EVB board that uses CYUSB4357
 [USB\VID_04B4&PID_521B]
-Plugin = ccgx
-GType = FuCcgxDmcDevice
+Plugin = ccgx_dmc
 CcgxDmcTriggerCode = 1
 RemoveDelay = 732000
