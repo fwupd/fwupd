@@ -19,6 +19,7 @@ enum CcgxDmcImgStatus {
 
 // flash architecture
 #[derive(ToString)]
+#[repr(u8)]
 enum CcgxDmcImgMode {
     // indicates that the device has a single image
     SingleImg = 0,
@@ -35,6 +36,7 @@ enum CcgxDmcImgMode {
 
 // dock status
 #[derive(ToString)]
+#[repr(u8)]
 enum CcgxDmcDeviceStatus {
     // status code indicating DOCK IDLE state. SUCCESS: no malfunctioning
     // no outstanding request or event
@@ -74,6 +76,7 @@ enum CcgxDmcDeviceStatus {
 }
 
 #[derive(ToString)]
+#[repr(u8)]
 enum CcgxDmcDevxDeviceType {
     Invalid = 0x00,
     Ccg3 = 0x01,
@@ -103,6 +106,7 @@ enum CcgxDmcRqtCode {
 
 // opcode of interrupt read
 #[derive(ToString)]
+#[repr(u8)]
 enum CcgxDmcIntOpcode {
     FwUpgradeRqt = 1,
     FwUpgradeStatus = 0x80,
@@ -156,12 +160,12 @@ struct CcgxDmcDockIdentity {
 #[derive(Parse)]
 struct CcgxDmcDevxStatus {
     // device ID of the device
-    device_type: u8,
+    device_type: CcgxDmcDevxDeviceType,
     // component ID of the device
     component_id: u8,
     // image mode of the device - single image/ dual symmetric/ dual
     // asymmetric image >
-    image_mode: u8,
+    image_mode: CcgxDmcImgMode,
     // current running image
     current_image: u8,
     // image status
@@ -171,7 +175,6 @@ struct CcgxDmcDevxStatus {
     //  1 = Valid
     //  2 = Invalid
     //  3-0xF = Reserved
-
     img_status: u8,
     // padding
     _reserved0: [u8; 3],
@@ -183,7 +186,7 @@ struct CcgxDmcDevxStatus {
 // fields of data returned when reading dock_status
 #[derive(New, Getters)]
 struct CcgxDmcDockStatus {
-    device_status: u8, // CcgxDmcDeviceStatus
+    device_status: CcgxDmcDeviceStatus,
     device_count: u8,
     status_length: u16le, // including dock_status, devx_status for each device
     composite_version: u32le, // dock composite version m_fwct_info
@@ -193,7 +196,7 @@ struct CcgxDmcDockStatus {
 // fields of data returned when reading an interrupt from DMC
 #[derive(New, Getters)]
 struct CcgxDmcIntRqt {
-    opcode: u8,
+    opcode: CcgxDmcIntOpcode,
     length: u8,
     data: [u8; 8],
 }
