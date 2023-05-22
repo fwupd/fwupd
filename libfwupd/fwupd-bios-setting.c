@@ -754,7 +754,6 @@ fwupd_bios_setting_from_key_value(FwupdBiosSetting *self, const gchar *key, GVar
 gboolean
 fwupd_bios_setting_from_json(FwupdBiosSetting *self, JsonNode *json_node, GError **error)
 {
-#if JSON_CHECK_VERSION(1, 6, 0)
 	JsonObject *obj;
 
 	/* sanity check */
@@ -818,13 +817,6 @@ fwupd_bios_setting_from_json(FwupdBiosSetting *self, JsonNode *json_node, GError
 							FALSE));
 	/* success */
 	return TRUE;
-#else
-	g_set_error_literal(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "json-glib version too old");
-	return FALSE;
-#endif
 }
 
 /**

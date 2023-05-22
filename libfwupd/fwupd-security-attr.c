@@ -1285,7 +1285,6 @@ fwupd_pad_kv_tfl(GString *str, const gchar *key, FwupdSecurityAttrFlags security
 gboolean
 fwupd_security_attr_from_json(FwupdSecurityAttr *self, JsonNode *json_node, GError **error)
 {
-#if JSON_CHECK_VERSION(1, 6, 0)
 	JsonObject *obj;
 
 	g_return_val_if_fail(FWUPD_IS_SECURITY_ATTR(self), FALSE);
@@ -1386,13 +1385,6 @@ fwupd_security_attr_from_json(FwupdSecurityAttr *self, JsonNode *json_node, GErr
 
 	/* success */
 	return TRUE;
-#else
-	g_set_error_literal(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "json-glib version too old");
-	return FALSE;
-#endif
 }
 
 /**

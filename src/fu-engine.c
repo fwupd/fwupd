@@ -7138,7 +7138,6 @@ fu_engine_attrs_calculate_hsi_for_chassis(FuEngine *self)
 static gboolean
 fu_engine_record_security_attrs(FuEngine *self, GError **error)
 {
-#if JSON_CHECK_VERSION(1, 6, 0)
 	g_autoptr(GPtrArray) attrs_array = NULL;
 	g_autofree gchar *json = NULL;
 
@@ -7171,7 +7170,6 @@ fu_engine_record_security_attrs(FuEngine *self, GError **error)
 		g_prefix_error(error, "failed to write to DB: ");
 		return FALSE;
 	}
-#endif
 
 	/* success */
 	return TRUE;
@@ -7374,7 +7372,6 @@ FuSecurityAttrs *
 fu_engine_get_host_security_events(FuEngine *self, guint limit, GError **error)
 {
 	g_autoptr(FuSecurityAttrs) events = fu_security_attrs_new();
-#if JSON_CHECK_VERSION(1, 6, 0)
 	g_autoptr(GPtrArray) attrs_array = NULL;
 
 	g_return_val_if_fail(FU_IS_ENGINE(self), NULL);
@@ -7400,7 +7397,6 @@ fu_engine_get_host_security_events(FuEngine *self, guint limit, GError **error)
 			fu_security_attrs_append_internal(events, attr);
 		}
 	}
-#endif
 
 	/* success */
 	return g_steal_pointer(&events);
