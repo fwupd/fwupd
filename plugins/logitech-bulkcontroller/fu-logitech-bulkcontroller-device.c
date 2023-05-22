@@ -114,7 +114,6 @@ fu_logitech_bulkcontroller_device_to_string(FuDevice *device, guint idt, GString
 static gboolean
 fu_logitech_bulkcontroller_device_probe(FuDevice *device, GError **error)
 {
-#if G_USB_CHECK_VERSION(0, 3, 3)
 	FuLogitechBulkcontrollerDevice *self = FU_LOGITECH_BULKCONTROLLER_DEVICE(device);
 	g_autoptr(GPtrArray) intfs = NULL;
 
@@ -162,13 +161,6 @@ fu_logitech_bulkcontroller_device_probe(FuDevice *device, GError **error)
 	fu_usb_device_add_interface(FU_USB_DEVICE(self), self->update_iface);
 	fu_usb_device_add_interface(FU_USB_DEVICE(self), self->sync_iface);
 	return TRUE;
-#else
-	g_set_error_literal(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "this version of GUsb is not supported");
-	return FALSE;
-#endif
 }
 
 static gboolean

@@ -8824,7 +8824,7 @@ fu_engine_init(FuEngine *self)
 
 	/* add some runtime versions of things the daemon depends on */
 	fu_engine_add_runtime_version(self, "org.freedesktop.fwupd", VERSION);
-#if G_USB_CHECK_VERSION(0, 3, 1)
+#ifdef HAVE_GUSB
 	fu_engine_add_runtime_version(self, "org.freedesktop.gusb", g_usb_version_string());
 #endif
 #if LIBJCAT_CHECK_VERSION(0, 1, 11)

@@ -314,7 +314,6 @@ fu_logitech_scribe_device_to_string(FuDevice *device, guint idt, GString *str)
 static gboolean
 fu_logitech_scribe_device_probe(FuDevice *device, GError **error)
 {
-#if G_USB_CHECK_VERSION(0, 3, 3)
 	const gchar *id_v4l_capabilities;
 	const gchar *index;
 	GUdevDevice *udev_device = fu_udev_device_get_dev(FU_UDEV_DEVICE(device));
@@ -352,13 +351,6 @@ fu_logitech_scribe_device_probe(FuDevice *device, GError **error)
 
 	/* set the physical ID */
 	return fu_udev_device_set_physical_id(FU_UDEV_DEVICE(device), "video4linux", error);
-#else
-	g_set_error_literal(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "this version of GUsb is not supported");
-	return FALSE;
-#endif
 }
 
 static gboolean
