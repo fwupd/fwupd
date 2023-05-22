@@ -29,8 +29,16 @@ fu_usi_dock_dmc_device_parent_notify_cb(FuDevice *device, GParamSpec *pspec, gpo
 
 		/* allow matching firmware */
 		fu_device_add_instance_str(parent, "CID", fu_device_get_name(device));
-		if (!fu_device_build_instance_id(parent, &error, "USB", "VID", "PID", "CID", NULL))
+		if (!fu_device_build_instance_id(parent,
+						 &error,
+						 "USB",
+						 "VID",
+						 "PID",
+						 "CID",
+						 NULL)) {
 			g_warning("failed to build ID: %s", error->message);
+			return;
+		}
 
 		/* use a better device name */
 		fu_device_set_name(device, "Dock Management Controller Information");
