@@ -29,6 +29,18 @@ enum UsiDockFirmwareIdx {
     Mcu   = 0x80,
 }
 
+#[repr(u8)]
+enum UsiDockTag2 {
+    IspBoot     = 0,    // before Common CMD for bootload, with TAG0, TAG1, CMD
+    Isp         = 0x5A, // before Common, with TAG0, TAG1, CMD
+    CmdMcu      = 0x6A, // USB->MCU(Common-cmd mode), with TAG0, TAG1, CMD
+    CmdSpi      = 0x7A, // USB->MCU->SPI(Common-cmd mode), with TAG0, TAG1, CMD
+    CmdI2c      = 0x8A, // USB->MCU->I2C(Mass data transmission)
+    MassDataMcu = 0x6B, // MASS data transfer for MCU 0xA0
+    MassDataSpi = 0x7B, // MASS data transfer for External flash 0xA1
+    MassDataI2c = 0x8B, // MASS data transfer for TBT flash
+}
+
 #[derive(New)]
 struct UsiDockSetReportBuf {
     id: u8: const=2,
@@ -36,7 +48,7 @@ struct UsiDockSetReportBuf {
     mcutag1: u8: const=0xFE,
     mcutag2: u8: const=0xFF,
     inbuf: [u8; 59],
-    mcutag3: u8,
+    mcutag3: UsiDockTag2,
 }
 
 struct UsiDockIspVersion {

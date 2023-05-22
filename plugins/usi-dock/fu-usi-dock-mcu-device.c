@@ -26,15 +26,15 @@ G_DEFINE_TYPE(FuUsiDockMcuDevice, fu_usi_dock_mcu_device, FU_TYPE_HID_DEVICE)
 #define USI_DOCK_NON_IOT_INSTANCE_ID "USB\\VID_17EF&PID_30B4&CID_40B0"
 static gboolean
 fu_usi_dock_mcu_device_tx(FuUsiDockMcuDevice *self,
-			  guint8 tag2,
+			  FuUsiDockTag2 tag2,
 			  const guint8 *inbuf,
 			  gsize inbufsz,
 			  GError **error)
 {
 	g_autoptr(GByteArray) st = fu_struct_usi_dock_set_report_buf_new();
+
 	fu_struct_usi_dock_set_report_buf_set_length(st, 0x3 + inbufsz);
 	fu_struct_usi_dock_set_report_buf_set_mcutag3(st, tag2);
-
 	if (inbuf != NULL) {
 		if (!fu_struct_usi_dock_set_report_buf_set_inbuf(st, inbuf, inbufsz, error))
 			return FALSE;
@@ -109,7 +109,7 @@ fu_usi_dock_mcu_device_rx(FuUsiDockMcuDevice *self,
 
 static gboolean
 fu_usi_dock_mcu_device_txrx(FuUsiDockMcuDevice *self,
-			    guint8 tag2,
+			    FuUsiDockTag2 tag2,
 			    const guint8 *inbuf,
 			    gsize inbufsz,
 			    guint8 *outbuf,
@@ -128,7 +128,7 @@ fu_usi_dock_mcu_device_get_status(FuUsiDockMcuDevice *self, GError **error)
 	guint8 response = 0;
 
 	if (!fu_usi_dock_mcu_device_txrx(self,
-					 TAG_TAG2_CMD_MCU,
+					 FU_USI_DOCK_TAG2_CMD_MCU,
 					 &cmd,
 					 sizeof(cmd),
 					 &response,
@@ -176,7 +176,7 @@ fu_usi_dock_mcu_device_enumerate_children(FuUsiDockMcuDevice *self, GError **err
 
 	/* assume DP and NIC in-use */
 	if (!fu_usi_dock_mcu_device_txrx(self,
-					 TAG_TAG2_CMD_MCU,
+					 FU_USI_DOCK_TAG2_CMD_MCU,
 					 inbuf,
 					 sizeof(inbuf),
 					 outbuf,
@@ -404,7 +404,7 @@ fu_usi_dock_mcu_device_write_chunk(FuUsiDockMcuDevice *self, FuChunk *chk, GErro
 
 	while (pagesize != 0) {
 		memset(buf, 0x0, sizeof(buf));
-		buf[63] = TAG_TAG2_MASS_DATA_SPI;
+		buf[63] = FU_USI_DOCK_TAG2_MASS_DATA_SPI;
 		buf[0] = USB_HID_REPORT_ID2;
 
 		/* set length and buffer */
@@ -457,12 +457,12 @@ fu_usi_dock_mcu_device_write_chunk(FuUsiDockMcuDevice *self, FuChunk *chk, GErro
 				    buf[0]);
 			return FALSE;
 		}
-		if (buf[63] != TAG_TAG2_CMD_SPI) {
+		if (buf[63] != FU_USI_DOCK_TAG2_CMD_SPI) {
 			g_set_error(error,
 				    G_IO_ERROR,
 				    G_IO_ERROR_INVALID_DATA,
 				    "invalid tag2, expected 0x%02x, got 0x%02x",
-				    (guint)TAG_TAG2_CMD_SPI,
+				    (guint)FU_USI_DOCK_TAG2_CMD_SPI,
 				    buf[58]);
 			return FALSE;
 		}
@@ -497,7 +497,7 @@ fu_usi_dock_mcu_device_wait_for_spi_ready_cb(FuDevice *device, gpointer user_dat
 	guint8 val = 0;
 
 	if (!fu_usi_dock_mcu_device_txrx(self,
-					 TAG_TAG2_CMD_SPI,
+					 FU_USI_DOCK_TAG2_CMD_SPI,
 					 buf,
 					 sizeof(buf),
 					 &val,
@@ -528,7 +528,7 @@ fu_usi_dock_mcu_device_wait_for_spi_initial_ready_cb(FuDevice *device,
 	guint8 val = 0;
 
 	if (!fu_usi_dock_mcu_device_txrx(self,
-					 TAG_TAG2_CMD_SPI,
+					 FU_USI_DOCK_TAG2_CMD_SPI,
 					 buf,
 					 sizeof(buf),
 					 &val,
@@ -601,7 +601,7 @@ fu_usi_dock_mcu_device_write_firmware_with_idx(FuUsiDockMcuDevice *self,
 	/* erase external flash */
 	cmd = USBUID_ISP_DEVICE_CMD_FWBUFER_ERASE_FLASH;
 	if (!fu_usi_dock_mcu_device_txrx(self,
-					 TAG_TAG2_CMD_SPI,
+					 FU_USI_DOCK_TAG2_CMD_SPI,
 					 &cmd,
 					 sizeof(cmd),
 					 NULL,
@@ -621,7 +621,7 @@ fu_usi_dock_mcu_device_write_firmware_with_idx(FuUsiDockMcuDevice *self,
 	/* write external flash */
 	cmd = USBUID_ISP_DEVICE_CMD_FWBUFER_PROGRAM;
 	if (!fu_usi_dock_mcu_device_txrx(self,
-					 TAG_TAG2_CMD_SPI,
+					 FU_USI_DOCK_TAG2_CMD_SPI,
 					 &cmd,
 					 sizeof(cmd),
 					 NULL,
@@ -643,7 +643,7 @@ fu_usi_dock_mcu_device_write_firmware_with_idx(FuUsiDockMcuDevice *self,
 	/* file transfer – finished */
 	cmd = USBUID_ISP_DEVICE_CMD_FWBUFER_TRANSFER_FINISH;
 	if (!fu_usi_dock_mcu_device_txrx(self,
-					 TAG_TAG2_CMD_SPI,
+					 FU_USI_DOCK_TAG2_CMD_SPI,
 					 &cmd,
 					 sizeof(cmd),
 					 NULL,
@@ -674,7 +674,7 @@ fu_usi_dock_mcu_device_write_firmware_with_idx(FuUsiDockMcuDevice *self,
 	/* internal flash */
 	cmd = USBUID_ISP_INTERNAL_FW_CMD_UPDATE_FW;
 	if (!fu_usi_dock_mcu_device_txrx(self,
-					 TAG_TAG2_CMD_MCU,
+					 FU_USI_DOCK_TAG2_CMD_MCU,
 					 &cmd,
 					 sizeof(cmd),
 					 NULL,
@@ -714,7 +714,7 @@ fu_usi_dock_mcu_device_prepare(FuDevice *device,
 	if (fu_device_has_guid(device, USI_DOCK_NON_IOT_INSTANCE_ID) &&
 	    g_strcmp0(fu_device_get_version(device), "10.10") == 0) {
 		if (!fu_usi_dock_mcu_device_txrx(self,
-						 TAG_TAG2_CMD_MCU,
+						 FU_USI_DOCK_TAG2_CMD_MCU,
 						 inbuf,
 						 sizeof(inbuf),
 						 NULL,
