@@ -50,6 +50,7 @@ struct _FuDeviceClass {
 				 GError **error) G_GNUC_WARN_UNUSED_RESULT;
 	gboolean (*setup)(FuDevice *self, GError **error) G_GNUC_WARN_UNUSED_RESULT;
 	void (*incorporate)(FuDevice *self, FuDevice *donor);
+	void (*replace)(FuDevice *self, FuDevice *donor);
 	void (*probe_complete)(FuDevice *self);
 	gboolean (*poll)(FuDevice *self, GError **error) G_GNUC_WARN_UNUSED_RESULT;
 	gboolean (*activate)(FuDevice *self,

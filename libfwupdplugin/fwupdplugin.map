@@ -1219,3 +1219,9 @@ LIBFWUPDPLUGIN_1.9.1 {
     fu_memchk_write;
   local: *;
 } LIBFWUPDPLUGIN_1.8.15;
+
+LIBFWUPDPLUGIN_1.9.2 {
+  global:
+    fu_device_replace;
+  local: *;
+} LIBFWUPDPLUGIN_1.9.1;
