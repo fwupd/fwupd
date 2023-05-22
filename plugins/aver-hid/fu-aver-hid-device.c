@@ -84,12 +84,15 @@ fu_aver_hid_device_get_version(FuDevice *device, GError **error)
 	FuAverHidDevice *self = FU_AVER_HID_DEVICE(device);
 	g_autoptr(GByteArray) req = fu_struct_aver_hid_req_device_version_new();
 	g_autoptr(GByteArray) res = fu_struct_aver_hid_res_device_version_new();
+	g_autofree gchar *ver = NULL;
 
 	if (!fu_aver_hid_device_transfer(self, req, res, error))
 		return FALSE;
 	if (!fu_struct_aver_hid_res_device_version_validate(res->data, res->len, 0x0, error))
 		return FALSE;
-	fu_device_set_version(device, (const char *)fu_struct_aver_hid_res_device_version_get_ver(res, NULL));
+	ver = fu_strsafe((const gchar *)fu_struct_aver_hid_res_device_version_get_ver(res, NULL),
+			 FU_STRUCT_AVER_HID_RES_DEVICE_VERSION_SIZE_VER);
+	fu_device_set_version(device, ver);
 	return TRUE;
 }
 
@@ -154,8 +157,7 @@ fu_aver_hid_device_isp_file_dnload(FuAverHidDevice *self,
 
 		/* resize the last packet */
 		if ((i == (chunks->len - 1)) && (fu_chunk_get_data_sz(chk) < FU_STRUCT_AVER_HID_REQ_ISP_FILE_DNLOAD_SIZE_DATA))
-			req->len = 3 + fu_chunk_get_data_sz(chk);
-
+			fu_byte_array_set_size(req, 3 + fu_chunk_get_data_sz(chk), 0x0);
 		if (!fu_aver_hid_device_transfer(self, req, res, error))
 			return FALSE;
 		if (!fu_struct_aver_hid_res_isp_status_validate(res->data, res->len, 0x0, error))
@@ -204,7 +206,10 @@ fu_aver_hid_device_wait_for_ready_cb(FuDevice *device, gpointer user_data, GErro
 }
 
 static gboolean
-fu_aver_hid_device_isp_file_start(FuAverHidDevice *self, guint32 *sz, gchar *name, GError **error)
+fu_aver_hid_device_isp_file_start(FuAverHidDevice *self,
+				  guint32 *sz,
+				  const gchar *name,
+				  GError **error)
 {
 	g_autoptr(GByteArray) req = fu_struct_aver_hid_req_isp_file_start_new();
 	g_autoptr(GByteArray) res = fu_struct_aver_hid_res_isp_status_new();
@@ -230,7 +235,10 @@ fu_aver_hid_device_isp_file_start(FuAverHidDevice *self, guint32 *sz, gchar *nam
 }
 
 static gboolean
-fu_aver_hid_device_isp_file_end(FuAverHidDevice *self, guint32 *sz, gchar *name, GError **error)
+fu_aver_hid_device_isp_file_end(FuAverHidDevice *self,
+				guint32 *sz,
+				const gchar *name,
+				GError **error)
 {
 	g_autoptr(GByteArray) req = fu_struct_aver_hid_req_isp_file_end_new();
 	g_autoptr(GByteArray) res = fu_struct_aver_hid_res_isp_status_new();
@@ -248,10 +256,25 @@ fu_aver_hid_device_isp_file_end(FuAverHidDevice *self, guint32 *sz, gchar *name,
 		FU_STRUCT_AVER_HID_REQ_ISP_FILE_END_SIZE_FILE_SIZE,
 		error))
 		return FALSE;
-	if (!fu_aver_hid_device_transfer(self, req, res, error))
+	if (!fu_aver_hid_device_transfer(self, req, res, error)) {
+		g_set_error(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_BUSY,
+			    "device has status %s",
+			    fu_aver_hid_status_to_string(
+				fu_struct_aver_hid_res_isp_status_get_status(res)));
 		return FALSE;
-	if (!fu_struct_aver_hid_res_isp_status_validate(res->data, res->len, 0x0, error))
+	}
+	if (!fu_struct_aver_hid_res_isp_status_validate(res->data, res->len, 0x0, error)) {
+		g_set_error(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_BUSY,
+			    "device has status %s",
+			    fu_aver_hid_status_to_string(
+				fu_struct_aver_hid_res_isp_status_get_status(res)));
+
 		return FALSE;
+	}
 	return TRUE;
 }
 
@@ -298,7 +321,7 @@ fu_aver_hid_device_write_firmware(FuDevice *device,
 	g_autoptr(GPtrArray) chunks = NULL;
 	g_autoptr(FuArchive) archive = NULL;
 	g_autoptr(FuArchive) archive2 = NULL;
-	g_autofree gchar *aver_fw_name = NULL;
+	const gchar *aver_fw_name = NULL;
 	g_autofree gchar *audio_fw_name = NULL;
 	guint32 fw_size = 0;
 
@@ -317,11 +340,14 @@ fu_aver_hid_device_write_firmware(FuDevice *device,
 	if (fw == NULL)
 		return FALSE;
 
-	/* decompress twice */
+	/* decompress twice :
+	 * Each SoC has a compressed file,
+	 * and then all the compressed files will be combined into a single compressed fw file.
+	 */
 	archive = fu_archive_new(fw, FU_ARCHIVE_FLAG_NONE, error);
 	if (archive == NULL)
 		return FALSE;
-	aver_fw_name = g_strdup(fu_firmware_get_filename(firmware));
+	aver_fw_name = fu_firmware_get_filename(firmware);
 	aver_fw = fu_archive_lookup_by_fn(archive, aver_fw_name, error);
 	if (aver_fw == NULL)
 		return FALSE;
@@ -386,12 +412,6 @@ fu_aver_hid_device_write_firmware(FuDevice *device,
 	fu_progress_step_done(progress);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 
-	/* release */
-	if (audio_fw)
-		audio_fw = NULL;
-	if (aver_fw)
-		aver_fw = NULL;
-
 	/* success! */
 	return TRUE;
 }
@@ -410,7 +430,7 @@ fu_aver_hid_device_set_progress(FuDevice *self, FuProgress *progress)
 static void
 fu_aver_hid_device_init(FuAverHidDevice *self)
 {
-	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PLAIN);
+	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_QUAD);
 	fu_device_add_protocol(FU_DEVICE(self), "com.aver.hid");
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_DUAL_IMAGE);
