@@ -214,7 +214,7 @@ if hsi
   conf.set('HAVE_HSI', '1')
 endif
 libxmlb = dependency('xmlb', version: '>= 0.3.6', fallback: ['libxmlb', 'libxmlb_dep'])
-gusb = dependency('gusb', version: '>= 0.3.0', fallback: ['gusb', 'gusb_dep'], required: get_option('gusb'))
+gusb = dependency('gusb', version: '>= 0.3.8', fallback: ['gusb', 'gusb_dep'], required: get_option('gusb'))
 if gusb.found()
   conf.set('HAVE_GUSB', '1')
 endif

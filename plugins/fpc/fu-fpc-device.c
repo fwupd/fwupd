@@ -168,7 +168,6 @@ fu_fpc_device_fw_cmd(FuFpcDevice *self,
 static gboolean
 fu_fpc_device_setup_mode(FuFpcDevice *self, GError **error)
 {
-#if G_USB_CHECK_VERSION(0, 3, 3)
 	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
 	g_autoptr(GPtrArray) intfs = NULL;
 
@@ -190,13 +189,6 @@ fu_fpc_device_setup_mode(FuFpcDevice *self, GError **error)
 	}
 	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "no update interface found");
 	return FALSE;
-#else
-	g_set_error_literal(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "this version of GUsb is not supported");
-	return FALSE;
-#endif
 }
 
 static gboolean

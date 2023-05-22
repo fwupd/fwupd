@@ -1057,7 +1057,6 @@ fu_dfu_device_open(FuDevice *device, GError **error)
 	/* GD32VF103 encodes the serial number in UTF-8 (rather than UTF-16)
 	 * and also uses the first two bytes as the model identifier */
 	if (fu_device_has_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_GD32)) {
-#if G_USB_CHECK_VERSION(0, 3, 6)
 		GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(device));
 		const guint8 *buf;
 		gsize bufsz = 0;
@@ -1087,14 +1086,6 @@ fu_dfu_device_open(FuDevice *device, GError **error)
 		/* serial number follows */
 		serial_str = g_strndup((const gchar *)buf + 2, bufsz - 2);
 		fu_device_set_serial(FU_DEVICE(device), serial_str);
-#else
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "GUsb version too old to support GD32, "
-				    "fwupd needs to be rebuilt against 0.3.6 or later");
-		return FALSE;
-#endif
 	}
 
 	/* set up target ready for use */

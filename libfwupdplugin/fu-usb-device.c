@@ -659,7 +659,7 @@ fu_usb_device_get_platform_id(FuUsbDevice *self)
 guint16
 fu_usb_device_get_spec(FuUsbDevice *self)
 {
-#if G_USB_CHECK_VERSION(0, 3, 1)
+#ifdef HAVE_GUSB
 	FuUsbDevicePrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FU_IS_USB_DEVICE(self), 0x0);
 	if (priv->usb_device == NULL)

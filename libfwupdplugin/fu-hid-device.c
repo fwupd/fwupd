@@ -89,7 +89,6 @@ fu_hid_device_set_property(GObject *object, guint prop_id, const GValue *value, 
 static gboolean
 fu_hid_device_autodetect_eps(FuHidDevice *self, GUsbInterface *iface, GError **error)
 {
-#if G_USB_CHECK_VERSION(0, 3, 3)
 	FuHidDevicePrivate *priv = GET_PRIVATE(self);
 	g_autoptr(GPtrArray) eps = g_usb_interface_get_endpoints(iface);
 	for (guint i = 0; i < eps->len; i++) {
@@ -113,13 +112,6 @@ fu_hid_device_autodetect_eps(FuHidDevice *self, GUsbInterface *iface, GError **e
 		return FALSE;
 	}
 	return TRUE;
-#else
-	g_set_error_literal(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "this version of GUsb is not supported");
-	return FALSE;
-#endif
 }
 #endif
 

@@ -118,7 +118,7 @@ sahara_packet_get_length(GByteArray *packet)
 static gboolean
 fu_sahara_loader_find_interface(FuSaharaLoader *self, FuUsbDevice *usb_device, GError **error)
 {
-#if G_USB_CHECK_VERSION(0, 3, 3)
+#ifdef HAVE_GUSB
 	g_autoptr(GPtrArray) intfs = NULL;
 	GUsbDevice *g_usb_device = fu_usb_device_get_dev(usb_device);
 
@@ -173,10 +173,7 @@ fu_sahara_loader_find_interface(FuSaharaLoader *self, FuUsbDevice *usb_device, G
 	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "no update interface found");
 	return FALSE;
 #else
-	g_set_error_literal(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "this version of GUsb is not supported");
+	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no GUsb support");
 	return FALSE;
 #endif
 }

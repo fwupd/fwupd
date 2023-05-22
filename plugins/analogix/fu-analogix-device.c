@@ -200,7 +200,6 @@ fu_analogix_device_setup(FuDevice *device, GError **error)
 static gboolean
 fu_analogix_device_find_interface(FuUsbDevice *device, GError **error)
 {
-#if G_USB_CHECK_VERSION(0, 3, 3)
 	GUsbDevice *usb_device = fu_usb_device_get_dev(device);
 	FuAnalogixDevice *self = FU_ANALOGIX_DEVICE(device);
 	g_autoptr(GPtrArray) intfs = NULL;
@@ -220,13 +219,6 @@ fu_analogix_device_find_interface(FuUsbDevice *device, GError **error)
 	}
 	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "no update interface found");
 	return FALSE;
-#else
-	g_set_error_literal(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "this version of GUsb is not supported");
-	return FALSE;
-#endif
 }
 
 static gboolean
