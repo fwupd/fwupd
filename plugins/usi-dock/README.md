@@ -34,6 +34,16 @@ back to the runtime locked mode.
 
 The vendor ID is set from the USB vendor.
 
+## Quirk Use
+
+This plugin uses the following plugin-specific quirks:
+
+### `Flags=verfmt-hp`
+
+Use the HP-style `quad` version format.
+
+Since: 1.7.4
+
 ## External Interface Access
 
 This plugin requires read/write access to `/dev/bus/usb`.
