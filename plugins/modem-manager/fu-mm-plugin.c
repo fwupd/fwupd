@@ -303,7 +303,7 @@ fu_mm_plugin_device_removed_cb(MMManager *manager, MMObject *modem, FuPlugin *pl
 	 * ModemManager, but it still exists in the system */
 	update_methods =
 	    MM_MODEM_FIRMWARE_UPDATE_METHOD_MBIM_QDU | MM_MODEM_FIRMWARE_UPDATE_METHOD_SAHARA;
-#elif MM_CHECK_VERSION(1, 17, 1)
+#else
 	update_methods = MM_MODEM_FIRMWARE_UPDATE_METHOD_MBIM_QDU;
 #endif
 
