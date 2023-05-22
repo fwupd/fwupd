@@ -811,13 +811,11 @@ fu_daemon_install_with_helper_device(FuMainAuthHelper *helper,
 	releases = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_INSTALL_ALL_RELEASES)) {
 		g_autoptr(GPtrArray) rels = NULL;
-#if LIBXMLB_CHECK_VERSION(0, 2, 0)
 		g_autoptr(XbQuery) query = NULL;
-#endif
+
 		/* we get this one "for free" */
 		g_ptr_array_add(releases, g_object_ref(release));
 
-#if LIBXMLB_CHECK_VERSION(0, 2, 0)
 		query = xb_query_new_full(xb_node_get_silo(component),
 					  "releases/release",
 					  XB_QUERY_FLAG_FORCE_NODE_CACHE,
@@ -825,9 +823,6 @@ fu_daemon_install_with_helper_device(FuMainAuthHelper *helper,
 		if (query == NULL)
 			return FALSE;
 		rels = xb_node_query_full(component, query, NULL);
-#else
-		rels = xb_node_query(component, "releases/release", 0, NULL);
-#endif
 		/* add all but the first entry */
 		for (guint i = 1; i < rels->len; i++) {
 			XbNode *rel = g_ptr_array_index(rels, i);

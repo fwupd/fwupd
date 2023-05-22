@@ -839,7 +839,6 @@ fu_release_load(FuRelease *self,
 	/* use default release */
 	if (rel_optional == NULL) {
 		g_autoptr(GError) error_local = NULL;
-#if LIBXMLB_CHECK_VERSION(0, 2, 0)
 		g_autoptr(XbQuery) query = NULL;
 		query = xb_query_new_full(xb_node_get_silo(component),
 					  "releases/release",
@@ -848,9 +847,6 @@ fu_release_load(FuRelease *self,
 		if (query == NULL)
 			return FALSE;
 		rel = xb_node_query_first_full(component, query, &error_local);
-#else
-		rel = xb_node_query_first(component, "releases/release", &error_local);
-#endif
 		if (rel == NULL) {
 			g_set_error(error,
 				    FWUPD_ERROR,

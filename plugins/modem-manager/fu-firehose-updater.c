@@ -748,11 +748,7 @@ fu_firehose_updater_run_action(FuFirehoseUpdater *self,
 
 	action = xb_node_get_element(node);
 
-#if LIBXMLB_CHECK_VERSION(0, 2, 2)
 	cmd_str = xb_node_export(node, XB_NODE_EXPORT_FLAG_COLLAPSE_EMPTY, error);
-#else
-	cmd_str = xb_node_export(node, XB_NODE_EXPORT_FLAG_NONE, error);
-#endif
 	if (cmd_str == NULL)
 		return FALSE;
 	cmd_bytearray = g_byte_array_new_take((guint8 *)cmd_str, strlen(cmd_str));

@@ -1831,9 +1831,7 @@ fu_firmware_export_to_xml(FuFirmware *self, FuFirmwareExportFlags flags, GError 
 	fu_firmware_export(self, flags, bn);
 	return xb_builder_node_export(bn,
 				      XB_NODE_EXPORT_FLAG_FORMAT_MULTILINE |
-#if LIBXMLB_CHECK_VERSION(0, 2, 2)
 					  XB_NODE_EXPORT_FLAG_COLLAPSE_EMPTY |
-#endif
 					  XB_NODE_EXPORT_FLAG_FORMAT_INDENT,
 				      error);
 }
@@ -1858,9 +1856,7 @@ fu_firmware_to_string(FuFirmware *self)
 			   bn);
 	return xb_builder_node_export(bn,
 				      XB_NODE_EXPORT_FLAG_FORMAT_MULTILINE |
-#if LIBXMLB_CHECK_VERSION(0, 2, 2)
 					  XB_NODE_EXPORT_FLAG_COLLAPSE_EMPTY |
-#endif
 					  XB_NODE_EXPORT_FLAG_FORMAT_INDENT,
 				      NULL);
 }
