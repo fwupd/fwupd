@@ -757,7 +757,7 @@ fu_usi_dock_mcu_device_init(FuUsiDockMcuDevice *self)
 
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_NO_SERIAL_NUMBER);
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_INHIBIT_CHILDREN);
-	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID);
+	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_ONLY_WAIT_FOR_REPLUG);
 
 	fu_device_register_private_flag(FU_DEVICE(self),
 					FU_USI_DOCK_DEVICE_FLAG_VERFMT_HP,
