@@ -37,15 +37,6 @@
 #define USBUID_ISP_INTERNAL_FW_CMD_ISP_END	   0x0D
 #define USBUID_ISP_CMD_ALL			   0xFF
 
-#define TAG_TAG2_ISP_BOOT      0    /* before Common CMD for bootload, with TAG0, TAG1, CMD */
-#define TAG_TAG2_ISP	       0x5a /* before Common, with TAG0, TAG1, CMD */
-#define TAG_TAG2_CMD_MCU       0x6a /* USB->MCU(Common-cmd mode), with TAG0, TAG1, CMD */
-#define TAG_TAG2_CMD_SPI       0x7a /* USB->MCU->SPI(Common-cmd mode), with TAG0, TAG1, CMD */
-#define TAG_TAG2_CMD_I2C       0x8a /* USB->MCU->I2C(Mass data transmission) */
-#define TAG_TAG2_MASS_DATA_MCU 0x6b /* MASS data transfer for MCU 0xA0 */
-#define TAG_TAG2_MASS_DATA_SPI 0x7b /* MASS data transfer for External flash 0xA1 */
-#define TAG_TAG2_MASS_DATA_I2C 0x8b /* MASS data transfer for TBT flash */
-
 #define DP_VERSION_FROM_MCU  0x01 /* if in use */
 #define NIC_VERSION_FROM_MCU 0x2  /* if in use */
 
