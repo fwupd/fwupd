@@ -234,7 +234,7 @@ if libarchive.found()
 endif
 endif
 libjcat = dependency('jcat', version: '>= 0.1.4', fallback: ['libjcat', 'libjcat_dep'])
-libjsonglib = dependency('json-glib-1.0', version: '>= 1.1.1')
+libjsonglib = dependency('json-glib-1.0', version: '>= 1.6.0')
 valgrind = dependency('valgrind', required: false)
 libcurl = dependency('libcurl', version: '>= 7.56.0', required: get_option('curl'))
 if libcurl.found()
