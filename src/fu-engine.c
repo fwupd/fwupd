@@ -598,12 +598,9 @@ fu_engine_add_local_release_metadata(FuEngine *self, FuRelease *release, GError 
 		const gchar *guid = g_ptr_array_index(guids, i);
 		g_autoptr(GError) error_local = NULL;
 		g_autoptr(GPtrArray) tags = NULL;
-#if LIBXMLB_CHECK_VERSION(0, 3, 0)
 		g_auto(XbQueryContext) context = XB_QUERY_CONTEXT_INIT();
-#endif
 
 		/* bind GUID and then query */
-#if LIBXMLB_CHECK_VERSION(0, 3, 0)
 		xb_value_bindings_bind_str(xb_query_context_get_bindings(&context), 0, guid, NULL);
 		xb_value_bindings_bind_str(xb_query_context_get_bindings(&context),
 					   1,
@@ -613,21 +610,6 @@ fu_engine_add_local_release_metadata(FuEngine *self, FuRelease *release, GError 
 						  self->query_tag_by_guid_version,
 						  &context,
 						  &error_local);
-#else
-		if (!xb_query_bind_str(self->query_tag_by_guid_version, 0, guid, error)) {
-			g_prefix_error(error, "failed to bind GUID: ");
-			return FALSE;
-		}
-		if (!xb_query_bind_str(self->query_tag_by_guid_version,
-				       1,
-				       fu_release_get_version(release),
-				       error)) {
-			g_prefix_error(error, "failed to bind version: ");
-			return FALSE;
-		}
-		tags =
-		    xb_silo_query_full(self->silo, self->query_tag_by_guid_version, &error_local);
-#endif
 		if (tags == NULL) {
 			if (g_error_matches(error_local, G_IO_ERROR, G_IO_ERROR_NOT_FOUND) ||
 			    g_error_matches(error_local, G_IO_ERROR, G_IO_ERROR_INVALID_ARGUMENT))
@@ -754,7 +736,6 @@ fu_engine_load_release(FuEngine *self,
 static const gchar *
 fu_engine_get_remote_id_for_checksum(FuEngine *self, const gchar *csum)
 {
-#if LIBXMLB_CHECK_VERSION(0, 3, 0)
 	g_auto(XbQueryContext) context = XB_QUERY_CONTEXT_INIT();
 	xb_query_context_set_flags(&context, XB_QUERY_FLAG_USE_INDEXES);
 	xb_value_bindings_bind_str(xb_query_context_get_bindings(&context), 0, csum, NULL);
@@ -776,22 +757,6 @@ fu_engine_get_remote_id_for_checksum(FuEngine *self, const gchar *csum)
 		if (key != NULL)
 			return xb_node_get_text(key);
 	}
-#else
-	if (self->query_container_checksum1 != NULL) {
-		g_autoptr(XbNode) key = NULL;
-		xb_query_bind_str(self->query_container_checksum1, 0, csum, NULL);
-		key = xb_silo_query_first_full(self->silo, self->query_container_checksum1, NULL);
-		if (key != NULL)
-			return xb_node_get_text(key);
-	}
-	if (self->query_container_checksum2 != NULL) {
-		g_autoptr(XbNode) key = NULL;
-		xb_query_bind_str(self->query_container_checksum2, 0, csum, NULL);
-		key = xb_silo_query_first_full(self->silo, self->query_container_checksum2, NULL);
-		if (key != NULL)
-			return xb_node_get_text(key);
-	}
-#endif
 
 	/* failed */
 	return NULL;
@@ -1445,29 +1410,18 @@ fu_engine_get_component_by_guid(FuEngine *self, const gchar *guid)
 {
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(XbNode) component = NULL;
-#if LIBXMLB_CHECK_VERSION(0, 3, 0)
 	g_auto(XbQueryContext) context = XB_QUERY_CONTEXT_INIT();
-#endif
 
 	/* no components in silo */
 	if (self->query_component_by_guid == NULL)
 		return NULL;
 
-#if LIBXMLB_CHECK_VERSION(0, 3, 0)
 	xb_query_context_set_flags(&context, XB_QUERY_FLAG_USE_INDEXES);
 	xb_value_bindings_bind_str(xb_query_context_get_bindings(&context), 0, guid, NULL);
 	component = xb_silo_query_first_with_context(self->silo,
 						     self->query_component_by_guid,
 						     &context,
 						     &error_local);
-#else
-	if (!xb_query_bind_str(self->query_component_by_guid, 0, guid, &error_local)) {
-		g_warning("failed to bind 0: %s", error_local->message);
-		return NULL;
-	}
-	component =
-	    xb_silo_query_first_full(self->silo, self->query_component_by_guid, &error_local);
-#endif
 	if (component == NULL) {
 		if (!g_error_matches(error_local, G_IO_ERROR, G_IO_ERROR_NOT_FOUND) &&
 		    !g_error_matches(error_local, G_IO_ERROR, G_IO_ERROR_INVALID_ARGUMENT))
@@ -1553,21 +1507,11 @@ fu_engine_verify_from_system_metadata(FuEngine *self, FuDevice *device, GError *
 		const gchar *guid = g_ptr_array_index(guids, i);
 		g_autoptr(GError) error_local = NULL;
 		g_autoptr(GPtrArray) releases = NULL;
-#if LIBXMLB_CHECK_VERSION(0, 3, 0)
 		g_auto(XbQueryContext) context = XB_QUERY_CONTEXT_INIT();
-#endif
 
 		/* bind GUID and then query */
-#if LIBXMLB_CHECK_VERSION(0, 3, 0)
 		xb_value_bindings_bind_str(xb_query_context_get_bindings(&context), 0, guid, NULL);
 		releases = xb_silo_query_with_context(self->silo, query, &context, &error_local);
-#else
-		if (!xb_query_bind_str(query, 0, guid, error)) {
-			g_prefix_error(error, "failed to bind string: ");
-			return NULL;
-		}
-		releases = xb_silo_query_full(self->silo, query, &error_local);
-#endif
 		if (releases == NULL) {
 			if (g_error_matches(error_local, G_IO_ERROR, G_IO_ERROR_NOT_FOUND) ||
 			    g_error_matches(error_local, G_IO_ERROR, G_IO_ERROR_INVALID_ARGUMENT)) {
@@ -5130,9 +5074,7 @@ fu_engine_get_result_from_component(FuEngine *self,
 	g_autoptr(GPtrArray) tags = NULL;
 	g_autoptr(XbNode) description = NULL;
 	g_autoptr(XbNode) rel = NULL;
-#if LIBXMLB_CHECK_VERSION(0, 2, 0)
 	g_autoptr(XbQuery) query = NULL;
-#endif
 
 	dev = fu_device_new(self->ctx);
 	provides = xb_node_query(component, "provides/firmware[@type=$'flashed']", 0, &error_local);
@@ -5188,7 +5130,6 @@ fu_engine_get_result_from_component(FuEngine *self,
 	release = fu_release_new();
 	fu_release_set_device(release, dev);
 	fu_release_set_request(release, request);
-#if LIBXMLB_CHECK_VERSION(0, 2, 0)
 	query = xb_query_new_full(xb_node_get_silo(component),
 				  "releases/release",
 				  XB_QUERY_FLAG_FORCE_NODE_CACHE,
@@ -5196,9 +5137,6 @@ fu_engine_get_result_from_component(FuEngine *self,
 	if (query == NULL)
 		return NULL;
 	rel = xb_node_query_first_full(component, query, &error_local);
-#else
-	rel = xb_node_query_first(component, "releases/release", &error_local);
-#endif
 	if (rel == NULL) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -5913,7 +5851,6 @@ fu_engine_get_releases_for_device(FuEngine *self,
 		const gchar *guid = g_ptr_array_index(device_guids, j);
 		g_autoptr(GError) error_local = NULL;
 		g_autoptr(GPtrArray) components = NULL;
-#if LIBXMLB_CHECK_VERSION(0, 3, 0)
 		g_auto(XbQueryContext) context = XB_QUERY_CONTEXT_INIT();
 
 		xb_query_context_set_flags(&context, XB_QUERY_FLAG_USE_INDEXES);
@@ -5922,16 +5859,6 @@ fu_engine_get_releases_for_device(FuEngine *self,
 							self->query_component_by_guid,
 							&context,
 							&error_local);
-#else
-		if (!xb_query_bind_str(self->query_component_by_guid, 0, guid, &error_local)) {
-			g_warning("failed to bind 0: %s", error_local->message);
-			return NULL;
-		}
-		components =
-		    xb_silo_query_full(self->silo, self->query_component_by_guid, &error_local);
-#endif
-
-		/* nothing found */
 		if (components == NULL) {
 			g_debug("%s was not found: %s", guid, error_local->message);
 			continue;

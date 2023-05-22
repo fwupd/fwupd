@@ -306,19 +306,11 @@ fu_quirks_add_quirks_for_path(FuQuirks *self, XbBuilder *builder, const gchar *p
 		g_autoptr(XbBuilderSource) source = xb_builder_source_new();
 
 		/* load from keyfile */
-#if LIBXMLB_CHECK_VERSION(0, 1, 15)
 		xb_builder_source_add_simple_adapter(source,
 						     "text/plain,application/octet-stream,.quirk",
 						     fu_quirks_convert_quirk_to_xml_cb,
 						     self,
 						     NULL);
-#else
-		xb_builder_source_add_adapter(source,
-					      "text/plain,application/octet-stream,.quirk",
-					      fu_quirks_convert_quirk_to_xml_cb,
-					      self,
-					      NULL);
-#endif
 		if (!xb_builder_source_load_file(source,
 						 file,
 						 XB_BUILDER_SOURCE_FLAG_WATCH_FILE |
@@ -451,9 +443,7 @@ fu_quirks_lookup_by_id(FuQuirks *self, const gchar *guid, const gchar *key)
 {
 	g_autoptr(GError) error = NULL;
 	g_autoptr(XbNode) n = NULL;
-#if LIBXMLB_CHECK_VERSION(0, 3, 0)
 	g_auto(XbQueryContext) context = XB_QUERY_CONTEXT_INIT();
-#endif
 
 	g_return_val_if_fail(FU_IS_QUIRKS(self), NULL);
 	g_return_val_if_fail(guid != NULL, NULL);
@@ -470,23 +460,10 @@ fu_quirks_lookup_by_id(FuQuirks *self, const gchar *guid, const gchar *key)
 		return NULL;
 
 	/* query */
-#if LIBXMLB_CHECK_VERSION(0, 3, 0)
 	xb_query_context_set_flags(&context, XB_QUERY_FLAG_USE_INDEXES);
 	xb_value_bindings_bind_str(xb_query_context_get_bindings(&context), 0, guid, NULL);
 	xb_value_bindings_bind_str(xb_query_context_get_bindings(&context), 1, key, NULL);
 	n = xb_silo_query_first_with_context(self->silo, self->query_kv, &context, &error);
-#else
-	if (!xb_query_bind_str(self->query_kv, 0, guid, &error)) {
-		g_warning("failed to bind 0: %s", error->message);
-		return NULL;
-	}
-	if (!xb_query_bind_str(self->query_kv, 1, key, &error)) {
-		g_warning("failed to bind 1: %s", error->message);
-		return NULL;
-	}
-	n = xb_silo_query_first_full(self->silo, self->query_kv, &error);
-#endif
-
 	if (n == NULL) {
 		if (g_error_matches(error, G_IO_ERROR, G_IO_ERROR_NOT_FOUND))
 			return NULL;
@@ -523,9 +500,7 @@ fu_quirks_lookup_by_id_iter(FuQuirks *self,
 {
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) results = NULL;
-#if LIBXMLB_CHECK_VERSION(0, 3, 0)
 	g_auto(XbQueryContext) context = XB_QUERY_CONTEXT_INIT();
-#endif
 
 	g_return_val_if_fail(FU_IS_QUIRKS(self), FALSE);
 	g_return_val_if_fail(guid != NULL, FALSE);
@@ -542,7 +517,6 @@ fu_quirks_lookup_by_id_iter(FuQuirks *self,
 		return FALSE;
 
 	/* query */
-#if LIBXMLB_CHECK_VERSION(0, 3, 0)
 	xb_query_context_set_flags(&context, XB_QUERY_FLAG_USE_INDEXES);
 	xb_value_bindings_bind_str(xb_query_context_get_bindings(&context), 0, guid, NULL);
 	if (key != NULL) {
@@ -551,26 +525,6 @@ fu_quirks_lookup_by_id_iter(FuQuirks *self,
 	} else {
 		results = xb_silo_query_with_context(self->silo, self->query_vs, &context, &error);
 	}
-#else
-	if (key != NULL) {
-		if (!xb_query_bind_str(self->query_kv, 0, guid, &error)) {
-			g_warning("failed to bind 0: %s", error->message);
-			return FALSE;
-		}
-		if (!xb_query_bind_str(self->query_kv, 1, key, &error)) {
-			g_warning("failed to bind 1: %s", error->message);
-			return FALSE;
-		}
-		results = xb_silo_query_full(self->silo, self->query_kv, &error);
-	} else {
-		if (!xb_query_bind_str(self->query_vs, 0, guid, &error)) {
-			g_warning("failed to bind 0: %s", error->message);
-			return FALSE;
-		}
-		results = xb_silo_query_full(self->silo, self->query_vs, &error);
-	}
-#endif
-
 	if (results == NULL) {
 		if (g_error_matches(error, G_IO_ERROR, G_IO_ERROR_NOT_FOUND))
 			return FALSE;

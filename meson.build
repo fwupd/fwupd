@@ -213,7 +213,7 @@ hsi = get_option('hsi').disable_auto_if(host_machine.system() != 'linux').disabl
 if hsi
   conf.set('HAVE_HSI', '1')
 endif
-libxmlb = dependency('xmlb', version: '>= 0.1.15', fallback: ['libxmlb', 'libxmlb_dep'])
+libxmlb = dependency('xmlb', version: '>= 0.3.6', fallback: ['libxmlb', 'libxmlb_dep'])
 gusb = dependency('gusb', version: '>= 0.3.0', fallback: ['gusb', 'gusb_dep'], required: get_option('gusb'))
 if gusb.found()
   conf.set('HAVE_GUSB', '1')

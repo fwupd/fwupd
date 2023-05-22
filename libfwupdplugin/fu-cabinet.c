@@ -538,10 +538,8 @@ fu_cabinet_fixup_strip_inner_text_cb(XbBuilderFixup *self,
 				     gpointer user_data,
 				     GError **error)
 {
-#if LIBXMLB_CHECK_VERSION(0, 3, 4)
 	if (xb_builder_node_get_first_child(bn) == NULL)
 		xb_builder_node_add_flag(bn, XB_BUILDER_NODE_FLAG_STRIP_TEXT);
-#endif
 	return TRUE;
 }
 
@@ -745,14 +743,8 @@ fu_cabinet_build_silo(FuCabinet *self, GError **error)
 	xb_builder_add_fixup(self->builder, fixup4);
 
 	/* did we get any valid files */
-	self->silo = xb_builder_compile(self->builder,
-#if LIBXMLB_CHECK_VERSION(0, 3, 4)
-					XB_BUILDER_COMPILE_FLAG_SINGLE_ROOT,
-#else
-					XB_BUILDER_COMPILE_FLAG_NONE,
-#endif
-					NULL,
-					error);
+	self->silo =
+	    xb_builder_compile(self->builder, XB_BUILDER_COMPILE_FLAG_SINGLE_ROOT, NULL, error);
 	if (self->silo == NULL)
 		return FALSE;
 
@@ -1118,11 +1110,7 @@ fu_cabinet_parse(FuCabinet *self, GBytes *data, FuCabinetParseFlags flags, GErro
 	/* prepare query */
 	query = xb_query_new_full(self->silo,
 				  "releases/release",
-#if LIBXMLB_CHECK_VERSION(0, 2, 0)
 				  XB_QUERY_FLAG_FORCE_NODE_CACHE,
-#else
-				  XB_QUERY_FLAG_NONE,
-#endif
 				  error);
 	if (query == NULL)
 		return FALSE;

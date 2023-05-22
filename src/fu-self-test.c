@@ -2351,9 +2351,7 @@ fu_engine_multiple_rels_func(gconstpointer user_data)
 	g_autoptr(FuEngineRequest) request = fu_engine_request_new();
 	g_autoptr(GPtrArray) releases = NULL;
 	g_autoptr(GPtrArray) rels = NULL;
-#if LIBXMLB_CHECK_VERSION(0, 2, 0)
 	g_autoptr(XbQuery) query = NULL;
-#endif
 
 #ifndef HAVE_LIBARCHIVE
 	g_test_skip("no libarchive support");
@@ -2413,7 +2411,6 @@ fu_engine_multiple_rels_func(gconstpointer user_data)
 	fu_device_set_metadata_integer(device, "nr-update", 0);
 
 	/* get all */
-#if LIBXMLB_CHECK_VERSION(0, 2, 0)
 	query = xb_query_new_full(xb_node_get_silo(component),
 				  "releases/release",
 				  XB_QUERY_FLAG_FORCE_NODE_CACHE,
@@ -2421,9 +2418,6 @@ fu_engine_multiple_rels_func(gconstpointer user_data)
 	g_assert_no_error(error);
 	g_assert_nonnull(query);
 	rels = xb_node_query_full(component, query, &error);
-#else
-	rels = xb_node_query(component, "releases/release", 0, &error);
-#endif
 	g_assert_no_error(error);
 	g_assert_nonnull(rels);
 
@@ -4602,9 +4596,7 @@ fu_common_store_cab_func(void)
 	g_autoptr(XbNode) rel = NULL;
 	g_autoptr(XbNode) req = NULL;
 	g_autoptr(XbSilo) silo = NULL;
-#if LIBXMLB_CHECK_VERSION(0, 2, 0)
 	g_autoptr(XbQuery) query = NULL;
-#endif
 
 	/* create silo */
 	blob = _build_cab(
@@ -4644,7 +4636,6 @@ fu_common_store_cab_func(void)
 				&error);
 	g_assert_no_error(error);
 	g_assert_nonnull(component);
-#if LIBXMLB_CHECK_VERSION(0, 2, 0)
 	query = xb_query_new_full(xb_node_get_silo(component),
 				  "releases/release",
 				  XB_QUERY_FLAG_FORCE_NODE_CACHE,
@@ -4652,9 +4643,6 @@ fu_common_store_cab_func(void)
 	g_assert_no_error(error);
 	g_assert_nonnull(query);
 	rel = xb_node_query_first_full(component, query, &error);
-#else
-	rel = xb_node_query_first(component, "releases/release", &error);
-#endif
 	g_assert_no_error(error);
 	g_assert_nonnull(rel);
 	g_assert_cmpstr(xb_node_get_attr(rel, "version"), ==, "1.2.3");
@@ -4801,9 +4789,7 @@ fu_common_store_cab_unsigned_func(void)
 	g_autoptr(XbNode) csum = NULL;
 	g_autoptr(XbNode) rel = NULL;
 	g_autoptr(XbSilo) silo = NULL;
-#if LIBXMLB_CHECK_VERSION(0, 2, 0)
 	g_autoptr(XbQuery) query = NULL;
-#endif
 
 	/* create silo */
 	blob = _build_cab(GCAB_COMPRESSION_NONE,
@@ -4828,7 +4814,6 @@ fu_common_store_cab_unsigned_func(void)
 				&error);
 	g_assert_no_error(error);
 	g_assert_nonnull(component);
-#if LIBXMLB_CHECK_VERSION(0, 2, 0)
 	query = xb_query_new_full(xb_node_get_silo(component),
 				  "releases/release",
 				  XB_QUERY_FLAG_FORCE_NODE_CACHE,
@@ -4836,9 +4821,6 @@ fu_common_store_cab_unsigned_func(void)
 	g_assert_no_error(error);
 	g_assert_nonnull(query);
 	rel = xb_node_query_first_full(component, query, &error);
-#else
-	rel = xb_node_query_first(component, "releases/release", &error);
-#endif
 	g_assert_no_error(error);
 	g_assert_nonnull(rel);
 	g_assert_cmpstr(xb_node_get_attr(rel, "version"), ==, "1.2.3");
@@ -4886,9 +4868,7 @@ fu_common_store_cab_folder_func(void)
 	g_autoptr(XbNode) component = NULL;
 	g_autoptr(XbNode) rel = NULL;
 	g_autoptr(XbSilo) silo = NULL;
-#if LIBXMLB_CHECK_VERSION(0, 2, 0)
 	g_autoptr(XbQuery) query = NULL;
-#endif
 
 	/* create silo */
 	blob = _build_cab(GCAB_COMPRESSION_NONE,
@@ -4913,7 +4893,6 @@ fu_common_store_cab_folder_func(void)
 				&error);
 	g_assert_no_error(error);
 	g_assert_nonnull(component);
-#if LIBXMLB_CHECK_VERSION(0, 2, 0)
 	query = xb_query_new_full(xb_node_get_silo(component),
 				  "releases/release",
 				  XB_QUERY_FLAG_FORCE_NODE_CACHE,
@@ -4921,9 +4900,6 @@ fu_common_store_cab_folder_func(void)
 	g_assert_no_error(error);
 	g_assert_nonnull(query);
 	rel = xb_node_query_first_full(component, query, &error);
-#else
-	rel = xb_node_query_first(component, "releases/release", &error);
-#endif
 	g_assert_no_error(error);
 	g_assert_nonnull(rel);
 	g_assert_cmpstr(xb_node_get_attr(rel, "version"), ==, "1.2.3");
