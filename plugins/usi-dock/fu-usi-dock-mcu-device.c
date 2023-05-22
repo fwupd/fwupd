@@ -29,8 +29,8 @@ G_DEFINE_TYPE(FuUsiDockMcuDevice, fu_usi_dock_mcu_device, FU_TYPE_HID_DEVICE)
 #define W25Q16DV_PAGE_SIZE 256
 
 #define FU_USI_DOCK_DEVICE_FLAG_VERFMT_HP (1 << 0)
+#define FU_USI_DOCK_DEVICE_FLAG_SET_CHIP_TYPE (1 << 1)
 
-#define USI_DOCK_NON_IOT_INSTANCE_ID "USB\\VID_17EF&PID_30B4&CID_40B0"
 static gboolean
 fu_usi_dock_mcu_device_tx(FuUsiDockMcuDevice *self,
 			  FuUsiDockTag2 tag2,
@@ -674,16 +674,13 @@ fu_usi_dock_mcu_device_write_firmware(FuDevice *device,
 }
 
 static gboolean
-fu_usi_dock_mcu_device_prepare(FuDevice *device,
-			       FuProgress *progress,
-			       FwupdInstallFlags flags,
-			       GError **error)
+fu_usi_dock_mcu_device_reload(FuDevice *device, GError **error)
 {
 	FuUsiDockMcuDevice *self = FU_USI_DOCK_MCU_DEVICE(device);
 	guint8 inbuf[] = {FU_USI_DOCK_MCU_CMD_SET_CHIP_TYPE, 1, 1};
 
-	if (fu_device_has_guid(device, USI_DOCK_NON_IOT_INSTANCE_ID) &&
-	    g_strcmp0(fu_device_get_version(device), "10.10") == 0) {
+	if (fu_device_has_private_flag(device, FU_USI_DOCK_DEVICE_FLAG_SET_CHIP_TYPE)) {
+		g_info("repairing device with CMD_SET_CHIP_TYPE");
 		if (!fu_usi_dock_mcu_device_txrx(self,
 						 FU_USI_DOCK_TAG2_CMD_MCU,
 						 inbuf,
@@ -731,6 +728,13 @@ fu_usi_dock_mcu_device_cleanup(FuDevice *device,
 }
 
 static void
+fu_usi_dock_mcu_device_replace(FuDevice *device, FuDevice *donor)
+{
+	if (fu_device_has_private_flag(donor, FU_USI_DOCK_DEVICE_FLAG_SET_CHIP_TYPE))
+		fu_device_add_private_flag(device, FU_USI_DOCK_DEVICE_FLAG_SET_CHIP_TYPE);
+}
+
+static void
 fu_usi_dock_mcu_device_set_progress(FuDevice *self, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
@@ -755,6 +759,9 @@ fu_usi_dock_mcu_device_init(FuUsiDockMcuDevice *self)
 	fu_device_register_private_flag(FU_DEVICE(self),
 					FU_USI_DOCK_DEVICE_FLAG_VERFMT_HP,
 					"verfmt-hp");
+	fu_device_register_private_flag(FU_DEVICE(self),
+					FU_USI_DOCK_DEVICE_FLAG_SET_CHIP_TYPE,
+					"set-chip-type");
 	fu_hid_device_add_flag(FU_HID_DEVICE(self), FU_HID_DEVICE_FLAG_USE_INTERRUPT_TRANSFER);
 	fu_device_add_protocol(FU_DEVICE(self), "com.usi.dock");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_NUMBER);
@@ -772,6 +779,7 @@ fu_usi_dock_mcu_device_class_init(FuUsiDockMcuDeviceClass *klass)
 	klass_device->attach = fu_usi_dock_mcu_device_attach;
 	klass_device->setup = fu_usi_dock_mcu_device_setup;
 	klass_device->set_progress = fu_usi_dock_mcu_device_set_progress;
-	klass_device->prepare = fu_usi_dock_mcu_device_prepare;
 	klass_device->cleanup = fu_usi_dock_mcu_device_cleanup;
+	klass_device->reload = fu_usi_dock_mcu_device_reload;
+	klass_device->replace = fu_usi_dock_mcu_device_replace;
 }

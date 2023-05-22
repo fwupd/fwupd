@@ -13,6 +13,10 @@ Plugin = usi_dock
 GType = FuUsiDockMcuDevice
 Name = ThinkPad Thunderbolt 4 Dock
 
+# fix up a device-provisioning problem for this specific version
+[USB\VID_17EF&PID_30B4&CID_40B0&DMCVER_10.10]
+Flags = set-chip-type
+
 [USB\VID_17EF&PID_30B5]
 Plugin = usi_dock
 GType = FuUsiDockDmcDevice
