@@ -5309,6 +5309,30 @@ fu_device_incorporate(FuDevice *self, FuDevice *donor)
 }
 
 /**
+ * fu_device_replace:
+ * @self: a #FuDevice
+ * @donor: the old #FuDevice
+ *
+ * Copy properties from the old (no-longer-connected) device to the new (connected) device.
+ *
+ * This is typcically called from the daemon device list and should not be called from plugin code.
+ *
+ * Since: 1.9.2
+ **/
+void
+fu_device_replace(FuDevice *self, FuDevice *donor)
+{
+	FuDeviceClass *klass = FU_DEVICE_GET_CLASS(self);
+
+	g_return_if_fail(FU_IS_DEVICE(self));
+	g_return_if_fail(FU_IS_DEVICE(donor));
+
+	/* optional subclass */
+	if (klass->replace != NULL)
+		klass->replace(self, donor);
+}
+
+/**
  * fu_device_incorporate_flag:
  * @self: a #FuDevice
  * @donor: another device

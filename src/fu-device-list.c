@@ -635,9 +635,11 @@ fu_device_incorporate_update_state(FuDevice *self, FuDevice *donor)
 static void
 fu_device_list_replace(FuDeviceList *self, FuDeviceItem *item, FuDevice *device)
 {
-	guint64 private_flags;
 	GPtrArray *vendor_ids;
 	g_autofree gchar *str = NULL;
+
+	/* run the optional device-specific subclass */
+	fu_device_replace(device, item->device);
 
 	/* copy over any GUIDs that used to exist */
 	fu_device_list_add_missing_guids(device, item->device);
@@ -648,13 +650,6 @@ fu_device_list_replace(FuDeviceList *self, FuDeviceItem *item, FuDevice *device)
 		const gchar *vendor_id = g_ptr_array_index(vendor_ids, i);
 		g_info("copying old vendor ID %s to new device", vendor_id);
 		fu_device_add_vendor_id(device, vendor_id);
-	}
-
-	/* copy over custom flags */
-	private_flags = fu_device_get_private_flags(item->device);
-	if (private_flags != 0) {
-		g_info("copying old custom flags 0x%x to new device", (guint)private_flags);
-		fu_device_set_private_flags(device, private_flags);
 	}
 
 	/* copy inhibit */
@@ -756,23 +751,15 @@ fu_device_list_add(FuDeviceList *self, FuDevice *device)
 	item = fu_device_list_find_by_id(self, fu_device_get_id(device), NULL);
 	if (item != NULL) {
 		/* literally the same object */
-		if (g_strcmp0(fu_device_get_id(device), fu_device_get_id(item->device)) == 0) {
+		if (device == item->device) {
 			g_info("found existing device %s", fu_device_get_id(device));
-			if (device != item->device) {
-				fu_device_uninhibit(item->device, "unconnected");
-				fu_device_incorporate_problem_update_in_progress(device,
-										 item->device);
-				fu_device_incorporate_update_state(device, item->device);
-				fu_device_list_item_set_device(item, device);
-			}
 			fu_device_list_clear_wait_for_replug(self, item);
 			fu_device_list_emit_device_changed(self, device);
 			return;
 		}
 
 		/* the old device again */
-		if (item->device_old != NULL &&
-		    g_strcmp0(fu_device_get_id(device), fu_device_get_id(item->device_old)) == 0) {
+		if (item->device_old != NULL && device == item->device_old) {
 			g_info("found old device %s, swapping", fu_device_get_id(device));
 			fu_device_uninhibit(item->device, "unconnected");
 			fu_device_incorporate_problem_update_in_progress(device, item->device);
