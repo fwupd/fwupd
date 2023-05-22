@@ -256,25 +256,10 @@ fu_aver_hid_device_isp_file_end(FuAverHidDevice *self,
 		FU_STRUCT_AVER_HID_REQ_ISP_FILE_END_SIZE_FILE_SIZE,
 		error))
 		return FALSE;
-	if (!fu_aver_hid_device_transfer(self, req, res, error)) {
-		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_BUSY,
-			    "device has status %s",
-			    fu_aver_hid_status_to_string(
-				fu_struct_aver_hid_res_isp_status_get_status(res)));
+	if (!fu_aver_hid_device_transfer(self, req, res, error))
 		return FALSE;
-	}
-	if (!fu_struct_aver_hid_res_isp_status_validate(res->data, res->len, 0x0, error)) {
-		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_BUSY,
-			    "device has status %s",
-			    fu_aver_hid_status_to_string(
-				fu_struct_aver_hid_res_isp_status_get_status(res)));
-
+	if (!fu_struct_aver_hid_res_isp_status_validate(res->data, res->len, 0x0, error))
 		return FALSE;
-	}
 	return TRUE;
 }
 
@@ -292,18 +277,38 @@ fu_aver_hid_device_isp_start(FuAverHidDevice *self, GError **error)
 }
 
 static gboolean
-fu_aver_hid_device_isp_status(FuAverHidDevice *self, GError **error)
+fu_aver_hid_device_wait_for_reboot_cb(FuDevice *device, gpointer user_data, GError **error)
 {
+	FuAverHidDevice *self = FU_AVER_HID_DEVICE(device);
+	FuProgress *progress = FU_PROGRESS(user_data);
 	g_autoptr(GByteArray) req = fu_struct_aver_hid_req_isp_new();
 	g_autoptr(GByteArray) res = fu_struct_aver_hid_res_isp_status_new();
-	fu_struct_aver_hid_req_isp_set_custom_isp_cmd(req, FU_AVER_HID_CUSTOM_ISP_CMD_STATUS);
 
-	if (!fu_aver_hid_device_transfer(self, req, res, error))
+	fu_struct_aver_hid_req_isp_set_custom_isp_cmd(req, FU_AVER_HID_CUSTOM_ISP_CMD_STATUS);
+	if (!fu_aver_hid_device_transfer(self, req, res, error)) {
 		return FALSE;
-	if (!fu_struct_aver_hid_res_isp_status_validate(res->data, res->len, 0x0, error))
+	}
+	if (fu_struct_aver_hid_res_isp_status_get_status(res) == FU_AVER_HID_STATUS_ISPING) {
+		guint8 percentage = fu_struct_aver_hid_res_isp_status_get_progress(res);
+		if (percentage < 100)
+			fu_progress_set_percentage(progress, percentage);
+		g_set_error(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_BUSY,
+			    "device has status %s",
+			    fu_aver_hid_status_to_string(
+				fu_struct_aver_hid_res_isp_status_get_status(res)));
 		return FALSE;
-	if (fu_struct_aver_hid_res_isp_status_get_status(res) == FU_AVER_HID_STATUS_REBOOT)
+	}
+	if (fu_struct_aver_hid_res_isp_status_get_status(res) != FU_AVER_HID_STATUS_REBOOT) {
+		g_set_error(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_BUSY,
+			    "device has status %s",
+			    fu_aver_hid_status_to_string(
+				fu_struct_aver_hid_res_isp_status_get_status(res)));
 		return FALSE;
+	}
 	return TRUE;
 }
 
@@ -398,17 +403,15 @@ fu_aver_hid_device_write_firmware(FuDevice *device,
 		return FALSE;
 	fu_progress_step_done(progress);
 
-	for (guint i = 0; i < FU_AVER_HID_DEVICE_ISP_TIMEOUT; i++) {
-		if (fu_aver_hid_device_isp_status(self, error)) {
-			/* fone540 is connected, ISP is processing. */
-			fu_device_sleep(device, 1000); /* ms */
-		} else {
-			/* fone540 is disconnect or fone540 send ISP_REBOOT, we assume it's in
-			 * reboot phase. */
-			fu_device_sleep(device, 5000); /* 5 secs */
-			break;
-		}
-	}
+	/* poll for the actual write progress */
+	if (!fu_device_retry_full(device,
+				  fu_aver_hid_device_wait_for_reboot_cb,
+				  FU_AVER_HID_DEVICE_ISP_TIMEOUT,
+				  FU_AVER_HID_DEVICE_GET_STATUS_POLL_INTERVAL,
+				  fu_progress_get_child(progress),
+				  error))
+		return FALSE;
+
 	fu_progress_step_done(progress);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 
