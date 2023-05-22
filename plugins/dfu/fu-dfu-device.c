@@ -245,7 +245,16 @@ fu_dfu_device_parse_iface_data(FuDfuDevice *self, GBytes *iface_data, GError **e
 		priv->transfer_size = 0x1000;
 
 	/* get attributes about the DFU operation */
-	fu_device_add_private_flag(FU_DEVICE(self), desc.bmAttributes);
+	if (desc.bmAttributes & FU_DFU_DEVICE_FLAG_CAN_DOWNLOAD)
+		fu_device_add_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_CAN_DOWNLOAD);
+	if (desc.bmAttributes & FU_DFU_DEVICE_FLAG_CAN_UPLOAD)
+		fu_device_add_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_CAN_UPLOAD);
+	if (desc.bmAttributes & FU_DFU_DEVICE_FLAG_MANIFEST_TOL)
+		fu_device_add_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_MANIFEST_TOL);
+	if (desc.bmAttributes & FU_DFU_DEVICE_FLAG_WILL_DETACH)
+		fu_device_add_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_WILL_DETACH);
+	if (desc.bmAttributes & FU_DFU_DEVICE_FLAG_CAN_ACCELERATE)
+		fu_device_add_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_CAN_ACCELERATE);
 	return TRUE;
 }
 
