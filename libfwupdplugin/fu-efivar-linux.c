@@ -329,6 +329,23 @@ fu_efivar_space_used_impl(GError **error)
 	guint64 total = 0;
 	g_autoptr(GDir) dir = NULL;
 	g_autofree gchar *path = fu_efivar_get_path();
+	g_autoptr(GFile) file_fs = g_file_new_for_path(path);
+	g_autoptr(GFileInfo) info_fs = NULL;
+	g_autoptr(GError) error_local = NULL;
+
+	/* this is only supported in new kernels */
+	info_fs = g_file_query_info(file_fs,
+				    G_FILE_ATTRIBUTE_FILESYSTEM_USED,
+				    G_FILE_QUERY_INFO_NONE,
+				    NULL,
+				    &error_local);
+	if (info_fs == NULL) {
+		g_debug("failed to get efivar used space: %s", error_local->message);
+	} else {
+		total = g_file_info_get_attribute_uint64(info_fs, G_FILE_ATTRIBUTE_FILESYSTEM_USED);
+		if (total > 0)
+			return total;
+	}
 
 	/* stat each file */
 	dir = g_dir_open(path, 0, error);
