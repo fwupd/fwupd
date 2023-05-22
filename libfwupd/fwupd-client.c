@@ -125,11 +125,9 @@ static guint signals[SIGNAL_LAST] = {0};
 G_DEFINE_TYPE_WITH_PRIVATE(FwupdClient, fwupd_client, G_TYPE_OBJECT)
 #define GET_PRIVATE(o) (fwupd_client_get_instance_private(o))
 
-#ifdef HAVE_LIBCURL_7_62_0
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(CURLU, curl_url_cleanup)
-#endif
-
 #ifdef HAVE_LIBCURL
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(CURLU, curl_url_cleanup)
+
 static void
 fwupd_client_curl_helper_free(FwupdCurlHelper *helper)
 {
@@ -3174,7 +3172,7 @@ fwupd_client_install_release_download_cb(GObject *source, GAsyncResult *res, gpo
 static gboolean
 fwupd_client_is_url_http(const gchar *perhaps_url)
 {
-#ifdef HAVE_LIBCURL_7_62_0
+#ifdef HAVE_LIBCURL
 	g_autoptr(CURLU) h = curl_url();
 	return curl_url_set(h, CURLUPART_URL, perhaps_url, 0) == CURLUE_OK;
 #else

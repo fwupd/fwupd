@@ -37,13 +37,8 @@ CURL *
 fu_redfish_request_get_curl(FuRedfishRequest *self);
 void
 fu_redfish_request_set_curlsh(FuRedfishRequest *self, CURLSH *curlsh);
-#ifdef HAVE_LIBCURL_7_62_0
 CURLU *
 fu_redfish_request_get_uri(FuRedfishRequest *self);
-#else
-void
-fu_redfish_request_set_uri_base(FuRedfishRequest *self, const gchar *uri_base);
-#endif
 glong
 fu_redfish_request_get_status_code(FuRedfishRequest *self);
 void
