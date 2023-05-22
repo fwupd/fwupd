@@ -3074,10 +3074,8 @@ fu_util_switch_branch(FuUtilPrivate *priv, gchar **values, GError **error)
 	for (guint i = 0; i < rels->len; i++) {
 		FwupdRelease *rel_tmp = g_ptr_array_index(rels, i);
 		const gchar *branch_tmp = fwupd_release_get_branch(rel_tmp);
-#if GLIB_CHECK_VERSION(2, 54, 3)
 		if (g_ptr_array_find_with_equal_func(branches, branch_tmp, _g_str_equal0, NULL))
 			continue;
-#endif
 		g_ptr_array_add(branches, g_strdup(branch_tmp));
 	}
 

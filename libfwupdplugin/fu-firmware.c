@@ -1782,16 +1782,7 @@ fu_firmware_export(FuFirmware *self, FuFirmwareExportFlags flags, XbBuilderNode 
 		if (flags & FU_FIRMWARE_EXPORT_FLAG_ASCII_DATA) {
 			datastr = fu_strsafe((const gchar *)buf, MIN(bufsz, 16));
 		} else {
-#if GLIB_CHECK_VERSION(2, 61, 0)
 			datastr = g_base64_encode(buf, bufsz);
-#else
-			/* older GLib versions can't cope with buf=NULL */
-			if (buf == NULL || bufsz == 0) {
-				datastr = g_strdup("");
-			} else {
-				datastr = g_base64_encode(buf, bufsz);
-			}
-#endif
 		}
 		xb_builder_node_insert_text(bn, "data", datastr, "size", dataszstr, NULL);
 	}

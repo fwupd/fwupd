@@ -754,23 +754,6 @@ fu_daemon_authorize_install_queue(FuMainAuthHelper *helper_ref)
 }
 #endif /* HAVE_GIO_UNIX */
 
-#if !GLIB_CHECK_VERSION(2, 54, 0)
-static gboolean
-g_ptr_array_find(GPtrArray *haystack, gconstpointer needle, guint *index_)
-{
-	for (guint i = 0; i < haystack->len; i++) {
-		gconstpointer *tmp = g_ptr_array_index(haystack, i);
-		if (tmp == needle) {
-			if (index_ != NULL) {
-				*index_ = i;
-				return TRUE;
-			}
-		}
-	}
-	return FALSE;
-}
-#endif
-
 #ifdef HAVE_GIO_UNIX
 static gint
 fu_daemon_release_sort_cb(gconstpointer a, gconstpointer b)

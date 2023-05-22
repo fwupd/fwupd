@@ -53,7 +53,6 @@
 #include "fu-history.h"
 #include "fu-idle.h"
 #include "fu-kenv.h"
-#include "fu-mutex.h"
 #include "fu-plugin-builtin.h"
 #include "fu-plugin-list.h"
 #include "fu-plugin-private.h"
@@ -5606,19 +5605,6 @@ fu_engine_get_history(FuEngine *self, GError **error)
 	return g_steal_pointer(&devices);
 }
 
-#if !GLIB_CHECK_VERSION(2, 62, 0)
-static GPtrArray *
-g_ptr_array_copy(GPtrArray *array, GCopyFunc func, gpointer user_data)
-{
-	GPtrArray *new = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
-	for (guint i = 0; i < array->len; i++) {
-		GObject *obj = g_ptr_array_index(array, i);
-		g_ptr_array_add(new, g_object_ref(obj));
-	}
-	return new;
-}
-#endif
-
 /**
  * fu_engine_get_remotes:
  * @self: a #FuEngine
@@ -5982,10 +5968,8 @@ fu_engine_get_releases_for_device(FuEngine *self,
 		FwupdRelease *rel_tmp = FWUPD_RELEASE(g_ptr_array_index(releases, i));
 		const gchar *branch_tmp =
 		    fu_engine_get_branch_fallback(fwupd_release_get_branch(rel_tmp));
-#if GLIB_CHECK_VERSION(2, 54, 3)
 		if (g_ptr_array_find_with_equal_func(branches, branch_tmp, g_str_equal, NULL))
 			continue;
-#endif
 		g_ptr_array_add(branches, g_strdup(branch_tmp));
 	}
 	if (branches->len > 1)

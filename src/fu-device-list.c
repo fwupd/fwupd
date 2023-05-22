@@ -13,7 +13,6 @@
 #include "fu-device-list.h"
 #include "fu-device-private.h"
 #include "fu-engine.h"
-#include "fu-mutex.h"
 
 /**
  * FuDeviceList:
