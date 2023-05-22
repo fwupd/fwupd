@@ -53,39 +53,3 @@
 #define TX_ISP_LENGTH	     61
 
 #define W25Q16DV_PAGE_SIZE 256
-
-#define FIRMWARE_IDX_NONE   0x00
-#define FIRMWARE_IDX_DMC_PD 0x01
-#define FIRMWARE_IDX_DP	    0x02
-#define FIRMWARE_IDX_TBT4   0x04
-#define FIRMWARE_IDX_USB3   0x08
-#define FIRMWARE_IDX_USB2   0x10
-#define FIRMWARE_IDX_AUDIO  0x20
-#define FIRMWARE_IDX_I225   0x40
-#define FIRMWARE_IDX_MCU    0x80
-
-typedef struct {
-	guint8 DMC[5];
-	guint8 PD[5];
-	guint8 DP5x[5];
-	guint8 DP6x[5];
-	guint8 TBT4[5];
-	guint8 USB3[5];
-	guint8 USB2[5];
-	guint8 AUDIO[5];
-	guint8 I255[5];
-	guint8 MCU[2];
-	guint8 bcdVersion[2];
-} IspVersionInMcu_t;
-
-typedef struct {
-	guint8 id;
-	guint8 length;
-	guint8 mcutag1;
-	guint8 mcutag2;
-	guint8 inbuf[59];
-	guint8 mcutag3;
-} UsiDockSetReportBuf;
-
-const gchar *
-fu_usi_dock_idx_to_string(guint8 val);

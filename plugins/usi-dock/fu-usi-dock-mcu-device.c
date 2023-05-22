@@ -31,35 +31,24 @@ fu_usi_dock_mcu_device_tx(FuUsiDockMcuDevice *self,
 			  gsize inbufsz,
 			  GError **error)
 {
-	UsiDockSetReportBuf tx_buffer = {
-	    .id = USB_HID_REPORT_ID2,
-	    .length = 0x3 + inbufsz,
-	    .mcutag1 = 0xFE,
-	    .mcutag2 = 0xFF,
-	    .mcutag3 = tag2,
-	};
+	g_autoptr(GByteArray) st = fu_struct_usi_dock_set_report_buf_new();
+	fu_struct_usi_dock_set_report_buf_set_length(st, 0x3 + inbufsz);
+	fu_struct_usi_dock_set_report_buf_set_mcutag3(st, tag2);
 
 	if (inbuf != NULL) {
-		if (!fu_memcpy_safe(tx_buffer.inbuf,
-				    sizeof(tx_buffer.inbuf),
-				    0x0, /* dst */
-				    inbuf,
-				    inbufsz,
-				    0x0, /* src */
-				    inbufsz,
-				    error))
+		if (!fu_struct_usi_dock_set_report_buf_set_inbuf(st, inbuf, inbufsz, error))
 			return FALSE;
 	}
 
 	/* special cases */
-	if (tx_buffer.inbuf[0] == USBUID_ISP_INTERNAL_FW_CMD_UPDATE_FW) {
-		tx_buffer.inbuf[1] = 0xFF;
-	}
+	if (st->data[FU_STRUCT_USI_DOCK_SET_REPORT_BUF_OFFSET_INBUF + 0] ==
+	    USBUID_ISP_INTERNAL_FW_CMD_UPDATE_FW)
+		st->data[FU_STRUCT_USI_DOCK_SET_REPORT_BUF_OFFSET_INBUF + 1] = 0xFF;
 
 	return fu_hid_device_set_report(FU_HID_DEVICE(self),
 					USB_HID_REPORT_ID2,
-					(guint8 *)&tx_buffer,
-					sizeof(tx_buffer),
+					st->data,
+					st->len,
 					FU_USI_DOCK_MCU_DEVICE_TIMEOUT,
 					FU_HID_DEVICE_FLAG_NONE,
 					error);
@@ -170,17 +159,19 @@ fu_usi_dock_mcu_device_enumerate_children(FuUsiDockMcuDevice *self, GError **err
 		guint8 chip_idx;
 		gsize offset;
 	} components[] = {
-	    {"DMC", FIRMWARE_IDX_DMC_PD, G_STRUCT_OFFSET(IspVersionInMcu_t, DMC)},
-	    {"PD", FIRMWARE_IDX_DP, G_STRUCT_OFFSET(IspVersionInMcu_t, PD)},
-	    {"DP5x", FIRMWARE_IDX_NONE, G_STRUCT_OFFSET(IspVersionInMcu_t, DP5x)},
-	    {"DP6x", FIRMWARE_IDX_NONE, G_STRUCT_OFFSET(IspVersionInMcu_t, DP6x)},
-	    {"TBT4", FIRMWARE_IDX_TBT4, G_STRUCT_OFFSET(IspVersionInMcu_t, TBT4)},
-	    {"USB3", FIRMWARE_IDX_USB3, G_STRUCT_OFFSET(IspVersionInMcu_t, USB3)},
-	    {"USB2", FIRMWARE_IDX_USB2, G_STRUCT_OFFSET(IspVersionInMcu_t, USB2)},
-	    {"AUDIO", FIRMWARE_IDX_AUDIO, G_STRUCT_OFFSET(IspVersionInMcu_t, AUDIO)},
-	    {"I255", FIRMWARE_IDX_I225, G_STRUCT_OFFSET(IspVersionInMcu_t, I255)},
-	    {"MCU", FIRMWARE_IDX_MCU, G_STRUCT_OFFSET(IspVersionInMcu_t, MCU)},
-	    {"bcdVersion", FIRMWARE_IDX_NONE, G_STRUCT_OFFSET(IspVersionInMcu_t, bcdVersion)},
+	    {"DMC", FU_USI_DOCK_FIRMWARE_IDX_DMC_PD, FU_STRUCT_USI_DOCK_ISP_VERSION_OFFSET_DMC},
+	    {"PD", FU_USI_DOCK_FIRMWARE_IDX_DP, FU_STRUCT_USI_DOCK_ISP_VERSION_OFFSET_PD},
+	    {"DP5x", FU_USI_DOCK_FIRMWARE_IDX_NONE, FU_STRUCT_USI_DOCK_ISP_VERSION_OFFSET_DP5X},
+	    {"DP6x", FU_USI_DOCK_FIRMWARE_IDX_NONE, FU_STRUCT_USI_DOCK_ISP_VERSION_OFFSET_DP6X},
+	    {"TBT4", FU_USI_DOCK_FIRMWARE_IDX_TBT4, FU_STRUCT_USI_DOCK_ISP_VERSION_OFFSET_TBT4},
+	    {"USB3", FU_USI_DOCK_FIRMWARE_IDX_USB3, FU_STRUCT_USI_DOCK_ISP_VERSION_OFFSET_USB3},
+	    {"USB2", FU_USI_DOCK_FIRMWARE_IDX_USB2, FU_STRUCT_USI_DOCK_ISP_VERSION_OFFSET_USB2},
+	    {"AUDIO", FU_USI_DOCK_FIRMWARE_IDX_AUDIO, FU_STRUCT_USI_DOCK_ISP_VERSION_OFFSET_AUDIO},
+	    {"I255", FU_USI_DOCK_FIRMWARE_IDX_I225, FU_STRUCT_USI_DOCK_ISP_VERSION_OFFSET_I255},
+	    {"MCU", FU_USI_DOCK_FIRMWARE_IDX_MCU, FU_STRUCT_USI_DOCK_ISP_VERSION_OFFSET_MCU},
+	    {"bcdVersion",
+	     FU_USI_DOCK_FIRMWARE_IDX_NONE,
+	     FU_STRUCT_USI_DOCK_ISP_VERSION_OFFSET_BCDVERSION},
 	    {NULL, 0, 0}};
 
 	/* assume DP and NIC in-use */
