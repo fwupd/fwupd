@@ -20,7 +20,6 @@
 #include "fu-context-private.h"
 #include "fu-device-private.h"
 #include "fu-kernel.h"
-#include "fu-mutex.h"
 #include "fu-path.h"
 #include "fu-plugin-private.h"
 #include "fu-security-attr.h"

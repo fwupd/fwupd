@@ -262,18 +262,10 @@ fu_engine_config_get_blocked_firmware(FuEngineConfig *self)
 guint
 fu_engine_config_get_uri_scheme_prio(FuEngineConfig *self, const gchar *scheme)
 {
-#if GLIB_CHECK_VERSION(2, 54, 0)
 	guint idx = 0;
 	if (!g_ptr_array_find_with_equal_func(self->uri_schemes, scheme, g_str_equal, &idx))
 		return G_MAXUINT;
 	return idx;
-#else
-	for (guint i = 0; i < self->uri_schemes->len; i++)
-		const gchar *scheme_tmp = g_ptr_array_index(self->uri_schemes, i);
-	if (g_str_equal(scheme_tmp, scheme))
-		return i;
-	return G_MAXUINT;
-#endif
 }
 
 guint64
