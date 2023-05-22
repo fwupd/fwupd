@@ -331,9 +331,9 @@ fu_dfu_device_add_targets(FuDfuDevice *self, GError **error)
 				continue;
 			}
 		} else {
+			fu_device_add_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_CAN_UPLOAD);
 			fu_device_add_private_flag(FU_DEVICE(self),
-						   FU_DFU_DEVICE_FLAG_CAN_DOWNLOAD |
-						       FU_DFU_DEVICE_FLAG_CAN_UPLOAD);
+						   FU_DFU_DEVICE_FLAG_CAN_DOWNLOAD);
 		}
 
 		/* fix up the version */
