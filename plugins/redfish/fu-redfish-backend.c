@@ -63,11 +63,7 @@ fu_redfish_backend_request_new(FuRedfishBackend *self)
 {
 	FuRedfishRequest *request = g_object_new(FU_TYPE_REDFISH_REQUEST, NULL);
 	CURL *curl;
-#ifdef HAVE_LIBCURL_7_62_0
 	CURLU *uri;
-#else
-	g_autofree gchar *uri_base = NULL;
-#endif
 	g_autofree gchar *user_agent = NULL;
 	g_autofree gchar *port = g_strdup_printf("%u", self->port);
 
@@ -77,17 +73,11 @@ fu_redfish_backend_request_new(FuRedfishBackend *self)
 
 	/* set up defaults */
 	curl = fu_redfish_request_get_curl(request);
-#ifdef HAVE_LIBCURL_7_62_0
 	uri = fu_redfish_request_get_uri(request);
 	(void)curl_url_set(uri, CURLUPART_SCHEME, self->use_https ? "https" : "http", 0);
 	(void)curl_url_set(uri, CURLUPART_HOST, self->hostname, 0);
 	(void)curl_url_set(uri, CURLUPART_PORT, port, 0);
 	(void)curl_easy_setopt(curl, CURLOPT_CURLU, uri);
-#else
-	uri_base =
-	    g_strdup_printf("%s://%s:%s", self->use_https ? "https" : "http", self->hostname, port);
-	fu_redfish_request_set_uri_base(request, uri_base);
-#endif
 
 	/* since DSP0266 makes Basic Authorization a requirement,
 	 * it is safe to use Basic Auth for all implementations */

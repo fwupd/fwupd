@@ -71,7 +71,7 @@ enum {
 G_DEFINE_TYPE_WITH_PRIVATE(FwupdRemote, fwupd_remote, G_TYPE_OBJECT)
 #define GET_PRIVATE(o) (fwupd_remote_get_instance_private(o))
 
-#ifdef HAVE_LIBCURL_7_62_0
+#ifdef HAVE_LIBCURL
 typedef gchar curlptr;
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(curlptr, curl_free)
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(CURLU, curl_url_cleanup)
@@ -315,7 +315,7 @@ fwupd_remote_build_uri(FwupdRemote *self,
 		       GError **error)
 {
 	FwupdRemotePrivate *priv = GET_PRIVATE(self);
-#ifdef HAVE_LIBCURL_7_62_0
+#ifdef HAVE_LIBCURL
 	g_autofree gchar *url = NULL;
 	g_autoptr(curlptr) tmp_uri = NULL;
 	g_autoptr(CURLU) uri = curl_url();
