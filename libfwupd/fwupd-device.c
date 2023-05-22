@@ -3135,7 +3135,6 @@ fwupd_device_to_json_full(FwupdDevice *self, JsonBuilder *builder, FwupdDeviceFl
 gboolean
 fwupd_device_from_json(FwupdDevice *self, JsonNode *json_node, GError **error)
 {
-#if JSON_CHECK_VERSION(1, 6, 0)
 	JsonObject *obj;
 
 	g_return_val_if_fail(FWUPD_IS_DEVICE(self), FALSE);
@@ -3406,13 +3405,6 @@ fwupd_device_from_json(FwupdDevice *self, JsonNode *json_node, GError **error)
 
 	/* success */
 	return TRUE;
-#else
-	g_set_error_literal(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "json-glib version too old");
-	return FALSE;
-#endif
 }
 
 /**
