@@ -44,7 +44,7 @@
 
 /* setters */
 {%- for item in items | selectattr('enabled') %}
-{%- if 'Setters' in derives or ('New' in derives and item.default) %}
+{%- if ('Setters' in derives and not item.constant) or ('New' in derives and item.default) %}
 {%- if item.type == Type.STRING %}
 {{"static " if item.constant else ""}}gboolean
 {{name_snake}}_set_{{item.element_id}}(GByteArray *st, const gchar *value, GError **error)
