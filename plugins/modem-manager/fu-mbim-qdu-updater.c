@@ -15,7 +15,6 @@
 #include "fu-mbim-qdu-updater.h"
 #include "fu-mm-utils.h"
 
-#if MBIM_CHECK_VERSION(1, 25, 3)
 #define FU_MBIM_QDU_MAX_OPEN_ATTEMPTS 8
 
 struct _FuMbimQduUpdater {
@@ -511,5 +510,3 @@ fu_mbim_qdu_updater_new(const gchar *mbim_port)
 	self->mbim_port = g_strdup(mbim_port);
 	return self;
 }
-
-#endif /* MBIM_CHECK_VERSION(1,25,3) */
