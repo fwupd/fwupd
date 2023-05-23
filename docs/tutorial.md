@@ -894,6 +894,7 @@ The struct types currently supported are:
 - `u64be`:  big endian `guint64`
 - `char`: a `NUL`-terminated string
 - `Guid`: a GUID
+- Any `enum` created in the `.rs` file with `#[repr(type)]`
 
 Arrays of types are also allowed, with the format `[type; multiple]`, for example:
 
@@ -955,7 +956,7 @@ Regardless of traits used, the header offset addresses are defined, for instance
     #define FU_STRUCT_EXAMPLE_OFFSET_PAYLOADSZ 0x13
     #define FU_STRUCT_EXAMPLE_OFFSET_FLAGS 0x17
 
-Any elements defined as a typed array (e.g. `8u16`) will also have the element
+Any elements defined as a typed array (e.g. `[u8; 16]`) will also have the element
 size defined in bytes:
 
     #define FU_STRUCT_EXAMPLE_SIZE_MAGIC 0x10
