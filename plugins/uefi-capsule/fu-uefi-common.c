@@ -7,8 +7,6 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
 #include <efivar.h>
 
 #include "fu-uefi-common.h"

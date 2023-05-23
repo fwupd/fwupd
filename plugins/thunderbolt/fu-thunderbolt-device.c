@@ -7,8 +7,6 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
 #include <errno.h>
 #include <fcntl.h>
 #include <string.h>

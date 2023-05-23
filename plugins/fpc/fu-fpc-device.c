@@ -6,8 +6,6 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
 #include "fu-fpc-device.h"
 #include "fu-fpc-struct.h"
 

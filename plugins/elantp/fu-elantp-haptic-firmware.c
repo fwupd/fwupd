@@ -6,8 +6,6 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
 #include "fu-elantp-common.h"
 #include "fu-elantp-haptic-firmware.h"
 

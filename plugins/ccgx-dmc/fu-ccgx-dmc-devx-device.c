@@ -7,8 +7,6 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
 #include "fu-ccgx-dmc-devx-device.h"
 
 #define DMC_FW_WRITE_STATUS_RETRY_COUNT	   3

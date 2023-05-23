@@ -6,8 +6,6 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
 #include "fu-acpi-phat-struct.h"
 #include "fu-acpi-phat-version-element.h"
 

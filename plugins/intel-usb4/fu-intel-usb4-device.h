@@ -17,8 +17,6 @@
 
 #pragma once
 
-#include "config.h"
-
 #include <fwupdplugin.h>
 
 #define FU_TYPE_INTEL_USB4_DEVICE (fu_intel_usb4_device_get_type())

@@ -5,8 +5,6 @@
  */
 #include "config.h"
 
-#include <fwupdplugin.h>
-
 #include "fu-analogix-common.h"
 #include "fu-analogix-device.h"
 #include "fu-analogix-firmware.h"

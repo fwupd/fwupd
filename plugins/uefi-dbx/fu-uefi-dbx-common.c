@@ -6,8 +6,6 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
 #include "fu-efi-image.h"
 #include "fu-uefi-dbx-common.h"
 

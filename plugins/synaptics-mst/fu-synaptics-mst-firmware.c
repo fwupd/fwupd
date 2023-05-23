@@ -6,8 +6,6 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
 #include "fu-synaptics-mst-connection.h"
 #include "fu-synaptics-mst-firmware.h"
 

@@ -6,8 +6,6 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
 #include "fu-uefi-dbx-common.h"
 #include "fu-uefi-dbx-device.h"
 

@@ -6,8 +6,6 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
 #include "fu-logitech-tap-device.h"
 
 G_DEFINE_TYPE(FuLogitechTapDevice, fu_logitech_tap_device, FU_TYPE_UDEV_DEVICE)

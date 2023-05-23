@@ -6,8 +6,6 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
 #include <fcntl.h>
 #include <glib/gstdio.h>
 #include <linux/ipmi.h>

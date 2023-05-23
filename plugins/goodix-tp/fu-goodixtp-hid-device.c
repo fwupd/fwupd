@@ -6,8 +6,6 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
 #ifdef HAVE_HIDRAW_H
 #include <linux/hidraw.h>
 #include <linux/input.h>

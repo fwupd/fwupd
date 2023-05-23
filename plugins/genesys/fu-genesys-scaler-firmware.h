@@ -8,8 +8,6 @@
 
 #include <fwupdplugin.h>
 
-#include "fu-genesys-common.h"
-
 #define FU_TYPE_GENESYS_SCALER_FIRMWARE (fu_genesys_scaler_firmware_get_type())
 G_DECLARE_FINAL_TYPE(FuGenesysScalerFirmware,
 		     fu_genesys_scaler_firmware,

@@ -6,8 +6,6 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
 #include "fu-rts54hid-common.h"
 #include "fu-rts54hid-device.h"
 #include "fu-rts54hid-module.h"

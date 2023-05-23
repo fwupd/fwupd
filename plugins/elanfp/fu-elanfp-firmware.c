@@ -6,8 +6,6 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
 #include "fu-elanfp-firmware.h"
 
 struct _FuElanfpFirmware {

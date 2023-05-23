@@ -6,8 +6,6 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
 #include <fcntl.h>
 #include <glib/gprintf.h>
 #include <glib/gstdio.h>

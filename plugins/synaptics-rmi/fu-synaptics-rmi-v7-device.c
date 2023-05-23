@@ -8,8 +8,6 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
 #include "fu-synaptics-rmi-struct.h"
 #include "fu-synaptics-rmi-v7-device.h"
 

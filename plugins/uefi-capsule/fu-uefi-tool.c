@@ -6,8 +6,6 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
 #include <glib-unix.h>
 #include <glib/gi18n.h>
 #include <locale.h>

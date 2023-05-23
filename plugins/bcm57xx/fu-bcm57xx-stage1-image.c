@@ -6,8 +6,6 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
 #include "fu-bcm57xx-common.h"
 #include "fu-bcm57xx-stage1-image.h"
 

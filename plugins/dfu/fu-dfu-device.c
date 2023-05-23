@@ -36,8 +36,6 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
 #include "fu-dfu-common.h"
 #include "fu-dfu-device.h"
 #include "fu-dfu-target-avr.h"

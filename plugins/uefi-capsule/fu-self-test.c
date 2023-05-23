@@ -6,8 +6,6 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
 #include "fu-context-private.h"
 #include "fu-uefi-backend.h"
 #include "fu-uefi-bgrt.h"

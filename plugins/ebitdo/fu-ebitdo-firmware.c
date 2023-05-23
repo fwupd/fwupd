@@ -6,8 +6,6 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
 #include "fu-ebitdo-firmware.h"
 #include "fu-ebitdo-struct.h"
 

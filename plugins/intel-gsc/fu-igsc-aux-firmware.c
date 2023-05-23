@@ -7,8 +7,6 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
 #include "fu-igsc-aux-firmware.h"
 #include "fu-igsc-heci.h"
 #include "fu-igsc-struct.h"

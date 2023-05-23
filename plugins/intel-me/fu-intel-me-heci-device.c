@@ -6,8 +6,6 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
 #include "fu-intel-me-common.h"
 #include "fu-intel-me-heci-device.h"
 

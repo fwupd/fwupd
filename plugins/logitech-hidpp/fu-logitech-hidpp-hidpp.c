@@ -6,8 +6,6 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
 #include "fu-logitech-hidpp-common.h"
 #include "fu-logitech-hidpp-hidpp.h"
 

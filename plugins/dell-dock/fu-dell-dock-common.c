@@ -15,8 +15,6 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
 #include "fu-dell-dock-common.h"
 #include "fu-dell-dock-i2c-ec.h"
 

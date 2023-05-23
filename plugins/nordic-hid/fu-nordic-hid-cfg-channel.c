@@ -11,8 +11,6 @@
 #include <linux/hidraw.h>
 #include <linux/input.h>
 #endif
-#include <fwupdplugin.h>
-
 #include "fu-nordic-hid-archive.h"
 #include "fu-nordic-hid-cfg-channel.h"
 
