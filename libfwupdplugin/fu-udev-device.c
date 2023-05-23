@@ -1432,7 +1432,7 @@ fu_udev_device_set_fd(FuUdevDevice *self, gint fd)
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
 
 	g_return_if_fail(FU_IS_UDEV_DEVICE(self));
-	if (priv->fd > 0)
+	if (priv->fd >= 0)
 		close(priv->fd);
 	priv->fd = fd;
 }
@@ -1554,10 +1554,10 @@ fu_udev_device_close(FuDevice *device, GError **error)
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
 
 	/* close device */
-	if (priv->fd > 0) {
+	if (priv->fd >= 0) {
 		if (!g_close(priv->fd, error))
 			return FALSE;
-		priv->fd = 0;
+		priv->fd = -1;
 	}
 
 	/* success */
@@ -1598,7 +1598,7 @@ fu_udev_device_ioctl(FuUdevDevice *self,
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* not open! */
-	if (priv->fd == 0) {
+	if (priv->fd < 0) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
@@ -1679,7 +1679,7 @@ fu_udev_device_pread(FuUdevDevice *self, goffset port, guint8 *buf, gsize bufsz,
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* not open! */
-	if (priv->fd == 0) {
+	if (priv->fd < 0) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
@@ -1730,7 +1730,7 @@ fu_udev_device_seek(FuUdevDevice *self, goffset offset, GError **error)
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* not open! */
-	if (priv->fd == 0) {
+	if (priv->fd < 0) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
@@ -1787,7 +1787,7 @@ fu_udev_device_pwrite(FuUdevDevice *self,
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* not open! */
-	if (priv->fd == 0) {
+	if (priv->fd < 0) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
@@ -2283,7 +2283,7 @@ fu_udev_device_finalize(GObject *object)
 	g_free(priv->device_file);
 	if (priv->udev_device != NULL)
 		g_object_unref(priv->udev_device);
-	if (priv->fd > 0)
+	if (priv->fd >= 0)
 		g_close(priv->fd, NULL);
 
 	G_OBJECT_CLASS(fu_udev_device_parent_class)->finalize(object);
@@ -2293,6 +2293,7 @@ static void
 fu_udev_device_init(FuUdevDevice *self)
 {
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
+	priv->fd = -1;
 	priv->flags = FU_UDEV_DEVICE_FLAG_OPEN_READ | FU_UDEV_DEVICE_FLAG_OPEN_WRITE;
 	fu_device_set_acquiesce_delay(FU_DEVICE(self), 2500);
 }
