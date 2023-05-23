@@ -6,8 +6,6 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
 #include <string.h>
 
 #include "fu-wac-firmware.h"

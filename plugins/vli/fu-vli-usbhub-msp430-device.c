@@ -7,8 +7,6 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
 #include "fu-vli-struct.h"
 #include "fu-vli-usbhub-common.h"
 #include "fu-vli-usbhub-i2c-common.h"

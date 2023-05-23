@@ -8,8 +8,6 @@
 
 #include <fwupdplugin.h>
 
-#include <string.h>
-
 #include "fu-linux-swap.h"
 
 struct _FuLinuxSwap {

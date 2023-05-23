@@ -6,8 +6,6 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
 #include "fu-pci-psp-device.h"
 
 struct _FuPciPspDevice {

@@ -6,8 +6,6 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
 #include "fu-ifd-device.h"
 #include "fu-intel-spi-device.h"
 

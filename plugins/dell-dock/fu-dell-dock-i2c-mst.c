@@ -16,8 +16,6 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
 #include <string.h>
 
 #include "fu-dell-dock-common.h"

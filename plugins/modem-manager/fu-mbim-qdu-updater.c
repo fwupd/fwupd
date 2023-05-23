@@ -6,8 +6,6 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
 #include <stdio.h>
 #include <string.h>
 #include <sys/stat.h>

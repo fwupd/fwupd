@@ -7,8 +7,6 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
 #include "fu-vli-struct.h"
 #include "fu-vli-usbhub-rtd21xx-device.h"
 

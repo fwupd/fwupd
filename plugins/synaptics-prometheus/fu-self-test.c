@@ -6,8 +6,6 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
 #include "fu-plugin-private.h"
 #include "fu-synaprom-device.h"
 #include "fu-synaprom-firmware.h"

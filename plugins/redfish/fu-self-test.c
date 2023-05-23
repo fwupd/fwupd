@@ -6,8 +6,6 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
 #include "fu-context-private.h"
 #include "fu-device-private.h"
 #ifdef HAVE_LINUX_IPMI_H

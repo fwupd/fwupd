@@ -8,8 +8,6 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
 #include "fu-thunderbolt-common.h"
 #include "fu-thunderbolt-retimer.h"
 

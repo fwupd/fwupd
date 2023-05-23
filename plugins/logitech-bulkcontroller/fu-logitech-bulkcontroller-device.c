@@ -7,8 +7,6 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
 #include <json-glib/json-glib.h>
 #include <string.h>
 

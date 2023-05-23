@@ -6,8 +6,7 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
+#include "fu-genesys-common.h"
 #include "fu-genesys-scaler-firmware.h"
 
 struct _FuGenesysScalerFirmware {

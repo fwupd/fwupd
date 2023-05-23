@@ -6,8 +6,6 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
 #include <gnutls/abstract.h>
 #include <gnutls/crypto.h>
 

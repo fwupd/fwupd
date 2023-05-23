@@ -19,8 +19,6 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
 #include <math.h>
 #include <string.h>
 

@@ -6,8 +6,6 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
 #include <scsi/sg.h>
 
 #include "fu-ata-device.h"

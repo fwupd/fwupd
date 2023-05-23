@@ -6,8 +6,6 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
 #include <fcntl.h>
 #include <linux/i2c-dev.h>
 

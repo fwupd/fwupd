@@ -7,8 +7,6 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
 #include "fu-thelio-io-device.h"
 
 struct _FuThelioIoDevice {

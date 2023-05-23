@@ -6,8 +6,6 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
 #include "fu-cfu-device.h"
 #include "fu-cfu-module.h"
 #include "fu-cfu-struct.h"

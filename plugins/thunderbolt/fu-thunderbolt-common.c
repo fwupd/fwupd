@@ -7,8 +7,6 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
 #include "fu-thunderbolt-common.h"
 
 static gboolean

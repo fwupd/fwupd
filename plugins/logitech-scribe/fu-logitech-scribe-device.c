@@ -7,8 +7,6 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
 #include <linux/types.h>
 #include <linux/usb/video.h>
 #include <linux/uvcvideo.h>

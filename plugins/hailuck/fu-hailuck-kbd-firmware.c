@@ -6,8 +6,6 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
 #include "fu-hailuck-kbd-firmware.h"
 
 struct _FuHailuckKbdFirmware {

@@ -6,8 +6,6 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
 #include "fu-pxi-firmware.h"
 
 #define PIXART_RF_FW_HEADER_SIZE       32 /* bytes */

@@ -6,8 +6,6 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
 #include "fu-wacom-aes-device.h"
 #include "fu-wacom-common.h"
 

@@ -7,9 +7,6 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
-#include <gusb.h>
 #include <string.h>
 
 #include "fu-genesys-common.h"

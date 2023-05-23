@@ -7,8 +7,6 @@
 #ifndef __FU_MM_UTILS_H
 #define __FU_MM_UTILS_H
 
-#include "config.h"
-
 #include <gudev/gudev.h>
 
 gboolean

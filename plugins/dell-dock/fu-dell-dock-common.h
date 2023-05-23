@@ -15,8 +15,6 @@
 
 #pragma once
 
-#include "config.h"
-
 #include <fwupdplugin.h>
 
 #include "fu-dell-dock-hid.h"

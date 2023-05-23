@@ -6,8 +6,6 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
 #include "fu-amd-gpu-device.h"
 struct _FuAmdGpuDevice {
 	FuUdevDevice parent_instance;

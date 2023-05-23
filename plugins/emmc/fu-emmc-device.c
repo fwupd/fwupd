@@ -6,8 +6,6 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
 #include <linux/mmc/ioctl.h>
 #include <sys/ioctl.h>
 

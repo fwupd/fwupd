@@ -6,8 +6,6 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
 #include "fu-wac-android-device.h"
 
 struct _FuWacAndroidDevice {

@@ -7,8 +7,6 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
 #include "fu-uefi-common.h"
 #include "fu-uefi-grub-device.h"
 

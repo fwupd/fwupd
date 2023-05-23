@@ -16,8 +16,6 @@
 
 #pragma once
 
-#include "config.h"
-
 #include <fwupdplugin.h>
 
 typedef struct __attribute__((packed)) {

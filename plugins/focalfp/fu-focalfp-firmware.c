@@ -6,8 +6,6 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
 #include "fu-focalfp-firmware.h"
 
 struct _FuFocalfpFirmware {

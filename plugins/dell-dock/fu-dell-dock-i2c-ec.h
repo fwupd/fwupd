@@ -15,8 +15,6 @@
 
 #pragma once
 
-#include "config.h"
-
 #include <fwupdplugin.h>
 
 #define FU_TYPE_DELL_DOCK_EC (fu_dell_dock_ec_get_type())

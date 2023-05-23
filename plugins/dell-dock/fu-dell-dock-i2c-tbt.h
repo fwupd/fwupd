@@ -16,8 +16,6 @@
 
 #pragma once
 
-#include "config.h"
-
 #include <fwupdplugin.h>
 
 #define FU_TYPE_DELL_DOCK_TBT (fu_dell_dock_tbt_get_type())
