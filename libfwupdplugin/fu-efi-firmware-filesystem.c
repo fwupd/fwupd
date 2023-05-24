@@ -21,6 +21,8 @@
 
 G_DEFINE_TYPE(FuEfiFirmwareFilesystem, fu_efi_firmware_filesystem, FU_TYPE_FIRMWARE)
 
+#define FU_EFI_FIRMWARE_FILESYSTEM_FILES_MAX 10000
+
 static gboolean
 fu_efi_firmware_filesystem_parse(FuFirmware *firmware,
 				 GBytes *fw,
@@ -29,12 +31,29 @@ fu_efi_firmware_filesystem_parse(FuFirmware *firmware,
 				 GError **error)
 {
 	gsize bufsz = 0x0;
+	guint files_max = FU_EFI_FIRMWARE_FILESYSTEM_FILES_MAX;
 	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
+	g_autoptr(GPtrArray) imgs = fu_firmware_get_images(firmware);
+
+	/* if fuzzing, artificially limit the number of files to avoid using large amounts of RSS
+	 * when printing the FuEfiFirmwareFilesystem XML output */
+	if (g_getenv("FWUPD_FUZZER_RUNNING") != NULL)
+		files_max = 50;
 
 	while (offset + 0x18 < bufsz) {
 		g_autoptr(FuFirmware) img = fu_efi_firmware_file_new();
 		g_autoptr(GBytes) fw_tmp = NULL;
 		gboolean is_freespace = TRUE;
+
+		/* limit reached */
+		if (imgs->len + 1 > files_max) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "too many file objects in the filesystem, limit was %u",
+				    files_max);
+			return FALSE;
+		}
 
 		/* ignore free space */
 		for (guint i = 0; i < 0x18; i++) {
