@@ -1515,10 +1515,18 @@ fu_plugin_backend_device_added(FuPlugin *self,
 	/* fall back to plugin default */
 	if (device_gtype == G_TYPE_INVALID) {
 		if (priv->device_gtypes->len > 1) {
-			g_set_error_literal(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_INTERNAL,
-					    "too many GTypes to choose a default");
+			g_autoptr(GString) str = g_string_new(NULL);
+			for (guint i = 0; i < priv->device_gtypes->len; i++) {
+				device_gtype = g_array_index(priv->device_gtypes, GType, i);
+				if (str->len > 0)
+					g_string_append(str, ",");
+				g_string_append(str, g_type_name(device_gtype));
+			}
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "too many GTypes to choose a default, got: %s",
+				    str->str);
 			return FALSE;
 		}
 		device_gtype = g_array_index(priv->device_gtypes, GType, 0);
