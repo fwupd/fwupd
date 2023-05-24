@@ -106,24 +106,24 @@ paired devices.
 
 Here's how the different devices are handled in the plugin:
 
-* Unifying receiver in runtime mode: FuLogitechHidPpRuntimeUnifying
+* Unifying receiver in runtime mode: FuLogitechHidppRuntimeUnifying
     (fu-logitech-hidpp-runtime-unifying.c)
 * Unifying receiver in bootloader mode:
-  * Nordic chipset: FuLogitechHidPpBootloaderNordic
+  * Nordic chipset: FuLogitechHidppBootloaderNordic
     (fu-logitech-hidpp-bootloader-nordic.c)
-  * TI chipset: FuLogitechHidPpBootloaderTexas
+  * TI chipset: FuLogitechHidppBootloaderTexas
     (fu-logitech-hidpp-bootloader-texas.c)
-* Bolt receiver in runtime mode: FuLogitechHidPpRuntimeBolt
+* Bolt receiver in runtime mode: FuLogitechHidppRuntimeBolt
     (fu-logitech-hidpp-runtime-bolt.c)
 * Bolt receiver in bootloader mode and all peripherals:
-    FuLogitechHidPpDevice (fu-logitech-hidpp-device.c)
+    FuLogitechHidppDevice (fu-logitech-hidpp-device.c)
 
-FuLogitechHidPpDevice effectively handles all devices that use the
+FuLogitechHidppDevice effectively handles all devices that use the
 HID++2.0 protocol.
 
 Every device contains two updatable entities, the main application FW
 and the radio stack FW (SoftDevice). The latter will show up as a child
-device of the actual device and is handled by FuLogitechHidPpRadio
+device of the actual device and is handled by FuLogitechHidppRadio
 (fu-logitech-hidpp-radio.c), which simply defers to the parent device
 for most operations.
 
@@ -140,7 +140,7 @@ tweak the plugin code for certain device types:
     re-bound after reset, so the device object can't be simply re-probed
     using the same file descriptor.
 * force-receiver-id: this flag is used to differentiate the receiver device in
-    FuLogitechHidPpDevice, since the receiver has a specific HID++ ID.
+    FuLogitechHidppDevice, since the receiver has a specific HID++ ID.
 * ble: used to differentiate devices in BLE mode. They require all the
     reports to be _long_.
 
