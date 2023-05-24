@@ -1,5 +1,5 @@
 if gudev.found() and gusb.found()
-cargs = ['-DG_LOG_DOMAIN="FuPluginLogitechHidPp"']
+cargs = ['-DG_LOG_DOMAIN="FuPluginLogitechHidpp"']
 
 plugin_quirks += files('logitech-hidpp.quirk')
 plugin_builtin_logitech_hidpp = static_library('fu_plugin_logitech_hidpp',
