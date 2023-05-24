@@ -6223,7 +6223,8 @@ fu_engine_get_upgrades(FuEngine *self,
 		return NULL;
 
 	/* there is no point checking each release */
-	if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE)) {
+	if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE) &&
+	    !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN)) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOTHING_TO_DO,
