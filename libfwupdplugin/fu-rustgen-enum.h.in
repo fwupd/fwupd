@@ -1,15 +1,16 @@
 typedef enum {
-{%- for item in items %}
+{%- for item in obj.items %}
 {%- if item.default %}
-    {{item.c_define(name)}} = {{item.default}},
+    {{item.c_define}} = {{item.default}},
 {%- else %}
-    {{item.c_define(name)}},
+    {{item.c_define}},
 {%- endif %}
 {%- endfor %}
-} {{name}};
-{%- if 'ToString' in derives %}
-const gchar *{{name_snake}}_to_string({{name}} val);
+} {{obj.c_type}};
+
+{%- if obj.export('ToString') == Export.PUBLIC %}
+const gchar *{{obj.c_method('ToString')}}({{obj.c_type}} val);
 {%- endif %}
-{%- if 'FromString' in derives %}
-{{name}} {{name_snake}}_from_string(const gchar *val);
+{%- if obj.export('FromString') == Export.PUBLIC %}
+{{obj.c_type}} {{obj.c_method('FromString')}}(const gchar *val);
 {%- endif %}

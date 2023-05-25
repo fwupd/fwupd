@@ -3885,6 +3885,7 @@ fu_plugin_struct_func(void)
 	g_autoptr(GByteArray) st3 = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autofree gchar *str1 = NULL;
+	g_autofree gchar *str2 = NULL;
 	g_autofree gchar *oem_table_id = NULL;
 
 	/* size */
@@ -3914,6 +3915,19 @@ fu_plugin_struct_func(void)
 	g_assert_cmpint(fu_struct_self_test_get_length(st2), ==, 0xDEAD);
 	oem_table_id = fu_struct_self_test_get_oem_table_id(st2);
 	g_assert_cmpstr(oem_table_id, ==, "X");
+
+	/* to string */
+	str2 = fu_struct_self_test_to_string(st);
+	g_assert_cmpstr(str2,
+			==,
+			"SelfTest:\n"
+			"  length: 0xdead\n"
+			"  revision: 0xff [all]\n"
+			"  owner: 00000000-0000-0000-0000-000000000000\n"
+			"  oem_table_id: X\n"
+			"  oem_revision: 0x0\n"
+			"  asl_compiler_id: 0xDFDFDFDF\n"
+			"  asl_compiler_revision: 0x0");
 
 	/* parse failing signature */
 	st->data[0] = 0xFF;

@@ -31,6 +31,12 @@ class Type(Enum):
     GUID = "Guid"
 
 
+class Export(Enum):
+    NONE = "none"
+    PRIVATE = "static "
+    PUBLIC = ""
+
+
 # convert a CamelCase name into snake_case
 def _camel_to_snake(name: str) -> str:
 
@@ -52,33 +58,124 @@ def _camel_to_snake(name: str) -> str:
     return name_snake
 
 
+class EnumObj:
+    def __init__(self, name: str) -> None:
+        self.name: str = name
+        self.repr_type: Optional[str] = None
+        self.derives: List[str] = []
+        self.items: List[EnumItem] = []
+        self._exports: Dict[str, Export] = {}
+
+    def c_method(self, suffix: str):
+        return f"fu_{_camel_to_snake(self.name)}_{_camel_to_snake(suffix)}"
+
+    @property
+    def c_type(self):
+        return f"Fu{self.name}"
+
+    def export(self, derive: str) -> Export:
+        if derive in ["FromString", "ToString"]:
+            if derive in self.derives:
+                return Export.PUBLIC
+        return self._exports.get(derive, Export.NONE)
+
+    def __str__(self) -> str:
+        return f"EnumObj({self.name})"
+
+
 class EnumItem:
-    def __init__(self) -> None:
+    def __init__(self, obj: EnumObj) -> None:
+        self.obj: EnumObj = obj
         self.name: str = ""
         self.default: Optional[str] = None
 
-    def c_define(self, name: str) -> str:
-        name_snake = _camel_to_snake(name)
-        return "{}_{}".format(
-            name_snake.upper(), _camel_to_snake(self.name).replace("-", "_").upper()
-        )
+    @property
+    def c_define(self) -> str:
+        name_snake = _camel_to_snake(self.obj.name)
+        return f"FU_{name_snake.upper()}_{_camel_to_snake(self.name).replace('-', '_').upper()}"
 
     @property
     def value(self) -> str:
         return _camel_to_snake(self.name).replace("_", "-")
 
 
+class StructObj:
+    def __init__(self, name: str) -> None:
+        self.name: str = name
+        self.derives: List[str] = []
+        self.items: List[StructItem] = []
+        self._exports: Dict[str, Export] = {}
+
+    def c_method(self, suffix: str):
+        return f"fu_struct_{_camel_to_snake(self.name)}_{_camel_to_snake(suffix)}"
+
+    def c_define(self, suffix: str):
+        return f"FU_STRUCT_{_camel_to_snake(self.name).upper()}_{suffix.upper()}"
+
+    @property
+    def size(self) -> int:
+        size: int = 0
+        for item in self.items:
+            size += item.size
+        return size
+
+    @property
+    def has_constant(self) -> bool:
+        for item in self.items:
+            if item.constant:
+                return True
+        return False
+
+    def export(self, derive: str) -> Export:
+        if derive in ["New", "Parse", "Validate", "ToString"]:
+            if derive in self.derives:
+                return Export.PUBLIC
+        if derive == "ToString":
+            if "Parse" in self.derives:
+                return Export.PRIVATE
+        return self._exports.get(derive, Export.NONE)
+
+    def __str__(self) -> str:
+        return f"StructObj({self.name})"
+
+
 class StructItem:
-    def __init__(self) -> None:
+    def __init__(self, obj: StructObj) -> None:
+        self.obj: StructObj = obj
         self.element_id: str = ""
         self.type: Type = Type.U8
-        self.custom_type = None
+        self.enum_obj: Optional[EnumObj] = None
         self.default: Optional[str] = None
         self.constant: Optional[str] = None
         self.padding: Optional[str] = None
         self.endian: Endian = Endian.NATIVE
         self.multiplier: int = 0
         self.offset: int = 0
+
+    def export(self, derive: str) -> Export:
+        if derive == "Getters":
+            if not self.constant and "Getters" in self.obj.derives:
+                return Export.PUBLIC
+            if (
+                self.constant
+                and self.type != Type.STRING
+                and "Parse" in self.obj.derives
+            ):
+                return Export.PRIVATE
+            if (
+                self.constant
+                and self.type != Type.STRING
+                and "Validate" in self.obj.derives
+            ):
+                return Export.PRIVATE
+            if not self.constant and self.obj.export("ToString") != Export.NONE:
+                return Export.PRIVATE
+        if derive == "Setters":
+            if not self.constant and "Setters" in self.obj.derives:
+                return Export.PUBLIC
+            if self.default and "New" in self.obj.derives:
+                return Export.PRIVATE
+        return Export.NONE
 
     @property
     def size(self) -> int:
@@ -113,10 +210,21 @@ class StructItem:
             return "G_BIG_ENDIAN"
         return "G_BYTE_ORDER"
 
+    def c_define(self, suffix: str):
+        return self.obj.c_define(suffix.upper() + "_" + self.element_id.upper())
+
+    @property
+    def c_getter(self):
+        return self.obj.c_method("get_" + self.element_id)
+
+    @property
+    def c_setter(self):
+        return self.obj.c_method("set_" + self.element_id)
+
     @property
     def type_glib(self) -> str:
-        if self.custom_type:
-            return self.custom_type
+        if self.enum_obj:
+            return self.enum_obj.c_type
         if self.type == Type.U8:
             return "guint8"
         if self.type == Type.U16:
@@ -190,7 +298,7 @@ class StructItem:
         self.default = self._parse_default(val)
         self.constant = self.default
 
-    def parse_type(self, val: str, reprs: Optional[Dict[str, str]]) -> None:
+    def parse_type(self, val: str, enum_objs: Dict[str, EnumObj]) -> None:
 
         # is array
         if val.startswith("[") and val.endswith("]"):
@@ -200,10 +308,12 @@ class StructItem:
             typestr = val
 
         # find the type
-        if reprs:
-            if typestr in reprs:
-                self.custom_type = f"Fu{typestr}"
-                typestr = reprs[typestr]
+        if typestr in enum_objs:
+            self.enum_obj = enum_objs[typestr]
+            typestr_maybe: Optional[str] = enum_objs[typestr].repr_type
+            if not typestr_maybe:
+                raise ValueError(f"no repr for: {typestr}")
+            typestr = typestr_maybe
         try:
             if typestr.endswith("be"):
                 self.endian = Endian.BIG
@@ -221,9 +331,9 @@ class StructItem:
         tmp = f"{self.element_id}: "
         if self.multiplier:
             tmp += str(self.multiplier)
-        tmp += str(self.type)
+        tmp += self.type.value
         if self.endian != Endian.NATIVE:
-            tmp += str(self.endian)
+            tmp += self.endian.value
         if self.default:
             tmp += f": default={self.default}"
         elif self.constant:
@@ -236,51 +346,33 @@ class StructItem:
 class Generator:
     def __init__(self, basename) -> None:
         self.basename: str = basename
+        self.struct_objs: Dict[str, StructObj] = {}
+        self.enum_objs: Dict[str, EnumObj] = {}
         self._env = Environment(
             loader=FileSystemLoader(os.path.dirname(__file__)),
             autoescape=select_autoescape(),
             keep_trailing_newline=True,
         )
 
-    def _process_enums(
-        self, name: str, items: List[EnumItem], derives: List[str]
-    ) -> Tuple[str, str]:
+    def _process_enums(self, enum_obj: EnumObj) -> Tuple[str, str]:
 
         # render
         subst = {
             "Type": Type,
-            "name": f"Fu{name}",
-            "name_snake": f"fu_{_camel_to_snake(name)}",
-            "items": items,
-            "derives": derives,
+            "Export": Export,
+            "obj": enum_obj,
         }
         template_h = self._env.get_template(os.path.basename("fu-rustgen-enum.h.in"))
         template_c = self._env.get_template(os.path.basename("fu-rustgen-enum.c.in"))
         return template_c.render(subst), template_h.render(subst)
 
-    def _process_structs(
-        self, name: str, items: List[StructItem], derives: List[str]
-    ) -> Tuple[str, str]:
-
-        # useful constants
-        size: int = 0
-        for item in items:
-            size += item.size
-        has_constant: bool = False
-        for item in items:
-            if item.constant:
-                has_constant = True
-                break
+    def _process_structs(self, struct_obj: StructObj) -> Tuple[str, str]:
 
         # render
         subst = {
             "Type": Type,
-            "name": f"Fu{name}",
-            "name_snake": f"fu_struct_{_camel_to_snake(name)}",
-            "items": items,
-            "derives": derives,
-            "size": size,
-            "has_constant": has_constant,
+            "Export": Export,
+            "obj": struct_obj,
         }
         template_h = self._env.get_template(os.path.basename("fu-rustgen-struct.h.in"))
         template_c = self._env.get_template(os.path.basename("fu-rustgen-struct.c.in"))
@@ -288,23 +380,12 @@ class Generator:
 
     def process_input(self, contents: str) -> Tuple[str, str]:
         name = None
-        enum_type: Optional[str] = None
-        enum_reprs: Dist[str, str] = {}
-        enum_items: List[EnumItem] = []
-        struct_items: List[StructItem] = []
+        repr_type: Optional[str] = None
         derives: List[str] = []
         offset: int = 0
+        struct_cur: Optional[StructObj] = None
+        enum_cur: Optional[EnumObj] = None
 
-        # header
-        subst = {
-            "basename": self.basename,
-        }
-        template_h = self._env.get_template(os.path.basename("fu-rustgen.h.in"))
-        template_c = self._env.get_template(os.path.basename("fu-rustgen.c.in"))
-        dst_h = template_h.render(subst)
-        dst_c = template_c.render(subst)
-
-        mode: Optional[str] = None
         for line in contents.split("\n"):
 
             # remove comments and indent
@@ -314,19 +395,27 @@ class Generator:
 
             # start of structure
             if line.startswith("struct ") and line.endswith("{"):
-                mode = "struct"
                 name = line[6:-1].strip()
+                if name in self.struct_objs:
+                    raise ValueError(f"struct {name} already defined")
+                struct_cur = StructObj(name)
+                struct_cur.derives = list(set(derives))
+                self.struct_objs[name] = struct_cur
                 continue
             if line.startswith("enum ") and line.endswith("{"):
-                mode = "enum"
                 name = line[4:-1].strip()
-                if enum_type:
-                    enum_reprs[name] = enum_type
+                if name in self.enum_objs:
+                    raise ValueError(f"enum {name} already defined")
+                enum_cur = EnumObj(name)
+                enum_cur.repr_type = repr_type
+                enum_cur.derives = list(set(derives))
+                self.enum_objs[name] = enum_cur
                 continue
 
             # the enum type
             if line.startswith("#[repr(") and line.endswith(")]"):
-                enum_type = line[7:-2]
+                repr_type = line[7:-2]
+                continue
 
             # what should we build
             if line.startswith("#[derive("):
@@ -334,33 +423,30 @@ class Generator:
                     if derive == "Parse":
                         derives.append("Getters")
                     if derive == "New":
-                        derives.append("Getters")
                         derives.append("Setters")
                     derives.append(derive)
                 continue
 
             # not in object
-            if not mode:
+            if not struct_cur and not enum_cur:
                 continue
 
             # end of structure
             if line.startswith("}"):
-                if name and struct_items:
-                    for item in struct_items:
+                if struct_cur:
+                    for item in struct_cur.items:
                         if item.default == "$struct_size":
                             item.default = str(offset)
                         if item.constant == "$struct_size":
                             item.constant = str(offset)
-                    str_c, str_h = self._process_structs(name, struct_items, derives)
-                if name and enum_items:
-                    str_c, str_h = self._process_enums(name, enum_items, derives)
-                dst_c += str_c
-                dst_h += str_h
-                mode = None
-                name = None
-                struct_items.clear()
-                enum_type = None
-                enum_items.clear()
+
+                        # require the enum ToString if parsing the struct
+                        if "Parse" in struct_cur.derives and item.enum_obj:
+                            if "ToString" not in item.enum_obj.derives:
+                                item.enum_obj._exports["ToString"] = Export.PRIVATE
+                struct_cur = None
+                enum_cur = None
+                repr_type = None
                 derives.clear()
                 offset = 0
                 continue
@@ -371,25 +457,25 @@ class Generator:
             line = line[:-1]
 
             # split enumeration into sections
-            if mode == "enum":
-                enum_item = EnumItem()
+            if enum_cur:
+                enum_item = EnumItem(enum_cur)
                 parts = line.replace(" ", "").split("=", maxsplit=2)
                 enum_item.name = parts[0]
                 if len(parts) > 1:
                     enum_item.default = parts[1]
-                enum_items.append(enum_item)
+                enum_cur.items.append(enum_item)
 
             # split structure into sections
-            if mode == "struct":
+            if struct_cur:
                 parts = line.replace(" ", "").split(":", maxsplit=3)
                 if len(parts) == 1:
                     raise ValueError(f"invalid struct line: {line}")
 
                 # parse one element
-                item = StructItem()
+                item = StructItem(struct_cur)
                 item.offset = offset
                 item.element_id = parts[0]
-                item.parse_type(parts[1], reprs=enum_reprs)
+                item.parse_type(parts[1], enum_objs=self.enum_objs)
                 for part in parts[2:]:
                     try:
                         key, value = tuple(part.split("=", maxsplit=1))
@@ -404,7 +490,24 @@ class Generator:
                     else:
                         raise ValueError(f"invalid struct line: {line}")
                 offset += item.size
-                struct_items.append(item)
+                struct_cur.items.append(item)
+
+        # process the templates here
+        subst = {
+            "basename": self.basename,
+        }
+        template_h = self._env.get_template(os.path.basename("fu-rustgen.h.in"))
+        template_c = self._env.get_template(os.path.basename("fu-rustgen.c.in"))
+        dst_h = template_h.render(subst)
+        dst_c = template_c.render(subst)
+        for enum_obj in self.enum_objs.values():
+            str_c, str_h = self._process_enums(enum_obj)
+            dst_c += str_c
+            dst_h += str_h
+        for struct_obj in self.struct_objs.values():
+            str_c, str_h = self._process_structs(struct_obj)
+            dst_c += str_c
+            dst_h += str_h
 
         # success
         return dst_c, dst_h
