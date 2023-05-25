@@ -7,7 +7,7 @@ struct VliPdHdr {
     vid: u16le,
     pid: u16le,
 }
-#[derive(New, Parse)]
+#[derive(New, Parse, ToString)]
 struct VliUsbhubHdr {
     dev_id: u16be,
     strapping1: u8,

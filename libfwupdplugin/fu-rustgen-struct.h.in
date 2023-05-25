@@ -1,57 +1,57 @@
-{%- if 'New' in derives %}
-GByteArray *{{name_snake}}_new(void);
+{%- if obj.export('New') == Export.PUBLIC %}
+GByteArray *{{obj.c_method('New')}}(void);
 {%- endif %}
-{%- if 'Parse' in derives %}
-GByteArray *{{name_snake}}_parse(const guint8 *buf, gsize bufsz, gsize offset, GError **error);
+{%- if obj.export('Parse') == Export.PUBLIC %}
+GByteArray *{{obj.c_method('Parse')}}(const guint8 *buf, gsize bufsz, gsize offset, GError **error);
 {%- endif %}
-{%- if 'Validate' in derives %}
-gboolean {{name_snake}}_validate(const guint8 *buf, gsize bufsz, gsize offset, GError **error);
+{%- if obj.export('Validate') == Export.PUBLIC %}
+gboolean {{obj.c_method('Validate')}}(const guint8 *buf, gsize bufsz, gsize offset, GError **error);
 {%- endif %}
-{%- if derives %}
-gchar *{{name_snake}}_to_string(GByteArray *st);
+{%- if obj.export('ToString') == Export.PUBLIC %}
+gchar *{{obj.c_method('ToString')}}(GByteArray *st);
 {%- endif %}
 
-{%- if 'Getters' in derives %}
-{%- for item in items | selectattr('enabled') | rejectattr('constant') %}
+{%- for item in obj.items | selectattr('enabled') %}
+{%- if item.export('Getters') == Export.PUBLIC %}
 {%- if item.type == Type.STRING %}
-gchar *{{name_snake}}_get_{{item.element_id}}(GByteArray *st);
+gchar *{{item.c_getter}}(GByteArray *st);
 {%- elif item.type == Type.U8 and item.multiplier %}
-const guint8 *{{name_snake}}_get_{{item.element_id}}(GByteArray *st, gsize *bufsz);
+const guint8 *{{item.c_getter}}(GByteArray *st, gsize *bufsz);
 {%- elif item.type == Type.GUID %}
-const fwupd_guid_t *{{name_snake}}_get_{{item.element_id}}(GByteArray *st);
+const fwupd_guid_t *{{item.c_getter}}(GByteArray *st);
 {%- elif not item.multiplier and item.type in [Type.U8, Type.U16, Type.U24, Type.U32, Type.U64] %}
-{{item.type_glib}} {{name_snake}}_get_{{item.element_id}}(GByteArray *st);
+{{item.type_glib}} {{item.c_getter}}(GByteArray *st);
+{%- endif %}
 {%- endif %}
 {%- endfor %}
-{%- endif %}
 
-{%- if 'Setters' in derives %}
-{%- for item in items | selectattr('enabled') | rejectattr('constant') %}
+{%- for item in obj.items | selectattr('enabled') %}
+{%- if item.export('Setters') == Export.PUBLIC %}
 {%- if item.type == Type.STRING %}
-gboolean {{name_snake}}_set_{{item.element_id}}(GByteArray *st, const gchar *value, GError **error);
+gboolean {{item.c_setter}}(GByteArray *st, const gchar *value, GError **error);
 {%- elif item.type == Type.U8 and item.multiplier %}
-gboolean {{name_snake}}_set_{{item.element_id}}(GByteArray *st, const guint8 *buf, gsize bufsz, GError **error);
+gboolean {{item.c_setter}}(GByteArray *st, const guint8 *buf, gsize bufsz, GError **error);
 {%- elif item.type == Type.GUID %}
-void {{name_snake}}_set_{{item.element_id}}(GByteArray *st, const fwupd_guid_t *value);
+void {{item.c_setter}}(GByteArray *st, const fwupd_guid_t *value);
 {%- elif not item.multiplier and item.type in [Type.U8, Type.U16, Type.U24, Type.U32, Type.U64] %}
-void {{name_snake}}_set_{{item.element_id}}(GByteArray *st, {{item.type_glib}} value);
+void {{item.c_setter}}(GByteArray *st, {{item.type_glib}} value);
+{%- endif %}
 {%- endif %}
 {%- endfor %}
-{%- endif %}
 
-{%- for item in items | selectattr('enabled') %}
-#define {{name_snake.upper()}}_OFFSET_{{item.element_id.upper()}} 0x{{'{:x}'.format(item.offset)}}
+{%- for item in obj.items | selectattr('enabled') %}
+#define {{item.c_define('OFFSET')}} 0x{{'{:X}'.format(item.offset)}}
 {%- endfor %}
 
-{%- for item in items | selectattr('enabled') | selectattr('multiplier') %}
-#define {{name_snake.upper()}}_SIZE_{{item.element_id.upper()}} 0x{{'{:x}'.format(item.size)}}
+{%- for item in obj.items | selectattr('enabled') | selectattr('multiplier') %}
+#define {{item.c_define('SIZE')}} 0x{{'{:X}'.format(item.size)}}
 {%- endfor %}
-#define {{name_snake.upper()}}_SIZE 0x{{'{:x}'.format(size)}}
+#define {{obj.c_define('SIZE')}} 0x{{'{:X}'.format(obj.size)}}
 
-{%- for item in items | selectattr('enabled') | selectattr('default') | rejectattr('constant') %}
+{%- for item in obj.items | selectattr('enabled') | selectattr('default') | rejectattr('constant') %}
 {%- if item.type == Type.STRING %}
-#define {{name_snake.upper()}}_DEFAULT_{{item.element_id.upper()}} "{{item.default}}"
+#define {{item.c_define('DEFAULT')}} "{{item.default}}"
 {%- else %}
-#define {{name_snake.upper()}}_DEFAULT_{{item.element_id.upper()}} {{item.default}}
+#define {{item.c_define('DEFAULT')}} {{item.default}}
 {%- endif %}
 {%- endfor %}

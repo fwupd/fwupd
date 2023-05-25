@@ -1,23 +1,26 @@
-{%- if 'ToString' in derives %}
-const gchar *
-{{name_snake}}_to_string({{name}} val)
+
+{%- set export = obj.export('ToString') %}
+{%- if export in [Export.PUBLIC, Export.PRIVATE] %}
+{{export.value}}const gchar *
+{{obj.c_method('ToString')}}({{obj.c_type}} val)
 {
-{%- for item in items %}
-    if (val == {{item.c_define(name)}})
+{%- for item in obj.items %}
+    if (val == {{item.c_define}})
         return "{{item.value}}";
 {%- endfor %}
     return NULL;
 }
 {%- endif %}
 
-{%- if 'FromString' in derives %}
-{{name}}
-{{name_snake}}_from_string(const gchar *val)
+{%- set export = obj.export('FromString') %}
+{%- if export in [Export.PUBLIC, Export.PRIVATE] %}
+{{export.value}}{{obj.c_type}}
+{{obj.c_method('FromString')}}(const gchar *val)
 {
-{%- for item in items %}
+{%- for item in obj.items %}
     if (g_strcmp0(val, "{{item.value}}") == 0)
-        return {{item.c_define(name)}};
+        return {{item.c_define}};
 {%- endfor %}
-    return {{items[0].c_define(name)}};
+    return {{obj.items[0].c_define}};
 }
 {%- endif %}
