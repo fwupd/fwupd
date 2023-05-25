@@ -303,10 +303,7 @@ fu_aver_hid_device_write_firmware(FuDevice *device,
 	FuAverHidDevice *self = FU_AVER_HID_DEVICE(device);
 	const gchar *aver_fw_name = NULL;
 	gsize fw_size;
-	g_autofree gchar *audio_fw_name = NULL;
-	g_autoptr(FuArchive) archive2 = NULL;
 	g_autoptr(FuArchive) archive = NULL;
-	g_autoptr(GBytes) audio_fw = NULL;
 	g_autoptr(GBytes) aver_fw = NULL;
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GPtrArray) chunks = NULL;
@@ -325,8 +322,7 @@ fu_aver_hid_device_write_firmware(FuDevice *device,
 	if (fw == NULL)
 		return FALSE;
 
-	/* decompress twice: each SoC has a compressed file,
-	 * and then all the compressed files will be combined into a single compressed fw file */
+	/* decompress */
 	archive = fu_archive_new(fw, FU_ARCHIVE_FLAG_NONE, error);
 	if (archive == NULL)
 		return FALSE;
@@ -334,14 +330,7 @@ fu_aver_hid_device_write_firmware(FuDevice *device,
 	aver_fw = fu_archive_lookup_by_fn(archive, aver_fw_name, error);
 	if (aver_fw == NULL)
 		return FALSE;
-	archive2 = fu_archive_new(aver_fw, FU_ARCHIVE_FLAG_NONE, error);
-	if (archive2 == NULL)
-		return FALSE;
-	audio_fw_name = g_strdup_printf("%s.audio.dat", fu_firmware_get_version(firmware));
-	audio_fw = fu_archive_lookup_by_fn(archive2, audio_fw_name, error);
-	if (audio_fw == NULL)
-		return FALSE;
-	fw_size = g_bytes_get_size(audio_fw);
+	fw_size = g_bytes_get_size(aver_fw);
 
 	/* wait for ST_READY */
 	if (!fu_device_retry_full(device,
@@ -359,7 +348,7 @@ fu_aver_hid_device_write_firmware(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/* ISP_FILE_DNLOAD */
-	chunks = fu_chunk_array_new_from_bytes(audio_fw,
+	chunks = fu_chunk_array_new_from_bytes(aver_fw,
 					       0x00,
 					       0x00, /* page_sz */
 					       FU_STRUCT_AVER_HID_REQ_ISP_FILE_DNLOAD_SIZE_DATA);
