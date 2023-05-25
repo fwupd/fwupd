@@ -41,14 +41,62 @@ enum UsiDockTag2 {
     MassDataI2c = 0x8B, // MASS data transfer for TBT flash
 }
 
+#[repr(u8)]
+enum UsiDockMcuCmd {
+    McuNone = 0x0,
+    McuStatus = 0x1,
+    McuJump2boot = 0x2,
+    ReadMcuVersionpage = 0x3,
+    SetI225Pwr = 0x4,
+    DockReset = 0x5,
+    VersionWriteback = 0x6,
+    SetChipType = 0x9,
+    FwInitial = 0x0A,
+    FwUpdate = 0x0B,
+    FwTargetChecksum = 0x0C,
+    FwIspEnd = 0x0D,
+    All = 0xFF,
+}
+
+enum UsiDockSpiCmd {
+    Initial = 0x01,
+    EraseFlash = 0x02,
+    Program = 0x03,
+    WriteResponse = 0x04,
+    ReadStatus = 0x05,
+    Checksum = 0x06,
+    End = 0x07,
+    TransferFinish = 0x08,
+    ErrorEnd = 0x09,
+}
+
 #[derive(New)]
-struct UsiDockSetReportBuf {
+struct UsiDockHidReq {
     id: u8: const=2,
     length: u8,
-    mcutag1: u8: const=0xFE,
-    mcutag2: u8: const=0xFF,
-    inbuf: [u8; 59],
-    mcutag3: UsiDockTag2,
+    buf: [u8; 61],
+    tag3: UsiDockTag2,
+}
+
+#[derive(New)]
+struct UsiDockMcuCmdReq {
+    id: u8: const=2,
+    length: u8,
+    tag1: u8: const=0xFE,
+    tag2: u8: const=0xFF,
+    buf: [u8; 59],
+    tag3: UsiDockTag2,
+}
+
+#[derive(Parse)]
+struct UsiDockMcuCmdRes {
+    id: u8: const=2,
+    cmd1: UsiDockMcuCmd,
+    tag1: u8: const=0xFE,
+    tag2: u8: const=0xFF,
+    cmd2: UsiDockMcuCmd,
+    buf: [u8; 58],
+    tag3: UsiDockTag2,
 }
 
 struct UsiDockIspVersion {
