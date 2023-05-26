@@ -75,3 +75,7 @@ RemoveDelay = 732000
 Plugin = ccgx_dmc
 [USB\VID_2188&PID_0035&CID_05&VER_3.3.1.69]
 CcgxDmcCompositeVersion = 15
+
+# Belkin Thunderbolt 4 Core Hub dock
+[USB\VID_050D&PID_006E]
+Plugin = ccgx_dmc
