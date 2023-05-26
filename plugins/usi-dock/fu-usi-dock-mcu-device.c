@@ -707,6 +707,29 @@ fu_usi_dock_mcu_device_attach(FuDevice *device, FuProgress *progress, GError **e
 	return TRUE;
 }
 
+static gboolean
+fu_usi_dock_mcu_device_cleanup(FuDevice *device,
+			       FuProgress *progress,
+			       FwupdInstallFlags install_flags,
+			       GError **error)
+{
+	g_autoptr(FwupdRequest) request = fwupd_request_new();
+
+	/* interactive request to start the SPI write */
+	fwupd_request_set_kind(request, FWUPD_REQUEST_KIND_IMMEDIATE);
+	fwupd_request_set_id(request, FWUPD_REQUEST_ID_INSERT_USB_CABLE);
+	fwupd_request_add_flag(request, FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE);
+	fwupd_request_set_message(
+	    request,
+	    "The update will continue when the device USB cable has been re-inserted.");
+	fu_device_emit_request(device, request);
+
+	/* success */
+	fu_device_set_remove_delay(device, 900000);
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+	return TRUE;
+}
+
 static void
 fu_usi_dock_mcu_device_set_progress(FuDevice *self, FuProgress *progress)
 {
@@ -750,4 +773,5 @@ fu_usi_dock_mcu_device_class_init(FuUsiDockMcuDeviceClass *klass)
 	klass_device->setup = fu_usi_dock_mcu_device_setup;
 	klass_device->set_progress = fu_usi_dock_mcu_device_set_progress;
 	klass_device->prepare = fu_usi_dock_mcu_device_prepare;
+	klass_device->cleanup = fu_usi_dock_mcu_device_cleanup;
 }
