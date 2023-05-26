@@ -741,6 +741,16 @@ fu_console_set_percentage_length(FuConsole *self, guint len)
 	self->length_percentage = len;
 }
 
+void
+fu_console_beep(FuConsole *self, guint count)
+{
+	for (guint i = 0; i < count; i++) {
+		if (i > 0)
+			g_usleep(250000);
+		g_print("\007");
+	}
+}
+
 static void
 fu_console_init(FuConsole *self)
 {

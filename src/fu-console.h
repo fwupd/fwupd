@@ -54,6 +54,8 @@ void
 fu_console_line(FuConsole *self, guint width);
 void
 fu_console_box(FuConsole *self, const gchar *title, const gchar *body, guint width);
+void
+fu_console_beep(FuConsole *self, guint count);
 
 void
 fu_console_set_progress(FuConsole *self, FwupdStatus status, guint percentage);
