@@ -363,6 +363,7 @@ fu_util_update_device_request_cb(FwupdClient *client, FwupdRequest *request, FuU
 		fmt = fu_console_color_format(_("Action Required:"), FU_CONSOLE_COLOR_RED);
 		tmp = g_strdup_printf("%s %s", fmt, fwupd_request_get_message(request));
 		fu_console_set_progress_title(priv->console, tmp);
+		fu_console_beep(priv->console, 5);
 	}
 
 	/* save for later */
