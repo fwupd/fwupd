@@ -3698,6 +3698,12 @@ fu_engine_cleanup(FuEngine *self,
 			return FALSE;
 	}
 
+	/* wait for any device to disconnect and reconnect */
+	if (!fu_device_list_wait_for_replug(self->device_list, error)) {
+		g_prefix_error(error, "failed to wait for cleanup replug: ");
+		return FALSE;
+	}
+
 	/* save to emulated phase */
 	if (fu_context_has_flag(self->ctx, FU_CONTEXT_FLAG_SAVE_EVENTS) &&
 	    !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED)) {
