@@ -9,7 +9,8 @@ if bluez.allowed()
   plugin_quirks += files('test-ble.quirk')
 endif
 
-plugin_builtins += static_library('fu_plugin_test',
+plugin_builtins += static_library(
+  'fu_plugin_test',
   sources: [
     'fu-test-plugin.c',
   ],
@@ -20,14 +21,15 @@ plugin_builtins += static_library('fu_plugin_test',
 )
 
 if bluez.allowed()
-plugin_builtins += static_library('fu_plugin_test_ble',
-  sources: [
-    'fu-test-ble-plugin.c',
-    'fu-test-ble-device.c',
-  ],
-  include_directories: plugin_incdirs,
-  link_with: plugin_libs,
-  c_args: cargs,
-  dependencies: plugin_deps,
-)
+  plugin_builtins += static_library(
+    'fu_plugin_test_ble',
+    sources: [
+      'fu-test-ble-plugin.c',
+      'fu-test-ble-device.c',
+    ],
+    include_directories: plugin_incdirs,
+    link_with: plugin_libs,
+    c_args: cargs,
+    dependencies: plugin_deps,
+  )
 endif

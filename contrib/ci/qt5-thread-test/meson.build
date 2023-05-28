@@ -1,4 +1,6 @@
-project('qt5-thread-test', 'cpp',
+project(
+  'qt5-thread-test',
+  'cpp',
   license: 'LGPL-2.1+',
 )
 add_project_arguments('-fPIC', language: 'cpp')
@@ -11,9 +13,7 @@ env = environment()
 env.set('G_DEBUG', 'fatal-criticals')
 e = executable(
   'qt-thread-test',
-  sources: [
-    'qt-thread-test.cpp'
-  ],
+  sources: ['qt-thread-test.cpp'],
   dependencies: [
     qt5core,
     qt5concurrent,
@@ -22,4 +22,9 @@ e = executable(
     fwupd,
   ],
 )
-test('qt-thread-test', e, timeout: 60, env: env)
+test(
+  'qt-thread-test',
+  e,
+  timeout: 60,
+  env: env,
+)

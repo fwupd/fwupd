@@ -16,6 +16,6 @@ if host_machine.system() == 'windows'
   configure_file(
     input: 'fwupd.wxs.in',
     output: 'fwupd.wxs',
-    configuration: conf
+    configuration: conf,
   )
 endif

@@ -38,7 +38,8 @@ configure_file(
   install_dir: installed_test_datadir,
 )
 
-install_data([
+install_data(
+  [
     'fwupdmgr.sh',
     'fwupd-tests.xml',
   ],
@@ -53,7 +54,8 @@ configure_file(
   install_dir: installed_test_bindir,
 )
 
-custom_target('installed-cab123',
+custom_target(
+  'installed-cab123',
   input: [
     'fakedevice123.bin',
     'fakedevice123.bin.asc',
@@ -61,12 +63,16 @@ custom_target('installed-cab123',
   ],
   output: 'fakedevice123.cab',
   command: [
-    gcab, '--create', '--nopath', '@OUTPUT@', '@INPUT@',
+    gcab,
+    '--create',
+    '--nopath', '@OUTPUT@',
+    '@INPUT@',
   ],
   install: true,
   install_dir: installed_test_datadir,
 )
-custom_target('installed-cab124',
+custom_target(
+  'installed-cab124',
   input: [
     'fakedevice124.bin',
     'fakedevice124.bin.asc',
@@ -74,7 +80,10 @@ custom_target('installed-cab124',
   ],
   output: 'fakedevice124.cab',
   command: [
-    gcab, '--create', '--nopath', '@OUTPUT@', '@INPUT@',
+    gcab,
+    '--create',
+    '--nopath', '@OUTPUT@',
+    '@INPUT@',
   ],
   install: true,
   install_dir: installed_test_datadir,

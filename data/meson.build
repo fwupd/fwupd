@@ -11,11 +11,11 @@ if get_option('fish_completion')
 endif
 
 if get_option('tests')
-subdir('device-tests')
+  subdir('device-tests')
 endif
 
 if build_daemon
-subdir('motd')
+  subdir('motd')
 endif
 
 if get_option('tests')
@@ -25,18 +25,20 @@ if get_option('tests')
 endif
 
 if build_standalone
-  install_data(['fwupd.conf'],
+  install_data(
+    ['fwupd.conf'],
     install_dir: join_paths(sysconfdir, 'fwupd'),
     install_mode: 'rw-r-----',
   )
-  plugin_quirks += files([
-    'power.quirk',
+  plugin_quirks += files(
     'cfi.quirk',
-  ])
+    'power.quirk',
+  )
 endif
 
 if get_option('metainfo')
-  custom_target('metainfo',
+  custom_target(
+    'metainfo',
     input: 'org.freedesktop.fwupd.metainfo.xml',
     output: 'org.freedesktop.fwupd.metainfo.xml',
     command: [
@@ -48,19 +50,22 @@ if get_option('metainfo')
     install: true,
     install_dir: join_paths(datadir, 'metainfo'),
   )
-  install_data(['org.freedesktop.fwupd.svg'],
-    install_dir: join_paths(datadir, 'icons', 'hicolor', 'scalable', 'apps')
+  install_data(
+    ['org.freedesktop.fwupd.svg'],
+    install_dir: join_paths(datadir, 'icons', 'hicolor', 'scalable', 'apps'),
   )
 endif
 
 if build_daemon
-  install_data(['org.freedesktop.fwupd.conf'],
-    install_dir: join_paths(datadir, 'dbus-1', 'system.d')
+  install_data(
+    ['org.freedesktop.fwupd.conf'],
+    install_dir: join_paths(datadir, 'dbus-1', 'system.d'),
   )
 
   if gudev.found()
-    install_data(['90-fwupd-devices.rules'],
-      install_dir: join_paths(udevdir, 'rules.d')
+    install_data(
+      ['90-fwupd-devices.rules'],
+      install_dir: join_paths(udevdir, 'rules.d'),
     )
   endif
 
@@ -82,12 +87,12 @@ if build_daemon
     endif
     if systemd.version().version_compare('>= 231')
       dynamic_options += 'RestrictRealtime=yes'
-#     dynamic_options += 'MemoryDenyWriteExecute=yes'
+      #dynamic_options += 'MemoryDenyWriteExecute=yes'
       dynamic_options += ['ReadWritePaths=' + ' '.join(rw_directories)]
     else
       dynamic_options += ['ReadWriteDirectories=' + ' '.join(rw_directories)]
     endif
-    #pull configuration/cache/state from /etc and /var only if prefix is /usr
+    # pull configuration/cache/state from /etc and /var only if prefix is /usr
     if get_option('prefix') == '/usr'
       dynamic_options += 'ConfigurationDirectory=fwupd'
       dynamic_options += 'StateDirectory=fwupd'
@@ -141,9 +146,7 @@ if build_daemon
       output: 'org.freedesktop.fwupd.service',
       configuration: con2,
       install: true,
-      install_dir: join_paths(datadir,
-                              'dbus-1',
-                              'system-services'),
+      install_dir: join_paths(datadir, 'dbus-1', 'system-services'),
     )
   endif
 endif

@@ -1,7 +1,8 @@
-hsi_test_jsons = files([
+hsi_test_jsons = files(
   'org.fwupd.hsi.Amd.PlatformRollbackProtection.json',
   'org.fwupd.hsi.Amd.SpiReplayProtection.json',
   'org.fwupd.hsi.Amd.SpiWriteProtection.json',
+  'org.fwupd.hsi.Bios.RollbackProtection.json',
   'org.fwupd.hsi.EncryptedRam.json',
   'org.fwupd.hsi.IntelBootguard.Acm.json',
   'org.fwupd.hsi.IntelBootguard.Enabled.json',
@@ -34,6 +35,5 @@ hsi_test_jsons = files([
   'org.fwupd.hsi.Tpm.Version20.json',
   'org.fwupd.hsi.Uefi.Pk.json',
   'org.fwupd.hsi.Uefi.SecureBoot.json',
-  'org.fwupd.hsi.Bios.RollbackProtection.json',
-])
+)
 

@@ -1,4 +1,6 @@
-project('fwupd', 'c',
+project(
+  'fwupd',
+  'c',
   version: '1.9.2',
   license: 'LGPL-2.1+',
   meson_version: '>=0.61.0',
@@ -25,7 +27,7 @@ if git.found()
   if source_version == ''
     source_version = fwupd_version
   endif
-  tag = run_command([git, 'describe', '--exact-match'], check: false).returncode() == 0
+  tag = (run_command([git, 'describe', '--exact-match'], check: false).returncode() == 0)
 else
   source_version = fwupd_version
 endif
@@ -51,7 +53,11 @@ conf.set_quoted('SOURCE_VERSION', source_version)
 libfwupd_lt_current = '2'
 libfwupd_lt_revision = '0'
 libfwupd_lt_age = '0'
-libfwupd_lt_version = '@0@.@1@.@2@'.format(libfwupd_lt_current, libfwupd_lt_age, libfwupd_lt_revision)
+libfwupd_lt_version = '@0@.@1@.@2@'.format(
+  libfwupd_lt_current,
+  libfwupd_lt_age,
+  libfwupd_lt_revision,
+)
 
 # get supported warning flags
 warning_flags = [
@@ -84,7 +90,7 @@ warning_flags = [
   '-Wmissing-prototypes',
   '-Wnested-externs',
   '-Wno-cast-function-type',
-  '-Wno-address-of-packed-member',  # incompatible with g_autoptr()
+  '-Wno-address-of-packed-member', # incompatible with g_autoptr()
   '-Wno-unknown-pragmas',
   '-Wno-missing-field-initializers',
   '-Wno-strict-aliasing',
@@ -108,7 +114,7 @@ warning_flags = [
   '-Wunused-but-set-variable',
   '-Wunused-variable',
   '-Wvla',
-  '-Wwrite-strings'
+  '-Wwrite-strings',
 ]
 if get_option('static_analysis') and host_machine.system() != 'windows'
   warning_flags += ['-fanalyzer', '-Wno-analyzer-null-dereference']
@@ -129,15 +135,12 @@ test_link_args = [
   '-Wl,-z,now',
   '-Wl,-z,ibt,-z,shstk',
 ]
-foreach arg: test_link_args
+foreach arg : test_link_args
   if cc.has_link_argument(arg)
     global_link_args += arg
   endif
 endforeach
-add_project_link_arguments(
-  global_link_args,
-  language: 'c'
-)
+add_project_link_arguments(global_link_args, language: 'c')
 
 add_project_arguments('-DFWUPD_COMPILATION', language: 'c')
 
@@ -184,8 +187,16 @@ else
   datadir = join_paths(prefix, get_option('datadir'))
   sysconfdir = join_paths(prefix, get_option('sysconfdir'))
   localstatedir = join_paths(prefix, get_option('localstatedir'))
-  installed_test_bindir = join_paths(libexecdir, 'installed-tests', meson.project_name())
-  installed_test_datadir = join_paths(datadir, 'installed-tests', meson.project_name())
+  installed_test_bindir = join_paths(
+    libexecdir,
+    'installed-tests',
+    meson.project_name(),
+  )
+  installed_test_datadir = join_paths(
+    datadir,
+    'installed-tests',
+    meson.project_name(),
+  )
   daemon_dir = join_paths(libexecdir, 'fwupd')
 endif
 mandir = join_paths(prefix, get_option('mandir'))
@@ -193,58 +204,92 @@ localedir = join_paths(prefix, get_option('localedir'))
 
 diffcmd = find_program('diff')
 gio = dependency('gio-2.0', version: '>= 2.64.0')
-giounix = dependency('gio-unix-2.0', version: '>= 2.64.0', required: false)
+giounix = dependency(
+  'gio-unix-2.0',
+  version: '>= 2.64.0',
+  required: false,
+)
 if giounix.found()
   conf.set('HAVE_GIO_UNIX', '1')
 endif
 gmodule = dependency('gmodule-2.0')
 if build_standalone
-gudev = dependency('gudev-1.0', version: '>= 232',
-                    required: get_option('gudev').disable_auto_if(host_machine.system() != 'linux'))
-if gudev.found()
-  conf.set('HAVE_GUDEV', '1')
-endif
-bluez = get_option('bluez').disable_auto_if(host_machine.system() != 'linux')
-if bluez.allowed()
-  conf.set('HAVE_BLUEZ', '1')
-endif
-host_cpu = host_machine.cpu_family()
-hsi = get_option('hsi').disable_auto_if(host_machine.system() != 'linux').disable_auto_if(host_cpu != 'x86' and host_cpu != 'x86_64').allowed()
-if hsi
-  conf.set('HAVE_HSI', '1')
-endif
-libxmlb = dependency('xmlb', version: '>= 0.3.6', fallback: ['libxmlb', 'libxmlb_dep'])
-gusb = dependency('gusb', version: '>= 0.3.8', fallback: ['gusb', 'gusb_dep'], required: get_option('gusb'))
-if gusb.found()
-  conf.set('HAVE_GUSB', '1')
-endif
-sqlite = dependency('sqlite3', required: get_option('sqlite'))
-if sqlite.found()
-  conf.set('HAVE_SQLITE', '1')
-endif
-libarchive = dependency('libarchive', required: get_option('libarchive'))
-if libarchive.found()
-  conf.set('HAVE_LIBARCHIVE', '1')
-  if cc.has_header_symbol('archive.h', 'archive_write_add_filter_zstd')
-    conf.set('HAVE_LIBARCHIVE_WRITE_ADD_FILTER_ZSTD', '1')
+  gudev = dependency(
+    'gudev-1.0',
+    version: '>= 232',
+    required: get_option('gudev').disable_auto_if(host_machine.system() != 'linux'),
+  )
+  if gudev.found()
+    conf.set('HAVE_GUDEV', '1')
+  endif
+  bluez = get_option('bluez').disable_auto_if(host_machine.system() != 'linux')
+  if bluez.allowed()
+    conf.set('HAVE_BLUEZ', '1')
+  endif
+  host_cpu = host_machine.cpu_family()
+  hsi = get_option(
+    'hsi'
+  ).disable_auto_if(host_machine.system() != 'linux').disable_auto_if(
+    host_cpu != 'x86' and host_cpu != 'x86_64'
+  ).allowed()
+  if hsi
+    conf.set('HAVE_HSI', '1')
+  endif
+  libxmlb = dependency(
+    'xmlb',
+    version: '>= 0.3.6',
+    fallback: ['libxmlb', 'libxmlb_dep'],
+  )
+  gusb = dependency(
+    'gusb',
+    version: '>= 0.3.8',
+    fallback: ['gusb', 'gusb_dep'],
+    required: get_option('gusb'),
+  )
+  if gusb.found()
+    conf.set('HAVE_GUSB', '1')
+  endif
+  sqlite = dependency('sqlite3', required: get_option('sqlite'))
+  if sqlite.found()
+    conf.set('HAVE_SQLITE', '1')
+  endif
+  libarchive = dependency('libarchive', required: get_option('libarchive'))
+  if libarchive.found()
+    conf.set('HAVE_LIBARCHIVE', '1')
+    if cc.has_header_symbol('archive.h', 'archive_write_add_filter_zstd')
+      conf.set('HAVE_LIBARCHIVE_WRITE_ADD_FILTER_ZSTD', '1')
+    endif
   endif
 endif
-endif
-libjcat = dependency('jcat', version: '>= 0.1.4', fallback: ['libjcat', 'libjcat_dep'])
+libjcat = dependency(
+  'jcat',
+  version: '>= 0.1.4',
+  fallback: ['libjcat', 'libjcat_dep'],
+)
 libjsonglib = dependency('json-glib-1.0', version: '>= 1.6.0')
 valgrind = dependency('valgrind', required: false)
-libcurl = dependency('libcurl', version: '>= 7.62.0', required: get_option('curl'))
+libcurl = dependency(
+  'libcurl',
+  version: '>= 7.62.0',
+  required: get_option('curl'),
+)
 if libcurl.found()
   conf.set('HAVE_LIBCURL', '1')
 endif
-polkit = dependency('polkit-gobject-1', version: '>= 0.103',
-         required: get_option('polkit').disable_auto_if(host_machine.system() != 'linux'))
+polkit = dependency(
+  'polkit-gobject-1',
+  version: '>= 0.103',
+  required: get_option('polkit').disable_auto_if(host_machine.system() != 'linux'),
+)
 if polkit.found()
   conf.set('HAVE_POLKIT', '1')
   if polkit.version().version_compare('>= 0.114')
     conf.set('HAVE_POLKIT_0_114', '1')
   endif
-  conf.set_quoted ('POLKIT_ACTIONDIR', polkit.get_variable(pkgconfig: 'actiondir'))
+  conf.set_quoted(
+    'POLKIT_ACTIONDIR',
+    polkit.get_variable(pkgconfig: 'actiondir'),
+  )
 endif
 if build_daemon
   if not polkit.found()
@@ -257,21 +302,36 @@ if build_daemon
   endif
 endif
 libm = cc.find_library('m', required: false)
-libgcab = dependency('libgcab-1.0', version: '>= 1.0', fallback: ['gcab', 'gcab_dep'])
+libgcab = dependency(
+  'libgcab-1.0',
+  version: '>= 1.0',
+  fallback: ['gcab', 'gcab_dep'],
+)
 if libgcab.type_name() == 'pkgconfig'
   if cc.has_function('gcab_file_set_bytes', dependencies: libgcab)
     conf.set('HAVE_GCAB_FILE_SET_BYTES', '1')
   endif
-  if cc.has_function('gcab_cabinet_add_allowed_compression', dependencies: libgcab)
+  if cc.has_function(
+    'gcab_cabinet_add_allowed_compression',
+    dependencies: libgcab,
+  )
     conf.set('HAVE_GCAB_CABINET_ADD_ALLOWED_COMPRESSION', '1')
   endif
 endif
 
-generate_man = join_paths(meson.project_source_root(), 'contrib', 'generate-man.py')
+generate_man = join_paths(
+  meson.project_source_root(),
+  'contrib',
+  'generate-man.py',
+)
 bashcomp = dependency('bash-completion', required: false)
 python3 = import('python').find_installation('python3')
 
-gnutls = dependency('gnutls', version: '>= 3.6.0', required: get_option('gnutls'))
+gnutls = dependency(
+  'gnutls',
+  version: '>= 3.6.0',
+  required: get_option('gnutls'),
+)
 if gnutls.found()
   conf.set('HAVE_GNUTLS', '1')
 endif
@@ -281,7 +341,11 @@ if lzma.found()
   conf.set('HAVE_LZMA', '1')
 endif
 
-cbor = dependency('libcbor', version: '>= 0.7.0', required: get_option('cbor'))
+cbor = dependency(
+  'libcbor',
+  version: '>= 0.7.0',
+  required: get_option('cbor'),
+)
 if cbor.found()
   conf.set('HAVE_CBOR', '1')
 endif
@@ -300,10 +364,16 @@ if valgrind.found()
   conf.set('HAVE_VALGRIND', '1')
 endif
 
-libsystemd = dependency('libsystemd',
-                        required: get_option('systemd').disable_auto_if(host_machine.system() != 'linux'))
-offline = get_option('offline').require(libsystemd.found(),
-    error_message: '-Doffline=enabled requires systemd')
+libsystemd = dependency(
+  'libsystemd',
+  required: get_option('systemd').disable_auto_if(host_machine.system() != 'linux'),
+)
+offline = get_option(
+  'offline'
+).require(
+  libsystemd.found(),
+  error_message: '-Doffline=enabled requires systemd',
+)
 if offline.allowed()
   conf.set('HAVE_FWUPDOFFLINE', '1')
 endif
@@ -326,7 +396,7 @@ endif
 if cc.has_header('sys/select.h')
   conf.set('HAVE_SELECT_H', '1')
 endif
-if cc.has_header('sys/io.h') and cc.has_function('outb', prefix: '#include <sys/io.h>')
+if (cc.has_header('sys/io.h') and cc.has_function('outb', prefix: '#include <sys/io.h>'))
   conf.set('HAVE_IO_H', '1')
 endif
 if cc.has_header('linux/ethtool.h')
@@ -356,10 +426,14 @@ endif
 if cc.has_header('malloc.h')
   conf.set('HAVE_MALLOC_H', '1')
   if cc.has_function('malloc_trim', prefix: '#include <malloc.h>')
-	 conf.set('HAVE_MALLOC_TRIM', '1')
+    conf.set('HAVE_MALLOC_TRIM', '1')
   endif
 endif
-has_cpuid = cc.has_header_symbol('cpuid.h', '__get_cpuid_count', required: get_option('plugin_msr'))
+has_cpuid = cc.has_header_symbol(
+  'cpuid.h',
+  '__get_cpuid_count',
+  required: get_option('plugin_msr'),
+)
 if has_cpuid
   conf.set('HAVE_CPUID_H', '1')
 endif
@@ -398,7 +472,10 @@ if cc.has_function('pwrite', args: '-D_XOPEN_SOURCE')
 endif
 
 if host_machine.system() == 'freebsd'
-  if cc.has_type('struct efi_esrt_entry_v1', prefix: '#include <sys/types.h>\n#include <sys/efiio.h>')
+  if cc.has_type(
+    'struct efi_esrt_entry_v1',
+    prefix: '#include <sys/types.h>\n#include <sys/efiio.h>',
+  )
     conf.set('HAVE_FREEBSD_ESRT', '1')
   endif
 endif
@@ -411,20 +488,23 @@ if build_standalone and efiboot.found() and efivar.found()
   conf.set_quoted('EFI_APP_LOCATION', efi_app_location)
 
   if host_cpu == 'x86'
-          EFI_MACHINE_TYPE_NAME = 'ia32'
+    EFI_MACHINE_TYPE_NAME = 'ia32'
   elif host_cpu == 'x86_64'
-          EFI_MACHINE_TYPE_NAME = 'x64'
+    EFI_MACHINE_TYPE_NAME = 'x64'
   elif host_cpu == 'arm'
-          EFI_MACHINE_TYPE_NAME = 'arm'
+    EFI_MACHINE_TYPE_NAME = 'arm'
   elif host_cpu == 'aarch64'
-          EFI_MACHINE_TYPE_NAME = 'aa64'
+    EFI_MACHINE_TYPE_NAME = 'aa64'
   else
-          EFI_MACHINE_TYPE_NAME = ''
+    EFI_MACHINE_TYPE_NAME = ''
   endif
   conf.set_quoted('EFI_MACHINE_TYPE_NAME', EFI_MACHINE_TYPE_NAME)
 
   if get_option('efi_binary')
-    efi_binary = dependency ('fwupd-efi', fallback: ['fwupd-efi', 'fwupd_efi_dep'])
+    efi_binary = dependency(
+      'fwupd-efi',
+      fallback: ['fwupd-efi', 'fwupd_efi_dep'],
+    )
   endif
 
   if get_option('plugin_uefi_capsule_splash')
@@ -433,50 +513,70 @@ if build_standalone and efiboot.found() and efivar.found()
 endif
 
 if get_option('soup_session_compat')
-    conf.set('SOUP_SESSION_COMPAT', '1')
+  conf.set('SOUP_SESSION_COMPAT', '1')
 endif
 
 umockdev = dependency('umockdev-1.0', required: false)
 
 if build_standalone
-  libflashrom = dependency('flashrom', 
-                            fallback: ['flashrom', 'flashrom_dep'], 
-                            required: get_option('plugin_flashrom').disable_auto_if(host_machine.system() != 'linux'))
+  libflashrom = dependency(
+    'flashrom',
+    fallback: ['flashrom', 'flashrom_dep'],
+    required: get_option('plugin_flashrom').disable_auto_if(host_machine.system() != 'linux'),
+  )
 endif
 
 if libsystemd.found()
-  systemd = dependency('systemd', version: '>= 211', required: get_option('systemd'))
-  conf.set('HAVE_SYSTEMD' , '1')
-  conf.set('HAVE_LOGIND' , '1')
+  systemd = dependency(
+    'systemd',
+    version: '>= 211',
+    required: get_option('systemd'),
+  )
+  conf.set('HAVE_SYSTEMD', '1')
+  conf.set('HAVE_LOGIND', '1')
   systemd_root_prefix = get_option('systemd_root_prefix')
   if systemd_root_prefix == ''
     systemdunitdir = systemd.get_variable(pkgconfig: 'systemdsystemunitdir')
-    systemdsystempresetdir = systemd.get_variable(pkgconfig: 'systemdsystempresetdir')
+    systemdsystempresetdir = systemd.get_variable(
+      pkgconfig: 'systemdsystempresetdir',
+    )
     systemd_shutdown_dir = systemd.get_variable(pkgconfig: 'systemdshutdowndir')
     systemd_modules_load_dir = systemd.get_variable(pkgconfig: 'modulesloaddir')
   else
-    systemdunitdir = systemd.get_variable(pkgconfig: 'systemdsystemunitdir', pkgconfig_define: ['rootprefix', systemd_root_prefix])
-    systemdsystempresetdir = systemd.get_variable(pkgconfig: 'systemdsystempresetdir', pkgconfig_define: ['rootprefix', systemd_root_prefix])
+    systemdunitdir = systemd.get_variable(
+      pkgconfig: 'systemdsystemunitdir',
+      pkgconfig_define: ['rootprefix', systemd_root_prefix],
+    )
+    systemdsystempresetdir = systemd.get_variable(
+      pkgconfig: 'systemdsystempresetdir',
+      pkgconfig_define: ['rootprefix', systemd_root_prefix],
+    )
     systemd_root_prefix_varname = 'root_prefix'
     if systemd.version().version_compare('< 246')
       systemd_root_prefix_varname = 'rootprefix'
     endif
-    systemd_shutdown_dir = systemd.get_variable(pkgconfig: 'systemdshutdowndir', pkgconfig_define: [systemd_root_prefix_varname, systemd_root_prefix])
-    systemd_modules_load_dir = systemd.get_variable(pkgconfig: 'modulesloaddir', pkgconfig_define: [systemd_root_prefix_varname, systemd_root_prefix])
+    systemd_shutdown_dir = systemd.get_variable(
+      pkgconfig: 'systemdshutdowndir',
+      pkgconfig_define: [systemd_root_prefix_varname, systemd_root_prefix],
+    )
+    systemd_modules_load_dir = systemd.get_variable(
+      pkgconfig: 'modulesloaddir',
+      pkgconfig_define: [systemd_root_prefix_varname, systemd_root_prefix],
+    )
   endif
 endif
 
 elogind = dependency('systemd', 'libelogind', required: get_option('elogind'))
 if elogind.found()
-  conf.set('HAVE_LOGIND' , '1')
+  conf.set('HAVE_LOGIND', '1')
 endif
 
 if get_option('consolekit').disable_auto_if(host_machine.system() != 'linux').allowed()
-  conf.set('HAVE_CONSOLEKIT' , '1')
+  conf.set('HAVE_CONSOLEKIT', '1')
 endif
 
 if get_option('supported_build').disable_auto_if(not tag).allowed()
-    conf.set('SUPPORTED_BUILD', '1')
+  conf.set('SUPPORTED_BUILD', '1')
 endif
 
 # compatibility with behavior in < kernel 6.3
@@ -497,12 +597,12 @@ conf.set_quoted('FWUPD_SYSCONFDIR', sysconfdir)
 conf.set_quoted('FWUPD_LOCALEDIR', localedir)
 
 if build_standalone
-if host_machine.system() == 'windows'
-  libdir_pkg = 'fwupd-@0@'.format(fwupd_version)
-else
-  libdir_pkg = join_paths(libdir, 'fwupd-@0@'.format(fwupd_version))
-endif
-conf.set_quoted('FWUPD_LIBDIR_PKG', libdir_pkg)
+  if host_machine.system() == 'windows'
+    libdir_pkg = 'fwupd-@0@'.format(fwupd_version)
+  else
+    libdir_pkg = join_paths(libdir, 'fwupd-@0@'.format(fwupd_version))
+  endif
+  conf.set_quoted('FWUPD_LIBDIR_PKG', libdir_pkg)
 endif
 
 # sanity check, otherwise there is not point building
@@ -521,19 +621,32 @@ conf.set_quoted('MOTD_DIR', motd_dir)
 
 configure_file(
   output: 'config.h',
-  configuration: conf
+  configuration: conf,
 )
 
-protobufc = dependency('libprotobuf-c', required: get_option('plugin_logitech_bulkcontroller'))
-protoc = find_program('protoc', 'protoc-c', required: get_option('plugin_logitech_bulkcontroller'))
+protobufc = dependency(
+  'libprotobuf-c',
+  required: get_option('plugin_logitech_bulkcontroller'),
+)
+protoc = find_program(
+  'protoc',
+  'protoc-c',
+  required: get_option('plugin_logitech_bulkcontroller'),
+)
 
 root_incdir = include_directories('.')
 
 fwupd_gir = []
-gir_dep = dependency('gobject-introspection-1.0', required: get_option('introspection'))
-introspection = get_option('introspection').disable_auto_if(host_machine.system() != 'linux').disable_auto_if(not gir_dep.found())
+gir_dep = dependency(
+  'gobject-introspection-1.0',
+  required: get_option('introspection'),
+)
+introspection = get_option(
+  'introspection'
+).disable_auto_if(host_machine.system() != 'linux').disable_auto_if(not gir_dep.found())
 
-gidocgen_dep = dependency('gi-docgen',
+gidocgen_dep = dependency(
+  'gi-docgen',
   version: '>= 2021.1',
   native: true,
   fallback: ['gi-docgen', 'dummy_dep'],
@@ -547,9 +660,11 @@ if build_docs and gidocgen_dep.version().version_compare('< 2022.2')
     [python3, '-c', 'import markdown; print(markdown.__version__)'],
     check: true,
   ).stdout().strip()
-  build_docs = get_option('docs').require(
+  build_docs = get_option(
+    'docs'
+  ).require(
     markdown_version.version_compare('>=3.2'),
-    error_message: 'docs=enabled requires at least markdown >= 3.2'
+    error_message: 'docs=enabled requires at least markdown >= 3.2',
   ).allowed()
 endif
 
@@ -563,16 +678,24 @@ endif
 
 # using "meson configure -Db_sanitize=address,undefined" is super useful in finding corruption,
 # but it does not work with our GMainContext-abuse tests...
-if get_option('b_sanitize') in ['address,undefined', 'address', 'undefined', 'leak']
+if (
+  get_option('b_sanitize') in [
+    'address,undefined',
+    'address',
+    'undefined',
+    'leak',
+  ]
+)
   run_sanitize_unsafe_tests = false
 else
   run_sanitize_unsafe_tests = true
 endif
 
 # take foo.rs and generate foo-struct.c and foo-struct.h files like protobuf_c
-rustgen = generator(python3,
-  output  : ['@BASENAME@-struct.c', '@BASENAME@-struct.h'],
-  arguments : [
+rustgen = generator(
+  python3,
+  output: ['@BASENAME@-struct.c', '@BASENAME@-struct.h'],
+  arguments: [
     join_paths(meson.project_source_root(), 'libfwupdplugin', 'rustgen.py'),
     '@INPUT@',
     '@OUTPUT0@',
@@ -608,14 +731,16 @@ if build_standalone
   subdir('docs')
 
   # append all the quirks into one big file and gzip it -- lzma is smaller, but needs libxmlb 0.3.3
-  builtin_quirk = custom_target('builtin-quirk',
+  builtin_quirk = custom_target(
+    'builtin-quirk',
     input: plugin_quirks,
     output: 'builtin.quirk',
     capture: true,
     command: ['cat', '@INPUT@'],
   )
   gzip = find_program('gzip')
-  custom_target('builtin-quirk-gz',
+  custom_target(
+    'builtin-quirk-gz',
     input: builtin_quirk,
     output: 'builtin.quirk.gz',
     capture: true,
@@ -626,8 +751,9 @@ if build_standalone
 endif
 
 if build_daemon and libsystemd.found() and offline.allowed()
-  install_symlink('fwupd-offline-update.service',
+  install_symlink(
+    'fwupd-offline-update.service',
     install_dir: join_paths(systemdunitdir, 'system-update.target.wants'),
-    pointing_to: join_paths('..', 'fwupd-offline-update.service')
+    pointing_to: join_paths('..', 'fwupd-offline-update.service'),
   )
 endif

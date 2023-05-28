@@ -8,6 +8,21 @@ set -x
 # disable the safe directory feature
 git config --global safe.directory "*"
 
+# sanity check the meson files
+if [ ! -d "muon" ]; then
+    git clone https://git.sr.ht/~lattis/muon
+    pushd muon
+    meson setup build
+    cd build
+    ninja-build
+    meson install
+    popd
+fi
+./contrib/ci/check-meson.py
+if [ -d "muon" ]; then
+    rm -rf muon
+fi
+
 #generate a tarball
 mkdir -p build && pushd build
 rm -rf *

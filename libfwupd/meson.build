@@ -1,11 +1,11 @@
 if get_option('tests')
-subdir('tests')
+  subdir('tests')
 endif
 
 fwupd_version_h = configure_file(
   input: 'fwupd-version.h.in',
   output: 'fwupd-version.h',
-  configuration: conf
+  configuration: conf,
 )
 
 install_headers(
@@ -13,7 +13,8 @@ install_headers(
   subdir: 'fwupd-1',
 )
 
-install_headers([
+install_headers(
+  [
     'fwupd-client.h',
     'fwupd-client-sync.h',
     'fwupd-common.h',
@@ -33,32 +34,35 @@ install_headers([
 )
 
 libfwupd_deps = [
-    giounix,
-    gmodule,
-    libjcat,
-    libjsonglib,
-    libcurl,
+  giounix,
+  gmodule,
+  libjcat,
+  libjsonglib,
+  libcurl,
 ]
 
 libfwupd_src = [
   'fwupd-client.c',
   'fwupd-client-sync.c',
-  'fwupd-common.c',         # fuzzing
-  'fwupd-device.c',         # fuzzing
-  'fwupd-enums.c',          # fuzzing
-  'fwupd-error.c',          # fuzzing
-  'fwupd-bios-setting.c',      # fuzzing
-  'fwupd-security-attr.c',  # fuzzing
-  'fwupd-release.c',        # fuzzing
+  'fwupd-common.c', # fuzzing
+  'fwupd-device.c', # fuzzing
+  'fwupd-enums.c', # fuzzing
+  'fwupd-error.c', # fuzzing
+  'fwupd-bios-setting.c', # fuzzing
+  'fwupd-security-attr.c', # fuzzing
+  'fwupd-release.c', # fuzzing
   'fwupd-plugin.c',
   'fwupd-remote.c',
-  'fwupd-report.c',         # fuzzing
-  'fwupd-request.c',        # fuzzing
+  'fwupd-report.c', # fuzzing
+  'fwupd-request.c', # fuzzing
   'fwupd-version.c',
 ]
 
 fwupd_mapfile = 'fwupd.map'
-vflag = '-Wl,--version-script,@0@/@1@'.format(meson.current_source_dir(), fwupd_mapfile)
+vflag = '-Wl,--version-script,@0@/@1@'.format(
+  meson.current_source_dir(),
+  fwupd_mapfile,
+)
 fwupd = library(
   'fwupd',
   sources: libfwupd_src,
@@ -66,25 +70,25 @@ fwupd = library(
   version: libfwupd_lt_version,
   dependencies: libfwupd_deps,
   c_args: [
-      '-DG_LOG_DOMAIN="Fwupd"',
-      '-DLOCALSTATEDIR="' + localstatedir + '"',
-    ],
+    '-DG_LOG_DOMAIN="Fwupd"',
+    '-DLOCALSTATEDIR="' + localstatedir + '"',
+  ],
   include_directories: root_incdir,
   link_args: cc.get_supported_link_arguments([vflag]),
   link_depends: fwupd_mapfile,
-  install: true
+  install: true,
 )
 
 libfwupd_dep = declare_dependency(
   link_with: fwupd,
   include_directories: [root_incdir, include_directories('.')],
-  dependencies: libfwupd_deps
+  dependencies: libfwupd_deps,
 )
 
 pkgg = import('pkgconfig')
 pkgg.generate(
   fwupd,
-  requires: [ 'gio-2.0' ],
+  requires: ['gio-2.0'],
   subdirs: 'fwupd-1',
   version: meson.project_version(),
   name: 'fwupd',
@@ -94,10 +98,11 @@ pkgg.generate(
 
 if introspection.allowed()
   fwupd_gir_deps = [
-      giounix,
-      libcurl,
+    giounix,
+    libcurl,
   ]
-  fwupd_gir = gnome.generate_gir(fwupd,
+  fwupd_gir = gnome.generate_gir(
+    fwupd,
     sources: [
       'fwupd-client.c',
       'fwupd-client.h',
@@ -150,10 +155,11 @@ if introspection.allowed()
       'GObject-2.0',
       'Json-1.0',
     ],
-    install: true
+    install: true,
   )
 
-  gnome.generate_vapi('fwupd',
+  gnome.generate_vapi(
+    'fwupd',
     sources: fwupd_gir[0],
     packages: ['gio-2.0', 'json-glib-1.0'],
     install: true,
@@ -167,24 +173,31 @@ if introspection.allowed()
   #
   # To avoid the circular dep, and to ensure we don't change exported API
   # accidentally actually check in a version of the version script to git.
-  mapfile_target = custom_target('fwupd_mapfile',
+  mapfile_target = custom_target(
+    'fwupd_mapfile',
     input: fwupd_gir[0],
     output: 'fwupd.map',
     command: [
       python3,
-      join_paths(meson.project_source_root(), 'contrib', 'generate-version-script.py'),
+      join_paths(
+        meson.project_source_root(),
+        'contrib',
+        'generate-version-script.py',
+      ),
       'LIBFWUPD',
       '@INPUT@',
       '@OUTPUT@',
     ],
   )
-  test('fwupd-exported-api', diffcmd,
-       args: [
-        '-urNp',
-        files('fwupd.map'),
-        mapfile_target,
-        ],
-      )
+  test(
+    'fwupd-exported-api',
+    diffcmd,
+    args: [
+      '-urNp',
+      files('fwupd.map'),
+      mapfile_target,
+    ],
+  )
 endif
 
 if get_option('tests')
@@ -194,9 +207,7 @@ if get_option('tests')
   e = executable(
     'fwupd-self-test',
     metadata_xml_gz_jcat,
-    sources: [
-      'fwupd-self-test.c'
-    ],
+    sources: ['fwupd-self-test.c'],
     include_directories: [
       root_incdir,
     ],
@@ -210,13 +221,16 @@ if get_option('tests')
       '-DLOCALSTATEDIR="' + localstatedir + '"',
     ],
   )
-  test('fwupd-self-test', e, timeout: 60, env: env)
-  if run_sanitize_unsafe_tests and gio.version().version_compare ('>= 2.64.0')
+  test(
+    'fwupd-self-test',
+    e,
+    timeout: 60,
+    env: env,
+  )
+  if run_sanitize_unsafe_tests and gio.version().version_compare('>= 2.64.0')
     e = executable(
       'fwupd-thread-test',
-      sources: [
-        'fwupd-thread-test.c'
-      ],
+      sources: ['fwupd-thread-test.c'],
       include_directories: [
         root_incdir,
       ],
@@ -231,9 +245,7 @@ if get_option('tests')
     test('fwupd-thread-test', e, timeout: 60)
     e = executable(
       'fwupd-context-test',
-      sources: [
-        'fwupd-context-test.c'
-      ],
+      sources: ['fwupd-context-test.c'],
       include_directories: [
         root_incdir,
       ],
