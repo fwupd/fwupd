@@ -9,10 +9,11 @@
 
 #include "fu-genesys-common.h"
 #include "fu-genesys-usbhub-firmware.h"
+#include "fu-genesys-usbhub-struct.h"
 
 struct _FuGenesysUsbhubFirmware {
 	FuFirmwareClass parent_instance;
-	FuGenesysStaticToolString static_ts;
+	GByteArray *st_static_ts;
 	FuGenesysChip chip;
 };
 
@@ -224,15 +225,7 @@ fu_genesys_usbhub_firmware_parse(FuFirmware *firmware,
 	}
 
 	/* get static tool string */
-	if (!fu_memcpy_safe((guint8 *)&self->static_ts,
-			    sizeof(self->static_ts),
-			    0, /* dst */
-			    buf,
-			    bufsz,
-			    static_ts_offset, /* src */
-			    sizeof(self->static_ts),
-			    error))
-		return FALSE;
+	self->st_static_ts = fu_struct_genesys_ts_static_parse(buf, bufsz, static_ts_offset, error);
 
 	/* deduce code size */
 	switch (self->chip.model) {
@@ -330,10 +323,10 @@ fu_genesys_usbhub_firmware_write(FuFirmware *firmware, GError **error)
 	if (!fu_memcpy_safe(buf->data,
 			    buf->len,
 			    GENESYS_USBHUB_STATIC_TOOL_STRING_OFFSET_GL3523, /* dst */
-			    (const guint8 *)&self->static_ts,
-			    sizeof(self->static_ts),
+			    self->st_static_ts->data,
+			    self->st_static_ts->len,
 			    0x0, /* src */
-			    sizeof(self->static_ts),
+			    self->st_static_ts->len,
 			    error))
 		return NULL;
 
@@ -360,69 +353,16 @@ fu_genesys_usbhub_firmware_write(FuFirmware *firmware, GError **error)
 	return g_steal_pointer(&buf);
 }
 
-static gchar *
-fu_genesys_usbhub_firmware_get_project_ic_type_string(const gchar *tmp)
-{
-	return g_strdup_printf("GL%c%c%c%c-%c%c", tmp[0], tmp[1], tmp[2], tmp[3], tmp[4], tmp[5]);
-}
-
 static void
 fu_genesys_usbhub_firmware_export(FuFirmware *firmware,
 				  FuFirmwareExportFlags flags,
 				  XbBuilderNode *bn)
 {
 	FuGenesysUsbhubFirmware *self = FU_GENESYS_USBHUB_FIRMWARE(firmware);
-	g_autofree gchar *tool_string_version = NULL;
-	g_autofree gchar *mask_project_code = NULL;
-	g_autofree gchar *mask_project_hardware = NULL;
-	g_autofree gchar *mask_project_firmware = NULL;
-	g_autofree gchar *mask_project_ic_type = NULL;
-	g_autofree gchar *running_project_code = NULL;
-	g_autofree gchar *running_project_hardware = NULL;
-	g_autofree gchar *running_project_firmware = NULL;
-	g_autofree gchar *running_project_ic_type = NULL;
+	g_autofree gchar *static_ts = NULL;
 
-	tool_string_version = fu_strsafe((const gchar *)&self->static_ts.tool_string_version,
-					 sizeof(self->static_ts.tool_string_version));
-	fu_xmlb_builder_insert_kv(bn, "tool_string_version", tool_string_version);
-
-	mask_project_code = fu_strsafe((const gchar *)&self->static_ts.mask_project_code,
-				       sizeof(self->static_ts.mask_project_code));
-	fu_xmlb_builder_insert_kv(bn, "mask_project_code", mask_project_code);
-
-	mask_project_hardware = fu_strsafe((const gchar *)&self->static_ts.mask_project_hardware,
-					   sizeof(self->static_ts.mask_project_hardware));
-	if (mask_project_hardware != NULL)
-		mask_project_hardware[0] += 0x10; /* '1' -> 'A'... */
-	fu_xmlb_builder_insert_kv(bn, "mask_project_hardware", mask_project_hardware);
-
-	mask_project_firmware = fu_strsafe((const gchar *)&self->static_ts.mask_project_firmware,
-					   sizeof(self->static_ts.mask_project_firmware));
-	fu_xmlb_builder_insert_kv(bn, "mask_project_firmware", mask_project_firmware);
-
-	mask_project_ic_type = fu_genesys_usbhub_firmware_get_project_ic_type_string(
-	    (const gchar *)self->static_ts.mask_project_ic_type);
-	fu_xmlb_builder_insert_kv(bn, "mask_project_ic_type", mask_project_ic_type);
-
-	running_project_code = fu_strsafe((const gchar *)&self->static_ts.running_project_code,
-					  sizeof(self->static_ts.running_project_code));
-	fu_xmlb_builder_insert_kv(bn, "running_project_code", running_project_code);
-
-	running_project_hardware =
-	    fu_strsafe((const gchar *)&self->static_ts.running_project_hardware,
-		       sizeof(self->static_ts.running_project_hardware));
-	if (running_project_hardware != NULL)
-		running_project_hardware[0] += 0x10; /* '1' -> 'A'... */
-	fu_xmlb_builder_insert_kv(bn, "running_project_hardware", running_project_hardware);
-
-	running_project_firmware =
-	    fu_strsafe((const gchar *)&self->static_ts.running_project_firmware,
-		       sizeof(self->static_ts.running_project_firmware));
-	fu_xmlb_builder_insert_kv(bn, "running_project_firmware", running_project_firmware);
-
-	running_project_ic_type = fu_genesys_usbhub_firmware_get_project_ic_type_string(
-	    (const gchar *)self->static_ts.running_project_ic_type);
-	fu_xmlb_builder_insert_kv(bn, "running_project_ic_type", running_project_ic_type);
+	static_ts = fu_strsafe((const gchar *)self->st_static_ts->data, self->st_static_ts->len);
+	fu_xmlb_builder_insert_kv(bn, "static_ts", static_ts);
 }
 
 static gboolean
@@ -430,19 +370,19 @@ fu_genesys_usbhub_firmware_build(FuFirmware *firmware, XbNode *n, GError **error
 {
 	FuGenesysUsbhubFirmware *self = FU_GENESYS_USBHUB_FIRMWARE(firmware);
 	const gchar *tmp;
-	guint64 tmp64;
 
 	/* optional properties */
-	tmp64 = xb_node_query_text_as_uint(n, "tool_string_version", NULL);
-	if (tmp64 != G_MAXUINT64) {
-		if (tmp64 > G_MAXUINT8) {
-			g_set_error_literal(error,
-					    G_IO_ERROR,
-					    G_IO_ERROR_INVALID_DATA,
-					    "invalid tool_string_version");
-			return FALSE;
-		}
-		self->static_ts.tool_string_version = tmp64;
+	self->st_static_ts = fu_struct_genesys_ts_static_new();
+
+	tmp = xb_node_query_text(n, "tool_string_version", NULL);
+	if (tmp == NULL) {
+		g_set_error_literal(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_INVALID_DATA,
+				    "invalid tool_string_version");
+		return FALSE;
+	} else {
+		fu_struct_genesys_ts_static_set_tool_string_version(self->st_static_ts, tmp[0]);
 	}
 
 	/* mask_project_code */
@@ -458,14 +398,9 @@ fu_genesys_usbhub_firmware_build(FuFirmware *firmware, XbNode *n, GError **error
 				    (guint)len);
 			return FALSE;
 		}
-		if (!fu_memcpy_safe((guint8 *)&self->static_ts.mask_project_code,
-				    sizeof(self->static_ts.mask_project_code),
-				    0x0, /* dst */
-				    (const guint8 *)tmp,
-				    len,
-				    0x0, /* src */
-				    len,
-				    error))
+		if (!fu_struct_genesys_ts_static_set_mask_project_code(self->st_static_ts,
+								       tmp,
+								       error))
 			return FALSE;
 	}
 
@@ -482,14 +417,9 @@ fu_genesys_usbhub_firmware_build(FuFirmware *firmware, XbNode *n, GError **error
 				    (guint)len);
 			return FALSE;
 		}
-		if (!fu_memcpy_safe((guint8 *)&self->static_ts.mask_project_ic_type,
-				    sizeof(self->static_ts.mask_project_ic_type),
-				    0x0, /* dst */
-				    (const guint8 *)tmp,
-				    len,
-				    0x0, /* src */
-				    len,
-				    error))
+		if (!fu_struct_genesys_ts_static_set_mask_project_ic_type(self->st_static_ts,
+									  tmp,
+									  error))
 			return FALSE;
 	}
 
@@ -504,9 +434,20 @@ fu_genesys_usbhub_firmware_init(FuGenesysUsbhubFirmware *self)
 }
 
 static void
+fu_genesys_usbhub_firmware_finalize(GObject *object)
+{
+	FuGenesysUsbhubFirmware *self = FU_GENESYS_USBHUB_FIRMWARE(object);
+	if (self->st_static_ts != NULL)
+		g_byte_array_unref(self->st_static_ts);
+	G_OBJECT_CLASS(fu_genesys_usbhub_firmware_parent_class)->finalize(object);
+}
+
+static void
 fu_genesys_usbhub_firmware_class_init(FuGenesysUsbhubFirmwareClass *klass)
 {
+	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
+	object_class->finalize = fu_genesys_usbhub_firmware_finalize;
 	klass_firmware->check_magic = fu_genesys_usbhub_firmware_check_magic;
 	klass_firmware->parse = fu_genesys_usbhub_firmware_parse;
 	klass_firmware->export = fu_genesys_usbhub_firmware_export;

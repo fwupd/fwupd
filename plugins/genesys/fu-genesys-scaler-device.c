@@ -1944,9 +1944,20 @@ fu_genesys_scaler_device_init(FuGenesysScalerDevice *self)
 }
 
 static void
+fu_genesys_scaler_device_finalize(GObject *object)
+{
+	FuGenesysScalerDevice *self = FU_GENESYS_SCALER_DEVICE(object);
+	if (self->cfi_device != NULL)
+		g_object_unref(self->cfi_device);
+	G_OBJECT_CLASS(fu_genesys_scaler_device_parent_class)->finalize(object);
+}
+
+static void
 fu_genesys_scaler_device_class_init(FuGenesysScalerDeviceClass *klass)
 {
+	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
+	object_class->finalize = fu_genesys_scaler_device_finalize;
 	klass_device->probe = fu_genesys_scaler_device_probe;
 	klass_device->setup = fu_genesys_scaler_device_setup;
 	klass_device->dump_firmware = fu_genesys_scaler_device_dump_firmware;

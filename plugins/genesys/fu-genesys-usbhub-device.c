@@ -14,6 +14,7 @@
 #include "fu-genesys-scaler-device.h"
 #include "fu-genesys-usbhub-device.h"
 #include "fu-genesys-usbhub-firmware.h"
+#include "fu-genesys-usbhub-struct.h"
 
 /**
  * FU_GENESYS_USBHUB_FLAG_HAS_MSTAR_SCALER:
@@ -54,94 +55,6 @@
 #define GENESYS_USBHUB_FLASH_WRITE_TIMEOUT 500	/* ms */
 
 typedef enum {
-	TOOL_STRING_VERSION_9BYTE_DYNAMIC,
-	TOOL_STRING_VERSION_BONDING,
-	TOOL_STRING_VERSION_BONDING_QC,
-	TOOL_STRING_VERSION_VENDOR_SUPPORT,
-	TOOL_STRING_VERSION_MULTI_TOKEN,
-	TOOL_STRING_VERSION_2ND_DYNAMIC,
-	TOOL_STRING_VERSION_RESERVED,
-	TOOL_STRING_VERSION_13BYTE_DYNAMIC,
-} FuGenesysToolStringVersion;
-
-typedef struct __attribute__((packed)) {
-	guint8 running_mode; /* 'M' for mask code, the others for bank code */
-
-	guint8 ss_port_number; /* super-speed port number */
-	guint8 hs_port_number; /* high-speed port number */
-
-	guint8 ss_connection_status; /* bit field. ON = DFP is a super-speed device */
-	guint8 hs_connection_status; /* bit field. ON = DFP is a high-speed device */
-	guint8 fs_connection_status; /* bit field. ON = DFP is a full-speed device */
-	guint8 ls_connection_status; /* bit field. ON = DFP is a low-speed device */
-
-	guint8 charging;		  /* bit field. ON = DFP is a charging port */
-	guint8 non_removable_port_status; /* bit field. ON = DFP is a non-removable port */
-
-	/*
-	 * Bonding reports Hardware register status for GL3523:
-	 *   2 / 4 ports         : 1 means 4 ports, 0 means 2 ports
-	 *   MTT / STT           : 1 means Multi Token Transfer, 0 means Single TT
-	 *   Type - C            : 1 means disable, 0 means enable
-	 *   QC                  : 1 means disable, 0 means enable
-	 *   Flash dump location : 1 means 32KB offset bank 1, 0 means 0 offset bank 0.
-	 *
-	 * Tool string Version 1:
-	 *   Bit3 : Flash dump location
-	 *   BIT2 : Type - C
-	 *   BIT1 : MTT / STT
-	 *   BIT0 : 2 / 4 ports
-	 *
-	 * Tool string Version 2 or newer :
-	 *   Bit4 : Flash dump location
-	 *   BIT3 : Type - C
-	 *   BIT2 : MTT / STT
-	 *   BIT1 : 2 / 4 ports
-	 *   BIT0 : QC
-	 *
-	 * Default use '0'~'F', plus Bit4 may over value, should extract that.
-	 *
-	 * Bonding for GL3590:
-	 *   Bit7 : Flash dump location, 0 means bank 0, 1 means bank 1.
-	 */
-	guint8 bonding;
-
-	guint8 reserved[22];
-} FuGenesysDynamicToolString;
-
-typedef struct __attribute__((packed)) {
-	guint8 running_mode; /* 'M' for mask code, the others for bank code */
-
-	guint8 ss_port_number; /* super-speed port number */
-	guint8 hs_port_number; /* high-speed port number */
-
-	guint8 ss_connection_status; /* bit field. ON = DFP is a super-speed device */
-	guint8 hs_connection_status; /* bit field. ON = DFP is a high-speed device */
-	guint8 fs_connection_status; /* bit field. ON = DFP is a full-speed device */
-	guint8 ls_connection_status; /* bit field. ON = DFP is a low-speed device */
-
-	guint8 charging;		  /* bit field. ON = DFP is a charging port */
-	guint8 non_removable_port_status; /* bit field. ON = DFP is a non-removable port */
-	guint8 bonding;
-
-	// indicate current FW runs on which bank, 0 means disable, 1 means bank 0, 2 means bank 1.
-	// also record PD and Dev FW version.
-	guint8 hub_fw_status;
-	guint8 pd_fw_status;
-	guint8 pd_fw_version_low;
-	guint8 pd_fw_version_high;
-	guint8 dev_fw_status;
-	guint8 dev_fw_version_low;
-	guint8 dev_fw_version_high;
-} FuGenesysDynamicToolString_GL3525;
-
-typedef enum {
-	BANK_MASK_CODE,
-	BANK_FIRST,
-	BANK_SECOND,
-} FuGenesysRunningBank;
-
-typedef enum {
 	FW_BANK_1,
 	FW_BANK_2,
 
@@ -159,18 +72,6 @@ typedef enum {
 	ISP_ENTER,
 } FuGenesysIspMode;
 
-typedef struct __attribute__((packed)) {
-	guint8 tool_version[6]; /* ISP tool defined by itself */
-	guint8 address_mode;
-	guint8 build_fw_time[12];  /* YYYYMMDDhhmm */
-	guint8 update_fw_time[12]; /* YYYYMMDDhhmm */
-} FuGenesysFirmwareInfoToolString;
-
-typedef struct __attribute__((packed)) {
-	guint8 version[2];
-	guint8 supports[29];
-} FuGenesysVendorSupportToolString;
-
 typedef struct {
 	guint8 req_switch;
 	guint8 req_read;
@@ -187,15 +88,17 @@ typedef struct {
 
 struct _FuGenesysUsbhubDevice {
 	FuUsbDevice parent_instance;
-	FuGenesysStaticToolString static_ts;
-	FuGenesysDynamicToolString dynamic_ts;
-	FuGenesysFirmwareInfoToolString fwinfo_ts;
-	FuGenesysVendorSupportToolString vs_ts;
+	GByteArray *st_static_ts;
+	GByteArray *st_dynamic_ts;
+	GByteArray *st_fwinfo_ts;
+	GByteArray *st_vendor_ts;
 	FuGenesysVendorCommandSetting vcs;
 	FuGenesysModelSpec spec;
-	guint32 running_bank;
+
+	FuGenesysTsVersion tool_string_version;
+	FuGenesysFwStatus running_bank;
 	guint8 bonding;
-	gboolean flash_dump_location_bit;
+
 	guint32 flash_erase_delay;
 	guint32 flash_write_delay;
 	guint32 flash_block_size;
@@ -521,7 +424,6 @@ fu_genesys_usbhub_device_authenticate(FuGenesysUsbhubDevice *self, GError **erro
 	guint8 temp_byte;
 	guint8 offset_start;
 	guint8 offset_end;
-	guint8 *fwinfo = (guint8 *)&self->fwinfo_ts;
 
 	if (self->vcs.req_switch == GENESYS_USBHUB_GL_HUB_SWITCH) {
 		g_set_error_literal(error,
@@ -539,7 +441,7 @@ fu_genesys_usbhub_device_authenticate(FuGenesysUsbhubDevice *self, GError **erro
 					  GENESYS_USBHUB_ENCRYPT_REGION_END - 1);
 	offset_end = g_random_int_range(offset_start + 1, GENESYS_USBHUB_ENCRYPT_REGION_END);
 	for (guint8 i = offset_start; i <= offset_end; i++) {
-		temp_byte ^= fwinfo[i];
+		temp_byte ^= self->st_fwinfo_ts->data[i];
 	}
 	if (!fu_genesys_usbhub_device_authentication_request(self,
 							     offset_start,
@@ -657,12 +559,24 @@ fu_genesys_tsdigit_value(gchar c)
 }
 
 static gboolean
-fu_genesys_usbhub_device_verify_model_and_generate_spec(FuGenesysUsbhubDevice *self, GError **error)
+fu_genesys_usbhub_device_get_info_from_static_ts(FuGenesysUsbhubDevice *self,
+						 const guint8 *buf,
+						 gsize bufsz,
+						 GError **error)
 {
-	const guint8 *project_ic_type = self->static_ts.mask_project_ic_type;
+	g_autofree gchar *project_ic_type = NULL;
 
+	self->st_static_ts = fu_struct_genesys_ts_static_parse(buf, bufsz, 0, error);
+	project_ic_type = fu_struct_genesys_ts_static_get_mask_project_ic_type(self->st_static_ts);
+
+	/* verify chip model and revision */
 	if (memcmp(project_ic_type, "3521", 4) == 0) {
-		self->spec.chip.model = ISP_MODEL_HUB_GL3521;
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "IC type %s already EOL and not supported",
+			    project_ic_type);
+		return FALSE;
 	} else if (memcmp(project_ic_type, "3523", 4) == 0) {
 		self->spec.chip.model = ISP_MODEL_HUB_GL3523;
 	} else if (memcmp(project_ic_type, "3590", 4) == 0) {
@@ -670,18 +584,19 @@ fu_genesys_usbhub_device_verify_model_and_generate_spec(FuGenesysUsbhubDevice *s
 	} else if (memcmp(project_ic_type, "3525", 4) == 0) {
 		self->spec.chip.model = ISP_MODEL_HUB_GL3525;
 	} else {
-		g_autofree gchar *ic_type = NULL;
-		ic_type = fu_strsafe((const gchar *)&self->static_ts.mask_project_ic_type,
-				     sizeof(self->static_ts.mask_project_ic_type));
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "IC type %s not supported",
-			    ic_type);
+			    "unsupported IC type %s",
+			    project_ic_type);
 		return FALSE;
 	}
 
 	self->spec.chip.revision = 10 * (project_ic_type[4] - '0') + (project_ic_type[5] - '0');
+
+	/* convert tool string version */
+	self->tool_string_version =
+	    fu_struct_genesys_ts_static_get_tool_string_version(self->st_static_ts);
 
 	/* setup firmware parameters */
 	switch (self->spec.chip.model) {
@@ -731,66 +646,128 @@ fu_genesys_usbhub_device_verify_model_and_generate_spec(FuGenesysUsbhubDevice *s
 		break;
 	}
 
+	/* add IC product instance */
+	fu_device_add_instance_str(FU_DEVICE(self), "IC", project_ic_type);
+
+	/* success */
 	return TRUE;
 }
 
 static gboolean
-fu_genesys_usbhub_device_get_bonding_and_flash_dump_location_bit(FuGenesysUsbhubDevice *self,
-								 GError **error)
+fu_genesys_usbhub_device_get_info_from_dynamic_ts(FuGenesysUsbhubDevice *self,
+						  const guint8 *buf,
+						  gsize bufsz,
+						  GError **error)
 {
-	gint bonding;
+	gint ss_port_number = 0;
+	gint hs_port_number = 0;
+	gchar running_mode = 0;
+	guint8 bonding = 0;
+	guint8 portnum = 0;
+	gboolean flash_dump_location_bit = FALSE;
 
 	/* bonding is not supported */
-	if (fu_genesys_tsdigit_value(self->static_ts.tool_string_version) <
-		TOOL_STRING_VERSION_BONDING ||
-	    self->dynamic_ts.bonding == 0) {
-		/* success */
-		return TRUE;
-	}
-
-	if (self->spec.chip.model == ISP_MODEL_HUB_GL3523) {
-		bonding = fu_genesys_tsdigit_value((gchar)self->dynamic_ts.bonding);
-		if (bonding == -1) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INTERNAL,
-				    "wrong bonding value 0x%02x",
-				    self->dynamic_ts.bonding);
-			return FALSE;
-		}
-
-		if (fu_genesys_tsdigit_value(self->static_ts.tool_string_version) <
-		    TOOL_STRING_VERSION_BONDING_QC)
-			bonding <<= 1;
-		self->bonding = (bonding & GL3523_BONDING_VALID_BIT);
-		self->flash_dump_location_bit = bonding & GL3523_BONDING_FLASH_DUMP_LOCATION_BIT;
-
-		/* success */
-		return TRUE;
-	} else if (self->spec.chip.model == ISP_MODEL_HUB_GL3590) {
-		self->bonding = (self->dynamic_ts.bonding & GL3590_BONDING_VALID_BIT);
-		self->flash_dump_location_bit =
-		    self->dynamic_ts.bonding & GL3590_BONDING_FLASH_DUMP_LOCATION_BIT;
-
-		/* success */
-		return TRUE;
-	} else if (self->spec.chip.model == ISP_MODEL_HUB_GL3525) {
-		const FuGenesysDynamicToolString_GL3525 *dynamic_ts_gl3525 =
-		    (const FuGenesysDynamicToolString_GL3525 *)&self->dynamic_ts;
-		self->bonding = dynamic_ts_gl3525->bonding;
-		self->flash_dump_location_bit =
-		    fu_genesys_tsdigit_value(dynamic_ts_gl3525->hub_fw_status) == 2;
-
-		/* success */
-		return TRUE;
-	} else {
+	if (self->tool_string_version < FU_GENESYS_TS_VERSION_BONDING) {
 		g_set_error(error,
 			    FWUPD_ERROR,
-			    FWUPD_ERROR_INTERNAL,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "legacy model 0x%02x not supported",
+			    self->spec.chip.model);
+		return FALSE;
+	}
+
+	/* get running mode, portnum, bonding and flash dump location bit */
+	switch (self->spec.chip.model) {
+	case ISP_MODEL_HUB_GL3523:
+		self->st_dynamic_ts =
+		    fu_struct_genesys_ts_dynamic_gl3523_parse(buf, bufsz, 0, error);
+		running_mode =
+		    fu_struct_genesys_ts_dynamic_gl3523_get_running_mode(self->st_dynamic_ts)[0];
+		ss_port_number = fu_genesys_tsdigit_value(
+		    fu_struct_genesys_ts_dynamic_gl3523_get_ss_port_number(self->st_dynamic_ts)[0]);
+		hs_port_number = fu_genesys_tsdigit_value(
+		    fu_struct_genesys_ts_dynamic_gl3523_get_hs_port_number(self->st_dynamic_ts)[0]);
+		bonding = fu_genesys_tsdigit_value(
+		    fu_struct_genesys_ts_dynamic_gl3523_get_bonding(self->st_dynamic_ts)[0]);
+		if (self->tool_string_version < FU_GENESYS_TS_VERSION_BONDING_QC)
+			bonding <<= 1;
+		self->bonding = bonding & GL3523_BONDING_VALID_BIT;
+		flash_dump_location_bit = (bonding & GL3523_BONDING_FLASH_DUMP_LOCATION_BIT) > 0;
+		break;
+	case ISP_MODEL_HUB_GL3590:
+		if (self->spec.chip.revision == 30) {
+			self->st_dynamic_ts =
+			    fu_struct_genesys_ts_dynamic_gl359030_parse(buf, bufsz, 0, error);
+			running_mode = fu_struct_genesys_ts_dynamic_gl359030_get_running_mode(
+			    self->st_dynamic_ts)[0];
+			ss_port_number = fu_genesys_tsdigit_value(
+			    fu_struct_genesys_ts_dynamic_gl359030_get_ss_port_number(
+				self->st_dynamic_ts)[0]);
+			hs_port_number = fu_genesys_tsdigit_value(
+			    fu_struct_genesys_ts_dynamic_gl359030_get_hs_port_number(
+				self->st_dynamic_ts)[0]);
+			self->bonding =
+			    fu_struct_genesys_ts_dynamic_gl359030_get_bonding(self->st_dynamic_ts);
+			flash_dump_location_bit =
+			    fu_struct_genesys_ts_dynamic_gl359030_get_hub_fw_status(
+				self->st_dynamic_ts) == FU_GENESYS_FW_STATUS_BANK2;
+		} else {
+			self->st_dynamic_ts =
+			    fu_struct_genesys_ts_dynamic_gl3590_parse(buf, bufsz, 0, error);
+			running_mode = fu_struct_genesys_ts_dynamic_gl3590_get_running_mode(
+			    self->st_dynamic_ts)[0];
+			ss_port_number = fu_genesys_tsdigit_value(
+			    fu_struct_genesys_ts_dynamic_gl3590_get_ss_port_number(
+				self->st_dynamic_ts)[0]);
+			hs_port_number = fu_genesys_tsdigit_value(
+			    fu_struct_genesys_ts_dynamic_gl3590_get_hs_port_number(
+				self->st_dynamic_ts)[0]);
+			bonding =
+			    fu_struct_genesys_ts_dynamic_gl3590_get_bonding(self->st_dynamic_ts);
+			self->bonding = bonding & GL3590_BONDING_VALID_BIT;
+			flash_dump_location_bit =
+			    (bonding & GL3590_BONDING_FLASH_DUMP_LOCATION_BIT) > 0;
+		}
+		break;
+	case ISP_MODEL_HUB_GL3525:
+		self->st_dynamic_ts =
+		    fu_struct_genesys_ts_dynamic_gl3525_parse(buf, bufsz, 0, error);
+		running_mode =
+		    fu_struct_genesys_ts_dynamic_gl3525_get_running_mode(self->st_dynamic_ts)[0];
+		ss_port_number = fu_genesys_tsdigit_value(
+		    fu_struct_genesys_ts_dynamic_gl3525_get_ss_port_number(self->st_dynamic_ts)[0]);
+		hs_port_number = fu_genesys_tsdigit_value(
+		    fu_struct_genesys_ts_dynamic_gl3525_get_hs_port_number(self->st_dynamic_ts)[0]);
+		self->bonding =
+		    fu_struct_genesys_ts_dynamic_gl3525_get_bonding(self->st_dynamic_ts);
+		flash_dump_location_bit = fu_struct_genesys_ts_dynamic_gl3525_get_hub_fw_status(
+					      self->st_dynamic_ts) == FU_GENESYS_FW_STATUS_BANK2;
+		break;
+	default:
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "unsupported model 0x%02x",
 			    self->spec.chip.model);
 		return FALSE;
 	}
+
+	if (running_mode == 'M') {
+		self->running_bank = FU_GENESYS_FW_STATUS_MASK;
+	} else if (flash_dump_location_bit) {
+		self->running_bank = FU_GENESYS_FW_STATUS_BANK2;
+	} else {
+		self->running_bank = FU_GENESYS_FW_STATUS_BANK1;
+	}
+
+	portnum = ss_port_number << 4 | hs_port_number;
+
+	/* add specific product info */
+	fu_device_add_instance_u8(FU_DEVICE(self), "PORTNUM", portnum);
+	fu_device_add_instance_u8(FU_DEVICE(self), "BONDING", self->bonding);
+
+	/* success */
+	return TRUE;
 }
 
 static gboolean
@@ -863,16 +840,15 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(device));
 	guint32 block_size;
 	guint32 sector_size;
-	guint16 version_raw;
 	guint8 static_idx = 0;
 	guint8 dynamic_idx = 0;
-	gint tool_string_version = 0;
+	const gsize bufsz = 0x20;
 	g_autoptr(GBytes) static_buf = NULL;
 	g_autoptr(GBytes) dynamic_buf = NULL;
 	g_autoptr(GBytes) fw_buf = NULL;
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GBytes) blob = NULL;
-	g_autofree gchar *ic_type = NULL;
+	g_autofree guint8 *buf = NULL;
 
 	/* FuUsbDevice->setup */
 	if (!FU_DEVICE_CLASS(fu_genesys_usbhub_device_parent_class)->setup(device, error)) {
@@ -897,6 +873,9 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 	 * Read/parse vendor-specific string descriptors and use that
 	 * data to setup device attributes.
 	 */
+	buf = g_malloc0(bufsz);
+
+	/* parse static tool string */
 	static_buf =
 	    g_usb_device_get_string_descriptor_bytes_full(usb_device,
 							  static_idx,
@@ -907,22 +886,14 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 		g_prefix_error(error, "failed to get static tool info from device: ");
 		return FALSE;
 	}
-	if (!fu_genesys_usbhub_device_get_descriptor_data(static_buf,
-							  (guint8 *)&self->static_ts,
-							  sizeof(FuGenesysStaticToolString),
-							  error)) {
+	if (!fu_genesys_usbhub_device_get_descriptor_data(static_buf, buf, bufsz, error)) {
 		g_prefix_error(error, "failed to get static tool info from device: ");
 		return FALSE;
 	}
-	fu_dump_raw(G_LOG_DOMAIN,
-		    "Static info",
-		    (guint8 *)&self->static_ts,
-		    sizeof(FuGenesysStaticToolString));
-
-	/* generate model spec */
-	if (!fu_genesys_usbhub_device_verify_model_and_generate_spec(self, error))
+	if (!fu_genesys_usbhub_device_get_info_from_static_ts(self, buf, bufsz, error))
 		return FALSE;
 
+	/* parse dynamic tool string */
 	dynamic_buf =
 	    g_usb_device_get_string_descriptor_bytes_full(usb_device,
 							  dynamic_idx,
@@ -933,18 +904,14 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 		g_prefix_error(error, "failed to get dynamic tool info from device: ");
 		return FALSE;
 	}
-	if (!fu_genesys_usbhub_device_get_descriptor_data(dynamic_buf,
-							  (guint8 *)&self->dynamic_ts,
-							  sizeof(FuGenesysDynamicToolString),
-							  error)) {
+	if (!fu_genesys_usbhub_device_get_descriptor_data(dynamic_buf, buf, bufsz, error)) {
 		g_prefix_error(error, "failed to get dynamic tool info from device: ");
 		return FALSE;
 	}
-	fu_dump_raw(G_LOG_DOMAIN,
-		    "Dynamic info",
-		    (guint8 *)&self->dynamic_ts,
-		    sizeof(FuGenesysDynamicToolString));
+	if (!fu_genesys_usbhub_device_get_info_from_dynamic_ts(self, buf, bufsz, error))
+		return FALSE;
 
+	/* parse firmware info tool string */
 	fw_buf =
 	    g_usb_device_get_string_descriptor_bytes_full(usb_device,
 							  GENESYS_USBHUB_FW_INFO_DESC_IDX,
@@ -955,20 +922,14 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 		g_prefix_error(error, "failed to get firmware info from device: ");
 		return FALSE;
 	}
-	if (!fu_genesys_usbhub_device_get_descriptor_data(fw_buf,
-							  (guint8 *)&self->fwinfo_ts,
-							  sizeof(FuGenesysFirmwareInfoToolString),
-							  error)) {
+	if (!fu_genesys_usbhub_device_get_descriptor_data(fw_buf, buf, bufsz, error)) {
 		g_prefix_error(error, "failed to get firmware info from device: ");
 		return FALSE;
 	}
-	fu_dump_raw(G_LOG_DOMAIN,
-		    "Fw info",
-		    (guint8 *)&self->fwinfo_ts,
-		    sizeof(FuGenesysFirmwareInfoToolString));
+	self->st_fwinfo_ts = fu_struct_genesys_ts_firmware_info_parse(buf, bufsz, 0, error);
 
-	tool_string_version = fu_genesys_tsdigit_value(self->static_ts.tool_string_version);
-	if (tool_string_version >= TOOL_STRING_VERSION_VENDOR_SUPPORT) {
+	/* parse vendor support tool string */
+	if (self->tool_string_version >= FU_GENESYS_TS_VERSION_VENDOR_SUPPORT) {
 		g_autoptr(GBytes) vendor_buf = g_usb_device_get_string_descriptor_bytes_full(
 		    usb_device,
 		    GENESYS_USBHUB_VENDOR_SUPPORT_DESC_IDX,
@@ -979,18 +940,14 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 			g_prefix_error(error, "failed to get vendor support info from device: ");
 			return FALSE;
 		}
-		if (!fu_genesys_usbhub_device_get_descriptor_data(
-			vendor_buf,
-			(guint8 *)&self->vs_ts,
-			sizeof(FuGenesysVendorSupportToolString),
-			error)) {
+		if (!fu_genesys_usbhub_device_get_descriptor_data(vendor_buf, buf, bufsz, error)) {
 			g_prefix_error(error, "failed to get vendor support info from device: ");
 			return FALSE;
 		}
-		fu_dump_raw(G_LOG_DOMAIN,
-			    "Vendor support",
-			    (guint8 *)&self->vs_ts,
-			    sizeof(FuGenesysVendorSupportToolString));
+		self->st_vendor_ts =
+		    fu_struct_genesys_ts_vendor_support_parse(buf, bufsz, 0, error);
+	} else {
+		self->st_vendor_ts = fu_struct_genesys_ts_vendor_support_new();
 	}
 
 	if (fu_device_has_private_flag(device, FU_GENESYS_USBHUB_FLAG_HAS_PUBLIC_KEY)) {
@@ -1010,19 +967,6 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 	if (sector_size != 0)
 		self->flash_sector_size = sector_size;
 
-	/* get bonding and flash dump location bit */
-	if (!fu_genesys_usbhub_device_get_bonding_and_flash_dump_location_bit(self, error))
-		return FALSE;
-	fu_device_add_instance_u8(device, "BONDING", self->bonding);
-
-	if (self->dynamic_ts.running_mode == 'M') {
-		self->running_bank = BANK_MASK_CODE;
-	} else if (self->flash_dump_location_bit) {
-		self->running_bank = BANK_SECOND;
-	} else {
-		self->running_bank = BANK_FIRST;
-	}
-
 	/* setup firmware parameters */
 	if (fu_device_has_private_flag(device, FU_GENESYS_USBHUB_FLAG_HAS_PUBLIC_KEY))
 		self->extend_size = GL3523_PUBLIC_KEY_LEN + GL3523_SIG_LEN;
@@ -1032,15 +976,16 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 					    self->extend_size);
 
 	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_DUAL_IMAGE)) {
-		gsize address = self->spec.fw_bank_addr[FW_BANK_1][FW_TYPE_HUB];
-		gsize bufsz;
-		gsize bufsz_dual;
-		g_autoptr(FuFirmware) firmware = NULL;
-		g_autoptr(FuFirmware) firmware_dual = NULL;
-		g_autoptr(GError) error_local_dual = NULL;
-		g_autoptr(GBytes) blob_dual = NULL;
-		g_autofree guint8 *buf = NULL;
-		g_autofree guint8 *buf_dual = NULL;
+		gsize address;
+		gsize bufsz_bank1;
+		gsize bufsz_bank2;
+		guint16 version_raw;
+		g_autoptr(FuFirmware) firmware_bank1 = NULL;
+		g_autoptr(FuFirmware) firmware_bank2 = NULL;
+		g_autoptr(GError) error_local_bank2 = NULL;
+		g_autoptr(GBytes) blob_bank2 = NULL;
+		g_autofree guint8 *buf_bank1 = NULL;
+		g_autofree guint8 *buf_bank2 = NULL;
 
 		if (self->spec.support_code_size) {
 			if (!fu_genesys_usbhub_device_get_code_size(self, 0, error))
@@ -1049,52 +994,52 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 			self->code_size = self->spec.fw_data_total_count[FW_TYPE_HUB];
 		}
 
-		/* verify firmware integrity */
-		bufsz = self->spec.fw_data_total_count[FW_TYPE_HUB] + self->extend_size;
-		buf = g_malloc0(bufsz);
+		/* verify bank1 firmware integrity */
+		bufsz_bank1 = self->spec.fw_data_total_count[FW_TYPE_HUB] + self->extend_size;
+		buf_bank1 = g_malloc0(bufsz_bank1);
 		if (!fu_genesys_usbhub_device_read_flash(
 			self,
 			self->spec.fw_bank_addr[FW_BANK_1][FW_TYPE_HUB],
-			buf,
-			bufsz,
+			buf_bank1,
+			bufsz_bank1,
 			NULL,
 			error))
 			return FALSE;
-		blob = g_bytes_new_take(g_steal_pointer(&buf), bufsz);
-		firmware = fu_genesys_usbhub_firmware_new();
-		if (!fu_firmware_parse(firmware,
+		blob = g_bytes_new_take(g_steal_pointer(&buf_bank1), bufsz_bank1);
+		firmware_bank1 = fu_genesys_usbhub_firmware_new();
+		if (!fu_firmware_parse(firmware_bank1,
 				       blob,
 				       FWUPD_INSTALL_FLAG_NO_SEARCH,
 				       &error_local)) {
 			g_debug("ignoring firmware: %s", error_local->message);
 			self->fw_bank_vers[FW_BANK_1][FW_TYPE_HUB] = 0;
 		} else {
-			version_raw = fu_firmware_get_version_raw(firmware);
+			version_raw = fu_firmware_get_version_raw(firmware_bank1);
 			if (version_raw != 0xffff)
 				self->fw_bank_vers[FW_BANK_1][FW_TYPE_HUB] = version_raw;
 		}
 
-		/* verify dual firmware integrity */
-		bufsz_dual = self->spec.fw_data_total_count[FW_TYPE_HUB] + self->extend_size;
-		buf_dual = g_malloc0(bufsz_dual);
+		/* verify bank2 firmware integrity */
+		bufsz_bank2 = self->spec.fw_data_total_count[FW_TYPE_HUB] + self->extend_size;
+		buf_bank2 = g_malloc0(bufsz_bank2);
 		if (!fu_genesys_usbhub_device_read_flash(
 			self,
 			self->spec.fw_bank_addr[FW_BANK_2][FW_TYPE_HUB],
-			buf_dual,
-			bufsz_dual,
+			buf_bank2,
+			bufsz_bank2,
 			NULL,
 			error))
 			return FALSE;
-		blob_dual = g_bytes_new_take(g_steal_pointer(&buf_dual), bufsz_dual);
-		firmware_dual = fu_genesys_usbhub_firmware_new();
-		if (!fu_firmware_parse(firmware_dual,
-				       blob_dual,
+		blob_bank2 = g_bytes_new_take(g_steal_pointer(&buf_bank2), bufsz_bank2);
+		firmware_bank2 = fu_genesys_usbhub_firmware_new();
+		if (!fu_firmware_parse(firmware_bank2,
+				       blob_bank2,
 				       FWUPD_INSTALL_FLAG_NO_SEARCH,
-				       &error_local_dual)) {
-			g_debug("ignoring recovery firmware: %s", error_local_dual->message);
+				       &error_local_bank2)) {
+			g_debug("ignoring recovery firmware: %s", error_local_bank2->message);
 			self->fw_bank_vers[FW_BANK_2][FW_TYPE_HUB] = 0;
 		} else {
-			version_raw = fu_firmware_get_version_raw(firmware_dual);
+			version_raw = fu_firmware_get_version_raw(firmware_bank2);
 			if (version_raw != 0xffff)
 				self->fw_bank_vers[FW_BANK_2][FW_TYPE_HUB] = version_raw;
 		}
@@ -1118,7 +1063,7 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 		self->write_recovery_bank =
 		    address == self->spec.fw_bank_addr[FW_BANK_2][FW_TYPE_HUB];
 	} else {
-		if (self->running_bank == BANK_FIRST)
+		if (self->running_bank == FU_GENESYS_FW_STATUS_BANK1)
 			self->fw_bank_vers[FW_BANK_1][FW_TYPE_HUB] =
 			    g_usb_device_get_release(usb_device);
 	}
@@ -1150,21 +1095,14 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 	}
 
 	/* add specific product info */
-	ic_type = fu_strsafe((const gchar *)self->static_ts.mask_project_ic_type,
-			     sizeof(self->static_ts.mask_project_ic_type));
-	fu_device_add_instance_str(device, "IC", ic_type);
-
-	if (self->running_bank != BANK_MASK_CODE) {
+	if (self->running_bank != FU_GENESYS_FW_STATUS_MASK) {
 		const gchar *vendor = fwupd_device_get_vendor(FWUPD_DEVICE(device));
-		guint8 portnum = fu_genesys_tsdigit_value(self->dynamic_ts.ss_port_number) << 4 |
-				 fu_genesys_tsdigit_value(self->dynamic_ts.hs_port_number);
 		g_autofree gchar *guid = NULL;
 
-		guid = fwupd_guid_hash_data((const guint8 *)&self->vs_ts,
-					    sizeof(self->vs_ts),
+		guid = fwupd_guid_hash_data((const guint8 *)self->st_vendor_ts->data,
+					    self->st_vendor_ts->len,
 					    FWUPD_GUID_FLAG_NONE);
 		fu_device_add_instance_strup(device, "VENDOR", vendor);
-		fu_device_add_instance_u8(device, "PORTNUM", portnum);
 		fu_device_add_instance_strup(device, "VENDORSUP", guid);
 	}
 
@@ -1646,9 +1584,28 @@ fu_genesys_usbhub_device_init(FuGenesysUsbhubDevice *self)
 }
 
 static void
+fu_genesys_usbhub_device_finalize(GObject *object)
+{
+	FuGenesysUsbhubDevice *self = FU_GENESYS_USBHUB_DEVICE(object);
+	if (self->st_static_ts != NULL)
+		g_byte_array_unref(self->st_static_ts);
+	if (self->st_dynamic_ts != NULL)
+		g_byte_array_unref(self->st_dynamic_ts);
+	if (self->st_fwinfo_ts != NULL)
+		g_byte_array_unref(self->st_fwinfo_ts);
+	if (self->st_vendor_ts != NULL)
+		g_byte_array_unref(self->st_vendor_ts);
+	if (self->cfi_device != NULL)
+		g_object_unref(self->cfi_device);
+	G_OBJECT_CLASS(fu_genesys_usbhub_device_parent_class)->finalize(object);
+}
+
+static void
 fu_genesys_usbhub_device_class_init(FuGenesysUsbhubDeviceClass *klass)
 {
+	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
+	object_class->finalize = fu_genesys_usbhub_device_finalize;
 	klass_device->setup = fu_genesys_usbhub_device_setup;
 	klass_device->dump_firmware = fu_genesys_usbhub_device_dump_firmware;
 	klass_device->prepare_firmware = fu_genesys_usbhub_device_prepare_firmware;
