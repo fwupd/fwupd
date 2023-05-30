@@ -446,6 +446,7 @@ fu_nordic_hid_cfg_channel_add_peers(FuNordicHidCfgChannel *self, GError **error)
 
 	while (cnt++ <= 0xFF) {
 		g_autoptr(FuNordicHidCfgChannel) peer = NULL;
+		g_autoptr(GError) error_peer = NULL;
 
 		if (!fu_nordic_hid_cfg_channel_cmd_send(self,
 							NULL,
@@ -468,8 +469,17 @@ fu_nordic_hid_cfg_channel_add_peers(FuNordicHidCfgChannel *self, GError **error)
 		/* prohibit to close parent's communication descriptor */
 		fu_device_add_internal_flag(FU_DEVICE(peer),
 					    FU_DEVICE_INTERNAL_FLAG_USE_PARENT_FOR_OPEN);
-		/* probe&setup are the part of adding child */
 		fu_device_add_child(FU_DEVICE(self), FU_DEVICE(peer));
+
+		/* remove child that does not support config channel DFU */
+		if (!fu_device_setup(FU_DEVICE(peer), &error_peer)) {
+			g_debug("failed to discover peer 0x%02x: %s",
+				res->data[8],
+				error_peer->message);
+			fu_device_remove_child(FU_DEVICE(self), FU_DEVICE(peer));
+		} else {
+			g_debug("peer 0x%02x discovered", res->data[8]);
+		}
 	}
 
 	g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_BROKEN_PIPE, "too many peers detected");
