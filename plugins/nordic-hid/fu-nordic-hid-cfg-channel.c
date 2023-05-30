@@ -1351,6 +1351,7 @@ fu_nordic_hid_cfg_channel_init(FuNordicHidCfgChannel *self)
 
 	fu_device_set_vendor(FU_DEVICE(self), "Nordic");
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_QUAD);
 	fu_device_add_protocol(FU_DEVICE(self), "com.nordic.hidcfgchannel");
 	fu_device_retry_set_delay(FU_DEVICE(self), FU_NORDIC_HID_CFG_CHANNEL_RETRY_DELAY);
