@@ -996,10 +996,24 @@ static gboolean
 fu_nordic_hid_cfg_channel_setup(FuDevice *device, GError **error)
 {
 	FuNordicHidCfgChannel *self = FU_NORDIC_HID_CFG_CHANNEL(device);
+	g_autoptr(GError) error_local = NULL;
 
-	/* get the board name */
-	if (!fu_nordic_hid_cfg_channel_get_board_name(self, error))
+	/* Get the board name. The first configuration channel operation is used to check if
+	 * hidraw instance supports the protocol. In case of failure, the hidraw instance is ignored
+	 * and predefined error code is returned to suppress warning log. This is needed to properly
+	 * handle hidraw instances that do not handle configuration channel requests. A device may
+	 * not support configuration channel at all (no configuration channel HID feature report).
+	 * The configuration channel requests are handled only by the first HID instance on device
+	 * (other instances reject the configuration channel operations).
+	 */
+	if (!fu_nordic_hid_cfg_channel_get_board_name(self, &error_local)) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "Get board name failed: %s",
+			    error_local->message);
 		return FALSE;
+	}
 	/* detect available modules first */
 	if (!fu_nordic_hid_cfg_channel_get_modinfo(self, error))
 		return FALSE;
