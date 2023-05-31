@@ -471,6 +471,9 @@ fu_nordic_hid_cfg_channel_add_peers(FuNordicHidCfgChannel *self, GError **error)
 					    FU_DEVICE_INTERNAL_FLAG_USE_PARENT_FOR_OPEN);
 		fu_device_add_child(FU_DEVICE(self), FU_DEVICE(peer));
 
+		/* ensure that the general quirk content for Nordic HID devices is applied */
+		fu_device_add_instance_id(FU_DEVICE(peer), "HIDRAW\\VEN_1915");
+
 		/* remove child that does not support config channel DFU */
 		if (!fu_device_setup(FU_DEVICE(peer), &error_peer)) {
 			g_debug("failed to discover peer 0x%02x: %s",
@@ -1294,19 +1297,14 @@ fu_nordic_hid_cfg_channel_set_quirk_kv(FuDevice *device,
 	FuNordicHidCfgChannel *self = FU_NORDIC_HID_CFG_CHANNEL(device);
 
 	if (g_strcmp0(key, "NordicHidBootloader") == 0) {
-		if (g_strcmp0(value, "B0") == 0)
-			self->bl_name = g_strdup("B0");
-		else if (g_strcmp0(value, "MCUBOOT") == 0)
-			self->bl_name = g_strdup("MCUBOOT");
-		else if (g_strcmp0(value, "MCUBOOT+XIP") == 0)
-			self->bl_name = g_strdup("MCUBOOT+XIP");
-		else {
+		if (g_strcmp0(value, "B0") != 0) {
 			g_set_error_literal(error,
 					    G_IO_ERROR,
 					    G_IO_ERROR_INVALID_DATA,
-					    "must be 'B0', 'MCUBOOT' or 'MCUBOOT+XIP'");
+					    "can be only 'B0' in quirk");
 			return FALSE;
 		}
+		self->bl_name = g_strdup(value);
 		return TRUE;
 	}
 
@@ -1318,7 +1316,7 @@ fu_nordic_hid_cfg_channel_set_quirk_kv(FuDevice *device,
 					    "can be only 'default' in quirk");
 			return FALSE;
 		}
-		self->generation = g_strdup("default");
+		self->generation = g_strdup(value);
 		return TRUE;
 	}
 
