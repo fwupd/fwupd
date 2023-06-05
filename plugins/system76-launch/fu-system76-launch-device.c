@@ -11,7 +11,19 @@
 
 #define SYSTEM76_LAUNCH_CMD_VERSION 3
 #define SYSTEM76_LAUNCH_CMD_RESET   6
+#define SYSTEM76_LAUNCH_CMD_SECURITY_SET 21
 #define SYSTEM76_LAUNCH_TIMEOUT	    1000
+
+enum SecurityState {
+	/* Default value, flashing is prevented, cannot be set with CMD_SECURITY_SET */
+	SECURITY_STATE_LOCK = 0,
+	/* Flashing is allowed, cannot be set with CMD_SECURITY_SET */
+	SECURITY_STATE_UNLOCK = 1,
+	/* Flashing will be prevented on the next reboot */
+	SECURITY_STATE_PREPARE_LOCK = 2,
+	/* Flashing will be allowed on the next reboot */
+	SECURITY_STATE_PREPARE_UNLOCK = 3,
+};
 
 struct _FuSystem76LaunchDevice {
 	FuUsbDevice parent_instance;
@@ -19,13 +31,50 @@ struct _FuSystem76LaunchDevice {
 
 G_DEFINE_TYPE(FuSystem76LaunchDevice, fu_system76_launch_device, FU_TYPE_USB_DEVICE)
 
+typedef struct {
+	guint8 *data;
+	gsize len;
+} FuSystem76LaunchDeviceHelper;
+
+static gboolean
+fu_system76_launch_device_response_cb(FuDevice *device, gpointer user_data, GError **error)
+{
+	const guint8 ep_in = 0x82;
+	gsize actual_len = 0;
+	FuSystem76LaunchDeviceHelper *helper = (FuSystem76LaunchDeviceHelper *)user_data;
+
+	/* receive response */
+	if (!g_usb_device_interrupt_transfer(fu_usb_device_get_dev(FU_USB_DEVICE(device)),
+					     ep_in,
+					     helper->data,
+					     helper->len,
+					     &actual_len,
+					     SYSTEM76_LAUNCH_TIMEOUT,
+					     NULL,
+					     error)) {
+		g_prefix_error(error, "failed to read response: ");
+		return FALSE;
+	}
+	if (actual_len < helper->len) {
+		g_set_error(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_INVALID_DATA,
+			    "response truncated: received %" G_GSIZE_FORMAT " bytes",
+			    actual_len);
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
 static gboolean
 fu_system76_launch_device_command(FuDevice *device, guint8 *data, gsize len, GError **error)
 {
 	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(device));
-	const guint8 ep_in = 0x82;
 	const guint8 ep_out = 0x03;
 	gsize actual_len = 0;
+	FuSystem76LaunchDeviceHelper helper = {.data = data, .len = len};
 
 	/* send command */
 	if (!g_usb_device_interrupt_transfer(usb_device,
@@ -47,29 +96,7 @@ fu_system76_launch_device_command(FuDevice *device, guint8 *data, gsize len, GEr
 			    actual_len);
 		return FALSE;
 	}
-
-	/* receive response */
-	if (!g_usb_device_interrupt_transfer(usb_device,
-					     ep_in,
-					     data,
-					     len,
-					     &actual_len,
-					     SYSTEM76_LAUNCH_TIMEOUT,
-					     NULL,
-					     error)) {
-		g_prefix_error(error, "failed to read response: ");
-		return FALSE;
-	}
-	if (actual_len < len) {
-		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
-			    "response truncated: received %" G_GSIZE_FORMAT " bytes",
-			    actual_len);
-		return FALSE;
-	}
-
-	return TRUE;
+	return fu_device_retry(device, fu_system76_launch_device_response_cb, 5, &helper, error);
 }
 
 static gboolean
@@ -122,6 +149,24 @@ fu_system76_launch_device_reset(FuDevice *device, guint8 *rc, GError **error)
 }
 
 static gboolean
+fu_system76_launch_device_security_set(FuDevice *device,
+				       enum SecurityState state,
+				       guint8 *rc,
+				       GError **error)
+{
+	guint8 data[32] = {SYSTEM76_LAUNCH_CMD_SECURITY_SET, 0, state, 0};
+
+	/* execute security set command */
+	if (!fu_system76_launch_device_command(device, data, sizeof(data), error)) {
+		g_prefix_error(error, "failed to execute security set command: ");
+		return FALSE;
+	}
+
+	*rc = data[1];
+	return TRUE;
+}
+
+static gboolean
 fu_system76_launch_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 {
 	guint8 rc = 0x0;
@@ -137,6 +182,13 @@ fu_system76_launch_device_detach(FuDevice *device, FuProgress *progress, GError 
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 		return TRUE;
 	}
+
+	/* notify device of desire to unlock */
+	if (!fu_system76_launch_device_security_set(device,
+						    SECURITY_STATE_PREPARE_UNLOCK,
+						    &rc,
+						    error))
+		return FALSE;
 
 	/* generate a message if not already set */
 	if (fu_device_get_update_message(device) == NULL) {
