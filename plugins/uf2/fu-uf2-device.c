@@ -350,14 +350,18 @@ fu_uf2_device_probe(FuDevice *device, GError **error)
 		pid = g_ascii_strtoull(tmp, NULL, 16);
 	if (pid != 0x0)
 		fu_device_add_instance_u16(device, "PID", pid);
-	tmp = g_udev_device_get_property(udev_device, "ID_FS_UUID");
-	fu_device_add_instance_str(device, "UUID", tmp);
 	if (!fu_device_build_instance_id_quirk(device, error, "USB", "VID", NULL))
 		return FALSE;
 	if (!fu_device_build_instance_id(device, error, "USB", "VID", "PID", NULL))
 		return FALSE;
-	if (!fu_device_build_instance_id(device, error, "USB", "VID", "PID", "UUID", NULL))
-		return FALSE;
+
+	/* only add UUID if it is set */
+	tmp = g_udev_device_get_property(udev_device, "ID_FS_UUID");
+	if (tmp != NULL) {
+		fu_device_add_instance_str(device, "UUID", tmp);
+		if (!fu_device_build_instance_id(device, error, "USB", "VID", "PID", "UUID", NULL))
+			return FALSE;
+	}
 
 	/* vendor-id */
 	if (vid != 0x0) {
