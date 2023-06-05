@@ -30,58 +30,6 @@ typedef struct {
 G_DEFINE_TYPE_WITH_PRIVATE(FuEfiFirmwareSection, fu_efi_firmware_section, FU_TYPE_FIRMWARE)
 #define GET_PRIVATE(o) (fu_efi_firmware_section_get_instance_private(o))
 
-#define FU_EFI_FIRMWARE_SECTION_TYPE_COMPRESSION	   0x01
-#define FU_EFI_FIRMWARE_SECTION_TYPE_GUID_DEFINED	   0x02
-#define FU_EFI_FIRMWARE_SECTION_TYPE_DISPOSABLE		   0x03
-#define FU_EFI_FIRMWARE_SECTION_TYPE_PE32		   0x10
-#define FU_EFI_FIRMWARE_SECTION_TYPE_PIC		   0x11
-#define FU_EFI_FIRMWARE_SECTION_TYPE_TE			   0x12
-#define FU_EFI_FIRMWARE_SECTION_TYPE_DXE_DEPEX		   0x13
-#define FU_EFI_FIRMWARE_SECTION_TYPE_VERSION		   0x14
-#define FU_EFI_FIRMWARE_SECTION_TYPE_USER_INTERFACE	   0x15
-#define FU_EFI_FIRMWARE_SECTION_TYPE_COMPATIBILITY16	   0x16
-#define FU_EFI_FIRMWARE_SECTION_TYPE_VOLUME_IMAGE	   0x17
-#define FU_EFI_FIRMWARE_SECTION_TYPE_FREEFORM_SUBTYPE_GUID 0x18
-#define FU_EFI_FIRMWARE_SECTION_TYPE_RAW		   0x19
-#define FU_EFI_FIRMWARE_SECTION_TYPE_PEI_DEPEX		   0x1B
-#define FU_EFI_FIRMWARE_SECTION_TYPE_MM_DEPEX		   0x1C
-
-static const gchar *
-fu_efi_firmware_section_type_to_string(guint8 type)
-{
-	if (type == FU_EFI_FIRMWARE_SECTION_TYPE_COMPRESSION)
-		return "compression";
-	if (type == FU_EFI_FIRMWARE_SECTION_TYPE_GUID_DEFINED)
-		return "guid-defined";
-	if (type == FU_EFI_FIRMWARE_SECTION_TYPE_DISPOSABLE)
-		return "disposable";
-	if (type == FU_EFI_FIRMWARE_SECTION_TYPE_PE32)
-		return "pe32";
-	if (type == FU_EFI_FIRMWARE_SECTION_TYPE_PIC)
-		return "pic";
-	if (type == FU_EFI_FIRMWARE_SECTION_TYPE_TE)
-		return "te";
-	if (type == FU_EFI_FIRMWARE_SECTION_TYPE_DXE_DEPEX)
-		return "dxe-depex";
-	if (type == FU_EFI_FIRMWARE_SECTION_TYPE_VERSION)
-		return "version";
-	if (type == FU_EFI_FIRMWARE_SECTION_TYPE_USER_INTERFACE)
-		return "user-interface";
-	if (type == FU_EFI_FIRMWARE_SECTION_TYPE_COMPATIBILITY16)
-		return "compatibility16";
-	if (type == FU_EFI_FIRMWARE_SECTION_TYPE_VOLUME_IMAGE)
-		return "volume-image";
-	if (type == FU_EFI_FIRMWARE_SECTION_TYPE_FREEFORM_SUBTYPE_GUID)
-		return "freeform-subtype-guid";
-	if (type == FU_EFI_FIRMWARE_SECTION_TYPE_RAW)
-		return "raw";
-	if (type == FU_EFI_FIRMWARE_SECTION_TYPE_PEI_DEPEX)
-		return "pei-depex";
-	if (type == FU_EFI_FIRMWARE_SECTION_TYPE_MM_DEPEX)
-		return "mm-depex";
-	return NULL;
-}
-
 static void
 fu_efi_firmware_section_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
 {
@@ -95,7 +43,7 @@ fu_efi_firmware_section_export(FuFirmware *firmware, FuFirmwareExportFlags flags
 					  fu_efi_guid_to_name(fu_firmware_get_id(firmware)));
 		fu_xmlb_builder_insert_kv(bn,
 					  "type_name",
-					  fu_efi_firmware_section_type_to_string(priv->type));
+					  fu_efi_section_type_to_string(priv->type));
 	}
 }
 
@@ -130,7 +78,7 @@ fu_efi_firmware_section_parse(FuFirmware *firmware,
 
 	/* name */
 	priv->type = fu_struct_efi_section_get_type(st);
-	if (priv->type == FU_EFI_FIRMWARE_SECTION_TYPE_GUID_DEFINED) {
+	if (priv->type == FU_EFI_SECTION_TYPE_GUID_DEFINED) {
 		g_autofree gchar *guid_str = NULL;
 		g_autoptr(GByteArray) st_def = NULL;
 		st_def = fu_struct_efi_section_guid_defined_parse(buf, bufsz, st->len, error);
@@ -160,14 +108,14 @@ fu_efi_firmware_section_parse(FuFirmware *firmware,
 	fu_firmware_set_bytes(firmware, blob);
 
 	/* nested volume */
-	if (priv->type == FU_EFI_FIRMWARE_SECTION_TYPE_VOLUME_IMAGE) {
+	if (priv->type == FU_EFI_SECTION_TYPE_VOLUME_IMAGE) {
 		g_autoptr(FuFirmware) img = fu_efi_firmware_volume_new();
 		if (!fu_firmware_parse(img, blob, flags | FWUPD_INSTALL_FLAG_NO_SEARCH, error))
 			return FALSE;
 		fu_firmware_add_image(firmware, img);
 
 		/* LZMA */
-	} else if (priv->type == FU_EFI_FIRMWARE_SECTION_TYPE_GUID_DEFINED &&
+	} else if (priv->type == FU_EFI_SECTION_TYPE_GUID_DEFINED &&
 		   g_strcmp0(fu_firmware_get_id(firmware), FU_EFI_FIRMWARE_SECTION_LZMA_COMPRESS) ==
 		       0) {
 		g_autoptr(GBytes) blob_uncomp = NULL;
@@ -198,7 +146,7 @@ fu_efi_firmware_section_write(FuFirmware *firmware, GError **error)
 		return NULL;
 
 	/* header */
-	if (priv->type == FU_EFI_FIRMWARE_SECTION_TYPE_GUID_DEFINED) {
+	if (priv->type == FU_EFI_SECTION_TYPE_GUID_DEFINED) {
 		fwupd_guid_t guid = {0x0};
 		g_autoptr(GByteArray) st_def = fu_struct_efi_section_guid_defined_new();
 		if (!fwupd_guid_from_string(fu_firmware_get_id(firmware),
@@ -238,7 +186,7 @@ static void
 fu_efi_firmware_section_init(FuEfiFirmwareSection *self)
 {
 	FuEfiFirmwareSectionPrivate *priv = GET_PRIVATE(self);
-	priv->type = FU_EFI_FIRMWARE_SECTION_TYPE_RAW;
+	priv->type = FU_EFI_SECTION_TYPE_RAW;
 	//	fu_firmware_set_alignment (FU_FIRMWARE (self), FU_FIRMWARE_ALIGNMENT_8);
 }
 
