@@ -56,6 +56,8 @@ G_DEFINE_TYPE_WITH_PRIVATE(FuEfiFirmwareFile, fu_efi_firmware_file, FU_TYPE_FIRM
 #define FU_EFI_FIRMWARE_FILE_TYPE_MM_CORE_STANDALONE	0x0F
 #define FU_EFI_FIRMWARE_FILE_TYPE_FFS_PAD		0xF0
 
+#define FU_EFI_FIRMWARE_FILE_SIZE_MAX 0x1000000 /* 16 MB */
+
 static const gchar *
 fu_efi_firmware_file_type_to_string(guint8 type)
 {
@@ -253,6 +255,17 @@ fu_efi_firmware_file_write_sections(FuFirmware *firmware, GError **error)
 			return NULL;
 		fu_byte_array_append_bytes(buf, blob);
 		fu_byte_array_align_up(buf, fu_firmware_get_alignment(img), 0xFF);
+
+		/* sanity check */
+		if (buf->len > FU_EFI_FIRMWARE_FILE_SIZE_MAX) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "EFI file too large, 0x%02x > 0x%02x",
+				    (guint)buf->len,
+				    (guint)FU_EFI_FIRMWARE_FILE_SIZE_MAX);
+			return NULL;
+		}
 	}
 
 	/* success */
