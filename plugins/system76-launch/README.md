@@ -4,7 +4,7 @@ title: Plugin: System76 Launch
 
 ## Introduction
 
-This plugin is used to detach the System76 Launch device to DFU mode.
+This plugin is used to detach the System76 Launch device to DFU or UF2 mode.
 
 To switch to bootloader mode a USB packet must be written, as specified by the
 System76 EC protocol.
@@ -17,14 +17,17 @@ These devices use the standard USB DeviceInstanceId values, e.g.
 * `USB\VID_3384&PID_0005&REV_0001`
 * `USB\VID_3384&PID_0006&REV_0001`
 * `USB\VID_3384&PID_0007&REV_0001`
+* `USB\VID_3384&PID_0009&REV_0001`
+* `USB\VID_3384&PID_000A&REV_0001`
+* `USB\VID_3384&PID_000B&REV_0001`
 
 ## Update Behavior
 
 The device usually presents in runtime mode, but on detach re-enumerates with a
-different USB VID and PID in DFU mode. The device is then handled by the `dfu`
-plugin.
+different USB VID and PID in DFU or UF2 mode. The device is then handled by the
+`dfu` or `uf2` plugin.
 
-On DFU attach the device again re-enumerates back to the runtime mode.
+On DFU or UF2 attach the device again re-enumerates back to the runtime mode.
 
 For this reason the `REPLUG_MATCH_GUID` internal device flag is used so that
 the bootloader and runtime modes are treated as the same device.

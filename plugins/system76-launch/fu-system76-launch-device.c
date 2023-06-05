@@ -146,6 +146,9 @@ fu_system76_launch_device_detach(FuDevice *device, FuProgress *progress, GError 
 		case 0x0001: /* launch_1 */
 			unlock_keys = "Fn+Esc";
 			break;
+		case 0x000B: /* thelio_io_2 */
+			unlock_keys = "the Power button";
+			break;
 		default:
 			unlock_keys = "Left Ctrl+Right Ctrl+Esc";
 			break;
@@ -204,6 +207,7 @@ fu_system76_launch_device_init(FuSystem76LaunchDevice *self)
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID);
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_ADD_INSTANCE_ID_REV);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PLAIN);
+	fu_device_add_protocol(FU_DEVICE(self), "com.microsoft.uf2");
 	fu_device_add_protocol(FU_DEVICE(self), "org.usb.dfu");
 	fu_device_retry_set_delay(FU_DEVICE(self), 100);
 	fu_usb_device_add_interface(FU_USB_DEVICE(self), 0x01);
