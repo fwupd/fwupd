@@ -22,6 +22,7 @@
 G_DEFINE_TYPE(FuEfiFirmwareFilesystem, fu_efi_firmware_filesystem, FU_TYPE_FIRMWARE)
 
 #define FU_EFI_FIRMWARE_FILESYSTEM_FILES_MAX 10000
+#define FU_EFI_FIRMWARE_FILESYSTEM_SIZE_MAX  0x10000000 /* 256 MB */
 
 static gboolean
 fu_efi_firmware_filesystem_parse(FuFirmware *firmware,
@@ -109,6 +110,17 @@ fu_efi_firmware_filesystem_write(FuFirmware *firmware, GError **error)
 			return NULL;
 		fu_byte_array_append_bytes(buf, blob);
 		fu_byte_array_align_up(buf, fu_firmware_get_alignment(firmware), 0xFF);
+
+		/* sanity check */
+		if (buf->len > FU_EFI_FIRMWARE_FILESYSTEM_SIZE_MAX) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "EFI filesystem too large, 0x%02x > 0x%02x",
+				    (guint)buf->len,
+				    (guint)FU_EFI_FIRMWARE_FILESYSTEM_SIZE_MAX);
+			return NULL;
+		}
 	}
 
 	/* success */
