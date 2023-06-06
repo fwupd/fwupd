@@ -485,7 +485,7 @@ fu_uefi_device_cleanup_esp(FuDevice *device, GError **error)
 	pattern = g_build_filename(esp_path, "EFI/*/fw/fwupd*.cap", NULL);
 	for (guint i = 0; i < files->len; i++) {
 		const gchar *fn = g_ptr_array_index(files, i);
-		if (fu_path_fnmatch(pattern, fn)) {
+		if (g_pattern_match_simple(pattern, fn)) {
 			g_autoptr(GFile) file = g_file_new_for_path(fn);
 			g_debug("deleting %s", fn);
 			if (!g_file_delete(file, NULL, error))

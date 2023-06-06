@@ -17,7 +17,7 @@
 
 #include "fwupd-error.h"
 
-#include "fu-path-private.h"
+#include "fu-path.h"
 
 /**
  * fu_path_rmtree:
@@ -450,25 +450,6 @@ fu_path_from_kind(FuPathKind path_kind)
 	return NULL;
 }
 
-/**
- * fu_path_fnmatch:
- * @pattern: a glob pattern, e.g. `*foo*`
- * @str: a string to match against the pattern, e.g. `bazfoobar`
- *
- * Matches a string against a glob pattern.
- *
- * Returns: %TRUE if the string matched
- *
- * Since: 1.8.2
- **/
-gboolean
-fu_path_fnmatch(const gchar *pattern, const gchar *str)
-{
-	g_return_val_if_fail(pattern != NULL, FALSE);
-	g_return_val_if_fail(str != NULL, FALSE);
-	return fu_path_fnmatch_impl(pattern, str);
-}
-
 static gint
 fu_path_glob_sort_cb(gconstpointer a, gconstpointer b)
 {
@@ -503,7 +484,7 @@ fu_path_glob(const gchar *directory, const gchar *pattern, GError **error)
 	if (dir == NULL)
 		return NULL;
 	while ((basename = g_dir_read_name(dir)) != NULL) {
-		if (!fu_path_fnmatch(pattern, basename))
+		if (!g_pattern_match_simple(pattern, basename))
 			continue;
 		g_ptr_array_add(files, g_build_filename(directory, basename, NULL));
 	}

@@ -8,7 +8,6 @@
 
 #include "config.h"
 
-#include <fnmatch.h>
 #include <sys/sysctl.h>
 
 #include "fu-common-private.h"
@@ -21,12 +20,6 @@ fu_common_get_block_devices(GError **error)
 		    G_IO_ERROR_NOT_SUPPORTED,
 		    "getting block devices is not supported on Darwin");
 	return NULL;
-}
-
-gboolean
-fu_path_fnmatch_impl(const gchar *pattern, const gchar *str)
-{
-	return fnmatch(pattern, str, FNM_NOESCAPE) == 0;
 }
 
 guint64
