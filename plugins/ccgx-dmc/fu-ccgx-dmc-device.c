@@ -572,12 +572,12 @@ fu_ccgx_dmc_write_firmware(FuDevice *device,
 		/* get interrupt request */
 		if (!fu_ccgx_dmc_device_read_intr_req(self, dmc_int_rqt, error))
 			return FALSE;
+		rqt_data = fu_struct_ccgx_dmc_int_rqt_get_data(dmc_int_rqt, NULL);
 
 		/* fw upgrade request */
 		rqt_opcode = fu_struct_ccgx_dmc_int_rqt_get_opcode(dmc_int_rqt);
 		if (rqt_opcode != FU_CCGX_DMC_INT_OPCODE_FW_UPGRADE_RQT)
 			break;
-		rqt_data = fu_struct_ccgx_dmc_int_rqt_get_data(dmc_int_rqt, NULL);
 		img_index = rqt_data[0];
 		if (img_index >= image_records->len) {
 			g_set_error(error,
