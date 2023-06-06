@@ -1362,6 +1362,8 @@ fu_ccgx_hpi_device_ensure_silicon_id(FuCcgxHpiDevice *self, GError **error)
 		fu_device_add_instance_u16(FU_DEVICE(self), "SID", self->silicon_id);
 	fu_device_build_instance_id_quirk(FU_DEVICE(self), NULL, "CCGX", "SID", NULL);
 
+	g_debug("got silicon ID: 0x%04x", self->silicon_id);
+
 	/* sanity check */
 	if (self->flash_row_size == 0x0 || self->flash_size == 0x0 ||
 	    self->flash_size % self->flash_row_size != 0) {
