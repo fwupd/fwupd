@@ -41,7 +41,7 @@ fu_goodixtp_gtx8_firmware_parse(FuGoodixtpFirmware *self,
 	if (st == NULL)
 		return FALSE;
 	firmware_size = fu_struct_goodix_gtx8_hdr_get_firmware_size(st);
-	if (firmware_size < 6) {
+	if (firmware_size < 6 || firmware_size > G_MAXUINT32 - GTX8_FW_DATA_OFFSET) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_FILE,
