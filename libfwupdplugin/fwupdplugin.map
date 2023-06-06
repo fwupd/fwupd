@@ -987,7 +987,6 @@ LIBFWUPDPLUGIN_1.8.2 {
     fu_oprom_firmware_get_type;
     fu_oprom_firmware_new;
     fu_path_find_program;
-    fu_path_fnmatch;
     fu_path_from_kind;
     fu_path_get_files;
     fu_path_glob;

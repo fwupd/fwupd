@@ -1703,7 +1703,7 @@ fu_engine_require_vercmp(XbNode *req, const gchar *version, FwupdVersionFormat f
 		rc = fu_version_compare(version, version_req, fmt);
 		ret = rc >= 0;
 	} else if (g_strcmp0(tmp, "glob") == 0) {
-		ret = fu_path_fnmatch(version_req, version);
+		ret = g_pattern_match_simple(version_req, version);
 	} else if (g_strcmp0(tmp, "regex") == 0) {
 		ret = g_regex_match_simple(version_req, version, 0, 0);
 	} else {
@@ -6918,7 +6918,7 @@ fu_engine_is_plugin_name_enabled(FuEngine *self, const gchar *name)
 		return TRUE;
 	for (guint i = 0; i < self->plugin_filter->len; i++) {
 		const gchar *name_tmp = g_ptr_array_index(self->plugin_filter, i);
-		if (fu_path_fnmatch(name_tmp, name))
+		if (g_pattern_match_simple(name_tmp, name))
 			return TRUE;
 	}
 	return FALSE;

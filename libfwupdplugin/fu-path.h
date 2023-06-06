@@ -86,8 +86,6 @@ fu_path_glob(const gchar *directory,
 	     const gchar *pattern,
 	     GError **error) G_GNUC_WARN_UNUSED_RESULT;
 gboolean
-fu_path_fnmatch(const gchar *pattern, const gchar *str);
-gboolean
 fu_path_rmtree(const gchar *directory, GError **error) G_GNUC_WARN_UNUSED_RESULT;
 GPtrArray *
 fu_path_get_files(const gchar *path, GError **error) G_GNUC_WARN_UNUSED_RESULT;

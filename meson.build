@@ -347,9 +347,6 @@ endif
 if cc.has_header('poll.h')
   conf.set('HAVE_POLL_H', '1')
 endif
-if cc.has_header('fnmatch.h')
-  conf.set('HAVE_FNMATCH_H', '1')
-endif
 if cc.has_header('kenv.h')
   conf.set('HAVE_KENV_H', '1')
 endif
