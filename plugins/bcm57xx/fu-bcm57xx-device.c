@@ -271,8 +271,15 @@ fu_bcm57xx_device_nvram_check(FuBcm57xxDevice *self, GError **error)
 	}
 	g_debug("FW version %s", drvinfo.fw_version);
 
-	/* sanity check */
-	if (drvinfo.eedump_len != fu_device_get_firmware_size_max(FU_DEVICE(self))) {
+	/* detect more OEM cards */
+	if (drvinfo.eedump_len == fu_device_get_firmware_size_max(FU_DEVICE(self)) * 2) {
+		g_autofree gchar *subsys =
+		    g_strdup_printf("%04X%04X",
+				    fu_udev_device_get_subsystem_vendor(FU_UDEV_DEVICE(self)),
+				    fu_udev_device_get_subsystem_model(FU_UDEV_DEVICE(self)));
+		g_debug("auto-sizing expected EEPROM size for OEM SUBSYS %s", subsys);
+		fu_device_set_firmware_size(FU_DEVICE(self), drvinfo.eedump_len);
+	} else if (drvinfo.eedump_len != fu_device_get_firmware_size_max(FU_DEVICE(self))) {
 		g_set_error(error,
 			    G_IO_ERROR,
 			    G_IO_ERROR_FAILED,
