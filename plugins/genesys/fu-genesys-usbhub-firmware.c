@@ -320,15 +320,17 @@ fu_genesys_usbhub_firmware_write(FuFirmware *firmware, GError **error)
 		return NULL;
 
 	/* static tool string */
-	if (!fu_memcpy_safe(buf->data,
-			    buf->len,
-			    GENESYS_USBHUB_STATIC_TOOL_STRING_OFFSET_GL3523, /* dst */
-			    self->st_static_ts->data,
-			    self->st_static_ts->len,
-			    0x0, /* src */
-			    self->st_static_ts->len,
-			    error))
-		return NULL;
+	if (self->st_static_ts != NULL) {
+		if (!fu_memcpy_safe(buf->data,
+				    buf->len,
+				    GENESYS_USBHUB_STATIC_TOOL_STRING_OFFSET_GL3523, /* dst */
+				    self->st_static_ts->data,
+				    self->st_static_ts->len,
+				    0x0, /* src */
+				    self->st_static_ts->len,
+				    error))
+			return NULL;
+	}
 
 	/* checksum */
 	checksum = fu_sum16(buf->data, code_size - sizeof(checksum));
