@@ -3,6 +3,7 @@
 
 // Tool String Descriptor
 #[repr(u8)]
+#[derive(ToString)]
 enum GenesysTsVersion {
     Dynamic_9Byte = 0x30,
     Bonding,
