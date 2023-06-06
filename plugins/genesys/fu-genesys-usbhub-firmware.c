@@ -361,10 +361,42 @@ fu_genesys_usbhub_firmware_export(FuFirmware *firmware,
 				  XbBuilderNode *bn)
 {
 	FuGenesysUsbhubFirmware *self = FU_GENESYS_USBHUB_FIRMWARE(firmware);
-	g_autofree gchar *static_ts = NULL;
+	if (self->st_static_ts != NULL) {
+		FuGenesysTsVersion tool_string_version =
+		    fu_struct_genesys_ts_static_get_tool_string_version(self->st_static_ts);
+		g_autofree gchar *mask_project_code =
+		    fu_struct_genesys_ts_static_get_mask_project_code(self->st_static_ts);
+		g_autofree gchar *mask_project_hardware =
+		    fu_struct_genesys_ts_static_get_mask_project_hardware(self->st_static_ts);
+		g_autofree gchar *mask_project_firmware =
+		    fu_struct_genesys_ts_static_get_mask_project_firmware(self->st_static_ts);
+		g_autofree gchar *mask_project_ic_type =
+		    fu_struct_genesys_ts_static_get_mask_project_ic_type(self->st_static_ts);
+		g_autofree gchar *running_project_code =
+		    fu_struct_genesys_ts_static_get_mask_project_code(self->st_static_ts);
+		g_autofree gchar *running_project_hardware =
+		    fu_struct_genesys_ts_static_get_running_project_hardware(self->st_static_ts);
+		g_autofree gchar *running_project_firmware =
+		    fu_struct_genesys_ts_static_get_running_project_firmware(self->st_static_ts);
+		g_autofree gchar *running_project_ic_type =
+		    fu_struct_genesys_ts_static_get_running_project_ic_type(self->st_static_ts);
 
-	static_ts = fu_strsafe((const gchar *)self->st_static_ts->data, self->st_static_ts->len);
-	fu_xmlb_builder_insert_kv(bn, "static_ts", static_ts);
+		fu_xmlb_builder_insert_kv(bn,
+					  "tool_string_version",
+					  fu_genesys_ts_version_to_string(tool_string_version));
+		fu_xmlb_builder_insert_kv(bn, "mask_project_code", mask_project_code);
+		if (mask_project_hardware != NULL)
+			mask_project_hardware[0] += 0x10; /* '1' -> 'A'... */
+		fu_xmlb_builder_insert_kv(bn, "mask_project_hardware", mask_project_hardware);
+		fu_xmlb_builder_insert_kv(bn, "mask_project_firmware", mask_project_firmware);
+		fu_xmlb_builder_insert_kv(bn, "mask_project_ic_type", mask_project_ic_type);
+		fu_xmlb_builder_insert_kv(bn, "running_project_code", running_project_code);
+		if (running_project_hardware != NULL)
+			running_project_hardware[0] += 0x10; /* '1' -> 'A'... */
+		fu_xmlb_builder_insert_kv(bn, "running_project_hardware", running_project_hardware);
+		fu_xmlb_builder_insert_kv(bn, "running_project_firmware", running_project_firmware);
+		fu_xmlb_builder_insert_kv(bn, "running_project_ic_type", running_project_ic_type);
+	}
 }
 
 static gboolean
