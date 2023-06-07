@@ -51,6 +51,7 @@ plugins = [
   'fpc',
   'fresco-pd',
   'genesys',
+  'genesys-gl32xx',
   'goodix-moc',
   'goodix-tp',
   'gpio',
