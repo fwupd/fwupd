@@ -322,6 +322,9 @@ endif
 if cc.has_header('sys/socket.h')
   conf.set('HAVE_SOCKET_H', '1')
 endif
+if cc.has_header('scsi/sg.h')
+  conf.set('HAVE_SCSI_SG_H', '1')
+endif
 if cc.has_header('sys/select.h')
   conf.set('HAVE_SELECT_H', '1')
 endif
