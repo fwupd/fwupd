@@ -604,19 +604,15 @@ if build_standalone
   subdir('src')
   subdir('docs')
 
-  # append all the quirks into one big file and gzip it -- lzma is smaller, but needs libxmlb 0.3.3
-  builtin_quirk = custom_target('builtin-quirk',
-    input: plugin_quirks,
-    output: 'builtin.quirk',
-    capture: true,
-    command: ['cat', '@INPUT@'],
-  )
-  gzip = find_program('gzip')
+  # append all the quirks into one big file and gzip it
   custom_target('builtin-quirk-gz',
-    input: builtin_quirk,
+    input: plugin_quirks,
     output: 'builtin.quirk.gz',
-    capture: true,
-    command: [gzip, '-n', '-k', '--stdout', '@INPUT@'],
+    command: [
+      generate_quirk_builtin,
+      '@OUTPUT@',
+      '@INPUT@',
+    ],
     install: true,
     install_dir: join_paths(datadir, 'fwupd', 'quirks.d'),
   )
