@@ -8,10 +8,10 @@
 
 #include "config.h"
 
+#include <fwupd.h>
 #include <glib/gi18n.h>
 
 #include "fwupd-security-attr-private.h"
-#include "fwupd-version.h"
 
 #include "fu-security-attrs-private.h"
 #include "fu-security-attrs.h"
@@ -462,6 +462,237 @@ fu_security_attrs_depsolve(FuSecurityAttrs *self)
 
 	/* sort */
 	g_ptr_array_sort(self->attrs, fu_security_attrs_sort_cb);
+}
+
+static void
+fu_security_attrs_to_json(FuSecurityAttrs *self, JsonBuilder *builder)
+{
+	g_autoptr(GPtrArray) items = NULL;
+
+	json_builder_begin_object(builder);
+	json_builder_set_member_name(builder, "SecurityAttributes");
+	json_builder_begin_array(builder);
+	items = fu_security_attrs_get_all(self);
+	for (guint i = 0; i < items->len; i++) {
+		FwupdSecurityAttr *attr = g_ptr_array_index(items, i);
+		guint64 created = fwupd_security_attr_get_created(attr);
+		json_builder_begin_object(builder);
+		fwupd_security_attr_set_created(attr, 0);
+		fwupd_security_attr_to_json(attr, builder);
+		fwupd_security_attr_set_created(attr, created);
+		json_builder_end_object(builder);
+	}
+	json_builder_end_array(builder);
+	json_builder_end_object(builder);
+}
+
+/**
+ * fu_security_attrs_to_json_string:
+ * @self: a pointer for a FuSecurityAttrs data structure.
+ * @error: (nullable): optional return location for an error
+ *
+ * Convert security attribute to JSON string. e.g.:
+ *    {
+ *      "SecurityAttributes": [
+ *        {
+ *          "name": "aaa",
+ *          "value": "bbb"
+ *        }
+ *      ]
+ *    }
+ *
+ * Returns: (transfer full): JSON string
+ *
+ * Since: 1.9.2
+ */
+gchar *
+fu_security_attrs_to_json_string(FuSecurityAttrs *self, GError **error)
+{
+	g_autofree gchar *data = NULL;
+	g_autoptr(JsonGenerator) json_generator = NULL;
+	g_autoptr(JsonBuilder) builder = json_builder_new();
+	g_autoptr(JsonNode) json_root = NULL;
+
+	g_return_val_if_fail(FU_IS_SECURITY_ATTRS(self), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	fu_security_attrs_to_json(self, builder);
+	json_root = json_builder_get_root(builder);
+	json_generator = json_generator_new();
+	json_generator_set_pretty(json_generator, TRUE);
+	json_generator_set_root(json_generator, json_root);
+	data = json_generator_to_data(json_generator, NULL);
+	if (data == NULL) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "Failed to convert security attribute to json.");
+		return NULL;
+	}
+	return g_steal_pointer(&data);
+}
+
+/**
+ * fu_security_attrs_from_json:
+ * @self: a #FuSecurityAttrs
+ * @json_node: a #JsonNode
+ * @error: (nullable): optional return location for an error
+ *
+ * Imports a JSON node.
+ *
+ * Returns: %TRUE on success
+ *
+ * Since: 1.9.2
+ */
+gboolean
+fu_security_attrs_from_json(FuSecurityAttrs *self, JsonNode *json_node, GError **error)
+{
+	JsonArray *array;
+	JsonObject *obj;
+
+	g_return_val_if_fail(FU_IS_SECURITY_ATTRS(self), FALSE);
+	g_return_val_if_fail(json_node != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	/* sanity check */
+	if (!JSON_NODE_HOLDS_OBJECT(json_node)) {
+		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA, "not JSON object");
+		return FALSE;
+	}
+	obj = json_node_get_object(json_node);
+
+	/* this has to exist */
+	if (!json_object_has_member(obj, "SecurityAttributes")) {
+		g_set_error_literal(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_INVALID_DATA,
+				    "no SecurityAttributes property in object");
+		return FALSE;
+	}
+	array = json_object_get_array_member(obj, "SecurityAttributes");
+	for (guint i = 0; i < json_array_get_length(array); i++) {
+		JsonNode *node_tmp = json_array_get_element(array, i);
+		g_autoptr(FwupdSecurityAttr) attr = fwupd_security_attr_new(NULL);
+		if (!fwupd_security_attr_from_json(attr, node_tmp, error))
+			return FALSE;
+		fu_security_attrs_append(self, attr);
+	}
+
+	/* success */
+	return TRUE;
+}
+
+/**
+ * fu_security_attrs_compare:
+ * @attrs1: a #FuSecurityAttrs
+ * @attrs2: another #FuSecurityAttrs, perhaps newer in some way
+ *
+ * Compares the two objects, returning the differences.
+ *
+ * If the two sets of attrs are considered the same then an empty array is returned.
+ * Only the AppStream ID results are compared, extra metadata is ignored.
+ *
+ * Returns: (element-type FwupdSecurityAttr) (transfer container): differences
+ *
+ * Since: 1.9.2
+ */
+GPtrArray *
+fu_security_attrs_compare(FuSecurityAttrs *attrs1, FuSecurityAttrs *attrs2)
+{
+	g_autoptr(GHashTable) hash1 = g_hash_table_new(g_str_hash, g_str_equal);
+	g_autoptr(GHashTable) hash2 = g_hash_table_new(g_str_hash, g_str_equal);
+	g_autoptr(GPtrArray) array1 = fu_security_attrs_get_all(attrs1);
+	g_autoptr(GPtrArray) array2 = fu_security_attrs_get_all(attrs2);
+	g_autoptr(GPtrArray) results =
+	    g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
+
+	g_return_val_if_fail(FU_IS_SECURITY_ATTRS(attrs1), NULL);
+	g_return_val_if_fail(FU_IS_SECURITY_ATTRS(attrs2), NULL);
+
+	/* create hash tables of appstream-id -> FwupdSecurityAttr */
+	for (guint i = 0; i < array1->len; i++) {
+		FwupdSecurityAttr *attr1 = g_ptr_array_index(array1, i);
+		g_hash_table_insert(hash1,
+				    (gpointer)fwupd_security_attr_get_appstream_id(attr1),
+				    (gpointer)attr1);
+	}
+	for (guint i = 0; i < array2->len; i++) {
+		FwupdSecurityAttr *attr2 = g_ptr_array_index(array2, i);
+		g_hash_table_insert(hash2,
+				    (gpointer)fwupd_security_attr_get_appstream_id(attr2),
+				    (gpointer)attr2);
+	}
+
+	/* present in attrs2, not present in attrs1 */
+	for (guint i = 0; i < array2->len; i++) {
+		FwupdSecurityAttr *attr1;
+		FwupdSecurityAttr *attr2 = g_ptr_array_index(array2, i);
+		attr1 = g_hash_table_lookup(hash1, fwupd_security_attr_get_appstream_id(attr2));
+		if (attr1 == NULL) {
+			g_autoptr(FwupdSecurityAttr) attr = fwupd_security_attr_copy(attr2);
+			g_ptr_array_add(results, g_steal_pointer(&attr));
+			continue;
+		}
+	}
+
+	/* present in attrs1, not present in attrs2 */
+	for (guint i = 0; i < array1->len; i++) {
+		FwupdSecurityAttr *attr1 = g_ptr_array_index(array1, i);
+		FwupdSecurityAttr *attr2;
+		attr2 = g_hash_table_lookup(hash2, fwupd_security_attr_get_appstream_id(attr1));
+		if (attr2 == NULL) {
+			g_autoptr(FwupdSecurityAttr) attr = fwupd_security_attr_copy(attr1);
+			fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_UNKNOWN);
+			fwupd_security_attr_set_result_fallback(
+			    attr, /* flip these around */
+			    fwupd_security_attr_get_result(attr1));
+			g_ptr_array_add(results, g_steal_pointer(&attr));
+			continue;
+		}
+	}
+
+	/* find any attributes that differ */
+	for (guint i = 0; i < array2->len; i++) {
+		FwupdSecurityAttr *attr1;
+		FwupdSecurityAttr *attr2 = g_ptr_array_index(array2, i);
+		attr1 = g_hash_table_lookup(hash1, fwupd_security_attr_get_appstream_id(attr2));
+		if (attr1 == NULL)
+			continue;
+
+		/* result of specific attr differed */
+		if (fwupd_security_attr_get_result(attr1) !=
+		    fwupd_security_attr_get_result(attr2)) {
+			g_autoptr(FwupdSecurityAttr) attr = fwupd_security_attr_copy(attr1);
+			fwupd_security_attr_set_result(attr, fwupd_security_attr_get_result(attr2));
+			fwupd_security_attr_set_result_fallback(
+			    attr,
+			    fwupd_security_attr_get_result(attr1));
+			fwupd_security_attr_set_flags(attr, fwupd_security_attr_get_flags(attr2));
+			g_ptr_array_add(results, g_steal_pointer(&attr));
+		}
+	}
+
+	/* success */
+	return g_steal_pointer(&results);
+}
+
+/**
+ * fu_security_attrs_equal:
+ * @attrs1: a #FuSecurityAttrs
+ * @attrs2: another #FuSecurityAttrs
+ *
+ * Tests the objects for equality. Only the AppStream ID results are compared, extra metadata
+ * is ignored.
+ *
+ * Returns: %TRUE if the set of attrs can be considered equal
+ *
+ * Since: 1.9.2
+ */
+gboolean
+fu_security_attrs_equal(FuSecurityAttrs *attrs1, FuSecurityAttrs *attrs2)
+{
+	g_autoptr(GPtrArray) compare = fu_security_attrs_compare(attrs1, attrs2);
+	return compare->len == 0;
 }
 
 /**

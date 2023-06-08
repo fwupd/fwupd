@@ -4145,70 +4145,6 @@ fu_plugin_composite_func(gconstpointer user_data)
 }
 
 static void
-fu_security_attrs_func(gconstpointer user_data)
-{
-	FwupdSecurityAttr *attr_tmp;
-	g_autoptr(FuSecurityAttrs) attrs1 = fu_security_attrs_new();
-	g_autoptr(FuSecurityAttrs) attrs2 = fu_security_attrs_new();
-	g_autoptr(FwupdSecurityAttr) attr1 = fwupd_security_attr_new("org.fwupd.hsi.foo");
-	g_autoptr(FwupdSecurityAttr) attr2 = fwupd_security_attr_new("org.fwupd.hsi.bar");
-	g_autoptr(FwupdSecurityAttr) attr3 = fwupd_security_attr_new("org.fwupd.hsi.baz");
-	g_autoptr(FwupdSecurityAttr) attr4 = fwupd_security_attr_new("org.fwupd.hsi.baz");
-	g_autoptr(GPtrArray) results = NULL;
-
-	/* attrs1 has foo and baz(enabled) */
-	fwupd_security_attr_set_plugin(attr1, "foo");
-	fwupd_security_attr_set_created(attr1, 0);
-	fwupd_security_attr_set_result(attr1, FWUPD_SECURITY_ATTR_RESULT_ENCRYPTED);
-	fu_security_attrs_append(attrs1, attr1);
-	fwupd_security_attr_set_plugin(attr3, "baz");
-	fwupd_security_attr_set_created(attr3, 0);
-	fwupd_security_attr_set_result(attr3, FWUPD_SECURITY_ATTR_RESULT_ENABLED);
-	fu_security_attrs_append(attrs1, attr3);
-
-	/* attrs2 has bar and baz(~enabled) */
-	fwupd_security_attr_set_plugin(attr2, "bar");
-	fwupd_security_attr_set_created(attr2, 0);
-	fwupd_security_attr_set_result(attr2, FWUPD_SECURITY_ATTR_RESULT_LOCKED);
-	fu_security_attrs_append(attrs2, attr2);
-	fwupd_security_attr_set_plugin(attr4, "baz");
-	fwupd_security_attr_set_created(attr4, 0);
-	fwupd_security_attr_set_result(attr4, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
-	fu_security_attrs_append(attrs2, attr4);
-
-	results = fu_security_attrs_compare(attrs1, attrs2);
-	g_assert_cmpint(results->len, ==, 3);
-	attr_tmp = g_ptr_array_index(results, 0);
-	g_assert_cmpstr(fwupd_security_attr_get_appstream_id(attr_tmp), ==, "org.fwupd.hsi.bar");
-	g_assert_cmpint(fwupd_security_attr_get_result_fallback(attr_tmp),
-			==,
-			FWUPD_SECURITY_ATTR_RESULT_UNKNOWN);
-	g_assert_cmpint(fwupd_security_attr_get_result(attr_tmp),
-			==,
-			FWUPD_SECURITY_ATTR_RESULT_LOCKED);
-	attr_tmp = g_ptr_array_index(results, 1);
-	g_assert_cmpstr(fwupd_security_attr_get_appstream_id(attr_tmp), ==, "org.fwupd.hsi.foo");
-	g_assert_cmpint(fwupd_security_attr_get_result_fallback(attr_tmp),
-			==,
-			FWUPD_SECURITY_ATTR_RESULT_ENCRYPTED);
-	g_assert_cmpint(fwupd_security_attr_get_result(attr_tmp),
-			==,
-			FWUPD_SECURITY_ATTR_RESULT_UNKNOWN);
-	attr_tmp = g_ptr_array_index(results, 2);
-	g_assert_cmpstr(fwupd_security_attr_get_appstream_id(attr_tmp), ==, "org.fwupd.hsi.baz");
-	g_assert_cmpint(fwupd_security_attr_get_result_fallback(attr_tmp),
-			==,
-			FWUPD_SECURITY_ATTR_RESULT_ENABLED);
-	g_assert_cmpint(fwupd_security_attr_get_result(attr_tmp),
-			==,
-			FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
-
-	g_assert_true(fu_security_attrs_equal(attrs1, attrs1));
-	g_assert_false(fu_security_attrs_equal(attrs1, attrs2));
-	g_assert_false(fu_security_attrs_equal(attrs2, attrs1));
-}
-
-static void
 fu_security_attr_func(gconstpointer user_data)
 {
 	gboolean ret;
@@ -5231,7 +5167,6 @@ main(int argc, char **argv)
 	g_test_add_data_func("/fwupd/plugin{module}", self, fu_plugin_module_func);
 	g_test_add_data_func("/fwupd/memcpy", self, fu_memcpy_func);
 	g_test_add_data_func("/fwupd/security-attr", self, fu_security_attr_func);
-	g_test_add_data_func("/fwupd/security-attrs", self, fu_security_attrs_func);
 	g_test_add_data_func("/fwupd/device-list", self, fu_device_list_func);
 	g_test_add_data_func("/fwupd/device-list{delay}", self, fu_device_list_delay_func);
 	g_test_add_data_func("/fwupd/device-list{no-auto-remove-children}",
