@@ -22,7 +22,6 @@
 
 #include "fu-console.h"
 #include "fu-device-private.h"
-#include "fu-security-attr-common.h"
 #include "fu-util-common.h"
 
 #ifdef HAVE_SYSTEMD
@@ -2140,21 +2139,103 @@ fu_util_request_get_message(FwupdRequest *req)
 	return fwupd_request_get_message(req);
 }
 
+static const gchar *
+fu_security_attr_result_to_string(FwupdSecurityAttrResult result)
+{
+	if (result == FWUPD_SECURITY_ATTR_RESULT_VALID) {
+		/* TRANSLATORS: Suffix: the HSI result */
+		return _("Valid");
+	}
+	if (result == FWUPD_SECURITY_ATTR_RESULT_NOT_VALID) {
+		/* TRANSLATORS: Suffix: the HSI result */
+		return _("Invalid");
+	}
+	if (result == FWUPD_SECURITY_ATTR_RESULT_ENABLED) {
+		/* TRANSLATORS: Suffix: the HSI result */
+		return _("Enabled");
+	}
+	if (result == FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED) {
+		/* TRANSLATORS: Suffix: the HSI result */
+		return _("Disabled");
+	}
+	if (result == FWUPD_SECURITY_ATTR_RESULT_LOCKED) {
+		/* TRANSLATORS: Suffix: the HSI result */
+		return _("Locked");
+	}
+	if (result == FWUPD_SECURITY_ATTR_RESULT_NOT_LOCKED) {
+		/* TRANSLATORS: Suffix: the HSI result */
+		return _("Unlocked");
+	}
+	if (result == FWUPD_SECURITY_ATTR_RESULT_ENCRYPTED) {
+		/* TRANSLATORS: Suffix: the HSI result */
+		return _("Encrypted");
+	}
+	if (result == FWUPD_SECURITY_ATTR_RESULT_NOT_ENCRYPTED) {
+		/* TRANSLATORS: Suffix: the HSI result */
+		return _("Unencrypted");
+	}
+	if (result == FWUPD_SECURITY_ATTR_RESULT_TAINTED) {
+		/* TRANSLATORS: Suffix: the HSI result */
+		return _("Tainted");
+	}
+	if (result == FWUPD_SECURITY_ATTR_RESULT_NOT_TAINTED) {
+		/* TRANSLATORS: Suffix: the HSI result */
+		return _("Untainted");
+	}
+	if (result == FWUPD_SECURITY_ATTR_RESULT_FOUND) {
+		/* TRANSLATORS: Suffix: the HSI result */
+		return _("Found");
+	}
+	if (result == FWUPD_SECURITY_ATTR_RESULT_NOT_FOUND) {
+		/* TRANSLATORS: Suffix: the HSI result */
+		return _("Not found");
+	}
+	if (result == FWUPD_SECURITY_ATTR_RESULT_SUPPORTED) {
+		/* TRANSLATORS: Suffix: the HSI result */
+		return _("Supported");
+	}
+	if (result == FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED) {
+		/* TRANSLATORS: Suffix: the HSI result */
+		return _("Not supported");
+	}
+	return NULL;
+}
+
+static const gchar *
+fu_security_attr_get_result(FwupdSecurityAttr *attr)
+{
+	const gchar *tmp;
+
+	/* common case */
+	tmp = fu_security_attr_result_to_string(fwupd_security_attr_get_result(attr));
+	if (tmp != NULL)
+		return tmp;
+
+	/* fallback */
+	if (fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS)) {
+		/* TRANSLATORS: Suffix: the HSI result */
+		return _("OK");
+	}
+
+	/* TRANSLATORS: Suffix: the fallback HSI result */
+	return _("Failed");
+}
+
 static void
 fu_security_attr_append_str(FwupdSecurityAttr *attr,
 			    GString *str,
 			    FuSecurityAttrToStringFlags flags)
 {
-	g_autofree gchar *name = NULL;
+	const gchar *name;
 
 	/* hide obsoletes by default */
 	if (fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_OBSOLETED) &&
 	    (flags & FU_SECURITY_ATTR_TO_STRING_FLAG_SHOW_OBSOLETES) == 0)
 		return;
 
-	name = fu_security_attr_get_name(attr);
+	name = dgettext(GETTEXT_PACKAGE, fwupd_security_attr_get_name(attr));
 	if (name == NULL)
-		name = g_strdup(fwupd_security_attr_get_appstream_id(attr));
+		name = fwupd_security_attr_get_appstream_id(attr);
 	if (fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_OBSOLETED)) {
 		g_string_append(str, "✦ ");
 	} else if (fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS)) {
@@ -2192,7 +2273,7 @@ fu_security_attr_append_str(FwupdSecurityAttr *attr,
 static gchar *
 fu_util_security_event_to_string(FwupdSecurityAttr *attr)
 {
-	g_autofree gchar *name = NULL;
+	const gchar *name;
 	struct {
 		const gchar *appstream_id;
 		FwupdSecurityAttrResult result_old;
@@ -2312,7 +2393,7 @@ fu_util_security_event_to_string(FwupdSecurityAttr *attr)
 
 	/* disappeared */
 	if (fwupd_security_attr_get_result(attr) == FWUPD_SECURITY_ATTR_RESULT_UNKNOWN) {
-		name = fu_security_attr_get_name(attr);
+		name = dgettext(GETTEXT_PACKAGE, fwupd_security_attr_get_name(attr));
 		return g_strdup_printf(
 		    /* TRANSLATORS: %1 refers to some kind of security test, e.g. "SPI BIOS region".
 		       %2 refers to a result value, e.g. "Invalid" */
@@ -2324,7 +2405,7 @@ fu_util_security_event_to_string(FwupdSecurityAttr *attr)
 
 	/* appeared */
 	if (fwupd_security_attr_get_result_fallback(attr) == FWUPD_SECURITY_ATTR_RESULT_UNKNOWN) {
-		name = fu_security_attr_get_name(attr);
+		name = dgettext(GETTEXT_PACKAGE, fwupd_security_attr_get_name(attr));
 		return g_strdup_printf(
 		    /* TRANSLATORS: %1 refers to some kind of security test, e.g. "Encrypted RAM".
 		       %2 refers to a result value, e.g. "Invalid" */
@@ -2334,7 +2415,7 @@ fu_util_security_event_to_string(FwupdSecurityAttr *attr)
 	}
 
 	/* fall back to something sensible */
-	name = fu_security_attr_get_name(attr);
+	name = dgettext(GETTEXT_PACKAGE, fwupd_security_attr_get_name(attr));
 	return g_strdup_printf(
 	    /* TRANSLATORS: %1 refers to some kind of security test, e.g. "UEFI platform key".
 	     * %2 and %3 refer to results value, e.g. "Valid" and "Invalid" */

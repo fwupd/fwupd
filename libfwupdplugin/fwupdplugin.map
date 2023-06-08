@@ -1222,5 +1222,9 @@ LIBFWUPDPLUGIN_1.9.1 {
 LIBFWUPDPLUGIN_1.9.2 {
   global:
     fu_device_replace;
+    fu_security_attrs_compare;
+    fu_security_attrs_equal;
+    fu_security_attrs_from_json;
+    fu_security_attrs_to_json_string;
   local: *;
 } LIBFWUPDPLUGIN_1.9.1;

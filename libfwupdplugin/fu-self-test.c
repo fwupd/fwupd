@@ -3518,6 +3518,71 @@ fu_security_attrs_hsi_func(void)
 	g_assert_cmpstr(hsi9, ==, expected_hsi9);
 	g_clear_object(&attr);
 }
+
+static void
+fu_security_attrs_compare_func(void)
+{
+	FwupdSecurityAttr *attr_tmp;
+	g_autoptr(FuSecurityAttrs) attrs1 = fu_security_attrs_new();
+	g_autoptr(FuSecurityAttrs) attrs2 = fu_security_attrs_new();
+	g_autoptr(FwupdSecurityAttr) attr1 = fwupd_security_attr_new("org.fwupd.hsi.foo");
+	g_autoptr(FwupdSecurityAttr) attr2 = fwupd_security_attr_new("org.fwupd.hsi.bar");
+	g_autoptr(FwupdSecurityAttr) attr3 = fwupd_security_attr_new("org.fwupd.hsi.baz");
+	g_autoptr(FwupdSecurityAttr) attr4 = fwupd_security_attr_new("org.fwupd.hsi.baz");
+	g_autoptr(GPtrArray) results = NULL;
+
+	/* attrs1 has foo and baz(enabled) */
+	fwupd_security_attr_set_plugin(attr1, "foo");
+	fwupd_security_attr_set_created(attr1, 0);
+	fwupd_security_attr_set_result(attr1, FWUPD_SECURITY_ATTR_RESULT_ENCRYPTED);
+	fu_security_attrs_append(attrs1, attr1);
+	fwupd_security_attr_set_plugin(attr3, "baz");
+	fwupd_security_attr_set_created(attr3, 0);
+	fwupd_security_attr_set_result(attr3, FWUPD_SECURITY_ATTR_RESULT_ENABLED);
+	fu_security_attrs_append(attrs1, attr3);
+
+	/* attrs2 has bar and baz(~enabled) */
+	fwupd_security_attr_set_plugin(attr2, "bar");
+	fwupd_security_attr_set_created(attr2, 0);
+	fwupd_security_attr_set_result(attr2, FWUPD_SECURITY_ATTR_RESULT_LOCKED);
+	fu_security_attrs_append(attrs2, attr2);
+	fwupd_security_attr_set_plugin(attr4, "baz");
+	fwupd_security_attr_set_created(attr4, 0);
+	fwupd_security_attr_set_result(attr4, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
+	fu_security_attrs_append(attrs2, attr4);
+
+	results = fu_security_attrs_compare(attrs1, attrs2);
+	g_assert_cmpint(results->len, ==, 3);
+	attr_tmp = g_ptr_array_index(results, 0);
+	g_assert_cmpstr(fwupd_security_attr_get_appstream_id(attr_tmp), ==, "org.fwupd.hsi.bar");
+	g_assert_cmpint(fwupd_security_attr_get_result_fallback(attr_tmp),
+			==,
+			FWUPD_SECURITY_ATTR_RESULT_UNKNOWN);
+	g_assert_cmpint(fwupd_security_attr_get_result(attr_tmp),
+			==,
+			FWUPD_SECURITY_ATTR_RESULT_LOCKED);
+	attr_tmp = g_ptr_array_index(results, 1);
+	g_assert_cmpstr(fwupd_security_attr_get_appstream_id(attr_tmp), ==, "org.fwupd.hsi.foo");
+	g_assert_cmpint(fwupd_security_attr_get_result_fallback(attr_tmp),
+			==,
+			FWUPD_SECURITY_ATTR_RESULT_ENCRYPTED);
+	g_assert_cmpint(fwupd_security_attr_get_result(attr_tmp),
+			==,
+			FWUPD_SECURITY_ATTR_RESULT_UNKNOWN);
+	attr_tmp = g_ptr_array_index(results, 2);
+	g_assert_cmpstr(fwupd_security_attr_get_appstream_id(attr_tmp), ==, "org.fwupd.hsi.baz");
+	g_assert_cmpint(fwupd_security_attr_get_result_fallback(attr_tmp),
+			==,
+			FWUPD_SECURITY_ATTR_RESULT_ENABLED);
+	g_assert_cmpint(fwupd_security_attr_get_result(attr_tmp),
+			==,
+			FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
+
+	g_assert_true(fu_security_attrs_equal(attrs1, attrs1));
+	g_assert_false(fu_security_attrs_equal(attrs1, attrs2));
+	g_assert_false(fu_security_attrs_equal(attrs2, attrs1));
+}
+
 static void
 fu_firmware_builder_round_trip_func(void)
 {
@@ -3977,6 +4042,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/progress{finish}", fu_progress_finish_func);
 	g_test_add_func("/fwupd/bios-attrs{load}", fu_bios_settings_load_func);
 	g_test_add_func("/fwupd/security-attrs{hsi}", fu_security_attrs_hsi_func);
+	g_test_add_func("/fwupd/security-attrs{compare}", fu_security_attrs_compare_func);
 	g_test_add_func("/fwupd/plugin{config}", fu_plugin_config_func);
 	g_test_add_func("/fwupd/plugin{devices}", fu_plugin_devices_func);
 	g_test_add_func("/fwupd/plugin{device-inhibit-children}",
