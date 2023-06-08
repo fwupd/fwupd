@@ -936,6 +936,14 @@
       <package variant="s390x" />
     </distro>
   </dependency>
+  <dependency id="linux-headers">
+    <distro id="fedora">
+      <package variant="x86_64">kernel-headers</package>
+    </distro>
+    <distro id="arch">
+      <package variant="x86_64" />
+    </distro>
+  </dependency>
   <dependency id="lintian">
     <distro id="debian">
       <package variant="x86_64" />

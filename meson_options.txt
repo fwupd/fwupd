@@ -142,6 +142,10 @@ option('plugin_acpi_phat',
     'false': 'disabled',
   },
 )
+option('plugin_amdgpu',
+  type: 'feature',
+  description: 'AMDGPU support',
+)
 option('plugin_android_boot',
   type: 'feature',
   description: 'Android Boot support',
