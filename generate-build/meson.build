@@ -1,5 +1,6 @@
 generate_metainfo = [python3, files('generate-metainfo.py')]
 generate_version_script = [python3, files('generate-version-script.py')]
 generate_plugins_header = [python3, files('generate-plugins-header.py')]
+generate_quirk_builtin = [python3, files('generate-quirk-builtin.py')]
 generate_man = [python3, files('generate-man.py')]
 fix_translations = [python3, files('fix_translations.py')]
