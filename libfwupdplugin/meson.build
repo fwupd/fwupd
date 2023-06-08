@@ -344,8 +344,7 @@ if introspection.allowed()
     input: fwupdplugin_gir[0],
     output: 'fwupdplugin.map',
     command: [
-      python3,
-      join_paths(meson.project_source_root(), 'contrib', 'generate-version-script.py'),
+      generate_version_script,
       'LIBFWUPDPLUGIN',
       '@INPUT@',
       '@OUTPUT@',
