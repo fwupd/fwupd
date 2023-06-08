@@ -227,7 +227,6 @@ fwupdengine = library(
 fwupdtool = executable(
   'fwupdtool',
   fwupdengine_rs,
-  resources_src,
   plugins_hdr,
   export_dynamic: true,
   sources: [
@@ -306,7 +305,6 @@ endif
 executable(
   'fwupd',
   fwupdengine_rs,
-  resources_src,
   plugins_hdr,
   sources: [
     daemon_loader_src,
@@ -344,7 +342,6 @@ if get_option('tests')
   e = executable(
     'fu-self-test',
     fwupdengine_rs,
-    resources_src,
     colorhug_test_firmware,
     hwid_test_firmware,
     multiple_rels_test_firmware,
