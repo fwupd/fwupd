@@ -102,10 +102,19 @@ fwupdutil = library(
   ],
 )
 
-if build_daemon
-install_data(['org.freedesktop.fwupd.xml'],
-  install_dir: join_paths(datadir, 'dbus-1', 'interfaces')
+dbus_interface = custom_target('fwupd-generate-dbus-interface',
+  input : 'org.freedesktop.fwupd.xml',
+  output : 'org.freedesktop.fwupd.xml',
+  command : [
+    generate_dbus_interface,
+    '@INPUT@',
+    '@OUTPUT@',
+  ],
+  install: build_daemon,
+  install_dir: join_paths(datadir, 'dbus-1', 'interfaces'),
 )
+
+if build_daemon
 fwupdmgr = executable(
   'fwupdmgr',
   sources: [
@@ -172,8 +181,8 @@ endif
 resources_src = gnome.compile_resources(
   'fwupd-resources',
   'fwupd.gresource.xml',
-  source_dir: '.',
-  c_name: 'fu'
+  c_name: 'fu',
+  dependencies: [dbus_interface],
 )
 
 # generate a header file that allows us to instantiate the plugins without copy-pasting or
