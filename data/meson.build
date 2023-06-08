@@ -40,8 +40,7 @@ if get_option('metainfo')
     input: 'org.freedesktop.fwupd.metainfo.xml',
     output: 'org.freedesktop.fwupd.metainfo.xml',
     command: [
-      python3,
-      join_paths(meson.project_source_root(), 'contrib', 'generate-metainfo.py'),
+      generate_metainfo,
       '@INPUT@',
       '@OUTPUT@',
     ],

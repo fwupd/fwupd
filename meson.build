@@ -267,7 +267,6 @@ if libgcab.type_name() == 'pkgconfig'
   endif
 endif
 
-generate_man = join_paths(meson.project_source_root(), 'contrib', 'generate-man.py')
 bashcomp = dependency('bash-completion', required: false)
 python3 = import('python').find_installation('python3')
 
@@ -577,6 +576,7 @@ rustgen = generator(python3,
   ],
 )
 
+subdir('generate-build')
 subdir('libfwupd')
 if polkit.found()
   subdir('policy')

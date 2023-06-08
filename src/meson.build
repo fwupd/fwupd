@@ -185,7 +185,7 @@ endforeach
 plugins_hdr = custom_target('fwupd-generate-plugins-header',
   output : 'fu-plugin-builtin.h',
   command : [
-    join_paths(meson.project_source_root(), 'contrib', 'generate-plugins-header.py'),
+    generate_plugins_header,
     '@OUTPUT@',
     meson.project_source_root(),
     ','.join(plugin_names),
