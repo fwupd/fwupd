@@ -141,7 +141,7 @@ fu_wac_module_bluetooth_id6_write_firmware(FuDevice *device,
 				       FU_WAC_MODULE_COMMAND_END,
 				       NULL,
 				       fu_progress_get_child(progress),
-				       FU_WAC_MODULE_COMMIT_TIMEOUT,
+				       0,
 				       error)) {
 		g_prefix_error(error, "wacom bluetooth-id6 module failed to end: ");
 		return FALSE;
@@ -149,6 +149,7 @@ fu_wac_module_bluetooth_id6_write_firmware(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/* success */
+	fu_device_add_flag(fu_device_get_proxy(device), FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	return TRUE;
 }
 
@@ -157,6 +158,7 @@ fu_wac_module_bluetooth_id6_init(FuWacModuleBluetoothId6 *self)
 {
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_set_install_duration(FU_DEVICE(self), 120);
+	fu_device_set_remove_delay(FU_DEVICE(self), 300000);
 }
 
 static void

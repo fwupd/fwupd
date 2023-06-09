@@ -81,9 +81,14 @@ fu_wac_module_refresh_cb(FuDevice *device, gpointer user_data, GError **error)
 {
 	FuWacModule *self = FU_WAC_MODULE(device);
 	FuWacModulePrivate *priv = GET_PRIVATE(self);
+	g_autoptr(GError) error_local = NULL;
 
-	if (!fu_wac_module_refresh(self, error))
+	if (!fu_wac_module_refresh(self, &error_local)) {
+		if (g_error_matches(error_local, G_USB_DEVICE_ERROR, G_USB_DEVICE_ERROR_NO_DEVICE))
+			return TRUE;
+		g_propagate_error(error, g_steal_pointer(&error_local));
 		return FALSE;
+	}
 	if (priv->status != FU_WAC_MODULE_STATUS_OK) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -156,7 +161,7 @@ fu_wac_module_set_feature(FuWacModule *self,
 	/* send to hardware */
 	if (!fu_wac_device_set_feature_report(parent_device,
 					      buf,
-					      len + 3,
+					      sizeof(buf),
 					      FU_HID_DEVICE_FLAG_ALLOW_TRUNC,
 					      error)) {
 		g_prefix_error(error, "failed to set module feature: ");
@@ -164,17 +169,19 @@ fu_wac_module_set_feature(FuWacModule *self,
 	}
 
 	/* wait for hardware */
-	fu_device_sleep(FU_DEVICE(self), 80); /* ms */
-	if (!fu_device_retry_full(FU_DEVICE(self),
-				  fu_wac_module_refresh_cb,
-				  busy_poll_loops,
-				  delay_ms,
-				  NULL,
-				  error)) {
-		g_prefix_error(error,
-			       "failed to set feature %s: ",
-			       fu_wac_module_command_to_string(command));
-		return FALSE;
+	if (busy_poll_loops > 0) {
+		fu_device_sleep(FU_DEVICE(self), 80); /* ms */
+		if (!fu_device_retry_full(FU_DEVICE(self),
+					  fu_wac_module_refresh_cb,
+					  busy_poll_loops,
+					  delay_ms,
+					  NULL,
+					  error)) {
+			g_prefix_error(error,
+				       "failed to set feature %s: ",
+				       fu_wac_module_command_to_string(command));
+			return FALSE;
+		}
 	}
 
 	/* success */
