@@ -33,6 +33,22 @@
     <binary>fwupdtool</binary>
   </provides>
   <releases>
+    <release version="1.8.16" date="2023-06-09">
+      <description>
+        <p>This stable release fixes the following bugs:</p>
+        <ul>
+          <li>Auto-detect the OEM BCM57xx PCI cards with double the available EEPROM</li>
+          <li>Beep the console when waiting for user input</li>
+          <li>Do not assume a file descriptor of zero is invalid</li>
+          <li>Fix high memory usage when writing a carefully crafted EFI filesystem</li>
+          <li>Ignore refresh on a non-download remote to fix old versions of KDE</li>
+          <li>Limit the maximum number of file objects in the EFI filesystem</li>
+          <li>Only add the supported DFU attributes as private flags</li>
+          <li>Show devices with problems in fwupdmgr get-upgrades</li>
+          <li>Update official Intel GPU product names</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.8.15" date="2023-05-12">
       <description>
         <p>This stable release fixes the following bugs:</p>
