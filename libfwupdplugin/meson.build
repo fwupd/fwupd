@@ -257,8 +257,6 @@ library_deps = [
   platform_deps,
 ]
 
-fwupdplugin_mapfile = 'fwupdplugin.map'
-vflag = '-Wl,--version-script,@0@/@1@'.format(meson.current_source_dir(), fwupdplugin_mapfile)
 fwupdplugin = library(
   'fwupdplugin',
   fwupdplugin_structs,
@@ -277,8 +275,6 @@ fwupdplugin = library(
   link_with: [
     fwupd,
   ],
-  link_args: cc.get_supported_link_arguments([vflag]),
-  link_depends: fwupdplugin_mapfile,
   install_dir: libdir_pkg,
   install: true
 )
@@ -331,35 +327,6 @@ if introspection.allowed()
     ],
     install: false
   )
-
-  # Verify the map file is correct -- note we can't actually use the generated
-  # file for two reasons:
-  #
-  #  1. We don't hard depend on GObject Introspection
-  #  2. The map file is required to build the lib that the GIR is built from
-  #
-  # To avoid the circular dep, and to ensure we don't change exported API
-  # accidentally actually check in a version of the version script to git.
-  fwupdplugin_mapfile_target = custom_target('fwupdplugin_mapfile',
-    input: fwupdplugin_gir[0],
-    output: 'fwupdplugin.map',
-    command: [
-      generate_version_script,
-      'LIBFWUPDPLUGIN',
-      '@INPUT@',
-      '@OUTPUT@',
-      '--override', 'fu_chunk_get_type', '1.5.6',
-      '--override', 'fu_srec_firmware_record_get_type', '1.6.1',
-    ],
-  )
-
-  test('fwupdplugin-exported-api', diffcmd,
-       args: [
-        '-urNp',
-        files('fwupdplugin.map'),
-        fwupdplugin_mapfile_target,
-        ],
-      )
 endif
 
 if get_option('tests')
