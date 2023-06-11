@@ -128,11 +128,6 @@ Requires: shared-mime-info
 Recommends: python3
 %endif
 
-Obsoletes: fwupd-sign < 0.1.6
-Obsoletes: libebitdo < 0.7.5-3
-Obsoletes: libdfu < 1.0.0
-Obsoletes: fwupd-labels < 1.1.0-1
-
 Obsoletes: dbxtool < 9
 Provides: dbxtool
 
