@@ -20,15 +20,6 @@ typedef struct {
 } FuGenesysWaitFlashRegisterHelper;
 
 typedef enum {
-	FW_TYPE_HUB,
-	FW_TYPE_INT_PD,
-	FW_TYPE_EXT_PD,
-	FW_TYPE_DEVICE_BRIDGE,
-
-	FW_TYPE_COUNT
-} FuGenesysFw;
-
-typedef enum {
 	ISP_MODEL_UNKNOWN,
 
 	/* hub */
@@ -48,10 +39,12 @@ typedef struct {
 	gint32 revision;
 } FuGenesysChip;
 
-#define GENESYS_USBHUB_FW_SIG_OFFSET	    0xFC
-#define GENESYS_USBHUB_FW_SIG_LEN	    4
-#define GENESYS_USBHUB_FW_SIG_TEXT_HUB	    "XROM"
-#define GENESYS_USBHUB_FW_SIG_TEXT_HUB_SIGN "SROM"
+#define GENESYS_USBHUB_FW_SIG_OFFSET	      0xFC
+#define GENESYS_USBHUB_FW_SIG_LEN	      4
+#define GENESYS_USBHUB_FW_SIG_TEXT_HUB	      "XROM"
+#define GENESYS_USBHUB_FW_SIG_TEXT_HUB_SIGN   "SROM" // not formal usage
+#define GENESYS_USBHUB_FW_SIG_TEXT_DEV_BRIDGE "HOST"
+#define GENESYS_USBHUB_FW_SIG_TEXT_PD	      "PRDY"
 
 #define GENESYS_USBHUB_FW_CONFIGURATION_OFFSET	       0x100
 #define GENESYS_USBHUB_FW_CONFIGURATION_WITHOUT_SERIAL 0x55
