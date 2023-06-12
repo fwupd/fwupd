@@ -508,6 +508,19 @@ fu_uefi_capsule_plugin_is_esp_linux(FuVolume *esp, GError **error)
 	return FALSE;
 }
 
+static gint
+fu_uefi_capsule_plugin_sort_volume_score_cb(gconstpointer a, gconstpointer b, gpointer user_data)
+{
+	GHashTable *esp_scores = (GHashTable *)user_data;
+	guint esp1_score = GPOINTER_TO_UINT(g_hash_table_lookup(esp_scores, *((FuVolume **)a)));
+	guint esp2_score = GPOINTER_TO_UINT(g_hash_table_lookup(esp_scores, *((FuVolume **)b)));
+	if (esp1_score < esp2_score)
+		return 1;
+	if (esp1_score > esp2_score)
+		return -1;
+	return 0;
+}
+
 static FuVolume *
 fu_uefi_capsule_plugin_get_default_esp(FuPlugin *plugin, GError **error)
 {
@@ -517,39 +530,44 @@ fu_uefi_capsule_plugin_get_default_esp(FuPlugin *plugin, GError **error)
 	esp_volumes = fu_context_get_esp_volumes(fu_plugin_get_context(plugin), error);
 	if (esp_volumes == NULL)
 		return NULL;
-	if (esp_volumes->len > 1) {
-		g_autoptr(GString) str = g_string_new(NULL);
-		for (guint i = 0; i < esp_volumes->len; i++) {
-			FuVolume *vol = g_ptr_array_index(esp_volumes, i);
-			if (str->len > 0)
-				g_string_append_c(str, ',');
-			g_string_append(str, fu_volume_get_id(vol));
-		}
-		g_info("more than one ESP possible: %s", str->str);
-	}
 
-	/* we found more than one: lets look for something plausible */
+	/* we found more than one: lets look for the best one */
 	if (esp_volumes->len > 1) {
+		g_autoptr(GString) str = g_string_new("more than one ESP possible:");
+		g_autoptr(GHashTable) esp_scores = g_hash_table_new(g_direct_hash, g_direct_equal);
 		for (guint i = 0; i < esp_volumes->len; i++) {
 			FuVolume *esp = g_ptr_array_index(esp_volumes, i);
+			guint score = 0;
 			g_autoptr(FuDeviceLocker) locker = NULL;
 			g_autoptr(GError) error_local = NULL;
 
+			/* ignore the volume completely if we cannot mount it */
 			locker = fu_volume_locker(esp, &error_local);
 			if (locker == NULL) {
 				g_warning("failed to mount ESP: %s", error_local->message);
 				continue;
 			}
+
+			/* big partitions are better than small partitions */
+			score += fu_volume_get_size(esp) / (1024 * 1024);
+
+			/* prefer linux ESP */
 			if (!fu_uefi_capsule_plugin_is_esp_linux(esp, &error_local)) {
 				g_debug("not a Linux ESP: %s", error_local->message);
-				continue;
+			} else {
+				score += 0x10000;
 			}
-			return g_object_ref(esp);
+			g_hash_table_insert(esp_scores, (gpointer)esp, GUINT_TO_POINTER(score));
 		}
-
-		/* we never found anything plausible */
-		g_warning("more than one ESP possible -- using %s because it is listed first",
-			  fu_volume_get_id(FU_VOLUME(g_ptr_array_index(esp_volumes, 0))));
+		g_ptr_array_sort_with_data(esp_volumes,
+					   fu_uefi_capsule_plugin_sort_volume_score_cb,
+					   esp_scores);
+		for (guint i = 0; i < esp_volumes->len; i++) {
+			FuVolume *esp = g_ptr_array_index(esp_volumes, i);
+			guint score = GPOINTER_TO_UINT(g_hash_table_lookup(esp_scores, esp));
+			g_string_append_printf(str, "\n - 0x%x:\t%s", score, fu_volume_get_id(esp));
+		}
+		g_debug("%s", str->str);
 	}
 
 	/* "success" */

@@ -198,6 +198,31 @@ fu_volume_get_id(FuVolume *self)
 }
 
 /**
+ * fu_volume_get_size:
+ * @self: a @FuVolume
+ *
+ * Gets the size of the block device pointed to by the volume.
+ *
+ * Returns: size in bytes, or 0 on error
+ *
+ * Since: 1.9.3
+ **/
+guint64
+fu_volume_get_size(FuVolume *self)
+{
+	g_autoptr(GVariant) val = NULL;
+
+	g_return_val_if_fail(FU_IS_VOLUME(self), 0);
+
+	if (self->proxy_blk == NULL)
+		return 0;
+	val = g_dbus_proxy_get_cached_property(self->proxy_blk, "Size");
+	if (val == NULL)
+		return 0;
+	return g_variant_get_uint64(val);
+}
+
+/**
  * fu_volume_get_partition_kind:
  * @self: a @FuVolume
  *
