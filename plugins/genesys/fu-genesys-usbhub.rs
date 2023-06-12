@@ -155,3 +155,55 @@ struct GenesysTsVendorSupport {
     version: [char; 2],
     supports: [char; 29],
 }
+
+// Firmware info
+#[derive(ToString)]
+enum GenesysFwCodesign {
+    None,
+    Rsa,
+    Ecdsa,
+}
+
+#[derive(Getters, Validate)]
+struct GenesysFwCodesignInfoRsa {
+    tag_n: u32be: const=0x4E203D20, // 'N = '
+    text_n: [char; 512],
+    end_n: u16be: const=0x0D0A,
+    tag_e: u32be: const=0x45203D20, // 'E = '
+    text_e: [char; 6],
+    end_e: u16be: const=0x0D0A,
+    signature: [u8; 256],
+}
+#[derive(Parse, Validate)]
+struct GenesysFwRsaPublicKeyText {
+    tag_n: u32be: const=0x4E203D20, // 'N = '
+    text_n: [char; 512],
+    end_n: u16be: const=0x0D0A,
+    tag_e: u32be: const=0x45203D20, // 'E = '
+    text_e: [char; 6],
+    end_e: u16be: const=0x0D0A,
+}
+
+#[derive(Getters, Validate)]
+struct GenesysFwCodesignInfoEcdsa {
+    hash: [u8; 32],
+    key: [u8; 64],
+    signature: [u8; 64],
+}
+#[derive(Parse, Validate)]
+struct GenesysFwEcdsaPublicKey {
+    key: [u8; 64],
+}
+
+#[derive(ToString)]
+enum GenesysFwType {
+    Hub, // inside hub start
+    DevBridge,
+    Pd,
+    Codesign, // inside hub end
+    InsideHubCount,
+
+    Scaler, // vendor support start
+
+    Unknown = 0xff,
+}
