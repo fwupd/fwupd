@@ -482,8 +482,8 @@ msgstr "მოწყობილობის განახლებას ა�
 msgid "Device will not re-appear after update completes"
 msgstr "განახლების დასრულების შემდეგ მოწყობილობა აღარ გამოჩნდება"
 
-#. TRANSLATORS: Suffix: the HSI result
 #. TRANSLATORS: Plugin is inactive and not used
+#. TRANSLATORS: Suffix: the HSI result
 msgid "Disabled"
 msgstr "გამორთულია"
 
@@ -531,9 +531,9 @@ msgstr "ჩართვა"
 msgid "Enable firmware update support on supported systems"
 msgstr "მხარდაჭერილ სისტემებზე მიკროკოდის განახლების ჩართვა"
 
-#. TRANSLATORS: Suffix: the HSI result
 #. TRANSLATORS: Plugin is active and in use
 #. TRANSLATORS: if the remote is enabled
+#. TRANSLATORS: Suffix: the HSI result
 msgid "Enabled"
 msgstr "ჩართულია"
 
@@ -589,8 +589,8 @@ msgstr "FILENAME [DEVICE-ID|GUID]"
 msgid "FILENAME [FIRMWARE-TYPE]"
 msgstr "FILENAME [FIRMWARE-TYPE]"
 
-#. TRANSLATORS: Suffix: the fallback HSI result
 #. TRANSLATORS: the update state of the specific device
+#. TRANSLATORS: Suffix: the fallback HSI result
 msgid "Failed"
 msgstr "შეცდომა"
 

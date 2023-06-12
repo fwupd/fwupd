@@ -590,8 +590,8 @@ msgstr "无固件更新可用的设备："
 msgid "Devices with the latest available firmware version:"
 msgstr "固件已是最新的设备："
 
-#. TRANSLATORS: Suffix: the HSI result
 #. TRANSLATORS: Plugin is inactive and not used
+#. TRANSLATORS: Suffix: the HSI result
 msgid "Disabled"
 msgstr "已禁用"
 
@@ -713,9 +713,9 @@ msgstr "£启用新的远程库"
 msgid "Enable this remote?"
 msgstr "要启用此远程源吗？"
 
-#. TRANSLATORS: Suffix: the HSI result
 #. TRANSLATORS: Plugin is active and in use
 #. TRANSLATORS: if the remote is enabled
+#. TRANSLATORS: Suffix: the HSI result
 msgid "Enabled"
 msgstr "已启用"
 
@@ -805,8 +805,8 @@ msgstr "文件名 [固件类型]"
 msgid "FILENAME-SRC FILENAME-DST [FIRMWARE-TYPE-SRC] [FIRMWARE-TYPE-DST]"
 msgstr "源文件名 目标文件名 [源固件类型] [目标固件类型]"
 
-#. TRANSLATORS: Suffix: the fallback HSI result
 #. TRANSLATORS: the update state of the specific device
+#. TRANSLATORS: Suffix: the fallback HSI result
 msgid "Failed"
 msgstr "已失败"
 

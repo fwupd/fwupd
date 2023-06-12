@@ -881,8 +881,8 @@ msgstr "Enheter med den senaste tillgängliga uppdateringen för fast programvar
 msgid "Did not find any devices with matching GUIDs"
 msgstr "Hittade inga enheter med matchande GUID"
 
-#. TRANSLATORS: Suffix: the HSI result
 #. TRANSLATORS: Plugin is inactive and not used
+#. TRANSLATORS: Suffix: the HSI result
 msgid "Disabled"
 msgstr "Inaktiverad"
 
@@ -1047,9 +1047,9 @@ msgstr "Aktivera ny fjärrkälla?"
 msgid "Enable this remote?"
 msgstr "Aktivera denna fjärrkälla?"
 
-#. TRANSLATORS: Suffix: the HSI result
 #. TRANSLATORS: Plugin is active and in use
 #. TRANSLATORS: if the remote is enabled
+#. TRANSLATORS: Suffix: the HSI result
 msgid "Enabled"
 msgstr "Aktiverad"
 
@@ -1162,8 +1162,8 @@ msgstr "FILNAMN-KÄL FILNAMN-MÅL [FAST-PROGRAMVARUTYP-KÄL] [FAST-PROGRAMVARUTY
 msgid "FILENAME|CHECKSUM1[,CHECKSUM2][,CHECKSUM3]"
 msgstr "FILNAMN|KONTROLLSUMMA1[,KONTROLLSUMMA2][,KONTROLLSUMMA3]"
 
-#. TRANSLATORS: Suffix: the fallback HSI result
 #. TRANSLATORS: the update state of the specific device
+#. TRANSLATORS: Suffix: the fallback HSI result
 msgid "Failed"
 msgstr "Misslyckades"
 
@@ -2029,8 +2029,8 @@ msgid "Not approved"
 msgstr "Inte godkänd"
 
 #. TRANSLATORS: error message to tell someone they can't use this feature
-msgid "Not enough data was provided to make an HSI calculation."
-msgstr "För lite data tillhandahölls för att göra en HSI-beräkning."
+msgid "Not enough data was provided by the platform to make an HSI calculation."
+msgstr "För lite data tillhandahölls av plattformen för att göra en HSI-beräkning."
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Not found"
@@ -2938,10 +2938,6 @@ msgstr "Detta verktyg kan endast användas av administratörsanvändaren"
 #. TRANSLATORS: CLI description
 msgid "This tool will read and parse the TPM event log from the system firmware."
 msgstr "Detta verktyg läser och analyserar TPM-händelseloggen från systemets fasta programvara."
-
-#. TRANSLATORS: message to tell someone how to ignore error
-msgid "To ignore this warning, use --force"
-msgstr "Använd --force för att ignorera denna varning"
 
 #. TRANSLATORS: the update state of the specific device
 msgid "Transient failure"

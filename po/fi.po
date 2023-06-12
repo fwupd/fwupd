@@ -689,8 +689,8 @@ msgstr "Laitteet, joille on asennettu uusin versio laiteohjelmistosta:"
 msgid "Did not find any devices with matching GUIDs"
 msgstr "Laitteita ei löytynyt vastaavilla GUID-tunnuksilla"
 
-#. TRANSLATORS: Suffix: the HSI result
 #. TRANSLATORS: Plugin is inactive and not used
+#. TRANSLATORS: Suffix: the HSI result
 msgid "Disabled"
 msgstr "Ei käytössä"
 
@@ -819,9 +819,9 @@ msgstr "Otetaanko uusi lähde käyttöön?"
 msgid "Enable this remote?"
 msgstr "Otetaanko tämä lähde käyttöön?"
 
-#. TRANSLATORS: Suffix: the HSI result
 #. TRANSLATORS: Plugin is active and in use
 #. TRANSLATORS: if the remote is enabled
+#. TRANSLATORS: Suffix: the HSI result
 msgid "Enabled"
 msgstr "Käytössä"
 
@@ -927,8 +927,8 @@ msgstr "TIEDOSTONIMI-LÄHDE TIEDOSTONIMI-KOHDE [LAITEOHJELMISTON-TYYPPI-LÄHDE] 
 msgid "FILENAME|CHECKSUM1[,CHECKSUM2][,CHECKSUM3]"
 msgstr "FILENAME|CHECKSUM1[,CHECKSUM2][,CHECKSUM3]"
 
-#. TRANSLATORS: Suffix: the fallback HSI result
 #. TRANSLATORS: the update state of the specific device
+#. TRANSLATORS: Suffix: the fallback HSI result
 msgid "Failed"
 msgstr "Epäonnistui"
 

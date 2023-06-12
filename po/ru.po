@@ -524,8 +524,8 @@ msgstr "Устройства без доступных обновлений пр
 msgid "Devices with the latest available firmware version:"
 msgstr "Устройства с последней доступной версией прошивки:"
 
-#. TRANSLATORS: Suffix: the HSI result
 #. TRANSLATORS: Plugin is inactive and not used
+#. TRANSLATORS: Suffix: the HSI result
 msgid "Disabled"
 msgstr "Не активировано"
 
@@ -633,9 +633,9 @@ msgstr "Включить новый удалённый репозиторий?"
 msgid "Enable this remote?"
 msgstr "Активировать этот репозиторий?"
 
-#. TRANSLATORS: Suffix: the HSI result
 #. TRANSLATORS: Plugin is active and in use
 #. TRANSLATORS: if the remote is enabled
+#. TRANSLATORS: Suffix: the HSI result
 msgid "Enabled"
 msgstr "Активировано"
 
@@ -693,8 +693,8 @@ msgstr "ФАЙЛ"
 msgid "FILENAME"
 msgstr "ИМЯ_ФАЙЛА"
 
-#. TRANSLATORS: Suffix: the fallback HSI result
 #. TRANSLATORS: the update state of the specific device
+#. TRANSLATORS: Suffix: the fallback HSI result
 msgid "Failed"
 msgstr "Не удалось"
 

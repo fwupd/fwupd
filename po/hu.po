@@ -452,9 +452,9 @@ msgstr "Firmware frissítési támogatás engedélyezése a támogatott rendszer
 msgid "Enable this remote?"
 msgstr "Engedélyezi ezt a távoli tárolót?"
 
-#. TRANSLATORS: Suffix: the HSI result
 #. TRANSLATORS: Plugin is active and in use
 #. TRANSLATORS: if the remote is enabled
+#. TRANSLATORS: Suffix: the HSI result
 msgid "Enabled"
 msgstr "Engedélyezve"
 

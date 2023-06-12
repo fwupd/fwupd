@@ -367,8 +367,8 @@ msgstr "Dispositîfs che no son stâts inzornâts ben:"
 msgid "Devices with no available firmware updates: "
 msgstr "Dispositîfs cence inzornaments firmware disponibii:"
 
-#. TRANSLATORS: Suffix: the HSI result
 #. TRANSLATORS: Plugin is inactive and not used
+#. TRANSLATORS: Suffix: the HSI result
 msgid "Disabled"
 msgstr "Disabilitât"
 
@@ -477,9 +477,9 @@ msgstr "Abilitâ gnove sorzint esterne?"
 msgid "Enable this remote?"
 msgstr "Abilitâ cheste sorzint esterne?"
 
-#. TRANSLATORS: Suffix: the HSI result
 #. TRANSLATORS: Plugin is active and in use
 #. TRANSLATORS: if the remote is enabled
+#. TRANSLATORS: Suffix: the HSI result
 msgid "Enabled"
 msgstr "Abilitât"
 

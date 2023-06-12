@@ -889,8 +889,8 @@ msgstr "Urządzenia z najnowszą dostępną wersją oprogramowania sprzętowego
 msgid "Did not find any devices with matching GUIDs"
 msgstr "Nie odnaleziono żadnych urządzeń o pasujących GUID"
 
-#. TRANSLATORS: Suffix: the HSI result
 #. TRANSLATORS: Plugin is inactive and not used
+#. TRANSLATORS: Suffix: the HSI result
 msgid "Disabled"
 msgstr "Wyłączone"
 
@@ -1051,9 +1051,9 @@ msgstr "Włączyć nowe repozytorium?"
 msgid "Enable this remote?"
 msgstr "Włączyć to repozytorium?"
 
-#. TRANSLATORS: Suffix: the HSI result
 #. TRANSLATORS: Plugin is active and in use
 #. TRANSLATORS: if the remote is enabled
+#. TRANSLATORS: Suffix: the HSI result
 msgid "Enabled"
 msgstr "Włączone"
 
@@ -1163,8 +1163,8 @@ msgstr "NAZWA-PLIKU-ŹRÓDŁOWEGO NAZWA-PLIKU-DOCELOWEGO [TYP-ŹRÓDŁOWEGO-OPRO
 msgid "FILENAME|CHECKSUM1[,CHECKSUM2][,CHECKSUM3]"
 msgstr "NAZWA-PLIKU|SUMA-KONTROLNA1[,SUMA-KONTROLNA2][,SUMA-KONTROLNA3]"
 
-#. TRANSLATORS: Suffix: the fallback HSI result
 #. TRANSLATORS: the update state of the specific device
+#. TRANSLATORS: Suffix: the fallback HSI result
 msgid "Failed"
 msgstr "Nie powiodło się"
 
@@ -1980,8 +1980,8 @@ msgid "Not approved"
 msgstr "Niezatwierdzone"
 
 #. TRANSLATORS: error message to tell someone they can't use this feature
-msgid "Not enough data was provided to make an HSI calculation."
-msgstr "Dostarczono za mało danych, aby wykonać obliczenie HSI."
+msgid "Not enough data was provided by the platform to make an HSI calculation."
+msgstr "Platforma dostarczyła za mało danych, aby wykonać obliczenie HSI."
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Not found"
@@ -2849,10 +2849,6 @@ msgstr "To narzędzie może być używane tylko przez użytkownika root"
 #. TRANSLATORS: CLI description
 msgid "This tool will read and parse the TPM event log from the system firmware."
 msgstr "To narzędzie odczyta i przetworzy dziennik zdarzeń TPM z oprogramowania sprzętowego komputera."
-
-#. TRANSLATORS: message to tell someone how to ignore error
-msgid "To ignore this warning, use --force"
-msgstr "Aby zignorować to ostrzeżenie, należy użyć parametru --force"
 
 #. TRANSLATORS: the update state of the specific device
 msgid "Transient failure"

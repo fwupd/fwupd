@@ -757,8 +757,8 @@ msgstr "Geräte mit der neuesten verfügbaren Firmware-Version:"
 msgid "Did not find any devices with matching GUIDs"
 msgstr "Es wurden keine Geräte mit passenden GUIDs gefunden"
 
-#. TRANSLATORS: Suffix: the HSI result
 #. TRANSLATORS: Plugin is inactive and not used
+#. TRANSLATORS: Suffix: the HSI result
 msgid "Disabled"
 msgstr "Deaktiviert"
 
@@ -903,9 +903,9 @@ msgstr "Neue Gegenstelle aktivieren?"
 msgid "Enable this remote?"
 msgstr "Diese Gegenstelle aktivieren?"
 
-#. TRANSLATORS: Suffix: the HSI result
 #. TRANSLATORS: Plugin is active and in use
 #. TRANSLATORS: if the remote is enabled
+#. TRANSLATORS: Suffix: the HSI result
 msgid "Enabled"
 msgstr "Aktiviert"
 
@@ -1014,8 +1014,8 @@ msgstr "DATEINAME-QUELLE DATEINAME-ZIEL [FIRMWARE-TYP-QUELLE] [FIRMWARE-TYP-ZIEL
 msgid "FILENAME|CHECKSUM1[,CHECKSUM2][,CHECKSUM3]"
 msgstr "DATEINAME|PRÜFSUMME1[,PRÜFSUMME2][,PRÜFSUMME3]"
 
-#. TRANSLATORS: Suffix: the fallback HSI result
 #. TRANSLATORS: the update state of the specific device
+#. TRANSLATORS: Suffix: the fallback HSI result
 msgid "Failed"
 msgstr "Fehlgeschlagen"
 
@@ -1701,10 +1701,6 @@ msgstr "Es wurden keine Aktualisierungen angewendet"
 #. TRANSLATORS: version cannot be installed due to policy
 msgid "Not approved"
 msgstr "Nicht genehmigt"
-
-#. TRANSLATORS: error message to tell someone they can't use this feature
-msgid "Not enough data was provided to make an HSI calculation."
-msgstr "Für eine Berechnung des HSI wurden nicht genügend Daten zur Verfügung gestellt."
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Not found"

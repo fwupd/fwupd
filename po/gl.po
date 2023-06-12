@@ -192,8 +192,8 @@ msgstr "Dispositivo retirado:"
 msgid "Devices that have been updated successfully:"
 msgstr "Dispositivos que foron actualizados con éxito:"
 
-#. TRANSLATORS: Suffix: the HSI result
 #. TRANSLATORS: Plugin is inactive and not used
+#. TRANSLATORS: Suffix: the HSI result
 msgid "Disabled"
 msgstr "Desactivado"
 
@@ -253,9 +253,9 @@ msgstr "Activar a compatibilidade de actualización de firmware nos sistemas adm
 msgid "Enable this remote?"
 msgstr "Desexa activar este remoto?"
 
-#. TRANSLATORS: Suffix: the HSI result
 #. TRANSLATORS: Plugin is active and in use
 #. TRANSLATORS: if the remote is enabled
+#. TRANSLATORS: Suffix: the HSI result
 msgid "Enabled"
 msgstr "Activad"
 
@@ -285,8 +285,8 @@ msgstr "Saír despois dun pequeno atraso"
 msgid "Exit after the engine has loaded"
 msgstr "Saír despois de que se cargue o motor"
 
-#. TRANSLATORS: Suffix: the fallback HSI result
 #. TRANSLATORS: the update state of the specific device
+#. TRANSLATORS: Suffix: the fallback HSI result
 msgid "Failed"
 msgstr "Fallido"
 

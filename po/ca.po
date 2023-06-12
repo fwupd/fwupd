@@ -876,8 +876,8 @@ msgstr "Dispositius amb la versió més recent del microprogramari disponible:"
 msgid "Did not find any devices with matching GUIDs"
 msgstr "No s'ha trobat cap dispositiu amb GUID coincident"
 
-#. TRANSLATORS: Suffix: the HSI result
 #. TRANSLATORS: Plugin is inactive and not used
+#. TRANSLATORS: Suffix: the HSI result
 msgid "Disabled"
 msgstr "Inhabilitada"
 
@@ -1042,9 +1042,9 @@ msgstr "Voleu habilitar el remot nou?"
 msgid "Enable this remote?"
 msgstr "Voleu habilitar aquest remot?"
 
-#. TRANSLATORS: Suffix: the HSI result
 #. TRANSLATORS: Plugin is active and in use
 #. TRANSLATORS: if the remote is enabled
+#. TRANSLATORS: Suffix: the HSI result
 msgid "Enabled"
 msgstr "Habilitat"
 
@@ -1157,8 +1157,8 @@ msgstr "NOM_FITXER_ORIG NOM_FITXER_DEST [TIPUS_MICROPROGRAMARI_ORIG] [TIPUS_MICR
 msgid "FILENAME|CHECKSUM1[,CHECKSUM2][,CHECKSUM3]"
 msgstr "NOM_DE_FITXER|SUMA_DE_VERIFICACIÓ_1[,SUMA_DE_VERIFICACIÓ_2][,SUMA_DE_VERIFICACIÓ_3]"
 
-#. TRANSLATORS: Suffix: the fallback HSI result
 #. TRANSLATORS: the update state of the specific device
+#. TRANSLATORS: Suffix: the fallback HSI result
 msgid "Failed"
 msgstr "Ha fallat"
 
@@ -2024,8 +2024,8 @@ msgid "Not approved"
 msgstr "No aprovada"
 
 #. TRANSLATORS: error message to tell someone they can't use this feature
-msgid "Not enough data was provided to make an HSI calculation."
-msgstr "No s'han proporcionat prou dades per a fer un càlcul HSI."
+msgid "Not enough data was provided by the platform to make an HSI calculation."
+msgstr "La plataforma no ha proporcionat prou dades per a fer un càlcul HSI."
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Not found"
@@ -2933,10 +2933,6 @@ msgstr "Aquesta eina només pot ser usada per l'usuari «root»."
 #. TRANSLATORS: CLI description
 msgid "This tool will read and parse the TPM event log from the system firmware."
 msgstr "Aquesta eina llegirà i analitzarà el registre d'esdeveniments TPM des del microprogramari del sistema."
-
-#. TRANSLATORS: message to tell someone how to ignore error
-msgid "To ignore this warning, use --force"
-msgstr "Per a ignorar aquest avís, useu --force"
 
 #. TRANSLATORS: the update state of the specific device
 msgid "Transient failure"

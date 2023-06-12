@@ -211,9 +211,9 @@ msgstr "對支援的系統啟用韌體更新支援"
 msgid "Enable this remote?"
 msgstr "啟用此遠端站點？"
 
-#. TRANSLATORS: Suffix: the HSI result
 #. TRANSLATORS: Plugin is active and in use
 #. TRANSLATORS: if the remote is enabled
+#. TRANSLATORS: Suffix: the HSI result
 msgid "Enabled"
 msgstr "啟用"
 

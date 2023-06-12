@@ -713,8 +713,8 @@ msgstr "පවතින නවතම ස්ථිරාංග අනුවාද
 msgid "Did not find any devices with matching GUIDs"
 msgstr "ගැළපෙන GUID සහිත උපාංග කිසිවක් සොයා ගත්තේ නැත"
 
-#. TRANSLATORS: Suffix: the HSI result
 #. TRANSLATORS: Plugin is inactive and not used
+#. TRANSLATORS: Suffix: the HSI result
 msgid "Disabled"
 msgstr "අබල කර ඇත"
 
@@ -840,9 +840,9 @@ msgstr "නව දුරස්ථ පාලකය සබල කරන්නද?"
 msgid "Enable this remote?"
 msgstr "මෙම දුරස්ථ පාලකය සබල කරන්නද?"
 
-#. TRANSLATORS: Suffix: the HSI result
 #. TRANSLATORS: Plugin is active and in use
 #. TRANSLATORS: if the remote is enabled
+#. TRANSLATORS: Suffix: the HSI result
 msgid "Enabled"
 msgstr "සබල කර ඇත"
 
@@ -948,8 +948,8 @@ msgstr "FILENAME-SRC FILENAME-DST [FIRMWARE-TYPE-SRC] [FIRMWARE-TYPE-DST]"
 msgid "FILENAME|CHECKSUM1[,CHECKSUM2][,CHECKSUM3]"
 msgstr "FILENAME|CHECKSUM1[,CHECKSUM2][,CHECKSUM3]"
 
-#. TRANSLATORS: Suffix: the fallback HSI result
 #. TRANSLATORS: the update state of the specific device
+#. TRANSLATORS: Suffix: the fallback HSI result
 msgid "Failed"
 msgstr "අසමත් විය"
 

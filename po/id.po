@@ -847,8 +847,8 @@ msgstr "Perangkat dengan versi firmware terbaru yang tersedia:"
 msgid "Did not find any devices with matching GUIDs"
 msgstr "Tidak menemukan perangkat dengan GUID yang cocok"
 
-#. TRANSLATORS: Suffix: the HSI result
 #. TRANSLATORS: Plugin is inactive and not used
+#. TRANSLATORS: Suffix: the HSI result
 msgid "Disabled"
 msgstr "Dinonaktifkan"
 
@@ -1005,9 +1005,9 @@ msgstr "Aktifkan remote baru?"
 msgid "Enable this remote?"
 msgstr "Aktifkan remote ini?"
 
-#. TRANSLATORS: Suffix: the HSI result
 #. TRANSLATORS: Plugin is active and in use
 #. TRANSLATORS: if the remote is enabled
+#. TRANSLATORS: Suffix: the HSI result
 msgid "Enabled"
 msgstr "Difungsikan"
 
@@ -1120,8 +1120,8 @@ msgstr "NAMABERKAS-SRC NAMABERKAS-DST [TIPE-FIRMWARE-SRC] [TIPE-FIRMWARE-DST]"
 msgid "FILENAME|CHECKSUM1[,CHECKSUM2][,CHECKSUM3]"
 msgstr "NAMABERKAS|CHECKSUM1[,CHECKSUM2][,CHECKSUM3]"
 
-#. TRANSLATORS: Suffix: the fallback HSI result
 #. TRANSLATORS: the update state of the specific device
+#. TRANSLATORS: Suffix: the fallback HSI result
 msgid "Failed"
 msgstr "Gagal"
 
@@ -1894,10 +1894,6 @@ msgstr "Tidak ada pembaruan yang diterapkan"
 #. TRANSLATORS: version cannot be installed due to policy
 msgid "Not approved"
 msgstr "Tidak disetujui"
-
-#. TRANSLATORS: error message to tell someone they can't use this feature
-msgid "Not enough data was provided to make an HSI calculation."
-msgstr "Tidak cukup data yang diberikan untuk membuat perhitungan HSI."
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Not found"
@@ -2738,10 +2734,6 @@ msgstr "Alat ini hanya bisa dipakai oleh pengguna root"
 #. TRANSLATORS: CLI description
 msgid "This tool will read and parse the TPM event log from the system firmware."
 msgstr "Alat ini akan membaca dan mengurai log kejadian TPM dari firmware sistem."
-
-#. TRANSLATORS: message to tell someone how to ignore error
-msgid "To ignore this warning, use --force"
-msgstr "Untuk mengabaikan peringatan ini, gunakan --force"
 
 #. TRANSLATORS: the update state of the specific device
 msgid "Transient failure"

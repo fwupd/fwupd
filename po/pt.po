@@ -602,8 +602,8 @@ msgstr "Dispositivos com nenhuma atualização de firmware disponível: "
 msgid "Devices with the latest available firmware version:"
 msgstr "Dispositivos com a versão mais recente do firmware disponível:"
 
-#. TRANSLATORS: Suffix: the HSI result
 #. TRANSLATORS: Plugin is inactive and not used
+#. TRANSLATORS: Suffix: the HSI result
 msgid "Disabled"
 msgstr "Desabilitado"
 
@@ -725,9 +725,9 @@ msgstr "Ativar novo remoto?"
 msgid "Enable this remote?"
 msgstr "Ativar esse remoto?"
 
-#. TRANSLATORS: Suffix: the HSI result
 #. TRANSLATORS: Plugin is active and in use
 #. TRANSLATORS: if the remote is enabled
+#. TRANSLATORS: Suffix: the HSI result
 msgid "Enabled"
 msgstr "Ativado"
 
@@ -817,8 +817,8 @@ msgstr "NOME-DE-FICHEIRO [TIPO-FIRMWARE]"
 msgid "FILENAME-SRC FILENAME-DST [FIRMWARE-TYPE-SRC] [FIRMWARE-TYPE-DST]"
 msgstr "NOME-DE-FICHEIRO-ORIG NOME-DE-FICHEIRO-DEST [TIPO-FIRMWARE-ORIG] [TIPO-FIRMWARE-DEST]"
 
-#. TRANSLATORS: Suffix: the fallback HSI result
 #. TRANSLATORS: the update state of the specific device
+#. TRANSLATORS: Suffix: the fallback HSI result
 msgid "Failed"
 msgstr "Falhou"
 

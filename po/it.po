@@ -751,8 +751,8 @@ msgstr "Dispositivi con l'ultima versione disponibile del firmware:"
 msgid "Did not find any devices with matching GUIDs"
 msgstr "Nessun dispositivo trovato con GUID corrispondenti"
 
-#. TRANSLATORS: Suffix: the HSI result
 #. TRANSLATORS: Plugin is inactive and not used
+#. TRANSLATORS: Suffix: the HSI result
 msgid "Disabled"
 msgstr "Disabilitato"
 
@@ -885,9 +885,9 @@ msgstr "Abilitare il nuovo remoto?"
 msgid "Enable this remote?"
 msgstr "Abilitare questo remoto?"
 
-#. TRANSLATORS: Suffix: the HSI result
 #. TRANSLATORS: Plugin is active and in use
 #. TRANSLATORS: if the remote is enabled
+#. TRANSLATORS: Suffix: the HSI result
 msgid "Enabled"
 msgstr "Abilitato"
 
@@ -993,8 +993,8 @@ msgstr "NOMEFILE-SRC NOMEFILE-DST [TIPO-FIRMWARE-SRC] [TIPO-FIRMWARE-DST]"
 msgid "FILENAME|CHECKSUM1[,CHECKSUM2][,CHECKSUM3]"
 msgstr "NOMEFILE|CHECKSUM1[,CHECKSUM2][,CHECKSUM3]"
 
-#. TRANSLATORS: Suffix: the fallback HSI result
 #. TRANSLATORS: the update state of the specific device
+#. TRANSLATORS: Suffix: the fallback HSI result
 msgid "Failed"
 msgstr "Non riuscito"
 
@@ -1637,10 +1637,6 @@ msgstr "Non è stato applicato alcun aggiornamento"
 #. TRANSLATORS: version cannot be installed due to policy
 msgid "Not approved"
 msgstr "Non approvata"
-
-#. TRANSLATORS: error message to tell someone they can't use this feature
-msgid "Not enough data was provided to make an HSI calculation."
-msgstr "I dati forniti non sono sufficienti per eseguire un calcolo HSI."
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Not found"
@@ -2384,10 +2380,6 @@ msgstr "Questo strumento può essere usato solamente dall'utente root"
 #. TRANSLATORS: CLI description
 msgid "This tool will read and parse the TPM event log from the system firmware."
 msgstr "Questo strumento legge e analizza il registro eventi TPM dal firmware di sistema."
-
-#. TRANSLATORS: message to tell someone how to ignore error
-msgid "To ignore this warning, use --force"
-msgstr "Per ignorare questo avviso, usare --force"
 
 #. TRANSLATORS: the update state of the specific device
 msgid "Transient failure"

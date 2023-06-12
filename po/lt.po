@@ -407,8 +407,8 @@ msgstr "Įrenginiai, kurie nebuvo teisingai atnaujinti:"
 msgid "Devices with no available firmware updates: "
 msgstr "Įrenginiai, neturintys prieinamų programinės aparatinės įrangos atnaujinimų: "
 
-#. TRANSLATORS: Suffix: the HSI result
 #. TRANSLATORS: Plugin is inactive and not used
+#. TRANSLATORS: Suffix: the HSI result
 msgid "Disabled"
 msgstr "Išjungtas"
 
@@ -490,9 +490,9 @@ msgstr "Įjungti programinės aparatinės įrangos atnaujinimo palaikymą palaik
 msgid "Enable this remote?"
 msgstr "Įjungti šią nuotolinę saugyklą?"
 
-#. TRANSLATORS: Suffix: the HSI result
 #. TRANSLATORS: Plugin is active and in use
 #. TRANSLATORS: if the remote is enabled
+#. TRANSLATORS: Suffix: the HSI result
 msgid "Enabled"
 msgstr "Įjungta"
 
@@ -563,8 +563,8 @@ msgstr "FAILO-PAVADINIMAS [ĮRENGINIO-ID|GUID]"
 msgid "FILENAME [FIRMWARE-TYPE]"
 msgstr "FAILO-PAVADINIMAS [PROGRAMINĖS-APARATINĖS-ĮRANGOS-TIPAS]"
 
-#. TRANSLATORS: Suffix: the fallback HSI result
 #. TRANSLATORS: the update state of the specific device
+#. TRANSLATORS: Suffix: the fallback HSI result
 msgid "Failed"
 msgstr "Patyrė nesėkmę"
 

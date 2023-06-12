@@ -267,8 +267,8 @@ msgstr "Périphérique retiré :"
 msgid "Device update method"
 msgstr "Méthode de mise à jour du périphérique"
 
-#. TRANSLATORS: Suffix: the HSI result
 #. TRANSLATORS: Plugin is inactive and not used
+#. TRANSLATORS: Suffix: the HSI result
 msgid "Disabled"
 msgstr "Désactivé"
 
@@ -307,9 +307,9 @@ msgstr "Téléchargement…"
 msgid "Duration"
 msgstr "Durée"
 
-#. TRANSLATORS: Suffix: the HSI result
 #. TRANSLATORS: Plugin is active and in use
 #. TRANSLATORS: if the remote is enabled
+#. TRANSLATORS: Suffix: the HSI result
 msgid "Enabled"
 msgstr "Activé"
 
@@ -347,8 +347,8 @@ msgstr "Quitter après le chargement du moteur"
 msgid "FILE"
 msgstr "FICHIER"
 
-#. TRANSLATORS: Suffix: the fallback HSI result
 #. TRANSLATORS: the update state of the specific device
+#. TRANSLATORS: Suffix: the fallback HSI result
 msgid "Failed"
 msgstr "Échec"
 

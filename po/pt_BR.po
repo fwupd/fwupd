@@ -7,7 +7,7 @@
 # Derek W. Stavis <dekestavis@gmail.com>, 2016
 # Derek W. Stavis <dekestavis@gmail.com>, 2015-2016
 # Rafael Fontenelle <rafaelff@gnome.org>, 2017-2018
-# Rafael Fontenelle <rffontenelle@gmail.com>, 2015-2022
+# Rafael Fontenelle <rffontenelle@gmail.com>, 2015-2023
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
@@ -399,12 +399,20 @@ msgid "Authentication is required to downgrade the firmware on this machine"
 msgstr "Autenticação é necessária para desatualizar a versão do firmware nesta máquina"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to modify BIOS settings"
+msgstr "Autenticação é necessária para modificar as configurações da BIOS"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify a configured remote used for firmware updates"
 msgstr "Autenticação é necessária para modificar um remoto configurado usado para atualizações de firmware"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify daemon configuration"
 msgstr "Autenticação é necessária para modificar uma configuração de daemon"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to read BIOS settings"
+msgstr "Autenticação é necessária para ler as configurações da BIOS"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to set the list of approved firmware"
@@ -441,6 +449,14 @@ msgstr "Relatórios automáticos"
 #. TRANSLATORS: can we JFDI?
 msgid "Automatically upload every time?"
 msgstr "Enviar automaticamente toda vez?"
+
+#. TRANSLATORS: Title: if firmware enforces rollback protection
+msgid "BIOS rollback protection"
+msgstr "Proteção contra reversão da BIOS"
+
+#. TRANSLATORS: description of a BIOS setting
+msgid "BIOS updates delivered via LVFS or Windows Update"
+msgstr "Atualizações do BIOS entregues via LVFS ou Windows Update"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "BUILDER-XML FILENAME-DST"
@@ -509,6 +525,10 @@ msgstr "Verifica se o hash criptográfico corresponde ao firmware"
 #. TRANSLATORS: remote checksum
 msgid "Checksum"
 msgstr "Soma de verificação"
+
+#. TRANSLATORS: get interactive prompt
+msgid "Choose the ESP:"
+msgstr "Escolha a ESP:"
 
 #. TRANSLATORS: command description
 msgid "Clears the results from the last update"
@@ -679,8 +699,8 @@ msgstr "Dispositivos com a versão mais recente do firmware disponível:"
 msgid "Did not find any devices with matching GUIDs"
 msgstr "Não foi encontrado qualquer dispositivo com GUID correspondente"
 
-#. TRANSLATORS: Suffix: the HSI result
 #. TRANSLATORS: Plugin is inactive and not used
+#. TRANSLATORS: Suffix: the HSI result
 msgid "Disabled"
 msgstr "Desabilitado"
 
@@ -794,6 +814,13 @@ msgstr "Duração"
 msgid "ESP specified was not valid"
 msgstr "A ESP especificada não era válida"
 
+#. TRANSLATORS: Title: if we are emulating a different host
+msgid "Emulated host"
+msgstr "Host emulado"
+
+msgid "Enable"
+msgstr "Habilitar"
+
 #. TRANSLATORS: command line option
 msgid "Enable firmware update support on supported systems"
 msgstr "Habilita suporte a atualização de firmware em sistemas suportados"
@@ -806,9 +833,9 @@ msgstr "Habilitar novo remoto?"
 msgid "Enable this remote?"
 msgstr "Habilitar esse remoto?"
 
-#. TRANSLATORS: Suffix: the HSI result
 #. TRANSLATORS: Plugin is active and in use
 #. TRANSLATORS: if the remote is enabled
+#. TRANSLATORS: Suffix: the HSI result
 msgid "Enabled"
 msgstr "Habilitado"
 
@@ -914,8 +941,8 @@ msgstr "NOME-DE-ARQUIVO-ORIG NOME-DE-ARQUIVO-DEST [TIPO-FIRMWARE-ORIG] [TIPO-FIR
 msgid "FILENAME|CHECKSUM1[,CHECKSUM2][,CHECKSUM3]"
 msgstr "NOME-DE-ARQUIVO|SOMA-VERIFICAÇÃO1[,SOMA-VERIFICAÇÃO2][,SOMA-VERIFICAÇÃO3]"
 
-#. TRANSLATORS: Suffix: the fallback HSI result
 #. TRANSLATORS: the update state of the specific device
+#. TRANSLATORS: Suffix: the fallback HSI result
 msgid "Failed"
 msgstr "Falhou"
 
@@ -1002,6 +1029,14 @@ msgstr "Nome de arquivo necessário"
 msgid "Filter with a set of device flags using a ~ prefix to exclude, e.g. 'internal,~needs-reboot'"
 msgstr "Filtra com um conjunto de opções de dispositivo usando um prefixo ~ para excluir, p.ex.  \"internal,~needs-reboot\""
 
+#. TRANSLATORS: Title: firmware refers to the flash chip in the computer
+msgid "Firmware BIOS Descriptor"
+msgstr "Descritor da BIOS do firmware"
+
+#. TRANSLATORS: Title: SPI refers to the flash chip in the computer
+msgid "Firmware BIOS Region"
+msgstr "Região da BIOS do firmware"
+
 #. TRANSLATORS: remote URI
 msgid "Firmware Base URI"
 msgstr "URI base de firmware"
@@ -1017,6 +1052,14 @@ msgstr "Daemon de Atualização de Firmware"
 #. TRANSLATORS: program name
 msgid "Firmware Utility"
 msgstr "Utilitário de Firmware"
+
+#. TRANSLATORS: Title: firmware refers to the flash chip in the computer
+msgid "Firmware Write Protection"
+msgstr "Proteção contra gravação de firmware"
+
+#. TRANSLATORS: Title: firmware refers to the flash chip in the computer
+msgid "Firmware Write Protection Lock"
+msgstr "Bloqueio de proteção contra gravação de firmware"
 
 #. TRANSLATORS: Title: if we can verify the firmware checksums
 msgid "Firmware attestation"
@@ -1099,6 +1142,9 @@ msgctxt "A single GUID"
 msgid "GUID"
 msgstr "GUID"
 
+msgid "Get BIOS settings"
+msgstr "Obter as configurações da BIOS"
+
 #. TRANSLATORS: command description
 msgid "Get all device flags supported by fwupd"
 msgstr "Obtém todas as opções de dispositivo suportadas pelo fwupd"
@@ -1167,6 +1213,11 @@ msgstr "ID de segurança do host:"
 #. * https://en.wikipedia.org/wiki/Input%E2%80%93output_memory_management_unit
 msgid "IOMMU"
 msgstr "IOMMU"
+
+#. TRANSLATORS: Title:
+#. * https://en.wikipedia.org/wiki/Input%E2%80%93output_memory_management_unit
+msgid "IOMMU Protection"
+msgstr "Proteção de IOMMU"
 
 #. TRANSLATORS: HSI event title
 msgid "IOMMU device protection disabled"
@@ -1249,13 +1300,32 @@ msgstr "Intel BootGuard"
 
 #. TRANSLATORS: Title: BootGuard is a trademark from Intel,
 #. * ACM means to verify the integrity of Initial Boot Block
+msgid "Intel BootGuard ACM Protected"
+msgstr "ACM protegido com Intel BootGuard"
+
+#. TRANSLATORS: Title: BootGuard is a trademark from Intel,
+#. * ACM means to verify the integrity of Initial Boot Block
 msgid "Intel BootGuard ACM protected"
 msgstr "ACM protegido com Intel BootGuard"
+
+#. TRANSLATORS: Title: BootGuard is a trademark from Intel,
+#. * error policy is what to do on failure
+msgid "Intel BootGuard Error Policy"
+msgstr "Política de erros da Intel BootGuard"
+
+#. TRANSLATORS: Title: BootGuard is a trademark from Intel
+msgid "Intel BootGuard Fuse"
+msgstr "Fuse de Intel BootGuard"
 
 #. TRANSLATORS: Title: BootGuard is a trademark from Intel,
 #. * OTP = one time programmable
 msgid "Intel BootGuard OTP fuse"
 msgstr "Fuse programável (OTP) do Intel BootGuard"
+
+#. TRANSLATORS: Title: BootGuard is a trademark from Intel,
+#. * verified boot refers to the way the boot process is verified
+msgid "Intel BootGuard Verified Boot"
+msgstr "Inicialização verificada por Intel BootGuard"
 
 #. TRANSLATORS: Title: BootGuard is a trademark from Intel,
 #. * error policy is what to do on failure
@@ -1326,11 +1396,11 @@ msgstr "Kernel está contaminado"
 
 #. TRANSLATORS: HSI event title
 msgid "Kernel lockdown disabled"
-msgstr "Isolamento do kernel desabilitado"
+msgstr "Lockdown do kernel desabilitado"
 
 #. TRANSLATORS: HSI event title
 msgid "Kernel lockdown enabled"
-msgstr "Isolamento do kernel habilitado"
+msgstr "Lockdown do kernel habilitado"
 
 #. TRANSLATORS: keyring type, e.g. GPG or PKCS7
 msgid "Keyring"
@@ -1352,6 +1422,22 @@ msgstr "Menos que um minuto restante"
 msgid "License"
 msgstr "Licença"
 
+#. TRANSLATORS: Title: lockdown is a security mode of the kernel
+msgid "Linux Kernel Lockdown"
+msgstr "Lockdown do kernel Linux"
+
+#. TRANSLATORS: longer description
+msgid "Linux Kernel Lockdown mode prevents administrator (root) accounts from accessing and changing critical parts of system software."
+msgstr "O modo Linux Kernel Lockdown impede que contas de administrador (root) acessem e alterem partes críticas do software do sistema."
+
+#. TRANSLATORS: Title: if it's tainted or not
+msgid "Linux Kernel Verification"
+msgstr "Verificação do kernel Linux"
+
+#. TRANSLATORS: Title: swap space or swap partition
+msgid "Linux Swap"
+msgstr "Swap Linux"
+
 msgid "Linux Vendor Firmware Service (stable firmware)"
 msgstr "Linux Vendor Firmware Service (firmware estável)"
 
@@ -1364,7 +1450,7 @@ msgstr "Kernel Linux"
 
 #. TRANSLATORS: Title: lockdown is a security mode of the kernel
 msgid "Linux kernel lockdown"
-msgstr "Confinamento do kernel Linux"
+msgstr "Lockdown do kernel Linux"
 
 #. TRANSLATORS: Title: swap space or swap partition
 msgid "Linux swap"
@@ -1397,6 +1483,11 @@ msgstr "Bloqueado"
 #. TRANSLATORS: the release urgency
 msgid "Low"
 msgstr "Baixa"
+
+#. TRANSLATORS: Title: MEI = Intel Management Engine, and key refer
+#. * to the private/public key used to secure loading of firmware
+msgid "MEI key manifest"
+msgstr "Manifesto de chave de MEI"
 
 #. TRANSLATORS: Title: MEI = Intel Management Engine
 msgid "MEI manufacturing mode"
@@ -1612,6 +1703,10 @@ msgstr "Efetuar a operação?"
 msgid "Platform Debugging"
 msgstr "Depuração de plataforma"
 
+#. TRANSLATORS: Title: Allows debugging of parts using proprietary hardware
+msgid "Platform debugging"
+msgstr "Depuração da plataforma"
+
 #. TRANSLATORS: 'recovery key' here refers to a code, rather than a physical
 #. metal thing
 msgid "Please ensure you have the volume recovery key before continuing."
@@ -1625,6 +1720,10 @@ msgstr "Por favor, insira um número de 0 a %u: "
 #. TRANSLATORS: Failed to open plugin, hey Arch users
 msgid "Plugin dependencies missing"
 msgstr "Dependências de plugin ausentes"
+
+#. TRANSLATORS: Title: DMA as in https://en.wikipedia.org/wiki/DMA_attack
+msgid "Pre-boot DMA Protection"
+msgstr "Proteção de DMA pré-inicialização"
 
 #. TRANSLATORS: Title: DMA as in https://en.wikipedia.org/wiki/DMA_attack
 msgid "Pre-boot DMA protection"
@@ -1654,6 +1753,10 @@ msgstr "Prioridade"
 
 msgid "Proceed with upload?"
 msgstr "Prosseguir com o envio?"
+
+#. TRANSLATORS: Title: if firmware enforces rollback protection
+msgid "Processor rollback protection"
+msgstr "Proteção contra reversão do processador"
 
 #. TRANSLATORS: a non-free software license
 msgid "Proprietary"
@@ -1749,6 +1852,10 @@ msgstr "URI do relatório"
 #. TRANSLATORS: Has been reported to a metadata server
 msgid "Reported to remote server"
 msgstr "Relatado ao servidor remoto"
+
+#. TRANSLATORS: we asked the user to choose an option and they declined
+msgid "Request canceled"
+msgstr "Solicitação canceladas"
 
 #. TRANSLATORS: the user is using Gentoo/Arch and has screwed something up
 msgid "Required efivarfs filesystem was not found"
@@ -1876,6 +1983,9 @@ msgstr "Volume selecionado"
 msgid "Serial Number"
 msgstr "Número de série"
 
+msgid "Set one or more BIOS settings"
+msgstr "Defina as configurações de uma ou mais BIOS"
+
 #. TRANSLATORS: command line option
 msgid "Set the debugging flag during update"
 msgstr "Define a opção de depuração durante atualização"
@@ -1883,6 +1993,10 @@ msgstr "Define a opção de depuração durante atualização"
 #. TRANSLATORS: firmware approved by the admin
 msgid "Sets the list of approved firmware"
 msgstr "Define a lista de firmwares aprovados"
+
+#. TRANSLATORS: description of a BIOS setting
+msgid "Settings will apply after system reboots"
+msgstr "As configurações serão aplicadas após a reinicialização do sistema"
 
 #. TRANSLATORS: command description
 msgid "Share firmware history with the developers"
@@ -2055,6 +2169,10 @@ msgstr "CPU suportada"
 #. TRANSLATORS: Is found in current metadata
 msgid "Supported on remote server"
 msgstr "Suporte no servidor remoto"
+
+#. TRANSLATORS: Title: sleep state
+msgid "Suspend To RAM"
+msgstr "Suspender para a RAM"
 
 #. TRANSLATORS: Title: a better sleep state
 msgid "Suspend-to-idle"
@@ -2451,6 +2569,10 @@ msgstr "Verificando…"
 #. TRANSLATORS: the detected version number of the dbx
 msgid "Version"
 msgstr "Versão"
+
+#. TRANSLATORS: this is a prefix on the console
+msgid "WARNING"
+msgstr "AVISO"
 
 #. TRANSLATORS: waiting for device to do something
 msgid "Waiting…"

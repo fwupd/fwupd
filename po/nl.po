@@ -565,8 +565,8 @@ msgstr "Apparaten zonder beschikbare firmware-updates:"
 msgid "Devices with the latest available firmware version:"
 msgstr "Apparaten met de nieuwste beschikbare firmware-versie:"
 
-#. TRANSLATORS: Suffix: the HSI result
 #. TRANSLATORS: Plugin is inactive and not used
+#. TRANSLATORS: Suffix: the HSI result
 msgid "Disabled"
 msgstr "Uitgeschakeld"
 
@@ -634,9 +634,9 @@ msgstr "Nieuwe remote inschakelen?"
 msgid "Enable this remote?"
 msgstr "Deze remote inschakelen?"
 
-#. TRANSLATORS: Suffix: the HSI result
 #. TRANSLATORS: Plugin is active and in use
 #. TRANSLATORS: if the remote is enabled
+#. TRANSLATORS: Suffix: the HSI result
 msgid "Enabled"
 msgstr "Ingeschakeld"
 
@@ -692,8 +692,8 @@ msgstr "BESTANDSNAAM APPARAAT-ID"
 msgid "FILENAME [DEVICE-ID|GUID]"
 msgstr "BESTANDSNAAM [APPARAAT-ID|GUID]"
 
-#. TRANSLATORS: Suffix: the fallback HSI result
 #. TRANSLATORS: the update state of the specific device
+#. TRANSLATORS: Suffix: the fallback HSI result
 msgid "Failed"
 msgstr "Mislukt"
 
@@ -1152,10 +1152,6 @@ msgstr "Er zijn geen updates toegepast"
 msgid "Not approved"
 msgstr "Niet goedgekeurd"
 
-#. TRANSLATORS: error message to tell someone they can't use this feature
-msgid "Not enough data was provided to make an HSI calculation."
-msgstr "Er is niet genoeg data opgegeven om een HSI-berekening te maken."
-
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Not found"
 msgstr "Niet gevonden"
@@ -1556,10 +1552,6 @@ msgstr "Dit systeem heeft HSI-runtimeproblemen."
 #. TRANSLATORS: this is instructions on how to improve the HSI security level
 msgid "This system has a low HSI security level."
 msgstr "Dit systeem heeft een laag HSI-beveiligingsniveau."
-
-#. TRANSLATORS: message to tell someone how to ignore error
-msgid "To ignore this warning, use --force"
-msgstr "Om deze waarschuwing te negeren, gebruik --force"
 
 #. TRANSLATORS: item is TRUE
 msgid "True"

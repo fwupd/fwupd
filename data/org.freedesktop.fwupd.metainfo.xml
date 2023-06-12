@@ -33,6 +33,40 @@
     <binary>fwupdtool</binary>
   </provides>
   <releases>
+    <release version="1.9.2" date="2023-06-12">
+      <description>
+        <p>
+          This release adds the following features:
+        </p>
+        <ul>
+          <li>Beep the console when CLI programs are waiting for user input</li>
+          <li>Bump requirements of various dependencies to remove a lot of fallback code</li>
+          <li>Show devices with problems in fwupdmgr get-upgrades</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Auto-detect the BCM57xx OEM PCI cards with double the expected EEPROM</li>
+          <li>Disable ThunderBolt retimer offline mode for some hardware</li>
+          <li>Do not assume a file descriptor of 0 is invalid when updating NVMe hardware</li>
+          <li>Fix discovery of Nordic peripherals connected via the dongle</li>
+          <li>Fix high memory usage when writing some EFI filesystem images</li>
+          <li>Fix USI dock devices with an incorrect factory-set firmware version</li>
+          <li>Ignore a client refresh on a non-download remote to fix old versions of KDE</li>
+          <li>Ignore the immutable flatpak config file file permission being incorrect</li>
+          <li>Limit the number of possible file objects in the EFI filesystem</li>
+          <li>Make the installed size smaller by deduping and filtering assets</li>
+          <li>Only expose --force for security attributes for unsupported builds</li>
+          <li>Require the user to manually replug the USI dock after update has completed</li>
+        </ul>
+        <p>This release adds support for the following hardware:</p>
+        <ul>
+          <li>AVer FONE540</li>
+          <li>Genesys GL3525 USB hubs</li>
+          <li>Goodix Touch controllers</li>
+          <li>Jabra Evolve, Evolve2, Speak2 and Link devices</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.9.1" date="2023-05-13">
       <description>
         <p>

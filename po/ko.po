@@ -867,8 +867,8 @@ msgstr "최신 펌웨어가 설치된 장치:"
 msgid "Did not find any devices with matching GUIDs"
 msgstr "일치하는 GUID 장치를 찾지 못했습니다"
 
-#. TRANSLATORS: Suffix: the HSI result
 #. TRANSLATORS: Plugin is inactive and not used
+#. TRANSLATORS: Suffix: the HSI result
 msgid "Disabled"
 msgstr "비활성화됨"
 
@@ -1033,9 +1033,9 @@ msgstr "새 원격 저장소를 활성화하시겠습니까?"
 msgid "Enable this remote?"
 msgstr "이 원격 저장소를 활성화하시겠습니까?"
 
-#. TRANSLATORS: Suffix: the HSI result
 #. TRANSLATORS: Plugin is active and in use
 #. TRANSLATORS: if the remote is enabled
+#. TRANSLATORS: Suffix: the HSI result
 msgid "Enabled"
 msgstr "활성화됨"
 
@@ -1148,8 +1148,8 @@ msgstr "FILENAME-SRC FILENAME-DST [FIRMWARE-TYPE-SRC] [FIRMWARE-TYPE-DST]"
 msgid "FILENAME|CHECKSUM1[,CHECKSUM2][,CHECKSUM3]"
 msgstr "<파일이름>|<체크섬1>[,<체크섬2>][,<체크섬3>]"
 
-#. TRANSLATORS: Suffix: the fallback HSI result
 #. TRANSLATORS: the update state of the specific device
+#. TRANSLATORS: Suffix: the fallback HSI result
 msgid "Failed"
 msgstr "실패함"
 
@@ -2006,10 +2006,6 @@ msgstr "적용된 업데이트 없음"
 #. TRANSLATORS: version cannot be installed due to policy
 msgid "Not approved"
 msgstr "승인 안함"
-
-#. TRANSLATORS: error message to tell someone they can't use this feature
-msgid "Not enough data was provided to make an HSI calculation."
-msgstr "HSI 계산 값을 산출하기에 불충분한 데이터를 제공했습니다."
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Not found"
@@ -2915,10 +2911,6 @@ msgstr "이 도구는 루트로만 사용할 수 있습니다"
 #. TRANSLATORS: CLI description
 msgid "This tool will read and parse the TPM event log from the system firmware."
 msgstr "이 도구는 시스템 펌웨어에서 TPM 이벤트 로그를 읽어서 해석합니다."
-
-#. TRANSLATORS: message to tell someone how to ignore error
-msgid "To ignore this warning, use --force"
-msgstr "이 경고를 무시하려면 --force 옵션을 사용하십시오"
 
 #. TRANSLATORS: the update state of the specific device
 msgid "Transient failure"
