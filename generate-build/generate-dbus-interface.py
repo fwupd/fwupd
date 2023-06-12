@@ -5,6 +5,7 @@
 #
 # SPDX-License-Identifier: LGPL-2.1+
 
+import sys
 import argparse
 import xml.etree.ElementTree as ET
 
@@ -39,6 +40,13 @@ if __name__ == "__main__":
             _remove_docs(node_method)
         _remove_docs(node)
 
-    ET.indent(tree, space=" ", level=0)
+    try:
+        ET.indent(tree, space=" ", level=0)
+    except AttributeError:
+        print(
+            f"WARNING: indenting of {args.dst} disabled as python is too old",
+            file=sys.stderr,
+        )
+        pass
     with open(args.dst, "wb") as f:
         tree.write(f, encoding="UTF-8", xml_declaration=True)
