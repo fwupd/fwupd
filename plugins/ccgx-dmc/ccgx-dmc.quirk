@@ -24,7 +24,6 @@ Summary = Dock Management Controller Device
 ParentGuid = USB\VID_03F0&PID_0363
 Vendor = HP
 Name = USB-C Dock G5
-CcgxDmcTriggerCode = 0x01
 InstallDuration = 233
 RemoveDelay = 203000
 
@@ -35,7 +34,6 @@ Summary = Dock Management Controller Device
 ParentGuid = USB\VID_03F0&PID_096B
 Vendor = HP
 Name = USB-C/A Universal Dock G2
-CcgxDmcTriggerCode = 0x01
 InstallDuration = 180
 RemoveDelay = 162000
 
@@ -57,7 +55,6 @@ Summary = Dock Management Controller Device
 ParentGuid = USB\VID_03F0&PID_2488
 Vendor = HP
 Name = Thunderbolt Dock G4
-CcgxDmcTriggerCode = 0x01
 InstallDuration = 898
 RemoveDelay = 732000
 
@@ -65,19 +62,16 @@ RemoveDelay = 732000
 [USB\VID_2BEF&PID_9065]
 Plugin = ccgx_dmc
 Summary = Dock Management Controller Device
-CcgxDmcTriggerCode = 0x01
 RemoveDelay = 732000
 
 # Anker Thunderbolt4 Mini Dock
 [USB\VID_291A&PID_8398]
 Plugin = ccgx_dmc
 Summary = Dock Management Controller Device
-CcgxDmcTriggerCode = 0x01
 RemoveDelay = 732000
 
 # Caldigit ElementHub
 [USB\VID_2188&PID_0035]
 Plugin = ccgx_dmc
-CcgxDmcTriggerCode = 0x01
 [USB\VID_2188&PID_0035&CID_05&VER_3.3.1.69]
 CcgxDmcCompositeVersion = 15
