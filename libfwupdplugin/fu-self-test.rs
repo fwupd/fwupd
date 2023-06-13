@@ -19,3 +19,10 @@ struct SelfTest {
     asl_compiler_id: [u8; 4]: padding=0xDF,
     asl_compiler_revision: u32le,
 }
+
+#[derive(New, Validate, Parse, ToString)]
+struct SelfTestWrapped {
+    less: u8,
+    base: SelfTest,
+    more: u8,
+}

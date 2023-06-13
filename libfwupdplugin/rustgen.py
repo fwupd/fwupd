@@ -145,6 +145,7 @@ class StructItem:
         self.element_id: str = ""
         self.type: Type = Type.U8
         self.enum_obj: Optional[EnumObj] = None
+        self.struct_obj: Optional[StructObj] = None
         self.default: Optional[str] = None
         self.constant: Optional[str] = None
         self.padding: Optional[str] = None
@@ -298,7 +299,9 @@ class StructItem:
         self.default = self._parse_default(val)
         self.constant = self.default
 
-    def parse_type(self, val: str, enum_objs: Dict[str, EnumObj]) -> None:
+    def parse_type(
+        self, val: str, enum_objs: Dict[str, EnumObj], struct_objs: Dict[str, StructObj]
+    ) -> None:
 
         # is array
         if val.startswith("[") and val.endswith("]"):
@@ -306,6 +309,13 @@ class StructItem:
             self.multiplier = int(multiplier)
         else:
             typestr = val
+
+        # nested struct
+        if typestr in struct_objs:
+            self.struct_obj = struct_objs[typestr]
+            self.multiplier = self.struct_obj.size
+            self.type = Type.U8
+            return
 
         # find the type
         if typestr in enum_objs:
@@ -440,10 +450,16 @@ class Generator:
                         if item.constant == "$struct_size":
                             item.constant = str(offset)
 
-                        # require the enum ToString if parsing the struct
+                        # require other derives as deps
                         if "Parse" in struct_cur.derives and item.enum_obj:
                             if "ToString" not in item.enum_obj.derives:
                                 item.enum_obj._exports["ToString"] = Export.PRIVATE
+                        if "Parse" in struct_cur.derives and item.struct_obj:
+                            if "Validate" not in item.struct_obj.derives:
+                                item.struct_obj._exports["Validate"] = Export.PRIVATE
+                        if "New" in struct_cur.derives and item.struct_obj:
+                            if "New" not in item.struct_obj.derives:
+                                item.struct_obj._exports["New"] = Export.PRIVATE
                 struct_cur = None
                 enum_cur = None
                 repr_type = None
@@ -475,7 +491,9 @@ class Generator:
                 item = StructItem(struct_cur)
                 item.offset = offset
                 item.element_id = parts[0]
-                item.parse_type(parts[1], enum_objs=self.enum_objs)
+                item.parse_type(
+                    parts[1], enum_objs=self.enum_objs, struct_objs=self.struct_objs
+                )
                 for part in parts[2:]:
                     try:
                         key, value = tuple(part.split("=", maxsplit=1))

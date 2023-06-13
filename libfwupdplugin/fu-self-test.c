@@ -4005,6 +4005,80 @@ fu_plugin_struct_func(void)
 	g_assert_false(ret);
 }
 
+static void
+fu_plugin_struct_wrapped_func(void)
+{
+	gboolean ret;
+	g_autofree gchar *str1 = NULL;
+	g_autofree gchar *str2 = NULL;
+	g_autofree gchar *str3 = NULL;
+	g_autofree gchar *str4 = NULL;
+	g_autoptr(GByteArray) st2 = NULL;
+	g_autoptr(GByteArray) st3 = NULL;
+	g_autoptr(GByteArray) st_base2 = NULL;
+	g_autoptr(GByteArray) st_base = fu_struct_self_test_new();
+	g_autoptr(GByteArray) st = fu_struct_self_test_wrapped_new();
+	g_autoptr(GError) error = NULL;
+
+	/* size */
+	g_assert_cmpint(st->len, ==, 53);
+
+	/* getters and setters */
+	fu_struct_self_test_wrapped_set_less(st, 0x99);
+	fu_struct_self_test_wrapped_set_more(st, 0x12);
+	g_assert_cmpint(fu_struct_self_test_wrapped_get_more(st), ==, 0x12);
+	str1 = fu_byte_array_to_string(st);
+	g_assert_cmpstr(str1,
+			==,
+			"991234567833000000000000000000000000000000000000000041424344454600000000"
+			"0000000000000000dfdfdfdf0000000012");
+
+	/* modify the base */
+	fu_struct_self_test_set_revision(st_base, 0xFE);
+	ret = fu_struct_self_test_wrapped_set_base(st, st_base, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	str4 = fu_byte_array_to_string(st);
+	g_assert_cmpstr(str4,
+			==,
+			"991234567833000000fe0000000000000000000000000000000041424344454600000000"
+			"0000000000000000dfdfdfdf0000000012");
+
+	/* parse */
+	st2 = fu_struct_self_test_wrapped_parse(st->data, st->len, 0x0, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(st2);
+	g_assert_cmpint(fu_struct_self_test_wrapped_get_more(st), ==, 0x12);
+	st_base2 = fu_struct_self_test_wrapped_get_base(st);
+	g_assert_cmpint(fu_struct_self_test_get_revision(st_base2), ==, 0xFE);
+
+	/* to string */
+	str2 = fu_struct_self_test_wrapped_to_string(st);
+	g_assert_cmpstr(str2,
+			==,
+			"SelfTestWrapped:\n"
+			"  less: 0x99\n"
+			"  base: SelfTest:\n"
+			"  length: 0x33\n"
+			"  revision: 0xfe [(null)]\n"
+			"  owner: 00000000-0000-0000-0000-000000000000\n"
+			"  oem_table_id: (null)\n"
+			"  oem_revision: 0x0\n"
+			"  asl_compiler_id: 0xDFDFDFDF\n"
+			"  asl_compiler_revision: 0x0\n"
+			"  more: 0x12");
+
+	/* parse failing signature */
+	st->data[FU_STRUCT_SELF_TEST_WRAPPED_OFFSET_BASE] = 0xFF;
+	st3 = fu_struct_self_test_wrapped_parse(st->data, st->len, 0x0, &error);
+	g_assert_error(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA);
+	g_assert_null(st3);
+	g_clear_error(&error);
+	ret = fu_struct_self_test_wrapped_validate(st->data, st->len, 0x0, &error);
+	g_assert_error(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA);
+	g_assert_false(ret);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -4030,6 +4104,7 @@ main(int argc, char **argv)
 	(void)g_setenv("FWUPD_PROFILE", "1", TRUE);
 
 	g_test_add_func("/fwupd/struct", fu_plugin_struct_func);
+	g_test_add_func("/fwupd/struct{wrapped}", fu_plugin_struct_wrapped_func);
 	g_test_add_func("/fwupd/plugin{quirks-append}", fu_plugin_quirks_append_func);
 	g_test_add_func("/fwupd/common{strnsplit}", fu_strsplit_func);
 	g_test_add_func("/fwupd/common{memmem}", fu_common_memmem_func);
