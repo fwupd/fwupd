@@ -895,6 +895,7 @@ The struct types currently supported are:
 - `char`: a `NUL`-terminated string
 - `Guid`: a GUID
 - Any `enum` created in the `.rs` file with `#[repr(type)]`
+- Any `struct` previously created in the `.rs` file
 
 Arrays of types are also allowed, with the format `[type; multiple]`, for example:
 

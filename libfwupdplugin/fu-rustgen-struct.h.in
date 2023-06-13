@@ -15,6 +15,8 @@ gchar *{{obj.c_method('ToString')}}(GByteArray *st);
 {%- if item.export('Getters') == Export.PUBLIC %}
 {%- if item.type == Type.STRING %}
 gchar *{{item.c_getter}}(GByteArray *st);
+{%- elif item.struct_obj %}
+GByteArray *{{item.c_getter}}(GByteArray *st);
 {%- elif item.type == Type.U8 and item.multiplier %}
 const guint8 *{{item.c_getter}}(GByteArray *st, gsize *bufsz);
 {%- elif item.type == Type.GUID %}
@@ -29,6 +31,9 @@ const fwupd_guid_t *{{item.c_getter}}(GByteArray *st);
 {%- if item.export('Setters') == Export.PUBLIC %}
 {%- if item.type == Type.STRING %}
 gboolean {{item.c_setter}}(GByteArray *st, const gchar *value, GError **error);
+{%- elif item.struct_obj %}
+gboolean
+{{item.c_setter}}(GByteArray *st, GByteArray *st_donor, GError **error);
 {%- elif item.type == Type.U8 and item.multiplier %}
 gboolean {{item.c_setter}}(GByteArray *st, const guint8 *buf, gsize bufsz, GError **error);
 {%- elif item.type == Type.GUID %}
