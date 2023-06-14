@@ -4,6 +4,7 @@ cargs = ['-DG_LOG_DOMAIN="FuPluginVliUsbhub"']
 plugin_quirks += files([
   'vli-bizlink.quirk',
   'vli-dell.quirk',
+  'vli-fujitsu.quirk',
   'vli-goodway.quirk',
   'vli-hyper.quirk',
   'vli-lenovo.quirk',
