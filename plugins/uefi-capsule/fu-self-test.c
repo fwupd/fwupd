@@ -257,7 +257,7 @@ fu_uefi_update_info_func(void)
 	info = fu_uefi_device_load_update_info(dev, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(info);
-	g_assert_cmpint(fu_uefi_update_info_get_version(info), ==, 0x7);
+	g_assert_cmpint(fu_firmware_get_version_raw(FU_FIRMWARE(info)), ==, 0x7);
 	g_assert_cmpstr(fu_uefi_update_info_get_guid(info),
 			==,
 			"697bd920-12cf-4da9-8385-996909bc6559");

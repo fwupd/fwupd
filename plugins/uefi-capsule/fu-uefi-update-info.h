@@ -11,14 +11,10 @@
 #include "fu-uefi-struct.h"
 
 #define FU_TYPE_UEFI_UPDATE_INFO (fu_uefi_update_info_get_type())
-G_DECLARE_FINAL_TYPE(FuUefiUpdateInfo, fu_uefi_update_info, FU, UEFI_UPDATE_INFO, GObject)
+G_DECLARE_FINAL_TYPE(FuUefiUpdateInfo, fu_uefi_update_info, FU, UEFI_UPDATE_INFO, FuFirmware)
 
 FuUefiUpdateInfo *
 fu_uefi_update_info_new(void);
-gboolean
-fu_uefi_update_info_parse(FuUefiUpdateInfo *self, const guint8 *buf, gsize sz, GError **error);
-guint32
-fu_uefi_update_info_get_version(FuUefiUpdateInfo *self);
 const gchar *
 fu_uefi_update_info_get_guid(FuUefiUpdateInfo *self);
 const gchar *

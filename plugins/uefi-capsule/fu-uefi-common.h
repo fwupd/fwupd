@@ -20,7 +20,7 @@
 #define EFI_OS_INDICATIONS_FILE_CAPSULE_DELIVERY_SUPPORTED 0x0000000000000004ULL
 
 gchar *
-fu_uefi_get_esp_app_path(FuDevice *device, const gchar *esp_path, const gchar *cmd, GError **error);
+fu_uefi_get_esp_app_path(const gchar *cmd, GError **error);
 gchar *
 fu_uefi_get_built_app_path(const gchar *binary, GError **error);
 gboolean
@@ -32,12 +32,17 @@ fu_uefi_get_bitmap_size(const guint8 *buf,
 gboolean
 fu_uefi_get_framebuffer_size(guint32 *width, guint32 *height, GError **error);
 gchar *
-fu_uefi_get_esp_path_for_os(FuDevice *device, const gchar *base);
+fu_uefi_get_esp_path_for_os(void);
 guint64
 fu_uefi_read_file_as_uint64(const gchar *path, const gchar *attr_name);
 gboolean
-fu_uefi_cmp_asset(const gchar *source, const gchar *target);
+fu_uefi_esp_target_exists(FuVolume *esp, const gchar *target_no_mountpoint);
 gboolean
-fu_uefi_copy_asset(const gchar *source, const gchar *target, GError **error);
+fu_uefi_esp_target_verify(const gchar *source_fn, FuVolume *esp, const gchar *target_no_mountpoint);
+gboolean
+fu_uefi_esp_target_copy(const gchar *source_fn,
+			FuVolume *esp,
+			const gchar *target_no_mountpoint,
+			GError **error);
 const gchar *
 fu_uefi_bootmgr_get_suffix(GError **error);

@@ -9,8 +9,6 @@
 
 #include <fwupdplugin.h>
 
-#include <efivar.h>
-
 typedef enum {
 	FU_UEFI_BOOTMGR_FLAG_NONE = 0,
 	FU_UEFI_BOOTMGR_FLAG_USE_SHIM_FOR_SB = 1 << 0,
@@ -21,8 +19,7 @@ typedef enum {
 gboolean
 fu_uefi_bootmgr_verify_fwupd(GError **error);
 gboolean
-fu_uefi_bootmgr_bootnext(FuDevice *device,
-			 const gchar *esp_path,
+fu_uefi_bootmgr_bootnext(FuVolume *esp,
 			 const gchar *description,
 			 FuUefiBootmgrFlags flags,
 			 GError **error);
