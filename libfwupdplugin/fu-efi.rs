@@ -100,3 +100,77 @@ struct EfiSignatureList {
     header_size: u32le,
     size: u32le,
 }
+
+#[repr(u32le)]
+enum EfiLoadOptionAttrs {
+    Active = 0x1,
+    ForceReconnect = 0x2,
+    Hidden = 0x8,
+    Category = 0x1F00,
+    CategoryBoot = 0x0,
+    CategoryAp = 0x100,
+}
+
+#[derive(Parse, New)]
+struct EfiLoadOption {
+    attrs: EfiLoadOptionAttrs,
+    dp_size: u16le,
+}
+
+#[repr(u8)]
+enum EfiDevicePathType {
+    Hardware = 0x01,
+    Acpi,
+    Message,
+    Media,
+    BiosBoot,
+    End = 0x7F,
+}
+
+#[derive(Parse, New)]
+struct EfiDevicePath {
+    type: EfiDevicePathType,
+    subtype: u8: default=0xFF,
+    length: u16le: default=$struct_size,
+}
+
+#[repr(u8)]
+enum EfiHardDriveDevicePathSubtype {
+    HardDrive = 0x01,
+    Cdrom = 0x02,
+    Vendor = 0x03,
+    FilePath = 0x04,
+    MediaProtocol = 0x05,
+    PiwgFirmwareFile = 0x06,
+    PiwgFirmwareVolume = 0x07,
+    RelativeOffsetRange = 0x08,
+    RamDiskDevicePath = 0x09,
+}
+
+#[repr(u8)]
+#[derive(ToString, FromString)]
+enum EfiHardDriveDevicePathPartitionFormat {
+    LegacyMbr = 0x01,
+    GuidPartitionTable = 0x02,
+}
+
+#[repr(u8)]
+#[derive(ToString, FromString)]
+enum EfiHardDriveDevicePathSignatureType {
+    None,
+    Addr1b8,
+    Guid,
+}
+
+#[derive(Parse, New)]
+struct EfiHardDriveDevicePath {
+    type: EfiDevicePathType: const=0x04,
+    subtype: EfiHardDriveDevicePathSubtype: default=0x01,
+    length: u16le: const=$struct_size,
+    partition_number: u32le,
+    partition_start: u64le,
+    partition_size: u64le,
+    partition_signature: Guid,
+    partition_format: EfiHardDriveDevicePathPartitionFormat: default=0x02,
+    signature_type: EfiHardDriveDevicePathSignatureType: default=0x02,
+}

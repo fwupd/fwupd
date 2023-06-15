@@ -33,10 +33,15 @@
 #include <libfwupdplugin/fu-dfu-firmware.h>
 #include <libfwupdplugin/fu-dfuse-firmware.h>
 #include <libfwupdplugin/fu-dump.h>
+#include <libfwupdplugin/fu-efi-device-path-list.h>
+#include <libfwupdplugin/fu-efi-device-path.h>
+#include <libfwupdplugin/fu-efi-file-path-device-path.h>
 #include <libfwupdplugin/fu-efi-firmware-file.h>
 #include <libfwupdplugin/fu-efi-firmware-filesystem.h>
 #include <libfwupdplugin/fu-efi-firmware-section.h>
 #include <libfwupdplugin/fu-efi-firmware-volume.h>
+#include <libfwupdplugin/fu-efi-hard-drive-device-path.h>
+#include <libfwupdplugin/fu-efi-load-option.h>
 #include <libfwupdplugin/fu-efi-signature-list.h>
 #include <libfwupdplugin/fu-efi-signature.h>
 #include <libfwupdplugin/fu-efivar.h>
