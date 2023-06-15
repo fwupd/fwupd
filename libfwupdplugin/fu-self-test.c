@@ -3640,6 +3640,9 @@ fu_firmware_builder_round_trip_func(void)
 	    {FU_TYPE_SREC_FIRMWARE, "srec.builder.xml", "2aae6c35c94fcfb415dbe95f408b9ce91ee846ed"},
 	    {FU_TYPE_IHEX_FIRMWARE, "ihex.builder.xml", "a8d74f767f3fc992b413e5ba801cedc80a4cf013"},
 	    {FU_TYPE_FMAP_FIRMWARE, "fmap.builder.xml", "a0b9ffc10a586d217edf9e9bae7c1fe7c564ea01"},
+	    {FU_TYPE_EFI_LOAD_OPTION,
+	     "efi-load-option.builder.xml",
+	     "7ef696d22902ae97ef5f73ad9c85a28095ad56f1"},
 	    {FU_TYPE_EFI_FIRMWARE_SECTION,
 	     "efi-firmware-section.builder.xml",
 	     "2aae6c35c94fcfb415dbe95f408b9ce91ee846ed"},
@@ -4120,6 +4123,33 @@ fu_plugin_struct_wrapped_func(void)
 	g_assert_false(ret);
 }
 
+static void
+fu_efi_load_option_func(void)
+{
+	/*
+	 * 0000 = Linux-Firmware-Updater
+	 * 0001 = Fedora
+	 * 0002 = Windows Boot Manager
+	 */
+	for (guint16 i = 0; i < 3; i++) {
+		g_autoptr(GError) error = NULL;
+		g_autoptr(FuEfiLoadOption) load_option =
+		    fu_efi_load_option_new_esp_for_boot_entry(i, &error);
+		g_autoptr(GBytes) fw = NULL;
+		g_autofree gchar *str = NULL;
+
+		if (load_option == NULL) {
+			g_debug("failed: %s", error->message);
+			continue;
+		}
+		str = fu_firmware_to_string(FU_FIRMWARE(load_option));
+		g_debug("%s", str);
+		fw = fu_firmware_write(FU_FIRMWARE(load_option), &error);
+		g_assert_no_error(error);
+		g_assert_nonnull(fw);
+	}
+}
+
 int
 main(int argc, char **argv)
 {
@@ -4137,6 +4167,7 @@ main(int argc, char **argv)
 	(void)g_setenv("FWUPD_DATADIR", testdatadir, TRUE);
 	(void)g_setenv("FWUPD_LIBDIR_PKG", testdatadir, TRUE);
 	(void)g_setenv("FWUPD_SYSCONFDIR", testdatadir, TRUE);
+	(void)g_setenv("FWUPD_SYSFSFWDIR", testdatadir, TRUE);
 	(void)g_setenv("FWUPD_SYSFSFWATTRIBDIR", testdatadir, TRUE);
 	(void)g_setenv("FWUPD_SYSFSDMIDIR", testdatadir, TRUE);
 	(void)g_setenv("FWUPD_LOCALSTATEDIR", testdatadir, TRUE);
@@ -4186,6 +4217,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/common{bytes-get-data}", fu_common_bytes_get_data_func);
 	g_test_add_func("/fwupd/common{kernel-lockdown}", fu_common_kernel_lockdown_func);
 	g_test_add_func("/fwupd/common{strsafe}", fu_strsafe_func);
+	g_test_add_func("/fwupd/efi-load-option", fu_efi_load_option_func);
 	g_test_add_func("/fwupd/efivar", fu_efivar_func);
 	g_test_add_func("/fwupd/hwids", fu_hwids_func);
 	g_test_add_func("/fwupd/context{flags}", fu_context_flags_func);

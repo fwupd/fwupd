@@ -89,6 +89,11 @@ fwupdplugin_src = [
   'fu-efi-firmware-filesystem.c', # fuzzing
   'fu-efi-firmware-section.c',    # fuzzing
   'fu-efi-firmware-volume.c',     # fuzzing
+  'fu-efi-load-option.c',         # fuzzing
+  'fu-efi-device-path.c',         # fuzzing
+  'fu-efi-device-path-list.c',    # fuzzing
+  'fu-efi-file-path-device-path.c', # fuzzing
+  'fu-efi-hard-drive-device-path.c', # fuzzing
   'fu-ifd-bios.c',                # fuzzing
   'fu-ifd-common.c',              # fuzzing
   'fu-ifd-firmware.c',            # fuzzing
@@ -97,7 +102,7 @@ fwupdplugin_src = [
   'fu-coswid-common.c',           # fuzzing
   'fu-coswid-firmware.c',         # fuzzing
   'fu-pefile-firmware.c',         # fuzzing
-  'fu-efivar.c',
+  'fu-efivar.c', # fuzzing
   'fu-udev-device.c',
   'fu-i2c-device.c',
   'fu-mei-device.c',
@@ -168,6 +173,7 @@ fwupdplugin_headers = [
   'fu-efi-firmware-filesystem.h',
   'fu-efi-firmware-section.h',
   'fu-efi-firmware-volume.h',
+  'fu-efi-load-option.h',
   'fu-ifd-bios.h',
   'fu-ifd-common.h',
   'fu-ifd-firmware.h',

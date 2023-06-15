@@ -1,0 +1,23 @@
+<firmware gtype="FuEfiLoadOption">
+  <id>Linux-Firmware-Updater</id>
+  <attrs>0x1</attrs>
+  <optional_data>aGVsbG8gd29ybGQ=</optional_data>
+  <firmware gtype="FuEfiDevicePathList">
+    <id>payload</id>
+    <firmware gtype="FuEfiHardDriveDevicePath">
+      <idx>0x04</idx>
+      <subtype>0x01</subtype>
+      <partition_number>0x1</partition_number>
+      <partition_start>0x800</partition_start>
+      <partition_size>0x12c000</partition_size>
+      <partition_signature>c7e198db-ec30-4a23-b0fd-8e2dbc092a01</partition_signature>
+      <partition_format>guid-partition-table</partition_format>
+      <signature_type>guid</signature_type>
+    </firmware>
+    <firmware gtype="FuEfiFilePathDevicePath">
+      <idx>0x04</idx>
+      <subtype>0x04</subtype>
+      <name>Hello World</name>
+    </firmware>
+  </firmware>
+</firmware>
