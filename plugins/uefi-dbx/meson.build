@@ -1,4 +1,3 @@
-if efiboot.found() and efivar.found()
 cargs = ['-DG_LOG_DOMAIN="FuPluginUefiDbx"']
 
 plugin_quirks += files('uefi-dbx.quirk')
@@ -71,5 +70,4 @@ if get_option('man')
     install: true,
     install_dir: join_paths(mandir, 'man1'),
   )
-endif
 endif

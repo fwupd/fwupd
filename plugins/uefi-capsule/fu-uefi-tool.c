@@ -397,7 +397,7 @@ main(int argc, char *argv[])
 				continue;
 			}
 			g_print("  Information Version: %" G_GUINT32_FORMAT "\n",
-				fu_uefi_update_info_get_version(info));
+				(guint32)fu_firmware_get_version_raw(FU_FIRMWARE(info)));
 			g_print("  Firmware GUID: {%s}\n", fu_uefi_update_info_get_guid(info));
 			g_print("  Capsule Flags: 0x%08" G_GUINT32_FORMAT "x\n",
 				fu_uefi_update_info_get_capsule_flags(info));

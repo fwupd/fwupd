@@ -135,8 +135,6 @@ parts:
       - libarchive-dev
       - libcbor-dev
       - libcairo-dev
-      - libefiboot-dev
-      - libefivar-dev
       - libgudev-1.0-dev
       - libgcab-dev
       - libglib2.0-dev
@@ -183,8 +181,6 @@ parts:
       - libjcat1
       - liblcms2-2
       - liblzma5
-      - libefivar1
-      - libefiboot1
       - libgusb2
       - libusb-1.0-0
       - libgudev-1.0-0

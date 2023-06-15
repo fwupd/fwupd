@@ -787,27 +787,6 @@
       <package variant="x86_64" />
     </distro>
   </dependency>
-  <dependency id="libefiboot-dev">
-    <distro id="debian">
-      <control>
-        <inclusive>amd64</inclusive>
-        <inclusive>arm64</inclusive>
-        <inclusive>armhf</inclusive>
-        <inclusive>i386</inclusive>
-      </control>
-      <package variant="x86_64" />
-      <package variant="i386" />
-    </distro>
-    <distro id="ubuntu">
-      <control>
-        <inclusive>amd64</inclusive>
-        <inclusive>arm64</inclusive>
-        <inclusive>armhf</inclusive>
-        <inclusive>i386</inclusive>
-      </control>
-      <package variant="x86_64" />
-    </distro>
-  </dependency>
   <dependency id="libgcab-dev">
     <distro id="arch">
       <package variant="x86_64">gcab</package>

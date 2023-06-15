@@ -100,7 +100,6 @@ BuildRequires: libmbim-devel
 %endif
 
 %if 0%{?have_uefi}
-BuildRequires: efivar-devel >= 33
 BuildRequires: python3 python3-cairo python3-gobject
 BuildRequires: pango-devel
 BuildRequires: cairo-devel cairo-gobject-devel

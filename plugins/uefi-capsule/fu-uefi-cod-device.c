@@ -144,7 +144,7 @@ fu_uefi_cod_device_write_firmware(FuDevice *device,
 	FuUefiDevice *self = FU_UEFI_DEVICE(device);
 	g_autofree gchar *basename = NULL;
 	g_autofree gchar *cod_path = NULL;
-	g_autofree gchar *esp_path = fu_uefi_device_get_esp_path(self);
+	g_autofree gchar *esp_path = fu_volume_get_mount_point(fu_uefi_device_get_esp(self));
 	g_autoptr(GBytes) fw = NULL;
 
 	/* ensure we have the existing state */

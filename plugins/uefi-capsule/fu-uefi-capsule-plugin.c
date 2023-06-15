@@ -7,7 +7,6 @@
 
 #include "config.h"
 
-#include <fcntl.h>
 #include <glib/gi18n.h>
 
 #include "fu-acpi-uefi.h"
@@ -19,6 +18,7 @@
 #include "fu-uefi-common.h"
 #include "fu-uefi-grub-device.h"
 #include "fu-uefi-struct.h"
+#include "fu-uefi-update-info.h"
 
 struct _FuUefiCapsulePlugin {
 	FuPlugin parent_instance;
@@ -228,10 +228,11 @@ fu_uefi_capsule_plugin_write_splash_data(FuUefiCapsulePlugin *self,
 	guint32 height, width;
 	guint8 csum = 0;
 	fwupd_guid_t guid = {0x0};
+	g_autofree gchar *capsule_path = NULL;
 	g_autofree gchar *esp_path = NULL;
 	g_autofree gchar *fn = NULL;
-	g_autofree gchar *directory = NULL;
 	g_autofree gchar *basename = NULL;
+	g_autofree gchar *directory = NULL;
 	g_autoptr(GByteArray) st_cap = fu_struct_efi_capsule_header_new();
 	g_autoptr(GByteArray) st_uxh = fu_struct_efi_ux_capsule_header_new();
 	g_autoptr(GFile) ofile = NULL;
@@ -251,9 +252,10 @@ fu_uefi_capsule_plugin_write_splash_data(FuUefiCapsulePlugin *self,
 
 	/* save to a predictable filename */
 	esp_path = fu_volume_get_mount_point(self->esp);
-	directory = fu_uefi_get_esp_path_for_os(device, esp_path);
+	directory = fu_uefi_get_esp_path_for_os();
 	basename = g_strdup_printf("fwupd-%s.cap", FU_EFIVAR_GUID_UX_CAPSULE);
-	fn = g_build_filename(directory, "fw", basename, NULL);
+	capsule_path = g_build_filename(directory, "fw", basename, NULL);
+	fn = g_build_filename(esp_path, capsule_path, NULL);
 	if (!fu_path_mkdir_parent(fn, error))
 		return FALSE;
 	ofile = g_file_new_for_path(fn);
@@ -303,7 +305,7 @@ fu_uefi_capsule_plugin_write_splash_data(FuUefiCapsulePlugin *self,
 
 	/* write display capsule location as UPDATE_INFO */
 	return fu_uefi_device_write_update_info(FU_UEFI_DEVICE(device),
-						fn,
+						capsule_path,
 						"fwupd-ux-capsule",
 						FU_EFIVAR_GUID_UX_CAPSULE,
 						error);
@@ -1046,6 +1048,7 @@ fu_uefi_capsule_plugin_constructed(GObject *obj)
 	fu_plugin_add_rule(plugin, FU_PLUGIN_RULE_METADATA_SOURCE, "acpi_phat");
 	fu_plugin_add_rule(plugin, FU_PLUGIN_RULE_CONFLICTS, "uefi"); /* old name */
 	fu_plugin_add_firmware_gtype(FU_PLUGIN(self), NULL, FU_TYPE_ACPI_UEFI);
+	fu_plugin_add_firmware_gtype(FU_PLUGIN(self), NULL, FU_TYPE_UEFI_UPDATE_INFO);
 
 	/* add a requirement on the fwupd-efi version -- which can change  */
 	if (!fu_uefi_capsule_plugin_fwupd_efi_probe(self, &error_local))

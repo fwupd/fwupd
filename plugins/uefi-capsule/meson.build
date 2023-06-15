@@ -1,4 +1,4 @@
-if efiboot.found() and efivar.found()
+if get_option('plugin_uefi_capsule').disable_auto_if(host_machine.system() not in ['linux', 'freebsd']).allowed()
 
 cargs = ['-DG_LOG_DOMAIN="FuPluginUefiCapsule"']
 
@@ -39,7 +39,6 @@ plugin_builtin_uefi_capsule = static_library('fu_plugin_uefi_capsule',
     'fu-uefi-nvram-device.c',
     'fu-uefi-grub-device.c',
     'fu-uefi-device.c',
-    'fu-uefi-devpath.c',
     'fu-uefi-update-info.c',
     'fu-acpi-uefi.c',
     backend_srcs,
@@ -50,7 +49,6 @@ plugin_builtin_uefi_capsule = static_library('fu_plugin_uefi_capsule',
   dependencies: [
     plugin_deps,
     platform_deps,
-    efiboot,
   ],
 )
 plugin_builtins += plugin_builtin_uefi_capsule
@@ -66,7 +64,6 @@ fwupdate = executable(
   dependencies: [
     plugin_deps,
     platform_deps,
-    efiboot,
   ],
   link_with: [
     plugin_libs,
@@ -102,8 +99,17 @@ foreach ux_lingua: ux_linguas
   ux_capsule_pofiles += join_paths(meson.project_source_root(), 'po', '@0@.po'.format(ux_lingua))
 endforeach
 
+if get_option('efi_binary')
+  efi_binary = dependency('fwupd-efi', fallback: ['fwupd-efi', 'fwupd_efi_dep'])
+endif
+
 if get_option('plugin_uefi_capsule_splash')
   # add the archive of pregenerated images
+  run_command([
+    python3,
+    join_paths(meson.project_source_root(), 'po', 'test-deps'),
+    join_paths(meson.project_source_root(), 'po', 'LINGUAS'),
+  ], check: true)
   custom_target('ux-capsule-tar',
     input: [
       join_paths(meson.project_source_root(), 'po', 'LINGUAS'),
@@ -138,7 +144,6 @@ if get_option('tests')
     dependencies: [
       plugin_deps,
       platform_deps,
-      efiboot,
     ],
     link_with: [
       fwupd,

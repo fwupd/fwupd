@@ -399,33 +399,22 @@ if host_machine.system() == 'freebsd'
   endif
 endif
 
-efiboot = dependency('efiboot', required: get_option('plugin_uefi_capsule'))
-efivar = dependency('efivar', required: get_option('plugin_uefi_capsule'))
-if build_standalone and efiboot.found() and efivar.found()
-
+# EFI
+if build_standalone
   efi_app_location = join_paths(libexecdir, 'fwupd', 'efi')
   conf.set_quoted('EFI_APP_LOCATION', efi_app_location)
-
   if host_cpu == 'x86'
-          EFI_MACHINE_TYPE_NAME = 'ia32'
+    EFI_MACHINE_TYPE_NAME = 'ia32'
   elif host_cpu == 'x86_64'
-          EFI_MACHINE_TYPE_NAME = 'x64'
+    EFI_MACHINE_TYPE_NAME = 'x64'
   elif host_cpu == 'arm'
-          EFI_MACHINE_TYPE_NAME = 'arm'
+    EFI_MACHINE_TYPE_NAME = 'arm'
   elif host_cpu == 'aarch64'
-          EFI_MACHINE_TYPE_NAME = 'aa64'
+    EFI_MACHINE_TYPE_NAME = 'aa64'
   else
-          EFI_MACHINE_TYPE_NAME = ''
+    EFI_MACHINE_TYPE_NAME = ''
   endif
   conf.set_quoted('EFI_MACHINE_TYPE_NAME', EFI_MACHINE_TYPE_NAME)
-
-  if get_option('efi_binary')
-    efi_binary = dependency ('fwupd-efi', fallback: ['fwupd-efi', 'fwupd_efi_dep'])
-  endif
-
-  if get_option('plugin_uefi_capsule_splash')
-    run_command([python3, 'po/test-deps'], check: true)
-  endif
 endif
 
 if get_option('soup_session_compat')

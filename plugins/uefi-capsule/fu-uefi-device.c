@@ -7,13 +7,10 @@
 
 #include "config.h"
 
-#include <efivar.h>
-#include <efivar/efiboot.h>
 #include <string.h>
 
 #include "fu-uefi-common.h"
 #include "fu-uefi-device.h"
-#include "fu-uefi-devpath.h"
 #include "fu-uefi-struct.h"
 
 typedef struct {
@@ -247,18 +244,18 @@ fu_uefi_device_build_varname(FuUefiDevice *self)
 FuUefiUpdateInfo *
 fu_uefi_device_load_update_info(FuUefiDevice *self, GError **error)
 {
-	gsize datasz = 0;
 	g_autofree gchar *varname = fu_uefi_device_build_varname(self);
-	g_autofree guint8 *data = NULL;
 	g_autoptr(FuUefiUpdateInfo) info = fu_uefi_update_info_new();
+	g_autoptr(GBytes) fw = NULL;
 
 	g_return_val_if_fail(FU_IS_UEFI_DEVICE(self), NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
 	/* get the existing status */
-	if (!fu_efivar_get_data(FU_EFIVAR_GUID_FWUPDATE, varname, &data, &datasz, NULL, error))
+	fw = fu_efivar_get_data_bytes(FU_EFIVAR_GUID_FWUPDATE, varname, NULL, error);
+	if (fw == NULL)
 		return NULL;
-	if (!fu_uefi_update_info_parse(info, data, datasz, error))
+	if (!fu_firmware_parse(FU_FIRMWARE(info), fw, FWUPD_INSTALL_FLAG_NONE, error))
 		return NULL;
 	return g_steal_pointer(&info);
 }
@@ -295,63 +292,22 @@ fu_uefi_device_clear_status(FuUefiDevice *self, GError **error)
 				  error);
 }
 
-static guint8 *
-fu_uefi_device_build_dp_buf(const gchar *path, gsize *bufsz, GError **error)
+FuEfiDevicePathList *
+fu_uefi_device_build_dp_buf(FuVolume *esp, const gchar *capsule_path, GError **error)
 {
-	gssize req;
-	gssize sz;
-	g_autofree guint8 *dp_buf = NULL;
-	g_autoptr(GPtrArray) dps = NULL;
+	g_autoptr(FuEfiDevicePathList) dp_buf = fu_efi_device_path_list_new();
+	g_autoptr(FuEfiFilePathDevicePath) dp_file = fu_efi_file_path_device_path_new();
+	g_autoptr(FuEfiHardDriveDevicePath) dp_hd = NULL;
+	g_autofree gchar *name_with_root = NULL;
 
-	/* get the size of the path first */
-	req = efi_generate_file_device_path(NULL,
-					    0,
-					    path,
-					    EFIBOOT_OPTIONS_IGNORE_FS_ERROR | EFIBOOT_ABBREV_HD);
-	if (req < 0) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "failed to efi_generate_file_device_path(%s)",
-			    path);
+	dp_hd = fu_efi_hard_drive_device_path_new_from_volume(esp, error);
+	if (dp_hd == NULL)
 		return NULL;
-	}
-
-	/* if we just have an end device path, it's not going to work */
-	if (req <= 4) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "failed to get valid device_path for (%s)",
-			    path);
+	name_with_root = g_strdup_printf("/%s", capsule_path);
+	if (!fu_efi_file_path_device_path_set_name(dp_file, name_with_root, error))
 		return NULL;
-	}
-
-	/* actually get the path this time */
-	dp_buf = g_malloc0(req);
-	sz = efi_generate_file_device_path(dp_buf,
-					   req,
-					   path,
-					   EFIBOOT_OPTIONS_IGNORE_FS_ERROR | EFIBOOT_ABBREV_HD);
-	if (sz < 0) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "failed to efi_generate_file_device_path(%s)",
-			    path);
-		return NULL;
-	}
-
-	/* parse what we got back from efivar */
-	dps = fu_uefi_devpath_parse(dp_buf, (gsize)sz, FU_UEFI_DEVPATH_PARSE_FLAG_NONE, error);
-	if (dps == NULL) {
-		fu_dump_raw(G_LOG_DOMAIN, "dp_buf", dp_buf, (gsize)sz);
-		return NULL;
-	}
-
-	/* success */
-	if (bufsz != NULL)
-		*bufsz = sz;
+	fu_firmware_add_image(FU_FIRMWARE(dp_buf), FU_FIRMWARE(dp_hd));
+	fu_firmware_add_image(FU_FIRMWARE(dp_buf), FU_FIRMWARE(dp_file));
 	return g_steal_pointer(&dp_buf);
 }
 
@@ -412,15 +368,15 @@ fu_uefi_device_fixup_firmware(FuUefiDevice *self, GBytes *fw, GError **error)
 
 gboolean
 fu_uefi_device_write_update_info(FuUefiDevice *self,
-				 const gchar *filename,
+				 const gchar *capsule_path,
 				 const gchar *varname,
 				 const gchar *guid_str,
 				 GError **error)
 {
 	FuUefiDevicePrivate *priv = GET_PRIVATE(self);
-	gsize dp_bufsz = 0;
 	fwupd_guid_t guid = {0x0};
-	g_autofree guint8 *dp_buf = NULL;
+	g_autoptr(FuEfiDevicePathList) dp_buf = NULL;
+	g_autoptr(GBytes) dp_blob = NULL;
 	g_autoptr(GByteArray) st_inf = fu_struct_efi_update_info_new();
 
 	/* set the body as the device path */
@@ -430,8 +386,11 @@ fu_uefi_device_write_update_info(FuUefiDevice *self,
 	}
 
 	/* convert to EFI device path */
-	dp_buf = fu_uefi_device_build_dp_buf(filename, &dp_bufsz, error);
+	dp_buf = fu_uefi_device_build_dp_buf(priv->esp, capsule_path, error);
 	if (dp_buf == NULL)
+		return FALSE;
+	dp_blob = fu_firmware_write(FU_FIRMWARE(dp_buf), error);
+	if (dp_blob == NULL)
 		return FALSE;
 
 	/* save this header and body to the hardware */
@@ -441,7 +400,7 @@ fu_uefi_device_write_update_info(FuUefiDevice *self,
 	fu_struct_efi_update_info_set_hw_inst(st_inf, priv->fmp_hardware_instance);
 	fu_struct_efi_update_info_set_status(st_inf, FU_UEFI_UPDATE_INFO_STATUS_ATTEMPT_UPDATE);
 	fu_struct_efi_update_info_set_guid(st_inf, &guid);
-	g_byte_array_append(st_inf, dp_buf, dp_bufsz);
+	fu_byte_array_append_bytes(st_inf, dp_blob);
 	return fu_efivar_set_data(FU_EFIVAR_GUID_FWUPDATE,
 				  varname,
 				  st_inf->data,
@@ -672,11 +631,11 @@ fu_uefi_device_get_results(FuDevice *device, GError **error)
 	return TRUE;
 }
 
-gchar *
-fu_uefi_device_get_esp_path(FuUefiDevice *self)
+FuVolume *
+fu_uefi_device_get_esp(FuUefiDevice *self)
 {
 	FuUefiDevicePrivate *priv = GET_PRIVATE(self);
-	return fu_volume_get_mount_point(priv->esp);
+	return priv->esp;
 }
 
 static FuFirmware *
