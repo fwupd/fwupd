@@ -25,7 +25,7 @@ fu_uefi_dbx_get_authenticode_hash(const gchar *fn, GError **error)
 	img = fu_efi_image_new(bytes, error);
 	if (img == NULL)
 		return NULL;
-	g_debug("SHA256 was %s", fu_efi_image_get_checksum(img));
+	g_debug("Authenticode hash was %s", fu_efi_image_get_checksum(img));
 	return g_strdup(fu_efi_image_get_checksum(img));
 }
 
