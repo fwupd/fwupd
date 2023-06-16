@@ -544,6 +544,16 @@ typedef enum {
  */
 #define FWUPD_DEVICE_FLAG_EMULATION_TAG (1llu << 50)
 /**
+ * FWUPD_DEVICE_FLAG_ONLY_EXPLICIT_UPDATES:
+ *
+ * The device should stay on one firmware version unless the new version is explicitly specified.
+ *
+ * This can either be done using `fwupdmgr install`, using GNOME Firmware, or using a BKC config.
+ *
+ * Since: 1.9.3
+ */
+#define FWUPD_DEVICE_FLAG_ONLY_EXPLICIT_UPDATES (1llu << 51)
+/**
  * FWUPD_DEVICE_FLAG_UNKNOWN:
  *
  * This flag is not defined, this typically will happen from mismatched

@@ -1150,6 +1150,11 @@ fu_util_device_flag_to_string(guint64 device_flag)
 		/* TRANSLATORS: we're saving all USB events for emulation */
 		return _("Tagged for emulation");
 	}
+	if (device_flag == FWUPD_DEVICE_FLAG_ONLY_EXPLICIT_UPDATES) {
+		/* TRANSLATORS: stay on one firmware version unless the new version is explicitly
+		 * specified */
+		return _("Installing a specific release is explicitly required");
+	}
 	if (device_flag == FWUPD_DEVICE_FLAG_SKIPS_RESTART) {
 		/* skip */
 		return NULL;
