@@ -1589,6 +1589,10 @@ fu_util_plugin_flag_to_string(FwupdPluginFlags plugin_flag)
 		/* TRANSLATORS: partition refers to something on disk, again, hey Arch users */
 		return _("UEFI ESP partition not detected or configured");
 	}
+	if (plugin_flag == FWUPD_PLUGIN_FLAG_ESP_NOT_VALID) {
+		/* TRANSLATORS: partition refers to something on disk, again, hey Arch users */
+		return _("UEFI ESP partition may not be set up correctly");
+	}
 	if (plugin_flag == FWUPD_PLUGIN_FLAG_FAILED_OPEN) {
 		/* TRANSLATORS: Failed to open plugin, hey Arch users */
 		return _("Plugin dependencies missing");
@@ -1627,6 +1631,7 @@ fu_util_plugin_flag_to_cli_text(FwupdPluginFlags plugin_flag)
 	case FWUPD_PLUGIN_FLAG_AUTH_REQUIRED:
 	case FWUPD_PLUGIN_FLAG_EFIVAR_NOT_MOUNTED:
 	case FWUPD_PLUGIN_FLAG_ESP_NOT_FOUND:
+	case FWUPD_PLUGIN_FLAG_ESP_NOT_VALID:
 	case FWUPD_PLUGIN_FLAG_KERNEL_TOO_OLD:
 		return fu_console_color_format(fu_util_plugin_flag_to_string(plugin_flag),
 					       FU_CONSOLE_COLOR_RED);

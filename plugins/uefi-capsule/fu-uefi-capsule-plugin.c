@@ -943,6 +943,10 @@ fu_uefi_capsule_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError *
 			fu_plugin_add_flag(plugin, FWUPD_PLUGIN_FLAG_CLEAR_UPDATABLE);
 			fu_plugin_add_flag(plugin, FWUPD_PLUGIN_FLAG_USER_WARNING);
 			g_warning("cannot find default ESP: %s", error_udisks2->message);
+		} else if (g_strcmp0(fu_volume_get_partition_kind(self->esp), FU_VOLUME_KIND_ESP) !=
+			   0) {
+			fu_plugin_add_flag(plugin, FWUPD_PLUGIN_FLAG_ESP_NOT_VALID);
+			fu_plugin_add_flag(plugin, FWUPD_PLUGIN_FLAG_USER_WARNING);
 		}
 	}
 	fu_progress_step_done(progress);

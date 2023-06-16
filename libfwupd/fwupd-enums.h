@@ -936,6 +936,15 @@ typedef enum {
  */
 #define FWUPD_PLUGIN_FLAG_MEASURE_SYSTEM_INTEGRITY (1llu << 15)
 /**
+ * FWUPD_PLUGIN_FLAG_ESP_NOT_VALID:
+ *
+ * The plugins discovered that the EFI system partition may not be valid.
+ * Supported clients will display this information to a user.
+ *
+ * Since: 1.9.3
+ */
+#define FWUPD_PLUGIN_FLAG_ESP_NOT_VALID (1llu << 16)
+/**
  * FWUPD_PLUGIN_FLAG_UNKNOWN:
  *
  * The plugin flag is Unknown.
