@@ -4,7 +4,7 @@ title: Plugin: Jabra
 
 ## Introduction
 
-This plugin is used to detach the Jabra device to DFU mode.
+This plugin is used to detach Jabra Speak Gen 1 devices to DFU mode.
 
 ## GUID Generation
 

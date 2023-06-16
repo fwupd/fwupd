@@ -2,7 +2,11 @@
 
 ## Introduction
 
-This plugin is used to firmware update some Jabra devices.
+This plugin is used to firmware update for some Jabra devices
+(refer to the `jabra-gnp.quirk` file for more information).
+Notably this excludes devices supported by the `jabra` plugin,
+as well as 1st edition Jabra Evolve (non-SE) devices and the
+corresponding Jabra Link connectors.
 
 ## GUID Generation
 
