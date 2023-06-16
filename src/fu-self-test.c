@@ -1721,6 +1721,7 @@ fu_engine_downgrade_func(gconstpointer user_data)
 	g_autoptr(GPtrArray) releases_dg = NULL;
 	g_autoptr(GPtrArray) releases = NULL;
 	g_autoptr(GPtrArray) releases_up = NULL;
+	g_autoptr(GPtrArray) releases_up2 = NULL;
 	g_autoptr(GPtrArray) remotes = NULL;
 	g_autoptr(XbSilo) silo_empty = xb_silo_new();
 
@@ -1888,6 +1889,12 @@ fu_engine_downgrade_func(gconstpointer user_data)
 	g_assert_cmpint(releases_dg->len, ==, 1);
 	rel = FWUPD_RELEASE(g_ptr_array_index(releases_dg, 0));
 	g_assert_cmpstr(fwupd_release_get_version(rel), ==, "1.2.2");
+
+	/* enforce that updates have to be explicit */
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_ONLY_EXPLICIT_UPDATES);
+	releases_up2 = fu_engine_get_upgrades(engine, request, fu_device_get_id(device), &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO);
+	g_assert_null(releases_up2);
 }
 
 static void

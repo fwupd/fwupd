@@ -213,6 +213,8 @@ fwupd_device_flag_to_string(FwupdDeviceFlags device_flag)
 		return "emulated";
 	if (device_flag == FWUPD_DEVICE_FLAG_EMULATION_TAG)
 		return "emulation-tag";
+	if (device_flag == FWUPD_DEVICE_FLAG_ONLY_EXPLICIT_UPDATES)
+		return "only-explicit-updates";
 	if (device_flag == FWUPD_DEVICE_FLAG_UNKNOWN)
 		return "unknown";
 	return NULL;
@@ -336,6 +338,8 @@ fwupd_device_flag_from_string(const gchar *device_flag)
 		return FWUPD_DEVICE_FLAG_EMULATED;
 	if (g_strcmp0(device_flag, "emulation-tag") == 0)
 		return FWUPD_DEVICE_FLAG_EMULATION_TAG;
+	if (g_strcmp0(device_flag, "only-explicit-updates") == 0)
+		return FWUPD_DEVICE_FLAG_ONLY_EXPLICIT_UPDATES;
 	return FWUPD_DEVICE_FLAG_UNKNOWN;
 }
 

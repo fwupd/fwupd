@@ -6238,6 +6238,15 @@ fu_engine_get_upgrades(FuEngine *self,
 		return NULL;
 	}
 
+	/* stay on one firmware version unless the new version is explicitly specified */
+	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_ONLY_EXPLICIT_UPDATES)) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOTHING_TO_DO,
+				    "Installing a specific release is explicitly required");
+		return NULL;
+	}
+
 	/* don't show upgrades again until we reboot */
 	if (fu_device_get_update_state(device) == FWUPD_UPDATE_STATE_NEEDS_REBOOT) {
 		g_set_error_literal(error,
