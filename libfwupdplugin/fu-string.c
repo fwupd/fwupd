@@ -215,10 +215,61 @@ fu_strdup(const gchar *str, gsize bufsz, gsize offset)
 guint
 fu_string_replace(GString *string, const gchar *search, const gchar *replace)
 {
+#if GLIB_CHECK_VERSION(2, 68, 0)
 	g_return_val_if_fail(string != NULL, 0);
 	g_return_val_if_fail(search != NULL, 0);
 	g_return_val_if_fail(replace != NULL, 0);
 	return g_string_replace(string, search, replace, 0);
+#else
+	gchar *tmp;
+	guint count = 0;
+	gsize search_idx = 0;
+	gsize replace_len;
+	gsize search_len;
+
+	g_return_val_if_fail(string != NULL, 0);
+	g_return_val_if_fail(search != NULL, 0);
+	g_return_val_if_fail(replace != NULL, 0);
+
+	/* nothing to do */
+	if (string->len == 0)
+		return 0;
+
+	search_len = strlen(search);
+	replace_len = strlen(replace);
+
+	do {
+		tmp = g_strstr_len(string->str + search_idx, -1, search);
+		if (tmp == NULL)
+			break;
+
+		/* advance the counter in case @replace contains @search */
+		search_idx = (gsize)(tmp - string->str);
+
+		/* reallocate the string if required */
+		if (search_len > replace_len) {
+			g_string_erase(string,
+				       (gssize)search_idx,
+				       (gssize)(search_len - replace_len));
+			memcpy(tmp, replace, replace_len);
+		} else if (search_len < replace_len) {
+			g_string_insert_len(string,
+					    (gssize)search_idx,
+					    replace,
+					    (gssize)(replace_len - search_len));
+			/* we have to treat this specially as it could have
+			 * been reallocated when the insertion happened */
+			memcpy(string->str + search_idx, replace, replace_len);
+		} else {
+			/* just memcmp in the new string */
+			memcpy(tmp, replace, replace_len);
+		}
+		search_idx += replace_len;
+		count++;
+	} while (TRUE);
+
+	return count;
+#endif
 }
 
 /**
