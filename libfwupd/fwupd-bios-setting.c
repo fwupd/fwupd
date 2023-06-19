@@ -10,6 +10,7 @@
 #include "fwupd-common-private.h"
 #include "fwupd-enums-private.h"
 #include "fwupd-error.h"
+#include "fwupd-json-common.h"
 
 /**
  * FwupdBiosSetting:

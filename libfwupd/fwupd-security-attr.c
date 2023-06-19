@@ -12,6 +12,7 @@
 #include "fwupd-common-private.h"
 #include "fwupd-enums-private.h"
 #include "fwupd-error.h"
+#include "fwupd-json-common.h"
 #include "fwupd-security-attr-private.h"
 
 /**

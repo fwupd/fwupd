@@ -55,6 +55,7 @@ libfwupd_src = [
   'fwupd-report.c',         # fuzzing
   'fwupd-request.c',        # fuzzing
   'fwupd-version.c',
+  'fwupd-json-common.c',
 ]
 
 fwupd_mapfile = 'fwupd.map'
