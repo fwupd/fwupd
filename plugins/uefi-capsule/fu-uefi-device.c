@@ -77,12 +77,12 @@ fu_uefi_device_to_string(FuDevice *device, guint idt, GString *str)
 			 fu_uefi_device_status_to_string(priv->last_attempt_status));
 	fu_string_append_kx(str, idt, "LastAttemptVersion", priv->last_attempt_version);
 	if (priv->esp != NULL) {
+		g_autofree gchar *kind = fu_volume_get_partition_kind(priv->esp);
 		g_autofree gchar *mount_point = fu_volume_get_mount_point(priv->esp);
 		fu_string_append(str, idt, "EspId", fu_volume_get_id(priv->esp));
 		if (mount_point != NULL)
 			fu_string_append(str, idt, "EspPath", mount_point);
-		if (fu_volume_get_partition_kind(priv->esp) != NULL) {
-			const gchar *kind = fu_volume_get_partition_kind(priv->esp);
+		if (kind != NULL) {
 			const gchar *guid = fu_volume_kind_convert_to_gpt(kind);
 			fu_string_append(str, idt, "EspKind", kind);
 			if (g_strcmp0(kind, guid) != 0)
@@ -97,6 +97,7 @@ fu_uefi_device_report_metadata_pre(FuDevice *device, GHashTable *metadata)
 {
 	FuUefiDevice *self = FU_UEFI_DEVICE(device);
 	FuUefiDevicePrivate *priv = GET_PRIVATE(self);
+	g_autofree gchar *kind = fu_volume_get_partition_kind(priv->esp);
 	g_autofree gchar *mount_point = fu_volume_get_mount_point(priv->esp);
 
 	/* record if we had an invalid header during update */
@@ -106,10 +107,8 @@ fu_uefi_device_report_metadata_pre(FuDevice *device, GHashTable *metadata)
 
 	/* where and how the ESP was mounted during installation */
 	g_hash_table_insert(metadata, g_strdup("EspPath"), g_steal_pointer(&mount_point));
-	if (fu_volume_get_partition_kind(priv->esp) != NULL) {
-		g_hash_table_insert(metadata,
-				    g_strdup("EspKind"),
-				    g_strdup(fu_volume_get_partition_kind(priv->esp)));
+	if (kind != NULL) {
+		g_hash_table_insert(metadata, g_strdup("EspKind"), g_steal_pointer(&kind));
 	}
 }
 
