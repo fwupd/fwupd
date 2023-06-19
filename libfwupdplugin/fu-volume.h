@@ -42,8 +42,16 @@ gboolean
 fu_volume_is_encrypted(FuVolume *self);
 guint64
 fu_volume_get_size(FuVolume *self);
-const gchar *
+gchar *
 fu_volume_get_partition_kind(FuVolume *self);
+guint64
+fu_volume_get_partition_size(FuVolume *self);
+guint64
+fu_volume_get_partition_offset(FuVolume *self);
+guint32
+fu_volume_get_partition_number(FuVolume *self);
+gchar *
+fu_volume_get_partition_uuid(FuVolume *self);
 gchar *
 fu_volume_get_mount_point(FuVolume *self);
 gboolean
