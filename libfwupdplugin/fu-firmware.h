@@ -331,6 +331,10 @@ fu_firmware_get_image_by_idx(FuFirmware *self, guint64 idx, GError **error);
 GBytes *
 fu_firmware_get_image_by_idx_bytes(FuFirmware *self, guint64 idx, GError **error);
 FuFirmware *
+fu_firmware_get_image_by_gtype(FuFirmware *self, GType gtype, GError **error);
+GBytes *
+fu_firmware_get_image_by_gtype_bytes(FuFirmware *self, GType gtype, GError **error);
+FuFirmware *
 fu_firmware_get_image_by_checksum(FuFirmware *self, const gchar *checksum, GError **error);
 void
 fu_firmware_add_patch(FuFirmware *self, gsize offset, GBytes *blob);

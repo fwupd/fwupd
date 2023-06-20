@@ -823,6 +823,9 @@ fu_plugin_fdt_func(void)
 	g_autoptr(FuFirmware) fdt = NULL;
 	g_autoptr(FuFirmware) fdt_root = NULL;
 	g_autoptr(FuFirmware) fdt_tmp = fu_fdt_firmware_new();
+	g_autoptr(FuFirmware) img2 = NULL;
+	g_autoptr(FuFirmware) img3 = NULL;
+	g_autoptr(FuFirmware) img4 = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GFile) file =
 	    g_file_new_for_path("/tmp/fwupd-self-test/var/lib/fwupd/system.dtb");
@@ -853,6 +856,17 @@ fu_plugin_fdt_func(void)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	g_assert_cmpstr(compatible, ==, "pine64,rockpro64-v2.1");
+
+	/* get by GType */
+	img2 = fu_firmware_get_image_by_gtype(fdt, FU_TYPE_FIRMWARE, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(img2);
+	img3 = fu_firmware_get_image_by_gtype(fdt, FU_TYPE_FDT_IMAGE, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(img3);
+	img4 = fu_firmware_get_image_by_gtype(fdt, G_TYPE_STRING, &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
+	g_assert_null(img4);
 }
 
 static void

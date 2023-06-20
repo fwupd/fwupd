@@ -1727,6 +1727,60 @@ fu_firmware_get_image_by_idx_bytes(FuFirmware *self, guint64 idx, GError **error
 		return NULL;
 	return fu_firmware_write(img, error);
 }
+/**
+ * fu_firmware_get_image_by_gtype_bytes:
+ * @self: a #FuPlugin
+ * @gtype: an image #GType
+ * @error: (nullable): optional return location for an error
+ *
+ * Gets the firmware image bytes using the image #GType.
+ *
+ * Returns: (transfer full): a #GBytes of a #FuFirmware, or %NULL if the image is not found
+ *
+ * Since: 1.9.3
+ **/
+GBytes *
+fu_firmware_get_image_by_gtype_bytes(FuFirmware *self, GType gtype, GError **error)
+{
+	g_autoptr(FuFirmware) img = fu_firmware_get_image_by_gtype(self, gtype, error);
+	if (img == NULL)
+		return NULL;
+	return fu_firmware_write(img, error);
+}
+
+/**
+ * fu_firmware_get_image_by_gtype:
+ * @self: a #FuPlugin
+ * @gtype: an image #GType
+ * @error: (nullable): optional return location for an error
+ *
+ * Gets the firmware image using the image #GType.
+ *
+ * Returns: (transfer full): a #FuFirmware, or %NULL if the image is not found
+ *
+ * Since: 1.9.3
+ **/
+FuFirmware *
+fu_firmware_get_image_by_gtype(FuFirmware *self, GType gtype, GError **error)
+{
+	FuFirmwarePrivate *priv = GET_PRIVATE(self);
+
+	g_return_val_if_fail(FU_IS_FIRMWARE(self), NULL);
+	g_return_val_if_fail(gtype != G_TYPE_INVALID, NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	for (guint i = 0; i < priv->images->len; i++) {
+		FuFirmware *img = g_ptr_array_index(priv->images, i);
+		if (g_type_is_a(G_OBJECT_TYPE(img), gtype))
+			return g_object_ref(img);
+	}
+	g_set_error(error,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_NOT_FOUND,
+		    "no image GType %s found in firmware",
+		    g_type_name(gtype));
+	return NULL;
+}
 
 /**
  * fu_firmware_export:
