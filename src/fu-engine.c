@@ -6940,7 +6940,7 @@ fu_engine_add_plugin_filter(FuEngine *self, const gchar *plugin_glob)
 	g_return_if_fail(FU_IS_ENGINE(self));
 	g_return_if_fail(plugin_glob != NULL);
 	str = g_string_new(plugin_glob);
-	fu_string_replace(str, "-", "_");
+	g_string_replace(str, "-", "_", 0);
 	g_ptr_array_add(self->plugin_filter, g_string_free(str, FALSE));
 }
 

@@ -790,7 +790,7 @@ fu_pxi_receiver_device_setup_guid(FuPxiReceiverDevice *device, GError **error)
 
 	dev_name = g_string_new(fu_device_get_name(FU_DEVICE(device)));
 	g_string_ascii_up(dev_name);
-	fu_string_replace(dev_name, " ", "_");
+	g_string_replace(dev_name, " ", "_", 0);
 	devid = g_strdup_printf("HIDRAW\\VEN_%04X&DEV_%04X&NAME_%s",
 				(guint)hid_raw_info.vendor,
 				(guint)hid_raw_info.product,

@@ -818,12 +818,12 @@ fu_pxi_ble_device_setup_guid(FuPxiBleDevice *self, GError **error)
 		return FALSE;
 	dev_name = g_string_new(fu_device_get_name(device));
 	g_string_ascii_up(dev_name);
-	fu_string_replace(dev_name, " ", "_");
+	g_string_replace(dev_name, " ", "_", 0);
 
 	/* extra GUID with model name*/
 	model_name = g_string_new(self->model_name);
 	g_string_ascii_up(model_name);
-	fu_string_replace(model_name, " ", "_");
+	g_string_replace(model_name, " ", "_", 0);
 
 	/* generate IDs */
 	fu_device_add_instance_u16(device, "VEN", hid_raw_info.vendor);

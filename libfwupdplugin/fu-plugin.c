@@ -1474,7 +1474,7 @@ fu_plugin_add_firmware_gtype(FuPlugin *self, const gchar *id, GType gtype)
 		g_autoptr(GString) str = g_string_new(g_type_name(gtype));
 		if (g_str_has_prefix(str->str, "Fu"))
 			g_string_erase(str, 0, 2);
-		fu_string_replace(str, "Firmware", "");
+		g_string_replace(str, "Firmware", "", 1);
 		id_safe = fu_common_string_uncamelcase(str->str);
 	}
 	fu_context_add_firmware_gtype(priv->ctx, id_safe, gtype);

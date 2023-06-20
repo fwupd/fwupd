@@ -8,8 +8,6 @@
 
 #include <gio/gio.h>
 
-guint
-fu_string_replace(GString *string, const gchar *search, const gchar *replace);
 void
 fu_string_append(GString *str, guint idt, const gchar *key, const gchar *value);
 void

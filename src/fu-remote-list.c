@@ -310,11 +310,11 @@ fu_remote_list_add_for_path(FuRemoteList *self, const gchar *path, GError **erro
 			tmp = g_hash_table_lookup(os_release, "NAME");
 			if (tmp == NULL)
 				tmp = "this distribution";
-			fu_string_replace(agreement_markup, "$OS_RELEASE:NAME$", tmp);
+			g_string_replace(agreement_markup, "$OS_RELEASE:NAME$", tmp, 0);
 			tmp = g_hash_table_lookup(os_release, "BUG_REPORT_URL");
 			if (tmp == NULL)
 				tmp = "https://github.com/fwupd/fwupd/issues";
-			fu_string_replace(agreement_markup, "$OS_RELEASE:BUG_REPORT_URL$", tmp);
+			g_string_replace(agreement_markup, "$OS_RELEASE:BUG_REPORT_URL$", tmp, 0);
 			fwupd_remote_set_agreement(remote, agreement_markup->str);
 		}
 
