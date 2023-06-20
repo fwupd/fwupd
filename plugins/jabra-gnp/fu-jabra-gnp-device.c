@@ -147,6 +147,35 @@ fu_jabra_gnp_device_rx_with_sequence_cb(FuDevice *device, gpointer user_data, GE
 }
 
 static gboolean
+fu_jabra_gnp_device_read_name(FuJabraGnpDevice *self, GError **error)
+{
+	guint8 txbuf[FU_JABRA_GNP_BUF_SIZE] =
+	    {FU_JABRA_GNP_IFACE, 0x08, 0x00, self->sequence_number, 0x46, 0x02, 0x00};
+	guint8 rxbuf[FU_JABRA_GNP_BUF_SIZE] = {0x00};
+	FuJabraGnpTxData tx_data = {.txbuf = txbuf, .timeout = FU_JABRA_GNP_STANDARD_SEND_TIMEOUT};
+	FuJabraGnpRxData rx_data = {.rxbuf = rxbuf,
+				    .timeout = FU_JABRA_GNP_STANDARD_RECEIVE_TIMEOUT};
+	g_autofree gchar *name = NULL;
+	if (!fu_device_retry_full(FU_DEVICE(self),
+				  fu_jabra_gnp_device_tx_cb,
+				  FU_JABRA_GNP_MAX_RETRIES,
+				  FU_JABRA_GNP_RETRY_DELAY,
+				  (gpointer)&tx_data,
+				  error))
+		return FALSE;
+	if (!fu_device_retry_full(FU_DEVICE(self),
+				  fu_jabra_gnp_device_rx_with_sequence_cb,
+				  FU_JABRA_GNP_MAX_RETRIES,
+				  FU_JABRA_GNP_RETRY_DELAY,
+				  (gpointer)&rx_data,
+				  error))
+		return FALSE;
+	name = fu_strsafe((const gchar *)rx_data.rxbuf + 8, FU_JABRA_GNP_BUF_SIZE - 8);
+	fu_device_set_name(FU_DEVICE(self), name);
+	return TRUE;
+}
+
+static gboolean
 fu_jabra_gnp_device_read_dfu_pid(FuJabraGnpDevice *self, GError **error)
 {
 	guint8 txbuf[FU_JABRA_GNP_BUF_SIZE] =
@@ -573,6 +602,8 @@ static gboolean
 fu_jabra_gnp_device_setup(FuDevice *device, GError **error)
 {
 	FuJabraGnpDevice *self = FU_JABRA_GNP_DEVICE(device);
+	if (!fu_jabra_gnp_device_read_name(self, error))
+		return FALSE;
 	if (!fu_jabra_gnp_device_read_version(self, error))
 		return FALSE;
 	if (!fu_jabra_gnp_device_read_dfu_pid(self, error))
