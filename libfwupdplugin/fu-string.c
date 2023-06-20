@@ -201,27 +201,6 @@ fu_strdup(const gchar *str, gsize bufsz, gsize offset)
 }
 
 /**
- * fu_string_replace:
- * @string: the #GString to operate on
- * @search: the text to search for
- * @replace: the text to use for substitutions
- *
- * Performs multiple search and replace operations on the given string.
- *
- * Returns: the number of replacements done, or 0 if @search is not found.
- *
- * Since: 1.8.2
- **/
-guint
-fu_string_replace(GString *string, const gchar *search, const gchar *replace)
-{
-	g_return_val_if_fail(string != NULL, 0);
-	g_return_val_if_fail(search != NULL, 0);
-	g_return_val_if_fail(replace != NULL, 0);
-	return g_string_replace(string, search, replace, 0);
-}
-
-/**
  * fu_strwidth:
  * @text: the string to operate on
  *

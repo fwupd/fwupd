@@ -125,7 +125,7 @@ static gchar *
 fu_ata_device_pad_string_for_id(const gchar *name)
 {
 	GString *str = g_string_new(name);
-	fu_string_replace(str, " ", "_");
+	g_string_replace(str, " ", "_", 0);
 	for (guint i = str->len; i < 40; i++)
 		g_string_append_c(str, '_');
 	return g_string_free(str, FALSE);

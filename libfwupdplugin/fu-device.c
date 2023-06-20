@@ -2597,8 +2597,8 @@ fu_device_sanitize_name(const gchar *value)
 		}
 	}
 	g_string_truncate(new, last_non_space);
-	fu_string_replace(new, "(TM)", "™");
-	fu_string_replace(new, "(R)", "");
+	g_string_replace(new, "(TM)", "™", 0);
+	g_string_replace(new, "(R)", "", 0);
 	if (new->len == 0)
 		return NULL;
 	return g_string_free(g_steal_pointer(&new), FALSE);

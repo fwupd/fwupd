@@ -52,7 +52,7 @@ fu_tpm_device_parse_line(const gchar *line, gpointer user_data)
 
 	/* parse hash */
 	str = g_string_new(split[1]);
-	fu_string_replace(str, " ", "");
+	g_string_replace(str, " ", "", 0);
 	if ((str->len != 40 && str->len != 64) || !_g_string_isxdigit(str)) {
 		g_debug("not SHA-1 or SHA-256, skipping: %s", split[1]);
 		return;
