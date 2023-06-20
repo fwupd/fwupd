@@ -56,3 +56,24 @@ fu_strsplit_full(const gchar *str,
 		 FuStrsplitFunc callback,
 		 gpointer user_data,
 		 GError **error);
+
+/**
+ * FuUtfConvertFlags:
+ * @FU_UTF_CONVERT_FLAG_NONE:		No flags set
+ * @FU_UTF_CONVERT_FLAG_APPEND_NUL:	Include the trailing `NUL` or `NULw` in the buffer
+ *
+ * The flags to use when converting to and from UTF-8.
+ **/
+typedef enum {
+	FU_UTF_CONVERT_FLAG_NONE = 0,
+	FU_UTF_CONVERT_FLAG_APPEND_NUL = 1 << 0,
+} FuUtfConvertFlags;
+
+gchar *
+fu_utf16_to_utf8_byte_array(GByteArray *array, GError **error);
+GByteArray *
+fu_utf8_to_utf16_byte_array(const gchar *str, FuUtfConvertFlags flags, GError **error);
+gchar *
+fu_utf16_to_utf8_bytes(GBytes *bytes, GError **error);
+GBytes *
+fu_utf8_to_utf16_bytes(const gchar *str, FuUtfConvertFlags flags, GError **error);

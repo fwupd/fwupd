@@ -56,36 +56,32 @@ fu_uefi_capsule_plugin_fwupd_efi_parse(FuUefiCapsulePlugin *self, GError **error
 {
 	FuContext *ctx = fu_plugin_get_context(FU_PLUGIN(self));
 	const guint8 needle[] = "f\0w\0u\0p\0d\0-\0e\0f\0i\0 \0v\0e\0r\0s\0i\0o\0n\0 ";
-	gsize bufsz = 0;
 	gsize offset = 0;
-	guint16 version_tmp[16] = {0x0};
-	g_autofree gchar *buf = NULL;
+	g_autofree gchar *fn = g_file_get_path(self->fwupd_efi_file);
 	g_autofree gchar *version = NULL;
+	g_autoptr(GBytes) buf = NULL;
+	g_autoptr(GBytes) ubuf = NULL;
 
 	/* find the UTF-16 version string */
-	if (!g_file_load_contents(self->fwupd_efi_file, NULL, &buf, &bufsz, NULL, error))
+	buf = fu_bytes_get_contents(fn, error);
+	if (buf == NULL)
 		return FALSE;
-	if (!fu_memmem_safe((const guint8 *)buf, bufsz, needle, sizeof(needle), &offset, error)) {
-		g_autofree gchar *fn = g_file_get_path(self->fwupd_efi_file);
+	if (!fu_memmem_safe(g_bytes_get_data(buf, NULL),
+			    g_bytes_get_size(buf),
+			    needle,
+			    sizeof(needle),
+			    &offset,
+			    error)) {
 		g_prefix_error(error, "searching %s: ", fn);
 		return FALSE;
 	}
-
-	/* align */
-	if (!fu_memcpy_safe((guint8 *)version_tmp,
-			    sizeof(version_tmp),
-			    0x0, /* dst */
-			    (const guint8 *)buf,
-			    bufsz,
-			    offset + sizeof(needle),
-			    sizeof(version_tmp) - sizeof(guint16),
-			    error))
+	ubuf = fu_bytes_new_offset(buf, offset + sizeof(needle), 30, error);
+	if (ubuf == NULL)
 		return FALSE;
 
 	/* convert to UTF-8 */
-	version = g_utf16_to_utf8(version_tmp, -1, NULL, NULL, error);
+	version = fu_utf16_to_utf8_bytes(ubuf, error);
 	if (version == NULL) {
-		g_autofree gchar *fn = g_file_get_path(self->fwupd_efi_file);
 		g_prefix_error(error, "converting %s: ", fn);
 		return FALSE;
 	}

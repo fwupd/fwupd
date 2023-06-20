@@ -603,27 +603,22 @@ fu_uefi_device_probe(FuDevice *device, GError **error)
 static void
 fu_uefi_device_capture_efi_debugging(FuDevice *device)
 {
-	gsize sz = 0;
 	g_autofree gchar *str = NULL;
-	g_autofree guint16 *buf_ucs2 = NULL;
-	g_autofree guint8 *buf = NULL;
+	g_autoptr(GBytes) buf = NULL;
 	g_autoptr(GError) error_local = NULL;
 
 	/* get the EFI variable contents */
-	if (!fu_efivar_get_data(FU_EFIVAR_GUID_FWUPDATE,
-				"FWUPDATE_DEBUG_LOG",
-				&buf,
-				&sz,
-				NULL,
-				&error_local)) {
+	buf = fu_efivar_get_data_bytes(FU_EFIVAR_GUID_FWUPDATE,
+				       "FWUPDATE_DEBUG_LOG",
+				       NULL,
+				       &error_local);
+	if (buf == NULL) {
 		fu_device_set_update_error(device, error_local->message);
 		return;
 	}
 
-	/* convert from UCS-2 to UTF-8, carefully */
-	buf_ucs2 = g_new0(guint16, (sz / 2) + 1);
-	memcpy(buf_ucs2, buf, sz);
-	str = g_utf16_to_utf8(buf_ucs2, sz / 2, NULL, NULL, &error_local);
+	/* convert from UCS-2 to UTF-8 */
+	str = fu_utf16_to_utf8_bytes(buf, &error_local);
 	if (str == NULL) {
 		fu_device_set_update_error(device, error_local->message);
 		return;
