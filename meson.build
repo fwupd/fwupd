@@ -192,8 +192,8 @@ mandir = join_paths(prefix, get_option('mandir'))
 localedir = join_paths(prefix, get_option('localedir'))
 
 diffcmd = find_program('diff')
-gio = dependency('gio-2.0', version: '>= 2.64.0')
-giounix = dependency('gio-unix-2.0', version: '>= 2.64.0', required: false)
+gio = dependency('gio-2.0', version: '>= 2.68.0')
+giounix = dependency('gio-unix-2.0', version: '>= 2.68.0', required: false)
 if giounix.found()
   conf.set('HAVE_GIO_UNIX', '1')
 endif
