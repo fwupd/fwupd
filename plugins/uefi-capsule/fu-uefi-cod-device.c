@@ -85,26 +85,15 @@ fu_uefi_cod_device_get_results_for_idx(FuDevice *device, guint idx, GError **err
 static gboolean
 fu_uefi_cod_device_get_variable_idx(const gchar *name, guint *value, GError **error)
 {
-	gsize bufsz = 0;
 	guint64 tmp = 0;
-	g_autofree guint8 *buf = NULL;
 	g_autofree gchar *str = NULL;
-	gunichar2 buf16[VARIABLE_IDX_SIZE] = {0x0};
-
-	if (!fu_efivar_get_data(FU_EFIVAR_GUID_EFI_CAPSULE_REPORT, name, &buf, &bufsz, NULL, error))
-		return FALSE;
-	if (!fu_memcpy_safe((guint8 *)buf16,
-			    sizeof(buf16),
-			    0x0, /* dst */
-			    buf,
-			    bufsz,
-			    0x0, /* src */
-			    sizeof(buf16),
-			    error))
-		return FALSE;
+	g_autoptr(GBytes) buf = NULL;
 
 	/* parse the value */
-	str = g_utf16_to_utf8(buf16, VARIABLE_IDX_SIZE, NULL, NULL, error);
+	buf = fu_efivar_get_data_bytes(FU_EFIVAR_GUID_EFI_CAPSULE_REPORT, name, NULL, error);
+	if (buf == NULL)
+		return FALSE;
+	str = fu_utf16_to_utf8_bytes(buf, error);
 	if (str == NULL)
 		return FALSE;
 	if (!g_str_has_prefix(str, "Capsule")) {

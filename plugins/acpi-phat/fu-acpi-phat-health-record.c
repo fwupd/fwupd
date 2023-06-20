@@ -69,7 +69,7 @@ fu_acpi_phat_health_record_parse(FuFirmware *firmware,
 	dataoff = fu_struct_acpi_phat_health_record_get_device_specific_data(st);
 	if (bufsz > 28) {
 		gsize ubufsz; /* bytes */
-		g_autofree gunichar2 *ubuf = NULL;
+		g_autoptr(GBytes) ubuf = NULL;
 
 		/* header -> devicepath -> data */
 		if (dataoff == 0x0) {
@@ -77,17 +77,7 @@ fu_acpi_phat_health_record_parse(FuFirmware *firmware,
 		} else {
 			ubufsz = dataoff - 28;
 		}
-		if (ubufsz > bufsz) {
-			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
-				    "device path too large: 0x%x",
-				    (guint)ubufsz);
-			return FALSE;
-		}
-
-		/* check this is an even number of bytes */
-		if (ubufsz == 0 || ubufsz % 2 != 0) {
+		if (ubufsz == 0) {
 			g_set_error(error,
 				    G_IO_ERROR,
 				    G_IO_ERROR_INVALID_DATA,
@@ -97,17 +87,10 @@ fu_acpi_phat_health_record_parse(FuFirmware *firmware,
 		}
 
 		/* align and convert */
-		ubuf = g_new0(gunichar2, ubufsz / 2);
-		if (!fu_memcpy_safe((guint8 *)ubuf,
-				    ubufsz,
-				    0x0, /* dst */
-				    buf,
-				    bufsz,
-				    28, /* src */
-				    ubufsz,
-				    error))
+		ubuf = fu_bytes_new_offset(fw, 28, ubufsz, error);
+		if (ubuf == NULL)
 			return FALSE;
-		self->device_path = g_utf16_to_utf8(ubuf, ubufsz / 2, NULL, NULL, error);
+		self->device_path = fu_utf16_to_utf8_bytes(ubuf, error);
 		if (self->device_path == NULL)
 			return FALSE;
 	}
@@ -120,17 +103,15 @@ static GByteArray *
 fu_acpi_phat_health_record_write(FuFirmware *firmware, GError **error)
 {
 	FuAcpiPhatHealthRecord *self = FU_ACPI_PHAT_HEALTH_RECORD(firmware);
-	glong device_path_utf16sz = 0;
-	g_autofree gunichar2 *device_path_utf16 = NULL;
 	g_autoptr(GByteArray) st = fu_struct_acpi_phat_health_record_new();
 
-	/* convert device path ahead of time to get total record length */
+	/* convert device path ahead of time */
 	if (self->device_path != NULL) {
-		device_path_utf16 =
-		    g_utf8_to_utf16(self->device_path, -1, NULL, &device_path_utf16sz, error);
-		if (device_path_utf16 == NULL)
+		g_autoptr(GByteArray) buf =
+		    fu_utf8_to_utf16_byte_array(self->device_path, FU_UTF_CONVERT_FLAG_NONE, error);
+		if (buf == NULL)
 			return NULL;
-		device_path_utf16sz *= 2;
+		g_byte_array_append(st, buf->data, buf->len);
 	}
 
 	/* data record */
@@ -140,13 +121,9 @@ fu_acpi_phat_health_record_write(FuFirmware *firmware, GError **error)
 			return NULL;
 		fu_struct_acpi_phat_health_record_set_device_signature(st, &guid);
 	}
-	fu_struct_acpi_phat_health_record_set_rcdlen(st, st->len + device_path_utf16sz);
+	fu_struct_acpi_phat_health_record_set_rcdlen(st, st->len);
 	fu_struct_acpi_phat_health_record_set_version(st, fu_firmware_get_version_raw(firmware));
 	fu_struct_acpi_phat_health_record_set_flags(st, self->am_healthy);
-
-	/* device path */
-	if (self->device_path != NULL)
-		g_byte_array_append(st, (const guint8 *)device_path_utf16, device_path_utf16sz);
 
 	/* success */
 	return g_steal_pointer(&st);

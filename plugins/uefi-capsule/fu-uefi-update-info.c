@@ -30,10 +30,7 @@ static gchar *
 fu_uefi_update_info_parse_dp(const guint8 *buf, gsize sz, GError **error)
 {
 	GBytes *dp_data;
-	const gchar *data;
-	gsize ucs2sz = 0;
 	g_autofree gchar *relpath = NULL;
-	g_autofree guint16 *ucs2file = NULL;
 	g_autoptr(GPtrArray) dps = NULL;
 
 	g_return_val_if_fail(buf != NULL, NULL);
@@ -48,10 +45,7 @@ fu_uefi_update_info_parse_dp(const guint8 *buf, gsize sz, GError **error)
 		return NULL;
 
 	/* convert to UTF-8 */
-	data = g_bytes_get_data(dp_data, &ucs2sz);
-	ucs2file = g_new0(guint16, (ucs2sz / 2) + 1);
-	memcpy(ucs2file, data, ucs2sz);
-	relpath = g_utf16_to_utf8(ucs2file, ucs2sz / sizeof(guint16), NULL, NULL, error);
+	relpath = fu_utf16_to_utf8_bytes(dp_data, error);
 	if (relpath == NULL)
 		return NULL;
 	g_strdelimit(relpath, "\\", '/');

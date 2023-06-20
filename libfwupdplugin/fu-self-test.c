@@ -348,6 +348,33 @@ fu_device_metadata_func(void)
 }
 
 static void
+fu_string_utf16_func(void)
+{
+	g_autofree gchar *str1 = NULL;
+	g_autofree gchar *str2 = NULL;
+	g_autoptr(GByteArray) buf = NULL;
+	g_autoptr(GError) error = NULL;
+
+	buf = fu_utf8_to_utf16_byte_array("hello world", FU_UTF_CONVERT_FLAG_APPEND_NUL, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(buf);
+	g_assert_cmpint(buf->len, ==, 24);
+	g_assert_cmpint(buf->data[0], ==, 'h');
+	g_assert_cmpint(buf->data[1], ==, '\0');
+	g_assert_cmpint(buf->data[2], ==, 'e');
+	g_assert_cmpint(buf->data[3], ==, '\0');
+	str1 = fu_utf16_to_utf8_byte_array(buf, &error);
+	g_assert_no_error(error);
+	g_assert_cmpstr(str1, ==, "hello world");
+
+	/* failure */
+	g_byte_array_set_size(buf, buf->len - 1);
+	str2 = fu_utf16_to_utf8_byte_array(buf, &error);
+	g_assert_error(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA);
+	g_assert_cmpstr(str2, ==, NULL);
+}
+
+static void
 fu_smbios_func(void)
 {
 	const gchar *str;
@@ -4149,6 +4176,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/hwids", fu_hwids_func);
 	g_test_add_func("/fwupd/context{flags}", fu_context_flags_func);
 	g_test_add_func("/fwupd/context{hwids-dmi}", fu_context_hwids_dmi_func);
+	g_test_add_func("/fwupd/string{utf16}", fu_string_utf16_func);
 	g_test_add_func("/fwupd/smbios", fu_smbios_func);
 	g_test_add_func("/fwupd/smbios3", fu_smbios3_func);
 	g_test_add_func("/fwupd/kernel", fu_kernel_func);
