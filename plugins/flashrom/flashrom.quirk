@@ -146,3 +146,10 @@ Plugin = flashrom
 [FLASHROM\GUID_16cabee1-8d79-5164-9400-346dddbfe2c5]
 Flags = fn-m-me-unlock
 FirmwareSizeMax = 0x1000000
+
+# TUXEDO InfinityBook Pro 13 v3 (HwId)
+[caaa8a77-aca3-595b-92fa-4e6fb7bccc82]
+Plugin = flashrom
+[FLASHROM\GUID_caaa8a77-aca3-595b-92fa-4e6fb7bccc82]
+Flags = fn-m-me-unlock
+FirmwareSizeMax = 0x800000
