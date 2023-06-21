@@ -6,6 +6,7 @@ When forking main into a stable 1_9_X, be sure to disable the following CI jobs:
  * publish-docs
  * publish-stable
 
+Also update `SECURITY.md`, removing the oldest branch and add the new branch at the top.
 To make sure it's done right, you can reference commit 433e809318c68c9ab6d4ae50ee9c4312503185d8
 
 Write release entries:
