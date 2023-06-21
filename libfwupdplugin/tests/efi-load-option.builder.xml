@@ -3,7 +3,6 @@
   <attrs>0x1</attrs>
   <optional_data>aGVsbG8gd29ybGQ=</optional_data>
   <firmware gtype="FuEfiDevicePathList">
-    <id>payload</id>
     <firmware gtype="FuEfiHardDriveDevicePath">
       <idx>0x04</idx>
       <subtype>0x01</subtype>
