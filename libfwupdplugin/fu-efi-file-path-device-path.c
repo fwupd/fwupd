@@ -63,6 +63,7 @@ fu_efi_file_path_device_path_get_name(FuEfiFilePathDevicePath *self, GError **er
  * @error: (nullable): optional return location for an error
  *
  * Sets the `DEVICE_PATH` name.
+ * Any forward slash characters are automatically converted to backslashes.
  *
  * Since: 1.9.3
  **/
@@ -77,8 +78,10 @@ fu_efi_file_path_device_path_set_name(FuEfiFilePathDevicePath *self,
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	if (name != NULL) {
-		g_autoptr(GByteArray) buf =
-		    fu_utf8_to_utf16_byte_array(name, FU_UTF_CONVERT_FLAG_APPEND_NUL, error);
+		g_autofree gchar *name_bs = g_strdup(name);
+		g_autoptr(GByteArray) buf = NULL;
+		g_strdelimit(name_bs, "/", '\\');
+		buf = fu_utf8_to_utf16_byte_array(name_bs, FU_UTF_CONVERT_FLAG_APPEND_NUL, error);
 		if (buf == NULL)
 			return FALSE;
 		blob = g_bytes_new(buf->data, buf->len);
