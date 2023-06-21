@@ -1423,6 +1423,10 @@ fu_util_install_release(FuUtilPrivate *priv, FwupdRelease *rel, GError **error)
 	} else {
 		argv[0] = fwupd_remote_build_firmware_uri(remote, uri_tmp, error);
 	}
+
+	/* reset progress before reusing it. */
+	fu_progress_reset(priv->progress);
+
 	return fu_util_install(priv, argv, error);
 }
 
