@@ -25,7 +25,7 @@ G_DEFINE_TYPE(FuWacModuleBluetooth, fu_wac_module_bluetooth, FU_TYPE_WAC_MODULE)
 
 typedef struct {
 	guint8 preamble[7];
-	guint8 addr[3];
+	guint32 addr;
 	guint8 crc;
 	guint8 cdata[FU_WAC_MODULE_BLUETOOTH_PAYLOAD_SZ];
 } FuWacModuleBluetoothBlockData;
@@ -89,10 +89,8 @@ fu_wac_module_bluetooth_parse_blocks(const guint8 *data,
 			continue;
 
 		bd = g_new0(FuWacModuleBluetoothBlockData, 1);
+		bd->addr = addr;
 		memcpy(bd->preamble, preamble, sizeof(preamble));
-		bd->addr[0] = (addr >> 16) & 0xff;
-		bd->addr[1] = (addr >> 8) & 0xff;
-		bd->addr[2] = addr & 0xff;
 		memset(bd->cdata, 0xff, FU_WAC_MODULE_BLUETOOTH_PAYLOAD_SZ);
 
 		/* if file is not in multiples of payload size */
@@ -171,7 +169,7 @@ fu_wac_module_bluetooth_write_firmware(FuDevice *device,
 		/* build data packet */
 		memset(buf, 0xff, sizeof(buf));
 		memcpy(&buf[0], bd->preamble, 7);
-		memcpy(&buf[7], bd->addr, 3);
+		fu_memwrite_uint24(buf + 0x7, bd->addr, G_LITTLE_ENDIAN);
 		buf[10] = bd->crc;
 		memcpy(&buf[11], bd->cdata, sizeof(bd->cdata));
 		blob_chunk = g_bytes_new(buf, sizeof(buf));
