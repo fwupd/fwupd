@@ -32,6 +32,7 @@ hsi_test_jsons = files([
   'org.fwupd.hsi.Tpm.EmptyPcr.json',
   'org.fwupd.hsi.Tpm.ReconstructionPcr0.json',
   'org.fwupd.hsi.Tpm.Version20.json',
+  'org.fwupd.hsi.Uefi.BootserviceVars.json',
   'org.fwupd.hsi.Uefi.Pk.json',
   'org.fwupd.hsi.Uefi.SecureBoot.json',
   'org.fwupd.hsi.Bios.RollbackProtection.json',

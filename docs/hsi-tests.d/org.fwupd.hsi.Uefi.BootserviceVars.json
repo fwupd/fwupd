@@ -1,0 +1,21 @@
+{
+  "id": "org.fwupd.hsi.Uefi.BootserviceVars",
+  "name": "UEFI BootService Variables",
+  "description": [
+    "UEFI boot service variables should not be readable from runtime mode."
+  ],
+  "failure-impact": [
+    "It is possible to read security-sensitive data that should not be readable by the runtime mode."
+  ],
+  "failure-results": {
+    "not-locked": "bootservice-only data is readable in runtime mode"
+  },
+  "success-results": {
+    "locked": "bootservice-only data is not visible"
+  },
+  "hsi-level": 1,
+  "references": {
+    "https://uefi.org/specs/UEFI/2.10/07_Services_Boot_Services.html": "UEFI Specification"
+  },
+  "fwupd-version": "1.9.3"
+}
