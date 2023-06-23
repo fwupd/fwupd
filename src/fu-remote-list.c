@@ -465,12 +465,12 @@ fu_remote_list_reload(FuRemoteList *self, GError **error)
 	g_ptr_array_set_size(self->array, 0);
 	g_ptr_array_set_size(self->monitors, 0);
 
-	/* use sysremotes, and then fall back to /etc */
-	remotesdir = fu_path_from_kind(FU_PATH_KIND_SYSCONFDIR_PKG);
-	if (!fu_remote_list_add_for_path(self, remotesdir, error))
-		return FALSE;
+	/* search mutable, and then fall back to /etc */
 	remotesdir_mut = fu_path_from_kind(FU_PATH_KIND_LOCALSTATEDIR_PKG);
 	if (!fu_remote_list_add_for_path(self, remotesdir_mut, error))
+		return FALSE;
+	remotesdir = fu_path_from_kind(FU_PATH_KIND_SYSCONFDIR_PKG);
+	if (!fu_remote_list_add_for_path(self, remotesdir, error))
 		return FALSE;
 
 	/* depsolve */
