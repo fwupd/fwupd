@@ -3431,6 +3431,32 @@ fu_util_get_bios_setting(FuUtilPrivate *priv, gchar **values, GError **error)
 }
 
 static gboolean
+fu_util_efivar_list(FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	g_autoptr(GPtrArray) names = NULL;
+
+	/* sanity check */
+	if (g_strv_length(values) < 1) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOTHING_TO_DO,
+				    /* TRANSLATORS: error message */
+				    _("Invalid arguments, expected GUID"));
+		return FALSE;
+	}
+	names = fu_efivar_get_names(values[0], error);
+	if (names == NULL)
+		return FALSE;
+	for (guint i = 0; i < names->len; i++) {
+		const gchar *name = g_ptr_array_index(names, i);
+		fu_console_print(priv->console, "name: %s", name);
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_util_build_cabinet(FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(GBytes) cab_blob = NULL;
@@ -4071,6 +4097,13 @@ main(int argc, char *argv[])
 			      /* TRANSLATORS: command description */
 			      _("Build a cabinet archive from a firmware blob and XML metadata"),
 			      fu_util_build_cabinet);
+	fu_util_cmd_array_add(cmd_array,
+			      "efivar-list",
+			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			      _("GUID"),
+			      /* TRANSLATORS: command description */
+			      _("List EFI variables with a specific GUID"),
+			      fu_util_efivar_list);
 
 	/* do stuff on ctrl+c */
 	priv->cancellable = g_cancellable_new();
