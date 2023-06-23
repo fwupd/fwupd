@@ -113,6 +113,10 @@ fu_security_attr_get_name(FwupdSecurityAttr *attr)
 		/* TRANSLATORS: Title: SB is a way of locking down UEFI */
 		return g_strdup(_("UEFI secure boot"));
 	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_UEFI_BOOTSERVICE_VARS) == 0) {
+		/* TRANSLATORS: Title: Bootservice is when only readable from early-boot */
+		return g_strdup(_("UEFI bootservice variables"));
+	}
 	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_TPM_EMPTY_PCR) == 0) {
 		/* TRANSLATORS: Title: PCRs (Platform Configuration Registers) shouldn't be empty */
 		return g_strdup(_("TPM empty PCRs"));
@@ -308,6 +312,10 @@ fu_security_attr_get_title(FwupdSecurityAttr *attr)
 		/* TRANSLATORS: Title: SB is a way of locking down UEFI */
 		return _("UEFI Secure Boot");
 	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_UEFI_BOOTSERVICE_VARS) == 0) {
+		/* TRANSLATORS: Title: Bootservice is when only readable from early-boot */
+		return _("UEFI Bootservice Variables");
+	}
 	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_TPM_EMPTY_PCR) == 0) {
 		/* TRANSLATORS: Title: PCRs (Platform Configuration Registers) shouldn't be empty */
 		return _("TPM Platform Configuration");
@@ -486,6 +494,10 @@ fu_security_attr_get_description(FwupdSecurityAttr *attr)
 		/* TRANSLATORS: longer description */
 		return _("UEFI Secure Boot prevents malicious software from being loaded when the "
 			 "device starts.");
+	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_UEFI_BOOTSERVICE_VARS) == 0) {
+		/* TRANSLATORS: longer description */
+		return _("UEFI boot service variables should not be readable from runtime mode.");
 	}
 	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_TPM_EMPTY_PCR) == 0) {
 		/* TRANSLATORS: longer description */

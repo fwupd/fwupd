@@ -263,6 +263,14 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_SECURITY_ATTR_ID_UEFI_SECUREBOOT "org.fwupd.hsi.Uefi.SecureBoot"
 /**
+ * FWUPD_SECURITY_ATTR_ID_UEFI_BOOTSERVICE_VARS:
+ *
+ * Host Security ID attribute indicating if Bootservice-only variables are hidden.
+ *
+ * Since: 1.9.3
+ **/
+#define FWUPD_SECURITY_ATTR_ID_UEFI_BOOTSERVICE_VARS "org.fwupd.hsi.Uefi.BootserviceVars"
+/**
  * FWUPD_SECURITY_ATTR_ID_PLATFORM_DEBUG_ENABLED:
  *
  * Host Security ID attribute for parts with debugging capabilities enabled
