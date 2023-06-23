@@ -25,14 +25,17 @@
 struct _FuEfiHardDriveDevicePath {
 	FuEfiDevicePath parent_instance;
 	guint32 partition_number;
-	guint64 partition_start;
-	guint64 partition_size;
+	guint64 partition_start; /* blocks */
+	guint64 partition_size;	 /* blocks */
 	fwupd_guid_t partition_signature;
 	FuEfiHardDriveDevicePathPartitionFormat partition_format;
 	FuEfiHardDriveDevicePathSignatureType signature_type;
 };
 
 G_DEFINE_TYPE(FuEfiHardDriveDevicePath, fu_efi_hard_drive_device_path, FU_TYPE_EFI_DEVICE_PATH)
+
+/* Linux always considers sectors to be 512 bytes */
+#define BLOCK_SIZE 0x200
 
 static void
 fu_efi_hard_drive_device_path_export(FuFirmware *firmware,
@@ -210,8 +213,8 @@ fu_efi_hard_drive_device_path_new_from_volume(FuVolume *volume, GError **error)
 
 	/* common to both */
 	self->partition_number = fu_volume_get_partition_number(volume);
-	self->partition_start = fu_volume_get_partition_offset(volume);
-	self->partition_size = fu_volume_get_partition_size(volume);
+	self->partition_start = fu_volume_get_partition_offset(volume) / BLOCK_SIZE;
+	self->partition_size = fu_volume_get_partition_size(volume) / BLOCK_SIZE;
 
 	/* set up the rest of the struct */
 	partition_kind = fu_volume_get_partition_kind(volume);
