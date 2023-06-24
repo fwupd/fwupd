@@ -106,7 +106,8 @@ fu_goodixtp_brlb_firmware_parse(FuGoodixtpFirmware *self,
 			if (fw_img == NULL)
 				return FALSE;
 			fu_firmware_set_bytes(img, fw_img);
-			fu_firmware_add_image(FU_FIRMWARE(self), img);
+			if (!fu_firmware_add_image_full(FU_FIRMWARE(self), img, error))
+				return FALSE;
 		}
 		offset_hdr += st_img->len;
 		offset_payload += img_size;
@@ -120,6 +121,7 @@ fu_goodixtp_brlb_firmware_parse(FuGoodixtpFirmware *self,
 static void
 fu_goodixtp_brlb_firmware_init(FuGoodixtpBrlbFirmware *self)
 {
+	fu_firmware_set_images_max(FU_FIRMWARE(self), 1024);
 }
 
 static void

@@ -103,7 +103,8 @@ fu_linear_firmware_parse(FuFirmware *firmware,
 			return FALSE;
 		}
 		fu_firmware_set_offset(firmware, offset);
-		fu_firmware_add_image(firmware, img);
+		if (!fu_firmware_add_image_full(firmware, img, error))
+			return FALSE;
 
 		/* next! */
 		offset += fu_firmware_get_size(img);
@@ -170,6 +171,7 @@ fu_linear_firmware_set_property(GObject *object,
 static void
 fu_linear_firmware_init(FuLinearFirmware *self)
 {
+	fu_firmware_set_images_max(FU_FIRMWARE(self), 1024);
 }
 
 static void

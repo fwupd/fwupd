@@ -626,6 +626,7 @@ fu_fdt_image_init(FuFdtImage *self)
 	priv->hash_attrs =
 	    g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify)g_bytes_unref);
 	priv->hash_attrs_format = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
+	fu_firmware_set_images_max(FU_FIRMWARE(self), 10000);
 }
 
 static void

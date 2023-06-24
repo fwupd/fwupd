@@ -20,7 +20,7 @@ struct _FuEfiDevicePathList {
 
 G_DEFINE_TYPE(FuEfiDevicePathList, fu_efi_device_path_list, FU_TYPE_FIRMWARE)
 
-#define FU_EFI_DEVICE_PATH_MAX_CHILDREN 1000u
+#define FU_EFI_DEVICE_PATH_LIST_IMAGES_MAX 1000u
 
 static gboolean
 fu_efi_device_path_list_parse(FuFirmware *firmware,
@@ -35,17 +35,6 @@ fu_efi_device_path_list_parse(FuFirmware *firmware,
 	while (offset < g_bytes_get_size(fw)) {
 		g_autoptr(FuEfiDevicePath) efi_dp = NULL;
 		g_autoptr(GByteArray) st_dp = NULL;
-		g_autoptr(GPtrArray) imgs = fu_firmware_get_images(firmware);
-
-		/* sanity check */
-		if (imgs->len > FU_EFI_DEVICE_PATH_MAX_CHILDREN) {
-			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
-				    "invalid DEVICE_PATH count, limit is %u",
-				    FU_EFI_DEVICE_PATH_MAX_CHILDREN);
-			return FALSE;
-		}
 
 		/* parse the header so we can work out what GType to create */
 		st_dp = fu_struct_efi_device_path_parse(buf, bufsz, offset, error);
@@ -68,7 +57,8 @@ fu_efi_device_path_list_parse(FuFirmware *firmware,
 		fu_firmware_set_offset(FU_FIRMWARE(efi_dp), offset);
 		if (!fu_firmware_parse_full(FU_FIRMWARE(efi_dp), fw, offset, flags, error))
 			return FALSE;
-		fu_firmware_add_image(firmware, FU_FIRMWARE(efi_dp));
+		if (!fu_firmware_add_image_full(firmware, FU_FIRMWARE(efi_dp), error))
+			return FALSE;
 		offset += fu_firmware_get_size(FU_FIRMWARE(efi_dp));
 	}
 
@@ -115,6 +105,7 @@ fu_efi_device_path_list_init(FuEfiDevicePathList *self)
 {
 	g_type_ensure(FU_TYPE_EFI_FILE_PATH_DEVICE_PATH);
 	g_type_ensure(FU_TYPE_EFI_HARD_DRIVE_DEVICE_PATH);
+	fu_firmware_set_images_max(FU_FIRMWARE(self), FU_EFI_DEVICE_PATH_LIST_IMAGES_MAX);
 }
 
 /**

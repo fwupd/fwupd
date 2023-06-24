@@ -243,7 +243,8 @@ fu_wac_firmware_tokenize_cb(GString *token, guint token_idx, gpointer user_data,
 		fu_firmware_set_bytes(img, fw_srec);
 		fu_firmware_set_addr(img, fu_firmware_get_addr(firmware_srec));
 		fu_firmware_set_idx(img, helper->images_cnt);
-		fu_firmware_add_image(helper->firmware, img);
+		if (!fu_firmware_add_image_full(helper->firmware, img, error))
+			return FALSE;
 		helper->images_cnt++;
 
 		/* clear the image buffer */
@@ -394,6 +395,7 @@ fu_wac_firmware_write(FuFirmware *firmware, GError **error)
 static void
 fu_wac_firmware_init(FuWacFirmware *self)
 {
+	fu_firmware_set_images_max(FU_FIRMWARE(self), 1024);
 }
 
 static void

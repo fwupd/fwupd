@@ -50,8 +50,7 @@ fu_archive_firmware_parse_cb(FuArchive *self,
 	FuFirmware *firmware = FU_FIRMWARE(user_data);
 	g_autoptr(FuFirmware) img = fu_firmware_new_from_bytes(bytes);
 	fu_firmware_set_id(img, filename);
-	fu_firmware_add_image(firmware, img);
-	return TRUE;
+	return fu_firmware_add_image_full(firmware, img, error);
 }
 
 static gboolean
@@ -277,6 +276,7 @@ fu_archive_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
 static void
 fu_archive_firmware_init(FuArchiveFirmware *self)
 {
+	fu_firmware_set_images_max(FU_FIRMWARE(self), 10000);
 }
 
 static void

@@ -174,6 +174,7 @@ fu_fmap_firmware_write(FuFirmware *firmware, GError **error)
 static void
 fu_fmap_firmware_init(FuFmapFirmware *self)
 {
+	fu_firmware_set_images_max(FU_FIRMWARE(self), 1024);
 }
 
 static void

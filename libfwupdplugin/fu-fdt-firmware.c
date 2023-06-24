@@ -209,7 +209,8 @@ fu_fdt_firmware_parse_dt_struct(FuFdtFirmware *self, GBytes *fw, GBytes *strtab,
 			if (str->len > 0)
 				fu_firmware_set_id(image, str->str);
 			fu_firmware_set_offset(image, offset);
-			fu_firmware_add_image(firmware_current, image);
+			if (!fu_firmware_add_image_full(firmware_current, image, error))
+				return FALSE;
 			g_set_object(&firmware_current, image);
 			continue;
 		}
