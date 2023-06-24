@@ -49,7 +49,6 @@ fu_synaprom_firmware_parse(FuFirmware *firmware,
 	FuSynapromFirmware *self = FU_SYNAPROM_FIRMWARE(firmware);
 	gsize bufsz = 0;
 	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
-	guint img_cnt = 0;
 
 	/* 256 byte signature as footer */
 	if (bufsz < FU_SYNAPROM_FIRMWARE_SIGSIZE + FU_STRUCT_SYNAPROM_HDR_SIZE) {
@@ -113,7 +112,8 @@ fu_synaprom_firmware_parse(FuFirmware *firmware,
 		img = fu_firmware_new_from_bytes(bytes);
 		fu_firmware_set_idx(img, tag);
 		fu_firmware_set_id(img, fu_synaprom_firmware_tag_to_string(tag));
-		fu_firmware_add_image(firmware, img);
+		if (!fu_firmware_add_image_full(firmware, img, error))
+			return FALSE;
 
 		/* metadata */
 		if (tag == FU_SYNAPROM_FIRMWARE_TAG_MFW_UPDATE_HEADER) {
@@ -127,17 +127,6 @@ fu_synaprom_firmware_parse(FuFirmware *firmware,
 						  fu_struct_synaprom_mfw_hdr_get_vmajor(st_mfw),
 						  fu_struct_synaprom_mfw_hdr_get_vminor(st_mfw));
 			fu_firmware_set_version(firmware, version);
-		}
-
-		/* sanity check */
-		if (img_cnt++ > FU_SYNAPROM_FIRMWARE_COUNT_MAX) {
-			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
-				    "maximum number of images exceeded, "
-				    "maximum is 0x%02x",
-				    (guint)FU_SYNAPROM_FIRMWARE_COUNT_MAX);
-			return FALSE;
 		}
 
 		/* next item */
@@ -196,6 +185,7 @@ static void
 fu_synaprom_firmware_init(FuSynapromFirmware *self)
 {
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_VID_PID);
+	fu_firmware_set_images_max(FU_FIRMWARE(self), FU_SYNAPROM_FIRMWARE_COUNT_MAX);
 }
 
 static void

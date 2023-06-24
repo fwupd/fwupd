@@ -175,7 +175,8 @@ fu_pefile_firmware_parse(FuFirmware *firmware,
 		}
 		if (!fu_firmware_parse(fw_sect, sect_blob, flags, error))
 			return FALSE;
-		fu_firmware_add_image(firmware, fw_sect);
+		if (!fu_firmware_add_image_full(firmware, fw_sect, error))
+			return FALSE;
 
 		/* next! */
 		hdr_offset += 0x28;
@@ -188,6 +189,7 @@ fu_pefile_firmware_parse(FuFirmware *firmware,
 static void
 fu_pefile_firmware_init(FuPefileFirmware *self)
 {
+	fu_firmware_set_images_max(FU_FIRMWARE(self), 100);
 }
 
 static void

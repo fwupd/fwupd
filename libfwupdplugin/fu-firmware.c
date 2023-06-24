@@ -38,6 +38,7 @@ typedef struct {
 	guint64 addr;
 	guint64 offset;
 	gsize size;
+	guint images_max;
 	GPtrArray *chunks;  /* nullable, element-type FuChunk */
 	GPtrArray *patches; /* nullable, element-type FuFirmwarePatch */
 } FuFirmwarePrivate;
@@ -1122,7 +1123,8 @@ fu_firmware_build(FuFirmware *self, XbNode *n, GError **error)
 			}
 			if (!fu_firmware_build(img, xb_image, error))
 				return FALSE;
-			fu_firmware_add_image(self, img);
+			if (!fu_firmware_add_image_full(self, img, error))
+				return FALSE;
 		}
 	}
 
@@ -1420,23 +1422,29 @@ fu_firmware_write_file(FuFirmware *self, GFile *file, GError **error)
 }
 
 /**
- * fu_firmware_add_image:
+ * fu_firmware_add_image_full:
  * @self: a #FuPlugin
  * @img: a child firmware image
+ * @error: (nullable): optional return location for an error
  *
- * Adds an image to the firmware.
+ * Adds an image to the firmware. This method will fail if the number of images would be
+ * above the limit set by fu_firmware_set_images_max().
  *
  * If %FU_FIRMWARE_FLAG_DEDUPE_ID is set, an image with the same ID is already
  * present it is replaced.
  *
- * Since: 1.3.1
+ * Returns: %TRUE if the image was added
+ *
+ * Since: 1.9.3
  **/
-void
-fu_firmware_add_image(FuFirmware *self, FuFirmware *img)
+gboolean
+fu_firmware_add_image_full(FuFirmware *self, FuFirmware *img, GError **error)
 {
 	FuFirmwarePrivate *priv = GET_PRIVATE(self);
-	g_return_if_fail(FU_IS_FIRMWARE(self));
-	g_return_if_fail(FU_IS_FIRMWARE(img));
+
+	g_return_val_if_fail(FU_IS_FIRMWARE(self), FALSE);
+	g_return_val_if_fail(FU_IS_FIRMWARE(img), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* dedupe */
 	for (guint i = 0; i < priv->images->len; i++) {
@@ -1455,10 +1463,85 @@ fu_firmware_add_image(FuFirmware *self, FuFirmware *img)
 		}
 	}
 
+	/* sanity check */
+	if (priv->images_max > 0 && priv->images->len >= priv->images_max) {
+		g_set_error(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_INVALID_DATA,
+			    "too many images, limit is %u",
+			    priv->images_max);
+		return FALSE;
+	}
+
 	g_ptr_array_add(priv->images, g_object_ref(img));
 
 	/* set the other way around */
 	fu_firmware_set_parent(img, self);
+
+	/* success */
+	return TRUE;
+}
+
+/**
+ * fu_firmware_add_image:
+ * @self: a #FuPlugin
+ * @img: a child firmware image
+ *
+ * Adds an image to the firmware.
+ *
+ * NOTE: If adding images in a loop of any kind then fu_firmware_add_image_full() should be used
+ * instead, and fu_firmware_set_images_max() should be set before adding images.
+ *
+ * If %FU_FIRMWARE_FLAG_DEDUPE_ID is set, an image with the same ID is already
+ * present it is replaced.
+ *
+ * Since: 1.3.1
+ **/
+void
+fu_firmware_add_image(FuFirmware *self, FuFirmware *img)
+{
+	g_autoptr(GError) error_local = NULL;
+
+	g_return_if_fail(FU_IS_FIRMWARE(self));
+	g_return_if_fail(FU_IS_FIRMWARE(img));
+
+	if (!fu_firmware_add_image_full(self, img, &error_local))
+		g_critical("failed to add image: %s", error_local->message);
+}
+
+/**
+ * fu_firmware_set_images_max:
+ * @self: a #FuPlugin
+ * @images_max: integer, or 0 for unlimited
+ *
+ * Sets the maximum number of images this container can hold.
+ *
+ * Since: 1.9.3
+ **/
+void
+fu_firmware_set_images_max(FuFirmware *self, guint images_max)
+{
+	FuFirmwarePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_FIRMWARE(self));
+	priv->images_max = images_max;
+}
+
+/**
+ * fu_firmware_get_images_max:
+ * @self: a #FuPlugin
+ *
+ * Gets the maximum number of images this container can hold.
+ *
+ * Returns: integer, or 0 for unlimited.
+ *
+ * Since: 1.9.3
+ **/
+guint
+fu_firmware_get_images_max(FuFirmware *self)
+{
+	FuFirmwarePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_FIRMWARE(self), G_MAXUINT);
+	return priv->images_max;
 }
 
 /**

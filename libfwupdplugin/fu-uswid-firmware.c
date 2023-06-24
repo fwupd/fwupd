@@ -141,7 +141,8 @@ fu_uswid_firmware_parse(FuFirmware *firmware,
 				       flags | FWUPD_INSTALL_FLAG_NO_SEARCH,
 				       error))
 			return FALSE;
-		fu_firmware_add_image(firmware, firmware_coswid);
+		if (!fu_firmware_add_image_full(firmware, firmware_coswid, error))
+			return FALSE;
 		if (fu_firmware_get_size(firmware_coswid) == 0) {
 			g_set_error_literal(error,
 					    FWUPD_ERROR,
@@ -241,6 +242,7 @@ fu_uswid_firmware_init(FuUswidFirmware *self)
 	priv->compressed = FALSE;
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_STORED_SIZE);
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_ALWAYS_SEARCH);
+	fu_firmware_set_images_max(FU_FIRMWARE(self), 2000);
 }
 
 static void

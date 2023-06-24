@@ -77,7 +77,6 @@ fu_elanfp_firmware_parse(FuFirmware *firmware,
 	FuElanfpFirmware *self = FU_ELANFP_FIRMWARE(firmware);
 	const guint8 *buf;
 	gsize bufsz;
-	guint img_cnt = 0;
 
 	/* file format version */
 	buf = g_bytes_get_data(fw, &bufsz);
@@ -97,15 +96,6 @@ fu_elanfp_firmware_parse(FuFirmware *firmware,
 		guint32 fwtype = 0;
 		g_autoptr(GBytes) blob = NULL;
 		g_autoptr(FuFirmware) img = NULL;
-
-		/* check sanity */
-		if (img_cnt++ > 256) {
-			g_set_error_literal(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_NOT_SUPPORTED,
-					    "too many images detected");
-			return FALSE;
-		}
 
 		/* type, reserved, start-addr, len */
 		if (!fu_memread_uint32_safe(buf,
@@ -172,7 +162,8 @@ fu_elanfp_firmware_parse(FuFirmware *firmware,
 			return FALSE;
 		if (!fu_firmware_parse(img, blob, flags | FWUPD_INSTALL_FLAG_NO_SEARCH, error))
 			return FALSE;
-		fu_firmware_add_image(firmware, img);
+		if (!fu_firmware_add_image_full(firmware, img, error))
+			return FALSE;
 
 		offset += 0x10;
 	}
@@ -231,6 +222,7 @@ fu_elanfp_firmware_write(FuFirmware *firmware, GError **error)
 static void
 fu_elanfp_firmware_init(FuElanfpFirmware *self)
 {
+	fu_firmware_set_images_max(FU_FIRMWARE(self), 256);
 }
 
 static void

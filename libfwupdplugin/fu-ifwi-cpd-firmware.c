@@ -115,7 +115,8 @@ fu_ifwi_cpd_firmware_parse_manifest(FuFirmware *firmware, GBytes *fw, GError **e
 
 		/* success */
 		fu_firmware_set_offset(img, offset);
-		fu_firmware_add_image(firmware, img);
+		if (!fu_firmware_add_image_full(firmware, img, error))
+			return FALSE;
 		offset += extension_length;
 	}
 
@@ -206,7 +207,8 @@ fu_ifwi_cpd_firmware_parse(FuFirmware *firmware,
 		}
 
 		/* success */
-		fu_firmware_add_image(firmware, img);
+		if (!fu_firmware_add_image_full(firmware, img, error))
+			return FALSE;
 		offset += st_ent->len;
 	}
 
@@ -312,6 +314,7 @@ fu_ifwi_cpd_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
 static void
 fu_ifwi_cpd_firmware_init(FuIfwiCpdFirmware *self)
 {
+	fu_firmware_set_images_max(FU_FIRMWARE(self), FU_IFWI_CPD_FIRMWARE_ENTRIES_MAX);
 }
 
 static void

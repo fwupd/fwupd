@@ -705,7 +705,8 @@ fu_intel_thunderbolt_nvm_parse(FuFirmware *firmware,
 	}
 	img_payload = fu_firmware_new_from_bytes(fw_payload);
 	fu_firmware_set_id(img_payload, FU_FIRMWARE_ID_PAYLOAD);
-	fu_firmware_add_image(firmware, img_payload);
+	if (!fu_firmware_add_image_full(firmware, img_payload, error))
+		return FALSE;
 
 	/* success */
 	return TRUE;
@@ -952,6 +953,7 @@ static void
 fu_intel_thunderbolt_nvm_init(FuIntelThunderboltNvm *self)
 {
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_VID_PID);
+	fu_firmware_set_images_max(FU_FIRMWARE(self), 1024);
 }
 
 static void

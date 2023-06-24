@@ -148,7 +148,8 @@ fu_jabra_gnp_firmware_parse(FuFirmware *firmware,
 			g_propagate_error(error, g_steal_pointer(&error_local));
 			return FALSE;
 		}
-		fu_firmware_add_image(firmware, FU_FIRMWARE(img));
+		if (!fu_firmware_add_image_full(firmware, FU_FIRMWARE(img), error))
+			return FALSE;
 	}
 
 	/* success */
@@ -173,6 +174,7 @@ static void
 fu_jabra_gnp_firmware_init(FuJabraGnpFirmware *self)
 {
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_VID_PID);
+	fu_firmware_set_images_max(FU_FIRMWARE(self), 1024);
 }
 
 static void

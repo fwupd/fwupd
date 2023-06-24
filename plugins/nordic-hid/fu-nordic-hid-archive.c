@@ -166,7 +166,8 @@ fu_nordic_hid_archive_parse(FuFirmware *firmware,
 			image_addr = json_object_get_int_member(obj, "load_address");
 			fu_firmware_set_addr(image, image_addr);
 		}
-		fu_firmware_add_image(firmware, image);
+		if (!fu_firmware_add_image_full(firmware, image, error))
+			return FALSE;
 	}
 
 	/* success */
@@ -176,6 +177,7 @@ fu_nordic_hid_archive_parse(FuFirmware *firmware,
 static void
 fu_nordic_hid_archive_init(FuNordicHidArchive *self)
 {
+	fu_firmware_set_images_max(FU_FIRMWARE(self), 1024);
 }
 
 static void

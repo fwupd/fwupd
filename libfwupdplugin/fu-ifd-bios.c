@@ -86,6 +86,7 @@ static void
 fu_ifd_bios_init(FuIfdBios *self)
 {
 	fu_firmware_set_alignment(FU_FIRMWARE(self), FU_FIRMWARE_ALIGNMENT_4K);
+	fu_firmware_set_images_max(FU_FIRMWARE(self), 1024);
 }
 
 static void

@@ -2956,17 +2956,20 @@ fu_firmware_common_func(void)
 static void
 fu_firmware_dedupe_func(void)
 {
+	gboolean ret;
 	g_autoptr(FuFirmware) firmware = fu_firmware_new();
 	g_autoptr(FuFirmware) img1 = fu_firmware_new();
 	g_autoptr(FuFirmware) img1_old = fu_firmware_new();
 	g_autoptr(FuFirmware) img2 = fu_firmware_new();
 	g_autoptr(FuFirmware) img2_old = fu_firmware_new();
+	g_autoptr(FuFirmware) img3 = fu_firmware_new();
 	g_autoptr(FuFirmware) img_id = NULL;
 	g_autoptr(FuFirmware) img_idx = NULL;
 	g_autoptr(GError) error = NULL;
 
 	fu_firmware_add_flag(firmware, FU_FIRMWARE_FLAG_DEDUPE_ID);
 	fu_firmware_add_flag(firmware, FU_FIRMWARE_FLAG_DEDUPE_IDX);
+	fu_firmware_set_images_max(firmware, 2);
 
 	fu_firmware_set_idx(img1_old, 13);
 	fu_firmware_set_id(img1_old, "DAVE");
@@ -2996,6 +2999,10 @@ fu_firmware_dedupe_func(void)
 	g_assert_nonnull(img_idx);
 	g_assert_cmpint(fu_firmware_get_idx(img_idx), ==, 23);
 	g_assert_cmpstr(fu_firmware_get_id(img_idx), ==, "secondary");
+
+	ret = fu_firmware_add_image_full(firmware, img3, &error);
+	g_assert_error(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA);
+	g_assert_false(ret);
 }
 
 static void

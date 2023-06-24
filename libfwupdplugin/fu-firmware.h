@@ -253,6 +253,10 @@ gsize
 fu_firmware_get_size(FuFirmware *self);
 void
 fu_firmware_set_size(FuFirmware *self, gsize size);
+void
+fu_firmware_set_images_max(FuFirmware *self, guint images_max);
+guint
+fu_firmware_get_images_max(FuFirmware *self);
 guint64
 fu_firmware_get_idx(FuFirmware *self);
 void
@@ -314,6 +318,8 @@ fu_firmware_check_compatible(FuFirmware *self,
 
 void
 fu_firmware_add_image(FuFirmware *self, FuFirmware *img);
+gboolean
+fu_firmware_add_image_full(FuFirmware *self, FuFirmware *img, GError **error);
 gboolean
 fu_firmware_remove_image(FuFirmware *self, FuFirmware *img, GError **error);
 gboolean

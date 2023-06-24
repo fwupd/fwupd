@@ -32,29 +32,12 @@ fu_efi_firmware_filesystem_parse(FuFirmware *firmware,
 				 GError **error)
 {
 	gsize bufsz = 0x0;
-	guint files_max = FU_EFI_FIRMWARE_FILESYSTEM_FILES_MAX;
 	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
-	g_autoptr(GPtrArray) imgs = fu_firmware_get_images(firmware);
-
-	/* if fuzzing, artificially limit the number of files to avoid using large amounts of RSS
-	 * when printing the FuEfiFirmwareFilesystem XML output */
-	if (g_getenv("FWUPD_FUZZER_RUNNING") != NULL)
-		files_max = 50;
 
 	while (offset + 0x18 < bufsz) {
 		g_autoptr(FuFirmware) img = fu_efi_firmware_file_new();
 		g_autoptr(GBytes) fw_tmp = NULL;
 		gboolean is_freespace = TRUE;
-
-		/* limit reached */
-		if (imgs->len + 1 > files_max) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_FILE,
-				    "too many file objects in the filesystem, limit was %u",
-				    files_max);
-			return FALSE;
-		}
 
 		/* ignore free space */
 		for (guint i = 0; i < 0x18; i++) {
@@ -74,7 +57,8 @@ fu_efi_firmware_filesystem_parse(FuFirmware *firmware,
 			return FALSE;
 		}
 		fu_firmware_set_offset(firmware, offset);
-		fu_firmware_add_image(firmware, img);
+		if (!fu_firmware_add_image_full(firmware, img, error))
+			return FALSE;
 
 		/* next! */
 		offset += fu_firmware_get_size(img);
@@ -130,6 +114,11 @@ fu_efi_firmware_filesystem_write(FuFirmware *firmware, GError **error)
 static void
 fu_efi_firmware_filesystem_init(FuEfiFirmwareFilesystem *self)
 {
+	/* if fuzzing, artificially limit the number of files to avoid using large amounts of RSS
+	 * when printing the FuEfiFirmwareFilesystem XML output */
+	fu_firmware_set_images_max(
+	    FU_FIRMWARE(self),
+	    g_getenv("FWUPD_FUZZER_RUNNING") == NULL ? FU_EFI_FIRMWARE_FILESYSTEM_FILES_MAX : 50);
 	fu_firmware_set_alignment(FU_FIRMWARE(self), FU_FIRMWARE_ALIGNMENT_8);
 }
 

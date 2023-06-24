@@ -48,7 +48,8 @@ fu_acpi_phat_version_record_parse(FuFirmware *firmware,
 				       flags | FWUPD_INSTALL_FLAG_NO_SEARCH,
 				       error))
 			return FALSE;
-		fu_firmware_add_image(firmware, firmware_tmp);
+		if (!fu_firmware_add_image_full(firmware, firmware_tmp, error))
+			return FALSE;
 		offset += fu_firmware_get_size(firmware_tmp);
 	}
 	return TRUE;
@@ -83,6 +84,7 @@ fu_acpi_phat_version_record_write(FuFirmware *firmware, GError **error)
 static void
 fu_acpi_phat_version_record_init(FuAcpiPhatVersionRecord *self)
 {
+	fu_firmware_set_images_max(FU_FIRMWARE(self), 2000);
 }
 
 static void
