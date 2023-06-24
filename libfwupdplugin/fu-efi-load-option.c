@@ -25,6 +25,8 @@ struct _FuEfiLoadOption {
 
 G_DEFINE_TYPE(FuEfiLoadOption, fu_efi_load_option, FU_TYPE_FIRMWARE)
 
+#define FU_EFI_LOAD_OPTION_DESCRIPTION_SIZE_MAX 0x1000u /* bytes */
+
 /**
  * fu_efi_load_option_get_optional_data:
  * @self: a #FuEfiLoadOption
@@ -122,6 +124,14 @@ fu_efi_load_option_parse(FuFirmware *firmware,
 	/* parse UTF-16 description */
 	for (; offset < bufsz; offset += 2) {
 		guint16 tmp = 0;
+		if (buf_utf16->len > FU_EFI_LOAD_OPTION_DESCRIPTION_SIZE_MAX) {
+			g_set_error(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_INVALID_DATA,
+				    "description was too long, limit is 0x%x chars",
+				    FU_EFI_LOAD_OPTION_DESCRIPTION_SIZE_MAX / 2);
+			return FALSE;
+		}
 		if (!fu_memread_uint16_safe(buf, bufsz, offset, &tmp, G_LITTLE_ENDIAN, error))
 			return FALSE;
 		if (tmp == 0)
