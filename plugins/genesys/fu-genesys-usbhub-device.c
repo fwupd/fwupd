@@ -247,7 +247,10 @@ fu_genesys_usbhub_device_compare_flash_blank(FuGenesysUsbhubDevice *self,
 		}
 		if (!fu_memcmp_safe(buf->data,
 				    fu_chunk_get_data_sz(chk),
+				    0x0,
 				    blank_buf->data,
+				    blank_buf->len,
+				    0x0,
 				    fu_chunk_get_data_sz(chk),
 				    error)) {
 			g_prefix_error(error,
@@ -302,8 +305,11 @@ fu_genesys_usbhub_device_compare_flash_data(FuGenesysUsbhubDevice *self,
 			return FALSE;
 		}
 		if (!fu_memcmp_safe(read_buf->data,
-				    fu_chunk_get_data_sz(chk),
+				    read_buf->len,
+				    0x0,
 				    fu_chunk_get_data(chk),
+				    fu_chunk_get_data_sz(chk),
+				    0x0,
 				    fu_chunk_get_data_sz(chk),
 				    error)) {
 			g_prefix_error(error,

@@ -272,7 +272,7 @@ fu_vli_device_spi_write_block(FuVliDevice *self,
 		g_prefix_error(error, "SPI data read failed: ");
 		return FALSE;
 	}
-	return fu_memcmp_safe(buf, bufsz, buf_tmp, bufsz, error);
+	return fu_memcmp_safe(buf, bufsz, 0, buf_tmp, bufsz, 0, bufsz, error);
 }
 
 gboolean
