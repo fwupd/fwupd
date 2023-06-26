@@ -4062,7 +4062,6 @@ fu_plugin_struct_wrapped_func(void)
 	gboolean ret;
 	g_autofree gchar *str1 = NULL;
 	g_autofree gchar *str2 = NULL;
-	g_autofree gchar *str3 = NULL;
 	g_autofree gchar *str4 = NULL;
 	g_autoptr(GByteArray) st2 = NULL;
 	g_autoptr(GByteArray) st3 = NULL;
