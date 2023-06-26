@@ -308,6 +308,7 @@ main(int argc, char *argv[])
 			g_print("%s\n", _("Validating ESP contents…"));
 			if (!fu_uefi_dbx_signature_list_validate(ctx,
 								 FU_EFI_SIGNATURE_LIST(dbx_update),
+								 FWUPD_INSTALL_FLAG_NONE,
 								 &error)) {
 				g_printerr("%s: %s\n",
 					   /* TRANSLATORS: something with a blocked hash exists
