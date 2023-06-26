@@ -90,6 +90,7 @@ struct GenesysTsDynamicGl3590 {
     bonding: u8,
 }
 
+#[derive(ToString)]
 #[repr(u8)]
 enum GenesysFwStatus {
     Mask = 0x30,
