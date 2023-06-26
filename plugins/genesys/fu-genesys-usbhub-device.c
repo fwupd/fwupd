@@ -12,6 +12,7 @@
 
 #include "fu-genesys-common.h"
 #include "fu-genesys-scaler-device.h"
+#include "fu-genesys-usbhub-codesign-firmware.h"
 #include "fu-genesys-usbhub-device.h"
 #include "fu-genesys-usbhub-firmware.h"
 #include "fu-genesys-usbhub-struct.h"
@@ -123,7 +124,8 @@ struct _FuGenesysUsbhubDevice {
 	 */
 	gboolean write_recovery_bank;
 
-	FuGenesysPublicKey public_key;
+	FuGenesysFwCodesign codesign;
+	GByteArray *st_public_key;
 	FuCfiDevice *cfi_device;
 };
 
@@ -557,6 +559,65 @@ fu_genesys_usbhub_device_get_code_size(FuGenesysUsbhubDevice *self, int bank_num
 		return FALSE;
 	}
 	self->code_size = 1024 * kbs;
+
+	/* success */
+	return TRUE;
+}
+
+/* read the public-key from the firmware stored in the device */
+static gboolean
+fu_genesys_usbhub_device_get_public_key(FuGenesysUsbhubDevice *self, int bank_num, GError **error)
+{
+	gsize bufsz = self->spec.fw_bank_capacity[FU_GENESYS_FW_TYPE_CODESIGN];
+	g_autofree guint8 *buf = NULL;
+	g_autofree gchar *guid = NULL;
+
+	g_return_val_if_fail(bank_num < FW_BANK_COUNT, FALSE);
+
+	/* check public-key available */
+	if (bufsz == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "unsupported public-key");
+		return FALSE;
+	}
+
+	/* get public-key from device */
+	buf = g_malloc0(bufsz);
+	if (!fu_genesys_usbhub_device_read_flash(
+		self,
+		self->spec.fw_bank_addr[bank_num][FU_GENESYS_FW_TYPE_CODESIGN],
+		buf,
+		bufsz,
+		NULL,
+		error)) {
+		g_prefix_error(error, "error getting public-key from device: ");
+		return FALSE;
+	}
+
+	/* validate and parse public-key */
+	if (fu_struct_genesys_fw_rsa_public_key_text_validate(buf, bufsz, 0, NULL)) {
+		self->codesign = FU_GENESYS_FW_CODESIGN_RSA;
+		self->st_public_key =
+		    fu_struct_genesys_fw_rsa_public_key_text_parse(buf, bufsz, 0, error);
+	} else if (fu_struct_genesys_fw_ecdsa_public_key_validate(buf, bufsz, 0, NULL)) {
+		self->codesign = FU_GENESYS_FW_CODESIGN_ECDSA;
+		self->st_public_key =
+		    fu_struct_genesys_fw_ecdsa_public_key_parse(buf, bufsz, 0, error);
+	} else {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_FOUND,
+				    "device does not have public-key");
+		return FALSE;
+	}
+
+	/* add PUBKEY product instance */
+	guid = fwupd_guid_hash_data(self->st_public_key->data,
+				    self->st_public_key->len,
+				    FWUPD_GUID_FLAG_NONE);
+	fu_device_add_instance_strup(FU_DEVICE(self), "PUBKEY", guid);
 
 	/* success */
 	return TRUE;
@@ -1097,30 +1158,9 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 	}
 
 	/* has public key */
-	if (fu_device_has_private_flag(device, FU_GENESYS_USBHUB_FLAG_HAS_PUBLIC_KEY)) {
-		g_autofree gchar *guid = NULL;
-		if (!fu_memcpy_safe((guint8 *)&self->public_key,
-				    sizeof(self->public_key),
-				    0, /* dst */
-				    g_bytes_get_data(blob, NULL),
-				    g_bytes_get_size(blob),
-				    self->spec.fw_bank_capacity[FU_GENESYS_FW_TYPE_HUB], /* src */
-				    sizeof(self->public_key),
-				    error))
+	if (fu_device_has_private_flag(device, FU_GENESYS_USBHUB_FLAG_HAS_PUBLIC_KEY))
+		if (!fu_genesys_usbhub_device_get_public_key(self, FW_BANK_1, error))
 			return FALSE;
-		if (memcmp(&self->public_key.N, "N = ", 4) != 0 &&
-		    memcmp(&self->public_key.E, "E = ", 4) != 0) {
-			g_set_error_literal(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_SIGNATURE_INVALID,
-					    "invalid public-key");
-			return FALSE;
-		}
-		guid = fwupd_guid_hash_data((const guint8 *)&self->public_key,
-					    sizeof(self->public_key),
-					    FWUPD_GUID_FLAG_NONE);
-		fu_device_add_instance_strup(device, "PUBKEY", guid);
-	}
 
 	/* add specific product info */
 	if (self->running_bank != FU_GENESYS_FW_STATUS_MASK) {
@@ -1193,6 +1233,110 @@ fu_genesys_usbhub_device_to_string(FuDevice *device, guint idt, GString *str)
 	fu_string_append_kx(str, idt, "ExtendSize", self->extend_size);
 }
 
+static gboolean
+fu_genesys_usbhub_device_compare_fw_public_key(FuGenesysUsbhubDevice *self,
+					       FuFirmware *firmware,
+					       GError **error)
+{
+	FuGenesysFwCodesign codesign_type = FU_GENESYS_FW_CODESIGN_NONE;
+	GBytes *codesign_blob = NULL;
+	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GByteArray) st_codesign = NULL;
+	g_return_val_if_fail(FU_IS_GENESYS_USBHUB_CODESIGN_FIRMWARE(firmware), FALSE);
+
+	/* compare dev and fw codesign type */
+	codesign_type = fu_genesys_usbhub_codesign_firmware_get_codesign(
+	    FU_GENESYS_USBHUB_CODESIGN_FIRMWARE(firmware));
+	if (codesign_type != self->codesign) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_SIGNATURE_INVALID,
+			    "mismatch codesign type %s",
+			    fu_genesys_fw_codesign_to_string(codesign_type));
+		return FALSE;
+	}
+
+	/* get fw codesign info */
+	blob = fu_firmware_get_bytes(firmware, error);
+	if (blob == NULL) {
+		g_prefix_error(error,
+			       "firmware does not have %s bytes: ",
+			       fu_genesys_fw_type_to_string(FU_GENESYS_FW_TYPE_CODESIGN));
+		return FALSE;
+	}
+	codesign_blob = fu_bytes_new_offset(blob,
+					    fu_firmware_get_offset(firmware),
+					    fu_firmware_get_size(firmware),
+					    error);
+	if (codesign_blob == NULL) {
+		g_prefix_error(error, "error getting codesign data: ");
+		return FALSE;
+	}
+	st_codesign = g_bytes_unref_to_array(codesign_blob);
+
+	/* compare dev and fw public-key */
+	switch (self->codesign) {
+	case FU_GENESYS_FW_CODESIGN_RSA: {
+		fu_dump_raw(G_LOG_DOMAIN,
+			    "PublicKey",
+			    st_codesign->data,
+			    FU_STRUCT_GENESYS_FW_CODESIGN_INFO_RSA_SIZE);
+		if (memcmp(fu_struct_genesys_fw_codesign_info_rsa_get_text_n(st_codesign),
+			   fu_struct_genesys_fw_rsa_public_key_text_get_text_n(self->st_public_key),
+			   FU_STRUCT_GENESYS_FW_RSA_PUBLIC_KEY_TEXT_SIZE_TEXT_N) != 0) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_SIGNATURE_INVALID,
+					    "mismatch public-keyN");
+			return FALSE;
+		}
+		if (memcmp(fu_struct_genesys_fw_codesign_info_rsa_get_text_e(st_codesign),
+			   fu_struct_genesys_fw_rsa_public_key_text_get_text_e(self->st_public_key),
+			   FU_STRUCT_GENESYS_FW_RSA_PUBLIC_KEY_TEXT_SIZE_TEXT_E) != 0) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_SIGNATURE_INVALID,
+					    "mismatch public-keyE");
+			return FALSE;
+		}
+		break;
+	}
+	case FU_GENESYS_FW_CODESIGN_ECDSA: {
+		gsize fw_keysz = 0;
+		const guint8 *fw_key =
+		    fu_struct_genesys_fw_codesign_info_ecdsa_get_key(st_codesign, &fw_keysz);
+
+		if (fw_keysz != FU_STRUCT_GENESYS_FW_ECDSA_PUBLIC_KEY_SIZE) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_SIGNATURE_INVALID,
+					    "mismatch public-key size");
+			return FALSE;
+		}
+		if (memcmp(fw_key,
+			   self->st_public_key->data,
+			   FU_STRUCT_GENESYS_FW_ECDSA_PUBLIC_KEY_SIZE) != 0) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_SIGNATURE_INVALID,
+					    "mismatch public-key");
+			fu_dump_raw(G_LOG_DOMAIN, "PublicKey", fw_key, fw_keysz);
+			return FALSE;
+		}
+		break;
+	}
+	default: /* does not exist */
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOTHING_TO_DO,
+			    "unsupported codesign type %s",
+			    fu_genesys_fw_codesign_to_string(codesign_type));
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
 static FuFirmware *
 fu_genesys_usbhub_device_prepare_firmware(FuDevice *device,
 					  GBytes *fw,
@@ -1207,21 +1351,28 @@ fu_genesys_usbhub_device_prepare_firmware(FuDevice *device,
 		return NULL;
 
 	/* has public-key */
-	if (g_bytes_get_size(fw) >= fu_firmware_get_size(firmware) + sizeof(self->public_key)) {
-		gsize bufsz = 0;
-		const guint8 *buf = g_bytes_get_data(fw, &bufsz);
+	if (fu_device_has_private_flag(device, FU_GENESYS_USBHUB_FLAG_HAS_PUBLIC_KEY) &&
+	    (flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {
+		g_autoptr(FuFirmware) img = NULL;
 
-		fu_dump_raw(G_LOG_DOMAIN, "PublicKey", buf, bufsz);
-		if (memcmp(buf + fu_firmware_get_size(firmware),
-			   &self->public_key,
-			   sizeof(self->public_key)) != 0 &&
-		    (flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {
+		if (self->st_public_key == NULL) {
 			g_set_error_literal(error,
 					    FWUPD_ERROR,
-					    FWUPD_ERROR_SIGNATURE_INVALID,
-					    "mismatch public-key");
+					    FWUPD_ERROR_NOT_FOUND,
+					    "device does not have public-key");
 			return NULL;
 		}
+
+		img = fu_firmware_get_image_by_idx(firmware, FU_GENESYS_FW_TYPE_CODESIGN, error);
+		if (img == NULL) {
+			g_prefix_error(error,
+				       "firmware does not have %s: ",
+				       fu_genesys_fw_type_to_string(FU_GENESYS_FW_TYPE_CODESIGN));
+			return NULL;
+		}
+
+		if (!fu_genesys_usbhub_device_compare_fw_public_key(self, img, error))
+			return NULL;
 	}
 
 	/* check size */
@@ -1618,6 +1769,7 @@ fu_genesys_usbhub_device_init(FuGenesysUsbhubDevice *self)
 	self->flash_block_size = 0x10000; /* 64KB */
 	self->flash_sector_size = 0x1000; /* 4KB */
 	self->flash_rw_size = 0x40;	  /* 64B */
+	self->codesign = FU_GENESYS_FW_CODESIGN_NONE;
 }
 
 static void
@@ -1632,6 +1784,8 @@ fu_genesys_usbhub_device_finalize(GObject *object)
 		g_byte_array_unref(self->st_fwinfo_ts);
 	if (self->st_vendor_ts != NULL)
 		g_byte_array_unref(self->st_vendor_ts);
+	if (self->st_public_key != NULL)
+		g_byte_array_unref(self->st_public_key);
 	if (self->cfi_device != NULL)
 		g_object_unref(self->cfi_device);
 	G_OBJECT_CLASS(fu_genesys_usbhub_device_parent_class)->finalize(object);
