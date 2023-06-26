@@ -100,6 +100,7 @@ fu_uefi_dbx_prepare_firmware(FuDevice *device, GBytes *fw, FwupdInstallFlags fla
 		//		fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_VERIFY);
 		if (!fu_uefi_dbx_signature_list_validate(ctx,
 							 FU_EFI_SIGNATURE_LIST(siglist),
+							 flags,
 							 error)) {
 			g_prefix_error(error,
 				       "Blocked executable in the ESP, "
