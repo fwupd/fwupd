@@ -1257,38 +1257,103 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 }
 
 static void
+fu_genesys_usbhub_device_codesign_to_string(FuDevice *device, guint idt, GString *str)
+{
+	FuGenesysUsbhubDevice *self = FU_GENESYS_USBHUB_DEVICE(device);
+	guint64 fw_max_size = fu_device_get_firmware_size_max(device);
+	guint32 bank_addr1 = self->spec.fw_bank_addr[FW_BANK_1][FU_GENESYS_FW_TYPE_CODESIGN];
+	guint32 bank_addr2 = self->spec.fw_bank_addr[FW_BANK_2][FU_GENESYS_FW_TYPE_CODESIGN];
+	guint idt_detail = idt + 1;
+
+	fu_string_append(str, idt, "Codesign", fu_genesys_fw_codesign_to_string(self->codesign));
+
+	if (self->spec.support_dual_bank) {
+		fu_string_append_kx(str, idt_detail, "Bank1Addr", bank_addr1);
+
+		if (fw_max_size <= bank_addr2) /* capacity too small */
+			return;
+		fu_string_append_kx(str, idt_detail, "Bank2Addr", bank_addr2);
+	}
+}
+
+static void
 fu_genesys_usbhub_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuGenesysUsbhubDevice *self = FU_GENESYS_USBHUB_DEVICE(device);
-	fu_string_append_kx(str, idt, "FlashEraseDelay", self->flash_erase_delay);
-	fu_string_append_kx(str, idt, "FlashWriteDelay", self->flash_write_delay);
-	fu_string_append_kx(str, idt, "FlashBlockSize", self->flash_block_size);
-	fu_string_append_kx(str, idt, "FlashSectorSize", self->flash_sector_size);
-	fu_string_append_kx(str, idt, "FlashRwSize", self->flash_rw_size);
-	fu_string_append_kx(str,
-			    idt,
-			    "FwBank0Addr",
-			    self->spec.fw_bank_addr[FW_BANK_1][FU_GENESYS_FW_TYPE_HUB]);
-	fu_string_append_kx(str,
-			    idt,
-			    "FwBank0Vers",
-			    self->fw_bank_vers[FW_BANK_1][FU_GENESYS_FW_TYPE_HUB]);
-	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_DUAL_IMAGE)) {
+	guint64 fw_max_size = fu_device_get_firmware_size_max(device);
+	guint idt_detail = idt + 1;
+	guint idt_bank_detail = idt_detail + 1;
+
+	fu_string_append(str, idt, "CFI", fu_device_get_name(FU_DEVICE(self->cfi_device)));
+	fu_string_append_ku(str, idt_detail, "FlashEraseDelay", self->flash_erase_delay);
+	fu_string_append_ku(str, idt_detail, "FlashWriteDelay", self->flash_write_delay);
+	fu_string_append_kx(str, idt_detail, "FlashBlockSize", self->flash_block_size);
+	fu_string_append_kx(str, idt_detail, "FlashSectorSize", self->flash_sector_size);
+	fu_string_append_kx(str, idt_detail, "FlashRwSize", self->flash_rw_size);
+
+	fu_string_append(str,
+			 idt,
+			 "RunningBank",
+			 fu_genesys_fw_status_to_string(self->running_bank));
+	fu_string_append_kb(str, idt, "SupportDualBank", self->spec.support_dual_bank);
+	fu_string_append_kb(str, idt, "SupportCodeSize", self->spec.support_code_size);
+
+	for (gint i = 0; i < FU_GENESYS_FW_TYPE_INSIDE_HUB_COUNT; i++) {
+		if (self->spec.fw_bank_capacity[i] == 0 ||		  /* unsupported fw type */
+		    fw_max_size <= self->spec.fw_bank_addr[FW_BANK_1][i]) /* capacity too small */
+			continue;
+
+		if (i == FU_GENESYS_FW_TYPE_CODESIGN) {
+			if (self->codesign != FU_GENESYS_FW_CODESIGN_NONE)
+				fu_genesys_usbhub_device_codesign_to_string(device, idt + 1, str);
+			continue;
+		}
+
+		fu_string_append(str, idt_detail, "FwBank", fu_genesys_fw_type_to_string(i));
 		fu_string_append_kx(str,
-				    idt,
-				    "FwBank1Addr",
-				    self->spec.fw_bank_addr[FW_BANK_2][FU_GENESYS_FW_TYPE_HUB]);
-		fu_string_append_kx(str,
-				    idt,
-				    "FwBank1Vers",
-				    self->fw_bank_vers[FW_BANK_2][FU_GENESYS_FW_TYPE_HUB]);
+				    idt_bank_detail,
+				    "DataTotalCount",
+				    self->spec.fw_bank_capacity[i]);
+		fu_string_append_ku(str, idt_bank_detail, "UpdateBank", self->update_fw_banks[i]);
+
+		if (self->spec.chip.model == ISP_MODEL_HUB_GL3523 && i == FU_GENESYS_FW_TYPE_HUB)
+			fu_string_append_kb(str,
+					    idt_bank_detail,
+					    "BackupHubFwBank1",
+					    self->write_recovery_bank);
+
+		if (self->spec.support_dual_bank) {
+			fu_string_append_kx(str,
+					    idt_bank_detail,
+					    "Bank1Addr",
+					    self->spec.fw_bank_addr[FW_BANK_1][i]);
+			fu_string_append_kx(str,
+					    idt_bank_detail,
+					    "Bank1Ver",
+					    self->fw_bank_vers[FW_BANK_1][i]);
+			fu_string_append_kx(str,
+					    idt_bank_detail,
+					    "Bank1CodeSize",
+					    self->fw_bank_code_sizes[FW_BANK_1][i]);
+
+			if (fw_max_size <=
+			    self->spec.fw_bank_addr[FW_BANK_2][i]) /* capacity too small */
+				continue;
+
+			fu_string_append_kx(str,
+					    idt_bank_detail,
+					    "Bank2Addr",
+					    self->spec.fw_bank_addr[FW_BANK_2][i]);
+			fu_string_append_kx(str,
+					    idt_bank_detail,
+					    "Bank2Ver",
+					    self->fw_bank_vers[FW_BANK_2][i]);
+			fu_string_append_kx(str,
+					    idt_bank_detail,
+					    "Bank2CodeSize",
+					    self->fw_bank_code_sizes[FW_BANK_2][i]);
+		}
 	}
-	fu_string_append_kx(str, idt, "CodeSize", self->code_size);
-	fu_string_append_kx(str,
-			    idt,
-			    "FwDataTotalCount",
-			    self->spec.fw_bank_capacity[FU_GENESYS_FW_TYPE_HUB]);
-	fu_string_append_kx(str, idt, "ExtendSize", self->extend_size);
 }
 
 /**
@@ -1473,6 +1538,64 @@ fu_genesys_usbhub_device_compare_fw_public_key(FuGenesysUsbhubDevice *self,
 	return TRUE;
 }
 
+static gboolean
+fu_genesys_usbhub_device_adjust_fw_addr(FuGenesysUsbhubDevice *self,
+					FuFirmware *firmware,
+					GError **error)
+{
+	FuGenesysFwType fw_type = fu_firmware_get_idx(firmware);
+	FuGenesysFwBank bank_num = self->update_fw_banks[fw_type];
+	guint32 code_size = 0;
+	guint32 bank_size = 0;
+	g_autoptr(GPtrArray) imgs = NULL;
+
+	/* check supported fw type */
+	if (fw_type >= FU_GENESYS_FW_TYPE_INSIDE_HUB_COUNT) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "unknown firmware type %s",
+			    fu_firmware_get_id(firmware));
+		return FALSE;
+	}
+
+	/* check bank capacity */
+	bank_size = self->spec.fw_bank_capacity[fw_type];
+	if (bank_size == 0) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "device not supported firmware type %s",
+			    fu_firmware_get_id(firmware));
+		return FALSE;
+	}
+	code_size = fu_firmware_get_size(firmware);
+	if (code_size > bank_size) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "firmware %s too large, got 0x%x, expected <= 0x%x",
+			    fu_firmware_get_id(firmware),
+			    code_size,
+			    bank_size);
+		return FALSE;
+	}
+
+	/* set update address */
+	fu_firmware_set_addr(firmware, self->spec.fw_bank_addr[bank_num][fw_type]);
+
+	/* set child firmware */
+	imgs = fu_firmware_get_images(firmware);
+	for (guint i = 0; i < imgs->len; i++) {
+		FuFirmware *img = g_ptr_array_index(imgs, i);
+		if (!fu_genesys_usbhub_device_adjust_fw_addr(self, img, error))
+			return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
 static FuFirmware *
 fu_genesys_usbhub_device_prepare_firmware(FuDevice *device,
 					  GBytes *fw,
@@ -1511,19 +1634,12 @@ fu_genesys_usbhub_device_prepare_firmware(FuDevice *device,
 			return NULL;
 	}
 
-	/* check size */
-	if (g_bytes_get_size(fw) > fu_device_get_firmware_size_max(device)) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_FILE,
-			    "firmware too large, got 0x%x, expected <= 0x%x",
-			    (guint)g_bytes_get_size(fw),
-			    (guint)fu_device_get_firmware_size_max(device));
+	/* set write address into each firmware address */
+	if (!fu_genesys_usbhub_device_adjust_fw_addr(self, firmware, error))
 		return NULL;
-	}
 
 	/* success */
-	return fu_firmware_new_from_bytes(fw);
+	return g_steal_pointer(&firmware);
 }
 
 static gboolean
