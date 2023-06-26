@@ -198,9 +198,12 @@ fu_synaptics_cxaudio_device_operation(FuSynapticsCxaudioDevice *self,
 		}
 		if (operation == FU_SYNAPTICS_CXAUDIO_OPERATION_WRITE &&
 		    flags & FU_SYNAPTICS_CXAUDIO_OPERATION_FLAG_VERIFY) {
-			if (!fu_memcmp_safe(outbuf + idx_write,
-					    payload_max,
-					    inbuf + idx_read,
+			if (!fu_memcmp_safe(outbuf,
+					    sizeof(outbuf),
+					    idx_write,
+					    inbuf,
+					    sizeof(inbuf),
+					    idx_read,
 					    payload_max,
 					    error)) {
 				g_prefix_error(error,

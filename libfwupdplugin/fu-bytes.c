@@ -325,7 +325,7 @@ fu_bytes_compare(GBytes *bytes1, GBytes *bytes2, GError **error)
 
 	buf1 = g_bytes_get_data(bytes1, &bufsz1);
 	buf2 = g_bytes_get_data(bytes2, &bufsz2);
-	return fu_memcmp_safe(buf1, bufsz1, buf2, bufsz2, error);
+	return fu_memcmp_safe(buf1, bufsz1, 0x0, buf2, bufsz2, 0x0, MAX(bufsz1, bufsz2), error);
 }
 
 /**

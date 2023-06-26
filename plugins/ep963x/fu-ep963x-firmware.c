@@ -20,29 +20,15 @@ G_DEFINE_TYPE(FuEp963xFirmware, fu_ep963x_firmware, FU_TYPE_FIRMWARE)
 static gboolean
 fu_ep963x_firmware_check_magic(FuFirmware *firmware, GBytes *fw, gsize offset, GError **error)
 {
-	guint8 magic[5] = {0x0};
-
-	if (!fu_memcpy_safe(magic,
-			    sizeof(magic),
-			    0, /* dst */
-			    g_bytes_get_data(fw, NULL),
-			    g_bytes_get_size(fw),
-			    offset + 16,
-			    sizeof(magic),
-			    error)) {
-		g_prefix_error(error, "failed to read magic: ");
-		return FALSE;
-	}
-	if (memcmp(magic, "EP963", sizeof(magic)) != 0) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_FILE,
-				    "invalid EP963x binary file");
-		return FALSE;
-	}
-
-	/* success */
-	return TRUE;
+	guint8 magic[5] = "EP963";
+	return fu_memcmp_safe(g_bytes_get_data(fw, NULL),
+			      g_bytes_get_size(fw),
+			      offset + 16,
+			      magic,
+			      sizeof(magic),
+			      0x0,
+			      sizeof(magic),
+			      error);
 }
 
 static gboolean

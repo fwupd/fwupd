@@ -188,5 +188,12 @@ fu_byte_array_compare(GByteArray *buf1, GByteArray *buf2, GError **error)
 	g_return_val_if_fail(buf1 != NULL, FALSE);
 	g_return_val_if_fail(buf2 != NULL, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
-	return fu_memcmp_safe(buf1->data, buf1->len, buf2->data, buf2->len, error);
+	return fu_memcmp_safe(buf1->data,
+			      buf1->len,
+			      0x0,
+			      buf2->data,
+			      buf2->len,
+			      0x0,
+			      MAX(buf1->len, buf2->len),
+			      error);
 }

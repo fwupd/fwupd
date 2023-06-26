@@ -258,29 +258,15 @@ fu_wac_firmware_tokenize_cb(GString *token, guint token_idx, gpointer user_data,
 static gboolean
 fu_wac_firmware_check_magic(FuFirmware *firmware, GBytes *fw, gsize offset, GError **error)
 {
-	guint8 magic[5] = {0x0};
-
-	if (!fu_memcpy_safe(magic,
-			    sizeof(magic),
-			    0, /* dst */
-			    g_bytes_get_data(fw, NULL),
-			    g_bytes_get_size(fw),
-			    offset,
-			    sizeof(magic),
-			    error)) {
-		g_prefix_error(error, "failed to read magic: ");
-		return FALSE;
-	}
-	if (memcmp(magic, "WACOM", sizeof(magic)) != 0) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_FILE,
-				    "invalid .wac prefix");
-		return FALSE;
-	}
-
-	/* success */
-	return TRUE;
+	guint8 magic[5] = "WACOM";
+	return fu_memcmp_safe(g_bytes_get_data(fw, NULL),
+			      g_bytes_get_size(fw),
+			      offset,
+			      magic,
+			      sizeof(magic),
+			      0x0,
+			      sizeof(magic),
+			      error);
 }
 
 static gboolean

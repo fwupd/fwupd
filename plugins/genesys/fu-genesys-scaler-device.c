@@ -1799,7 +1799,7 @@ fu_genesys_scaler_device_write_firmware(FuDevice *device,
 						 fu_progress_get_child(progress),
 						 error))
 		return FALSE;
-	if (!fu_memcmp_safe(buf, size, data, size, error))
+	if (!fu_memcmp_safe(buf, size, 0x0, data, size, 0x0, size, error))
 		return FALSE;
 	fu_progress_step_done(progress);
 

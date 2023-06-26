@@ -249,9 +249,12 @@ fu_memread_uint64(const guint8 *buf, FuEndianType endian)
 /**
  * fu_memcmp_safe:
  * @buf1: a buffer
- * @bufsz1: sizeof @buf1
+ * @buf1_sz: sizeof @buf1
+ * @buf1_offset: offset into @buf1
  * @buf2: another buffer
- * @bufsz2: sizeof @buf2
+ * @buf2_sz: sizeof @buf2
+ * @buf2_offset: offset into @buf1
+ * @n: number of bytes to compare from @buf1+@buf1_offset from
  * @error: (nullable): optional return location for an error
  *
  * Compares the buffers for equality.
@@ -261,33 +264,33 @@ fu_memread_uint64(const guint8 *buf, FuEndianType endian)
  * Since: 1.8.2
  **/
 gboolean
-fu_memcmp_safe(const guint8 *buf1, gsize bufsz1, const guint8 *buf2, gsize bufsz2, GError **error)
+fu_memcmp_safe(const guint8 *buf1,
+	       gsize buf1_sz,
+	       gsize buf1_offset,
+	       const guint8 *buf2,
+	       gsize buf2_sz,
+	       gsize buf2_offset,
+	       gsize n,
+	       GError **error)
 {
 	g_return_val_if_fail(buf1 != NULL, FALSE);
 	g_return_val_if_fail(buf2 != NULL, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
-	/* not the same length */
-	if (bufsz1 != bufsz2) {
-		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
-			    "got %" G_GSIZE_FORMAT " bytes, expected "
-			    "%" G_GSIZE_FORMAT,
-			    bufsz1,
-			    bufsz2);
+	if (!fu_memchk_read(buf1_sz, buf1_offset, n, error))
 		return FALSE;
-	}
+	if (!fu_memchk_read(buf2_sz, buf2_offset, n, error))
+		return FALSE;
 
 	/* check matches */
-	for (guint i = 0x0; i < bufsz1; i++) {
-		if (buf1[i] != buf2[i]) {
+	for (guint i = 0x0; i < n; i++) {
+		if (buf1[buf1_offset + i] != buf2[buf2_offset + i]) {
 			g_set_error(error,
 				    G_IO_ERROR,
 				    G_IO_ERROR_INVALID_DATA,
 				    "got 0x%02x, expected 0x%02x @ 0x%04x",
-				    buf1[i],
-				    buf2[i],
+				    buf1[buf1_offset + i],
+				    buf2[buf2_offset + i],
 				    i);
 			return FALSE;
 		}
