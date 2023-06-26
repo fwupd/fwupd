@@ -9,9 +9,9 @@ plugin_builtins += static_library('fu_plugin_genesys',
   sources: [
     'fu-genesys-scaler-firmware.c',   # fuzzing
     'fu-genesys-usbhub-firmware.c',   # fuzzing
-    'fu-genesys-usbhub-dev-firmware.c',
-    'fu-genesys-usbhub-pd-firmware.c',
-    'fu-genesys-usbhub-codesign-firmware.c',
+    'fu-genesys-usbhub-dev-firmware.c', # fuzzing
+    'fu-genesys-usbhub-pd-firmware.c', # fuzzing
+    'fu-genesys-usbhub-codesign-firmware.c', # fuzzing
     'fu-genesys-scaler-device.c',
     'fu-genesys-usbhub-device.c',
     'fu-genesys-plugin.c',
