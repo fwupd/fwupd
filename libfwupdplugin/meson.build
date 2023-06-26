@@ -124,12 +124,12 @@ elif host_machine.system() == 'freebsd'
   fwupdplugin_src += 'fu-efivar-freebsd.c'
 elif host_machine.system() == 'windows'
   fwupdplugin_src += 'fu-common-windows.c'
-  fwupdplugin_src += 'fu-efivar-windows.c'  # fuzzing
+  fwupdplugin_src += 'fu-efivar-windows.c'
 elif host_machine.system() == 'darwin'
   fwupdplugin_src += 'fu-common-darwin.c'
   fwupdplugin_src += 'fu-efivar-darwin.c'
 else
-  error('no OS support for @0@'.format(host_machine.system()))
+  fwupdplugin_src += 'fu-efivar-impl.c' # fuzzing
 endif
 
 fwupdplugin_headers = [
