@@ -208,9 +208,6 @@ fwupdplugin_headers = [
   'fu-mei-device.h',
   'fu-usb-device.h',
   'fu-hid-device.h',
-]
-
-fwupdplugin_headers_private = [
   'fu-backend-private.h',
   'fu-context-private.h',
   'fu-config-private.h',
@@ -269,7 +266,6 @@ fwupdplugin = library(
   sources: [
     fwupdplugin_src,
     fwupdplugin_headers,
-    fwupdplugin_headers_private,
   ],
   include_directories: [
     root_incdir,
@@ -306,7 +302,6 @@ if introspection.allowed()
     sources: [
       fwupdplugin_src,
       fwupdplugin_headers,
-      fwupdplugin_headers_private,
     ],
     nsversion: '1.0',
     namespace: 'FwupdPlugin',
