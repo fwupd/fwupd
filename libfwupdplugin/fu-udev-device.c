@@ -531,14 +531,26 @@ fu_udev_device_probe(FuDevice *device, GError **error)
 		    g_strdup_printf("%04X%04X", priv->subsystem_vendor, priv->subsystem_model);
 		fu_device_add_instance_str(device, "SUBSYS", subsys);
 	}
-	if (priv->revision != 0xFF)
+	if (fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_ADD_INSTANCE_ID_REV) &&
+	    priv->revision != 0xFF) {
 		fu_device_add_instance_u8(device, "REV", priv->revision);
+	}
 
 	fu_device_build_instance_id_quirk(device, NULL, subsystem, "VEN", NULL);
 	fu_device_build_instance_id(device, NULL, subsystem, "VEN", "DEV", NULL);
-	fu_device_build_instance_id(device, NULL, subsystem, "VEN", "DEV", "REV", NULL);
+	if (fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_ADD_INSTANCE_ID_REV))
+		fu_device_build_instance_id(device, NULL, subsystem, "VEN", "DEV", "REV", NULL);
 	fu_device_build_instance_id(device, NULL, subsystem, "VEN", "DEV", "SUBSYS", NULL);
-	fu_device_build_instance_id(device, NULL, subsystem, "VEN", "DEV", "SUBSYS", "REV", NULL);
+	if (fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_ADD_INSTANCE_ID_REV)) {
+		fu_device_build_instance_id(device,
+					    NULL,
+					    subsystem,
+					    "VEN",
+					    "DEV",
+					    "SUBSYS",
+					    "REV",
+					    NULL);
+	}
 
 	/* add device class */
 	tmp = g_udev_device_get_sysfs_attr(priv->udev_device, "class");

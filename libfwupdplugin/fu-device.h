@@ -538,6 +538,15 @@ typedef guint64 FuDeviceInternalFlags;
  */
 #define FU_DEVICE_INTERNAL_FLAG_MD_ONLY_CHECKSUM (1ull << 31)
 
+/**
+ * FU_DEVICE_INTERNAL_FLAG_ADD_INSTANCE_ID_REV:
+ *
+ * Add the `_REV` instance ID suffix.
+ *
+ * Since: 1.9.3
+ */
+#define FU_DEVICE_INTERNAL_FLAG_ADD_INSTANCE_ID_REV (1ull << 32)
+
 /* accessors */
 gchar *
 fu_device_to_string(FuDevice *self);

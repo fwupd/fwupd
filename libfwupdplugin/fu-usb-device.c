@@ -535,7 +535,8 @@ fu_usb_device_probe(FuDevice *device, GError **error)
 	fu_device_add_instance_u16(device, "REV", release);
 	fu_device_build_instance_id_quirk(device, NULL, "USB", "VID", NULL);
 	fu_device_build_instance_id(device, NULL, "USB", "VID", "PID", NULL);
-	fu_device_build_instance_id(device, NULL, "USB", "VID", "PID", "REV", NULL);
+	if (fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_ADD_INSTANCE_ID_REV))
+		fu_device_build_instance_id(device, NULL, "USB", "VID", "PID", "REV", NULL);
 
 	/* add the interface GUIDs */
 	intfs = g_usb_device_get_interfaces(priv->usb_device, error);

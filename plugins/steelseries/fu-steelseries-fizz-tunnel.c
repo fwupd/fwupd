@@ -157,14 +157,16 @@ fu_steelseries_fizz_tunnel_probe(FuDevice *device, GError **error)
 	fu_device_add_instance_u16(device, "REV", release);
 	fu_device_build_instance_id_quirk(device, NULL, "STEELSERIES", "VID", "PROTOCOL", NULL);
 	fu_device_build_instance_id(device, NULL, "STEELSERIES", "VID", "PID", "PROTOCOL", NULL);
-	fu_device_build_instance_id(device,
-				    NULL,
-				    "STEELSERIES",
-				    "VID",
-				    "PID",
-				    "REV",
-				    "PROTOCOL",
-				    NULL);
+	if (fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_ADD_INSTANCE_ID_REV)) {
+		fu_device_build_instance_id(device,
+					    NULL,
+					    "STEELSERIES",
+					    "VID",
+					    "PID",
+					    "REV",
+					    "PROTOCOL",
+					    NULL);
+	}
 
 	/* success */
 	return TRUE;

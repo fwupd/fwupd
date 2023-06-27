@@ -3537,7 +3537,7 @@ fu_backend_usb_func(gconstpointer user_data)
 
 	/* check the device was processed correctly by FuUsbDevice */
 	g_assert_cmpstr(fu_device_get_name(device_tmp), ==, "ColorHug2");
-	g_assert_true(fu_device_has_instance_id(device_tmp, "USB\\VID_273F&PID_1004&REV_0002"));
+	g_assert_true(fu_device_has_instance_id(device_tmp, "USB\\VID_273F&PID_1004"));
 	g_assert_true(fu_device_has_vendor_id(device_tmp, "USB:0x273F"));
 
 	/* check the fwupd DS20 descriptor was parsed */
@@ -3623,7 +3623,7 @@ fu_backend_usb_invalid_func(gconstpointer user_data)
 
 	/* check the device was processed correctly by FuUsbDevice */
 	g_assert_cmpstr(fu_device_get_name(device_tmp), ==, "ColorHug2");
-	g_assert_true(fu_device_has_instance_id(device_tmp, "USB\\VID_273F&PID_1004&REV_0002"));
+	g_assert_true(fu_device_has_instance_id(device_tmp, "USB\\VID_273F&PID_1004"));
 	g_assert_true(fu_device_has_vendor_id(device_tmp, "USB:0x273F"));
 
 	/* check the fwupd DS20 descriptor was *not* parsed */

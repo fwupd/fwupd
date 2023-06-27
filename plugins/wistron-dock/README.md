@@ -24,7 +24,6 @@ This plugin supports the following protocol ID:
 
 These devices use the standard USB DeviceInstanceId values, e.g.
 
-* `USB\VID_0FB8&PID_0010&REV_0001`
 * `USB\VID_0FB8&PID_0010`
 * `USB\VID_0FB8`
 

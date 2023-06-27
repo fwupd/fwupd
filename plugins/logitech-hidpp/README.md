@@ -36,7 +36,6 @@ This plugin supports the following protocol IDs:
 The Unifying receivers and peripherals use the standard USB
 DeviceInstanceId values when in DFU mode:
 
-* `USB\VID_046D&PID_AAAA&REV_0001`
 * `USB\VID_046D&PID_AAAA`
 * `USB\VID_046D`
 
