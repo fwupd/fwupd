@@ -33,6 +33,37 @@
     <binary>fwupdtool</binary>
   </provides>
   <releases>
+    <release version="1.9.3" date="2023-07-12"> <!-- date is approximate -->
+      <description>
+        <p>
+          This release adds the following features:
+        </p>
+        <ul>
+          <li>Allow devices to only accept explicitly specified release versions</li>
+          <li>Drop the libefiboot dependency</li>
+          <li>Ensure that BootService-only variables cannot be read in runtime mode</li>
+          <li>Record the NVRAM space used as report metadata</li>
+          <li>Show the user a warning when the ESP may not be valid</li>
+          <li>Support reading and writing EFI variables on Windows</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Deduplicate the remotes as required</li>
+          <li>Do not accidentally depend on python 3.9</li>
+          <li>Do not truncate feature reports to fix Wacom ID6 update</li>
+          <li>Get the Jabra GNP device name from the device</li>
+          <li>Ignore small ESP block devices if there are multiple choices</li>
+          <li>Use a CapsuleOnDisk filename supported by InsydeH2O</li>
+        </ul>
+        <p>This release adds support for the following hardware:</p>
+        <ul>
+          <li>Belkin Thunderbolt 4 Core Hub dock</li>
+          <li>CE-LINK TB4-Dock01</li>
+          <li>Genesys GL352350</li>
+          <li>TUXEDO InfinityBook Pro 13 v3</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.9.2" date="2023-06-12">
       <description>
         <p>
@@ -63,7 +94,7 @@
           <li>AVer FONE540</li>
           <li>Genesys GL3525 USB hubs</li>
           <li>Goodix Touch controllers</li>
-	  <li>Jabra Evolve 65e/t and SE, Evolve2, Speak2 and Link devices</li>
+          <li>Jabra Evolve 65e/t and SE, Evolve2, Speak2 and Link devices</li>
         </ul>
       </description>
     </release>
