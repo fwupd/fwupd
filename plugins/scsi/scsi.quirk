@@ -1,6 +1,3 @@
-[BLOCK]
-Plugin = scsi
-
 [SCSI\VEN_LSI&DEV_VirtualSES]
 Flags = no-probe
 [SCSI\VEN_Marvell&DEV_Console]

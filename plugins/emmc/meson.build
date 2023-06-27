@@ -3,7 +3,6 @@ if get_option('plugin_emmc').require(gudev.found(),
 
 cargs = ['-DG_LOG_DOMAIN="FuPluginEmmc"']
 
-plugin_quirks += files('emmc.quirk')
 plugin_builtins += static_library('fu_plugin_emmc',
   sources: [
     'fu-emmc-plugin.c',

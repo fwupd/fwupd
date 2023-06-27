@@ -33,7 +33,7 @@ typedef struct {
 	FuQuirks *quirks;
 	GHashTable *runtime_versions;
 	GHashTable *compile_versions;
-	GPtrArray *udev_subsystems;
+	GHashTable *udev_subsystems; /* utf8:GPtrArray */
 	GPtrArray *esp_volumes;
 	GHashTable *firmware_gtypes; /* utf8:GType */
 	GHashTable *hwid_flags; /* str: */
@@ -573,10 +573,19 @@ fu_context_set_compile_versions(FuContext *self, GHashTable *compile_versions)
 	priv->compile_versions = g_hash_table_ref(compile_versions);
 }
 
+static gint
+fu_context_udev_plugin_names_sort_cb(gconstpointer a, gconstpointer b)
+{
+	const gchar *str_a = *((const gchar **)a);
+	const gchar *str_b = *((const gchar **)b);
+	return g_strcmp0(str_a, str_b);
+}
+
 /**
  * fu_context_add_udev_subsystem:
  * @self: a #FuContext
  * @subsystem: a subsystem name, e.g. `pciport`
+ * @plugin_name: (nullable): a plugin name, e.g. `iommu`
  *
  * Registers the udev subsystem to be watched by the daemon.
  *
@@ -585,20 +594,75 @@ fu_context_set_compile_versions(FuContext *self, GHashTable *compile_versions)
  * Since: 1.6.0
  **/
 void
-fu_context_add_udev_subsystem(FuContext *self, const gchar *subsystem)
+fu_context_add_udev_subsystem(FuContext *self, const gchar *subsystem, const gchar *plugin_name)
 {
 	FuContextPrivate *priv = GET_PRIVATE(self);
+	GPtrArray *plugin_names;
 
 	g_return_if_fail(FU_IS_CONTEXT(self));
 	g_return_if_fail(subsystem != NULL);
 
-	for (guint i = 0; i < priv->udev_subsystems->len; i++) {
-		const gchar *subsystem_tmp = g_ptr_array_index(priv->udev_subsystems, i);
-		if (g_strcmp0(subsystem_tmp, subsystem) == 0)
-			return;
+	/* already exists */
+	plugin_names = g_hash_table_lookup(priv->udev_subsystems, subsystem);
+	if (plugin_names != NULL) {
+		if (plugin_name != NULL) {
+			for (guint i = 0; i < plugin_names->len; i++) {
+				const gchar *tmp = g_ptr_array_index(plugin_names, i);
+				if (g_strcmp0(tmp, plugin_name) == 0)
+					return;
+			}
+			g_ptr_array_add(plugin_names, g_strdup(plugin_name));
+			g_ptr_array_sort(plugin_names, fu_context_udev_plugin_names_sort_cb);
+		}
+		return;
 	}
-	g_info("added udev subsystem watch of %s", subsystem);
-	g_ptr_array_add(priv->udev_subsystems, g_strdup(subsystem));
+
+	/* add */
+	plugin_names = g_ptr_array_new_with_free_func(g_free);
+	if (plugin_name != NULL)
+		g_ptr_array_add(plugin_names, g_strdup(plugin_name));
+	g_hash_table_insert(priv->udev_subsystems,
+			    g_strdup(subsystem),
+			    g_steal_pointer(&plugin_names));
+	if (plugin_name != NULL)
+		g_info("added udev subsystem watch of %s for plugin %s", subsystem, plugin_name);
+	else
+		g_info("added udev subsystem watch of %s", subsystem);
+}
+
+/**
+ * fu_context_get_plugin_names_for_udev_subsystem:
+ * @self: a #FuContext
+ * @subsystem: a subsystem name, e.g. `pciport`
+ * @error: (nullable): optional return location for an error
+ *
+ * Gets the plugins which registered for a specific subsystem.
+ *
+ * Returns: (transfer container) (element-type utf8): List of plugin names
+ *
+ * Since: 1.9.3
+ **/
+GPtrArray *
+fu_context_get_plugin_names_for_udev_subsystem(FuContext *self,
+					       const gchar *subsystem,
+					       GError **error)
+{
+	FuContextPrivate *priv = GET_PRIVATE(self);
+	GPtrArray *plugin_names;
+
+	g_return_val_if_fail(FU_IS_CONTEXT(self), NULL);
+	g_return_val_if_fail(subsystem != NULL, NULL);
+
+	plugin_names = g_hash_table_lookup(priv->udev_subsystems, subsystem);
+	if (plugin_names == NULL) {
+		g_set_error(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_NOT_FOUND,
+			    "no plugins registered for %s",
+			    subsystem);
+		return NULL;
+	}
+	return g_ptr_array_ref(plugin_names);
 }
 
 /**
@@ -607,7 +671,7 @@ fu_context_add_udev_subsystem(FuContext *self, const gchar *subsystem)
  *
  * Gets the udev subsystems required by all plugins.
  *
- * Returns: (transfer none) (element-type utf8): List of subsystems
+ * Returns: (transfer container) (element-type utf8): List of subsystems
  *
  * Since: 1.6.0
  **/
@@ -615,8 +679,16 @@ GPtrArray *
 fu_context_get_udev_subsystems(FuContext *self)
 {
 	FuContextPrivate *priv = GET_PRIVATE(self);
+	g_autoptr(GList) keys = g_hash_table_get_keys(priv->udev_subsystems);
+	g_autoptr(GPtrArray) subsystems = g_ptr_array_new_with_free_func(g_free);
+
 	g_return_val_if_fail(FU_IS_CONTEXT(self), NULL);
-	return priv->udev_subsystems;
+
+	for (GList *l = keys; l != NULL; l = l->next) {
+		const gchar *subsystem = (const gchar *)l->data;
+		g_ptr_array_add(subsystems, g_strdup(subsystem));
+	}
+	return g_steal_pointer(&subsystems);
 }
 
 /**
@@ -932,7 +1004,7 @@ fu_context_load_hwinfo(FuContext *self,
 	}
 	fu_progress_step_done(progress);
 
-	fu_context_add_udev_subsystem(self, "firmware-attributes");
+	fu_context_add_udev_subsystem(self, "firmware-attributes", NULL);
 	if (!fu_context_reload_bios_settings(self, &error_bios_settings))
 		g_debug("%s", error_bios_settings->message);
 	fu_progress_step_done(progress);
@@ -1388,7 +1460,7 @@ fu_context_finalize(GObject *object)
 	g_object_unref(priv->smbios);
 	g_object_unref(priv->host_bios_settings);
 	g_hash_table_unref(priv->firmware_gtypes);
-	g_ptr_array_unref(priv->udev_subsystems);
+	g_hash_table_unref(priv->udev_subsystems);
 	g_ptr_array_unref(priv->esp_volumes);
 
 	G_OBJECT_CLASS(fu_context_parent_class)->finalize(object);
@@ -1517,7 +1589,10 @@ fu_context_init(FuContext *self)
 	priv->hwids = fu_hwids_new();
 	priv->config = fu_config_new();
 	priv->hwid_flags = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
-	priv->udev_subsystems = g_ptr_array_new_with_free_func(g_free);
+	priv->udev_subsystems = g_hash_table_new_full(g_str_hash,
+						      g_str_equal,
+						      g_free,
+						      (GDestroyNotify)g_ptr_array_unref);
 	priv->firmware_gtypes = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
 	priv->quirks = fu_quirks_new();
 	priv->host_bios_settings = fu_bios_settings_new();

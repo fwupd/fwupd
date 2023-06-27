@@ -1,3 +1,0 @@
-# match all devices with this udev subsystem
-[PCI]
-Plugin = optionrom

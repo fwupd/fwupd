@@ -85,7 +85,7 @@ static void
 fu_iommu_plugin_constructed(GObject *obj)
 {
 	FuPlugin *plugin = FU_PLUGIN(obj);
-	fu_plugin_add_udev_subsystem(plugin, "iommu");
+	fu_plugin_add_device_udev_subsystem(plugin, "iommu");
 }
 
 static void

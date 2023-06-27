@@ -1,7 +1,3 @@
-# match all devices with this udev subsystem
-[BLOCK]
-Plugin = uf2
-
 # Raspberry Pi RP2 [no CURRENT.UF2]
 [USB\VID_2E8A&PID_0003]
 Guid = UF2\FAMILY_E48BFF56

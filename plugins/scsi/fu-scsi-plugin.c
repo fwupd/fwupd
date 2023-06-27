@@ -24,7 +24,7 @@ static void
 fu_scsi_plugin_constructed(GObject *obj)
 {
 	FuPlugin *plugin = FU_PLUGIN(obj);
-	fu_plugin_add_udev_subsystem(plugin, "block");
+	fu_plugin_add_device_udev_subsystem(plugin, "block");
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_SCSI_DEVICE);
 }
 

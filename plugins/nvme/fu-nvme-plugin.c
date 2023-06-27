@@ -26,7 +26,7 @@ fu_nvme_plugin_constructed(GObject *obj)
 	FuPlugin *plugin = FU_PLUGIN(obj);
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	fu_context_add_quirk_key(ctx, "NvmeBlockSize");
-	fu_plugin_add_udev_subsystem(plugin, "nvme");
+	fu_plugin_add_device_udev_subsystem(plugin, "nvme");
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_NVME_DEVICE);
 }
 
