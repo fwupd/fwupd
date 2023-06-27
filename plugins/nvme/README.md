@@ -24,7 +24,6 @@ This plugin supports the following protocol ID:
 
 These device use the NVMe DeviceInstanceId values, e.g.
 
-* `NVME\VEN_1179&DEV_010F&REV_01`
 * `NVME\VEN_1179&DEV_010F`
 * `NVME\VEN_1179`
 
