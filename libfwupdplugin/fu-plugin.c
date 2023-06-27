@@ -1420,6 +1420,41 @@ fu_plugin_check_amdgpu_dpaux(FuPlugin *self, GError **error)
 }
 
 /**
+ * fu_plugin_add_device_udev_subsystem:
+ * @self: a #FuPlugin
+ * @subsystem: a subsystem name, e.g. `pciport`
+ *
+ * Add this plugin as a possible handler of devices with this udev subsystem.
+ * Use fu_plugin_add_udev_subsystem() if you just want to ensure the subsystem is watched.
+ *
+ * Plugins can use this method only in fu_plugin_init()
+ *
+ * Since: 1.9.3
+ **/
+void
+fu_plugin_add_device_udev_subsystem(FuPlugin *self, const gchar *subsystem)
+{
+	FuPluginPrivate *priv = GET_PRIVATE(self);
+
+	g_return_if_fail(FU_IS_PLUGIN(self));
+	g_return_if_fail(subsystem != NULL);
+
+	/* see https://github.com/fwupd/fwupd/issues/1121 for more details */
+	if (g_strcmp0(subsystem, "drm_dp_aux_dev") == 0) {
+		g_autoptr(GError) error = NULL;
+		if (!fu_plugin_check_amdgpu_dpaux(self, &error)) {
+			g_warning("failed to add subsystem: %s", error->message);
+			fu_plugin_add_flag(self, FWUPD_PLUGIN_FLAG_DISABLED);
+			fu_plugin_add_flag(self, FWUPD_PLUGIN_FLAG_KERNEL_TOO_OLD);
+			return;
+		}
+	}
+
+	/* proxy */
+	fu_context_add_udev_subsystem(priv->ctx, subsystem, fu_plugin_get_name(self));
+}
+
+/**
  * fu_plugin_add_udev_subsystem:
  * @self: a #FuPlugin
  * @subsystem: a subsystem name, e.g. `pciport`
@@ -1435,19 +1470,11 @@ fu_plugin_add_udev_subsystem(FuPlugin *self, const gchar *subsystem)
 {
 	FuPluginPrivate *priv = GET_PRIVATE(self);
 
-	/* see https://github.com/fwupd/fwupd/issues/1121 for more details */
-	if (g_strcmp0(subsystem, "drm_dp_aux_dev") == 0) {
-		g_autoptr(GError) error = NULL;
-		if (!fu_plugin_check_amdgpu_dpaux(self, &error)) {
-			g_warning("failed to add subsystem: %s", error->message);
-			fu_plugin_add_flag(self, FWUPD_PLUGIN_FLAG_DISABLED);
-			fu_plugin_add_flag(self, FWUPD_PLUGIN_FLAG_KERNEL_TOO_OLD);
-			return;
-		}
-	}
+	g_return_if_fail(FU_IS_PLUGIN(self));
+	g_return_if_fail(subsystem != NULL);
 
 	/* proxy */
-	fu_context_add_udev_subsystem(priv->ctx, subsystem);
+	fu_context_add_udev_subsystem(priv->ctx, subsystem, NULL);
 }
 
 /**

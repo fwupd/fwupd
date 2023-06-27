@@ -6,8 +6,6 @@ if hsi and \
     error_message: 'gudev is needed for plugin_tpm').allowed()
 cargs = ['-DG_LOG_DOMAIN="FuPluginTpm"']
 
-plugin_quirks += files('tpm.quirk')
-
 plugin_builtin_tpm = static_library('fu_plugin_tpm',
   rustgen.process('fu-tpm.rs'),
   sources: [

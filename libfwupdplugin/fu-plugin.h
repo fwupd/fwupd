@@ -433,6 +433,8 @@ fu_plugin_add_device_gtype(FuPlugin *self, GType device_gtype);
 void
 fu_plugin_add_firmware_gtype(FuPlugin *self, const gchar *id, GType gtype);
 void
+fu_plugin_add_device_udev_subsystem(FuPlugin *self, const gchar *subsystem);
+void
 fu_plugin_add_udev_subsystem(FuPlugin *self, const gchar *subsystem);
 gpointer
 fu_plugin_cache_lookup(FuPlugin *self, const gchar *id);

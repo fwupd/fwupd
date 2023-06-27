@@ -512,7 +512,7 @@ static void
 fu_msr_plugin_constructed(GObject *obj)
 {
 	FuPlugin *plugin = FU_PLUGIN(obj);
-	fu_plugin_add_udev_subsystem(plugin, "msr");
+	fu_plugin_add_device_udev_subsystem(plugin, "msr");
 }
 
 static void

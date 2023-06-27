@@ -573,10 +573,6 @@ fu_udev_device_probe(FuDevice *device, GError **error)
 				       g_udev_device_get_property(priv->udev_device, "MODALIAS"));
 	fu_device_build_instance_id_quirk(device, NULL, subsystem, "MODALIAS", NULL);
 
-	/* add subsystem to match in plugins */
-	if (subsystem != NULL)
-		fu_device_add_instance_id_full(device, subsystem, FU_DEVICE_INSTANCE_FLAG_QUIRKS);
-
 	/* add firmware_id */
 	if (g_strcmp0(g_udev_device_get_subsystem(priv->udev_device), "serio") == 0) {
 		if (!fu_udev_device_probe_serio(self, error))

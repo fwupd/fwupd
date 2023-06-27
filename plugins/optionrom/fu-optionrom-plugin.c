@@ -24,7 +24,7 @@ static void
 fu_optionrom_plugin_constructed(GObject *obj)
 {
 	FuPlugin *plugin = FU_PLUGIN(obj);
-	fu_plugin_add_udev_subsystem(plugin, "pci");
+	fu_plugin_add_device_udev_subsystem(plugin, "pci");
 	fu_plugin_add_rule(plugin, FU_PLUGIN_RULE_CONFLICTS, "udev");
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_OPTIONROM_DEVICE);
 }

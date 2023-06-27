@@ -27,7 +27,7 @@ fu_uf2_plugin_constructed(GObject *obj)
 	FuPlugin *plugin = FU_PLUGIN(obj);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_UF2_DEVICE);
 	fu_plugin_add_firmware_gtype(plugin, "uf2", FU_TYPE_UF2_FIRMWARE);
-	fu_plugin_add_udev_subsystem(plugin, "block");
+	fu_plugin_add_device_udev_subsystem(plugin, "block");
 }
 
 static void

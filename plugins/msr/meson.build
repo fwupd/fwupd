@@ -1,8 +1,6 @@
 if hsi and has_cpuid
 cargs = ['-DG_LOG_DOMAIN="FuPluginMsr"']
 
-plugin_quirks += files('msr.quirk')
-
 if libsystemd.found()
 install_data(['fwupd-msr.conf'],
   install_dir: systemd_modules_load_dir,

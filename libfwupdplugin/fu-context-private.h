@@ -47,9 +47,13 @@ fu_context_get_firmware_gtypes(FuContext *self);
 GType
 fu_context_get_firmware_gtype_by_id(FuContext *self, const gchar *id);
 void
-fu_context_add_udev_subsystem(FuContext *self, const gchar *subsystem);
+fu_context_add_udev_subsystem(FuContext *self, const gchar *subsystem, const gchar *plugin_name);
 GPtrArray *
 fu_context_get_udev_subsystems(FuContext *self);
+GPtrArray *
+fu_context_get_plugin_names_for_udev_subsystem(FuContext *self,
+					       const gchar *subsystem,
+					       GError **error);
 void
 fu_context_add_esp_volume(FuContext *self, FuVolume *volume);
 FuSmbios *

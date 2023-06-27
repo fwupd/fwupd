@@ -157,7 +157,7 @@ fu_synaptics_mst_plugin_constructed(GObject *obj)
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	fu_context_add_quirk_key(ctx, "SynapticsMstDeviceKind");
 	fu_plugin_add_udev_subsystem(plugin, "drm"); /* used for uevent only */
-	fu_plugin_add_udev_subsystem(plugin, "drm_dp_aux_dev");
+	fu_plugin_add_device_udev_subsystem(plugin, "drm_dp_aux_dev");
 	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_SYNAPTICS_MST_FIRMWARE);
 }
 
