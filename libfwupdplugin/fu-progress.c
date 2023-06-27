@@ -400,8 +400,13 @@ fu_progress_set_percentage(FuProgress *self, guint percentage)
 	}
 
 	/* done */
-	if (percentage == 100)
+	if (percentage == 100) {
 		fu_progress_set_duration(self, g_timer_elapsed(self->timer, NULL));
+		for (guint i = 0; i < self->children->len; i++) {
+			FuProgress *child = g_ptr_array_index(self->children, i);
+			g_signal_handlers_disconnect_by_data(child, self);
+		}
+	}
 
 	/* save */
 	self->percentage = percentage;
