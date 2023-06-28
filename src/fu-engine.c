@@ -654,17 +654,17 @@ fu_engine_compare_report_trusted(FwupdReport *report_trusted, FwupdReport *repor
 		    fwupd_report_get_vendor_id(report))
 			return FALSE;
 	}
-	if (fwupd_report_get_distro_id(report_trusted) != 0) {
+	if (fwupd_report_get_distro_id(report_trusted) != NULL) {
 		if (g_strcmp0(fwupd_report_get_distro_id(report_trusted),
 			      fwupd_report_get_distro_id(report)) != 0)
 			return FALSE;
 	}
-	if (fwupd_report_get_distro_version(report_trusted) != 0) {
+	if (fwupd_report_get_distro_version(report_trusted) != NULL) {
 		if (g_strcmp0(fwupd_report_get_distro_version(report_trusted),
 			      fwupd_report_get_distro_version(report)) != 0)
 			return FALSE;
 	}
-	if (fwupd_report_get_distro_variant(report_trusted) != 0) {
+	if (fwupd_report_get_distro_variant(report_trusted) != NULL) {
 		if (g_strcmp0(fwupd_report_get_distro_variant(report_trusted),
 			      fwupd_report_get_distro_variant(report)) != 0)
 			return FALSE;
