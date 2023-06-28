@@ -27,6 +27,8 @@ fwupd_remote_save_to_filename(FwupdRemote *self,
 void
 fwupd_remote_set_enabled(FwupdRemote *self, gboolean enabled);
 void
+fwupd_remote_set_id(FwupdRemote *self, const gchar *id);
+void
 fwupd_remote_set_title(FwupdRemote *self, const gchar *title);
 void
 fwupd_remote_set_priority(FwupdRemote *self, gint priority);

@@ -261,8 +261,18 @@ fwupd_remote_set_keyring_kind(FwupdRemote *self, FwupdKeyringKind keyring_kind)
 	priv->keyring_kind = keyring_kind;
 }
 
-/* note, this has to be set before url */
-static void
+/**
+ * fwupd_remote_set_id:
+ * @self: a #FwupdRemote
+ * @id: (nullable): remote ID, e.g. "lvfs"
+ *
+ * Sets the remote title.
+ *
+ * NOTE: the ID has to be set before the URL.
+ *
+ * Since: 1.9.3
+ **/
+void
 fwupd_remote_set_id(FwupdRemote *self, const gchar *id)
 {
 	FwupdRemotePrivate *priv = GET_PRIVATE(self);

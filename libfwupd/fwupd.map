@@ -946,3 +946,9 @@ LIBFWUPD_1.9.1 {
     fwupd_report_set_flags;
   local: *;
 } LIBFWUPD_1.8.13;
+
+LIBFWUPD_1.9.3 {
+  global:
+    fwupd_remote_set_id;
+  local: *;
+} LIBFWUPD_1.9.1;
