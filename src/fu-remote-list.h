@@ -41,3 +41,7 @@ GPtrArray *
 fu_remote_list_get_all(FuRemoteList *self);
 FwupdRemote *
 fu_remote_list_get_by_id(FuRemoteList *self, const gchar *remote_id);
+
+/* for the self tests */
+void
+fu_remote_list_add_remote(FuRemoteList *self, FwupdRemote *remote);

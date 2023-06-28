@@ -4427,14 +4427,20 @@ fu_release_trusted_report_func(gconstpointer user_data)
 	g_autofree gchar *filename = NULL;
 	g_autoptr(FuDevice) device = fu_device_new(self->ctx);
 	g_autoptr(FuEngine) engine = fu_engine_new();
+	g_autoptr(FwupdRemote) remote = fwupd_remote_new();
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GFile) file = NULL;
 	g_autoptr(XbBuilder) builder = xb_builder_new();
+	g_autoptr(XbBuilderNode) custom = xb_builder_node_new("custom");
 	g_autoptr(XbBuilderSource) source = xb_builder_source_new();
 	g_autoptr(XbSilo) silo = NULL;
 	g_autoptr(GPtrArray) releases = NULL;
 	g_autoptr(FuEngineRequest) request = fu_engine_request_new();
+
+	/* add fake LVFS remote */
+	fwupd_remote_set_id(remote, "lvfs");
+	fu_engine_add_remote(engine, remote);
 
 	/* load engine to get FuConfig set up */
 	ret = fu_engine_load(engine, FU_ENGINE_LOAD_FLAG_NO_CACHE, progress, &error);
@@ -4447,6 +4453,8 @@ fu_release_trusted_report_func(gconstpointer user_data)
 	ret = xb_builder_source_load_file(source, file, XB_BUILDER_SOURCE_FLAG_NONE, NULL, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
+	xb_builder_node_insert_text(custom, "value", "lvfs", "key", "fwupd::RemoteId", NULL);
+	xb_builder_source_set_info(source, custom);
 	xb_builder_import_source(builder, source);
 	silo = xb_builder_compile(builder, XB_BUILDER_COMPILE_FLAG_NONE, NULL, &error);
 	g_assert_no_error(error);

@@ -225,6 +225,15 @@ fu_remote_list_cleanup_remote(FwupdRemote *remote, GError **error)
 	return TRUE;
 }
 
+void
+fu_remote_list_add_remote(FuRemoteList *self, FwupdRemote *remote)
+{
+	g_return_if_fail(FU_IS_REMOTE_LIST(self));
+	g_return_if_fail(FWUPD_IS_REMOTE(remote));
+	fu_remote_list_emit_added(self, remote);
+	g_ptr_array_add(self->array, g_object_ref(remote));
+}
+
 static gboolean
 fu_remote_list_add_for_file(FuRemoteList *self,
 			    GHashTable *os_release,
@@ -307,8 +316,7 @@ fu_remote_list_add_for_file(FuRemoteList *self,
 
 	/* set mtime */
 	fwupd_remote_set_mtime(remote, _fwupd_remote_get_mtime(remote));
-	fu_remote_list_emit_added(self, remote);
-	g_ptr_array_add(self->array, g_steal_pointer(&remote));
+	fu_remote_list_add_remote(self, remote);
 
 	/* success */
 	return TRUE;
