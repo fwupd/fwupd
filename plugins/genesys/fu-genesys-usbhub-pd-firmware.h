@@ -14,6 +14,3 @@ G_DECLARE_FINAL_TYPE(FuGenesysUsbhubPdFirmware,
 		     FU,
 		     GENESYS_USBHUB_PD_FIRMWARE,
 		     FuFirmware)
-
-FuFirmware *
-fu_genesys_usbhub_pd_firmware_new(void);

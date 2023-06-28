@@ -389,6 +389,7 @@ fu_usb_device_setup(FuDevice *device, GError **error)
 			g_autoptr(GError) error_ds20 = NULL;
 
 			ds20 = fu_firmware_new_from_gtypes(extra,
+							   0x0,
 							   FWUPD_INSTALL_FLAG_NONE,
 							   &error_ds20,
 							   FU_TYPE_USB_DEVICE_FW_DS20,
