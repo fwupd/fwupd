@@ -165,7 +165,7 @@ enum GenesysFwCodesign {
     Ecdsa,
 }
 
-#[derive(Getters, Validate)]
+#[derive(Parse, Validate)]
 struct GenesysFwCodesignInfoRsa {
     tag_n: u32be: const=0x4E203D20, // 'N = '
     text_n: [char; 512],
@@ -185,7 +185,7 @@ struct GenesysFwRsaPublicKeyText {
     end_e: u16be: const=0x0D0A,
 }
 
-#[derive(Getters, Validate)]
+#[derive(Parse, Validate)]
 struct GenesysFwCodesignInfoEcdsa {
     hash: [u8; 32],
     key: [u8; 64],

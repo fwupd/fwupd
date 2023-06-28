@@ -114,27 +114,17 @@ fu_genesys_usbhub_firmware_get_chip(FuGenesysUsbhubFirmware *self,
 }
 
 gboolean
-fu_genesys_usbhub_firmware_verify(GBytes *fw, gsize offset, gsize code_size, GError **error)
+fu_genesys_usbhub_firmware_verify_checksum(GBytes *fw, GError **error)
 {
 	gsize bufsz = 0;
 	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
-	guint16 fw_checksum;
+	guint16 fw_checksum = 0;
 	guint16 checksum;
-
-	/* check code-size */
-	if (offset + code_size < sizeof(checksum)) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_FILE,
-			    "code-size is too small: %lu bytes",
-			    offset + code_size);
-		return FALSE;
-	}
 
 	/* get checksum */
 	if (!fu_memread_uint16_safe(buf,
 				    bufsz,
-				    offset + code_size - sizeof(checksum),
+				    bufsz - sizeof(checksum),
 				    &fw_checksum,
 				    G_BIG_ENDIAN,
 				    error)) {
@@ -143,7 +133,7 @@ fu_genesys_usbhub_firmware_verify(GBytes *fw, gsize offset, gsize code_size, GEr
 	}
 
 	/* calculate checksum */
-	checksum = fu_sum16(buf + offset, code_size - sizeof(checksum));
+	checksum = fu_sum16(buf, bufsz - sizeof(checksum));
 	if (checksum != fw_checksum) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -158,10 +148,7 @@ fu_genesys_usbhub_firmware_verify(GBytes *fw, gsize offset, gsize code_size, GEr
 }
 
 gboolean
-fu_genesys_usbhub_firmware_query_codesize(FuFirmware *firmware,
-					  GBytes *fw,
-					  gsize offset,
-					  GError **error)
+fu_genesys_usbhub_firmware_calculate_size(GBytes *fw, gsize offset, gsize *size, GError **error)
 {
 	guint8 kbs = 0;
 	if (!fu_memread_uint8_safe(g_bytes_get_data(fw, NULL),
@@ -172,22 +159,28 @@ fu_genesys_usbhub_firmware_query_codesize(FuFirmware *firmware,
 		g_prefix_error(error, "failed to get codesize: ");
 		return FALSE;
 	}
-	fu_firmware_set_size(firmware, 1024 * kbs);
+	if (kbs == 0) {
+		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA, "invalid codesize");
+		return FALSE;
+	}
+	if (size != NULL)
+		*size = 1024 * kbs;
 	return TRUE;
 }
 
 gboolean
-fu_genesys_usbhub_firmware_query_version(FuFirmware *firmware,
-					 GBytes *fw,
-					 gsize offset,
-					 GError **error)
+fu_genesys_usbhub_firmware_ensure_version(FuFirmware *firmware, GError **error)
 {
 	guint16 version_raw = 0;
 	g_autofree gchar *version = NULL;
+	g_autoptr(GBytes) fw = NULL;
 
+	fw = fu_firmware_get_bytes(firmware, error);
+	if (fw == NULL)
+		return FALSE;
 	if (!fu_memread_uint16_safe(g_bytes_get_data(fw, NULL),
 				    g_bytes_get_size(fw),
-				    offset + GENESYS_USBHUB_VERSION_OFFSET,
+				    GENESYS_USBHUB_VERSION_OFFSET,
 				    &version_raw,
 				    G_LITTLE_ENDIAN,
 				    error)) {
@@ -268,8 +261,9 @@ fu_genesys_usbhub_firmware_parse(FuFirmware *firmware,
 	FuGenesysUsbhubFirmware *self = FU_GENESYS_USBHUB_FIRMWARE(firmware);
 	gsize bufsz = 0;
 	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
-	guint32 code_size = 0;
+	gsize code_size = 0;
 	guint32 static_ts_offset = 0;
+	g_autoptr(GBytes) fw_trunc = NULL;
 
 	/* get chip */
 	if (!fu_genesys_usbhub_firmware_get_chip(self, buf, bufsz, offset, error)) {
@@ -314,35 +308,44 @@ fu_genesys_usbhub_firmware_parse(FuFirmware *firmware,
 	/* deduce code size */
 	switch (self->chip.model) {
 	case ISP_MODEL_HUB_GL3521:
-		fu_firmware_set_size(firmware, 0x5000);
+		code_size = 0x5000;
 		break;
 	case ISP_MODEL_HUB_GL3523: {
 		if (self->chip.revision == 50) {
-			if (!fu_genesys_usbhub_firmware_query_codesize(firmware, fw, offset, error))
+			if (!fu_genesys_usbhub_firmware_calculate_size(fw,
+								       offset,
+								       &code_size,
+								       error))
 				return FALSE;
 		} else {
-			fu_firmware_set_size(firmware, 0x6000);
+			code_size = 0x6000;
 		}
 		break;
 	}
 	case ISP_MODEL_HUB_GL3590:
 	case ISP_MODEL_HUB_GL3525: {
-		if (!fu_genesys_usbhub_firmware_query_codesize(firmware, fw, offset, error))
+		if (!fu_genesys_usbhub_firmware_calculate_size(fw, offset, &code_size, error))
 			return FALSE;
 		break;
 	}
 	default:
 		break;
 	}
-	code_size = fu_firmware_get_size(firmware);
+
+	/* truncate to correct size */
+	fw_trunc = fu_bytes_new_offset(fw, offset, code_size, error);
+	if (fw_trunc == NULL)
+		return FALSE;
+	fu_firmware_set_bytes(firmware, fw_trunc);
 
 	/* calculate checksum */
-	if ((flags & FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM) == 0)
-		if (!fu_genesys_usbhub_firmware_verify(fw, offset, code_size, error))
+	if ((flags & FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM) == 0) {
+		if (!fu_genesys_usbhub_firmware_verify_checksum(fw_trunc, error))
 			return FALSE;
+	}
 
 	/* get firmware version */
-	if (!fu_genesys_usbhub_firmware_query_version(firmware, fw, offset, error))
+	if (!fu_genesys_usbhub_firmware_ensure_version(firmware, error))
 		return FALSE;
 
 	/* parse remaining firmware bytes */
