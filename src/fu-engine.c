@@ -627,6 +627,15 @@ fu_engine_add_local_release_metadata(FuEngine *self, FuRelease *release, GError 
 	return TRUE;
 }
 
+/* private, for self tests */
+void
+fu_engine_add_remote(FuEngine *self, FwupdRemote *remote)
+{
+	g_return_if_fail(FU_IS_ENGINE(self));
+	g_return_if_fail(FWUPD_IS_REMOTE(remote));
+	fu_remote_list_add_remote(self->remote_list, remote);
+}
+
 static void
 fu_engine_release_remote_id_changed_cb(FuRelease *release, GParamSpec *pspec, FuEngine *self)
 {
@@ -667,6 +676,11 @@ fu_engine_compare_report_trusted(FwupdReport *report_trusted, FwupdReport *repor
 	if (fwupd_report_get_distro_variant(report_trusted) != NULL) {
 		if (g_strcmp0(fwupd_report_get_distro_variant(report_trusted),
 			      fwupd_report_get_distro_variant(report)) != 0)
+			return FALSE;
+	}
+	if (fwupd_report_get_remote_id(report_trusted) != NULL) {
+		if (g_strcmp0(fwupd_report_get_remote_id(report_trusted),
+			      fwupd_report_get_remote_id(report)) != 0)
 			return FALSE;
 	}
 	return TRUE;

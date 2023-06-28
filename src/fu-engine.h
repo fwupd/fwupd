@@ -214,6 +214,8 @@ fu_engine_add_device(FuEngine *self, FuDevice *device);
 void
 fu_engine_add_plugin(FuEngine *self, FuPlugin *plugin);
 void
+fu_engine_add_remote(FuEngine *self, FwupdRemote *remote);
+void
 fu_engine_add_runtime_version(FuEngine *self, const gchar *component_id, const gchar *version);
 GPtrArray *
 fu_engine_get_details_for_bytes(FuEngine *self,

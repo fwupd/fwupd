@@ -154,15 +154,28 @@ The `[fwupd]` section can contain the following parameters:
 
 **TrustedReports={{FU_DAEMON_CONFIG_DEFAULT_TRUSTED_REPORTS}}**
 
-  Vendor reports matching these expressions will have releases marked as `trusted-report`, e.g.
+  Vendor reports matching these expressions will have releases marked as `trusted-report`.
+  Each *OR* section is delimited by a `;` and each *AND* section delimited by `&`, e.g.
 
 * `DistroId=chromeos`
 
+  Any report uploaded from ChromeOS is trusted.
+
+* `DistroId=chromeos&RemoteId=lvfs`
+
+  Any report found in the `lvfs` remote uploaded from a ChromeOS machine is trusted.
+
 * `DistroId=fedora&VendorId=19`
+
+  Any report uploaded from Fedora 19 is trusted.
 
 * `DistroId=fedora&VendorId=$OEM`
 
+  Any report uploaded from Fedora by the hardware OEM is trusted.
+
 * `DistroId=fedora;DistroId=rhel&DistroVersion=9`
+
+  Any report uploaded from Fedora (any version) or from RHEL 9 is trusted.
 
   NOTE: a `VendorId` of `$OEM` represents the OEM vendor ID of the vendor that owns the firmware,
   for example, where Lenovo QA has generated a signed report for a Lenovo laptop.
