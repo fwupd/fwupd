@@ -950,5 +950,7 @@ LIBFWUPD_1.9.1 {
 LIBFWUPD_1.9.3 {
   global:
     fwupd_remote_set_id;
+    fwupd_report_get_remote_id;
+    fwupd_report_set_remote_id;
   local: *;
 } LIBFWUPD_1.9.1;

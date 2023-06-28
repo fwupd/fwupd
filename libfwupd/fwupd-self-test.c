@@ -715,6 +715,7 @@ fwupd_report_func(void)
 	fwupd_report_set_device_name(report1, "name");
 	fwupd_report_set_distro_id(report1, "distro_id");
 	fwupd_report_set_distro_version(report1, "distro_version");
+	fwupd_report_set_remote_id(report1, "lvfs");
 	data = fwupd_report_to_variant(report1);
 	report2 = fwupd_report_from_variant(data);
 	g_assert_cmpstr(fwupd_report_get_metadata_item(report2, "foo"), ==, "bar");
@@ -747,6 +748,7 @@ fwupd_report_func(void)
 				    "  VersionOld:           1.2.3\n"
 				    "  Vendor:               acme\n"
 				    "  VendorId:             2468\n"
+				    "  RemoteId:             lvfs\n"
 				    "  Flags:                none\n"
 				    "  foo:                  bar\n"
 				    "  baz:                  bam\n",

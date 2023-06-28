@@ -82,6 +82,8 @@ fu_engine_config_report_from_spec(FuEngineConfig *self, const gchar *report_spec
 			fwupd_report_set_distro_variant(report, value);
 		} else if (g_strcmp0(kv[0], "DistroVersion") == 0) {
 			fwupd_report_set_distro_version(report, value);
+		} else if (g_strcmp0(kv[0], "RemoteId") == 0) {
+			fwupd_report_set_remote_id(report, value);
 		} else {
 			g_set_error(error,
 				    G_IO_ERROR,
