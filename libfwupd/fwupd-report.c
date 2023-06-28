@@ -34,6 +34,7 @@ typedef struct {
 	gchar *distro_version;
 	GHashTable *metadata;
 	gchar *distro_variant;
+	gchar *remote_id;
 	FwupdReportFlags flags;
 } FwupdReportPrivate;
 
@@ -320,6 +321,47 @@ fwupd_report_set_distro_variant(FwupdReport *self, const gchar *distro_variant)
 }
 
 /**
+ * fwupd_report_get_remote_id:
+ * @self: a #FwupdReport
+ *
+ * Gets the remote ID.
+ *
+ * Returns: ID, or %NULL if unset
+ *
+ * Since: 1.9.3
+ **/
+const gchar *
+fwupd_report_get_remote_id(FwupdReport *self)
+{
+	FwupdReportPrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_REPORT(self), NULL);
+	return priv->remote_id;
+}
+
+/**
+ * fwupd_report_set_remote_id:
+ * @self: a #FwupdReport
+ * @remote_id: (nullable): the remote, e.g. `lvfs`
+ *
+ * Sets the remote ID.
+ *
+ * Since: 1.9.3
+ **/
+void
+fwupd_report_set_remote_id(FwupdReport *self, const gchar *remote_id)
+{
+	FwupdReportPrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FWUPD_IS_REPORT(self));
+
+	/* not changed */
+	if (g_strcmp0(priv->remote_id, remote_id) == 0)
+		return;
+
+	g_free(priv->remote_id);
+	priv->remote_id = g_strdup(remote_id);
+}
+
+/**
  * fwupd_report_get_distro_version:
  * @self: a #FwupdReport
  *
@@ -486,6 +528,12 @@ fwupd_report_to_variant(FwupdReport *self)
 				      FWUPD_RESULT_KEY_VENDOR_ID,
 				      g_variant_new_uint32(priv->vendor_id));
 	}
+	if (priv->remote_id != NULL) {
+		g_variant_builder_add(&builder,
+				      "{sv}",
+				      FWUPD_RESULT_KEY_REMOTE_ID,
+				      g_variant_new_string(priv->remote_id));
+	}
 	if (g_hash_table_size(priv->metadata) > 0) {
 		g_variant_builder_add(&builder,
 				      "{sv}",
@@ -537,6 +585,10 @@ fwupd_report_from_key_value(FwupdReport *self, const gchar *key, GVariant *value
 		fwupd_report_set_version_old(self, g_variant_get_string(value, NULL));
 		return;
 	}
+	if (g_strcmp0(key, FWUPD_RESULT_KEY_REMOTE_ID) == 0) {
+		fwupd_report_set_remote_id(self, g_variant_get_string(value, NULL));
+		return;
+	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_FLAGS) == 0) {
 		fwupd_report_set_flags(self, g_variant_get_uint64(value));
 		return;
@@ -576,6 +628,7 @@ fwupd_report_to_json(FwupdReport *self, JsonBuilder *builder)
 				     priv->distro_version);
 	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_VERSION_OLD, priv->version_old);
 	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_VENDOR, priv->vendor);
+	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_REMOTE_ID, priv->remote_id);
 	if (priv->vendor_id > 0)
 		fwupd_common_json_add_int(builder, FWUPD_RESULT_KEY_VENDOR_ID, priv->vendor_id);
 
@@ -645,6 +698,7 @@ fwupd_report_to_string(FwupdReport *self)
 	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_VERSION_OLD, priv->version_old);
 	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_VENDOR, priv->vendor);
 	fwupd_pad_kv_int(str, FWUPD_RESULT_KEY_VENDOR_ID, priv->vendor_id);
+	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_REMOTE_ID, priv->remote_id);
 	fwupd_pad_kv_dfl(str, FWUPD_RESULT_KEY_FLAGS, priv->flags);
 
 	/* metadata */
@@ -846,6 +900,7 @@ fwupd_report_finalize(GObject *object)
 	g_free(priv->distro_id);
 	g_free(priv->distro_version);
 	g_free(priv->distro_variant);
+	g_free(priv->remote_id);
 	g_free(priv->version_old);
 	g_hash_table_unref(priv->metadata);
 

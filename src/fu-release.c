@@ -322,6 +322,8 @@ fu_release_load_test_result(FuRelease *self, XbNode *n, GError **error)
 			fwupd_report_set_distro_variant(report, tmp);
 		fwupd_report_set_distro_id(report, xb_node_get_text(os));
 	}
+	if (fu_release_get_remote_id(self) != NULL)
+		fwupd_report_set_remote_id(report, fu_release_get_remote_id(self));
 	custom = xb_node_query(n, "custom/value", 0, NULL);
 	if (custom != NULL) {
 		for (guint i = 0; i < custom->len; i++) {
