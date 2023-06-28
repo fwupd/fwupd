@@ -214,7 +214,7 @@ fu_firmware_new(void);
 FuFirmware *
 fu_firmware_new_from_bytes(GBytes *fw);
 FuFirmware *
-fu_firmware_new_from_gtypes(GBytes *fw, FwupdInstallFlags flags, GError **error, ...);
+fu_firmware_new_from_gtypes(GBytes *fw, gsize offset, FwupdInstallFlags flags, GError **error, ...);
 gchar *
 fu_firmware_to_string(FuFirmware *self);
 void

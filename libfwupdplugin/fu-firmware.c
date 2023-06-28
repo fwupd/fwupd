@@ -2126,6 +2126,7 @@ fu_firmware_new_from_bytes(GBytes *fw)
 /**
  * fu_firmware_new_from_gtypes:
  * @fw: firmware blob
+ * @offset: start offset, useful for ignoring a bootloader
  * @flags: install flags, e.g. %FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM
  * @error: (nullable): optional return location for an error
  * @...: an array of #GTypes, ending with %G_TYPE_INVALID
@@ -2137,7 +2138,7 @@ fu_firmware_new_from_bytes(GBytes *fw)
  * Since: 1.5.6
  **/
 FuFirmware *
-fu_firmware_new_from_gtypes(GBytes *fw, FwupdInstallFlags flags, GError **error, ...)
+fu_firmware_new_from_gtypes(GBytes *fw, gsize offset, FwupdInstallFlags flags, GError **error, ...)
 {
 	va_list args;
 	g_autoptr(GArray) gtypes = g_array_new(FALSE, FALSE, sizeof(GType));
@@ -2170,7 +2171,7 @@ fu_firmware_new_from_gtypes(GBytes *fw, FwupdInstallFlags flags, GError **error,
 		GType gtype = g_array_index(gtypes, GType, i);
 		g_autoptr(FuFirmware) firmware = g_object_new(gtype, NULL);
 		g_autoptr(GError) error_local = NULL;
-		if (!fu_firmware_parse(firmware, fw, flags, &error_local)) {
+		if (!fu_firmware_parse_full(firmware, fw, offset, flags, &error_local)) {
 			if (error_all == NULL) {
 				g_propagate_error(&error_all, g_steal_pointer(&error_local));
 			} else {

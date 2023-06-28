@@ -2561,6 +2561,7 @@ fu_firmware_new_from_gtypes_func(void)
 
 	/* dfu -> FuDfuFirmware */
 	firmware1 = fu_firmware_new_from_gtypes(blob,
+						0x0,
 						FWUPD_INSTALL_FLAG_NONE,
 						&error,
 						FU_TYPE_SREC_FIRMWARE,
@@ -2573,6 +2574,7 @@ fu_firmware_new_from_gtypes_func(void)
 
 	/* dfu -> FuFirmware */
 	firmware2 = fu_firmware_new_from_gtypes(blob,
+						0x0,
 						FWUPD_INSTALL_FLAG_NONE,
 						&error,
 						FU_TYPE_SREC_FIRMWARE,
@@ -2584,6 +2586,7 @@ fu_firmware_new_from_gtypes_func(void)
 
 	/* dfu -> error */
 	firmware3 = fu_firmware_new_from_gtypes(blob,
+						0x0,
 						FWUPD_INSTALL_FLAG_NONE,
 						&error,
 						FU_TYPE_SREC_FIRMWARE,

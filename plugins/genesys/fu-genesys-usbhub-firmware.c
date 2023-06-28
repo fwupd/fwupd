@@ -213,44 +213,6 @@ fu_genesys_usbhub_firmware_check_magic(FuFirmware *firmware,
 			      error);
 }
 
-static FuGenesysFwType
-fu_genesys_usbhub_firmware_query_magic(GBytes *fw, gsize offset, GError **error)
-{
-	FuGenesysFwType fw_type = FU_GENESYS_FW_TYPE_UNKNOWN;
-	guint8 magic[GENESYS_USBHUB_FW_SIG_LEN] = {0x0};
-
-	if (g_bytes_get_size(fw) - offset <= 0x312) /* codesign info */
-		return FU_GENESYS_FW_TYPE_CODESIGN;
-
-	if (!fu_memcpy_safe(magic,
-			    sizeof(magic),
-			    0, /* dst */
-			    g_bytes_get_data(fw, NULL),
-			    g_bytes_get_size(fw),
-			    offset + GENESYS_USBHUB_FW_SIG_OFFSET,
-			    sizeof(magic),
-			    error)) {
-		g_prefix_error(error, "failed to read magic: ");
-		return FU_GENESYS_FW_TYPE_UNKNOWN;
-	}
-
-	if (memcmp(magic, GENESYS_USBHUB_FW_SIG_TEXT_HUB, sizeof(magic)) == 0) {
-		fw_type = FU_GENESYS_FW_TYPE_HUB;
-	} else if (memcmp(magic, GENESYS_USBHUB_FW_SIG_TEXT_DEV_BRIDGE, sizeof(magic)) == 0) {
-		fw_type = FU_GENESYS_FW_TYPE_DEV_BRIDGE;
-	} else if (memcmp(magic, GENESYS_USBHUB_FW_SIG_TEXT_PD, sizeof(magic)) == 0) {
-		fw_type = FU_GENESYS_FW_TYPE_PD;
-	} else {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_SIGNATURE_INVALID,
-				    "signature invalid");
-		return FU_GENESYS_FW_TYPE_UNKNOWN;
-	}
-
-	return fw_type;
-}
-
 static gboolean
 fu_genesys_usbhub_firmware_parse(FuFirmware *firmware,
 				 GBytes *fw,
@@ -349,41 +311,24 @@ fu_genesys_usbhub_firmware_parse(FuFirmware *firmware,
 		return FALSE;
 
 	/* parse remaining firmware bytes */
-	if (bufsz > offset + code_size) {
-		gsize fw_offset = offset + code_size;
-
-		do {
-			FuGenesysFwType fw_type =
-			    fu_genesys_usbhub_firmware_query_magic(fw, fw_offset, error);
-			g_autoptr(FuFirmware) firmware_sub = NULL;
-
-			switch (fw_type) {
-			case FU_GENESYS_FW_TYPE_HUB:
-				g_set_error_literal(error,
-						    FWUPD_ERROR,
-						    FWUPD_ERROR_NOT_SUPPORTED,
-						    "fw bytes have dual hub firmware");
-				return FALSE;
-			case FU_GENESYS_FW_TYPE_DEV_BRIDGE:
-				firmware_sub = fu_genesys_usbhub_dev_firmware_new();
-				break;
-			case FU_GENESYS_FW_TYPE_PD:
-				firmware_sub = fu_genesys_usbhub_pd_firmware_new();
-				break;
-			case FU_GENESYS_FW_TYPE_CODESIGN:
-				firmware_sub = fu_genesys_usbhub_codesign_firmware_new();
-				break;
-			default:
-				return FALSE;
-			}
-			/* parse firmware */
-			if (!fu_firmware_parse_full(firmware_sub, fw, fw_offset, flags, error))
-				return FALSE;
-			fu_firmware_add_image(firmware, firmware_sub);
-			/* shift offset */
-			fw_offset = fu_firmware_get_offset(firmware_sub) +
-				    fu_firmware_get_size(firmware_sub);
-		} while (bufsz > fw_offset);
+	offset += code_size;
+	while (offset < bufsz) {
+		g_autoptr(FuFirmware) firmware_sub = NULL;
+		firmware_sub = fu_firmware_new_from_gtypes(fw,
+							   offset,
+							   flags | FWUPD_INSTALL_FLAG_NO_SEARCH,
+							   error,
+							   FU_TYPE_GENESYS_USBHUB_DEV_FIRMWARE,
+							   FU_TYPE_GENESYS_USBHUB_PD_FIRMWARE,
+							   FU_TYPE_GENESYS_USBHUB_CODESIGN_FIRMWARE,
+							   G_TYPE_INVALID);
+		if (firmware_sub == NULL) {
+			g_prefix_error(error, "fw bytes have dual hub firmware: ");
+			return FALSE;
+		}
+		fu_firmware_set_offset(firmware_sub, offset);
+		fu_firmware_add_image(firmware, firmware_sub);
+		offset += fu_firmware_get_size(firmware_sub);
 	}
 
 	/* success */

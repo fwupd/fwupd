@@ -89,9 +89,3 @@ fu_genesys_usbhub_dev_firmware_class_init(FuGenesysUsbhubDevFirmwareClass *klass
 	klass_firmware->check_magic = fu_genesys_usbhub_dev_firmware_check_magic;
 	klass_firmware->parse = fu_genesys_usbhub_dev_firmware_parse;
 }
-
-FuFirmware *
-fu_genesys_usbhub_dev_firmware_new(void)
-{
-	return FU_FIRMWARE(g_object_new(FU_TYPE_GENESYS_USBHUB_DEV_FIRMWARE, NULL));
-}

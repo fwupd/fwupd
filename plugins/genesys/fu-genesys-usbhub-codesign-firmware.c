@@ -109,9 +109,3 @@ fu_genesys_usbhub_codesign_firmware_class_init(FuGenesysUsbhubCodesignFirmwareCl
 	klass_firmware->parse = fu_genesys_usbhub_codesign_firmware_parse;
 	klass_firmware->export = fu_genesys_usbhub_codesign_firmware_export;
 }
-
-FuFirmware *
-fu_genesys_usbhub_codesign_firmware_new(void)
-{
-	return FU_FIRMWARE(g_object_new(FU_TYPE_GENESYS_USBHUB_CODESIGN_FIRMWARE, NULL));
-}

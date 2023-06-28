@@ -1556,6 +1556,7 @@ fu_dfu_device_prepare_firmware(FuDevice *device,
 			       GError **error)
 {
 	return fu_firmware_new_from_gtypes(fw,
+					   0x0,
 					   flags,
 					   error,
 					   FU_TYPE_IHEX_FIRMWARE,

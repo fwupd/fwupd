@@ -15,7 +15,5 @@ G_DECLARE_FINAL_TYPE(FuGenesysUsbhubCodesignFirmware,
 		     GENESYS_USBHUB_CODESIGN_FIRMWARE,
 		     FuFirmware)
 
-FuFirmware *
-fu_genesys_usbhub_codesign_firmware_new(void);
 gint
 fu_genesys_usbhub_codesign_firmware_get_codesign(FuGenesysUsbhubCodesignFirmware *self);

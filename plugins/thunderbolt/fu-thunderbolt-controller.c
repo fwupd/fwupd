@@ -122,6 +122,7 @@ fu_thunderbolt_controller_read_status_block(FuThunderboltController *self, GErro
 	if (controller_fw == NULL)
 		return FALSE;
 	firmware = fu_firmware_new_from_gtypes(controller_fw,
+					       0x0,
 					       FWUPD_INSTALL_FLAG_NO_SEARCH,
 					       error,
 					       FU_TYPE_INTEL_THUNDERBOLT_NVM,
