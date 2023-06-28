@@ -118,7 +118,8 @@ fu_genesys_usbhub_firmware_verify(GBytes *fw, gsize offset, gsize code_size, GEr
 {
 	gsize bufsz = 0;
 	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
-	guint16 fw_checksum, checksum;
+	guint16 fw_checksum;
+	guint16 checksum;
 
 	/* check code-size */
 	if (offset + code_size < sizeof(checksum)) {
@@ -208,7 +209,7 @@ fu_genesys_usbhub_firmware_check_magic(FuFirmware *firmware,
 				       gsize offset,
 				       GError **error)
 {
-	guint8 magic[4] = "XROM";
+	guint8 magic[4] = GENESYS_USBHUB_FW_SIG_TEXT_HUB;
 	return fu_memcmp_safe(g_bytes_get_data(fw, NULL),
 			      g_bytes_get_size(fw),
 			      offset + GENESYS_USBHUB_FW_SIG_OFFSET,

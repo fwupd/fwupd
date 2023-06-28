@@ -23,7 +23,7 @@ fu_genesys_usbhub_pd_firmware_check_magic(FuFirmware *firmware,
 					  gsize offset,
 					  GError **error)
 {
-	guint8 magic[4] = "PRDY";
+	guint8 magic[4] = GENESYS_USBHUB_FW_SIG_TEXT_PD;
 	return fu_memcmp_safe(g_bytes_get_data(fw, NULL),
 			      g_bytes_get_size(fw),
 			      offset + GENESYS_USBHUB_FW_SIG_OFFSET,
