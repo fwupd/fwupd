@@ -681,7 +681,7 @@ fu_engine_add_trusted_report(FuEngine *self, FuRelease *release)
 	for (guint i = 0; i < reports->len; i++) {
 		FwupdReport *report = g_ptr_array_index(reports, i);
 		for (guint j = 0; j < trusted_reports->len; j++) {
-			FwupdReport *trusted_report = g_ptr_array_index(reports, j);
+			FwupdReport *trusted_report = g_ptr_array_index(trusted_reports, j);
 			if (fu_engine_compare_report_trusted(trusted_report, report)) {
 				g_autofree gchar *str = fwupd_report_to_string(trusted_report);
 				g_debug("add trusted-report to %s:%s as trusted: %s",
