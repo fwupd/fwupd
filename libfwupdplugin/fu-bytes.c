@@ -380,6 +380,10 @@ fu_bytes_new_offset(GBytes *bytes, gsize offset, gsize length, GError **error)
 	g_return_val_if_fail(bytes != NULL, NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
+	/* optimize */
+	if (offset == 0x0 && g_bytes_get_size(bytes) == length)
+		return g_bytes_ref(bytes);
+
 	/* sanity check */
 	if (offset + length < length || offset + length > g_bytes_get_size(bytes)) {
 		g_set_error(error,
