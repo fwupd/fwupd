@@ -804,7 +804,7 @@ fu_genesys_usbhub_device_get_fw_bank_version(FuGenesysUsbhubDevice *self,
 
 	/* verify bank firmware integrity */
 	blob = g_bytes_new_take(g_steal_pointer(&buf), bufsz);
-	if (!fu_genesys_usbhub_firmware_verify(blob, 0, bufsz, &error_local)) {
+	if (!fu_genesys_usbhub_firmware_verify_checksum(blob, &error_local)) {
 		g_debug("ignoring firmware %s bank%d: %s",
 			fu_genesys_fw_type_to_string(fw_type),
 			bank_num + 1,
@@ -1569,9 +1569,9 @@ fu_genesys_usbhub_device_compare_fw_public_key(FuGenesysUsbhubDevice *self,
 					       GError **error)
 {
 	FuGenesysFwCodesign codesign_type = FU_GENESYS_FW_CODESIGN_NONE;
-	GBytes *codesign_blob = NULL;
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GByteArray) st_codesign = NULL;
+
 	g_return_val_if_fail(FU_IS_GENESYS_USBHUB_CODESIGN_FIRMWARE(firmware), FALSE);
 
 	/* compare dev and fw codesign type */
@@ -1594,19 +1594,18 @@ fu_genesys_usbhub_device_compare_fw_public_key(FuGenesysUsbhubDevice *self,
 			       fu_genesys_fw_type_to_string(FU_GENESYS_FW_TYPE_CODESIGN));
 		return FALSE;
 	}
-	codesign_blob = fu_bytes_new_offset(blob,
-					    fu_firmware_get_offset(firmware),
-					    fu_firmware_get_size(firmware),
-					    error);
-	if (codesign_blob == NULL) {
-		g_prefix_error(error, "error getting codesign data: ");
-		return FALSE;
-	}
-	st_codesign = g_bytes_unref_to_array(codesign_blob);
 
 	/* compare dev and fw public-key */
 	switch (self->codesign) {
 	case FU_GENESYS_FW_CODESIGN_RSA: {
+		/* parse and validate */
+		st_codesign =
+		    fu_struct_genesys_fw_codesign_info_rsa_parse(g_bytes_get_data(blob, NULL),
+								 g_bytes_get_size(blob),
+								 0x0,
+								 error);
+		if (st_codesign == NULL)
+			return FALSE;
 		fu_dump_raw(G_LOG_DOMAIN,
 			    "PublicKey",
 			    st_codesign->data,
@@ -1633,9 +1632,18 @@ fu_genesys_usbhub_device_compare_fw_public_key(FuGenesysUsbhubDevice *self,
 	}
 	case FU_GENESYS_FW_CODESIGN_ECDSA: {
 		gsize fw_keysz = 0;
-		const guint8 *fw_key =
-		    fu_struct_genesys_fw_codesign_info_ecdsa_get_key(st_codesign, &fw_keysz);
+		const guint8 *fw_key;
 
+		/* parse and validate */
+		st_codesign =
+		    fu_struct_genesys_fw_codesign_info_ecdsa_parse(g_bytes_get_data(blob, NULL),
+								   g_bytes_get_size(blob),
+								   0x0,
+								   error);
+		if (st_codesign == NULL)
+			return FALSE;
+
+		fw_key = fu_struct_genesys_fw_codesign_info_ecdsa_get_key(st_codesign, &fw_keysz);
 		if (fw_keysz != FU_STRUCT_GENESYS_FW_ECDSA_PUBLIC_KEY_SIZE) {
 			g_set_error_literal(error,
 					    FWUPD_ERROR,
@@ -1655,7 +1663,12 @@ fu_genesys_usbhub_device_compare_fw_public_key(FuGenesysUsbhubDevice *self,
 		}
 		break;
 	}
-	default: /* does not exist */
+	default:
+		break;
+	}
+
+	/* does not exist */
+	if (st_codesign == NULL) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOTHING_TO_DO,
@@ -1664,6 +1677,7 @@ fu_genesys_usbhub_device_compare_fw_public_key(FuGenesysUsbhubDevice *self,
 		return FALSE;
 	}
 
+	/* success */
 	return TRUE;
 }
 
@@ -2020,32 +2034,23 @@ fu_genesys_usbhub_device_update_firmware(FuGenesysUsbhubDevice *self,
 					 GError **error)
 {
 	gboolean skip_erase = FALSE;
+	gsize bufsz = 0;
+	const guint8 *buf = NULL;
 	const guint start_addr = fu_firmware_get_addr(firmware);
-	const guint code_size = fu_firmware_get_size(firmware);
-	const guint8 *code_data = NULL;
 	g_autoptr(GBytes) blob = NULL;
 
+	/* get raw data */
 	blob = fu_firmware_get_bytes(firmware, error);
 	if (blob == NULL)
 		return FALSE;
-	code_data = g_bytes_get_region(blob, code_size, fu_firmware_get_offset(firmware), 1);
-	if (code_data == NULL) {
-		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
-			    "invalid firmware, offset:%#lx, codesize:%#x",
-			    fu_firmware_get_offset(firmware),
-			    code_size);
-		return FALSE;
-	}
+	buf = g_bytes_get_data(blob, &bufsz);
 
+	/* already erase at FU_GENESYS_FW_TYPE_HUB before */
 	if (self->is_gl352350 && fu_firmware_get_idx(firmware) == FU_GENESYS_FW_TYPE_CODESIGN)
-		/* already erase at FU_GENESYS_FW_TYPE_HUB before. */
 		skip_erase = TRUE;
 
 	/* progress */
 	fu_progress_set_id(progress, fu_firmware_get_id(firmware));
-
 	if (skip_erase) {
 		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 1, NULL);
 		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 5, NULL);
@@ -2061,7 +2066,7 @@ fu_genesys_usbhub_device_update_firmware(FuGenesysUsbhubDevice *self,
 	/* erase */
 	if (!skip_erase && !fu_genesys_usbhub_device_erase_flash(self,
 								 start_addr,
-								 code_size,
+								 bufsz,
 								 fu_progress_get_child(progress),
 								 error))
 		return FALSE;
@@ -2070,7 +2075,7 @@ fu_genesys_usbhub_device_update_firmware(FuGenesysUsbhubDevice *self,
 	/* verify blank */
 	if (!fu_genesys_usbhub_device_compare_flash_blank(self,
 							  start_addr,
-							  code_size,
+							  bufsz,
 							  fu_progress_get_child(progress),
 							  error))
 		return FALSE;
@@ -2079,8 +2084,8 @@ fu_genesys_usbhub_device_update_firmware(FuGenesysUsbhubDevice *self,
 	/* write */
 	if (!fu_genesys_usbhub_device_write_flash(self,
 						  start_addr,
-						  code_data,
-						  code_size,
+						  buf,
+						  bufsz,
 						  fu_progress_get_child(progress),
 						  error))
 		return FALSE;
@@ -2089,8 +2094,8 @@ fu_genesys_usbhub_device_update_firmware(FuGenesysUsbhubDevice *self,
 	/* verify */
 	if (!fu_genesys_usbhub_device_compare_flash_data(self,
 							 start_addr,
-							 code_data,
-							 code_size,
+							 buf,
+							 bufsz,
 							 fu_progress_get_child(progress),
 							 error))
 		return FALSE;

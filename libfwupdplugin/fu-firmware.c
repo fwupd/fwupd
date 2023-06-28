@@ -914,7 +914,15 @@ fu_firmware_parse_full(FuFirmware *self,
 		return FALSE;
 
 	/* always set by default */
-	fu_firmware_set_bytes(self, fw);
+	if (offset == 0x0) {
+		fu_firmware_set_bytes(self, fw);
+	} else {
+		g_autoptr(GBytes) fw_offset = NULL;
+		fw_offset = fu_bytes_new_offset(fw, offset, g_bytes_get_size(fw) - offset, error);
+		if (fw_offset == NULL)
+			return FALSE;
+		fu_firmware_set_bytes(self, fw_offset);
+	}
 
 	/* handled by the subclass */
 	if (klass->parse != NULL)
