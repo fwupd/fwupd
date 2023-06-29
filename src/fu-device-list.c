@@ -916,7 +916,7 @@ fu_device_list_wait_for_replug(FuDeviceList *self, GError **error)
 		g_main_context_iteration(NULL, FALSE);
 		devices_wfr_tmp = fu_device_list_get_wait_for_replug(self);
 		if (devices_wfr_tmp->len == 0)
-			break;
+			continue;
 	} while (g_timer_elapsed(timer, NULL) * 1000.f < remove_delay);
 
 	/* check that no other devices are still waiting for replug */
