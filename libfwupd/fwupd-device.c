@@ -4137,6 +4137,74 @@ fwupd_device_compare(FwupdDevice *self1, FwupdDevice *self2)
 }
 
 /**
+ * fwupd_device_match_flags:
+ * @include: #FwupdDeviceFlags, or %FWUPD_DEVICE_FLAG_NONE
+ * @exclude: #FwupdDeviceFlags, or %FWUPD_DEVICE_FLAG_NONE
+ *
+ * Check if the device flags match.
+ *
+ * Returns: %TRUE if the device flags match
+ *
+ * Since: 1.9.3
+ **/
+gboolean
+fwupd_device_match_flags(FwupdDevice *self, FwupdDeviceFlags include, FwupdDeviceFlags exclude)
+{
+	g_return_val_if_fail(FWUPD_IS_DEVICE(self), FALSE);
+
+	for (guint i = 0; i < 64; i++) {
+		FwupdDeviceFlags flag = 1LLU << i;
+		if ((include & flag) > 0) {
+			if (!fwupd_device_has_flag(self, flag))
+				return FALSE;
+		}
+		if ((exclude & flag) > 0) {
+			if (fwupd_device_has_flag(self, flag))
+				return FALSE;
+		}
+	}
+	return TRUE;
+}
+
+/**
+ * fwupd_device_array_filter_flags:
+ * @devices: (not nullable) (element-type FwupdDevice): devices
+ * @include: #FwupdDeviceFlags, or %FWUPD_DEVICE_FLAG_NONE
+ * @exclude: #FwupdDeviceFlags, or %FWUPD_DEVICE_FLAG_NONE
+ * @error: (nullable): optional return location for an error
+ *
+ * Creates an array of new devices that match using fwupd_device_match_flags().
+ *
+ * Returns: (transfer container) (element-type FwupdDevice): devices
+ *
+ * Since: 1.9.3
+ **/
+GPtrArray *
+fwupd_device_array_filter_flags(GPtrArray *devices,
+				FwupdDeviceFlags include,
+				FwupdDeviceFlags exclude,
+				GError **error)
+{
+	g_autoptr(GPtrArray) devices_filtered =
+	    g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
+
+	g_return_val_if_fail(devices != NULL, NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	for (guint i = 0; i < devices->len; i++) {
+		FwupdDevice *device = g_ptr_array_index(devices, i);
+		if (!fwupd_device_match_flags(device, include, exclude))
+			continue;
+		g_ptr_array_add(devices_filtered, g_object_ref(device));
+	}
+	if (devices_filtered->len == 0) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO, "no devices");
+		return NULL;
+	}
+	return g_steal_pointer(&devices_filtered);
+}
+
+/**
  * fwupd_device_new:
  *
  * Creates a new device.

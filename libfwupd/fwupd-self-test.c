@@ -837,6 +837,46 @@ fwupd_request_func(void)
 }
 
 static void
+fwupd_device_filter_func(void)
+{
+	g_autoptr(FwupdDevice) dev = fwupd_device_new();
+	fwupd_device_add_flag(dev, FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
+	fwupd_device_add_flag(dev, FWUPD_DEVICE_FLAG_SUPPORTED);
+
+	/* none */
+	g_assert_true(
+	    fwupd_device_match_flags(dev, FWUPD_DEVICE_FLAG_NONE, FWUPD_DEVICE_FLAG_NONE));
+
+	/* include */
+	g_assert_true(fwupd_device_match_flags(dev,
+					       FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD,
+					       FWUPD_DEVICE_FLAG_NONE));
+	g_assert_true(
+	    fwupd_device_match_flags(dev, FWUPD_DEVICE_FLAG_SUPPORTED, FWUPD_DEVICE_FLAG_NONE));
+	g_assert_true(
+	    fwupd_device_match_flags(dev,
+				     FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD | FWUPD_DEVICE_FLAG_SUPPORTED,
+				     FWUPD_DEVICE_FLAG_NONE));
+	g_assert_false(fwupd_device_match_flags(dev,
+						FWUPD_DEVICE_FLAG_ANOTHER_WRITE_REQUIRED,
+						FWUPD_DEVICE_FLAG_NONE));
+
+	/* exclude, i.e. ~flag */
+	g_assert_false(fwupd_device_match_flags(dev,
+						FWUPD_DEVICE_FLAG_NONE,
+						FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD));
+	g_assert_false(
+	    fwupd_device_match_flags(dev, FWUPD_DEVICE_FLAG_NONE, FWUPD_DEVICE_FLAG_SUPPORTED));
+	g_assert_false(fwupd_device_match_flags(dev,
+						FWUPD_DEVICE_FLAG_NONE,
+						FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD |
+						    FWUPD_DEVICE_FLAG_SUPPORTED));
+	g_assert_true(fwupd_device_match_flags(dev,
+					       FWUPD_DEVICE_FLAG_NONE,
+					       FWUPD_DEVICE_FLAG_ANOTHER_WRITE_REQUIRED));
+}
+
+static void
 fwupd_device_func(void)
 {
 	gboolean ret;
@@ -1595,6 +1635,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/plugin", fwupd_plugin_func);
 	g_test_add_func("/fwupd/request", fwupd_request_func);
 	g_test_add_func("/fwupd/device", fwupd_device_func);
+	g_test_add_func("/fwupd/device{filter}", fwupd_device_filter_func);
 	g_test_add_func("/fwupd/security-attr", fwupd_security_attr_func);
 	g_test_add_func("/fwupd/remote{download}", fwupd_remote_download_func);
 	g_test_add_func("/fwupd/remote{base-uri}", fwupd_remote_baseuri_func);

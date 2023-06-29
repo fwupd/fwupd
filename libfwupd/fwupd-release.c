@@ -2468,6 +2468,74 @@ fwupd_release_incorporate(FwupdRelease *self, FwupdRelease *donor)
 }
 
 /**
+ * fwupd_release_match_flags:
+ * @include: #FwupdReleaseFlags, or %FWUPD_RELEASE_FLAG_NONE
+ * @exclude: #FwupdReleaseFlags, or %FWUPD_RELEASE_FLAG_NONE
+ *
+ * Check if the release flags match.
+ *
+ * Returns: %TRUE if the release flags match
+ *
+ * Since: 1.9.3
+ **/
+gboolean
+fwupd_release_match_flags(FwupdRelease *self, FwupdReleaseFlags include, FwupdReleaseFlags exclude)
+{
+	g_return_val_if_fail(FWUPD_IS_RELEASE(self), FALSE);
+
+	for (guint i = 0; i < 64; i++) {
+		FwupdReleaseFlags flag = 1LLU << i;
+		if ((include & flag) > 0) {
+			if (!fwupd_release_has_flag(self, flag))
+				return FALSE;
+		}
+		if ((exclude & flag) > 0) {
+			if (fwupd_release_has_flag(self, flag))
+				return FALSE;
+		}
+	}
+	return TRUE;
+}
+
+/**
+ * fwupd_release_array_filter_flags:
+ * @rels: (not nullable) (element-type FwupdRelease): releases
+ * @include: #FwupdReleaseFlags, or %FWUPD_RELEASE_FLAG_NONE
+ * @exclude: #FwupdReleaseFlags, or %FWUPD_RELEASE_FLAG_NONE
+ * @error: (nullable): optional return location for an error
+ *
+ * Creates an array of new releases that match using fwupd_release_match_flags().
+ *
+ * Returns: (transfer container) (element-type FwupdRelease): releases
+ *
+ * Since: 1.9.3
+ **/
+GPtrArray *
+fwupd_release_array_filter_flags(GPtrArray *rels,
+				 FwupdReleaseFlags include,
+				 FwupdReleaseFlags exclude,
+				 GError **error)
+{
+	g_autoptr(GPtrArray) rels_filtered =
+	    g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
+
+	g_return_val_if_fail(rels != NULL, NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	for (guint i = 0; i < rels->len; i++) {
+		FwupdRelease *rel = g_ptr_array_index(rels, i);
+		if (!fwupd_release_match_flags(rel, include, exclude))
+			continue;
+		g_ptr_array_add(rels_filtered, g_object_ref(rel));
+	}
+	if (rels_filtered->len == 0) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO, "no releases");
+		return NULL;
+	}
+	return g_steal_pointer(&rels_filtered);
+}
+
+/**
  * fwupd_release_new:
  *
  * Creates a new release.
