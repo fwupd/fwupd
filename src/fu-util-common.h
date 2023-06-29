@@ -87,10 +87,15 @@ gboolean
 fu_util_using_correct_daemon(GError **error);
 
 gboolean
-fu_util_parse_filter_flags(const gchar *filter,
-			   FwupdDeviceFlags *include,
-			   FwupdDeviceFlags *exclude,
-			   GError **error);
+fu_util_parse_filter_device_flags(const gchar *filter,
+				  FwupdDeviceFlags *include,
+				  FwupdDeviceFlags *exclude,
+				  GError **error);
+gboolean
+fu_util_parse_filter_release_flags(const gchar *filter,
+				   FwupdReleaseFlags *include,
+				   FwupdReleaseFlags *exclude,
+				   GError **error);
 gchar *
 fu_util_convert_description(const gchar *xml, GError **error);
 gchar *

@@ -54,6 +54,8 @@ _fwupdtool_opts=(
 	'--verbose'
 	'--allow-reinstall'
 	'--allow-older'
+	'--filter'
+	'--filter-release'
 	'--force'
 	'--show-all'
 	'--plugins'
