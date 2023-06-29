@@ -189,6 +189,14 @@ fwupd_release_get_reports(FwupdRelease *self);
 void
 fwupd_release_add_report(FwupdRelease *self, FwupdReport *report);
 
+gboolean
+fwupd_release_match_flags(FwupdRelease *self, FwupdReleaseFlags include, FwupdReleaseFlags exclude);
+GPtrArray *
+fwupd_release_array_filter_flags(GPtrArray *rels,
+				 FwupdReleaseFlags include,
+				 FwupdReleaseFlags exclude,
+				 GError **error);
+
 FwupdRelease *
 fwupd_release_from_variant(GVariant *value);
 GPtrArray *
