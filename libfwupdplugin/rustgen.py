@@ -62,7 +62,6 @@ class EnumObj:
     def __init__(self, name: str) -> None:
         self.name: str = name
         self.repr_type: Optional[str] = None
-        self.derives: List[str] = []
         self.items: List[EnumItem] = []
         self._exports: Dict[str, Export] = {}
 
@@ -73,10 +72,16 @@ class EnumObj:
     def c_type(self):
         return f"Fu{self.name}"
 
+    def add_private_export(self, derive: str) -> None:
+        if self._exports.get(derive) == Export.PUBLIC:
+            return
+        self._exports[derive] = Export.PRIVATE
+
+    def add_public_export(self, derive: str) -> None:
+        self.add_private_export(derive)
+        self._exports[derive] = Export.PUBLIC
+
     def export(self, derive: str) -> Export:
-        if derive in ["FromString", "ToString"]:
-            if derive in self.derives:
-                return Export.PUBLIC
         return self._exports.get(derive, Export.NONE)
 
     def __str__(self) -> str:
@@ -102,7 +107,6 @@ class EnumItem:
 class StructObj:
     def __init__(self, name: str) -> None:
         self.name: str = name
-        self.derives: List[str] = []
         self.items: List[StructItem] = []
         self._exports: Dict[str, Export] = {}
 
@@ -126,13 +130,33 @@ class StructObj:
                 return True
         return False
 
-    def export(self, derive: str) -> Export:
-        if derive in ["New", "Parse", "Validate", "ToString"]:
-            if derive in self.derives:
-                return Export.PUBLIC
+    def add_private_export(self, derive: str) -> None:
+        if self._exports.get(derive) == Export.PUBLIC:
+            return
+        self._exports[derive] = Export.PRIVATE
+        if derive == "Validate":
+            for item in self.items:
+                if item.constant:
+                    item.add_private_export("Getters")
+                if item.struct_obj:
+                    item.struct_obj.add_private_export("Validate")
         if derive == "ToString":
-            if "Parse" in self.derives:
-                return Export.PRIVATE
+            for item in self.items:
+                if item.enum_obj:
+                    item.enum_obj.add_private_export("ToString")
+
+    def add_public_export(self, derive: str) -> None:
+        self.add_private_export(derive)
+        self._exports[derive] = Export.PUBLIC
+
+        # for convenience
+        if derive == "Parse":
+            self.add_public_export("Getters")
+            self.add_private_export("ToString")
+        if derive == "New":
+            self.add_public_export("Setters")
+
+    def export(self, derive: str) -> Export:
         return self._exports.get(derive, Export.NONE)
 
     def __str__(self) -> str:
@@ -152,31 +176,17 @@ class StructItem:
         self.endian: Endian = Endian.NATIVE
         self.multiplier: int = 0
         self.offset: int = 0
+        self._exports: Dict[str, Export] = {}
+
+    def add_private_export(self, derive: str) -> None:
+        if self._exports.get(derive) == Export.PUBLIC:
+            return
+        self._exports[derive] = Export.PRIVATE
 
     def export(self, derive: str) -> Export:
-        if derive == "Getters":
-            if not self.constant and "Getters" in self.obj.derives:
-                return Export.PUBLIC
-            if (
-                self.constant
-                and self.type != Type.STRING
-                and "Parse" in self.obj.derives
-            ):
-                return Export.PRIVATE
-            if (
-                self.constant
-                and self.type != Type.STRING
-                and "Validate" in self.obj.derives
-            ):
-                return Export.PRIVATE
-            if not self.constant and self.obj.export("ToString") != Export.NONE:
-                return Export.PRIVATE
-        if derive == "Setters":
-            if not self.constant and "Setters" in self.obj.derives:
-                return Export.PUBLIC
-            if self.default and "New" in self.obj.derives:
-                return Export.PRIVATE
-        return Export.NONE
+        if derive in self.obj._exports:
+            return self.obj._exports[derive]
+        return self._exports.get(derive, Export.NONE)
 
     @property
     def size(self) -> int:
@@ -409,7 +419,6 @@ class Generator:
                 if name in self.struct_objs:
                     raise ValueError(f"struct {name} already defined")
                 struct_cur = StructObj(name)
-                struct_cur.derives = list(set(derives))
                 self.struct_objs[name] = struct_cur
                 continue
             if line.startswith("enum ") and line.endswith("{"):
@@ -418,7 +427,6 @@ class Generator:
                     raise ValueError(f"enum {name} already defined")
                 enum_cur = EnumObj(name)
                 enum_cur.repr_type = repr_type
-                enum_cur.derives = list(set(derives))
                 self.enum_objs[name] = enum_cur
                 continue
 
@@ -430,10 +438,6 @@ class Generator:
             # what should we build
             if line.startswith("#[derive("):
                 for derive in line[9:-2].replace(" ", "").split(","):
-                    if derive == "Parse":
-                        derives.append("Getters")
-                    if derive == "New":
-                        derives.append("Setters")
                     derives.append(derive)
                 continue
 
@@ -444,22 +448,16 @@ class Generator:
             # end of structure
             if line.startswith("}"):
                 if struct_cur:
+                    for derive in derives:
+                        struct_cur.add_public_export(derive)
                     for item in struct_cur.items:
                         if item.default == "$struct_size":
                             item.default = str(offset)
                         if item.constant == "$struct_size":
                             item.constant = str(offset)
-
-                        # require other derives as deps
-                        if "Parse" in struct_cur.derives and item.enum_obj:
-                            if "ToString" not in item.enum_obj.derives:
-                                item.enum_obj._exports["ToString"] = Export.PRIVATE
-                        if "Parse" in struct_cur.derives and item.struct_obj:
-                            if "Validate" not in item.struct_obj.derives:
-                                item.struct_obj._exports["Validate"] = Export.PRIVATE
-                        if "New" in struct_cur.derives and item.struct_obj:
-                            if "New" not in item.struct_obj.derives:
-                                item.struct_obj._exports["New"] = Export.PRIVATE
+                if enum_cur:
+                    for derive in derives:
+                        enum_cur.add_public_export(derive)
                 struct_cur = None
                 enum_cur = None
                 repr_type = None
