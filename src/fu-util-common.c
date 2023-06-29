@@ -790,10 +790,10 @@ fu_util_release_get_name(FwupdRelease *release)
 }
 
 gboolean
-fu_util_parse_filter_flags(const gchar *filter,
-			   FwupdDeviceFlags *include,
-			   FwupdDeviceFlags *exclude,
-			   GError **error)
+fu_util_parse_filter_device_flags(const gchar *filter,
+				  FwupdDeviceFlags *include,
+				  FwupdDeviceFlags *exclude,
+				  GError **error)
 {
 	FwupdDeviceFlags tmp;
 	g_auto(GStrv) strv = g_strsplit(filter, ",", -1);
@@ -853,6 +853,79 @@ fu_util_parse_filter_flags(const gchar *filter,
 					    FWUPD_ERROR_NOT_SUPPORTED,
 					    "Filter %s already included",
 					    fwupd_device_flag_to_string(tmp));
+				return FALSE;
+			}
+			*include |= tmp;
+		}
+	}
+
+	return TRUE;
+}
+
+gboolean
+fu_util_parse_filter_release_flags(const gchar *filter,
+				   FwupdReleaseFlags *include,
+				   FwupdReleaseFlags *exclude,
+				   GError **error)
+{
+	FwupdDeviceFlags tmp;
+	g_auto(GStrv) strv = g_strsplit(filter, ",", -1);
+
+	g_return_val_if_fail(include != NULL, FALSE);
+	g_return_val_if_fail(exclude != NULL, FALSE);
+
+	for (guint i = 0; strv[i] != NULL; i++) {
+		if (g_str_has_prefix(strv[i], "~")) {
+			tmp = fwupd_release_flag_from_string(strv[i] + 1);
+			if (tmp == FWUPD_RELEASE_FLAG_UNKNOWN) {
+				g_set_error(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
+					    "Unknown release flag %s",
+					    strv[i] + 1);
+				return FALSE;
+			}
+			if ((tmp & *include) > 0) {
+				g_set_error(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
+					    "Filter %s already included",
+					    fwupd_release_flag_to_string(tmp));
+				return FALSE;
+			}
+			if ((tmp & *exclude) > 0) {
+				g_set_error(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
+					    "Filter %s already excluded",
+					    fwupd_release_flag_to_string(tmp));
+				return FALSE;
+			}
+			*exclude |= tmp;
+		} else {
+			tmp = fwupd_release_flag_from_string(strv[i]);
+			if (tmp == FWUPD_RELEASE_FLAG_UNKNOWN) {
+				g_set_error(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
+					    "Unknown release flag %s",
+					    strv[i]);
+				return FALSE;
+			}
+			if ((tmp & *exclude) > 0) {
+				g_set_error(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
+					    "Filter %s already excluded",
+					    fwupd_release_flag_to_string(tmp));
+				return FALSE;
+			}
+			if ((tmp & *include) > 0) {
+				g_set_error(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
+					    "Filter %s already included",
+					    fwupd_release_flag_to_string(tmp));
 				return FALSE;
 			}
 			*include |= tmp;
