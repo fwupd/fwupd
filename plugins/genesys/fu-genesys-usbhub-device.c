@@ -1687,7 +1687,7 @@ fu_genesys_usbhub_device_adjust_fw_addr(FuGenesysUsbhubDevice *self,
 					GError **error)
 {
 	FuGenesysFwType fw_type = fu_firmware_get_idx(firmware);
-	FuGenesysFwBank bank_num = self->update_fw_banks[fw_type];
+	FuGenesysFwBank bank_num;
 	guint32 code_size = 0;
 	guint32 bank_size = 0;
 	g_autoptr(GPtrArray) imgs = NULL;
@@ -1725,6 +1725,15 @@ fu_genesys_usbhub_device_adjust_fw_addr(FuGenesysUsbhubDevice *self,
 	}
 
 	/* set update address */
+	bank_num = self->update_fw_banks[fw_type];
+	if (bank_num >= FW_BANK_COUNT) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "unknown bank num 0x%x",
+			    bank_num);
+		return FALSE;
+	}
 	fu_firmware_set_addr(firmware, self->spec.fw_bank_addr[bank_num][fw_type]);
 
 	/* set child firmware */
