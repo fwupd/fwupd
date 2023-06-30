@@ -40,26 +40,33 @@
         </p>
         <ul>
           <li>Allow devices to only accept explicitly specified release versions</li>
+          <li>Allow filtering by release flags from fwupdtool and fwupdmgr</li>
+          <li>Allow filtering by remote when looking for trusted reports</li>
           <li>Drop the libefiboot dependency</li>
           <li>Ensure that BootService-only variables cannot be read in runtime mode</li>
           <li>Record the NVRAM space used as report metadata</li>
           <li>Show the user a warning when the ESP may not be valid</li>
+          <li>Speed up the daemon startup by 35% and reduce RSS by 12%</li>
           <li>Support reading and writing EFI variables on Windows</li>
         </ul>
         <p>This release fixes the following bugs:</p>
         <ul>
+          <li>Check only the EFI executables from boot menu when using --force</li>
           <li>Deduplicate the remotes as required</li>
           <li>Do not accidentally depend on python 3.9</li>
           <li>Do not truncate feature reports to fix Wacom ID6 update</li>
           <li>Get the Jabra GNP device name from the device</li>
           <li>Ignore small ESP block devices if there are multiple choices</li>
+          <li>Only add the little-used _REV instance IDs by request</li>
           <li>Use a CapsuleOnDisk filename supported by InsydeH2O</li>
         </ul>
         <p>This release adds support for the following hardware:</p>
         <ul>
           <li>Belkin Thunderbolt 4 Core Hub dock</li>
           <li>CE-LINK TB4-Dock01</li>
-          <li>Genesys GL352350</li>
+          <li>Genesys GL32XX SD readers</li>
+          <li>Genesys GL352350 USB 3.1 hub</li>
+          <li>Nordic HID devices without DFU support</li>
           <li>TUXEDO InfinityBook Pro 13 v3</li>
         </ul>
       </description>
