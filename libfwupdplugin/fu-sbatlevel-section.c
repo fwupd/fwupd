@@ -19,21 +19,21 @@ G_DEFINE_TYPE(FuSbatlevelSection, fu_sbatlevel_section, FU_TYPE_FIRMWARE);
 static gboolean
 fu_sbatlevel_section_add_entry(FuFirmware *firmware,
 			       GBytes *fw,
-			       const guint8 *buf,
-			       gsize bufsz,
-			       gsize entry_offset,
+			       gsize offset,
 			       const gchar *entry_name,
 			       guint64 entry_idx,
 			       FwupdInstallFlags flags,
 			       GError **error)
 {
+	gsize bufsz = 0;
+	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
+	gsize size = 0;
 	g_autoptr(FuFirmware) entry_fw = NULL;
 	g_autoptr(GBytes) entry_blob = NULL;
-	gsize entry_size;
 
 	/* look for the null terminator */
-	for (entry_size = 0; ((entry_offset + entry_size) < bufsz); ++entry_size) {
-		if (buf[entry_offset + entry_size] == 0)
+	for (size = 0; ((offset + size) < bufsz); ++size) {
+		if (buf[offset + size] == 0)
 			break;
 	}
 
@@ -44,8 +44,8 @@ fu_sbatlevel_section_add_entry(FuFirmware *firmware,
 
 	fu_firmware_set_idx(entry_fw, entry_idx);
 	fu_firmware_set_id(entry_fw, entry_name);
-	fu_firmware_set_offset(entry_fw, entry_offset);
-	entry_blob = fu_bytes_new_offset(fw, entry_offset, entry_size, error);
+	fu_firmware_set_offset(entry_fw, offset);
+	entry_blob = fu_bytes_new_offset(fw, offset, size, error);
 	if (entry_blob == NULL)
 		return FALSE;
 	if (!fu_firmware_add_image_full(firmware, entry_fw, error))
@@ -63,26 +63,21 @@ fu_sbatlevel_section_parse(FuFirmware *firmware,
 			   FwupdInstallFlags flags,
 			   GError **error)
 {
-	const guint8 *buf = NULL;
-	gsize bufsz;
+	gsize bufsz = 0;
+	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
 	gsize header_offset = offset + FU_STRUCT_SBAT_LEVEL_SECTION_HEADER_OFFSET_PREVIOUS;
 	guint32 previous_addr;
 	guint32 latest_addr;
 	g_autoptr(GByteArray) st = NULL;
-
-	buf = g_bytes_get_data(fw, &bufsz);
 
 	st = fu_struct_sbat_level_section_header_parse(buf, bufsz, offset, error);
 	if (st == NULL)
 		return FALSE;
 
 	previous_addr = fu_struct_sbat_level_section_header_get_previous(st);
-	latest_addr = fu_struct_sbat_level_section_header_get_latest(st);
 
 	if (!fu_sbatlevel_section_add_entry(firmware,
 					    fw,
-					    buf,
-					    bufsz,
 					    header_offset + previous_addr,
 					    "previous",
 					    0,
@@ -90,10 +85,10 @@ fu_sbatlevel_section_parse(FuFirmware *firmware,
 					    error))
 		return FALSE;
 
+	latest_addr = fu_struct_sbat_level_section_header_get_latest(st);
+
 	if (!fu_sbatlevel_section_add_entry(firmware,
 					    fw,
-					    buf,
-					    bufsz,
 					    header_offset + latest_addr,
 					    "latest",
 					    1,
