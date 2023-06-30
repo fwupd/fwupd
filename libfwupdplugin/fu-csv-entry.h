@@ -23,3 +23,8 @@ const gchar *
 fu_csv_entry_get_value_by_idx(FuCsvEntry *self, guint idx);
 const gchar *
 fu_csv_entry_get_value_by_column_id(FuCsvEntry *self, const gchar *column_id);
+gboolean
+fu_csv_entry_get_value_by_column_id_uint64(FuCsvEntry *self,
+					   const gchar *column_id,
+					   guint64 *value,
+					   GError **error);
