@@ -13,6 +13,7 @@ fwupdplugin_structs = rustgen.process(
   'fu-cfu.rs', # fuzzing
   'fu-dfu.rs', # fuzzing
   'fu-efi.rs', # fuzzing
+  'fu-elf.rs', # fuzzing
   'fu-fdt.rs', # fuzzing
   'fu-fmap.rs', # fuzzing
   'fu-ifwi.rs', # fuzzing
@@ -64,6 +65,7 @@ fwupdplugin_src = [
   'fu-efi-signature.c',
   'fu-efi-signature-list.c',
   'fu-efivar.c', # fuzzing
+  'fu-elf-firmware.c', # fuzzing
   'fu-fdt-firmware.c', # fuzzing
   'fu-fdt-image.c', # fuzzing
   'fu-firmware.c', # fuzzing
@@ -174,6 +176,7 @@ fwupdplugin_headers = [
   'fu-efi-signature.h',
   'fu-efi-signature-list.h',
   'fu-efivar.h',
+  'fu-elf-firmware.h',
   'fu-fdt-firmware.h',
   'fu-fdt-image.h',
   'fu-firmware-common.h',
