@@ -47,7 +47,7 @@ fu_igsc_code_firmware_parse_imgi(FuIgscCodeFirmware *self, GBytes *fw, GError **
 
 	/* get hw_sku */
 	st_inf = fu_struct_igsc_fwu_gws_image_info_parse(buf, bufsz, 0x0, error);
-	if (st_inf != NULL)
+	if (st_inf == NULL)
 		return FALSE;
 	self->hw_sku = fu_struct_igsc_fwu_gws_image_info_get_instance_id(st_inf);
 	return TRUE;
