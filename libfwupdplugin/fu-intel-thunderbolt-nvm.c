@@ -590,6 +590,13 @@ fu_intel_thunderbolt_nvm_parse(FuFirmware *firmware,
 			break;
 		}
 	}
+	if (priv->family == FU_INTEL_THUNDERBOLT_NVM_FAMILY_UNKNOWN) {
+		g_set_error_literal(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_INVALID_DATA,
+				    "unknown NVM family");
+		return FALSE;
+	}
 	if (priv->ports == 0 && priv->is_host) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -876,10 +883,12 @@ fu_intel_thunderbolt_nvm_check_compatible(FuFirmware *firmware,
 			return FALSE;
 		}
 		if (priv->flash_size != priv_other->flash_size) {
-			g_set_error_literal(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_INVALID_FILE,
-					    "incorrect flash size");
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "incorrect flash size, got 0x%x and expected 0x%x",
+				    priv->flash_size,
+				    priv_other->flash_size);
 			return FALSE;
 		}
 	}
