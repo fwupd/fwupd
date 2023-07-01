@@ -2228,11 +2228,9 @@ fu_util_get_firmware_gtypes(FuUtilPrivate *priv, gchar **values, GError **error)
 }
 
 static gchar *
-fu_util_prompt_for_firmware_type(FuUtilPrivate *priv, GError **error)
+fu_util_prompt_for_firmware_type(FuUtilPrivate *priv, GPtrArray *firmware_types, GError **error)
 {
-	g_autoptr(GPtrArray) firmware_types = NULL;
 	guint idx;
-	firmware_types = fu_context_get_firmware_gtype_ids(fu_engine_get_context(priv->engine));
 
 	/* TRANSLATORS: this is to abort the interactive prompt */
 	fu_console_print(priv->console, "0.\t%s", _("Cancel"));
@@ -2256,6 +2254,7 @@ fu_util_prompt_for_firmware_type(FuUtilPrivate *priv, GError **error)
 static gboolean
 fu_util_firmware_parse(FuUtilPrivate *priv, gchar **values, GError **error)
 {
+	FuContext *ctx = fu_engine_get_context(priv->engine);
 	GType gtype;
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(FuFirmware) firmware = NULL;
@@ -2287,12 +2286,53 @@ fu_util_firmware_parse(FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 
 	/* find the GType to use */
-	if (firmware_type == NULL)
-		firmware_type = fu_util_prompt_for_firmware_type(priv, error);
-	if (firmware_type == NULL)
-		return FALSE;
-	gtype =
-	    fu_context_get_firmware_gtype_by_id(fu_engine_get_context(priv->engine), firmware_type);
+	if (firmware_type == NULL) {
+		g_autoptr(GPtrArray) firmware_types = fu_context_get_firmware_gtype_ids(ctx);
+		firmware_type = fu_util_prompt_for_firmware_type(priv, firmware_types, error);
+		if (firmware_type == NULL)
+			return FALSE;
+	} else if (g_strcmp0(firmware_type, "auto") == 0) {
+		g_autoptr(GPtrArray) gtype_ids = fu_context_get_firmware_gtype_ids(ctx);
+		g_autoptr(GPtrArray) firmware_auto_types = g_ptr_array_new_with_free_func(g_free);
+		for (guint i = 0; i < gtype_ids->len; i++) {
+			const gchar *gtype_id = g_ptr_array_index(gtype_ids, i);
+			GType gtype_tmp;
+			g_autofree gchar *firmware_str = NULL;
+			g_autoptr(FuFirmware) firmware_tmp = NULL;
+			g_autoptr(GError) error_local = NULL;
+
+			if (g_strcmp0(gtype_id, "raw") == 0)
+				continue;
+			gtype_tmp = fu_context_get_firmware_gtype_by_id(ctx, gtype_id);
+			if (gtype_tmp == G_TYPE_INVALID) {
+				g_set_error(error,
+					    G_IO_ERROR,
+					    G_IO_ERROR_NOT_FOUND,
+					    "GType %s not supported",
+					    gtype_id);
+				return FALSE;
+			}
+			firmware_tmp = g_object_new(gtype_tmp, NULL);
+			if (fu_firmware_has_flag(firmware_tmp, FU_FIRMWARE_FLAG_NO_AUTO_DETECTION))
+				continue;
+			if (!fu_firmware_parse(firmware_tmp,
+					       blob,
+					       FWUPD_INSTALL_FLAG_NO_SEARCH,
+					       &error_local)) {
+				g_debug("failed to parse as %s: %s",
+					gtype_id,
+					error_local->message);
+				continue;
+			}
+			firmware_str = fu_firmware_to_string(firmware_tmp);
+			g_debug("parsed as %s: %s", gtype_id, firmware_str);
+			g_ptr_array_add(firmware_auto_types, g_strdup(gtype_id));
+		}
+		firmware_type = fu_util_prompt_for_firmware_type(priv, firmware_auto_types, error);
+		if (firmware_type == NULL)
+			return FALSE;
+	}
+	gtype = fu_context_get_firmware_gtype_by_id(ctx, firmware_type);
 	if (gtype == G_TYPE_INVALID) {
 		g_set_error(error,
 			    G_IO_ERROR,
@@ -2328,6 +2368,7 @@ fu_util_firmware_parse(FuUtilPrivate *priv, gchar **values, GError **error)
 static gboolean
 fu_util_firmware_export(FuUtilPrivate *priv, gchar **values, GError **error)
 {
+	FuContext *ctx = fu_engine_get_context(priv->engine);
 	FuFirmwareExportFlags flags = FU_FIRMWARE_EXPORT_FLAG_NONE;
 	GType gtype;
 	g_autoptr(GBytes) blob = NULL;
@@ -2360,12 +2401,13 @@ fu_util_firmware_export(FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 
 	/* find the GType to use */
-	if (firmware_type == NULL)
-		firmware_type = fu_util_prompt_for_firmware_type(priv, error);
+	if (firmware_type == NULL) {
+		g_autoptr(GPtrArray) firmware_types = fu_context_get_firmware_gtype_ids(ctx);
+		firmware_type = fu_util_prompt_for_firmware_type(priv, firmware_types, error);
+	}
 	if (firmware_type == NULL)
 		return FALSE;
-	gtype =
-	    fu_context_get_firmware_gtype_by_id(fu_engine_get_context(priv->engine), firmware_type);
+	gtype = fu_context_get_firmware_gtype_by_id(ctx, firmware_type);
 	if (gtype == G_TYPE_INVALID) {
 		g_set_error(error,
 			    G_IO_ERROR,
@@ -2389,6 +2431,7 @@ fu_util_firmware_export(FuUtilPrivate *priv, gchar **values, GError **error)
 static gboolean
 fu_util_firmware_extract(FuUtilPrivate *priv, gchar **values, GError **error)
 {
+	FuContext *ctx = fu_engine_get_context(priv->engine);
 	GType gtype;
 	g_autofree gchar *firmware_type = NULL;
 	g_autofree gchar *str = NULL;
@@ -2420,12 +2463,13 @@ fu_util_firmware_extract(FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 
 	/* find the GType to use */
-	if (firmware_type == NULL)
-		firmware_type = fu_util_prompt_for_firmware_type(priv, error);
+	if (firmware_type == NULL) {
+		g_autoptr(GPtrArray) firmware_types = fu_context_get_firmware_gtype_ids(ctx);
+		firmware_type = fu_util_prompt_for_firmware_type(priv, firmware_types, error);
+	}
 	if (firmware_type == NULL)
 		return FALSE;
-	gtype =
-	    fu_context_get_firmware_gtype_by_id(fu_engine_get_context(priv->engine), firmware_type);
+	gtype = fu_context_get_firmware_gtype_by_id(ctx, firmware_type);
 	if (gtype == G_TYPE_INVALID) {
 		g_set_error(error,
 			    G_IO_ERROR,
@@ -2612,16 +2656,19 @@ fu_util_firmware_convert(FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 
 	/* find the GType to use */
-	if (firmware_type_src == NULL)
-		firmware_type_src = fu_util_prompt_for_firmware_type(priv, error);
+	if (firmware_type_src == NULL) {
+		g_autoptr(GPtrArray) firmware_types = fu_context_get_firmware_gtype_ids(ctx);
+		firmware_type_src = fu_util_prompt_for_firmware_type(priv, firmware_types, error);
+	}
 	if (firmware_type_src == NULL)
 		return FALSE;
-	if (firmware_type_dst == NULL)
-		firmware_type_dst = fu_util_prompt_for_firmware_type(priv, error);
+	if (firmware_type_dst == NULL) {
+		g_autoptr(GPtrArray) firmware_types = fu_context_get_firmware_gtype_ids(ctx);
+		firmware_type_dst = fu_util_prompt_for_firmware_type(priv, firmware_types, error);
+	}
 	if (firmware_type_dst == NULL)
 		return FALSE;
-	gtype_src = fu_context_get_firmware_gtype_by_id(fu_engine_get_context(priv->engine),
-							firmware_type_src);
+	gtype_src = fu_context_get_firmware_gtype_by_id(ctx, firmware_type_src);
 	if (gtype_src == G_TYPE_INVALID) {
 		g_set_error(error,
 			    G_IO_ERROR,
@@ -2758,8 +2805,10 @@ fu_util_firmware_patch(FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 
 	/* find the GType to use */
-	if (firmware_type == NULL)
-		firmware_type = fu_util_prompt_for_firmware_type(priv, error);
+	if (firmware_type == NULL) {
+		g_autoptr(GPtrArray) firmware_types = fu_context_get_firmware_gtype_ids(ctx);
+		firmware_type = fu_util_prompt_for_firmware_type(priv, firmware_types, error);
+	}
 	if (firmware_type == NULL)
 		return FALSE;
 	gtype = fu_context_get_firmware_gtype_by_id(ctx, firmware_type);

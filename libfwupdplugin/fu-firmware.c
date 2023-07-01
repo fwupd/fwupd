@@ -77,6 +77,8 @@ fu_firmware_flag_to_string(FuFirmwareFlags flag)
 		return "has-stored-size";
 	if (flag == FU_FIRMWARE_FLAG_ALWAYS_SEARCH)
 		return "always-search";
+	if (flag == FU_FIRMWARE_FLAG_NO_AUTO_DETECTION)
+		return "no-auto-detection";
 	return NULL;
 }
 
@@ -107,6 +109,8 @@ fu_firmware_flag_from_string(const gchar *flag)
 		return FU_FIRMWARE_FLAG_HAS_STORED_SIZE;
 	if (g_strcmp0(flag, "always-search") == 0)
 		return FU_FIRMWARE_FLAG_ALWAYS_SEARCH;
+	if (g_strcmp0(flag, "no-auto-detection") == 0)
+		return FU_FIRMWARE_FLAG_NO_AUTO_DETECTION;
 	return FU_FIRMWARE_FLAG_NONE;
 }
 

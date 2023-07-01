@@ -135,6 +135,15 @@ struct _FuFirmwareClass {
  * Since: 1.8.6
  **/
 #define FU_FIRMWARE_FLAG_ALWAYS_SEARCH (1u << 6)
+/**
+ * FU_FIRMWARE_FLAG_NO_AUTO_DETECTION:
+ *
+ * Do not use this firmware type when auto-detecting firmware.
+ * This should be used when there is no valid signature or CRC to check validity when parsing.
+ *
+ * Since: 1.9.3
+ **/
+#define FU_FIRMWARE_FLAG_NO_AUTO_DETECTION (1u << 7)
 
 /**
  * FuFirmwareFlags:
