@@ -2232,6 +2232,21 @@ fu_util_prompt_for_firmware_type(FuUtilPrivate *priv, GPtrArray *firmware_types,
 {
 	guint idx;
 
+	/* no detected types */
+	if (firmware_types->len == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOTHING_TO_DO,
+				    "No detected firmware types");
+		return NULL;
+	}
+
+	/* there is no point asking */
+	if (firmware_types->len == 1) {
+		const gchar *id = g_ptr_array_index(firmware_types, 0);
+		return g_strdup(id);
+	}
+
 	/* TRANSLATORS: this is to abort the interactive prompt */
 	fu_console_print(priv->console, "0.\t%s", _("Cancel"));
 	for (guint i = 0; i < firmware_types->len; i++) {
@@ -2303,6 +2318,7 @@ fu_util_firmware_parse(FuUtilPrivate *priv, gchar **values, GError **error)
 
 			if (g_strcmp0(gtype_id, "raw") == 0)
 				continue;
+			g_debug("parsing as %s", gtype_id);
 			gtype_tmp = fu_context_get_firmware_gtype_by_id(ctx, gtype_id);
 			if (gtype_tmp == G_TYPE_INVALID) {
 				g_set_error(error,
