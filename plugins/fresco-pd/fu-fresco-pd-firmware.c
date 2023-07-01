@@ -66,6 +66,7 @@ fu_fresco_pd_firmware_parse(FuFirmware *firmware,
 static void
 fu_fresco_pd_firmware_init(FuFrescoPdFirmware *self)
 {
+	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_NO_AUTO_DETECTION);
 }
 
 static void

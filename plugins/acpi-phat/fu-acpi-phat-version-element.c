@@ -113,6 +113,7 @@ fu_acpi_phat_version_element_build(FuFirmware *firmware, XbNode *n, GError **err
 static void
 fu_acpi_phat_version_element_init(FuAcpiPhatVersionElement *self)
 {
+	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_NO_AUTO_DETECTION);
 }
 
 static void
