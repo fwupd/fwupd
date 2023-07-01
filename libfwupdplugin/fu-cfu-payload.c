@@ -50,6 +50,13 @@ fu_cfu_payload_parse(FuFirmware *firmware,
 			return FALSE;
 		offset += st->len;
 		chunk_size = fu_struct_cfu_payload_get_size(st);
+		if (chunk_size == 0) {
+			g_set_error_literal(error,
+					    G_IO_ERROR,
+					    G_IO_ERROR_INVALID_DATA,
+					    "payload size was invalid");
+			return FALSE;
+		}
 		blob = fu_bytes_new_offset(fw, offset, chunk_size, error);
 		if (blob == NULL)
 			return FALSE;
