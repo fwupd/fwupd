@@ -14,6 +14,7 @@
 #include "fu-byte-array.h"
 #include "fu-bytes.h"
 #include "fu-intel-thunderbolt-nvm.h"
+#include "fu-intel-thunderbolt-struct.h"
 #include "fu-mem.h"
 #include "fu-string.h"
 #include "fu-version-common.h"
@@ -25,27 +26,6 @@
  *
  * See also: [class@FuFirmware]
  */
-
-typedef enum {
-	FU_INTEL_THUNDERBOLT_NVM_SECTION_DIGITAL,
-	FU_INTEL_THUNDERBOLT_NVM_SECTION_DROM,
-	FU_INTEL_THUNDERBOLT_NVM_SECTION_ARC_PARAMS,
-	FU_INTEL_THUNDERBOLT_NVM_SECTION_DRAM_UCODE,
-	FU_INTEL_THUNDERBOLT_NVM_SECTION_LAST
-} FuIntelThunderboltNvmSection;
-
-typedef enum {
-	FU_INTEL_THUNDERBOLT_NVM_FAMILY_UNKNOWN,
-	FU_INTEL_THUNDERBOLT_NVM_FAMILY_FR,
-	FU_INTEL_THUNDERBOLT_NVM_FAMILY_WR,
-	FU_INTEL_THUNDERBOLT_NVM_FAMILY_AR,
-	FU_INTEL_THUNDERBOLT_NVM_FAMILY_AR_C,
-	FU_INTEL_THUNDERBOLT_NVM_FAMILY_TR,
-	FU_INTEL_THUNDERBOLT_NVM_FAMILY_BB,
-	FU_INTEL_THUNDERBOLT_NVM_FAMILY_MR,
-	FU_INTEL_THUNDERBOLT_NVM_FAMILY_GR,
-	FU_INTEL_THUNDERBOLT_NVM_FAMILY_LAST,
-} FuIntelThunderboltNvmFamily;
 
 typedef struct {
 	guint32 sections[FU_INTEL_THUNDERBOLT_NVM_SECTION_LAST];
@@ -78,64 +58,6 @@ G_DEFINE_TYPE_WITH_PRIVATE(FuIntelThunderboltNvm, fu_intel_thunderbolt_nvm, FU_T
 #define FU_INTEL_THUNDERBOLT_NVM_DROM_OFFSET_MODEL_ID  0x0012
 
 #define FU_INTEL_THUNDERBOLT_NVM_ARC_PARAMS_OFFSET_PD_POINTER 0x010C
-
-static const gchar *
-fu_intel_thunderbolt_nvm_family_to_string(FuIntelThunderboltNvmFamily family)
-{
-	if (family == FU_INTEL_THUNDERBOLT_NVM_FAMILY_FR)
-		return "falcon-ridge";
-	if (family == FU_INTEL_THUNDERBOLT_NVM_FAMILY_WR)
-		return "win-ridge";
-	if (family == FU_INTEL_THUNDERBOLT_NVM_FAMILY_AR)
-		return "alpine-ridge";
-	if (family == FU_INTEL_THUNDERBOLT_NVM_FAMILY_AR_C)
-		return "alpine-ridge-c";
-	if (family == FU_INTEL_THUNDERBOLT_NVM_FAMILY_TR)
-		return "titan-ridge";
-	if (family == FU_INTEL_THUNDERBOLT_NVM_FAMILY_BB)
-		return "bb";
-	if (family == FU_INTEL_THUNDERBOLT_NVM_FAMILY_MR)
-		return "maple-ridge";
-	if (family == FU_INTEL_THUNDERBOLT_NVM_FAMILY_GR)
-		return "goshen-ridge";
-	return "unknown";
-}
-
-static FuIntelThunderboltNvmFamily
-fu_intel_thunderbolt_nvm_family_from_string(const gchar *family)
-{
-	if (g_strcmp0(family, "falcon-ridge") == 0)
-		return FU_INTEL_THUNDERBOLT_NVM_FAMILY_FR;
-	if (g_strcmp0(family, "win-ridge") == 0)
-		return FU_INTEL_THUNDERBOLT_NVM_FAMILY_WR;
-	if (g_strcmp0(family, "alpine-ridge") == 0)
-		return FU_INTEL_THUNDERBOLT_NVM_FAMILY_AR;
-	if (g_strcmp0(family, "alpine-ridge-c") == 0)
-		return FU_INTEL_THUNDERBOLT_NVM_FAMILY_AR_C;
-	if (g_strcmp0(family, "titan-ridge") == 0)
-		return FU_INTEL_THUNDERBOLT_NVM_FAMILY_TR;
-	if (g_strcmp0(family, "bb") == 0)
-		return FU_INTEL_THUNDERBOLT_NVM_FAMILY_BB;
-	if (g_strcmp0(family, "maple-ridge") == 0)
-		return FU_INTEL_THUNDERBOLT_NVM_FAMILY_MR;
-	if (g_strcmp0(family, "goshen-ridge") == 0)
-		return FU_INTEL_THUNDERBOLT_NVM_FAMILY_GR;
-	return FU_INTEL_THUNDERBOLT_NVM_FAMILY_UNKNOWN;
-}
-
-static const gchar *
-fu_intel_thunderbolt_nvm_section_to_string(FuIntelThunderboltNvmSection section)
-{
-	if (section == FU_INTEL_THUNDERBOLT_NVM_SECTION_DIGITAL)
-		return "digital";
-	if (section == FU_INTEL_THUNDERBOLT_NVM_SECTION_DROM)
-		return "drom";
-	if (section == FU_INTEL_THUNDERBOLT_NVM_SECTION_ARC_PARAMS)
-		return "arc-params";
-	if (section == FU_INTEL_THUNDERBOLT_NVM_SECTION_DRAM_UCODE)
-		return "dram-ucode";
-	return "unknown";
-}
 
 /**
  * fu_intel_thunderbolt_nvm_get_vendor_id:
@@ -516,26 +438,26 @@ fu_intel_thunderbolt_nvm_parse(FuFirmware *firmware,
 		guint gen;
 		FuIntelThunderboltNvmFamily family;
 		guint ports;
-	} hw_info_arr[] = {{0x156D, 2, FU_INTEL_THUNDERBOLT_NVM_FAMILY_FR, 2},	 /* FR 4C */
-			   {0x156B, 2, FU_INTEL_THUNDERBOLT_NVM_FAMILY_FR, 1},	 /* FR 2C */
-			   {0x157E, 2, FU_INTEL_THUNDERBOLT_NVM_FAMILY_WR, 1},	 /* WR */
-			   {0x1578, 3, FU_INTEL_THUNDERBOLT_NVM_FAMILY_AR, 2},	 /* AR 4C */
-			   {0x1576, 3, FU_INTEL_THUNDERBOLT_NVM_FAMILY_AR, 1},	 /* AR 2C */
-			   {0x15C0, 3, FU_INTEL_THUNDERBOLT_NVM_FAMILY_AR, 1},	 /* AR LP */
-			   {0x15D3, 3, FU_INTEL_THUNDERBOLT_NVM_FAMILY_AR_C, 2}, /* AR-C 4C */
-			   {0x15DA, 3, FU_INTEL_THUNDERBOLT_NVM_FAMILY_AR_C, 1}, /* AR-C 2C */
-			   {0x15E7, 3, FU_INTEL_THUNDERBOLT_NVM_FAMILY_TR, 1},	 /* TR 2C */
-			   {0x15EA, 3, FU_INTEL_THUNDERBOLT_NVM_FAMILY_TR, 2},	 /* TR 4C */
-			   {0x15EF, 3, FU_INTEL_THUNDERBOLT_NVM_FAMILY_TR, 2},	 /* TR 4C device */
-			   {0x15EE, 3, FU_INTEL_THUNDERBOLT_NVM_FAMILY_BB, 0},	 /* BB device */
-			   {0x0B26, 4, FU_INTEL_THUNDERBOLT_NVM_FAMILY_GR, 2},	 /* GR USB4 */
+	} hw_info_arr[] = {{0x156D, 2, FU_INTEL_THUNDERBOLT_NVM_FAMILY_FALCON_RIDGE, 2},
+			   {0x156B, 2, FU_INTEL_THUNDERBOLT_NVM_FAMILY_FALCON_RIDGE, 1},
+			   {0x157E, 2, FU_INTEL_THUNDERBOLT_NVM_FAMILY_WIN_RIDGE, 1},
+			   {0x1578, 3, FU_INTEL_THUNDERBOLT_NVM_FAMILY_ALPINE_RIDGE, 2},
+			   {0x1576, 3, FU_INTEL_THUNDERBOLT_NVM_FAMILY_ALPINE_RIDGE, 1},
+			   {0x15C0, 3, FU_INTEL_THUNDERBOLT_NVM_FAMILY_ALPINE_RIDGE, 1},
+			   {0x15D3, 3, FU_INTEL_THUNDERBOLT_NVM_FAMILY_ALPINE_RIDGE_C, 2},
+			   {0x15DA, 3, FU_INTEL_THUNDERBOLT_NVM_FAMILY_ALPINE_RIDGE_C, 1},
+			   {0x15E7, 3, FU_INTEL_THUNDERBOLT_NVM_FAMILY_TITAN_RIDGE, 1},
+			   {0x15EA, 3, FU_INTEL_THUNDERBOLT_NVM_FAMILY_TITAN_RIDGE, 2},
+			   {0x15EF, 3, FU_INTEL_THUNDERBOLT_NVM_FAMILY_TITAN_RIDGE, 2},
+			   {0x15EE, 3, FU_INTEL_THUNDERBOLT_NVM_FAMILY_BB, 0},
+			   {0x0B26, 4, FU_INTEL_THUNDERBOLT_NVM_FAMILY_GOSHEN_RIDGE, 2},
 			   /* Maple ridge devices
 			    * NOTE: These are expected to be flashed via UEFI capsules *not*
 			    * Thunderbolt plugin Flashing via fwupd will require matching kernel
 			    * work. They're left here only for parsing the binaries
 			    */
-			   {0x1136, 4, FU_INTEL_THUNDERBOLT_NVM_FAMILY_MR, 2},
-			   {0x1137, 4, FU_INTEL_THUNDERBOLT_NVM_FAMILY_MR, 2},
+			   {0x1136, 4, FU_INTEL_THUNDERBOLT_NVM_FAMILY_MAPLE_RIDGE, 2},
+			   {0x1137, 4, FU_INTEL_THUNDERBOLT_NVM_FAMILY_MAPLE_RIDGE, 2},
 			   {0}};
 	g_autofree gchar *version = NULL;
 	g_autoptr(FuFirmware) img_payload = NULL;
@@ -641,8 +563,8 @@ fu_intel_thunderbolt_nvm_parse(FuFirmware *firmware,
 
 	/* versions */
 	switch (priv->family) {
-	case FU_INTEL_THUNDERBOLT_NVM_FAMILY_TR:
-	case FU_INTEL_THUNDERBOLT_NVM_FAMILY_GR:
+	case FU_INTEL_THUNDERBOLT_NVM_FAMILY_TITAN_RIDGE:
+	case FU_INTEL_THUNDERBOLT_NVM_FAMILY_GOSHEN_RIDGE:
 		if (!fu_intel_thunderbolt_nvm_read_uint16(
 			self,
 			FU_INTEL_THUNDERBOLT_NVM_SECTION_DIGITAL,
@@ -662,9 +584,9 @@ fu_intel_thunderbolt_nvm_parse(FuFirmware *firmware,
 
 	if (priv->is_host) {
 		switch (priv->family) {
-		case FU_INTEL_THUNDERBOLT_NVM_FAMILY_AR:
-		case FU_INTEL_THUNDERBOLT_NVM_FAMILY_AR_C:
-		case FU_INTEL_THUNDERBOLT_NVM_FAMILY_TR:
+		case FU_INTEL_THUNDERBOLT_NVM_FAMILY_ALPINE_RIDGE:
+		case FU_INTEL_THUNDERBOLT_NVM_FAMILY_ALPINE_RIDGE_C:
+		case FU_INTEL_THUNDERBOLT_NVM_FAMILY_TITAN_RIDGE:
 			/* used for comparison between old and new image, not a raw number */
 			if (!fu_intel_thunderbolt_nvm_read_uint8(
 				self,
