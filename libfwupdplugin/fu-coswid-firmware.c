@@ -235,6 +235,16 @@ fu_coswid_firmware_parse(FuFirmware *firmware,
 		}
 	}
 
+	/* device not supported */
+	if (fu_firmware_get_id(firmware) == NULL && fu_firmware_get_version(firmware) == NULL &&
+	    priv->product == NULL && priv->entities->len == 0 && priv->links->len == 0) {
+		g_set_error_literal(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_NOT_SUPPORTED,
+				    "not enough SBoM data");
+		return FALSE;
+	}
+
 	/* success */
 	return TRUE;
 #else
