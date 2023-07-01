@@ -2285,9 +2285,6 @@ fu_util_firmware_parse(FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 	}
 
-	if (g_strv_length(values) == 2)
-		firmware_type = g_strdup(values[1]);
-
 	/* load file */
 	blob = fu_bytes_get_contents(values[0], error);
 	if (blob == NULL)
@@ -2301,12 +2298,12 @@ fu_util_firmware_parse(FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 
 	/* find the GType to use */
-	if (firmware_type == NULL) {
+	if (g_strv_length(values) == 1) {
 		g_autoptr(GPtrArray) firmware_types = fu_context_get_firmware_gtype_ids(ctx);
 		firmware_type = fu_util_prompt_for_firmware_type(priv, firmware_types, error);
 		if (firmware_type == NULL)
 			return FALSE;
-	} else if (g_strcmp0(firmware_type, "auto") == 0) {
+	} else if (g_strcmp0(values[1], "auto") == 0) {
 		g_autoptr(GPtrArray) gtype_ids = fu_context_get_firmware_gtype_ids(ctx);
 		g_autoptr(GPtrArray) firmware_auto_types = g_ptr_array_new_with_free_func(g_free);
 		for (guint i = 0; i < gtype_ids->len; i++) {
@@ -2347,6 +2344,8 @@ fu_util_firmware_parse(FuUtilPrivate *priv, gchar **values, GError **error)
 		firmware_type = fu_util_prompt_for_firmware_type(priv, firmware_auto_types, error);
 		if (firmware_type == NULL)
 			return FALSE;
+	} else {
+		firmware_type = g_strdup(values[1]);
 	}
 	gtype = fu_context_get_firmware_gtype_by_id(ctx, firmware_type);
 	if (gtype == G_TYPE_INVALID) {
