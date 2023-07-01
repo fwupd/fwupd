@@ -749,7 +749,7 @@ fu_context_gtypes_sort_cb(gconstpointer a, gconstpointer b)
  *
  * Returns all the firmware #GType IDs.
  *
- * Returns: (transfer none) (element-type utf8): List of subsystems
+ * Returns: (transfer container) (element-type utf8): firmware IDs
  *
  * Since: 1.6.0
  **/
