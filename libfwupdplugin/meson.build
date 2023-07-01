@@ -17,6 +17,7 @@ fwupdplugin_structs = rustgen.process(
   'fu-fdt.rs', # fuzzing
   'fu-fmap.rs', # fuzzing
   'fu-ifwi.rs', # fuzzing
+  'fu-intel-thunderbolt.rs', # fuzzing
   'fu-oprom.rs', # fuzzing
   'fu-smbios.rs', # fuzzing
   'fu-usb-device-ds20.rs', # fuzzing
