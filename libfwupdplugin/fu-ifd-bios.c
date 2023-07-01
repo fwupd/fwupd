@@ -34,6 +34,7 @@ fu_ifd_bios_parse(FuFirmware *firmware,
 {
 	gsize bufsz = 0;
 	guint32 sig;
+	guint img_cnt = 0;
 	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
 
 	/* jump 16MiB as required */
@@ -73,6 +74,16 @@ fu_ifd_bios_parse(FuFirmware *firmware,
 
 		/* next! */
 		offset += fu_firmware_get_size(firmware_tmp);
+		img_cnt++;
+	}
+
+	/* found nothing */
+	if (img_cnt == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "no EFI firmware volumes");
+		return FALSE;
 	}
 
 	/* success */
