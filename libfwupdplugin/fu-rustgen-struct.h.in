@@ -53,7 +53,7 @@ void {{item.c_setter}}(GByteArray *st, {{item.type_glib}} value);
 {%- endfor %}
 #define {{obj.c_define('SIZE')}} 0x{{'{:X}'.format(obj.size)}}
 
-{%- for item in obj.items | selectattr('enabled') | selectattr('default') | rejectattr('constant') %}
+{%- for item in obj.items | selectattr('enabled') | selectattr('default') %}
 {%- if item.type == Type.STRING %}
 #define {{item.c_define('DEFAULT')}} "{{item.default}}"
 {%- else %}
