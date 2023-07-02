@@ -187,6 +187,7 @@ fu_efi_firmware_section_init(FuEfiFirmwareSection *self)
 {
 	FuEfiFirmwareSectionPrivate *priv = GET_PRIVATE(self);
 	priv->type = FU_EFI_SECTION_TYPE_RAW;
+	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_NO_AUTO_DETECTION);
 	//	fu_firmware_set_alignment (FU_FIRMWARE (self), FU_FIRMWARE_ALIGNMENT_8);
 }
 
