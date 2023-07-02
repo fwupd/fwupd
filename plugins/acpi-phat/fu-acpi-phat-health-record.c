@@ -175,6 +175,7 @@ fu_acpi_phat_health_record_build(FuFirmware *firmware, XbNode *n, GError **error
 static void
 fu_acpi_phat_health_record_init(FuAcpiPhatHealthRecord *self)
 {
+	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_NO_AUTO_DETECTION);
 }
 
 static void

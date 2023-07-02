@@ -85,6 +85,7 @@ static void
 fu_acpi_phat_version_record_init(FuAcpiPhatVersionRecord *self)
 {
 	fu_firmware_set_images_max(FU_FIRMWARE(self), 2000);
+	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_NO_AUTO_DETECTION);
 }
 
 static void
