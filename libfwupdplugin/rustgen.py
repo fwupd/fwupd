@@ -63,7 +63,10 @@ class EnumObj:
         self.name: str = name
         self.repr_type: Optional[str] = None
         self.items: List[EnumItem] = []
-        self._exports: Dict[str, Export] = {}
+        self._exports: Dict[str, Export] = {
+            "ToString": Export.NONE,
+            "FromString": Export.NONE,
+        }
 
     def c_method(self, suffix: str):
         return f"fu_{_camel_to_snake(self.name)}_{_camel_to_snake(suffix)}"
@@ -73,7 +76,7 @@ class EnumObj:
         return f"Fu{self.name}"
 
     def add_private_export(self, derive: str) -> None:
-        if self._exports.get(derive) == Export.PUBLIC:
+        if self._exports[derive] == Export.PUBLIC:
             return
         self._exports[derive] = Export.PRIVATE
 
@@ -82,7 +85,7 @@ class EnumObj:
         self._exports[derive] = Export.PUBLIC
 
     def export(self, derive: str) -> Export:
-        return self._exports.get(derive, Export.NONE)
+        return self._exports[derive]
 
     def __str__(self) -> str:
         return f"EnumObj({self.name})"
@@ -108,7 +111,12 @@ class StructObj:
     def __init__(self, name: str) -> None:
         self.name: str = name
         self.items: List[StructItem] = []
-        self._exports: Dict[str, Export] = {}
+        self._exports: Dict[str, Export] = {
+            "Validate": Export.NONE,
+            "Parse": Export.NONE,
+            "New": Export.NONE,
+            "ToString": Export.NONE,
+        }
 
     def c_method(self, suffix: str):
         return f"fu_struct_{_camel_to_snake(self.name)}_{_camel_to_snake(suffix)}"
@@ -131,12 +139,12 @@ class StructObj:
         return False
 
     def add_private_export(self, derive: str) -> None:
-        if self._exports.get(derive) == Export.PUBLIC:
+        if self._exports[derive] == Export.PUBLIC:
             return
         self._exports[derive] = Export.PRIVATE
         if derive == "Validate":
             for item in self.items:
-                if item.constant:
+                if item.constant and item.type != Type.STRING:
                     item.add_private_export("Getters")
                 if item.struct_obj:
                     item.struct_obj.add_private_export("Validate")
@@ -144,20 +152,35 @@ class StructObj:
             for item in self.items:
                 if item.enum_obj:
                     item.enum_obj.add_private_export("ToString")
+        if derive == "Parse":
+            self.add_private_export("ToString")
+            for item in self.items:
+                if item.constant and item.type != Type.STRING:
+                    item.add_private_export("Getters")
+        if derive == "New":
+            for item in self.items:
+                if item.constant:
+                    item.add_private_export("Setters")
 
     def add_public_export(self, derive: str) -> None:
-        self.add_private_export(derive)
-        self._exports[derive] = Export.PUBLIC
+
+        # Getters and Setters are special as we do not want public exports of const
+        if derive in ["Getters", "Setters"]:
+            for item in self.items:
+                if not item.constant:
+                    item.add_public_export(derive)
+        else:
+            self.add_private_export(derive)
+            self._exports[derive] = Export.PUBLIC
 
         # for convenience
         if derive == "Parse":
             self.add_public_export("Getters")
-            self.add_private_export("ToString")
         if derive == "New":
             self.add_public_export("Setters")
 
     def export(self, derive: str) -> Export:
-        return self._exports.get(derive, Export.NONE)
+        return self._exports[derive]
 
     def __str__(self) -> str:
         return f"StructObj({self.name})"
@@ -176,17 +199,22 @@ class StructItem:
         self.endian: Endian = Endian.NATIVE
         self.multiplier: int = 0
         self.offset: int = 0
-        self._exports: Dict[str, Export] = {}
+        self._exports: Dict[str, Export] = {
+            "Getters": Export.NONE,
+            "Setters": Export.NONE,
+        }
 
     def add_private_export(self, derive: str) -> None:
-        if self._exports.get(derive) == Export.PUBLIC:
+        if self._exports[derive] == Export.PUBLIC:
             return
         self._exports[derive] = Export.PRIVATE
 
+    def add_public_export(self, derive: str) -> None:
+        self.add_private_export(derive)
+        self._exports[derive] = Export.PUBLIC
+
     def export(self, derive: str) -> Export:
-        if derive in self.obj._exports:
-            return self.obj._exports[derive]
-        return self._exports.get(derive, Export.NONE)
+        return self._exports[derive]
 
     @property
     def size(self) -> int:
