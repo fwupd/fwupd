@@ -170,8 +170,8 @@ fu_logitech_hidpp_device_ping(FuLogitechHidppDevice *self, GError **error)
 	}
 
 	/* if the device index is unset, grab it from the reply */
-	if (priv->device_idx == HIDPP_DEVICE_IDX_UNSET &&
-	    msg->device_id != HIDPP_DEVICE_IDX_UNSET) {
+	if (priv->device_idx == HIDPP_DEVICE_IDX_WIRED &&
+	    msg->device_id != HIDPP_DEVICE_IDX_WIRED) {
 		priv->device_idx = msg->device_id;
 		g_debug("device index is %02x", priv->device_idx);
 	}
@@ -677,7 +677,7 @@ fu_logitech_hidpp_device_probe(FuDevice *device, GError **error)
 	 * physical id, make them unique by using their pairing slot
 	 * (device index) as a basis for their logical id.
 	 */
-	if (priv->device_idx != HIDPP_DEVICE_IDX_UNSET &&
+	if (priv->device_idx != HIDPP_DEVICE_IDX_WIRED &&
 	    priv->device_idx != HIDPP_DEVICE_IDX_BLE) {
 		g_autoptr(GString) id_str = g_string_new(NULL);
 		g_string_append_printf(id_str, "DEV_IDX=%d", priv->device_idx);
@@ -738,7 +738,7 @@ fu_logitech_hidpp_device_setup(FuDevice *device, GError **error)
 		return FALSE;
 
 	/* did not get ID */
-	if (priv->device_idx == HIDPP_DEVICE_IDX_UNSET) {
+	if (priv->device_idx == HIDPP_DEVICE_IDX_WIRED) {
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no HID++ ID");
 		return FALSE;
 	}
@@ -1087,7 +1087,7 @@ fu_logitech_hidpp_device_write_firmware_pkt(FuLogitechHidppDevice *self,
 	msg->function_id = cmd << 4; /* dfuStart or dfuCmdDataX */
 	msg->hidpp_version = priv->hidpp_version;
 	/* enable transfer workaround for devices paired to Bolt receiver */
-	if (priv->device_idx != HIDPP_DEVICE_IDX_UNSET && priv->device_idx != HIDPP_DEVICE_IDX_BLE)
+	if (priv->device_idx != HIDPP_DEVICE_IDX_WIRED && priv->device_idx != HIDPP_DEVICE_IDX_BLE)
 		msg->flags = FU_LOGITECH_HIDPP_HIDPP_MSG_FLAG_RETRY_STUCK;
 	if (!fu_memcpy_safe(msg->data,
 			    sizeof(msg->data),
@@ -1357,7 +1357,7 @@ static void
 fu_logitech_hidpp_device_init(FuLogitechHidppDevice *self)
 {
 	FuLogitechHidppDevicePrivate *priv = GET_PRIVATE(self);
-	priv->device_idx = HIDPP_DEVICE_IDX_UNSET;
+	priv->device_idx = HIDPP_DEVICE_IDX_WIRED;
 	priv->feature_index = g_ptr_array_new_with_free_func(g_free);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
