@@ -25,8 +25,6 @@ fu_logitech_hidpp_msg_dev_id_to_string(FuLogitechHidppHidppMsg *msg)
 		return "wired";
 	if (msg->device_id == HIDPP_DEVICE_IDX_RECEIVER)
 		return "receiver";
-	if (msg->device_id == HIDPP_DEVICE_IDX_UNSET)
-		return "unset";
 	return NULL;
 }
 
@@ -201,8 +199,8 @@ fu_logitech_hidpp_msg_is_reply(FuLogitechHidppHidppMsg *msg1, FuLogitechHidppHid
 {
 	g_return_val_if_fail(msg1 != NULL, FALSE);
 	g_return_val_if_fail(msg2 != NULL, FALSE);
-	if (msg1->device_id != msg2->device_id && msg1->device_id != HIDPP_DEVICE_IDX_UNSET &&
-	    msg2->device_id != HIDPP_DEVICE_IDX_UNSET)
+	if (msg1->device_id != msg2->device_id && msg1->device_id != HIDPP_DEVICE_IDX_WIRED &&
+	    msg2->device_id != HIDPP_DEVICE_IDX_WIRED)
 		return FALSE;
 	if (msg1->flags & FU_LOGITECH_HIDPP_HIDPP_MSG_FLAG_IGNORE_SUB_ID ||
 	    msg2->flags & FU_LOGITECH_HIDPP_HIDPP_MSG_FLAG_IGNORE_SUB_ID)
