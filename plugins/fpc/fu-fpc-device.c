@@ -68,6 +68,7 @@
 struct _FuFpcDevice {
 	FuUsbDevice parent_instance;
 	guint32 max_block_size;
+	gboolean need_reset;
 };
 
 G_DEFINE_TYPE(FuFpcDevice, fu_fpc_device, FU_TYPE_USB_DEVICE)
@@ -224,8 +225,10 @@ fu_fpc_device_setup_version(FuFpcDevice *self, GError **error)
 						   0,
 						   FALSE,
 						   FALSE,
-						   error))
+						   error)) {
+				g_prefix_error(error, "fail to clear status in setup version");
 				return FALSE;
+			}
 		}
 
 		data = g_malloc0(FPC_DEVICE_DFU_FW_STATUS_LEN);
@@ -236,8 +239,10 @@ fu_fpc_device_setup_version(FuFpcDevice *self, GError **error)
 					   FPC_DEVICE_DFU_FW_STATUS_LEN,
 					   TRUE,
 					   TRUE,
-					   error))
+					   error)) {
+			g_prefix_error(error, "fail to get fw status in setup version");
 			return FALSE;
+		}
 
 		if (!fu_memread_uint32_safe(data,
 					    FPC_DEVICE_DFU_FW_STATUS_LEN,
@@ -293,21 +298,56 @@ fu_fpc_device_check_dfu_status_cb(FuDevice *device, gpointer user_data, GError *
 }
 
 static gboolean
+fu_fpc_device_clear_status_cb(FuDevice *device, gpointer user_data, GError **error)
+{
+	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(device));
+	FuFpcDevice *self = FU_FPC_DEVICE(device);
+	g_autoptr(GError) error_local = NULL;
+
+	/* force to reboot GUSBdevice */
+	if (self->need_reset) {
+		if (!g_usb_device_reset(usb_device, error)) {
+			g_prefix_error(error, "failed to force-reset device: ");
+			return FALSE;
+		}
+
+		if (!g_usb_device_claim_interface(usb_device, 0, G_USB_DEVICE_CLAIM_INTERFACE_NONE, error)) {
+			g_prefix_error(error, "failed to claim interface after reset: ");
+			return FALSE;
+		}
+
+		self->need_reset = FALSE;
+	}
+
+	if (!fu_fpc_device_dfu_cmd(self,
+				  FPC_CMD_DFU_CLRSTATUS,
+				  0x0000,
+				  NULL,
+				  0,
+				  FALSE,
+				  FALSE,
+				  error)) {
+				g_prefix_error(error, "failed to clear status in cb: ");
+				self->need_reset = TRUE;
+				return FALSE;
+	}
+	self->need_reset = FALSE;
+	return TRUE;
+}
+
+static gboolean
 fu_fpc_device_update_init(FuFpcDevice *self, GError **error)
 {
 	if (!fu_device_has_private_flag(FU_DEVICE(self), FU_FPC_DEVICE_FLAG_LEGACY_DFU)) {
-		if (!fu_fpc_device_dfu_cmd(self,
-					   FPC_CMD_DFU_CLRSTATUS,
-					   0x0000,
-					   NULL,
-					   0,
-					   FALSE,
-					   FALSE,
-					   error)) {
-			g_prefix_error(error, "failed to clear status: ");
-			return FALSE;
-		}
+				    if (!fu_device_retry_full(FU_DEVICE(self),
+				    fu_fpc_device_clear_status_cb,
+				    4,
+				    20,
+				    NULL,
+				    error))
+		return FALSE;
 	}
+
 	return fu_device_retry_full(FU_DEVICE(self),
 				    fu_fpc_device_check_dfu_status_cb,
 				    FPC_DFU_MAX_ATTEMPTS,
@@ -414,6 +454,8 @@ fu_fpc_device_write_firmware(FuDevice *device,
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1, "init");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 95, NULL);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 5, "check");
+
+	self->need_reset = FALSE;
 
 	/* get default image */
 	fw = fu_firmware_get_bytes(firmware, error);
