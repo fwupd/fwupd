@@ -3,6 +3,7 @@ cargs = ['-DG_LOG_DOMAIN="FuPluginIntelMe"']
 
 plugin_quirks += files('intel-me.quirk')
 plugin_builtins += static_library('fu_plugin_intel_me',
+  rustgen.process('fu-intel-me.rs'),
   sources: [
     'fu-intel-me-common.c',
     'fu-intel-me-plugin.c',

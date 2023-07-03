@@ -8,28 +8,13 @@
 
 #include "fu-intel-me-common.h"
 #include "fu-intel-me-mca-device.h"
+#include "fu-intel-me-struct.h"
 
 struct _FuIntelMeMcaDevice {
 	FuIntelMeHeciDevice parent_instance;
 };
 
 G_DEFINE_TYPE(FuIntelMeMcaDevice, fu_intel_me_mca_device, FU_TYPE_INTEL_ME_HECI_DEVICE)
-
-#define MCA_SECTION_ME	0x00 /* OEM Public Key Hash ME FW */
-#define MCA_SECTION_UEP 0x04 /* OEM Public Key Hash UEP */
-#define MCA_SECTION_FPF 0x08 /* OEM Public Key Hash FPF */
-
-static const gchar *
-fu_intel_me_mca_device_section_to_string(guint8 section)
-{
-	if (section == MCA_SECTION_ME)
-		return "ME";
-	if (section == MCA_SECTION_UEP)
-		return "UEP";
-	if (section == MCA_SECTION_FPF)
-		return "FPF";
-	return NULL;
-}
 
 static gboolean
 fu_intel_me_mca_device_add_checksum_for_id(FuIntelMeMcaDevice *self,
@@ -69,7 +54,10 @@ static gboolean
 fu_intel_me_mca_device_setup(FuDevice *device, GError **error)
 {
 	FuIntelMeMcaDevice *self = FU_INTEL_ME_MCA_DEVICE(device);
-	const guint32 sections[] = {MCA_SECTION_FPF, MCA_SECTION_UEP, MCA_SECTION_ME, G_MAXUINT32};
+	const guint32 sections[] = {FU_INTEL_ME_MCA_SECTION_FPF,
+				    FU_INTEL_ME_MCA_SECTION_UEP,
+				    FU_INTEL_ME_MCA_SECTION_ME,
+				    G_MAXUINT32};
 	const guint32 file_ids[] = {0x40002300, /* CometLake: OEM Public Key Hash */
 				    0x40005B00, /* TigerLake: 1st OEM Public Key Hash */
 				    0x40005C00 /* TigerLake: 2nd OEM Public Key Hash */,
@@ -94,7 +82,7 @@ fu_intel_me_mca_device_setup(FuDevice *device, GError **error)
 				g_warning("failed to get public key using file-id 0x%x, "
 					  "section %s [0x%x]: %s",
 					  file_ids[i],
-					  fu_intel_me_mca_device_section_to_string(sections[j]),
+					  fu_intel_me_mca_section_to_string(sections[j]),
 					  sections[j],
 					  error_local->message);
 			}
