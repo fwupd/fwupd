@@ -11,6 +11,7 @@
 #include "fwupd-error.h"
 
 #include "fu-mem-private.h"
+#include "fu-string.h"
 
 /**
  * fu_memwrite_uint16:
@@ -940,4 +941,39 @@ fu_memwrite_uint64_safe(guint8 *buf,
 			      0x0, /* src */
 			      sizeof(tmp),
 			      error);
+}
+
+/**
+ * fu_memstrsafe:
+ * @buf: source buffer
+ * @bufsz: maximum size of @buf, typically `sizeof(buf)`
+ * @offset: offset in bytes into @buf to read from
+ * @maxsz: maximum size of returned string
+ * @error: (nullable): optional return location for an error
+ *
+ * Converts a byte buffer to a ASCII string.
+ *
+ * Returns: (transfer full): a string, or %NULL on error
+ *
+ * Since: 1.9.3
+ **/
+gchar *
+fu_memstrsafe(const guint8 *buf, gsize bufsz, gsize offset, gsize maxsz, GError **error)
+{
+	g_autofree gchar *str = NULL;
+
+	g_return_val_if_fail(buf != NULL, NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	if (!fu_memchk_read(bufsz, offset, maxsz, error))
+		return NULL;
+	str = fu_strsafe((const gchar *)buf + offset, maxsz);
+	if (str == NULL) {
+		g_set_error_literal(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_INVALID_DATA,
+				    "invalid ASCII string");
+		return NULL;
+	}
+	return g_steal_pointer(&str);
 }

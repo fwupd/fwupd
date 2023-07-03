@@ -1576,8 +1576,9 @@ fu_genesys_scaler_device_probe(FuDevice *device, GError **error)
 	if (!fu_genesys_scaler_device_get_version(self, buf, sizeof(buf), error))
 		return FALSE;
 	/* ?xIM123; where ? is 0x06 (length?) */
-	panelrev = fu_strsafe((const gchar *)&buf[1], 6);
-
+	panelrev = fu_memstrsafe(buf, sizeof(buf), 0x1, 6, error);
+	if (panelrev == NULL)
+		return FALSE;
 	if (!fu_genesys_scaler_device_get_firmware_packet_version(self, &ver, error))
 		return FALSE;
 

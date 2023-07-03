@@ -182,7 +182,7 @@ fu_goodixtp_gtx8_device_ensure_version(FuGoodixtpGtx8Device *self, GError **erro
 		return FALSE;
 	}
 
-	patch_pid = fu_strsafe((const gchar *)fw_info + 9, 5);
+	patch_pid = fu_memstrsafe(fw_info, sizeof(fw_info), 0x9, 5, NULL);
 	if (patch_pid != NULL)
 		fu_goodixtp_hid_device_set_patch_pid(FU_GOODIXTP_HID_DEVICE(self), patch_pid);
 	patch_vid_raw = fu_memread_uint32(fw_info + 17, G_BIG_ENDIAN);

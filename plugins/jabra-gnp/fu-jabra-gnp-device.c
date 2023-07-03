@@ -170,7 +170,9 @@ fu_jabra_gnp_device_read_name(FuJabraGnpDevice *self, GError **error)
 				  (gpointer)&rx_data,
 				  error))
 		return FALSE;
-	name = fu_strsafe((const gchar *)rx_data.rxbuf + 8, FU_JABRA_GNP_BUF_SIZE - 8);
+	name = fu_memstrsafe(rxbuf, sizeof(rxbuf), 0x8, sizeof(rxbuf) - 8, error);
+	if (name == NULL)
+		return FALSE;
 	fu_device_set_name(FU_DEVICE(self), name);
 	return TRUE;
 }
@@ -228,7 +230,9 @@ fu_jabra_gnp_device_read_version(FuJabraGnpDevice *self, GError **error)
 				  (gpointer)&rx_data,
 				  error))
 		return FALSE;
-	version = fu_strsafe((const gchar *)rx_data.rxbuf + 8, FU_JABRA_GNP_BUF_SIZE - 8);
+	version = fu_memstrsafe(rxbuf, sizeof(rxbuf), 0x8, sizeof(rxbuf) - 8, error);
+	if (version == NULL)
+		return FALSE;
 	fu_device_set_version(FU_DEVICE(self), version);
 	return TRUE;
 }

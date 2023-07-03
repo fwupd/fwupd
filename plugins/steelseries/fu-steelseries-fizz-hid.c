@@ -148,9 +148,9 @@ fu_steelseries_fizz_hid_ensure_version(FuDevice *device, GError **error)
 	fu_dump_raw(G_LOG_DOMAIN, "Version", data, sizeof(data));
 
 	/* success */
-	version = fu_strsafe((const gchar *)&data[1], sizeof(data) - 1);
+	version = fu_memstrsafe(data, sizeof(data), 0x1, sizeof(data) - 1, error);
 	if (version == NULL) {
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_READ, "unable to read version");
+		g_prefix_error(error, "unable to read version: ");
 		return FALSE;
 	}
 	fu_device_set_version(device, version);

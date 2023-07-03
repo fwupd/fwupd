@@ -163,7 +163,7 @@ fu_goodixtp_brlb_device_ensure_version(FuGoodixtpBrlbDevice *self, GError **erro
 	vice_ver = hidbuf[10];
 	inter_ver = hidbuf[11];
 
-	patch_pid = fu_strsafe((const gchar *)hidbuf + 0, 8);
+	patch_pid = fu_memstrsafe(hidbuf, sizeof(hidbuf), 0x0, 8, NULL);
 	if (patch_pid != NULL)
 		fu_goodixtp_hid_device_set_patch_pid(FU_GOODIXTP_HID_DEVICE(self), patch_pid);
 	patch_vid_raw = fu_memread_uint32(hidbuf + 8, G_BIG_ENDIAN);
