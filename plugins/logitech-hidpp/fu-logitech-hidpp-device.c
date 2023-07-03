@@ -17,8 +17,7 @@ typedef struct {
 	guint8 cached_fw_entity;
 	/*
 	 * Device index:
-	 *   - HIDPP_DEVICE_IDX_RECEIVER for the receiver
-	 *   - HIDPP_DEVICE_IDX_BLE for BLE devices
+	 *   - HIDPP_DEVICE_IDX_RECEIVER for the receiver or BLE devices
 	 *   - pairing slot for paired Bolt devices.
 	 */
 	guint8 device_idx;
@@ -678,7 +677,7 @@ fu_logitech_hidpp_device_probe(FuDevice *device, GError **error)
 	 * (device index) as a basis for their logical id.
 	 */
 	if (priv->device_idx != HIDPP_DEVICE_IDX_WIRED &&
-	    priv->device_idx != HIDPP_DEVICE_IDX_BLE) {
+	    priv->device_idx != HIDPP_DEVICE_IDX_RECEIVER) {
 		g_autoptr(GString) id_str = g_string_new(NULL);
 		g_string_append_printf(id_str, "DEV_IDX=%d", priv->device_idx);
 		fu_device_set_logical_id(device, id_str->str);
@@ -712,7 +711,7 @@ fu_logitech_hidpp_device_setup(FuDevice *device, GError **error)
 
 	if (fu_device_has_private_flag(device, FU_LOGITECH_HIDPP_DEVICE_FLAG_BLE)) {
 		priv->hidpp_version = FU_HIDPP_VERSION_BLE;
-		priv->device_idx = HIDPP_DEVICE_IDX_BLE;
+		priv->device_idx = HIDPP_DEVICE_IDX_RECEIVER;
 		/*
 		 * Set the logical ID for BLE devices. Note that for BLE
 		 * devices, physical_id = HID_PHYS = MAC of the BT adapter,
@@ -1087,7 +1086,8 @@ fu_logitech_hidpp_device_write_firmware_pkt(FuLogitechHidppDevice *self,
 	msg->function_id = cmd << 4; /* dfuStart or dfuCmdDataX */
 	msg->hidpp_version = priv->hidpp_version;
 	/* enable transfer workaround for devices paired to Bolt receiver */
-	if (priv->device_idx != HIDPP_DEVICE_IDX_WIRED && priv->device_idx != HIDPP_DEVICE_IDX_BLE)
+	if (priv->device_idx != HIDPP_DEVICE_IDX_WIRED &&
+	    priv->device_idx != HIDPP_DEVICE_IDX_RECEIVER)
 		msg->flags = FU_LOGITECH_HIDPP_HIDPP_MSG_FLAG_RETRY_STUCK;
 	if (!fu_memcpy_safe(msg->data,
 			    sizeof(msg->data),
