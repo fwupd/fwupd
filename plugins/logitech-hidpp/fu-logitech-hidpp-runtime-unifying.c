@@ -9,6 +9,7 @@
 #include "fu-logitech-hidpp-common.h"
 #include "fu-logitech-hidpp-hidpp.h"
 #include "fu-logitech-hidpp-runtime-unifying.h"
+#include "fu-logitech-hidpp-struct.h"
 
 struct _FuLogitechHidppRuntimeUnifying {
 	FuLogitechHidppRuntime parent_instance;
@@ -26,10 +27,10 @@ fu_logitech_hidpp_runtime_unifying_detach(FuDevice *device, FuProgress *progress
 	g_autoptr(FuLogitechHidppHidppMsg) msg = fu_logitech_hidpp_msg_new();
 	g_autoptr(GError) error_local = NULL;
 
-	msg->report_id = HIDPP_REPORT_ID_SHORT;
-	msg->device_id = HIDPP_DEVICE_IDX_RECEIVER;
-	msg->sub_id = HIDPP_SUBID_SET_REGISTER;
-	msg->function_id = HIDPP_REGISTER_DEVICE_FIRMWARE_UPDATE_MODE;
+	msg->report_id = FU_LOGITECH_HIDPP_REPORT_ID_SHORT;
+	msg->device_id = FU_LOGITECH_HIDPP_DEVICE_IDX_RECEIVER;
+	msg->sub_id = FU_LOGITECH_HIDPP_SUBID_SET_REGISTER;
+	msg->function_id = FU_LOGITECH_HIDPP_REGISTER_DEVICE_FIRMWARE_UPDATE_MODE;
 	msg->data[0] = 'I';
 	msg->data[1] = 'C';
 	msg->data[2] = 'P';
@@ -68,10 +69,10 @@ fu_logitech_hidpp_runtime_unifying_setup_internal(FuDevice *device, GError **err
 		if (i == 0x03)
 			continue;
 
-		msg->report_id = HIDPP_REPORT_ID_SHORT;
-		msg->device_id = HIDPP_DEVICE_IDX_RECEIVER;
-		msg->sub_id = HIDPP_SUBID_GET_REGISTER;
-		msg->function_id = HIDPP_REGISTER_DEVICE_FIRMWARE_INFORMATION;
+		msg->report_id = FU_LOGITECH_HIDPP_REPORT_ID_SHORT;
+		msg->device_id = FU_LOGITECH_HIDPP_DEVICE_IDX_RECEIVER;
+		msg->sub_id = FU_LOGITECH_HIDPP_SUBID_GET_REGISTER;
+		msg->function_id = FU_LOGITECH_HIDPP_REGISTER_DEVICE_FIRMWARE_INFORMATION;
 		msg->data[0] = i;
 		msg->hidpp_version = 1;
 		if (!fu_logitech_hidpp_transfer(fu_logitech_hidpp_runtime_get_io_channel(self),

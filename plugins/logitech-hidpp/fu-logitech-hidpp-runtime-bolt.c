@@ -11,6 +11,7 @@
 #include "fu-logitech-hidpp-hidpp.h"
 #include "fu-logitech-hidpp-radio.h"
 #include "fu-logitech-hidpp-runtime-bolt.h"
+#include "fu-logitech-hidpp-struct.h"
 
 struct _FuLogitechHidppRuntimeBolt {
 	FuLogitechHidppRuntime parent_instance;
@@ -26,9 +27,9 @@ fu_logitech_hidpp_runtime_bolt_detach(FuDevice *device, FuProgress *progress, GE
 	g_autoptr(FuLogitechHidppHidppMsg) msg = fu_logitech_hidpp_msg_new();
 	g_autoptr(GError) error_local = NULL;
 
-	msg->report_id = HIDPP_REPORT_ID_LONG;
-	msg->device_id = HIDPP_DEVICE_IDX_RECEIVER;
-	msg->sub_id = HIDPP_SUBID_SET_LONG_REGISTER;
+	msg->report_id = FU_LOGITECH_HIDPP_REPORT_ID_LONG;
+	msg->device_id = FU_LOGITECH_HIDPP_DEVICE_IDX_RECEIVER;
+	msg->sub_id = FU_LOGITECH_HIDPP_SUBID_SET_LONG_REGISTER;
 	msg->function_id = BOLT_REGISTER_DFU_CONTROL;
 	msg->data[0] = 1; /* Enable DFU */
 	msg->data[4] = 'P';
@@ -85,9 +86,9 @@ fu_logitech_hidpp_runtime_bolt_query_device_name(FuLogitechHidppRuntime *self,
 	g_autoptr(GString) dev_name = g_string_new(NULL);
 	guint namelen;
 
-	msg->report_id = HIDPP_REPORT_ID_SHORT;
-	msg->device_id = HIDPP_DEVICE_IDX_RECEIVER;
-	msg->sub_id = HIDPP_SUBID_GET_LONG_REGISTER;
+	msg->report_id = FU_LOGITECH_HIDPP_REPORT_ID_SHORT;
+	msg->device_id = FU_LOGITECH_HIDPP_DEVICE_IDX_RECEIVER;
+	msg->sub_id = FU_LOGITECH_HIDPP_SUBID_GET_LONG_REGISTER;
 	msg->function_id = BOLT_REGISTER_PAIRING_INFORMATION;
 	msg->data[0] = 0x60 | slot; /* device name */
 	msg->data[1] = 1;
@@ -191,9 +192,9 @@ fu_logitech_hidpp_runtime_bolt_poll_peripherals(FuDevice *device)
 			continue;
 		}
 
-		msg->report_id = HIDPP_REPORT_ID_SHORT;
-		msg->device_id = HIDPP_DEVICE_IDX_RECEIVER;
-		msg->sub_id = HIDPP_SUBID_GET_LONG_REGISTER;
+		msg->report_id = FU_LOGITECH_HIDPP_REPORT_ID_SHORT;
+		msg->device_id = FU_LOGITECH_HIDPP_DEVICE_IDX_RECEIVER;
+		msg->sub_id = FU_LOGITECH_HIDPP_SUBID_GET_LONG_REGISTER;
 		msg->function_id = BOLT_REGISTER_PAIRING_INFORMATION;
 		msg->data[0] = 0x50 | i; /* pairing information */
 		msg->hidpp_version = 1;
@@ -234,11 +235,11 @@ fu_logitech_hidpp_runtime_bolt_process_notification(FuLogitechHidppRuntimeBolt *
 	}
 
 	/* unifying receiver notification */
-	if (msg->report_id == HIDPP_REPORT_ID_SHORT) {
+	if (msg->report_id == FU_LOGITECH_HIDPP_REPORT_ID_SHORT) {
 		switch (msg->sub_id) {
-		case HIDPP_SUBID_DEVICE_CONNECTION:
-		case HIDPP_SUBID_DEVICE_DISCONNECTION:
-		case HIDPP_SUBID_DEVICE_LOCKING_CHANGED:
+		case FU_LOGITECH_HIDPP_SUBID_DEVICE_CONNECTION:
+		case FU_LOGITECH_HIDPP_SUBID_DEVICE_DISCONNECTION:
+		case FU_LOGITECH_HIDPP_SUBID_DEVICE_LOCKING_CHANGED:
 			if (!fu_logitech_hidpp_runtime_bolt_update_paired_device(self,
 										 msg,
 										 &error_local)) {
@@ -247,10 +248,10 @@ fu_logitech_hidpp_runtime_bolt_process_notification(FuLogitechHidppRuntimeBolt *
 				return FALSE;
 			}
 			break;
-		case HIDPP_SUBID_LINK_QUALITY:
+		case FU_LOGITECH_HIDPP_SUBID_LINK_QUALITY:
 			g_debug("ignoring link quality message");
 			break;
-		case HIDPP_SUBID_ERROR_MSG:
+		case FU_LOGITECH_HIDPP_SUBID_ERROR_MSG:
 			g_debug("ignoring error message");
 			break;
 		default:
@@ -316,9 +317,9 @@ fu_logitech_hidpp_runtime_bolt_poll(FuDevice *device, GError **error)
 		if (msg != msg_newest) {
 			g_debug("ignoring duplicate message device-id:%02x [%s] sub-id:%02x [%s]",
 				msg->device_id,
-				fu_logitech_hidpp_msg_dev_id_to_string(msg),
+				fu_logitech_hidpp_device_idx_to_string(msg->device_id),
 				msg->sub_id,
-				fu_logitech_hidpp_msg_sub_id_to_string(msg));
+				fu_logitech_hidpp_subid_to_string(msg->sub_id));
 			continue;
 		}
 		fu_logitech_hidpp_runtime_bolt_process_notification(self, msg);
@@ -335,9 +336,9 @@ fu_logitech_hidpp_runtime_bolt_setup_internal(FuDevice *device, GError **error)
 	FuLogitechHidppRuntimeBolt *bolt = FU_HIDPP_RUNTIME_BOLT(device);
 	g_autoptr(FuLogitechHidppHidppMsg) msg = fu_logitech_hidpp_msg_new();
 
-	msg->report_id = HIDPP_REPORT_ID_SHORT;
-	msg->device_id = HIDPP_DEVICE_IDX_RECEIVER;
-	msg->sub_id = HIDPP_SUBID_GET_LONG_REGISTER;
+	msg->report_id = FU_LOGITECH_HIDPP_REPORT_ID_SHORT;
+	msg->device_id = FU_LOGITECH_HIDPP_DEVICE_IDX_RECEIVER;
+	msg->sub_id = FU_LOGITECH_HIDPP_SUBID_GET_LONG_REGISTER;
 	msg->function_id = BOLT_REGISTER_PAIRING_INFORMATION;
 	msg->data[0] = 0x02; /* FW Version (contains the number of pairing slots) */
 	msg->hidpp_version = 1;
@@ -359,9 +360,9 @@ fu_logitech_hidpp_runtime_bolt_setup_internal(FuDevice *device, GError **error)
 		g_autoptr(FuLogitechHidppRadio) radio = NULL;
 		g_autoptr(GString) radio_version = NULL;
 
-		msg->report_id = HIDPP_REPORT_ID_SHORT;
-		msg->device_id = HIDPP_DEVICE_IDX_RECEIVER;
-		msg->sub_id = HIDPP_SUBID_GET_LONG_REGISTER;
+		msg->report_id = FU_LOGITECH_HIDPP_REPORT_ID_SHORT;
+		msg->device_id = FU_LOGITECH_HIDPP_DEVICE_IDX_RECEIVER;
+		msg->sub_id = FU_LOGITECH_HIDPP_SUBID_GET_LONG_REGISTER;
 		msg->function_id = BOLT_REGISTER_RECEIVER_FW_INFORMATION;
 		msg->data[0] = i;
 		msg->hidpp_version = 1;
