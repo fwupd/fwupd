@@ -12,6 +12,7 @@
 
 #include "fu-logitech-bulkcontroller-common.h"
 #include "fu-logitech-bulkcontroller-device.h"
+#include "fu-logitech-bulkcontroller-struct.h"
 
 /* SYNC interface follows TLSV (Type, Length, SequenceID, Value) protocol */
 /* UPD interface follows TLV (Type, Length, Value) protocol */
@@ -59,8 +60,8 @@ struct _FuLogitechBulkcontrollerDevice {
 	guint update_ep[EP_LAST];
 	guint sync_iface;
 	guint update_iface;
-	FuLogitechBulkcontrollerDeviceStatus status;
-	FuLogitechBulkcontrollerDeviceUpdateState update_status;
+	FuLogitechBulkcontrollerDeviceState status;
+	FuLogitechBulkcontrollerUpdateState update_status;
 	guint update_progress; /* percentage value */
 	gboolean is_sync_transfer_in_progress;
 };
@@ -100,13 +101,12 @@ fu_logitech_bulkcontroller_device_to_string(FuDevice *device, guint idt, GString
 	fu_string_append_kx(str, idt, "UpdateIface", self->update_iface);
 	fu_string_append(str,
 			 idt,
-			 "Status",
-			 fu_logitech_bulkcontroller_device_status_to_string(self->status));
-	fu_string_append(
-	    str,
-	    idt,
-	    "UpdateState",
-	    fu_logitech_bulkcontroller_device_update_state_to_string(self->update_status));
+			 "State",
+			 fu_logitech_bulkcontroller_device_state_to_string(self->status));
+	fu_string_append(str,
+			 idt,
+			 "UpdateState",
+			 fu_logitech_bulkcontroller_update_state_to_string(self->update_status));
 }
 
 static gboolean
@@ -834,20 +834,19 @@ fu_logitech_bulkcontroller_device_write_firmware(FuDevice *device,
 
 		/* device responsive, no error and not rebooting yet */
 		no_response_count = 0;
-		g_debug(
-		    "firmware update status: %s. progress: %u",
-		    fu_logitech_bulkcontroller_device_update_state_to_string(self->update_status),
-		    self->update_progress);
+		g_debug("firmware update status: %s. progress: %u",
+			fu_logitech_bulkcontroller_update_state_to_string(self->update_status),
+			self->update_progress);
 
 		/* existing device image version is same as newly pushed image */
-		if (self->update_status == kUpdateStateError) {
+		if (self->update_status == FU_LOGITECH_BULKCONTROLLER_UPDATE_STATE_ERROR) {
 			g_set_error_literal(error,
 					    G_IO_ERROR,
 					    G_IO_ERROR_INVALID_DATA,
 					    "firmware upgrade failed");
 			return FALSE;
 		}
-		if (self->update_status == kUpdateStateCurrent) {
+		if (self->update_status == FU_LOGITECH_BULKCONTROLLER_UPDATE_STATE_CURRENT) {
 			g_debug("new firmware version: %s, old firmware version: %s, "
 				"rebooting...",
 				fu_device_get_version(device),
