@@ -12,6 +12,23 @@
 }
 {%- endif %}
 
+{%- set export = obj.export('ToBitString') %}
+{%- if export in [Export.PUBLIC, Export.PRIVATE] %}
+{{export.value}}gchar *
+{{obj.c_method('ToString')}}({{obj.c_type}} val)
+{
+    const gchar *data[{{obj.items|length}}] = {0};
+    guint idx = 0;
+    if (val == {{obj.items[0].c_define}})
+        return g_strdup("{{obj.items[0].value}}");
+{%- for item in obj.items[1:] %}
+    if (val & {{item.c_define}})
+        data[idx++] = "{{item.value}}";
+{%- endfor %}
+    return g_strjoinv(",", (gchar **)data);
+}
+{%- endif %}
+
 {%- set export = obj.export('FromString') %}
 {%- if export in [Export.PUBLIC, Export.PRIVATE] %}
 {{export.value}}{{obj.c_type}}

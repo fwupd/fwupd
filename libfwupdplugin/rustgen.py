@@ -65,6 +65,7 @@ class EnumObj:
         self.items: List[EnumItem] = []
         self._exports: Dict[str, Export] = {
             "ToString": Export.NONE,
+            "ToBitString": Export.NONE,
             "FromString": Export.NONE,
         }
 

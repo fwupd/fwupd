@@ -11,6 +11,9 @@ typedef enum {
 {%- if obj.export('ToString') == Export.PUBLIC %}
 const gchar *{{obj.c_method('ToString')}}({{obj.c_type}} val);
 {%- endif %}
+{%- if obj.export('ToBitString') == Export.PUBLIC %}
+gchar *{{obj.c_method('ToString')}}({{obj.c_type}} val);
+{%- endif %}
 {%- if obj.export('FromString') == Export.PUBLIC %}
 {{obj.c_type}} {{obj.c_method('FromString')}}(const gchar *val);
 {%- endif %}

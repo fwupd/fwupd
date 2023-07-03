@@ -122,7 +122,7 @@ fu_dfu_target_stm_upload_element(FuDfuTarget *target,
 		return NULL;
 	}
 	g_debug("using sector %u for read of %x", fu_dfu_sector_get_id(sector), offset);
-	if (!fu_dfu_sector_has_cap(sector, DFU_SECTOR_CAP_READABLE)) {
+	if (!fu_dfu_sector_has_cap(sector, FU_DFU_SECTOR_CAP_READABLE)) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
@@ -286,7 +286,7 @@ fu_dfu_target_stm_download_element1(FuDfuTarget *target,
 					    (guint)address + offset_dev);
 				return FALSE;
 			}
-			if (!fu_dfu_sector_has_cap(sector, DFU_SECTOR_CAP_WRITEABLE)) {
+			if (!fu_dfu_sector_has_cap(sector, FU_DFU_SECTOR_CAP_WRITEABLE)) {
 				g_set_error(error,
 					    FWUPD_ERROR,
 					    FWUPD_ERROR_NOT_SUPPORTED,
@@ -296,7 +296,7 @@ fu_dfu_target_stm_download_element1(FuDfuTarget *target,
 			}
 
 			/* if it's erasable and not yet blanked */
-			if (fu_dfu_sector_has_cap(sector, DFU_SECTOR_CAP_ERASABLE) &&
+			if (fu_dfu_sector_has_cap(sector, FU_DFU_SECTOR_CAP_ERASABLE) &&
 			    g_hash_table_lookup(sectors_hash, sector) == NULL) {
 				g_hash_table_insert(sectors_hash, sector, GINT_TO_POINTER(1));
 				g_ptr_array_add(sectors_array, sector);

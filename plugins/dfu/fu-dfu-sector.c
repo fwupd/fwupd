@@ -108,19 +108,6 @@ fu_dfu_sector_has_cap(FuDfuSector *self, FuDfuSectorCap cap)
 	return (priv->cap & cap) > 0;
 }
 
-static gchar *
-fu_dfu_sector_cap_to_string(FuDfuSectorCap cap)
-{
-	GString *str = g_string_new(NULL);
-	if (cap & DFU_SECTOR_CAP_READABLE)
-		g_string_append(str, "R");
-	if (cap & DFU_SECTOR_CAP_ERASABLE)
-		g_string_append(str, "E");
-	if (cap & DFU_SECTOR_CAP_WRITEABLE)
-		g_string_append(str, "W");
-	return g_string_free(str, FALSE);
-}
-
 gchar *
 fu_dfu_sector_to_string(FuDfuSector *self)
 {
