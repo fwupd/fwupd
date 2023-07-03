@@ -445,7 +445,9 @@ fu_ti_tps6598x_device_ensure_mode(FuTiTps6598xDevice *self, GError **error)
 		return FALSE;
 
 	/* ensure in recognized mode */
-	str = fu_strsafe((const gchar *)buf->data, buf->len);
+	str = fu_memstrsafe(buf->data, buf->len, 0x0, 4, error);
+	if (str == NULL)
+		return FALSE;
 	if (g_strcmp0(str, "APP ") == 0) {
 		fu_device_remove_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 		return TRUE;

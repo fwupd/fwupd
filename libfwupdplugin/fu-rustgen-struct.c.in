@@ -7,7 +7,7 @@
 {{item.c_getter}}(GByteArray *st)
 {
     g_return_val_if_fail(st != NULL, NULL);
-    return fu_strsafe((const gchar *) (st->data + {{item.offset}}), {{item.size}});
+    return fu_memstrsafe(st->data, st->len, {{item.offset}}, {{item.size}}, NULL);
 }
 {%- elif item.struct_obj %}
 {{export.value}}GByteArray *

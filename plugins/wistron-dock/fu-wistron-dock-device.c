@@ -470,7 +470,9 @@ fu_wistron_dock_device_ensure_mcuid(FuWistronDockDevice *self, GError **error)
 						 TRUE,
 						 error))
 		return FALSE;
-	tmp = fu_strsafe((const gchar *)buf + 2, 5);
+	tmp = fu_memstrsafe(buf, sizeof(buf), 2, 5, error);
+	if (tmp == NULL)
+		return FALSE;
 	fu_device_add_instance_str(FU_DEVICE(self), "MCUID", tmp);
 	return fu_device_build_instance_id(FU_DEVICE(self),
 					   error,

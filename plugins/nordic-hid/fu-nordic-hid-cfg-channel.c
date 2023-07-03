@@ -505,7 +505,9 @@ fu_nordic_hid_cfg_channel_get_board_name(FuNordicHidCfgChannel *self, GError **e
 		return FALSE;
 	if (!fu_nordic_hid_cfg_channel_cmd_receive(self, CONFIG_STATUS_SUCCESS, res, error))
 		return FALSE;
-	self->board_name = fu_strsafe((const gchar *)res->data, res->data_len);
+	self->board_name = fu_memstrsafe(res->data, res->data_len, 0x0, res->data_len, error);
+	if (self->board_name == NULL)
+		return FALSE;
 
 	/* success */
 	return TRUE;
@@ -539,7 +541,9 @@ fu_nordic_hid_cfg_channel_get_bl_name(FuNordicHidCfgChannel *self, GError **erro
 				self->bl_name);
 			g_free(self->bl_name);
 		}
-		self->bl_name = fu_strsafe((const gchar *)res->data, res->data_len);
+		self->bl_name = fu_memstrsafe(res->data, res->data_len, 0x0, res->data_len, error);
+		if (self->bl_name == NULL)
+			return FALSE;
 	} else {
 		g_debug("the board has no support of bootloader runtime detection");
 	}
@@ -595,8 +599,11 @@ fu_nordic_hid_cfg_channel_get_devinfo(FuNordicHidCfgChannel *self, GError **erro
 					    G_LITTLE_ENDIAN,
 					    error))
 			return FALSE;
+		generation =
+		    fu_memstrsafe(res->data, res->data_len, 0x4, res->data_len - 0x04, error);
+		if (generation == NULL)
+			return FALSE;
 
-		generation = fu_strsafe((const gchar *)&res->data[0x04], res->data_len - 0x04);
 		/* check if not set via quirk */
 		if (self->generation != NULL) {
 			g_debug("generation readout '%s' overrides generation from quirk '%s'",
@@ -687,7 +694,9 @@ fu_nordic_hid_cfg_channel_load_module_opts(FuNordicHidCfgChannel *self,
 		if (res->data[0] == END_OF_TRANSFER_CHAR)
 			break;
 		opt = g_new0(FuNordicCfgChannelModuleOption, 1);
-		opt->name = fu_strsafe((const gchar *)res->data, res->data_len);
+		opt->name = fu_memstrsafe(res->data, res->data_len, 0x0, res->data_len, error);
+		if (opt->name == NULL)
+			return FALSE;
 		opt->idx = i;
 		g_ptr_array_add(mod->options, opt);
 	}

@@ -216,7 +216,7 @@ fu_steelseries_fizz_get_version(FuDevice *device, gboolean tunnel, GError **erro
 	fu_dump_raw(G_LOG_DOMAIN, "Version", data, sizeof(data));
 
 	/* success */
-	return fu_strsafe((const gchar *)data, sizeof(data));
+	return fu_memstrsafe(data, sizeof(data), 0x0, sizeof(data), error);
 }
 
 static gboolean
