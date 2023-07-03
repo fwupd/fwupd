@@ -14,6 +14,7 @@
 #include "fu-mem.h"
 #include "fu-pefile-firmware.h"
 #include "fu-pefile-struct.h"
+#include "fu-sbatlevel-section.h"
 #include "fu-string.h"
 
 /**
@@ -89,6 +90,8 @@ fu_pefile_firmware_parse_section(FuFirmware *firmware,
 		fu_csv_firmware_add_column_id(FU_CSV_FIRMWARE(img), "vendor_package_name");
 		fu_csv_firmware_add_column_id(FU_CSV_FIRMWARE(img), "$version");
 		fu_csv_firmware_add_column_id(FU_CSV_FIRMWARE(img), "vendor_url");
+	} else if (g_strcmp0(sect_id, ".sbatlevel") == 0) {
+		img = fu_sbatlevel_section_new();
 	} else {
 		img = fu_firmware_new();
 	}
