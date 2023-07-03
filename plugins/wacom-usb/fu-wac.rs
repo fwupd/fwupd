@@ -62,3 +62,13 @@ enum WacModuleStatus {
     ErrInvalidOp,
     ErrWrongImage,
 }
+
+#[derive(ToBitString)]
+enum WacDeviceStatus {
+    Unknown = 0,
+    Writing = 1 << 0,
+    Erasing = 1 << 1,
+    ErrorWrite = 1 << 2,
+    ErrorErase = 1 << 3,
+    WriteProtected = 1 << 4,
+}

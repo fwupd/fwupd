@@ -978,6 +978,7 @@ They are verified during `_validate()` and `_parse()` however.
 There are traits that control the generation of enum code. These include:
 
 - `ToString`: for `fu_example_family_to_string()`, needed to create output
+- `ToBitString`: for `fu_example_family_to_string()`, needed to create output for bitfields
 - `FromString`: for `fu_example_family_from_string()`, needed to parse input
 
 **NOTE:** Enums are defined as a native unsigned type, and should not be copied by

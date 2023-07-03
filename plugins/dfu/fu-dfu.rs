@@ -45,3 +45,11 @@ enum DfuState {
     DfuUploadIdle,
     DfuError,
 }
+
+#[derive(ToBitString)]
+enum DfuSectorCap {
+    None = 0, // No operations possible
+    Readable = 1 << 0,
+    Writeable = 1 << 1,
+    Erasable = 1 << 2,
+}
