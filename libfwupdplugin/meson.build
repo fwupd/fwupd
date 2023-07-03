@@ -20,6 +20,7 @@ fwupdplugin_structs = rustgen.process(
   'fu-intel-thunderbolt.rs', # fuzzing
   'fu-oprom.rs', # fuzzing
   'fu-pefile.rs', # fuzzing
+  'fu-sbatlevel-section.rs', # fuzzing
   'fu-smbios.rs', # fuzzing
   'fu-usb-device-ds20.rs', # fuzzing
   'fu-uswid.rs', # fuzzing
@@ -105,6 +106,7 @@ fwupdplugin_src = [
   'fu-plugin.c',
   'fu-progress.c', # fuzzing
   'fu-quirks.c', # fuzzing
+  'fu-sbatlevel-section.c', # fuzzing
   'fu-security-attr.c', # fuzzing
   'fu-security-attrs.c',
   'fu-smbios.c', # fuzzing
@@ -215,6 +217,7 @@ fwupdplugin_headers = [
   'fu-plugin-private.h',
   'fu-progress.h',
   'fu-quirks.h',
+  'fu-sbatlevel-section.h',
   'fu-security-attr.h',
   'fu-security-attrs.h',
   'fu-security-attrs-private.h',
