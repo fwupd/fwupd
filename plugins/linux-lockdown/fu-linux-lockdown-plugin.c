@@ -7,37 +7,16 @@
 #include "config.h"
 
 #include "fu-linux-lockdown-plugin.h"
-
-typedef enum {
-	FU_PLUGIN_LINUX_LOCKDOWN_UNKNOWN,
-	FU_PLUGIN_LINUX_LOCKDOWN_INVALID,
-	FU_PLUGIN_LINUX_LOCKDOWN_NONE,
-	FU_PLUGIN_LINUX_LOCKDOWN_INTEGRITY,
-	FU_PLUGIN_LINUX_LOCKDOWN_CONFIDENTIALITY,
-} FuPluginLinuxLockdown;
+#include "fu-linux-lockdown-struct.h"
 
 struct _FuLinuxLockdownPlugin {
 	FuPlugin parent_instance;
 	GFile *file;
 	GFileMonitor *monitor;
-	FuPluginLinuxLockdown lockdown;
+	FuLinuxLockdown lockdown;
 };
 
 G_DEFINE_TYPE(FuLinuxLockdownPlugin, fu_linux_lockdown_plugin, FU_TYPE_PLUGIN)
-
-static const gchar *
-fu_linux_lockdown_plugin_to_string(FuPluginLinuxLockdown lockdown)
-{
-	if (lockdown == FU_PLUGIN_LINUX_LOCKDOWN_NONE)
-		return "none";
-	if (lockdown == FU_PLUGIN_LINUX_LOCKDOWN_INTEGRITY)
-		return "integrity";
-	if (lockdown == FU_PLUGIN_LINUX_LOCKDOWN_CONFIDENTIALITY)
-		return "confidentiality";
-	if (lockdown == FU_PLUGIN_LINUX_LOCKDOWN_INVALID)
-		return "invalid";
-	return NULL;
-}
 
 static void
 fu_linux_lockdown_plugin_rescan(FuPlugin *plugin)
@@ -48,21 +27,21 @@ fu_linux_lockdown_plugin_rescan(FuPlugin *plugin)
 
 	/* load file */
 	if (!g_file_load_contents(self->file, NULL, &buf, &bufsz, NULL, NULL)) {
-		self->lockdown = FU_PLUGIN_LINUX_LOCKDOWN_INVALID;
+		self->lockdown = FU_LINUX_LOCKDOWN_INVALID;
 	} else if (g_strstr_len(buf, bufsz, "[none]") != NULL) {
-		self->lockdown = FU_PLUGIN_LINUX_LOCKDOWN_NONE;
+		self->lockdown = FU_LINUX_LOCKDOWN_NONE;
 	} else if (g_strstr_len(buf, bufsz, "[integrity]") != NULL) {
-		self->lockdown = FU_PLUGIN_LINUX_LOCKDOWN_INTEGRITY;
+		self->lockdown = FU_LINUX_LOCKDOWN_INTEGRITY;
 	} else if (g_strstr_len(buf, bufsz, "[confidentiality]") != NULL) {
-		self->lockdown = FU_PLUGIN_LINUX_LOCKDOWN_CONFIDENTIALITY;
+		self->lockdown = FU_LINUX_LOCKDOWN_CONFIDENTIALITY;
 	} else {
-		self->lockdown = FU_PLUGIN_LINUX_LOCKDOWN_UNKNOWN;
+		self->lockdown = FU_LINUX_LOCKDOWN_UNKNOWN;
 	}
 
 	/* update metadata */
 	fu_plugin_add_report_metadata(plugin,
 				      "LinuxLockdown",
-				      fu_linux_lockdown_plugin_to_string(self->lockdown));
+				      fu_linux_lockdown_to_string(self->lockdown));
 }
 
 static void
@@ -117,17 +96,17 @@ fu_linux_lockdown_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *a
 	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ISSUE);
 	fu_security_attrs_append(attrs, attr);
 
-	if (self->lockdown == FU_PLUGIN_LINUX_LOCKDOWN_UNKNOWN) {
+	if (self->lockdown == FU_LINUX_LOCKDOWN_UNKNOWN) {
 		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA);
 		return;
 	}
 
 	/* load file */
-	if (self->lockdown == FU_PLUGIN_LINUX_LOCKDOWN_INVALID) {
+	if (self->lockdown == FU_LINUX_LOCKDOWN_INVALID) {
 		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
 		return;
 	}
-	if (self->lockdown == FU_PLUGIN_LINUX_LOCKDOWN_NONE) {
+	if (self->lockdown == FU_LINUX_LOCKDOWN_NONE) {
 		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
 		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_OS);
 		return;
@@ -139,10 +118,10 @@ fu_linux_lockdown_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *a
 }
 
 static void
-fu_linux_lockdown_plugin_to_string2(FuPlugin *plugin, guint idt, GString *str)
+fu_linux_lockdown_plugin_to_string(FuPlugin *plugin, guint idt, GString *str)
 {
 	FuLinuxLockdownPlugin *self = FU_LINUX_LOCKDOWN_PLUGIN(plugin);
-	fu_string_append(str, idt, "Lockdown", fu_linux_lockdown_plugin_to_string(self->lockdown));
+	fu_string_append(str, idt, "Lockdown", fu_linux_lockdown_to_string(self->lockdown));
 }
 
 static void
@@ -170,7 +149,7 @@ fu_linux_lockdown_plugin_class_init(FuLinuxLockdownPluginClass *klass)
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 
 	object_class->finalize = fu_linux_lockdown_finalize;
-	plugin_class->to_string = fu_linux_lockdown_plugin_to_string2;
+	plugin_class->to_string = fu_linux_lockdown_plugin_to_string;
 	plugin_class->startup = fu_linux_lockdown_plugin_startup;
 	plugin_class->add_security_attrs = fu_linux_lockdown_plugin_add_security_attrs;
 }
