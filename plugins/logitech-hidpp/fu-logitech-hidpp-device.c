@@ -17,7 +17,7 @@ typedef struct {
 	guint8 cached_fw_entity;
 	/*
 	 * Device index:
-	 *   - HIDPP_DEVICE_IDX_RECEIVER for the receiver or BLE devices
+	 *   - FU_LOGITECH_HIDPP_DEVICE_IDX_RECEIVER for the receiver or BLE devices
 	 *   - pairing slot for paired Bolt devices.
 	 */
 	guint8 device_idx;
@@ -139,7 +139,7 @@ fu_logitech_hidpp_device_ping(FuLogitechHidppDevice *self, GError **error)
 	GPtrArray *children = NULL;
 
 	/* handle failure */
-	msg->report_id = HIDPP_REPORT_ID_SHORT;
+	msg->report_id = FU_LOGITECH_HIDPP_REPORT_ID_SHORT;
 	msg->device_id = priv->device_idx;
 	msg->sub_id = 0x00;	      /* rootIndex */
 	msg->function_id = 0x01 << 4; /* ping */
@@ -169,8 +169,8 @@ fu_logitech_hidpp_device_ping(FuLogitechHidppDevice *self, GError **error)
 	}
 
 	/* if the device index is unset, grab it from the reply */
-	if (priv->device_idx == HIDPP_DEVICE_IDX_WIRED &&
-	    msg->device_id != HIDPP_DEVICE_IDX_WIRED) {
+	if (priv->device_idx == FU_LOGITECH_HIDPP_DEVICE_IDX_WIRED &&
+	    msg->device_id != FU_LOGITECH_HIDPP_DEVICE_IDX_WIRED) {
 		priv->device_idx = msg->device_id;
 		g_debug("device index is %02x", priv->device_idx);
 	}
@@ -376,7 +376,7 @@ fu_logitech_hidpp_device_fetch_firmware_info(FuLogitechHidppDevice *self, GError
 		return TRUE;
 
 	/* get the entity count */
-	msg->report_id = HIDPP_REPORT_ID_SHORT;
+	msg->report_id = FU_LOGITECH_HIDPP_REPORT_ID_SHORT;
 	msg->device_id = priv->device_idx;
 	msg->sub_id = idx;
 	msg->function_id = 0x00 << 4; /* getCount */
@@ -394,7 +394,7 @@ fu_logitech_hidpp_device_fetch_firmware_info(FuLogitechHidppDevice *self, GError
 		g_autofree gchar *version = NULL;
 		g_autofree gchar *name = NULL;
 
-		msg->report_id = HIDPP_REPORT_ID_SHORT;
+		msg->report_id = FU_LOGITECH_HIDPP_REPORT_ID_SHORT;
 		msg->device_id = priv->device_idx;
 		msg->sub_id = idx;
 		msg->function_id = 0x01 << 4; /* getInfo */
@@ -459,7 +459,7 @@ fu_logitech_hidpp_device_fetch_model_id(FuLogitechHidppDevice *self, GError **er
 	if (idx == 0x00)
 		return TRUE;
 
-	msg->report_id = HIDPP_REPORT_ID_SHORT;
+	msg->report_id = FU_LOGITECH_HIDPP_REPORT_ID_SHORT;
 	msg->device_id = priv->device_idx;
 	msg->sub_id = idx;
 	msg->function_id = 0x00 << 4; /* getDeviceInfo */
@@ -496,7 +496,7 @@ fu_logitech_hidpp_device_fetch_battery_level(FuLogitechHidppDevice *self, GError
 		if (idx != 0x00) {
 			gboolean socc = FALSE; /* state of charge capability */
 			g_autoptr(FuLogitechHidppHidppMsg) msg = fu_logitech_hidpp_msg_new();
-			msg->report_id = HIDPP_REPORT_ID_SHORT;
+			msg->report_id = FU_LOGITECH_HIDPP_REPORT_ID_SHORT;
 			msg->device_id = priv->device_idx;
 			msg->sub_id = idx;
 			msg->function_id = 0x00 << 4; /* get_capabilities */
@@ -542,7 +542,7 @@ fu_logitech_hidpp_device_fetch_battery_level(FuLogitechHidppDevice *self, GError
 		    FU_LOGITECH_HIDPP_FEATURE_BATTERY_LEVEL_STATUS);
 		if (idx != 0x00) {
 			g_autoptr(FuLogitechHidppHidppMsg) msg = fu_logitech_hidpp_msg_new();
-			msg->report_id = HIDPP_REPORT_ID_SHORT;
+			msg->report_id = FU_LOGITECH_HIDPP_REPORT_ID_SHORT;
 			msg->device_id = priv->device_idx;
 			msg->sub_id = idx;
 			msg->function_id = 0x00 << 4; /* GetBatteryLevelStatus */
@@ -560,10 +560,10 @@ fu_logitech_hidpp_device_fetch_battery_level(FuLogitechHidppDevice *self, GError
 	/* try HID++1.0 battery mileage */
 	if (priv->hidpp_version == 1.f) {
 		g_autoptr(FuLogitechHidppHidppMsg) msg = fu_logitech_hidpp_msg_new();
-		msg->report_id = HIDPP_REPORT_ID_SHORT;
+		msg->report_id = FU_LOGITECH_HIDPP_REPORT_ID_SHORT;
 		msg->device_id = priv->device_idx;
-		msg->sub_id = HIDPP_SUBID_GET_REGISTER;
-		msg->function_id = HIDPP_REGISTER_BATTERY_MILEAGE << 4;
+		msg->sub_id = FU_LOGITECH_HIDPP_SUBID_GET_REGISTER;
+		msg->function_id = FU_LOGITECH_HIDPP_REGISTER_BATTERY_MILEAGE << 4;
 		msg->hidpp_version = priv->hidpp_version;
 		if (fu_logitech_hidpp_transfer(priv->io_channel, msg, NULL)) {
 			if (msg->data[0] != 0x7F)
@@ -574,7 +574,7 @@ fu_logitech_hidpp_device_fetch_battery_level(FuLogitechHidppDevice *self, GError
 		}
 
 		/* try HID++1.0 battery status instead */
-		msg->function_id = HIDPP_REGISTER_BATTERY_STATUS << 4;
+		msg->function_id = FU_LOGITECH_HIDPP_REGISTER_BATTERY_STATUS << 4;
 		if (fu_logitech_hidpp_transfer(priv->io_channel, msg, NULL)) {
 			switch (msg->data[0]) {
 			case 1: /* 0 - 10 */
@@ -610,7 +610,7 @@ fu_logitech_hidpp_feature_search(FuDevice *device, guint16 feature, GError **err
 	g_autoptr(FuLogitechHidppHidppMsg) msg = fu_logitech_hidpp_msg_new();
 
 	/* find the idx for the feature */
-	msg->report_id = HIDPP_REPORT_ID_SHORT;
+	msg->report_id = FU_LOGITECH_HIDPP_REPORT_ID_SHORT;
 	msg->device_id = priv->device_idx;
 	msg->sub_id = 0x00;	      /* rootIndex */
 	msg->function_id = 0x00 << 4; /* getFeature */
@@ -676,8 +676,8 @@ fu_logitech_hidpp_device_probe(FuDevice *device, GError **error)
 	 * physical id, make them unique by using their pairing slot
 	 * (device index) as a basis for their logical id.
 	 */
-	if (priv->device_idx != HIDPP_DEVICE_IDX_WIRED &&
-	    priv->device_idx != HIDPP_DEVICE_IDX_RECEIVER) {
+	if (priv->device_idx != FU_LOGITECH_HIDPP_DEVICE_IDX_WIRED &&
+	    priv->device_idx != FU_LOGITECH_HIDPP_DEVICE_IDX_RECEIVER) {
 		g_autoptr(GString) id_str = g_string_new(NULL);
 		g_string_append_printf(id_str, "DEV_IDX=%d", priv->device_idx);
 		fu_device_set_logical_id(device, id_str->str);
@@ -711,7 +711,7 @@ fu_logitech_hidpp_device_setup(FuDevice *device, GError **error)
 
 	if (fu_device_has_private_flag(device, FU_LOGITECH_HIDPP_DEVICE_FLAG_BLE)) {
 		priv->hidpp_version = FU_HIDPP_VERSION_BLE;
-		priv->device_idx = HIDPP_DEVICE_IDX_RECEIVER;
+		priv->device_idx = FU_LOGITECH_HIDPP_DEVICE_IDX_RECEIVER;
 		/*
 		 * Set the logical ID for BLE devices. Note that for BLE
 		 * devices, physical_id = HID_PHYS = MAC of the BT adapter,
@@ -730,14 +730,14 @@ fu_logitech_hidpp_device_setup(FuDevice *device, GError **error)
 		fu_device_sleep(device, 1000); /* ms */
 	}
 	if (fu_device_has_private_flag(device, FU_LOGITECH_HIDPP_DEVICE_FLAG_FORCE_RECEIVER_ID))
-		priv->device_idx = HIDPP_DEVICE_IDX_RECEIVER;
+		priv->device_idx = FU_LOGITECH_HIDPP_DEVICE_IDX_RECEIVER;
 
 	/* ping device to get HID++ version */
 	if (!fu_logitech_hidpp_device_ping(self, error))
 		return FALSE;
 
 	/* did not get ID */
-	if (priv->device_idx == HIDPP_DEVICE_IDX_WIRED) {
+	if (priv->device_idx == FU_LOGITECH_HIDPP_DEVICE_IDX_WIRED) {
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no HID++ ID");
 		return FALSE;
 	}
@@ -775,7 +775,7 @@ fu_logitech_hidpp_device_setup(FuDevice *device, GError **error)
 	if (idx != 0x00) {
 		const gchar *tmp;
 		g_autoptr(FuLogitechHidppHidppMsg) msg = fu_logitech_hidpp_msg_new();
-		msg->report_id = HIDPP_REPORT_ID_SHORT;
+		msg->report_id = FU_LOGITECH_HIDPP_REPORT_ID_SHORT;
 		msg->device_id = priv->device_idx;
 		msg->sub_id = idx;
 		msg->function_id = 0x02 << 4; /* getDeviceType */
@@ -808,7 +808,7 @@ fu_logitech_hidpp_device_setup(FuDevice *device, GError **error)
 	if (idx != 0x00) {
 		/* check the feature is available */
 		g_autoptr(FuLogitechHidppHidppMsg) msg = fu_logitech_hidpp_msg_new();
-		msg->report_id = HIDPP_REPORT_ID_SHORT;
+		msg->report_id = FU_LOGITECH_HIDPP_REPORT_ID_SHORT;
 		msg->device_id = priv->device_idx;
 		msg->sub_id = idx;
 		msg->function_id = 0x00 << 4; /* getDfuStatus */
@@ -876,7 +876,7 @@ fu_logitech_hidpp_device_detach(FuDevice *device, FuProgress *progress, GError *
 		FuDevice *parent;
 		g_autoptr(FwupdRequest) request = fwupd_request_new();
 		g_autoptr(GError) error_local = NULL;
-		msg->report_id = HIDPP_REPORT_ID_LONG;
+		msg->report_id = FU_LOGITECH_HIDPP_REPORT_ID_LONG;
 		msg->device_id = priv->device_idx;
 		msg->sub_id = idx;
 		msg->function_id = 0x01 << 4; /* setDfuControl */
@@ -935,7 +935,7 @@ fu_logitech_hidpp_device_detach(FuDevice *device, FuProgress *progress, GError *
 	    fu_logitech_hidpp_device_feature_get_idx(self,
 						     FU_LOGITECH_HIDPP_FEATURE_DFU_CONTROL_SIGNED);
 	if (idx != 0x00) {
-		msg->report_id = HIDPP_REPORT_ID_LONG;
+		msg->report_id = FU_LOGITECH_HIDPP_REPORT_ID_LONG;
 		msg->device_id = priv->device_idx;
 		msg->sub_id = idx;
 		msg->function_id = 0x01 << 4; /* setDfuControl */
@@ -1080,14 +1080,14 @@ fu_logitech_hidpp_device_write_firmware_pkt(FuLogitechHidppDevice *self,
 	g_autoptr(GError) error_local = NULL;
 
 	/* send firmware data */
-	msg->report_id = HIDPP_REPORT_ID_LONG;
+	msg->report_id = FU_LOGITECH_HIDPP_REPORT_ID_LONG;
 	msg->device_id = priv->device_idx;
 	msg->sub_id = idx;
 	msg->function_id = cmd << 4; /* dfuStart or dfuCmdDataX */
 	msg->hidpp_version = priv->hidpp_version;
 	/* enable transfer workaround for devices paired to Bolt receiver */
-	if (priv->device_idx != HIDPP_DEVICE_IDX_WIRED &&
-	    priv->device_idx != HIDPP_DEVICE_IDX_RECEIVER)
+	if (priv->device_idx != FU_LOGITECH_HIDPP_DEVICE_IDX_WIRED &&
+	    priv->device_idx != FU_LOGITECH_HIDPP_DEVICE_IDX_RECEIVER)
 		msg->flags = FU_LOGITECH_HIDPP_HIDPP_MSG_FLAG_RETRY_STUCK;
 	if (!fu_memcpy_safe(msg->data,
 			    sizeof(msg->data),
@@ -1235,7 +1235,7 @@ fu_logitech_hidpp_device_attach(FuLogitechHidppDevice *self,
 	}
 
 	/* reboot back into firmware mode */
-	msg->report_id = HIDPP_REPORT_ID_LONG;
+	msg->report_id = FU_LOGITECH_HIDPP_REPORT_ID_LONG;
 	msg->device_id = priv->device_idx;
 	msg->sub_id = idx;
 	msg->function_id = 0x05 << 4; /* restart */
@@ -1357,7 +1357,7 @@ static void
 fu_logitech_hidpp_device_init(FuLogitechHidppDevice *self)
 {
 	FuLogitechHidppDevicePrivate *priv = GET_PRIVATE(self);
-	priv->device_idx = HIDPP_DEVICE_IDX_WIRED;
+	priv->device_idx = FU_LOGITECH_HIDPP_DEVICE_IDX_WIRED;
 	priv->feature_index = g_ptr_array_new_with_free_func(g_free);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);

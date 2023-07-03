@@ -55,10 +55,4 @@ gboolean
 fu_logitech_hidpp_msg_verify_swid(FuLogitechHidppHidppMsg *msg);
 
 const gchar *
-fu_logitech_hidpp_msg_dev_id_to_string(FuLogitechHidppHidppMsg *msg);
-const gchar *
-fu_logitech_hidpp_msg_rpt_id_to_string(FuLogitechHidppHidppMsg *msg);
-const gchar *
-fu_logitech_hidpp_msg_sub_id_to_string(FuLogitechHidppHidppMsg *msg);
-const gchar *
 fu_logitech_hidpp_msg_fcn_id_to_string(FuLogitechHidppHidppMsg *msg);

@@ -11,6 +11,7 @@
 #include "fu-logitech-hidpp-common.h"
 #include "fu-logitech-hidpp-hidpp.h"
 #include "fu-logitech-hidpp-runtime.h"
+#include "fu-logitech-hidpp-struct.h"
 
 typedef struct {
 	guint8 version_bl_major;
@@ -51,10 +52,10 @@ fu_logitech_hidpp_runtime_enable_notifications(FuLogitechHidppRuntime *self, GEr
 	g_autoptr(FuLogitechHidppHidppMsg) msg = fu_logitech_hidpp_msg_new();
 	FuLogitechHidppRuntimePrivate *priv = GET_PRIVATE(self);
 
-	msg->report_id = HIDPP_REPORT_ID_SHORT;
-	msg->device_id = HIDPP_DEVICE_IDX_RECEIVER;
-	msg->sub_id = HIDPP_SUBID_SET_REGISTER;
-	msg->function_id = HIDPP_REGISTER_HIDPP_NOTIFICATIONS;
+	msg->report_id = FU_LOGITECH_HIDPP_REPORT_ID_SHORT;
+	msg->device_id = FU_LOGITECH_HIDPP_DEVICE_IDX_RECEIVER;
+	msg->sub_id = FU_LOGITECH_HIDPP_SUBID_SET_REGISTER;
+	msg->function_id = FU_LOGITECH_HIDPP_REGISTER_HIDPP_NOTIFICATIONS;
 	msg->data[0] = 0x00;
 	msg->data[1] = 0x05; /* Wireless + SoftwarePresent */
 	msg->data[2] = 0x00;
@@ -108,17 +109,17 @@ fu_logitech_hidpp_runtime_poll(FuDevice *device, GError **error)
 	}
 
 	/* unifying receiver notification */
-	if (msg->report_id == HIDPP_REPORT_ID_SHORT) {
+	if (msg->report_id == FU_LOGITECH_HIDPP_REPORT_ID_SHORT) {
 		switch (msg->sub_id) {
-		case HIDPP_SUBID_DEVICE_CONNECTION:
-		case HIDPP_SUBID_DEVICE_DISCONNECTION:
-		case HIDPP_SUBID_DEVICE_LOCKING_CHANGED:
+		case FU_LOGITECH_HIDPP_SUBID_DEVICE_CONNECTION:
+		case FU_LOGITECH_HIDPP_SUBID_DEVICE_DISCONNECTION:
+		case FU_LOGITECH_HIDPP_SUBID_DEVICE_LOCKING_CHANGED:
 			g_debug("device connection event, do something");
 			break;
-		case HIDPP_SUBID_LINK_QUALITY:
+		case FU_LOGITECH_HIDPP_SUBID_LINK_QUALITY:
 			g_debug("ignoring link quality message");
 			break;
-		case HIDPP_SUBID_ERROR_MSG:
+		case FU_LOGITECH_HIDPP_SUBID_ERROR_MSG:
 			g_debug("ignoring error message");
 			break;
 		default:

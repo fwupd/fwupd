@@ -8,11 +8,11 @@
 
 #include "fu-logitech-hidpp-common.h"
 #include "fu-logitech-hidpp-hidpp.h"
+#include "fu-logitech-hidpp-struct.h"
 
 static gchar *
 fu_logitech_hidpp_msg_to_string(FuLogitechHidppHidppMsg *msg)
 {
-	const gchar *tmp;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GString) flags_str = g_string_new(NULL);
 	g_autoptr(GString) str = g_string_new(NULL);
@@ -37,13 +37,15 @@ fu_logitech_hidpp_msg_to_string(FuLogitechHidppHidppMsg *msg)
 	g_string_append_printf(str,
 			       "report-id:   %02x   [%s]\n",
 			       msg->report_id,
-			       fu_logitech_hidpp_msg_rpt_id_to_string(msg));
-	tmp = fu_logitech_hidpp_msg_dev_id_to_string(msg);
-	g_string_append_printf(str, "device-id:   %02x   [%s]\n", msg->device_id, tmp);
+			       fu_logitech_hidpp_report_id_to_string(msg->report_id));
+	g_string_append_printf(str,
+			       "device-id:   %02x   [%s]\n",
+			       msg->device_id,
+			       fu_logitech_hidpp_device_idx_to_string(msg->device_id));
 	g_string_append_printf(str,
 			       "sub-id:      %02x   [%s]\n",
 			       msg->sub_id,
-			       fu_logitech_hidpp_msg_sub_id_to_string(msg));
+			       fu_logitech_hidpp_subid_to_string(msg->sub_id));
 	g_string_append_printf(str,
 			       "function-id: %02x   [%s]\n",
 			       msg->function_id,
@@ -72,7 +74,7 @@ fu_logitech_hidpp_send(FuIOChannel *io_channel,
 
 	/* force long reports for BLE-direct devices */
 	if (msg->hidpp_version == FU_HIDPP_VERSION_BLE) {
-		msg->report_id = HIDPP_REPORT_ID_LONG;
+		msg->report_id = FU_LOGITECH_HIDPP_REPORT_ID_LONG;
 		len = 20;
 	}
 	fu_dump_raw(G_LOG_DOMAIN, "host->device", (guint8 *)msg, len);
