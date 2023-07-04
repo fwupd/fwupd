@@ -705,6 +705,23 @@ fu_usi_dock_mcu_device_attach(FuDevice *device, FuProgress *progress, GError **e
 }
 
 static gboolean
+fu_usi_dock_mcu_device_insert_cb(gpointer user_data)
+{
+	g_autoptr(FwupdRequest) request = fwupd_request_new();
+	/* interactive request to start the SPI write */
+	fwupd_request_set_kind(request, FWUPD_REQUEST_KIND_IMMEDIATE);
+	fwupd_request_set_id(request, FWUPD_REQUEST_ID_INSERT_USB_CABLE);
+	fwupd_request_add_flag(request, FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE);
+	fwupd_request_set_message(
+	    request,
+	    "The update will continue when the device USB cable has been re-inserted.");
+	fu_device_emit_request(user_data, request);
+
+	/* success */
+	return G_SOURCE_REMOVE;
+}
+
+static gboolean
 fu_usi_dock_mcu_device_cleanup(FuDevice *device,
 			       FuProgress *progress,
 			       FwupdInstallFlags install_flags,
@@ -714,16 +731,24 @@ fu_usi_dock_mcu_device_cleanup(FuDevice *device,
 
 	/* interactive request to start the SPI write */
 	fwupd_request_set_kind(request, FWUPD_REQUEST_KIND_IMMEDIATE);
-	fwupd_request_set_id(request, FWUPD_REQUEST_ID_INSERT_USB_CABLE);
+	fwupd_request_set_id(request, FWUPD_REQUEST_ID_REMOVE_USB_CABLE);
 	fwupd_request_add_flag(request, FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE);
 	fwupd_request_set_message(
 	    request,
-	    "The update will continue when the device USB cable has been re-inserted.");
+	    "Please unplug the USB cable. The update will continue in 30 seconds from now.");
 	fu_device_emit_request(device, request);
 
 	/* success */
 	fu_device_set_remove_delay(device, 900000);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+
+	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_BUSY);
+	g_timeout_add_seconds_full(G_PRIORITY_DEFAULT,
+				   40,
+				   fu_usi_dock_mcu_device_insert_cb,
+				   g_object_ref(device),
+				   g_object_unref);
+
 	return TRUE;
 }
 
