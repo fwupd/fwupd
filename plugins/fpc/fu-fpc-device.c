@@ -243,8 +243,10 @@ fu_fpc_device_setup_version(FuFpcDevice *self, GError **error)
 						   0,
 						   FALSE,
 						   FALSE,
-						   error))
+						   error)) {
+				g_prefix_error(error, "fail to clear status in setup version");
 				return FALSE;
+			}
 		}
 
 		data = g_malloc0(FPC_DEVICE_DFU_FW_STATUS_LEN);
@@ -255,8 +257,10 @@ fu_fpc_device_setup_version(FuFpcDevice *self, GError **error)
 					   FPC_DEVICE_DFU_FW_STATUS_LEN,
 					   TRUE,
 					   TRUE,
-					   error))
+					   error)) {
+			g_prefix_error(error, "fail to get fw status in setup version");
 			return FALSE;
+		}
 
 		if (!fu_memread_uint32_safe(data,
 					    FPC_DEVICE_DFU_FW_STATUS_LEN,
