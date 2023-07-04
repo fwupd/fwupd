@@ -3,11 +3,11 @@
 
 #[derive(New, Validate, Parse)]
 struct IfwiCpd {
-    header_marker: u32le: const=0x44504324,
+    header_marker: u32le == 0x44504324,
     num_of_entries: u32le,
     header_version: u8,
     entry_version: u8,
-    header_length: u8: default=$struct_size,
+    header_length: u8 = $struct_size,
     checksum: u8,
     partition_name: u32le,
     crc32: u32le,
@@ -40,11 +40,11 @@ struct IfwiCpdManifestExt {
 }
 #[derive(New, Validate, Parse)]
 struct IfwiFpt {
-    header_marker: u32le: const=0x54504624,
+    header_marker: u32le == 0x54504624,
     num_of_entries: u32le,
-    header_version: u8: default=0x20,
-    entry_version: u8: const=0x10,
-    header_length: u8: default=$struct_size,
+    header_version: u8 = 0x20,
+    entry_version: u8 == 0x10,
+    header_length: u8 = $struct_size,
     flags: u8,
     ticks_to_add: u16le,
     tokens_to_add: u16le,

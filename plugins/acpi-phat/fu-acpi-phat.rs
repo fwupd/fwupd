@@ -3,7 +3,7 @@
 
 #[derive(New, Parse)]
 struct AcpiPhatHealthRecord {
-    signature: u16le: default=0x1,
+    signature: u16le = 0x1,
     rcdlen: u16le,
     version: u8,
     reserved: [u8; 2],
@@ -19,7 +19,7 @@ struct AcpiPhatVersionElement {
 }
 #[derive(New, Parse)]
 struct AcpiPhatVersionRecord {
-    signature: u16le: default=0x0,
+    signature: u16le = 0x0,
     rcdlen: u16le,
     version: u8,
     reserved: [u8; 3],

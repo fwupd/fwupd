@@ -3,7 +3,7 @@
 
 #[derive(New, Getters)]
 struct EfiUxCapsuleHeader {
-    version: u8: const=0x01,
+    version: u8 == 0x01,
     checksum: u8,
     image_type: u8,
     _reserved: u8,
@@ -14,7 +14,7 @@ struct EfiUxCapsuleHeader {
 #[derive(New, Getters)]
 struct EfiCapsuleHeader {
     guid: Guid,
-    header_size: u32le: default=$struct_size,
+    header_size: u32le = $struct_size,
     flags: u32le,
     image_size: u32le,
 }
@@ -29,7 +29,7 @@ enum UefiUpdateInfoStatus {
 
 #[derive(New, Parse)]
 struct EfiUpdateInfo {
-    version: u32le: default=0x7,
+    version: u32le = 0x7,
     guid: Guid,
     flags: u32le,
     hw_inst: u64le,

@@ -866,7 +866,7 @@ rustc*, so small differences may be noticeable.
     struct ExampleHdr {
         magic: Guid,
         hdrver: u8,
-        hdrsz: u16le: default=$struct_size,
+        hdrsz: u16le = $struct_size,
         payloadsz: u32le,
         flags: u8,
     }
@@ -901,7 +901,7 @@ Arrays of types are also allowed, with the format `[type; multiple]`, for exampl
 
 - `buf: [u8; 12]` for a C array of `guint8 buf[12] = {0};`
 - `val: [u64be; 7]`  for a C array of `guint64 val[7] = {0};`
-- `str: [char; 4]: default="ABCD"` for a C array of `gchar buf[4] = {'A','B','C','D'};`
+- `str: [char; 4] = "ABCD"` for a C array of `gchar buf[4] = {'A','B','C','D'};`
   -- NOTE: `fu_struct_example_get_str()` would return a `NUL`-terminated string of `ABCD\0`.
 
 Additionally, default or constant values can be auto-populated:
@@ -913,9 +913,8 @@ Additionally, default or constant values can be auto-populated:
 
 Per-field metadata can also be defined, such as:
 
-- `default`: set as the default value
-- `constant`: set as the default, and is **also** verified during unpacking.
-- `padding`: initialize with a padding byte, typically `0xFF`
+- ` = `: set as the default value, or for `u8` arrays initialize with a padding byte
+- ` == `: set as the default, and is **also** verified during unpacking.
 
 Default values and padding will be used when creating a new structure,
 for instance using `fu_struct_example_new()`.
