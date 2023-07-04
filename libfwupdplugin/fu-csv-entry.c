@@ -139,6 +139,27 @@ fu_csv_entry_parse_token_cb(GString *token, guint token_idx, gpointer user_data,
 		fu_firmware_set_id(FU_FIRMWARE(self), token->str);
 		return TRUE;
 	}
+	if (g_strcmp0(column_id, "$idx") == 0) {
+		guint64 value = 0;
+		if (!fu_strtoull(token->str, &value, 0, G_MAXUINT64, error))
+			return FALSE;
+		g_ptr_array_add(priv->values, NULL);
+		fu_firmware_set_idx(FU_FIRMWARE(self), value);
+		return TRUE;
+	}
+	if (g_strcmp0(column_id, "$version") == 0) {
+		g_ptr_array_add(priv->values, NULL);
+		fu_firmware_set_version(FU_FIRMWARE(self), token->str);
+		return TRUE;
+	}
+	if (g_strcmp0(column_id, "$version_raw") == 0) {
+		guint64 value = 0;
+		if (!fu_strtoull(token->str, &value, 0, G_MAXUINT64, error))
+			return FALSE;
+		g_ptr_array_add(priv->values, NULL);
+		fu_firmware_set_version_raw(FU_FIRMWARE(self), value);
+		return TRUE;
+	}
 
 	g_ptr_array_add(priv->values, g_strdup(token->str));
 	return TRUE;

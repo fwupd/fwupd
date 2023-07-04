@@ -10,6 +10,7 @@
 
 #include "fu-bytes.h"
 #include "fu-coswid-firmware.h"
+#include "fu-csv-firmware.h"
 #include "fu-mem.h"
 #include "fu-pefile-firmware.h"
 #include "fu-pefile-struct.h"
@@ -80,6 +81,14 @@ fu_pefile_firmware_parse_section(FuFirmware *firmware,
 	/* create new firmware */
 	if (g_strcmp0(sect_id, ".sbom") == 0) {
 		img = fu_coswid_firmware_new();
+	} else if (g_strcmp0(sect_id, ".sbat") == 0) {
+		img = fu_csv_firmware_new();
+		fu_csv_firmware_add_column_id(FU_CSV_FIRMWARE(img), "$id");
+		fu_csv_firmware_add_column_id(FU_CSV_FIRMWARE(img), "$version_raw");
+		fu_csv_firmware_add_column_id(FU_CSV_FIRMWARE(img), "vendor_name");
+		fu_csv_firmware_add_column_id(FU_CSV_FIRMWARE(img), "vendor_package_name");
+		fu_csv_firmware_add_column_id(FU_CSV_FIRMWARE(img), "$version");
+		fu_csv_firmware_add_column_id(FU_CSV_FIRMWARE(img), "vendor_url");
 	} else {
 		img = fu_firmware_new();
 	}
