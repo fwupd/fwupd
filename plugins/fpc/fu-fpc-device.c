@@ -351,7 +351,6 @@ fu_fpc_device_attach(FuDevice *device, FuProgress *progress, GError **error)
 	}
 	if (!fu_fpc_device_dfu_cmd(self, FPC_CMD_DFU_DETACH, 0x0000, NULL, 0, FALSE, FALSE, error))
 		return FALSE;
-	fu_device_remove_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	return TRUE;
 }
@@ -368,7 +367,6 @@ fu_fpc_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 	}
 	if (!fu_fpc_device_fw_cmd(self, FPC_CMD_BOOT0, NULL, 0, FALSE, error))
 		return FALSE;
-	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	return TRUE;
 }
