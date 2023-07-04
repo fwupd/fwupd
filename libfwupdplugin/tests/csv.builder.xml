@@ -1,0 +1,14 @@
+<firmware gtype="FuCsvFirmware">
+  <firmware gtype="FuCsvEntry">
+    <values>
+      <component_name>sbat</component_name>
+      <component_generation>1</component_generation>
+    </values>
+  </firmware>
+  <firmware gtype="FuCsvEntry">
+    <values>
+      <component_name>grub</component_name>
+      <component_generation>1</component_generation>
+    </values>
+  </firmware>
+</firmware>

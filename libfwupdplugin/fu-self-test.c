@@ -2596,6 +2596,56 @@ fu_firmware_new_from_gtypes_func(void)
 }
 
 static void
+fu_firmware_csv_func(void)
+{
+	FuCsvEntry *entry_tmp;
+	gboolean ret;
+	g_autofree gchar *str = NULL;
+	g_autoptr(FuFirmware) firmware = fu_csv_firmware_new();
+	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GPtrArray) imgs = NULL;
+	const gchar *data =
+	    "sbat,1,SBAT Version,sbat,1,https://github.com/rhboot/shim/blob/main/SBAT.md\n"
+	    "grub,1,Free Software Foundation,grub,2.04,https://www.gnu.org/software/grub/\n";
+
+	fu_csv_firmware_add_column_id(FU_CSV_FIRMWARE(firmware), "$id");
+	fu_csv_firmware_add_column_id(FU_CSV_FIRMWARE(firmware), "component_generation");
+	fu_csv_firmware_add_column_id(FU_CSV_FIRMWARE(firmware), "vendor_name");
+	fu_csv_firmware_add_column_id(FU_CSV_FIRMWARE(firmware), "vendor_package_name");
+	fu_csv_firmware_add_column_id(FU_CSV_FIRMWARE(firmware), "vendor_version");
+	fu_csv_firmware_add_column_id(FU_CSV_FIRMWARE(firmware), "vendor_url");
+
+	g_assert_cmpstr(fu_csv_firmware_get_column_id(FU_CSV_FIRMWARE(firmware), 0), ==, "$id");
+	g_assert_cmpstr(fu_csv_firmware_get_column_id(FU_CSV_FIRMWARE(firmware), 1),
+			==,
+			"component_generation");
+	g_assert_cmpstr(fu_csv_firmware_get_column_id(FU_CSV_FIRMWARE(firmware), 5),
+			==,
+			"vendor_url");
+	g_assert_cmpstr(fu_csv_firmware_get_column_id(FU_CSV_FIRMWARE(firmware), 6), ==, NULL);
+
+	blob = g_bytes_new(data, strlen(data));
+	ret = fu_firmware_parse(firmware, blob, FWUPD_INSTALL_FLAG_NONE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	str = fu_firmware_to_string(firmware);
+	g_debug("%s", str);
+
+	imgs = fu_firmware_get_images(firmware);
+	g_assert_cmpint(imgs->len, ==, 2);
+
+	entry_tmp = g_ptr_array_index(imgs, 1);
+
+	g_assert_cmpstr(fu_firmware_get_id(FU_FIRMWARE(entry_tmp)), ==, "grub");
+	g_assert_cmpstr(fu_csv_entry_get_value_by_idx(entry_tmp, 0), ==, NULL);
+	g_assert_cmpstr(fu_csv_entry_get_value_by_idx(entry_tmp, 1), ==, "1");
+	g_assert_cmpstr(fu_csv_entry_get_value_by_column_id(entry_tmp, "vendor_version"),
+			==,
+			"2.04");
+}
+
+static void
 fu_firmware_archive_func(void)
 {
 	gboolean ret;
@@ -3645,6 +3695,7 @@ fu_firmware_builder_round_trip_func(void)
 	    {FU_TYPE_DFUSE_FIRMWARE,
 	     "dfuse.builder.xml",
 	     "c1ff429f0e381c8fe8e1b2ee41a5a9a79e2f2ff7"},
+	    {FU_TYPE_CSV_FIRMWARE, "csv.builder.xml", "986cbf8cde5bc7d8b49ee94cceae3f92efbd2eef"},
 	    {FU_TYPE_FDT_FIRMWARE, "fdt.builder.xml", "40f7fbaff684a6bcf67c81b3079422c2529741e1"},
 	    {FU_TYPE_FIT_FIRMWARE, "fit.builder.xml", "293ce07351bb7d76631c4e2ba47243db1e150f3c"},
 	    {FU_TYPE_SREC_FIRMWARE, "srec.builder.xml", "2aae6c35c94fcfb415dbe95f408b9ce91ee846ed"},
@@ -4237,6 +4288,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/kernel", fu_kernel_func);
 	g_test_add_func("/fwupd/firmware", fu_firmware_func);
 	g_test_add_func("/fwupd/firmware{common}", fu_firmware_common_func);
+	g_test_add_func("/fwupd/firmware{csv}", fu_firmware_csv_func);
 	g_test_add_func("/fwupd/firmware{archive}", fu_firmware_archive_func);
 	g_test_add_func("/fwupd/firmware{linear}", fu_firmware_linear_func);
 	g_test_add_func("/fwupd/firmware{dedupe}", fu_firmware_dedupe_func);
