@@ -164,13 +164,13 @@ enum EfiHardDriveDevicePathSignatureType {
 
 #[derive(Parse, New)]
 struct EfiHardDriveDevicePath {
-    type: EfiDevicePathType == 0x04,
-    subtype: EfiHardDriveDevicePathSubtype = 0x01,
+    type: EfiDevicePathType == Media,
+    subtype: EfiHardDriveDevicePathSubtype = HardDrive,
     length: u16le == $struct_size,
     partition_number: u32le,
     partition_start: u64le,
     partition_size: u64le,
     partition_signature: Guid,
-    partition_format: EfiHardDriveDevicePathPartitionFormat = 0x02,
-    signature_type: EfiHardDriveDevicePathSignatureType = 0x02,
+    partition_format: EfiHardDriveDevicePathPartitionFormat = GuidPartitionTable,
+    signature_type: EfiHardDriveDevicePathSignatureType = Guid,
 }

@@ -85,7 +85,7 @@ enum FuCoffSubsystem {
 #[derive(Parse)]
 struct PeCoffFileHeader {
     signature: u32le == 0x4550, // "PE\0\0"
-    machine: PeCoffMachine = 0x8664,
+    machine: PeCoffMachine = Amd64,
     number_of_sections: u16le = 0,
     _time_date_stamp: u32le = 0,
     pointer_to_symbol_table: u32le = 0,
@@ -96,7 +96,7 @@ struct PeCoffFileHeader {
 
 #[derive(Parse)]
 struct PeCoffOptionalHeader64 {
-    magic: PeCoffMagic = 0x020b,
+    magic: PeCoffMagic = Pe32Plus,
     _major_linker_version: u8 = 0x0e,
     _minor_linker_version: u8 = 0x0e,
     size_of_code: u32le = 0x0,
@@ -117,7 +117,7 @@ struct PeCoffOptionalHeader64 {
     size_of_image: u32le = 0x0,
     size_of_headers: u32le = 0x0,
     check_sum: u32le = 0x0,
-    subsystem: FuCoffSubsystem = 0xa,
+    subsystem: FuCoffSubsystem = EfiApplication,
     _dll_characteristics: u16le = 0x0,
     _size_of_stackreserve: u64le = 0x0,
     _size_of_stack_commit: u64le = 0x0,

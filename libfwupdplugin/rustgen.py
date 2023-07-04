@@ -76,6 +76,12 @@ class EnumObj:
     def c_type(self):
         return f"Fu{self.name}"
 
+    def item(self, name: str) -> Optional["EnumItem"]:
+        for item in self.items:
+            if item.name == name:
+                return item
+        return None
+
     def add_private_export(self, derive: str) -> None:
         if self._exports[derive] == Export.PUBLIC:
             return
@@ -106,6 +112,9 @@ class EnumItem:
     @property
     def value(self) -> str:
         return _camel_to_snake(self.name).replace("_", "-")
+
+    def __str__(self) -> str:
+        return f"EnumItem({self.name}={self.default})"
 
 
 class StructObj:
@@ -295,6 +304,12 @@ class StructItem:
 
     def _parse_default(self, val: str) -> str:
 
+        if self.enum_obj:
+            enum_item = self.enum_obj.item(val)
+            if not enum_item:
+                msg: str = [item.name for item in self.enum_obj.items]
+                raise ValueError(f"enum default unknown, got {val} expected: {msg}")
+            return enum_item.c_define
         if self.type == Type.STRING:
             if val.startswith('"') and val.endswith('"'):
                 return val[1:-1]
