@@ -881,7 +881,7 @@ rustc*, so small differences may be noticeable.
         Csme,
     }
     struct ExamplePacket {
-        family: ExampleFamily,
+        family: ExampleFamily = Csme,
         data: [u8; 254],
     }
 
@@ -910,6 +910,7 @@ Additionally, default or constant values can be auto-populated:
 - `$struct_offset`: the internal offset in the struct
 - string values, specified **without** double or single quotes
 - integer values, specified with a `0x` prefix for base-16 and with no prefix for base-10
+- previously specified `enum` values
 
 Per-field metadata can also be defined, such as:
 
