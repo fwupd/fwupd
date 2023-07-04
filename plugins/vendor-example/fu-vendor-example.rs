@@ -3,7 +3,7 @@
 
 #[derive(New, Validate, Parse)]
 struct {{Vendor}}{{Example}} {
-    signature: u8: const=0xDE,
+    signature: u8 == 0xDE,
     address: u16le,
 }
 #[derive(ToString)]

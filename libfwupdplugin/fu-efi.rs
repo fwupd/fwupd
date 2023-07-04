@@ -41,7 +41,7 @@ struct EfiFile {
     type: EfiFileType,
     attrs: u8,
     size: u24le,
-    state: u8: const=0xF8,
+    state: u8 == 0xF8,
 }
 
 #[repr(u8)]
@@ -80,13 +80,13 @@ struct EfiVolume {
     zero_vector: Guid,
     guid: Guid,
     length: u64le,
-    signature: u32le: const=0x4856465F,
+    signature: u32le == 0x4856465F,
     attrs: u32le,
     hdr_len: u16le,
     checksum: u16le,
     ext_hdr: u16le,
     reserved: u8,
-    revision: u8: const=0x02,
+    revision: u8 == 0x02,
 }
 #[derive(New, Validate, Parse)]
 struct EfiVolumeBlockMap {
@@ -130,8 +130,8 @@ enum EfiDevicePathType {
 #[derive(Parse, New)]
 struct EfiDevicePath {
     type: EfiDevicePathType,
-    subtype: u8: default=0xFF,
-    length: u16le: default=$struct_size,
+    subtype: u8 = 0xFF,
+    length: u16le = $struct_size,
 }
 
 #[repr(u8)]
@@ -164,13 +164,13 @@ enum EfiHardDriveDevicePathSignatureType {
 
 #[derive(Parse, New)]
 struct EfiHardDriveDevicePath {
-    type: EfiDevicePathType: const=0x04,
-    subtype: EfiHardDriveDevicePathSubtype: default=0x01,
-    length: u16le: const=$struct_size,
+    type: EfiDevicePathType == 0x04,
+    subtype: EfiHardDriveDevicePathSubtype = 0x01,
+    length: u16le == $struct_size,
     partition_number: u32le,
     partition_start: u64le,
     partition_size: u64le,
     partition_signature: Guid,
-    partition_format: EfiHardDriveDevicePathPartitionFormat: default=0x02,
-    signature_type: EfiHardDriveDevicePathSignatureType: default=0x02,
+    partition_format: EfiHardDriveDevicePathPartitionFormat = 0x02,
+    signature_type: EfiHardDriveDevicePathSignatureType = 0x02,
 }

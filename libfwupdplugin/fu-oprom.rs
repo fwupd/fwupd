@@ -3,7 +3,7 @@
 
 #[derive(New, Validate, Parse)]
 struct Oprom {
-    signature: u16le: const=0xAA55,
+    signature: u16le == 0xAA55,
     image_size: u16le,		// of 512 bytes
     init_func_entry_point: u32le,
     subsystem: u16le,
@@ -11,12 +11,12 @@ struct Oprom {
     compression_type: u16le,
     _reserved: [u8; 8],
     efi_image_offset: u16le,
-    pci_header_offset: u16le: default=$struct_size,
+    pci_header_offset: u16le = $struct_size,
     expansion_header_offset: u16le,
 }
 #[derive(New, Validate, Parse)]
 struct OpromPci {
-    signature: u32le: const=0x52494350,
+    signature: u32le == 0x52494350,
     vendor_id: u16le,
     device_id: u16le,
     device_list_pointer: u16le,

@@ -320,18 +320,15 @@ class StructItem:
 
     def parse_default(self, val: str) -> None:
 
-        self.default = self._parse_default(val)
-
-    def parse_padding(self, val: str) -> None:
-
-        if self.type == Type.U8 and self.multiplier:
-            if not val.startswith("0x"):
-                raise ValueError(f"0x prefix for hex number expected, got: {val}")
-            if len(val) != 4:
-                raise ValueError("data has to be one byte only")
+        if (
+            self.type == Type.U8
+            and self.multiplier
+            and val.startswith("0x")
+            and len(val) == 4
+        ):
             self.padding = val
             return
-        raise ValueError(f"do not know how to parse value for type: {self.type}")
+        self.default = self._parse_default(val)
 
     def parse_constant(self, val: str) -> None:
 
@@ -384,11 +381,11 @@ class StructItem:
         if self.endian != Endian.NATIVE:
             tmp += self.endian.value
         if self.default:
-            tmp += f": default={self.default}"
+            tmp += f" = {self.default}"
         elif self.constant:
-            tmp += f": const={self.constant}"
+            tmp += f" == {self.constant}"
         elif self.padding:
-            tmp += f": padding={self.padding}"
+            tmp += f" = {self.padding}"
         return tmp
 
 
@@ -510,7 +507,9 @@ class Generator:
 
             # split structure into sections
             if struct_cur:
-                parts = line.replace(" ", "").split(":", maxsplit=3)
+
+                # parse "signature: u32be == 0x12345678"
+                parts = line.replace(" ", "").split(":", maxsplit=2)
                 if len(parts) == 1:
                     raise ValueError(f"invalid struct line: {line}")
 
@@ -518,22 +517,17 @@ class Generator:
                 item = StructItem(struct_cur)
                 item.offset = offset
                 item.element_id = parts[0]
+
+                type_parts = parts[1].split("=", maxsplit=3)
                 item.parse_type(
-                    parts[1], enum_objs=self.enum_objs, struct_objs=self.struct_objs
+                    type_parts[0],
+                    enum_objs=self.enum_objs,
+                    struct_objs=self.struct_objs,
                 )
-                for part in parts[2:]:
-                    try:
-                        key, value = tuple(part.split("=", maxsplit=1))
-                    except ValueError as e:
-                        raise ValueError(f"invalid struct line: {line}") from e
-                    if key == "const":
-                        item.parse_constant(value)
-                    elif key == "default":
-                        item.parse_default(value)
-                    elif key == "padding":
-                        item.parse_padding(value)
-                    else:
-                        raise ValueError(f"invalid struct line: {line}")
+                if len(type_parts) == 3:
+                    item.parse_constant(type_parts[2])
+                elif len(type_parts) == 2:
+                    item.parse_default(type_parts[1])
                 offset += item.size
                 struct_cur.items.append(item)
 

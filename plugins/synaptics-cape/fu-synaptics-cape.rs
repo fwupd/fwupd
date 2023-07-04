@@ -6,7 +6,7 @@ struct SynapticsCapeHidHdr {
     vid: u32le,
     pid: u32le,
     update_type: u32le,
-    signature: u32le: const=0x43534645, // "EFSC"
+    signature: u32le == 0x43534645, // "EFSC"
     crc: u32le,
     ver_w: u16le,
     ver_x: u16le,
@@ -17,7 +17,7 @@ struct SynapticsCapeHidHdr {
 
 #[derive(New, Parse)]
 struct SynapticsCapeSnglHdr {
-    magic: u32le: const=0x4C474E53, // "SNGL"
+    magic: u32le == 0x4C474E53, // "SNGL"
     file_crc: u32le,
     file_size: u32le,
     magic2: u32le,

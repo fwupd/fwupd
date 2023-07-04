@@ -20,11 +20,11 @@ struct SynapticsCxaudioCustomInfo {
 #[derive(Parse)]
 struct SynapticsCxaudioStringHeader {
     length: u8,
-    type: u8: const=0x03,
+    type: u8 == 0x03,
 }
 #[derive(Parse)]
 struct SynapticsCxaudioValiditySignature {
-    magic_byte: u8: default=0x4C,    // 'L'
+    magic_byte: u8 = 0x4C,    // 'L'
     eeprom_size_code: u8,
 }
 #[derive(Parse, Setters)]

@@ -72,7 +72,7 @@ enum UsiDockSpiCmd {
 
 #[derive(New)]
 struct UsiDockHidReq {
-    id: u8: const=2,
+    id: u8 == 2,
     length: u8,
     buf: [u8; 61],
     tag3: UsiDockTag2,
@@ -80,20 +80,20 @@ struct UsiDockHidReq {
 
 #[derive(New)]
 struct UsiDockMcuCmdReq {
-    id: u8: const=2,
+    id: u8 == 2,
     length: u8,
-    tag1: u8: const=0xFE,
-    tag2: u8: const=0xFF,
+    tag1: u8 == 0xFE,
+    tag2: u8 == 0xFF,
     buf: [u8; 59],
     tag3: UsiDockTag2,
 }
 
 #[derive(Parse)]
 struct UsiDockMcuCmdRes {
-    id: u8: const=2,
+    id: u8 == 2,
     cmd1: UsiDockMcuCmd,
-    tag1: u8: const=0xFE,
-    tag2: u8: const=0xFF,
+    tag1: u8 == 0xFE,
+    tag2: u8 == 0xFF,
     cmd2: UsiDockMcuCmd,
     buf: [u8; 58],
     tag3: UsiDockTag2,

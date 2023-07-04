@@ -9,7 +9,7 @@ struct CcgxMetadataHdr {
     _reserved1: [u8; 2],
     fw_size: u32le,
     _reserved2: [u8; 9],
-    metadata_valid: u16le: default=0x4359, // "CY"
+    metadata_valid: u16le = 0x4359, // "CY"
     _reserved3: [u8; 4],
     boot_seq: u32le,
 }

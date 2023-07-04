@@ -3,9 +3,9 @@
 
 #[derive(New, Validate, Parse)]
 struct Fmap {
-    signature: [char; 8]: const="__FMAP__",
-    ver_major: u8: default=0x1,
-    ver_minor: u8: default=0x1,
+    signature: [char; 8] == "__FMAP__",
+    ver_major: u8 = 0x1,
+    ver_minor: u8 = 0x1,
     base: u64le,		// address of the firmware binary
     size: u32le,		// bytes
     name: [char; 32],

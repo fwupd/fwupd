@@ -167,22 +167,22 @@ enum GenesysFwCodesign {
 
 #[derive(Parse, Validate)]
 struct GenesysFwCodesignInfoRsa {
-    tag_n: u32be: const=0x4E203D20, // 'N = '
+    tag_n: u32be == 0x4E203D20, // 'N = '
     text_n: [char; 512],
-    end_n: u16be: const=0x0D0A,
-    tag_e: u32be: const=0x45203D20, // 'E = '
+    end_n: u16be == 0x0D0A,
+    tag_e: u32be == 0x45203D20, // 'E = '
     text_e: [char; 6],
-    end_e: u16be: const=0x0D0A,
+    end_e: u16be == 0x0D0A,
     signature: [u8; 256],
 }
 #[derive(Parse, Validate)]
 struct GenesysFwRsaPublicKeyText {
-    tag_n: u32be: const=0x4E203D20, // 'N = '
+    tag_n: u32be == 0x4E203D20, // 'N = '
     text_n: [char; 512],
-    end_n: u16be: const=0x0D0A,
-    tag_e: u32be: const=0x45203D20, // 'E = '
+    end_n: u16be == 0x0D0A,
+    tag_e: u32be == 0x45203D20, // 'E = '
     text_e: [char; 6],
-    end_e: u16be: const=0x0D0A,
+    end_e: u16be == 0x0D0A,
 }
 
 #[derive(Parse, Validate)]
