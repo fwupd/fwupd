@@ -33,7 +33,12 @@ G_DEFINE_TYPE_WITH_PRIVATE(FuCsvFirmware, fu_csv_firmware, FU_TYPE_FIRMWARE)
  *
  * Adds a column ID.
  *
- * NOTE: As a special magic feature, a @column_id of `$id` also sets the firmware ID.
+ * There are several optional magic column IDs that map to #FuFirmware properties:
+ *
+ * * `$id` sets the firmware ID
+ * * `$idx` sets the firmware index
+ * * `$version` sets the firmware version
+ * * `$version_raw` sets the raw firmware version
  *
  * Since: 1.9.3
  **/
