@@ -382,6 +382,7 @@ def _build(bld: Builder) -> None:
 
     # built in formats
     for fzr in [
+        Fuzzer("csv"),
         Fuzzer("dfuse"),
         Fuzzer("fdt"),
         Fuzzer("fit"),

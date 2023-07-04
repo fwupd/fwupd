@@ -1135,9 +1135,9 @@ fu_firmware_build(FuFirmware *self, XbNode *n, GError **error)
 			} else {
 				img = fu_firmware_new();
 			}
-			if (!fu_firmware_build(img, xb_image, error))
-				return FALSE;
 			if (!fu_firmware_add_image_full(self, img, error))
+				return FALSE;
+			if (!fu_firmware_build(img, xb_image, error))
 				return FALSE;
 		}
 	}

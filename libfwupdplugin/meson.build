@@ -47,6 +47,8 @@ fwupdplugin_src = [
   'fu-coswid-common.c', # fuzzing
   'fu-coswid-firmware.c', # fuzzing
   'fu-crc.c', # fuzzing
+  'fu-csv-entry.c', # fuzzing
+  'fu-csv-firmware.c', # fuzzing
   'fu-device.c', # fuzzing
   'fu-device-locker.c', # fuzzing
   'fu-device-progress.c',
@@ -161,6 +163,8 @@ fwupdplugin_headers = [
   'fu-context-private.h',
   'fu-coswid-firmware.h',
   'fu-crc.h',
+  'fu-csv-entry.h',
+  'fu-csv-firmware.h',
   'fu-device.h',
   'fu-device-locker.h',
   'fu-device-metadata.h',
