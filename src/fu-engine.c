@@ -3533,7 +3533,7 @@ fu_engine_get_device(FuEngine *self, const gchar *device_id, GError **error)
 
 	/* wait for any device to disconnect and reconnect */
 	if (!fu_device_list_wait_for_replug(self->device_list, error)) {
-		g_prefix_error(error, "failed to wait for detach replug: ");
+		g_prefix_error(error, "failed to wait for device: ");
 		return NULL;
 	}
 
