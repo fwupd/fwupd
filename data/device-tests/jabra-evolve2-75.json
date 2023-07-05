@@ -1,0 +1,34 @@
+{
+  "name": "Jabra Evolve2 75",
+  "interactive": false,
+  "steps": [
+    {
+      "url": "https://fwupd.org/downloads/335f10696cd57ae74b2115a9e44a39a2c5208e7e090d1f4e72bb91bc65a7480d-jabra-evolve2-75-1.8.13.cab",
+      "components": [
+        {
+          "version": "1.8.13",
+          "protocol": "com.jabra.gnp",
+          "guids": [
+            "354b39e6-e12e-557e-8beb-fa4128b0a98c",
+            "dc636868-13f1-5c3b-bac5-c4432d447707",
+            "b0870be4-7c69-50af-9b7d-fdfa8d849607"
+          ]
+        }
+      ]
+    },
+    {
+      "url": "https://fwupd.org/downloads/8fa6ff5d43c0cb5807f136c6edc90c146f3796b9228706ebed6f6348d9c358cd-jabra-evolve2-75-1.7.4.cab",
+      "components": [
+        {
+          "version": "1.7.4",
+          "protocol": "com.jabra.gnp",
+          "guids": [
+            "354b39e6-e12e-557e-8beb-fa4128b0a98c",
+            "dc636868-13f1-5c3b-bac5-c4432d447707",
+            "b0870be4-7c69-50af-9b7d-fdfa8d849607"
+          ]
+        }
+      ]
+    }
+  ]
+}
