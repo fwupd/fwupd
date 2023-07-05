@@ -34,7 +34,6 @@ enum PeCoffMachine {
     Arm = 0x1c0,
     Arm64 = 0xaa64,
     Armnt = 0x1c4,
-    Axp64 = 0x284,
     Ebc = 0xebc,
     I386 = 0x14c,
     Ia64 = 0x200,
