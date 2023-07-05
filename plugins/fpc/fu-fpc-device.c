@@ -401,10 +401,20 @@ static gboolean
 fu_fpc_device_setup(FuDevice *device, GError **error)
 {
 	FuFpcDevice *self = FU_FPC_DEVICE(device);
+	g_autofree gchar *name = NULL;
 
 	/* setup */
 	if (!FU_DEVICE_CLASS(fu_fpc_device_parent_class)->setup(device, error))
 		return FALSE;
+
+	/* remove the ' L:0001 FW:27.26.23.18' suffix */
+	name = g_strdup(fu_device_get_name(device));
+	if (name != NULL) {
+		gchar *tmp = g_strstr_len(name, -1, " L:00");
+		if (tmp != NULL)
+			*tmp = '\0';
+		fu_device_set_name(device, name);
+	}
 
 	if (!fu_fpc_device_setup_mode(self, error)) {
 		g_prefix_error(error, "failed to get device mode: ");
