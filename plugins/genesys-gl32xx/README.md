@@ -16,7 +16,11 @@ This plugin supports the following protocol ID:
 
 These devices use the standard UDEV DeviceInstanceId values, e.g.
 
-* `[BLOCK\VEN_05E3&DEV_XXXX]`
+* `BLOCK\VEN_05E3&DEV_XXXX`
+
+These devices also use custom GUID values, e.g.
+
+* `BLOCK\VEN_05E3&DEV_XXXX&VER_YY`
 
 ## Update Behavior
 

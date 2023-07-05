@@ -310,6 +310,7 @@ static gboolean
 fu_genesys_gl32xx_device_ensure_version(FuGenesysGl32xxDevice *self, GError **error)
 {
 	g_autofree gchar *version = NULL;
+	g_autofree gchar *version_prefix = NULL;
 	g_autoptr(GByteArray) buf = NULL;
 
 	buf = fu_genesys_gl32xx_device_cmd_get_version(self, error);
@@ -325,14 +326,23 @@ fu_genesys_gl32xx_device_ensure_version(FuGenesysGl32xxDevice *self, GError **er
 		return FALSE;
 	}
 
-	version = g_strdup_printf("%c%c%c%c",
-				  buf->data[0x20],
-				  buf->data[0x21],
-				  buf->data[0x22],
-				  buf->data[0x23]);
+	version = fu_memstrsafe(buf->data, buf->len, 0x20, 4, error);
+	if (version == NULL)
+		return FALSE;
 	fu_device_set_version(FU_DEVICE(self), version);
 
-	return TRUE;
+	/* this is used to differentiate standard firmware versions */
+	version_prefix = fu_memstrsafe(buf->data, buf->len, 0x20, 2, error);
+	if (version_prefix == NULL)
+		return FALSE;
+	fu_device_add_instance_str(FU_DEVICE(self), "VER", version_prefix);
+	return fu_device_build_instance_id(FU_DEVICE(self),
+					   error,
+					   "BLOCK",
+					   "VEN",
+					   "DEV",
+					   "VER",
+					   NULL);
 }
 
 static gboolean
