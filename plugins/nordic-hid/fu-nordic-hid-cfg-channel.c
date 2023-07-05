@@ -114,6 +114,9 @@ fu_nordic_hid_cfg_channel_module_option_free(FuNordicCfgChannelModuleOption *opt
 	g_free(opt);
 }
 
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuNordicCfgChannelModuleOption,
+			      fu_nordic_hid_cfg_channel_module_option_free);
+
 static void
 fu_nordic_hid_cfg_channel_module_free(FuNordicCfgChannelModule *mod)
 {
@@ -677,7 +680,7 @@ fu_nordic_hid_cfg_channel_load_module_opts(FuNordicHidCfgChannel *self,
 					   GError **error)
 {
 	for (guint8 i = 0; i < 0xFF; i++) {
-		FuNordicCfgChannelModuleOption *opt = NULL;
+		g_autoptr(FuNordicCfgChannelModuleOption) opt = NULL;
 		g_autoptr(FuNordicCfgChannelMsg) res = g_new0(FuNordicCfgChannelMsg, 1);
 
 		if (!fu_nordic_hid_cfg_channel_cmd_send_by_id(self,
@@ -698,7 +701,7 @@ fu_nordic_hid_cfg_channel_load_module_opts(FuNordicHidCfgChannel *self,
 		if (opt->name == NULL)
 			return FALSE;
 		opt->idx = i;
-		g_ptr_array_add(mod->options, opt);
+		g_ptr_array_add(mod->options, g_steal_pointer(&opt));
 	}
 
 	/* success */
