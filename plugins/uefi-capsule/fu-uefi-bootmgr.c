@@ -252,23 +252,20 @@ fu_uefi_setup_bootnext_with_loadopt(FuEfiLoadOption *loadopt, GError **error)
 static gboolean
 fu_uefi_bootmgr_shim_is_safe(const gchar *source_shim, GError **error)
 {
-	gsize idx = 0;
 	g_autoptr(GBytes) current_sbatlevel_bytes = NULL;
-	g_autoptr(FuFirmware) shim = NULL;
+	g_autoptr(FuFirmware) shim = fu_pefile_firmware_new();
 	g_autoptr(FuFirmware) sbatlevel_section = NULL;
 	g_autoptr(FuFirmware) previous_sbatlevel = NULL;
-	g_autoptr(FuFirmware) current_sbatlevel = NULL;
+	g_autoptr(FuFirmware) current_sbatlevel = fu_csv_firmware_new();
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GPtrArray) shim_entries = NULL;
 
-	shim = fu_pefile_firmware_new();
 	blob = fu_bytes_get_contents(source_shim, error);
 	if (blob == NULL)
 		return FALSE;
 	if (!fu_firmware_parse(shim, blob, FWUPD_INSTALL_FLAG_NONE, error))
 		return FALSE;
-
 	sbatlevel_section = fu_firmware_get_image_by_id(shim, ".sbatlevel", &error_local);
 	if (sbatlevel_section == NULL) {
 		g_debug("no sbatlevel section was found");
@@ -276,25 +273,17 @@ fu_uefi_bootmgr_shim_is_safe(const gchar *source_shim, GError **error)
 		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND))
 			return TRUE;
 		g_propagate_error(error, g_steal_pointer(&error_local));
+		return FALSE;
 	}
 
-	previous_sbatlevel = fu_firmware_get_image_by_id(sbatlevel_section, "previous", error);
-	if (previous_sbatlevel == NULL)
-		return FALSE;
-
-	shim_entries = fu_firmware_get_images(previous_sbatlevel);
-
+	/* not safe if variable is not set but new shim would set it */
 	current_sbatlevel_bytes =
 	    fu_efivar_get_data_bytes(FU_EFIVAR_GUID_SHIM, "SbatLevelRT", NULL, error);
-	/* not safe if variable is not set but new shim would set it */
 	if (current_sbatlevel_bytes == NULL)
 		return FALSE;
-
-	current_sbatlevel = fu_csv_firmware_new();
 	fu_csv_firmware_add_column_id(FU_CSV_FIRMWARE(current_sbatlevel), "$id");
 	fu_csv_firmware_add_column_id(FU_CSV_FIRMWARE(current_sbatlevel), "component_generation");
 	fu_csv_firmware_add_column_id(FU_CSV_FIRMWARE(current_sbatlevel), "date_stamp");
-
 	if (!fu_firmware_parse(current_sbatlevel,
 			       current_sbatlevel_bytes,
 			       FWUPD_INSTALL_FLAG_NONE,
@@ -310,14 +299,16 @@ fu_uefi_bootmgr_shim_is_safe(const gchar *source_shim, GError **error)
 	 * sbatlevel matches) or not (shim is too old), but it will
 	 * not brick the current OS.
 	 */
-	for (idx = 0; idx < shim_entries->len; idx++) {
-		const gchar *entry_id = NULL;
-		guint64 shim_generation = 0;
-		guint64 current_generation = 0;
+	previous_sbatlevel = fu_firmware_get_image_by_id(sbatlevel_section, "previous", error);
+	if (previous_sbatlevel == NULL)
+		return FALSE;
+	shim_entries = fu_firmware_get_images(previous_sbatlevel);
+	for (guint idx = 0; idx < shim_entries->len; idx++) {
 		FuCsvEntry *current_entry = NULL;
 		FuCsvEntry *shim_entry = g_ptr_array_index(shim_entries, idx);
-
-		entry_id = fu_firmware_get_id(FU_FIRMWARE(shim_entry));
+		const gchar *entry_id = fu_firmware_get_id(FU_FIRMWARE(shim_entry));
+		guint64 current_generation = 0;
+		guint64 shim_generation = 0;
 
 		current_entry =
 		    FU_CSV_ENTRY(fu_firmware_get_image_by_id(FU_FIRMWARE(current_sbatlevel),
@@ -338,7 +329,6 @@ fu_uefi_bootmgr_shim_is_safe(const gchar *source_shim, GError **error)
 					       "while looking for entry in current sbatlevel: ");
 				g_propagate_error(error, g_steal_pointer(&error_local));
 			}
-
 			return FALSE;
 		}
 
@@ -350,19 +340,15 @@ fu_uefi_bootmgr_shim_is_safe(const gchar *source_shim, GError **error)
 				       "sbatlevel entry %s for shim %s: ",
 				       entry_id,
 				       source_shim);
-
 			return FALSE;
 		}
-
 		if (!fu_csv_entry_get_value_by_column_id_uint64(current_entry,
 								"component_generation",
 								&current_generation,
 								error)) {
 			g_prefix_error(error, "entry %s from current sbatlevel: ", entry_id);
-
 			return FALSE;
 		}
-
 		if (current_generation < shim_generation) {
 			g_set_error(error,
 				    FWUPD_ERROR,
@@ -371,11 +357,11 @@ fu_uefi_bootmgr_shim_is_safe(const gchar *source_shim, GError **error)
 				    "%s (newer generation)",
 				    source_shim,
 				    entry_id);
-
 			return FALSE;
 		}
 	}
 
+	/* success */
 	return TRUE;
 }
 
