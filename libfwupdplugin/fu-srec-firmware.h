@@ -60,6 +60,10 @@ typedef struct {
 
 FuFirmware *
 fu_srec_firmware_new(void);
+void
+fu_srec_firmware_set_addr_min(FuSrecFirmware *self, guint32 addr_min);
+void
+fu_srec_firmware_set_addr_max(FuSrecFirmware *self, guint32 addr_max);
 GPtrArray *
 fu_srec_firmware_get_records(FuSrecFirmware *self);
 GType
