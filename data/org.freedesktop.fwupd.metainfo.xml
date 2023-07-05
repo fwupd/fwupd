@@ -39,11 +39,13 @@
           This release adds the following features:
         </p>
         <ul>
+          <li>Allow autodetection when using fwupdtool firmware-parse</li>
           <li>Allow devices to only accept explicitly specified release versions</li>
           <li>Allow filtering by release flags from fwupdtool and fwupdmgr</li>
           <li>Allow filtering by remote when looking for trusted reports</li>
           <li>Drop the libefiboot dependency</li>
           <li>Ensure that BootService-only variables cannot be read in runtime mode</li>
+          <li>Parse the various SBAT sections from PE firmware</li>
           <li>Record the NVRAM space used as report metadata</li>
           <li>Show the user a warning when the ESP may not be valid</li>
           <li>Speed up the daemon startup by 35% and reduce RSS by 12%</li>
@@ -55,8 +57,10 @@
           <li>Deduplicate the remotes as required</li>
           <li>Do not accidentally depend on python 3.9</li>
           <li>Do not truncate feature reports to fix Wacom ID6 update</li>
+          <li>Fix parsing of IGSC code firmware</li>
           <li>Get the Jabra GNP device name from the device</li>
           <li>Ignore small ESP block devices if there are multiple choices</li>
+          <li>Never install a shim too new for the system</li>
           <li>Only add the little-used _REV instance IDs by request</li>
           <li>Use a CapsuleOnDisk filename supported by InsydeH2O</li>
         </ul>
