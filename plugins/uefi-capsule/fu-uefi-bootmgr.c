@@ -260,7 +260,6 @@ fu_uefi_bootmgr_shim_is_safe(const gchar *source_shim, GError **error)
 	g_autoptr(FuFirmware) current_sbatlevel = NULL;
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GBytes) blob = NULL;
-	g_autoptr(GBytes) sbatlevel_bytes = NULL;
 	g_autoptr(GPtrArray) shim_entries = NULL;
 
 	shim = fu_pefile_firmware_new();
