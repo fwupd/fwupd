@@ -26,6 +26,8 @@ typedef struct {
 G_DEFINE_TYPE_WITH_PRIVATE(FuCsvEntry, fu_csv_entry, FU_TYPE_FIRMWARE)
 #define GET_PRIVATE(o) (fu_csv_entry_get_instance_private(o))
 
+#define FU_CSV_ENTRY_COLUMNS_MAX 1000u
+
 /**
  * fu_csv_entry_add_value:
  * @self: a #FuFirmware
@@ -150,6 +152,16 @@ fu_csv_entry_parse_token_cb(GString *token, guint token_idx, gpointer user_data,
 	FuCsvEntryPrivate *priv = GET_PRIVATE(self);
 	FuCsvFirmware *parent = FU_CSV_FIRMWARE(fu_firmware_get_parent(FU_FIRMWARE(self)));
 	const gchar *column_id = fu_csv_firmware_get_column_id(parent, token_idx);
+
+	/* sanity check */
+	if (token_idx > FU_CSV_ENTRY_COLUMNS_MAX) {
+		g_set_error(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_INVALID_DATA,
+			    "too many columns, limit is %u",
+			    FU_CSV_ENTRY_COLUMNS_MAX);
+		return FALSE;
+	}
 
 	if (g_strcmp0(column_id, "$id") == 0) {
 		g_ptr_array_add(priv->values, NULL);
