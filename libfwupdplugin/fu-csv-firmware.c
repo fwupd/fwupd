@@ -127,7 +127,8 @@ fu_csv_firmware_parse_line_cb(GString *token, guint token_idx, gpointer user_dat
 	/* parse entry */
 	fw = g_bytes_new(token->str, token->len);
 	fu_firmware_set_idx(entry, token_idx);
-	fu_firmware_add_image(FU_FIRMWARE(self), entry);
+	if (!fu_firmware_add_image_full(FU_FIRMWARE(self), entry, error))
+		return FALSE;
 	if (!fu_firmware_parse(entry, fw, FWUPD_INSTALL_FLAG_NONE, error))
 		return FALSE;
 	return TRUE;
@@ -187,6 +188,7 @@ fu_csv_firmware_init(FuCsvFirmware *self)
 	FuCsvFirmwarePrivate *priv = GET_PRIVATE(self);
 	priv->column_ids = g_ptr_array_new_with_free_func(g_free);
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_NO_AUTO_DETECTION);
+	fu_firmware_set_images_max(FU_FIRMWARE(self), 10000);
 	g_type_ensure(FU_TYPE_CSV_ENTRY);
 }
 
