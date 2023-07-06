@@ -142,12 +142,18 @@ fu_csv_firmware_parse(FuFirmware *firmware,
 		      GError **error)
 {
 	FuCsvFirmware *self = FU_CSV_FIRMWARE(firmware);
-	return fu_strsplit_full((const gchar *)g_bytes_get_data(fw, NULL),
-				g_bytes_get_size(fw),
-				"\n",
-				fu_csv_firmware_parse_line_cb,
-				self,
-				error);
+	gsize bufsz = 0;
+	const gchar *buf = (const gchar *)g_bytes_get_data(fw, &bufsz);
+
+	/* sanity check */
+	if (!g_utf8_validate_len(buf, bufsz, NULL)) {
+		g_set_error_literal(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_INVALID_DATA,
+				    "text must be UTF-8");
+		return FALSE;
+	}
+	return fu_strsplit_full(buf, bufsz, "\n", fu_csv_firmware_parse_line_cb, self, error);
 }
 
 static GByteArray *
