@@ -88,21 +88,42 @@ fu_cfu_module_prepare_firmware(FuDevice *device,
 			       GError **error)
 {
 	g_autoptr(FuFirmware) firmware = fu_firmware_new();
+	g_autoptr(FuFirmware) firmware_archive = fu_archive_firmware_new();
+	g_autoptr(FuFirmware) fw_offer = NULL;
+	g_autoptr(FuFirmware) fw_payload = NULL;
 	g_autoptr(FuFirmware) offer = fu_cfu_offer_new();
 	g_autoptr(FuFirmware) payload = fu_cfu_payload_new();
-	g_autoptr(GBytes) fw_offset = NULL;
+	g_autoptr(GBytes) blob_offer = NULL;
+	g_autoptr(GBytes) blob_payload = NULL;
+
+	/* parse archive */
+	if (!fu_firmware_parse(firmware_archive, fw, flags, error))
+		return NULL;
 
 	/* offer */
-	if (!fu_firmware_parse(offer, fw, flags, error))
+	fw_offer = fu_archive_firmware_get_image_fnmatch(FU_ARCHIVE_FIRMWARE(firmware_archive),
+							 "*.offer.bin",
+							 error);
+	if (fw_offer == NULL)
+		return NULL;
+	blob_offer = fu_firmware_get_bytes(fw_offer, NULL);
+	if (blob_offer == NULL)
+		return NULL;
+	if (!fu_firmware_parse(offer, blob_offer, flags, error))
 		return NULL;
 	fu_firmware_set_id(offer, FU_FIRMWARE_ID_HEADER);
 	fu_firmware_add_image(firmware, offer);
 
 	/* payload */
-	fw_offset = fu_bytes_new_offset(fw, 0x10, g_bytes_get_size(fw) - 0x10, error);
-	if (fw_offset == NULL)
+	fw_payload = fu_archive_firmware_get_image_fnmatch(FU_ARCHIVE_FIRMWARE(firmware_archive),
+							   "*.payload.bin",
+							   error);
+	if (fw_payload == NULL)
 		return NULL;
-	if (!fu_firmware_parse(payload, fw_offset, flags, error))
+	blob_payload = fu_firmware_get_bytes(fw_payload, NULL);
+	if (blob_payload == NULL)
+		return NULL;
+	if (!fu_firmware_parse(payload, blob_payload, flags, error))
 		return NULL;
 	fu_firmware_set_id(payload, FU_FIRMWARE_ID_PAYLOAD);
 	fu_firmware_add_image(firmware, payload);
@@ -119,12 +140,7 @@ fu_cfu_module_write_firmware(FuDevice *device,
 			     GError **error)
 {
 	FuDevice *proxy;
-	g_autoptr(GBytes) fw = NULL;
-
-	/* get the whole image */
-	fw = fu_firmware_get_bytes(firmware, error);
-	if (fw == NULL)
-		return FALSE;
+	FuDeviceClass *klass_proxy;
 
 	/* process by the parent */
 	proxy = fu_device_get_proxy(device);
@@ -135,7 +151,8 @@ fu_cfu_module_write_firmware(FuDevice *device,
 			    "no proxy device assigned");
 		return FALSE;
 	}
-	return fu_device_write_firmware(proxy, fw, progress, flags, error);
+	klass_proxy = FU_DEVICE_GET_CLASS(proxy);
+	return klass_proxy->write_firmware(proxy, firmware, progress, flags, error);
 }
 
 static void
@@ -153,10 +170,12 @@ static void
 fu_cfu_module_init(FuCfuModule *self)
 {
 	fu_device_add_protocol(FU_DEVICE(self), "com.microsoft.cfu");
-	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_QUAD);
+	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_SURFACE);
+	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_ARCHIVE_FIRMWARE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_MD_SET_SIGNED);
+	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_USE_PARENT_FOR_OPEN);
 }
 
 static void
