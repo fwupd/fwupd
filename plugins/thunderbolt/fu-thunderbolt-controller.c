@@ -131,7 +131,7 @@ fu_thunderbolt_controller_read_status_block(FuThunderboltController *self, GErro
 					       G_TYPE_INVALID);
 	if (firmware == NULL)
 		return FALSE;
-	if (FU_IS_INTEL_THUNDERBOLT_FIRMWARE(firmware)) {
+	if (FU_IS_INTEL_THUNDERBOLT_NVM(firmware)) {
 		self->is_native =
 		    fu_intel_thunderbolt_nvm_is_native(FU_INTEL_THUNDERBOLT_NVM(firmware));
 	}
