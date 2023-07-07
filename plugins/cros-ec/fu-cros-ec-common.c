@@ -13,7 +13,8 @@
 gboolean
 fu_cros_ec_parse_version(const gchar *version_raw, struct cros_ec_version *version, GError **error)
 {
-	g_auto(GStrv) v_split = NULL;
+	gchar *ver = NULL;
+	g_autofree gchar *board = g_strdup(version_raw);
 	g_auto(GStrv) marker_split = NULL;
 	g_auto(GStrv) triplet_split = NULL;
 
@@ -26,21 +27,23 @@ fu_cros_ec_parse_version(const gchar *version_raw, struct cros_ec_version *versi
 	}
 
 	/* sample version string: cheese_v1.1.1755-4da9520 */
-	v_split = g_strsplit(version_raw, "_v", 2);
-	if (g_strv_length(v_split) < 2) {
+	ver = g_strrstr(board, "_v");
+	if (ver == NULL) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INTERNAL,
 				    "version marker not found");
 		return FALSE;
 	}
-	marker_split = g_strsplit_set(v_split[1], "-+", 2);
+	*ver = '\0';
+	ver += 2;
+	marker_split = g_strsplit_set(ver, "-+", 2);
 	if (g_strv_length(marker_split) < 2) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
 			    "hash marker not found: %s",
-			    v_split[1]);
+			    ver);
 		return FALSE;
 	}
 	triplet_split = g_strsplit_set(marker_split[0], ".", 3);
@@ -53,7 +56,7 @@ fu_cros_ec_parse_version(const gchar *version_raw, struct cros_ec_version *versi
 		return FALSE;
 	}
 	(void)g_strlcpy(version->triplet, marker_split[0], 32);
-	if (g_strlcpy(version->boardname, v_split[0], 32) == 0) {
+	if (g_strlcpy(version->boardname, board, 32) == 0) {
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "empty board name");
 		return FALSE;
 	}
@@ -61,7 +64,7 @@ fu_cros_ec_parse_version(const gchar *version_raw, struct cros_ec_version *versi
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "empty SHA");
 		return FALSE;
 	}
-	version->dirty = (g_strrstr(v_split[1], "+") != NULL);
+	version->dirty = (g_strrstr(ver, "+") != NULL);
 
 	return TRUE;
 }
