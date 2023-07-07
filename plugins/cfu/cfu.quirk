@@ -1,2 +1,12 @@
 [USB\VID_273F&PID_100A]
 Plugin = cfu
+
+# Microsoft USB-C Travel Hub
+[USB\VID_045E&PID_09BC]
+Plugin = cfu
+Vendor = Microsoft
+CfuVersionGetReport = 0xC8
+CfuOfferSetReport = 0xDC
+CfuOfferGetReport = 0xD8
+CfuContentSetReport = 0xC7
+CfuContentGetReport = 0xCC

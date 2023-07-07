@@ -17,6 +17,7 @@ struct CfuGetVersionRspComponent {
     _vendor_specific: u16le,
 }
 
+#[derive(ToString)]
 #[repr(u8)]
 enum CfuOfferInfoCode {
     StartEntireTransaction = 0x00,
@@ -70,6 +71,8 @@ struct CfuOfferRsp {
 
 #[repr(u8)]
 enum CfuContentFlag {
+    Verify = 0x08,
+    TestReplaceFilesystem = 0x20,
     LastBlock = 0x40,
     FirstBlock = 0x80,
 }
@@ -99,7 +102,7 @@ struct CfuContentReq {
     address: u32le,
 }
 
-#[derive(New, Getters)]
+#[derive(Parse)]
 struct CfuContentRsp {
     seq_number: u16le,
     _reserved1: u16le,
