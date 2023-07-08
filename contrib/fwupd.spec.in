@@ -337,9 +337,7 @@ done
 %{_libexecdir}/fwupd/fwupd-detect-cet
 %endif
 %{_libexecdir}/fwupd/fwupdoffline
-%if 0%{?have_uefi}
 %{_bindir}/dbxtool
-%endif
 %{_bindir}/fwupdmgr
 %{_bindir}/fwupdtool
 %dir %{_sysconfdir}/fwupd
@@ -372,9 +370,7 @@ done
 %{_datadir}/polkit-1/rules.d/org.freedesktop.fwupd.rules
 %{_datadir}/dbus-1/system-services/org.freedesktop.fwupd.service
 %{_mandir}/man1/fwupdtool.1*
-%if 0%{?have_uefi}
 %{_mandir}/man1/dbxtool.*
-%endif
 %{_mandir}/man1/fwupdmgr.1*
 %{_mandir}/man5/*
 %{_datadir}/metainfo/org.freedesktop.fwupd.metainfo.xml
