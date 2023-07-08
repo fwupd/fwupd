@@ -316,7 +316,7 @@ main(int argc, char *argv[])
 			g_printerr("failed: %s\n", error_local->message);
 			return EXIT_FAILURE;
 		}
-		str = fu_utf16_to_utf8_bytes(buf, &error_local);
+		str = fu_utf16_to_utf8_bytes(buf, G_LITTLE_ENDIAN, &error_local);
 		if (str == NULL) {
 			g_printerr("failed: %s\n", error_local->message);
 			return EXIT_FAILURE;

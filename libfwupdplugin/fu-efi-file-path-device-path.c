@@ -49,7 +49,7 @@ fu_efi_file_path_device_path_get_name(FuEfiFilePathDevicePath *self, GError **er
 	blob = fu_firmware_get_bytes(FU_FIRMWARE(self), error);
 	if (blob == NULL)
 		return NULL;
-	name = fu_utf16_to_utf8_bytes(blob, error);
+	name = fu_utf16_to_utf8_bytes(blob, G_LITTLE_ENDIAN, error);
 	if (name == NULL)
 		return NULL;
 	g_strdelimit(name, "\\", '/');
@@ -81,7 +81,10 @@ fu_efi_file_path_device_path_set_name(FuEfiFilePathDevicePath *self,
 		g_autofree gchar *name_bs = g_strdup(name);
 		g_autoptr(GByteArray) buf = NULL;
 		g_strdelimit(name_bs, "/", '\\');
-		buf = fu_utf8_to_utf16_byte_array(name_bs, FU_UTF_CONVERT_FLAG_APPEND_NUL, error);
+		buf = fu_utf8_to_utf16_byte_array(name_bs,
+						  G_LITTLE_ENDIAN,
+						  FU_UTF_CONVERT_FLAG_APPEND_NUL,
+						  error);
 		if (buf == NULL)
 			return FALSE;
 		blob = g_bytes_new(buf->data, buf->len);

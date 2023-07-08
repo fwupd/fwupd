@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <gio/gio.h>
+#include "fu-common.h"
 
 void
 fu_string_append(GString *str, guint idt, const gchar *key, const gchar *value);
@@ -68,10 +68,16 @@ typedef enum {
 } FuUtfConvertFlags;
 
 gchar *
-fu_utf16_to_utf8_byte_array(GByteArray *array, GError **error);
+fu_utf16_to_utf8_byte_array(GByteArray *array, FuEndianType endian, GError **error);
 GByteArray *
-fu_utf8_to_utf16_byte_array(const gchar *str, FuUtfConvertFlags flags, GError **error);
+fu_utf8_to_utf16_byte_array(const gchar *str,
+			    FuEndianType endian,
+			    FuUtfConvertFlags flags,
+			    GError **error);
 gchar *
-fu_utf16_to_utf8_bytes(GBytes *bytes, GError **error);
+fu_utf16_to_utf8_bytes(GBytes *bytes, FuEndianType endian, GError **error);
 GBytes *
-fu_utf8_to_utf16_bytes(const gchar *str, FuUtfConvertFlags flags, GError **error);
+fu_utf8_to_utf16_bytes(const gchar *str,
+		       FuEndianType endian,
+		       FuUtfConvertFlags flags,
+		       GError **error);

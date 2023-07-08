@@ -355,7 +355,10 @@ fu_string_utf16_func(void)
 	g_autoptr(GByteArray) buf = NULL;
 	g_autoptr(GError) error = NULL;
 
-	buf = fu_utf8_to_utf16_byte_array("hello world", FU_UTF_CONVERT_FLAG_APPEND_NUL, &error);
+	buf = fu_utf8_to_utf16_byte_array("hello world",
+					  G_LITTLE_ENDIAN,
+					  FU_UTF_CONVERT_FLAG_APPEND_NUL,
+					  &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(buf);
 	g_assert_cmpint(buf->len, ==, 24);
@@ -363,13 +366,13 @@ fu_string_utf16_func(void)
 	g_assert_cmpint(buf->data[1], ==, '\0');
 	g_assert_cmpint(buf->data[2], ==, 'e');
 	g_assert_cmpint(buf->data[3], ==, '\0');
-	str1 = fu_utf16_to_utf8_byte_array(buf, &error);
+	str1 = fu_utf16_to_utf8_byte_array(buf, G_LITTLE_ENDIAN, &error);
 	g_assert_no_error(error);
 	g_assert_cmpstr(str1, ==, "hello world");
 
 	/* failure */
 	g_byte_array_set_size(buf, buf->len - 1);
-	str2 = fu_utf16_to_utf8_byte_array(buf, &error);
+	str2 = fu_utf16_to_utf8_byte_array(buf, G_LITTLE_ENDIAN, &error);
 	g_assert_error(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA);
 	g_assert_cmpstr(str2, ==, NULL);
 }

@@ -93,7 +93,7 @@ fu_uefi_cod_device_get_variable_idx(const gchar *name, guint *value, GError **er
 	buf = fu_efivar_get_data_bytes(FU_EFIVAR_GUID_EFI_CAPSULE_REPORT, name, NULL, error);
 	if (buf == NULL)
 		return FALSE;
-	str = fu_utf16_to_utf8_bytes(buf, error);
+	str = fu_utf16_to_utf8_bytes(buf, G_LITTLE_ENDIAN, error);
 	if (str == NULL)
 		return FALSE;
 	if (!g_str_has_prefix(str, "Capsule")) {
