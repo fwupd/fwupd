@@ -8,6 +8,8 @@
 
 #include "config.h"
 
+#include "fu-byte-array.h"
+#include "fu-mem.h"
 #include "fu-string.h"
 
 /**
@@ -501,6 +503,7 @@ fu_strjoin(const gchar *separator, GPtrArray *array)
 /**
  * fu_utf16_to_utf8_byte_array:
  * @array: a #GByteArray
+ * @endian: an endian type, e.g. %G_LITTLE_ENDIAN
  * @error: (nullable): optional return location for an error
  *
  * Converts a UTF-16 buffer to a UTF-8 string.
@@ -510,7 +513,7 @@ fu_strjoin(const gchar *separator, GPtrArray *array)
  * Since: 1.9.3
  **/
 gchar *
-fu_utf16_to_utf8_byte_array(GByteArray *array, GError **error)
+fu_utf16_to_utf8_byte_array(GByteArray *array, FuEndianType endian, GError **error)
 {
 	g_autofree guint16 *buf16 = NULL;
 
@@ -525,13 +528,17 @@ fu_utf16_to_utf8_byte_array(GByteArray *array, GError **error)
 		return NULL;
 	}
 	buf16 = g_new0(guint16, (array->len / sizeof(guint16)) + 1);
-	memcpy(buf16, array->data, array->len);
+	for (guint i = 0; i < array->len / 2; i++) {
+		guint16 data = fu_memread_uint16(array->data + (i * 2), endian);
+		fu_memwrite_uint16((guint8 *)(buf16 + i), data, G_BYTE_ORDER);
+	}
 	return g_utf16_to_utf8(buf16, array->len / sizeof(guint16), NULL, NULL, error);
 }
 
 /**
  * fu_utf8_to_utf16_byte_array:
  * @str: a UTF-8 string
+ * @endian: an endian type, e.g. %G_LITTLE_ENDIAN
  * @flags: a FuUtfConvertFlags, e.g. %FU_UTF_CONVERT_FLAG_APPEND_NUL
  * @error: (nullable): optional return location for an error
  *
@@ -542,7 +549,10 @@ fu_utf16_to_utf8_byte_array(GByteArray *array, GError **error)
  * Since: 1.9.3
  **/
 GByteArray *
-fu_utf8_to_utf16_byte_array(const gchar *str, FuUtfConvertFlags flags, GError **error)
+fu_utf8_to_utf16_byte_array(const gchar *str,
+			    FuEndianType endian,
+			    FuUtfConvertFlags flags,
+			    GError **error)
 {
 	glong buf_utf16sz = 0;
 	g_autoptr(GByteArray) array = g_byte_array_new();
@@ -556,14 +566,17 @@ fu_utf8_to_utf16_byte_array(const gchar *str, FuUtfConvertFlags flags, GError **
 		return NULL;
 	if (flags & FU_UTF_CONVERT_FLAG_APPEND_NUL)
 		buf_utf16sz += 1;
-	g_byte_array_append(array, (guint8 *)buf_utf16, buf_utf16sz * 2);
-
+	for (guint i = 0; i < buf_utf16sz; i++) {
+		guint16 data = fu_memread_uint16((guint8 *)(buf_utf16 + i), G_BYTE_ORDER);
+		fu_byte_array_append_uint16(array, data, endian);
+	}
 	return g_steal_pointer(&array);
 }
 
 /**
  * fu_utf16_to_utf8_bytes:
  * @bytes: a #GBytes
+ * @endian: an endian type, e.g. %G_LITTLE_ENDIAN
  * @error: (nullable): optional return location for an error
  *
  * Converts a UTF-16 buffer to a UTF-8 string.
@@ -573,28 +586,22 @@ fu_utf8_to_utf16_byte_array(const gchar *str, FuUtfConvertFlags flags, GError **
  * Since: 1.9.3
  **/
 gchar *
-fu_utf16_to_utf8_bytes(GBytes *bytes, GError **error)
+fu_utf16_to_utf8_bytes(GBytes *bytes, FuEndianType endian, GError **error)
 {
-	g_autofree guint16 *buf16 = NULL;
+	GByteArray array = {0x0};
 
 	g_return_val_if_fail(bytes != NULL, NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
-	if (g_bytes_get_size(bytes) % 2 != 0) {
-		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
-				    "invalid UTF-16 buffer length");
-		return NULL;
-	}
-	buf16 = g_new0(guint16, (g_bytes_get_size(bytes) / sizeof(guint16)) + 1);
-	memcpy(buf16, g_bytes_get_data(bytes, NULL), g_bytes_get_size(bytes));
-	return g_utf16_to_utf8(buf16, g_bytes_get_size(bytes) / sizeof(guint16), NULL, NULL, error);
+	array.data = (guint8 *)g_bytes_get_data(bytes, NULL);
+	array.len = g_bytes_get_size(bytes);
+	return fu_utf16_to_utf8_byte_array(&array, endian, error);
 }
 
 /**
  * fu_utf8_to_utf16_bytes:
  * @str: a UTF-8 string
+ * @endian: an endian type, e.g. %G_LITTLE_ENDIAN
  * @error: (nullable): optional return location for an error
  *
  * Converts UTF-8 string to a buffer of UTF-16, optionally including the trailing NULw.
@@ -604,18 +611,18 @@ fu_utf16_to_utf8_bytes(GBytes *bytes, GError **error)
  * Since: 1.9.3
  **/
 GBytes *
-fu_utf8_to_utf16_bytes(const gchar *str, FuUtfConvertFlags flags, GError **error)
+fu_utf8_to_utf16_bytes(const gchar *str,
+		       FuEndianType endian,
+		       FuUtfConvertFlags flags,
+		       GError **error)
 {
-	glong buf_utf16sz = 0;
-	g_autofree gunichar2 *buf_utf16 = NULL;
+	g_autoptr(GByteArray) buf = NULL;
 
 	g_return_val_if_fail(str != NULL, NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
-	buf_utf16 = g_utf8_to_utf16(str, (glong)-1, NULL, &buf_utf16sz, error);
-	if (buf_utf16 == NULL)
+	buf = fu_utf8_to_utf16_byte_array(str, endian, flags, error);
+	if (buf == NULL)
 		return NULL;
-	if (flags & FU_UTF_CONVERT_FLAG_APPEND_NUL)
-		buf_utf16sz += 1;
-	return g_bytes_new_take(g_steal_pointer(&buf_utf16), buf_utf16sz * 2);
+	return g_bytes_new(buf->data, buf->len);
 }

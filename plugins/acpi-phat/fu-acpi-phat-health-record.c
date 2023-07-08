@@ -90,7 +90,7 @@ fu_acpi_phat_health_record_parse(FuFirmware *firmware,
 		ubuf = fu_bytes_new_offset(fw, 28, ubufsz, error);
 		if (ubuf == NULL)
 			return FALSE;
-		self->device_path = fu_utf16_to_utf8_bytes(ubuf, error);
+		self->device_path = fu_utf16_to_utf8_bytes(ubuf, G_LITTLE_ENDIAN, error);
 		if (self->device_path == NULL)
 			return FALSE;
 	}
@@ -107,8 +107,10 @@ fu_acpi_phat_health_record_write(FuFirmware *firmware, GError **error)
 
 	/* convert device path ahead of time */
 	if (self->device_path != NULL) {
-		g_autoptr(GByteArray) buf =
-		    fu_utf8_to_utf16_byte_array(self->device_path, FU_UTF_CONVERT_FLAG_NONE, error);
+		g_autoptr(GByteArray) buf = fu_utf8_to_utf16_byte_array(self->device_path,
+									G_LITTLE_ENDIAN,
+									FU_UTF_CONVERT_FLAG_NONE,
+									error);
 		if (buf == NULL)
 			return NULL;
 		g_byte_array_append(st, buf->data, buf->len);

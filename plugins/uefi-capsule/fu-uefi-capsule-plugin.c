@@ -81,7 +81,7 @@ fu_uefi_capsule_plugin_fwupd_efi_parse(FuUefiCapsulePlugin *self, GError **error
 		return FALSE;
 
 	/* convert to UTF-8 */
-	version = fu_utf16_to_utf8_bytes(ubuf, error);
+	version = fu_utf16_to_utf8_bytes(ubuf, G_LITTLE_ENDIAN, error);
 	if (version == NULL) {
 		g_prefix_error(error, "converting %s: ", fn);
 		return FALSE;

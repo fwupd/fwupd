@@ -90,7 +90,10 @@ fu_efi_load_option_set_optional_path(FuEfiLoadOption *self,
 	/* is required if a path */
 	if (!g_str_has_prefix(str->str, "\\"))
 		g_string_prepend(str, "\\");
-	opt_blob = fu_utf8_to_utf16_bytes(str->str, FU_UTF_CONVERT_FLAG_APPEND_NUL, error);
+	opt_blob = fu_utf8_to_utf16_bytes(str->str,
+					  G_LITTLE_ENDIAN,
+					  FU_UTF_CONVERT_FLAG_APPEND_NUL,
+					  error);
 	if (opt_blob == NULL)
 		return FALSE;
 	fu_efi_load_option_set_optional_data(self, opt_blob);
@@ -138,7 +141,7 @@ fu_efi_load_option_parse(FuFirmware *firmware,
 			break;
 		fu_byte_array_append_uint16(buf_utf16, tmp, G_LITTLE_ENDIAN);
 	}
-	id = fu_utf16_to_utf8_byte_array(buf_utf16, error);
+	id = fu_utf16_to_utf8_byte_array(buf_utf16, G_LITTLE_ENDIAN, error);
 	if (id == NULL)
 		return FALSE;
 	fu_firmware_set_id(firmware, id);
@@ -183,6 +186,7 @@ fu_efi_load_option_write(FuFirmware *firmware, GError **error)
 		return NULL;
 	}
 	buf_utf16 = fu_utf8_to_utf16_byte_array(fu_firmware_get_id(firmware),
+						G_LITTLE_ENDIAN,
 						FU_UTF_CONVERT_FLAG_APPEND_NUL,
 						error);
 	if (buf_utf16 == NULL)

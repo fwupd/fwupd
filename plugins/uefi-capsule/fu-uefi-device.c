@@ -577,7 +577,7 @@ fu_uefi_device_capture_efi_debugging(FuDevice *device)
 	}
 
 	/* convert from UCS-2 to UTF-8 */
-	str = fu_utf16_to_utf8_bytes(buf, &error_local);
+	str = fu_utf16_to_utf8_bytes(buf, G_LITTLE_ENDIAN, &error_local);
 	if (str == NULL) {
 		fu_device_set_update_error(device, error_local->message);
 		return;
