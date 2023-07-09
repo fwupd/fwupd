@@ -33,6 +33,17 @@
     <binary>fwupdtool</binary>
   </provides>
   <releases>
+    <release version="1.8.17" date="2023-07-09">
+      <description>
+        <p>This stable release fixes the following bugs:</p>
+        <ul>
+          <li>Correctly obtain the Thunderbolt is_native controller attribute</li>
+          <li>Fix a Wacom emulation failure on s390x</li>
+          <li>Only allow --force on security attributes for unsupported builds</li>
+          <li>Reduce the amount of RSS by ~12% at startup</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.8.16" date="2023-06-09">
       <description>
         <p>This stable release fixes the following bugs:</p>
