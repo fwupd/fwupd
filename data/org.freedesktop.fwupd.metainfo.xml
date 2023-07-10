@@ -43,7 +43,7 @@
           <li>Allow devices to only accept explicitly specified release versions</li>
           <li>Allow filtering by release flags from fwupdtool and fwupdmgr</li>
           <li>Allow filtering by remote when looking for trusted reports</li>
-          <li>Drop the libefiboot dependency</li>
+          <li>Drop the libefiboot dependency and generate UEFI DPs directly</li>
           <li>Ensure that BootService-only variables cannot be read in runtime mode</li>
           <li>Parse the various SBAT sections from PE firmware</li>
           <li>Record the NVRAM space used as report metadata</li>
@@ -53,9 +53,11 @@
         </ul>
         <p>This release fixes the following bugs:</p>
         <ul>
-          <li>Check only the EFI executables from boot menu when using --force</li>
+          <li>Check only the EFI executables from the boot menu when using --force</li>
+          <li>Correctly obtain the Thunderbolt is_native controller attribute</li>
           <li>Deduplicate the remotes as required</li>
           <li>Do not accidentally depend on python 3.9</li>
+          <li>Do not misuse the offset as an address in the SREC parser</li>
           <li>Do not truncate feature reports to fix Wacom ID6 update</li>
           <li>Fix parsing of IGSC code firmware</li>
           <li>Get the Jabra GNP device name from the device</li>
@@ -67,11 +69,12 @@
         <p>This release adds support for the following hardware:</p>
         <ul>
           <li>Belkin Thunderbolt 4 Core Hub dock</li>
-          <li>CE-LINK TB4-Dock01</li>
+          <li>CE-LINK TB4 Docks</li>
           <li>Genesys GL32XX SD readers</li>
           <li>Genesys GL352350 USB 3.1 hub</li>
           <li>Nordic HID devices without DFU support</li>
           <li>TUXEDO InfinityBook Pro 13 v3</li>
+          <li>Wacom tablets with ID9 Bluetooth chipsets</li>
         </ul>
       </description>
     </release>
