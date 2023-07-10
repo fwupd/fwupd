@@ -207,6 +207,7 @@ fu_uefi_pk_device_add_security_attrs(FuDevice *device, FuSecurityAttrs *attrs)
 
 	/* create attr */
 	attr = fu_device_security_attr_new(device, FWUPD_SECURITY_ATTR_ID_UEFI_PK);
+	fwupd_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_VALID);
 	fu_security_attrs_append(attrs, attr);
 
 	/* test key is not secure */
@@ -219,7 +220,6 @@ fu_uefi_pk_device_add_security_attrs(FuDevice *device, FuSecurityAttrs *attrs)
 
 	/* success */
 	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
-	fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_VALID);
 }
 
 static void

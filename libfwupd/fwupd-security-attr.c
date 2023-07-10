@@ -37,6 +37,7 @@ typedef struct {
 	FwupdSecurityAttrLevel level;
 	FwupdSecurityAttrResult result;
 	FwupdSecurityAttrResult result_fallback;
+	FwupdSecurityAttrResult result_success;
 	FwupdSecurityAttrFlags flags;
 	gchar *bios_setting_id;
 	gchar *bios_setting_target_value;
@@ -826,6 +827,21 @@ fwupd_security_attr_set_flags(FwupdSecurityAttr *self, FwupdSecurityAttrFlags fl
 	priv->flags = flags;
 }
 
+/* copy over the success result if not already set */
+static void
+fwupd_security_attr_ensure_result(FwupdSecurityAttr *self)
+{
+	FwupdSecurityAttrPrivate *priv = GET_PRIVATE(self);
+	if (fwupd_security_attr_has_flag(self, FWUPD_SECURITY_ATTR_FLAG_SUCCESS) &&
+	    priv->result == FWUPD_SECURITY_ATTR_RESULT_UNKNOWN &&
+	    priv->result_success != FWUPD_SECURITY_ATTR_RESULT_UNKNOWN) {
+		g_debug("auto-setting %s result %s",
+			priv->appstream_id,
+			fwupd_security_attr_result_to_string(priv->result_success));
+		priv->result = priv->result_success;
+	}
+}
+
 /**
  * fwupd_security_attr_add_flag:
  * @self: a #FwupdSecurityAttr
@@ -841,6 +857,7 @@ fwupd_security_attr_add_flag(FwupdSecurityAttr *self, FwupdSecurityAttrFlags fla
 	FwupdSecurityAttrPrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FWUPD_IS_SECURITY_ATTR(self));
 	priv->flags |= flag;
+	fwupd_security_attr_ensure_result(self);
 }
 
 /**
@@ -995,6 +1012,42 @@ fwupd_security_attr_get_result_fallback(FwupdSecurityAttr *self)
 }
 
 /**
+ * fwupd_security_attr_set_result_success:
+ * @self: a #FwupdSecurityAttr
+ * @result: a security attribute, e.g. %FWUPD_SECURITY_ATTR_LEVEL_LOCKED
+ *
+ * Sets the desired HSI result.
+ *
+ * Since: 1.9.3
+ **/
+void
+fwupd_security_attr_set_result_success(FwupdSecurityAttr *self, FwupdSecurityAttrResult result)
+{
+	FwupdSecurityAttrPrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FWUPD_IS_SECURITY_ATTR(self));
+	priv->result_success = result;
+	fwupd_security_attr_ensure_result(self);
+}
+
+/**
+ * fwupd_security_attr_get_result_success:
+ * @self: a #FwupdSecurityAttr
+ *
+ * Gets the desired HSI result.
+ *
+ * Returns: the #FwupdSecurityAttrResult, e.g %FWUPD_SECURITY_ATTR_LEVEL_LOCKED
+ *
+ * Since: 1.9.3
+ **/
+FwupdSecurityAttrResult
+fwupd_security_attr_get_result_success(FwupdSecurityAttr *self)
+{
+	FwupdSecurityAttrPrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_SECURITY_ATTR(self), 0);
+	return priv->result_success;
+}
+
+/**
  * fwupd_security_attr_to_variant:
  * @self: a #FwupdSecurityAttr
  *
@@ -1096,6 +1149,12 @@ fwupd_security_attr_to_variant(FwupdSecurityAttr *self)
 				      "{sv}",
 				      FWUPD_RESULT_KEY_HSI_RESULT_FALLBACK,
 				      g_variant_new_uint32(priv->result_fallback));
+	}
+	if (priv->result_success != FWUPD_SECURITY_ATTR_RESULT_UNKNOWN) {
+		g_variant_builder_add(&builder,
+				      "{sv}",
+				      FWUPD_RESULT_KEY_HSI_RESULT_SUCCESS,
+				      g_variant_new_uint32(priv->result_success));
 	}
 	if (priv->metadata != NULL) {
 		g_variant_builder_add(&builder,
@@ -1219,6 +1278,10 @@ fwupd_security_attr_from_key_value(FwupdSecurityAttr *self, const gchar *key, GV
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_HSI_RESULT_FALLBACK) == 0) {
 		fwupd_security_attr_set_result_fallback(self, g_variant_get_uint32(value));
+		return;
+	}
+	if (g_strcmp0(key, FWUPD_RESULT_KEY_HSI_RESULT_SUCCESS) == 0) {
+		fwupd_security_attr_set_result_success(self, g_variant_get_uint32(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_GUID) == 0) {
@@ -1366,6 +1429,14 @@ fwupd_security_attr_from_json(FwupdSecurityAttr *self, JsonNode *json_node, GErr
 		    self,
 		    fwupd_security_attr_result_from_string(tmp));
 	}
+	if (json_object_has_member(obj, FWUPD_RESULT_KEY_HSI_RESULT_SUCCESS)) {
+		const gchar *tmp =
+		    json_object_get_string_member_with_default(obj,
+							       FWUPD_RESULT_KEY_HSI_RESULT_SUCCESS,
+							       NULL);
+		fwupd_security_attr_set_result_success(self,
+						       fwupd_security_attr_result_from_string(tmp));
+	}
 	if (json_object_has_member(obj, FWUPD_RESULT_KEY_FLAGS)) {
 		JsonArray *array = json_object_get_array_member(obj, FWUPD_RESULT_KEY_FLAGS);
 		for (guint i = 0; i < json_array_get_length(array); i++) {
@@ -1414,6 +1485,9 @@ fwupd_security_attr_to_json(FwupdSecurityAttr *self, JsonBuilder *builder)
 	fwupd_common_json_add_string(builder,
 				     FWUPD_RESULT_KEY_HSI_RESULT_FALLBACK,
 				     fwupd_security_attr_result_to_string(priv->result_fallback));
+	fwupd_common_json_add_string(builder,
+				     FWUPD_RESULT_KEY_HSI_RESULT_SUCCESS,
+				     fwupd_security_attr_result_to_string(priv->result_success));
 	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_NAME, priv->name);
 	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_SUMMARY, priv->title);
 	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_DESCRIPTION, priv->description);
@@ -1489,6 +1563,9 @@ fwupd_security_attr_to_string(FwupdSecurityAttr *self)
 	fwupd_pad_kv_str(str,
 			 FWUPD_RESULT_KEY_HSI_RESULT_FALLBACK,
 			 fwupd_security_attr_result_to_string(priv->result_fallback));
+	fwupd_pad_kv_str(str,
+			 FWUPD_RESULT_KEY_HSI_RESULT_SUCCESS,
+			 fwupd_security_attr_result_to_string(priv->result_success));
 	if (priv->flags != FWUPD_SECURITY_ATTR_FLAG_NONE)
 		fwupd_pad_kv_tfl(str, FWUPD_RESULT_KEY_FLAGS, priv->flags);
 	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_NAME, priv->name);

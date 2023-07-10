@@ -111,6 +111,7 @@ fu_intel_me_mca_device_add_security_attrs(FuDevice *device, FuSecurityAttrs *att
 	/* create attr */
 	attr =
 	    fu_device_security_attr_new(FU_DEVICE(self), FWUPD_SECURITY_ATTR_ID_MEI_KEY_MANIFEST);
+	fwupd_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_VALID);
 	fu_security_attrs_append(attrs, attr);
 
 	/* verify keys */
@@ -125,7 +126,6 @@ fu_intel_me_mca_device_add_security_attrs(FuDevice *device, FuSecurityAttrs *att
 
 	/* success */
 	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
-	fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_VALID);
 }
 
 static void

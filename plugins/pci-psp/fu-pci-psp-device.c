@@ -73,6 +73,7 @@ fu_pci_psp_device_add_security_attrs_tsme(FuDevice *device,
 	gboolean val;
 
 	attr = fu_device_security_attr_new(device, FWUPD_SECURITY_ATTR_ID_ENCRYPTED_RAM);
+	fwupd_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_ENCRYPTED);
 	fu_security_attrs_append(attrs, attr);
 
 	if (!fu_pci_psp_device_get_attr(attr, path, "tsme_status", &val, &error_local)) {
@@ -89,7 +90,6 @@ fu_pci_psp_device_add_security_attrs_tsme(FuDevice *device,
 		return;
 	}
 
-	fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_ENCRYPTED);
 	fwupd_security_attr_add_obsolete(attr, "msr");
 	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 }
@@ -104,6 +104,7 @@ fu_pci_psp_device_add_security_attrs_fused_part(FuDevice *device,
 	gboolean val;
 
 	attr = fu_device_security_attr_new(device, FWUPD_SECURITY_ATTR_ID_PLATFORM_FUSED);
+	fwupd_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_LOCKED);
 	fu_security_attrs_append(attrs, attr);
 
 	if (!fu_pci_psp_device_get_attr(attr, path, "fused_part", &val, &error_local)) {
@@ -119,7 +120,6 @@ fu_pci_psp_device_add_security_attrs_fused_part(FuDevice *device,
 	}
 
 	/* success */
-	fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_LOCKED);
 	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 }
 
@@ -133,6 +133,7 @@ fu_pci_psp_device_add_security_attrs_debug_locked_part(FuDevice *device,
 	gboolean val;
 
 	attr = fu_device_security_attr_new(device, FWUPD_SECURITY_ATTR_ID_PLATFORM_DEBUG_LOCKED);
+	fwupd_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_LOCKED);
 	fu_security_attrs_append(attrs, attr);
 
 	if (!fu_pci_psp_device_get_attr(attr, path, "debug_lock_on", &val, &error_local)) {
@@ -148,7 +149,6 @@ fu_pci_psp_device_add_security_attrs_debug_locked_part(FuDevice *device,
 	}
 
 	/* success */
-	fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_LOCKED);
 	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 }
 
@@ -162,6 +162,7 @@ fu_pci_psp_device_add_security_attrs_rollback_protection(FuDevice *device,
 	gboolean val;
 
 	attr = fu_device_security_attr_new(device, FWUPD_SECURITY_ATTR_ID_AMD_ROLLBACK_PROTECTION);
+	fwupd_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_ENABLED);
 	fu_security_attrs_append(attrs, attr);
 
 	if (!fu_pci_psp_device_get_attr(attr, path, "anti_rollback_status", &val, &error_local)) {
@@ -177,7 +178,6 @@ fu_pci_psp_device_add_security_attrs_rollback_protection(FuDevice *device,
 		return;
 	}
 
-	fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_ENABLED);
 	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 }
 
@@ -192,6 +192,7 @@ fu_pci_psp_device_add_security_attrs_rom_armor(FuDevice *device,
 
 	/* create attr */
 	attr = fu_device_security_attr_new(device, FWUPD_SECURITY_ATTR_ID_AMD_SPI_WRITE_PROTECTION);
+	fwupd_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_ENABLED);
 	fu_security_attrs_append(attrs, attr);
 
 	if (!fu_pci_psp_device_get_attr(attr, path, "rom_armor_enforced", &val, &error_local)) {
@@ -207,7 +208,6 @@ fu_pci_psp_device_add_security_attrs_rom_armor(FuDevice *device,
 	}
 
 	/* success */
-	fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_ENABLED);
 	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 }
 
@@ -223,6 +223,7 @@ fu_pci_psp_device_add_security_attrs_rpmc(FuDevice *device,
 	/* create attr */
 	attr =
 	    fu_device_security_attr_new(device, FWUPD_SECURITY_ATTR_ID_AMD_SPI_REPLAY_PROTECTION);
+	fwupd_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_ENABLED);
 	fu_security_attrs_append(attrs, attr);
 
 	if (!fu_pci_psp_device_get_attr(attr, path, "rpmc_spirom_available", &val, &error_local)) {
@@ -252,7 +253,6 @@ fu_pci_psp_device_add_security_attrs_rpmc(FuDevice *device,
 	}
 
 	/* success */
-	fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_ENABLED);
 	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 }
 
