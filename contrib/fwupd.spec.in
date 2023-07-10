@@ -373,6 +373,7 @@ done
 %{_mandir}/man1/dbxtool.*
 %{_mandir}/man1/fwupdmgr.1*
 %{_mandir}/man5/*
+%{_mandir}/man8/*
 %{_datadir}/metainfo/org.freedesktop.fwupd.metainfo.xml
 %{_datadir}/icons/hicolor/scalable/apps/org.freedesktop.fwupd.svg
 %{_datadir}/fwupd/firmware_packager.py
