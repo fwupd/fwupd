@@ -82,10 +82,14 @@ def _convert_md_to_man(data: str) -> str:
             if line_tmp.startswith("| "):
                 line_tmp = line_tmp[2:]
             if line_tmp.startswith("  "):
-                line_tmp = line_tmp[2:]
-                sectalign = 8
+                line += ".nf\n"
+                line += line_tmp[2:] + "\n"
+                line += ".fi\n"
+                continue
             elif line_tmp.startswith("* "):
-                sectalign = 8
+                line += ".IP \[bu] 2\n"
+                line += line_tmp[2:]
+                continue
             line_tmp = line_tmp.replace("\\-", "-")
             line += line_tmp
             if line_tmp.endswith("."):
