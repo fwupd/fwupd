@@ -65,6 +65,7 @@ struct FuUtilPrivate {
 	gboolean no_safety_check;
 	gboolean no_device_prompt;
 	gboolean no_emulation_check;
+	gboolean no_security_fix;
 	gboolean assume_yes;
 	gboolean sign;
 	gboolean show_all;
@@ -3867,14 +3868,16 @@ fu_util_security(FuUtilPrivate *priv, gchar **values, GError **error)
 	}
 
 	/* any things we can fix? */
-	for (guint j = 0; j < attrs->len; j++) {
-		FwupdSecurityAttr *attr = g_ptr_array_index(attrs, j);
-		if (!fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS) &&
-		    fwupd_security_attr_get_bios_setting_id(attr) != NULL &&
-		    fwupd_security_attr_get_bios_setting_current_value(attr) != NULL &&
-		    fwupd_security_attr_get_bios_setting_target_value(attr) != NULL) {
-			if (!fu_util_security_modify_bios_setting(priv, attr, error))
-				return FALSE;
+	if (!priv->no_security_fix) {
+		for (guint j = 0; j < attrs->len; j++) {
+			FwupdSecurityAttr *attr = g_ptr_array_index(attrs, j);
+			if (!fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS) &&
+			    fwupd_security_attr_get_bios_setting_id(attr) != NULL &&
+			    fwupd_security_attr_get_bios_setting_current_value(attr) != NULL &&
+			    fwupd_security_attr_get_bios_setting_target_value(attr) != NULL) {
+				if (!fu_util_security_modify_bios_setting(priv, attr, error))
+					return FALSE;
+			}
 		}
 	}
 
@@ -4626,6 +4629,14 @@ main(int argc, char *argv[])
 	     /* TRANSLATORS: command line option */
 	     N_("Output in JSON format"),
 	     NULL},
+	    {"no-security-fix",
+	     '\0',
+	     0,
+	     G_OPTION_ARG_NONE,
+	     &priv->no_security_fix,
+	     /* TRANSLATORS: command line option */
+	     N_("Do not prompt to fix security issues"),
+	     NULL},
 	    {"no-authenticate",
 	     '\0',
 	     0,
@@ -4996,6 +5007,7 @@ main(int argc, char *argv[])
 		priv->no_remote_check = TRUE;
 		priv->no_device_prompt = TRUE;
 		priv->no_emulation_check = TRUE;
+		priv->no_security_fix = TRUE;
 	} else {
 		is_interactive = TRUE;
 	}

@@ -64,6 +64,7 @@ _fwupdmgr_opts=(
 	'--no-reboot-check'
 	'--no-safety-check'
 	'--no-remote-check'
+	'--no-security-fix'
 	'--show-all'
 	'--sign'
 	'--filter'
