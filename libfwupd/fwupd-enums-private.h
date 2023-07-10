@@ -187,6 +187,14 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_RESULT_KEY_HSI_RESULT_FALLBACK "HsiResultFallback"
 /**
+ * FWUPD_RESULT_KEY_HSI_RESULT_SUCCESS:
+ *
+ * Result key to represent the desired HsiResult
+ *
+ * The D-Bus type signature string is 'u' i.e. a unsigned 32 bit integer.
+ **/
+#define FWUPD_RESULT_KEY_HSI_RESULT_SUCCESS "HsiResultSuccess"
+/**
  * FWUPD_RESULT_KEY_INSTALL_DURATION:
  *
  * Result key to represent InstallDuration

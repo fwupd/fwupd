@@ -32,6 +32,7 @@ fu_acpi_ivrs_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 
 	/* create attr */
 	attr = fu_plugin_security_attr_new(plugin, FWUPD_SECURITY_ATTR_ID_PREBOOT_DMA_PROTECTION);
+	fwupd_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_ENABLED);
 	fu_security_attrs_append(attrs, attr);
 
 	/* load IVRS table */
@@ -57,7 +58,6 @@ fu_acpi_ivrs_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 	}
 
 	/* success */
-	fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_ENABLED);
 	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 }
 

@@ -7024,6 +7024,7 @@ fu_engine_ensure_security_attrs_tainted(FuEngine *self)
 	g_autoptr(FwupdSecurityAttr) attr =
 	    fwupd_security_attr_new(FWUPD_SECURITY_ATTR_ID_FWUPD_PLUGINS);
 	fwupd_security_attr_set_plugin(attr, "core");
+	fwupd_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_TAINTED);
 	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ISSUE);
 
 	fu_security_attrs_append(self->host_security_attrs, attr);
@@ -7042,7 +7043,6 @@ fu_engine_ensure_security_attrs_tainted(FuEngine *self)
 
 	/* success */
 	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
-	fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_TAINTED);
 }
 
 /*
@@ -7276,6 +7276,7 @@ fu_engine_ensure_security_attrs(FuEngine *self)
 #ifdef HAVE_HSI
 	GPtrArray *plugins = fu_plugin_list_get_all(self->plugin_list);
 	g_autoptr(GPtrArray) devices = fu_device_list_get_all(self->device_list);
+	g_autoptr(GPtrArray) vals = NULL;
 	g_autoptr(GError) error = NULL;
 
 	/* already valid */
@@ -7298,6 +7299,17 @@ fu_engine_ensure_security_attrs(FuEngine *self)
 	for (guint j = 0; j < plugins->len; j++) {
 		FuPlugin *plugin_tmp = g_ptr_array_index(plugins, j);
 		fu_plugin_runner_add_security_attrs(plugin_tmp, self->host_security_attrs);
+	}
+
+	/* sanity check */
+	vals = fu_security_attrs_get_all(self->host_security_attrs);
+	for (guint i = 0; i < vals->len; i++) {
+		FwupdSecurityAttr *attr = g_ptr_array_index(vals, i);
+		if (fwupd_security_attr_get_result(attr) == FWUPD_SECURITY_ATTR_RESULT_UNKNOWN) {
+			g_critical("HSI attribute %s (from %s) had unknown result",
+				   fwupd_security_attr_get_appstream_id(attr),
+				   fwupd_security_attr_get_plugin(attr));
+		}
 	}
 
 	/* depsolve */

@@ -155,6 +155,10 @@ FwupdSecurityAttrResult
 fwupd_security_attr_get_result_fallback(FwupdSecurityAttr *self);
 void
 fwupd_security_attr_set_result_fallback(FwupdSecurityAttr *self, FwupdSecurityAttrResult result);
+FwupdSecurityAttrResult
+fwupd_security_attr_get_result_success(FwupdSecurityAttr *self);
+void
+fwupd_security_attr_set_result_success(FwupdSecurityAttr *self, FwupdSecurityAttrResult result);
 const gchar *
 fwupd_security_attr_get_name(FwupdSecurityAttr *self);
 void
