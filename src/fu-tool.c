@@ -4180,7 +4180,7 @@ main(int argc, char *argv[])
 	fu_util_cmd_array_add(cmd_array,
 			      "efivar-list",
 			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
-			      _("GUID"),
+			      C_("command-argument", "GUID"),
 			      /* TRANSLATORS: command description */
 			      _("List EFI variables with a specific GUID"),
 			      fu_util_efivar_list);
