@@ -1131,6 +1131,11 @@ msgctxt "A single GUID"
 msgid "GUID"
 msgstr "මාර්ගෝපදේශය"
 
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgctxt "command-argument"
+msgid "GUID"
+msgstr "මාර්ගෝපදේශය"
+
 #. TRANSLATORS: command description
 msgid "Get all device flags supported by fwupd"
 msgstr "fwupd මගින් සහය දක්වන සියලුම උපාංග කොඩි ලබා ගන්න"

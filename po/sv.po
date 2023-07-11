@@ -1217,6 +1217,9 @@ msgstr "Misslyckades med att tolka fil"
 msgid "Failed to parse flags for --filter"
 msgstr "Misslyckades med att tolka --filter-flaggor"
 
+msgid "Failed to parse flags for --filter-release"
+msgstr "Misslyckades med att tolka flaggor för --filter-release"
+
 #. TRANSLATORS: could not parse file
 msgid "Failed to parse local dbx"
 msgstr "Misslyckades med att tolka lokal dbx"
@@ -1261,6 +1264,10 @@ msgstr "Filnamn krävs"
 #. TRANSLATORS: command line option
 msgid "Filter with a set of device flags using a ~ prefix to exclude, e.g. 'internal,~needs-reboot'"
 msgstr "Filtrera via en uppsättning av enhetsflaggor genom att använda ett ~-prefix för att exkludera, t.ex. ”internal,~needs-reboot”"
+
+#. TRANSLATORS: command line option
+msgid "Filter with a set of release flags using a ~ prefix to exclude, e.g. 'trusted-release,~trusted-metadata'"
+msgstr "Filtrera med en uppsättning utgåveflaggor och prefixet ~ för att exkludera, t.ex. 'trusted-release,~trusted-metadata'"
 
 #. TRANSLATORS: Title: if we can verify the firmware checksums
 msgid "Firmware Attestation"
@@ -1405,6 +1412,11 @@ msgstr[1] "GUID"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgctxt "A single GUID"
+msgid "GUID"
+msgstr "GUID"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgctxt "command-argument"
 msgid "GUID"
 msgstr "GUID"
 
@@ -1593,6 +1605,12 @@ msgstr "Installera osignerad fast programvara för systemet"
 msgid "Installing Firmware…"
 msgstr "Installerar fast programvara…"
 
+#. TRANSLATORS: stay on one firmware version unless the new version is
+#. explicitly
+#. * specified
+msgid "Installing a specific release is explicitly required"
+msgstr "Det krävs att explicit installera en specifik utgåva"
+
 #. TRANSLATORS: this is shown when updating the firmware after the reboot
 msgid "Installing firmware update…"
 msgstr "Installerar uppdatering för fast programvara…"
@@ -1719,6 +1737,10 @@ msgid "Invalid arguments"
 msgstr "Ogiltiga argument"
 
 #. TRANSLATORS: error message
+msgid "Invalid arguments, expected GUID"
+msgstr "Ogiltiga argument, GUID förväntades"
+
+#. TRANSLATORS: error message
 msgid "Invalid arguments, expected at least ARCHIVE FIRMWARE METAINFO"
 msgstr "Ogiltiga argument, förväntade åtminstone ARKIV FAST_PROGRAMVARA METAINFO"
 
@@ -1819,6 +1841,10 @@ msgstr "Lockdown för Linux-kärnan"
 #. TRANSLATORS: Title: swap space or swap partition
 msgid "Linux swap"
 msgstr "Linux-växlingsutrymme"
+
+#. TRANSLATORS: command description
+msgid "List EFI variables with a specific GUID"
+msgstr "Lista EFI-variabler med ett specifikt GUID"
 
 #. TRANSLATORS: command line option
 msgid "List entries in dbx"
@@ -2959,6 +2985,14 @@ msgstr "Betrodd nyttolast"
 msgid "Type"
 msgstr "Typ"
 
+#. TRANSLATORS: Title: Bootservice is when only readable from early-boot
+msgid "UEFI Bootservice Variables"
+msgstr "UEFI-uppstartstjänstvariabler"
+
+#. TRANSLATORS: partition refers to something on disk, again, hey Arch users
+msgid "UEFI ESP partition may not be set up correctly"
+msgstr "UEFI ESP-partition kanske inte konfigurerats korrekt"
+
 #. TRANSLATORS: partition refers to something on disk, again, hey Arch users
 msgid "UEFI ESP partition not detected or configured"
 msgstr "UEFI ESP-partition upptäcktes inte eller är inte konfigurerad"
@@ -2978,6 +3012,14 @@ msgstr "UEFI säkerhetsstart"
 #. TRANSLATORS: longer description
 msgid "UEFI Secure Boot prevents malicious software from being loaded when the device starts."
 msgstr "UEFI säkerhetsstart förhindrar skadlig programvara från att läsas in när enheten startas."
+
+#. TRANSLATORS: longer description
+msgid "UEFI boot service variables should not be readable from runtime mode."
+msgstr "UEFI-uppstartstjänstvariabler får inte vara läsbara från körtidsläge."
+
+#. TRANSLATORS: Title: Bootservice is when only readable from early-boot
+msgid "UEFI bootservice variables"
+msgstr "UEFI-uppstartstjänstvariabler"
 
 #. TRANSLATORS: capsule updates are an optional BIOS feature
 msgid "UEFI capsule updates not available or enabled in firmware setup"

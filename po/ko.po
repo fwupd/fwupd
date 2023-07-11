@@ -1393,6 +1393,11 @@ msgid "GUID"
 msgstr "GUID"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgctxt "command-argument"
+msgid "GUID"
+msgstr "GUID"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "GUID|DEVICE-ID"
 msgstr "<GUID|장치ID>"
 
@@ -1475,6 +1480,10 @@ msgstr "호스트 보안 ID 속성을 제대로 올렸습니다. 감사합니다
 #. TRANSLATORS: this is a string like 'HSI:2-U'
 msgid "Host Security ID:"
 msgstr "호스트 보안 ID:"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "INHIBIT-ID"
+msgstr "INHIBIT-ID"
 
 #. TRANSLATORS: Title:
 #. * https://en.wikipedia.org/wiki/Input%E2%80%93output_memory_management_unit
@@ -2006,6 +2015,10 @@ msgstr "적용된 업데이트 없음"
 #. TRANSLATORS: version cannot be installed due to policy
 msgid "Not approved"
 msgstr "승인 안함"
+
+#. TRANSLATORS: error message to tell someone they can't use this feature
+msgid "Not enough data was provided by the platform to make an HSI calculation."
+msgstr "HSI 계산 값을 산출하기에 불충분한 데이터를 플랫폼에서 제공했습니다."
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Not found"

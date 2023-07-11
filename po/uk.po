@@ -1229,6 +1229,9 @@ msgstr "Не вдалося обробити файл"
 msgid "Failed to parse flags for --filter"
 msgstr "Не вдалося обробити прапорці до --filter"
 
+msgid "Failed to parse flags for --filter-release"
+msgstr "Не вдалося обробити прапорці до --filter-release"
+
 #. TRANSLATORS: could not parse file
 msgid "Failed to parse local dbx"
 msgstr "Не вдалося обробити локальний dbx"
@@ -1273,6 +1276,10 @@ msgstr "Слід вказати назву файла"
 #. TRANSLATORS: command line option
 msgid "Filter with a set of device flags using a ~ prefix to exclude, e.g. 'internal,~needs-reboot'"
 msgstr "Фільтрувати за набором прапорців пристроїв за допомогою префікса виключення ~, наприклад «internal,~needs-reboot»"
+
+#. TRANSLATORS: command line option
+msgid "Filter with a set of release flags using a ~ prefix to exclude, e.g. 'trusted-release,~trusted-metadata'"
+msgstr "Фільтрувати за набором прапорців випуску з використанням префікса ~ для виключення, приклад: 'trusted-release,~trusted-metadata'"
 
 #. TRANSLATORS: Title: if we can verify the firmware checksums
 msgid "Firmware Attestation"
@@ -1421,6 +1428,11 @@ msgstr[3] "GUID"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgctxt "A single GUID"
+msgid "GUID"
+msgstr "GUID"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgctxt "command-argument"
 msgid "GUID"
 msgstr "GUID"
 
@@ -1609,6 +1621,12 @@ msgstr "Встановити непідписану мікропрограму �
 msgid "Installing Firmware…"
 msgstr "Встановлюємо мікропрограму…"
 
+#. TRANSLATORS: stay on one firmware version unless the new version is
+#. explicitly
+#. * specified
+msgid "Installing a specific release is explicitly required"
+msgstr "Явно вказано встановлення вказаного випуску"
+
 #. TRANSLATORS: this is shown when updating the firmware after the reboot
 msgid "Installing firmware update…"
 msgstr "Встановлюємо оновлення мікропрограми…"
@@ -1735,6 +1753,10 @@ msgid "Invalid arguments"
 msgstr "Некоректні аргументи"
 
 #. TRANSLATORS: error message
+msgid "Invalid arguments, expected GUID"
+msgstr "Некоректні аргументи, мало бути вказано GUID"
+
+#. TRANSLATORS: error message
 msgid "Invalid arguments, expected at least ARCHIVE FIRMWARE METAINFO"
 msgstr "Некоректні аргументи. Мало бути вказано принаймні АРХІВ МІКРОПРОГРАМА МЕТАІНФО"
 
@@ -1837,6 +1859,10 @@ msgstr "Блокування ядра Linux"
 #. TRANSLATORS: Title: swap space or swap partition
 msgid "Linux swap"
 msgstr "Рез. пам'ять Linux"
+
+#. TRANSLATORS: command description
+msgid "List EFI variables with a specific GUID"
+msgstr "Вивести список змінних EFI із певним GUID"
 
 #. TRANSLATORS: command line option
 msgid "List entries in dbx"
@@ -2981,6 +3007,14 @@ msgstr "Надійні дані"
 msgid "Type"
 msgstr "Тип"
 
+#. TRANSLATORS: Title: Bootservice is when only readable from early-boot
+msgid "UEFI Bootservice Variables"
+msgstr "Змінні служби завантаження UEFI"
+
+#. TRANSLATORS: partition refers to something on disk, again, hey Arch users
+msgid "UEFI ESP partition may not be set up correctly"
+msgstr "Можливо, неправильно налаштовано розділ ESP UEFI"
+
 #. TRANSLATORS: partition refers to something on disk, again, hey Arch users
 msgid "UEFI ESP partition not detected or configured"
 msgstr "Розділ ESP UEFI не виявлено або не налаштовано"
@@ -3000,6 +3034,14 @@ msgstr "Secure Boot UEFI"
 #. TRANSLATORS: longer description
 msgid "UEFI Secure Boot prevents malicious software from being loaded when the device starts."
 msgstr "Secure Boot UEFI запобігає завантаженню програмного забезпечення зловмисників при запуску пристрою."
+
+#. TRANSLATORS: longer description
+msgid "UEFI boot service variables should not be readable from runtime mode."
+msgstr "Змінні служби завантаження UEFI повинні бути недоступним для читання для режиму виконання програм."
+
+#. TRANSLATORS: Title: Bootservice is when only readable from early-boot
+msgid "UEFI bootservice variables"
+msgstr "Змінні служби завантаження UEFI"
 
 #. TRANSLATORS: capsule updates are an optional BIOS feature
 msgid "UEFI capsule updates not available or enabled in firmware setup"

@@ -682,6 +682,11 @@ msgid "GUID"
 msgstr "GUID"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgctxt "command-argument"
+msgid "GUID"
+msgstr "GUID"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "HWIDS-FILE"
 msgstr "HWIDS-FILE"
 

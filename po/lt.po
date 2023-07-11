@@ -482,6 +482,9 @@ msgstr "Trukmė"
 msgid "ESP specified was not valid"
 msgstr "Nurodytas ESS (angl. ESP) nebuvo teisingas"
 
+msgid "Enable"
+msgstr "Įjungti"
+
 #. TRANSLATORS: command line option
 msgid "Enable firmware update support on supported systems"
 msgstr "Įjungti programinės aparatinės įrangos atnaujinimo palaikymą palaikomose sistemose"
@@ -682,6 +685,11 @@ msgstr "Rastas"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgctxt "A single GUID"
+msgid "GUID"
+msgstr "GUID"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgctxt "command-argument"
 msgid "GUID"
 msgstr "GUID"
 
@@ -1372,6 +1380,10 @@ msgstr "Patikrinama…"
 #. TRANSLATORS: the detected version number of the dbx
 msgid "Version"
 msgstr "Versija"
+
+#. TRANSLATORS: this is a prefix on the console
+msgid "WARNING"
+msgstr "ĮSPĖJIMAS"
 
 #. TRANSLATORS: waiting for device to do something
 msgid "Waiting…"

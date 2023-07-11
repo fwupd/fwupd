@@ -1142,6 +1142,11 @@ msgctxt "A single GUID"
 msgid "GUID"
 msgstr "GUID"
 
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgctxt "command-argument"
+msgid "GUID"
+msgstr "GUID"
+
 msgid "Get BIOS settings"
 msgstr "Obter as configurações da BIOS"
 

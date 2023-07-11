@@ -849,6 +849,11 @@ msgctxt "A single GUID"
 msgid "GUID"
 msgstr "GUID"
 
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgctxt "command-argument"
+msgid "GUID"
+msgstr "GUID"
+
 #. TRANSLATORS: command description
 msgid "Get all device flags supported by fwupd"
 msgstr "Получить все флаги устройств, поддерживаемые fwupd"

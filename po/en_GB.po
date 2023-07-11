@@ -1404,6 +1404,11 @@ msgid "GUID"
 msgstr "GUID"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgctxt "command-argument"
+msgid "GUID"
+msgstr "GUID"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "GUID|DEVICE-ID"
 msgstr "GUID|DEVICE-ID"
 

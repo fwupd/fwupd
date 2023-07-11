@@ -33,12 +33,13 @@
     <binary>fwupdtool</binary>
   </provides>
   <releases>
-    <release version="1.9.3" date="2023-07-12"> <!-- date is approximate -->
+    <release version="1.9.3" date="2023-07-11">
       <description>
         <p>
           This release adds the following features:
         </p>
         <ul>
+          <li>Add the expected result to each HSI test attribute</li>
           <li>Allow autodetection when using fwupdtool firmware-parse</li>
           <li>Allow devices to only accept explicitly specified release versions</li>
           <li>Allow filtering by release flags from fwupdtool and fwupdmgr</li>

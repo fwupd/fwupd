@@ -1232,6 +1232,9 @@ msgstr "Soubor se nepodařilo zpracovat"
 msgid "Failed to parse flags for --filter"
 msgstr "Nepodařilo se zpracovat příznaky pro --filter"
 
+msgid "Failed to parse flags for --filter-release"
+msgstr "Nepodařilo se zpracovat příznaky pro --filter-release"
+
 #. TRANSLATORS: could not parse file
 msgid "Failed to parse local dbx"
 msgstr "Nepodařilo se zpracovat místní dbx"
@@ -1276,6 +1279,10 @@ msgstr "Je zapotřebí zadat název souboru"
 #. TRANSLATORS: command line option
 msgid "Filter with a set of device flags using a ~ prefix to exclude, e.g. 'internal,~needs-reboot'"
 msgstr "Filtrovat podle sady příznaků zařízení (s tím, že předpona ~ slouží pro vynechání), např. 'internal,~needs-reboot' (vestavěné, nevyžadující restart)"
+
+#. TRANSLATORS: command line option
+msgid "Filter with a set of release flags using a ~ prefix to exclude, e.g. 'trusted-release,~trusted-metadata'"
+msgstr "Filtrovat podle sady příznaků vydání (s tím, že předpona ~ slouží pro vynechání), např. 'trusted-release,~trusted-metadata'"
 
 #. TRANSLATORS: Title: if we can verify the firmware checksums
 msgid "Firmware Attestation"
@@ -1424,6 +1431,11 @@ msgstr[3] "GUID identifikátory"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgctxt "A single GUID"
+msgid "GUID"
+msgstr "GUID"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgctxt "command-argument"
 msgid "GUID"
 msgstr "GUID"
 
@@ -1612,6 +1624,12 @@ msgstr "Instalace nepodepsaného systémového firmwaru"
 msgid "Installing Firmware…"
 msgstr "Instalace firmware…"
 
+#. TRANSLATORS: stay on one firmware version unless the new version is
+#. explicitly
+#. * specified
+msgid "Installing a specific release is explicitly required"
+msgstr "Je výslovně vyžadována instalace konkrétního vydání"
+
 #. TRANSLATORS: this is shown when updating the firmware after the reboot
 msgid "Installing firmware update…"
 msgstr "Instaluje se aktualizace firmwaru…"
@@ -1738,6 +1756,10 @@ msgid "Invalid arguments"
 msgstr "Neplatné argumenty"
 
 #. TRANSLATORS: error message
+msgid "Invalid arguments, expected GUID"
+msgstr "Neplatný argument – očekáváno GUID"
+
+#. TRANSLATORS: error message
 msgid "Invalid arguments, expected at least ARCHIVE FIRMWARE METAINFO"
 msgstr "Neplatný argument – očekáváno přinjemenším ARCHIVE FIRMWARE METAINFO"
 
@@ -1840,6 +1862,10 @@ msgstr "Uzamčení linuxového jádra"
 #. TRANSLATORS: Title: swap space or swap partition
 msgid "Linux swap"
 msgstr "Linuxový odkládací prostor"
+
+#. TRANSLATORS: command description
+msgid "List EFI variables with a specific GUID"
+msgstr "Vypsat EFI proměnné s konkrétním GUID"
 
 #. TRANSLATORS: command line option
 msgid "List entries in dbx"
@@ -2984,6 +3010,14 @@ msgstr "Důvěryhodný obsah"
 msgid "Type"
 msgstr "Typ"
 
+#. TRANSLATORS: Title: Bootservice is when only readable from early-boot
+msgid "UEFI Bootservice Variables"
+msgstr "UEFI Bootservice Variables"
+
+#. TRANSLATORS: partition refers to something on disk, again, hey Arch users
+msgid "UEFI ESP partition may not be set up correctly"
+msgstr "Je možné, že UEFI ESP oddíl není správně uspořádán"
+
 #. TRANSLATORS: partition refers to something on disk, again, hey Arch users
 msgid "UEFI ESP partition not detected or configured"
 msgstr "Nezjištěn (či nenastaven) UEFI ESP oddíl"
@@ -3003,6 +3037,14 @@ msgstr "UEFI Secure Boot"
 #. TRANSLATORS: longer description
 msgid "UEFI Secure Boot prevents malicious software from being loaded when the device starts."
 msgstr "UEFI Secure Boot brání načtení záškodnickému softwaru při spouštění zařízení."
+
+#. TRANSLATORS: longer description
+msgid "UEFI boot service variables should not be readable from runtime mode."
+msgstr "Proměnné UEFI boot service by neměly být čitelné z běhového režimu."
+
+#. TRANSLATORS: Title: Bootservice is when only readable from early-boot
+msgid "UEFI bootservice variables"
+msgstr "Proměnné UEFI bootservice"
 
 #. TRANSLATORS: capsule updates are an optional BIOS feature
 msgid "UEFI capsule updates not available or enabled in firmware setup"

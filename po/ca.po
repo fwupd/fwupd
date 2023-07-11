@@ -1212,6 +1212,9 @@ msgstr "Ha fallat en analitzar el fitxer"
 msgid "Failed to parse flags for --filter"
 msgstr "Ha fallat en analitzar les etiquetes per a --filter"
 
+msgid "Failed to parse flags for --filter-release"
+msgstr "Ha fallat en analitzar els indicadors --filter-release"
+
 #. TRANSLATORS: could not parse file
 msgid "Failed to parse local dbx"
 msgstr "Ha fallat en analitzar una dbx local"
@@ -1256,6 +1259,10 @@ msgstr "El nom del fitxer és obligatori"
 #. TRANSLATORS: command line option
 msgid "Filter with a set of device flags using a ~ prefix to exclude, e.g. 'internal,~needs-reboot'"
 msgstr "Filtra amb un conjunt d'etiquetes del dispositiu amb un prefix «~» per a excloure, p. ex., «internal,~needs-reboot»"
+
+#. TRANSLATORS: command line option
+msgid "Filter with a set of release flags using a ~ prefix to exclude, e.g. 'trusted-release,~trusted-metadata'"
+msgstr "Filtreu amb un conjunt de marques de llançament utilitzant un prefix ~ per a excloure, p. ex. «trusted-release,~trusted-metadata»"
 
 #. TRANSLATORS: Title: if we can verify the firmware checksums
 msgid "Firmware Attestation"
@@ -1400,6 +1407,11 @@ msgstr[1] "Els GUID"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgctxt "A single GUID"
+msgid "GUID"
+msgstr "GUID"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgctxt "command-argument"
 msgid "GUID"
 msgstr "GUID"
 
@@ -1588,6 +1600,12 @@ msgstr "Instal·la microprogramari sense signar per al sistema"
 msgid "Installing Firmware…"
 msgstr "Instal·lació del microprogramari..."
 
+#. TRANSLATORS: stay on one firmware version unless the new version is
+#. explicitly
+#. * specified
+msgid "Installing a specific release is explicitly required"
+msgstr "Es requereix explícitament la instal·lació d'una versió específica"
+
 #. TRANSLATORS: this is shown when updating the firmware after the reboot
 msgid "Installing firmware update…"
 msgstr "S'està instal·lant l'actualització de microprogramari..."
@@ -1714,6 +1732,10 @@ msgid "Invalid arguments"
 msgstr "Arguments no vàlids"
 
 #. TRANSLATORS: error message
+msgid "Invalid arguments, expected GUID"
+msgstr "Arguments no vàlids, GUID esperat"
+
+#. TRANSLATORS: error message
 msgid "Invalid arguments, expected at least ARCHIVE FIRMWARE METAINFO"
 msgstr "Arguments no vàlids, com a mínim s'esperaven ARXIU MICROPROGRAMARI METAINFO"
 
@@ -1814,6 +1836,10 @@ msgstr "Bloqueig del nucli Linux"
 #. TRANSLATORS: Title: swap space or swap partition
 msgid "Linux swap"
 msgstr "Intercanvi de Linux"
+
+#. TRANSLATORS: command description
+msgid "List EFI variables with a specific GUID"
+msgstr "Llista les variables EFI amb un GUID específic"
 
 #. TRANSLATORS: command line option
 msgid "List entries in dbx"
@@ -2954,6 +2980,14 @@ msgstr "Part útil de confiança"
 msgid "Type"
 msgstr "Tipus"
 
+#. TRANSLATORS: Title: Bootservice is when only readable from early-boot
+msgid "UEFI Bootservice Variables"
+msgstr "Variables del servei d'arrencada UEFI"
+
+#. TRANSLATORS: partition refers to something on disk, again, hey Arch users
+msgid "UEFI ESP partition may not be set up correctly"
+msgstr "És possible que la partició ESP de la UEFI no estigui configurada correctament"
+
 #. TRANSLATORS: partition refers to something on disk, again, hey Arch users
 msgid "UEFI ESP partition not detected or configured"
 msgstr "No s'ha detectat o configurat la partició ESP de la UEFI"
@@ -2973,6 +3007,14 @@ msgstr "Arrencada segura UEFI"
 #. TRANSLATORS: longer description
 msgid "UEFI Secure Boot prevents malicious software from being loaded when the device starts."
 msgstr "L'arrencada segura UEFI evita que es carregui programari maliciós quan s'inicia el dispositiu."
+
+#. TRANSLATORS: longer description
+msgid "UEFI boot service variables should not be readable from runtime mode."
+msgstr "Les variables del servei d'arrencada UEFI no s'haurien de poder llegir des del mode de temps d'execució."
+
+#. TRANSLATORS: Title: Bootservice is when only readable from early-boot
+msgid "UEFI bootservice variables"
+msgstr "Variables del servei d'arrencada UEFI"
 
 #. TRANSLATORS: capsule updates are an optional BIOS feature
 msgid "UEFI capsule updates not available or enabled in firmware setup"

@@ -1218,6 +1218,9 @@ msgstr "Przetworzenie pliku się nie powiodło"
 msgid "Failed to parse flags for --filter"
 msgstr "Przetworzenie flag dla opcji --filter się nie powiodło"
 
+msgid "Failed to parse flags for --filter-release"
+msgstr "Przetworzenie flag dla opcji --filter-release się nie powiodło"
+
 #. TRANSLATORS: could not parse file
 msgid "Failed to parse local dbx"
 msgstr "Przetworzenie lokalnej bazy dbx się nie powiodło"
@@ -1262,6 +1265,10 @@ msgstr "Wymagana jest nazwa pliku"
 #. TRANSLATORS: command line option
 msgid "Filter with a set of device flags using a ~ prefix to exclude, e.g. 'internal,~needs-reboot'"
 msgstr "Filtruje za pomocą zestawu flag urządzeń, przedrostek ~ wyklucza, np. „internal,~needs-reboot”"
+
+#. TRANSLATORS: command line option
+msgid "Filter with a set of release flags using a ~ prefix to exclude, e.g. 'trusted-release,~trusted-metadata'"
+msgstr "Filtruje za pomocą zestawu flag wydań, przedrostek ~ wyklucza, np. „trusted-release,~trusted-metadata”"
 
 #. TRANSLATORS: Title: if we can verify the firmware checksums
 msgid "Firmware Attestation"
@@ -1391,6 +1398,11 @@ msgstr[3] "GUID"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgctxt "A single GUID"
+msgid "GUID"
+msgstr "GUID"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgctxt "command-argument"
 msgid "GUID"
 msgstr "GUID"
 
@@ -1575,6 +1587,12 @@ msgstr "Instalacja niepodpisanego oprogramowania sprzętowego komputera"
 msgid "Installing Firmware…"
 msgstr "Instalowanie oprogramowania sprzętowego…"
 
+#. TRANSLATORS: stay on one firmware version unless the new version is
+#. explicitly
+#. * specified
+msgid "Installing a specific release is explicitly required"
+msgstr "Wymagane jest instalowanie konkretnego wydania"
+
 #. TRANSLATORS: this is shown when updating the firmware after the reboot
 msgid "Installing firmware update…"
 msgstr "Instalowanie aktualizacji oprogramowania sprzętowego…"
@@ -1682,6 +1700,10 @@ msgid "Invalid arguments"
 msgstr "Nieprawidłowe parametry"
 
 #. TRANSLATORS: error message
+msgid "Invalid arguments, expected GUID"
+msgstr "Nieprawidłowe parametry, oczekiwano GUID"
+
+#. TRANSLATORS: error message
 msgid "Invalid arguments, expected at least ARCHIVE FIRMWARE METAINFO"
 msgstr "Nieprawidłowe parametry, oczekiwano co najmniej ARCHIWUM OPROGRAMOWANIE-SPRZĘTOWE METAINFO"
 
@@ -1774,6 +1796,10 @@ msgstr "Blokada jądra Linux"
 #. TRANSLATORS: Title: swap space or swap partition
 msgid "Linux swap"
 msgstr "Obszar wymiany systemu Linux"
+
+#. TRANSLATORS: command description
+msgid "List EFI variables with a specific GUID"
+msgstr "Wyświetla listę zmiennych EFI o podanym GUID"
 
 #. TRANSLATORS: command line option
 msgid "List entries in dbx"
@@ -2870,6 +2896,14 @@ msgstr "Zweryfikowane dane"
 msgid "Type"
 msgstr "Typ"
 
+#. TRANSLATORS: Title: Bootservice is when only readable from early-boot
+msgid "UEFI Bootservice Variables"
+msgstr "Zmienne usługi uruchamiania UEFI"
+
+#. TRANSLATORS: partition refers to something on disk, again, hey Arch users
+msgid "UEFI ESP partition may not be set up correctly"
+msgstr "Partycja ESP UEFI może nie być poprawnie skonfigurowana"
+
 #. TRANSLATORS: partition refers to something on disk, again, hey Arch users
 msgid "UEFI ESP partition not detected or configured"
 msgstr "Nie wykryto lub nie skonfigurowano partycji ESP UEFI"
@@ -2885,6 +2919,10 @@ msgstr "Klucz platformy UEFI"
 #. TRANSLATORS: Title: SB is a way of locking down UEFI
 msgid "UEFI Secure Boot"
 msgstr "Zabezpieczone uruchamianie UEFI"
+
+#. TRANSLATORS: Title: Bootservice is when only readable from early-boot
+msgid "UEFI bootservice variables"
+msgstr "Zmienne usługi uruchamiania UEFI"
 
 #. TRANSLATORS: capsule updates are an optional BIOS feature
 msgid "UEFI capsule updates not available or enabled in firmware setup"
