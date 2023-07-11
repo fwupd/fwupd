@@ -22,6 +22,11 @@ These devices also use custom GUID values, e.g.
 
 * `BLOCK\VEN_05E3&DEV_XXXX&VER_YY`
 
+Additional GUID values based on customer ID read from the device, e.g.
+
+* `BLOCK\VEN_05E3&DEV_XXXX&CID_ZZZZZZZZ`
+* `BLOCK\VEN_05E3&DEV_XXXX&VER_YY&CID_ZZZZZZZZ`
+
 ## Update Behavior
 
 The device is switched to ROM mode for the update and the device must be reset
