@@ -10,8 +10,8 @@ fwupdplugin_version_h = configure_file(
 
 fwupdplugin_structs = rustgen.process(
   'fu-acpi-table.rs', # fuzzing
-  'fu-cfu.rs', # fuzzing
-  'fu-dfu.rs', # fuzzing
+  'fu-cfu-firmware.rs', # fuzzing
+  'fu-dfu-firmware.rs', # fuzzing
   'fu-efi.rs', # fuzzing
   'fu-elf.rs', # fuzzing
   'fu-fdt.rs', # fuzzing

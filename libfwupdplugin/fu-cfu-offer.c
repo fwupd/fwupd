@@ -9,8 +9,8 @@
 #include "config.h"
 
 #include "fu-byte-array.h"
+#include "fu-cfu-firmware-struct.h"
 #include "fu-cfu-offer.h"
-#include "fu-cfu-struct.h"
 #include "fu-common.h"
 #include "fu-string.h"
 

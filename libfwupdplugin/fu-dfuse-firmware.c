@@ -15,7 +15,7 @@
 #include "fu-chunk-private.h"
 #include "fu-common.h"
 #include "fu-dfu-firmware-private.h"
-#include "fu-dfu-struct.h"
+#include "fu-dfu-firmware-struct.h"
 #include "fu-dfuse-firmware.h"
 
 /**
