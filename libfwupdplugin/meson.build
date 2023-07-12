@@ -17,6 +17,7 @@ fwupdplugin_structs = [
   'fu-elf.rs', # fuzzing
   'fu-fdt.rs', # fuzzing
   'fu-fmap.rs', # fuzzing
+  'fu-ifd.rs', # fuzzing
   'fu-ifwi.rs', # fuzzing
   'fu-intel-thunderbolt.rs', # fuzzing
   'fu-oprom.rs', # fuzzing

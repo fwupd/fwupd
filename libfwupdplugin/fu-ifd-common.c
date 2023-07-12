@@ -9,42 +9,6 @@
 #include "fu-ifd-common.h"
 
 /**
- * fu_ifd_region_to_string:
- * @region: A #FuIfdRegion, e.g. %FU_IFD_REGION_BIOS
- *
- * Converts a #FuIfdRegion to a string.
- *
- * Returns: identifier string
- *
- * Since: 1.6.2
- **/
-const gchar *
-fu_ifd_region_to_string(FuIfdRegion region)
-{
-	if (region == FU_IFD_REGION_DESC)
-		return "desc";
-	if (region == FU_IFD_REGION_BIOS)
-		return "bios";
-	if (region == FU_IFD_REGION_ME)
-		return "me";
-	if (region == FU_IFD_REGION_GBE)
-		return "gbe";
-	if (region == FU_IFD_REGION_PLATFORM)
-		return "platform";
-	if (region == FU_IFD_REGION_DEVEXP)
-		return "devexp";
-	if (region == FU_IFD_REGION_BIOS2)
-		return "bios2";
-	if (region == FU_IFD_REGION_EC)
-		return "ec";
-	if (region == FU_IFD_REGION_IE)
-		return "ie";
-	if (region == FU_IFD_REGION_10GBE)
-		return "10gbe";
-	return NULL;
-}
-
-/**
  * fu_ifd_region_to_name:
  * @region: A #FuIfdRegion, e.g. %FU_IFD_REGION_BIOS
  *
