@@ -47,22 +47,15 @@ fu_cfu_module_setup(FuCfuModule *self, const guint8 *buf, gsize bufsz, gsize off
 	/* these GUIDs may cause the name or version-format to be overwritten */
 	self->component_id = fu_struct_cfu_rsp_get_firmware_version_component_get_component_id(st);
 	fu_device_add_instance_u8(device, "CID", self->component_id);
-	if (!fu_device_build_instance_id(device, error, "HIDRAW", "VEN", "DEV", NULL))
+	if (!fu_device_build_instance_id(device, error, "USB", "VID", "PID", NULL))
 		return FALSE;
-	if (!fu_device_build_instance_id(device, error, "HIDRAW", "VEN", "DEV", "CID", NULL))
+	if (!fu_device_build_instance_id(device, error, "USB", "VID", "PID", "CID", NULL))
 		return FALSE;
 
 	/* bank */
 	self->bank = fu_struct_cfu_rsp_get_firmware_version_component_get_flags(st) & 0b11;
 	fu_device_add_instance_u4(device, "BANK", self->bank);
-	if (!fu_device_build_instance_id(device,
-					 error,
-					 "HIDRAW",
-					 "VEN",
-					 "DEV",
-					 "CID",
-					 "BANK",
-					 NULL))
+	if (!fu_device_build_instance_id(device, error, "USB", "VID", "PID", "CID", "BANK", NULL))
 		return FALSE;
 
 	/* set name, if not already set using a quirk */
