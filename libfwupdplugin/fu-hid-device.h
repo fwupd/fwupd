@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "fu-hid-descriptor.h"
 #include "fu-usb-device.h"
 
 #define FU_TYPE_HID_DEVICE (fu_hid_device_get_type())
@@ -47,6 +48,8 @@ void
 fu_hid_device_set_interface(FuHidDevice *self, guint8 interface_number);
 guint8
 fu_hid_device_get_interface(FuHidDevice *self);
+FuHidDescriptor *
+fu_hid_device_parse_descriptor(FuHidDevice *self, GError **error);
 gboolean
 fu_hid_device_set_report(FuHidDevice *self,
 			 guint8 value,

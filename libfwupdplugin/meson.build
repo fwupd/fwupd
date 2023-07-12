@@ -17,6 +17,7 @@ fwupdplugin_structs = [
   'fu-elf.rs', # fuzzing
   'fu-fdt.rs', # fuzzing
   'fu-fmap.rs', # fuzzing
+  'fu-hid.rs', # fuzzing
   'fu-ifd.rs', # fuzzing
   'fu-ifwi.rs', # fuzzing
   'fu-intel-thunderbolt.rs', # fuzzing
@@ -95,7 +96,10 @@ fwupdplugin_src = [
   'fu-firmware-common.c', # fuzzing
   'fu-fit-firmware.c', # fuzzing
   'fu-fmap-firmware.c', # fuzzing
+  'fu-hid-descriptor.c', # fuzzing
   'fu-hid-device.c',
+  'fu-hid-report-item.c', # fuzzing
+  'fu-hid-report.c', # fuzzing
   'fu-hwids.c', # fuzzing
   'fu-hwids-config.c', # fuzzing
   'fu-hwids-dmi.c', # fuzzing
@@ -209,7 +213,9 @@ fwupdplugin_headers = [
   'fu-firmware.h',
   'fu-fit-firmware.h',
   'fu-fmap-firmware.h',
+  'fu-hid-descriptor.h',
   'fu-hid-device.h',
+  'fu-hid-report.h',
   'fu-hwids.h',
   'fu-i2c-device.h',
   'fu-ifd-bios.h',

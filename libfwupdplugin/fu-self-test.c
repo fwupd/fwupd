@@ -2912,6 +2912,64 @@ fu_firmware_dfu_patch_func(void)
 }
 
 static void
+fu_hid_descriptor_func(void)
+{
+	gboolean ret;
+	g_autoptr(FuFirmware) firmware = fu_hid_descriptor_new();
+	g_autoptr(FuHidReport) report1 = NULL;
+	g_autoptr(FuHidReport) report2 = NULL;
+	g_autoptr(FuHidReport) report3 = NULL;
+	g_autoptr(FuHidReport) report4 = NULL;
+	g_autoptr(FuFirmware) item_usage = NULL;
+	g_autoptr(FuFirmware) item_id = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autofree gchar *filename = NULL;
+	g_autoptr(GBytes) fw = NULL;
+
+	filename = g_test_build_filename(G_TEST_DIST, "tests", "hid-descriptor.bin", NULL);
+	fw = fu_bytes_get_contents(filename, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(fw);
+	ret = fu_firmware_parse(firmware, fw, FWUPD_INSTALL_FLAG_NO_SEARCH, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* find report-id from usage */
+	report4 = fu_hid_descriptor_find_report_by_usage(FU_HID_DESCRIPTOR(firmware),
+							 G_MAXUINT32,
+							 0xC8,
+							 &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(report4);
+	item_id = fu_firmware_get_image_by_id(FU_FIRMWARE(report4), "report-id", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(item_id);
+	g_assert_cmpint(fu_hid_report_item_get_value(FU_HID_REPORT_ITEM(item_id)), ==, 0xF1);
+
+	/* find usage from report-id */
+	report1 = fu_hid_descriptor_find_report_by_id(FU_HID_DESCRIPTOR(firmware),
+						      G_MAXUINT32,
+						      0xF1,
+						      &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(report1);
+	report2 =
+	    fu_hid_descriptor_find_report_by_id(FU_HID_DESCRIPTOR(firmware), 0xFF0B, 0xF1, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(report2);
+	item_usage = fu_firmware_get_image_by_id(FU_FIRMWARE(report2), "usage", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(item_usage);
+	g_assert_cmpint(fu_hid_report_item_get_value(FU_HID_REPORT_ITEM(item_usage)), ==, 0xC8);
+
+	/* not found */
+	report3 =
+	    fu_hid_descriptor_find_report_by_id(FU_HID_DESCRIPTOR(firmware), 0x1234, 0xF1, &error);
+	g_assert_error(error, G_IO_ERROR, G_IO_ERROR_NOT_FOUND);
+	g_assert_null(report3);
+}
+
+static void
 fu_firmware_func(void)
 {
 	gboolean ret;
@@ -3698,6 +3756,12 @@ fu_firmware_builder_round_trip_func(void)
 	    {FU_TYPE_DFUSE_FIRMWARE,
 	     "dfuse.builder.xml",
 	     "c1ff429f0e381c8fe8e1b2ee41a5a9a79e2f2ff7"},
+	    {FU_TYPE_HID_REPORT_ITEM,
+	     "hid-report-item.builder.xml",
+	     "5b18c07399fc8968ce22127df38d8d923089ec92"},
+	    {FU_TYPE_HID_DESCRIPTOR,
+	     "hid-descriptor.builder.xml",
+	     "6bb23f7c9fedc21f05528b3b63ad5837f4a16a92"},
 	    {FU_TYPE_CSV_FIRMWARE, "csv.builder.xml", "986cbf8cde5bc7d8b49ee94cceae3f92efbd2eef"},
 	    {FU_TYPE_FDT_FIRMWARE, "fdt.builder.xml", "40f7fbaff684a6bcf67c81b3079422c2529741e1"},
 	    {FU_TYPE_FIT_FIRMWARE, "fit.builder.xml", "293ce07351bb7d76631c4e2ba47243db1e150f3c"},
@@ -4289,6 +4353,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/smbios", fu_smbios_func);
 	g_test_add_func("/fwupd/smbios3", fu_smbios3_func);
 	g_test_add_func("/fwupd/kernel", fu_kernel_func);
+	g_test_add_func("/fwupd/hid{descriptor}", fu_hid_descriptor_func);
 	g_test_add_func("/fwupd/firmware", fu_firmware_func);
 	g_test_add_func("/fwupd/firmware{common}", fu_firmware_common_func);
 	g_test_add_func("/fwupd/firmware{csv}", fu_firmware_csv_func);

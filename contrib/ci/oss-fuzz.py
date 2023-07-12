@@ -387,6 +387,7 @@ def _build(bld: Builder) -> None:
         Fuzzer("fdt"),
         Fuzzer("fit"),
         Fuzzer("fmap"),
+        Fuzzer("hid-descriptor", pattern="hid-descriptor"),
         Fuzzer("ihex"),
         Fuzzer("srec"),
         Fuzzer("intel-thunderbolt"),
