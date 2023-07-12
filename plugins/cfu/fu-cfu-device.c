@@ -23,7 +23,7 @@ struct _FuCfuDevice {
 G_DEFINE_TYPE(FuCfuDevice, fu_cfu_device, FU_TYPE_HID_DEVICE)
 
 #define FU_CFU_DEVICE_TIMEOUT 5000 /* ms */
-#define FU_CFU_FEATURE_SIZE   60   /* bytes */
+#define FU_CFU_FEATURE_SIZE   61   /* bytes */
 
 static void
 fu_cfu_device_to_string(FuDevice *device, guint idt, GString *str)
