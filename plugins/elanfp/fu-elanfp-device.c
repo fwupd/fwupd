@@ -6,6 +6,7 @@
 
 #include "config.h"
 
+#include "fu-cfu-struct.h"
 #include "fu-elanfp-device.h"
 #include "fu-elanfp-firmware.h"
 
@@ -274,9 +275,9 @@ fu_elanfp_device_write_payload(FuElanfpDevice *self,
 
 		/* flags */
 		if (i == 0)
-			databuf[0] = FU_CFU_DEVICE_FLAG_FIRST_BLOCK;
+			databuf[0] = FU_CFU_CONTENT_FLAG_FIRST_BLOCK;
 		else if (i == chunks->len - 1)
-			databuf[0] = FU_CFU_DEVICE_FLAG_LAST_BLOCK;
+			databuf[0] = FU_CFU_CONTENT_FLAG_LAST_BLOCK;
 
 		/* length */
 		databuf[1] = fu_chunk_get_data_sz(chk);
@@ -325,13 +326,13 @@ fu_elanfp_device_write_payload(FuElanfpDevice *self,
 			g_prefix_error(error, "received payload status fail: ");
 			return FALSE;
 		}
-		if (recvbuf[5] != FU_CFU_DEVICE_STATUS_SUCCESS) {
+		if (recvbuf[5] != FU_CFU_CONTENT_STATUS_SUCCESS) {
 			g_set_error(error,
 				    G_IO_ERROR,
 				    G_IO_ERROR_INVALID_DATA,
 				    "failed to send chunk %u: %s",
 				    i + 1,
-				    fu_cfu_device_status_to_string(recvbuf[5]));
+				    fu_cfu_content_status_to_string(recvbuf[5]));
 			return FALSE;
 		}
 		fu_progress_step_done(progress);
@@ -390,9 +391,9 @@ fu_elanfp_device_write_firmware(FuDevice *device,
 		}
 		g_debug("offer-%s status:%s reject:%s",
 			items[i].tag,
-			fu_cfu_device_offer_to_string(recvbuf[13]),
-			fu_cfu_device_reject_to_string(recvbuf[9]));
-		if (recvbuf[13] == FU_CFU_DEVICE_OFFER_ACCEPT)
+			fu_cfu_offer_status_to_string(recvbuf[13]),
+			fu_cfu_rr_code_to_string(recvbuf[9]));
+		if (recvbuf[13] == FU_CFU_OFFER_STATUS_ACCEPT)
 			break;
 	}
 	if (items[i].tag == NULL) {

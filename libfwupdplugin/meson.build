@@ -37,7 +37,6 @@ fwupdplugin_src = [
   'fu-bytes.c', # fuzzing
   'fu-cabinet.c',
   'fu-cfi-device.c',
-  'fu-cfu-common.c', # fuzzing
   'fu-cfu-offer.c', # fuzzing
   'fu-cfu-payload.c', # fuzzing
   'fu-chunk.c', # fuzzing
@@ -153,7 +152,6 @@ fwupdplugin_headers = [
   'fu-bytes.h',
   'fu-cabinet.h',
   'fu-cfi-device.h',
-  'fu-cfu-common.h',
   'fu-cfu-offer.h',
   'fu-cfu-payload.h',
   'fu-chunk.h',

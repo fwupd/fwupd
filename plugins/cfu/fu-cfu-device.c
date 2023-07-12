@@ -42,11 +42,74 @@ fu_cfu_device_to_string(FuDevice *device, guint idt, GString *str)
 }
 
 static gboolean
-fu_cfu_device_write_offer(FuCfuDevice *self,
-			  FuFirmware *firmware,
-			  FuProgress *progress,
-			  FwupdInstallFlags flags,
-			  GError **error)
+fu_cfu_device_send_offer_info(FuCfuDevice *self, FuCfuOfferInfoCode info_code, GError **error)
+{
+	guint8 buf[FU_CFU_FEATURE_SIZE] = {0};
+	g_autoptr(GByteArray) st_req = fu_struct_cfu_offer_info_req_new();
+	g_autoptr(GByteArray) st_res = NULL;
+
+	fu_struct_cfu_offer_info_req_set_code(st_req, info_code);
+	if (!fu_memcpy_safe(buf,
+			    sizeof(buf),
+			    0x0,
+			    st_req->data,
+			    st_req->len,
+			    0x0,
+			    st_req->len,
+			    error))
+		return FALSE;
+	if (!fu_hid_device_set_report(FU_HID_DEVICE(self),
+				      self->offer_set_report,
+				      buf,
+				      sizeof(buf),
+				      FU_CFU_DEVICE_TIMEOUT,
+				      FU_HID_DEVICE_FLAG_IS_FEATURE,
+				      error)) {
+		g_prefix_error(error, "failed to start entire transaction: ");
+		return FALSE;
+	}
+	if (!fu_hid_device_get_report(FU_HID_DEVICE(self),
+				      self->offer_get_report,
+				      buf,
+				      sizeof(buf),
+				      FU_CFU_DEVICE_TIMEOUT,
+				      FU_HID_DEVICE_FLAG_IS_FEATURE,
+				      error)) {
+		return FALSE;
+	}
+	st_res = fu_struct_cfu_offer_rsp_parse(buf, sizeof(buf), 0x0, error);
+	if (st_res == NULL)
+		return FALSE;
+	if (fu_struct_cfu_offer_rsp_get_token(st_res) !=
+	    FU_STRUCT_CFU_OFFER_INFO_REQ_DEFAULT_TOKEN) {
+		g_set_error(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_NOT_SUPPORTED,
+			    "token invalid: got 0x%x and expected 0x%x",
+			    fu_struct_cfu_offer_rsp_get_token(st_res),
+			    (guint)FU_STRUCT_CFU_OFFER_INFO_REQ_DEFAULT_TOKEN);
+		return FALSE;
+	}
+	if (fu_struct_cfu_offer_rsp_get_status(st_res) != FU_CFU_OFFER_STATUS_ACCEPT) {
+		g_set_error(
+		    error,
+		    G_IO_ERROR,
+		    G_IO_ERROR_NOT_SUPPORTED,
+		    "transaction not supported: %s",
+		    fu_cfu_offer_status_to_string(fu_struct_cfu_offer_rsp_get_status(st_res)));
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_cfu_device_send_offer(FuCfuDevice *self,
+			 FuFirmware *firmware,
+			 FuProgress *progress,
+			 FwupdInstallFlags flags,
+			 GError **error)
 {
 	const guint8 *buf;
 	gsize bufsz = 0;
@@ -86,16 +149,15 @@ fu_cfu_device_write_offer(FuCfuDevice *self,
 				      error)) {
 		return FALSE;
 	}
-	st = fu_struct_cfu_rsp_firmware_update_offer_parse(buf2, sizeof(buf2), 0x0, error);
+	st = fu_struct_cfu_offer_rsp_parse(buf2, sizeof(buf2), 0x0, error);
 	if (st == NULL)
 		return FALSE;
-	if (fu_struct_cfu_rsp_firmware_update_offer_get_status(st) != FU_CFU_DEVICE_OFFER_ACCEPT) {
+	if (fu_struct_cfu_offer_rsp_get_status(st) != FU_CFU_OFFER_STATUS_ACCEPT) {
 		g_set_error(error,
 			    G_IO_ERROR,
 			    G_IO_ERROR_NOT_SUPPORTED,
 			    "not supported: %s",
-			    fu_cfu_device_offer_to_string(
-				fu_struct_cfu_rsp_firmware_update_offer_get_status(st)));
+			    fu_cfu_offer_status_to_string(fu_struct_cfu_offer_rsp_get_status(st)));
 		return FALSE;
 	}
 
@@ -104,10 +166,10 @@ fu_cfu_device_write_offer(FuCfuDevice *self,
 }
 
 static gboolean
-fu_cfu_device_write_payload(FuCfuDevice *self,
-			    FuFirmware *firmware,
-			    FuProgress *progress,
-			    GError **error)
+fu_cfu_device_send_payload(FuCfuDevice *self,
+			   FuFirmware *firmware,
+			   FuProgress *progress,
+			   GError **error)
 {
 	g_autoptr(GPtrArray) chunks = NULL;
 
@@ -119,25 +181,19 @@ fu_cfu_device_write_payload(FuCfuDevice *self,
 	fu_progress_set_steps(progress, chunks->len);
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index(chunks, i);
-		g_autoptr(GByteArray) st_req = fu_struct_cfu_req_firmware_update_content_new();
-		g_autoptr(GByteArray) st_rsp = fu_struct_cfu_rsp_firmware_update_content_new();
+		g_autoptr(GByteArray) st_req = fu_struct_cfu_content_req_new();
+		g_autoptr(GByteArray) st_rsp = fu_struct_cfu_content_rsp_new();
 
 		/* build */
 		if (i == 0) {
-			fu_struct_cfu_req_firmware_update_content_set_flags(
-			    st_req,
-			    FU_CFU_DEVICE_FLAG_FIRST_BLOCK);
+			fu_struct_cfu_content_req_set_flags(st_req,
+							    FU_CFU_CONTENT_FLAG_FIRST_BLOCK);
 		} else if (i == chunks->len - 1) {
-			fu_struct_cfu_req_firmware_update_content_set_flags(
-			    st_req,
-			    FU_CFU_DEVICE_FLAG_LAST_BLOCK);
+			fu_struct_cfu_content_req_set_flags(st_req, FU_CFU_CONTENT_FLAG_LAST_BLOCK);
 		}
-		fu_struct_cfu_req_firmware_update_content_set_data_length(
-		    st_req,
-		    fu_chunk_get_data_sz(chk));
-		fu_struct_cfu_req_firmware_update_content_set_seq_number(st_req, i + 1);
-		fu_struct_cfu_req_firmware_update_content_set_address(st_req,
-								      fu_chunk_get_address(chk));
+		fu_struct_cfu_content_req_set_data_length(st_req, fu_chunk_get_data_sz(chk));
+		fu_struct_cfu_content_req_set_seq_number(st_req, i + 1);
+		fu_struct_cfu_content_req_set_address(st_req, fu_chunk_get_address(chk));
 		g_byte_array_append(st_req, fu_chunk_get_data(chk), fu_chunk_get_data_sz(chk));
 
 		/* transfer */
@@ -162,27 +218,24 @@ fu_cfu_device_write_payload(FuCfuDevice *self,
 		}
 
 		/* verify */
-		if (fu_struct_cfu_rsp_firmware_update_content_get_seq_number(st_rsp) !=
-		    fu_struct_cfu_req_firmware_update_content_get_seq_number(st_req)) {
-			g_set_error(
-			    error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
-			    "sequence number invalid 0x%x: expected 0x%x",
-			    fu_struct_cfu_rsp_firmware_update_content_get_seq_number(st_rsp),
-			    fu_struct_cfu_req_firmware_update_content_get_seq_number(st_req));
+		if (fu_struct_cfu_content_rsp_get_seq_number(st_rsp) !=
+		    fu_struct_cfu_content_req_get_seq_number(st_req)) {
+			g_set_error(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_INVALID_DATA,
+				    "sequence number invalid 0x%x: expected 0x%x",
+				    fu_struct_cfu_content_rsp_get_seq_number(st_rsp),
+				    fu_struct_cfu_content_req_get_seq_number(st_req));
 			return FALSE;
 		}
-		if (fu_struct_cfu_rsp_firmware_update_content_get_status(st_rsp) !=
-		    FU_CFU_DEVICE_STATUS_SUCCESS) {
-			g_set_error(
-			    error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
-			    "failed to send chunk %u: %s",
-			    i + 1,
-			    fu_cfu_device_status_to_string(
-				fu_struct_cfu_rsp_firmware_update_content_get_status(st_rsp)));
+		if (fu_struct_cfu_content_rsp_get_status(st_rsp) != FU_CFU_CONTENT_STATUS_SUCCESS) {
+			g_set_error(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_INVALID_DATA,
+				    "failed to send chunk %u: %s",
+				    i + 1,
+				    fu_cfu_content_status_to_string(
+					fu_struct_cfu_content_rsp_get_status(st_rsp)));
 			return FALSE;
 		}
 
@@ -207,8 +260,11 @@ fu_cfu_device_write_firmware(FuDevice *device,
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 2, "start-entire");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 2, "start-offer");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 2, "offer");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 98, "payload");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 2, "end-offer");
 
 	/* get both images */
 	fw_offer = fu_archive_firmware_get_image_fnmatch(FU_ARCHIVE_FIRMWARE(firmware),
@@ -222,17 +278,32 @@ fu_cfu_device_write_firmware(FuDevice *device,
 	if (fw_payload == NULL)
 		return FALSE;
 
+	/* host is now initialized */
+	if (!fu_cfu_device_send_offer_info(self,
+					   FU_CFU_OFFER_INFO_CODE_START_ENTIRE_TRANSACTION,
+					   error))
+		return FALSE;
+	fu_progress_step_done(progress);
+
 	/* send offer */
-	if (!fu_cfu_device_write_offer(self,
-				       fw_offer,
-				       fu_progress_get_child(progress),
-				       flags,
-				       error))
+	if (!fu_cfu_device_send_offer_info(self, FU_CFU_OFFER_INFO_CODE_START_OFFER_LIST, error))
+		return FALSE;
+	fu_progress_step_done(progress);
+	if (!fu_cfu_device_send_offer(self,
+				      fw_offer,
+				      fu_progress_get_child(progress),
+				      flags,
+				      error))
 		return FALSE;
 	fu_progress_step_done(progress);
 
 	/* send payload */
-	if (!fu_cfu_device_write_payload(self, fw_payload, fu_progress_get_child(progress), error))
+	if (!fu_cfu_device_send_payload(self, fw_payload, fu_progress_get_child(progress), error))
+		return FALSE;
+	fu_progress_step_done(progress);
+
+	/* all done */
+	if (!fu_cfu_device_send_offer_info(self, FU_CFU_OFFER_INFO_CODE_END_OFFER_LIST, error))
 		return FALSE;
 	fu_progress_step_done(progress);
 
@@ -261,20 +332,19 @@ fu_cfu_device_setup(FuDevice *device, GError **error)
 				      sizeof(buf),
 				      FU_CFU_DEVICE_TIMEOUT,
 				      FU_HID_DEVICE_FLAG_IS_FEATURE,
-				      error)) {
+				      error))
 		return FALSE;
-	}
-	st = fu_struct_cfu_rsp_get_firmware_version_parse(buf, sizeof(buf), 0x0, error);
+	st = fu_struct_cfu_get_version_rsp_parse(buf, sizeof(buf), 0x1, error);
 	if (st == NULL)
 		return FALSE;
-	self->protocol_version = fu_struct_cfu_rsp_get_firmware_version_get_flags(st) & 0b1111;
+	self->protocol_version = fu_struct_cfu_get_version_rsp_get_flags(st) & 0b1111;
 
 	/* keep track of all modules so we can work out which are dual bank */
 	modules_by_cid = g_hash_table_new(g_direct_hash, g_direct_equal);
 
 	/* read each component module version */
-	offset += st->len;
-	component_cnt = fu_struct_cfu_rsp_get_firmware_version_get_component_cnt(st);
+	offset += 0x1 + st->len;
+	component_cnt = fu_struct_cfu_get_version_rsp_get_component_cnt(st);
 	for (guint i = 0; i < component_cnt; i++) {
 		g_autoptr(FuCfuModule) module = fu_cfu_module_new(device);
 		FuCfuModule *module_tmp;
@@ -297,7 +367,7 @@ fu_cfu_device_setup(FuDevice *device, GError **error)
 		}
 
 		/* done */
-		offset += 0x8;
+		offset += FU_STRUCT_CFU_GET_VERSION_RSP_COMPONENT_SIZE;
 	}
 
 	/* success */
