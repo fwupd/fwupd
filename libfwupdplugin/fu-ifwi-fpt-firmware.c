@@ -31,8 +31,6 @@
 
 G_DEFINE_TYPE(FuIfwiFptFirmware, fu_ifwi_fpt_firmware, FU_TYPE_FIRMWARE)
 
-#define FU_IFWI_FPT_HEADER_VERSION 0x20
-#define FU_IFWI_FPT_ENTRY_VERSION  0x10
 #define FU_IFWI_FPT_MAX_ENTRIES	   56
 
 static gboolean
@@ -69,7 +67,8 @@ fu_ifwi_fpt_firmware_parse(FuFirmware *firmware,
 			    num_of_entries);
 		return FALSE;
 	}
-	if (fu_struct_ifwi_fpt_get_header_version(st_hdr) < FU_IFWI_FPT_HEADER_VERSION) {
+	if (fu_struct_ifwi_fpt_get_header_version(st_hdr) <
+	    FU_STRUCT_IFWI_FPT_DEFAULT_HEADER_VERSION) {
 		g_set_error(error,
 			    G_IO_ERROR,
 			    G_IO_ERROR_INVALID_DATA,
