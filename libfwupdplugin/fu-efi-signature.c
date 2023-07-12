@@ -25,26 +25,6 @@ struct _FuEfiSignature {
 G_DEFINE_TYPE(FuEfiSignature, fu_efi_signature, FU_TYPE_FIRMWARE)
 
 /**
- * fu_efi_signature_kind_to_string:
- * @kind: A #FuEfiSignatureKind, e.g. %FU_EFI_SIGNATURE_KIND_X509
- *
- * Converts the signature kind to a text representation.
- *
- * Returns: text, e.g. `x509_cert`
- *
- * Since: 1.5.5
- **/
-const gchar *
-fu_efi_signature_kind_to_string(FuEfiSignatureKind kind)
-{
-	if (kind == FU_EFI_SIGNATURE_KIND_SHA256)
-		return "sha256";
-	if (kind == FU_EFI_SIGNATURE_KIND_X509)
-		return "x509_cert";
-	return "unknown";
-}
-
-/**
  * fu_efi_signature_new: (skip):
  * @kind: A #FuEfiSignatureKind
  * @owner: A GUID, e.g. %FU_EFI_SIGNATURE_GUID_MICROSOFT
