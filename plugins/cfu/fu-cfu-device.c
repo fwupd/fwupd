@@ -212,12 +212,12 @@ fu_cfu_device_write_firmware(FuDevice *device,
 
 	/* get both images */
 	fw_offer = fu_archive_firmware_get_image_fnmatch(FU_ARCHIVE_FIRMWARE(firmware),
-							 "`.offer.bin`",
+							 "*.offer.bin",
 							 error);
 	if (fw_offer == NULL)
 		return FALSE;
 	fw_payload = fu_archive_firmware_get_image_fnmatch(FU_ARCHIVE_FIRMWARE(firmware),
-							   "`.payload.bin`",
+							   "*.payload.bin",
 							   error);
 	if (fw_payload == NULL)
 		return FALSE;
