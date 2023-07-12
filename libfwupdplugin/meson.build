@@ -11,6 +11,7 @@ fwupdplugin_version_h = configure_file(
 fwupdplugin_structs = rustgen.process(
   'fu-acpi-table.rs', # fuzzing
   'fu-cfu-firmware.rs', # fuzzing
+  'fu-coswid.rs', # fuzzing
   'fu-dfu-firmware.rs', # fuzzing
   'fu-efi.rs', # fuzzing
   'fu-elf.rs', # fuzzing
@@ -45,7 +46,6 @@ fwupdplugin_src = [
   'fu-common-guid.c',
   'fu-config.c', # fuzzing
   'fu-context.c', # fuzzing
-  'fu-coswid-common.c', # fuzzing
   'fu-coswid-firmware.c', # fuzzing
   'fu-crc.c', # fuzzing
   'fu-csv-entry.c', # fuzzing
