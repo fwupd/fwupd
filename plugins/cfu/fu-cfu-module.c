@@ -185,11 +185,6 @@ FuCfuModule *
 fu_cfu_module_new(FuDevice *parent)
 {
 	FuCfuModule *self;
-	self = g_object_new(FU_TYPE_CFU_MODULE,
-			    "ctx",
-			    fu_device_get_context(parent),
-			    "proxy",
-			    parent,
-			    NULL);
+	self = g_object_new(FU_TYPE_CFU_MODULE, "proxy", parent, "parent", parent, NULL);
 	return self;
 }
