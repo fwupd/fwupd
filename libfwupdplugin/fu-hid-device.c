@@ -85,6 +85,44 @@ fu_hid_device_set_property(GObject *object, guint prop_id, const GValue *value, 
 	}
 }
 
+/**
+ * fu_hid_device_parse_descriptor:
+ * @self: a #FuHidDevice
+ * @error: (nullable): optional return location for an error
+ *
+ * Parses the HID descriptor.
+ *
+ * Returns: (transfer full): a #FuHidDescriptor, or %NULL for error
+ *
+ * Since: 1.9.4
+ **/
+FuHidDescriptor *
+fu_hid_device_parse_descriptor(FuHidDevice *self, GError **error)
+{
+#if G_USB_CHECK_VERSION(0, 4, 7)
+	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
+	g_autoptr(FuFirmware) descriptor = fu_hid_descriptor_new();
+	g_autoptr(GBytes) fw = NULL;
+
+	g_return_val_if_fail(FU_HID_DEVICE(self), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	fw = g_usb_device_get_hid_descriptor_default(usb_device, error);
+	if (fw == NULL)
+		return NULL;
+	fu_dump_bytes(G_LOG_DOMAIN, "HidDescriptor", fw);
+	if (!fu_firmware_parse(descriptor, fw, FWUPD_INSTALL_FLAG_NONE, error))
+		return NULL;
+	return FU_HID_DESCRIPTOR(g_steal_pointer(&descriptor));
+#else
+	g_set_error_literal(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_NOT_SUPPORTED,
+			    "only supported in libgusb >= 0.4.7");
+	return NULL;
+#endif
+}
+
 #ifdef HAVE_GUSB
 static gboolean
 fu_hid_device_autodetect_eps(FuHidDevice *self, GUsbInterface *iface, GError **error)

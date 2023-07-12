@@ -1,0 +1,4 @@
+<firmware gtype="FuHidReportItem">
+  <id>usage</id>
+  <value>0xDE</value>
+</firmware>
