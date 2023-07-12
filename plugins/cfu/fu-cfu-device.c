@@ -360,8 +360,6 @@ fu_cfu_device_init(FuCfuDevice *self)
 	self->offer_get_report = 0x8E;
 	self->content_set_report = 0x61;
 	self->content_get_report = 0x66;
-	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE);
-	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_MD_SET_SIGNED);
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_ARCHIVE_FIRMWARE);
 }
 
