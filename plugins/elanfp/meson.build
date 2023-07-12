@@ -8,8 +8,14 @@ plugin_builtins += static_library('fu_plugin_elanfp',
     'fu-elanfp-device.c',
     'fu-elanfp-firmware.c'  # fuzzing
   ],
-  include_directories: plugin_incdirs,
-  link_with: plugin_libs,
+  include_directories: [
+    plugin_incdirs,
+    plugincfu_incdir,
+  ],
+  link_with: [
+    plugin_libs,
+    plugin_builtin_cfu,
+  ],
   c_args: cargs,
   dependencies: plugin_deps,
 )
