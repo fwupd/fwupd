@@ -15,7 +15,7 @@
 #include "fu-common.h"
 #include "fu-crc.h"
 #include "fu-dfu-firmware-private.h"
-#include "fu-dfu-struct.h"
+#include "fu-dfu-firmware-struct.h"
 
 /**
  * FuDfuFirmware:
