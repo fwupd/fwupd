@@ -13,8 +13,8 @@
 #endif
 
 #include "fu-common.h"
-#include "fu-coswid-common.h"
 #include "fu-coswid-firmware.h"
+#include "fu-coswid-struct.h"
 
 /**
  * FuCoswidFirmware:
