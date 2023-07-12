@@ -449,6 +449,9 @@ class Generator:
 
         for line in contents.split("\n"):
 
+            # replace all tabs with spaces
+            line = line.replace("\t", "  ")
+
             # remove comments and indent
             line = line.split("//")[0].strip()
             if not line:

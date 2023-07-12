@@ -4,7 +4,7 @@
 #[repr(u8)]
 enum SelfTestRevision {
     None = 0x0,
-    All = 0xFF,
+    All	= 0xFF,
 }
 
 #[derive(New, Validate, Parse, ToString)]
@@ -16,7 +16,7 @@ struct SelfTest {
     oem_id: [char; 6] == "ABCDEF",
     oem_table_id: [char; 8],
     oem_revision: u32le,
-    asl_compiler_id: [u8; 4] = 0xDF,
+    asl_compiler_id: [u8; 4] =	0xDF,
     asl_compiler_revision: u32le,
 }
 
