@@ -118,6 +118,9 @@
 
 {%- set export = obj.export('New') %}
 {%- if export in [Export.PUBLIC, Export.PRIVATE] %}
+/**
+ * {{obj.c_method('New')}}: (skip):
+ **/
 {{export.value}}GByteArray *
 {{obj.c_method('New')}}(void)
 {
@@ -147,6 +150,9 @@
 
 {%- set export = obj.export('ToString') %}
 {%- if export in [Export.PUBLIC, Export.PRIVATE] %}
+/**
+ * {{obj.c_method('ToString')}}: (skip):
+ **/
 {{export.value}}gchar *
 {{obj.c_method('ToString')}}(GByteArray *st)
 {
@@ -199,6 +205,9 @@
 
 {%- set export = obj.export('Parse') %}
 {%- if export in [Export.PUBLIC, Export.PRIVATE] %}
+/**
+ * {{obj.c_method('Parse')}}: (skip):
+ **/
 {{export.value}}GByteArray *
 {{obj.c_method('Parse')}}(const guint8 *buf, gsize bufsz, gsize offset, GError **error)
 {
@@ -238,6 +247,9 @@
 
 {%- set export = obj.export('Validate') %}
 {%- if export in [Export.PUBLIC, Export.PRIVATE] %}
+/**
+ * {{obj.c_method('Validate')}}: (skip):
+ **/
 {{export.value}}gboolean
 {{obj.c_method('Validate')}}(const guint8 *buf, gsize bufsz, gsize offset, GError **error)
 {
