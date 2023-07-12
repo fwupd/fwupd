@@ -4,12 +4,12 @@
 #[repr(u8)]
 enum SelfTestRevision {
     None = 0x0,
-    All	= 0xFF,
+    All	= 0xF_F,
 }
 
 #[derive(New, Validate, Parse, ToString)]
 struct SelfTest {
-    signature: u32be == 0x12345678,
+    signature: u32be == 0x1234_5678,
     length: u32le = $struct_size, // bytes
     revision: SelfTestRevision,
     owner: Guid,
