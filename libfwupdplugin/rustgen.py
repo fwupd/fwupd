@@ -109,6 +109,11 @@ class EnumItem:
         name_snake = _camel_to_snake(self.obj.name)
         return f"FU_{name_snake.upper()}_{_camel_to_snake(self.name).replace('-', '_').upper()}"
 
+    def parse_default(self, val: str) -> None:
+        if val.startswith("0x") or val.startswith("0b"):
+            val = val.replace("_", "")
+        self.default = val
+
     @property
     def value(self) -> str:
         return _camel_to_snake(self.name).replace("_", "-")
@@ -330,6 +335,8 @@ class StructItem:
             Type.U32,
             Type.U64,
         ]:
+            if val.startswith("0x") or val.startswith("0b"):
+                val = val.replace("_", "")
             return val.replace("$struct_offset", str(self.offset))
         raise ValueError(f"do not know how to parse value for type: {self.type}")
 
@@ -520,7 +527,7 @@ class Generator:
                 parts = line.replace(" ", "").split("=", maxsplit=2)
                 enum_item.name = parts[0]
                 if len(parts) > 1:
-                    enum_item.default = parts[1]
+                    enum_item.parse_default(parts[1])
                 enum_cur.items.append(enum_item)
 
             # split structure into sections
