@@ -270,7 +270,7 @@ fu_cfu_device_setup(FuDevice *device, GError **error)
 	self->protocol_version = fu_struct_cfu_rsp_get_firmware_version_get_flags(st) & 0b1111;
 
 	/* keep track of all modules so we can work out which are dual bank */
-	modules_by_cid = g_hash_table_new(g_int_hash, g_int_equal);
+	modules_by_cid = g_hash_table_new(g_direct_hash, g_direct_equal);
 
 	/* read each component module version */
 	offset += st->len;
