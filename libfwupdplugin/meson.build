@@ -8,7 +8,7 @@ fwupdplugin_version_h = configure_file(
   configuration: conf
 )
 
-fwupdplugin_structs = rustgen.process(
+fwupdplugin_structs = [
   'fu-acpi-table.rs', # fuzzing
   'fu-cfu-firmware.rs', # fuzzing
   'fu-coswid.rs', # fuzzing
@@ -25,7 +25,24 @@ fwupdplugin_structs = rustgen.process(
   'fu-smbios.rs', # fuzzing
   'fu-usb-device-ds20.rs', # fuzzing
   'fu-uswid.rs', # fuzzing
-)
+]
+
+# do not use structgen as these are referenced in headers too...
+fwupdplugin_struct_targets = []
+foreach fwupdplugin_struct: fwupdplugin_structs
+  fwupdplugin_struct_targets += custom_target('lib' + fwupdplugin_struct,
+    input: fwupdplugin_struct,
+    output: [
+      fwupdplugin_struct.replace('.rs', '-struct.c'),
+      fwupdplugin_struct.replace('.rs', '-struct.h'),
+    ],
+    command: [
+      python3,
+      join_paths(meson.project_source_root(), 'libfwupdplugin', 'rustgen.py'),
+      '@INPUT@', '@OUTPUT0@', '@OUTPUT1@',
+    ],
+  )
+endforeach
 
 fwupdplugin_src = [
   'fu-acpi-table.c', # fuzzing
@@ -274,7 +291,7 @@ library_deps = [
 
 fwupdplugin = library(
   'fwupdplugin',
-  fwupdplugin_structs,
+  fwupdplugin_struct_targets,
   sources: [
     fwupdplugin_src,
     fwupdplugin_headers,
@@ -314,6 +331,7 @@ if introspection.allowed()
     sources: [
       fwupdplugin_src,
       fwupdplugin_headers,
+      fwupdplugin_struct_targets,
     ],
     nsversion: '1.0',
     namespace: 'FwupdPlugin',
