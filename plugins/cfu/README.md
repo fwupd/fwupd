@@ -57,6 +57,9 @@ per-device unless the exact same defaults are used as in `CFU/Tools/ComponentFir
 
 In fwupd these can be set as quirks in `cfu.quirk`.
 
+The included `https://github.com/fwupd/fwupd/blob/main/contrib/cfu-inf-to-quirk.py` script may be
+useful to convert an existing `.inf` file to fwupd `.quirk` format.
+
 ## Firmware Format
 
 Due to the one-shot way fwupd deploys firmware, the daemon only deals with one “payload” per
@@ -80,31 +83,46 @@ This plugin uses the following plugin-specific quirks:
 
 ### CfuVersionGetReport
 
-The HID report ID to use when parsing the response of `GET_FIRMWARE_VERSION`.
+The HID report usage to use when parsing the response of `GET_FIRMWARE_VERSION`.
+
+This usually corresponds to the `VersionsFeatureValueCapabilityUsageRangeMinimum` value
+set in the `.inf` file.
 
 Since: 1.9.1
 
 ### CfuOfferSetReport
 
-The HID report ID to use when sending the request for `FIRMWARE_UPDATE_OFFER`.
+The HID report usage to use when sending the request for `FIRMWARE_UPDATE_OFFER`.
+
+This usually corresponds to the `OfferOutputValueCapabilityUsageRangeMinimum` value
+set in the `.inf` file.
 
 Since: 1.9.1
 
 ### CfuOfferGetReport
 
-The HID report ID to use when parsing the response of `FIRMWARE_UPDATE_OFFER`.
+The HID report usage to use when parsing the response of `FIRMWARE_UPDATE_OFFER`.
+
+This usually corresponds to the `OfferInputValueCapabilityUsageRangeMinimum` value
+set in the `.inf` file.
 
 Since: 1.9.1
 
 ### CfuContentSetReport
 
-The HID report ID to use when sending the request for `FIRMWARE_UPDATE_CONTENT`.
+The HID report usage to use when sending the request for `FIRMWARE_UPDATE_CONTENT`.
+
+This usually corresponds to the `PayloadOutputValueCapabilityUsageRangeMinimum` value
+set in the `.inf` file.
 
 Since: 1.9.1
 
 ### CfuContentGetReport
 
-The HID report ID to use when parsing the response of `FIRMWARE_UPDATE_CONTENT`.
+The HID report usage to use when parsing the response of `FIRMWARE_UPDATE_CONTENT`.
+
+This usually corresponds to the `PayloadInputValueCapabilityUsageRangeMinimum` value
+set in the `.inf` file.
 
 Since: 1.9.1
 
