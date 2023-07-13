@@ -112,6 +112,8 @@ class EnumItem:
     def parse_default(self, val: str) -> None:
         if val.startswith("0x") or val.startswith("0b"):
             val = val.replace("_", "")
+        if val.startswith("0b"):
+            val = hex(int(val[2:], 2))
         self.default = val
 
     @property
