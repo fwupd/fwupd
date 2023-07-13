@@ -631,15 +631,25 @@ fu_genesys_gl32xx_device_attach(FuDevice *device, FuProgress *progress, GError *
 static gboolean
 fu_genesys_gl32xx_device_probe(FuDevice *device, GError **error)
 {
+	FuUdevDevice *udev_device = FU_UDEV_DEVICE(device);
 	const gchar *device_bus = NULL;
 
 	/* UdevDevice->probe */
 	if (!FU_DEVICE_CLASS(fu_genesys_gl32xx_device_parent_class)->probe(device, error))
 		return FALSE;
 
+	if (g_strcmp0(fu_udev_device_get_devtype(udev_device), "disk") != 0) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "is not correct devtype=%s, expected disk",
+			    fu_udev_device_get_devtype(udev_device));
+		return FALSE;
+	}
+
 	/* success */
-	device_bus = fu_udev_device_get_subsystem(FU_UDEV_DEVICE(device));
-	return fu_udev_device_set_physical_id(FU_UDEV_DEVICE(device), device_bus, error);
+	device_bus = fu_udev_device_get_subsystem(udev_device);
+	return fu_udev_device_set_physical_id(udev_device, device_bus, error);
 }
 
 static gboolean
