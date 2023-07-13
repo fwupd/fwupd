@@ -960,3 +960,10 @@ LIBFWUPD_1.9.3 {
     fwupd_security_attr_set_result_success;
   local: *;
 } LIBFWUPD_1.9.1;
+
+LIBFWUPD_1.9.4 {
+  global:
+    fwupd_remote_get_refresh_interval;
+    fwupd_remote_needs_refresh;
+  local: *;
+} LIBFWUPD_1.9.3;

@@ -1868,6 +1868,11 @@ fu_util_check_oldest_remote(FuUtilPrivate *priv, guint64 *age_oldest, GError **e
 		if (fwupd_remote_get_kind(remote) != FWUPD_REMOTE_KIND_DOWNLOAD)
 			continue;
 		checked = TRUE;
+		if (!fwupd_remote_needs_refresh(remote))
+			continue;
+		g_debug("%s is age %u",
+			fwupd_remote_get_id(remote),
+			(guint)fwupd_remote_get_age(remote));
 		if (fwupd_remote_get_age(remote) > *age_oldest)
 			*age_oldest = fwupd_remote_get_age(remote);
 	}
@@ -1894,12 +1899,11 @@ fu_util_download_metadata(FuUtilPrivate *priv, GError **error)
 
 	/* metadata refreshed recently */
 	if ((priv->flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {
-		guint64 age_oldest = 0;
-		const guint64 age_limit_hours = 24;
+		guint64 age_oldest_needs_refresh = 0;
 
-		if (!fu_util_check_oldest_remote(priv, &age_oldest, error))
+		if (!fu_util_check_oldest_remote(priv, &age_oldest_needs_refresh, error))
 			return FALSE;
-		if (age_oldest < 60 * 60 * age_limit_hours) {
+		if (age_oldest_needs_refresh > 0) {
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOTHING_TO_DO,
@@ -1908,7 +1912,7 @@ fu_util_download_metadata(FuUtilPrivate *priv, GError **error)
 				       as 6 hours or 15 seconds */
 				    _("Firmware metadata last refresh: %s ago. "
 				      "Use --force to refresh again."),
-				    fu_util_time_to_str(age_oldest));
+				    fu_util_time_to_str(age_oldest_needs_refresh));
 			return FALSE;
 		}
 	}
@@ -1921,6 +1925,9 @@ fu_util_download_metadata(FuUtilPrivate *priv, GError **error)
 		if (!fwupd_remote_get_enabled(remote))
 			continue;
 		if (fwupd_remote_get_kind(remote) != FWUPD_REMOTE_KIND_DOWNLOAD)
+			continue;
+		if ((priv->flags & FWUPD_INSTALL_FLAG_FORCE) == 0 &&
+		    !fwupd_remote_needs_refresh(remote))
 			continue;
 		download_remote_enabled = TRUE;
 		fu_console_print(priv->console,

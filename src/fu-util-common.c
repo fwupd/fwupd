@@ -2101,28 +2101,15 @@ fu_util_remote_to_string(FwupdRemote *remote, guint idt)
 	/* optional parameters */
 	if (kind == FWUPD_REMOTE_KIND_DOWNLOAD && fwupd_remote_get_age(remote) > 0 &&
 	    fwupd_remote_get_age(remote) != G_MAXUINT64) {
-		const gchar *unit = "s";
-		gdouble age = fwupd_remote_get_age(remote);
-		g_autofree gchar *age_str = NULL;
-		if (age > 60) {
-			age /= 60.f;
-			unit = "m";
-		}
-		if (age > 60) {
-			age /= 60.f;
-			unit = "h";
-		}
-		if (age > 24) {
-			age /= 24.f;
-			unit = "d";
-		}
-		if (age > 7) {
-			age /= 7.f;
-			unit = "w";
-		}
-		age_str = g_strdup_printf("%.2f%s", age, unit);
+		g_autofree gchar *age_str = fu_util_time_to_str(fwupd_remote_get_age(remote));
 		/* TRANSLATORS: the age of the metadata */
 		fu_string_append(str, idt + 1, _("Age"), age_str);
+	}
+	if (kind == FWUPD_REMOTE_KIND_DOWNLOAD && fwupd_remote_get_refresh_interval(remote) > 0) {
+		g_autofree gchar *age_str =
+		    fu_util_time_to_str(fwupd_remote_get_refresh_interval(remote));
+		/* TRANSLATORS: how often we should refresh the metadata */
+		fu_string_append(str, idt + 1, _("Refresh Interval"), age_str);
 	}
 	priority = fwupd_remote_get_priority(remote);
 	if (priority != 0) {

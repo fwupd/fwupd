@@ -90,6 +90,10 @@ gboolean
 fwupd_remote_get_automatic_reports(FwupdRemote *self);
 gboolean
 fwupd_remote_get_automatic_security_reports(FwupdRemote *self);
+guint64
+fwupd_remote_get_refresh_interval(FwupdRemote *self);
+gboolean
+fwupd_remote_needs_refresh(FwupdRemote *self);
 gint
 fwupd_remote_get_priority(FwupdRemote *self);
 guint64
