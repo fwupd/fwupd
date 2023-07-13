@@ -27,6 +27,8 @@
  * See also: [class@FwupdClient]
  */
 
+#define FWUPD_REMOTE_CONFIG_DEFAULT_REFRESH_INTERVAL 86400 /* 24h */
+
 static void
 fwupd_remote_finalize(GObject *obj);
 
@@ -51,6 +53,7 @@ typedef struct {
 	gboolean approval_required;
 	gint priority;
 	guint64 mtime;
+	guint64 refresh_interval;
 	gchar **order_after;
 	gchar **order_before;
 	gchar *remotes_dir;
@@ -126,6 +129,7 @@ fwupd_remote_to_json(FwupdRemote *self, JsonBuilder *builder)
 				      priv->automatic_security_reports);
 	fwupd_common_json_add_int(builder, "Priority", priv->priority);
 	fwupd_common_json_add_int(builder, "Mtime", priv->mtime);
+	fwupd_common_json_add_int(builder, "RefreshInterval", priv->refresh_interval);
 	fwupd_common_json_add_string(builder, "RemotesDir", priv->remotes_dir);
 	fwupd_common_json_add_stringv(builder, "OrderAfter", priv->order_after);
 	fwupd_common_json_add_stringv(builder, "OrderBefore", priv->order_before);
@@ -739,6 +743,7 @@ fwupd_remote_load_from_filename(FwupdRemote *self,
 		} else if (g_str_has_prefix(tmp, "http://") || g_str_has_prefix(tmp, "https://") ||
 			   g_str_has_prefix(tmp, "ipfs://") || g_str_has_prefix(tmp, "ipns://")) {
 			priv->kind = FWUPD_REMOTE_KIND_DOWNLOAD;
+			priv->refresh_interval = FWUPD_REMOTE_CONFIG_DEFAULT_REFRESH_INTERVAL;
 			fwupd_remote_set_metadata_uri(self, tmp);
 		}
 	}
@@ -753,6 +758,8 @@ fwupd_remote_load_from_filename(FwupdRemote *self,
 		g_autofree gchar *tmp = g_key_file_get_string(kf, group, "Title", NULL);
 		fwupd_remote_set_title(self, tmp);
 	}
+	if (g_key_file_has_key(kf, group, "RefreshInterval", NULL))
+		priv->refresh_interval = g_key_file_get_uint64(kf, group, "RefreshInterval", NULL);
 	if (g_key_file_has_key(kf, group, "ReportURI", NULL)) {
 		g_autofree gchar *tmp = g_key_file_get_string(kf, group, "ReportURI", NULL);
 		fwupd_remote_set_report_uri(self, tmp);
@@ -834,6 +841,8 @@ fwupd_remote_save_to_filename(FwupdRemote *self,
 		g_key_file_set_string(kf, group, "Title", priv->title);
 	if (priv->report_uri != NULL)
 		g_key_file_set_string(kf, group, "ReportURI", priv->report_uri);
+	if (priv->refresh_interval != 0)
+		g_key_file_set_uint64(kf, group, "RefreshInterval", priv->refresh_interval);
 	if (priv->security_report_uri != NULL)
 		g_key_file_set_string(kf, group, "SecurityReportURI", priv->security_report_uri);
 	if (priv->username != NULL)
@@ -1084,6 +1093,24 @@ fwupd_remote_set_mtime(FwupdRemote *self, guint64 mtime)
 	FwupdRemotePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FWUPD_IS_REMOTE(self));
 	priv->mtime = mtime;
+}
+
+/**
+ * fwupd_remote_get_refresh_interval:
+ * @self: a #FwupdRemote
+ *
+ * Sets the plugin refresh interval in seconds.
+ *
+ * Returns: value in seconds
+ *
+ * Since: 1.9.4
+ **/
+guint64
+fwupd_remote_get_refresh_interval(FwupdRemote *self)
+{
+	FwupdRemotePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_REMOTE(self), G_MAXUINT64);
+	return priv->refresh_interval;
 }
 
 /**
@@ -1511,6 +1538,29 @@ fwupd_remote_get_automatic_security_reports(FwupdRemote *self)
 }
 
 /**
+ * fwupd_remote_needs_refresh:
+ * @self: a #FwupdRemote
+ *
+ * Gets if the metadata remote needs re-downloading.
+ *
+ * Returns: a #TRUE if the remote contents are considered old
+ *
+ * Since: 1.9.4
+ **/
+gboolean
+fwupd_remote_needs_refresh(FwupdRemote *self)
+{
+	FwupdRemotePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_REMOTE(self), FALSE);
+
+	if (!priv->enabled)
+		return FALSE;
+	if (priv->kind != FWUPD_REMOTE_KIND_DOWNLOAD)
+		return FALSE;
+	return fwupd_remote_get_age(self) > priv->refresh_interval;
+}
+
+/**
  * fwupd_remote_get_approval_required:
  * @self: a #FwupdRemote
  *
@@ -1597,6 +1647,8 @@ fwupd_remote_set_from_variant_iter(FwupdRemote *self, GVariantIter *iter)
 			priv->priority = g_variant_get_int32(value);
 		} else if (g_strcmp0(key, "ModificationTime") == 0) {
 			priv->mtime = g_variant_get_uint64(value);
+		} else if (g_strcmp0(key, "RefreshInterval") == 0) {
+			priv->refresh_interval = g_variant_get_uint64(value);
 		} else if (g_strcmp0(key, "FirmwareBaseUri") == 0) {
 			fwupd_remote_set_firmware_base_uri(self, g_variant_get_string(value, NULL));
 		} else if (g_strcmp0(key, "AutomaticReports") == 0) {
@@ -1704,6 +1756,12 @@ fwupd_remote_to_variant(FwupdRemote *self)
 				      "{sv}",
 				      "ModificationTime",
 				      g_variant_new_uint64(priv->mtime));
+	}
+	if (priv->refresh_interval != 0) {
+		g_variant_builder_add(&builder,
+				      "{sv}",
+				      "RefreshInterval",
+				      g_variant_new_uint64(priv->refresh_interval));
 	}
 	if (priv->filename_cache != NULL) {
 		g_variant_builder_add(&builder,

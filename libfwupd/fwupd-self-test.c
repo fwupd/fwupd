@@ -358,7 +358,8 @@ fwupd_remote_auth_func(void)
 	    "  \"AutomaticReports\" : \"false\",\n"
 	    "  \"AutomaticSecurityReports\" : \"true\",\n"
 	    "  \"Priority\" : 999,\n"
-	    "  \"Mtime\" : 0\n"
+	    "  \"Mtime\" : 0,\n"
+	    "  \"RefreshInterval\" : 86400\n"
 	    "}",
 	    &error);
 	g_assert_no_error(error);
@@ -487,7 +488,8 @@ fwupd_remote_local_func(void)
 	    "  \"AutomaticReports\" : \"false\",\n"
 	    "  \"AutomaticSecurityReports\" : \"false\",\n"
 	    "  \"Priority\" : 0,\n"
-	    "  \"Mtime\" : 0\n"
+	    "  \"Mtime\" : 0,\n"
+	    "  \"RefreshInterval\" : 0\n"
 	    "}",
 	    &error);
 	g_assert_no_error(error);
