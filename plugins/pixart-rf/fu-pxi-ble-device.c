@@ -23,6 +23,7 @@
 
 #define PXI_HID_DEV_OTA_REPORT_USAGE_PAGE     0xff02u
 #define PXI_HID_DEV_OTA_RETRANSMIT_USAGE_PAGE 0xff01u
+#define PXI_HID_DEV_OTA_NOTIFY_USAGE_PAGE     0xff00u
 
 #define ERR_COMMAND_SUCCESS 0x0
 
@@ -33,7 +34,7 @@
 
 #define FU_PXI_BLE_DEVICE_NOTIFY_TIMEOUT_MS 5000
 
-#define FU_PXI_BLE_DEVICE_SET_REPORT_RETRIES 10
+#define FU_PXI_BLE_DEVICE_SET_REPORT_RETRIES 30
 
 /* OTA target selection */
 enum ota_process_setting {
@@ -46,6 +47,8 @@ struct _FuPxiBleDevice {
 	FuUdevDevice parent_instance;
 	struct ota_fw_state fwstate;
 	guint8 retransmit_id;
+	guint8 feature_report_id;
+	guint8 input_report_id;
 	gchar *model_name;
 };
 
@@ -78,6 +81,8 @@ fu_pxi_ble_device_to_string(FuDevice *device, guint idt, GString *str)
 	fu_string_append(str, idt, "ModelName", self->model_name);
 	fu_pxi_ota_fw_state_to_string(&self->fwstate, idt, str);
 	fu_string_append_kx(str, idt, "RetransmitID", self->retransmit_id);
+	fu_string_append_kx(str, idt, "FeatureReportID", self->feature_report_id);
+	fu_string_append_kx(str, idt, "InputReportID", self->input_report_id);
 }
 
 static FuFirmware *
@@ -167,10 +172,10 @@ fu_pxi_ble_device_get_feature(FuPxiBleDevice *self, guint8 *buf, guint bufsz, GE
 
 	/* prepend the report-id and cmd for versions of bluez that do not have
 	 * https://github.com/bluez/bluez/commit/35a2c50437cca4d26ac6537ce3a964bb509c9b62 */
-	if (bufsz > 2 && buf[0] != PXI_HID_DEV_OTA_FEATURE_REPORT_ID) {
+	if (bufsz > 2 && buf[0] != self->feature_report_id) {
 		g_debug("doing fixup for old bluez version");
 		memmove(buf + 2, buf, bufsz - 2);
-		buf[0] = PXI_HID_DEV_OTA_FEATURE_REPORT_ID;
+		buf[0] = self->feature_report_id;
 		buf[1] = 0x0;
 	}
 
@@ -185,40 +190,67 @@ fu_pxi_ble_device_get_feature(FuPxiBleDevice *self, guint8 *buf, guint bufsz, GE
 }
 
 static gboolean
-fu_pxi_ble_device_search_hid_usage_page(guint8 *report_descriptor,
-					gint size,
-					guint8 *usage_page,
-					guint8 usage_page_sz)
+fu_pxi_ble_device_search_hid_feature_report_id(FuFirmware *descriptor,
+					       guint16 usage_page,
+					       guint8 *report_id,
+					       GError **error)
 {
-	gint pos = 0;
+	g_autoptr(FuFirmware) item_id = NULL;
+	g_autoptr(FuHidReport) report = NULL;
 
-	fu_dump_raw(G_LOG_DOMAIN, "target usage_page", usage_page, usage_page_sz);
+	/* check ota retransmit feature report usage page exists */
+	report = fu_hid_descriptor_find_report(FU_HID_DESCRIPTOR(descriptor),
+					       error,
+					       "usage-page",
+					       usage_page,
+					       "usage",
+					       0x01,
+					       "feature",
+					       0x02,
+					       NULL);
+	if (report == NULL)
+		return FALSE;
 
-	while (pos < size) {
-		/* HID info define by HID specification */
-		guint8 item = report_descriptor[pos];
-		guint8 report_size = item & 0x03;
-		guint8 report_tag = item & 0xF0;
-		guint8 usage_page_tmp[4] = {0x00};
+	/* find report-id */
+	item_id = fu_firmware_get_image_by_id(FU_FIRMWARE(report), "report-id", error);
+	if (item_id == NULL)
+		return FALSE;
 
-		report_size = (report_size == 3) ? 4 : report_size;
+	/* success */
+	*report_id = fu_hid_report_item_get_value(FU_HID_REPORT_ITEM(item_id));
+	return TRUE;
+}
 
-		if (report_tag != 0) {
-			pos += report_size + 1;
-			continue;
-		}
+static gboolean
+fu_pxi_ble_device_search_hid_input_report_id(FuFirmware *descriptor,
+					     guint16 usage_page,
+					     guint8 *report_id,
+					     GError **error)
+{
+	g_autoptr(FuHidReport) report = NULL;
+	g_autoptr(FuFirmware) item_id = NULL;
 
-		memmove(usage_page_tmp, &report_descriptor[pos + 1], report_size);
-		if (memcmp(usage_page, usage_page_tmp, usage_page_sz) == 0) {
-			g_debug("hit item: %x  ", item);
-			fu_dump_raw(G_LOG_DOMAIN, "usage_page", usage_page, report_size);
-			g_debug("hit pos %d", pos);
-			return TRUE; /* finished processing */
-		}
-		pos += report_size + 1;
-	}
+	/* check ota retransmit feature report usage page exist or not */
+	report = fu_hid_descriptor_find_report(FU_HID_DESCRIPTOR(descriptor),
+					       error,
+					       "usage-page",
+					       usage_page,
+					       "usage",
+					       0x01,
+					       "input",
+					       0x02,
+					       NULL);
+	if (report == NULL)
+		return FALSE;
 
-	return FALSE; /* finished processing */
+	/* find report-id */
+	item_id = fu_firmware_get_image_by_id(FU_FIRMWARE(report), "report-id", error);
+	if (item_id == NULL)
+		return FALSE;
+
+	/* success */
+	*report_id = fu_hid_report_item_get_value(FU_HID_REPORT_ITEM(item_id));
+	return TRUE;
 }
 
 static gboolean
@@ -226,9 +258,15 @@ fu_pxi_ble_device_check_support_report_id(FuPxiBleDevice *self, GError **error)
 {
 #ifdef HAVE_HIDRAW_H
 	gint desc_size = 0;
+	g_autoptr(FuFirmware) descriptor = fu_hid_descriptor_new();
 	g_autoptr(GByteArray) req = g_byte_array_new();
+	g_autoptr(GBytes) fw = NULL;
+	g_autoptr(GError) error_local1 = NULL;
+	g_autoptr(GError) error_local2 = NULL;
+	g_autoptr(GError) error_local3 = NULL;
+	g_autoptr(GError) error_local = NULL;
 
-	struct hidraw_report_descriptor rpt_desc;
+	struct hidraw_report_descriptor rpt_desc = {0x0};
 
 	/* Get Report Descriptor Size */
 	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
@@ -249,18 +287,48 @@ fu_pxi_ble_device_check_support_report_id(FuPxiBleDevice *self, GError **error)
 		return FALSE;
 	fu_dump_raw(G_LOG_DOMAIN, "HID descriptor", rpt_desc.value, rpt_desc.size);
 
-	/* check ota retransmit feature report usage page exist or not */
-	fu_byte_array_append_uint16(req, PXI_HID_DEV_OTA_RETRANSMIT_USAGE_PAGE, G_LITTLE_ENDIAN);
-	if (!fu_pxi_ble_device_search_hid_usage_page(rpt_desc.value,
-						     rpt_desc.size,
-						     req->data,
-						     req->len)) {
-		/* replace retransmit report id with feature report id, if retransmit report id not
-		 * found */
-		self->retransmit_id = PXI_HID_DEV_OTA_FEATURE_REPORT_ID;
+	/* parse the descriptor, but use the defaults if it fails */
+	fw = g_bytes_new(rpt_desc.value, rpt_desc.size);
+	if (!fu_firmware_parse(descriptor, fw, FWUPD_INSTALL_FLAG_NONE, &error_local)) {
+		g_debug("failed to parse descriptor: %s", error_local->message);
+		return TRUE;
 	}
-	return TRUE;
 
+	/* check ota retransmit feature report usage page exists */
+	if (!fu_pxi_ble_device_search_hid_feature_report_id(descriptor,
+							    PXI_HID_DEV_OTA_RETRANSMIT_USAGE_PAGE,
+							    &self->retransmit_id,
+							    &error_local1)) {
+		g_debug("failed to parse descriptor: %s", error_local1->message);
+	}
+	g_debug("usage-page: 0x%x retransmit_id: %d",
+		PXI_HID_DEV_OTA_RETRANSMIT_USAGE_PAGE,
+		self->retransmit_id);
+
+	/* check ota feature report usage page exists */
+	if (!fu_pxi_ble_device_search_hid_feature_report_id(descriptor,
+							    PXI_HID_DEV_OTA_REPORT_USAGE_PAGE,
+							    &self->feature_report_id,
+							    &error_local2)) {
+		g_debug("failed to parse descriptor: %s", error_local2->message);
+	}
+	g_debug("usage-page: 0x%x feature_report_id: %d",
+		PXI_HID_DEV_OTA_RETRANSMIT_USAGE_PAGE,
+		self->retransmit_id);
+
+	/* check ota notify input report usage page exist or not */
+	if (!fu_pxi_ble_device_search_hid_input_report_id(descriptor,
+							  PXI_HID_DEV_OTA_NOTIFY_USAGE_PAGE,
+							  &self->input_report_id,
+							  &error_local3)) {
+		g_debug("failed to parse descriptor: %s", error_local3->message);
+	}
+	g_debug("usage-page: 0x%x input_report_id: %d",
+		PXI_HID_DEV_OTA_RETRANSMIT_USAGE_PAGE,
+		self->input_report_id);
+
+	/* success */
+	return TRUE;
 #else
 	g_set_error_literal(error,
 			    G_IO_ERROR,
@@ -350,12 +418,12 @@ fu_pxi_ble_device_wait_notify(FuPxiBleDevice *self,
 					  (FU_PXI_BLE_DEVICE_NOTIFY_RET_LEN + 1) - port,
 					  error))
 			return FALSE;
-		if (res[0] == PXI_HID_DEV_OTA_INPUT_REPORT_ID)
+		if (res[0] == self->input_report_id)
 			break;
 	}
 
 	/* timeout */
-	if (res[0] != PXI_HID_DEV_OTA_INPUT_REPORT_ID) {
+	if (res[0] != self->input_report_id) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INTERNAL,
@@ -405,7 +473,7 @@ fu_pxi_ble_device_fw_object_create(FuPxiBleDevice *self, FuChunk *chk, GError **
 	g_autoptr(GByteArray) req = g_byte_array_new();
 
 	/* request */
-	fu_byte_array_append_uint8(req, PXI_HID_DEV_OTA_FEATURE_REPORT_ID);
+	fu_byte_array_append_uint8(req, self->feature_report_id);
 	fu_byte_array_append_uint8(req, FU_PXI_DEVICE_CMD_FW_OBJECT_CREATE);
 	fu_byte_array_append_uint32(req, fu_chunk_get_address(chk), G_LITTLE_ENDIAN);
 	fu_byte_array_append_uint32(req, fu_chunk_get_data_sz(chk), G_LITTLE_ENDIAN);
@@ -433,7 +501,7 @@ static gboolean
 fu_pxi_ble_device_write_payload(FuPxiBleDevice *self, FuChunk *chk, GError **error)
 {
 	g_autoptr(GByteArray) req = g_byte_array_new();
-	fu_byte_array_append_uint8(req, PXI_HID_DEV_OTA_FEATURE_REPORT_ID);
+	fu_byte_array_append_uint8(req, self->feature_report_id);
 	g_byte_array_append(req, fu_chunk_get_data(chk), fu_chunk_get_data_sz(chk));
 	return fu_pxi_ble_device_set_feature(self, req, error);
 }
@@ -504,7 +572,7 @@ static gboolean
 fu_pxi_ble_device_reset(FuPxiBleDevice *self, GError **error)
 {
 	g_autoptr(GByteArray) req = g_byte_array_new();
-	fu_byte_array_append_uint8(req, PXI_HID_DEV_OTA_FEATURE_REPORT_ID);
+	fu_byte_array_append_uint8(req, self->feature_report_id);
 	fu_byte_array_append_uint8(req, FU_PXI_DEVICE_CMD_FW_MCU_RESET); /* OTA reset command */
 	fu_byte_array_append_uint8(req, OTA_RESET);			 /* OTA reset reason  */
 
@@ -523,7 +591,7 @@ fu_pxi_ble_device_fw_ota_init(FuPxiBleDevice *self, GError **error)
 	g_autoptr(GByteArray) req = g_byte_array_new();
 
 	/* write fw ota init command */
-	fu_byte_array_append_uint8(req, PXI_HID_DEV_OTA_FEATURE_REPORT_ID);
+	fu_byte_array_append_uint8(req, self->feature_report_id);
 	fu_byte_array_append_uint8(req, FU_PXI_DEVICE_CMD_FW_OTA_INIT);
 	return fu_pxi_ble_device_set_feature(self, req, error);
 }
@@ -536,7 +604,7 @@ fu_pxi_ble_device_fw_ota_init_new(FuPxiBleDevice *self, gsize bufsz, GError **er
 	g_autoptr(GByteArray) req = g_byte_array_new();
 
 	/* write fw ota init new command */
-	fu_byte_array_append_uint8(req, PXI_HID_DEV_OTA_FEATURE_REPORT_ID);
+	fu_byte_array_append_uint8(req, self->feature_report_id);
 	fu_byte_array_append_uint8(req, FU_PXI_DEVICE_CMD_FW_OTA_INIT_NEW);
 	fu_byte_array_append_uint32(req, bufsz, G_LITTLE_ENDIAN);
 	fu_byte_array_append_uint8(req, 0x0); /* OTA setting */
@@ -548,7 +616,7 @@ fu_pxi_ble_device_fw_ota_init_new(FuPxiBleDevice *self, gsize bufsz, GError **er
 	fu_device_sleep(FU_DEVICE(self), 10); /* ms */
 
 	/* read fw ota init new command */
-	res[0] = PXI_HID_DEV_OTA_FEATURE_REPORT_ID;
+	res[0] = self->feature_report_id;
 	res[1] = FU_PXI_DEVICE_CMD_FW_OTA_INIT_NEW;
 	if (!fu_pxi_ble_device_get_feature(self, res, sizeof(res), error))
 		return FALSE;
@@ -587,7 +655,7 @@ fu_pxi_ble_device_fw_upgrade(FuPxiBleDevice *self,
 	if (fw == NULL)
 		return FALSE;
 	checksum = fu_sum16_bytes(fw);
-	fu_byte_array_append_uint8(req, PXI_HID_DEV_OTA_FEATURE_REPORT_ID);
+	fu_byte_array_append_uint8(req, self->feature_report_id);
 	fu_byte_array_append_uint8(req, FU_PXI_DEVICE_CMD_FW_UPGRADE);
 	fu_byte_array_append_uint32(req, g_bytes_get_size(fw), G_LITTLE_ENDIAN);
 	fu_byte_array_append_uint16(req, checksum, G_LITTLE_ENDIAN);
@@ -715,7 +783,7 @@ fu_pxi_ble_device_fw_get_info(FuPxiBleDevice *self, GError **error)
 	g_autofree gchar *version_str = NULL;
 	g_autoptr(GByteArray) req = g_byte_array_new();
 
-	fu_byte_array_append_uint8(req, PXI_HID_DEV_OTA_FEATURE_REPORT_ID);
+	fu_byte_array_append_uint8(req, self->feature_report_id);
 	fu_byte_array_append_uint8(req, FU_PXI_DEVICE_CMD_FW_GET_INFO);
 	if (!fu_pxi_ble_device_set_feature(self, req, error))
 		return FALSE;
@@ -723,7 +791,7 @@ fu_pxi_ble_device_fw_get_info(FuPxiBleDevice *self, GError **error)
 	/* delay for BLE device read command */
 	fu_device_sleep(FU_DEVICE(self), 10); /* ms */
 
-	res[0] = PXI_HID_DEV_OTA_FEATURE_REPORT_ID;
+	res[0] = self->feature_report_id;
 	res[1] = FU_PXI_DEVICE_CMD_FW_GET_INFO;
 
 	if (!fu_pxi_ble_device_get_feature(self, res, FU_PXI_BLE_DEVICE_FW_INFO_RET_LEN + 3, error))
@@ -758,7 +826,7 @@ fu_pxi_ble_device_get_model_info(FuPxiBleDevice *self, GError **error)
 	guint8 model_name[FU_PXI_DEVICE_MODEL_NAME_LEN] = {0x0};
 	g_autoptr(GByteArray) req = g_byte_array_new();
 
-	fu_byte_array_append_uint8(req, PXI_HID_DEV_OTA_FEATURE_REPORT_ID);
+	fu_byte_array_append_uint8(req, self->feature_report_id);
 	fu_byte_array_append_uint8(req, FU_PXI_DEVICE_CMD_FW_OTA_GET_MODEL);
 
 	if (!fu_pxi_ble_device_set_feature(self, req, error))
@@ -767,7 +835,7 @@ fu_pxi_ble_device_get_model_info(FuPxiBleDevice *self, GError **error)
 	/* delay for BLE device read command */
 	fu_device_sleep(FU_DEVICE(self), 10); /* ms */
 
-	res[0] = PXI_HID_DEV_OTA_FEATURE_REPORT_ID;
+	res[0] = self->feature_report_id;
 	if (!fu_pxi_ble_device_get_feature(self, res, sizeof(res), error))
 		return FALSE;
 	if (!fu_memread_uint8_safe(res, sizeof(res), 0x4, &opcode, error))
@@ -892,6 +960,8 @@ fu_pxi_ble_device_init(FuPxiBleDevice *self)
 	fu_device_add_protocol(FU_DEVICE(self), "com.pixart.rf");
 	fu_device_retry_set_delay(FU_DEVICE(self), 50);
 	self->retransmit_id = PXI_HID_DEV_OTA_RETRANSMIT_REPORT_ID;
+	self->feature_report_id = PXI_HID_DEV_OTA_FEATURE_REPORT_ID;
+	self->input_report_id = PXI_HID_DEV_OTA_INPUT_REPORT_ID;
 }
 
 static void
