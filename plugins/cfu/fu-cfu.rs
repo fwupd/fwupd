@@ -34,6 +34,7 @@ enum CfuRrCode {
     SignRule = 0xE0,
     VerReleaseDebug = 0xE1,
     DebugSameVersion  = 0xE2,
+    None  = 0xFF,
 }
 
 #[derive(ToString)]
