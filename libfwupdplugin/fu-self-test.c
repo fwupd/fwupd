@@ -3789,7 +3789,7 @@ fu_firmware_builder_round_trip_func(void)
 	    {FU_TYPE_IFD_FIRMWARE, "ifd.builder.xml", "0805c742e0deec12db2d8f9a86158a7cf610869b"},
 	    {FU_TYPE_CFU_OFFER,
 	     "cfu-offer.builder.xml",
-	     "acc572d03a129081921c36118b527dab34a077ad"},
+	     "c10223887ff6cdf4475ad07c65b1f0f3a2d0d5ca"},
 	    {FU_TYPE_CFU_PAYLOAD,
 	     "cfu-payload.builder.xml",
 	     "5da829f5fd15a28970aed98ebb26ebf2f88ed6f2"},
