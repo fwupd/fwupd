@@ -34,7 +34,7 @@
 
 #define FU_PXI_BLE_DEVICE_NOTIFY_TIMEOUT_MS 5000
 
-#define FU_PXI_BLE_DEVICE_SET_REPORT_RETRIES 10
+#define FU_PXI_BLE_DEVICE_SET_REPORT_RETRIES 30
 
 /* OTA target selection */
 enum ota_process_setting {
