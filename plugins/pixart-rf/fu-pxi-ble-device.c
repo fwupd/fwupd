@@ -12,8 +12,6 @@
 #include <linux/input.h>
 #endif
 
-#include <fwupdplugin.h>
-
 #include "fu-pxi-ble-device.h"
 #include "fu-pxi-common.h"
 #include "fu-pxi-firmware.h"
