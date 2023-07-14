@@ -142,7 +142,7 @@ fu_hid_device_autodetect_eps(FuHidDevice *self, GUsbInterface *iface, GError **e
 			continue;
 		}
 	}
-	if (priv->ep_addr_in == 0x0 || priv->ep_addr_out == 0) {
+	if (priv->ep_addr_in == 0x0 && priv->ep_addr_out == 0) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
@@ -318,6 +318,13 @@ fu_hid_device_set_report_internal(FuHidDevice *self, FuHidDeviceRetryHelper *hel
 		g_autofree gchar *title =
 		    g_strdup_printf("HID::SetReport [EP=0x%02x]", priv->ep_addr_out);
 		fu_dump_raw(G_LOG_DOMAIN, title, helper->buf, helper->bufsz);
+		if (priv->ep_addr_out == 0x0) {
+			g_set_error_literal(error,
+					    G_IO_ERROR,
+					    G_IO_ERROR_NOT_SUPPORTED,
+					    "no EpAddrOut set");
+			return FALSE;
+		}
 		if (!g_usb_device_interrupt_transfer(usb_device,
 						     priv->ep_addr_out,
 						     helper->buf,
@@ -442,6 +449,13 @@ fu_hid_device_get_report_internal(FuHidDevice *self, FuHidDeviceRetryHelper *hel
 	/* what method do we use? */
 	if (helper->flags & FU_HID_DEVICE_FLAG_USE_INTERRUPT_TRANSFER) {
 		g_autofree gchar *title = NULL;
+		if (priv->ep_addr_in == 0x0) {
+			g_set_error_literal(error,
+					    G_IO_ERROR,
+					    G_IO_ERROR_NOT_SUPPORTED,
+					    "no EpAddrIn set");
+			return FALSE;
+		}
 		if (!g_usb_device_interrupt_transfer(usb_device,
 						     priv->ep_addr_in,
 						     helper->buf,
