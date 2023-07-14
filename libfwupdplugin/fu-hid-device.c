@@ -177,7 +177,7 @@ fu_hid_device_open(FuDevice *device, GError **error)
 			if (g_usb_interface_get_class(iface) == G_USB_DEVICE_CLASS_HID) {
 				priv->interface = g_usb_interface_get_number(iface);
 				priv->interface_autodetect = FALSE;
-				if (priv->flags & FU_HID_DEVICE_FLAG_USE_INTERRUPT_TRANSFER) {
+				if (priv->flags & FU_HID_DEVICE_FLAG_AUTODETECT_EPS) {
 					if (!fu_hid_device_autodetect_eps(self, iface, error))
 						return FALSE;
 				}
@@ -314,7 +314,7 @@ fu_hid_device_set_report_internal(FuHidDevice *self, FuHidDeviceRetryHelper *hel
 	gsize actual_len = 0;
 
 	/* what method do we use? */
-	if (priv->flags & FU_HID_DEVICE_FLAG_USE_INTERRUPT_TRANSFER) {
+	if (helper->flags & FU_HID_DEVICE_FLAG_USE_INTERRUPT_TRANSFER) {
 		g_autofree gchar *title =
 		    g_strdup_printf("HID::SetReport [EP=0x%02x]", priv->ep_addr_out);
 		fu_dump_raw(G_LOG_DOMAIN, title, helper->buf, helper->bufsz);
@@ -440,7 +440,7 @@ fu_hid_device_get_report_internal(FuHidDevice *self, FuHidDeviceRetryHelper *hel
 	gsize actual_len = 0;
 
 	/* what method do we use? */
-	if (priv->flags & FU_HID_DEVICE_FLAG_USE_INTERRUPT_TRANSFER) {
+	if (helper->flags & FU_HID_DEVICE_FLAG_USE_INTERRUPT_TRANSFER) {
 		g_autofree gchar *title = NULL;
 		if (!g_usb_device_interrupt_transfer(usb_device,
 						     priv->ep_addr_in,
