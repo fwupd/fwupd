@@ -444,8 +444,8 @@ fu_cfu_offer_parse(FuFirmware *firmware,
 
 	/* component info */
 	flags1 = fu_struct_cfu_offer_get_flags1(st);
-	priv->force_ignore_version = (flags1 & 0b1) > 0;
-	priv->force_immediate_reset = (flags1 & 0b10) > 0;
+	priv->force_ignore_version = (flags1 & 0b10000000) > 0;
+	priv->force_immediate_reset = (flags1 & 0b01000000) > 0;
 
 	/* product info */
 	flags2 = fu_struct_cfu_offer_get_flags2(st);
@@ -468,8 +468,8 @@ fu_cfu_offer_write(FuFirmware *firmware, GError **error)
 	/* component info */
 	fu_struct_cfu_offer_set_segment_number(st, priv->segment_number);
 	fu_struct_cfu_offer_set_flags1(st,
-				       priv->force_ignore_version |
-					   (priv->force_immediate_reset << 1));
+				       priv->force_ignore_version << 7 |
+					   (priv->force_immediate_reset << 6));
 	fu_struct_cfu_offer_set_component_id(st, priv->component_id);
 	fu_struct_cfu_offer_set_token(st, priv->token);
 
