@@ -57,7 +57,7 @@ fu_usi_dock_mcu_device_tx(FuUsiDockMcuDevice *self,
 					st->data,
 					st->len,
 					FU_USI_DOCK_MCU_DEVICE_TIMEOUT,
-					FU_HID_DEVICE_FLAG_NONE,
+					FU_HID_DEVICE_FLAG_USE_INTERRUPT_TRANSFER,
 					error);
 }
 
@@ -76,7 +76,7 @@ fu_usi_dock_mcu_device_rx(FuUsiDockMcuDevice *self,
 				      buf,
 				      sizeof(buf),
 				      FU_USI_DOCK_MCU_DEVICE_TIMEOUT,
-				      FU_HID_DEVICE_FLAG_NONE,
+				      FU_HID_DEVICE_FLAG_USE_INTERRUPT_TRANSFER,
 				      error)) {
 		return FALSE;
 	}
@@ -418,7 +418,7 @@ fu_usi_dock_mcu_device_write_chunk(FuUsiDockMcuDevice *self, FuChunk *chk, GErro
 				      st_req->data,
 				      st_req->len,
 				      FU_USI_DOCK_MCU_DEVICE_TIMEOUT,
-				      FU_HID_DEVICE_FLAG_NONE,
+				      FU_HID_DEVICE_FLAG_USE_INTERRUPT_TRANSFER,
 				      error))
 		return FALSE;
 	return fu_usi_dock_mcu_device_rx(self, FU_USI_DOCK_MCU_CMD_ALL, NULL, 0x0, error);
@@ -787,7 +787,7 @@ fu_usi_dock_mcu_device_init(FuUsiDockMcuDevice *self)
 	fu_device_register_private_flag(FU_DEVICE(self),
 					FU_USI_DOCK_DEVICE_FLAG_SET_CHIP_TYPE,
 					"set-chip-type");
-	fu_hid_device_add_flag(FU_HID_DEVICE(self), FU_HID_DEVICE_FLAG_USE_INTERRUPT_TRANSFER);
+	fu_hid_device_add_flag(FU_HID_DEVICE(self), FU_HID_DEVICE_FLAG_AUTODETECT_EPS);
 	fu_device_add_protocol(FU_DEVICE(self), "com.usi.dock");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_NUMBER);
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);

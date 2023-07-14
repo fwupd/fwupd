@@ -38,7 +38,7 @@ fu_qsi_dock_mcu_device_tx(FuQsiDockMcuDevice *self,
 					buf,
 					sizeof(buf),
 					FU_QSI_DOCK_MCU_DEVICE_TIMEOUT,
-					FU_HID_DEVICE_FLAG_NONE,
+					FU_HID_DEVICE_FLAG_USE_INTERRUPT_TRANSFER,
 					error);
 }
 
@@ -52,7 +52,7 @@ fu_qsi_dock_mcu_device_rx(FuQsiDockMcuDevice *self, guint8 *outbuf, gsize outbuf
 				      buf,
 				      sizeof(buf),
 				      FU_QSI_DOCK_MCU_DEVICE_TIMEOUT,
-				      FU_HID_DEVICE_FLAG_NONE,
+				      FU_HID_DEVICE_FLAG_USE_INTERRUPT_TRANSFER,
 				      error)) {
 		return FALSE;
 	}
@@ -241,7 +241,7 @@ fu_qsi_dock_mcu_device_checksum(FuQsiDockMcuDevice *self,
 				      buf,
 				      sizeof(buf),
 				      FU_QSI_DOCK_MCU_DEVICE_TIMEOUT,
-				      FU_HID_DEVICE_FLAG_NONE,
+				      FU_HID_DEVICE_FLAG_USE_INTERRUPT_TRANSFER,
 				      error))
 		return FALSE;
 	memset(buf, 0x0, sizeof(buf));
@@ -250,7 +250,7 @@ fu_qsi_dock_mcu_device_checksum(FuQsiDockMcuDevice *self,
 				      buf,
 				      sizeof(buf),
 				      FU_QSI_DOCK_MCU_DEVICE_TIMEOUT,
-				      FU_HID_DEVICE_FLAG_NONE,
+				      FU_HID_DEVICE_FLAG_USE_INTERRUPT_TRANSFER,
 				      error))
 		return FALSE;
 
@@ -301,7 +301,7 @@ fu_qsi_dock_mcu_device_write_chunk(FuQsiDockMcuDevice *self,
 					      buf,
 					      sizeof(buf),
 					      FU_QSI_DOCK_MCU_DEVICE_TIMEOUT,
-					      FU_HID_DEVICE_FLAG_NONE,
+					      FU_HID_DEVICE_FLAG_USE_INTERRUPT_TRANSFER,
 					      error))
 			return FALSE;
 
@@ -324,7 +324,7 @@ fu_qsi_dock_mcu_device_write_chunk(FuQsiDockMcuDevice *self,
 					      buf,
 					      sizeof(buf),
 					      FU_QSI_DOCK_MCU_DEVICE_TIMEOUT,
-					      FU_HID_DEVICE_FLAG_NONE,
+					      FU_HID_DEVICE_FLAG_USE_INTERRUPT_TRANSFER,
 					      error))
 			return FALSE;
 
@@ -385,7 +385,7 @@ fu_qsi_dock_mcu_device_wait_for_spi_initial_ready_cb(FuDevice *device,
 				      buf,
 				      sizeof(buf),
 				      FU_QSI_DOCK_MCU_DEVICE_TIMEOUT,
-				      FU_HID_DEVICE_FLAG_NONE,
+				      FU_HID_DEVICE_FLAG_USE_INTERRUPT_TRANSFER,
 				      error))
 		return FALSE;
 	memset(buf, 0x0, sizeof(buf));
@@ -394,7 +394,7 @@ fu_qsi_dock_mcu_device_wait_for_spi_initial_ready_cb(FuDevice *device,
 				      buf,
 				      sizeof(buf),
 				      FU_QSI_DOCK_MCU_DEVICE_TIMEOUT,
-				      FU_HID_DEVICE_FLAG_NONE,
+				      FU_HID_DEVICE_FLAG_USE_INTERRUPT_TRANSFER,
 				      error))
 		return FALSE;
 
@@ -444,7 +444,7 @@ fu_qsi_dock_mcu_device_wait_for_spi_erase_ready_cb(FuQsiDockMcuDevice *self,
 				      buf,
 				      sizeof(buf),
 				      FU_QSI_DOCK_MCU_DEVICE_TIMEOUT,
-				      FU_HID_DEVICE_FLAG_NONE,
+				      FU_HID_DEVICE_FLAG_USE_INTERRUPT_TRANSFER,
 				      error))
 		return FALSE;
 	memset(buf, 0x0, sizeof(buf));
@@ -453,7 +453,7 @@ fu_qsi_dock_mcu_device_wait_for_spi_erase_ready_cb(FuQsiDockMcuDevice *self,
 				      buf,
 				      sizeof(buf),
 				      FU_QSI_DOCK_MCU_DEVICE_TIMEOUT,
-				      FU_HID_DEVICE_FLAG_NONE,
+				      FU_HID_DEVICE_FLAG_USE_INTERRUPT_TRANSFER,
 				      error))
 		return FALSE;
 
@@ -563,7 +563,7 @@ fu_qsi_dock_mcu_device_init(FuQsiDockMcuDevice *self)
 {
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
-	fu_hid_device_add_flag(FU_HID_DEVICE(self), FU_HID_DEVICE_FLAG_USE_INTERRUPT_TRANSFER);
+	fu_hid_device_add_flag(FU_HID_DEVICE(self), FU_HID_DEVICE_FLAG_AUTODETECT_EPS);
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_INHIBIT_CHILDREN);
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_NO_SERIAL_NUMBER);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_NUMBER);
