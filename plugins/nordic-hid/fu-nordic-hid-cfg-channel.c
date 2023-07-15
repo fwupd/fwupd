@@ -18,12 +18,14 @@
 #define REPORT_SIZE	     30
 #define REPORT_DATA_MAX_LEN  (REPORT_SIZE - 5)
 #define HWID_LEN	     8
+#define PEERS_CACHE_LEN	     16
 #define END_OF_TRANSFER_CHAR 0x0a
 #define INVALID_PEER_ID	     0xFF
 
-#define FU_NORDIC_HID_CFG_CHANNEL_RETRIES	  10
-#define FU_NORDIC_HID_CFG_CHANNEL_RETRY_DELAY	  50  /* ms */
-#define FU_NORDIC_HID_CFG_CHANNEL_DFU_RETRY_DELAY 500 /* ms */
+#define FU_NORDIC_HID_CFG_CHANNEL_RETRIES	      10
+#define FU_NORDIC_HID_CFG_CHANNEL_RETRY_DELAY	      50   /* ms */
+#define FU_NORDIC_HID_CFG_CHANNEL_DFU_RETRY_DELAY     500  /* ms */
+#define FU_NORDIC_HID_CFG_CHANNEL_PEERS_POLL_INTERVAL 2000 /* ms */
 
 #define FU_NORDIC_HID_CFG_CHANNEL_IOCTL_TIMEOUT 5000 /* ms */
 
@@ -41,6 +43,7 @@ typedef enum {
 	CONFIG_STATUS_REJECT,
 	CONFIG_STATUS_WRITE_FAIL,
 	CONFIG_STATUS_DISCONNECTED,
+	CONFIG_STATUS_GET_PEERS_CACHE,
 	CONFIG_STATUS_FAULT = 99,
 } FuNordicCfgStatus;
 
@@ -91,6 +94,8 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuNordicCfgChannelDfuInfo, g_free);
 struct _FuNordicHidCfgChannel {
 	FuUdevDevice parent_instance;
 	gboolean dfu_support;
+	gboolean peers_cache_support;
+	guint8 peers_cache[PEERS_CACHE_LEN];
 	gchar *board_name;
 	gchar *bl_name;
 	gchar *generation;
@@ -418,14 +423,75 @@ fu_nordic_hid_cfg_channel_cmd_receive(FuNordicHidCfgChannel *self,
 }
 
 static gboolean
-fu_nordic_hid_cfg_channel_add_peers(FuNordicHidCfgChannel *self, GError **error)
+fu_nordic_hid_cfg_channel_is_cached_peer_connected(guint8 peer_cache_val)
 {
-	guint cnt = 0;
+	return (peer_cache_val % 2) != 0;
+}
+
+static void
+fu_nordic_hid_cfg_channel_add_peer(FuNordicHidCfgChannel *self, guint8 peer_id)
+{
+	g_autoptr(GError) error_local = NULL;
+	g_autoptr(FuNordicHidCfgChannel) peer = NULL;
+
+	peer = fu_nordic_hid_cfg_channel_new(peer_id, self);
+
+	/* ensure that the general quirk content for Nordic HID devices is applied */
+	fu_device_add_instance_id(FU_DEVICE(peer), "HIDRAW\\VEN_1915");
+
+	if (!fu_device_setup(FU_DEVICE(peer), &error_local)) {
+		g_debug("failed to discover peer 0x%02x: %s", peer_id, error_local->message);
+		return;
+	}
+
+	g_debug("peer 0x%02x discovered", peer_id);
+	fu_device_add_child(FU_DEVICE(self), FU_DEVICE(peer));
+	/* prohibit to close parent's communication descriptor */
+	fu_device_add_internal_flag(FU_DEVICE(peer), FU_DEVICE_INTERNAL_FLAG_USE_PARENT_FOR_OPEN);
+}
+
+static void
+fu_nordic_hid_cfg_channel_remove_peer(FuNordicHidCfgChannel *self, guint8 peer_id)
+{
+	GPtrArray *children = fu_device_get_children(FU_DEVICE(self));
+
+	/* remove child device if already discovered */
+	for (guint i = 0; i < children->len; i++) {
+		FuDevice *child_dev = g_ptr_array_index(children, i);
+		FuNordicHidCfgChannel *child = FU_NORDIC_HID_CFG_CHANNEL(child_dev);
+
+		if (child->peer_id == peer_id) {
+			fu_device_remove_child(FU_DEVICE(self), child_dev);
+			break;
+		}
+	}
+}
+
+static void
+fu_nordic_hid_cfg_channel_remove_disconnected_peers(FuNordicHidCfgChannel *self,
+						    guint8 peers_cache[PEERS_CACHE_LEN])
+{
+	for (guint i = 0; i < PEERS_CACHE_LEN; i++) {
+		guint8 peer_id = i + 1;
+
+		if (peers_cache == NULL ||
+		    !fu_nordic_hid_cfg_channel_is_cached_peer_connected(peers_cache[i])) {
+			fu_nordic_hid_cfg_channel_remove_peer(self, peer_id);
+			if (peers_cache != NULL)
+				self->peers_cache[i] = peers_cache[i];
+		}
+	}
+}
+
+static gboolean
+fu_nordic_hid_cfg_channel_index_peers_cmd(FuNordicHidCfgChannel *self,
+					  gboolean *cmd_supported,
+					  GError **error)
+{
 	g_autoptr(FuNordicCfgChannelMsg) res = g_new0(FuNordicCfgChannelMsg, 1);
 	g_autoptr(GError) error_local = NULL;
 
-	if (self->peer_id != 0)
-		return TRUE;
+	*cmd_supported = FALSE;
 
 	if (!fu_nordic_hid_cfg_channel_cmd_send(self,
 						NULL,
@@ -433,62 +499,231 @@ fu_nordic_hid_cfg_channel_add_peers(FuNordicHidCfgChannel *self, GError **error)
 						CONFIG_STATUS_INDEX_PEERS,
 						NULL,
 						0,
-						error))
+						error)) {
+		g_prefix_error(error, "INDEX_PEERS cmd_send failed: ");
 		return FALSE;
+	}
+
 	if (fu_nordic_hid_cfg_channel_cmd_receive(self,
 						  CONFIG_STATUS_DISCONNECTED,
 						  res,
 						  &error_local)) {
-		/* no peers */
+		/* forwarding configuration channel to peers not supported */
 		return TRUE;
 	}
 
 	/* Peers available */
-	if (!fu_nordic_hid_cfg_channel_cmd_receive(self, CONFIG_STATUS_SUCCESS, res, error))
+	if (!fu_nordic_hid_cfg_channel_cmd_receive(self, CONFIG_STATUS_SUCCESS, res, error)) {
+		g_prefix_error(error, "INDEX_PEERS cmd_receive failed: ");
+		return FALSE;
+	}
+
+	*cmd_supported = TRUE;
+	return TRUE;
+}
+
+static gboolean
+fu_nordic_hid_cfg_channel_get_next_peer_id_cmd(FuNordicHidCfgChannel *self,
+					       guint8 *peer_id,
+					       GError **error)
+{
+	g_autoptr(FuNordicCfgChannelMsg) res = g_new0(FuNordicCfgChannelMsg, 1);
+
+	if (!fu_nordic_hid_cfg_channel_cmd_send(self,
+						NULL,
+						NULL,
+						CONFIG_STATUS_GET_PEER,
+						NULL,
+						0,
+						error)) {
+		g_prefix_error(error, "GET_PEER cmd_send failed: ");
+		return FALSE;
+	}
+
+	if (!fu_nordic_hid_cfg_channel_cmd_receive(self, CONFIG_STATUS_SUCCESS, res, error)) {
+		g_prefix_error(error, "GET_PEER cmd_receive failed: ");
+		return FALSE;
+	}
+
+	*peer_id = res->data[8];
+
+	return TRUE;
+}
+
+static gboolean
+fu_nordic_hid_cfg_channel_read_peers_cache_cmd(FuNordicHidCfgChannel *self,
+					       gboolean *cmd_supported,
+					       guint8 peers_cache[PEERS_CACHE_LEN],
+					       GError **error)
+{
+	g_autoptr(FuNordicCfgChannelMsg) res = g_new0(FuNordicCfgChannelMsg, 1);
+	g_autoptr(GError) error_local = NULL;
+
+	*cmd_supported = FALSE;
+
+	if (!fu_nordic_hid_cfg_channel_cmd_send(self,
+						NULL,
+						NULL,
+						CONFIG_STATUS_GET_PEERS_CACHE,
+						NULL,
+						0,
+						error)) {
+		g_prefix_error(error, "GET_PEERS_CACHE cmd_send failed: ");
+		return FALSE;
+	}
+
+	if (fu_nordic_hid_cfg_channel_cmd_receive(self,
+						  CONFIG_STATUS_DISCONNECTED,
+						  res,
+						  &error_local)) {
+		/* configuration channel peers cache not supported */
+		return TRUE;
+	}
+
+	/* configuration channel peer caching available */
+	if (!fu_nordic_hid_cfg_channel_cmd_receive(self, CONFIG_STATUS_SUCCESS, res, error)) {
+		g_prefix_error(error, "GET_PEERS_CACHE cmd_receive failed: ");
+		return FALSE;
+	}
+
+	if (!fu_memcpy_safe(peers_cache,
+			    PEERS_CACHE_LEN,
+			    0,
+			    res->data,
+			    PEERS_CACHE_LEN,
+			    0,
+			    PEERS_CACHE_LEN,
+			    error))
 		return FALSE;
 
-	while (cnt++ <= 0xFF) {
-		g_autoptr(FuNordicHidCfgChannel) peer = NULL;
-		g_autoptr(GError) error_peer = NULL;
+	*cmd_supported = TRUE;
 
-		if (!fu_nordic_hid_cfg_channel_cmd_send(self,
-							NULL,
-							NULL,
-							CONFIG_STATUS_GET_PEER,
-							NULL,
-							0,
-							error))
-			return FALSE;
-		if (!fu_nordic_hid_cfg_channel_cmd_receive(self, CONFIG_STATUS_SUCCESS, res, error))
+	return TRUE;
+}
+
+static gboolean
+fu_nordic_hid_cfg_channel_update_peers(FuNordicHidCfgChannel *self,
+				       guint8 peers_cache[PEERS_CACHE_LEN],
+				       GError **error)
+{
+	gboolean peers_supported = FALSE;
+	guint8 peer_id;
+	guint cnt = 0;
+	g_autoptr(GError) error_local = NULL;
+
+	if (!fu_nordic_hid_cfg_channel_index_peers_cmd(self, &peers_supported, error))
+		return FALSE;
+
+	if (!peers_supported)
+		return TRUE;
+
+	/* a device that does not support peers caching, would drop all of the peers because it
+	 * cannot determine if the previously discovered peer is still connected
+	 */
+	fu_nordic_hid_cfg_channel_remove_disconnected_peers(self, peers_cache);
+
+	while (cnt++ <= 0xFF) {
+		if (!fu_nordic_hid_cfg_channel_get_next_peer_id_cmd(self, &peer_id, error))
 			return FALSE;
 
 		/* end of the list */
-		if (res->data[8] == INVALID_PEER_ID)
-			return TRUE;
+		if (peer_id == INVALID_PEER_ID)
+			break;
 
-		g_debug("detected peer: 0x%02x", res->data[8]);
+		g_debug("detected peer: 0x%02x", peer_id);
 
-		peer = fu_nordic_hid_cfg_channel_new(res->data[8], self);
-		/* prohibit to close parent's communication descriptor */
-		fu_device_add_internal_flag(FU_DEVICE(peer),
-					    FU_DEVICE_INTERNAL_FLAG_USE_PARENT_FOR_OPEN);
-
-		/* ensure that the general quirk content for Nordic HID devices is applied */
-		fu_device_add_instance_id(FU_DEVICE(peer), "HIDRAW\\VEN_1915");
-
-		/* remove child that does not support config channel DFU */
-		if (!fu_device_setup(FU_DEVICE(peer), &error_peer)) {
-			g_debug("failed to discover peer 0x%02x: %s",
-				res->data[8],
-				error_peer->message);
+		if (peers_cache == NULL) {
+			/* allow to properly discover dongles without peers cache support */
+			fu_nordic_hid_cfg_channel_add_peer(self, peer_id);
 		} else {
-			g_debug("peer 0x%02x discovered", res->data[8]);
-			fu_device_add_child(FU_DEVICE(self), FU_DEVICE(peer));
+			guint8 idx = peer_id - 1;
+
+			if (self->peers_cache[idx] != peers_cache[idx] &&
+			    fu_nordic_hid_cfg_channel_is_cached_peer_connected(peers_cache[idx])) {
+				fu_nordic_hid_cfg_channel_remove_peer(self, peer_id);
+				fu_nordic_hid_cfg_channel_add_peer(self, peer_id);
+				self->peers_cache[idx] = peers_cache[idx];
+			}
 		}
 	}
 
-	g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_BROKEN_PIPE, "too many peers detected");
-	return FALSE;
+	if (peer_id != INVALID_PEER_ID) {
+		g_set_error_literal(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_BROKEN_PIPE,
+				    "too many peers detected");
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+static gboolean
+fu_nordic_hid_cfg_channel_setup_peers(FuNordicHidCfgChannel *self, GError **error)
+{
+	gboolean peers_cache_supported = FALSE;
+	guint8 peers_cache[PEERS_CACHE_LEN] = {0x00};
+
+	if (self->peer_id != 0) {
+		/* device connected through dongle cannot support peers */
+		return TRUE;
+	}
+
+	if (!fu_nordic_hid_cfg_channel_read_peers_cache_cmd(self,
+							    &peers_cache_supported,
+							    peers_cache,
+							    error))
+		return FALSE;
+
+	if (!peers_cache_supported) {
+		if (!fu_nordic_hid_cfg_channel_update_peers(self, NULL, error))
+			return FALSE;
+	} else {
+		if (!fu_nordic_hid_cfg_channel_update_peers(self, peers_cache, error))
+			return FALSE;
+
+		/* device must be kept open to allow polling */
+		if (!fu_device_open(FU_DEVICE(self), error))
+			return FALSE;
+
+		/* mark device as supporting peers cache, ensure periodic polling for peers */
+		self->peers_cache_support = TRUE;
+		fu_device_set_poll_interval(FU_DEVICE(self),
+					    FU_NORDIC_HID_CFG_CHANNEL_PEERS_POLL_INTERVAL);
+	}
+
+	return TRUE;
+}
+
+static gboolean
+fu_nordic_hid_cfg_channel_poll_peers(FuDevice *device, GError **error)
+{
+	FuNordicHidCfgChannel *self = FU_NORDIC_HID_CFG_CHANNEL(device);
+	gboolean peers_cache_supported = FALSE;
+	guint8 peers_cache[PEERS_CACHE_LEN] = {0x00};
+
+	if (!fu_nordic_hid_cfg_channel_read_peers_cache_cmd(self,
+							    &peers_cache_supported,
+							    peers_cache,
+							    error))
+		return FALSE;
+
+	if (!self->peers_cache_support || !peers_cache_supported) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "unexpected poll of device without peers caching support");
+		return FALSE;
+	}
+
+	/* skip update if not needed */
+	if (!memcmp(self->peers_cache, peers_cache, PEERS_CACHE_LEN))
+		return TRUE;
+
+	if (!fu_nordic_hid_cfg_channel_update_peers(self, peers_cache, error))
+		return FALSE;
+
+	return TRUE;
 }
 
 static gboolean
@@ -1149,8 +1384,7 @@ fu_nordic_hid_cfg_channel_setup(FuDevice *device, GError **error)
 	if (!fu_nordic_hid_cfg_channel_direct_discovery(self, error))
 		return FALSE;
 
-	/* check if any peer is connected via this device */
-	if (!fu_nordic_hid_cfg_channel_add_peers(self, error))
+	if (!fu_nordic_hid_cfg_channel_setup_peers(self, error))
 		return FALSE;
 
 	return TRUE;
@@ -1407,6 +1641,7 @@ fu_nordic_hid_cfg_channel_class_init(FuNordicHidCfgChannelClass *klass)
 	klass_device->set_progress = fu_nordic_hid_cfg_channel_set_progress;
 	klass_device->set_quirk_kv = fu_nordic_hid_cfg_channel_set_quirk_kv;
 	klass_device->setup = fu_nordic_hid_cfg_channel_setup;
+	klass_device->poll = fu_nordic_hid_cfg_channel_poll_peers;
 	klass_device->to_string = fu_nordic_hid_cfg_channel_to_string;
 	klass_device->write_firmware = fu_nordic_hid_cfg_channel_write_firmware;
 	object_class->finalize = fu_nordic_hid_cfg_channel_finalize;
