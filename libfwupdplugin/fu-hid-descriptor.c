@@ -28,6 +28,8 @@
 
 G_DEFINE_TYPE(FuHidDescriptor, fu_hid_descriptor, FU_TYPE_FIRMWARE)
 
+#define FU_HID_DESCRIPTOR_TABLE_SIZE_MAX 1024
+
 static gboolean
 fu_hid_descriptor_parse(FuFirmware *firmware,
 			GBytes *fw,
@@ -40,6 +42,16 @@ fu_hid_descriptor_parse(FuFirmware *firmware,
 	while (offset < g_bytes_get_size(fw)) {
 		g_autofree gchar *itemstr = NULL;
 		g_autoptr(FuHidReportItem) item = fu_hid_report_item_new();
+
+		/* sanity check */
+		if (table_state->len > FU_HID_DESCRIPTOR_TABLE_SIZE_MAX) {
+			g_set_error(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_INVALID_DATA,
+				    "HID table state too large, limit is %u",
+				    (guint)FU_HID_DESCRIPTOR_TABLE_SIZE_MAX);
+			return FALSE;
+		}
 
 		if (!fu_firmware_parse_full(FU_FIRMWARE(item), fw, offset, flags, error))
 			return FALSE;
