@@ -566,7 +566,7 @@ fu_utf8_to_utf16_byte_array(const gchar *str,
 		return NULL;
 	if (flags & FU_UTF_CONVERT_FLAG_APPEND_NUL)
 		buf_utf16sz += 1;
-	for (guint i = 0; i < buf_utf16sz; i++) {
+	for (glong i = 0; i < buf_utf16sz; i++) {
 		guint16 data = fu_memread_uint16((guint8 *)(buf_utf16 + i), G_BYTE_ORDER);
 		fu_byte_array_append_uint16(array, data, endian);
 	}
