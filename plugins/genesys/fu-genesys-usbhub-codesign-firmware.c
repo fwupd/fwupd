@@ -74,9 +74,9 @@ fu_genesys_usbhub_codesign_firmware_parse(FuFirmware *firmware,
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_FILE,
-			    "unknown file format at %#lx:%#lx",
-			    offset,
-			    bufsz);
+			    "unknown file format at 0x%x:0x%x",
+			    (guint)offset,
+			    (guint)bufsz);
 		return FALSE;
 	}
 

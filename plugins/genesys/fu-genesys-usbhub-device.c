@@ -1953,8 +1953,8 @@ fu_genesys_usbhub_device_backup_hub_fw_bank1_to_bank2(FuGenesysUsbhubDevice *sel
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOTHING_TO_DO,
-				    "hub firmware too large, got %#lx, expected <= %#x",
-				    code_size,
+				    "hub firmware too large, got 0x%x, expected <= 0x%x",
+				    (guint)code_size,
 				    codesign_offset);
 			return FALSE;
 		}
