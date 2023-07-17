@@ -50,6 +50,14 @@ void
 fu_hid_device_set_interface(FuHidDevice *self, guint8 interface_number);
 guint8
 fu_hid_device_get_interface(FuHidDevice *self);
+void
+fu_hid_device_set_ep_addr_in(FuHidDevice *self, guint8 ep_addr_in);
+guint8
+fu_hid_device_get_ep_addr_in(FuHidDevice *self);
+void
+fu_hid_device_set_ep_addr_out(FuHidDevice *self, guint8 ep_addr_out);
+guint8
+fu_hid_device_get_ep_addr_out(FuHidDevice *self);
 FuHidDescriptor *
 fu_hid_device_parse_descriptor(FuHidDevice *self, GError **error);
 gboolean
