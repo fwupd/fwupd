@@ -96,6 +96,13 @@ fu_version_from_uint32(guint32 val, FwupdVersionFormat kind)
 				       (val >> 16) & 0xff,
 				       val & 0xffff);
 	}
+	if (kind == FWUPD_VERSION_FORMAT_TRIPLET_MINOR) {
+		/* AA.BBCC.DD */
+		return g_strdup_printf("%u.%u.%u",
+				       (val >> 24) & 0xff,
+				       (val >> 8) & 0xffff,
+				       val & 0xff);
+	}
 	if (kind == FWUPD_VERSION_FORMAT_PAIR) {
 		/* AABB.CCDD */
 		return g_strdup_printf("%u.%u", (val >> 16) & 0xffff, val & 0xffff);

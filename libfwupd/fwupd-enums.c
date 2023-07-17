@@ -890,6 +890,8 @@ fwupd_version_format_from_string(const gchar *str)
 		return FWUPD_VERSION_FORMAT_NUMBER;
 	if (g_strcmp0(str, "triplet") == 0)
 		return FWUPD_VERSION_FORMAT_TRIPLET;
+	if (g_strcmp0(str, "triplet-minor") == 0)
+		return FWUPD_VERSION_FORMAT_TRIPLET_MINOR;
 	if (g_strcmp0(str, "quad") == 0)
 		return FWUPD_VERSION_FORMAT_QUAD;
 	if (g_strcmp0(str, "bcd") == 0)
@@ -930,6 +932,8 @@ fwupd_version_format_to_string(FwupdVersionFormat kind)
 		return "pair";
 	if (kind == FWUPD_VERSION_FORMAT_TRIPLET)
 		return "triplet";
+	if (kind == FWUPD_VERSION_FORMAT_TRIPLET_MINOR)
+		return "triplet-minor";
 	if (kind == FWUPD_VERSION_FORMAT_QUAD)
 		return "quad";
 	if (kind == FWUPD_VERSION_FORMAT_BCD)
