@@ -13,6 +13,7 @@
 #include "fu-cfu-offer.h"
 #include "fu-common.h"
 #include "fu-string.h"
+#include "fu-version-common.h"
 
 /**
  * FuCfuOffer:
@@ -430,6 +431,7 @@ fu_cfu_offer_parse(FuFirmware *firmware,
 	guint8 flags3;
 	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
 	g_autoptr(GByteArray) st = NULL;
+	g_autofree gchar *version = NULL;
 
 	/* parse */
 	st = fu_struct_cfu_offer_parse(buf, bufsz, offset, error);
@@ -440,6 +442,11 @@ fu_cfu_offer_parse(FuFirmware *firmware,
 	priv->token = fu_struct_cfu_offer_get_token(st);
 	priv->hw_variant = fu_struct_cfu_offer_get_compat_variant_mask(st);
 	priv->product_id = fu_struct_cfu_offer_get_product_id(st);
+
+	/* AA.BBCC.DD */
+	version = fu_version_from_uint32(fu_struct_cfu_offer_get_version(st),
+					 FWUPD_VERSION_FORMAT_SURFACE);
+	fu_firmware_set_version(firmware, version);
 	fu_firmware_set_version_raw(firmware, fu_struct_cfu_offer_get_version(st));
 
 	/* component info */
