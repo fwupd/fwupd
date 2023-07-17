@@ -419,7 +419,7 @@ fu_fresco_pd_device_init(FuFrescoPdDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_protocol(FU_DEVICE(self), "com.frescologic.pd");
-	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_QUAD);
+	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORAMT_AA_BB_CC_DD);
 	fu_device_set_install_duration(FU_DEVICE(self), 15);
 	fu_device_set_remove_delay(FU_DEVICE(self), 20000);
 	fu_device_set_firmware_size(FU_DEVICE(self), 0x4400);

@@ -90,8 +90,8 @@ fu_bcm57xx_veritem_new(const guint8 *buf, gsize bufsz)
 		const gchar *prefix;
 		const gchar *branch;
 		FwupdVersionFormat verfmt;
-	} data[] = {{"5719-v", BCM_FW_BRANCH_UNKNOWN, FWUPD_VERSION_FORMAT_PAIR},
-		    {"stage1-", BCM_FW_BRANCH_OSS_FIRMWARE, FWUPD_VERSION_FORMAT_TRIPLET},
+	} data[] = {{"5719-v", BCM_FW_BRANCH_UNKNOWN, FWUPD_VERSION_FORMAT_AABB_CCDD},
+		    {"stage1-", BCM_FW_BRANCH_OSS_FIRMWARE, FWUPD_VERSION_FORMAT_AA_BB_CCDD},
 		    {NULL, NULL, 0}};
 
 	/* do not assume this is NUL terminated */

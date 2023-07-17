@@ -526,7 +526,7 @@ fu_elantp_hid_haptic_device_setup(FuDevice *device, GError **error)
 	if (!fu_elantp_hid_haptic_device_get_version(FU_DEVICE(parent), self, error))
 		return FALSE;
 
-	version_bl = fu_version_from_uint16(self->iap_ver, FWUPD_VERSION_FORMAT_HEX);
+	version_bl = fu_version_from_uint16(self->iap_ver, FWUPD_VERSION_FORMAT_AABBCCDD);
 	fu_device_set_version_bootloader(device, version_bl);
 
 	/* get module ID */

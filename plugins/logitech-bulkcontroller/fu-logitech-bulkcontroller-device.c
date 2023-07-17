@@ -1136,7 +1136,7 @@ static void
 fu_logitech_bulkcontroller_device_init(FuLogitechBulkcontrollerDevice *self)
 {
 	fu_device_add_protocol(FU_DEVICE(self), "com.logitech.vc.proto");
-	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_TRIPLET);
+	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_AA_BB_CCDD);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 	fu_device_retry_set_delay(FU_DEVICE(self), 1000);

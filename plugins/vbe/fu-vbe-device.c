@@ -61,7 +61,7 @@ fu_vbe_device_init(FuVbeDevice *self)
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_ENSURE_SEMVER);
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_MD_SET_SIGNED);
 	fu_device_set_physical_id(FU_DEVICE(self), "vbe");
-	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PAIR);
+	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_AABB_CCDD);
 	fu_device_add_icon(FU_DEVICE(self), "computer");
 }
 

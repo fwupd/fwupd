@@ -30,7 +30,7 @@ fu_uefi_recovery_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError 
 	g_autoptr(FuDevice) device = fu_device_new(fu_plugin_get_context(plugin));
 	fu_device_set_id(device, "uefi-recovery");
 	fu_device_set_name(device, "System Firmware ESRT Recovery");
-	fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_TRIPLET);
+	fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_AA_BB_CCDD);
 	fu_device_set_version(device, "0.0.0");
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_REQUIRE_AC);

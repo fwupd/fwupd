@@ -803,7 +803,7 @@ fu_ccgx_dmc_device_init(FuCcgxDmcDevice *self)
 	self->trigger_code = 0x1;
 	fu_device_add_protocol(FU_DEVICE(self), "com.cypress.ccgx.dmc");
 	fu_device_add_protocol(FU_DEVICE(self), "com.infineon.ccgx.dmc");
-	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_QUAD);
+	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORAMT_AA_BB_CC_DD);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_REQUIRE_AC);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_DUAL_IMAGE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SELF_RECOVERY);

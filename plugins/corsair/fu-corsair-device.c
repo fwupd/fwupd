@@ -556,7 +556,7 @@ fu_corsair_device_init(FuCorsairDevice *device)
 					"no-version-in-bl");
 
 	fu_device_set_remove_delay(FU_DEVICE(device), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
-	fu_device_set_version_format(FU_DEVICE(device), FWUPD_VERSION_FORMAT_TRIPLET);
+	fu_device_set_version_format(FU_DEVICE(device), FWUPD_VERSION_FORMAT_AA_BB_CCDD);
 
 	fu_device_add_flag(FU_DEVICE(device), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 

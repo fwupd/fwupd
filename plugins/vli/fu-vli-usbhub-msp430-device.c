@@ -316,7 +316,7 @@ fu_vli_usbhub_msp430_device_init(FuVliUsbhubMsp430Device *self)
 	fu_device_add_protocol(FU_DEVICE(self), "com.vli.i2c");
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
-	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PAIR);
+	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_AABB_CCDD);
 	fu_device_set_logical_id(FU_DEVICE(self), "I2C");
 	fu_device_set_summary(FU_DEVICE(self), "I²C dock management device");
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_IHEX_FIRMWARE);

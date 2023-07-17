@@ -305,7 +305,8 @@ fu_ccgx_dmc_firmware_parse(FuFirmware *firmware,
 	hdr_composite_version = fu_struct_ccgx_dmc_fwct_info_get_composite_version(st_hdr);
 	if (hdr_composite_version != 0) {
 		g_autofree gchar *ver = NULL;
-		ver = fu_version_from_uint32(hdr_composite_version, FWUPD_VERSION_FORMAT_QUAD);
+		ver =
+		    fu_version_from_uint32(hdr_composite_version, FWUPD_VERSION_FORAMT_AA_BB_CC_DD);
 		fu_firmware_set_version(firmware, ver);
 		fu_firmware_set_version_raw(firmware, hdr_composite_version);
 	}

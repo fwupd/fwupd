@@ -538,7 +538,7 @@ fu_fpc_device_init(FuFpcDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_USE_RUNTIME_VERSION);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
-	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_QUAD);
+	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORAMT_AA_BB_CC_DD);
 	fu_device_set_remove_delay(FU_DEVICE(self), 10000);
 	fu_device_add_protocol(FU_DEVICE(self), "com.fingerprints.dfupc");
 	fu_device_set_summary(FU_DEVICE(self), "FPC fingerprint sensor");

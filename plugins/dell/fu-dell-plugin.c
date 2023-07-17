@@ -789,7 +789,7 @@ fu_dell_plugin_detect_tpm(FuPlugin *plugin, GError **error)
 	g_debug("Creating primary TPM GUID %s and secondary TPM GUID %s",
 		tpm_guid_raw,
 		tpm_guid_raw_alt);
-	version_str = fu_version_from_uint32(out->fw_version, FWUPD_VERSION_FORMAT_QUAD);
+	version_str = fu_version_from_uint32(out->fw_version, FWUPD_VERSION_FORAMT_AA_BB_CC_DD);
 
 	/* make it clear that the TPM is a discrete device of the product */
 	pretty_tpm_name = g_strdup_printf("TPM %s", tpm_mode);
@@ -805,7 +805,7 @@ fu_dell_plugin_detect_tpm(FuPlugin *plugin, GError **error)
 	fu_device_add_vendor_id(dev, "PCI:0x1028");
 	fu_device_set_name(dev, pretty_tpm_name);
 	fu_device_set_summary(dev, "Platform TPM device");
-	fu_device_set_version_format(dev, FWUPD_VERSION_FORMAT_QUAD);
+	fu_device_set_version_format(dev, FWUPD_VERSION_FORAMT_AA_BB_CC_DD);
 	fu_device_set_version(dev, version_str);
 	fu_device_add_flag(dev, FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_device_add_flag(dev, FWUPD_DEVICE_FLAG_REQUIRE_AC);

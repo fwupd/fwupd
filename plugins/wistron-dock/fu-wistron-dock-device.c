@@ -546,13 +546,16 @@ fu_wistron_dock_device_parse_wdit_img(FuWistronDockDevice *self,
 		/* versions */
 		version_raw = fu_struct_wistron_dock_wdit_img_get_version_build(st);
 		if (version_raw != 0)
-			version0 = fu_version_from_uint32(version_raw, FWUPD_VERSION_FORMAT_QUAD);
+			version0 =
+			    fu_version_from_uint32(version_raw, FWUPD_VERSION_FORAMT_AA_BB_CC_DD);
 		version_raw = fu_struct_wistron_dock_wdit_img_get_version1(st);
 		if (version_raw != 0)
-			version1 = fu_version_from_uint32(version_raw, FWUPD_VERSION_FORMAT_QUAD);
+			version1 =
+			    fu_version_from_uint32(version_raw, FWUPD_VERSION_FORAMT_AA_BB_CC_DD);
 		version_raw = fu_struct_wistron_dock_wdit_img_get_version2(st);
 		if (version_raw != 0)
-			version2 = fu_version_from_uint32(version_raw, FWUPD_VERSION_FORMAT_QUAD);
+			version2 =
+			    fu_version_from_uint32(version_raw, FWUPD_VERSION_FORAMT_AA_BB_CC_DD);
 
 		/* name */
 		name = fu_struct_wistron_dock_wdit_img_get_name(st);
@@ -805,7 +808,7 @@ static void
 fu_wistron_dock_device_init(FuWistronDockDevice *self)
 {
 	fu_device_add_protocol(FU_DEVICE(self), "com.wistron.dock");
-	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_QUAD);
+	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORAMT_AA_BB_CC_DD);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE);
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_ONLY_WAIT_FOR_REPLUG);

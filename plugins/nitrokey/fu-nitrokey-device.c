@@ -150,7 +150,7 @@ fu_nitrokey_device_init(FuNitrokeyDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_ADD_COUNTERPART_GUIDS);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID);
-	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PAIR);
+	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_AABB_CCDD);
 	fu_device_add_protocol(FU_DEVICE(self), "org.usb.dfu");
 	fu_device_retry_set_delay(FU_DEVICE(self), 100);
 }

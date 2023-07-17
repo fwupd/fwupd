@@ -399,7 +399,7 @@ fu_aver_hid_device_set_progress(FuDevice *self, FuProgress *progress)
 static void
 fu_aver_hid_device_init(FuAverHidDevice *self)
 {
-	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_QUAD);
+	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORAMT_AA_BB_CC_DD);
 	fu_device_add_protocol(FU_DEVICE(self), "com.aver.hid");
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_DUAL_IMAGE);

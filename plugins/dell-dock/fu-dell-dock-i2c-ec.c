@@ -440,7 +440,8 @@ fu_dell_dock_ec_get_dock_info(FuDevice *device, GError **error)
 							   device_entry[i].version.version_8[2],
 							   device_entry[i].version.version_8[3]);
 			g_debug("\tParsed version %s", self->ec_version);
-			fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_QUAD);
+			fu_device_set_version_format(FU_DEVICE(self),
+						     FWUPD_VERSION_FORAMT_AA_BB_CC_DD);
 			fu_device_set_version(FU_DEVICE(self), self->ec_version);
 
 		} else if (map->device_type == FU_DELL_DOCK_DEVICETYPE_MST) {
@@ -502,7 +503,7 @@ fu_dell_dock_ec_get_dock_info(FuDevice *device, GError **error)
 
 	/* Determine if the passive flow should be used when flashing */
 	hub_version = fu_device_get_version(fu_device_get_proxy(device));
-	if (fu_version_compare(hub_version, "1.42", FWUPD_VERSION_FORMAT_PAIR) < 0) {
+	if (fu_version_compare(hub_version, "1.42", FWUPD_VERSION_FORMAT_AABB_CCDD) < 0) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
@@ -818,7 +819,7 @@ fu_dell_dock_ec_write_fw(FuDevice *device,
 	if ((flags & FWUPD_INSTALL_FLAG_FORCE) == 0 &&
 	    (fu_version_compare(dynamic_version,
 				self->ec_minimum_version,
-				FWUPD_VERSION_FORMAT_QUAD) < 0)) {
+				FWUPD_VERSION_FORAMT_AA_BB_CC_DD) < 0)) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
@@ -865,7 +866,7 @@ fu_dell_dock_ec_write_fw(FuDevice *device,
 		return FALSE;
 
 	/* dock will reboot to re-read; this is to appease the daemon */
-	fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_QUAD);
+	fu_device_set_version_format(device, FWUPD_VERSION_FORAMT_AA_BB_CC_DD);
 	fu_device_set_version(device, dynamic_version);
 
 	/* activate passive behavior */

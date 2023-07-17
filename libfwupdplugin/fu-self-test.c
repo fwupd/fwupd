@@ -214,9 +214,9 @@ fu_version_guess_format_func(void)
 	g_assert_cmpint(fu_version_guess_format(NULL), ==, FWUPD_VERSION_FORMAT_UNKNOWN);
 	g_assert_cmpint(fu_version_guess_format(""), ==, FWUPD_VERSION_FORMAT_UNKNOWN);
 	g_assert_cmpint(fu_version_guess_format("1234ac"), ==, FWUPD_VERSION_FORMAT_PLAIN);
-	g_assert_cmpint(fu_version_guess_format("1.2"), ==, FWUPD_VERSION_FORMAT_PAIR);
-	g_assert_cmpint(fu_version_guess_format("1.2.3"), ==, FWUPD_VERSION_FORMAT_TRIPLET);
-	g_assert_cmpint(fu_version_guess_format("1.2.3.4"), ==, FWUPD_VERSION_FORMAT_QUAD);
+	g_assert_cmpint(fu_version_guess_format("1.2"), ==, FWUPD_VERSION_FORMAT_AABB_CCDD);
+	g_assert_cmpint(fu_version_guess_format("1.2.3"), ==, FWUPD_VERSION_FORMAT_AA_BB_CCDD);
+	g_assert_cmpint(fu_version_guess_format("1.2.3.4"), ==, FWUPD_VERSION_FORAMT_AA_BB_CC_DD);
 	g_assert_cmpint(fu_version_guess_format("1.2.3.4.5"), ==, FWUPD_VERSION_FORMAT_UNKNOWN);
 	g_assert_cmpint(fu_version_guess_format("1a.2b.3"), ==, FWUPD_VERSION_FORMAT_PLAIN);
 	g_assert_cmpint(fu_version_guess_format("1"), ==, FWUPD_VERSION_FORMAT_NUMBER);
@@ -228,7 +228,7 @@ fu_device_version_format_func(void)
 {
 	g_autoptr(FuDevice) device = fu_device_new(NULL);
 	fu_device_add_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_ENSURE_SEMVER);
-	fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_TRIPLET);
+	fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_AA_BB_CCDD);
 	fu_device_set_version(device, "Ver1.2.3 RELEASE");
 	g_assert_cmpstr(fu_device_get_version(device), ==, "1.2.3");
 }
@@ -1824,13 +1824,13 @@ fu_version_semver_func(void)
 		const gchar *old;
 		const gchar *new;
 		FwupdVersionFormat fmt;
-	} map[] = {{"1.2.3", "1.2.3", FWUPD_VERSION_FORMAT_TRIPLET},
-		   {"1.2.3.4", "1.2.3", FWUPD_VERSION_FORMAT_TRIPLET},
-		   {"1.2", "0.1.2", FWUPD_VERSION_FORMAT_TRIPLET},
-		   {"1", "0.0.1", FWUPD_VERSION_FORMAT_TRIPLET},
-		   {"CBET1.2.3", "1.2.3", FWUPD_VERSION_FORMAT_TRIPLET},
-		   {"4.11-1190-g12d8072e6b-dirty", "4.11.1190", FWUPD_VERSION_FORMAT_TRIPLET},
-		   {"4.11-1190-g12d8072e6b-dirty", "4.11", FWUPD_VERSION_FORMAT_PAIR},
+	} map[] = {{"1.2.3", "1.2.3", FWUPD_VERSION_FORMAT_AA_BB_CCDD},
+		   {"1.2.3.4", "1.2.3", FWUPD_VERSION_FORMAT_AA_BB_CCDD},
+		   {"1.2", "0.1.2", FWUPD_VERSION_FORMAT_AA_BB_CCDD},
+		   {"1", "0.0.1", FWUPD_VERSION_FORMAT_AA_BB_CCDD},
+		   {"CBET1.2.3", "1.2.3", FWUPD_VERSION_FORMAT_AA_BB_CCDD},
+		   {"4.11-1190-g12d8072e6b-dirty", "4.11.1190", FWUPD_VERSION_FORMAT_AA_BB_CCDD},
+		   {"4.11-1190-g12d8072e6b-dirty", "4.11", FWUPD_VERSION_FORMAT_AABB_CCDD},
 		   {NULL, NULL}};
 	for (guint i = 0; map[i].old != NULL; i++) {
 		g_autofree gchar *tmp = fu_version_ensure_semver(map[i].old, map[i].fmt);
@@ -1879,16 +1879,16 @@ fu_common_version_func(void)
 		const gchar *ver;
 		FwupdVersionFormat flags;
 	} version_from_uint32[] = {
-	    {0x0, "0.0.0.0", FWUPD_VERSION_FORMAT_QUAD},
-	    {0xff, "0.0.0.255", FWUPD_VERSION_FORMAT_QUAD},
-	    {0xff01, "0.0.255.1", FWUPD_VERSION_FORMAT_QUAD},
-	    {0xff0001, "0.255.0.1", FWUPD_VERSION_FORMAT_QUAD},
-	    {0xff000100, "255.0.1.0", FWUPD_VERSION_FORMAT_QUAD},
-	    {0x0, "0.0.0", FWUPD_VERSION_FORMAT_TRIPLET},
-	    {0xff, "0.0.255", FWUPD_VERSION_FORMAT_TRIPLET},
-	    {0xff01, "0.0.65281", FWUPD_VERSION_FORMAT_TRIPLET},
-	    {0xff0001, "0.255.1", FWUPD_VERSION_FORMAT_TRIPLET},
-	    {0xff000100, "255.0.256", FWUPD_VERSION_FORMAT_TRIPLET},
+	    {0x0, "0.0.0.0", FWUPD_VERSION_FORAMT_AA_BB_CC_DD},
+	    {0xff, "0.0.0.255", FWUPD_VERSION_FORAMT_AA_BB_CC_DD},
+	    {0xff01, "0.0.255.1", FWUPD_VERSION_FORAMT_AA_BB_CC_DD},
+	    {0xff0001, "0.255.0.1", FWUPD_VERSION_FORAMT_AA_BB_CC_DD},
+	    {0xff000100, "255.0.1.0", FWUPD_VERSION_FORAMT_AA_BB_CC_DD},
+	    {0x0, "0.0.0", FWUPD_VERSION_FORMAT_AA_BB_CCDD},
+	    {0xff, "0.0.255", FWUPD_VERSION_FORMAT_AA_BB_CCDD},
+	    {0xff01, "0.0.65281", FWUPD_VERSION_FORMAT_AA_BB_CCDD},
+	    {0xff0001, "0.255.1", FWUPD_VERSION_FORMAT_AA_BB_CCDD},
+	    {0xff000100, "255.0.256", FWUPD_VERSION_FORMAT_AA_BB_CCDD},
 	    {0x0, "0", FWUPD_VERSION_FORMAT_NUMBER},
 	    {0xff000100, "4278190336", FWUPD_VERSION_FORMAT_NUMBER},
 	    {0x0, "11.0.0.0", FWUPD_VERSION_FORMAT_INTEL_ME},
@@ -1898,38 +1898,38 @@ fu_common_version_func(void)
 	    {0x226a4b00, "137.2706.768", FWUPD_VERSION_FORMAT_SURFACE_LEGACY},
 	    {0x6001988, "6.25.136", FWUPD_VERSION_FORMAT_SURFACE},
 	    {0x00ff0001, "255.0.1", FWUPD_VERSION_FORMAT_DELL_BIOS},
-	    {0xc8, "0x000000c8", FWUPD_VERSION_FORMAT_HEX},
+	    {0xc8, "0x000000c8", FWUPD_VERSION_FORMAT_AABBCCDD},
 	    {0, NULL}};
 	struct {
 		guint32 val;
 		const gchar *ver;
 		FwupdVersionFormat flags;
-	} version_from_uint24[] = {{0x0, NULL, FWUPD_VERSION_FORMAT_QUAD},
-				   {0x0, "0.0.0", FWUPD_VERSION_FORMAT_TRIPLET},
-				   {0xff, "0.0.255", FWUPD_VERSION_FORMAT_TRIPLET},
+	} version_from_uint24[] = {{0x0, NULL, FWUPD_VERSION_FORAMT_AA_BB_CC_DD},
+				   {0x0, "0.0.0", FWUPD_VERSION_FORMAT_AA_BB_CCDD},
+				   {0xff, "0.0.255", FWUPD_VERSION_FORMAT_AA_BB_CCDD},
 				   {0x0, "0", FWUPD_VERSION_FORMAT_NUMBER},
-				   {0xc8, "0x0000c8", FWUPD_VERSION_FORMAT_HEX},
+				   {0xc8, "0x0000c8", FWUPD_VERSION_FORMAT_AABBCCDD},
 				   {0, NULL}};
 	struct {
 		guint64 val;
 		const gchar *ver;
 		FwupdVersionFormat flags;
 	} version_from_uint64[] = {
-	    {0x0, "0.0.0.0", FWUPD_VERSION_FORMAT_QUAD},
-	    {0xff, "0.0.0.255", FWUPD_VERSION_FORMAT_QUAD},
-	    {0xffffffffffffffff, "65535.65535.65535.65535", FWUPD_VERSION_FORMAT_QUAD},
-	    {0xff, "0.255", FWUPD_VERSION_FORMAT_PAIR},
-	    {0xffffffffffffffff, "4294967295.4294967295", FWUPD_VERSION_FORMAT_PAIR},
+	    {0x0, "0.0.0.0", FWUPD_VERSION_FORAMT_AA_BB_CC_DD},
+	    {0xff, "0.0.0.255", FWUPD_VERSION_FORAMT_AA_BB_CC_DD},
+	    {0xffffffffffffffff, "65535.65535.65535.65535", FWUPD_VERSION_FORAMT_AA_BB_CC_DD},
+	    {0xff, "0.255", FWUPD_VERSION_FORMAT_AABB_CCDD},
+	    {0xffffffffffffffff, "4294967295.4294967295", FWUPD_VERSION_FORMAT_AABB_CCDD},
 	    {0x0, "0", FWUPD_VERSION_FORMAT_NUMBER},
-	    {0x11000000c8, "0x00000011000000c8", FWUPD_VERSION_FORMAT_HEX},
+	    {0x11000000c8, "0x00000011000000c8", FWUPD_VERSION_FORMAT_AABBCCDD},
 	    {0, NULL}};
 	struct {
 		guint16 val;
 		const gchar *ver;
 		FwupdVersionFormat flags;
-	} version_from_uint16[] = {{0x0, "0.0", FWUPD_VERSION_FORMAT_PAIR},
-				   {0xff, "0.255", FWUPD_VERSION_FORMAT_PAIR},
-				   {0xff01, "255.1", FWUPD_VERSION_FORMAT_PAIR},
+	} version_from_uint16[] = {{0x0, "0.0", FWUPD_VERSION_FORMAT_AABB_CCDD},
+				   {0xff, "0.255", FWUPD_VERSION_FORMAT_AABB_CCDD},
+				   {0xff01, "255.1", FWUPD_VERSION_FORMAT_AABB_CCDD},
 				   {0x0, "0.0", FWUPD_VERSION_FORMAT_BCD},
 				   {0x0110, "1.10", FWUPD_VERSION_FORMAT_BCD},
 				   {0x9999, "99.99", FWUPD_VERSION_FORMAT_BCD},
@@ -1980,7 +1980,7 @@ fu_common_version_func(void)
 	for (i = 0; version_parse[i].old != NULL; i++) {
 		g_autofree gchar *ver = NULL;
 		ver = fu_version_parse_from_format(version_parse[i].old,
-						   FWUPD_VERSION_FORMAT_TRIPLET);
+						   FWUPD_VERSION_FORMAT_AA_BB_CCDD);
 		g_assert_cmpstr(ver, ==, version_parse[i].new);
 	}
 }
@@ -1994,7 +1994,9 @@ fu_common_vercmp_func(void)
 	    fu_version_compare("001.002.003", "001.002.003", FWUPD_VERSION_FORMAT_UNKNOWN),
 	    ==,
 	    0);
-	g_assert_cmpint(fu_version_compare("0x00000002", "0x2", FWUPD_VERSION_FORMAT_HEX), ==, 0);
+	g_assert_cmpint(fu_version_compare("0x00000002", "0x2", FWUPD_VERSION_FORMAT_AABBCCDD),
+			==,
+			0);
 
 	/* upgrade and downgrade */
 	g_assert_cmpint(fu_version_compare("1.2.3", "1.2.4", FWUPD_VERSION_FORMAT_UNKNOWN), <, 0);

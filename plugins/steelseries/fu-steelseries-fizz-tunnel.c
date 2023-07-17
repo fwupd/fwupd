@@ -380,7 +380,7 @@ fu_steelseries_fizz_tunnel_class_init(FuSteelseriesFizzTunnelClass *klass)
 static void
 fu_steelseries_fizz_tunnel_init(FuSteelseriesFizzTunnel *self)
 {
-	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_TRIPLET);
+	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_AA_BB_CCDD);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_USE_PARENT_FOR_OPEN);

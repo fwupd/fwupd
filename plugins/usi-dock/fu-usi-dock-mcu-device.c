@@ -202,7 +202,7 @@ fu_usi_dock_mcu_device_enumerate_children(FuUsiDockMcuDevice *self, GError **err
 							  val[1] >> 4,
 							  val[1] & 0xFu);
 				fu_device_set_version_format(FU_DEVICE(self),
-							     FWUPD_VERSION_FORMAT_QUAD);
+							     FWUPD_VERSION_FORAMT_AA_BB_CC_DD);
 				fu_device_set_version(FU_DEVICE(self), version);
 			} else {
 				version = g_strdup_printf("%x.%x.%02x",
@@ -221,7 +221,7 @@ fu_usi_dock_mcu_device_enumerate_children(FuUsiDockMcuDevice *self, GError **err
 				continue;
 			}
 			version = g_strdup_printf("%d.%d.%d", val[2], val[3], val[4]);
-			fu_device_set_version_format(child, FWUPD_VERSION_FORMAT_TRIPLET);
+			fu_device_set_version_format(child, FWUPD_VERSION_FORMAT_AA_BB_CCDD);
 			fu_device_set_version(child, version);
 			fu_device_set_name(child, "Dock Management Controller");
 		} else if (g_strcmp0(components[i].name, "PD") == 0) {
@@ -236,10 +236,12 @@ fu_usi_dock_mcu_device_enumerate_children(FuUsiDockMcuDevice *self, GError **err
 						       FU_USI_DOCK_DEVICE_FLAG_VERFMT_HP)) {
 				version =
 				    g_strdup_printf("%d.%d.%d.%d", val[3], val[4], val[1], val[2]);
-				fu_device_set_version_format(child, FWUPD_VERSION_FORMAT_QUAD);
+				fu_device_set_version_format(child,
+							     FWUPD_VERSION_FORAMT_AA_BB_CC_DD);
 			} else {
 				version = g_strdup_printf("%d.%d.%d", val[2], val[3], val[4]);
-				fu_device_set_version_format(child, FWUPD_VERSION_FORMAT_TRIPLET);
+				fu_device_set_version_format(child,
+							     FWUPD_VERSION_FORMAT_AA_BB_CCDD);
 			}
 			fu_device_set_version(child, version);
 			fu_device_set_name(child, "Power Delivery");
@@ -250,7 +252,7 @@ fu_usi_dock_mcu_device_enumerate_children(FuUsiDockMcuDevice *self, GError **err
 				continue;
 			}
 			version = g_strdup_printf("%02x.%02x.%02x", val[1], val[2], val[3]);
-			fu_device_set_version_format(child, FWUPD_VERSION_FORMAT_TRIPLET);
+			fu_device_set_version_format(child, FWUPD_VERSION_FORMAT_AA_BB_CCDD);
 			fu_device_set_version(child, version);
 			fu_device_add_icon(child, "thunderbolt");
 			fu_device_set_name(child, "Thunderbolt 4 Controller");
@@ -261,7 +263,7 @@ fu_usi_dock_mcu_device_enumerate_children(FuUsiDockMcuDevice *self, GError **err
 				continue;
 			}
 			version = g_strdup_printf("%d.%02d.%03d", val[2], val[3], val[4]);
-			fu_device_set_version_format(child, FWUPD_VERSION_FORMAT_TRIPLET);
+			fu_device_set_version_format(child, FWUPD_VERSION_FORMAT_AA_BB_CCDD);
 			fu_device_set_version(child, version);
 			fu_device_add_icon(child, "video-display");
 			fu_device_set_name(child, "Display Port 5");
@@ -275,11 +277,13 @@ fu_usi_dock_mcu_device_enumerate_children(FuUsiDockMcuDevice *self, GError **err
 						       FU_USI_DOCK_DEVICE_FLAG_VERFMT_HP)) {
 				version =
 				    g_strdup_printf("%x.%x.%x.%x", val[3], val[4], val[2], val[1]);
-				fu_device_set_version_format(child, FWUPD_VERSION_FORMAT_QUAD);
+				fu_device_set_version_format(child,
+							     FWUPD_VERSION_FORAMT_AA_BB_CC_DD);
 				fu_device_set_name(child, "USB/PD HUB");
 			} else {
 				version = g_strdup_printf("%d.%02d.%03d", val[2], val[3], val[4]);
-				fu_device_set_version_format(child, FWUPD_VERSION_FORMAT_TRIPLET);
+				fu_device_set_version_format(child,
+							     FWUPD_VERSION_FORMAT_AA_BB_CCDD);
 				fu_device_set_name(child, "Display Port 6");
 			}
 			fu_device_set_version(child, version);
@@ -324,7 +328,7 @@ fu_usi_dock_mcu_device_enumerate_children(FuUsiDockMcuDevice *self, GError **err
 				continue;
 			}
 			version = g_strdup_printf("%x.%x.%x", val[2] >> 4, val[3], val[4]);
-			fu_device_set_version_format(child, FWUPD_VERSION_FORMAT_TRIPLET);
+			fu_device_set_version_format(child, FWUPD_VERSION_FORMAT_AA_BB_CCDD);
 			fu_device_set_version(child, version);
 			fu_device_add_icon(child, "network-wired");
 			fu_device_set_name(child, "Ethernet Adapter");
@@ -341,7 +345,8 @@ fu_usi_dock_mcu_device_enumerate_children(FuUsiDockMcuDevice *self, GError **err
 							  val[0] & 0xFu,
 							  val[1] >> 4,
 							  val[1] & 0xFu);
-				fu_device_set_version_format(child, FWUPD_VERSION_FORMAT_QUAD);
+				fu_device_set_version_format(child,
+							     FWUPD_VERSION_FORAMT_AA_BB_CC_DD);
 			} else {
 				version = g_strdup_printf("%X.%X", val[0], val[1]);
 				fu_device_set_version_format(child, FWUPD_VERSION_FORMAT_PLAIN);

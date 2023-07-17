@@ -33,14 +33,14 @@ fu_bcm57xx_common_veritem_func(void)
 	g_assert_nonnull(veritem1);
 	g_assert_cmpstr(veritem1->version, ==, "1.43");
 	g_assert_cmpstr(veritem1->branch, ==, BCM_FW_BRANCH_UNKNOWN);
-	g_assert_cmpint(veritem1->verfmt, ==, FWUPD_VERSION_FORMAT_PAIR);
+	g_assert_cmpint(veritem1->verfmt, ==, FWUPD_VERSION_FORMAT_AABB_CCDD);
 
 	fu_bcm57xx_create_verbuf(bufver, "stage1-0.4.391");
 	veritem2 = fu_bcm57xx_veritem_new(bufver, sizeof(bufver));
 	g_assert_nonnull(veritem2);
 	g_assert_cmpstr(veritem2->version, ==, "0.4.391");
 	g_assert_cmpstr(veritem2->branch, ==, BCM_FW_BRANCH_OSS_FIRMWARE);
-	g_assert_cmpint(veritem2->verfmt, ==, FWUPD_VERSION_FORMAT_TRIPLET);
+	g_assert_cmpint(veritem2->verfmt, ==, FWUPD_VERSION_FORMAT_AA_BB_CCDD);
 
 	fu_bcm57xx_create_verbuf(bufver, "RANDOM-7");
 	veritem3 = fu_bcm57xx_veritem_new(bufver, sizeof(bufver));

@@ -70,7 +70,7 @@ fu_synaptics_cape_sngl_firmware_parse(FuFirmware *firmware,
 	fu_synaptics_cape_firmware_set_pid(FU_SYNAPTICS_CAPE_FIRMWARE(self),
 					   fu_struct_synaptics_cape_sngl_hdr_get_pid(st));
 	version_str = fu_version_from_uint32(fu_struct_synaptics_cape_sngl_hdr_get_fw_version(st),
-					     FWUPD_VERSION_FORMAT_QUAD);
+					     FWUPD_VERSION_FORAMT_AA_BB_CC_DD);
 	fu_firmware_set_version(FU_FIRMWARE(self), version_str);
 
 	/* add each file */

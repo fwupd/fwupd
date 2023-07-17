@@ -736,7 +736,7 @@ static void
 fu_ti_tps6598x_device_init(FuTiTps6598xDevice *self)
 {
 	fu_device_add_protocol(FU_DEVICE(self), "com.ti.tps6598x");
-	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_TRIPLET);
+	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_AA_BB_CCDD);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_DUAL_IMAGE);

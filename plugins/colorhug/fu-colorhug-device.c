@@ -389,7 +389,7 @@ fu_colorhug_device_setup(FuDevice *device, GError **error)
 		if (version != NULL) {
 			g_debug("obtained fwver using API '%s'", version);
 			fu_device_set_version(device, version);
-			fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_TRIPLET);
+			fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_AA_BB_CCDD);
 		} else {
 			g_warning("failed to get firmware version: %s", error_local->message);
 		}

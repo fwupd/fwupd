@@ -43,7 +43,7 @@ fu_bcm57xx_stage1_image_parse(FuFirmware *image,
 		return FALSE;
 	if (fwversion != 0x0) {
 		g_autofree gchar *tmp = NULL;
-		tmp = fu_version_from_uint32(fwversion, FWUPD_VERSION_FORMAT_TRIPLET);
+		tmp = fu_version_from_uint32(fwversion, FWUPD_VERSION_FORMAT_AA_BB_CCDD);
 		fu_firmware_set_version(image, tmp);
 		fu_firmware_set_version_raw(image, fwversion);
 	} else {

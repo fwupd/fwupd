@@ -35,7 +35,7 @@ fu_corsair_calculate_crc(const guint8 *data, guint32 data_len)
  * fu_corsair_version_from_uint32:
  * @val: version in corsair device format
  *
- * fu_version_from_uint32(... %FWUPD_VERSION_FORMAT_TRIPLET)
+ * fu_version_from_uint32(... %FWUPD_VERSION_FORMAT_AA_BB_CCDD)
  * cannot be used because bytes in the version are in non-standard
  * order: 0xCCDD.BB.AA.
  *

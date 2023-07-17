@@ -458,7 +458,7 @@ fu_vbe_simple_device_init(FuVbeSimpleDevice *self)
 	fu_device_set_name(FU_DEVICE(self), "simple");
 	fu_device_set_vendor(FU_DEVICE(self), "U-Boot");
 	fu_device_add_vendor_id(FU_DEVICE(self), "VBE:U-Boot");
-	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_TRIPLET);
+	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_AA_BB_CCDD);
 	fu_device_set_version_lowest(FU_DEVICE(self), "0.0.1");
 }
 

@@ -353,7 +353,7 @@ fu_android_boot_device_init(FuAndroidBootDevice *self)
 	 * will disappear. If version reporting is available, the reported version is set.
 	 */
 	fu_device_set_version(FU_DEVICE(self), ANDROID_BOOT_UNKNOWN_VERSION);
-	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_TRIPLET);
+	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_AA_BB_CCDD);
 }
 
 static void

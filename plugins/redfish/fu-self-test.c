@@ -295,7 +295,7 @@ fu_test_redfish_devices_func(gconstpointer user_data)
 	g_assert_cmpstr(fu_device_get_vendor(dev), ==, "Lenovo");
 	g_assert_cmpstr(fu_device_get_version(dev), ==, "1.02");
 	g_assert_cmpstr(fu_device_get_version_lowest(dev), ==, "0.12");
-	g_assert_cmpint(fu_device_get_version_format(dev), ==, FWUPD_VERSION_FORMAT_PAIR);
+	g_assert_cmpint(fu_device_get_version_format(dev), ==, FWUPD_VERSION_FORMAT_AABB_CCDD);
 	g_assert_cmpint(fu_device_get_version_build_date(dev), ==, 1552608000);
 	g_assert_true(fu_device_has_flag(dev, FWUPD_DEVICE_FLAG_UPDATABLE));
 	g_assert_true(fu_device_has_protocol(dev, "org.dmtf.redfish"));
@@ -313,7 +313,7 @@ fu_test_redfish_devices_func(gconstpointer user_data)
 	g_assert_cmpstr(fu_device_get_version(dev), ==, "1.45");
 	g_assert_cmpstr(fu_device_get_serial(dev), ==, "12345");
 	g_assert_cmpstr(fu_device_get_version_lowest(dev), ==, "1.10");
-	g_assert_cmpint(fu_device_get_version_format(dev), ==, FWUPD_VERSION_FORMAT_PAIR);
+	g_assert_cmpint(fu_device_get_version_format(dev), ==, FWUPD_VERSION_FORMAT_AABB_CCDD);
 	g_assert_cmpint(fu_device_get_version_build_date(dev), ==, 1552608000);
 	g_assert_true(fu_device_has_flag(dev, FWUPD_DEVICE_FLAG_UPDATABLE));
 	g_assert_true(fu_device_has_icon(dev, "network-wired"));

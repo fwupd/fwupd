@@ -534,7 +534,7 @@ fu_vli_usbhub_rtd21xx_device_init(FuVliUsbhubRtd21xxDevice *self)
 	fu_device_add_protocol(FU_DEVICE(self), "com.vli.i2c");
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_DUAL_IMAGE);
-	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PAIR);
+	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_AABB_CCDD);
 	fu_device_set_install_duration(FU_DEVICE(self), 100); /* seconds */
 	fu_device_set_logical_id(FU_DEVICE(self), "I2C");
 	fu_device_retry_set_delay(FU_DEVICE(self), 30); /* ms */

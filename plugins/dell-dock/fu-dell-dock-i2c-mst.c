@@ -1080,7 +1080,7 @@ fu_dell_dock_mst_write_fw(FuDevice *device,
 	}
 
 	/* dock will reboot to re-read; this is to appease the daemon */
-	fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_TRIPLET);
+	fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_AA_BB_CCDD);
 	fu_device_set_version(device, dynamic_version);
 
 	/* disable remote control now */
@@ -1146,7 +1146,7 @@ fu_dell_dock_mst_setup(FuDevice *device, GError **error)
 	parent = fu_device_get_parent(device);
 	version = fu_dell_dock_ec_get_mst_version(parent);
 	if (version != NULL) {
-		fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_TRIPLET);
+		fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_AA_BB_CCDD);
 		fu_device_set_version(device, version);
 	}
 

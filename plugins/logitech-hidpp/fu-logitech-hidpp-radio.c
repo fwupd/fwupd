@@ -102,7 +102,7 @@ fu_logitech_hidpp_radio_init(FuLogitechHidppRadio *self)
 	fu_device_add_internal_flag(FU_DEVICE(self),
 				    FU_DEVICE_INTERNAL_FLAG_USE_PARENT_FOR_BATTERY);
 	fu_device_add_protocol(FU_DEVICE(self), "com.logitech.unifyingsigned");
-	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_HEX);
+	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_AABBCCDD);
 }
 
 static void

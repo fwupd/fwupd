@@ -843,7 +843,7 @@ fu_synaptics_rmi_device_init(FuSynapticsRmiDevice *self)
 	fu_device_add_protocol(FU_DEVICE(self), "com.synaptics.rmi");
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
-	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_TRIPLET);
+	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_AA_BB_CCDD);
 	priv->current_page = 0xfe;
 	priv->functions = g_ptr_array_new_with_free_func(g_free);
 }

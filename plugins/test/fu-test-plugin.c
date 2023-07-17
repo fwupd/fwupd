@@ -89,7 +89,7 @@ fu_test_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError **error)
 	fu_device_set_summary(device, "Fake webcam");
 	fu_device_set_vendor(device, "ACME Corp.");
 	fu_device_add_vendor_id(device, "USB:0x046D");
-	fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_TRIPLET);
+	fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_AA_BB_CCDD);
 	fu_device_set_version_bootloader(device, "0.1.2");
 	fu_device_set_version(device, "1.2.2");
 	fu_device_set_version_lowest(device, "1.2.0");
@@ -198,7 +198,7 @@ fu_test_plugin_get_version(GBytes *blob_fw)
 	}
 	if (val == 0x0)
 		return NULL;
-	return fu_version_from_uint32(val, FWUPD_VERSION_FORMAT_TRIPLET);
+	return fu_version_from_uint32(val, FWUPD_VERSION_FORMAT_AA_BB_CCDD);
 }
 
 static gboolean
@@ -256,7 +256,7 @@ fu_test_plugin_write_firmware(FuPlugin *plugin,
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
 	} else {
 		g_autofree gchar *ver = fu_test_plugin_get_version(blob_fw);
-		fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_TRIPLET);
+		fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_AA_BB_CCDD);
 		if (ver != NULL) {
 			fu_device_set_version(device, ver);
 		} else {
@@ -285,7 +285,7 @@ fu_test_plugin_write_firmware(FuPlugin *plugin,
 static gboolean
 fu_test_plugin_activate(FuPlugin *plugin, FuDevice *device, FuProgress *process, GError **error)
 {
-	fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_TRIPLET);
+	fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_AA_BB_CCDD);
 	fu_device_set_version(device, "1.2.3");
 	return TRUE;
 }

@@ -810,7 +810,7 @@ fu_vli_pd_device_init(FuVliPdDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
-	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_QUAD);
+	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORAMT_AA_BB_CC_DD);
 	fu_vli_device_set_spi_auto_detect(FU_VLI_DEVICE(self), FALSE);
 	fu_device_register_private_flag(FU_DEVICE(self),
 					FU_VLI_PD_DEVICE_FLAG_HAS_I2C_PS186,

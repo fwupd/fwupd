@@ -953,7 +953,7 @@ fu_uefi_capsule_plugin_unlock(FuPlugin *plugin, FuDevice *device, GError **error
 	fu_device_inhibit(device_alt, "alt-device", "Preventing upgrades as alternate");
 
 	/* make sure that this unlocked device can be updated */
-	fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_QUAD);
+	fu_device_set_version_format(device, FWUPD_VERSION_FORAMT_AA_BB_CC_DD);
 	fu_device_set_version(device, "0.0.0.0");
 	return TRUE;
 }

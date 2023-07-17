@@ -73,7 +73,7 @@ fu_ccgx_dmc_devx_device_hexver_to_string(FuCcgxDmcDevxDevice *self,
 	g_autofree gchar *key = g_strdup_printf("FwVersion[%s]", kind);
 	g_autofree gchar *val =
 	    fu_version_from_uint64(fu_memread_uint64(fw_version + offset, G_LITTLE_ENDIAN),
-				   FWUPD_VERSION_FORMAT_HEX);
+				   FWUPD_VERSION_FORMAT_AABBCCDD);
 	fu_string_append(str, idt, key, val);
 }
 
@@ -263,10 +263,10 @@ fu_ccgx_dmc_devx_device_probe(FuDevice *device, GError **error)
 	/* version, if possible */
 	if (device_version_type == FU_CCGX_DMC_DEVX_DEVICE_TYPE_DMC) {
 		version = fu_ccgx_dmc_devx_device_version_dmc_bfw(self, offset);
-		fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_QUAD);
+		fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORAMT_AA_BB_CC_DD);
 	} else if (device_version_type == FU_CCGX_DMC_DEVX_DEVICE_TYPE_HX3) {
 		version = fu_ccgx_dmc_devx_device_version_hx3(self, offset);
-		fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_TRIPLET);
+		fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_AA_BB_CCDD);
 		fu_device_set_version(device, version);
 	}
 	if (version != NULL) {

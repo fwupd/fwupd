@@ -80,7 +80,7 @@ fu_kernel_check_version(const gchar *minimum_kernel, GError **error)
 				    "failed to read kernel version");
 		return FALSE;
 	}
-	if (fu_version_compare(name_tmp.release, minimum_kernel, FWUPD_VERSION_FORMAT_TRIPLET) <
+	if (fu_version_compare(name_tmp.release, minimum_kernel, FWUPD_VERSION_FORMAT_AA_BB_CCDD) <
 	    0) {
 		g_set_error(error,
 			    FWUPD_ERROR,

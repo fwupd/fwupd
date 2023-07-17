@@ -566,7 +566,7 @@ fu_bcm57xx_device_setup(FuDevice *device, GError **error)
 		return FALSE;
 	if (fwversion != 0x0) {
 		/* this is only set on the OSS firmware */
-		fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_TRIPLET);
+		fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_AA_BB_CCDD);
 		fu_device_set_version_from_uint32(device, GUINT32_FROM_BE(fwversion));
 		fu_device_set_branch(device, BCM_FW_BRANCH_OSS_FIRMWARE);
 	} else {

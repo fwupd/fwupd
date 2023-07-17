@@ -88,7 +88,7 @@ fu_steelseries_mouse_setup(FuDevice *device, GError **error)
 static void
 fu_steelseries_mouse_init(FuSteelseriesMouse *self)
 {
-	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_TRIPLET);
+	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_AA_BB_CCDD);
 	fu_usb_device_add_interface(FU_USB_DEVICE(self), 0x00);
 }
 

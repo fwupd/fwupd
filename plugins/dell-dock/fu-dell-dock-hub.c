@@ -129,7 +129,7 @@ fu_dell_dock_hub_write_fw(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/* dock will reboot to re-read; this is to appease the daemon */
-	fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_PAIR);
+	fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_AABB_CCDD);
 	fu_device_set_version(device, dynamic_version);
 	return TRUE;
 }

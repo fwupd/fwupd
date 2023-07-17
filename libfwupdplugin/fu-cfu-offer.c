@@ -445,7 +445,7 @@ fu_cfu_offer_parse(FuFirmware *firmware,
 
 	/* AA.BBCC.DD */
 	version = fu_version_from_uint32(fu_struct_cfu_offer_get_version(st),
-					 FWUPD_VERSION_FORMAT_SURFACE);
+					 FWUPD_VERSION_FORMAT_AA_BBCC_DD);
 	fu_firmware_set_version(firmware, version);
 	fu_firmware_set_version_raw(firmware, fu_struct_cfu_offer_get_version(st));
 

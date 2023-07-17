@@ -282,7 +282,7 @@ static void
 fu_wacom_aes_device_init(FuWacomAesDevice *self)
 {
 	fu_device_set_name(FU_DEVICE(self), "Wacom AES Device");
-	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PAIR);
+	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_AABB_CCDD);
 }
 
 static void

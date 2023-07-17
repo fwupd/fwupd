@@ -145,7 +145,7 @@ fu_dell_dock_hid_get_hub_version(FuDevice *self, GError **error)
 	}
 
 	version = g_strdup_printf("%02x.%02x", cmd_buffer.data[10], cmd_buffer.data[11]);
-	fu_device_set_version_format(self, FWUPD_VERSION_FORMAT_PAIR);
+	fu_device_set_version_format(self, FWUPD_VERSION_FORMAT_AABB_CCDD);
 	fu_device_set_version(self, version);
 	return TRUE;
 }
