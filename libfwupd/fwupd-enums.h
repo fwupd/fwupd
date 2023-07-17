@@ -1102,6 +1102,44 @@ typedef enum {
 } FwupdVersionFormat;
 
 /**
+ * FWUPD_VERSION_FORMAT_AABB_CCDD:
+ *
+ * A "pair" version format where a word is split into two sections
+ */
+#define FWUPD_VERSION_FORMAT_AABB_CCDD FWUPD_VERSION_FORMAT_PAIR
+
+/**
+ * FWUPD_VERSION_FORAMT_AA_BB_CC_DD:
+ *
+ * A "quad" version format where a word is split into four sections
+ */
+#define FWUPD_VERSION_FORAMT_AA_BB_CC_DD FWUPD_VERSION_FORMAT_QUAD
+
+/**
+ * FWUPD_VERSION_FORMAT_AA_BBCC_DD:
+ *
+ * A "triplet" version format where a word is split into three sections
+ * and the two middle sections are combined.
+ */
+#define FWUPD_VERSION_FORMAT_AA_BBCC_DD FWUPD_VERSION_FORMAT_SURFACE
+
+/**
+ * FWUPD_VERSION_FORMAT_AA_BB_CCDD:
+ *
+ * A "triplet" version format where a word is split into three sections
+ * and the two final sections are combined.
+ */
+#define FWUPD_VERSION_FORMAT_AA_BB_CCDD FWUPD_VERSION_FORMAT_TRIPLET
+
+/**
+ * FWUPD_VERSION_FORMAT_AABBCCDD:
+ *
+ * A "number" version format where a word is rendered as a hexadecimal
+ * number.
+ */
+#define FWUPD_VERSION_FORMAT_AABBCCDD FWUPD_VERSION_FORMAT_HEX
+
+/**
  * FWUPD_BATTERY_LEVEL_INVALID:
  *
  * This value signifies the battery level is either unset, or the value cannot
