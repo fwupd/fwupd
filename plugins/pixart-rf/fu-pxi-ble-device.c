@@ -81,6 +81,8 @@ fu_pxi_ble_device_to_string(FuDevice *device, guint idt, GString *str)
 	fu_string_append(str, idt, "ModelName", self->model_name);
 	fu_pxi_ota_fw_state_to_string(&self->fwstate, idt, str);
 	fu_string_append_kx(str, idt, "RetransmitID", self->retransmit_id);
+	fu_string_append_kx(str, idt, "FeatureReportID", self->feature_report_id);
+	fu_string_append_kx(str, idt, "InputReportID", self->input_report_id);
 }
 
 static FuFirmware *
