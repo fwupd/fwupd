@@ -281,6 +281,84 @@ fu_hid_device_get_interface(FuHidDevice *self)
 }
 
 /**
+ * fu_hid_device_set_ep_addr_in:
+ * @self: a #FuHidDevice
+ * @ep_addr_in: an endpoint, e.g. `0x03`
+ *
+ * Sets the HID USB interrupt in endpoint.
+ *
+ * In most cases the HID ep_addr_in is auto-detected, but this function can be
+ * used where there are multiple HID EPss or where the device USB EP is invalid.
+ *
+ * Since: 1.9.4
+ **/
+void
+fu_hid_device_set_ep_addr_in(FuHidDevice *self, guint8 ep_addr_in)
+{
+	FuHidDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_HID_DEVICE(self));
+	priv->ep_addr_in = ep_addr_in;
+	priv->interface_autodetect = FALSE;
+}
+
+/**
+ * fu_hid_device_get_ep_addr_in:
+ * @self: a #FuHidDevice
+ *
+ * Gets the HID USB in endpoint.
+ *
+ * Returns: integer
+ *
+ * Since: 1.9.4
+ **/
+guint8
+fu_hid_device_get_ep_addr_in(FuHidDevice *self)
+{
+	FuHidDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_HID_DEVICE(self), 0xff);
+	return priv->ep_addr_in;
+}
+
+/**
+ * fu_hid_device_set_ep_addr_out:
+ * @self: a #FuHidDevice
+ * @ep_addr_out: an endpoint, e.g. `0x03`
+ *
+ * Sets the HID USB interrupt out endpoint.
+ *
+ * In most cases the HID EPs are auto-detected, but this function can be
+ * used where there are multiple HID EPs or where the device USB EP is invalid.
+ *
+ * Since: 1.9.4
+ **/
+void
+fu_hid_device_set_ep_addr_out(FuHidDevice *self, guint8 ep_addr_out)
+{
+	FuHidDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_HID_DEVICE(self));
+	priv->ep_addr_out = ep_addr_out;
+	priv->interface_autodetect = FALSE;
+}
+
+/**
+ * fu_hid_device_get_ep_addr_out:
+ * @self: a #FuHidDevice
+ *
+ * Gets the HID USB out endpoint.
+ *
+ * Returns: integer
+ *
+ * Since: 1.9.4
+ **/
+guint8
+fu_hid_device_get_ep_addr_out(FuHidDevice *self)
+{
+	FuHidDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_HID_DEVICE(self), 0xff);
+	return priv->ep_addr_out;
+}
+
+/**
  * fu_hid_device_add_flag:
  * @self: a #FuHidDevice
  * @flag: HID device flags, e.g. %FU_HID_DEVICE_FLAG_RETRY_FAILURE
