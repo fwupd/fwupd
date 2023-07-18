@@ -125,24 +125,18 @@ fu_hid_report_item_write(FuFirmware *firmware, GError **error)
 
 	if (self->value == 0) {
 		fu_byte_array_append_uint8(st, tmp);
-	} else if (self->value <= 0xFF) {
+	} else if (self->value <= G_MAXUINT8) {
 		tmp |= 0b01;
 		fu_byte_array_append_uint8(st, tmp);
 		fu_byte_array_append_uint8(st, self->value);
-	} else if (self->value <= 0xFFFF) {
+	} else if (self->value <= G_MAXUINT16) {
 		tmp |= 0b10;
 		fu_byte_array_append_uint8(st, tmp);
 		fu_byte_array_append_uint16(st, self->value, G_LITTLE_ENDIAN);
-	} else if (self->value <= 0xFFFFFFFF) {
+	} else {
 		tmp |= 0b11;
 		fu_byte_array_append_uint8(st, tmp);
 		fu_byte_array_append_uint32(st, self->value, G_LITTLE_ENDIAN);
-	} else {
-		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
-				    "value out of range");
-		return NULL;
 	}
 
 	/* success */
