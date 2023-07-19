@@ -99,13 +99,14 @@ struct _FuNordicHidCfgChannel {
 	guint8 flash_area_id;
 	guint32 flashed_image_len;
 	guint8 peer_id;
+	FuUdevDevice *parent_udev;
 	GPtrArray *modules; /* of FuNordicCfgChannelModule */
 };
 
 G_DEFINE_TYPE(FuNordicHidCfgChannel, fu_nordic_hid_cfg_channel, FU_TYPE_UDEV_DEVICE)
 
 static FuNordicHidCfgChannel *
-fu_nordic_hid_cfg_channel_new(guint8 id);
+fu_nordic_hid_cfg_channel_new(guint8 id, FuNordicHidCfgChannel *parent);
 
 static void
 fu_nordic_hid_cfg_channel_module_option_free(FuNordicCfgChannelModuleOption *opt)
@@ -132,15 +133,12 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuNordicCfgChannelModule, fu_nordic_hid_cfg_channe
 static FuUdevDevice *
 fu_nordic_hid_cfg_channel_get_udev_device(FuNordicHidCfgChannel *self, GError **error)
 {
-	FuDevice *parent;
-
 	/* ourselves */
 	if (self->peer_id == 0)
 		return FU_UDEV_DEVICE(self);
 
 	/* parent */
-	parent = fu_device_get_parent(FU_DEVICE(self));
-	if (parent == NULL) {
+	if (self->parent_udev == NULL) {
 		g_set_error(error,
 			    G_IO_ERROR,
 			    G_IO_ERROR_NOT_SUPPORTED,
@@ -148,7 +146,8 @@ fu_nordic_hid_cfg_channel_get_udev_device(FuNordicHidCfgChannel *self, GError **
 			    self->peer_id);
 		return NULL;
 	}
-	return FU_UDEV_DEVICE(parent);
+
+	return self->parent_udev;
 }
 #endif
 
@@ -469,11 +468,10 @@ fu_nordic_hid_cfg_channel_add_peers(FuNordicHidCfgChannel *self, GError **error)
 
 		g_debug("detected peer: 0x%02x", res->data[8]);
 
-		peer = fu_nordic_hid_cfg_channel_new(res->data[8]);
+		peer = fu_nordic_hid_cfg_channel_new(res->data[8], self);
 		/* prohibit to close parent's communication descriptor */
 		fu_device_add_internal_flag(FU_DEVICE(peer),
 					    FU_DEVICE_INTERNAL_FLAG_USE_PARENT_FOR_OPEN);
-		fu_device_add_child(FU_DEVICE(self), FU_DEVICE(peer));
 
 		/* ensure that the general quirk content for Nordic HID devices is applied */
 		fu_device_add_instance_id(FU_DEVICE(peer), "HIDRAW\\VEN_1915");
@@ -483,9 +481,9 @@ fu_nordic_hid_cfg_channel_add_peers(FuNordicHidCfgChannel *self, GError **error)
 			g_debug("failed to discover peer 0x%02x: %s",
 				res->data[8],
 				error_peer->message);
-			fu_device_remove_child(FU_DEVICE(self), FU_DEVICE(peer));
 		} else {
 			g_debug("peer 0x%02x discovered", res->data[8]);
+			fu_device_add_child(FU_DEVICE(self), FU_DEVICE(peer));
 		}
 	}
 
@@ -1428,9 +1426,13 @@ fu_nordic_hid_cfg_channel_init(FuNordicHidCfgChannel *self)
 }
 
 static FuNordicHidCfgChannel *
-fu_nordic_hid_cfg_channel_new(guint8 id)
+fu_nordic_hid_cfg_channel_new(guint8 id, FuNordicHidCfgChannel *parent)
 {
-	FuNordicHidCfgChannel *self = g_object_new(FU_TYPE_NORDIC_HID_CFG_CHANNEL, NULL);
+	FuNordicHidCfgChannel *self = g_object_new(FU_TYPE_NORDIC_HID_CFG_CHANNEL,
+						   "context",
+						   fu_device_get_context(FU_DEVICE(parent)),
+						   NULL);
 	self->peer_id = id;
+	self->parent_udev = FU_UDEV_DEVICE(parent);
 	return self;
 }
