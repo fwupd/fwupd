@@ -365,10 +365,11 @@ fu_cfu_device_ensure_map_item(FuHidDescriptor *descriptor, FuCfuDeviceMap *map, 
 	g_autoptr(FuFirmware) item_id = NULL;
 	g_autoptr(FuHidReport) report = NULL;
 
-	report = fu_hid_descriptor_find_report_by_usage(FU_HID_DESCRIPTOR(descriptor),
-							G_MAXUINT32,
-							map->op,
-							error);
+	report = fu_hid_descriptor_find_report(FU_HID_DESCRIPTOR(descriptor),
+					       error,
+					       "usage",
+					       map->op,
+					       NULL);
 	if (report == NULL)
 		return FALSE;
 	item_id = fu_firmware_get_image_by_id(FU_FIRMWARE(report), "report-id", error);
