@@ -1,0 +1,65 @@
+<firmware gtype="FuHidDescriptor">
+  <firmware gtype="FuHidReport">
+    <firmware gtype="FuHidReportItem">
+      <id>usage-page</id>
+      <value>0xff02</value>
+    </firmware>
+    <firmware gtype="FuHidReportItem">
+      <id>usage</id>
+      <kind>local</kind>
+      <value>0x1</value>
+    </firmware>
+    <firmware gtype="FuHidReportItem">
+      <id>collection</id>
+      <value>0x1</value>
+    </firmware>
+  </firmware>
+  <firmware gtype="FuHidReport">
+    <firmware gtype="FuHidReportItem">
+      <id>usage-page</id>
+      <value>0xff02</value>
+    </firmware>
+    <firmware gtype="FuHidReportItem">
+      <id>report-size</id>
+      <value>0x8</value>
+    </firmware>
+    <firmware gtype="FuHidReportItem">
+      <id>report-count</id>
+      <value>0x14</value>
+    </firmware>
+    <firmware gtype="FuHidReportItem">
+      <id>report-id</id>
+      <value>0x9</value>
+    </firmware>
+    <firmware gtype="FuHidReportItem">
+      <id>usage</id>
+      <kind>local</kind>
+      <value>0x1</value>
+    </firmware>
+    <firmware gtype="FuHidReportItem">
+      <id>feature</id>
+      <value>0x2</value>
+    </firmware>
+  </firmware>
+  <firmware gtype="FuHidReport">
+    <firmware gtype="FuHidReportItem">
+      <id>usage-page</id>
+      <value>0xff02</value>
+    </firmware>
+    <firmware gtype="FuHidReportItem">
+      <id>report-size</id>
+      <value>0x8</value>
+    </firmware>
+    <firmware gtype="FuHidReportItem">
+      <id>report-count</id>
+      <value>0x14</value>
+    </firmware>
+    <firmware gtype="FuHidReportItem">
+      <id>report-id</id>
+      <value>0x9</value>
+    </firmware>
+    <firmware gtype="FuHidReportItem">
+      <id>end-collection</id>
+    </firmware>
+  </firmware>
+</firmware>

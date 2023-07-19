@@ -163,109 +163,63 @@ fu_hid_descriptor_write(FuFirmware *firmware, GError **error)
 	return g_steal_pointer(&buf);
 }
 
+typedef struct {
+	const gchar *id;
+	guint32 value;
+} FuHidDescriptorCondition;
+
 /**
- * fu_hid_descriptor_find_report_by_id:
+ * fu_hid_descriptor_find_report:
  * @self: a #FuHidDescriptor
- * @usage_page: a HID usage page, or %G_MAXUINT32 for "don't care"
- * @report_id: a HID report id
  * @error: (nullable): optional return location for an error
+ * @...: pairs of string-integer values, ending with %NULL
  *
- * Finds the HID report from the report ID.
+ * Finds the first HID report that matches all the report attributes.
  *
  * Returns: (transfer full): A #FuHidReport, or %NULL if not found.
  *
  * Since: 1.9.4
  **/
 FuHidReport *
-fu_hid_descriptor_find_report_by_id(FuHidDescriptor *self,
-				    guint32 usage_page,
-				    guint32 report_id,
-				    GError **error)
+fu_hid_descriptor_find_report(FuHidDescriptor *self, GError **error, ...)
 {
+	va_list args;
+	g_autoptr(GPtrArray) conditions = g_ptr_array_new_with_free_func(g_free);
 	g_autoptr(GPtrArray) reports = fu_firmware_get_images(FU_FIRMWARE(self));
 
 	g_return_val_if_fail(FU_IS_HID_DESCRIPTOR(self), NULL);
-	g_return_val_if_fail(report_id != 0x0, NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
-	for (guint i = 0; i < reports->len; i++) {
-		FuHidReport *report = g_ptr_array_index(reports, i);
-		g_autoptr(FuFirmware) item_id = NULL;
-
-		/* optional, but sometimes required */
-		if (usage_page != G_MAXUINT32) {
-			g_autoptr(FuFirmware) item_usage_page =
-			    fu_firmware_get_image_by_idx(FU_FIRMWARE(report),
-							 FU_HID_ITEM_TAG_USAGE_PAGE,
-							 NULL);
-			if (item_usage_page == NULL)
-				continue;
-			if (fu_hid_report_item_get_value(FU_HID_REPORT_ITEM(item_usage_page)) !=
-			    usage_page)
-				continue;
-		}
-
-		/* always required */
-		item_id = fu_firmware_get_image_by_idx(FU_FIRMWARE(report),
-						       FU_HID_ITEM_TAG_REPORT_ID,
-						       NULL);
-		if (item_id == NULL)
-			continue;
-		if (fu_hid_report_item_get_value(FU_HID_REPORT_ITEM(item_id)) == report_id)
-			return g_object_ref(report);
+	/* parse varargs */
+	va_start(args, error);
+	for (guint i = 0;; i++) {
+		g_autofree FuHidDescriptorCondition *cond = g_new0(FuHidDescriptorCondition, 1);
+		cond->id = va_arg(args, const gchar *);
+		if (cond->id == NULL)
+			break;
+		cond->value = va_arg(args, guint32);
+		g_ptr_array_add(conditions, g_steal_pointer(&cond));
 	}
-	g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_NOT_FOUND, "no report found");
-	return NULL;
-}
+	va_end(args);
 
-/**
- * fu_hid_descriptor_find_report_by_usage:
- * @self: a #FuHidDescriptor
- * @usage_page: a HID usage page, or %G_MAXUINT32 for "don't care"
- * @usage: a HID usage id
- * @error: (nullable): optional return location for an error
- *
- * Finds the HID report from the report usage.
- *
- * Returns: (transfer full): A #FuHidReport, or %NULL if not found.
- *
- * Since: 1.9.4
- **/
-FuHidReport *
-fu_hid_descriptor_find_report_by_usage(FuHidDescriptor *self,
-				       guint32 usage_page,
-				       guint32 usage,
-				       GError **error)
-{
-	g_autoptr(GPtrArray) reports = fu_firmware_get_images(FU_FIRMWARE(self));
-
-	g_return_val_if_fail(FU_IS_HID_DESCRIPTOR(self), NULL);
-	g_return_val_if_fail(usage != 0x0, NULL);
-	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
-
+	/* return the first report that matches *all* conditions */
 	for (guint i = 0; i < reports->len; i++) {
 		FuHidReport *report = g_ptr_array_index(reports, i);
-		g_autoptr(FuFirmware) item_id = NULL;
-
-		/* optional, but sometimes required */
-		if (usage_page != G_MAXUINT32) {
-			g_autoptr(FuFirmware) item_usage_page =
-			    fu_firmware_get_image_by_idx(FU_FIRMWARE(report),
-							 FU_HID_ITEM_TAG_USAGE_PAGE,
-							 NULL);
-			if (item_usage_page == NULL)
-				continue;
-			if (fu_hid_report_item_get_value(FU_HID_REPORT_ITEM(item_usage_page)) !=
-			    usage_page)
-				continue;
+		gboolean matched = TRUE;
+		for (guint j = 0; j < conditions->len; j++) {
+			FuHidDescriptorCondition *cond = g_ptr_array_index(conditions, j);
+			g_autoptr(FuFirmware) item =
+			    fu_firmware_get_image_by_id(FU_FIRMWARE(report), cond->id, NULL);
+			if (item == NULL) {
+				matched = FALSE;
+				break;
+			}
+			if (fu_hid_report_item_get_value(FU_HID_REPORT_ITEM(item)) != cond->value) {
+				matched = FALSE;
+				break;
+			}
 		}
-
-		/* always required */
-		item_id =
-		    fu_firmware_get_image_by_idx(FU_FIRMWARE(report), FU_HID_ITEM_TAG_USAGE, NULL);
-		if (item_id == NULL)
-			continue;
-		if (fu_hid_report_item_get_value(FU_HID_REPORT_ITEM(item_id)) == usage)
+		if (matched)
 			return g_object_ref(report);
 	}
 	g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_NOT_FOUND, "no report found");

@@ -19,12 +19,4 @@ FuFirmware *
 fu_hid_descriptor_new(void);
 
 FuHidReport *
-fu_hid_descriptor_find_report_by_id(FuHidDescriptor *self,
-				    guint32 usage_page,
-				    guint32 report_id,
-				    GError **error);
-FuHidReport *
-fu_hid_descriptor_find_report_by_usage(FuHidDescriptor *self,
-				       guint32 usage_page,
-				       guint32 usage,
-				       GError **error);
+fu_hid_descriptor_find_report(FuHidDescriptor *self, GError **error, ...) G_GNUC_NULL_TERMINATED;
