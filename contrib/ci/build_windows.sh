@@ -10,6 +10,12 @@ fi
 # install deps
 ./contrib/ci/fwupd_setup_helpers.py --yes -o fedora -v mingw64 install-dependencies
 
+# until it appears in updates-testing
+dnf install --allowerasing -y \
+    https://kojipkgs.fedoraproject.org//packages/msitools/0.102/1.fc39/x86_64/msitools-0.102-1.fc39.x86_64.rpm \
+    https://kojipkgs.fedoraproject.org//packages/glib2/2.76.4/3.fc38/x86_64/glib2-2.76.4-3.fc38.x86_64.rpm \
+    https://kojipkgs.fedoraproject.org//packages/glib2/2.76.4/3.fc38/x86_64/glib2-devel-2.76.4-3.fc38.x86_64.rpm
+
 # update to latest version of meson
 if [ "$(id -u)" -eq 0 ]; then
     dnf install -y python-pip
