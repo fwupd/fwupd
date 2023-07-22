@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1999-2021 Logitech, Inc.
+ * Copyright (c) 1999-2023 Logitech, Inc.
  * All Rights Reserved
  *
  * SPDX-License-Identifier: LGPL-2.1+
@@ -16,10 +16,64 @@ import "device_common.proto";
 /**
  * This message data structure holds information about the
  * current RightSight configuration.
+ * Note:
+ * status = 0 = disabled/not working|1 = ok
  *
+ * 11/5/2021
+ * Added modes to support RightSight 2
  */
 message RightSightConfiguration
 {
+	/**
+	 * Enumeration of modes for speaker tracking.
+	 * For RightSight v2
+	 */
+	enum SpeakerTrackingMode {
+		/**
+		 * This is the old rightsight that we know that uses
+		 * camera to track persons.  When selected, sub modes are
+		 * dynamic or call start.
+		 */
+		GROUP_VIEW = 0;
+
+		/**
+		 * This does not indicate a default value.
+		 *
+		 */
+		SPEAKER_VIEW = 1;
+
+		/**
+		 * Grid view.   Valid when RightSight version=6
+		 *
+		 */
+		GRID_VIEW = 2;
+	}
+
+	/**
+	 * Enumeration of speaker detection speed when in speaker view
+	 * For RightSight v2
+	 */
+	enum SpeakerDetectionSpeed {
+		SLOW_SPEAKER_SPEED = 0;
+
+		DEFAULT_SPEAKER_SPEED = 1;
+
+		FAST_SPEAKER_SPEED = 2;
+	}
+
+	/**
+	 * Enumeration of frame speed when in group view
+	 * For RightSight v2
+	 *
+	 */
+	enum FramingSpeed {
+		SLOW_FRAME_SPEED = 0;
+
+		DEFAULT_FRAME_SPEED = 1;
+
+		FAST_FRAME_SPEED = 2;
+	}
+
 	/**
 	 * Enumeration of modes that the RightSight service can be in.
 	 */
@@ -59,6 +113,80 @@ message RightSightConfiguration
 	 * milliseconds since the epoch.
 	 */
 	uint64 last_modified = 3;
+
+	/**
+	 * (OPTIONAL) The tracking mode.
+	 * For RightSight v2
+	 */
+	SpeakerTrackingMode trackingMode = 4;
+
+	/**
+	 * (OPTIONAL) Valid when tracking mode is set to speaker view. Indicate if pip is
+	 *   enabled or not.
+	 *  Valid if device report has version 2
+	 */
+	bool pip = 5;
+
+	/**
+	 * (OPTIONAL)
+	 *  Valid if trackingMode is speaker view
+	 * For RightSight v2
+	 */
+	bool reduceTransitions = 6;
+
+	/**
+	 * (OPTIONAL)
+	 *  Valid if trackingMode is speaker view
+	 * For RightSight v2
+	 */
+	SpeakerDetectionSpeed speakerDetectionSpeed = 7;
+
+	/**
+	 * (DEPRECATED)
+	 * Frame speed value.
+	 * For RightSight v2
+	 */
+	FramingSpeed framingSpeed = 8;
+
+	/**
+	 * (OPTIONAL)
+	 * Group view frame speed value.
+	 * For RightSight v2
+	 */
+	FramingSpeed groupFramingSpeed = 9;
+
+	/**
+	 * (OPTIONAL)
+	 * Speaker view frame speed value.
+	 * For RightSight v2
+	 */
+	FramingSpeed speakerFramingSpeed = 10;
+
+	/**
+	 * (OPTIONAL)
+	 *  1. Valid when tracking mode is set to speaker view.
+     *  2. Valid if device report has RS version 8 and Sight camera is connected.
+     *
+     *  Indicate to use Sight camera in Speaker view
+
+     * Possible values
+	-1 = DISABLED - For option to signify off, greyed out, unable to select
+	 0 = OFF      -  is Off and able to toggle
+	 1 = ON        -  is On and able to toggle
+	 */
+	int32 useSight = 11;
+
+	/**
+	 * (OPTIONAL)
+     *  Valid if device report has RS version 8 and Sight camera is connected.
+     *
+     *  Intelligently switch between cameras to show the best view.
+     * Possible values
+	-1 = DISABLED - For option to signify off, greyed out, unable to select
+	 0 = OFF      -  is Off and able to toggle
+	 1 = ON        -  is On and able to toggle
+	 */
+	int32 smartSwitching = 12;
 }
 
 /**
@@ -81,7 +209,7 @@ message RightSightConfiguration
  *
  * EXPECTED RESPONSE
  * SetRightSightConfigurationResponse
- *
+ * Note:  For RightSight v1
  */
 message SetRightSightConfigurationRequest
 {
@@ -120,4 +248,141 @@ message SetRightSightConfigurationResponse
 	 * the product.
 	 */
 	RightSightConfiguration right_sight_configuration = 2;
+}
+
+/**
+ *
+ * This message requests that the RightSight configuration
+ * settings be changed.
+ * After handling this request, the device should send the response and an updated device report.
+ *
+ * EXPECTED RESPONSE
+ * SetRightSightConfigurationResponse
+
+	Support
+    CollabOS 1.5:
+	RightSight 2
+	Group View
+	    the only additional options will be the dynamic/on call start
+	    Speed option not available in 1.5
+	Speaker view
+	    only the additional option for picture in picture will be available
+	    reduce transitions will not be available in 1.5
+	    both speed options will not be available in 1.5
+
+    CollabOS 1.6 (version=3):
+	Speaker view
+	    speaker detection
+	    framing speed
+	Group View
+	    framing speed
+
+	(version=4) separate framing speed variables for frame speed
+	speakerFramingSpeed
+	groupFramingSpeed
+
+
+ * Note:  For RightSight v2
+ */
+message SetRightSightConfigurationRequestv2
+{
+	/**
+	 * (REQUIRED) If true, requests that RightSight be
+	 * turned on. If false, indicates that
+	 * RightSight should be turned off.
+	 */
+	bool enabled = 1;
+
+	/**
+	 * (REQUIRED) The tracking mode for RightSight
+	 */
+	RightSightConfiguration.SpeakerTrackingMode trackingMode = 2;
+
+	/**
+	 * (REQUIRED) The mode for RightSight to be in. A value is
+	 * required, but if none is provided, then this will
+	 * default to DYNAMIC mode.
+	 * Valid in Group view
+	 */
+	RightSightConfiguration.Mode mode = 3;
+
+	/**
+	 * (OPTIONAL) Picture-in-picture.
+	 *  Valid in speaker view
+	 */
+	bool pip = 4;
+
+	/**
+	 * (OPTIONAL) Speaker detection speed
+	 *  Valid in speaker view
+	 */
+	RightSightConfiguration.SpeakerDetectionSpeed speakerDetectionSpeed = 5;
+
+	/**
+	 * DEPRECATED
+	 * (OPTIONAL) The framing speed.
+	 * value could be different based on tracking mode
+	 */
+	RightSightConfiguration.FramingSpeed framingSpeed = 6;
+
+	/**
+	 * Not supported
+	 * (OPTIONAL) Reduce transitions
+	 *  Valid in speaker view
+	 *
+	 *  bool reduceTransitions = 7;
+	 */
+
+	/**
+	 * (OPTIONAL) The group framing speed.
+	 */
+	RightSightConfiguration.FramingSpeed groupFramingSpeed = 8;
+
+	/**
+	 * (OPTIONAL) The speaker framing speed.
+	 */
+	RightSightConfiguration.FramingSpeed speakerFramingSpeed = 9;
+
+	/**
+	 * (OPTIONAL)
+	 *  1. Valid when tracking mode is set to speaker view.
+     *  2. Valid if device report has RS version 8 and Sight camera is connected.
+     *
+     *  Indicate to use Sight camera in Speaker view
+     *
+     *  Note:
+     *  1. Proto uses default values.  When device report comes in and this attribute does not
+     exists,
+     *    int value DISABLED will be used.
+     *  2. Incoming request may also contain DISABLED value.  Device can ignore if Sight is not
+     connected.
+     *  3. Sync app UI will search for Sight peripheral device in report to show toggle or not
+     * Possible values
+	-1 = DISABLED - For option to signify off, greyed out, unable to select
+	 0 = OFF      -  is Off and able to toggle
+	 1 = ON        -  is On and able to toggle
+	 */
+	int32 useSight = 10;
+
+	/**
+	 * (OPTIONAL)
+     *  Valid if device report has RS version 8 and Sight camera is connected.
+     *
+     *  Intelligently switch between cameras to show the best view.
+     *  Note: 03/29/23 Current design shows UI is grayed out, so value should be false by default
+     for now.
+     *
+     *  Note:
+     *  1. Proto uses default values.  When device report comes in and this attribute does not
+     exists,
+     *    int value DISABLED will be used.
+     *  2. Incoming request may also contain DISABLED value.  Device can ignore if Sight is not
+     connected.
+     *  3. Sync app UI will search for Sight peripheral device in report to show toggle or not
+     * Possible values
+	-1 = DISABLED - For option to signify off, greyed out, unable to select
+	 0 = OFF      -  is Off and able to toggle
+	 1 = ON        -  is On and able to toggle
+	 */
+	int32 smartSwitching = 11;
 }

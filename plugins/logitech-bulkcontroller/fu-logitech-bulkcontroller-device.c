@@ -725,14 +725,16 @@ fu_logitech_bulkcontroller_device_write_firmware(FuDevice *device,
 	g_autoptr(GByteArray) start_pkt = g_byte_array_new();
 	g_autoptr(GBytes) fw = NULL;
 	g_autofree gchar *old_firmware_version = NULL;
+	gboolean status_updating = FALSE;
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1, "init");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 48, "device-write-blocks");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1, "end-transfer");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1, "uninit");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 49, NULL);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 55, "device-write-blocks");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 2, "end-transfer");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 2, "uninit");
+	fu_progress_add_step(progress, FWUPD_STATUS_DOWNLOADING, 5, NULL);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 35, NULL);
 
 	/* get default image */
 	fw = fu_firmware_get_bytes(firmware, error);
@@ -838,6 +840,13 @@ fu_logitech_bulkcontroller_device_write_firmware(FuDevice *device,
 			fu_logitech_bulkcontroller_update_state_to_string(self->update_status),
 			self->update_progress);
 
+		/* when update status changes from kUpdateStateDownloading to kUpdateStateUpdating,
+		 * update progress reset to 0. Move progress step from downloading to verify */
+		if ((!status_updating) &&
+		    (self->update_status == FU_LOGITECH_BULKCONTROLLER_UPDATE_STATE_UPDATING)) {
+			fu_progress_step_done(progress);
+			status_updating = TRUE;
+		}
 		/* existing device image version is same as newly pushed image */
 		if (self->update_status == FU_LOGITECH_BULKCONTROLLER_UPDATE_STATE_ERROR) {
 			g_set_error_literal(error,
@@ -1127,9 +1136,9 @@ fu_logitech_bulkcontroller_device_set_progress(FuDevice *self, FuProgress *progr
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0, "detach");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 99, "write");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 90, "write");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0, "attach");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1, "reload");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 10, "reload");
 }
 
 static void

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1999-2021 Logitech, Inc.
+ * Copyright (c) 1999-2023 Logitech, Inc.
  * All Rights Reserved
  *
  * SPDX-License-Identifier: LGPL-2.1+
@@ -32,8 +32,7 @@ message Header
 {
 	/**
 	 * A unique id of the message. If responding after receiving
-	 * data, the value stored in this field should be used in the ack message
-	 * msgId field
+	 * data, the value stored in this field should be used in the ack message msgId field
 	 */
 	string id = 1;
 	/**
@@ -156,6 +155,13 @@ message Request
 		SetReverbModeRequest reverb_mode_request = 17;
 		GenerateCrashDumpRequest generate_bug_report_request = 18;
 		SendCertificateDataRequest send_certificate_data_request = 19;
+		SetMicEQModeRequest mic_eq_mode_request = 20;
+		SetSpeakerEQModeRequest speaker_eq_mode_request = 21;
+		ForgetDeviceRequest forget_request = 22;
+		SetRightSightConfigurationRequestv2 set_rightsight_configuration_request_v2 = 23;
+		SendTestResultRequest send_test_result_request = 24;
+		GetMemfaultManifestRequest get_memfault_manifest_request = 25;
+		SendMemfaultSettingsRequest send_memfault_settings_request = 26;
 	}
 }
 
@@ -185,6 +191,12 @@ message Response
 		SetReverbModeResponse reverb_mode_response = 17;
 		GenerateCrashDumpResponse generate_bug_report_response = 18;
 		SendCertificateDataResponse send_certificate_data_response = 19;
+		SetMicEQModeResponse mic_eq_response = 20;
+		SetSpeakerEQModeResponse speaker_eq_response = 21;
+		ForgetDeviceResponse forget_response = 22;
+		SendTestResultResponse send_test_result_response = 24;
+		GetMemfaultManifestResponse get_memfault_manifest_response = 25;
+		SendMemfaultSettingsResponse send_memfault_settings_response = 26;
 	}
 }
 
@@ -200,5 +212,6 @@ message Event
 		SendCrashDumpEvent send_crash_dump_event = 2;
 		CrashDumpAvailableEvent crash_dump_available_event = 3;
 		HandshakeEvent handshake_event = 4;
+		InitiateMemfaultManifestRequestEvent initiate_memfault_manifest_request_event = 5;
 	}
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1999-2021 Logitech, Inc.
+ * Copyright (c) 1999-2023 Logitech, Inc.
  * All Rights Reserved
  *
  * SPDX-License-Identifier: LGPL-2.1+
@@ -10,6 +10,8 @@ syntax = "proto3";
 package logi.device.proto;
 
 option java_package = "com.logitech.vc.proto";
+
+import "device_common.proto";
 
 /**
  * Kong as an Android device can accumulate
@@ -194,8 +196,8 @@ message SendCrashDumpEvent
 	/**
 	 * (REQUIRED)
 	 * Transfer state.
-	 *  true indicates file was received without errors and bug report file was
-	 * uploaded false means an error occurred
+	 *  true indicates file was received without errors and bug report file was uploaded
+	 *  false means an error occurred
 	 */
 	bool success = 2;
 }
@@ -241,6 +243,21 @@ message GenerateCrashDumpRequest
 	 * (OPTIONAL)
 	 */
 	string note = 3;
+
+	/**
+	 * (OPTIONAL)
+	 *  serial number of the intended recipient of the command.
+	 *  If empty, the receiver should handle the command as the intended recipient. This also
+	 * handles backward compatibility with older Sync app where serial number is not defined.
+	 */
+	string serial_number = 4;
+
+	/**
+	 * (OPTIONAL)
+	 *  Request reference for connected devices. This could be empty for backwards
+	 * compatibility.
+	 */
+	string request_ref = 5;
 }
 
 /**
@@ -282,4 +299,167 @@ message GenerateCrashDumpResponse
 	 * The get upload url body signature.
 	 */
 	string signature = 4;
+}
+
+/**
+ * Ask device to copy test result.
+ * EXPECTED RESPONSE:
+ * SendTestResultResponse
+ */
+message SendTestResultRequest
+{
+	/**
+	 * Unused. Reserved for future use.
+	 */
+	bool reserved = 1;
+}
+
+/**
+ * Test result response.
+ */
+message SendTestResultResponse
+{
+	/**
+	 * (OPTIONAL)
+	 * If test result file exists, this variable
+	 * contains the file name
+	 * that will be copied over.
+	 */
+	string test_result_file = 1;
+
+	/**
+	 * (REQUIRED)
+	 * bool value to indicate will send file
+	 * true if sending file over.
+	 * false if no file to send.
+	 */
+	bool will_send_file = 2;
+}
+
+/**
+ *  Device can use to notify Sync app to call
+ *  GetMemfaultManifestRequest API with attestation...
+ */
+message InitiateMemfaultManifestRequestEvent
+{
+	/**
+	 * Unused. Reserved for future use.
+	 */
+	bool reserved = 1;
+}
+
+/**
+ * Request attested manifest from device to be used in retrieving memfault
+ *  settings from futen.
+ * This is to be included in UsbMsg.
+ *
+ * EXPECTED RESPONSE
+ * GetMemfaultManifestResponse
+ * Added 10/12/2022 EE
+ */
+message GetMemfaultManifestRequest
+{
+	/**
+	 * The device serial number.
+	 *  Reserve for future versions to indicate target device.
+	 * (OPTIONAL)
+	 */
+	string serial = 1;
+
+	/**
+	 * The attestation challenge.
+	 * (REQUIRED)
+	 */
+	string challenge = 2;
+
+	/**
+	 * Time to live
+	 * (REQUIRED)
+	 */
+	int32 ttl = 3;
+
+	/**
+	 * Sender to provide in case of issue responding to initiate request
+	 *   i.e  Sender is busy, firmware update in progress, etc.
+	 */
+	Error error = 4;
+}
+
+/**
+ * GetMemfaultManifestRequest response.
+ *  The device should send this message after receiving GetMemfaultManifestRequest.
+ *  If the device encounters any issues, this message should be sent with the error field filled
+ * out. An empty error field indicates success.
+ */
+message GetMemfaultManifestResponse
+{
+	/**
+	 * The device serial number.
+	 *  Reserve for future versions to indicate target device.
+	 * (OPTIONAL)
+	 */
+	string serial = 1;
+	/**
+	 * The manifest body.  This is a json string
+	 * (REQUIRED)
+	 */
+	string body = 2;
+
+	/**
+	 * The manifest body signature.
+	 * (REQUIRED)
+	 */
+	string signature = 3;
+
+	/**
+	 * If any error are encountered while processing the request,
+	 *   the device should respond with this error field.
+	 * (OPTIONAL)
+	 */
+	Error error = 4;
+}
+
+/**
+ * For sending memfault settings to device.
+ *
+ * EXPECTED RESPONSE
+ * SendMemfaultSettingsResponse
+ * Added 10/12/2022 EE
+ */
+message SendMemfaultSettingsRequest
+{
+	/**
+	 * The device serial number.
+	 *  Reserve for future versions to indicate target device.
+	 * (OPTIONAL)
+	 */
+	string serial = 1;
+
+	/**
+	 * (REQUIRED)
+	 * The memfault settings in bytes.
+	 */
+	bytes memfault_settings = 2;
+
+	/**
+	 * (REQUIRED)
+	 * The memfault settings md5 hash
+	 */
+	string md5 = 3;
+}
+
+/**
+ * Response to SendMemfaultSettingsRequest request.
+ *  The device should send this message after receiving SendMemfaultSettingsRequest.
+ *  If the device encounters any issues, this message should be sent with the error field filled
+ * out. An empty error field indicates success.
+ */
+message SendMemfaultSettingsResponse
+{
+	/**
+	 * If any error are encountered while processing the request,
+	 *   the device should respond with this error field.
+	 * (OPTIONAL)
+	 */
+	Error error = 1;
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1999-2021 Logitech, Inc.
+ * Copyright (c) 1999-2023 Logitech, Inc.
  * All Rights Reserved
  *
  * SPDX-License-Identifier: LGPL-2.1+
@@ -12,9 +12,40 @@ package logi.device.proto;
 option java_package = "com.logitech.vc.proto";
 
 /**
+ * For reboot schedule request defined here
+ * https://docs.google.com/document/d/10pG89Cw_siDvnmsKxdLQqutIqegH6ouSnMon_G28Nyc/edit#bookmark=id.k0bz8vzzaj9
+ */
+message RebootSchedule
+{
+	/**
+	 * The time to reboot.
+	 * If this is empty and ts is non-zero, it means to clear the reboot schedule
+	 */
+	string when = 1;
+
+	/**
+	 * repeat mode defined here
+	 * https://docs.google.com/document/d/1yQp8Ju82bDuVfHmprP_5ToUJbitK7kOjmj_71Cqc-do/edit#heading=h.k8yyuyddqj1v
+	 */
+	uint32 repeat = 2;
+
+	/**
+	 * timestamp the schedule request was made
+	 */
+	uint64 ts = 3;
+}
+
+/**
  * Request to reboot device
  * This is to be included in UsbMsg
-
+ *
+ * After the device receives this, the device should send a response,
+ * followed by an mqtt event that conforms to device reboot or
+ * schedule reboot defined here
+ * https://docs.google.com/document/d/10pG89Cw_siDvnmsKxdLQqutIqegH6ouSnMon_G28Nyc/edit#bookmark=id.zcy4ldnyuij
+ * and
+ * https://docs.google.com/document/d/10pG89Cw_siDvnmsKxdLQqutIqegH6ouSnMon_G28Nyc/edit#bookmark=id.k0bz8vzzaj9
+ *
  * EXPECTED RESPONSE
  * RebootDeviceResponse
  */
@@ -32,6 +63,44 @@ message RebootDeviceRequest
 	 *   it sends back to PC during a reboot request.
 	 */
 	uint64 iat = 2;
+
+	/**
+	 * Below are newly defined attributes that includes rebootSchedule,
+	 * and also tries to keep the request in-line with cloud request
+	 * Note:
+	 *   older versions of Sync app would not know about below
+	 */
+	/**
+	 * (REQUIRED)Reboot strategy defined in
+	 * https://docs.google.com/document/d/10pG89Cw_siDvnmsKxdLQqutIqegH6ouSnMon_G28Nyc/edit#
+	 */
+	uint32 strategy = 3;
+	/**
+	 * (REQUIRED) Same behavior as in Raiden Backend API
+	 */
+	bool rebootNow = 4;
+	/**
+	 * (OPTIONAL) Same behavior as in Raiden Backend API
+	 */
+	RebootSchedule schedule = 5;
+	/**
+	 * (REQUIRED) For device to distinguish between older request and new one that
+	 *   support schedule reboot.
+	 *   This defaults to 0 for older Sync app.  Sync app that supports
+	 *   schedule reboot will pass with value 1.
+	 */
+	uint32 version = 6;
+
+	/**
+	 * (OPTIONAL)
+	 *  serial number of the intended recipient of the command.
+	 *  If empty, the receiver should handle the command as the intended recipient. This also
+	 * handles backward compatibility with older Sync app where serial number is not defined.
+	 *  Behavior for host and peripheral device: if command is for host device, host will
+	 * handle command and forward the command to peripheral device as well.  If for peripheral
+	 * device, host will just forward command to peripheral device.
+	 */
+	string serial_number = 7;
 }
 
 /**
@@ -48,8 +117,7 @@ message RebootDeviceResponse
 
 /**
  * This message requests that the speaker boost audio setting be changed.
- * The device should send a device info event after this setting request are
- * handled.
+ * The device should send a device info event after this setting request are handled.
  *
  * EXPECTED RESPONSE
  * SetSpeakerBoostResponse
@@ -69,16 +137,15 @@ message SetSpeakerBoostRequest
 message SetSpeakerBoostResponse
 {
 	/**
-	 * (REQUIRED) set to true if the audio setting request was successfully sent,
-	 * false otherwise
+	 * (REQUIRED) set to true if the audio setting request was successfully sent, false
+	 * otherwise
 	 */
 	bool success = 1;
 }
 
 /**
  * This message requests that the noise reduction audio setting be changed.
- * The device should send a device info event after this setting request are
- * handled.
+ * The device should send a device info event after this setting request are handled.
  *
  * EXPECTED RESPONSE
  * SetNoiseReductionResponse
@@ -98,16 +165,15 @@ message SetNoiseReductionRequest
 message SetNoiseReductionResponse
 {
 	/**
-	 * (REQUIRED) set to true if the audio setting request was successfully sent,
-	 * false otherwise
+	 * (REQUIRED) set to true if the audio setting request was successfully sent, false
+	 * otherwise
 	 */
 	bool success = 1;
 }
 
 /**
  * This message requests that the reverb mode audio setting be changed.
- * The device should send a device info event after this setting request are
- * handled.
+ * The device should send a device info event after this setting request are handled.
  *
  * EXPECTED RESPONSE
  * SetReverbModeResponse
@@ -136,8 +202,107 @@ message SetReverbModeRequest
 message SetReverbModeResponse
 {
 	/**
-	 * (REQUIRED) set to true if the setting request was successfully sent, false
-	 * otherwise
+	 * (REQUIRED) set to true if the setting request was successfully sent, false otherwise
+	 */
+	bool success = 1;
+}
+
+/**
+ * This message requests that the microphone eq mode audio setting be changed.
+ * The device should send a device info event after this setting request are handled.
+ *
+ * EXPECTED RESPONSE
+ * SetMicEQModeResponse
+ *
+ */
+message SetMicEQModeRequest
+{
+	/**
+	 * MicEQ mode enumeration
+	 */
+	enum MicEQMode {
+		BASSBOOST = 0;
+		NORMAL = 1;
+		VOICEBOOST = 2;
+	}
+
+	/**
+	 * (REQUIRED) The microphone eq setting to be set
+	 *
+	 *  see MicEQ mode enumeration
+	 */
+	MicEQMode mic_eq_mode = 1;
+}
+
+message SetMicEQModeResponse
+{
+	/**
+	 * (REQUIRED) set to true if the setting request was successfully sent, false otherwise
+	 */
+	bool success = 1;
+}
+
+/**
+ * This message requests that the speaker eq mode audio setting be changed.
+ * The device should send a device info event after this setting request are handled.
+ *
+ * EXPECTED RESPONSE
+ * SetSpeakerEQModeResponse
+ *
+ */
+message SetSpeakerEQModeRequest
+{
+	/**
+	 * SpeakerEQ mode enumeration
+	 */
+	enum SpeakerEQMode {
+		BASSBOOST = 0;
+		NORMAL = 1;
+		VOICEBOOST = 2;
+	}
+
+	/**
+	 * (REQUIRED) The speaker eq setting to be set
+	 *
+	 *  see SpeakerEQ mode enumeration
+	 */
+	SpeakerEQMode speaker_eq_mode = 1;
+}
+
+message SetSpeakerEQModeResponse
+{
+	/**
+	 * (REQUIRED) set to true if the setting request was successfully sent, false otherwise
+	 */
+	bool success = 1;
+}
+
+/**
+ * This message requests that the device forgets a peripheral.
+ * After forgetting the peripheral, the device should send ForgetDeviceResponse
+ * and indicate success or false.
+ * The device should also send a device info event after sending the response
+ * to indicate the new peripheral state.
+ * Note: micpod uid comes from device in this format "uid": "33",
+ *   but Sync stores this as hex string , like  uuid: "0x0021".
+ *   Sync app will send the uuid in hex string format.
+ * EXPECTED RESPONSE
+ * ForgetDeviceResponse
+ *
+ */
+message ForgetDeviceRequest
+{
+	/**
+	 * (REQUIRED) The uuid of peripheral to forget
+	 *
+	 */
+	string uuid = 1;
+}
+
+message ForgetDeviceResponse
+{
+	/**
+	 * (REQUIRED) set to true if forget request was successfully handled
 	 */
 	bool success = 1;
 }
