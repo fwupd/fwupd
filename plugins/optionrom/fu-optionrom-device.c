@@ -40,77 +40,22 @@ fu_optionrom_device_probe(FuDevice *device, GError **error)
 static GBytes *
 fu_optionrom_device_dump_firmware(FuDevice *device, FuProgress *progress, GError **error)
 {
-	FuUdevDevice *udev_device = FU_UDEV_DEVICE(device);
-	guint number_reads = 0;
-	g_autofree gchar *fn = NULL;
-	g_autofree gchar *rom_fn = NULL;
-	g_autoptr(GByteArray) buf = g_byte_array_new();
-	g_autoptr(GError) error_local = NULL;
-	g_autoptr(GFile) file = NULL;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(GBytes) fw = NULL;
 
-	/* open the file */
-	rom_fn = g_build_filename(fu_udev_device_get_sysfs_path(udev_device), "rom", NULL);
-	if (rom_fn == NULL) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INTERNAL,
-				    "Unable to read firmware from device");
+	/* FuUdevDevice->dump_firmware */
+	fw = FU_DEVICE_CLASS(fu_optionrom_device_parent_class)
+		 ->dump_firmware(device, progress, error);
+	if (fw == NULL)
 		return NULL;
-	}
-
-	/* open file */
-	file = g_file_new_for_path(rom_fn);
-	stream = G_INPUT_STREAM(g_file_read(file, NULL, &error_local));
-	if (stream == NULL) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_AUTH_FAILED,
-				    error_local->message);
-		return NULL;
-	}
-
-	/* we have to enable the read for devices */
-	fn = g_file_get_path(file);
-	if (g_str_has_prefix(fn, "/sys")) {
-		g_autoptr(GFileOutputStream) output_stream = NULL;
-		output_stream = g_file_replace(file, NULL, FALSE, G_FILE_CREATE_NONE, NULL, error);
-		if (output_stream == NULL)
-			return NULL;
-		if (g_output_stream_write(G_OUTPUT_STREAM(output_stream), "1", 1, NULL, error) < 0)
-			return NULL;
-	}
-
-	/* ensure we got enough data to fill the buffer */
-	while (TRUE) {
-		gssize sz;
-		guint8 tmp[32 * 1024] = {0x0};
-		sz = g_input_stream_read(stream, tmp, sizeof(tmp), NULL, error);
-		if (sz == 0)
-			break;
-		g_debug("ROM returned 0x%04x bytes", (guint)sz);
-		if (sz < 0)
-			return NULL;
-		g_byte_array_append(buf, tmp, sz);
-
-		/* check the firmware isn't serving us small chunks */
-		if (number_reads++ > 1024) {
-			g_set_error_literal(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_INVALID_FILE,
-					    "firmware not fulfilling requests");
-			return NULL;
-		}
-	}
-	if (buf->len < 512) {
+	if (g_bytes_get_size(fw) < 512) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_FILE,
 			    "firmware too small: %u bytes",
-			    buf->len);
+			    (guint)g_bytes_get_size(fw));
 		return NULL;
 	}
-	return g_bytes_new(buf->data, buf->len);
+	return g_steal_pointer(&fw);
 }
 
 static void
