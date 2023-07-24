@@ -827,10 +827,8 @@ fu_firmware_check_magic_for_offset(FuFirmware *self,
 	/* fuzzing */
 	if (!fu_firmware_has_flag(self, FU_FIRMWARE_FLAG_ALWAYS_SEARCH) &&
 	    (flags & FWUPD_INSTALL_FLAG_NO_SEARCH) > 0) {
-		if (!klass->check_magic(self, fw, *offset, error)) {
-			g_prefix_error(error, "not searching magic due to install flags: ");
+		if (!klass->check_magic(self, fw, *offset, error))
 			return FALSE;
-		}
 		return TRUE;
 	}
 
