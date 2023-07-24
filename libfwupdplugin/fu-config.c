@@ -163,22 +163,32 @@ fu_config_reload(FuConfig *self, GError **error)
 	for (guint i = 0; i < priv->items->len; i++) {
 		FuConfigItem *item = g_ptr_array_index(priv->items, i);
 		g_autofree gchar *dirname = g_path_get_dirname(item->filename);
+		g_autoptr(GError) error_load = NULL;
+		g_autoptr(GBytes) blob_item = NULL;
 		g_debug("trying to load config values from %s", item->filename);
-		if (g_file_query_exists(item->file, NULL)) {
-			g_autoptr(GBytes) blob = fu_bytes_get_contents(item->filename, error);
-			if (blob == NULL)
-				return FALSE;
-			fu_byte_array_append_bytes(buf, blob);
+		blob_item = fu_bytes_get_contents(item->filename, &error_load);
+		if (blob_item == NULL) {
+			if (g_error_matches(error_load, G_FILE_ERROR, G_FILE_ERROR_ACCES)) {
+				g_debug("ignoring config file %s: ", error_load->message);
+				continue;
+			} else if (g_error_matches(error_load, G_FILE_ERROR, G_FILE_ERROR_NOENT)) {
+				g_debug("%s", error_load->message);
+				continue;
+			}
+			g_propagate_error(error, g_steal_pointer(&error_load));
+			return FALSE;
 		}
+		fu_byte_array_append_bytes(buf, blob_item);
 
 		/* are any of the legacy files found in this location? */
 		for (guint j = 0; fn_merge[j] != NULL; j++) {
 			g_autofree gchar *fncompat = g_build_filename(dirname, fn_merge[j], NULL);
 			if (g_file_test(fncompat, G_FILE_TEST_EXISTS)) {
-				g_autoptr(GBytes) blob = fu_bytes_get_contents(fncompat, error);
-				if (blob == NULL)
+				g_autoptr(GBytes) blob_compat =
+				    fu_bytes_get_contents(fncompat, error);
+				if (blob_compat == NULL)
 					return FALSE;
-				fu_byte_array_append_bytes(buf, blob);
+				fu_byte_array_append_bytes(buf, blob_compat);
 				g_ptr_array_add(legacy_cfg_files, g_steal_pointer(&fncompat));
 			}
 		}
