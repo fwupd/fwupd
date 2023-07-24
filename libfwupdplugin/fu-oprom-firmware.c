@@ -30,6 +30,8 @@ typedef struct {
 	guint16 machine_type;
 	guint16 subsystem;
 	guint16 compression_type;
+	guint16 vendor_id;
+	guint16 device_id;
 } FuOpromFirmwarePrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE(FuOpromFirmware, fu_oprom_firmware, FU_TYPE_FIRMWARE)
@@ -100,6 +102,8 @@ fu_oprom_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBu
 	fu_xmlb_builder_insert_kx(bn, "machine_type", priv->machine_type);
 	fu_xmlb_builder_insert_kx(bn, "subsystem", priv->subsystem);
 	fu_xmlb_builder_insert_kx(bn, "compression_type", priv->compression_type);
+	fu_xmlb_builder_insert_kx(bn, "vendor_id", priv->vendor_id);
+	fu_xmlb_builder_insert_kx(bn, "device_id", priv->device_id);
 }
 
 static gboolean
@@ -150,6 +154,8 @@ fu_oprom_firmware_parse(FuFirmware *firmware,
 	st_pci = fu_struct_oprom_pci_parse(buf, bufsz, offset + pci_header_offset, error);
 	if (st_pci == NULL)
 		return FALSE;
+	priv->vendor_id = fu_struct_oprom_pci_get_vendor_id(st_pci);
+	priv->device_id = fu_struct_oprom_pci_get_device_id(st_pci);
 
 	/* get length */
 	image_length = fu_struct_oprom_pci_get_image_length(st_pci);
@@ -217,7 +223,8 @@ fu_oprom_firmware_write(FuFirmware *firmware, GError **error)
 	g_byte_array_append(buf, st_hdr->data, st_hdr->len);
 
 	/* add PCI section */
-	fu_struct_oprom_pci_set_vendor_id(st_pci, 0x8086);
+	fu_struct_oprom_pci_set_vendor_id(st_pci, priv->vendor_id);
+	fu_struct_oprom_pci_set_device_id(st_pci, priv->device_id);
 	fu_struct_oprom_pci_set_image_length(st_pci, image_size / FU_OPROM_FIRMWARE_ALIGN_LEN);
 	fu_struct_oprom_pci_set_code_type(st_pci, fu_firmware_get_idx(firmware));
 	fu_struct_oprom_pci_set_indicator(st_pci, FU_OPROM_FIRMWARE_LAST_IMAGE_INDICATOR_BIT);
@@ -262,6 +269,20 @@ fu_oprom_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
 		if (!fu_strtoull(tmp, &val, 0x0, G_MAXUINT16, error))
 			return FALSE;
 		priv->compression_type = val;
+	}
+	tmp = xb_node_query_text(n, "vendor_id", NULL);
+	if (tmp != NULL) {
+		guint64 val = 0;
+		if (!fu_strtoull(tmp, &val, 0x0, G_MAXUINT16, error))
+			return FALSE;
+		priv->vendor_id = val;
+	}
+	tmp = xb_node_query_text(n, "device_id", NULL);
+	if (tmp != NULL) {
+		guint64 val = 0;
+		if (!fu_strtoull(tmp, &val, 0x0, G_MAXUINT16, error))
+			return FALSE;
+		priv->device_id = val;
 	}
 
 	/* success */

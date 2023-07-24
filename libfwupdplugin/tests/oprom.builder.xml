@@ -1,6 +1,7 @@
 <firmware gtype="FuOpromFirmware">
   <machine_type>0x1</machine_type>
   <compression_type>0x0</compression_type>
+  <vendor_id>0x8086</vendor_id>
   <idx>0x1</idx>
   <data>aGVsbG8gd29ybGQ=</data>
   <firmware gtype="FuFirmware">
