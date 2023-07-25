@@ -218,21 +218,32 @@ fu_pxi_ble_device_search_hid_feature_report_id(guint8 *report_descriptor,
 					       "feature",
 					       0x02,
 					       NULL);
-	if (report == NULL)
+	if (report == NULL) {
+		g_set_error_literal(error,
+			FWUPD_ERROR,
+			FWUPD_ERROR_INTERNAL,
+			"report not found");
+	}
 		return FALSE;
 
 	/* find report-id */
 	item_id = fu_firmware_get_image_by_id(FU_FIRMWARE(report), "report-id", error);
 
-	if (item_id == NULL)
+	if (item_id == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "item_id not found");
 		return FALSE;
+	}
+
 
 	/* find report-id value */
 	*report_id = fu_hid_report_item_get_value(FU_HID_REPORT_ITEM(item_id));
 
 	g_debug("usage-page: %x report_id:%d",usage_page, *report_id);
 
-	return FALSE; /* finished processing */
+	return TRUE; /* finished processing */
 
 }
 
@@ -265,14 +276,24 @@ fu_pxi_ble_device_search_hid_input_report_id(guint8 *report_descriptor,
 					       "input",
 					       0x02,
 					       NULL);
-	if (report == NULL)
+	if (report == NULL) {
+		g_set_error_literal(error,
+			FWUPD_ERROR,
+			FWUPD_ERROR_INTERNAL,
+			"report not found");
+	}
 		return FALSE;
 
 	/* find report-id */
 	item_id = fu_firmware_get_image_by_id(FU_FIRMWARE(report), "report-id", error);
 
-	if (item_id == NULL)
+	if (item_id == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "item_id not found");
 		return FALSE;
+	}
 
 	/* find report-id value */
 	*report_id = fu_hid_report_item_get_value(FU_HID_REPORT_ITEM(item_id));
