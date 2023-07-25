@@ -10,6 +10,13 @@
 #include "config.h"
 
 #include <gio/gio.h>
+#include <glib/gstdio.h>
+
+#if defined(HAVE_IOCTL_H) && defined(HAVE_BLKSSZGET)
+#include <fcntl.h>
+#include <sys/ioctl.h>
+#include <sys/mount.h>
+#endif
 
 #include "fwupd-error.h"
 
@@ -351,6 +358,74 @@ fu_volume_get_partition_kind(FuVolume *self)
 	if (val == NULL)
 		return NULL;
 	return g_variant_dup_string(val, NULL);
+}
+
+static guint32
+fu_volume_get_block_size_from_device_name(const gchar *device_name, GError **error)
+{
+#if defined(HAVE_IOCTL_H) && defined(HAVE_BLKSSZGET)
+	gint fd;
+	gint rc;
+	gint sector_size = 0;
+
+	fd = g_open(device_name, O_RDONLY, 0);
+	if (fd < 0) {
+		g_set_error_literal(error,
+				    G_IO_ERROR,
+				    g_io_error_from_errno(errno),
+				    strerror(errno));
+		return 0;
+	}
+	rc = ioctl(fd, BLKSSZGET, &sector_size);
+	if (rc < 0) {
+		g_set_error_literal(error,
+				    G_IO_ERROR,
+				    g_io_error_from_errno(errno),
+				    strerror(errno));
+	} else if (sector_size == 0) {
+		g_set_error_literal(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_FAILED,
+				    "failed to get non-zero logical sector size");
+	}
+	g_close(fd, NULL);
+	return sector_size;
+#else
+	g_set_error(error,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_NOT_SUPPORTED,
+		    "Not supported as <sys/ioctl.h> or BLKSSZGET not found");
+	return 0;
+#endif
+}
+
+/**
+ * fu_volume_get_block_size:
+ * @self: a @FuVolume
+ *
+ * Gets the logical block size of the volume mount point.
+ *
+ * Returns: block size in bytes or 0 on error
+ *
+ * Since: 1.9.4
+ **/
+gsize
+fu_volume_get_block_size(FuVolume *self, GError **error)
+{
+	g_autoptr(GVariant) val = NULL;
+
+	g_return_val_if_fail(FU_IS_VOLUME(self), 0);
+	g_return_val_if_fail(G_IS_DBUS_PROXY(self->proxy_blk), 0);
+
+	val = g_dbus_proxy_get_cached_property(self->proxy_blk, "Device");
+	if (val == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "no device property");
+		return 0;
+	}
+	return fu_volume_get_block_size_from_device_name(g_variant_get_bytestring(val), error);
 }
 
 /**

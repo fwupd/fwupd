@@ -34,8 +34,7 @@ struct _FuEfiHardDriveDevicePath {
 
 G_DEFINE_TYPE(FuEfiHardDriveDevicePath, fu_efi_hard_drive_device_path, FU_TYPE_EFI_DEVICE_PATH)
 
-/* Linux always considers sectors to be 512 bytes */
-#define BLOCK_SIZE 0x200
+#define BLOCK_SIZE_FALLBACK 0x200
 
 static void
 fu_efi_hard_drive_device_path_export(FuFirmware *firmware,
@@ -204,17 +203,26 @@ fu_efi_hard_drive_device_path_new(void)
 FuEfiHardDriveDevicePath *
 fu_efi_hard_drive_device_path_new_from_volume(FuVolume *volume, GError **error)
 {
+	guint16 block_size;
 	g_autoptr(FuEfiHardDriveDevicePath) self = fu_efi_hard_drive_device_path_new();
-	g_autofree gchar *partition_uuid = NULL;
 	g_autofree gchar *partition_kind = NULL;
+	g_autofree gchar *partition_uuid = NULL;
+	g_autoptr(GError) error_local = NULL;
 
 	g_return_val_if_fail(FU_IS_VOLUME(volume), NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
 	/* common to both */
+	block_size = fu_volume_get_block_size(volume, &error_local);
+	if (block_size == 0) {
+		g_warning("failed to get volume block size, falling back to 0x%x: %s",
+			  (guint)BLOCK_SIZE_FALLBACK,
+			  error_local->message);
+		block_size = BLOCK_SIZE_FALLBACK;
+	}
 	self->partition_number = fu_volume_get_partition_number(volume);
-	self->partition_start = fu_volume_get_partition_offset(volume) / BLOCK_SIZE;
-	self->partition_size = fu_volume_get_partition_size(volume) / BLOCK_SIZE;
+	self->partition_start = fu_volume_get_partition_offset(volume) / block_size;
+	self->partition_size = fu_volume_get_partition_size(volume) / block_size;
 
 	/* set up the rest of the struct */
 	partition_kind = fu_volume_get_partition_kind(volume);
