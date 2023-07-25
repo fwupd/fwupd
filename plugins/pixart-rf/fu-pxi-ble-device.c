@@ -312,7 +312,6 @@ fu_pxi_ble_device_check_support_report_id(FuPxiBleDevice *self, GError **error)
 	guint8 report_id = 0;
 	g_autoptr(GByteArray) req = g_byte_array_new();
 
-
 	struct hidraw_report_descriptor rpt_desc;
 
 	/* Get Report Descriptor Size */
@@ -338,16 +337,17 @@ fu_pxi_ble_device_check_support_report_id(FuPxiBleDevice *self, GError **error)
 	fu_dump_raw(G_LOG_DOMAIN, "HID descriptor", rpt_desc.value, rpt_desc.size);
 
 	/* check ota retransmit feature report usage page exist or not */
-	fu_byte_array_append_uint16(req, PXI_HID_DEV_OTA_RETRANSMIT_USAGE_PAGE, G_LITTLE_ENDIAN);
+	g_autoptr(GError) error_local = NULL;
 	if (!fu_pxi_ble_device_search_hid_feature_report_id(rpt_desc.value,
 					rpt_desc.size,
 					PXI_HID_DEV_OTA_RETRANSMIT_USAGE_PAGE,
 					&report_id,
-					error)) {
-		self->retransmit_id = report_id;
+					error_local)) {
+		g_debug("failed to parse descriptor: %s", error_local->message);
+		self->retransmit_id = PXI_HID_DEV_OTA_RETRANSMIT_REPORT_ID;
 	} else {
 
-		self->retransmit_id = PXI_HID_DEV_OTA_RETRANSMIT_REPORT_ID;
+		self->retransmit_id = report_id;
 	}
 
 	g_debug("usage-page: %x retransmit_id:%d",PXI_HID_DEV_OTA_RETRANSMIT_USAGE_PAGE, self->retransmit_id);
@@ -358,9 +358,10 @@ fu_pxi_ble_device_check_support_report_id(FuPxiBleDevice *self, GError **error)
 					PXI_HID_DEV_OTA_REPORT_USAGE_PAGE,
 					&report_id,
 					error)) {
-		self->feature_report_id = report_id;
-	} else {
+		g_debug("failed to parse descriptor: %s", error_local->message);
 		self->feature_report_id = PXI_HID_DEV_OTA_FEATURE_REPORT_ID;
+	} else {
+		self->feature_report_id = report_id;
 	}
 
 	g_debug("usage-page: %x feature_report_id:%d",PXI_HID_DEV_OTA_RETRANSMIT_USAGE_PAGE, self->retransmit_id);
@@ -371,9 +372,10 @@ fu_pxi_ble_device_check_support_report_id(FuPxiBleDevice *self, GError **error)
 					PXI_HID_DEV_OTA_NOTIFY_USAGE_PAGE,
 					&report_id,
 					error)) {
-		self->input_report_id = report_id;
-	} else {
+		g_debug("failed to parse descriptor: %s", error_local->message);
 		self->input_report_id = PXI_HID_DEV_OTA_INPUT_REPORT_ID;
+	} else {
+		self->input_report_id = report_id;
 	}
 
 	return TRUE;
