@@ -395,6 +395,9 @@ endif
 if cc.has_function('pwrite', args: '-D_XOPEN_SOURCE')
   conf.set('HAVE_PWRITE', '1')
 endif
+if cc.has_header_symbol('sys/mount.h', 'BLKSSZGET')
+  conf.set('HAVE_BLKSSZGET', '1')
+endif
 
 if host_machine.system() == 'freebsd'
   if cc.has_type('struct efi_esrt_entry_v1', prefix: '#include <sys/types.h>\n#include <sys/efiio.h>')

@@ -42,6 +42,8 @@ gboolean
 fu_volume_is_encrypted(FuVolume *self);
 guint64
 fu_volume_get_size(FuVolume *self);
+gsize
+fu_volume_get_block_size(FuVolume *self, GError **error);
 gchar *
 fu_volume_get_partition_kind(FuVolume *self);
 guint64
