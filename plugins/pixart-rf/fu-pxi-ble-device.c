@@ -223,8 +223,9 @@ fu_pxi_ble_device_search_hid_feature_report_id(guint8 *report_descriptor,
 			FWUPD_ERROR,
 			FWUPD_ERROR_INTERNAL,
 			"report not found");
-	}
 		return FALSE;
+	}
+
 
 	/* find report-id */
 	item_id = fu_firmware_get_image_by_id(FU_FIRMWARE(report), "report-id", error);
@@ -281,8 +282,9 @@ fu_pxi_ble_device_search_hid_input_report_id(guint8 *report_descriptor,
 			FWUPD_ERROR,
 			FWUPD_ERROR_INTERNAL,
 			"report not found");
-	}
 		return FALSE;
+	}
+
 
 	/* find report-id */
 	item_id = fu_firmware_get_image_by_id(FU_FIRMWARE(report), "report-id", error);
@@ -300,7 +302,7 @@ fu_pxi_ble_device_search_hid_input_report_id(guint8 *report_descriptor,
 
 	g_debug("usage-page: %x report_id:%d",usage_page, *report_id);
 
-	return FALSE; /* finished processing */
+	return TRUE; /* finished processing */
 
 }
 
@@ -342,7 +344,7 @@ fu_pxi_ble_device_check_support_report_id(FuPxiBleDevice *self, GError **error)
 					rpt_desc.size,
 					PXI_HID_DEV_OTA_RETRANSMIT_USAGE_PAGE,
 					&report_id,
-					error_local)) {
+					&error_local)) {
 		g_debug("failed to parse descriptor: %s", error_local->message);
 		self->retransmit_id = PXI_HID_DEV_OTA_RETRANSMIT_REPORT_ID;
 	} else {
@@ -357,7 +359,7 @@ fu_pxi_ble_device_check_support_report_id(FuPxiBleDevice *self, GError **error)
 					rpt_desc.size,
 					PXI_HID_DEV_OTA_REPORT_USAGE_PAGE,
 					&report_id,
-					error)) {
+					&error_local)) {
 		g_debug("failed to parse descriptor: %s", error_local->message);
 		self->feature_report_id = PXI_HID_DEV_OTA_FEATURE_REPORT_ID;
 	} else {
@@ -371,7 +373,7 @@ fu_pxi_ble_device_check_support_report_id(FuPxiBleDevice *self, GError **error)
 					rpt_desc.size,
 					PXI_HID_DEV_OTA_NOTIFY_USAGE_PAGE,
 					&report_id,
-					error)) {
+					&error_local)) {
 		g_debug("failed to parse descriptor: %s", error_local->message);
 		self->input_report_id = PXI_HID_DEV_OTA_INPUT_REPORT_ID;
 	} else {
