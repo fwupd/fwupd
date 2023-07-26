@@ -75,6 +75,7 @@ plugins = [
   'logitech-bulkcontroller',
   'logitech-scribe',
   'logitech-tap',
+  'mediatek-scaler',
   'modem-manager',
   'msr',
   'mtd',
