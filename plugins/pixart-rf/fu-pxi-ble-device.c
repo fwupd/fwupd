@@ -908,7 +908,7 @@ fu_pxi_ble_device_get_model_info(FuPxiBleDevice *self, GError **error)
 			    sizeof(model_name),
 			    error))
 		return FALSE;
-	g_debug("model name%s",model_name);
+
 	g_clear_pointer(&self->model_name, g_free);
 	if (model_name[0] != 0x00 && model_name[0] != 0xFF)
 		self->model_name = g_strndup((gchar *)model_name, sizeof(model_name));
