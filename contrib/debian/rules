@@ -78,6 +78,8 @@ override_dh_install:
 
 	#enable fwupd-refresh.service by default (we have a dedicated user)
 	rm -f debian/fwupd/lib/systemd/system-preset/fwupd-refresh.preset
+	# avoid shipping an empty directory
+	find debian/fwupd/lib/systemd -type d -empty -delete
 
 override_dh_strip_nondeterminism:
 	dh_strip_nondeterminism -Xfirmware-example.xml.gz
