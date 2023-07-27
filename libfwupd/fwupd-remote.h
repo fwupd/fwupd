@@ -63,6 +63,8 @@ fwupd_remote_get_remotes_dir(FwupdRemote *self);
 const gchar *
 fwupd_remote_get_checksum(FwupdRemote *self);
 const gchar *
+fwupd_remote_get_checksum_metadata(FwupdRemote *self);
+const gchar *
 fwupd_remote_get_username(FwupdRemote *self);
 const gchar *
 fwupd_remote_get_password(FwupdRemote *self);

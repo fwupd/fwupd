@@ -45,7 +45,8 @@ typedef struct {
 	gchar *password;
 	gchar *title;
 	gchar *agreement;
-	gchar *checksum;
+	gchar *checksum;     /* of metadata */
+	gchar *checksum_sig; /* of the signature */
 	gchar *filename_cache;
 	gchar *filename_cache_sig;
 	gchar *filename_source;
@@ -118,6 +119,7 @@ fwupd_remote_to_json(FwupdRemote *self, JsonBuilder *builder)
 	fwupd_common_json_add_string(builder, "Title", priv->title);
 	fwupd_common_json_add_string(builder, "Agreement", priv->agreement);
 	fwupd_common_json_add_string(builder, "Checksum", priv->checksum);
+	fwupd_common_json_add_string(builder, "ChecksumSig", priv->checksum_sig);
 	fwupd_common_json_add_string(builder, "FilenameCache", priv->filename_cache);
 	fwupd_common_json_add_string(builder, "FilenameCacheSig", priv->filename_cache_sig);
 	fwupd_common_json_add_string(builder, "FilenameSource", priv->filename_source);
@@ -207,14 +209,31 @@ fwupd_remote_set_agreement(FwupdRemote *self, const gchar *agreement)
 /**
  * fwupd_remote_set_checksum:
  * @self: a #FwupdRemote
- * @checksum: (nullable): checksum string
+ * @checksum_sig: (nullable): checksum string
  *
- * Sets the remote checksum, typically only useful in the self tests.
+ * Sets the remote signature checksum, typically only useful in the self tests.
+ *
+ * NOTE: This should have been called fwupd_remote_set_checksum_sig() but alas, ABI.
  *
  * Since: 1.8.2
  **/
 void
-fwupd_remote_set_checksum(FwupdRemote *self, const gchar *checksum)
+fwupd_remote_set_checksum(FwupdRemote *self, const gchar *checksum_sig)
+{
+	FwupdRemotePrivate *priv = GET_PRIVATE(self);
+
+	g_return_if_fail(FWUPD_IS_REMOTE(self));
+
+	/* not changed */
+	if (g_strcmp0(priv->checksum_sig, checksum_sig) == 0)
+		return;
+
+	g_free(priv->checksum_sig);
+	priv->checksum_sig = g_strdup(checksum_sig);
+}
+
+static void
+fwupd_remote_set_checksum_metadata(FwupdRemote *self, const gchar *checksum)
 {
 	FwupdRemotePrivate *priv = GET_PRIVATE(self);
 
@@ -655,18 +674,18 @@ fwupd_remote_setup(FwupdRemote *self, GError **error)
 		}
 	}
 
-	/* load the checksum */
+	/* load the signature checksum */
 	if (priv->filename_cache_sig != NULL &&
 	    g_file_test(priv->filename_cache_sig, G_FILE_TEST_EXISTS)) {
 		gsize sz = 0;
 		g_autofree gchar *buf = NULL;
-		g_autoptr(GChecksum) checksum = g_checksum_new(G_CHECKSUM_SHA256);
+		g_autoptr(GChecksum) checksum_sig = g_checksum_new(G_CHECKSUM_SHA256);
 		if (!g_file_get_contents(priv->filename_cache_sig, &buf, &sz, error)) {
-			g_prefix_error(error, "failed to get checksum: ");
+			g_prefix_error(error, "failed to get signature checksum: ");
 			return FALSE;
 		}
-		g_checksum_update(checksum, (guchar *)buf, (gssize)sz);
-		fwupd_remote_set_checksum(self, g_checksum_get_string(checksum));
+		g_checksum_update(checksum_sig, (guchar *)buf, (gssize)sz);
+		fwupd_remote_set_checksum(self, g_checksum_get_string(checksum_sig));
 	} else {
 		fwupd_remote_set_checksum(self, NULL);
 	}
@@ -1207,7 +1226,7 @@ fwupd_remote_get_remotes_dir(FwupdRemote *self)
  * fwupd_remote_get_checksum:
  * @self: a #FwupdRemote
  *
- * Gets the remote checksum.
+ * Gets the remote signature checksum.
  *
  * Returns: a string, or %NULL if unset
  *
@@ -1215,6 +1234,24 @@ fwupd_remote_get_remotes_dir(FwupdRemote *self)
  **/
 const gchar *
 fwupd_remote_get_checksum(FwupdRemote *self)
+{
+	FwupdRemotePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_REMOTE(self), NULL);
+	return priv->checksum_sig;
+}
+
+/**
+ * fwupd_remote_get_checksum_metadata:
+ * @self: a #FwupdRemote
+ *
+ * Gets the remote metadata checksum.
+ *
+ * Returns: a string, or %NULL if unset
+ *
+ * Since: 1.9.4
+ **/
+const gchar *
+fwupd_remote_get_checksum_metadata(FwupdRemote *self)
 {
 	FwupdRemotePrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FWUPD_IS_REMOTE(self), NULL);
@@ -1326,6 +1363,7 @@ fwupd_remote_load_signature_jcat(FwupdRemote *self, JcatFile *jcat_file, GError 
 	g_autofree gchar *basename = NULL;
 	g_autofree gchar *baseuri = NULL;
 	g_autofree gchar *metadata_uri = NULL;
+	g_autoptr(GPtrArray) jcat_blobs = NULL;
 	g_autoptr(JcatItem) jcat_item = NULL;
 
 	/* this seems pointless to get the item by ID then just read the ID,
@@ -1354,6 +1392,14 @@ fwupd_remote_load_signature_jcat(FwupdRemote *self, JcatFile *jcat_file, GError 
 		g_info("changing metadata URI from %s to %s", priv->metadata_uri, metadata_uri);
 		g_free(priv->metadata_uri);
 		priv->metadata_uri = g_steal_pointer(&metadata_uri);
+	}
+
+	/* look for the metadata hash */
+	jcat_blobs = jcat_item_get_blobs_by_kind(jcat_item, JCAT_BLOB_KIND_SHA256);
+	if (jcat_blobs->len == 1) {
+		JcatBlob *blob = g_ptr_array_index(jcat_blobs, 0);
+		g_autofree gchar *hash = jcat_blob_get_data_as_string(blob);
+		fwupd_remote_set_checksum_metadata(self, hash);
 	}
 
 	/* success */
@@ -1706,11 +1752,11 @@ fwupd_remote_to_variant(FwupdRemote *self)
 				      "Agreement",
 				      g_variant_new_string(priv->agreement));
 	}
-	if (priv->checksum != NULL) {
+	if (priv->checksum_sig != NULL) {
 		g_variant_builder_add(&builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_CHECKSUM,
-				      g_variant_new_string(priv->checksum));
+				      g_variant_new_string(priv->checksum_sig));
 	}
 	if (priv->metadata_uri != NULL) {
 		g_variant_builder_add(&builder,
@@ -1956,6 +2002,7 @@ fwupd_remote_finalize(GObject *obj)
 	g_free(priv->agreement);
 	g_free(priv->remotes_dir);
 	g_free(priv->checksum);
+	g_free(priv->checksum_sig);
 	g_free(priv->filename_cache);
 	g_free(priv->filename_cache_sig);
 	g_free(priv->filename_source);

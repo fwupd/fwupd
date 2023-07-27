@@ -349,7 +349,7 @@ fwupd_remote_auth_func(void)
 	    "  \"MetadataUriSig\" : \"https://cdn.fwupd.org/downloads/firmware.xml.gz.jcat\",\n"
 	    "  \"Username\" : \"user\",\n"
 	    "  \"Password\" : \"pass\",\n"
-	    "  \"Checksum\" : "
+	    "  \"ChecksumSig\" : "
 	    "\"dd1b4fd2a59bb0e4d9ea760c658ac3cf9336c7b6729357bab443485b5cf071b2\",\n"
 	    "  \"FilenameCache\" : \"./libfwupd/tests/auth/metadata.xml.gz\",\n"
 	    "  \"FilenameCacheSig\" : \"./libfwupd/tests/auth/metadata.xml.gz.jcat\",\n"
