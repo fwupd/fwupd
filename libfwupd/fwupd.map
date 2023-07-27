@@ -963,6 +963,8 @@ LIBFWUPD_1.9.3 {
 
 LIBFWUPD_1.9.4 {
   global:
+    fwupd_bios_setting_get_unsettled_value;
+    fwupd_bios_setting_set_unsettled_value;
     fwupd_client_refresh_remote2;
     fwupd_client_refresh_remote2_async;
     fwupd_remote_add_flag;

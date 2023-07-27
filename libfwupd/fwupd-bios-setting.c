@@ -27,6 +27,7 @@ typedef struct {
 	gchar *description;
 	gchar *path;
 	gchar *current_value;
+	gchar *unsettled_value;
 	guint64 lower_bound;
 	guint64 upper_bound;
 	guint64 scalar_increment;
@@ -584,6 +585,52 @@ fwupd_bios_setting_set_current_value(FwupdBiosSetting *self, const gchar *value)
 
 	g_free(priv->current_value);
 	priv->current_value = g_strdup(value);
+}
+
+/**
+ * fwupd_bios_setting_get_unsettled_value:
+ * @self: a #FwupdBiosSetting
+ *
+ * Get a unsettled BIOS unsettled value from the cache. This value is not
+ * applied to the BIOS.
+ *
+ * Returns: the unsettled value of the attribute.
+ *
+ * Since: 1.9.4
+ **/
+const gchar *
+fwupd_bios_setting_get_unsettled_value(FwupdBiosSetting *self)
+{
+	FwupdBiosSettingPrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_BIOS_SETTING(self), NULL);
+	return priv->unsettled_value;
+}
+
+/**
+ * fwupd_bios_setting_set_unsettled_value:
+ * @self: a #FwupdBiosSetting
+ * @value: (nullable): The BIOS setting value to set
+ *
+ * Sets the BIOS setting value stored in an attribute. The value is cached and
+ * will be applied when the BIOS setting is triggered.
+ *
+ * Since: 1.9.4
+ **/
+void
+fwupd_bios_setting_set_unsettled_value(FwupdBiosSetting *self, const gchar *value)
+{
+	FwupdBiosSettingPrivate *priv = GET_PRIVATE(self);
+
+	/* not changed */
+	if (g_strcmp0(priv->unsettled_value, value) == 0)
+		return;
+
+	g_free(priv->unsettled_value);
+
+	if (value == NULL)
+		priv->unsettled_value = NULL;
+	else
+		priv->unsettled_value = g_strdup(value);
 }
 
 static gboolean

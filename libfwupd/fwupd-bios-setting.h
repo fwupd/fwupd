@@ -93,6 +93,10 @@ fwupd_bios_setting_get_path(FwupdBiosSetting *self);
 const gchar *
 fwupd_bios_setting_get_description(FwupdBiosSetting *self);
 const gchar *
+fwupd_bios_setting_get_unsettled_value(FwupdBiosSetting *self);
+void
+fwupd_bios_setting_set_unsettled_value(FwupdBiosSetting *self, const gchar *value);
+const gchar *
 fwupd_bios_setting_map_possible_value(FwupdBiosSetting *self, const gchar *key, GError **error);
 gboolean
 fwupd_bios_setting_has_possible_value(FwupdBiosSetting *self, const gchar *val);
