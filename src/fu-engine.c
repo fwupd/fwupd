@@ -13,6 +13,9 @@
 #ifdef HAVE_GIO_UNIX
 #include <gio/gunixinputstream.h>
 #endif
+#ifdef HAVE_PASSIM
+#include <passim.h>
+#endif
 #include <stdlib.h>
 #include <string.h>
 #ifdef HAVE_UTSNAME_H
@@ -144,6 +147,9 @@ struct _FuEngine {
 	guint acquiesce_delay;
 	guint update_motd_id;
 	FuEngineInstallPhase install_phase;
+#ifdef HAVE_PASSIM
+	PassimClient *passim_client;
+#endif
 };
 
 enum {
@@ -3028,6 +3034,24 @@ fu_engine_install_release(FuEngine *self,
 	/* allow capturing setup again */
 	fu_engine_set_install_phase(self, FU_ENGINE_INSTALL_PHASE_SETUP);
 
+#ifdef HAVE_PASSIM
+	/* send to passimd, if enabled and running */
+	if (passim_client_get_version(self->passim_client) != NULL &&
+	    fu_engine_config_get_p2p_policy(self->config) & FU_P2P_POLICY_FIRMWARE) {
+		g_autofree gchar *basename = g_path_get_basename(fu_release_get_filename(release));
+		g_autoptr(GError) error_passim = NULL;
+		g_autoptr(PassimItem) passim_item = passim_item_new();
+		if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT))
+			passim_item_add_flag(passim_item, PASSIM_ITEM_FLAG_NEXT_REBOOT);
+		passim_item_set_max_age(passim_item, 30 * 24 * 60 * 60);
+		passim_item_set_share_limit(passim_item, 50);
+		passim_item_set_basename(passim_item, basename);
+		passim_item_set_bytes(passim_item, blob_cab);
+		if (!passim_client_publish(self->passim_client, passim_item, &error_passim))
+			g_warning("failed to publish to Passim: %s", error_passim->message);
+	}
+#endif
+
 	/* make the UI update */
 	fu_engine_emit_changed(self);
 
@@ -4446,8 +4470,26 @@ fu_engine_load_metadata_store(FuEngine *self, FuEngineLoadFlags flags, GError **
 }
 
 static void
+fu_engine_remote_list_ensure_p2p_policy_remote(FuEngine *self, FwupdRemote *remote)
+{
+	if (fwupd_remote_get_kind(remote) == FWUPD_REMOTE_KIND_DOWNLOAD) {
+		FuP2pPolicy p2p_policy = fu_engine_config_get_p2p_policy(self->config);
+		if (p2p_policy & FU_P2P_POLICY_METADATA)
+			fwupd_remote_add_flag(remote, FWUPD_REMOTE_FLAG_ALLOW_P2P_METADATA);
+		else
+			fwupd_remote_remove_flag(remote, FWUPD_REMOTE_FLAG_ALLOW_P2P_METADATA);
+		if (p2p_policy & FU_P2P_POLICY_FIRMWARE)
+			fwupd_remote_add_flag(remote, FWUPD_REMOTE_FLAG_ALLOW_P2P_FIRMWARE);
+		else
+			fwupd_remote_remove_flag(remote, FWUPD_REMOTE_FLAG_ALLOW_P2P_FIRMWARE);
+	}
+}
+
+static void
 fu_engine_config_changed_cb(FuEngineConfig *config, FuEngine *self)
 {
+	GPtrArray *remotes = fu_remote_list_get_all(self->remote_list);
+
 	fu_idle_set_timeout(self->idle, fu_engine_config_get_idle_timeout(config));
 
 	/* allow changing the hardcoded ESP location */
@@ -4460,6 +4502,12 @@ fu_engine_config_changed_cb(FuEngineConfig *config, FuEngine *self)
 		} else {
 			fu_context_add_esp_volume(self->ctx, vol);
 		}
+	}
+
+	/* amend P2P policy */
+	for (guint i = 0; i < remotes->len; i++) {
+		FwupdRemote *remote = g_ptr_array_index(remotes, i);
+		fu_engine_remote_list_ensure_p2p_policy_remote(self, remote);
 	}
 }
 
@@ -4501,6 +4549,9 @@ fu_engine_remote_list_added_cb(FuRemoteList *remote_list, FwupdRemote *remote, F
 			fwupd_remote_get_id(remote));
 		fwupd_remote_set_priority(remote, fwupd_remote_get_priority(remote) + 1000);
 	}
+
+	/* set the p2p policy */
+	fu_engine_remote_list_ensure_p2p_policy_remote(self, remote);
 }
 
 static gint
@@ -4723,6 +4774,25 @@ fu_engine_update_metadata_bytes(FuEngine *self,
 	/* save XML and signature to remotes.d */
 	if (!fu_bytes_set_contents(fwupd_remote_get_filename_cache(remote), bytes_raw, error))
 		return FALSE;
+
+#ifdef HAVE_PASSIM
+	/* send to passimd, if enabled and running */
+	if (passim_client_get_version(self->passim_client) != NULL &&
+	    fu_engine_config_get_p2p_policy(self->config) & FU_P2P_POLICY_METADATA) {
+		g_autofree gchar *basename =
+		    g_path_get_basename(fwupd_remote_get_filename_cache(remote));
+		g_autoptr(GError) error_passim = NULL;
+		g_autoptr(PassimItem) passim_item = passim_item_new();
+		passim_item_set_basename(passim_item, basename);
+		passim_item_set_bytes(passim_item, bytes_raw);
+		passim_item_set_max_age(passim_item, fwupd_remote_get_refresh_interval(remote));
+		passim_item_set_share_limit(passim_item, 50);
+		if (!passim_client_publish(self->passim_client, passim_item, &error_passim))
+			g_warning("failed to publish to Passim: %s", error_passim->message);
+	}
+#endif
+
+	/* save signature to remotes.d */
 	if (keyring_kind != FWUPD_KEYRING_KIND_NONE) {
 		if (!fu_bytes_set_contents(fwupd_remote_get_filename_cache_sig(remote),
 					   bytes_sig,
@@ -8042,6 +8112,9 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 	g_autoptr(GError) error_quirks = NULL;
 	g_autoptr(GError) error_json_devices = NULL;
 	g_autoptr(GError) error_local = NULL;
+#ifdef HAVE_PASSIM
+	g_autoptr(GError) error_passim = NULL;
+#endif
 	g_autoptr(GString) str = g_string_new(NULL);
 
 	g_return_val_if_fail(FU_IS_ENGINE(self), FALSE);
@@ -8396,6 +8469,17 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 	if (!fu_engine_update_devices_file(self, &error_json_devices))
 		g_info("failed to update list of devices: %s", error_json_devices->message);
 
+#ifdef HAVE_PASSIM
+	/* connect to passimd */
+	if (!passim_client_load(self->passim_client, &error_passim))
+		g_debug("failed to load Passim: %s", error_passim->message);
+	if (passim_client_get_version(self->passim_client) != NULL) {
+		fu_engine_add_runtime_version(self,
+					      "org.freedesktop.Passim",
+					      passim_client_get_version(self->passim_client));
+	}
+#endif
+
 	fu_engine_set_status(self, FWUPD_STATUS_IDLE);
 	self->loaded = TRUE;
 
@@ -8571,6 +8655,9 @@ fu_engine_init(FuEngine *self)
 	self->acquiesce_loop = g_main_loop_new(NULL, FALSE);
 	self->emulation_phases = g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL, g_free);
 	self->emulation_backend_ids = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
+#ifdef HAVE_PASSIM
+	self->passim_client = passim_client_new();
+#endif
 
 	fu_context_set_runtime_versions(self->ctx, self->runtime_versions);
 	fu_context_set_compile_versions(self->ctx, self->compile_versions);
@@ -8675,6 +8762,14 @@ fu_engine_init(FuEngine *self)
 					    G_USB_MINOR_VERSION,
 					    G_USB_MICRO_VERSION));
 #endif
+#ifdef HAVE_PASSIM
+	g_hash_table_insert(self->compile_versions,
+			    g_strdup("org.freedesktop.Passim"),
+			    g_strdup_printf("%i.%i.%i",
+					    PASSIM_MAJOR_VERSION,
+					    PASSIM_MINOR_VERSION,
+					    PASSIM_MICRO_VERSION));
+#endif
 	g_hash_table_insert(self->compile_versions,
 			    g_strdup("com.hughsie.libjcat"),
 			    g_strdup_printf("%i.%i.%i",
@@ -8728,6 +8823,10 @@ fu_engine_finalize(GObject *obj)
 		g_source_remove(self->acquiesce_id);
 	if (self->update_motd_id != 0)
 		g_source_remove(self->update_motd_id);
+#ifdef HAVE_PASSIM
+	if (self->passim_client != NULL)
+		g_object_unref(self->passim_client);
+#endif
 	g_main_loop_unref(self->acquiesce_loop);
 
 	g_free(self->host_machine_id);

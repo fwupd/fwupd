@@ -1,0 +1,4 @@
+[wrap-git]
+directory = passim
+url = https://github.com/hughsie/passim.git
+revision = 0.1.0

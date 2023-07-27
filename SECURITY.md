@@ -78,6 +78,8 @@ Important things to note:
       ODM -. "fw.cab" .-> LVFS
       IBV(BIOS Vendor) -- "fw.bin" --> ODM
       ISV(Silicon Vendor) -- "fw.bin" --> ODM
+      User -. "md.xml 🔒" .-> User2(Other LAN Users)
+      User -. "fw.cab 🔒" .-> User2
       LVFS -- "FwHunt|Yara" --> SecAlert(Security Researchers)
 ```
 
@@ -107,8 +109,12 @@ Important things to note:
       subgraph User
         fwupdmgr((fwupdmgr\ngnome-software))
       end
+      subgraph Local Network User
+        fwupdmgr2((fwupdmgr\ngnome-software))
+      end
       subgraph Privileged
         fwupd((fwupd\ndaemon))
+        passim((passimd))
         fwupdengine(FuEngine)
         fwupdtool(fwupdtool\ndebug\ntool)
         fwupd-efi(fwupd capsule loader)
@@ -161,6 +167,8 @@ Important things to note:
       fwupdmgr -. "report.json" .-> LVFS
       fwupdmgr -. "report.json 🔒" .-> LVFS
       State <-- "fw.cab 🔒" --> fwupd
+      passim -. "md.md|fw.cab 🔒\nmDNS with TLS" .-> fwupdmgr2
+      fwupd -. "md.md|fw.cab 🔒🚏" .-> passim
       User ~~~~ Privileged
       Internet ~~~~~ User
       Vendor ~~~~~ Internet

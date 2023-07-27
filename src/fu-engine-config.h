@@ -49,6 +49,8 @@ gboolean
 fu_engine_config_get_release_dedupe(FuEngineConfig *self);
 FuReleasePriority
 fu_engine_config_get_release_priority(FuEngineConfig *self);
+FuP2pPolicy
+fu_engine_config_get_p2p_policy(FuEngineConfig *self);
 const gchar *
 fu_engine_config_get_host_bkc(FuEngineConfig *self);
 const gchar *

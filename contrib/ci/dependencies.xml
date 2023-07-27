@@ -945,6 +945,23 @@
       <package variant="x86_64" />
     </distro>
   </dependency>
+  <!-- for passim -->
+  <dependency id="libsoup3.0-dev">
+    <distro id="ubuntu">
+      <control />
+      <package variant="x86_64" />
+    </distro>
+    <distro id="fedora">
+      <package variant="x86_64">libsoup3-devel</package>
+      <package variant="aarch64">libsoup3-devel</package>
+    </distro>
+    <distro id="arch">
+      <package variant="x86_64">libsoup3</package>
+    </distro>
+    <distro id="void">
+      <package variant="x86_64">libsoup3-devel</package>
+    </distro>
+  </dependency>
   <dependency id="libtool-bin">
     <distro id="debian">
       <control />

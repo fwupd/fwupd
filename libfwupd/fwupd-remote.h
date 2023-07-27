@@ -52,6 +52,8 @@ typedef enum {
  * @FWUPD_REMOTE_FLAG_APPROVAL_REQUIRED:		Requires approval for each firmware
  * @FWUPD_REMOTE_FLAG_AUTOMATIC_REPORTS:		Send firmware reports automatically
  * @FWUPD_REMOTE_FLAG_AUTOMATIC_SECURITY_REPORTS:	Send security reports automatically
+ * @FWUPD_REMOTE_FLAG_ALLOW_P2P_METADATA:		Use peer-to-peer locations for metadata
+ * @FWUPD_REMOTE_FLAG_ALLOW_P2P_FIRMWARE:		Use peer-to-peer locations for firmware
  *
  * The flags available for the remote.
  **/
@@ -61,6 +63,8 @@ typedef enum {
 	FWUPD_REMOTE_FLAG_APPROVAL_REQUIRED = 1 << 1,	       /* Since: 1.9.4 */
 	FWUPD_REMOTE_FLAG_AUTOMATIC_REPORTS = 1 << 2,	       /* Since: 1.9.4 */
 	FWUPD_REMOTE_FLAG_AUTOMATIC_SECURITY_REPORTS = 1 << 3, /* Since: 1.9.4 */
+	FWUPD_REMOTE_FLAG_ALLOW_P2P_METADATA = 1 << 4,	       /* Since: 1.9.5 */
+	FWUPD_REMOTE_FLAG_ALLOW_P2P_FIRMWARE = 1 << 5,	       /* Since: 1.9.5 */
 } FwupdRemoteFlags;
 
 FwupdRemoteKind

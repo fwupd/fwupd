@@ -19,6 +19,10 @@ engine_dep = [
   cbor,
 ]
 
+if get_option('passim').allowed()
+  engine_dep += passim
+endif
+
 client_dep = [
   gudev,
   gusb,
