@@ -16,5 +16,7 @@ FuBiosSettings *
 fu_bios_settings_new(void);
 gboolean
 fu_bios_settings_get_pending_reboot(FuBiosSettings *self, gboolean *result, GError **error);
+GPtrArray *
+fu_bios_settings_get_unsettled_values(FuBiosSettings *self);
 FwupdBiosSetting *
 fu_bios_settings_get_attr(FuBiosSettings *self, const gchar *val);
