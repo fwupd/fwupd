@@ -661,6 +661,27 @@ fu_uefi_capsule_plugin_get_default_esp(FuPlugin *plugin, GError **error)
 }
 
 static void
+fu_uefi_capsule_plugin_validate_esp(FuUefiCapsulePlugin *self)
+{
+	g_autofree gchar *kind = NULL;
+
+	/* nothing found */
+	if (self->esp == NULL) {
+		fu_plugin_add_flag(FU_PLUGIN(self), FWUPD_PLUGIN_FLAG_ESP_NOT_FOUND);
+		fu_plugin_add_flag(FU_PLUGIN(self), FWUPD_PLUGIN_FLAG_CLEAR_UPDATABLE);
+		fu_plugin_add_flag(FU_PLUGIN(self), FWUPD_PLUGIN_FLAG_USER_WARNING);
+		return;
+	}
+
+	/* found *something* but it wasn't quite an ESP... */
+	kind = fu_volume_get_partition_kind(self->esp);
+	if (g_strcmp0(kind, FU_VOLUME_KIND_ESP) != 0) {
+		fu_plugin_add_flag(FU_PLUGIN(self), FWUPD_PLUGIN_FLAG_ESP_NOT_VALID);
+		fu_plugin_add_flag(FU_PLUGIN(self), FWUPD_PLUGIN_FLAG_USER_WARNING);
+	}
+}
+
+static void
 fu_uefi_capsule_plugin_register_proxy_device(FuPlugin *plugin, FuDevice *device)
 {
 	FuUefiCapsulePlugin *self = FU_UEFI_CAPSULE_PLUGIN(plugin);
@@ -670,8 +691,12 @@ fu_uefi_capsule_plugin_register_proxy_device(FuPlugin *plugin, FuDevice *device)
 	/* load all configuration variables */
 	dev = fu_uefi_backend_device_new_from_dev(FU_UEFI_BACKEND(self->backend), device);
 	fu_uefi_capsule_plugin_load_config(plugin, FU_DEVICE(dev));
-	if (self->esp == NULL)
+	if (self->esp == NULL) {
 		self->esp = fu_uefi_capsule_plugin_get_default_esp(plugin, &error_local);
+		if (self->esp == NULL)
+			g_warning("cannot find default ESP: %s", error_local->message);
+		fu_uefi_capsule_plugin_validate_esp(self);
+	}
 	if (self->esp == NULL) {
 		fu_device_inhibit(device, "no-esp", error_local->message);
 	} else {
@@ -879,6 +904,7 @@ fu_uefi_capsule_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **
 				       esp_path);
 			return FALSE;
 		}
+		fu_uefi_capsule_plugin_validate_esp(self);
 	}
 
 	/* we use this both for quirking the CoD implementation sanity and the CoD filename */
@@ -1040,18 +1066,9 @@ fu_uefi_capsule_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError *
 
 	if (self->esp == NULL) {
 		self->esp = fu_uefi_capsule_plugin_get_default_esp(plugin, &error_udisks2);
-		if (self->esp == NULL) {
-			fu_plugin_add_flag(plugin, FWUPD_PLUGIN_FLAG_ESP_NOT_FOUND);
-			fu_plugin_add_flag(plugin, FWUPD_PLUGIN_FLAG_CLEAR_UPDATABLE);
-			fu_plugin_add_flag(plugin, FWUPD_PLUGIN_FLAG_USER_WARNING);
+		if (self->esp == NULL)
 			g_warning("cannot find default ESP: %s", error_udisks2->message);
-		} else {
-			g_autofree gchar *kind = fu_volume_get_partition_kind(self->esp);
-			if (g_strcmp0(kind, FU_VOLUME_KIND_ESP) != 0) {
-				fu_plugin_add_flag(plugin, FWUPD_PLUGIN_FLAG_ESP_NOT_VALID);
-				fu_plugin_add_flag(plugin, FWUPD_PLUGIN_FLAG_USER_WARNING);
-			}
-		}
+		fu_uefi_capsule_plugin_validate_esp(self);
 	}
 	fu_progress_step_done(progress);
 
