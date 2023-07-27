@@ -4,7 +4,7 @@ endif
 
 client_src = []
 systemd_src = []
-daemon_dep = [
+engine_dep = [
   libarchive,
   libjcat,
   libxmlb,
@@ -221,7 +221,7 @@ fwupdengine = library(
   install_dir: libdir_pkg,
   include_directories: plugin_incdirs,
   dependencies: [
-    daemon_dep,
+    engine_dep,
   ],
   link_whole: [
     plugin_builtins,
@@ -326,7 +326,7 @@ executable(
   dependencies: [
     valgrind,
     libsystemd,
-    daemon_dep,
+    engine_dep,
   ],
   link_with: [
     fwupdengine,
@@ -365,7 +365,7 @@ if get_option('tests')
       fwupdplugin_incdir,
     ],
     dependencies: [
-      daemon_dep,
+      engine_dep,
     ],
     link_with: [
       fwupdengine,
