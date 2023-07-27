@@ -222,6 +222,10 @@ sqlite = dependency('sqlite3', required: get_option('sqlite'))
 if sqlite.found()
   conf.set('HAVE_SQLITE', '1')
 endif
+passim = dependency('passim', required: get_option('passim'), fallback: ['passim', 'passim_dep'])
+if passim.found()
+  conf.set('HAVE_PASSIM', '1')
+endif
 libarchive = dependency('libarchive', required: get_option('libarchive'))
 if libarchive.found()
   conf.set('HAVE_LIBARCHIVE', '1')

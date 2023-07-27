@@ -75,6 +75,7 @@ BuildRequires: systemd >= %{systemd_version}
 BuildRequires: systemd-devel
 BuildRequires: libarchive-devel
 BuildRequires: libcbor-devel
+BuildRequires: passim-devel
 BuildRequires: gobject-introspection-devel
 BuildRequires: gcab
 %ifarch %{valgrind_arches}
@@ -142,6 +143,7 @@ Provides: fwupdate-efi
 Recommends: udisks2
 Recommends: bluez
 Recommends: jq
+Recommends: passim
 
 %if 0%{?have_modem_manager}
 Recommends: %{name}-plugin-modem-manager

@@ -60,6 +60,10 @@ if [ -n "$CI" ]; then
 	sed -i "s,enable_ci 0,enable_ci 1,;" build/fwupd.spec
 fi
 
+# until we've done a package review
+dnf install -y dnf-plugins-core
+dnf copr enable rhughes/fwupd fedora-38-x86_64 -y && dnf install -y passim-devel passim
+
 #build RPM packages
 rpmbuild -ba "${QUBES_MACRO[@]}" build/fwupd.spec
 

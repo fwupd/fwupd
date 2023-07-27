@@ -43,6 +43,7 @@ G_DEFINE_TYPE(FuEngineConfig, fu_engine_config, FU_TYPE_CONFIG)
 #define FU_DAEMON_CONFIG_DEFAULT_TRUSTED_REPORTS       "VendorId=$OEM"
 #define FU_DAEMON_CONFIG_DEFAULT_RELEASE_DEDUPE	       TRUE
 #define FU_DAEMON_CONFIG_DEFAULT_RELEASE_PRIORITY      "local"
+#define FU_DAEMON_CONFIG_DEFAULT_P2P_POLICY	       "metadata"
 
 static FwupdReport *
 fu_engine_config_report_from_spec(FuEngineConfig *self, const gchar *report_spec, GError **error)
@@ -355,6 +356,20 @@ fu_engine_config_get_release_priority(FuEngineConfig *self)
 						    "ReleasePriority",
 						    FU_DAEMON_CONFIG_DEFAULT_RELEASE_PRIORITY);
 	return fu_release_priority_from_string(tmp);
+}
+
+FuP2pPolicy
+fu_engine_config_get_p2p_policy(FuEngineConfig *self)
+{
+	FuP2pPolicy p2p_policy = FU_P2P_POLICY_NOTHING;
+	g_autofree gchar *tmp = fu_config_get_value(FU_CONFIG(self),
+						    "fwupd",
+						    "P2pPolicy",
+						    FU_DAEMON_CONFIG_DEFAULT_P2P_POLICY);
+	g_auto(GStrv) split = g_strsplit(tmp, ",", -1);
+	for (guint i = 0; split[i] != NULL; i++)
+		p2p_policy |= fu_p2p_policy_from_string(split[i]);
+	return p2p_policy;
 }
 
 gboolean

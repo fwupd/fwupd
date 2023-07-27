@@ -3179,6 +3179,18 @@ fwupd_client_is_url_ipfs(const gchar *perhaps_url)
 	return g_str_has_prefix(perhaps_url, "ipfs://") || g_str_has_prefix(perhaps_url, "ipns://");
 }
 
+static gboolean
+fwupd_client_is_url_p2p(const gchar *perhaps_url)
+{
+	if (perhaps_url == NULL)
+		return FALSE;
+	if (fwupd_client_is_url_ipfs(perhaps_url))
+		return TRUE;
+	if (g_str_has_prefix(perhaps_url, "https://localhost/"))
+		return TRUE;
+	return FALSE;
+}
+
 static void
 fwupd_client_install_release_remote_cb(GObject *source, GAsyncResult *res, gpointer user_data)
 {
@@ -3232,10 +3244,25 @@ fwupd_client_install_release_remote_cb(GObject *source, GAsyncResult *res, gpoin
 		return;
 	}
 
+	/* maybe get payload from Passim */
+	if (fwupd_remote_has_flag(remote, FWUPD_REMOTE_FLAG_ALLOW_P2P_FIRMWARE)) {
+		const gchar *checksum_sha256 =
+		    fwupd_checksum_get_by_kind(fwupd_release_get_checksums(data->release),
+					       G_CHECKSUM_SHA256);
+		if (checksum_sha256 != NULL) {
+			g_autofree gchar *basename =
+			    g_path_get_basename(fwupd_release_get_filename(data->release));
+			g_ptr_array_add(uris_built,
+					g_strdup_printf("https://localhost:27500/%s?sha256=%s",
+							basename,
+							checksum_sha256));
+		}
+	}
+
 	/* remote file */
 	for (guint i = 0; i < locations->len; i++) {
 		uri_tmp = g_ptr_array_index(locations, i);
-		if (fwupd_client_is_url_ipfs(uri_tmp)) {
+		if (fwupd_client_is_url_p2p(uri_tmp)) {
 			g_ptr_array_add(uris_built, g_strdup(uri_tmp));
 		} else if (fwupd_client_is_url_http(uri_tmp)) {
 			g_autofree gchar *uri_str = NULL;
@@ -3280,7 +3307,7 @@ fwupd_client_filter_locations(GPtrArray *locations,
 	for (guint i = 0; i < locations->len; i++) {
 		const gchar *uri = g_ptr_array_index(locations, i);
 		if ((download_flags & FWUPD_CLIENT_DOWNLOAD_FLAG_ONLY_P2P) > 0 &&
-		    !fwupd_client_is_url_ipfs(uri))
+		    !fwupd_client_is_url_p2p(uri))
 			continue;
 		g_ptr_array_add(uris_filtered, g_strdup(uri));
 	}
@@ -4007,6 +4034,23 @@ fwupd_client_refresh_remote_metadata_cb(GObject *source, GAsyncResult *res, gpoi
 	}
 	data->metadata = g_steal_pointer(&bytes);
 
+	/* verify this was what we expected */
+	if (fwupd_remote_get_checksum_metadata(data->remote) != NULL) {
+		GChecksumType checksum_kind =
+		    fwupd_checksum_guess_kind(fwupd_remote_get_checksum_metadata(data->remote));
+		g_autofree gchar *checksum =
+		    g_compute_checksum_for_bytes(checksum_kind, data->metadata);
+		if (g_strcmp0(checksum, fwupd_remote_get_checksum_metadata(data->remote)) != 0) {
+			g_task_return_new_error(task,
+						FWUPD_ERROR,
+						FWUPD_ERROR_INVALID_FILE,
+						"metadata checksum expected %s and got %s",
+						fwupd_remote_get_checksum_metadata(data->remote),
+						checksum);
+			return;
+		}
+	}
+
 	/* send all this to fwupd */
 	fwupd_client_update_metadata_bytes_async(self,
 						 fwupd_remote_get_id(data->remote),
@@ -4028,6 +4072,7 @@ fwupd_client_refresh_remote_signature_cb(GObject *source, GAsyncResult *res, gpo
 	GCancellable *cancellable = g_task_get_cancellable(task);
 	GChecksumType checksum_kind;
 	g_autofree gchar *checksum = NULL;
+	g_autoptr(GPtrArray) urls = g_ptr_array_new_with_free_func(g_free);
 
 	/* save signature */
 	bytes = fwupd_client_download_bytes_finish(FWUPD_CLIENT(source), res, &error);
@@ -4057,13 +4102,24 @@ fwupd_client_refresh_remote_signature_cb(GObject *source, GAsyncResult *res, gpo
 		return;
 	}
 
-	/* download metadata */
-	fwupd_client_download_bytes_async(self,
-					  fwupd_remote_get_metadata_uri(data->remote),
-					  FWUPD_CLIENT_DOWNLOAD_FLAG_NONE,
-					  cancellable,
-					  fwupd_client_refresh_remote_metadata_cb,
-					  g_steal_pointer(&task));
+	/* maybe get metadata from Passim */
+	if (fwupd_remote_has_flag(data->remote, FWUPD_REMOTE_FLAG_ALLOW_P2P_METADATA) &&
+	    fwupd_remote_get_checksum_metadata(data->remote) != NULL) {
+		g_autofree gchar *basename =
+		    g_path_get_basename(fwupd_remote_get_metadata_uri(data->remote));
+		g_ptr_array_add(urls,
+				g_strdup_printf("https://localhost:27500/%s?sha256=%s",
+						basename,
+						fwupd_remote_get_checksum_metadata(data->remote)));
+	}
+	if ((data->download_flags & FWUPD_CLIENT_DOWNLOAD_FLAG_ONLY_P2P) == 0)
+		g_ptr_array_add(urls, g_strdup(fwupd_remote_get_metadata_uri(data->remote)));
+	fwupd_client_download_bytes2_async(self,
+					   urls,
+					   FWUPD_CLIENT_DOWNLOAD_FLAG_NONE,
+					   cancellable,
+					   fwupd_client_refresh_remote_metadata_cb,
+					   g_steal_pointer(&task));
 }
 
 /**

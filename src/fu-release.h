@@ -18,6 +18,7 @@ FuRelease *
 fu_release_new(void);
 
 #define fu_release_get_appstream_id(r) fwupd_release_get_appstream_id(FWUPD_RELEASE(r))
+#define fu_release_get_filename(r)     fwupd_release_get_filename(FWUPD_RELEASE(r))
 #define fu_release_get_version(r)     fwupd_release_get_version(FWUPD_RELEASE(r))
 #define fu_release_get_branch(r)      fwupd_release_get_branch(FWUPD_RELEASE(r))
 #define fu_release_get_remote_id(r)    fwupd_release_get_remote_id(FWUPD_RELEASE(r))

@@ -102,6 +102,10 @@ fwupd_remote_flag_to_string(FwupdRemoteFlags flag)
 		return "automatic-reports";
 	if (flag == FWUPD_REMOTE_FLAG_AUTOMATIC_SECURITY_REPORTS)
 		return "automatic-security-reports";
+	if (flag == FWUPD_REMOTE_FLAG_ALLOW_P2P_METADATA)
+		return "allow-p2p-metadata";
+	if (flag == FWUPD_REMOTE_FLAG_ALLOW_P2P_FIRMWARE)
+		return "allow-p2p-firmware";
 	return NULL;
 }
 
@@ -126,6 +130,10 @@ fwupd_remote_flag_from_string(const gchar *flag)
 		return FWUPD_REMOTE_FLAG_AUTOMATIC_REPORTS;
 	if (g_strcmp0(flag, "automatic-security-reports") == 0)
 		return FWUPD_REMOTE_FLAG_AUTOMATIC_SECURITY_REPORTS;
+	if (g_strcmp0(flag, "allow-p2p-metadata") == 0)
+		return FWUPD_REMOTE_FLAG_ALLOW_P2P_METADATA;
+	if (g_strcmp0(flag, "allow-p2p-firmware") == 0)
+		return FWUPD_REMOTE_FLAG_ALLOW_P2P_FIRMWARE;
 	return FWUPD_REMOTE_FLAG_NONE;
 }
 

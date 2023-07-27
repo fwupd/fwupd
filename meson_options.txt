@@ -13,6 +13,7 @@ option('bluez', type : 'feature', description : 'BlueZ support', deprecated: {'t
 option('polkit', type: 'feature', description : 'PolKit support in daemon', deprecated: {'true': 'enabled', 'false': 'disabled'})
 option('gnutls', type: 'feature', description : 'GnuTLS support', deprecated: {'true': 'enabled', 'false': 'disabled'})
 option('sqlite', type: 'feature', description : 'sqlite support', deprecated: {'true': 'enabled', 'false': 'disabled'})
+option('passim', type: 'feature', description : 'Passim support')
 option('lzma', type: 'feature', description : 'LZMA support', deprecated: {'true': 'enabled', 'false': 'disabled'})
 option('cbor', type: 'feature', description : 'CBOR support for coSWID and uSWID')
 option('plugin_acpi_phat', type : 'feature', description : 'ACPI PHAT support', deprecated: {'true': 'enabled', 'false': 'disabled'})

@@ -2102,6 +2102,22 @@ fu_util_remote_to_string(FwupdRemote *remote, guint idt)
 			 _("Enabled"),
 			 fwupd_remote_has_flag(remote, FWUPD_REMOTE_FLAG_ENABLED) ? "true"
 										  : "false");
+	if (fwupd_remote_get_kind(remote) == FWUPD_REMOTE_KIND_DOWNLOAD) {
+		fu_string_append(str,
+				 idt + 1,
+				 /* TRANSLATORS: if we can get metadata from peer-to-peer clients */
+				 _("P2P Metadata"),
+				 fwupd_remote_has_flag(remote, FWUPD_REMOTE_FLAG_ALLOW_P2P_METADATA)
+				     ? "true"
+				     : "false");
+		fu_string_append(str,
+				 idt + 1,
+				 /* TRANSLATORS: if we can get metadata from peer-to-peer clients */
+				 _("P2P Firmware"),
+				 fwupd_remote_has_flag(remote, FWUPD_REMOTE_FLAG_ALLOW_P2P_FIRMWARE)
+				     ? "true"
+				     : "false");
+	}
 
 	tmp = fwupd_remote_get_checksum(remote);
 	if (tmp != NULL) {
