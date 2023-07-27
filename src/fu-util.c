@@ -4653,6 +4653,10 @@ main(int argc, char *argv[])
 	     N_("Don't prompt for authentication (less details may be shown)"),
 	     NULL},
 	    {NULL}};
+	FwupdFeatureFlags feature_flags =
+	    FWUPD_FEATURE_FLAG_CAN_REPORT | FWUPD_FEATURE_FLAG_SWITCH_BRANCH |
+	    FWUPD_FEATURE_FLAG_FDE_WARNING | FWUPD_FEATURE_FLAG_COMMUNITY_TEXT |
+	    FWUPD_FEATURE_FLAG_SHOW_PROBLEMS;
 
 #ifdef _WIN32
 	/* workaround Windows setting the codepage to 1252 */
@@ -5219,22 +5223,19 @@ main(int argc, char *argv[])
 
 	/* send our implemented feature set */
 	if (is_interactive) {
-		FwupdFeatureFlags flags =
-		    FWUPD_FEATURE_FLAG_CAN_REPORT | FWUPD_FEATURE_FLAG_SWITCH_BRANCH |
-		    FWUPD_FEATURE_FLAG_REQUESTS | FWUPD_FEATURE_FLAG_UPDATE_ACTION |
-		    FWUPD_FEATURE_FLAG_FDE_WARNING | FWUPD_FEATURE_FLAG_DETACH_ACTION |
-		    FWUPD_FEATURE_FLAG_COMMUNITY_TEXT | FWUPD_FEATURE_FLAG_SHOW_PROBLEMS;
+		feature_flags |= FWUPD_FEATURE_FLAG_REQUESTS | FWUPD_FEATURE_FLAG_UPDATE_ACTION |
+				 FWUPD_FEATURE_FLAG_DETACH_ACTION;
 		if (!no_authenticate)
-			flags |= FWUPD_FEATURE_FLAG_ALLOW_AUTHENTICATION;
-		if (!fwupd_client_set_feature_flags(priv->client,
-						    flags,
-						    priv->cancellable,
-						    &error)) {
-			/* TRANSLATORS: a feature is something like "can show an image" */
-			g_prefix_error(&error, "%s: ", _("Failed to set front-end features"));
-			fu_util_print_error(priv, error);
-			return EXIT_FAILURE;
-		}
+			feature_flags |= FWUPD_FEATURE_FLAG_ALLOW_AUTHENTICATION;
+	}
+	if (!fwupd_client_set_feature_flags(priv->client,
+					    feature_flags,
+					    priv->cancellable,
+					    &error)) {
+		/* TRANSLATORS: a feature is something like "can show an image" */
+		g_prefix_error(&error, "%s: ", _("Failed to set front-end features"));
+		fu_util_print_error(priv, error);
+		return EXIT_FAILURE;
 	}
 
 	/* run the specified command */
