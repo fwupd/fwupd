@@ -1134,6 +1134,61 @@ fu_engine_modify_bios_settings(FuEngine *self,
 	return TRUE;
 }
 
+gboolean
+fu_engine_update_bios_unsettled_settings(FuEngine *self,
+					 GHashTable *settings,
+					 gboolean force_ro,
+					 GError **error)
+{
+	gboolean changed = FALSE;
+	GHashTableIter iter;
+	gpointer key, value;
+
+	g_return_val_if_fail(FU_IS_ENGINE(self), FALSE);
+	g_return_val_if_fail(settings != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	g_hash_table_iter_init(&iter, settings);
+	while (g_hash_table_iter_next(&iter, &key, &value)) {
+		changed = fu_context_get_bios_setting_unsettled_value(self->ctx, key, value, error);
+	}
+
+	if (!changed)
+		return FALSE;
+
+	g_object_notify(G_OBJECT(self->ctx), "bios-set");
+	return TRUE;
+}
+
+static void
+fu_engine_bios_set_notify_cb(FuContext *ctx, GParamSpec *pspec, FuEngine *self)
+{
+	g_autoptr(FuBiosSettings) bios_settings = fu_context_get_bios_settings(self->ctx);
+	g_autoptr(GPtrArray) unsettled_bios_settings =
+	    fu_bios_settings_get_unsettled_values(bios_settings);
+	g_autoptr(GHashTable) bios_settings_hash =
+	    g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
+	GError *local_error = NULL;
+
+	if (unsettled_bios_settings->len == 0)
+		return;
+
+	for (guint i = 0; i < unsettled_bios_settings->len; i++) {
+		FwupdBiosSetting *attr = g_ptr_array_index(unsettled_bios_settings, i);
+		const gchar *id = NULL;
+		const gchar *unsettled_value = NULL;
+
+		id = fwupd_bios_setting_get_id(attr);
+		unsettled_value = fwupd_bios_setting_get_unsettled_value(attr);
+		if (unsettled_value == NULL)
+			continue;
+
+		g_hash_table_insert(bios_settings_hash, g_strdup(id), g_strdup(unsettled_value));
+		fwupd_bios_setting_set_unsettled_value(attr, NULL);
+	}
+	fu_engine_modify_bios_settings(self, bios_settings_hash, FALSE, &local_error);
+}
+
 static void
 fu_engine_check_context_flag_save_events(FuEngine *self)
 {
@@ -7480,7 +7535,7 @@ fu_engine_apply_default_bios_settings_policy(FuEngine *self, GError **error)
 			return FALSE;
 	}
 	hashtable = fu_bios_settings_to_hash_kv(new_bios_settings);
-	return fu_engine_modify_bios_settings(self, hashtable, TRUE, error);
+	return fu_engine_update_bios_unsettled_settings(self, hashtable, TRUE, error);
 }
 
 static void
@@ -8726,6 +8781,10 @@ fu_engine_init(FuEngine *self)
 	g_signal_connect(FU_IDLE(self->idle),
 			 "notify::status",
 			 G_CALLBACK(fu_engine_idle_status_notify_cb),
+			 self);
+	g_signal_connect(FU_CONTEXT(self->ctx),
+			 "notify::bios-set",
+			 G_CALLBACK(fu_engine_bios_set_notify_cb),
 			 self);
 
 	/* backends */

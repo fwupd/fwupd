@@ -250,6 +250,11 @@ fu_engine_modify_bios_settings(FuEngine *self,
 			       gboolean force_ro,
 			       GError **error);
 gboolean
+fu_engine_update_bios_unsettled_settings(FuEngine *self,
+					 GHashTable *settings,
+					 gboolean force_ro,
+					 GError **error);
+gboolean
 fu_engine_emulation_load(FuEngine *self, GBytes *data, GError **error);
 GBytes *
 fu_engine_emulation_save(FuEngine *self, GError **error);
