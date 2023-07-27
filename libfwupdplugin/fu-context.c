@@ -1557,6 +1557,22 @@ fu_context_class_init(FuContextClass *klass)
 	g_object_class_install_property(object_class, PROP_FLAGS, pspec);
 
 	/**
+	 * FuContext:bios-set:
+	 *
+	 * The property for signaling bios updating.
+	 *
+	 * Since: 1.9.4
+	 */
+	pspec = g_param_spec_uint64("bios-set",
+				    NULL,
+				    NULL,
+				    FU_CONTEXT_FLAG_NONE,
+				    G_MAXUINT64,
+				    FU_CONTEXT_FLAG_NONE,
+				    G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
+	g_object_class_install_property(object_class, PROP_FLAGS, pspec);
+
+	/**
 	 * FuContext::security-changed:
 	 * @self: the #FuContext instance that emitted the signal
 	 *
