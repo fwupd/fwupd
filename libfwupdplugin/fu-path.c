@@ -442,6 +442,13 @@ fu_path_from_kind(FuPathKind path_kind)
 	/* C:\Program Files (x86)\fwupd\ */
 	case FU_PATH_KIND_WIN32_BASEDIR:
 		return fu_path_get_win32_basedir();
+	/* / */
+	case FU_PATH_KIND_HOSTFS_ROOT:
+		tmp = g_getenv("FWUPD_HOSTFS_ROOT");
+		if (tmp != NULL)
+			return g_strdup(tmp);
+		return g_strdup("/");
+
 	/* this shouldn't happen */
 	default:
 		g_warning("cannot build path for unknown kind %u", path_kind);
