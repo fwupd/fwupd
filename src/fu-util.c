@@ -4433,7 +4433,7 @@ main(int argc, char *argv[])
 	gboolean allow_branch_switch = FALSE;
 	gboolean allow_older = FALSE;
 	gboolean allow_reinstall = FALSE;
-	gboolean enable_ipfs = FALSE;
+	gboolean only_p2p = FALSE;
 	gboolean is_interactive = FALSE;
 	gboolean no_history = FALSE;
 	gboolean no_authenticate = FALSE;
@@ -4602,13 +4602,13 @@ main(int argc, char *argv[])
 	     /* TRANSLATORS: command line option */
 	     N_("Ignore SSL strict checks when downloading files"),
 	     NULL},
-	    {"ipfs",
+	    {"p2p",
 	     '\0',
 	     0,
 	     G_OPTION_ARG_NONE,
-	     &enable_ipfs,
+	     &only_p2p,
 	     /* TRANSLATORS: command line option */
-	     N_("Only use IPFS when downloading files"),
+	     N_("Only use peer-to-peer networking when downloading files"),
 	     NULL},
 	    {"filter",
 	     '\0',
@@ -5119,9 +5119,9 @@ main(int argc, char *argv[])
 	if (no_history)
 		priv->flags |= FWUPD_INSTALL_FLAG_NO_HISTORY;
 
-	/* use IPFS for metadata and firmware *only* if specified */
-	if (enable_ipfs)
-		priv->download_flags |= FWUPD_CLIENT_DOWNLOAD_FLAG_ONLY_IPFS;
+	/* use peer-to-peer for metadata and firmware *only* if specified */
+	if (only_p2p)
+		priv->download_flags |= FWUPD_CLIENT_DOWNLOAD_FLAG_ONLY_P2P;
 
 #ifdef HAVE_POLKIT
 	/* start polkit tty agent to listen for password requests */
