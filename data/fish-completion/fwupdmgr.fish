@@ -30,7 +30,7 @@ complete -c fwupdmgr -l no-history -d 'Do not write to the history database'
 complete -c fwupdmgr -l no-security-fix -d 'Do not prompt to fix security issues'
 complete -c fwupdmgr -l show-all -d 'Show all results'
 complete -c fwupdmgr -l disable-ssl-strict -d 'Ignore SSL strict checks when downloading'
-complete -c fwupdmgr -l ipfs -d 'Use IPFS when downloading files'
+complete -c fwupdmgr -l p2p -d 'Only use peer-to-peer networking when downloading files'
 complete -c fwupdmgr -l filter -d 'Filter with a set of device flags'
 
 # complete subcommands

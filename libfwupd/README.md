@@ -11,6 +11,7 @@
 * Remove fwupd_device_set_protocol() and fwupd_device_get_protocol()
 * Remove deprecated install flag `FWUPD_INSTALL_FLAG_IGNORE_POWER`
 * Rename `fwupd_remote_set_checksum()` to `fwupd_remote_set_checksum_sig()`
+* Remove the deprecated flag `FWUPD_CLIENT_DOWNLOAD_FLAG_ONLY_IPFS`
 
 ## Migration from Version 0.9.x
 

@@ -3289,7 +3289,7 @@ fwupd_client_filter_locations(GPtrArray *locations,
 
 	for (guint i = 0; i < locations->len; i++) {
 		const gchar *uri = g_ptr_array_index(locations, i);
-		if ((download_flags & FWUPD_CLIENT_DOWNLOAD_FLAG_ONLY_IPFS) > 0 &&
+		if ((download_flags & FWUPD_CLIENT_DOWNLOAD_FLAG_ONLY_P2P) > 0 &&
 		    !fwupd_client_is_url_ipfs(uri))
 			continue;
 		g_ptr_array_add(uris_filtered, g_strdup(uri));
@@ -3311,7 +3311,7 @@ fwupd_client_filter_locations(GPtrArray *locations,
  * @device: (not nullable): a device
  * @release: (not nullable): a release
  * @install_flags: install flags, e.g. %FWUPD_INSTALL_FLAG_ALLOW_REINSTALL
- * @download_flags: download flags, e.g. %FWUPD_CLIENT_DOWNLOAD_FLAG_DISABLE_IPFS
+ * @download_flags: download flags, e.g. %FWUPD_CLIENT_DOWNLOAD_FLAG_ONLY_P2P
  * @cancellable: (nullable): optional #GCancellable
  * @callback: (scope async) (closure callback_data): the function to run on completion
  * @callback_data: the data to pass to @callback
