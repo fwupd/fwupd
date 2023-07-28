@@ -17,3 +17,6 @@ FuFirmware *
 fu_pxi_firmware_new(void);
 const gchar *
 fu_pxi_firmware_get_model_name(FuPxiFirmware *self);
+
+gboolean
+fu_pxi_firmware_is_hpac(FuPxiFirmware *self);

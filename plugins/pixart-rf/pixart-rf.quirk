@@ -187,3 +187,9 @@ GType = FuPxiBleDevice
 [HIDRAW\VEN_093A&DEV_2852]
 Plugin = pixart_rf
 GType = FuPxiBleDevice
+
+# HP 430
+[HIDRAW\VEN_03F0&DEV_114C]
+Plugin = pixart_rf
+GType = FuPxiBleDevice
+Flags = is-hpac

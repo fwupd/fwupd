@@ -9,6 +9,8 @@
 
 #include <fwupdplugin.h>
 
+#define FU_PXI_DEVICE_FLAG_IS_HPAC (1 << 0)
+
 #define PXI_HID_WIRELESS_DEV_OTA_REPORT_ID 0x03
 
 #define FU_PXI_DEVICE_CMD_FW_OTA_INIT		   0x10u
