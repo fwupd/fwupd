@@ -1848,7 +1848,11 @@ fu_util_download_metadata_enable_lvfs(FuUtilPrivate *priv, GError **error)
 		return FALSE;
 
 	/* refresh the newly-enabled remote */
-	return fwupd_client_refresh_remote(priv->client, remote, priv->cancellable, error);
+	return fwupd_client_refresh_remote2(priv->client,
+					    remote,
+					    priv->download_flags,
+					    priv->cancellable,
+					    error);
 }
 
 static gboolean
@@ -1934,7 +1938,11 @@ fu_util_download_metadata(FuUtilPrivate *priv, GError **error)
 				 "%s %s",
 				 _("Updating"),
 				 fwupd_remote_get_id(remote));
-		if (!fwupd_client_refresh_remote(priv->client, remote, priv->cancellable, error))
+		if (!fwupd_client_refresh_remote2(priv->client,
+						  remote,
+						  priv->download_flags,
+						  priv->cancellable,
+						  error))
 			return FALSE;
 	}
 
@@ -2885,7 +2893,11 @@ fu_util_remote_enable(FuUtilPrivate *priv, gchar **values, GError **error)
 			return TRUE;
 		}
 	}
-	if (!fwupd_client_refresh_remote(priv->client, remote, priv->cancellable, error))
+	if (!fwupd_client_refresh_remote2(priv->client,
+					  remote,
+					  priv->download_flags,
+					  priv->cancellable,
+					  error))
 		return FALSE;
 
 	/* TRANSLATORS: success message */

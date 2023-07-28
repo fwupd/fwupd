@@ -357,7 +357,15 @@ fwupd_client_refresh_remote_async(FwupdClient *self,
 				  FwupdRemote *remote,
 				  GCancellable *cancellable,
 				  GAsyncReadyCallback callback,
-				  gpointer callback_data);
+				  gpointer callback_data)
+    G_DEPRECATED_FOR(fwupd_client_refresh_remote2_async);
+void
+fwupd_client_refresh_remote2_async(FwupdClient *self,
+				   FwupdRemote *remote,
+				   FwupdClientDownloadFlags download_flags,
+				   GCancellable *cancellable,
+				   GAsyncReadyCallback callback,
+				   gpointer callback_data);
 gboolean
 fwupd_client_refresh_remote_finish(FwupdClient *self,
 				   GAsyncResult *res,

@@ -1744,6 +1744,50 @@ fwupd_client_refresh_remote_cb(GObject *source, GAsyncResult *res, gpointer user
 }
 
 /**
+ * fwupd_client_refresh_remote2:
+ * @self: a #FwupdClient
+ * @remote: a #FwupdRemote
+ * @download_flags: download flags, e.g. %FWUPD_CLIENT_DOWNLOAD_FLAG_ONLY_P2P
+ * @cancellable: (nullable): optional #GCancellable
+ * @error: (nullable): optional return location for an error
+ *
+ * Refreshes a remote by downloading new metadata.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.9.4
+ **/
+gboolean
+fwupd_client_refresh_remote2(FwupdClient *self,
+			     FwupdRemote *remote,
+			     FwupdClientDownloadFlags download_flags,
+			     GCancellable *cancellable,
+			     GError **error)
+{
+	g_autoptr(FwupdClientHelper) helper = NULL;
+
+	g_return_val_if_fail(FWUPD_IS_CLIENT(self), FALSE);
+	g_return_val_if_fail(FWUPD_IS_REMOTE(remote), FALSE);
+	g_return_val_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	/* call async version and run loop until complete */
+	helper = fwupd_client_helper_new(self);
+	fwupd_client_refresh_remote2_async(self,
+					   remote,
+					   download_flags,
+					   cancellable,
+					   fwupd_client_refresh_remote_cb,
+					   helper);
+	g_main_loop_run(helper->loop);
+	if (!helper->ret) {
+		g_propagate_error(error, g_steal_pointer(&helper->error));
+		return FALSE;
+	}
+	return TRUE;
+}
+
+/**
  * fwupd_client_refresh_remote:
  * @self: a #FwupdClient
  * @remote: a #FwupdRemote
@@ -1762,26 +1806,15 @@ fwupd_client_refresh_remote(FwupdClient *self,
 			    GCancellable *cancellable,
 			    GError **error)
 {
-	g_autoptr(FwupdClientHelper) helper = NULL;
-
 	g_return_val_if_fail(FWUPD_IS_CLIENT(self), FALSE);
 	g_return_val_if_fail(FWUPD_IS_REMOTE(remote), FALSE);
 	g_return_val_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
-
-	/* call async version and run loop until complete */
-	helper = fwupd_client_helper_new(self);
-	fwupd_client_refresh_remote_async(self,
-					  remote,
-					  cancellable,
-					  fwupd_client_refresh_remote_cb,
-					  helper);
-	g_main_loop_run(helper->loop);
-	if (!helper->ret) {
-		g_propagate_error(error, g_steal_pointer(&helper->error));
-		return FALSE;
-	}
-	return TRUE;
+	return fwupd_client_refresh_remote2(self,
+					    remote,
+					    FWUPD_CLIENT_DOWNLOAD_FLAG_NONE,
+					    cancellable,
+					    error);
 }
 
 static void

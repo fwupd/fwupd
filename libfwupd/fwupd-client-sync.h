@@ -176,7 +176,13 @@ gboolean
 fwupd_client_refresh_remote(FwupdClient *self,
 			    FwupdRemote *remote,
 			    GCancellable *cancellable,
-			    GError **error) G_GNUC_WARN_UNUSED_RESULT;
+			    GError **error) G_DEPRECATED_FOR(fwupd_client_refresh_remote2);
+gboolean
+fwupd_client_refresh_remote2(FwupdClient *self,
+			     FwupdRemote *remote,
+			     FwupdClientDownloadFlags download_flags,
+			     GCancellable *cancellable,
+			     GError **error) G_GNUC_WARN_UNUSED_RESULT;
 gboolean
 fwupd_client_modify_remote(FwupdClient *self,
 			   const gchar *remote_id,

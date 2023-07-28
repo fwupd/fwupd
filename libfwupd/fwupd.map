@@ -963,6 +963,8 @@ LIBFWUPD_1.9.3 {
 
 LIBFWUPD_1.9.4 {
   global:
+    fwupd_client_refresh_remote2;
+    fwupd_client_refresh_remote2_async;
     fwupd_remote_get_checksum_metadata;
     fwupd_remote_get_refresh_interval;
     fwupd_remote_needs_refresh;

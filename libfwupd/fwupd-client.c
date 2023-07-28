@@ -3967,6 +3967,7 @@ fwupd_client_update_metadata_bytes_finish(FwupdClient *self, GAsyncResult *res, 
 
 typedef struct {
 	FwupdRemote *remote;
+	FwupdClientDownloadFlags download_flags;
 	GBytes *signature;
 	GBytes *metadata;
 } FwupdClientRefreshRemoteData;
@@ -4076,9 +4077,10 @@ fwupd_client_refresh_remote_signature_cb(GObject *source, GAsyncResult *res, gpo
 }
 
 /**
- * fwupd_client_refresh_remote_async:
+ * fwupd_client_refresh_remote2_async:
  * @self: a #FwupdClient
  * @remote: a #FwupdRemote
+ * @download_flags: download flags, e.g. %FWUPD_CLIENT_DOWNLOAD_FLAG_ONLY_P2P
  * @cancellable: (nullable): optional #GCancellable
  * @callback: (scope async) (closure callback_data): the function to run on completion
  * @callback_data: the data to pass to @callback
@@ -4089,14 +4091,15 @@ fwupd_client_refresh_remote_signature_cb(GObject *source, GAsyncResult *res, gpo
  * emitted in the global default main context, if not explicitly set with
  * [method@Client.set_main_context].
  *
- * Since: 1.5.0
+ * Since: 1.9.4
  **/
 void
-fwupd_client_refresh_remote_async(FwupdClient *self,
-				  FwupdRemote *remote,
-				  GCancellable *cancellable,
-				  GAsyncReadyCallback callback,
-				  gpointer callback_data)
+fwupd_client_refresh_remote2_async(FwupdClient *self,
+				   FwupdRemote *remote,
+				   FwupdClientDownloadFlags download_flags,
+				   GCancellable *cancellable,
+				   GAsyncReadyCallback callback,
+				   gpointer callback_data)
 {
 	FwupdClientRefreshRemoteData *data;
 	g_autoptr(GTask) task = NULL;
@@ -4107,6 +4110,7 @@ fwupd_client_refresh_remote_async(FwupdClient *self,
 
 	task = g_task_new(self, cancellable, callback, callback_data);
 	data = g_new0(FwupdClientRefreshRemoteData, 1);
+	data->download_flags = download_flags;
 	data->remote = g_object_ref(remote);
 	g_task_set_task_data(task,
 			     g_steal_pointer(&data),
@@ -4135,10 +4139,44 @@ fwupd_client_refresh_remote_async(FwupdClient *self,
 	/* download signature */
 	fwupd_client_download_bytes_async(self,
 					  fwupd_remote_get_metadata_uri_sig(remote),
-					  FWUPD_CLIENT_DOWNLOAD_FLAG_NONE,
+					  download_flags,
 					  cancellable,
 					  fwupd_client_refresh_remote_signature_cb,
 					  g_steal_pointer(&task));
+}
+
+/**
+ * fwupd_client_refresh_remote_async:
+ * @self: a #FwupdClient
+ * @remote: a #FwupdRemote
+ * @cancellable: (nullable): optional #GCancellable
+ * @callback: (scope async) (closure callback_data): the function to run on completion
+ * @callback_data: the data to pass to @callback
+ *
+ * Refreshes a remote by downloading new metadata.
+ *
+ * NOTE: This method is thread-safe, but progress signals will be
+ * emitted in the global default main context, if not explicitly set with
+ * [method@Client.set_main_context].
+ *
+ * Since: 1.5.0
+ **/
+void
+fwupd_client_refresh_remote_async(FwupdClient *self,
+				  FwupdRemote *remote,
+				  GCancellable *cancellable,
+				  GAsyncReadyCallback callback,
+				  gpointer callback_data)
+{
+	g_return_if_fail(FWUPD_IS_CLIENT(self));
+	g_return_if_fail(FWUPD_IS_REMOTE(remote));
+	g_return_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable));
+	return fwupd_client_refresh_remote2_async(self,
+						  remote,
+						  FWUPD_CLIENT_DOWNLOAD_FLAG_NONE,
+						  cancellable,
+						  callback,
+						  callback_data);
 }
 
 /**
