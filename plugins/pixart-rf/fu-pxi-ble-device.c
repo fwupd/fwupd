@@ -92,32 +92,66 @@ fu_pxi_ble_device_prepare_firmware(FuDevice *device,
 				   GError **error)
 {
 	FuPxiBleDevice *self = FU_PXI_BLE_DEVICE(device);
-	const gchar *model_name;
 	g_autoptr(FuFirmware) firmware = fu_pxi_firmware_new();
 
 	if (!fu_firmware_parse(firmware, fw, flags, error))
 		return NULL;
 
-	/* check is compatible with hardware */
-	model_name = fu_pxi_firmware_get_model_name(FU_PXI_FIRMWARE(firmware));
-	if ((flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {
-		if (self->model_name == NULL || model_name == NULL) {
-			g_set_error_literal(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_INVALID_FILE,
-					    "legacy device or firmware detected, "
-					    "--force required");
+	if (fu_device_has_private_flag(device, FU_PXI_DEVICE_FLAG_IS_HPAC) &&
+	    fu_pxi_firmware_is_hpac(FU_PXI_FIRMWARE(firmware))) {
+		g_autoptr(GBytes) fw_tmp = NULL;
+		guint32 hpac_fw_size = 0;
+		const guint8 *fw_ptr = g_bytes_get_data(fw, NULL);
+
+		if (!fu_memread_uint32_safe(fw_ptr,
+					    g_bytes_get_size(fw),
+					    9,
+					    &hpac_fw_size,
+					    G_LITTLE_ENDIAN,
+					    error))
 			return NULL;
-		}
-		if (g_strcmp0(self->model_name, model_name) != 0) {
+		hpac_fw_size += 264;
+		fw_tmp = fu_bytes_new_offset(fw, 9, hpac_fw_size, error);
+		if (fw_tmp == NULL) {
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_FILE,
-				    "incompatible firmware, got %s, expected %s.",
-				    model_name,
-				    self->model_name);
+				    "HPAC F/W preparation failed.");
 			return NULL;
 		}
+
+		fu_firmware_set_bytes(firmware, fw_tmp);
+	} else if (!fu_device_has_private_flag(device, FU_PXI_DEVICE_FLAG_IS_HPAC) &&
+		   !fu_pxi_firmware_is_hpac(FU_PXI_FIRMWARE(firmware))) {
+		const gchar *model_name;
+
+		/* check is compatible with hardware */
+		model_name = fu_pxi_firmware_get_model_name(FU_PXI_FIRMWARE(firmware));
+		if ((flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {
+			if (self->model_name == NULL || model_name == NULL) {
+				g_set_error_literal(error,
+						    FWUPD_ERROR,
+						    FWUPD_ERROR_INVALID_FILE,
+						    "legacy device or firmware detected, "
+						    "--force required");
+				return NULL;
+			}
+			if (g_strcmp0(self->model_name, model_name) != 0) {
+				g_set_error(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_FILE,
+					    "incompatible firmware, got %s, expected %s.",
+					    model_name,
+					    self->model_name);
+				return NULL;
+			}
+		}
+	} else {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "The firmware is incompatible with the device");
+		return NULL;
 	}
 
 	return g_steal_pointer(&firmware);
@@ -659,16 +693,18 @@ fu_pxi_ble_device_fw_upgrade(FuPxiBleDevice *self,
 	fu_byte_array_append_uint8(req, FU_PXI_DEVICE_CMD_FW_UPGRADE);
 	fu_byte_array_append_uint32(req, g_bytes_get_size(fw), G_LITTLE_ENDIAN);
 	fu_byte_array_append_uint16(req, checksum, G_LITTLE_ENDIAN);
-	version = fu_firmware_get_version(firmware);
-	if (!fu_memcpy_safe(fw_version,
-			    sizeof(fw_version),
-			    0x0, /* dst */
-			    (guint8 *)version,
-			    strlen(version),
-			    0x0, /* src */
-			    strlen(version),
-			    error))
-		return FALSE;
+	if (!fu_device_has_private_flag(FU_DEVICE(self), FU_PXI_DEVICE_FLAG_IS_HPAC)) {
+		version = fu_firmware_get_version(firmware);
+		if (!fu_memcpy_safe(fw_version,
+				    sizeof(fw_version),
+				    0x0, /* dst */
+				    (guint8 *)version,
+				    strlen(version),
+				    0x0, /* src */
+				    strlen(version),
+				    error))
+			return FALSE;
+	}
 	g_byte_array_append(req, fw_version, sizeof(fw_version));
 
 	/* send fw upgrade command */
@@ -713,12 +749,11 @@ fu_pxi_ble_device_write_firmware(FuDevice *device,
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 9, "ota-init");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 1, "check-support-resume");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 90, NULL);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 1, NULL);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 1, NULL);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 0, "ota-init");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 0, "check-support-resume");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 100, NULL);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 0, NULL);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0, NULL);
 
 	/* get the default image */
 	fw = fu_firmware_get_bytes(firmware, error);
@@ -943,11 +978,10 @@ static void
 fu_pxi_ble_device_set_progress(FuDevice *self, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0, "detach");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 98, "write");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 100, "write");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0, "attach");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 2, "reload");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 0, "reload");
 }
 
 static void
@@ -962,6 +996,7 @@ fu_pxi_ble_device_init(FuPxiBleDevice *self)
 	self->retransmit_id = PXI_HID_DEV_OTA_RETRANSMIT_REPORT_ID;
 	self->feature_report_id = PXI_HID_DEV_OTA_FEATURE_REPORT_ID;
 	self->input_report_id = PXI_HID_DEV_OTA_INPUT_REPORT_ID;
+	fu_device_register_private_flag(FU_DEVICE(self), FU_PXI_DEVICE_FLAG_IS_HPAC, "is-hpac");
 }
 
 static void

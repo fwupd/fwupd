@@ -10,12 +10,15 @@
 
 #define PIXART_RF_FW_HEADER_SIZE       32 /* bytes */
 #define PIXART_RF_FW_HEADER_TAG_OFFSET 24
+/* The hpac header is start from 821st byte from the end */
+#define PIXART_RF_FW_HEADER_HPAC_POS_FROM_END 821
 
 #define PIXART_RF_FW_HEADER_MAGIC 0x55AA55AA55AA55AA
 
 struct _FuPxiFirmware {
 	FuFirmware parent_instance;
 	gchar *model_name;
+	gboolean is_hpac;
 };
 
 G_DEFINE_TYPE(FuPxiFirmware, fu_pxi_firmware, FU_TYPE_FIRMWARE)
@@ -38,8 +41,9 @@ static gboolean
 fu_pxi_firmware_check_magic(FuFirmware *firmware, GBytes *fw, gsize offset, GError **error)
 {
 	guint64 magic = 0;
+	FuPxiFirmware *self = FU_PXI_FIRMWARE(firmware);
 
-	/* is a footer */
+	/* is a footer, in normal bin file, the header is starts from the 32nd byte from the end. */
 	if (!fu_memread_uint64_safe(g_bytes_get_data(fw, NULL),
 				    g_bytes_get_size(fw),
 				    g_bytes_get_size(fw) - PIXART_RF_FW_HEADER_SIZE +
@@ -51,13 +55,29 @@ fu_pxi_firmware_check_magic(FuFirmware *firmware, GBytes *fw, gsize offset, GErr
 		return FALSE;
 	}
 	if (magic != PIXART_RF_FW_HEADER_MAGIC) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_FILE,
-			    "invalid magic, expected 0x%08X got 0x%08X",
-			    (guint32)PIXART_RF_FW_HEADER_MAGIC,
-			    (guint32)magic);
-		return FALSE;
+		/* if the magic number is not found, then start from the 821st byte from the end for
+		 * HPAC header */
+		if (!fu_memread_uint64_safe(g_bytes_get_data(fw, NULL),
+					    g_bytes_get_size(fw),
+					    g_bytes_get_size(fw) -
+						PIXART_RF_FW_HEADER_HPAC_POS_FROM_END +
+						PIXART_RF_FW_HEADER_TAG_OFFSET,
+					    &magic,
+					    G_BIG_ENDIAN,
+					    error)) {
+			g_prefix_error(error, "failed to read magic: ");
+			return FALSE;
+		}
+		if (magic != PIXART_RF_FW_HEADER_MAGIC) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "invalid magic, expected 0x%08X got 0x%08X",
+				    (guint32)PIXART_RF_FW_HEADER_MAGIC,
+				    (guint32)magic);
+			return FALSE;
+		}
+		self->is_hpac = TRUE;
 	}
 
 	/* success */
@@ -81,17 +101,32 @@ fu_pxi_firmware_parse(FuFirmware *firmware,
 
 	/* get fw header from buf */
 	buf = g_bytes_get_data(fw, &bufsz);
-	if (!fu_memcpy_safe(fw_header,
-			    sizeof(fw_header),
-			    0x0,
-			    buf,
-			    bufsz,
-			    bufsz - sizeof(fw_header),
-			    sizeof(fw_header),
-			    error)) {
-		g_prefix_error(error, "failed to read fw header: ");
-		return FALSE;
+	if (fu_pxi_firmware_is_hpac(self)) {
+		if (!fu_memcpy_safe(fw_header,
+				    sizeof(fw_header),
+				    0x0,
+				    buf,
+				    bufsz,
+				    bufsz - PIXART_RF_FW_HEADER_HPAC_POS_FROM_END,
+				    sizeof(fw_header),
+				    error)) {
+			g_prefix_error(error, "failed to read fw header: ");
+			return FALSE;
+		}
+	} else {
+		if (!fu_memcpy_safe(fw_header,
+				    sizeof(fw_header),
+				    0x0,
+				    buf,
+				    bufsz,
+				    bufsz - sizeof(fw_header),
+				    sizeof(fw_header),
+				    error)) {
+			g_prefix_error(error, "failed to read fw header: ");
+			return FALSE;
+		}
 	}
+
 	fu_dump_raw(G_LOG_DOMAIN, "fw header", fw_header, sizeof(fw_header));
 
 	/* set fw version */
@@ -157,6 +192,13 @@ fu_pxi_firmware_write(FuFirmware *firmware, GError **error)
 	blob = fu_firmware_get_bytes_with_patches(firmware, error);
 	if (blob == NULL)
 		return NULL;
+
+	if (fu_pxi_firmware_is_hpac(self)) {
+		buf = g_byte_array_sized_new(g_bytes_get_size(blob));
+		fu_byte_array_append_bytes(buf, blob);
+		return g_steal_pointer(&buf);
+	}
+
 	buf = g_byte_array_sized_new(g_bytes_get_size(blob) + sizeof(fw_header));
 	fu_byte_array_append_bytes(buf, blob);
 
@@ -233,4 +275,10 @@ FuFirmware *
 fu_pxi_firmware_new(void)
 {
 	return FU_FIRMWARE(g_object_new(FU_TYPE_PXI_FIRMWARE, NULL));
+}
+
+gboolean
+fu_pxi_firmware_is_hpac(FuPxiFirmware *self)
+{
+	return self->is_hpac;
 }
