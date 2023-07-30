@@ -185,7 +185,7 @@ fwupd_remote_download_func(void)
 	g_assert_cmpint(fwupd_remote_get_kind(remote), ==, FWUPD_REMOTE_KIND_DOWNLOAD);
 	g_assert_cmpint(fwupd_remote_get_keyring_kind(remote), ==, FWUPD_KEYRING_KIND_JCAT);
 	g_assert_cmpint(fwupd_remote_get_priority(remote), ==, 0);
-	g_assert_false(fwupd_remote_get_enabled(remote));
+	g_assert_false(fwupd_remote_has_flag(remote, FWUPD_REMOTE_FLAG_ENABLED));
 	g_assert_nonnull(fwupd_remote_get_metadata_uri(remote));
 	g_assert_nonnull(fwupd_remote_get_metadata_uri_sig(remote));
 	g_assert_cmpstr(fwupd_remote_get_title(remote),
@@ -219,7 +219,7 @@ fwupd_remote_baseuri_func(void)
 	g_assert_cmpint(fwupd_remote_get_kind(remote), ==, FWUPD_REMOTE_KIND_DOWNLOAD);
 	g_assert_cmpint(fwupd_remote_get_keyring_kind(remote), ==, FWUPD_KEYRING_KIND_JCAT);
 	g_assert_cmpint(fwupd_remote_get_priority(remote), ==, 0);
-	g_assert_true(fwupd_remote_get_enabled(remote));
+	g_assert_true(fwupd_remote_has_flag(remote, FWUPD_REMOTE_FLAG_ENABLED));
 	g_assert_cmpstr(fwupd_remote_get_firmware_base_uri(remote), ==, "https://my.fancy.cdn/");
 	g_assert_cmpstr(fwupd_remote_get_agreement(remote), ==, NULL);
 	g_assert_cmpstr(fwupd_remote_get_checksum(remote), ==, NULL);
@@ -285,9 +285,9 @@ fwupd_remote_auth_func(void)
 	g_assert_cmpstr(fwupd_remote_get_security_report_uri(remote),
 			==,
 			"https://fwupd.org/lvfs/hsireports/upload");
-	g_assert_false(fwupd_remote_get_approval_required(remote));
-	g_assert_false(fwupd_remote_get_automatic_reports(remote));
-	g_assert_true(fwupd_remote_get_automatic_security_reports(remote));
+	g_assert_false(fwupd_remote_has_flag(remote, FWUPD_REMOTE_FLAG_APPROVAL_REQUIRED));
+	g_assert_false(fwupd_remote_has_flag(remote, FWUPD_REMOTE_FLAG_AUTOMATIC_REPORTS));
+	g_assert_true(fwupd_remote_has_flag(remote, FWUPD_REMOTE_FLAG_AUTOMATIC_SECURITY_REPORTS));
 
 	g_assert_true(
 	    g_str_has_suffix(fwupd_remote_get_filename_source(remote), "tests/auth.conf"));
@@ -353,6 +353,7 @@ fwupd_remote_auth_func(void)
 	    "\"dd1b4fd2a59bb0e4d9ea760c658ac3cf9336c7b6729357bab443485b5cf071b2\",\n"
 	    "  \"FilenameCache\" : \"./libfwupd/tests/auth/metadata.xml.gz\",\n"
 	    "  \"FilenameCacheSig\" : \"./libfwupd/tests/auth/metadata.xml.gz.jcat\",\n"
+	    "  \"Flags\" : 9,\n"
 	    "  \"Enabled\" : \"true\",\n"
 	    "  \"ApprovalRequired\" : \"false\",\n"
 	    "  \"AutomaticReports\" : \"false\",\n"
@@ -389,7 +390,7 @@ fwupd_remote_duplicate_func(void)
 	ret = fwupd_remote_setup(remote, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	g_assert_false(fwupd_remote_get_enabled(remote));
+	g_assert_false(fwupd_remote_has_flag(remote, FWUPD_REMOTE_FLAG_ENABLED));
 	g_assert_cmpint(fwupd_remote_get_keyring_kind(remote), ==, FWUPD_KEYRING_KIND_NONE);
 	g_assert_cmpstr(fwupd_remote_get_username(remote), ==, NULL);
 	g_assert_cmpstr(fwupd_remote_get_password(remote), ==, "");
@@ -419,7 +420,7 @@ fwupd_remote_nopath_func(void)
 	g_assert_cmpint(fwupd_remote_get_kind(remote), ==, FWUPD_REMOTE_KIND_DOWNLOAD);
 	g_assert_cmpint(fwupd_remote_get_keyring_kind(remote), ==, FWUPD_KEYRING_KIND_JCAT);
 	g_assert_cmpint(fwupd_remote_get_priority(remote), ==, 0);
-	g_assert_true(fwupd_remote_get_enabled(remote));
+	g_assert_true(fwupd_remote_has_flag(remote, FWUPD_REMOTE_FLAG_ENABLED));
 	g_assert_cmpstr(fwupd_remote_get_checksum(remote), ==, NULL);
 	g_assert_cmpstr(fwupd_remote_get_metadata_uri(remote),
 			==,
@@ -452,7 +453,7 @@ fwupd_remote_local_func(void)
 	g_assert_true(ret);
 	g_assert_cmpint(fwupd_remote_get_kind(remote), ==, FWUPD_REMOTE_KIND_LOCAL);
 	g_assert_cmpint(fwupd_remote_get_keyring_kind(remote), ==, FWUPD_KEYRING_KIND_NONE);
-	g_assert_true(fwupd_remote_get_enabled(remote));
+	g_assert_true(fwupd_remote_has_flag(remote, FWUPD_REMOTE_FLAG_ENABLED));
 	g_assert_null(fwupd_remote_get_metadata_uri(remote));
 	g_assert_null(fwupd_remote_get_metadata_uri_sig(remote));
 	g_assert_null(fwupd_remote_get_report_uri(remote));
@@ -483,6 +484,7 @@ fwupd_remote_local_func(void)
 	    "  \"KeyringKind\" : \"none\",\n"
 	    "  \"Title\" : \"Enable UEFI capsule updates on Dell systems\",\n"
 	    "  \"FilenameCache\" : \"@datadir@/fwupd/remotes.d/dell-esrt/metadata.xml\",\n"
+	    "  \"Flags\" : 1,\n"
 	    "  \"Enabled\" : \"true\",\n"
 	    "  \"ApprovalRequired\" : \"false\",\n"
 	    "  \"AutomaticReports\" : \"false\",\n"

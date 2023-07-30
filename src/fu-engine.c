@@ -3070,19 +3070,19 @@ fu_engine_save_into_backup_remote(FuEngine *self, GBytes *fw, GError **error)
 	}
 
 	/* already exists as an enabled remote */
-	if (remote_tmp != NULL && fwupd_remote_get_enabled(remote_tmp))
+	if (remote_tmp != NULL && fwupd_remote_has_flag(remote_tmp, FWUPD_REMOTE_FLAG_ENABLED))
 		return TRUE;
 
 	/* just enable */
 	if (remote_tmp != NULL) {
 		g_info("enabling remote %s", fwupd_remote_get_id(remote_tmp));
-		fwupd_remote_set_enabled(remote_tmp, TRUE);
+		fwupd_remote_add_flag(remote_tmp, FWUPD_REMOTE_FLAG_ENABLED);
 		return fwupd_remote_save_to_filename(remote_tmp, remotes_fn, NULL, error);
 	}
 
 	/* create a new remote we can use for re-installing */
 	g_info("creating new backup remote");
-	fwupd_remote_set_enabled(remote, TRUE);
+	fwupd_remote_add_flag(remote, FWUPD_REMOTE_FLAG_ENABLED);
 	fwupd_remote_set_keyring_kind(remote, FWUPD_KEYRING_KIND_NONE);
 	fwupd_remote_set_title(remote, "Backup");
 	fwupd_remote_set_metadata_uri(remote, backupdir_uri);
@@ -4603,7 +4603,7 @@ fu_engine_load_metadata_store(FuEngine *self, FuEngineLoadFlags flags, GError **
 		g_autoptr(XbBuilderSource) source = xb_builder_source_new();
 
 		FwupdRemote *remote = g_ptr_array_index(remotes, i);
-		if (!fwupd_remote_get_enabled(remote))
+		if (!fwupd_remote_has_flag(remote, FWUPD_REMOTE_FLAG_ENABLED))
 			continue;
 		path = fwupd_remote_get_filename_cache(remote);
 		if (!g_file_test(path, G_FILE_TEST_EXISTS))
@@ -4892,7 +4892,7 @@ fu_engine_update_metadata_bytes(FuEngine *self,
 			    remote_id);
 		return FALSE;
 	}
-	if (!fwupd_remote_get_enabled(remote)) {
+	if (!fwupd_remote_has_flag(remote, FWUPD_REMOTE_FLAG_ENABLED)) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
@@ -5782,7 +5782,8 @@ fu_engine_add_releases_for_device_component(FuEngine *self,
 		remote_id = fwupd_release_get_remote_id(FWUPD_RELEASE(release));
 		if (remote_id != NULL) {
 			FwupdRemote *remote = fu_engine_get_remote_by_id(self, remote_id, NULL);
-			if (remote != NULL && fwupd_remote_get_approval_required(remote) &&
+			if (remote != NULL &&
+			    fwupd_remote_has_flag(remote, FWUPD_REMOTE_FLAG_APPROVAL_REQUIRED) &&
 			    !fu_engine_check_release_is_approved(self, FWUPD_RELEASE(release))) {
 				fu_release_add_flag(release, FWUPD_RELEASE_FLAG_BLOCKED_APPROVAL);
 			}

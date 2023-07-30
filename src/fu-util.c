@@ -277,7 +277,8 @@ fu_util_perhaps_show_unreported(FuUtilPrivate *priv, GError **error)
 		g_hash_table_insert(remote_id_uri_map,
 				    (gpointer)fwupd_remote_get_id(remote),
 				    (gpointer)fwupd_remote_get_report_uri(remote));
-		remote_automatic = fwupd_remote_get_automatic_reports(remote);
+		remote_automatic =
+		    fwupd_remote_has_flag(remote, FWUPD_REMOTE_FLAG_AUTOMATIC_REPORTS);
 		g_debug("%s is %d", fwupd_remote_get_title(remote), remote_automatic);
 		if (remote_automatic && !all_automatic)
 			all_automatic = TRUE;
@@ -429,7 +430,8 @@ fu_util_perhaps_show_unreported(FuUtilPrivate *priv, GError **error)
 				const gchar *remote_id = fwupd_remote_get_id(remote);
 				if (fwupd_remote_get_report_uri(remote) == NULL)
 					continue;
-				if (fwupd_remote_get_automatic_reports(remote))
+				if (fwupd_remote_has_flag(remote,
+							  FWUPD_REMOTE_FLAG_AUTOMATIC_REPORTS))
 					continue;
 				if (!fwupd_client_modify_remote(priv->client,
 								remote_id,
@@ -1468,7 +1470,8 @@ fu_util_report_history_for_remote(FuUtilPrivate *priv,
 	report_uri = fwupd_remote_build_report_uri(remote, error);
 	if (report_uri == NULL)
 		return FALSE;
-	if (!priv->assume_yes && !fwupd_remote_get_automatic_reports(remote)) {
+	if (!priv->assume_yes &&
+	    !fwupd_remote_has_flag(remote, FWUPD_REMOTE_FLAG_AUTOMATIC_REPORTS)) {
 		fu_console_print_kv(priv->console, _("Target"), report_uri);
 		fu_console_print_kv(priv->console, _("Payload"), data);
 		if (sig != NULL)
@@ -1867,7 +1870,7 @@ fu_util_check_oldest_remote(FuUtilPrivate *priv, guint64 *age_oldest, GError **e
 		return FALSE;
 	for (guint i = 0; i < remotes->len; i++) {
 		FwupdRemote *remote = g_ptr_array_index(remotes, i);
-		if (!fwupd_remote_get_enabled(remote))
+		if (!fwupd_remote_has_flag(remote, FWUPD_REMOTE_FLAG_ENABLED))
 			continue;
 		if (fwupd_remote_get_kind(remote) != FWUPD_REMOTE_KIND_DOWNLOAD)
 			continue;
@@ -1926,7 +1929,7 @@ fu_util_download_metadata(FuUtilPrivate *priv, GError **error)
 		return FALSE;
 	for (guint i = 0; i < remotes->len; i++) {
 		FwupdRemote *remote = g_ptr_array_index(remotes, i);
-		if (!fwupd_remote_get_enabled(remote))
+		if (!fwupd_remote_has_flag(remote, FWUPD_REMOTE_FLAG_ENABLED))
 			continue;
 		if (fwupd_remote_get_kind(remote) != FWUPD_REMOTE_KIND_DOWNLOAD)
 			continue;
@@ -2673,7 +2676,7 @@ fu_util_maybe_send_reports(FuUtilPrivate *priv, FwupdRelease *rel, GError **erro
 					       error);
 	if (remote == NULL)
 		return FALSE;
-	if (fwupd_remote_get_automatic_reports(remote)) {
+	if (fwupd_remote_has_flag(remote, FWUPD_REMOTE_FLAG_AUTOMATIC_REPORTS)) {
 		if (!fu_util_report_history(priv, NULL, &error_local))
 			if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED))
 				g_warning("%s", error_local->message);
@@ -3416,7 +3419,7 @@ fu_util_get_remote_with_security_report_uri(FuUtilPrivate *priv, GError **error)
 
 	for (guint i = 0; i < remotes->len; i++) {
 		FwupdRemote *remote = g_ptr_array_index(remotes, i);
-		if (!fwupd_remote_get_enabled(remote))
+		if (!fwupd_remote_has_flag(remote, FWUPD_REMOTE_FLAG_ENABLED))
 			continue;
 		if (fwupd_remote_get_security_report_uri(remote) != NULL)
 			return g_object_ref(remote);
@@ -3452,7 +3455,8 @@ fu_util_upload_security(FuUtilPrivate *priv, GPtrArray *attrs, GError **error)
 		g_debug("failed to find suitable remote: %s", error_local->message);
 		return TRUE;
 	}
-	if (!priv->assume_yes && !fwupd_remote_get_automatic_security_reports(remote)) {
+	if (!priv->assume_yes &&
+	    !fwupd_remote_has_flag(remote, FWUPD_REMOTE_FLAG_AUTOMATIC_SECURITY_REPORTS)) {
 		if (!fu_console_input_bool(priv->console,
 					   FALSE,
 					   /* TRANSLATORS: ask the user to share, %s is something
@@ -3541,7 +3545,8 @@ fu_util_upload_security(FuUtilPrivate *priv, GPtrArray *attrs, GError **error)
 	}
 
 	/* ask for permission */
-	if (!priv->assume_yes && !fwupd_remote_get_automatic_security_reports(remote)) {
+	if (!priv->assume_yes &&
+	    !fwupd_remote_has_flag(remote, FWUPD_REMOTE_FLAG_AUTOMATIC_SECURITY_REPORTS)) {
 		fu_console_print_kv(priv->console,
 				    _("Target"),
 				    fwupd_remote_get_security_report_uri(remote));
@@ -3573,7 +3578,7 @@ fu_util_upload_security(FuUtilPrivate *priv, GPtrArray *attrs, GError **error)
 				 _("Host Security ID attributes uploaded successfully, thanks!"));
 
 	/* as this worked, ask if the user want to do this every time */
-	if (!fwupd_remote_get_automatic_security_reports(remote)) {
+	if (!fwupd_remote_has_flag(remote, FWUPD_REMOTE_FLAG_AUTOMATIC_SECURITY_REPORTS)) {
 		if (fu_console_input_bool(priv->console,
 					  FALSE,
 					  "%s",

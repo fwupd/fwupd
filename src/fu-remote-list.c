@@ -271,7 +271,7 @@ fu_remote_list_add_for_file(FuRemoteList *self,
 	}
 
 	/* delete the obsolete .gz files if the remote is now set up to use .xz */
-	if (fwupd_remote_get_enabled(remote) &&
+	if (fwupd_remote_has_flag(remote, FWUPD_REMOTE_FLAG_ENABLED) &&
 	    fwupd_remote_get_kind(remote) == FWUPD_REMOTE_KIND_DOWNLOAD) {
 		if (!fu_remote_list_cleanup_remote(remote, error))
 			return FALSE;
@@ -519,7 +519,7 @@ fu_remote_list_reload(FuRemoteList *self, GError **error)
 	/* print to the console */
 	for (guint i = 0; i < self->array->len; i++) {
 		FwupdRemote *remote = g_ptr_array_index(self->array, i);
-		if (!fwupd_remote_get_enabled(remote))
+		if (!fwupd_remote_has_flag(remote, FWUPD_REMOTE_FLAG_ENABLED))
 			continue;
 		if (str->len > 0)
 			g_string_append(str, ", ");

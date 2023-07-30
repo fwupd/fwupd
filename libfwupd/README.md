@@ -13,6 +13,10 @@
 * Rename `fwupd_remote_set_checksum()` to `fwupd_remote_set_checksum_sig()`
 * Remove the deprecated flag `FWUPD_CLIENT_DOWNLOAD_FLAG_ONLY_IPFS`
 * Rename `fwupd_client_refresh_remote2_async()` to `fwupd_client_refresh_remote_async()`
+* Remove the deprecated method `fwupd_remote_get_enabled()`
+* Remove the deprecated method `fwupd_remote_get_approval_required()`
+* Remove the deprecated method `fwupd_remote_get_automatic_reports()`
+* Remove the deprecated method `fwupd_remote_get_automatic_security_reports()`
 
 ## Migration from Version 0.9.x
 

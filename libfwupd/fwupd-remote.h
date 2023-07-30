@@ -45,10 +45,32 @@ typedef enum {
 	FWUPD_REMOTE_KIND_LAST
 } FwupdRemoteKind;
 
+/**
+ * FwupdRemoteFlags:
+ * @FWUPD_REMOTE_FLAG_NONE:				No flags set
+ * @FWUPD_REMOTE_FLAG_ENABLED:				Is enabled
+ * @FWUPD_REMOTE_FLAG_APPROVAL_REQUIRED:		Requires approval for each firmware
+ * @FWUPD_REMOTE_FLAG_AUTOMATIC_REPORTS:		Send firmware reports automatically
+ * @FWUPD_REMOTE_FLAG_AUTOMATIC_SECURITY_REPORTS:	Send security reports automatically
+ *
+ * The flags available for the remote.
+ **/
+typedef enum {
+	FWUPD_REMOTE_FLAG_NONE = 0,			       /* Since: 1.9.4 */
+	FWUPD_REMOTE_FLAG_ENABLED = 1 << 0,		       /* Since: 1.9.4 */
+	FWUPD_REMOTE_FLAG_APPROVAL_REQUIRED = 1 << 1,	       /* Since: 1.9.4 */
+	FWUPD_REMOTE_FLAG_AUTOMATIC_REPORTS = 1 << 2,	       /* Since: 1.9.4 */
+	FWUPD_REMOTE_FLAG_AUTOMATIC_SECURITY_REPORTS = 1 << 3, /* Since: 1.9.4 */
+} FwupdRemoteFlags;
+
 FwupdRemoteKind
 fwupd_remote_kind_from_string(const gchar *kind);
 const gchar *
 fwupd_remote_kind_to_string(FwupdRemoteKind kind);
+const gchar *
+fwupd_remote_flag_to_string(FwupdRemoteFlags flag);
+FwupdRemoteFlags
+fwupd_remote_flag_from_string(const gchar *flag);
 
 FwupdRemote *
 fwupd_remote_new(void);
@@ -85,15 +107,28 @@ fwupd_remote_get_metadata_uri(FwupdRemote *self);
 const gchar *
 fwupd_remote_get_metadata_uri_sig(FwupdRemote *self);
 gboolean
-fwupd_remote_get_enabled(FwupdRemote *self);
+fwupd_remote_get_enabled(FwupdRemote *self) G_DEPRECATED_FOR(fwupd_remote_has_flag);
 gboolean
-fwupd_remote_get_approval_required(FwupdRemote *self);
+fwupd_remote_get_approval_required(FwupdRemote *self) G_DEPRECATED_FOR(fwupd_remote_has_flag);
 gboolean
-fwupd_remote_get_automatic_reports(FwupdRemote *self);
+fwupd_remote_get_automatic_reports(FwupdRemote *self) G_DEPRECATED_FOR(fwupd_remote_has_flag);
 gboolean
-fwupd_remote_get_automatic_security_reports(FwupdRemote *self);
+fwupd_remote_get_automatic_security_reports(FwupdRemote *self)
+    G_DEPRECATED_FOR(fwupd_remote_has_flag);
 guint64
 fwupd_remote_get_refresh_interval(FwupdRemote *self);
+
+FwupdRemoteFlags
+fwupd_remote_get_flags(FwupdRemote *self);
+void
+fwupd_remote_set_flags(FwupdRemote *self, FwupdRemoteFlags flags);
+void
+fwupd_remote_add_flag(FwupdRemote *self, FwupdRemoteFlags flag);
+void
+fwupd_remote_remove_flag(FwupdRemote *self, FwupdRemoteFlags flag);
+gboolean
+fwupd_remote_has_flag(FwupdRemote *self, FwupdRemoteFlags flag);
+
 gboolean
 fwupd_remote_needs_refresh(FwupdRemote *self);
 gint

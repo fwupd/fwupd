@@ -34,6 +34,7 @@ fwupd_remote_finalize(GObject *obj);
 
 typedef struct {
 	FwupdRemoteKind kind;
+	FwupdRemoteFlags flags;
 	FwupdKeyringKind keyring_kind;
 	gchar *id;
 	gchar *firmware_base_uri;
@@ -50,16 +51,12 @@ typedef struct {
 	gchar *filename_cache;
 	gchar *filename_cache_sig;
 	gchar *filename_source;
-	gboolean enabled;
-	gboolean approval_required;
 	gint priority;
 	guint64 mtime;
 	guint64 refresh_interval;
 	gchar **order_after;
 	gchar **order_before;
 	gchar *remotes_dir;
-	gboolean automatic_reports;
-	gboolean automatic_security_reports;
 } FwupdRemotePrivate;
 
 enum {
@@ -69,6 +66,7 @@ enum {
 	PROP_APPROVAL_REQUIRED,
 	PROP_AUTOMATIC_REPORTS,
 	PROP_AUTOMATIC_SECURITY_REPORTS,
+	PROP_FLAGS,
 	PROP_LAST
 };
 
@@ -80,6 +78,56 @@ typedef gchar curlptr;
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(curlptr, curl_free)
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(CURLU, curl_url_cleanup)
 #endif
+
+/**
+ * fwupd_remote_flag_to_string:
+ * @flag: remote attribute flags, e.g. %FWUPD_REMOTE_FLAG_ENABLED
+ *
+ * Returns the printable string for the flag.
+ *
+ * Returns: string, or %NULL
+ *
+ * Since: 1.9.4
+ **/
+const gchar *
+fwupd_remote_flag_to_string(FwupdRemoteFlags flag)
+{
+	if (flag == FWUPD_REMOTE_FLAG_NONE)
+		return "none";
+	if (flag == FWUPD_REMOTE_FLAG_ENABLED)
+		return "enabled";
+	if (flag == FWUPD_REMOTE_FLAG_APPROVAL_REQUIRED)
+		return "approval-required";
+	if (flag == FWUPD_REMOTE_FLAG_AUTOMATIC_REPORTS)
+		return "automatic-reports";
+	if (flag == FWUPD_REMOTE_FLAG_AUTOMATIC_SECURITY_REPORTS)
+		return "automatic-security-reports";
+	return NULL;
+}
+
+/**
+ * fwupd_remote_flag_from_string:
+ * @flag: (nullable): a string, e.g. `enabled`
+ *
+ * Converts a string to an enumerated flag.
+ *
+ * Returns: enumerated value
+ *
+ * Since: 1.9.4
+ **/
+FwupdRemoteFlags
+fwupd_remote_flag_from_string(const gchar *flag)
+{
+	if (g_strcmp0(flag, "enabled") == 0)
+		return FWUPD_REMOTE_FLAG_ENABLED;
+	if (g_strcmp0(flag, "approval-required") == 0)
+		return FWUPD_REMOTE_FLAG_APPROVAL_REQUIRED;
+	if (g_strcmp0(flag, "automatic-reports") == 0)
+		return FWUPD_REMOTE_FLAG_AUTOMATIC_REPORTS;
+	if (g_strcmp0(flag, "automatic-security-reports") == 0)
+		return FWUPD_REMOTE_FLAG_AUTOMATIC_SECURITY_REPORTS;
+	return FWUPD_REMOTE_FLAG_NONE;
+}
 
 /**
  * fwupd_remote_to_json:
@@ -123,18 +171,121 @@ fwupd_remote_to_json(FwupdRemote *self, JsonBuilder *builder)
 	fwupd_common_json_add_string(builder, "FilenameCache", priv->filename_cache);
 	fwupd_common_json_add_string(builder, "FilenameCacheSig", priv->filename_cache_sig);
 	fwupd_common_json_add_string(builder, "FilenameSource", priv->filename_source);
-	fwupd_common_json_add_boolean(builder, "Enabled", priv->enabled);
-	fwupd_common_json_add_boolean(builder, "ApprovalRequired", priv->approval_required);
-	fwupd_common_json_add_boolean(builder, "AutomaticReports", priv->automatic_reports);
+	fwupd_common_json_add_int(builder, "Flags", priv->flags);
 	fwupd_common_json_add_boolean(builder,
-				      "AutomaticSecurityReports",
-				      priv->automatic_security_reports);
+				      "Enabled",
+				      fwupd_remote_has_flag(self, FWUPD_REMOTE_FLAG_ENABLED));
+	fwupd_common_json_add_boolean(
+	    builder,
+	    "ApprovalRequired",
+	    fwupd_remote_has_flag(self, FWUPD_REMOTE_FLAG_APPROVAL_REQUIRED));
+	fwupd_common_json_add_boolean(
+	    builder,
+	    "AutomaticReports",
+	    fwupd_remote_has_flag(self, FWUPD_REMOTE_FLAG_AUTOMATIC_REPORTS));
+	fwupd_common_json_add_boolean(
+	    builder,
+	    "AutomaticSecurityReports",
+	    fwupd_remote_has_flag(self, FWUPD_REMOTE_FLAG_AUTOMATIC_SECURITY_REPORTS));
 	fwupd_common_json_add_int(builder, "Priority", priv->priority);
 	fwupd_common_json_add_int(builder, "Mtime", priv->mtime);
 	fwupd_common_json_add_int(builder, "RefreshInterval", priv->refresh_interval);
 	fwupd_common_json_add_string(builder, "RemotesDir", priv->remotes_dir);
 	fwupd_common_json_add_stringv(builder, "OrderAfter", priv->order_after);
 	fwupd_common_json_add_stringv(builder, "OrderBefore", priv->order_before);
+}
+
+/**
+ * fwupd_remote_get_flags:
+ * @self: a #FwupdRemote
+ *
+ * Gets the self flags.
+ *
+ * Returns: remote attribute flags, or 0 if unset
+ *
+ * Since: 1.9.4
+ **/
+FwupdRemoteFlags
+fwupd_remote_get_flags(FwupdRemote *self)
+{
+	FwupdRemotePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_REMOTE(self), 0);
+	return priv->flags;
+}
+
+/**
+ * fwupd_remote_set_flags:
+ * @self: a #FwupdRemote
+ * @flags: remote attribute flags, e.g. %FWUPD_REMOTE_FLAG_APPROVAL_REQUIRED
+ *
+ * Sets the attribute flags.
+ *
+ * Since: 1.9.4
+ **/
+void
+fwupd_remote_set_flags(FwupdRemote *self, FwupdRemoteFlags flags)
+{
+	FwupdRemotePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FWUPD_IS_REMOTE(self));
+	if (flags == priv->flags)
+		return;
+	priv->flags = flags;
+	g_object_notify(G_OBJECT(self), "flags");
+}
+
+/**
+ * fwupd_remote_add_flag:
+ * @self: a #FwupdRemote
+ * @flag: the #FwupdRemoteFlags, e.g. %FWUPD_REMOTE_FLAG_APPROVAL_REQUIRED
+ *
+ * Adds a specific attribute flag to the attribute.
+ *
+ * Since: 1.9.4
+ **/
+void
+fwupd_remote_add_flag(FwupdRemote *self, FwupdRemoteFlags flag)
+{
+	FwupdRemotePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FWUPD_IS_REMOTE(self));
+	priv->flags |= flag;
+	g_object_notify(G_OBJECT(self), "flags");
+}
+
+/**
+ * fwupd_remote_remove_flag:
+ * @self: a #FwupdRemote
+ * @flag: the #FwupdRemoteFlags, e.g. %FWUPD_REMOTE_FLAG_APPROVAL_REQUIRED
+ *
+ * Removes a specific attribute flag from the remote.
+ *
+ * Since: 1.9.4
+ **/
+void
+fwupd_remote_remove_flag(FwupdRemote *self, FwupdRemoteFlags flag)
+{
+	FwupdRemotePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FWUPD_IS_REMOTE(self));
+	priv->flags &= ~flag;
+	g_object_notify(G_OBJECT(self), "flags");
+}
+
+/**
+ * fwupd_remote_has_flag:
+ * @self: a #FwupdRemote
+ * @flag: the remote flag, e.g. %FWUPD_REMOTE_FLAG_APPROVAL_REQUIRED
+ *
+ * Finds if the remote has a specific flag.
+ *
+ * Returns: %TRUE if the flag is set
+ *
+ * Since: 1.9.4
+ **/
+gboolean
+fwupd_remote_has_flag(FwupdRemote *self, FwupdRemoteFlags flag)
+{
+	FwupdRemotePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_REMOTE(self), FALSE);
+	return (priv->flags & flag) > 0;
 }
 
 static gchar *
@@ -768,11 +919,18 @@ fwupd_remote_load_from_filename(FwupdRemote *self,
 	}
 
 	/* all keys are optional */
-	if (g_key_file_has_key(kf, group, "Enabled", NULL))
-		priv->enabled = g_key_file_get_boolean(kf, group, "Enabled", NULL);
-	if (g_key_file_has_key(kf, group, "ApprovalRequired", NULL))
-		priv->approval_required =
-		    g_key_file_get_boolean(kf, group, "ApprovalRequired", NULL);
+	if (g_key_file_has_key(kf, group, "Enabled", NULL)) {
+		if (g_key_file_get_boolean(kf, group, "Enabled", NULL))
+			fwupd_remote_add_flag(self, FWUPD_REMOTE_FLAG_ENABLED);
+		else
+			fwupd_remote_remove_flag(self, FWUPD_REMOTE_FLAG_ENABLED);
+	}
+	if (g_key_file_has_key(kf, group, "ApprovalRequired", NULL)) {
+		if (g_key_file_get_boolean(kf, group, "ApprovalRequired", NULL))
+			fwupd_remote_add_flag(self, FWUPD_REMOTE_FLAG_APPROVAL_REQUIRED);
+		else
+			fwupd_remote_remove_flag(self, FWUPD_REMOTE_FLAG_APPROVAL_REQUIRED);
+	}
 	if (g_key_file_has_key(kf, group, "Title", NULL)) {
 		g_autofree gchar *tmp = g_key_file_get_string(kf, group, "Title", NULL);
 		fwupd_remote_set_title(self, tmp);
@@ -807,13 +965,19 @@ fwupd_remote_load_from_filename(FwupdRemote *self,
 		g_autofree gchar *tmp = g_key_file_get_string(kf, group, "OrderAfter", NULL);
 		fwupd_remote_set_order_after(self, tmp);
 	}
-	if (g_key_file_has_key(kf, group, "AutomaticReports", NULL))
-		priv->automatic_reports =
-		    g_key_file_get_boolean(kf, group, "AutomaticReports", NULL);
-	if (g_key_file_has_key(kf, group, "AutomaticSecurityReports", NULL))
-		priv->automatic_security_reports =
-		    g_key_file_get_boolean(kf, group, "AutomaticSecurityReports", NULL);
-
+	if (g_key_file_has_key(kf, group, "AutomaticReports", NULL)) {
+		if (g_key_file_get_boolean(kf, group, "AutomaticReports", NULL))
+			fwupd_remote_add_flag(self, FWUPD_REMOTE_FLAG_AUTOMATIC_REPORTS);
+		else
+			fwupd_remote_remove_flag(self, FWUPD_REMOTE_FLAG_AUTOMATIC_REPORTS);
+	}
+	if (g_key_file_has_key(kf, group, "AutomaticSecurityReports", NULL)) {
+		if (g_key_file_get_boolean(kf, group, "AutomaticSecurityReports", NULL))
+			fwupd_remote_add_flag(self, FWUPD_REMOTE_FLAG_AUTOMATIC_SECURITY_REPORTS);
+		else
+			fwupd_remote_remove_flag(self,
+						 FWUPD_REMOTE_FLAG_AUTOMATIC_SECURITY_REPORTS);
+	}
 	/* success */
 	fwupd_remote_set_filename_source(self, filename);
 	return TRUE;
@@ -878,13 +1042,13 @@ fwupd_remote_save_to_filename(FwupdRemote *self,
 		g_autofree gchar *str = g_strjoinv(";", priv->order_before);
 		g_key_file_set_string(kf, group, "OrderBefore", str);
 	}
-	if (priv->enabled)
+	if (fwupd_remote_has_flag(self, FWUPD_REMOTE_FLAG_ENABLED))
 		g_key_file_set_boolean(kf, group, "Enabled", TRUE);
-	if (priv->approval_required)
+	if (fwupd_remote_has_flag(self, FWUPD_REMOTE_FLAG_APPROVAL_REQUIRED))
 		g_key_file_set_boolean(kf, group, "ApprovalRequired", TRUE);
-	if (priv->automatic_reports)
+	if (fwupd_remote_has_flag(self, FWUPD_REMOTE_FLAG_AUTOMATIC_REPORTS))
 		g_key_file_set_boolean(kf, group, "AutomaticReports", TRUE);
-	if (priv->automatic_security_reports)
+	if (fwupd_remote_has_flag(self, FWUPD_REMOTE_FLAG_AUTOMATIC_SECURITY_REPORTS))
 		g_key_file_set_boolean(kf, group, "AutomaticSecurityReports", TRUE);
 
 	/* save file */
@@ -1525,9 +1689,8 @@ fwupd_remote_get_firmware_base_uri(FwupdRemote *self)
 gboolean
 fwupd_remote_get_enabled(FwupdRemote *self)
 {
-	FwupdRemotePrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FWUPD_IS_REMOTE(self), FALSE);
-	return priv->enabled;
+	return fwupd_remote_has_flag(self, FWUPD_REMOTE_FLAG_ENABLED);
 }
 
 /**
@@ -1542,9 +1705,11 @@ fwupd_remote_get_enabled(FwupdRemote *self)
 void
 fwupd_remote_set_enabled(FwupdRemote *self, gboolean enabled)
 {
-	FwupdRemotePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FWUPD_IS_REMOTE(self));
-	priv->enabled = enabled;
+	if (enabled)
+		fwupd_remote_add_flag(self, FWUPD_REMOTE_FLAG_ENABLED);
+	else
+		fwupd_remote_remove_flag(self, FWUPD_REMOTE_FLAG_ENABLED);
 }
 
 /**
@@ -1560,9 +1725,8 @@ fwupd_remote_set_enabled(FwupdRemote *self, gboolean enabled)
 gboolean
 fwupd_remote_get_automatic_reports(FwupdRemote *self)
 {
-	FwupdRemotePrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FWUPD_IS_REMOTE(self), FALSE);
-	return priv->automatic_reports;
+	return fwupd_remote_has_flag(self, FWUPD_REMOTE_FLAG_AUTOMATIC_REPORTS);
 }
 
 /**
@@ -1578,9 +1742,8 @@ fwupd_remote_get_automatic_reports(FwupdRemote *self)
 gboolean
 fwupd_remote_get_automatic_security_reports(FwupdRemote *self)
 {
-	FwupdRemotePrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FWUPD_IS_REMOTE(self), FALSE);
-	return priv->automatic_security_reports;
+	return fwupd_remote_has_flag(self, FWUPD_REMOTE_FLAG_AUTOMATIC_SECURITY_REPORTS);
 }
 
 /**
@@ -1599,7 +1762,7 @@ fwupd_remote_needs_refresh(FwupdRemote *self)
 	FwupdRemotePrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FWUPD_IS_REMOTE(self), FALSE);
 
-	if (!priv->enabled)
+	if (!fwupd_remote_has_flag(self, FWUPD_REMOTE_FLAG_ENABLED))
 		return FALSE;
 	if (priv->kind != FWUPD_REMOTE_KIND_DOWNLOAD)
 		return FALSE;
@@ -1620,9 +1783,8 @@ fwupd_remote_needs_refresh(FwupdRemote *self)
 gboolean
 fwupd_remote_get_approval_required(FwupdRemote *self)
 {
-	FwupdRemotePrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FWUPD_IS_REMOTE(self), FALSE);
-	return priv->approval_required;
+	return fwupd_remote_has_flag(self, FWUPD_REMOTE_FLAG_APPROVAL_REQUIRED);
 }
 
 /**
@@ -1658,6 +1820,8 @@ fwupd_remote_set_from_variant_iter(FwupdRemote *self, GVariantIter *iter)
 			fwupd_remote_set_id(self, g_variant_get_string(value, NULL));
 		if (g_strcmp0(key, "Type") == 0)
 			fwupd_remote_set_kind(self, g_variant_get_uint32(value));
+		if (g_strcmp0(key, FWUPD_RESULT_KEY_FLAGS) == 0)
+			fwupd_remote_set_flags(self, g_variant_get_uint64(value));
 		if (g_strcmp0(key, "Keyring") == 0)
 			fwupd_remote_set_keyring_kind(self, g_variant_get_uint32(value));
 	}
@@ -1686,9 +1850,11 @@ fwupd_remote_set_from_variant_iter(FwupdRemote *self, GVariantIter *iter)
 		} else if (g_strcmp0(key, FWUPD_RESULT_KEY_CHECKSUM) == 0) {
 			fwupd_remote_set_checksum(self, g_variant_get_string(value, NULL));
 		} else if (g_strcmp0(key, "Enabled") == 0) {
-			priv->enabled = g_variant_get_boolean(value);
+			if (g_variant_get_boolean(value))
+				fwupd_remote_add_flag(self, FWUPD_REMOTE_FLAG_ENABLED);
 		} else if (g_strcmp0(key, "ApprovalRequired") == 0) {
-			priv->approval_required = g_variant_get_boolean(value);
+			if (g_variant_get_boolean(value))
+				fwupd_remote_add_flag(self, FWUPD_REMOTE_FLAG_APPROVAL_REQUIRED);
 		} else if (g_strcmp0(key, "Priority") == 0) {
 			priv->priority = g_variant_get_int32(value);
 		} else if (g_strcmp0(key, "ModificationTime") == 0) {
@@ -1698,9 +1864,13 @@ fwupd_remote_set_from_variant_iter(FwupdRemote *self, GVariantIter *iter)
 		} else if (g_strcmp0(key, "FirmwareBaseUri") == 0) {
 			fwupd_remote_set_firmware_base_uri(self, g_variant_get_string(value, NULL));
 		} else if (g_strcmp0(key, "AutomaticReports") == 0) {
-			priv->automatic_reports = g_variant_get_boolean(value);
+			/* we can probably stop doing proxying flags when we next branch */
+			if (g_variant_get_boolean(value))
+				fwupd_remote_add_flag(self, FWUPD_REMOTE_FLAG_AUTOMATIC_REPORTS);
 		} else if (g_strcmp0(key, "AutomaticSecurityReports") == 0) {
-			priv->automatic_security_reports = g_variant_get_boolean(value);
+			if (g_variant_get_boolean(value))
+				fwupd_remote_add_flag(self,
+						      FWUPD_REMOTE_FLAG_AUTOMATIC_SECURITY_REPORTS);
 		}
 	}
 }
@@ -1730,6 +1900,12 @@ fwupd_remote_to_variant(FwupdRemote *self)
 				      "{sv}",
 				      FWUPD_RESULT_KEY_REMOTE_ID,
 				      g_variant_new_string(priv->id));
+	}
+	if (priv->flags != 0) {
+		g_variant_builder_add(&builder,
+				      "{sv}",
+				      FWUPD_RESULT_KEY_FLAGS,
+				      g_variant_new_uint64(priv->flags));
 	}
 	if (priv->username != NULL) {
 		g_variant_builder_add(&builder,
@@ -1827,19 +2003,30 @@ fwupd_remote_to_variant(FwupdRemote *self)
 				      "RemotesDir",
 				      g_variant_new_string(priv->remotes_dir));
 	}
-	g_variant_builder_add(&builder, "{sv}", "Enabled", g_variant_new_boolean(priv->enabled));
-	g_variant_builder_add(&builder,
-			      "{sv}",
-			      "ApprovalRequired",
-			      g_variant_new_boolean(priv->approval_required));
-	g_variant_builder_add(&builder,
-			      "{sv}",
-			      "AutomaticReports",
-			      g_variant_new_boolean(priv->automatic_reports));
-	g_variant_builder_add(&builder,
-			      "{sv}",
-			      "AutomaticSecurityReports",
-			      g_variant_new_boolean(priv->automatic_security_reports));
+	/* we can probably stop doing proxying flags when we next branch */
+	g_variant_builder_add(
+	    &builder,
+	    "{sv}",
+	    "Enabled",
+	    g_variant_new_boolean(fwupd_remote_has_flag(self, FWUPD_REMOTE_FLAG_ENABLED)));
+	g_variant_builder_add(
+	    &builder,
+	    "{sv}",
+	    "ApprovalRequired",
+	    g_variant_new_boolean(
+		fwupd_remote_has_flag(self, FWUPD_REMOTE_FLAG_APPROVAL_REQUIRED)));
+	g_variant_builder_add(
+	    &builder,
+	    "{sv}",
+	    "AutomaticReports",
+	    g_variant_new_boolean(
+		fwupd_remote_has_flag(self, FWUPD_REMOTE_FLAG_AUTOMATIC_REPORTS)));
+	g_variant_builder_add(
+	    &builder,
+	    "{sv}",
+	    "AutomaticSecurityReports",
+	    g_variant_new_boolean(
+		fwupd_remote_has_flag(self, FWUPD_REMOTE_FLAG_AUTOMATIC_SECURITY_REPORTS)));
 	return g_variant_new("a{sv}", &builder);
 }
 
@@ -1851,19 +2038,28 @@ fwupd_remote_get_property(GObject *obj, guint prop_id, GValue *value, GParamSpec
 
 	switch (prop_id) {
 	case PROP_ENABLED:
-		g_value_set_boolean(value, priv->enabled);
+		g_value_set_boolean(value, fwupd_remote_has_flag(self, FWUPD_REMOTE_FLAG_ENABLED));
 		break;
 	case PROP_APPROVAL_REQUIRED:
-		g_value_set_boolean(value, priv->approval_required);
+		g_value_set_boolean(
+		    value,
+		    fwupd_remote_has_flag(self, FWUPD_REMOTE_FLAG_APPROVAL_REQUIRED));
 		break;
 	case PROP_ID:
 		g_value_set_string(value, priv->id);
 		break;
 	case PROP_AUTOMATIC_REPORTS:
-		g_value_set_boolean(value, priv->automatic_reports);
+		g_value_set_boolean(
+		    value,
+		    fwupd_remote_has_flag(self, FWUPD_REMOTE_FLAG_AUTOMATIC_REPORTS));
 		break;
 	case PROP_AUTOMATIC_SECURITY_REPORTS:
-		g_value_set_boolean(value, priv->automatic_security_reports);
+		g_value_set_boolean(
+		    value,
+		    fwupd_remote_has_flag(self, FWUPD_REMOTE_FLAG_AUTOMATIC_SECURITY_REPORTS));
+		break;
+	case PROP_FLAGS:
+		g_value_set_uint64(value, priv->flags);
 		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(obj, prop_id, pspec);
@@ -1875,23 +2071,38 @@ static void
 fwupd_remote_set_property(GObject *obj, guint prop_id, const GValue *value, GParamSpec *pspec)
 {
 	FwupdRemote *self = FWUPD_REMOTE(obj);
-	FwupdRemotePrivate *priv = GET_PRIVATE(self);
 
 	switch (prop_id) {
 	case PROP_ENABLED:
-		priv->enabled = g_value_get_boolean(value);
+		if (g_value_get_boolean(value))
+			fwupd_remote_add_flag(self, FWUPD_REMOTE_FLAG_ENABLED);
+		else
+			fwupd_remote_remove_flag(self, FWUPD_REMOTE_FLAG_ENABLED);
 		break;
 	case PROP_APPROVAL_REQUIRED:
-		priv->approval_required = g_value_get_boolean(value);
+		if (g_value_get_boolean(value))
+			fwupd_remote_add_flag(self, FWUPD_REMOTE_FLAG_APPROVAL_REQUIRED);
+		else
+			fwupd_remote_remove_flag(self, FWUPD_REMOTE_FLAG_APPROVAL_REQUIRED);
 		break;
 	case PROP_ID:
 		fwupd_remote_set_id(self, g_value_get_string(value));
 		break;
 	case PROP_AUTOMATIC_REPORTS:
-		priv->automatic_reports = g_value_get_boolean(value);
+		if (g_value_get_boolean(value))
+			fwupd_remote_add_flag(self, FWUPD_REMOTE_FLAG_AUTOMATIC_REPORTS);
+		else
+			fwupd_remote_remove_flag(self, FWUPD_REMOTE_FLAG_AUTOMATIC_REPORTS);
 		break;
 	case PROP_AUTOMATIC_SECURITY_REPORTS:
-		priv->automatic_security_reports = g_value_get_boolean(value);
+		if (g_value_get_boolean(value))
+			fwupd_remote_add_flag(self, FWUPD_REMOTE_FLAG_AUTOMATIC_SECURITY_REPORTS);
+		else
+			fwupd_remote_remove_flag(self,
+						 FWUPD_REMOTE_FLAG_AUTOMATIC_SECURITY_REPORTS);
+		break;
+	case PROP_FLAGS:
+		fwupd_remote_set_flags(self, g_value_get_uint64(value));
 		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(obj, prop_id, pspec);
@@ -1975,6 +2186,22 @@ fwupd_remote_class_init(FwupdRemoteClass *klass)
 				     FALSE,
 				     G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_AUTOMATIC_SECURITY_REPORTS, pspec);
+
+	/**
+	 * FwupdRemote:flags:
+	 *
+	 * The remote flags.
+	 *
+	 * Since: 1.9.4
+	 */
+	pspec = g_param_spec_uint64("flags",
+				    NULL,
+				    NULL,
+				    0,
+				    G_MAXUINT64,
+				    0,
+				    G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
+	g_object_class_install_property(object_class, PROP_FLAGS, pspec);
 }
 
 static void
