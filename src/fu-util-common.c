@@ -2090,7 +2090,8 @@ fu_util_remote_to_string(FwupdRemote *remote, guint idt)
 			 idt + 1,
 			 /* TRANSLATORS: if the remote is enabled */
 			 _("Enabled"),
-			 fwupd_remote_get_enabled(remote) ? "true" : "false");
+			 fwupd_remote_has_flag(remote, FWUPD_REMOTE_FLAG_ENABLED) ? "true"
+										  : "false");
 
 	tmp = fwupd_remote_get_checksum(remote);
 	if (tmp != NULL) {
@@ -2167,7 +2168,9 @@ fu_util_remote_to_string(FwupdRemote *remote, guint idt)
 				 idt + 1,
 				 /* TRANSLATORS: Boolean value to automatically send reports */
 				 _("Automatic Reporting"),
-				 fwupd_remote_get_automatic_reports(remote) ? "true" : "false");
+				 fwupd_remote_has_flag(remote, FWUPD_REMOTE_FLAG_AUTOMATIC_REPORTS)
+				     ? "true"
+				     : "false");
 	}
 
 	return g_string_free(g_steal_pointer(&str), FALSE);
