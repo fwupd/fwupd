@@ -1933,10 +1933,10 @@ fu_util_download_metadata(FuUtilPrivate *priv, GError **error)
 			continue;
 		if (fwupd_remote_get_kind(remote) != FWUPD_REMOTE_KIND_DOWNLOAD)
 			continue;
+		download_remote_enabled = TRUE;
 		if ((priv->flags & FWUPD_INSTALL_FLAG_FORCE) == 0 &&
 		    !fwupd_remote_needs_refresh(remote))
 			continue;
-		download_remote_enabled = TRUE;
 		fu_console_print(priv->console,
 				 "%s %s",
 				 _("Updating"),
