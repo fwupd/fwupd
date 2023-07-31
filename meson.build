@@ -405,6 +405,11 @@ if host_machine.system() == 'freebsd'
   endif
 endif
 
+# this is way less hassle than including TargetConditionals.h and looking for TARGET_OS_MAC=1
+if host_machine.system() == 'darwin'
+  conf.set('HOST_MACHINE_SYSTEM_DARWIN', '1')
+endif
+
 # EFI
 if build_standalone
   efi_app_location = join_paths(libexecdir, 'fwupd', 'efi')
