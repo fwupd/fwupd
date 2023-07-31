@@ -436,21 +436,6 @@ fu_dfu_device_add_targets(FuDfuDevice *self, GError **error)
 }
 
 /**
- * fu_dfu_device_set_timeout:
- * @self: a #FuDfuDevice
- * @timeout_ms: the timeout in ms
- *
- * Sets the USB timeout to use when contacting the USB device.
- **/
-void
-fu_dfu_device_set_timeout(FuDfuDevice *self, guint timeout_ms)
-{
-	FuDfuDevicePrivate *priv = GET_PRIVATE(self);
-	g_return_if_fail(FU_IS_DFU_DEVICE(self));
-	priv->timeout_ms = timeout_ms;
-}
-
-/**
  * fu_dfu_device_get_timeout:
  * @device: a #FuDfuDevice
  *
