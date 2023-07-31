@@ -61,7 +61,7 @@ fu_engine_config_report_from_spec(FuEngineConfig *self, const gchar *report_spec
 				    parts[i]);
 			return NULL;
 		}
-		if (g_str_has_prefix(kv[1], "$"))
+		if (self->os_release != NULL && g_str_has_prefix(kv[1], "$"))
 			value = g_hash_table_lookup(self->os_release, kv[1] + 1);
 		if (value == NULL)
 			value = kv[1];
