@@ -354,6 +354,59 @@ fu_context_get_bios_setting_pending_reboot(FuContext *self)
 }
 
 /**
+ * fu_context_get_bios_setting_unsettled_value:
+ * @self: a #FuContext
+ * @id: a BIOS setting title
+ * @value: a BIOS setting value
+ * @error: (nullable): optional return location for an error
+ *
+ * Set a new unsettled BIOS setting to be wrote.
+ *
+ * Returns: %TRUE if successfully updated a unsettled value.
+ *
+ * Since: 1.9.4
+ **/
+gboolean
+fu_context_get_bios_setting_unsettled_value(FuContext *self,
+					    const gchar *id,
+					    const gchar *value,
+					    GError **error)
+{
+	FuContextPrivate *priv = GET_PRIVATE(self);
+	FwupdBiosSetting *attr;
+	const gchar *possible_value = NULL;
+
+	g_return_val_if_fail(FU_IS_CONTEXT(self), FALSE);
+
+	attr = fu_bios_settings_get_attr(priv->host_bios_settings, id);
+	if (attr == NULL) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "cannot find BIOS setting %s",
+			    id);
+		return FALSE;
+	}
+
+	possible_value = fwupd_bios_setting_map_possible_value(attr, value, error);
+	if (possible_value == NULL)
+		return FALSE;
+
+	if (!g_strcmp0(fwupd_bios_setting_get_current_value(attr), possible_value)) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOTHING_TO_DO,
+			    "no BIOS setting change required");
+		return FALSE;
+	}
+
+	g_info("BIOS %s is set to %s", id, possible_value);
+	fwupd_bios_setting_set_unsettled_value(attr, g_strdup(possible_value));
+
+	return TRUE;
+}
+
+/**
  * fu_context_get_chassis_kind:
  * @self: a #FuContext
  *

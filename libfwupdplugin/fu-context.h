@@ -77,6 +77,11 @@ fu_context_remove_flag(FuContext *context, FuContextFlags flag);
 gboolean
 fu_context_has_flag(FuContext *context, FuContextFlags flag);
 
+gboolean
+fu_context_get_bios_setting_unsettled_value(FuContext *self,
+					    const gchar *id,
+					    const gchar *value,
+					    GError **error);
 const gchar *
 fu_context_get_smbios_string(FuContext *self, guint8 structure_type, guint8 offset, GError **error);
 guint
