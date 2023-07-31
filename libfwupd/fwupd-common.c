@@ -245,8 +245,51 @@ fwupd_get_os_release_full(const gchar *filename, GError **error)
 GHashTable *
 fwupd_get_os_release(GError **error)
 {
+#ifdef HOST_MACHINE_SYSTEM_DARWIN
+	g_autofree gchar *stdout = NULL;
+	g_autofree gchar *sw_vers = g_find_program_in_path("sw_vers");
+	g_auto(GStrv) split = NULL;
+	g_autoptr(GHashTable) hash = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
+	struct {
+		const gchar *key;
+		const gchar *val;
+	} kvs[] = {{"ProductName:", "NAME"},
+		   {"ProductVersion:", "VERSION_ID"},
+		   {"BuildVersion:", "VARIANT_ID"},
+		   {NULL, NULL}};
+
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	/* macOS */
+	if (sw_vers == NULL) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_READ, "No os-release found");
+		return NULL;
+	}
+
+	/* parse in format:
+	 *
+	 *    ProductName:    Mac OS X
+	 *    ProductVersion: 10.14.6
+	 *    BuildVersion:   18G103
+	 */
+	if (!g_spawn_command_line_sync(sw_vers, &stdout, NULL, NULL, error))
+		return NULL;
+	split = g_strsplit(stdout, "\n", -1);
+	for (guint j = 0; split[j] != NULL; j++) {
+		for (guint i = 0; kvs[i].key != NULL; i++) {
+			if (g_str_has_prefix(split[j], kvs[i].key)) {
+				g_autofree gchar *tmp = g_strdup(split[j] + strlen(kvs[i].key));
+				g_hash_table_insert(hash,
+						    g_strdup(kvs[i].val),
+						    g_strdup(g_strstrip(tmp)));
+			}
+		}
+	}
+	return g_steal_pointer(&hash);
+#else
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 	return fwupd_get_os_release_full(NULL, error);
+#endif
 }
 
 static gchar *
