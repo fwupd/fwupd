@@ -421,7 +421,9 @@ fu_path_from_kind(FuPathKind path_kind)
 		tmp = g_getenv("FWUPD_LOCKDIR");
 		if (tmp != NULL)
 			return g_strdup(tmp);
-		return g_strdup("/run/lock");
+		if (g_file_test("/run/lock", G_FILE_TEST_EXISTS))
+			return g_strdup("/run/lock");
+		return g_strdup("/var/run");
 	/* /sys/class/firmware-attributes */
 	case FU_PATH_KIND_SYSFSDIR_FW_ATTRIB:
 		tmp = g_getenv("FWUPD_SYSFSFWATTRIBDIR");
