@@ -85,12 +85,9 @@ fu_dfu_target_avr_mass_erase(FuDfuTarget *target, FuProgress *progress, GError *
 	g_autoptr(GBytes) data_in = NULL;
 	const guint8 buf[] = {DFU_AVR32_GROUP_EXEC, DFU_AVR32_CMD_ERASE, 0xFF};
 
-	/* this takes a long time on some devices */
-	fu_dfu_device_set_timeout(FU_DFU_DEVICE(fu_device_get_proxy(FU_DEVICE(target))), 5000);
-
 	/* format buffer */
 	data_in = g_bytes_new_static(buf, sizeof(buf));
-	if (!fu_dfu_target_download_chunk(target, 0, data_in, progress, error)) {
+	if (!fu_dfu_target_download_chunk(target, 0, data_in, 5000, progress, error)) {
 		g_prefix_error(error, "cannot mass-erase: ");
 		return FALSE;
 	}
@@ -117,6 +114,7 @@ fu_dfu_target_avr_attach(FuDfuTarget *target, FuProgress *progress, GError **err
 	if (!fu_dfu_target_download_chunk(target,
 					  0,
 					  data_in,
+					  0, /* timeout default */
 					  fu_progress_get_child(progress),
 					  &error_local)) {
 		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
@@ -136,6 +134,7 @@ fu_dfu_target_avr_attach(FuDfuTarget *target, FuProgress *progress, GError **err
 	if (!fu_dfu_target_download_chunk(target,
 					  0,
 					  data_empty,
+					  0, /* timeout default */
 					  fu_progress_get_child(progress),
 					  &error_local)) {
 		if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
@@ -184,7 +183,7 @@ fu_dfu_target_avr_select_memory_unit(FuDfuTarget *target,
 	/* format buffer */
 	data_in = g_bytes_new_static(buf, sizeof(buf));
 	g_debug("selecting memory unit 0x%02x", (guint)memory_unit);
-	if (!fu_dfu_target_download_chunk(target, 0, data_in, progress, error)) {
+	if (!fu_dfu_target_download_chunk(target, 0, data_in, 0, progress, error)) {
 		g_prefix_error(error, "cannot select memory unit: ");
 		return FALSE;
 	}
@@ -224,7 +223,7 @@ fu_dfu_target_avr_select_memory_page(FuDfuTarget *target,
 	/* format buffer */
 	data_in = g_bytes_new_static(buf, sizeof(buf));
 	g_debug("selecting memory page 0x%01x", (guint)memory_page);
-	if (!fu_dfu_target_download_chunk(target, 0, data_in, progress, error)) {
+	if (!fu_dfu_target_download_chunk(target, 0, data_in, 0, progress, error)) {
 		g_prefix_error(error, "cannot select memory page: ");
 		return FALSE;
 	}
@@ -256,7 +255,7 @@ fu_dfu_target_avr32_select_memory_page(FuDfuTarget *target,
 	fu_memwrite_uint16(&buf[3], memory_page, G_BIG_ENDIAN);
 	data_in = g_bytes_new_static(buf, sizeof(buf));
 	g_debug("selecting memory page 0x%02x", (guint)memory_page);
-	if (!fu_dfu_target_download_chunk(target, 0, data_in, progress, error)) {
+	if (!fu_dfu_target_download_chunk(target, 0, data_in, 0, progress, error)) {
 		g_prefix_error(error, "cannot select memory page: ");
 		return FALSE;
 	}
@@ -289,7 +288,7 @@ fu_dfu_target_avr_read_memory(FuDfuTarget *target,
 	fu_memwrite_uint16(&buf[4], addr_end, G_BIG_ENDIAN);
 	data_in = g_bytes_new_static(buf, sizeof(buf));
 	g_debug("reading memory from 0x%04x to 0x%04x", (guint)addr_start, (guint)addr_end);
-	if (!fu_dfu_target_download_chunk(target, 0, data_in, progress, error)) {
+	if (!fu_dfu_target_download_chunk(target, 0, data_in, 0, progress, error)) {
 		g_prefix_error(error,
 			       "cannot read memory 0x%04x to 0x%04x: ",
 			       (guint)addr_start,
@@ -322,7 +321,7 @@ fu_dfu_target_avr_read_command(FuDfuTarget *target,
 	/* format buffer */
 	data_in = g_bytes_new_static(buf, sizeof(buf));
 	g_debug("read command page:0x%02x addr:0x%02x", (guint)page, (guint)addr);
-	if (!fu_dfu_target_download_chunk(target, 0, data_in, progress, error)) {
+	if (!fu_dfu_target_download_chunk(target, 0, data_in, 0, progress, error)) {
 		g_prefix_error(error, "cannot read command page: ");
 		return FALSE;
 	}
@@ -625,6 +624,7 @@ fu_dfu_target_avr_download_element_chunks(FuDfuTarget *target,
 		if (!fu_dfu_target_download_chunk(target,
 						  i,
 						  chunk_tmp,
+						  0, /* timeout default */
 						  fu_progress_get_child(progress),
 						  error))
 			return FALSE;

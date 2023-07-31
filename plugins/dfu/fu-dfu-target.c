@@ -659,6 +659,7 @@ gboolean
 fu_dfu_target_download_chunk(FuDfuTarget *self,
 			     guint16 index,
 			     GBytes *bytes,
+			     guint timeout_ms,
 			     FuProgress *progress,
 			     GError **error)
 {
@@ -666,6 +667,10 @@ fu_dfu_target_download_chunk(FuDfuTarget *self,
 	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(device));
 	g_autoptr(GError) error_local = NULL;
 	gsize actual_length;
+
+	/* fall back to default */
+	if (timeout_ms == 0)
+		timeout_ms = fu_dfu_device_get_timeout(device);
 
 	/* low level packet debugging */
 	fu_dump_bytes(G_LOG_DOMAIN, "Message", bytes);
@@ -679,7 +684,7 @@ fu_dfu_target_download_chunk(FuDfuTarget *self,
 					   (guint8 *)g_bytes_get_data(bytes, NULL),
 					   g_bytes_get_size(bytes),
 					   &actual_length,
-					   fu_dfu_device_get_timeout(device),
+					   timeout_ms,
 					   NULL,
 					   &error_local)) {
 		/* refresh the error code */
@@ -1069,7 +1074,7 @@ fu_dfu_target_download_element_dfu(FuDfuTarget *self,
 		g_debug("writing #%04x chunk of size %" G_GSIZE_FORMAT,
 			i,
 			g_bytes_get_size(bytes_tmp));
-		if (!fu_dfu_target_download_chunk(self, i, bytes_tmp, progress, error))
+		if (!fu_dfu_target_download_chunk(self, i, bytes_tmp, 0, progress, error))
 			return FALSE;
 
 		/* update UI */

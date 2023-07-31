@@ -63,8 +63,6 @@ fu_dfu_device_get_timeout(FuDfuDevice *self);
 void
 fu_dfu_device_set_transfer_size(FuDfuDevice *self, guint16 transfer_size);
 void
-fu_dfu_device_set_timeout(FuDfuDevice *self, guint timeout_ms);
-void
 fu_dfu_device_error_fixup(FuDfuDevice *self, GError **error);
 guint
 fu_dfu_device_get_download_timeout(FuDfuDevice *self);

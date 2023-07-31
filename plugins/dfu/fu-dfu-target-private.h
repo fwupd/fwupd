@@ -25,6 +25,7 @@ gboolean
 fu_dfu_target_download_chunk(FuDfuTarget *self,
 			     guint16 index,
 			     GBytes *bytes,
+			     guint timeout_ms,
 			     FuProgress *progress,
 			     GError **error);
 gboolean

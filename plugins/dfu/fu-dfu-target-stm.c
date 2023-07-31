@@ -31,7 +31,7 @@ fu_dfu_target_stm_attach(FuDfuTarget *target, FuProgress *progress, GError **err
 	 * the returned status will be dfuMANIFEST and expect the device to disconnect */
 	g_autoptr(GBytes) bytes_tmp = g_bytes_new(NULL, 0);
 	g_autoptr(GError) error_local = NULL;
-	if (!fu_dfu_target_download_chunk(target, 2, bytes_tmp, progress, &error_local)) {
+	if (!fu_dfu_target_download_chunk(target, 2, bytes_tmp, 0, progress, &error_local)) {
 		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
 			g_debug("ignoring: %s", error_local->message);
 			return TRUE;
@@ -51,7 +51,7 @@ fu_dfu_target_stm_mass_erase(FuDfuTarget *target, FuProgress *progress, GError *
 	/* format buffer */
 	buf[0] = DFU_STM_CMD_ERASE;
 	data_in = g_bytes_new_static(buf, sizeof(buf));
-	if (!fu_dfu_target_download_chunk(target, 0, data_in, progress, error)) {
+	if (!fu_dfu_target_download_chunk(target, 0, data_in, 35000, progress, error)) {
 		g_prefix_error(error, "cannot mass-erase: ");
 		return FALSE;
 	}
@@ -74,7 +74,7 @@ fu_dfu_target_stm_set_address(FuDfuTarget *target,
 	buf[0] = DFU_STM_CMD_SET_ADDRESS_POINTER;
 	memcpy(buf + 1, &address, 4);
 	data_in = g_bytes_new_static(buf, sizeof(buf));
-	if (!fu_dfu_target_download_chunk(target, 0, data_in, progress, error)) {
+	if (!fu_dfu_target_download_chunk(target, 0, data_in, 0, progress, error)) {
 		g_prefix_error(error, "cannot set address 0x%x: ", address);
 		return FALSE;
 	}
@@ -241,7 +241,7 @@ fu_dfu_target_stm_erase_address(FuDfuTarget *target,
 	buf[0] = DFU_STM_CMD_ERASE;
 	memcpy(buf + 1, &address, 4);
 	data_in = g_bytes_new_static(buf, sizeof(buf));
-	if (!fu_dfu_target_download_chunk(target, 0, data_in, progress, error)) {
+	if (!fu_dfu_target_download_chunk(target, 0, data_in, 0, progress, error)) {
 		g_prefix_error(error, "cannot erase address 0x%x: ", address);
 		return FALSE;
 	}
@@ -388,6 +388,7 @@ fu_dfu_target_stm_download_element3(FuDfuTarget *target,
 		if (!fu_dfu_target_download_chunk(target,
 						  (i + 2),
 						  bytes_tmp,
+						  0, /* timeout default */
 						  fu_progress_get_child(progress),
 						  error))
 			return FALSE;
