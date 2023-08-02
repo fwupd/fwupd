@@ -80,6 +80,11 @@ typedef struct {
 } FuGenesysVendorCommandSetting;
 
 typedef struct {
+	guint16 cmd;
+	guint16 len;
+} FuGenesysQueryRdidFormat;
+
+typedef struct {
 	FuGenesysChip chip;
 	gboolean support_dual_bank;
 	gboolean support_code_size;
@@ -355,65 +360,61 @@ static FuCfiDevice *
 fu_genesys_usbhub_device_cfi_setup(FuGenesysUsbhubDevice *self, GError **error)
 {
 	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
-	const guint8 rdid_dummy_addr[] = {0x01, 0x02};
-	const guint8 rdid_cmd[] = {0x9f, 0x90, 0xAB, 0x1D, 0x15, 0x4D, 0x4B};
+	const FuGenesysQueryRdidFormat rdid[] = {
+	    {.cmd = 0x1D02, .len = 0x02},
+	    {.cmd = 0x4B01, .len = 0x02},
+	    {.cmd = 0x9001, .len = 0x02},
+	    {.cmd = 0x9f02, .len = 0x03},
+	    {.cmd = 0xAB01, .len = 0x02},
+	};
 
-	for (guint8 i = 0; i < G_N_ELEMENTS(rdid_cmd); i++) {
-		for (guint8 j = 0; j < G_N_ELEMENTS(rdid_dummy_addr); j++) {
-			guint16 val = ((guint16)rdid_cmd[i] << 8) | rdid_dummy_addr[j];
-			guint8 buf[2 * 3] = {0}; /* 2 x 3-bytes JEDEC-ID-bytes */
-			guint len;
-			g_autoptr(GError) error_local = NULL;
-			g_autoptr(FuCfiDevice) cfi_device = NULL;
-			g_autofree gchar *flash_id = NULL;
+	for (guint8 i = 0; i < G_N_ELEMENTS(rdid); i++) {
+		guint8 buf[3] = {0};
+		g_autoptr(GError) error_local = NULL;
+		g_autoptr(FuCfiDevice) cfi_device = NULL;
+		g_autofree gchar *flash_id = NULL;
 
-			if (!g_usb_device_control_transfer(usb_device,
-							   G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
-							   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-							   G_USB_DEVICE_RECIPIENT_DEVICE,
-							   self->vcs.req_read,
-							   val,		/* value */
-							   0,		/* idx */
-							   buf,		/* data */
-							   sizeof(buf), /* data length */
-							   NULL,	/* actual length */
-							   GENESYS_USBHUB_USB_TIMEOUT,
-							   NULL,
-							   error)) {
-				g_prefix_error(error, "error reading flash chip: ");
-				return NULL;
-			}
-
-			flash_id = g_strdup_printf("%02X%02X%02X", buf[0], buf[1], buf[2]);
-			cfi_device =
-			    fu_cfi_device_new(fu_device_get_context(FU_DEVICE(self)), flash_id);
-			if (cfi_device == NULL)
-				continue;
-
-			if (!fu_device_setup(FU_DEVICE(cfi_device), &error_local)) {
-				g_debug("ignoring %s: %s", flash_id, error_local->message);
-				continue;
-			}
-
-			if (fu_device_get_name(FU_DEVICE(cfi_device)) == NULL)
-				continue;
-
-			/*
-			 * The USB vendor command loops over the JEDEC-ID-bytes.
-			 *
-			 * Therefore, the CFI is 3-bytes long if the first 3-bytes are
-			 * identical to the last 3-bytes.
-			 */
-			if (buf[0] == buf[3] && buf[1] == buf[4] && buf[2] == buf[5])
-				len = 3;
-			else
-				len = 2;
-
-			fu_dump_raw(G_LOG_DOMAIN, "Flash ID", buf, len);
-			g_debug("CFI: %s", fu_device_get_name(FU_DEVICE(cfi_device)));
-
-			return g_steal_pointer(&cfi_device);
+		if (!g_usb_device_control_transfer(usb_device,
+						   G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
+						   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
+						   G_USB_DEVICE_RECIPIENT_DEVICE,
+						   self->vcs.req_read,
+						   rdid[i].cmd, /* value */
+						   0,		/* idx */
+						   buf,		/* data */
+						   rdid[i].len, /* data length */
+						   NULL,	/* actual length */
+						   GENESYS_USBHUB_USB_TIMEOUT,
+						   NULL,
+						   error)) {
+			g_prefix_error(error, "error reading flash chip: ");
+			return NULL;
 		}
+
+		if (rdid[i].len == 2) {
+			flash_id = g_strdup_printf("%02X%02X", buf[0], buf[1]);
+		} else if (rdid[i].len == 3) {
+			flash_id = g_strdup_printf("%02X%02X%02X", buf[0], buf[1], buf[2]);
+		}
+
+		cfi_device = fu_cfi_device_new(fu_device_get_context(FU_DEVICE(self)), flash_id);
+		if (cfi_device == NULL)
+			continue;
+
+		if (!fu_device_setup(FU_DEVICE(cfi_device), &error_local)) {
+			g_debug("ignoring %s: %s", flash_id, error_local->message);
+			continue;
+		}
+
+		if (fu_device_get_name(FU_DEVICE(cfi_device)) == NULL) {
+			g_debug("read %#x: %s", rdid[i].cmd, flash_id);
+			continue;
+		}
+
+		fu_dump_raw(G_LOG_DOMAIN, "Flash ID", buf, rdid[i].len);
+		g_debug("CFI: %s", fu_device_get_name(FU_DEVICE(cfi_device)));
+
+		return g_steal_pointer(&cfi_device);
 	}
 
 	/* failure */
