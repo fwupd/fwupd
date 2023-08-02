@@ -494,8 +494,9 @@ fu_nordic_hid_cfg_channel_add_peers(FuNordicHidCfgChannel *self, GError **error)
 }
 
 static gboolean
-fu_nordic_hid_cfg_channel_get_board_name(FuNordicHidCfgChannel *self, GError **error)
+fu_nordic_hid_cfg_channel_get_board_name_cb(FuDevice *device, gpointer user_data, GError **error)
 {
+	FuNordicHidCfgChannel *self = FU_NORDIC_HID_CFG_CHANNEL(device);
 	g_autoptr(FuNordicCfgChannelMsg) res = g_new0(FuNordicCfgChannelMsg, 1);
 
 	if (!fu_nordic_hid_cfg_channel_cmd_send(self,
@@ -1084,8 +1085,17 @@ fu_nordic_hid_cfg_channel_direct_discovery(FuNordicHidCfgChannel *self, GError *
 	 * not support configuration channel at all (no configuration channel HID feature report).
 	 * The configuration channel requests are handled only by the first HID instance on device
 	 * (other instances reject the configuration channel operations).
+	 *
+	 * If the HID device is connected over BLE, the configuration channel operations right after
+	 * reconnection may fail with an ioctl error. Retry after a delay to ensure that the device
+	 * will be properly recognized by the fwupd tool.
 	 */
-	if (!fu_nordic_hid_cfg_channel_get_board_name(self, &error_board_name)) {
+	if (!fu_device_retry_full(device,
+				  fu_nordic_hid_cfg_channel_get_board_name_cb,
+				  3,
+				  50,
+				  NULL,
+				  &error_board_name)) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
