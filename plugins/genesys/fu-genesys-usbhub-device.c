@@ -607,6 +607,20 @@ fu_genesys_usbhub_device_authenticate(FuGenesysUsbhubDevice *self, GError **erro
 }
 
 static gboolean
+fu_genesys_usbhub_device_enter_isp_mode(FuGenesysUsbhubDevice *self, GError **error)
+{
+	if (self->has_codesign) {
+		if (!fu_genesys_usbhub_device_authenticate(self, error))
+			return FALSE;
+	}
+	if (!fu_genesys_usbhub_device_set_isp_mode(self, ISP_ENTER, error))
+		return FALSE;
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_genesys_usbhub_device_get_descriptor_data(GBytes *desc_bytes,
 					     guint8 *dst,
 					     guint dst_size,
@@ -1133,16 +1147,7 @@ fu_genesys_usbhub_device_get_info_from_dynamic_ts(FuGenesysUsbhubDevice *self,
 static gboolean
 fu_genesys_usbhub_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 {
-	FuGenesysUsbhubDevice *self = FU_GENESYS_USBHUB_DEVICE(device);
-	if (self->has_codesign) {
-		if (!fu_genesys_usbhub_device_authenticate(self, error))
-			return FALSE;
-	}
-	if (!fu_genesys_usbhub_device_set_isp_mode(self, ISP_ENTER, error))
-		return FALSE;
-
-	/* success */
-	return TRUE;
+	return fu_genesys_usbhub_device_enter_isp_mode(FU_GENESYS_USBHUB_DEVICE(device), error);
 }
 
 static gboolean
@@ -1308,12 +1313,11 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 		self->st_vendor_ts = fu_struct_genesys_ts_vendor_support_new();
 	}
 
-	if (fu_device_has_private_flag(device, FU_GENESYS_USBHUB_FLAG_HAS_PUBLIC_KEY)) {
+	if (fu_device_has_private_flag(device, FU_GENESYS_USBHUB_FLAG_HAS_PUBLIC_KEY))
 		self->has_codesign = TRUE;
-		if (!fu_genesys_usbhub_device_authenticate(self, error))
-			return FALSE;
-	}
-	if (!fu_genesys_usbhub_device_set_isp_mode(self, ISP_ENTER, error))
+
+	/* enter isp mode */
+	if (!fu_genesys_usbhub_device_enter_isp_mode(self, error))
 		return FALSE;
 	/* setup cfi device */
 	self->cfi_device = fu_genesys_usbhub_device_cfi_setup(self, error);
@@ -1507,11 +1511,7 @@ fu_genesys_usbhub_device_prepare(FuDevice *device,
 	guint64 fw_max_size = fu_device_get_firmware_size_max(device);
 
 	/* enter isp mode */
-	if (self->has_codesign) {
-		if (!fu_genesys_usbhub_device_authenticate(self, error))
-			return FALSE;
-	}
-	if (!fu_genesys_usbhub_device_set_isp_mode(self, ISP_ENTER, error))
+	if (!fu_genesys_usbhub_device_enter_isp_mode(self, error))
 		return FALSE;
 
 	/* query each fw bank version of fw type */
@@ -2126,11 +2126,7 @@ fu_genesys_usbhub_device_write_firmware(FuDevice *device,
 	g_autoptr(GPtrArray) imgs = fu_firmware_get_images(firmware);
 
 	/* enter isp mode */
-	if (self->has_codesign) {
-		if (!fu_genesys_usbhub_device_authenticate(self, error))
-			return FALSE;
-	}
-	if (!fu_genesys_usbhub_device_set_isp_mode(self, ISP_ENTER, error))
+	if (!fu_genesys_usbhub_device_enter_isp_mode(self, error))
 		return FALSE;
 
 	/* progress */
