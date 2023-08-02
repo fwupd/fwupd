@@ -712,9 +712,9 @@ fu_usi_dock_mcu_device_insert_cb(gpointer user_data)
 	fwupd_request_set_kind(request, FWUPD_REQUEST_KIND_IMMEDIATE);
 	fwupd_request_set_id(request, FWUPD_REQUEST_ID_INSERT_USB_CABLE);
 	fwupd_request_add_flag(request, FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE);
-	fwupd_request_set_message(
-	    request,
-	    "The update will continue when the device USB cable has been re-inserted.");
+	fwupd_request_set_message(request,
+				  "Please insert the USB cable, then, new firmware will take "
+				  "effect after dock LED blinking finish.");
 	fu_device_emit_request(user_data, request);
 
 	/* success */
@@ -744,7 +744,7 @@ fu_usi_dock_mcu_device_cleanup(FuDevice *device,
 
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_BUSY);
 	g_timeout_add_seconds_full(G_PRIORITY_DEFAULT,
-				   40,
+				   60,
 				   fu_usi_dock_mcu_device_insert_cb,
 				   g_object_ref(device),
 				   g_object_unref);
