@@ -50,7 +50,7 @@ fu_genesys_usbhub_pd_firmware_parse(FuFirmware *firmware,
 
 	/* truncate to correct size */
 	if (!fu_genesys_usbhub_firmware_calculate_size(fw, offset, &code_size, error)) {
-		g_prefix_error(error, "not valid for pd: ");
+		g_prefix_error_literal(error, "not valid for pd: ");
 		return FALSE;
 	}
 	fw_trunc = fu_bytes_new_offset(fw, offset, code_size, error);
@@ -61,14 +61,14 @@ fu_genesys_usbhub_pd_firmware_parse(FuFirmware *firmware,
 	/* calculate checksum */
 	if ((flags & FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM) == 0) {
 		if (!fu_genesys_usbhub_firmware_verify_checksum(fw_trunc, error)) {
-			g_prefix_error(error, "not valid for pd: ");
+			g_prefix_error_literal(error, "not valid for pd: ");
 			return FALSE;
 		}
 	}
 
 	/* get firmware version */
 	if (!fu_genesys_usbhub_firmware_ensure_version(firmware, error)) {
-		g_prefix_error(error, "not valid for pd: ");
+		g_prefix_error_literal(error, "not valid for pd: ");
 		return FALSE;
 	}
 
