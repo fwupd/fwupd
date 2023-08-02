@@ -925,6 +925,11 @@ fu_genesys_usbhub_device_get_info_from_static_ts(FuGenesysUsbhubDevice *self,
 	g_autofree gchar *project_ic_type = NULL;
 
 	self->st_static_ts = fu_struct_genesys_ts_static_parse(buf, bufsz, 0, error);
+	if (self->st_static_ts == NULL) {
+		g_prefix_error_literal(error, "failed to parse static tool info: ");
+		return FALSE;
+	}
+
 	project_ic_type = fu_struct_genesys_ts_static_get_mask_project_ic_type(self->st_static_ts);
 
 	/* verify chip model and revision */
@@ -1039,6 +1044,10 @@ fu_genesys_usbhub_device_get_info_from_dynamic_ts(FuGenesysUsbhubDevice *self,
 	guint8 bonding = 0;
 	guint8 portnum = 0;
 	gboolean flash_dump_location_bit = FALSE;
+	g_autofree gchar *rm_st = NULL;
+	g_autofree gchar *ss_st = NULL;
+	g_autofree gchar *hs_st = NULL;
+	g_autofree gchar *bonding_st = NULL;
 
 	/* bonding is not supported */
 	if (self->tool_string_version < FU_GENESYS_TS_VERSION_BONDING) {
@@ -1055,14 +1064,17 @@ fu_genesys_usbhub_device_get_info_from_dynamic_ts(FuGenesysUsbhubDevice *self,
 	case ISP_MODEL_HUB_GL3523:
 		self->st_dynamic_ts =
 		    fu_struct_genesys_ts_dynamic_gl3523_parse(buf, bufsz, 0, error);
-		running_mode =
-		    fu_struct_genesys_ts_dynamic_gl3523_get_running_mode(self->st_dynamic_ts)[0];
-		ss_port_number = fu_genesys_tsdigit_value(
-		    fu_struct_genesys_ts_dynamic_gl3523_get_ss_port_number(self->st_dynamic_ts)[0]);
-		hs_port_number = fu_genesys_tsdigit_value(
-		    fu_struct_genesys_ts_dynamic_gl3523_get_hs_port_number(self->st_dynamic_ts)[0]);
-		bonding = fu_genesys_tsdigit_value(
-		    fu_struct_genesys_ts_dynamic_gl3523_get_bonding(self->st_dynamic_ts)[0]);
+		if (self->st_dynamic_ts == NULL) {
+			g_prefix_error_literal(error, "failed to parse dynamic tool info: ");
+			return FALSE;
+		}
+
+		rm_st = fu_struct_genesys_ts_dynamic_gl3523_get_running_mode(self->st_dynamic_ts);
+		ss_st = fu_struct_genesys_ts_dynamic_gl3523_get_ss_port_number(self->st_dynamic_ts);
+		hs_st = fu_struct_genesys_ts_dynamic_gl3523_get_hs_port_number(self->st_dynamic_ts);
+		bonding_st = fu_struct_genesys_ts_dynamic_gl3523_get_bonding(self->st_dynamic_ts);
+
+		bonding = fu_genesys_tsdigit_value(bonding_st[0]);
 		if (self->tool_string_version < FU_GENESYS_TS_VERSION_BONDING_QC)
 			bonding <<= 1;
 		self->bonding = bonding & GL3523_BONDING_VALID_BIT;
@@ -1072,14 +1084,18 @@ fu_genesys_usbhub_device_get_info_from_dynamic_ts(FuGenesysUsbhubDevice *self,
 		if (self->spec.chip.revision == 30) {
 			self->st_dynamic_ts =
 			    fu_struct_genesys_ts_dynamic_gl359030_parse(buf, bufsz, 0, error);
-			running_mode = fu_struct_genesys_ts_dynamic_gl359030_get_running_mode(
-			    self->st_dynamic_ts)[0];
-			ss_port_number = fu_genesys_tsdigit_value(
-			    fu_struct_genesys_ts_dynamic_gl359030_get_ss_port_number(
-				self->st_dynamic_ts)[0]);
-			hs_port_number = fu_genesys_tsdigit_value(
-			    fu_struct_genesys_ts_dynamic_gl359030_get_hs_port_number(
-				self->st_dynamic_ts)[0]);
+			if (self->st_dynamic_ts == NULL) {
+				g_prefix_error_literal(error,
+						       "failed to parse dynamic tool info: ");
+				return FALSE;
+			}
+
+			rm_st = fu_struct_genesys_ts_dynamic_gl359030_get_running_mode(
+			    self->st_dynamic_ts);
+			ss_st = fu_struct_genesys_ts_dynamic_gl359030_get_ss_port_number(
+			    self->st_dynamic_ts);
+			hs_st = fu_struct_genesys_ts_dynamic_gl359030_get_hs_port_number(
+			    self->st_dynamic_ts);
 			self->bonding =
 			    fu_struct_genesys_ts_dynamic_gl359030_get_bonding(self->st_dynamic_ts);
 			flash_dump_location_bit =
@@ -1088,14 +1104,18 @@ fu_genesys_usbhub_device_get_info_from_dynamic_ts(FuGenesysUsbhubDevice *self,
 		} else {
 			self->st_dynamic_ts =
 			    fu_struct_genesys_ts_dynamic_gl3590_parse(buf, bufsz, 0, error);
-			running_mode = fu_struct_genesys_ts_dynamic_gl3590_get_running_mode(
-			    self->st_dynamic_ts)[0];
-			ss_port_number = fu_genesys_tsdigit_value(
-			    fu_struct_genesys_ts_dynamic_gl3590_get_ss_port_number(
-				self->st_dynamic_ts)[0]);
-			hs_port_number = fu_genesys_tsdigit_value(
-			    fu_struct_genesys_ts_dynamic_gl3590_get_hs_port_number(
-				self->st_dynamic_ts)[0]);
+			if (self->st_dynamic_ts == NULL) {
+				g_prefix_error_literal(error,
+						       "failed to parse dynamic tool info: ");
+				return FALSE;
+			}
+
+			rm_st = fu_struct_genesys_ts_dynamic_gl3590_get_running_mode(
+			    self->st_dynamic_ts);
+			ss_st = fu_struct_genesys_ts_dynamic_gl3590_get_ss_port_number(
+			    self->st_dynamic_ts);
+			hs_st = fu_struct_genesys_ts_dynamic_gl3590_get_hs_port_number(
+			    self->st_dynamic_ts);
 			bonding =
 			    fu_struct_genesys_ts_dynamic_gl3590_get_bonding(self->st_dynamic_ts);
 			self->bonding = bonding & GL3590_BONDING_VALID_BIT;
@@ -1106,12 +1126,14 @@ fu_genesys_usbhub_device_get_info_from_dynamic_ts(FuGenesysUsbhubDevice *self,
 	case ISP_MODEL_HUB_GL3525:
 		self->st_dynamic_ts =
 		    fu_struct_genesys_ts_dynamic_gl3525_parse(buf, bufsz, 0, error);
-		running_mode =
-		    fu_struct_genesys_ts_dynamic_gl3525_get_running_mode(self->st_dynamic_ts)[0];
-		ss_port_number = fu_genesys_tsdigit_value(
-		    fu_struct_genesys_ts_dynamic_gl3525_get_ss_port_number(self->st_dynamic_ts)[0]);
-		hs_port_number = fu_genesys_tsdigit_value(
-		    fu_struct_genesys_ts_dynamic_gl3525_get_hs_port_number(self->st_dynamic_ts)[0]);
+		if (self->st_dynamic_ts == NULL) {
+			g_prefix_error_literal(error, "failed to parse dynamic tool info: ");
+			return FALSE;
+		}
+
+		rm_st = fu_struct_genesys_ts_dynamic_gl3525_get_running_mode(self->st_dynamic_ts);
+		ss_st = fu_struct_genesys_ts_dynamic_gl3525_get_ss_port_number(self->st_dynamic_ts);
+		hs_st = fu_struct_genesys_ts_dynamic_gl3525_get_hs_port_number(self->st_dynamic_ts);
 		self->bonding =
 		    fu_struct_genesys_ts_dynamic_gl3525_get_bonding(self->st_dynamic_ts);
 		flash_dump_location_bit = fu_struct_genesys_ts_dynamic_gl3525_get_hub_fw_status(
@@ -1125,6 +1147,10 @@ fu_genesys_usbhub_device_get_info_from_dynamic_ts(FuGenesysUsbhubDevice *self,
 			    self->spec.chip.model);
 		return FALSE;
 	}
+
+	running_mode = rm_st[0];
+	ss_port_number = fu_genesys_tsdigit_value(ss_st[0]);
+	hs_port_number = fu_genesys_tsdigit_value(hs_st[0]);
 
 	if (running_mode == 'M') {
 		self->running_bank = FU_GENESYS_FW_STATUS_MASK;
@@ -1282,14 +1308,18 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 							  64,
 							  error);
 	if (fw_buf == NULL) {
-		g_prefix_error_literal(error, "failed to get firmware info from device: ");
+		g_prefix_error_literal(error, "failed to get firmware tool info from device: ");
 		return FALSE;
 	}
 	if (!fu_genesys_usbhub_device_get_descriptor_data(fw_buf, buf, bufsz, error)) {
-		g_prefix_error_literal(error, "failed to get firmware info from device: ");
+		g_prefix_error_literal(error, "failed to get firmware tool info from device: ");
 		return FALSE;
 	}
 	self->st_fwinfo_ts = fu_struct_genesys_ts_firmware_info_parse(buf, bufsz, 0, error);
+	if (self->st_fwinfo_ts == NULL) {
+		g_prefix_error_literal(error, "failed to parse firmware tool info: ");
+		return FALSE;
+	}
 
 	/* parse vendor support tool string */
 	if (self->tool_string_version >= FU_GENESYS_TS_VERSION_VENDOR_SUPPORT) {
@@ -1300,17 +1330,23 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 		    64,
 		    error);
 		if (vendor_buf == NULL) {
-			g_prefix_error_literal(error,
-					       "failed to get vendor support info from device: ");
+			g_prefix_error_literal(
+			    error,
+			    "failed to get vendor support tool info from device: ");
 			return FALSE;
 		}
 		if (!fu_genesys_usbhub_device_get_descriptor_data(vendor_buf, buf, bufsz, error)) {
-			g_prefix_error_literal(error,
-					       "failed to get vendor support info from device: ");
+			g_prefix_error_literal(
+			    error,
+			    "failed to get vendor support tool info from device: ");
 			return FALSE;
 		}
 		self->st_vendor_ts =
 		    fu_struct_genesys_ts_vendor_support_parse(buf, bufsz, 0, error);
+		if (self->st_vendor_ts == NULL) {
+			g_prefix_error_literal(error, "failed to parse vendor support tool info: ");
+			return FALSE;
+		}
 	} else {
 		self->st_vendor_ts = fu_struct_genesys_ts_vendor_support_new();
 	}
@@ -1601,41 +1637,60 @@ fu_genesys_usbhub_device_compare_fw_public_key(FuGenesysUsbhubDevice *self,
 	/* compare dev and fw public-key */
 	switch (self->codesign) {
 	case FU_GENESYS_FW_CODESIGN_RSA: {
+		g_autofree gchar *fw_n = NULL;
+		g_autofree gchar *fw_e = NULL;
+		g_autofree gchar *dev_n = NULL;
+		g_autofree gchar *dev_e = NULL;
+
 		/* parse and validate */
 		st_codesign =
 		    fu_struct_genesys_fw_codesign_info_rsa_parse(g_bytes_get_data(blob, NULL),
 								 g_bytes_get_size(blob),
 								 0x0,
 								 error);
-		if (st_codesign == NULL)
+		if (st_codesign == NULL) {
+			g_prefix_error(error,
+				       "failed to parse %s codesgin: ",
+				       fu_genesys_fw_codesign_to_string(codesign_type));
 			return FALSE;
+		}
 		fu_dump_raw(G_LOG_DOMAIN,
 			    "PublicKey",
 			    st_codesign->data,
 			    FU_STRUCT_GENESYS_FW_CODESIGN_INFO_RSA_SIZE);
-		if (memcmp(fu_struct_genesys_fw_codesign_info_rsa_get_text_n(st_codesign),
-			   fu_struct_genesys_fw_rsa_public_key_text_get_text_n(self->st_public_key),
-			   FU_STRUCT_GENESYS_FW_RSA_PUBLIC_KEY_TEXT_SIZE_TEXT_N) != 0) {
-			g_set_error_literal(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_SIGNATURE_INVALID,
-					    "mismatch public-keyN");
+
+		fw_n = fu_struct_genesys_fw_codesign_info_rsa_get_text_n(st_codesign);
+		dev_n = fu_struct_genesys_fw_rsa_public_key_text_get_text_n(self->st_public_key);
+		if (!fu_memcmp_safe((const guint8 *)fw_n,
+				    FU_STRUCT_GENESYS_FW_CODESIGN_INFO_RSA_SIZE_TEXT_N,
+				    0,
+				    (const guint8 *)dev_n,
+				    FU_STRUCT_GENESYS_FW_RSA_PUBLIC_KEY_TEXT_SIZE_TEXT_N,
+				    0,
+				    FU_STRUCT_GENESYS_FW_RSA_PUBLIC_KEY_TEXT_SIZE_TEXT_N,
+				    error)) {
+			g_prefix_error_literal(error, "mismatch public-keyN: ");
 			return FALSE;
 		}
-		if (memcmp(fu_struct_genesys_fw_codesign_info_rsa_get_text_e(st_codesign),
-			   fu_struct_genesys_fw_rsa_public_key_text_get_text_e(self->st_public_key),
-			   FU_STRUCT_GENESYS_FW_RSA_PUBLIC_KEY_TEXT_SIZE_TEXT_E) != 0) {
-			g_set_error_literal(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_SIGNATURE_INVALID,
-					    "mismatch public-keyE");
+
+		fw_e = fu_struct_genesys_fw_codesign_info_rsa_get_text_e(st_codesign);
+		dev_e = fu_struct_genesys_fw_rsa_public_key_text_get_text_e(self->st_public_key);
+		if (!fu_memcmp_safe((const guint8 *)fw_e,
+				    FU_STRUCT_GENESYS_FW_CODESIGN_INFO_RSA_SIZE_TEXT_E,
+				    0,
+				    (const guint8 *)dev_e,
+				    FU_STRUCT_GENESYS_FW_RSA_PUBLIC_KEY_TEXT_SIZE_TEXT_E,
+				    0,
+				    FU_STRUCT_GENESYS_FW_RSA_PUBLIC_KEY_TEXT_SIZE_TEXT_E,
+				    error)) {
+			g_prefix_error_literal(error, "mismatch public-keyE: ");
 			return FALSE;
 		}
 		break;
 	}
 	case FU_GENESYS_FW_CODESIGN_ECDSA: {
 		gsize fw_keysz = 0;
-		const guint8 *fw_key;
+		const guint8 *fw_key = NULL;
 
 		/* parse and validate */
 		st_codesign =
@@ -1643,8 +1698,12 @@ fu_genesys_usbhub_device_compare_fw_public_key(FuGenesysUsbhubDevice *self,
 								   g_bytes_get_size(blob),
 								   0x0,
 								   error);
-		if (st_codesign == NULL)
+		if (st_codesign == NULL) {
+			g_prefix_error(error,
+				       "failed to parse %s codesgin: ",
+				       fu_genesys_fw_codesign_to_string(codesign_type));
 			return FALSE;
+		}
 
 		fw_key = fu_struct_genesys_fw_codesign_info_ecdsa_get_key(st_codesign, &fw_keysz);
 		if (fw_keysz != FU_STRUCT_GENESYS_FW_ECDSA_PUBLIC_KEY_SIZE) {
@@ -1654,13 +1713,15 @@ fu_genesys_usbhub_device_compare_fw_public_key(FuGenesysUsbhubDevice *self,
 					    "mismatch public-key size");
 			return FALSE;
 		}
-		if (memcmp(fw_key,
-			   self->st_public_key->data,
-			   FU_STRUCT_GENESYS_FW_ECDSA_PUBLIC_KEY_SIZE) != 0) {
-			g_set_error_literal(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_SIGNATURE_INVALID,
-					    "mismatch public-key");
+		if (!fu_memcmp_safe(fw_key,
+				    fw_keysz,
+				    0,
+				    self->st_public_key->data,
+				    self->st_public_key->len,
+				    0,
+				    FU_STRUCT_GENESYS_FW_ECDSA_PUBLIC_KEY_SIZE,
+				    error)) {
+			g_prefix_error_literal(error, "mismatch public-key: ");
 			fu_dump_raw(G_LOG_DOMAIN, "PublicKey", fw_key, fw_keysz);
 			return FALSE;
 		}
