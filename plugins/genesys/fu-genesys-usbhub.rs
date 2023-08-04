@@ -151,10 +151,30 @@ struct GenesysTsFirmwareInfo {
     update_fw_time: [char; 12], // YYYYMMDDhhmm
 }
 
+#[derive(ToString)]
+#[repr(u8)]
+enum GenesysVsCodesignCheck {
+    Unsupported = 0x30,
+    Scaler,
+    Fw,
+    Master, // there is a master hub has Scaler or Hw, and this hub verified by the master.
+    Reserved,
+    Hw,
+}
+#[repr(u8)]
+enum GenesysVsHidIsp {
+    Unsupported = 0x30,
+    Support,
+    CodesignNReset, // Support Codesign ISP Bank2 FW without reset.
+}
 #[derive(ToString, New, Parse)]
 struct GenesysTsVendorSupport {
     version: [char; 2],
-    supports: [char; 29],
+    reserved1: [char; 8],
+    codesign_check: GenesysVsCodesignCheck, // offset: 0x0a
+    reserved2: [char; 4],
+    hid_isp: GenesysVsHidIsp, // offset: 0x0f
+    reserved3: [char; 15],
 }
 
 // Firmware info

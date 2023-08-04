@@ -134,6 +134,8 @@ struct _FuGenesysUsbhubDevice {
 
 	/* codesign info */
 	gboolean has_codesign;
+	gboolean has_hw_codesign;
+	FuGenesysVsCodesignCheck codesign_check;
 	FuGenesysFwCodesign codesign;
 	GByteArray *st_public_key;
 };
@@ -1169,6 +1171,33 @@ fu_genesys_usbhub_device_get_info_from_dynamic_ts(FuGenesysUsbhubDevice *self,
 }
 
 static gboolean
+fu_genesys_usbhub_device_get_info_from_vendor_ts(FuGenesysUsbhubDevice *self,
+						 const guint8 *buf,
+						 gsize bufsz,
+						 GError **error)
+{
+	self->st_vendor_ts = fu_struct_genesys_ts_vendor_support_parse(buf, bufsz, 0, error);
+	if (self->st_vendor_ts == NULL) {
+		g_prefix_error(error, "failed to parse vendor support tool info: ");
+		return FALSE;
+	}
+
+	self->codesign_check =
+	    fu_struct_genesys_ts_vendor_support_get_codesign_check(self->st_vendor_ts);
+
+	if (self->codesign_check > FU_GENESYS_VS_CODESIGN_CHECK_UNSUPPORTED) {
+		self->vcs.req_switch = 0xA1;
+		self->vcs.req_read = 0xA2;
+		self->vcs.req_write = 0xA3;
+		self->has_codesign = TRUE;
+		self->has_hw_codesign = self->codesign_check == FU_GENESYS_VS_CODESIGN_CHECK_HW;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_genesys_usbhub_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 {
 	return fu_genesys_usbhub_device_enter_isp_mode(FU_GENESYS_USBHUB_DEVICE(device), error);
@@ -1337,12 +1366,8 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 				       "failed to get vendor support tool info from device: ");
 			return FALSE;
 		}
-		self->st_vendor_ts =
-		    fu_struct_genesys_ts_vendor_support_parse(buf, bufsz, 0, error);
-		if (self->st_vendor_ts == NULL) {
-			g_prefix_error(error, "failed to parse vendor support tool info: ");
+		if (!fu_genesys_usbhub_device_get_info_from_vendor_ts(self, buf, bufsz, error))
 			return FALSE;
-		}
 	} else {
 		self->st_vendor_ts = fu_struct_genesys_ts_vendor_support_new();
 	}
@@ -1438,6 +1463,10 @@ fu_genesys_usbhub_device_codesign_to_string(FuDevice *device, guint idt, GString
 	guint idt_detail = idt + 1;
 
 	fu_string_append(str, idt, "Codesign", fu_genesys_fw_codesign_to_string(self->codesign));
+	fu_string_append(str,
+			 idt_detail,
+			 "CodesignCheck",
+			 fu_genesys_vs_codesign_check_to_string(self->codesign_check));
 
 	if (self->spec.support_dual_bank) {
 		fu_string_append_kx(str, idt_detail, "Bank1Addr", bank_addr1);
@@ -2338,6 +2367,8 @@ fu_genesys_usbhub_device_init(FuGenesysUsbhubDevice *self)
 	self->flash_rw_size = 0x40;	  /* 64B */
 	self->is_gl352350 = FALSE;
 	self->has_codesign = FALSE;
+	self->has_hw_codesign = FALSE;
+	self->codesign_check = FU_GENESYS_VS_CODESIGN_CHECK_UNSUPPORTED;
 	self->codesign = FU_GENESYS_FW_CODESIGN_NONE;
 }
 
