@@ -49,18 +49,8 @@
 #define GENESYS_USBHUB_ENCRYPT_REGION_START 0x01
 #define GENESYS_USBHUB_ENCRYPT_REGION_END   0x15
 
-#define GL3523_PUBLIC_KEY_LEN 0x212
-#define GL3523_SIG_LEN	      0x100
-
 #define GENESYS_USBHUB_USB_TIMEOUT	   5000 /* ms */
 #define GENESYS_USBHUB_FLASH_WRITE_TIMEOUT 500	/* ms */
-
-typedef enum {
-	FW_BANK_1,
-	FW_BANK_2,
-
-	FW_BANK_COUNT
-} FuGenesysFwBank;
 
 #define GL3523_BONDING_VALID_BIT 0x0F
 #define GL3590_BONDING_VALID_BIT 0x7F
@@ -83,6 +73,13 @@ typedef struct {
 	guint16 cmd;
 	guint16 len;
 } FuGenesysQueryRdidFormat;
+
+typedef enum {
+	FW_BANK_1,
+	FW_BANK_2,
+
+	FW_BANK_COUNT
+} FuGenesysFwBank;
 
 typedef struct {
 	FuGenesysChip chip;
@@ -137,6 +134,7 @@ struct _FuGenesysUsbhubDevice {
 	gboolean has_hw_codesign;
 	FuGenesysVsCodesignCheck codesign_check;
 	FuGenesysFwCodesign codesign;
+	GByteArray *st_codesign; /* codesign info, may need to backup for GL352350 */
 	GByteArray *st_public_key;
 };
 
@@ -882,20 +880,45 @@ fu_genesys_usbhub_device_get_public_key(FuGenesysUsbhubDevice *self, int bank_nu
 	}
 
 	/* validate and parse public-key */
-	if (fu_struct_genesys_fw_rsa_public_key_text_validate(buf, bufsz, 0, NULL)) {
-		self->codesign = FU_GENESYS_FW_CODESIGN_RSA;
-		self->st_public_key =
-		    fu_struct_genesys_fw_rsa_public_key_text_parse(buf, bufsz, 0, error);
-	} else if (fu_struct_genesys_fw_ecdsa_public_key_validate(buf, bufsz, 0, NULL)) {
-		self->codesign = FU_GENESYS_FW_CODESIGN_ECDSA;
-		self->st_public_key =
-		    fu_struct_genesys_fw_ecdsa_public_key_parse(buf, bufsz, 0, error);
+	if (self->has_hw_codesign) {
+		/* master device has ECDSA key and signature only */
+		if (fu_struct_genesys_fw_ecdsa_public_key_validate(buf, bufsz, 0, NULL)) {
+			self->codesign = FU_GENESYS_FW_CODESIGN_ECDSA;
+			self->st_codesign =
+			    fu_struct_genesys_fw_ecdsa_public_key_parse(buf, bufsz, 0, error);
+			self->st_public_key = g_byte_array_ref(self->st_codesign);
+		} else {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_FOUND,
+					    "device does not have public-key");
+			return FALSE;
+		}
 	} else {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_FOUND,
-				    "device does not have public-key");
-		return FALSE;
+		if (fu_struct_genesys_fw_rsa_public_key_text_validate(buf, bufsz, 0, NULL)) {
+			self->codesign = FU_GENESYS_FW_CODESIGN_RSA;
+			self->st_codesign =
+			    fu_struct_genesys_fw_rsa_public_key_text_parse(buf, bufsz, 0, error);
+			self->st_public_key = g_byte_array_ref(self->st_codesign);
+		} else if (fu_struct_genesys_fw_codesign_info_ecdsa_validate(buf, bufsz, 0, NULL)) {
+			/* slave device has completely ECDSA codesign info */
+			gsize keysz = 0;
+			const guint8 *key = NULL;
+
+			self->codesign = FU_GENESYS_FW_CODESIGN_ECDSA;
+			self->st_codesign =
+			    fu_struct_genesys_fw_codesign_info_ecdsa_parse(buf, bufsz, 0, error);
+			key = fu_struct_genesys_fw_codesign_info_ecdsa_get_key(self->st_codesign,
+									       &keysz);
+			self->st_public_key = g_byte_array_new();
+			g_byte_array_append(self->st_public_key, key, keysz);
+		} else {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_FOUND,
+					    "device does not have public-key");
+			return FALSE;
+		}
 	}
 
 	/* add PUBKEY product instance */
@@ -1278,8 +1301,11 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 
 	/* read standard string descriptors */
 	if (g_usb_device_get_spec(usb_device) >= 0x300) {
-		static_idx = GENESYS_USBHUB_STATIC_TOOL_DESC_IDX_USB_3_0;
-		dynamic_idx = GENESYS_USBHUB_DYNAMIC_TOOL_DESC_IDX_USB_3_0;
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "unsupported USB3 hub");
+		return FALSE;
 	} else {
 		static_idx = GENESYS_USBHUB_STATIC_TOOL_DESC_IDX_USB_2_0;
 		dynamic_idx = GENESYS_USBHUB_DYNAMIC_TOOL_DESC_IDX_USB_2_0;
@@ -2010,8 +2036,8 @@ fu_genesys_usbhub_device_write_flash(FuGenesysUsbhubDevice *self,
  * is right. For this purpose, we usually backup bank1 (right fw) to bank2, then update new
  * fw to bank1.
  *
- * GL352350's fw bank stores public-key and code in the same sector and the sector will be
- * erased. Therefore, backup must include public-key.
+ * GL352350's fw bank stores codesign info and code in the same sector and the sector will
+ * be erased. Therefore, backup must include codesign info.
  */
 static gboolean
 fu_genesys_usbhub_device_backup_hub_fw_bank1_to_bank2(FuGenesysUsbhubDevice *self,
@@ -2032,7 +2058,7 @@ fu_genesys_usbhub_device_backup_hub_fw_bank1_to_bank2(FuGenesysUsbhubDevice *sel
 	}
 
 	if (self->is_gl352350 && self->has_codesign) {
-		/* merge hub fw and public-key for GL352350 */
+		/* merge hub fw and codesign info for GL352350 */
 		gsize code_size = 0;
 		const guint8 *code_data = g_bytes_get_data(self->hub_fw_bank1_data, &code_size);
 		guint32 codesign_offset =
@@ -2047,7 +2073,7 @@ fu_genesys_usbhub_device_backup_hub_fw_bank1_to_bank2(FuGenesysUsbhubDevice *sel
 				    codesign_offset);
 			return FALSE;
 		}
-		bufsz = codesign_offset + self->st_public_key->len;
+		bufsz = codesign_offset + self->st_codesign->len;
 		buf = g_malloc0(bufsz);
 		/* copy fw bank data */
 		if (!fu_memcpy_safe(buf,
@@ -2059,14 +2085,14 @@ fu_genesys_usbhub_device_backup_hub_fw_bank1_to_bank2(FuGenesysUsbhubDevice *sel
 				    code_size,
 				    error))
 			return FALSE;
-		/* copy public-key */
+		/* copy codesign info */
 		if (!fu_memcpy_safe(buf,
 				    bufsz,
 				    codesign_offset, /* dst */
-				    self->st_public_key->data,
-				    self->st_public_key->len,
+				    self->st_codesign->data,
+				    self->st_codesign->len,
 				    0x0, /* src */
-				    self->st_public_key->len,
+				    self->st_codesign->len,
 				    error))
 			return FALSE;
 	} else {
@@ -2386,6 +2412,8 @@ fu_genesys_usbhub_device_finalize(GObject *object)
 		g_byte_array_unref(self->st_vendor_ts);
 	if (self->hub_fw_bank1_data != NULL)
 		g_bytes_unref(self->hub_fw_bank1_data);
+	if (self->st_codesign != NULL)
+		g_byte_array_unref(self->st_codesign);
 	if (self->st_public_key != NULL)
 		g_byte_array_unref(self->st_public_key);
 	if (self->cfi_device != NULL)
