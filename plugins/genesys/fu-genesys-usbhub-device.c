@@ -41,10 +41,11 @@
 #define GENESYS_USBHUB_FW_INFO_DESC_IDX		     0x83
 #define GENESYS_USBHUB_VENDOR_SUPPORT_DESC_IDX	     0x86
 
-#define GENESYS_USBHUB_GL_HUB_VERIFY 0x71
-#define GENESYS_USBHUB_GL_HUB_SWITCH 0x81
-#define GENESYS_USBHUB_GL_HUB_READ   0x82
-#define GENESYS_USBHUB_GL_HUB_WRITE  0x83
+#define GENESYS_USBHUB_GL_HUB_VERIFY	  0x71
+#define GENESYS_USBHUB_GL_HUB_SWITCH	  0x81
+#define GENESYS_USBHUB_GL_HUB_READ	  0x82
+#define GENESYS_USBHUB_GL_HUB_WRITE	  0x83
+#define GENESYS_USBHUB_GL_HUB_HW_SECURITY 0xAC
 
 #define GENESYS_USBHUB_ENCRYPT_REGION_START 0x01
 #define GENESYS_USBHUB_ENCRYPT_REGION_END   0x15
@@ -1291,7 +1292,7 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 
 	/* FuUsbDevice->setup */
 	if (!FU_DEVICE_CLASS(fu_genesys_usbhub_device_parent_class)->setup(device, error)) {
-		g_prefix_error(error, "error setuping device: ");
+		g_prefix_error(error, "error setting up device: ");
 		return FALSE;
 	}
 
@@ -2169,9 +2170,27 @@ fu_genesys_usbhub_device_update_firmware(FuGenesysUsbhubDevice *self,
 		return FALSE;
 	buf = g_bytes_get_data(blob, &bufsz);
 
-	/* already erase at FU_GENESYS_FW_TYPE_HUB before */
-	if (self->is_gl352350 && fu_firmware_get_idx(firmware) == FU_GENESYS_FW_TYPE_CODESIGN)
-		skip_erase = TRUE;
+	if (fu_firmware_get_idx(firmware) == FU_GENESYS_FW_TYPE_CODESIGN) {
+		/* already erase at FU_GENESYS_FW_TYPE_HUB before */
+		if (self->is_gl352350)
+			skip_erase = TRUE;
+
+		/* jump ECDSA hash on HW codesign */
+		if (self->has_hw_codesign && self->codesign == FU_GENESYS_FW_CODESIGN_ECDSA) {
+			if (bufsz != FU_STRUCT_GENESYS_FW_CODESIGN_INFO_ECDSA_SIZE) {
+				g_set_error(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_SIGNATURE_INVALID,
+					    "mismatch codesign length, got 0x%x, expected = 0x%x",
+					    (guint)bufsz,
+					    (guint)FU_STRUCT_GENESYS_FW_CODESIGN_INFO_ECDSA_SIZE);
+				return FALSE;
+			}
+
+			buf += FU_STRUCT_GENESYS_FW_CODESIGN_INFO_ECDSA_SIZE_HASH;
+			bufsz -= FU_STRUCT_GENESYS_FW_CODESIGN_INFO_ECDSA_SIZE_HASH;
+		}
+	}
 
 	/* progress */
 	fu_progress_set_id(progress, fu_firmware_get_id(firmware));
@@ -2216,12 +2235,388 @@ fu_genesys_usbhub_device_update_firmware(FuGenesysUsbhubDevice *self,
 	fu_progress_step_done(progress);
 
 	/* verify */
+	if (!self->has_hw_codesign) { /* skip specific codesign verification */
+		if (!fu_genesys_usbhub_device_compare_flash_data(self,
+								 start_addr,
+								 buf,
+								 bufsz,
+								 fu_progress_get_child(progress),
+								 error))
+			return FALSE;
+	}
+	fu_progress_step_done(progress);
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_genesys_usbhub_device_setup_hw_module(FuGenesysUsbhubDevice *self, GError **error)
+{
+	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
+
+	if (!g_usb_device_control_transfer(usb_device,
+					   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
+					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
+					   G_USB_DEVICE_RECIPIENT_DEVICE,
+					   GENESYS_USBHUB_GL_HUB_HW_SECURITY,
+					   0,	 /* value */
+					   0,	 /* idx */
+					   NULL, /* data */
+					   0,	 /* data length */
+					   NULL, /* actual length */
+					   GENESYS_USBHUB_USB_TIMEOUT,
+					   NULL,
+					   error)) {
+		g_prefix_error(error, "error setting up HW module: ");
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_genesys_usbhub_device_send_hash_data_length(FuGenesysUsbhubDevice *self,
+					       gsize size_to_hash,
+					       GError **error)
+{
+	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
+
+	guint16 length_by_4k = size_to_hash / 4096;
+
+	if (!g_usb_device_control_transfer(usb_device,
+					   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
+					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
+					   G_USB_DEVICE_RECIPIENT_DEVICE,
+					   GENESYS_USBHUB_GL_HUB_HW_SECURITY,
+					   0x040b,	 /* value */
+					   length_by_4k, /* idx */
+					   NULL,	 /* data */
+					   0,		 /* data length */
+					   NULL,	 /* actual length */
+					   GENESYS_USBHUB_USB_TIMEOUT,
+					   NULL,
+					   error)) {
+		g_prefix_error(error, "error sending hash data length by 4k(0x%x): ", length_by_4k);
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_genesys_usbhub_device_send_hash_digest(FuGenesysUsbhubDevice *self,
+					  GByteArray *st_codesign,
+					  GError **error)
+{
+	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
+	gsize hash_bufsz = 0;
+	const guint8 *hash_buf = NULL;
+	g_autofree guint8 *buf_mut = NULL;
+
+	hash_buf = fu_struct_genesys_fw_codesign_info_ecdsa_get_hash(st_codesign, &hash_bufsz);
+	if (hash_buf == NULL) {
+		g_prefix_error(error, "failed to get hash digest: ");
+		return FALSE;
+	}
+
+	buf_mut = fu_memdup_safe(hash_buf, hash_bufsz, error);
+	if (buf_mut == NULL) {
+		g_prefix_error(error, "failed to dup hash digest: ");
+		return FALSE;
+	}
+
+	if (!g_usb_device_control_transfer(usb_device,
+					   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
+					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
+					   G_USB_DEVICE_RECIPIENT_DEVICE,
+					   GENESYS_USBHUB_GL_HUB_HW_SECURITY,
+					   0x000b,     /* value */
+					   0,	       /* idx */
+					   buf_mut,    /* data */
+					   hash_bufsz, /* data length */
+					   NULL,       /* actual length */
+					   GENESYS_USBHUB_USB_TIMEOUT,
+					   NULL,
+					   error)) {
+		g_prefix_error(error, "error sending hash digest: ");
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_genesys_usbhub_device_check_hash_digest_verification(FuGenesysUsbhubDevice *self, GError **error)
+{
+	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
+
+	guint8 verification = 0;
+
+	if (!g_usb_device_control_transfer(usb_device,
+					   G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
+					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
+					   G_USB_DEVICE_RECIPIENT_DEVICE,
+					   GENESYS_USBHUB_GL_HUB_HW_SECURITY,
+					   0x000b,	  /* value */
+					   0,		  /* idx */
+					   &verification, /* data */
+					   1,		  /* data length */
+					   NULL,	  /* actual length */
+					   GENESYS_USBHUB_USB_TIMEOUT,
+					   NULL,
+					   error)) {
+		g_prefix_error(error, "error getting hash digest verification: ");
+		return FALSE;
+	}
+
+	if (verification != 1) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_AUTH_FAILED,
+			    "failed to verify hash digest, got 0x%x, expected 0x01",
+			    verification);
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_genesys_usbhub_device_toggle_hw_read_key(FuGenesysUsbhubDevice *self,
+					    guint16 key_addr,
+					    GError **error)
+{
+	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
+
+	if (!g_usb_device_control_transfer(usb_device,
+					   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
+					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
+					   G_USB_DEVICE_RECIPIENT_DEVICE,
+					   GENESYS_USBHUB_GL_HUB_HW_SECURITY,
+					   0x020c,   /* value */
+					   key_addr, /* idx */
+					   NULL,     /* data */
+					   0,	     /* data length */
+					   NULL,     /* actual length */
+					   GENESYS_USBHUB_USB_TIMEOUT,
+					   NULL,
+					   error)) {
+		g_prefix_error(error, "error sending key addr 0x%x: ", key_addr);
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_genesys_usbhub_device_send_signature(FuGenesysUsbhubDevice *self,
+					GByteArray *st_codesign,
+					GError **error)
+{
+	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
+	gsize sig_bufsz = 0;
+	const guint8 *sig_buf = NULL;
+	g_autofree guint8 *buf_mut = NULL;
+
+	sig_buf = fu_struct_genesys_fw_codesign_info_ecdsa_get_signature(st_codesign, &sig_bufsz);
+	if (sig_buf == NULL) {
+		g_prefix_error(error, "failed to get signature: ");
+		return FALSE;
+	}
+
+	buf_mut = fu_memdup_safe(sig_buf, sig_bufsz, error);
+	if (buf_mut == NULL) {
+		g_prefix_error(error, "failed to dup signature: ");
+		return FALSE;
+	}
+
+	if (!g_usb_device_control_transfer(usb_device,
+					   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
+					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
+					   G_USB_DEVICE_RECIPIENT_DEVICE,
+					   GENESYS_USBHUB_GL_HUB_HW_SECURITY,
+					   0x010c,    /* value */
+					   0,	      /* idx */
+					   buf_mut,   /* data */
+					   sig_bufsz, /* data length */
+					   NULL,      /* actual length */
+					   GENESYS_USBHUB_USB_TIMEOUT,
+					   NULL,
+					   error)) {
+		g_prefix_error(error, "error sending signature: ");
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_genesys_usbhub_device_check_signature_verification(FuGenesysUsbhubDevice *self, GError **error)
+{
+	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
+
+	guint8 verification = 0;
+
+	if (!g_usb_device_control_transfer(usb_device,
+					   G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
+					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
+					   G_USB_DEVICE_RECIPIENT_DEVICE,
+					   GENESYS_USBHUB_GL_HUB_HW_SECURITY,
+					   0x000c,	  /* value */
+					   0,		  /* idx */
+					   &verification, /* data */
+					   1,		  /* data length */
+					   NULL,	  /* actual length */
+					   GENESYS_USBHUB_USB_TIMEOUT,
+					   NULL,
+					   error)) {
+		g_prefix_error(error, "error getting signature verification: ");
+		return FALSE;
+	}
+
+	if (verification != 1) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_AUTH_FAILED,
+			    "failed to verify signature, got 0x%x, expected 0x01",
+			    verification);
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_genesys_usbhub_device_compare_firmware_flash_data(FuGenesysUsbhubDevice *self,
+						     FuFirmware *firmware,
+						     FuProgress *progress,
+						     GError **error)
+{
+	gsize bufsz = 0;
+	const guint8 *buf = NULL;
+	const guint start_addr = fu_firmware_get_addr(firmware);
+	g_autoptr(GBytes) blob = NULL;
+
+	/* get raw data */
+	blob = fu_firmware_get_bytes(firmware, error);
+	if (blob == NULL)
+		return FALSE;
+	buf = g_bytes_get_data(blob, &bufsz);
+
 	if (!fu_genesys_usbhub_device_compare_flash_data(self,
 							 start_addr,
 							 buf,
 							 bufsz,
-							 fu_progress_get_child(progress),
+							 progress,
 							 error))
+		return FALSE;
+
+	/* success */
+	return TRUE;
+}
+
+/**
+ * GL3590 hub has HW module to examine ECDSA codesign.
+ */
+static gboolean
+fu_genesys_usbhub_device_examine_fw_codesign_hw(FuGenesysUsbhubDevice *self,
+						FuFirmware *firmware,
+						FuProgress *progress,
+						GError **error)
+{
+	gsize codesize_to_hash = 0;
+	g_autoptr(FuFirmware) codesign_img = NULL;
+	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GByteArray) st_codesign = NULL;
+	g_autoptr(GPtrArray) imgs = fu_firmware_get_images(firmware);
+
+	/* get fw codesign info */
+	codesign_img = fu_firmware_get_image_by_idx(firmware, FU_GENESYS_FW_TYPE_CODESIGN, error);
+	if (codesign_img == NULL)
+		return FALSE;
+	blob = fu_firmware_get_bytes(codesign_img, error);
+	if (blob == NULL)
+		return FALSE;
+	st_codesign = fu_struct_genesys_fw_codesign_info_ecdsa_parse(g_bytes_get_data(blob, NULL),
+								     g_bytes_get_size(blob),
+								     0x0,
+								     error);
+	if (st_codesign == NULL)
+		return FALSE;
+
+	/* progress */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 5, "setup HW codesign engine");
+	fu_progress_add_step(progress,
+			     FWUPD_STATUS_DEVICE_VERIFY,
+			     100,
+			     fu_firmware_get_id(firmware));
+	for (guint i = 0; i < imgs->len; i++) {
+		FuFirmware *img = g_ptr_array_index(imgs, i);
+		if (fu_firmware_get_idx(img) != FU_GENESYS_FW_TYPE_CODESIGN)
+			fu_progress_add_step(progress,
+					     FWUPD_STATUS_DEVICE_VERIFY,
+					     100,
+					     fu_firmware_get_id(img));
+	}
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 5, "verify hash");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 5, "verify signature");
+
+	/* setup HW codesign module */
+	if (!fu_genesys_usbhub_device_setup_hw_module(self, error))
+		return FALSE;
+	fu_progress_step_done(progress);
+
+	/* compare firmware data */
+	if (!fu_genesys_usbhub_device_compare_firmware_flash_data(self,
+								  firmware,
+								  fu_progress_get_child(progress),
+								  error))
+		return FALSE;
+	fu_progress_step_done(progress);
+	codesize_to_hash += fu_firmware_get_size(firmware);
+
+	for (guint i = 0; i < imgs->len; i++) {
+		FuFirmware *img = g_ptr_array_index(imgs, i);
+		if (fu_firmware_get_idx(img) != FU_GENESYS_FW_TYPE_CODESIGN) {
+			if (!fu_genesys_usbhub_device_compare_firmware_flash_data(
+				self,
+				img,
+				fu_progress_get_child(progress),
+				error))
+				return FALSE;
+			fu_progress_step_done(progress);
+			codesize_to_hash += fu_firmware_get_size(img);
+		}
+	}
+
+	/* compute and verify hash */
+	if (!fu_genesys_usbhub_device_send_hash_data_length(self, codesize_to_hash, error))
+		return FALSE;
+	if (!fu_genesys_usbhub_device_send_hash_digest(self, st_codesign, error))
+		return FALSE;
+	if (!fu_genesys_usbhub_device_check_hash_digest_verification(self, error))
+		return FALSE;
+	fu_progress_step_done(progress);
+
+	/* toggle hw read key */
+	if (!fu_genesys_usbhub_device_toggle_hw_read_key(self,
+							 fu_firmware_get_addr(codesign_img),
+							 error))
+		return FALSE;
+
+	/* send and verify signature */
+	if (!fu_genesys_usbhub_device_send_signature(self, st_codesign, error))
+		return FALSE;
+	if (!fu_genesys_usbhub_device_check_signature_verification(self, error))
 		return FALSE;
 	fu_progress_step_done(progress);
 
@@ -2263,6 +2658,12 @@ fu_genesys_usbhub_device_write_firmware(FuDevice *device,
 				     100,
 				     fu_firmware_get_id(img));
 	}
+	if (self->has_hw_codesign) {
+		fu_progress_add_step(progress,
+				     FWUPD_STATUS_DEVICE_VERIFY,
+				     100,
+				     "verify firmware codesign");
+	}
 
 	/* backup fw to bank2 first */
 	if (self->backup_hub_fw_bank1) {
@@ -2290,6 +2691,19 @@ fu_genesys_usbhub_device_write_firmware(FuDevice *device,
 							      fu_progress_get_child(progress),
 							      error))
 			return FALSE;
+		fu_progress_step_done(progress);
+	}
+
+	/* examine codesign */
+	if (self->has_hw_codesign) {
+		if (!fu_genesys_usbhub_device_examine_fw_codesign_hw(
+			self,
+			firmware,
+			fu_progress_get_child(progress),
+			error)) {
+			g_prefix_error(error, "failed to verify HW codesign: ");
+			return FALSE;
+		}
 		fu_progress_step_done(progress);
 	}
 
