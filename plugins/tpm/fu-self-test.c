@@ -6,8 +6,6 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
 #include "fu-context-private.h"
 #include "fu-plugin-private.h"
 #include "fu-security-attrs-private.h"

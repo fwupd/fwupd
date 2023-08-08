@@ -6,34 +6,24 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
 #include <string.h>
 
 #include "fu-wac-common.h"
 #include "fu-wac-device.h"
 #include "fu-wac-firmware.h"
 #include "fu-wac-module-bluetooth-id6.h"
+#include "fu-wac-module-bluetooth-id9.h"
 #include "fu-wac-module-bluetooth.h"
 #include "fu-wac-module-scaler.h"
 #include "fu-wac-module-touch-id7.h"
 #include "fu-wac-module-touch.h"
+#include "fu-wac-struct.h"
 
 typedef struct {
 	guint32 start_addr;
 	guint32 block_sz;
 	guint16 write_sz; /* bit 15 is write protection flag */
 } FuWacFlashDescriptor;
-
-typedef enum {
-	FU_WAC_STATUS_UNKNOWN = 0,
-	FU_WAC_STATUS_WRITING = 1 << 0,
-	FU_WAC_STATUS_ERASING = 1 << 1,
-	FU_WAC_STATUS_ERROR_WRITE = 1 << 2,
-	FU_WAC_STATUS_ERROR_ERASE = 1 << 3,
-	FU_WAC_STATUS_WRITE_PROTECTED = 1 << 4,
-	FU_WAC_STATUS_LAST
-} FuWacStatus;
 
 #define FU_WAC_DEVICE_TIMEOUT 5000 /* ms */
 
@@ -52,28 +42,6 @@ struct _FuWacDevice {
 };
 
 G_DEFINE_TYPE(FuWacDevice, fu_wac_device, FU_TYPE_HID_DEVICE)
-
-static GString *
-fu_wac_device_status_to_string(guint32 status_word)
-{
-	GString *str = g_string_new(NULL);
-	if (status_word & FU_WAC_STATUS_WRITING)
-		g_string_append(str, "writing,");
-	if (status_word & FU_WAC_STATUS_ERASING)
-		g_string_append(str, "erasing,");
-	if (status_word & FU_WAC_STATUS_ERROR_WRITE)
-		g_string_append(str, "error-write,");
-	if (status_word & FU_WAC_STATUS_ERROR_ERASE)
-		g_string_append(str, "error-erase,");
-	if (status_word & FU_WAC_STATUS_WRITE_PROTECTED)
-		g_string_append(str, "write-protected,");
-	if (str->len == 0) {
-		g_string_append(str, "none");
-		return str;
-	}
-	g_string_truncate(str, str->len - 1);
-	return str;
-}
 
 static gboolean
 fu_wav_device_flash_descriptor_is_wp(const FuWacFlashDescriptor *fd)
@@ -94,7 +62,7 @@ static void
 fu_wac_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuWacDevice *self = FU_WAC_DEVICE(device);
-	g_autoptr(GString) status_str = NULL;
+	g_autofree gchar *status_str = NULL;
 
 	if (self->firmware_index != 0xffff) {
 		g_autofree gchar *tmp = g_strdup_printf("0x%04x", self->firmware_index);
@@ -131,7 +99,7 @@ fu_wac_device_to_string(FuDevice *device, guint idt, GString *str)
 		fu_wac_device_flash_descriptor_to_string(fd, idt + 1, str);
 	}
 	status_str = fu_wac_device_status_to_string(self->status_word);
-	fu_string_append(str, idt, "Status", status_str->str);
+	fu_string_append(str, idt, "Status", status_str);
 }
 
 gboolean
@@ -243,7 +211,7 @@ fu_wac_device_ensure_flash_descriptors(FuWacDevice *self, GError **error)
 static gboolean
 fu_wac_device_ensure_status(FuWacDevice *self, GError **error)
 {
-	g_autoptr(GString) str = NULL;
+	g_autofree gchar *str = NULL;
 	guint8 buf[] = {[0] = FU_WAC_REPORT_ID_GET_STATUS, [1 ... 4] = 0xff};
 
 	/* hit hardware */
@@ -258,7 +226,7 @@ fu_wac_device_ensure_status(FuWacDevice *self, GError **error)
 	/* parse */
 	self->status_word = fu_memread_uint32(buf + 1, G_LITTLE_ENDIAN);
 	str = fu_wac_device_status_to_string(self->status_word);
-	g_debug("status now: %s", str->str);
+	g_debug("status now: %s", str);
 	return TRUE;
 }
 
@@ -817,6 +785,15 @@ fu_wac_device_add_modules(FuWacDevice *self, GError **error)
 					       fu_device_get_name(FU_DEVICE(self)));
 			fu_device_add_child(FU_DEVICE(self), FU_DEVICE(module));
 			fu_device_set_name(FU_DEVICE(module), name);
+			fu_device_set_version_from_uint16(FU_DEVICE(module), ver);
+			break;
+		case FU_WAC_MODULE_FW_TYPE_BLUETOOTH_ID9:
+			module = fu_wac_module_bluetooth_id9_new(FU_DEVICE(self));
+			name = g_strdup_printf("%s [Bluetooth Module]",
+					       fu_device_get_name(FU_DEVICE(self)));
+			fu_device_add_child(FU_DEVICE(self), FU_DEVICE(module));
+			fu_device_set_name(FU_DEVICE(module), name);
+			fu_device_set_summary(FU_DEVICE(module), "ID9");
 			fu_device_set_version_from_uint16(FU_DEVICE(module), ver);
 			break;
 		case FU_WAC_MODULE_FW_TYPE_MAIN:

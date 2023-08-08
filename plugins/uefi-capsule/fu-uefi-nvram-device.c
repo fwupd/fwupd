@@ -7,8 +7,6 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
 #include "fu-uefi-bootmgr.h"
 #include "fu-uefi-common.h"
 #include "fu-uefi-nvram-device.h"
@@ -55,9 +53,11 @@ fu_uefi_nvram_device_write_firmware(FuDevice *device,
 	FuUefiBootmgrFlags bootmgr_flags = FU_UEFI_BOOTMGR_FLAG_NONE;
 	const gchar *bootmgr_desc = "Linux Firmware Updater";
 	const gchar *fw_class = fu_uefi_device_get_guid(self);
-	g_autofree gchar *esp_path = fu_uefi_device_get_esp_path(self);
+	FuVolume *esp = fu_uefi_device_get_esp(self);
+	g_autofree gchar *esp_path = fu_volume_get_mount_point(esp);
 	g_autoptr(GBytes) fixed_fw = NULL;
 	g_autoptr(GBytes) fw = NULL;
+	g_autofree gchar *capsule_path = NULL;
 	g_autofree gchar *basename = NULL;
 	g_autofree gchar *directory = NULL;
 	g_autofree gchar *fn = NULL;
@@ -78,9 +78,10 @@ fu_uefi_nvram_device_write_firmware(FuDevice *device,
 		return FALSE;
 
 	/* save the blob to the ESP */
-	directory = fu_uefi_get_esp_path_for_os(device, esp_path);
+	directory = fu_uefi_get_esp_path_for_os();
 	basename = g_strdup_printf("fwupd-%s.cap", fw_class);
-	fn = g_build_filename(directory, "fw", basename, NULL);
+	capsule_path = g_build_filename(directory, "fw", basename, NULL);
+	fn = g_build_filename(esp_path, capsule_path, NULL);
 	if (!fu_path_mkdir_parent(fn, error))
 		return FALSE;
 	fixed_fw = fu_uefi_device_fixup_firmware(self, fw, error);
@@ -100,7 +101,7 @@ fu_uefi_nvram_device_write_firmware(FuDevice *device,
 	}
 
 	/* set the blob header shared with fwupd.efi */
-	if (!fu_uefi_device_write_update_info(self, fn, varname, fw_class, error))
+	if (!fu_uefi_device_write_update_info(self, capsule_path, varname, fw_class, error))
 		return FALSE;
 
 	/* update the firmware before the bootloader runs */
@@ -112,7 +113,7 @@ fu_uefi_nvram_device_write_firmware(FuDevice *device,
 	/* some legacy devices use the old name to deduplicate boot entries */
 	if (fu_device_has_private_flag(device, FU_UEFI_DEVICE_FLAG_USE_LEGACY_BOOTMGR_DESC))
 		bootmgr_desc = "Linux-Firmware-Updater";
-	if (!fu_uefi_bootmgr_bootnext(device, esp_path, bootmgr_desc, bootmgr_flags, error))
+	if (!fu_uefi_bootmgr_bootnext(esp, bootmgr_desc, bootmgr_flags, error))
 		return FALSE;
 
 	/* success! */

@@ -19,7 +19,7 @@ struct _FuNordicHidFirmwareB0 {
 
 G_DEFINE_TYPE(FuNordicHidFirmwareB0, fu_nordic_hid_firmware_b0, FU_TYPE_NORDIC_HID_FIRMWARE)
 
-static GBytes *
+static GByteArray *
 fu_nordic_hid_firmware_b0_write(FuFirmware *firmware, GError **error)
 {
 	g_autoptr(GByteArray) buf = g_byte_array_new();
@@ -35,7 +35,7 @@ fu_nordic_hid_firmware_b0_write(FuFirmware *firmware, GError **error)
 	if (blob == NULL)
 		return NULL;
 	fu_byte_array_append_bytes(buf, blob);
-	return g_byte_array_free_to_bytes(g_steal_pointer(&buf));
+	return g_steal_pointer(&buf);
 }
 
 static gboolean

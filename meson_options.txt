@@ -29,6 +29,7 @@ option('plugin_gpio', type : 'feature', description : 'Linux GPIO support', depr
 option('plugin_igsc', type : 'feature', description : 'Intel Graphics System Controller support')
 option('plugin_logitech_bulkcontroller', type : 'feature', description : 'Logitech bulk controller support', deprecated: {'true': 'enabled', 'false': 'disabled'})
 option('plugin_logitech_scribe', type : 'feature', description : 'Logitech Scribe support')
+option('plugin_logitech_tap', type : 'feature', description : 'Logitech Tap support')
 option('plugin_parade_lspcon', type : 'feature', description : 'Parade LSPCON support', deprecated: {'true': 'enabled', 'false': 'disabled'})
 option('plugin_pixart_rf', type : 'feature', description : 'PixartRF support', deprecated: {'true': 'enabled', 'false': 'disabled'})
 option('plugin_realtek_mst', type : 'feature', description : 'Realtek MST hub support', deprecated: {'true': 'enabled', 'false': 'disabled'})

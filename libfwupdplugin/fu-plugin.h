@@ -62,7 +62,6 @@ struct _FuPluginClass {
 	void (*_device_register)(FuPlugin *self, FuDevice *device);
 	gboolean (*_check_supported)(FuPlugin *self, const gchar *guid);
 	void (*_rules_changed)(FuPlugin *self);
-	void (*_config_changed)(FuPlugin *self);
 
 	/* vfuncs */
 	/**
@@ -433,6 +432,8 @@ void
 fu_plugin_add_device_gtype(FuPlugin *self, GType device_gtype);
 void
 fu_plugin_add_firmware_gtype(FuPlugin *self, const gchar *id, GType gtype);
+void
+fu_plugin_add_device_udev_subsystem(FuPlugin *self, const gchar *subsystem);
 void
 fu_plugin_add_udev_subsystem(FuPlugin *self, const gchar *subsystem);
 gpointer

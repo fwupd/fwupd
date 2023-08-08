@@ -10,32 +10,6 @@
 
 #include "fu-synaptics-mst-common.h"
 
-const gchar *
-fu_synaptics_mst_mode_to_string(FuSynapticsMstMode mode)
-{
-	if (mode == FU_SYNAPTICS_MST_MODE_DIRECT)
-		return "DIRECT";
-	if (mode == FU_SYNAPTICS_MST_MODE_REMOTE)
-		return "REMOTE";
-	return NULL;
-}
-
-const gchar *
-fu_synaptics_mst_family_to_string(FuSynapticsMstFamily family)
-{
-	if (family == FU_SYNAPTICS_MST_FAMILY_TESLA)
-		return "tesla";
-	if (family == FU_SYNAPTICS_MST_FAMILY_LEAF)
-		return "leaf";
-	if (family == FU_SYNAPTICS_MST_FAMILY_PANAMERA)
-		return "panamera";
-	if (family == FU_SYNAPTICS_MST_FAMILY_CAYENNE)
-		return "cayenne";
-	if (family == FU_SYNAPTICS_MST_FAMILY_SPYDER)
-		return "spyder";
-	return NULL;
-}
-
 FuSynapticsMstFamily
 fu_synaptics_mst_family_from_chip_id(guint16 chip_id)
 {

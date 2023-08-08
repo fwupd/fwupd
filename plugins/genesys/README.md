@@ -8,6 +8,7 @@ This plugin allows updating the Genesys Logic USB Hub devices.
 
 * GL3521
 * GL3523
+* GL3525
 * GL3590
 
 Additionally, this plugin allows updating the MStar Semiconductor Scaler connected via an I²C bus.
@@ -28,6 +29,7 @@ This plugin supports the following protocol IDs:
 These devices use the standard USB DeviceInstanceId values for the USB Hub, e.g.
 
 * GenesysLogic USB2.0 Hub: `USB\VID_05E3&PID_0610`
+* GenesysLogic USB2.1 Hub: `USB\VID_05E3&PID_0630`
 * HP USB-C Controller: `USB\VID_03F0&PID_0610`
 
 Additionally, some customized instance IDs are added. e.g.

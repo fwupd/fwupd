@@ -6,11 +6,10 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
 #include "fu-hailuck-bl-device.h"
 #include "fu-hailuck-common.h"
 #include "fu-hailuck-kbd-firmware.h"
+#include "fu-hailuck-struct.h"
 
 struct _FuHailuckBlDevice {
 	FuHidDevice parent_instance;
@@ -127,7 +126,7 @@ fu_hailuck_bl_device_dump_firmware(FuDevice *device, FuProgress *progress, GErro
 	}
 
 	/* success */
-	return g_byte_array_free_to_bytes(g_steal_pointer(&fwbuf));
+	return g_bytes_new(fwbuf->data, fwbuf->len);
 }
 
 static gboolean

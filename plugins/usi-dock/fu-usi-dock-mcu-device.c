@@ -8,9 +8,9 @@
 #include "config.h"
 
 #include "fu-usi-dock-child-device.h"
-#include "fu-usi-dock-common.h"
 #include "fu-usi-dock-dmc-device.h"
 #include "fu-usi-dock-mcu-device.h"
+#include "fu-usi-dock-struct.h"
 
 struct _FuUsiDockMcuDevice {
 	FuHidDevice parent_instance;
@@ -20,47 +20,44 @@ G_DEFINE_TYPE(FuUsiDockMcuDevice, fu_usi_dock_mcu_device, FU_TYPE_HID_DEVICE)
 
 #define FU_USI_DOCK_MCU_DEVICE_TIMEOUT 5000 /* ms */
 
-#define FU_USI_DOCK_DEVICE_FLAG_VERFMT_HP (1 << 0)
+#define USB_HID_REPORT_ID1 1u
+#define USB_HID_REPORT_ID2 2u
 
-#define USI_DOCK_NON_IOT_INSTANCE_ID "USB\\VID_17EF&PID_30B4&CID_40B0"
+#define DP_VERSION_FROM_MCU  0x01 /* if in use */
+#define NIC_VERSION_FROM_MCU 0x2  /* if in use */
+
+#define W25Q16DV_PAGE_SIZE 256
+
+#define FU_USI_DOCK_DEVICE_FLAG_VERFMT_HP (1 << 0)
+#define FU_USI_DOCK_DEVICE_FLAG_SET_CHIP_TYPE (1 << 1)
+
 static gboolean
 fu_usi_dock_mcu_device_tx(FuUsiDockMcuDevice *self,
-			  guint8 tag2,
-			  const guint8 *inbuf,
-			  gsize inbufsz,
+			  FuUsiDockTag2 tag2,
+			  const guint8 *buf,
+			  gsize bufsz,
 			  GError **error)
 {
-	UsiDockSetReportBuf tx_buffer = {
-	    .id = USB_HID_REPORT_ID2,
-	    .length = 0x3 + inbufsz,
-	    .mcutag1 = 0xFE,
-	    .mcutag2 = 0xFF,
-	    .mcutag3 = tag2,
-	};
+	g_autoptr(GByteArray) st = fu_struct_usi_dock_mcu_cmd_req_new();
 
-	if (inbuf != NULL) {
-		if (!fu_memcpy_safe(tx_buffer.inbuf,
-				    sizeof(tx_buffer.inbuf),
-				    0x0, /* dst */
-				    inbuf,
-				    inbufsz,
-				    0x0, /* src */
-				    inbufsz,
-				    error))
+	fu_struct_usi_dock_mcu_cmd_req_set_length(st, 0x3 + bufsz);
+	fu_struct_usi_dock_mcu_cmd_req_set_tag3(st, tag2);
+	if (buf != NULL) {
+		if (!fu_struct_usi_dock_mcu_cmd_req_set_buf(st, buf, bufsz, error))
 			return FALSE;
 	}
 
 	/* special cases */
-	if (tx_buffer.inbuf[0] == USBUID_ISP_INTERNAL_FW_CMD_UPDATE_FW) {
-		tx_buffer.inbuf[1] = 0xFF;
-	}
+	if (st->data[FU_STRUCT_USI_DOCK_MCU_CMD_REQ_OFFSET_BUF + 0] ==
+	    FU_USI_DOCK_MCU_CMD_FW_UPDATE)
+		st->data[FU_STRUCT_USI_DOCK_MCU_CMD_REQ_OFFSET_BUF + 1] = 0xFF;
 
 	return fu_hid_device_set_report(FU_HID_DEVICE(self),
 					USB_HID_REPORT_ID2,
-					(guint8 *)&tx_buffer,
-					sizeof(tx_buffer),
+					st->data,
+					st->len,
 					FU_USI_DOCK_MCU_DEVICE_TIMEOUT,
-					FU_HID_DEVICE_FLAG_NONE,
+					FU_HID_DEVICE_FLAG_USE_INTERRUPT_TRANSFER,
 					error);
 }
 
@@ -72,44 +69,27 @@ fu_usi_dock_mcu_device_rx(FuUsiDockMcuDevice *self,
 			  GError **error)
 {
 	guint8 buf[64] = {0};
+	g_autoptr(GByteArray) st_rsp = NULL;
 
 	if (!fu_hid_device_get_report(FU_HID_DEVICE(self),
 				      USB_HID_REPORT_ID2,
 				      buf,
 				      sizeof(buf),
 				      FU_USI_DOCK_MCU_DEVICE_TIMEOUT,
-				      FU_HID_DEVICE_FLAG_NONE,
+				      FU_HID_DEVICE_FLAG_USE_INTERRUPT_TRANSFER,
 				      error)) {
 		return FALSE;
 	}
-	if (buf[0] != USB_HID_REPORT_ID2) {
-		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
-			    "invalid ID, expected 0x%02x, got 0x%02x",
-			    USB_HID_REPORT_ID2,
-			    buf[0]);
+	st_rsp = fu_struct_usi_dock_mcu_cmd_res_parse(buf, sizeof(buf), 0x0, error);
+	if (st_rsp == NULL)
 		return FALSE;
-	}
-	if (buf[2] != 0xFE || buf[3] != 0xFF) {
-		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
-			    "invalid tags, expected 0x%02x:0x%02x, got 0x%02x:0x%02x",
-			    0xFEu,
-			    0xFFu,
-			    buf[2],
-			    buf[3]);
-		return FALSE;
-	}
-
 	if (outbuf != NULL) {
 		if (!fu_memcpy_safe(outbuf,
 				    outbufsz,
 				    0x0, /* dst */
 				    buf,
 				    sizeof(buf),
-				    0x5, /* src */
+				    FU_STRUCT_USI_DOCK_MCU_CMD_RES_OFFSET_BUF, /* src */
 				    outbufsz,
 				    error))
 			return FALSE;
@@ -119,32 +99,40 @@ fu_usi_dock_mcu_device_rx(FuUsiDockMcuDevice *self,
 
 static gboolean
 fu_usi_dock_mcu_device_txrx(FuUsiDockMcuDevice *self,
-			    guint8 tag2,
+			    FuUsiDockTag2 tag2,
 			    const guint8 *inbuf,
 			    gsize inbufsz,
 			    guint8 *outbuf,
 			    gsize outbufsz,
 			    GError **error)
 {
-	if (!fu_usi_dock_mcu_device_tx(self, tag2, inbuf, inbufsz, error))
+	if (!fu_usi_dock_mcu_device_tx(self, tag2, inbuf, inbufsz, error)) {
+		g_prefix_error(error, "failed to transmit: ");
 		return FALSE;
-	return fu_usi_dock_mcu_device_rx(self, USBUID_ISP_CMD_ALL, outbuf, outbufsz, error);
+	}
+	if (!fu_usi_dock_mcu_device_rx(self, FU_USI_DOCK_MCU_CMD_ALL, outbuf, outbufsz, error)) {
+		g_prefix_error(error, "failed to receive: ");
+		return FALSE;
+	}
+	return TRUE;
 }
 
 static gboolean
 fu_usi_dock_mcu_device_get_status(FuUsiDockMcuDevice *self, GError **error)
 {
-	guint8 cmd = USBUID_ISP_DEVICE_CMD_MCU_STATUS;
+	guint8 cmd = FU_USI_DOCK_MCU_CMD_MCU_STATUS;
 	guint8 response = 0;
 
 	if (!fu_usi_dock_mcu_device_txrx(self,
-					 TAG_TAG2_CMD_MCU,
+					 FU_USI_DOCK_TAG2_CMD_MCU,
 					 &cmd,
 					 sizeof(cmd),
 					 &response,
 					 sizeof(response),
-					 error))
+					 error)) {
+		g_prefix_error(error, "failed to send CMD MCU: ");
 		return FALSE;
+	}
 	if (response == 0x1) {
 		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_BUSY, "device is busy");
 		return FALSE;
@@ -161,7 +149,7 @@ fu_usi_dock_mcu_device_get_status(FuUsiDockMcuDevice *self, GError **error)
 static gboolean
 fu_usi_dock_mcu_device_enumerate_children(FuUsiDockMcuDevice *self, GError **error)
 {
-	guint8 inbuf[] = {USBUID_ISP_DEVICE_CMD_READ_MCU_VERSIONPAGE,
+	guint8 inbuf[] = {FU_USI_DOCK_MCU_CMD_READ_MCU_VERSIONPAGE,
 			  DP_VERSION_FROM_MCU | NIC_VERSION_FROM_MCU};
 	guint8 outbuf[49] = {0x0};
 	struct {
@@ -169,22 +157,24 @@ fu_usi_dock_mcu_device_enumerate_children(FuUsiDockMcuDevice *self, GError **err
 		guint8 chip_idx;
 		gsize offset;
 	} components[] = {
-	    {"DMC", FIRMWARE_IDX_DMC_PD, G_STRUCT_OFFSET(IspVersionInMcu_t, DMC)},
-	    {"PD", FIRMWARE_IDX_DP, G_STRUCT_OFFSET(IspVersionInMcu_t, PD)},
-	    {"DP5x", FIRMWARE_IDX_NONE, G_STRUCT_OFFSET(IspVersionInMcu_t, DP5x)},
-	    {"DP6x", FIRMWARE_IDX_NONE, G_STRUCT_OFFSET(IspVersionInMcu_t, DP6x)},
-	    {"TBT4", FIRMWARE_IDX_TBT4, G_STRUCT_OFFSET(IspVersionInMcu_t, TBT4)},
-	    {"USB3", FIRMWARE_IDX_USB3, G_STRUCT_OFFSET(IspVersionInMcu_t, USB3)},
-	    {"USB2", FIRMWARE_IDX_USB2, G_STRUCT_OFFSET(IspVersionInMcu_t, USB2)},
-	    {"AUDIO", FIRMWARE_IDX_AUDIO, G_STRUCT_OFFSET(IspVersionInMcu_t, AUDIO)},
-	    {"I255", FIRMWARE_IDX_I225, G_STRUCT_OFFSET(IspVersionInMcu_t, I255)},
-	    {"MCU", FIRMWARE_IDX_MCU, G_STRUCT_OFFSET(IspVersionInMcu_t, MCU)},
-	    {"bcdVersion", FIRMWARE_IDX_NONE, G_STRUCT_OFFSET(IspVersionInMcu_t, bcdVersion)},
+	    {"DMC", FU_USI_DOCK_FIRMWARE_IDX_DMC_PD, FU_STRUCT_USI_DOCK_ISP_VERSION_OFFSET_DMC},
+	    {"PD", FU_USI_DOCK_FIRMWARE_IDX_DP, FU_STRUCT_USI_DOCK_ISP_VERSION_OFFSET_PD},
+	    {"DP5x", FU_USI_DOCK_FIRMWARE_IDX_NONE, FU_STRUCT_USI_DOCK_ISP_VERSION_OFFSET_DP5X},
+	    {"DP6x", FU_USI_DOCK_FIRMWARE_IDX_NONE, FU_STRUCT_USI_DOCK_ISP_VERSION_OFFSET_DP6X},
+	    {"TBT4", FU_USI_DOCK_FIRMWARE_IDX_TBT4, FU_STRUCT_USI_DOCK_ISP_VERSION_OFFSET_TBT4},
+	    {"USB3", FU_USI_DOCK_FIRMWARE_IDX_USB3, FU_STRUCT_USI_DOCK_ISP_VERSION_OFFSET_USB3},
+	    {"USB2", FU_USI_DOCK_FIRMWARE_IDX_USB2, FU_STRUCT_USI_DOCK_ISP_VERSION_OFFSET_USB2},
+	    {"AUDIO", FU_USI_DOCK_FIRMWARE_IDX_AUDIO, FU_STRUCT_USI_DOCK_ISP_VERSION_OFFSET_AUDIO},
+	    {"I255", FU_USI_DOCK_FIRMWARE_IDX_I225, FU_STRUCT_USI_DOCK_ISP_VERSION_OFFSET_I255},
+	    {"MCU", FU_USI_DOCK_FIRMWARE_IDX_MCU, FU_STRUCT_USI_DOCK_ISP_VERSION_OFFSET_MCU},
+	    {"bcdVersion",
+	     FU_USI_DOCK_FIRMWARE_IDX_NONE,
+	     FU_STRUCT_USI_DOCK_ISP_VERSION_OFFSET_BCDVERSION},
 	    {NULL, 0, 0}};
 
 	/* assume DP and NIC in-use */
 	if (!fu_usi_dock_mcu_device_txrx(self,
-					 TAG_TAG2_CMD_MCU,
+					 FU_USI_DOCK_TAG2_CMD_MCU,
 					 inbuf,
 					 sizeof(inbuf),
 					 outbuf,
@@ -394,10 +384,14 @@ fu_usi_dock_mcu_device_setup(FuDevice *device, GError **error)
 		return FALSE;
 
 	/* get status and component versions */
-	if (!fu_usi_dock_mcu_device_get_status(self, error))
+	if (!fu_usi_dock_mcu_device_get_status(self, error)) {
+		g_prefix_error(error, "failed to get status: ");
 		return FALSE;
-	if (!fu_usi_dock_mcu_device_enumerate_children(self, error))
+	}
+	if (!fu_usi_dock_mcu_device_enumerate_children(self, error)) {
+		g_prefix_error(error, "failed to enumerate children: ");
 		return FALSE;
+	}
 
 	/* success */
 	return TRUE;
@@ -406,89 +400,59 @@ fu_usi_dock_mcu_device_setup(FuDevice *device, GError **error)
 static gboolean
 fu_usi_dock_mcu_device_write_chunk(FuUsiDockMcuDevice *self, FuChunk *chk, GError **error)
 {
-	guint8 buf[64] = {0x0};
-	guint32 length = 0;
-	guint32 pagesize = fu_chunk_get_data_sz(chk);
+	g_autoptr(GByteArray) st_req = fu_struct_usi_dock_hid_req_new();
 
-	while (pagesize != 0) {
-		memset(buf, 0x0, sizeof(buf));
-		buf[63] = TAG_TAG2_MASS_DATA_SPI;
-		buf[0] = USB_HID_REPORT_ID2;
+	fu_struct_usi_dock_hid_req_set_length(st_req, fu_chunk_get_data_sz(chk));
+	fu_struct_usi_dock_hid_req_set_tag3(st_req, FU_USI_DOCK_TAG2_MASS_DATA_SPI);
+	if (!fu_memcpy_safe(st_req->data,
+			    st_req->len,
+			    FU_STRUCT_USI_DOCK_HID_REQ_OFFSET_BUF, /* dst */
+			    fu_chunk_get_data(chk),
+			    fu_chunk_get_data_sz(chk),
+			    0x0, /* src */
+			    fu_chunk_get_data_sz(chk),
+			    error))
+		return FALSE;
+	if (!fu_hid_device_set_report(FU_HID_DEVICE(self),
+				      USB_HID_REPORT_ID2,
+				      st_req->data,
+				      st_req->len,
+				      FU_USI_DOCK_MCU_DEVICE_TIMEOUT,
+				      FU_HID_DEVICE_FLAG_USE_INTERRUPT_TRANSFER,
+				      error))
+		return FALSE;
+	return fu_usi_dock_mcu_device_rx(self, FU_USI_DOCK_MCU_CMD_ALL, NULL, 0x0, error);
+}
 
-		/* set length and buffer */
-		if (pagesize >= TX_ISP_LENGTH) {
-			length = TX_ISP_LENGTH;
-			pagesize -= TX_ISP_LENGTH;
-		} else {
-			length = pagesize;
-			pagesize = 0;
-		}
-		buf[1] = length;
+static gboolean
+fu_usi_dock_mcu_device_write_page(FuUsiDockMcuDevice *self, FuChunk *chk_page, GError **error)
+{
+	g_autoptr(GPtrArray) chunks = NULL;
 
-		/* SetReport */
-		if (!fu_memcpy_safe(buf,
-				    sizeof(buf),
-				    0x2, /* dst */
-				    fu_chunk_get_data(chk),
-				    fu_chunk_get_data_sz(chk),
-				    fu_chunk_get_data_sz(chk) - pagesize - length, /* src */
-				    length,
-				    error))
+	chunks = fu_chunk_array_new(fu_chunk_get_data(chk_page),
+				    fu_chunk_get_data_sz(chk_page),
+				    0x0,
+				    0x0,
+				    FU_STRUCT_USI_DOCK_HID_REQ_SIZE_BUF); // FIXME DEFINE
+	for (guint i = 0; i < chunks->len; i++) {
+		FuChunk *chk = g_ptr_array_index(chunks, i);
+		if (!fu_usi_dock_mcu_device_write_chunk(self, chk, error))
 			return FALSE;
-
-		if (!fu_hid_device_set_report(FU_HID_DEVICE(self),
-					      USB_HID_REPORT_ID2,
-					      buf,
-					      sizeof(buf),
-					      FU_USI_DOCK_MCU_DEVICE_TIMEOUT,
-					      FU_HID_DEVICE_FLAG_NONE,
-					      error))
-			return FALSE;
-
-		/* GetReport */
-		memset(buf, 0x0, sizeof(buf));
-		if (!fu_hid_device_get_report(FU_HID_DEVICE(self),
-					      USB_HID_REPORT_ID2,
-					      buf,
-					      sizeof(buf),
-					      FU_USI_DOCK_MCU_DEVICE_TIMEOUT,
-					      FU_HID_DEVICE_FLAG_NONE,
-					      error)) {
-			return FALSE;
-		}
-		if (buf[0] != USB_HID_REPORT_ID2) {
-			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
-				    "invalid ID, expected 0x%02x, got 0x%02x",
-				    USB_HID_REPORT_ID2,
-				    buf[0]);
-			return FALSE;
-		}
-		if (buf[63] != TAG_TAG2_CMD_SPI) {
-			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
-				    "invalid tag2, expected 0x%02x, got 0x%02x",
-				    (guint)TAG_TAG2_CMD_SPI,
-				    buf[58]);
-			return FALSE;
-		}
 	}
 	return TRUE;
 }
 
 static gboolean
-fu_usi_dock_mcu_device_write_chunks(FuUsiDockMcuDevice *self,
-				    GPtrArray *chunks,
-				    FuProgress *progress,
-				    GError **error)
+fu_usi_dock_mcu_device_write_pages(FuUsiDockMcuDevice *self,
+				   GPtrArray *chunks,
+				   FuProgress *progress,
+				   GError **error)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, chunks->len);
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index(chunks, i);
-		if (!fu_usi_dock_mcu_device_write_chunk(self, chk, error)) {
+		if (!fu_usi_dock_mcu_device_write_page(self, chk, error)) {
 			g_prefix_error(error, "failed to write chunk 0x%x: ", i);
 			return FALSE;
 		}
@@ -501,18 +465,18 @@ static gboolean
 fu_usi_dock_mcu_device_wait_for_spi_ready_cb(FuDevice *device, gpointer user_data, GError **error)
 {
 	FuUsiDockMcuDevice *self = FU_USI_DOCK_MCU_DEVICE(device);
-	guint8 buf[] = {USBUID_ISP_DEVICE_CMD_FWBUFER_READ_STATUS};
+	guint8 buf[] = {FU_USI_DOCK_SPI_CMD_READ_STATUS};
 	guint8 val = 0;
 
 	if (!fu_usi_dock_mcu_device_txrx(self,
-					 TAG_TAG2_CMD_SPI,
+					 FU_USI_DOCK_TAG2_CMD_SPI,
 					 buf,
 					 sizeof(buf),
 					 &val,
 					 sizeof(val),
 					 error))
 		return FALSE;
-	if (val != SPI_STATE_READY) {
+	if (val != FU_USI_DOCK_SPI_STATE_READY) {
 		g_set_error(error,
 			    G_IO_ERROR,
 			    G_IO_ERROR_BUSY,
@@ -532,18 +496,18 @@ fu_usi_dock_mcu_device_wait_for_spi_initial_ready_cb(FuDevice *device,
 						     GError **error)
 {
 	FuUsiDockMcuDevice *self = FU_USI_DOCK_MCU_DEVICE(device);
-	guint8 buf[] = {USBUID_ISP_DEVICE_CMD_FWBUFER_INITIAL};
+	guint8 buf[] = {FU_USI_DOCK_SPI_CMD_INITIAL};
 	guint8 val = 0;
 
 	if (!fu_usi_dock_mcu_device_txrx(self,
-					 TAG_TAG2_CMD_SPI,
+					 FU_USI_DOCK_TAG2_CMD_SPI,
 					 buf,
 					 sizeof(buf),
 					 &val,
 					 sizeof(val),
 					 error))
 		return FALSE;
-	if (val != SPI_STATE_READY) {
+	if (val != FU_USI_DOCK_SPI_STATE_READY) {
 		g_set_error(error,
 			    G_IO_ERROR,
 			    G_IO_ERROR_BUSY,
@@ -563,7 +527,7 @@ fu_usi_dock_mcu_device_wait_for_checksum_cb(FuDevice *device, gpointer user_data
 	FuUsiDockMcuDevice *self = FU_USI_DOCK_MCU_DEVICE(device);
 
 	if (!fu_usi_dock_mcu_device_rx(self,
-				       USBUID_ISP_CMD_ALL,
+				       FU_USI_DOCK_MCU_CMD_ALL,
 				       (guint8 *)user_data,
 				       sizeof(guint8),
 				       error))
@@ -588,7 +552,6 @@ fu_usi_dock_mcu_device_write_firmware_with_idx(FuUsiDockMcuDevice *self,
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 0, NULL);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 5, NULL);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 69, "write-external");
@@ -607,9 +570,9 @@ fu_usi_dock_mcu_device_write_firmware_with_idx(FuUsiDockMcuDevice *self,
 	fu_progress_step_done(progress);
 
 	/* erase external flash */
-	cmd = USBUID_ISP_DEVICE_CMD_FWBUFER_ERASE_FLASH;
+	cmd = FU_USI_DOCK_SPI_CMD_ERASE_FLASH;
 	if (!fu_usi_dock_mcu_device_txrx(self,
-					 TAG_TAG2_CMD_SPI,
+					 FU_USI_DOCK_TAG2_CMD_SPI,
 					 &cmd,
 					 sizeof(cmd),
 					 NULL,
@@ -627,9 +590,9 @@ fu_usi_dock_mcu_device_write_firmware_with_idx(FuUsiDockMcuDevice *self,
 	fu_progress_step_done(progress);
 
 	/* write external flash */
-	cmd = USBUID_ISP_DEVICE_CMD_FWBUFER_PROGRAM;
+	cmd = FU_USI_DOCK_SPI_CMD_PROGRAM;
 	if (!fu_usi_dock_mcu_device_txrx(self,
-					 TAG_TAG2_CMD_SPI,
+					 FU_USI_DOCK_TAG2_CMD_SPI,
 					 &cmd,
 					 sizeof(cmd),
 					 NULL,
@@ -641,17 +604,17 @@ fu_usi_dock_mcu_device_write_firmware_with_idx(FuUsiDockMcuDevice *self,
 	if (fw == NULL)
 		return FALSE;
 	chunks = fu_chunk_array_new_from_bytes(fw, 0x0, 0x0, W25Q16DV_PAGE_SIZE);
-	if (!fu_usi_dock_mcu_device_write_chunks(self,
-						 chunks,
-						 fu_progress_get_child(progress),
-						 error))
+	if (!fu_usi_dock_mcu_device_write_pages(self,
+						chunks,
+						fu_progress_get_child(progress),
+						error))
 		return FALSE;
 	fu_progress_step_done(progress);
 
 	/* file transfer – finished */
-	cmd = USBUID_ISP_DEVICE_CMD_FWBUFER_TRANSFER_FINISH;
+	cmd = FU_USI_DOCK_SPI_CMD_TRANSFER_FINISH;
 	if (!fu_usi_dock_mcu_device_txrx(self,
-					 TAG_TAG2_CMD_SPI,
+					 FU_USI_DOCK_TAG2_CMD_SPI,
 					 &cmd,
 					 sizeof(cmd),
 					 NULL,
@@ -680,9 +643,9 @@ fu_usi_dock_mcu_device_write_firmware_with_idx(FuUsiDockMcuDevice *self,
 	fu_progress_step_done(progress);
 
 	/* internal flash */
-	cmd = USBUID_ISP_INTERNAL_FW_CMD_UPDATE_FW;
+	cmd = FU_USI_DOCK_MCU_CMD_FW_UPDATE;
 	if (!fu_usi_dock_mcu_device_txrx(self,
-					 TAG_TAG2_CMD_MCU,
+					 FU_USI_DOCK_TAG2_CMD_MCU,
 					 &cmd,
 					 sizeof(cmd),
 					 NULL,
@@ -711,18 +674,15 @@ fu_usi_dock_mcu_device_write_firmware(FuDevice *device,
 }
 
 static gboolean
-fu_usi_dock_mcu_device_prepare(FuDevice *device,
-			       FuProgress *progress,
-			       FwupdInstallFlags flags,
-			       GError **error)
+fu_usi_dock_mcu_device_reload(FuDevice *device, GError **error)
 {
 	FuUsiDockMcuDevice *self = FU_USI_DOCK_MCU_DEVICE(device);
-	guint8 inbuf[] = {USBUID_ISP_DEVICE_CMD_SET_CHIP_TYPE, 1, 1};
+	guint8 inbuf[] = {FU_USI_DOCK_MCU_CMD_SET_CHIP_TYPE, 1, 1};
 
-	if (fu_device_has_guid(device, USI_DOCK_NON_IOT_INSTANCE_ID) &&
-	    g_strcmp0(fu_device_get_version(device), "10.10") == 0) {
+	if (fu_device_has_private_flag(device, FU_USI_DOCK_DEVICE_FLAG_SET_CHIP_TYPE)) {
+		g_info("repairing device with CMD_SET_CHIP_TYPE");
 		if (!fu_usi_dock_mcu_device_txrx(self,
-						 TAG_TAG2_CMD_MCU,
+						 FU_USI_DOCK_TAG2_CMD_MCU,
 						 inbuf,
 						 sizeof(inbuf),
 						 NULL,
@@ -744,15 +704,69 @@ fu_usi_dock_mcu_device_attach(FuDevice *device, FuProgress *progress, GError **e
 	return TRUE;
 }
 
+static gboolean
+fu_usi_dock_mcu_device_insert_cb(gpointer user_data)
+{
+	g_autoptr(FwupdRequest) request = fwupd_request_new();
+	/* interactive request to start the SPI write */
+	fwupd_request_set_kind(request, FWUPD_REQUEST_KIND_IMMEDIATE);
+	fwupd_request_set_id(request, FWUPD_REQUEST_ID_INSERT_USB_CABLE);
+	fwupd_request_add_flag(request, FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE);
+	fwupd_request_set_message(
+	    request,
+	    "The update will continue when the device USB cable has been re-inserted.");
+	fu_device_emit_request(user_data, request);
+
+	/* success */
+	return G_SOURCE_REMOVE;
+}
+
+static gboolean
+fu_usi_dock_mcu_device_cleanup(FuDevice *device,
+			       FuProgress *progress,
+			       FwupdInstallFlags install_flags,
+			       GError **error)
+{
+	g_autoptr(FwupdRequest) request = fwupd_request_new();
+
+	/* interactive request to start the SPI write */
+	fwupd_request_set_kind(request, FWUPD_REQUEST_KIND_IMMEDIATE);
+	fwupd_request_set_id(request, FWUPD_REQUEST_ID_REMOVE_USB_CABLE);
+	fwupd_request_add_flag(request, FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE);
+	fwupd_request_set_message(
+	    request,
+	    "Please unplug the USB cable. The update will continue in 30 seconds from now.");
+	fu_device_emit_request(device, request);
+
+	/* success */
+	fu_device_set_remove_delay(device, 900000);
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+
+	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_BUSY);
+	g_timeout_add_seconds_full(G_PRIORITY_DEFAULT,
+				   40,
+				   fu_usi_dock_mcu_device_insert_cb,
+				   g_object_ref(device),
+				   g_object_unref);
+
+	return TRUE;
+}
+
+static void
+fu_usi_dock_mcu_device_replace(FuDevice *device, FuDevice *donor)
+{
+	if (fu_device_has_private_flag(donor, FU_USI_DOCK_DEVICE_FLAG_SET_CHIP_TYPE))
+		fu_device_add_private_flag(device, FU_USI_DOCK_DEVICE_FLAG_SET_CHIP_TYPE);
+}
+
 static void
 fu_usi_dock_mcu_device_set_progress(FuDevice *self, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 2, "detach");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 90, "write");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 6, "attach");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 2, "reload");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 0, "detach");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 48, "write");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0, "attach");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 52, "reload");
 }
 
 static void
@@ -765,12 +779,15 @@ fu_usi_dock_mcu_device_init(FuUsiDockMcuDevice *self)
 
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_NO_SERIAL_NUMBER);
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_INHIBIT_CHILDREN);
-	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID);
+	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_ONLY_WAIT_FOR_REPLUG);
 
 	fu_device_register_private_flag(FU_DEVICE(self),
 					FU_USI_DOCK_DEVICE_FLAG_VERFMT_HP,
 					"verfmt-hp");
-	fu_hid_device_add_flag(FU_HID_DEVICE(self), FU_HID_DEVICE_FLAG_USE_INTERRUPT_TRANSFER);
+	fu_device_register_private_flag(FU_DEVICE(self),
+					FU_USI_DOCK_DEVICE_FLAG_SET_CHIP_TYPE,
+					"set-chip-type");
+	fu_hid_device_add_flag(FU_HID_DEVICE(self), FU_HID_DEVICE_FLAG_AUTODETECT_EPS);
 	fu_device_add_protocol(FU_DEVICE(self), "com.usi.dock");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_NUMBER);
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
@@ -787,5 +804,7 @@ fu_usi_dock_mcu_device_class_init(FuUsiDockMcuDeviceClass *klass)
 	klass_device->attach = fu_usi_dock_mcu_device_attach;
 	klass_device->setup = fu_usi_dock_mcu_device_setup;
 	klass_device->set_progress = fu_usi_dock_mcu_device_set_progress;
-	klass_device->prepare = fu_usi_dock_mcu_device_prepare;
+	klass_device->cleanup = fu_usi_dock_mcu_device_cleanup;
+	klass_device->reload = fu_usi_dock_mcu_device_reload;
+	klass_device->replace = fu_usi_dock_mcu_device_replace;
 }

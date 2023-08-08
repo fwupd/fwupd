@@ -16,38 +16,6 @@ struct _FuRedfishNetworkDevice {
 
 G_DEFINE_TYPE(FuRedfishNetworkDevice, fu_redfish_network_device, G_TYPE_OBJECT)
 
-const gchar *
-fu_redfish_network_device_state_to_string(FuRedfishNetworkDeviceState state)
-{
-	if (state == FU_REDFISH_NETWORK_DEVICE_STATE_UNKNOWN)
-		return "unknown";
-	if (state == FU_REDFISH_NETWORK_DEVICE_STATE_UNMANAGED)
-		return "unmanaged";
-	if (state == FU_REDFISH_NETWORK_DEVICE_STATE_UNAVAILABLE)
-		return "unavailable";
-	if (state == FU_REDFISH_NETWORK_DEVICE_STATE_DISCONNECTED)
-		return "disconnected";
-	if (state == FU_REDFISH_NETWORK_DEVICE_STATE_PREPARE)
-		return "prepare";
-	if (state == FU_REDFISH_NETWORK_DEVICE_STATE_CONFIG)
-		return "config";
-	if (state == FU_REDFISH_NETWORK_DEVICE_STATE_NEED_AUTH)
-		return "need-auth";
-	if (state == FU_REDFISH_NETWORK_DEVICE_STATE_IP_CONFIG)
-		return "ip-config";
-	if (state == FU_REDFISH_NETWORK_DEVICE_STATE_IP_CHECK)
-		return "ip-check";
-	if (state == FU_REDFISH_NETWORK_DEVICE_STATE_SECONDARIES)
-		return "secondaries";
-	if (state == FU_REDFISH_NETWORK_DEVICE_STATE_ACTIVATED)
-		return "activated";
-	if (state == FU_REDFISH_NETWORK_DEVICE_STATE_DEACTIVATING)
-		return "deactivating";
-	if (state == FU_REDFISH_NETWORK_DEVICE_STATE_FAILED)
-		return "failed";
-	return NULL;
-}
-
 gboolean
 fu_redfish_network_device_get_state(FuRedfishNetworkDevice *self,
 				    FuRedfishNetworkDeviceState *state,

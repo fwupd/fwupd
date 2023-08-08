@@ -21,6 +21,9 @@
 
 G_DEFINE_TYPE(FuEfiFirmwareFilesystem, fu_efi_firmware_filesystem, FU_TYPE_FIRMWARE)
 
+#define FU_EFI_FIRMWARE_FILESYSTEM_FILES_MAX 10000
+#define FU_EFI_FIRMWARE_FILESYSTEM_SIZE_MAX  0x10000000 /* 256 MB */
+
 static gboolean
 fu_efi_firmware_filesystem_parse(FuFirmware *firmware,
 				 GBytes *fw,
@@ -54,7 +57,8 @@ fu_efi_firmware_filesystem_parse(FuFirmware *firmware,
 			return FALSE;
 		}
 		fu_firmware_set_offset(firmware, offset);
-		fu_firmware_add_image(firmware, img);
+		if (!fu_firmware_add_image_full(firmware, img, error))
+			return FALSE;
 
 		/* next! */
 		offset += fu_firmware_get_size(img);
@@ -64,7 +68,7 @@ fu_efi_firmware_filesystem_parse(FuFirmware *firmware,
 	return TRUE;
 }
 
-static GBytes *
+static GByteArray *
 fu_efi_firmware_filesystem_write(FuFirmware *firmware, GError **error)
 {
 	g_autoptr(GByteArray) buf = g_byte_array_new();
@@ -90,15 +94,31 @@ fu_efi_firmware_filesystem_write(FuFirmware *firmware, GError **error)
 			return NULL;
 		fu_byte_array_append_bytes(buf, blob);
 		fu_byte_array_align_up(buf, fu_firmware_get_alignment(firmware), 0xFF);
+
+		/* sanity check */
+		if (buf->len > FU_EFI_FIRMWARE_FILESYSTEM_SIZE_MAX) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "EFI filesystem too large, 0x%02x > 0x%02x",
+				    (guint)buf->len,
+				    (guint)FU_EFI_FIRMWARE_FILESYSTEM_SIZE_MAX);
+			return NULL;
+		}
 	}
 
 	/* success */
-	return g_byte_array_free_to_bytes(g_steal_pointer(&buf));
+	return g_steal_pointer(&buf);
 }
 
 static void
 fu_efi_firmware_filesystem_init(FuEfiFirmwareFilesystem *self)
 {
+	/* if fuzzing, artificially limit the number of files to avoid using large amounts of RSS
+	 * when printing the FuEfiFirmwareFilesystem XML output */
+	fu_firmware_set_images_max(
+	    FU_FIRMWARE(self),
+	    g_getenv("FWUPD_FUZZER_RUNNING") == NULL ? FU_EFI_FIRMWARE_FILESYSTEM_FILES_MAX : 50);
 	fu_firmware_set_alignment(FU_FIRMWARE(self), FU_FIRMWARE_ALIGNMENT_8);
 }
 

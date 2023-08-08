@@ -7,7 +7,6 @@
 
 #include "config.h"
 
-#include <fcntl.h>
 #include <glib/gi18n.h>
 
 #include "fu-acpi-uefi.h"
@@ -19,10 +18,12 @@
 #include "fu-uefi-common.h"
 #include "fu-uefi-grub-device.h"
 #include "fu-uefi-struct.h"
+#include "fu-uefi-update-info.h"
 
 struct _FuUefiCapsulePlugin {
 	FuPlugin parent_instance;
 	FuUefiBgrt *bgrt;
+	FuFirmware *acpi_uefi; /* optional */
 	FuVolume *esp;
 	FuBackend *backend;
 	GFile *fwupd_efi_file;
@@ -30,6 +31,13 @@ struct _FuUefiCapsulePlugin {
 };
 
 G_DEFINE_TYPE(FuUefiCapsulePlugin, fu_uefi_capsule_plugin, FU_TYPE_PLUGIN)
+
+/* defaults changed here will also be reflected in the fwupd.conf man page */
+#define FU_UEFI_CAPSULE_CONFIG_DEFAULT_ENABLE_GRUB_CHAIN_LOAD	      FALSE
+#define FU_UEFI_CAPSULE_CONFIG_DEFAULT_DISABLE_SHIM_FOR_SECURE_BOOT   FALSE
+#define FU_UEFI_CAPSULE_CONFIG_DEFAULT_REQUIRE_ESP_FREE_SPACE	      "0" /* in MB */
+#define FU_UEFI_CAPSULE_CONFIG_DEFAULT_DISABLE_CAPSULE_UPDATE_ON_DISK FALSE
+#define FU_UEFI_CAPSULE_CONFIG_DEFAULT_ENABLE_EFI_DEBUGGING	      FALSE
 
 static void
 fu_uefi_capsule_plugin_to_string(FuPlugin *plugin, guint idt, GString *str)
@@ -49,36 +57,32 @@ fu_uefi_capsule_plugin_fwupd_efi_parse(FuUefiCapsulePlugin *self, GError **error
 {
 	FuContext *ctx = fu_plugin_get_context(FU_PLUGIN(self));
 	const guint8 needle[] = "f\0w\0u\0p\0d\0-\0e\0f\0i\0 \0v\0e\0r\0s\0i\0o\0n\0 ";
-	gsize bufsz = 0;
 	gsize offset = 0;
-	guint16 version_tmp[16] = {0x0};
-	g_autofree gchar *buf = NULL;
+	g_autofree gchar *fn = g_file_get_path(self->fwupd_efi_file);
 	g_autofree gchar *version = NULL;
+	g_autoptr(GBytes) buf = NULL;
+	g_autoptr(GBytes) ubuf = NULL;
 
 	/* find the UTF-16 version string */
-	if (!g_file_load_contents(self->fwupd_efi_file, NULL, &buf, &bufsz, NULL, error))
+	buf = fu_bytes_get_contents(fn, error);
+	if (buf == NULL)
 		return FALSE;
-	if (!fu_memmem_safe((const guint8 *)buf, bufsz, needle, sizeof(needle), &offset, error)) {
-		g_autofree gchar *fn = g_file_get_path(self->fwupd_efi_file);
+	if (!fu_memmem_safe(g_bytes_get_data(buf, NULL),
+			    g_bytes_get_size(buf),
+			    needle,
+			    sizeof(needle),
+			    &offset,
+			    error)) {
 		g_prefix_error(error, "searching %s: ", fn);
 		return FALSE;
 	}
-
-	/* align */
-	if (!fu_memcpy_safe((guint8 *)version_tmp,
-			    sizeof(version_tmp),
-			    0x0, /* dst */
-			    (const guint8 *)buf,
-			    bufsz,
-			    offset + sizeof(needle),
-			    sizeof(version_tmp) - sizeof(guint16),
-			    error))
+	ubuf = fu_bytes_new_offset(buf, offset + sizeof(needle), 30, error);
+	if (ubuf == NULL)
 		return FALSE;
 
 	/* convert to UTF-8 */
-	version = g_utf16_to_utf8(version_tmp, -1, NULL, NULL, error);
+	version = fu_utf16_to_utf8_bytes(ubuf, G_LITTLE_ENDIAN, error);
 	if (version == NULL) {
-		g_autofree gchar *fn = g_file_get_path(self->fwupd_efi_file);
 		g_prefix_error(error, "converting %s: ", fn);
 		return FALSE;
 	}
@@ -139,14 +143,37 @@ fu_uefi_capsule_plugin_clear_results(FuPlugin *plugin, FuDevice *device, GError 
 	return fu_uefi_device_clear_status(device_uefi, error);
 }
 
+static gchar *
+fu_uefi_capsule_plugin_efivar_attrs_to_string(guint32 attrs)
+{
+	const gchar *data[7] = {0};
+	guint idx = 0;
+	if (attrs & FU_EFIVAR_ATTR_NON_VOLATILE)
+		data[idx++] = "non-volatile";
+	if (attrs & FU_EFIVAR_ATTR_BOOTSERVICE_ACCESS)
+		data[idx++] = "bootservice-access";
+	if (attrs & FU_EFIVAR_ATTR_RUNTIME_ACCESS)
+		data[idx++] = "runtime-access";
+	if (attrs & FU_EFIVAR_ATTR_HARDWARE_ERROR_RECORD)
+		data[idx++] = "hardware-error-record";
+	if (attrs & FU_EFIVAR_ATTR_AUTHENTICATED_WRITE_ACCESS)
+		data[idx++] = "authenticated-write-access";
+	if (attrs & FU_EFIVAR_ATTR_TIME_BASED_AUTHENTICATED_WRITE_ACCESS)
+		data[idx++] = "time-based-authenticated-write-access";
+	if (attrs & FU_EFIVAR_ATTR_APPEND_WRITE)
+		data[idx++] = "append-write";
+	return g_strjoinv(",", (gchar **)data);
+}
+
 static void
-fu_uefi_capsule_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
+fu_uefi_capsule_plugin_add_security_attrs_secureboot(FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
 	g_autoptr(GError) error = NULL;
 
 	/* create attr */
 	attr = fu_plugin_security_attr_new(plugin, FWUPD_SECURITY_ATTR_ID_UEFI_SECUREBOOT);
+	fwupd_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_ENABLED);
 	fu_security_attrs_append(attrs, attr);
 
 	/* SB not available or disabled */
@@ -164,7 +191,71 @@ fu_uefi_capsule_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *att
 
 	/* success */
 	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
-	fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_ENABLED);
+}
+
+static void
+fu_uefi_capsule_plugin_add_security_attrs_bootservices(FuPlugin *plugin, FuSecurityAttrs *attrs)
+{
+	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	const gchar *guids[] = {FU_EFIVAR_GUID_SECURITY_DATABASE, FU_EFIVAR_GUID_EFI_GLOBAL};
+
+	/* create attr */
+	attr = fu_plugin_security_attr_new(plugin, FWUPD_SECURITY_ATTR_ID_UEFI_BOOTSERVICE_VARS);
+	fwupd_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_LOCKED);
+	fu_security_attrs_append(attrs, attr);
+	for (guint j = 0; j < G_N_ELEMENTS(guids); j++) {
+		g_autoptr(GPtrArray) names = fu_efivar_get_names(guids[j], NULL);
+
+		/* sanity check */
+		if (names == NULL)
+			continue;
+		for (guint i = 0; i < names->len; i++) {
+			const gchar *name = g_ptr_array_index(names, i);
+			g_autoptr(GError) error_local = NULL;
+			gsize data_sz = 0;
+			guint32 data_attr = 0;
+
+			if (!fu_efivar_get_data(guids[j],
+						name,
+						NULL,
+						&data_sz,
+						&data_attr,
+						&error_local)) {
+				g_warning("failed to read %s-%s: %s",
+					  name,
+					  guids[j],
+					  error_local->message);
+				continue;
+			}
+			if ((data_attr & FU_EFIVAR_ATTR_BOOTSERVICE_ACCESS) > 0 &&
+			    (data_attr & FU_EFIVAR_ATTR_RUNTIME_ACCESS) == 0) {
+				g_debug("%s-%s attr of size 0x%x had flags %s",
+					name,
+					guids[j],
+					(guint)data_sz,
+					fu_uefi_capsule_plugin_efivar_attrs_to_string(data_attr));
+				fwupd_security_attr_add_metadata(attr, "guid", guids[j]);
+				fwupd_security_attr_add_metadata(attr, "name", name);
+				fwupd_security_attr_add_flag(
+				    attr,
+				    FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM);
+				fwupd_security_attr_set_result(
+				    attr,
+				    FWUPD_SECURITY_ATTR_RESULT_NOT_LOCKED);
+				return;
+			}
+		}
+	}
+
+	/* success */
+	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+}
+
+static void
+fu_uefi_capsule_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
+{
+	fu_uefi_capsule_plugin_add_security_attrs_secureboot(plugin, attrs);
+	fu_uefi_capsule_plugin_add_security_attrs_bootservices(plugin, attrs);
 }
 
 static GBytes *
@@ -225,10 +316,11 @@ fu_uefi_capsule_plugin_write_splash_data(FuUefiCapsulePlugin *self,
 	guint32 height, width;
 	guint8 csum = 0;
 	fwupd_guid_t guid = {0x0};
+	g_autofree gchar *capsule_path = NULL;
 	g_autofree gchar *esp_path = NULL;
 	g_autofree gchar *fn = NULL;
-	g_autofree gchar *directory = NULL;
 	g_autofree gchar *basename = NULL;
+	g_autofree gchar *directory = NULL;
 	g_autoptr(GByteArray) st_cap = fu_struct_efi_capsule_header_new();
 	g_autoptr(GByteArray) st_uxh = fu_struct_efi_ux_capsule_header_new();
 	g_autoptr(GFile) ofile = NULL;
@@ -248,9 +340,10 @@ fu_uefi_capsule_plugin_write_splash_data(FuUefiCapsulePlugin *self,
 
 	/* save to a predictable filename */
 	esp_path = fu_volume_get_mount_point(self->esp);
-	directory = fu_uefi_get_esp_path_for_os(device, esp_path);
+	directory = fu_uefi_get_esp_path_for_os();
 	basename = g_strdup_printf("fwupd-%s.cap", FU_EFIVAR_GUID_UX_CAPSULE);
-	fn = g_build_filename(directory, "fw", basename, NULL);
+	capsule_path = g_build_filename(directory, "fw", basename, NULL);
+	fn = g_build_filename(esp_path, capsule_path, NULL);
 	if (!fu_path_mkdir_parent(fn, error))
 		return FALSE;
 	ofile = g_file_new_for_path(fn);
@@ -300,7 +393,7 @@ fu_uefi_capsule_plugin_write_splash_data(FuUefiCapsulePlugin *self,
 
 	/* write display capsule location as UPDATE_INFO */
 	return fu_uefi_device_write_update_info(FU_UEFI_DEVICE(device),
-						fn,
+						capsule_path,
 						"fwupd-ux-capsule",
 						FU_EFIVAR_GUID_UX_CAPSULE,
 						error);
@@ -437,17 +530,25 @@ fu_uefi_capsule_plugin_load_config(FuPlugin *plugin, FuDevice *device)
 	g_autoptr(GError) error_local = NULL;
 
 	/* parse free space needed for ESP */
-	require_esp_free_space = fu_plugin_get_config_value(plugin, "RequireESPFreeSpace", "0x0");
+	require_esp_free_space =
+	    fu_plugin_get_config_value(plugin,
+				       "RequireESPFreeSpace",
+				       FU_UEFI_CAPSULE_CONFIG_DEFAULT_REQUIRE_ESP_FREE_SPACE);
 	if (!fu_strtoull(require_esp_free_space, &sz_reqd, 0, G_MAXUINT64, &error_local))
 		g_warning("invalid ESP free space specified: %s", error_local->message);
 	fu_uefi_device_set_require_esp_free_space(FU_UEFI_DEVICE(device), sz_reqd);
 
 	/* shim used for SB or not? */
-	if (!fu_plugin_get_config_value_boolean(plugin, "DisableShimForSecureBoot", FALSE))
+	if (!fu_plugin_get_config_value_boolean(
+		plugin,
+		"DisableShimForSecureBoot",
+		FU_UEFI_CAPSULE_CONFIG_DEFAULT_DISABLE_SHIM_FOR_SECURE_BOOT))
 		fu_device_add_private_flag(device, FU_UEFI_DEVICE_FLAG_USE_SHIM_FOR_SB);
 
 	/* enable the fwupd.efi debug log? */
-	if (fu_plugin_get_config_value_boolean(plugin, "EnableEfiDebugging", FALSE))
+	if (fu_plugin_get_config_value_boolean(plugin,
+					       "EnableEfiDebugging",
+					       FU_UEFI_CAPSULE_CONFIG_DEFAULT_ENABLE_EFI_DEBUGGING))
 		fu_device_add_private_flag(device, FU_UEFI_DEVICE_FLAG_ENABLE_EFI_DEBUGGING);
 }
 
@@ -493,6 +594,19 @@ fu_uefi_capsule_plugin_is_esp_linux(FuVolume *esp, GError **error)
 	return FALSE;
 }
 
+static gint
+fu_uefi_capsule_plugin_sort_volume_score_cb(gconstpointer a, gconstpointer b, gpointer user_data)
+{
+	GHashTable *esp_scores = (GHashTable *)user_data;
+	guint esp1_score = GPOINTER_TO_UINT(g_hash_table_lookup(esp_scores, *((FuVolume **)a)));
+	guint esp2_score = GPOINTER_TO_UINT(g_hash_table_lookup(esp_scores, *((FuVolume **)b)));
+	if (esp1_score < esp2_score)
+		return 1;
+	if (esp1_score > esp2_score)
+		return -1;
+	return 0;
+}
+
 static FuVolume *
 fu_uefi_capsule_plugin_get_default_esp(FuPlugin *plugin, GError **error)
 {
@@ -502,43 +616,69 @@ fu_uefi_capsule_plugin_get_default_esp(FuPlugin *plugin, GError **error)
 	esp_volumes = fu_context_get_esp_volumes(fu_plugin_get_context(plugin), error);
 	if (esp_volumes == NULL)
 		return NULL;
-	if (esp_volumes->len > 1) {
-		g_autoptr(GString) str = g_string_new(NULL);
-		for (guint i = 0; i < esp_volumes->len; i++) {
-			FuVolume *vol = g_ptr_array_index(esp_volumes, i);
-			if (str->len > 0)
-				g_string_append_c(str, ',');
-			g_string_append(str, fu_volume_get_id(vol));
-		}
-		g_info("more than one ESP possible: %s", str->str);
-	}
 
-	/* we found more than one: lets look for something plausible */
+	/* we found more than one: lets look for the best one */
 	if (esp_volumes->len > 1) {
+		g_autoptr(GString) str = g_string_new("more than one ESP possible:");
+		g_autoptr(GHashTable) esp_scores = g_hash_table_new(g_direct_hash, g_direct_equal);
 		for (guint i = 0; i < esp_volumes->len; i++) {
 			FuVolume *esp = g_ptr_array_index(esp_volumes, i);
+			guint score = 0;
 			g_autoptr(FuDeviceLocker) locker = NULL;
 			g_autoptr(GError) error_local = NULL;
 
+			/* ignore the volume completely if we cannot mount it */
 			locker = fu_volume_locker(esp, &error_local);
 			if (locker == NULL) {
 				g_warning("failed to mount ESP: %s", error_local->message);
 				continue;
 			}
+
+			/* big partitions are better than small partitions */
+			score += fu_volume_get_size(esp) / (1024 * 1024);
+
+			/* prefer linux ESP */
 			if (!fu_uefi_capsule_plugin_is_esp_linux(esp, &error_local)) {
 				g_debug("not a Linux ESP: %s", error_local->message);
-				continue;
+			} else {
+				score += 0x10000;
 			}
-			return g_object_ref(esp);
+			g_hash_table_insert(esp_scores, (gpointer)esp, GUINT_TO_POINTER(score));
 		}
-
-		/* we never found anything plausible */
-		g_warning("more than one ESP possible -- using %s because it is listed first",
-			  fu_volume_get_id(FU_VOLUME(g_ptr_array_index(esp_volumes, 0))));
+		g_ptr_array_sort_with_data(esp_volumes,
+					   fu_uefi_capsule_plugin_sort_volume_score_cb,
+					   esp_scores);
+		for (guint i = 0; i < esp_volumes->len; i++) {
+			FuVolume *esp = g_ptr_array_index(esp_volumes, i);
+			guint score = GPOINTER_TO_UINT(g_hash_table_lookup(esp_scores, esp));
+			g_string_append_printf(str, "\n - 0x%x:\t%s", score, fu_volume_get_id(esp));
+		}
+		g_debug("%s", str->str);
 	}
 
 	/* "success" */
 	return g_object_ref(g_ptr_array_index(esp_volumes, 0));
+}
+
+static void
+fu_uefi_capsule_plugin_validate_esp(FuUefiCapsulePlugin *self)
+{
+	g_autofree gchar *kind = NULL;
+
+	/* nothing found */
+	if (self->esp == NULL) {
+		fu_plugin_add_flag(FU_PLUGIN(self), FWUPD_PLUGIN_FLAG_ESP_NOT_FOUND);
+		fu_plugin_add_flag(FU_PLUGIN(self), FWUPD_PLUGIN_FLAG_CLEAR_UPDATABLE);
+		fu_plugin_add_flag(FU_PLUGIN(self), FWUPD_PLUGIN_FLAG_USER_WARNING);
+		return;
+	}
+
+	/* found *something* but it wasn't quite an ESP... */
+	kind = fu_volume_get_partition_kind(self->esp);
+	if (g_strcmp0(kind, FU_VOLUME_KIND_ESP) != 0) {
+		fu_plugin_add_flag(FU_PLUGIN(self), FWUPD_PLUGIN_FLAG_ESP_NOT_VALID);
+		fu_plugin_add_flag(FU_PLUGIN(self), FWUPD_PLUGIN_FLAG_USER_WARNING);
+	}
 }
 
 static void
@@ -551,8 +691,12 @@ fu_uefi_capsule_plugin_register_proxy_device(FuPlugin *plugin, FuDevice *device)
 	/* load all configuration variables */
 	dev = fu_uefi_backend_device_new_from_dev(FU_UEFI_BACKEND(self->backend), device);
 	fu_uefi_capsule_plugin_load_config(plugin, FU_DEVICE(dev));
-	if (self->esp == NULL)
+	if (self->esp == NULL) {
 		self->esp = fu_uefi_capsule_plugin_get_default_esp(plugin, &error_local);
+		if (self->esp == NULL)
+			g_warning("cannot find default ESP: %s", error_local->message);
+		fu_uefi_capsule_plugin_validate_esp(self);
+	}
 	if (self->esp == NULL) {
 		fu_device_inhibit(device, "no-esp", error_local->message);
 	} else {
@@ -606,6 +750,7 @@ fu_uefi_capsule_plugin_get_name_for_type(FuPlugin *plugin, FuUefiDeviceKind devi
 static gboolean
 fu_uefi_capsule_plugin_coldplug_device(FuPlugin *plugin, FuUefiDevice *dev, GError **error)
 {
+	FuUefiCapsulePlugin *self = FU_UEFI_CAPSULE_PLUGIN(plugin);
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	FuUefiDeviceKind device_kind;
 
@@ -628,6 +773,13 @@ fu_uefi_capsule_plugin_coldplug_device(FuPlugin *plugin, FuUefiDevice *dev, GErr
 		fu_device_add_private_flag(FU_DEVICE(dev), FU_UEFI_DEVICE_FLAG_NO_UX_CAPSULE);
 	if (fu_context_has_hwid_flag(ctx, "no-lid-closed"))
 		fu_device_add_internal_flag(FU_DEVICE(dev), FU_DEVICE_INTERNAL_FLAG_NO_LID_CLOSED);
+
+	/* detected InsydeH2O */
+	if (self->acpi_uefi != NULL &&
+	    fu_acpi_uefi_cod_indexed_filename(FU_ACPI_UEFI(self->acpi_uefi))) {
+		fu_device_add_private_flag(FU_DEVICE(dev),
+					   FU_UEFI_DEVICE_FLAG_COD_INDEXED_FILENAME);
+	}
 
 	/* set fallback name if nothing else is set */
 	device_kind = fu_uefi_device_get_kind(dev);
@@ -673,6 +825,23 @@ fu_uefi_capsule_plugin_test_secure_boot(FuPlugin *plugin)
 }
 
 static gboolean
+fu_uefi_capsule_plugin_parse_acpi_uefi(FuUefiCapsulePlugin *self, GError **error)
+{
+	g_autofree gchar *fn = NULL;
+	g_autofree gchar *path = NULL;
+	g_autoptr(GBytes) blob = NULL;
+
+	/* if we have a table, parse it and validate it */
+	path = fu_path_from_kind(FU_PATH_KIND_ACPI_TABLES);
+	fn = g_build_filename(path, "UEFI", NULL);
+	blob = fu_bytes_get_contents(fn, error);
+	if (blob == NULL)
+		return FALSE;
+	self->acpi_uefi = fu_acpi_uefi_new();
+	return fu_firmware_parse(self->acpi_uefi, blob, FWUPD_INSTALL_FLAG_NONE, error);
+}
+
+static gboolean
 fu_uefi_capsule_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 {
 	FuUefiCapsulePlugin *self = FU_UEFI_CAPSULE_PLUGIN(plugin);
@@ -681,6 +850,7 @@ fu_uefi_capsule_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **
 	g_autofree gchar *esp_path = NULL;
 	g_autofree gchar *nvram_total_str = NULL;
 	g_autoptr(GError) error_local = NULL;
+	g_autoptr(GError) error_acpi_uefi = NULL;
 
 	/* don't let user's environment influence test suite failures */
 	if (g_getenv("FWUPD_UEFI_TEST") != NULL)
@@ -695,7 +865,10 @@ fu_uefi_capsule_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **
 		return TRUE;
 
 	/* use GRUB to load updates */
-	if (fu_plugin_get_config_value_boolean(plugin, "EnableGrubChainLoad", FALSE)) {
+	if (fu_plugin_get_config_value_boolean(
+		plugin,
+		"EnableGrubChainLoad",
+		FU_UEFI_CAPSULE_CONFIG_DEFAULT_ENABLE_GRUB_CHAIN_LOAD)) {
 		fu_uefi_backend_set_device_gtype(FU_UEFI_BACKEND(self->backend),
 						 FU_TYPE_UEFI_GRUB_DEVICE);
 	}
@@ -731,7 +904,12 @@ fu_uefi_capsule_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **
 				       esp_path);
 			return FALSE;
 		}
+		fu_uefi_capsule_plugin_validate_esp(self);
 	}
+
+	/* we use this both for quirking the CoD implementation sanity and the CoD filename */
+	if (!fu_uefi_capsule_plugin_parse_acpi_uefi(self, &error_acpi_uefi))
+		g_debug("failed to load ACPI UEFI table: %s", error_acpi_uefi->message);
 
 	/* test for invalid ESP in coldplug, and set the update-error rather
 	 * than showing no output if the plugin had self-disabled here */
@@ -835,15 +1013,11 @@ fu_plugin_uefi_update_state_notify_cb(GObject *object, GParamSpec *pspec, FuPlug
 }
 
 static gboolean
-fu_uefi_capsule_plugin_check_cod_support(FuPlugin *plugin, GError **error)
+fu_uefi_capsule_plugin_check_cod_support(FuUefiCapsulePlugin *self, GError **error)
 {
 	gsize bufsz = 0;
 	guint64 value = 0;
-	g_autofree gchar *fn = NULL;
-	g_autofree gchar *path = NULL;
 	g_autofree guint8 *buf = NULL;
-	g_autoptr(FuFirmware) acpi_uefi = NULL;
-	g_autoptr(GBytes) blob = NULL;
 
 	if (!fu_efivar_get_data(FU_EFIVAR_GUID_EFI_GLOBAL,
 				"OsIndicationsSupported",
@@ -865,19 +1039,9 @@ fu_uefi_capsule_plugin_check_cod_support(FuPlugin *plugin, GError **error)
 	}
 
 	/* no table, nothing to check */
-	path = fu_path_from_kind(FU_PATH_KIND_ACPI_TABLES);
-	fn = g_build_filename(path, "UEFI", NULL);
-	if (!g_file_test(fn, G_FILE_TEST_EXISTS))
+	if (self->acpi_uefi == NULL)
 		return TRUE;
-
-	/* if we have a table, parse it and validate it */
-	blob = fu_bytes_get_contents(fn, error);
-	if (blob == NULL)
-		return FALSE;
-	acpi_uefi = fu_acpi_uefi_new();
-	if (!fu_firmware_parse(acpi_uefi, blob, FWUPD_INSTALL_FLAG_NONE, error))
-		return FALSE;
-	return fu_acpi_uefi_cod_functional(FU_ACPI_UEFI(acpi_uefi), error);
+	return fu_acpi_uefi_cod_functional(FU_ACPI_UEFI(self->acpi_uefi), error);
 }
 
 static gboolean
@@ -902,19 +1066,19 @@ fu_uefi_capsule_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError *
 
 	if (self->esp == NULL) {
 		self->esp = fu_uefi_capsule_plugin_get_default_esp(plugin, &error_udisks2);
-		if (self->esp == NULL) {
-			fu_plugin_add_flag(plugin, FWUPD_PLUGIN_FLAG_ESP_NOT_FOUND);
-			fu_plugin_add_flag(plugin, FWUPD_PLUGIN_FLAG_CLEAR_UPDATABLE);
-			fu_plugin_add_flag(plugin, FWUPD_PLUGIN_FLAG_USER_WARNING);
+		if (self->esp == NULL)
 			g_warning("cannot find default ESP: %s", error_udisks2->message);
-		}
+		fu_uefi_capsule_plugin_validate_esp(self);
 	}
 	fu_progress_step_done(progress);
 
 	/* firmware may lie */
-	if (!fu_plugin_get_config_value_boolean(plugin, "DisableCapsuleUpdateOnDisk", FALSE)) {
+	if (!fu_plugin_get_config_value_boolean(
+		plugin,
+		"DisableCapsuleUpdateOnDisk",
+		FU_UEFI_CAPSULE_CONFIG_DEFAULT_DISABLE_CAPSULE_UPDATE_ON_DISK)) {
 		g_autoptr(GError) error_cod = NULL;
-		if (!fu_uefi_capsule_plugin_check_cod_support(plugin, &error_cod)) {
+		if (!fu_uefi_capsule_plugin_check_cod_support(self, &error_cod)) {
 			g_debug("not using CapsuleOnDisk support: %s", error_cod->message);
 		} else {
 			fu_uefi_backend_set_device_gtype(FU_UEFI_BACKEND(self->backend),
@@ -1005,6 +1169,7 @@ fu_uefi_capsule_plugin_constructed(GObject *obj)
 	fu_plugin_add_rule(plugin, FU_PLUGIN_RULE_METADATA_SOURCE, "acpi_phat");
 	fu_plugin_add_rule(plugin, FU_PLUGIN_RULE_CONFLICTS, "uefi"); /* old name */
 	fu_plugin_add_firmware_gtype(FU_PLUGIN(self), NULL, FU_TYPE_ACPI_UEFI);
+	fu_plugin_add_firmware_gtype(FU_PLUGIN(self), NULL, FU_TYPE_UEFI_UPDATE_INFO);
 
 	/* add a requirement on the fwupd-efi version -- which can change  */
 	if (!fu_uefi_capsule_plugin_fwupd_efi_probe(self, &error_local))
@@ -1019,6 +1184,8 @@ fu_uefi_capsule_finalize(GObject *obj)
 		g_object_unref(self->esp);
 	if (self->fwupd_efi_file != NULL)
 		g_object_unref(self->fwupd_efi_file);
+	if (self->acpi_uefi != NULL)
+		g_object_unref(self->acpi_uefi);
 	if (self->fwupd_efi_monitor != NULL) {
 		g_file_monitor_cancel(self->fwupd_efi_monitor);
 		g_object_unref(self->fwupd_efi_monitor);

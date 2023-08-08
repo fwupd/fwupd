@@ -5,11 +5,12 @@
 # Translators:
 # Moo, 2019
 # Moo, 2020-2021
+# Moo, 2023
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"Language-Team: Lithuanian (http://www.transifex.com/freedesktop/fwupd/language/lt/)\n"
+"Language-Team: Lithuanian (http://app.transifex.com/freedesktop/fwupd/language/lt/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -406,8 +407,8 @@ msgstr "Įrenginiai, kurie nebuvo teisingai atnaujinti:"
 msgid "Devices with no available firmware updates: "
 msgstr "Įrenginiai, neturintys prieinamų programinės aparatinės įrangos atnaujinimų: "
 
-#. TRANSLATORS: Suffix: the HSI result
 #. TRANSLATORS: Plugin is inactive and not used
+#. TRANSLATORS: Suffix: the HSI result
 msgid "Disabled"
 msgstr "Išjungtas"
 
@@ -481,6 +482,9 @@ msgstr "Trukmė"
 msgid "ESP specified was not valid"
 msgstr "Nurodytas ESS (angl. ESP) nebuvo teisingas"
 
+msgid "Enable"
+msgstr "Įjungti"
+
 #. TRANSLATORS: command line option
 msgid "Enable firmware update support on supported systems"
 msgstr "Įjungti programinės aparatinės įrangos atnaujinimo palaikymą palaikomose sistemose"
@@ -489,9 +493,9 @@ msgstr "Įjungti programinės aparatinės įrangos atnaujinimo palaikymą palaik
 msgid "Enable this remote?"
 msgstr "Įjungti šią nuotolinę saugyklą?"
 
-#. TRANSLATORS: Suffix: the HSI result
 #. TRANSLATORS: Plugin is active and in use
 #. TRANSLATORS: if the remote is enabled
+#. TRANSLATORS: Suffix: the HSI result
 msgid "Enabled"
 msgstr "Įjungta"
 
@@ -562,8 +566,8 @@ msgstr "FAILO-PAVADINIMAS [ĮRENGINIO-ID|GUID]"
 msgid "FILENAME [FIRMWARE-TYPE]"
 msgstr "FAILO-PAVADINIMAS [PROGRAMINĖS-APARATINĖS-ĮRANGOS-TIPAS]"
 
-#. TRANSLATORS: Suffix: the fallback HSI result
 #. TRANSLATORS: the update state of the specific device
+#. TRANSLATORS: Suffix: the fallback HSI result
 msgid "Failed"
 msgstr "Patyrė nesėkmę"
 
@@ -646,6 +650,10 @@ msgstr "Programinės aparatinės įrangos atnaujinimo D-Bus tarnyba"
 msgid "Firmware Update Daemon"
 msgstr "Programinės aparatinės įrangos atnaujinimo tarnyba"
 
+#. TRANSLATORS: Title: if firmware updates are available
+msgid "Firmware Updates"
+msgstr "Programinės aparatinės įrangos atnaujinimai"
+
 #. TRANSLATORS: program name
 msgid "Firmware Utility"
 msgstr "Programinės aparatinės įrangos paslaugų programa"
@@ -677,6 +685,11 @@ msgstr "Rastas"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgctxt "A single GUID"
+msgid "GUID"
+msgstr "GUID"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgctxt "command-argument"
 msgid "GUID"
 msgstr "GUID"
 
@@ -723,14 +736,6 @@ msgstr "Nepaisyti programinės aparatinės įrangos kontrolinės sumos nesėkmi�
 #. TRANSLATORS: length of time the update takes to apply
 msgid "Install Duration"
 msgstr "Įdiegimo trukmė"
-
-#. TRANSLATORS: command description
-msgid "Install a firmware blob on a device"
-msgstr "Įdiegti įrenginyje programinės aparatinės įrangos dvejetainį išplėstinį objektą"
-
-#. TRANSLATORS: command description
-msgid "Install a firmware file on this hardware"
-msgstr "Įdiegti šioje aparatinėje įrangoje programinės aparatinės įrangos failą"
 
 msgid "Install signed device firmware"
 msgstr "Įdiegti pasirašytą įrenginio programinę aparatinę įrangą"
@@ -1375,6 +1380,10 @@ msgstr "Patikrinama…"
 #. TRANSLATORS: the detected version number of the dbx
 msgid "Version"
 msgstr "Versija"
+
+#. TRANSLATORS: this is a prefix on the console
+msgid "WARNING"
+msgstr "ĮSPĖJIMAS"
 
 #. TRANSLATORS: waiting for device to do something
 msgid "Waiting…"

@@ -48,6 +48,17 @@ typedef struct {
 
 G_DEFINE_TYPE(FuSmbios, fu_smbios, FU_TYPE_FIRMWARE)
 
+static FuSmbiosItem *
+fu_smbios_get_item_for_type(FuSmbios *self, guint8 type)
+{
+	for (guint i = 0; i < self->items->len; i++) {
+		FuSmbiosItem *item = g_ptr_array_index(self->items, i);
+		if (item->type == type)
+			return item;
+	}
+	return NULL;
+}
+
 static gboolean
 fu_smbios_setup_from_data(FuSmbios *self, const guint8 *buf, gsize bufsz, GError **error)
 {
@@ -105,6 +116,17 @@ fu_smbios_setup_from_data(FuSmbios *self, const guint8 *buf, gsize bufsz, GError
 			g_ptr_array_add(item->strings, g_string_free(str, FALSE));
 		}
 	}
+
+	/* this has to exist */
+	if (fu_smbios_get_item_for_type(self, FU_SMBIOS_STRUCTURE_TYPE_SYSTEM) == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "no structure with required type SYSTEM");
+		return FALSE;
+	}
+
+	/* success */
 	return TRUE;
 }
 
@@ -415,17 +437,6 @@ fu_smbios_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNod
 			xb_builder_node_insert_text(bc, "string", value, "idx", title, NULL);
 		}
 	}
-}
-
-static FuSmbiosItem *
-fu_smbios_get_item_for_type(FuSmbios *self, guint8 type)
-{
-	for (guint i = 0; i < self->items->len; i++) {
-		FuSmbiosItem *item = g_ptr_array_index(self->items, i);
-		if (item->type == type)
-			return item;
-	}
-	return NULL;
 }
 
 /**

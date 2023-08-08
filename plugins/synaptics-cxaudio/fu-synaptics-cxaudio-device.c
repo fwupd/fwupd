@@ -7,8 +7,6 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
 #include <string.h>
 
 #include "fu-synaptics-cxaudio-common.h"
@@ -200,9 +198,12 @@ fu_synaptics_cxaudio_device_operation(FuSynapticsCxaudioDevice *self,
 		}
 		if (operation == FU_SYNAPTICS_CXAUDIO_OPERATION_WRITE &&
 		    flags & FU_SYNAPTICS_CXAUDIO_OPERATION_FLAG_VERIFY) {
-			if (!fu_memcmp_safe(outbuf + idx_write,
-					    payload_max,
-					    inbuf + idx_read,
+			if (!fu_memcmp_safe(outbuf,
+					    sizeof(outbuf),
+					    idx_write,
+					    inbuf,
+					    sizeof(inbuf),
+					    idx_read,
 					    payload_max,
 					    error)) {
 				g_prefix_error(error,
@@ -811,7 +812,7 @@ fu_synaptics_cxaudio_device_attach(FuDevice *device, FuProgress *progress, GErro
 						   &tmp,
 						   sizeof(tmp),
 						   FU_SYNAPTICS_CXAUDIO_OPERATION_FLAG_NONE,
-						   error)) {
+						   &error_local)) {
 		if (g_error_matches(error_local, G_USB_DEVICE_ERROR, G_USB_DEVICE_ERROR_FAILED)) {
 			return TRUE;
 		}

@@ -34,3 +34,11 @@ GPtrArray *
 fu_security_attrs_get_all(FuSecurityAttrs *self);
 void
 fu_security_attrs_append_internal(FuSecurityAttrs *self, FwupdSecurityAttr *attr);
+gchar *
+fu_security_attrs_to_json_string(FuSecurityAttrs *self, GError **error);
+gboolean
+fu_security_attrs_from_json(FuSecurityAttrs *self, JsonNode *json_node, GError **error);
+gboolean
+fu_security_attrs_equal(FuSecurityAttrs *attrs1, FuSecurityAttrs *attrs2);
+GPtrArray *
+fu_security_attrs_compare(FuSecurityAttrs *attrs1, FuSecurityAttrs *attrs2);

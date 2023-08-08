@@ -156,16 +156,16 @@ class Builder:
             sys.exit(1)
         return os.path.join(self.builddir, "{}".format(dst))
 
-    def generate_struct(self, src: str) -> str:
+    def rustgen(self, src: str) -> str:
 
-        fn_root = os.path.basename(src).replace(".struct", "")
+        fn_root = os.path.basename(src).replace(".rs", "")
         fulldst_c = os.path.join(self.builddir, f"{fn_root}-struct.c")
         fulldst_h = os.path.join(self.builddir, f"{fn_root}-struct.h")
         try:
             subprocess.run(
                 [
                     "python",
-                    "fwupd/libfwupdplugin/generate-struct.py",
+                    "fwupd/libfwupdplugin/rustgen.py",
                     src,
                     fulldst_c,
                     fulldst_h,
@@ -371,8 +371,8 @@ def _build(bld: Builder) -> None:
         for src in bld.grep_meson(path):
             if src.endswith(".c"):
                 built_objs.append(bld.compile(src))
-            elif src.endswith(".struct"):
-                built_objs.append(bld.compile(bld.generate_struct(src)))
+            elif src.endswith(".rs"):
+                built_objs.append(bld.compile(bld.rustgen(src)))
 
     # dummy binary entrypoint
     if "LIB_FUZZING_ENGINE" in os.environ:
@@ -382,10 +382,12 @@ def _build(bld: Builder) -> None:
 
     # built in formats
     for fzr in [
+        Fuzzer("csv"),
         Fuzzer("dfuse"),
         Fuzzer("fdt"),
         Fuzzer("fit"),
         Fuzzer("fmap"),
+        Fuzzer("hid-descriptor", pattern="hid-descriptor"),
         Fuzzer("ihex"),
         Fuzzer("srec"),
         Fuzzer("intel-thunderbolt"),
@@ -395,6 +397,7 @@ def _build(bld: Builder) -> None:
         Fuzzer("uswid"),
         Fuzzer("efi-firmware-filesystem", pattern="efi-firmware-filesystem"),
         Fuzzer("efi-firmware-volume", pattern="efi-firmware-volume"),
+        Fuzzer("efi-load-option", pattern="efi-load-option"),
         Fuzzer("ifd"),
     ]:
         src = bld.substitute(
@@ -423,8 +426,8 @@ def _build(bld: Builder) -> None:
     for fzr in [
         Fuzzer("acpi-phat", pattern="acpi-phat"),
         Fuzzer("bcm57xx"),
-        Fuzzer("ccgx-dmc", srcdir="ccgx", globstr="ccgx-dmc*.bin"),
         Fuzzer("ccgx"),
+        Fuzzer("ccgx-dmc"),
         Fuzzer("cros-ec"),
         Fuzzer("ebitdo"),
         Fuzzer("elanfp"),
@@ -444,8 +447,8 @@ def _build(bld: Builder) -> None:
         for obj in bld.grep_meson("fwupd/plugins/{}".format(fzr.srcdir)):
             if obj.endswith(".c"):
                 fuzz_objs.append(bld.compile(obj))
-            elif obj.endswith(".struct"):
-                fuzz_objs.append(bld.compile(bld.generate_struct(obj)))
+            elif obj.endswith(".rs"):
+                fuzz_objs.append(bld.compile(bld.rustgen(obj)))
         src = bld.substitute(
             "fwupd/libfwupdplugin/fu-fuzzer-firmware.c.in",
             {
@@ -484,6 +487,7 @@ if __name__ == "__main__":
                 "libzstd-dev",
                 "libcbor-dev",
                 "python3",
+                "python3-jinja2",
             ],
             stdout=open(os.devnull, "wb"),
         )

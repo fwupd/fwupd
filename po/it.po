@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"Language-Team: Italian (http://www.transifex.com/freedesktop/fwupd/language/it/)\n"
+"Language-Team: Italian (http://app.transifex.com/freedesktop/fwupd/language/it/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -751,8 +751,8 @@ msgstr "Dispositivi con l'ultima versione disponibile del firmware:"
 msgid "Did not find any devices with matching GUIDs"
 msgstr "Nessun dispositivo trovato con GUID corrispondenti"
 
-#. TRANSLATORS: Suffix: the HSI result
 #. TRANSLATORS: Plugin is inactive and not used
+#. TRANSLATORS: Suffix: the HSI result
 msgid "Disabled"
 msgstr "Disabilitato"
 
@@ -885,9 +885,9 @@ msgstr "Abilitare il nuovo remoto?"
 msgid "Enable this remote?"
 msgstr "Abilitare questo remoto?"
 
-#. TRANSLATORS: Suffix: the HSI result
 #. TRANSLATORS: Plugin is active and in use
 #. TRANSLATORS: if the remote is enabled
+#. TRANSLATORS: Suffix: the HSI result
 msgid "Enabled"
 msgstr "Abilitato"
 
@@ -993,8 +993,8 @@ msgstr "NOMEFILE-SRC NOMEFILE-DST [TIPO-FIRMWARE-SRC] [TIPO-FIRMWARE-DST]"
 msgid "FILENAME|CHECKSUM1[,CHECKSUM2][,CHECKSUM3]"
 msgstr "NOMEFILE|CHECKSUM1[,CHECKSUM2][,CHECKSUM3]"
 
-#. TRANSLATORS: Suffix: the fallback HSI result
 #. TRANSLATORS: the update state of the specific device
+#. TRANSLATORS: Suffix: the fallback HSI result
 msgid "Failed"
 msgstr "Non riuscito"
 
@@ -1178,6 +1178,11 @@ msgctxt "A single GUID"
 msgid "GUID"
 msgstr "GUID"
 
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgctxt "command-argument"
+msgid "GUID"
+msgstr "GUID"
+
 msgid "Get BIOS settings"
 msgstr "Recupero impostazioni BIOS"
 
@@ -1285,14 +1290,6 @@ msgstr "Controlli SSL ignorati, per fare ciò automaticamente in futuro, esporta
 #. TRANSLATORS: length of time the update takes to apply
 msgid "Install Duration"
 msgstr "Tempo di installazione"
-
-#. TRANSLATORS: command description
-msgid "Install a firmware blob on a device"
-msgstr "Installa blob firmware su un dispositivo"
-
-#. TRANSLATORS: command description
-msgid "Install a firmware file on this hardware"
-msgstr "Installa un file di firmware su questo hardware"
 
 msgid "Install old version of signed system firmware"
 msgstr "Installa versione precedente del firmware firmato di sistema"
@@ -1555,7 +1552,7 @@ msgstr "Valore minimo"
 msgid "Mismatched daemon and client, use %s instead"
 msgstr "Versioni di demone e client non corrispondenti, usare %s"
 
-#. TRANSLATORS: sets something in daemon.conf
+#. TRANSLATORS: sets something in the daemon configuration file
 msgid "Modifies a daemon configuration value"
 msgstr "Modifica il valore della configurazione del demone"
 
@@ -1645,10 +1642,6 @@ msgstr "Non è stato applicato alcun aggiornamento"
 #. TRANSLATORS: version cannot be installed due to policy
 msgid "Not approved"
 msgstr "Non approvata"
-
-#. TRANSLATORS: error message to tell someone they can't use this feature
-msgid "Not enough data was provided to make an HSI calculation."
-msgstr "I dati forniti non sono sufficienti per eseguire un calcolo HSI."
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Not found"
@@ -2392,10 +2385,6 @@ msgstr "Questo strumento può essere usato solamente dall'utente root"
 #. TRANSLATORS: CLI description
 msgid "This tool will read and parse the TPM event log from the system firmware."
 msgstr "Questo strumento legge e analizza il registro eventi TPM dal firmware di sistema."
-
-#. TRANSLATORS: message to tell someone how to ignore error
-msgid "To ignore this warning, use --force"
-msgstr "Per ignorare questo avviso, usare --force"
 
 #. TRANSLATORS: the update state of the specific device
 msgid "Transient failure"

@@ -17,7 +17,7 @@
 
 #include "fwupd-error.h"
 
-#include "fu-path-private.h"
+#include "fu-path.h"
 
 /**
  * fu_path_rmtree:
@@ -421,7 +421,9 @@ fu_path_from_kind(FuPathKind path_kind)
 		tmp = g_getenv("FWUPD_LOCKDIR");
 		if (tmp != NULL)
 			return g_strdup(tmp);
-		return g_strdup("/run/lock");
+		if (g_file_test("/run/lock", G_FILE_TEST_EXISTS))
+			return g_strdup("/run/lock");
+		return g_strdup("/var/run");
 	/* /sys/class/firmware-attributes */
 	case FU_PATH_KIND_SYSFSDIR_FW_ATTRIB:
 		tmp = g_getenv("FWUPD_SYSFSFWATTRIBDIR");
@@ -442,31 +444,19 @@ fu_path_from_kind(FuPathKind path_kind)
 	/* C:\Program Files (x86)\fwupd\ */
 	case FU_PATH_KIND_WIN32_BASEDIR:
 		return fu_path_get_win32_basedir();
+	/* / */
+	case FU_PATH_KIND_HOSTFS_ROOT:
+		tmp = g_getenv("FWUPD_HOSTFS_ROOT");
+		if (tmp != NULL)
+			return g_strdup(tmp);
+		return g_strdup("/");
+
 	/* this shouldn't happen */
 	default:
 		g_warning("cannot build path for unknown kind %u", path_kind);
 	}
 
 	return NULL;
-}
-
-/**
- * fu_path_fnmatch:
- * @pattern: a glob pattern, e.g. `*foo*`
- * @str: a string to match against the pattern, e.g. `bazfoobar`
- *
- * Matches a string against a glob pattern.
- *
- * Returns: %TRUE if the string matched
- *
- * Since: 1.8.2
- **/
-gboolean
-fu_path_fnmatch(const gchar *pattern, const gchar *str)
-{
-	g_return_val_if_fail(pattern != NULL, FALSE);
-	g_return_val_if_fail(str != NULL, FALSE);
-	return fu_path_fnmatch_impl(pattern, str);
 }
 
 static gint
@@ -503,7 +493,7 @@ fu_path_glob(const gchar *directory, const gchar *pattern, GError **error)
 	if (dir == NULL)
 		return NULL;
 	while ((basename = g_dir_read_name(dir)) != NULL) {
-		if (!fu_path_fnmatch(pattern, basename))
+		if (!g_pattern_match_simple(pattern, basename))
 			continue;
 		g_ptr_array_add(files, g_build_filename(directory, basename, NULL));
 	}

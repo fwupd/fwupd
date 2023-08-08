@@ -43,3 +43,16 @@ configure_file(
   configuration: con2,
   install: false,
 )
+
+if libsystemd.found() and get_option('man')
+  custom_target('fwupd-refresh.service.8',
+    input: 'fwupd-refresh.service.md',
+    output: 'fwupd-refresh.service.8',
+    command: [
+      generate_man, '@INPUT@', '-o', '@OUTPUT@',
+      '--replace', 'PACKAGE_VERSION', fwupd_version,
+    ],
+    install: true,
+    install_dir: join_paths(mandir, 'man8'),
+  )
+endif

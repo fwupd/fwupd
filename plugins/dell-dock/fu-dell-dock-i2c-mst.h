@@ -15,8 +15,6 @@
 
 #pragma once
 
-#include "config.h"
-
 #include <fwupdplugin.h>
 
 #define FU_TYPE_DELL_DOCK_MST (fu_dell_dock_mst_get_type())

@@ -76,7 +76,7 @@ fu_ifd_image_get_access(FuIfdImage *self, FuIfdRegion region)
 	return priv->access[region];
 }
 
-static GBytes *
+static GByteArray *
 fu_ifd_image_write(FuFirmware *firmware, GError **error)
 {
 	g_autoptr(GByteArray) buf = g_byte_array_new();
@@ -115,7 +115,7 @@ fu_ifd_image_write(FuFirmware *firmware, GError **error)
 			       0x00);
 
 	/* success */
-	return g_byte_array_free_to_bytes(g_steal_pointer(&buf));
+	return g_steal_pointer(&buf);
 }
 
 static void

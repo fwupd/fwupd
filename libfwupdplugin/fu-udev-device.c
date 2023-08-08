@@ -531,14 +531,26 @@ fu_udev_device_probe(FuDevice *device, GError **error)
 		    g_strdup_printf("%04X%04X", priv->subsystem_vendor, priv->subsystem_model);
 		fu_device_add_instance_str(device, "SUBSYS", subsys);
 	}
-	if (priv->revision != 0xFF)
+	if (fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_ADD_INSTANCE_ID_REV) &&
+	    priv->revision != 0xFF) {
 		fu_device_add_instance_u8(device, "REV", priv->revision);
+	}
 
 	fu_device_build_instance_id_quirk(device, NULL, subsystem, "VEN", NULL);
 	fu_device_build_instance_id(device, NULL, subsystem, "VEN", "DEV", NULL);
-	fu_device_build_instance_id(device, NULL, subsystem, "VEN", "DEV", "REV", NULL);
+	if (fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_ADD_INSTANCE_ID_REV))
+		fu_device_build_instance_id(device, NULL, subsystem, "VEN", "DEV", "REV", NULL);
 	fu_device_build_instance_id(device, NULL, subsystem, "VEN", "DEV", "SUBSYS", NULL);
-	fu_device_build_instance_id(device, NULL, subsystem, "VEN", "DEV", "SUBSYS", "REV", NULL);
+	if (fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_ADD_INSTANCE_ID_REV)) {
+		fu_device_build_instance_id(device,
+					    NULL,
+					    subsystem,
+					    "VEN",
+					    "DEV",
+					    "SUBSYS",
+					    "REV",
+					    NULL);
+	}
 
 	/* add device class */
 	tmp = g_udev_device_get_sysfs_attr(priv->udev_device, "class");
@@ -560,10 +572,6 @@ fu_udev_device_probe(FuDevice *device, GError **error)
 				       "MODALIAS",
 				       g_udev_device_get_property(priv->udev_device, "MODALIAS"));
 	fu_device_build_instance_id_quirk(device, NULL, subsystem, "MODALIAS", NULL);
-
-	/* add subsystem to match in plugins */
-	if (subsystem != NULL)
-		fu_device_add_instance_id_full(device, subsystem, FU_DEVICE_INSTANCE_FLAG_QUIRKS);
 
 	/* add firmware_id */
 	if (g_strcmp0(g_udev_device_get_subsystem(priv->udev_device), "serio") == 0) {
@@ -1432,7 +1440,7 @@ fu_udev_device_set_fd(FuUdevDevice *self, gint fd)
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
 
 	g_return_if_fail(FU_IS_UDEV_DEVICE(self));
-	if (priv->fd > 0)
+	if (priv->fd >= 0)
 		close(priv->fd);
 	priv->fd = fd;
 }
@@ -1554,10 +1562,10 @@ fu_udev_device_close(FuDevice *device, GError **error)
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
 
 	/* close device */
-	if (priv->fd > 0) {
+	if (priv->fd >= 0) {
 		if (!g_close(priv->fd, error))
 			return FALSE;
-		priv->fd = 0;
+		priv->fd = -1;
 	}
 
 	/* success */
@@ -1598,7 +1606,7 @@ fu_udev_device_ioctl(FuUdevDevice *self,
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* not open! */
-	if (priv->fd == 0) {
+	if (priv->fd < 0) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
@@ -1679,7 +1687,7 @@ fu_udev_device_pread(FuUdevDevice *self, goffset port, guint8 *buf, gsize bufsz,
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* not open! */
-	if (priv->fd == 0) {
+	if (priv->fd < 0) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
@@ -1730,7 +1738,7 @@ fu_udev_device_seek(FuUdevDevice *self, goffset offset, GError **error)
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* not open! */
-	if (priv->fd == 0) {
+	if (priv->fd < 0) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
@@ -1787,7 +1795,7 @@ fu_udev_device_pwrite(FuUdevDevice *self,
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* not open! */
-	if (priv->fd == 0) {
+	if (priv->fd < 0) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
@@ -2283,7 +2291,7 @@ fu_udev_device_finalize(GObject *object)
 	g_free(priv->device_file);
 	if (priv->udev_device != NULL)
 		g_object_unref(priv->udev_device);
-	if (priv->fd > 0)
+	if (priv->fd >= 0)
 		g_close(priv->fd, NULL);
 
 	G_OBJECT_CLASS(fu_udev_device_parent_class)->finalize(object);
@@ -2293,6 +2301,7 @@ static void
 fu_udev_device_init(FuUdevDevice *self)
 {
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
+	priv->fd = -1;
 	priv->flags = FU_UDEV_DEVICE_FLAG_OPEN_READ | FU_UDEV_DEVICE_FLAG_OPEN_WRITE;
 	fu_device_set_acquiesce_delay(FU_DEVICE(self), 2500);
 }

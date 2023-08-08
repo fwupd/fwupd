@@ -6,8 +6,6 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
 #include <glib-unix.h>
 #include <glib/gi18n.h>
 #include <locale.h>
@@ -306,23 +304,19 @@ main(int argc, char *argv[])
 
 	/* show the debug action_log from the last attempted update */
 	if (action_log) {
-		gsize sz = 0;
-		g_autofree guint8 *buf = NULL;
-		g_autofree guint16 *buf_ucs2 = NULL;
 		g_autofree gchar *str = NULL;
+		g_autoptr(GBytes) buf = NULL;
 		g_autoptr(GError) error_local = NULL;
-		if (!fu_efivar_get_data(FU_EFIVAR_GUID_FWUPDATE,
-					"FWUPDATE_DEBUG_LOG",
-					&buf,
-					&sz,
-					NULL,
-					&error_local)) {
+
+		buf = fu_efivar_get_data_bytes(FU_EFIVAR_GUID_FWUPDATE,
+					       "FWUPDATE_DEBUG_LOG",
+					       NULL,
+					       &error_local);
+		if (buf == NULL) {
 			g_printerr("failed: %s\n", error_local->message);
 			return EXIT_FAILURE;
 		}
-		buf_ucs2 = g_new0(guint16, (sz / 2) + 1);
-		memcpy(buf_ucs2, buf, sz);
-		str = g_utf16_to_utf8(buf_ucs2, sz / 2, NULL, NULL, &error_local);
+		str = fu_utf16_to_utf8_bytes(buf, G_LITTLE_ENDIAN, &error_local);
 		if (str == NULL) {
 			g_printerr("failed: %s\n", error_local->message);
 			return EXIT_FAILURE;
@@ -403,7 +397,7 @@ main(int argc, char *argv[])
 				continue;
 			}
 			g_print("  Information Version: %" G_GUINT32_FORMAT "\n",
-				fu_uefi_update_info_get_version(info));
+				(guint32)fu_firmware_get_version_raw(FU_FIRMWARE(info)));
 			g_print("  Firmware GUID: {%s}\n", fu_uefi_update_info_get_guid(info));
 			g_print("  Capsule Flags: 0x%08" G_GUINT32_FORMAT "x\n",
 				fu_uefi_update_info_get_capsule_flags(info));

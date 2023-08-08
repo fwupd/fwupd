@@ -6,8 +6,6 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
 #include <string.h>
 
 #include "fu-cros-ec-common.h"
@@ -81,15 +79,7 @@ fu_cros_ec_usb_device_get_configuration(FuCrosEcUsbDevice *self, GError **error)
 	guint8 index;
 	g_autofree gchar *configuration = NULL;
 
-#if G_USB_CHECK_VERSION(0, 3, 5)
 	index = g_usb_device_get_configuration_index(usb_device);
-#else
-	g_set_error_literal(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "this version of GUsb is not supported");
-	return FALSE;
-#endif
 	configuration = g_usb_device_get_string_descriptor(usb_device, index, error);
 	if (configuration == NULL)
 		return FALSE;
@@ -109,7 +99,6 @@ fu_cros_ec_usb_device_get_configuration(FuCrosEcUsbDevice *self, GError **error)
 static gboolean
 fu_cros_ec_usb_device_find_interface(FuUsbDevice *device, GError **error)
 {
-#if G_USB_CHECK_VERSION(0, 3, 3)
 	GUsbDevice *usb_device = fu_usb_device_get_dev(device);
 	FuCrosEcUsbDevice *self = FU_CROS_EC_USB_DEVICE(device);
 	g_autoptr(GPtrArray) intfs = NULL;
@@ -125,9 +114,7 @@ fu_cros_ec_usb_device_find_interface(FuUsbDevice *device, GError **error)
 		    g_usb_interface_get_subclass(intf) == USB_SUBCLASS_GOOGLE_UPDATE &&
 		    g_usb_interface_get_protocol(intf) == USB_PROTOCOL_GOOGLE_UPDATE) {
 			GUsbEndpoint *ep;
-			g_autoptr(GPtrArray) endpoints = NULL;
-
-			endpoints = g_usb_interface_get_endpoints(intf);
+			g_autoptr(GPtrArray) endpoints = g_usb_interface_get_endpoints(intf);
 			if (NULL == endpoints || 0 == endpoints->len)
 				continue;
 			ep = g_ptr_array_index(endpoints, 0);
@@ -140,13 +127,6 @@ fu_cros_ec_usb_device_find_interface(FuUsbDevice *device, GError **error)
 	}
 	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "no update interface found");
 	return FALSE;
-#else
-	g_set_error_literal(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "this version of GUsb is not supported");
-	return FALSE;
-#endif
 }
 
 static gboolean

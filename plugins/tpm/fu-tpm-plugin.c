@@ -105,6 +105,7 @@ fu_tpm_plugin_add_security_attr_version(FuPlugin *plugin, FuSecurityAttrs *attrs
 
 	/* create attr */
 	attr = fu_plugin_security_attr_new(plugin, FWUPD_SECURITY_ATTR_ID_TPM_VERSION_20);
+	fwupd_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_FOUND);
 	fu_security_attrs_append(attrs, attr);
 
 	/* check exists, and in v2.0 mode */
@@ -121,7 +122,6 @@ fu_tpm_plugin_add_security_attr_version(FuPlugin *plugin, FuSecurityAttrs *attrs
 	/* success */
 	fwupd_security_attr_add_guids(attr, fu_device_get_guids(FU_DEVICE(self->tpm_device)));
 	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
-	fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_FOUND);
 }
 
 static void
@@ -141,6 +141,7 @@ fu_tpm_plugin_add_security_attr_eventlog(FuPlugin *plugin, FuSecurityAttrs *attr
 	/* create attr */
 	attr = fu_plugin_security_attr_new(plugin, FWUPD_SECURITY_ATTR_ID_TPM_RECONSTRUCTION_PCR0);
 	fwupd_security_attr_add_guids(attr, fu_device_get_guids(self->tpm_device));
+	fwupd_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_VALID);
 	fu_security_attrs_append(attrs, attr);
 
 	/* check reconstructed to PCR0 */
@@ -186,7 +187,6 @@ fu_tpm_plugin_add_security_attr_eventlog(FuPlugin *plugin, FuSecurityAttrs *attr
 
 	/* success */
 	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
-	fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_VALID);
 }
 
 static void
@@ -202,6 +202,7 @@ fu_tpm_plugin_add_security_attr_empty(FuPlugin *plugin, FuSecurityAttrs *attrs)
 	/* add attributes */
 	attr = fu_plugin_security_attr_new(plugin, FWUPD_SECURITY_ATTR_ID_TPM_EMPTY_PCR);
 	fwupd_security_attr_add_guids(attr, fu_device_get_guids(self->tpm_device));
+	fwupd_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_VALID);
 	fu_security_attrs_append(attrs, attr);
 
 	/* check PCRs 0 through 7 for empty checksums */
@@ -229,7 +230,6 @@ fu_tpm_plugin_add_security_attr_empty(FuPlugin *plugin, FuSecurityAttrs *attrs)
 
 	/* success */
 	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
-	fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_VALID);
 }
 
 static void
@@ -365,7 +365,7 @@ fu_tpm_plugin_constructed(GObject *obj)
 
 	/* old name */
 	fu_plugin_add_rule(plugin, FU_PLUGIN_RULE_CONFLICTS, "tpm_eventlog");
-	fu_plugin_add_udev_subsystem(plugin, "tpm");
+	fu_plugin_add_device_udev_subsystem(plugin, "tpm");
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_TPM_V2_DEVICE);
 }
 

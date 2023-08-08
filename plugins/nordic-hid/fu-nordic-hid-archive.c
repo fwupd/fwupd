@@ -125,6 +125,9 @@ fu_nordic_hid_archive_parse(FuFirmware *firmware,
 		} else if (json_object_has_member(obj, "version_MCUBOOT")) {
 			bootloader_name = "MCUBOOT";
 			image = g_object_new(FU_TYPE_NORDIC_HID_FIRMWARE_MCUBOOT, NULL);
+		} else if (json_object_has_member(obj, "version_MCUBOOT+XIP")) {
+			bootloader_name = "MCUBOOT+XIP";
+			image = g_object_new(FU_TYPE_NORDIC_HID_FIRMWARE_MCUBOOT, NULL);
 		} else {
 			g_set_error_literal(error,
 					    FWUPD_ERROR,
@@ -149,10 +152,10 @@ fu_nordic_hid_archive_parse(FuFirmware *firmware,
 					    "manifest invalid as has no target board information");
 			return FALSE;
 		}
-		/* images for B0 bootloader are listed in strict order:
+		/* The images for B0 or MCUboot+XIP bootloader are listed in strict order:
 		 * this is guaranteed by producer set the id format as
 		 * <board>_<bl>_<bank>N, i.e "nrf52840dk_B0_bank0".
-		 * For MCUBoot bootloader only the single image is available */
+		 * For MCUBoot bootloader that swaps images, only a single image is available */
 		image_id = g_strdup_printf("%s_%s_bank%01u", board_split[0], bootloader_name, i);
 		if (!fu_firmware_parse(image, blob, flags | FWUPD_INSTALL_FLAG_NO_SEARCH, error))
 			return FALSE;
@@ -163,7 +166,8 @@ fu_nordic_hid_archive_parse(FuFirmware *firmware,
 			image_addr = json_object_get_int_member(obj, "load_address");
 			fu_firmware_set_addr(image, image_addr);
 		}
-		fu_firmware_add_image(firmware, image);
+		if (!fu_firmware_add_image_full(firmware, image, error))
+			return FALSE;
 	}
 
 	/* success */
@@ -173,6 +177,7 @@ fu_nordic_hid_archive_parse(FuFirmware *firmware,
 static void
 fu_nordic_hid_archive_init(FuNordicHidArchive *self)
 {
+	fu_firmware_set_images_max(FU_FIRMWARE(self), 1024);
 }
 
 static void

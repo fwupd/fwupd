@@ -36,6 +36,15 @@ useful to update a specific device on the command line that needs a bleeding
 edge fwupd version, but it should not be considered as a replacement to the
 distro-provided system version.
 
+### Using Tartan
+
+[Tartan](https://gitlab.freedesktop.org/tartan/tartan/-/wikis/home) is a LLVM static
+analysis plugin built to analyze GLib code. It can be installed and then run using:
+
+    mkdir build-tartan
+    CC=clang meson ../
+    SCANBUILD=../contrib/tartan.sh ninja scan-build
+
 ## LVFS
 
 This project is configured by default to download firmware from the [Linux Vendor
@@ -98,7 +107,7 @@ to only firmware that have been tested specifically in your organization.
 
 The list of approved updates can be enabled by adding `ApprovalRequired=true`
 to the remote configuration file, e.g. `lvfs.conf`. Once enabled, the
-list of approved updates can be set in `daemon.conf` using a comma-delimited list.
+list of approved updates can be set in `fwupd.conf` using a comma-delimited list.
 
 For example:
 

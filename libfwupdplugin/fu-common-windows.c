@@ -13,7 +13,6 @@
 #include <sysinfoapi.h>
 
 #include "fu-common-private.h"
-#include "fu-path-private.h"
 
 GPtrArray *
 fu_common_get_block_devices(GError **error)
@@ -23,14 +22,6 @@ fu_common_get_block_devices(GError **error)
 		    G_IO_ERROR_NOT_SUPPORTED,
 		    "getting block devices is not supported on Windows");
 	return NULL;
-}
-
-gboolean
-fu_path_fnmatch_impl(const gchar *pattern, const gchar *str)
-{
-	g_return_val_if_fail(pattern != NULL, FALSE);
-	g_return_val_if_fail(str != NULL, FALSE);
-	return PathMatchSpecA(str, pattern);
 }
 
 guint64

@@ -37,7 +37,7 @@ refuses to install when packaged into a cabinet archive:
     $ gcab -c firmware.cab firmware.bin firmware.metainfo.xml 
     $ fwupdmgr install firmware.cab --allow-reinstall
     Decompressing…           [ -                                     ]
-    firmware signature missing or not trusted; set OnlyTrusted=false in /etc/fwupd/daemon.conf ONLY if you are a firmware developer
+    firmware signature missing or not trusted; set OnlyTrusted=false in /etc/fwupd/fwupd.conf ONLY if you are a firmware developer
 
 Let's download a script that can generate some test certificates -- feel free to copy the commands
 used and of course you need to modify the details of both the CA and user certificate.
@@ -93,7 +93,7 @@ If fwupd is running in a prefix then you need to use that instead, e.g. `/home/e
     $ sudo cp ACME-CA.pem /etc/pki/fwupd/
     [sudo] password for emily: foobarbaz
 
-Then, the firmware should install **without** needing to change `OnlyTrusted` in `daemon.conf`.
+Then, the firmware should install **without** needing to change `OnlyTrusted` in `fwupd.conf`.
 
     $ fwupdmgr install firmware.cab --allow-reinstall
     Writing…                 [***************************************]

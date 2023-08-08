@@ -6,11 +6,6 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
-#include <gusb.h>
-#include <string.h>
-
 #include "fu-genesys-common.h"
 #include "fu-genesys-scaler-device.h"
 #include "fu-genesys-scaler-firmware.h"
@@ -1581,8 +1576,9 @@ fu_genesys_scaler_device_probe(FuDevice *device, GError **error)
 	if (!fu_genesys_scaler_device_get_version(self, buf, sizeof(buf), error))
 		return FALSE;
 	/* ?xIM123; where ? is 0x06 (length?) */
-	panelrev = fu_strsafe((const gchar *)&buf[1], 6);
-
+	panelrev = fu_memstrsafe(buf, sizeof(buf), 0x1, 6, error);
+	if (panelrev == NULL)
+		return FALSE;
 	if (!fu_genesys_scaler_device_get_firmware_packet_version(self, &ver, error))
 		return FALSE;
 
@@ -1804,7 +1800,7 @@ fu_genesys_scaler_device_write_firmware(FuDevice *device,
 						 fu_progress_get_child(progress),
 						 error))
 		return FALSE;
-	if (!fu_memcmp_safe(buf, size, data, size, error))
+	if (!fu_memcmp_safe(buf, size, 0x0, data, size, 0x0, size, error))
 		return FALSE;
 	fu_progress_step_done(progress);
 
@@ -1949,9 +1945,20 @@ fu_genesys_scaler_device_init(FuGenesysScalerDevice *self)
 }
 
 static void
+fu_genesys_scaler_device_finalize(GObject *object)
+{
+	FuGenesysScalerDevice *self = FU_GENESYS_SCALER_DEVICE(object);
+	if (self->cfi_device != NULL)
+		g_object_unref(self->cfi_device);
+	G_OBJECT_CLASS(fu_genesys_scaler_device_parent_class)->finalize(object);
+}
+
+static void
 fu_genesys_scaler_device_class_init(FuGenesysScalerDeviceClass *klass)
 {
+	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
+	object_class->finalize = fu_genesys_scaler_device_finalize;
 	klass_device->probe = fu_genesys_scaler_device_probe;
 	klass_device->setup = fu_genesys_scaler_device_setup;
 	klass_device->dump_firmware = fu_genesys_scaler_device_dump_firmware;

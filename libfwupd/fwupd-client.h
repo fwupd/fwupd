@@ -39,16 +39,26 @@ struct _FwupdClientClass {
 /**
  * FwupdClientDownloadFlags:
  * @FWUPD_CLIENT_DOWNLOAD_FLAG_NONE:		No flags set
- * @FWUPD_CLIENT_DOWNLOAD_FLAG_ONLY_IPFS:	Only use IPFS when downloading URIs
+ * @FWUPD_CLIENT_DOWNLOAD_FLAG_ONLY_P2P:	Only use peer-to-peer when downloading URIs
  *
  * The options to use for downloading.
  **/
 typedef enum {
-	FWUPD_CLIENT_DOWNLOAD_FLAG_NONE = 0,	       /* Since: 1.4.5 */
-	FWUPD_CLIENT_DOWNLOAD_FLAG_ONLY_IPFS = 1 << 0, /* Since: 1.5.6 */
+	FWUPD_CLIENT_DOWNLOAD_FLAG_NONE = 0,	      /* Since: 1.4.5 */
+	FWUPD_CLIENT_DOWNLOAD_FLAG_ONLY_P2P = 1 << 0, /* Since: 1.9.4 */
 	/*< private >*/
 	FWUPD_CLIENT_DOWNLOAD_FLAG_LAST
 } FwupdClientDownloadFlags;
+
+/**
+ * FWUPD_CLIENT_DOWNLOAD_FLAG_ONLY_IPFS:
+ *
+ * For API compatibility:
+ *
+ * Since: 1.5.6
+ * Deprecated: 1.9.4
+ **/
+#define FWUPD_CLIENT_DOWNLOAD_FLAG_ONLY_IPFS FWUPD_CLIENT_DOWNLOAD_FLAG_ONLY_P2P
 
 /**
  * FwupdClientUploadFlags:
@@ -347,7 +357,15 @@ fwupd_client_refresh_remote_async(FwupdClient *self,
 				  FwupdRemote *remote,
 				  GCancellable *cancellable,
 				  GAsyncReadyCallback callback,
-				  gpointer callback_data);
+				  gpointer callback_data)
+    G_DEPRECATED_FOR(fwupd_client_refresh_remote2_async);
+void
+fwupd_client_refresh_remote2_async(FwupdClient *self,
+				   FwupdRemote *remote,
+				   FwupdClientDownloadFlags download_flags,
+				   GCancellable *cancellable,
+				   GAsyncReadyCallback callback,
+				   gpointer callback_data);
 gboolean
 fwupd_client_refresh_remote_finish(FwupdClient *self,
 				   GAsyncResult *res,

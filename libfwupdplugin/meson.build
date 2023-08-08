@@ -8,216 +8,256 @@ fwupdplugin_version_h = configure_file(
   configuration: conf
 )
 
-fwupdplugin_structs = structgen.process(
-  'fu-acpi-table.struct',   # fuzzing
-  'fu-cfu.struct',          # fuzzing
-  'fu-dfu.struct',          # fuzzing
-  'fu-efi.struct',          # fuzzing
-  'fu-fdt.struct',          # fuzzing
-  'fu-fmap.struct',         # fuzzing
-  'fu-ifwi.struct',         # fuzzing
-  'fu-oprom.struct',        # fuzzing
-  'fu-smbios.struct',       # fuzzing
-  'fu-usb-device-ds20.struct', # fuzzing
-  'fu-uswid.struct',        # fuzzing
-)
+fwupdplugin_structs = [
+  'fu-acpi-table.rs', # fuzzing
+  'fu-cfu-firmware.rs', # fuzzing
+  'fu-coswid.rs', # fuzzing
+  'fu-dfu-firmware.rs', # fuzzing
+  'fu-efi.rs', # fuzzing
+  'fu-elf.rs', # fuzzing
+  'fu-fdt.rs', # fuzzing
+  'fu-fmap.rs', # fuzzing
+  'fu-hid.rs', # fuzzing
+  'fu-ifd.rs', # fuzzing
+  'fu-ifwi.rs', # fuzzing
+  'fu-intel-thunderbolt.rs', # fuzzing
+  'fu-oprom.rs', # fuzzing
+  'fu-pefile.rs', # fuzzing
+  'fu-sbatlevel-section.rs', # fuzzing
+  'fu-smbios.rs', # fuzzing
+  'fu-usb-device-ds20.rs', # fuzzing
+  'fu-uswid.rs', # fuzzing
+]
+
+# do not use structgen as these are referenced in headers too...
+fwupdplugin_struct_targets = []
+foreach fwupdplugin_struct: fwupdplugin_structs
+  fwupdplugin_struct_targets += custom_target('lib' + fwupdplugin_struct,
+    input: fwupdplugin_struct,
+    output: [
+      fwupdplugin_struct.replace('.rs', '-struct.c'),
+      fwupdplugin_struct.replace('.rs', '-struct.h'),
+    ],
+    command: [
+      python3,
+      join_paths(meson.project_source_root(), 'libfwupdplugin', 'rustgen.py'),
+      '@INPUT@', '@OUTPUT0@', '@OUTPUT1@',
+    ],
+  )
+endforeach
 
 fwupdplugin_src = [
-  'fu-acpi-table.c',        # fuzzing
+  'fu-acpi-table.c', # fuzzing
   'fu-archive.c',
-  'fu-backend.c',
-  'fu-bluez-device.c',
-  'fu-cabinet.c',
-  'fu-chunk.c',             # fuzzing
-  'fu-common.c',            # fuzzing
-  'fu-sum.c',               # fuzzing
-  'fu-crc.c',               # fuzzing
-  'fu-mem.c',               # fuzzing
-  'fu-byte-array.c',        # fuzzing
-  'fu-string.c',            # fuzzing
-  'fu-bytes.c',             # fuzzing
-  'fu-kernel.c',            # fuzzing
-  'fu-dump.c',              # fuzzing
-  'fu-path.c',              # fuzzing
-  'fu-common-guid.c',
-  'fu-version-common.c',    # fuzzing
-  'fu-context.c',           # fuzzing
-  'fu-device-locker.c',     # fuzzing
-  'fu-device.c',            # fuzzing
-  'fu-device-progress.c',
-  'fu-dfu-firmware.c',      # fuzzing
-  'fu-fdt-firmware.c',      # fuzzing
-  'fu-fdt-image.c',         # fuzzing
-  'fu-fit-firmware.c',      # fuzzing
-  'fu-ifwi-cpd-firmware.c', # fuzzing
-  'fu-ifwi-fpt-firmware.c', # fuzzing
-  'fu-oprom-firmware.c',    # fuzzing
-  'fu-intel-thunderbolt-nvm.c',         # fuzzing
-  'fu-intel-thunderbolt-firmware.c', # fuzzing
-  'fu-cfu-common.c',        # fuzzing
-  'fu-cfu-offer.c',         # fuzzing
-  'fu-cfu-payload.c',       # fuzzing
-  'fu-volume.c',            # fuzzing
-  'fu-firmware.c',          # fuzzing
-  'fu-bios-settings.c',        # fuzzing
-  'fu-firmware-common.c',   # fuzzing
-  'fu-dfuse-firmware.c',    # fuzzing
-  'fu-fmap-firmware.c',     # fuzzing
-  'fu-hwids.c',             # fuzzing
-  'fu-hwids-config.c',      # fuzzing
-  'fu-hwids-dmi.c',         # fuzzing
-  'fu-hwids-fdt.c',         # fuzzing
-  'fu-hwids-kenv.c',        # fuzzing
-  'fu-hwids-smbios.c',      # fuzzing
-  'fu-ihex-firmware.c',     # fuzzing
-  'fu-io-channel.c',        # fuzzing
-  'fu-plugin.c',
-  'fu-quirks.c',            # fuzzing
-  'fu-progress.c',          # fuzzing
-  'fu-security-attr.c',     # fuzzing
-  'fu-security-attrs.c',
-  'fu-smbios.c',            # fuzzing
-  'fu-srec-firmware.c',     # fuzzing
   'fu-archive-firmware.c',
-  'fu-kenv.c',              # fuzzing
+  'fu-backend.c',
+  'fu-bios-settings.c', # fuzzing
+  'fu-bluez-device.c',
+  'fu-byte-array.c', # fuzzing
+  'fu-bytes.c', # fuzzing
+  'fu-cabinet.c',
+  'fu-cfi-device.c',
+  'fu-cfu-offer.c', # fuzzing
+  'fu-cfu-payload.c', # fuzzing
+  'fu-chunk.c', # fuzzing
+  'fu-common.c', # fuzzing
+  'fu-common-guid.c',
+  'fu-config.c', # fuzzing
+  'fu-context.c', # fuzzing
+  'fu-coswid-firmware.c', # fuzzing
+  'fu-crc.c', # fuzzing
+  'fu-csv-entry.c', # fuzzing
+  'fu-csv-firmware.c', # fuzzing
+  'fu-device.c', # fuzzing
+  'fu-device-locker.c', # fuzzing
+  'fu-device-progress.c',
+  'fu-dfu-firmware.c', # fuzzing
+  'fu-dfuse-firmware.c', # fuzzing
+  'fu-dump.c', # fuzzing
+  'fu-efi-common.c', # fuzzing
+  'fu-efi-device-path.c', # fuzzing
+  'fu-efi-device-path-list.c', # fuzzing
+  'fu-efi-file-path-device-path.c', # fuzzing
+  'fu-efi-firmware-common.c', # fuzzing
+  'fu-efi-firmware-file.c', # fuzzing
+  'fu-efi-firmware-filesystem.c', # fuzzing
+  'fu-efi-firmware-section.c', # fuzzing
+  'fu-efi-firmware-volume.c', # fuzzing
+  'fu-efi-hard-drive-device-path.c', # fuzzing
+  'fu-efi-load-option.c', # fuzzing
   'fu-efi-signature.c',
   'fu-efi-signature-list.c',
-  'fu-efi-common.c',              # fuzzing
-  'fu-efi-firmware-common.c',     # fuzzing
-  'fu-efi-firmware-file.c',       # fuzzing
-  'fu-efi-firmware-filesystem.c', # fuzzing
-  'fu-efi-firmware-section.c',    # fuzzing
-  'fu-efi-firmware-volume.c',     # fuzzing
-  'fu-ifd-bios.c',                # fuzzing
-  'fu-ifd-common.c',              # fuzzing
-  'fu-ifd-firmware.c',            # fuzzing
-  'fu-ifd-image.c',               # fuzzing
-  'fu-uswid-firmware.c',          # fuzzing
-  'fu-coswid-common.c',           # fuzzing
-  'fu-coswid-firmware.c',         # fuzzing
-  'fu-pefile-firmware.c',         # fuzzing
-  'fu-efivar.c',
-  'fu-udev-device.c',
-  'fu-i2c-device.c',
-  'fu-mei-device.c',
-  'fu-usb-device.c',
-  'fu-usb-device-ds20.c',         # fuzzing
-  'fu-usb-device-fw-ds20.c',      # fuzzing
-  'fu-usb-device-ms-ds20.c',      # fuzzing
-  'fu-cfi-device.c',
+  'fu-efivar.c', # fuzzing
+  'fu-elf-firmware.c', # fuzzing
+  'fu-fdt-firmware.c', # fuzzing
+  'fu-fdt-image.c', # fuzzing
+  'fu-firmware.c', # fuzzing
+  'fu-firmware-common.c', # fuzzing
+  'fu-fit-firmware.c', # fuzzing
+  'fu-fmap-firmware.c', # fuzzing
+  'fu-hid-descriptor.c', # fuzzing
   'fu-hid-device.c',
+  'fu-hid-report-item.c', # fuzzing
+  'fu-hid-report.c', # fuzzing
+  'fu-hwids.c', # fuzzing
+  'fu-hwids-config.c', # fuzzing
+  'fu-hwids-dmi.c', # fuzzing
+  'fu-hwids-fdt.c', # fuzzing
+  'fu-hwids-kenv.c', # fuzzing
+  'fu-hwids-smbios.c', # fuzzing
+  'fu-i2c-device.c',
+  'fu-ifd-bios.c', # fuzzing
+  'fu-ifd-common.c', # fuzzing
+  'fu-ifd-firmware.c', # fuzzing
+  'fu-ifd-image.c', # fuzzing
+  'fu-ifwi-cpd-firmware.c', # fuzzing
+  'fu-ifwi-fpt-firmware.c', # fuzzing
+  'fu-ihex-firmware.c', # fuzzing
+  'fu-intel-thunderbolt-firmware.c', # fuzzing
+  'fu-intel-thunderbolt-nvm.c', # fuzzing
+  'fu-io-channel.c', # fuzzing
+  'fu-kenv.c', # fuzzing
+  'fu-kernel.c', # fuzzing
   'fu-linear-firmware.c',
+  'fu-mei-device.c',
+  'fu-mem.c', # fuzzing
+  'fu-oprom-firmware.c', # fuzzing
+  'fu-path.c', # fuzzing
+  'fu-pefile-firmware.c', # fuzzing
+  'fu-plugin.c',
+  'fu-progress.c', # fuzzing
+  'fu-quirks.c', # fuzzing
+  'fu-sbatlevel-section.c', # fuzzing
+  'fu-security-attr.c', # fuzzing
+  'fu-security-attrs.c',
+  'fu-smbios.c', # fuzzing
+  'fu-srec-firmware.c', # fuzzing
+  'fu-string.c', # fuzzing
+  'fu-sum.c', # fuzzing
+  'fu-udev-device.c',
+  'fu-usb-device.c',
+  'fu-usb-device-ds20.c', # fuzzing
+  'fu-usb-device-fw-ds20.c', # fuzzing
+  'fu-usb-device-ms-ds20.c', # fuzzing
+  'fu-uswid-firmware.c', # fuzzing
   'fu-version.c',
+  'fu-version-common.c', # fuzzing
+  'fu-volume.c', # fuzzing
 ]
 
 if host_machine.system() == 'linux'
-  fwupdplugin_src += 'fu-common-linux.c'    # fuzzing
+  fwupdplugin_src += 'fu-common-linux.c' # fuzzing
   fwupdplugin_src += 'fu-efivar-linux.c'
 elif host_machine.system() == 'freebsd'
   fwupdplugin_src += 'fu-common-freebsd.c'
   fwupdplugin_src += 'fu-efivar-freebsd.c'
 elif host_machine.system() == 'windows'
   fwupdplugin_src += 'fu-common-windows.c'
-  fwupdplugin_src += 'fu-efivar-windows.c'  # fuzzing
+  fwupdplugin_src += 'fu-efivar-windows.c'
 elif host_machine.system() == 'darwin'
   fwupdplugin_src += 'fu-common-darwin.c'
   fwupdplugin_src += 'fu-efivar-darwin.c'
 else
-  error('no OS support for @0@'.format(host_machine.system()))
+  fwupdplugin_src += 'fu-efivar-impl.c' # fuzzing
 endif
 
 fwupdplugin_headers = [
   'fu-acpi-table.h',
+  'fu-archive-firmware.h',
   'fu-archive.h',
   'fu-backend.h',
+  'fu-backend-private.h',
+  'fu-bios-settings.h',
+  'fu-bios-settings-private.h',
   'fu-bluez-device.h',
-  'fu-cabinet.h',
-  'fu-chunk.h',
-  'fu-common.h',
   'fu-byte-array.h',
-  'fu-string.h',
-  'fu-sum.h',
-  'fu-crc.h',
-  'fu-mem.h',
-  'fu-dump.h',
-  'fu-path.h',
   'fu-bytes.h',
-  'fu-kernel.h',
-  'fu-common-guid.h',
-  'fu-version-common.h',
-  'fu-context.h',
-  'fu-device.h',
-  'fu-device-metadata.h',
-  'fu-device-locker.h',
-  'fu-dfu-firmware.h',
-  'fu-fdt-firmware.h',
-  'fu-fdt-image.h',
-  'fu-fit-firmware.h',
-  'fu-ifwi-cpd-firmware.h',
-  'fu-ifwi-fpt-firmware.h',
-  'fu-oprom-firmware.h',
-  'fu-intel-thunderbolt-firmware.h',
-  'fu-intel-thunderbolt-nvm.h',
-  'fu-cfu-common.h',
+  'fu-cabinet.h',
+  'fu-cfi-device.h',
   'fu-cfu-offer.h',
   'fu-cfu-payload.h',
+  'fu-chunk.h',
+  'fu-common-guid.h',
+  'fu-common.h',
+  'fu-config.h',
+  'fu-config-private.h',
+  'fu-context.h',
+  'fu-context-private.h',
+  'fu-coswid-firmware.h',
+  'fu-crc.h',
+  'fu-csv-entry.h',
+  'fu-csv-firmware.h',
+  'fu-device.h',
+  'fu-device-locker.h',
+  'fu-device-metadata.h',
+  'fu-device-private.h',
+  'fu-device-progress.h',
+  'fu-dfu-firmware.h',
+  'fu-dfuse-firmware.h',
+  'fu-dump.h',
   'fu-efi-common.h',
   'fu-efi-firmware-file.h',
   'fu-efi-firmware-filesystem.h',
   'fu-efi-firmware-section.h',
   'fu-efi-firmware-volume.h',
-  'fu-ifd-bios.h',
-  'fu-ifd-common.h',
-  'fu-ifd-firmware.h',
-  'fu-uswid-firmware.h',
-  'fu-coswid-firmware.h',
-  'fu-pefile-firmware.h',
-  'fu-ifd-image.h',
-  'fu-linear-firmware.h',
-  'fu-volume.h',
-  'fu-firmware.h',
-  'fu-bios-settings.h',
-  'fu-firmware-common.h',
-  'fu-fmap-firmware.h',
-  'fu-dfuse-firmware.h',
-  'fu-hwids.h',
-  'fu-ihex-firmware.h',
-  'fu-io-channel.h',
-  'fu-plugin.h',
-  'fu-quirks.h',
-  'fu-security-attr.h',
-  'fu-security-attrs.h',
-  'fu-progress.h',
-  'fu-smbios.h',
-  'fu-cfi-device.h',
-  'fu-srec-firmware.h',
-  'fu-archive-firmware.h',
+  'fu-efi-load-option.h',
   'fu-efi-signature.h',
   'fu-efi-signature-list.h',
   'fu-efivar.h',
-  'fu-udev-device.h',
-  'fu-i2c-device.h',
-  'fu-mei-device.h',
-  'fu-usb-device.h',
+  'fu-elf-firmware.h',
+  'fu-fdt-firmware.h',
+  'fu-fdt-image.h',
+  'fu-firmware-common.h',
+  'fu-firmware.h',
+  'fu-fit-firmware.h',
+  'fu-fmap-firmware.h',
+  'fu-hid-descriptor.h',
   'fu-hid-device.h',
-]
-
-fwupdplugin_headers_private = [
-  'fu-backend-private.h',
-  'fu-context-private.h',
-  'fu-device-private.h',
-  'fu-device-progress.h',
+  'fu-hid-report.h',
+  'fu-hwids.h',
+  'fu-i2c-device.h',
+  'fu-ifd-bios.h',
+  'fu-ifd-common.h',
+  'fu-ifd-firmware.h',
+  'fu-ifd-image.h',
+  'fu-ifwi-cpd-firmware.h',
+  'fu-ifwi-fpt-firmware.h',
+  'fu-ihex-firmware.h',
+  'fu-intel-thunderbolt-firmware.h',
+  'fu-intel-thunderbolt-nvm.h',
+  'fu-io-channel.h',
   'fu-kenv.h',
+  'fu-kernel.h',
+  'fu-linear-firmware.h',
+  'fu-mei-device.h',
+  'fu-mem.h',
   'fu-mem-private.h',
+  'fu-oprom-firmware.h',
+  'fu-path.h',
+  'fu-pefile-firmware.h',
+  'fu-plugin.h',
   'fu-plugin-private.h',
-  'fu-bios-settings-private.h',
+  'fu-progress.h',
+  'fu-quirks.h',
+  'fu-sbatlevel-section.h',
+  'fu-security-attr.h',
+  'fu-security-attrs.h',
   'fu-security-attrs-private.h',
+  'fu-smbios.h',
   'fu-smbios-private.h',
+  'fu-srec-firmware.h',
+  'fu-string.h',
+  'fu-sum.h',
+  'fu-udev-device.h',
   'fu-udev-device-private.h',
   'fu-usb-device-ds20.h',
   'fu-usb-device-fw-ds20.h',
+  'fu-usb-device.h',
   'fu-usb-device-ms-ds20.h',
   'fu-usb-device-private.h',
+  'fu-uswid-firmware.h',
+  'fu-version-common.h',
+  'fu-volume.h',
   fwupdplugin_version_h,
 ]
 
@@ -254,15 +294,12 @@ library_deps = [
   platform_deps,
 ]
 
-fwupdplugin_mapfile = 'fwupdplugin.map'
-vflag = '-Wl,--version-script,@0@/@1@'.format(meson.current_source_dir(), fwupdplugin_mapfile)
 fwupdplugin = library(
   'fwupdplugin',
-  fwupdplugin_structs,
+  fwupdplugin_struct_targets,
   sources: [
     fwupdplugin_src,
     fwupdplugin_headers,
-    fwupdplugin_headers_private,
   ],
   include_directories: [
     root_incdir,
@@ -274,8 +311,6 @@ fwupdplugin = library(
   link_with: [
     fwupd,
   ],
-  link_args: cc.get_supported_link_arguments([vflag]),
-  link_depends: fwupdplugin_mapfile,
   install_dir: libdir_pkg,
   install: true
 )
@@ -301,7 +336,7 @@ if introspection.allowed()
     sources: [
       fwupdplugin_src,
       fwupdplugin_headers,
-      fwupdplugin_headers_private,
+      fwupdplugin_struct_targets,
     ],
     nsversion: '1.0',
     namespace: 'FwupdPlugin',
@@ -328,36 +363,6 @@ if introspection.allowed()
     ],
     install: false
   )
-
-  # Verify the map file is correct -- note we can't actually use the generated
-  # file for two reasons:
-  #
-  #  1. We don't hard depend on GObject Introspection
-  #  2. The map file is required to build the lib that the GIR is built from
-  #
-  # To avoid the circular dep, and to ensure we don't change exported API
-  # accidentally actually check in a version of the version script to git.
-  fwupdplugin_mapfile_target = custom_target('fwupdplugin_mapfile',
-    input: fwupdplugin_gir[0],
-    output: 'fwupdplugin.map',
-    command: [
-      python3,
-      join_paths(meson.project_source_root(), 'contrib', 'generate-version-script.py'),
-      'LIBFWUPDPLUGIN',
-      '@INPUT@',
-      '@OUTPUT@',
-      '--override', 'fu_chunk_get_type', '1.5.6',
-      '--override', 'fu_srec_firmware_record_get_type', '1.6.1',
-    ],
-  )
-
-  test('fwupdplugin-exported-api', diffcmd,
-       args: [
-        '-urNp',
-        files('fwupdplugin.map'),
-        fwupdplugin_mapfile_target,
-        ],
-      )
 endif
 
 if get_option('tests')
@@ -367,7 +372,7 @@ if get_option('tests')
   e = executable(
     'fwupdplugin-self-test',
     installed_firmware_zip,
-    structgen.process('fu-self-test.struct'),
+    rustgen.process('fu-self-test.rs'),
     sources: [
       'fu-self-test.c'
     ],

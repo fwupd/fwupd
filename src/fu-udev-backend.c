@@ -13,13 +13,13 @@
 #include <gudev/gudev.h>
 
 #include "fu-context-private.h"
+#include "fu-device-private.h"
 #include "fu-udev-backend.h"
 
 struct _FuUdevBackend {
 	FuBackend parent_instance;
 	GUdevClient *gudev_client;
 	GHashTable *changed_idle_ids; /* sysfs:FuUdevBackendHelper */
-	GPtrArray *subsystems;
 };
 
 G_DEFINE_TYPE(FuUdevBackend, fu_udev_backend, FU_TYPE_BACKEND)
@@ -27,8 +27,10 @@ G_DEFINE_TYPE(FuUdevBackend, fu_udev_backend, FU_TYPE_BACKEND)
 static void
 fu_udev_backend_device_add(FuUdevBackend *self, GUdevDevice *udev_device)
 {
+	FuContext *ctx = fu_backend_get_context(FU_BACKEND(self));
 	GType gtype = FU_TYPE_UDEV_DEVICE;
 	g_autoptr(FuUdevDevice) device = NULL;
+	g_autoptr(GPtrArray) possible_plugins = NULL;
 	struct {
 		const gchar *subsystem;
 		GType gtype;
@@ -53,6 +55,20 @@ fu_udev_backend_device_add(FuUdevBackend *self, GUdevDevice *udev_device)
 			      "udev-device",
 			      udev_device,
 			      NULL);
+
+	/* notify plugins using fu_plugin_add_udev_subsystem() */
+	possible_plugins =
+	    fu_context_get_plugin_names_for_udev_subsystem(ctx,
+							   g_udev_device_get_subsystem(udev_device),
+							   NULL);
+	if (possible_plugins != NULL) {
+		for (guint i = 0; i < possible_plugins->len; i++) {
+			const gchar *plugin_name = g_ptr_array_index(possible_plugins, i);
+			fu_device_add_possible_plugin(FU_DEVICE(device), plugin_name);
+		}
+	}
+
+	/* success */
 	fu_backend_device_added(FU_BACKEND(self), FU_DEVICE(device));
 }
 
@@ -174,13 +190,15 @@ fu_udev_backend_coldplug_subsystem(FuUdevBackend *self,
 static gboolean
 fu_udev_backend_coldplug(FuBackend *backend, FuProgress *progress, GError **error)
 {
+	FuContext *ctx = fu_backend_get_context(backend);
 	FuUdevBackend *self = FU_UDEV_BACKEND(backend);
+	g_autoptr(GPtrArray) udev_subsystems = fu_context_get_udev_subsystems(ctx);
 
 	/* udev watches can only be set up in _init() so set up client now */
-	if (self->subsystems->len > 0) {
-		g_auto(GStrv) subsystems = g_new0(gchar *, self->subsystems->len + 1);
-		for (guint i = 0; i < self->subsystems->len; i++) {
-			const gchar *subsystem = g_ptr_array_index(self->subsystems, i);
+	if (udev_subsystems->len > 0) {
+		g_auto(GStrv) subsystems = g_new0(gchar *, udev_subsystems->len + 1);
+		for (guint i = 0; i < udev_subsystems->len; i++) {
+			const gchar *subsystem = g_ptr_array_index(udev_subsystems, i);
 			subsystems[i] = g_strdup(subsystem);
 		}
 		self->gudev_client = g_udev_client_new((const gchar *const *)subsystems);
@@ -192,9 +210,9 @@ fu_udev_backend_coldplug(FuBackend *backend, FuProgress *progress, GError **erro
 
 	/* get all devices of class */
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_set_steps(progress, self->subsystems->len);
-	for (guint i = 0; i < self->subsystems->len; i++) {
-		const gchar *subsystem = g_ptr_array_index(self->subsystems, i);
+	fu_progress_set_steps(progress, udev_subsystems->len);
+	for (guint i = 0; i < udev_subsystems->len; i++) {
+		const gchar *subsystem = g_ptr_array_index(udev_subsystems, i);
 		fu_udev_backend_coldplug_subsystem(self,
 						   subsystem,
 						   fu_progress_get_child(progress));
@@ -210,8 +228,6 @@ fu_udev_backend_finalize(GObject *object)
 	FuUdevBackend *self = FU_UDEV_BACKEND(object);
 	if (self->gudev_client != NULL)
 		g_object_unref(self->gudev_client);
-	if (self->subsystems != NULL)
-		g_ptr_array_unref(self->subsystems);
 	g_hash_table_unref(self->changed_idle_ids);
 	G_OBJECT_CLASS(fu_udev_backend_parent_class)->finalize(object);
 }
@@ -238,11 +254,5 @@ fu_udev_backend_class_init(FuUdevBackendClass *klass)
 FuBackend *
 fu_udev_backend_new(FuContext *ctx)
 {
-	FuUdevBackend *self;
-	GPtrArray *subsystems = fu_context_get_udev_subsystems(ctx);
-	self = FU_UDEV_BACKEND(
-	    g_object_new(FU_TYPE_UDEV_BACKEND, "name", "udev", "context", ctx, NULL));
-	if (subsystems != NULL)
-		self->subsystems = g_ptr_array_ref(subsystems);
-	return FU_BACKEND(self);
+	return FU_BACKEND(g_object_new(FU_TYPE_UDEV_BACKEND, "name", "udev", "context", ctx, NULL));
 }

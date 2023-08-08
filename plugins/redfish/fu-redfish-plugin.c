@@ -16,8 +16,14 @@
 #include "fu-redfish-network.h"
 #include "fu-redfish-plugin.h"
 #include "fu-redfish-smbios.h"
+#include "fu-redfish-struct.h"
 
 #define FU_REDFISH_PLUGIN_CLEANUP_RETRIES_DELAY 10 /* seconds */
+
+/* defaults changed here will also be reflected in the fwupd.conf man page */
+#define FU_REDFISH_CONFIG_DEFAULT_CA_CHECK		   FALSE
+#define FU_REDFISH_CONFIG_DEFAULT_IPMI_DISABLE_CREATE_USER FALSE
+#define FU_REDFISH_CONFIG_DEFAULT_MANAGER_RESET_TIMEOUT	   "1800" /* seconds */
 
 struct _FuRedfishPlugin {
 	FuPlugin parent_instance;
@@ -442,7 +448,9 @@ fu_redfish_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error
 		fu_redfish_backend_set_password(self->backend, password);
 	fu_redfish_backend_set_cacheck(
 	    self->backend,
-	    fu_plugin_get_config_value_boolean(plugin, "CACheck", FALSE));
+	    fu_plugin_get_config_value_boolean(plugin,
+					       "CACheck",
+					       FU_REDFISH_CONFIG_DEFAULT_CA_CHECK));
 	if (fu_context_has_hwid_flag(fu_plugin_get_context(plugin), "wildcard-targets"))
 		fu_redfish_backend_set_wildcard_targets(self->backend, TRUE);
 
@@ -457,7 +465,10 @@ fu_redfish_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error
 					    "and no vendor quirk for 'ipmi-create-user'");
 			return FALSE;
 		}
-		if (!fu_plugin_get_config_value_boolean(plugin, "IpmiDisableCreateUser", FALSE)) {
+		if (!fu_plugin_get_config_value_boolean(
+			plugin,
+			"IpmiDisableCreateUser",
+			FU_REDFISH_CONFIG_DEFAULT_IPMI_DISABLE_CREATE_USER)) {
 			g_info("attempting to create user using IPMI");
 			if (!fu_redfish_plugin_ipmi_create_user(plugin, error))
 				return FALSE;
@@ -547,7 +558,10 @@ fu_redfish_plugin_cleanup(FuPlugin *plugin,
 	fu_progress_step_done(progress);
 
 	/* read the config file to work out how long to wait */
-	restart_timeout_str = fu_plugin_get_config_value(plugin, "ManagerResetTimeout", "1800");
+	restart_timeout_str =
+	    fu_plugin_get_config_value(plugin,
+				       "ManagerResetTimeout",
+				       FU_REDFISH_CONFIG_DEFAULT_MANAGER_RESET_TIMEOUT);
 	if (!fu_strtoull(restart_timeout_str, &reset_timeout, 1, 86400, error))
 		return FALSE;
 

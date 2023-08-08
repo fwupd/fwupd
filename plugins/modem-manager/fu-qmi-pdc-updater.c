@@ -8,8 +8,6 @@
 
 #include <fwupdplugin.h>
 
-#include <string.h>
-
 #include "fu-qmi-pdc-updater.h"
 
 #define FU_QMI_PDC_MAX_OPEN_ATTEMPTS 8
@@ -258,15 +256,6 @@ typedef struct {
 	guint token;
 } WriteContext;
 
-#if !QMI_CHECK_VERSION(1, 26, 0)
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wunused-function"
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(QmiMessagePdcLoadConfigInput, qmi_message_pdc_load_config_input_unref)
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(QmiMessagePdcLoadConfigOutput,
-			      qmi_message_pdc_load_config_output_unref)
-#pragma clang diagnostic pop
-#endif
-
 static void
 fu_qmi_pdc_updater_load_config(WriteContext *ctx);
 
@@ -493,16 +482,6 @@ typedef struct {
 	guint token;
 } ActivateContext;
 
-#if !QMI_CHECK_VERSION(1, 26, 0)
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wunused-function"
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(QmiMessagePdcActivateConfigInput,
-			      qmi_message_pdc_activate_config_input_unref)
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(QmiMessagePdcActivateConfigOutput,
-			      qmi_message_pdc_activate_config_output_unref)
-#pragma clang diagnostic pop
-#endif
-
 static gboolean
 fu_qmi_pdc_updater_activate_config_timeout(gpointer user_data)
 {
@@ -617,16 +596,6 @@ fu_qmi_pdc_updater_activate_config(ActivateContext *ctx)
 				       fu_qmi_pdc_updater_activate_config_ready,
 				       ctx);
 }
-
-#if !QMI_CHECK_VERSION(1, 26, 0)
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wunused-function"
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(QmiMessagePdcSetSelectedConfigInput,
-			      qmi_message_pdc_set_selected_config_input_unref)
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(QmiMessagePdcSetSelectedConfigOutput,
-			      qmi_message_pdc_set_selected_config_output_unref)
-#pragma clang diagnostic pop
-#endif
 
 static gboolean
 fu_qmi_pdc_updater_set_selected_config_timeout(gpointer user_data)

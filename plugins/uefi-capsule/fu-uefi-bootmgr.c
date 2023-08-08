@@ -6,17 +6,11 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
-#include <efivar/efiboot.h>
 #include <stdio.h>
 
 #include "fu-uefi-bootmgr.h"
 #include "fu-uefi-common.h"
 #include "fu-uefi-device.h"
-
-/* XXX PJFIX: this should be in efiboot-loadopt.h in efivar */
-#define LOAD_OPTION_ACTIVE 0x00000001
 
 static gboolean
 fu_uefi_bootmgr_add_to_boot_order(guint16 boot_entry, GError **error)
@@ -87,10 +81,9 @@ fu_uefi_bootmgr_verify_fwupd(GError **error)
 	for (guint i = 0; i < names->len; i++) {
 		const gchar *desc;
 		const gchar *name = g_ptr_array_index(names, i);
-		efi_load_option *loadopt;
-		gsize var_data_size = 0;
 		guint16 entry;
-		g_autofree guint8 *var_data_tmp = NULL;
+		g_autoptr(FuEfiLoadOption) loadopt = fu_efi_load_option_new();
+		g_autoptr(GBytes) loadopt_blob = NULL;
 		g_autoptr(GError) error_local = NULL;
 
 		/* not BootXXXX */
@@ -99,22 +92,20 @@ fu_uefi_bootmgr_verify_fwupd(GError **error)
 			continue;
 
 		/* parse key */
-		if (!fu_efivar_get_data(FU_EFIVAR_GUID_EFI_GLOBAL,
-					name,
-					&var_data_tmp,
-					&var_data_size,
-					NULL,
-					&error_local)) {
+		loadopt_blob =
+		    fu_efivar_get_data_bytes(FU_EFIVAR_GUID_EFI_GLOBAL, name, NULL, &error_local);
+		if (loadopt_blob == NULL) {
 			g_debug("failed to get data for name %s: %s", name, error_local->message);
 			continue;
 		}
-		loadopt = (efi_load_option *)var_data_tmp;
-		if (!efi_loadopt_is_valid(loadopt, var_data_size)) {
-			g_debug("%s -> load option was invalid", name);
+		if (!fu_firmware_parse(FU_FIRMWARE(loadopt),
+				       loadopt_blob,
+				       FWUPD_INSTALL_FLAG_NONE,
+				       &error_local)) {
+			g_debug("%s -> load option was invalid: %s", name, error_local->message);
 			continue;
 		}
-
-		desc = (const gchar *)efi_loadopt_desc(loadopt, var_data_size);
+		desc = fu_firmware_get_id(FU_FIRMWARE(loadopt));
 		if (g_strcmp0(desc, "Linux Firmware Updater") == 0 ||
 		    g_strcmp0(desc, "Linux-Firmware-Updater") == 0) {
 			g_debug("found %s at Boot%04X", desc, entry);
@@ -131,25 +122,32 @@ fu_uefi_bootmgr_verify_fwupd(GError **error)
 }
 
 static gboolean
-fu_uefi_setup_bootnext_with_dp(const guint8 *dp_buf, guint8 *opt, gssize opt_size, GError **error)
+fu_uefi_setup_bootnext_with_loadopt(FuEfiLoadOption *loadopt, GError **error)
 {
-	const gchar *desc = NULL;
 	const gchar *name = NULL;
-	efi_load_option *loadopt = NULL;
-	gsize var_data_size = 0;
 	guint32 attr;
 	guint16 boot_next = G_MAXUINT16;
-	g_autofree guint8 *var_data = NULL;
+	guint8 boot_nextbuf[2] = {0};
 	g_autofree guint8 *set_entries = g_malloc0(G_MAXUINT16);
+	g_autoptr(GBytes) loadopt_blob = NULL;
+	g_autoptr(GBytes) loadopt_blob_old = NULL;
 	g_autoptr(GPtrArray) names = NULL;
 
+	/* write */
+	loadopt_blob = fu_firmware_write(FU_FIRMWARE(loadopt), error);
+	if (loadopt_blob == NULL)
+		return FALSE;
+
+	/* find existing BootXXXX entry for fwupd */
 	names = fu_efivar_get_names(FU_EFIVAR_GUID_EFI_GLOBAL, error);
 	if (names == NULL)
 		return FALSE;
 	for (guint i = 0; i < names->len; i++) {
+		const gchar *desc;
 		guint16 entry = 0;
-		g_autofree guint8 *var_data_tmp = NULL;
+		g_autoptr(GBytes) loadopt_blob_tmp = NULL;
 		g_autoptr(GError) error_local = NULL;
+		g_autoptr(FuEfiLoadOption) loadopt_tmp = fu_efi_load_option_new();
 
 		/* not BootXXXX */
 		name = g_ptr_array_index(names, i);
@@ -160,51 +158,46 @@ fu_uefi_setup_bootnext_with_dp(const guint8 *dp_buf, guint8 *opt, gssize opt_siz
 		/* mark this as used */
 		set_entries[entry] = 1;
 
-		if (!fu_efivar_get_data(FU_EFIVAR_GUID_EFI_GLOBAL,
-					name,
-					&var_data_tmp,
-					&var_data_size,
-					&attr,
-					&error_local)) {
+		loadopt_blob_tmp =
+		    fu_efivar_get_data_bytes(FU_EFIVAR_GUID_EFI_GLOBAL, name, &attr, &error_local);
+		if (loadopt_blob_tmp == NULL) {
 			g_debug("failed to get data for name %s: %s", name, error_local->message);
 			continue;
 		}
-
-		loadopt = (efi_load_option *)var_data_tmp;
-		if (!efi_loadopt_is_valid(loadopt, var_data_size)) {
-			g_debug("%s -> load option was invalid", name);
+		if (!fu_firmware_parse(FU_FIRMWARE(loadopt_tmp),
+				       loadopt_blob_tmp,
+				       FWUPD_INSTALL_FLAG_NONE,
+				       &error_local)) {
+			g_debug("%s -> load option was invalid: %s", name, error_local->message);
 			continue;
 		}
-
-		desc = (const gchar *)efi_loadopt_desc(loadopt, var_data_size);
+		desc = fu_firmware_get_id(FU_FIRMWARE(loadopt_tmp));
 		if (g_strcmp0(desc, "Linux Firmware Updater") != 0 &&
 		    g_strcmp0(desc, "Linux-Firmware-Updater") != 0) {
 			g_debug("%s -> '%s' : does not match", name, desc);
 			continue;
 		}
 
-		var_data = g_steal_pointer(&var_data_tmp);
+		loadopt_blob_old = g_steal_pointer(&loadopt_blob_tmp);
 		boot_next = entry;
 		break;
 	}
 
 	/* already exists */
-	if (var_data != NULL) {
+	if (loadopt_blob_old != NULL) {
 		/* is different than before */
-		if (var_data_size != (gsize)opt_size || memcmp(var_data, opt, opt_size) != 0) {
-			g_debug("%s -> '%s' : updating existing boot entry", name, desc);
-			efi_loadopt_attr_set(loadopt, LOAD_OPTION_ACTIVE);
-			if (!fu_efivar_set_data(FU_EFIVAR_GUID_EFI_GLOBAL,
-						name,
-						opt,
-						opt_size,
-						attr,
-						error)) {
+		if (!fu_bytes_compare(loadopt_blob, loadopt_blob_old, NULL)) {
+			g_debug("%s: updating existing boot entry", name);
+			if (!fu_efivar_set_data_bytes(FU_EFIVAR_GUID_EFI_GLOBAL,
+						      name,
+						      loadopt_blob,
+						      attr,
+						      error)) {
 				g_prefix_error(error, "could not set boot variable active: ");
 				return FALSE;
 			}
 		} else {
-			g_debug("%s -> %s : re-using existing boot entry", name, desc);
+			g_debug("%s: re-using existing boot entry", name);
 		}
 		/* create a new one */
 	} else {
@@ -225,14 +218,13 @@ fu_uefi_setup_bootnext_with_dp(const guint8 *dp_buf, guint8 *opt, gssize opt_siz
 		}
 		boot_next_name = g_strdup_printf("Boot%04X", (guint)boot_next);
 		g_debug("%s -> creating new entry", boot_next_name);
-		if (!fu_efivar_set_data(FU_EFIVAR_GUID_EFI_GLOBAL,
-					boot_next_name,
-					opt,
-					opt_size,
-					FU_EFIVAR_ATTR_NON_VOLATILE |
-					    FU_EFIVAR_ATTR_BOOTSERVICE_ACCESS |
-					    FU_EFIVAR_ATTR_RUNTIME_ACCESS,
-					error)) {
+		if (!fu_efivar_set_data_bytes(FU_EFIVAR_GUID_EFI_GLOBAL,
+					      boot_next_name,
+					      loadopt_blob,
+					      FU_EFIVAR_ATTR_NON_VOLATILE |
+						  FU_EFIVAR_ATTR_BOOTSERVICE_ACCESS |
+						  FU_EFIVAR_ATTR_RUNTIME_ACCESS,
+					      error)) {
 			g_prefix_error(error, "could not set boot variable %s: ", boot_next_name);
 			return FALSE;
 		}
@@ -243,42 +235,152 @@ fu_uefi_setup_bootnext_with_dp(const guint8 *dp_buf, guint8 *opt, gssize opt_siz
 		return FALSE;
 
 	/* set the boot next */
+	fu_memwrite_uint16(boot_nextbuf, boot_next, G_LITTLE_ENDIAN);
 	if (!fu_efivar_set_data(FU_EFIVAR_GUID_EFI_GLOBAL,
 				"BootNext",
-				(guint8 *)&boot_next,
-				2,
+				boot_nextbuf,
+				sizeof(boot_nextbuf),
 				FU_EFIVAR_ATTR_NON_VOLATILE | FU_EFIVAR_ATTR_BOOTSERVICE_ACCESS |
 				    FU_EFIVAR_ATTR_RUNTIME_ACCESS,
 				error)) {
-		g_prefix_error(error, "could not set BootNext(%" G_GUINT16_FORMAT "): ", boot_next);
+		g_prefix_error(error, "could not set BootNext(%u): ", boot_next);
 		return FALSE;
 	}
 	return TRUE;
 }
 
+static gboolean
+fu_uefi_bootmgr_shim_is_safe(const gchar *source_shim, GError **error)
+{
+	g_autoptr(GBytes) current_sbatlevel_bytes = NULL;
+	g_autoptr(FuFirmware) shim = fu_pefile_firmware_new();
+	g_autoptr(FuFirmware) sbatlevel_section = NULL;
+	g_autoptr(FuFirmware) previous_sbatlevel = NULL;
+	g_autoptr(FuFirmware) current_sbatlevel = fu_csv_firmware_new();
+	g_autoptr(GError) error_local = NULL;
+	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GPtrArray) shim_entries = NULL;
+
+	blob = fu_bytes_get_contents(source_shim, error);
+	if (blob == NULL)
+		return FALSE;
+	if (!fu_firmware_parse(shim, blob, FWUPD_INSTALL_FLAG_NONE, error))
+		return FALSE;
+	sbatlevel_section = fu_firmware_get_image_by_id(shim, ".sbatlevel", &error_local);
+	if (sbatlevel_section == NULL) {
+		g_debug("no sbatlevel section was found");
+		/* if there is no .sbatlevel section, then it will not update, it should be safe */
+		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND))
+			return TRUE;
+		g_propagate_error(error, g_steal_pointer(&error_local));
+		return FALSE;
+	}
+
+	/* not safe if variable is not set but new shim would set it */
+	current_sbatlevel_bytes =
+	    fu_efivar_get_data_bytes(FU_EFIVAR_GUID_SHIM, "SbatLevelRT", NULL, error);
+	if (current_sbatlevel_bytes == NULL)
+		return FALSE;
+	fu_csv_firmware_add_column_id(FU_CSV_FIRMWARE(current_sbatlevel), "$id");
+	fu_csv_firmware_add_column_id(FU_CSV_FIRMWARE(current_sbatlevel), "component_generation");
+	fu_csv_firmware_add_column_id(FU_CSV_FIRMWARE(current_sbatlevel), "date_stamp");
+	if (!fu_firmware_parse(current_sbatlevel,
+			       current_sbatlevel_bytes,
+			       FWUPD_INSTALL_FLAG_NONE,
+			       error))
+		return FALSE;
+
+	/*
+	 * For every new shim entry, we need a matching entry in the
+	 * current sbatlevel. That is the entry of the shim is not
+	 * newer than current sbatlevel.
+	 *
+	 * The opposite way might work (for example shim's latest
+	 * sbatlevel matches) or not (shim is too old), but it will
+	 * not brick the current OS.
+	 */
+	previous_sbatlevel = fu_firmware_get_image_by_id(sbatlevel_section, "previous", error);
+	if (previous_sbatlevel == NULL)
+		return FALSE;
+	shim_entries = fu_firmware_get_images(previous_sbatlevel);
+	for (guint idx = 0; idx < shim_entries->len; idx++) {
+		FuCsvEntry *current_entry = NULL;
+		FuCsvEntry *shim_entry = g_ptr_array_index(shim_entries, idx);
+		const gchar *entry_id = fu_firmware_get_id(FU_FIRMWARE(shim_entry));
+		guint64 current_generation = 0;
+		guint64 shim_generation = 0;
+
+		current_entry =
+		    FU_CSV_ENTRY(fu_firmware_get_image_by_id(FU_FIRMWARE(current_sbatlevel),
+							     entry_id,
+							     &error_local));
+		if (current_entry == NULL) {
+			if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
+				g_set_error(
+				    error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "shim sbatlevel for %s has a bricking update for entry %s "
+				    "(missing entry in current UEFI variable)",
+				    source_shim,
+				    entry_id);
+			} else {
+				g_prefix_error(&error_local,
+					       "while looking for entry in current sbatlevel: ");
+				g_propagate_error(error, g_steal_pointer(&error_local));
+			}
+			return FALSE;
+		}
+
+		if (!fu_csv_entry_get_value_by_column_id_uint64(shim_entry,
+								"component_generation",
+								&shim_generation,
+								error)) {
+			g_prefix_error(error,
+				       "sbatlevel entry %s for shim %s: ",
+				       entry_id,
+				       source_shim);
+			return FALSE;
+		}
+		if (!fu_csv_entry_get_value_by_column_id_uint64(current_entry,
+								"component_generation",
+								&current_generation,
+								error)) {
+			g_prefix_error(error, "entry %s from current sbatlevel: ", entry_id);
+			return FALSE;
+		}
+		if (current_generation < shim_generation) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "sbatlevel for shim %s has a bricking update for entry "
+				    "%s (newer generation)",
+				    source_shim,
+				    entry_id);
+			return FALSE;
+		}
+	}
+
+	/* success */
+	return TRUE;
+}
+
 gboolean
-fu_uefi_bootmgr_bootnext(FuDevice *device,
-			 const gchar *esp_path,
+fu_uefi_bootmgr_bootnext(FuVolume *esp,
 			 const gchar *description,
 			 FuUefiBootmgrFlags flags,
 			 GError **error)
 {
-	const gchar *filepath;
+	const gchar *filepath = NULL;
 	gboolean use_fwup_path = TRUE;
 	gboolean secure_boot = FALSE;
-	gsize loader_sz = 0;
-	gssize opt_size = 0;
-	gssize sz, dp_size = 0;
-	guint32 attributes = LOAD_OPTION_ACTIVE;
-	g_autofree guint16 *loader_str = NULL;
-	g_autofree gchar *label = NULL;
 	g_autofree gchar *shim_app = NULL;
 	g_autofree gchar *shim_cpy = NULL;
-	g_autofree guint8 *dp_buf = NULL;
-	g_autofree guint8 *opt = NULL;
 	g_autofree gchar *source_app = NULL;
-	g_autofree gchar *target_app = NULL;
 	g_autofree gchar *source_shim = NULL;
+	g_autofree gchar *target_app = NULL;
+	g_autoptr(FuEfiDevicePathList) dp_buf = NULL;
+	g_autoptr(FuEfiLoadOption) loadopt = fu_efi_load_option_new();
 
 	/* skip for self tests */
 	if (g_getenv("FWUPD_UEFI_TEST") != NULL)
@@ -292,28 +394,32 @@ fu_uefi_bootmgr_bootnext(FuDevice *device,
 	/* test if we should use shim */
 	secure_boot = fu_efivar_secure_boot_enabled(NULL);
 	if (secure_boot) {
-		shim_app = fu_uefi_get_esp_app_path(device, esp_path, "shim", error);
+		shim_app = fu_uefi_get_esp_app_path("shim", error);
 		if (shim_app == NULL)
 			return FALSE;
 
 		/* copy in an updated shim if we have one */
 		source_shim = fu_uefi_get_built_app_path("shim", NULL);
 		if (source_shim != NULL) {
-			if (!fu_uefi_cmp_asset(source_shim, shim_app)) {
-				if (!fu_uefi_copy_asset(source_shim, shim_app, error))
+			if (!fu_uefi_esp_target_verify(source_shim, esp, shim_app)) {
+				if (!fu_uefi_bootmgr_shim_is_safe(source_shim, error))
+					return FALSE;
+				if (!fu_uefi_esp_target_copy(source_shim, esp, shim_app, error))
 					return FALSE;
 			}
 		}
 
-		if (g_file_test(shim_app, G_FILE_TEST_EXISTS)) {
+		if (fu_uefi_esp_target_exists(esp, shim_app)) {
 			/* use a custom copy of shim for firmware updates */
 			if (flags & FU_UEFI_BOOTMGR_FLAG_USE_SHIM_UNIQUE) {
-				shim_cpy =
-				    fu_uefi_get_esp_app_path(device, esp_path, "shimfwupd", error);
+				shim_cpy = fu_uefi_get_esp_app_path("shimfwupd", error);
 				if (shim_cpy == NULL)
 					return FALSE;
-				if (!fu_uefi_cmp_asset(shim_app, shim_cpy)) {
-					if (!fu_uefi_copy_asset(shim_app, shim_cpy, error))
+				if (!fu_uefi_esp_target_verify(shim_app, esp, shim_cpy)) {
+					if (!fu_uefi_esp_target_copy(shim_app,
+								     esp,
+								     shim_cpy,
+								     error))
 						return FALSE;
 				}
 				filepath = shim_cpy;
@@ -333,11 +439,11 @@ fu_uefi_bootmgr_bootnext(FuDevice *device,
 	}
 
 	/* test if correct asset in place */
-	target_app = fu_uefi_get_esp_app_path(device, esp_path, "fwupd", error);
+	target_app = fu_uefi_get_esp_app_path("fwupd", error);
 	if (target_app == NULL)
 		return FALSE;
-	if (!fu_uefi_cmp_asset(source_app, target_app)) {
-		if (!fu_uefi_copy_asset(source_app, target_app, error))
+	if (!fu_uefi_esp_target_verify(source_app, esp, target_app)) {
+		if (!fu_uefi_esp_target_copy(source_app, esp, target_app, error))
 			return FALSE;
 	}
 
@@ -345,77 +451,20 @@ fu_uefi_bootmgr_bootnext(FuDevice *device,
 	if (use_fwup_path)
 		filepath = target_app;
 
-	/* generate device path for target */
-	sz = efi_generate_file_device_path(dp_buf,
-					   dp_size,
-					   filepath,
-					   EFIBOOT_OPTIONS_IGNORE_FS_ERROR | EFIBOOT_ABBREV_HD);
-	if (sz < 0) {
-		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
-			    "efi_generate_file_device_path(%s) failed",
-			    filepath);
-		return FALSE;
-	}
-
 	/* add the fwupdx64.efi ESP path as the shim loadopt data */
-	dp_size = sz;
-	dp_buf = g_malloc0(dp_size);
 	if (!use_fwup_path) {
-		glong items_written = 0;
 		g_autofree gchar *fwup_fs_basename = g_path_get_basename(target_app);
-		g_autofree gchar *fwup_esp_path = g_strdup_printf("\\%s", fwup_fs_basename);
-		loader_str = g_utf8_to_utf16(fwup_esp_path, -1, NULL, &items_written, error);
-		if (loader_str == NULL)
+		if (!fu_efi_load_option_set_optional_path(loadopt, fwup_fs_basename, error))
 			return FALSE;
-		if (items_written > 0)
-			loader_sz += (items_written + 1) * 2;
 	}
 
-	sz = efi_generate_file_device_path(dp_buf,
-					   dp_size,
-					   filepath,
-					   EFIBOOT_OPTIONS_IGNORE_FS_ERROR | EFIBOOT_ABBREV_HD);
-	if (sz != dp_size) {
-		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
-			    "efi_generate_file_device_path(%s) failed",
-			    filepath);
+	/* add DEVICE_PATH */
+	dp_buf = fu_uefi_device_build_dp_buf(esp, filepath, error);
+	if (dp_buf == NULL)
 		return FALSE;
-	}
+	fu_firmware_add_image(FU_FIRMWARE(loadopt), FU_FIRMWARE(dp_buf));
+	fu_firmware_set_id(FU_FIRMWARE(loadopt), description);
 
-	label = g_strdup(description);
-	sz = efi_loadopt_create(opt,
-				opt_size,
-				attributes,
-				(efidp)dp_buf,
-				dp_size,
-				(guint8 *)label,
-				(guint8 *)loader_str,
-				loader_sz);
-	if (sz < 0) {
-		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
-			    "efi_loadopt_create(%s) failed",
-			    label);
-		return FALSE;
-	}
-	opt = g_malloc0(sz);
-	opt_size = sz;
-	sz = efi_loadopt_create(opt,
-				opt_size,
-				attributes,
-				(efidp)dp_buf,
-				dp_size,
-				(guint8 *)label,
-				(guint8 *)loader_str,
-				loader_sz);
-	if (sz != opt_size) {
-		g_set_error(error, G_IO_ERROR, G_IO_ERROR_FAILED, "loadopt size was unreasonable.");
-		return FALSE;
-	}
-	return fu_uefi_setup_bootnext_with_dp(dp_buf, opt, opt_size, error);
+	/* save as BootNext */
+	return fu_uefi_setup_bootnext_with_loadopt(loadopt, error);
 }

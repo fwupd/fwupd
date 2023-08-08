@@ -6,8 +6,6 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
 #include "fu-hailuck-kbd-firmware.h"
 
 struct _FuHailuckKbdFirmware {
@@ -79,7 +77,7 @@ fu_hailuck_kbd_firmware_parse(FuFirmware *firmware,
 	}
 
 	/* whole image */
-	fw_new = g_byte_array_free_to_bytes(g_steal_pointer(&buf));
+	fw_new = g_bytes_new(buf->data, buf->len);
 	fu_firmware_set_bytes(firmware, fw_new);
 	return TRUE;
 }
@@ -87,6 +85,7 @@ fu_hailuck_kbd_firmware_parse(FuFirmware *firmware,
 static void
 fu_hailuck_kbd_firmware_init(FuHailuckKbdFirmware *self)
 {
+	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_NO_AUTO_DETECTION);
 }
 
 static void

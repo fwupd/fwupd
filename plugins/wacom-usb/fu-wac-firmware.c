@@ -6,8 +6,6 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
 #include <string.h>
 
 #include "fu-wac-firmware.h"
@@ -233,9 +231,10 @@ fu_wac_firmware_tokenize_cb(GString *token, guint token_idx, gpointer user_data,
 
 		/* parse SREC file and add as image */
 		blob = g_bytes_new(helper->image_buffer->str, helper->image_buffer->len);
+		fu_srec_firmware_set_addr_min(FU_SREC_FIRMWARE(firmware_srec), hdr->addr);
 		if (!fu_firmware_parse_full(firmware_srec,
 					    blob,
-					    hdr->addr,
+					    0x0,
 					    helper->flags | FWUPD_INSTALL_FLAG_NO_SEARCH,
 					    error))
 			return FALSE;
@@ -245,7 +244,8 @@ fu_wac_firmware_tokenize_cb(GString *token, guint token_idx, gpointer user_data,
 		fu_firmware_set_bytes(img, fw_srec);
 		fu_firmware_set_addr(img, fu_firmware_get_addr(firmware_srec));
 		fu_firmware_set_idx(img, helper->images_cnt);
-		fu_firmware_add_image(helper->firmware, img);
+		if (!fu_firmware_add_image_full(helper->firmware, img, error))
+			return FALSE;
 		helper->images_cnt++;
 
 		/* clear the image buffer */
@@ -259,29 +259,15 @@ fu_wac_firmware_tokenize_cb(GString *token, guint token_idx, gpointer user_data,
 static gboolean
 fu_wac_firmware_check_magic(FuFirmware *firmware, GBytes *fw, gsize offset, GError **error)
 {
-	guint8 magic[5] = {0x0};
-
-	if (!fu_memcpy_safe(magic,
-			    sizeof(magic),
-			    0, /* dst */
-			    g_bytes_get_data(fw, NULL),
-			    g_bytes_get_size(fw),
-			    offset,
-			    sizeof(magic),
-			    error)) {
-		g_prefix_error(error, "failed to read magic: ");
-		return FALSE;
-	}
-	if (memcmp(magic, "WACOM", sizeof(magic)) != 0) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_FILE,
-				    "invalid .wac prefix");
-		return FALSE;
-	}
-
-	/* success */
-	return TRUE;
+	guint8 magic[5] = "WACOM";
+	return fu_memcmp_safe(g_bytes_get_data(fw, NULL),
+			      g_bytes_get_size(fw),
+			      offset,
+			      magic,
+			      sizeof(magic),
+			      0x0,
+			      sizeof(magic),
+			      error);
 }
 
 static gboolean
@@ -340,11 +326,12 @@ fu_wac_firmware_calc_checksum(GByteArray *buf)
 	return fu_sum8(buf->data, buf->len) ^ 0xFF;
 }
 
-static GBytes *
+static GByteArray *
 fu_wac_firmware_write(FuFirmware *firmware, GError **error)
 {
 	g_autoptr(GPtrArray) images = fu_firmware_get_images(firmware);
 	g_autoptr(GString) str = g_string_new(NULL);
+	g_autoptr(GByteArray) buf = g_byte_array_new();
 	g_autoptr(GByteArray) buf_hdr = g_byte_array_new();
 
 	/* fw header */
@@ -388,12 +375,14 @@ fu_wac_firmware_write(FuFirmware *firmware, GError **error)
 	}
 
 	/* success */
-	return g_string_free_to_bytes(g_steal_pointer(&str));
+	g_byte_array_append(buf, (const guint8 *)str->str, str->len);
+	return g_steal_pointer(&buf);
 }
 
 static void
 fu_wac_firmware_init(FuWacFirmware *self)
 {
+	fu_firmware_set_images_max(FU_FIRMWARE(self), 1024);
 }
 
 static void

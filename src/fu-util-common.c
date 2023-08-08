@@ -22,7 +22,6 @@
 
 #include "fu-console.h"
 #include "fu-device-private.h"
-#include "fu-security-attr-common.h"
 #include "fu-util-common.h"
 
 #ifdef HAVE_SYSTEMD
@@ -791,10 +790,10 @@ fu_util_release_get_name(FwupdRelease *release)
 }
 
 gboolean
-fu_util_parse_filter_flags(const gchar *filter,
-			   FwupdDeviceFlags *include,
-			   FwupdDeviceFlags *exclude,
-			   GError **error)
+fu_util_parse_filter_device_flags(const gchar *filter,
+				  FwupdDeviceFlags *include,
+				  FwupdDeviceFlags *exclude,
+				  GError **error)
 {
 	FwupdDeviceFlags tmp;
 	g_auto(GStrv) strv = g_strsplit(filter, ",", -1);
@@ -854,6 +853,79 @@ fu_util_parse_filter_flags(const gchar *filter,
 					    FWUPD_ERROR_NOT_SUPPORTED,
 					    "Filter %s already included",
 					    fwupd_device_flag_to_string(tmp));
+				return FALSE;
+			}
+			*include |= tmp;
+		}
+	}
+
+	return TRUE;
+}
+
+gboolean
+fu_util_parse_filter_release_flags(const gchar *filter,
+				   FwupdReleaseFlags *include,
+				   FwupdReleaseFlags *exclude,
+				   GError **error)
+{
+	FwupdDeviceFlags tmp;
+	g_auto(GStrv) strv = g_strsplit(filter, ",", -1);
+
+	g_return_val_if_fail(include != NULL, FALSE);
+	g_return_val_if_fail(exclude != NULL, FALSE);
+
+	for (guint i = 0; strv[i] != NULL; i++) {
+		if (g_str_has_prefix(strv[i], "~")) {
+			tmp = fwupd_release_flag_from_string(strv[i] + 1);
+			if (tmp == FWUPD_RELEASE_FLAG_UNKNOWN) {
+				g_set_error(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
+					    "Unknown release flag %s",
+					    strv[i] + 1);
+				return FALSE;
+			}
+			if ((tmp & *include) > 0) {
+				g_set_error(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
+					    "Filter %s already included",
+					    fwupd_release_flag_to_string(tmp));
+				return FALSE;
+			}
+			if ((tmp & *exclude) > 0) {
+				g_set_error(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
+					    "Filter %s already excluded",
+					    fwupd_release_flag_to_string(tmp));
+				return FALSE;
+			}
+			*exclude |= tmp;
+		} else {
+			tmp = fwupd_release_flag_from_string(strv[i]);
+			if (tmp == FWUPD_RELEASE_FLAG_UNKNOWN) {
+				g_set_error(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
+					    "Unknown release flag %s",
+					    strv[i]);
+				return FALSE;
+			}
+			if ((tmp & *exclude) > 0) {
+				g_set_error(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
+					    "Filter %s already excluded",
+					    fwupd_release_flag_to_string(tmp));
+				return FALSE;
+			}
+			if ((tmp & *include) > 0) {
+				g_set_error(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
+					    "Filter %s already included",
+					    fwupd_release_flag_to_string(tmp));
 				return FALSE;
 			}
 			*include |= tmp;
@@ -1150,6 +1222,11 @@ fu_util_device_flag_to_string(guint64 device_flag)
 	if (device_flag == FWUPD_DEVICE_FLAG_EMULATION_TAG) {
 		/* TRANSLATORS: we're saving all USB events for emulation */
 		return _("Tagged for emulation");
+	}
+	if (device_flag == FWUPD_DEVICE_FLAG_ONLY_EXPLICIT_UPDATES) {
+		/* TRANSLATORS: stay on one firmware version unless the new version is explicitly
+		 * specified */
+		return _("Installing a specific release is explicitly required");
 	}
 	if (device_flag == FWUPD_DEVICE_FLAG_SKIPS_RESTART) {
 		/* skip */
@@ -1590,6 +1667,10 @@ fu_util_plugin_flag_to_string(FwupdPluginFlags plugin_flag)
 		/* TRANSLATORS: partition refers to something on disk, again, hey Arch users */
 		return _("UEFI ESP partition not detected or configured");
 	}
+	if (plugin_flag == FWUPD_PLUGIN_FLAG_ESP_NOT_VALID) {
+		/* TRANSLATORS: partition refers to something on disk, again, hey Arch users */
+		return _("UEFI ESP partition may not be set up correctly");
+	}
 	if (plugin_flag == FWUPD_PLUGIN_FLAG_FAILED_OPEN) {
 		/* TRANSLATORS: Failed to open plugin, hey Arch users */
 		return _("Plugin dependencies missing");
@@ -1628,6 +1709,7 @@ fu_util_plugin_flag_to_cli_text(FwupdPluginFlags plugin_flag)
 	case FWUPD_PLUGIN_FLAG_AUTH_REQUIRED:
 	case FWUPD_PLUGIN_FLAG_EFIVAR_NOT_MOUNTED:
 	case FWUPD_PLUGIN_FLAG_ESP_NOT_FOUND:
+	case FWUPD_PLUGIN_FLAG_ESP_NOT_VALID:
 	case FWUPD_PLUGIN_FLAG_KERNEL_TOO_OLD:
 		return fu_console_color_format(fu_util_plugin_flag_to_string(plugin_flag),
 					       FU_CONSOLE_COLOR_RED);
@@ -2008,7 +2090,8 @@ fu_util_remote_to_string(FwupdRemote *remote, guint idt)
 			 idt + 1,
 			 /* TRANSLATORS: if the remote is enabled */
 			 _("Enabled"),
-			 fwupd_remote_get_enabled(remote) ? "true" : "false");
+			 fwupd_remote_has_flag(remote, FWUPD_REMOTE_FLAG_ENABLED) ? "true"
+										  : "false");
 
 	tmp = fwupd_remote_get_checksum(remote);
 	if (tmp != NULL) {
@@ -2019,28 +2102,15 @@ fu_util_remote_to_string(FwupdRemote *remote, guint idt)
 	/* optional parameters */
 	if (kind == FWUPD_REMOTE_KIND_DOWNLOAD && fwupd_remote_get_age(remote) > 0 &&
 	    fwupd_remote_get_age(remote) != G_MAXUINT64) {
-		const gchar *unit = "s";
-		gdouble age = fwupd_remote_get_age(remote);
-		g_autofree gchar *age_str = NULL;
-		if (age > 60) {
-			age /= 60.f;
-			unit = "m";
-		}
-		if (age > 60) {
-			age /= 60.f;
-			unit = "h";
-		}
-		if (age > 24) {
-			age /= 24.f;
-			unit = "d";
-		}
-		if (age > 7) {
-			age /= 7.f;
-			unit = "w";
-		}
-		age_str = g_strdup_printf("%.2f%s", age, unit);
+		g_autofree gchar *age_str = fu_util_time_to_str(fwupd_remote_get_age(remote));
 		/* TRANSLATORS: the age of the metadata */
 		fu_string_append(str, idt + 1, _("Age"), age_str);
+	}
+	if (kind == FWUPD_REMOTE_KIND_DOWNLOAD && fwupd_remote_get_refresh_interval(remote) > 0) {
+		g_autofree gchar *age_str =
+		    fu_util_time_to_str(fwupd_remote_get_refresh_interval(remote));
+		/* TRANSLATORS: how often we should refresh the metadata */
+		fu_string_append(str, idt + 1, _("Refresh Interval"), age_str);
 	}
 	priority = fwupd_remote_get_priority(remote);
 	if (priority != 0) {
@@ -2098,7 +2168,9 @@ fu_util_remote_to_string(FwupdRemote *remote, guint idt)
 				 idt + 1,
 				 /* TRANSLATORS: Boolean value to automatically send reports */
 				 _("Automatic Reporting"),
-				 fwupd_remote_get_automatic_reports(remote) ? "true" : "false");
+				 fwupd_remote_has_flag(remote, FWUPD_REMOTE_FLAG_AUTOMATIC_REPORTS)
+				     ? "true"
+				     : "false");
 	}
 
 	return g_string_free(g_steal_pointer(&str), FALSE);
@@ -2140,21 +2212,103 @@ fu_util_request_get_message(FwupdRequest *req)
 	return fwupd_request_get_message(req);
 }
 
+static const gchar *
+fu_security_attr_result_to_string(FwupdSecurityAttrResult result)
+{
+	if (result == FWUPD_SECURITY_ATTR_RESULT_VALID) {
+		/* TRANSLATORS: Suffix: the HSI result */
+		return _("Valid");
+	}
+	if (result == FWUPD_SECURITY_ATTR_RESULT_NOT_VALID) {
+		/* TRANSLATORS: Suffix: the HSI result */
+		return _("Invalid");
+	}
+	if (result == FWUPD_SECURITY_ATTR_RESULT_ENABLED) {
+		/* TRANSLATORS: Suffix: the HSI result */
+		return _("Enabled");
+	}
+	if (result == FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED) {
+		/* TRANSLATORS: Suffix: the HSI result */
+		return _("Disabled");
+	}
+	if (result == FWUPD_SECURITY_ATTR_RESULT_LOCKED) {
+		/* TRANSLATORS: Suffix: the HSI result */
+		return _("Locked");
+	}
+	if (result == FWUPD_SECURITY_ATTR_RESULT_NOT_LOCKED) {
+		/* TRANSLATORS: Suffix: the HSI result */
+		return _("Unlocked");
+	}
+	if (result == FWUPD_SECURITY_ATTR_RESULT_ENCRYPTED) {
+		/* TRANSLATORS: Suffix: the HSI result */
+		return _("Encrypted");
+	}
+	if (result == FWUPD_SECURITY_ATTR_RESULT_NOT_ENCRYPTED) {
+		/* TRANSLATORS: Suffix: the HSI result */
+		return _("Unencrypted");
+	}
+	if (result == FWUPD_SECURITY_ATTR_RESULT_TAINTED) {
+		/* TRANSLATORS: Suffix: the HSI result */
+		return _("Tainted");
+	}
+	if (result == FWUPD_SECURITY_ATTR_RESULT_NOT_TAINTED) {
+		/* TRANSLATORS: Suffix: the HSI result */
+		return _("Untainted");
+	}
+	if (result == FWUPD_SECURITY_ATTR_RESULT_FOUND) {
+		/* TRANSLATORS: Suffix: the HSI result */
+		return _("Found");
+	}
+	if (result == FWUPD_SECURITY_ATTR_RESULT_NOT_FOUND) {
+		/* TRANSLATORS: Suffix: the HSI result */
+		return _("Not found");
+	}
+	if (result == FWUPD_SECURITY_ATTR_RESULT_SUPPORTED) {
+		/* TRANSLATORS: Suffix: the HSI result */
+		return _("Supported");
+	}
+	if (result == FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED) {
+		/* TRANSLATORS: Suffix: the HSI result */
+		return _("Not supported");
+	}
+	return NULL;
+}
+
+static const gchar *
+fu_security_attr_get_result(FwupdSecurityAttr *attr)
+{
+	const gchar *tmp;
+
+	/* common case */
+	tmp = fu_security_attr_result_to_string(fwupd_security_attr_get_result(attr));
+	if (tmp != NULL)
+		return tmp;
+
+	/* fallback */
+	if (fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS)) {
+		/* TRANSLATORS: Suffix: the HSI result */
+		return _("OK");
+	}
+
+	/* TRANSLATORS: Suffix: the fallback HSI result */
+	return _("Failed");
+}
+
 static void
 fu_security_attr_append_str(FwupdSecurityAttr *attr,
 			    GString *str,
 			    FuSecurityAttrToStringFlags flags)
 {
-	g_autofree gchar *name = NULL;
+	const gchar *name;
 
 	/* hide obsoletes by default */
 	if (fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_OBSOLETED) &&
 	    (flags & FU_SECURITY_ATTR_TO_STRING_FLAG_SHOW_OBSOLETES) == 0)
 		return;
 
-	name = fu_security_attr_get_name(attr);
+	name = dgettext(GETTEXT_PACKAGE, fwupd_security_attr_get_name(attr));
 	if (name == NULL)
-		name = g_strdup(fwupd_security_attr_get_appstream_id(attr));
+		name = fwupd_security_attr_get_appstream_id(attr);
 	if (fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_OBSOLETED)) {
 		g_string_append(str, "✦ ");
 	} else if (fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS)) {
@@ -2192,7 +2346,7 @@ fu_security_attr_append_str(FwupdSecurityAttr *attr,
 static gchar *
 fu_util_security_event_to_string(FwupdSecurityAttr *attr)
 {
-	g_autofree gchar *name = NULL;
+	const gchar *name;
 	struct {
 		const gchar *appstream_id;
 		FwupdSecurityAttrResult result_old;
@@ -2312,7 +2466,7 @@ fu_util_security_event_to_string(FwupdSecurityAttr *attr)
 
 	/* disappeared */
 	if (fwupd_security_attr_get_result(attr) == FWUPD_SECURITY_ATTR_RESULT_UNKNOWN) {
-		name = fu_security_attr_get_name(attr);
+		name = dgettext(GETTEXT_PACKAGE, fwupd_security_attr_get_name(attr));
 		return g_strdup_printf(
 		    /* TRANSLATORS: %1 refers to some kind of security test, e.g. "SPI BIOS region".
 		       %2 refers to a result value, e.g. "Invalid" */
@@ -2324,7 +2478,7 @@ fu_util_security_event_to_string(FwupdSecurityAttr *attr)
 
 	/* appeared */
 	if (fwupd_security_attr_get_result_fallback(attr) == FWUPD_SECURITY_ATTR_RESULT_UNKNOWN) {
-		name = fu_security_attr_get_name(attr);
+		name = dgettext(GETTEXT_PACKAGE, fwupd_security_attr_get_name(attr));
 		return g_strdup_printf(
 		    /* TRANSLATORS: %1 refers to some kind of security test, e.g. "Encrypted RAM".
 		       %2 refers to a result value, e.g. "Invalid" */
@@ -2334,7 +2488,7 @@ fu_util_security_event_to_string(FwupdSecurityAttr *attr)
 	}
 
 	/* fall back to something sensible */
-	name = fu_security_attr_get_name(attr);
+	name = dgettext(GETTEXT_PACKAGE, fwupd_security_attr_get_name(attr));
 	return g_strdup_printf(
 	    /* TRANSLATORS: %1 refers to some kind of security test, e.g. "UEFI platform key".
 	     * %2 and %3 refer to results value, e.g. "Valid" and "Invalid" */
@@ -2766,14 +2920,14 @@ fu_util_show_unsupported_warning(FuConsole *console)
 #endif
 }
 
-#ifdef HAVE_LIBCURL_7_62_0
+#ifdef HAVE_LIBCURL
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(CURLU, curl_url_cleanup)
 #endif
 
 gboolean
 fu_util_is_url(const gchar *perhaps_url)
 {
-#ifdef HAVE_LIBCURL_7_62_0
+#ifdef HAVE_LIBCURL
 	g_autoptr(CURLU) h = curl_url();
 	return curl_url_set(h, CURLUPART_URL, perhaps_url, 0) == CURLUE_OK;
 #else

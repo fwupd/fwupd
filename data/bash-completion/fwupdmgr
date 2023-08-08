@@ -5,6 +5,7 @@ _fwupdmgr_cmd_list=(
 	'disable-remote'
 	'device-test'
 	'device-emulate'
+	'device-wait'
 	'downgrade'
 	'download'
 	'enable-remote'
@@ -63,11 +64,13 @@ _fwupdmgr_opts=(
 	'--no-reboot-check'
 	'--no-safety-check'
 	'--no-remote-check'
+	'--no-security-fix'
 	'--show-all'
 	'--sign'
 	'--filter'
+	'--filter-release'
 	'--disable-ssl-strict'
-	'--ipfs'
+	'--p2p'
 	'--json'
 )
 

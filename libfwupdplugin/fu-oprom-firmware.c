@@ -164,18 +164,9 @@ fu_oprom_firmware_parse(FuFirmware *firmware,
 	expansion_header_offset = fu_struct_oprom_get_expansion_header_offset(st_hdr);
 	if (expansion_header_offset != 0x0) {
 		g_autoptr(FuFirmware) img = NULL;
-		g_autoptr(GBytes) blob = NULL;
 
-		blob = fu_bytes_new_offset(fw,
-					   expansion_header_offset,
-					   bufsz - expansion_header_offset,
-					   error);
-		if (blob == NULL) {
-			g_prefix_error(error, "failed to section CPD: ");
-			return FALSE;
-		}
-
-		img = fu_firmware_new_from_gtypes(blob,
+		img = fu_firmware_new_from_gtypes(fw,
+						  expansion_header_offset,
 						  FWUPD_INSTALL_FLAG_NONE,
 						  error,
 						  FU_TYPE_IFWI_CPD_FIRMWARE,
@@ -194,7 +185,7 @@ fu_oprom_firmware_parse(FuFirmware *firmware,
 	return TRUE;
 }
 
-static GBytes *
+static GByteArray *
 fu_oprom_firmware_write(FuFirmware *firmware, GError **error)
 {
 	FuOpromFirmware *self = FU_OPROM_FIRMWARE(firmware);
@@ -240,7 +231,7 @@ fu_oprom_firmware_write(FuFirmware *firmware, GError **error)
 	}
 
 	/* success */
-	return g_byte_array_free_to_bytes(g_steal_pointer(&buf));
+	return g_steal_pointer(&buf);
 }
 
 static gboolean

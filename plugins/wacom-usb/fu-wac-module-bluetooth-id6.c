@@ -12,6 +12,7 @@
 #include "fu-wac-common.h"
 #include "fu-wac-device.h"
 #include "fu-wac-module-bluetooth-id6.h"
+#include "fu-wac-struct.h"
 
 struct _FuWacModuleBluetoothId6 {
 	FuWacModule parent_instance;
@@ -23,6 +24,8 @@ G_DEFINE_TYPE(FuWacModuleBluetoothId6, fu_wac_module_bluetooth_id6, FU_TYPE_WAC_
 #define FU_WAC_MODULE_BLUETOOTH_ID6_PAYLOAD_SZ	    256
 #define FU_WAC_MODULE_BLUETOOTH_ID6_START_NORMAL    0x00
 #define FU_WAC_MODULE_BLUETOOTH_ID6_START_FULLERASE 0xFE
+
+#define FU_WAC_MODULE_BLUETOOTH_ID6_WRITE_TIMEOUT 8000 /* ms */
 
 static guint8
 fu_wac_module_bluetooth_id6_reverse_bits(guint8 value)
@@ -74,7 +77,7 @@ fu_wac_module_bluetooth_id6_write_blob(FuWacModule *self,
 					       FU_WAC_MODULE_COMMAND_DATA,
 					       blob_chunk,
 					       fu_progress_get_child(progress),
-					       FU_WAC_MODULE_WRITE_TIMEOUT,
+					       FU_WAC_MODULE_BLUETOOTH_ID6_WRITE_TIMEOUT,
 					       error)) {
 			g_prefix_error(error, "failed to write block %u of %u: ", i, chunks->len);
 			return FALSE;
@@ -138,7 +141,7 @@ fu_wac_module_bluetooth_id6_write_firmware(FuDevice *device,
 				       FU_WAC_MODULE_COMMAND_END,
 				       NULL,
 				       fu_progress_get_child(progress),
-				       FU_WAC_MODULE_COMMIT_TIMEOUT,
+				       0,
 				       error)) {
 		g_prefix_error(error, "wacom bluetooth-id6 module failed to end: ");
 		return FALSE;
@@ -146,6 +149,7 @@ fu_wac_module_bluetooth_id6_write_firmware(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/* success */
+	fu_device_add_flag(fu_device_get_proxy(device), FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	return TRUE;
 }
 
@@ -154,6 +158,7 @@ fu_wac_module_bluetooth_id6_init(FuWacModuleBluetoothId6 *self)
 {
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_set_install_duration(FU_DEVICE(self), 120);
+	fu_device_set_remove_delay(FU_DEVICE(self), 300000);
 }
 
 static void

@@ -6,8 +6,6 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
 #include "fu-uf2-firmware.h"
 #include "fu-uf2-struct.h"
 
@@ -190,7 +188,7 @@ fu_uf2_firmware_parse(FuFirmware *firmware,
 	}
 
 	/* success */
-	blob = g_byte_array_free_to_bytes(g_steal_pointer(&tmp));
+	blob = g_bytes_new(tmp->data, tmp->len);
 	fu_firmware_set_bytes(firmware, blob);
 	return TRUE;
 }
@@ -223,7 +221,7 @@ fu_uf2_firmware_write_chunk(FuUf2Firmware *self, FuChunk *chk, guint chk_len, GE
 	return g_steal_pointer(&st);
 }
 
-static GBytes *
+static GByteArray *
 fu_uf2_firmware_write(FuFirmware *firmware, GError **error)
 {
 	FuUf2Firmware *self = FU_UF2_FIRMWARE(firmware);
@@ -248,7 +246,7 @@ fu_uf2_firmware_write(FuFirmware *firmware, GError **error)
 	}
 
 	/* success */
-	return g_byte_array_free_to_bytes(g_steal_pointer(&buf));
+	return g_steal_pointer(&buf);
 }
 
 static void

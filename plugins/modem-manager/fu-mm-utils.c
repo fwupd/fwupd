@@ -6,7 +6,7 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
+#include <gio/gio.h>
 
 #include "fu-mm-utils.h"
 

@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"Language-Team: Serbian (http://www.transifex.com/freedesktop/fwupd/language/sr/)\n"
+"Language-Team: Serbian (http://app.transifex.com/freedesktop/fwupd/language/sr/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -160,9 +160,9 @@ msgstr "Преузимам…"
 msgid "Dump SMBIOS data from a file"
 msgstr "Ишчитај SMBIOS податке из датотеке"
 
-#. TRANSLATORS: Suffix: the HSI result
 #. TRANSLATORS: Plugin is active and in use
 #. TRANSLATORS: if the remote is enabled
+#. TRANSLATORS: Suffix: the HSI result
 msgid "Enabled"
 msgstr "Омогућено"
 
@@ -231,6 +231,11 @@ msgctxt "A single GUID"
 msgid "GUID"
 msgstr "ГУИД"
 
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgctxt "command-argument"
+msgid "GUID"
+msgstr "ГУИД"
+
 #. TRANSLATORS: command description
 msgid "Get all devices that support firmware updates"
 msgstr "Добави све уређаје који подржавају ажурирање фирмвера"
@@ -258,10 +263,6 @@ msgstr "Добавља резултате последњег ажурирања"
 #. TRANSLATORS: daemon is inactive
 msgid "Idle…"
 msgstr "Мирујем…"
-
-#. TRANSLATORS: command description
-msgid "Install a firmware file on this hardware"
-msgstr "Инсталирај датотеку са фирмвером на овај уређај"
 
 msgid "Install signed device firmware"
 msgstr "Инсталирајте потписани фирмвер за уређаје"

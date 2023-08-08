@@ -58,7 +58,7 @@ fu_{{vendor}}_{{example}}_firmware_parse(FuFirmware *firmware,
 	return TRUE;
 }
 
-static GBytes *
+static GByteArray *
 fu_{{vendor}}_{{example}}_firmware_write(FuFirmware *firmware, GError **error)
 {
 	Fu{{Vendor}}{{Example}}Firmware *self = FU_{{VENDOR}}_{{EXAMPLE}}_FIRMWARE(firmware);
@@ -75,7 +75,7 @@ fu_{{vendor}}_{{example}}_firmware_write(FuFirmware *firmware, GError **error)
 	fu_byte_array_append_bytes(buf, fw);
 
 	/* success */
-	return g_byte_array_free_to_bytes(g_steal_pointer(&buf));
+	return g_steal_pointer(&buf);
 }
 
 guint16

@@ -45,6 +45,14 @@ def pip_install_package(debug, name):
     subprocess.call(cmd)
 
 
+def test_jinja2(debug):
+    try:
+        import jinja2
+    except ModuleNotFoundError:
+        print("python3-jinja2 must be installed/upgraded")
+        pip_install_package(debug, "jinja2")
+
+
 def test_markdown(debug):
     try:
         import markdown
@@ -195,6 +203,7 @@ if __name__ == "__main__":
             choices=[
                 "get-dependencies",
                 "test-markdown",
+                "test-jinja2",
                 "test-meson",
                 "detect-profile",
                 "install-dependencies",
@@ -229,6 +238,8 @@ if __name__ == "__main__":
     # command to run
     if command == "test-markdown":
         test_markdown(args.debug)
+    elif command == "test-jinja2":
+        test_jinja2(args.debug)
     elif command == "test-meson":
         test_meson(args.debug)
     elif command == "detect-profile":

@@ -1,0 +1,39 @@
+# Fujitsu B2711 Hub
+[USB\VID_0BF8&PID_105F]
+Plugin = vli
+GType = FuVliUsbhubDevice
+Flags = usb3
+CounterpartGuid = USB\VID_0BF8&PID_105E
+[USB\VID_0BF8&PID_105E]
+Plugin = vli
+GType = FuVliUsbhubDevice
+Flags = usb2
+ParentGuid = USB\VID_0BF8&PID_105F
+
+# Fujitsu P2711 Multi-Hub
+[USB\VID_0BF8&PID_1051]
+Plugin = vli
+GType = FuVliUsbhubDevice
+Flags = usb3,has-shared-spi-pd
+CounterpartGuid = USB\VID_0BF8&PID_1052
+[USB\VID_0BF8&PID_1052]
+Plugin = vli
+GType = FuVliUsbhubDevice
+Flags = usb2
+ParentGuid = USB\VID_0BF8&PID_1051
+[USB\VID_0BF8&PID_1054]
+Plugin = vli
+GType = FuVliUsbhubDevice
+Flags = usb3
+ParentGuid = USB\VID_0BF8&PID_1051
+CounterpartGuid = USB\VID_0BF8&PID_1055
+[USB\VID_0BF8&PID_1055]
+Plugin = vli
+GType = FuVliUsbhubDevice
+Flags = usb2
+ParentGuid = USB\VID_0BF8&PID_1051
+
+# Fujitsu
+[USB\VID_0BF8&PID_103C]
+Plugin = vli
+GType = FuVliPDDevice

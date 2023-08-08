@@ -8,6 +8,8 @@
 
 #include "config.h"
 
+#include "fu-byte-array.h"
+#include "fu-mem.h"
 #include "fu-string.h"
 
 /**
@@ -198,78 +200,6 @@ fu_strdup(const gchar *str, gsize bufsz, gsize offset)
 		g_string_append_c(substr, str[offset++]);
 	}
 	return substr;
-}
-
-/**
- * fu_string_replace:
- * @string: the #GString to operate on
- * @search: the text to search for
- * @replace: the text to use for substitutions
- *
- * Performs multiple search and replace operations on the given string.
- *
- * Returns: the number of replacements done, or 0 if @search is not found.
- *
- * Since: 1.8.2
- **/
-guint
-fu_string_replace(GString *string, const gchar *search, const gchar *replace)
-{
-#if GLIB_CHECK_VERSION(2, 68, 0)
-	g_return_val_if_fail(string != NULL, 0);
-	g_return_val_if_fail(search != NULL, 0);
-	g_return_val_if_fail(replace != NULL, 0);
-	return g_string_replace(string, search, replace, 0);
-#else
-	gchar *tmp;
-	guint count = 0;
-	gsize search_idx = 0;
-	gsize replace_len;
-	gsize search_len;
-
-	g_return_val_if_fail(string != NULL, 0);
-	g_return_val_if_fail(search != NULL, 0);
-	g_return_val_if_fail(replace != NULL, 0);
-
-	/* nothing to do */
-	if (string->len == 0)
-		return 0;
-
-	search_len = strlen(search);
-	replace_len = strlen(replace);
-
-	do {
-		tmp = g_strstr_len(string->str + search_idx, -1, search);
-		if (tmp == NULL)
-			break;
-
-		/* advance the counter in case @replace contains @search */
-		search_idx = (gsize)(tmp - string->str);
-
-		/* reallocate the string if required */
-		if (search_len > replace_len) {
-			g_string_erase(string,
-				       (gssize)search_idx,
-				       (gssize)(search_len - replace_len));
-			memcpy(tmp, replace, replace_len);
-		} else if (search_len < replace_len) {
-			g_string_insert_len(string,
-					    (gssize)search_idx,
-					    replace,
-					    (gssize)(replace_len - search_len));
-			/* we have to treat this specially as it could have
-			 * been reallocated when the insertion happened */
-			memcpy(string->str + search_idx, replace, replace_len);
-		} else {
-			/* just memcmp in the new string */
-			memcpy(tmp, replace, replace_len);
-		}
-		search_idx += replace_len;
-		count++;
-	} while (TRUE);
-
-	return count;
-#endif
 }
 
 /**
@@ -568,4 +498,131 @@ fu_strjoin(const gchar *separator, GPtrArray *array)
 	for (guint i = 0; i < array->len; i++)
 		strv[i] = g_ptr_array_index(array, i);
 	return g_strjoinv(separator, (gchar **)strv);
+}
+
+/**
+ * fu_utf16_to_utf8_byte_array:
+ * @array: a #GByteArray
+ * @endian: an endian type, e.g. %G_LITTLE_ENDIAN
+ * @error: (nullable): optional return location for an error
+ *
+ * Converts a UTF-16 buffer to a UTF-8 string.
+ *
+ * Returns: (transfer full): a string, or %NULL on error
+ *
+ * Since: 1.9.3
+ **/
+gchar *
+fu_utf16_to_utf8_byte_array(GByteArray *array, FuEndianType endian, GError **error)
+{
+	g_autofree guint16 *buf16 = NULL;
+
+	g_return_val_if_fail(array != NULL, NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	if (array->len % 2 != 0) {
+		g_set_error_literal(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_INVALID_DATA,
+				    "invalid UTF-16 buffer length");
+		return NULL;
+	}
+	buf16 = g_new0(guint16, (array->len / sizeof(guint16)) + 1);
+	for (guint i = 0; i < array->len / 2; i++) {
+		guint16 data = fu_memread_uint16(array->data + (i * 2), endian);
+		fu_memwrite_uint16((guint8 *)(buf16 + i), data, G_BYTE_ORDER);
+	}
+	return g_utf16_to_utf8(buf16, array->len / sizeof(guint16), NULL, NULL, error);
+}
+
+/**
+ * fu_utf8_to_utf16_byte_array:
+ * @str: a UTF-8 string
+ * @endian: an endian type, e.g. %G_LITTLE_ENDIAN
+ * @flags: a FuUtfConvertFlags, e.g. %FU_UTF_CONVERT_FLAG_APPEND_NUL
+ * @error: (nullable): optional return location for an error
+ *
+ * Converts UTF-8 string to a buffer of UTF-16, optionially including the trailing NULw.
+ *
+ * Returns: (transfer full): a #GByteArray, or %NULL on error
+ *
+ * Since: 1.9.3
+ **/
+GByteArray *
+fu_utf8_to_utf16_byte_array(const gchar *str,
+			    FuEndianType endian,
+			    FuUtfConvertFlags flags,
+			    GError **error)
+{
+	glong buf_utf16sz = 0;
+	g_autoptr(GByteArray) array = g_byte_array_new();
+	g_autofree gunichar2 *buf_utf16 = NULL;
+
+	g_return_val_if_fail(str != NULL, NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	buf_utf16 = g_utf8_to_utf16(str, (glong)-1, NULL, &buf_utf16sz, error);
+	if (buf_utf16 == NULL)
+		return NULL;
+	if (flags & FU_UTF_CONVERT_FLAG_APPEND_NUL)
+		buf_utf16sz += 1;
+	for (glong i = 0; i < buf_utf16sz; i++) {
+		guint16 data = fu_memread_uint16((guint8 *)(buf_utf16 + i), G_BYTE_ORDER);
+		fu_byte_array_append_uint16(array, data, endian);
+	}
+	return g_steal_pointer(&array);
+}
+
+/**
+ * fu_utf16_to_utf8_bytes:
+ * @bytes: a #GBytes
+ * @endian: an endian type, e.g. %G_LITTLE_ENDIAN
+ * @error: (nullable): optional return location for an error
+ *
+ * Converts a UTF-16 buffer to a UTF-8 string.
+ *
+ * Returns: (transfer full): a string, or %NULL on error
+ *
+ * Since: 1.9.3
+ **/
+gchar *
+fu_utf16_to_utf8_bytes(GBytes *bytes, FuEndianType endian, GError **error)
+{
+	GByteArray array = {0x0};
+
+	g_return_val_if_fail(bytes != NULL, NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	array.data = (guint8 *)g_bytes_get_data(bytes, NULL);
+	array.len = g_bytes_get_size(bytes);
+	return fu_utf16_to_utf8_byte_array(&array, endian, error);
+}
+
+/**
+ * fu_utf8_to_utf16_bytes:
+ * @str: a UTF-8 string
+ * @endian: an endian type, e.g. %G_LITTLE_ENDIAN
+ * @error: (nullable): optional return location for an error
+ *
+ * Converts UTF-8 string to a buffer of UTF-16, optionally including the trailing NULw.
+ *
+ * Returns: (transfer full): a #GBytes, or %NULL on error
+ *
+ * Since: 1.9.3
+ **/
+GBytes *
+fu_utf8_to_utf16_bytes(const gchar *str,
+		       FuEndianType endian,
+		       FuUtfConvertFlags flags,
+		       GError **error)
+{
+	g_autoptr(GByteArray) buf = NULL;
+
+	g_return_val_if_fail(str != NULL, NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	buf = fu_utf8_to_utf16_byte_array(str, endian, flags, error);
+	if (buf == NULL)
+		return NULL;
+	return g_bytes_new(buf->data, buf->len);
 }

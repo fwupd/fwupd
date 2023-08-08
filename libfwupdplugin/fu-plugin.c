@@ -11,16 +11,15 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <fwupd.h>
-#include <glib/gstdio.h>
 #include <gmodule.h>
 #include <string.h>
 #include <unistd.h>
 
 #include "fu-bytes.h"
+#include "fu-config.h"
 #include "fu-context-private.h"
 #include "fu-device-private.h"
 #include "fu-kernel.h"
-#include "fu-mutex.h"
 #include "fu-path.h"
 #include "fu-plugin-private.h"
 #include "fu-security-attr.h"
@@ -62,7 +61,6 @@ enum {
 	SIGNAL_DEVICE_REMOVED,
 	SIGNAL_DEVICE_REGISTER,
 	SIGNAL_RULES_CHANGED,
-	SIGNAL_CONFIG_CHANGED,
 	SIGNAL_CHECK_SUPPORTED,
 	SIGNAL_LAST
 };
@@ -84,9 +82,6 @@ typedef gboolean (*FuPluginFlaggedDeviceFunc)(FuPlugin *self,
 					      FwupdInstallFlags flags,
 					      GError **error);
 typedef gboolean (*FuPluginDeviceArrayFunc)(FuPlugin *self, GPtrArray *devices, GError **error);
-
-#define FU_PLUGIN_FILE_MODE_NONSECURE 0644
-#define FU_PLUGIN_FILE_MODE_SECURE    0640
 
 /**
  * fu_plugin_is_open:
@@ -294,14 +289,6 @@ fu_plugin_guess_name_from_fn(const gchar *filename)
 	return name;
 }
 
-static gchar *
-fu_plugin_get_config_filename(FuPlugin *self)
-{
-	g_autofree gchar *conf_dir = fu_path_from_kind(FU_PATH_KIND_SYSCONFDIR_PKG);
-	g_autofree gchar *conf_file = g_strdup_printf("%s.conf", fu_plugin_get_name(self));
-	return g_build_filename(conf_dir, conf_file, NULL);
-}
-
 /**
  * fu_plugin_open:
  * @self: a #FuPlugin
@@ -494,19 +481,6 @@ fu_plugin_device_child_removed_cb(FuDevice *device, FuDevice *child, FuPlugin *s
 		fu_device_get_id(child),
 		fu_device_get_id(device));
 	fu_plugin_device_remove(self, child);
-}
-
-static void
-fu_plugin_config_monitor_changed_cb(GFileMonitor *monitor,
-				    GFile *file,
-				    GFile *other_file,
-				    GFileMonitorEvent event_type,
-				    gpointer user_data)
-{
-	FuPlugin *self = FU_PLUGIN(user_data);
-	g_autofree gchar *fn = g_file_get_path(file);
-	g_debug("%s changed, sending signal", fn);
-	g_signal_emit(self, signals[SIGNAL_CONFIG_CHANGED], 0);
 }
 
 /**
@@ -883,11 +857,8 @@ fu_plugin_device_read_firmware(FuPlugin *self,
 gboolean
 fu_plugin_runner_startup(FuPlugin *self, FuProgress *progress, GError **error)
 {
-	FuPluginPrivate *priv = GET_PRIVATE(self);
 	FuPluginVfuncs *vfuncs = fu_plugin_get_vfuncs(self);
-	g_autofree gchar *config_filename = fu_plugin_get_config_filename(self);
 	g_autoptr(GError) error_local = NULL;
-	g_autoptr(GFile) file = g_file_new_for_path(config_filename);
 
 	g_return_val_if_fail(FU_IS_PLUGIN(self), FALSE);
 
@@ -900,39 +871,6 @@ fu_plugin_runner_startup(FuPlugin *self, FuProgress *progress, GError **error)
 	/* not enabled */
 	if (fu_plugin_has_flag(self, FWUPD_PLUGIN_FLAG_DISABLED))
 		return TRUE;
-
-	/* ensure the configure file is set to the correct permission */
-	if (fu_plugin_has_flag(self, FWUPD_PLUGIN_FLAG_SECURE_CONFIG)) {
-		if (g_file_test(config_filename, G_FILE_TEST_EXISTS)) {
-			GStatBuf st = {0x0};
-			gint rc = g_stat(config_filename, &st);
-			if (rc != 0) {
-				g_set_error(error,
-					    G_IO_ERROR,
-					    G_IO_ERROR_FAILED,
-					    "failed to get permission of %s",
-					    config_filename);
-				fu_plugin_add_flag(self, FWUPD_PLUGIN_FLAG_FAILED_OPEN);
-				return FALSE;
-			}
-			st.st_mode &= 0777;
-			if (st.st_mode != FU_PLUGIN_FILE_MODE_SECURE) {
-				g_info("mode was 0%o, and needs to be 0%o",
-				       st.st_mode,
-				       (guint)FU_PLUGIN_FILE_MODE_SECURE);
-				rc = g_chmod(config_filename, FU_PLUGIN_FILE_MODE_SECURE);
-				if (rc != 0) {
-					g_set_error(error,
-						    G_IO_ERROR,
-						    G_IO_ERROR_FAILED,
-						    "failed to change permission of %s",
-						    config_filename);
-					fu_plugin_add_flag(self, FWUPD_PLUGIN_FLAG_FAILED_OPEN);
-					return FALSE;
-				}
-			}
-		}
-	}
 
 	/* optional */
 	if (vfuncs->startup != NULL) {
@@ -953,15 +891,6 @@ fu_plugin_runner_startup(FuPlugin *self, FuProgress *progress, GError **error)
 			return FALSE;
 		}
 	}
-
-	/* create a monitor on the config file */
-	priv->config_monitor = g_file_monitor_file(file, G_FILE_MONITOR_NONE, NULL, error);
-	if (priv->config_monitor == NULL)
-		return FALSE;
-	g_signal_connect(G_FILE_MONITOR(priv->config_monitor),
-			 "changed",
-			 G_CALLBACK(fu_plugin_config_monitor_changed_cb),
-			 self);
 
 	/* success */
 	return TRUE;
@@ -1491,6 +1420,41 @@ fu_plugin_check_amdgpu_dpaux(FuPlugin *self, GError **error)
 }
 
 /**
+ * fu_plugin_add_device_udev_subsystem:
+ * @self: a #FuPlugin
+ * @subsystem: a subsystem name, e.g. `pciport`
+ *
+ * Add this plugin as a possible handler of devices with this udev subsystem.
+ * Use fu_plugin_add_udev_subsystem() if you just want to ensure the subsystem is watched.
+ *
+ * Plugins can use this method only in fu_plugin_init()
+ *
+ * Since: 1.9.3
+ **/
+void
+fu_plugin_add_device_udev_subsystem(FuPlugin *self, const gchar *subsystem)
+{
+	FuPluginPrivate *priv = GET_PRIVATE(self);
+
+	g_return_if_fail(FU_IS_PLUGIN(self));
+	g_return_if_fail(subsystem != NULL);
+
+	/* see https://github.com/fwupd/fwupd/issues/1121 for more details */
+	if (g_strcmp0(subsystem, "drm_dp_aux_dev") == 0) {
+		g_autoptr(GError) error = NULL;
+		if (!fu_plugin_check_amdgpu_dpaux(self, &error)) {
+			g_warning("failed to add subsystem: %s", error->message);
+			fu_plugin_add_flag(self, FWUPD_PLUGIN_FLAG_DISABLED);
+			fu_plugin_add_flag(self, FWUPD_PLUGIN_FLAG_KERNEL_TOO_OLD);
+			return;
+		}
+	}
+
+	/* proxy */
+	fu_context_add_udev_subsystem(priv->ctx, subsystem, fu_plugin_get_name(self));
+}
+
+/**
  * fu_plugin_add_udev_subsystem:
  * @self: a #FuPlugin
  * @subsystem: a subsystem name, e.g. `pciport`
@@ -1506,19 +1470,11 @@ fu_plugin_add_udev_subsystem(FuPlugin *self, const gchar *subsystem)
 {
 	FuPluginPrivate *priv = GET_PRIVATE(self);
 
-	/* see https://github.com/fwupd/fwupd/issues/1121 for more details */
-	if (g_strcmp0(subsystem, "drm_dp_aux_dev") == 0) {
-		g_autoptr(GError) error = NULL;
-		if (!fu_plugin_check_amdgpu_dpaux(self, &error)) {
-			g_warning("failed to add subsystem: %s", error->message);
-			fu_plugin_add_flag(self, FWUPD_PLUGIN_FLAG_DISABLED);
-			fu_plugin_add_flag(self, FWUPD_PLUGIN_FLAG_KERNEL_TOO_OLD);
-			return;
-		}
-	}
+	g_return_if_fail(FU_IS_PLUGIN(self));
+	g_return_if_fail(subsystem != NULL);
 
 	/* proxy */
-	fu_context_add_udev_subsystem(priv->ctx, subsystem);
+	fu_context_add_udev_subsystem(priv->ctx, subsystem, NULL);
 }
 
 /**
@@ -1545,7 +1501,7 @@ fu_plugin_add_firmware_gtype(FuPlugin *self, const gchar *id, GType gtype)
 		g_autoptr(GString) str = g_string_new(g_type_name(gtype));
 		if (g_str_has_prefix(str->str, "Fu"))
 			g_string_erase(str, 0, 2);
-		fu_string_replace(str, "Firmware", "");
+		g_string_replace(str, "Firmware", "", 1);
 		id_safe = fu_common_string_uncamelcase(str->str);
 	}
 	fu_context_add_firmware_gtype(priv->ctx, id_safe, gtype);
@@ -1586,10 +1542,18 @@ fu_plugin_backend_device_added(FuPlugin *self,
 	/* fall back to plugin default */
 	if (device_gtype == G_TYPE_INVALID) {
 		if (priv->device_gtypes->len > 1) {
-			g_set_error_literal(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_INTERNAL,
-					    "too many GTypes to choose a default");
+			g_autoptr(GString) str = g_string_new(NULL);
+			for (guint i = 0; i < priv->device_gtypes->len; i++) {
+				device_gtype = g_array_index(priv->device_gtypes, GType, i);
+				if (str->len > 0)
+					g_string_append(str, ",");
+				g_string_append(str, g_type_name(device_gtype));
+			}
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "too many GTypes to choose a default, got: %s",
+				    str->str);
 			return FALSE;
 		}
 		device_gtype = g_array_index(priv->device_gtypes, GType, 0);
@@ -2420,18 +2384,13 @@ fu_plugin_get_report_metadata(FuPlugin *self)
 gchar *
 fu_plugin_get_config_value(FuPlugin *self, const gchar *key, const gchar *value_default)
 {
-	g_autofree gchar *conf_path = fu_plugin_get_config_filename(self);
-	g_autofree gchar *value = NULL;
-	g_autoptr(GKeyFile) keyfile = NULL;
-	if (!g_file_test(conf_path, G_FILE_TEST_IS_REGULAR))
-		return g_strdup(value_default);
-	keyfile = g_key_file_new();
-	if (!g_key_file_load_from_file(keyfile, conf_path, G_KEY_FILE_NONE, NULL))
-		return g_strdup(value_default);
-	value = g_key_file_get_string(keyfile, fu_plugin_get_name(self), key, NULL);
-	if (value == NULL)
-		return g_strdup(value_default);
-	return g_steal_pointer(&value);
+	FuPluginPrivate *priv = fu_plugin_get_instance_private(self);
+	FuConfig *config = fu_context_get_config(priv->ctx);
+	if (config == NULL) {
+		g_critical("cannot get config value with no loaded context!");
+		return NULL;
+	}
+	return fu_config_get_value(config, fu_plugin_get_name(self), key, value_default);
 }
 
 /**
@@ -2499,38 +2458,6 @@ g_file_set_contents_full(const gchar *filename,
 }
 #endif
 
-static gboolean
-fu_plugin_set_config_value_internal(FuPlugin *self,
-				    const gchar *key,
-				    const gchar *value,
-				    guint32 mode,
-				    GError **error)
-{
-	g_autofree gchar *conf_path = fu_plugin_get_config_filename(self);
-	g_autofree gchar *data = NULL;
-	g_autoptr(GKeyFile) keyfile = g_key_file_new();
-
-	g_return_val_if_fail(FU_IS_PLUGIN(self), FALSE);
-	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
-
-	if (!g_file_test(conf_path, G_FILE_TEST_EXISTS)) {
-		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "%s is missing", conf_path);
-		return FALSE;
-	}
-	if (!g_key_file_load_from_file(keyfile, conf_path, G_KEY_FILE_KEEP_COMMENTS, error))
-		return FALSE;
-	g_key_file_set_string(keyfile, fu_plugin_get_name(self), key, value);
-	data = g_key_file_to_data(keyfile, NULL, error);
-	if (data == NULL)
-		return FALSE;
-	return g_file_set_contents_full(conf_path,
-					data,
-					-1,
-					G_FILE_SET_CONTENTS_CONSISTENT,
-					mode,
-					error);
-}
-
 /**
  * fu_plugin_set_config_value:
  * @self: a #FuPlugin
@@ -2547,23 +2474,19 @@ fu_plugin_set_config_value_internal(FuPlugin *self,
 gboolean
 fu_plugin_set_config_value(FuPlugin *self, const gchar *key, const gchar *value, GError **error)
 {
+	FuPluginPrivate *priv = fu_plugin_get_instance_private(self);
+	FuConfig *config = fu_context_get_config(priv->ctx);
 	g_return_val_if_fail(FU_IS_PLUGIN(self), FALSE);
 	g_return_val_if_fail(key != NULL, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
-
-	/* when removing fu_plugin_set_secure_config_value() just remove this instead */
-	if (fu_plugin_has_flag(self, FWUPD_PLUGIN_FLAG_SECURE_CONFIG)) {
-		return fu_plugin_set_config_value_internal(self,
-							   key,
-							   value,
-							   FU_PLUGIN_FILE_MODE_SECURE,
-							   error);
+	if (config == NULL) {
+		g_set_error_literal(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_FAILED,
+				    "cannot get config value with no loaded context");
+		return FALSE;
 	}
-	return fu_plugin_set_config_value_internal(self,
-						   key,
-						   value,
-						   FU_PLUGIN_FILE_MODE_NONSECURE,
-						   error);
+	return fu_config_set_value(config, fu_plugin_get_name(self), key, value, error);
 }
 
 /**
@@ -2581,10 +2504,13 @@ fu_plugin_set_config_value(FuPlugin *self, const gchar *key, const gchar *value,
 gboolean
 fu_plugin_get_config_value_boolean(FuPlugin *self, const gchar *key, gboolean value_default)
 {
-	g_autofree gchar *tmp = fu_plugin_get_config_value(self, key, NULL);
-	if (tmp == NULL)
+	FuPluginPrivate *priv = fu_plugin_get_instance_private(self);
+	FuConfig *config = fu_context_get_config(priv->ctx);
+	if (config == NULL) {
+		g_critical("cannot get config value with no loaded context!");
 		return value_default;
-	return g_ascii_strcasecmp(tmp, "true") == 0;
+	}
+	return fu_config_get_value_bool(config, fu_plugin_get_name(self), key, value_default);
 }
 
 /**
@@ -2787,25 +2713,6 @@ fu_plugin_class_init(FuPluginClass *klass)
 						     g_cclosure_marshal_VOID__VOID,
 						     G_TYPE_NONE,
 						     0);
-	/**
-	 * FuPlugin::config-changed:
-	 * @self: the #FuPlugin instance that emitted the signal
-	 *
-	 * The ::config-changed signal is emitted when one or more config files have changed which
-	 * may affect how the daemon should be run.
-	 *
-	 * Since: 1.7.0
-	 **/
-	signals[SIGNAL_CONFIG_CHANGED] =
-	    g_signal_new("config-changed",
-			 G_TYPE_FROM_CLASS(object_class),
-			 G_SIGNAL_RUN_LAST,
-			 G_STRUCT_OFFSET(FuPluginClass, _config_changed),
-			 NULL,
-			 NULL,
-			 g_cclosure_marshal_VOID__VOID,
-			 G_TYPE_NONE,
-			 0);
 
 	/**
 	 * FuPlugin:context:

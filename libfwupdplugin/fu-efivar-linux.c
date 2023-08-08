@@ -160,7 +160,7 @@ fu_efivar_delete_with_glob_impl(const gchar *guid, const gchar *name_glob, GErro
 		return FALSE;
 	nameguid_glob = g_strdup_printf("%s-%s", name_glob, guid);
 	while ((fn = g_dir_read_name(dir)) != NULL) {
-		if (fu_path_fnmatch(nameguid_glob, fn)) {
+		if (g_pattern_match_simple(nameguid_glob, fn)) {
 			g_autofree gchar *keyfn = g_build_filename(efivardir, fn, NULL);
 			g_autoptr(GFile) file = g_file_new_for_path(keyfn);
 			if (!fu_efivar_set_immutable(keyfn, FALSE, NULL, error)) {
@@ -329,6 +329,23 @@ fu_efivar_space_used_impl(GError **error)
 	guint64 total = 0;
 	g_autoptr(GDir) dir = NULL;
 	g_autofree gchar *path = fu_efivar_get_path();
+	g_autoptr(GFile) file_fs = g_file_new_for_path(path);
+	g_autoptr(GFileInfo) info_fs = NULL;
+	g_autoptr(GError) error_local = NULL;
+
+	/* this is only supported in new kernels */
+	info_fs = g_file_query_info(file_fs,
+				    G_FILE_ATTRIBUTE_FILESYSTEM_USED,
+				    G_FILE_QUERY_INFO_NONE,
+				    NULL,
+				    &error_local);
+	if (info_fs == NULL) {
+		g_debug("failed to get efivar used space: %s", error_local->message);
+	} else {
+		total = g_file_info_get_attribute_uint64(info_fs, G_FILE_ATTRIBUTE_FILESYSTEM_USED);
+		if (total > 0)
+			return total;
+	}
 
 	/* stat each file */
 	dir = g_dir_open(path, 0, error);

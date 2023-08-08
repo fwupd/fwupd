@@ -1,4 +1,4 @@
-% fwupdtool(1) @PACKAGE_VERSION@ | standalone firmware update utility man page
+% fwupdtool(1) {{PACKAGE_VERSION}} | standalone firmware update utility man page
 
 NAME
 ====
@@ -31,8 +31,11 @@ Note that some runtimes failures can be ignored using **\-\-force**.
 EXIT STATUS
 ===========
 
-Commands that successfully execute will return "0", but commands that have no
-actions but successfully execute will return "2".
+Commands that successfully execute will return "0", with generic failure as "1".
+
+There are also several other exit codes used:
+A return code of "2" is used for commands that have no actions but were successfully executed,
+and "3" is used when a resource was not found.
 
 BUGS
 ====
@@ -43,3 +46,4 @@ SEE ALSO
 ========
 
 fwupdmgr(1)
+fwupd.conf(5)

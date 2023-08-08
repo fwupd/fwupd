@@ -7,9 +7,8 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
 #include "fu-vli-device.h"
+#include "fu-vli-struct.h"
 
 typedef struct {
 	FuVliDeviceKind kind;
@@ -273,7 +272,7 @@ fu_vli_device_spi_write_block(FuVliDevice *self,
 		g_prefix_error(error, "SPI data read failed: ");
 		return FALSE;
 	}
-	return fu_memcmp_safe(buf, bufsz, buf_tmp, bufsz, error);
+	return fu_memcmp_safe(buf, bufsz, 0, buf_tmp, bufsz, 0, bufsz, error);
 }
 
 gboolean
@@ -471,7 +470,7 @@ fu_vli_device_set_kind(FuVliDevice *self, FuVliDeviceKind device_kind)
 		break;
 	default:
 		g_warning("device kind %s [0x%02x] does not indicate unsigned/signed payload",
-			  fu_vli_common_device_kind_to_string(device_kind),
+			  fu_vli_device_kind_to_string(device_kind),
 			  device_kind);
 		break;
 	}
@@ -484,7 +483,7 @@ fu_vli_device_set_kind(FuVliDevice *self, FuVliDeviceKind device_kind)
 	/* add extra DEV GUID too */
 	fu_device_add_instance_str(FU_DEVICE(self),
 				   "DEV",
-				   fu_vli_common_device_kind_to_string(priv->kind));
+				   fu_vli_device_kind_to_string(priv->kind));
 	fu_device_build_instance_id(FU_DEVICE(self), NULL, "USB", "VID", "PID", "DEV", NULL);
 }
 
@@ -519,10 +518,7 @@ fu_vli_device_to_string(FuDevice *device, guint idt, GString *str)
 	FU_DEVICE_CLASS(fu_vli_device_parent_class)->to_string(device, idt, str);
 
 	if (priv->kind != FU_VLI_DEVICE_KIND_UNKNOWN) {
-		fu_string_append(str,
-				 idt,
-				 "DeviceKind",
-				 fu_vli_common_device_kind_to_string(priv->kind));
+		fu_string_append(str, idt, "DeviceKind", fu_vli_device_kind_to_string(priv->kind));
 	}
 	fu_string_append_kb(str, idt, "SpiAutoDetect", priv->spi_auto_detect);
 	if (priv->flash_id != 0x0) {
@@ -651,7 +647,7 @@ fu_vli_device_set_quirk_kv(FuDevice *device, const gchar *key, const gchar *valu
 	}
 	if (g_strcmp0(key, "VliDeviceKind") == 0) {
 		FuVliDeviceKind device_kind;
-		device_kind = fu_vli_common_device_kind_from_string(value);
+		device_kind = fu_vli_device_kind_from_string(value);
 		if (device_kind == FU_VLI_DEVICE_KIND_UNKNOWN) {
 			g_set_error(error,
 				    G_IO_ERROR,
@@ -722,6 +718,7 @@ fu_vli_device_init(FuVliDevice *self)
 	priv->spi_auto_detect = TRUE;
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_ADD_COUNTERPART_GUIDS);
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_NO_SERIAL_NUMBER);
+	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_ADD_INSTANCE_ID_REV);
 }
 
 static void

@@ -6,9 +6,8 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
 #include "fu-fpc-device.h"
+#include "fu-fpc-struct.h"
 
 #define FPC_USB_INTERFACE	     0
 #define FPC_USB_TRANSFER_TIMEOUT     1500 /* ms */
@@ -34,8 +33,6 @@
 #define FPC_DEVICE_DFU_MODE_PORT     0x02
 #define FPC_DEVICE_NORMAL_MODE_CLASS 0xFF
 #define FPC_DEVICE_NORMAL_MODE_PORT  0xFF
-
-#define FPC_DFU_DNBUSY 0x04
 
 /**
  * FU_FPC_DEVICE_FLAG_MOH_DEVICE:
@@ -74,14 +71,6 @@ struct _FuFpcDevice {
 };
 
 G_DEFINE_TYPE(FuFpcDevice, fu_fpc_device, FU_TYPE_USB_DEVICE)
-
-typedef struct __attribute__((packed)) {
-	guint8 bstatus;
-	guint8 bmax_payload_size;
-	guint8 reserved[2];
-	guint8 bstate;
-	guint8 reserved2;
-} FuFpcDfuStatus;
 
 static gboolean
 fu_fpc_device_dfu_cmd(FuFpcDevice *self,
@@ -175,7 +164,6 @@ fu_fpc_device_fw_cmd(FuFpcDevice *self,
 static gboolean
 fu_fpc_device_setup_mode(FuFpcDevice *self, GError **error)
 {
-#if G_USB_CHECK_VERSION(0, 3, 3)
 	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
 	g_autoptr(GPtrArray) intfs = NULL;
 
@@ -197,13 +185,6 @@ fu_fpc_device_setup_mode(FuFpcDevice *self, GError **error)
 	}
 	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "no update interface found");
 	return FALSE;
-#else
-	g_set_error_literal(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "this version of GUsb is not supported");
-	return FALSE;
-#endif
 }
 
 static gboolean
@@ -243,8 +224,10 @@ fu_fpc_device_setup_version(FuFpcDevice *self, GError **error)
 						   0,
 						   FALSE,
 						   FALSE,
-						   error))
+						   error)) {
+				g_prefix_error(error, "fail to clear status in setup version");
 				return FALSE;
+			}
 		}
 
 		data = g_malloc0(FPC_DEVICE_DFU_FW_STATUS_LEN);
@@ -255,8 +238,10 @@ fu_fpc_device_setup_version(FuFpcDevice *self, GError **error)
 					   FPC_DEVICE_DFU_FW_STATUS_LEN,
 					   TRUE,
 					   TRUE,
-					   error))
+					   error)) {
+			g_prefix_error(error, "fail to get fw status in setup version");
 			return FALSE;
+		}
 
 		if (!fu_memread_uint32_safe(data,
 					    FPC_DEVICE_DFU_FW_STATUS_LEN,
@@ -273,16 +258,16 @@ fu_fpc_device_setup_version(FuFpcDevice *self, GError **error)
 }
 
 static gboolean
-fu_fpc_device_check_dfu_status(FuDevice *device, gpointer user_data, GError **error)
+fu_fpc_device_check_dfu_status_cb(FuDevice *device, gpointer user_data, GError **error)
 {
 	FuFpcDevice *self = FU_FPC_DEVICE(device);
-	FuFpcDfuStatus *dfu_status = (FuFpcDfuStatus *)user_data;
+	g_autoptr(GByteArray) dfu_status = fu_struct_fpc_dfu_new();
 
 	if (!fu_fpc_device_dfu_cmd(self,
 				   FPC_CMD_DFU_GETSTATUS,
 				   0x0000,
-				   (guint8 *)dfu_status,
-				   sizeof(FuFpcDfuStatus),
+				   dfu_status->data,
+				   dfu_status->len,
 				   TRUE,
 				   FALSE,
 				   error)) {
@@ -290,16 +275,23 @@ fu_fpc_device_check_dfu_status(FuDevice *device, gpointer user_data, GError **er
 		return FALSE;
 	}
 
-	if (dfu_status->bstatus != 0 || dfu_status->bstate == FPC_DFU_DNBUSY) {
+	if (fu_struct_fpc_dfu_get_status(dfu_status) != 0 ||
+	    fu_struct_fpc_dfu_get_state(dfu_status) == FU_FPC_DFU_STATE_DNBUSY) {
 		/* device is not in correct status/state */
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_WRITE,
 			    "dfu status error [0x%x, 0x%x]",
-			    dfu_status->bstatus,
-			    dfu_status->bstate);
+			    fu_struct_fpc_dfu_get_status(dfu_status),
+			    fu_struct_fpc_dfu_get_state(dfu_status));
 		return FALSE;
 	}
+
+	if (fu_struct_fpc_dfu_get_max_payload_size(dfu_status) > 0 ||
+	    fu_device_has_private_flag(FU_DEVICE(self), FU_FPC_DEVICE_FLAG_RTS_DEVICE))
+		self->max_block_size = FPC_FLASH_BLOCK_SIZE_4096;
+	else
+		self->max_block_size = FPC_FLASH_BLOCK_SIZE_DEFAULT;
 
 	return TRUE;
 }
@@ -307,8 +299,6 @@ fu_fpc_device_check_dfu_status(FuDevice *device, gpointer user_data, GError **er
 static gboolean
 fu_fpc_device_update_init(FuFpcDevice *self, GError **error)
 {
-	FuFpcDfuStatus dfu_status = {0};
-
 	if (!fu_device_has_private_flag(FU_DEVICE(self), FU_FPC_DEVICE_FLAG_LEGACY_DFU)) {
 		if (!fu_fpc_device_dfu_cmd(self,
 					   FPC_CMD_DFU_CLRSTATUS,
@@ -322,22 +312,12 @@ fu_fpc_device_update_init(FuFpcDevice *self, GError **error)
 			return FALSE;
 		}
 	}
-
-	if (!fu_device_retry_full(FU_DEVICE(self),
-				  fu_fpc_device_check_dfu_status,
-				  FPC_DFU_MAX_ATTEMPTS,
-				  20,
-				  (gpointer)&dfu_status,
-				  error))
-		return FALSE;
-
-	if (dfu_status.bmax_payload_size > 0 ||
-	    fu_device_has_private_flag(FU_DEVICE(self), FU_FPC_DEVICE_FLAG_RTS_DEVICE))
-		self->max_block_size = FPC_FLASH_BLOCK_SIZE_4096;
-	else
-		self->max_block_size = FPC_FLASH_BLOCK_SIZE_DEFAULT;
-
-	return TRUE;
+	return fu_device_retry_full(FU_DEVICE(self),
+				    fu_fpc_device_check_dfu_status_cb,
+				    FPC_DFU_MAX_ATTEMPTS,
+				    20,
+				    NULL,
+				    error);
 }
 
 static void
@@ -345,7 +325,7 @@ fu_fpc_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuFpcDevice *self = FU_FPC_DEVICE(device);
 
-	fu_string_append_kx(str, idt, "Max block size", self->max_block_size);
+	fu_string_append_kx(str, idt, "MaxBlockSize", self->max_block_size);
 	fu_string_append_kb(str,
 			    idt,
 			    "LegacyDfu",
@@ -375,7 +355,6 @@ fu_fpc_device_attach(FuDevice *device, FuProgress *progress, GError **error)
 	}
 	if (!fu_fpc_device_dfu_cmd(self, FPC_CMD_DFU_DETACH, 0x0000, NULL, 0, FALSE, FALSE, error))
 		return FALSE;
-	fu_device_remove_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	return TRUE;
 }
@@ -392,7 +371,6 @@ fu_fpc_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 	}
 	if (!fu_fpc_device_fw_cmd(self, FPC_CMD_BOOT0, NULL, 0, FALSE, error))
 		return FALSE;
-	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	return TRUE;
 }
@@ -401,10 +379,20 @@ static gboolean
 fu_fpc_device_setup(FuDevice *device, GError **error)
 {
 	FuFpcDevice *self = FU_FPC_DEVICE(device);
+	g_autofree gchar *name = NULL;
 
 	/* setup */
 	if (!FU_DEVICE_CLASS(fu_fpc_device_parent_class)->setup(device, error))
 		return FALSE;
+
+	/* remove the ' L:0001 FW:27.26.23.18' suffix */
+	name = g_strdup(fu_device_get_name(device));
+	if (name != NULL) {
+		gchar *tmp = g_strstr_len(name, -1, " L:00");
+		if (tmp != NULL)
+			*tmp = '\0';
+		fu_device_set_name(device, name);
+	}
 
 	if (!fu_fpc_device_setup_mode(self, error)) {
 		g_prefix_error(error, "failed to get device mode: ");
@@ -429,7 +417,6 @@ fu_fpc_device_write_firmware(FuDevice *device,
 			     GError **error)
 {
 	FuFpcDevice *self = FU_FPC_DEVICE(device);
-	FuFpcDfuStatus dfu_status = {0};
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GPtrArray) chunks = NULL;
@@ -486,10 +473,10 @@ fu_fpc_device_write_firmware(FuDevice *device,
 		}
 
 		if (!fu_device_retry_full(device,
-					  fu_fpc_device_check_dfu_status,
+					  fu_fpc_device_check_dfu_status_cb,
 					  FPC_DFU_MAX_ATTEMPTS,
 					  20,
-					  (gpointer)&dfu_status,
+					  NULL,
 					  &error_local)) {
 			g_set_error(error,
 				    FWUPD_ERROR,
@@ -522,10 +509,10 @@ fu_fpc_device_write_firmware(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	if (!fu_device_retry_full(device,
-				  fu_fpc_device_check_dfu_status,
+				  fu_fpc_device_check_dfu_status_cb,
 				  FPC_DFU_MAX_ATTEMPTS,
 				  20,
-				  (gpointer)&dfu_status,
+				  NULL,
 				  error))
 		return FALSE;
 
@@ -552,7 +539,7 @@ fu_fpc_device_init(FuFpcDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_USE_RUNTIME_VERSION);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_QUAD);
-	fu_device_set_remove_delay(FU_DEVICE(self), 5000);
+	fu_device_set_remove_delay(FU_DEVICE(self), 10000);
 	fu_device_add_protocol(FU_DEVICE(self), "com.fingerprints.dfupc");
 	fu_device_set_summary(FU_DEVICE(self), "FPC fingerprint sensor");
 	fu_device_set_install_duration(FU_DEVICE(self), 15);

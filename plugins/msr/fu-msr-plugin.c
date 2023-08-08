@@ -73,6 +73,9 @@ G_DEFINE_TYPE(FuMsrPlugin, fu_msr_plugin, FU_TYPE_PLUGIN)
 #define PCI_MSR_AMD64_SYSCFG	     0xC0010010
 #define PCI_MSR_AMD64_SEV	     0xC0010131
 
+/* defaults changed here will also be reflected in the fwupd.conf man page */
+#define FU_MSR_CONFIG_DEFAULT_MINIMUM_SME_KERNEL_VERSION "5.18.0"
+
 static void
 fu_msr_plugin_to_string(FuPlugin *plugin, guint idt, GString *str)
 {
@@ -314,6 +317,7 @@ fu_plugin_add_security_attr_dci_enabled(FuPlugin *plugin, FuSecurityAttrs *attrs
 	attr = fu_plugin_security_attr_new(plugin, FWUPD_SECURITY_ATTR_ID_PLATFORM_DEBUG_ENABLED);
 	if (device != NULL)
 		fwupd_security_attr_add_guids(attr, fu_device_get_guids(device));
+	fwupd_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
 	fu_security_attrs_append(attrs, attr);
 
 	/* check fields */
@@ -330,7 +334,6 @@ fu_plugin_add_security_attr_dci_enabled(FuPlugin *plugin, FuSecurityAttrs *attrs
 
 	/* success */
 	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
-	fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
 }
 
 static void
@@ -347,6 +350,7 @@ fu_plugin_add_security_attr_intel_tme_enabled(FuPlugin *plugin, FuSecurityAttrs 
 	attr = fu_security_attrs_get_by_appstream_id(attrs, FWUPD_SECURITY_ATTR_ID_ENCRYPTED_RAM);
 	if (attr == NULL) {
 		attr = fu_plugin_security_attr_new(plugin, FWUPD_SECURITY_ATTR_ID_ENCRYPTED_RAM);
+		fwupd_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_ENCRYPTED);
 		fu_security_attrs_append(attrs, attr);
 	}
 
@@ -390,6 +394,7 @@ fu_plugin_add_security_attr_dci_locked(FuPlugin *plugin, FuSecurityAttrs *attrs)
 	attr = fu_plugin_security_attr_new(plugin, FWUPD_SECURITY_ATTR_ID_PLATFORM_DEBUG_LOCKED);
 	if (device != NULL)
 		fwupd_security_attr_add_guids(attr, fu_device_get_guids(device));
+	fwupd_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_LOCKED);
 	fu_security_attrs_append(attrs, attr);
 
 	/* check fields */
@@ -406,14 +411,15 @@ fu_plugin_add_security_attr_dci_locked(FuPlugin *plugin, FuSecurityAttrs *attrs)
 
 	/* success */
 	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
-	fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_LOCKED);
 }
 
 static gboolean
 fu_msr_plugin_safe_kernel_for_sme(FuPlugin *plugin, GError **error)
 {
 	g_autofree gchar *min =
-	    fu_plugin_get_config_value(plugin, "MinimumSmeKernelVersion", "5.18.0");
+	    fu_plugin_get_config_value(plugin,
+				       "MinimumSmeKernelVersion",
+				       FU_MSR_CONFIG_DEFAULT_MINIMUM_SME_KERNEL_VERSION);
 	return fu_kernel_check_version(min, error);
 }
 
@@ -455,6 +461,7 @@ fu_plugin_add_security_attr_amd_sme_enabled(FuPlugin *plugin, FuSecurityAttrs *a
 	attr = fu_plugin_security_attr_new(plugin, FWUPD_SECURITY_ATTR_ID_ENCRYPTED_RAM);
 	if (device != NULL)
 		fwupd_security_attr_add_guids(attr, fu_device_get_guids(device));
+	fwupd_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_ENCRYPTED);
 	fu_security_attrs_append(attrs, attr);
 
 	/* check fields */
@@ -485,7 +492,6 @@ fu_plugin_add_security_attr_amd_sme_enabled(FuPlugin *plugin, FuSecurityAttrs *a
 
 	/* success */
 	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
-	fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_ENCRYPTED);
 	fwupd_security_attr_add_obsolete(attr, "pci_psp");
 }
 
@@ -507,7 +513,7 @@ static void
 fu_msr_plugin_constructed(GObject *obj)
 {
 	FuPlugin *plugin = FU_PLUGIN(obj);
-	fu_plugin_add_udev_subsystem(plugin, "msr");
+	fu_plugin_add_device_udev_subsystem(plugin, "msr");
 }
 
 static void

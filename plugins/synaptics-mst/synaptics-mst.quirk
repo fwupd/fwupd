@@ -1,7 +1,3 @@
-# match all devices with this udev subsystem
-[DRM_DP_AUX_DEV]
-Plugin = synaptics_mst
-
 # GUID generation for Synaptics MST plugin
 #
 # SYNAPTICSMST\BID is the 16 bit board ID which contains:

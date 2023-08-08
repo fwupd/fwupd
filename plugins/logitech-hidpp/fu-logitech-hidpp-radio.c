@@ -9,24 +9,24 @@
 #include "fu-logitech-hidpp-device.h"
 #include "fu-logitech-hidpp-radio.h"
 
-struct _FuLogitechHidPpRadio {
+struct _FuLogitechHidppRadio {
 	FuDevice parent_instance;
 	guint8 entity;
 };
 
-G_DEFINE_TYPE(FuLogitechHidPpRadio, fu_logitech_hidpp_radio, FU_TYPE_DEVICE)
+G_DEFINE_TYPE(FuLogitechHidppRadio, fu_logitech_hidpp_radio, FU_TYPE_DEVICE)
 
 static void
 fu_logitech_hidpp_radio_to_string(FuDevice *device, guint idt, GString *str)
 {
-	FuLogitechHidPpRadio *self = FU_HIDPP_RADIO(device);
+	FuLogitechHidppRadio *self = FU_HIDPP_RADIO(device);
 	fu_string_append_kx(str, idt, "Entity", self->entity);
 }
 
 static gboolean
 fu_logitech_hidpp_radio_attach(FuDevice *device, FuProgress *progress, GError **error)
 {
-	FuLogitechHidPpRadio *self = FU_HIDPP_RADIO(device);
+	FuLogitechHidppRadio *self = FU_HIDPP_RADIO(device);
 	FuDevice *parent = fu_device_get_parent(device);
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
@@ -91,7 +91,7 @@ fu_logitech_hidpp_radio_set_progress(FuDevice *self, FuProgress *progress)
 }
 
 static void
-fu_logitech_hidpp_radio_init(FuLogitechHidPpRadio *self)
+fu_logitech_hidpp_radio_init(FuLogitechHidppRadio *self)
 {
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
@@ -106,7 +106,7 @@ fu_logitech_hidpp_radio_init(FuLogitechHidPpRadio *self)
 }
 
 static void
-fu_logitech_hidpp_radio_class_init(FuLogitechHidPpRadioClass *klass)
+fu_logitech_hidpp_radio_class_init(FuLogitechHidppRadioClass *klass)
 {
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
 
@@ -117,10 +117,10 @@ fu_logitech_hidpp_radio_class_init(FuLogitechHidPpRadioClass *klass)
 	klass_device->set_progress = fu_logitech_hidpp_radio_set_progress;
 }
 
-FuLogitechHidPpRadio *
+FuLogitechHidppRadio *
 fu_logitech_hidpp_radio_new(FuContext *ctx, guint8 entity)
 {
-	FuLogitechHidPpRadio *self = NULL;
+	FuLogitechHidppRadio *self = NULL;
 
 	self = g_object_new(FU_TYPE_LOGITECH_HIDPP_RADIO, "context", ctx, NULL);
 	self->entity = entity;

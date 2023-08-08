@@ -389,6 +389,7 @@ fu_usb_device_setup(FuDevice *device, GError **error)
 			g_autoptr(GError) error_ds20 = NULL;
 
 			ds20 = fu_firmware_new_from_gtypes(extra,
+							   0x0,
 							   FWUPD_INSTALL_FLAG_NONE,
 							   &error_ds20,
 							   FU_TYPE_USB_DEVICE_FW_DS20,
@@ -535,7 +536,8 @@ fu_usb_device_probe(FuDevice *device, GError **error)
 	fu_device_add_instance_u16(device, "REV", release);
 	fu_device_build_instance_id_quirk(device, NULL, "USB", "VID", NULL);
 	fu_device_build_instance_id(device, NULL, "USB", "VID", "PID", NULL);
-	fu_device_build_instance_id(device, NULL, "USB", "VID", "PID", "REV", NULL);
+	if (fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_ADD_INSTANCE_ID_REV))
+		fu_device_build_instance_id(device, NULL, "USB", "VID", "PID", "REV", NULL);
 
 	/* add the interface GUIDs */
 	intfs = g_usb_device_get_interfaces(priv->usb_device, error);
@@ -659,7 +661,7 @@ fu_usb_device_get_platform_id(FuUsbDevice *self)
 guint16
 fu_usb_device_get_spec(FuUsbDevice *self)
 {
-#if G_USB_CHECK_VERSION(0, 3, 1)
+#ifdef HAVE_GUSB
 	FuUsbDevicePrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FU_IS_USB_DEVICE(self), 0x0);
 	if (priv->usb_device == NULL)

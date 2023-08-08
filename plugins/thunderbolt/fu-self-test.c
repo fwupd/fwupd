@@ -6,8 +6,6 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
 #include <fcntl.h>
 #include <glib/gprintf.h>
 #include <glib/gstdio.h>
@@ -1081,7 +1079,7 @@ test_image_validation(ThunderboltTest *tt, gconstpointer user_data)
 	/* parse; should fail, bad image */
 	ret = fu_firmware_parse(firmware_bad, bad_data, FWUPD_INSTALL_FLAG_NO_SEARCH, &error);
 	g_assert_false(ret);
-	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_READ);
+	g_assert_error(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA);
 	g_debug("expected image validation error [ctl]: %s", error->message);
 	g_clear_error(&error);
 

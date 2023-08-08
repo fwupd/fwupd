@@ -10,7 +10,7 @@
 #include <glib.h>
 
 GByteArray *
-fu_synaprom_request_new(guint8 cmd, const gpointer data, gsize len);
+fu_synaprom_request_new(guint8 cmd, const guint8 *buf, gsize bufsz);
 GByteArray *
 fu_synaprom_reply_new(gsize cmdlen);
 gboolean

@@ -26,6 +26,8 @@
 
 typedef struct {
 	GPtrArray *records;
+	guint32 addr_min;
+	guint32 addr_max;
 } FuSrecFirmwarePrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE(FuSrecFirmware, fu_srec_firmware, FU_TYPE_FIRMWARE)
@@ -52,6 +54,40 @@ fu_srec_firmware_get_records(FuSrecFirmware *self)
 	FuSrecFirmwarePrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FU_IS_SREC_FIRMWARE(self), NULL);
 	return priv->records;
+}
+
+/**
+ * fu_srec_firmware_set_addr_min:
+ * @self: A #FuSrecFirmware
+ * @addr_min: address, or 0x0 to disable
+ *
+ * Sets the minimum address allowed. This may be useful to ignore a bootloader section.
+ *
+ * Since: 1.9.3
+ **/
+void
+fu_srec_firmware_set_addr_min(FuSrecFirmware *self, guint32 addr_min)
+{
+	FuSrecFirmwarePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_SREC_FIRMWARE(self));
+	priv->addr_min = addr_min;
+}
+
+/**
+ * fu_srec_firmware_set_addr_max:
+ * @self: A #FuSrecFirmware
+ * @addr_max: address, or 0x0 to disable
+ *
+ * Sets the maximum address allowed. This may be useful to ignore a signature.
+ *
+ * Since: 1.9.3
+ **/
+void
+fu_srec_firmware_set_addr_max(FuSrecFirmware *self, guint32 addr_max)
+{
+	FuSrecFirmwarePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_SREC_FIRMWARE(self));
+	priv->addr_max = addr_max;
 }
 
 static void
@@ -447,11 +483,17 @@ fu_srec_firmware_parse(FuFirmware *firmware,
 					    rcd->ln);
 				return FALSE;
 			}
-			if (rcd->addr < offset) {
+			if (rcd->addr < priv->addr_min) {
 				g_debug(
 				    "ignoring data at 0x%x as before start address 0x%x at line %u",
 				    (guint)rcd->addr,
-				    (guint)offset,
+				    priv->addr_min,
+				    rcd->ln);
+			} else if (priv->addr_max > 0 && rcd->addr < priv->addr_max) {
+				g_debug(
+				    "ignoring data at 0x%x as after end address 0x%x at line %u",
+				    (guint)rcd->addr,
+				    priv->addr_max,
 				    rcd->ln);
 			} else {
 				guint32 len_hole = rcd->addr - addr32_last;
@@ -545,9 +587,10 @@ fu_srec_firmware_write_line(GString *str,
 	g_string_append_printf(str, "%02X\n", csum);
 }
 
-static GBytes *
+static GByteArray *
 fu_srec_firmware_write(FuFirmware *firmware, GError **error)
 {
+	g_autoptr(GByteArray) buf = g_byte_array_new();
 	g_autoptr(GString) str = g_string_new(NULL);
 	g_autoptr(GBytes) buf_blob = NULL;
 	const gchar *id = fu_firmware_get_id(firmware);
@@ -602,7 +645,8 @@ fu_srec_firmware_write(FuFirmware *firmware, GError **error)
 	fu_srec_firmware_write_line(str, kind_term, 0x0, NULL, 0);
 
 	/* success */
-	return g_string_free_to_bytes(g_steal_pointer(&str));
+	g_byte_array_append(buf, (const guint8 *)str->str, str->len);
+	return g_steal_pointer(&buf);
 }
 
 static void

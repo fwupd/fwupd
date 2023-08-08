@@ -100,7 +100,6 @@ BuildRequires: libmbim-devel
 %endif
 
 %if 0%{?have_uefi}
-BuildRequires: efivar-devel >= 33
 BuildRequires: python3 python3-cairo python3-gobject
 BuildRequires: pango-devel
 BuildRequires: cairo-devel cairo-gobject-devel
@@ -127,11 +126,6 @@ Requires: shared-mime-info
 %if 0%{?rhel} > 7 || 0%{?fedora} > 28
 Recommends: python3
 %endif
-
-Obsoletes: fwupd-sign < 0.1.6
-Obsoletes: libebitdo < 0.7.5-3
-Obsoletes: libdfu < 1.0.0
-Obsoletes: fwupd-labels < 1.1.0-1
 
 Obsoletes: dbxtool < 9
 Provides: dbxtool
@@ -336,23 +330,14 @@ done
 %files -f %{name}.lang
 %doc README.md
 %license COPYING
-%config(noreplace)%{_sysconfdir}/fwupd/daemon.conf
-%if 0%{?have_uefi}
-%config(noreplace)%{_sysconfdir}/fwupd/uefi_capsule.conf
-%endif
-%config(noreplace)%{_sysconfdir}/fwupd/redfish.conf
-%if 0%{?have_thunderbolt}
-%config(noreplace)%{_sysconfdir}/fwupd/thunderbolt.conf
-%endif
+%config(noreplace)%{_sysconfdir}/fwupd/fwupd.conf
 %dir %{_libexecdir}/fwupd
 %{_libexecdir}/fwupd/fwupd
 %ifarch i686 x86_64
 %{_libexecdir}/fwupd/fwupd-detect-cet
 %endif
 %{_libexecdir}/fwupd/fwupdoffline
-%if 0%{?have_uefi}
 %{_bindir}/dbxtool
-%endif
 %{_bindir}/fwupdmgr
 %{_bindir}/fwupdtool
 %dir %{_sysconfdir}/fwupd
@@ -370,7 +355,6 @@ done
 %{_sysconfdir}/pki/fwupd-metadata
 %if 0%{?have_msr}
 /usr/lib/modules-load.d/fwupd-msr.conf
-%config(noreplace)%{_sysconfdir}/fwupd/msr.conf
 %endif
 %{_datadir}/dbus-1/system.d/org.freedesktop.fwupd.conf
 %{_datadir}/bash-completion/completions/fwupdmgr
@@ -386,10 +370,10 @@ done
 %{_datadir}/polkit-1/rules.d/org.freedesktop.fwupd.rules
 %{_datadir}/dbus-1/system-services/org.freedesktop.fwupd.service
 %{_mandir}/man1/fwupdtool.1*
-%if 0%{?have_uefi}
 %{_mandir}/man1/dbxtool.*
-%endif
 %{_mandir}/man1/fwupdmgr.1*
+%{_mandir}/man5/*
+%{_mandir}/man8/*
 %{_datadir}/metainfo/org.freedesktop.fwupd.metainfo.xml
 %{_datadir}/icons/hicolor/scalable/apps/org.freedesktop.fwupd.svg
 %{_datadir}/fwupd/firmware_packager.py

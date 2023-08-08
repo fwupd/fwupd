@@ -6,10 +6,8 @@
 
 #pragma once
 
-#include <gio/gio.h>
+#include "fu-common.h"
 
-guint
-fu_string_replace(GString *string, const gchar *search, const gchar *replace);
 void
 fu_string_append(GString *str, guint idt, const gchar *key, const gchar *value);
 void
@@ -56,3 +54,30 @@ fu_strsplit_full(const gchar *str,
 		 FuStrsplitFunc callback,
 		 gpointer user_data,
 		 GError **error);
+
+/**
+ * FuUtfConvertFlags:
+ * @FU_UTF_CONVERT_FLAG_NONE:		No flags set
+ * @FU_UTF_CONVERT_FLAG_APPEND_NUL:	Include the trailing `NUL` or `NULw` in the buffer
+ *
+ * The flags to use when converting to and from UTF-8.
+ **/
+typedef enum {
+	FU_UTF_CONVERT_FLAG_NONE = 0,
+	FU_UTF_CONVERT_FLAG_APPEND_NUL = 1 << 0,
+} FuUtfConvertFlags;
+
+gchar *
+fu_utf16_to_utf8_byte_array(GByteArray *array, FuEndianType endian, GError **error);
+GByteArray *
+fu_utf8_to_utf16_byte_array(const gchar *str,
+			    FuEndianType endian,
+			    FuUtfConvertFlags flags,
+			    GError **error);
+gchar *
+fu_utf16_to_utf8_bytes(GBytes *bytes, FuEndianType endian, GError **error);
+GBytes *
+fu_utf8_to_utf16_bytes(const gchar *str,
+		       FuEndianType endian,
+		       FuUtfConvertFlags flags,
+		       GError **error);

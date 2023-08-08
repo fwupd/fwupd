@@ -45,6 +45,7 @@
  * @FU_PATH_KIND_WIN32_BASEDIR:		The root of the install directory on Windows
  * @FU_PATH_KIND_LOCALCONFDIR_PKG:	The package configuration override (IE /var/etc/fwupd)
  * @FU_PATH_KIND_SYSFSDIR_DMI:	The sysfs DMI location, (IE /sys/class/dmi/id)
+ * @FU_PATH_KIND_HOSTFS_ROOT:		The root of the host filesystem (IE /)
  *
  * Path types to use when dynamically determining a path at runtime
  **/
@@ -75,6 +76,7 @@ typedef enum {
 	FU_PATH_KIND_WIN32_BASEDIR,
 	FU_PATH_KIND_LOCALCONFDIR_PKG,
 	FU_PATH_KIND_SYSFSDIR_DMI,
+	FU_PATH_KIND_HOSTFS_ROOT,
 	/*< private >*/
 	FU_PATH_KIND_LAST
 } FuPathKind;
@@ -85,8 +87,6 @@ GPtrArray *
 fu_path_glob(const gchar *directory,
 	     const gchar *pattern,
 	     GError **error) G_GNUC_WARN_UNUSED_RESULT;
-gboolean
-fu_path_fnmatch(const gchar *pattern, const gchar *str);
 gboolean
 fu_path_rmtree(const gchar *directory, GError **error) G_GNUC_WARN_UNUSED_RESULT;
 GPtrArray *

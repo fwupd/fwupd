@@ -421,7 +421,8 @@ fu_ihex_firmware_parse(FuFirmware *firmware,
 				g_autoptr(FuFirmware) img_sig =
 				    fu_firmware_new_from_bytes(data_sig);
 				fu_firmware_set_id(img_sig, FU_FIRMWARE_ID_SIGNATURE);
-				fu_firmware_add_image(firmware, img_sig);
+				if (!fu_firmware_add_image_full(firmware, img_sig, error))
+					return FALSE;
 			}
 			got_sig = TRUE;
 			break;
@@ -512,9 +513,10 @@ fu_ihex_firmware_image_to_string(GBytes *bytes,
 	return TRUE;
 }
 
-static GBytes *
+static GByteArray *
 fu_ihex_firmware_write(FuFirmware *firmware, GError **error)
 {
+	g_autoptr(GByteArray) buf = g_byte_array_new();
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(FuFirmware) img_sig = NULL;
 	g_autoptr(GString) str = g_string_new("");
@@ -546,7 +548,8 @@ fu_ihex_firmware_write(FuFirmware *firmware, GError **error)
 
 	/* add EOF */
 	fu_ihex_firmware_emit_chunk(str, 0x0, FU_IHEX_FIRMWARE_RECORD_TYPE_EOF, NULL, 0);
-	return g_bytes_new(str->str, str->len);
+	g_byte_array_append(buf, (const guint8 *)str->str, str->len);
+	return g_steal_pointer(&buf);
 }
 
 static void
@@ -565,6 +568,7 @@ fu_ihex_firmware_init(FuIhexFirmware *self)
 	priv->padding_value = 0x00; /* chosen as we can't write 0xffff to PIC14 */
 	priv->records = g_ptr_array_new_with_free_func((GFreeFunc)fu_ihex_firmware_record_free);
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_CHECKSUM);
+	fu_firmware_set_images_max(FU_FIRMWARE(self), 10);
 }
 
 static void

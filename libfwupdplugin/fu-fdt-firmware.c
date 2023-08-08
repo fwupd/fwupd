@@ -209,7 +209,8 @@ fu_fdt_firmware_parse_dt_struct(FuFdtFirmware *self, GBytes *fw, GBytes *strtab,
 			if (str->len > 0)
 				fu_firmware_set_id(image, str->str);
 			fu_firmware_set_offset(image, offset);
-			fu_firmware_add_image(firmware_current, image);
+			if (!fu_firmware_add_image_full(firmware_current, image, error))
+				return FALSE;
 			g_set_object(&firmware_current, image);
 			continue;
 		}
@@ -490,7 +491,7 @@ fu_fdt_firmware_write_image(FuFdtFirmware *self,
 	return TRUE;
 }
 
-static GBytes *
+static GByteArray *
 fu_fdt_firmware_write(FuFirmware *firmware, GError **error)
 {
 	FuFdtFirmware *self = FU_FDT_FIRMWARE(firmware);
@@ -554,7 +555,7 @@ fu_fdt_firmware_write(FuFirmware *firmware, GError **error)
 	fu_byte_array_align_up(st_hdr, FU_FIRMWARE_ALIGNMENT_4, 0x0);
 
 	/* success */
-	return g_byte_array_free_to_bytes(g_steal_pointer(&st_hdr));
+	return g_steal_pointer(&st_hdr);
 }
 
 static gboolean

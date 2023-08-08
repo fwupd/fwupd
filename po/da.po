@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"Language-Team: Danish (http://www.transifex.com/freedesktop/fwupd/language/da/)\n"
+"Language-Team: Danish (http://app.transifex.com/freedesktop/fwupd/language/da/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -594,8 +594,8 @@ msgstr "Enheder uden nogen tilgængelige firmwareopdateringer: "
 msgid "Devices with the latest available firmware version:"
 msgstr "Enheder med den seneste tilgængelige firmwareversion:"
 
-#. TRANSLATORS: Suffix: the HSI result
 #. TRANSLATORS: Plugin is inactive and not used
+#. TRANSLATORS: Suffix: the HSI result
 msgid "Disabled"
 msgstr "Deaktiveret"
 
@@ -717,9 +717,9 @@ msgstr "Aktivér ny fjern?"
 msgid "Enable this remote?"
 msgstr "Aktivér fjernen?"
 
-#. TRANSLATORS: Suffix: the HSI result
 #. TRANSLATORS: Plugin is active and in use
 #. TRANSLATORS: if the remote is enabled
+#. TRANSLATORS: Suffix: the HSI result
 msgid "Enabled"
 msgstr "Aktiveret"
 
@@ -809,8 +809,8 @@ msgstr "FILNAVN [FIRMWARETYPE]"
 msgid "FILENAME-SRC FILENAME-DST [FIRMWARE-TYPE-SRC] [FIRMWARE-TYPE-DST]"
 msgstr "FILNAVN-KILDE FILNAVN-DST [FIRMWARETYPE-KILDE] [FIRMWARE-TYPE-DST]"
 
-#. TRANSLATORS: Suffix: the fallback HSI result
 #. TRANSLATORS: the update state of the specific device
+#. TRANSLATORS: Suffix: the fallback HSI result
 msgid "Failed"
 msgstr "Mislykkedes"
 
@@ -979,6 +979,11 @@ msgctxt "A single GUID"
 msgid "GUID"
 msgstr "GUID"
 
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgctxt "command-argument"
+msgid "GUID"
+msgstr "GUID"
+
 #. TRANSLATORS: command description
 msgid "Get all device flags supported by fwupd"
 msgstr "Hent alle enhedsflag som understøttes af fwupd"
@@ -1071,14 +1076,6 @@ msgstr "Ignorerer strikse SSL-tjeks. Eksportér DISABLE_SSL_STRICT i dit miljø 
 #. TRANSLATORS: length of time the update takes to apply
 msgid "Install Duration"
 msgstr "Varighed for installation"
-
-#. TRANSLATORS: command description
-msgid "Install a firmware blob on a device"
-msgstr "Installer en firmwareblob på en enhed"
-
-#. TRANSLATORS: command description
-msgid "Install a firmware file on this hardware"
-msgstr "Installer en firmwarefil på hardwaren"
 
 msgid "Install signed device firmware"
 msgstr "Installer enhedsfirmware der er underskrevet"
@@ -1282,7 +1279,7 @@ msgstr "Minimum version"
 msgid "Mismatched daemon and client, use %s instead"
 msgstr "Dæmon og klient passer ikke sammen, brug %s i stedet"
 
-#. TRANSLATORS: sets something in daemon.conf
+#. TRANSLATORS: sets something in the daemon configuration file
 msgid "Modifies a daemon configuration value"
 msgstr "Rediger en værdi i dæmonkonfiguration"
 

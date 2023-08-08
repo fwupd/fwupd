@@ -78,7 +78,7 @@ fu_firehose_read(FuFirehoseUpdater *self, guint timeout_ms, FuIOChannelFlags fla
 {
 	if (self->sahara != NULL) {
 		GByteArray *bytearr = fu_sahara_loader_qdl_read(self->sahara, error);
-		return bytearr == NULL ? NULL : g_byte_array_free_to_bytes(bytearr);
+		return bytearr == NULL ? NULL : g_bytes_new(bytearr->data, bytearr->len);
 	}
 
 	return fu_io_channel_read_bytes(self->io_channel, -1, timeout_ms, flags, error);
@@ -331,7 +331,7 @@ fu_firehose_updater_send_and_receive(FuFirehoseUpdater *self,
 		g_byte_array_append(take_cmd_bytearray,
 				    (const guint8 *)cmd_trailer,
 				    strlen(cmd_trailer));
-		cmd_bytes = g_byte_array_free_to_bytes(take_cmd_bytearray);
+		cmd_bytes = g_bytes_new(take_cmd_bytearray->data, take_cmd_bytearray->len);
 
 		fu_firehose_updater_log_message("writing", cmd_bytes);
 		if (!fu_firehose_write(self,
@@ -748,11 +748,7 @@ fu_firehose_updater_run_action(FuFirehoseUpdater *self,
 
 	action = xb_node_get_element(node);
 
-#if LIBXMLB_CHECK_VERSION(0, 2, 2)
 	cmd_str = xb_node_export(node, XB_NODE_EXPORT_FLAG_COLLAPSE_EMPTY, error);
-#else
-	cmd_str = xb_node_export(node, XB_NODE_EXPORT_FLAG_NONE, error);
-#endif
 	if (cmd_str == NULL)
 		return FALSE;
 	cmd_bytearray = g_byte_array_new_take((guint8 *)cmd_str, strlen(cmd_str));

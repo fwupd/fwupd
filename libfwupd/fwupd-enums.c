@@ -213,6 +213,8 @@ fwupd_device_flag_to_string(FwupdDeviceFlags device_flag)
 		return "emulated";
 	if (device_flag == FWUPD_DEVICE_FLAG_EMULATION_TAG)
 		return "emulation-tag";
+	if (device_flag == FWUPD_DEVICE_FLAG_ONLY_EXPLICIT_UPDATES)
+		return "only-explicit-updates";
 	if (device_flag == FWUPD_DEVICE_FLAG_UNKNOWN)
 		return "unknown";
 	return NULL;
@@ -336,6 +338,8 @@ fwupd_device_flag_from_string(const gchar *device_flag)
 		return FWUPD_DEVICE_FLAG_EMULATED;
 	if (g_strcmp0(device_flag, "emulation-tag") == 0)
 		return FWUPD_DEVICE_FLAG_EMULATION_TAG;
+	if (g_strcmp0(device_flag, "only-explicit-updates") == 0)
+		return FWUPD_DEVICE_FLAG_ONLY_EXPLICIT_UPDATES;
 	return FWUPD_DEVICE_FLAG_UNKNOWN;
 }
 
@@ -452,6 +456,8 @@ fwupd_plugin_flag_to_string(FwupdPluginFlags plugin_flag)
 		return "efivar-not-mounted";
 	if (plugin_flag == FWUPD_PLUGIN_FLAG_ESP_NOT_FOUND)
 		return "esp-not-found";
+	if (plugin_flag == FWUPD_PLUGIN_FLAG_ESP_NOT_VALID)
+		return "esp-not-valid";
 	if (plugin_flag == FWUPD_PLUGIN_FLAG_LEGACY_BIOS)
 		return "legacy-bios";
 	if (plugin_flag == FWUPD_PLUGIN_FLAG_FAILED_OPEN)
@@ -504,6 +510,8 @@ fwupd_plugin_flag_from_string(const gchar *plugin_flag)
 		return FWUPD_PLUGIN_FLAG_EFIVAR_NOT_MOUNTED;
 	if (g_strcmp0(plugin_flag, "esp-not-found") == 0)
 		return FWUPD_PLUGIN_FLAG_ESP_NOT_FOUND;
+	if (g_strcmp0(plugin_flag, "esp-not-valid") == 0)
+		return FWUPD_PLUGIN_FLAG_ESP_NOT_VALID;
 	if (g_strcmp0(plugin_flag, "legacy-bios") == 0)
 		return FWUPD_PLUGIN_FLAG_LEGACY_BIOS;
 	if (g_strcmp0(plugin_flag, "failed-open") == 0)

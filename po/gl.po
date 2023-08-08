@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"Language-Team: Galician (http://www.transifex.com/freedesktop/fwupd/language/gl/)\n"
+"Language-Team: Galician (http://app.transifex.com/freedesktop/fwupd/language/gl/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -192,8 +192,8 @@ msgstr "Dispositivo retirado:"
 msgid "Devices that have been updated successfully:"
 msgstr "Dispositivos que foron actualizados con éxito:"
 
-#. TRANSLATORS: Suffix: the HSI result
 #. TRANSLATORS: Plugin is inactive and not used
+#. TRANSLATORS: Suffix: the HSI result
 msgid "Disabled"
 msgstr "Desactivado"
 
@@ -253,9 +253,9 @@ msgstr "Activar a compatibilidade de actualización de firmware nos sistemas adm
 msgid "Enable this remote?"
 msgstr "Desexa activar este remoto?"
 
-#. TRANSLATORS: Suffix: the HSI result
 #. TRANSLATORS: Plugin is active and in use
 #. TRANSLATORS: if the remote is enabled
+#. TRANSLATORS: Suffix: the HSI result
 msgid "Enabled"
 msgstr "Activad"
 
@@ -285,8 +285,8 @@ msgstr "Saír despois dun pequeno atraso"
 msgid "Exit after the engine has loaded"
 msgstr "Saír despois de que se cargue o motor"
 
-#. TRANSLATORS: Suffix: the fallback HSI result
 #. TRANSLATORS: the update state of the specific device
+#. TRANSLATORS: Suffix: the fallback HSI result
 msgid "Failed"
 msgstr "Fallido"
 
@@ -418,14 +418,6 @@ msgstr "IOMMU"
 #. TRANSLATORS: daemon is inactive
 msgid "Idle…"
 msgstr "Ocioso…"
-
-#. TRANSLATORS: command description
-msgid "Install a firmware blob on a device"
-msgstr "Instalar un blob de firmware nun dispositivo"
-
-#. TRANSLATORS: command description
-msgid "Install a firmware file on this hardware"
-msgstr "Instalar un ficheiro de firmware neste hardware"
 
 msgid "Install signed device firmware"
 msgstr "Instalar firmware de dispositivo asinado"

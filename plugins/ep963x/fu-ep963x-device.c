@@ -6,11 +6,10 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
 #include "fu-ep963x-common.h"
 #include "fu-ep963x-device.h"
 #include "fu-ep963x-firmware.h"
+#include "fu-ep963x-struct.h"
 
 struct _FuEp963xDevice {
 	FuHidDevice parent_instance;
@@ -99,7 +98,7 @@ fu_ep963x_device_write_icp(FuEp963xDevice *self,
 			}
 			return TRUE;
 		}
-		g_debug("SMBUS: %s [0x%x]", fu_ep963x_smbus_strerror(bufhw[7]), bufhw[7]);
+		g_debug("SMBUS: %s [0x%x]", fu_ep963x_smbus_error_to_string(bufhw[7]), bufhw[7]);
 		fu_device_sleep(FU_DEVICE(self), 100);
 	}
 

@@ -7,8 +7,7 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
+#include "fu-vli-struct.h"
 #include "fu-vli-usbhub-rtd21xx-device.h"
 
 struct _FuVliUsbhubRtd21xxDevice {
@@ -509,11 +508,11 @@ fu_vli_usbhub_rtd21xx_device_probe(FuDevice *device, GError **error)
 	FuVliDeviceKind device_kind = FU_VLI_DEVICE_KIND_RTD21XX;
 	FuVliUsbhubDevice *parent = FU_VLI_USBHUB_DEVICE(fu_device_get_parent(device));
 
-	fu_device_set_name(device, fu_vli_common_device_kind_to_string(device_kind));
+	fu_device_set_name(device, fu_vli_device_kind_to_string(device_kind));
 	fu_device_set_physical_id(device, fu_device_get_physical_id(FU_DEVICE(parent)));
 
 	/* add instance ID */
-	fu_device_add_instance_str(device, "I2C", fu_vli_common_device_kind_to_string(device_kind));
+	fu_device_add_instance_str(device, "I2C", fu_vli_device_kind_to_string(device_kind));
 	return fu_device_build_instance_id(device, error, "USB", "VID", "PID", "I2C", NULL);
 }
 

@@ -15,8 +15,6 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
 #include "fu-dell-dock-common.h"
 
 struct _FuDellDockHub {

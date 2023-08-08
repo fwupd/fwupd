@@ -8,38 +8,7 @@
 #include "config.h"
 
 #include "fu-pxi-common.h"
-
-const gchar *
-fu_pxi_spec_check_result_to_string(guint8 spec_check_result)
-{
-	if (spec_check_result == OTA_SPEC_CHECK_OK)
-		return "ok";
-	if (spec_check_result == OTA_FW_OUT_OF_BOUNDS)
-		return "fw-out-of-bounds";
-	if (spec_check_result == OTA_PROCESS_ILLEGAL)
-		return "process-illegal";
-	if (spec_check_result == OTA_RECONNECT)
-		return "reconnect";
-	if (spec_check_result == OTA_FW_IMG_VERSION_ERROR)
-		return "fw-img-version-error";
-	if (spec_check_result == OTA_DEVICE_LOW_BATTERY)
-		return "device-low-battery";
-	return NULL;
-}
-
-const gchar *
-fu_pxi_receiver_cmd_result_to_string(guint8 result)
-{
-	if (result == OTA_RSP_OK)
-		return "ok";
-	if (result == OTA_RSP_FINISH)
-		return "ota-response-finish";
-	if (result == OTA_RSP_FAIL)
-		return "ota-response-fail";
-	if (result == OTA_RSP_CODE_ERROR)
-		return "ota-response-error";
-	return NULL;
-}
+#include "fu-pxi-struct.h"
 
 void
 fu_pxi_ota_fw_state_to_string(struct ota_fw_state *fwstate, guint idt, GString *str)
@@ -54,7 +23,7 @@ fu_pxi_ota_fw_state_to_string(struct ota_fw_state *fwstate, guint idt, GString *
 	fu_string_append(str,
 			 idt,
 			 "SpecCheckResult",
-			 fu_pxi_spec_check_result_to_string(fwstate->spec_check_result));
+			 fu_pxi_ota_spec_check_result_to_string(fwstate->spec_check_result));
 }
 
 gboolean

@@ -48,27 +48,6 @@
 #define HSFC_FDBC   (0x3f << 8)
 #define HSFC_SME    (0x01 << 15)
 
-typedef enum {
-	FU_INTEL_SPI_KIND_UNKNOWN,
-	FU_INTEL_SPI_KIND_APL,
-	FU_INTEL_SPI_KIND_C620,
-	FU_INTEL_SPI_KIND_ICH0,
-	FU_INTEL_SPI_KIND_ICH2345,
-	FU_INTEL_SPI_KIND_ICH6,
-	FU_INTEL_SPI_KIND_ICH9,
-	FU_INTEL_SPI_KIND_PCH100,
-	FU_INTEL_SPI_KIND_PCH200,
-	FU_INTEL_SPI_KIND_PCH300,
-	FU_INTEL_SPI_KIND_PCH400,
-	FU_INTEL_SPI_KIND_POULSBO,
-	FU_INTEL_SPI_KIND_LAST
-} FuIntelSpiKind;
-
-FuIntelSpiKind
-fu_intel_spi_kind_from_string(const gchar *kind);
-const gchar *
-fu_intel_spi_kind_to_string(FuIntelSpiKind kind);
-
 guint16
 fu_mmio_read16(gconstpointer addr, goffset offset);
 void

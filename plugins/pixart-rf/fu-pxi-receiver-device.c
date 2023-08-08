@@ -11,10 +11,9 @@
 #include <linux/input.h>
 #endif
 
-#include <fwupdplugin.h>
-
 #include "fu-pxi-firmware.h"
 #include "fu-pxi-receiver-device.h"
+#include "fu-pxi-struct.h"
 #include "fu-pxi-wireless-device.h"
 
 struct _FuPxiReceiverDevice {
@@ -252,7 +251,7 @@ fu_pxi_receiver_device_check_crc(FuDevice *device, guint16 checksum, GError **er
 	if (!fu_memread_uint8_safe(buf, sizeof(buf), 0x5, &status, error))
 		return FALSE;
 
-	if (status == OTA_RSP_CODE_ERROR) {
+	if (status == FU_PXI_WIRELESS_MODULE_OTA_RSP_CODE_ERROR) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_READ,
@@ -303,12 +302,12 @@ fu_pxi_receiver_device_fw_object_create(FuDevice *device, FuChunk *chk, GError *
 	if (!fu_memread_uint8_safe(buf, sizeof(buf), 0x5, &status, error))
 		return FALSE;
 
-	if (status != OTA_RSP_OK) {
+	if (status != FU_PXI_WIRELESS_MODULE_OTA_RSP_CODE_OK) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_READ,
 			    "cmd rsp check fail: %s [0x%02x]",
-			    fu_pxi_receiver_cmd_result_to_string(status),
+			    fu_pxi_wireless_module_ota_rsp_code_to_string(status),
 			    status);
 		return FALSE;
 	}
@@ -355,12 +354,12 @@ fu_pxi_receiver_device_write_payload(FuDevice *device, FuChunk *chk, GError **er
 	if (!fu_memread_uint8_safe(buf, sizeof(buf), 0x5, &status, error))
 		return FALSE;
 
-	if (status != OTA_RSP_OK) {
+	if (status != FU_PXI_WIRELESS_MODULE_OTA_RSP_CODE_OK) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_READ,
 			    "cmd rsp check fail: %s [0x%02x]",
-			    fu_pxi_receiver_cmd_result_to_string(status),
+			    fu_pxi_wireless_module_ota_rsp_code_to_string(status),
 			    status);
 		return FALSE;
 	}
@@ -487,12 +486,12 @@ fu_pxi_receiver_device_fw_upgrade(FuDevice *device,
 
 	if (!fu_memread_uint8_safe(res, sizeof(res), 0x5, &result, error))
 		return FALSE;
-	if (result != OTA_RSP_OK) {
+	if (result != FU_PXI_WIRELESS_MODULE_OTA_RSP_CODE_OK) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_READ,
 			    "cmd rsp check fail: %s [0x%02x]",
-			    fu_pxi_receiver_cmd_result_to_string(result),
+			    fu_pxi_wireless_module_ota_rsp_code_to_string(result),
 			    result);
 		return FALSE;
 	}
@@ -791,7 +790,7 @@ fu_pxi_receiver_device_setup_guid(FuPxiReceiverDevice *device, GError **error)
 
 	dev_name = g_string_new(fu_device_get_name(FU_DEVICE(device)));
 	g_string_ascii_up(dev_name);
-	fu_string_replace(dev_name, " ", "_");
+	g_string_replace(dev_name, " ", "_", 0);
 	devid = g_strdup_printf("HIDRAW\\VEN_%04X&DEV_%04X&NAME_%s",
 				(guint)hid_raw_info.vendor,
 				(guint)hid_raw_info.product,

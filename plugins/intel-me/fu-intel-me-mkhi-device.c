@@ -79,6 +79,8 @@ fu_intel_me_mkhi_device_init(FuIntelMeMkhiDevice *self)
 	fu_device_set_logical_id(FU_DEVICE(self), "MKHI");
 	fu_device_set_name(FU_DEVICE(self), "BootGuard Configuration");
 	fu_device_add_parent_guid(FU_DEVICE(self), "main-system-firmware");
+	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_MD_ONLY_CHECKSUM);
+	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_MD_SET_FLAGS);
 }
 
 static void

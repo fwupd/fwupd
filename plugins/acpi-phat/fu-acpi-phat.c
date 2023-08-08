@@ -6,8 +6,6 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
 #include <string.h>
 
 #include "fu-acpi-phat-health-record.h"
@@ -99,29 +97,15 @@ fu_acpi_phat_set_oem_id(FuAcpiPhat *self, const gchar *oem_id)
 static gboolean
 fu_acpi_phat_check_magic(FuFirmware *firmware, GBytes *fw, gsize offset, GError **error)
 {
-	gchar magic[4] = {'\0'};
-
-	if (!fu_memcpy_safe((guint8 *)magic,
-			    sizeof(magic),
-			    0x0, /* dst */
-			    g_bytes_get_data(fw, NULL),
-			    g_bytes_get_size(fw),
-			    offset, /* src */
-			    sizeof(magic),
-			    error)) {
-		g_prefix_error(error, "failed to read magic: ");
-		return FALSE;
-	}
-	if (memcmp(magic, "PHAT", sizeof(magic)) != 0) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_FILE,
-				    "invalid magic signature, expected PHAT");
-		return FALSE;
-	}
-
-	/* success */
-	return TRUE;
+	const guint8 magic[4] = "PHAT";
+	return fu_memcmp_safe(g_bytes_get_data(fw, NULL),
+			      g_bytes_get_size(fw),
+			      offset,
+			      magic,
+			      sizeof(magic),
+			      0x0,
+			      sizeof(magic),
+			      error);
 }
 
 static gboolean
@@ -222,7 +206,7 @@ fu_acpi_phat_parse(FuFirmware *firmware,
 	return TRUE;
 }
 
-static GBytes *
+static GByteArray *
 fu_acpi_phat_write(FuFirmware *firmware, GError **error)
 {
 	FuAcpiPhat *self = FU_ACPI_PHAT(firmware);
@@ -285,7 +269,7 @@ fu_acpi_phat_write(FuFirmware *firmware, GError **error)
 	buf->data[9] = 0xFF - fu_sum8(buf->data, buf->len);
 
 	/* success */
-	return g_byte_array_free_to_bytes(g_steal_pointer(&buf));
+	return g_steal_pointer(&buf);
 }
 
 static gboolean

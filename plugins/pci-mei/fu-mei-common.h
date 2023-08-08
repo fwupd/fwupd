@@ -9,14 +9,6 @@
 #include <fwupdplugin.h>
 
 typedef enum {
-	FU_MEI_FAMILY_UNKNOWN,
-	FU_MEI_FAMILY_SPS,
-	FU_MEI_FAMILY_TXE,
-	FU_MEI_FAMILY_ME,
-	FU_MEI_FAMILY_CSME,
-} FuMeiFamily;
-
-typedef enum {
 	FU_MEI_ISSUE_UNKNOWN,
 	FU_MEI_ISSUE_NOT_VULNERABLE,
 	FU_MEI_ISSUE_VULNERABLE,
@@ -160,44 +152,6 @@ typedef union {
 	} __attribute__((packed)) fields;
 } FuMeiHfsts6;
 
-#define ME_HFS_CWS_RESET    0
-#define ME_HFS_CWS_INIT	    1
-#define ME_HFS_CWS_REC	    2
-#define ME_HFS_CWS_TEST	    3
-#define ME_HFS_CWS_DISABLED 4
-#define ME_HFS_CWS_NORMAL   5
-#define ME_HFS_CWS_WAIT	    6
-#define ME_HFS_CWS_TRANS    7
-#define ME_HFS_CWS_INVALID  8
-
-#define ME_HFS_STATE_PREBOOT 0
-#define ME_HFS_STATE_M0_UMA  1
-#define ME_HFS_STATE_M3	     4
-#define ME_HFS_STATE_M0	     5
-#define ME_HFS_STATE_BRINGUP 6
-#define ME_HFS_STATE_ERROR   7
-
-#define ME_HFS_ERROR_NONE     0
-#define ME_HFS_ERROR_UNCAT    1
-#define ME_HFS_ERROR_DISABLED 2
-#define ME_HFS_ERROR_IMAGE    3
-#define ME_HFS_ERROR_DEBUG    4
-
-#define ME_HFS_MODE_NORMAL    0
-#define ME_HFS_MODE_DEBUG     2
-#define ME_HFS_MODE_DIS	      3
-#define ME_HFS_MODE_OVER_JMPR 4
-#define ME_HFS_MODE_OVER_MEI  5
-#define ME_HFS_MODE_UNKNOWN_6 6
-#define ME_HFS_MODE_MAYBE_SPS 7
-
-#define ME_HFS_ENFORCEMENT_POLICY_NOTHING	  0x0
-#define ME_HFS_ENFORCEMENT_POLICY_SHUTDOWN_TO	  0x1
-#define ME_HFS_ENFORCEMENT_POLICY_SHUTDOWN_NOW	  0x2
-#define ME_HFS_ENFORCEMENT_POLICY_SHUTDOWN_30MINS 0x3
-
-const gchar *
-fu_mei_common_family_to_string(FuMeiFamily family);
 FuMeiIssue
 fu_mei_common_is_csme_vulnerable(FuMeiVersion *vers);
 FuMeiIssue

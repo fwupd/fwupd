@@ -8,3 +8,7 @@ InstallDuration = 1500
 Plugin = logitech_bulkcontroller
 InstallDuration = 1500
 Flags = is-mini
+
+[USB\VID_046D&PID_087C]
+Plugin = logitech_bulkcontroller
+InstallDuration = 1500

@@ -45,7 +45,6 @@ def test_files() -> int:
 
     # test all C and H files
     for fn in glob.glob("**/*.[c|h]", recursive=True):
-        includes = __get_includes(fn)
 
         # we do not care
         if fn.startswith("subprojects"):
@@ -63,6 +62,7 @@ def test_files() -> int:
         ]:
             continue
 
+        includes = __get_includes(fn)
         if (
             fn.startswith("plugins")
             and not fn.endswith("self-test.c")

@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"Language-Team: Czech (http://www.transifex.com/freedesktop/fwupd/language/cs/)\n"
+"Language-Team: Czech (http://app.transifex.com/freedesktop/fwupd/language/cs/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -354,6 +354,10 @@ msgstr "AMD – zamezení zápisu firmware"
 msgid "AMD Secure Processor Rollback Protection"
 msgstr "AMD zamezení instalace starší verze na procesoru"
 
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "ARCHIVE FIRMWARE METAINFO [FIRMWARE] [METAINFO] [JCATFILE]"
+msgstr "ARCHIV FIRMWARE METAINFO [FIRMWARE] [METAINFO] [JCATSOUBOR]"
+
 #. TRANSLATORS: the user needs to do something, e.g. remove the device
 msgid "Action Required:"
 msgstr "Vyžadovaná akce:"
@@ -601,6 +605,10 @@ msgid "Branch"
 msgstr "Větev"
 
 #. TRANSLATORS: command description
+msgid "Build a cabinet archive from a firmware blob and XML metadata"
+msgstr "Sestavit cab archiv z binárního souboru s firmwarem a XML metadat"
+
+#. TRANSLATORS: command description
 msgid "Build a firmware file"
 msgstr "Sestavit soubor s firmware"
 
@@ -749,6 +757,10 @@ msgstr "Identifikátor zařízení"
 msgid "Device added:"
 msgstr "Přidáno zařízení:"
 
+#. TRANSLATORS: the device is already connected
+msgid "Device already exists"
+msgstr "Zařízení už existuje"
+
 #. TRANSLATORS: for example the batteries *inside* the Bluetooth mouse
 msgid "Device battery power is too low"
 msgstr "Akumulátor/baterie v zařízení je příliš vybitý"
@@ -781,6 +793,10 @@ msgstr "Je třeba, aby firmware zařízení měl kontrolu verze"
 #. TRANSLATORS: emulated means we are pretending to be a different model
 msgid "Device is emulated"
 msgstr "Zařízení je emulováno"
+
+#. TRANSLATORS: device cannot be interrupted, for instance taking a phone call
+msgid "Device is in use"
+msgstr "Zařízení je používáno"
 
 #. TRANSLATORS: Is locked and can be unlocked
 msgid "Device is locked"
@@ -880,8 +896,8 @@ msgstr "Zařízení s nejnovějšími dostupnými verzemi firmware:"
 msgid "Did not find any devices with matching GUIDs"
 msgstr "Nenalezena žádná zařízení, která mají odpovídající GUID identifikátory"
 
-#. TRANSLATORS: Suffix: the HSI result
 #. TRANSLATORS: Plugin is inactive and not used
+#. TRANSLATORS: Suffix: the HSI result
 msgid "Disabled"
 msgstr "Zakázáno"
 
@@ -1046,9 +1062,9 @@ msgstr "Povolit nový vzdálený zdroj?"
 msgid "Enable this remote?"
 msgstr "Povolit tento vzdálený zdroj?"
 
-#. TRANSLATORS: Suffix: the HSI result
 #. TRANSLATORS: Plugin is active and in use
 #. TRANSLATORS: if the remote is enabled
+#. TRANSLATORS: Suffix: the HSI result
 msgid "Enabled"
 msgstr "Povoleno"
 
@@ -1161,8 +1177,8 @@ msgstr "ZDROJOVÝ-SOUBOR CÍLOVÝ-SOUBOR [ZDROJ-TYP-FIRMWARE] [CÍL-TYP-FIRMWARE
 msgid "FILENAME|CHECKSUM1[,CHECKSUM2][,CHECKSUM3]"
 msgstr "SOUBOR|KONTROLNÍ-SOUČET1[,KONTROLNÍ-SOUČET2][,KONTROLNÍ-SOUČET3]"
 
-#. TRANSLATORS: Suffix: the fallback HSI result
 #. TRANSLATORS: the update state of the specific device
+#. TRANSLATORS: Suffix: the fallback HSI result
 msgid "Failed"
 msgstr "Nezdařilo se"
 
@@ -1216,6 +1232,9 @@ msgstr "Soubor se nepodařilo zpracovat"
 msgid "Failed to parse flags for --filter"
 msgstr "Nepodařilo se zpracovat příznaky pro --filter"
 
+msgid "Failed to parse flags for --filter-release"
+msgstr "Nepodařilo se zpracovat příznaky pro --filter-release"
+
 #. TRANSLATORS: could not parse file
 msgid "Failed to parse local dbx"
 msgstr "Nepodařilo se zpracovat místní dbx"
@@ -1260,6 +1279,10 @@ msgstr "Je zapotřebí zadat název souboru"
 #. TRANSLATORS: command line option
 msgid "Filter with a set of device flags using a ~ prefix to exclude, e.g. 'internal,~needs-reboot'"
 msgstr "Filtrovat podle sady příznaků zařízení (s tím, že předpona ~ slouží pro vynechání), např. 'internal,~needs-reboot' (vestavěné, nevyžadující restart)"
+
+#. TRANSLATORS: command line option
+msgid "Filter with a set of release flags using a ~ prefix to exclude, e.g. 'trusted-release,~trusted-metadata'"
+msgstr "Filtrovat podle sady příznaků vydání (s tím, že předpona ~ slouží pro vynechání), např. 'trusted-release,~trusted-metadata'"
 
 #. TRANSLATORS: Title: if we can verify the firmware checksums
 msgid "Firmware Attestation"
@@ -1411,6 +1434,15 @@ msgctxt "A single GUID"
 msgid "GUID"
 msgstr "GUID"
 
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgctxt "command-argument"
+msgid "GUID"
+msgstr "GUID"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "GUID|DEVICE-ID"
+msgstr "GUID|ID-ZARIZENI"
+
 msgid "Get BIOS settings"
 msgstr "Získat nastavení BIOS"
 
@@ -1555,12 +1587,12 @@ msgid "Install Duration"
 msgstr "Délka instalace"
 
 #. TRANSLATORS: command description
-msgid "Install a firmware blob on a device"
-msgstr "Nainstalovat na zařízení binární soubor s firmwarem"
+msgid "Install a firmware file in cabinet format on this hardware"
+msgstr "Nainstalovat soubor s firmwarem (ve formátu cab) na tento hardware"
 
 #. TRANSLATORS: command description
-msgid "Install a firmware file on this hardware"
-msgstr "Nainstalovat soubor s firmwarem na tento hardware"
+msgid "Install a raw firmware blob on a device"
+msgstr "Nainstalovat na zařízení holý binární soubor s firmwarem"
 
 #. TRANSLATORS: command description
 msgid "Install a specific firmware on a device, all possible devices will also be installed once the CAB matches"
@@ -1591,6 +1623,12 @@ msgstr "Instalace nepodepsaného systémového firmwaru"
 #. TRANSLATORS: console message when no Plymouth is installed
 msgid "Installing Firmware…"
 msgstr "Instalace firmware…"
+
+#. TRANSLATORS: stay on one firmware version unless the new version is
+#. explicitly
+#. * specified
+msgid "Installing a specific release is explicitly required"
+msgstr "Je výslovně vyžadována instalace konkrétního vydání"
 
 #. TRANSLATORS: this is shown when updating the firmware after the reboot
 msgid "Installing firmware update…"
@@ -1717,6 +1755,14 @@ msgstr "Neplatné"
 msgid "Invalid arguments"
 msgstr "Neplatné argumenty"
 
+#. TRANSLATORS: error message
+msgid "Invalid arguments, expected GUID"
+msgstr "Neplatný argument – očekáváno GUID"
+
+#. TRANSLATORS: error message
+msgid "Invalid arguments, expected at least ARCHIVE FIRMWARE METAINFO"
+msgstr "Neplatný argument – očekáváno přinjemenším ARCHIVE FIRMWARE METAINFO"
+
 #. TRANSLATORS: version is older
 msgid "Is downgrade"
 msgstr "Je starší verzí"
@@ -1817,6 +1863,10 @@ msgstr "Uzamčení linuxového jádra"
 msgid "Linux swap"
 msgstr "Linuxový odkládací prostor"
 
+#. TRANSLATORS: command description
+msgid "List EFI variables with a specific GUID"
+msgstr "Vypsat EFI proměnné s konkrétním GUID"
+
 #. TRANSLATORS: command line option
 msgid "List entries in dbx"
 msgstr "Vypsat položky v dbx"
@@ -1824,6 +1874,10 @@ msgstr "Vypsat položky v dbx"
 #. TRANSLATORS: command line option
 msgid "List supported firmware updates"
 msgstr "Vypsat podporované aktualizace firmwarů"
+
+#. TRANSLATORS: command description
+msgid "List the available firmware GTypes"
+msgstr "Vypsat GTypy firmware, které jsou k dispozici"
 
 #. TRANSLATORS: command description
 msgid "List the available firmware types"
@@ -1926,7 +1980,7 @@ msgstr "Nejnižší platná hodnota"
 msgid "Mismatched daemon and client, use %s instead"
 msgstr "Nesoulad verzí procesu služby a klienta, namísto toho použijte %s"
 
-#. TRANSLATORS: sets something in daemon.conf
+#. TRANSLATORS: sets something in the daemon configuration file
 msgid "Modifies a daemon configuration value"
 msgstr "Změnit hodnotu v nastavení procesu služby"
 
@@ -1978,6 +2032,10 @@ msgstr "Pro %s nejsou k dispozici žádné starší verze"
 msgid "No firmware IDs found"
 msgstr "Nenalezeny žádné identifikátory firmware"
 
+#. TRANSLATORS: nothing found
+msgid "No firmware found"
+msgstr "Nenalezen žádný firmware"
+
 #. TRANSLATORS: nothing attached that can be upgraded
 msgid "No hardware detected with firmware update capability"
 msgstr "Nezjištěn žádný hardware vybavený pro aktualizaci firmware v něm."
@@ -2018,8 +2076,8 @@ msgid "Not approved"
 msgstr "Neschváleno"
 
 #. TRANSLATORS: error message to tell someone they can't use this feature
-msgid "Not enough data was provided to make an HSI calculation."
-msgstr "Nezadán dostatek údajů pro provedení výpočtu HSI."
+msgid "Not enough data was provided by the platform to make an HSI calculation."
+msgstr "Platforma neposkytla dostatek údajů pro provedení výpočtu HSI."
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Not found"
@@ -2643,6 +2701,11 @@ msgstr[3] "Úspěšně odeslána %u hlášení"
 msgid "Successfully verified device checksums"
 msgstr "Kontrolní součty pro zařízení úspěšně ověřeny"
 
+#. TRANSLATORS: the device showed up in time
+#, c-format
+msgid "Successfully waited %.0fms for device"
+msgstr "Úspěšně počkáno %.0fms na zařízení"
+
 #. TRANSLATORS: one line summary of device
 msgid "Summary"
 msgstr "Souhrn"
@@ -2784,6 +2847,10 @@ msgstr "Vyzkoušeno"
 msgid "Tested by %s"
 msgstr "Vyzkoušeno výrobcem %s"
 
+#. TRANSLATORS: someone we trust has tested this
+msgid "Tested by trusted vendor"
+msgstr "Vyzkoušeno důvěryhodným výrobcem"
+
 #. TRANSLATORS: longer description
 msgid "The Intel Management Engine Key Manifest must be valid so that the device firmware can be trusted by the CPU."
 msgstr "Je třeba, aby manifest klíče správního engine (ME) byl platný, aby z pohledu procesoru mohl být firmware považován za důvěryhodný."
@@ -2923,10 +2990,6 @@ msgstr "Tento nástroj může používat pouze uživatel s oprávněními na úr
 msgid "This tool will read and parse the TPM event log from the system firmware."
 msgstr "Tento nástroj vyčte ze systémového firmwaru záznam událostí v TPM a zpracuje ho."
 
-#. TRANSLATORS: message to tell someone how to ignore error
-msgid "To ignore this warning, use --force"
-msgstr "Pokud chcete toto varování ignorovat, použijte --force"
-
 #. TRANSLATORS: the update state of the specific device
 msgid "Transient failure"
 msgstr "Přechodný nezdar"
@@ -2947,6 +3010,14 @@ msgstr "Důvěryhodný obsah"
 msgid "Type"
 msgstr "Typ"
 
+#. TRANSLATORS: Title: Bootservice is when only readable from early-boot
+msgid "UEFI Bootservice Variables"
+msgstr "UEFI Bootservice Variables"
+
+#. TRANSLATORS: partition refers to something on disk, again, hey Arch users
+msgid "UEFI ESP partition may not be set up correctly"
+msgstr "Je možné, že UEFI ESP oddíl není správně uspořádán"
+
 #. TRANSLATORS: partition refers to something on disk, again, hey Arch users
 msgid "UEFI ESP partition not detected or configured"
 msgstr "Nezjištěn (či nenastaven) UEFI ESP oddíl"
@@ -2966,6 +3037,14 @@ msgstr "UEFI Secure Boot"
 #. TRANSLATORS: longer description
 msgid "UEFI Secure Boot prevents malicious software from being loaded when the device starts."
 msgstr "UEFI Secure Boot brání načtení záškodnickému softwaru při spouštění zařízení."
+
+#. TRANSLATORS: longer description
+msgid "UEFI boot service variables should not be readable from runtime mode."
+msgstr "Proměnné UEFI boot service by neměly být čitelné z běhového režimu."
+
+#. TRANSLATORS: Title: Bootservice is when only readable from early-boot
+msgid "UEFI bootservice variables"
+msgstr "Proměnné UEFI bootservice"
 
 #. TRANSLATORS: capsule updates are an optional BIOS feature
 msgid "UEFI capsule updates not available or enabled in firmware setup"
@@ -3209,6 +3288,10 @@ msgstr "Verze[fwupd]"
 #. TRANSLATORS: this is a prefix on the console
 msgid "WARNING"
 msgstr "VAROVÁNÍ"
+
+#. TRANSLATORS: command description
+msgid "Wait for a device to appear"
+msgstr "Počkat až se zařízení objeví"
 
 #. TRANSLATORS: waiting for device to do something
 msgid "Waiting…"

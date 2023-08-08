@@ -1,4 +1,4 @@
-if efiboot.found() and efivar.found()
+if get_option('plugin_uefi_capsule').disable_auto_if(host_machine.system() not in ['linux', 'freebsd']).allowed()
 
 cargs = ['-DG_LOG_DOMAIN="FuPluginUefiCapsule"']
 
@@ -29,7 +29,7 @@ else
 endif
 
 plugin_builtin_uefi_capsule = static_library('fu_plugin_uefi_capsule',
-  structgen.process('fu-uefi.struct'),
+  rustgen.process('fu-uefi.rs'),
   sources: [
     'fu-uefi-capsule-plugin.c',
     'fu-uefi-bgrt.c',
@@ -39,7 +39,6 @@ plugin_builtin_uefi_capsule = static_library('fu_plugin_uefi_capsule',
     'fu-uefi-nvram-device.c',
     'fu-uefi-grub-device.c',
     'fu-uefi-device.c',
-    'fu-uefi-devpath.c',
     'fu-uefi-update-info.c',
     'fu-acpi-uefi.c',
     backend_srcs,
@@ -50,7 +49,6 @@ plugin_builtin_uefi_capsule = static_library('fu_plugin_uefi_capsule',
   dependencies: [
     plugin_deps,
     platform_deps,
-    efiboot,
   ],
 )
 plugin_builtins += plugin_builtin_uefi_capsule
@@ -58,7 +56,7 @@ plugin_builtins += plugin_builtin_uefi_capsule
 if get_option('compat_cli')
 fwupdate = executable(
   'fwupdate',
-  structgen.process('fu-uefi.struct'),
+  rustgen.process('fu-uefi.rs'),
   sources: [
     'fu-uefi-tool.c',
   ],
@@ -66,7 +64,6 @@ fwupdate = executable(
   dependencies: [
     plugin_deps,
     platform_deps,
-    efiboot,
   ],
   link_with: [
     plugin_libs,
@@ -85,16 +82,12 @@ if get_option('compat_cli') and get_option('man')
     output: 'fwupdate.1',
     command: [
       generate_man, '@INPUT@', '-o', '@OUTPUT@',
-      '--replace', '@PACKAGE_VERSION@', fwupd_version,
+      '--replace', 'PACKAGE_VERSION', fwupd_version,
     ],
     install: true,
     install_dir: join_paths(mandir, 'man1'),
   )
 endif
-
-install_data(['uefi_capsule.conf'],
-  install_dir: join_paths(sysconfdir, 'fwupd')
-)
 
 # add all the .po files as inputs to watch
 ux_linguas = run_command(
@@ -106,8 +99,17 @@ foreach ux_lingua: ux_linguas
   ux_capsule_pofiles += join_paths(meson.project_source_root(), 'po', '@0@.po'.format(ux_lingua))
 endforeach
 
+if get_option('efi_binary')
+  efi_binary = dependency('fwupd-efi', fallback: ['fwupd-efi', 'fwupd_efi_dep'])
+endif
+
 if get_option('plugin_uefi_capsule_splash')
   # add the archive of pregenerated images
+  run_command([
+    python3,
+    join_paths(meson.project_source_root(), 'po', 'test-deps'),
+    join_paths(meson.project_source_root(), 'po', 'LINGUAS'),
+  ], check: true)
   custom_target('ux-capsule-tar',
     input: [
       join_paths(meson.project_source_root(), 'po', 'LINGUAS'),
@@ -134,6 +136,7 @@ if get_option('tests')
   env.set('FWUPD_LOCALSTATEDIR', '/tmp/fwupd-self-test/var')
   e = executable(
     'uefi-self-test',
+    rustgen.process('fu-uefi.rs'),
     sources: [
       'fu-self-test.c',
     ],
@@ -141,7 +144,6 @@ if get_option('tests')
     dependencies: [
       plugin_deps,
       platform_deps,
-      efiboot,
     ],
     link_with: [
       fwupd,

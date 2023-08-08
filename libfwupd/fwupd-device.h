@@ -248,6 +248,8 @@ FwupdRelease *
 fwupd_device_get_release_default(FwupdDevice *self);
 gint
 fwupd_device_compare(FwupdDevice *self1, FwupdDevice *self2);
+gboolean
+fwupd_device_match_flags(FwupdDevice *self, FwupdDeviceFlags include, FwupdDeviceFlags exclude);
 
 FwupdDevice *
 fwupd_device_from_variant(GVariant *value);
@@ -255,5 +257,10 @@ GPtrArray *
 fwupd_device_array_from_variant(GVariant *value);
 void
 fwupd_device_array_ensure_parents(GPtrArray *devices);
+GPtrArray *
+fwupd_device_array_filter_flags(GPtrArray *devices,
+				FwupdDeviceFlags include,
+				FwupdDeviceFlags exclude,
+				GError **error);
 
 G_END_DECLS

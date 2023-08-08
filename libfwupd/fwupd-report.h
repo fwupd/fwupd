@@ -98,6 +98,10 @@ const gchar *
 fwupd_report_get_distro_variant(FwupdReport *self);
 void
 fwupd_report_set_distro_variant(FwupdReport *self, const gchar *distro_variant);
+const gchar *
+fwupd_report_get_remote_id(FwupdReport *self);
+void
+fwupd_report_set_remote_id(FwupdReport *self, const gchar *remote_id);
 
 GHashTable *
 fwupd_report_get_metadata(FwupdReport *self);

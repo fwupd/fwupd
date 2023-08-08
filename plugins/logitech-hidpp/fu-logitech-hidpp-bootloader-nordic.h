@@ -8,9 +8,9 @@
 
 #include "fu-logitech-hidpp-bootloader.h"
 
-#define FU_TYPE_UNIFYING_BOOTLOADER_NORDIC (fu_logitech_hidpp_bootloader_nordic_get_type())
-G_DECLARE_FINAL_TYPE(FuLogitechHidPpBootloaderNordic,
+#define FU_TYPE_LOGITECH_HIDPP_BOOTLOADER_NORDIC (fu_logitech_hidpp_bootloader_nordic_get_type())
+G_DECLARE_FINAL_TYPE(FuLogitechHidppBootloaderNordic,
 		     fu_logitech_hidpp_bootloader_nordic,
 		     FU,
-		     UNIFYING_BOOTLOADER_NORDIC,
-		     FuLogitechHidPpBootloader)
+		     LOGITECH_HIDPP_BOOTLOADER_NORDIC,
+		     FuLogitechHidppBootloader)

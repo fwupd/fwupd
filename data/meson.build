@@ -25,8 +25,9 @@ if get_option('tests')
 endif
 
 if build_standalone
-  install_data(['daemon.conf'],
-    install_dir: join_paths(sysconfdir, 'fwupd')
+  install_data(['fwupd.conf'],
+    install_dir: join_paths(sysconfdir, 'fwupd'),
+    install_mode: 'rw-r-----',
   )
   plugin_quirks += files([
     'power.quirk',
@@ -39,8 +40,7 @@ if get_option('metainfo')
     input: 'org.freedesktop.fwupd.metainfo.xml',
     output: 'org.freedesktop.fwupd.metainfo.xml',
     command: [
-      python3,
-      join_paths(meson.project_source_root(), 'contrib', 'generate-metainfo.py'),
+      generate_metainfo,
       '@INPUT@',
       '@OUTPUT@',
     ],

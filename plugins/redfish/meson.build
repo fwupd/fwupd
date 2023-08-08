@@ -10,8 +10,8 @@ if have_linux_ipmi
 endif
 
 plugin_builtin_redfish = static_library('fu_plugin_redfish',
-  structgen.process(
-    'fu-redfish-smbios.struct', # fuzzing
+  rustgen.process(
+    'fu-redfish.rs',       # fuzzing
   ),
   sources: [
     'fu-redfish-plugin.c',
@@ -37,11 +37,6 @@ plugin_builtin_redfish = static_library('fu_plugin_redfish',
 )
 plugin_builtins += plugin_builtin_redfish
 
-install_data(['redfish.conf'],
-  install_dir: join_paths(sysconfdir, 'fwupd'),
-  install_mode: 'rw-r-----',
-)
-
 if get_option('tests')
   install_data(['tests/redfish-smbios.bin'],
     install_dir: join_paths(installed_test_datadir, 'tests'))
@@ -59,6 +54,7 @@ if get_option('tests')
   env.set('FWUPD_LOCALSTATEDIR', '/tmp/fwupd-self-test/var')
   e = executable(
     'redfish-self-test',
+    rustgen.process('fu-redfish.rs'),
     sources: [
       'fu-self-test.c',
     ],

@@ -31,7 +31,7 @@ let us know by [opening an issue](https://gitlab.com/fwupd/lvfs-website/-/issues
 ## Client
 
 When provisioning the client machine, we can set the BKC by setting `HostBkc=vendor-2021q1` in
-`/etc/fwupd/daemon.conf`.
+`/etc/fwupd/fwupd.conf`.
 Then any invocation of `fwupdmgr sync-bkc` will install or downgrade firmware on all compatible
 devices (UEFI, RAID, network adapter, & SAS HBA etc.) to make the system match a compatible set.
 
@@ -102,3 +102,23 @@ This then appears when getting the releases for that specific GUID:
     ║ This release sets the number of HBAs supported by the system to 1024.        ║
     ╚══════════════════════════════════════════════════════════════════════════════╝
     Perform operation? [Y|n]:
+
+## Vendor Firmware Remotes
+
+Tags can also be included in the `metainfo.xml` files included in `.cab` archives installed into
+`/usr/share/fwupd/remotes.d/vendor/firmware/` -- although in most cases it makes sense to actually
+*decouple* the tag assignment from the firmware binary by specifying local metadata.
+
+If the tag is specific to the firmware build, then it can be included directly in the metadata:
+
+    <?xml version="1.0" encoding="UTF-8"?>
+    <component type="firmware">
+      <id>org.fwupd.myproduct.firmware</id>
+      ...
+      <tags>
+        <tag namespace="lvfs">product-mycompanyname-2022q1</tag>
+      </tags>
+    </component>
+
+**NOTE:** the `namespace="lvfs"` is required for fwupd as the `<tag>` section is also used by other
+software for different purposes. Forgetting the namespace will cause fwupd to ignore the tag!

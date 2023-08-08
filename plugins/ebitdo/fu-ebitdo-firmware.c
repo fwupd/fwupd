@@ -6,8 +6,6 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
 #include "fu-ebitdo-firmware.h"
 #include "fu-ebitdo-struct.h"
 
@@ -73,7 +71,7 @@ fu_ebitdo_firmware_parse(FuFirmware *firmware,
 	return TRUE;
 }
 
-static GBytes *
+static GByteArray *
 fu_ebitdo_firmware_write(FuFirmware *firmware, GError **error)
 {
 	g_autoptr(GByteArray) st = fu_struct_ebitdo_hdr_new();
@@ -87,7 +85,7 @@ fu_ebitdo_firmware_write(FuFirmware *firmware, GError **error)
 	fu_struct_ebitdo_hdr_set_destination_addr(st, fu_firmware_get_addr(firmware));
 	fu_struct_ebitdo_hdr_set_destination_len(st, g_bytes_get_size(blob));
 	fu_byte_array_append_bytes(st, blob);
-	return g_byte_array_free_to_bytes(g_steal_pointer(&st));
+	return g_steal_pointer(&st);
 }
 
 static void

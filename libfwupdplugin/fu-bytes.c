@@ -170,7 +170,7 @@ fu_bytes_get_contents_stream(GInputStream *stream, gsize count, GError **error)
 			return NULL;
 		}
 	}
-	return g_byte_array_free_to_bytes(g_steal_pointer(&buf));
+	return g_bytes_new(buf->data, buf->len);
 }
 
 /**
@@ -237,7 +237,7 @@ fu_bytes_get_contents_stream_full(GInputStream *stream, gsize offset, gsize coun
 		if (buf->len >= count)
 			break;
 	}
-	return g_byte_array_free_to_bytes(g_steal_pointer(&buf));
+	return g_bytes_new(buf->data, buf->len);
 }
 
 /**
@@ -325,7 +325,7 @@ fu_bytes_compare(GBytes *bytes1, GBytes *bytes2, GError **error)
 
 	buf1 = g_bytes_get_data(bytes1, &bufsz1);
 	buf2 = g_bytes_get_data(bytes2, &bufsz2);
-	return fu_memcmp_safe(buf1, bufsz1, buf2, bufsz2, error);
+	return fu_memcmp_safe(buf1, bufsz1, 0x0, buf2, bufsz2, 0x0, MAX(bufsz1, bufsz2), error);
 }
 
 /**
@@ -379,6 +379,10 @@ fu_bytes_new_offset(GBytes *bytes, gsize offset, gsize length, GError **error)
 {
 	g_return_val_if_fail(bytes != NULL, NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	/* optimize */
+	if (offset == 0x0 && g_bytes_get_size(bytes) == length)
+		return g_bytes_ref(bytes);
 
 	/* sanity check */
 	if (offset + length < length || offset + length > g_bytes_get_size(bytes)) {

@@ -6,8 +6,6 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
@@ -21,6 +19,7 @@
 #include "fu-ifd-device.h"
 #include "fu-intel-spi-common.h"
 #include "fu-intel-spi-device.h"
+#include "fu-intel-spi-struct.h"
 #include "fu-pci-device.h"
 
 struct _FuIntelSpiDevice {
@@ -215,6 +214,7 @@ fu_intel_spi_device_add_security_attrs(FuDevice *device, FuSecurityAttrs *attrs)
 
 	/* create attr */
 	attr = fu_device_security_attr_new(device, FWUPD_SECURITY_ATTR_ID_SPI_DESCRIPTOR);
+	fwupd_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_LOCKED);
 	fu_security_attrs_append(attrs, attr);
 
 	/* check for read access from other regions */
@@ -244,7 +244,6 @@ fu_intel_spi_device_add_security_attrs(FuDevice *device, FuSecurityAttrs *attrs)
 
 	/* success */
 	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
-	fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_LOCKED);
 }
 
 static gboolean
@@ -438,7 +437,7 @@ fu_intel_spi_device_dump(FuIntelSpiDevice *self,
 	}
 
 	/* success */
-	return g_byte_array_free_to_bytes(g_steal_pointer(&buf));
+	return g_bytes_new(buf->data, buf->len);
 }
 
 static GBytes *

@@ -7,8 +7,6 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
 #include "fu-uefi-common.h"
 #include "fu-uefi-grub-device.h"
 
@@ -70,7 +68,7 @@ fu_uefi_grub_device_mkconfig(FuDevice *device,
 
 	/* replace ESP info in conf with what we detected */
 	g_string_append_printf(str, "EFI_PATH=%s\n", target_app);
-	fu_string_replace(str, esp_path, "");
+	g_string_replace(str, esp_path, "", 0);
 	g_string_append_printf(str, "ESP=%s\n", esp_path);
 	grub_target = g_build_filename(localstatedir, "uefi_capsule.conf", NULL);
 	if (!g_file_set_contents(grub_target, str->str, -1, error))
@@ -113,10 +111,12 @@ fu_uefi_grub_device_write_firmware(FuDevice *device,
 				   GError **error)
 {
 	FuUefiDevice *self = FU_UEFI_DEVICE(device);
+	FuVolume *esp = fu_uefi_device_get_esp(self);
 	const gchar *fw_class = fu_uefi_device_get_guid(self);
 	g_autofree gchar *basename = NULL;
+	g_autofree gchar *capsule_path = NULL;
 	g_autofree gchar *directory = NULL;
-	g_autofree gchar *esp_path = fu_uefi_device_get_esp_path(self);
+	g_autofree gchar *esp_path = fu_volume_get_mount_point(esp);
 	g_autofree gchar *fn = NULL;
 	g_autofree gchar *source_app = NULL;
 	g_autofree gchar *target_app = NULL;
@@ -139,9 +139,10 @@ fu_uefi_grub_device_write_firmware(FuDevice *device,
 		return FALSE;
 
 	/* save the blob to the ESP */
-	directory = fu_uefi_get_esp_path_for_os(device, esp_path);
+	directory = fu_uefi_get_esp_path_for_os();
 	basename = g_strdup_printf("fwupd-%s.cap", fw_class);
-	fn = g_build_filename(directory, "fw", basename, NULL);
+	capsule_path = g_build_filename(directory, "fw", basename, NULL);
+	fn = g_build_filename(esp_path, capsule_path, NULL);
 	if (!fu_path_mkdir_parent(fn, error))
 		return FALSE;
 	fixed_fw = fu_uefi_device_fixup_firmware(self, fw, error);
@@ -165,7 +166,7 @@ fu_uefi_grub_device_write_firmware(FuDevice *device,
 	}
 
 	/* set the blob header shared with fwupd.efi */
-	if (!fu_uefi_device_write_update_info(self, fn, varname, fw_class, error))
+	if (!fu_uefi_device_write_update_info(self, capsule_path, varname, fw_class, error))
 		return FALSE;
 
 	/* if secure boot was turned on this might need to be installed separately */
@@ -174,11 +175,11 @@ fu_uefi_grub_device_write_firmware(FuDevice *device,
 		return FALSE;
 
 	/* test if correct asset in place */
-	target_app = fu_uefi_get_esp_app_path(device, esp_path, "fwupd", error);
+	target_app = fu_uefi_get_esp_app_path("fwupd", error);
 	if (target_app == NULL)
 		return FALSE;
-	if (!fu_uefi_cmp_asset(source_app, target_app)) {
-		if (!fu_uefi_copy_asset(source_app, target_app, error))
+	if (!fu_uefi_esp_target_verify(source_app, esp, target_app)) {
+		if (!fu_uefi_esp_target_copy(source_app, esp, target_app, error))
 			return FALSE;
 	}
 

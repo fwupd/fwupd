@@ -7,8 +7,6 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
 #include <errno.h>
 #include <fcntl.h>
 #include <string.h>
@@ -311,6 +309,7 @@ fu_thunderbolt_device_prepare_firmware(FuDevice *device,
 
 	/* parse */
 	firmware = fu_firmware_new_from_gtypes(fw,
+					       0x0,
 					       flags,
 					       error,
 					       FU_TYPE_INTEL_THUNDERBOLT_FIRMWARE,
@@ -327,6 +326,7 @@ fu_thunderbolt_device_prepare_firmware(FuDevice *device,
 	if (controller_fw == NULL)
 		return NULL;
 	firmware_old = fu_firmware_new_from_gtypes(controller_fw,
+						   0x0,
 						   flags,
 						   error,
 						   FU_TYPE_INTEL_THUNDERBOLT_NVM,

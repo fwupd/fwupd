@@ -6,8 +6,6 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
 #include <scsi/sg.h>
 
 #include "fu-ata-device.h"
@@ -127,7 +125,7 @@ static gchar *
 fu_ata_device_pad_string_for_id(const gchar *name)
 {
 	GString *str = g_string_new(name);
-	fu_string_replace(str, " ", "_");
+	g_string_replace(str, " ", "_", 0);
 	for (guint i = str->len; i < 40; i++)
 		g_string_append_c(str, '_');
 	return g_string_free(str, FALSE);
@@ -284,7 +282,7 @@ fu_ata_device_parse_vendor_name(FuAtaDevice *self, const gchar *name)
 
 	/* find match */
 	for (guint i = 0; map_name[i].prefix != NULL; i++) {
-		if (fu_path_fnmatch(map_name[i].prefix, name_up)) {
+		if (g_pattern_match_simple(map_name[i].prefix, name_up)) {
 			name += strlen(map_name[i].prefix) - 1;
 			fu_device_set_vendor(FU_DEVICE(self), map_name[i].name);
 			vendor_id = g_strdup_printf("ATA:0x%X", map_name[i].vid);
@@ -295,7 +293,7 @@ fu_ata_device_parse_vendor_name(FuAtaDevice *self, const gchar *name)
 	/* fall back to fuzzy match */
 	if (vendor_id == NULL) {
 		for (guint i = 0; map_fuzzy[i].prefix != NULL; i++) {
-			if (fu_path_fnmatch(map_fuzzy[i].prefix, name_up)) {
+			if (g_pattern_match_simple(map_fuzzy[i].prefix, name_up)) {
 				fu_device_set_vendor(FU_DEVICE(self), map_fuzzy[i].name);
 				vendor_id = g_strdup_printf("ATA:0x%X", map_fuzzy[i].vid);
 				break;
@@ -308,7 +306,7 @@ fu_ata_device_parse_vendor_name(FuAtaDevice *self, const gchar *name)
 		g_autofree gchar *version_up =
 		    g_ascii_strup(fu_device_get_version(FU_DEVICE(self)), -1);
 		for (guint i = 0; map_version[i].prefix != NULL; i++) {
-			if (fu_path_fnmatch(map_version[i].prefix, version_up)) {
+			if (g_pattern_match_simple(map_version[i].prefix, version_up)) {
 				fu_device_set_vendor(FU_DEVICE(self), map_version[i].name);
 				vendor_id = g_strdup_printf("ATA:0x%X", map_version[i].vid);
 				break;

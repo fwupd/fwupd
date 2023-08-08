@@ -29,12 +29,33 @@ fu_usi_dock_dmc_device_parent_notify_cb(FuDevice *device, GParamSpec *pspec, gpo
 
 		/* allow matching firmware */
 		fu_device_add_instance_str(parent, "CID", fu_device_get_name(device));
-		if (!fu_device_build_instance_id(parent, &error, "USB", "VID", "PID", "CID", NULL))
+		if (!fu_device_build_instance_id(parent,
+						 &error,
+						 "USB",
+						 "VID",
+						 "PID",
+						 "CID",
+						 NULL)) {
 			g_warning("failed to build ID: %s", error->message);
+			return;
+		}
 
-		/* don't allow firmware updates on this */
+		/* this might match Flags=set-chip-type */
+		fu_device_add_instance_str(parent, "DMCVER", fu_device_get_version(device));
+		if (!fu_device_build_instance_id_quirk(parent,
+						       &error,
+						       "USB",
+						       "VID",
+						       "PID",
+						       "CID",
+						       "DMCVER",
+						       NULL)) {
+			g_warning("failed to build MCU DMC Instance ID: %s", error->message);
+			return;
+		}
+
+		/* use a better device name */
 		fu_device_set_name(device, "Dock Management Controller Information");
-		fu_device_inhibit(device, "dummy", "Use the MCU to update the DMC device");
 	}
 }
 

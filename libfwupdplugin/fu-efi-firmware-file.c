@@ -31,70 +31,7 @@ typedef struct {
 G_DEFINE_TYPE_WITH_PRIVATE(FuEfiFirmwareFile, fu_efi_firmware_file, FU_TYPE_FIRMWARE)
 #define GET_PRIVATE(o) (fu_efi_firmware_file_get_instance_private(o))
 
-#define FU_EFI_FIRMWARE_FILE_ATTRIB_NONE	     0x00
-#define FU_EFI_FIRMWARE_FILE_ATTRIB_LARGE_FILE	     0x01
-#define FU_EFI_FIRMWARE_FILE_ATTRIB_DATA_ALIGNMENT_2 0x02
-#define FU_EFI_FIRMWARE_FILE_ATTRIB_FIXED	     0x04
-#define FU_EFI_FIRMWARE_FILE_ATTRIB_DATA_ALIGNMENT   0x38
-#define FU_EFI_FIRMWARE_FILE_ATTRIB_CHECKSUM	     0x40
-
-#define FU_EFI_FIRMWARE_FILE_TYPE_ALL			0x00
-#define FU_EFI_FIRMWARE_FILE_TYPE_RAW			0x01
-#define FU_EFI_FIRMWARE_FILE_TYPE_FREEFORM		0x02
-#define FU_EFI_FIRMWARE_FILE_TYPE_SECURITY_CORE		0x03
-#define FU_EFI_FIRMWARE_FILE_TYPE_PEI_CORE		0x04
-#define FU_EFI_FIRMWARE_FILE_TYPE_DXE_CORE		0x05
-#define FU_EFI_FIRMWARE_FILE_TYPE_PEIM			0x06
-#define FU_EFI_FIRMWARE_FILE_TYPE_DRIVER		0x07
-#define FU_EFI_FIRMWARE_FILE_TYPE_COMBINED_PEIM_DRIVER	0x08
-#define FU_EFI_FIRMWARE_FILE_TYPE_APPLICATION		0x09
-#define FU_EFI_FIRMWARE_FILE_TYPE_MM			0x0A
-#define FU_EFI_FIRMWARE_FILE_TYPE_FIRMWARE_VOLUME_IMAGE 0x0B
-#define FU_EFI_FIRMWARE_FILE_TYPE_COMBINED_MM_DXE	0x0C
-#define FU_EFI_FIRMWARE_FILE_TYPE_MM_CORE		0x0D
-#define FU_EFI_FIRMWARE_FILE_TYPE_MM_STANDALONE		0x0E
-#define FU_EFI_FIRMWARE_FILE_TYPE_MM_CORE_STANDALONE	0x0F
-#define FU_EFI_FIRMWARE_FILE_TYPE_FFS_PAD		0xF0
-
-static const gchar *
-fu_efi_firmware_file_type_to_string(guint8 type)
-{
-	if (type == FU_EFI_FIRMWARE_FILE_TYPE_ALL)
-		return "all";
-	if (type == FU_EFI_FIRMWARE_FILE_TYPE_RAW)
-		return "raw";
-	if (type == FU_EFI_FIRMWARE_FILE_TYPE_FREEFORM)
-		return "freeform";
-	if (type == FU_EFI_FIRMWARE_FILE_TYPE_SECURITY_CORE)
-		return "security-core";
-	if (type == FU_EFI_FIRMWARE_FILE_TYPE_PEI_CORE)
-		return "pei-core";
-	if (type == FU_EFI_FIRMWARE_FILE_TYPE_DXE_CORE)
-		return "dxe-core";
-	if (type == FU_EFI_FIRMWARE_FILE_TYPE_PEIM)
-		return "peim";
-	if (type == FU_EFI_FIRMWARE_FILE_TYPE_DRIVER)
-		return "driver";
-	if (type == FU_EFI_FIRMWARE_FILE_TYPE_COMBINED_PEIM_DRIVER)
-		return "combined-peim-driver";
-	if (type == FU_EFI_FIRMWARE_FILE_TYPE_APPLICATION)
-		return "application";
-	if (type == FU_EFI_FIRMWARE_FILE_TYPE_MM)
-		return "mm";
-	if (type == FU_EFI_FIRMWARE_FILE_TYPE_FIRMWARE_VOLUME_IMAGE)
-		return "firmware-volume-image";
-	if (type == FU_EFI_FIRMWARE_FILE_TYPE_COMBINED_MM_DXE)
-		return "combined-mm-dxe";
-	if (type == FU_EFI_FIRMWARE_FILE_TYPE_MM_CORE)
-		return "mm-core";
-	if (type == FU_EFI_FIRMWARE_FILE_TYPE_MM_STANDALONE)
-		return "mm-standalone";
-	if (type == FU_EFI_FIRMWARE_FILE_TYPE_MM_CORE_STANDALONE)
-		return "core-standalone";
-	if (type == FU_EFI_FIRMWARE_FILE_TYPE_FFS_PAD)
-		return "ffs-pad";
-	return NULL;
-}
+#define FU_EFI_FIRMWARE_FILE_SIZE_MAX 0x1000000 /* 16 MB */
 
 static void
 fu_efi_firmware_file_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
@@ -108,9 +45,7 @@ fu_efi_firmware_file_export(FuFirmware *firmware, FuFirmwareExportFlags flags, X
 		fu_xmlb_builder_insert_kv(bn,
 					  "name",
 					  fu_efi_guid_to_name(fu_firmware_get_id(firmware)));
-		fu_xmlb_builder_insert_kv(bn,
-					  "type_name",
-					  fu_efi_firmware_file_type_to_string(priv->type));
+		fu_xmlb_builder_insert_kv(bn, "type_name", fu_efi_file_type_to_string(priv->type));
 	}
 }
 
@@ -193,7 +128,7 @@ fu_efi_firmware_file_parse(FuFirmware *firmware,
 		return FALSE;
 
 	/* add fv-image */
-	if (priv->type == FU_EFI_FIRMWARE_FILE_TYPE_FIRMWARE_VOLUME_IMAGE) {
+	if (priv->type == FU_EFI_FILE_TYPE_FIRMWARE_VOLUME_IMAGE) {
 		if (!fu_efi_firmware_parse_sections(firmware, blob, flags, error))
 			return FALSE;
 	} else {
@@ -201,7 +136,7 @@ fu_efi_firmware_file_parse(FuFirmware *firmware,
 	}
 
 	/* verify data checksum */
-	if ((priv->attrib & FU_EFI_FIRMWARE_FILE_ATTRIB_CHECKSUM) > 0 &&
+	if ((priv->attrib & FU_EFI_FILE_ATTRIB_CHECKSUM) > 0 &&
 	    (flags & FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM) == 0) {
 		guint8 data_checksum_verify = 0x100 - fu_sum8_bytes(blob);
 		if (data_checksum_verify != fu_struct_efi_file_get_data_checksum(st)) {
@@ -253,13 +188,24 @@ fu_efi_firmware_file_write_sections(FuFirmware *firmware, GError **error)
 			return NULL;
 		fu_byte_array_append_bytes(buf, blob);
 		fu_byte_array_align_up(buf, fu_firmware_get_alignment(img), 0xFF);
+
+		/* sanity check */
+		if (buf->len > FU_EFI_FIRMWARE_FILE_SIZE_MAX) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "EFI file too large, 0x%02x > 0x%02x",
+				    (guint)buf->len,
+				    (guint)FU_EFI_FIRMWARE_FILE_SIZE_MAX);
+			return NULL;
+		}
 	}
 
 	/* success */
-	return g_byte_array_free_to_bytes(g_steal_pointer(&buf));
+	return g_bytes_new(buf->data, buf->len);
 }
 
-static GBytes *
+static GByteArray *
 fu_efi_firmware_file_write(FuFirmware *firmware, GError **error)
 {
 	FuEfiFirmwareFile *self = FU_EFI_FIRMWARE_FILE(firmware);
@@ -291,7 +237,7 @@ fu_efi_firmware_file_write(FuFirmware *firmware, GError **error)
 
 	/* success */
 	fu_byte_array_append_bytes(st, blob);
-	return g_byte_array_free_to_bytes(g_steal_pointer(&st));
+	return g_steal_pointer(&st);
 }
 
 static gboolean
@@ -317,8 +263,8 @@ static void
 fu_efi_firmware_file_init(FuEfiFirmwareFile *self)
 {
 	FuEfiFirmwareFilePrivate *priv = GET_PRIVATE(self);
-	priv->attrib = FU_EFI_FIRMWARE_FILE_ATTRIB_NONE;
-	priv->type = FU_EFI_FIRMWARE_FILE_TYPE_RAW;
+	priv->attrib = FU_EFI_FILE_ATTRIB_NONE;
+	priv->type = FU_EFI_FILE_TYPE_RAW;
 	fu_firmware_set_alignment(FU_FIRMWARE(self), FU_FIRMWARE_ALIGNMENT_8);
 }
 

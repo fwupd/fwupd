@@ -288,7 +288,7 @@ fu_daemon_device_array_to_variant(FuDaemon *self,
 	g_variant_builder_init(&builder, G_VARIANT_TYPE_ARRAY);
 
 	/* override when required */
-	if (fu_config_get_show_device_private(fu_engine_get_config(self->engine)))
+	if (fu_engine_config_get_show_device_private(fu_engine_get_config(self->engine)))
 		flags |= FWUPD_DEVICE_FLAG_TRUSTED;
 	for (guint i = 0; i < devices->len; i++) {
 		FuDevice *device = g_ptr_array_index(devices, i);
@@ -754,23 +754,6 @@ fu_daemon_authorize_install_queue(FuMainAuthHelper *helper_ref)
 }
 #endif /* HAVE_GIO_UNIX */
 
-#if !GLIB_CHECK_VERSION(2, 54, 0)
-static gboolean
-g_ptr_array_find(GPtrArray *haystack, gconstpointer needle, guint *index_)
-{
-	for (guint i = 0; i < haystack->len; i++) {
-		gconstpointer *tmp = g_ptr_array_index(haystack, i);
-		if (tmp == needle) {
-			if (index_ != NULL) {
-				*index_ = i;
-				return TRUE;
-			}
-		}
-	}
-	return FALSE;
-}
-#endif
-
 #ifdef HAVE_GIO_UNIX
 static gint
 fu_daemon_release_sort_cb(gconstpointer a, gconstpointer b)
@@ -828,13 +811,11 @@ fu_daemon_install_with_helper_device(FuMainAuthHelper *helper,
 	releases = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_INSTALL_ALL_RELEASES)) {
 		g_autoptr(GPtrArray) rels = NULL;
-#if LIBXMLB_CHECK_VERSION(0, 2, 0)
 		g_autoptr(XbQuery) query = NULL;
-#endif
+
 		/* we get this one "for free" */
 		g_ptr_array_add(releases, g_object_ref(release));
 
-#if LIBXMLB_CHECK_VERSION(0, 2, 0)
 		query = xb_query_new_full(xb_node_get_silo(component),
 					  "releases/release",
 					  XB_QUERY_FLAG_FORCE_NODE_CACHE,
@@ -842,9 +823,6 @@ fu_daemon_install_with_helper_device(FuMainAuthHelper *helper,
 		if (query == NULL)
 			return FALSE;
 		rels = xb_node_query_full(component, query, NULL);
-#else
-		rels = xb_node_query(component, "releases/release", 0, NULL);
-#endif
 		/* add all but the first entry */
 		for (guint i = 1; i < rels->len; i++) {
 			XbNode *rel = g_ptr_array_index(rels, i);
@@ -1842,7 +1820,7 @@ fu_daemon_daemon_method_call(GDBusConnection *connection,
 		 * what action ID to use, for instance, if this is trusted --
 		 * this will also close the fd when done */
 		archive_size_max =
-		    fu_config_get_archive_size_max(fu_engine_get_config(self->engine));
+		    fu_engine_config_get_archive_size_max(fu_engine_get_config(self->engine));
 		helper->blob_cab = fu_bytes_get_contents_fd(fd, archive_size_max, &error);
 		if (helper->blob_cab == NULL) {
 			g_dbus_method_invocation_return_gerror(invocation, error);
@@ -2052,7 +2030,7 @@ fu_daemon_daemon_get_property(GDBusConnection *connection_,
 
 	if (g_strcmp0(property_name, "OnlyTrusted") == 0) {
 		return g_variant_new_boolean(
-		    fu_config_get_only_trusted(fu_engine_get_config(self->engine)));
+		    fu_engine_config_get_only_trusted(fu_engine_get_config(self->engine)));
 	}
 
 	/* return an error */

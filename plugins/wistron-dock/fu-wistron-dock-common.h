@@ -34,31 +34,8 @@
 #define FU_WISTRON_DOCK_CMD_DFU_DONE		0x5A
 #define FU_WISTRON_DOCK_CMD_DFU_ERROR		0xFF
 
-#define FU_WISTRON_DOCK_COMPONENT_IDX_MCU   0x0
-#define FU_WISTRON_DOCK_COMPONENT_IDX_PD    0x1
-#define FU_WISTRON_DOCK_COMPONENT_IDX_AUDIO 0x2
-#define FU_WISTRON_DOCK_COMPONENT_IDX_USB   0x3
-#define FU_WISTRON_DOCK_COMPONENT_IDX_MST   0x4
-#define FU_WISTRON_DOCK_COMPONENT_IDX_SPI   0xA
-#define FU_WISTRON_DOCK_COMPONENT_IDX_DOCK  0xF
-
-#define FU_WISTRON_DOCK_UPDATE_PHASE_DOWNLOAD 0x1
-#define FU_WISTRON_DOCK_UPDATE_PHASE_DEPLOY   0x2
-
-#define FU_WISTRON_DOCK_STATUS_CODE_ENTER    0x01
-#define FU_WISTRON_DOCK_STATUS_CODE_PREPARE  0x02
-#define FU_WISTRON_DOCK_STATUS_CODE_UPDATING 0x03
-#define FU_WISTRON_DOCK_STATUS_CODE_COMPLETE 0x04 /* unplug cable to trigger update */
-
 #define FU_WISTRON_DOCK_WDIT_SIZE   512	   /* bytes */
 #define FU_WISTRON_DOCK_WDIT_TAG_ID 0x4954 /* 'IT' */
 
 #define FU_WISTRON_DOCK_WDFL_SIG_SIZE  256  /* bytes */
 #define FU_WISTRON_DOCK_WDFL_DATA_SIZE 1328 /* bytes */
-
-const gchar *
-fu_wistron_dock_component_idx_to_string(guint8 component_idx);
-const gchar *
-fu_wistron_dock_update_phase_to_string(guint8 update_phase);
-const gchar *
-fu_wistron_dock_status_code_to_string(guint8 status_code);

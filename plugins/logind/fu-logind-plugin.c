@@ -72,7 +72,7 @@ fu_logind_plugin_prepare(FuPlugin *plugin,
 			    "handle-hibernate-key:handle-lid-switch";
 
 	/* already inhibited */
-	if (self->logind_fd != 0)
+	if (self->logind_fd >= 0)
 		return TRUE;
 
 	/* not yet connected */
@@ -115,25 +115,26 @@ fu_logind_plugin_cleanup(FuPlugin *plugin,
 			 GError **error)
 {
 	FuLogindPlugin *self = FU_LOGIND_PLUGIN(plugin);
-	if (self->logind_fd == 0)
+	if (self->logind_fd < 0)
 		return TRUE;
 	g_debug("closed logind fd %i", self->logind_fd);
 	if (!g_close(self->logind_fd, error))
 		return FALSE;
-	self->logind_fd = 0;
+	self->logind_fd = -1;
 	return TRUE;
 }
 
 static void
 fu_logind_plugin_init(FuLogindPlugin *self)
 {
+	self->logind_fd = -1;
 }
 
 static void
 fu_logind_finalize(GObject *obj)
 {
 	FuLogindPlugin *self = FU_LOGIND_PLUGIN(obj);
-	if (self->logind_fd != 0)
+	if (self->logind_fd >= 0)
 		g_close(self->logind_fd, NULL);
 	if (self->logind_proxy != NULL)
 		g_object_unref(self->logind_proxy);

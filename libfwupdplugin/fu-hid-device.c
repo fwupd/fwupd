@@ -85,11 +85,48 @@ fu_hid_device_set_property(GObject *object, guint prop_id, const GValue *value, 
 	}
 }
 
+/**
+ * fu_hid_device_parse_descriptor:
+ * @self: a #FuHidDevice
+ * @error: (nullable): optional return location for an error
+ *
+ * Parses the HID descriptor.
+ *
+ * Returns: (transfer full): a #FuHidDescriptor, or %NULL for error
+ *
+ * Since: 1.9.4
+ **/
+FuHidDescriptor *
+fu_hid_device_parse_descriptor(FuHidDevice *self, GError **error)
+{
+#if G_USB_CHECK_VERSION(0, 4, 7)
+	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
+	g_autoptr(FuFirmware) descriptor = fu_hid_descriptor_new();
+	g_autoptr(GBytes) fw = NULL;
+
+	g_return_val_if_fail(FU_HID_DEVICE(self), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	fw = g_usb_device_get_hid_descriptor_default(usb_device, error);
+	if (fw == NULL)
+		return NULL;
+	fu_dump_bytes(G_LOG_DOMAIN, "HidDescriptor", fw);
+	if (!fu_firmware_parse(descriptor, fw, FWUPD_INSTALL_FLAG_NONE, error))
+		return NULL;
+	return FU_HID_DESCRIPTOR(g_steal_pointer(&descriptor));
+#else
+	g_set_error_literal(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_NOT_SUPPORTED,
+			    "only supported in libgusb >= 0.4.7");
+	return NULL;
+#endif
+}
+
 #ifdef HAVE_GUSB
 static gboolean
 fu_hid_device_autodetect_eps(FuHidDevice *self, GUsbInterface *iface, GError **error)
 {
-#if G_USB_CHECK_VERSION(0, 3, 3)
 	FuHidDevicePrivate *priv = GET_PRIVATE(self);
 	g_autoptr(GPtrArray) eps = g_usb_interface_get_endpoints(iface);
 	for (guint i = 0; i < eps->len; i++) {
@@ -105,7 +142,7 @@ fu_hid_device_autodetect_eps(FuHidDevice *self, GUsbInterface *iface, GError **e
 			continue;
 		}
 	}
-	if (priv->ep_addr_in == 0x0 || priv->ep_addr_out == 0) {
+	if (priv->ep_addr_in == 0x0 && priv->ep_addr_out == 0) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
@@ -113,13 +150,6 @@ fu_hid_device_autodetect_eps(FuHidDevice *self, GUsbInterface *iface, GError **e
 		return FALSE;
 	}
 	return TRUE;
-#else
-	g_set_error_literal(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "this version of GUsb is not supported");
-	return FALSE;
-#endif
 }
 #endif
 
@@ -147,7 +177,7 @@ fu_hid_device_open(FuDevice *device, GError **error)
 			if (g_usb_interface_get_class(iface) == G_USB_DEVICE_CLASS_HID) {
 				priv->interface = g_usb_interface_get_number(iface);
 				priv->interface_autodetect = FALSE;
-				if (priv->flags & FU_HID_DEVICE_FLAG_USE_INTERRUPT_TRANSFER) {
+				if (priv->flags & FU_HID_DEVICE_FLAG_AUTODETECT_EPS) {
 					if (!fu_hid_device_autodetect_eps(self, iface, error))
 						return FALSE;
 				}
@@ -251,6 +281,84 @@ fu_hid_device_get_interface(FuHidDevice *self)
 }
 
 /**
+ * fu_hid_device_set_ep_addr_in:
+ * @self: a #FuHidDevice
+ * @ep_addr_in: an endpoint, e.g. `0x03`
+ *
+ * Sets the HID USB interrupt in endpoint.
+ *
+ * In most cases the HID ep_addr_in is auto-detected, but this function can be
+ * used where there are multiple HID EPss or where the device USB EP is invalid.
+ *
+ * Since: 1.9.4
+ **/
+void
+fu_hid_device_set_ep_addr_in(FuHidDevice *self, guint8 ep_addr_in)
+{
+	FuHidDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_HID_DEVICE(self));
+	priv->ep_addr_in = ep_addr_in;
+	priv->interface_autodetect = FALSE;
+}
+
+/**
+ * fu_hid_device_get_ep_addr_in:
+ * @self: a #FuHidDevice
+ *
+ * Gets the HID USB in endpoint.
+ *
+ * Returns: integer
+ *
+ * Since: 1.9.4
+ **/
+guint8
+fu_hid_device_get_ep_addr_in(FuHidDevice *self)
+{
+	FuHidDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_HID_DEVICE(self), 0xff);
+	return priv->ep_addr_in;
+}
+
+/**
+ * fu_hid_device_set_ep_addr_out:
+ * @self: a #FuHidDevice
+ * @ep_addr_out: an endpoint, e.g. `0x03`
+ *
+ * Sets the HID USB interrupt out endpoint.
+ *
+ * In most cases the HID EPs are auto-detected, but this function can be
+ * used where there are multiple HID EPs or where the device USB EP is invalid.
+ *
+ * Since: 1.9.4
+ **/
+void
+fu_hid_device_set_ep_addr_out(FuHidDevice *self, guint8 ep_addr_out)
+{
+	FuHidDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_HID_DEVICE(self));
+	priv->ep_addr_out = ep_addr_out;
+	priv->interface_autodetect = FALSE;
+}
+
+/**
+ * fu_hid_device_get_ep_addr_out:
+ * @self: a #FuHidDevice
+ *
+ * Gets the HID USB out endpoint.
+ *
+ * Returns: integer
+ *
+ * Since: 1.9.4
+ **/
+guint8
+fu_hid_device_get_ep_addr_out(FuHidDevice *self)
+{
+	FuHidDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_HID_DEVICE(self), 0xff);
+	return priv->ep_addr_out;
+}
+
+/**
  * fu_hid_device_add_flag:
  * @self: a #FuHidDevice
  * @flag: HID device flags, e.g. %FU_HID_DEVICE_FLAG_RETRY_FAILURE
@@ -284,10 +392,17 @@ fu_hid_device_set_report_internal(FuHidDevice *self, FuHidDeviceRetryHelper *hel
 	gsize actual_len = 0;
 
 	/* what method do we use? */
-	if (priv->flags & FU_HID_DEVICE_FLAG_USE_INTERRUPT_TRANSFER) {
+	if (helper->flags & FU_HID_DEVICE_FLAG_USE_INTERRUPT_TRANSFER) {
 		g_autofree gchar *title =
 		    g_strdup_printf("HID::SetReport [EP=0x%02x]", priv->ep_addr_out);
 		fu_dump_raw(G_LOG_DOMAIN, title, helper->buf, helper->bufsz);
+		if (priv->ep_addr_out == 0x0) {
+			g_set_error_literal(error,
+					    G_IO_ERROR,
+					    G_IO_ERROR_NOT_SUPPORTED,
+					    "no EpAddrOut set");
+			return FALSE;
+		}
 		if (!g_usb_device_interrupt_transfer(usb_device,
 						     priv->ep_addr_out,
 						     helper->buf,
@@ -410,8 +525,15 @@ fu_hid_device_get_report_internal(FuHidDevice *self, FuHidDeviceRetryHelper *hel
 	gsize actual_len = 0;
 
 	/* what method do we use? */
-	if (priv->flags & FU_HID_DEVICE_FLAG_USE_INTERRUPT_TRANSFER) {
+	if (helper->flags & FU_HID_DEVICE_FLAG_USE_INTERRUPT_TRANSFER) {
 		g_autofree gchar *title = NULL;
+		if (priv->ep_addr_in == 0x0) {
+			g_set_error_literal(error,
+					    G_IO_ERROR,
+					    G_IO_ERROR_NOT_SUPPORTED,
+					    "no EpAddrIn set");
+			return FALSE;
+		}
 		if (!g_usb_device_interrupt_transfer(usb_device,
 						     priv->ep_addr_in,
 						     helper->buf,

@@ -50,7 +50,7 @@ if __name__ == "__main__":
             "fu_common_crc32": "fu_crc32",
             "fu_common_crc32_full": "fu_crc32_full",
             "fu_byte_array_set_size_full": "fu_byte_array_set_size",
-            "fu_common_string_replace": "fu_string_replace",
+            "fu_common_string_replace": "g_string_replace",
             "fu_common_string_append_kv": "fu_string_append",
             "fu_common_string_append_ku": "fu_string_append_ku",
             "fu_common_string_append_kx": "fu_string_append_kx",
@@ -105,7 +105,7 @@ if __name__ == "__main__":
             "fu_common_error_array_get_best": "fu_engine_error_array_get_best",
             "fu_common_get_path": "fu_path_from_kind",
             "fu_common_filename_glob": "fu_path_glob",
-            "fu_common_fnmatch": "fu_path_fnmatch",
+            "fu_common_fnmatch": "g_pattern_match_simple",
             "fu_common_rmtree": "fu_path_rmtree",
             "fu_common_get_files_recursive": "fu_path_get_files",
             "fu_common_mkdir": "fu_path_mkdir",
@@ -129,6 +129,8 @@ if __name__ == "__main__":
             "fu_smbios_to_string": "fu_firmware_to_string",
             "fu_i2c_device_read_full": "fu_i2c_device_read",
             "fu_i2c_device_write_full": "fu_i2c_device_write",
+            "fu_path_fnmatch": "g_pattern_match_simple",
+            "fu_string_replace": "g_string_replace",
         }.items():
             if buf.find(old) == -1:
                 continue

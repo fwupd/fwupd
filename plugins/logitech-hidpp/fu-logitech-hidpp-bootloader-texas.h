@@ -8,9 +8,9 @@
 
 #include "fu-logitech-hidpp-bootloader.h"
 
-#define FU_TYPE_UNIFYING_BOOTLOADER_TEXAS (fu_logitech_hidpp_bootloader_texas_get_type())
-G_DECLARE_FINAL_TYPE(FuLogitechHidPpBootloaderTexas,
+#define FU_TYPE_LOGITECH_HIDPP_BOOTLOADER_TEXAS (fu_logitech_hidpp_bootloader_texas_get_type())
+G_DECLARE_FINAL_TYPE(FuLogitechHidppBootloaderTexas,
 		     fu_logitech_hidpp_bootloader_texas,
 		     FU,
-		     UNIFYING_BOOTLOADER_TEXAS,
-		     FuLogitechHidPpBootloader)
+		     LOGITECH_HIDPP_BOOTLOADER_TEXAS,
+		     FuLogitechHidppBootloader)

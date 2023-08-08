@@ -1,7 +1,3 @@
-# match all devices with this udev subsystem
-[BLOCK]
-Plugin = ata
-
 [ThinkSystem M.2 VD]
 Flags = ~updatable
 

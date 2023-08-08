@@ -7,10 +7,9 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
 #include "fu-vli-pd-device.h"
 #include "fu-vli-pd-parade-device.h"
+#include "fu-vli-struct.h"
 
 struct _FuVliPdParadeDevice {
 	FuDevice parent_instance;
@@ -28,10 +27,7 @@ static void
 fu_vli_pd_parade_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuVliPdParadeDevice *self = FU_VLI_PD_PARADE_DEVICE(device);
-	fu_string_append(str,
-			 idt,
-			 "DeviceKind",
-			 fu_vli_common_device_kind_to_string(self->device_kind));
+	fu_string_append(str, idt, "DeviceKind", fu_vli_device_kind_to_string(self->device_kind));
 	fu_string_append_kx(str, idt, "Page2", self->page2);
 	fu_string_append_kx(str, idt, "Page7", self->page7);
 }
@@ -559,7 +555,7 @@ fu_vli_pd_parade_device_write_firmware(FuDevice *device,
 						i + 1,
 						blocks->len);
 	}
-	fw_verify = g_byte_array_free_to_bytes(g_steal_pointer(&buf_verify));
+	fw_verify = g_bytes_new(buf_verify->data, buf_verify->len);
 	if (!fu_bytes_compare(fw, fw_verify, error))
 		return FALSE;
 	fu_progress_step_done(progress);
@@ -665,7 +661,7 @@ fu_vli_pd_parade_device_dump_firmware(FuDevice *device, FuProgress *progress, GE
 			return NULL;
 		fu_progress_step_done(progress);
 	}
-	return g_byte_array_free_to_bytes(g_steal_pointer(&fw));
+	return g_bytes_new(fw->data, fw->len);
 }
 
 static gboolean
@@ -678,9 +674,7 @@ fu_vli_pd_parade_device_probe(FuDevice *device, GError **error)
 		return FALSE;
 
 	/* use header to populate device info */
-	fu_device_add_instance_str(device,
-				   "I2C",
-				   fu_vli_common_device_kind_to_string(self->device_kind));
+	fu_device_add_instance_str(device, "I2C", fu_vli_device_kind_to_string(self->device_kind));
 	return fu_device_build_instance_id(device, error, "USB", "VID", "PID", "I2C", NULL);
 }
 

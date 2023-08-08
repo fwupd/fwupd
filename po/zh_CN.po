@@ -13,7 +13,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"Language-Team: Chinese (China) (http://www.transifex.com/freedesktop/fwupd/language/zh_CN/)\n"
+"Language-Team: Chinese (China) (http://app.transifex.com/freedesktop/fwupd/language/zh_CN/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -590,8 +590,8 @@ msgstr "无固件更新可用的设备："
 msgid "Devices with the latest available firmware version:"
 msgstr "固件已是最新的设备："
 
-#. TRANSLATORS: Suffix: the HSI result
 #. TRANSLATORS: Plugin is inactive and not used
+#. TRANSLATORS: Suffix: the HSI result
 msgid "Disabled"
 msgstr "已禁用"
 
@@ -713,9 +713,9 @@ msgstr "£启用新的远程库"
 msgid "Enable this remote?"
 msgstr "要启用此远程源吗？"
 
-#. TRANSLATORS: Suffix: the HSI result
 #. TRANSLATORS: Plugin is active and in use
 #. TRANSLATORS: if the remote is enabled
+#. TRANSLATORS: Suffix: the HSI result
 msgid "Enabled"
 msgstr "已启用"
 
@@ -805,8 +805,8 @@ msgstr "文件名 [固件类型]"
 msgid "FILENAME-SRC FILENAME-DST [FIRMWARE-TYPE-SRC] [FIRMWARE-TYPE-DST]"
 msgstr "源文件名 目标文件名 [源固件类型] [目标固件类型]"
 
-#. TRANSLATORS: Suffix: the fallback HSI result
 #. TRANSLATORS: the update state of the specific device
+#. TRANSLATORS: Suffix: the fallback HSI result
 msgid "Failed"
 msgstr "已失败"
 
@@ -977,6 +977,11 @@ msgctxt "A single GUID"
 msgid "GUID"
 msgstr "GUID"
 
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgctxt "command-argument"
+msgid "GUID"
+msgstr "GUID"
+
 #. TRANSLATORS: command description
 msgid "Get all device flags supported by fwupd"
 msgstr "获取 fwupd 支持的全部设备标志"
@@ -1077,14 +1082,6 @@ msgstr "正在忽略 SSL 严格检查，要在之后自动应用这一选项请�
 #. TRANSLATORS: length of time the update takes to apply
 msgid "Install Duration"
 msgstr "安装时长"
-
-#. TRANSLATORS: command description
-msgid "Install a firmware blob on a device"
-msgstr "在设备上安装固件比特块"
-
-#. TRANSLATORS: command description
-msgid "Install a firmware file on this hardware"
-msgstr "在此硬件上安装固件文件"
 
 msgid "Install old version of signed system firmware"
 msgstr "安装旧版本的已签名系统固件"
@@ -1289,7 +1286,7 @@ msgstr "最小版本"
 msgid "Mismatched daemon and client, use %s instead"
 msgstr "守护进程与客户端不匹配，使用 %s 来代替"
 
-#. TRANSLATORS: sets something in daemon.conf
+#. TRANSLATORS: sets something in the daemon configuration file
 msgid "Modifies a daemon configuration value"
 msgstr "修改守护进程的配置值"
 

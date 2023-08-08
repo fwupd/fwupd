@@ -7,13 +7,12 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
 #include <json-glib/json-glib.h>
 #include <string.h>
 
 #include "fu-logitech-bulkcontroller-common.h"
 #include "fu-logitech-bulkcontroller-device.h"
+#include "fu-logitech-bulkcontroller-struct.h"
 
 /* SYNC interface follows TLSV (Type, Length, SequenceID, Value) protocol */
 /* UPD interface follows TLV (Type, Length, Value) protocol */
@@ -61,8 +60,8 @@ struct _FuLogitechBulkcontrollerDevice {
 	guint update_ep[EP_LAST];
 	guint sync_iface;
 	guint update_iface;
-	FuLogitechBulkcontrollerDeviceStatus status;
-	FuLogitechBulkcontrollerDeviceUpdateState update_status;
+	FuLogitechBulkcontrollerDeviceState status;
+	FuLogitechBulkcontrollerUpdateState update_status;
 	guint update_progress; /* percentage value */
 	gboolean is_sync_transfer_in_progress;
 };
@@ -102,19 +101,17 @@ fu_logitech_bulkcontroller_device_to_string(FuDevice *device, guint idt, GString
 	fu_string_append_kx(str, idt, "UpdateIface", self->update_iface);
 	fu_string_append(str,
 			 idt,
-			 "Status",
-			 fu_logitech_bulkcontroller_device_status_to_string(self->status));
-	fu_string_append(
-	    str,
-	    idt,
-	    "UpdateState",
-	    fu_logitech_bulkcontroller_device_update_state_to_string(self->update_status));
+			 "State",
+			 fu_logitech_bulkcontroller_device_state_to_string(self->status));
+	fu_string_append(str,
+			 idt,
+			 "UpdateState",
+			 fu_logitech_bulkcontroller_update_state_to_string(self->update_status));
 }
 
 static gboolean
 fu_logitech_bulkcontroller_device_probe(FuDevice *device, GError **error)
 {
-#if G_USB_CHECK_VERSION(0, 3, 3)
 	FuLogitechBulkcontrollerDevice *self = FU_LOGITECH_BULKCONTROLLER_DEVICE(device);
 	g_autoptr(GPtrArray) intfs = NULL;
 
@@ -162,13 +159,6 @@ fu_logitech_bulkcontroller_device_probe(FuDevice *device, GError **error)
 	fu_usb_device_add_interface(FU_USB_DEVICE(self), self->update_iface);
 	fu_usb_device_add_interface(FU_USB_DEVICE(self), self->sync_iface);
 	return TRUE;
-#else
-	g_set_error_literal(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "this version of GUsb is not supported");
-	return FALSE;
-#endif
 }
 
 static gboolean
@@ -735,14 +725,16 @@ fu_logitech_bulkcontroller_device_write_firmware(FuDevice *device,
 	g_autoptr(GByteArray) start_pkt = g_byte_array_new();
 	g_autoptr(GBytes) fw = NULL;
 	g_autofree gchar *old_firmware_version = NULL;
+	gboolean status_updating = FALSE;
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1, "init");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 48, "device-write-blocks");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1, "end-transfer");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1, "uninit");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 49, NULL);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 55, "device-write-blocks");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 2, "end-transfer");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 2, "uninit");
+	fu_progress_add_step(progress, FWUPD_STATUS_DOWNLOADING, 5, NULL);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 35, NULL);
 
 	/* get default image */
 	fw = fu_firmware_get_bytes(firmware, error);
@@ -844,20 +836,26 @@ fu_logitech_bulkcontroller_device_write_firmware(FuDevice *device,
 
 		/* device responsive, no error and not rebooting yet */
 		no_response_count = 0;
-		g_debug(
-		    "firmware update status: %s. progress: %u",
-		    fu_logitech_bulkcontroller_device_update_state_to_string(self->update_status),
-		    self->update_progress);
+		g_debug("firmware update status: %s. progress: %u",
+			fu_logitech_bulkcontroller_update_state_to_string(self->update_status),
+			self->update_progress);
 
+		/* when update status changes from kUpdateStateDownloading to kUpdateStateUpdating,
+		 * update progress reset to 0. Move progress step from downloading to verify */
+		if ((!status_updating) &&
+		    (self->update_status == FU_LOGITECH_BULKCONTROLLER_UPDATE_STATE_UPDATING)) {
+			fu_progress_step_done(progress);
+			status_updating = TRUE;
+		}
 		/* existing device image version is same as newly pushed image */
-		if (self->update_status == kUpdateStateError) {
+		if (self->update_status == FU_LOGITECH_BULKCONTROLLER_UPDATE_STATE_ERROR) {
 			g_set_error_literal(error,
 					    G_IO_ERROR,
 					    G_IO_ERROR_INVALID_DATA,
 					    "firmware upgrade failed");
 			return FALSE;
 		}
-		if (self->update_status == kUpdateStateCurrent) {
+		if (self->update_status == FU_LOGITECH_BULKCONTROLLER_UPDATE_STATE_CURRENT) {
 			g_debug("new firmware version: %s, old firmware version: %s, "
 				"rebooting...",
 				fu_device_get_version(device),
@@ -1138,9 +1136,9 @@ fu_logitech_bulkcontroller_device_set_progress(FuDevice *self, FuProgress *progr
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0, "detach");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 99, "write");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 90, "write");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0, "attach");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1, "reload");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 10, "reload");
 }
 
 static void

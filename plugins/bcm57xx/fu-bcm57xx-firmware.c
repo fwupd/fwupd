@@ -7,8 +7,6 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
 #include "fu-bcm57xx-common.h"
 #include "fu-bcm57xx-dict-image.h"
 #include "fu-bcm57xx-firmware.h"
@@ -458,10 +456,10 @@ fu_bcm57xx_firmware_parse(FuFirmware *firmware,
 static GBytes *
 _g_bytes_new_sized(gsize sz)
 {
-	GByteArray *tmp = g_byte_array_sized_new(sz);
+	g_autoptr(GByteArray) tmp = g_byte_array_sized_new(sz);
 	for (gsize i = 0; i < sz; i++)
 		fu_byte_array_append_uint8(tmp, 0x0);
-	return g_byte_array_free_to_bytes(tmp);
+	return g_bytes_new(tmp->data, tmp->len);
 }
 
 static gboolean
@@ -482,7 +480,7 @@ fu_bcm57xx_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
 	return TRUE;
 }
 
-static GBytes *
+static GByteArray *
 fu_bcm57xx_firmware_write(FuFirmware *firmware, GError **error)
 {
 	gsize off = BCM_NVRAM_STAGE1_BASE;
@@ -571,12 +569,12 @@ fu_bcm57xx_firmware_write(FuFirmware *firmware, GError **error)
 		if (blob_info == NULL)
 			return NULL;
 	} else {
-		GByteArray *tmp = g_byte_array_sized_new(BCM_NVRAM_INFO_SZ);
+		g_autoptr(GByteArray) tmp = g_byte_array_sized_new(BCM_NVRAM_INFO_SZ);
 		for (gsize i = 0; i < BCM_NVRAM_INFO_SZ; i++)
 			fu_byte_array_append_uint8(tmp, 0x0);
 		fu_memwrite_uint16(tmp->data + BCM_NVRAM_INFO_VENDOR, self->vendor, G_BIG_ENDIAN);
 		fu_memwrite_uint16(tmp->data + BCM_NVRAM_INFO_DEVICE, self->model, G_BIG_ENDIAN);
-		blob_info = g_byte_array_free_to_bytes(tmp);
+		blob_info = g_bytes_new(tmp->data, tmp->len);
 	}
 	fu_byte_array_append_bytes(buf, blob_info);
 
@@ -617,7 +615,7 @@ fu_bcm57xx_firmware_write(FuFirmware *firmware, GError **error)
 		fu_byte_array_append_uint8(buf, self->source_padchar);
 
 	/* add EOF */
-	return g_byte_array_free_to_bytes(g_steal_pointer(&buf));
+	return g_steal_pointer(&buf);
 }
 
 guint16

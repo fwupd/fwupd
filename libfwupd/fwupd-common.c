@@ -29,10 +29,6 @@
 #endif
 #include <json-glib/json-glib.h>
 
-#if !GLIB_CHECK_VERSION(2, 54, 0)
-#include <errno.h>
-#endif
-
 /**
  * fwupd_checksum_guess_kind:
  * @checksum: (nullable): a checksum
@@ -249,8 +245,51 @@ fwupd_get_os_release_full(const gchar *filename, GError **error)
 GHashTable *
 fwupd_get_os_release(GError **error)
 {
+#ifdef HOST_MACHINE_SYSTEM_DARWIN
+	g_autofree gchar *stdout = NULL;
+	g_autofree gchar *sw_vers = g_find_program_in_path("sw_vers");
+	g_auto(GStrv) split = NULL;
+	g_autoptr(GHashTable) hash = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
+	struct {
+		const gchar *key;
+		const gchar *val;
+	} kvs[] = {{"ProductName:", "NAME"},
+		   {"ProductVersion:", "VERSION_ID"},
+		   {"BuildVersion:", "VARIANT_ID"},
+		   {NULL, NULL}};
+
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	/* macOS */
+	if (sw_vers == NULL) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_READ, "No os-release found");
+		return NULL;
+	}
+
+	/* parse in format:
+	 *
+	 *    ProductName:    Mac OS X
+	 *    ProductVersion: 10.14.6
+	 *    BuildVersion:   18G103
+	 */
+	if (!g_spawn_command_line_sync(sw_vers, &stdout, NULL, NULL, error))
+		return NULL;
+	split = g_strsplit(stdout, "\n", -1);
+	for (guint j = 0; split[j] != NULL; j++) {
+		for (guint i = 0; kvs[i].key != NULL; i++) {
+			if (g_str_has_prefix(split[j], kvs[i].key)) {
+				g_autofree gchar *tmp = g_strdup(split[j] + strlen(kvs[i].key));
+				g_hash_table_insert(hash,
+						    g_strdup(kvs[i].val),
+						    g_strdup(g_strstrip(tmp)));
+			}
+		}
+	}
+	return g_steal_pointer(&hash);
+#else
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 	return fwupd_get_os_release_full(NULL, error);
+#endif
 }
 
 static gchar *
@@ -697,76 +736,6 @@ fwupd_guid_to_string(const fwupd_guid_t *guid, FwupdGuidFlags flags)
 			       gnat.e[5]);
 }
 
-#if !GLIB_CHECK_VERSION(2, 54, 0)
-static gboolean
-str_has_sign(const gchar *str)
-{
-	return str[0] == '-' || str[0] == '+';
-}
-
-static gboolean
-str_has_hex_prefix(const gchar *str)
-{
-	return str[0] == '0' && g_ascii_tolower(str[1]) == 'x';
-}
-
-static gboolean
-g_ascii_string_to_unsigned(const gchar *str,
-			   guint base,
-			   guint64 min,
-			   guint64 max,
-			   guint64 *out_num,
-			   GError **error)
-{
-	const gchar *end_ptr = NULL;
-	gint saved_errno = 0;
-	guint64 number;
-
-	g_return_val_if_fail(str != NULL, FALSE);
-	g_return_val_if_fail(base >= 2 && base <= 36, FALSE);
-	g_return_val_if_fail(min <= max, FALSE);
-	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
-
-	if (str[0] == '\0') {
-		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
-				    "Empty string is not a number");
-		return FALSE;
-	}
-
-	errno = 0;
-	number = g_ascii_strtoull(str, (gchar **)&end_ptr, base);
-	saved_errno = errno;
-
-	if (g_ascii_isspace(str[0]) || str_has_sign(str) ||
-	    (base == 16 && str_has_hex_prefix(str)) ||
-	    (saved_errno != 0 && saved_errno != ERANGE) || end_ptr == NULL || *end_ptr != '\0') {
-		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
-			    "“%s” is not an unsigned number",
-			    str);
-		return FALSE;
-	}
-	if (saved_errno == ERANGE || number < min || number > max) {
-		g_autofree gchar *min_str = g_strdup_printf("%" G_GUINT64_FORMAT, min);
-		g_autofree gchar *max_str = g_strdup_printf("%" G_GUINT64_FORMAT, max);
-		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
-			    "Number “%s” is out of bounds [%s, %s]",
-			    str,
-			    min_str,
-			    max_str);
-		return FALSE;
-	}
-	if (out_num != NULL)
-		*out_num = number;
-	return TRUE;
-}
-#endif /* GLIB_CHECK_VERSION(2,54,0) */
-
 /**
  * fwupd_guid_from_string:
  * @guidstr: (not nullable): a GUID, e.g. `00112233-4455-6677-8899-aabbccddeeff`
@@ -1047,10 +1016,8 @@ fwupd_input_stream_read_bytes_cb(GObject *source, GAsyncResult *res, gpointer us
 	g_autoptr(GBytes) bytes = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GTask) task = G_TASK(user_data);
-#if GLIB_CHECK_VERSION(2, 64, 0)
 	guint8 *buf;
 	gsize bufsz = 0;
-#endif
 
 	/* read buf */
 	bytes = g_input_stream_read_bytes_finish(stream, res, &error);
@@ -1075,14 +1042,8 @@ fwupd_input_stream_read_bytes_cb(GObject *source, GAsyncResult *res, gpointer us
 	}
 
 	/* success */
-#if GLIB_CHECK_VERSION(2, 64, 0)
 	buf = g_byte_array_steal(bufarr, &bufsz);
 	g_task_return_pointer(task, g_bytes_new_take(buf, bufsz), (GDestroyNotify)g_bytes_unref);
-#else
-	g_task_return_pointer(task,
-			      g_bytes_new(bufarr->data, bufarr->len),
-			      (GDestroyNotify)g_bytes_unref);
-#endif
 }
 
 /**

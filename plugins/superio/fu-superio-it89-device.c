@@ -6,8 +6,6 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
 #include "fu-superio-common.h"
 #include "fu-superio-it89-device.h"
 

@@ -141,7 +141,8 @@ fu_uswid_firmware_parse(FuFirmware *firmware,
 				       flags | FWUPD_INSTALL_FLAG_NO_SEARCH,
 				       error))
 			return FALSE;
-		fu_firmware_add_image(firmware, firmware_coswid);
+		if (!fu_firmware_add_image_full(firmware, firmware_coswid, error))
+			return FALSE;
 		if (fu_firmware_get_size(firmware_coswid) == 0) {
 			g_set_error_literal(error,
 					    FWUPD_ERROR,
@@ -156,7 +157,7 @@ fu_uswid_firmware_parse(FuFirmware *firmware,
 	return TRUE;
 }
 
-static GBytes *
+static GByteArray *
 fu_uswid_firmware_write(FuFirmware *firmware, GError **error)
 {
 	FuUswidFirmware *self = FU_USWID_FIRMWARE(firmware);
@@ -188,7 +189,7 @@ fu_uswid_firmware_write(FuFirmware *firmware, GError **error)
 		if (payload_blob == NULL)
 			return NULL;
 	} else {
-		payload_blob = g_byte_array_free_to_bytes(g_steal_pointer(&payload));
+		payload_blob = g_bytes_new(payload->data, payload->len);
 	}
 
 	/* pack */
@@ -206,7 +207,7 @@ fu_uswid_firmware_write(FuFirmware *firmware, GError **error)
 	fu_byte_array_append_bytes(buf, payload_blob);
 
 	/* success */
-	return g_byte_array_free_to_bytes(g_steal_pointer(&buf));
+	return g_steal_pointer(&buf);
 }
 
 static gboolean
@@ -241,6 +242,7 @@ fu_uswid_firmware_init(FuUswidFirmware *self)
 	priv->compressed = FALSE;
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_STORED_SIZE);
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_ALWAYS_SEARCH);
+	fu_firmware_set_images_max(FU_FIRMWARE(self), 2000);
 }
 
 static void

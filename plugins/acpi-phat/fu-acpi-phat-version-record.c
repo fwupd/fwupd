@@ -48,13 +48,14 @@ fu_acpi_phat_version_record_parse(FuFirmware *firmware,
 				       flags | FWUPD_INSTALL_FLAG_NO_SEARCH,
 				       error))
 			return FALSE;
-		fu_firmware_add_image(firmware, firmware_tmp);
+		if (!fu_firmware_add_image_full(firmware, firmware_tmp, error))
+			return FALSE;
 		offset += fu_firmware_get_size(firmware_tmp);
 	}
 	return TRUE;
 }
 
-static GBytes *
+static GByteArray *
 fu_acpi_phat_version_record_write(FuFirmware *firmware, GError **error)
 {
 	g_autoptr(GByteArray) buf2 = g_byte_array_new();
@@ -77,12 +78,14 @@ fu_acpi_phat_version_record_write(FuFirmware *firmware, GError **error)
 
 	/* element data */
 	g_byte_array_append(st, buf2->data, buf2->len);
-	return g_byte_array_free_to_bytes(g_steal_pointer(&st));
+	return g_steal_pointer(&st);
 }
 
 static void
 fu_acpi_phat_version_record_init(FuAcpiPhatVersionRecord *self)
 {
+	fu_firmware_set_images_max(FU_FIRMWARE(self), 2000);
+	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_NO_AUTO_DETECTION);
 }
 
 static void

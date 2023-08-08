@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "fu-hid-descriptor.h"
 #include "fu-usb-device.h"
 
 #define FU_TYPE_HID_DEVICE (fu_hid_device_get_type())
@@ -24,6 +25,7 @@ struct _FuHidDeviceClass {
  * @FU_HID_DEVICE_FLAG_NO_KERNEL_UNBIND:	Do not unbind the kernel driver on open
  * @FU_HID_DEVICE_FLAG_NO_KERNEL_REBIND:	Do not rebind the kernel driver on close
  * @FU_HID_DEVICE_FLAG_USE_INTERRUPT_TRANSFER:	Use interrupt transfers, not control transfers
+ * @FU_HID_DEVICE_FLAG_AUTODETECT_EPS:		Autodetect interface endpoints
  *
  * Flags used when calling fu_hid_device_get_report() and fu_hid_device_set_report().
  **/
@@ -35,6 +37,7 @@ typedef enum {
 	FU_HID_DEVICE_FLAG_NO_KERNEL_UNBIND = 1 << 3,
 	FU_HID_DEVICE_FLAG_NO_KERNEL_REBIND = 1 << 4,
 	FU_HID_DEVICE_FLAG_USE_INTERRUPT_TRANSFER = 1 << 5,
+	FU_HID_DEVICE_FLAG_AUTODETECT_EPS = 1 << 6,
 	/*< private >*/
 	FU_HID_DEVICE_FLAG_LAST
 } FuHidDeviceFlags;
@@ -47,6 +50,16 @@ void
 fu_hid_device_set_interface(FuHidDevice *self, guint8 interface_number);
 guint8
 fu_hid_device_get_interface(FuHidDevice *self);
+void
+fu_hid_device_set_ep_addr_in(FuHidDevice *self, guint8 ep_addr_in);
+guint8
+fu_hid_device_get_ep_addr_in(FuHidDevice *self);
+void
+fu_hid_device_set_ep_addr_out(FuHidDevice *self, guint8 ep_addr_out);
+guint8
+fu_hid_device_get_ep_addr_out(FuHidDevice *self);
+FuHidDescriptor *
+fu_hid_device_parse_descriptor(FuHidDevice *self, GError **error);
 gboolean
 fu_hid_device_set_report(FuHidDevice *self,
 			 guint8 value,

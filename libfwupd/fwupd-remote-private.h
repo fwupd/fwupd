@@ -25,7 +25,10 @@ fwupd_remote_save_to_filename(FwupdRemote *self,
 			      GCancellable *cancellable,
 			      GError **error);
 void
-fwupd_remote_set_enabled(FwupdRemote *self, gboolean enabled);
+fwupd_remote_set_enabled(FwupdRemote *self, gboolean enabled)
+    G_DEPRECATED_FOR(fwupd_remote_add_flag);
+void
+fwupd_remote_set_id(FwupdRemote *self, const gchar *id);
 void
 fwupd_remote_set_title(FwupdRemote *self, const gchar *title);
 void
@@ -33,7 +36,7 @@ fwupd_remote_set_priority(FwupdRemote *self, gint priority);
 void
 fwupd_remote_set_agreement(FwupdRemote *self, const gchar *agreement);
 void
-fwupd_remote_set_checksum(FwupdRemote *self, const gchar *checksum);
+fwupd_remote_set_checksum(FwupdRemote *self, const gchar *checksum_sig);
 void
 fwupd_remote_set_filename_cache(FwupdRemote *self, const gchar *filename);
 void

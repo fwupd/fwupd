@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1999-2021 Logitech, Inc.
+ * Copyright (c) 1999-2023 Logitech, Inc.
  * All Rights Reserved
  *
  * SPDX-License-Identifier: LGPL-2.1+
@@ -53,6 +53,18 @@ message GetManifestBodyRequest
 	 * (REQUIRED)
 	 */
 	int32 ttl = 5;
+
+	/**
+	 * Serial number of attached device
+	 * (OPTIONAL)
+	 */
+	string serial_number = 6;
+
+	/**
+	 * target version
+	 * (OPTIONAL)
+	 */
+	string target_version = 7;
 }
 
 /**
@@ -69,4 +81,10 @@ message GetManifestBodyResponse
 	 * The get manifest body signature.
 	 */
 	string signature = 2;
+
+	/**
+	 * Serial number of attached device
+	 * (OPTIONAL)
+	 */
+	string serial_number = 3;
 }

@@ -6,22 +6,16 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
 #include <errno.h>
 #include <fcntl.h>
 #include <glib/gstdio.h>
 #include <string.h>
 
+#include "fu-firehose-updater.h"
 #include "fu-mbim-qdu-updater.h"
 #include "fu-mm-device.h"
 #include "fu-mm-utils.h"
 #include "fu-qmi-pdc-updater.h"
-
-#if MM_CHECK_VERSION(1, 17, 2)
-#include "fu-firehose-updater.h"
-#endif
-
 #include "fu-sahara-loader.h"
 
 /* Amount of time for the modem to boot in fastboot mode. */
@@ -81,18 +75,14 @@ struct _FuMmDevice {
 
 	/* mbim-qdu update logic */
 	gchar *port_mbim;
-#if MBIM_CHECK_VERSION(1, 25, 3)
 	FuMbimQduUpdater *mbim_qdu_updater;
-#endif /* MBIM_CHECK_VERSION(1,25,3) */
 
 	/* firehose update handling */
 	gchar *port_qcdm;
 	gchar *port_edl;
 	gchar *firehose_prog_file;
 	FuSaharaLoader *sahara_loader;
-#if MM_CHECK_VERSION(1, 17, 2)
 	FuFirehoseUpdater *firehose_updater;
-#endif
 
 	/* for sahara */
 	FuUsbDevice *usb_device;
@@ -142,12 +132,8 @@ validate_firmware_update_method(MMModemFirmwareUpdateMethod methods, GError **er
 	static const MMModemFirmwareUpdateMethod supported_combinations[] = {
 		MM_MODEM_FIRMWARE_UPDATE_METHOD_FASTBOOT,
 		MM_MODEM_FIRMWARE_UPDATE_METHOD_QMI_PDC | MM_MODEM_FIRMWARE_UPDATE_METHOD_FASTBOOT,
-#if MM_CHECK_VERSION(1, 17, 1)
 		MM_MODEM_FIRMWARE_UPDATE_METHOD_MBIM_QDU,
-#endif /* MM_CHECK_VERSION(1,17,1) */
-#if MM_CHECK_VERSION(1, 17, 2)
 		MM_MODEM_FIRMWARE_UPDATE_METHOD_FIREHOSE,
-#endif
 #if MM_CHECK_VERSION(1, 19, 1)
 		MM_MODEM_FIRMWARE_UPDATE_METHOD_FIREHOSE | MM_MODEM_FIRMWARE_UPDATE_METHOD_SAHARA,
 #endif
@@ -643,7 +629,6 @@ fu_mm_device_probe_default(FuDevice *device, GError **error)
 		if (fu_device_get_protocols(device)->len == 0)
 			fu_device_add_protocol(device, "com.qualcomm.qmi_pdc");
 	}
-#if MM_CHECK_VERSION(1, 17, 1)
 	if (self->update_methods & MM_MODEM_FIRMWARE_UPDATE_METHOD_MBIM_QDU) {
 		for (guint i = 0; i < n_ports; i++) {
 			if (ports[i].type == MM_MODEM_PORT_TYPE_MBIM) {
@@ -653,8 +638,6 @@ fu_mm_device_probe_default(FuDevice *device, GError **error)
 		}
 		fu_device_add_protocol(device, "com.qualcomm.mbim_qdu");
 	}
-#endif /* MM_CHECK_VERSION(1,17,1) */
-#if MM_CHECK_VERSION(1, 17, 2)
 	if (self->update_methods & MM_MODEM_FIRMWARE_UPDATE_METHOD_FIREHOSE) {
 		for (guint i = 0; i < n_ports; i++) {
 			if (ports[i].type == MM_MODEM_PORT_TYPE_QCDM)
@@ -667,7 +650,6 @@ fu_mm_device_probe_default(FuDevice *device, GError **error)
 		}
 		fu_device_add_protocol(device, "com.qualcomm.firehose");
 	}
-#endif
 
 	mm_modem_port_info_array_free(ports, n_ports);
 
@@ -691,7 +673,6 @@ fu_mm_device_probe_default(FuDevice *device, GError **error)
 		return FALSE;
 	}
 
-#if MM_CHECK_VERSION(1, 17, 1)
 	/* a mbim port is required for mbim-qdu */
 	if ((self->update_methods & MM_MODEM_FIRMWARE_UPDATE_METHOD_MBIM_QDU) &&
 	    (self->port_mbim == NULL)) {
@@ -702,8 +683,6 @@ fu_mm_device_probe_default(FuDevice *device, GError **error)
 		return FALSE;
 	}
 
-#endif /* MM_CHECK_VERSION(1,17,1) */
-#if MM_CHECK_VERSION(1, 17, 2)
 	/* a qcdm or mbim port is required for firehose */
 	if ((self->update_methods & MM_MODEM_FIRMWARE_UPDATE_METHOD_FIREHOSE) &&
 	    (self->port_qcdm == NULL && self->port_mbim == NULL)) {
@@ -713,7 +692,6 @@ fu_mm_device_probe_default(FuDevice *device, GError **error)
 				    "failed to find QCDM port");
 		return FALSE;
 	}
-#endif
 
 	if (self->port_at != NULL) {
 		fu_mm_utils_get_port_info(self->port_at,
@@ -913,7 +891,6 @@ fu_mm_device_probe(FuDevice *device, GError **error)
 	return fu_mm_device_probe_udev(device, error);
 }
 
-#if MM_CHECK_VERSION(1, 17, 2)
 static gboolean
 fu_mm_device_io_open_qcdm(FuMmDevice *self, GError **error)
 {
@@ -976,7 +953,6 @@ fu_mm_device_qcdm_cmd(FuMmDevice *self, const guint8 *cmd, gsize cmd_len, GError
 
 	return TRUE;
 }
-#endif /* MM_CHECK_VERSION(1,17,2) */
 
 typedef struct {
 	const gchar *cmd;
@@ -1440,7 +1416,6 @@ fu_mm_device_write_firmware_qmi_pdc(FuDevice *device,
 	return TRUE;
 }
 
-#if MM_CHECK_VERSION(1, 17, 1) && MBIM_CHECK_VERSION(1, 25, 3)
 typedef struct {
 	FuDevice *device;
 	GMainLoop *mainloop;
@@ -1639,9 +1614,6 @@ fu_mm_device_write_firmware_mbim_qdu(FuDevice *device,
 	return TRUE;
 }
 
-#endif /* MM_CHECK_VERSION(1,17,1) && MBIM_CHECK_VERSION(1,25,3) */
-
-#if MM_CHECK_VERSION(1, 17, 2)
 static gboolean
 fu_mm_find_device_file(FuDevice *device, gpointer userdata, GError **error)
 {
@@ -1779,7 +1751,7 @@ fu_mm_device_firehose_write(FuMmDevice *self,
 					 error);
 }
 
-#if MM_CHECK_VERSION(1, 19, 1) && MBIM_CHECK_VERSION(1, 25, 7)
+#if MM_CHECK_VERSION(1, 19, 1)
 static gboolean
 fu_mm_device_sahara_open(FuMmDevice *self, GError **error)
 {
@@ -1795,7 +1767,7 @@ fu_mm_device_sahara_close(FuMmDevice *self, GError **error)
 	loader = g_steal_pointer(&self->sahara_loader);
 	return fu_sahara_loader_close(loader, error);
 }
-#endif // MM_CHECK_VERSION(1, 19, 1) && MBIM_CHECK_VERSION(1, 25, 7)
+#endif // MM_CHECK_VERSION(1, 19, 1)
 
 static gboolean
 fu_mm_setup_firmware_dir(FuMmDevice *self, GError **error)
@@ -1947,7 +1919,7 @@ fu_mm_device_write_firmware_firehose(FuDevice *device,
 
 		g_debug("found edl port: %s", self->port_edl);
 	}
-#if MM_CHECK_VERSION(1, 19, 1) && MBIM_CHECK_VERSION(1, 25, 7)
+#if MM_CHECK_VERSION(1, 19, 1)
 	else if ((FU_MM_DEVICE(self)->update_methods & MM_MODEM_FIRMWARE_UPDATE_METHOD_SAHARA) &&
 		 self->port_mbim != NULL) {
 		/* switch to emergency download (EDL) execution environment */
@@ -1965,7 +1937,7 @@ fu_mm_device_write_firmware_firehose(FuDevice *device,
 		if (!fu_sahara_loader_run(self->sahara_loader, firehose_prog, error))
 			return FALSE;
 	}
-#endif // MM_CHECK_VERSION(1, 19, 1) && MBIM_CHECK_VERSION(1, 25, 7)
+#endif // MM_CHECK_VERSION(1, 19, 1)
 	else {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -1988,8 +1960,6 @@ fu_mm_device_write_firmware_firehose(FuDevice *device,
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_RESTART);
 	return TRUE;
 }
-
-#endif /* MM_CHECK_VERSION(1,17,2) */
 
 static gboolean
 fu_mm_device_write_firmware(FuDevice *device,
@@ -2019,17 +1989,13 @@ fu_mm_device_write_firmware(FuDevice *device,
 							   &self->qmi_pdc_active_id,
 							   error);
 
-#if MM_CHECK_VERSION(1, 17, 1) && MBIM_CHECK_VERSION(1, 25, 3)
 	/* mbim qdu write operation */
 	if (self->update_methods & MM_MODEM_FIRMWARE_UPDATE_METHOD_MBIM_QDU)
 		return fu_mm_device_write_firmware_mbim_qdu(device, fw, progress, error);
 
-#endif /* MM_CHECK_VERSION(1,17,1) && MBIM_CHECK_VERSION(1,25,3) */
-#if MM_CHECK_VERSION(1, 17, 2)
 	/* firehose operation */
 	if (self->update_methods & MM_MODEM_FIRMWARE_UPDATE_METHOD_FIREHOSE)
 		return fu_mm_device_write_firmware_firehose(device, fw, progress, error);
-#endif
 
 	g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "unsupported update method");
 	return FALSE;
@@ -2290,6 +2256,7 @@ fu_mm_device_init(FuMmDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_REQUIRE_AC);
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID);
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_MD_SET_VERFMT);
+	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_ADD_INSTANCE_ID_REV);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PLAIN);
 	fu_device_set_summary(FU_DEVICE(self), "Mobile broadband device");

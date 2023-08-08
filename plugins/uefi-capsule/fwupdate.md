@@ -1,4 +1,4 @@
-% fwupdate(1) @PACKAGE_VERSION@ | fwupdate man page
+% fwupdate(1) {{PACKAGE_VERSION}} | fwupdate man page
 
 NAME
 ====

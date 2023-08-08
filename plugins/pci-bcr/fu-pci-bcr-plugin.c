@@ -75,6 +75,7 @@ fu_plugin_add_security_attr_bioswe(FuPlugin *plugin, FuSecurityAttrs *attrs)
 	attr = fu_plugin_security_attr_new(plugin, FWUPD_SECURITY_ATTR_ID_SPI_BIOSWE);
 	if (msf_device != NULL)
 		fwupd_security_attr_add_guids(attr, fu_device_get_guids(msf_device));
+	fwupd_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
 	fu_security_attrs_append(attrs, attr);
 
 	/* no device */
@@ -92,7 +93,6 @@ fu_plugin_add_security_attr_bioswe(FuPlugin *plugin, FuSecurityAttrs *attrs)
 
 	/* success */
 	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
-	fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
 }
 
 static void
@@ -106,6 +106,7 @@ fu_plugin_add_security_attr_ble(FuPlugin *plugin, FuSecurityAttrs *attrs)
 	attr = fu_plugin_security_attr_new(plugin, FWUPD_SECURITY_ATTR_ID_SPI_BLE);
 	if (msf_device != NULL)
 		fwupd_security_attr_add_guids(attr, fu_device_get_guids(msf_device));
+	fwupd_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_ENABLED);
 	fu_security_attrs_append(attrs, attr);
 
 	/* no device */
@@ -122,7 +123,6 @@ fu_plugin_add_security_attr_ble(FuPlugin *plugin, FuSecurityAttrs *attrs)
 
 	/* success */
 	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
-	fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_ENABLED);
 }
 
 static void
@@ -136,6 +136,7 @@ fu_plugin_add_security_attr_smm_bwp(FuPlugin *plugin, FuSecurityAttrs *attrs)
 	attr = fu_plugin_security_attr_new(plugin, FWUPD_SECURITY_ATTR_ID_SPI_SMM_BWP);
 	if (msf_device != NULL)
 		fwupd_security_attr_add_guids(attr, fu_device_get_guids(msf_device));
+	fwupd_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_LOCKED);
 	fu_security_attrs_append(attrs, attr);
 
 	/* no device */
@@ -152,7 +153,6 @@ fu_plugin_add_security_attr_smm_bwp(FuPlugin *plugin, FuSecurityAttrs *attrs)
 
 	/* success */
 	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
-	fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_LOCKED);
 }
 
 static gboolean

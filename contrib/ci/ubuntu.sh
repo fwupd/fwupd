@@ -14,6 +14,9 @@ set -x
 #check markdown is new enough
 ./contrib/ci/fwupd_setup_helpers.py test-markdown
 
+#check jinja2 is installed
+./contrib/ci/fwupd_setup_helpers.py test-jinja2
+
 #clone test firmware if necessary
 . ./contrib/ci/get_test_firmware.sh
 

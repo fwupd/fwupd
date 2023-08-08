@@ -470,7 +470,7 @@ fu_tpm_v2_device_dump_firmware(FuDevice *device, FuProgress *progress, GError **
 	FuTpmV2Device *self = FU_TPM_V2_DEVICE(device);
 	TSS2_RC rc;
 	guint chunks_max = fu_device_get_firmware_size_max(device) / TPM2_MAX_DIGEST_BUFFER;
-	g_autoptr(GByteArray) buf = NULL;
+	g_autoptr(GByteArray) buf = g_byte_array_new();
 
 	/* keep reading chunks until we get a zero sized response */
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_READ);
@@ -510,7 +510,7 @@ fu_tpm_v2_device_dump_firmware(FuDevice *device, FuProgress *progress, GError **
 	}
 
 	/* success */
-	return g_byte_array_free_to_bytes(g_steal_pointer(&buf));
+	return g_bytes_new(buf->data, buf->len);
 }
 
 static gboolean

@@ -6,8 +6,6 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
 #include "fu-acpi-phat-struct.h"
 #include "fu-acpi-phat-version-element.h"
 
@@ -56,7 +54,7 @@ fu_acpi_phat_version_element_parse(FuFirmware *firmware,
 	return TRUE;
 }
 
-static GBytes *
+static GByteArray *
 fu_acpi_phat_version_element_write(FuFirmware *firmware, GError **error)
 {
 	FuAcpiPhatVersionElement *self = FU_ACPI_PHAT_VERSION_ELEMENT(firmware);
@@ -76,7 +74,7 @@ fu_acpi_phat_version_element_write(FuFirmware *firmware, GError **error)
 		return NULL;
 
 	/* success */
-	return g_byte_array_free_to_bytes(g_steal_pointer(&st));
+	return g_steal_pointer(&st);
 }
 
 static void
@@ -115,6 +113,7 @@ fu_acpi_phat_version_element_build(FuFirmware *firmware, XbNode *n, GError **err
 static void
 fu_acpi_phat_version_element_init(FuAcpiPhatVersionElement *self)
 {
+	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_NO_AUTO_DETECTION);
 }
 
 static void

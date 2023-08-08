@@ -6,12 +6,10 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
 #include <string.h>
 
 #include "fu-synaptics-cape-device.h"
-#include "fu-synaptics-cape-firmware.h"
+#include "fu-synaptics-cape-hid-firmware.h"
 
 /* defines timings */
 #define FU_SYNAPTICS_CAPE_DEVICE_USB_CMD_WRITE_TIMEOUT	20   /* ms */
@@ -19,7 +17,7 @@
 #define FU_SYNAPTICS_CAPE_DEVICE_USB_CMD_RETRY_INTERVAL 10   /* ms */
 #define FU_SYNAPTICS_CAPE_DEVICE_USB_CMD_RETRY_TIMEOUT	300  /* ms */
 #define FU_SYNAPTICS_CAPE_DEVICE_USB_CMD_INTR_TIMEOUT	5000 /* ms */
-#define FU_SYNAPTICS_CAPE_DEVICE_USB_RESET_DELAY_MS	3000 /* ms */
+#define FU_SYNAPTICS_CAPE_DEVICE_USB_RESET_DELAY_MS	5000 /* ms */
 
 /* defines CAPE command constant values and macro */
 #define FU_SYNAPTICS_CAPE_DEVICE_GOLEM_REPORT_ID 1 /* HID report id */
@@ -41,6 +39,21 @@
 #define FU_SYNAPTICS_CAPE_MODULE_RC_MODULE_TYPE_HAS_NO_API (-1034)
 #define FU_SYNAPTICS_CAPE_MODULE_RC_BAD_MAGIC_NUMBER	   (-1052)
 #define FU_SYNAPTICS_CAPE_MODULE_RC_CMD_MODE_UNSUPPORTED   (-1056)
+#define FU_SYNAPTICS_CAPE_ERROR_EAGAIN			   (-11)
+
+#define FU_SYNAPTICS_CAPE_ERROR_SFU_FAIL				  (-200)
+#define FU_SYNAPTICS_CAPE_ERROR_SFU_WRITE_FAIL				  (-201)
+#define FU_SYNAPTICS_CAPE_ERROR_SFU_READ_FAIL				  (-202)
+#define FU_SYNAPTICS_CAPE_ERROR_SFU_CRC_ERROR				  (-203)
+#define FU_SYNAPTICS_CAPE_ERROR_SFU_USB_ID_NOT_MATCH			  (-204)
+#define FU_SYNAPTICS_CAPE_ERROR_SFU_VERSION_DOWNGRADE			  (-205)
+#define FU_SYNAPTICS_CAPE_ERROR_SFU_HEADER_CORRUPTION			  (-206)
+#define FU_SYNAPTICS_CAPE_ERROR_SFU_IMAGE_CORRUPTION			  (-207)
+#define FU_SYNAPTICS_CAPE_ERROR_SFU_ALREADY_ACTIVE			  (-208)
+#define FU_SYNAPTICS_CAPE_ERROR_SFU_NOT_READY				  (-209)
+#define FU_SYNAPTICS_CAPE_ERROR_SFU_SIGN_TRANSFER_CORRUPTION		  (-210)
+#define FU_SYNAPTICS_CAPE_ERROR_SFU_DIGITAL_SIGNATURE_VERFIICATION_FAILED (-211)
+#define FU_SYNAPTICS_CAPE_ERROR_SFU_TASK_NOT_RUNING			  (-212)
 
 #define FU_SYNAPTICS_CMD_GET_FLAG 0x100 /* GET flag */
 
@@ -173,38 +186,76 @@ fu_synaptics_cape_device_rc_set_error(const FuCapCmd *rsp, GError **error)
 
 	switch (rsp->data_len) {
 	case FU_SYNAPTICS_CAPE_MODULE_RC_GENERIC_FAILURE:
-		g_set_error(error, G_IO_ERROR, G_IO_ERROR_BUSY, "CMD ERROR: generic failure");
+		g_set_error(error, G_IO_ERROR, G_IO_ERROR_BUSY, "generic failure");
 		break;
 	case FU_SYNAPTICS_CAPE_MODULE_RC_ALREADY_EXISTS:
-		g_set_error(error, G_IO_ERROR, G_IO_ERROR_BUSY, "CMD ERROR: already exists");
+		g_set_error(error, G_IO_ERROR, G_IO_ERROR_BUSY, "already exists");
 		break;
 	case FU_SYNAPTICS_CAPE_MODULE_RC_NULL_APP_POINTER:
-		g_set_error(error, G_IO_ERROR, G_IO_ERROR_BUSY, "CMD ERROR: null app pointer");
+		g_set_error(error, G_IO_ERROR, G_IO_ERROR_BUSY, "null app pointer");
 		break;
 	case FU_SYNAPTICS_CAPE_MODULE_RC_NULL_MODULE_POINTER:
-		g_set_error(error, G_IO_ERROR, G_IO_ERROR_BUSY, "CMD ERROR: null module pointer");
+		g_set_error(error, G_IO_ERROR, G_IO_ERROR_BUSY, "null module pointer");
 		break;
 	case FU_SYNAPTICS_CAPE_MODULE_RC_NULL_POINTER:
-		g_set_error(error, G_IO_ERROR, G_IO_ERROR_BUSY, "CMD ERROR: null pointer");
+		g_set_error(error, G_IO_ERROR, G_IO_ERROR_BUSY, "null pointer");
 		break;
 	case FU_SYNAPTICS_CAPE_MODULE_RC_BAD_APP_ID:
-		g_set_error(error, G_IO_ERROR, G_IO_ERROR_BUSY, "CMD ERROR: bad app id");
+		g_set_error(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA, "bad app id");
 		break;
 	case FU_SYNAPTICS_CAPE_MODULE_RC_MODULE_TYPE_HAS_NO_API:
-		g_set_error(error, G_IO_ERROR, G_IO_ERROR_BUSY, "CMD ERROR: has no api");
+		g_set_error(error, G_IO_ERROR, G_IO_ERROR_BUSY, "has no api");
 		break;
 	case FU_SYNAPTICS_CAPE_MODULE_RC_BAD_MAGIC_NUMBER:
-		g_set_error(error, G_IO_ERROR, G_IO_ERROR_BUSY, "CMD ERROR: bad magic number");
+		g_set_error(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA, "bad magic number");
 		break;
 	case FU_SYNAPTICS_CAPE_MODULE_RC_CMD_MODE_UNSUPPORTED:
-		g_set_error(error, G_IO_ERROR, G_IO_ERROR_BUSY, "CMD ERROR: mode unsupported");
+		g_set_error(error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED, "mode unsupported");
+		break;
+	case FU_SYNAPTICS_CAPE_ERROR_EAGAIN:
+		g_set_error(error, G_IO_ERROR, G_IO_ERROR_TIMED_OUT, "query timeout");
+		break;
+	case FU_SYNAPTICS_CAPE_ERROR_SFU_FAIL:
+		g_set_error(error, G_IO_ERROR, G_IO_ERROR_FAILED, "command failed");
+		break;
+	case FU_SYNAPTICS_CAPE_ERROR_SFU_WRITE_FAIL:
+		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_WRITE, "writing to flash failed");
+		break;
+	case FU_SYNAPTICS_CAPE_ERROR_SFU_READ_FAIL:
+		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_READ, "reading from flash failed");
+		break;
+	case FU_SYNAPTICS_CAPE_ERROR_SFU_CRC_ERROR:
+		g_set_error(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA, "data is corrupted");
+		break;
+	case FU_SYNAPTICS_CAPE_ERROR_SFU_USB_ID_NOT_MATCH:
+		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "USB IDs do not match");
+		break;
+	case FU_SYNAPTICS_CAPE_ERROR_SFU_VERSION_DOWNGRADE:
+		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_VERSION_NEWER, "update is a downgrade");
+		break;
+	case FU_SYNAPTICS_CAPE_ERROR_SFU_HEADER_CORRUPTION:
+		g_set_error(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA, "header data is corrupted");
+		break;
+	case FU_SYNAPTICS_CAPE_ERROR_SFU_IMAGE_CORRUPTION:
+		g_set_error(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA, "payload is corrupted");
+		break;
+	case FU_SYNAPTICS_CAPE_ERROR_SFU_ALREADY_ACTIVE:
+		g_set_error(error, G_IO_ERROR, G_IO_ERROR_FAILED, "failed to activate");
+		break;
+	case FU_SYNAPTICS_CAPE_ERROR_SFU_NOT_READY:
+		g_set_error(error, G_IO_ERROR, G_IO_ERROR_BUSY, "update is not ready");
+		break;
+	case FU_SYNAPTICS_CAPE_ERROR_SFU_SIGN_TRANSFER_CORRUPTION:
+		g_set_error(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA, "signature is corrupted");
+		break;
+	case FU_SYNAPTICS_CAPE_ERROR_SFU_DIGITAL_SIGNATURE_VERFIICATION_FAILED:
+		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_AUTH_FAILED, "signature is invalid");
+		break;
+	case FU_SYNAPTICS_CAPE_ERROR_SFU_TASK_NOT_RUNING:
+		g_set_error(error, G_IO_ERROR, G_IO_ERROR_FAILED, "update task is not running");
 		break;
 	default:
-		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_BUSY,
-			    "CMD ERROR: unknown error: %d",
-			    rsp->data_len);
+		g_set_error(error, G_IO_ERROR, G_IO_ERROR_BUSY, "unknown error %d", rsp->data_len);
 	}
 
 	/* success */
@@ -508,7 +559,7 @@ fu_synaptics_cape_device_prepare_firmware(FuDevice *device,
 {
 	FuSynapticsCapeDevice *self = FU_SYNAPTICS_CAPE_DEVICE(device);
 	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
-	g_autoptr(FuFirmware) firmware = fu_synaptics_cape_firmware_new();
+	g_autoptr(FuFirmware) firmware = fu_synaptics_cape_hid_firmware_new();
 	gsize offset = 0;
 	g_autoptr(GBytes) new_fw = NULL;
 

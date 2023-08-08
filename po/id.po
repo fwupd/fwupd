@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"Language-Team: Indonesian (http://www.transifex.com/freedesktop/fwupd/language/id/)\n"
+"Language-Team: Indonesian (http://app.transifex.com/freedesktop/fwupd/language/id/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -847,8 +847,8 @@ msgstr "Perangkat dengan versi firmware terbaru yang tersedia:"
 msgid "Did not find any devices with matching GUIDs"
 msgstr "Tidak menemukan perangkat dengan GUID yang cocok"
 
-#. TRANSLATORS: Suffix: the HSI result
 #. TRANSLATORS: Plugin is inactive and not used
+#. TRANSLATORS: Suffix: the HSI result
 msgid "Disabled"
 msgstr "Dinonaktifkan"
 
@@ -1005,9 +1005,9 @@ msgstr "Aktifkan remote baru?"
 msgid "Enable this remote?"
 msgstr "Aktifkan remote ini?"
 
-#. TRANSLATORS: Suffix: the HSI result
 #. TRANSLATORS: Plugin is active and in use
 #. TRANSLATORS: if the remote is enabled
+#. TRANSLATORS: Suffix: the HSI result
 msgid "Enabled"
 msgstr "Difungsikan"
 
@@ -1120,8 +1120,8 @@ msgstr "NAMABERKAS-SRC NAMABERKAS-DST [TIPE-FIRMWARE-SRC] [TIPE-FIRMWARE-DST]"
 msgid "FILENAME|CHECKSUM1[,CHECKSUM2][,CHECKSUM3]"
 msgstr "NAMABERKAS|CHECKSUM1[,CHECKSUM2][,CHECKSUM3]"
 
-#. TRANSLATORS: Suffix: the fallback HSI result
 #. TRANSLATORS: the update state of the specific device
+#. TRANSLATORS: Suffix: the fallback HSI result
 msgid "Failed"
 msgstr "Gagal"
 
@@ -1352,6 +1352,11 @@ msgctxt "A single GUID"
 msgid "GUID"
 msgstr "GUID"
 
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgctxt "command-argument"
+msgid "GUID"
+msgstr "GUID"
+
 msgid "Get BIOS settings"
 msgstr "Dapatkan pengaturan BIOS"
 
@@ -1480,14 +1485,6 @@ msgstr "Mengabaikan pemeriksaan ketat SSL, untuk melakukan ini secara otomatis d
 #. TRANSLATORS: length of time the update takes to apply
 msgid "Install Duration"
 msgstr "Durasi Instalasi"
-
-#. TRANSLATORS: command description
-msgid "Install a firmware blob on a device"
-msgstr "Instal blob firmware pada perangkat"
-
-#. TRANSLATORS: command description
-msgid "Install a firmware file on this hardware"
-msgstr "Pasang suatu berkas firmware pada perangkat keras ini"
 
 msgid "Install old version of signed system firmware"
 msgstr "Menginstal versi lama firmware sistem yang ditandatangani"
@@ -1812,7 +1809,7 @@ msgstr "Nilai minimum"
 msgid "Mismatched daemon and client, use %s instead"
 msgstr "Daemon dan klien tidak cocok, gunakan %s sebagai gantinya"
 
-#. TRANSLATORS: sets something in daemon.conf
+#. TRANSLATORS: sets something in the daemon configuration file
 msgid "Modifies a daemon configuration value"
 msgstr "Memodifikasi nilai konfigurasi daemon"
 
@@ -1902,10 +1899,6 @@ msgstr "Tidak ada pembaruan yang diterapkan"
 #. TRANSLATORS: version cannot be installed due to policy
 msgid "Not approved"
 msgstr "Tidak disetujui"
-
-#. TRANSLATORS: error message to tell someone they can't use this feature
-msgid "Not enough data was provided to make an HSI calculation."
-msgstr "Tidak cukup data yang diberikan untuk membuat perhitungan HSI."
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Not found"
@@ -2746,10 +2739,6 @@ msgstr "Alat ini hanya bisa dipakai oleh pengguna root"
 #. TRANSLATORS: CLI description
 msgid "This tool will read and parse the TPM event log from the system firmware."
 msgstr "Alat ini akan membaca dan mengurai log kejadian TPM dari firmware sistem."
-
-#. TRANSLATORS: message to tell someone how to ignore error
-msgid "To ignore this warning, use --force"
-msgstr "Untuk mengabaikan peringatan ini, gunakan --force"
 
 #. TRANSLATORS: the update state of the specific device
 msgid "Transient failure"

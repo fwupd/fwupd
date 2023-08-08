@@ -11,8 +11,14 @@
 #include "fu-common.h"
 
 gboolean
-fu_memcmp_safe(const guint8 *buf1, gsize bufsz1, const guint8 *buf2, gsize bufsz2, GError **error)
-    G_GNUC_WARN_UNUSED_RESULT;
+fu_memcmp_safe(const guint8 *buf1,
+	       gsize buf1_sz,
+	       gsize buf1_offset,
+	       const guint8 *buf2,
+	       gsize buf2_sz,
+	       gsize buf2_offset,
+	       gsize n,
+	       GError **error) G_GNUC_WARN_UNUSED_RESULT;
 guint8 *
 fu_memdup_safe(const guint8 *src, gsize n, GError **error) G_GNUC_WARN_UNUSED_RESULT;
 gboolean
@@ -103,3 +109,5 @@ guint32
 fu_memread_uint32(const guint8 *buf, FuEndianType endian);
 guint64
 fu_memread_uint64(const guint8 *buf, FuEndianType endian);
+gchar *
+fu_memstrsafe(const guint8 *buf, gsize bufsz, gsize offset, gsize maxsz, GError **error);

@@ -6,8 +6,6 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
 #include "fu-context-private.h"
 #include "fu-device-private.h"
 #ifdef HAVE_LINUX_IPMI_H
@@ -18,6 +16,7 @@
 #include "fu-redfish-network.h"
 #include "fu-redfish-plugin.h"
 #include "fu-redfish-smc-device.h"
+#include "fu-redfish-struct.h"
 
 typedef struct {
 	FuPlugin *plugin;

@@ -31,8 +31,6 @@
 
 G_DEFINE_TYPE(FuIfwiFptFirmware, fu_ifwi_fpt_firmware, FU_TYPE_FIRMWARE)
 
-#define FU_IFWI_FPT_HEADER_VERSION 0x20
-#define FU_IFWI_FPT_ENTRY_VERSION  0x10
 #define FU_IFWI_FPT_MAX_ENTRIES	   56
 
 static gboolean
@@ -69,7 +67,8 @@ fu_ifwi_fpt_firmware_parse(FuFirmware *firmware,
 			    num_of_entries);
 		return FALSE;
 	}
-	if (fu_struct_ifwi_fpt_get_header_version(st_hdr) < FU_IFWI_FPT_HEADER_VERSION) {
+	if (fu_struct_ifwi_fpt_get_header_version(st_hdr) <
+	    FU_STRUCT_IFWI_FPT_DEFAULT_HEADER_VERSION) {
 		g_set_error(error,
 			    G_IO_ERROR,
 			    G_IO_ERROR_INVALID_DATA,
@@ -112,7 +111,8 @@ fu_ifwi_fpt_firmware_parse(FuFirmware *firmware,
 			fu_firmware_set_bytes(img, blob);
 			fu_firmware_set_offset(img, data_offset);
 		}
-		fu_firmware_add_image(firmware, img);
+		if (!fu_firmware_add_image_full(firmware, img, error))
+			return FALSE;
 
 		/* next */
 		offset += st_ent->len;
@@ -122,7 +122,7 @@ fu_ifwi_fpt_firmware_parse(FuFirmware *firmware,
 	return TRUE;
 }
 
-static GBytes *
+static GByteArray *
 fu_ifwi_fpt_firmware_write(FuFirmware *firmware, GError **error)
 {
 	gsize offset = 0;
@@ -168,12 +168,13 @@ fu_ifwi_fpt_firmware_write(FuFirmware *firmware, GError **error)
 	}
 
 	/* success */
-	return g_byte_array_free_to_bytes(g_steal_pointer(&buf));
+	return g_steal_pointer(&buf);
 }
 
 static void
 fu_ifwi_fpt_firmware_init(FuIfwiFptFirmware *self)
 {
+	fu_firmware_set_images_max(FU_FIRMWARE(self), FU_IFWI_FPT_MAX_ENTRIES);
 }
 
 static void

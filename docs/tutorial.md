@@ -839,3 +839,147 @@ The `fu_dump_full` and `fu_dump_raw` functions implement the
 printing of a binary buffer to the console as a stream of bytes in
 hexadecimal. See `libfwupdplugin/fu-common.c` for their definitions, you
 can find many examples of how to use them in the plugins code.
+
+## The rustgen Helper
+
+The rustgen script generates C source files that allow parsing, modifying and
+querying a packed structure or enumeration.
+This functionality is provided as parsing untrusted structured data from devices
+or firmware files is something fwupd does *a lot*, and so it makes sense to
+abstract out common code for maintainability reasons.
+It also allows us to force best-practices into the plugins without having to
+do careful review of buffer reading and writing.
+
+Structures support integers of specific widths, arrays, GUIDs, strings, default
+and constant data of variable size.
+The generated code is endian safe and if used correctly, is also safe
+against malicious data.
+
+In most cases the structure or enumeration will be defined in a `.rs`
+file -- which is the usual file extension of Rust programs.
+This was done as the format is heavily inspired by Rust, and it makes editor
+highlighting support work correctly.
+Although these files *look like* Rust files they're *not actually compiled by
+rustc*, so small differences may be noticeable.
+
+    #[derive(New, Validate, Parse)]
+    struct ExampleHdr {
+        magic: Guid,
+        hdrver: u8,
+        hdrsz: u16le = $struct_size,
+        payloadsz: u32le,
+        flags: u8,
+    }
+
+    #[derive(ToString, FromString)]
+    #[repr(u8)] // optional, and only required if using the enum as a struct item type
+    enum ExampleFamily {
+        Unknown,
+        Sps,
+        Txe = 0x5,
+        Me,
+        Csme,
+    }
+    struct ExamplePacket {
+        family: ExampleFamily = Csme,
+        data: [u8; 254],
+    }
+
+The struct types currently supported are:
+
+- `u8`: a `guint8`
+- `u16le`: a `guint16
+- `u24`: a 24 bit number represented as a `guint32`
+- `u32le`:  little endian `guint32`
+- `u64be`:  big endian `guint64`
+- `char`: a `NUL`-terminated string
+- `Guid`: a GUID
+- Any `enum` created in the `.rs` file with `#[repr(type)]`
+- Any `struct` previously created in the `.rs` file
+
+Arrays of types are also allowed, with the format `[type; multiple]`, for example:
+
+- `buf: [u8; 12]` for a C array of `guint8 buf[12] = {0};`
+- `val: [u64be; 7]`  for a C array of `guint64 val[7] = {0};`
+- `str: [char; 4] = "ABCD"` for a C array of `gchar buf[4] = {'A','B','C','D'};`
+  -- NOTE: `fu_struct_example_get_str()` would return a `NUL`-terminated string of `ABCD\0`.
+
+Additionally, default or constant values can be auto-populated:
+
+- `$struct_size`: the total struct size
+- `$struct_offset`: the internal offset in the struct
+- string values, specified **without** double or single quotes
+- integer values, specified with a `0x` prefix for base-16 and with no prefix for base-10
+- previously specified `enum` values
+
+Per-field metadata can also be defined, such as:
+
+- ` = `: set as the default value, or for `u8` arrays initialize with a padding byte
+- ` == `: set as the default, and is **also** verified during unpacking.
+
+Default values and padding will be used when creating a new structure,
+for instance using `fu_struct_example_new()`.
+
+### Building
+
+When building a plugin with meson a generator can be used:
+
+    diff --git a/plugins/example/meson.build b/plugins/example/meson.build
+    @@ -3,7 +3,6 @@
+     plugin_quirks += files('example.quirk')
+     plugin_builtins += static_library('fu_plugin_example',
+    +  rustgen.process('fu-example.rs'),
+       sources:
+
+...which creates the files `plugins/libfu_plugin_example.a.p/fu-example-struct.c`
+and `plugins/libfu_plugin_example.a.p/fu-example-struct.h` in the build tree.
+
+The latter can be included using `#include fu-example-struct.h` in the
+existing plugin code.
+
+### Structs
+
+There are traits that control the generation of struct code. These include:
+
+- `New`: for `fu_struct_example_new()`, needed to create new instances
+- `Validate`: for `fu_struct_example_validate()`, needed to check memory buffers are valid
+- `Parse`: for `fu_struct_example_parse()`, to create a struct from a memory buffer
+- `Getters`: for `fu_struct_example_get_XXXX()`, to get access to field values
+- `Setters`: for `fu_struct_example_set_XXXX()`, to set specific field values
+
+`Getters` is implied by `Parse`, and `[Getters,Setters]` is implied by `New`.
+
+Regardless of traits used, the header offset addresses are defined, for instance:
+
+    #define FU_STRUCT_EXAMPLE_OFFSET_MAGIC 0x0
+    #define FU_STRUCT_EXAMPLE_OFFSET_HDRVER 0x10
+    #define FU_STRUCT_EXAMPLE_OFFSET_HDRSZ 0x11
+    #define FU_STRUCT_EXAMPLE_OFFSET_PAYLOADSZ 0x13
+    #define FU_STRUCT_EXAMPLE_OFFSET_FLAGS 0x17
+
+Any elements defined as a typed array (e.g. `[u8; 16]`) will also have the element
+size defined in bytes:
+
+    #define FU_STRUCT_EXAMPLE_SIZE_MAGIC 0x10
+
+If the default has been set (but not a constant value) the default is also defined:
+
+    #define FU_STRUCT_EXAMPLE_DEFAULT_HDRSZ 24
+
+Finally, the size in bytes of the whole structure is also included:
+
+    #define FU_STRUCT_EXAMPLE_SIZE 0x18
+
+**NOTE:** constants never have getters or setters defined -- they're constant after all.
+They are verified during `_validate()` and `_parse()` however.
+
+### Enums
+
+There are traits that control the generation of enum code. These include:
+
+- `ToString`: for `fu_example_family_to_string()`, needed to create output
+- `ToBitString`: for `fu_example_family_to_string()`, needed to create output for bitfields
+- `FromString`: for `fu_example_family_from_string()`, needed to parse input
+
+**NOTE:** Enums are defined as a native unsigned type, and should not be copied by
+reference without first casting to an integer of known width.

@@ -40,7 +40,11 @@ except ImportError:
     err = 1
 
 # check that LINUGAS lists every language with a .po file
-with open("po/LINGUAS") as f:
+try:
+    linguas_fn = sys.argv[1]
+except IndexError:
+    linguas_fn = open("po/LINGUAS")
+with open(linguas_fn) as f:
     langs = f.read().splitlines()
 for root, dirs, files in os.walk("po"):
     for file in files:

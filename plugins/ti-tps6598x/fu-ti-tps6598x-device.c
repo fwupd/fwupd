@@ -11,6 +11,7 @@
 #include "fu-ti-tps6598x-device.h"
 #include "fu-ti-tps6598x-firmware.h"
 #include "fu-ti-tps6598x-pd-device.h"
+#include "fu-ti-tps6598x-struct.h"
 
 struct _FuTiTps6598xDevice {
 	FuUsbDevice parent_instance;
@@ -300,12 +301,12 @@ fu_ti_tps6598x_device_sfwi(FuTiTps6598xDevice *self, GError **error)
 	if (buf == NULL)
 		return FALSE;
 	res = buf->data[0] & 0b1111;
-	if (res != TI_TPS6598X_SFWI_SUCCESS) {
+	if (res != FU_TI_TPS6598X_SFWI_SUCCESS) {
 		g_set_error(error,
 			    G_IO_ERROR,
 			    G_IO_ERROR_INVALID_ARGUMENT,
 			    "SFWi failed, got %s [0x%02x]",
-			    fu_ti_tps6598x_device_sfwi_strerror(res),
+			    fu_ti_tps6598x_sfwi_to_string(res),
 			    res);
 		return FALSE;
 	}
@@ -332,12 +333,12 @@ fu_ti_tps6598x_device_sfwd(FuTiTps6598xDevice *self, GByteArray *data, GError **
 	if (buf == NULL)
 		return FALSE;
 	res = buf->data[0] & 0b1111;
-	if (res != TI_TPS6598X_SFWD_SUCCESS) {
+	if (res != FU_TI_TPS6598X_SFWD_SUCCESS) {
 		g_set_error(error,
 			    G_IO_ERROR,
 			    G_IO_ERROR_INVALID_ARGUMENT,
 			    "SFWd failed, got %s [0x%02x]",
-			    fu_ti_tps6598x_device_sfwd_strerror(res),
+			    fu_ti_tps6598x_sfwd_to_string(res),
 			    res);
 		return FALSE;
 	}
@@ -362,12 +363,12 @@ fu_ti_tps6598x_device_sfws(FuTiTps6598xDevice *self, GByteArray *data, GError **
 	if (buf == NULL)
 		return FALSE;
 	res = buf->data[0] & 0b1111;
-	if (res != TI_TPS6598X_SFWS_SUCCESS) {
+	if (res != FU_TI_TPS6598X_SFWS_SUCCESS) {
 		g_set_error(error,
 			    G_IO_ERROR,
 			    G_IO_ERROR_INVALID_ARGUMENT,
 			    "SFWs failed, got %s [0x%02x]",
-			    fu_ti_tps6598x_device_sfws_strerror(res),
+			    fu_ti_tps6598x_sfws_to_string(res),
 			    res);
 		return FALSE;
 	}
@@ -444,7 +445,9 @@ fu_ti_tps6598x_device_ensure_mode(FuTiTps6598xDevice *self, GError **error)
 		return FALSE;
 
 	/* ensure in recognized mode */
-	str = fu_strsafe((const gchar *)buf->data, buf->len);
+	str = fu_memstrsafe(buf->data, buf->len, 0x0, 4, error);
+	if (str == NULL)
+		return FALSE;
 	if (g_strcmp0(str, "APP ") == 0) {
 		fu_device_remove_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 		return TRUE;

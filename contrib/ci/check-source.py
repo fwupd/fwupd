@@ -24,7 +24,10 @@ def test_files() -> int:
             continue
         with open(fn, "rb") as f:
             src = f.read().decode()
-        for token, msg in {"g_error(": "Use GError instead"}.items():
+        for token, msg in {
+            "g_error(": "Use GError instead",
+            "g_byte_array_free_to_bytes(": "Use g_bytes_new() instead",
+        }.items():
             if src.find(token) != -1:
                 print(f"{fn} contains blocked token {token}: {msg}")
                 rc = 1

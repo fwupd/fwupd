@@ -275,10 +275,11 @@ fu_io_channel_read_bytes(FuIOChannel *self,
 			 FuIOChannelFlags flags,
 			 GError **error)
 {
-	GByteArray *buf = fu_io_channel_read_byte_array(self, max_size, timeout_ms, flags, error);
+	g_autoptr(GByteArray) buf =
+	    fu_io_channel_read_byte_array(self, max_size, timeout_ms, flags, error);
 	if (buf == NULL)
 		return NULL;
-	return g_byte_array_free_to_bytes(buf);
+	return g_bytes_new(buf->data, buf->len);
 }
 
 /**

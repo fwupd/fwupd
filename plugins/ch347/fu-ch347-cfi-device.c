@@ -6,8 +6,6 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
 #include "fu-ch347-cfi-device.h"
 #include "fu-ch347-device.h"
 

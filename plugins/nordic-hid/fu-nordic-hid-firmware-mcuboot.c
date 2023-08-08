@@ -20,7 +20,7 @@ G_DEFINE_TYPE(FuNordicHidFirmwareMcuboot,
 	      fu_nordic_hid_firmware_mcuboot,
 	      FU_TYPE_NORDIC_HID_FIRMWARE)
 
-static GBytes *
+static GByteArray *
 fu_nordic_hid_firmware_mcuboot_write(FuFirmware *firmware, GError **error)
 {
 	g_autoptr(GByteArray) buf = g_byte_array_new();
@@ -55,7 +55,7 @@ fu_nordic_hid_firmware_mcuboot_write(FuFirmware *firmware, GError **error)
 	fu_byte_array_append_uint16(buf, IMAGE_TLV_INFO_MAGIC, G_LITTLE_ENDIAN);
 	fu_byte_array_append_uint16(buf, 0x00, G_LITTLE_ENDIAN);
 
-	return g_byte_array_free_to_bytes(g_steal_pointer(&buf));
+	return g_steal_pointer(&buf);
 }
 
 /* simple validation of the image */

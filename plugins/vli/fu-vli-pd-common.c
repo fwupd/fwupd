@@ -8,6 +8,7 @@
 #include "config.h"
 
 #include "fu-vli-pd-common.h"
+#include "fu-vli-struct.h"
 
 FuVliDeviceKind
 fu_vli_pd_common_guess_device_kind(guint32 fwver)

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"Language-Team: Chinese (Taiwan) (http://www.transifex.com/freedesktop/fwupd/language/zh_TW/)\n"
+"Language-Team: Chinese (Taiwan) (http://app.transifex.com/freedesktop/fwupd/language/zh_TW/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -211,9 +211,9 @@ msgstr "對支援的系統啟用韌體更新支援"
 msgid "Enable this remote?"
 msgstr "啟用此遠端站點？"
 
-#. TRANSLATORS: Suffix: the HSI result
 #. TRANSLATORS: Plugin is active and in use
 #. TRANSLATORS: if the remote is enabled
+#. TRANSLATORS: Suffix: the HSI result
 msgid "Enabled"
 msgstr "啟用"
 
@@ -300,6 +300,11 @@ msgctxt "A single GUID"
 msgid "GUID"
 msgstr "GUID"
 
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgctxt "command-argument"
+msgid "GUID"
+msgstr "GUID"
+
 #. TRANSLATORS: command description
 msgid "Get all devices that support firmware updates"
 msgstr "取得所有支援韌體更新的裝置"
@@ -331,14 +336,6 @@ msgstr "取得上次更新的結果"
 #. TRANSLATORS: daemon is inactive
 msgid "Idle…"
 msgstr "閒置…"
-
-#. TRANSLATORS: command description
-msgid "Install a firmware blob on a device"
-msgstr "在裝置上安裝韌體 blob"
-
-#. TRANSLATORS: command description
-msgid "Install a firmware file on this hardware"
-msgstr "在此硬體安裝韌體檔案"
 
 msgid "Install signed device firmware"
 msgstr "安裝已簽署的裝置韌體"

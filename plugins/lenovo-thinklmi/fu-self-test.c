@@ -6,8 +6,6 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
 #include <glib/gstdio.h>
 #include <stdlib.h>
 
@@ -208,7 +206,7 @@ main(int argc, char **argv)
 	(void)g_setenv("FWUPD_UEFI_ESP_PATH", sysfsdir, TRUE);
 	(void)g_setenv("FWUPD_UEFI_TEST", "1", TRUE);
 
-	/* to load daemon.conf */
+	/* to load fwupd.conf */
 	confdir = g_test_build_filename(G_TEST_DIST, "tests", "etc", "fwupd", NULL);
 	(void)g_setenv("CONFIGURATION_DIRECTORY", confdir, TRUE);
 

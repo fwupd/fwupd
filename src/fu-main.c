@@ -58,7 +58,6 @@ fu_main_argv_changed_cb(GFileMonitor *monitor,
 	fu_daemon_stop(daemon);
 }
 
-#if GLIB_CHECK_VERSION(2, 63, 3)
 static void
 fu_main_memory_monitor_warning_cb(GMemoryMonitor *memory_monitor,
 				  GMemoryMonitorWarningLevel level,
@@ -67,7 +66,6 @@ fu_main_memory_monitor_warning_cb(GMemoryMonitor *memory_monitor,
 	g_info("OOM event, shutting down");
 	fu_daemon_stop(daemon);
 }
-#endif
 
 static gboolean
 fu_main_is_hypervisor(void)
@@ -123,9 +121,7 @@ main(int argc, char *argv[])
 	g_autoptr(GOptionContext) context = NULL;
 	g_autoptr(FuDaemon) daemon = fu_daemon_new();
 	g_autoptr(GFileMonitor) argv0_monitor = NULL;
-#if GLIB_CHECK_VERSION(2, 63, 3)
 	g_autoptr(GMemoryMonitor) memory_monitor = NULL;
-#endif
 
 	setlocale(LC_ALL, "");
 
@@ -185,7 +181,6 @@ main(int argc, char *argv[])
 			 G_CALLBACK(fu_main_argv_changed_cb),
 			 daemon);
 
-#if GLIB_CHECK_VERSION(2, 63, 3)
 	/* shut down on low memory event as we can just rescan hardware */
 	memory_monitor = g_memory_monitor_dup_default();
 	if (memory_monitor != NULL) {
@@ -194,7 +189,6 @@ main(int argc, char *argv[])
 				 G_CALLBACK(fu_main_memory_monitor_warning_cb),
 				 daemon);
 	}
-#endif
 
 	/* Only timeout and close the mainloop if we have specified it
 	 * on the command line */

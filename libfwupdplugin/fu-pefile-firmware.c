@@ -10,9 +10,11 @@
 
 #include "fu-bytes.h"
 #include "fu-coswid-firmware.h"
-#include "fu-dump.h"
+#include "fu-csv-firmware.h"
 #include "fu-mem.h"
 #include "fu-pefile-firmware.h"
+#include "fu-pefile-struct.h"
+#include "fu-sbatlevel-section.h"
 #include "fu-string.h"
 
 /**
@@ -30,27 +32,85 @@ G_DEFINE_TYPE(FuPefileFirmware, fu_pefile_firmware, FU_TYPE_FIRMWARE)
 static gboolean
 fu_pefile_firmware_check_magic(FuFirmware *firmware, GBytes *fw, gsize offset, GError **error)
 {
-	guint16 magic = 0x0;
+	return fu_struct_pe_dos_header_validate(g_bytes_get_data(fw, NULL),
+						g_bytes_get_size(fw),
+						offset,
+						error);
+}
 
-	if (!fu_memread_uint16_safe(g_bytes_get_data(fw, NULL),
-				    g_bytes_get_size(fw),
-				    offset,
-				    &magic,
-				    G_LITTLE_ENDIAN,
-				    error)) {
-		g_prefix_error(error, "failed to read magic: ");
+static gboolean
+fu_pefile_firmware_parse_section(FuFirmware *firmware,
+				 GBytes *fw,
+				 gsize hdr_offset,
+				 gsize strtab_offset,
+				 FwupdInstallFlags flags,
+				 GError **error)
+{
+	gsize bufsz = 0;
+	guint32 sect_offset;
+	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
+	g_autofree gchar *sect_id = NULL;
+	g_autofree gchar *sect_id_tmp = NULL;
+	g_autoptr(FuFirmware) img = NULL;
+	g_autoptr(GByteArray) st = NULL;
+	g_autoptr(GBytes) blob = NULL;
+
+	st = fu_struct_pe_coff_section_parse(buf, bufsz, hdr_offset, error);
+	if (st == NULL)
 		return FALSE;
-	}
-	if (magic != 0x5A4D) {
+	sect_id_tmp = fu_struct_pe_coff_section_get_name(st);
+	if (sect_id_tmp == NULL) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_FILE,
-				    "invalid magic for file");
+				    "invalid section name");
 		return FALSE;
 	}
+	if (sect_id_tmp[0] == '/') {
+		guint64 str_idx = 0x0;
+		if (!fu_strtoull(sect_id_tmp + 1, &str_idx, 0, G_MAXUINT32, error))
+			return FALSE;
+		sect_id = fu_memstrsafe(buf, bufsz, strtab_offset + str_idx, 16, error);
+		if (sect_id == NULL) {
+			g_prefix_error(error, "no section name: ");
+			return FALSE;
+		}
+	} else {
+		sect_id = g_steal_pointer(&sect_id_tmp);
+	}
 
-	/* success */
-	return TRUE;
+	/* create new firmware */
+	if (g_strcmp0(sect_id, ".sbom") == 0) {
+		img = fu_coswid_firmware_new();
+	} else if (g_strcmp0(sect_id, ".sbat") == 0) {
+		img = fu_csv_firmware_new();
+		fu_csv_firmware_add_column_id(FU_CSV_FIRMWARE(img), "$id");
+		fu_csv_firmware_add_column_id(FU_CSV_FIRMWARE(img), "$version_raw");
+		fu_csv_firmware_add_column_id(FU_CSV_FIRMWARE(img), "vendor_name");
+		fu_csv_firmware_add_column_id(FU_CSV_FIRMWARE(img), "vendor_package_name");
+		fu_csv_firmware_add_column_id(FU_CSV_FIRMWARE(img), "$version");
+		fu_csv_firmware_add_column_id(FU_CSV_FIRMWARE(img), "vendor_url");
+	} else if (g_strcmp0(sect_id, ".sbatlevel") == 0) {
+		img = fu_sbatlevel_section_new();
+	} else {
+		img = fu_firmware_new();
+	}
+	fu_firmware_set_id(img, sect_id);
+
+	/* add data */
+	sect_offset = fu_struct_pe_coff_section_get_pointer_to_raw_data(st);
+	fu_firmware_set_offset(img, sect_offset);
+	blob = fu_bytes_new_offset(fw,
+				   sect_offset,
+				   fu_struct_pe_coff_section_get_size_of_raw_data(st),
+				   error);
+	if (blob == NULL) {
+		g_prefix_error(error, "failed to get raw data for %s: ", sect_id);
+		return FALSE;
+	}
+	if (!fu_firmware_parse(img, blob, flags, error))
+		return FALSE;
+	return fu_firmware_add_image_full(firmware, img, error);
 }
 
 static gboolean
@@ -61,41 +121,33 @@ fu_pefile_firmware_parse(FuFirmware *firmware,
 			 GError **error)
 {
 	gsize bufsz = 0;
-	gsize hdr_offset = offset;
-	guint16 opt_hdrsz = 0x0;
-	guint32 nr_sections = 0x0;
-	guint32 offset_sig = 0x0;
-	guint32 signature = 0x0;
+	gsize strtab_offset;
+	guint32 nr_sections;
 	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
+	g_autoptr(GByteArray) st_coff = NULL;
+	g_autoptr(GByteArray) st_doshdr = NULL;
 
-	/* we already checked the MS-DOS magic, check the signature now */
-	if (!fu_memread_uint32_safe(buf,
-				    bufsz,
-				    hdr_offset + 0x3C,
-				    &offset_sig,
-				    G_LITTLE_ENDIAN,
-				    error))
+	/* parse the DOS header to get the COFF header */
+	st_doshdr = fu_struct_pe_dos_header_parse(buf, bufsz, offset, error);
+	if (st_doshdr == NULL)
 		return FALSE;
-	hdr_offset += offset_sig;
-	if (!fu_memread_uint32_safe(buf, bufsz, hdr_offset, &signature, G_LITTLE_ENDIAN, error))
+	offset += fu_struct_pe_dos_header_get_lfanew(st_doshdr);
+	st_coff = fu_struct_pe_coff_file_header_parse(buf, bufsz, offset, error);
+	if (st_coff == NULL)
 		return FALSE;
-	if (signature != 0x4550) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_FILE,
-				    "invalid signature for file");
-		return FALSE;
+	offset += st_coff->len;
+
+	/* verify optional extra header */
+	if (fu_struct_pe_coff_file_header_get_size_of_optional_header(st_coff) > 0) {
+		g_autoptr(GByteArray) st_opt =
+		    fu_struct_pe_coff_optional_header64_parse(buf, bufsz, offset, error);
+		if (st_opt == NULL)
+			return FALSE;
+		offset += fu_struct_pe_coff_file_header_get_size_of_optional_header(st_coff);
 	}
-	hdr_offset += 4;
 
 	/* read number of sections */
-	if (!fu_memread_uint32_safe(buf,
-				    bufsz,
-				    hdr_offset + 0x02,
-				    &nr_sections,
-				    G_LITTLE_ENDIAN,
-				    error))
-		return FALSE;
+	nr_sections = fu_struct_pe_coff_file_header_get_number_of_sections(st_coff);
 	if (nr_sections == 0) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -103,82 +155,20 @@ fu_pefile_firmware_parse(FuFirmware *firmware,
 				    "invalid number of sections");
 		return FALSE;
 	}
+	strtab_offset = fu_struct_pe_coff_file_header_get_pointer_to_symbol_table(st_coff) +
+			fu_struct_pe_coff_file_header_get_number_of_symbols(st_coff) *
+			    FU_STRUCT_PE_COFF_SYMBOL_SIZE;
 
-	/* read optional extra header size  */
-	if (!fu_memread_uint16_safe(buf,
-				    bufsz,
-				    hdr_offset + 0x10,
-				    &opt_hdrsz,
-				    G_LITTLE_ENDIAN,
-				    error))
-		return FALSE;
-	hdr_offset += 0x14 + opt_hdrsz;
-
-	/* read out COFF header */
+	/* read out each section */
 	for (guint idx = 0; idx < nr_sections; idx++) {
-		guint32 sect_length = 0x0;
-		guint32 sect_offset = 0x0;
-		guint8 name[8] = {0x0};
-		g_autofree gchar *sect_id = NULL;
-		g_autoptr(FuFirmware) fw_sect = NULL;
-		g_autoptr(GBytes) sect_blob = NULL;
-
-		/* read the section name */
-		if (!fu_memcpy_safe(name,
-				    sizeof(name),
-				    0x0,
-				    buf,
-				    bufsz,
-				    hdr_offset,
-				    sizeof(name),
-				    error))
+		if (!fu_pefile_firmware_parse_section(firmware,
+						      fw,
+						      offset,
+						      strtab_offset,
+						      flags,
+						      error))
 			return FALSE;
-		sect_id = fu_strsafe((const gchar *)name, sizeof(name));
-		if (sect_id == NULL) {
-			g_set_error_literal(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_INVALID_FILE,
-					    "no section name");
-			return FALSE;
-		}
-
-		/* create new firmware */
-		if (g_strcmp0(sect_id, ".sbom") == 0) {
-			fw_sect = fu_coswid_firmware_new();
-		} else {
-			fw_sect = fu_firmware_new();
-		}
-		fu_firmware_set_idx(fw_sect, idx);
-		fu_firmware_set_id(fw_sect, sect_id);
-
-		/* add data */
-		if (!fu_memread_uint32_safe(buf,
-					    bufsz,
-					    hdr_offset + 0x08,
-					    &sect_length,
-					    G_LITTLE_ENDIAN,
-					    error))
-			return FALSE;
-		fu_firmware_set_size(fw_sect, sect_length);
-		if (!fu_memread_uint32_safe(buf,
-					    bufsz,
-					    hdr_offset + 0x14,
-					    &sect_offset,
-					    G_LITTLE_ENDIAN,
-					    error))
-			return FALSE;
-		fu_firmware_set_offset(fw_sect, sect_offset);
-		sect_blob = fu_bytes_new_offset(fw, sect_offset, sect_length, error);
-		if (sect_blob == NULL) {
-			g_prefix_error(error, "failed to get raw data for %s: ", sect_id);
-			return FALSE;
-		}
-		if (!fu_firmware_parse(fw_sect, sect_blob, flags, error))
-			return FALSE;
-		fu_firmware_add_image(firmware, fw_sect);
-
-		/* next! */
-		hdr_offset += 0x28;
+		offset += FU_STRUCT_PE_COFF_SECTION_SIZE;
 	}
 
 	/* success */
@@ -188,6 +178,7 @@ fu_pefile_firmware_parse(FuFirmware *firmware,
 static void
 fu_pefile_firmware_init(FuPefileFirmware *self)
 {
+	fu_firmware_set_images_max(FU_FIRMWARE(self), 100);
 }
 
 static void

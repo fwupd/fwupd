@@ -6,8 +6,6 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
 #include "fu-ch341a-cfi-device.h"
 #include "fu-ch341a-device.h"
 

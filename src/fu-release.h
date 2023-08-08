@@ -8,7 +8,7 @@
 
 #include <fwupdplugin.h>
 
-#include "fu-config.h"
+#include "fu-engine-config.h"
 #include "fu-engine-request.h"
 
 #define FU_TYPE_RELEASE (fu_release_get_type())
@@ -20,6 +20,7 @@ fu_release_new(void);
 #define fu_release_get_appstream_id(r) fwupd_release_get_appstream_id(FWUPD_RELEASE(r))
 #define fu_release_get_version(r)     fwupd_release_get_version(FWUPD_RELEASE(r))
 #define fu_release_get_branch(r)      fwupd_release_get_branch(FWUPD_RELEASE(r))
+#define fu_release_get_remote_id(r)    fwupd_release_get_remote_id(FWUPD_RELEASE(r))
 #define fu_release_get_checksums(r)   fwupd_release_get_checksums(FWUPD_RELEASE(r))
 #define fu_release_get_reports(r)      fwupd_release_get_reports(FWUPD_RELEASE(r))
 #define fu_release_get_flags(r)	      fwupd_release_get_flags(FWUPD_RELEASE(r))
@@ -52,7 +53,7 @@ fu_release_set_device(FuRelease *self, FuDevice *device);
 void
 fu_release_set_remote(FuRelease *self, FwupdRemote *remote);
 void
-fu_release_set_config(FuRelease *self, FuConfig *config);
+fu_release_set_config(FuRelease *self, FuEngineConfig *config);
 
 gboolean
 fu_release_load(FuRelease *self,

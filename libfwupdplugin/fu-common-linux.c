@@ -11,12 +11,7 @@
 #include <gio/gio.h>
 #include <unistd.h>
 
-#ifdef HAVE_FNMATCH_H
-#include <fnmatch.h>
-#endif
-
 #include "fu-common-private.h"
-#include "fu-path-private.h"
 
 #define UDISKS_DBUS_PATH	      "/org/freedesktop/UDisks2/Manager"
 #define UDISKS_DBUS_MANAGER_INTERFACE "org.freedesktop.UDisks2.Manager"
@@ -87,16 +82,6 @@ fu_common_get_block_devices(GError **error)
 		g_ptr_array_add(devices, g_steal_pointer(&proxy_blk));
 	}
 	return g_steal_pointer(&devices);
-}
-
-gboolean
-fu_path_fnmatch_impl(const gchar *pattern, const gchar *str)
-{
-#ifdef HAVE_FNMATCH_H
-	return fnmatch(pattern, str, FNM_NOESCAPE) == 0;
-#else
-	return g_strcmp0(pattern, str) == 0;
-#endif
 }
 
 guint64

@@ -9,6 +9,7 @@
 #include "config.h"
 
 #include <glib/gi18n.h>
+#include <glib/gstdio.h>
 #include <xmlb.h>
 
 #ifdef HAVE_INOTIFY_H
@@ -20,7 +21,7 @@
 
 #include "fu-remote-list.h"
 
-enum { SIGNAL_CHANGED, SIGNAL_LAST };
+enum { SIGNAL_CHANGED, SIGNAL_ADDED, SIGNAL_LAST };
 
 static guint signals[SIGNAL_LAST] = {0};
 
@@ -33,7 +34,6 @@ struct _FuRemoteList {
 	GObject parent_instance;
 	GPtrArray *array;	  /* (element-type FwupdRemote) */
 	GPtrArray *monitors;	  /* (element-type GFileMonitor) */
-	GHashTable *hash_unfound; /* utf8 : NULL */
 	XbSilo *silo;
 };
 
@@ -44,6 +44,13 @@ fu_remote_list_emit_changed(FuRemoteList *self)
 {
 	g_debug("::remote_list changed");
 	g_signal_emit(self, signals[SIGNAL_CHANGED], 0);
+}
+
+static void
+fu_remote_list_emit_added(FuRemoteList *self, FwupdRemote *remote)
+{
+	g_debug("::remote_list changed");
+	g_signal_emit(self, signals[SIGNAL_ADDED], 0, remote);
 }
 
 static void
@@ -180,12 +187,147 @@ _fwupd_remote_build_component_id(FwupdRemote *remote)
 }
 
 static gboolean
+fu_remote_list_cleanup_remote(FwupdRemote *remote, GError **error)
+{
+	const gchar *fn_cache = fwupd_remote_get_filename_cache(remote);
+	g_autofree gchar *dirname = NULL;
+	g_autoptr(GPtrArray) files = NULL;
+
+	/* sanity check */
+	if (fn_cache == NULL)
+		return TRUE;
+	if (!g_str_has_suffix(fn_cache, ".xz"))
+		return TRUE;
+
+	/* get all files */
+	dirname = g_path_get_dirname(fn_cache);
+	files = fu_path_get_files(dirname, NULL);
+	if (files == NULL)
+		return TRUE;
+
+	/* delete any obsolete ones */
+	for (guint i = 0; i < files->len; i++) {
+		const gchar *fn = g_ptr_array_index(files, i);
+		if (g_strstr_len(fn, -1, ".gz") != NULL) {
+			g_info("deleting obsolete %s", fn);
+			if (g_unlink(fn) == -1) {
+				g_set_error(error,
+					    G_IO_ERROR,
+					    G_IO_ERROR_FAILED,
+					    "failed to delete obsolete %s",
+					    fn);
+				return FALSE;
+			}
+		}
+	}
+
+	/* success */
+	return TRUE;
+}
+
+void
+fu_remote_list_add_remote(FuRemoteList *self, FwupdRemote *remote)
+{
+	g_return_if_fail(FU_IS_REMOTE_LIST(self));
+	g_return_if_fail(FWUPD_IS_REMOTE(remote));
+	fu_remote_list_emit_added(self, remote);
+	g_ptr_array_add(self->array, g_object_ref(remote));
+}
+
+static gboolean
+fu_remote_list_add_for_file(FuRemoteList *self,
+			    GHashTable *os_release,
+			    const gchar *filename,
+			    GError **error)
+{
+	FwupdRemote *remote_tmp;
+	g_autofree gchar *remotesdir = NULL;
+	g_autoptr(FwupdRemote) remote = fwupd_remote_new();
+
+	/* set directory to store data */
+	remotesdir = fu_path_from_kind(FU_PATH_KIND_LOCALSTATEDIR_METADATA);
+	fwupd_remote_set_remotes_dir(remote, remotesdir);
+
+	/* load from keyfile */
+	g_info("loading remote from %s", filename);
+	if (!fwupd_remote_load_from_filename(remote, filename, NULL, error)) {
+		g_prefix_error(error, "failed to load %s: ", filename);
+		return FALSE;
+	}
+
+	/* does it already exist */
+	remote_tmp = fu_remote_list_get_by_id(self, fwupd_remote_get_id(remote));
+	if (remote_tmp != NULL) {
+		g_debug("remote %s already added from %s",
+			fwupd_remote_get_id(remote),
+			fwupd_remote_get_filename_source(remote_tmp));
+		return TRUE;
+	}
+
+	/* load remote */
+	if (!fwupd_remote_setup(remote, error)) {
+		g_prefix_error(error, "failed to setup %s: ", filename);
+		return FALSE;
+	}
+
+	/* delete the obsolete .gz files if the remote is now set up to use .xz */
+	if (fwupd_remote_has_flag(remote, FWUPD_REMOTE_FLAG_ENABLED) &&
+	    fwupd_remote_get_kind(remote) == FWUPD_REMOTE_KIND_DOWNLOAD) {
+		if (!fu_remote_list_cleanup_remote(remote, error))
+			return FALSE;
+	}
+
+	/* watch the remote_list file and the XML file itself */
+	if (!fu_remote_list_add_inotify(self, filename, error))
+		return FALSE;
+	if (!fu_remote_list_add_inotify(self, fwupd_remote_get_filename_cache(remote), error))
+		return FALSE;
+
+	/* try to find a custom agreement, falling back to a generic warning */
+	if (fwupd_remote_get_kind(remote) == FWUPD_REMOTE_KIND_DOWNLOAD) {
+		g_autofree gchar *component_id = _fwupd_remote_build_component_id(remote);
+		g_autofree gchar *xpath = NULL;
+		g_autoptr(GString) agreement_markup = NULL;
+		g_autoptr(XbNode) component = NULL;
+		const gchar *tmp;
+
+		xpath = g_strdup_printf("component/id[text()='%s']/..", component_id);
+		component = xb_silo_query_first(self->silo, xpath, NULL);
+		if (component != NULL) {
+			agreement_markup =
+			    _fwupd_remote_get_agreement_for_app(remote, component, error);
+		} else {
+			agreement_markup = _fwupd_remote_get_agreement_default(remote, error);
+		}
+		if (agreement_markup == NULL)
+			return FALSE;
+
+		/* replace any dynamic values from os-release */
+		tmp = g_hash_table_lookup(os_release, "NAME");
+		if (tmp == NULL)
+			tmp = "this distribution";
+		g_string_replace(agreement_markup, "$OS_RELEASE:NAME$", tmp, 0);
+		tmp = g_hash_table_lookup(os_release, "BUG_REPORT_URL");
+		if (tmp == NULL)
+			tmp = "https://github.com/fwupd/fwupd/issues";
+		g_string_replace(agreement_markup, "$OS_RELEASE:BUG_REPORT_URL$", tmp, 0);
+		fwupd_remote_set_agreement(remote, agreement_markup->str);
+	}
+
+	/* set mtime */
+	fwupd_remote_set_mtime(remote, _fwupd_remote_get_mtime(remote));
+	fu_remote_list_add_remote(self, remote);
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_remote_list_add_for_path(FuRemoteList *self, const gchar *path, GError **error)
 {
-	const gchar *tmp;
 	g_autofree gchar *path_remotes = NULL;
-	g_autoptr(GDir) dir = NULL;
 	g_autoptr(GHashTable) os_release = NULL;
+	g_autoptr(GPtrArray) paths = NULL;
 
 	path_remotes = g_build_filename(path, "remotes.d", NULL);
 	if (!g_file_test(path_remotes, G_FILE_TEST_EXISTS)) {
@@ -194,80 +336,16 @@ fu_remote_list_add_for_path(FuRemoteList *self, const gchar *path, GError **erro
 	}
 	if (!fu_remote_list_add_inotify(self, path_remotes, error))
 		return FALSE;
-	dir = g_dir_open(path_remotes, 0, error);
-	if (dir == NULL)
-		return FALSE;
+	paths = fu_path_glob(path_remotes, "*.conf", NULL);
+	if (paths == NULL)
+		return TRUE;
 	os_release = fwupd_get_os_release(error);
 	if (os_release == NULL)
 		return FALSE;
-	while ((tmp = g_dir_read_name(dir)) != NULL) {
-		g_autofree gchar *filename = g_build_filename(path_remotes, tmp, NULL);
-		g_autoptr(FwupdRemote) remote = fwupd_remote_new();
-		g_autofree gchar *remotesdir = NULL;
-
-		/* skip invalid files */
-		if (!g_str_has_suffix(tmp, ".conf")) {
-			g_debug("skipping invalid file %s", filename);
-			continue;
-		}
-
-		/* set directory to store data */
-		remotesdir = fu_path_from_kind(FU_PATH_KIND_LOCALSTATEDIR_METADATA);
-		fwupd_remote_set_remotes_dir(remote, remotesdir);
-
-		/* load from keyfile */
-		g_info("loading remote from %s", filename);
-		if (!fwupd_remote_load_from_filename(remote, filename, NULL, error)) {
-			g_prefix_error(error, "failed to load %s: ", filename);
+	for (guint i = 0; i < paths->len; i++) {
+		const gchar *filename = g_ptr_array_index(paths, i);
+		if (!fu_remote_list_add_for_file(self, os_release, filename, error))
 			return FALSE;
-		}
-		if (!fwupd_remote_setup(remote, error)) {
-			g_prefix_error(error, "failed to setup %s: ", filename);
-			return FALSE;
-		}
-
-		/* watch the remote_list file and the XML file itself */
-		if (!fu_remote_list_add_inotify(self, filename, error))
-			return FALSE;
-		if (!fu_remote_list_add_inotify(self,
-						fwupd_remote_get_filename_cache(remote),
-						error))
-			return FALSE;
-
-		/* try to find a custom agreement, falling back to a generic warning */
-		if (fwupd_remote_get_kind(remote) == FWUPD_REMOTE_KIND_DOWNLOAD) {
-			g_autoptr(GString) agreement_markup = NULL;
-			g_autofree gchar *component_id = _fwupd_remote_build_component_id(remote);
-			g_autoptr(XbNode) component = NULL;
-			g_autofree gchar *xpath = NULL;
-
-			xpath = g_strdup_printf("component/id[text()='%s']/..", component_id);
-			component = xb_silo_query_first(self->silo, xpath, NULL);
-			if (component != NULL) {
-				agreement_markup =
-				    _fwupd_remote_get_agreement_for_app(remote, component, error);
-			} else {
-				agreement_markup =
-				    _fwupd_remote_get_agreement_default(remote, error);
-			}
-			if (agreement_markup == NULL)
-				return FALSE;
-
-			/* replace any dynamic values from os-release */
-			tmp = g_hash_table_lookup(os_release, "NAME");
-			if (tmp == NULL)
-				tmp = "this distribution";
-			fu_string_replace(agreement_markup, "$OS_RELEASE:NAME$", tmp);
-			tmp = g_hash_table_lookup(os_release, "BUG_REPORT_URL");
-			if (tmp == NULL)
-				tmp = "https://github.com/fwupd/fwupd/issues";
-			fu_string_replace(agreement_markup, "$OS_RELEASE:BUG_REPORT_URL$", tmp);
-			fwupd_remote_set_agreement(remote, agreement_markup->str);
-		}
-
-		/* set mtime */
-		fwupd_remote_set_mtime(remote, _fwupd_remote_get_mtime(remote));
-		g_ptr_array_add(self->array, g_steal_pointer(&remote));
 	}
 	return TRUE;
 }
@@ -334,14 +412,13 @@ fu_remote_list_sort_cb(gconstpointer a, gconstpointer b)
 }
 
 static guint
-fu_remote_list_depsolve_with_direction(FuRemoteList *self, gint inc)
+fu_remote_list_depsolve_order_before(FuRemoteList *self)
 {
 	guint cnt = 0;
 
 	for (guint i = 0; i < self->array->len; i++) {
 		FwupdRemote *remote = g_ptr_array_index(self->array, i);
-		gchar **order = inc < 0 ? fwupd_remote_get_order_after(remote)
-					: fwupd_remote_get_order_before(remote);
+		gchar **order = fwupd_remote_get_order_before(remote);
 		if (order == NULL)
 			continue;
 		for (guint j = 0; order[j] != NULL; j++) {
@@ -352,21 +429,48 @@ fu_remote_list_depsolve_with_direction(FuRemoteList *self, gint inc)
 			}
 			remote2 = fu_remote_list_get_by_id(self, order[j]);
 			if (remote2 == NULL) {
-				if (g_hash_table_contains(self->hash_unfound, order[j]))
-					continue;
 				g_debug("ignoring unfound remote %s", order[j]);
-				g_hash_table_insert(self->hash_unfound, g_strdup(order[j]), NULL);
 				continue;
 			}
 			if (fwupd_remote_get_priority(remote) > fwupd_remote_get_priority(remote2))
 				continue;
-			g_debug("ordering %s=%s+%i",
+			g_debug("ordering %s=%s+1",
 				fwupd_remote_get_id(remote),
-				fwupd_remote_get_id(remote2),
-				inc);
-			fwupd_remote_set_priority(remote, fwupd_remote_get_priority(remote2) + inc);
+				fwupd_remote_get_id(remote2));
+			fwupd_remote_set_priority(remote, fwupd_remote_get_priority(remote2) + 1);
+			cnt++;
+		}
+	}
+	return cnt;
+}
 
-			/* increment changes counter */
+static guint
+fu_remote_list_depsolve_order_after(FuRemoteList *self)
+{
+	guint cnt = 0;
+
+	for (guint i = 0; i < self->array->len; i++) {
+		FwupdRemote *remote = g_ptr_array_index(self->array, i);
+		gchar **order = fwupd_remote_get_order_after(remote);
+		if (order == NULL)
+			continue;
+		for (guint j = 0; order[j] != NULL; j++) {
+			FwupdRemote *remote2;
+			if (g_strcmp0(order[j], fwupd_remote_get_id(remote)) == 0) {
+				g_debug("ignoring self-dep remote %s", order[j]);
+				continue;
+			}
+			remote2 = fu_remote_list_get_by_id(self, order[j]);
+			if (remote2 == NULL) {
+				g_debug("ignoring unfound remote %s", order[j]);
+				continue;
+			}
+			if (fwupd_remote_get_priority(remote) < fwupd_remote_get_priority(remote2))
+				continue;
+			g_debug("ordering %s=%s+1",
+				fwupd_remote_get_id(remote2),
+				fwupd_remote_get_id(remote));
+			fwupd_remote_set_priority(remote2, fwupd_remote_get_priority(remote) + 1);
 			cnt++;
 		}
 	}
@@ -385,19 +489,19 @@ fu_remote_list_reload(FuRemoteList *self, GError **error)
 	g_ptr_array_set_size(self->array, 0);
 	g_ptr_array_set_size(self->monitors, 0);
 
-	/* use sysremotes, and then fall back to /etc */
-	remotesdir = fu_path_from_kind(FU_PATH_KIND_SYSCONFDIR_PKG);
-	if (!fu_remote_list_add_for_path(self, remotesdir, error))
-		return FALSE;
+	/* search mutable, and then fall back to /etc */
 	remotesdir_mut = fu_path_from_kind(FU_PATH_KIND_LOCALSTATEDIR_PKG);
 	if (!fu_remote_list_add_for_path(self, remotesdir_mut, error))
+		return FALSE;
+	remotesdir = fu_path_from_kind(FU_PATH_KIND_SYSCONFDIR_PKG);
+	if (!fu_remote_list_add_for_path(self, remotesdir, error))
 		return FALSE;
 
 	/* depsolve */
 	for (depsolve_check = 0; depsolve_check < 100; depsolve_check++) {
 		guint cnt = 0;
-		cnt += fu_remote_list_depsolve_with_direction(self, 1);
-		cnt += fu_remote_list_depsolve_with_direction(self, -1);
+		cnt += fu_remote_list_depsolve_order_before(self);
+		cnt += fu_remote_list_depsolve_order_after(self);
 		if (cnt == 0)
 			break;
 	}
@@ -415,11 +519,15 @@ fu_remote_list_reload(FuRemoteList *self, GError **error)
 	/* print to the console */
 	for (guint i = 0; i < self->array->len; i++) {
 		FwupdRemote *remote = g_ptr_array_index(self->array, i);
-		if (fwupd_remote_get_enabled(remote))
-			g_string_append_printf(str, "%s, ", fwupd_remote_get_id(remote));
+		if (!fwupd_remote_has_flag(remote, FWUPD_REMOTE_FLAG_ENABLED))
+			continue;
+		if (str->len > 0)
+			g_string_append(str, ", ");
+		g_string_append_printf(str,
+				       "%s[%i]",
+				       fwupd_remote_get_id(remote),
+				       fwupd_remote_get_priority(remote));
 	}
-	if (str->len > 2)
-		g_string_truncate(str, str->len - 2);
 	g_info("enabled remotes: %s", str->str);
 
 	/* success */
@@ -545,6 +653,21 @@ fu_remote_list_class_init(FuRemoteListClass *klass)
 					       g_cclosure_marshal_VOID__VOID,
 					       G_TYPE_NONE,
 					       0);
+	/**
+	 * FuRemoteList::added:
+	 * @self: the #FuRemoteList instance that emitted the signal
+	 * @remote: the #FwupdRemote that was added
+	 **/
+	signals[SIGNAL_ADDED] = g_signal_new("added",
+					     G_TYPE_FROM_CLASS(object_class),
+					     G_SIGNAL_RUN_LAST,
+					     0,
+					     NULL,
+					     NULL,
+					     g_cclosure_marshal_generic,
+					     G_TYPE_NONE,
+					     1,
+					     FWUPD_TYPE_REMOTE);
 }
 
 static void
@@ -560,7 +683,6 @@ fu_remote_list_init(FuRemoteList *self)
 	self->array = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 	self->monitors =
 	    g_ptr_array_new_with_free_func((GDestroyNotify)fu_remote_list_monitor_unref);
-	self->hash_unfound = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
 }
 
 static void
@@ -571,7 +693,6 @@ fu_remote_list_finalize(GObject *obj)
 		g_object_unref(self->silo);
 	g_ptr_array_unref(self->array);
 	g_ptr_array_unref(self->monitors);
-	g_hash_table_unref(self->hash_unfound);
 	G_OBJECT_CLASS(fu_remote_list_parent_class)->finalize(obj);
 }
 

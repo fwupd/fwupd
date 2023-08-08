@@ -7,10 +7,6 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
-#include <efivar.h>
-
 #include "fu-uefi-common.h"
 #include "fu-uefi-device.h"
 
@@ -59,14 +55,15 @@ fu_uefi_bootmgr_get_suffix(GError **error)
 	return NULL;
 }
 
+/* return without the ESP dir prepended */
 gchar *
-fu_uefi_get_esp_app_path(FuDevice *device, const gchar *esp_path, const gchar *cmd, GError **error)
+fu_uefi_get_esp_app_path(const gchar *cmd, GError **error)
 {
 	const gchar *suffix = fu_uefi_bootmgr_get_suffix(error);
 	g_autofree gchar *base = NULL;
 	if (suffix == NULL)
 		return NULL;
-	base = fu_uefi_get_esp_path_for_os(device, esp_path);
+	base = fu_uefi_get_esp_path_for_os();
 	return g_strdup_printf("%s/%s%s.efi", base, cmd, suffix);
 }
 
@@ -222,8 +219,9 @@ fu_uefi_get_bitmap_size(const guint8 *buf,
 	return TRUE;
 }
 
+/* return without the ESP dir prepended */
 gchar *
-fu_uefi_get_esp_path_for_os(FuDevice *device, const gchar *base)
+fu_uefi_get_esp_path_for_os(void)
 {
 #ifndef EFI_OS_DIR
 	const gchar *os_release_id = NULL;
@@ -240,7 +238,7 @@ fu_uefi_get_esp_path_for_os(FuDevice *device, const gchar *base)
 	if (os_release_id == NULL)
 		os_release_id = "unknown";
 	/* if ID key points at something existing return it */
-	esp_path = g_build_filename(base, "EFI", os_release_id, NULL);
+	esp_path = g_build_filename("EFI", os_release_id, NULL);
 	if (g_file_test(esp_path, G_FILE_TEST_IS_DIR) || os_release == NULL)
 		return g_steal_pointer(&esp_path);
 	/* if ID key doesn't exist, try ID_LIKE */
@@ -248,8 +246,7 @@ fu_uefi_get_esp_path_for_os(FuDevice *device, const gchar *base)
 	if (id_like != NULL) {
 		g_auto(GStrv) split = g_strsplit(id_like, " ", -1);
 		for (guint i = 0; split[i] != NULL; i++) {
-			g_autofree gchar *id_like_path =
-			    g_build_filename(base, "EFI", split[i], NULL);
+			g_autofree gchar *id_like_path = g_build_filename("EFI", split[i], NULL);
 			if (g_file_test(id_like_path, G_FILE_TEST_IS_DIR)) {
 				g_debug("using ID_LIKE key from os-release");
 				return g_steal_pointer(&id_like_path);
@@ -258,7 +255,7 @@ fu_uefi_get_esp_path_for_os(FuDevice *device, const gchar *base)
 	}
 	return g_steal_pointer(&esp_path);
 #else
-	return g_build_filename(base, "EFI", EFI_OS_DIR, NULL);
+	return g_build_filename("EFI", EFI_OS_DIR, NULL);
 #endif
 }
 
@@ -280,33 +277,48 @@ fu_uefi_read_file_as_uint64(const gchar *path, const gchar *attr_name)
 }
 
 gboolean
-fu_uefi_cmp_asset(const gchar *source, const gchar *target)
+fu_uefi_esp_target_verify(const gchar *source_fn, FuVolume *esp, const gchar *target_no_mountpoint)
 {
 	gsize len = 0;
 	g_autofree gchar *source_csum = NULL;
 	g_autofree gchar *source_data = NULL;
 	g_autofree gchar *target_csum = NULL;
 	g_autofree gchar *target_data = NULL;
+	g_autofree gchar *esp_path = fu_volume_get_mount_point(esp);
+	g_autofree gchar *target_fn = g_build_filename(esp_path, target_no_mountpoint, NULL);
 
 	/* nothing in target yet */
-	if (!g_file_test(target, G_FILE_TEST_EXISTS))
+	if (!g_file_test(target_fn, G_FILE_TEST_EXISTS))
 		return FALSE;
 
 	/* test if the file needs to be updated */
-	if (!g_file_get_contents(source, &source_data, &len, NULL))
+	if (!g_file_get_contents(source_fn, &source_data, &len, NULL))
 		return FALSE;
 	source_csum = g_compute_checksum_for_data(G_CHECKSUM_SHA256, (guchar *)source_data, len);
-	if (!g_file_get_contents(target, &target_data, &len, NULL))
+	if (!g_file_get_contents(target_fn, &target_data, &len, NULL))
 		return FALSE;
 	target_csum = g_compute_checksum_for_data(G_CHECKSUM_SHA256, (guchar *)target_data, len);
 	return g_strcmp0(target_csum, source_csum) == 0;
 }
 
 gboolean
-fu_uefi_copy_asset(const gchar *source, const gchar *target, GError **error)
+fu_uefi_esp_target_exists(FuVolume *esp, const gchar *target_no_mountpoint)
 {
-	g_autoptr(GFile) source_file = g_file_new_for_path(source);
-	g_autoptr(GFile) target_file = g_file_new_for_path(target);
+	g_autofree gchar *esp_path = fu_volume_get_mount_point(esp);
+	g_autofree gchar *target_fn = g_build_filename(esp_path, target_no_mountpoint, NULL);
+	return g_file_test(target_fn, G_FILE_TEST_EXISTS);
+}
+
+gboolean
+fu_uefi_esp_target_copy(const gchar *source_fn,
+			FuVolume *esp,
+			const gchar *target_no_mountpoint,
+			GError **error)
+{
+	g_autofree gchar *esp_path = fu_volume_get_mount_point(esp);
+	g_autofree gchar *target_fn = g_build_filename(esp_path, target_no_mountpoint, NULL);
+	g_autoptr(GFile) source_file = g_file_new_for_path(source_fn);
+	g_autoptr(GFile) target_file = g_file_new_for_path(target_fn);
 
 	if (!g_file_copy(source_file,
 			 target_file,
@@ -315,7 +327,7 @@ fu_uefi_copy_asset(const gchar *source, const gchar *target, GError **error)
 			 NULL,
 			 NULL,
 			 error)) {
-		g_prefix_error(error, "Failed to copy %s to %s: ", source, target);
+		g_prefix_error(error, "Failed to copy %s to %s: ", source_fn, target_fn);
 		return FALSE;
 	}
 

@@ -19,14 +19,13 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
 #include <math.h>
 #include <string.h>
 
 #include "fu-dfu-common.h"
 #include "fu-dfu-device.h"
 #include "fu-dfu-sector.h"
+#include "fu-dfu-struct.h"
 #include "fu-dfu-target-private.h" /* waive-pre-commit */
 
 #define DFU_TARGET_MANIFEST_MAX_POLLING_TRIES 200
@@ -99,7 +98,7 @@ fu_dfu_target_parse_sector(FuDfuTarget *self,
 			   GError **error)
 {
 	FuDfuTargetPrivate *priv = GET_PRIVATE(self);
-	FuDfuSectorCap cap = DFU_SECTOR_CAP_NONE;
+	FuDfuSectorCap cap = FU_DFU_SECTOR_CAP_NONE;
 	gchar *tmp;
 	guint32 addr_offset = 0;
 	guint64 nr_sectors;
@@ -169,25 +168,26 @@ fu_dfu_target_parse_sector(FuDfuTarget *self,
 	/* get sector type */
 	switch (tmp[1]) {
 	case 'a':
-		cap = DFU_SECTOR_CAP_READABLE;
+		cap = FU_DFU_SECTOR_CAP_READABLE;
 		break;
 	case 'b':
-		cap = DFU_SECTOR_CAP_ERASABLE;
+		cap = FU_DFU_SECTOR_CAP_ERASABLE;
 		break;
 	case 'c':
-		cap = DFU_SECTOR_CAP_READABLE | DFU_SECTOR_CAP_ERASABLE;
+		cap = FU_DFU_SECTOR_CAP_READABLE | FU_DFU_SECTOR_CAP_ERASABLE;
 		break;
 	case 'd':
-		cap = DFU_SECTOR_CAP_WRITEABLE;
+		cap = FU_DFU_SECTOR_CAP_WRITEABLE;
 		break;
 	case 'e':
-		cap = DFU_SECTOR_CAP_READABLE | DFU_SECTOR_CAP_WRITEABLE;
+		cap = FU_DFU_SECTOR_CAP_READABLE | FU_DFU_SECTOR_CAP_WRITEABLE;
 		break;
 	case 'f':
-		cap = DFU_SECTOR_CAP_ERASABLE | DFU_SECTOR_CAP_WRITEABLE;
+		cap = FU_DFU_SECTOR_CAP_ERASABLE | FU_DFU_SECTOR_CAP_WRITEABLE;
 		break;
 	case 'g':
-		cap = DFU_SECTOR_CAP_READABLE | DFU_SECTOR_CAP_ERASABLE | DFU_SECTOR_CAP_WRITEABLE;
+		cap = FU_DFU_SECTOR_CAP_READABLE | FU_DFU_SECTOR_CAP_ERASABLE |
+		      FU_DFU_SECTOR_CAP_WRITEABLE;
 		break;
 	default:
 		g_set_error(error,
@@ -239,8 +239,8 @@ fu_dfu_target_parse_sectors(FuDfuTarget *self, const gchar *alt_name, GError **e
 					   0x0, /* size_left */
 					   0x0, /* zone */
 					   0x0, /* number */
-					   DFU_SECTOR_CAP_ERASABLE | DFU_SECTOR_CAP_READABLE |
-					       DFU_SECTOR_CAP_WRITEABLE);
+					   FU_DFU_SECTOR_CAP_ERASABLE | FU_DFU_SECTOR_CAP_READABLE |
+					       FU_DFU_SECTOR_CAP_WRITEABLE);
 		g_ptr_array_add(priv->sectors, sector);
 	}
 
@@ -639,12 +639,13 @@ fu_dfu_target_setup(FuDfuTarget *self, GError **error)
 	/* add a dummy entry */
 	if (priv->sectors->len == 0) {
 		FuDfuSector *sector;
-		sector = fu_dfu_sector_new(0x0, /* addr */
-					   0x0, /* size */
-					   0x0, /* size_left */
-					   0x0, /* zone */
-					   0x0, /* number */
-					   DFU_SECTOR_CAP_READABLE | DFU_SECTOR_CAP_WRITEABLE);
+		sector =
+		    fu_dfu_sector_new(0x0, /* addr */
+				      0x0, /* size */
+				      0x0, /* size_left */
+				      0x0, /* zone */
+				      0x0, /* number */
+				      FU_DFU_SECTOR_CAP_READABLE | FU_DFU_SECTOR_CAP_WRITEABLE);
 		g_debug("no UM0424 sector description in %s",
 			fu_device_get_logical_id(FU_DEVICE(self)));
 		g_ptr_array_add(priv->sectors, sector);

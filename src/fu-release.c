@@ -25,7 +25,7 @@ struct _FuRelease {
 	FuEngineRequest *request;
 	FuDevice *device;
 	FwupdRemote *remote;
-	FuConfig *config;
+	FuEngineConfig *config;
 	GBytes *blob_fw;
 	gchar *update_request_id;
 	GPtrArray *soft_reqs; /* nullable, element-type XbNode */
@@ -225,13 +225,13 @@ fu_release_set_remote(FuRelease *self, FwupdRemote *remote)
 /**
  * fu_release_set_config:
  * @self: a #FuRelease
- * @config: (nullable): a #FuConfig
+ * @config: (nullable): a #FuEngineConfig
  *
  * Sets the config to use when loading. The config may be used for things like ordering attributes
  *like protocol priority.
  **/
 void
-fu_release_set_config(FuRelease *self, FuConfig *config)
+fu_release_set_config(FuRelease *self, FuEngineConfig *config)
 {
 	g_return_if_fail(FU_IS_RELEASE(self));
 	g_set_object(&self->config, config);
@@ -322,12 +322,20 @@ fu_release_load_test_result(FuRelease *self, XbNode *n, GError **error)
 			fwupd_report_set_distro_variant(report, tmp);
 		fwupd_report_set_distro_id(report, xb_node_get_text(os));
 	}
+	if (fu_release_get_remote_id(self) != NULL)
+		fwupd_report_set_remote_id(report, fu_release_get_remote_id(self));
 	custom = xb_node_query(n, "custom/value", 0, NULL);
 	if (custom != NULL) {
 		for (guint i = 0; i < custom->len; i++) {
 			XbNode *c = g_ptr_array_index(custom, i);
 			if (g_strcmp0(xb_node_get_attr(c, "key"), "FromOEM") == 0) {
 				fwupd_report_add_flag(report, FWUPD_REPORT_FLAG_FROM_OEM);
+				continue;
+			}
+			if (xb_node_get_attr(c, "key") == NULL || xb_node_get_text(c) == NULL) {
+				g_debug("ignoring metadata: %s=%s",
+					xb_node_get_attr(c, "key"),
+					xb_node_get_text(c));
 				continue;
 			}
 			fwupd_report_add_metadata_item(report,
@@ -371,7 +379,8 @@ fu_release_load_artifact(FuRelease *self, XbNode *artifact, GError **error)
 			/* check the scheme is allowed */
 			scheme = fu_release_uri_get_scheme(xb_node_get_text(n));
 			if (scheme != NULL) {
-				guint prio = fu_config_get_uri_scheme_prio(self->config, scheme);
+				guint prio =
+				    fu_engine_config_get_uri_scheme_prio(self->config, scheme);
 				if (prio == G_MAXUINT)
 					continue;
 			}
@@ -427,8 +436,8 @@ fu_release_scheme_compare_cb(gconstpointer a, gconstpointer b, gpointer user_dat
 	const gchar *location2 = *((const gchar **)b);
 	g_autofree gchar *scheme1 = fu_release_uri_get_scheme(location1);
 	g_autofree gchar *scheme2 = fu_release_uri_get_scheme(location2);
-	guint prio1 = fu_config_get_uri_scheme_prio(self->config, scheme1);
-	guint prio2 = fu_config_get_uri_scheme_prio(self->config, scheme2);
+	guint prio1 = fu_engine_config_get_uri_scheme_prio(self->config, scheme1);
+	guint prio2 = fu_engine_config_get_uri_scheme_prio(self->config, scheme2);
 	if (prio1 < prio2)
 		return -1;
 	if (prio1 > prio2)
@@ -725,6 +734,35 @@ fu_release_set_priority(FuRelease *self, guint64 priority)
 	self->priority = priority;
 }
 
+static void
+fu_release_ensure_device_by_checksum(FuRelease *self, XbNode *component, XbNode *rel)
+{
+	g_autoptr(GPtrArray) device_checksums = NULL;
+
+	/* sanity check */
+	if (fu_device_get_checksums(self->device)->len == 0)
+		return;
+	device_checksums = xb_node_query(rel, "checksum[@target='device']", 0, NULL);
+	if (device_checksums == NULL)
+		return;
+	for (guint i = 0; i < device_checksums->len; i++) {
+		XbNode *device_checksum = g_ptr_array_index(device_checksums, i);
+		if (!fu_device_has_checksum(self->device, xb_node_get_text(device_checksum)))
+			continue;
+		fu_device_ensure_from_component(self->device, component);
+		if (fu_device_has_internal_flag(self->device,
+						FU_DEVICE_INTERNAL_FLAG_MD_SET_VERSION)) {
+			const gchar *rel_version = xb_node_get_attr(rel, "version");
+			if (rel_version == NULL)
+				continue;
+			fu_device_set_version(self->device, rel_version);
+			fu_device_remove_internal_flag(self->device,
+						       FU_DEVICE_INTERNAL_FLAG_MD_SET_VERSION);
+		}
+		break;
+	}
+}
+
 /**
  * fu_release_load:
  * @self: a #FuRelease
@@ -803,7 +841,6 @@ fu_release_load(FuRelease *self,
 	/* use default release */
 	if (rel_optional == NULL) {
 		g_autoptr(GError) error_local = NULL;
-#if LIBXMLB_CHECK_VERSION(0, 2, 0)
 		g_autoptr(XbQuery) query = NULL;
 		query = xb_query_new_full(xb_node_get_silo(component),
 					  "releases/release",
@@ -812,9 +849,6 @@ fu_release_load(FuRelease *self,
 		if (query == NULL)
 			return FALSE;
 		rel = xb_node_query_first_full(component, query, &error_local);
-#else
-		rel = xb_node_query_first(component, "releases/release", &error_local);
-#endif
 		if (rel == NULL) {
 			g_set_error(error,
 				    FWUPD_ERROR,
@@ -838,8 +872,15 @@ fu_release_load(FuRelease *self,
 	/* use the metadata to set the device attributes */
 	if (!fu_release_ensure_trust_flags(self, rel, error))
 		return FALSE;
-	if (self->device != NULL && fu_release_has_flag(self, FWUPD_RELEASE_FLAG_TRUSTED_METADATA))
-		fu_device_ensure_from_component(self->device, component);
+	if (self->device != NULL &&
+	    fu_release_has_flag(self, FWUPD_RELEASE_FLAG_TRUSTED_METADATA)) {
+		if (fu_device_has_internal_flag(self->device,
+						FU_DEVICE_INTERNAL_FLAG_MD_ONLY_CHECKSUM)) {
+			fu_release_ensure_device_by_checksum(self, component, rel);
+		} else {
+			fu_device_ensure_from_component(self->device, component);
+		}
+	}
 
 	/* the version is fixed up with the device format */
 	tmp = xb_node_get_attr(rel, "version");
@@ -1189,6 +1230,17 @@ fu_release_compare(FuRelease *release1, FuRelease *release2)
 		return -1;
 	if (release1->priority < release2->priority)
 		return 1;
+
+	/* remote priority, higher is better */
+	if (release1->remote != NULL && release2->remote) {
+		if (fwupd_remote_get_priority(release1->remote) >
+		    fwupd_remote_get_priority(release2->remote))
+			return -1;
+		if (fwupd_remote_get_priority(release1->remote) <
+		    fwupd_remote_get_priority(release2->remote))
+			return 1;
+	}
+
 	return 0;
 }
 

@@ -6,21 +6,12 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
 #include <gio/gunixmounts.h>
 
 #include "fu-uefi-backend-linux.h"
 #include "fu-uefi-cod-device.h"
 #include "fu-uefi-common.h"
 #include "fu-uefi-nvram-device.h"
-
-#ifndef HAVE_GIO_2_55_0
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wunused-function"
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(GUnixMountEntry, g_unix_mount_free)
-#pragma clang diagnostic pop
-#endif
 
 struct _FuUefiBackendLinux {
 	FuUefiBackend parent_instance;

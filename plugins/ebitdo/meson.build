@@ -3,12 +3,11 @@ cargs = ['-DG_LOG_DOMAIN="FuPluginEbitdo"']
 
 plugin_quirks += files('ebitdo.quirk')
 plugin_builtins += static_library('fu_plugin_ebitdo',
-  structgen.process(
-    'fu-ebitdo.struct',         # fuzzing
+  rustgen.process(
+    'fu-ebitdo.rs',         # fuzzing
   ),
   sources: [
     'fu-ebitdo-plugin.c',
-    'fu-ebitdo-common.c',
     'fu-ebitdo-device.c',
     'fu-ebitdo-firmware.c',     # fuzzing
   ],

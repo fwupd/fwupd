@@ -10,8 +10,8 @@
 
 #include "fu-byte-array.h"
 #include "fu-bytes.h"
+#include "fu-cfu-firmware-struct.h"
 #include "fu-cfu-payload.h"
-#include "fu-cfu-struct.h"
 #include "fu-common.h"
 
 /**
@@ -50,6 +50,13 @@ fu_cfu_payload_parse(FuFirmware *firmware,
 			return FALSE;
 		offset += st->len;
 		chunk_size = fu_struct_cfu_payload_get_size(st);
+		if (chunk_size == 0) {
+			g_set_error_literal(error,
+					    G_IO_ERROR,
+					    G_IO_ERROR_INVALID_DATA,
+					    "payload size was invalid");
+			return FALSE;
+		}
 		blob = fu_bytes_new_offset(fw, offset, chunk_size, error);
 		if (blob == NULL)
 			return FALSE;
@@ -65,7 +72,7 @@ fu_cfu_payload_parse(FuFirmware *firmware,
 	return TRUE;
 }
 
-static GBytes *
+static GByteArray *
 fu_cfu_payload_write(FuFirmware *firmware, GError **error)
 {
 	g_autoptr(GByteArray) buf = g_byte_array_new();
@@ -76,11 +83,13 @@ fu_cfu_payload_write(FuFirmware *firmware, GError **error)
 		return NULL;
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index(chunks, i);
-		fu_byte_array_append_uint32(buf, fu_chunk_get_address(chk), G_LITTLE_ENDIAN);
-		fu_byte_array_append_uint8(buf, fu_chunk_get_data_sz(chk));
+		g_autoptr(GByteArray) st = fu_struct_cfu_payload_new();
+		fu_struct_cfu_payload_set_addr(st, fu_chunk_get_address(chk));
+		fu_struct_cfu_payload_set_size(st, fu_chunk_get_data_sz(chk));
+		g_byte_array_append(buf, st->data, st->len);
 		g_byte_array_append(buf, fu_chunk_get_data(chk), fu_chunk_get_data_sz(chk));
 	}
-	return g_byte_array_free_to_bytes(g_steal_pointer(&buf));
+	return g_steal_pointer(&buf);
 }
 
 static void

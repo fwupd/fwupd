@@ -14,7 +14,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"Language-Team: Swedish (http://www.transifex.com/freedesktop/fwupd/language/sv/)\n"
+"Language-Team: Swedish (http://app.transifex.com/freedesktop/fwupd/language/sv/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -341,6 +341,10 @@ msgstr "Skrivskydd för AMD:s fasta programvara"
 msgid "AMD Secure Processor Rollback Protection"
 msgstr "Säkert AMD-tillbakarullningsskydd för processorn"
 
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "ARCHIVE FIRMWARE METAINFO [FIRMWARE] [METAINFO] [JCATFILE]"
+msgstr "ARKIV FAST_PROGRAMVARA METAINFO [FAST_PROGRAMVARA] [METAINFO] [JCAT-FIL]"
+
 #. TRANSLATORS: the user needs to do something, e.g. remove the device
 msgid "Action Required:"
 msgstr "Åtgärd krävs:"
@@ -586,6 +590,10 @@ msgid "Branch"
 msgstr "Gren"
 
 #. TRANSLATORS: command description
+msgid "Build a cabinet archive from a firmware blob and XML metadata"
+msgstr "Bygg ett kabinettarkiv från en fast programvaru-blob och XML-metadata"
+
+#. TRANSLATORS: command description
 msgid "Build a firmware file"
 msgstr "Bygg en fast programvarufil"
 
@@ -734,6 +742,10 @@ msgstr "Enhets-ID"
 msgid "Device added:"
 msgstr "Enhet tillagd:"
 
+#. TRANSLATORS: the device is already connected
+msgid "Device already exists"
+msgstr "Enheten finns redan"
+
 #. TRANSLATORS: for example the batteries *inside* the Bluetooth mouse
 msgid "Device battery power is too low"
 msgstr "Enheten har för lite batteri"
@@ -766,6 +778,10 @@ msgstr "Fast programvara för enhet krävs för att ha en versionskontroll"
 #. TRANSLATORS: emulated means we are pretending to be a different model
 msgid "Device is emulated"
 msgstr "Enheten är emulerad"
+
+#. TRANSLATORS: device cannot be interrupted, for instance taking a phone call
+msgid "Device is in use"
+msgstr "Enheten används"
 
 #. TRANSLATORS: Is locked and can be unlocked
 msgid "Device is locked"
@@ -865,8 +881,8 @@ msgstr "Enheter med den senaste tillgängliga uppdateringen för fast programvar
 msgid "Did not find any devices with matching GUIDs"
 msgstr "Hittade inga enheter med matchande GUID"
 
-#. TRANSLATORS: Suffix: the HSI result
 #. TRANSLATORS: Plugin is inactive and not used
+#. TRANSLATORS: Suffix: the HSI result
 msgid "Disabled"
 msgstr "Inaktiverad"
 
@@ -1031,9 +1047,9 @@ msgstr "Aktivera ny fjärrkälla?"
 msgid "Enable this remote?"
 msgstr "Aktivera denna fjärrkälla?"
 
-#. TRANSLATORS: Suffix: the HSI result
 #. TRANSLATORS: Plugin is active and in use
 #. TRANSLATORS: if the remote is enabled
+#. TRANSLATORS: Suffix: the HSI result
 msgid "Enabled"
 msgstr "Aktiverad"
 
@@ -1146,8 +1162,8 @@ msgstr "FILNAMN-KÄL FILNAMN-MÅL [FAST-PROGRAMVARUTYP-KÄL] [FAST-PROGRAMVARUTY
 msgid "FILENAME|CHECKSUM1[,CHECKSUM2][,CHECKSUM3]"
 msgstr "FILNAMN|KONTROLLSUMMA1[,KONTROLLSUMMA2][,KONTROLLSUMMA3]"
 
-#. TRANSLATORS: Suffix: the fallback HSI result
 #. TRANSLATORS: the update state of the specific device
+#. TRANSLATORS: Suffix: the fallback HSI result
 msgid "Failed"
 msgstr "Misslyckades"
 
@@ -1201,6 +1217,9 @@ msgstr "Misslyckades med att tolka fil"
 msgid "Failed to parse flags for --filter"
 msgstr "Misslyckades med att tolka --filter-flaggor"
 
+msgid "Failed to parse flags for --filter-release"
+msgstr "Misslyckades med att tolka flaggor för --filter-release"
+
 #. TRANSLATORS: could not parse file
 msgid "Failed to parse local dbx"
 msgstr "Misslyckades med att tolka lokal dbx"
@@ -1245,6 +1264,10 @@ msgstr "Filnamn krävs"
 #. TRANSLATORS: command line option
 msgid "Filter with a set of device flags using a ~ prefix to exclude, e.g. 'internal,~needs-reboot'"
 msgstr "Filtrera via en uppsättning av enhetsflaggor genom att använda ett ~-prefix för att exkludera, t.ex. ”internal,~needs-reboot”"
+
+#. TRANSLATORS: command line option
+msgid "Filter with a set of release flags using a ~ prefix to exclude, e.g. 'trusted-release,~trusted-metadata'"
+msgstr "Filtrera med en uppsättning utgåveflaggor och prefixet ~ för att exkludera, t.ex. 'trusted-release,~trusted-metadata'"
 
 #. TRANSLATORS: Title: if we can verify the firmware checksums
 msgid "Firmware Attestation"
@@ -1392,6 +1415,15 @@ msgctxt "A single GUID"
 msgid "GUID"
 msgstr "GUID"
 
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgctxt "command-argument"
+msgid "GUID"
+msgstr "GUID"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "GUID|DEVICE-ID"
+msgstr "GUID|ENHETS-ID"
+
 msgid "Get BIOS settings"
 msgstr "Erhåll BIOS-inställningar"
 
@@ -1536,12 +1568,12 @@ msgid "Install Duration"
 msgstr "Installationstid"
 
 #. TRANSLATORS: command description
-msgid "Install a firmware blob on a device"
-msgstr "Installera en fast programvaru-blob på en enhet"
+msgid "Install a firmware file in cabinet format on this hardware"
+msgstr "Installera en fast programvarufil i kabinettformat på denna hårdvara"
 
 #. TRANSLATORS: command description
-msgid "Install a firmware file on this hardware"
-msgstr "Installera en fast programvarufil på denna hårdvara"
+msgid "Install a raw firmware blob on a device"
+msgstr "Installera en rå fast programvaru-blob på en enhet"
 
 #. TRANSLATORS: command description
 msgid "Install a specific firmware on a device, all possible devices will also be installed once the CAB matches"
@@ -1572,6 +1604,12 @@ msgstr "Installera osignerad fast programvara för systemet"
 #. TRANSLATORS: console message when no Plymouth is installed
 msgid "Installing Firmware…"
 msgstr "Installerar fast programvara…"
+
+#. TRANSLATORS: stay on one firmware version unless the new version is
+#. explicitly
+#. * specified
+msgid "Installing a specific release is explicitly required"
+msgstr "Det krävs att explicit installera en specifik utgåva"
 
 #. TRANSLATORS: this is shown when updating the firmware after the reboot
 msgid "Installing firmware update…"
@@ -1698,6 +1736,14 @@ msgstr "Ogiltig"
 msgid "Invalid arguments"
 msgstr "Ogiltiga argument"
 
+#. TRANSLATORS: error message
+msgid "Invalid arguments, expected GUID"
+msgstr "Ogiltiga argument, GUID förväntades"
+
+#. TRANSLATORS: error message
+msgid "Invalid arguments, expected at least ARCHIVE FIRMWARE METAINFO"
+msgstr "Ogiltiga argument, förväntade åtminstone ARKIV FAST_PROGRAMVARA METAINFO"
+
 #. TRANSLATORS: version is older
 msgid "Is downgrade"
 msgstr "Är nedgradering"
@@ -1796,6 +1842,10 @@ msgstr "Lockdown för Linux-kärnan"
 msgid "Linux swap"
 msgstr "Linux-växlingsutrymme"
 
+#. TRANSLATORS: command description
+msgid "List EFI variables with a specific GUID"
+msgstr "Lista EFI-variabler med ett specifikt GUID"
+
 #. TRANSLATORS: command line option
 msgid "List entries in dbx"
 msgstr "Lista poster i dbx"
@@ -1803,6 +1853,10 @@ msgstr "Lista poster i dbx"
 #. TRANSLATORS: command line option
 msgid "List supported firmware updates"
 msgstr "Lista uppdateringar för fast programvara som stöds"
+
+#. TRANSLATORS: command description
+msgid "List the available firmware GTypes"
+msgstr "Lista tillgängliga GType-typer för fast programvara"
 
 #. TRANSLATORS: command description
 msgid "List the available firmware types"
@@ -1905,7 +1959,7 @@ msgstr "Lägsta värde"
 msgid "Mismatched daemon and client, use %s instead"
 msgstr "Demon och klient stämmer inte, använd %s istället"
 
-#. TRANSLATORS: sets something in daemon.conf
+#. TRANSLATORS: sets something in the daemon configuration file
 msgid "Modifies a daemon configuration value"
 msgstr "Modifierar ett konfigurationsvärde för demonen"
 
@@ -1957,6 +2011,10 @@ msgstr "Inga nedgraderingar för %s"
 msgid "No firmware IDs found"
 msgstr "Inget fast programvaru-ID hittat"
 
+#. TRANSLATORS: nothing found
+msgid "No firmware found"
+msgstr "Ingen fast programvara hittades"
+
 #. TRANSLATORS: nothing attached that can be upgraded
 msgid "No hardware detected with firmware update capability"
 msgstr "Ingen uppdateringsbar hårdvara upptäcktes"
@@ -1997,8 +2055,8 @@ msgid "Not approved"
 msgstr "Inte godkänd"
 
 #. TRANSLATORS: error message to tell someone they can't use this feature
-msgid "Not enough data was provided to make an HSI calculation."
-msgstr "För lite data tillhandahölls för att göra en HSI-beräkning."
+msgid "Not enough data was provided by the platform to make an HSI calculation."
+msgstr "För lite data tillhandahölls av plattformen för att göra en HSI-beräkning."
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Not found"
@@ -2620,6 +2678,11 @@ msgstr[1] "Skickade framgångsrikt %u rapporter"
 msgid "Successfully verified device checksums"
 msgstr "Verifierade framgångsrikt enhetskontrollsummor"
 
+#. TRANSLATORS: the device showed up in time
+#, c-format
+msgid "Successfully waited %.0fms for device"
+msgstr "Väntade %.0fms på enhet"
+
 #. TRANSLATORS: one line summary of device
 msgid "Summary"
 msgstr "Sammanfattning"
@@ -2758,6 +2821,10 @@ msgstr "Testad"
 #, c-format
 msgid "Tested by %s"
 msgstr "Testad av %s"
+
+#. TRANSLATORS: someone we trust has tested this
+msgid "Tested by trusted vendor"
+msgstr "Testad av en betrodd leverantör"
 
 #. TRANSLATORS: longer description
 msgid "The Intel Management Engine Key Manifest must be valid so that the device firmware can be trusted by the CPU."
@@ -2898,10 +2965,6 @@ msgstr "Detta verktyg kan endast användas av administratörsanvändaren"
 msgid "This tool will read and parse the TPM event log from the system firmware."
 msgstr "Detta verktyg läser och analyserar TPM-händelseloggen från systemets fasta programvara."
 
-#. TRANSLATORS: message to tell someone how to ignore error
-msgid "To ignore this warning, use --force"
-msgstr "Använd --force för att ignorera denna varning"
-
 #. TRANSLATORS: the update state of the specific device
 msgid "Transient failure"
 msgstr "Tillfälligt misslyckande"
@@ -2922,6 +2985,14 @@ msgstr "Betrodd nyttolast"
 msgid "Type"
 msgstr "Typ"
 
+#. TRANSLATORS: Title: Bootservice is when only readable from early-boot
+msgid "UEFI Bootservice Variables"
+msgstr "UEFI-uppstartstjänstvariabler"
+
+#. TRANSLATORS: partition refers to something on disk, again, hey Arch users
+msgid "UEFI ESP partition may not be set up correctly"
+msgstr "UEFI ESP-partition kanske inte konfigurerats korrekt"
+
 #. TRANSLATORS: partition refers to something on disk, again, hey Arch users
 msgid "UEFI ESP partition not detected or configured"
 msgstr "UEFI ESP-partition upptäcktes inte eller är inte konfigurerad"
@@ -2941,6 +3012,14 @@ msgstr "UEFI säkerhetsstart"
 #. TRANSLATORS: longer description
 msgid "UEFI Secure Boot prevents malicious software from being loaded when the device starts."
 msgstr "UEFI säkerhetsstart förhindrar skadlig programvara från att läsas in när enheten startas."
+
+#. TRANSLATORS: longer description
+msgid "UEFI boot service variables should not be readable from runtime mode."
+msgstr "UEFI-uppstartstjänstvariabler får inte vara läsbara från körtidsläge."
+
+#. TRANSLATORS: Title: Bootservice is when only readable from early-boot
+msgid "UEFI bootservice variables"
+msgstr "UEFI-uppstartstjänstvariabler"
 
 #. TRANSLATORS: capsule updates are an optional BIOS feature
 msgid "UEFI capsule updates not available or enabled in firmware setup"
@@ -3184,6 +3263,10 @@ msgstr "Version[fwupd]"
 #. TRANSLATORS: this is a prefix on the console
 msgid "WARNING"
 msgstr "VARNING"
+
+#. TRANSLATORS: command description
+msgid "Wait for a device to appear"
+msgstr "Vänta på att en enhet ska dyka upp"
 
 #. TRANSLATORS: waiting for device to do something
 msgid "Waiting…"

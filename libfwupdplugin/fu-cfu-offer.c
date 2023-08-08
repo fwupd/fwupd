@@ -9,10 +9,11 @@
 #include "config.h"
 
 #include "fu-byte-array.h"
+#include "fu-cfu-firmware-struct.h"
 #include "fu-cfu-offer.h"
-#include "fu-cfu-struct.h"
 #include "fu-common.h"
 #include "fu-string.h"
+#include "fu-version-common.h"
 
 /**
  * FuCfuOffer:
@@ -430,6 +431,7 @@ fu_cfu_offer_parse(FuFirmware *firmware,
 	guint8 flags3;
 	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
 	g_autoptr(GByteArray) st = NULL;
+	g_autofree gchar *version = NULL;
 
 	/* parse */
 	st = fu_struct_cfu_offer_parse(buf, bufsz, offset, error);
@@ -438,14 +440,19 @@ fu_cfu_offer_parse(FuFirmware *firmware,
 	priv->segment_number = fu_struct_cfu_offer_get_segment_number(st);
 	priv->component_id = fu_struct_cfu_offer_get_component_id(st);
 	priv->token = fu_struct_cfu_offer_get_token(st);
-	priv->hw_variant = fu_struct_cfu_offer_get_hw_variant(st);
+	priv->hw_variant = fu_struct_cfu_offer_get_compat_variant_mask(st);
 	priv->product_id = fu_struct_cfu_offer_get_product_id(st);
-	fu_firmware_set_version_raw(firmware, fu_struct_cfu_offer_get_version_raw(st));
+
+	/* AA.BBCC.DD */
+	version = fu_version_from_uint32(fu_struct_cfu_offer_get_version(st),
+					 FWUPD_VERSION_FORMAT_SURFACE);
+	fu_firmware_set_version(firmware, version);
+	fu_firmware_set_version_raw(firmware, fu_struct_cfu_offer_get_version(st));
 
 	/* component info */
 	flags1 = fu_struct_cfu_offer_get_flags1(st);
-	priv->force_ignore_version = (flags1 & 0b1) > 0;
-	priv->force_immediate_reset = (flags1 & 0b10) > 0;
+	priv->force_ignore_version = (flags1 & 0b10000000) > 0;
+	priv->force_immediate_reset = (flags1 & 0b01000000) > 0;
 
 	/* product info */
 	flags2 = fu_struct_cfu_offer_get_flags2(st);
@@ -458,7 +465,7 @@ fu_cfu_offer_parse(FuFirmware *firmware,
 	return TRUE;
 }
 
-static GBytes *
+static GByteArray *
 fu_cfu_offer_write(FuFirmware *firmware, GError **error)
 {
 	FuCfuOffer *self = FU_CFU_OFFER(firmware);
@@ -468,14 +475,14 @@ fu_cfu_offer_write(FuFirmware *firmware, GError **error)
 	/* component info */
 	fu_struct_cfu_offer_set_segment_number(st, priv->segment_number);
 	fu_struct_cfu_offer_set_flags1(st,
-				       priv->force_ignore_version |
-					   (priv->force_immediate_reset << 1));
+				       priv->force_ignore_version << 7 |
+					   (priv->force_immediate_reset << 6));
 	fu_struct_cfu_offer_set_component_id(st, priv->component_id);
 	fu_struct_cfu_offer_set_token(st, priv->token);
 
 	/* version */
-	fu_struct_cfu_offer_set_version_raw(st, fu_firmware_get_version_raw(firmware));
-	fu_struct_cfu_offer_set_hw_variant(st, priv->hw_variant);
+	fu_struct_cfu_offer_set_version(st, fu_firmware_get_version_raw(firmware));
+	fu_struct_cfu_offer_set_compat_variant_mask(st, priv->hw_variant);
 
 	/* product info */
 	fu_struct_cfu_offer_set_flags2(st, (priv->protocol_revision << 4) | (priv->bank << 2));
@@ -483,7 +490,7 @@ fu_cfu_offer_write(FuFirmware *firmware, GError **error)
 	fu_struct_cfu_offer_set_product_id(st, priv->product_id);
 
 	/* success */
-	return g_byte_array_free_to_bytes(g_steal_pointer(&st));
+	return g_steal_pointer(&st);
 }
 
 static gboolean
@@ -538,6 +545,7 @@ static void
 fu_cfu_offer_init(FuCfuOffer *self)
 {
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_VID_PID);
+	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_NO_AUTO_DETECTION);
 }
 
 static void

@@ -34,6 +34,7 @@ fu_ifd_bios_parse(FuFirmware *firmware,
 {
 	gsize bufsz = 0;
 	guint32 sig;
+	guint img_cnt = 0;
 	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
 
 	/* jump 16MiB as required */
@@ -43,7 +44,6 @@ fu_ifd_bios_parse(FuFirmware *firmware,
 	/* read each volume in order */
 	while (offset < bufsz) {
 		g_autoptr(FuFirmware) firmware_tmp = NULL;
-		g_autoptr(GBytes) fw_offset = NULL;
 
 		/* ignore _FIT_ as EOF */
 		if (!fu_memread_uint32_safe(buf, bufsz, offset, &sig, G_LITTLE_ENDIAN, error)) {
@@ -56,10 +56,8 @@ fu_ifd_bios_parse(FuFirmware *firmware,
 			break;
 
 		/* FV */
-		fw_offset = fu_bytes_new_offset(fw, offset, bufsz - offset, error);
-		if (fw_offset == NULL)
-			return FALSE;
-		firmware_tmp = fu_firmware_new_from_gtypes(fw_offset,
+		firmware_tmp = fu_firmware_new_from_gtypes(fw,
+							   offset,
 							   flags,
 							   error,
 							   FU_TYPE_EFI_FIRMWARE_VOLUME,
@@ -76,6 +74,16 @@ fu_ifd_bios_parse(FuFirmware *firmware,
 
 		/* next! */
 		offset += fu_firmware_get_size(firmware_tmp);
+		img_cnt++;
+	}
+
+	/* found nothing */
+	if (img_cnt == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "no EFI firmware volumes");
+		return FALSE;
 	}
 
 	/* success */
@@ -86,6 +94,7 @@ static void
 fu_ifd_bios_init(FuIfdBios *self)
 {
 	fu_firmware_set_alignment(FU_FIRMWARE(self), FU_FIRMWARE_ALIGNMENT_4K);
+	fu_firmware_set_images_max(FU_FIRMWARE(self), 1024);
 }
 
 static void

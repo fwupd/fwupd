@@ -1,9 +1,8 @@
-if efiboot.found() and efivar.found()
 cargs = ['-DG_LOG_DOMAIN="FuPluginUefiDbx"']
 
 plugin_quirks += files('uefi-dbx.quirk')
 plugin_builtin_uefi_dbx = static_library('fu_plugin_uefi_dbx',
-  structgen.process('fu-efi-image.struct'),
+  rustgen.process('fu-efi-image.rs'),
   sources: [
     'fu-uefi-dbx-plugin.c',
     'fu-uefi-dbx-common.c',
@@ -66,10 +65,9 @@ if get_option('man')
     output: 'dbxtool.1',
     command: [
       generate_man, '@INPUT@', '-o', '@OUTPUT@',
-      '--replace', '@PACKAGE_VERSION@', fwupd_version,
+      '--replace', 'PACKAGE_VERSION', fwupd_version,
     ],
     install: true,
     install_dir: join_paths(mandir, 'man1'),
   )
-endif
 endif

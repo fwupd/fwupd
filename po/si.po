@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"Language-Team: Sinhala (http://www.transifex.com/freedesktop/fwupd/language/si/)\n"
+"Language-Team: Sinhala (http://app.transifex.com/freedesktop/fwupd/language/si/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -713,8 +713,8 @@ msgstr "පවතින නවතම ස්ථිරාංග අනුවාද
 msgid "Did not find any devices with matching GUIDs"
 msgstr "ගැළපෙන GUID සහිත උපාංග කිසිවක් සොයා ගත්තේ නැත"
 
-#. TRANSLATORS: Suffix: the HSI result
 #. TRANSLATORS: Plugin is inactive and not used
+#. TRANSLATORS: Suffix: the HSI result
 msgid "Disabled"
 msgstr "අබල කර ඇත"
 
@@ -840,9 +840,9 @@ msgstr "නව දුරස්ථ පාලකය සබල කරන්නද?"
 msgid "Enable this remote?"
 msgstr "මෙම දුරස්ථ පාලකය සබල කරන්නද?"
 
-#. TRANSLATORS: Suffix: the HSI result
 #. TRANSLATORS: Plugin is active and in use
 #. TRANSLATORS: if the remote is enabled
+#. TRANSLATORS: Suffix: the HSI result
 msgid "Enabled"
 msgstr "සබල කර ඇත"
 
@@ -948,8 +948,8 @@ msgstr "FILENAME-SRC FILENAME-DST [FIRMWARE-TYPE-SRC] [FIRMWARE-TYPE-DST]"
 msgid "FILENAME|CHECKSUM1[,CHECKSUM2][,CHECKSUM3]"
 msgstr "FILENAME|CHECKSUM1[,CHECKSUM2][,CHECKSUM3]"
 
-#. TRANSLATORS: Suffix: the fallback HSI result
 #. TRANSLATORS: the update state of the specific device
+#. TRANSLATORS: Suffix: the fallback HSI result
 msgid "Failed"
 msgstr "අසමත් විය"
 
@@ -1131,6 +1131,11 @@ msgctxt "A single GUID"
 msgid "GUID"
 msgstr "මාර්ගෝපදේශය"
 
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgctxt "command-argument"
+msgid "GUID"
+msgstr "මාර්ගෝපදේශය"
+
 #. TRANSLATORS: command description
 msgid "Get all device flags supported by fwupd"
 msgstr "fwupd මගින් සහය දක්වන සියලුම උපාංග කොඩි ලබා ගන්න"
@@ -1235,14 +1240,6 @@ msgstr "SSL දැඩි චෙක්පත් නොසලකා හැරී�
 #. TRANSLATORS: length of time the update takes to apply
 msgid "Install Duration"
 msgstr "ස්ථාපන කාලය"
-
-#. TRANSLATORS: command description
-msgid "Install a firmware blob on a device"
-msgstr "උපාංගයක ස්ථිරාංග බ්ලොබ් එකක් ස්ථාපනය කරන්න"
-
-#. TRANSLATORS: command description
-msgid "Install a firmware file on this hardware"
-msgstr "මෙම දෘඪාංගයේ ස්ථිරාංග ගොනුවක් ස්ථාපනය කරන්න"
 
 msgid "Install old version of signed system firmware"
 msgstr "අත්සන් කළ පද්ධති ස්ථිරාංගයේ පැරණි අනුවාදය ස්ථාපනය කරන්න"
@@ -1476,7 +1473,7 @@ msgstr "අවම අනුවාදය"
 msgid "Mismatched daemon and client, use %s instead"
 msgstr "නොගැලපෙන ඩීමන් සහ සේවාදායකයා, ඒ වෙනුවට %s භාවිතා කරන්න"
 
-#. TRANSLATORS: sets something in daemon.conf
+#. TRANSLATORS: sets something in the daemon configuration file
 msgid "Modifies a daemon configuration value"
 msgstr "ඩීමන් වින්‍යාස අගයක් වෙනස් කරයි"
 

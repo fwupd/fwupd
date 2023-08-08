@@ -1,0 +1,235 @@
+# Jabra Evolve 65 SE Stereo [runtime]
+[USB\VID_0B0E&PID_24FC]
+Plugin = jabra_gnp
+
+# Jabra Evolve 65 SE Stereo [runtime]
+[USB\VID_0B0E&PID_24FD]
+Plugin = jabra_gnp
+
+# Jabra Evolve 65 SE Stereo [runtime]
+[USB\VID_0B0E&PID_24FE]
+Plugin = jabra_gnp
+
+# Jabra Evolve 75 SE [runtime]
+[USB\VID_0B0E&PID_2502]
+Plugin = jabra_gnp
+
+# Jabra Evolve 75 SE [runtime]
+[USB\VID_0B0E&PID_2503]
+Plugin = jabra_gnp
+
+# Jabra Evolve 75 SE [runtime]
+[USB\VID_0B0E&PID_2504]
+Plugin = jabra_gnp
+
+# Jabra Evolve 65e [runtime]
+[USB\VID_0B0E&PID_248E]
+Plugin = jabra_gnp
+
+# Jabra Evolve 65t [runtime]
+[USB\VID_0B0E&PID_2497]
+Plugin = jabra_gnp
+
+# Jabra Link 380 [runtime]
+[USB\VID_0B0E&PID_24C7]
+Plugin = jabra_gnp
+
+# Jabra Link 380 [runtime]
+[USB\VID_0B0E&PID_24C8]
+Plugin = jabra_gnp
+
+# Jabra Link 380 [runtime]
+[USB\VID_0B0E&PID_24C9]
+Plugin = jabra_gnp
+
+# Jabra Link 380 [runtime]
+[USB\VID_0B0E&PID_24CA]
+Plugin = jabra_gnp
+
+# Jabra Evolve2 65 Mono [runtime]
+[USB\VID_0B0E&PID_24B3]
+Plugin = jabra_gnp
+
+# Jabra Evolve2 65 Mono [runtime]
+[USB\VID_0B0E&PID_24B4]
+Plugin = jabra_gnp
+
+# Jabra Evolve2 65 Mono [runtime]
+[USB\VID_0B0E&PID_24B5]
+Plugin = jabra_gnp
+
+# Jabra Evolve2 65 Mono [runtime]
+[USB\VID_0B0E&PID_24B6]
+Plugin = jabra_gnp
+
+# Jabra Evolve2 65 Stereo [runtime]
+[USB\VID_0B0E&PID_24B7]
+Plugin = jabra_gnp
+
+# Jabra Evolve2 65 Stereo [runtime]
+[USB\VID_0B0E&PID_24B8]
+Plugin = jabra_gnp
+
+# Jabra Evolve2 65 Stereo [runtime]
+[USB\VID_0B0E&PID_24A3]
+Plugin = jabra_gnp
+
+# Jabra Evolve2 65 Stereo [runtime]
+[USB\VID_0B0E&PID_24A4]
+Plugin = jabra_gnp
+
+# Jabra Evolve2 75 [runtime]
+[USB\VID_0B0E&PID_24D9]
+Plugin = jabra_gnp
+
+# Jabra Evolve2 75 [runtime]
+[USB\VID_0B0E&PID_24DA]
+Plugin = jabra_gnp
+
+# Jabra Evolve2 75 [runtime]
+[USB\VID_0B0E&PID_24DB]
+Plugin = jabra_gnp
+
+# Jabra Evolve2 85 [runtime]
+[USB\VID_0B0E&PID_24B9]
+Plugin = jabra_gnp
+
+# Jabra Evolve2 85 [runtime]
+[USB\VID_0B0E&PID_24BA]
+Plugin = jabra_gnp
+
+# Jabra Evolve2 85 [runtime]
+[USB\VID_0B0E&PID_24BB]
+Plugin = jabra_gnp
+
+# Jabra Evolve2 85 [runtime]
+[USB\VID_0B0E&PID_24BC]
+Plugin = jabra_gnp
+
+# Jabra Evolve2 75 [runtime]
+[USB\VID_0B0E&PID_24D9]
+Plugin = jabra_gnp
+
+# Jabra Speak2 40 [runtime]
+[USB\VID_0B0E&PID_AE6D]
+Plugin = jabra_gnp
+
+# Jabra Speak2 40 [runtime]
+[USB\VID_0B0E&PID_AE6B]
+Plugin = jabra_gnp
+
+# Jabra Speak2 40 [runtime]
+[USB\VID_0B0E&PID_AE6F]
+Plugin = jabra_gnp
+
+# Jabra Speak2 55 [runtime]
+[USB\VID_0B0E&PID_AE6C]
+Plugin = jabra_gnp
+
+# Jabra Speak2 55 [runtime]
+[USB\VID_0B0E&PID_AE6A]
+Plugin = jabra_gnp
+
+# Jabra Speak2 55 [runtime]
+[USB\VID_0B0E&PID_AE6E]
+Plugin = jabra_gnp
+
+# Jabra Speak2 55 [runtime]
+[USB\VID_0B0E&PID_AE70]
+Plugin = jabra_gnp
+
+# Jabra Speak2 75 [runtime]
+[USB\VID_0B0E&PID_24EF]
+Plugin = jabra_gnp
+
+# Jabra Speak2 75 [runtime]
+[USB\VID_0B0E&PID_24F0]
+Plugin = jabra_gnp
+
+# Jabra Speak2 75 [runtime]
+[USB\VID_0B0E&PID_24F1]
+Plugin = jabra_gnp
+
+# Jabra Evolve2 50 Mono [runtime]
+[USB\VID_0B0E&PID_2508]
+Plugin = jabra_gnp
+
+# Jabra Evolve2 50 Mono [runtime]
+[USB\VID_0B0E&PID_2509]
+Plugin = jabra_gnp
+
+# Jabra Evolve2 50 Mono [runtime]
+[USB\VID_0B0E&PID_250A]
+Plugin = jabra_gnp
+
+# Jabra Evolve2 50 Stereo [runtime]
+[USB\VID_0B0E&PID_2505]
+Plugin = jabra_gnp
+
+# Jabra Evolve2 50 Stereo [runtime]
+[USB\VID_0B0E&PID_2506]
+Plugin = jabra_gnp
+
+# Jabra Evolve2 50 Stereo [runtime]
+[USB\VID_0B0E&PID_2507]
+Plugin = jabra_gnp
+
+# Jabra Evolve2 55 Mono [runtime]
+[USB\VID_0B0E&PID_24F6]
+Plugin = jabra_gnp
+
+# Jabra Evolve2 55 Mono [runtime]
+[USB\VID_0B0E&PID_24F7]
+Plugin = jabra_gnp
+
+# Jabra Evolve2 55 Mono [runtime]
+[USB\VID_0B0E&PID_24F8]
+Plugin = jabra_gnp
+
+# Jabra Evolve2 55 Secure Stereo [runtime]
+[USB\VID_0B0E&PID_2512]
+Plugin = jabra_gnp
+
+# Jabra Evolve2 55 Secure Stereo [runtime]
+[USB\VID_0B0E&PID_2513]
+Plugin = jabra_gnp
+
+# Jabra Evolve2 55 Secure Stereo [runtime]
+[USB\VID_0B0E&PID_2514]
+Plugin = jabra_gnp
+
+# Jabra Evolve2 55 Stereo [runtime]
+[USB\VID_0B0E&PID_24F3]
+Plugin = jabra_gnp
+
+# Jabra Evolve2 55 Stereo [runtime]
+[USB\VID_0B0E&PID_24F4]
+Plugin = jabra_gnp
+
+# Jabra Evolve2 55 Stereo [runtime]
+[USB\VID_0B0E&PID_24F5]
+Plugin = jabra_gnp
+
+# Jabra Evolve2 65 Flex [runtime]
+[USB\VID_0B0E&PID_2517]
+Plugin = jabra_gnp
+
+# Jabra Evolve2 65 Flex [runtime]
+[USB\VID_0B0E&PID_2518]
+Plugin = jabra_gnp
+
+# Jabra Evolve2 65 Flex [runtime]
+[USB\VID_0B0E&PID_2519]
+Plugin = jabra_gnp
+
+# Jabra Evolve2 65 Flex Secure [runtime]
+[USB\VID_0B0E&PID_2523]
+Plugin = jabra_gnp
+
+# Jabra Evolve2 65 Flex Secure [runtime]
+[USB\VID_0B0E&PID_2524]
+Plugin = jabra_gnp
+
+# Jabra Evolve2 65 Flex Secure [runtime]
+[USB\VID_0B0E&PID_2525]
+Plugin = jabra_gnp

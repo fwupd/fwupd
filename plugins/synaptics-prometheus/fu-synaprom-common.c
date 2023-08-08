@@ -28,12 +28,12 @@ enum {
 };
 
 GByteArray *
-fu_synaprom_request_new(guint8 cmd, const gpointer data, gsize len)
+fu_synaprom_request_new(guint8 cmd, const guint8 *buf, gsize bufsz)
 {
 	GByteArray *blob = g_byte_array_new();
 	fu_byte_array_append_uint8(blob, cmd);
-	if (data != NULL)
-		g_byte_array_append(blob, data, len);
+	if (buf != NULL)
+		g_byte_array_append(blob, buf, bufsz);
 	return blob;
 }
 

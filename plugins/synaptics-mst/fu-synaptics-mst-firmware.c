@@ -6,8 +6,6 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
 #include "fu-synaptics-mst-connection.h"
 #include "fu-synaptics-mst-firmware.h"
 
@@ -57,7 +55,7 @@ fu_synaptics_mst_firmware_parse(FuFirmware *firmware,
 	return TRUE;
 }
 
-static GBytes *
+static GByteArray *
 fu_synaptics_mst_firmware_write(FuFirmware *firmware, GError **error)
 {
 	g_autoptr(GByteArray) buf = g_byte_array_new();
@@ -80,7 +78,7 @@ fu_synaptics_mst_firmware_write(FuFirmware *firmware, GError **error)
 	fu_byte_array_append_bytes(buf, blob);
 
 	/* success */
-	return g_byte_array_free_to_bytes(g_steal_pointer(&buf));
+	return g_steal_pointer(&buf);
 }
 
 static gboolean
@@ -101,6 +99,7 @@ fu_synaptics_rmi_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
 static void
 fu_synaptics_mst_firmware_init(FuSynapticsMstFirmware *self)
 {
+	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_NO_AUTO_DETECTION);
 }
 
 static void

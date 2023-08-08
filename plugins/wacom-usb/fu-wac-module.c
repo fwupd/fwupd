@@ -11,22 +11,7 @@
 #include "fu-wac-common.h"
 #include "fu-wac-device.h"
 #include "fu-wac-module.h"
-
-#define FU_WAC_MODULE_STATUS_OK			    0
-#define FU_WAC_MODULE_STATUS_BUSY		    1
-#define FU_WAC_MODULE_STATUS_ERR_CRC		    2
-#define FU_WAC_MODULE_STATUS_ERR_CMD		    3
-#define FU_WAC_MODULE_STATUS_ERR_HW_ACCESS_FAIL	    4
-#define FU_WAC_MODULE_STATUS_ERR_FLASH_NO_SUPPORT   5
-#define FU_WAC_MODULE_STATUS_ERR_MODE_WRONG	    6
-#define FU_WAC_MODULE_STATUS_ERR_MPU_NO_SUPPORT	    7
-#define FU_WAC_MODULE_STATUS_ERR_VERSION_NO_SUPPORT 8
-#define FU_WAC_MODULE_STATUS_ERR_ERASE		    9
-#define FU_WAC_MODULE_STATUS_ERR_WRITE		    10
-#define FU_WAC_MODULE_STATUS_ERR_EXIT		    11
-#define FU_WAC_MODULE_STATUS_ERR		    12
-#define FU_WAC_MODULE_STATUS_ERR_INVALID_OP	    13
-#define FU_WAC_MODULE_STATUS_ERR_WRONG_IMAGE	    14
+#include "fu-wac-struct.h"
 
 typedef struct {
 	guint8 fw_type;
@@ -38,74 +23,6 @@ G_DEFINE_TYPE_WITH_PRIVATE(FuWacModule, fu_wac_module, FU_TYPE_DEVICE)
 #define GET_PRIVATE(o) (fu_wac_module_get_instance_private(o))
 
 enum { PROP_0, PROP_FW_TYPE, PROP_LAST };
-
-static const gchar *
-fu_wac_module_fw_type_to_string(guint8 fw_type)
-{
-	if (fw_type == FU_WAC_MODULE_FW_TYPE_TOUCH)
-		return "touch";
-	if (fw_type == FU_WAC_MODULE_FW_TYPE_TOUCH_ID7)
-		return "touch-id7";
-	if (fw_type == FU_WAC_MODULE_FW_TYPE_BLUETOOTH)
-		return "bluetooth";
-	if (fw_type == FU_WAC_MODULE_FW_TYPE_BLUETOOTH_ID6)
-		return "bluetooth-id6";
-	if (fw_type == FU_WAC_MODULE_FW_TYPE_SCALER)
-		return "scaler";
-	if (fw_type == FU_WAC_MODULE_FW_TYPE_EMR_CORRECTION)
-		return "emr-correction";
-	if (fw_type == FU_WAC_MODULE_FW_TYPE_BLUETOOTH_HID)
-		return "bluetooth-hid";
-	return NULL;
-}
-
-static const gchar *
-fu_wac_module_command_to_string(guint8 command)
-{
-	if (command == FU_WAC_MODULE_COMMAND_START)
-		return "start";
-	if (command == FU_WAC_MODULE_COMMAND_DATA)
-		return "data";
-	if (command == FU_WAC_MODULE_COMMAND_END)
-		return "end";
-	return NULL;
-}
-
-static const gchar *
-fu_wac_module_status_to_string(guint8 status)
-{
-	if (status == FU_WAC_MODULE_STATUS_OK)
-		return "ok";
-	if (status == FU_WAC_MODULE_STATUS_BUSY)
-		return "busy";
-	if (status == FU_WAC_MODULE_STATUS_ERR_CRC)
-		return "err-crc";
-	if (status == FU_WAC_MODULE_STATUS_ERR_CMD)
-		return "err-cmd";
-	if (status == FU_WAC_MODULE_STATUS_ERR_HW_ACCESS_FAIL)
-		return "err-hw-access-fail";
-	if (status == FU_WAC_MODULE_STATUS_ERR_FLASH_NO_SUPPORT)
-		return "err-flash-no-support";
-	if (status == FU_WAC_MODULE_STATUS_ERR_MODE_WRONG)
-		return "err-mode-wrong";
-	if (status == FU_WAC_MODULE_STATUS_ERR_MPU_NO_SUPPORT)
-		return "err-mpu-no-support";
-	if (status == FU_WAC_MODULE_STATUS_ERR_VERSION_NO_SUPPORT)
-		return "erro-version-no-support";
-	if (status == FU_WAC_MODULE_STATUS_ERR_ERASE)
-		return "err-erase";
-	if (status == FU_WAC_MODULE_STATUS_ERR_WRITE)
-		return "err-write";
-	if (status == FU_WAC_MODULE_STATUS_ERR_EXIT)
-		return "err-exit";
-	if (status == FU_WAC_MODULE_STATUS_ERR)
-		return "err-err";
-	if (status == FU_WAC_MODULE_STATUS_ERR_INVALID_OP)
-		return "err-invalid-op";
-	if (status == FU_WAC_MODULE_STATUS_ERR_WRONG_IMAGE)
-		return "err-wrong-image";
-	return NULL;
-}
 
 static void
 fu_wac_module_to_string(FuDevice *device, guint idt, GString *str)
@@ -164,14 +81,20 @@ fu_wac_module_refresh_cb(FuDevice *device, gpointer user_data, GError **error)
 {
 	FuWacModule *self = FU_WAC_MODULE(device);
 	FuWacModulePrivate *priv = GET_PRIVATE(self);
+	g_autoptr(GError) error_local = NULL;
 
-	if (!fu_wac_module_refresh(self, error))
+	if (!fu_wac_module_refresh(self, &error_local)) {
+		if (g_error_matches(error_local, G_USB_DEVICE_ERROR, G_USB_DEVICE_ERROR_NO_DEVICE))
+			return TRUE;
+		g_propagate_error(error, g_steal_pointer(&error_local));
 		return FALSE;
+	}
 	if (priv->status != FU_WAC_MODULE_STATUS_OK) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
-			    "refresh returned status %s",
+			    "refresh returned status 0x%x [%s]",
+			    priv->status,
 			    fu_wac_module_status_to_string(priv->status));
 		return FALSE;
 	}
@@ -193,7 +116,7 @@ fu_wac_module_set_feature(FuWacModule *self,
 	const guint8 *data;
 	gsize len = 0;
 	guint delay_ms =
-	    fu_device_has_flag(FU_DEVICE(parent_device), FWUPD_DEVICE_FLAG_EMULATED) ? 10 : 20;
+	    fu_device_has_flag(FU_DEVICE(parent_device), FWUPD_DEVICE_FLAG_EMULATED) ? 10 : 250;
 	guint busy_poll_loops = busy_timeout / delay_ms;
 	guint8 buf[] = {[0] = FU_WAC_REPORT_ID_MODULE,
 			[1] = priv->fw_type,
@@ -238,7 +161,7 @@ fu_wac_module_set_feature(FuWacModule *self,
 	/* send to hardware */
 	if (!fu_wac_device_set_feature_report(parent_device,
 					      buf,
-					      len + 3,
+					      sizeof(buf),
 					      FU_HID_DEVICE_FLAG_ALLOW_TRUNC,
 					      error)) {
 		g_prefix_error(error, "failed to set module feature: ");
@@ -246,13 +169,20 @@ fu_wac_module_set_feature(FuWacModule *self,
 	}
 
 	/* wait for hardware */
-	if (!fu_device_retry_full(FU_DEVICE(self),
-				  fu_wac_module_refresh_cb,
-				  busy_poll_loops,
-				  delay_ms,
-				  NULL,
-				  error))
-		return FALSE;
+	if (busy_poll_loops > 0) {
+		fu_device_sleep(FU_DEVICE(self), 80); /* ms */
+		if (!fu_device_retry_full(FU_DEVICE(self),
+					  fu_wac_module_refresh_cb,
+					  busy_poll_loops,
+					  delay_ms,
+					  NULL,
+					  error)) {
+			g_prefix_error(error,
+				       "failed to set feature %s: ",
+				       fu_wac_module_command_to_string(command));
+			return FALSE;
+		}
+	}
 
 	/* success */
 	return TRUE;

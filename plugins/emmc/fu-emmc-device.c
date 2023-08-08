@@ -6,8 +6,6 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
 #include <linux/mmc/ioctl.h>
 #include <sys/ioctl.h>
 
@@ -208,7 +206,8 @@ fu_emmc_device_probe(FuDevice *device, GError **error)
 		fu_device_set_version(device, tmp);
 	}
 	fu_device_add_instance_strsafe(device, "REV", tmp);
-	fu_device_build_instance_id(device, NULL, "EMMC", "NAME", "REV", NULL);
+	if (fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_ADD_INSTANCE_ID_REV))
+		fu_device_build_instance_id(device, NULL, "EMMC", "NAME", "REV", NULL);
 
 	/* manfid + oemid, manfid + oemid + name */
 	if (!fu_emmc_device_get_sysattr_guint64(udev_parent, "manfid", &manfid, error))

@@ -82,6 +82,7 @@ fu_linux_tainted_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *at
 	/* create attr */
 	attr = fu_plugin_security_attr_new(plugin, FWUPD_SECURITY_ATTR_ID_KERNEL_TAINTED);
 	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ISSUE);
+	fwupd_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_TAINTED);
 	fu_security_attrs_append(attrs, attr);
 
 	/* startup failed */
@@ -122,7 +123,6 @@ fu_linux_tainted_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *at
 
 	/* success */
 	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
-	fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_TAINTED);
 }
 
 static void

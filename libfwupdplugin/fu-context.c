@@ -9,6 +9,7 @@
 #include "config.h"
 
 #include "fu-bios-settings-private.h"
+#include "fu-config-private.h"
 #include "fu-context-private.h"
 #include "fu-fdt-firmware.h"
 #include "fu-hwids-private.h"
@@ -26,12 +27,13 @@
 typedef struct {
 	FuContextFlags flags;
 	FuHwids *hwids;
+	FuConfig *config;
 	FuSmbios *smbios;
 	FuSmbiosChassisKind chassis_kind;
 	FuQuirks *quirks;
 	GHashTable *runtime_versions;
 	GHashTable *compile_versions;
-	GPtrArray *udev_subsystems;
+	GHashTable *udev_subsystems; /* utf8:GPtrArray */
 	GPtrArray *esp_volumes;
 	GHashTable *firmware_gtypes; /* utf8:GType */
 	GHashTable *hwid_flags; /* str: */
@@ -164,6 +166,24 @@ fu_context_get_hwids(FuContext *self)
 	FuContextPrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FU_IS_CONTEXT(self), NULL);
 	return priv->hwids;
+}
+
+/**
+ * fu_context_get_config:
+ * @self: a #FuContext
+ *
+ * Gets the system config.
+ *
+ * Returns: (transfer none): a #FuHwids
+ *
+ * Since: 1.9.1
+ **/
+FuConfig *
+fu_context_get_config(FuContext *self)
+{
+	FuContextPrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_CONTEXT(self), NULL);
+	return priv->config;
 }
 
 /**
@@ -553,10 +573,19 @@ fu_context_set_compile_versions(FuContext *self, GHashTable *compile_versions)
 	priv->compile_versions = g_hash_table_ref(compile_versions);
 }
 
+static gint
+fu_context_udev_plugin_names_sort_cb(gconstpointer a, gconstpointer b)
+{
+	const gchar *str_a = *((const gchar **)a);
+	const gchar *str_b = *((const gchar **)b);
+	return g_strcmp0(str_a, str_b);
+}
+
 /**
  * fu_context_add_udev_subsystem:
  * @self: a #FuContext
  * @subsystem: a subsystem name, e.g. `pciport`
+ * @plugin_name: (nullable): a plugin name, e.g. `iommu`
  *
  * Registers the udev subsystem to be watched by the daemon.
  *
@@ -565,20 +594,75 @@ fu_context_set_compile_versions(FuContext *self, GHashTable *compile_versions)
  * Since: 1.6.0
  **/
 void
-fu_context_add_udev_subsystem(FuContext *self, const gchar *subsystem)
+fu_context_add_udev_subsystem(FuContext *self, const gchar *subsystem, const gchar *plugin_name)
 {
 	FuContextPrivate *priv = GET_PRIVATE(self);
+	GPtrArray *plugin_names;
 
 	g_return_if_fail(FU_IS_CONTEXT(self));
 	g_return_if_fail(subsystem != NULL);
 
-	for (guint i = 0; i < priv->udev_subsystems->len; i++) {
-		const gchar *subsystem_tmp = g_ptr_array_index(priv->udev_subsystems, i);
-		if (g_strcmp0(subsystem_tmp, subsystem) == 0)
-			return;
+	/* already exists */
+	plugin_names = g_hash_table_lookup(priv->udev_subsystems, subsystem);
+	if (plugin_names != NULL) {
+		if (plugin_name != NULL) {
+			for (guint i = 0; i < plugin_names->len; i++) {
+				const gchar *tmp = g_ptr_array_index(plugin_names, i);
+				if (g_strcmp0(tmp, plugin_name) == 0)
+					return;
+			}
+			g_ptr_array_add(plugin_names, g_strdup(plugin_name));
+			g_ptr_array_sort(plugin_names, fu_context_udev_plugin_names_sort_cb);
+		}
+		return;
 	}
-	g_info("added udev subsystem watch of %s", subsystem);
-	g_ptr_array_add(priv->udev_subsystems, g_strdup(subsystem));
+
+	/* add */
+	plugin_names = g_ptr_array_new_with_free_func(g_free);
+	if (plugin_name != NULL)
+		g_ptr_array_add(plugin_names, g_strdup(plugin_name));
+	g_hash_table_insert(priv->udev_subsystems,
+			    g_strdup(subsystem),
+			    g_steal_pointer(&plugin_names));
+	if (plugin_name != NULL)
+		g_info("added udev subsystem watch of %s for plugin %s", subsystem, plugin_name);
+	else
+		g_info("added udev subsystem watch of %s", subsystem);
+}
+
+/**
+ * fu_context_get_plugin_names_for_udev_subsystem:
+ * @self: a #FuContext
+ * @subsystem: a subsystem name, e.g. `pciport`
+ * @error: (nullable): optional return location for an error
+ *
+ * Gets the plugins which registered for a specific subsystem.
+ *
+ * Returns: (transfer container) (element-type utf8): List of plugin names
+ *
+ * Since: 1.9.3
+ **/
+GPtrArray *
+fu_context_get_plugin_names_for_udev_subsystem(FuContext *self,
+					       const gchar *subsystem,
+					       GError **error)
+{
+	FuContextPrivate *priv = GET_PRIVATE(self);
+	GPtrArray *plugin_names;
+
+	g_return_val_if_fail(FU_IS_CONTEXT(self), NULL);
+	g_return_val_if_fail(subsystem != NULL, NULL);
+
+	plugin_names = g_hash_table_lookup(priv->udev_subsystems, subsystem);
+	if (plugin_names == NULL) {
+		g_set_error(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_NOT_FOUND,
+			    "no plugins registered for %s",
+			    subsystem);
+		return NULL;
+	}
+	return g_ptr_array_ref(plugin_names);
 }
 
 /**
@@ -587,7 +671,7 @@ fu_context_add_udev_subsystem(FuContext *self, const gchar *subsystem)
  *
  * Gets the udev subsystems required by all plugins.
  *
- * Returns: (transfer none) (element-type utf8): List of subsystems
+ * Returns: (transfer container) (element-type utf8): List of subsystems
  *
  * Since: 1.6.0
  **/
@@ -595,8 +679,16 @@ GPtrArray *
 fu_context_get_udev_subsystems(FuContext *self)
 {
 	FuContextPrivate *priv = GET_PRIVATE(self);
+	g_autoptr(GList) keys = g_hash_table_get_keys(priv->udev_subsystems);
+	g_autoptr(GPtrArray) subsystems = g_ptr_array_new_with_free_func(g_free);
+
 	g_return_val_if_fail(FU_IS_CONTEXT(self), NULL);
-	return priv->udev_subsystems;
+
+	for (GList *l = keys; l != NULL; l = l->next) {
+		const gchar *subsystem = (const gchar *)l->data;
+		g_ptr_array_add(subsystems, g_strdup(subsystem));
+	}
+	return g_steal_pointer(&subsystems);
 }
 
 /**
@@ -657,7 +749,7 @@ fu_context_gtypes_sort_cb(gconstpointer a, gconstpointer b)
  *
  * Returns all the firmware #GType IDs.
  *
- * Returns: (transfer none) (element-type utf8): List of subsystems
+ * Returns: (transfer container) (element-type utf8): firmware IDs
  *
  * Since: 1.6.0
  **/
@@ -752,10 +844,27 @@ fu_context_lookup_quirk_by_id(FuContext *self, const gchar *guid, const gchar *k
 	return fu_quirks_lookup_by_id(priv->quirks, guid, key);
 }
 
+typedef struct {
+	FuContext *self; /* noref */
+	FuContextLookupIter iter_cb;
+	gpointer user_data;
+} FuContextQuirkLookupHelper;
+
+static void
+fu_context_lookup_quirk_by_id_iter_cb(FuQuirks *self,
+				      const gchar *key,
+				      const gchar *value,
+				      gpointer user_data)
+{
+	FuContextQuirkLookupHelper *helper = (FuContextQuirkLookupHelper *)user_data;
+	helper->iter_cb(helper->self, key, value, helper->user_data);
+}
+
 /**
  * fu_context_lookup_quirk_by_id_iter:
  * @self: a #FuContext
  * @guid: GUID to lookup
+ * @key: (nullable): an ID to match the entry, e.g. `Name`, or %NULL for all keys
  * @iter_cb: (scope call) (closure user_data): a function to call for each result
  * @user_data: user data passed to @iter_cb
  *
@@ -768,14 +877,24 @@ fu_context_lookup_quirk_by_id(FuContext *self, const gchar *guid, const gchar *k
 gboolean
 fu_context_lookup_quirk_by_id_iter(FuContext *self,
 				   const gchar *guid,
+				   const gchar *key,
 				   FuContextLookupIter iter_cb,
 				   gpointer user_data)
 {
 	FuContextPrivate *priv = GET_PRIVATE(self);
+	FuContextQuirkLookupHelper helper = {
+	    .self = self,
+	    .iter_cb = iter_cb,
+	    .user_data = user_data,
+	};
 	g_return_val_if_fail(FU_IS_CONTEXT(self), FALSE);
 	g_return_val_if_fail(guid != NULL, FALSE);
 	g_return_val_if_fail(iter_cb != NULL, FALSE);
-	return fu_quirks_lookup_by_id_iter(priv->quirks, guid, (FuQuirksIter)iter_cb, user_data);
+	return fu_quirks_lookup_by_id_iter(priv->quirks,
+					   guid,
+					   key,
+					   fu_context_lookup_quirk_by_id_iter_cb,
+					   &helper);
 }
 
 /**
@@ -794,6 +913,17 @@ fu_context_security_changed(FuContext *self)
 }
 
 typedef gboolean (*FuContextHwidsSetupFunc)(FuContext *self, FuHwids *hwids, GError **error);
+
+static void
+fu_context_hwid_quirk_cb(FuContext *self, const gchar *key, const gchar *value, gpointer user_data)
+{
+	FuContextPrivate *priv = GET_PRIVATE(self);
+	if (value != NULL) {
+		g_auto(GStrv) values = g_strsplit(value, ",", -1);
+		for (guint j = 0; values[j] != NULL; j++)
+			g_hash_table_add(priv->hwid_flags, g_strdup(values[j]));
+	}
+}
 
 /**
  * fu_context_load_hwinfo:
@@ -839,6 +969,10 @@ fu_context_load_hwinfo(FuContext *self,
 	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 3, "set-flags");
 	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 95, "reload-bios-settings");
 
+	/* required always */
+	if (!fu_config_load(priv->config, error))
+		return FALSE;
+
 	/* run all the HWID setup funcs */
 	for (guint i = 0; hwids_setup_map[i].name != NULL; i++) {
 		if ((flags & hwids_setup_map[i].flag) > 0) {
@@ -862,19 +996,15 @@ fu_context_load_hwinfo(FuContext *self,
 	guids = fu_context_get_hwid_guids(self);
 	for (guint i = 0; i < guids->len; i++) {
 		const gchar *guid = g_ptr_array_index(guids, i);
-		const gchar *value;
-
-		/* does prefixed quirk exist */
-		value = fu_context_lookup_quirk_by_id(self, guid, FU_QUIRKS_FLAGS);
-		if (value != NULL) {
-			g_auto(GStrv) values = g_strsplit(value, ",", -1);
-			for (guint j = 0; values[j] != NULL; j++)
-				g_hash_table_add(priv->hwid_flags, g_strdup(values[j]));
-		}
+		fu_context_lookup_quirk_by_id_iter(self,
+						   guid,
+						   FU_QUIRKS_FLAGS,
+						   fu_context_hwid_quirk_cb,
+						   NULL);
 	}
 	fu_progress_step_done(progress);
 
-	fu_context_add_udev_subsystem(self, "firmware-attributes");
+	fu_context_add_udev_subsystem(self, "firmware-attributes", NULL);
 	if (!fu_context_reload_bios_settings(self, &error_bios_settings))
 		g_debug("%s", error_bios_settings->message);
 	fu_progress_step_done(progress);
@@ -1324,12 +1454,13 @@ fu_context_finalize(GObject *object)
 	if (priv->fdt != NULL)
 		g_object_unref(priv->fdt);
 	g_object_unref(priv->hwids);
+	g_object_unref(priv->config);
 	g_hash_table_unref(priv->hwid_flags);
 	g_object_unref(priv->quirks);
 	g_object_unref(priv->smbios);
 	g_object_unref(priv->host_bios_settings);
 	g_hash_table_unref(priv->firmware_gtypes);
-	g_ptr_array_unref(priv->udev_subsystems);
+	g_hash_table_unref(priv->udev_subsystems);
 	g_ptr_array_unref(priv->esp_volumes);
 
 	G_OBJECT_CLASS(fu_context_parent_class)->finalize(object);
@@ -1456,8 +1587,12 @@ fu_context_init(FuContext *self)
 	priv->battery_threshold = FWUPD_BATTERY_LEVEL_INVALID;
 	priv->smbios = fu_smbios_new();
 	priv->hwids = fu_hwids_new();
+	priv->config = fu_config_new();
 	priv->hwid_flags = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
-	priv->udev_subsystems = g_ptr_array_new_with_free_func(g_free);
+	priv->udev_subsystems = g_hash_table_new_full(g_str_hash,
+						      g_str_equal,
+						      g_free,
+						      (GDestroyNotify)g_ptr_array_unref);
 	priv->firmware_gtypes = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
 	priv->quirks = fu_quirks_new();
 	priv->host_bios_settings = fu_bios_settings_new();

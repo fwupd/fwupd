@@ -1,4 +1,0 @@
-struct {{Vendor}}{{Example}} {
-	signature: u8: const=0xDE
-	address: u16le
-}

@@ -9,4 +9,7 @@
 #include <fwupdplugin.h>
 
 gboolean
-fu_uefi_dbx_signature_list_validate(FuContext *ctx, FuEfiSignatureList *siglist, GError **error);
+fu_uefi_dbx_signature_list_validate(FuContext *ctx,
+				    FuEfiSignatureList *siglist,
+				    FwupdInstallFlags flags,
+				    GError **error);

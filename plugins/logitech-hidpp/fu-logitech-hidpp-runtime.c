@@ -11,29 +11,30 @@
 #include "fu-logitech-hidpp-common.h"
 #include "fu-logitech-hidpp-hidpp.h"
 #include "fu-logitech-hidpp-runtime.h"
+#include "fu-logitech-hidpp-struct.h"
 
 typedef struct {
 	guint8 version_bl_major;
 	FuIOChannel *io_channel;
-} FuLogitechHidPpRuntimePrivate;
+} FuLogitechHidppRuntimePrivate;
 
-G_DEFINE_TYPE_WITH_PRIVATE(FuLogitechHidPpRuntime, fu_logitech_hidpp_runtime, FU_TYPE_UDEV_DEVICE)
+G_DEFINE_TYPE_WITH_PRIVATE(FuLogitechHidppRuntime, fu_logitech_hidpp_runtime, FU_TYPE_UDEV_DEVICE)
 
 #define GET_PRIVATE(o) (fu_logitech_hidpp_runtime_get_instance_private(o))
 
 FuIOChannel *
-fu_logitech_hidpp_runtime_get_io_channel(FuLogitechHidPpRuntime *self)
+fu_logitech_hidpp_runtime_get_io_channel(FuLogitechHidppRuntime *self)
 {
-	FuLogitechHidPpRuntimePrivate *priv;
+	FuLogitechHidppRuntimePrivate *priv;
 	g_return_val_if_fail(FU_IS_HIDPP_RUNTIME(self), NULL);
 	priv = GET_PRIVATE(self);
 	return priv->io_channel;
 }
 
 guint8
-fu_logitech_hidpp_runtime_get_version_bl_major(FuLogitechHidPpRuntime *self)
+fu_logitech_hidpp_runtime_get_version_bl_major(FuLogitechHidppRuntime *self)
 {
-	FuLogitechHidPpRuntimePrivate *priv;
+	FuLogitechHidppRuntimePrivate *priv;
 	g_return_val_if_fail(FU_IS_HIDPP_RUNTIME(self), 0);
 	priv = GET_PRIVATE(self);
 	return priv->version_bl_major;
@@ -46,15 +47,15 @@ fu_logitech_hidpp_runtime_to_string(FuDevice *device, guint idt, GString *str)
 }
 
 gboolean
-fu_logitech_hidpp_runtime_enable_notifications(FuLogitechHidPpRuntime *self, GError **error)
+fu_logitech_hidpp_runtime_enable_notifications(FuLogitechHidppRuntime *self, GError **error)
 {
-	g_autoptr(FuLogitechHidPpHidppMsg) msg = fu_logitech_hidpp_msg_new();
-	FuLogitechHidPpRuntimePrivate *priv = GET_PRIVATE(self);
+	g_autoptr(FuLogitechHidppHidppMsg) msg = fu_logitech_hidpp_msg_new();
+	FuLogitechHidppRuntimePrivate *priv = GET_PRIVATE(self);
 
-	msg->report_id = HIDPP_REPORT_ID_SHORT;
-	msg->device_id = HIDPP_DEVICE_IDX_RECEIVER;
-	msg->sub_id = HIDPP_SUBID_SET_REGISTER;
-	msg->function_id = HIDPP_REGISTER_HIDPP_NOTIFICATIONS;
+	msg->report_id = FU_LOGITECH_HIDPP_REPORT_ID_SHORT;
+	msg->device_id = FU_LOGITECH_HIDPP_DEVICE_IDX_RECEIVER;
+	msg->sub_id = FU_LOGITECH_HIDPP_SUBID_SET_REGISTER;
+	msg->function_id = FU_LOGITECH_HIDPP_REGISTER_HIDPP_NOTIFICATIONS;
 	msg->data[0] = 0x00;
 	msg->data[1] = 0x05; /* Wireless + SoftwarePresent */
 	msg->data[2] = 0x00;
@@ -65,8 +66,8 @@ fu_logitech_hidpp_runtime_enable_notifications(FuLogitechHidPpRuntime *self, GEr
 static gboolean
 fu_logitech_hidpp_runtime_close(FuDevice *device, GError **error)
 {
-	FuLogitechHidPpRuntime *self = FU_HIDPP_RUNTIME(device);
-	FuLogitechHidPpRuntimePrivate *priv = GET_PRIVATE(self);
+	FuLogitechHidppRuntime *self = FU_HIDPP_RUNTIME(device);
+	FuLogitechHidppRuntimePrivate *priv = GET_PRIVATE(self);
 
 	if (priv->io_channel != NULL) {
 		if (!fu_io_channel_shutdown(priv->io_channel, error))
@@ -79,11 +80,11 @@ fu_logitech_hidpp_runtime_close(FuDevice *device, GError **error)
 static gboolean
 fu_logitech_hidpp_runtime_poll(FuDevice *device, GError **error)
 {
-	FuLogitechHidPpRuntime *self = FU_HIDPP_RUNTIME(device);
-	FuLogitechHidPpRuntimePrivate *priv = GET_PRIVATE(self);
+	FuLogitechHidppRuntime *self = FU_HIDPP_RUNTIME(device);
+	FuLogitechHidppRuntimePrivate *priv = GET_PRIVATE(self);
 	const guint timeout = 1; /* ms */
 	g_autoptr(GError) error_local = NULL;
-	g_autoptr(FuLogitechHidPpHidppMsg) msg = fu_logitech_hidpp_msg_new();
+	g_autoptr(FuLogitechHidppHidppMsg) msg = fu_logitech_hidpp_msg_new();
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
 	/* open */
@@ -108,17 +109,17 @@ fu_logitech_hidpp_runtime_poll(FuDevice *device, GError **error)
 	}
 
 	/* unifying receiver notification */
-	if (msg->report_id == HIDPP_REPORT_ID_SHORT) {
+	if (msg->report_id == FU_LOGITECH_HIDPP_REPORT_ID_SHORT) {
 		switch (msg->sub_id) {
-		case HIDPP_SUBID_DEVICE_CONNECTION:
-		case HIDPP_SUBID_DEVICE_DISCONNECTION:
-		case HIDPP_SUBID_DEVICE_LOCKING_CHANGED:
+		case FU_LOGITECH_HIDPP_SUBID_DEVICE_CONNECTION:
+		case FU_LOGITECH_HIDPP_SUBID_DEVICE_DISCONNECTION:
+		case FU_LOGITECH_HIDPP_SUBID_DEVICE_LOCKING_CHANGED:
 			g_debug("device connection event, do something");
 			break;
-		case HIDPP_SUBID_LINK_QUALITY:
+		case FU_LOGITECH_HIDPP_SUBID_LINK_QUALITY:
 			g_debug("ignoring link quality message");
 			break;
-		case HIDPP_SUBID_ERROR_MSG:
+		case FU_LOGITECH_HIDPP_SUBID_ERROR_MSG:
 			g_debug("ignoring error message");
 			break;
 		default:
@@ -132,8 +133,8 @@ fu_logitech_hidpp_runtime_poll(FuDevice *device, GError **error)
 static gboolean
 fu_logitech_hidpp_runtime_open(FuDevice *device, GError **error)
 {
-	FuLogitechHidPpRuntime *self = FU_HIDPP_RUNTIME(device);
-	FuLogitechHidPpRuntimePrivate *priv = GET_PRIVATE(self);
+	FuLogitechHidppRuntime *self = FU_HIDPP_RUNTIME(device);
+	FuLogitechHidppRuntimePrivate *priv = GET_PRIVATE(self);
 	const gchar *devpath = fu_udev_device_get_device_file(FU_UDEV_DEVICE(device));
 
 	/* open, but don't block */
@@ -151,8 +152,8 @@ fu_logitech_hidpp_runtime_open(FuDevice *device, GError **error)
 static gboolean
 fu_logitech_hidpp_runtime_probe(FuDevice *device, GError **error)
 {
-	FuLogitechHidPpRuntime *self = FU_HIDPP_RUNTIME(device);
-	FuLogitechHidPpRuntimePrivate *priv = GET_PRIVATE(self);
+	FuLogitechHidppRuntime *self = FU_HIDPP_RUNTIME(device);
+	FuLogitechHidppRuntimePrivate *priv = GET_PRIVATE(self);
 	GUdevDevice *udev_device = fu_udev_device_get_dev(FU_UDEV_DEVICE(device));
 	guint16 release = 0xffff;
 	g_autoptr(GUdevDevice) udev_parent = NULL;
@@ -176,17 +177,19 @@ fu_logitech_hidpp_runtime_probe(FuDevice *device, GError **error)
 		switch (release &= 0xff00) {
 		case 0x1200:
 			/* Nordic */
-			devid2 = g_strdup_printf("USB\\VID_%04X&PID_%04X",
-						 (guint)FU_UNIFYING_DEVICE_VID,
-						 (guint)FU_UNIFYING_DEVICE_PID_BOOTLOADER_NORDIC);
+			devid2 =
+			    g_strdup_printf("USB\\VID_%04X&PID_%04X",
+					    (guint)FU_LOGITECH_HIDPP_DEVICE_VID,
+					    (guint)FU_LOGITECH_HIDPP_DEVICE_PID_BOOTLOADER_NORDIC);
 			fu_device_add_counterpart_guid(device, devid2);
 			priv->version_bl_major = 0x01;
 			break;
 		case 0x2400:
 			/* Texas */
-			devid2 = g_strdup_printf("USB\\VID_%04X&PID_%04X",
-						 (guint)FU_UNIFYING_DEVICE_VID,
-						 (guint)FU_UNIFYING_DEVICE_PID_BOOTLOADER_TEXAS);
+			devid2 =
+			    g_strdup_printf("USB\\VID_%04X&PID_%04X",
+					    (guint)FU_LOGITECH_HIDPP_DEVICE_VID,
+					    (guint)FU_LOGITECH_HIDPP_DEVICE_PID_BOOTLOADER_TEXAS);
 			fu_device_add_counterpart_guid(device, devid2);
 			priv->version_bl_major = 0x03;
 			break;
@@ -212,9 +215,10 @@ fu_logitech_hidpp_runtime_probe(FuDevice *device, GError **error)
 					    "skipping hidraw device");
 				return FALSE;
 			}
-			devid2 = g_strdup_printf("USB\\VID_%04X&PID_%04X",
-						 (guint)FU_UNIFYING_DEVICE_VID,
-						 (guint)FU_UNIFYING_DEVICE_PID_BOOTLOADER_BOLT);
+			devid2 =
+			    g_strdup_printf("USB\\VID_%04X&PID_%04X",
+					    (guint)FU_LOGITECH_HIDPP_DEVICE_VID,
+					    (guint)FU_LOGITECH_HIDPP_DEVICE_PID_BOOTLOADER_BOLT);
 			fu_device_add_counterpart_guid(device, devid2);
 			priv->version_bl_major = 0x03;
 			break;
@@ -233,7 +237,7 @@ fu_logitech_hidpp_runtime_finalize(GObject *object)
 }
 
 static void
-fu_logitech_hidpp_runtime_class_init(FuLogitechHidPpRuntimeClass *klass)
+fu_logitech_hidpp_runtime_class_init(FuLogitechHidppRuntimeClass *klass)
 {
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
@@ -247,7 +251,7 @@ fu_logitech_hidpp_runtime_class_init(FuLogitechHidPpRuntimeClass *klass)
 }
 
 static void
-fu_logitech_hidpp_runtime_init(FuLogitechHidPpRuntime *self)
+fu_logitech_hidpp_runtime_init(FuLogitechHidppRuntime *self)
 {
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID);

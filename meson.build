@@ -1,5 +1,5 @@
 project('fwupd', 'c',
-  version: '1.9.1',
+  version: '1.9.4',
   license: 'LGPL-2.1+',
   meson_version: '>=0.61.0',
   default_options: ['warning_level=2', 'c_std=c11'],
@@ -192,13 +192,10 @@ mandir = join_paths(prefix, get_option('mandir'))
 localedir = join_paths(prefix, get_option('localedir'))
 
 diffcmd = find_program('diff')
-gio = dependency('gio-2.0', version: '>= 2.45.8')
-giounix = dependency('gio-unix-2.0', version: '>= 2.45.8', required: false)
+gio = dependency('gio-2.0', version: '>= 2.68.0')
+giounix = dependency('gio-unix-2.0', version: '>= 2.68.0', required: false)
 if giounix.found()
   conf.set('HAVE_GIO_UNIX', '1')
-endif
-if gio.version().version_compare ('>= 2.55.0')
-  conf.set('HAVE_GIO_2_55_0', '1')
 endif
 gmodule = dependency('gmodule-2.0')
 if build_standalone
@@ -216,8 +213,8 @@ hsi = get_option('hsi').disable_auto_if(host_machine.system() != 'linux').disabl
 if hsi
   conf.set('HAVE_HSI', '1')
 endif
-libxmlb = dependency('xmlb', version: '>= 0.1.15', fallback: ['libxmlb', 'libxmlb_dep'])
-gusb = dependency('gusb', version: '>= 0.3.0', fallback: ['gusb', 'gusb_dep'], required: get_option('gusb'))
+libxmlb = dependency('xmlb', version: '>= 0.3.6', fallback: ['libxmlb', 'libxmlb_dep'])
+gusb = dependency('gusb', version: '>= 0.3.8', fallback: ['gusb', 'gusb_dep'], required: get_option('gusb'))
 if gusb.found()
   conf.set('HAVE_GUSB', '1')
 endif
@@ -234,14 +231,11 @@ if libarchive.found()
 endif
 endif
 libjcat = dependency('jcat', version: '>= 0.1.4', fallback: ['libjcat', 'libjcat_dep'])
-libjsonglib = dependency('json-glib-1.0', version: '>= 1.1.1')
+libjsonglib = dependency('json-glib-1.0', version: '>= 1.6.0')
 valgrind = dependency('valgrind', required: false)
-libcurl = dependency('libcurl', version: '>= 7.56.0', required: get_option('curl'))
+libcurl = dependency('libcurl', version: '>= 7.62.0', required: get_option('curl'))
 if libcurl.found()
   conf.set('HAVE_LIBCURL', '1')
-  if libcurl.version().version_compare('>= 7.62.0')
-    conf.set('HAVE_LIBCURL_7_62_0', '1')
-  endif
 endif
 polkit = dependency('polkit-gobject-1', version: '>= 0.103',
          required: get_option('polkit').disable_auto_if(host_machine.system() != 'linux'))
@@ -273,7 +267,6 @@ if libgcab.type_name() == 'pkgconfig'
   endif
 endif
 
-generate_man = join_paths(meson.project_source_root(), 'contrib', 'generate-man.py')
 bashcomp = dependency('bash-completion', required: false)
 python3 = import('python').find_installation('python3')
 
@@ -329,6 +322,9 @@ endif
 if cc.has_header('sys/socket.h')
   conf.set('HAVE_SOCKET_H', '1')
 endif
+if cc.has_header('scsi/sg.h')
+  conf.set('HAVE_SCSI_SG_H', '1')
+endif
 if cc.has_header('sys/select.h')
   conf.set('HAVE_SELECT_H', '1')
 endif
@@ -352,9 +348,6 @@ if cc.has_header('sys/mman.h')
 endif
 if cc.has_header('poll.h')
   conf.set('HAVE_POLL_H', '1')
-endif
-if cc.has_header('fnmatch.h')
-  conf.set('HAVE_FNMATCH_H', '1')
 endif
 if cc.has_header('kenv.h')
   conf.set('HAVE_KENV_H', '1')
@@ -402,6 +395,9 @@ endif
 if cc.has_function('pwrite', args: '-D_XOPEN_SOURCE')
   conf.set('HAVE_PWRITE', '1')
 endif
+if cc.has_header_symbol('sys/mount.h', 'BLKSSZGET')
+  conf.set('HAVE_BLKSSZGET', '1')
+endif
 
 if host_machine.system() == 'freebsd'
   if cc.has_type('struct efi_esrt_entry_v1', prefix: '#include <sys/types.h>\n#include <sys/efiio.h>')
@@ -409,33 +405,27 @@ if host_machine.system() == 'freebsd'
   endif
 endif
 
-efiboot = dependency('efiboot', required: get_option('plugin_uefi_capsule'))
-efivar = dependency('efivar', required: get_option('plugin_uefi_capsule'))
-if build_standalone and efiboot.found() and efivar.found()
+# this is way less hassle than including TargetConditionals.h and looking for TARGET_OS_MAC=1
+if host_machine.system() == 'darwin'
+  conf.set('HOST_MACHINE_SYSTEM_DARWIN', '1')
+endif
 
+# EFI
+if build_standalone
   efi_app_location = join_paths(libexecdir, 'fwupd', 'efi')
   conf.set_quoted('EFI_APP_LOCATION', efi_app_location)
-
   if host_cpu == 'x86'
-          EFI_MACHINE_TYPE_NAME = 'ia32'
+    EFI_MACHINE_TYPE_NAME = 'ia32'
   elif host_cpu == 'x86_64'
-          EFI_MACHINE_TYPE_NAME = 'x64'
+    EFI_MACHINE_TYPE_NAME = 'x64'
   elif host_cpu == 'arm'
-          EFI_MACHINE_TYPE_NAME = 'arm'
+    EFI_MACHINE_TYPE_NAME = 'arm'
   elif host_cpu == 'aarch64'
-          EFI_MACHINE_TYPE_NAME = 'aa64'
+    EFI_MACHINE_TYPE_NAME = 'aa64'
   else
-          EFI_MACHINE_TYPE_NAME = ''
+    EFI_MACHINE_TYPE_NAME = ''
   endif
   conf.set_quoted('EFI_MACHINE_TYPE_NAME', EFI_MACHINE_TYPE_NAME)
-
-  if get_option('efi_binary')
-    efi_binary = dependency ('fwupd-efi', fallback: ['fwupd-efi', 'fwupd_efi_dep'])
-  endif
-
-  if get_option('plugin_uefi_capsule_splash')
-    run_command([python3, 'po/test-deps'], check: true)
-  endif
 endif
 
 if get_option('soup_session_compat')
@@ -559,6 +549,14 @@ if build_docs and gidocgen_dep.version().version_compare('< 2022.2')
   ).allowed()
 endif
 
+jinja2 = run_command(
+  [python3, '-c', 'import jinja2; print(jinja2.__version__)'],
+  check: true,
+)
+if jinja2.stderr().strip() != ''
+  error('Python module jinja2 not found')
+endif
+
 # using "meson configure -Db_sanitize=address,undefined" is super useful in finding corruption,
 # but it does not work with our GMainContext-abuse tests...
 if get_option('b_sanitize') in ['address,undefined', 'address', 'undefined', 'leak']
@@ -567,13 +565,18 @@ else
   run_sanitize_unsafe_tests = true
 endif
 
-# take foo.struct and generate foo-struct.c and foo-struct.h files like protobuf_c
-structgenpy = find_program(join_paths(meson.project_source_root(), 'libfwupdplugin', 'generate-struct.py'))
-structgen = generator(structgenpy,
+# take foo.rs and generate foo-struct.c and foo-struct.h files like protobuf_c
+rustgen = generator(python3,
   output  : ['@BASENAME@-struct.c', '@BASENAME@-struct.h'],
-  arguments : ['@INPUT@', '@OUTPUT0@', '@OUTPUT1@'],
+  arguments : [
+    join_paths(meson.project_source_root(), 'libfwupdplugin', 'rustgen.py'),
+    '@INPUT@',
+    '@OUTPUT0@',
+    '@OUTPUT1@',
+  ],
 )
 
+subdir('generate-build')
 subdir('libfwupd')
 if polkit.found()
   subdir('policy')
@@ -601,19 +604,15 @@ if build_standalone
   subdir('src')
   subdir('docs')
 
-  # append all the quirks into one big file and gzip it -- lzma is smaller, but needs libxmlb 0.3.3
-  builtin_quirk = custom_target('builtin-quirk',
-    input: plugin_quirks,
-    output: 'builtin.quirk',
-    capture: true,
-    command: ['cat', '@INPUT@'],
-  )
-  gzip = find_program('gzip')
+  # append all the quirks into one big file and gzip it
   custom_target('builtin-quirk-gz',
-    input: builtin_quirk,
+    input: plugin_quirks,
     output: 'builtin.quirk.gz',
-    capture: true,
-    command: [gzip, '-n', '-k', '--stdout', '@INPUT@'],
+    command: [
+      generate_quirk_builtin,
+      '@OUTPUT@',
+      '@INPUT@',
+    ],
     install: true,
     install_dir: join_paths(datadir, 'fwupd', 'quirks.d'),
   )

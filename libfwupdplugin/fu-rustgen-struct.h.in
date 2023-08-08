@@ -1,0 +1,62 @@
+{%- if obj.export('New') == Export.PUBLIC %}
+GByteArray *{{obj.c_method('New')}}(void);
+{%- endif %}
+{%- if obj.export('Parse') == Export.PUBLIC %}
+GByteArray *{{obj.c_method('Parse')}}(const guint8 *buf, gsize bufsz, gsize offset, GError **error);
+{%- endif %}
+{%- if obj.export('Validate') == Export.PUBLIC %}
+gboolean {{obj.c_method('Validate')}}(const guint8 *buf, gsize bufsz, gsize offset, GError **error);
+{%- endif %}
+{%- if obj.export('ToString') == Export.PUBLIC %}
+gchar *{{obj.c_method('ToString')}}(GByteArray *st);
+{%- endif %}
+
+{%- for item in obj.items | selectattr('enabled') %}
+{%- if item.export('Getters') == Export.PUBLIC %}
+{%- if item.type == Type.STRING %}
+gchar *{{item.c_getter}}(GByteArray *st);
+{%- elif item.struct_obj %}
+GByteArray *{{item.c_getter}}(GByteArray *st);
+{%- elif item.type == Type.U8 and item.multiplier %}
+const guint8 *{{item.c_getter}}(GByteArray *st, gsize *bufsz);
+{%- elif item.type == Type.GUID %}
+const fwupd_guid_t *{{item.c_getter}}(GByteArray *st);
+{%- elif not item.multiplier and item.type in [Type.U8, Type.U16, Type.U24, Type.U32, Type.U64] %}
+{{item.type_glib}} {{item.c_getter}}(GByteArray *st);
+{%- endif %}
+{%- endif %}
+{%- endfor %}
+
+{%- for item in obj.items | selectattr('enabled') %}
+{%- if item.export('Setters') == Export.PUBLIC %}
+{%- if item.type == Type.STRING %}
+gboolean {{item.c_setter}}(GByteArray *st, const gchar *value, GError **error);
+{%- elif item.struct_obj %}
+gboolean
+{{item.c_setter}}(GByteArray *st, GByteArray *st_donor, GError **error);
+{%- elif item.type == Type.U8 and item.multiplier %}
+gboolean {{item.c_setter}}(GByteArray *st, const guint8 *buf, gsize bufsz, GError **error);
+{%- elif item.type == Type.GUID %}
+void {{item.c_setter}}(GByteArray *st, const fwupd_guid_t *value);
+{%- elif not item.multiplier and item.type in [Type.U8, Type.U16, Type.U24, Type.U32, Type.U64] %}
+void {{item.c_setter}}(GByteArray *st, {{item.type_glib}} value);
+{%- endif %}
+{%- endif %}
+{%- endfor %}
+
+{%- for item in obj.items | selectattr('enabled') %}
+#define {{item.c_define('OFFSET')}} 0x{{'{:X}'.format(item.offset)}}
+{%- endfor %}
+
+{%- for item in obj.items | selectattr('enabled') | selectattr('multiplier') %}
+#define {{item.c_define('SIZE')}} 0x{{'{:X}'.format(item.size)}}
+{%- endfor %}
+#define {{obj.c_define('SIZE')}} 0x{{'{:X}'.format(obj.size)}}
+
+{%- for item in obj.items | selectattr('enabled') | selectattr('default') %}
+{%- if item.type == Type.STRING or item.multiplier %}
+#define {{item.c_define('DEFAULT')}} "{{item.default}}"
+{%- else %}
+#define {{item.c_define('DEFAULT')}} {{item.default}}
+{%- endif %}
+{%- endfor %}

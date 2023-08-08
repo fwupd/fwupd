@@ -15,7 +15,7 @@
 #include "fu-common.h"
 #include "fu-crc.h"
 #include "fu-dfu-firmware-private.h"
-#include "fu-dfu-struct.h"
+#include "fu-dfu-firmware-struct.h"
 
 /**
  * FuDfuFirmware:
@@ -279,7 +279,7 @@ fu_dfu_firmware_parse(FuFirmware *firmware,
 	return TRUE;
 }
 
-GBytes *
+GByteArray *
 fu_dfu_firmware_append_footer(FuDfuFirmware *self, GBytes *contents, GError **error)
 {
 	FuDfuFirmwarePrivate *priv = GET_PRIVATE(self);
@@ -294,10 +294,10 @@ fu_dfu_firmware_append_footer(FuDfuFirmware *self, GBytes *contents, GError **er
 	fu_struct_dfu_ftr_set_ver(st, priv->dfu_version);
 	g_byte_array_append(buf, st->data, st->len - sizeof(guint32));
 	fu_byte_array_append_uint32(buf, ~fu_crc32(buf->data, buf->len), G_LITTLE_ENDIAN);
-	return g_byte_array_free_to_bytes(g_steal_pointer(&buf));
+	return g_steal_pointer(&buf);
 }
 
-static GBytes *
+static GByteArray *
 fu_dfu_firmware_write(FuFirmware *firmware, GError **error)
 {
 	FuDfuFirmware *self = FU_DFU_FIRMWARE(firmware);

@@ -74,7 +74,7 @@ fu_test_mtd_device_func(void)
 	/* create a random payload exactly the same size */
 	for (gsize i = 0; i < bufsz; i++)
 		fu_byte_array_append_uint8(buf, g_rand_int_range(rand, 0x00, 0xFF));
-	fw = g_byte_array_free_to_bytes(g_steal_pointer(&buf));
+	fw = g_bytes_new(buf->data, buf->len);
 
 	/* write with a verify */
 	ret = fu_device_write_firmware(device, fw, progress, FWUPD_INSTALL_FLAG_NONE, &error);
@@ -106,6 +106,7 @@ main(int argc, char **argv)
 	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
 	(void)g_setenv("FWUPD_SYSFSFWDIR", testdatadir, TRUE);
 	(void)g_setenv("FWUPD_SYSFSFWATTRIBDIR", testdatadir, TRUE);
+	(void)g_setenv("CONFIGURATION_DIRECTORY", testdatadir, TRUE);
 
 	g_log_set_fatal_mask(NULL, G_LOG_LEVEL_ERROR | G_LOG_LEVEL_CRITICAL);
 	g_test_add_func("/mtd/device", fu_test_mtd_device_func);

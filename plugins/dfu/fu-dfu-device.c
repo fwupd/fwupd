@@ -36,8 +36,6 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
 #include "fu-dfu-common.h"
 #include "fu-dfu-device.h"
 #include "fu-dfu-target-avr.h"
@@ -245,7 +243,16 @@ fu_dfu_device_parse_iface_data(FuDfuDevice *self, GBytes *iface_data, GError **e
 		priv->transfer_size = 0x1000;
 
 	/* get attributes about the DFU operation */
-	fu_device_add_private_flag(FU_DEVICE(self), desc.bmAttributes);
+	if (desc.bmAttributes & FU_DFU_DEVICE_FLAG_CAN_DOWNLOAD)
+		fu_device_add_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_CAN_DOWNLOAD);
+	if (desc.bmAttributes & FU_DFU_DEVICE_FLAG_CAN_UPLOAD)
+		fu_device_add_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_CAN_UPLOAD);
+	if (desc.bmAttributes & FU_DFU_DEVICE_FLAG_MANIFEST_TOL)
+		fu_device_add_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_MANIFEST_TOL);
+	if (desc.bmAttributes & FU_DFU_DEVICE_FLAG_WILL_DETACH)
+		fu_device_add_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_WILL_DETACH);
+	if (desc.bmAttributes & FU_DFU_DEVICE_FLAG_CAN_ACCELERATE)
+		fu_device_add_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_CAN_ACCELERATE);
 	return TRUE;
 }
 
@@ -322,9 +329,9 @@ fu_dfu_device_add_targets(FuDfuDevice *self, GError **error)
 				continue;
 			}
 		} else {
+			fu_device_add_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_CAN_UPLOAD);
 			fu_device_add_private_flag(FU_DEVICE(self),
-						   FU_DFU_DEVICE_FLAG_CAN_DOWNLOAD |
-						       FU_DFU_DEVICE_FLAG_CAN_UPLOAD);
+						   FU_DFU_DEVICE_FLAG_CAN_DOWNLOAD);
 		}
 
 		/* fix up the version */
@@ -1057,7 +1064,6 @@ fu_dfu_device_open(FuDevice *device, GError **error)
 	/* GD32VF103 encodes the serial number in UTF-8 (rather than UTF-16)
 	 * and also uses the first two bytes as the model identifier */
 	if (fu_device_has_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_GD32)) {
-#if G_USB_CHECK_VERSION(0, 3, 6)
 		GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(device));
 		const guint8 *buf;
 		gsize bufsz = 0;
@@ -1087,14 +1093,6 @@ fu_dfu_device_open(FuDevice *device, GError **error)
 		/* serial number follows */
 		serial_str = g_strndup((const gchar *)buf + 2, bufsz - 2);
 		fu_device_set_serial(FU_DEVICE(device), serial_str);
-#else
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "GUsb version too old to support GD32, "
-				    "fwupd needs to be rebuilt against 0.3.6 or later");
-		return FALSE;
-#endif
 	}
 
 	/* set up target ready for use */
@@ -1558,6 +1556,7 @@ fu_dfu_device_prepare_firmware(FuDevice *device,
 			       GError **error)
 {
 	return fu_firmware_new_from_gtypes(fw,
+					   0x0,
 					   flags,
 					   error,
 					   FU_TYPE_IHEX_FIRMWARE,
@@ -1686,6 +1685,7 @@ fu_dfu_device_init(FuDfuDevice *self)
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID);
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_MD_SET_SIGNED);
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_MD_SET_FLAGS);
+	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_ADD_INSTANCE_ID_REV);
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
 
 	fu_device_register_private_flag(FU_DEVICE(self),

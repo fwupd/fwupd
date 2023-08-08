@@ -6,8 +6,6 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
 #include "fu-amd-pmc-device.h"
 struct _FuAmdPmcDevice {
 	FuUdevDevice parent_instance;

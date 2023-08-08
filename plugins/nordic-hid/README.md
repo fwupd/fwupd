@@ -53,7 +53,9 @@ This plugin uses the following plugin-specific quirks:
 
 ### NordicHidBootloader
 
-Explicitly set the expected bootloader type: "B0" or "MCUBOOT"
+Explicitly set the expected bootloader type.
+Only the `B0` bootloader can be set by the quirk file.
+Other values can only be provided by device.
 This quirk must be set for devices without support of `bootloader variant` DFU option.
 
 ### NordicHidGeneration

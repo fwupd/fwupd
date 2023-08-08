@@ -10,47 +10,22 @@
 
 #include "fu-logitech-hidpp-hidpp-msg.h"
 #include "fu-logitech-hidpp-hidpp.h"
+#include "fu-logitech-hidpp-struct.h"
 
-FuLogitechHidPpHidppMsg *
+FuLogitechHidppHidppMsg *
 fu_logitech_hidpp_msg_new(void)
 {
-	return g_new0(FuLogitechHidPpHidppMsg, 1);
-}
-
-const gchar *
-fu_logitech_hidpp_msg_dev_id_to_string(FuLogitechHidPpHidppMsg *msg)
-{
-	g_return_val_if_fail(msg != NULL, NULL);
-	if (msg->device_id == HIDPP_DEVICE_IDX_WIRED)
-		return "wired";
-	if (msg->device_id == HIDPP_DEVICE_IDX_RECEIVER)
-		return "receiver";
-	if (msg->device_id == HIDPP_DEVICE_IDX_UNSET)
-		return "unset";
-	return NULL;
-}
-
-const gchar *
-fu_logitech_hidpp_msg_rpt_id_to_string(FuLogitechHidPpHidppMsg *msg)
-{
-	g_return_val_if_fail(msg != NULL, NULL);
-	if (msg->report_id == HIDPP_REPORT_ID_SHORT)
-		return "short";
-	if (msg->report_id == HIDPP_REPORT_ID_LONG)
-		return "long";
-	if (msg->report_id == HIDPP_REPORT_ID_VERY_LONG)
-		return "very-long";
-	return NULL;
+	return g_new0(FuLogitechHidppHidppMsg, 1);
 }
 
 gsize
-fu_logitech_hidpp_msg_get_payload_length(FuLogitechHidPpHidppMsg *msg)
+fu_logitech_hidpp_msg_get_payload_length(FuLogitechHidppHidppMsg *msg)
 {
-	if (msg->report_id == HIDPP_REPORT_ID_SHORT)
+	if (msg->report_id == FU_LOGITECH_HIDPP_REPORT_ID_SHORT)
 		return 0x07;
-	if (msg->report_id == HIDPP_REPORT_ID_LONG)
+	if (msg->report_id == FU_LOGITECH_HIDPP_REPORT_ID_LONG)
 		return 0x14;
-	if (msg->report_id == HIDPP_REPORT_ID_VERY_LONG)
+	if (msg->report_id == FU_LOGITECH_HIDPP_REPORT_ID_VERY_LONG)
 		return 0x2f;
 	if (msg->report_id == HIDPP_REPORT_NOTIFICATION)
 		return 0x08;
@@ -58,54 +33,17 @@ fu_logitech_hidpp_msg_get_payload_length(FuLogitechHidPpHidppMsg *msg)
 }
 
 const gchar *
-fu_logitech_hidpp_msg_fcn_id_to_string(FuLogitechHidPpHidppMsg *msg)
+fu_logitech_hidpp_msg_fcn_id_to_string(FuLogitechHidppHidppMsg *msg)
 {
 	g_return_val_if_fail(msg != NULL, NULL);
 	switch (msg->sub_id) {
-	case HIDPP_SUBID_SET_REGISTER:
-	case HIDPP_SUBID_GET_REGISTER:
-	case HIDPP_SUBID_SET_LONG_REGISTER:
-	case HIDPP_SUBID_GET_LONG_REGISTER:
-	case HIDPP_SUBID_SET_VERY_LONG_REGISTER:
-	case HIDPP_SUBID_GET_VERY_LONG_REGISTER:
-		if (msg->function_id == HIDPP_REGISTER_HIDPP_NOTIFICATIONS)
-			return "hidpp-notifications";
-		if (msg->function_id == HIDPP_REGISTER_ENABLE_INDIVIDUAL_FEATURES)
-			return "individual-features";
-		if (msg->function_id == HIDPP_REGISTER_BATTERY_STATUS)
-			return "battery-status";
-		if (msg->function_id == HIDPP_REGISTER_BATTERY_MILEAGE)
-			return "battery-mileage";
-		if (msg->function_id == HIDPP_REGISTER_PROFILE)
-			return "profile";
-		if (msg->function_id == HIDPP_REGISTER_LED_STATUS)
-			return "led-status";
-		if (msg->function_id == HIDPP_REGISTER_LED_INTENSITY)
-			return "led-intensity";
-		if (msg->function_id == HIDPP_REGISTER_LED_COLOR)
-			return "led-color";
-		if (msg->function_id == HIDPP_REGISTER_OPTICAL_SENSOR_SETTINGS)
-			return "optical-sensor-settings";
-		if (msg->function_id == HIDPP_REGISTER_CURRENT_RESOLUTION)
-			return "current-resolution";
-		if (msg->function_id == HIDPP_REGISTER_USB_REFRESH_RATE)
-			return "usb-refresh-rate";
-		if (msg->function_id == HIDPP_REGISTER_GENERIC_MEMORY_MANAGEMENT)
-			return "generic-memory-management";
-		if (msg->function_id == HIDPP_REGISTER_HOT_CONTROL)
-			return "hot-control";
-		if (msg->function_id == HIDPP_REGISTER_READ_MEMORY)
-			return "read-memory";
-		if (msg->function_id == HIDPP_REGISTER_DEVICE_CONNECTION_DISCONNECTION)
-			return "device-connection-disconnection";
-		if (msg->function_id == HIDPP_REGISTER_PAIRING_INFORMATION)
-			return "pairing-information";
-		if (msg->function_id == HIDPP_REGISTER_DEVICE_FIRMWARE_UPDATE_MODE)
-			return "device-firmware-update-mode";
-		if (msg->function_id == HIDPP_REGISTER_DEVICE_FIRMWARE_INFORMATION)
-			return "device-firmware-information";
-		if (msg->function_id == BOLT_REGISTER_RECEIVER_FW_INFORMATION)
-			return "receiver-fw-information";
+	case FU_LOGITECH_HIDPP_SUBID_SET_REGISTER:
+	case FU_LOGITECH_HIDPP_SUBID_GET_REGISTER:
+	case FU_LOGITECH_HIDPP_SUBID_SET_LONG_REGISTER:
+	case FU_LOGITECH_HIDPP_SUBID_GET_LONG_REGISTER:
+	case FU_LOGITECH_HIDPP_SUBID_SET_VERY_LONG_REGISTER:
+	case FU_LOGITECH_HIDPP_SUBID_GET_VERY_LONG_REGISTER:
+		return fu_logitech_hidpp_register_to_string(msg->function_id);
 		break;
 	default:
 		break;
@@ -113,104 +51,22 @@ fu_logitech_hidpp_msg_fcn_id_to_string(FuLogitechHidPpHidppMsg *msg)
 	return NULL;
 }
 
-const gchar *
-fu_logitech_hidpp_msg_sub_id_to_string(FuLogitechHidPpHidppMsg *msg)
-{
-	g_return_val_if_fail(msg != NULL, NULL);
-	if (msg->sub_id == HIDPP_SUBID_VENDOR_SPECIFIC_KEYS)
-		return "vendor-specific-keys";
-	if (msg->sub_id == HIDPP_SUBID_POWER_KEYS)
-		return "power-keys";
-	if (msg->sub_id == HIDPP_SUBID_ROLLER)
-		return "roller";
-	if (msg->sub_id == HIDPP_SUBID_MOUSE_EXTRA_BUTTONS)
-		return "mouse-extra-buttons";
-	if (msg->sub_id == HIDPP_SUBID_BATTERY_CHARGING_LEVEL)
-		return "battery-charging-level";
-	if (msg->sub_id == HIDPP_SUBID_USER_INTERFACE_EVENT)
-		return "user-interface-event";
-	if (msg->sub_id == HIDPP_SUBID_F_LOCK_STATUS)
-		return "f-lock-status";
-	if (msg->sub_id == HIDPP_SUBID_CALCULATOR_RESULT)
-		return "calculator-result";
-	if (msg->sub_id == HIDPP_SUBID_MENU_NAVIGATE)
-		return "menu-navigate";
-	if (msg->sub_id == HIDPP_SUBID_FN_KEY)
-		return "fn-key";
-	if (msg->sub_id == HIDPP_SUBID_BATTERY_MILEAGE)
-		return "battery-mileage";
-	if (msg->sub_id == HIDPP_SUBID_UART_RX)
-		return "uart-rx";
-	if (msg->sub_id == HIDPP_SUBID_BACKLIGHT_DURATION_UPDATE)
-		return "backlight-duration-update";
-	if (msg->sub_id == HIDPP_SUBID_DEVICE_DISCONNECTION)
-		return "device-disconnection";
-	if (msg->sub_id == HIDPP_SUBID_DEVICE_CONNECTION)
-		return "device-connection";
-	if (msg->sub_id == HIDPP_SUBID_DEVICE_DISCOVERY)
-		return "device-discovery";
-	if (msg->sub_id == HIDPP_SUBID_PIN_CODE_REQUEST)
-		return "pin-code-request";
-	if (msg->sub_id == HIDPP_SUBID_RECEIVER_WORKING_MODE)
-		return "receiver-working-mode";
-	if (msg->sub_id == HIDPP_SUBID_ERROR_MESSAGE)
-		return "error-message";
-	if (msg->sub_id == HIDPP_SUBID_RF_LINK_CHANGE)
-		return "rf-link-change";
-	if (msg->sub_id == HIDPP_SUBID_HCI)
-		return "hci";
-	if (msg->sub_id == HIDPP_SUBID_LINK_QUALITY)
-		return "link-quality";
-	if (msg->sub_id == HIDPP_SUBID_DEVICE_LOCKING_CHANGED)
-		return "device-locking-changed";
-	if (msg->sub_id == HIDPP_SUBID_WIRELESS_DEVICE_CHANGE)
-		return "wireless-device-change";
-	if (msg->sub_id == HIDPP_SUBID_ACL)
-		return "acl";
-	if (msg->sub_id == HIDPP_SUBID_VOIP_TELEPHONY_EVENT)
-		return "voip-telephony-event";
-	if (msg->sub_id == HIDPP_SUBID_LED)
-		return "led";
-	if (msg->sub_id == HIDPP_SUBID_GESTURE_AND_AIR)
-		return "gesture-and-air";
-	if (msg->sub_id == HIDPP_SUBID_TOUCHPAD_MULTI_TOUCH)
-		return "touchpad-multi-touch";
-	if (msg->sub_id == HIDPP_SUBID_TRACEABILITY)
-		return "traceability";
-	if (msg->sub_id == HIDPP_SUBID_SET_REGISTER)
-		return "set-register";
-	if (msg->sub_id == HIDPP_SUBID_GET_REGISTER)
-		return "get-register";
-	if (msg->sub_id == HIDPP_SUBID_SET_LONG_REGISTER)
-		return "set-long-register";
-	if (msg->sub_id == HIDPP_SUBID_GET_LONG_REGISTER)
-		return "get-long-register";
-	if (msg->sub_id == HIDPP_SUBID_SET_VERY_LONG_REGISTER)
-		return "set-very-long-register";
-	if (msg->sub_id == HIDPP_SUBID_GET_VERY_LONG_REGISTER)
-		return "get-very-long-register";
-	if (msg->sub_id == HIDPP_SUBID_ERROR_MSG)
-		return "error-msg";
-	if (msg->sub_id == HIDPP_SUBID_ERROR_MSG_20)
-		return "error-msg-v2";
-	return NULL;
-}
-
 gboolean
-fu_logitech_hidpp_msg_is_reply(FuLogitechHidPpHidppMsg *msg1, FuLogitechHidPpHidppMsg *msg2)
+fu_logitech_hidpp_msg_is_reply(FuLogitechHidppHidppMsg *msg1, FuLogitechHidppHidppMsg *msg2)
 {
 	g_return_val_if_fail(msg1 != NULL, FALSE);
 	g_return_val_if_fail(msg2 != NULL, FALSE);
-	if (msg1->device_id != msg2->device_id && msg1->device_id != HIDPP_DEVICE_IDX_UNSET &&
-	    msg2->device_id != HIDPP_DEVICE_IDX_UNSET)
+	if (msg1->device_id != msg2->device_id &&
+	    msg1->device_id != FU_LOGITECH_HIDPP_DEVICE_IDX_WIRED &&
+	    msg2->device_id != FU_LOGITECH_HIDPP_DEVICE_IDX_WIRED)
 		return FALSE;
-	if (msg1->flags & FU_UNIFYING_HIDPP_MSG_FLAG_IGNORE_SUB_ID ||
-	    msg2->flags & FU_UNIFYING_HIDPP_MSG_FLAG_IGNORE_SUB_ID)
+	if (msg1->flags & FU_LOGITECH_HIDPP_HIDPP_MSG_FLAG_IGNORE_SUB_ID ||
+	    msg2->flags & FU_LOGITECH_HIDPP_HIDPP_MSG_FLAG_IGNORE_SUB_ID)
 		return TRUE;
 	if (msg1->sub_id != msg2->sub_id)
 		return FALSE;
-	if (msg1->flags & FU_UNIFYING_HIDPP_MSG_FLAG_IGNORE_FNCT_ID ||
-	    msg2->flags & FU_UNIFYING_HIDPP_MSG_FLAG_IGNORE_FNCT_ID)
+	if (msg1->flags & FU_LOGITECH_HIDPP_HIDPP_MSG_FLAG_IGNORE_FNCT_ID ||
+	    msg2->flags & FU_LOGITECH_HIDPP_HIDPP_MSG_FLAG_IGNORE_FNCT_ID)
 		return TRUE;
 	if (msg1->function_id != msg2->function_id)
 		return FALSE;
@@ -219,10 +75,10 @@ fu_logitech_hidpp_msg_is_reply(FuLogitechHidPpHidppMsg *msg1, FuLogitechHidPpHid
 
 /* HID++ error */
 gboolean
-fu_logitech_hidpp_msg_is_error(FuLogitechHidPpHidppMsg *msg, GError **error)
+fu_logitech_hidpp_msg_is_error(FuLogitechHidppHidppMsg *msg, GError **error)
 {
 	g_return_val_if_fail(msg != NULL, FALSE);
-	if (msg->sub_id == HIDPP_SUBID_ERROR_MSG) {
+	if (msg->sub_id == FU_LOGITECH_HIDPP_SUBID_ERROR_MSG) {
 		switch (msg->data[1]) {
 		case HIDPP_ERR_INVALID_SUBID:
 			g_set_error_literal(error,
@@ -298,7 +154,7 @@ fu_logitech_hidpp_msg_is_error(FuLogitechHidPpHidppMsg *msg, GError **error)
 		}
 		return FALSE;
 	}
-	if (msg->sub_id == HIDPP_SUBID_ERROR_MSG_20) {
+	if (msg->sub_id == FU_LOGITECH_HIDPP_SUBID_ERROR_MSG_20) {
 		switch (msg->data[1]) {
 		case HIDPP_ERROR_CODE_INVALID_ARGUMENT:
 			g_set_error(error,
@@ -353,7 +209,7 @@ fu_logitech_hidpp_msg_is_error(FuLogitechHidPpHidppMsg *msg, GError **error)
 }
 
 void
-fu_logitech_hidpp_msg_copy(FuLogitechHidPpHidppMsg *msg_dst, const FuLogitechHidPpHidppMsg *msg_src)
+fu_logitech_hidpp_msg_copy(FuLogitechHidppHidppMsg *msg_dst, const FuLogitechHidppHidppMsg *msg_src)
 {
 	g_return_if_fail(msg_dst != NULL);
 	g_return_if_fail(msg_src != NULL);
@@ -366,7 +222,7 @@ fu_logitech_hidpp_msg_copy(FuLogitechHidPpHidppMsg *msg_dst, const FuLogitechHid
 
 /* filter HID++1.0 messages */
 gboolean
-fu_logitech_hidpp_msg_is_hidpp10_compat(FuLogitechHidPpHidppMsg *msg)
+fu_logitech_hidpp_msg_is_hidpp10_compat(FuLogitechHidppHidppMsg *msg)
 {
 	g_return_val_if_fail(msg != NULL, FALSE);
 	if (msg->sub_id == 0x40 || msg->sub_id == 0x41 || msg->sub_id == 0x49 ||
@@ -377,10 +233,10 @@ fu_logitech_hidpp_msg_is_hidpp10_compat(FuLogitechHidPpHidppMsg *msg)
 }
 
 gboolean
-fu_logitech_hidpp_msg_verify_swid(FuLogitechHidPpHidppMsg *msg)
+fu_logitech_hidpp_msg_verify_swid(FuLogitechHidppHidppMsg *msg)
 {
 	g_return_val_if_fail(msg != NULL, FALSE);
-	if ((msg->function_id & 0x0f) != FU_UNIFYING_HIDPP_MSG_SW_ID)
+	if ((msg->function_id & 0x0f) != FU_LOGITECH_HIDPP_HIDPP_MSG_SW_ID)
 		return FALSE;
 	return TRUE;
 }

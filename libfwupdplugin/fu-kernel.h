@@ -20,3 +20,5 @@ gboolean
 fu_kernel_reset_firmware_search_path(GError **error);
 GHashTable *
 fu_kernel_get_cmdline(GError **error);
+GHashTable *
+fu_kernel_parse_cmdline(const gchar *buf, gsize bufsz);

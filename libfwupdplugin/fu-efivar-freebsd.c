@@ -15,7 +15,6 @@
 
 #include "fu-common.h"
 #include "fu-efivar-impl.h"
-#include "fu-path.h"
 
 gboolean
 fu_efivar_supported_impl(GError **error)
@@ -56,7 +55,7 @@ fu_efivar_delete_with_glob_impl(const gchar *guid, const gchar *name_glob, GErro
 	while (efi_get_next_variable_name(&guidt, &name)) {
 		if (memcmp(&guid_to_delete, guidt, sizeof(guid_to_delete)) != 0)
 			continue;
-		if (!fu_path_fnmatch(name, name_glob))
+		if (!g_pattern_match_simple(name, name_glob))
 			continue;
 		rv = fu_efivar_delete(guid, name, error);
 		if (!rv)

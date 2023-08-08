@@ -6,12 +6,11 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
 #include <string.h>
 
 #include "fu-wac-device.h"
 #include "fu-wac-module-touch.h"
+#include "fu-wac-struct.h"
 
 struct _FuWacModuleTouch {
 	FuWacModule parent_instance;

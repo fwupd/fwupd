@@ -6,8 +6,6 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
 #include "fu-uf2-device.h"
 #include "fu-uf2-firmware.h"
 

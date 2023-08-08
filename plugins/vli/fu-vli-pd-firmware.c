@@ -7,8 +7,6 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
 #include "fu-vli-pd-common.h"
 #include "fu-vli-pd-firmware.h"
 #include "fu-vli-struct.h"
@@ -40,6 +38,8 @@ fu_vli_pd_firmware_validate_header(FuVliPdFirmware *self)
 		return TRUE;
 	if (self->vid == 0x06C4)
 		return TRUE;
+	if (self->vid == 0x0BF8)
+		return TRUE;
 	return FALSE;
 }
 
@@ -49,7 +49,7 @@ fu_vli_pd_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbB
 	FuVliPdFirmware *self = FU_VLI_PD_FIRMWARE(firmware);
 	fu_xmlb_builder_insert_kv(bn,
 				  "device_kind",
-				  fu_vli_common_device_kind_to_string(self->device_kind));
+				  fu_vli_device_kind_to_string(self->device_kind));
 	fu_xmlb_builder_insert_kx(bn, "vid", self->vid);
 	fu_xmlb_builder_insert_kx(bn, "pid", self->pid);
 }

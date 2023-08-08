@@ -76,6 +76,7 @@ typedef struct {
 
 enum {
 	PROP_0,
+	PROP_VERSION,
 	PROP_VERSION_FORMAT,
 	PROP_FLAGS,
 	PROP_PROTOCOL,
@@ -1108,6 +1109,7 @@ fwupd_device_set_version(FwupdDevice *self, const gchar *version)
 
 	g_free(priv->version);
 	priv->version = g_strdup(version);
+	g_object_notify(G_OBJECT(self), "version");
 }
 
 /**
@@ -3133,7 +3135,6 @@ fwupd_device_to_json_full(FwupdDevice *self, JsonBuilder *builder, FwupdDeviceFl
 gboolean
 fwupd_device_from_json(FwupdDevice *self, JsonNode *json_node, GError **error)
 {
-#if JSON_CHECK_VERSION(1, 6, 0)
 	JsonObject *obj;
 
 	g_return_val_if_fail(FWUPD_IS_DEVICE(self), FALSE);
@@ -3404,13 +3405,6 @@ fwupd_device_from_json(FwupdDevice *self, JsonNode *json_node, GError **error)
 
 	/* success */
 	return TRUE;
-#else
-	g_set_error_literal(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "json-glib version too old");
-	return FALSE;
-#endif
 }
 
 /**
@@ -3613,6 +3607,9 @@ fwupd_device_get_property(GObject *object, guint prop_id, GValue *value, GParamS
 	FwupdDevice *self = FWUPD_DEVICE(object);
 	FwupdDevicePrivate *priv = GET_PRIVATE(self);
 	switch (prop_id) {
+	case PROP_VERSION:
+		g_value_set_string(value, priv->version);
+		break;
 	case PROP_VERSION_FORMAT:
 		g_value_set_uint(value, priv->version_format);
 		break;
@@ -3663,6 +3660,9 @@ fwupd_device_set_property(GObject *object, guint prop_id, const GValue *value, G
 {
 	FwupdDevice *self = FWUPD_DEVICE(object);
 	switch (prop_id) {
+	case PROP_VERSION:
+		fwupd_device_set_version(self, g_value_get_string(value));
+		break;
 	case PROP_VERSION_FORMAT:
 		fwupd_device_set_version_format(self, g_value_get_uint(value));
 		break;
@@ -3717,6 +3717,20 @@ fwupd_device_class_init(FwupdDeviceClass *klass)
 	object_class->finalize = fwupd_device_finalize;
 	object_class->get_property = fwupd_device_get_property;
 	object_class->set_property = fwupd_device_set_property;
+
+	/**
+	 * FwupdDevice:version:
+	 *
+	 * The device version.
+	 *
+	 * Since: 1.8.15
+	 */
+	pspec = g_param_spec_string("version",
+				    NULL,
+				    NULL,
+				    NULL,
+				    G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
+	g_object_class_install_property(object_class, PROP_VERSION, pspec);
 
 	/**
 	 * FwupdDevice:version-format:
@@ -4120,6 +4134,74 @@ fwupd_device_compare(FwupdDevice *self1, FwupdDevice *self2)
 	g_return_val_if_fail(FWUPD_IS_DEVICE(self1), 0);
 	g_return_val_if_fail(FWUPD_IS_DEVICE(self2), 0);
 	return g_strcmp0(priv1->id, priv2->id);
+}
+
+/**
+ * fwupd_device_match_flags:
+ * @include: #FwupdDeviceFlags, or %FWUPD_DEVICE_FLAG_NONE
+ * @exclude: #FwupdDeviceFlags, or %FWUPD_DEVICE_FLAG_NONE
+ *
+ * Check if the device flags match.
+ *
+ * Returns: %TRUE if the device flags match
+ *
+ * Since: 1.9.3
+ **/
+gboolean
+fwupd_device_match_flags(FwupdDevice *self, FwupdDeviceFlags include, FwupdDeviceFlags exclude)
+{
+	g_return_val_if_fail(FWUPD_IS_DEVICE(self), FALSE);
+
+	for (guint i = 0; i < 64; i++) {
+		FwupdDeviceFlags flag = 1LLU << i;
+		if ((include & flag) > 0) {
+			if (!fwupd_device_has_flag(self, flag))
+				return FALSE;
+		}
+		if ((exclude & flag) > 0) {
+			if (fwupd_device_has_flag(self, flag))
+				return FALSE;
+		}
+	}
+	return TRUE;
+}
+
+/**
+ * fwupd_device_array_filter_flags:
+ * @devices: (not nullable) (element-type FwupdDevice): devices
+ * @include: #FwupdDeviceFlags, or %FWUPD_DEVICE_FLAG_NONE
+ * @exclude: #FwupdDeviceFlags, or %FWUPD_DEVICE_FLAG_NONE
+ * @error: (nullable): optional return location for an error
+ *
+ * Creates an array of new devices that match using fwupd_device_match_flags().
+ *
+ * Returns: (transfer container) (element-type FwupdDevice): devices
+ *
+ * Since: 1.9.3
+ **/
+GPtrArray *
+fwupd_device_array_filter_flags(GPtrArray *devices,
+				FwupdDeviceFlags include,
+				FwupdDeviceFlags exclude,
+				GError **error)
+{
+	g_autoptr(GPtrArray) devices_filtered =
+	    g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
+
+	g_return_val_if_fail(devices != NULL, NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	for (guint i = 0; i < devices->len; i++) {
+		FwupdDevice *device = g_ptr_array_index(devices, i);
+		if (!fwupd_device_match_flags(device, include, exclude))
+			continue;
+		g_ptr_array_add(devices_filtered, g_object_ref(device));
+	}
+	if (devices_filtered->len == 0) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO, "no devices");
+		return NULL;
+	}
+	return g_steal_pointer(&devices_filtered);
 }
 
 /**

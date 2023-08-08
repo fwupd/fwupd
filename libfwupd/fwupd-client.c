@@ -125,11 +125,9 @@ static guint signals[SIGNAL_LAST] = {0};
 G_DEFINE_TYPE_WITH_PRIVATE(FwupdClient, fwupd_client, G_TYPE_OBJECT)
 #define GET_PRIVATE(o) (fwupd_client_get_instance_private(o))
 
-#ifdef HAVE_LIBCURL_7_62_0
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(CURLU, curl_url_cleanup)
-#endif
-
 #ifdef HAVE_LIBCURL
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(CURLU, curl_url_cleanup)
+
 static void
 fwupd_client_curl_helper_free(FwupdCurlHelper *helper)
 {
@@ -3174,7 +3172,7 @@ fwupd_client_install_release_download_cb(GObject *source, GAsyncResult *res, gpo
 static gboolean
 fwupd_client_is_url_http(const gchar *perhaps_url)
 {
-#ifdef HAVE_LIBCURL_7_62_0
+#ifdef HAVE_LIBCURL
 	g_autoptr(CURLU) h = curl_url();
 	return curl_url_set(h, CURLUPART_URL, perhaps_url, 0) == CURLUE_OK;
 #else
@@ -3291,7 +3289,7 @@ fwupd_client_filter_locations(GPtrArray *locations,
 
 	for (guint i = 0; i < locations->len; i++) {
 		const gchar *uri = g_ptr_array_index(locations, i);
-		if ((download_flags & FWUPD_CLIENT_DOWNLOAD_FLAG_ONLY_IPFS) > 0 &&
+		if ((download_flags & FWUPD_CLIENT_DOWNLOAD_FLAG_ONLY_P2P) > 0 &&
 		    !fwupd_client_is_url_ipfs(uri))
 			continue;
 		g_ptr_array_add(uris_filtered, g_strdup(uri));
@@ -3313,7 +3311,7 @@ fwupd_client_filter_locations(GPtrArray *locations,
  * @device: (not nullable): a device
  * @release: (not nullable): a release
  * @install_flags: install flags, e.g. %FWUPD_INSTALL_FLAG_ALLOW_REINSTALL
- * @download_flags: download flags, e.g. %FWUPD_CLIENT_DOWNLOAD_FLAG_DISABLE_IPFS
+ * @download_flags: download flags, e.g. %FWUPD_CLIENT_DOWNLOAD_FLAG_ONLY_P2P
  * @cancellable: (nullable): optional #GCancellable
  * @callback: (scope async) (closure callback_data): the function to run on completion
  * @callback_data: the data to pass to @callback
@@ -3969,6 +3967,7 @@ fwupd_client_update_metadata_bytes_finish(FwupdClient *self, GAsyncResult *res, 
 
 typedef struct {
 	FwupdRemote *remote;
+	FwupdClientDownloadFlags download_flags;
 	GBytes *signature;
 	GBytes *metadata;
 } FwupdClientRefreshRemoteData;
@@ -4078,6 +4077,75 @@ fwupd_client_refresh_remote_signature_cb(GObject *source, GAsyncResult *res, gpo
 }
 
 /**
+ * fwupd_client_refresh_remote2_async:
+ * @self: a #FwupdClient
+ * @remote: a #FwupdRemote
+ * @download_flags: download flags, e.g. %FWUPD_CLIENT_DOWNLOAD_FLAG_ONLY_P2P
+ * @cancellable: (nullable): optional #GCancellable
+ * @callback: (scope async) (closure callback_data): the function to run on completion
+ * @callback_data: the data to pass to @callback
+ *
+ * Refreshes a remote by downloading new metadata.
+ *
+ * NOTE: This method is thread-safe, but progress signals will be
+ * emitted in the global default main context, if not explicitly set with
+ * [method@Client.set_main_context].
+ *
+ * Since: 1.9.4
+ **/
+void
+fwupd_client_refresh_remote2_async(FwupdClient *self,
+				   FwupdRemote *remote,
+				   FwupdClientDownloadFlags download_flags,
+				   GCancellable *cancellable,
+				   GAsyncReadyCallback callback,
+				   gpointer callback_data)
+{
+	FwupdClientRefreshRemoteData *data;
+	g_autoptr(GTask) task = NULL;
+
+	g_return_if_fail(FWUPD_IS_CLIENT(self));
+	g_return_if_fail(FWUPD_IS_REMOTE(remote));
+	g_return_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable));
+
+	task = g_task_new(self, cancellable, callback, callback_data);
+	data = g_new0(FwupdClientRefreshRemoteData, 1);
+	data->download_flags = download_flags;
+	data->remote = g_object_ref(remote);
+	g_task_set_task_data(task,
+			     g_steal_pointer(&data),
+			     (GDestroyNotify)fwupd_client_refresh_remote_data_free);
+
+	/* nothing to do */
+	if (fwupd_remote_get_kind(remote) != FWUPD_REMOTE_KIND_DOWNLOAD) {
+		g_debug("ignoring %s as %s",
+			fwupd_remote_get_id(remote),
+			fwupd_remote_kind_to_string(fwupd_remote_get_kind(remote)));
+		g_task_return_boolean(task, TRUE);
+		return;
+	}
+
+	/* sanity check */
+	if (fwupd_remote_get_metadata_uri_sig(remote) == NULL ||
+	    fwupd_remote_get_metadata_uri(remote) == NULL) {
+		g_task_return_new_error(task,
+					FWUPD_ERROR,
+					FWUPD_ERROR_NOT_SUPPORTED,
+					"no metadata URIs for %s",
+					fwupd_remote_get_id(remote));
+		return;
+	}
+
+	/* download signature */
+	fwupd_client_download_bytes_async(self,
+					  fwupd_remote_get_metadata_uri_sig(remote),
+					  download_flags,
+					  cancellable,
+					  fwupd_client_refresh_remote_signature_cb,
+					  g_steal_pointer(&task));
+}
+
+/**
  * fwupd_client_refresh_remote_async:
  * @self: a #FwupdClient
  * @remote: a #FwupdRemote
@@ -4100,38 +4168,15 @@ fwupd_client_refresh_remote_async(FwupdClient *self,
 				  GAsyncReadyCallback callback,
 				  gpointer callback_data)
 {
-	FwupdClientRefreshRemoteData *data;
-	g_autoptr(GTask) task = NULL;
-
 	g_return_if_fail(FWUPD_IS_CLIENT(self));
 	g_return_if_fail(FWUPD_IS_REMOTE(remote));
 	g_return_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable));
-
-	task = g_task_new(self, cancellable, callback, callback_data);
-	data = g_new0(FwupdClientRefreshRemoteData, 1);
-	data->remote = g_object_ref(remote);
-	g_task_set_task_data(task,
-			     g_steal_pointer(&data),
-			     (GDestroyNotify)fwupd_client_refresh_remote_data_free);
-
-	/* sanity check */
-	if (fwupd_remote_get_metadata_uri_sig(remote) == NULL ||
-	    fwupd_remote_get_metadata_uri(remote) == NULL) {
-		g_task_return_new_error(task,
-					FWUPD_ERROR,
-					FWUPD_ERROR_NOT_SUPPORTED,
-					"no metadata URIs for %s",
-					fwupd_remote_get_id(remote));
-		return;
-	}
-
-	/* download signature */
-	fwupd_client_download_bytes_async(self,
-					  fwupd_remote_get_metadata_uri_sig(remote),
-					  FWUPD_CLIENT_DOWNLOAD_FLAG_NONE,
-					  cancellable,
-					  fwupd_client_refresh_remote_signature_cb,
-					  g_steal_pointer(&task));
+	return fwupd_client_refresh_remote2_async(self,
+						  remote,
+						  FWUPD_CLIENT_DOWNLOAD_FLAG_NONE,
+						  cancellable,
+						  callback,
+						  callback_data);
 }
 
 /**
@@ -5212,7 +5257,7 @@ fwupd_client_download_http(FwupdClient *self, CURL *curl, const gchar *url, GErr
 		return NULL;
 	}
 
-	return g_byte_array_free_to_bytes(g_steal_pointer(&buf));
+	return g_bytes_new(buf->data, buf->len);
 }
 
 static void
@@ -5402,7 +5447,7 @@ fwupd_client_upload_bytes_thread_cb(GTask *task,
 		return;
 	}
 	g_task_return_pointer(task,
-			      g_byte_array_free_to_bytes(g_steal_pointer(&buf)),
+			      g_bytes_new(buf->data, buf->len),
 			      (GDestroyNotify)g_bytes_unref);
 }
 #endif

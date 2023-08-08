@@ -54,7 +54,7 @@ struct _FuFirmwareClass {
 			  gsize offset,
 			  FwupdInstallFlags flags,
 			  GError **error) G_GNUC_WARN_UNUSED_RESULT;
-	GBytes *(*write)(FuFirmware *self, GError **error)G_GNUC_WARN_UNUSED_RESULT;
+	GByteArray *(*write)(FuFirmware *self, GError **error)G_GNUC_WARN_UNUSED_RESULT;
 	void (*export)(FuFirmware *self, FuFirmwareExportFlags flags, XbBuilderNode *bn);
 	gboolean (*tokenize)(FuFirmware *self, GBytes *fw, FwupdInstallFlags flags, GError **error)
 	    G_GNUC_WARN_UNUSED_RESULT;
@@ -135,6 +135,15 @@ struct _FuFirmwareClass {
  * Since: 1.8.6
  **/
 #define FU_FIRMWARE_FLAG_ALWAYS_SEARCH (1u << 6)
+/**
+ * FU_FIRMWARE_FLAG_NO_AUTO_DETECTION:
+ *
+ * Do not use this firmware type when auto-detecting firmware.
+ * This should be used when there is no valid signature or CRC to check validity when parsing.
+ *
+ * Since: 1.9.3
+ **/
+#define FU_FIRMWARE_FLAG_NO_AUTO_DETECTION (1u << 7)
 
 /**
  * FuFirmwareFlags:
@@ -214,7 +223,7 @@ fu_firmware_new(void);
 FuFirmware *
 fu_firmware_new_from_bytes(GBytes *fw);
 FuFirmware *
-fu_firmware_new_from_gtypes(GBytes *fw, FwupdInstallFlags flags, GError **error, ...);
+fu_firmware_new_from_gtypes(GBytes *fw, gsize offset, FwupdInstallFlags flags, GError **error, ...);
 gchar *
 fu_firmware_to_string(FuFirmware *self);
 void
@@ -253,6 +262,10 @@ gsize
 fu_firmware_get_size(FuFirmware *self);
 void
 fu_firmware_set_size(FuFirmware *self, gsize size);
+void
+fu_firmware_set_images_max(FuFirmware *self, guint images_max);
+guint
+fu_firmware_get_images_max(FuFirmware *self);
 guint64
 fu_firmware_get_idx(FuFirmware *self);
 void
@@ -315,6 +328,8 @@ fu_firmware_check_compatible(FuFirmware *self,
 void
 fu_firmware_add_image(FuFirmware *self, FuFirmware *img);
 gboolean
+fu_firmware_add_image_full(FuFirmware *self, FuFirmware *img, GError **error);
+gboolean
 fu_firmware_remove_image(FuFirmware *self, FuFirmware *img, GError **error);
 gboolean
 fu_firmware_remove_image_by_idx(FuFirmware *self, guint64 idx, GError **error);
@@ -330,6 +345,10 @@ FuFirmware *
 fu_firmware_get_image_by_idx(FuFirmware *self, guint64 idx, GError **error);
 GBytes *
 fu_firmware_get_image_by_idx_bytes(FuFirmware *self, guint64 idx, GError **error);
+FuFirmware *
+fu_firmware_get_image_by_gtype(FuFirmware *self, GType gtype, GError **error);
+GBytes *
+fu_firmware_get_image_by_gtype_bytes(FuFirmware *self, GType gtype, GError **error);
 FuFirmware *
 fu_firmware_get_image_by_checksum(FuFirmware *self, const gchar *checksum, GError **error);
 void

@@ -99,7 +99,6 @@ fu_steelseries_device_cmd(FuSteelseriesDevice *self,
 static gboolean
 fu_steelseries_device_probe(FuDevice *device, GError **error)
 {
-#if G_USB_CHECK_VERSION(0, 3, 3)
 	FuSteelseriesDevice *self = FU_STEELSERIES_DEVICE(device);
 	FuSteelseriesDevicePrivate *priv = GET_PRIVATE(self);
 	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(device));
@@ -152,14 +151,6 @@ fu_steelseries_device_probe(FuDevice *device, GError **error)
 
 	/* success */
 	return TRUE;
-#else
-	/* failed */
-	g_set_error_literal(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "this version of GUsb is not supported");
-	return FALSE;
-#endif
 }
 
 static void

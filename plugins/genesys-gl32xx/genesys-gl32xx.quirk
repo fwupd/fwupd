@@ -1,0 +1,7 @@
+[BLOCK\VEN_05E3&DEV_0749]
+Plugin = genesys_gl32xx
+FirmwareSize = 0x10000
+
+[BLOCK\VEN_05E3&DEV_0764]
+Plugin = genesys_gl32xx
+FirmwareSize = 0x1C000

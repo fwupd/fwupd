@@ -73,11 +73,7 @@ GByteArray *
 proto_manager_generate_set_device_time_request(void)
 {
 	GByteArray *buf = g_byte_array_new();
-#if GLIB_CHECK_VERSION(2, 57, 1)
 	g_autoptr(GTimeZone) tz = g_time_zone_new_local();
-#else
-	g_autoptr(GDateTime) dt = g_date_time_new_now_utc();
-#endif
 
 	Logi__Device__Proto__Header header_msg = LOGI__DEVICE__PROTO__HEADER__INIT;
 	Logi__Device__Proto__SetDeviceTimeRequest set_devicetime_msg =
@@ -87,13 +83,8 @@ proto_manager_generate_set_device_time_request(void)
 	request_msg.payload_case = LOGI__DEVICE__PROTO__REQUEST__PAYLOAD_SET_DEVICE_TIME_REQUEST;
 	request_msg.set_device_time_request = &set_devicetime_msg;
 
-#if GLIB_CHECK_VERSION(2, 57, 1)
 	set_devicetime_msg.ts = (g_get_real_time() / 1000) + SET_TIME_DELAY_MS;
 	set_devicetime_msg.time_zone = g_strdup_printf("%s", g_time_zone_get_identifier(tz));
-#else
-	set_devicetime_msg.ts = (g_date_time_to_unix(dt) * 1000) + SET_TIME_DELAY_MS;
-	set_devicetime_msg.time_zone = g_strdup_printf("%s", "UTC");
-#endif
 	proto_manager_set_header(&header_msg);
 	usb_msg.header = &header_msg;
 	usb_msg.message_case = LOGI__DEVICE__PROTO__USB_MSG__MESSAGE_REQUEST;
@@ -202,49 +193,4 @@ proto_manager_decode_message(const guint8 *data,
 	};
 	logi__device__proto__usb_msg__free_unpacked(usb_msg, NULL);
 	return g_steal_pointer(&buf_decoded);
-}
-
-const gchar *
-fu_logitech_bulkcontroller_device_status_to_string(FuLogitechBulkcontrollerDeviceStatus status)
-{
-	if (status == kDeviceStateUnknown)
-		return "Unknown";
-	if (status == kDeviceStateOffline)
-		return "Offline";
-	if (status == kDeviceStateOnline)
-		return "Online";
-	if (status == kDeviceStateIdle)
-		return "Idle";
-	if (status == kDeviceStateInUse)
-		return "InUse";
-	if (status == kDeviceStateAudioOnly)
-		return "AudioOnly";
-	if (status == kDeviceStateEnumerating)
-		return "Enumerating";
-	return NULL;
-}
-
-const gchar *
-fu_logitech_bulkcontroller_device_update_state_to_string(
-    FuLogitechBulkcontrollerDeviceUpdateState update_state)
-{
-	if (update_state == kUpdateStateUnknown)
-		return "Unknown";
-	if (update_state == kUpdateStateCurrent)
-		return "Current";
-	if (update_state == kUpdateStateAvailable)
-		return "Available";
-	if (update_state == kUpdateStateStarting)
-		return "Starting";
-	if (update_state == kUpdateStateDownloading)
-		return "Downloading";
-	if (update_state == kUpdateStateReady)
-		return "Ready";
-	if (update_state == kUpdateStateUpdating)
-		return "Updating";
-	if (update_state == kUpdateStateScheduled)
-		return "Scheduled";
-	if (update_state == kUpdateStateError)
-		return "Error";
-	return NULL;
 }

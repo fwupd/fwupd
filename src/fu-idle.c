@@ -9,7 +9,6 @@
 #include "config.h"
 
 #include "fu-idle.h"
-#include "fu-mutex.h"
 
 static void
 fu_idle_finalize(GObject *obj);

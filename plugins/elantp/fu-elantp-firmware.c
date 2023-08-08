@@ -6,8 +6,6 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
 #include "fu-elantp-common.h"
 #include "fu-elantp-firmware.h"
 
@@ -250,7 +248,7 @@ fu_elantp_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
 	return TRUE;
 }
 
-static GBytes *
+static GByteArray *
 fu_elantp_firmware_write(FuFirmware *firmware, GError **error)
 {
 	FuElantpFirmware *self = FU_ELANTP_FIRMWARE(firmware);
@@ -295,7 +293,7 @@ fu_elantp_firmware_write(FuFirmware *firmware, GError **error)
 		return NULL;
 	fu_byte_array_append_bytes(buf, blob);
 	g_byte_array_append(buf, elantp_signature, sizeof(elantp_signature));
-	return g_byte_array_free_to_bytes(g_steal_pointer(&buf));
+	return g_steal_pointer(&buf);
 }
 
 static void

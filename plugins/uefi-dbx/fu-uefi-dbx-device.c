@@ -6,8 +6,6 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
 #include "fu-uefi-dbx-common.h"
 #include "fu-uefi-dbx-device.h"
 
@@ -57,6 +55,7 @@ fu_uefi_dbx_device_set_version_number(FuDevice *device, GError **error)
 {
 	g_autoptr(GBytes) dbx_blob = NULL;
 	g_autoptr(FuFirmware) dbx = fu_efi_signature_list_new();
+	g_autoptr(GPtrArray) sigs = NULL;
 
 	/* use the number of checksums in the dbx as a version number, ignoring
 	 * some owners that do not make sense */
@@ -65,9 +64,25 @@ fu_uefi_dbx_device_set_version_number(FuDevice *device, GError **error)
 		return FALSE;
 	if (!fu_firmware_parse(dbx, dbx_blob, FWUPD_INSTALL_FLAG_NO_SEARCH, error))
 		return FALSE;
+
+	/* add the last checksum to the device */
+	sigs = fu_firmware_get_images(dbx);
+	if (sigs->len > 0) {
+		FuEfiSignature *sig = g_ptr_array_index(sigs, sigs->len - 1);
+		g_autofree gchar *csum =
+		    fu_firmware_get_checksum(FU_FIRMWARE(sig), G_CHECKSUM_SHA256, NULL);
+		if (csum != NULL)
+			fu_device_add_checksum(device, csum);
+	}
+
 	fu_device_set_version(device, fu_firmware_get_version(dbx));
-	fu_device_set_version_lowest(device, fu_firmware_get_version(dbx));
 	return TRUE;
+}
+
+static void
+fu_uefi_dbx_device_version_notify_cb(FuDevice *device, GParamSpec *pspec, gpointer user_data)
+{
+	fu_device_set_version_lowest(device, fu_device_get_version(device));
 }
 
 static FuFirmware *
@@ -85,6 +100,7 @@ fu_uefi_dbx_prepare_firmware(FuDevice *device, GBytes *fw, FwupdInstallFlags fla
 		//		fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_VERIFY);
 		if (!fu_uefi_dbx_signature_list_validate(ctx,
 							 FU_EFI_SIGNATURE_LIST(siglist),
+							 flags,
 							 error)) {
 			g_prefix_error(error,
 				       "Blocked executable in the ESP, "
@@ -128,14 +144,24 @@ fu_uefi_dbx_device_probe(FuDevice *device, GError **error)
 }
 
 static void
+fu_uefi_dbx_device_report_metadata_pre(FuDevice *device, GHashTable *metadata)
+{
+	guint64 nvram_total = fu_efivar_space_used(NULL);
+	if (nvram_total != G_MAXUINT64) {
+		g_hash_table_insert(metadata,
+				    g_strdup("EfivarNvramUsed"),
+				    g_strdup_printf("%" G_GUINT64_FORMAT, nvram_total));
+	}
+}
+
+static void
 fu_uefi_dbx_device_set_progress(FuDevice *self, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0, "detach");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 98, "write");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 100, "write");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0, "attach");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 2, "reload");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 0, "reload");
 }
 
 static void
@@ -154,9 +180,15 @@ fu_uefi_dbx_device_init(FuUefiDbxDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_ONLY_VERSION_UPGRADE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE);
+	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_MD_ONLY_CHECKSUM);
+	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_MD_SET_VERSION);
 	fu_device_add_parent_guid(FU_DEVICE(self), "main-system-firmware");
 	if (!fu_common_is_live_media())
 		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
+	g_signal_connect(FWUPD_DEVICE(self),
+			 "notify::version",
+			 G_CALLBACK(fu_uefi_dbx_device_version_notify_cb),
+			 NULL);
 }
 
 static void
@@ -167,6 +199,7 @@ fu_uefi_dbx_device_class_init(FuUefiDbxDeviceClass *klass)
 	klass_device->write_firmware = fu_uefi_dbx_device_write_firmware;
 	klass_device->prepare_firmware = fu_uefi_dbx_prepare_firmware;
 	klass_device->set_progress = fu_uefi_dbx_device_set_progress;
+	klass_device->report_metadata_pre = fu_uefi_dbx_device_report_metadata_pre;
 }
 
 FuUefiDbxDevice *

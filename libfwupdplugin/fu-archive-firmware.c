@@ -12,7 +12,6 @@
 #include "fu-archive-firmware.h"
 #include "fu-archive.h"
 #include "fu-common.h"
-#include "fu-path.h"
 
 /**
  * FuArchiveFirmware:
@@ -51,8 +50,7 @@ fu_archive_firmware_parse_cb(FuArchive *self,
 	FuFirmware *firmware = FU_FIRMWARE(user_data);
 	g_autoptr(FuFirmware) img = fu_firmware_new_from_bytes(bytes);
 	fu_firmware_set_id(img, filename);
-	fu_firmware_add_image(firmware, img);
-	return TRUE;
+	return fu_firmware_add_image_full(firmware, img, error);
 }
 
 static gboolean
@@ -169,7 +167,7 @@ fu_archive_firmware_get_image_fnmatch(FuArchiveFirmware *self, const gchar *patt
 	for (guint i = 0; i < imgs->len; i++) {
 		FuFirmware *img = g_ptr_array_index(imgs, i);
 		const gchar *fn = fu_firmware_get_id(img);
-		if (!fu_path_fnmatch(pattern, fn))
+		if (!g_pattern_match_simple(pattern, fn))
 			continue;
 		if (img_match != NULL) {
 			g_set_error(error,
@@ -192,7 +190,7 @@ fu_archive_firmware_get_image_fnmatch(FuArchiveFirmware *self, const gchar *patt
 	return g_steal_pointer(&img_match);
 }
 
-static GBytes *
+static GByteArray *
 fu_archive_firmware_write(FuFirmware *firmware, GError **error)
 {
 	FuArchiveFirmware *self = FU_ARCHIVE_FIRMWARE(firmware);
@@ -278,6 +276,7 @@ fu_archive_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
 static void
 fu_archive_firmware_init(FuArchiveFirmware *self)
 {
+	fu_firmware_set_images_max(FU_FIRMWARE(self), 10000);
 }
 
 static void

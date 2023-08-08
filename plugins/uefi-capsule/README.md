@@ -138,9 +138,18 @@ support on the device by using the `unlock` command.
 Since version 1.1.0 fwupd will autodetect the ESP if it is mounted on
 `/boot/efi`, `/boot`, or `/efi`, and UDisks is available on the system. In
 other cases the mount point of the ESP needs to be manually specified using the
-option *EspLocation* in `/etc/fwupd/daemon.conf`.
+option *EspLocation* in `/etc/fwupd/fwupd.conf`.
 
 Setting an invalid directory will disable the fwupd plugin.
+
+## Quirk Use
+
+This plugin uses the following plugin-specific quirks:
+
+### `Flags=cod-indexed-filename`
+
+Use a Capsule-on-Disk filename of `CapsuleUpdateFileXXXX.bin` rather than including the ESRT GUID.
+This alternative format may be needed for some early InsydeH2O firmwares.
 
 ## External Interface Access
 

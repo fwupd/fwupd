@@ -141,7 +141,7 @@ if introspection.allowed()
     nsversion: '2.0',
     namespace: 'Fwupd',
     symbol_prefix: 'fwupd',
-    identifier_prefix: 'Fwupd',
+    identifier_prefix: ['Fwupd', 'fwupd'],
     export_packages: 'fwupd',
     header: 'fwupd.h',
     dependencies: fwupd_gir_deps,
@@ -171,8 +171,7 @@ if introspection.allowed()
     input: fwupd_gir[0],
     output: 'fwupd.map',
     command: [
-      python3,
-      join_paths(meson.project_source_root(), 'contrib', 'generate-version-script.py'),
+      generate_version_script,
       'LIBFWUPD',
       '@INPUT@',
       '@OUTPUT@',
