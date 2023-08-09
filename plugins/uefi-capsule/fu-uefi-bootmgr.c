@@ -264,8 +264,10 @@ fu_uefi_bootmgr_shim_is_safe(const gchar *source_shim, GError **error)
 	blob = fu_bytes_get_contents(source_shim, error);
 	if (blob == NULL)
 		return FALSE;
-	if (!fu_firmware_parse(shim, blob, FWUPD_INSTALL_FLAG_NONE, error))
+	if (!fu_firmware_parse(shim, blob, FWUPD_INSTALL_FLAG_NONE, error)) {
+		g_prefix_error(error, "failed to load %s: ", source_shim);
 		return FALSE;
+	}
 	sbatlevel_section = fu_firmware_get_image_by_id(shim, ".sbatlevel", &error_local);
 	if (sbatlevel_section == NULL) {
 		g_debug("no sbatlevel section was found");
@@ -287,8 +289,10 @@ fu_uefi_bootmgr_shim_is_safe(const gchar *source_shim, GError **error)
 	if (!fu_firmware_parse(current_sbatlevel,
 			       current_sbatlevel_bytes,
 			       FWUPD_INSTALL_FLAG_NONE,
-			       error))
+			       error)) {
+		g_prefix_error(error, "failed to load SbatLevelRT: ");
 		return FALSE;
+	}
 
 	/*
 	 * For every new shim entry, we need a matching entry in the
