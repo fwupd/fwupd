@@ -978,6 +978,14 @@ fwupd_remote_load_from_filename(FwupdRemote *self,
 			fwupd_remote_remove_flag(self,
 						 FWUPD_REMOTE_FLAG_AUTOMATIC_SECURITY_REPORTS);
 	}
+
+	/* old versions of fwupd used empty strings to mean "unset" and the package manager
+	 * might not have replaced the file marked as a config file due to modification */
+	if (g_strcmp0(priv->username, "") == 0 && g_strcmp0(priv->password, "") == 0) {
+		fwupd_remote_set_username(self, NULL);
+		fwupd_remote_set_password(self, NULL);
+	}
+
 	/* success */
 	fwupd_remote_set_filename_source(self, filename);
 	return TRUE;
