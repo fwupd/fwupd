@@ -2,6 +2,9 @@
 set -e
 set -x
 
+# undo dnf5 breakage
+dnf5 install "dnf < 5" --best -y
+
 #get any missing deps from the container
 ./contrib/ci/fwupd_setup_helpers.py install-dependencies --yes -o fedora
 
