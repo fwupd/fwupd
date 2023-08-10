@@ -601,6 +601,15 @@ fu_udev_device_get_miscdev0(FuUdevDevice *self)
 }
 #endif
 
+static void
+fu_udev_device_set_dev_internal(FuUdevDevice *self, GUdevDevice *udev_device)
+{
+	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_UDEV_DEVICE(self));
+	if (g_set_object(&priv->udev_device, udev_device))
+		g_object_notify(G_OBJECT(self), "udev-device");
+}
+
 /**
  * fu_udev_device_set_dev:
  * @self: a #FuUdevDevice
@@ -627,15 +636,15 @@ fu_udev_device_set_dev(FuUdevDevice *self, GUdevDevice *udev_device)
 	    g_strcmp0(g_udev_device_get_subsystem(udev_device), "net") == 0) {
 		g_autoptr(GUdevDevice) udev_device_phys = NULL;
 		udev_device_phys = g_udev_device_get_parent(udev_device);
-		g_set_object(&priv->udev_device, udev_device_phys);
+		fu_udev_device_set_dev_internal(self, udev_device_phys);
 		fu_device_set_metadata(FU_DEVICE(self),
 				       "ParentSubsystem",
 				       g_udev_device_get_subsystem(udev_device));
 	} else {
-		g_set_object(&priv->udev_device, udev_device);
+		fu_udev_device_set_dev_internal(self, udev_device);
 	}
 #else
-	g_set_object(&priv->udev_device, udev_device);
+	fu_udev_device_set_dev_internal(&priv->udev_device, udev_device);
 #endif
 
 	/* set new device */
