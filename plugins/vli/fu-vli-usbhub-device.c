@@ -595,10 +595,16 @@ fu_vli_usbhub_device_guess_kind(FuVliUsbhubDevice *self, GError **error)
 		fu_vli_device_set_kind(FU_VLI_DEVICE(self), FU_VLI_DEVICE_KIND_VL815);
 	} else if (chipid2 == 0x35 && chipid1 == 0x38) {
 		fu_vli_device_set_kind(FU_VLI_DEVICE(self), FU_VLI_DEVICE_KIND_VL817);
+	} else if (chipid2 == 0x35 && chipid1 == 0x90) {
+		fu_vli_device_set_kind(FU_VLI_DEVICE(self), FU_VLI_DEVICE_KIND_VL817S);
+	} else if (chipid2 == 0x35 && chipid1 == 0x92) {
+		fu_vli_device_set_kind(FU_VLI_DEVICE(self), FU_VLI_DEVICE_KIND_VL822T);
 	} else if (chipid2 == 0x35 && chipid1 == 0x45) {
 		fu_vli_device_set_kind(FU_VLI_DEVICE(self), FU_VLI_DEVICE_KIND_VL211);
 	} else if (chipid22 == 0x35 && chipid12 == 0x53) {
 		fu_vli_device_set_kind(FU_VLI_DEVICE(self), FU_VLI_DEVICE_KIND_VL120);
+	} else if (chipid22 == 0x35 && chipid12 == 0x92) {
+		fu_vli_device_set_kind(FU_VLI_DEVICE(self), FU_VLI_DEVICE_KIND_VL122);
 	} else if (tPid == 0x810) {
 		fu_vli_device_set_kind(FU_VLI_DEVICE(self), FU_VLI_DEVICE_KIND_VL810);
 	} else if (tPid == 0x811) {

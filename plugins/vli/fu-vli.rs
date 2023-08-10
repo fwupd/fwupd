@@ -37,6 +37,7 @@ enum VliDeviceKind {
     Vl105 = 0x0105,
     Vl107 = 0x0107,
     Vl120 = 0x0120,
+    Vl122 = 0x0122,
     Vl210 = 0x0210,
     Vl211 = 0x0211,
     Vl212 = 0x0212,
@@ -51,6 +52,7 @@ enum VliDeviceKind {
     Vl813 = 0x0813,
     Vl815 = 0x0815,
     Vl817 = 0x0817,
+    Vl817s = 0xa817,
     Vl819q7 = 0xa819, // guessed
     Vl819q8 = 0xb819, // guessed
     Vl820q7 = 0xa820,
@@ -60,6 +62,7 @@ enum VliDeviceKind {
     Vl822q5 = 0x0822, // guessed
     Vl822q7 = 0xa822, // guessed
     Vl822q8 = 0xb822, // guessed
+    Vl822t = 0xc822, // guessed
     Vl830 = 0x0830,
     Msp430 = 0xf430,  // guessed
     Ps186 = 0xf186,   // guessed
