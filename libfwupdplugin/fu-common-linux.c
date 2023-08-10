@@ -12,6 +12,7 @@
 #include <unistd.h>
 
 #include "fu-common-private.h"
+#include "fu-kernel.h"
 
 #define UDISKS_DBUS_PATH	      "/org/freedesktop/UDisks2/Manager"
 #define UDISKS_DBUS_MANAGER_INTERFACE "org.freedesktop.UDisks2.Manager"
@@ -88,4 +89,103 @@ guint64
 fu_common_get_memory_size_impl(void)
 {
 	return (guint64)sysconf(_SC_PHYS_PAGES) * (guint64)sysconf(_SC_PAGE_SIZE);
+}
+
+gchar *
+fu_common_get_kernel_cmdline_impl(GError **error)
+{
+	GHashTableIter iter;
+	gpointer key;
+	gpointer value;
+	g_autoptr(GHashTable) hash = NULL;
+	g_autoptr(GString) cmdline_safe = g_string_new(NULL);
+	const gchar *ignore[] = {
+	    "",
+	    "apparmor",
+	    "audit",
+	    "auto",
+	    "boot",
+	    "BOOT_IMAGE",
+	    "console",
+	    "crashkernel",
+	    "cryptdevice",
+	    "cryptkey",
+	    "dm",
+	    "earlycon",
+	    "earlyprintk",
+	    "ether",
+	    "initrd",
+	    "ip",
+	    "LANG",
+	    "loglevel",
+	    "luks.key",
+	    "luks.name",
+	    "luks.options",
+	    "luks.uuid",
+	    "mitigations",
+	    "mount.usr",
+	    "mount.usrflags",
+	    "mount.usrfstype",
+	    "netdev",
+	    "netroot",
+	    "nfsaddrs",
+	    "nfs.nfs4_unique_id",
+	    "nfsroot",
+	    "noplymouth",
+	    "ostree",
+	    "quiet",
+	    "rd.dm.uuid",
+	    "rd.luks.allow-discards",
+	    "rd.luks.key",
+	    "rd.luks.name",
+	    "rd.luks.options",
+	    "rd.luks.uuid",
+	    "rd.lvm.lv",
+	    "rd.lvm.vg",
+	    "rd.md.uuid",
+	    "rd.systemd.mask",
+	    "rd.systemd.wants",
+	    "resume",
+	    "resumeflags",
+	    "rhgb",
+	    "ro",
+	    "root",
+	    "rootflags",
+	    "roothash",
+	    "rw",
+	    "security",
+	    "showopts",
+	    "splash",
+	    "swap",
+	    "systemd.mask",
+	    "systemd.show_status",
+	    "systemd.unit",
+	    "systemd.verity_root_data",
+	    "systemd.verity_root_hash",
+	    "systemd.wants",
+	    "udev.log_priority",
+	    "verbose",
+	    "vt.handoff",
+	    "zfs",
+	    NULL, /* last entry */
+	};
+
+	/* get a PII-safe kernel command line */
+	hash = fu_kernel_get_cmdline(error);
+	if (hash == NULL)
+		return NULL;
+	for (guint i = 0; ignore[i] != NULL; i++)
+		g_hash_table_remove(hash, ignore[i]);
+	g_hash_table_iter_init(&iter, hash);
+	while (g_hash_table_iter_next(&iter, &key, &value)) {
+		if (cmdline_safe->len > 0)
+			g_string_append(cmdline_safe, " ");
+		if (value == NULL) {
+			g_string_append(cmdline_safe, (gchar *)key);
+			continue;
+		}
+		g_string_append_printf(cmdline_safe, "%s=%s", (gchar *)key, (gchar *)value);
+	}
+
+	return g_string_free(g_steal_pointer(&cmdline_safe), FALSE);
 }
