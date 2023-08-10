@@ -91,3 +91,13 @@ Plugin = wacom_usb
 [USB\VID_056A&PID_03C0]
 Plugin = wacom_usb
 GType = FuWacDevice
+
+# Wacom One 13 (USB) [DTH-134]
+[USB\VID_056A&PID_03CB]
+Plugin = wacom_usb
+GType = FuWacDevice
+
+# Wacom One 12 (USB) [DTC-121]
+[USB\VID_056A&PID_03CE]
+Plugin = wacom_usb
+GType = FuWacDevice
