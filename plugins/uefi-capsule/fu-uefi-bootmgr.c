@@ -128,7 +128,9 @@ fu_uefi_bootmgr_verify_fwupd(GError **error)
 }
 
 static gboolean
-fu_uefi_setup_bootnext_with_loadopt(FuEfiLoadOption *loadopt, GError **error)
+fu_uefi_setup_bootnext_with_loadopt(FuEfiLoadOption *loadopt,
+				    FuUefiBootmgrFlags flags,
+				    GError **error)
 {
 	const gchar *name = NULL;
 	guint32 attr;
@@ -237,8 +239,10 @@ fu_uefi_setup_bootnext_with_loadopt(FuEfiLoadOption *loadopt, GError **error)
 	}
 
 	/* TODO: conditionalize this on the UEFI version? */
-	if (!fu_uefi_bootmgr_add_to_boot_order(boot_next, error))
-		return FALSE;
+	if (flags & FU_UEFI_BOOTMGR_FLAG_MODIFY_BOOTORDER) {
+		if (!fu_uefi_bootmgr_add_to_boot_order(boot_next, error))
+			return FALSE;
+	}
 
 	/* set the boot next */
 	fu_memwrite_uint16(boot_nextbuf, boot_next, G_LITTLE_ENDIAN);
@@ -476,5 +480,5 @@ fu_uefi_bootmgr_bootnext(FuVolume *esp,
 	fu_firmware_set_id(FU_FIRMWARE(loadopt), description);
 
 	/* save as BootNext */
-	return fu_uefi_setup_bootnext_with_loadopt(loadopt, error);
+	return fu_uefi_setup_bootnext_with_loadopt(loadopt, flags, error);
 }

@@ -109,6 +109,8 @@ fu_uefi_nvram_device_write_firmware(FuDevice *device,
 		bootmgr_flags |= FU_UEFI_BOOTMGR_FLAG_USE_SHIM_FOR_SB;
 	if (fu_device_has_private_flag(device, FU_UEFI_DEVICE_FLAG_USE_SHIM_UNIQUE))
 		bootmgr_flags |= FU_UEFI_BOOTMGR_FLAG_USE_SHIM_UNIQUE;
+	if (fu_device_has_private_flag(device, FU_UEFI_DEVICE_FLAG_MODIFY_BOOTORDER))
+		bootmgr_flags |= FU_UEFI_BOOTMGR_FLAG_MODIFY_BOOTORDER;
 
 	/* some legacy devices use the old name to deduplicate boot entries */
 	if (fu_device_has_private_flag(device, FU_UEFI_DEVICE_FLAG_USE_LEGACY_BOOTMGR_DESC))

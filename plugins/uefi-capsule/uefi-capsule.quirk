@@ -10,9 +10,25 @@ Flags = no-ux-capsule
 [386c2f52-44ec-55d3-b802-47631bfb8451]
 Flags = uefi-force-enable
 
-# Lenovo
+# LENOVO
 [6de5d951-d755-576b-bd09-c5cf66b27234]
-Flags = supports-boot-order-lock,use-legacy-bootmgr-desc,no-ux-capsule,no-lid-closed
+Flags = supports-boot-order-lock,use-legacy-bootmgr-desc,no-ux-capsule,no-lid-closed,modify-bootorder
+
+# Dell Inc.
+[85d38fda-fc0e-5c6f-808f-076984ae7978]
+Flags = modify-bootorder
+
+# ASUSTeK COMPUTER INC.
+[65605ed1-09e2-57aa-bd0f-a26c1d35433f]
+Flags = modify-bootorder
+
+# Framework
+[2185e781-ed4b-5fc2-8839-b5ddb1e7d649]
+Flags = modify-bootorder
+
+# HP
+[93f84748-c854-5d6b-b78a-13c2361e0758]
+Flags = modify-bootorder
 
 # Lenovo ThinkPad X1 Yoga 4th
 [1138930e-8df1-5ae0-b946-7b0d9c9b4a79]
