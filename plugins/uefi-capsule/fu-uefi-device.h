@@ -74,6 +74,12 @@ struct _FuUefiDeviceClass {
  * Use a Capsule-on-Disk filename of `CapsuleUpdateFileXXXX.bin`.
  */
 #define FU_UEFI_DEVICE_FLAG_COD_INDEXED_FILENAME (1 << 9)
+/**
+ * FU_UEFI_DEVICE_FLAG_MODIFY_BOOTORDER:
+ *
+ * Modify `BootOrder` as well as `BootNext` to work around BIOS bugs.
+ */
+#define FU_UEFI_DEVICE_FLAG_MODIFY_BOOTORDER (1 << 10)
 
 void
 fu_uefi_device_set_esp(FuUefiDevice *self, FuVolume *esp);
