@@ -276,6 +276,7 @@ static void
 fu_efi_load_option_init(FuEfiLoadOption *self)
 {
 	self->attrs = FU_EFI_LOAD_OPTION_ATTRS_ACTIVE;
+	g_type_ensure(FU_TYPE_EFI_DEVICE_PATH_LIST);
 }
 
 /**
