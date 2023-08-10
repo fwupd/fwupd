@@ -705,6 +705,11 @@
       <package variant="x86_64" />
     </distro>
   </dependency>
+  <dependency id="libzstd-dev">
+    <distro id="fedora">
+      <package variant="mingw64">mingw64-zstd</package>
+    </distro>
+  </dependency>
   <dependency id="libarchive-dev">
     <distro id="centos">
       <package variant="x86_64">libarchive-devel</package>
