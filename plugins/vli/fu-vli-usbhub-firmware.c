@@ -243,13 +243,25 @@ fu_vli_usbhub_firmware_parse(FuFirmware *firmware,
 				self->device_kind = FU_VLI_DEVICE_KIND_VL820Q7;
 		}
 		break;
+	case 0x0595:
+		/* VL822T == VT3595 */
+		self->device_kind = FU_VLI_DEVICE_KIND_VL822T;
+		break;
 	case 0x0538:
 		/* VL817 == VT3538 */
 		self->device_kind = FU_VLI_DEVICE_KIND_VL817;
 		break;
+	case 0x0590:
+		/* VL817S == VT3590 */
+		self->device_kind = FU_VLI_DEVICE_KIND_VL817S;
+		break;
 	case 0x0553:
 		/* VL120 == VT3553 */
 		self->device_kind = FU_VLI_DEVICE_KIND_VL120;
+		break;
+	case 0x0592:
+		/* VL122 == VT3592 */
+		self->device_kind = FU_VLI_DEVICE_KIND_VL122;
 		break;
 	default:
 		break;
