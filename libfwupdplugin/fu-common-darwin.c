@@ -31,3 +31,12 @@ fu_common_get_memory_size_impl(void)
 	sysctl(mib, 2, &physical_memory, &length, NULL, 0);
 	return (guint64)physical_memory;
 }
+
+gchar *
+fu_common_get_kernel_cmdline_impl(GError **error)
+{
+	gchar cmdline[1024] = {0};
+	gsize cmdlinesz = sizeof(cmdline);
+	sysctlbyname("kern.bootargs", cmdline, &cmdlinesz, NULL, 0);
+	return g_strndup(cmdline, sizeof(cmdline));
+}

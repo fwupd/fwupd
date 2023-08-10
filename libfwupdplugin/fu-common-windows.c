@@ -32,3 +32,9 @@ fu_common_get_memory_size_impl(void)
 	GlobalMemoryStatusEx(&status);
 	return (guint64)status.ullTotalPhys;
 }
+
+gchar *
+fu_common_get_kernel_cmdline_impl(GError **error)
+{
+	return g_strdup("");
+}

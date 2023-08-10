@@ -13,6 +13,7 @@
 #include <unistd.h>
 
 #include "fu-common-private.h"
+#include "fu-kenv.h"
 
 /* bsdisks doesn't provide Manager object */
 #define UDISKS_DBUS_PATH	      "/org/freedesktop/UDisks2"
@@ -110,4 +111,10 @@ guint64
 fu_common_get_memory_size_impl(void)
 {
 	return (guint64)sysconf(_SC_PHYS_PAGES) * (guint64)sysconf(_SC_PAGE_SIZE);
+}
+
+gchar *
+fu_common_get_kernel_cmdline_impl(GError **error)
+{
+	return fu_kenv_get_string("kernel_options", error);
 }

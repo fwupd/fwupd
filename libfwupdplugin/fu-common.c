@@ -142,6 +142,22 @@ fu_common_get_memory_size(void)
 }
 
 /**
+ * fu_common_get_kernel_cmdline:
+ * @error: (nullable): optional return location for an error
+ *
+ * Returns the current kernel command line options.
+ *
+ * Returns: options as a string, or %NULL on error
+ *
+ * Since: 1.5.6
+ **/
+gchar *
+fu_common_get_kernel_cmdline(GError **error)
+{
+	return fu_common_get_kernel_cmdline_impl(error);
+}
+
+/**
  * fu_common_check_full_disk_encryption:
  * @error: (nullable): optional return location for an error
  *
