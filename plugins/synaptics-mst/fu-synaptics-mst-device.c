@@ -79,13 +79,26 @@ fu_synaptics_mst_device_finalize(GObject *object)
 }
 
 static void
+fu_synaptics_mst_device_udev_device_notify_cb(FuUdevDevice *udev_device,
+					      GParamSpec *pspec,
+					      gpointer user_data)
+{
+	FuSynapticsMstDevice *self = FU_SYNAPTICS_MST_DEVICE(user_data);
+	if (fu_udev_device_get_dev(FU_UDEV_DEVICE(self)) != NULL) {
+		fu_udev_device_set_flags(FU_UDEV_DEVICE(self),
+					 FU_UDEV_DEVICE_FLAG_OPEN_READ |
+					     FU_UDEV_DEVICE_FLAG_OPEN_WRITE |
+					     FU_UDEV_DEVICE_FLAG_VENDOR_FROM_PARENT);
+	} else {
+		fu_udev_device_set_flags(FU_UDEV_DEVICE(self),
+					 FU_UDEV_DEVICE_FLAG_OPEN_READ |
+					     FU_UDEV_DEVICE_FLAG_VENDOR_FROM_PARENT);
+	}
+}
+
+static void
 fu_synaptics_mst_device_init(FuSynapticsMstDevice *self)
 {
-	FuUdevDeviceFlags flags =
-	    FU_UDEV_DEVICE_FLAG_OPEN_READ | FU_UDEV_DEVICE_FLAG_VENDOR_FROM_PARENT;
-	if (fu_udev_device_get_dev(FU_UDEV_DEVICE(self)) != NULL)
-		flags |= FU_UDEV_DEVICE_FLAG_OPEN_WRITE;
-	fu_udev_device_set_flags(FU_UDEV_DEVICE(self), flags);
 	fu_device_add_protocol(FU_DEVICE(self), "com.synaptics.mst");
 	fu_device_set_vendor(FU_DEVICE(self), "Synaptics");
 	fu_device_add_vendor_id(FU_DEVICE(self), "DRM_DP_AUX_DEV:0x06CB");
@@ -97,6 +110,12 @@ fu_synaptics_mst_device_init(FuSynapticsMstDevice *self)
 					"ignore-board-id");
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_NO_PROBE_COMPLETE);
+
+	/* this is set from ->incorporate() */
+	g_signal_connect(FU_UDEV_DEVICE(self),
+			 "notify::udev-device",
+			 G_CALLBACK(fu_synaptics_mst_device_udev_device_notify_cb),
+			 self);
 }
 
 static void
