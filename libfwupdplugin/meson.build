@@ -104,6 +104,7 @@ fwupdplugin_src = [
   'fu-hwids-dmi.c', # fuzzing
   'fu-hwids-fdt.c', # fuzzing
   'fu-hwids-kenv.c', # fuzzing
+  'fu-hwids-darwin.c', # fuzzing
   'fu-hwids-smbios.c', # fuzzing
   'fu-i2c-device.c',
   'fu-ifd-bios.c', # fuzzing

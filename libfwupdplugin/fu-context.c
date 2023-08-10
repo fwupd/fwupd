@@ -957,6 +957,7 @@ fu_context_load_hwinfo(FuContext *self,
 			       {"fdt", FU_CONTEXT_HWID_FLAG_LOAD_FDT, fu_hwids_fdt_setup},
 			       {"kenv", FU_CONTEXT_HWID_FLAG_LOAD_KENV, fu_hwids_kenv_setup},
 			       {"dmi", FU_CONTEXT_HWID_FLAG_LOAD_DMI, fu_hwids_dmi_setup},
+			       {"darwin", FU_CONTEXT_HWID_FLAG_LOAD_DARWIN, fu_hwids_darwin_setup},
 			       {NULL, FU_CONTEXT_HWID_FLAG_NONE, NULL}};
 
 	g_return_val_if_fail(FU_IS_CONTEXT(self), FALSE);

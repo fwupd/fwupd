@@ -22,4 +22,6 @@ fu_hwids_fdt_setup(FuContext *ctx, FuHwids *self, GError **error);
 gboolean
 fu_hwids_kenv_setup(FuContext *ctx, FuHwids *self, GError **error);
 gboolean
+fu_hwids_darwin_setup(FuContext *ctx, FuHwids *self, GError **error);
+gboolean
 fu_hwids_smbios_setup(FuContext *ctx, FuHwids *self, GError **error);
