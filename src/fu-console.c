@@ -166,9 +166,9 @@ fu_console_input_uint(FuConsole *self, guint maxnum, const gchar *format, ...)
 		if (retval == 1 && answer <= maxnum)
 			break;
 
-		/* TRANSLATORS: the user isn't reading the question */
 		fu_console_print_full(self,
 				      FU_CONSOLE_PRINT_FLAG_NONE,
+				      /* TRANSLATORS: the user isn't reading the question */
 				      _("Please enter a number from 0 to %u: "),
 				      maxnum);
 	} while (TRUE);
