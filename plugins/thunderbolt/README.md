@@ -119,3 +119,25 @@ This plugin requires read/write access to `/sys/bus/thunderbolt`.
 ## Version Considerations
 
 This plugin has been available since fwupd version `0.8.0`.
+
+## Data Flow
+
+```mermaid
+  flowchart LR
+      subgraph Thunderbolt Controller
+        controller(TBT/USB4)
+        TBT_SPI[(SPI)]
+      end
+      subgraph Kernel
+        thunderbolt(Thunderbolt\ndriver)
+      end
+      subgraph fwupd Process
+        fwupdengine(FuEngine)
+        tbt_plugin(Thunderbolt\nPlugin)
+      end
+      fwupdengine-->tbt_plugin
+      tbt_plugin<--sysfs-->thunderbolt
+      thunderbolt<--mailbox-->controller
+      controller---TBT_SPI
+      thunderbolt~~~controller
+```
