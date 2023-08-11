@@ -148,3 +148,47 @@ This plugin requires read/write access to `/dev/bus/usb`.
 ## Version Considerations
 
 This plugin has been available since fwupd version `1.2.0`.
+
+## Data flow
+
+```mermaid
+  flowchart TD
+      subgraph Dell Dock
+        I2C([I2C Bus])
+        EC
+        EC_SPI[(EC\nStorage)]
+        USB1
+        USB1_SPI[(SPI)]
+        USB2
+        MST_SPI[(SPI)]
+        USB2_SPI[(SPI)]
+        MST
+        TBT(TBT/USB4)
+        TBT_SPI[(SPI)]
+      end
+      subgraph fwupd Process
+        fwupdengine(FuEngine)
+        dell_plugin(DellDock\nPlugin)
+        tbt_plugin(Thunderbolt\nPlugin)
+        usb4_plugin(USB4\nPlugin)
+      end
+      dell_plugin<--hid proxy-->I2C
+      tbt_plugin<--thunderbolt-->TBT
+      usb4_plugin<--hid-->TBT
+      fwupdengine --- dell_plugin
+      fwupdengine --- tbt_plugin
+      USB1<-->I2C
+      USB2<-.->I2C
+      EC<-.->I2C
+      TBT<-.->I2C
+      MST<-.->I2C
+      EC<-.->EC_SPI
+      USB1---USB1_SPI
+      USB2---USB2_SPI
+      MST---MST_SPI
+      TBT---TBT_SPI
+      I2C~~~EC
+      I2C~~~MST
+      I2C~~~USB1
+      I2C~~~USB2
+```
