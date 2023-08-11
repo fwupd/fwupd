@@ -96,3 +96,24 @@ This plugin requires read/write access to `/dev/drm_dp_aux*`.
 ## Version Considerations
 
 This plugin has been available since fwupd version `1.3.6`.
+
+## Data Flow
+
+```mermaid
+  flowchart LR
+      subgraph MST Controller
+        MST(Controller)
+        SPI[(SPI)]
+      end
+      subgraph Kernel
+        gpu(GPU\ndriver)
+      end
+      subgraph fwupd Process
+        fwupdengine(FuEngine)
+        mst_plugin(Synaptics MST\nPlugin)
+      end
+      fwupdengine-->mst_plugin
+      mst_plugin<--/dev/drm_dp_aux-->gpu
+      gpu<--DDC/I2C-->MST
+      MST---SPI
+```
