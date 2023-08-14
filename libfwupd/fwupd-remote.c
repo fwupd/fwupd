@@ -505,7 +505,8 @@ fwupd_remote_build_uri(FwupdRemote *self,
 	g_autoptr(CURLU) uri = curl_url();
 
 	/* the LVFS can't accept basic auth on an endpoint not expecting authentication */
-	if (priv->username != NULL || priv->password != NULL) {
+	if (!g_str_has_suffix(url_noauth, "/auth") &&
+	    (priv->username != NULL || priv->password != NULL)) {
 		url = g_strdup_printf("%s/auth", url_noauth);
 	} else {
 		url = g_strdup(url_noauth);
