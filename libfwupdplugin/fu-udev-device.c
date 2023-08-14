@@ -607,7 +607,6 @@ fu_udev_device_get_miscdev0(FuUdevDevice *self)
 		return NULL;
 	return g_strdup_printf("/dev/%s", fn);
 }
-#endif
 
 static void
 fu_udev_device_set_dev_internal(FuUdevDevice *self, GUdevDevice *udev_device)
@@ -617,6 +616,7 @@ fu_udev_device_set_dev_internal(FuUdevDevice *self, GUdevDevice *udev_device)
 	if (g_set_object(&priv->udev_device, udev_device))
 		g_object_notify(G_OBJECT(self), "udev-device");
 }
+#endif
 
 /**
  * fu_udev_device_set_dev:
@@ -651,8 +651,6 @@ fu_udev_device_set_dev(FuUdevDevice *self, GUdevDevice *udev_device)
 	} else {
 		fu_udev_device_set_dev_internal(self, udev_device);
 	}
-#else
-	fu_udev_device_set_dev_internal(&priv->udev_device, udev_device);
 #endif
 
 	/* set new device */
