@@ -2238,6 +2238,81 @@ fu_plugin_runner_get_results(FuPlugin *self, FuDevice *device, GError **error)
 	return TRUE;
 }
 
+static gboolean
+fu_plugin_runner_security(FuPlugin *self, gboolean do_fix, FwupdSecurityAttr *attr, GError **error)
+{
+	FuPluginVfuncs *vfuncs = fu_plugin_get_vfuncs(self);
+
+	g_return_val_if_fail(FU_IS_PLUGIN(self), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	switch (do_fix) {
+	case TRUE:
+		if (vfuncs->security_hardening_fix == NULL) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
+					    "Hardening fix is not supported");
+			return FALSE;
+		}
+		return vfuncs->security_hardening_fix(self, attr, error);
+		break;
+	case FALSE:
+		if (vfuncs->security_hardening_unfix == NULL) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
+					    "Unfix hardening is not supported");
+			return FALSE;
+		}
+		return vfuncs->security_hardening_unfix(self, attr, error);
+		break;
+	default:
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "Unknown security hardening action");
+	}
+
+	return FALSE;
+}
+
+/**
+ * fu_plugin_runner_security_fix:
+ * @self: a #FuPlugin
+ * @attr: (nullable): a security attribute
+ * @error: (nullable): optional return location for an error
+ *
+ * Fix the security issue of given security attribute.
+ *
+ * Returns: #TRUE for success, #FALSE for failure
+ *
+ * Since: 1.9.5
+ **/
+gboolean
+fu_plugin_runner_security_fix(FuPlugin *self, FwupdSecurityAttr *attr, GError **error)
+{
+	return fu_plugin_runner_security(self, TRUE, attr, error);
+}
+
+/**
+ * fu_plugin_runner_security_unfix:
+ * @self: a #FuPlugin
+ * @attr: (nullable): a security attribute
+ * @error: (nullable): optional return location for an error
+ *
+ * Fix the security issue of given security attribute.
+ *
+ * Returns: #TRUE for success, #FALSE for failure
+ *
+ * Since: 1.9.5
+ **/
+gboolean
+fu_plugin_runner_security_unfix(FuPlugin *self, FwupdSecurityAttr *attr, GError **error)
+{
+	return fu_plugin_runner_security(self, FALSE, attr, error);
+}
+
 /**
  * fu_plugin_get_order:
  * @self: a #FuPlugin
