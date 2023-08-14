@@ -13,6 +13,7 @@
 #include "fwupd-bios-setting-private.h"
 #include "fwupd-error.h"
 
+#include "fu-bios-setting.h"
 #include "fu-bios-settings-private.h"
 #include "fu-path.h"
 #include "fu-string.h"
@@ -362,9 +363,11 @@ fu_bios_settings_populate_attribute(FuBiosSettings *self,
 	g_return_val_if_fail(path != NULL, FALSE);
 	g_return_val_if_fail(driver != NULL, FALSE);
 
-	attr = fwupd_bios_setting_new(name, path);
+	attr = fu_bios_setting_new();
 
 	id = g_strdup_printf("com.%s.%s", driver, name);
+	fwupd_bios_setting_set_name(attr, name);
+	fwupd_bios_setting_set_path(attr, path);
 	fwupd_bios_setting_set_id(attr, id);
 
 	if (g_file_test(path, G_FILE_TEST_IS_DIR)) {
