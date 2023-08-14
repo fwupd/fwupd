@@ -1348,7 +1348,9 @@ fu_daemon_daemon_method_call(GDBusConnection *connection,
 		return;
 	}
 	if (g_strcmp0(method_name, "GetHostSecurityAttrs") == 0) {
+#ifdef HAVE_HSI
 		g_autoptr(FuSecurityAttrs) attrs = NULL;
+#endif
 		g_debug("Called %s()", method_name);
 #ifndef HAVE_HSI
 		g_dbus_method_invocation_return_error_literal(invocation,
