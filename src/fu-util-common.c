@@ -1888,6 +1888,7 @@ fu_util_release_to_string(FwupdRelease *rel, guint idt)
 {
 	const gchar *title;
 	const gchar *tmp2;
+	GPtrArray *checksums = fwupd_release_get_checksums(rel);
 	GPtrArray *issues = fwupd_release_get_issues(rel);
 	GPtrArray *tags = fwupd_release_get_tags(rel);
 	GPtrArray *reports = fwupd_release_get_reports(rel);
@@ -2054,6 +2055,17 @@ fu_util_release_to_string(FwupdRelease *rel, guint idt)
 				 /* TRANSLATORS: release tag set for release, e.g. lenovo-2021q3 */
 				 ngettext("Tag", "Tags", tags->len),
 				 tag_strs);
+	}
+	for (guint i = 0; i < checksums->len; i++) {
+		const gchar *checksum = g_ptr_array_index(checksums, i);
+		GChecksumType checksum_type = fwupd_checksum_guess_kind(checksum);
+
+		/* avoid showing brokwn checksums */
+		if (checksum_type == G_CHECKSUM_SHA1)
+			continue;
+
+		/* TRANSLATORS: hash to that exact firmware archive */
+		fu_string_append(str, idt + 1, _("Checksum"), checksum);
 	}
 
 	return g_string_free(g_steal_pointer(&str), FALSE);
