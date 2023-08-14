@@ -701,7 +701,6 @@ fu_engine_get_remote_id_for_checksum(FuEngine *self, const gchar *csum)
 {
 #if LIBXMLB_CHECK_VERSION(0, 3, 0)
 	g_auto(XbQueryContext) context = XB_QUERY_CONTEXT_INIT();
-	xb_query_context_set_flags(&context, XB_QUERY_FLAG_USE_INDEXES);
 	xb_value_bindings_bind_str(xb_query_context_get_bindings(&context), 0, csum, NULL);
 	if (self->query_container_checksum1 != NULL) {
 		g_autoptr(XbNode) key =
