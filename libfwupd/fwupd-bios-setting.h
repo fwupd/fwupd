@@ -17,8 +17,8 @@ G_DECLARE_DERIVABLE_TYPE(FwupdBiosSetting, fwupd_bios_setting, FWUPD, BIOS_SETTI
 
 struct _FwupdBiosSettingClass {
 	GObjectClass parent_class;
+	gboolean (*write_value)(FwupdBiosSetting *self, const gchar *value, GError **error);
 	/*< private >*/
-	void (*_fwupd_reserved1)(void);
 	void (*_fwupd_reserved2)(void);
 	void (*_fwupd_reserved3)(void);
 	void (*_fwupd_reserved4)(void);
@@ -110,6 +110,9 @@ const gchar *
 fwupd_bios_setting_get_current_value(FwupdBiosSetting *self);
 void
 fwupd_bios_setting_set_current_value(FwupdBiosSetting *self, const gchar *value);
+
+gboolean
+fwupd_bios_setting_write_value(FwupdBiosSetting *self, const gchar *value, GError **error);
 
 const gchar *
 fwupd_bios_setting_get_id(FwupdBiosSetting *self);

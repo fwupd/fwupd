@@ -963,6 +963,7 @@ LIBFWUPD_1.9.3 {
 
 LIBFWUPD_1.9.4 {
   global:
+    fwupd_bios_setting_write_value;
     fwupd_client_refresh_remote2;
     fwupd_client_refresh_remote2_async;
     fwupd_remote_add_flag;

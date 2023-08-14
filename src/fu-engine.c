@@ -909,149 +909,6 @@ fu_engine_modify_remote(FuEngine *self,
 }
 
 static gboolean
-fu_engine_update_bios_setting(FwupdBiosSetting *attr,
-			      const gchar *value,
-			      gboolean force_ro,
-			      GError **error)
-{
-	int fd;
-	g_autofree gchar *fn =
-	    g_build_filename(fwupd_bios_setting_get_path(attr), "current_value", NULL);
-	g_autoptr(FuIOChannel) io = NULL;
-
-	if (force_ro)
-		fwupd_bios_setting_set_read_only(attr, TRUE);
-
-	if (g_strcmp0(fwupd_bios_setting_get_current_value(attr), value) == 0) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOTHING_TO_DO,
-			    "%s is already set to %s",
-			    fwupd_bios_setting_get_id(attr),
-			    value);
-		return FALSE;
-	}
-
-	fd = open(fn, O_WRONLY);
-	if (fd < 0) {
-		g_set_error(error,
-			    G_IO_ERROR,
-#ifdef HAVE_ERRNO_H
-			    g_io_error_from_errno(errno),
-#else
-			    G_IO_ERROR_FAILED,
-#endif
-			    "could not open %s: %s",
-			    fn,
-			    g_strerror(errno));
-		return FALSE;
-	}
-	io = fu_io_channel_unix_new(fd);
-	if (!fu_io_channel_write_raw(io,
-				     (const guint8 *)value,
-				     strlen(value),
-				     1000,
-				     FU_IO_CHANNEL_FLAG_NONE,
-				     error))
-		return FALSE;
-	fwupd_bios_setting_set_current_value(attr, value);
-	g_debug("set %s to %s", fwupd_bios_setting_get_id(attr), value);
-
-	return TRUE;
-}
-
-/*
- * This is also done by the kernel or firmware, doing it here too allows for cleaner
- * error messages
- */
-static gboolean
-fu_engine_validate_bios_setting_input(FwupdBiosSetting *attr, const gchar **value, GError **error)
-{
-	guint64 tmp = 0;
-
-	g_return_val_if_fail(*value != NULL, FALSE);
-	g_return_val_if_fail(value != NULL, FALSE);
-
-	if (attr == NULL) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_FOUND,
-				    "attribute not found");
-		return FALSE;
-	}
-	if (fwupd_bios_setting_get_read_only(attr)) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "%s is read only",
-			    fwupd_bios_setting_get_name(attr));
-		return FALSE;
-	}
-	if (fwupd_bios_setting_get_kind(attr) == FWUPD_BIOS_SETTING_KIND_INTEGER) {
-		if (!fu_strtoull(*value, &tmp, 0, G_MAXUINT64, error))
-			return FALSE;
-		if (tmp < fwupd_bios_setting_get_lower_bound(attr)) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "%s is too small (%" G_GUINT64_FORMAT
-				    "); expected at least %" G_GUINT64_FORMAT,
-				    *value,
-				    tmp,
-				    fwupd_bios_setting_get_lower_bound(attr));
-			return FALSE;
-		}
-		if (tmp > fwupd_bios_setting_get_upper_bound(attr)) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "%s is too big (%" G_GUINT64_FORMAT
-				    "); expected no more than %" G_GUINT64_FORMAT,
-				    *value,
-				    tmp,
-				    fwupd_bios_setting_get_upper_bound(attr));
-			return FALSE;
-		}
-	} else if (fwupd_bios_setting_get_kind(attr) == FWUPD_BIOS_SETTING_KIND_STRING) {
-		tmp = strlen(*value);
-		if (tmp < fwupd_bios_setting_get_lower_bound(attr)) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "%s is too short (%" G_GUINT64_FORMAT
-				    "); expected at least %" G_GUINT64_FORMAT,
-				    *value,
-				    tmp,
-				    fwupd_bios_setting_get_lower_bound(attr));
-			return FALSE;
-		}
-		if (tmp > fwupd_bios_setting_get_upper_bound(attr)) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "%s is too long (%" G_GUINT64_FORMAT
-				    "); expected no more than %" G_GUINT64_FORMAT,
-				    *value,
-				    tmp,
-				    fwupd_bios_setting_get_upper_bound(attr));
-			return FALSE;
-		}
-	} else if (fwupd_bios_setting_get_kind(attr) == FWUPD_BIOS_SETTING_KIND_ENUMERATION) {
-		const gchar *result = fwupd_bios_setting_map_possible_value(attr, *value, error);
-		if (result == NULL)
-			return FALSE;
-		*value = result;
-	} else {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "unknown attribute type");
-		return FALSE;
-	}
-	return TRUE;
-}
-
-static gboolean
 fu_engine_modify_single_bios_setting(FuEngine *self,
 				     const gchar *key,
 				     const gchar *value,
@@ -1059,12 +916,18 @@ fu_engine_modify_single_bios_setting(FuEngine *self,
 				     GError **error)
 {
 	FwupdBiosSetting *attr = fu_context_get_bios_setting(self->ctx, key);
-	const gchar *tmp = value;
-
-	if (!fu_engine_validate_bios_setting_input(attr, &tmp, error))
+	if (attr == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_FOUND,
+				    "attribute not found");
 		return FALSE;
-
-	return fu_engine_update_bios_setting(attr, tmp, force_ro, error);
+	}
+	if (!fwupd_bios_setting_write_value(attr, value, error))
+		return FALSE;
+	if (force_ro)
+		fwupd_bios_setting_set_read_only(attr, TRUE);
+	return TRUE;
 }
 
 /**

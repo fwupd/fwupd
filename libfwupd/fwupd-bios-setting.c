@@ -587,6 +587,162 @@ fwupd_bios_setting_set_current_value(FwupdBiosSetting *self, const gchar *value)
 }
 
 static gboolean
+_fu_strtoull_simple(const gchar *str, guint64 *value, GError **error)
+{
+	gchar *endptr = NULL;
+	guint base = 10;
+
+	/* convert */
+	if (g_str_has_prefix(str, "0x")) {
+		str += 2;
+		base = 16;
+	}
+	*value = g_ascii_strtoull(str, &endptr, base);
+	if ((gsize)(endptr - str) != strlen(str) && *endptr != '\n') {
+		g_set_error(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA, "cannot parse %s", str);
+		return FALSE;
+	}
+	return TRUE;
+}
+
+static gboolean
+fwupd_bios_setting_validate_value(FwupdBiosSetting *self, const gchar *value, GError **error)
+{
+	FwupdBiosSettingPrivate *priv = GET_PRIVATE(self);
+
+	if (priv->kind == FWUPD_BIOS_SETTING_KIND_INTEGER) {
+		guint64 tmp = 0;
+		if (!_fu_strtoull_simple(value, &tmp, error))
+			return FALSE;
+		if (tmp < priv->lower_bound) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "%s is too small (%" G_GUINT64_FORMAT
+				    "); expected at least %" G_GUINT64_FORMAT,
+				    value,
+				    tmp,
+				    priv->lower_bound);
+			return FALSE;
+		}
+		if (tmp > priv->upper_bound) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "%s is too big (%" G_GUINT64_FORMAT
+				    "); expected no more than %" G_GUINT64_FORMAT,
+				    value,
+				    tmp,
+				    priv->upper_bound);
+			return FALSE;
+		}
+		return TRUE;
+	}
+	if (priv->kind == FWUPD_BIOS_SETTING_KIND_STRING) {
+		gsize tmp = strlen(value);
+		if (tmp < priv->lower_bound) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "%s is too short (%" G_GSIZE_FORMAT
+				    "); expected at least %" G_GUINT64_FORMAT,
+				    value,
+				    tmp,
+				    priv->lower_bound);
+			return FALSE;
+		}
+		if (tmp > priv->upper_bound) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "%s is too long (%" G_GSIZE_FORMAT
+				    "); expected no more than %" G_GUINT64_FORMAT,
+				    value,
+				    tmp,
+				    priv->upper_bound);
+			return FALSE;
+		}
+		return TRUE;
+	}
+	if (priv->kind == FWUPD_BIOS_SETTING_KIND_ENUMERATION)
+		return TRUE;
+
+	/* not supported */
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "unknown attribute type");
+	return FALSE;
+}
+
+/**
+ * fwupd_bios_setting_write_value:
+ * @self: a #FwupdBiosSetting
+ * @value: (not nullable): The string to write
+ * @error: (nullable): optional return location for an error
+ *
+ * Writes a new value into the setting if it is different from the current value.
+ *
+ * NOTE: A subclass should handle the `->write_value()` vfunc and actually write the value to the
+ * firmware.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.9.4
+ **/
+gboolean
+fwupd_bios_setting_write_value(FwupdBiosSetting *self, const gchar *value, GError **error)
+{
+	FwupdBiosSettingPrivate *priv = GET_PRIVATE(self);
+	FwupdBiosSettingClass *klass = FWUPD_BIOS_SETTING_GET_CLASS(self);
+
+	g_return_val_if_fail(FWUPD_IS_BIOS_SETTING(self), FALSE);
+	g_return_val_if_fail(value != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	/* not changed */
+	if (g_strcmp0(priv->current_value, value) == 0) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOTHING_TO_DO,
+			    "%s is already set to %s",
+			    priv->id,
+			    value);
+		return FALSE;
+	}
+
+	/* sanity check */
+	if (fwupd_bios_setting_get_read_only(self)) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "%s is read only",
+			    priv->name);
+		return FALSE;
+	}
+
+	/* convert the value */
+	if (priv->kind == FWUPD_BIOS_SETTING_KIND_ENUMERATION) {
+		value = fwupd_bios_setting_map_possible_value(self, value, error);
+		if (value == NULL)
+			return FALSE;
+	}
+
+	/* also done by the kernel or firmware, doing it here too allows for better errors */
+	if (!fwupd_bios_setting_validate_value(self, value, error))
+		return FALSE;
+
+	/* not implemented */
+	if (klass->write_value == NULL) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "not supported");
+		return FALSE;
+	}
+
+	/* proxy */
+	return klass->write_value(self, value, error);
+}
+
+static gboolean
 fwupd_bios_setting_trusted(FwupdBiosSetting *self, gboolean trusted)
 {
 	g_return_val_if_fail(FWUPD_IS_BIOS_SETTING(self), FALSE);

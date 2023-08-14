@@ -51,6 +51,7 @@ fwupdplugin_src = [
   'fu-archive.c',
   'fu-archive-firmware.c',
   'fu-backend.c',
+  'fu-bios-setting.c', # fuzzing
   'fu-bios-settings.c', # fuzzing
   'fu-bluez-device.c',
   'fu-byte-array.c', # fuzzing
