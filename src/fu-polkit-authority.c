@@ -92,12 +92,11 @@ fu_polkit_authority_check(FuPolkitAuthority *self,
 #endif
 
 	g_return_if_fail(FU_IS_POLKIT_AUTHORITY(self));
-	g_return_if_fail(sender != NULL);
 	g_return_if_fail(action_id != NULL);
 	g_return_if_fail(callback != NULL);
 
 #ifdef HAVE_POLKIT
-	if (owner != NULL) {
+	if (owner != NULL && sender != NULL) {
 		g_autoptr(PolkitSubject) pksubject = polkit_system_bus_name_new(sender);
 		if (flags & FU_POLKIT_AUTHORITY_CHECK_FLAG_ALLOW_USER_INTERACTION)
 			pkflags |= POLKIT_CHECK_AUTHORIZATION_FLAGS_ALLOW_USER_INTERACTION;
