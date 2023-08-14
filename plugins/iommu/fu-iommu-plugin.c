@@ -88,6 +88,68 @@ fu_iommu_plugin_constructed(GObject *obj)
 	fu_plugin_add_device_udev_subsystem(plugin, "iommu");
 }
 
+static gboolean
+fu_iommu_security_fix(FuPlugin *self, FwupdSecurityAttr *attr, GError **error)
+{
+	g_autofree gchar *grubby = NULL;
+	g_autoptr(GHashTable) kernel_param = NULL;
+
+	grubby = fu_kernel_get_grubby_path(error);
+	if (grubby == NULL)
+		return FALSE;
+
+	kernel_param = fu_kernel_get_cmdline(error);
+	if (kernel_param == NULL)
+		return FALSE;
+
+	if (g_hash_table_contains(kernel_param, "iommu") ||
+	    g_hash_table_contains(kernel_param, "intel_iommu") ||
+	    g_hash_table_contains(kernel_param, "amd_iommu")) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOTHING_TO_DO,
+				    "IOMMU had been already set.");
+		return FALSE;
+	}
+
+	return fu_kernel_add_cmdline_arg(grubby, "iommu=force", error);
+}
+
+static gboolean
+fu_iommu_security_unfix(FuPlugin *self, FwupdSecurityAttr *attr, GError **error)
+{
+	g_autofree gchar *grubby = NULL;
+	g_autoptr(GHashTable) kernel_param = NULL;
+	const gchar *value = NULL;
+
+	grubby = fu_kernel_get_grubby_path(error);
+	if (grubby == NULL)
+		return FALSE;
+
+	kernel_param = fu_kernel_get_cmdline(error);
+	if (kernel_param == NULL)
+		return FALSE;
+
+	value = g_hash_table_lookup(kernel_param, "iommu");
+	if (value == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOTHING_TO_DO,
+				    "IOMMU was not set.");
+		return FALSE;
+	}
+
+	if (g_strcmp0(value, "force")) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOTHING_TO_DO,
+				    "IOMMU was not set to \"force\"");
+		return FALSE;
+	}
+
+	return fu_kernel_remove_cmdline_arg(grubby, "iommu=force", error);
+}
+
 static void
 fu_iommu_plugin_class_init(FuIommuPluginClass *klass)
 {
@@ -96,4 +158,6 @@ fu_iommu_plugin_class_init(FuIommuPluginClass *klass)
 	plugin_class->to_string = fu_iommu_plugin_to_string;
 	plugin_class->backend_device_added = fu_iommu_plugin_backend_device_added;
 	plugin_class->add_security_attrs = fu_iommu_plugin_add_security_attrs;
+	plugin_class->security_hardening_fix = fu_iommu_security_fix;
+	plugin_class->security_hardening_unfix = fu_iommu_security_unfix;
 }
