@@ -270,4 +270,11 @@ fwupd_client_emulation_save(FwupdClient *self,
 			    GCancellable *cancellable,
 			    GError **error) G_GNUC_WARN_UNUSED_RESULT;
 
+gboolean
+fwupd_client_security_harden(FwupdClient *self,
+			     const gchar *appstream_id,
+			     gboolean enable,
+			     GCancellable *cancellable,
+			     GError **error);
+
 G_END_DECLS

@@ -978,3 +978,11 @@ LIBFWUPD_1.9.4 {
     fwupd_remote_set_flags;
   local: *;
 } LIBFWUPD_1.9.3;
+
+LIBFWUPD_1.9.6 {
+  global:
+    fwupd_client_security_harden;
+    fwupd_client_security_harden_async;
+    fwupd_client_security_harden_finish;
+  local: *;
+} LIBFWUPD_1.9.4;
