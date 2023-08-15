@@ -8,6 +8,16 @@
     <releases>
       <release version="1" timestamp="1456743843">
         <description><p>Applying will enable UEFI firmware reporting</p></description>
+        <testing>
+          <test_result date="2021-07-15">
+            <vendor_name id="9999">Google</vendor_name>
+            <device>ChromeBook</device>
+            <os version="102">chromeos</os>
+            <custom>
+              <value key="RuntimeVersion(org.freedesktop.fwupd)">1.9.1</value>
+            </custom>
+          </test_result>
+        </testing>
       </release>
     </releases>
   </component>
