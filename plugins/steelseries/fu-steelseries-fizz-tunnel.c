@@ -22,6 +22,7 @@ fu_steelseries_fizz_tunnel_ping(FuDevice *device, gboolean *reached, GError **er
 	guint8 status;
 	guint8 level;
 	g_autoptr(GError) error_local = NULL;
+	g_autofree gchar *version = NULL;
 
 	if (!fu_steelseries_fizz_get_connection_status(parent, &status, error)) {
 		g_prefix_error(error, "failed to get connection status: ");
@@ -64,6 +65,17 @@ fu_steelseries_fizz_tunnel_ping(FuDevice *device, gboolean *reached, GError **er
 				    ((level & STEELSERIES_FIZZ_BATTERY_LEVEL_STATUS_BITS) - 1U) *
 					5U);
 
+	/* re-read version after reconnect/update */
+	version = fu_steelseries_fizz_get_version(parent, TRUE, error);
+	if (version == NULL) {
+		*reached = FALSE;
+		g_prefix_error(error,
+			       "unable to read version from device %s: ",
+			       fu_device_get_id(device));
+		return FALSE;
+	}
+	fu_device_set_version(device, version);
+
 	/* success */
 	return TRUE;
 }
@@ -75,6 +87,7 @@ fu_steelseries_fizz_tunnel_wait_for_reconnect_cb(FuDevice *device,
 {
 	FuDevice *parent = fu_device_get_parent(device);
 	guint8 status;
+	gboolean reached;
 
 	if (!fu_steelseries_fizz_get_connection_status(parent, &status, error)) {
 		g_prefix_error(error, "failed to get connection status: ");
@@ -83,6 +96,12 @@ fu_steelseries_fizz_tunnel_wait_for_reconnect_cb(FuDevice *device,
 	g_debug("ConnectionStatus: %u", status);
 	if (status == STEELSERIES_FIZZ_CONNECTION_STATUS_NOT_CONNECTED) {
 		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "device is unreachable");
+		return FALSE;
+	}
+
+	/* ping */
+	if (!fu_steelseries_fizz_tunnel_ping(device, &reached, error)) {
+		g_prefix_error(error, "failed to ping on reconnect: ");
 		return FALSE;
 	}
 
@@ -182,7 +201,6 @@ fu_steelseries_fizz_tunnel_setup(FuDevice *device, GError **error)
 	guint8 fs = STEELSERIES_FIZZ_FILESYSTEM_MOUSE;
 	guint8 id = STEELSERIES_FIZZ_MOUSE_FILESYSTEM_BACKUP_APP_ID;
 	g_autoptr(GError) error_local = NULL;
-	g_autofree gchar *version = NULL;
 
 	/* ping */
 	if (!fu_steelseries_fizz_tunnel_ping(device, &reached, &error_local)) {
@@ -197,13 +215,6 @@ fu_steelseries_fizz_tunnel_setup(FuDevice *device, GError **error)
 		/* success */
 		return TRUE;
 	}
-
-	version = fu_steelseries_fizz_get_version(parent, TRUE, error);
-	if (version == NULL) {
-		g_prefix_error(error, "failed to get version: ");
-		return FALSE;
-	}
-	fu_device_set_version(device, version);
 
 	if (!fu_steelseries_fizz_get_crc32_fs(parent,
 					      TRUE,
@@ -241,7 +252,6 @@ fu_steelseries_fizz_tunnel_poll(FuDevice *device, GError **error)
 	guint8 id = STEELSERIES_FIZZ_MOUSE_FILESYSTEM_BACKUP_APP_ID;
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(FuDeviceLocker) locker = NULL;
-	g_autofree gchar *version = NULL;
 
 	/* open */
 	locker = fu_device_locker_new(parent, error);
@@ -259,16 +269,6 @@ fu_steelseries_fizz_tunnel_poll(FuDevice *device, GError **error)
 		/* success */
 		return TRUE;
 	}
-
-	/* "deferred" setup */
-	version = fu_steelseries_fizz_get_version(parent, TRUE, &error_local);
-	if (version == NULL) {
-		g_debug("ignoring error on version: %s", error_local->message);
-
-		/* success */
-		return TRUE;
-	}
-	fu_device_set_version(device, version);
 
 	if (!fu_steelseries_fizz_get_crc32_fs(parent,
 					      TRUE,
