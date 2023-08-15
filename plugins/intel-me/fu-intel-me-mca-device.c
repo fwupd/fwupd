@@ -29,8 +29,8 @@ fu_intel_me_mca_device_add_checksum_for_id(FuIntelMeMcaDevice *self,
 	 * Call READ_FILE_EX with a larger-than-required data size -- which hopefully works when
 	 * SHA512 results start being returned too.
 	 *
-	 * CometLake: 0x20 (SHA256)
-	 * TigerLake: 0x30 (SHA384)
+	 * Icelake/Jasperlake/Cometlake: 0x20 (SHA256)
+	 * Elkhartlake/Tigerlake/Alderlake/Raptorlake: 0x30 (SHA384)
 	 */
 	buf = fu_intel_me_heci_device_read_file_ex(FU_INTEL_ME_HECI_DEVICE(self),
 						   file_id,
