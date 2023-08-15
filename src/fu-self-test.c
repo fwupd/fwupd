@@ -4560,7 +4560,7 @@ fu_release_no_trusted_report_func(gconstpointer user_data)
 	g_assert_true(ret);
 
 	/* metadata without OEM or valid VendorId as per tests/fwupd.conf */
-	filename = g_test_build_filename(G_TEST_DIST, "tests", "metadata.xml", NULL);
+	filename = g_test_build_filename(G_TEST_DIST, "tests", "metadata-report3.xml", NULL);
 	file = g_file_new_for_path(filename);
 	ret = xb_builder_source_load_file(source, file, XB_BUILDER_SOURCE_FLAG_NONE, NULL, &error);
 	g_assert_no_error(error);
