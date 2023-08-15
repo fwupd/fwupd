@@ -4368,6 +4368,110 @@ fu_util_get_bios_setting(FuUtilPrivate *priv, gchar **values, GError **error)
 }
 
 static gboolean
+fu_util_security_harden(FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	gchar *appstream_id = NULL;
+	gboolean action = TRUE;
+	g_autoptr(GList) fu_repair_list = NULL;
+	gint ret = 0;
+
+	for (guint i = 0; values[i] != NULL; i++) {
+		if (i == 0) {
+			appstream_id = values[i];
+		} else if (i == 1) {
+			if (!g_strcmp0(values[i], "fix")) {
+				action = TRUE;
+			} else if (!g_strcmp0(values[i], "unfix")) {
+				action = FALSE;
+			} else {
+				g_set_error_literal(error,
+						    FWUPD_ERROR,
+						    FWUPD_ERROR_INVALID_ARGS,
+						    /* TRANSLATOR: This is the error message for
+						     * incorrect parameter. "fix" and "unfix" are
+						     * the command line parameters. */
+						    _("Invalid arguments, expected fix or unfix"));
+				return FALSE;
+			}
+			break;
+		}
+	}
+
+	if (appstream_id == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_ARGS,
+				    /* TRANSLATOR: This is the error message for
+				     * incorrect parameter */
+				    _("Invalid arguments, expected an AppStream ID"));
+		return FALSE;
+	}
+
+	ret = fwupd_client_security_harden(priv->client,
+					   appstream_id,
+					   action,
+					   priv->cancellable,
+					   error);
+	if (!ret)
+		return FALSE;
+
+	fu_console_print_full(priv->console,
+			      FU_CONSOLE_PRINT_FLAG_NONE,
+			      "%s %s\n",
+			      action ? _("Fix") : _("Unfix"),
+			      _("Security hardening successfully"));
+
+	return TRUE;
+}
+
+static void
+title_print_padding(const gchar *title, GString *dst_string, gsize maxlen)
+{
+	gsize title_len;
+	gsize maxpad = maxlen;
+
+	if (maxlen == 0)
+		maxpad = 50;
+
+	if (title == NULL || dst_string == NULL)
+		return;
+	g_string_append_printf(dst_string, "%s", title);
+
+	title_len = g_utf8_strlen(title, -1) + 1;
+	for (gsize i = title_len; i < maxpad; i++)
+		g_string_append(dst_string, " ");
+}
+
+static void
+fu_util_security_list(FuUtilPrivate *priv, GError **error)
+{
+	g_autoptr(GPtrArray) attrs = NULL;
+	g_autoptr(GString) repair_msg = g_string_new(NULL);
+	FuConsole *console = priv->console;
+
+	attrs = fwupd_client_get_host_security_attrs(priv->client, priv->cancellable, error);
+	if (attrs == NULL)
+		return;
+
+	for (guint j = 0; j < attrs->len; j++) {
+		FwupdSecurityAttr *attr = g_ptr_array_index(attrs, j);
+
+		title_print_padding(fwupd_security_attr_get_appstream_id(attr), repair_msg, 40);
+		g_string_append_printf(repair_msg, "%s\n", fwupd_security_attr_get_name(attr));
+	}
+
+	fu_console_print_full(console, FU_CONSOLE_PRINT_FLAG_NONE, "%s\n", repair_msg->str);
+}
+
+static gboolean
+fu_util_security_list_items(FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	fu_util_security_list(priv, error);
+
+	return TRUE;
+}
+
+static gboolean
 fu_util_emulation_tag(FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(FwupdDevice) dev = NULL;
@@ -5007,6 +5111,23 @@ main(int argc, char *argv[])
 			      /* TRANSLATORS: command description */
 			      _("Inhibit the system to prevent upgrades"),
 			      fu_util_inhibit);
+
+	fu_util_cmd_array_add(
+	    cmd_array,
+	    "security-harden",
+	    /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+	    _("[STREAM_ID]"),
+	    /* TRANSLATORS: command description */
+	    _("Automatically repair the system configuration to improve host security"),
+	    fu_util_security_harden);
+
+	fu_util_cmd_array_add(cmd_array,
+			      "security-harden-list",
+			      NULL,
+			      /* TRANSLATORS: command description */
+			      _("List auto-repairing items"),
+			      fu_util_security_list_items);
+
 	fu_util_cmd_array_add(cmd_array,
 			      "uninhibit",
 			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
