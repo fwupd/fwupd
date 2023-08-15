@@ -27,6 +27,7 @@
 #include "fu-bios-settings-private.h"
 #include "fu-daemon.h"
 #include "fu-device-private.h"
+#include "fu-engine-security.h"
 #include "fu-engine.h"
 #include "fu-polkit-authority.h"
 #include "fu-release.h"
@@ -370,6 +371,7 @@ typedef struct {
 	gchar *value;
 	XbSilo *silo;
 	GHashTable *bios_settings; /* str:str */
+	gboolean is_hardening;
 } FuMainAuthHelper;
 
 static void
@@ -510,6 +512,29 @@ fu_daemon_authorize_set_blocked_firmware_cb(GObject *source, GAsyncResult *res, 
 
 	/* success */
 	if (!fu_engine_set_blocked_firmware(helper->self->engine, helper->checksums, &error)) {
+		g_dbus_method_invocation_return_gerror(helper->invocation, error);
+		return;
+	}
+	g_dbus_method_invocation_return_value(helper->invocation, NULL);
+}
+
+static void
+fu_daemon_authorize_security_harden_cb(GObject *source, GAsyncResult *res, gpointer user_data)
+{
+	g_autoptr(FuMainAuthHelper) helper = (FuMainAuthHelper *)user_data;
+	g_autoptr(GError) error = NULL;
+
+	/* get result */
+	if (!fu_polkit_authority_check_finish(FU_POLKIT_AUTHORITY(source), res, &error)) {
+		g_dbus_method_invocation_return_gerror(helper->invocation, error);
+		return;
+	}
+
+	/* success */
+	if (!fu_engine_security_harden(helper->self->engine,
+				       helper->key,
+				       helper->is_hardening,
+				       &error)) {
 		g_dbus_method_invocation_return_gerror(helper->invocation, error);
 		return;
 	}
@@ -1948,6 +1973,42 @@ fu_daemon_daemon_method_call(GDBusConnection *connection,
 					  NULL,
 					  fu_daemon_authorize_set_bios_settings_cb,
 					  g_steal_pointer(&helper));
+		return;
+	}
+	if (g_strcmp0(method_name, "SecurityHarden") == 0) {
+		g_autofree gchar *appstream_id = NULL;
+		gboolean action;
+		g_autoptr(FuMainAuthHelper) helper = NULL;
+		g_variant_get(parameters, "(sb)", &appstream_id, &action);
+		g_debug("Called %s(%s)", method_name, appstream_id);
+
+		/* authenticate */
+		fu_daemon_set_status(self, FWUPD_STATUS_WAITING_FOR_AUTH);
+		helper = g_new0(FuMainAuthHelper, 1);
+		helper->self = self;
+		helper->request = g_steal_pointer(&request);
+		helper->invocation = g_object_ref(invocation);
+		helper->checksums = g_ptr_array_new_with_free_func(g_free);
+		helper->key = g_steal_pointer(&appstream_id);
+		helper->is_hardening = action;
+
+		if (action) {
+			fu_polkit_authority_check(self->authority,
+						  sender,
+						  "org.freedesktop.fwupd.security-harden-fix",
+						  auth_flags,
+						  NULL,
+						  fu_daemon_authorize_security_harden_cb,
+						  g_steal_pointer(&helper));
+		} else {
+			fu_polkit_authority_check(self->authority,
+						  sender,
+						  "org.freedesktop.fwupd.security-harden-unfix",
+						  auth_flags,
+						  NULL,
+						  fu_daemon_authorize_security_harden_cb,
+						  g_steal_pointer(&helper));
+		}
 		return;
 	}
 	g_set_error(&error,
