@@ -3123,6 +3123,23 @@ fu_engine_get_plugins(FuEngine *self)
 	return fu_plugin_list_get_all(self->plugin_list);
 }
 
+/**
+ * fu_engine_get_plugin_by_name:
+ * @self: a #FuEngine
+ *
+ * Gets a plugin by name.
+ *
+ * Returns: (type FuPlugin): the plugins
+ *
+ * Since: 1.9.5
+ **/
+FuPlugin *
+fu_engine_get_plugin_by_name(FuEngine *self, const gchar *plugin_name, GError **error)
+{
+	g_return_val_if_fail(FU_IS_ENGINE(self), NULL);
+	return fu_plugin_list_find_by_name(self->plugin_list, plugin_name, error);
+}
+
 static gboolean
 fu_engine_emulation_load_json(FuEngine *self, const gchar *json, GError **error)
 {
@@ -7298,6 +7315,57 @@ fu_engine_get_host_security_events(FuEngine *self, guint limit, GError **error)
 
 	/* success */
 	return g_steal_pointer(&events);
+}
+
+/**
+ * fu_history_get_previous_security_attr:
+ * @self: a #FuHistory
+ * @appstream_id: maximum number of attributes to return, or 0 for no limit
+ * @current_setting: (nullable): optional return location for an error
+ * @error: return location for a #GError, or %NULL
+ *
+ * Gets the security attributes of the previous BIOS setting for the given
+ * appstream ID and current BIOS config.
+ *
+ * Returns: (element-type #FuSecurityAttr) (transfer container): attr
+ *
+ * Since: 1.9.5
+ **/
+FwupdSecurityAttr *
+fu_engine_get_previous_bios_security_attr(FuEngine *self,
+					  const gchar *appstream_id,
+					  const gchar *current_setting,
+					  GError **error)
+{
+	g_autoptr(FuSecurityAttrs) events = fu_security_attrs_new();
+	g_autoptr(GPtrArray) attrs_array = NULL;
+
+	g_return_val_if_fail(FU_IS_ENGINE(self), NULL);
+
+	if (current_setting == NULL)
+		return NULL;
+
+	attrs_array = fu_history_get_security_attrs(self->history, 20, error);
+	if (attrs_array == NULL)
+		return NULL;
+
+	for (guint i = 1; i < attrs_array->len; i++) {
+		FuSecurityAttrs *attrs = g_ptr_array_index(attrs_array, i - 1);
+		g_autoptr(GPtrArray) diffs = fu_security_attrs_get_all(attrs);
+		for (guint j = 0; j < diffs->len; j++) {
+			FwupdSecurityAttr *attr = g_ptr_array_index(diffs, j);
+			if (!g_strcmp0(appstream_id, fwupd_security_attr_get_appstream_id(attr)) &&
+			    g_strcmp0(current_setting,
+				      fwupd_security_attr_get_bios_setting_current_value(attr))) {
+				g_debug("found previous BIOS setting for %s: %s",
+					appstream_id,
+					fwupd_security_attr_get_bios_setting_current_value(attr));
+				return g_object_ref(attr);
+			}
+		}
+	}
+
+	return NULL;
 }
 
 static void

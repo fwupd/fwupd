@@ -71,6 +71,8 @@ FuEngineConfig *
 fu_engine_get_config(FuEngine *self);
 GPtrArray *
 fu_engine_get_plugins(FuEngine *self);
+FuPlugin *
+fu_engine_get_plugin_by_name(FuEngine *self, const gchar *plugin_name, GError **error);
 GPtrArray *
 fu_engine_get_devices(FuEngine *self, GError **error);
 FuDevice *
@@ -253,3 +255,9 @@ gboolean
 fu_engine_emulation_load(FuEngine *self, GBytes *data, GError **error);
 GBytes *
 fu_engine_emulation_save(FuEngine *self, GError **error);
+
+FwupdSecurityAttr *
+fu_engine_get_previous_bios_security_attr(FuEngine *self,
+					  const gchar *appstream_id,
+					  const gchar *current_setting,
+					  GError **error);
