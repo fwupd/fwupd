@@ -111,9 +111,17 @@ fu_synaprom_config_prepare_firmware(FuDevice *device,
 				    GError **error)
 {
 	FuSynapromConfig *self = FU_SYNAPROM_CONFIG(device);
+	FuDevice *parent = fu_device_get_parent(device);
 	g_autoptr(GByteArray) st_hdr = NULL;
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(FuFirmware) firmware = fu_synaprom_firmware_new();
+
+	if (fu_synaprom_device_get_product_type(FU_SYNAPROM_DEVICE(parent)) ==
+	    FU_SYNAPROM_PRODUCT_TYPE_TRITON) {
+		if (!fu_synaprom_firmware_set_signature_size(FU_SYNAPROM_FIRMWARE(firmware),
+							     FU_SYNAPROM_FIRMWARE_TRITON_SIGSIZE))
+			return NULL;
+	}
 
 	/* parse the firmware */
 	if (!fu_firmware_parse(firmware, fw, flags, error))

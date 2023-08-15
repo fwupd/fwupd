@@ -15,13 +15,13 @@
 struct _FuSynapromFirmware {
 	FuFirmware parent_instance;
 	guint32 product_id;
+	guint32 signature_size;
 };
 
 G_DEFINE_TYPE(FuSynapromFirmware, fu_synaprom_firmware, FU_TYPE_FIRMWARE)
 
 /* use only first 12 bit of 16 bits as tag value */
 #define FU_SYNAPROM_FIRMWARE_TAG_MAX 0xfff0
-#define FU_SYNAPROM_FIRMWARE_SIGSIZE 0x0100
 
 #define FU_SYNAPROM_FIRMWARE_COUNT_MAX 64
 
@@ -30,6 +30,14 @@ fu_synaprom_firmware_get_product_id(FuSynapromFirmware *self)
 {
 	g_return_val_if_fail(FU_IS_SYNAPROM_FIRMWARE(self), 0x0);
 	return self->product_id;
+}
+
+gboolean
+fu_synaprom_firmware_set_signature_size(FuSynapromFirmware *self, guint32 signature_size)
+{
+	g_return_val_if_fail(FU_IS_SYNAPROM_FIRMWARE(self), FALSE);
+	self->signature_size = signature_size;
+	return TRUE;
 }
 
 static void
@@ -50,15 +58,14 @@ fu_synaprom_firmware_parse(FuFirmware *firmware,
 	gsize bufsz = 0;
 	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
 
-	/* 256 byte signature as footer */
-	if (bufsz < FU_SYNAPROM_FIRMWARE_SIGSIZE + FU_STRUCT_SYNAPROM_HDR_SIZE) {
+	if (bufsz < self->signature_size + FU_STRUCT_SYNAPROM_HDR_SIZE) {
 		g_set_error_literal(error,
 				    G_IO_ERROR,
 				    G_IO_ERROR_INVALID_DATA,
 				    "blob is too small to be firmware");
 		return FALSE;
 	}
-	bufsz -= FU_SYNAPROM_FIRMWARE_SIGSIZE;
+	bufsz -= self->signature_size;
 
 	/* parse each chunk */
 	while (offset < bufsz) {
@@ -161,7 +168,7 @@ fu_synaprom_firmware_write(FuFirmware *firmware, GError **error)
 	fu_byte_array_append_bytes(buf, payload);
 
 	/* add signature */
-	for (guint i = 0; i < FU_SYNAPROM_FIRMWARE_SIGSIZE; i++)
+	for (guint i = 0; i < self->signature_size; i++)
 		fu_byte_array_append_uint8(buf, 0xff);
 	return g_steal_pointer(&buf);
 }
@@ -186,6 +193,7 @@ fu_synaprom_firmware_init(FuSynapromFirmware *self)
 {
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_VID_PID);
 	fu_firmware_set_images_max(FU_FIRMWARE(self), FU_SYNAPROM_FIRMWARE_COUNT_MAX);
+	self->signature_size = FU_SYNAPROM_FIRMWARE_PROMETHEUS_SIGSIZE;
 }
 
 static void

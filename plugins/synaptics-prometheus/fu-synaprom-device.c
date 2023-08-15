@@ -18,6 +18,7 @@ struct _FuSynapromDevice {
 	FuUsbDevice parent_instance;
 	guint8 vmajor;
 	guint8 vminor;
+	guint32 product_type;
 };
 
 /* vendor-specific USB control requests to write DFT word (Hayes) */
@@ -140,6 +141,12 @@ fu_synaprom_device_cmd_send(FuSynapromDevice *device,
 	return TRUE;
 }
 
+guint32
+fu_synaprom_device_get_product_type(FuSynapromDevice *self)
+{
+	return self->product_type;
+}
+
 void
 fu_synaprom_device_set_version(FuSynapromDevice *self,
 			       guint8 vmajor,
@@ -210,10 +217,12 @@ fu_synaprom_device_setup(FuDevice *device, GError **error)
 	fu_synaprom_device_set_serial_number(self, serial_number);
 
 	/* check device type */
-	if (product == FU_SYNAPROM_PRODUCT_PROMETHEUS) {
+	if (product == FU_SYNAPROM_PRODUCT_PROMETHEUS || product == FU_SYNAPROM_PRODUCT_TRITON) {
 		fu_device_remove_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 	} else if (product == FU_SYNAPROM_PRODUCT_PROMETHEUSPBL ||
-		   product == FU_SYNAPROM_PRODUCT_PROMETHEUSMSBL) {
+		   product == FU_SYNAPROM_PRODUCT_PROMETHEUSMSBL ||
+		   product == FU_SYNAPROM_PRODUCT_TRITONPBL ||
+		   product == FU_SYNAPROM_PRODUCT_TRITONMSBL) {
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 	} else {
 		g_set_error(error,
@@ -223,6 +232,12 @@ fu_synaprom_device_setup(FuDevice *device, GError **error)
 			    product);
 		return FALSE;
 	}
+
+	if (product == FU_SYNAPROM_PRODUCT_TRITON || product == FU_SYNAPROM_PRODUCT_TRITONPBL ||
+	    product == FU_SYNAPROM_PRODUCT_TRITONMSBL)
+		self->product_type = FU_SYNAPROM_PRODUCT_TYPE_TRITON;
+	else
+		self->product_type = FU_SYNAPROM_PRODUCT_TYPE_PROMETHEUS;
 
 	/* add updatable config child, if this is a production sensor */
 	if (fu_device_get_children(device)->len == 0 &&
@@ -241,25 +256,35 @@ fu_synaprom_device_prepare_fw(FuDevice *device, GBytes *fw, FwupdInstallFlags fl
 {
 	guint32 product_id;
 	g_autoptr(FuFirmware) firmware = fu_synaprom_firmware_new();
+	FuSynapromDevice *self = FU_SYNAPROM_DEVICE(device);
+
+	if (self->product_type == FU_SYNAPROM_PRODUCT_TYPE_TRITON) {
+		if (!fu_synaprom_firmware_set_signature_size(FU_SYNAPROM_FIRMWARE(firmware),
+							     FU_SYNAPROM_FIRMWARE_TRITON_SIGSIZE))
+			return NULL;
+	}
 
 	/* check the update header product and version */
 	if (!fu_firmware_parse(firmware, fw, flags, error))
 		return NULL;
 	product_id = fu_synaprom_firmware_get_product_id(FU_SYNAPROM_FIRMWARE(firmware));
-	if (product_id != FU_SYNAPROM_PRODUCT_PROMETHEUS) {
+	if (product_id != FU_SYNAPROM_PRODUCT_PROMETHEUS &&
+	    product_id != FU_SYNAPROM_PRODUCT_TRITON) {
 		if (flags & FWUPD_INSTALL_FLAG_IGNORE_VID_PID) {
 			g_warning("MFW metadata not compatible, "
-				  "got 0x%02x expected 0x%02x",
+				  "got 0x%02x expected 0x%02x or 0x%02x",
 				  product_id,
-				  (guint)FU_SYNAPROM_PRODUCT_PROMETHEUS);
+				  (guint)FU_SYNAPROM_PRODUCT_PROMETHEUS,
+				  (guint)FU_SYNAPROM_PRODUCT_TRITON);
 		} else {
 			g_set_error(error,
 				    G_IO_ERROR,
 				    G_IO_ERROR_NOT_SUPPORTED,
 				    "MFW metadata not compatible, "
-				    "got 0x%02x expected 0x%02x",
+				    "got 0x%02x expected 0x%02x or 0x%02x",
 				    product_id,
-				    (guint)FU_SYNAPROM_PRODUCT_PROMETHEUS);
+				    (guint)FU_SYNAPROM_PRODUCT_PROMETHEUS,
+				    (guint)FU_SYNAPROM_PRODUCT_TRITON);
 			return NULL;
 		}
 	}
