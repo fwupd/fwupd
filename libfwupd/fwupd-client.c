@@ -7,7 +7,6 @@
 #include "config.h"
 
 #include <gio/gio.h>
-#include <gmodule.h>
 #ifdef HAVE_LIBCURL
 #include <curl/curl.h>
 #endif
@@ -76,10 +75,6 @@ typedef struct {
 	gchar *package_version;
 	gchar *user_agent;
 	GHashTable *hints; /* str:str */
-#ifdef SOUP_SESSION_COMPAT
-	GObject *soup_session;
-	GModule *soup_module; /* we leak this */
-#endif
 } FwupdClientPrivate;
 
 #ifdef HAVE_LIBCURL
@@ -107,7 +102,7 @@ enum {
 	PROP_PERCENTAGE,
 	PROP_DAEMON_VERSION,
 	PROP_TAINTED,
-	PROP_SOUP_SESSION, /* compat ABI, do not use! */
+	PROP_SOUP_SESSION, /* not set, do not use! */
 	PROP_HOST_PRODUCT,
 	PROP_HOST_VENDOR,
 	PROP_HOST_MACHINE_ID,
@@ -640,11 +635,6 @@ fwupd_client_ensure_networking(FwupdClient *self, GError **error)
 				    "user agent unsuitable; fwupd version required");
 		return FALSE;
 	}
-#ifdef SOUP_SESSION_COMPAT
-	if (priv->soup_session != NULL) {
-		g_object_set(priv->soup_session, "user-agent", priv->user_agent, NULL);
-	}
-#endif
 	return TRUE;
 }
 
@@ -5913,48 +5903,6 @@ fwupd_client_emulation_save_finish(FwupdClient *self, GAsyncResult *res, GError 
 	return g_task_propagate_pointer(G_TASK(res), error);
 }
 
-#ifdef SOUP_SESSION_COMPAT
-/* this is bad; we dlopen libsoup-2.4.so.1 and get the gtype manually
- * to avoid deps on both libcurl and libsoup whilst preserving ABI */
-static void
-fwupd_client_ensure_soup_session(FwupdClient *self)
-{
-	FwupdClientObjectNewFunc func = NULL;
-	FwupdClientPrivate *priv = GET_PRIVATE(self);
-	GType soup_gtype;
-
-	/* already set up */
-	if (priv->soup_session != NULL)
-		return;
-
-	/* known GType, just create */
-	soup_gtype = g_type_from_name("SoupSession");
-	if (soup_gtype != 0) {
-		priv->soup_session = g_object_new(soup_gtype, NULL);
-		return;
-	}
-
-	/* load the library at runtime, leaking the module */
-	if (priv->soup_module == NULL) {
-		g_autofree gchar *fn = NULL;
-		fn = g_build_filename(FWUPD_LIBDIR, "libsoup-2.4.so.1", NULL);
-		priv->soup_module = g_module_open(fn, G_MODULE_BIND_LAZY);
-		if (priv->soup_module == NULL) {
-			g_warning("failed to find libsoup library");
-			return;
-		}
-	}
-	if (!g_module_symbol(priv->soup_module, "soup_session_new", (gpointer *)&func)) {
-		g_warning("failed to find soup_session_get_type()");
-		g_module_close(priv->soup_module);
-		priv->soup_module = NULL;
-		return;
-	}
-	priv->soup_session = func();
-	g_object_set(priv->soup_session, "timeout", (guint)60, NULL);
-}
-#endif
-
 static void
 fwupd_client_get_property(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
 {
@@ -5969,12 +5917,7 @@ fwupd_client_get_property(GObject *object, guint prop_id, GValue *value, GParamS
 		g_value_set_boolean(value, priv->tainted);
 		break;
 	case PROP_SOUP_SESSION:
-#ifdef SOUP_SESSION_COMPAT
-		fwupd_client_ensure_soup_session(self);
-		g_value_set_object(value, priv->soup_session);
-#else
 		g_value_set_object(value, NULL);
-#endif
 		break;
 	case PROP_PERCENTAGE:
 		g_value_set_uint(value, priv->percentage);
@@ -6438,10 +6381,6 @@ fwupd_client_finalize(GObject *object)
 	g_mutex_clear(&priv->proxy_mutex);
 	if (priv->proxy != NULL)
 		g_object_unref(priv->proxy);
-#ifdef SOUP_SESSION_COMPAT
-	if (priv->soup_session != NULL)
-		g_object_unref(priv->soup_session);
-#endif
 
 	G_OBJECT_CLASS(fwupd_client_parent_class)->finalize(object);
 }

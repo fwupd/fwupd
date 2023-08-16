@@ -919,15 +919,6 @@
       <package variant="x86_64" />
     </distro>
   </dependency>
-  <dependency id="libsoup2.4-dev">
-    <distro id="ubuntu">
-      <control />
-      <package variant="x86_64" />
-    </distro>
-    <distro id="void">
-      <package variant="x86_64">libsoup-devel</package>
-    </distro>
-  </dependency>
   <dependency id="libcurl4-gnutls-dev">
     <distro id="arch">
       <package variant="x86_64">curl</package>

@@ -60,7 +60,6 @@ option('systemd_unit_user', type : 'string', description : 'User account to use 
 option('systemd_root_prefix', type: 'string', value: '', description: 'Directory to base systemd’s installation directories on')
 option('elogind', type : 'feature', description : 'elogind support', deprecated: {'true': 'enabled', 'false': 'disabled'})
 option('tests', type : 'boolean', value : true, description : 'enable tests')
-option('soup_session_compat', type : 'boolean', value : false, description : 'enable SoupSession runtime compatibility support')
 option('curl', type : 'feature', description : 'libcurl support', deprecated: {'true': 'enabled', 'false': 'disabled'})
 option('udevdir', type: 'string', value: '', description: 'Directory for udev rules')
 option('efi_os_dir', type: 'string', description : 'the hardcoded name of OS directory in ESP, e.g. fedora')
