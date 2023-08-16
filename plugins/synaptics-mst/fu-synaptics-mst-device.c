@@ -1202,8 +1202,10 @@ fu_synaptics_mst_device_read_board_id(FuSynapticsMstDevice *self,
 		offset = (gint)ADDR_MEMORY_CUSTOMER_ID;
 		break;
 	case FU_SYNAPTICS_MST_FAMILY_CAYENNE:
-	case FU_SYNAPTICS_MST_FAMILY_SPYDER:
 		offset = (gint)ADDR_MEMORY_CUSTOMER_ID_CAYENNE;
+		break;
+	case FU_SYNAPTICS_MST_FAMILY_SPYDER:
+		offset = (gint)ADDR_MEMORY_CUSTOMER_ID_SPYDER;
 		break;
 	default:
 		g_set_error(error,
