@@ -121,7 +121,8 @@ fu_ifd_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuil
 	for (guint i = 0; i < priv->values->len; i++) {
 		const gchar *value = g_ptr_array_index(priv->values, i);
 		const gchar *key = fu_csv_firmware_get_column_id(parent, i);
-		fu_xmlb_builder_insert_kv(bc, key, value);
+		if (key != NULL)
+			fu_xmlb_builder_insert_kv(bc, key, value);
 	}
 }
 
