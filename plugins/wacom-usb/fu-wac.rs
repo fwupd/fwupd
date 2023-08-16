@@ -76,14 +76,14 @@ enum WacDeviceStatus {
 
 #[derive(New)]
 struct Id9UnknownCmd {
-    unknown1: u16be: const=0x7050,
-    unknown2: u32be: const=0,
+    unknown1: u16be == 0x7050,
+    unknown2: u32be == 0,
     size: u16be,                  // Size of payload to be transferred
 }
 #[derive(New)]
 struct Id9SpiCmd {
-    command: u8: const=0x91,
-    start_addr: u32be: const=0,
+    command: u8 == 0x91,
+    start_addr: u32be == 0,
     size: u16be,                  // sizeof(data) + size of payload
     data: Id9UnknownCmd,
 }
