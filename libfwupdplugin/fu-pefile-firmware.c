@@ -46,6 +46,7 @@ fu_pefile_firmware_parse_section(FuFirmware *firmware,
 				 FwupdInstallFlags flags,
 				 GError **error)
 {
+	gboolean truncate_to_nul = FALSE;
 	gsize bufsz = 0;
 	guint32 sect_offset;
 	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
@@ -53,6 +54,7 @@ fu_pefile_firmware_parse_section(FuFirmware *firmware,
 	g_autofree gchar *sect_id_tmp = NULL;
 	g_autoptr(FuFirmware) img = NULL;
 	g_autoptr(GByteArray) st = NULL;
+	g_autoptr(GBytes) blob_fixed = NULL;
 	g_autoptr(GBytes) blob = NULL;
 
 	st = fu_struct_pe_coff_section_parse(buf, bufsz, hdr_offset, error);
@@ -90,6 +92,7 @@ fu_pefile_firmware_parse_section(FuFirmware *firmware,
 		fu_csv_firmware_add_column_id(FU_CSV_FIRMWARE(img), "vendor_package_name");
 		fu_csv_firmware_add_column_id(FU_CSV_FIRMWARE(img), "$version");
 		fu_csv_firmware_add_column_id(FU_CSV_FIRMWARE(img), "vendor_url");
+		truncate_to_nul = TRUE;
 	} else if (g_strcmp0(sect_id, ".sbatlevel") == 0) {
 		img = fu_sbatlevel_section_new();
 	} else {
@@ -108,7 +111,24 @@ fu_pefile_firmware_parse_section(FuFirmware *firmware,
 		g_prefix_error(error, "failed to get raw data for %s: ", sect_id);
 		return FALSE;
 	}
-	if (!fu_firmware_parse(img, blob, flags, error)) {
+
+	/* truncate the buffer if padded with NUL */
+	if (truncate_to_nul) {
+		const guint8 needle[] = {'\0'};
+		gsize offset = 0;
+		if (!fu_memmem_safe(g_bytes_get_data(blob, NULL),
+				    g_bytes_get_size(blob),
+				    needle,
+				    sizeof(needle),
+				    &offset,
+				    error))
+			return FALSE;
+		if (offset > 0)
+			blob_fixed = g_bytes_new_from_bytes(blob, 0x0, offset);
+	}
+	if (blob_fixed == NULL)
+		blob_fixed = g_bytes_ref(blob);
+	if (!fu_firmware_parse(img, blob_fixed, flags, error)) {
 		g_prefix_error(error, "failed to parse %s: ", sect_id);
 		return FALSE;
 	}
