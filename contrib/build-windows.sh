@@ -26,7 +26,6 @@ meson setup .. \
     -Dfirmware-packager=false \
     -Dmetainfo=false \
     -Dcompat_cli=false \
-    -Dsoup_session_compat=false \
     -Dgcab:introspection=false \
     -Dgcab:docs=false \
     -Dgcab:nls=false \
