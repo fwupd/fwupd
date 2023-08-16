@@ -477,12 +477,17 @@ fu_usb_device_close(FuDevice *device, GError **error)
 	/* release interfaces, ignoring errors */
 	for (guint i = 0; priv->interfaces != NULL && i < priv->interfaces->len; i++) {
 		FuUsbDeviceInterface *iface = g_ptr_array_index(priv->interfaces, i);
+		GUsbDeviceClaimInterfaceFlags claim_flags = G_USB_DEVICE_CLAIM_INTERFACE_NONE;
 		g_autoptr(GError) error_local = NULL;
 		if (!iface->claimed)
 			continue;
+		if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG)) {
+			g_debug("re-binding kernel driver as not waiting for replug");
+			claim_flags |= G_USB_DEVICE_CLAIM_INTERFACE_BIND_KERNEL_DRIVER;
+		}
 		if (!g_usb_device_release_interface(priv->usb_device,
 						    iface->number,
-						    G_USB_DEVICE_CLAIM_INTERFACE_BIND_KERNEL_DRIVER,
+						    claim_flags,
 						    &error_local)) {
 			if (g_error_matches(error_local,
 					    G_USB_DEVICE_ERROR,
