@@ -428,10 +428,6 @@ if build_standalone
   conf.set_quoted('EFI_MACHINE_TYPE_NAME', EFI_MACHINE_TYPE_NAME)
 endif
 
-if get_option('soup_session_compat')
-    conf.set('SOUP_SESSION_COMPAT', '1')
-endif
-
 umockdev = dependency('umockdev-1.0', required: false)
 
 if build_standalone
