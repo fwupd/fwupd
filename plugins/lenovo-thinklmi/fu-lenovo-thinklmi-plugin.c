@@ -111,6 +111,45 @@ fu_lenovo_thinklmi_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *
 	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 }
 
+static gboolean
+fu_lenovo_thinklmi_security_hardening_fix(FuPlugin *plugin, FwupdSecurityAttr *attr, GError **error)
+{
+	FwupdBiosSetting *bios_attr;
+	FuContext *ctx = fu_plugin_get_context(plugin);
+
+	bios_attr = fu_context_get_bios_setting(ctx, BIOS_SETTING_SECURE_ROLLBACK);
+	if (bios_attr == NULL) {
+		g_debug("failed to find %s in cache", BIOS_SETTING_SECURE_ROLLBACK);
+		return FALSE;
+	}
+
+	return fwupd_bios_setting_write_value(
+	    bios_attr,
+	    fwupd_security_attr_get_bios_setting_target_value(attr),
+	    error);
+}
+
+static gboolean
+fu_lenovo_thinklmi_security_hardening_unfix(FuPlugin *plugin,
+					    FwupdSecurityAttr *attr,
+					    GError **error)
+{
+	FwupdBiosSetting *bios_attr;
+	FuContext *ctx = fu_plugin_get_context(plugin);
+
+	g_return_val_if_fail(attr != NULL, FALSE);
+	bios_attr = fu_context_get_bios_setting(ctx, BIOS_SETTING_SECURE_ROLLBACK);
+	if (bios_attr == NULL) {
+		g_debug("failed to find %s in cache", BIOS_SETTING_SECURE_ROLLBACK);
+		return FALSE;
+	}
+
+	return fwupd_bios_setting_write_value(
+	    bios_attr,
+	    fwupd_security_attr_get_bios_setting_current_value(attr),
+	    error);
+}
+
 static void
 fu_lenovo_thinklmi_plugin_init(FuLenovoThinklmiPlugin *self)
 {
@@ -123,4 +162,6 @@ fu_lenovo_thinklmi_plugin_class_init(FuLenovoThinklmiPluginClass *klass)
 	plugin_class->startup = fu_lenovo_thinklmi_plugin_startup;
 	plugin_class->device_registered = fu_lenovo_thinklmi_plugin_device_registered;
 	plugin_class->add_security_attrs = fu_lenovo_thinklmi_plugin_add_security_attrs;
+	plugin_class->security_hardening_fix = fu_lenovo_thinklmi_security_hardening_fix;
+	plugin_class->security_hardening_unfix = fu_lenovo_thinklmi_security_hardening_unfix;
 }
