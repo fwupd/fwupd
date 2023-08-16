@@ -89,6 +89,11 @@ fu_wac_module_refresh_cb(FuDevice *device, gpointer user_data, GError **error)
 		g_propagate_error(error, g_steal_pointer(&error_local));
 		return FALSE;
 	}
+
+	/* retry not necessary for unrecoverable errors */
+	if (priv->status != FU_WAC_MODULE_STATUS_BUSY)
+		return TRUE;
+
 	if (priv->status != FU_WAC_MODULE_STATUS_OK) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -180,6 +185,15 @@ fu_wac_module_set_feature(FuWacModule *self,
 			g_prefix_error(error,
 				       "failed to set feature %s: ",
 				       fu_wac_module_command_to_string(command));
+			return FALSE;
+		}
+		if (priv->status != FU_WAC_MODULE_STATUS_OK) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "refresh returned status 0x%x [%s]",
+				    priv->status,
+				    fu_wac_module_status_to_string(priv->status));
 			return FALSE;
 		}
 	}
