@@ -30,6 +30,7 @@ G_DEFINE_TYPE(FuUsiDockMcuDevice, fu_usi_dock_mcu_device, FU_TYPE_HID_DEVICE)
 
 #define FU_USI_DOCK_DEVICE_FLAG_VERFMT_HP (1 << 0)
 #define FU_USI_DOCK_DEVICE_FLAG_SET_CHIP_TYPE (1 << 1)
+#define FU_USI_DOCK_DEVICE_FLAG_WAITING_FOR_UNPLUG (1 << 2)
 
 static gboolean
 fu_usi_dock_mcu_device_tx(FuUsiDockMcuDevice *self,
@@ -712,13 +713,29 @@ fu_usi_dock_mcu_device_insert_cb(gpointer user_data)
 	fwupd_request_set_kind(request, FWUPD_REQUEST_KIND_IMMEDIATE);
 	fwupd_request_set_id(request, FWUPD_REQUEST_ID_INSERT_USB_CABLE);
 	fwupd_request_add_flag(request, FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE);
-	fwupd_request_set_message(
-	    request,
-	    "The update will continue when the device USB cable has been re-inserted.");
+	fwupd_request_set_message(request,
+				  "Please re-insert the device USB cable to continue the update.");
 	fu_device_emit_request(user_data, request);
 
 	/* success */
 	return G_SOURCE_REMOVE;
+}
+
+static void
+fu_usi_dock_mcu_device_internal_flags_notify_cb(FuDevice *device,
+						GParamSpec *pspec,
+						gpointer user_data)
+{
+	if (fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_UNCONNECTED) &&
+	    fu_device_has_private_flag(device, FU_USI_DOCK_DEVICE_FLAG_WAITING_FOR_UNPLUG)) {
+		g_debug("starting 40s countdown");
+		g_timeout_add_seconds_full(G_PRIORITY_DEFAULT,
+					   40, /* seconds */
+					   fu_usi_dock_mcu_device_insert_cb,
+					   g_object_ref(device),
+					   g_object_unref);
+		fu_device_remove_private_flag(device, FU_USI_DOCK_DEVICE_FLAG_WAITING_FOR_UNPLUG);
+	}
 }
 
 static gboolean
@@ -729,26 +746,19 @@ fu_usi_dock_mcu_device_cleanup(FuDevice *device,
 {
 	g_autoptr(FwupdRequest) request = fwupd_request_new();
 
+	/* wait for the user to unplug then start the 40 second timer */
+	fu_device_add_private_flag(device, FU_USI_DOCK_DEVICE_FLAG_WAITING_FOR_UNPLUG);
+	fu_device_set_remove_delay(device, 900000);
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_BUSY);
+
 	/* interactive request to start the SPI write */
 	fwupd_request_set_kind(request, FWUPD_REQUEST_KIND_IMMEDIATE);
 	fwupd_request_set_id(request, FWUPD_REQUEST_ID_REMOVE_USB_CABLE);
 	fwupd_request_add_flag(request, FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE);
-	fwupd_request_set_message(
-	    request,
-	    "Please unplug the USB cable. The update will continue in 30 seconds from now.");
+	fwupd_request_set_message(request,
+				  "Please unplug the device USB cable to continue the update.");
 	fu_device_emit_request(device, request);
-
-	/* success */
-	fu_device_set_remove_delay(device, 900000);
-	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
-
-	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_BUSY);
-	g_timeout_add_seconds_full(G_PRIORITY_DEFAULT,
-				   40,
-				   fu_usi_dock_mcu_device_insert_cb,
-				   g_object_ref(device),
-				   g_object_unref);
-
 	return TRUE;
 }
 
@@ -780,6 +790,10 @@ fu_usi_dock_mcu_device_init(FuUsiDockMcuDevice *self)
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_NO_SERIAL_NUMBER);
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_INHIBIT_CHILDREN);
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_ONLY_WAIT_FOR_REPLUG);
+	g_signal_connect(FWUPD_DEVICE(self),
+			 "notify::internal-flags",
+			 G_CALLBACK(fu_usi_dock_mcu_device_internal_flags_notify_cb),
+			 NULL);
 
 	fu_device_register_private_flag(FU_DEVICE(self),
 					FU_USI_DOCK_DEVICE_FLAG_VERFMT_HP,
@@ -787,6 +801,9 @@ fu_usi_dock_mcu_device_init(FuUsiDockMcuDevice *self)
 	fu_device_register_private_flag(FU_DEVICE(self),
 					FU_USI_DOCK_DEVICE_FLAG_SET_CHIP_TYPE,
 					"set-chip-type");
+	fu_device_register_private_flag(FU_DEVICE(self),
+					FU_USI_DOCK_DEVICE_FLAG_WAITING_FOR_UNPLUG,
+					"waiting-for-unplug");
 	fu_hid_device_add_flag(FU_HID_DEVICE(self), FU_HID_DEVICE_FLAG_AUTODETECT_EPS);
 	fu_device_add_protocol(FU_DEVICE(self), "com.usi.dock");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_NUMBER);
