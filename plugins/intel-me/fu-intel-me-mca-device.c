@@ -8,7 +8,6 @@
 
 #include "fu-intel-me-common.h"
 #include "fu-intel-me-mca-device.h"
-#include "fu-intel-me-struct.h"
 
 struct _FuIntelMeMcaDevice {
 	FuIntelMeHeciDevice parent_instance;
@@ -54,10 +53,6 @@ static gboolean
 fu_intel_me_mca_device_setup(FuDevice *device, GError **error)
 {
 	FuIntelMeMcaDevice *self = FU_INTEL_ME_MCA_DEVICE(device);
-	const guint32 sections[] = {FU_INTEL_ME_MCA_SECTION_FPF,
-				    FU_INTEL_ME_MCA_SECTION_UEP,
-				    FU_INTEL_ME_MCA_SECTION_ME,
-				    G_MAXUINT32};
 	const guint32 file_ids[] = {0x40002300, /* CometLake: OEM Public Key Hash */
 				    0x40005B00, /* TigerLake: 1st OEM Public Key Hash */
 				    0x40005C00 /* TigerLake: 2nd OEM Public Key Hash */,
@@ -65,27 +60,18 @@ fu_intel_me_mca_device_setup(FuDevice *device, GError **error)
 
 	/* look for all the possible OEM Public Key hashes using the CML+ method */
 	for (guint i = 0; file_ids[i] != G_MAXUINT32; i++) {
-		for (guint j = 0; sections[j] != G_MAXUINT32; j++) {
-			g_autoptr(GError) error_local = NULL;
-			if (!fu_intel_me_mca_device_add_checksum_for_id(self,
-									file_ids[i],
-									sections[j],
-									&error_local)) {
-				if (g_error_matches(error_local,
-						    G_IO_ERROR,
-						    G_IO_ERROR_NOT_SUPPORTED) ||
-				    g_error_matches(error_local,
-						    G_IO_ERROR,
-						    G_IO_ERROR_NOT_INITIALIZED)) {
-					continue;
-				}
-				g_warning("failed to get public key using file-id 0x%x, "
-					  "section %s [0x%x]: %s",
-					  file_ids[i],
-					  fu_intel_me_mca_section_to_string(sections[j]),
-					  sections[j],
-					  error_local->message);
+		g_autoptr(GError) error_local = NULL;
+		if (!fu_intel_me_mca_device_add_checksum_for_id(self,
+								file_ids[i],
+								0x0,
+								&error_local)) {
+			if (g_error_matches(error_local, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED) ||
+			    g_error_matches(error_local, G_IO_ERROR, G_IO_ERROR_NOT_INITIALIZED)) {
+				continue;
 			}
+			g_warning("failed to get public key using file-id 0x%x: %s",
+				  file_ids[i],
+				  error_local->message);
 		}
 	}
 
