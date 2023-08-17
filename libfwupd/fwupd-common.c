@@ -285,6 +285,7 @@ fwupd_get_os_release(GError **error)
 			}
 		}
 	}
+	g_hash_table_insert(hash, g_strdup("ID"), g_strdup("macos"));
 	return g_steal_pointer(&hash);
 #else
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
