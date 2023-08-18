@@ -302,7 +302,7 @@ fu_mbim_qdu_updater_file_write_ready(MbimDevice *device, GAsyncResult *res, gpoi
 							NULL);
 		mbim_device_command(ctx->mbim_device,
 				    request,
-				    10,
+				    20,
 				    NULL,
 				    (GAsyncReadyCallback)fu_mbim_qdu_updater_file_write_ready,
 				    ctx);
