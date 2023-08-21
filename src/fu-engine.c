@@ -746,28 +746,28 @@ fu_engine_load_release(FuEngine *self,
 
 /* finds the remote-id for the first firmware in the silo that matches this
  * container checksum */
-static const gchar *
-fu_engine_get_remote_id_for_checksum(FuEngine *self, const gchar *csum)
+static XbNode *
+fu_engine_get_component_for_checksum(FuEngine *self, const gchar *csum)
 {
 	g_auto(XbQueryContext) context = XB_QUERY_CONTEXT_INIT();
 	xb_value_bindings_bind_str(xb_query_context_get_bindings(&context), 0, csum, NULL);
 	if (self->query_container_checksum1 != NULL) {
-		g_autoptr(XbNode) key =
+		g_autoptr(XbNode) component =
 		    xb_silo_query_first_with_context(self->silo,
 						     self->query_container_checksum1,
 						     &context,
 						     NULL);
-		if (key != NULL)
-			return xb_node_get_text(key);
+		if (component != NULL)
+			return g_steal_pointer(&component);
 	}
 	if (self->query_container_checksum2 != NULL) {
-		g_autoptr(XbNode) key =
+		g_autoptr(XbNode) component =
 		    xb_silo_query_first_with_context(self->silo,
 						     self->query_container_checksum2,
 						     &context,
 						     NULL);
-		if (key != NULL)
-			return xb_node_get_text(key);
+		if (component != NULL)
+			return g_steal_pointer(&component);
 	}
 
 	/* failed */
@@ -785,9 +785,15 @@ fu_engine_get_remote_id_for_blob(FuEngine *self, GBytes *blob)
 
 	for (guint i = 0; checksum_types[i] != 0; i++) {
 		g_autofree gchar *csum = g_compute_checksum_for_bytes(checksum_types[i], blob);
-		const gchar *remote_id = fu_engine_get_remote_id_for_checksum(self, csum);
-		if (remote_id != NULL)
-			return g_strdup(remote_id);
+		g_autoptr(XbNode) component = fu_engine_get_component_for_checksum(self, csum);
+		if (component != NULL) {
+			const gchar *remote_id =
+			    xb_node_query_text(component,
+					       "../custom/value[@key='fwupd::RemoteId']",
+					       NULL);
+			if (remote_id != NULL)
+				return g_strdup(remote_id);
+		}
 	}
 	return NULL;
 }
@@ -4059,8 +4065,7 @@ fu_engine_create_silo_index(FuEngine *self, GError **error)
 	self->query_container_checksum1 =
 	    xb_query_new_full(self->silo,
 			      "components/component[@type='firmware']/releases/release/"
-			      "checksum[@target='container'][text()=?]/../../"
-			      "../../custom/value[@key='fwupd::RemoteId']",
+			      "checksum[@target='container'][text()=?]/../../..",
 			      XB_QUERY_FLAG_OPTIMIZE,
 			      &error_container_checksum1);
 	if (self->query_container_checksum1 == NULL)
@@ -4069,7 +4074,7 @@ fu_engine_create_silo_index(FuEngine *self, GError **error)
 	    xb_query_new_full(self->silo,
 			      "components/component[@type='firmware']/releases/release/"
 			      "artifacts/artifact[@type='binary']/checksum[text()=?]/../../"
-			      "../../../../custom/value[@key='fwupd::RemoteId']",
+			      "../../..",
 			      XB_QUERY_FLAG_OPTIMIZE,
 			      &error_container_checksum2);
 	if (self->query_container_checksum2 == NULL)
@@ -4957,12 +4962,12 @@ fu_engine_get_details_for_bytes(FuEngine *self,
 				GBytes *blob,
 				GError **error)
 {
-	const gchar *remote_id = NULL;
 	GChecksumType checksum_types[] = {G_CHECKSUM_SHA256, G_CHECKSUM_SHA1, 0};
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GPtrArray) components = NULL;
 	g_autoptr(GPtrArray) details = NULL;
 	g_autoptr(GPtrArray) checksums = g_ptr_array_new_with_free_func(g_free);
+	g_autoptr(XbNode) component_by_csum = NULL;
 	g_autoptr(XbSilo) silo = NULL;
 
 	silo = fu_engine_get_silo_from_blob(self, blob, error);
@@ -4997,8 +5002,8 @@ fu_engine_get_details_for_bytes(FuEngine *self,
 	/* does this exist in any enabled remote */
 	for (guint i = 0; i < checksums->len; i++) {
 		const gchar *csum = g_ptr_array_index(checksums, i);
-		remote_id = fu_engine_get_remote_id_for_checksum(self, csum);
-		if (remote_id != NULL)
+		component_by_csum = fu_engine_get_component_for_checksum(self, csum);
+		if (component_by_csum != NULL)
 			break;
 	}
 
@@ -5008,12 +5013,19 @@ fu_engine_get_details_for_bytes(FuEngine *self,
 		XbNode *component = g_ptr_array_index(components, i);
 		FuDevice *dev;
 		g_autoptr(FwupdRelease) rel = fwupd_release_new();
+
 		dev = fu_engine_get_result_from_component(self, request, component, error);
 		if (dev == NULL)
 			return NULL;
 		fu_device_add_release(dev, rel);
-		if (remote_id != NULL) {
-			fwupd_release_set_remote_id(rel, remote_id);
+
+		if (component_by_csum != NULL) {
+			const gchar *remote_id =
+			    xb_node_query_text(component_by_csum,
+					       "../custom/value[@key='fwupd::RemoteId']",
+					       NULL);
+			if (remote_id != NULL)
+				fwupd_release_set_remote_id(rel, remote_id);
 			fu_device_add_flag(dev, FWUPD_DEVICE_FLAG_SUPPORTED);
 		}
 
@@ -5241,6 +5253,40 @@ fu_engine_get_history_set_hsi_attrs(FuEngine *self, FuDevice *device)
 	fu_device_set_metadata(device, "HSI", self->host_security_id);
 }
 
+static void
+fu_engine_fixup_history_device(FuEngine *self, FuDevice *device)
+{
+	FwupdRelease *rel;
+	GPtrArray *csums;
+
+	/* get the checksums */
+	rel = fu_device_get_release_default(device);
+	if (rel == NULL) {
+		g_warning("no checksums from release history");
+		return;
+	}
+
+	/* find the checksum that matches */
+	csums = fwupd_release_get_checksums(rel);
+	for (guint j = 0; j < csums->len; j++) {
+		const gchar *csum = g_ptr_array_index(csums, j);
+		g_autoptr(XbNode) component = fu_engine_get_component_for_checksum(self, csum);
+		if (component != NULL) {
+			const gchar *appstream_id = xb_node_query_text(component, "id", NULL);
+			const gchar *remote_id =
+			    xb_node_query_text(component,
+					       "../custom/value[@key='fwupd::RemoteId']",
+					       NULL);
+			if (remote_id != NULL)
+				fwupd_release_set_remote_id(rel, remote_id);
+			if (appstream_id != NULL)
+				fwupd_release_set_appstream_id(rel, appstream_id);
+			fu_device_add_flag(device, FWUPD_DEVICE_FLAG_SUPPORTED);
+			break;
+		}
+	}
+}
+
 /**
  * fu_engine_get_history:
  * @self: a #FuEngine
@@ -5284,25 +5330,7 @@ fu_engine_get_history(FuEngine *self, GError **error)
 	/* try to set the remote ID for each device */
 	for (guint i = 0; i < devices->len; i++) {
 		FuDevice *dev = g_ptr_array_index(devices, i);
-		FwupdRelease *rel;
-		GPtrArray *csums;
-
-		/* get the checksums */
-		rel = fu_device_get_release_default(dev);
-		if (rel == NULL)
-			continue;
-
-		/* find the checksum that matches */
-		csums = fwupd_release_get_checksums(rel);
-		for (guint j = 0; j < csums->len; j++) {
-			const gchar *csum = g_ptr_array_index(csums, j);
-			const gchar *remote_id = fu_engine_get_remote_id_for_checksum(self, csum);
-			if (remote_id != NULL) {
-				fu_device_add_flag(dev, FWUPD_DEVICE_FLAG_SUPPORTED);
-				fwupd_release_set_remote_id(rel, remote_id);
-				break;
-			}
-		}
+		fu_engine_fixup_history_device(self, dev);
 	}
 
 	return g_steal_pointer(&devices);
@@ -6177,6 +6205,9 @@ fu_engine_get_results(FuEngine *self, const gchar *device_id, GError **error)
 			    fu_device_get_id(device));
 		return NULL;
 	}
+
+	/* try to set some release properties for the UI */
+	fu_engine_fixup_history_device(self, device);
 
 	/* success */
 	return g_object_ref(FWUPD_DEVICE(device));
