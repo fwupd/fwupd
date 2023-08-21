@@ -295,6 +295,10 @@ fu_cpu_device_set_quirk_kv(FuDevice *device, const gchar *key, const gchar *valu
 		fu_device_set_metadata_integer(device, "PciBcrAddr", tmp);
 		return TRUE;
 	}
+	if (g_strcmp0(key, "CpuMitigationsRequired") == 0) {
+		fu_device_set_metadata(device, "CpuMitigationsRequired", value);
+		return TRUE;
+	}
 	g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED, "no supported");
 	return FALSE;
 }

@@ -10,6 +10,7 @@ hsi_test_jsons = files([
   'org.fwupd.hsi.IntelBootguard.Verified.json',
   'org.fwupd.hsi.IntelCet.Active.json',
   'org.fwupd.hsi.IntelCet.Enabled.json',
+  'org.fwupd.hsi.IntelGds.json',
   'org.fwupd.hsi.IntelSmap.json',
   'org.fwupd.hsi.Iommu.json',
   'org.fwupd.hsi.Kernel.Lockdown.json',

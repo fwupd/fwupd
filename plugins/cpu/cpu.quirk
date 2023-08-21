@@ -1,3 +1,71 @@
 # Intel Atom Bay Trail [Silvermont]
 [CPUID\PRO_0&FAM_06&MOD_37]
 PciBcrAddr = 0x0
+
+# affected by Gather Data Sampling bug
+[CPUID\PRO_0&FAM_06&MOD_55&STP_3]
+CpuMitigationsRequired = gds
+[CPUID\PRO_0&FAM_06&MOD_55&STP_4]
+CpuMitigationsRequired = gds
+[CPUID\PRO_0&FAM_06&MOD_55&STP_6]
+CpuMitigationsRequired = gds
+[CPUID\PRO_0&FAM_06&MOD_55&STP_7]
+CpuMitigationsRequired = gds
+[CPUID\PRO_0&FAM_06&MOD_55&STP_A]
+CpuMitigationsRequired = gds
+[CPUID\PRO_0&FAM_06&MOD_55&STP_B]
+CpuMitigationsRequired = gds
+[CPUID\PRO_0&FAM_06&MOD_6A&STP_4]
+CpuMitigationsRequired = gds
+[CPUID\PRO_0&FAM_06&MOD_6A&STP_5]
+CpuMitigationsRequired = gds
+[CPUID\PRO_0&FAM_06&MOD_6A&STP_6]
+CpuMitigationsRequired = gds
+[CPUID\PRO_0&FAM_06&MOD_6C&STP_1]
+CpuMitigationsRequired = gds
+[CPUID\PRO_0&FAM_06&MOD_7E&STP_5]
+CpuMitigationsRequired = gds
+[CPUID\PRO_0&FAM_06&MOD_8C&STP_0]
+CpuMitigationsRequired = gds
+[CPUID\PRO_0&FAM_06&MOD_8C&STP_1]
+CpuMitigationsRequired = gds
+[CPUID\PRO_0&FAM_06&MOD_8C&STP_2]
+CpuMitigationsRequired = gds
+[CPUID\PRO_0&FAM_06&MOD_8D&STP_0]
+CpuMitigationsRequired = gds
+[CPUID\PRO_0&FAM_06&MOD_8D&STP_1]
+CpuMitigationsRequired = gds
+[CPUID\PRO_0&FAM_06&MOD_8E&STP_9]
+CpuMitigationsRequired = gds
+[CPUID\PRO_0&FAM_06&MOD_8E&STP_A]
+CpuMitigationsRequired = gds
+[CPUID\PRO_0&FAM_06&MOD_8E&STP_B]
+CpuMitigationsRequired = gds
+[CPUID\PRO_0&FAM_06&MOD_8E&STP_C]
+CpuMitigationsRequired = gds
+[CPUID\PRO_0&FAM_06&MOD_9E&STP_9]
+CpuMitigationsRequired = gds
+[CPUID\PRO_0&FAM_06&MOD_9E&STP_A]
+CpuMitigationsRequired = gds
+[CPUID\PRO_0&FAM_06&MOD_9E&STP_B]
+CpuMitigationsRequired = gds
+[CPUID\PRO_0&FAM_06&MOD_9E&STP_C]
+CpuMitigationsRequired = gds
+[CPUID\PRO_0&FAM_06&MOD_9E&STP_D]
+CpuMitigationsRequired = gds
+[CPUID\PRO_0&FAM_06&MOD_A5&STP_0]
+CpuMitigationsRequired = gds
+[CPUID\PRO_0&FAM_06&MOD_A5&STP_1]
+CpuMitigationsRequired = gds
+[CPUID\PRO_0&FAM_06&MOD_A5&STP_2]
+CpuMitigationsRequired = gds
+[CPUID\PRO_0&FAM_06&MOD_A5&STP_3]
+CpuMitigationsRequired = gds
+[CPUID\PRO_0&FAM_06&MOD_A5&STP_5]
+CpuMitigationsRequired = gds
+[CPUID\PRO_0&FAM_06&MOD_A6&STP_0]
+CpuMitigationsRequired = gds
+[CPUID\PRO_0&FAM_06&MOD_A6&STP_1]
+CpuMitigationsRequired = gds
+[CPUID\PRO_0&FAM_06&MOD_A7]
+CpuMitigationsRequired = gds

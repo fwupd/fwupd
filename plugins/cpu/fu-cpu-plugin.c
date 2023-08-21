@@ -48,6 +48,8 @@ static void
 fu_cpu_plugin_constructed(GObject *obj)
 {
 	FuPlugin *plugin = FU_PLUGIN(obj);
+	FuContext *ctx = fu_plugin_get_context(plugin);
+	fu_context_add_quirk_key(ctx, "CpuMitigationsRequired");
 	fu_plugin_add_rule(plugin, FU_PLUGIN_RULE_RUN_BEFORE, "msr");
 }
 

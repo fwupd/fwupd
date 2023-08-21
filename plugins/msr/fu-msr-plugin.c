@@ -23,6 +23,27 @@ typedef union {
 typedef union {
 	guint64 data;
 	struct {
+		guint64 rsrvd : 25;
+		guint64 gds_ctrl : 1;
+		guint64 gds_no : 1;
+	} __attribute__((packed)) fields;
+} FuMsrIa32ArchCapabilities;
+
+typedef union {
+	guint64 data;
+	struct {
+		guint64 rngds_mitg_dis : 1;
+		guint64 rtm_allow : 1;
+		guint64 rtm_locked : 1;
+		guint64 fb_clear_dis : 1;
+		guint64 gds_mitg_dis : 1;
+		guint64 gds_mitg_lock : 1;
+	} __attribute__((packed)) fields;
+} FuMsrIa32McuOptCtrl;
+
+typedef union {
+	guint64 data;
+	struct {
 		guint32 lock_ro : 1;
 		guint32 enable : 1;
 		guint32 key_select : 1;
@@ -57,8 +78,12 @@ struct _FuMsrPlugin {
 	FuPlugin parent_instance;
 	gboolean ia32_debug_supported;
 	gboolean ia32_tme_supported;
+	gboolean ia32_arch_capabilities_supported;
+	gboolean ia32_mcu_opt_ctrl_supported;
 	FuMsrIa32Debug ia32_debug;
 	FuMsrIa32TmeActivation ia32_tme_activation;
+	FuMsrIa32ArchCapabilities ia32_arch_capabilities;
+	FuMsrIa32McuOptCtrl ia32_mcu_opt_ctrl;
 	gboolean amd64_syscfg_supported;
 	gboolean amd64_sev_supported;
 	FuMsrAMD64Syscfg amd64_syscfg;
@@ -70,6 +95,8 @@ G_DEFINE_TYPE(FuMsrPlugin, fu_msr_plugin, FU_TYPE_PLUGIN)
 #define PCI_MSR_IA32_DEBUG_INTERFACE 0xc80
 #define PCI_MSR_IA32_TME_ACTIVATION  0x982
 #define PCI_MSR_IA32_BIOS_SIGN_ID    0x8b
+#define PCI_MSR_IA32_ARCH_CAPABILITIES 0x10a
+#define PCI_MSR_IA32_MCU_OPT_CTRL      0x123
 #define PCI_MSR_AMD64_SYSCFG	     0xC0010010
 #define PCI_MSR_AMD64_SEV	     0xC0010131
 
@@ -108,6 +135,16 @@ fu_msr_plugin_to_string(FuPlugin *plugin, guint idt, GString *str)
 				    "Ia32TmeActivateBypassEnable",
 				    self->ia32_tme_activation.fields.bypass_enable);
 	}
+	if (self->ia32_mcu_opt_ctrl_supported) {
+		fu_string_append_kb(str,
+				    idt,
+				    "GdsMitgDis",
+				    self->ia32_mcu_opt_ctrl.fields.gds_mitg_dis);
+		fu_string_append_kb(str,
+				    idt,
+				    "GdsMitgLock",
+				    self->ia32_mcu_opt_ctrl.fields.gds_mitg_lock);
+	}
 	if (self->amd64_syscfg_supported) {
 		fu_string_append_kb(str,
 				    idt,
@@ -129,6 +166,7 @@ fu_msr_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 	guint eax = 0;
 	guint ebx = 0;
 	guint ecx = 0;
+	guint edx = 0;
 
 	if (!g_file_test("/dev/cpu", G_FILE_TEST_IS_DIR)) {
 		g_set_error_literal(error,
@@ -143,9 +181,11 @@ fu_msr_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 		if (!fu_cpuid(0x01, NULL, NULL, &ecx, NULL, error))
 			return FALSE;
 		self->ia32_debug_supported = ((ecx >> 11) & 0x1) > 0;
-		if (!fu_cpuid(0x07, NULL, NULL, &ecx, NULL, error))
+		if (!fu_cpuid(0x07, NULL, NULL, &ecx, &edx, error))
 			return FALSE;
 		self->ia32_tme_supported = ((ecx >> 13) & 0x1) > 0;
+		self->ia32_arch_capabilities_supported = ((edx >> 29) & 0x1) > 0;
+		self->ia32_mcu_opt_ctrl_supported = ((edx >> 9) & 0x1) > 0;
 	}
 
 	/* indicates support for SME and SEV */
@@ -220,6 +260,40 @@ fu_msr_plugin_backend_device_added(FuPlugin *plugin,
 					    sizeof(buf),
 					    0x0,
 					    &self->ia32_tme_activation.data,
+					    G_LITTLE_ENDIAN,
+					    error))
+			return FALSE;
+	}
+	if (self->ia32_arch_capabilities_supported) {
+		if (!fu_udev_device_pread(FU_UDEV_DEVICE(device),
+					  PCI_MSR_IA32_ARCH_CAPABILITIES,
+					  buf,
+					  sizeof(buf),
+					  error)) {
+			g_prefix_error(error, "could not read IA32_ARCH_CAPABILITIES: ");
+			return FALSE;
+		}
+		if (!fu_memread_uint64_safe(buf,
+					    sizeof(buf),
+					    0x0,
+					    &self->ia32_arch_capabilities.data,
+					    G_LITTLE_ENDIAN,
+					    error))
+			return FALSE;
+	}
+	if (self->ia32_mcu_opt_ctrl_supported) {
+		if (!fu_udev_device_pread(FU_UDEV_DEVICE(device),
+					  PCI_MSR_IA32_MCU_OPT_CTRL,
+					  buf,
+					  sizeof(buf),
+					  error)) {
+			g_prefix_error(error, "could not read IA32_MCU_OPT_CTRL: ");
+			return FALSE;
+		}
+		if (!fu_memread_uint64_safe(buf,
+					    sizeof(buf),
+					    0x0,
+					    &self->ia32_mcu_opt_ctrl.data,
 					    G_LITTLE_ENDIAN,
 					    error))
 			return FALSE;
@@ -329,6 +403,61 @@ fu_plugin_add_security_attr_dci_enabled(FuPlugin *plugin, FuSecurityAttrs *attrs
 	if (self->ia32_debug.fields.enabled) {
 		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_ENABLED);
 		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM);
+		return;
+	}
+
+	/* success */
+	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+}
+
+static void
+fu_plugin_add_security_attr_intel_gds(FuPlugin *plugin, FuSecurityAttrs *attrs)
+{
+	FuMsrPlugin *self = FU_MSR_PLUGIN(plugin);
+	FuDevice *device = fu_plugin_cache_lookup(plugin, "cpu");
+	const gchar *mitigations_required;
+	g_autoptr(FwupdSecurityAttr) attr = NULL;
+
+	/* this MSR is only valid for a subset of Intel CPUs */
+	if (fu_cpu_get_vendor() != FU_CPU_VENDOR_INTEL)
+		return;
+	if (device == NULL)
+		return;
+
+	/* only specific CPUs are affected by GDS */
+	mitigations_required =
+	    fu_device_get_metadata(device, FU_DEVICE_METADATA_CPU_MITIGATIONS_REQUIRED);
+	if (g_strcmp0(mitigations_required, "gds") != 0)
+		return;
+
+	/* create attr */
+	attr = fu_plugin_security_attr_new(plugin, FWUPD_SECURITY_ATTR_ID_INTEL_GDS);
+	fwupd_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_ENABLED);
+	fu_security_attrs_append(attrs, attr);
+	fwupd_security_attr_add_guids(attr, fu_device_get_guids(device));
+
+	/* processor is not vulnerable */
+	if (self->ia32_arch_capabilities.fields.gds_no) {
+		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+		return;
+	}
+
+	/* enumeration for support of both IA32_MCU_OPT_CTRL[4] and IA32_MCU_OPT_CTRL[5] */
+	if (!self->ia32_arch_capabilities.fields.gds_ctrl) {
+		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
+		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM);
+		return;
+	}
+
+	/* GDS mitigation has to be enabled [and locked] */
+	if (self->ia32_mcu_opt_ctrl.fields.gds_mitg_dis) {
+		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
+		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_FW);
+		return;
+	}
+	if (self->ia32_mcu_opt_ctrl.fields.gds_mitg_lock) {
+		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_LOCKED);
+		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_FW);
 		return;
 	}
 
@@ -502,6 +631,7 @@ fu_msr_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 	fu_plugin_add_security_attr_dci_locked(plugin, attrs);
 	fu_plugin_add_security_attr_amd_sme_enabled(plugin, attrs);
 	fu_plugin_add_security_attr_intel_tme_enabled(plugin, attrs);
+	fu_plugin_add_security_attr_intel_gds(plugin, attrs);
 }
 
 static void
