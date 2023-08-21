@@ -43,3 +43,10 @@
  * need to be handled as a capsule update.
  */
 #define FU_DEVICE_METADATA_UEFI_CAPSULE_FLAGS "UefiCapsuleFlags"
+
+/**
+ * FU_DEVICE_METADATA_CPU_MITIGATIONS_REQUIRED:
+ *
+ * CPU mitigations required. See the CPU plugin for more details.
+ */
+#define FU_DEVICE_METADATA_CPU_MITIGATIONS_REQUIRED "CpuMitigationsRequired"

@@ -357,6 +357,14 @@ G_BEGIN_DECLS
  * Since: 1.8.8
  **/
 #define FWUPD_SECURITY_ATTR_ID_BIOS_ROLLBACK_PROTECTION "org.fwupd.hsi.Bios.RollbackProtection"
+/**
+ * FWUPD_SECURITY_ATTR_ID_INTEL_GDS:
+ *
+ * Host Security ID attribute indicating the processor is safe against Gather Data Sampling.
+ *
+ * Since: 1.9.4
+ **/
+#define FWUPD_SECURITY_ATTR_ID_INTEL_GDS "org.fwupd.hsi.IntelGds"
 
 GVariant *
 fwupd_security_attr_to_variant(FwupdSecurityAttr *self);

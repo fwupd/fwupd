@@ -215,6 +215,10 @@ fu_security_attr_get_name(FwupdSecurityAttr *attr)
 		/* TRANSLATORS: Title: if firmware enforces rollback protection */
 		return g_strdup(_("BIOS rollback protection"));
 	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_INTEL_GDS) == 0) {
+		/* TRANSLATORS: Title: GDS is where the CPU leaks information */
+		return g_strdup(_("Intel GDS mitigation"));
+	}
 	/* we should not get here */
 	return g_strdup(fwupd_security_attr_get_name(attr));
 }
@@ -387,6 +391,10 @@ fu_security_attr_get_title(FwupdSecurityAttr *attr)
 	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_BIOS_ROLLBACK_PROTECTION) == 0) {
 		/* TRANSLATORS: Title: if firmware enforces rollback protection */
 		return _("BIOS Rollback Protection");
+	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_INTEL_GDS) == 0) {
+		/* TRANSLATORS: Title: GDS is where the CPU leaks information */
+		return _("Intel GDS Mitigation");
 	}
 	return NULL;
 }
@@ -566,6 +574,11 @@ fu_security_attr_get_description(FwupdSecurityAttr *attr)
 		/* TRANSLATORS: longer description */
 		return _("Rollback Protection prevents device software from being downgraded "
 			 "to an older version that has security problems.");
+	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_INTEL_GDS) == 0) {
+		/* TRANSLATORS: longer description */
+		return _("CPU Microcode must be updated to mitigate against various "
+			 "information-disclosure security issues.");
 	}
 
 	return NULL;

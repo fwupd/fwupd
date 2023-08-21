@@ -1,0 +1,23 @@
+{
+  "id": "org.fwupd.hsi.IntelGds",
+  "name": "Intel GDS Mitigation",
+  "description": [
+    "CPU Microcode must be updated to mitigate against an information-disclosure security issue called Gather Data Sampling."
+  ],
+  "failure-impact": [
+    "Firmware without this feature enabled allow an attacker to exfiltrate secrets by running a malicious program or script."
+  ],
+  "failure-results": {
+    "not-valid": "microcode is not new enough to support required mitigations",
+    "not-enabled": "mitigation is not enabled",
+    "not-locked": "mitigation is not locked"
+  },
+  "success-results": {
+    "enabled": "microcode mitigation is supported, enabled and locked"
+  },
+  "hsi-level": 2,
+  "references": {
+    "https://www.intel.com/content/www/us/en/developer/articles/technical/software-security-guidance/technical-documentation/gather-data-sampling.html": "Gather Data Sampling"
+  },
+  "fwupd-version": "1.9.4"
+}
