@@ -424,7 +424,7 @@ fu_smbios_func(void)
 static void
 fu_kernel_func(void)
 {
-	const gchar *buf = "key=val foo bar=\"baz baz baz\" tail";
+	const gchar *buf = "key=val foo bar=\"baz baz baz\" tail\n";
 	g_autoptr(GHashTable) hash = NULL;
 
 	hash = fu_kernel_parse_cmdline(buf, strlen(buf));
@@ -436,6 +436,7 @@ fu_kernel_func(void)
 	g_assert_true(g_hash_table_contains(hash, "bar"));
 	g_assert_cmpstr(g_hash_table_lookup(hash, "bar"), ==, "baz baz baz");
 	g_assert_true(g_hash_table_contains(hash, "tail"));
+	g_assert_false(g_hash_table_contains(hash, ""));
 }
 
 static void

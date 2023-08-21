@@ -254,7 +254,7 @@ fu_kernel_parse_cmdline(const gchar *buf, gsize bufsz)
 	if (bufsz == 0)
 		return g_steal_pointer(&hash);
 	for (gsize i = 0; i < bufsz; i++) {
-		if (!is_escape && buf[i] == ' ' && acc->len > 0) {
+		if (!is_escape && (buf[i] == ' ' || buf[i] == '\n') && acc->len > 0) {
 			g_auto(GStrv) kv = g_strsplit(acc->str, "=", 2);
 			g_hash_table_insert(hash, g_strdup(kv[0]), g_strdup(kv[1]));
 			g_string_set_size(acc, 0);
