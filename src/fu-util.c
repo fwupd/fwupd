@@ -1617,6 +1617,24 @@ fu_util_report_history(FuUtilPrivate *priv, gchar **values, GError **error)
 }
 
 static gboolean
+fu_util_get_history_as_json(FuUtilPrivate *priv, GPtrArray *devs, GError **error)
+{
+	g_autoptr(JsonBuilder) builder = json_builder_new();
+	json_builder_begin_object(builder);
+	json_builder_set_member_name(builder, "Devices");
+	json_builder_begin_array(builder);
+	for (guint i = 0; i < devs->len; i++) {
+		FwupdDevice *dev = g_ptr_array_index(devs, i);
+		json_builder_begin_object(builder);
+		fwupd_device_to_json_full(dev, builder, FWUPD_DEVICE_FLAG_TRUSTED);
+		json_builder_end_object(builder);
+	}
+	json_builder_end_array(builder);
+	json_builder_end_object(builder);
+	return fu_util_print_builder(priv->console, builder, error);
+}
+
+static gboolean
 fu_util_get_history(FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(GPtrArray) devices = NULL;
@@ -1629,7 +1647,7 @@ fu_util_get_history(FuUtilPrivate *priv, gchar **values, GError **error)
 
 	/* not for human consumption */
 	if (priv->as_json)
-		return fu_util_get_devices_as_json(priv, devices, error);
+		return fu_util_get_history_as_json(priv, devices, error);
 
 	/* show each device */
 	for (guint i = 0; i < devices->len; i++) {
