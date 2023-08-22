@@ -192,7 +192,7 @@ fu_hid_descriptor_find_report(FuHidDescriptor *self, GError **error, ...)
 
 	/* parse varargs */
 	va_start(args, error);
-	for (guint i = 0;; i++) {
+	for (guint i = 0; i < 1000; i++) {
 		g_autofree FuHidDescriptorCondition *cond = g_new0(FuHidDescriptorCondition, 1);
 		cond->id = va_arg(args, const gchar *);
 		if (cond->id == NULL)
