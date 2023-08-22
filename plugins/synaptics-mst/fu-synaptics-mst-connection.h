@@ -75,33 +75,33 @@ gboolean
 fu_synaptics_mst_connection_read(FuSynapticsMstConnection *self,
 				 guint32 offset,
 				 guint8 *buf,
-				 guint32 length,
+				 gsize bufsz,
 				 GError **error);
 
 gboolean
 fu_synaptics_mst_connection_rc_set_command(FuSynapticsMstConnection *self,
 					   guint32 rc_cmd,
-					   guint32 length,
 					   guint32 offset,
 					   const guint8 *buf,
+					   gsize bufsz,
 					   GError **error);
 
 gboolean
 fu_synaptics_mst_connection_rc_get_command(FuSynapticsMstConnection *self,
 					   guint32 rc_cmd,
-					   guint32 length,
 					   guint32 offset,
 					   guint8 *buf,
+					   gsize bufsz,
 					   GError **error);
 
 gboolean
 fu_synaptics_mst_connection_rc_special_get_command(FuSynapticsMstConnection *self,
 						   guint32 rc_cmd,
-						   guint32 cmd_length,
 						   guint32 cmd_offset,
 						   guint8 *cmd_data,
-						   guint32 length,
+						   gsize cmd_datasz,
 						   guint8 *buf,
+						   gsize bufsz,
 						   GError **error);
 
 gboolean

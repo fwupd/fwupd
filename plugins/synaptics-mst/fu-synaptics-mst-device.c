@@ -202,11 +202,11 @@ fu_synaptics_mst_device_get_flash_checksum(FuSynapticsMstDevice *self,
 						     self->rad);
 	if (!fu_synaptics_mst_connection_rc_special_get_command(connection,
 								UPDC_CAL_EEPROM_CHECKSUM,
-								length,
 								offset,
 								NULL,
-								4,
+								length,
 								(guint8 *)checksum,
+								4,
 								error)) {
 		g_prefix_error(error, "failed to get flash checksum: ");
 		return FALSE;
@@ -302,9 +302,9 @@ fu_synaptics_mst_device_set_flash_sector_erase(FuSynapticsMstDevice *self,
 
 	if (!fu_synaptics_mst_connection_rc_set_command(connection,
 							UPDC_FLASH_ERASE,
-							2,
 							0,
 							(guint8 *)&us_data,
+							2,
 							error)) {
 		g_prefix_error(error, "can't sector erase flash at offset %x: ", offset);
 		return FALSE;
@@ -374,9 +374,9 @@ fu_synaptics_mst_device_update_esm(FuSynapticsMstDevice *self,
 			g_autoptr(GError) error_local = NULL;
 			if (!fu_synaptics_mst_connection_rc_set_command(connection,
 									UPDC_WRITE_TO_EEPROM,
-									unit_sz,
 									write_offset,
 									esm_code_ptr + write_idx,
+									unit_sz,
 									&error_local)) {
 				g_warning("failed to write ESM: %s", error_local->message);
 				break;
@@ -457,9 +457,9 @@ fu_synaptics_mst_device_update_tesla_leaf_firmware(FuSynapticsMstDevice *self,
 				length = data_to_write;
 			if (!fu_synaptics_mst_connection_rc_set_command(connection,
 									UPDC_WRITE_TO_EEPROM,
-									length,
 									offset,
 									payload_data + offset,
+									length,
 									&error_local)) {
 				g_warning("Failed to write flash offset 0x%04x: %s, retrying",
 					  offset,
@@ -468,9 +468,9 @@ fu_synaptics_mst_device_update_tesla_leaf_firmware(FuSynapticsMstDevice *self,
 				if (!fu_synaptics_mst_connection_rc_set_command(
 					connection,
 					UPDC_WRITE_TO_EEPROM,
-					length,
 					offset,
 					payload_data + offset,
+					length,
 					error)) {
 					g_prefix_error(error,
 						       "can't write flash offset 0x%04x: ",
@@ -524,9 +524,9 @@ fu_synaptics_mst_device_get_active_bank_panamera(FuSynapticsMstDevice *self, GEr
 						     self->rad);
 	if (!fu_synaptics_mst_connection_rc_get_command(connection,
 							UPDC_READ_FROM_MEMORY,
-							((sizeof(buf) / sizeof(buf[0])) * 4),
 							(gint)0x20010c,
 							(guint8 *)buf,
+							((sizeof(buf) / sizeof(buf[0])) * 4),
 							error)) {
 		g_prefix_error(error, "get active bank failed: ");
 		return FALSE;
@@ -625,18 +625,18 @@ fu_synaptics_mst_device_update_panamera_firmware(FuSynapticsMstDevice *self,
 			g_autoptr(GError) error_local = NULL;
 			if (!fu_synaptics_mst_connection_rc_set_command(connection,
 									UPDC_WRITE_TO_EEPROM,
-									unit_sz,
 									write_offset,
 									payload_data + write_idx,
+									unit_sz,
 									&error_local)) {
 				g_warning("Write failed: %s, retrying", error_local->message);
 				/* repeat once */
 				if (!fu_synaptics_mst_connection_rc_set_command(
 					connection,
 					UPDC_WRITE_TO_EEPROM,
-					unit_sz,
 					write_offset,
 					payload_data + write_idx,
+					unit_sz,
 					error)) {
 					g_prefix_error(error, "firmware write failed: ");
 					return FALSE;
@@ -655,11 +655,11 @@ fu_synaptics_mst_device_update_panamera_firmware(FuSynapticsMstDevice *self,
 			if (!fu_synaptics_mst_connection_rc_special_get_command(
 				connection,
 				UPDC_CAL_EEPROM_CHECK_CRC16,
-				fw_size,
 				(EEPROM_BANK_OFFSET * bank_to_update),
 				NULL,
-				4,
+				fw_size,
 				(guint8 *)(&flash_checksum),
+				4,
 				error)) {
 				g_prefix_error(error, "Failed to get flash checksum: ");
 				return FALSE;
@@ -705,9 +705,9 @@ fu_synaptics_mst_device_update_panamera_firmware(FuSynapticsMstDevice *self,
 		if (!fu_synaptics_mst_connection_rc_set_command(
 			connection,
 			UPDC_WRITE_TO_EEPROM,
-			16,
 			(EEPROM_BANK_OFFSET * bank_to_update + EEPROM_TAG_OFFSET),
 			tagData,
+			16,
 			error)) {
 			g_prefix_error(error, "failed to write tag: ");
 			return FALSE;
@@ -716,9 +716,9 @@ fu_synaptics_mst_device_update_panamera_firmware(FuSynapticsMstDevice *self,
 		if (!fu_synaptics_mst_connection_rc_get_command(
 			connection,
 			UPDC_READ_FROM_EEPROM,
-			16,
 			(EEPROM_BANK_OFFSET * bank_to_update + EEPROM_TAG_OFFSET),
 			readBuf,
+			16,
 			error)) {
 			g_prefix_error(error, "failed to read tag: ");
 			return FALSE;
@@ -744,9 +744,9 @@ fu_synaptics_mst_device_update_panamera_firmware(FuSynapticsMstDevice *self,
 	if (!fu_synaptics_mst_connection_rc_get_command(
 		connection,
 		UPDC_READ_FROM_EEPROM,
-		1,
 		(EEPROM_BANK_OFFSET * self->active_bank + EEPROM_TAG_OFFSET + 15),
 		tagData,
+		1,
 		error)) {
 		g_prefix_error(error, "failed to read tag from flash: ");
 		return FALSE;
@@ -771,9 +771,9 @@ fu_synaptics_mst_device_update_panamera_firmware(FuSynapticsMstDevice *self,
 			if (!fu_synaptics_mst_connection_rc_set_command(
 				connection,
 				UPDC_WRITE_TO_EEPROM,
-				1,
 				(EEPROM_BANK_OFFSET * self->active_bank + EEPROM_TAG_OFFSET + 15),
 				&tagData[1],
+				1,
 				error)) {
 				g_prefix_error(error, "failed to clear CRC: ");
 				return FALSE;
@@ -782,9 +782,9 @@ fu_synaptics_mst_device_update_panamera_firmware(FuSynapticsMstDevice *self,
 		if (!fu_synaptics_mst_connection_rc_get_command(
 			connection,
 			UPDC_READ_FROM_EEPROM,
-			1,
 			(EEPROM_BANK_OFFSET * self->active_bank + EEPROM_TAG_OFFSET + 15),
 			readBuf,
+			1,
 			error)) {
 			g_prefix_error(error, "failed to read CRC from flash: ");
 			return FALSE;
@@ -821,9 +821,9 @@ fu_synaptics_mst_device_panamera_prepare_write(FuSynapticsMstDevice *self, GErro
 	buf[0] = 0x21;
 	if (!fu_synaptics_mst_connection_rc_set_command(connection,
 							UPDC_WRITE_TO_MEMORY,
-							4,
 							(gint)REG_ESM_DISABLE,
 							(guint8 *)buf,
+							4,
 							error)) {
 		g_prefix_error(error, "ESM disable failed: ");
 		return FALSE;
@@ -835,9 +835,9 @@ fu_synaptics_mst_device_panamera_prepare_write(FuSynapticsMstDevice *self, GErro
 	/* disable QUAD mode */
 	if (!fu_synaptics_mst_connection_rc_get_command(connection,
 							UPDC_READ_FROM_MEMORY,
-							((sizeof(buf) / sizeof(buf[0])) * 4),
 							(gint)REG_QUAD_DISABLE,
 							(guint8 *)buf,
+							((sizeof(buf) / sizeof(buf[0])) * 4),
 							error)) {
 		g_prefix_error(error, "quad query failed: ");
 		return FALSE;
@@ -846,9 +846,9 @@ fu_synaptics_mst_device_panamera_prepare_write(FuSynapticsMstDevice *self, GErro
 	buf[0] = 0x00;
 	if (!fu_synaptics_mst_connection_rc_set_command(connection,
 							UPDC_WRITE_TO_MEMORY,
-							4,
 							(gint)REG_QUAD_DISABLE,
 							(guint8 *)buf,
+							4,
 							error)) {
 		g_prefix_error(error, "quad disable failed: ");
 		return FALSE;
@@ -857,9 +857,9 @@ fu_synaptics_mst_device_panamera_prepare_write(FuSynapticsMstDevice *self, GErro
 	/* disable HDCP2.2 */
 	if (!fu_synaptics_mst_connection_rc_get_command(connection,
 							UPDC_READ_FROM_MEMORY,
-							4,
 							(gint)REG_HDCP22_DISABLE,
 							(guint8 *)buf,
+							4,
 							error)) {
 		g_prefix_error(error, "HDCP query failed: ");
 		return FALSE;
@@ -868,9 +868,9 @@ fu_synaptics_mst_device_panamera_prepare_write(FuSynapticsMstDevice *self, GErro
 	buf[0] = buf[0] & (~BIT(2));
 	if (!fu_synaptics_mst_connection_rc_set_command(connection,
 							UPDC_WRITE_TO_MEMORY,
-							4,
 							(gint)REG_HDCP22_DISABLE,
 							(guint8 *)buf,
+							4,
 							error)) {
 		g_prefix_error(error, "HDCP disable failed: ");
 		return FALSE;
@@ -929,9 +929,9 @@ fu_synaptics_mst_device_update_cayenne_firmware(FuSynapticsMstDevice *self,
 				length = data_to_write;
 			if (!fu_synaptics_mst_connection_rc_set_command(connection,
 									UPDC_WRITE_TO_EEPROM,
-									length,
 									offset,
 									payload_data + offset,
+									length,
 									&error_local)) {
 				g_warning("Failed to write flash offset 0x%04x: %s, retrying",
 					  offset,
@@ -940,9 +940,9 @@ fu_synaptics_mst_device_update_cayenne_firmware(FuSynapticsMstDevice *self,
 				if (!fu_synaptics_mst_connection_rc_set_command(
 					connection,
 					UPDC_WRITE_TO_EEPROM,
-					length,
 					offset,
 					payload_data + offset,
+					length,
 					error)) {
 					g_prefix_error(error,
 						       "can't write flash offset 0x%04x: ",
@@ -959,11 +959,11 @@ fu_synaptics_mst_device_update_cayenne_firmware(FuSynapticsMstDevice *self,
 		checksum = fu_synaptics_mst_device_get_crc(0, 16, payload_len, payload_data);
 		if (!fu_synaptics_mst_connection_rc_special_get_command(connection,
 									UPDC_CAL_EEPROM_CHECK_CRC16,
-									payload_len,
 									0,
 									NULL,
-									4,
+									payload_len,
 									(guint8 *)(&flash_checksum),
+									4,
 									error)) {
 			g_prefix_error(error, "Failed to get flash checksum: ");
 			return FALSE;
@@ -989,8 +989,8 @@ fu_synaptics_mst_device_update_cayenne_firmware(FuSynapticsMstDevice *self,
 	if (!fu_synaptics_mst_connection_rc_set_command(connection,
 							UPDC_ACTIVATE_FIRMWARE,
 							0,
-							0,
 							NULL,
+							0,
 							error)) {
 		g_prefix_error(error, "active firmware failed: ");
 		return FALSE;
@@ -1030,9 +1030,9 @@ fu_synaptics_mst_device_restart(FuSynapticsMstDevice *self, GError **error)
 						     self->rad);
 	if (!fu_synaptics_mst_connection_rc_set_command(connection,
 							UPDC_WRITE_TO_MEMORY,
-							4,
 							offset,
 							(guint8 *)&buf,
+							4,
 							&error_local))
 		g_debug("failed to restart: %s", error_local->message);
 
@@ -1246,9 +1246,9 @@ fu_synaptics_mst_device_read_board_id(FuSynapticsMstDevice *self,
 	/* get board ID via MCU address 0x170E instead of flash access due to HDCP2.2 running */
 	if (!fu_synaptics_mst_connection_rc_get_command(connection,
 							UPDC_READ_FROM_MEMORY,
-							2,
 							offset,
 							byte,
+							2,
 							error)) {
 		g_prefix_error(error, "Memory query failed: ");
 		return FALSE;
