@@ -139,11 +139,11 @@ fu_msr_plugin_to_string(FuPlugin *plugin, guint idt, GString *str)
 		fu_string_append_kb(str,
 				    idt,
 				    "GdsMitgDis",
-				    self->ia32_mcu_opt_ctrl.fields.gds_mitg_dis);
+				    self->ia32_mcu_opt_ctrl.fields.gds_mitg_dis > 0);
 		fu_string_append_kb(str,
 				    idt,
 				    "GdsMitgLock",
-				    self->ia32_mcu_opt_ctrl.fields.gds_mitg_lock);
+				    self->ia32_mcu_opt_ctrl.fields.gds_mitg_lock > 0);
 	}
 	if (self->amd64_syscfg_supported) {
 		fu_string_append_kb(str,
