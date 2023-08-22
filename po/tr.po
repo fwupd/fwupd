@@ -282,6 +282,7 @@ msgstr "İptal Edildi"
 msgid "Changed"
 msgstr "Değişti"
 
+#. TRANSLATORS: hash to that exact firmware archive
 #. TRANSLATORS: remote checksum
 msgid "Checksum"
 msgstr "Sağlama Toplamı"

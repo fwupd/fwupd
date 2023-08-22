@@ -421,6 +421,7 @@ msgstr "Geannuleerd"
 msgid "Changed"
 msgstr "Gewijzigd"
 
+#. TRANSLATORS: hash to that exact firmware archive
 #. TRANSLATORS: remote checksum
 msgid "Checksum"
 msgstr "Controlesom"

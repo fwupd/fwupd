@@ -315,6 +315,7 @@ msgstr "Negalima taikyti, nes dbx atnaujinimas jau yra pritaikytas."
 msgid "Changed"
 msgstr "Pakeistas"
 
+#. TRANSLATORS: hash to that exact firmware archive
 #. TRANSLATORS: remote checksum
 msgid "Checksum"
 msgstr "Kontrolinė suma"
@@ -914,10 +915,6 @@ msgstr "Gerai"
 #. TRANSLATORS: command line option
 msgid "Only show single PCR value"
 msgstr "Rodyti tik vieną PCR reikšmę"
-
-#. TRANSLATORS: command line option
-msgid "Only use IPFS when downloading files"
-msgstr "Naudoti IPFS tik atsisiunčiant failus"
 
 #. TRANSLATORS: command line option
 msgid "Output in JSON format"

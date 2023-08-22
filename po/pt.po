@@ -4,6 +4,7 @@
 #
 # Translators:
 # Hugo Carvalho <hugokarvalho@hotmail.com>, 2021
+# Luis Filipe Teixeira <lufilte@gmail.com>, 2023
 # Peter J. Mello <admin@petermello.net>, 2020
 msgid ""
 msgstr ""
@@ -340,12 +341,20 @@ msgid "Authentication is required to downgrade the firmware on this machine"
 msgstr "Autenticação é necessária para fazer downgrade da versão do firmware nesta máquina"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to modify BIOS settings"
+msgstr "A autenticação é necessária para modificar as definições do BIOS"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify a configured remote used for firmware updates"
 msgstr "Autenticação é necessária para modificar um remoto configurado usado para atualizações de firmware"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify daemon configuration"
 msgstr "Autenticação é necessária para modificar uma configuração de daemon"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to read BIOS settings"
+msgstr "A autenticação é necessária para ler as definições do BIOS"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to set the list of approved firmware"
@@ -382,6 +391,10 @@ msgstr "Relatórios automáticos"
 #. TRANSLATORS: can we JFDI?
 msgid "Automatically upload every time?"
 msgstr "Enviar automaticamente toda vez?"
+
+#. TRANSLATORS: description of a BIOS setting
+msgid "BIOS updates delivered via LVFS or Windows Update"
+msgstr "Atualizações do BIOS fornecidas via LVFS ou Windows Update"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "BUILDER-XML FILENAME-DST"
@@ -443,9 +456,14 @@ msgstr "Alterado"
 msgid "Checks cryptographic hash matches firmware"
 msgstr "Verifica se o hash criptográfico corresponde ao firmware"
 
+#. TRANSLATORS: hash to that exact firmware archive
 #. TRANSLATORS: remote checksum
 msgid "Checksum"
 msgstr "Soma de verificação"
+
+#. TRANSLATORS: get interactive prompt
+msgid "Choose the ESP:"
+msgstr "Selecione o ESP:"
 
 #. TRANSLATORS: command description
 msgid "Clears the results from the last update"
@@ -713,6 +731,9 @@ msgstr "Duração"
 msgid "ESP specified was not valid"
 msgstr "A ESP especificada não era válida"
 
+msgid "Enable"
+msgstr "Ativar"
+
 #. TRANSLATORS: command line option
 msgid "Enable firmware update support on supported systems"
 msgstr "Ativa suporte a atualização de firmware em sistemas suportados"
@@ -941,13 +962,6 @@ msgstr[0] "Os metadados do firmware não foram atualizados a %u dia e podem não
 msgstr[1] "Os metadados do firmware não foram atualizados a %u dias e podem não estar atualizados."
 msgstr[2] "Os metadados do firmware não foram atualizados a %u dias e podem não estar atualizados."
 
-#. TRANSLATORS: error message for a user who ran fwupdmgr
-#. refresh recently %1 is an already translated timestamp such
-#. as 6 hours or 15 seconds
-#, c-format
-msgid "Firmware metadata last refresh: %s ago. Use --force to refresh again."
-msgstr "Última atualização dos metadados do firmware: %s atrás. Use --force para atualizar novamente."
-
 #. TRANSLATORS: Title: if firmware updates are available
 msgid "Firmware updates"
 msgstr "Atualizações de firmware"
@@ -997,6 +1011,9 @@ msgstr "GUID"
 msgctxt "command-argument"
 msgid "GUID"
 msgstr "GUID"
+
+msgid "Get BIOS settings"
+msgstr "Obter definições do BIOS"
 
 #. TRANSLATORS: command description
 msgid "Get all device flags supported by fwupd"
@@ -1090,6 +1107,12 @@ msgstr "Ignorando as verificações estritas de SSL; para fazer isso automaticam
 #. TRANSLATORS: length of time the update takes to apply
 msgid "Install Duration"
 msgstr "Duração de instalação"
+
+msgid "Install old version of signed system firmware"
+msgstr "Instalar a versão antiga do firmware do sistema assinado"
+
+msgid "Install old version of unsigned system firmware"
+msgstr "Instalar a versão antiga do firmware do sistema não assinado"
 
 msgid "Install signed device firmware"
 msgstr "Instalar firmware assinado no dispositivo"
@@ -1389,10 +1412,6 @@ msgstr "OK!"
 msgid "Only show single PCR value"
 msgstr "Mostra apenas valor único de PCR"
 
-#. TRANSLATORS: command line option
-msgid "Only use IPFS when downloading files"
-msgstr "Usa apenas IPFS ao baixar ficheiros"
-
 #. TRANSLATORS: some devices can only be updated to a new semver and cannot
 #. * be downgraded or reinstalled with the existing version
 msgid "Only version upgrades are allowed"
@@ -1440,6 +1459,10 @@ msgstr "Percentagem concluída"
 #. TRANSLATORS: prompt to apply the update
 msgid "Perform operation?"
 msgstr "Efetuar a operação?"
+
+#. TRANSLATORS: Title: Allows debugging of parts using proprietary hardware
+msgid "Platform debugging"
+msgstr "Depuração de plataforma"
 
 #. TRANSLATORS: the user isn't reading the question
 #, c-format
@@ -1562,6 +1585,10 @@ msgstr "URI do relatório"
 msgid "Reported to remote server"
 msgstr "Relatado ao servidor remoto"
 
+#. TRANSLATORS: we asked the user to choose an option and they declined
+msgid "Request canceled"
+msgstr "Pedido cancelado"
+
 #. TRANSLATORS: the user is using Gentoo/Arch and has screwed something up
 msgid "Required efivarfs filesystem was not found"
 msgstr "O sistema de ficheiros efivarfs necessário não foi encontrado"
@@ -1597,6 +1624,10 @@ msgstr "Retorna todos os IDs de hardware para a máquina"
 #. TRANSLATORS: this is shown in the MOTD
 msgid "Run `fwupdmgr get-upgrades` for more information."
 msgstr "Execute `fwupdmgr get-upgrades` para mais informações."
+
+#. TRANSLATORS: this is shown in the MOTD
+msgid "Run `fwupdmgr sync-bkc` to complete this action."
+msgstr "Execute `fwupdmgr sync-bkc` para concluir esta ação."
 
 #. TRANSLATORS: command line option
 msgid "Run the plugin composite cleanup routine when using install-blob"
@@ -1663,6 +1694,9 @@ msgstr "Volume selecionado"
 msgid "Serial Number"
 msgstr "Número de série"
 
+msgid "Set one or more BIOS settings"
+msgstr "Definir uma ou mais definições do BIOS"
+
 #. TRANSLATORS: command line option
 msgid "Set the debugging flag during update"
 msgstr "Define a opção de depuração durante atualização"
@@ -1670,6 +1704,10 @@ msgstr "Define a opção de depuração durante atualização"
 #. TRANSLATORS: firmware approved by the admin
 msgid "Sets the list of approved firmware"
 msgstr "Define a lista de firmwares aprovados"
+
+#. TRANSLATORS: description of a BIOS setting
+msgid "Settings will apply after system reboots"
+msgstr "As definições serão aplicadas após a reinicialização do sistema"
 
 #. TRANSLATORS: command description
 msgid "Share firmware history with the developers"
@@ -1827,6 +1865,10 @@ msgstr "Resumo"
 msgid "Supported"
 msgstr "Suportado"
 
+#. TRANSLATORS: Title: if fwupd supports HSI on this chip
+msgid "Supported CPU"
+msgstr "CPU suportado"
+
 #. TRANSLATORS: Is found in current metadata
 msgid "Supported on remote server"
 msgstr "Suporte no servidor remoto"
@@ -1860,6 +1902,11 @@ msgstr "TEXTO"
 #. TRANSLATORS: Title: the PCR is rebuilt from the TPM event log
 msgid "TPM PCR0 reconstruction"
 msgstr "Reconstrução de PCR0 de TPM"
+
+#. TRANSLATORS: Title: PCRs (Platform Configuration Registers) shouldn't be
+#. empty
+msgid "TPM empty PCRs"
+msgstr "PCRs vazios de TPM"
 
 #. TRANSLATORS: Title: TPM = Trusted Platform Module
 msgid "TPM v2.0"
@@ -1971,6 +2018,10 @@ msgstr "Partição UEFI ESP não detectada ou configurada"
 #. TRANSLATORS: program name
 msgid "UEFI Firmware Utility"
 msgstr "Utilitário de Firmware UEFI"
+
+#. TRANSLATORS: Title: Bootservice is when only readable from early-boot
+msgid "UEFI bootservice variables"
+msgstr "Variáveis do serviço de arranque UEFI"
 
 #. TRANSLATORS: capsule updates are an optional BIOS feature
 msgid "UEFI capsule updates not available or enabled in firmware setup"
@@ -2165,6 +2216,10 @@ msgstr "A verificar…"
 #. TRANSLATORS: the detected version number of the dbx
 msgid "Version"
 msgstr "Versão"
+
+#. TRANSLATORS: this is a prefix on the console
+msgid "WARNING"
+msgstr "ATENÇÃO"
 
 #. TRANSLATORS: waiting for device to do something
 msgid "Waiting…"

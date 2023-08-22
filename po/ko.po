@@ -608,6 +608,7 @@ msgstr "바뀜"
 msgid "Checks cryptographic hash matches firmware"
 msgstr "암호화 해시가 펌웨어와 일치하는지 확인"
 
+#. TRANSLATORS: hash to that exact firmware archive
 #. TRANSLATORS: remote checksum
 msgid "Checksum"
 msgstr "체크섬"
@@ -1329,13 +1330,6 @@ msgid "Firmware metadata has not been updated for %u day and may not be up to da
 msgid_plural "Firmware metadata has not been updated for %u days and may not be up to date."
 msgstr[0] "펌웨어 메타데이터가 %u일 동안 업데이트되지 않았으므로 최신 정보가 누락되었을 수도 있습니다."
 
-#. TRANSLATORS: error message for a user who ran fwupdmgr
-#. refresh recently %1 is an already translated timestamp such
-#. as 6 hours or 15 seconds
-#, c-format
-msgid "Firmware metadata last refresh: %s ago. Use --force to refresh again."
-msgstr "펌웨어 메타데이터 최근 새로 고침: %s 전. 다시 새로 고치려면 --force 옵션을 사용하십시오."
-
 #. TRANSLATORS: Title: if firmware updates are available
 msgid "Firmware updates"
 msgstr "펌웨어 업데이트"
@@ -2043,10 +2037,6 @@ msgstr "이전 버전"
 #. TRANSLATORS: command line option
 msgid "Only show single PCR value"
 msgstr "단일 PCR 값만 표시"
-
-#. TRANSLATORS: command line option
-msgid "Only use IPFS when downloading files"
-msgstr "파일을 다운로드할 때 IPFS만 사용"
 
 #. TRANSLATORS: some devices can only be updated to a new semver and cannot
 #. * be downgraded or reinstalled with the existing version

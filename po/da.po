@@ -435,6 +435,7 @@ msgstr "Ændret"
 msgid "Checks cryptographic hash matches firmware"
 msgstr "Tjekker om den kryptografiske hash passer med firmwaren"
 
+#. TRANSLATORS: hash to that exact firmware archive
 #. TRANSLATORS: remote checksum
 msgid "Checksum"
 msgstr "Checksum"
@@ -932,13 +933,6 @@ msgid_plural "Firmware metadata has not been updated for %u days and may not be 
 msgstr[0] "Firmwaremetadata er ikke blevet opdateret i %u dag og kan være forældet."
 msgstr[1] "Firmwaremetadata er ikke blevet opdateret i %u dage og kan være forældet."
 
-#. TRANSLATORS: error message for a user who ran fwupdmgr
-#. refresh recently %1 is an already translated timestamp such
-#. as 6 hours or 15 seconds
-#, c-format
-msgid "Firmware metadata last refresh: %s ago. Use --force to refresh again."
-msgstr "Sidste opdatering af firmwaremetadata: %s siden. Brug --force til at opdatere igen."
-
 #. TRANSLATORS: Title: if firmware updates are available
 msgid "Firmware updates"
 msgstr "Firmwareopdateringer"
@@ -1373,10 +1367,6 @@ msgstr "OK"
 #. TRANSLATORS: command line option
 msgid "Only show single PCR value"
 msgstr "Vis kun én PCR-værdi"
-
-#. TRANSLATORS: command line option
-msgid "Only use IPFS when downloading files"
-msgstr "Brug kun IPFS når filer downloades"
 
 #. TRANSLATORS: some devices can only be updated to a new semver and cannot
 #. * be downgraded or reinstalled with the existing version

@@ -75,6 +75,7 @@ msgstr "Gekanselleer"
 msgid "Changed"
 msgstr "Verander"
 
+#. TRANSLATORS: hash to that exact firmware archive
 #. TRANSLATORS: remote checksum
 msgid "Checksum"
 msgstr "Kontrolesom"

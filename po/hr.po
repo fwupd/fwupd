@@ -610,6 +610,7 @@ msgstr "Promijenjeno"
 msgid "Checks cryptographic hash matches firmware"
 msgstr "Provjeri podudarnost kriptografske jedinstvene vrijednosti firmvera"
 
+#. TRANSLATORS: hash to that exact firmware archive
 #. TRANSLATORS: remote checksum
 msgid "Checksum"
 msgstr "Kontrolni zbroj"
@@ -1317,13 +1318,6 @@ msgstr[0] "Metapodaci firmvera nisu nadopunjeni %u dan i možda nisu najnoviji."
 msgstr[1] "Metapodaci firmvera nisu nadopunjeni %u dana i možda nisu najnoviji."
 msgstr[2] "Metapodaci firmvera nisu nadopunjeni %u dana i možda nisu najnoviji."
 
-#. TRANSLATORS: error message for a user who ran fwupdmgr
-#. refresh recently %1 is an already translated timestamp such
-#. as 6 hours or 15 seconds
-#, c-format
-msgid "Firmware metadata last refresh: %s ago. Use --force to refresh again."
-msgstr "Posljednja provjera metapodatka frimvera: prije %s. Koristite --force za ponovnu provjeru."
-
 #. TRANSLATORS: Title: if firmware updates are available
 msgid "Firmware updates"
 msgstr "Nadopune frimvera"
@@ -1990,10 +1984,6 @@ msgstr "Stara inačica"
 #. TRANSLATORS: command line option
 msgid "Only show single PCR value"
 msgstr "Prikaži samo jednu PRC vrijednost"
-
-#. TRANSLATORS: command line option
-msgid "Only use IPFS when downloading files"
-msgstr "Koristi samo IPFS pri preuzimanju datoteka"
 
 #. TRANSLATORS: some devices can only be updated to a new semver and cannot
 #. * be downgraded or reinstalled with the existing version

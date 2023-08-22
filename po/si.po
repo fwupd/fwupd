@@ -3,7 +3,7 @@
 # This file is distributed under the same license as the fwupd package.
 #
 # Translators:
-# හෙළබස සමූහය, 2021-2022
+# HelaBasa Group <transifex-helabasa-group@yalu.lk>, 2021-2022
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
@@ -515,6 +515,7 @@ msgstr "වෙනස් විය"
 msgid "Checks cryptographic hash matches firmware"
 msgstr "ගුප්ත ලේඛන හැෂ් ගැලපීම් ස්ථිරාංග පරීක්ෂා කරයි"
 
+#. TRANSLATORS: hash to that exact firmware archive
 #. TRANSLATORS: remote checksum
 msgid "Checksum"
 msgstr "චෙක්සම්"
@@ -1071,13 +1072,6 @@ msgid_plural "Firmware metadata has not been updated for %u days and may not be 
 msgstr[0] "ස්ථිරාංග පාරදත්ත දින %u ක් සඳහා යාවත්කාලීන කර නොමැති අතර යාවත්කාලීන නොවිය හැක."
 msgstr[1] "ස්ථිරාංග පාරදත්ත දින %u ක් සඳහා යාවත්කාලීන කර නොමැති අතර යාවත්කාලීන නොවිය හැක."
 
-#. TRANSLATORS: error message for a user who ran fwupdmgr
-#. refresh recently %1 is an already translated timestamp such
-#. as 6 hours or 15 seconds
-#, c-format
-msgid "Firmware metadata last refresh: %s ago. Use --force to refresh again."
-msgstr "ස්ථිරාංග පාරදත්ත අවසන් වරට නැවුම් කළේ: %s පෙර. නැවත නැවුම් කිරීමට --force භාවිතා කරන්න."
-
 #. TRANSLATORS: Title: if firmware updates are available
 msgid "Firmware updates"
 msgstr "ස්ථිරාංග යාවත්කාල"
@@ -1583,10 +1577,6 @@ msgstr "හරි!"
 #. TRANSLATORS: command line option
 msgid "Only show single PCR value"
 msgstr "තනි PCR අගය පමණක් පෙන්වන්න"
-
-#. TRANSLATORS: command line option
-msgid "Only use IPFS when downloading files"
-msgstr "ගොනු බාගත කිරීමේදී පමණක් IPFS භාවිතා කරන්න"
 
 #. TRANSLATORS: some devices can only be updated to a new semver and cannot
 #. * be downgraded or reinstalled with the existing version

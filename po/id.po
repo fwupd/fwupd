@@ -596,6 +596,7 @@ msgstr "Diubah"
 msgid "Checks cryptographic hash matches firmware"
 msgstr "Memeriksa apakah hash kriptografis cocok dengan firmware"
 
+#. TRANSLATORS: hash to that exact firmware archive
 #. TRANSLATORS: remote checksum
 msgid "Checksum"
 msgstr "Checksum"
@@ -1293,13 +1294,6 @@ msgid "Firmware metadata has not been updated for %u day and may not be up to da
 msgid_plural "Firmware metadata has not been updated for %u days and may not be up to date."
 msgstr[0] "Metadata firmware belum diperbarui selama %uhari dan mungkin tidak mutakhir."
 
-#. TRANSLATORS: error message for a user who ran fwupdmgr
-#. refresh recently %1 is an already translated timestamp such
-#. as 6 hours or 15 seconds
-#, c-format
-msgid "Firmware metadata last refresh: %s ago. Use --force to refresh again."
-msgstr "Penyegaran terakhir metadata firmware: %s yang lalu. Gunakan --force untuk menyegarkan lagi."
-
 #. TRANSLATORS: Title: if firmware updates are available
 msgid "Firmware updates"
 msgstr "Pemutakhiran firmware"
@@ -1923,10 +1917,6 @@ msgstr "Versi lama"
 #. TRANSLATORS: command line option
 msgid "Only show single PCR value"
 msgstr "Hanya tampilkan nilai PCR tunggal"
-
-#. TRANSLATORS: command line option
-msgid "Only use IPFS when downloading files"
-msgstr "Hanya menggunakan IPFS saat mengunduh berkas"
 
 #. TRANSLATORS: some devices can only be updated to a new semver and cannot
 #. * be downgraded or reinstalled with the existing version

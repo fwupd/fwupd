@@ -401,6 +401,7 @@ msgstr "Не удалось применить обновления с порт�
 msgid "Changed"
 msgstr "Изменено"
 
+#. TRANSLATORS: hash to that exact firmware archive
 #. TRANSLATORS: remote checksum
 msgid "Checksum"
 msgstr "Контрольная сумма"

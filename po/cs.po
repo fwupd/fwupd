@@ -637,6 +637,7 @@ msgstr "Změněno"
 msgid "Checks cryptographic hash matches firmware"
 msgstr "Zkontrolovat zda se kryptografický otisk shoduje s firmware"
 
+#. TRANSLATORS: hash to that exact firmware archive
 #. TRANSLATORS: remote checksum
 msgid "Checksum"
 msgstr "Kontrolní součet"
@@ -947,6 +948,10 @@ msgstr "Neprovádět přípravné kontroly zařízení"
 #. TRANSLATORS: command line option
 msgid "Do not prompt for devices"
 msgstr "Nedotazovat se na zařízení"
+
+#. TRANSLATORS: command line option
+msgid "Do not prompt to fix security issues"
+msgstr "Nevyzývat k opravení problémů se zabezpečením"
 
 #. TRANSLATORS: command line option
 msgid "Do not search the firmware when parsing"
@@ -1368,13 +1373,6 @@ msgstr[1] "Metadata o firmwarech nebyla aktualizována už celé %u dny a nemus�
 msgstr[2] "Metadata o firmwarech nebyla aktualizována už celých %u dní a nemusí být proto aktuální."
 msgstr[3] "Metadata o firmwarech nebyla aktualizována už celé %u dny a nemusí být proto aktuální."
 
-#. TRANSLATORS: error message for a user who ran fwupdmgr
-#. refresh recently %1 is an already translated timestamp such
-#. as 6 hours or 15 seconds
-#, c-format
-msgid "Firmware metadata last refresh: %s ago. Use --force to refresh again."
-msgstr "Metadata ohledně firmwarů byla naposledy aktualizována před pouhými: %s. Pokud přesto chcete znovu načíst, použijte --force."
-
 #. TRANSLATORS: Title: if firmware updates are available
 msgid "Firmware updates"
 msgstr "Aktualizace firmware"
@@ -1593,6 +1591,10 @@ msgstr "Nainstalovat soubor s firmwarem (ve formátu cab) na tento hardware"
 #. TRANSLATORS: command description
 msgid "Install a raw firmware blob on a device"
 msgstr "Nainstalovat na zařízení holý binární soubor s firmwarem"
+
+#. TRANSLATORS: command description
+msgid "Install a specific firmware file on all devices that match"
+msgstr "Nainstalovat konkrétní soubor s firmware na všech zařízeních, se kterými je ve shodě"
 
 #. TRANSLATORS: command description
 msgid "Install a specific firmware on a device, all possible devices will also be installed once the CAB matches"
@@ -2104,8 +2106,8 @@ msgid "Only show single PCR value"
 msgstr "Zobrazit pouze jedinou PCR hodnotu"
 
 #. TRANSLATORS: command line option
-msgid "Only use IPFS when downloading files"
-msgstr "IFPS použít pouze při stahování souborů"
+msgid "Only use peer-to-peer networking when downloading files"
+msgstr "Stahovat soubory pouze ze sítě klient-klient (p2p)"
 
 #. TRANSLATORS: some devices can only be updated to a new semver and cannot
 #. * be downgraded or reinstalled with the existing version
@@ -2290,6 +2292,10 @@ msgstr "Čtení…"
 #. TRANSLATORS: console message when not using plymouth
 msgid "Rebooting…"
 msgstr "Restartování…"
+
+#. TRANSLATORS: how often we should refresh the metadata
+msgid "Refresh Interval"
+msgstr "Interval opětovného načítání"
 
 #. TRANSLATORS: command description
 msgid "Refresh metadata from remote server"

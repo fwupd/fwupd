@@ -539,6 +539,7 @@ msgstr "Geändert"
 msgid "Checks cryptographic hash matches firmware"
 msgstr "Überprüft, ob der kryptografische Hash mit der Firmware übereinstimmt"
 
+#. TRANSLATORS: hash to that exact firmware archive
 #. TRANSLATORS: remote checksum
 msgid "Checksum"
 msgstr "Prüfsumme"
@@ -1730,10 +1731,6 @@ msgstr "Alte Version"
 #. TRANSLATORS: command line option
 msgid "Only show single PCR value"
 msgstr "Nur einzelnen PCR-Wert anzeigen"
-
-#. TRANSLATORS: command line option
-msgid "Only use IPFS when downloading files"
-msgstr "IPFS nur beim Herunterladen von Dateien verwenden"
 
 #. TRANSLATORS: some devices can only be updated to a new semver and cannot
 #. * be downgraded or reinstalled with the existing version

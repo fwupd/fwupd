@@ -634,6 +634,7 @@ msgstr "Zmieniono"
 msgid "Checks cryptographic hash matches firmware"
 msgstr "Sprawdza, czy kryptograficzna suma kontrolna pasuje do oprogramowania sprzętowego"
 
+#. TRANSLATORS: hash to that exact firmware archive
 #. TRANSLATORS: remote checksum
 msgid "Checksum"
 msgstr "Suma kontrolna"
@@ -940,6 +941,10 @@ msgstr "Bez wykonywania testów bezpieczeństwa urządzenia"
 #. TRANSLATORS: command line option
 msgid "Do not prompt for devices"
 msgstr "Bez pytania o urządzenia"
+
+#. TRANSLATORS: command line option
+msgid "Do not prompt to fix security issues"
+msgstr "Bez pytania o naprawienie problemów zabezpieczeń"
 
 #. TRANSLATORS: command line option
 msgid "Do not search the firmware when parsing"
@@ -1335,13 +1340,6 @@ msgstr[1] "Metadane oprogramowania sprzętowego nie zostały zaktualizowane prze
 msgstr[2] "Metadane oprogramowania sprzętowego nie zostały zaktualizowane przez %u dni i mogą nie być aktualne."
 msgstr[3] "Metadane oprogramowania sprzętowego nie zostały zaktualizowane przez %u dni i mogą nie być aktualne."
 
-#. TRANSLATORS: error message for a user who ran fwupdmgr
-#. refresh recently %1 is an already translated timestamp such
-#. as 6 hours or 15 seconds
-#, c-format
-msgid "Firmware metadata last refresh: %s ago. Use --force to refresh again."
-msgstr "Ostatnie odświeżenie metadanych oprogramowania sprzętowego: %s temu. Parametr --force odświeży ponownie."
-
 #. TRANSLATORS: Title: if firmware updates are available
 msgid "Firmware updates"
 msgstr "Aktualizacje oprogramowania sprzętowego"
@@ -1556,6 +1554,10 @@ msgstr "Instaluje plik oprogramowania sprzętowego w formacie CAB na tym sprzę
 #. TRANSLATORS: command description
 msgid "Install a raw firmware blob on a device"
 msgstr "Instaluje surowe zamknięte oprogramowanie sprzętowe na urządzeniu"
+
+#. TRANSLATORS: command description
+msgid "Install a specific firmware file on all devices that match"
+msgstr "Instaluje podany plik oprogramowania sprzętowego na wszystkich pasujących urządzeniach"
 
 #. TRANSLATORS: command description
 msgid "Install a specific firmware on a device, all possible devices will also be installed once the CAB matches"
@@ -2034,8 +2036,8 @@ msgid "Only show single PCR value"
 msgstr "Wyświetla tylko jedną wartość PCR"
 
 #. TRANSLATORS: command line option
-msgid "Only use IPFS when downloading files"
-msgstr "Używa IPFS tylko podczas pobierania plików"
+msgid "Only use peer-to-peer networking when downloading files"
+msgstr "Używa tylko sieci P2P podczas pobierania plików"
 
 #. TRANSLATORS: some devices can only be updated to a new semver and cannot
 #. * be downgraded or reinstalled with the existing version
@@ -2212,6 +2214,10 @@ msgstr "Odczytywanie…"
 #. TRANSLATORS: console message when not using plymouth
 msgid "Rebooting…"
 msgstr "Ponowne uruchamianie…"
+
+#. TRANSLATORS: how often we should refresh the metadata
+msgid "Refresh Interval"
+msgstr "Czas między odświeżeniami"
 
 #. TRANSLATORS: command description
 msgid "Refresh metadata from remote server"

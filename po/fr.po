@@ -210,6 +210,7 @@ msgstr "Modifié"
 msgid "Checks cryptographic hash matches firmware"
 msgstr "Vérifie que l'empreinte cryptographique correspond au micrologiciel"
 
+#. TRANSLATORS: hash to that exact firmware archive
 #. TRANSLATORS: remote checksum
 msgid "Checksum"
 msgstr "Somme de contrôle"
@@ -662,10 +663,6 @@ msgstr "Non pris en charge"
 #. TRANSLATORS: Suffix: the HSI result
 msgid "OK"
 msgstr "OK"
-
-#. TRANSLATORS: command line option
-msgid "Only use IPFS when downloading files"
-msgstr "N'utiliser IPFS que lors du téléchargement de fichiers"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "PATH"

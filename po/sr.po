@@ -79,6 +79,7 @@ msgstr "Отказао"
 msgid "Changed"
 msgstr "Променио"
 
+#. TRANSLATORS: hash to that exact firmware archive
 #. TRANSLATORS: remote checksum
 msgid "Checksum"
 msgstr "Чек-сума"

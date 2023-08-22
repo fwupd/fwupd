@@ -329,6 +329,7 @@ msgstr "შეწყვეტილია"
 msgid "Changed"
 msgstr "შეცვლილია"
 
+#. TRANSLATORS: hash to that exact firmware archive
 #. TRANSLATORS: remote checksum
 msgid "Checksum"
 msgstr "საკონტროლო რიცხვი"

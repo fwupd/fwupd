@@ -99,6 +99,7 @@ msgstr "已取消"
 msgid "Changed"
 msgstr "已變更"
 
+#. TRANSLATORS: hash to that exact firmware archive
 #. TRANSLATORS: remote checksum
 msgid "Checksum"
 msgstr "校驗計算碼"

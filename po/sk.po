@@ -53,6 +53,7 @@ msgstr "Zrušené"
 msgid "Changed"
 msgstr "Zmenené"
 
+#. TRANSLATORS: hash to that exact firmware archive
 #. TRANSLATORS: remote checksum
 msgid "Checksum"
 msgstr "Kontrolný medzisúčet"

@@ -431,6 +431,7 @@ msgstr "已变更"
 msgid "Checks cryptographic hash matches firmware"
 msgstr "检查加密哈希与固件是否匹配"
 
+#. TRANSLATORS: hash to that exact firmware archive
 #. TRANSLATORS: remote checksum
 msgid "Checksum"
 msgstr "校验和"
@@ -927,13 +928,6 @@ msgid "Firmware metadata has not been updated for %u day and may not be up to da
 msgid_plural "Firmware metadata has not been updated for %u days and may not be up to date."
 msgstr[0] "固件元数据已有 %u 天未更新，数据可能不是最新的。"
 
-#. TRANSLATORS: error message for a user who ran fwupdmgr
-#. refresh recently %1 is an already translated timestamp such
-#. as 6 hours or 15 seconds
-#, c-format
-msgid "Firmware metadata last refresh: %s ago. Use --force to refresh again."
-msgstr "固件元数据上次刷新：%s前。使用 --force 再次刷新。"
-
 #. TRANSLATORS: Title: if firmware updates are available
 msgid "Firmware updates"
 msgstr "固件更新"
@@ -1380,10 +1374,6 @@ msgstr "确定"
 #. TRANSLATORS: command line option
 msgid "Only show single PCR value"
 msgstr "只显示单 PCR 值"
-
-#. TRANSLATORS: command line option
-msgid "Only use IPFS when downloading files"
-msgstr "下载文件时只使用 IPFS"
 
 #. TRANSLATORS: some devices can only be updated to a new semver and cannot
 #. * be downgraded or reinstalled with the existing version

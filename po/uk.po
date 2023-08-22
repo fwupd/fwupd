@@ -634,6 +634,7 @@ msgstr "Змінено"
 msgid "Checks cryptographic hash matches firmware"
 msgstr "Перевірити відповідність криптографічних хешів мікропрограми"
 
+#. TRANSLATORS: hash to that exact firmware archive
 #. TRANSLATORS: remote checksum
 msgid "Checksum"
 msgstr "Контрольна сума"
@@ -944,6 +945,10 @@ msgstr "Не виконувати перевірок безпечності дл
 #. TRANSLATORS: command line option
 msgid "Do not prompt for devices"
 msgstr "Не запитувати про пристрої"
+
+#. TRANSLATORS: command line option
+msgid "Do not prompt to fix security issues"
+msgstr "Не питати про дії щодо проблем із захистом"
 
 #. TRANSLATORS: command line option
 msgid "Do not search the firmware when parsing"
@@ -1365,13 +1370,6 @@ msgstr[1] "Метадані мікропрограми не оновлювали
 msgstr[2] "Метадані мікропрограми не оновлювалися %u днів, можливо, вони вже не є актуальними."
 msgstr[3] "Метадані мікропрограми не оновлювалися %u днів, можливо, вони вже не є актуальними."
 
-#. TRANSLATORS: error message for a user who ran fwupdmgr
-#. refresh recently %1 is an already translated timestamp such
-#. as 6 hours or 15 seconds
-#, c-format
-msgid "Firmware metadata last refresh: %s ago. Use --force to refresh again."
-msgstr "Останнє оновлення метаданих мікропрограми було виконано %s тому. Скористайтеся --force, щоб виконати примусове оновлення."
-
 #. TRANSLATORS: Title: if firmware updates are available
 msgid "Firmware updates"
 msgstr "Оновлення мікропрограми"
@@ -1590,6 +1588,10 @@ msgstr "Встановити файл мікропрограми у формат
 #. TRANSLATORS: command description
 msgid "Install a raw firmware blob on a device"
 msgstr "Встановити просту бінарну мікропрограму на пристрій"
+
+#. TRANSLATORS: command description
+msgid "Install a specific firmware file on all devices that match"
+msgstr "Встановити певний файл мікропрограми на усі відповідні пристрої"
 
 #. TRANSLATORS: command description
 msgid "Install a specific firmware on a device, all possible devices will also be installed once the CAB matches"
@@ -2101,8 +2103,8 @@ msgid "Only show single PCR value"
 msgstr "Показувати лише одне значення PCR"
 
 #. TRANSLATORS: command line option
-msgid "Only use IPFS when downloading files"
-msgstr "Використовувати IPFS лише при отриманні файлів"
+msgid "Only use peer-to-peer networking when downloading files"
+msgstr "Використовувати лише рівнорангові з'єднання мережі при отриманні файлів"
 
 #. TRANSLATORS: some devices can only be updated to a new semver and cannot
 #. * be downgraded or reinstalled with the existing version
@@ -2287,6 +2289,10 @@ msgstr "Читаємо…"
 #. TRANSLATORS: console message when not using plymouth
 msgid "Rebooting…"
 msgstr "Перезавантажуємо…"
+
+#. TRANSLATORS: how often we should refresh the metadata
+msgid "Refresh Interval"
+msgstr "Інтервал оновлення"
 
 #. TRANSLATORS: command description
 msgid "Refresh metadata from remote server"

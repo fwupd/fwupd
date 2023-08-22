@@ -33,6 +33,55 @@
     <binary>fwupdtool</binary>
   </provides>
   <releases>
+    <release version="1.9.4" date="2023-08-14">
+      <description>
+        <p>
+          This release adds the following features:
+        </p>
+        <ul>
+          <li>Add a new HSI attribute that detects any missing Intel GDS mitigation</li>
+          <li>Allow configuring the refresh interval per-remote rather than per-system</li>
+          <li>Remove the libsoup-2.4 compatibility code</li>
+          <li>Show the firmware release checksum in CLI tools</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Correctly query the Steelseries Fizz version on reconnect</li>
+          <li>Correctly wait for USB replug on macOS</li>
+          <li>Do not add gl32xx disk partitions as extra devices</li>
+          <li>Do not assume the logical block size is always 0x200</li>
+          <li>Ensure the AppStream ID is set on historical releases</li>
+          <li>Enumerate Synaptics MST devices correctly</li>
+          <li>Fix a possible CFU crash when adding modules</li>
+          <li>Fix 'fwupdmgr get-history --json' output to only show one release</li>
+          <li>Fix 'fwupdmgr modify-remote' on ChromeOS</li>
+          <li>Fix incorrect OEM trusted reports flags being set when not matching</li>
+          <li>Fix regression in returning device history with libxmlb 0.3.12</li>
+          <li>Fix some Wacom hardware by only attempting retries for the busy error state</li>
+          <li>Fix transaction timed out issue for T99W373 QDU device</li>
+          <li>Handle cros-ec boards with '_v' in their name</li>
+          <li>Ignore the authentication when username and password are both empty</li>
+          <li>Load the effective size of a PE section instead of raw size</li>
+          <li>Set some feature flags when non-interactive</li>
+          <li>Set the HWIDs correctly when running macOS</li>
+          <li>Use a much larger USB timeout for STM32 erase operations</li>
+          <li>Use the correct offsets when checking Synaptics MST Spyder devices</li>
+          <li>Use the correct URI when downloading from authenticated remotes</li>
+          <li>Use /var/run when /run/lock does not exist</li>
+        </ul>
+        <p>This release adds support for the following hardware:</p>
+        <ul>
+          <li>Genesys GL352350 and GL3590</li>
+          <li>Logitech Huddle</li>
+          <li>Microsoft USB-C Travel Hub</li>
+          <li>PixArt BLE HPAC OTA</li>
+          <li>Quectel RM520</li>
+          <li>Synaptics Triton devices</li>
+          <li>VIA VL122, VL817S and VL822T</li>
+          <li>Wacom One 13 and One 12 Tablets</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.9.3" date="2023-07-11">
       <description>
         <p>

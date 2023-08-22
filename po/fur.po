@@ -265,6 +265,7 @@ msgstr "Impussibil aplicâ i inzornaments su supuarts “live”"
 msgid "Changed"
 msgstr "Modificât"
 
+#. TRANSLATORS: hash to that exact firmware archive
 #. TRANSLATORS: remote checksum
 msgid "Checksum"
 msgstr "Checksum"
