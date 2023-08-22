@@ -511,6 +511,7 @@ void
 fu_progress_set_steps(FuProgress *self, guint step_max)
 {
 	g_return_if_fail(FU_IS_PROGRESS(self));
+	g_return_if_fail(step_max < 100 * 1000);
 	g_return_if_fail(self->id != NULL);
 
 	/* create fake steps */
@@ -675,6 +676,7 @@ fu_progress_add_step(FuProgress *self, FwupdStatus status, guint value, const gc
 
 	g_return_if_fail(FU_IS_PROGRESS(self));
 	g_return_if_fail(self->id != NULL);
+	g_return_if_fail(self->children->len < 100 * 1000);
 
 	/* save data */
 	fu_progress_set_status(child, status);
