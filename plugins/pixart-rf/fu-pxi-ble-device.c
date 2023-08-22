@@ -293,7 +293,6 @@ fu_pxi_ble_device_check_support_report_id(FuPxiBleDevice *self, GError **error)
 #ifdef HAVE_HIDRAW_H
 	gint desc_size = 0;
 	g_autoptr(FuFirmware) descriptor = fu_hid_descriptor_new();
-	g_autoptr(GByteArray) req = g_byte_array_new();
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GError) error_local1 = NULL;
 	g_autoptr(GError) error_local2 = NULL;
