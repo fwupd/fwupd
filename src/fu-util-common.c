@@ -1027,10 +1027,8 @@ fu_util_convert_description(const gchar *xml, GError **error)
  * Converts a timestamp to a 'pretty' translated string
  *
  * Returns: (transfer full): A string
- *
- * Since: 1.3.7
  **/
-gchar *
+static gchar *
 fu_util_time_to_str(guint64 tmp)
 {
 	g_return_val_if_fail(tmp != 0, NULL);

@@ -1918,29 +1918,10 @@ fu_util_download_metadata(FuUtilPrivate *priv, GError **error)
 {
 	gboolean download_remote_enabled = FALSE;
 	guint devices_supported_cnt = 0;
+	guint refresh_cnt = 0;
 	g_autoptr(GPtrArray) devs = NULL;
 	g_autoptr(GPtrArray) remotes = NULL;
 	g_autoptr(GString) str = g_string_new(NULL);
-
-	/* metadata refreshed recently */
-	if ((priv->flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {
-		guint64 age_oldest_needs_refresh = 0;
-
-		if (!fu_util_check_oldest_remote(priv, &age_oldest_needs_refresh, error))
-			return FALSE;
-		if (age_oldest_needs_refresh > 0) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOTHING_TO_DO,
-				    /* TRANSLATORS: error message for a user who ran fwupdmgr
-				       refresh recently %1 is an already translated timestamp such
-				       as 6 hours or 15 seconds */
-				    _("Firmware metadata last refresh: %s ago. "
-				      "Use --force to refresh again."),
-				    fu_util_time_to_str(age_oldest_needs_refresh));
-			return FALSE;
-		}
-	}
 
 	remotes = fwupd_client_get_remotes(priv->client, priv->cancellable, error);
 	if (remotes == NULL)
@@ -1965,6 +1946,7 @@ fu_util_download_metadata(FuUtilPrivate *priv, GError **error)
 						  priv->cancellable,
 						  error))
 			return FALSE;
+		refresh_cnt++;
 	}
 
 	/* no web remote is declared; try to enable LVFS */
@@ -1977,6 +1959,17 @@ fu_util_download_metadata(FuUtilPrivate *priv, GError **error)
 
 		if (!fu_util_download_metadata_enable_lvfs(priv, error))
 			return FALSE;
+	}
+
+	/* metadata refreshed recently */
+	if ((priv->flags & FWUPD_INSTALL_FLAG_FORCE) == 0 && refresh_cnt == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOTHING_TO_DO,
+				    /* TRANSLATORS: error message for a user who ran fwupdmgr
+				     * refresh recently */
+				    _("Metadata is up to date; use --force to refresh again."));
+		return FALSE;
 	}
 
 	/* get devices from daemon */

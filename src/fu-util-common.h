@@ -98,8 +98,6 @@ fu_util_parse_filter_release_flags(const gchar *filter,
 				   GError **error);
 gchar *
 fu_util_convert_description(const gchar *xml, GError **error);
-gchar *
-fu_util_time_to_str(guint64 tmp);
 
 gchar *
 fu_util_device_to_string(FwupdClient *client, FwupdDevice *dev, guint idt);
