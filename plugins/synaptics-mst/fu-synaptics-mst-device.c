@@ -575,18 +575,133 @@ fu_synaptics_mst_device_update_panamera_firmware_cb(FuDevice *device,
 }
 
 static gboolean
+fu_synaptics_mst_device_update_panamera_set_new_valid_cb(FuDevice *device,
+							 gpointer user_data,
+							 GError **error)
+{
+	FuSynapticsMstDevice *self = FU_SYNAPTICS_MST_DEVICE(device);
+	FuSynapticsMstDeviceHelper *helper = (FuSynapticsMstDeviceHelper *)user_data;
+	guint8 buf[16] = {0x0};
+	guint8 buf_verify[16] = {0x0};
+	g_autoptr(GDateTime) dt = g_date_time_new_now_utc();
+
+	buf[0] = helper->bank_to_update;
+	buf[1] = g_date_time_get_month(dt);
+	buf[2] = g_date_time_get_day_of_month(dt);
+	buf[3] = g_date_time_get_year(dt) - 2000;
+	buf[4] = (helper->checksum >> 8) & 0xff;
+	buf[5] = helper->checksum & 0xff;
+	buf[15] = fu_synaptics_mst_calculate_crc8(0, buf, sizeof(buf) - 1);
+	g_debug("tag date %x %x %x crc %x %x %x %x",
+		buf[1],
+		buf[2],
+		buf[3],
+		buf[0],
+		buf[4],
+		buf[5],
+		buf[15]);
+
+	if (!fu_synaptics_mst_connection_rc_set_command(
+		helper->connection,
+		UPDC_WRITE_TO_EEPROM,
+		(EEPROM_BANK_OFFSET * helper->bank_to_update + EEPROM_TAG_OFFSET),
+		buf,
+		sizeof(buf),
+		error)) {
+		g_prefix_error(error, "failed to write tag: ");
+		return FALSE;
+	}
+	fu_device_sleep(FU_DEVICE(self), 1); /* ms */
+	if (!fu_synaptics_mst_connection_rc_get_command(
+		helper->connection,
+		UPDC_READ_FROM_EEPROM,
+		(EEPROM_BANK_OFFSET * helper->bank_to_update + EEPROM_TAG_OFFSET),
+		buf_verify,
+		sizeof(buf_verify),
+		error)) {
+		g_prefix_error(error, "failed to read tag: ");
+		return FALSE;
+	}
+	if (memcmp(buf, buf_verify, sizeof(buf)) != 0) {
+		g_set_error_literal(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_INVALID_DATA,
+				    "set tag valid fail");
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_synaptics_mst_device_update_panamera_set_old_invalid_cb(FuDevice *device,
+							   gpointer user_data,
+							   GError **error)
+{
+	FuSynapticsMstDevice *self = FU_SYNAPTICS_MST_DEVICE(device);
+	FuSynapticsMstDeviceHelper *helper = (FuSynapticsMstDeviceHelper *)user_data;
+	guint8 checksum_tmp = 0;
+	guint8 checksum_expected = 0;
+
+	/* CRC8 is not 0xff, erase last 4k of bank# */
+	if (helper->checksum != 0xff) {
+		guint32 erase_offset =
+		    (EEPROM_BANK_OFFSET * self->active_bank + EEPROM_BANK_OFFSET - 0x1000) / 0x1000;
+		if (!fu_synaptics_mst_device_set_flash_sector_erase(self,
+								    FLASH_SECTOR_ERASE_4K,
+								    erase_offset,
+								    error))
+			return FALSE;
+		checksum_expected = 0xff;
+	} else {
+		/* CRC8 is 0xff, set it to 0x00 */
+		if (!fu_synaptics_mst_connection_rc_set_command(
+			helper->connection,
+			UPDC_WRITE_TO_EEPROM,
+			(EEPROM_BANK_OFFSET * self->active_bank + EEPROM_TAG_OFFSET + 15),
+			&checksum_tmp,
+			sizeof(checksum_tmp),
+			error)) {
+			g_prefix_error(error, "failed to clear CRC: ");
+			return FALSE;
+		}
+		checksum_expected = checksum_tmp;
+	}
+	if (!fu_synaptics_mst_connection_rc_get_command(
+		helper->connection,
+		UPDC_READ_FROM_EEPROM,
+		(EEPROM_BANK_OFFSET * self->active_bank + EEPROM_TAG_OFFSET + 15),
+		&checksum_tmp,
+		sizeof(checksum_tmp),
+		error)) {
+		g_prefix_error(error, "failed to read CRC from flash: ");
+		return FALSE;
+	}
+	if (checksum_tmp != checksum_expected) {
+		g_set_error(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_INVALID_DATA,
+			    "set tag invalid fail, got 0x%x and expected 0x%x",
+			    checksum_tmp,
+			    checksum_expected);
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_synaptics_mst_device_update_panamera_firmware(FuSynapticsMstDevice *self,
 						 GBytes *fw,
 						 FuProgress *progress,
 						 GError **error)
 {
-	guint16 crc_tmp = 0;
 	guint32 fw_size = 0;
-	guint8 readBuf[256];
-	guint8 tagData[16];
-	struct tm *pTM;
-	time_t timeptr;
+	guint8 checksum8 = 0;
 	g_autoptr(FuSynapticsMstDeviceHelper) helper = fu_synaptics_mst_device_helper_new();
+	g_autoptr(GDateTime) dt = g_date_time_new_now_utc();
 
 	/* get used bank */
 	if (!fu_synaptics_mst_device_get_active_bank_panamera(self, error))
@@ -641,132 +756,31 @@ fu_synaptics_mst_device_update_panamera_firmware(FuSynapticsMstDevice *self,
 				  error))
 		return FALSE;
 
-	/* set tag valid */
-	time(&timeptr);
-	pTM = localtime(&timeptr);
-	memset(tagData, 0, sizeof(tagData));
-	memset(readBuf, 0, sizeof(readBuf));
+	/* set bank_to_update tag valid */
+	if (!fu_device_retry(FU_DEVICE(self),
+			     fu_synaptics_mst_device_update_panamera_set_new_valid_cb,
+			     MAX_RETRY_COUNTS,
+			     helper,
+			     error))
+		return FALSE;
 
-	tagData[1] = pTM->tm_mon + 1;
-	tagData[2] = pTM->tm_mday;
-	tagData[3] = pTM->tm_year + 1900 - 2000;
-	crc_tmp = helper->checksum;
-	tagData[0] = helper->bank_to_update;
-	tagData[4] = (crc_tmp >> 8) & 0xff;
-	tagData[5] = crc_tmp & 0xff;
-	tagData[15] = fu_synaptics_mst_calculate_crc8(0, tagData, 15);
-	g_debug("tag date %x %x %x crc %x %x %x %x",
-		tagData[1],
-		tagData[2],
-		tagData[3],
-		tagData[0],
-		tagData[4],
-		tagData[5],
-		tagData[15]);
-
-	for (guint32 retries_cnt = 0;; retries_cnt++) {
-		gboolean match = TRUE;
-		if (!fu_synaptics_mst_connection_rc_set_command(
-			helper->connection,
-			UPDC_WRITE_TO_EEPROM,
-			(EEPROM_BANK_OFFSET * helper->bank_to_update + EEPROM_TAG_OFFSET),
-			tagData,
-			16,
-			error)) {
-			g_prefix_error(error, "failed to write tag: ");
-			return FALSE;
-		}
-		fu_device_sleep(FU_DEVICE(self), 1); /* ms */
-		if (!fu_synaptics_mst_connection_rc_get_command(
-			helper->connection,
-			UPDC_READ_FROM_EEPROM,
-			(EEPROM_BANK_OFFSET * helper->bank_to_update + EEPROM_TAG_OFFSET),
-			readBuf,
-			16,
-			error)) {
-			g_prefix_error(error, "failed to read tag: ");
-			return FALSE;
-		}
-		for (guint32 i = 0; i < 16; i++) {
-			if (readBuf[i] != tagData[i]) {
-				match = FALSE;
-				break;
-			}
-		}
-		if (match)
-			break;
-		if (retries_cnt > MAX_RETRY_COUNTS) {
-			g_set_error_literal(error,
-					    G_IO_ERROR,
-					    G_IO_ERROR_INVALID_DATA,
-					    "set tag valid fail");
-			return FALSE;
-		}
-	}
-
-	/* set tag invalid*/
+	/* set active_bank tag invalid */
 	if (!fu_synaptics_mst_connection_rc_get_command(
 		helper->connection,
 		UPDC_READ_FROM_EEPROM,
 		(EEPROM_BANK_OFFSET * self->active_bank + EEPROM_TAG_OFFSET + 15),
-		tagData,
-		1,
+		&checksum8,
+		sizeof(checksum8),
 		error)) {
 		g_prefix_error(error, "failed to read tag from flash: ");
 		return FALSE;
 	}
-
-	for (guint32 retries_cnt = 0;; retries_cnt++) {
-		/* CRC8 is not 0xff, erase last 4k of bank# */
-		if (tagData[0] != 0xff) {
-			guint32 erase_offset;
-			/* offset for last 4k of bank# */
-			erase_offset =
-			    (EEPROM_BANK_OFFSET * self->active_bank + EEPROM_BANK_OFFSET - 0x1000) /
-			    0x1000;
-			if (!fu_synaptics_mst_device_set_flash_sector_erase(self,
-									    FLASH_SECTOR_ERASE_4K,
-									    erase_offset,
-									    error))
-				return FALSE;
-			/* CRC8 is 0xff, set it to 0x00 */
-		} else {
-			tagData[1] = 0x00;
-			if (!fu_synaptics_mst_connection_rc_set_command(
-				helper->connection,
-				UPDC_WRITE_TO_EEPROM,
-				(EEPROM_BANK_OFFSET * self->active_bank + EEPROM_TAG_OFFSET + 15),
-				&tagData[1],
-				1,
-				error)) {
-				g_prefix_error(error, "failed to clear CRC: ");
-				return FALSE;
-			}
-		}
-		if (!fu_synaptics_mst_connection_rc_get_command(
-			helper->connection,
-			UPDC_READ_FROM_EEPROM,
-			(EEPROM_BANK_OFFSET * self->active_bank + EEPROM_TAG_OFFSET + 15),
-			readBuf,
-			1,
-			error)) {
-			g_prefix_error(error, "failed to read CRC from flash: ");
-			return FALSE;
-		}
-		if ((readBuf[0] == 0xff && tagData[0] != 0xff) ||
-		    (readBuf[0] == 0x00 && tagData[0] == 0xff)) {
-			break;
-		}
-		if (retries_cnt > MAX_RETRY_COUNTS) {
-			g_set_error_literal(error,
-					    G_IO_ERROR,
-					    G_IO_ERROR_INVALID_DATA,
-					    "set tag invalid fail");
-			return FALSE;
-		}
-	}
-
-	return TRUE;
+	helper->checksum = checksum8;
+	return fu_device_retry(FU_DEVICE(self),
+			       fu_synaptics_mst_device_update_panamera_set_old_invalid_cb,
+			       MAX_RETRY_COUNTS,
+			       helper,
+			       error);
 }
 
 static gboolean
