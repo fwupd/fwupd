@@ -625,6 +625,25 @@ fu_mm_device_at_cmd_cb(FuDevice *device, gpointer user_data, GError **error)
 	}
 	fu_dump_bytes(G_LOG_DOMAIN, "read", at_res);
 	buf = g_bytes_get_data(at_res, &bufsz);
+
+	/*
+	 * the first time the modem returns may be the command itself with one \n missing.
+	 * this is because the modem AT has enabled echo
+	 */
+	if (g_strrstr(buf, helper->cmd) != NULL && bufsz == strlen(helper->cmd) + 1) {
+		g_bytes_unref(at_res);
+		at_res = fu_io_channel_read_bytes(self->io_channel,
+						  -1,
+						  1500,
+						  FU_IO_CHANNEL_FLAG_SINGLE_SHOT,
+						  error);
+		if (at_res == NULL) {
+			g_prefix_error(error, "failed to read response for %s: ", helper->cmd);
+			return FALSE;
+		}
+		buf = g_bytes_get_data(at_res, &bufsz);
+	}
+
 	if (bufsz < 6) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -1811,6 +1830,11 @@ fu_mm_device_setup_secboot_status(FuDevice *device)
 	if (fu_device_has_vendor_id(device, "USB:0x2C7C") ||
 	    fu_device_has_vendor_id(device, "PCI:0x1EAC"))
 		fu_mm_device_setup_secboot_status_quectel(self);
+	else if (fu_device_has_vendor_id(device, "USB:0x2CB7")) {
+		fu_device_add_internal_flag(FU_DEVICE(self),
+					    FU_DEVICE_INTERNAL_FLAG_SAVE_INTO_BACKUP_REMOTE);
+		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
+	}
 }
 
 static gboolean
