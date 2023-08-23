@@ -244,22 +244,115 @@ fu_synaptics_mst_device_set_flash_sector_erase(FuSynapticsMstDevice *self,
 	return TRUE;
 }
 
+typedef struct {
+	FuSynapticsMstConnection *connection;
+	GBytes *fw;
+	GPtrArray *chunks;
+	FuProgress *progress;
+	guint8 bank_to_update;
+	guint32 checksum;
+} FuSynapticsMstDeviceHelper;
+
+static void
+fu_synaptics_mst_device_helper_free(FuSynapticsMstDeviceHelper *helper)
+{
+	if (helper->chunks != NULL)
+		g_ptr_array_unref(helper->chunks);
+	if (helper->fw != NULL)
+		g_bytes_unref(helper->fw);
+	if (helper->connection != NULL)
+		g_object_unref(helper->connection);
+	if (helper->progress != NULL)
+		g_object_unref(helper->progress);
+	g_free(helper);
+}
+
+static FuSynapticsMstDeviceHelper *
+fu_synaptics_mst_device_helper_new(void)
+{
+	FuSynapticsMstDeviceHelper *helper = g_new0(FuSynapticsMstDeviceHelper, 1);
+	helper->bank_to_update = BANKTAG_1;
+	return helper;
+}
+
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuSynapticsMstDeviceHelper, fu_synaptics_mst_device_helper_free)
+
+static gboolean
+fu_synaptics_mst_device_update_esm_cb(FuDevice *device, gpointer user_data, GError **error)
+{
+	FuSynapticsMstDevice *self = FU_SYNAPTICS_MST_DEVICE(device);
+	FuSynapticsMstDeviceHelper *helper = (FuSynapticsMstDeviceHelper *)user_data;
+	guint32 flash_checksum = 0;
+
+	/* erase ESM firmware; erase failure is fatal */
+	for (guint32 j = 0; j < 4; j++) {
+		if (!fu_synaptics_mst_device_set_flash_sector_erase(self,
+								    FLASH_SECTOR_ERASE_64K,
+								    j + 4,
+								    error)) {
+			g_prefix_error(error, "failed to erase sector %u: ", j);
+			return FALSE;
+		}
+	}
+
+	g_debug("waiting for flash clear to settle");
+	fu_device_sleep(FU_DEVICE(self), FLASH_SETTLE_TIME);
+
+	/* write firmware */
+	fu_progress_set_id(helper->progress, G_STRLOC);
+	fu_progress_set_steps(helper->progress, helper->chunks->len);
+	for (guint i = 0; i < helper->chunks->len; i++) {
+		FuChunk *chk = g_ptr_array_index(helper->chunks, i);
+		g_autoptr(GError) error_local = NULL;
+		if (!fu_synaptics_mst_connection_rc_set_command(helper->connection,
+								UPDC_WRITE_TO_EEPROM,
+								fu_chunk_get_address(chk),
+								fu_chunk_get_data(chk),
+								fu_chunk_get_data_sz(chk),
+								&error_local)) {
+			g_warning("failed to write ESM: %s", error_local->message);
+			break;
+		}
+		fu_progress_step_done(helper->progress);
+	}
+
+	/* check ESM checksum */
+	if (!fu_synaptics_mst_device_get_flash_checksum(self,
+							EEPROM_ESM_OFFSET,
+							ESM_CODE_SIZE,
+							&flash_checksum,
+							error))
+		return FALSE;
+
+	/* ESM update done */
+	if (helper->checksum != flash_checksum) {
+		g_set_error(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_INVALID_DATA,
+			    "checksum 0x%x mismatched 0x%x",
+			    flash_checksum,
+			    helper->checksum);
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
 static gboolean
 fu_synaptics_mst_device_update_esm(FuSynapticsMstDevice *self,
 				   GBytes *fw,
 				   FuProgress *progress,
 				   GError **error)
 {
-	guint32 checksum = 0;
 	guint32 flash_checksum = 0;
-	g_autoptr(FuSynapticsMstConnection) connection = NULL;
-	g_autoptr(GBytes) fw_truncated = NULL;
-	g_autoptr(GPtrArray) chunks = NULL;
+	g_autoptr(FuSynapticsMstDeviceHelper) helper = fu_synaptics_mst_device_helper_new();
 
-	connection = fu_synaptics_mst_connection_new(fu_udev_device_get_fd(FU_UDEV_DEVICE(self)),
-						     self->layer,
-						     self->rad);
-
+	/* ESM checksum same */
+	helper->fw = fu_bytes_new_offset(fw, EEPROM_ESM_OFFSET, ESM_CODE_SIZE, error);
+	if (helper->fw == NULL)
+		return FALSE;
+	helper->checksum = fu_sum32_bytes(helper->fw);
 	if (!fu_synaptics_mst_device_get_flash_checksum(self,
 							EEPROM_ESM_OFFSET,
 							ESM_CODE_SIZE,
@@ -267,82 +360,88 @@ fu_synaptics_mst_device_update_esm(FuSynapticsMstDevice *self,
 							error)) {
 		return FALSE;
 	}
-
-	/* ESM checksum same */
-	fw_truncated = fu_bytes_new_offset(fw, EEPROM_ESM_OFFSET, ESM_CODE_SIZE, error);
-	if (fw_truncated == NULL)
-		return FALSE;
-	checksum = fu_sum32_bytes(fw_truncated);
-	if (checksum == flash_checksum) {
+	if (helper->checksum == flash_checksum) {
 		g_debug("ESM checksum already matches");
 		return TRUE;
 	}
-	g_debug("ESM checksum %x doesn't match expected %x", flash_checksum, checksum);
+	g_debug("ESM checksum %x doesn't match expected %x", flash_checksum, helper->checksum);
 
-	/* update ESM firmware */
-	chunks = fu_chunk_array_new_from_bytes(fw_truncated, EEPROM_ESM_OFFSET, 0x0, BLOCK_UNIT);
-	for (guint retries_cnt = 0;; retries_cnt++) {
-		/* erase ESM firmware; erase failure is fatal */
-		for (guint32 j = 0; j < 4; j++) {
-			if (!fu_synaptics_mst_device_set_flash_sector_erase(self,
-									    FLASH_SECTOR_ERASE_64K,
-									    j + 4,
-									    error)) {
-				g_prefix_error(error, "failed to erase sector %u: ", j);
-				return FALSE;
-			}
-		}
+	helper->connection =
+	    fu_synaptics_mst_connection_new(fu_udev_device_get_fd(FU_UDEV_DEVICE(self)),
+					    self->layer,
+					    self->rad);
+	helper->progress = g_object_ref(progress);
+	helper->chunks =
+	    fu_chunk_array_new_from_bytes(helper->fw, EEPROM_ESM_OFFSET, 0x0, BLOCK_UNIT);
+	return fu_device_retry(FU_DEVICE(self),
+			       fu_synaptics_mst_device_update_esm_cb,
+			       MAX_RETRY_COUNTS,
+			       helper,
+			       error);
+}
 
-		g_debug("waiting for flash clear to settle");
-		fu_device_sleep(FU_DEVICE(self), FLASH_SETTLE_TIME);
+static gboolean
+fu_synaptics_mst_device_update_tesla_leaf_firmware_cb(FuDevice *device,
+						      gpointer user_data,
+						      GError **error)
+{
+	FuSynapticsMstDevice *self = FU_SYNAPTICS_MST_DEVICE(device);
+	FuSynapticsMstDeviceHelper *helper = (FuSynapticsMstDeviceHelper *)user_data;
+	guint32 flash_checksum = 0;
 
-		/* write firmware */
-		fu_progress_set_id(progress, G_STRLOC);
-		fu_progress_set_steps(progress, chunks->len);
-		for (guint i = 0; i < chunks->len; i++) {
-			FuChunk *chk = g_ptr_array_index(chunks, i);
-			g_autoptr(GError) error_local = NULL;
-			if (!fu_synaptics_mst_connection_rc_set_command(connection,
+	if (!fu_synaptics_mst_device_set_flash_sector_erase(self, 0xffff, 0, error))
+		return FALSE;
+	g_debug("waiting for flash clear to settle");
+	fu_device_sleep(FU_DEVICE(self), FLASH_SETTLE_TIME);
+
+	fu_progress_set_steps(helper->progress, helper->chunks->len);
+	for (guint i = 0; i < helper->chunks->len; i++) {
+		FuChunk *chk = g_ptr_array_index(helper->chunks, i);
+		g_autoptr(GError) error_local = NULL;
+
+		if (!fu_synaptics_mst_connection_rc_set_command(helper->connection,
+								UPDC_WRITE_TO_EEPROM,
+								fu_chunk_get_address(chk),
+								fu_chunk_get_data(chk),
+								fu_chunk_get_data_sz(chk),
+								&error_local)) {
+			g_warning("Failed to write flash offset 0x%04x: %s, retrying",
+				  fu_chunk_get_address(chk),
+				  error_local->message);
+			/* repeat once */
+			if (!fu_synaptics_mst_connection_rc_set_command(helper->connection,
 									UPDC_WRITE_TO_EEPROM,
 									fu_chunk_get_address(chk),
 									fu_chunk_get_data(chk),
 									fu_chunk_get_data_sz(chk),
-									&error_local)) {
-				g_warning("failed to write ESM: %s", error_local->message);
-				break;
+									error)) {
+				g_prefix_error(error,
+					       "can't write flash offset 0x%04x: ",
+					       fu_chunk_get_address(chk));
+				return FALSE;
 			}
-			fu_progress_step_done(progress);
 		}
-
-		/* check ESM checksum */
-		flash_checksum = 0;
-		if (!fu_synaptics_mst_device_get_flash_checksum(self,
-								EEPROM_ESM_OFFSET,
-								ESM_CODE_SIZE,
-								&flash_checksum,
-								error))
-			return FALSE;
-
-		/* ESM update done */
-		if (checksum == flash_checksum)
-			break;
-		g_debug("attempt %u: ESM checksum %x didn't match %x",
-			retries_cnt,
-			flash_checksum,
-			checksum);
-
-		/* abort */
-		if (retries_cnt > MAX_RETRY_COUNTS) {
-			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
-				    "checksum did not match after %u tries",
-				    retries_cnt);
-			return FALSE;
-		}
+		fu_progress_step_done(helper->progress);
 	}
-	g_debug("ESM successfully written");
 
+	/* check data just written */
+	if (!fu_synaptics_mst_device_get_flash_checksum(self,
+							0,
+							g_bytes_get_size(helper->fw),
+							&flash_checksum,
+							error))
+		return FALSE;
+	if (helper->checksum != flash_checksum) {
+		g_set_error(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_INVALID_DATA,
+			    "checksum 0x%x mismatched 0x%x",
+			    flash_checksum,
+			    helper->checksum);
+		return FALSE;
+	}
+
+	/* success */
 	return TRUE;
 }
 
@@ -352,80 +451,21 @@ fu_synaptics_mst_device_update_tesla_leaf_firmware(FuSynapticsMstDevice *self,
 						   FuProgress *progress,
 						   GError **error)
 {
-	g_autoptr(FuSynapticsMstConnection) connection = NULL;
-	g_autoptr(GPtrArray) chunks = NULL;
+	g_autoptr(FuSynapticsMstDeviceHelper) helper = fu_synaptics_mst_device_helper_new();
 
-	connection = fu_synaptics_mst_connection_new(fu_udev_device_get_fd(FU_UDEV_DEVICE(self)),
-						     self->layer,
-						     self->rad);
-	chunks = fu_chunk_array_new_from_bytes(fw, 0x0, 0x0, BLOCK_UNIT);
-	for (guint32 retries_cnt = 0;; retries_cnt++) {
-		guint32 checksum;
-		guint32 flash_checksum = 0;
-
-		if (!fu_synaptics_mst_device_set_flash_sector_erase(self, 0xffff, 0, error))
-			return FALSE;
-		g_debug("waiting for flash clear to settle");
-		fu_device_sleep(FU_DEVICE(self), FLASH_SETTLE_TIME);
-
-		fu_progress_set_steps(progress, chunks->len);
-		for (guint i = 0; i < chunks->len; i++) {
-			FuChunk *chk = g_ptr_array_index(chunks, i);
-			g_autoptr(GError) error_local = NULL;
-
-			if (!fu_synaptics_mst_connection_rc_set_command(connection,
-									UPDC_WRITE_TO_EEPROM,
-									fu_chunk_get_address(chk),
-									fu_chunk_get_data(chk),
-									fu_chunk_get_data_sz(chk),
-									&error_local)) {
-				g_warning("Failed to write flash offset 0x%04x: %s, retrying",
-					  fu_chunk_get_address(chk),
-					  error_local->message);
-				/* repeat once */
-				if (!fu_synaptics_mst_connection_rc_set_command(
-					connection,
-					UPDC_WRITE_TO_EEPROM,
-					fu_chunk_get_address(chk),
-					fu_chunk_get_data(chk),
-					fu_chunk_get_data_sz(chk),
-					error)) {
-					g_prefix_error(error,
-						       "can't write flash offset 0x%04x: ",
-						       fu_chunk_get_address(chk));
-					return FALSE;
-				}
-			}
-			fu_progress_step_done(progress);
-		}
-
-		/* check data just written */
-		if (!fu_synaptics_mst_device_get_flash_checksum(self,
-								0,
-								g_bytes_get_size(fw),
-								&flash_checksum,
-								error))
-			return FALSE;
-		checksum = fu_sum32_bytes(fw);
-		if (checksum == flash_checksum)
-			break;
-		g_debug("attempt %u: checksum %x didn't match %x",
-			retries_cnt,
-			flash_checksum,
-			checksum);
-
-		if (retries_cnt > MAX_RETRY_COUNTS) {
-			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
-				    "checksum %x mismatched %x",
-				    flash_checksum,
-				    checksum);
-			return FALSE;
-		}
-	}
-
-	return TRUE;
+	helper->connection =
+	    fu_synaptics_mst_connection_new(fu_udev_device_get_fd(FU_UDEV_DEVICE(self)),
+					    self->layer,
+					    self->rad);
+	helper->fw = g_bytes_ref(fw);
+	helper->checksum = fu_sum32_bytes(fw);
+	helper->progress = g_object_ref(progress);
+	helper->chunks = fu_chunk_array_new_from_bytes(fw, 0x0, 0x0, BLOCK_UNIT);
+	return fu_device_retry(FU_DEVICE(self),
+			       fu_synaptics_mst_device_update_tesla_leaf_firmware_cb,
+			       MAX_RETRY_COUNTS,
+			       helper,
+			       error);
 }
 
 static gboolean
@@ -455,6 +495,86 @@ fu_synaptics_mst_device_get_active_bank_panamera(FuSynapticsMstDevice *self, GEr
 }
 
 static gboolean
+fu_synaptics_mst_device_update_panamera_firmware_cb(FuDevice *device,
+						    gpointer user_data,
+						    GError **error)
+{
+	FuSynapticsMstDevice *self = FU_SYNAPTICS_MST_DEVICE(device);
+	FuSynapticsMstDeviceHelper *helper = (FuSynapticsMstDeviceHelper *)user_data;
+	guint32 erase_offset = helper->bank_to_update * 2;
+	guint32 flash_checksum = 0;
+
+	/* erase storage */
+	if (!fu_synaptics_mst_device_set_flash_sector_erase(self,
+							    FLASH_SECTOR_ERASE_64K,
+							    erase_offset++,
+							    error))
+		return FALSE;
+	if (!fu_synaptics_mst_device_set_flash_sector_erase(self,
+							    FLASH_SECTOR_ERASE_64K,
+							    erase_offset,
+							    error))
+		return FALSE;
+	g_debug("waiting for flash clear to settle");
+	fu_device_sleep(FU_DEVICE(self), FLASH_SETTLE_TIME);
+
+	/* write */
+	fu_progress_set_steps(helper->progress, helper->chunks->len);
+	for (guint i = 0; i < helper->chunks->len; i++) {
+		FuChunk *chk = g_ptr_array_index(helper->chunks, i);
+		g_autoptr(GError) error_local = NULL;
+		if (!fu_synaptics_mst_connection_rc_set_command(helper->connection,
+								UPDC_WRITE_TO_EEPROM,
+								fu_chunk_get_address(chk),
+								fu_chunk_get_data(chk),
+								fu_chunk_get_data_sz(chk),
+								&error_local)) {
+			g_warning("write failed: %s, retrying", error_local->message);
+			/* repeat once */
+			if (!fu_synaptics_mst_connection_rc_set_command(helper->connection,
+									UPDC_WRITE_TO_EEPROM,
+									fu_chunk_get_address(chk),
+									fu_chunk_get_data(chk),
+									fu_chunk_get_data_sz(chk),
+									error)) {
+				g_prefix_error(error, "firmware write failed: ");
+				return FALSE;
+			}
+		}
+		fu_progress_step_done(helper->progress);
+	}
+
+	/* verify CRC */
+	for (guint32 i = 0; i < 4; i++) {
+		fu_device_sleep(FU_DEVICE(self), 1); /* wait crc calculation */
+		if (!fu_synaptics_mst_connection_rc_special_get_command(
+			helper->connection,
+			UPDC_CAL_EEPROM_CHECK_CRC16,
+			(EEPROM_BANK_OFFSET * helper->bank_to_update),
+			NULL,
+			g_bytes_get_size(helper->fw),
+			(guint8 *)(&flash_checksum),
+			sizeof(flash_checksum),
+			error)) {
+			g_prefix_error(error, "failed to get flash checksum: ");
+			return FALSE;
+		}
+	}
+	if (helper->checksum != flash_checksum) {
+		g_set_error(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_INVALID_DATA,
+			    "checksum 0x%x mismatched 0x%x",
+			    flash_checksum,
+			    helper->checksum);
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_synaptics_mst_device_update_panamera_firmware(FuSynapticsMstDevice *self,
 						 GBytes *fw,
 						 FuProgress *progress,
@@ -462,21 +582,18 @@ fu_synaptics_mst_device_update_panamera_firmware(FuSynapticsMstDevice *self,
 {
 	guint16 crc_tmp = 0;
 	guint32 fw_size = 0;
-	guint8 bank_to_update = BANKTAG_1;
 	guint8 readBuf[256];
 	guint8 tagData[16];
 	struct tm *pTM;
 	time_t timeptr;
-	g_autoptr(FuSynapticsMstConnection) connection = NULL;
-	g_autoptr(GBytes) fw2 = NULL;
-	g_autoptr(GPtrArray) chunks = NULL;
+	g_autoptr(FuSynapticsMstDeviceHelper) helper = fu_synaptics_mst_device_helper_new();
 
 	/* get used bank */
 	if (!fu_synaptics_mst_device_get_active_bank_panamera(self, error))
 		return FALSE;
 	if (self->active_bank == BANKTAG_1)
-		bank_to_update = BANKTAG_0;
-	g_debug("bank to update:%x", bank_to_update);
+		helper->bank_to_update = BANKTAG_0;
+	g_debug("bank to update:%x", helper->bank_to_update);
 
 	/* get firmware size */
 	if (!fu_memread_uint32_safe(g_bytes_get_data(fw, NULL),
@@ -500,93 +617,29 @@ fu_synaptics_mst_device_update_panamera_firmware(FuSynapticsMstDevice *self,
 	if (fw_size < g_bytes_get_size(fw))
 		fw_size = PANAMERA_FIRMWARE_SIZE;
 	g_debug("calculated fw size as %u", fw_size);
-	fw2 = fu_bytes_new_offset(fw, 0x0, fw_size, error);
-	if (fw2 == NULL)
+
+	helper->connection =
+	    fu_synaptics_mst_connection_new(fu_udev_device_get_fd(FU_UDEV_DEVICE(self)),
+					    self->layer,
+					    self->rad);
+	helper->fw = fu_bytes_new_offset(fw, 0x0, fw_size, error);
+	if (helper->fw == NULL)
 		return FALSE;
-	chunks = fu_chunk_array_new_from_bytes(fw2,
-					       EEPROM_BANK_OFFSET * bank_to_update,
-					       0x0,
-					       BLOCK_UNIT);
-	for (guint32 retries_cnt = 0;; retries_cnt++) {
-		guint32 checksum = 0;
-		guint32 erase_offset = bank_to_update * 2;
-		guint32 flash_checksum = 0;
-
-		/* erase storage */
-		if (!fu_synaptics_mst_device_set_flash_sector_erase(self,
-								    FLASH_SECTOR_ERASE_64K,
-								    erase_offset++,
-								    error))
-			return FALSE;
-		if (!fu_synaptics_mst_device_set_flash_sector_erase(self,
-								    FLASH_SECTOR_ERASE_64K,
-								    erase_offset,
-								    error))
-			return FALSE;
-		g_debug("waiting for flash clear to settle");
-		fu_device_sleep(FU_DEVICE(self), FLASH_SETTLE_TIME);
-
-		/* write */
-		connection =
-		    fu_synaptics_mst_connection_new(fu_udev_device_get_fd(FU_UDEV_DEVICE(self)),
-						    self->layer,
-						    self->rad);
-		fu_progress_set_steps(progress, chunks->len);
-		for (guint i = 0; i < chunks->len; i++) {
-			FuChunk *chk = g_ptr_array_index(chunks, i);
-			g_autoptr(GError) error_local = NULL;
-			if (!fu_synaptics_mst_connection_rc_set_command(connection,
-									UPDC_WRITE_TO_EEPROM,
-									fu_chunk_get_address(chk),
-									fu_chunk_get_data(chk),
-									fu_chunk_get_data_sz(chk),
-									&error_local)) {
-				g_warning("write failed: %s, retrying", error_local->message);
-				/* repeat once */
-				if (!fu_synaptics_mst_connection_rc_set_command(
-					connection,
-					UPDC_WRITE_TO_EEPROM,
-					fu_chunk_get_address(chk),
-					fu_chunk_get_data(chk),
-					fu_chunk_get_data_sz(chk),
-					error)) {
-					g_prefix_error(error, "firmware write failed: ");
-					return FALSE;
-				}
-			}
-			fu_progress_step_done(progress);
-		}
-
-		/* verify CRC */
-		checksum = fu_synaptics_mst_calculate_crc16(0,
-							    g_bytes_get_data(fw2, NULL),
-							    g_bytes_get_size(fw2));
-		for (guint32 i = 0; i < 4; i++) {
-			fu_device_sleep(FU_DEVICE(self), 1); /* wait crc calculation */
-			if (!fu_synaptics_mst_connection_rc_special_get_command(
-				connection,
-				UPDC_CAL_EEPROM_CHECK_CRC16,
-				(EEPROM_BANK_OFFSET * bank_to_update),
-				NULL,
-				g_bytes_get_size(fw2),
-				(guint8 *)(&flash_checksum),
-				sizeof(flash_checksum),
-				error)) {
-				g_prefix_error(error, "failed to get flash checksum: ");
-				return FALSE;
-			}
-		}
-		if (checksum == flash_checksum)
-			break;
-		if (retries_cnt > MAX_RETRY_COUNTS) {
-			g_set_error_literal(error,
-					    G_IO_ERROR,
-					    G_IO_ERROR_INVALID_DATA,
-					    "firmware update fail");
-			return FALSE;
-		}
-		fu_device_sleep(FU_DEVICE(self), 2);
-	}
+	helper->checksum = fu_synaptics_mst_calculate_crc16(0,
+							    g_bytes_get_data(helper->fw, NULL),
+							    g_bytes_get_size(helper->fw));
+	helper->progress = g_object_ref(progress);
+	helper->chunks = fu_chunk_array_new_from_bytes(helper->fw,
+						       EEPROM_BANK_OFFSET * helper->bank_to_update,
+						       0x0,
+						       BLOCK_UNIT);
+	if (!fu_device_retry_full(FU_DEVICE(self),
+				  fu_synaptics_mst_device_update_panamera_firmware_cb,
+				  MAX_RETRY_COUNTS,
+				  2, /* ms */
+				  helper,
+				  error))
+		return FALSE;
 
 	/* set tag valid */
 	time(&timeptr);
@@ -597,9 +650,8 @@ fu_synaptics_mst_device_update_panamera_firmware(FuSynapticsMstDevice *self,
 	tagData[1] = pTM->tm_mon + 1;
 	tagData[2] = pTM->tm_mday;
 	tagData[3] = pTM->tm_year + 1900 - 2000;
-	crc_tmp =
-	    fu_synaptics_mst_calculate_crc16(0, g_bytes_get_data(fw2, NULL), g_bytes_get_size(fw2));
-	tagData[0] = bank_to_update;
+	crc_tmp = helper->checksum;
+	tagData[0] = helper->bank_to_update;
 	tagData[4] = (crc_tmp >> 8) & 0xff;
 	tagData[5] = crc_tmp & 0xff;
 	tagData[15] = fu_synaptics_mst_calculate_crc8(0, tagData, 15);
@@ -615,9 +667,9 @@ fu_synaptics_mst_device_update_panamera_firmware(FuSynapticsMstDevice *self,
 	for (guint32 retries_cnt = 0;; retries_cnt++) {
 		gboolean match = TRUE;
 		if (!fu_synaptics_mst_connection_rc_set_command(
-			connection,
+			helper->connection,
 			UPDC_WRITE_TO_EEPROM,
-			(EEPROM_BANK_OFFSET * bank_to_update + EEPROM_TAG_OFFSET),
+			(EEPROM_BANK_OFFSET * helper->bank_to_update + EEPROM_TAG_OFFSET),
 			tagData,
 			16,
 			error)) {
@@ -626,9 +678,9 @@ fu_synaptics_mst_device_update_panamera_firmware(FuSynapticsMstDevice *self,
 		}
 		fu_device_sleep(FU_DEVICE(self), 1); /* ms */
 		if (!fu_synaptics_mst_connection_rc_get_command(
-			connection,
+			helper->connection,
 			UPDC_READ_FROM_EEPROM,
-			(EEPROM_BANK_OFFSET * bank_to_update + EEPROM_TAG_OFFSET),
+			(EEPROM_BANK_OFFSET * helper->bank_to_update + EEPROM_TAG_OFFSET),
 			readBuf,
 			16,
 			error)) {
@@ -654,7 +706,7 @@ fu_synaptics_mst_device_update_panamera_firmware(FuSynapticsMstDevice *self,
 
 	/* set tag invalid*/
 	if (!fu_synaptics_mst_connection_rc_get_command(
-		connection,
+		helper->connection,
 		UPDC_READ_FROM_EEPROM,
 		(EEPROM_BANK_OFFSET * self->active_bank + EEPROM_TAG_OFFSET + 15),
 		tagData,
@@ -681,7 +733,7 @@ fu_synaptics_mst_device_update_panamera_firmware(FuSynapticsMstDevice *self,
 		} else {
 			tagData[1] = 0x00;
 			if (!fu_synaptics_mst_connection_rc_set_command(
-				connection,
+				helper->connection,
 				UPDC_WRITE_TO_EEPROM,
 				(EEPROM_BANK_OFFSET * self->active_bank + EEPROM_TAG_OFFSET + 15),
 				&tagData[1],
@@ -692,7 +744,7 @@ fu_synaptics_mst_device_update_panamera_firmware(FuSynapticsMstDevice *self,
 			}
 		}
 		if (!fu_synaptics_mst_connection_rc_get_command(
-			connection,
+			helper->connection,
 			UPDC_READ_FROM_EEPROM,
 			(EEPROM_BANK_OFFSET * self->active_bank + EEPROM_TAG_OFFSET + 15),
 			readBuf,
@@ -792,98 +844,103 @@ fu_synaptics_mst_device_panamera_prepare_write(FuSynapticsMstDevice *self, GErro
 }
 
 static gboolean
+fu_synaptics_mst_device_update_cayenne_firmware_cb(FuDevice *device,
+						   gpointer user_data,
+						   GError **error)
+{
+	FuSynapticsMstDevice *self = FU_SYNAPTICS_MST_DEVICE(device);
+	FuSynapticsMstDeviceHelper *helper = (FuSynapticsMstDeviceHelper *)user_data;
+	guint32 flash_checksum = 0;
+
+	if (!fu_synaptics_mst_device_set_flash_sector_erase(self, 0xffff, 0, error))
+		return FALSE;
+	g_debug("waiting for flash clear to settle");
+	fu_device_sleep(FU_DEVICE(self), FLASH_SETTLE_TIME);
+
+	fu_progress_set_steps(helper->progress, helper->chunks->len);
+	for (guint i = 0; i < helper->chunks->len; i++) {
+		FuChunk *chk = g_ptr_array_index(helper->chunks, i);
+		g_autoptr(GError) error_local = NULL;
+
+		if (!fu_synaptics_mst_connection_rc_set_command(helper->connection,
+								UPDC_WRITE_TO_EEPROM,
+								fu_chunk_get_address(chk),
+								fu_chunk_get_data(chk),
+								fu_chunk_get_data_sz(chk),
+								&error_local)) {
+			g_warning("Failed to write flash offset 0x%04x: %s, retrying",
+				  fu_chunk_get_address(chk),
+				  error_local->message);
+			/* repeat once */
+			if (!fu_synaptics_mst_connection_rc_set_command(helper->connection,
+									UPDC_WRITE_TO_EEPROM,
+									fu_chunk_get_address(chk),
+									fu_chunk_get_data(chk),
+									fu_chunk_get_data_sz(chk),
+									error)) {
+				g_prefix_error(error,
+					       "can't write flash offset 0x%04x: ",
+					       fu_chunk_get_address(chk));
+				return FALSE;
+			}
+		}
+		fu_progress_step_done(helper->progress);
+	}
+
+	/* verify CRC */
+	if (!fu_synaptics_mst_connection_rc_special_get_command(helper->connection,
+								UPDC_CAL_EEPROM_CHECK_CRC16,
+								0,
+								NULL,
+								g_bytes_get_size(helper->fw),
+								(guint8 *)(&flash_checksum),
+								sizeof(flash_checksum),
+								error)) {
+		g_prefix_error(error, "Failed to get flash checksum: ");
+		return FALSE;
+	}
+	if (helper->checksum != flash_checksum) {
+		g_set_error(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_INVALID_DATA,
+			    "checksum 0x%x mismatched 0x%x",
+			    flash_checksum,
+			    helper->checksum);
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_synaptics_mst_device_update_cayenne_firmware(FuSynapticsMstDevice *self,
 						GBytes *fw,
 						FuProgress *progress,
 						GError **error)
 {
-	g_autoptr(FuSynapticsMstConnection) connection = NULL;
-	g_autoptr(GPtrArray) chunks = NULL;
-	g_autoptr(GBytes) fw2 = NULL;
+	g_autoptr(FuSynapticsMstDeviceHelper) helper = fu_synaptics_mst_device_helper_new();
 
-	/* sanity check */
-	fw2 = fu_bytes_new_offset(fw, 0x0, CAYENNE_FIRMWARE_SIZE, error);
-	if (fw2 == NULL)
+	helper->connection =
+	    fu_synaptics_mst_connection_new(fu_udev_device_get_fd(FU_UDEV_DEVICE(self)),
+					    self->layer,
+					    self->rad);
+	helper->fw = fu_bytes_new_offset(fw, 0x0, CAYENNE_FIRMWARE_SIZE, error);
+	if (helper->fw == NULL)
 		return FALSE;
-	chunks = fu_chunk_array_new_from_bytes(fw2, 0x0, 0x0, BLOCK_UNIT);
+	helper->checksum = fu_synaptics_mst_calculate_crc16(0,
+							    g_bytes_get_data(helper->fw, NULL),
+							    g_bytes_get_size(helper->fw));
+	helper->progress = g_object_ref(progress);
+	helper->chunks = fu_chunk_array_new_from_bytes(helper->fw, 0x0, 0x0, BLOCK_UNIT);
+	if (!fu_device_retry(FU_DEVICE(self),
+			     fu_synaptics_mst_device_update_cayenne_firmware_cb,
+			     MAX_RETRY_COUNTS,
+			     helper,
+			     error))
+		return FALSE;
 
-	connection = fu_synaptics_mst_connection_new(fu_udev_device_get_fd(FU_UDEV_DEVICE(self)),
-						     self->layer,
-						     self->rad);
-	for (guint32 retries_cnt = 0;; retries_cnt++) {
-		guint32 checksum = 0;
-		guint32 flash_checksum = 0;
-
-		if (!fu_synaptics_mst_device_set_flash_sector_erase(self, 0xffff, 0, error))
-			return FALSE;
-		g_debug("waiting for flash clear to settle");
-		fu_device_sleep(FU_DEVICE(self), FLASH_SETTLE_TIME);
-
-		fu_progress_set_steps(progress, chunks->len);
-		for (guint i = 0; i < chunks->len; i++) {
-			FuChunk *chk = g_ptr_array_index(chunks, i);
-			g_autoptr(GError) error_local = NULL;
-
-			if (!fu_synaptics_mst_connection_rc_set_command(connection,
-									UPDC_WRITE_TO_EEPROM,
-									fu_chunk_get_address(chk),
-									fu_chunk_get_data(chk),
-									fu_chunk_get_data_sz(chk),
-									&error_local)) {
-				g_warning("Failed to write flash offset 0x%04x: %s, retrying",
-					  fu_chunk_get_address(chk),
-					  error_local->message);
-				/* repeat once */
-				if (!fu_synaptics_mst_connection_rc_set_command(
-					connection,
-					UPDC_WRITE_TO_EEPROM,
-					fu_chunk_get_address(chk),
-					fu_chunk_get_data(chk),
-					fu_chunk_get_data_sz(chk),
-					error)) {
-					g_prefix_error(error,
-						       "can't write flash offset 0x%04x: ",
-						       fu_chunk_get_address(chk));
-					return FALSE;
-				}
-			}
-			fu_progress_step_done(progress);
-		}
-
-		/* verify CRC */
-		checksum = fu_synaptics_mst_calculate_crc16(0,
-							    g_bytes_get_data(fw2, NULL),
-							    g_bytes_get_size(fw2));
-		if (!fu_synaptics_mst_connection_rc_special_get_command(connection,
-									UPDC_CAL_EEPROM_CHECK_CRC16,
-									0,
-									NULL,
-									g_bytes_get_size(fw2),
-									(guint8 *)(&flash_checksum),
-									sizeof(flash_checksum),
-									error)) {
-			g_prefix_error(error, "Failed to get flash checksum: ");
-			return FALSE;
-		}
-		if (checksum == flash_checksum)
-			break;
-		g_debug("attempt %u: checksum %x didn't match %x",
-			retries_cnt,
-			flash_checksum,
-			checksum);
-
-		if (retries_cnt > MAX_RETRY_COUNTS) {
-			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
-				    "checksum %x mismatched %x",
-				    flash_checksum,
-				    checksum);
-			return FALSE;
-		}
-	}
-
-	if (!fu_synaptics_mst_connection_rc_set_command(connection,
+	if (!fu_synaptics_mst_connection_rc_set_command(helper->connection,
 							UPDC_ACTIVATE_FIRMWARE,
 							0,
 							NULL,
