@@ -78,3 +78,15 @@ ModemManagerFirehoseProgFile = prog_firehose_sdx6x.elf
 [PCI\VID_1EAC&PID_1007]
 Summary = Quectel RM520 firehose prog file
 ModemManagerFirehoseProgFile = prog_firehose_sdx6x.elf
+
+# Fibocom FM101
+[USB\VID_2CB7&PID_01A2]
+Summary = Fibocom FM101-GL Module
+Flags = uninhibit-modemmanager-after-fastboot-reboot,detach-at-fastboot-has-no-response
+CounterpartGuid = USB\VID_2CB7&PID_D00D
+
+# Fibocom FM101 in fastboot mode
+[USB\VID_2CB7&PID_D00D]
+Summary = Fibocom FM101 Modem
+CounterpartGuid = USB\VID_2CB7&PID_01A2
+
