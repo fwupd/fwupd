@@ -42,6 +42,7 @@
 #define FLASH_SETTLE_TIME 5000 /* ms */
 
 #define CAYENNE_FIRMWARE_SIZE 0x50000 /* bytes */
+#define PANAMERA_FIRMWARE_SIZE 0x1A000 /* bytes */
 
 /**
  * FU_SYNAPTICS_MST_DEVICE_FLAG_IGNORE_BOARD_ID:
@@ -456,21 +457,20 @@ fu_synaptics_mst_device_get_active_bank_panamera(FuSynapticsMstDevice *self, GEr
 
 static gboolean
 fu_synaptics_mst_device_update_panamera_firmware(FuSynapticsMstDevice *self,
-						 guint32 payload_len,
-						 const guint8 *payload_data,
+						 GBytes *fw,
 						 FuProgress *progress,
 						 GError **error)
 {
 	guint16 crc_tmp = 0;
 	guint32 fw_size = 0;
-	guint32 unit_sz = BLOCK_UNIT;
-	guint32 write_loops = 0;
 	guint8 bank_to_update = BANKTAG_1;
 	guint8 readBuf[256];
 	guint8 tagData[16];
 	struct tm *pTM;
 	time_t timeptr;
 	g_autoptr(FuSynapticsMstConnection) connection = NULL;
+	g_autoptr(GBytes) fw2 = NULL;
+	g_autoptr(GPtrArray) chunks = NULL;
 
 	/* get used bank */
 	if (!fu_synaptics_mst_device_get_active_bank_panamera(self, error))
@@ -480,14 +480,15 @@ fu_synaptics_mst_device_update_panamera_firmware(FuSynapticsMstDevice *self,
 	g_debug("bank to update:%x", bank_to_update);
 
 	/* get firmware size */
-	if (!fu_memread_uint32_safe(payload_data,
-				    payload_len,
+	if (!fu_memread_uint32_safe(g_bytes_get_data(fw, NULL),
+				    g_bytes_get_size(fw),
 				    0x400,
 				    &fw_size,
 				    G_BIG_ENDIAN,
 				    error))
 		return FALSE;
-	if (fw_size > 10 * 1024 * 1024) {
+	fw_size += 0x410;
+	if (fw_size > PANAMERA_FIRMWARE_SIZE) {
 		g_set_error(error,
 			    G_IO_ERROR,
 			    G_IO_ERROR_INVALID_DATA,
@@ -495,27 +496,24 @@ fu_synaptics_mst_device_update_panamera_firmware(FuSynapticsMstDevice *self,
 			    fw_size);
 		return FALSE;
 	}
-	fw_size += 0x410;
 
 	/* current max firmware size is 104K */
-	if (fw_size < payload_len)
-		fw_size = 104 * 1024;
+	if (fw_size < g_bytes_get_size(fw))
+		fw_size = PANAMERA_FIRMWARE_SIZE;
 	g_debug("calculated fw size as %u", fw_size);
-
-	/* Update firmware */
-	write_loops = fw_size / unit_sz;
-	if (fw_size % unit_sz)
-		write_loops++;
-
+	fw2 = fu_bytes_new_offset(fw, 0x0, fw_size, error);
+	if (fw2 == NULL)
+		return FALSE;
+	chunks = fu_chunk_array_new_from_bytes(fw2,
+					       EEPROM_BANK_OFFSET * bank_to_update,
+					       0x0,
+					       BLOCK_UNIT);
 	for (guint32 retries_cnt = 0;; retries_cnt++) {
 		guint32 checksum = 0;
-		guint32 erase_offset;
+		guint32 erase_offset = bank_to_update * 2;
 		guint32 flash_checksum = 0;
-		guint32 write_idx;
-		guint32 write_offset;
 
 		/* erase storage */
-		erase_offset = bank_to_update * 2;
 		if (!fu_synaptics_mst_device_set_flash_sector_erase(self,
 								    FLASH_SECTOR_ERASE_64K,
 								    erase_offset++,
@@ -530,42 +528,40 @@ fu_synaptics_mst_device_update_panamera_firmware(FuSynapticsMstDevice *self,
 		fu_device_sleep(FU_DEVICE(self), FLASH_SETTLE_TIME);
 
 		/* write */
-		write_idx = 0;
-		write_offset = EEPROM_BANK_OFFSET * bank_to_update;
 		connection =
 		    fu_synaptics_mst_connection_new(fu_udev_device_get_fd(FU_UDEV_DEVICE(self)),
 						    self->layer,
 						    self->rad);
-		fu_progress_set_steps(progress, write_loops);
-		for (guint32 i = 0; i < write_loops; i++) {
+		fu_progress_set_steps(progress, chunks->len);
+		for (guint i = 0; i < chunks->len; i++) {
+			FuChunk *chk = g_ptr_array_index(chunks, i);
 			g_autoptr(GError) error_local = NULL;
 			if (!fu_synaptics_mst_connection_rc_set_command(connection,
 									UPDC_WRITE_TO_EEPROM,
-									write_offset,
-									payload_data + write_idx,
-									unit_sz,
+									fu_chunk_get_address(chk),
+									fu_chunk_get_data(chk),
+									fu_chunk_get_data_sz(chk),
 									&error_local)) {
-				g_warning("Write failed: %s, retrying", error_local->message);
+				g_warning("write failed: %s, retrying", error_local->message);
 				/* repeat once */
 				if (!fu_synaptics_mst_connection_rc_set_command(
 					connection,
 					UPDC_WRITE_TO_EEPROM,
-					write_offset,
-					payload_data + write_idx,
-					unit_sz,
+					fu_chunk_get_address(chk),
+					fu_chunk_get_data(chk),
+					fu_chunk_get_data_sz(chk),
 					error)) {
 					g_prefix_error(error, "firmware write failed: ");
 					return FALSE;
 				}
 			}
-
-			write_offset += unit_sz;
-			write_idx += unit_sz;
 			fu_progress_step_done(progress);
 		}
 
 		/* verify CRC */
-		checksum = fu_synaptics_mst_calculate_crc16(0, payload_data, fw_size);
+		checksum = fu_synaptics_mst_calculate_crc16(0,
+							    g_bytes_get_data(fw2, NULL),
+							    g_bytes_get_size(fw2));
 		for (guint32 i = 0; i < 4; i++) {
 			fu_device_sleep(FU_DEVICE(self), 1); /* wait crc calculation */
 			if (!fu_synaptics_mst_connection_rc_special_get_command(
@@ -573,11 +569,11 @@ fu_synaptics_mst_device_update_panamera_firmware(FuSynapticsMstDevice *self,
 				UPDC_CAL_EEPROM_CHECK_CRC16,
 				(EEPROM_BANK_OFFSET * bank_to_update),
 				NULL,
-				fw_size,
+				g_bytes_get_size(fw2),
 				(guint8 *)(&flash_checksum),
-				4,
+				sizeof(flash_checksum),
 				error)) {
-				g_prefix_error(error, "Failed to get flash checksum: ");
+				g_prefix_error(error, "failed to get flash checksum: ");
 				return FALSE;
 			}
 		}
@@ -602,7 +598,8 @@ fu_synaptics_mst_device_update_panamera_firmware(FuSynapticsMstDevice *self,
 	tagData[1] = pTM->tm_mon + 1;
 	tagData[2] = pTM->tm_mday;
 	tagData[3] = pTM->tm_year + 1900 - 2000;
-	crc_tmp = fu_synaptics_mst_calculate_crc16(0, payload_data, fw_size);
+	crc_tmp =
+	    fu_synaptics_mst_calculate_crc16(0, g_bytes_get_data(fw2, NULL), g_bytes_get_size(fw2));
 	tagData[0] = bank_to_update;
 	tagData[4] = (crc_tmp >> 8) & 0xff;
 	tagData[5] = crc_tmp & 0xff;
@@ -1033,11 +1030,7 @@ fu_synaptics_mst_device_write_firmware(FuDevice *device,
 			g_prefix_error(error, "ESM update failed: ");
 			return FALSE;
 		}
-		if (!fu_synaptics_mst_device_update_panamera_firmware(self,
-								      payload_len,
-								      payload_data,
-								      progress,
-								      error)) {
+		if (!fu_synaptics_mst_device_update_panamera_firmware(self, fw, progress, error)) {
 			g_prefix_error(error, "Firmware update failed: ");
 			return FALSE;
 		}
