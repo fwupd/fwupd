@@ -189,12 +189,14 @@ fu_synaptics_mst_device_probe(FuDevice *device, GError **error)
 
 static gboolean
 fu_synaptics_mst_device_get_flash_checksum(FuSynapticsMstDevice *self,
-					   guint32 length,
 					   guint32 offset,
+					   guint32 length,
 					   guint32 *checksum,
 					   GError **error)
 {
 	g_autoptr(FuSynapticsMstConnection) connection = NULL;
+
+	g_return_val_if_fail(length > 0, FALSE);
 
 	connection = fu_synaptics_mst_connection_new(fu_udev_device_get_fd(FU_UDEV_DEVICE(self)),
 						     self->layer,
@@ -260,8 +262,8 @@ fu_synaptics_mst_device_update_esm(FuSynapticsMstDevice *self,
 						     self->rad);
 
 	if (!fu_synaptics_mst_device_get_flash_checksum(self,
-							esm_sz,
 							EEPROM_ESM_OFFSET,
+							esm_sz,
 							&flash_checksum,
 							error)) {
 		return FALSE;
@@ -318,8 +320,8 @@ fu_synaptics_mst_device_update_esm(FuSynapticsMstDevice *self,
 		/* check ESM checksum */
 		flash_checksum = 0;
 		if (!fu_synaptics_mst_device_get_flash_checksum(self,
-								esm_sz,
 								EEPROM_ESM_OFFSET,
+								esm_sz,
 								&flash_checksum,
 								error))
 			return FALSE;
@@ -402,8 +404,8 @@ fu_synaptics_mst_device_update_tesla_leaf_firmware(FuSynapticsMstDevice *self,
 
 		/* check data just written */
 		if (!fu_synaptics_mst_device_get_flash_checksum(self,
-								g_bytes_get_size(fw),
 								0,
+								g_bytes_get_size(fw),
 								&flash_checksum,
 								error))
 			return FALSE;
