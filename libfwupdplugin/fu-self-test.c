@@ -1695,10 +1695,12 @@ fu_chunk_func(void)
 	g_autofree gchar *chunked2_str = NULL;
 	g_autofree gchar *chunked3_str = NULL;
 	g_autofree gchar *chunked4_str = NULL;
+	g_autofree gchar *chunked5_str = NULL;
 	g_autoptr(GPtrArray) chunked1 = NULL;
 	g_autoptr(GPtrArray) chunked2 = NULL;
 	g_autoptr(GPtrArray) chunked3 = NULL;
 	g_autoptr(GPtrArray) chunked4 = NULL;
+	g_autoptr(GPtrArray) chunked5 = NULL;
 
 	chunked3 = fu_chunk_array_new((const guint8 *)"123456", 6, 0x0, 3, 3);
 	chunked3_str = fu_chunk_array_to_string(chunked3);
@@ -1730,6 +1732,10 @@ fu_chunk_func(void)
 			"    <data size=\"0x2\">56</data>\n"
 			"  </chunk>\n"
 			"</chunks>\n");
+	chunked5 = fu_chunk_array_new(NULL, 0, 0x0, 0x0, 4);
+	g_assert_cmpint(chunked5->len, ==, 0);
+	chunked5_str = fu_chunk_array_to_string(chunked5);
+	g_assert_cmpstr(chunked5_str, ==, "<chunks>\n</chunks>\n");
 
 	chunked1 = fu_chunk_array_new((const guint8 *)"0123456789abcdef", 16, 0x0, 10, 4);
 	chunked1_str = fu_chunk_array_to_string(chunked1);
