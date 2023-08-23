@@ -30,6 +30,11 @@ struct FuPluginData {
 	 * ourselves to recreate a functional device object even without MM
 	 */
 	FuMmDevice *shadow_device;
+
+	/*
+	 * Used to mark whether FU_MM_DEVICE_FLAG_UNINHIBIT_MM_AFTER_FASTBOOT_REBOOT is being used
+	 */
+	gboolean device_ready_uninhibit_manager;
 };
 
 typedef FuPluginData FuModemManagerPlugin;
@@ -195,6 +200,12 @@ fu_mm_plugin_udev_uevent_cb(GUdevClient *udev,
 		      fu_device_get_physical_id(FU_DEVICE(self->shadow_device))) != 0)
 		return TRUE;
 
+	/* device re creation, uninhibit manager */
+	if (self->device_ready_uninhibit_manager) {
+		self->device_ready_uninhibit_manager = FALSE;
+		fu_mm_plugin_uninhibit_device(plugin);
+	}
+
 	path = g_strdup_printf("/dev/%s", name);
 
 	if ((g_str_equal(action, "add")) || (g_str_equal(action, "change"))) {
@@ -226,6 +237,14 @@ fu_mm_plugin_inhibit_device(FuPlugin *plugin, FuDevice *device, GError **error)
 
 	/* setup shadow_device device info */
 	self->shadow_device = g_steal_pointer(&shadow_device);
+
+	/* uninhibit when device re creation is detected */
+	if (fu_device_has_private_flag(device,
+				       FU_MM_DEVICE_FLAG_UNINHIBIT_MM_AFTER_FASTBOOT_REBOOT)) {
+		self->device_ready_uninhibit_manager = TRUE;
+	} else {
+		self->device_ready_uninhibit_manager = FALSE;
+	}
 
 	/* only do modem port monitoring using udev if the module is expected
 	 * to reset itself into a fully different layout, e.g. a fastboot device */
