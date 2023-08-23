@@ -568,7 +568,7 @@ fu_synaptics_mst_device_update_panamera_firmware(FuSynapticsMstDevice *self,
 				    payload_len,
 				    0x400,
 				    &fw_size,
-				    G_LITTLE_ENDIAN,
+				    G_BIG_ENDIAN,
 				    error))
 		return FALSE;
 	fw_size += 0x410;
