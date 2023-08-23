@@ -246,16 +246,15 @@ fu_synaptics_mst_device_set_flash_sector_erase(FuSynapticsMstDevice *self,
 
 static gboolean
 fu_synaptics_mst_device_update_esm(FuSynapticsMstDevice *self,
-				   const guint8 *payload_data,
+				   GBytes *fw,
 				   FuProgress *progress,
 				   GError **error)
 {
 	guint32 checksum = 0;
-	guint32 esm_sz = ESM_CODE_SIZE;
 	guint32 flash_checksum = 0;
-	guint32 unit_sz = BLOCK_UNIT;
-	guint32 write_loops = 0;
 	g_autoptr(FuSynapticsMstConnection) connection = NULL;
+	g_autoptr(GBytes) fw_truncated = NULL;
+	g_autoptr(GPtrArray) chunks = NULL;
 
 	connection = fu_synaptics_mst_connection_new(fu_udev_device_get_fd(FU_UDEV_DEVICE(self)),
 						     self->layer,
@@ -263,14 +262,17 @@ fu_synaptics_mst_device_update_esm(FuSynapticsMstDevice *self,
 
 	if (!fu_synaptics_mst_device_get_flash_checksum(self,
 							EEPROM_ESM_OFFSET,
-							esm_sz,
+							ESM_CODE_SIZE,
 							&flash_checksum,
 							error)) {
 		return FALSE;
 	}
 
 	/* ESM checksum same */
-	checksum = fu_sum32(payload_data + EEPROM_ESM_OFFSET, esm_sz);
+	fw_truncated = fu_bytes_new_offset(fw, EEPROM_ESM_OFFSET, ESM_CODE_SIZE, error);
+	if (fw_truncated == NULL)
+		return FALSE;
+	checksum = fu_sum32_bytes(fw_truncated);
 	if (checksum == flash_checksum) {
 		g_debug("ESM checksum already matches");
 		return TRUE;
@@ -278,12 +280,8 @@ fu_synaptics_mst_device_update_esm(FuSynapticsMstDevice *self,
 	g_debug("ESM checksum %x doesn't match expected %x", flash_checksum, checksum);
 
 	/* update ESM firmware */
-	write_loops = esm_sz / unit_sz;
+	chunks = fu_chunk_array_new_from_bytes(fw_truncated, EEPROM_ESM_OFFSET, 0x0, BLOCK_UNIT);
 	for (guint retries_cnt = 0;; retries_cnt++) {
-		guint32 write_idx = 0;
-		guint32 write_offset = EEPROM_ESM_OFFSET;
-		const guint8 *esm_code_ptr = &payload_data[EEPROM_ESM_OFFSET];
-
 		/* erase ESM firmware; erase failure is fatal */
 		for (guint32 j = 0; j < 4; j++) {
 			if (!fu_synaptics_mst_device_set_flash_sector_erase(self,
@@ -300,20 +298,19 @@ fu_synaptics_mst_device_update_esm(FuSynapticsMstDevice *self,
 
 		/* write firmware */
 		fu_progress_set_id(progress, G_STRLOC);
-		fu_progress_set_steps(progress, write_loops);
-		for (guint32 i = 0; i < write_loops; i++) {
+		fu_progress_set_steps(progress, chunks->len);
+		for (guint i = 0; i < chunks->len; i++) {
+			FuChunk *chk = g_ptr_array_index(chunks, i);
 			g_autoptr(GError) error_local = NULL;
 			if (!fu_synaptics_mst_connection_rc_set_command(connection,
 									UPDC_WRITE_TO_EEPROM,
-									write_offset,
-									esm_code_ptr + write_idx,
-									unit_sz,
+									fu_chunk_get_address(chk),
+									fu_chunk_get_data(chk),
+									fu_chunk_get_data_sz(chk),
 									&error_local)) {
 				g_warning("failed to write ESM: %s", error_local->message);
 				break;
 			}
-			write_offset += unit_sz;
-			write_idx += unit_sz;
 			fu_progress_step_done(progress);
 		}
 
@@ -321,7 +318,7 @@ fu_synaptics_mst_device_update_esm(FuSynapticsMstDevice *self,
 		flash_checksum = 0;
 		if (!fu_synaptics_mst_device_get_flash_checksum(self,
 								EEPROM_ESM_OFFSET,
-								esm_sz,
+								ESM_CODE_SIZE,
 								&flash_checksum,
 								error))
 			return FALSE;
@@ -977,8 +974,6 @@ fu_synaptics_mst_device_write_firmware(FuDevice *device,
 {
 	FuSynapticsMstDevice *self = FU_SYNAPTICS_MST_DEVICE(device);
 	g_autoptr(GBytes) fw = NULL;
-	const guint8 *payload_data;
-	gsize payload_len;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
 	/* progress */
@@ -990,7 +985,6 @@ fu_synaptics_mst_device_write_firmware(FuDevice *device,
 	fw = fu_firmware_get_bytes(firmware, error);
 	if (fw == NULL)
 		return FALSE;
-	payload_data = g_bytes_get_data(fw, &payload_len);
 
 	/* enable remote control and disable on exit */
 	if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_SKIPS_RESTART)) {
@@ -1028,7 +1022,7 @@ fu_synaptics_mst_device_write_firmware(FuDevice *device,
 			g_prefix_error(error, "Failed to prepare for write: ");
 			return FALSE;
 		}
-		if (!fu_synaptics_mst_device_update_esm(self, payload_data, progress, error)) {
+		if (!fu_synaptics_mst_device_update_esm(self, fw, progress, error)) {
 			g_prefix_error(error, "ESM update failed: ");
 			return FALSE;
 		}
