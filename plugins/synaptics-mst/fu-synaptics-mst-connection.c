@@ -193,9 +193,8 @@ fu_synaptics_mst_connection_rc_send_command_and_wait(FuSynapticsMstConnection *s
 						     GError **error)
 {
 	guint32 cmd = 0x80 | rc_cmd;
-	struct timespec t_spec;
-	guint16 readData = 0;
-	long deadline;
+	guint16 buf = 0;
+	g_autoptr(GTimer) timer = g_timer_new();
 
 	if (!fu_synaptics_mst_connection_write(self, REG_RC_CMD, (guint8 *)&cmd, 1, error)) {
 		g_prefix_error(error, "failed to write command: ");
@@ -203,34 +202,30 @@ fu_synaptics_mst_connection_rc_send_command_and_wait(FuSynapticsMstConnection *s
 	}
 
 	/* wait command complete */
-	clock_gettime(CLOCK_REALTIME, &t_spec);
-	deadline = t_spec.tv_sec + MAX_WAIT_TIME;
-
 	do {
 		if (!fu_synaptics_mst_connection_read(self,
 						      REG_RC_CMD,
-						      (guint8 *)&readData,
-						      sizeof(readData),
+						      (guint8 *)&buf,
+						      sizeof(buf),
 						      error)) {
 			g_prefix_error(error, "failed to read command: ");
 			return FALSE;
 		}
-		clock_gettime(CLOCK_REALTIME, &t_spec);
-		if (t_spec.tv_sec > deadline) {
+		if (g_timer_elapsed(timer, NULL) > MAX_WAIT_TIME) {
 			g_set_error_literal(error,
 					    G_IO_ERROR,
 					    G_IO_ERROR_INVALID_DATA,
 					    "timeout exceeded");
 			return FALSE;
 		}
-	} while (readData & 0x80);
+	} while (buf & 0x80);
 
-	if (readData & 0xFF00) {
+	if (buf & 0xFF00) {
 		g_set_error(error,
 			    G_IO_ERROR,
 			    G_IO_ERROR_INVALID_DATA,
 			    "remote command failed: %u",
-			    (guint)(readData >> 8) & 0xFF);
+			    (guint)(buf >> 8) & 0xFF);
 
 		return FALSE;
 	}
