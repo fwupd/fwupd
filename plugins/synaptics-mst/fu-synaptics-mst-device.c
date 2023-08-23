@@ -797,32 +797,19 @@ fu_synaptics_mst_device_panamera_prepare_write(FuSynapticsMstDevice *self, GErro
 
 static gboolean
 fu_synaptics_mst_device_update_cayenne_firmware(FuSynapticsMstDevice *self,
-						guint32 payload_len,
-						const guint8 *payload_data,
+						GBytes *fw,
 						FuProgress *progress,
 						GError **error)
 {
 	g_autoptr(FuSynapticsMstConnection) connection = NULL;
-	guint32 data_to_write = 0;
-	guint32 offset = 0;
-	guint32 write_loops = 0;
+	g_autoptr(GPtrArray) chunks = NULL;
+	g_autoptr(GBytes) fw2 = NULL;
 
 	/* sanity check */
-	if (payload_len < CAYENNE_FIRMWARE_SIZE) {
-		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
-			    "payload too small, expected >=0x%x",
-			    (guint)CAYENNE_FIRMWARE_SIZE);
+	fw2 = fu_bytes_new_offset(fw, 0x0, CAYENNE_FIRMWARE_SIZE, error);
+	if (fw2 == NULL)
 		return FALSE;
-	}
-
-	payload_len = CAYENNE_FIRMWARE_SIZE;
-	write_loops = (payload_len / BLOCK_UNIT);
-	data_to_write = payload_len;
-
-	if (payload_len % BLOCK_UNIT)
-		write_loops++;
+	chunks = fu_chunk_array_new_from_bytes(fw2, 0x0, 0x0, BLOCK_UNIT);
 
 	connection = fu_synaptics_mst_connection_new(fu_udev_device_get_fd(FU_UDEV_DEVICE(self)),
 						     self->layer,
@@ -836,50 +823,48 @@ fu_synaptics_mst_device_update_cayenne_firmware(FuSynapticsMstDevice *self,
 		g_debug("waiting for flash clear to settle");
 		fu_device_sleep(FU_DEVICE(self), FLASH_SETTLE_TIME);
 
-		fu_progress_set_steps(progress, write_loops);
-		for (guint32 i = 0; i < write_loops; i++) {
+		fu_progress_set_steps(progress, chunks->len);
+		for (guint i = 0; i < chunks->len; i++) {
+			FuChunk *chk = g_ptr_array_index(chunks, i);
 			g_autoptr(GError) error_local = NULL;
-			guint8 length = BLOCK_UNIT;
 
-			if (data_to_write < BLOCK_UNIT)
-				length = data_to_write;
 			if (!fu_synaptics_mst_connection_rc_set_command(connection,
 									UPDC_WRITE_TO_EEPROM,
-									offset,
-									payload_data + offset,
-									length,
+									fu_chunk_get_address(chk),
+									fu_chunk_get_data(chk),
+									fu_chunk_get_data_sz(chk),
 									&error_local)) {
 				g_warning("Failed to write flash offset 0x%04x: %s, retrying",
-					  offset,
+					  fu_chunk_get_address(chk),
 					  error_local->message);
 				/* repeat once */
 				if (!fu_synaptics_mst_connection_rc_set_command(
 					connection,
 					UPDC_WRITE_TO_EEPROM,
-					offset,
-					payload_data + offset,
-					length,
+					fu_chunk_get_address(chk),
+					fu_chunk_get_data(chk),
+					fu_chunk_get_data_sz(chk),
 					error)) {
 					g_prefix_error(error,
 						       "can't write flash offset 0x%04x: ",
-						       offset);
+						       fu_chunk_get_address(chk));
 					return FALSE;
 				}
 			}
-			offset += length;
-			data_to_write -= length;
 			fu_progress_step_done(progress);
 		}
 
 		/* verify CRC */
-		checksum = fu_synaptics_mst_calculate_crc16(0, payload_data, payload_len);
+		checksum = fu_synaptics_mst_calculate_crc16(0,
+							    g_bytes_get_data(fw2, NULL),
+							    g_bytes_get_size(fw2));
 		if (!fu_synaptics_mst_connection_rc_special_get_command(connection,
 									UPDC_CAL_EEPROM_CHECK_CRC16,
 									0,
 									NULL,
-									payload_len,
+									g_bytes_get_size(fw2),
 									(guint8 *)(&flash_checksum),
-									4,
+									sizeof(flash_checksum),
 									error)) {
 			g_prefix_error(error, "Failed to get flash checksum: ");
 			return FALSE;
@@ -1059,11 +1044,7 @@ fu_synaptics_mst_device_write_firmware(FuDevice *device,
 		break;
 	case FU_SYNAPTICS_MST_FAMILY_CAYENNE:
 	case FU_SYNAPTICS_MST_FAMILY_SPYDER:
-		if (!fu_synaptics_mst_device_update_cayenne_firmware(self,
-								     payload_len,
-								     payload_data,
-								     progress,
-								     error)) {
+		if (!fu_synaptics_mst_device_update_cayenne_firmware(self, fw, progress, error)) {
 			g_prefix_error(error, "Firmware update failed: ");
 			return FALSE;
 		}
