@@ -1893,6 +1893,9 @@ fu_mm_device_init(FuMmDevice *self)
 	fu_device_register_private_flag(FU_DEVICE(self),
 					FU_MM_DEVICE_FLAG_DETACH_AT_FASTBOOT_HAS_NO_RESPONSE,
 					"detach-at-fastboot-has-no-response");
+	fu_device_register_private_flag(FU_DEVICE(self),
+					FU_MM_DEVICE_FLAG_UNINHIBIT_MM_AFTER_FASTBOOT_REBOOT,
+					"uninhibit-modemmanager-after-fastboot-reboot");
 }
 
 static void

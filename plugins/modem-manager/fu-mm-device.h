@@ -12,6 +12,15 @@
 
 #include <libmm-glib.h>
 
+/*
+ * FU_MM_DEVICE_FLAG_UNINHIBIT_MM_AFTER_FASTBOOT_REBOOT
+ *
+ * after entering the fastboot state, the modem cannot execute the attach method
+ * in the MM plugin plugin plugin. shadow_device needs to be used to uninhibit the modem
+ * when fu_mm_plugin_udev_uevent_cb detects it.
+ */
+#define FU_MM_DEVICE_FLAG_UNINHIBIT_MM_AFTER_FASTBOOT_REBOOT (1 << 1)
+
 #define FU_TYPE_MM_DEVICE (fu_mm_device_get_type())
 G_DECLARE_FINAL_TYPE(FuMmDevice, fu_mm_device, FU, MM_DEVICE, FuDevice)
 
