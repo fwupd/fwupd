@@ -642,31 +642,30 @@ fu_synaptics_mst_device_update_panamera_set_old_invalid_cb(FuDevice *device,
 	FuSynapticsMstDevice *self = FU_SYNAPTICS_MST_DEVICE(device);
 	FuSynapticsMstDeviceHelper *helper = (FuSynapticsMstDeviceHelper *)user_data;
 	guint8 checksum_tmp = 0;
-	guint8 checksum_expected = 0;
+	guint8 checksum_nul = 0;
 
 	/* CRC8 is not 0xff, erase last 4k of bank# */
 	if (helper->checksum != 0xff) {
 		guint32 erase_offset =
 		    (EEPROM_BANK_OFFSET * self->active_bank + EEPROM_BANK_OFFSET - 0x1000) / 0x1000;
+		g_debug("erasing offset 0x%x", erase_offset);
 		if (!fu_synaptics_mst_device_set_flash_sector_erase(self,
 								    FLASH_SECTOR_ERASE_4K,
 								    erase_offset,
 								    error))
 			return FALSE;
-		checksum_expected = 0xff;
-	} else {
-		/* CRC8 is 0xff, set it to 0x00 */
-		if (!fu_synaptics_mst_connection_rc_set_command(
-			helper->connection,
-			UPDC_WRITE_TO_EEPROM,
-			(EEPROM_BANK_OFFSET * self->active_bank + EEPROM_TAG_OFFSET + 15),
-			&checksum_tmp,
-			sizeof(checksum_tmp),
-			error)) {
-			g_prefix_error(error, "failed to clear CRC: ");
-			return FALSE;
-		}
-		checksum_expected = checksum_tmp;
+	}
+
+	/* set CRC8 to 0x00 */
+	if (!fu_synaptics_mst_connection_rc_set_command(
+		helper->connection,
+		UPDC_WRITE_TO_EEPROM,
+		(EEPROM_BANK_OFFSET * self->active_bank + EEPROM_TAG_OFFSET + 15),
+		&checksum_nul,
+		sizeof(checksum_nul),
+		error)) {
+		g_prefix_error(error, "failed to clear CRC: ");
+		return FALSE;
 	}
 	if (!fu_synaptics_mst_connection_rc_get_command(
 		helper->connection,
@@ -678,13 +677,13 @@ fu_synaptics_mst_device_update_panamera_set_old_invalid_cb(FuDevice *device,
 		g_prefix_error(error, "failed to read CRC from flash: ");
 		return FALSE;
 	}
-	if (checksum_tmp != checksum_expected) {
+	if (checksum_tmp != checksum_nul) {
 		g_set_error(error,
 			    G_IO_ERROR,
 			    G_IO_ERROR_INVALID_DATA,
 			    "set tag invalid fail, got 0x%x and expected 0x%x",
 			    checksum_tmp,
-			    checksum_expected);
+			    checksum_nul);
 		return FALSE;
 	}
 
