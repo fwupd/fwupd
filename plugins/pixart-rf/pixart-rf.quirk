@@ -188,8 +188,26 @@ GType = FuPxiBleDevice
 Plugin = pixart_rf
 GType = FuPxiBleDevice
 
-# HP 430
+# Twinkies Mouse/KB
 [HIDRAW\VEN_03F0&DEV_114C]
+Plugin = pixart_rf
+GType = FuPxiBleDevice
+Flags = is-hpac
+
+# Twinkies Dongle
+[HIDRAW\VEN_03F0&DEV_6841]
+Plugin = pixart_rf
+GType = FuPxiReceiverDevice
+Flags = is-hpac
+
+# Rata BLE Mouse
+[HIDRAW\VEN_03F0&DEV_7F4A]
+Plugin = pixart_rf
+GType = FuPxiBleDevice
+Flags = is-hpac
+
+# Remi BLE Mouse
+[HIDRAW\VEN_03F0&DEV_804A]
 Plugin = pixart_rf
 GType = FuPxiBleDevice
 Flags = is-hpac
