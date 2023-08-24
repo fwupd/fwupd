@@ -76,8 +76,6 @@ override_dh_install:
 	rm -f debian/fwupd/usr/lib/*/fwupd-plugins-*/libfu_plugin_test_ble.so
 	rm -f debian/fwupd/etc/fwupd/remotes.d/fwupd-tests.conf
 
-	#enable fwupd-refresh.service by default (we have a dedicated user)
-	rm -f debian/fwupd/lib/systemd/system-preset/fwupd-refresh.preset
 	# avoid shipping an empty directory
 	find debian/fwupd/lib/systemd -type d -empty -delete
 

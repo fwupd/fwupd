@@ -13,7 +13,6 @@ usr/share/metainfo/*
 usr/libexec/fwupd/*
 usr/share/man/*
 lib/systemd/system/*
-lib/systemd/system-preset/*
 lib/systemd/system-shutdown/*
 lib/udev/rules.d/*
 data/fwupd.conf etc/fwupd

@@ -1,2 +1,0 @@
-disable fwupd-refresh.service
-disable fwupd-refresh.timer
