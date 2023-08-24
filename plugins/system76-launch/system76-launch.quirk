@@ -1,34 +1,34 @@
 # System76 launch_1
-[USB\VID_3384&PID_0001&REV_0001]
+[USB\VID_3384&PID_0001]
 Plugin = system76_launch
 CounterpartGuid = USB\VID_03EB&PID_2FF4
 
 # System76 launch_lite_1
-[USB\VID_3384&PID_0005&REV_0001]
+[USB\VID_3384&PID_0005]
 Plugin = system76_launch
 CounterpartGuid = USB\VID_03EB&PID_2FF9
 
 # System76 launch_2
-[USB\VID_3384&PID_0006&REV_0001]
+[USB\VID_3384&PID_0006]
 Plugin = system76_launch
 CounterpartGuid = USB\VID_03EB&PID_2FF9
 
 # System76 launch_heavy_1
-[USB\VID_3384&PID_0007&REV_0001]
+[USB\VID_3384&PID_0007]
 Plugin = system76_launch
 CounterpartGuid = USB\VID_03EB&PID_2FF9
 
 # System76 launch_3
-[USB\VID_3384&PID_0009&REV_0001]
+[USB\VID_3384&PID_0009]
 Plugin = system76_launch
 CounterpartGuid = BLOCK\VEN_2E8A&DEV_0003
 
 # System76 launch_heavy_3
-[USB\VID_3384&PID_000A&REV_0001]
+[USB\VID_3384&PID_000A]
 Plugin = system76_launch
 CounterpartGuid = BLOCK\VEN_2E8A&DEV_0003
 
 # System76 thelio_io_2
-[USB\VID_3384&PID_000B&REV_0001]
+[USB\VID_3384&PID_000B]
 Plugin = system76_launch
 CounterpartGuid = BLOCK\VEN_2E8A&DEV_0003
