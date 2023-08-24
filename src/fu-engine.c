@@ -3702,7 +3702,6 @@ fu_engine_write_firmware(FuEngine *self,
 	FuPlugin *plugin;
 	g_autofree gchar *str = NULL;
 	g_autoptr(FuDevice) device = NULL;
-	g_autoptr(FuDevice) device_pending = NULL;
 	g_autoptr(FuDeviceLocker) poll_locker = NULL;
 
 	/* cancel the pending action */
@@ -3721,7 +3720,6 @@ fu_engine_write_firmware(FuEngine *self,
 	if (poll_locker == NULL)
 		return FALSE;
 
-	device_pending = fu_history_get_device_by_id(self->history, device_id, NULL);
 	str = fu_device_to_string(device);
 	g_info("update -> %s", str);
 	plugin =
@@ -3746,35 +3744,6 @@ fu_engine_write_firmware(FuEngine *self,
 				  error_cleanup->message);
 		}
 		return FALSE;
-	}
-
-	/* cleanup */
-	if (device_pending != NULL) {
-		const gchar *tmp;
-		FwupdRelease *release;
-
-		/* update history database */
-		fu_device_set_update_state(device, FWUPD_UPDATE_STATE_SUCCESS);
-		if (!fu_history_modify_device(self->history, device, error))
-			return FALSE;
-
-		/* delete cab file */
-		release = fu_device_get_release_default(device_pending);
-		tmp = fwupd_release_get_filename(release);
-		if (tmp != NULL && g_str_has_prefix(tmp, FWUPD_LIBEXECDIR)) {
-			g_autoptr(GError) error_delete = NULL;
-			g_autoptr(GFile) file = NULL;
-			file = g_file_new_for_path(tmp);
-			if (!g_file_delete(file, NULL, &error_delete)) {
-				g_set_error(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_INVALID_FILE,
-					    "Failed to delete %s: %s",
-					    tmp,
-					    error_delete->message);
-				return FALSE;
-			}
-		}
 	}
 
 	/* save to emulated phase */
@@ -3847,6 +3816,7 @@ fu_engine_install_blob(FuEngine *self,
 {
 	guint retries = 0;
 	g_autofree gchar *device_id = NULL;
+	g_autofree gchar *filename_to_delete = NULL;
 	g_autoptr(GTimer) timer = g_timer_new();
 	g_autoptr(FuDeviceProgress) device_progress = fu_device_progress_new(device, progress);
 
@@ -3877,6 +3847,16 @@ fu_engine_install_blob(FuEngine *self,
 	if (!fu_engine_prepare(self, device_id, fu_progress_get_child(progress), flags, error))
 		return FALSE;
 	fu_progress_step_done(progress);
+
+	/* we saved this so we could do the offline update */
+	if (fu_device_get_update_state(device) == FWUPD_UPDATE_STATE_PENDING) {
+		g_autoptr(FuDevice) device_pending =
+		    fu_history_get_device_by_id(self->history, device_id, NULL);
+		if (device_pending != NULL) {
+			FwupdRelease *release = fu_device_get_release_default(device_pending);
+			filename_to_delete = g_strdup(fwupd_release_get_filename(release));
+		}
+	}
 
 	/* plugins can set FWUPD_DEVICE_FLAG_ANOTHER_WRITE_REQUIRED to run again, but they
 	 * must return TRUE rather than an error */
@@ -3963,6 +3943,22 @@ fu_engine_install_blob(FuEngine *self,
 
 	} while (TRUE);
 	fu_progress_step_done(progress);
+
+	/* delete offline-update cab archive */
+	if (filename_to_delete != NULL) {
+		g_autoptr(GFile) file = g_file_new_for_path(filename_to_delete);
+		if (!g_file_delete(file, NULL, error)) {
+			g_prefix_error(error, "failed to delete %s: ", filename_to_delete);
+			return FALSE;
+		}
+	}
+
+	/* update history database */
+	fu_device_set_update_state(device, FWUPD_UPDATE_STATE_SUCCESS);
+	if (!fu_history_modify_device(self->history, device, error)) {
+		g_prefix_error(error, "failed to set success: ");
+		return FALSE;
+	}
 
 	/* signal to all the plugins the update has happened */
 	fu_engine_set_install_phase(self, FU_ENGINE_INSTALL_PHASE_CLEANUP);
