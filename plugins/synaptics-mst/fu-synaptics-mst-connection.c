@@ -41,6 +41,7 @@ fu_synaptics_mst_connection_aux_node_read(FuSynapticsMstConnection *self,
 					  gint length,
 					  GError **error)
 {
+	g_autofree gchar *title = g_strdup_printf("read@0x%x", offset);
 	if (lseek(self->fd, offset, SEEK_SET) != offset) {
 		g_set_error(error,
 			    G_IO_ERROR,
@@ -62,6 +63,7 @@ fu_synaptics_mst_connection_aux_node_read(FuSynapticsMstConnection *self,
 			    self->rad);
 		return FALSE;
 	}
+	fu_dump_raw(G_LOG_DOMAIN, title, buf, bufsz);
 
 	return TRUE;
 }
@@ -73,6 +75,8 @@ fu_synaptics_mst_connection_aux_node_write(FuSynapticsMstConnection *self,
 					   gint length,
 					   GError **error)
 {
+	g_autofree gchar *title = g_strdup_printf("write@0x%x", offset);
+	fu_dump_raw(G_LOG_DOMAIN, title, buf, bufsz);
 	if (lseek(self->fd, offset, SEEK_SET) != offset) {
 		g_set_error(error,
 			    G_IO_ERROR,
