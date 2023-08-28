@@ -40,6 +40,7 @@
 #define GENESYS_USBHUB_DYNAMIC_TOOL_DESC_IDX_USB_2_0 0x82
 #define GENESYS_USBHUB_FW_INFO_DESC_IDX		     0x83
 #define GENESYS_USBHUB_VENDOR_SUPPORT_DESC_IDX	     0x86
+#define GENESYS_USBHUB_BRAND_PROJECT_DESC_IDX	     0x8A
 
 #define GENESYS_USBHUB_GL_HUB_VERIFY	  0x71
 #define GENESYS_USBHUB_GL_HUB_SWITCH	  0x81
@@ -97,6 +98,7 @@ struct _FuGenesysUsbhubDevice {
 	GByteArray *st_dynamic_ts;
 	GByteArray *st_fwinfo_ts;
 	GByteArray *st_vendor_ts;
+	GByteArray *st_project_ts;
 	FuGenesysVendorCommandSetting vcs;
 	FuGenesysModelSpec spec;
 
@@ -634,6 +636,8 @@ fu_genesys_usbhub_device_get_descriptor_data(GBytes *desc_bytes,
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "data is too small");
 		return FALSE;
 	}
+
+	memset(dst, 0, dst_size);
 
 	/* discard first 2 bytes (desc. length and type) */
 	buf += 2;
@@ -1222,6 +1226,30 @@ fu_genesys_usbhub_device_get_info_from_vendor_ts(FuGenesysUsbhubDevice *self,
 }
 
 static gboolean
+fu_genesys_usbhub_device_get_info_from_project_ts(FuGenesysUsbhubDevice *self,
+						  const guint8 *buf,
+						  gsize bufsz,
+						  GError **error)
+{
+	g_autofree gchar *guid = NULL;
+
+	self->st_project_ts = fu_struct_genesys_ts_brand_project_parse(buf, bufsz, 0, error);
+	if (self->st_project_ts == NULL) {
+		g_prefix_error(error, "failed to parse brand project tool info: ");
+		return FALSE;
+	}
+
+	/* add specific product info */
+	guid = fwupd_guid_hash_data(self->st_project_ts->data,
+				    self->st_project_ts->len,
+				    FWUPD_GUID_FLAG_NONE);
+	fu_device_add_instance_strup(FU_DEVICE(self), "PROJECT", guid);
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_genesys_usbhub_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 {
 	return fu_genesys_usbhub_device_enter_isp_mode(FU_GENESYS_USBHUB_DEVICE(device), error);
@@ -1399,6 +1427,28 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 		self->st_vendor_ts = fu_struct_genesys_ts_vendor_support_new();
 	}
 
+	/* parse brand project tool string */
+	if (self->tool_string_version >= FU_GENESYS_TS_VERSION_BRAND_PROJECT) {
+		g_autoptr(GBytes) project_buf = g_usb_device_get_string_descriptor_bytes_full(
+		    usb_device,
+		    GENESYS_USBHUB_BRAND_PROJECT_DESC_IDX,
+		    G_USB_DEVICE_LANGID_ENGLISH_UNITED_STATES,
+		    64,
+		    error);
+		if (project_buf == NULL) {
+			g_prefix_error(error,
+				       "failed to get brand project tool info from device: ");
+			return FALSE;
+		}
+		if (!fu_genesys_usbhub_device_get_descriptor_data(project_buf, buf, bufsz, error)) {
+			g_prefix_error(error,
+				       "failed to get brand project tool info from device: ");
+			return FALSE;
+		}
+		if (!fu_genesys_usbhub_device_get_info_from_project_ts(self, buf, bufsz, error))
+			return FALSE;
+	}
+
 	if (fu_device_has_private_flag(device, FU_GENESYS_USBHUB_FLAG_HAS_PUBLIC_KEY))
 		self->has_codesign = TRUE;
 
@@ -1470,6 +1520,7 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 				    "VENDORSUP",
 				    NULL);
 	fu_device_build_instance_id(device, NULL, "USB", "VID", "PID", "PUBKEY", NULL);
+	fu_device_build_instance_id(device, NULL, "USB", "VID", "PID", "PROJECT", NULL);
 
 	/* have MStar scaler */
 	if (fu_device_has_private_flag(device, FU_GENESYS_USBHUB_FLAG_HAS_MSTAR_SCALER))
@@ -2824,6 +2875,8 @@ fu_genesys_usbhub_device_finalize(GObject *object)
 		g_byte_array_unref(self->st_fwinfo_ts);
 	if (self->st_vendor_ts != NULL)
 		g_byte_array_unref(self->st_vendor_ts);
+	if (self->st_project_ts != NULL)
+		g_byte_array_unref(self->st_project_ts);
 	if (self->hub_fw_bank1_data != NULL)
 		g_bytes_unref(self->hub_fw_bank1_data);
 	if (self->st_codesign != NULL)

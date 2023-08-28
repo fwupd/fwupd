@@ -13,7 +13,7 @@ enum GenesysTsVersion {
     Dynamic_2nd,
     Reserved,
     Dynamic_13Byte,
-    ProductProject,
+    BrandProject,
 }
 #[derive(ToString, Parse, New)]
 struct GenesysTsStatic {
@@ -175,6 +175,11 @@ struct GenesysTsVendorSupport {
     reserved2: [char; 4],
     hid_isp: GenesysVsHidIsp, // offset: 0x0f
     reserved3: [char; 15],
+}
+
+#[derive(ToString, Parse)]
+struct GenesysTsBrandProject {
+    project: [char; 15],
 }
 
 // Firmware info
