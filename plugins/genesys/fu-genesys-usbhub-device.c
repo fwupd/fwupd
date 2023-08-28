@@ -11,6 +11,7 @@
 #include <string.h>
 
 #include "fu-genesys-common.h"
+#include "fu-genesys-hubhid-device.h"
 #include "fu-genesys-scaler-device.h"
 #include "fu-genesys-usbhub-codesign-firmware.h"
 #include "fu-genesys-usbhub-device.h"
@@ -139,9 +140,28 @@ struct _FuGenesysUsbhubDevice {
 	FuGenesysFwCodesign codesign;
 	GByteArray *st_codesign; /* codesign info, may need to backup for GL352350 */
 	GByteArray *st_public_key;
+
+	/* hid channel */
+	FuGenesysHubhidDevice *hid_channel;
 };
 
 G_DEFINE_TYPE(FuGenesysUsbhubDevice, fu_genesys_usbhub_device, FU_TYPE_USB_DEVICE)
+
+void
+fu_genesys_usbhub_device_set_hid_channel(FuDevice *device, FuDevice *channel)
+{
+	FuGenesysUsbhubDevice *self = FU_GENESYS_USBHUB_DEVICE(device);
+
+	g_return_if_fail(self);
+	g_return_if_fail(FU_IS_GENESYS_HUBHID_DEVICE(channel));
+
+	if (self->hid_channel != NULL) {
+		g_warning("already set hid_channel, physical_id(%s)",
+			  fu_device_get_physical_id(FU_DEVICE(self->hid_channel)));
+	} else {
+		self->hid_channel = FU_GENESYS_HUBHID_DEVICE(channel);
+	}
+}
 
 static gboolean
 fu_genesys_usbhub_device_mstar_scaler_setup(FuGenesysUsbhubDevice *self, GError **error)
@@ -1262,6 +1282,10 @@ fu_genesys_usbhub_device_attach(FuDevice *device, FuProgress *progress, GError *
 	if (!fu_genesys_usbhub_device_reset(self, error))
 		return FALSE;
 
+	if (self->hid_channel != NULL) {
+		fu_device_add_flag(FU_DEVICE(self->hid_channel), FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+	}
+
 	/* success */
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	return TRUE;
@@ -1304,6 +1328,65 @@ fu_genesys_usbhub_device_dump_firmware(FuDevice *device, FuProgress *progress, G
 }
 
 static gboolean
+fu_genesys_usbhub_device_probe(FuDevice *device, GError **error)
+{
+	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(device));
+
+	if (g_usb_device_get_device_class(usb_device) != G_USB_DEVICE_CLASS_HUB) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "is not a usb hub");
+		return FALSE;
+	}
+	if (g_usb_device_get_spec(usb_device) >= 0x300) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "unsupported USB3 hub");
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+static gboolean
+fu_genesys_usbhub_device_open(FuDevice *device, GError **error)
+{
+	FuGenesysUsbhubDevice *self = FU_GENESYS_USBHUB_DEVICE(device);
+
+	/* FuUsbDevice->open */
+	if (!FU_DEVICE_CLASS(fu_genesys_usbhub_device_parent_class)->open(device, error))
+		return FALSE;
+
+	/* FuGenesysHubhidDevice->open */
+	if (self->hid_channel != NULL) {
+		if (!fu_device_open(FU_DEVICE(self->hid_channel), error))
+			return FALSE;
+	}
+
+	return TRUE;
+}
+
+static gboolean
+fu_genesys_usbhub_device_close(FuDevice *device, GError **error)
+{
+	FuGenesysUsbhubDevice *self = FU_GENESYS_USBHUB_DEVICE(device);
+
+	/* FuUsbDevice->close */
+	if (!FU_DEVICE_CLASS(fu_genesys_usbhub_device_parent_class)->close(device, error))
+		return FALSE;
+
+	/* FuGenesysHubhidDevice->close */
+	if (self->hid_channel != NULL) {
+		if (!fu_device_close(FU_DEVICE(self->hid_channel), error))
+			return FALSE;
+	}
+
+	return TRUE;
+}
+
+static gboolean
 fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 {
 	FuGenesysUsbhubDevice *self = FU_GENESYS_USBHUB_DEVICE(device);
@@ -1330,11 +1413,8 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 
 	/* read standard string descriptors */
 	if (g_usb_device_get_spec(usb_device) >= 0x300) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "unsupported USB3 hub");
-		return FALSE;
+		static_idx = GENESYS_USBHUB_STATIC_TOOL_DESC_IDX_USB_3_0;
+		dynamic_idx = GENESYS_USBHUB_DYNAMIC_TOOL_DESC_IDX_USB_3_0;
 	} else {
 		static_idx = GENESYS_USBHUB_STATIC_TOOL_DESC_IDX_USB_2_0;
 		dynamic_idx = GENESYS_USBHUB_DYNAMIC_TOOL_DESC_IDX_USB_2_0;
@@ -2894,6 +2974,9 @@ fu_genesys_usbhub_device_class_init(FuGenesysUsbhubDeviceClass *klass)
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
 	object_class->finalize = fu_genesys_usbhub_device_finalize;
+	klass_device->probe = fu_genesys_usbhub_device_probe;
+	klass_device->open = fu_genesys_usbhub_device_open;
+	klass_device->close = fu_genesys_usbhub_device_close;
 	klass_device->setup = fu_genesys_usbhub_device_setup;
 	klass_device->dump_firmware = fu_genesys_usbhub_device_dump_firmware;
 	klass_device->prepare = fu_genesys_usbhub_device_prepare;

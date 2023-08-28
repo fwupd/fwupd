@@ -42,7 +42,6 @@ typedef struct {
 #define GENESYS_USBHUB_FW_SIG_OFFSET	      0xFC
 #define GENESYS_USBHUB_FW_SIG_LEN	      4
 #define GENESYS_USBHUB_FW_SIG_TEXT_HUB	      "XROM"
-#define GENESYS_USBHUB_FW_SIG_TEXT_HUB_SIGN   "SROM" // not formal usage
 #define GENESYS_USBHUB_FW_SIG_TEXT_DEV_BRIDGE "HOST"
 #define GENESYS_USBHUB_FW_SIG_TEXT_PD	      "PRDY"
 
