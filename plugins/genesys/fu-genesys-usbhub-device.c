@@ -798,6 +798,7 @@ static gboolean
 fu_genesys_usbhub_device_get_fw_bank_version(FuGenesysUsbhubDevice *self,
 					     FuGenesysFwType fw_type,
 					     int bank_num,
+					     FuProgress *progress,
 					     GError **error)
 {
 	gsize bufsz = 0;
@@ -838,7 +839,7 @@ fu_genesys_usbhub_device_get_fw_bank_version(FuGenesysUsbhubDevice *self,
 						 self->spec.fw_bank_addr[bank_num][fw_type],
 						 buf,
 						 bufsz,
-						 NULL,
+						 progress,
 						 error))
 		return FALSE;
 
@@ -1730,12 +1731,8 @@ fu_genesys_usbhub_device_prepare(FuDevice *device,
 {
 	FuGenesysUsbhubDevice *self = FU_GENESYS_USBHUB_DEVICE(device);
 	guint64 fw_max_size = fu_device_get_firmware_size_max(device);
+	g_autoptr(GArray) fw_types = g_array_new(FALSE, FALSE, sizeof(FuGenesysFwType));
 
-	/* enter isp mode */
-	if (!fu_genesys_usbhub_device_enter_isp_mode(self, error))
-		return FALSE;
-
-	/* query each fw bank version of fw type */
 	for (gint i = 0; i < FU_GENESYS_FW_TYPE_INSIDE_HUB_COUNT; i++) {
 		if (self->spec.fw_bank_capacity[i] == 0 ||		  /* unsupported fw type */
 		    fw_max_size <= self->spec.fw_bank_addr[FW_BANK_1][i]) /* capacity is smaller */
@@ -1748,36 +1745,74 @@ fu_genesys_usbhub_device_prepare(FuDevice *device,
 		}
 
 		/* hub & codesign info must at the same bank */
-		if (i == FU_GENESYS_FW_TYPE_CODESIGN) {
-			self->update_fw_banks[i] = self->update_fw_banks[FU_GENESYS_FW_TYPE_HUB];
+		if (i == FU_GENESYS_FW_TYPE_CODESIGN)
+			continue;
+
+		g_array_append_val(fw_types, i);
+	}
+
+	if (fw_types->len == 0)
+		return TRUE;
+
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_step(progress, FWUPD_STATUS_SCHEDULING, 5, "detach");
+	for (guint i = 0; i < fw_types->len; i++) {
+		fu_progress_add_step(progress, FWUPD_STATUS_SCHEDULING, 100, NULL);
+		fu_progress_add_step(progress, FWUPD_STATUS_SCHEDULING, 100, NULL);
+	}
+
+	/* enter isp mode */
+	if (!fu_genesys_usbhub_device_enter_isp_mode(self, error))
+		return FALSE;
+	fu_progress_step_done(progress);
+
+	/* query each fw bank version of fw type */
+	for (guint i = 0; i < fw_types->len; i++) {
+		FuGenesysFwType fw_type = g_array_index(fw_types, FuGenesysFwType, i);
+		/* hub & codesign info must at the same bank */
+		if (fw_type == FU_GENESYS_FW_TYPE_CODESIGN) {
+			self->update_fw_banks[fw_type] =
+			    self->update_fw_banks[FU_GENESYS_FW_TYPE_HUB];
 			continue;
 		}
 
-		if (!fu_genesys_usbhub_device_get_fw_bank_version(self, i, FW_BANK_1, error)) {
+		if (!fu_genesys_usbhub_device_get_fw_bank_version(self,
+								  fw_type,
+								  FW_BANK_1,
+								  fu_progress_get_child(progress),
+								  error)) {
 			g_prefix_error(error,
 				       "error getting %s bank1 version: ",
-				       fu_genesys_fw_type_to_string(i));
+				       fu_genesys_fw_type_to_string(fw_type));
 			return FALSE;
 		}
-		if (!fu_genesys_usbhub_device_get_fw_bank_version(self, i, FW_BANK_2, error)) {
+		fu_progress_step_done(progress);
+
+		if (!fu_genesys_usbhub_device_get_fw_bank_version(self,
+								  fw_type,
+								  FW_BANK_2,
+								  fu_progress_get_child(progress),
+								  error)) {
 			g_prefix_error(error,
 				       "error getting %s bank2 version: ",
-				       fu_genesys_fw_type_to_string(i));
+				       fu_genesys_fw_type_to_string(fw_type));
 			return FALSE;
 		}
+		fu_progress_step_done(progress);
 
-		if (self->fw_bank_vers[FW_BANK_1][i] > self->fw_bank_vers[FW_BANK_2][i]) {
+		if (self->fw_bank_vers[FW_BANK_1][fw_type] >
+		    self->fw_bank_vers[FW_BANK_2][fw_type]) {
 			/* bank1 is more recent than bank2: write fw on bank2 */
 			if (self->spec.chip.model == ISP_MODEL_HUB_GL3523) {
 				/* GL3523 unique dual bank mechanism */
 				self->backup_hub_fw_bank1 = TRUE;
-				self->update_fw_banks[i] = FW_BANK_1;
+				self->update_fw_banks[fw_type] = FW_BANK_1;
 			} else {
-				self->update_fw_banks[i] = FW_BANK_2;
+				self->update_fw_banks[fw_type] = FW_BANK_2;
 			}
 		} else {
 			/* bank2 is more recent than bank1: write fw on bank1 */
-			self->update_fw_banks[i] = FW_BANK_1;
+			self->update_fw_banks[fw_type] = FW_BANK_1;
 		}
 	}
 
