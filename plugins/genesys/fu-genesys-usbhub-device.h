@@ -14,3 +14,6 @@ G_DECLARE_FINAL_TYPE(FuGenesysUsbhubDevice,
 		     FU,
 		     GENESYS_USBHUB_DEVICE,
 		     FuUsbDevice)
+
+void
+fu_genesys_usbhub_device_set_hid_channel(FuDevice *device, FuDevice *channel);
