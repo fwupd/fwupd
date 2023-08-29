@@ -547,6 +547,15 @@ typedef guint64 FuDeviceInternalFlags;
  */
 #define FU_DEVICE_INTERNAL_FLAG_ADD_INSTANCE_ID_REV (1ull << 32)
 
+/**
+ * FU_DEVICE_INTERNAL_FLAG_UNCONNECTED:
+ *
+ * The device is not connected and is probably awaiting replug.
+ *
+ * Since: 1.9.4
+ */
+#define FU_DEVICE_INTERNAL_FLAG_UNCONNECTED (1ull << 33)
+
 /* accessors */
 gchar *
 fu_device_to_string(FuDevice *self);

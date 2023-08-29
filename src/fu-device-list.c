@@ -213,7 +213,7 @@ fu_device_list_get_active(FuDeviceList *self)
 	g_rw_lock_reader_lock(&self->devices_mutex);
 	for (guint i = 0; i < self->devices->len; i++) {
 		FuDeviceItem *item = g_ptr_array_index(self->devices, i);
-		if (fu_device_has_inhibit(item->device, "unconnected"))
+		if (fu_device_has_internal_flag(item->device, FU_DEVICE_INTERNAL_FLAG_UNCONNECTED))
 			continue;
 		if (fu_device_has_inhibit(item->device, "hidden"))
 			continue;
@@ -488,7 +488,7 @@ fu_device_list_remove(FuDeviceList *self, FuDevice *device)
 	}
 
 	/* we can't do anything with an unconnected device */
-	fu_device_inhibit(item->device, "unconnected", "Device has been removed");
+	fu_device_add_internal_flag(item->device, FU_DEVICE_INTERNAL_FLAG_UNCONNECTED);
 
 	/* ensure never fired if the remove delay is changed */
 	if (item->remove_id > 0) {
@@ -598,7 +598,7 @@ fu_device_list_clear_wait_for_replug(FuDeviceList *self, FuDeviceItem *item)
 			fu_device_remove_flag(item->device_old, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 		}
 	}
-	fu_device_uninhibit(item->device, "unconnected");
+	fu_device_remove_internal_flag(item->device, FU_DEVICE_INTERNAL_FLAG_UNCONNECTED);
 
 	/* debug */
 	str = fu_device_list_to_string(self);
@@ -761,7 +761,8 @@ fu_device_list_add(FuDeviceList *self, FuDevice *device)
 		/* the old device again */
 		if (item->device_old != NULL && device == item->device_old) {
 			g_info("found old device %s, swapping", fu_device_get_id(device));
-			fu_device_uninhibit(item->device, "unconnected");
+			fu_device_remove_internal_flag(item->device,
+						       FU_DEVICE_INTERNAL_FLAG_UNCONNECTED);
 			fu_device_incorporate_problem_update_in_progress(device, item->device);
 			fu_device_incorporate_update_state(device, item->device);
 			g_set_object(&item->device_old, item->device);
@@ -774,7 +775,7 @@ fu_device_list_add(FuDeviceList *self, FuDevice *device)
 		/* same ID, different object */
 		g_info("found existing device %s, reusing item", fu_device_get_id(item->device));
 		fu_device_list_replace(self, item, device);
-		fu_device_uninhibit(device, "unconnected");
+		fu_device_remove_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_UNCONNECTED);
 		return;
 	}
 
@@ -789,7 +790,7 @@ fu_device_list_add(FuDeviceList *self, FuDevice *device)
 		       fu_device_get_plugin(item->device),
 		       fu_device_get_plugin(device));
 		fu_device_list_replace(self, item, device);
-		fu_device_uninhibit(device, "unconnected");
+		fu_device_remove_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_UNCONNECTED);
 		return;
 	}
 
@@ -804,7 +805,7 @@ fu_device_list_add(FuDeviceList *self, FuDevice *device)
 			       fu_device_get_plugin(item->device),
 			       fu_device_get_plugin(device));
 			fu_device_list_replace(self, item, device);
-			fu_device_uninhibit(device, "unconnected");
+			fu_device_remove_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_UNCONNECTED);
 			return;
 		}
 		g_info("not adding matching %s for device add, use "

@@ -274,6 +274,8 @@ fu_device_internal_flag_to_string(FuDeviceInternalFlags flag)
 		return "md-only-checksum";
 	if (flag == FU_DEVICE_INTERNAL_FLAG_ADD_INSTANCE_ID_REV)
 		return "add-instance-id-rev";
+	if (flag == FU_DEVICE_INTERNAL_FLAG_UNCONNECTED)
+		return "unconnected";
 	return NULL;
 }
 
@@ -356,6 +358,8 @@ fu_device_internal_flag_from_string(const gchar *flag)
 		return FU_DEVICE_INTERNAL_FLAG_MD_ONLY_CHECKSUM;
 	if (g_strcmp0(flag, "add-instance-id-rev") == 0)
 		return FU_DEVICE_INTERNAL_FLAG_ADD_INSTANCE_ID_REV;
+	if (g_strcmp0(flag, "unconnected") == 0)
+		return FU_DEVICE_INTERNAL_FLAG_UNCONNECTED;
 	return FU_DEVICE_INTERNAL_FLAG_UNKNOWN;
 }
 
@@ -373,6 +377,11 @@ fu_device_add_internal_flag(FuDevice *self, FuDeviceInternalFlags flag)
 {
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FU_IS_DEVICE(self));
+
+	/* do not let devices be updated until re-connected */
+	if (flag & FU_DEVICE_INTERNAL_FLAG_UNCONNECTED)
+		fu_device_inhibit(self, "unconnected", "Device has been removed");
+
 	priv->internal_flags |= flag;
 	g_object_notify(G_OBJECT(self), "internal-flags");
 }
@@ -391,6 +400,10 @@ fu_device_remove_internal_flag(FuDevice *self, FuDeviceInternalFlags flag)
 {
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FU_IS_DEVICE(self));
+
+	if (flag & FU_DEVICE_INTERNAL_FLAG_UNCONNECTED)
+		fu_device_uninhibit(self, "unconnected");
+
 	priv->internal_flags &= ~flag;
 	g_object_notify(G_OBJECT(self), "internal-flags");
 }
