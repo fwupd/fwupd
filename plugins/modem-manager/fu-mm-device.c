@@ -265,7 +265,9 @@ fu_mm_device_probe_default(FuDevice *device, GError **error)
 	}
 	if (self->update_methods & MM_MODEM_FIRMWARE_UPDATE_METHOD_FIREHOSE) {
 		for (guint i = 0; i < n_ports; i++) {
-			if (ports[i].type == MM_MODEM_PORT_TYPE_QCDM)
+			if ((ports[i].type == MM_MODEM_PORT_TYPE_QCDM) ||
+			    (ports[i].type == MM_MODEM_PORT_TYPE_IGNORED &&
+			     g_strstr_len(ports[i].name, -1, "qcdm") != NULL))
 				self->port_qcdm = g_strdup_printf("/dev/%s", ports[i].name);
 			else if (ports[i].type == MM_MODEM_PORT_TYPE_MBIM)
 				self->port_mbim = g_strdup_printf("/dev/%s", ports[i].name);
