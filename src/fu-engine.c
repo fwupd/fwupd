@@ -6250,6 +6250,7 @@ fu_engine_clear_results(FuEngine *self, const gchar *device_id, GError **error)
 FwupdDevice *
 fu_engine_get_results(FuEngine *self, const gchar *device_id, GError **error)
 {
+	FwupdRelease *rel;
 	g_autoptr(FuDevice) device = NULL;
 
 	g_return_val_if_fail(FU_IS_ENGINE(self), NULL);
@@ -6274,6 +6275,17 @@ fu_engine_get_results(FuEngine *self, const gchar *device_id, GError **error)
 
 	/* try to set some release properties for the UI */
 	fu_engine_fixup_history_device(self, device);
+
+	/* we did not either record or find the AppStream ID */
+	rel = fu_device_get_release_default(device);
+	if (rel == NULL || fwupd_release_get_appstream_id(rel) == NULL) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_FOUND,
+			    "device %s appstream id was not found",
+			    fu_device_get_id(device));
+		return NULL;
+	}
 
 	/* success */
 	return g_object_ref(FWUPD_DEVICE(device));
