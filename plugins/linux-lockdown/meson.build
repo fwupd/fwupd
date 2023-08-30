@@ -3,6 +3,7 @@ cargs = ['-DG_LOG_DOMAIN="FuPluginLinuxLockdown"']
 
 plugin_builtins += static_library('fu_plugin_linux_lockdown',
   rustgen.process('fu-linux-lockdown.rs'),
+  fwupdplugin_rs,
   sources: [
     'fu-linux-lockdown-plugin.c',
   ],

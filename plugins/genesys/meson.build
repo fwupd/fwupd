@@ -6,6 +6,7 @@ plugin_builtins += static_library('fu_plugin_genesys',
   rustgen.process(
     'fu-genesys-usbhub.rs', # fuzzing
   ),
+  fwupdplugin_rs,
   sources: [
     'fu-genesys-scaler-firmware.c',   # fuzzing
     'fu-genesys-usbhub-firmware.c',   # fuzzing

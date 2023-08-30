@@ -3,6 +3,7 @@ cargs = ['-DG_LOG_DOMAIN="FuPluginCrosEc"']
 
 plugin_quirks += files('cros-ec.quirk')
 plugin_builtins += static_library('fu_plugin_cros_ec',
+  fwupdplugin_rs,
   sources: [
     'fu-cros-ec-plugin.c',
     'fu-cros-ec-usb-device.c',

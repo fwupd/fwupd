@@ -8,6 +8,7 @@ install_data(['fwupd-msr.conf'],
 endif
 
 plugin_builtins += static_library('fu_plugin_msr',
+  fwupdplugin_rs,
   sources: [
     'fu-msr-plugin.c',
   ],

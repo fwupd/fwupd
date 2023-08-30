@@ -6,6 +6,7 @@ plugin_builtin_synaprom = static_library('fu_plugin_synaprom',
   rustgen.process(
     'fu-synaprom.rs',           # fuzzing
   ),
+  fwupdplugin_rs,
   sources: [
     'fu-synaprom-plugin.c',
     'fu-synaprom-common.c',

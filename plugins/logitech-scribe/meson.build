@@ -1,10 +1,11 @@
 if get_option('plugin_logitech_scribe').require(gusb.found(),
-    error_message: 'usb is needed for plugin_logitech_scribe').disable_auto_if(host_machine.system() != 'linux').allowed()    
+    error_message: 'usb is needed for plugin_logitech_scribe').disable_auto_if(host_machine.system() != 'linux').allowed()
 cargs = ['-DG_LOG_DOMAIN="FuPluginLogitechScribe"']
 
 plugin_quirks += files('logitech-scribe.quirk')
 
 plugin_builtins += static_library('fu_plugin_logitech_scribe',
+  fwupdplugin_rs,
   sources: [
     'fu-logitech-scribe-device.c',
     'fu-logitech-scribe-plugin.c',

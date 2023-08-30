@@ -4,6 +4,7 @@ cargs = ['-DG_LOG_DOMAIN="FuPluginLogitechHidpp"']
 plugin_quirks += files('logitech-hidpp.quirk')
 plugin_builtin_logitech_hidpp = static_library('fu_plugin_logitech_hidpp',
   rustgen.process('fu-logitech-hidpp.rs'),
+  fwupdplugin_rs,
   sources: [
     'fu-logitech-hidpp-plugin.c',
     'fu-logitech-hidpp-bootloader.c',

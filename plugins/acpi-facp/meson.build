@@ -2,6 +2,7 @@ if hsi and (host_cpu == 'x86' or host_cpu == 'x86_64')
 cargs = ['-DG_LOG_DOMAIN="FuPluginAcpiFacp"']
 
 plugin_builtin_acpi_facp = static_library('fu_plugin_acpi_facp',
+  fwupdplugin_rs,
   sources: [
     'fu-acpi-facp-plugin.c',
     'fu-acpi-facp.c',

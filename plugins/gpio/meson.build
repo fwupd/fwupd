@@ -5,6 +5,7 @@ cargs = ['-DG_LOG_DOMAIN="FuPluginGpio"']
 
 plugin_quirks += files('gpio.quirk')
 plugin_builtins += static_library('fu_plugin_gpio',
+  fwupdplugin_rs,
   sources: [
     'fu-gpio-plugin.c',
     'fu-gpio-device.c',

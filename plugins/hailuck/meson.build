@@ -4,6 +4,7 @@ cargs = ['-DG_LOG_DOMAIN="FuPluginNovatek"']
 plugin_quirks += files('hailuck.quirk')
 plugin_builtins += static_library('fu_plugin_hailuck',
   rustgen.process('fu-hailuck.rs'),
+  fwupdplugin_rs,
   sources: [
     'fu-hailuck-bl-device.c',
     'fu-hailuck-kbd-device.c',

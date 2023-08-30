@@ -4,6 +4,7 @@ cargs = ['-DG_LOG_DOMAIN="FuPluginGoodixtp"']
 plugin_quirks += files('goodixtp.quirk')
 plugin_builtins += static_library('fu_plugin_goodixtp',
   rustgen.process('fu-goodixtp.rs'),
+  fwupdplugin_rs,
   sources: [
     'fu-goodixtp-brlb-device.c',
     'fu-goodixtp-brlb-firmware.c',

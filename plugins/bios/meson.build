@@ -2,6 +2,7 @@ if get_option('plugin_uefi_capsule').disable_auto_if(host_machine.system() != 'l
 cargs = ['-DG_LOG_DOMAIN="FuPluginBios"']
 
 plugin_builtins += static_library('fu_plugin_bios',
+  fwupdplugin_rs,
   sources: [
     'fu-bios-plugin.c',
   ],

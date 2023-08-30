@@ -3,6 +3,7 @@ cargs = ['-DG_LOG_DOMAIN="FuPluginUefiRecovery"']
 
 plugin_quirks += files('uefi-recovery.quirk')
 plugin_builtins += static_library('fu_plugin_uefi_recovery',
+  fwupdplugin_rs,
   sources: [
     'fu-uefi-recovery-plugin.c',
   ],

@@ -5,6 +5,7 @@ plugin_builtin_acpi_phat = static_library('fu_plugin_acpi_phat',
   rustgen.process(
     'fu-acpi-phat.rs',            # fuzzing
   ),
+  fwupdplugin_rs,
   sources: [
     'fu-acpi-phat-plugin.c',
     'fu-acpi-phat.c',                 # fuzzing

@@ -6,6 +6,7 @@ plugin_builtins += static_library('fu_plugin_pci_mei',
   rustgen.process(
     'fu-mei.rs',
   ),
+  fwupdplugin_rs,
   sources: [
     'fu-pci-mei-plugin.c',
     'fu-mei-common.c',

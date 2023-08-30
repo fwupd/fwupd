@@ -3,6 +3,7 @@ cargs = ['-DG_LOG_DOMAIN="FuPluginColorHug"']
 
 plugin_quirks += files('colorhug.quirk')
 plugin_builtins += static_library('fu_plugin_colorhug',
+  fwupdplugin_rs,
   sources: [
     'fu-colorhug-common.c',
     'fu-colorhug-device.c',

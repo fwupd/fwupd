@@ -4,6 +4,7 @@ cargs = ['-DG_LOG_DOMAIN="FuPluginCpu"']
 
 plugin_quirks += files('cpu.quirk')
 plugin_builtins += static_library('fu_plugin_cpu',
+  fwupdplugin_rs,
   sources: [
     'fu-cpu-plugin.c',
     'fu-cpu-device.c',

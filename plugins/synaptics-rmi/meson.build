@@ -9,6 +9,7 @@ plugin_builtin_synaptics_rmi = static_library('fu_plugin_synaptics_rmi',
   rustgen.process(
     'fu-synaptics-rmi.rs',        # fuzzing
   ),
+  fwupdplugin_rs,
   sources: [
     'fu-synaptics-rmi-plugin.c',
     'fu-synaptics-rmi-common.c',      # fuzzing

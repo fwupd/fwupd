@@ -8,6 +8,7 @@ plugin_builtin_uf2 = static_library('fu_plugin_uf2',
   rustgen.process(
     'fu-uf2.rs',          # fuzzing
   ),
+  fwupdplugin_rs,
   sources: [
     'fu-uf2-plugin.c',
     'fu-uf2-device.c',

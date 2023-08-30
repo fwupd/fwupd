@@ -3,6 +3,7 @@ cargs = ['-DG_LOG_DOMAIN="FuPluginWacomRaw"']
 
 plugin_quirks += files('wacom-raw.quirk')
 plugin_builtins += static_library('fu_plugin_wacom_raw',
+  fwupdplugin_rs,
   sources: [
     'fu-wacom-raw-plugin.c',
     'fu-wacom-common.c',

@@ -3,6 +3,7 @@ cargs = ['-DG_LOG_DOMAIN="FuPluginNordicHid"']
 
 plugin_quirks += files('nordic-hid.quirk')
 plugin_builtins += static_library('fu_plugin_nordic_hid',
+  fwupdplugin_rs,
   sources: [
     'fu-nordic-hid-plugin.c',
     'fu-nordic-hid-cfg-channel.c',

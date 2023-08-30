@@ -13,6 +13,7 @@ plugin_builtin_redfish = static_library('fu_plugin_redfish',
   rustgen.process(
     'fu-redfish.rs',       # fuzzing
   ),
+  fwupdplugin_rs,
   sources: [
     'fu-redfish-plugin.c',
     'fu-redfish-backend.c',

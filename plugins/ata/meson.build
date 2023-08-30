@@ -3,6 +3,7 @@ cargs = ['-DG_LOG_DOMAIN="FuPluginAta"']
 
 plugin_quirks += files('ata.quirk')
 plugin_builtin_ata = static_library('fu_plugin_ata',
+  fwupdplugin_rs,
   sources: [
     'fu-ata-plugin.c',
     'fu-ata-device.c',

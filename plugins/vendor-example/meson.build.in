@@ -8,6 +8,7 @@ cargs = ['-DG_LOG_DOMAIN="FuPlugin{{Vendor}}{{Example}}"']
 plugin_quirks += files('{{vendor}}-{{example}}.quirk')
 plugin_builtins += static_library('fu_plugin_{{vendor}}_{{example}}',
   rustgen.process('fu-{{vendor}}-{{example}}.rs'),
+  fwupdplugin_rs,
   sources: [
     'fu-{{vendor}}-{{example}}-common.c',
     'fu-{{vendor}}-{{example}}-device.c',

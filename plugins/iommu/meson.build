@@ -2,6 +2,7 @@ if hsi and (host_cpu == 'x86' or host_cpu == 'x86_64')
 cargs = ['-DG_LOG_DOMAIN="FuPluginIommu"']
 
 plugin_builtins += static_library('fu_plugin_iommu',
+  fwupdplugin_rs,
   sources: [
     'fu-iommu-plugin.c',
   ],

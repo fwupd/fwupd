@@ -5,6 +5,7 @@ cargs = ['-DG_LOG_DOMAIN="FuPluginParadeLspcon"']
 
 plugin_quirks += files('parade-lspcon.quirk')
 plugin_builtins += static_library('fu_plugin_parade_lspcon',
+  fwupdplugin_rs,
   sources: [
     'fu-parade-lspcon-device.c',
     'fu-parade-lspcon-plugin.c',

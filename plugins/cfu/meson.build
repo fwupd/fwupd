@@ -15,6 +15,7 @@ cfu_rs = custom_target('fu-cfu-rs',
 plugin_quirks += files('cfu.quirk')
 plugin_builtin_cfu = static_library('fu_plugin_cfu',
   cfu_rs,
+  fwupdplugin_rs,
   sources: [
     'fu-cfu-device.c',
     'fu-cfu-module.c',

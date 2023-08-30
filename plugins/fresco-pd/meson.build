@@ -3,6 +3,7 @@ cargs = ['-DG_LOG_DOMAIN="FuPluginFrescoPd"']
 
 plugin_quirks += files('fresco-pd.quirk')
 plugin_builtins += static_library('fu_plugin_fresco_pd',
+  fwupdplugin_rs,
   sources: [
     'fu-fresco-pd-plugin.c',
     'fu-fresco-pd-common.c',

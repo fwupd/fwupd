@@ -3,6 +3,7 @@ cargs = ['-DG_LOG_DOMAIN="FuPluginGenesysGl32xx"']
 
 plugin_quirks += files('genesys-gl32xx.quirk')
 plugin_builtins += static_library('fu_plugin_genesys_gl32xx',
+  fwupdplugin_rs,
   sources: [
     'fu-genesys-gl32xx-device.c',
     'fu-genesys-gl32xx-firmware.c',

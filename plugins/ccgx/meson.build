@@ -9,6 +9,7 @@ plugin_builtin_ccgx = static_library('fu_plugin_ccgx',
   rustgen.process(
     'fu-ccgx.rs',           # fuzzing
   ),
+  fwupdplugin_rs,
   sources: [
     'fu-ccgx-plugin.c',
     'fu-ccgx-common.c',         # fuzzing

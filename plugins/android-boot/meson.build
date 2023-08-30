@@ -4,6 +4,7 @@ cargs = ['-DG_LOG_DOMAIN="FuPluginAndroidBoot"']
 
 plugin_quirks += files('android-boot.quirk')
 plugin_builtins += static_library('fu_plugin_android_boot',
+  fwupdplugin_rs,
   sources: [
     'fu-android-boot-plugin.c',
     'fu-android-boot-device.c',

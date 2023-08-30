@@ -3,6 +3,7 @@ cargs = ['-DG_LOG_DOMAIN="FuPluginGoodixMoc"']
 
 plugin_quirks += files('goodixmoc.quirk')
 plugin_builtins += static_library('fu_plugin_goodixmoc',
+  fwupdplugin_rs,
   sources: [
     'fu-goodixmoc-device.c',
     'fu-goodixmoc-plugin.c',

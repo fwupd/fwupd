@@ -15,6 +15,7 @@ dfu_rs = custom_target('fu-dfu-rs',
 )
 plugin_builtin_dfu = static_library('fu_plugin_dfu',
   dfu_rs,
+  fwupdplugin_rs,
   sources: [
     'fu-dfu-plugin.c',
     'fu-dfu-common.c',

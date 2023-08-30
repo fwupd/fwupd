@@ -3,6 +3,7 @@ cargs = ['-DG_LOG_DOMAIN="FuPluginQsiDock"']
 
 plugin_quirks += files('qsi-dock.quirk')
 plugin_builtins += static_library('fu_plugin_qsi_dock',
+  fwupdplugin_rs,
   sources: [
     'fu-qsi-dock-child-device.c',
     'fu-qsi-dock-mcu-device.c',

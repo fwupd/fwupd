@@ -3,6 +3,7 @@ cargs = ['-DG_LOG_DOMAIN="FuPluginJabraGnp"']
 
 plugin_quirks += files('jabra-gnp.quirk')
 plugin_builtins += static_library('fu_plugin_jabra_gnp',
+  fwupdplugin_rs,
   sources: [
     'fu-jabra-gnp-common.c',
     'fu-jabra-gnp-device.c',

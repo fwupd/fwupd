@@ -4,6 +4,7 @@ cargs = ['-DG_LOG_DOMAIN="FuPluginEp963x"']
 plugin_quirks += files('ep963x.quirk')
 plugin_builtins += static_library('fu_plugin_ep963x',
   rustgen.process('fu-ep963x.rs'),
+  fwupdplugin_rs,
   sources: [
     'fu-ep963x-device.c',
     'fu-ep963x-firmware.c',

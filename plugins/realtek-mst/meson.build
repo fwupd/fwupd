@@ -4,6 +4,7 @@ cargs = ['-DG_LOG_DOMAIN="FuPluginRealtekMst"']
 
 plugin_quirks += files('realtek-mst.quirk')
 plugin_builtins += static_library('fu_plugin_realtek_mst',
+  fwupdplugin_rs,
   sources: [
     'fu-realtek-mst-device.c',
     'fu-realtek-mst-plugin.c',

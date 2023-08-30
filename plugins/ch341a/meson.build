@@ -3,6 +3,7 @@ cargs = ['-DG_LOG_DOMAIN="FuPluginCh341a"']
 
 plugin_quirks += files('ch341a.quirk')
 plugin_builtins += static_library('fu_plugin_ch341a',
+  fwupdplugin_rs,
   sources: [
     'fu-ch341a-cfi-device.c',
     'fu-ch341a-device.c',

@@ -6,6 +6,7 @@ plugin_builtins += static_library('fu_plugin_synaptics_cape',
   rustgen.process(
     'fu-synaptics-cape.rs',     # fuzzing
   ),
+  fwupdplugin_rs,
   sources: [
     'fu-synaptics-cape-plugin.c',
     'fu-synaptics-cape-device.c',

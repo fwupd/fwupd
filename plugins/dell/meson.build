@@ -10,6 +10,7 @@ cargs = ['-DG_LOG_DOMAIN="FuPluginDell"']
 plugin_quirks += files('dell.quirk')
 
 plugin_builtin_dell = static_library('fu_plugin_dell',
+  fwupdplugin_rs,
   sources: [
     'fu-dell-plugin.c',
     'fu-dell-smi.c',

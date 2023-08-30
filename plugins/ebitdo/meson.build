@@ -6,6 +6,7 @@ plugin_builtins += static_library('fu_plugin_ebitdo',
   rustgen.process(
     'fu-ebitdo.rs',         # fuzzing
   ),
+  fwupdplugin_rs,
   sources: [
     'fu-ebitdo-plugin.c',
     'fu-ebitdo-device.c',

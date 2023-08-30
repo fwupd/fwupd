@@ -2,6 +2,7 @@ if hsi and (host_cpu == 'x86' or host_cpu == 'x86_64')
 cargs = ['-DG_LOG_DOMAIN="FuPluginLinuxSleep"']
 
 plugin_builtins += static_library('fu_plugin_linux_sleep',
+  fwupdplugin_rs,
   sources: [
     'fu-linux-sleep-plugin.c',
   ],

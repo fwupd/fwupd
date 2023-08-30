@@ -30,6 +30,7 @@ endif
 
 plugin_builtin_uefi_capsule = static_library('fu_plugin_uefi_capsule',
   rustgen.process('fu-uefi.rs'),
+  fwupdplugin_rs,
   sources: [
     'fu-uefi-capsule-plugin.c',
     'fu-uefi-bgrt.c',

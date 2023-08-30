@@ -3,6 +3,7 @@ cargs = ['-DG_LOG_DOMAIN="FuPluginAmdPmc"']
 
 plugin_quirks += files('amd-pmc.quirk')
 plugin_builtins += static_library('fu_plugin_amd_pmc',
+  fwupdplugin_rs,
   sources: [
     'fu-amd-pmc-plugin.c',
     'fu-amd-pmc-device.c',

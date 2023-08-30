@@ -3,6 +3,7 @@ cargs = ['-DG_LOG_DOMAIN="FuPluginPciPsp"']
 
 plugin_quirks += files('pci-psp.quirk')
 plugin_builtins += static_library('fu_plugin_pci_psp',
+  fwupdplugin_rs,
   sources: [
     'fu-pci-psp-plugin.c',
     'fu-pci-psp-device.c',

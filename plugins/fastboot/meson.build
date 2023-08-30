@@ -4,6 +4,7 @@ cargs = ['-DG_LOG_DOMAIN="FuPluginFastboot"']
 
 plugin_quirks += files('fastboot.quirk')
 plugin_builtins += static_library('fu_plugin_fastboot',
+  fwupdplugin_rs,
   sources: [
     'fu-fastboot-plugin.c',
     'fu-fastboot-device.c',

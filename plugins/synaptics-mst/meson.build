@@ -8,6 +8,7 @@ plugin_builtin_synaptics_mst = static_library('fu_plugin_synaptics_mst',
   rustgen.process(
     'fu-synaptics-mst.rs', # fuzzing
   ),
+  fwupdplugin_rs,
   sources: [
     'fu-synaptics-mst-plugin.c',
     'fu-synaptics-mst-common.c',

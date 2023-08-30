@@ -7,6 +7,7 @@ cargs = ['-DG_LOG_DOMAIN="FuPluginNvme"']
 
 plugin_quirks += files('nvme.quirk')
 plugin_builtin_nvme = static_library('fu_plugin_nvme',
+  fwupdplugin_rs,
   sources: [
     'fu-nvme-plugin.c',
     'fu-nvme-common.c',

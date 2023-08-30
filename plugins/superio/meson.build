@@ -3,6 +3,7 @@ cargs = ['-DG_LOG_DOMAIN="FuPluginSuperio"']
 
 plugin_quirks += files('superio.quirk')
 plugin_builtins += static_library('fu_plugin_superio',
+  fwupdplugin_rs,
   sources: [
     'fu-superio-plugin.c',
     'fu-superio-device.c',

@@ -12,6 +12,7 @@ plugin_quirks += files([
   ])
 plugin_builtins += static_library('fu_plugin_vli',
   rustgen.process('fu-vli.rs'),
+  fwupdplugin_rs,
   sources: [
     'fu-vli-plugin.c',
     'fu-vli-common.c',

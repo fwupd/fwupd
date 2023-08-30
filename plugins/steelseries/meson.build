@@ -3,6 +3,7 @@ cargs = ['-DG_LOG_DOMAIN="FuPluginSteelSeries"']
 
 plugin_quirks += files('steelseries.quirk')
 plugin_builtins += static_library('fu_plugin_steelseries',
+  fwupdplugin_rs,
   sources: [
     'fu-steelseries-plugin.c',
     'fu-steelseries-device.c',

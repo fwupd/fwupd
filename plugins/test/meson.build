@@ -10,6 +10,7 @@ if bluez.allowed()
 endif
 
 plugin_builtins += static_library('fu_plugin_test',
+  fwupdplugin_rs,
   sources: [
     'fu-test-plugin.c',
   ],
@@ -21,6 +22,7 @@ plugin_builtins += static_library('fu_plugin_test',
 
 if bluez.allowed()
 plugin_builtins += static_library('fu_plugin_test_ble',
+  fwupdplugin_rs,
   sources: [
     'fu-test-ble-plugin.c',
     'fu-test-ble-device.c',

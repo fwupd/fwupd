@@ -1,6 +1,7 @@
 cargs = ['-DG_LOG_DOMAIN="FuPluginVbe"']
 
 plugin_builtins += static_library('fu_plugin_vbe',
+  fwupdplugin_rs,
   sources : [
     'fu-vbe-plugin.c',
     'fu-vbe-device.c',

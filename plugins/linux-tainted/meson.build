@@ -2,6 +2,7 @@ if hsi
 cargs = ['-DG_LOG_DOMAIN="FuPluginLinuxTainted"']
 
 plugin_builtins += static_library('fu_plugin_linux_tainted',
+  fwupdplugin_rs,
   sources: [
     'fu-linux-tainted-plugin.c',
   ],

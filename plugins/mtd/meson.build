@@ -3,6 +3,7 @@ cargs = ['-DG_LOG_DOMAIN="FuPluginMtd"']
 
 plugin_quirks += files('mtd.quirk')
 plugin_builtin_mtd = static_library('fu_plugin_mtd',
+  fwupdplugin_rs,
   sources: [
     'fu-mtd-plugin.c',
     'fu-mtd-device.c',

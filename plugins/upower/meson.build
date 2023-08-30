@@ -2,6 +2,7 @@ if get_option('plugin_upower').disable_auto_if(host_machine.system() != 'linux')
 cargs = ['-DG_LOG_DOMAIN="FuPluginUpower"']
 
 plugin_builtins += static_library('fu_plugin_upower',
+  fwupdplugin_rs,
   sources: [
     'fu-upower-plugin.c',
   ],

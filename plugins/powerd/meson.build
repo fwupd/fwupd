@@ -3,6 +3,7 @@ if get_option('plugin_powerd').disable_auto_if(host_machine.system() != 'linux')
   cargs = ['-DG_LOG_DOMAIN="FuPluginPowerd"']
 
 plugin_builtins += static_library('fu_plugin_powerd',
+  fwupdplugin_rs,
   sources: [
     'fu-powerd-plugin.c',
   ],

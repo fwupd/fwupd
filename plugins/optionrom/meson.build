@@ -2,6 +2,7 @@ if gudev.found()
 cargs = ['-DG_LOG_DOMAIN="FuPluginOptionrom"']
 
 plugin_builtins += static_library('fu_plugin_optionrom',
+  fwupdplugin_rs,
   sources: [
     'fu-optionrom-plugin.c',
     'fu-optionrom-device.c',

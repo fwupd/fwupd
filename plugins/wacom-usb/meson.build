@@ -6,6 +6,7 @@ plugin_builtin_wac = static_library('fu_plugin_wac',
   rustgen.process(
     'fu-wac.rs',              # fuzzing
   ),
+  fwupdplugin_rs,
   sources: [
     'fu-wac-common.c',
     'fu-wac-android-device.c',

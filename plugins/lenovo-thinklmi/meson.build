@@ -3,6 +3,7 @@ if get_option('plugin_uefi_capsule').disable_auto_if(host_machine.system() != 'l
 cargs = ['-DG_LOG_DOMAIN="FuPluginLenovoThinkLmi"']
 
 plugin_builtin_lenovo_thinklmi = static_library('fu_plugin_lenovo_thinklmi',
+  fwupdplugin_rs,
   sources: [
     'fu-lenovo-thinklmi-plugin.c',
   ],

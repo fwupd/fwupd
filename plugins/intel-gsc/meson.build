@@ -6,6 +6,7 @@ cargs = ['-DG_LOG_DOMAIN="FuPluginIgsc"']
 plugin_quirks += files('igsc.quirk')
 plugin_builtins += static_library('fu_plugin_igsc',
   rustgen.process('fu-igsc.rs'),
+  fwupdplugin_rs,
   sources: [
     'fu-igsc-plugin.c',
     'fu-igsc-device.c',

@@ -4,6 +4,7 @@ cargs = ['-DG_LOG_DOMAIN="FuPluginBcm57xx"']
 
 plugin_quirks += files('bcm57xx.quirk')
 plugin_builtin_bcm57xx = static_library('fu_plugin_bcm57xx',
+  fwupdplugin_rs,
   sources: [
     'fu-bcm57xx-plugin.c',
     'fu-bcm57xx-common.c',          # fuzzing

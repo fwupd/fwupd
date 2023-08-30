@@ -2,6 +2,7 @@ if hsi and (host_cpu == 'x86' or host_cpu == 'x86_64')
 cargs = ['-DG_LOG_DOMAIN="FuPluginAcpiIvrs"']
 
 plugin_builtin_acpi_ivrs = static_library('fu_plugin_acpi_ivrs',
+  fwupdplugin_rs,
   sources: [
     'fu-acpi-ivrs-plugin.c',
     'fu-acpi-ivrs.c',

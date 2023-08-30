@@ -3,6 +3,7 @@ cargs = ['-DG_LOG_DOMAIN="FuPluginElantp"']
 
 plugin_quirks += files('elantp.quirk')
 plugin_builtin_elantp = static_library('fu_plugin_elantp',
+  fwupdplugin_rs,
   sources: [
     'fu-elantp-plugin.c',
     'fu-elantp-firmware.c',   # fuzzing

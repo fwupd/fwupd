@@ -5,6 +5,7 @@ install_data(['metadata.xml'],
   install_dir: join_paths(datadir, 'fwupd', 'remotes.d', 'dell-esrt')
 )
 plugin_builtins += static_library('fu_plugin_dell_esrt',
+  fwupdplugin_rs,
   sources: [
     'fu-dell-esrt-plugin.c',
   ],

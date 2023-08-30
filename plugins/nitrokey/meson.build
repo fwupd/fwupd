@@ -3,6 +3,7 @@ cargs = ['-DG_LOG_DOMAIN="FuPluginNitrokey"']
 
 plugin_quirks += files('nitrokey.quirk')
 plugin_builtin_nitrokey = static_library('fu_plugin_nitrokey',
+  fwupdplugin_rs,
   sources: [
     'fu-nitrokey-device.c',
     'fu-nitrokey-common.c',

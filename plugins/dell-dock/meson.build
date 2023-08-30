@@ -3,6 +3,7 @@ cargs = ['-DG_LOG_DOMAIN="FuPluginDellDock"']
 
 plugin_quirks += files('dell-dock.quirk')
 plugin_builtins += static_library('fu_plugin_dell_dock',
+  fwupdplugin_rs,
   sources: [
     'fu-dell-dock-plugin.c',
     'fu-dell-dock-common.c',

@@ -3,6 +3,7 @@ cargs = ['-DG_LOG_DOMAIN="FuPluginAmdGpu"']
 
 plugin_quirks += files('amd-gpu.quirk')
 plugin_builtins += static_library('fu_plugin_amd_gpu',
+  fwupdplugin_rs,
   sources: [
     'fu-amd-gpu-plugin.c',
     'fu-amd-gpu-device.c',

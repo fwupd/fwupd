@@ -4,6 +4,7 @@ cargs = ['-DG_LOG_DOMAIN="FuPluginAnalogix"']
 plugin_quirks += files('analogix.quirk')
 plugin_builtins += static_library('fu_plugin_analogix',
   rustgen.process('fu-analogix.rs'),
+  fwupdplugin_rs,
   sources: [
     'fu-analogix-plugin.c',
     'fu-analogix-device.c',

@@ -3,6 +3,7 @@ cargs = ['-DG_LOG_DOMAIN="FuPluginThelioIo"']
 
 plugin_quirks += files('thelio-io.quirk')
 plugin_builtins += static_library('fu_plugin_thelio_io',
+  fwupdplugin_rs,
   sources: [
     'fu-thelio-io-plugin.c',
     'fu-thelio-io-device.c',

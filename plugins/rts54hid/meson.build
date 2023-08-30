@@ -3,6 +3,7 @@ cargs = ['-DG_LOG_DOMAIN="FuPluginRts54Hid"']
 
 plugin_quirks += files('rts54hid.quirk')
 plugin_builtins += static_library('fu_plugin_rts54hid',
+  fwupdplugin_rs,
   sources: [
     'fu-rts54hid-device.c',
     'fu-rts54hid-module.c',

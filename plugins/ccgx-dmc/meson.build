@@ -6,6 +6,7 @@ plugin_builtin_ccgx_dmc = static_library('fu_plugin_ccgx_dmc',
   rustgen.process(
     'fu-ccgx-dmc.rs',       # fuzzing
   ),
+  fwupdplugin_rs,
   sources: [
     'fu-ccgx-dmc-plugin.c',
     'fu-ccgx-dmc-device.c',

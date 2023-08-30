@@ -2,6 +2,7 @@ if hsi
 cargs = ['-DG_LOG_DOMAIN="FuPluginLinuxSwap"']
 
 plugin_builtin_linux_swap = static_library('fu_plugin_linux_swap',
+  fwupdplugin_rs,
   sources: [
     'fu-linux-swap-plugin.c',
     'fu-linux-swap.c',

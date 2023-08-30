@@ -4,6 +4,7 @@ if get_option('plugin_emmc').require(gudev.found(),
 cargs = ['-DG_LOG_DOMAIN="FuPluginEmmc"']
 
 plugin_builtins += static_library('fu_plugin_emmc',
+  fwupdplugin_rs,
   sources: [
     'fu-emmc-plugin.c',
     'fu-emmc-device.c',

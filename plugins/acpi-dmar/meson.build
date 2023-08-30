@@ -2,6 +2,7 @@ if hsi and (host_cpu == 'x86' or host_cpu == 'x86_64')
 cargs = ['-DG_LOG_DOMAIN="FuPluginAcpiDmar"']
 
 plugin_builtin_acpi_dmar = static_library('fu_plugin_acpi_dmar',
+  fwupdplugin_rs,
   sources: [
     'fu-acpi-dmar-plugin.c',
     'fu-acpi-dmar.c',

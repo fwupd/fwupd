@@ -7,6 +7,7 @@ plugin_quirks += files('logitech-bulkcontroller.quirk')
 subdir('proto')
 plugin_builtins += static_library('fu_plugin_logitech_bulkcontroller',
   rustgen.process('fu-logitech-bulkcontroller.rs'),
+  fwupdplugin_rs,
   sources: [
     generated,
     'fu-logitech-bulkcontroller-common.c',

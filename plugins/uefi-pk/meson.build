@@ -4,6 +4,7 @@ if hsi and \
 cargs = ['-DG_LOG_DOMAIN="FuPluginUefiPk"']
 
 plugin_builtins += static_library('fu_plugin_uefi_pk',
+  fwupdplugin_rs,
   sources: [
     'fu-uefi-pk-device.c',
     'fu-uefi-pk-plugin.c',

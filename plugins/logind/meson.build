@@ -2,6 +2,7 @@ if libsystemd.found() or elogind.found()
 cargs = ['-DG_LOG_DOMAIN="FuPluginLogind"']
 
 plugin_builtins += static_library('fu_plugin_logind',
+  fwupdplugin_rs,
   sources: [
     'fu-logind-plugin.c',
   ],

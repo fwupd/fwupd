@@ -8,6 +8,7 @@ cargs = ['-DG_LOG_DOMAIN="FuPluginTpm"']
 
 plugin_builtin_tpm = static_library('fu_plugin_tpm',
   rustgen.process('fu-tpm.rs'),
+  fwupdplugin_rs,
   sources: [
     'fu-tpm-plugin.c',
     'fu-tpm-device.c',
