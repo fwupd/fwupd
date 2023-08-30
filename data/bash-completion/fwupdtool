@@ -57,6 +57,7 @@ _fwupdtool_opts=(
 	'--filter'
 	'--filter-release'
 	'--force'
+	'--json'
 	'--show-all'
 	'--plugins'
 	'--prepare'
