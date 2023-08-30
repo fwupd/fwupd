@@ -661,6 +661,7 @@ fu_nordic_hid_cfg_channel_update_peers(FuNordicHidCfgChannel *self,
 static gboolean
 fu_nordic_hid_cfg_channel_setup_peers(FuNordicHidCfgChannel *self, GError **error)
 {
+	gboolean peers_supported = FALSE;
 	gboolean peers_cache_supported = FALSE;
 	guint8 peers_cache[PEERS_CACHE_LEN] = {0x00};
 
@@ -668,6 +669,15 @@ fu_nordic_hid_cfg_channel_setup_peers(FuNordicHidCfgChannel *self, GError **erro
 		/* device connected through dongle cannot support peers */
 		return TRUE;
 	}
+
+	/* Send index peers command to a device before accessing peers cache. This is done to
+	 * prevent assertion failure on peripheral with legacy firmware that enables debug logs.
+	 */
+	if (!fu_nordic_hid_cfg_channel_index_peers_cmd(self, &peers_supported, error))
+		return FALSE;
+
+	if (!peers_supported)
+		return TRUE;
 
 	if (!fu_nordic_hid_cfg_channel_read_peers_cache_cmd(self,
 							    &peers_cache_supported,
