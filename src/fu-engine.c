@@ -3955,9 +3955,11 @@ fu_engine_install_blob(FuEngine *self,
 
 	/* update history database */
 	fu_device_set_update_state(device, FWUPD_UPDATE_STATE_SUCCESS);
-	if (!fu_history_modify_device(self->history, device, error)) {
-		g_prefix_error(error, "failed to set success: ");
-		return FALSE;
+	if ((flags & FWUPD_INSTALL_FLAG_NO_HISTORY) == 0) {
+		if (!fu_history_modify_device(self->history, device, error)) {
+			g_prefix_error(error, "failed to set success: ");
+			return FALSE;
+		}
 	}
 
 	/* signal to all the plugins the update has happened */
