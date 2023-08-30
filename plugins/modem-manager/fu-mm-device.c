@@ -1222,7 +1222,7 @@ fu_mm_device_write_firmware_mbim_qdu(FuDevice *device,
 	fu_mm_utils_get_port_info(self->port_mbim, NULL, &device_sysfs_path, NULL, NULL);
 	autosuspend_delay_filename =
 	    g_build_filename(device_sysfs_path, "/power/autosuspend_delay_ms", NULL);
-	if (!fu_mm_device_writeln(autosuspend_delay_filename, "10000", error))
+	if (!fu_mm_device_writeln(autosuspend_delay_filename, "20000", error))
 		return FALSE;
 
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_WRITE);
