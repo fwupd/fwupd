@@ -2421,14 +2421,23 @@ fu_engine_composite_cleanup(FuEngine *self, GPtrArray *devices, GError **error)
 }
 
 static gint
-fu_engine_sort_release_versions_cb(gconstpointer a, gconstpointer b)
+fu_engine_sort_release_device_order_release_version_cb(gconstpointer a, gconstpointer b)
 {
 	FuRelease *na = *((FuRelease **)a);
 	FuRelease *nb = *((FuRelease **)b);
-	FuDevice *device = fu_release_get_device(na);
+	FuDevice *device1 = fu_release_get_device(na);
+	FuDevice *device2 = fu_release_get_device(nb);
 	const gchar *va = fu_release_get_version(na);
 	const gchar *vb = fu_release_get_version(nb);
-	return fu_version_compare(va, vb, fu_device_get_version_format(device));
+
+	/* FWUPD_DEVICE_FLAG_INSTALL_PARENT_FIRST takes precedence */
+	if (fu_device_get_order(device1) < fu_device_get_order(device2))
+		return -1;
+	if (fu_device_get_order(device1) > fu_device_get_order(device2))
+		return 1;
+
+	/* FWUPD_DEVICE_FLAG_INSTALL_ALL_RELEASES has to be from oldest to newest */
+	return fu_version_compare(va, vb, fu_device_get_version_format(device1));
 }
 
 /**
@@ -2466,16 +2475,20 @@ fu_engine_install_releases(FuEngine *self,
 	g_assert(locker != NULL);
 
 	/* install these in the right order */
-	g_ptr_array_sort(releases, fu_engine_sort_release_versions_cb);
+	g_ptr_array_sort(releases, fu_engine_sort_release_device_order_release_version_cb);
 
 	/* notify the plugins about the composite action */
 	devices = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 	for (guint i = 0; i < releases->len; i++) {
 		FuRelease *release = g_ptr_array_index(releases, i);
-		g_info("composite update %u: %s",
+		FuDevice *device = fu_release_get_device(release);
+		const gchar *logical_id = fu_device_get_logical_id(device);
+		g_info("composite update %u: %s (%s: %i)",
 		       i + 1,
-		       fu_device_get_id(fu_release_get_device(release)));
-		g_ptr_array_add(devices, g_object_ref(fu_release_get_device(release)));
+		       fu_device_get_id(device),
+		       logical_id != NULL ? logical_id : "n/a",
+		       fu_device_get_order(device));
+		g_ptr_array_add(devices, g_object_ref(device));
 	}
 	if (!fu_engine_composite_prepare(self, devices, error)) {
 		g_prefix_error(error, "failed to prepare composite action: ");

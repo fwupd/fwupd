@@ -3984,10 +3984,25 @@ _plugin_composite_device_added_cb(FuPlugin *plugin, FuDevice *device, gpointer u
 	g_ptr_array_add(devices, g_object_ref(device));
 }
 
+static gint
+fu_plugin_composite_release_sort_cb(gconstpointer a, gconstpointer b)
+{
+	FuRelease *release1 = *((FuRelease **)a);
+	FuRelease *release2 = *((FuRelease **)b);
+	FuDevice *device1 = fu_release_get_device(release1);
+	FuDevice *device2 = fu_release_get_device(release2);
+	if (fu_device_get_order(device1) < fu_device_get_order(device2))
+		return 1;
+	if (fu_device_get_order(device1) > fu_device_get_order(device2))
+		return -1;
+	return 0;
+}
+
 static void
 fu_plugin_composite_func(gconstpointer user_data)
 {
 	FuTest *self = (FuTest *)user_data;
+	FuDevice *dev_tmp;
 	GError *error = NULL;
 	gboolean ret;
 	g_autoptr(FuEngine) engine = fu_engine_new();
@@ -4120,6 +4135,15 @@ fu_plugin_composite_func(gconstpointer user_data)
 	}
 	g_assert_cmpint(releases->len, ==, 3);
 
+	/* sort these by version, forcing fu_engine_install_releases() to sort by device order */
+	g_ptr_array_sort(releases, fu_plugin_composite_release_sort_cb);
+	dev_tmp = fu_release_get_device(FU_RELEASE(g_ptr_array_index(releases, 0)));
+	g_assert_cmpstr(fu_device_get_logical_id(dev_tmp), ==, "child1");
+	dev_tmp = fu_release_get_device(FU_RELEASE(g_ptr_array_index(releases, 1)));
+	g_assert_cmpstr(fu_device_get_logical_id(dev_tmp), ==, "child2");
+	dev_tmp = fu_release_get_device(FU_RELEASE(g_ptr_array_index(releases, 2)));
+	g_assert_cmpstr(fu_device_get_logical_id(dev_tmp), ==, NULL);
+
 	/* install the cab */
 	ret = fu_engine_install_releases(engine,
 					 request,
@@ -4130,6 +4154,14 @@ fu_plugin_composite_func(gconstpointer user_data)
 					 &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
+
+	/* verify we installed the parent first */
+	dev_tmp = fu_release_get_device(FU_RELEASE(g_ptr_array_index(releases, 0)));
+	g_assert_cmpstr(fu_device_get_logical_id(dev_tmp), ==, NULL);
+	dev_tmp = fu_release_get_device(FU_RELEASE(g_ptr_array_index(releases, 1)));
+	g_assert_cmpstr(fu_device_get_logical_id(dev_tmp), ==, "child2");
+	dev_tmp = fu_release_get_device(FU_RELEASE(g_ptr_array_index(releases, 2)));
+	g_assert_cmpstr(fu_device_get_logical_id(dev_tmp), ==, "child1");
 
 	/* verify everything upgraded */
 	for (guint i = 0; i < devices->len; i++) {
