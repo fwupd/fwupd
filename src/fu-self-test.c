@@ -2314,6 +2314,7 @@ fu_engine_history_func(gconstpointer user_data)
 			    "  UpdateState:          success\n"
 			    "  \n"
 			    "  [Release]\n"
+			    "  AppstreamId:          com.hughski.test.firmware\n"
 			    "  Version:              1.2.3\n"
 			    "  Checksum:             SHA1(%s)\n"
 			    "  Flags:                none\n"
@@ -2325,6 +2326,7 @@ fu_engine_history_func(gconstpointer user_data)
 
 	/* GetResults() */
 	device3 = fu_engine_get_results(engine, FWUPD_DEVICE_ID_ANY, &error);
+	g_assert_no_error(error);
 	g_assert_nonnull(device3);
 	g_assert_cmpstr(fu_device_get_id(device3), ==, "894e8c17a29428b09d10cd90d1db74ea76fbcfe8");
 	g_assert_cmpint(fu_device_get_update_state(device3), ==, FWUPD_UPDATE_STATE_SUCCESS);
@@ -2802,6 +2804,7 @@ fu_engine_history_error_func(gconstpointer user_data)
 			    "  UpdateError:          device was not in supported mode\n"
 			    "  \n"
 			    "  [Release]\n"
+			    "  AppstreamId:          com.hughski.test.firmware\n"
 			    "  Version:              1.2.3\n"
 			    "  Checksum:             SHA1(%s)\n"
 			    "  Flags:                none\n"
