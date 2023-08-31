@@ -19,6 +19,8 @@
 #define MMC_SEND_EXT_CSD	   8	/* adtc				R1  */
 #define MMC_SWITCH_MODE_WRITE_BYTE 0x03 /* Set target to value */
 #define MMC_WRITE_BLOCK		   24	/* adtc [31:0] data addr	R1  */
+#define MMC_SET_BLOCK_COUNT	   23	/* adtc [31:0] data addr	R1  */
+#define MMC_WRITE_MULTIPLE_BLOCK   25	/* adtc [31:0] data addr	R1  */
 
 /* From kernel linux/mmc/core.h */
 #define MMC_RSP_PRESENT	 (1 << 0)
@@ -380,8 +382,8 @@ fu_emmc_device_write_firmware(FuDevice *device,
 	      ext_csd[EXT_CSD_FFU_ARG_2] << 16 | ext_csd[EXT_CSD_FFU_ARG_3] << 24;
 
 	/* prepare multi_cmd to be sent */
-	multi_cmd = g_malloc0(sizeof(struct mmc_ioc_multi_cmd) + 3 * sizeof(struct mmc_ioc_cmd));
-	multi_cmd->num_of_cmds = 3;
+	multi_cmd = g_malloc0(sizeof(struct mmc_ioc_multi_cmd) + 4 * sizeof(struct mmc_ioc_cmd));
+	multi_cmd->num_of_cmds = 4;
 
 	/* put device into ffu mode */
 	multi_cmd->cmds[0].opcode = MMC_SWITCH;
@@ -390,20 +392,25 @@ fu_emmc_device_write_firmware(FuDevice *device,
 	multi_cmd->cmds[0].flags = MMC_RSP_SPI_R1B | MMC_RSP_R1B | MMC_CMD_AC;
 	multi_cmd->cmds[0].write_flag = 1;
 
-	/* send image chunk */
-	multi_cmd->cmds[1].opcode = MMC_WRITE_BLOCK;
-	multi_cmd->cmds[1].blksz = self->sect_size;
-	multi_cmd->cmds[1].blocks = 1;
-	multi_cmd->cmds[1].arg = arg;
+	/* send block count */
+	multi_cmd->cmds[1].opcode = MMC_SET_BLOCK_COUNT;
+	multi_cmd->cmds[1].arg = 1;
 	multi_cmd->cmds[1].flags = MMC_RSP_SPI_R1 | MMC_RSP_R1 | MMC_CMD_ADTC;
-	multi_cmd->cmds[1].write_flag = 1;
+
+	/* send image chunk */
+	multi_cmd->cmds[2].opcode = MMC_WRITE_MULTIPLE_BLOCK;
+	multi_cmd->cmds[2].blksz = self->sect_size;
+	multi_cmd->cmds[2].blocks = 1;
+	multi_cmd->cmds[2].arg = arg;
+	multi_cmd->cmds[2].flags = MMC_RSP_SPI_R1 | MMC_RSP_R1 | MMC_CMD_ADTC;
+	multi_cmd->cmds[2].write_flag = 1;
 
 	/* return device into normal mode */
-	multi_cmd->cmds[2].opcode = MMC_SWITCH;
-	multi_cmd->cmds[2].arg = (MMC_SWITCH_MODE_WRITE_BYTE << 24) | (EXT_CSD_MODE_CONFIG << 16) |
+	multi_cmd->cmds[3].opcode = MMC_SWITCH;
+	multi_cmd->cmds[3].arg = (MMC_SWITCH_MODE_WRITE_BYTE << 24) | (EXT_CSD_MODE_CONFIG << 16) |
 				 (EXT_CSD_NORMAL_MODE << 8) | EXT_CSD_CMD_SET_NORMAL;
-	multi_cmd->cmds[2].flags = MMC_RSP_SPI_R1B | MMC_RSP_R1B | MMC_CMD_AC;
-	multi_cmd->cmds[2].write_flag = 1;
+	multi_cmd->cmds[3].flags = MMC_RSP_SPI_R1B | MMC_RSP_R1B | MMC_CMD_AC;
+	multi_cmd->cmds[3].write_flag = 1;
 	fu_progress_step_done(progress);
 
 	/* build packets */
@@ -412,7 +419,7 @@ fu_emmc_device_write_firmware(FuDevice *device,
 		for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
 			g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
 
-			mmc_ioc_cmd_set_data(multi_cmd->cmds[1], fu_chunk_get_data(chk));
+			mmc_ioc_cmd_set_data(multi_cmd->cmds[2], fu_chunk_get_data(chk));
 
 			if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
 						  MMC_IOC_MULTI_CMD,
@@ -425,7 +432,7 @@ fu_emmc_device_write_firmware(FuDevice *device,
 				/* multi-cmd ioctl failed before exiting from ffu mode */
 				if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
 							  MMC_IOC_CMD,
-							  (guint8 *)&multi_cmd->cmds[2],
+							  (guint8 *)&multi_cmd->cmds[3],
 							  NULL,
 							  FU_EMMC_DEVICE_IOCTL_TIMEOUT,
 							  &error_local)) {
