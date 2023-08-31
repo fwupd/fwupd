@@ -317,6 +317,13 @@ fwupdplugin = library(
   install: true
 )
 
+# see https://mesonbuild.com/FAQ.html#how-do-i-tell-meson-that-my-sources-use-generated-headers
+fwupdplugin_rs_headers = []
+foreach fwupdplugin_rs_target: fwupdplugin_rs_targets
+  fwupdplugin_rs_headers += fwupdplugin_rs_target[1]
+endforeach
+fwupdplugin_rs_dep = declare_dependency(link_with: fwupdplugin, sources: fwupdplugin_rs_headers)
+
 if introspection.allowed()
   gir_dep = declare_dependency(sources: fwupd_gir)
   girtargets = []
