@@ -4,6 +4,7 @@ cargs = ['-DG_LOG_DOMAIN="FuPluginElanfp"']
 plugin_quirks += files('elanfp.quirk')
 plugin_builtins += static_library('fu_plugin_elanfp',
   sources: [
+    cfu_rs[1], # header
     'fu-elanfp-plugin.c',
     'fu-elanfp-device.c',
     'fu-elanfp-firmware.c'  # fuzzing
