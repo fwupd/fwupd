@@ -18,6 +18,7 @@
 #define FU_SYNAPTICS_CAPE_DEVICE_USB_CMD_RETRY_TIMEOUT	300  /* ms */
 #define FU_SYNAPTICS_CAPE_DEVICE_USB_CMD_INTR_TIMEOUT	5000 /* ms */
 #define FU_SYNAPTICS_CAPE_DEVICE_USB_RESET_DELAY_MS	5000 /* ms */
+#define FU_SYNAPTICS_CAPE_DEVICE_HDR_WRITE_DELAY_MS	150  /* ms */
 
 /* defines CAPE command constant values and macro */
 #define FU_SYNAPTICS_CAPE_DEVICE_GOLEM_REPORT_ID 1 /* HID report id */
@@ -659,7 +660,7 @@ fu_synaptics_cape_device_write_firmware_header(FuSynapticsCapeDevice *self,
 						FU_SYNAPTICS_CMD_FW_UPDATE_START,
 						buf32,
 						bufsz / sizeof(guint32),
-						0,
+						FU_SYNAPTICS_CAPE_DEVICE_HDR_WRITE_DELAY_MS,
 						error);
 }
 
