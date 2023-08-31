@@ -348,9 +348,9 @@ fu_emmc_device_write_firmware(FuDevice *device,
 {
 	FuEmmcDevice *self = FU_EMMC_DEVICE(device);
 	gsize fw_size = 0;
-	gsize total_done;
 	guint32 arg;
 	guint32 sect_done = 0;
+	gboolean check_sect_done = FALSE;
 	guint8 ext_csd[512];
 	guint failure_cnt = 0;
 	g_autofree struct mmc_ioc_multi_cmd *multi_cmd = NULL;
@@ -371,6 +371,9 @@ fu_emmc_device_write_firmware(FuDevice *device,
 	if (fw == NULL)
 		return FALSE;
 	fw_size = g_bytes_get_size(fw);
+
+	/*  mode operation codes are supported */
+	check_sect_done = ext_csd[EXT_CSD_FFU_FEATURES];
 
 	/* set CMD ARG */
 	arg = ext_csd[EXT_CSD_FFU_ARG_0] | ext_csd[EXT_CSD_FFU_ARG_1] << 8 |
@@ -405,7 +408,7 @@ fu_emmc_device_write_firmware(FuDevice *device,
 
 	/* build packets */
 	chunks = fu_chunk_array_new_from_bytes(fw, 0x00, self->sect_size);
-	while (sect_done == 0) {
+	while (failure_cnt < 3) {
 		for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
 			g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
 
@@ -431,50 +434,51 @@ fu_emmc_device_write_firmware(FuDevice *device,
 				return FALSE;
 			}
 
-			if (!fu_emmc_read_extcsd(self, ext_csd, sizeof(ext_csd), error))
-				return FALSE;
-
-			/* if we need to restart the download */
-			sect_done = ext_csd[EXT_CSD_NUM_OF_FW_SEC_PROG_0] |
-				    ext_csd[EXT_CSD_NUM_OF_FW_SEC_PROG_1] << 8 |
-				    ext_csd[EXT_CSD_NUM_OF_FW_SEC_PROG_2] << 16 |
-				    ext_csd[EXT_CSD_NUM_OF_FW_SEC_PROG_3] << 24;
-			if (sect_done == 0) {
-				if (failure_cnt >= 3) {
-					g_set_error_literal(error,
-							    G_IO_ERROR,
-							    G_IO_ERROR_FAILED,
-							    "programming failed");
-					return FALSE;
-				}
-				failure_cnt++;
-				g_debug("programming failed: retrying (%u)", failure_cnt);
-				break;
-			}
-
 			/* update progress */
 			fu_progress_set_percentage_full(fu_progress_get_child(progress),
 							(gsize)i + 1,
 							(gsize)fu_chunk_array_length(chunks));
 		}
+
+		if (!check_sect_done)
+			break;
+
+		if (!fu_emmc_read_extcsd(self, ext_csd, sizeof(ext_csd), error))
+			return FALSE;
+
+		sect_done = ext_csd[EXT_CSD_NUM_OF_FW_SEC_PROG_0] |
+			    ext_csd[EXT_CSD_NUM_OF_FW_SEC_PROG_1] << 8 |
+			    ext_csd[EXT_CSD_NUM_OF_FW_SEC_PROG_2] << 16 |
+			    ext_csd[EXT_CSD_NUM_OF_FW_SEC_PROG_3] << 24;
+
+		if (sect_done != 0)
+			break;
+
+		failure_cnt++;
+		g_debug("programming failed: retrying (%u)", failure_cnt);
+		fu_progress_step_done(progress);
 	}
+
 	fu_progress_step_done(progress);
 
 	/* sanity check */
-	total_done = (gsize)sect_done * (gsize)self->sect_size;
-	if (total_done != fw_size) {
-		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
-			    "firmware size and number of sectors written "
-			    "mismatch (%" G_GSIZE_FORMAT "/%" G_GSIZE_FORMAT "):",
-			    total_done,
-			    fw_size);
-		return FALSE;
+	if (check_sect_done) {
+		gsize total_done = (gsize)sect_done * (gsize)self->sect_size;
+
+		if (total_done != fw_size) {
+			g_set_error(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_FAILED,
+				    "firmware size and number of sectors written "
+				    "mismatch (%" G_GSIZE_FORMAT "/%" G_GSIZE_FORMAT "):",
+				    total_done,
+				    fw_size);
+			return FALSE;
+		}
 	}
 
 	/* check mode operation for ffu install*/
-	if (!ext_csd[EXT_CSD_FFU_FEATURES]) {
+	if (!check_sect_done) {
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
 	} else {
 		/* re-enter ffu mode and install the firmware */
