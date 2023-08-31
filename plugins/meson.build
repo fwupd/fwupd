@@ -10,6 +10,7 @@ plugin_deps = [
   libjsonglib,
   libxmlb,
   protobufc,
+  fwupdplugin_rs_dep,
 ]
 
 plugins = [
