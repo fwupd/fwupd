@@ -700,7 +700,6 @@ fu_synaptics_mst_device_update_panamera_firmware(FuSynapticsMstDevice *self,
 	guint32 fw_size = 0;
 	guint8 checksum8 = 0;
 	g_autoptr(FuSynapticsMstDeviceHelper) helper = fu_synaptics_mst_device_helper_new();
-	g_autoptr(GDateTime) dt = g_date_time_new_now_utc();
 
 	/* get used bank */
 	if (!fu_synaptics_mst_device_get_active_bank_panamera(self, error))
