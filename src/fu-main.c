@@ -150,6 +150,12 @@ main(int argc, char *argv[])
 		fu_daemon_set_machine_kind(daemon, FU_DAEMON_MACHINE_KIND_PHYSICAL);
 	}
 
+#ifdef FWUPD_ALWAYS_USE_DBUS_P2P
+	/* this is set for macOS and Windows */
+	if (socket_filename == NULL)
+		socket_filename = g_strdup(FWUPD_DBUS_P2P_SOCKET_ADDRESS);
+#endif
+
 	/* convert from filename to address, if required */
 	if (socket_filename != NULL) {
 		if (g_strrstr(socket_filename, "=") == NULL) {

@@ -20,6 +20,7 @@ meson setup .. \
     --libexecdir="bin" \
     --bindir="bin" \
     -Dbuild=all \
+    -Ddbus_p2p=true \
     -Dman=false \
     -Dfish_completion=false \
     -Dbash_completion=false \
