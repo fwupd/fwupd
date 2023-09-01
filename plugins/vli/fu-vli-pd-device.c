@@ -707,7 +707,10 @@ fu_vli_pd_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 					   FU_VLI_DEVICE_TIMEOUT,
 					   NULL,
 					   &error_local)) {
-		if (g_error_matches(error_local, G_USB_DEVICE_ERROR, G_USB_DEVICE_ERROR_FAILED)) {
+		if (g_error_matches(error_local, G_USB_DEVICE_ERROR, G_USB_DEVICE_ERROR_FAILED) ||
+		    g_error_matches(error_local,
+				    G_USB_DEVICE_ERROR,
+				    G_USB_DEVICE_ERROR_NOT_SUPPORTED)) {
 			g_debug("ignoring %s", error_local->message);
 		} else {
 			g_propagate_prefixed_error(error,
@@ -763,6 +766,9 @@ fu_vli_pd_device_attach(FuDevice *device, FuProgress *progress, GError **error)
 		if (g_error_matches(error_local,
 				    G_USB_DEVICE_ERROR,
 				    G_USB_DEVICE_ERROR_NO_DEVICE) ||
+		    g_error_matches(error_local,
+				    G_USB_DEVICE_ERROR,
+				    G_USB_DEVICE_ERROR_NOT_SUPPORTED) ||
 		    g_error_matches(error_local,
 				    G_USB_DEVICE_ERROR,
 				    G_USB_DEVICE_ERROR_TIMED_OUT) ||
