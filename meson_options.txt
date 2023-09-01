@@ -72,3 +72,4 @@ option('offline', type: 'feature', description : 'Allow installing firmware usin
 option('compat_cli', type: 'boolean', value : false, description : 'enable legacy commands: fwupdagent,dfu-tool,fwupdate')
 option('hsi', type: 'feature', description : ' Host Security Information', deprecated: {'true': 'enabled', 'false': 'disabled'})
 option('thinklmi_compat', type: 'boolean', description : 'Include workaround for thinklmi kernel bugs')
+option('python', type: 'string', description : 'the absolute path of the python3 binary')
