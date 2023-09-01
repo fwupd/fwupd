@@ -97,7 +97,7 @@ find $MINGW32BINDIR \
 	-o -name libbrotlicommon.dll \
 	-o -name libbrotlidec.dll \
 	-o -name libbz2-1.dll \
-	-o -name libcrypto-1_1-x64.dll \
+	-o -name libcrypto-3-x64.dll \
 	-o -name libcurl-4.dll \
 	-o -name "libffi-*.dll" \
 	-o -name libgcc_s_seh-1.dll \
@@ -118,7 +118,7 @@ find $MINGW32BINDIR \
 	-o -name libpcre-1.dll \
 	-o -name libsqlite3-0.dll \
 	-o -name libssh2-1.dll \
-	-o -name libssl-1_1-x64.dll \
+	-o -name libssl-3-x64.dll \
 	-o -name libssp-0.dll \
 	-o -name libtasn1-6.dll \
 	-o -name libusb-1.0.dll \
