@@ -272,7 +272,12 @@ if libgcab.type_name() == 'pkgconfig'
 endif
 
 bashcomp = dependency('bash-completion', required: false)
-python3 = import('python').find_installation('python3')
+python3path = get_option('python')
+if python3path == ''
+  python3 = import('python').find_installation('python3')
+else
+  python3 = find_program(python3path)
+endif
 
 gnutls = dependency('gnutls', version: '>= 3.6.0', required: get_option('gnutls'))
 if gnutls.found()
