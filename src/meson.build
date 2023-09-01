@@ -30,6 +30,7 @@ client_dep = [
   libjsonglib,
   libxmlb,
   sqlite,
+  fwupdplugin_rs_dep,
 ]
 if libsystemd.found()
   systemd_src += 'fu-systemd.c'
