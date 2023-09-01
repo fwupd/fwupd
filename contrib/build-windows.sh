@@ -62,7 +62,7 @@ cp -f -v \
 	$MINGW32BINDIR/libbrotlicommon.dll \
 	$MINGW32BINDIR/libbrotlidec.dll \
 	$MINGW32BINDIR/libbz2-1.dll \
-	$MINGW32BINDIR/libcrypto-1_1-x64.dll \
+	$MINGW32BINDIR/libcrypto-3-x64.dll \
 	$MINGW32BINDIR/libcurl-4.dll \
 	$MINGW32BINDIR/libffi-*.dll \
 	$MINGW32BINDIR/libgcc_s_seh-1.dll \
@@ -83,7 +83,7 @@ cp -f -v \
 	$MINGW32BINDIR/libpcre-1.dll \
 	$MINGW32BINDIR/libsqlite3-0.dll \
 	$MINGW32BINDIR/libssh2-1.dll \
-	$MINGW32BINDIR/libssl-1_1-x64.dll \
+	$MINGW32BINDIR/libssl-3-x64.dll \
 	$MINGW32BINDIR/libssp-0.dll \
 	$MINGW32BINDIR/libtasn1-6.dll \
 	$MINGW32BINDIR/libusb-1.0.dll \
