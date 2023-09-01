@@ -8,6 +8,7 @@ plugin_quirks += files([
   'vli-goodway.quirk',
   'vli-hyper.quirk',
   'vli-lenovo.quirk',
+  'vli-luxshare.quirk',
   'vli-samsung.quirk',
   ])
 plugin_builtins += static_library('fu_plugin_vli',
