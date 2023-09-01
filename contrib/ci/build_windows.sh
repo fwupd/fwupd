@@ -48,6 +48,7 @@ meson setup .. \
     --bindir="bin" \
     -Dbuild=all \
     -Dman=false \
+    -Ddbus_p2p=true \
     -Dfish_completion=false \
     -Dbash_completion=false \
     -Dfirmware-packager=false \

@@ -908,6 +908,12 @@ fwupd_client_connect_async(FwupdClient *self,
 		return;
 	}
 
+#ifdef FWUPD_ALWAYS_USE_DBUS_P2P
+	/* this is set for macOS and Windows */
+	if (socket_filename == NULL)
+		socket_filename = g_strdup(FWUPD_DBUS_P2P_SOCKET_ADDRESS);
+#endif
+
 	/* convert from filename to address, if required */
 	if (socket_filename != NULL) {
 		if (g_strrstr(socket_filename, "=") == NULL) {
@@ -915,10 +921,6 @@ fwupd_client_connect_async(FwupdClient *self,
 		} else {
 			socket_address = g_strdup(socket_filename);
 		}
-	} else {
-#ifdef _WIN32
-		socket_address = g_strdup(FWUPD_DBUS_P2P_SOCKET_ADDRESS);
-#endif
 	}
 
 	/* use peer-to-peer only if the env variable is set */
