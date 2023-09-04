@@ -31,6 +31,16 @@ One deprecated instance ID is also added; new firmware should not use this.
 The firmware is deployed when the device is in normal runtime mode, but it is
 only activated when the device is rebooted.
 
+## Quirk Use
+
+This plugin uses the following plugin-specific quirks:
+
+### EmmcBlockSize
+
+The block size used for Emmc  writes
+
+Since: 1.9.7
+
 ## Vendor ID Security
 
 The vendor ID is set from the EMMC vendor, for example set to `EMMC:{$manfid}`
