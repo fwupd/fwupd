@@ -513,8 +513,8 @@ conf.set_quoted('GETTEXT_PACKAGE', meson.project_name())
 conf.set_quoted('PACKAGE_NAME', meson.project_name())
 conf.set_quoted('VERSION', meson.project_version())
 
-if get_option('dbus_p2p')
-  conf.set('FWUPD_ALWAYS_USE_DBUS_P2P', '1')
+if get_option('dbus_socket_address') != ''
+  conf.set_quoted('FWUPD_DBUS_SOCKET_ADDRESS', get_option('dbus_socket_address'))
 endif
 
 motd_file = '85-fwupd'
