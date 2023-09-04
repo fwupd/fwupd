@@ -1,7 +1,7 @@
 option('build', type : 'combo', choices : ['all', 'standalone', 'library'], value : 'all', description : 'build type')
 option('consolekit', type : 'feature', description : 'ConsoleKit support', deprecated: {'true': 'enabled', 'false': 'disabled'})
 option('static_analysis', type : 'boolean', value : false, description : 'enable GCC static analysis support')
-option('dbus_p2p', type : 'boolean', value : false, description : 'always use D-Bus in p2p mode')
+option('dbus_socket_address', type : 'string', value : '', description : 'D-Bus socket address to use for p2p mode')
 option('firmware-packager', type : 'boolean', value : true, description : 'enable firmware-packager installation')
 option('docs', type : 'feature', description : 'Build developer documentation', deprecated: {'docgen': 'enabled', 'none': 'disabled'})
 option('introspection', type : 'feature', description : 'generate GObject Introspection data', deprecated: {'true': 'enabled', 'false': 'disabled'})

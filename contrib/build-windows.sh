@@ -20,7 +20,7 @@ meson setup .. \
     --libexecdir="bin" \
     --bindir="bin" \
     -Dbuild=all \
-    -Ddbus_p2p=true \
+    -Ddbus_socket_address="tcp:host=localhost,port=1341" \
     -Dman=false \
     -Dfish_completion=false \
     -Dbash_completion=false \

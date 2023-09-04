@@ -908,10 +908,10 @@ fwupd_client_connect_async(FwupdClient *self,
 		return;
 	}
 
-#ifdef FWUPD_ALWAYS_USE_DBUS_P2P
+#ifdef FWUPD_DBUS_SOCKET_ADDRESS
 	/* this is set for macOS and Windows */
 	if (socket_filename == NULL)
-		socket_filename = g_strdup(FWUPD_DBUS_P2P_SOCKET_ADDRESS);
+		socket_filename = g_strdup(FWUPD_DBUS_SOCKET_ADDRESS);
 #endif
 
 	/* convert from filename to address, if required */

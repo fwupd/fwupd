@@ -32,6 +32,8 @@ G_BEGIN_DECLS
  * FWUPD_DBUS_P2P_SOCKET_ADDRESS:
  *
  * The D-Bus socket address when using point-to-point connections.
+ *
+ * NOTE: This is no longer used as the value is set at compile time.
  **/
 #define FWUPD_DBUS_P2P_SOCKET_ADDRESS "tcp:host=localhost,port=1341"
 
