@@ -5186,18 +5186,20 @@ fu_engine_get_details(FuEngine *self, FuEngineRequest *request, gint fd, GError 
 }
 
 static gint
-fu_engine_sort_devices_by_priority_name(gconstpointer a, gconstpointer b)
+fu_engine_sort_devices_by_order_priority_name_cb(gconstpointer a, gconstpointer b)
 {
 	FuDevice *dev_a = *((FuDevice **)a);
 	FuDevice *dev_b = *((FuDevice **)b);
-	gint prio_a = fu_device_get_priority(dev_a);
-	gint prio_b = fu_device_get_priority(dev_b);
 	const gchar *name_a = fu_device_get_name(dev_a);
 	const gchar *name_b = fu_device_get_name(dev_b);
 
-	if (prio_a > prio_b)
+	if (fu_device_get_order(dev_a) > fu_device_get_order(dev_b))
+		return 1;
+	if (fu_device_get_order(dev_a) < fu_device_get_order(dev_b))
 		return -1;
-	if (prio_a < prio_b)
+	if (fu_device_get_priority(dev_a) > fu_device_get_priority(dev_b))
+		return -1;
+	if (fu_device_get_priority(dev_a) < fu_device_get_priority(dev_b))
 		return 1;
 	if (g_strcmp0(name_a, name_b) > 0)
 		return 1;
@@ -5231,7 +5233,7 @@ fu_engine_get_devices(FuEngine *self, GError **error)
 				    "No detected devices");
 		return NULL;
 	}
-	g_ptr_array_sort(devices, fu_engine_sort_devices_by_priority_name);
+	g_ptr_array_sort(devices, fu_engine_sort_devices_by_order_priority_name_cb);
 	return g_steal_pointer(&devices);
 }
 
