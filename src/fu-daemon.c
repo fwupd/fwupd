@@ -2114,9 +2114,8 @@ fu_daemon_dbus_connection_closed_cb(GDBusConnection *connection,
 				    GError *error,
 				    gpointer user_data)
 {
-	FuDaemon *self = FU_DAEMON(user_data);
-	g_info("client connection closed: %s", error != NULL ? error->message : "unknown");
-	g_clear_object(&self->connection);
+	if (remote_peer_vanished)
+		g_info("client connection closed: %s", error != NULL ? error->message : "unknown");
 }
 
 static gboolean
