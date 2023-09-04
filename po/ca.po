@@ -38,7 +38,7 @@ msgstr "%s Actualització de la bateria"
 #. * at system bootup
 #, c-format
 msgid "%s CPU Microcode Update"
-msgstr "%s Actualitza el microprogramari de la CPU"
+msgstr "%s Actualitza el microcodi de la CPU"
 
 #. TRANSLATORS: camera can refer to the laptop internal
 #. * camera in the bezel or external USB webcam
@@ -591,6 +591,10 @@ msgstr "Construeix un arxiu Cabinet a partir d’un blob de microprogramari i me
 #. TRANSLATORS: command description
 msgid "Build a firmware file"
 msgstr "Construeix un fitxer de microprogramari."
+
+#. TRANSLATORS: longer description
+msgid "CPU Microcode must be updated to mitigate against various information-disclosure security issues."
+msgstr "El microcodi de la CPU s'ha d'actualitzar per a mitigar diversos problemes de seguretat de divulgació d'informació."
 
 #. TRANSLATORS: this is to abort the interactive prompt
 msgid "Cancel"
@@ -1693,6 +1697,14 @@ msgstr "CET d'Intel habilitat"
 msgid "Intel Control-Flow Enforcement Technology detects and prevents certain methods for running malicious software on the device."
 msgstr "La tecnologia de compliment del flux de control d'Intel detecta i impedeix certs mètodes per a executar programari maliciós en el dispositiu."
 
+#. TRANSLATORS: Title: GDS is where the CPU leaks information
+msgid "Intel GDS Mitigation"
+msgstr "Mitigació GDS d'Intel"
+
+#. TRANSLATORS: Title: GDS is where the CPU leaks information
+msgid "Intel GDS mitigation"
+msgstr "Mitigació GDS d'Intel"
+
 #. TRANSLATORS: Title: MEI = Intel Management Engine
 msgid "Intel Management Engine Manufacturing Mode"
 msgstr "Mode de fabricació del motor de gestió d'Intel"
@@ -1939,6 +1951,11 @@ msgstr "URI de les metadades"
 msgid "Metadata can be obtained from the Linux Vendor Firmware Service."
 msgstr "Les metadades es poden obtenir des del servei de microprogramari del proveïdor Linux."
 
+#. TRANSLATORS: error message for a user who ran fwupdmgr
+#. * refresh recently
+msgid "Metadata is up to date; use --force to refresh again."
+msgstr "Les metadades estan actualitzades, useu --force per a actualitzar-les de nou."
+
 #. TRANSLATORS: smallest version number installable on device
 msgid "Minimum Version"
 msgstr "Versió mínima"
@@ -2156,6 +2173,11 @@ msgstr "Abans de continuar, assegureu-vos que teniu la clau de recuperació del 
 #, c-format
 msgid "Please enter a number from 0 to %u: "
 msgstr "Introduïu un número del 0 al %u: "
+
+#. TRANSLATORS: the user isn't reading the question -- please don't translate
+#. * 'Y' or 'N' as these are hardcoded
+msgid "Please enter either Y or N: "
+msgstr "Introduïu S o N:"
 
 #. TRANSLATORS: Failed to open plugin, hey Arch users
 msgid "Plugin dependencies missing"

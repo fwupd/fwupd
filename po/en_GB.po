@@ -592,6 +592,10 @@ msgstr "Build a cabinet archive from a firmware blob and XML metadata"
 msgid "Build a firmware file"
 msgstr "Build a firmware file"
 
+#. TRANSLATORS: longer description
+msgid "CPU Microcode must be updated to mitigate against various information-disclosure security issues."
+msgstr "CPU Microcode must be updated to mitigate against various information-disclosure security issues."
+
 #. TRANSLATORS: this is to abort the interactive prompt
 msgid "Cancel"
 msgstr "Cancel"
@@ -1693,6 +1697,14 @@ msgstr "Intel CET Enabled"
 msgid "Intel Control-Flow Enforcement Technology detects and prevents certain methods for running malicious software on the device."
 msgstr "Intel Control-Flow Enforcement Technology detects and prevents certain methods for running malicious software on the device."
 
+#. TRANSLATORS: Title: GDS is where the CPU leaks information
+msgid "Intel GDS Mitigation"
+msgstr "Intel GDS Mitigation"
+
+#. TRANSLATORS: Title: GDS is where the CPU leaks information
+msgid "Intel GDS mitigation"
+msgstr "Intel GDS mitigation"
+
 #. TRANSLATORS: Title: MEI = Intel Management Engine
 msgid "Intel Management Engine Manufacturing Mode"
 msgstr "Intel Management Engine Manufacturing Mode"
@@ -1939,6 +1951,11 @@ msgstr "Metadata URI"
 msgid "Metadata can be obtained from the Linux Vendor Firmware Service."
 msgstr "Metadata can be obtained from the Linux Vendor Firmware Service."
 
+#. TRANSLATORS: error message for a user who ran fwupdmgr
+#. * refresh recently
+msgid "Metadata is up to date; use --force to refresh again."
+msgstr "Metadata is up to date; use --force to refresh again."
+
 #. TRANSLATORS: smallest version number installable on device
 msgid "Minimum Version"
 msgstr "Minimum Version"
@@ -2096,6 +2113,14 @@ msgstr "Output in JSON format"
 msgid "Override the default ESP path"
 msgstr "Override the default ESP path"
 
+#. TRANSLATORS: if we can get metadata from peer-to-peer clients
+msgid "P2P Firmware"
+msgstr "P2P Firmware"
+
+#. TRANSLATORS: if we can get metadata from peer-to-peer clients
+msgid "P2P Metadata"
+msgstr "P2P Metadata"
+
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "PATH"
 msgstr "PATH"
@@ -2156,6 +2181,11 @@ msgstr "Please ensure you have the volume recovery key before continuing."
 #, c-format
 msgid "Please enter a number from 0 to %u: "
 msgstr "Please enter a number from 0 to %u: "
+
+#. TRANSLATORS: the user isn't reading the question -- please don't translate
+#. * 'Y' or 'N' as these are hardcoded
+msgid "Please enter either Y or N: "
+msgstr "Please enter either Y or N: "
 
 #. TRANSLATORS: Failed to open plugin, hey Arch users
 msgid "Plugin dependencies missing"

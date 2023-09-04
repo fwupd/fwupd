@@ -22,6 +22,25 @@ msgid_plural "%.0f minutes remaining"
 msgstr[0] "Minutu%.0f falta da"
 msgstr[1] "%.0f minutu falta dira"
 
+#. TRANSLATORS: should the remote still be enabled
+msgid "Agree and enable the remote?"
+msgstr "Onartu eta gaitu urrunekoa?"
+
+#. TRANSLATORS: command line option
+msgid "Answer yes to all questions"
+msgstr "Erantzun bai galdera guztiei"
+
+#. TRANSLATORS: approved firmware has been checked by
+#. * the domain administrator
+msgid "Approved firmware:"
+msgid_plural "Approved firmware:"
+msgstr[0] "Onartutako firmwarea:"
+msgstr[1] "Onartutako firmwarea:"
+
+#. TRANSLATORS: stop nagging the user
+msgid "Ask again next time?"
+msgstr "Galdetu berriro hurrengoan?"
+
 #. TRANSLATORS: waiting for user to authenticate
 msgid "Authenticating…"
 msgstr "Autentifikatzen…"
@@ -29,6 +48,17 @@ msgstr "Autentifikatzen…"
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify daemon configuration"
 msgstr "Autentifikazioa behar da daemon-aren konfigurazioa aldatzeko"
+
+#. TRANSLATORS: can we JFDI?
+msgid "Automatically upload every time?"
+msgstr "Automatikoki eguneratu guztietan?"
+
+msgid "BYTES"
+msgstr "BYTE"
+
+#. TRANSLATORS: we will not offer this firmware to the user
+msgid "Blocking firmware:"
+msgstr "Firmwarea blokeatzen:"
 
 #. TRANSLATORS: this is to abort the interactive prompt
 msgid "Cancel"
@@ -44,6 +74,14 @@ msgid "Choose branch"
 msgstr "Aukeratu adarra"
 
 #. TRANSLATORS: get interactive prompt
+msgid "Choose firmware"
+msgstr "Aukeratu firmwarea"
+
+#. TRANSLATORS: get interactive prompt
+msgid "Choose release"
+msgstr "Aukeratu argitalpena"
+
+#. TRANSLATORS: get interactive prompt
 msgid "Choose volume"
 msgstr "Aukeratu bolumena"
 
@@ -55,6 +93,26 @@ msgstr "Ez da komandoa aurkitu"
 msgid "Decompressing…"
 msgstr "Deskonprimatzen…"
 
+#. TRANSLATORS: this is when a device is hotplugged
+msgid "Device added:"
+msgstr "Gailua gehitu da:"
+
+#. TRANSLATORS: the device is already connected
+msgid "Device already exists"
+msgstr "Gailua badago lehendik"
+
+#. TRANSLATORS: this is when a device has been updated
+msgid "Device changed:"
+msgstr "Gailua aldatu da:"
+
+#. ability to load emulated devices is opt-in
+msgid "Device emulation is not enabled."
+msgstr "Gailu-emulazioa ez dago gaituta."
+
+#. TRANSLATORS: this is when a device is hotplugged
+msgid "Device removed:"
+msgstr "Gailua kendu da:"
+
 #. TRANSLATORS: command line option
 msgid "Device update method"
 msgstr "Gailua eguneratzeko metodoa"
@@ -62,6 +120,14 @@ msgstr "Gailua eguneratzeko metodoa"
 #. TRANSLATORS: command line option
 msgid "Display version"
 msgstr "Bistaratze-bertsioa"
+
+#. TRANSLATORS: we can do this live
+msgid "Do you want to enable it now?"
+msgstr "Gaitu nahi al duzu?"
+
+#. TRANSLATORS: ask if we can update the metadata
+msgid "Do you want to refresh this remote now?"
+msgstr "Urruneko hau orain freskatu nahi al duzu?"
 
 #. TRANSLATORS: success
 #. success
@@ -74,6 +140,14 @@ msgstr "Deskargatzen…"
 
 msgid "Enable"
 msgstr "Gaitu"
+
+#. TRANSLATORS: a remote here is like a 'repo' or software source
+msgid "Enable new remote?"
+msgstr "Gaitu urruneko berria?"
+
+#. TRANSLATORS: Turn on the remote
+msgid "Enable this remote?"
+msgstr "Gaitu urruneko hau?"
 
 #. TRANSLATORS: Plugin is active and in use
 #. TRANSLATORS: if the remote is enabled
@@ -88,6 +162,14 @@ msgstr "Ezabatzen…"
 #. TRANSLATORS: failed to read measurements file
 msgid "Failed to parse file"
 msgstr "Huts egin du fitxategiaren analisiak"
+
+#. TRANSLATORS: user selected something not possible
+msgid "Firmware is already blocked"
+msgstr "Firmwarea jadanik blokeatuta dago"
+
+#. TRANSLATORS: user selected something not possible
+msgid "Firmware is not already blocked"
+msgstr "Firmwarea ez dago jadanik blokeatuta"
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Found"
@@ -129,8 +211,43 @@ msgstr "Kargatzen…"
 msgid "Modify daemon configuration"
 msgstr "Aldatu daemon-aren konfigurazioa"
 
+#. TRANSLATORS: nothing found
+msgid "No firmware IDs found"
+msgstr "Ez da firmwarearen IDrik aurkitu"
+
+#. TRANSLATORS: nothing found
+msgid "No firmware found"
+msgstr "Ez da firmwarerik aurkitu"
+
+#. TRANSLATORS: no repositories to download from
+msgid "No releases available"
+msgstr "Ez dago argitalpenik eskuragarri"
+
+#. TRANSLATORS: no repositories to download from
+msgid "No remotes available"
+msgstr "Ez dago urrunekorik erabilgarri"
+
+#. TRANSLATORS: this is an error string
+msgid "No updatable devices"
+msgstr "Ez dago eguneratu daitekeen gailurik"
+
+#. TRANSLATORS: this is an error string
+msgid "No updates available"
+msgstr "Ez dago eguneraketarik erabilgarri"
+
+#. TRANSLATORS: this is for the device tests
+msgid "OK!"
+msgstr "Ados"
+
+#. TRANSLATORS: prompt to apply the update
+msgid "Perform operation?"
+msgstr "Gauzatu eragiketa?"
+
 msgid "Print the version number"
 msgstr "Inprimatu bertsio-zenbakia"
+
+msgid "Proceed with upload?"
+msgstr "Jarraitu kargarekin?"
 
 #. TRANSLATORS: reading from the flash chips
 msgid "Reading…"
@@ -156,6 +273,13 @@ msgstr "Programatzen…"
 msgid "Selected volume"
 msgstr "Hautatutako bolumena"
 
+#. TRANSLATORS: command description
+msgid "Set a BIOS setting"
+msgstr "Ezarri BIOS ezarpen bat"
+
+msgid "Set one or more BIOS settings"
+msgstr "Ezarri BIOS ezarpen bat edo batzuk"
+
 #. TRANSLATORS: command line option
 msgid "Show all results"
 msgstr "Erakutsi emaitza guztiak"
@@ -164,11 +288,70 @@ msgstr "Erakutsi emaitza guztiak"
 msgid "Show devices that are not updatable"
 msgstr "Erakutsi eguneragarriak ez diren gailuak"
 
+msgid "Signature"
+msgstr "Sinadura"
+
+#. TRANSLATORS: success message -- where activation is making the new
+#. * firmware take effect, usually after updating offline
+msgid "Successfully activated all devices"
+msgstr "Gailu guztiak ongi aktibatu dira"
+
+#. TRANSLATORS: success message
+msgid "Successfully disabled remote"
+msgstr "Urrunekoa ongi desgaitu da"
+
+#. TRANSLATORS: success message -- where 'metadata' is information
+#. * about available firmware on the remote server
+msgid "Successfully downloaded new metadata: "
+msgstr "Metadatu berriak ongi deskargatu dira:"
+
+#. TRANSLATORS: success message
+msgid "Successfully enabled and refreshed remote"
+msgstr "Urrunekoa ongi gaitu eta freskatu da"
+
+#. TRANSLATORS: success message
+msgid "Successfully enabled remote"
+msgstr "Urrunekoa ongi gaitu da"
+
+#. TRANSLATORS: success message
+msgid "Successfully installed firmware"
+msgstr "Firmwarea ongi instalatu da"
+
+#. TRANSLATORS: success message -- a per-system setting value
+msgid "Successfully modified configuration value"
+msgstr "Konfigurazio-balioa ongi aldatu da"
+
+#. TRANSLATORS: success message for a per-remote setting change
+msgid "Successfully modified remote"
+msgstr "Urrunekoa ongi aldatu da"
+
+#. TRANSLATORS: success message -- the user can do this by-hand too
+msgid "Successfully refreshed metadata manually"
+msgstr "Metadatuak ongi freskatu dira eskuz"
+
+msgid "Target"
+msgstr "Helburua"
+
+#. TRANSLATORS: error message
+msgid "Unable to connect to service"
+msgstr "Ezin da zerbitzuarekin konektatu"
+
+#. TRANSLATORS: we will now offer this firmware to the user
+msgid "Unblocking firmware:"
+msgstr "Firmwarea desblokeatzen:"
+
 #. TRANSLATORS: current daemon status is unknown
 #. TRANSLATORS: we don't know the license of the update
 #. TRANSLATORS: unknown release urgency
 msgid "Unknown"
 msgstr "Ezezaguna"
+
+#. TRANSLATORS: ask if we can update metadata
+msgid "Update now?"
+msgstr "Eguneratu orain?"
+
+msgid "Updating"
+msgstr "Eguneratzen"
 
 #. TRANSLATORS: verifying we wrote the firmware correctly
 msgid "Verifying…"

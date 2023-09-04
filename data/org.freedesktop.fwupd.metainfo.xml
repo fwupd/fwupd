@@ -33,6 +33,39 @@
     <binary>fwupdtool</binary>
   </provides>
   <releases>
+    <release version="1.9.5" date="2023-09-04">
+      <description>
+        <p>
+          This release adds the following features:
+        </p>
+        <ul>
+          <li>Add optional support for Passim, a local caching server</li>
+          <li>Allow using fwupdtool get-devices --json</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Allow adding UF2 devices without a filesystem UUID</li>
+          <li>Correctly read the size of Synaptics Panamera MST firmware</li>
+          <li>Do not return historical results with no AppStream ID</li>
+          <li>Fix parallel build when using a machine with a lot of cores</li>
+          <li>Fix uninhibiting ModemManager after the fastboot flash has completed</li>
+          <li>Make firmware USI dock flashing more reliable</li>
+          <li>Record the update state of success when the device is returned to runtime</li>
+          <li>Remove the default-installed fwupd-refresh systemd preset</li>
+          <li>Sort composite updates by the device order when required</li>
+        </ul>
+        <p>This release adds support for the following hardware:</p>
+        <ul>
+          <li>EPOS ADAPT 1x5</li>
+          <li>Fibocom FM101</li>
+          <li>Foxconn T99W373</li>
+          <li>Genesys GL3525S USB Hub</li>
+          <li>HP Rata/Remi BLE Mice</li>
+          <li>Luxshare Quad USB4 Dock</li>
+          <li>System76 Launch 3, Launch Heavy 3 and Thelio IO 2</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.9.4" date="2023-08-14">
       <description>
         <p>

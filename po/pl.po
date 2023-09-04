@@ -1669,6 +1669,14 @@ msgstr "Intel CET jest aktywne"
 msgid "Intel CET Enabled"
 msgstr "Intel CET jest włączone"
 
+#. TRANSLATORS: Title: GDS is where the CPU leaks information
+msgid "Intel GDS Mitigation"
+msgstr "Załatanie dziury GDS procesorów Intel"
+
+#. TRANSLATORS: Title: GDS is where the CPU leaks information
+msgid "Intel GDS mitigation"
+msgstr "Załatanie dziury GDS procesorów Intel"
+
 #. TRANSLATORS: Title: MEI = Intel Management Engine
 msgid "Intel Management Engine Manufacturing Mode"
 msgstr "Tryb serwisowy Intel Management Engine"
@@ -1895,6 +1903,11 @@ msgstr "Adres URI metadanych"
 msgid "Metadata can be obtained from the Linux Vendor Firmware Service."
 msgstr "Metadane można uzyskać z serwisu Linux Vendor Firmware Service."
 
+#. TRANSLATORS: error message for a user who ran fwupdmgr
+#. * refresh recently
+msgid "Metadata is up to date; use --force to refresh again."
+msgstr "Metadane są aktualne, opcja --force odświeży je ponownie."
+
 #. TRANSLATORS: smallest version number installable on device
 msgid "Minimum Version"
 msgstr "Minimalna wersja"
@@ -2108,6 +2121,11 @@ msgstr "Przed kontynuacją proszę się upewnić, że posiadany jest klucz odzys
 #, c-format
 msgid "Please enter a number from 0 to %u: "
 msgstr "Proszę podać liczbę od 0 do %u: "
+
+#. TRANSLATORS: the user isn't reading the question -- please don't translate
+#. * 'Y' or 'N' as these are hardcoded
+msgid "Please enter either Y or N: "
+msgstr "Proszę nacisnąć Y lub N:"
 
 #. TRANSLATORS: Failed to open plugin, hey Arch users
 msgid "Plugin dependencies missing"

@@ -612,6 +612,10 @@ msgstr "Sestavit cab archiv z binárního souboru s firmwarem a XML metadat"
 msgid "Build a firmware file"
 msgstr "Sestavit soubor s firmware"
 
+#. TRANSLATORS: longer description
+msgid "CPU Microcode must be updated to mitigate against various information-disclosure security issues."
+msgstr "Aby bylo možné zmírnit dopad různých problémů s úniky různých informací z procesoru, je třeba zaktualizovat jeho mikrokód"
+
 #. TRANSLATORS: this is to abort the interactive prompt
 msgid "Cancel"
 msgstr "Storno"
@@ -1717,6 +1721,14 @@ msgstr "Intel CET podporováno"
 msgid "Intel Control-Flow Enforcement Technology detects and prevents certain methods for running malicious software on the device."
 msgstr "Technologie Intel Control-Flow Enforcement (vynucování řízení toku) zjišťuje a brání určitým metodám spouštění škodlivého software na zařízení."
 
+#. TRANSLATORS: Title: GDS is where the CPU leaks information
+msgid "Intel GDS Mitigation"
+msgstr "Zmírnění Intel GDS"
+
+#. TRANSLATORS: Title: GDS is where the CPU leaks information
+msgid "Intel GDS mitigation"
+msgstr "Zmírnění Intel GDS"
+
 #. TRANSLATORS: Title: MEI = Intel Management Engine
 msgid "Intel Management Engine Manufacturing Mode"
 msgstr "Intel Management Engine – režim pro výrobce"
@@ -1965,6 +1977,11 @@ msgstr "URI pro metadata"
 msgid "Metadata can be obtained from the Linux Vendor Firmware Service."
 msgstr "Metadata lze získat ze služby Linux Vendor Firmware Service."
 
+#. TRANSLATORS: error message for a user who ran fwupdmgr
+#. * refresh recently
+msgid "Metadata is up to date; use --force to refresh again."
+msgstr "Metadata jsou aktuální. Pokud je přesto chcete znovu načíst, použijte přepínač --force."
+
 #. TRANSLATORS: smallest version number installable on device
 msgid "Minimum Version"
 msgstr "Nejstarší použitelná verze"
@@ -2182,6 +2199,11 @@ msgstr "Než budete pokračovat, zajistěte si, abyste měli k dispozici záchra
 #, c-format
 msgid "Please enter a number from 0 to %u: "
 msgstr "Zadejte prosím číslo od 0 do %u:"
+
+#. TRANSLATORS: the user isn't reading the question -- please don't translate
+#. * 'Y' or 'N' as these are hardcoded
+msgid "Please enter either Y or N: "
+msgstr "Zadejte Y (ano) nebo N (ne):"
 
 #. TRANSLATORS: Failed to open plugin, hey Arch users
 msgid "Plugin dependencies missing"

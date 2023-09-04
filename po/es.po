@@ -263,7 +263,7 @@ msgstr "%s v%s"
 #. TRANSLATORS: Title: %s is ME kind, e.g. CSME/TXT
 #, c-format
 msgid "%s version"
-msgstr "Version %s"
+msgstr "Versión %s"
 
 #. TRANSLATORS: duration in days!
 #, c-format
@@ -495,7 +495,7 @@ msgstr "Se requiere autenticación para devolver el firmware a una versión ante
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify BIOS settings"
-msgstr "Se requiere para modificar la configuración del demonio"
+msgstr "Se requiere autenticación para modificar los parámetros del BIOS"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify a configured remote used for firmware updates"
@@ -603,6 +603,10 @@ msgstr "Construye un archivado gabinete desde un globo de firmware y metadatos X
 #. TRANSLATORS: command description
 msgid "Build a firmware file"
 msgstr "Compila un archivo firmware"
+
+#. TRANSLATORS: longer description
+msgid "CPU Microcode must be updated to mitigate against various information-disclosure security issues."
+msgstr "El micro-código de CPU debe ser actualizarlo para mitigar varios informes descubiertos en problemas de seguridad."
 
 #. TRANSLATORS: this is to abort the interactive prompt
 msgid "Cancel"
@@ -828,6 +832,10 @@ msgstr "El dispositivo requiere electricidad AC para conectarlo"
 #. TRANSLATORS: The device cannot be updated due to missing vendor's license."
 msgid "Device requires a software license to update"
 msgstr "El dispositivo requiere una licencia de software para actualizarse"
+
+#. TRANSLATORS: longer description
+msgid "Device software updates are provided for this device."
+msgstr "Actualizaciones del software del dispositivo son proporcionados para este dispositivo."
 
 #. TRANSLATORS: Device supports a safety mechanism for flashing
 msgid "Device stages updates"
@@ -1087,6 +1095,9 @@ msgstr "Cifrado"
 msgid "Encrypted RAM"
 msgstr "RAM cifrada"
 
+msgid "Encrypted RAM makes it impossible for information that is stored in device memory to be read if the memory chip is removed and accessed."
+msgstr "RAM cifrado lo hace imposible para información que esté almacenada en memoria del dispositivo para ser leído si el chip de memoria está extraído y accedido."
+
 #. TRANSLATORS: the vendor is no longer supporting the device
 msgid "End of life"
 msgstr "Final de vida"
@@ -1227,7 +1238,7 @@ msgstr "Ha fallado al interpretar indicaciones para --filter-release"
 
 #. TRANSLATORS: could not parse file
 msgid "Failed to parse local dbx"
-msgstr "Ha fallado al interpretar dbx local"
+msgstr "Intérprete erróneo del dbx local"
 
 #. TRANSLATORS: we could not reboot for some reason
 msgid "Failed to reboot"
@@ -1239,7 +1250,7 @@ msgstr "Erróneo al fijar características de front-end"
 
 #. TRANSLATORS: we could not talk to plymouth
 msgid "Failed to set splash mode"
-msgstr "Error al fijar el modo presentación"
+msgstr "Error al fijar el modo de presentación"
 
 #. TRANSLATORS: something with a blocked hash exists
 #. * in the users ESP -- which would be bad!
@@ -1278,6 +1289,10 @@ msgstr "Filtrar con un conjunto de indicadores de publicación utilizando un pre
 msgid "Firmware Attestation"
 msgstr "Prueba de Firmware"
 
+#. TRANSLATORS: longer description
+msgid "Firmware Attestation checks device software using a reference copy, to make sure that it has not been changed."
+msgstr "Garantía de firmware comprueba que el software del dispositivo utiliza una copia de referencia, para asegurar que no haya sido modificado."
+
 #. TRANSLATORS: Title: firmware refers to the flash chip in the computer
 msgid "Firmware BIOS Descriptor"
 msgstr "Descriptor BIOS Firmware"
@@ -1310,6 +1325,9 @@ msgstr "Demonio de Actualización de Firmware"
 msgid "Firmware Updater Verification"
 msgstr "Verificación para Actualizador del Firmware"
 
+msgid "Firmware Updater Verification checks that software used for updating has not been tampered with."
+msgstr "La Verificación de Actualizador del Firmware comprueba que el software utilizado para actualizar no ha sido manipulado."
+
 #. TRANSLATORS: Title: if firmware updates are available
 msgid "Firmware Updates"
 msgstr "Actualizaciones del firmware"
@@ -1332,7 +1350,7 @@ msgstr "Protección de Escritura del Firmware del de la memoria del firmware del
 
 #. TRANSLATORS: Title: if we can verify the firmware checksums
 msgid "Firmware attestation"
-msgstr "Prueba de firmware"
+msgstr "Garantía de firmware"
 
 #. TRANSLATORS: user selected something not possible
 msgid "Firmware is already blocked"
@@ -1511,6 +1529,10 @@ msgstr "IOMMU"
 msgid "IOMMU Protection"
 msgstr "Protección de dispositivo IOMMU"
 
+#. TRANSLATORS: longer description
+msgid "IOMMU Protection prevents connected devices from accessing unauthorized parts of system memory."
+msgstr "Protección IOMMU previene dispositivos conectados desde partes de acceso no autorizadas de memoria del sistema."
+
 #. TRANSLATORS: HSI event title
 msgid "IOMMU device protection disabled"
 msgstr "Protección de dispositivo IOMMU desactivado"
@@ -1640,6 +1662,9 @@ msgstr "ACM protegido Intel BootGuard"
 msgid "Intel BootGuard Error Policy"
 msgstr "Error de normativa Intel BootGuard"
 
+msgid "Intel BootGuard Error Policy ensures the device does not continue to start if its device software has been tampered with."
+msgstr "Normativa Errónea de Intel BootGuard asegura que el dispositivo no continúe iniciar si su software del dispositivo haya sido manipulado."
+
 #. TRANSLATORS: Title: BootGuard is a trademark from Intel
 msgid "Intel BootGuard Fuse"
 msgstr "Intel BootGuard Fuse"
@@ -1682,6 +1707,18 @@ msgstr "Intel CET Activo"
 msgid "Intel CET Enabled"
 msgstr "Intel CET Habilitada"
 
+#. TRANSLATORS: longer description
+msgid "Intel Control-Flow Enforcement Technology detects and prevents certain methods for running malicious software on the device."
+msgstr "Tecnología de Refuerzo de Control de Flujo Intel detecta y previene ciertos métodos para ejecución de software malicioso en el dispositivo."
+
+#. TRANSLATORS: Title: GDS is where the CPU leaks information
+msgid "Intel GDS Mitigation"
+msgstr "Mitigación de GDS de Intel"
+
+#. TRANSLATORS: Title: GDS is where the CPU leaks information
+msgid "Intel GDS mitigation"
+msgstr "Mitigación de GDS de Intel"
+
 #. TRANSLATORS: Title: MEI = Intel Management Engine
 msgid "Intel Management Engine Manufacturing Mode"
 msgstr "Modo de Manufactura del Motor de Gestión Intel"
@@ -1694,6 +1731,10 @@ msgstr "Modo de Manufactura del Motor de Gestión Intel"
 msgid "Intel Management Engine Override"
 msgstr "Modo de Manufactura del Motor de Gestión Intel"
 
+#. TRANSLATORS: longer description
+msgid "Intel Management Engine Override disables checks for device software tampering."
+msgstr "Descarta el Gestor de Motor Intel desactiva las comprobaciones para manipulación de software del dispositivo."
+
 #. TRANSLATORS: Title: MEI = Intel Management Engine
 msgid "Intel Management Engine Version"
 msgstr "Versión del Motor de Gestión Intel"
@@ -1701,6 +1742,10 @@ msgstr "Versión del Motor de Gestión Intel"
 #. TRANSLATORS: Title: SMAP = Supervisor Mode Access Prevention
 msgid "Intel SMAP"
 msgstr "Intel SMAP"
+
+#. TRANSLATORS: longer description
+msgid "Intel Supervisor Mode Access Prevention ensures critical parts of device memory are not accessed by less secure programs."
+msgstr "Prevención de Acceso al Modo Supervisor de Intel asegura partes críticas de memoria del dispositivo que no están accedidas por programas menos seguros."
 
 #. TRANSLATORS: Device cannot be removed easily
 msgid "Internal device"
@@ -1785,9 +1830,19 @@ msgstr "Licencia"
 msgid "Linux Kernel Lockdown"
 msgstr "Kernel Linux bloqueado"
 
+#. TRANSLATORS: longer description
+msgid "Linux Kernel Lockdown mode prevents administrator (root) accounts from accessing and changing critical parts of system software."
+msgstr "El modo Cerrojo del Kernel Linux previene al administrador (root) las cuentas desde el acceso y modificación de partes críticas del software del sistema."
+
+msgid "Linux Kernel Swap temporarily saves information to disk as you work. If the information is not protected, it could be accessed by someone if they obtained the disk."
+msgstr "El Intercambio del Kernel Linux guarda información temporalmente al disco para que pueda trabajar. Si la información no está protegida, pudo ser accedido por alguno si obtuvieron el disco."
+
 #. TRANSLATORS: Title: if it's tainted or not
 msgid "Linux Kernel Verification"
 msgstr "Verificación de Kernel Linux"
+
+msgid "Linux Kernel Verification makes sure that critical system software has not been tampered with. Using device drivers which are not provided with the system can prevent this security feature from working correctly."
+msgstr "La Verificación del Kernel Linux asegura que el software crítico del sistema no ha sido manoseado. Utilizando controladores del dispositivo los cuales no sean proporcionados con el sistema pueden prevenir esta característica de seguridad desde el trabajo correcto."
 
 #. TRANSLATORS: Title: swap space or swap partition
 msgid "Linux Swap"
@@ -1809,7 +1864,7 @@ msgstr "Kernel Linux bloqueado"
 
 #. TRANSLATORS: Title: swap space or swap partition
 msgid "Linux swap"
-msgstr "Intercambio (swap) de Linux"
+msgstr "Intercambio de Linux"
 
 #. TRANSLATORS: command description
 msgid "List EFI variables with a specific GUID"
@@ -1863,7 +1918,7 @@ msgstr "Declaración de llave MEI"
 #. TRANSLATORS: Title: MEI = Intel Management Engine, and key refer
 #. * to the private/public key used to secure loading of firmware
 msgid "MEI key manifest"
-msgstr "Sobrecarga MEI"
+msgstr "Manifestar clave MEI"
 
 #. TRANSLATORS: Title: MEI = Intel Management Engine
 msgid "MEI manufacturing mode"
@@ -1882,6 +1937,10 @@ msgstr "Versión MEI"
 #. TRANSLATORS: command line option
 msgid "Manually enable specific plugins"
 msgstr "Activa manualmente complementos específicos"
+
+#. TRANSLATORS: longer description
+msgid "Manufacturing Mode is used when the device is manufactured and security features are not yet enabled."
+msgstr "Modo Fabricante se utiliza cuando el dispositivo es fabricado y las características de seguridad aún no están activadas."
 
 #. TRANSLATORS: Longest valid string for BIOS setting
 msgid "Maximum length"
@@ -1906,6 +1965,11 @@ msgstr "URI Metadatos"
 #. TRANSLATORS: explain why no metadata available
 msgid "Metadata can be obtained from the Linux Vendor Firmware Service."
 msgstr "Metadatos pueden obtenerse desde el Servicio de Firmware del Proveedor Linux."
+
+#. TRANSLATORS: error message for a user who ran fwupdmgr
+#. * refresh recently
+msgid "Metadata is up to date; use --force to refresh again."
+msgstr "Metadatos están actualizados; utilice --force para actualizarlo de nuevo."
 
 #. TRANSLATORS: smallest version number installable on device
 msgid "Minimum Version"
@@ -2064,6 +2128,14 @@ msgstr "Formato de salida en JSON"
 msgid "Override the default ESP path"
 msgstr "Supera la ruta del ESP predeterminado"
 
+#. TRANSLATORS: if we can get metadata from peer-to-peer clients
+msgid "P2P Firmware"
+msgstr "Firmware P2P"
+
+#. TRANSLATORS: if we can get metadata from peer-to-peer clients
+msgid "P2P Metadata"
+msgstr "Metadatos P2P"
+
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "PATH"
 msgstr "RUTA"
@@ -2107,6 +2179,10 @@ msgstr "¿Realizar operación?"
 msgid "Platform Debugging"
 msgstr "Depuración de Plataforma"
 
+#. TRANSLATORS: longer description
+msgid "Platform Debugging allows device security features to be disabled. This should only be used by hardware manufacturers."
+msgstr "Depuración de plataforma permite características de seguridad del dispositivo que sean desactivadas. Esto solamente serían utilizadas por fabricante del hardware."
+
 #. TRANSLATORS: Title: Allows debugging of parts using proprietary hardware
 msgid "Platform debugging"
 msgstr "Depuración de plataforma"
@@ -2120,6 +2196,11 @@ msgstr "Asegure que tenga la llave de recuperación del volumen antes de continu
 #, c-format
 msgid "Please enter a number from 0 to %u: "
 msgstr "Introduzca un número desde 0 hasta %u: "
+
+#. TRANSLATORS: the user isn't reading the question -- please don't translate
+#. * 'Y' or 'N' as these are hardcoded
+msgid "Please enter either Y or N: "
+msgstr "Introduzca o S o N:"
 
 #. TRANSLATORS: Failed to open plugin, hey Arch users
 msgid "Plugin dependencies missing"
@@ -2161,7 +2242,7 @@ msgid "Print the version number"
 msgstr "Escribe el número de la versión"
 
 msgid "Print verbose debug statements"
-msgstr "Escribe mensajes detallados de depuración"
+msgstr "Escribe la verborrea de mensajes de depuración"
 
 #. TRANSLATORS: the numeric priority
 msgid "Priority"
@@ -2332,6 +2413,10 @@ msgstr "Obtiene la configuración de la BIOS. Si no se proporciona ningún argum
 #. TRANSLATORS: command description
 msgid "Return all the hardware IDs for the machine"
 msgstr "Devuelve todos los ID de hardware para la máquina"
+
+#. TRANSLATORS: longer description
+msgid "Rollback Protection prevents device software from being downgraded to an older version that has security problems."
+msgstr "Retroceder Protección previene software de dispositivo sea degradado a una versión más antigua que tenga problemas de seguridad."
 
 #. TRANSLATORS: this is shown in the MOTD
 msgid "Run `fwupdmgr get-upgrades` for more information."
@@ -2669,13 +2754,21 @@ msgstr "Suspendido a Descanso"
 msgid "Suspend To RAM"
 msgstr "Suspender a RAM"
 
+#. TRANSLATORS: longer description
+msgid "Suspend to Idle allows the device to quickly go to sleep in order to save power. While the device has been suspended, its memory could be physically removed and its information accessed."
+msgstr "Suspensión para Descanso permite que el dispositivo se duerma rápidamente con el fin de guardar energía. Mientras que el dispositivo esté suspendido, su memoria pudo ser retirada físicamente y su información accedida."
+
+#. TRANSLATORS: longer description
+msgid "Suspend to RAM allows the device to quickly go to sleep in order to save power. While the device has been suspended, its memory could be physically removed and its information accessed."
+msgstr "Suspensión a RAM permite al dispositivo que rápidamente se vuelva durmiente con el fin de guardar energía. Mientras el dispositivo ha estado suspendido, su memoria pudo ser físicamente retirada y su información accedida."
+
 #. TRANSLATORS: Title: a better sleep state
 msgid "Suspend-to-idle"
 msgstr "Suspendido-a-descanso"
 
 #. TRANSLATORS: Title: sleep state
 msgid "Suspend-to-ram"
-msgstr "Suspender a ram"
+msgstr "Suspender a RAM"
 
 #. TRANSLATORS: show and ask user to confirm --
 #. * %1 is the old branch name, %2 is the new branch name
@@ -2711,6 +2804,10 @@ msgstr "Sistema requiere energía externa"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "TEXT"
 msgstr "TEXTO"
+
+#. TRANSLATORS: longer description
+msgid "TPM (Trusted Platform Module) is a computer chip that detects when hardware components have been tampered with."
+msgstr "TPM (Trusted Platform Module) es un chip del equipo que detecta cuando los componentes del hardware han sido manipulados."
 
 #. TRANSLATORS: Title: the PCR is rebuilt from the TPM event log
 msgid "TPM PCR0 reconstruction"
@@ -2777,13 +2874,33 @@ msgstr "Probado por %s"
 msgid "Tested by trusted vendor"
 msgstr "Probado por proveedor confiado"
 
+#. TRANSLATORS: longer description
+msgid "The Intel Management Engine Key Manifest must be valid so that the device firmware can be trusted by the CPU."
+msgstr "El Motor de Gestión Intel Manifiesta Clave debe ser válida tal que el firmware del dispositivo pueda ser confiado por la CPU."
+
+#. TRANSLATORS: longer description
+msgid "The Intel Management Engine controls device components and needs to have a recent version to avoid security issues."
+msgstr "El Motor de Gestión de Intel controla componentes del dispositivo y necesita tener una versión reciente para evitar problemas de seguridad."
+
 #. TRANSLATORS: do not translate the variables marked using $
 msgid "The LVFS is a free service that operates as an independent legal entity and has no connection with $OS_RELEASE:NAME$. Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices. All firmware is provided only by the original equipment manufacturer."
-msgstr "El LVFS es un servicio libre que opera como una entidad independiente legal y no tiene contacto con $OS_RELEASE:NAME$. Su distribuidor puede no haber verificado ninguna de las actualizaciones del firmware por compatibilidad con su sistema o dispositivos conectados. Todo el firmware se distribuye únicamente a través el fabricante del equipo original."
+msgstr "El LVFS es un servicio libre que opera como una entidad independiente legal y no tienen contacto con $OS_RELEASE:NAME$. Su distribuidor no está verificado y ninguna de las actualizaciones del firmware para compatibilidad con su sistema o dispositivos conectados. Todo el firmware está distribuido únicamente por el fabricante del equipo original."
+
+#. TRANSLATORS: longer description
+msgid "The TPM (Trusted Platform Module) Platform Configuration is used to check whether the device start process has been modified."
+msgstr "La Configuración de la Plataforma TPM (Trusted Platform Module) se utiliza si el dispositivo inicial del proceso ha sido modificado."
+
+#. TRANSLATORS: longer description
+msgid "The TPM (Trusted Platform Module) Reconstruction is used to check whether the device start process has been modified."
+msgstr "La Reconstrucción de TPM (Trusted Platform Module) se utiliza para comprobar si el proceso de arranque del dispositivo ha sido modificado."
 
 #. TRANSLATORS: this is more background on a security measurement problem
 msgid "The TPM PCR0 differs from reconstruction."
 msgstr "El PCR0 TPM difiere desde reconstrucción."
+
+#. TRANSLATORS: longer description
+msgid "The UEFI Platform Key is used to determine if device software comes from a trusted source."
+msgstr "La Clave de Plataforma UEFI es utilizada para determinar si el software del dispositivo viene desde un origen confiado."
 
 #. TRANSLATORS: the user is SOL for support...
 msgid "The daemon has loaded 3rd party code and is no longer supported by the upstream developers!"
@@ -2944,6 +3061,10 @@ msgstr "Arranque Seguro UEFI"
 msgid "UEFI Secure Boot prevents malicious software from being loaded when the device starts."
 msgstr "UEFI Secure Boot previene software malicioso sea cargado cuando el dispositivo de inicie."
 
+#. TRANSLATORS: longer description
+msgid "UEFI boot service variables should not be readable from runtime mode."
+msgstr "Variables del servicio de arranque UEFI no sería legible desde modo en tiempo de ejecución."
+
 #. TRANSLATORS: Title: Bootservice is when only readable from early-boot
 msgid "UEFI bootservice variables"
 msgstr "Variables de servicio de arranque UEFI"
@@ -3027,7 +3148,7 @@ msgstr "Desenchufe y vuelva a enchufar el dispositivo, después instale el firmw
 
 #. TRANSLATORS: command line option
 msgid "Unset the debugging flag during update"
-msgstr "Libera el indicador de depuración durante actualización"
+msgstr "Suelta el indicador de depuración durante actualización"
 
 #. TRANSLATORS: firmware payload is unsigned and it is possible to modify it
 msgid "Unsigned Payload"
@@ -3146,7 +3267,7 @@ msgstr "Emplee fwupdtool --help para ayuda"
 
 #. TRANSLATORS: command line option
 msgid "Use quirk flags when installing firmware"
-msgstr "Emplee indicadores quirk cuando instale firmware"
+msgstr "Emplee indicadores particulares cuando instale firmware"
 
 #. TRANSLATORS: User has been notified
 msgid "User has been notified"
@@ -3223,6 +3344,10 @@ msgstr "Escribiendo archivo:"
 #. TRANSLATORS: writing to the flash chips
 msgid "Writing…"
 msgstr "Escribiendo…"
+
+#. TRANSLATORS: the user has to manually recover; we can't do it
+msgid "You should ensure you are comfortable restoring the setting from the system firmware setup, as this change may cause the system to not boot into Linux or cause other system instability."
+msgstr "Aseguraría que sea confortable restaurando los parámetros desde la configuración del firmware del sistema, como este cambio pueda causar que el sistema no arranque en Linux o causar otra inestabilidad del sistema."
 
 #. TRANSLATORS: show the user a warning
 msgid "Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices."
