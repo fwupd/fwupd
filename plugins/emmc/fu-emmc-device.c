@@ -69,6 +69,7 @@
 struct _FuEmmcDevice {
 	FuUdevDevice parent_instance;
 	guint32 sect_size;
+	guint32 write_block_size;
 };
 
 G_DEFINE_TYPE(FuEmmcDevice, fu_emmc_device, FU_TYPE_UDEV_DEVICE)
@@ -311,6 +312,7 @@ static gboolean
 fu_emmc_device_setup(FuDevice *device, GError **error)
 {
 	g_autoptr(GError) error_validate = NULL;
+
 	if (!fu_emmc_validate_extcsd(device, &error_validate))
 		g_debug("%s", error_validate->message);
 	else
@@ -352,6 +354,7 @@ fu_emmc_device_write_firmware(FuDevice *device,
 	gsize fw_size = 0;
 	guint32 arg;
 	guint32 sect_done = 0;
+	guint32 sector_size;
 	gboolean check_sect_done = FALSE;
 	guint8 ext_csd[512];
 	guint failure_cnt = 0;
@@ -374,6 +377,8 @@ fu_emmc_device_write_firmware(FuDevice *device,
 		return FALSE;
 	fw_size = g_bytes_get_size(fw);
 
+	sector_size = self->write_block_size ?: self->sect_size;
+
 	/*  mode operation codes are supported */
 	check_sect_done = (ext_csd[EXT_CSD_FFU_FEATURES] & 1) > 0;
 
@@ -394,13 +399,13 @@ fu_emmc_device_write_firmware(FuDevice *device,
 
 	/* send block count */
 	multi_cmd->cmds[1].opcode = MMC_SET_BLOCK_COUNT;
-	multi_cmd->cmds[1].arg = 1;
+	multi_cmd->cmds[1].arg = sector_size / 512;
 	multi_cmd->cmds[1].flags = MMC_RSP_SPI_R1 | MMC_RSP_R1 | MMC_CMD_ADTC;
 
 	/* send image chunk */
 	multi_cmd->cmds[2].opcode = MMC_WRITE_MULTIPLE_BLOCK;
-	multi_cmd->cmds[2].blksz = self->sect_size;
-	multi_cmd->cmds[2].blocks = 1;
+	multi_cmd->cmds[2].blksz = 512;
+	multi_cmd->cmds[2].blocks = sector_size / 512;
 	multi_cmd->cmds[2].arg = arg;
 	multi_cmd->cmds[2].flags = MMC_RSP_SPI_R1 | MMC_RSP_R1 | MMC_CMD_ADTC;
 	multi_cmd->cmds[2].write_flag = 1;
@@ -414,7 +419,7 @@ fu_emmc_device_write_firmware(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/* build packets */
-	chunks = fu_chunk_array_new_from_bytes(fw, 0x00, self->sect_size);
+	chunks = fu_chunk_array_new_from_bytes(fw, 0x00, sector_size);
 	while (failure_cnt < 3) {
 		for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
 			g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
@@ -539,6 +544,22 @@ fu_emmc_device_write_firmware(FuDevice *device,
 	return TRUE;
 }
 
+static gboolean
+fu_emmc_device_set_quirk_kv(FuDevice *device, const gchar *key, const gchar *value, GError **error)
+{
+	FuEmmcDevice *self = FU_EMMC_DEVICE(device);
+	if (g_strcmp0(key, "EmmcBlockSize") == 0) {
+		guint64 tmp = 0;
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT32, error))
+			return FALSE;
+		self->write_block_size = tmp;
+		return TRUE;
+	}
+
+	g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED, "quirk key not supported");
+	return FALSE;
+}
+
 static void
 fu_emmc_device_set_progress(FuDevice *self, FuProgress *progress)
 {
@@ -570,6 +591,7 @@ fu_emmc_device_class_init(FuEmmcDeviceClass *klass)
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
 	object_class->finalize = fu_emmc_device_finalize;
+	klass_device->set_quirk_kv = fu_emmc_device_set_quirk_kv;
 	klass_device->setup = fu_emmc_device_setup;
 	klass_device->to_string = fu_emmc_device_to_string;
 	klass_device->prepare_firmware = fu_emmc_device_prepare_firmware;
