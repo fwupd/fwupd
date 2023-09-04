@@ -446,6 +446,10 @@ fu_nordic_hid_cfg_channel_add_peer(FuNordicHidCfgChannel *self, guint8 peer_id)
 
 	g_debug("peer 0x%02x discovered", peer_id);
 	fu_device_add_child(FU_DEVICE(self), FU_DEVICE(peer));
+
+	/* Ensure that peripherals connected through a dongle will be updated before the dongle. */
+	fu_device_set_priority(FU_DEVICE(peer), fu_device_get_priority(FU_DEVICE(self)) + 1);
+
 	/* prohibit to close parent's communication descriptor */
 	fu_device_add_internal_flag(FU_DEVICE(peer), FU_DEVICE_INTERNAL_FLAG_USE_PARENT_FOR_OPEN);
 }
