@@ -709,6 +709,12 @@
     <distro id="fedora">
       <package variant="mingw64">mingw64-zstd</package>
     </distro>
+    <distro id="debian">
+      <control />
+      <package variant="x86_64" />
+      <package variant="s390x">libzstd-dev:s390x</package>
+      <package variant="i386" />
+    </distro>
   </dependency>
   <dependency id="libarchive-dev">
     <distro id="centos">
