@@ -429,6 +429,29 @@ fu_nordic_hid_cfg_channel_is_cached_peer_connected(guint8 peer_cache_val)
 }
 
 static void
+fu_nordic_hid_cfg_channel_check_children_update_pending_cb(FuDevice *device,
+							   GParamSpec *pspec,
+							   gpointer user_data)
+{
+	FuNordicHidCfgChannel *self = FU_NORDIC_HID_CFG_CHANNEL(user_data);
+	GPtrArray *children = fu_device_get_children(FU_DEVICE(self));
+	gboolean update_pending = FALSE;
+
+	for (guint i = 0; i < children->len; i++) {
+		FuDevice *peer = g_ptr_array_index(children, i);
+		if (fu_device_has_internal_flag(peer, FU_DEVICE_INTERNAL_FLAG_UPDATE_PENDING)) {
+			update_pending = TRUE;
+			break;
+		}
+	}
+	if (update_pending) {
+		fu_device_add_problem(FU_DEVICE(self), FWUPD_DEVICE_PROBLEM_UPDATE_PENDING);
+	} else {
+		fu_device_remove_problem(FU_DEVICE(self), FWUPD_DEVICE_PROBLEM_UPDATE_PENDING);
+	}
+}
+
+static void
 fu_nordic_hid_cfg_channel_add_peer(FuNordicHidCfgChannel *self, guint8 peer_id)
 {
 	g_autoptr(GError) error_local = NULL;
@@ -445,6 +468,13 @@ fu_nordic_hid_cfg_channel_add_peer(FuNordicHidCfgChannel *self, guint8 peer_id)
 	}
 
 	g_debug("peer 0x%02x discovered", peer_id);
+
+	/* if any of the peripherals have a pending update, inhibit the dongle */
+	g_signal_connect(FU_DEVICE(peer),
+			 "notify::internal-flags",
+			 G_CALLBACK(fu_nordic_hid_cfg_channel_check_children_update_pending_cb),
+			 self);
+
 	fu_device_add_child(FU_DEVICE(self), FU_DEVICE(peer));
 	/* prohibit to close parent's communication descriptor */
 	fu_device_add_internal_flag(FU_DEVICE(peer), FU_DEVICE_INTERNAL_FLAG_USE_PARENT_FOR_OPEN);
