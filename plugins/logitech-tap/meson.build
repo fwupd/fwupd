@@ -1,5 +1,5 @@
-if get_option('plugin_logitech_tap').require(gusb.found(),
-    error_message: 'usb is needed for plugin_logitech_tap').disable_auto_if(host_machine.system() != 'linux').allowed()    
+if get_option('plugin_logitech_tap').require(gusb.found() and gudev.found(),
+    error_message: 'usb and udev are needed for plugin_logitech_tap').disable_auto_if(host_machine.system() != 'linux').allowed()
 cargs = ['-DG_LOG_DOMAIN="FuPluginLogitechTap"']
 
 plugin_quirks += files('logitech-tap.quirk')
