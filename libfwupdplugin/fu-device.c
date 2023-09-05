@@ -279,6 +279,8 @@ fu_device_internal_flag_to_string(FuDeviceInternalFlags flag)
 		return "unconnected";
 	if (flag == FU_DEVICE_INTERNAL_FLAG_DISPLAY_REQUIRED)
 		return "display-required";
+	if (flag == FU_DEVICE_INTERNAL_FLAG_UPDATE_PENDING)
+		return "update-pending";
 	return NULL;
 }
 
@@ -365,6 +367,8 @@ fu_device_internal_flag_from_string(const gchar *flag)
 		return FU_DEVICE_INTERNAL_FLAG_UNCONNECTED;
 	if (g_strcmp0(flag, "display-required") == 0)
 		return FU_DEVICE_INTERNAL_FLAG_DISPLAY_REQUIRED;
+	if (g_strcmp0(flag, "update-pending") == 0)
+		return FU_DEVICE_INTERNAL_FLAG_UPDATE_PENDING;
 	return FU_DEVICE_INTERNAL_FLAG_UNKNOWN;
 }
 
