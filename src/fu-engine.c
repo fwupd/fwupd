@@ -3060,8 +3060,12 @@ fu_engine_install_release(FuEngine *self,
 		passim_item_set_share_limit(passim_item, 50);
 		passim_item_set_basename(passim_item, basename);
 		passim_item_set_bytes(passim_item, blob_cab);
-		if (!passim_client_publish(self->passim_client, passim_item, &error_passim))
-			g_warning("failed to publish to Passim: %s", error_passim->message);
+		if (!passim_client_publish(self->passim_client, passim_item, &error_passim)) {
+			if (!g_error_matches(error_passim, G_IO_ERROR, G_IO_ERROR_EXISTS)) {
+				g_warning("failed to publish firmware to Passim: %s",
+					  error_passim->message);
+			}
+		}
 	}
 #endif
 
@@ -4798,8 +4802,12 @@ fu_engine_update_metadata_bytes(FuEngine *self,
 		passim_item_set_bytes(passim_item, bytes_raw);
 		passim_item_set_max_age(passim_item, fwupd_remote_get_refresh_interval(remote));
 		passim_item_set_share_limit(passim_item, 50);
-		if (!passim_client_publish(self->passim_client, passim_item, &error_passim))
-			g_warning("failed to publish to Passim: %s", error_passim->message);
+		if (!passim_client_publish(self->passim_client, passim_item, &error_passim)) {
+			if (!g_error_matches(error_passim, G_IO_ERROR, G_IO_ERROR_EXISTS)) {
+				g_warning("failed to publish metadata to Passim: %s",
+					  error_passim->message);
+			}
+		}
 	}
 #endif
 
