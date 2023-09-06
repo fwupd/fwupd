@@ -108,3 +108,15 @@ secure or practical -- or how fwupd and LVFS were designed to be used. So please
 
 That said, if a vendor included the `.jcat` in the firmware cabinet archive, the LVFS will
 **append** its own signature rather than replace it -- which may make testing the archive easier.
+
+## Debugging
+
+Using `sudo fwupdtool get-details firmware.cab --verbose --verbose` should indicate why the
+certificate isn't being trusted, e.g.
+
+    FuCabinet            processing file: firmware.metainfo.xml
+    FuCabinet            processing release: 1.2.3
+    FuCabinet            failed to verify payload firmware.bin: checksums were required, but none supplied
+
+This indicates that the `jcat-tool self-sign firmware.jcat firmware.bin --kind sha256` step was
+missed as the JCat file does not have any supported checksums.
