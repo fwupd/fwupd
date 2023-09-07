@@ -11,6 +11,7 @@
 #include <fwupdplugin.h>
 #ifdef HAVE_GIO_UNIX
 #include <gio/gunixfdlist.h>
+#include <gio/gunixinputstream.h>
 #endif
 #include <glib/gstdio.h>
 #include <jcat.h>
@@ -363,6 +364,7 @@ typedef struct {
 	GPtrArray *errors;
 	guint64 flags;
 	GBytes *blob_cab;
+	GFile *file_cab; /* only for large files */
 	FuDaemon *self;
 	gchar *device_id;
 	gchar *remote_id;
@@ -378,6 +380,12 @@ fu_daemon_auth_helper_free(FuMainAuthHelper *helper)
 	/* always return to IDLE even in event of an auth error */
 	fu_daemon_set_status(helper->self, FWUPD_STATUS_IDLE);
 
+	if (helper->file_cab != NULL) {
+		g_autoptr(GError) error_local = NULL;
+		if (!g_file_delete(helper->file_cab, NULL, &error_local))
+			g_warning("failed to delete file: %s", error_local->message);
+		g_object_unref(helper->file_cab);
+	}
 	if (helper->blob_cab != NULL)
 		g_bytes_unref(helper->blob_cab);
 	if (helper->silo != NULL)
@@ -1041,6 +1049,75 @@ fu_daemon_inhibit_name_vanished_cb(GDBusConnection *connection,
 			break;
 		}
 	}
+}
+
+/* this will also close the fd when done */
+static gboolean
+fu_daemon_helper_read_archive_from_fd(FuMainAuthHelper *helper, gint fd, GError **error)
+{
+#ifdef HAVE_GIO_UNIX
+	FuDaemon *self = helper->self;
+	guint64 archive_size_max =
+	    fu_engine_config_get_archive_size_max(fu_engine_get_config(self->engine));
+	guint8 tmp[0x8000] = {0x0};
+	g_autofree gchar *localstatedir = fu_path_from_kind(FU_PATH_KIND_LOCALSTATEDIR_PKG);
+	g_autofree gchar *filename = g_build_filename(localstatedir, "incoming.cab", NULL);
+	g_autoptr(GByteArray) buf = g_byte_array_new();
+	g_autoptr(GInputStream) istream = NULL;
+	g_autoptr(GMappedFile) mapped_file = NULL;
+	g_autoptr(GOutputStream) ostream = NULL;
+
+	/* this is invalid */
+	if (archive_size_max == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "A maximum read size must be specified");
+		return FALSE;
+	}
+
+	/* try to read a small file in 32kB chunks */
+	istream = g_unix_input_stream_new(fd, TRUE);
+	while (buf->len < archive_size_max) {
+		g_autoptr(GError) error_local = NULL;
+		gssize sz = g_input_stream_read(istream, tmp, sizeof(tmp), NULL, &error_local);
+		if (sz < 0) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_FILE,
+					    error_local->message);
+			return FALSE;
+		}
+		if (sz == 0) {
+			helper->blob_cab = g_bytes_new(buf->data, buf->len);
+			return TRUE;
+		}
+		g_byte_array_append(buf, tmp, sz);
+	}
+
+	/* save, and mmap */
+	helper->file_cab = g_file_new_for_path(filename);
+	ostream = G_OUTPUT_STREAM(
+	    g_file_replace(helper->file_cab, NULL, FALSE, G_FILE_CREATE_NONE, NULL, error));
+	if (ostream == NULL)
+		return FALSE;
+	g_debug("writing 0x%x bytes to %s, then splicing fd", (guint)buf->len, filename);
+	if (g_output_stream_write(ostream, buf->data, buf->len, NULL, error) < 0)
+		return FALSE;
+	if (g_output_stream_splice(ostream, istream, G_OUTPUT_STREAM_SPLICE_NONE, NULL, error) < 0)
+		return FALSE;
+	mapped_file = g_mapped_file_new(filename, FALSE, error);
+	if (mapped_file == NULL)
+		return FALSE;
+	helper->blob_cab = g_mapped_file_get_bytes(mapped_file);
+	return TRUE;
+#else
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "Not supported as <glib-unix.h> is unavailable");
+	return FALSE;
+#endif
 }
 
 static void
@@ -1758,7 +1835,6 @@ fu_daemon_daemon_method_call(GDBusConnection *connection,
 		const gchar *prop_key;
 		gint32 fd_handle = 0;
 		gint fd;
-		guint64 archive_size_max;
 		GDBusMessage *message;
 		GUnixFDList *fd_list;
 		g_autoptr(FuMainAuthHelper) helper = NULL;
@@ -1821,12 +1897,8 @@ fu_daemon_daemon_method_call(GDBusConnection *connection,
 		}
 
 		/* parse the cab file before authenticating so we can work out
-		 * what action ID to use, for instance, if this is trusted --
-		 * this will also close the fd when done */
-		archive_size_max =
-		    fu_engine_config_get_archive_size_max(fu_engine_get_config(self->engine));
-		helper->blob_cab = fu_bytes_get_contents_fd(fd, archive_size_max, &error);
-		if (helper->blob_cab == NULL) {
+		 * what action ID to use, for instance, if this is trusted */
+		if (!fu_daemon_helper_read_archive_from_fd(helper, fd, &error)) {
 			g_dbus_method_invocation_return_gerror(invocation, error);
 			return;
 		}

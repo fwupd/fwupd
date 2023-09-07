@@ -275,7 +275,7 @@ guint64
 fu_engine_config_get_archive_size_max(FuEngineConfig *self)
 {
 	guint64 memory_size = fu_common_get_memory_size();
-	guint64 value_default = memory_size > 0 ? MIN(memory_size / 4, G_MAXUINT32)
+	guint64 value_default = memory_size > 0 ? MIN(memory_size / 10, G_MAXUINT32)
 						: 512 * 0x100000;
 	return fu_config_get_value_u64(FU_CONFIG(self), "fwupd", "ArchiveSizeMax", value_default);
 }
