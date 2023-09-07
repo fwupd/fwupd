@@ -1504,6 +1504,46 @@ fu_util_report_history_for_remote(FuUtilPrivate *priv,
 }
 
 static gboolean
+fu_util_report_history_force(FuUtilPrivate *priv, GError **error)
+{
+	g_autoptr(GPtrArray) devices = NULL;
+	g_autoptr(GString) str = g_string_new(NULL);
+
+	/* get all devices */
+	devices = fwupd_client_get_history(priv->client, priv->cancellable, error);
+	if (devices == NULL)
+		return FALSE;
+
+	/* just assume every report goes to this remote */
+	if (!fu_util_report_history_for_remote(priv, "lvfs", devices, error))
+		return FALSE;
+
+	/* mark each device as reported */
+	for (guint i = 0; i < devices->len; i++) {
+		FwupdDevice *device = g_ptr_array_index(devices, i);
+		g_debug("setting flag on %s", fwupd_device_get_id(device));
+		if (!fwupd_client_modify_device(priv->client,
+						fwupd_device_get_id(device),
+						"Flags",
+						"reported",
+						priv->cancellable,
+						error))
+			return FALSE;
+	}
+
+	/* success */
+	g_string_append_printf(str,
+			       /* TRANSLATORS: success message -- where the user has uploaded
+				* success and/or failure reports to the remote server */
+			       ngettext("Successfully uploaded %u report",
+					"Successfully uploaded %u reports",
+					devices->len),
+			       devices->len);
+	fu_console_print_literal(priv->console, str->str);
+	return TRUE;
+}
+
+static gboolean
 fu_util_report_history(FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(GHashTable) report_map = NULL;
@@ -1516,6 +1556,7 @@ fu_util_report_history(FuUtilPrivate *priv, gchar **values, GError **error)
 	devices = fwupd_client_get_history(priv->client, priv->cancellable, error);
 	if (devices == NULL)
 		return FALSE;
+	g_debug("%u devices with history", devices->len);
 	report_map = g_hash_table_new_full(g_str_hash,
 					   g_str_equal,
 					   g_free,
@@ -1533,10 +1574,14 @@ fu_util_report_history(FuUtilPrivate *priv, gchar **values, GError **error)
 					      priv->filter_device_exclude))
 			continue;
 		if ((priv->flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {
-			if (fwupd_device_has_flag(dev, FWUPD_DEVICE_FLAG_REPORTED))
+			if (fwupd_device_has_flag(dev, FWUPD_DEVICE_FLAG_REPORTED)) {
+				g_debug("%s has already been reported", fwupd_device_get_id(dev));
 				continue;
-			if (!fwupd_device_has_flag(dev, FWUPD_DEVICE_FLAG_SUPPORTED))
+			}
+			if (!fwupd_device_has_flag(dev, FWUPD_DEVICE_FLAG_SUPPORTED)) {
+				g_debug("%s is not supported", fwupd_device_get_id(dev));
 				continue;
+			}
 		}
 		/* only send success and failure */
 		if (fwupd_device_get_update_state(dev) != FWUPD_UPDATE_STATE_FAILED &&
@@ -1574,8 +1619,10 @@ fu_util_report_history(FuUtilPrivate *priv, gchar **values, GError **error)
 		g_ptr_array_add(devices_tmp, dev);
 	}
 
-	/* nothing to report */
+	/* nothing to report, but try harder with --force */
 	if (g_hash_table_size(report_map) == 0) {
+		if (priv->flags & FWUPD_INSTALL_FLAG_FORCE)
+			return fu_util_report_history_force(priv, error);
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
