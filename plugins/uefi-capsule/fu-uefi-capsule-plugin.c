@@ -38,6 +38,7 @@ G_DEFINE_TYPE(FuUefiCapsulePlugin, fu_uefi_capsule_plugin, FU_TYPE_PLUGIN)
 #define FU_UEFI_CAPSULE_CONFIG_DEFAULT_REQUIRE_ESP_FREE_SPACE	      "0" /* in MB */
 #define FU_UEFI_CAPSULE_CONFIG_DEFAULT_DISABLE_CAPSULE_UPDATE_ON_DISK FALSE
 #define FU_UEFI_CAPSULE_CONFIG_DEFAULT_ENABLE_EFI_DEBUGGING	      FALSE
+#define FU_UEFI_CAPSULE_CONFIG_DEFAULT_REBOOT_CLEANUP		      TRUE
 
 static void
 fu_uefi_capsule_plugin_to_string(FuPlugin *plugin, guint idt, GString *str)
@@ -1150,6 +1151,114 @@ fu_uefi_capsule_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError *
 	return TRUE;
 }
 
+static gboolean
+fu_uefi_capsule_plugin_cleanup_esp(FuUefiCapsulePlugin *self, GError **error)
+{
+	g_autofree gchar *esp_os_base = fu_uefi_get_esp_path_for_os();
+	g_autofree gchar *esp_path = fu_volume_get_mount_point(self->esp);
+	g_autofree gchar *pattern = NULL;
+	g_autoptr(FuDeviceLocker) esp_locker = NULL;
+	g_autoptr(GPtrArray) files = NULL;
+
+	/* delete any files matching the glob in the ESP */
+	esp_locker = fu_volume_locker(self->esp, error);
+	if (esp_locker == NULL)
+		return FALSE;
+	files = fu_path_get_files(esp_path, error);
+	if (files == NULL)
+		return FALSE;
+	pattern = g_build_filename(esp_path, esp_os_base, "fw", "fwupd*.cap", NULL);
+	for (guint i = 0; i < files->len; i++) {
+		const gchar *fn = g_ptr_array_index(files, i);
+		if (g_pattern_match_simple(pattern, fn)) {
+			g_autoptr(GFile) file = g_file_new_for_path(fn);
+			g_debug("deleting %s", fn);
+			if (!g_file_delete(file, NULL, error))
+				return FALSE;
+		}
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_uefi_capsule_plugin_cleanup_bootnext(FuUefiCapsulePlugin *self, GError **error)
+{
+	guint16 boot_next = 0;
+	g_autofree gchar *boot_xxxxstr = NULL;
+	g_autofree gchar *loadoptstr = NULL;
+	g_autoptr(FuEfiLoadOption) loadopt = fu_efi_load_option_new();
+	g_autoptr(GBytes) boot_nextbuf = NULL;
+	g_autoptr(GBytes) boot_xxxxbuf = NULL;
+
+	/* unset */
+	if (!fu_efivar_exists(FU_EFIVAR_GUID_EFI_GLOBAL, "BootNext"))
+		return TRUE;
+
+	/* get the value of BootNext */
+	boot_nextbuf = fu_efivar_get_data_bytes(FU_EFIVAR_GUID_EFI_GLOBAL, "BootNext", NULL, error);
+	if (boot_nextbuf == NULL)
+		return FALSE;
+	if (!fu_memread_uint16_safe(g_bytes_get_data(boot_nextbuf, NULL),
+				    g_bytes_get_size(boot_nextbuf),
+				    0x0,
+				    &boot_next,
+				    G_LITTLE_ENDIAN,
+				    error))
+		return FALSE;
+
+	/* get the correct BootXXXX key */
+	boot_xxxxstr = g_strdup_printf("Boot%04X", boot_next);
+	boot_xxxxbuf =
+	    fu_efivar_get_data_bytes(FU_EFIVAR_GUID_EFI_GLOBAL, boot_xxxxstr, NULL, error);
+	if (boot_xxxxbuf == NULL)
+		return FALSE;
+	if (!fu_firmware_parse(FU_FIRMWARE(loadopt), boot_xxxxbuf, FWUPD_INSTALL_FLAG_NONE, error))
+		return FALSE;
+
+	/* is this us? */
+	loadoptstr = fu_firmware_to_string(FU_FIRMWARE(loadopt));
+	g_debug("EFI LoadOption: %s", loadoptstr);
+	if (g_strcmp0(fu_firmware_get_id(FU_FIRMWARE(loadopt)), "Linux Firmware Updater") == 0 ||
+	    g_strcmp0(fu_firmware_get_id(FU_FIRMWARE(loadopt)), "Linux-Firmware-Updater") == 0) {
+		g_warning("BootNext was not deleted automatically, so removing: "
+			  "this normally indicates a BIOS bug");
+		if (!fu_efivar_delete(FU_EFIVAR_GUID_EFI_GLOBAL, "BootNext", error))
+			return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_uefi_capsule_plugin_reboot_cleanup(FuPlugin *plugin, FuDevice *device, GError **error)
+{
+	FuUefiCapsulePlugin *self = FU_UEFI_CAPSULE_PLUGIN(plugin);
+
+	/* provide an escape hatch for debugging */
+	if (!fu_plugin_get_config_value_boolean(plugin,
+						"RebootCleanup",
+						FU_UEFI_CAPSULE_CONFIG_DEFAULT_REBOOT_CLEANUP))
+		return TRUE;
+
+	/* delete capsules */
+	if (!fu_uefi_capsule_plugin_cleanup_esp(self, error))
+		return FALSE;
+
+	/* delete any old variables */
+	if (!fu_efivar_delete_with_glob(FU_EFIVAR_GUID_FWUPDATE, "fwupd*-*", error))
+		return FALSE;
+
+	/* this should not be required, but, hey -- here were are */
+	if (!fu_uefi_capsule_plugin_cleanup_bootnext(self, error))
+		return FALSE;
+
+	/* success */
+	return TRUE;
+}
+
 static void
 fu_uefi_capsule_plugin_init(FuUefiCapsulePlugin *self)
 {
@@ -1217,4 +1326,5 @@ fu_uefi_capsule_plugin_class_init(FuUefiCapsulePluginClass *klass)
 	plugin_class->unlock = fu_uefi_capsule_plugin_unlock;
 	plugin_class->coldplug = fu_uefi_capsule_plugin_coldplug;
 	plugin_class->write_firmware = fu_uefi_capsule_plugin_write_firmware;
+	plugin_class->reboot_cleanup = fu_uefi_capsule_plugin_reboot_cleanup;
 }

@@ -413,6 +413,17 @@ struct _FuPluginClass {
 	gboolean (*undo_host_security_attr)(FuPlugin *self,
 					    FwupdSecurityAttr *attr,
 					    GError **error);
+	/**
+	 * reboot_cleanup:
+	 * @self: a #FuPlugin
+	 * @device: a device
+	 * @error: (nullable): optional return location for an error
+	 *
+	 * Performs cleanup actions after the reboot has been performed.
+	 *
+	 * Since: 1.9.7
+	 **/
+	gboolean (*reboot_cleanup)(FuPlugin *self, FuDevice *device, GError **error);
 };
 
 /**

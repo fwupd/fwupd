@@ -50,6 +50,7 @@ _fwupdtool_cmd_list=(
 	'unbind-driver'
 	'bind-driver'
 	'export-hwids'
+	'reboot-cleanup'
 )
 
 _fwupdtool_opts=(

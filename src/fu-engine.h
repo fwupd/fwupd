@@ -71,6 +71,8 @@ FuEngineConfig *
 fu_engine_get_config(FuEngine *self);
 GPtrArray *
 fu_engine_get_plugins(FuEngine *self);
+FuPlugin *
+fu_engine_get_plugin_by_name(FuEngine *self, const gchar *name, GError **error);
 GPtrArray *
 fu_engine_get_devices(FuEngine *self, GError **error);
 FuDevice *

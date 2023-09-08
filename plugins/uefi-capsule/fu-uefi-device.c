@@ -424,41 +424,6 @@ fu_uefi_check_asset(FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_uefi_device_cleanup_esp(FuDevice *device, GError **error)
-{
-	FuUefiDevice *self = FU_UEFI_DEVICE(device);
-	FuUefiDevicePrivate *priv = GET_PRIVATE(self);
-	g_autofree gchar *esp_path = fu_volume_get_mount_point(priv->esp);
-	g_autofree gchar *pattern = NULL;
-	g_autoptr(GPtrArray) files = NULL;
-
-	/* in case we call capsule install twice before reboot */
-	if (fu_efivar_exists(FU_EFIVAR_GUID_EFI_GLOBAL, "BootNext"))
-		return TRUE;
-
-	/* delete any files matching the glob in the ESP */
-	files = fu_path_get_files(esp_path, error);
-	if (files == NULL)
-		return FALSE;
-	pattern = g_build_filename(esp_path, "EFI/*/fw/fwupd*.cap", NULL);
-	for (guint i = 0; i < files->len; i++) {
-		const gchar *fn = g_ptr_array_index(files, i);
-		if (g_pattern_match_simple(pattern, fn)) {
-			g_autoptr(GFile) file = g_file_new_for_path(fn);
-			g_debug("deleting %s", fn);
-			if (!g_file_delete(file, NULL, error))
-				return FALSE;
-		}
-	}
-
-	/* delete any old variables */
-	if (!fu_efivar_delete_with_glob(FU_EFIVAR_GUID_FWUPDATE, "fwupd*-*", error))
-		return FALSE;
-
-	return TRUE;
-}
-
-static gboolean
 fu_uefi_device_prepare(FuDevice *device,
 		       FuProgress *progress,
 		       FwupdInstallFlags flags,
@@ -473,8 +438,6 @@ fu_uefi_device_prepare(FuDevice *device,
 		return FALSE;
 
 	/* sanity checks */
-	if (!fu_uefi_device_cleanup_esp(device, error))
-		return FALSE;
 	if (!fu_uefi_check_asset(device, error))
 		return FALSE;
 

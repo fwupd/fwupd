@@ -235,6 +235,13 @@ The `[uefi_capsule]` section can contain the following parameters:
 
   This value also has no affect when using Capsule-on-Disk as the EFI helper binary is
   not being used.
+
+**RebootCleanup={{FU_UEFI_CAPSULE_CONFIG_DEFAULT_REBOOT_CLEANUP}}**
+
+  Delete any capsule files copy to the ESP, and remove any EFI variables set for the update.
+
+  **NOTE:** disabling this option is only required when debugging the flash process and normal
+  users should not need to change this setting.
 {% endif %}
 
 {% if plugin_msr %}
