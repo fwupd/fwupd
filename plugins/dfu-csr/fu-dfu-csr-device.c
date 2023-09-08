@@ -10,6 +10,7 @@
 
 #include "fu-dfu-common.h"
 #include "fu-dfu-csr-device.h"
+#include "fu-dfu-csr-firmware.h"
 #include "fu-dfu-struct.h"
 
 /**
@@ -201,52 +202,11 @@ fu_dfu_csr_device_upload(FuDevice *device, FuProgress *progress, GError **error)
 		chunk_sz = g_bytes_get_size(chunk);
 
 		/* get the total size using the CSR header */
-		if (i == 0 && chunk_sz >= 10) {
-			const guint8 *buf = g_bytes_get_data(chunk, NULL);
-			if (memcmp(buf, "CSR-dfu", 7) == 0) {
-				guint16 hdr_ver;
-				guint16 hdr_len;
-				if (!fu_memread_uint16_safe(buf,
-							    chunk_sz,
-							    8,
-							    &hdr_ver,
-							    G_LITTLE_ENDIAN,
-							    error))
-					return NULL;
-				if (hdr_ver != 0x03) {
-					g_set_error(error,
-						    FWUPD_ERROR,
-						    FWUPD_ERROR_INTERNAL,
-						    "DFU_CSR header version is "
-						    "invalid %" G_GUINT16_FORMAT,
-						    hdr_ver);
-					return NULL;
-				}
-				if (!fu_memread_uint32_safe(buf,
-							    chunk_sz,
-							    10,
-							    &total_sz,
-							    G_LITTLE_ENDIAN,
-							    error))
-					return NULL;
-				if (total_sz == 0) {
-					g_set_error(error,
-						    FWUPD_ERROR,
-						    FWUPD_ERROR_INTERNAL,
-						    "DFU_CSR header data length "
-						    "invalid %" G_GUINT32_FORMAT,
-						    total_sz);
-					return NULL;
-				}
-				if (!fu_memread_uint16_safe(buf,
-							    chunk_sz,
-							    14,
-							    &hdr_len,
-							    G_LITTLE_ENDIAN,
-							    error))
-					return NULL;
-				g_debug("DFU_CSR header length: %" G_GUINT16_FORMAT, hdr_len);
-			}
+		if (i == 0) {
+			g_autoptr(FuFirmware) firmware = fu_dfu_csr_firmware_new();
+			if (!fu_firmware_parse(firmware, chunk, FWUPD_INSTALL_FLAG_NONE, error))
+				return NULL;
+			total_sz = fu_dfu_csr_firmware_get_total_sz(FU_DFU_CSR_FIRMWARE(firmware));
 		}
 
 		/* add to chunk array */
