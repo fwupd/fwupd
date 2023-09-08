@@ -47,6 +47,10 @@ Plugin = flashrom
 [b39593ad-7522-52a5-a4ab-1b2ca2153956]
 Plugin = flashrom
 
+# StarBook Mk VIr2 - Intel (HwId)
+[6fca23e4-71e4-518a-96e2-b03ad7eb484f]
+Plugin = flashrom
+
 # Byte Mk I - AMD (HwId)
 [79a64046-5643-59c4-91d0-e68b33db5829]
 Plugin = flashrom
@@ -105,6 +109,17 @@ FirmwareSizeMax = 0x2000000
 
 # StarBook Mk VI - Intel (coreboot GUID)
 [8c994a92-7ef8-5d68-80b5-99ead7cf4686]
+Branch = coreboot
+Flags = reset-cmos
+PciBcrAddr = 0x0
+FirmwareSizeMax = 0x2000000
+
+# StarBook Mk VIr2 - Intel (AMI GUID)
+[ce35649d-b89d-5188-b961-d992ce7e0f88]
+FirmwareSizeMax = 0x2000000
+
+# StarBook Mk VIr2 - Intel (coreboot GUID)
+[595c5861-a105-509b-8dd6-f77070345286]
 Branch = coreboot
 Flags = reset-cmos
 PciBcrAddr = 0x0
