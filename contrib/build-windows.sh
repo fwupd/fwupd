@@ -80,7 +80,7 @@ cp -f -v \
 	$MINGW32BINDIR/liblzma-5.dll \
 	$MINGW32BINDIR/libnettle-*.dll \
 	$MINGW32BINDIR/libp11-kit-0.dll \
-	$MINGW32BINDIR/libpcre-1.dll \
+	$MINGW32BINDIR/libpcre2-8-0.dll \
 	$MINGW32BINDIR/libsqlite3-0.dll \
 	$MINGW32BINDIR/libssh2-1.dll \
 	$MINGW32BINDIR/libssl-3-x64.dll \
