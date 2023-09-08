@@ -89,5 +89,6 @@ cp -f -v \
 	$MINGW32BINDIR/libusb-1.0.dll \
 	$MINGW32BINDIR/libwinpthread-1.dll \
 	$MINGW32BINDIR/libxml2-2.dll \
+	$MINGW32BINDIR/libzstd.dll \
 	$MINGW32BINDIR/zlib1.dll \
 	"$DESTDIR/bin/"
