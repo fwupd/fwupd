@@ -7,6 +7,7 @@
 #include "config.h"
 
 #include "fu-dfu-csr-device.h"
+#include "fu-dfu-csr-firmware.h"
 #include "fu-dfu-csr-plugin.h"
 
 struct _FuDfuCsrPlugin {
@@ -25,6 +26,7 @@ fu_dfu_csr_plugin_constructed(GObject *obj)
 {
 	FuPlugin *plugin = FU_PLUGIN(obj);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_DFU_CSR_DEVICE);
+	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_DFU_CSR_FIRMWARE);
 }
 
 static void
