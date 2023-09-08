@@ -19,7 +19,7 @@ struct _Fu{{Vendor}}{{Example}}Firmware {
 G_DEFINE_TYPE(Fu{{Vendor}}{{Example}}Firmware, fu_{{vendor}}_{{example}}_firmware, FU_TYPE_FIRMWARE)
 
 static void
-fu__{{vendor}}_{{example}}_firmware_export(FuFirmware *firmware,
+fu_{{vendor}}_{{example}}_firmware_export(FuFirmware *firmware,
 				   FuFirmwareExportFlags flags,
 				   XbBuilderNode *bn)
 {
@@ -28,7 +28,7 @@ fu__{{vendor}}_{{example}}_firmware_export(FuFirmware *firmware,
 }
 
 static gboolean
-fu__{{vendor}}_{{example}}_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
+fu_{{vendor}}_{{example}}_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
 {
 	Fu{{Vendor}}{{Example}}Firmware *self = FU_{{VENDOR}}_{{EXAMPLE}}_FIRMWARE(firmware);
 	guint64 tmp;
@@ -43,6 +43,27 @@ fu__{{vendor}}_{{example}}_firmware_build(FuFirmware *firmware, XbNode *n, GErro
 }
 
 static gboolean
+fu_{{vendor}}_{{example}}_check_magic(FuFirmware *firmware,
+					GBytes *fw,
+					gsize offset,
+					GError **error)
+{
+	const guint8 magic[4] = "TODO";
+	//return fu_struct_{{vendor}}_{{example}}_header_validate(g_bytes_get_data(fw, NULL),
+	//					     g_bytes_get_size(fw),
+	//					     offset,
+	//					     error);
+	return fu_memcmp_safe(g_bytes_get_data(fw, NULL),
+			      g_bytes_get_size(fw),
+			      offset,
+			      magic,
+			      sizeof(magic),
+			      0x0,
+			      sizeof(magic),
+			      error);
+}
+
+static gboolean
 fu_{{vendor}}_{{example}}_firmware_parse(FuFirmware *firmware,
 				 GBytes *fw,
 				 gsize offset,
@@ -50,8 +71,14 @@ fu_{{vendor}}_{{example}}_firmware_parse(FuFirmware *firmware,
 				 GError **error)
 {
 	Fu{{Vendor}}{{Example}}Firmware *self = FU_{{VENDOR}}_{{EXAMPLE}}_FIRMWARE(firmware);
+	gsize bufsz = 0;
+	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
+	g_autoptr(GByteArray) st_hdr = NULL;
 
 	/* TODO: parse firmware into images */
+	st_hdr = fu_struct_{{vendor}}_{{example}}_hdr_parse(buf, bufsz, offset, error);
+	if (st_hdr == NULL)
+		return FALSE;
 	self->start_addr = 0x1234;
 	fu_firmware_set_version(firmware, "1.2.3");
 	fu_firmware_set_bytes(firmware, fw);
@@ -97,10 +124,11 @@ static void
 fu_{{vendor}}_{{example}}_firmware_class_init(Fu{{Vendor}}{{Example}}FirmwareClass *klass)
 {
 	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
+	klass_firmware->check_magic = fu_{{vendor}}_{{example}}_check_magic;
 	klass_firmware->parse = fu_{{vendor}}_{{example}}_firmware_parse;
 	klass_firmware->write = fu_{{vendor}}_{{example}}_firmware_write;
-	klass_firmware->build = fu__{{vendor}}_{{example}}_firmware_build;
-	klass_firmware->export = fu__{{vendor}}_{{example}}_firmware_export;
+	klass_firmware->build = fu_{{vendor}}_{{example}}_firmware_build;
+	klass_firmware->export = fu_{{vendor}}_{{example}}_firmware_export;
 }
 
 FuFirmware *
