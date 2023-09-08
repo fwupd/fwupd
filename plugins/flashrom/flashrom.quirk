@@ -23,8 +23,12 @@ Plugin = flashrom
 [0fc25c8c-ffa8-54ad-a216-d13cfe75bee4]
 Plugin = flashrom
 
-# StarLabTop Mk III (HwId)
+# StarLabTop Mk III (HwId - AMI)
 [013b60e5-1023-5bee-8ae5-14cae21377b7]
+Plugin = flashrom
+
+# StarLabTop Mk III (HwId - coreboot)
+[8f8ca82b-30e1-5907-bc9d-4257a49898d4]
 Plugin = flashrom
 
 # StarLabTop Mk IV (HwId)
@@ -35,17 +39,35 @@ Plugin = flashrom
 [85aba599-addd-5985-a2e8-eddb41c61ba3]
 Plugin = flashrom
 
+# StarBook Mk VI - Intel (HwId)
+[5c917039-d938-5c9a-b22a-9c392b1534f3]
+Plugin = flashrom
+
+# StarBook Mk VI - AMD (HwId)
+[b39593ad-7522-52a5-a4ab-1b2ca2153956]
+Plugin = flashrom
+
+# StarBook Mk VIr2 - Intel (HwId)
+[6fca23e4-71e4-518a-96e2-b03ad7eb484f]
+Plugin = flashrom
+
+# Byte Mk I - AMD (HwId)
+[79a64046-5643-59c4-91d0-e68b33db5829]
+Plugin = flashrom
+
 # StarLabTop Mk III (coreboot GUID)
 [d33219e2-b84c-53a8-a624-27af9752dba6]
 Branch = coreboot
-VersionFormat = plain
 Flags = reset-cmos
+PciBcrAddr = 0x0
+VersionFormat = plain
 
 # StarLite Mk II (coreboot GUID)
 [2993474c-b4c4-5b7c-b2e1-a471d8d328a5]
 Branch = coreboot
-VersionFormat = plain
 Flags = reset-cmos
+PciBcrAddr = 0x0
+VersionFormat = plain
 
 # StarLite Mk II (AMI GUID)
 [0676539d-150f-5f07-89b9-fe0afd98c44e]
@@ -54,34 +76,66 @@ FirmwareSizeMax = 0x800000
 # StarLite Mk III (coreboot GUID)
 [3d2f164a-8818-58fd-a082-6c60a67e21a6]
 Branch = coreboot
-VersionFormat = plain
 Flags = reset-cmos
+PciBcrAddr = 0x0
+VersionFormat = plain
 
 # StarLite Mk III (AMI GUID)
 [ec375a72-9ed9-5a21-b1da-5e7f00dcada1]
 FirmwareSizeMax = 0x800000
+VersionFormat = plain
 
 # StarLite Mk IV (coreboot GUID)
 [5dc1dd5b-761e-5146-8ac2-1fdd8445f2ff]
 Branch = coreboot
-VersionFormat = plain
 Flags = reset-cmos
+PciBcrAddr = 0x0
+VersionFormat = plain
 
 # StarLite Mk IV (AMI GUID)
 [32edd806-13a0-5b0f-a8e9-656a0e147369]
 FirmwareSizeMax = 0x800000
+VersionFormat = plain
 
 # StarLabTop Mk IV (coreboot GUID)
 [0ee5867c-93f0-5fb4-adf1-9d686ea1183a]
 Branch = coreboot
-VersionFormat = plain
 Flags = reset-cmos
+PciBcrAddr = 0x0
+VersionFormat = plain
 
 # StarBook Mk V (coreboot GUID)
 [54c96fef-31e7-5011-a3ff-ea8e855d9acd]
 Branch = coreboot
-VersionFormat = plain
 Flags = reset-cmos
+PciBcrAddr = 0x0
+VersionFormat = plain
+
+# StarBook Mk VI - Intel (AMI GUID)
+[1292e166-a66f-5e11-b2bb-53265a8f53d9]
+FirmwareSizeMax = 0x2000000
+VersionFormat = plain
+
+# StarBook Mk VI - Intel (coreboot GUID)
+[8c994a92-7ef8-5d68-80b5-99ead7cf4686]
+Branch = coreboot
+Flags = reset-cmos
+PciBcrAddr = 0x0
+FirmwareSizeMax = 0x2000000
+VersionFormat = plain
+
+# StarBook Mk VIr2 - Intel (AMI GUID)
+[ce35649d-b89d-5188-b961-d992ce7e0f88]
+FirmwareSizeMax = 0x2000000
+VersionFormat = plain
+
+# StarBook Mk VIr2 - Intel (coreboot GUID)
+[595c5861-a105-509b-8dd6-f77070345286]
+Branch = coreboot
+Flags = reset-cmos
+PciBcrAddr = 0x0
+FirmwareSizeMax = 0x2000000
+VersionFormat = plain
 
 # NovaCustom NV4x (HwId)
 [25b6ea34-8f52-598e-a27a-31e03014dbe3]
