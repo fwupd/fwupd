@@ -1379,6 +1379,32 @@ fu_plugin_runner_reload(FuPlugin *self, FuDevice *device, GError **error)
 }
 
 /**
+ * fu_plugin_runner_reboot_cleanup:
+ * @self: a #FuPlugin
+ * @device: a device
+ * @error: (nullable): optional return location for an error
+ *
+ * Performs cleanup actions after the reboot has been performed.
+ *
+ * Returns: #TRUE for success, #FALSE for failure
+ *
+ * Since: 1.9.7
+ **/
+gboolean
+fu_plugin_runner_reboot_cleanup(FuPlugin *self, FuDevice *device, GError **error)
+{
+	FuPluginVfuncs *vfuncs = fu_plugin_get_vfuncs(self);
+
+	/* optional */
+	if (fu_plugin_has_flag(self, FWUPD_PLUGIN_FLAG_DISABLED))
+		return TRUE;
+	if (vfuncs->reboot_cleanup == NULL)
+		return TRUE;
+	g_debug("reboot_cleanup(%s)", fu_plugin_get_name(self));
+	return vfuncs->reboot_cleanup(self, device, error);
+}
+
+/**
  * fu_plugin_runner_add_security_attrs:
  * @self: a #FuPlugin
  * @attrs: a security attribute

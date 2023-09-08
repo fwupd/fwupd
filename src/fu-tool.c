@@ -3615,6 +3615,31 @@ fu_util_get_bios_setting(FuUtilPrivate *priv, gchar **values, GError **error)
 }
 
 static gboolean
+fu_util_reboot_cleanup(FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	FuPlugin *plugin;
+	g_autoptr(FuDevice) device = NULL;
+
+	if (!fu_util_start_engine(priv, FU_ENGINE_LOAD_FLAG_COLDPLUG, priv->progress, error))
+		return FALSE;
+
+	/* both arguments are optional */
+	if (g_strv_length(values) >= 1) {
+		device = fu_engine_get_device(priv->engine, values[1], error);
+		if (device == NULL)
+			return FALSE;
+	} else {
+		device = fu_util_prompt_for_device(priv, NULL, error);
+		if (device == NULL)
+			return FALSE;
+	}
+	plugin = fu_engine_get_plugin_by_name(priv->engine, fu_device_get_plugin(device), error);
+	if (plugin == NULL)
+		return FALSE;
+	return fu_plugin_runner_reboot_cleanup(plugin, device, error);
+}
+
+static gboolean
 fu_util_efivar_list(FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(GPtrArray) names = NULL;
@@ -4312,6 +4337,13 @@ main(int argc, char *argv[])
 			      /* TRANSLATORS: command description */
 			      _("Undo the host security attribute fix"),
 			      fu_util_security_undo);
+	fu_util_cmd_array_add(cmd_array,
+			      "reboot-cleanup",
+			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			      _("[DEVICE]"),
+			      /* TRANSLATORS: command description */
+			      _("Run the post-reboot cleanup action"),
+			      fu_util_reboot_cleanup);
 
 	/* do stuff on ctrl+c */
 	priv->cancellable = g_cancellable_new();
