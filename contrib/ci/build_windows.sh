@@ -124,6 +124,7 @@ find $MINGW32BINDIR \
 	-o -name libusb-1.0.dll \
 	-o -name libwinpthread-1.dll \
 	-o -name libxml2-2.dll \
+	-o -name libzstd.dll \
 	-o -name zlib1.dll \
 	| wixl-heat \
 	-p $MINGW32BINDIR/ \
