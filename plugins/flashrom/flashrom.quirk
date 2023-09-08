@@ -48,7 +48,7 @@ Plugin = flashrom
 Plugin = flashrom
 
 # StarBook Mk VIr2 - Intel (HwId)
-[6fca23e4-71e4-518a-96e2-b03ad7eb484f]
+[12122d1c-c383-5583-9cb7-3ba8d220913d]
 Plugin = flashrom
 
 # Byte Mk I - AMD (HwId)
