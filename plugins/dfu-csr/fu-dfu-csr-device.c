@@ -11,6 +11,7 @@
 #include "fu-dfu-common.h"
 #include "fu-dfu-csr-device.h"
 #include "fu-dfu-csr-firmware.h"
+#include "fu-dfu-csr-struct.h"
 #include "fu-dfu-struct.h"
 
 /**
@@ -31,16 +32,6 @@ struct _FuDfuCsrDevice {
 
 G_DEFINE_TYPE(FuDfuCsrDevice, fu_dfu_csr_device, FU_TYPE_HID_DEVICE)
 
-#define FU_DFU_CSR_REPORT_ID_COMMAND 0x01
-#define FU_DFU_CSR_REPORT_ID_STATUS  0x02
-#define FU_DFU_CSR_REPORT_ID_CONTROL 0x03
-
-#define FU_DFU_CSR_COMMAND_HEADER_SIZE 6 /* bytes */
-#define FU_DFU_CSR_COMMAND_UPGRADE     0x01
-
-#define FU_DFU_CSR_STATUS_HEADER_SIZE 7
-
-#define FU_DFU_CSR_CONTROL_HEADER_SIZE	2 /* bytes */
 #define FU_DFU_CSR_CONTROL_CLEAR_STATUS 0x04
 #define FU_DFU_CSR_CONTROL_RESET	0xff
 
@@ -165,7 +156,7 @@ fu_dfu_csr_device_upload_chunk(FuDfuCsrDevice *self, GError **error)
 
 	/* check the length */
 	data_sz = fu_memread_uint16(&buf[1], G_LITTLE_ENDIAN);
-	if (data_sz + FU_DFU_CSR_COMMAND_HEADER_SIZE != (guint16)sizeof(buf)) {
+	if (data_sz + FU_STRUCT_DFU_CSR_COMMAND_HEADER_SIZE != (guint16)sizeof(buf)) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
@@ -175,8 +166,8 @@ fu_dfu_csr_device_upload_chunk(FuDfuCsrDevice *self, GError **error)
 	}
 
 	/* return as bytes */
-	return g_bytes_new(buf + FU_DFU_CSR_COMMAND_HEADER_SIZE,
-			   sizeof(buf) - FU_DFU_CSR_COMMAND_HEADER_SIZE);
+	return g_bytes_new(buf + FU_STRUCT_DFU_CSR_COMMAND_HEADER_SIZE,
+			   sizeof(buf) - FU_STRUCT_DFU_CSR_COMMAND_HEADER_SIZE);
 }
 
 static GBytes *
@@ -215,7 +206,7 @@ fu_dfu_csr_device_upload(FuDevice *device, FuProgress *progress, GError **error)
 		fu_progress_set_percentage_full(progress, done_sz, (gsize)total_sz);
 
 		/* we're done */
-		if (chunk_sz < 64 - FU_DFU_CSR_COMMAND_HEADER_SIZE)
+		if (chunk_sz < 64 - FU_STRUCT_DFU_CSR_COMMAND_HEADER_SIZE)
 			break;
 	}
 
@@ -226,44 +217,22 @@ fu_dfu_csr_device_upload(FuDevice *device, FuProgress *progress, GError **error)
 static gboolean
 fu_dfu_csr_device_download_chunk(FuDfuCsrDevice *self, guint16 idx, GBytes *chunk, GError **error)
 {
-	const guint8 *chunk_data;
-	gsize chunk_sz = 0;
-	guint8 buf[FU_DFU_CSR_PACKET_DATA_SIZE] = {0};
-
-	/* too large? */
-	chunk_data = g_bytes_get_data(chunk, &chunk_sz);
-	if (chunk_sz + FU_DFU_CSR_COMMAND_HEADER_SIZE > FU_DFU_CSR_PACKET_DATA_SIZE) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INTERNAL,
-			    "packet was too large: %" G_GSIZE_FORMAT,
-			    chunk_sz);
-		return FALSE;
-	}
-	g_debug("writing %" G_GSIZE_FORMAT " bytes of data", chunk_sz);
+	g_autoptr(GByteArray) buf = fu_struct_dfu_csr_command_header_new();
 
 	/* create packet */
-	buf[0] = FU_DFU_CSR_REPORT_ID_COMMAND;
-	buf[1] = FU_DFU_CSR_COMMAND_UPGRADE;
-	fu_memwrite_uint16(&buf[2], idx, G_LITTLE_ENDIAN);
-	fu_memwrite_uint16(&buf[4], chunk_sz, G_LITTLE_ENDIAN);
-	if (chunk_sz > 0) {
-		if (!fu_memcpy_safe(buf,
-				    sizeof(buf),
-				    FU_DFU_CSR_COMMAND_HEADER_SIZE, /* dst */
-				    chunk_data,
-				    chunk_sz,
-				    0x0, /* src */
-				    chunk_sz,
-				    error))
-			return FALSE;
-	}
+	fu_struct_dfu_csr_command_header_set_report_id(buf, FU_DFU_CSR_REPORT_ID_COMMAND);
+	fu_struct_dfu_csr_command_header_set_command(buf, FU_DFU_CSR_COMMAND_UPGRADE);
+	fu_struct_dfu_csr_command_header_set_idx(buf, idx);
+	fu_struct_dfu_csr_command_header_set_chunk_sz(buf, g_bytes_get_size(chunk));
+	fu_byte_array_append_bytes(buf, chunk);
+	fu_byte_array_set_size(buf, FU_DFU_CSR_PACKET_DATA_SIZE, 0x0);
 
 	/* hit hardware */
+	g_debug("writing %" G_GSIZE_FORMAT " bytes of data", g_bytes_get_size(chunk));
 	if (!fu_hid_device_set_report(FU_HID_DEVICE(self),
 				      FU_DFU_CSR_REPORT_ID_COMMAND,
-				      buf,
-				      sizeof(buf),
+				      buf->data,
+				      buf->len,
 				      FU_DFU_CSR_DEVICE_TIMEOUT,
 				      FU_HID_DEVICE_FLAG_IS_FEATURE,
 				      error)) {
@@ -328,7 +297,7 @@ fu_dfu_csr_device_download(FuDevice *device,
 	chunks = fu_chunk_array_new_from_bytes(blob,
 					       0x0,
 					       FU_DFU_CSR_PACKET_DATA_SIZE -
-						   FU_DFU_CSR_COMMAND_HEADER_SIZE);
+						   FU_STRUCT_DFU_CSR_COMMAND_HEADER_SIZE);
 	if (fu_chunk_array_length(chunks) > G_MAXUINT16) {
 		g_set_error(error,
 			    FWUPD_ERROR,

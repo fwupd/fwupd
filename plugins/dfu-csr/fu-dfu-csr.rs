@@ -9,3 +9,23 @@ struct DfuCsrFile {
     file_hdr_len: u16le,
     //file_desc: [char; 64], -- useless
 }
+
+#[repr(u8)]
+enum DfuCsrReportId {
+    Command = 0x01,
+    Status = 0x02,
+    Control = 0x03,
+}
+
+#[repr(u8)]
+enum DfuCsrCommand {
+    Upgrade = 0x01,
+}
+
+#[derive(New)]
+struct DfuCsrCommandHeader {
+    report_id: DfuCsrReportId,
+    command: DfuCsrCommand,
+    idx: u16le,
+    chunk_sz: u16le,
+}
