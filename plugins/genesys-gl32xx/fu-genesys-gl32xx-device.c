@@ -632,7 +632,6 @@ static gboolean
 fu_genesys_gl32xx_device_probe(FuDevice *device, GError **error)
 {
 	FuUdevDevice *udev_device = FU_UDEV_DEVICE(device);
-	const gchar *device_bus = NULL;
 
 	/* UdevDevice->probe */
 	if (!FU_DEVICE_CLASS(fu_genesys_gl32xx_device_parent_class)->probe(device, error))
@@ -648,8 +647,7 @@ fu_genesys_gl32xx_device_probe(FuDevice *device, GError **error)
 	}
 
 	/* success */
-	device_bus = fu_udev_device_get_subsystem(udev_device);
-	return fu_udev_device_set_physical_id(udev_device, device_bus, error);
+	return fu_udev_device_set_physical_id(udev_device, "usb", error);
 }
 
 static gboolean
