@@ -319,7 +319,8 @@ fu_vli_pd_device_setup(FuDevice *device, GError **error)
 	FuVliPdDevice *self = FU_VLI_PD_DEVICE(device);
 	guint32 version_raw;
 	guint8 verbuf[4] = {0x0};
-	guint8 tmp = 0;
+	guint8 value = 0;
+	guint8 cmp = 0;
 
 	/* FuVliDevice->setup */
 	if (!FU_DEVICE_CLASS(fu_vli_pd_device_parent_class)->setup(device, error))
@@ -348,36 +349,73 @@ fu_vli_pd_device_setup(FuDevice *device, GError **error)
 
 	/* get device kind if not already in ROM mode */
 	if (fu_vli_device_get_kind(FU_VLI_DEVICE(self)) == FU_VLI_DEVICE_KIND_UNKNOWN) {
-		if (!fu_vli_pd_device_read_reg(self, 0x0018, &tmp, error))
+		if (!fu_vli_pd_device_read_reg(self, 0x0018, &value, error))
 			return FALSE;
-		switch (tmp & 0xF0) {
-		case 0x00:
-			fu_vli_device_set_kind(FU_VLI_DEVICE(self), FU_VLI_DEVICE_KIND_VL100);
-			break;
-		case 0x10:
-			/* this is also the code for VL101, but VL102 is more likely */
-			fu_vli_device_set_kind(FU_VLI_DEVICE(self), FU_VLI_DEVICE_KIND_VL102);
-			break;
-		case 0x80:
-			fu_vli_device_set_kind(FU_VLI_DEVICE(self), FU_VLI_DEVICE_KIND_VL103);
-			break;
-		case 0x90:
-			fu_vli_device_set_kind(FU_VLI_DEVICE(self), FU_VLI_DEVICE_KIND_VL104);
-			break;
-		default:
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_FILE,
-				    "unable to map 0x0018=0x%02X to device kind",
-				    tmp);
-			return FALSE;
+		if (value != 0xFF) {
+			switch (value & 0xF0) {
+			case 0x00:
+				fu_vli_device_set_kind(FU_VLI_DEVICE(self),
+						       FU_VLI_DEVICE_KIND_VL100);
+				break;
+			case 0x10:
+				/* this is also the code for VL101, but VL102 is more likely */
+				fu_vli_device_set_kind(FU_VLI_DEVICE(self),
+						       FU_VLI_DEVICE_KIND_VL102);
+				break;
+			case 0x80:
+				fu_vli_device_set_kind(FU_VLI_DEVICE(self),
+						       FU_VLI_DEVICE_KIND_VL103);
+				break;
+			case 0x90:
+				fu_vli_device_set_kind(FU_VLI_DEVICE(self),
+						       FU_VLI_DEVICE_KIND_VL104);
+				break;
+			case 0xA0:
+				fu_vli_device_set_kind(FU_VLI_DEVICE(self),
+						       FU_VLI_DEVICE_KIND_VL105);
+				break;
+			case 0xB0:
+				fu_vli_device_set_kind(FU_VLI_DEVICE(self),
+						       FU_VLI_DEVICE_KIND_VL106);
+				break;
+			case 0xC0:
+				fu_vli_device_set_kind(FU_VLI_DEVICE(self),
+						       FU_VLI_DEVICE_KIND_VL107);
+				break;
+			default:
+				g_set_error(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_FILE,
+					    "unable to map 0x0018=0x%02X to device kind",
+					    value);
+				return FALSE;
+			}
+		} else {
+			if (!fu_vli_pd_device_read_reg(self, 0x009C, &value, error))
+				return FALSE;
+			if (!fu_vli_pd_device_read_reg(self, 0x009D, &cmp, error))
+				return FALSE;
+			if ((value == 0x35) && (cmp == 0x96))
+				fu_vli_device_set_kind(FU_VLI_DEVICE(self),
+						       FU_VLI_DEVICE_KIND_VL108);
+			else if ((value == 0x36) && (cmp == 0x01))
+				fu_vli_device_set_kind(FU_VLI_DEVICE(self),
+						       FU_VLI_DEVICE_KIND_VL109);
+			else {
+				g_set_error(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_FILE,
+					    "unable to map 0x9C9D=0x%02X%02X to device kind",
+					    value,
+					    cmp);
+				return FALSE;
+			}
 		}
-	}
 
 	/* get bootloader mode */
-	if (!fu_vli_pd_device_read_reg(self, 0x00F7, &tmp, error))
+	if (!fu_vli_pd_device_read_reg(self, 0x00F7, &value, error))
 		return FALSE;
-	if ((tmp & 0x80) == 0x00)
+	if ((value & 0x80) == 0x00)
 		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 	else
 		fu_device_remove_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
@@ -618,6 +656,7 @@ fu_vli_pd_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuVliPdDevice *self = FU_VLI_PD_DEVICE(device);
 	g_autoptr(GError) error_local = NULL;
+	guint8 tmp = 0;
 
 	/* sanity check */
 	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
@@ -629,8 +668,16 @@ fu_vli_pd_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 	if (!fu_vli_pd_device_write_gpios(self, error))
 		return FALSE;
 
+	/* disable charging */
+	if (!fu_vli_pd_device_read_reg(self, 0x0003, &tmp, error))
+		return FALSE;
+	tmp = (tmp | 0x10) & 0xFE;
+	if (!fu_vli_pd_device_write_reg(self, 0x0003, tmp, error))
+		return FALSE;
+
 	/* VL103 set ROM sig does not work, so use alternate function */
-	if (fu_vli_device_get_kind(FU_VLI_DEVICE(device)) == FU_VLI_DEVICE_KIND_VL103) {
+	if ((fu_vli_device_get_kind(FU_VLI_DEVICE(device)) != FU_VLI_DEVICE_KIND_VL100) &&
+	    (fu_vli_device_get_kind(FU_VLI_DEVICE(device)) != FU_VLI_DEVICE_KIND_VL102)) {
 		if (!g_usb_device_control_transfer(fu_usb_device_get_dev(FU_USB_DEVICE(device)),
 						   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
 						   G_USB_DEVICE_REQUEST_TYPE_VENDOR,

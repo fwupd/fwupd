@@ -438,6 +438,10 @@ fu_vli_device_set_kind(FuVliDevice *self, FuVliDeviceKind device_kind)
 	case FU_VLI_DEVICE_KIND_VL103:
 	case FU_VLI_DEVICE_KIND_VL104:
 	case FU_VLI_DEVICE_KIND_VL105:
+	case FU_VLI_DEVICE_KIND_VL106:
+	case FU_VLI_DEVICE_KIND_VL107:
+	case FU_VLI_DEVICE_KIND_VL108:
+	case FU_VLI_DEVICE_KIND_VL109:
 	case FU_VLI_DEVICE_KIND_VL120:
 	case FU_VLI_DEVICE_KIND_VL122:
 	case FU_VLI_DEVICE_KIND_VL210:
@@ -466,7 +470,6 @@ fu_vli_device_set_kind(FuVliDevice *self, FuVliDeviceKind device_kind)
 	case FU_VLI_DEVICE_KIND_VL822Q8:
 		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 		break;
-	case FU_VLI_DEVICE_KIND_VL107:
 	case FU_VLI_DEVICE_KIND_VL650:
 	case FU_VLI_DEVICE_KIND_VL830:
 		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
