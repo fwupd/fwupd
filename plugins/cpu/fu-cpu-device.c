@@ -358,6 +358,7 @@ fu_cpu_device_add_security_attrs_intel_cet_active(FuCpuDevice *self, FuSecurityA
 #endif
 		g_debug("CET does not function, not supported: %s", error_local->message);
 		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
+		return;
 	}
 
 	/* success */
