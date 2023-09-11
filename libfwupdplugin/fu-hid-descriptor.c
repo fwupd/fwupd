@@ -39,12 +39,22 @@ fu_hid_descriptor_parse(FuFirmware *firmware,
 {
 	g_autoptr(GPtrArray) table_state =
 	    g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
+	g_autoptr(GPtrArray) table_local =
+	    g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 	while (offset < g_bytes_get_size(fw)) {
 		g_autofree gchar *itemstr = NULL;
 		g_autoptr(FuHidReportItem) item = fu_hid_report_item_new();
 
 		/* sanity check */
 		if (table_state->len > FU_HID_DESCRIPTOR_TABLE_SIZE_MAX) {
+			g_set_error(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_INVALID_DATA,
+				    "HID table state too large, limit is %u",
+				    (guint)FU_HID_DESCRIPTOR_TABLE_SIZE_MAX);
+			return FALSE;
+		}
+		if (table_local->len > FU_HID_DESCRIPTOR_TABLE_SIZE_MAX) {
 			g_set_error(error,
 				    G_IO_ERROR,
 				    G_IO_ERROR_INVALID_DATA,
@@ -60,11 +70,15 @@ fu_hid_descriptor_parse(FuFirmware *firmware,
 		/* only for debugging */
 		itemstr = fu_firmware_to_string(FU_FIRMWARE(item));
 		g_debug("add to table-state:\n%s", itemstr);
-		g_ptr_array_add(table_state, g_object_ref(item));
+		if (fu_hid_report_item_get_kind(item) == FU_HID_ITEM_KIND_GLOBAL) {
+			g_ptr_array_add(table_state, g_object_ref(item));
+		} else if (fu_hid_report_item_get_kind(item) == FU_HID_ITEM_KIND_LOCAL ||
+			   fu_hid_report_item_get_kind(item) == FU_HID_ITEM_KIND_MAIN) {
+			g_ptr_array_add(table_local, g_object_ref(item));
+		}
 
 		/* add report */
 		if (fu_hid_report_item_get_kind(item) == FU_HID_ITEM_KIND_MAIN) {
-			g_autoptr(GPtrArray) to_remove = g_ptr_array_new();
 			g_autoptr(FuHidReport) report = fu_hid_report_new();
 
 			/* copy the table state to the new report */
@@ -75,20 +89,18 @@ fu_hid_descriptor_parse(FuFirmware *firmware,
 								error))
 					return FALSE;
 			}
+			for (guint i = 0; i < table_local->len; i++) {
+				FuHidReportItem *item_tmp = g_ptr_array_index(table_local, i);
+				if (!fu_firmware_add_image_full(FU_FIRMWARE(report),
+								FU_FIRMWARE(item_tmp),
+								error))
+					return FALSE;
+			}
 			if (!fu_firmware_add_image_full(firmware, FU_FIRMWARE(report), error))
 				return FALSE;
 
 			/* remove all the local items */
-			for (guint i = 0; i < table_state->len; i++) {
-				FuHidReportItem *item_tmp = g_ptr_array_index(table_state, i);
-				if (fu_hid_report_item_get_kind(item_tmp) !=
-				    FU_HID_ITEM_KIND_GLOBAL)
-					g_ptr_array_add(to_remove, item_tmp);
-			}
-			for (guint i = 0; i < to_remove->len; i++) {
-				FuHidReportItem *item_tmp = g_ptr_array_index(to_remove, i);
-				g_ptr_array_remove(table_state, item_tmp);
-			}
+			g_ptr_array_set_size(table_local, 0);
 		}
 	}
 
