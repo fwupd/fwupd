@@ -123,3 +123,14 @@ fu_pxi_composite_receiver_cmd(guint8 opcode,
 	g_byte_array_prepend(wireless_mod_cmd, &rid, 0x01);
 	return TRUE;
 }
+
+gchar *
+fu_pxi_hpac_version_info_parse(const guint16 hpac_ver)
+{
+	return g_strdup_printf("%u%u.%u%u.%u",
+			       hpac_ver / 10000,
+			       (hpac_ver / 1000) % 10,
+			       ((hpac_ver / 100) % 10),
+			       (hpac_ver / 10) % 10,
+			       hpac_ver % 10);
+}
