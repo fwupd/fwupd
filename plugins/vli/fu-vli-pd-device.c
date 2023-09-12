@@ -411,6 +411,7 @@ fu_vli_pd_device_setup(FuDevice *device, GError **error)
 				return FALSE;
 			}
 		}
+	}
 
 	/* get bootloader mode */
 	if (!fu_vli_pd_device_read_reg(self, 0x00F7, &value, error))
