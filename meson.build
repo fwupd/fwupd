@@ -454,6 +454,7 @@ if libsystemd.found()
     systemdunitdir = systemd.get_variable(pkgconfig: 'systemdsystemunitdir')
     systemd_shutdown_dir = systemd.get_variable(pkgconfig: 'systemdshutdowndir')
     systemd_modules_load_dir = systemd.get_variable(pkgconfig: 'modulesloaddir')
+    systemd_sysusers_dir = systemd.get_variable(pkgconfig: 'sysusersdir')
   else
     systemdunitdir = systemd.get_variable(pkgconfig: 'systemdsystemunitdir', pkgconfig_define: ['rootprefix', systemd_root_prefix])
     systemd_root_prefix_varname = 'root_prefix'
@@ -462,6 +463,7 @@ if libsystemd.found()
     endif
     systemd_shutdown_dir = systemd.get_variable(pkgconfig: 'systemdshutdowndir', pkgconfig_define: [systemd_root_prefix_varname, systemd_root_prefix])
     systemd_modules_load_dir = systemd.get_variable(pkgconfig: 'modulesloaddir', pkgconfig_define: [systemd_root_prefix_varname, systemd_root_prefix])
+    systemd_sysusers_dir = systemd.get_variable(pkgconfig: 'sysusersdir', pkgconfig_define: [systemd_root_prefix_varname, systemd_root_prefix])
   endif
 endif
 
