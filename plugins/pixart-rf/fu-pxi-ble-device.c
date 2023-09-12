@@ -814,6 +814,7 @@ fu_pxi_ble_device_fw_get_info(FuPxiBleDevice *self, GError **error)
 	guint8 res[FU_PXI_BLE_DEVICE_OTA_BUF_SZ] = {0x0};
 	guint8 opcode = 0x0;
 	guint16 checksum = 0;
+	guint16 hpac_ver = 0;
 	g_autofree gchar *version_str = NULL;
 	g_autoptr(GByteArray) req = g_byte_array_new();
 
@@ -841,7 +842,19 @@ fu_pxi_ble_device_fw_get_info(FuPxiBleDevice *self, GError **error)
 		return FALSE;
 	}
 	/* set current version */
-	version_str = g_strndup((gchar *)res + 0x6, 5);
+	if (!fu_device_has_private_flag(FU_DEVICE(self), FU_PXI_DEVICE_FLAG_IS_HPAC)) {
+		version_str = g_strndup((gchar *)res + 0x6, 5);
+	} else {
+		if (!fu_memread_uint16_safe(res,
+					    FU_PXI_BLE_DEVICE_OTA_BUF_SZ,
+					    9,
+					    &hpac_ver,
+					    G_BIG_ENDIAN,
+					    error))
+			return FALSE;
+
+		version_str = fu_pxi_hpac_version_info_parse(hpac_ver);
+	}
 	fu_device_set_version(FU_DEVICE(self), version_str);
 
 	/* add current checksum */
