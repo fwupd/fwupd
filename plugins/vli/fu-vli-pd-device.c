@@ -349,7 +349,10 @@ fu_vli_pd_device_setup(FuDevice *device, GError **error)
 
 	/* get device kind if not already in ROM mode */
 	if (fu_vli_device_get_kind(FU_VLI_DEVICE(self)) == FU_VLI_DEVICE_KIND_UNKNOWN) {
-		if (!fu_vli_pd_device_read_reg(self, 0x0018, &value, error))
+		if (!fu_vli_pd_device_read_reg(self,
+					       FU_VLI_PD_REGISTER_ADDRESS_PROJ_LEGACY,
+					       &value,
+					       error))
 			return FALSE;
 		if (value != 0xFF) {
 			switch (value & 0xF0) {
@@ -391,9 +394,15 @@ fu_vli_pd_device_setup(FuDevice *device, GError **error)
 				return FALSE;
 			}
 		} else {
-			if (!fu_vli_pd_device_read_reg(self, 0x009C, &value, error))
+			if (!fu_vli_pd_device_read_reg(self,
+						       FU_VLI_PD_REGISTER_ADDRESS_PROJ_ID_HIGH,
+						       &value,
+						       error))
 				return FALSE;
-			if (!fu_vli_pd_device_read_reg(self, 0x009D, &cmp, error))
+			if (!fu_vli_pd_device_read_reg(self,
+						       FU_VLI_PD_REGISTER_ADDRESS_PROJ_ID_LOW,
+						       &cmp,
+						       error))
 				return FALSE;
 			if ((value == 0x35) && (cmp == 0x96))
 				fu_vli_device_set_kind(FU_VLI_DEVICE(self),
@@ -615,9 +624,15 @@ fu_vli_pd_device_write_firmware(FuDevice *device,
 		return FALSE;
 
 	/* disable write protect in GPIO_3 */
-	if (!fu_vli_pd_device_read_reg(self, 0x0003, &tmp, error))
+	if (!fu_vli_pd_device_read_reg(self,
+				       FU_VLI_PD_REGISTER_ADDRESS_GPIO_CONTROL_A,
+				       &tmp,
+				       error))
 		return FALSE;
-	if (!fu_vli_pd_device_write_reg(self, 0x0003, tmp | 0x44, error))
+	if (!fu_vli_pd_device_write_reg(self,
+					FU_VLI_PD_REGISTER_ADDRESS_GPIO_CONTROL_A,
+					tmp | 0x44,
+					error))
 		return FALSE;
 
 	/* dual image on VL103 */
@@ -670,10 +685,16 @@ fu_vli_pd_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 		return FALSE;
 
 	/* disable charging */
-	if (!fu_vli_pd_device_read_reg(self, 0x0003, &tmp, error))
+	if (!fu_vli_pd_device_read_reg(self,
+				       FU_VLI_PD_REGISTER_ADDRESS_GPIO_CONTROL_A,
+				       &tmp,
+				       error))
 		return FALSE;
 	tmp = (tmp | 0x10) & 0xFE;
-	if (!fu_vli_pd_device_write_reg(self, 0x0003, tmp, error))
+	if (!fu_vli_pd_device_write_reg(self,
+					FU_VLI_PD_REGISTER_ADDRESS_GPIO_CONTROL_A,
+					tmp,
+					error))
 		return FALSE;
 
 	/* VL103 set ROM sig does not work, so use alternate function */
@@ -711,7 +732,10 @@ fu_vli_pd_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 	if (fu_vli_device_get_kind(FU_VLI_DEVICE(device)) == FU_VLI_DEVICE_KIND_VL100 ||
 	    fu_vli_device_get_kind(FU_VLI_DEVICE(device)) == FU_VLI_DEVICE_KIND_VL102) {
 		guint8 tmp = 0;
-		if (!fu_vli_pd_device_read_reg(self, 0x0018, &tmp, error))
+		if (!fu_vli_pd_device_read_reg(self,
+					       FU_VLI_PD_REGISTER_ADDRESS_PROJ_LEGACY,
+					       &tmp,
+					       error))
 			return FALSE;
 		if (tmp != 0x80) {
 			if (!fu_vli_pd_device_write_reg(self, 0x2AE2, 0x1E, error))

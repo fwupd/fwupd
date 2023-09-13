@@ -258,7 +258,7 @@ ParentGuid = USB\VID_17EF&PID_A392
 Plugin = vli
 GType = FuVliUsbhubDevice
 
-#Lenovo Test Device 2023
+# Lenovo Hybrid Dock Version 2
 [USB\VID_17EF&PID_30D2]
 Plugin = vli
 GType = FuVliUsbhubDevice
@@ -272,7 +272,7 @@ ParentGuid = USB\VID_17EF&PID_30D2
 [USB\VID_17EF&PID_30D4]
 Plugin = vli
 GType = FuVliUsbhubDevice
-Flags = usb3,will-disappear
+Flags = usb3
 ParentGuid = USB\VID_17EF&PID_30D2
 CounterpartGuid = USB\VID_17EF&PID_30D5
 [USB\VID_17EF&PID_30D5]
