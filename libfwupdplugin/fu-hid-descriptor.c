@@ -31,7 +31,7 @@ G_DEFINE_TYPE(FuHidDescriptor, fu_hid_descriptor, FU_TYPE_FIRMWARE)
 #define FU_HID_DESCRIPTOR_TABLE_LOCAL_SIZE_MAX	 1024
 #define FU_HID_DESCRIPTOR_TABLE_LOCAL_DUPES_MAX	 5
 #define FU_HID_DESCRIPTOR_TABLE_GLOBAL_SIZE_MAX	 1024
-#define FU_HID_DESCRIPTOR_TABLE_GLOBAL_DUPES_MAX 10
+#define FU_HID_DESCRIPTOR_TABLE_GLOBAL_DUPES_MAX 32
 
 static guint
 fu_hid_descriptor_count_table_dupes(GPtrArray *table, FuHidReportItem *item)
