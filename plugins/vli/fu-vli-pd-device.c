@@ -672,7 +672,7 @@ fu_vli_pd_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuVliPdDevice *self = FU_VLI_PD_DEVICE(device);
 	g_autoptr(GError) error_local = NULL;
-	guint8 tmp = 0;
+	guint8 gpio_control_a = 0;
 
 	/* sanity check */
 	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
@@ -687,13 +687,13 @@ fu_vli_pd_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 	/* disable charging */
 	if (!fu_vli_pd_device_read_reg(self,
 				       FU_VLI_PD_REGISTER_ADDRESS_GPIO_CONTROL_A,
-				       &tmp,
+				       &gpio_control_a,
 				       error))
 		return FALSE;
-	tmp = (tmp | 0x10) & 0xFE;
+	gpio_control_a = (gpio_control_a | 0x10) & 0xFE;
 	if (!fu_vli_pd_device_write_reg(self,
 					FU_VLI_PD_REGISTER_ADDRESS_GPIO_CONTROL_A,
-					tmp,
+					gpio_control_a,
 					error))
 		return FALSE;
 
@@ -731,13 +731,13 @@ fu_vli_pd_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 	/* patch APP5 FW bug (2AF2 -> 2AE2) on VL100-App5 and VL102 */
 	if (fu_vli_device_get_kind(FU_VLI_DEVICE(device)) == FU_VLI_DEVICE_KIND_VL100 ||
 	    fu_vli_device_get_kind(FU_VLI_DEVICE(device)) == FU_VLI_DEVICE_KIND_VL102) {
-		guint8 tmp = 0;
+		guint8 proj_legacy = 0;
 		if (!fu_vli_pd_device_read_reg(self,
 					       FU_VLI_PD_REGISTER_ADDRESS_PROJ_LEGACY,
-					       &tmp,
+					       &proj_legacy,
 					       error))
 			return FALSE;
-		if (tmp != 0x80) {
+		if (proj_legacy != 0x80) {
 			if (!fu_vli_pd_device_write_reg(self, 0x2AE2, 0x1E, error))
 				return FALSE;
 			if (!fu_vli_pd_device_write_reg(self, 0x2AE3, 0xC3, error))
