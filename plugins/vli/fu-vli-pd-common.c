@@ -20,11 +20,15 @@ fu_vli_pd_common_guess_device_kind(guint32 fwver)
 		return FU_VLI_DEVICE_KIND_VL101;
 	if (tmp == 0x07 || tmp == 0x08)
 		return FU_VLI_DEVICE_KIND_VL102;
-	if (tmp == 0x09 || tmp == 0x0a)
+	if (tmp == 0x09)
 		return FU_VLI_DEVICE_KIND_VL103;
 	if (tmp == 0x0b)
 		return FU_VLI_DEVICE_KIND_VL104;
-	if (tmp == 0x0c)
+	if (tmp == 0xa0)
 		return FU_VLI_DEVICE_KIND_VL105;
+	if (tmp == 0xb0)
+		return FU_VLI_DEVICE_KIND_VL106;
+	if (tmp == 0xc0)
+		return FU_VLI_DEVICE_KIND_VL107;
 	return FU_VLI_DEVICE_KIND_UNKNOWN;
 }

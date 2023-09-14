@@ -258,6 +258,29 @@ ParentGuid = USB\VID_17EF&PID_A392
 Plugin = vli
 GType = FuVliUsbhubDevice
 
+# Lenovo Hybrid Dock Version 2
+[USB\VID_17EF&PID_30D2]
+Plugin = vli
+GType = FuVliUsbhubDevice
+Flags = usb3,has-shared-spi-pd
+CounterpartGuid = USB\VID_17EF&PID_30D3
+[USB\VID_17EF&PID_30D3]
+Plugin = vli
+GType = FuVliUsbhubDevice
+Flags = usb2
+ParentGuid = USB\VID_17EF&PID_30D2
+[USB\VID_17EF&PID_30D4]
+Plugin = vli
+GType = FuVliUsbhubDevice
+Flags = usb3
+ParentGuid = USB\VID_17EF&PID_30D2
+CounterpartGuid = USB\VID_17EF&PID_30D5
+[USB\VID_17EF&PID_30D5]
+Plugin = vli
+GType = FuVliUsbhubDevice
+Flags = usb2
+ParentGuid = USB\VID_17EF&PID_30D2
+
 # Lenovo VGA
 [USB\VID_17EF&PID_7211]
 Plugin = vli
@@ -280,3 +303,6 @@ GType = FuVliPdDevice
 Plugin = vli
 GType = FuVliPdDevice
 Flags = dual-image
+[USB\VID_17EF&PID_7247]
+Plugin = vli
+GType = FuVliPdDevice

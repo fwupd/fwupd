@@ -24,8 +24,14 @@ fu_vli_common_device_kind_get_size(FuVliDeviceKind device_kind)
 		return 0xc000; /* 48KB */
 	if (device_kind == FU_VLI_DEVICE_KIND_VL105)
 		return 0xc000; /* 48KB */
+	if (device_kind == FU_VLI_DEVICE_KIND_VL106)
+		return 0xc000; /* 48KB */
 	if (device_kind == FU_VLI_DEVICE_KIND_VL107)
-		return 0x80000;
+		return 0xC800;
+	if (device_kind == FU_VLI_DEVICE_KIND_VL108)
+		return 0x10000;
+	if (device_kind == FU_VLI_DEVICE_KIND_VL109)
+		return 0x10000;
 	if (device_kind == FU_VLI_DEVICE_KIND_VL122)
 		return 0x80000;
 	if (device_kind == FU_VLI_DEVICE_KIND_VL210)
@@ -100,7 +106,13 @@ fu_vli_common_device_kind_get_offset(FuVliDeviceKind device_kind)
 		return 0x20000;
 	if (device_kind == FU_VLI_DEVICE_KIND_VL105)
 		return 0x20000;
+	if (device_kind == FU_VLI_DEVICE_KIND_VL106)
+		return 0x20000;
 	if (device_kind == FU_VLI_DEVICE_KIND_VL107)
+		return 0x20000;
+	if (device_kind == FU_VLI_DEVICE_KIND_VL108)
+		return 0x20000;
+	if (device_kind == FU_VLI_DEVICE_KIND_VL109)
 		return 0x20000;
 	return 0x0;
 }
