@@ -217,6 +217,15 @@ fu_emmc_device_probe(FuDevice *device, GError **error)
 		return FALSE;
 	if (!fu_emmc_device_get_sysattr_guint64(udev_parent, "oemid", &oemid, error))
 		return FALSE;
+
+	/*
+	 * TODO: Remove this once the Linux kernel bug is fixed:
+	 * The mmc driver wrongly parse the CID register picking 16 bits for the oemid instead of
+	 * just 8 - see drivers/mmc/core/mmc.c:107. For further reference see the eMMC spec
+	 * JESD84-B51 paragraph 7.2.
+	 */
+	oemid &= 0xff;
+
 	fu_device_add_instance_u16(device, "MAN", manfid);
 	fu_device_add_instance_u16(device, "OEM", oemid);
 	fu_device_build_instance_id(device, NULL, "EMMC", "MAN", "OEM", NULL);
