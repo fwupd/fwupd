@@ -50,7 +50,7 @@ fu_bytes_set_contents(const gchar *filename, GBytes *bytes, GError **error)
 			return FALSE;
 	}
 	data = g_bytes_get_data(bytes, &size);
-	g_debug("writing %s with %" G_GSIZE_FORMAT " bytes", filename, size);
+	g_debug("writing %s with 0x%" G_GSIZE_FORMAT "x bytes", filename, size);
 	return g_file_set_contents(filename, data, size, error);
 }
 
@@ -68,16 +68,34 @@ fu_bytes_set_contents(const gchar *filename, GBytes *bytes, GError **error)
 GBytes *
 fu_bytes_get_contents(const gchar *filename, GError **error)
 {
-	gchar *data = NULL;
-	gsize len = 0;
+	g_autoptr(GError) error_local = NULL;
+	g_autoptr(GMappedFile) mapped_file = NULL;
 
 	g_return_val_if_fail(filename != NULL, NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
-	if (!g_file_get_contents(filename, &data, &len, error))
-		return NULL;
-	g_debug("reading %s with %" G_GSIZE_FORMAT " bytes", filename, len);
-	return g_bytes_new_take(data, len);
+	/* try as a mapped file, falling back to reading it as a blob instead */
+	mapped_file = g_mapped_file_new(filename, FALSE, &error_local);
+	if (mapped_file == NULL) {
+		gchar *data = NULL;
+		gsize len = 0;
+		if (!g_file_get_contents(filename, &data, &len, error))
+			return NULL;
+		g_debug("failed to read as mapped file, "
+			"so reading %s of size 0x%" G_GSIZE_FORMAT "x: %s",
+			filename,
+			len,
+			error_local->message);
+		return g_bytes_new_take(data, len);
+	}
+	if (g_mapped_file_get_length(mapped_file) == 0) {
+		const guint8 buf[] = {};
+		return g_bytes_new_static(buf, 0);
+	}
+	g_debug("mapped file %s of size 0x%" G_GSIZE_FORMAT "x",
+		filename,
+		g_mapped_file_get_length(mapped_file));
+	return g_mapped_file_get_bytes(mapped_file);
 }
 
 /**
