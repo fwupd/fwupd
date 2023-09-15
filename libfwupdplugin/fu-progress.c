@@ -71,6 +71,8 @@ struct _FuProgress {
 	GTimer *timer;
 	GTimer *timer_child;
 	guint step_now;
+	guint step_done;
+	guint step_scaling;
 	FuProgress *parent; /* no-ref */
 };
 
@@ -79,6 +81,8 @@ enum { SIGNAL_PERCENTAGE_CHANGED, SIGNAL_STATUS_CHANGED, SIGNAL_LAST };
 static guint signals[SIGNAL_LAST] = {0};
 
 G_DEFINE_TYPE(FuProgress, fu_progress, G_TYPE_OBJECT)
+
+#define FU_PROGRESS_STEPS_MAX 1000
 
 /**
  * fu_progress_get_id:
@@ -511,8 +515,13 @@ void
 fu_progress_set_steps(FuProgress *self, guint step_max)
 {
 	g_return_if_fail(FU_IS_PROGRESS(self));
-	g_return_if_fail(step_max < 100 * 1000);
 	g_return_if_fail(self->id != NULL);
+
+	/* if there is an insane number of steps, scale these */
+	if (step_max > FU_PROGRESS_STEPS_MAX) {
+		self->step_scaling = step_max / 100;
+		step_max = 100;
+	}
 
 	/* create fake steps */
 	for (guint i = 0; i < step_max; i++)
@@ -836,6 +845,13 @@ fu_progress_step_done(FuProgress *self)
 
 	g_return_if_fail(FU_IS_PROGRESS(self));
 	g_return_if_fail(self->id != NULL);
+
+	/* ignore steps */
+	if (self->step_scaling > 0) {
+		if (self->step_now >= self->children->len ||
+		    self->step_done++ % self->step_scaling != 0)
+			return;
+	}
 
 	/* did we call done when no size set? */
 	if (self->children->len == 0) {

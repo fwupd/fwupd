@@ -4052,6 +4052,21 @@ fu_progress_child_func(void)
 }
 
 static void
+fu_progress_scaling_func(void)
+{
+	const guint insane_steps = 1000 * 1000;
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+
+	fu_progress_set_steps(progress, insane_steps);
+	for (guint i = 0; i < insane_steps / 2; i++)
+		fu_progress_step_done(progress);
+	g_assert_cmpint(fu_progress_get_percentage(progress), ==, 50);
+	for (guint i = 0; i < insane_steps / 2; i++)
+		fu_progress_step_done(progress);
+	g_assert_cmpint(fu_progress_get_percentage(progress), ==, 100);
+}
+
+static void
 fu_progress_parent_one_step_proxy_func(void)
 {
 	FuProgressHelper helper = {0};
@@ -4402,6 +4417,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/common{memmem}", fu_common_memmem_func);
 	if (g_test_slow())
 		g_test_add_func("/fwupd/progress", fu_progress_func);
+	g_test_add_func("/fwupd/progress{scaling}", fu_progress_scaling_func);
 	g_test_add_func("/fwupd/progress{child}", fu_progress_child_func);
 	g_test_add_func("/fwupd/progress{child-finished}", fu_progress_child_finished);
 	g_test_add_func("/fwupd/progress{parent-1-step}", fu_progress_parent_one_step_proxy_func);
