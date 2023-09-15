@@ -164,11 +164,12 @@ fu_ch347_device_send_command(FuCh347Device *self,
 {
 	/* write */
 	if (wbufsz > 0) {
-		g_autoptr(GPtrArray) chunks =
-		    fu_chunk_array_new(wbuf, wbufsz, 0x0, 0x0, FU_CH347_PAYLOAD_SIZE);
-		for (guint i = 0; i < chunks->len; i++) {
-			FuChunk *chk = g_ptr_array_index(chunks, i);
+		g_autoptr(GBytes) wblob = g_bytes_new_static(wbuf, wbufsz);
+		g_autoptr(FuChunkArray) chunks =
+		    fu_chunk_array_new_from_bytes(wblob, 0x0, FU_CH347_PAYLOAD_SIZE);
+		for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
 			guint8 buf[1] = {0x0};
+			g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
 			if (!fu_ch347_device_write(self,
 						   FU_CH347_CMD_SPI_OUT,
 						   fu_chunk_get_data(chk),

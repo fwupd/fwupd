@@ -205,21 +205,16 @@ fu_synaptics_rmi_v7_device_erase_all(FuSynapticsRmiDevice *self, GError **error)
 static gboolean
 fu_synaptics_rmi_v7_device_write_blocks(FuSynapticsRmiDevice *self,
 					guint32 address,
-					const guint8 *data,
-					guint32 datasz,
+					GBytes *fw,
 					GError **error)
 {
 	FuSynapticsRmiFlash *flash = fu_synaptics_rmi_device_get_flash(self);
-	g_autoptr(GPtrArray) chunks = NULL;
+	g_autoptr(FuChunkArray) chunks = NULL;
 
 	/* write FW blocks */
-	chunks = fu_chunk_array_new(data,
-				    datasz,
-				    0x00, /* start addr */
-				    0x00, /* page_sz */
-				    flash->block_size);
-	for (guint i = 0; i < chunks->len; i++) {
-		FuChunk *chk = g_ptr_array_index(chunks, i);
+	chunks = fu_chunk_array_new_from_bytes(fw, 0x00, flash->block_size);
+	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
+		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
 		g_autoptr(GByteArray) req = g_byte_array_new();
 		g_byte_array_append(req, fu_chunk_get_data(chk), fu_chunk_get_data_sz(chk));
 		if (!fu_synaptics_rmi_device_write(self,
@@ -258,7 +253,7 @@ fu_synaptics_rmi_v7_device_write_partition_signature(FuSynapticsRmiDevice *self,
 	FuSynapticsRmiFunction *f34;
 	FuSynapticsRmiFlash *flash = fu_synaptics_rmi_device_get_flash(self);
 	g_autoptr(GByteArray) req_offset = g_byte_array_new();
-	g_autoptr(GPtrArray) chunks = NULL;
+	g_autoptr(FuChunkArray) chunks = NULL;
 	g_autoptr(GBytes) bytes = NULL;
 
 	/* f34 */
@@ -288,11 +283,11 @@ fu_synaptics_rmi_v7_device_write_partition_signature(FuSynapticsRmiDevice *self,
 
 	chunks =
 	    fu_chunk_array_new_from_bytes(bytes,
-					  0x00, /* start addr */
-					  0x00, /* page_sz */
+					  0x00,
 					  (gsize)flash->payload_length * (gsize)flash->block_size);
-	for (guint i = 0; i < chunks->len; i++) {
-		FuChunk *chk = g_ptr_array_index(chunks, i);
+	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
+		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
+		g_autoptr(GBytes) chk_blob = fu_chunk_get_bytes(chk);
 		g_autoptr(GByteArray) req_trans_sz = g_byte_array_new();
 		g_autoptr(GByteArray) req_cmd = g_byte_array_new();
 		fu_byte_array_append_uint16(req_trans_sz,
@@ -317,8 +312,7 @@ fu_synaptics_rmi_v7_device_write_partition_signature(FuSynapticsRmiDevice *self,
 		}
 		if (!fu_synaptics_rmi_v7_device_write_blocks(self,
 							     f34->data_base + 0x5,
-							     fu_chunk_get_data(chk),
-							     fu_chunk_get_data_sz(chk),
+							     chk_blob,
 							     error))
 			return FALSE;
 	}
@@ -338,7 +332,7 @@ fu_synaptics_rmi_v7_device_write_partition(FuSynapticsRmiDevice *self,
 	FuSynapticsRmiFlash *flash = fu_synaptics_rmi_device_get_flash(self);
 	g_autoptr(GByteArray) req_offset = g_byte_array_new();
 	g_autoptr(GByteArray) req_partition_id = g_byte_array_new();
-	g_autoptr(GPtrArray) chunks = NULL;
+	g_autoptr(FuChunkArray) chunks = NULL;
 
 	/* f34 */
 	f34 = fu_synaptics_rmi_device_get_function(self, 0x34, error);
@@ -369,13 +363,13 @@ fu_synaptics_rmi_v7_device_write_partition(FuSynapticsRmiDevice *self,
 	/* write partition */
 	chunks =
 	    fu_chunk_array_new_from_bytes(bytes,
-					  0x00, /* start addr */
-					  0x00, /* page_sz */
+					  0x00,
 					  (gsize)flash->payload_length * (gsize)flash->block_size);
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_set_steps(progress, chunks->len + 1);
-	for (guint i = 0; i < chunks->len; i++) {
-		FuChunk *chk = g_ptr_array_index(chunks, i);
+	fu_progress_set_steps(progress, fu_chunk_array_length(chunks) + 1);
+	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
+		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
+		g_autoptr(GBytes) chk_blob = fu_chunk_get_bytes(chk);
 		g_autoptr(GByteArray) req_trans_sz = g_byte_array_new();
 		g_autoptr(GByteArray) req_cmd = g_byte_array_new();
 		fu_byte_array_append_uint16(req_trans_sz,
@@ -400,8 +394,7 @@ fu_synaptics_rmi_v7_device_write_partition(FuSynapticsRmiDevice *self,
 		}
 		if (!fu_synaptics_rmi_v7_device_write_blocks(self,
 							     f34->data_base + 0x5,
-							     fu_chunk_get_data(chk),
-							     fu_chunk_get_data_sz(chk),
+							     chk_blob,
 							     error))
 			return FALSE;
 		fu_progress_step_done(progress);

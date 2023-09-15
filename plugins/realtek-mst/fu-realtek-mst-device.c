@@ -641,11 +641,11 @@ flash_iface_write(FuRealtekMstDevice *self,
 		  GError **error)
 {
 	gsize total_size = g_bytes_get_size(data);
-	g_autoptr(GPtrArray) chunks = fu_chunk_array_new_from_bytes(data, address, 0, 256);
+	g_autoptr(FuChunkArray) chunks = fu_chunk_array_new_from_bytes(data, address, 256);
 
 	g_debug("write %#" G_GSIZE_MODIFIER "x bytes at %#08x", total_size, address);
-	for (guint i = 0; i < chunks->len; i++) {
-		FuChunk *chunk = g_ptr_array_index(chunks, i);
+	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
+		g_autoptr(FuChunk) chunk = fu_chunk_array_index(chunks, i);
 		guint32 chunk_address = fu_chunk_get_address(chunk);
 		guint32 chunk_size = fu_chunk_get_data_sz(chunk);
 
@@ -691,7 +691,7 @@ flash_iface_write(FuRealtekMstDevice *self,
 				       address);
 			return FALSE;
 		}
-		fu_progress_set_percentage_full(progress, i + 1, chunks->len);
+		fu_progress_set_percentage_full(progress, i + 1, fu_chunk_array_length(chunks));
 	}
 
 	return TRUE;

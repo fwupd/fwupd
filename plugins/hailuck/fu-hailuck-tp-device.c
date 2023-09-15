@@ -84,7 +84,7 @@ fu_hailuck_tp_device_write_firmware(FuDevice *device,
 	FuDevice *parent = fu_device_get_parent(device);
 	const guint block_size = 1024;
 	g_autoptr(GBytes) fw = NULL;
-	g_autoptr(GPtrArray) chunks = NULL;
+	g_autoptr(FuChunkArray) chunks = NULL;
 	FuHailuckTpDeviceReq req = {
 	    .type = 0xff,
 	    .success = 0xff,
@@ -114,9 +114,9 @@ fu_hailuck_tp_device_write_firmware(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/* write */
-	chunks = fu_chunk_array_new_from_bytes(fw, 0x0, 0x0, block_size);
-	for (guint i = 0; i < chunks->len; i++) {
-		FuChunk *chk = g_ptr_array_index(chunks, i);
+	chunks = fu_chunk_array_new_from_bytes(fw, 0x0, block_size);
+	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
+		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
 		g_autoptr(GByteArray) buf = g_byte_array_new();
 
 		/* write block */
@@ -162,7 +162,7 @@ fu_hailuck_tp_device_write_firmware(FuDevice *device,
 		/* update progress */
 		fu_progress_set_percentage_full(fu_progress_get_child(progress),
 						i + 1,
-						chunks->len);
+						fu_chunk_array_length(chunks));
 	}
 	fu_device_sleep(device, 50);
 	fu_progress_step_done(progress);

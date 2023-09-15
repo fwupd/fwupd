@@ -233,17 +233,17 @@ fu_analogix_device_probe(FuDevice *device, GError **error)
 
 static gboolean
 fu_analogix_device_write_chunks(FuAnalogixDevice *self,
-				GPtrArray *chunks,
+				FuChunkArray *chunks,
 				guint16 req_val,
 				FuProgress *progress,
 				GError **error)
 {
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_set_steps(progress, chunks->len);
-	for (guint i = 0; i < chunks->len; i++) {
+	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
+	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
 		FuAnalogixUpdateStatus status = FU_ANALOGIX_UPDATE_STATUS_INVALID;
-		FuChunk *chk = g_ptr_array_index(chunks, i);
+		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
 		if (!fu_analogix_device_send(self,
 					     ANX_BB_RQT_SEND_UPDATE_DATA,
 					     req_val,
@@ -275,7 +275,7 @@ fu_analogix_device_write_image(FuAnalogixDevice *self,
 	FuAnalogixUpdateStatus status = FU_ANALOGIX_UPDATE_STATUS_INVALID;
 	guint8 buf_init[4] = {0x0};
 	g_autoptr(GBytes) block_bytes = NULL;
-	g_autoptr(GPtrArray) chunks = NULL;
+	g_autoptr(FuChunkArray) chunks = NULL;
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
@@ -304,7 +304,7 @@ fu_analogix_device_write_image(FuAnalogixDevice *self,
 	fu_progress_step_done(progress);
 
 	/* write data */
-	chunks = fu_chunk_array_new_from_bytes(block_bytes, 0x00, 0x00, BILLBOARD_MAX_PACKET_SIZE);
+	chunks = fu_chunk_array_new_from_bytes(block_bytes, 0x00, BILLBOARD_MAX_PACKET_SIZE);
 	if (!fu_analogix_device_write_chunks(self,
 					     chunks,
 					     req_val,

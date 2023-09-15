@@ -210,7 +210,7 @@ fu_wacom_emr_device_write_block(FuWacomEmrDevice *self,
 
 static gboolean
 fu_wacom_emr_device_write_firmware(FuDevice *device,
-				   GPtrArray *chunks,
+				   FuChunkArray *chunks,
 				   FuProgress *progress,
 				   GError **error)
 {
@@ -241,8 +241,8 @@ fu_wacom_emr_device_write_firmware(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/* write */
-	for (guint i = 0; i < chunks->len; i++) {
-		FuChunk *chk = g_ptr_array_index(chunks, i);
+	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
+		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
 		if (fu_wacom_common_block_is_empty(fu_chunk_get_data(chk),
 						   fu_chunk_get_data_sz(chk)))
 			continue;
@@ -255,7 +255,7 @@ fu_wacom_emr_device_write_firmware(FuDevice *device,
 			return FALSE;
 		fu_progress_set_percentage_full(fu_progress_get_child(progress),
 						(gsize)i + 1,
-						(gsize)chunks->len);
+						(gsize)fu_chunk_array_length(chunks));
 	}
 	fu_progress_step_done(progress);
 

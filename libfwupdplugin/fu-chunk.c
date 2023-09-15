@@ -475,35 +475,15 @@ fu_chunk_array_new(const guint8 *data,
 					     data_offset,
 					     data_sz - last_flush));
 	}
-	return chunks;
-}
 
-/**
- * fu_chunk_array_new_from_bytes:
- * @blob: data
- * @addr_start: the hardware address offset, or 0
- * @page_sz: the hardware page size, or 0
- * @packet_sz: the transfer size, or 0
- *
- * Chunks a linear blob of memory into packets, ensuring each packet does not
- * cross a package boundary and is less that a specific transfer size.
- *
- * Returns: (transfer container) (element-type FuChunk): array of packets
- *
- * Since: 1.1.2
- **/
-GPtrArray *
-fu_chunk_array_new_from_bytes(GBytes *blob, guint32 addr_start, guint32 page_sz, guint32 packet_sz)
-{
-	GPtrArray *chunks;
-	gsize sz;
-	const guint8 *data = g_bytes_get_data(blob, &sz);
-
-	chunks = fu_chunk_array_new(data, (guint32)sz, addr_start, page_sz, packet_sz);
-	for (guint i = 0; i < chunks->len; i++) {
-		FuChunk *chk = g_ptr_array_index(chunks, i);
-		chk->bytes = fu_bytes_new_offset(blob, chk->data - data, chk->data_sz, NULL);
+#ifndef SUPPORTED_BUILD
+	/* show the programmer a warning */
+	if (page_sz == 0x0 && chunks->len > 10000) {
+		g_warning("fu_chunk_array_new() generated a lot of chunks (%u), "
+			  "maybe use FuChunkArray instead?",
+			  chunks->len);
 	}
+#endif
 	return chunks;
 }
 

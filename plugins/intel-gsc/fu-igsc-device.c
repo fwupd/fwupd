@@ -577,14 +577,14 @@ fu_igsc_device_no_update(FuIgscDevice *self, GError **error)
 
 static gboolean
 fu_igsc_device_write_chunks(FuIgscDevice *self,
-			    GPtrArray *chunks,
+			    FuChunkArray *chunks,
 			    FuProgress *progress,
 			    GError **error)
 {
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_set_steps(progress, chunks->len);
-	for (guint i = 0; i < chunks->len; i++) {
-		FuChunk *chk = g_ptr_array_index(chunks, i);
+	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
+	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
+		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
 		if (!fu_igsc_device_update_data(self,
 						fu_chunk_get_data(chk),
 						fu_chunk_get_data_sz(chk),
@@ -636,7 +636,7 @@ fu_igsc_device_write_blob(FuIgscDevice *self,
 	guint32 sts5 = 0;
 	gsize payloadsz = fu_mei_device_get_max_msg_length(FU_MEI_DEVICE(self)) -
 			  sizeof(struct gsc_fwu_heci_data_req);
-	g_autoptr(GPtrArray) chunks = NULL;
+	g_autoptr(FuChunkArray) chunks = NULL;
 
 	/* progress */
 	if (payload_type == GSC_FWU_HECI_PAYLOAD_TYPE_GFX_FW) {
@@ -671,7 +671,7 @@ fu_igsc_device_write_blob(FuIgscDevice *self,
 	fu_progress_step_done(progress);
 
 	/* data */
-	chunks = fu_chunk_array_new_from_bytes(fw, 0x0, 0x0, payloadsz);
+	chunks = fu_chunk_array_new_from_bytes(fw, 0x0, payloadsz);
 	if (!fu_igsc_device_write_chunks(self, chunks, fu_progress_get_child(progress), error))
 		return FALSE;
 	fu_progress_step_done(progress);

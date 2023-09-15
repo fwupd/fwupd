@@ -261,7 +261,7 @@ typedef struct {
 	GError *error;
 	GBytes *blob;
 	GArray *digest;
-	GPtrArray *chunks;
+	FuChunkArray *chunks;
 	guint chunk_sent;
 	FuDevice *device;
 	FuProgress *progress;
@@ -278,14 +278,14 @@ fu_mbim_qdu_updater_file_write_ready(MbimDevice *device, GAsyncResult *res, gpoi
 							   MBIM_MESSAGE_TYPE_COMMAND_DONE,
 							   &ctx->error)) {
 		g_debug("operation failed: %s", ctx->error->message);
-		g_ptr_array_unref(ctx->chunks);
+		g_object_unref(ctx->chunks);
 		g_main_loop_quit(ctx->mainloop);
 		return;
 	}
 
 	if (!mbim_message_qdu_file_write_response_parse(response, &ctx->error)) {
 		g_debug("couldn't parse response message: %s", ctx->error->message);
-		g_ptr_array_unref(ctx->chunks);
+		g_object_unref(ctx->chunks);
 		g_main_loop_quit(ctx->mainloop);
 		return;
 	}
@@ -293,9 +293,9 @@ fu_mbim_qdu_updater_file_write_ready(MbimDevice *device, GAsyncResult *res, gpoi
 	ctx->chunk_sent++;
 	fu_progress_set_percentage_full(ctx->progress,
 					(gsize)ctx->chunk_sent,
-					(gsize)ctx->chunks->len);
-	if (ctx->chunk_sent < ctx->chunks->len) {
-		FuChunk *chk = g_ptr_array_index(ctx->chunks, ctx->chunk_sent);
+					(gsize)fu_chunk_array_length(ctx->chunks));
+	if (ctx->chunk_sent < fu_chunk_array_length(ctx->chunks)) {
+		g_autoptr(FuChunk) chk = fu_chunk_array_index(ctx->chunks, ctx->chunk_sent);
 		g_autoptr(MbimMessage) request =
 		    mbim_message_qdu_file_write_set_new(fu_chunk_get_data_sz(chk),
 							(const guint8 *)fu_chunk_get_data(chk),
@@ -309,7 +309,7 @@ fu_mbim_qdu_updater_file_write_ready(MbimDevice *device, GAsyncResult *res, gpoi
 		return;
 	}
 
-	g_ptr_array_unref(ctx->chunks);
+	g_object_unref(ctx->chunks);
 	g_main_loop_quit(ctx->mainloop);
 }
 
@@ -318,7 +318,7 @@ fu_mbim_qdu_updater_file_open_ready(MbimDevice *device, GAsyncResult *res, gpoin
 {
 	WriteContext *ctx = user_data;
 	guint32 out_max_transfer_size;
-	FuChunk *chk = NULL;
+	g_autoptr(FuChunk) chk = NULL;
 	g_autoptr(MbimMessage) request = NULL;
 	g_autoptr(MbimMessage) response = NULL;
 
@@ -340,11 +340,8 @@ fu_mbim_qdu_updater_file_open_ready(MbimDevice *device, GAsyncResult *res, gpoin
 		return;
 	}
 
-	ctx->chunks = fu_chunk_array_new_from_bytes(ctx->blob,
-						    0x00, /* start addr */
-						    0x00, /* page_sz */
-						    out_max_transfer_size);
-	chk = g_ptr_array_index(ctx->chunks, 0);
+	ctx->chunks = fu_chunk_array_new_from_bytes(ctx->blob, 0x00, out_max_transfer_size);
+	chk = fu_chunk_array_index(ctx->chunks, 0);
 	request = mbim_message_qdu_file_write_set_new(fu_chunk_get_data_sz(chk),
 						      (const guint8 *)fu_chunk_get_data(chk),
 						      NULL);
@@ -448,7 +445,7 @@ fu_mbim_qdu_updater_write(FuMbimQduUpdater *self,
 {
 	g_autoptr(GMainLoop) mainloop = g_main_loop_new(NULL, FALSE);
 	g_autoptr(GArray) digest = fu_mbim_qdu_updater_get_checksum(blob);
-	g_autoptr(GPtrArray) chunks = NULL;
+	g_autoptr(FuChunkArray) chunks = NULL;
 	WriteContext ctx = {
 	    .mainloop = mainloop,
 	    .mbim_device = self->mbim_device,

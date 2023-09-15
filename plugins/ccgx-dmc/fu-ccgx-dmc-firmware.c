@@ -385,13 +385,14 @@ fu_ccgx_dmc_firmware_write(FuFirmware *firmware, GError **error)
 	for (guint i = 0; i < images->len; i++) {
 		FuFirmware *img = g_ptr_array_index(images, i);
 		g_autoptr(GByteArray) st_info = fu_struct_ccgx_dmc_fwct_segmentation_info_new();
-		g_autoptr(GPtrArray) chunks = NULL;
+		g_autoptr(FuChunkArray) chunks = NULL;
 		g_autoptr(GBytes) img_bytes = fu_firmware_get_bytes(img, error);
 		if (img_bytes == NULL)
 			return NULL;
-		chunks = fu_chunk_array_new_from_bytes(img_bytes, 0x0, 0x0, 64);
-		fu_struct_ccgx_dmc_fwct_segmentation_info_set_num_rows(st_info,
-								       MAX(chunks->len, 1));
+		chunks = fu_chunk_array_new_from_bytes(img_bytes, 0x0, 64);
+		fu_struct_ccgx_dmc_fwct_segmentation_info_set_num_rows(
+		    st_info,
+		    MAX(fu_chunk_array_length(chunks), 1));
 		g_byte_array_append(buf, st_info->data, st_info->len);
 	}
 
@@ -409,13 +410,13 @@ fu_ccgx_dmc_firmware_write(FuFirmware *firmware, GError **error)
 		g_autoptr(GChecksum) csum = g_checksum_new(G_CHECKSUM_SHA256);
 		g_autoptr(GBytes) img_bytes = NULL;
 		g_autoptr(GBytes) img_padded = NULL;
-		g_autoptr(GPtrArray) chunks = NULL;
+		g_autoptr(FuChunkArray) chunks = NULL;
 
 		img_bytes = fu_firmware_get_bytes(img, error);
 		if (img_bytes == NULL)
 			return NULL;
-		chunks = fu_chunk_array_new_from_bytes(img_bytes, 0x0, 0x0, 64);
-		img_padded = fu_bytes_pad(img_bytes, MAX(chunks->len, 1) * 64);
+		chunks = fu_chunk_array_new_from_bytes(img_bytes, 0x0, 64);
+		img_padded = fu_bytes_pad(img_bytes, MAX(fu_chunk_array_length(chunks), 1) * 64);
 		fu_byte_array_append_bytes(buf, img_padded);
 		g_checksum_update(csum,
 				  (const guchar *)g_bytes_get_data(img_padded, NULL),

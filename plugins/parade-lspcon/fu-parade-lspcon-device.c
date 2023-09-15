@@ -411,7 +411,7 @@ fu_parade_lspcon_flash_write(FuParadeLspconDevice *self,
 	FuI2cDevice *i2c_device = FU_I2C_DEVICE(self);
 	const guint8 unlock_writes[] = {0xaa, 0x55, 0x50, 0x41, 0x52, 0x44};
 	gsize data_len = g_bytes_get_size(data);
-	g_autoptr(GPtrArray) chunks = NULL;
+	g_autoptr(FuChunkArray) chunks = NULL;
 
 	/* address must be 256-byte aligned */
 	g_return_val_if_fail((base_address & 0xFF) == 0, FALSE);
@@ -435,9 +435,9 @@ fu_parade_lspcon_flash_write(FuParadeLspconDevice *self,
 	if (!fu_parade_lspcon_write_register(self, REG_ADDR_CLT2SPI, 0, error))
 		return FALSE;
 
-	chunks = fu_chunk_array_new_from_bytes(data, base_address, 0, 256);
-	for (gsize i = 0; i < chunks->len; i++) {
-		FuChunk *chunk = g_ptr_array_index(chunks, i);
+	chunks = fu_chunk_array_new_from_bytes(data, base_address, 256);
+	for (gsize i = 0; i < fu_chunk_array_length(chunks); i++) {
+		g_autoptr(FuChunk) chunk = fu_chunk_array_index(chunks, i);
 		guint32 address = fu_chunk_get_address(chunk);
 		guint32 chunk_size = fu_chunk_get_data_sz(chunk);
 		guint8 write_data[257] = {0x0};

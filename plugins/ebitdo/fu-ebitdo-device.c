@@ -465,7 +465,7 @@ fu_ebitdo_device_write_firmware(FuDevice *device,
 	g_autoptr(GBytes) fw_hdr = NULL;
 	g_autoptr(GBytes) fw_payload = NULL;
 	g_autoptr(GError) error_local = NULL;
-	g_autoptr(GPtrArray) chunks = NULL;
+	g_autoptr(FuChunkArray) chunks = NULL;
 	const guint32 app_key_index[16] = {0x186976e5,
 					   0xcac67acd,
 					   0x38f27fee,
@@ -525,9 +525,9 @@ fu_ebitdo_device_write_firmware(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/* flash the firmware in 32 byte blocks */
-	chunks = fu_chunk_array_new_from_bytes(fw_payload, 0x0, 0x0, 32);
-	for (guint i = 0; i < chunks->len; i++) {
-		FuChunk *chk = g_ptr_array_index(chunks, i);
+	chunks = fu_chunk_array_new_from_bytes(fw_payload, 0x0, 32);
+	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
+		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
 		g_debug("writing %u bytes to 0x%04x of 0x%04x",
 			fu_chunk_get_data_sz(chk),
 			fu_chunk_get_address(chk),
@@ -552,7 +552,7 @@ fu_ebitdo_device_write_firmware(FuDevice *device,
 		}
 		fu_progress_set_percentage_full(fu_progress_get_child(progress),
 						i + 1,
-						chunks->len);
+						fu_chunk_array_length(chunks));
 	}
 	fu_progress_step_done(progress);
 

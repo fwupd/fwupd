@@ -11,6 +11,7 @@
 #include "fu-byte-array.h"
 #include "fu-bytes.h"
 #include "fu-cfi-device.h"
+#include "fu-chunk-array.h"
 #include "fu-dump.h"
 #include "fu-mem.h"
 #include "fu-quirks.h"
@@ -768,13 +769,16 @@ fu_cfi_device_write_page(FuCfiDevice *self, FuChunk *page, FuProgress *progress,
 }
 
 static gboolean
-fu_cfi_device_write_pages(FuCfiDevice *self, GPtrArray *pages, FuProgress *progress, GError **error)
+fu_cfi_device_write_pages(FuCfiDevice *self,
+			  FuChunkArray *pages,
+			  FuProgress *progress,
+			  GError **error)
 {
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_set_steps(progress, pages->len);
-	for (guint i = 0; i < pages->len; i++) {
-		FuChunk *page = g_ptr_array_index(pages, i);
+	fu_progress_set_steps(progress, fu_chunk_array_length(pages));
+	for (guint i = 0; i < fu_chunk_array_length(pages); i++) {
+		g_autoptr(FuChunk) page = fu_chunk_array_index(pages, i);
 		if (!fu_cfi_device_write_page(self, page, fu_progress_get_child(progress), error))
 			return FALSE;
 		fu_progress_step_done(progress);
@@ -865,7 +869,7 @@ fu_cfi_device_write_firmware(FuDevice *device,
 	FuCfiDevice *self = FU_CFI_DEVICE(device);
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GBytes) fw_verify = NULL;
-	g_autoptr(GPtrArray) pages = NULL;
+	g_autoptr(FuChunkArray) pages = NULL;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
 	/* open programmer */
@@ -896,7 +900,7 @@ fu_cfi_device_write_firmware(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/* write each block */
-	pages = fu_chunk_array_new_from_bytes(fw, 0x0, 0x0, fu_cfi_device_get_page_size(self));
+	pages = fu_chunk_array_new_from_bytes(fw, 0x0, fu_cfi_device_get_page_size(self));
 	if (!fu_cfi_device_write_pages(self, pages, fu_progress_get_child(progress), error)) {
 		g_prefix_error(error, "failed to write pages: ");
 		return FALSE;

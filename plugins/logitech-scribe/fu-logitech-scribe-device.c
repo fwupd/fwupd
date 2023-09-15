@@ -365,13 +365,11 @@ fu_logitech_scribe_device_write_fw(FuLogitechScribeDevice *self,
 				   FuProgress *progress,
 				   GError **error)
 {
-	g_autoptr(GPtrArray) chunks = NULL;
-
-	chunks = fu_chunk_array_new_from_bytes(fw, 0x0, 0x0, PAYLOAD_SIZE);
+	g_autoptr(FuChunkArray) chunks = fu_chunk_array_new_from_bytes(fw, 0x0, PAYLOAD_SIZE);
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_set_steps(progress, chunks->len);
-	for (guint i = 0; i < chunks->len; i++) {
-		FuChunk *chk = g_ptr_array_index(chunks, i);
+	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
+	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
+		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
 		g_autoptr(GByteArray) data_pkt = g_byte_array_new();
 		g_byte_array_append(data_pkt, fu_chunk_get_data(chk), fu_chunk_get_data_sz(chk));
 		if (!fu_logitech_scribe_device_send_upd_cmd(self,

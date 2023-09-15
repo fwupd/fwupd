@@ -362,7 +362,7 @@ fu_intel_usb4_device_nvm_write(FuDevice *device,
 			       GError **error)
 {
 	guint8 metadata[4];
-	g_autoptr(GPtrArray) chunks = NULL;
+	g_autoptr(FuChunkArray) chunks = NULL;
 
 	if (nvm_addr % 4 != 0) {
 		g_set_error(error,
@@ -392,12 +392,12 @@ fu_intel_usb4_device_nvm_write(FuDevice *device,
 	}
 
 	/* write data in 64 byte blocks */
-	chunks = fu_chunk_array_new_from_bytes(blob, 0x0, 0x0, 64);
+	chunks = fu_chunk_array_new_from_bytes(blob, 0x0, 64);
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_set_steps(progress, chunks->len);
+	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_WRITE);
-	for (guint i = 0; i < chunks->len; i++) {
-		FuChunk *chk = g_ptr_array_index(chunks, i);
+	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
+		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
 
 		/* write data to mbox data regs */
 		if (!fu_intel_usb4_device_mbox_data_write(device,

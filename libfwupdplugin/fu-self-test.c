@@ -1689,6 +1689,45 @@ fu_backend_func(void)
 }
 
 static void
+fu_chunk_array_func(void)
+{
+	g_autoptr(FuChunk) chk1 = NULL;
+	g_autoptr(FuChunk) chk2 = NULL;
+	g_autoptr(FuChunk) chk3 = NULL;
+	g_autoptr(FuChunk) chk4 = NULL;
+	g_autoptr(GBytes) fw = g_bytes_new_static("hello world", 11);
+	g_autoptr(FuChunkArray) chunks = fu_chunk_array_new_from_bytes(fw, 100, 5);
+
+	g_assert_cmpint(fu_chunk_array_length(chunks), ==, 3);
+
+	chk1 = fu_chunk_array_index(chunks, 0);
+	g_assert_nonnull(chk1);
+	g_assert_cmpint(fu_chunk_get_idx(chk1), ==, 0x0);
+	g_assert_cmpint(fu_chunk_get_address(chk1), ==, 100);
+	g_assert_cmpint(fu_chunk_get_data_sz(chk1), ==, 0x5);
+	g_assert_cmpint(strncmp((const gchar *)fu_chunk_get_data(chk1), "hello", 5), ==, 0);
+
+	chk2 = fu_chunk_array_index(chunks, 1);
+	g_assert_nonnull(chk2);
+	g_assert_cmpint(fu_chunk_get_idx(chk2), ==, 0x1);
+	g_assert_cmpint(fu_chunk_get_address(chk2), ==, 105);
+	g_assert_cmpint(fu_chunk_get_data_sz(chk2), ==, 0x5);
+	g_assert_cmpint(strncmp((const gchar *)fu_chunk_get_data(chk2), " world", 5), ==, 0);
+
+	chk3 = fu_chunk_array_index(chunks, 2);
+	g_assert_nonnull(chk3);
+	g_assert_cmpint(fu_chunk_get_idx(chk3), ==, 0x2);
+	g_assert_cmpint(fu_chunk_get_address(chk3), ==, 110);
+	g_assert_cmpint(fu_chunk_get_data_sz(chk3), ==, 0x1);
+	g_assert_cmpint(strncmp((const gchar *)fu_chunk_get_data(chk3), "d", 1), ==, 0);
+
+	chk4 = fu_chunk_array_index(chunks, 3);
+	g_assert_null(chk4);
+	chk4 = fu_chunk_array_index(chunks, 1024);
+	g_assert_null(chk4);
+}
+
+static void
 fu_chunk_func(void)
 {
 	g_autofree gchar *chunked1_str = NULL;
@@ -4382,6 +4421,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/plugin{quirks-device}", fu_plugin_quirks_device_func);
 	g_test_add_func("/fwupd/backend", fu_backend_func);
 	g_test_add_func("/fwupd/chunk", fu_chunk_func);
+	g_test_add_func("/fwupd/chunks", fu_chunk_array_func);
 	g_test_add_func("/fwupd/common{align-up}", fu_common_align_up_func);
 	g_test_add_func("/fwupd/volume{gpt-type}", fu_volume_gpt_type_func);
 	g_test_add_func("/fwupd/common{byte-array}", fu_common_byte_array_func);

@@ -322,31 +322,31 @@ fu_pxi_wireless_device_write_chunk(FuDevice *device, FuChunk *chk, GError **erro
 	FuPxiWirelessDevice *self = FU_PXI_WIRELESS_DEVICE(device);
 	guint16 checksum;
 	guint32 prn = 0;
-	g_autoptr(GPtrArray) chunks = NULL;
+	g_autoptr(FuChunkArray) chunks = NULL;
+	g_autoptr(GBytes) chk_bytes = fu_chunk_get_bytes(chk);
 
 	/* send create fw object command */
 	if (!fu_pxi_wireless_device_fw_object_create(device, chk, error))
 		return FALSE;
 
 	/* write payload */
-	chunks = fu_chunk_array_new(fu_chunk_get_data(chk),
-				    fu_chunk_get_data_sz(chk),
-				    fu_chunk_get_address(chk),
-				    0x0,
-				    self->fwstate.mtu_size);
+	chunks = fu_chunk_array_new_from_bytes(chk_bytes,
+					       fu_chunk_get_address(chk),
+					       self->fwstate.mtu_size);
 
 	/* calculate checksum of chunk */
 	checksum = fu_sum16(fu_chunk_get_data(chk), fu_chunk_get_data_sz(chk));
 	self->fwstate.checksum += checksum;
 
-	for (guint i = 0; i < chunks->len; i++) {
-		FuChunk *chk2 = g_ptr_array_index(chunks, i);
+	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
+		g_autoptr(FuChunk) chk2 = fu_chunk_array_index(chunks, i);
 		if (!fu_pxi_wireless_device_write_payload(device, chk2, error))
 			return FALSE;
 		prn++;
 		/* check crc at fw when PRN over threshold write or
 		 * offset reach max object sz or write offset reach fw length */
-		if (prn >= self->fwstate.prn_threshold || i == (chunks->len - 1)) {
+		if (prn >= self->fwstate.prn_threshold ||
+		    i == (fu_chunk_array_length(chunks) - 1)) {
 			if (!fu_pxi_wireless_device_check_crc(device,
 							      self->fwstate.checksum,
 							      error))
@@ -574,7 +574,7 @@ fu_pxi_wireless_device_write_firmware(FuDevice *device,
 {
 	FuPxiWirelessDevice *self = FU_PXI_WIRELESS_DEVICE(device);
 	g_autoptr(GBytes) fw = NULL;
-	g_autoptr(GPtrArray) chunks = NULL;
+	g_autoptr(FuChunkArray) chunks = NULL;
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
@@ -595,19 +595,19 @@ fu_pxi_wireless_device_write_firmware(FuDevice *device,
 		return FALSE;
 	fu_progress_step_done(progress);
 
-	chunks = fu_chunk_array_new_from_bytes(fw, 0x0, 0x0, FU_PXI_DEVICE_OBJECT_SIZE_MAX);
+	chunks = fu_chunk_array_new_from_bytes(fw, 0x0, FU_PXI_DEVICE_OBJECT_SIZE_MAX);
 	/* prepare write fw into device */
 	self->fwstate.offset = 0;
 	self->fwstate.checksum = 0;
 
 	/* write fw into device */
-	for (guint i = self->fwstate.offset; i < chunks->len; i++) {
-		FuChunk *chk = g_ptr_array_index(chunks, i);
+	for (guint i = self->fwstate.offset; i < fu_chunk_array_length(chunks); i++) {
+		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
 		if (!fu_pxi_wireless_device_write_chunk(device, chk, error))
 			return FALSE;
 		fu_progress_set_percentage_full(fu_progress_get_child(progress),
 						(gsize)i + self->fwstate.offset + 1,
-						(gsize)chunks->len);
+						(gsize)fu_chunk_array_length(chunks));
 	}
 	fu_progress_step_done(progress);
 

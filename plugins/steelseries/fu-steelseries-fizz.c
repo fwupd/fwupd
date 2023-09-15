@@ -224,23 +224,22 @@ fu_steelseries_fizz_write_fs(FuDevice *device,
 			     gboolean tunnel,
 			     guint8 fs,
 			     guint8 id,
-			     const guint8 *buf,
-			     gsize bufsz,
+			     GBytes *fw,
 			     FuProgress *progress,
 			     GError **error)
 {
 	guint8 data[STEELSERIES_BUFFER_CONTROL_SIZE] = {0};
 	guint8 cmd = STEELSERIES_FIZZ_WRITE_ACCESS_FILE_COMMAND;
-	g_autoptr(GPtrArray) chunks = NULL;
+	g_autoptr(FuChunkArray) chunks = NULL;
 
 	if (tunnel)
 		cmd |= STEELSERIES_FIZZ_COMMAND_TUNNEL_BIT;
 
-	chunks = fu_chunk_array_new(buf, bufsz, 0x0, 0x0, STEELSERIES_BUFFER_TRANSFER_SIZE);
+	chunks = fu_chunk_array_new_from_bytes(fw, 0x0, STEELSERIES_BUFFER_TRANSFER_SIZE);
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_set_steps(progress, chunks->len);
-	for (guint i = 0; i < chunks->len; i++) {
-		FuChunk *chk = g_ptr_array_index(chunks, i);
+	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
+	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
+		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
 		const guint16 size = fu_chunk_get_data_sz(chk);
 		const guint32 offset = fu_chunk_get_address(chk);
 
@@ -767,8 +766,7 @@ fu_steelseries_fizz_write_firmware_fs(FuDevice *device,
 					  tunnel,
 					  fs,
 					  id,
-					  buf,
-					  bufsz,
+					  blob,
 					  fu_progress_get_child(progress),
 					  error)) {
 		g_prefix_error(error, "failed to write FS 0x%02x ID 0x%02x: ", fs, id);

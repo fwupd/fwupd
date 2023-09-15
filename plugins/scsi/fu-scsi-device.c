@@ -206,7 +206,7 @@ fu_scsi_device_write_firmware(FuDevice *device,
 	guint32 chunksz = 0x1000;
 	guint32 offset = 0;
 	g_autoptr(GBytes) fw = NULL;
-	g_autoptr(GPtrArray) chunks = NULL;
+	g_autoptr(FuChunkArray) chunks = NULL;
 
 	/* get default image */
 	fw = fu_firmware_get_bytes(firmware, error);
@@ -214,14 +214,14 @@ fu_scsi_device_write_firmware(FuDevice *device,
 		return FALSE;
 
 	/* prepare chunks */
-	chunks = fu_chunk_array_new_from_bytes(fw, 0x00, 0x00, chunksz);
+	chunks = fu_chunk_array_new_from_bytes(fw, 0x00, chunksz);
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_WRITE);
-	fu_progress_set_steps(progress, chunks->len);
+	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
 
 	/* write each block */
-	for (guint i = 0; i < chunks->len; i++) {
-		FuChunk *chk = g_ptr_array_index(chunks, i);
+	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
+		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
 		guint8 cdb[WRITE_BUF_CMDLEN] = {WRITE_BUFFER_CMD,
 						BUFFER_FFU_MODE,
 						0x0 /* buf_id */};

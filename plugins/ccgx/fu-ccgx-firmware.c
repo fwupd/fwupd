@@ -421,7 +421,7 @@ fu_ccgx_firmware_write(FuFirmware *firmware, GError **error)
 	g_autoptr(GByteArray) mdbuf = g_byte_array_new();
 	g_autoptr(GByteArray) st_metadata = fu_struct_ccgx_metadata_hdr_new();
 	g_autoptr(GBytes) fw = NULL;
-	g_autoptr(GPtrArray) chunks = NULL;
+	g_autoptr(FuChunkArray) chunks = NULL;
 	g_autoptr(GString) str = g_string_new(NULL);
 
 	/* header record */
@@ -436,9 +436,9 @@ fu_ccgx_firmware_write(FuFirmware *firmware, GError **error)
 	fw = fu_firmware_get_bytes_with_patches(firmware, error);
 	if (fw == NULL)
 		return NULL;
-	chunks = fu_chunk_array_new_from_bytes(fw, 0x0, 0x0, 0x100);
-	for (guint i = 0; i < chunks->len; i++) {
-		FuChunk *chk = g_ptr_array_index(chunks, i);
+	chunks = fu_chunk_array_new_from_bytes(fw, 0x0, 0x100);
+	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
+		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
 		fu_ccgx_firmware_write_record(str,
 					      0x0,
 					      i,

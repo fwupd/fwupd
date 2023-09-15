@@ -95,16 +95,13 @@ fu_wac_module_bluetooth_id9_write_blocks(FuWacModule *self,
 					 FuProgress *progress,
 					 GError **error)
 {
-	g_autoptr(GPtrArray) chunks = fu_chunk_array_new_from_bytes(data, 0, 0, block_len);
+	g_autoptr(FuChunkArray) chunks = fu_chunk_array_new_from_bytes(data, 0, block_len);
 
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_set_steps(progress, chunks->len);
-	for (guint i = 0; i < chunks->len; i++) {
-		if (!fu_wac_module_bluetooth_id9_write_block(self,
-							     phase,
-							     g_ptr_array_index(chunks, i),
-							     progress,
-							     error))
+	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
+	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
+		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
+		if (!fu_wac_module_bluetooth_id9_write_block(self, phase, chk, progress, error))
 			return FALSE;
 
 		fu_progress_step_done(progress);

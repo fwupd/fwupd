@@ -798,15 +798,15 @@ fu_genesys_gl32xx_device_write_block(FuGenesysGl32xxDevice *self, FuChunk *chunk
 
 static gboolean
 fu_genesys_gl32xx_device_write_blocks(FuGenesysGl32xxDevice *self,
-				      GPtrArray *chunks,
+				      FuChunkArray *chunks,
 				      FuProgress *progress,
 				      GError **error)
 {
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_set_steps(progress, chunks->len);
-	for (guint i = 0; i < chunks->len; i++) {
-		FuChunk *chk = g_ptr_array_index(chunks, i);
+	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
+	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
+		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
 		if (!fu_genesys_gl32xx_device_write_block(self, chk, error)) {
 			g_prefix_error(error, "failed on block 0x%x: ", i);
 			return FALSE;
@@ -828,7 +828,7 @@ fu_genesys_gl32xx_device_write_firmware(FuDevice *device,
 	FuGenesysGl32xxDevice *self = FU_GENESYS_GL32XX_DEVICE(device);
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GBytes) fw_read = NULL;
-	g_autoptr(GPtrArray) chunks = NULL;
+	g_autoptr(FuChunkArray) chunks = NULL;
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
@@ -848,10 +848,7 @@ fu_genesys_gl32xx_device_write_firmware(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/* write each block */
-	chunks = fu_chunk_array_new_from_bytes(fw,
-					       FU_GENESYS_GL32XX_FW_START_ADDR,
-					       0x00, /* page_sz */
-					       self->packetsz /* block_size */);
+	chunks = fu_chunk_array_new_from_bytes(fw, FU_GENESYS_GL32XX_FW_START_ADDR, self->packetsz);
 	if (!fu_genesys_gl32xx_device_write_blocks(self,
 						   chunks,
 						   fu_progress_get_child(progress),

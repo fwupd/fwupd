@@ -175,7 +175,7 @@ fu_wacom_device_write_firmware(FuDevice *device,
 	FuWacomDevicePrivate *priv = GET_PRIVATE(self);
 	FuWacomDeviceClass *klass = FU_WACOM_DEVICE_GET_CLASS(device);
 	g_autoptr(GBytes) fw = NULL;
-	g_autoptr(GPtrArray) chunks = NULL;
+	g_autoptr(FuChunkArray) chunks = NULL;
 
 	/* use the correct image from the firmware */
 	g_debug("using element at addr 0x%0x", (guint)fu_firmware_get_addr(firmware));
@@ -208,10 +208,7 @@ fu_wacom_device_write_firmware(FuDevice *device,
 		return FALSE;
 
 	/* flash chunks */
-	chunks = fu_chunk_array_new_from_bytes(fw,
-					       priv->flash_base_addr,
-					       0x00, /* page_sz */
-					       priv->flash_block_size);
+	chunks = fu_chunk_array_new_from_bytes(fw, priv->flash_base_addr, priv->flash_block_size);
 	return klass->write_firmware(device, chunks, progress, error);
 }
 

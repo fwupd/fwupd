@@ -517,7 +517,7 @@ fu_wac_device_write_firmware(FuDevice *device,
 	for (guint i = 0; i < self->flash_descriptors->len; i++) {
 		FuWacFlashDescriptor *fd = g_ptr_array_index(self->flash_descriptors, i);
 		GBytes *blob_block;
-		g_autoptr(GPtrArray) chunks = NULL;
+		g_autoptr(FuChunkArray) chunks = NULL;
 
 		/* if page is protected */
 		if (fu_wav_device_flash_descriptor_is_wp(fd))
@@ -542,12 +542,10 @@ fu_wac_device_write_firmware(FuDevice *device,
 			return FALSE;
 
 		/* write block in chunks */
-		chunks = fu_chunk_array_new_from_bytes(blob_block,
-						       fd->start_addr,
-						       0, /* page_sz */
-						       self->write_block_sz);
-		for (guint j = 0; j < chunks->len; j++) {
-			FuChunk *chk = g_ptr_array_index(chunks, j);
+		chunks =
+		    fu_chunk_array_new_from_bytes(blob_block, fd->start_addr, self->write_block_sz);
+		for (guint j = 0; j < fu_chunk_array_length(chunks); j++) {
+			g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
 			g_autoptr(GBytes) blob_chunk = fu_chunk_get_bytes(chk);
 			if (!fu_wac_device_write_block(self,
 						       fu_chunk_get_address(chk),

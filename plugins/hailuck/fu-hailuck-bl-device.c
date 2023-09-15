@@ -207,10 +207,10 @@ fu_hailuck_bl_device_write_firmware(FuDevice *device,
 				    GError **error)
 {
 	FuHailuckBlDevice *self = FU_HAILUCK_BL_DEVICE(device);
-	FuChunk *chk0;
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GBytes) fw_new = NULL;
-	g_autoptr(GPtrArray) chunks = NULL;
+	g_autoptr(FuChunk) chk0 = NULL;
+	g_autoptr(FuChunkArray) chunks = NULL;
 	g_autofree guint8 *chk0_data = NULL;
 
 	/* progress */
@@ -236,10 +236,10 @@ fu_hailuck_bl_device_write_firmware(FuDevice *device,
 		return FALSE;
 
 	/* build packets */
-	chunks = fu_chunk_array_new_from_bytes(fw, 0x0, 0x00, 2048);
+	chunks = fu_chunk_array_new_from_bytes(fw, 0x0, 2048);
 
 	/* intentionally corrupt first chunk so that CRC fails */
-	chk0 = g_ptr_array_index(chunks, 0);
+	chk0 = fu_chunk_array_index(chunks, 0);
 	chk0_data = fu_memdup_safe(fu_chunk_get_data(chk0), fu_chunk_get_data_sz(chk0), error);
 	if (chk0_data == NULL)
 		return FALSE;
@@ -248,8 +248,8 @@ fu_hailuck_bl_device_write_firmware(FuDevice *device,
 		return FALSE;
 
 	/* send the rest of the chunks */
-	for (guint i = 1; i < chunks->len; i++) {
-		FuChunk *chk = g_ptr_array_index(chunks, i);
+	for (guint i = 1; i < fu_chunk_array_length(chunks); i++) {
+		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
 		if (!fu_hailuck_bl_device_write_block(self,
 						      fu_chunk_get_data(chk),
 						      fu_chunk_get_data_sz(chk),
@@ -257,7 +257,7 @@ fu_hailuck_bl_device_write_firmware(FuDevice *device,
 			return FALSE;
 		fu_progress_set_percentage_full(fu_progress_get_child(progress),
 						i + 1,
-						chunks->len);
+						fu_chunk_array_length(chunks));
 	}
 	fu_progress_step_done(progress);
 

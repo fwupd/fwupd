@@ -177,12 +177,12 @@ fu_uf2_firmware_parse(FuFirmware *firmware,
 	FuUf2Firmware *self = FU_UF2_FIRMWARE(firmware);
 	g_autoptr(GByteArray) tmp = g_byte_array_new();
 	g_autoptr(GBytes) blob = NULL;
-	g_autoptr(GPtrArray) chunks = NULL;
+	g_autoptr(FuChunkArray) chunks = NULL;
 
 	/* read in fixed sized chunks */
-	chunks = fu_chunk_array_new_from_bytes(fw, 0x0, 0x0, 512);
-	for (guint i = 0; i < chunks->len; i++) {
-		FuChunk *chk = g_ptr_array_index(chunks, i);
+	chunks = fu_chunk_array_new_from_bytes(fw, 0x0, 512);
+	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
+		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
 		if (!fu_uf2_firmware_parse_chunk(self, chk, tmp, error))
 			return FALSE;
 	}
@@ -227,7 +227,7 @@ fu_uf2_firmware_write(FuFirmware *firmware, GError **error)
 	FuUf2Firmware *self = FU_UF2_FIRMWARE(firmware);
 	g_autoptr(GByteArray) buf = g_byte_array_new();
 	g_autoptr(GBytes) fw = NULL;
-	g_autoptr(GPtrArray) chunks = NULL;
+	g_autoptr(FuChunkArray) chunks = NULL;
 
 	/* data first */
 	fw = fu_firmware_get_bytes_with_patches(firmware, error);
@@ -235,11 +235,11 @@ fu_uf2_firmware_write(FuFirmware *firmware, GError **error)
 		return NULL;
 
 	/* write in chunks */
-	chunks = fu_chunk_array_new_from_bytes(fw, fu_firmware_get_addr(firmware), 0x0, 256);
-	for (guint i = 0; i < chunks->len; i++) {
-		FuChunk *chk = g_ptr_array_index(chunks, i);
+	chunks = fu_chunk_array_new_from_bytes(fw, fu_firmware_get_addr(firmware), 256);
+	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
+		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
 		g_autoptr(GByteArray) tmp = NULL;
-		tmp = fu_uf2_firmware_write_chunk(self, chk, chunks->len, error);
+		tmp = fu_uf2_firmware_write_chunk(self, chk, fu_chunk_array_length(chunks), error);
 		if (tmp == NULL)
 			return NULL;
 		g_byte_array_append(buf, tmp->data, tmp->len);

@@ -335,7 +335,7 @@ fu_superio_it55_device_write_attempt(FuDevice *device,
 	const guint8 *fw_data = NULL;
 	g_autoptr(GBytes) erased_fw = NULL;
 	g_autoptr(GBytes) written_fw = NULL;
-	g_autoptr(GPtrArray) blocks = NULL;
+	g_autoptr(FuChunkArray) blocks = NULL;
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
@@ -364,9 +364,9 @@ fu_superio_it55_device_write_attempt(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/* write everything but the first kilobyte */
-	blocks = fu_chunk_array_new_from_bytes(firmware, 0x00, 0x00, BLOCK_SIZE);
-	for (guint i = 0; i < blocks->len; ++i) {
-		FuChunk *block = g_ptr_array_index(blocks, i);
+	blocks = fu_chunk_array_new_from_bytes(firmware, 0x00, BLOCK_SIZE);
+	for (guint i = 0; i < fu_chunk_array_length(blocks); ++i) {
+		g_autoptr(FuChunk) block = fu_chunk_array_index(blocks, i);
 		gboolean first = (i == 0);
 		guint32 offset = 0;
 		guint32 bytes_left = fu_chunk_get_data_sz(block);
@@ -402,7 +402,7 @@ fu_superio_it55_device_write_attempt(FuDevice *device,
 		}
 		fu_progress_set_percentage_full(fu_progress_get_child(progress),
 						(gsize)i + 1,
-						(gsize)blocks->len);
+						(gsize)fu_chunk_array_length(blocks));
 	}
 	fu_progress_step_done(progress);
 

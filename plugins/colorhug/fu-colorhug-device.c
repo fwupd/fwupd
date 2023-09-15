@@ -410,15 +410,15 @@ ch_colorhug_device_calculate_checksum(const guint8 *data, guint32 len)
 
 static gboolean
 fu_colorhug_device_write_blocks(FuColorhugDevice *self,
-				GPtrArray *chunks,
+				FuChunkArray *chunks,
 				FuProgress *progress,
 				GError **error)
 {
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_set_steps(progress, chunks->len);
-	for (guint i = 0; i < chunks->len; i++) {
-		FuChunk *chk = g_ptr_array_index(chunks, i);
+	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
+	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
+		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
 		guint8 buf[CH_FLASH_TRANSFER_BLOCK_SIZE + 4];
 		g_autoptr(GError) error_local = NULL;
 
@@ -461,15 +461,15 @@ fu_colorhug_device_write_blocks(FuColorhugDevice *self,
 
 static gboolean
 fu_colorhug_device_verify_blocks(FuColorhugDevice *self,
-				 GPtrArray *chunks,
+				 FuChunkArray *chunks,
 				 FuProgress *progress,
 				 GError **error)
 {
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_set_steps(progress, chunks->len);
-	for (guint i = 0; i < chunks->len; i++) {
-		FuChunk *chk = g_ptr_array_index(chunks, i);
+	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
+	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
+		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
 		guint8 buf[3];
 		guint8 buf_out[CH_FLASH_TRANSFER_BLOCK_SIZE + 1];
 		g_autoptr(GError) error_local = NULL;
@@ -522,7 +522,7 @@ fu_colorhug_device_write_firmware(FuDevice *device,
 {
 	FuColorhugDevice *self = FU_COLORHUG_DEVICE(device);
 	g_autoptr(GBytes) fw = NULL;
-	g_autoptr(GPtrArray) chunks = NULL;
+	g_autoptr(FuChunkArray) chunks = NULL;
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
@@ -547,10 +547,7 @@ fu_colorhug_device_write_firmware(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/* write each block */
-	chunks = fu_chunk_array_new_from_bytes(fw,
-					       self->start_addr,
-					       0x00, /* page_sz */
-					       CH_FLASH_TRANSFER_BLOCK_SIZE);
+	chunks = fu_chunk_array_new_from_bytes(fw, self->start_addr, CH_FLASH_TRANSFER_BLOCK_SIZE);
 	if (!fu_colorhug_device_write_blocks(self, chunks, fu_progress_get_child(progress), error))
 		return FALSE;
 	fu_progress_step_done(progress);

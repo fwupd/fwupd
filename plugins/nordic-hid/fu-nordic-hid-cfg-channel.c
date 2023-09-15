@@ -1507,18 +1507,18 @@ fu_nordic_hid_cfg_channel_write_firmware_blob(FuNordicHidCfgChannel *self,
 					      GError **error)
 {
 	g_autoptr(FuNordicCfgChannelDfuInfo) dfu_info = g_new0(FuNordicCfgChannelDfuInfo, 1);
-	g_autoptr(GPtrArray) chunks = NULL;
+	g_autoptr(FuChunkArray) chunks = NULL;
 
 	if (!fu_nordic_hid_cfg_channel_dfu_sync(self, dfu_info, DFU_STATE_ACTIVE, error))
 		return FALSE;
 
-	chunks = fu_chunk_array_new_from_bytes(blob, 0, 0, dfu_info->sync_buffer_size);
+	chunks = fu_chunk_array_new_from_bytes(blob, 0, dfu_info->sync_buffer_size);
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_set_steps(progress, chunks->len);
+	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
 
-	for (guint i = 0; i < chunks->len; i++) {
-		FuChunk *chk = g_ptr_array_index(chunks, i);
-		gboolean is_last = (i == chunks->len - 1);
+	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
+		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
+		gboolean is_last = (i == fu_chunk_array_length(chunks) - 1);
 		if (!fu_nordic_hid_cfg_channel_write_firmware_chunk(self, chk, is_last, error)) {
 			g_prefix_error(error, "chunk %u: ", fu_chunk_get_idx(chk));
 			return FALSE;

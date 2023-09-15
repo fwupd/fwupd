@@ -656,7 +656,7 @@ fu_elantp_hid_haptic_device_write_chunks_cb(FuDevice *device, gpointer user_data
 	FuElantpHidHapticDevice *self = FU_ELANTP_HID_HAPTIC_DEVICE(device);
 	FuElantpHidDevice *parent;
 	const guint16 eeprom_fw_page_size = 32;
-	g_autoptr(GPtrArray) chunks = NULL;
+	g_autoptr(FuChunkArray) chunks = NULL;
 
 	/* use parent */
 	parent = fu_elantp_haptic_device_get_parent(device, error);
@@ -664,20 +664,21 @@ fu_elantp_hid_haptic_device_write_chunks_cb(FuDevice *device, gpointer user_data
 		return FALSE;
 
 	/* progress */
-	chunks = fu_chunk_array_new_from_bytes(helper->fw, 0x0, 0x0, eeprom_fw_page_size);
+	chunks = fu_chunk_array_new_from_bytes(helper->fw, 0x0, eeprom_fw_page_size);
 	fu_progress_set_id(helper->progress, G_STRLOC);
-	fu_progress_set_steps(helper->progress, chunks->len - helper->idx_page_start + 1);
-	for (guint i = helper->idx_page_start; i <= chunks->len; i++) {
-		FuChunk *chk;
+	fu_progress_set_steps(helper->progress,
+			      fu_chunk_array_length(chunks) - helper->idx_page_start + 1);
+	for (guint i = helper->idx_page_start; i <= fu_chunk_array_length(chunks); i++) {
 		guint16 csum_tmp;
 		gsize blksz = self->fw_page_size + 3;
 		g_autofree guint8 *blk = g_malloc0(blksz);
+		g_autoptr(FuChunk) chk = NULL;
 		g_autoptr(GError) error_iapctrl = NULL;
 
-		if (i == chunks->len)
-			chk = g_ptr_array_index(chunks, 0);
+		if (i == fu_chunk_array_length(chunks))
+			chk = fu_chunk_array_index(chunks, 0);
 		else
-			chk = g_ptr_array_index(chunks, i);
+			chk = fu_chunk_array_index(chunks, i);
 
 		/* write block */
 		blk[0] = 0x0B; /* report ID */

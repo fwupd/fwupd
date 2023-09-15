@@ -210,7 +210,7 @@ fu_rts54hid_module_write_firmware(FuDevice *module,
 {
 	FuRts54HidModule *self = FU_RTS54HID_MODULE(module);
 	g_autoptr(GBytes) fw = NULL;
-	g_autoptr(GPtrArray) chunks = NULL;
+	g_autoptr(FuChunkArray) chunks = NULL;
 
 	/* get default image */
 	fw = fu_firmware_get_bytes(firmware, error);
@@ -218,10 +218,7 @@ fu_rts54hid_module_write_firmware(FuDevice *module,
 		return FALSE;
 
 	/* build packets */
-	chunks = fu_chunk_array_new_from_bytes(fw,
-					       0x00, /* start addr */
-					       0x00, /* page_sz */
-					       FU_RTS54HID_TRANSFER_BLOCK_SIZE);
+	chunks = fu_chunk_array_new_from_bytes(fw, 0x00, FU_RTS54HID_TRANSFER_BLOCK_SIZE);
 
 	if (0) {
 		if (!fu_rts54hid_module_i2c_read(self, 0x0000, NULL, 0, error))
@@ -232,8 +229,8 @@ fu_rts54hid_module_write_firmware(FuDevice *module,
 
 	/* write each block */
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_WRITE);
-	for (guint i = 0; i < chunks->len; i++) {
-		FuChunk *chk = g_ptr_array_index(chunks, i);
+	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
+		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
 
 		/* write chunk */
 		if (!fu_rts54hid_module_i2c_write(self,
@@ -243,7 +240,9 @@ fu_rts54hid_module_write_firmware(FuDevice *module,
 			return FALSE;
 
 		/* update progress */
-		fu_progress_set_percentage_full(progress, (gsize)i + 1, (gsize)chunks->len);
+		fu_progress_set_percentage_full(progress,
+						(gsize)i + 1,
+						(gsize)fu_chunk_array_length(chunks));
 	}
 
 	/* success! */

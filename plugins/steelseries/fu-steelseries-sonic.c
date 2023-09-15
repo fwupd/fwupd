@@ -322,21 +322,20 @@ static gboolean
 fu_steelseries_sonic_write_to_ram(FuDevice *device,
 				  SteelseriesSonicChip chip,
 				  guint16 address,
-				  const guint8 *buf,
-				  guint16 bufsz,
+				  GBytes *fw,
 				  FuProgress *progress,
 				  GError **error)
 {
 	const guint16 opcode = STEELSERIES_SONIC_WRITE_TO_RAM_OPCODE[chip];
 	guint8 data[STEELSERIES_BUFFER_CONTROL_SIZE] = {0};
-	g_autoptr(GPtrArray) chunks = NULL;
+	g_autoptr(FuChunkArray) chunks = NULL;
 
-	chunks = fu_chunk_array_new(buf, bufsz, 0x0, 0x0, STEELSERIES_BUFFER_RAM_TRANSFER_SIZE);
+	chunks = fu_chunk_array_new_from_bytes(fw, 0x0, STEELSERIES_BUFFER_RAM_TRANSFER_SIZE);
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_WRITE);
-	fu_progress_set_steps(progress, chunks->len);
-	for (guint i = 0; i < chunks->len; i++) {
-		FuChunk *chk = g_ptr_array_index(chunks, i);
+	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
+	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
+		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
 		const guint16 offset = fu_chunk_get_address(chk);
 		const guint16 size = fu_chunk_get_data_sz(chk);
 
@@ -395,30 +394,29 @@ static gboolean
 fu_steelseries_sonic_write_to_flash(FuDevice *device,
 				    SteelseriesSonicChip chip,
 				    guint32 address,
-				    const guint8 *buf,
-				    guint32 bufsz,
+				    GBytes *fw,
 				    FuProgress *progress,
 				    GError **error)
 {
 	const guint16 opcode = STEELSERIES_SONIC_WRITE_TO_FLASH_OPCODE[chip];
 	const guint16 chipid = STEELSERIES_SONIC_CHIP[chip];
 	guint8 data[STEELSERIES_BUFFER_CONTROL_SIZE] = {0};
-	g_autoptr(GPtrArray) chunks = NULL;
+	g_autoptr(FuChunkArray) chunks = NULL;
 
-	chunks = fu_chunk_array_new(buf, bufsz, 0x0, 0x0, STEELSERIES_BUFFER_FLASH_TRANSFER_SIZE);
+	chunks = fu_chunk_array_new_from_bytes(fw, 0x0, STEELSERIES_BUFFER_FLASH_TRANSFER_SIZE);
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_WRITE);
-	fu_progress_set_steps(progress, chunks->len);
-	for (guint i = 0; i < chunks->len; i++) {
-		FuChunk *chk = g_ptr_array_index(chunks, i);
+	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
+	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
+		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
+		g_autoptr(GBytes) chk_blob = fu_chunk_get_bytes(chk);
 		const guint32 offset = fu_chunk_get_address(chk);
 		const guint16 size = fu_chunk_get_data_sz(chk);
 
 		if (!fu_steelseries_sonic_write_to_ram(device,
 						       chip,
 						       offset,
-						       fu_chunk_get_data(chk),
-						       size,
+						       chk_blob,
 						       fu_progress_get_child(progress),
 						       error))
 			return FALSE;
@@ -728,8 +726,7 @@ fu_steelseries_sonic_write_chip(FuDevice *device,
 	if (!fu_steelseries_sonic_write_to_flash(device,
 						 chip,
 						 0x0,
-						 buf,
-						 bufsz,
+						 blob,
 						 fu_progress_get_child(progress),
 						 error)) {
 		g_prefix_error(error, "failed to write to flash chip %u: ", chip);

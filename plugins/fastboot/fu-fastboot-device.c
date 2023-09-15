@@ -254,7 +254,7 @@ fu_fastboot_device_download(FuDevice *device, GBytes *fw, FuProgress *progress, 
 	FuFastbootDevice *self = FU_FASTBOOT_DEVICE(device);
 	gsize sz = g_bytes_get_size(fw);
 	g_autofree gchar *tmp = g_strdup_printf("download:%08x", (guint)sz);
-	g_autoptr(GPtrArray) chunks = NULL;
+	g_autoptr(FuChunkArray) chunks = NULL;
 
 	/* tell the client the size of data to expect */
 	if (!fu_fastboot_device_cmd(device,
@@ -266,14 +266,11 @@ fu_fastboot_device_download(FuDevice *device, GBytes *fw, FuProgress *progress, 
 
 	/* send the data in chunks */
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_WRITE);
-	chunks = fu_chunk_array_new_from_bytes(fw,
-					       0x00, /* start addr */
-					       0x00, /* page_sz */
-					       self->blocksz);
+	chunks = fu_chunk_array_new_from_bytes(fw, 0x00, self->blocksz);
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_set_steps(progress, chunks->len);
-	for (guint i = 0; i < chunks->len; i++) {
-		FuChunk *chk = g_ptr_array_index(chunks, i);
+	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
+	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
+		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
 		if (!fu_fastboot_device_write(device,
 					      fu_chunk_get_data(chk),
 					      fu_chunk_get_data_sz(chk),

@@ -197,8 +197,9 @@ fu_ch341a_cfi_device_write_page(FuCh341aCfiDevice *self, FuChunk *page, GError *
 {
 	FuCh341aDevice *proxy = FU_CH341A_DEVICE(fu_device_get_proxy(FU_DEVICE(self)));
 	guint8 buf[4] = {0x0};
-	g_autoptr(GPtrArray) chunks = NULL;
+	g_autoptr(FuChunkArray) chunks = NULL;
 	g_autoptr(FuDeviceLocker) cslocker = NULL;
+	g_autoptr(GBytes) page_blob = fu_chunk_get_bytes(page);
 
 	if (!fu_ch341a_cfi_device_write_enable(self, error))
 		return FALSE;
@@ -218,13 +219,9 @@ fu_ch341a_cfi_device_write_page(FuCh341aCfiDevice *self, FuChunk *page, GError *
 		return FALSE;
 
 	/* send data */
-	chunks = fu_chunk_array_new(fu_chunk_get_data(page),
-				    fu_chunk_get_data_sz(page),
-				    0x0,
-				    0x0,
-				    CH341A_PAYLOAD_SIZE);
-	for (guint i = 0; i < chunks->len; i++) {
-		FuChunk *chk = g_ptr_array_index(chunks, i);
+	chunks = fu_chunk_array_new_from_bytes(page_blob, 0x0, CH341A_PAYLOAD_SIZE);
+	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
+		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
 		guint8 buf2[CH341A_PAYLOAD_SIZE] = {0x0};
 		if (!fu_memcpy_safe(buf2,
 				    sizeof(buf2),
@@ -247,15 +244,15 @@ fu_ch341a_cfi_device_write_page(FuCh341aCfiDevice *self, FuChunk *page, GError *
 
 static gboolean
 fu_ch341a_cfi_device_write_pages(FuCh341aCfiDevice *self,
-				 GPtrArray *pages,
+				 FuChunkArray *pages,
 				 FuProgress *progress,
 				 GError **error)
 {
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_set_steps(progress, pages->len);
-	for (guint i = 0; i < pages->len; i++) {
-		FuChunk *page = g_ptr_array_index(pages, i);
+	fu_progress_set_steps(progress, fu_chunk_array_length(pages));
+	for (guint i = 0; i < fu_chunk_array_length(pages); i++) {
+		g_autoptr(FuChunk) page = fu_chunk_array_index(pages, i);
 		if (!fu_ch341a_cfi_device_write_page(self, page, error))
 			return FALSE;
 		fu_progress_step_done(progress);
@@ -325,7 +322,7 @@ fu_ch341a_cfi_device_write_firmware(FuDevice *device,
 	FuCh341aDevice *proxy = FU_CH341A_DEVICE(fu_device_get_proxy(FU_DEVICE(self)));
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GBytes) fw_verify = NULL;
-	g_autoptr(GPtrArray) pages = NULL;
+	g_autoptr(FuChunkArray) pages = NULL;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
 	/* open programmer */
@@ -358,7 +355,6 @@ fu_ch341a_cfi_device_write_firmware(FuDevice *device,
 
 	/* write each block */
 	pages = fu_chunk_array_new_from_bytes(fw,
-					      0x0,
 					      0x0,
 					      fu_cfi_device_get_page_size(FU_CFI_DEVICE(self)));
 	if (!fu_ch341a_cfi_device_write_pages(self,

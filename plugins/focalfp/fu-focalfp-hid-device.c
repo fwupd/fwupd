@@ -400,20 +400,20 @@ fu_focalfp_hid_device_setup(FuDevice *device, GError **error)
 
 static gboolean
 fu_focalfp_hid_device_write_chunks(FuFocalfpHidDevice *self,
-				   GPtrArray *chunks,
+				   FuChunkArray *chunks,
 				   FuProgress *progress,
 				   GError **error)
 {
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_set_steps(progress, chunks->len);
-	for (guint i = 0; i < chunks->len; i++) {
-		FuChunk *chk = g_ptr_array_index(chunks, i);
+	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
+	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
+		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
 		guint8 uc_packet_type = MID_PACKET;
 
 		if (i == 0)
 			uc_packet_type = FIRST_PACKET;
-		else if (i == chunks->len - 1)
+		else if (i == fu_chunk_array_length(chunks) - 1)
 			uc_packet_type = END_PACKET;
 
 		if (!fu_focalfp_hid_device_send_data(self,
@@ -447,7 +447,7 @@ fu_focalfp_hid_device_write_firmware(FuDevice *device,
 	guint16 us_ic_id = 0;
 	guint32 checksum = 0;
 	g_autoptr(GBytes) fw = NULL;
-	g_autoptr(GPtrArray) chunks = NULL;
+	g_autoptr(FuChunkArray) chunks = NULL;
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
@@ -484,7 +484,7 @@ fu_focalfp_hid_device_write_firmware(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/* send packet data */
-	chunks = fu_chunk_array_new_from_bytes(fw, 0x0, 0x0, MAX_USB_PACKET_SIZE);
+	chunks = fu_chunk_array_new_from_bytes(fw, 0x0, MAX_USB_PACKET_SIZE);
 	if (!fu_focalfp_hid_device_write_chunks(self,
 						chunks,
 						fu_progress_get_child(progress),

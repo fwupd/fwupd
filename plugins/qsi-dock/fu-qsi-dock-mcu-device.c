@@ -270,17 +270,14 @@ fu_qsi_dock_mcu_device_write_chunk(FuQsiDockMcuDevice *self,
 				   FuProgress *progress,
 				   GError **error)
 {
-	g_autoptr(GPtrArray) chunks = NULL;
+	g_autoptr(FuChunkArray) chunks = NULL;
+	g_autoptr(GBytes) chk_bytes = fu_chunk_get_bytes(chk_page);
 
-	chunks = fu_chunk_array_new(fu_chunk_get_data(chk_page),
-				    fu_chunk_get_data_sz(chk_page),
-				    0x0,
-				    0x0,
-				    FU_QSI_DOCK_TX_ISP_LENGTH_MCU);
+	chunks = fu_chunk_array_new_from_bytes(chk_bytes, 0x0, FU_QSI_DOCK_TX_ISP_LENGTH_MCU);
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_set_steps(progress, chunks->len);
-	for (guint i = 0; i < chunks->len; i++) {
-		FuChunk *chk = g_ptr_array_index(chunks, i);
+	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
+	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
+		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
 		guint8 checksum_buf[FU_QSI_DOCK_TX_ISP_LENGTH_MCU] = {0x0};
 		guint8 buf[64] = {FU_QSI_DOCK_REPORT_ID,
 				  FU_QSI_DOCK_CMD1_MASS_SPI,
@@ -346,15 +343,15 @@ fu_qsi_dock_mcu_device_write_chunk(FuQsiDockMcuDevice *self,
 
 static gboolean
 fu_qsi_dock_mcu_device_write_chunks(FuQsiDockMcuDevice *self,
-				    GPtrArray *chunks,
+				    FuChunkArray *chunks,
 				    guint32 *checksum,
 				    FuProgress *progress,
 				    GError **error)
 {
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_set_steps(progress, chunks->len);
-	for (guint i = 0; i < chunks->len; i++) {
-		FuChunk *chk = g_ptr_array_index(chunks, i);
+	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
+	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
+		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
 		if (!fu_qsi_dock_mcu_device_write_chunk(self,
 							chk,
 							checksum,
@@ -472,7 +469,7 @@ fu_qsi_dock_mcu_device_write_firmware_with_idx(FuQsiDockMcuDevice *self,
 	guint32 checksum_val = 0;
 	g_autoptr(GBytes) fw_align = NULL;
 	g_autoptr(GBytes) fw = NULL;
-	g_autoptr(GPtrArray) chunks = NULL;
+	g_autoptr(FuChunkArray) chunks = NULL;
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
@@ -502,7 +499,7 @@ fu_qsi_dock_mcu_device_write_firmware_with_idx(FuQsiDockMcuDevice *self,
 		return FALSE;
 
 	/* write external flash */
-	chunks = fu_chunk_array_new_from_bytes(fw_align, 0, 0, FU_QSI_DOCK_EXTERN_FLASH_PAGE_SIZE);
+	chunks = fu_chunk_array_new_from_bytes(fw_align, 0, FU_QSI_DOCK_EXTERN_FLASH_PAGE_SIZE);
 	if (!fu_qsi_dock_mcu_device_write_chunks(self,
 						 chunks,
 						 &checksum_val,

@@ -129,16 +129,16 @@ fu_steelseries_gamepad_detach(FuDevice *device, FuProgress *progress, GError **e
 
 static gboolean
 fu_steelseries_gamepad_write_firmware_chunks(FuDevice *device,
-					     GPtrArray *chunks,
+					     FuChunkArray *chunks,
 					     FuProgress *progress,
 					     guint32 *checksum,
 					     GError **error)
 {
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_set_steps(progress, chunks->len);
+	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
 
-	for (guint id = 0; id < chunks->len; id++) {
-		FuChunk *chunk = g_ptr_array_index(chunks, id);
+	for (guint id = 0; id < fu_chunk_array_length(chunks); id++) {
+		g_autoptr(FuChunk) chunk = fu_chunk_array_index(chunks, id);
 		guint16 chunk_checksum;
 		guint8 data[STEELSERIES_BUFFER_CONTROL_SIZE] = {0xA3};
 
@@ -234,19 +234,18 @@ fu_steelseries_gamepad_write_firmware(FuDevice *device,
 {
 	guint32 checksum = 0;
 	g_autoptr(GBytes) blob = NULL;
-	g_autoptr(GPtrArray) chunks = NULL;
+	g_autoptr(FuChunkArray) chunks = NULL;
 
 	blob = fu_firmware_get_bytes(firmware, error);
 	if (blob == NULL)
 		return FALSE;
 
-	chunks = fu_chunk_array_new_from_bytes(blob, 0, 0, STEELSERIES_BUFFER_TRANSFER_SIZE);
-
-	if (chunks->len > (G_MAXUINT16 + 1)) {
+	chunks = fu_chunk_array_new_from_bytes(blob, 0, STEELSERIES_BUFFER_TRANSFER_SIZE);
+	if (fu_chunk_array_length(chunks) > (G_MAXUINT16 + 1)) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "too lot of firmware chunks for the device");
+				    "too many firmware chunks for the device");
 		return FALSE;
 	}
 

@@ -460,14 +460,14 @@ fu_vli_pd_parade_device_write_firmware(FuDevice *device,
 {
 	FuVliPdParadeDevice *self = FU_VLI_PD_PARADE_DEVICE(device);
 	FuVliPdDevice *parent = FU_VLI_PD_DEVICE(fu_device_get_parent(device));
-	FuChunk *chk0;
 	guint8 buf[0x20];
 	guint block_idx_tmp;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(GByteArray) buf_verify = NULL;
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GBytes) fw_verify = NULL;
-	g_autoptr(GPtrArray) blocks = NULL;
+	g_autoptr(FuChunk) chk0 = NULL;
+	g_autoptr(FuChunkArray) blocks = NULL;
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
@@ -498,14 +498,14 @@ fu_vli_pd_parade_device_write_firmware(FuDevice *device,
 		return FALSE;
 	if (!fu_vli_pd_parade_device_wait_ready(self, error))
 		return FALSE;
-	blocks = fu_chunk_array_new_from_bytes(fw, 0x0, 0x0, 0x10000);
-	for (guint i = 1; i < blocks->len; i++) {
-		FuChunk *chk = g_ptr_array_index(blocks, i);
+	blocks = fu_chunk_array_new_from_bytes(fw, 0x0, 0x10000);
+	for (guint i = 1; i < fu_chunk_array_length(blocks); i++) {
+		g_autoptr(FuChunk) chk = fu_chunk_array_index(blocks, i);
 		if (!fu_vli_pd_parade_device_block_erase(self, fu_chunk_get_idx(chk), error))
 			return FALSE;
 		fu_progress_set_percentage_full(fu_progress_get_child(progress),
 						i + 1,
-						blocks->len);
+						fu_chunk_array_length(blocks));
 	}
 	fu_progress_step_done(progress);
 
@@ -519,8 +519,8 @@ fu_vli_pd_parade_device_write_firmware(FuDevice *device,
 		return FALSE;
 
 	/* write blocks */
-	for (guint i = 1; i < blocks->len; i++) {
-		FuChunk *chk = g_ptr_array_index(blocks, i);
+	for (guint i = 1; i < fu_chunk_array_length(blocks); i++) {
+		g_autoptr(FuChunk) chk = fu_chunk_array_index(blocks, i);
 		if (!fu_vli_pd_parade_device_block_write(self,
 							 fu_chunk_get_idx(chk),
 							 fu_chunk_get_data(chk),
@@ -528,7 +528,7 @@ fu_vli_pd_parade_device_write_firmware(FuDevice *device,
 			return FALSE;
 		fu_progress_set_percentage_full(fu_progress_get_child(progress),
 						i + 1,
-						blocks->len);
+						fu_chunk_array_length(blocks));
 	}
 	if (!fu_vli_pd_parade_device_write_disable(self, error))
 		return FALSE;
@@ -536,12 +536,12 @@ fu_vli_pd_parade_device_write_firmware(FuDevice *device,
 
 	/* add the new boot config into the verify buffer */
 	buf_verify = g_byte_array_sized_new(g_bytes_get_size(fw));
-	chk0 = g_ptr_array_index(blocks, 0);
+	chk0 = fu_chunk_array_index(blocks, 0);
 	g_byte_array_append(buf_verify, fu_chunk_get_data(chk0), fu_chunk_get_data_sz(chk0));
 
 	/*  verify SPI ROM, ignoring the boot config */
-	for (guint i = 1; i < blocks->len; i++) {
-		FuChunk *chk = g_ptr_array_index(blocks, i);
+	for (guint i = 1; i < fu_chunk_array_length(blocks); i++) {
+		g_autoptr(FuChunk) chk = fu_chunk_array_index(blocks, i);
 		gsize bufsz = fu_chunk_get_data_sz(chk);
 		g_autofree guint8 *vbuf = g_malloc0(bufsz);
 		if (!fu_vli_pd_parade_device_block_read(self,
@@ -553,7 +553,7 @@ fu_vli_pd_parade_device_write_firmware(FuDevice *device,
 		g_byte_array_append(buf_verify, vbuf, bufsz);
 		fu_progress_set_percentage_full(fu_progress_get_child(progress),
 						i + 1,
-						blocks->len);
+						fu_chunk_array_length(blocks));
 	}
 	fw_verify = g_bytes_new(buf_verify->data, buf_verify->len);
 	if (!fu_bytes_compare(fw, fw_verify, error))

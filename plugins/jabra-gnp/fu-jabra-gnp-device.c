@@ -401,7 +401,7 @@ fu_jabra_gnp_device_write_chunk(FuJabraGnpDevice *self,
 
 static gboolean
 fu_jabra_gnp_device_write_chunks(FuJabraGnpDevice *self,
-				 GPtrArray *chunks,
+				 FuChunkArray *chunks,
 				 FuProgress *progress,
 				 GError **error)
 {
@@ -414,9 +414,10 @@ fu_jabra_gnp_device_write_chunks(FuJabraGnpDevice *self,
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_set_steps(progress, chunks->len);
-	for (gint chunk_number = 0; (guint)chunk_number < chunks->len; chunk_number++) {
-		FuChunk *chk = g_ptr_array_index(chunks, chunk_number);
+	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
+	for (gint chunk_number = 0; (guint)chunk_number < fu_chunk_array_length(chunks);
+	     chunk_number++) {
+		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, chunk_number);
 		if (!fu_jabra_gnp_device_write_chunk(self,
 						     chunk_number,
 						     fu_chunk_get_data(chk),
@@ -424,7 +425,7 @@ fu_jabra_gnp_device_write_chunks(FuJabraGnpDevice *self,
 						     error))
 			return FALSE;
 		if (((chunk_number % preload_count) == 0) ||
-		    (guint)chunk_number == chunks->len - 1) {
+		    (guint)chunk_number == fu_chunk_array_length(chunks) - 1) {
 			if (!fu_device_retry_full(FU_DEVICE(self),
 						  fu_jabra_gnp_device_rx_cb,
 						  FU_JABRA_GNP_MAX_RETRIES,
@@ -623,7 +624,7 @@ fu_jabra_gnp_device_write_image(FuJabraGnpDevice *self,
 				GError **error)
 {
 	const guint chunk_size = 52;
-	g_autoptr(GPtrArray) chunks = NULL;
+	g_autoptr(FuChunkArray) chunks = NULL;
 	g_autoptr(GBytes) blob = NULL;
 
 	/* progress */
@@ -654,10 +655,10 @@ fu_jabra_gnp_device_write_image(FuJabraGnpDevice *self,
 	fu_progress_step_done(progress);
 
 	/* write chunks */
-	chunks = fu_chunk_array_new_from_bytes(blob, 0x00, 0x00, chunk_size);
+	chunks = fu_chunk_array_new_from_bytes(blob, 0x00, chunk_size);
 	if (!fu_jabra_gnp_device_write_crc(self,
 					   fu_jabra_gnp_image_get_crc32(FU_JABRA_GNP_IMAGE(img)),
-					   chunks->len,
+					   fu_chunk_array_length(chunks),
 					   100,
 					   error))
 		return FALSE;
