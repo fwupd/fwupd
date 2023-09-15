@@ -87,7 +87,7 @@ def _convert_md_to_man(data: str) -> str:
                 line += ".fi\n"
                 continue
             elif line_tmp.startswith("* "):
-                line += ".IP \[bu] 2\n"
+                line += ".IP \\[bu] 2\n"
                 line += line_tmp[2:]
                 continue
             line_tmp = line_tmp.replace("\\-", "-")
