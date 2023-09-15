@@ -167,9 +167,8 @@ fu_logitech_bulkcontroller_device_send(FuLogitechBulkcontrollerDevice *self,
 				       gint interface_id,
 				       GError **error)
 {
-	gsize transferred = 0;
 	gint ep;
-	GCancellable *cancellable = NULL;
+
 	g_return_val_if_fail(buf != NULL, FALSE);
 
 	if (interface_id == BULK_INTERFACE_SYNC) {
@@ -184,9 +183,9 @@ fu_logitech_bulkcontroller_device_send(FuLogitechBulkcontrollerDevice *self,
 					ep,
 					(guint8 *)buf->data,
 					buf->len,
-					&transferred,
+					NULL, /* transferred */
 					BULK_TRANSFER_TIMEOUT,
-					cancellable,
+					NULL,
 					error)) {
 		g_prefix_error(error, "failed to send using bulk transfer: ");
 		return FALSE;
@@ -201,7 +200,6 @@ fu_logitech_bulkcontroller_device_recv(FuLogitechBulkcontrollerDevice *self,
 				       guint timeout,
 				       GError **error)
 {
-	gsize received_length = 0;
 	gint ep;
 	g_return_val_if_fail(buf != NULL, FALSE);
 
@@ -217,7 +215,7 @@ fu_logitech_bulkcontroller_device_recv(FuLogitechBulkcontrollerDevice *self,
 					ep,
 					buf->data,
 					buf->len,
-					&received_length,
+					NULL, /* received_length */
 					timeout,
 					NULL,
 					error)) {
@@ -255,7 +253,7 @@ fu_logitech_bulkcontroller_device_send_upd_cmd(FuLogitechBulkcontrollerDevice *s
 
 	/* extending the bulk transfer timeout value, as android device takes some time to
 	   calculate Hash and respond */
-	if (CMD_END_TRANSFER == cmd)
+	if (cmd == CMD_END_TRANSFER)
 		timeout = HASH_TIMEOUT;
 
 	if (!fu_logitech_bulkcontroller_device_recv(self,
@@ -315,9 +313,7 @@ fu_logitech_bulkcontroller_device_send_sync_cmd(FuLogitechBulkcontrollerDevice *
 				    buf->data,
 				    buf->len); /* Value(V) : Actual payload data */
 	}
-	if (!fu_logitech_bulkcontroller_device_send(self, buf_pkt, BULK_INTERFACE_SYNC, error))
-		return FALSE;
-	return TRUE;
+	return fu_logitech_bulkcontroller_device_send(self, buf_pkt, BULK_INTERFACE_SYNC, error);
 }
 
 static gchar *
