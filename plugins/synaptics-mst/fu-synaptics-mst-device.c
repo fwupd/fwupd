@@ -247,7 +247,7 @@ fu_synaptics_mst_device_set_flash_sector_erase(FuSynapticsMstDevice *self,
 typedef struct {
 	FuSynapticsMstConnection *connection;
 	GBytes *fw;
-	GPtrArray *chunks;
+	FuChunkArray *chunks;
 	FuProgress *progress;
 	guint8 bank_to_update;
 	guint32 checksum;
@@ -257,7 +257,7 @@ static void
 fu_synaptics_mst_device_helper_free(FuSynapticsMstDeviceHelper *helper)
 {
 	if (helper->chunks != NULL)
-		g_ptr_array_unref(helper->chunks);
+		g_object_unref(helper->chunks);
 	if (helper->fw != NULL)
 		g_bytes_unref(helper->fw);
 	if (helper->connection != NULL)
@@ -300,9 +300,9 @@ fu_synaptics_mst_device_update_esm_cb(FuDevice *device, gpointer user_data, GErr
 
 	/* write firmware */
 	fu_progress_set_id(helper->progress, G_STRLOC);
-	fu_progress_set_steps(helper->progress, helper->chunks->len);
-	for (guint i = 0; i < helper->chunks->len; i++) {
-		FuChunk *chk = g_ptr_array_index(helper->chunks, i);
+	fu_progress_set_steps(helper->progress, fu_chunk_array_length(helper->chunks));
+	for (guint i = 0; i < fu_chunk_array_length(helper->chunks); i++) {
+		g_autoptr(FuChunk) chk = fu_chunk_array_index(helper->chunks, i);
 		g_autoptr(GError) error_local = NULL;
 		if (!fu_synaptics_mst_connection_rc_set_command(helper->connection,
 								UPDC_WRITE_TO_EEPROM,
@@ -371,8 +371,7 @@ fu_synaptics_mst_device_update_esm(FuSynapticsMstDevice *self,
 					    self->layer,
 					    self->rad);
 	helper->progress = g_object_ref(progress);
-	helper->chunks =
-	    fu_chunk_array_new_from_bytes(helper->fw, EEPROM_ESM_OFFSET, 0x0, BLOCK_UNIT);
+	helper->chunks = fu_chunk_array_new_from_bytes(helper->fw, EEPROM_ESM_OFFSET, BLOCK_UNIT);
 	return fu_device_retry(FU_DEVICE(self),
 			       fu_synaptics_mst_device_update_esm_cb,
 			       MAX_RETRY_COUNTS,
@@ -394,9 +393,9 @@ fu_synaptics_mst_device_update_tesla_leaf_firmware_cb(FuDevice *device,
 	g_debug("waiting for flash clear to settle");
 	fu_device_sleep(FU_DEVICE(self), FLASH_SETTLE_TIME);
 
-	fu_progress_set_steps(helper->progress, helper->chunks->len);
-	for (guint i = 0; i < helper->chunks->len; i++) {
-		FuChunk *chk = g_ptr_array_index(helper->chunks, i);
+	fu_progress_set_steps(helper->progress, fu_chunk_array_length(helper->chunks));
+	for (guint i = 0; i < fu_chunk_array_length(helper->chunks); i++) {
+		g_autoptr(FuChunk) chk = fu_chunk_array_index(helper->chunks, i);
 		g_autoptr(GError) error_local = NULL;
 
 		if (!fu_synaptics_mst_connection_rc_set_command(helper->connection,
@@ -460,7 +459,7 @@ fu_synaptics_mst_device_update_tesla_leaf_firmware(FuSynapticsMstDevice *self,
 	helper->fw = g_bytes_ref(fw);
 	helper->checksum = fu_sum32_bytes(fw);
 	helper->progress = g_object_ref(progress);
-	helper->chunks = fu_chunk_array_new_from_bytes(fw, 0x0, 0x0, BLOCK_UNIT);
+	helper->chunks = fu_chunk_array_new_from_bytes(fw, 0x0, BLOCK_UNIT);
 	return fu_device_retry(FU_DEVICE(self),
 			       fu_synaptics_mst_device_update_tesla_leaf_firmware_cb,
 			       MAX_RETRY_COUNTS,
@@ -519,9 +518,9 @@ fu_synaptics_mst_device_update_panamera_firmware_cb(FuDevice *device,
 	fu_device_sleep(FU_DEVICE(self), FLASH_SETTLE_TIME);
 
 	/* write */
-	fu_progress_set_steps(helper->progress, helper->chunks->len);
-	for (guint i = 0; i < helper->chunks->len; i++) {
-		FuChunk *chk = g_ptr_array_index(helper->chunks, i);
+	fu_progress_set_steps(helper->progress, fu_chunk_array_length(helper->chunks));
+	for (guint i = 0; i < fu_chunk_array_length(helper->chunks); i++) {
+		g_autoptr(FuChunk) chk = fu_chunk_array_index(helper->chunks, i);
 		g_autoptr(GError) error_local = NULL;
 		if (!fu_synaptics_mst_connection_rc_set_command(helper->connection,
 								UPDC_WRITE_TO_EEPROM,
@@ -744,7 +743,6 @@ fu_synaptics_mst_device_update_panamera_firmware(FuSynapticsMstDevice *self,
 	helper->progress = g_object_ref(progress);
 	helper->chunks = fu_chunk_array_new_from_bytes(helper->fw,
 						       EEPROM_BANK_OFFSET * helper->bank_to_update,
-						       0x0,
 						       BLOCK_UNIT);
 	if (!fu_device_retry_full(FU_DEVICE(self),
 				  fu_synaptics_mst_device_update_panamera_firmware_cb,
@@ -869,9 +867,9 @@ fu_synaptics_mst_device_update_cayenne_firmware_cb(FuDevice *device,
 	g_debug("waiting for flash clear to settle");
 	fu_device_sleep(FU_DEVICE(self), FLASH_SETTLE_TIME);
 
-	fu_progress_set_steps(helper->progress, helper->chunks->len);
-	for (guint i = 0; i < helper->chunks->len; i++) {
-		FuChunk *chk = g_ptr_array_index(helper->chunks, i);
+	fu_progress_set_steps(helper->progress, fu_chunk_array_length(helper->chunks));
+	for (guint i = 0; i < fu_chunk_array_length(helper->chunks); i++) {
+		g_autoptr(FuChunk) chk = fu_chunk_array_index(helper->chunks, i);
 		g_autoptr(GError) error_local = NULL;
 
 		if (!fu_synaptics_mst_connection_rc_set_command(helper->connection,
@@ -944,7 +942,7 @@ fu_synaptics_mst_device_update_cayenne_firmware(FuSynapticsMstDevice *self,
 							    g_bytes_get_data(helper->fw, NULL),
 							    g_bytes_get_size(helper->fw));
 	helper->progress = g_object_ref(progress);
-	helper->chunks = fu_chunk_array_new_from_bytes(helper->fw, 0x0, 0x0, BLOCK_UNIT);
+	helper->chunks = fu_chunk_array_new_from_bytes(helper->fw, 0x0, BLOCK_UNIT);
 	if (!fu_device_retry(FU_DEVICE(self),
 			     fu_synaptics_mst_device_update_cayenne_firmware_cb,
 			     MAX_RETRY_COUNTS,

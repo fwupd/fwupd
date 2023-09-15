@@ -253,7 +253,7 @@ fu_dfu_target_stm_erase_address(FuDfuTarget *target,
 
 static gboolean
 fu_dfu_target_stm_download_element1(FuDfuTarget *target,
-				    GPtrArray *chunks,
+				    FuChunkArray *chunks,
 				    GPtrArray *sectors_array,
 				    FuProgress *progress,
 				    GError **error)
@@ -263,14 +263,14 @@ fu_dfu_target_stm_download_element1(FuDfuTarget *target,
 	guint32 transfer_size = 0;
 
 	/* start offset */
-	if (chunks->len > 0) {
-		FuChunk *chk = g_ptr_array_index(chunks, 0);
+	if (fu_chunk_array_length(chunks) > 0) {
+		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, 0);
 		address = fu_chunk_get_address(chk);
 		transfer_size = fu_chunk_get_data_sz(chk);
 	}
 
 	/* no progress */
-	for (guint i = 0; i < chunks->len; i++) {
+	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
 		guint32 offset_dev = i * transfer_size;
 
 		/* for DfuSe devices we need to handle the erase and setting
@@ -340,7 +340,7 @@ fu_dfu_target_stm_download_element2(FuDfuTarget *target,
 
 static gboolean
 fu_dfu_target_stm_download_element3(FuDfuTarget *target,
-				    GPtrArray *chunks,
+				    FuChunkArray *chunks,
 				    GPtrArray *sectors_array,
 				    FuProgress *progress,
 				    GError **error)
@@ -349,9 +349,9 @@ fu_dfu_target_stm_download_element3(FuDfuTarget *target,
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_set_steps(progress, chunks->len);
-	for (guint i = 0; i < chunks->len; i++) {
-		FuChunk *chk_tmp = g_ptr_array_index(chunks, i);
+	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
+	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
+		g_autoptr(FuChunk) chk_tmp = fu_chunk_array_index(chunks, i);
 		FuDfuSector *sector;
 		guint32 offset_dev = fu_chunk_get_address(chk_tmp);
 		g_autoptr(GBytes) bytes_tmp = NULL;
@@ -414,7 +414,7 @@ fu_dfu_target_stm_download_element(FuDfuTarget *target,
 {
 	FuDfuDevice *device = FU_DFU_DEVICE(fu_device_get_proxy(FU_DEVICE(target)));
 	g_autoptr(GBytes) bytes = NULL;
-	g_autoptr(GPtrArray) chunks = NULL;
+	g_autoptr(FuChunkArray) chunks = NULL;
 	g_autoptr(GPtrArray) sectors_array = g_ptr_array_new();
 
 	/* progress */
@@ -427,7 +427,6 @@ fu_dfu_target_stm_download_element(FuDfuTarget *target,
 	bytes = fu_chunk_get_bytes(chk);
 	chunks = fu_chunk_array_new_from_bytes(bytes,
 					       fu_chunk_get_address(chk),
-					       0x0,
 					       fu_dfu_device_get_transfer_size(device));
 	if (!fu_dfu_target_stm_download_element1(target,
 						 chunks,

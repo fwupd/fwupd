@@ -275,13 +275,13 @@ fu_corsair_bp_set_mode(FuCorsairBp *self, FuCorsairDeviceMode mode, GError **err
 static gboolean
 fu_corsair_bp_write_firmware_chunks(FuCorsairBp *self,
 				    FuChunk *first_chunk,
-				    GPtrArray *chunks,
+				    FuChunkArray *chunks,
 				    FuProgress *progress,
 				    guint32 firmware_size,
 				    GError **error)
 {
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_set_steps(progress, chunks->len + 1);
+	fu_progress_set_steps(progress, fu_chunk_array_length(chunks) + 1);
 
 	if (!fu_corsair_bp_write_first_chunk(self, first_chunk, firmware_size, error)) {
 		g_prefix_error(error, "cannot write first chunk: ");
@@ -289,10 +289,10 @@ fu_corsair_bp_write_firmware_chunks(FuCorsairBp *self,
 	}
 	fu_progress_step_done(progress);
 
-	for (guint id = 0; id < chunks->len; id++) {
-		FuChunk *chunk = g_ptr_array_index(chunks, id);
-		if (!fu_corsair_bp_write_chunk(self, chunk, error)) {
-			g_prefix_error(error, "cannot write chunk %u: ", id);
+	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
+		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
+		if (!fu_corsair_bp_write_chunk(self, chk, error)) {
+			g_prefix_error(error, "cannot write chunk %u: ", i);
 			return FALSE;
 		}
 		fu_progress_step_done(progress);
@@ -322,7 +322,7 @@ fu_corsair_bp_write_firmware(FuDevice *device,
 	const guint8 *firmware_raw;
 	gsize firmware_size;
 	g_autoptr(GBytes) blob = NULL;
-	g_autoptr(GPtrArray) chunks = NULL;
+	g_autoptr(FuChunkArray) chunks = NULL;
 	g_autoptr(FuChunk) firstChunk = NULL;
 	g_autoptr(GBytes) rest_of_firmware = NULL;
 	FuCorsairBp *self = FU_CORSAIR_BP(device);
@@ -358,7 +358,6 @@ fu_corsair_bp_write_firmware(FuDevice *device,
 	chunks =
 	    fu_chunk_array_new_from_bytes(rest_of_firmware,
 					  first_chunk_size,
-					  0,
 					  self->cmd_write_size - CORSAIR_NEXT_CHUNKS_HEADER_SIZE);
 
 	if (!fu_corsair_bp_write_firmware_chunks(self,

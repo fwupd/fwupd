@@ -11,6 +11,7 @@
 #include <string.h>
 
 #include "fu-byte-array.h"
+#include "fu-chunk-array.h"
 #include "fu-common.h"
 #include "fu-firmware-common.h"
 #include "fu-srec-firmware.h"
@@ -622,13 +623,10 @@ fu_srec_firmware_write(FuFirmware *firmware, GError **error)
 
 	/* payload */
 	if (g_bytes_get_size(buf_blob) > 0) {
-		g_autoptr(GPtrArray) chunks = NULL;
-		chunks = fu_chunk_array_new_from_bytes(buf_blob,
-						       fu_firmware_get_addr(firmware),
-						       0x0,
-						       64);
-		for (guint i = 0; i < chunks->len; i++) {
-			FuChunk *chk = g_ptr_array_index(chunks, i);
+		g_autoptr(FuChunkArray) chunks =
+		    fu_chunk_array_new_from_bytes(buf_blob, fu_firmware_get_addr(firmware), 64);
+		for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
+			g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
 			fu_srec_firmware_write_line(str,
 						    kind_data,
 						    fu_chunk_get_address(chk),
@@ -636,9 +634,9 @@ fu_srec_firmware_write(FuFirmware *firmware, GError **error)
 						    fu_chunk_get_data_sz(chk));
 		}
 		/* upgrade to longer format */
-		if (chunks->len > G_MAXUINT16)
+		if (fu_chunk_array_length(chunks) > G_MAXUINT16)
 			kind_coun = FU_FIRMWARE_SREC_RECORD_KIND_S6_COUNT_24;
-		fu_srec_firmware_write_line(str, kind_coun, chunks->len, NULL, 0);
+		fu_srec_firmware_write_line(str, kind_coun, fu_chunk_array_length(chunks), NULL, 0);
 	}
 
 	/* EOF */

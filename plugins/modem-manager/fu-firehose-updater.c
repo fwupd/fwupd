@@ -525,31 +525,31 @@ fu_firehose_updater_send_program_file(FuFirehoseUpdater *self,
 				      gsize sector_size,
 				      GError **error)
 {
-	g_autoptr(GPtrArray) chunks = NULL;
-	FuChunk *chk;
+	g_autoptr(FuChunk) chk_last = NULL;
+	g_autoptr(FuChunkArray) chunks =
+	    fu_chunk_array_new_from_bytes(program_file, 0, payload_size);
 
-	chunks = fu_chunk_array_new_from_bytes(program_file, 0, 0, payload_size);
 	/* last block needs to be padded to the next sector_size,
 	 * so that we always send full sectors */
-	chk = g_ptr_array_index(chunks, chunks->len - 1);
-	if ((fu_chunk_get_data_sz(chk) % sector_size) != 0) {
+	chk_last = fu_chunk_array_index(chunks, fu_chunk_array_length(chunks) - 1);
+	if ((fu_chunk_get_data_sz(chk_last) % sector_size) != 0) {
 		g_autoptr(GBytes) padded_bytes = NULL;
-		gsize padded_sz = sector_size * (fu_chunk_get_data_sz(chk) / sector_size + 1);
+		gsize padded_sz = sector_size * (fu_chunk_get_data_sz(chk_last) / sector_size + 1);
 
-		padded_bytes = fu_bytes_pad(fu_chunk_get_bytes(chk), padded_sz);
-		fu_chunk_set_bytes(chk, padded_bytes);
+		padded_bytes = fu_bytes_pad(fu_chunk_get_bytes(chk_last), padded_sz);
+		fu_chunk_set_bytes(chk_last, padded_bytes);
 
-		g_return_val_if_fail(fu_chunk_get_data_sz(chk) == padded_sz, FALSE);
+		g_return_val_if_fail(fu_chunk_get_data_sz(chk_last) == padded_sz, FALSE);
 	}
-	for (guint i = 0; i < chunks->len; i++) {
-		chk = g_ptr_array_index(chunks, i);
+	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
+		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
 
 		/* log only in blocks of 250 plus first/last */
-		if (i == 0 || i == (chunks->len - 1) || (i + 1) % 250 == 0)
+		if (i == 0 || i == (fu_chunk_array_length(chunks) - 1) || (i + 1) % 250 == 0)
 			g_debug("sending %u bytes in block %u/%u of file '%s'",
 				fu_chunk_get_data_sz(chk),
 				i + 1,
-				chunks->len,
+				fu_chunk_array_length(chunks),
 				program_filename);
 
 		if (!fu_firehose_write(self,
@@ -560,7 +560,7 @@ fu_firehose_updater_send_program_file(FuFirehoseUpdater *self,
 			g_prefix_error(error,
 				       "Failed to write block %u/%u of file '%s': ",
 				       i + 1,
-				       chunks->len,
+				       fu_chunk_array_length(chunks),
 				       program_filename);
 			return FALSE;
 		}

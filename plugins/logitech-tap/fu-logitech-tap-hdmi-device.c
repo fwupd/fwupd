@@ -283,7 +283,7 @@ fu_logitech_tap_hdmi_device_ait_finalize_update(FuLogitechTapHdmiDevice *self, G
 
 static gboolean
 fu_logitech_tap_hdmi_device_write_fw(FuLogitechTapHdmiDevice *self,
-				     GPtrArray *chunks,
+				     FuChunkArray *chunks,
 				     FuProgress *progress,
 				     GError **error)
 {
@@ -293,9 +293,9 @@ fu_logitech_tap_hdmi_device_write_fw(FuLogitechTapHdmiDevice *self,
 
 	/* write */
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_set_steps(progress, chunks->len);
-	for (guint i = 0; i < chunks->len; i++) {
-		FuChunk *chk = g_ptr_array_index(chunks, i);
+	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
+	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
+		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
 		/* if needed, pad the last block to kLogiDefaultImageBlockSize size,
 		 * so that device always gets each block of kLogiDefaultImageBlockSize */
 		g_autofree guint8 *data_pkt = g_malloc0(kLogiDefaultImageBlockSize);
@@ -338,7 +338,7 @@ fu_logitech_tap_hdmi_device_write_firmware(FuDevice *device,
 	FuLogitechTapHdmiDevice *self = FU_LOGITECH_TAP_HDMI_DEVICE(device);
 	g_autofree gchar *old_firmware_version = NULL;
 	g_autoptr(GBytes) fw = NULL;
-	g_autoptr(GPtrArray) chunks = NULL;
+	g_autoptr(FuChunkArray) chunks = NULL;
 
 	/* for troubleshooting purpose */
 	old_firmware_version = g_strdup(fu_device_get_version(device));
@@ -355,7 +355,7 @@ fu_logitech_tap_hdmi_device_write_firmware(FuDevice *device,
 
 	/* write */
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_WRITE);
-	chunks = fu_chunk_array_new_from_bytes(fw, 0x0, 0x0, kLogiDefaultImageBlockSize);
+	chunks = fu_chunk_array_new_from_bytes(fw, 0x0, kLogiDefaultImageBlockSize);
 	if (!fu_logitech_tap_hdmi_device_write_fw(self,
 						  chunks,
 						  fu_progress_get_child(progress),

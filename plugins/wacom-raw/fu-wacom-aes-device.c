@@ -243,7 +243,7 @@ fu_wacom_aes_device_write_block(FuWacomAesDevice *self,
 
 static gboolean
 fu_wacom_aes_device_write_firmware(FuDevice *device,
-				   GPtrArray *chunks,
+				   FuChunkArray *chunks,
 				   FuProgress *progress,
 				   GError **error)
 {
@@ -261,8 +261,8 @@ fu_wacom_aes_device_write_firmware(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/* write */
-	for (guint i = 0; i < chunks->len; i++) {
-		FuChunk *chk = g_ptr_array_index(chunks, i);
+	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
+		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
 		if (!fu_wacom_aes_device_write_block(self,
 						     fu_chunk_get_idx(chk),
 						     fu_chunk_get_address(chk),
@@ -272,7 +272,7 @@ fu_wacom_aes_device_write_firmware(FuDevice *device,
 			return FALSE;
 		fu_progress_set_percentage_full(fu_progress_get_child(progress),
 						(gsize)i,
-						(gsize)chunks->len);
+						(gsize)fu_chunk_array_length(chunks));
 	}
 	fu_progress_step_done(progress);
 	return TRUE;

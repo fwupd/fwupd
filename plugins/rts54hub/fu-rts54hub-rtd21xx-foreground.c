@@ -233,7 +233,7 @@ fu_rts54hub_rtd21xx_foreground_write_firmware(FuDevice *device,
 	guint8 write_buf[ISP_PACKET_SIZE] = {0x0};
 	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(GBytes) fw = NULL;
-	g_autoptr(GPtrArray) chunks = NULL;
+	g_autoptr(FuChunkArray) chunks = NULL;
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
@@ -342,12 +342,9 @@ fu_rts54hub_rtd21xx_foreground_write_firmware(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/* send data */
-	chunks = fu_chunk_array_new_from_bytes(fw,
-					       0x00, /* start addr */
-					       0x00, /* page_sz */
-					       ISP_DATA_BLOCKSIZE);
-	for (guint i = 0; i < chunks->len; i++) {
-		FuChunk *chk = g_ptr_array_index(chunks, i);
+	chunks = fu_chunk_array_new_from_bytes(fw, 0x00, ISP_DATA_BLOCKSIZE);
+	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
+		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
 		if (!fu_rts54hub_rtd21xx_device_read_status(FU_RTS54HUB_RTD21XX_DEVICE(self),
 							    NULL,
 							    error))
@@ -367,7 +364,7 @@ fu_rts54hub_rtd21xx_foreground_write_firmware(FuDevice *device,
 		/* update progress */
 		fu_progress_set_percentage_full(fu_progress_get_child(progress),
 						(gsize)i + 1,
-						(gsize)chunks->len);
+						(gsize)fu_chunk_array_length(chunks));
 	}
 	fu_progress_step_done(progress);
 

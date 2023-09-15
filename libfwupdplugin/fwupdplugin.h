@@ -20,6 +20,7 @@
 #include <libfwupdplugin/fu-cfi-device.h>
 #include <libfwupdplugin/fu-cfu-offer.h>
 #include <libfwupdplugin/fu-cfu-payload.h>
+#include <libfwupdplugin/fu-chunk-array.h>
 #include <libfwupdplugin/fu-chunk.h>
 #include <libfwupdplugin/fu-common-guid.h>
 #include <libfwupdplugin/fu-common.h>

@@ -560,15 +560,15 @@ fu_ti_tps6598x_device_report_metadata_pre(FuDevice *device, GHashTable *metadata
 
 static gboolean
 fu_ti_tps6598x_device_write_chunks(FuTiTps6598xDevice *self,
-				   GPtrArray *chunks,
+				   FuChunkArray *chunks,
 				   FuProgress *progress,
 				   GError **error)
 {
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_set_steps(progress, chunks->len);
-	for (guint i = 0; i < chunks->len; i++) {
-		FuChunk *chk = g_ptr_array_index(chunks, i);
+	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
+	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
+		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
 		g_autoptr(GByteArray) buf = g_byte_array_new();
 
 		/* align */
@@ -589,15 +589,15 @@ fu_ti_tps6598x_device_write_chunks(FuTiTps6598xDevice *self,
 
 static gboolean
 fu_ti_tps6598x_device_write_sfws_chunks(FuTiTps6598xDevice *self,
-					GPtrArray *chunks,
+					FuChunkArray *chunks,
 					FuProgress *progress,
 					GError **error)
 {
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_set_steps(progress, chunks->len);
-	for (guint i = 0; i < chunks->len; i++) {
-		FuChunk *chk = g_ptr_array_index(chunks, i);
+	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
+	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
+		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
 		g_autoptr(GByteArray) buf = g_byte_array_new();
 
 		/* align and pad low before sending */
@@ -649,9 +649,9 @@ fu_ti_tps6598x_device_write_firmware(FuDevice *device,
 	g_autoptr(GBytes) fw_sig = NULL;
 	g_autoptr(GBytes) fw_pubkey = NULL;
 	g_autoptr(GBytes) fw_payload = NULL;
-	g_autoptr(GPtrArray) chunks_pubkey = NULL;
-	g_autoptr(GPtrArray) chunks_sig = NULL;
-	g_autoptr(GPtrArray) chunks_payload = NULL;
+	g_autoptr(FuChunkArray) chunks_pubkey = NULL;
+	g_autoptr(FuChunkArray) chunks_sig = NULL;
+	g_autoptr(FuChunkArray) chunks_payload = NULL;
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
@@ -671,10 +671,7 @@ fu_ti_tps6598x_device_write_firmware(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/* write each SFWd block */
-	chunks_payload = fu_chunk_array_new_from_bytes(fw_payload,
-						       0x0, /* start_addr */
-						       0x0, /* page_sz */
-						       64);
+	chunks_payload = fu_chunk_array_new_from_bytes(fw_payload, 0x0, 64);
 	if (!fu_ti_tps6598x_device_write_chunks(self,
 						chunks_payload,
 						fu_progress_get_child(progress),
@@ -688,10 +685,7 @@ fu_ti_tps6598x_device_write_firmware(FuDevice *device,
 	fw_sig = fu_firmware_get_image_by_id_bytes(firmware, FU_FIRMWARE_ID_SIGNATURE, error);
 	if (fw_sig == NULL)
 		return FALSE;
-	chunks_sig = fu_chunk_array_new_from_bytes(fw_sig,
-						   0x0, /* start_addr */
-						   0x0, /* page_sz */
-						   64);
+	chunks_sig = fu_chunk_array_new_from_bytes(fw_sig, 0x0, 64);
 	if (!fu_ti_tps6598x_device_write_sfws_chunks(self,
 						     chunks_sig,
 						     fu_progress_get_child(progress),
@@ -705,10 +699,7 @@ fu_ti_tps6598x_device_write_firmware(FuDevice *device,
 	fw_pubkey = fu_firmware_get_image_by_id_bytes(firmware, "pubkey", error);
 	if (fw_pubkey == NULL)
 		return FALSE;
-	chunks_pubkey = fu_chunk_array_new_from_bytes(fw_pubkey,
-						      0x0, /* start_addr */
-						      0x0, /* page_sz */
-						      64);
+	chunks_pubkey = fu_chunk_array_new_from_bytes(fw_pubkey, 0x0, 64);
 	if (!fu_ti_tps6598x_device_write_sfws_chunks(self,
 						     chunks_pubkey,
 						     fu_progress_get_child(progress),

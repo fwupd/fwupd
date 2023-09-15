@@ -617,15 +617,15 @@ fu_superio_it89_device_get_jedec_id(FuSuperioDevice *self, guint8 *id, GError **
 
 static gboolean
 fu_superio_it89_device_write_chunks(FuSuperioDevice *self,
-				    GPtrArray *chunks,
+				    FuChunkArray *chunks,
 				    FuProgress *progress,
 				    GError **error)
 {
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_set_steps(progress, chunks->len - 1);
-	for (guint i = 0; i < chunks->len - 1; i++) {
-		FuChunk *chk = g_ptr_array_index(chunks, i);
+	fu_progress_set_steps(progress, fu_chunk_array_length(chunks) - 1);
+	for (guint i = 0; i < fu_chunk_array_length(chunks) - 1; i++) {
+		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
 
 		/* try this many times; the failure-to-flash case leaves you
 		 * without a keyboard and future boot may completely fail */
@@ -663,7 +663,7 @@ fu_superio_it89_device_write_firmware(FuDevice *device,
 	guint8 id[4] = {0x0};
 	g_autoptr(GBytes) fw_fixed = NULL;
 	g_autoptr(GBytes) fw = NULL;
-	g_autoptr(GPtrArray) chunks = NULL;
+	g_autoptr(FuChunkArray) chunks = NULL;
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
@@ -708,7 +708,7 @@ fu_superio_it89_device_write_firmware(FuDevice *device,
 	}
 
 	/* chunks of 1kB, skipping the final chunk */
-	chunks = fu_chunk_array_new_from_bytes(fw_fixed, 0x00, 0x00, 0x400);
+	chunks = fu_chunk_array_new_from_bytes(fw_fixed, 0x00, 0x400);
 	if (!fu_superio_it89_device_write_chunks(self,
 						 chunks,
 						 fu_progress_get_child(progress),

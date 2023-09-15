@@ -236,7 +236,7 @@ fu_ep963x_device_write_firmware(FuDevice *device,
 	FuEp963xDevice *self = FU_EP963X_DEVICE(device);
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GError) error_local = NULL;
-	g_autoptr(GPtrArray) blocks = NULL;
+	g_autoptr(FuChunkArray) blocks = NULL;
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
@@ -266,11 +266,12 @@ fu_ep963x_device_write_firmware(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/* write each block */
-	blocks = fu_chunk_array_new_from_bytes(fw, 0x00, 0x00, FU_EP963_TRANSFER_BLOCK_SIZE);
-	for (guint i = 0; i < blocks->len; i++) {
-		FuChunk *chk2 = g_ptr_array_index(blocks, i);
+	blocks = fu_chunk_array_new_from_bytes(fw, 0x00, FU_EP963_TRANSFER_BLOCK_SIZE);
+	for (guint i = 0; i < fu_chunk_array_length(blocks); i++) {
+		g_autoptr(FuChunk) chk2 = fu_chunk_array_index(blocks, i);
 		guint8 buf[] = {i};
-		g_autoptr(GPtrArray) chunks = NULL;
+		g_autoptr(FuChunkArray) chunks = NULL;
+		g_autoptr(GBytes) chk_blob = fu_chunk_get_bytes(chk2);
 
 		/* set the block index */
 		if (!fu_ep963x_device_write(self,
@@ -288,13 +289,11 @@ fu_ep963x_device_write_firmware(FuDevice *device,
 		}
 
 		/* 4 byte chunks */
-		chunks = fu_chunk_array_new(fu_chunk_get_data(chk2),
-					    fu_chunk_get_data_sz(chk2),
-					    fu_chunk_get_address(chk2),
-					    0x0,
-					    FU_EP963_TRANSFER_CHUNK_SIZE);
-		for (guint j = 0; j < chunks->len; j++) {
-			FuChunk *chk = g_ptr_array_index(chunks, j);
+		chunks = fu_chunk_array_new_from_bytes(chk_blob,
+						       fu_chunk_get_address(chk2),
+						       FU_EP963_TRANSFER_CHUNK_SIZE);
+		for (guint j = 0; j < fu_chunk_array_length(chunks); j++) {
+			g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
 			g_autoptr(GError) error_loop = NULL;
 
 			/* copy data and write */
@@ -337,7 +336,7 @@ fu_ep963x_device_write_firmware(FuDevice *device,
 		/* update progress */
 		fu_progress_set_percentage_full(fu_progress_get_child(progress),
 						(gsize)i + 1,
-						(gsize)chunks->len);
+						(gsize)fu_chunk_array_length(chunks));
 	}
 	fu_progress_step_done(progress);
 

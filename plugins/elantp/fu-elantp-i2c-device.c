@@ -459,14 +459,13 @@ fu_elantp_i2c_device_write_firmware(FuDevice *device,
 {
 	FuElantpI2cDevice *self = FU_ELANTP_I2C_DEVICE(device);
 	FuElantpFirmware *firmware_elantp = FU_ELANTP_FIRMWARE(firmware);
-	gsize bufsz = 0;
 	guint16 checksum = 0;
 	guint16 checksum_device = 0;
 	guint16 iap_addr;
-	const guint8 *buf;
 	guint8 csum_buf[2] = {0x0};
 	g_autoptr(GBytes) fw = NULL;
-	g_autoptr(GPtrArray) chunks = NULL;
+	g_autoptr(GBytes) fw2 = NULL;
+	g_autoptr(FuChunkArray) chunks = NULL;
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
@@ -487,11 +486,14 @@ fu_elantp_i2c_device_write_firmware(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/* write each block */
-	buf = g_bytes_get_data(fw, &bufsz);
 	iap_addr = fu_elantp_firmware_get_iap_addr(firmware_elantp);
-	chunks = fu_chunk_array_new(buf + iap_addr, bufsz - iap_addr, 0x0, 0x0, self->fw_page_size);
-	for (guint i = 0; i < chunks->len; i++) {
-		FuChunk *chk = g_ptr_array_index(chunks, i);
+
+	fw2 = fu_bytes_new_offset(fw, iap_addr, g_bytes_get_size(fw) - iap_addr, error);
+	if (fw2 == NULL)
+		return FALSE;
+	chunks = fu_chunk_array_new_from_bytes(fw2, 0x0, self->fw_page_size);
+	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
+		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
 		guint16 csum_tmp =
 		    fu_sum16w(fu_chunk_get_data(chk), fu_chunk_get_data_sz(chk), G_LITTLE_ENDIAN);
 		gsize blksz = self->fw_page_size + 4;
@@ -533,7 +535,7 @@ fu_elantp_i2c_device_write_firmware(FuDevice *device,
 		checksum += csum_tmp;
 		fu_progress_set_percentage_full(fu_progress_get_child(progress),
 						(gsize)i + 1,
-						(gsize)chunks->len);
+						(gsize)fu_chunk_array_length(chunks));
 	}
 	fu_progress_step_done(progress);
 

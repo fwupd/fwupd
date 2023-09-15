@@ -428,15 +428,12 @@ fu_usi_dock_mcu_device_write_chunk(FuUsiDockMcuDevice *self, FuChunk *chk, GErro
 static gboolean
 fu_usi_dock_mcu_device_write_page(FuUsiDockMcuDevice *self, FuChunk *chk_page, GError **error)
 {
-	g_autoptr(GPtrArray) chunks = NULL;
+	g_autoptr(FuChunkArray) chunks = NULL;
+	g_autoptr(GBytes) chk_blob = fu_chunk_get_bytes(chk_page);
 
-	chunks = fu_chunk_array_new(fu_chunk_get_data(chk_page),
-				    fu_chunk_get_data_sz(chk_page),
-				    0x0,
-				    0x0,
-				    FU_STRUCT_USI_DOCK_HID_REQ_SIZE_BUF); // FIXME DEFINE
-	for (guint i = 0; i < chunks->len; i++) {
-		FuChunk *chk = g_ptr_array_index(chunks, i);
+	chunks = fu_chunk_array_new_from_bytes(chk_blob, 0x0, FU_STRUCT_USI_DOCK_HID_REQ_SIZE_BUF);
+	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
+		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
 		if (!fu_usi_dock_mcu_device_write_chunk(self, chk, error))
 			return FALSE;
 	}
@@ -445,14 +442,14 @@ fu_usi_dock_mcu_device_write_page(FuUsiDockMcuDevice *self, FuChunk *chk_page, G
 
 static gboolean
 fu_usi_dock_mcu_device_write_pages(FuUsiDockMcuDevice *self,
-				   GPtrArray *chunks,
+				   FuChunkArray *chunks,
 				   FuProgress *progress,
 				   GError **error)
 {
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_set_steps(progress, chunks->len);
-	for (guint i = 0; i < chunks->len; i++) {
-		FuChunk *chk = g_ptr_array_index(chunks, i);
+	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
+	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
+		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
 		if (!fu_usi_dock_mcu_device_write_page(self, chk, error)) {
 			g_prefix_error(error, "failed to write chunk 0x%x: ", i);
 			return FALSE;
@@ -548,7 +545,7 @@ fu_usi_dock_mcu_device_write_firmware_with_idx(FuUsiDockMcuDevice *self,
 {
 	guint8 cmd;
 	g_autoptr(GBytes) fw = NULL;
-	g_autoptr(GPtrArray) chunks = NULL;
+	g_autoptr(FuChunkArray) chunks = NULL;
 	guint8 checksum = 0xFF;
 
 	/* progress */
@@ -604,7 +601,7 @@ fu_usi_dock_mcu_device_write_firmware_with_idx(FuUsiDockMcuDevice *self,
 	fw = fu_firmware_get_bytes(firmware, error);
 	if (fw == NULL)
 		return FALSE;
-	chunks = fu_chunk_array_new_from_bytes(fw, 0x0, 0x0, W25Q16DV_PAGE_SIZE);
+	chunks = fu_chunk_array_new_from_bytes(fw, 0x0, W25Q16DV_PAGE_SIZE);
 	if (!fu_usi_dock_mcu_device_write_pages(self,
 						chunks,
 						fu_progress_get_child(progress),

@@ -339,7 +339,7 @@ fu_goodixmoc_device_write_firmware(FuDevice *device,
 	gboolean wait_data_reply = FALSE;
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GError) error_local = NULL;
-	g_autoptr(GPtrArray) chunks = NULL;
+	g_autoptr(FuChunkArray) chunks = NULL;
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
@@ -353,10 +353,7 @@ fu_goodixmoc_device_write_firmware(FuDevice *device,
 		return FALSE;
 
 	/* build packets */
-	chunks = fu_chunk_array_new_from_bytes(fw,
-					       0x00,
-					       0x00, /* page_sz */
-					       GX_FLASH_TRANSFER_BLOCK_SIZE);
+	chunks = fu_chunk_array_new_from_bytes(fw, 0x00, GX_FLASH_TRANSFER_BLOCK_SIZE);
 
 	/* don't auto-boot firmware */
 	if (!fu_goodixmoc_device_update_init(self, &error_local)) {
@@ -370,15 +367,15 @@ fu_goodixmoc_device_write_firmware(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/* write each block */
-	for (guint i = 0; i < chunks->len; i++) {
-		FuChunk *chk = g_ptr_array_index(chunks, i);
+	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
+		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
 		g_autoptr(GByteArray) req = g_byte_array_new();
 		g_autoptr(GError) error_block = NULL;
 
 		g_byte_array_append(req, fu_chunk_get_data(chk), fu_chunk_get_data_sz(chk));
 
 		/* the last chunk */
-		if (i == chunks->len - 1) {
+		if (i == fu_chunk_array_length(chunks) - 1) {
 			wait_data_reply = TRUE;
 			pkg_eop = GX_PKG_TYPE_EOP;
 		}
@@ -411,7 +408,7 @@ fu_goodixmoc_device_write_firmware(FuDevice *device,
 		/* update progress */
 		fu_progress_set_percentage_full(fu_progress_get_child(progress),
 						(gsize)i + 1,
-						(gsize)chunks->len);
+						(gsize)fu_chunk_array_length(chunks));
 	}
 	fu_progress_step_done(progress);
 

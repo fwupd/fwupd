@@ -291,15 +291,15 @@ fu_wistron_dock_device_write_img_data(FuWistronDockDevice *self,
 
 static gboolean
 fu_wistron_dock_device_write_blocks(FuWistronDockDevice *self,
-				    GPtrArray *chunks,
+				    FuChunkArray *chunks,
 				    FuProgress *progress,
 				    GError **error)
 {
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_set_steps(progress, chunks->len);
-	for (guint i = 0; i < chunks->len; i++) {
-		FuChunk *chk = g_ptr_array_index(chunks, i);
+	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
+	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
+		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
 
 		/* set address */
 		if (!fu_wistron_dock_device_set_img_address(self,
@@ -400,7 +400,7 @@ fu_wistron_dock_device_write_firmware(FuDevice *device,
 	g_autoptr(GBytes) fw_cbin = NULL;
 	g_autoptr(GBytes) fw_wdfl = NULL;
 	g_autoptr(GBytes) fw_wsig = NULL;
-	g_autoptr(GPtrArray) chunks = NULL;
+	g_autoptr(FuChunkArray) chunks = NULL;
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
@@ -438,10 +438,7 @@ fu_wistron_dock_device_write_firmware(FuDevice *device,
 	fw_cbin = fu_firmware_get_image_by_id_bytes(firmware, FU_FIRMWARE_ID_PAYLOAD, error);
 	if (fw_cbin == NULL)
 		return FALSE;
-	chunks = fu_chunk_array_new_from_bytes(fw_cbin,
-					       0x0,
-					       0x0, /* page_sz */
-					       FU_WISTRON_DOCK_TRANSFER_BLOCK_SIZE);
+	chunks = fu_chunk_array_new_from_bytes(fw_cbin, 0x0, FU_WISTRON_DOCK_TRANSFER_BLOCK_SIZE);
 	if (!fu_wistron_dock_device_write_blocks(self,
 						 chunks,
 						 fu_progress_get_child(progress),

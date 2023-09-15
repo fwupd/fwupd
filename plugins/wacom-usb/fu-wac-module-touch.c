@@ -27,7 +27,7 @@ fu_wac_module_touch_write_firmware(FuDevice *device,
 {
 	FuWacModule *self = FU_WAC_MODULE(device);
 	g_autoptr(GBytes) fw = NULL;
-	g_autoptr(GPtrArray) chunks = NULL;
+	g_autoptr(FuChunkArray) chunks = NULL;
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
@@ -44,10 +44,8 @@ fu_wac_module_touch_write_firmware(FuDevice *device,
 		g_prefix_error(error, "wacom touch module failed to get bytes: ");
 		return FALSE;
 	}
-	chunks = fu_chunk_array_new_from_bytes(fw,
-					       fu_firmware_get_addr(firmware),
-					       0x0,  /* page_sz */
-					       128); /* packet_sz */
+	chunks =
+	    fu_chunk_array_new_from_bytes(fw, fu_firmware_get_addr(firmware), 128); /* packet_sz */
 
 	/* start, which will erase the module */
 	if (!fu_wac_module_set_feature(self,
@@ -62,8 +60,8 @@ fu_wac_module_touch_write_firmware(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/* data */
-	for (guint i = 0; i < chunks->len; i++) {
-		FuChunk *chk = g_ptr_array_index(chunks, i);
+	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
+		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
 		guint8 buf[128 + 7] = {0xff};
 		g_autoptr(GBytes) blob_chunk = NULL;
 
@@ -98,7 +96,7 @@ fu_wac_module_touch_write_firmware(FuDevice *device,
 		/* update progress */
 		fu_progress_set_percentage_full(fu_progress_get_child(progress),
 						i + 1,
-						chunks->len);
+						fu_chunk_array_length(chunks));
 	}
 	fu_progress_step_done(progress);
 

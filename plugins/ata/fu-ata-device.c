@@ -774,7 +774,7 @@ fu_ata_device_write_firmware(FuDevice *device,
 	guint32 chunksz = (guint32)self->transfer_blocks * FU_ATA_BLOCK_SIZE;
 	guint max_size = 0xffff * FU_ATA_BLOCK_SIZE;
 	g_autoptr(GBytes) fw = NULL;
-	g_autoptr(GPtrArray) chunks = NULL;
+	g_autoptr(FuChunkArray) chunks = NULL;
 
 	/* get default image */
 	fw = fu_firmware_get_bytes(firmware, error);
@@ -805,11 +805,11 @@ fu_ata_device_write_firmware(FuDevice *device,
 
 	/* write each block */
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_WRITE);
-	chunks = fu_chunk_array_new_from_bytes(fw, 0x00, 0x00, chunksz);
+	chunks = fu_chunk_array_new_from_bytes(fw, 0x00, chunksz);
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_set_steps(progress, chunks->len);
-	for (guint i = 0; i < chunks->len; i++) {
-		FuChunk *chk = g_ptr_array_index(chunks, i);
+	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
+	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
+		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
 		if (!fu_ata_device_fw_download(self,
 					       fu_chunk_get_idx(chk),
 					       fu_chunk_get_address(chk),

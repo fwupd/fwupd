@@ -124,15 +124,15 @@ fu_aver_hid_device_prepare_firmware(FuDevice *device,
 
 static gboolean
 fu_aver_hid_device_isp_file_dnload(FuAverHidDevice *self,
-				   GPtrArray *chunks,
+				   FuChunkArray *chunks,
 				   FuProgress *progress,
 				   GError **error)
 {
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_set_steps(progress, chunks->len);
-	for (guint i = 0; i < chunks->len; i++) {
-		FuChunk *chk = g_ptr_array_index(chunks, i);
+	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
+	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
+		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
 		g_autoptr(GByteArray) req = fu_struct_aver_hid_req_isp_file_dnload_new();
 		g_autoptr(GByteArray) res = fu_struct_aver_hid_res_isp_status_new();
 
@@ -151,7 +151,7 @@ fu_aver_hid_device_isp_file_dnload(FuAverHidDevice *self,
 			return FALSE;
 
 		/* resize the last packet */
-		if ((i == (chunks->len - 1)) &&
+		if ((i == (fu_chunk_array_length(chunks) - 1)) &&
 		    (fu_chunk_get_data_sz(chk) < FU_STRUCT_AVER_HID_REQ_ISP_FILE_DNLOAD_SIZE_DATA))
 			fu_byte_array_set_size(req, 3 + fu_chunk_get_data_sz(chk), 0x0);
 		if (!fu_aver_hid_device_transfer(self, req, res, error))
@@ -306,7 +306,7 @@ fu_aver_hid_device_write_firmware(FuDevice *device,
 	g_autoptr(FuArchive) archive = NULL;
 	g_autoptr(GBytes) aver_fw = NULL;
 	g_autoptr(GBytes) fw = NULL;
-	g_autoptr(GPtrArray) chunks = NULL;
+	g_autoptr(FuChunkArray) chunks = NULL;
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
@@ -350,7 +350,6 @@ fu_aver_hid_device_write_firmware(FuDevice *device,
 	/* ISP_FILE_DNLOAD */
 	chunks = fu_chunk_array_new_from_bytes(aver_fw,
 					       0x00,
-					       0x00, /* page_sz */
 					       FU_STRUCT_AVER_HID_REQ_ISP_FILE_DNLOAD_SIZE_DATA);
 
 	if (!fu_aver_hid_device_isp_file_dnload(self,

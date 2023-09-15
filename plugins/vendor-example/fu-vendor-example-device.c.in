@@ -176,15 +176,15 @@ fu_{{vendor}}_{{example}}_device_prepare_firmware(FuDevice *device,
 
 static gboolean
 fu_{{vendor}}_{{example}}_device_write_blocks(Fu{{Vendor}}{{Example}}Device *self,
-				      GPtrArray *chunks,
+				      FuChunkArray *chunks,
 				      FuProgress *progress,
 				      GError **error)
 {
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_set_steps(progress, chunks->len);
-	for (guint i = 0; i < chunks->len; i++) {
-		FuChunk *chk = g_ptr_array_index(chunks, i);
+	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
+	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
+		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
 
 		/* TODO: send to hardware */
 		g_assert(chk != NULL);
@@ -239,7 +239,7 @@ fu_{{vendor}}_{{example}}_device_write_firmware(FuDevice *device,
 {
 	Fu{{Vendor}}{{Example}}Device *self = FU_{{VENDOR}}_{{EXAMPLE}}_DEVICE(device);
 	g_autoptr(GBytes) fw = NULL;
-	g_autoptr(GPtrArray) chunks = NULL;
+	g_autoptr(FuChunkArray) chunks = NULL;
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
@@ -253,10 +253,7 @@ fu_{{vendor}}_{{example}}_device_write_firmware(FuDevice *device,
 		return FALSE;
 
 	/* write each block */
-	chunks = fu_chunk_array_new_from_bytes(fw,
-					       self->start_addr,
-					       0x00, /* page_sz */
-					       64 /* block_size */);
+	chunks = fu_chunk_array_new_from_bytes(fw, self->start_addr, 64 /* block_size */);
 	if (!fu_{{vendor}}_{{example}}_device_write_blocks(self,
 						   chunks,
 						   fu_progress_get_child(progress),

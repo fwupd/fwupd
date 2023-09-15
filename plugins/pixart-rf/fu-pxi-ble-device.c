@@ -389,7 +389,7 @@ fu_pxi_ble_device_check_support_resume(FuPxiBleDevice *self,
 				       GError **error)
 {
 	g_autoptr(GBytes) fw = NULL;
-	g_autoptr(GPtrArray) chunks = NULL;
+	g_autoptr(FuChunkArray) chunks = NULL;
 	guint16 checksum_tmp = 0x0;
 
 	/* get the default image */
@@ -398,21 +398,21 @@ fu_pxi_ble_device_check_support_resume(FuPxiBleDevice *self,
 		return FALSE;
 
 	/* check offset is invalid or not */
-	chunks = fu_chunk_array_new_from_bytes(fw, 0x0, 0x0, FU_PXI_DEVICE_OBJECT_SIZE_MAX);
-	if (self->fwstate.offset > chunks->len) {
+	chunks = fu_chunk_array_new_from_bytes(fw, 0x0, FU_PXI_DEVICE_OBJECT_SIZE_MAX);
+	if (self->fwstate.offset > fu_chunk_array_length(chunks)) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_READ,
 			    "offset from device is invalid: "
 			    "got 0x%x, current maximum 0x%x",
 			    self->fwstate.offset,
-			    chunks->len);
+			    fu_chunk_array_length(chunks));
 		return FALSE;
 	}
 
 	/* calculate device current checksum */
 	for (guint i = 0; i < self->fwstate.offset; i++) {
-		FuChunk *chk = g_ptr_array_index(chunks, i);
+		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
 		checksum_tmp += fu_sum16(fu_chunk_get_data(chk), fu_chunk_get_data_sz(chk));
 	}
 
@@ -545,26 +545,25 @@ fu_pxi_ble_device_write_chunk(FuPxiBleDevice *self, FuChunk *chk, GError **error
 	guint32 prn = 0;
 	guint16 checksum;
 	guint16 checksum_device = 0;
-	g_autoptr(GPtrArray) chunks = NULL;
+	g_autoptr(FuChunkArray) chunks = NULL;
+	g_autoptr(GBytes) chk_bytes = fu_chunk_get_bytes(chk);
 
 	/* send create fw object command */
 	if (!fu_pxi_ble_device_fw_object_create(self, chk, error))
 		return FALSE;
 
 	/* write payload */
-	chunks = fu_chunk_array_new(fu_chunk_get_data(chk),
-				    fu_chunk_get_data_sz(chk),
-				    fu_chunk_get_address(chk),
-				    0x0,
-				    self->fwstate.mtu_size);
-	for (guint i = 0; i < chunks->len; i++) {
-		FuChunk *chk2 = g_ptr_array_index(chunks, i);
+	chunks = fu_chunk_array_new_from_bytes(chk_bytes,
+					       fu_chunk_get_address(chk),
+					       self->fwstate.mtu_size);
+	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
+		g_autoptr(FuChunk) chk2 = fu_chunk_array_index(chunks, i);
 		if (!fu_pxi_ble_device_write_payload(self, chk2, error))
 			return FALSE;
 		prn++;
 		/* wait notify from device when PRN over threshold write or
 		 * offset reach max object sz or write offset reach fw length */
-		if (prn >= self->fwstate.prn_threshold || i == chunks->len - 1) {
+		if (prn >= self->fwstate.prn_threshold || i == fu_chunk_array_length(chunks) - 1) {
 			guint8 opcode = 0;
 			if (!fu_pxi_ble_device_wait_notify(self,
 							   0x0,
@@ -743,7 +742,7 @@ fu_pxi_ble_device_write_firmware(FuDevice *device,
 {
 	FuPxiBleDevice *self = FU_PXI_BLE_DEVICE(device);
 	g_autoptr(GBytes) fw = NULL;
-	g_autoptr(GPtrArray) chunks = NULL;
+	g_autoptr(FuChunkArray) chunks = NULL;
 	g_autoptr(GError) error_local = NULL;
 
 	/* progress */
@@ -772,7 +771,7 @@ fu_pxi_ble_device_write_firmware(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/* prepare write fw into device */
-	chunks = fu_chunk_array_new_from_bytes(fw, 0x0, 0x0, FU_PXI_DEVICE_OBJECT_SIZE_MAX);
+	chunks = fu_chunk_array_new_from_bytes(fw, 0x0, FU_PXI_DEVICE_OBJECT_SIZE_MAX);
 	if (!fu_pxi_ble_device_check_support_resume(self,
 						    firmware,
 						    fu_progress_get_child(progress),
@@ -784,13 +783,13 @@ fu_pxi_ble_device_write_firmware(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/* write fw into device */
-	for (guint i = self->fwstate.offset; i < chunks->len; i++) {
-		FuChunk *chk = g_ptr_array_index(chunks, i);
+	for (guint i = self->fwstate.offset; i < fu_chunk_array_length(chunks); i++) {
+		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
 		if (!fu_pxi_ble_device_write_chunk(self, chk, error))
 			return FALSE;
 		fu_progress_set_percentage_full(fu_progress_get_child(progress),
 						(gsize)self->fwstate.offset + 1,
-						(gsize)chunks->len);
+						(gsize)fu_chunk_array_length(chunks));
 	}
 	fu_progress_step_done(progress);
 

@@ -227,15 +227,15 @@ static gboolean
 fu_mtd_device_erase(FuMtdDevice *self, GBytes *fw, FuProgress *progress, GError **error)
 {
 #ifdef HAVE_MTD_USER_H
-	g_autoptr(GPtrArray) chunks = fu_chunk_array_new_from_bytes(fw, 0x0, 0x0, self->erasesize);
+	g_autoptr(FuChunkArray) chunks = fu_chunk_array_new_from_bytes(fw, 0x0, self->erasesize);
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_set_steps(progress, chunks->len);
+	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
 
 	/* erase each chunk */
-	for (guint i = 0; i < chunks->len; i++) {
-		FuChunk *chk = g_ptr_array_index(chunks, i);
+	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
+		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
 		struct erase_info_user erase = {
 		    .start = fu_chunk_get_address(chk),
 		    .length = fu_chunk_get_data_sz(chk),
@@ -264,11 +264,11 @@ fu_mtd_device_erase(FuMtdDevice *self, GBytes *fw, FuProgress *progress, GError 
 }
 
 static gboolean
-fu_mtd_device_write(FuMtdDevice *self, GPtrArray *chunks, FuProgress *progress, GError **error)
+fu_mtd_device_write(FuMtdDevice *self, FuChunkArray *chunks, FuProgress *progress, GError **error)
 {
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_set_steps(progress, chunks->len);
+	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
 
 	/* rewind */
 	if (!fu_udev_device_seek(FU_UDEV_DEVICE(self), 0x0, error)) {
@@ -277,8 +277,8 @@ fu_mtd_device_write(FuMtdDevice *self, GPtrArray *chunks, FuProgress *progress, 
 	}
 
 	/* write each chunk */
-	for (guint i = 0; i < chunks->len; i++) {
-		FuChunk *chk = g_ptr_array_index(chunks, i);
+	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
+		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
 		if (!fu_udev_device_pwrite(FU_UDEV_DEVICE(self),
 					   fu_chunk_get_address(chk),
 					   fu_chunk_get_data(chk),
@@ -297,15 +297,15 @@ fu_mtd_device_write(FuMtdDevice *self, GPtrArray *chunks, FuProgress *progress, 
 }
 
 static gboolean
-fu_mtd_device_verify(FuMtdDevice *self, GPtrArray *chunks, FuProgress *progress, GError **error)
+fu_mtd_device_verify(FuMtdDevice *self, FuChunkArray *chunks, FuProgress *progress, GError **error)
 {
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_set_steps(progress, chunks->len);
+	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
 
 	/* verify each chunk */
-	for (guint i = 0; i < chunks->len; i++) {
-		FuChunk *chk = g_ptr_array_index(chunks, i);
+	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
+		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
 		g_autofree guint8 *buf = g_malloc0(fu_chunk_get_data_sz(chk));
 		g_autoptr(GBytes) blob1 = fu_chunk_get_bytes(chk);
 		g_autoptr(GBytes) blob2 = NULL;
@@ -337,7 +337,7 @@ fu_mtd_device_verify(FuMtdDevice *self, GPtrArray *chunks, FuProgress *progress,
 static gboolean
 fu_mtd_device_write_verify(FuMtdDevice *self, GBytes *fw, FuProgress *progress, GError **error)
 {
-	g_autoptr(GPtrArray) chunks = fu_chunk_array_new_from_bytes(fw, 0x0, 0x0, 10 * 1024);
+	g_autoptr(FuChunkArray) chunks = fu_chunk_array_new_from_bytes(fw, 0x0, 10 * 1024);
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);

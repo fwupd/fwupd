@@ -355,7 +355,7 @@ fu_emmc_device_write_firmware(FuDevice *device,
 	guint failure_cnt = 0;
 	g_autofree struct mmc_ioc_multi_cmd *multi_cmd = NULL;
 	g_autoptr(GBytes) fw = NULL;
-	g_autoptr(GPtrArray) chunks = NULL;
+	g_autoptr(FuChunkArray) chunks = NULL;
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
@@ -404,13 +404,10 @@ fu_emmc_device_write_firmware(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/* build packets */
-	chunks = fu_chunk_array_new_from_bytes(fw,
-					       0x00, /* start addr */
-					       0x00, /* page_sz */
-					       self->sect_size);
+	chunks = fu_chunk_array_new_from_bytes(fw, 0x00, self->sect_size);
 	while (sect_done == 0) {
-		for (guint i = 0; i < chunks->len; i++) {
-			FuChunk *chk = g_ptr_array_index(chunks, i);
+		for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
+			g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
 
 			mmc_ioc_cmd_set_data(multi_cmd->cmds[1], fu_chunk_get_data(chk));
 
@@ -458,7 +455,7 @@ fu_emmc_device_write_firmware(FuDevice *device,
 			/* update progress */
 			fu_progress_set_percentage_full(fu_progress_get_child(progress),
 							(gsize)i + 1,
-							(gsize)chunks->len);
+							(gsize)fu_chunk_array_length(chunks));
 		}
 	}
 	fu_progress_step_done(progress);

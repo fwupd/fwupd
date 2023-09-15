@@ -61,6 +61,7 @@ fwupdplugin_src = [
   'fu-cfu-offer.c', # fuzzing
   'fu-cfu-payload.c', # fuzzing
   'fu-chunk.c', # fuzzing
+  'fu-chunk-array.c', # fuzzing
   'fu-common.c', # fuzzing
   'fu-common-guid.c',
   'fu-config.c', # fuzzing
@@ -179,6 +180,7 @@ fwupdplugin_headers = [
   'fu-cfu-offer.h',
   'fu-cfu-payload.h',
   'fu-chunk.h',
+  'fu-chunk-array.h',
   'fu-common-guid.h',
   'fu-common.h',
   'fu-config.h',

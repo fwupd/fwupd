@@ -468,14 +468,14 @@ fu_bcm57xx_device_prepare_firmware(FuDevice *device,
 
 static gboolean
 fu_bcm57xx_device_write_chunks(FuBcm57xxDevice *self,
-			       GPtrArray *chunks,
+			       FuChunkArray *chunks,
 			       FuProgress *progress,
 			       GError **error)
 {
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_set_steps(progress, chunks->len);
-	for (guint i = 0; i < chunks->len; i++) {
-		FuChunk *chk = g_ptr_array_index(chunks, i);
+	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
+	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
+		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
 		if (!fu_bcm57xx_device_nvram_write(self,
 						   fu_chunk_get_address(chk),
 						   fu_chunk_get_data(chk),
@@ -497,7 +497,7 @@ fu_bcm57xx_device_write_firmware(FuDevice *device,
 	FuBcm57xxDevice *self = FU_BCM57XX_DEVICE(device);
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GBytes) blob_verify = NULL;
-	g_autoptr(GPtrArray) chunks = NULL;
+	g_autoptr(FuChunkArray) chunks = NULL;
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
@@ -514,7 +514,7 @@ fu_bcm57xx_device_write_firmware(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/* hit hardware */
-	chunks = fu_chunk_array_new_from_bytes(blob, 0x0, 0x0, FU_BCM57XX_BLOCK_SZ);
+	chunks = fu_chunk_array_new_from_bytes(blob, 0x0, FU_BCM57XX_BLOCK_SZ);
 	if (!fu_bcm57xx_device_write_chunks(self, chunks, fu_progress_get_child(progress), error))
 		return FALSE;
 	fu_progress_step_done(progress);

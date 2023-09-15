@@ -362,7 +362,7 @@ fu_nvme_device_write_firmware(FuDevice *device,
 	FuNvmeDevice *self = FU_NVME_DEVICE(device);
 	g_autoptr(GBytes) fw2 = NULL;
 	g_autoptr(GBytes) fw = NULL;
-	g_autoptr(GPtrArray) chunks = NULL;
+	g_autoptr(FuChunkArray) chunks = NULL;
 	guint64 block_size = self->write_block_size > 0 ? self->write_block_size : 0x1000;
 	guint8 commit_action = FU_NVME_COMMIT_ACTION_CA1;
 
@@ -386,12 +386,9 @@ fu_nvme_device_write_firmware(FuDevice *device,
 	}
 
 	/* write each block */
-	chunks = fu_chunk_array_new_from_bytes(fw2,
-					       0x00,	    /* start_addr */
-					       0x00,	    /* page_sz */
-					       block_size); /* block size */
-	for (guint i = 0; i < chunks->len; i++) {
-		FuChunk *chk = g_ptr_array_index(chunks, i);
+	chunks = fu_chunk_array_new_from_bytes(fw2, 0x00, block_size);
+	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
+		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
 		if (!fu_nvme_device_fw_download(self,
 						fu_chunk_get_address(chk),
 						fu_chunk_get_data(chk),
@@ -402,7 +399,7 @@ fu_nvme_device_write_firmware(FuDevice *device,
 		}
 		fu_progress_set_percentage_full(fu_progress_get_child(progress),
 						(gsize)i + 1,
-						(gsize)chunks->len);
+						(gsize)fu_chunk_array_length(chunks));
 	}
 	fu_progress_step_done(progress);
 

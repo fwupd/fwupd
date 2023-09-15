@@ -671,7 +671,7 @@ fu_synaptics_cape_device_write_firmware_image(FuSynapticsCapeDevice *self,
 					      FuProgress *progress,
 					      GError **error)
 {
-	g_autoptr(GPtrArray) chunks = NULL;
+	g_autoptr(FuChunkArray) chunks = NULL;
 
 	g_return_val_if_fail(FU_IS_SYNAPTICS_CAPE_DEVICE(self), FALSE);
 	g_return_val_if_fail(fw != NULL, FALSE);
@@ -680,13 +680,12 @@ fu_synaptics_cape_device_write_firmware_image(FuSynapticsCapeDevice *self,
 	chunks =
 	    fu_chunk_array_new_from_bytes(fw,
 					  0x00,
-					  0x00,
 					  sizeof(guint32) * FU_SYNAPTICS_CAPE_CMD_WRITE_DATAL_LEN);
 
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_set_steps(progress, chunks->len);
-	for (guint i = 0; i < chunks->len; i++) {
-		FuChunk *chk = g_ptr_array_index(chunks, i);
+	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
+	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
+		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
 		gsize bufsz = fu_chunk_get_data_sz(chk);
 		g_autofree guint32 *buf32 = NULL;
 

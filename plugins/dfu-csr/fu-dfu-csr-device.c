@@ -354,7 +354,7 @@ fu_dfu_csr_device_download(FuDevice *device,
 	guint idx;
 	g_autoptr(GBytes) blob_empty = NULL;
 	g_autoptr(GBytes) blob = NULL;
-	g_autoptr(GPtrArray) chunks = NULL;
+	g_autoptr(FuChunkArray) chunks = NULL;
 
 	/* get default image */
 	blob = fu_firmware_get_bytes(firmware, error);
@@ -367,23 +367,22 @@ fu_dfu_csr_device_download(FuDevice *device,
 	/* create chunks */
 	chunks = fu_chunk_array_new_from_bytes(blob,
 					       0x0,
-					       0x0,
 					       FU_DFU_CSR_PACKET_DATA_SIZE -
 						   FU_DFU_CSR_COMMAND_HEADER_SIZE);
-	if (chunks->len > G_MAXUINT16) {
+	if (fu_chunk_array_length(chunks) > G_MAXUINT16) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_FILE,
 			    "too many chunks for hardware: 0x%x",
-			    chunks->len);
+			    fu_chunk_array_length(chunks));
 		return FALSE;
 	}
 
 	/* send to hardware */
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_set_steps(progress, chunks->len);
-	for (idx = 0; idx < chunks->len; idx++) {
-		FuChunk *chk = g_ptr_array_index(chunks, idx);
+	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
+	for (idx = 0; idx < fu_chunk_array_length(chunks); idx++) {
+		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, idx);
 		g_autoptr(GBytes) blob_tmp = fu_chunk_get_bytes(chk);
 
 		/* send packet */

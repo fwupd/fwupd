@@ -365,13 +365,13 @@ fu_tpm_v2_device_upgrade_data(FuTpmV2Device *self, GBytes *fw, FuProgress *progr
 	TPMT_HA *first_digest;
 	TPMT_HA *next_digest;
 	TSS2_RC rc;
-	g_autoptr(GPtrArray) chunks = NULL;
+	g_autoptr(FuChunkArray) chunks = NULL;
 
-	chunks = fu_chunk_array_new_from_bytes(fw, 0x0, 0x0, TPM2_MAX_DIGEST_BUFFER);
+	chunks = fu_chunk_array_new_from_bytes(fw, 0x0, TPM2_MAX_DIGEST_BUFFER);
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_set_steps(progress, chunks->len);
-	for (guint i = 0; i < chunks->len; i++) {
-		FuChunk *chk = g_ptr_array_index(chunks, i);
+	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
+	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
+		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
 		TPM2B_MAX_BUFFER data = {.size = g_bytes_get_size(fw)};
 		if (!fu_memcpy_safe((guint8 *)data.buffer,
 				    sizeof(data.buffer),

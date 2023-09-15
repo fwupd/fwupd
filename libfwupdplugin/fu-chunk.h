@@ -56,5 +56,3 @@ fu_chunk_array_mutable_new(guint8 *data,
 			   guint32 addr_start,
 			   guint32 page_sz,
 			   guint32 packet_sz);
-GPtrArray *
-fu_chunk_array_new_from_bytes(GBytes *blob, guint32 addr_start, guint32 page_sz, guint32 packet_sz);
