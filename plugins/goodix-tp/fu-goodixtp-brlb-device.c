@@ -61,12 +61,13 @@ fu_goodixtp_brlb_device_hid_read(FuGoodixtpBrlbDevice *self,
 				 guint32 bufsz,
 				 GError **error)
 {
-	g_autoptr(GPtrArray) chunks = fu_chunk_array_new(buf, bufsz, addr, 0, PACKAGE_LEN - 12);
+	g_autoptr(GPtrArray) chunks =
+	    fu_chunk_array_mutable_new(buf, bufsz, addr, 0, PACKAGE_LEN - 12);
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index(chunks, i);
 		if (!fu_goodixtp_brlb_device_read_pkg(self,
 						      fu_chunk_get_address(chk),
-						      (guint8 *)fu_chunk_get_data(chk),
+						      fu_chunk_get_data_out(chk),
 						      fu_chunk_get_data_sz(chk),
 						      error))
 			return FALSE;
