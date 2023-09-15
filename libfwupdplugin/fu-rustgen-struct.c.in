@@ -124,7 +124,7 @@
 {{export.value}}GByteArray *
 {{obj.c_method('New')}}(void)
 {
-    GByteArray *st = g_byte_array_new();
+    GByteArray *st = g_byte_array_sized_new({{obj.size}});
     fu_byte_array_set_size(st, {{obj.size}}, 0x0);
 {%- for item in obj.items | selectattr('padding') %}
     memset(st->data + {{item.offset}}, {{item.padding}}, {{item.size}});
