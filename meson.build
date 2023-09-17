@@ -120,6 +120,10 @@ if not meson.is_cross_build()
   add_project_arguments('-fstack-protector-strong', language: 'c')
 endif
 
+if cc.get_id() == 'msvc'
+  error('MSVC is not supported as it does not support __attribute__((cleanup))')
+endif
+
 # enable full RELRO where possible
 # FIXME: until https://github.com/mesonbuild/meson/issues/1140 is fixed
 global_link_args = []
