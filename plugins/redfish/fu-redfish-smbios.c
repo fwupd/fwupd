@@ -143,17 +143,20 @@ fu_redfish_smbios_parse_interface_data(FuRedfishSmbios *self,
 	/* parse the data depending on the interface type */
 	if (!fu_memread_uint8_safe(buf, bufsz, offset, &interface_type, error))
 		return FALSE;
+	g_debug("interface_type: %s [0x%x]",
+		fu_redfish_interface_type_to_string(interface_type),
+		interface_type);
 	offset++;
 	switch (interface_type) {
-	case REDFISH_INTERFACE_TYPE_USB_NETWORK:
-	case REDFISH_INTERFACE_TYPE_PCI_NETWORK:
+	case FU_REDFISH_INTERFACE_TYPE_USB_NETWORK:
+	case FU_REDFISH_INTERFACE_TYPE_PCI_NETWORK:
 		offset_vid_pid = 0x00;
 		break;
-	case REDFISH_INTERFACE_TYPE_USB_NETWORK_V2:
+	case FU_REDFISH_INTERFACE_TYPE_USB_NETWORK_V2:
 		offset_vid_pid = 0x01;
 		offset_mac_addr = 0x06;
 		break;
-	case REDFISH_INTERFACE_TYPE_PCI_NETWORK_V2:
+	case FU_REDFISH_INTERFACE_TYPE_PCI_NETWORK_V2:
 		offset_vid_pid = 0x01;
 		offset_mac_addr = 0x09;
 		break;
@@ -218,12 +221,12 @@ fu_redfish_smbios_parse_over_ip(FuRedfishSmbios *self, GBytes *fw, gsize offset,
 				   fu_struct_redfish_protocol_over_ip_get_service_ip_port(st));
 	service_ip_address_format =
 	    fu_struct_redfish_protocol_over_ip_get_service_ip_address_format(st);
-	if (service_ip_address_format == REDFISH_IP_ADDRESS_FORMAT_V4) {
+	if (service_ip_address_format == FU_REDFISH_IP_ADDRESS_FORMAT_V4) {
 		const guint8 *ip_address =
 		    fu_struct_redfish_protocol_over_ip_get_service_ip_address(st, NULL);
 		g_autofree gchar *tmp = fu_redfish_common_buffer_to_ipv4(ip_address);
 		fu_redfish_smbios_set_ip_addr(self, tmp);
-	} else if (service_ip_address_format == REDFISH_IP_ADDRESS_FORMAT_V6) {
+	} else if (service_ip_address_format == FU_REDFISH_IP_ADDRESS_FORMAT_V6) {
 		const guint8 *ip_address =
 		    fu_struct_redfish_protocol_over_ip_get_service_ip_address(st, NULL);
 		g_autofree gchar *tmp = fu_redfish_common_buffer_to_ipv6(ip_address);
@@ -267,6 +270,7 @@ fu_redfish_smbios_parse(FuFirmware *firmware,
 	gsize bufsz = 0;
 	guint8 protocol_rcds = 0;
 	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
+	g_autoptr(GByteArray) st = NULL;
 
 	/* check size */
 	if (bufsz < 0x09 + offset) {
@@ -278,43 +282,34 @@ fu_redfish_smbios_parse(FuFirmware *firmware,
 		return FALSE;
 	}
 
-	/* check type */
-	if (buf[offset + 0x0] != REDFISH_SMBIOS_TABLE_TYPE) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_FILE,
-				    "not Management Controller Host Interface");
+	/* parse */
+	st = fu_struct_redfish_smbios_type42_parse(buf, bufsz, offset, error);
+	if (st == NULL)
 		return FALSE;
-	}
-	if (buf[offset + 0x1] != bufsz) {
+
+	/* check length */
+	if (fu_struct_redfish_smbios_type42_get_length(st) != bufsz) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_FILE,
 			    "size of table 0x%x does not match binary 0x%x",
-			    buf[0x1],
+			    fu_struct_redfish_smbios_type42_get_length(st),
 			    (guint)bufsz);
 		return FALSE;
 	}
 
-	/* check interface type */
-	if (buf[offset + 0x04] != REDFISH_CONTROLLER_INTERFACE_TYPE_NETWORK_HOST) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_FILE,
-				    "only Network Host Interface supported");
-		return FALSE;
-	}
-
 	/* check length */
-	if (buf[offset + 0x05] > 0) {
-		if (!fu_redfish_smbios_parse_interface_data(self, fw, 0x06, error))
+	offset += FU_STRUCT_REDFISH_SMBIOS_TYPE42_SIZE;
+	if (fu_struct_redfish_smbios_type42_get_data_length(st) > 0) {
+		if (!fu_redfish_smbios_parse_interface_data(self, fw, offset, error))
 			return FALSE;
 	}
+	offset += fu_struct_redfish_smbios_type42_get_data_length(st);
 
 	/* parse protocol records */
-	if (!fu_memread_uint8_safe(buf, bufsz, offset + 0x06 + buf[0x05], &protocol_rcds, error))
+	if (!fu_memread_uint8_safe(buf, bufsz, offset, &protocol_rcds, error))
 		return FALSE;
-	offset += 0x07 + buf[0x05];
+	offset += 1;
 	g_debug("protocol_rcds: %u", protocol_rcds);
 	for (guint i = 0; i < protocol_rcds; i++) {
 		guint8 protocol_id = 0;
@@ -349,9 +344,9 @@ fu_redfish_smbios_write(FuFirmware *firmware, GError **error)
 	fu_byte_array_append_uint8(buf, REDFISH_SMBIOS_TABLE_TYPE);
 	fu_byte_array_append_uint8(buf, 0x6D + hostname_sz);	   /* length */
 	fu_byte_array_append_uint16(buf, 0x1234, G_LITTLE_ENDIAN); /* handle */
-	fu_byte_array_append_uint8(buf, REDFISH_CONTROLLER_INTERFACE_TYPE_NETWORK_HOST);
+	fu_byte_array_append_uint8(buf, FU_REDFISH_CONTROLLER_INTERFACE_TYPE_NETWORK_HOST);
 	fu_byte_array_append_uint8(buf, 0x09);				     /* iface datalen */
-	fu_byte_array_append_uint8(buf, REDFISH_INTERFACE_TYPE_USB_NETWORK); /* iface */
+	fu_byte_array_append_uint8(buf, FU_REDFISH_INTERFACE_TYPE_USB_NETWORK); /* iface */
 	fu_byte_array_append_uint16(buf, self->vid, G_LITTLE_ENDIAN);	     /* iface:VID */
 	fu_byte_array_append_uint16(buf, self->pid, G_LITTLE_ENDIAN);	     /* iface:PID */
 	fu_byte_array_append_uint8(buf, 0x02);				     /* iface:serialsz */
@@ -369,10 +364,10 @@ fu_redfish_smbios_write(FuFirmware *firmware, GError **error)
 	fu_struct_redfish_protocol_over_ip_set_service_ip_port(st, self->port);
 	fu_struct_redfish_protocol_over_ip_set_service_ip_address_format(
 	    st,
-	    REDFISH_IP_ADDRESS_FORMAT_V4);
+	    FU_REDFISH_IP_ADDRESS_FORMAT_V4);
 	fu_struct_redfish_protocol_over_ip_set_service_ip_assignment_type(
 	    st,
-	    REDFISH_IP_ASSIGNMENT_TYPE_STATIC);
+	    FU_REDFISH_IP_ASSIGNMENT_TYPE_STATIC);
 	fu_struct_redfish_protocol_over_ip_set_service_hostname_len(st, hostname_sz);
 	g_byte_array_append(buf, st->data, st->len);
 	if (hostname_sz > 0)
