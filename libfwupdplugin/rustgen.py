@@ -167,7 +167,7 @@ class StructObj:
                     item.struct_obj.add_private_export("Validate")
         if derive == "ToString":
             for item in self.items:
-                if item.enum_obj:
+                if item.enum_obj and not item.constant:
                     item.enum_obj.add_private_export("ToString")
         if derive == "Parse":
             self.add_private_export("ToString")
