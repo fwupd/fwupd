@@ -9,7 +9,9 @@ endif
 
 con2 = configuration_data()
 con2.set('bindir', bindir)
+con2.set('libdir', libdir)
 con2.set('motd_fullpath', motd_fullpath)
+con2.set('systemd_unit_user', get_option('systemd_unit_user'))
 
 if libsystemd.found()
   if get_option('systemd_unit_user') == ''
@@ -52,5 +54,18 @@ if libsystemd.found() and get_option('man')
     ],
     install: true,
     install_dir: join_paths(mandir, 'man8'),
+  )
+endif
+
+if libsystemd.found() and get_option('systemd_unit_user') != ''
+  con3 = configuration_data()
+  con3.set('localstatedir', localstatedir)
+  con3.set('systemd_unit_user', get_option('systemd_unit_user'))
+  configure_file(
+    input: 'fwupd.sysusers',
+    output: 'fwupd.conf',
+    configuration: con3,
+    install: true,
+    install_dir: systemd_sysusers_dir,
   )
 endif

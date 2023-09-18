@@ -11,6 +11,7 @@ usr/share/polkit-1/*
 usr/share/locale
 usr/share/metainfo/*
 usr/libexec/fwupd/*
+usr/lib/sysusers.d/*
 usr/share/man/*
 lib/systemd/system/*
 lib/systemd/system-shutdown/*
