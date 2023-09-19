@@ -42,8 +42,14 @@ enum LogitechBulkcontrollerCmd {
     Nack = 0xFF03,
 }
 
-#[derive(New)]
+#[derive(New, ToString, Getters)]
 struct LogitechBulkcontrollerSendSyncReq {
+    cmd: LogitechBulkcontrollerCmd,
+    payload_length: u32le,
+    sequence_id: u32le,
+}
+#[derive(Parse)]
+struct LogitechBulkcontrollerSendSyncRes {
     cmd: LogitechBulkcontrollerCmd,
     payload_length: u32le,
     sequence_id: u32le,
