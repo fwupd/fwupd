@@ -109,8 +109,6 @@ proto_manager_decode_message(const guint8 *data,
 			     GError **error)
 {
 	g_autoptr(GByteArray) buf_decoded = g_byte_array_new();
-	guint32 success = 0;
-	guint32 error_code = 0;
 	Logi__Device__Proto__UsbMsg *usb_msg =
 	    logi__device__proto__usb_msg__unpack(NULL, len, (const unsigned char *)data);
 	if (usb_msg == NULL) {
@@ -148,16 +146,16 @@ proto_manager_decode_message(const guint8 *data,
 		case LOGI__DEVICE__PROTO__RESPONSE__PAYLOAD_TRANSITION_TO_DEVICEMODE_RESPONSE:
 			if (usb_msg->response->transition_to_devicemode_response) {
 				*proto_id = kProtoId_TransitionToDeviceModeResponse;
-				success =
-				    usb_msg->response->transition_to_devicemode_response->success
-					? 1
-					: 0;
-				error_code =
-				    usb_msg->response->transition_to_devicemode_response->error;
-				fu_byte_array_append_uint32(buf_decoded, success, G_LITTLE_ENDIAN);
-				fu_byte_array_append_uint32(buf_decoded,
-							    error_code,
-							    G_LITTLE_ENDIAN);
+				if (!usb_msg->response->transition_to_devicemode_response
+					 ->success) {
+					g_set_error(error,
+						    G_IO_ERROR,
+						    G_IO_ERROR_FAILED,
+						    "transition mode request failed. error: %u",
+						    (guint)usb_msg->response
+							->transition_to_devicemode_response->error);
+					return NULL;
+				}
 			}
 			break;
 		default:

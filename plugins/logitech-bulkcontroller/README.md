@@ -34,6 +34,46 @@ and the device will reset when the new firmware has been written.
 
 ## Design Notes
 
+There are two protocols in use, `LogitechBulkcontrollerSendSync` and `LogitechBulkcontrollerSendUpd`
+which correspond to the two different bulk endpoints.
+
+The "Sync" interface accepts protobuf-formatted binary data as described in `proto/`, encapsulated
+further in a `LogitechBulkcontrollerSendSyncReq` and returned as a `LogitechBulkcontrollerSendSyncRes`.
+
+The sequence IDs seem to be used to allow parallel queries, although in practice some of the IDs
+are hardcoded to zero even when setting them in the request.
+
+There seems to be two possible flows when writing using the bulk "Sync" interface:
+
+```mermaid
+    sequenceDiagram
+      Host->>+Device: Write
+      Device-->>-Host: Ack (Write)
+      Host->>+Device: Uninit
+      Device-->>-Host: Ack (Uninit)
+      Device->>+Host: Read
+      Host-->>-Device: Ack (Read)
+      Device->>+Host: Uninit
+      Host-->>-Device: Ack (Uninit)
+```
+
+or...
+
+```mermaid
+    sequenceDiagram
+      Host->>+Device: Write
+      Device-->>-Host: Ack (Write)
+      Host->>+Device: Uninit
+      Device->>+Host: Read
+      Device-->>-Host: Ack (Uninit)
+      Host-->>-Device: Ack (Read)
+      Device->>+Host: Uninit
+      Host-->>-Device: Ack (Uninit)
+```
+
+Additionally, the device seems to force re-enumeration at random times, presumably restarting due
+to a protocol error or interface timeout.
+
 ## Vendor ID Security
 
 The vendor ID is set from the USB vendor, in this instance set to `USB:0x046D`
