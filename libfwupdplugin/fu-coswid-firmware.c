@@ -267,6 +267,18 @@ fu_coswid_firmware_write_tag_string(cbor_item_t *root, FuCoswidTag tag, const gc
 }
 
 static void
+fu_coswid_firmware_write_tag_bytestring(cbor_item_t *root,
+					FuCoswidTag tag,
+					const guint8 *buf,
+					gsize bufsz)
+{
+	g_autoptr(cbor_item_t) key = cbor_build_uint8(tag);
+	g_autoptr(cbor_item_t) val = cbor_build_bytestring((cbor_data)buf, bufsz);
+	if (!cbor_map_add(root, (struct cbor_pair){.key = key, .value = val}))
+		g_critical("failed to push to indefinite map");
+}
+
+static void
 fu_coswid_firmware_write_tag_bool(cbor_item_t *root, FuCoswidTag tag, gboolean item)
 {
 	g_autoptr(cbor_item_t) key = cbor_build_uint8(tag);
@@ -323,9 +335,20 @@ fu_coswid_firmware_write(FuFirmware *firmware, GError **error)
 	/* preallocate the map structure */
 	fu_coswid_firmware_write_tag_string(root, FU_COSWID_TAG_LANG, "en-US");
 	if (fu_firmware_get_id(firmware) != NULL) {
-		fu_coswid_firmware_write_tag_string(root,
-						    FU_COSWID_TAG_TAG_ID,
-						    fu_firmware_get_id(firmware));
+		fwupd_guid_t uuid = {0};
+		if (fwupd_guid_from_string(fu_firmware_get_id(firmware),
+					   &uuid,
+					   FWUPD_GUID_FLAG_NONE,
+					   NULL)) {
+			fu_coswid_firmware_write_tag_bytestring(root,
+								FU_COSWID_TAG_TAG_ID,
+								(const guint8 *)&uuid,
+								sizeof(uuid));
+		} else {
+			fu_coswid_firmware_write_tag_string(root,
+							    FU_COSWID_TAG_TAG_ID,
+							    fu_firmware_get_id(firmware));
+		}
 	}
 	fu_coswid_firmware_write_tag_bool(root, FU_COSWID_TAG_CORPUS, TRUE);
 	if (priv->product != NULL) {
