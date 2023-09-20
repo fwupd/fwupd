@@ -102,6 +102,16 @@ GType = FuWacDevice
 Plugin = wacom_usb
 GType = FuWacDevice
 
+# DTH134 (USB) [DTH-134]
+[USB\VID_056A&PID_03EC]
+Plugin = wacom_usb
+GType = FuWacDevice
+
+# DTC121 (USB) [DTC-121]
+[USB\VID_056A&PID_03ED]
+Plugin = wacom_usb
+GType = FuWacDevice
+
 # Wacom One Pen tablet small (USB) [CTC4110WL]
 [USB\VID_0531&PID_0100]
 Plugin = wacom_usb
