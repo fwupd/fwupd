@@ -45,6 +45,10 @@ fu_plugin_runner_startup(FuPlugin *self,
 			 FuProgress *progress,
 			 GError **error) G_GNUC_WARN_UNUSED_RESULT;
 gboolean
+fu_plugin_runner_ready(FuPlugin *self,
+		       FuProgress *progress,
+		       GError **error) G_GNUC_WARN_UNUSED_RESULT;
+gboolean
 fu_plugin_runner_coldplug(FuPlugin *self,
 			  FuProgress *progress,
 			  GError **error) G_GNUC_WARN_UNUSED_RESULT;

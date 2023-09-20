@@ -897,6 +897,54 @@ fu_plugin_runner_startup(FuPlugin *self, FuProgress *progress, GError **error)
 }
 
 /**
+ * fu_plugin_runner_ready:
+ * @self: a #FuPlugin
+ * @error: (nullable): optional return location for an error
+ *
+ * Runs the ready routine for the plugin
+ *
+ * Returns: #TRUE for success, #FALSE for failure
+ *
+ * Since: 1.9.6
+ **/
+gboolean
+fu_plugin_runner_ready(FuPlugin *self, FuProgress *progress, GError **error)
+{
+	FuPluginVfuncs *vfuncs = fu_plugin_get_vfuncs(self);
+	g_autoptr(GError) error_local = NULL;
+
+	g_return_val_if_fail(FU_IS_PLUGIN(self), FALSE);
+
+	/* progress */
+	fu_progress_set_name(progress, fu_plugin_get_name(self));
+	if (fu_plugin_has_flag(self, FWUPD_PLUGIN_FLAG_DISABLED))
+		return TRUE;
+	fu_plugin_add_flag(self, FWUPD_PLUGIN_FLAG_READY);
+	if (vfuncs->ready == NULL)
+		return TRUE;
+
+	/* optional */
+	g_debug("ready(%s)", fu_plugin_get_name(self));
+	if (!vfuncs->ready(self, progress, &error_local)) {
+		if (error_local == NULL) {
+			g_critical("unset plugin error in ready(%s)", fu_plugin_get_name(self));
+			g_set_error_literal(&error_local,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INTERNAL,
+					    "unspecified error");
+		}
+		g_propagate_prefixed_error(error,
+					   g_steal_pointer(&error_local),
+					   "failed to ready using %s: ",
+					   fu_plugin_get_name(self));
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+/**
  * fu_plugin_runner_init:
  * @self: a #FuPlugin
  *
