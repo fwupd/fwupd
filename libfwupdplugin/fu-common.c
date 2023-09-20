@@ -307,6 +307,28 @@ fu_lid_state_to_string(FuLidState lid_state)
 }
 
 /**
+ * fu_display_state_to_string:
+ * @display_state: a lid state, e.g. %FU_DISPLAY_STATE_CONNECTED
+ *
+ * Converts an enumerated type to a string.
+ *
+ * Returns: a string, or %NULL for invalid
+ *
+ * Since: 1.9.6
+ **/
+const gchar *
+fu_display_state_to_string(FuDisplayState display_state)
+{
+	if (display_state == FU_DISPLAY_STATE_UNKNOWN)
+		return "unknown";
+	if (display_state == FU_DISPLAY_STATE_CONNECTED)
+		return "connected";
+	if (display_state == FU_DISPLAY_STATE_DISCONNECTED)
+		return "disconnected";
+	return NULL;
+}
+
+/**
  * fu_xmlb_builder_insert_kv:
  * @bn: #XbBuilderNode
  * @key: string key

@@ -773,6 +773,10 @@ fu_uefi_capsule_plugin_coldplug_device(FuPlugin *plugin, FuUefiDevice *dev, GErr
 		fu_device_add_private_flag(FU_DEVICE(dev), FU_UEFI_DEVICE_FLAG_NO_UX_CAPSULE);
 	if (fu_context_has_hwid_flag(ctx, "no-lid-closed"))
 		fu_device_add_internal_flag(FU_DEVICE(dev), FU_DEVICE_INTERNAL_FLAG_NO_LID_CLOSED);
+	if (fu_context_has_hwid_flag(ctx, "display-required")) {
+		fu_device_add_internal_flag(FU_DEVICE(dev),
+					    FU_DEVICE_INTERNAL_FLAG_DISPLAY_REQUIRED);
+	}
 
 	/* detected InsydeH2O */
 	if (self->acpi_uefi != NULL &&
