@@ -101,6 +101,23 @@ struct _FuPluginClass {
 	 **/
 	gboolean (*startup)(FuPlugin *self, FuProgress *progress, GError **error);
 	/**
+	 * ready:
+	 * @self: a #FuPlugin
+	 * @progress: a #FuProgress
+	 * @error: (nullable): optional return location for an error
+	 *
+	 * Tells the plugin that all devices have been coldplugged and the plugin is
+	 * ready to be used.
+	 *
+	 * Returns: TRUE for success or FALSE for failure.
+	 *
+	 * NOTE: Any plugins not intended for the system or that have failure communicating
+	 * with the device should return %FALSE and set @error.
+	 *
+	 * Since: 1.9.6
+	 **/
+	gboolean (*ready)(FuPlugin *self, FuProgress *progress, GError **error);
+	/**
 	 * coldplug:
 	 * @self: a #FuPlugin
 	 * @progress: a #FuProgress

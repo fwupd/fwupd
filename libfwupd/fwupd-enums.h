@@ -955,6 +955,14 @@ typedef enum {
  */
 #define FWUPD_PLUGIN_FLAG_ESP_NOT_VALID (1llu << 16)
 /**
+ * FWUPD_PLUGIN_FLAG_READY:
+ *
+ * The plugin is ready for use and all devices have been coldplugged.
+ *
+ * Since: 1.9.6
+ */
+#define FWUPD_PLUGIN_FLAG_READY (1llu << 17)
+/**
  * FWUPD_PLUGIN_FLAG_UNKNOWN:
  *
  * The plugin flag is Unknown.
