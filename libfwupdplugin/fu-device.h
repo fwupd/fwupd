@@ -556,6 +556,15 @@ typedef guint64 FuDeviceInternalFlags;
  */
 #define FU_DEVICE_INTERNAL_FLAG_UNCONNECTED (1ull << 33)
 
+/**
+ * FU_DEVICE_INTERNAL_FLAG_DISPLAY_REQUIRED:
+ *
+ * The device requires a display to be plugged in.
+ *
+ * Since: 1.9.6
+ */
+#define FU_DEVICE_INTERNAL_FLAG_DISPLAY_REQUIRED (1ull << 34)
+
 /* accessors */
 gchar *
 fu_device_to_string(FuDevice *self);

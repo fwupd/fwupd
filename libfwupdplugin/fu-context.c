@@ -39,6 +39,7 @@ typedef struct {
 	GHashTable *hwid_flags; /* str: */
 	FuPowerState power_state;
 	FuLidState lid_state;
+	FuDisplayState display_state;
 	guint battery_level;
 	guint battery_threshold;
 	FuBiosSettings *host_bios_settings;
@@ -52,6 +53,7 @@ enum {
 	PROP_0,
 	PROP_POWER_STATE,
 	PROP_LID_STATE,
+	PROP_DISPLAY_STATE,
 	PROP_BATTERY_LEVEL,
 	PROP_BATTERY_THRESHOLD,
 	PROP_FLAGS,
@@ -1142,6 +1144,45 @@ fu_context_set_lid_state(FuContext *self, FuLidState lid_state)
 }
 
 /**
+ * fu_context_get_display_state:
+ * @self: a #FuContext
+ *
+ * Gets the display state, if applicable.
+ *
+ * Returns: a display state, e.g. %FU_DISPLAY_STATE_CONNECTED
+ *
+ * Since: 1.9.6
+ **/
+FuDisplayState
+fu_context_get_display_state(FuContext *self)
+{
+	FuContextPrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_CONTEXT(self), FALSE);
+	return priv->display_state;
+}
+
+/**
+ * fu_context_set_display_state:
+ * @self: a #FuContext
+ * @display_state: a display state, e.g. %FU_DISPLAY_STATE_CONNECTED
+ *
+ * Sets the display state, if applicable.
+ *
+ * Since: 1.9.6
+ **/
+void
+fu_context_set_display_state(FuContext *self, FuDisplayState display_state)
+{
+	FuContextPrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_CONTEXT(self));
+	if (priv->display_state == display_state)
+		return;
+	priv->display_state = display_state;
+	g_info("display-state now %s", fu_display_state_to_string(display_state));
+	g_object_notify(G_OBJECT(self), "display-state");
+}
+
+/**
  * fu_context_get_battery_level:
  * @self: a #FuContext
  *
@@ -1400,6 +1441,9 @@ fu_context_get_property(GObject *object, guint prop_id, GValue *value, GParamSpe
 	case PROP_LID_STATE:
 		g_value_set_uint(value, priv->lid_state);
 		break;
+	case PROP_DISPLAY_STATE:
+		g_value_set_uint(value, priv->display_state);
+		break;
 	case PROP_BATTERY_LEVEL:
 		g_value_set_uint(value, priv->battery_level);
 		break;
@@ -1426,6 +1470,9 @@ fu_context_set_property(GObject *object, guint prop_id, const GValue *value, GPa
 		break;
 	case PROP_LID_STATE:
 		fu_context_set_lid_state(self, g_value_get_uint(value));
+		break;
+	case PROP_DISPLAY_STATE:
+		fu_context_set_display_state(self, g_value_get_uint(value));
 		break;
 	case PROP_BATTERY_LEVEL:
 		fu_context_set_battery_level(self, g_value_get_uint(value));
@@ -1507,6 +1554,22 @@ fu_context_class_init(FuContextClass *klass)
 				  FU_LID_STATE_UNKNOWN,
 				  G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_LID_STATE, pspec);
+
+	/**
+	 * FuContext:display-state:
+	 *
+	 * The display state.
+	 *
+	 * Since: 1.9.6
+	 */
+	pspec = g_param_spec_uint("display-state",
+				  NULL,
+				  NULL,
+				  FU_DISPLAY_STATE_UNKNOWN,
+				  FU_DISPLAY_STATE_LAST,
+				  FU_DISPLAY_STATE_UNKNOWN,
+				  G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
+	g_object_class_install_property(object_class, PROP_DISPLAY_STATE, pspec);
 
 	/**
 	 * FuContext:battery-level:

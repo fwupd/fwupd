@@ -666,6 +666,14 @@ typedef guint64 FwupdDeviceFlags;
  */
 #define FWUPD_DEVICE_PROBLEM_IN_USE (1llu << 10)
 /**
+ * FWUPD_DEVICE_PROBLEM_DISPLAY_REQUIRED:
+ *
+ * The device cannot be used while there are no displays plugged in.
+ *
+ * Since 1.9.6
+ */
+#define FWUPD_DEVICE_PROBLEM_DISPLAY_REQUIRED (1llu << 11)
+/**
  * FWUPD_DEVICE_PROBLEM_UNKNOWN:
  *
  * This problem is not defined, this typically will happen from mismatched

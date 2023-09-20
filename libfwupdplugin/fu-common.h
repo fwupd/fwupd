@@ -77,6 +77,22 @@ typedef enum {
 	FU_LID_STATE_LAST
 } FuLidState;
 
+/**
+ * FuDisplayState:
+ * @FU_DISPLAY_STATE_UNKNOWN:		Unknown
+ * @FU_DISPLAY_STATE_CONNECTED:		A monitor is connected
+ * @FU_DISPLAY_STATE_DISCONNECTED:	No monitor is connected
+ *
+ * The device lid state.
+ **/
+typedef enum {
+	FU_DISPLAY_STATE_UNKNOWN,
+	FU_DISPLAY_STATE_CONNECTED,
+	FU_DISPLAY_STATE_DISCONNECTED,
+	/*< private >*/
+	FU_DISPLAY_STATE_LAST
+} FuDisplayState;
+
 gboolean
 fu_cpuid(guint32 leaf, guint32 *eax, guint32 *ebx, guint32 *ecx, guint32 *edx, GError **error)
     G_GNUC_WARN_UNUSED_RESULT;
@@ -99,6 +115,8 @@ gboolean
 fu_power_state_is_ac(FuPowerState power_state);
 const gchar *
 fu_lid_state_to_string(FuLidState lid_state);
+const gchar *
+fu_display_state_to_string(FuDisplayState display_state);
 
 void
 fu_xmlb_builder_insert_kv(XbBuilderNode *bn, const gchar *key, const gchar *value);

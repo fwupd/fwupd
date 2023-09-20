@@ -484,6 +484,17 @@ fu_engine_ensure_device_lid_inhibit(FuEngine *self, FuDevice *device)
 }
 
 static void
+fu_engine_ensure_device_display_required_inhibit(FuEngine *self, FuDevice *device)
+{
+	if (fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_DISPLAY_REQUIRED) &&
+	    fu_context_get_display_state(self->ctx) == FU_DISPLAY_STATE_DISCONNECTED) {
+		fu_device_add_problem(device, FWUPD_DEVICE_PROBLEM_DISPLAY_REQUIRED);
+		return;
+	}
+	fu_device_remove_problem(device, FWUPD_DEVICE_PROBLEM_DISPLAY_REQUIRED);
+}
+
+static void
 fu_engine_ensure_device_system_inhibit(FuEngine *self, FuDevice *device)
 {
 	if (fu_context_has_flag(self->ctx, FU_CONTEXT_FLAG_SYSTEM_INHIBIT)) {
@@ -531,6 +542,7 @@ fu_engine_device_added_cb(FuDeviceList *device_list, FuDevice *device, FuEngine 
 	fu_engine_watch_device(self, device);
 	fu_engine_ensure_device_power_inhibit(self, device);
 	fu_engine_ensure_device_lid_inhibit(self, device);
+	fu_engine_ensure_device_display_required_inhibit(self, device);
 	fu_engine_ensure_device_system_inhibit(self, device);
 	fu_engine_acquiesce_reset(self);
 	g_signal_emit(self, signals[SIGNAL_DEVICE_ADDED], 0, device);
@@ -2376,6 +2388,10 @@ fu_engine_get_report_metadata(FuEngine *self, GError **error)
 	    hash,
 	    g_strdup("PowerState"),
 	    g_strdup(fu_power_state_to_string(fu_context_get_power_state(self->ctx))));
+	g_hash_table_insert(
+	    hash,
+	    g_strdup("DisplayState"),
+	    g_strdup(fu_display_state_to_string(fu_context_get_display_state(self->ctx))));
 	g_hash_table_insert(hash,
 			    g_strdup("LidState"),
 			    g_strdup(fu_lid_state_to_string(fu_context_get_lid_state(self->ctx))));
@@ -8691,6 +8707,7 @@ fu_engine_context_power_changed_cb(FuContext *ctx, GParamSpec *pspec, FuEngine *
 		FuDevice *device = g_ptr_array_index(devices, i);
 		fu_engine_ensure_device_power_inhibit(self, device);
 		fu_engine_ensure_device_lid_inhibit(self, device);
+		fu_engine_ensure_device_display_required_inhibit(self, device);
 		fu_engine_ensure_device_system_inhibit(self, device);
 	}
 }
@@ -8750,6 +8767,10 @@ fu_engine_init(FuEngine *self)
 			 self);
 	g_signal_connect(FU_CONTEXT(self->ctx),
 			 "notify::lid-state",
+			 G_CALLBACK(fu_engine_context_power_changed_cb),
+			 self);
+	g_signal_connect(FU_CONTEXT(self->ctx),
+			 "notify::display-state",
 			 G_CALLBACK(fu_engine_context_power_changed_cb),
 			 self);
 	g_signal_connect(FU_CONTEXT(self->ctx),

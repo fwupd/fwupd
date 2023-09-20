@@ -65,6 +65,7 @@ plugins = [
   'jabra',
   'jabra-gnp',
   'lenovo-thinklmi',
+  'linux-display',
   'linux-lockdown',
   'linux-sleep',
   'linux-swap',

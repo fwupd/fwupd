@@ -1328,6 +1328,10 @@ fu_util_device_problem_to_string(FwupdClient *client, FwupdDevice *dev, FwupdDev
 		/* TRANSLATORS: device cannot be interrupted, for instance taking a phone call */
 		return g_strdup(_("Device is in use"));
 	}
+	if (problem == FWUPD_DEVICE_PROBLEM_DISPLAY_REQUIRED) {
+		/* TRANSLATORS: device does not have a display connected */
+		return g_strdup(_("Device requires a display to be plugged in"));
+	}
 	return NULL;
 }
 
