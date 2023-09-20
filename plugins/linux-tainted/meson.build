@@ -1,4 +1,4 @@
-if hsi
+if host_machine.system() == 'linux' and hsi
 cargs = ['-DG_LOG_DOMAIN="FuPluginLinuxTainted"']
 
 plugin_builtins += static_library('fu_plugin_linux_tainted',

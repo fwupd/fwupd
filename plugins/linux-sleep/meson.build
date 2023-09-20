@@ -1,4 +1,4 @@
-if hsi and (host_cpu == 'x86' or host_cpu == 'x86_64')
+if host_machine.system() == 'linux' and hsi and (host_cpu == 'x86' or host_cpu == 'x86_64')
 cargs = ['-DG_LOG_DOMAIN="FuPluginLinuxSleep"']
 
 plugin_builtins += static_library('fu_plugin_linux_sleep',
