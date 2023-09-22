@@ -33,7 +33,7 @@ apps:
     plugs: [fwupdmgr, network]
   fwupdtool:
     command: fwupdtool.wrapper
-    plugs: [bluez, udisks2, modem-manager, upower-observe, network, hardware-observe]
+    plugs: [bluez, udisks2, modem-manager, upower-observe, network, hardware-observe, raw-usb]
     slots: [fwupd]
     completer:
       share/bash-completion/completions/fwupdtool
@@ -43,7 +43,7 @@ apps:
     command: fwupd.wrapper
     daemon: dbus
     slots: [fwupd]
-    plugs: [bluez, udisks2, modem-manager, upower-observe, polkit, network, hardware-observe]
+    plugs: [bluez, udisks2, modem-manager, upower-observe, polkit, network, hardware-observe, raw-usb]
     daemon-scope: system
     activates-on:
       - fwupd-dbus
