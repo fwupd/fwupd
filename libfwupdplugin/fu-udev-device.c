@@ -1708,7 +1708,11 @@ fu_udev_device_pread(FuUdevDevice *self, goffset port, guint8 *buf, gsize bufsz,
 	if (pread(priv->fd, buf, bufsz, port) != (gssize)bufsz) {
 		g_set_error(error,
 			    G_IO_ERROR,
+#ifdef HAVE_ERRNO_H
+			    g_io_error_from_errno(errno),
+#else
 			    G_IO_ERROR_FAILED,
+#endif
 			    "failed to read from port 0x%04x: %s",
 			    (guint)port,
 			    strerror(errno));
@@ -1759,7 +1763,11 @@ fu_udev_device_seek(FuUdevDevice *self, goffset offset, GError **error)
 	if (lseek(priv->fd, offset, SEEK_SET) < 0) {
 		g_set_error(error,
 			    G_IO_ERROR,
+#ifdef HAVE_ERRNO_H
+			    g_io_error_from_errno(errno),
+#else
 			    G_IO_ERROR_FAILED,
+#endif
 			    "failed to seek to 0x%04x: %s",
 			    (guint)offset,
 			    strerror(errno));
@@ -1816,7 +1824,11 @@ fu_udev_device_pwrite(FuUdevDevice *self,
 	if (pwrite(priv->fd, buf, bufsz, port) != (gssize)bufsz) {
 		g_set_error(error,
 			    G_IO_ERROR,
+#ifdef HAVE_ERRNO_H
+			    g_io_error_from_errno(errno),
+#else
 			    G_IO_ERROR_FAILED,
+#endif
 			    "failed to write to port %04x: %s",
 			    (guint)port,
 			    strerror(errno));
