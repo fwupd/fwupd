@@ -389,6 +389,30 @@ struct _FuPluginClass {
 	 * Since: 1.8.4
 	 **/
 	void (*to_string)(FuPlugin *self, guint idt, GString *str);
+	/**
+	 * fix_host_security_attr:
+	 * @self: a #FuPlugin
+	 * @attr: a #FwupdSecurityAttr
+	 * @error: (nullable): optional return location for an error
+	 *
+	 * Fix a host security issue.
+	 *
+	 * Since: 1.9.6
+	 **/
+	gboolean (*fix_host_security_attr)(FuPlugin *self, FwupdSecurityAttr *attr, GError **error);
+	/**
+	 * undo_host_security_attr:
+	 * @self: a #FuPlugin
+	 * @attr: a #FwupdSecurityAttr
+	 * @error: (nullable): optional return location for an error
+	 *
+	 * Undo the fix for a host security issue.
+	 *
+	 * Since: 1.9.6
+	 **/
+	gboolean (*undo_host_security_attr)(FuPlugin *self,
+					    FwupdSecurityAttr *attr,
+					    GError **error);
 };
 
 /**

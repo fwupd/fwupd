@@ -3792,12 +3792,10 @@ fu_util_sync_bkc(FuUtilPrivate *priv, gchar **values, GError **error)
 }
 
 static gboolean
-fu_util_security_modify_bios_setting(FuUtilPrivate *priv, FwupdSecurityAttr *attr, GError **error)
+fu_util_security_fix_attr(FuUtilPrivate *priv, FwupdSecurityAttr *attr, GError **error)
 {
 	g_autoptr(GString) body = g_string_new(NULL);
 	g_autoptr(GString) title = g_string_new(NULL);
-	g_autoptr(GHashTable) bios_settings =
-	    g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
 
 	g_string_append_printf(title,
 			       "%s: %s",
@@ -3806,34 +3804,63 @@ fu_util_security_modify_bios_setting(FuUtilPrivate *priv, FwupdSecurityAttr *att
 			       fwupd_security_attr_get_title(attr));
 
 	g_string_append(body, fwupd_security_attr_get_description(attr));
-	g_string_append(body, "\n\n");
-	g_string_append_printf(body,
-			       /* TRANSLATORS: the %1 is a BIOS setting name.  %2 and %3 are the
-				  values, e.g. "True" or "Windows10" */
-			       _("This tool can change the BIOS setting '%s' from '%s' to '%s' "
-				 "automatically, but it will only be active after restarting the "
-				 "computer."),
-			       fwupd_security_attr_get_bios_setting_id(attr),
-			       fwupd_security_attr_get_bios_setting_current_value(attr),
-			       fwupd_security_attr_get_bios_setting_target_value(attr));
-	g_string_append(body, "\n\n");
-	g_string_append(body,
-			/* TRANSLATORS: the user has to manually recover; we can't do it */
-			_("You should ensure you are comfortable restoring the setting from "
-			  "the system firmware setup, as this change may cause the system "
-			  "to not boot into Linux or cause other system instability."));
+
+	if (fwupd_security_attr_get_bios_setting_id(attr) != NULL &&
+	    fwupd_security_attr_get_bios_setting_current_value(attr) != NULL &&
+	    fwupd_security_attr_get_bios_setting_target_value(attr) != NULL) {
+		g_string_append(body, "\n\n");
+		g_string_append_printf(body,
+				       /* TRANSLATORS: the %1 is a BIOS setting name.
+					* %2 and %3 are the values, e.g. "True" or "Windows10" */
+				       _("This tool can change the BIOS setting '%s' from '%s' "
+					 "to '%s' automatically, but it will only be active after "
+					 "restarting the computer."),
+				       fwupd_security_attr_get_bios_setting_id(attr),
+				       fwupd_security_attr_get_bios_setting_current_value(attr),
+				       fwupd_security_attr_get_bios_setting_target_value(attr));
+		g_string_append(body, "\n\n");
+		g_string_append(body,
+				/* TRANSLATORS: the user has to manually recover; we can't do it */
+				_("You should ensure you are comfortable restoring the setting "
+				  "from the system firmware setup, as this change may cause the "
+				  "system to not boot into Linux or cause other system "
+				  "instability."));
+	} else if (fwupd_security_attr_get_kernel_target_value(attr) != NULL) {
+		g_string_append(body, "\n\n");
+		if (fwupd_security_attr_get_kernel_current_value(attr) != NULL) {
+			g_string_append_printf(
+			    body,
+			    /* TRANSLATORS: the %1 is a kernel command line key=value */
+			    _("This tool can change the kernel argument from '%s' to '%s', but "
+			      "it will only be active after restarting the computer."),
+			    fwupd_security_attr_get_kernel_current_value(attr),
+			    fwupd_security_attr_get_kernel_target_value(attr));
+		} else {
+			g_string_append_printf(
+			    body,
+			    /* TRANSLATORS: the %1 is a kernel command line key=value */
+			    _("This tool can add a kernel argument of '%s', but it will "
+			      "only be active after restarting the computer."),
+			    fwupd_security_attr_get_kernel_current_value(attr));
+		}
+		g_string_append(body, "\n\n");
+		g_string_append(body,
+				/* TRANSLATORS: the user has to manually recover; we can't do it */
+				_("You should ensure you are comfortable restoring the setting "
+				  "from a recovery or installation disk, as this change may cause "
+				  "the system to not boot into Linux or cause other system "
+				  "instability."));
+	}
+
 	fu_console_box(priv->console, title->str, body->str, 80);
 
 	/* TRANSLATORS: prompt to apply the update */
 	if (!fu_console_input_bool(priv->console, FALSE, "%s", _("Perform operation?")))
 		return TRUE;
-	g_hash_table_insert(bios_settings,
-			    g_strdup(fwupd_security_attr_get_bios_setting_id(attr)),
-			    g_strdup(fwupd_security_attr_get_bios_setting_target_value(attr)));
-	if (!fwupd_client_modify_bios_setting(priv->client,
-					      bios_settings,
-					      priv->cancellable,
-					      error))
+	if (!fwupd_client_fix_host_security_attr(priv->client,
+						 fwupd_security_attr_get_appstream_id(attr),
+						 priv->cancellable,
+						 error))
 		return FALSE;
 
 	/* do not offer to upload the report */
@@ -3953,11 +3980,9 @@ fu_util_security(FuUtilPrivate *priv, gchar **values, GError **error)
 	if (!priv->no_security_fix) {
 		for (guint j = 0; j < attrs->len; j++) {
 			FwupdSecurityAttr *attr = g_ptr_array_index(attrs, j);
-			if (!fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS) &&
-			    fwupd_security_attr_get_bios_setting_id(attr) != NULL &&
-			    fwupd_security_attr_get_bios_setting_current_value(attr) != NULL &&
-			    fwupd_security_attr_get_bios_setting_target_value(attr) != NULL) {
-				if (!fu_util_security_modify_bios_setting(priv, attr, error))
+			if (fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_CAN_FIX) &&
+			    !fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS)) {
+				if (!fu_util_security_fix_attr(priv, attr, error))
 					return FALSE;
 			}
 		}
@@ -4364,6 +4389,65 @@ fu_util_get_bios_setting(FuUtilPrivate *priv, gchar **values, GError **error)
 				    _("Unable to find attribute"));
 		return FALSE;
 	}
+	return TRUE;
+}
+
+static gboolean
+fu_util_security_fix(FuUtilPrivate *priv, gchar **values, GError **error)
+{
+#ifndef HAVE_HSI
+	g_set_error(error,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_NOT_SUPPORTED,
+		    /* TRANSLATORS: error message for unsupported feature */
+		    _("Host Security ID (HSI) is not supported"));
+	return FALSE;
+#endif /* HAVE_HSI */
+
+	if (g_strv_length(values) == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_ARGS,
+				    /* TRANSLATOR: This is the error message for
+				     * incorrect parameter */
+				    _("Invalid arguments, expected an AppStream ID"));
+		return FALSE;
+	}
+	if (!fwupd_client_fix_host_security_attr(priv->client, values[0], priv->cancellable, error))
+		return FALSE;
+	/* TRANSLATORS: we've fixed a security problem on the machine */
+	fu_console_print_literal(priv->console, _("Fixed successfully"));
+	return TRUE;
+}
+
+static gboolean
+fu_util_security_undo(FuUtilPrivate *priv, gchar **values, GError **error)
+{
+#ifndef HAVE_HSI
+	g_set_error(error,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_NOT_SUPPORTED,
+		    /* TRANSLATORS: error message for unsupported feature */
+		    _("Host Security ID (HSI) is not supported"));
+	return FALSE;
+#endif /* HAVE_HSI */
+
+	if (g_strv_length(values) == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_ARGS,
+				    /* TRANSLATOR: This is the error message for
+				     * incorrect parameter */
+				    _("Invalid arguments, expected an AppStream ID"));
+		return FALSE;
+	}
+	if (!fwupd_client_undo_host_security_attr(priv->client,
+						  values[0],
+						  priv->cancellable,
+						  error))
+		return FALSE;
+	/* TRANSLATORS: we've fixed a security problem on the machine */
+	fu_console_print_literal(priv->console, _("Fix reverted successfully"));
 	return TRUE;
 }
 
@@ -5070,6 +5154,20 @@ main(int argc, char *argv[])
 			      /* TRANSLATORS: command description */
 			      _("Removes devices to watch for future emulation"),
 			      fu_util_emulation_untag);
+	fu_util_cmd_array_add(cmd_array,
+			      "security-fix",
+			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			      _("[APPSTREAM_ID]"),
+			      /* TRANSLATORS: command description */
+			      _("Fix a specific host security attribute"),
+			      fu_util_security_fix);
+	fu_util_cmd_array_add(cmd_array,
+			      "security-undo",
+			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			      _("[APPSTREAM_ID]"),
+			      /* TRANSLATORS: command description */
+			      _("Undo the host security attribute fix"),
+			      fu_util_security_undo);
 
 	/* do stuff on ctrl+c */
 	priv->cancellable = g_cancellable_new();

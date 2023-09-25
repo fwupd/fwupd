@@ -42,6 +42,8 @@ typedef struct {
 	gchar *bios_setting_id;
 	gchar *bios_setting_target_value;
 	gchar *bios_setting_current_value;
+	gchar *kernel_current_value;
+	gchar *kernel_target_value;
 } FwupdSecurityAttrPrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE(FwupdSecurityAttr, fwupd_security_attr, G_TYPE_OBJECT)
@@ -80,6 +82,10 @@ fwupd_security_attr_flag_to_string(FwupdSecurityAttrFlags flag)
 		return "action-config-fw";
 	if (flag == FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_OS)
 		return "action-config-os";
+	if (flag == FWUPD_SECURITY_ATTR_FLAG_CAN_FIX)
+		return "can-fix";
+	if (flag == FWUPD_SECURITY_ATTR_FLAG_CAN_UNDO)
+		return "can-undo";
 	return NULL;
 }
 
@@ -114,6 +120,10 @@ fwupd_security_attr_flag_from_string(const gchar *flag)
 		return FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_FW;
 	if (g_strcmp0(flag, "action-config-os") == 0)
 		return FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_OS;
+	if (g_strcmp0(flag, "can-fix") == 0)
+		return FWUPD_SECURITY_ATTR_FLAG_CAN_FIX;
+	if (g_strcmp0(flag, "can-undo") == 0)
+		return FWUPD_SECURITY_ATTR_FLAG_CAN_UNDO;
 	return FWUPD_SECURITY_ATTR_FLAG_NONE;
 }
 
@@ -582,6 +592,86 @@ fwupd_security_attr_set_bios_setting_current_value(FwupdSecurityAttr *self, cons
 
 	g_free(priv->bios_setting_current_value);
 	priv->bios_setting_current_value = g_strdup(value);
+}
+
+/**
+ * fwupd_security_attr_get_kernel_current_value:
+ * @self: a #FwupdSecurityAttr
+ *
+ * Gets the current value of the BIOS setting that can be changed.
+ *
+ * Returns: the current value of the attribute.
+ *
+ * Since: 1.9.6
+ **/
+const gchar *
+fwupd_security_attr_get_kernel_current_value(FwupdSecurityAttr *self)
+{
+	FwupdSecurityAttrPrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_SECURITY_ATTR(self), NULL);
+	return priv->kernel_current_value;
+}
+
+/**
+ * fwupd_security_attr_set_kernel_current_value:
+ * @self: a #FwupdSecurityAttr
+ * @value: (nullable): The string to set current value to
+ *
+ * Sets the current value of the BIOS setting that can be changed.
+ *
+ * Since: 1.9.6
+ **/
+void
+fwupd_security_attr_set_kernel_current_value(FwupdSecurityAttr *self, const gchar *value)
+{
+	FwupdSecurityAttrPrivate *priv = GET_PRIVATE(self);
+
+	/* not changed */
+	if (g_strcmp0(priv->kernel_current_value, value) == 0)
+		return;
+
+	g_free(priv->kernel_current_value);
+	priv->kernel_current_value = g_strdup(value);
+}
+
+/**
+ * fwupd_security_attr_get_kernel_target_value:
+ * @self: a #FwupdSecurityAttr
+ *
+ * Gets the target value of the kernel setting that can be changed.
+ *
+ * Returns: the current value of the attribute.
+ *
+ * Since: 1.9.6
+ **/
+const gchar *
+fwupd_security_attr_get_kernel_target_value(FwupdSecurityAttr *self)
+{
+	FwupdSecurityAttrPrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_SECURITY_ATTR(self), NULL);
+	return priv->kernel_target_value;
+}
+
+/**
+ * fwupd_security_attr_set_kernel_target_value:
+ * @self: a #FwupdSecurityAttr
+ * @value: (nullable): The string to set current value to
+ *
+ * Sets the target value of the kernel setting that can be changed.
+ *
+ * Since: 1.9.6
+ **/
+void
+fwupd_security_attr_set_kernel_target_value(FwupdSecurityAttr *self, const gchar *value)
+{
+	FwupdSecurityAttrPrivate *priv = GET_PRIVATE(self);
+
+	/* not changed */
+	if (g_strcmp0(priv->kernel_target_value, value) == 0)
+		return;
+
+	g_free(priv->kernel_target_value);
+	priv->kernel_target_value = g_strdup(value);
 }
 
 /**
@@ -1180,6 +1270,18 @@ fwupd_security_attr_to_variant(FwupdSecurityAttr *self)
 				      FWUPD_RESULT_KEY_BIOS_SETTING_CURRENT_VALUE,
 				      g_variant_new_string(priv->bios_setting_current_value));
 	}
+	if (priv->kernel_current_value != NULL) {
+		g_variant_builder_add(&builder,
+				      "{sv}",
+				      FWUPD_RESULT_KEY_KERNEL_CURRENT_VALUE,
+				      g_variant_new_string(priv->kernel_current_value));
+	}
+	if (priv->kernel_target_value != NULL) {
+		g_variant_builder_add(&builder,
+				      "{sv}",
+				      FWUPD_RESULT_KEY_KERNEL_TARGET_VALUE,
+				      g_variant_new_string(priv->kernel_target_value));
+	}
 	return g_variant_new("a{sv}", &builder);
 }
 
@@ -1312,6 +1414,16 @@ fwupd_security_attr_from_key_value(FwupdSecurityAttr *self, const gchar *key, GV
 		    g_variant_get_string(value, NULL));
 		return;
 	}
+	if (g_strcmp0(key, FWUPD_RESULT_KEY_KERNEL_CURRENT_VALUE) == 0) {
+		fwupd_security_attr_set_kernel_current_value(self,
+							     g_variant_get_string(value, NULL));
+		return;
+	}
+	if (g_strcmp0(key, FWUPD_RESULT_KEY_KERNEL_TARGET_VALUE) == 0) {
+		fwupd_security_attr_set_kernel_target_value(self,
+							    g_variant_get_string(value, NULL));
+		return;
+	}
 }
 
 static void
@@ -1411,6 +1523,16 @@ fwupd_security_attr_from_json(FwupdSecurityAttr *self, JsonNode *json_node, GErr
 	    json_object_get_string_member_with_default(obj,
 						       FWUPD_RESULT_KEY_BIOS_SETTING_CURRENT_VALUE,
 						       NULL));
+	fwupd_security_attr_set_kernel_current_value(
+	    self,
+	    json_object_get_string_member_with_default(obj,
+						       FWUPD_RESULT_KEY_KERNEL_CURRENT_VALUE,
+						       NULL));
+	fwupd_security_attr_set_kernel_target_value(
+	    self,
+	    json_object_get_string_member_with_default(obj,
+						       FWUPD_RESULT_KEY_KERNEL_TARGET_VALUE,
+						       NULL));
 
 	/* also optional */
 	if (json_object_has_member(obj, FWUPD_RESULT_KEY_HSI_RESULT)) {
@@ -1502,6 +1624,12 @@ fwupd_security_attr_to_json(FwupdSecurityAttr *self, JsonBuilder *builder)
 	fwupd_common_json_add_string(builder,
 				     FWUPD_RESULT_KEY_BIOS_SETTING_ID,
 				     priv->bios_setting_id);
+	fwupd_common_json_add_string(builder,
+				     FWUPD_RESULT_KEY_KERNEL_CURRENT_VALUE,
+				     priv->kernel_current_value);
+	fwupd_common_json_add_string(builder,
+				     FWUPD_RESULT_KEY_KERNEL_TARGET_VALUE,
+				     priv->kernel_target_value);
 
 	if (priv->flags != FWUPD_SECURITY_ATTR_FLAG_NONE) {
 		json_builder_set_member_name(builder, FWUPD_RESULT_KEY_FLAGS);
@@ -1580,6 +1708,8 @@ fwupd_security_attr_to_string(FwupdSecurityAttr *self)
 	fwupd_pad_kv_str(str,
 			 FWUPD_RESULT_KEY_BIOS_SETTING_CURRENT_VALUE,
 			 priv->bios_setting_current_value);
+	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_KERNEL_CURRENT_VALUE, priv->kernel_current_value);
+	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_KERNEL_TARGET_VALUE, priv->kernel_target_value);
 
 	for (guint i = 0; i < priv->obsoletes->len; i++) {
 		const gchar *appstream_id = g_ptr_array_index(priv->obsoletes, i);
@@ -1629,6 +1759,8 @@ fwupd_security_attr_finalize(GObject *object)
 	g_free(priv->bios_setting_id);
 	g_free(priv->bios_setting_target_value);
 	g_free(priv->bios_setting_current_value);
+	g_free(priv->kernel_current_value);
+	g_free(priv->kernel_target_value);
 	g_free(priv->appstream_id);
 	g_free(priv->name);
 	g_free(priv->title);

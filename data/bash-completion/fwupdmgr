@@ -37,6 +37,8 @@ _fwupdmgr_cmd_list=(
 	'refresh'
 	'report-history'
 	'security'
+	'security-fix'
+	'security-undo'
 	'set-approved-firmware'
 	'set-bios-setting'
 	'switch-branch'

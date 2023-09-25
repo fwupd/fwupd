@@ -370,6 +370,7 @@ typedef struct {
 	gchar *value;
 	XbSilo *silo;
 	GHashTable *bios_settings; /* str:str */
+	gboolean is_fix;
 } FuMainAuthHelper;
 
 static void
@@ -510,6 +511,50 @@ fu_daemon_authorize_set_blocked_firmware_cb(GObject *source, GAsyncResult *res, 
 
 	/* success */
 	if (!fu_engine_set_blocked_firmware(helper->self->engine, helper->checksums, &error)) {
+		g_dbus_method_invocation_return_gerror(helper->invocation, error);
+		return;
+	}
+	g_dbus_method_invocation_return_value(helper->invocation, NULL);
+}
+
+static void
+fu_daemon_authorize_fix_host_security_attr_cb(GObject *source,
+					      GAsyncResult *res,
+					      gpointer user_data)
+{
+	g_autoptr(FuMainAuthHelper) helper = (FuMainAuthHelper *)user_data;
+	g_autoptr(GError) error = NULL;
+
+	/* get result */
+	if (!fu_polkit_authority_check_finish(FU_POLKIT_AUTHORITY(source), res, &error)) {
+		g_dbus_method_invocation_return_gerror(helper->invocation, error);
+		return;
+	}
+
+	/* success */
+	if (!fu_engine_fix_host_security_attr(helper->self->engine, helper->key, &error)) {
+		g_dbus_method_invocation_return_gerror(helper->invocation, error);
+		return;
+	}
+	g_dbus_method_invocation_return_value(helper->invocation, NULL);
+}
+
+static void
+fu_daemon_authorize_undo_host_security_attr_cb(GObject *source,
+					       GAsyncResult *res,
+					       gpointer user_data)
+{
+	g_autoptr(FuMainAuthHelper) helper = (FuMainAuthHelper *)user_data;
+	g_autoptr(GError) error = NULL;
+
+	/* get result */
+	if (!fu_polkit_authority_check_finish(FU_POLKIT_AUTHORITY(source), res, &error)) {
+		g_dbus_method_invocation_return_gerror(helper->invocation, error);
+		return;
+	}
+
+	/* success */
+	if (!fu_engine_undo_host_security_attr(helper->self->engine, helper->key, &error)) {
 		g_dbus_method_invocation_return_gerror(helper->invocation, error);
 		return;
 	}
@@ -1947,6 +1992,52 @@ fu_daemon_daemon_method_call(GDBusConnection *connection,
 					  auth_flags,
 					  NULL,
 					  fu_daemon_authorize_set_bios_settings_cb,
+					  g_steal_pointer(&helper));
+		return;
+	}
+	if (g_strcmp0(method_name, "FixHostSecurityAttr") == 0) {
+		const gchar *appstream_id = NULL;
+		g_autoptr(FuMainAuthHelper) helper = NULL;
+		g_variant_get(parameters, "(&s)", &appstream_id);
+		g_debug("Called %s(%s)", method_name, appstream_id);
+
+		/* authenticate */
+		fu_daemon_set_status(self, FWUPD_STATUS_WAITING_FOR_AUTH);
+		helper = g_new0(FuMainAuthHelper, 1);
+		helper->self = self;
+		helper->request = g_steal_pointer(&request);
+		helper->invocation = g_object_ref(invocation);
+		helper->key = g_strdup(appstream_id);
+		helper->is_fix = TRUE;
+		fu_polkit_authority_check(self->authority,
+					  sender,
+					  "org.freedesktop.fwupd.fix-host-security-attr",
+					  auth_flags,
+					  NULL,
+					  fu_daemon_authorize_fix_host_security_attr_cb,
+					  g_steal_pointer(&helper));
+		return;
+	}
+	if (g_strcmp0(method_name, "UndoHostSecurityAttr") == 0) {
+		const gchar *appstream_id = NULL;
+		g_autoptr(FuMainAuthHelper) helper = NULL;
+		g_variant_get(parameters, "(&s)", &appstream_id);
+		g_debug("Called %s(%s)", method_name, appstream_id);
+
+		/* authenticate */
+		fu_daemon_set_status(self, FWUPD_STATUS_WAITING_FOR_AUTH);
+		helper = g_new0(FuMainAuthHelper, 1);
+		helper->self = self;
+		helper->request = g_steal_pointer(&request);
+		helper->invocation = g_object_ref(invocation);
+		helper->key = g_strdup(appstream_id);
+		helper->is_fix = FALSE;
+		fu_polkit_authority_check(self->authority,
+					  sender,
+					  "org.freedesktop.fwupd.undo-host-security-attr",
+					  auth_flags,
+					  NULL,
+					  fu_daemon_authorize_undo_host_security_attr_cb,
 					  g_steal_pointer(&helper));
 		return;
 	}

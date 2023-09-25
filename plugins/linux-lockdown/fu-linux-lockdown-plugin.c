@@ -85,17 +85,74 @@ fu_linux_lockdown_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError 
 	return TRUE;
 }
 
+static gboolean
+fu_linux_lockdown_plugin_ensure_security_attr_flags(FwupdSecurityAttr *attr, GError **error)
+{
+	const gchar *value;
+	g_autoptr(GHashTable) cmdline = NULL;
+	g_autoptr(GHashTable) config = NULL;
+
+	/* get current args */
+	cmdline = fu_kernel_get_cmdline(error);
+	if (cmdline == NULL)
+		return FALSE;
+
+	/* can we modify the args */
+	if (!fu_kernel_check_cmdline_mutable(error))
+		return FALSE;
+
+	/* get build flags */
+	config = fu_kernel_get_config(error);
+	if (config == NULL)
+		return FALSE;
+	if (!g_hash_table_contains(config, "CONFIG_LOCK_DOWN_KERNEL_FORCE_NONE")) {
+		g_set_error_literal(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_NOT_SUPPORTED,
+				    "config does not have CONFIG_LOCK_DOWN_KERNEL_FORCE_NONE");
+		return FALSE;
+	}
+
+	/* we cannot change this */
+	if (g_hash_table_contains(config, "CONFIG_LOCK_DOWN_IN_EFI_SECURE_BOOT") &&
+	    fu_efivar_secure_boot_enabled(NULL)) {
+		g_set_error_literal(
+		    error,
+		    G_IO_ERROR,
+		    G_IO_ERROR_INVALID_ARGUMENT,
+		    "kernel lockdown cannot be changed when secure boot is enabled");
+		return FALSE;
+	}
+
+	/* set the current and target values */
+	value = g_hash_table_lookup(cmdline, "lockdown");
+	fwupd_security_attr_set_kernel_current_value(attr, value);
+	if (g_strcmp0(value, "integrity") != 0) {
+		fwupd_security_attr_set_kernel_target_value(attr, "lockdown=integrity");
+		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_CAN_FIX);
+	} else {
+		fwupd_security_attr_set_kernel_target_value(attr, "lockdown=none");
+		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_CAN_UNDO);
+	}
+	return TRUE;
+}
+
 static void
 fu_linux_lockdown_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
 	FuLinuxLockdownPlugin *self = FU_LINUX_LOCKDOWN_PLUGIN(plugin);
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(GError) error_local = NULL;
 
 	/* create attr */
 	attr = fu_plugin_security_attr_new(plugin, FWUPD_SECURITY_ATTR_ID_KERNEL_LOCKDOWN);
 	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ISSUE);
 	fwupd_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_ENABLED);
 	fu_security_attrs_append(attrs, attr);
+
+	/* we might be able to fix this */
+	if (!fu_linux_lockdown_plugin_ensure_security_attr_flags(attr, &error_local))
+		g_info("failed to ensure attribute fix flags: %s", error_local->message);
 
 	if (self->lockdown == FU_LINUX_LOCKDOWN_UNKNOWN) {
 		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA);
@@ -142,6 +199,22 @@ fu_linux_lockdown_finalize(GObject *obj)
 	G_OBJECT_CLASS(fu_linux_lockdown_plugin_parent_class)->finalize(obj);
 }
 
+static gboolean
+fu_linux_lockdown_plugin_fix_host_security_attr(FuPlugin *plugin,
+						FwupdSecurityAttr *attr,
+						GError **error)
+{
+	return fu_kernel_add_cmdline_arg("lockdown=integrity", error);
+}
+
+static gboolean
+fu_linux_lockdown_plugin_undo_host_security_attr(FuPlugin *plugin,
+						 FwupdSecurityAttr *attr,
+						 GError **error)
+{
+	return fu_kernel_remove_cmdline_arg("lockdown=integrity", error);
+}
+
 static void
 fu_linux_lockdown_plugin_class_init(FuLinuxLockdownPluginClass *klass)
 {
@@ -152,4 +225,6 @@ fu_linux_lockdown_plugin_class_init(FuLinuxLockdownPluginClass *klass)
 	plugin_class->to_string = fu_linux_lockdown_plugin_to_string;
 	plugin_class->startup = fu_linux_lockdown_plugin_startup;
 	plugin_class->add_security_attrs = fu_linux_lockdown_plugin_add_security_attrs;
+	plugin_class->fix_host_security_attr = fu_linux_lockdown_plugin_fix_host_security_attr;
+	plugin_class->undo_host_security_attr = fu_linux_lockdown_plugin_undo_host_security_attr;
 }

@@ -271,5 +271,15 @@ GBytes *
 fwupd_client_emulation_save(FwupdClient *self,
 			    GCancellable *cancellable,
 			    GError **error) G_GNUC_WARN_UNUSED_RESULT;
+gboolean
+fwupd_client_fix_host_security_attr(FwupdClient *self,
+				    const gchar *appstream_id,
+				    GCancellable *cancellable,
+				    GError **error);
+gboolean
+fwupd_client_undo_host_security_attr(FwupdClient *self,
+				     const gchar *appstream_id,
+				     GCancellable *cancellable,
+				     GError **error);
 
 G_END_DECLS

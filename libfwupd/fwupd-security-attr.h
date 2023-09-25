@@ -39,6 +39,8 @@ struct _FwupdSecurityAttrClass {
  * @FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM:	Contact the firmware vendor for a update
  * @FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_FW:		Failure may be fixed by changing FW config
  * @FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_OS:		Failure may be fixed by changing OS config
+ * @FWUPD_SECURITY_ATTR_FLAG_CAN_FIX:			The failure can be automatically fixed
+ * @FWUPD_SECURITY_ATTR_FLAG_CAN_UNDO:			The fix can be automatically reverted
  *
  * The flags available for HSI attributes.
  **/
@@ -53,6 +55,8 @@ typedef enum {
 	FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM = 1 << 11,
 	FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_FW = 1 << 12,
 	FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_OS = 1 << 13,
+	FWUPD_SECURITY_ATTR_FLAG_CAN_FIX = 1 << 14,
+	FWUPD_SECURITY_ATTR_FLAG_CAN_UNDO = 1 << 15,
 } FwupdSecurityAttrFlags;
 
 /**
@@ -138,6 +142,14 @@ const gchar *
 fwupd_security_attr_get_bios_setting_current_value(FwupdSecurityAttr *self);
 void
 fwupd_security_attr_set_bios_setting_current_value(FwupdSecurityAttr *self, const gchar *value);
+const gchar *
+fwupd_security_attr_get_kernel_current_value(FwupdSecurityAttr *self);
+void
+fwupd_security_attr_set_kernel_current_value(FwupdSecurityAttr *self, const gchar *value);
+const gchar *
+fwupd_security_attr_get_kernel_target_value(FwupdSecurityAttr *self);
+void
+fwupd_security_attr_set_kernel_target_value(FwupdSecurityAttr *self, const gchar *value);
 
 const gchar *
 fwupd_security_attr_get_appstream_id(FwupdSecurityAttr *self);

@@ -7096,6 +7096,214 @@ fu_engine_security_attrs_depsolve(FuEngine *self)
 }
 #endif
 
+/**
+ * fu_history_get_previous_security_attr:
+ * @self: a #FuHistory
+ * @appstream_id: maximum number of attributes to return, or 0 for no limit
+ * @current_setting: (nullable): current value
+ * @error: return location for a #GError, or %NULL
+ *
+ * Gets the security attributes of the previous BIOS setting for the given
+ * appstream ID and current BIOS config.
+ *
+ * Returns: (element-type #FuSecurityAttr) (transfer full): attr, or %NULL
+ **/
+static FwupdSecurityAttr *
+fu_engine_get_previous_bios_security_attr(FuEngine *self,
+					  const gchar *appstream_id,
+					  const gchar *current_setting,
+					  GError **error)
+{
+	g_autoptr(GPtrArray) attrs_array = NULL;
+
+	attrs_array = fu_history_get_security_attrs(self->history, 20, error);
+	if (attrs_array == NULL)
+		return NULL;
+	for (guint i = 0; i < attrs_array->len; i++) {
+		FuSecurityAttrs *attrs = g_ptr_array_index(attrs_array, i);
+		g_autoptr(GPtrArray) attr_items = fu_security_attrs_get_all(attrs);
+		for (guint j = 0; j < attr_items->len; j++) {
+			FwupdSecurityAttr *attr = g_ptr_array_index(attr_items, j);
+			if (g_strcmp0(appstream_id, fwupd_security_attr_get_appstream_id(attr)) ==
+				0 &&
+			    g_strcmp0(current_setting,
+				      fwupd_security_attr_get_bios_setting_current_value(attr)) !=
+				0) {
+				g_debug("found previous BIOS setting for %s: %s",
+					appstream_id,
+					fwupd_security_attr_get_bios_setting_id(attr));
+				return g_object_ref(attr);
+			}
+		}
+	}
+
+	/* failed */
+	g_set_error_literal(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_NOT_SUPPORTED,
+			    "cannot find previous BIOS value");
+	return NULL;
+}
+
+/**
+ * fu_engine_fix_host_security_attr:
+ * @self: a #FuEngine
+ * @appstream_id: the Appstream ID
+ * @error: (nullable): optional return location for an error
+ *
+ * Fix one specific security attribute.
+ *
+ * Returns: %TRUE for success
+ **/
+gboolean
+fu_engine_fix_host_security_attr(FuEngine *self, const gchar *appstream_id, GError **error)
+{
+	FuPlugin *plugin;
+	FwupdBiosSetting *bios_attr;
+	g_autoptr(FwupdSecurityAttr) hsi_attr = NULL;
+	g_autoptr(GError) error_local = NULL;
+
+	g_return_val_if_fail(FU_IS_ENGINE(self), FALSE);
+
+	fu_engine_ensure_security_attrs(self);
+	hsi_attr =
+	    fu_security_attrs_get_by_appstream_id(self->host_security_attrs, appstream_id, error);
+	if (hsi_attr == NULL)
+		return FALSE;
+	if (!fwupd_security_attr_has_flag(hsi_attr, FWUPD_SECURITY_ATTR_FLAG_CAN_FIX)) {
+		g_set_error_literal(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_NOT_SUPPORTED,
+				    "cannot auto-fix attribute");
+		return FALSE;
+	}
+	plugin = fu_plugin_list_find_by_name(self->plugin_list,
+					     fwupd_security_attr_get_plugin(hsi_attr),
+					     error);
+	if (plugin == NULL)
+		return FALSE;
+
+	/* first try the per-plugin vfunc */
+	if (!fu_plugin_runner_fix_host_security_attr(plugin, hsi_attr, &error_local)) {
+		if (!g_error_matches(error_local, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED)) {
+			g_propagate_error(error, g_steal_pointer(&error_local));
+			return FALSE;
+		}
+		g_debug("ignoring %s", error_local->message);
+	} else {
+		g_info("fixed %s", fwupd_security_attr_get_appstream_id(hsi_attr));
+		return TRUE;
+	}
+
+	/* fall back to setting the BIOS attribute */
+	if (fwupd_security_attr_get_bios_setting_id(hsi_attr) == NULL) {
+		g_set_error_literal(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_NOT_SUPPORTED,
+				    "no BIOS setting ID set");
+		return FALSE;
+	}
+	bios_attr = fu_context_get_bios_setting(self->ctx,
+						fwupd_security_attr_get_bios_setting_id(hsi_attr));
+	if (bios_attr == NULL) {
+		g_set_error(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_NOT_SUPPORTED,
+			    "cannot get BIOS setting %s",
+			    fwupd_security_attr_get_bios_setting_id(hsi_attr));
+		return FALSE;
+	}
+	return fwupd_bios_setting_write_value(
+	    bios_attr,
+	    fwupd_security_attr_get_bios_setting_target_value(hsi_attr),
+	    error);
+}
+
+/**
+ * fu_engine_fix_host_security_attr:
+ * @self: a #FuEngine
+ * @appstream_id: the Appstream ID
+ * @error: (nullable): optional return location for an error
+ *
+ * Revert the fix for one specific security attribute.
+ *
+ * Returns: %TRUE for success
+ **/
+gboolean
+fu_engine_undo_host_security_attr(FuEngine *self, const gchar *appstream_id, GError **error)
+{
+	FuPlugin *plugin;
+	FwupdBiosSetting *bios_attr;
+	g_autoptr(FwupdSecurityAttr) hsi_attr = NULL;
+	g_autoptr(FwupdSecurityAttr) hsi_attr_old = NULL;
+	g_autoptr(GError) error_local = NULL;
+
+	g_return_val_if_fail(FU_IS_ENGINE(self), FALSE);
+
+	fu_engine_ensure_security_attrs(self);
+	hsi_attr =
+	    fu_security_attrs_get_by_appstream_id(self->host_security_attrs, appstream_id, error);
+	if (hsi_attr == NULL)
+		return FALSE;
+	if (!fwupd_security_attr_has_flag(hsi_attr, FWUPD_SECURITY_ATTR_FLAG_CAN_UNDO)) {
+		g_set_error_literal(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_NOT_SUPPORTED,
+				    "cannot auto-undo attribute");
+		return FALSE;
+	}
+	plugin = fu_plugin_list_find_by_name(self->plugin_list,
+					     fwupd_security_attr_get_plugin(hsi_attr),
+					     error);
+	if (plugin == NULL)
+		return FALSE;
+
+	/* first try the per-plugin vfunc */
+	if (!fu_plugin_runner_undo_host_security_attr(plugin, hsi_attr, &error_local)) {
+		if (!g_error_matches(error_local, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED)) {
+			g_propagate_error(error, g_steal_pointer(&error_local));
+			return FALSE;
+		}
+	}
+
+	/* fall back to setting the BIOS attribute */
+	if (fwupd_security_attr_get_bios_setting_id(hsi_attr) == NULL) {
+		g_set_error_literal(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_NOT_SUPPORTED,
+				    "no BIOS setting ID");
+		return FALSE;
+	}
+	bios_attr = fu_context_get_bios_setting(self->ctx,
+						fwupd_security_attr_get_bios_setting_id(hsi_attr));
+	if (bios_attr == NULL) {
+		g_set_error(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_NOT_SUPPORTED,
+			    "cannot get BIOS setting %s",
+			    fwupd_security_attr_get_bios_setting_id(hsi_attr));
+		return FALSE;
+	}
+	if (fwupd_security_attr_get_bios_setting_current_value(hsi_attr) == NULL) {
+		g_set_error_literal(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_NOT_SUPPORTED,
+				    "no BIOS setting current value");
+		return FALSE;
+	}
+	hsi_attr_old = fu_engine_get_previous_bios_security_attr(
+	    self,
+	    appstream_id,
+	    fwupd_security_attr_get_bios_setting_current_value(hsi_attr),
+	    error);
+	if (hsi_attr_old == NULL)
+		return FALSE;
+	return fwupd_bios_setting_write_value(
+	    bios_attr,
+	    fwupd_security_attr_get_bios_setting_current_value(hsi_attr_old),
+	    error);
+}
+
 static gboolean
 fu_engine_security_attrs_from_json(FuEngine *self, JsonNode *json_node, GError **error)
 {
