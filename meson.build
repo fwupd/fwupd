@@ -479,11 +479,6 @@ endif
 launchctl = find_program('launchctl',
     required: get_option('launchd').disable_auto_if(host_machine.system() != 'darwin').allowed(),
 )
-use_launchd = cc.has_header('launch.h') and launchctl.found()
-
-if use_launchd
-  conf.set('HAVE_LAUNCHD', '1')
-endif
 
 if get_option('consolekit').disable_auto_if(host_machine.system() != 'linux').allowed()
   conf.set('HAVE_CONSOLEKIT' , '1')
