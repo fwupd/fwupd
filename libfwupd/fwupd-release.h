@@ -153,11 +153,12 @@ const gchar *
 fwupd_release_get_license(FwupdRelease *self);
 void
 fwupd_release_set_license(FwupdRelease *self, const gchar *license);
+G_DEPRECATED_FOR(fwupd_release_get_flags)
 FwupdTrustFlags
-fwupd_release_get_trust_flags(FwupdRelease *self) G_DEPRECATED_FOR(fwupd_release_get_flags);
+fwupd_release_get_trust_flags(FwupdRelease *self);
+G_DEPRECATED_FOR(fwupd_release_set_flags)
 void
-fwupd_release_set_trust_flags(FwupdRelease *self, FwupdTrustFlags trust_flags)
-    G_DEPRECATED_FOR(fwupd_release_set_flags);
+fwupd_release_set_trust_flags(FwupdRelease *self, FwupdTrustFlags trust_flags);
 FwupdReleaseFlags
 fwupd_release_get_flags(FwupdRelease *self);
 void

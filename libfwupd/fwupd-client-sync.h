@@ -143,13 +143,14 @@ fwupd_client_install_bytes(FwupdClient *self,
 			   FwupdInstallFlags install_flags,
 			   GCancellable *cancellable,
 			   GError **error) G_GNUC_WARN_UNUSED_RESULT;
+G_DEPRECATED_FOR(fwupd_client_install_release2)
 gboolean
 fwupd_client_install_release(FwupdClient *self,
 			     FwupdDevice *device,
 			     FwupdRelease *release,
 			     FwupdInstallFlags install_flags,
 			     GCancellable *cancellable,
-			     GError **error) G_DEPRECATED_FOR(fwupd_client_install_release2);
+			     GError **error);
 gboolean
 fwupd_client_install_release2(FwupdClient *self,
 			      FwupdDevice *device,
@@ -172,11 +173,12 @@ fwupd_client_update_metadata_bytes(FwupdClient *self,
 				   GBytes *signature,
 				   GCancellable *cancellable,
 				   GError **error) G_GNUC_WARN_UNUSED_RESULT;
+G_DEPRECATED_FOR(fwupd_client_refresh_remote2)
 gboolean
 fwupd_client_refresh_remote(FwupdClient *self,
 			    FwupdRemote *remote,
 			    GCancellable *cancellable,
-			    GError **error) G_DEPRECATED_FOR(fwupd_client_refresh_remote2);
+			    GError **error);
 gboolean
 fwupd_client_refresh_remote2(FwupdClient *self,
 			     FwupdRemote *remote,
