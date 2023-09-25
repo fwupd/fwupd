@@ -982,5 +982,15 @@ LIBFWUPD_1.9.4 {
 LIBFWUPD_1.9.6 {
   global:
     fwupd_checksum_type_to_string_display;
+    fwupd_client_fix_host_security_attr;
+    fwupd_client_fix_host_security_attr_async;
+    fwupd_client_fix_host_security_attr_finish;
+    fwupd_client_undo_host_security_attr;
+    fwupd_client_undo_host_security_attr_async;
+    fwupd_client_undo_host_security_attr_finish;
+    fwupd_security_attr_get_kernel_current_value;
+    fwupd_security_attr_get_kernel_target_value;
+    fwupd_security_attr_set_kernel_current_value;
+    fwupd_security_attr_set_kernel_target_value;
   local: *;
 } LIBFWUPD_1.9.4;

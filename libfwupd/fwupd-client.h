@@ -440,6 +440,22 @@ GBytes *
 fwupd_client_emulation_save_finish(FwupdClient *self,
 				   GAsyncResult *res,
 				   GError **error) G_GNUC_WARN_UNUSED_RESULT;
+void
+fwupd_client_fix_host_security_attr_async(FwupdClient *self,
+					  const gchar *appstream_id,
+					  GCancellable *cancellable,
+					  GAsyncReadyCallback callback,
+					  gpointer callback_data);
+gboolean
+fwupd_client_fix_host_security_attr_finish(FwupdClient *self, GAsyncResult *res, GError **error);
+void
+fwupd_client_undo_host_security_attr_async(FwupdClient *self,
+					   const gchar *appstream_id,
+					   GCancellable *cancellable,
+					   GAsyncReadyCallback callback,
+					   gpointer callback_data);
+gboolean
+fwupd_client_undo_host_security_attr_finish(FwupdClient *self, GAsyncResult *res, GError **error);
 
 FwupdStatus
 fwupd_client_get_status(FwupdClient *self);

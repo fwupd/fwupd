@@ -253,3 +253,7 @@ gboolean
 fu_engine_emulation_load(FuEngine *self, GBytes *data, GError **error);
 GBytes *
 fu_engine_emulation_save(FuEngine *self, GError **error);
+gboolean
+fu_engine_fix_host_security_attr(FuEngine *self, const gchar *appstream_id, GError **error);
+gboolean
+fu_engine_undo_host_security_attr(FuEngine *self, const gchar *appstream_id, GError **error);

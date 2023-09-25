@@ -56,6 +56,9 @@ fu_security_attr_add_bios_target_value(FwupdSecurityAttr *attr,
 		g_autofree gchar *lower = g_utf8_strdown(possible, -1);
 		if (g_strrstr(lower, needle)) {
 			fwupd_security_attr_set_bios_setting_target_value(attr, possible);
+			/* this is built-in to the engine */
+			fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_CAN_FIX);
+			fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_CAN_UNDO);
 			return;
 		}
 	}

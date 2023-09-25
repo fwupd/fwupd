@@ -3499,6 +3499,76 @@ fu_util_set_bios_setting(FuUtilPrivate *priv, gchar **input, GError **error)
 }
 
 static gboolean
+fu_util_security_fix(FuUtilPrivate *priv, gchar **values, GError **error)
+{
+#ifndef HAVE_HSI
+	g_set_error(error,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_NOT_SUPPORTED,
+		    /* TRANSLATORS: error message for unsupported feature */
+		    _("Host Security ID (HSI) is not supported"));
+	return FALSE;
+#endif /* HAVE_HSI */
+
+	if (g_strv_length(values) == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_ARGS,
+				    /* TRANSLATOR: This is the error message for
+				     * incorrect parameter */
+				    _("Invalid arguments, expected an AppStream ID"));
+		return FALSE;
+	}
+
+	if (!fu_util_start_engine(priv,
+				  FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_REMOTES |
+				      FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS,
+				  priv->progress,
+				  error))
+		return FALSE;
+	if (!fu_engine_fix_host_security_attr(priv->engine, values[0], error))
+		return FALSE;
+	/* TRANSLATORS: we've fixed a security problem on the machine */
+	fu_console_print_literal(priv->console, _("Fixed successfully"));
+	return TRUE;
+}
+
+static gboolean
+fu_util_security_undo(FuUtilPrivate *priv, gchar **values, GError **error)
+{
+#ifndef HAVE_HSI
+	g_set_error(error,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_NOT_SUPPORTED,
+		    /* TRANSLATORS: error message for unsupported feature */
+		    _("Host Security ID (HSI) is not supported"));
+	return FALSE;
+#endif /* HAVE_HSI */
+
+	if (g_strv_length(values) == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_ARGS,
+				    /* TRANSLATOR: This is the error message for
+				     * incorrect parameter */
+				    _("Invalid arguments, expected an AppStream ID"));
+		return FALSE;
+	}
+
+	if (!fu_util_start_engine(priv,
+				  FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_REMOTES |
+				      FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS,
+				  priv->progress,
+				  error))
+		return FALSE;
+	if (!fu_engine_undo_host_security_attr(priv->engine, values[0], error))
+		return FALSE;
+	/* TRANSLATORS: we've fixed a security problem on the machine */
+	fu_console_print_literal(priv->console, _("Fix reverted successfully"));
+	return TRUE;
+}
+
+static gboolean
 fu_util_get_bios_setting(FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(FuBiosSettings) attrs = NULL;
@@ -4228,6 +4298,20 @@ main(int argc, char *argv[])
 			      /* TRANSLATORS: command description */
 			      _("List EFI variables with a specific GUID"),
 			      fu_util_efivar_list);
+	fu_util_cmd_array_add(cmd_array,
+			      "security-fix",
+			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			      _("[APPSTREAM_ID]"),
+			      /* TRANSLATORS: command description */
+			      _("Fix a specific host security attribute"),
+			      fu_util_security_fix);
+	fu_util_cmd_array_add(cmd_array,
+			      "security-undo",
+			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			      _("[APPSTREAM_ID]"),
+			      /* TRANSLATORS: command description */
+			      _("Undo the host security attribute fix"),
+			      fu_util_security_undo);
 
 	/* do stuff on ctrl+c */
 	priv->cancellable = g_cancellable_new();

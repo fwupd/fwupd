@@ -124,6 +124,14 @@ gboolean
 fu_plugin_runner_get_results(FuPlugin *self,
 			     FuDevice *device,
 			     GError **error) G_GNUC_WARN_UNUSED_RESULT;
+gboolean
+fu_plugin_runner_fix_host_security_attr(FuPlugin *self,
+					FwupdSecurityAttr *attr,
+					GError **error) G_GNUC_WARN_UNUSED_RESULT;
+gboolean
+fu_plugin_runner_undo_host_security_attr(FuPlugin *self,
+					 FwupdSecurityAttr *attr,
+					 GError **error) G_GNUC_WARN_UNUSED_RESULT;
 void
 fu_plugin_runner_add_security_attrs(FuPlugin *self, FuSecurityAttrs *attrs);
 gint

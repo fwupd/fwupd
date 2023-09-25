@@ -466,3 +466,117 @@ fu_kernel_get_cmdline(GError **error)
 	return NULL;
 #endif
 }
+
+gboolean
+fu_kernel_check_cmdline_mutable(GError **error)
+{
+	g_autofree gchar *bootdir = fu_path_from_kind(FU_PATH_KIND_HOSTFS_BOOT);
+	g_autofree gchar *grubby_path = NULL;
+	g_autofree gchar *sysconfdir = fu_path_from_kind(FU_PATH_KIND_SYSCONFDIR);
+	g_auto(GStrv) config_files = g_new0(gchar *, 3);
+
+	/* not found */
+	grubby_path = fu_path_find_program("grubby", error);
+	if (grubby_path == NULL)
+		return FALSE;
+
+	/* check all the config files are writable */
+	config_files[0] = g_build_filename(bootdir, "grub2", "grub.cfg", NULL);
+	config_files[1] = g_build_filename(sysconfdir, "grub.cfg", NULL);
+	for (guint i = 0; config_files[i] != NULL; i++) {
+		g_autoptr(GFile) file = g_file_new_for_path(config_files[i]);
+		g_autoptr(GFileInfo) info = NULL;
+		g_autoptr(GError) error_local = NULL;
+
+		if (!g_file_query_exists(file, NULL))
+			continue;
+		info = g_file_query_info(file,
+					 G_FILE_ATTRIBUTE_ACCESS_CAN_WRITE,
+					 G_FILE_QUERY_INFO_NONE,
+					 NULL,
+					 &error_local);
+		if (info == NULL) {
+			g_warning("failed to get info for %s: %s",
+				  config_files[i],
+				  error_local->message);
+			continue;
+		}
+		if (!g_file_info_get_attribute_boolean(info, G_FILE_ATTRIBUTE_ACCESS_CAN_WRITE)) {
+			g_set_error(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_NOT_SUPPORTED,
+				    "%s is not writable",
+				    config_files[i]);
+			return FALSE;
+		}
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_kernel_set_commandline(const gchar *arg, gboolean enable, GError **error)
+{
+	g_autofree gchar *output = NULL;
+	g_autofree gchar *arg_string = NULL;
+	g_autofree gchar *grubby_path = NULL;
+	const gchar *argv_grubby[] = {"", "--update-kernel=DEFAULT", "", NULL};
+
+	grubby_path = fu_path_find_program("grubby", error);
+	if (grubby_path == NULL) {
+		g_prefix_error(error, "failed to find grubby: ");
+		return FALSE;
+	}
+	if (enable)
+		arg_string = g_strdup_printf("--args=%s", arg);
+	else
+		arg_string = g_strdup_printf("--remove-args=%s", arg);
+
+	argv_grubby[0] = grubby_path;
+	argv_grubby[2] = arg_string;
+	return g_spawn_sync(NULL,
+			    (gchar **)argv_grubby,
+			    NULL,
+			    G_SPAWN_DEFAULT,
+			    NULL,
+			    NULL,
+			    &output,
+			    NULL,
+			    NULL,
+			    error);
+}
+
+/**
+ * fu_kernel_add_cmdline_arg:
+ * @arg: (not nullable): key to set
+ * @error: (nullable): optional return location for an error
+ *
+ * Add a kernel command line argument.
+ *
+ * Returns: %TRUE if successful
+ *
+ * Since: 1.9.5
+ **/
+gboolean
+fu_kernel_add_cmdline_arg(const gchar *arg, GError **error)
+{
+	return fu_kernel_set_commandline(arg, TRUE, error);
+}
+
+/**
+ * fu_kernel_remove_cmdline_arg:
+ * @arg: (not nullable): key to set
+ * @error: (nullable): optional return location for an error
+ *
+ * Remove a kernel command line argument.
+ *
+ * Returns: %TRUE if successful
+ *
+ * Since: 1.9.5
+ **/
+gboolean
+fu_kernel_remove_cmdline_arg(const gchar *arg, GError **error)
+{
+	return fu_kernel_set_commandline(arg, FALSE, error);
+}

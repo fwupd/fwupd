@@ -827,6 +827,46 @@
     </method>
 
     <!--***********************************************************-->
+    <method name='FixHostSecurityAttr'>
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Fix a specific HSI attribute.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
+      <arg type='s' name='appstream_id' direction='in'>
+        <doc:doc>
+          <doc:summary>
+            <doc:para>
+              The fwupd AppStream ID, e.g. 'org.fwupd.hsi.Kernel.Lockdown'.
+            </doc:para>
+          </doc:summary>
+        </doc:doc>
+      </arg>
+    </method>
+
+    <!--***********************************************************-->
+    <method name='UndoHostSecurityAttr'>
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Revert the fix for a specific HSI attribute.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
+      <arg type='s' name='appstream_id' direction='in'>
+        <doc:doc>
+          <doc:summary>
+            <doc:para>
+              The fwupd AppStream ID, e.g. 'org.fwupd.hsi.Kernel.Lockdown'.
+            </doc:para>
+          </doc:summary>
+        </doc:doc>
+      </arg>
+    </method>
+
+    <!--***********************************************************-->
     <method name='SelfSign'>
       <doc:doc>
         <doc:description>
