@@ -110,15 +110,18 @@ const gchar *
 fwupd_remote_get_metadata_uri(FwupdRemote *self);
 const gchar *
 fwupd_remote_get_metadata_uri_sig(FwupdRemote *self);
+G_DEPRECATED_FOR(fwupd_remote_has_flag)
 gboolean
-fwupd_remote_get_enabled(FwupdRemote *self) G_DEPRECATED_FOR(fwupd_remote_has_flag);
+fwupd_remote_get_enabled(FwupdRemote *self);
+G_DEPRECATED_FOR(fwupd_remote_has_flag)
 gboolean
-fwupd_remote_get_approval_required(FwupdRemote *self) G_DEPRECATED_FOR(fwupd_remote_has_flag);
+fwupd_remote_get_approval_required(FwupdRemote *self);
+G_DEPRECATED_FOR(fwupd_remote_has_flag)
 gboolean
-fwupd_remote_get_automatic_reports(FwupdRemote *self) G_DEPRECATED_FOR(fwupd_remote_has_flag);
+fwupd_remote_get_automatic_reports(FwupdRemote *self);
+G_DEPRECATED_FOR(fwupd_remote_has_flag)
 gboolean
-fwupd_remote_get_automatic_security_reports(FwupdRemote *self)
-    G_DEPRECATED_FOR(fwupd_remote_has_flag);
+fwupd_remote_get_automatic_security_reports(FwupdRemote *self);
 guint64
 fwupd_remote_get_refresh_interval(FwupdRemote *self);
 
