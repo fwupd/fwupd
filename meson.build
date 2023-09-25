@@ -226,7 +226,7 @@ sqlite = dependency('sqlite3', required: get_option('sqlite'))
 if sqlite.found()
   conf.set('HAVE_SQLITE', '1')
 endif
-passim = dependency('passim', required: get_option('passim'), fallback: ['passim', 'passim_dep'])
+passim = dependency('passim', version: '>= 0.1.2', required: get_option('passim'), fallback: ['passim', 'passim_dep'])
 if passim.found()
   conf.set('HAVE_PASSIM', '1')
 endif
