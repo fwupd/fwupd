@@ -154,7 +154,7 @@ if build_daemon
       input: 'org.freedesktop.fwupd.plist',
       output: 'org.freedesktop.fwupd.plist',
       configuration: con2,
-      install_dir: launchd_agent_dir,
+      install_dir: get_option('launchd_agent_dir'),
     )
   endif
 

@@ -476,23 +476,12 @@ if elogind.found()
   conf.set('HAVE_LOGIND' , '1')
 endif
 
-if get_option('launchd').disabled()
-  use_launchd = false
-else
-  launchctl = find_program('launchctl',
-    required: get_option('launchd').disable_auto_if(host_machine.system() != 'darwin'),
-  )
-  use_launchd = cc.has_header('launch.h') and launchctl.found()
-  if get_option('launchd').enabled() and not use_launchd
-    error('launchd support requested but not found')
-  endif
-endif
+launchctl = find_program('launchctl',
+    required: get_option('launchd').disable_auto_if(host_machine.system() != 'darwin').allowed(),
+)
+use_launchd = cc.has_header('launch.h') and launchctl.found()
 
 if use_launchd
-  launchd_agent_dir = get_option('launchd_agent_dir')
-  if launchd_agent_dir == ''
-    launchd_agent_dir = '/Library/LaunchAgents'
-  endif
   conf.set('HAVE_LAUNCHD', '1')
 endif
 
