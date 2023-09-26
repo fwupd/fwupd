@@ -127,6 +127,8 @@ fu_mediatek_scaler_device_use_aux_dev(FuDevice *device, GError **error)
 
 		udev = fu_udev_device_new(fu_device_get_context(device), element->data);
 		i2c_devices = fu_udev_device_get_siblings_with_subsystem(udev, "i2c");
+		if (i2c_devices->len == 0)
+			continue;
 		return fu_mediatek_scaler_device_set_i2c_dev(self, i2c_devices, error);
 	}
 	g_set_error(error,
