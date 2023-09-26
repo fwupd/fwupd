@@ -1,0 +1,18 @@
+{
+  "id": "org.fwupd.hsi.Bios.CapsuleUpdates",
+  "name": "BIOS Capsule updates",
+  "description": [
+    "Some OEMs offer a switch in the BIOS to allow capsule updates to be enabled."
+  ],
+  "failure-impact": [
+    "When this switch is present but disabled, BIOS firmware updates for Linux may not work."
+  ],
+  "failure-results": {
+    "not-enabled": "BIOS capsule updates disabled"
+  },
+  "success-results": {
+    "enabled": "BIOS capsule updates enabled"
+  },
+  "hsi-level": 1,
+  "fwupd-version": "1.9.6"
+}
