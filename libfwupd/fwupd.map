@@ -978,3 +978,9 @@ LIBFWUPD_1.9.4 {
     fwupd_remote_set_flags;
   local: *;
 } LIBFWUPD_1.9.3;
+
+LIBFWUPD_1.9.6 {
+  global:
+    fwupd_checksum_type_to_string_display;
+  local: *;
+} LIBFWUPD_1.9.4;

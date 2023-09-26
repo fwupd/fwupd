@@ -73,6 +73,8 @@ const gchar *
 fwupd_checksum_get_by_kind(GPtrArray *checksums, GChecksumType kind);
 GChecksumType
 fwupd_checksum_guess_kind(const gchar *checksum);
+const gchar *
+fwupd_checksum_type_to_string_display(GChecksumType checksum_type);
 gchar *
 fwupd_checksum_format_for_display(const gchar *checksum);
 
