@@ -137,8 +137,6 @@ fu_dell_get_system_id(FuPlugin *plugin)
 	system_id_str = fu_context_get_hwid_value(ctx, FU_HWIDS_KEY_PRODUCT_SKU);
 	if (system_id_str != NULL)
 		system_id = g_ascii_strtoull(system_id_str, &endptr, 16);
-	if (system_id == 0 || endptr == system_id_str)
-		system_id = (guint16)sysinfo_get_dell_system_id();
 
 	return system_id;
 }
