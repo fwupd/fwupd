@@ -219,6 +219,10 @@ fu_security_attr_get_name(FwupdSecurityAttr *attr)
 		/* TRANSLATORS: Title: GDS is where the CPU leaks information */
 		return g_strdup(_("Intel GDS mitigation"));
 	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_BIOS_CAPSULE_UPDATES) == 0) {
+		/* TRANSLATORS: Title: Whether BIOS Firmware updates is enabled */
+		return g_strdup(_("BIOS Firmware updates"));
+	}
 	/* we should not get here */
 	return g_strdup(fwupd_security_attr_get_name(attr));
 }
@@ -395,6 +399,10 @@ fu_security_attr_get_title(FwupdSecurityAttr *attr)
 	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_INTEL_GDS) == 0) {
 		/* TRANSLATORS: Title: GDS is where the CPU leaks information */
 		return _("Intel GDS Mitigation");
+	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_BIOS_CAPSULE_UPDATES) == 0) {
+		/* TRANSLATORS: Title: Whether BIOS Firmware updates is enabled */
+		return g_strdup(_("BIOS Firmware updates"));
 	}
 	return NULL;
 }
@@ -579,6 +587,11 @@ fu_security_attr_get_description(FwupdSecurityAttr *attr)
 		/* TRANSLATORS: longer description */
 		return _("CPU Microcode must be updated to mitigate against various "
 			 "information-disclosure security issues.");
+	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_BIOS_CAPSULE_UPDATES) == 0) {
+		/* TRANSLATORS: longer description */
+		return g_strdup(_("Enabling firmware updates for the BIOS allows fixing security "
+				  "issues."));
 	}
 
 	return NULL;

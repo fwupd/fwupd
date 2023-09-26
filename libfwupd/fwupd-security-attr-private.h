@@ -365,6 +365,14 @@ G_BEGIN_DECLS
  * Since: 1.9.4
  **/
 #define FWUPD_SECURITY_ATTR_ID_INTEL_GDS "org.fwupd.hsi.IntelGds"
+/**
+ * FWUPD_SECURITY_ATTR_ID_BIOS_CAPSULE_UPDATES:
+ *
+ * Host Security ID attribute indicating Capsule updates are supported by the BIOS.
+ *
+ * Since: 1.9.6
+ **/
+#define FWUPD_SECURITY_ATTR_ID_BIOS_CAPSULE_UPDATES "org.fwupd.hsi.Bios.CapsuleUpdates"
 
 GVariant *
 fwupd_security_attr_to_variant(FwupdSecurityAttr *self);
