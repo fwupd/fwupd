@@ -352,9 +352,6 @@ done
 %dir %{_sysconfdir}/fwupd/bios-settings.d
 %{_sysconfdir}/fwupd/bios-settings.d/README.md
 %dir %{_sysconfdir}/fwupd/remotes.d
-%if 0%{?have_dell}
-%config(noreplace)%{_sysconfdir}/fwupd/remotes.d/dell-esrt.conf
-%endif
 %config(noreplace)%{_sysconfdir}/fwupd/remotes.d/lvfs.conf
 %config(noreplace)%{_sysconfdir}/fwupd/remotes.d/lvfs-testing.conf
 %config(noreplace)%{_sysconfdir}/fwupd/remotes.d/vendor.conf
@@ -369,9 +366,6 @@ done
 %{_datadir}/bash-completion/completions/fwupdtool
 %{_datadir}/fish/vendor_completions.d/fwupdmgr.fish
 %{_datadir}/fwupd/metainfo/org.freedesktop.fwupd*.metainfo.xml
-%if 0%{?have_dell}
-%{_datadir}/fwupd/remotes.d/dell-esrt/metadata.xml
-%endif
 %{_datadir}/fwupd/remotes.d/vendor/firmware/README.md
 %{_datadir}/dbus-1/interfaces/org.freedesktop.fwupd.xml
 %{_datadir}/polkit-1/actions/org.freedesktop.fwupd.policy

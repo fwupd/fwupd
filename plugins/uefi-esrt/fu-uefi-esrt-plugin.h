@@ -8,4 +8,4 @@
 
 #include <fwupdplugin.h>
 
-G_DECLARE_FINAL_TYPE(FuDellEsrtPlugin, fu_dell_esrt_plugin, FU, DELL_ESRT_PLUGIN, FuPlugin)
+G_DECLARE_FINAL_TYPE(FuUefiEsrtPlugin, fu_uefi_esrt_plugin, FU, UEFI_ESRT_PLUGIN, FuPlugin)
