@@ -101,3 +101,11 @@ enum CoswidEntityRole {
     Licensor,
     Maintainer,
 }
+
+#[derive(ToString, FromString)]
+enum CoswidHashAlg {
+    Unknown = 0,
+    SHA256 = 1,
+    SHA384 = 7,
+    SHA512 = 8,
+}
