@@ -47,15 +47,6 @@ G_DEFINE_TYPE(FuDellPlugin, fu_dell_plugin, FU_TYPE_PLUGIN)
 #define DELL_IMAGE_MISSING	 0x000D
 #define DELL_DID_NOTHING	 0xFFFF
 
-/* Delay for settling */
-#define DELL_FLASH_MODE_DELAY 2
-
-typedef struct _DOCK_DESCRIPTION {
-	const gchar *guid;
-	const gchar *query;
-	const gchar *desc;
-} DOCK_DESCRIPTION;
-
 struct da_structure {
 	guint8 type;
 	guint8 length;
@@ -65,36 +56,6 @@ struct da_structure {
 	guint32 supported_cmds;
 	guint8 *tokens;
 } __attribute__((packed));
-
-/* These are for matching the components */
-#define WD15_EC_STR    "2 0 2 2 0"
-#define TB16_EC_STR    "2 0 2 1 0"
-#define TB16_PC2_STR   "2 1 0 1 1"
-#define TB16_PC1_STR   "2 1 0 1 0"
-#define WD15_PC1_STR   "2 1 0 2 0"
-#define LEGACY_CBL_STR "2 2 2 1 0"
-#define UNIV_CBL_STR   "2 2 2 2 0"
-#define TBT_CBL_STR    "2 2 2 3 0"
-#define FUTURE_EC_STR  "3 0 2 4 0"
-#define FUTURE_EC_STR2 "4 0 2 4 0"
-
-/* supported dock related GUIDs */
-#define DOCK_FLASH_GUID "e7ca1f36-bf73-4574-afe6-a4ccacabf479"
-#define WD15_EC_GUID	"e8445370-0211-449d-9faa-107906ab189f"
-#define TB16_EC_GUID	"33cc8870-b1fc-4ec7-948a-c07496874faf"
-#define TB16_PC2_GUID	"1b52c630-86f6-4aee-9f0c-474dc6be49b6"
-#define TB16_PC1_GUID	"8fe183da-c94e-4804-b319-0f1ba5457a69"
-#define WD15_PC1_GUID	"8ba2b709-6f97-47fc-b7e7-6a87b578fe25"
-#define LEGACY_CBL_GUID "fece1537-d683-4ea8-b968-154530bb6f73"
-#define UNIV_CBL_GUID	"e2bf3aad-61a3-44bf-91ef-349b39515d29"
-#define TBT_CBL_GUID	"6dc832fc-5bb0-4e63-a2ff-02aaba5bc1dc"
-
-#define EC_DESC		"EC"
-#define PC1_DESC	"Port Controller 1"
-#define PC2_DESC	"Port Controller 2"
-#define LEGACY_CBL_DESC "Passive Cable"
-#define UNIV_CBL_DESC	"Universal Cable"
-#define TBT_CBL_DESC	"Thunderbolt Cable"
 
 /**
  * Devices that should allow modeswitching
@@ -202,34 +163,6 @@ fu_dell_supported(FuPlugin *plugin, GError **error)
 	return FALSE;
 }
 
-static gboolean
-fu_dell_plugin_match_dock_component(const gchar *query_str,
-				    const gchar **guid_out,
-				    const gchar **name_out)
-{
-	const DOCK_DESCRIPTION list[] = {
-	    {WD15_EC_GUID, WD15_EC_STR, EC_DESC},
-	    {TB16_EC_GUID, TB16_EC_STR, EC_DESC},
-	    {WD15_PC1_GUID, WD15_PC1_STR, PC1_DESC},
-	    {TB16_PC1_GUID, TB16_PC1_STR, PC1_DESC},
-	    {TB16_PC2_GUID, TB16_PC2_STR, PC2_DESC},
-	    {TBT_CBL_GUID, TBT_CBL_STR, TBT_CBL_DESC},
-	    {UNIV_CBL_GUID, UNIV_CBL_STR, UNIV_CBL_DESC},
-	    {LEGACY_CBL_GUID, LEGACY_CBL_STR, LEGACY_CBL_DESC},
-	    {NULL, FUTURE_EC_STR, NULL},
-	    {NULL, FUTURE_EC_STR2, NULL},
-	};
-
-	for (guint i = 0; i < G_N_ELEMENTS(list); i++) {
-		if (g_strcmp0(query_str, list[i].query) == 0) {
-			*guid_out = list[i].guid;
-			*name_out = list[i].desc;
-			return TRUE;
-		}
-	}
-	return FALSE;
-}
-
 void
 fu_dell_plugin_inject_fake_data(FuPlugin *plugin,
 				guint32 *output,
@@ -254,224 +187,6 @@ fu_dell_plugin_capsule_supported(FuPlugin *plugin)
 {
 	FuDellPlugin *self = FU_DELL_PLUGIN(plugin);
 	return self->smi_obj->fake_smbios || self->capsule_supported;
-}
-
-static gboolean
-fu_plugin_dock_node(FuPlugin *plugin,
-		    const gchar *platform,
-		    guint8 type,
-		    const gchar *component_guid,
-		    const gchar *component_desc,
-		    const gchar *version,
-		    FwupdVersionFormat version_format)
-{
-	FuContext *ctx = fu_plugin_get_context(plugin);
-	const gchar *dock_type;
-	g_autofree gchar *dock_name = NULL;
-	g_autoptr(FuDevice) dev = NULL;
-
-	dock_type = fu_dell_get_dock_type(type);
-	if (dock_type == NULL) {
-		g_debug("Unknown dock type %d", type);
-		return FALSE;
-	}
-
-	dev = fu_device_new(ctx);
-	fu_device_set_physical_id(dev, platform);
-	fu_device_set_logical_id(dev, component_guid);
-	if (component_desc != NULL) {
-		dock_name = g_strdup_printf("Dell %s %s", dock_type, component_desc);
-		fu_device_add_parent_guid(dev, DOCK_FLASH_GUID);
-	} else {
-		dock_name = g_strdup_printf("Dell %s", dock_type);
-	}
-	fu_device_set_vendor(dev, "Dell Inc.");
-	fu_device_add_vendor_id(dev, "PCI:0x1028");
-	fu_device_set_name(dev, dock_name);
-	fu_device_set_metadata(dev, FU_DEVICE_METADATA_UEFI_DEVICE_KIND, "device-firmware");
-	if (type == DOCK_TYPE_TB16) {
-		fu_device_set_summary(dev, "Thunderbolt™ 3 docking station");
-	} else if (type == DOCK_TYPE_WD15) {
-		fu_device_set_summary(dev, "USB type-C docking station");
-	}
-	fu_device_add_icon(dev, "computer");
-	fu_device_add_guid(dev, component_guid);
-	fu_device_add_flag(dev, FWUPD_DEVICE_FLAG_REQUIRE_AC);
-	fu_device_set_version_format(dev, version_format);
-	if (version != NULL) {
-		fu_device_set_version(dev, version);
-		if (fu_dell_plugin_capsule_supported(plugin)) {
-			fu_device_add_flag(dev, FWUPD_DEVICE_FLAG_UPDATABLE);
-			fu_device_add_flag(dev, FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
-		}
-	}
-
-	fu_plugin_device_register(plugin, dev);
-	return TRUE;
-}
-
-gboolean
-fu_dell_plugin_backend_device_added(FuPlugin *plugin,
-				    FuDevice *device,
-				    FuProgress *progress,
-				    GError **error)
-{
-	FuDellPlugin *self = FU_DELL_PLUGIN(plugin);
-	FwupdVersionFormat version_format = FWUPD_VERSION_FORMAT_DELL_BIOS;
-	guint16 pid;
-	guint16 vid;
-	const gchar *query_str;
-	const gchar *component_guid = NULL;
-	const gchar *component_name = NULL;
-	const gchar *platform;
-	DOCK_UNION buf;
-	DOCK_INFO *dock_info;
-	gboolean old_ec = FALSE;
-	g_autofree gchar *flash_ver_str = NULL;
-
-	/* not interesting */
-	if (!FU_IS_USB_DEVICE(device)) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "not a USB device");
-		return FALSE;
-	}
-
-	/* don't look up immediately if a dock is connected as that would
-	   mean a SMI on every USB device that showed up on the system */
-	if (!self->smi_obj->fake_smbios) {
-		vid = fu_usb_device_get_vid(FU_USB_DEVICE(device));
-		pid = fu_usb_device_get_pid(FU_USB_DEVICE(device));
-		platform = fu_device_get_physical_id(FU_DEVICE(device));
-	} else {
-		vid = self->fake_vid;
-		pid = self->fake_pid;
-		platform = "fake";
-	}
-
-	/* we're going to match on the Realtek NIC in the dock */
-	if (vid != DOCK_NIC_VID || pid != DOCK_NIC_PID) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "wrong VID/PID %04x:%04x",
-			    vid,
-			    pid);
-		return FALSE;
-	}
-
-	buf.buf = NULL;
-	if (!fu_dell_query_dock(self->smi_obj, &buf)) {
-		g_debug("no dock detected");
-		return TRUE;
-	}
-
-	if (buf.record->dock_info_header.dir_version != 1) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "dock info header version unknown %d",
-			    buf.record->dock_info_header.dir_version);
-		return FALSE;
-	}
-
-	dock_info = &buf.record->dock_info;
-
-	g_debug("Dock description: %s", dock_info->dock_description);
-	/* Note: fw package version is deprecated, look at components instead */
-	g_debug("Dock flash pkg ver: 0x%x", dock_info->flash_pkg_version);
-	g_debug("Dock cable type: %" G_GUINT32_FORMAT, dock_info->cable_type);
-	g_debug("Dock location: %d", dock_info->location);
-	g_debug("Dock component count: %d", dock_info->component_count);
-	if (dock_info->flash_pkg_version == 0x00ffffff)
-		g_debug("WARNING: dock flash package version invalid");
-
-	for (guint i = 0; i < dock_info->component_count; i++) {
-		g_autofree gchar *fw_str = NULL;
-		if (i >= MAX_COMPONENTS) {
-			g_debug("Too many components.  Invalid: #%u", i);
-			break;
-		}
-		g_debug("Dock component %u: %s (version 0x%x)",
-			i,
-			dock_info->components[i].description,
-			dock_info->components[i].fw_version);
-		query_str = g_strrstr(dock_info->components[i].description, "Query ");
-		if (query_str == NULL) {
-			g_set_error_literal(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_NOT_SUPPORTED,
-					    "invalid dock component request");
-			return FALSE;
-		}
-		if (!fu_dell_plugin_match_dock_component(query_str + 6,
-							 &component_guid,
-							 &component_name)) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "invalid dock component request %s",
-				    query_str);
-			return FALSE;
-		}
-		if (component_guid == NULL || component_name == NULL) {
-			g_debug("%s is supported by another plugin", query_str);
-			return TRUE;
-		}
-
-		/* dock EC hasn't been updated for first time */
-		if (dock_info->flash_pkg_version == 0x00ffffff) {
-			old_ec = TRUE;
-			dock_info->flash_pkg_version = 0;
-			continue;
-		}
-
-		/* if invalid version, don't mark device for updates */
-		if (dock_info->components[i].fw_version == 0 ||
-		    dock_info->components[i].fw_version == 0xffffffff) {
-			old_ec = TRUE;
-			continue;
-		}
-
-		fw_str =
-		    fu_version_from_uint32(dock_info->components[i].fw_version, version_format);
-		if (!fu_plugin_dock_node(plugin,
-					 platform,
-					 buf.record->dock_info_header.dock_type,
-					 component_guid,
-					 component_name,
-					 fw_str,
-					 version_format)) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INTERNAL,
-				    "failed to create %s",
-				    component_name);
-			return FALSE;
-		}
-	}
-
-	/* if an old EC or invalid EC version found, create updatable parent */
-	if (old_ec)
-		flash_ver_str =
-		    fu_version_from_uint32(dock_info->flash_pkg_version, version_format);
-	if (!fu_plugin_dock_node(plugin,
-				 platform,
-				 buf.record->dock_info_header.dock_type,
-				 DOCK_FLASH_GUID,
-				 NULL,
-				 flash_ver_str,
-				 version_format)) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INTERNAL,
-				    "failed to create top dock node");
-
-		return FALSE;
-	}
-
-	return TRUE;
 }
 
 static gboolean
@@ -1045,7 +760,6 @@ fu_dell_plugin_class_init(FuDellPluginClass *klass)
 	plugin_class->to_string = fu_dell_plugin_to_string;
 	plugin_class->startup = fu_dell_plugin_startup;
 	plugin_class->coldplug = fu_dell_plugin_coldplug;
-	plugin_class->backend_device_added = fu_dell_plugin_backend_device_added;
 	plugin_class->device_registered = fu_dell_plugin_device_registered;
 	plugin_class->get_results = fu_dell_plugin_get_results;
 	plugin_class->add_security_attrs = fu_dell_plugin_add_security_attrs;
