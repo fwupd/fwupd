@@ -52,6 +52,8 @@ fwupd_checksum_guess_kind(const gchar *checksum)
 		return G_CHECKSUM_SHA1;
 	if (len == 64)
 		return G_CHECKSUM_SHA256;
+	if (len == 96)
+		return G_CHECKSUM_SHA384;
 	if (len == 128)
 		return G_CHECKSUM_SHA512;
 	return G_CHECKSUM_SHA1;
@@ -66,6 +68,8 @@ fwupd_checksum_type_to_string_display(GChecksumType checksum_type)
 		return "SHA1";
 	if (checksum_type == G_CHECKSUM_SHA256)
 		return "SHA256";
+	if (checksum_type == G_CHECKSUM_SHA384)
+		return "SHA384";
 	if (checksum_type == G_CHECKSUM_SHA512)
 		return "SHA512";
 	return NULL;
@@ -124,7 +128,11 @@ fwupd_checksum_get_by_kind(GPtrArray *checksums, GChecksumType kind)
 const gchar *
 fwupd_checksum_get_best(GPtrArray *checksums)
 {
-	GChecksumType checksum_types[] = {G_CHECKSUM_SHA512, G_CHECKSUM_SHA256, G_CHECKSUM_SHA1, 0};
+	GChecksumType checksum_types[] = {G_CHECKSUM_SHA512,
+					  G_CHECKSUM_SHA256,
+					  G_CHECKSUM_SHA384,
+					  G_CHECKSUM_SHA1,
+					  0};
 	g_return_val_if_fail(checksums != NULL, NULL);
 	for (guint i = 0; checksum_types[i] != 0; i++) {
 		for (guint j = 0; j < checksums->len; j++) {
