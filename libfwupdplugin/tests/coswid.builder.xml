@@ -9,6 +9,10 @@
     <rel>license</rel>
     <href>https://spdx.org/licenses/LGPL-2.0.html</href>
   </link>
+  <hash>
+    <alg_id>sha256</alg_id>
+    <value>dc626520dcd53a22f727af3ee42c770e56c97a64fe3adb063799d8ab032fe551</value>
+  </hash>
   <entity>
     <name>Richard Hughes</name>
     <regid>hughsie.com</regid>

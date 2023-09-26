@@ -12,6 +12,7 @@
 #include <cbor.h>
 #endif
 
+#include "fu-byte-array.h"
 #include "fu-common.h"
 #include "fu-coswid-firmware.h"
 #include "fu-coswid-struct.h"
@@ -31,6 +32,7 @@ typedef struct {
 	FuCoswidVersionScheme version_scheme;
 	GPtrArray *links;    /* of FuCoswidFirmwareLink */
 	GPtrArray *entities; /* of FuCoswidFirmwareEntity */
+	GPtrArray *hashes;   /* of FuCoswidFirmwareHash */
 } FuCoswidFirmwarePrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE(FuCoswidFirmware, fu_coswid_firmware, FU_TYPE_FIRMWARE)
@@ -46,6 +48,11 @@ typedef struct {
 	gchar *href;
 	FuCoswidLinkRel rel;
 } FuCoswidFirmwareLink;
+
+typedef struct {
+	GByteArray *value;
+	FuCoswidHashAlg alg_id;
+} FuCoswidFirmwareHash;
 
 static void
 fu_coswid_firmware_entity_free(FuCoswidFirmwareEntity *entity)
@@ -65,6 +72,16 @@ fu_coswid_firmware_link_free(FuCoswidFirmwareLink *link)
 }
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuCoswidFirmwareLink, fu_coswid_firmware_link_free)
+
+static void
+fu_coswid_firmware_hash_free(FuCoswidFirmwareHash *hash)
+{
+	if (hash->value != NULL)
+		g_byte_array_unref(hash->value);
+	g_free(hash);
+}
+
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuCoswidFirmwareHash, fu_coswid_firmware_hash_free)
 
 #ifdef HAVE_CBOR
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(cbor_item_t, cbor_intermediate_decref)
@@ -117,6 +134,33 @@ fu_coswid_firmware_parse_link(FuCoswidFirmware *self, cbor_item_t *item, GError 
 
 	/* success */
 	g_ptr_array_add(priv->links, g_steal_pointer(&link));
+	return TRUE;
+}
+
+static gboolean
+fu_coswid_firmware_parse_hash(FuCoswidFirmware *self, cbor_item_t *item, GError **error)
+{
+	FuCoswidFirmwarePrivate *priv = GET_PRIVATE(self);
+	g_autoptr(FuCoswidFirmwareHash) hash = g_new0(FuCoswidFirmwareHash, 1);
+	g_autoptr(cbor_item_t) hash_item_alg_id = cbor_array_get(item, 0);
+	g_autoptr(cbor_item_t) hash_item_value = cbor_array_get(item, 1);
+
+	/* sanity check */
+	if (hash_item_alg_id == NULL || hash_item_value == NULL) {
+		g_set_error_literal(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_INVALID_DATA,
+				    "invalid hash item");
+		return FALSE;
+	}
+
+	/* success */
+	hash->alg_id = cbor_get_uint8(hash_item_alg_id);
+	hash->value = g_byte_array_new();
+	g_byte_array_append(hash->value,
+			    cbor_bytestring_handle(hash_item_value),
+			    cbor_bytestring_length(hash_item_value));
+	g_ptr_array_add(priv->hashes, g_steal_pointer(&hash));
 	return TRUE;
 }
 
@@ -226,6 +270,12 @@ fu_coswid_firmware_parse(FuFirmware *firmware,
 				if (!fu_coswid_firmware_parse_link(self, value, error))
 					return FALSE;
 			}
+		} else if (tag_id == FU_COSWID_TAG_HASH) {
+			for (guint j = 0; j < cbor_array_size(pairs[i].value); j++) {
+				g_autoptr(cbor_item_t) value = cbor_array_get(pairs[i].value, j);
+				if (!fu_coswid_firmware_parse_hash(self, value, error))
+					return FALSE;
+			}
 		} else if (tag_id == FU_COSWID_TAG_ENTITY) {
 			for (guint j = 0; j < cbor_array_size(pairs[i].value); j++) {
 				g_autoptr(cbor_item_t) value = cbor_array_get(pairs[i].value, j);
@@ -254,6 +304,50 @@ fu_coswid_firmware_parse(FuFirmware *firmware,
 			    "not compiled with CBOR support");
 	return FALSE;
 #endif
+}
+
+static gchar *
+fu_coswid_firmware_get_checksum(FuFirmware *firmware, GChecksumType csum_kind, GError **error)
+{
+	FuCoswidFirmware *self = FU_COSWID_FIRMWARE(firmware);
+	FuCoswidFirmwarePrivate *priv = GET_PRIVATE(self);
+	FuCoswidHashAlg alg_id = FU_COSWID_HASH_ALG_UNKNOWN;
+	struct {
+		GChecksumType kind;
+		FuCoswidHashAlg alg_id;
+	} csum_kinds[] = {{G_CHECKSUM_SHA256, FU_COSWID_HASH_ALG_SHA256},
+			  {G_CHECKSUM_SHA384, FU_COSWID_HASH_ALG_SHA384},
+			  {G_CHECKSUM_SHA512, FU_COSWID_HASH_ALG_SHA512},
+			  {0, FU_COSWID_HASH_ALG_UNKNOWN}};
+
+	/* convert to FuCoswidHashAlg */
+	for (guint i = 0; csum_kinds[i].kind != 0; i++) {
+		if (csum_kinds[i].kind == csum_kind) {
+			alg_id = csum_kinds[i].alg_id;
+			break;
+		}
+	}
+	if (alg_id == FU_COSWID_HASH_ALG_UNKNOWN) {
+		g_set_error(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_NOT_SUPPORTED,
+			    "cannot convert %s",
+			    fwupd_checksum_type_to_string_display(csum_kind));
+		return NULL;
+	}
+
+	/* find the correct hash kind */
+	for (guint i = 0; i < priv->hashes->len; i++) {
+		FuCoswidFirmwareHash *hash = g_ptr_array_index(priv->hashes, i);
+		if (hash->alg_id == alg_id)
+			return fu_byte_array_to_string(hash->value);
+	}
+	g_set_error(error,
+		    G_IO_ERROR,
+		    G_IO_ERROR_NOT_SUPPORTED,
+		    "no hash kind %s",
+		    fwupd_checksum_type_to_string_display(csum_kind));
+	return NULL;
 }
 
 #ifdef HAVE_CBOR
@@ -429,6 +523,25 @@ fu_coswid_firmware_write(FuFirmware *firmware, GError **error)
 		fu_coswid_firmware_write_tag_item(root, FU_COSWID_TAG_LINK, item_links);
 	}
 
+	/* add hashes */
+	if (priv->hashes->len > 0) {
+		g_autoptr(cbor_item_t) item_hashes = cbor_new_indefinite_array();
+		for (guint i = 0; i < priv->hashes->len; i++) {
+			FuCoswidFirmwareHash *hash = g_ptr_array_index(priv->hashes, i);
+			g_autoptr(cbor_item_t) item_hash = cbor_new_definite_array(2);
+			g_autoptr(cbor_item_t) item_hash_alg_id = cbor_build_uint8(hash->alg_id);
+			g_autoptr(cbor_item_t) item_hash_value =
+			    cbor_build_bytestring(hash->value->data, hash->value->len);
+			if (!cbor_array_push(item_hash, item_hash_alg_id))
+				g_critical("failed to push to definite array");
+			if (!cbor_array_push(item_hash, item_hash_value))
+				g_critical("failed to push to definite array");
+			if (!cbor_array_push(item_hashes, item_hash))
+				g_critical("failed to push to indefinite array");
+		}
+		fu_coswid_firmware_write_tag_item(root, FU_COSWID_TAG_HASH, item_hashes);
+	}
+
 	/* serialize */
 	buflen = cbor_serialize_alloc(root, &buf, &bufsz);
 	if (buflen > bufsz) {
@@ -532,12 +645,47 @@ fu_coswid_firmware_build_link(FuCoswidFirmware *self, XbNode *n, GError **error)
 }
 
 static gboolean
+fu_coswid_firmware_build_hash(FuCoswidFirmware *self, XbNode *n, GError **error)
+{
+	FuCoswidFirmwarePrivate *priv = GET_PRIVATE(self);
+	const gchar *tmp;
+	g_autoptr(FuCoswidFirmwareHash) hash = g_new0(FuCoswidFirmwareHash, 1);
+
+	/* required */
+	tmp = xb_node_query_text(n, "value", error);
+	if (tmp == NULL)
+		return FALSE;
+	hash->value = fu_byte_array_from_string(tmp, error);
+	if (hash->value == NULL)
+		return FALSE;
+
+	/* optional */
+	tmp = xb_node_query_text(n, "alg_id", NULL);
+	if (tmp != NULL) {
+		hash->alg_id = fu_coswid_hash_alg_from_string(tmp);
+		if (hash->alg_id == FU_COSWID_HASH_ALG_UNKNOWN) {
+			g_set_error(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_INVALID_DATA,
+				    "failed to parse alg_id %s",
+				    tmp);
+			return FALSE;
+		}
+	}
+
+	/* success */
+	g_ptr_array_add(priv->hashes, g_steal_pointer(&hash));
+	return TRUE;
+}
+
+static gboolean
 fu_coswid_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
 {
 	FuCoswidFirmware *self = FU_COSWID_FIRMWARE(firmware);
 	FuCoswidFirmwarePrivate *priv = GET_PRIVATE(self);
 	const gchar *tmp;
 	g_autoptr(GPtrArray) links = NULL;
+	g_autoptr(GPtrArray) hashes = NULL;
 	g_autoptr(GPtrArray) entities = NULL;
 
 	/* simple properties */
@@ -570,6 +718,16 @@ fu_coswid_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
 		for (guint i = 0; i < links->len; i++) {
 			XbNode *c = g_ptr_array_index(links, i);
 			if (!fu_coswid_firmware_build_link(self, c, error))
+				return FALSE;
+		}
+	}
+
+	/* multiple hashes allowed */
+	hashes = xb_node_query(n, "hash", 0, NULL);
+	if (hashes != NULL) {
+		for (guint i = 0; i < hashes->len; i++) {
+			XbNode *c = g_ptr_array_index(hashes, i);
+			if (!fu_coswid_firmware_build_hash(self, c, error))
 				return FALSE;
 		}
 	}
@@ -611,6 +769,13 @@ fu_coswid_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbB
 						  fu_coswid_link_rel_to_string(link->rel));
 		}
 	}
+	for (guint i = 0; i < priv->hashes->len; i++) {
+		FuCoswidFirmwareHash *hash = g_ptr_array_index(priv->hashes, i);
+		g_autoptr(XbBuilderNode) bc = xb_builder_node_insert(bn, "hash", NULL);
+		g_autofree gchar *value = fu_byte_array_to_string(hash->value);
+		fu_xmlb_builder_insert_kv(bc, "alg_id", fu_coswid_hash_alg_to_string(hash->alg_id));
+		fu_xmlb_builder_insert_kv(bc, "href", value);
+	}
 	for (guint i = 0; i < priv->entities->len; i++) {
 		FuCoswidFirmwareEntity *entity = g_ptr_array_index(priv->entities, i);
 		g_autoptr(XbBuilderNode) bc = xb_builder_node_insert(bn, "entity", NULL);
@@ -631,6 +796,7 @@ fu_coswid_firmware_init(FuCoswidFirmware *self)
 	FuCoswidFirmwarePrivate *priv = GET_PRIVATE(self);
 	priv->version_scheme = FU_COSWID_VERSION_SCHEME_SEMVER;
 	priv->links = g_ptr_array_new_with_free_func((GDestroyNotify)fu_coswid_firmware_link_free);
+	priv->hashes = g_ptr_array_new_with_free_func((GDestroyNotify)fu_coswid_firmware_hash_free);
 	priv->entities =
 	    g_ptr_array_new_with_free_func((GDestroyNotify)fu_coswid_firmware_entity_free);
 }
@@ -645,6 +811,7 @@ fu_coswid_firmware_finalize(GObject *object)
 	g_free(priv->summary);
 	g_free(priv->colloquial_version);
 	g_ptr_array_unref(priv->links);
+	g_ptr_array_unref(priv->hashes);
 	g_ptr_array_unref(priv->entities);
 
 	G_OBJECT_CLASS(fu_coswid_firmware_parent_class)->finalize(object);
@@ -660,6 +827,7 @@ fu_coswid_firmware_class_init(FuCoswidFirmwareClass *klass)
 	klass_firmware->write = fu_coswid_firmware_write;
 	klass_firmware->build = fu_coswid_firmware_build;
 	klass_firmware->export = fu_coswid_firmware_export;
+	klass_firmware->get_checksum = fu_coswid_firmware_get_checksum;
 }
 
 /**
