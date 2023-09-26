@@ -108,7 +108,7 @@ fu_dell_plugin_tpm_func(gconstpointer user_data)
 
 	/* inject fake data (no TPM) */
 	tpm_out.ret = -2;
-	fu_dell_plugin_inject_fake_data(self->plugin_dell, (guint32 *)&tpm_out, 0, 0, NULL, FALSE);
+	fu_dell_plugin_inject_fake_data(self->plugin_dell, (guint32 *)&tpm_out, 0, 0, NULL);
 	ret = fu_dell_plugin_detect_tpm(self->plugin_dell, &error);
 	g_assert_error(error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED);
 	g_assert_false(ret);
@@ -125,26 +125,15 @@ fu_dell_plugin_tpm_func(gconstpointer user_data)
 	tpm_out.fw_version = 0;
 	tpm_out.status = TPM_EN_MASK | (TPM_1_2_MODE << 8);
 	tpm_out.flashes_left = 0;
-	fu_dell_plugin_inject_fake_data(self->plugin_dell, (guint32 *)&tpm_out, 0, 0, NULL, TRUE);
+	fu_dell_plugin_inject_fake_data(self->plugin_dell, (guint32 *)&tpm_out, 0, 0, NULL);
 	ret = fu_dell_plugin_detect_tpm(self->plugin_dell, &error);
 	g_assert_true(ret);
-	g_assert_cmpint(devices->len, ==, 2);
-
-	/* make sure 2.0 is locked */
-	device_v20 = _find_device_by_name(devices, "TPM 2.0");
-	g_assert_nonnull(device_v20);
-	g_assert_true(fu_device_has_flag(device_v20, FWUPD_DEVICE_FLAG_LOCKED));
+	g_assert_cmpint(devices->len, ==, 1);
 
 	/* make sure not allowed to flash 1.2 */
 	device_v12 = _find_device_by_name(devices, "TPM 1.2");
 	g_assert_nonnull(device_v12);
 	g_assert_false(fu_device_has_flag(device_v12, FWUPD_DEVICE_FLAG_UPDATABLE));
-
-	/* try to unlock 2.0 */
-	ret = fu_plugin_runner_unlock(self->plugin_uefi_capsule, device_v20, &error);
-	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
-	g_assert_false(ret);
-	g_clear_error(&error);
 
 	/* cleanup */
 	g_ptr_array_set_size(devices, 0);
@@ -157,7 +146,7 @@ fu_dell_plugin_tpm_func(gconstpointer user_data)
 	 */
 	tpm_out.status = TPM_EN_MASK | TPM_OWN_MASK | (TPM_1_2_MODE << 8);
 	tpm_out.flashes_left = 125;
-	fu_dell_plugin_inject_fake_data(self->plugin_dell, (guint32 *)&tpm_out, 0, 0, NULL, TRUE);
+	fu_dell_plugin_inject_fake_data(self->plugin_dell, (guint32 *)&tpm_out, 0, 0, NULL);
 	ret = fu_dell_plugin_detect_tpm(self->plugin_dell, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -167,12 +156,6 @@ fu_dell_plugin_tpm_func(gconstpointer user_data)
 	g_assert_nonnull(device_v12);
 	g_assert_false(fu_device_has_flag(device_v12, FWUPD_DEVICE_FLAG_UPDATABLE));
 
-	/* try to unlock 2.0 */
-	device_v20 = _find_device_by_name(devices, "TPM 2.0");
-	g_assert_nonnull(device_v20);
-	ret = fu_plugin_runner_unlock(self->plugin_uefi_capsule, device_v20, &error);
-	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
-	g_assert_false(ret);
 	g_clear_error(&error);
 
 	/* cleanup */
@@ -186,27 +169,15 @@ fu_dell_plugin_tpm_func(gconstpointer user_data)
 	 */
 	tpm_out.status = TPM_EN_MASK | (TPM_1_2_MODE << 8);
 	tpm_out.flashes_left = 125;
-	fu_dell_plugin_inject_fake_data(self->plugin_dell, (guint32 *)&tpm_out, 0, 0, NULL, TRUE);
+	fu_dell_plugin_inject_fake_data(self->plugin_dell, (guint32 *)&tpm_out, 0, 0, NULL);
 	ret = fu_dell_plugin_detect_tpm(self->plugin_dell, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
-	/* make sure allowed to flash 1.2 but not 2.0 */
+	/* make sure allowed to flash */
 	device_v12 = _find_device_by_name(devices, "TPM 1.2");
 	g_assert_nonnull(device_v12);
 	g_assert_true(fu_device_has_flag(device_v12, FWUPD_DEVICE_FLAG_UPDATABLE));
-	device_v20 = _find_device_by_name(devices, "TPM 2.0");
-	g_assert_nonnull(device_v20);
-	g_assert_false(fu_device_has_flag(device_v20, FWUPD_DEVICE_FLAG_UPDATABLE));
-
-	/* try to unlock 2.0 */
-	ret = fu_plugin_runner_unlock(self->plugin_uefi_capsule, device_v20, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
-
-	/* make sure no longer allowed to flash 1.2 but can flash 2.0 */
-	g_assert_false(fu_device_has_flag(device_v12, FWUPD_DEVICE_FLAG_UPDATABLE));
-	g_assert_true(fu_device_has_flag(device_v20, FWUPD_DEVICE_FLAG_UPDATABLE));
 
 	/* cleanup */
 	g_ptr_array_set_size(devices, 0);
@@ -219,18 +190,15 @@ fu_dell_plugin_tpm_func(gconstpointer user_data)
 	 */
 	tpm_out.status = TPM_EN_MASK | (TPM_2_0_MODE << 8);
 	tpm_out.flashes_left = 1;
-	fu_dell_plugin_inject_fake_data(self->plugin_dell, (guint32 *)&tpm_out, 0, 0, NULL, TRUE);
+	fu_dell_plugin_inject_fake_data(self->plugin_dell, (guint32 *)&tpm_out, 0, 0, NULL);
 	ret = fu_dell_plugin_detect_tpm(self->plugin_dell, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
-	/* make sure allowed to flash 2.0 but not 1.2 */
+	/* make sure allowed to flash */
 	device_v20 = _find_device_by_name(devices, "TPM 2.0");
 	g_assert_nonnull(device_v20);
 	g_assert_true(fu_device_has_flag(device_v20, FWUPD_DEVICE_FLAG_UPDATABLE));
-	device_v12 = _find_device_by_name(devices, "TPM 1.2");
-	g_assert_nonnull(device_v12);
-	g_assert_false(fu_device_has_flag(device_v12, FWUPD_DEVICE_FLAG_UPDATABLE));
 
 	/* ensure flags set */
 	ret = fu_device_probe(device_v20, &error);

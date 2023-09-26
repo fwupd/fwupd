@@ -15,8 +15,7 @@ fu_dell_plugin_inject_fake_data(FuPlugin *plugin,
 				guint32 *output,
 				guint16 vid,
 				guint16 pid,
-				guint8 *buf,
-				gboolean can_switch_modes);
+				guint8 *buf);
 
 gboolean
 fu_dell_plugin_detect_tpm(FuPlugin *plugin, GError **error);

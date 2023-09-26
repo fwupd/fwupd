@@ -24,7 +24,6 @@ struct _FuDellPlugin {
 	FuDellSmiObj *smi_obj;
 	guint16 fake_vid;
 	guint16 fake_pid;
-	gboolean can_switch_modes;
 	gboolean capsule_supported;
 };
 
@@ -57,14 +56,6 @@ struct da_structure {
 	guint8 *tokens;
 } __attribute__((packed));
 
-/**
- * Devices that should allow modeswitching
- */
-static guint16 tpm_switch_allowlist[] = {
-    0x06F2, 0x06F3, 0x06DD, 0x06DE, 0x06DF, 0x06DB, 0x06DC, 0x06BB, 0x06C6, 0x06BA, 0x06B9, 0x05CA,
-    0x06C7, 0x06B7, 0x06E0, 0x06E5, 0x06D9, 0x06DA, 0x06E4, 0x0704, 0x0720, 0x0730, 0x0758, 0x0759,
-    0x075B, 0x07A0, 0x079F, 0x07A4, 0x07A5, 0x07A6, 0x07A7, 0x07A8, 0x07A9, 0x07AA, 0x07AB, 0x07B0,
-    0x07B1, 0x07B2, 0x07B4, 0x07B7, 0x07B8, 0x07B9, 0x07BE, 0x07BF, 0x077A, 0x07CF};
 /**
  * Dell device types to run
  */
@@ -168,8 +159,7 @@ fu_dell_plugin_inject_fake_data(FuPlugin *plugin,
 				guint32 *output,
 				guint16 vid,
 				guint16 pid,
-				guint8 *buf,
-				gboolean can_switch_modes)
+				guint8 *buf)
 {
 	FuDellPlugin *self = FU_DELL_PLUGIN(plugin);
 	if (!self->smi_obj->fake_smbios)
@@ -179,7 +169,6 @@ fu_dell_plugin_inject_fake_data(FuPlugin *plugin,
 	self->fake_vid = vid;
 	self->fake_pid = pid;
 	self->smi_obj->fake_buffer = buf;
-	self->can_switch_modes = TRUE;
 }
 
 static gboolean
@@ -411,19 +400,12 @@ fu_dell_plugin_detect_tpm(FuPlugin *plugin, GError **error)
 	FuDellPlugin *self = FU_DELL_PLUGIN(plugin);
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	const gchar *tpm_mode;
-	const gchar *tpm_mode_alt;
 	guint16 system_id = 0;
-	gboolean can_switch_modes = FALSE;
-	g_autofree gchar *pretty_tpm_name_alt = NULL;
 	g_autofree gchar *pretty_tpm_name = NULL;
-	g_autofree gchar *tpm_guid_raw_alt = NULL;
-	g_autofree gchar *tpm_guid_alt = NULL;
 	g_autofree gchar *tpm_guid = NULL;
 	g_autofree gchar *tpm_guid_raw = NULL;
-	g_autofree gchar *tpm_id_alt = NULL;
 	g_autofree gchar *version_str = NULL;
 	struct tpm_status *out = NULL;
-	g_autoptr(FuDevice) dev_alt = NULL;
 	g_autoptr(FuDevice) dev = NULL;
 	g_autoptr(GError) error_tss = NULL;
 
@@ -466,10 +448,8 @@ fu_dell_plugin_detect_tpm(FuPlugin *plugin, GError **error)
 	/* test TPM mode to determine current mode */
 	if (((out->status & TPM_TYPE_MASK) >> 8) == TPM_1_2_MODE) {
 		tpm_mode = "1.2";
-		tpm_mode_alt = "2.0";
 	} else if (((out->status & TPM_TYPE_MASK) >> 8) == TPM_2_0_MODE) {
 		tpm_mode = "2.0";
-		tpm_mode_alt = "1.2";
 	} else {
 		g_set_error_literal(error,
 				    G_IO_ERROR,
@@ -479,34 +459,19 @@ fu_dell_plugin_detect_tpm(FuPlugin *plugin, GError **error)
 	}
 
 	system_id = fu_dell_get_system_id(plugin);
-	if (self->smi_obj->fake_smbios) {
-		can_switch_modes = self->can_switch_modes;
-	} else if (system_id == 0) {
+	if (!self->smi_obj->fake_smbios && system_id == 0) {
 		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED, "no system ID");
 		return FALSE;
-	}
-
-	for (guint i = 0; i < G_N_ELEMENTS(tpm_switch_allowlist); i++) {
-		if (tpm_switch_allowlist[i] == system_id) {
-			can_switch_modes = TRUE;
-		}
 	}
 
 	tpm_guid_raw = g_strdup_printf("%04x-%s", system_id, tpm_mode);
 	tpm_guid = fwupd_guid_hash_string(tpm_guid_raw);
 
-	tpm_guid_raw_alt = g_strdup_printf("%04x-%s", system_id, tpm_mode_alt);
-	tpm_guid_alt = fwupd_guid_hash_string(tpm_guid_raw_alt);
-	tpm_id_alt = g_strdup_printf("DELL-%s" G_GUINT64_FORMAT, tpm_guid_alt);
-
-	g_debug("Creating primary TPM GUID %s and secondary TPM GUID %s",
-		tpm_guid_raw,
-		tpm_guid_raw_alt);
+	g_debug("Creating TPM GUID %s", tpm_guid_raw);
 	version_str = fu_version_from_uint32(out->fw_version, FWUPD_VERSION_FORMAT_QUAD);
 
 	/* make it clear that the TPM is a discrete device of the product */
 	pretty_tpm_name = g_strdup_printf("TPM %s", tpm_mode);
-	pretty_tpm_name_alt = g_strdup_printf("TPM %s", tpm_mode_alt);
 
 	/* build Standard device nodes */
 	dev = fu_device_new(ctx);
@@ -544,42 +509,6 @@ fu_dell_plugin_detect_tpm(FuPlugin *plugin, GError **error)
 				      "TpmFamily",
 				      fu_device_get_metadata(dev, "TpmFamily"));
 
-	/* build alternate device node */
-	if (can_switch_modes) {
-		dev_alt = fu_device_new(ctx);
-		fu_device_set_id(dev_alt, tpm_id_alt);
-		fu_device_add_instance_id(dev_alt, tpm_guid_raw_alt);
-		fu_device_set_vendor(dev, "Dell Inc.");
-		fu_device_add_vendor_id(dev, "PCI:0x1028");
-		fu_device_set_name(dev_alt, pretty_tpm_name_alt);
-		fu_device_set_summary(dev_alt, "Alternate mode for platform TPM device");
-		fu_device_add_flag(dev_alt, FWUPD_DEVICE_FLAG_INTERNAL);
-		fu_device_add_flag(dev_alt, FWUPD_DEVICE_FLAG_REQUIRE_AC);
-		fu_device_add_flag(dev_alt, FWUPD_DEVICE_FLAG_LOCKED);
-		fu_device_add_icon(dev_alt, "computer");
-		fu_device_set_alternate_id(dev_alt, fu_device_get_id(dev));
-		fu_device_set_metadata(dev_alt,
-				       FU_DEVICE_METADATA_UEFI_DEVICE_KIND,
-				       "dell-tpm-firmware");
-		fu_device_add_parent_guid(dev_alt, tpm_guid);
-
-		/* If TPM is not owned and at least 1 flash left allow mode switching
-		 *
-		 * Mode switching is turned on by setting flashes left on alternate
-		 * device.
-		 */
-		if ((out->status & TPM_OWN_MASK) == 0 && out->flashes_left > 0) {
-			fu_device_set_flashes_left(dev_alt, out->flashes_left);
-		} else {
-			fu_device_set_update_error(dev_alt,
-						   "mode switch disabled due to TPM ownership");
-		}
-		if (!fu_device_setup(dev_alt, error))
-			return FALSE;
-		fu_plugin_device_register(plugin, dev_alt);
-	} else
-		g_debug("System %04x does not offer TPM modeswitching", system_id);
-
 	return TRUE;
 }
 
@@ -612,7 +541,6 @@ static void
 fu_dell_plugin_to_string(FuPlugin *plugin, guint idt, GString *str)
 {
 	FuDellPlugin *self = FU_DELL_PLUGIN(plugin);
-	fu_string_append_kb(str, idt, "CanSwitchModes", self->can_switch_modes);
 	fu_string_append_kb(str, idt, "CapsuleSupported", self->capsule_supported);
 }
 
