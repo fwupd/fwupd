@@ -422,7 +422,7 @@ fu_smbios_func(void)
 }
 
 static void
-fu_kernel_func(void)
+fu_kernel_cmdline_func(void)
 {
 	const gchar *buf = "key=val foo bar=\"baz baz baz\" tail\n";
 	g_autoptr(GHashTable) hash = NULL;
@@ -437,6 +437,22 @@ fu_kernel_func(void)
 	g_assert_cmpstr(g_hash_table_lookup(hash, "bar"), ==, "baz baz baz");
 	g_assert_true(g_hash_table_contains(hash, "tail"));
 	g_assert_false(g_hash_table_contains(hash, ""));
+}
+
+static void
+fu_kernel_config_func(void)
+{
+	const gchar *buf = "CONFIG_LOCK_DOWN_KERNEL_FORCE_NONE=y\n\n"
+			   "# CONFIG_LOCK_DOWN_KERNEL_FORCE_INTEGRITY is not set\n";
+	g_autoptr(GHashTable) hash = NULL;
+	g_autoptr(GError) error = NULL;
+
+	hash = fu_kernel_parse_config(buf, strlen(buf), &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(hash);
+	g_assert_true(g_hash_table_contains(hash, "CONFIG_LOCK_DOWN_KERNEL_FORCE_NONE"));
+	g_assert_cmpstr(g_hash_table_lookup(hash, "CONFIG_LOCK_DOWN_KERNEL_FORCE_NONE"), ==, "y");
+	g_assert_false(g_hash_table_contains(hash, "CONFIG_LOCK_DOWN_KERNEL_FORCE_INTEGRITY"));
 }
 
 static void
@@ -4462,7 +4478,8 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/string{utf16}", fu_string_utf16_func);
 	g_test_add_func("/fwupd/smbios", fu_smbios_func);
 	g_test_add_func("/fwupd/smbios3", fu_smbios3_func);
-	g_test_add_func("/fwupd/kernel", fu_kernel_func);
+	g_test_add_func("/fwupd/kernel{cmdline}", fu_kernel_cmdline_func);
+	g_test_add_func("/fwupd/kernel{config}", fu_kernel_config_func);
 	g_test_add_func("/fwupd/hid{descriptor}", fu_hid_descriptor_func);
 	g_test_add_func("/fwupd/hid{descriptor-container}", fu_hid_descriptor_container_func);
 	g_test_add_func("/fwupd/firmware", fu_firmware_func);
