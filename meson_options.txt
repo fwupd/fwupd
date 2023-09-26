@@ -437,6 +437,17 @@ option('systemd_root_prefix',
   value: '',
   description: 'Directory to base systemd’s installation directories on',
 )
+option('launchd',
+  type: 'feature',
+  value: 'auto',
+  description: 'Launchd auto-launch support (MacOS only)'
+)
+option(
+  'launchd_agent_dir',
+  type: 'string',
+  value: '/Library/LaunchAgents',
+  description: 'Directory to put the launchd agent'
+)
 option('elogind',
   type: 'feature',
   description: 'elogind support',

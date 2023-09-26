@@ -145,4 +145,17 @@ if build_daemon
                               'system-services'),
     )
   endif
+
+  if launchctl.found()
+    con2 = configuration_data()
+    con2.set('libexecdir', libexecdir)
+    con2.set('dbus_socket_address', get_option('dbus_socket_address'))
+    configure_file(
+      input: 'org.freedesktop.fwupd.plist',
+      output: 'org.freedesktop.fwupd.plist',
+      configuration: con2,
+      install_dir: get_option('launchd_agent_dir'),
+    )
+  endif
+
 endif

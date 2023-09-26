@@ -476,6 +476,10 @@ if elogind.found()
   conf.set('HAVE_LOGIND' , '1')
 endif
 
+launchctl = find_program('launchctl',
+    required: get_option('launchd').disable_auto_if(host_machine.system() != 'darwin').allowed(),
+)
+
 if get_option('consolekit').disable_auto_if(host_machine.system() != 'linux').allowed()
   conf.set('HAVE_CONSOLEKIT' , '1')
 endif
