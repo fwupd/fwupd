@@ -156,38 +156,6 @@ Precision 5510 TPM 1.2
 Keep in mind that **TPM 1.2** and **TPM 2.0** will require different userspace
 tools.
 
-## Dock Devices
-
-The *TB16* and *WD15* have a variety of updatable components.  Each component
-will create a virtual device in ```# fwupdmgr get-devices```
-
-For example the WD15 will display these components:
-
-```text
-Dell WD15 Port Controller 1
-  Guid:                 8ba2b709-6f97-47fc-b7e7-6a87b578fe25
-  DeviceID:             DELL-8ba2b709-6f97-47fc-b7e7-6a87b578fe25lu
-  Plugin:               dell
-  Flags:                allow-offline|require-ac
-  Version:              0.1.1.8
-  Created:              2016-07-19
-
-Dell WD15
-  Guid:                 e7ca1f36-bf73-4574-afe6-a4ccacabf479
-  DeviceID:             DELL-e7ca1f36-bf73-4574-afe6-a4ccacabf479lu
-  Plugin:               dell
-  Flags:                allow-offline|require-ac
-  Version:              0.0.0.67
-  Created:              2016-07-19
-```
-
-Components that can be updated via UEFI capsule will have the `allow-offline` moniker applied.
-
-These updates can be performed the standard method of using `fwupdmgr update`.
-
-Some components are updatable via other plugins in fwupd such as multi stream
-transport hub (MST) and thunderbolt NVM.
-
 ## External Interface Access
 
 This plugin requires read/write access to `/dev/wmi/dell-smbios` and `/sys/bus/platform/devices/dcdbas`.
