@@ -109,3 +109,7 @@ Remember: Plugins should be upstream!
 
 * `fu_plugin_get_config_value()`: Add the default value as the last parameter
 * `fu_plugin_get_config_value_boolean()`: Add the default value as the last parameter
+
+## 1.9.6
+
+* `fu_security_attrs_get_by_appstream_id()`: Add a `GError`
