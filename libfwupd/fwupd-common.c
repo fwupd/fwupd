@@ -59,7 +59,17 @@ fwupd_checksum_guess_kind(const gchar *checksum)
 	return G_CHECKSUM_SHA1;
 }
 
-static const gchar *
+/**
+ * fwupd_checksum_type_to_string_display:
+ * @checksum_type: a #GChecksumType, e.g. %G_CHECKSUM_SHA1
+ *
+ * Formats a checksum type for display.
+ *
+ * Returns: text, or %NULL for invalid
+ *
+ * Since: 1.9.6
+ **/
+const gchar *
 fwupd_checksum_type_to_string_display(GChecksumType checksum_type)
 {
 	if (checksum_type == G_CHECKSUM_MD5)
