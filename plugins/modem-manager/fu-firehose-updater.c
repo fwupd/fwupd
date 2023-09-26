@@ -686,6 +686,10 @@ fu_firehose_updater_run_action_program(FuFirehoseUpdater *self,
 
 	while ((payload_size + (guint)program_sector_size) <= max_payload_size)
 		payload_size += (guint)program_sector_size;
+	if (payload_size == 0) {
+		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_FAILED, "payload size invalid");
+		return FALSE;
+	}
 
 	g_debug("sending program file '%s' (0x%x bytes)",
 		program_filename,
