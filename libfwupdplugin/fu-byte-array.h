@@ -10,6 +10,8 @@
 
 gchar *
 fu_byte_array_to_string(GByteArray *array);
+GByteArray *
+fu_byte_array_from_string(const gchar *str, GError **error);
 void
 fu_byte_array_set_size(GByteArray *array, guint length, guint8 data);
 void

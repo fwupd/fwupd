@@ -162,6 +162,9 @@ fu_common_byte_array_func(void)
 {
 	g_autofree gchar *str = NULL;
 	g_autoptr(GByteArray) array = g_byte_array_new();
+	g_autoptr(GByteArray) array2 = NULL;
+	g_autoptr(GByteArray) array3 = NULL;
+	g_autoptr(GError) error = NULL;
 
 	fu_byte_array_append_uint8(array, (guint8)'h');
 	fu_byte_array_append_uint8(array, (guint8)'e');
@@ -177,6 +180,16 @@ fu_common_byte_array_func(void)
 
 	str = fu_byte_array_to_string(array);
 	g_assert_cmpstr(str, ==, "68656c6c6f0000000000");
+
+	array2 = fu_byte_array_from_string(str, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(array2);
+	g_assert_cmpint(array2->len, ==, 10);
+	g_assert_cmpint(memcmp(array2->data, "hello\0\0\0\0\0", array2->len), ==, 0);
+
+	array3 = fu_byte_array_from_string("ZZZ", &error);
+	g_assert_error(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA);
+	g_assert_null(array3);
 }
 
 static void

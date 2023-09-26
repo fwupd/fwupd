@@ -10,6 +10,7 @@
 
 #include "fu-byte-array.h"
 #include "fu-common.h"
+#include "fu-firmware-common.h"
 #include "fu-mem.h"
 
 /**
@@ -30,6 +31,36 @@ fu_byte_array_to_string(GByteArray *array)
 	for (guint i = 0; i < array->len; i++)
 		g_string_append_printf(str, "%02x", array->data[i]);
 	return g_string_free(g_steal_pointer(&str), FALSE);
+}
+
+/**
+ * fu_byte_array_from_string:
+ * @str: a hex string
+ * @error: (nullable): optional return location for an error
+ *
+ * Converts a lowercase hex string to a byte array.
+ *
+ * Returns: (transfer full): a #GByteArray, or %NULL on error
+ *
+ * Since: 1.9.6
+ **/
+GByteArray *
+fu_byte_array_from_string(const gchar *str, GError **error)
+{
+	gsize strsz;
+	g_autoptr(GByteArray) buf = g_byte_array_new();
+
+	g_return_val_if_fail(str != NULL, NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	strsz = strlen(str);
+	for (guint i = 0; i < strsz; i += 2) {
+		guint8 value = 0;
+		if (!fu_firmware_strparse_uint8_safe(str, strsz, i, &value, error))
+			return NULL;
+		fu_byte_array_append_uint8(buf, value);
+	}
+	return g_steal_pointer(&buf);
 }
 
 /**
