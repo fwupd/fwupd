@@ -14,6 +14,7 @@
 #include <sys/utsname.h>
 #endif
 
+#include "fu-bytes.h"
 #include "fu-common.h"
 #include "fu-kernel.h"
 #include "fu-path.h"
@@ -228,6 +229,166 @@ fu_kernel_reset_firmware_search_path(GError **error)
 	const gchar *contents = " ";
 
 	return fu_kernel_set_firmware_search_path(contents, error);
+}
+
+typedef struct {
+	GHashTable *hash;
+	GHashTable *values;
+} FuKernelConfigHelper;
+
+static gboolean
+fu_kernel_parse_config_line_cb(GString *token, guint token_idx, gpointer user_data, GError **error)
+{
+	g_auto(GStrv) kv = NULL;
+	FuKernelConfigHelper *helper = (FuKernelConfigHelper *)user_data;
+	GRefString *value;
+
+	if (token->len == 0)
+		return TRUE;
+	if (token->str[0] == '#')
+		return TRUE;
+
+	kv = g_strsplit(token->str, "=", 2);
+	if (g_strv_length(kv) != 2) {
+		g_set_error(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_INVALID_DATA,
+			    "invalid format for '%s'",
+			    token->str);
+		return FALSE;
+	}
+	value = g_hash_table_lookup(helper->values, kv[1]);
+	if (value != NULL) {
+		g_hash_table_insert(helper->hash, g_strdup(kv[0]), g_ref_string_acquire(value));
+	} else {
+		g_hash_table_insert(helper->hash, g_strdup(kv[0]), g_ref_string_new(kv[1]));
+	}
+	return TRUE;
+}
+
+/**
+ * fu_kernel_parse_config:
+ * @buf: (not nullable): cmdline to parse
+ * @bufsz: size of @bufsz
+ *
+ * Parses all the kernel options into a hash table. Commented out options are not included.
+ *
+ * Returns: (transfer container) (element-type utf8 utf8): config keys
+ *
+ * Since: 1.9.6
+ **/
+GHashTable *
+fu_kernel_parse_config(const gchar *buf, gsize bufsz, GError **error)
+{
+	g_autoptr(GHashTable) hash = g_hash_table_new_full(g_str_hash,
+							   g_str_equal,
+							   g_free,
+							   (GDestroyNotify)g_ref_string_release);
+	g_autoptr(GHashTable) values = g_hash_table_new_full(g_str_hash,
+							     g_str_equal,
+							     NULL,
+							     (GDestroyNotify)g_ref_string_release);
+	FuKernelConfigHelper helper = {.hash = hash, .values = values};
+	const gchar *value_keys[] = {"y", "m", "0", NULL};
+
+	g_return_val_if_fail(buf != NULL, NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	/* add 99.9% of the most common keys to avoid thousands of small allocations */
+	for (guint i = 0; value_keys[i] != NULL; i++) {
+		g_hash_table_insert(values,
+				    (gpointer)value_keys[i],
+				    g_ref_string_new(value_keys[i]));
+	}
+	if (!fu_strsplit_full(buf, bufsz, "\n", fu_kernel_parse_config_line_cb, &helper, error))
+		return NULL;
+	return g_steal_pointer(&hash);
+}
+
+static gchar *
+fu_kernel_get_config_path(GError **error)
+{
+#ifdef HAVE_UTSNAME_H
+	struct utsname name_tmp;
+	g_autofree gchar *config_fn = NULL;
+	g_autofree gchar *bootdir = fu_path_from_kind(FU_PATH_KIND_HOSTFS_BOOT);
+
+	memset(&name_tmp, 0, sizeof(struct utsname));
+	if (uname(&name_tmp) < 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "failed to read kernel version");
+		return NULL;
+	}
+	config_fn = g_strdup_printf("config-%s", name_tmp.release);
+	return g_build_filename(bootdir, config_fn, NULL);
+#else
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "platform does not support uname");
+	return NULL;
+#endif
+}
+
+/**
+ * fu_kernel_get_config:
+ * @error: (nullable): optional return location for an error
+ *
+ * Loads all the kernel options into a hash table. Commented out options are not included.
+ *
+ * Returns: (transfer container) (element-type utf8 utf8): options from the kernel
+ *
+ * Since: 1.8.5
+ **/
+GHashTable *
+fu_kernel_get_config(GError **error)
+{
+#ifdef __linux__
+	gsize bufsz = 0;
+	g_autofree gchar *buf = NULL;
+	g_autofree gchar *fn = NULL;
+	g_autofree gchar *procdir = fu_path_from_kind(FU_PATH_KIND_PROCFS);
+	g_autofree gchar *config_fngz = g_build_filename(procdir, "config.gz", NULL);
+
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	/* try /proc/config.gz -- which will only work with CONFIG_IKCONFIG */
+	if (g_file_test(config_fngz, G_FILE_TEST_EXISTS)) {
+		g_autoptr(GBytes) payload = NULL;
+		g_autoptr(GConverter) conv = NULL;
+		g_autoptr(GFile) file = g_file_new_for_path(config_fngz);
+		g_autoptr(GInputStream) istream1 = NULL;
+		g_autoptr(GInputStream) istream2 = NULL;
+
+		istream1 = G_INPUT_STREAM(g_file_read(file, NULL, error));
+		if (istream1 == NULL)
+			return NULL;
+		conv = G_CONVERTER(g_zlib_decompressor_new(G_ZLIB_COMPRESSOR_FORMAT_GZIP));
+		istream2 = g_converter_input_stream_new(istream1, conv);
+		payload = fu_bytes_get_contents_stream(istream2, G_MAXSIZE, error);
+		if (payload == NULL)
+			return NULL;
+		return fu_kernel_parse_config(g_bytes_get_data(payload, NULL),
+					      g_bytes_get_size(payload),
+					      error);
+	}
+
+	/* fall back to /boot/config-$(uname -r) */
+	fn = fu_kernel_get_config_path(error);
+	if (fn == NULL)
+		return NULL;
+	if (!g_file_get_contents(fn, &buf, &bufsz, error))
+		return NULL;
+	return fu_kernel_parse_config(buf, bufsz, error);
+#else
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "platform does not support getting the kernel config");
+	return NULL;
+#endif
 }
 
 /**

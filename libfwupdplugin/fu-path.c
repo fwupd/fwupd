@@ -450,6 +450,12 @@ fu_path_from_kind(FuPathKind path_kind)
 		if (tmp != NULL)
 			return g_strdup(tmp);
 		return g_strdup("/");
+	/* /boot */
+	case FU_PATH_KIND_HOSTFS_BOOT:
+		tmp = g_getenv("FWUPD_HOSTFS_BOOT");
+		if (tmp != NULL)
+			return g_strdup(tmp);
+		return g_strdup("/boot");
 
 	/* this shouldn't happen */
 	default:
