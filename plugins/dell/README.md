@@ -50,111 +50,13 @@ If you don't want or need this functionality you can use the
 
 ## Devices powered by the Dell Plugin
 
-The Dell plugin creates device nodes for PC's that have switchable TPMs as
-well as the Type-C docks (WD15/TB16).
+The Dell plugin creates device nodes for PC's with upgradable TPMs.
 
 These device nodes can be flashed using UEFI capsule but don't
 use the ESRT table to communicate device status or version information.
 
 This is intentional behavior because more complicated decisions need to be made
 on the OS side to determine if the devices should be offered to flash.
-
-## Switchable TPM Devices
-
-Machines with switchable TPMs can operate in both TPM 1.2 and TPM 2.0 modes.
-Switching modes will require flashing an alternative firmware and clearing the
-contents of the TPM.
-
-Machines that offer this functionality will display two devices in
-`fwupdmgr get-devices` output.
-
-Example (from a *Precision 5510*):
-
-```text
-Precision 5510 TPM 1.2
-  Guid:                 b2088ba1-51ae-514e-8f0a-64756c6e4ffc
-  DeviceID:             DELL-b2088ba1-51ae-514e-8f0a-64756c6e4ffclu
-  Plugin:               dell
-  Flags:                internal|allow-offline|require-ac
-  Version:              5.81.0.0
-  Created:              2016-07-19
-
-Precision 5510 TPM 2.0
-  Guid:                 475d9bbd-1b7a-554e-8ca7-54985174a962
-  DeviceID:             DELL-475d9bbd-1b7a-554e-8ca7-54985174a962lu
-  Plugin:               dell
-  Flags:                internal|require-ac|locked
-  Created:              2016-07-19
-```
-
-In this example, the TPM is currently operating in **TPM 1.2 mode**.  Any
-firmware updates posted to *LVFS* for TPM 1.2 mode will be applied.
-
-### Switching TPM Modes
-
-In order to be offered to switch the TPM to **TPM 2.0 mode**, the virtual device
-representing the *TPM 2.0 mode* will need to be unlocked.
-
-```# fwupdmgr unlock DELL-475d9bbd-1b7a-554e-8ca7-54985174a962lu```
-
-If the TPM is currently *owned*, an error will be displayed such as this one:
-
- ERROR: Precision 5510 TPM 1.2 is currently OWNED. Ownership must be removed to switch modes.
-
-TPM Ownership can be cleared from within the BIOS setup menus.
-
-If the unlock process was successful, then the devices will be modified:
-
-```text
-Precision 5510 TPM 1.2
-  Guid:                 b2088ba1-51ae-514e-8f0a-64756c6e4ffc
-  DeviceID:             DELL-b2088ba1-51ae-514e-8f0a-64756c6e4ffclu
-  Plugin:               dell
-  Flags:                internal|require-ac
-  Version:              5.81.0.0
-  Created:              2016-07-19
-
-Precision 5510 TPM 2.0
-  Guid:                 475d9bbd-1b7a-554e-8ca7-54985174a962
-  DeviceID:             DELL-475d9bbd-1b7a-554e-8ca7-54985174a962lu
-  Plugin:               dell
-  Flags:                internal|allow-offline|require-ac
-  Version:              0.0.0.0
-  Created:              2016-07-19
-  Modified:             2016-07-19
-```
-
-Now the firmware for TPM 2.0 mode can be pulled down from LVFS and flashed:
-
-```shell
-# fwupdmgr update
-```
-
-Upon the next reboot, the new TPM firmware will be flashed.  If the firmware is
-*not offered from LVFS*, then switching modes may not work on this machine.
-
-After updating the output from ```# fwupdmgr get-devices```  will reflect the
-new mode.
-
-```text
-Precision 5510 TPM 2.0
-  Guid:                 475d9bbd-1b7a-554e-8ca7-54985174a962
-  DeviceID:             DELL-475d9bbd-1b7a-554e-8ca7-54985174a962lu
-  Plugin:               dell
-  Flags:                internal|allow-offline|require-ac
-  Version:              1.3.0.1
-  Created:              2016-07-20
-
-Precision 5510 TPM 1.2
-  Guid:                 b2088ba1-51ae-514e-8f0a-64756c6e4ffc
-  DeviceID:             DELL-b2088ba1-51ae-514e-8f0a-64756c6e4ffclu
-  Plugin:               dell
-  Flags:                internal|require-ac|locked
-  Created:              2016-07-20
-```
-
-Keep in mind that **TPM 1.2** and **TPM 2.0** will require different userspace
-tools.
 
 ## External Interface Access
 
