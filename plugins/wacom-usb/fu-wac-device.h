@@ -23,3 +23,7 @@ fu_wac_device_set_feature_report(FuWacDevice *self,
 				 gsize bufsz,
 				 FuHidDeviceFlags flags,
 				 GError **error);
+gboolean
+fu_wac_device_switch_to_flash_loader(FuWacDevice *self, GError **error);
+gboolean
+fu_wac_device_update_reset(FuWacDevice *self, GError **error);

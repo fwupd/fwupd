@@ -152,7 +152,6 @@ fu_wac_module_bluetooth_id6_write_firmware(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/* success */
-	fu_device_add_flag(fu_device_get_proxy(device), FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	return TRUE;
 }
 

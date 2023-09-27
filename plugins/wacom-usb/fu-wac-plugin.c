@@ -33,6 +33,41 @@ fu_wac_plugin_write_firmware(FuPlugin *plugin,
 	return fu_device_write_firmware(device, blob_fw, progress, flags, error);
 }
 
+static gboolean
+fu_wac_plugin_composite_prepare(FuPlugin *self, GPtrArray *devices, GError **error)
+{
+	for (guint i = 0; i < devices->len; i++) {
+		FuDevice *device = g_ptr_array_index(devices, i);
+		if (FU_IS_WAC_DEVICE(device)) {
+			g_autoptr(FuDeviceLocker) locker = fu_device_locker_new(device, error);
+			if (locker == NULL)
+				return FALSE;
+			g_info("switching main device to flash loader");
+			if (!fu_wac_device_switch_to_flash_loader(FU_WAC_DEVICE(device), error))
+				return FALSE;
+		}
+	}
+	return TRUE;
+}
+
+static gboolean
+fu_wac_plugin_composite_cleanup(FuPlugin *self, GPtrArray *devices, GError **error)
+{
+	for (guint i = 0; i < devices->len; i++) {
+		FuDevice *device = g_ptr_array_index(devices, i);
+		if (FU_IS_WAC_DEVICE(device)) {
+			g_autoptr(FuDeviceLocker) locker = fu_device_locker_new(device, error);
+			if (locker == NULL)
+				return FALSE;
+			g_info("resetting main device");
+			fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+			if (!fu_wac_device_update_reset(FU_WAC_DEVICE(device), error))
+				return FALSE;
+		}
+	}
+	return TRUE;
+}
+
 static void
 fu_wac_plugin_init(FuWacPlugin *self)
 {
@@ -62,4 +97,6 @@ fu_wac_plugin_class_init(FuWacPluginClass *klass)
 	object_class->constructed = fu_wac_plugin_object_constructed;
 	plugin_class->constructed = fu_wac_plugin_constructed;
 	plugin_class->write_firmware = fu_wac_plugin_write_firmware;
+	plugin_class->composite_prepare = fu_wac_plugin_composite_prepare;
+	plugin_class->composite_cleanup = fu_wac_plugin_composite_cleanup;
 }

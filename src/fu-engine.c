@@ -2577,6 +2577,12 @@ fu_engine_install_releases(FuEngine *self,
 		return FALSE;
 	}
 
+	/* wait for any device to disconnect and reconnect */
+	if (!fu_device_list_wait_for_replug(self->device_list, error)) {
+		g_prefix_error(error, "failed to wait for device: ");
+		return FALSE;
+	}
+
 	/* success */
 	return TRUE;
 }
