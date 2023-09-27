@@ -82,7 +82,7 @@ fu_wac_module_bluetooth_id6_write_blob(FuWacModule *self,
 			g_prefix_error(error,
 				       "failed to write block %u of %u: ",
 				       i,
-				       fu_chunk_array_length(chunks));
+				       fu_chunk_array_length(chunks) - 1);
 			return FALSE;
 		}
 		fu_progress_step_done(progress);
