@@ -4090,8 +4090,12 @@ fu_progress_scaling_func(void)
 	for (guint i = 0; i < insane_steps / 2; i++)
 		fu_progress_step_done(progress);
 	g_assert_cmpint(fu_progress_get_percentage(progress), ==, 50);
-	for (guint i = 0; i < insane_steps / 2; i++)
+	for (guint i = 0; i < insane_steps / 2; i++) {
+		FuProgress *progress_child = fu_progress_get_child(progress);
+		fu_progress_set_percentage(progress_child, 0);
+		fu_progress_set_percentage(progress_child, 100);
 		fu_progress_step_done(progress);
+	}
 	g_assert_cmpint(fu_progress_get_percentage(progress), ==, 100);
 }
 
