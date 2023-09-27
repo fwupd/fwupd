@@ -124,15 +124,6 @@ The vendor ID is set from the BIOS vendor, for example `DMI:LENOVO` for all
 devices that are not marked as supporting Firmware Management Protocol. For FMP
 device no vendor ID is set.
 
-## UEFI Unlock Support
-
-On some Dell systems it is possible to turn on and off UEFI capsule
-support from within the BIOS.  This functionality can also be adjusted
-from within the OS by fwupd. This requires compiling with libsmbios support.
-
-When fwupd has been compiled with this support you will be able to enable UEFI
-support on the device by using the `unlock` command.
-
 ## Custom EFI System Partition (ESP)
 
 Since version 1.1.0 fwupd will autodetect the ESP if it is mounted on

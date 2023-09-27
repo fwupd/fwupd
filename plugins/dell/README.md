@@ -34,20 +34,6 @@ Example resultant GUIDs from a real system containing a TPM from Nuvoton:
   Guid:                 fe462d4a-e48f-5069-9172-47330fc5e838 <- DELL-TPM-2.0-NTC-NPCT75xrls
 ```
 
-## Vendor ID Security
-
-The vendor ID is hardcoded to `TPM:DELL`.
-
-## Build Requirements
-
-For Dell support you will need libsmbios_c version 2.4.0 or later.
-
-* [source](https://github.com/dell/libsmbios)
-* [binaries](https://github.com/dell/libsmbios/releases)
-
-If you don't want or need this functionality you can use the
-`-Dplugin_dell=disabled` option.
-
 ## Devices powered by the Dell Plugin
 
 The Dell plugin creates device nodes for PC's with upgradable TPMs.

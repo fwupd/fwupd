@@ -170,14 +170,6 @@ option('plugin_cpu',
     'false': 'disabled',
   },
 )
-option('plugin_dell',
-  type: 'feature',
-  description: 'Dell-specific support',
-  deprecated: {
-    'true': 'enabled',
-    'false': 'disabled',
-  },
-)
 option('plugin_dummy',
   type: 'boolean',
   value: false,
