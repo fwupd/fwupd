@@ -15,11 +15,10 @@ struct _FuWacModuleClass {
 	FuDeviceClass parent_class;
 };
 
-#define FU_WAC_MODULE_POLL_INTERVAL  100   /* ms */
-#define FU_WAC_MODULE_WRITE_TIMEOUT  2000  /* ms */
-#define FU_WAC_MODULE_ERASE_TIMEOUT  15000 /* ms */
-#define FU_WAC_MODULE_FINISH_TIMEOUT 1000  /* ms */
-#define FU_WAC_MODULE_COMMIT_TIMEOUT 80000 /* ms */
+#define FU_WAC_MODULE_POLL_INTERVAL 100	  /* ms */
+#define FU_WAC_MODULE_START_TIMEOUT 15000 /* ms */
+#define FU_WAC_MODULE_DATA_TIMEOUT  10000 /* ms */
+#define FU_WAC_MODULE_END_TIMEOUT   10000 /* ms */
 
 gboolean
 fu_wac_module_set_feature(FuWacModule *self,

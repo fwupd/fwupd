@@ -104,7 +104,7 @@ fu_wac_module_scaler_write_firmware(FuDevice *device,
 				       blob_start,
 				       fu_progress_get_child(progress),
 				       FU_WAC_MODULE_POLL_INTERVAL,
-				       FU_WAC_MODULE_ERASE_TIMEOUT,
+				       FU_WAC_MODULE_START_TIMEOUT,
 				       error)) {
 		g_prefix_error(error, "wacom scaler module failed to erase: ");
 		return FALSE;
@@ -130,7 +130,7 @@ fu_wac_module_scaler_write_firmware(FuDevice *device,
 					       blob_chunk,
 					       fu_progress_get_child(progress),
 					       FU_WAC_MODULE_POLL_INTERVAL,
-					       FU_WAC_MODULE_WRITE_TIMEOUT,
+					       FU_WAC_MODULE_DATA_TIMEOUT,
 					       error)) {
 			g_prefix_error(error, "wacom scaler module failed to write: ");
 			return FALSE;
@@ -148,7 +148,7 @@ fu_wac_module_scaler_write_firmware(FuDevice *device,
 				       NULL,
 				       fu_progress_get_child(progress),
 				       FU_WAC_MODULE_POLL_INTERVAL,
-				       FU_WAC_MODULE_COMMIT_TIMEOUT,
+				       FU_WAC_MODULE_END_TIMEOUT,
 				       error)) {
 		g_prefix_error(error, "wacom scaler module failed to end: ");
 		return FALSE;
