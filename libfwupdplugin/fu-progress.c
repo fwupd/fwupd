@@ -756,13 +756,18 @@ fu_progress_finished(FuProgress *self)
 FuProgress *
 fu_progress_get_child(FuProgress *self)
 {
+	guint step_now;
+
 	g_return_val_if_fail(FU_IS_PROGRESS(self), NULL);
 	g_return_val_if_fail(self->id != NULL, NULL);
+
+	step_now = self->step_now / self->step_scaling;
+
 	g_return_val_if_fail(self->children->len > 0, NULL);
-	g_return_val_if_fail(self->children->len > self->step_now, NULL);
+	g_return_val_if_fail(self->children->len > step_now, NULL);
 
 	/* all preallocated, nothing to do */
-	return FU_PROGRESS(g_ptr_array_index(self->children, self->step_now));
+	return FU_PROGRESS(g_ptr_array_index(self->children, step_now));
 }
 
 static void
@@ -847,7 +852,7 @@ fu_progress_step_done(FuProgress *self)
 	g_return_if_fail(self->id != NULL);
 
 	/* ignore steps */
-	if (self->step_scaling > 0) {
+	if (self->step_scaling > 1) {
 		if (self->step_now >= self->children->len ||
 		    self->step_done++ % self->step_scaling != 0)
 			return;
@@ -1055,6 +1060,7 @@ static void
 fu_progress_init(FuProgress *self)
 {
 	self->status = FWUPD_STATUS_UNKNOWN;
+	self->step_scaling = 1;
 	self->percentage = G_MAXUINT;
 	self->timer = g_timer_new();
 	self->timer_child = g_timer_new();
