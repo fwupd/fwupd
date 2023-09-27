@@ -137,8 +137,8 @@ fu_steelseries_gamepad_write_firmware_chunks(FuDevice *device,
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
 
-	for (guint id = 0; id < fu_chunk_array_length(chunks); id++) {
-		g_autoptr(FuChunk) chunk = fu_chunk_array_index(chunks, id);
+	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
+		g_autoptr(FuChunk) chunk = fu_chunk_array_index(chunks, i);
 		guint16 chunk_checksum;
 		guint8 data[STEELSERIES_BUFFER_CONTROL_SIZE] = {0xA3};
 
@@ -146,7 +146,7 @@ fu_steelseries_gamepad_write_firmware_chunks(FuDevice *device,
 		if (!fu_memwrite_uint16_safe(data,
 					     STEELSERIES_BUFFER_CONTROL_SIZE,
 					     0x01,
-					     (guint16)id,
+					     (guint16)i,
 					     G_LITTLE_ENDIAN,
 					     error))
 			return FALSE;
@@ -179,7 +179,7 @@ fu_steelseries_gamepad_write_firmware_chunks(FuDevice *device,
 					       sizeof(data),
 					       FALSE,
 					       error)) {
-			g_prefix_error(error, "unable to flash block %u: ", id);
+			g_prefix_error(error, "unable to flash block %u: ", i);
 			return FALSE;
 		}
 		/* timeout to give some time to flash the block on device */
