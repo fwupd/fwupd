@@ -356,7 +356,7 @@ fu_wac_device_erase_block(FuWacDevice *self, guint32 addr, GError **error)
 						error);
 }
 
-static gboolean
+gboolean
 fu_wac_device_update_reset(FuWacDevice *self, GError **error)
 {
 	guint8 buf[] = {[0] = FU_WAC_REPORT_ID_UPDATE_RESET, [1 ... 4] = 0xff};
@@ -418,7 +418,7 @@ fu_wac_device_write_checksum_table(FuWacDevice *self, GError **error)
 						error);
 }
 
-static gboolean
+gboolean
 fu_wac_device_switch_to_flash_loader(FuWacDevice *self, GError **error)
 {
 	guint8 buf[] = {[0] = FU_WAC_REPORT_ID_SWITCH_TO_FLASH_LOADER, [1] = 0x05, [2] = 0x6a};
@@ -462,10 +462,6 @@ fu_wac_device_write_firmware(FuDevice *device,
 	if (img == NULL)
 		return FALSE;
 	g_debug("using image at addr 0x%0x", (guint)fu_firmware_get_addr(img));
-
-	/* enter flash mode */
-	if (!fu_wac_device_switch_to_flash_loader(self, error))
-		return FALSE;
 
 	/* get firmware parameters (page sz and transfer sz) */
 	if (!fu_wac_device_ensure_parameters(self, error))
@@ -856,16 +852,6 @@ fu_wac_device_close(FuDevice *device, GError **error)
 	return FU_DEVICE_CLASS(fu_wac_device_parent_class)->close(device, error);
 }
 
-static gboolean
-fu_wac_device_cleanup(FuDevice *device,
-		      FuProgress *progress,
-		      FwupdInstallFlags flags,
-		      GError **error)
-{
-	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
-	return fu_wac_device_update_reset(FU_WAC_DEVICE(device), error);
-}
-
 static void
 fu_wac_device_set_progress(FuDevice *self, FuProgress *progress)
 {
@@ -914,7 +900,6 @@ fu_wac_device_class_init(FuWacDeviceClass *klass)
 	klass_device->write_firmware = fu_wac_device_write_firmware;
 	klass_device->to_string = fu_wac_device_to_string;
 	klass_device->setup = fu_wac_device_setup;
-	klass_device->cleanup = fu_wac_device_cleanup;
 	klass_device->close = fu_wac_device_close;
 	klass_device->set_progress = fu_wac_device_set_progress;
 }
