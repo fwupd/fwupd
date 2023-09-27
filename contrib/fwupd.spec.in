@@ -36,11 +36,6 @@
 %global have_msr 1
 %endif
 
-# libsmbios is only available on x86
-%ifarch x86_64
-%global have_dell 1
-%endif
-
 # Until we actually have seen it outside x86
 %ifarch i686 x86_64
 %global have_thunderbolt 1
@@ -110,11 +105,6 @@ BuildRequires: freetype
 BuildRequires: fontconfig
 BuildRequires: google-noto-sans-cjk-ttc-fonts
 BuildRequires: tpm2-tss-devel >= 2.2.3
-%endif
-
-%if 0%{?have_dell}
-BuildRequires: efivar-devel >= 33
-BuildRequires: libsmbios-devel >= 2.3.0
 %endif
 
 Requires(post): systemd
@@ -278,11 +268,6 @@ fwupd wrapper for Qubes OS
     -Dplugin_uefi_capsule=disabled \
     -Dplugin_uefi_pk=disabled \
     -Dplugin_tpm=disabled \
-%endif
-%if 0%{?have_dell}
-    -Dplugin_dell=enabled \
-%else
-    -Dplugin_dell=disabled \
 %endif
 %if 0%{?have_modem_manager}
     -Dplugin_modem_manager=enabled \

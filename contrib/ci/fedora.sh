@@ -36,7 +36,6 @@ meson setup \
     -Dplugin_flashrom=enabled \
     -Dplugin_modem_manager=disabled \
     -Dplugin_uefi_capsule=enabled \
-    -Dplugin_dell=enabled \
     -Dplugin_synaptics_mst=enabled $@
 ninja-build
 ../contrib/ci/check-unused.py

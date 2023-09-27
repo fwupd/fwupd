@@ -22,12 +22,6 @@ else
 	CONFARGS += -Dplugin_flashrom=disabled
 endif
 
-ifeq (yes,$(shell pkg-config --exists libsmbios_c && echo yes))
-	CONFARGS += -Dplugin_dell=enabled
-else
-	CONFARGS += -Dplugin_dell=disabled
-endif
-
 ifneq ($(filter $(DEB_HOST_ARCH_CPU),i386 amd64),)
 	CONFARGS += -Dplugin_msr=enabled
 else

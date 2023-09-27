@@ -764,40 +764,6 @@
       <package variant="x86_64">libcbor-devel</package>
     </distro>
   </dependency>
-  <dependency id="libefivar-dev">
-    <distro id="arch">
-      <package variant="x86_64">efivar</package>
-    </distro>
-    <distro id="centos">
-      <package variant="x86_64">efivar-devel</package>
-    </distro>
-    <distro id="fedora">
-      <package variant="x86_64">efivar-devel</package>
-      <package variant="aarch64">efivar-devel</package>
-    </distro>
-    <distro id="void">
-      <package variant="x86_64">libefivar-devel</package>
-    </distro>
-    <distro id="debian">
-      <control>
-        <inclusive>amd64</inclusive>
-        <inclusive>arm64</inclusive>
-        <inclusive>armhf</inclusive>
-        <inclusive>i386</inclusive>
-      </control>
-      <package variant="x86_64" />
-      <package variant="i386" />
-    </distro>
-    <distro id="ubuntu">
-      <control>
-        <inclusive>amd64</inclusive>
-        <inclusive>arm64</inclusive>
-        <inclusive>armhf</inclusive>
-        <inclusive>i386</inclusive>
-      </control>
-      <package variant="x86_64" />
-    </distro>
-  </dependency>
   <dependency id="libgcab-dev">
     <distro id="arch">
       <package variant="x86_64">gcab</package>
@@ -894,35 +860,6 @@
     <distro id="debian">
       <package variant="s390x">libidn2-0-dev:s390x</package>
       <package variant="i386" />
-    </distro>
-  </dependency>
-  <dependency id="libsmbios-dev">
-    <distro id="arch">
-      <package variant="x86_64">libsmbios</package>
-    </distro>
-    <distro id="centos">
-      <package variant="x86_64">libsmbios-devel</package>
-    </distro>
-    <distro id="fedora">
-      <package variant="x86_64">libsmbios-devel</package>
-    </distro>
-    <distro id="void">
-      <package variant="x86_64">libsmbios-devel</package>
-    </distro>
-    <distro id="debian">
-      <control>
-        <inclusive>i386</inclusive>
-        <inclusive>amd64</inclusive>
-      </control>
-      <package variant="x86_64" />
-      <package variant="i386" />
-    </distro>
-    <distro id="ubuntu">
-      <control>
-        <inclusive>i386</inclusive>
-        <inclusive>amd64</inclusive>
-      </control>
-      <package variant="x86_64" />
     </distro>
   </dependency>
   <dependency id="libcurl4-gnutls-dev">

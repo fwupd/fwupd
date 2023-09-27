@@ -1,7 +1,4 @@
-libsmbios_c = dependency('libsmbios_c', version: '>= 2.4.0', required: get_option('plugin_dell'))
-
-if get_option('plugin_dell').require(get_option('plugin_uefi_capsule').allowed(),
-    error_message: 'plugin_uefi_capsule is needed for plugin_dell').allowed()
+if get_option('plugin_uefi_capsule').disable_auto_if(host_machine.system() != 'linux').allowed()
 
 cargs = ['-DG_LOG_DOMAIN="FuPluginDell"']
 

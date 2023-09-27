@@ -147,7 +147,6 @@ parts:
       - libpango1.0-dev
       - libpolkit-gobject-1-dev
       - libprotobuf-c-dev
-      - libsmbios-dev
       - libsqlite3-dev
       - libsystemd-dev
       - libtss2-dev
@@ -188,7 +187,6 @@ parts:
       - libpcre32-3
       - libprotobuf-c1
       - libpolkit-gobject-1-0
-      - libsmbios-c2
       - libtss2-esys-3.0.2-0
       - libtss2-fapi1
       - libtss2-mu0
