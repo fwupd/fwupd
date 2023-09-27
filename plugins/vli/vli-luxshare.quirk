@@ -13,4 +13,5 @@ Flags = usb2
 [USB\VID_208E&PID_0105]
 Plugin = vli
 GType = FuVliPdDevice
+Flags = skips-rom
 VliDeviceKind = vl105

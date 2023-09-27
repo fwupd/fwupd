@@ -90,6 +90,34 @@ the other flash chip parameters. For example:
     CfiDeviceCmdChipErase = 0xc7
     CfiDeviceCmdSectorErase = 0x20
 
+### Flags:attach-with-gpiob
+
+This flag is used if device needs GPIO-B to reset the device.
+
+### Flags:unlock-legacy813
+
+This flag is used for unlocking VL813 with a custom VDR request.
+
+### Flags:has-shared-spi-pd
+
+This flag is used for devices that share SPI with the PD device.
+
+### Flags:has-msp430
+
+This flag is used if device has a MSP430 attached via I²C.
+
+### Flags:has-rtd21xx
+
+This flag is used if device has a RTD21XX attached via I²C.
+
+### Flags:has-i2c-ps186
+
+This flag is used if device has a PS186 attached via I²C.
+
+### Flags:skips-rom
+
+This flag handles cases to update in firmware mode, skips ROM mode entirely.
+
 ## External Interface Access
 
 This plugin requires read/write access to `/dev/bus/usb`.
