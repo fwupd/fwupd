@@ -15,6 +15,7 @@ struct _FuWacModuleClass {
 	FuDeviceClass parent_class;
 };
 
+#define FU_WAC_MODULE_POLL_INTERVAL  100   /* ms */
 #define FU_WAC_MODULE_WRITE_TIMEOUT  2000  /* ms */
 #define FU_WAC_MODULE_ERASE_TIMEOUT  15000 /* ms */
 #define FU_WAC_MODULE_FINISH_TIMEOUT 1000  /* ms */
@@ -25,5 +26,6 @@ fu_wac_module_set_feature(FuWacModule *self,
 			  guint8 command,
 			  GBytes *blob,
 			  FuProgress *progress,
+			  guint poll_interval,
 			  guint busy_timeout,
 			  GError **error);

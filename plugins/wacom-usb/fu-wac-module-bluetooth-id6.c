@@ -77,6 +77,7 @@ fu_wac_module_bluetooth_id6_write_blob(FuWacModule *self,
 					       FU_WAC_MODULE_COMMAND_DATA,
 					       blob_chunk,
 					       fu_progress_get_child(progress),
+					       FU_WAC_MODULE_POLL_INTERVAL,
 					       FU_WAC_MODULE_BLUETOOTH_ID6_WRITE_TIMEOUT,
 					       error)) {
 			g_prefix_error(error,
@@ -122,6 +123,7 @@ fu_wac_module_bluetooth_id6_write_firmware(FuDevice *device,
 				       FU_WAC_MODULE_COMMAND_START,
 				       blob_start,
 				       fu_progress_get_child(progress),
+				       FU_WAC_MODULE_POLL_INTERVAL,
 				       FU_WAC_MODULE_ERASE_TIMEOUT,
 				       error)) {
 		g_prefix_error(error, "wacom bluetooth-id6 module failed to erase: ");
@@ -144,6 +146,7 @@ fu_wac_module_bluetooth_id6_write_firmware(FuDevice *device,
 				       FU_WAC_MODULE_COMMAND_END,
 				       NULL,
 				       fu_progress_get_child(progress),
+				       FU_WAC_MODULE_POLL_INTERVAL,
 				       0,
 				       error)) {
 		g_prefix_error(error, "wacom bluetooth-id6 module failed to end: ");
