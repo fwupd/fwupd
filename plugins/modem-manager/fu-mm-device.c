@@ -26,13 +26,13 @@
  * modem boots without SIM card inserted (and therefore the initialization
  * may be very slow) and also where carrier config switching is explicitly
  * required (e.g. if switching from the default (DF) to generic (GC).*/
-#define FU_MM_DEVICE_REMOVE_DELAY_REPROBE 180000 /* ms */
+#define FU_MM_DEVICE_REMOVE_DELAY_REPROBE 210000 /* ms */
 
 #define FU_MM_DEVICE_AT_RETRIES 3
 #define FU_MM_DEVICE_AT_DELAY	3000 /* ms */
 
 /* Amount of time for the modem to get firmware version */
-#define MAX_WAIT_TIME_SECS 150 /* s */
+#define MAX_WAIT_TIME_SECS 240 /* s */
 
 /**
  * FU_MM_DEVICE_FLAG_DETACH_AT_FASTBOOT_HAS_NO_RESPONSE
@@ -40,6 +40,10 @@
  * If no AT response is expected when entering fastboot mode.
  */
 #define FU_MM_DEVICE_FLAG_DETACH_AT_FASTBOOT_HAS_NO_RESPONSE (1 << 0)
+
+gboolean sdx12_flag = FALSE;
+gboolean sdx55_flag = FALSE;
+gboolean sdx6x_flag = FALSE;
 
 struct _FuMmDevice {
 	FuDevice parent_instance;
@@ -75,6 +79,7 @@ struct _FuMmDevice {
 
 	/* mbim-qdu update logic */
 	gchar *port_mbim;
+	gchar *foxconn_device_flag;
 	FuMbimQduUpdater *mbim_qdu_updater;
 
 	/* firehose update handling */
@@ -473,6 +478,14 @@ fu_mm_device_probe_default(FuDevice *device, GError **error)
 	/* fix up vendor name */
 	if (g_strcmp0(fu_device_get_vendor(device), "QUALCOMM INCORPORATED") == 0)
 		fu_device_set_vendor(device, "Qualcomm");
+
+	// After mbim_qdu fw update successfully, restore default configuration of
+	// autosuspend_delay_ms
+	if (fu_mm_device_get_device_info(device, error) == TRUE &&
+	    (sdx12_flag == TRUE || sdx55_flag == TRUE || sdx6x_flag == TRUE)) {
+		if (!fu_mm_device_write_suspend_ms(device, "2000", error))
+			return FALSE;
+	}
 
 	/* success */
 	return TRUE;
@@ -1151,6 +1164,55 @@ fu_mm_device_writeln(const gchar *fn, const gchar *buf, GError **error)
 				       error);
 }
 
+gboolean
+fu_mm_device_write_suspend_ms(FuDevice *device, const gchar *buf, GError **error)
+{
+	FuMmDevice *self = FU_MM_DEVICE(device);
+	g_autofree gchar *device_sysfs_path = NULL;
+	g_autofree gchar *autosuspend_delay_filename = NULL;
+
+	/* autosuspend delay updated for a proper firmware update */
+	fu_mm_utils_get_port_info(self->port_mbim, NULL, &device_sysfs_path, NULL, NULL);
+	autosuspend_delay_filename =
+	    g_build_filename(device_sysfs_path, "/power/autosuspend_delay_ms", NULL);
+
+	if (!fu_mm_device_writeln(autosuspend_delay_filename, buf, error))
+		return FALSE;
+
+	return TRUE;
+}
+
+gboolean
+fu_mm_device_get_device_info(FuDevice *device, GError **error)
+{
+	FuMmDevice *self = FU_MM_DEVICE(device);
+
+	if (self->foxconn_device_flag == NULL) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_FOUND,
+			    "Foxconn Device Flag is not set for the device");
+		return FALSE;
+	}
+
+	if (g_strcmp0(self->foxconn_device_flag, "SDX12") == 0) {
+		sdx12_flag = TRUE;
+		return TRUE;
+	}
+
+	else if (g_strcmp0(self->foxconn_device_flag, "SDX55") == 0) {
+		sdx55_flag = TRUE;
+		return TRUE;
+	}
+
+	else if (g_strcmp0(self->foxconn_device_flag, "SDX6X") == 0) {
+		sdx6x_flag = TRUE;
+		return TRUE;
+	}
+
+	return FALSE;
+}
+
 static gboolean
 fu_mm_device_write_firmware_mbim_qdu(FuDevice *device,
 				     GBytes *fw,
@@ -1162,8 +1224,6 @@ fu_mm_device_write_firmware_mbim_qdu(FuDevice *device,
 	const gchar *filename = NULL;
 	const gchar *csum;
 	FuMmDevice *self = FU_MM_DEVICE(device);
-	g_autofree gchar *device_sysfs_path = NULL;
-	g_autofree gchar *autosuspend_delay_filename = NULL;
 	g_autofree gchar *csum_actual = NULL;
 	g_autofree gchar *version = NULL;
 	g_autoptr(FuArchive) archive = NULL;
@@ -1217,11 +1277,13 @@ fu_mm_device_write_firmware_mbim_qdu(FuDevice *device,
 	g_debug("[%s] MD5 matched", filename);
 
 	/* autosuspend delay updated for a proper firmware update */
-	fu_mm_utils_get_port_info(self->port_mbim, NULL, &device_sysfs_path, NULL, NULL);
-	autosuspend_delay_filename =
-	    g_build_filename(device_sysfs_path, "/power/autosuspend_delay_ms", NULL);
-	if (!fu_mm_device_writeln(autosuspend_delay_filename, "10000", error))
-		return FALSE;
+	if (fu_mm_device_get_device_info(device, error) == TRUE && sdx6x_flag == TRUE) {
+		if (!fu_mm_device_write_suspend_ms(device, "20000", error))
+			return FALSE;
+	} else {
+		if (!fu_mm_device_write_suspend_ms(device, "10000", error))
+			return FALSE;
+	}
 
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_WRITE);
 	digest = fu_mbim_qdu_updater_write(self->mbim_qdu_updater,
@@ -1646,6 +1708,11 @@ fu_mm_device_set_quirk_kv(FuDevice *device, const gchar *key, const gchar *value
 		return TRUE;
 	}
 
+	if (g_strcmp0(key, "ModemManagerFoxconnDeviceFlag") == 0) {
+		self->foxconn_device_flag = g_strdup(value);
+		return TRUE;
+	}
+
 	/* failed */
 	g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED, "quirk key not supported");
 	return FALSE;
@@ -1922,6 +1989,7 @@ fu_mm_device_finalize(GObject *object)
 	g_free(self->firmware_path);
 	g_free(self->restore_firmware_path);
 	g_free(self->firehose_prog_file);
+	g_free(self->foxconn_device_flag);
 	G_OBJECT_CLASS(fu_mm_device_parent_class)->finalize(object);
 }
 

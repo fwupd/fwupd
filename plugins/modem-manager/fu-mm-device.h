@@ -40,4 +40,10 @@ fu_mm_device_udev_new(FuContext *ctx, MMManager *manager, FuMmDevice *shadow_dev
 void
 fu_mm_device_udev_add_port(FuMmDevice *self, const gchar *subsystem, const gchar *path, gint ifnum);
 
+gboolean
+fu_mm_device_write_suspend_ms(FuDevice *device, const gchar *buf, GError **error);
+
+gboolean
+fu_mm_device_get_device_info(FuDevice *device, GError **error);
+
 #endif /* __FU_MM_DEVICE_H */
