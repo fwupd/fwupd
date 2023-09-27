@@ -208,7 +208,7 @@ fu_wac_module_touch_id7_write_block(FuWacModule *self,
 					       blob_chunk,
 					       fu_progress_get_child(progress),
 					       FU_WAC_MODULE_POLL_INTERVAL,
-					       FU_WAC_MODULE_WRITE_TIMEOUT,
+					       FU_WAC_MODULE_DATA_TIMEOUT,
 					       error)) {
 			g_prefix_error(error, "failed to write block %u: ", info->op_id);
 			return FALSE;
@@ -264,7 +264,7 @@ fu_wac_module_touch_id7_write_record(FuWacModule *self,
 				       blob_start,
 				       fu_progress_get_child(progress),
 				       FU_WAC_MODULE_POLL_INTERVAL,
-				       FU_WAC_MODULE_ERASE_TIMEOUT,
+				       FU_WAC_MODULE_DATA_TIMEOUT,
 				       error))
 		return FALSE;
 
@@ -288,7 +288,7 @@ fu_wac_module_touch_id7_write_record(FuWacModule *self,
 				       blob_end,
 				       fu_progress_get_child(progress),
 				       FU_WAC_MODULE_POLL_INTERVAL,
-				       FU_WAC_MODULE_ERASE_TIMEOUT,
+				       FU_WAC_MODULE_DATA_TIMEOUT,
 				       error))
 		return FALSE;
 
@@ -336,7 +336,7 @@ fu_wac_module_touch_id7_write_firmware(FuDevice *device,
 				       NULL,
 				       fu_progress_get_child(progress),
 				       FU_WAC_MODULE_POLL_INTERVAL,
-				       FU_WAC_MODULE_ERASE_TIMEOUT,
+				       FU_WAC_MODULE_START_TIMEOUT,
 				       error))
 		return FALSE;
 	fu_progress_step_done(progress);
@@ -364,7 +364,7 @@ fu_wac_module_touch_id7_write_firmware(FuDevice *device,
 				       NULL,
 				       fu_progress_get_child(progress),
 				       FU_WAC_MODULE_POLL_INTERVAL,
-				       FU_WAC_MODULE_FINISH_TIMEOUT,
+				       FU_WAC_MODULE_END_TIMEOUT,
 				       error))
 		return FALSE;
 	fu_progress_step_done(progress);
