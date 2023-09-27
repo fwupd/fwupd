@@ -113,15 +113,17 @@ fu_wac_module_set_feature(FuWacModule *self,
 			  guint8 command,
 			  GBytes *blob, /* optional */
 			  FuProgress *progress,
-			  guint busy_timeout, /* ms */
+			  guint poll_interval, /* ms */
+			  guint busy_timeout,  /* ms */
 			  GError **error)
 {
 	FuWacDevice *parent_device = FU_WAC_DEVICE(fu_device_get_parent(FU_DEVICE(self)));
 	FuWacModulePrivate *priv = GET_PRIVATE(self);
 	const guint8 *data;
 	gsize len = 0;
-	guint delay_ms =
-	    fu_device_has_flag(FU_DEVICE(parent_device), FWUPD_DEVICE_FLAG_EMULATED) ? 10 : 250;
+	guint delay_ms = fu_device_has_flag(FU_DEVICE(parent_device), FWUPD_DEVICE_FLAG_EMULATED)
+			     ? 10
+			     : poll_interval;
 	guint busy_poll_loops = busy_timeout / delay_ms;
 	guint8 buf[] = {[0] = FU_WAC_REPORT_ID_MODULE,
 			[1] = priv->fw_type,
@@ -175,7 +177,7 @@ fu_wac_module_set_feature(FuWacModule *self,
 
 	/* wait for hardware */
 	if (busy_poll_loops > 0) {
-		fu_device_sleep(FU_DEVICE(self), 80); /* ms */
+		fu_device_sleep(FU_DEVICE(self), delay_ms); /* settle before polling status */
 		if (!fu_device_retry_full(FU_DEVICE(self),
 					  fu_wac_module_refresh_cb,
 					  busy_poll_loops,
