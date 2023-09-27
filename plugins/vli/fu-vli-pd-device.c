@@ -22,6 +22,12 @@ struct _FuVliPdDevice {
  * Device has a PS186 attached via I²C.
  */
 #define FU_VLI_PD_DEVICE_FLAG_HAS_I2C_PS186 (1 << 0)
+/**
+ * FU_VLI_PD_DEVICE_FLAG_SKIPS_ROM:
+ *
+ * Device updates while in firmware mode, skips ROM mode in detach.
+ */
+#define FU_VLI_PD_DEVICE_FLAG_SKIPS_ROM (1 << 1)
 
 G_DEFINE_TYPE(FuVliPdDevice, fu_vli_pd_device, FU_TYPE_VLI_DEVICE)
 
@@ -703,6 +709,12 @@ fu_vli_pd_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 					error))
 		return FALSE;
 
+	/* VL103 only updates in ROM mode, check other devices for skips-rom flag */
+	if (fu_vli_device_get_kind(FU_VLI_DEVICE(device)) != FU_VLI_DEVICE_KIND_VL103 &&
+	    fu_device_has_private_flag(device, FU_VLI_PD_DEVICE_FLAG_SKIPS_ROM)) {
+		return TRUE;
+	}
+
 	/* VL103 set ROM sig does not work, so use alternate function */
 	if ((fu_vli_device_get_kind(FU_VLI_DEVICE(device)) != FU_VLI_DEVICE_KIND_VL100) &&
 	    (fu_vli_device_get_kind(FU_VLI_DEVICE(device)) != FU_VLI_DEVICE_KIND_VL102)) {
@@ -898,6 +910,9 @@ fu_vli_pd_device_init(FuVliPdDevice *self)
 	fu_device_register_private_flag(FU_DEVICE(self),
 					FU_VLI_PD_DEVICE_FLAG_HAS_I2C_PS186,
 					"has-i2c-ps186");
+	fu_device_register_private_flag(FU_DEVICE(self),
+					FU_VLI_PD_DEVICE_FLAG_SKIPS_ROM,
+					"skips-rom");
 
 	/* connect up attach or detach vfuncs when kind is known */
 	g_signal_connect(FU_VLI_DEVICE(self),
