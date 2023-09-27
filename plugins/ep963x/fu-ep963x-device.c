@@ -293,7 +293,7 @@ fu_ep963x_device_write_firmware(FuDevice *device,
 						       fu_chunk_get_address(chk2),
 						       FU_EP963_TRANSFER_CHUNK_SIZE);
 		for (guint j = 0; j < fu_chunk_array_length(chunks); j++) {
-			g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
+			g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, j);
 			g_autoptr(GError) error_loop = NULL;
 
 			/* copy data and write */
