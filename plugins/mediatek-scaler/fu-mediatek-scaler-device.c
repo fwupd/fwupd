@@ -108,32 +108,11 @@ static gboolean
 fu_mediatek_scaler_device_use_aux_dev(FuDevice *device, GError **error)
 {
 	FuMediatekScalerDevice *self = FU_MEDIATEK_SCALER_DEVICE(device);
-	g_autoptr(GUdevClient) udev_client = g_udev_client_new(NULL);
-	g_autoptr(GUdevEnumerator) udev_enumerator = g_udev_enumerator_new(udev_client);
-	g_autoptr(GList) matches = NULL;
+	g_autoptr(GPtrArray) i2c_devices = NULL;
+
 	self->dp_aux_dev_name = g_strdup(fu_udev_device_get_device_file(FU_UDEV_DEVICE(device)));
-
-	g_udev_enumerator_add_match_subsystem(udev_enumerator, "drm_dp_aux_dev");
-	g_udev_enumerator_add_match_property(udev_enumerator, "DEVNAME", self->dp_aux_dev_name);
-	matches = g_udev_enumerator_execute(udev_enumerator);
-
-	/* from a drm_dp_aux_dev with the given name, locate its sibling i2c
-	 * device and in turn the i2c-dev under that representing the actual
-	 * I2C bus that runs over DPDDC on the port represented by the
-	 * drm_dp_aux_dev */
-	for (GList *element = matches; element != NULL; element = element->next) {
-		g_autoptr(FuUdevDevice) udev = NULL;
-		g_autoptr(GPtrArray) i2c_devices = NULL;
-
-		udev = fu_udev_device_new(fu_device_get_context(device), element->data);
-		i2c_devices = fu_udev_device_get_siblings_with_subsystem(udev, "i2c");
-		return fu_mediatek_scaler_device_set_i2c_dev(self, i2c_devices, error);
-	}
-	g_set_error(error,
-		    FWUPD_ERROR,
-		    FWUPD_ERROR_NOT_SUPPORTED,
-		    "no devices under drm_dp_aux_dev subsystem");
-	return FALSE;
+	i2c_devices = fu_udev_device_get_siblings_with_subsystem(FU_UDEV_DEVICE(device), "i2c");
+	return fu_mediatek_scaler_device_set_i2c_dev(self, i2c_devices, error);
 }
 
 static gboolean
