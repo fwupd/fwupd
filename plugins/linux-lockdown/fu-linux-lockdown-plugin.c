@@ -154,13 +154,9 @@ fu_linux_lockdown_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *a
 	if (!fu_linux_lockdown_plugin_ensure_security_attr_flags(attr, &error_local))
 		g_info("failed to ensure attribute fix flags: %s", error_local->message);
 
-	if (self->lockdown == FU_LINUX_LOCKDOWN_UNKNOWN) {
-		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA);
-		return;
-	}
-
 	/* load file */
-	if (self->lockdown == FU_LINUX_LOCKDOWN_INVALID) {
+	if (self->lockdown == FU_LINUX_LOCKDOWN_INVALID ||
+	    self->lockdown == FU_LINUX_LOCKDOWN_UNKNOWN) {
 		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
 		return;
 	}
