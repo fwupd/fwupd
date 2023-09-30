@@ -32,7 +32,7 @@ typedef struct {
 	FuCoswidVersionScheme version_scheme;
 	GPtrArray *links;    /* of FuCoswidFirmwareLink */
 	GPtrArray *entities; /* of FuCoswidFirmwareEntity */
-	GPtrArray *hashes;   /* of FuCoswidFirmwareHash */
+	GPtrArray *payloads; /* of FuCoswidFirmwarePayload */
 } FuCoswidFirmwarePrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE(FuCoswidFirmware, fu_coswid_firmware, FU_TYPE_FIRMWARE)
@@ -53,6 +53,12 @@ typedef struct {
 	GByteArray *value;
 	FuCoswidHashAlg alg_id;
 } FuCoswidFirmwareHash;
+
+typedef struct {
+	gchar *name;
+	guint64 size;
+	GPtrArray *hashes; /* of FuCoswidFirmwareHash */
+} FuCoswidFirmwarePayload;
 
 static void
 fu_coswid_firmware_entity_free(FuCoswidFirmwareEntity *entity)
@@ -83,6 +89,25 @@ fu_coswid_firmware_hash_free(FuCoswidFirmwareHash *hash)
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuCoswidFirmwareHash, fu_coswid_firmware_hash_free)
 
+static FuCoswidFirmwarePayload *
+fu_coswid_firmware_payload_new(void)
+{
+	FuCoswidFirmwarePayload *payload = g_new0(FuCoswidFirmwarePayload, 1);
+	payload->hashes =
+	    g_ptr_array_new_with_free_func((GDestroyNotify)fu_coswid_firmware_hash_free);
+	return payload;
+}
+
+static void
+fu_coswid_firmware_payload_free(FuCoswidFirmwarePayload *payload)
+{
+	g_ptr_array_unref(payload->hashes);
+	g_free(payload->name);
+	g_free(payload);
+}
+
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuCoswidFirmwarePayload, fu_coswid_firmware_payload_free)
+
 #ifdef HAVE_CBOR
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(cbor_item_t, cbor_intermediate_decref)
 
@@ -94,8 +119,42 @@ fu_coswid_firmware_strndup(cbor_item_t *item)
 	return g_strndup((const gchar *)cbor_string_handle(item), cbor_string_length(item));
 }
 
+typedef gboolean (*FuCoswidFirmwareItemFunc)(FuCoswidFirmware *self,
+					     cbor_item_t *item,
+					     gpointer user_data,
+					     GError **error) G_GNUC_WARN_UNUSED_RESULT;
+
 static gboolean
-fu_coswid_firmware_parse_meta(FuCoswidFirmware *self, cbor_item_t *item, GError **error)
+fu_coswid_firmware_parse_one_or_many(FuCoswidFirmware *self,
+				     cbor_item_t *item,
+				     FuCoswidFirmwareItemFunc func,
+				     gpointer user_data,
+				     GError **error)
+{
+	/* one */
+	if (cbor_isa_map(item))
+		return func(self, item, user_data, error);
+
+	/* many */
+	if (cbor_isa_array(item)) {
+		for (guint j = 0; j < cbor_array_size(item); j++) {
+			g_autoptr(cbor_item_t) value = cbor_array_get(item, j);
+			if (!func(self, value, user_data, error))
+				return FALSE;
+		}
+		return TRUE;
+	}
+
+	/* not sure what to do */
+	g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA, "neither an array or map");
+	return FALSE;
+}
+
+static gboolean
+fu_coswid_firmware_parse_meta(FuCoswidFirmware *self,
+			      cbor_item_t *item,
+			      gpointer user_data,
+			      GError **error)
 {
 	FuCoswidFirmwarePrivate *priv = GET_PRIVATE(self);
 	struct cbor_pair *pairs = cbor_map_handle(item);
@@ -106,6 +165,10 @@ fu_coswid_firmware_parse_meta(FuCoswidFirmware *self, cbor_item_t *item, GError 
 			priv->summary = fu_coswid_firmware_strndup(pairs[i].value);
 		} else if (tag_id == FU_COSWID_TAG_COLLOQUIAL_VERSION) {
 			priv->colloquial_version = fu_coswid_firmware_strndup(pairs[i].value);
+		} else {
+			g_debug("unhandled tag %s from %s",
+				fu_coswid_tag_to_string(tag_id),
+				fu_coswid_tag_to_string(FU_COSWID_TAG_SOFTWARE_META));
 		}
 	}
 
@@ -114,7 +177,10 @@ fu_coswid_firmware_parse_meta(FuCoswidFirmware *self, cbor_item_t *item, GError 
 }
 
 static gboolean
-fu_coswid_firmware_parse_link(FuCoswidFirmware *self, cbor_item_t *item, GError **error)
+fu_coswid_firmware_parse_link(FuCoswidFirmware *self,
+			      cbor_item_t *item,
+			      gpointer user_data,
+			      GError **error)
 {
 	FuCoswidFirmwarePrivate *priv = GET_PRIVATE(self);
 	struct cbor_pair *pairs = cbor_map_handle(item);
@@ -129,6 +195,10 @@ fu_coswid_firmware_parse_link(FuCoswidFirmware *self, cbor_item_t *item, GError 
 				link->rel = (-1) - cbor_get_uint8(pairs[i].value);
 			else
 				link->rel = cbor_get_uint8(pairs[i].value);
+		} else {
+			g_debug("unhandled tag %s from %s",
+				fu_coswid_tag_to_string(tag_id),
+				fu_coswid_tag_to_string(FU_COSWID_TAG_LINK));
 		}
 	}
 
@@ -138,9 +208,12 @@ fu_coswid_firmware_parse_link(FuCoswidFirmware *self, cbor_item_t *item, GError 
 }
 
 static gboolean
-fu_coswid_firmware_parse_hash(FuCoswidFirmware *self, cbor_item_t *item, GError **error)
+fu_coswid_firmware_parse_hash(FuCoswidFirmware *self,
+			      cbor_item_t *item,
+			      gpointer user_data,
+			      GError **error)
 {
-	FuCoswidFirmwarePrivate *priv = GET_PRIVATE(self);
+	FuCoswidFirmwarePayload *payload = (FuCoswidFirmwarePayload *)user_data;
 	g_autoptr(FuCoswidFirmwareHash) hash = g_new0(FuCoswidFirmwareHash, 1);
 	g_autoptr(cbor_item_t) hash_item_alg_id = cbor_array_get(item, 0);
 	g_autoptr(cbor_item_t) hash_item_value = cbor_array_get(item, 1);
@@ -160,12 +233,173 @@ fu_coswid_firmware_parse_hash(FuCoswidFirmware *self, cbor_item_t *item, GError 
 	g_byte_array_append(hash->value,
 			    cbor_bytestring_handle(hash_item_value),
 			    cbor_bytestring_length(hash_item_value));
-	g_ptr_array_add(priv->hashes, g_steal_pointer(&hash));
+	g_ptr_array_add(payload->hashes, g_steal_pointer(&hash));
 	return TRUE;
 }
 
 static gboolean
-fu_coswid_firmware_parse_entity(FuCoswidFirmware *self, cbor_item_t *item, GError **error)
+fu_coswid_firmware_parse_hash_array(FuCoswidFirmware *self,
+				    cbor_item_t *item,
+				    gpointer user_data,
+				    GError **error)
+{
+	for (guint j = 0; j < cbor_array_size(item); j++) {
+		g_autoptr(cbor_item_t) value = cbor_array_get(item, j);
+		if (!fu_coswid_firmware_parse_hash(self, value, user_data, error))
+			return FALSE;
+	}
+	return TRUE;
+}
+
+static gboolean
+fu_coswid_firmware_parse_file(FuCoswidFirmware *self,
+			      cbor_item_t *item,
+			      gpointer user_data,
+			      GError **error)
+{
+	FuCoswidFirmwarePrivate *priv = GET_PRIVATE(self);
+	struct cbor_pair *pairs = cbor_map_handle(item);
+	g_autoptr(FuCoswidFirmwarePayload) payload = fu_coswid_firmware_payload_new();
+
+	for (gsize i = 0; i < cbor_map_size(item); i++) {
+		FuCoswidTag tag_id = cbor_get_uint8(pairs[i].key);
+		if (tag_id == FU_COSWID_TAG_FS_NAME) {
+			payload->name = fu_coswid_firmware_strndup(pairs[i].value);
+		} else if (tag_id == FU_COSWID_TAG_SIZE) {
+			payload->size = cbor_get_int(pairs[i].value);
+		} else if (tag_id == FU_COSWID_TAG_HASH) {
+			if (cbor_isa_array(pairs[i].value) &&
+			    cbor_array_size(pairs[i].value) >= 1) {
+				g_autoptr(cbor_item_t) value = cbor_array_get(pairs[i].value, 0);
+				/* we can't use fu_coswid_firmware_parse_one_or_many() here as
+				 * the hash is an array, not a map -- for some reason */
+				if (cbor_isa_array(value)) {
+					if (!fu_coswid_firmware_parse_hash_array(self,
+										 pairs[i].value,
+										 payload,
+										 error))
+						return FALSE;
+				} else {
+					if (!fu_coswid_firmware_parse_hash(self,
+									   pairs[i].value,
+									   payload,
+									   error))
+						return FALSE;
+				}
+			} else {
+				g_set_error(error,
+					    G_IO_ERROR,
+					    G_IO_ERROR_INVALID_DATA,
+					    "hashes neither an array or array of array");
+				return FALSE;
+			}
+		} else {
+			g_debug("unhandled tag %s from %s",
+				fu_coswid_tag_to_string(tag_id),
+				fu_coswid_tag_to_string(FU_COSWID_TAG_FILE));
+		}
+	}
+
+	/* success */
+	g_ptr_array_add(priv->payloads, g_steal_pointer(&payload));
+	return TRUE;
+}
+
+static gboolean
+fu_coswid_firmware_parse_path_elements(FuCoswidFirmware *self,
+				       cbor_item_t *item,
+				       gpointer user_data,
+				       GError **error)
+{
+	struct cbor_pair *pairs = cbor_map_handle(item);
+	for (gsize i = 0; i < cbor_map_size(item); i++) {
+		FuCoswidTag tag_id = cbor_get_uint8(pairs[i].key);
+		if (tag_id == FU_COSWID_TAG_FILE) {
+			if (!fu_coswid_firmware_parse_one_or_many(self,
+								  pairs[i].value,
+								  fu_coswid_firmware_parse_file,
+								  NULL, /* user_data */
+								  error))
+				return FALSE;
+		} else {
+			g_debug("unhandled tag %s from %s",
+				fu_coswid_tag_to_string(tag_id),
+				fu_coswid_tag_to_string(FU_COSWID_TAG_PATH_ELEMENTS));
+		}
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_coswid_firmware_parse_directory(FuCoswidFirmware *self,
+				   cbor_item_t *item,
+				   gpointer user_data,
+				   GError **error)
+{
+	struct cbor_pair *pairs = cbor_map_handle(item);
+	for (gsize i = 0; i < cbor_map_size(item); i++) {
+		FuCoswidTag tag_id = cbor_get_uint8(pairs[i].key);
+		if (tag_id == FU_COSWID_TAG_PATH_ELEMENTS) {
+			if (!fu_coswid_firmware_parse_one_or_many(
+				self,
+				pairs[i].value,
+				fu_coswid_firmware_parse_path_elements,
+				NULL, /* user_data */
+				error))
+				return FALSE;
+		} else {
+			g_debug("unhandled tag %s from %s",
+				fu_coswid_tag_to_string(tag_id),
+				fu_coswid_tag_to_string(FU_COSWID_TAG_DIRECTORY));
+		}
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_coswid_firmware_parse_payload(FuCoswidFirmware *self,
+				 cbor_item_t *item,
+				 gpointer user_data,
+				 GError **error)
+{
+	struct cbor_pair *pairs = cbor_map_handle(item);
+	for (gsize i = 0; i < cbor_map_size(item); i++) {
+		FuCoswidTag tag_id = cbor_get_uint8(pairs[i].key);
+		if (tag_id == FU_COSWID_TAG_FILE) {
+			if (!fu_coswid_firmware_parse_one_or_many(self,
+								  pairs[i].value,
+								  fu_coswid_firmware_parse_file,
+								  NULL, /* user_data */
+								  error))
+				return FALSE;
+		} else if (tag_id == FU_COSWID_TAG_DIRECTORY) {
+			if (!fu_coswid_firmware_parse_one_or_many(
+				self,
+				pairs[i].value,
+				fu_coswid_firmware_parse_directory,
+				NULL, /* user_data */
+				error))
+				return FALSE;
+		} else {
+			g_debug("unhandled tag %s from %s",
+				fu_coswid_tag_to_string(tag_id),
+				fu_coswid_tag_to_string(FU_COSWID_TAG_PAYLOAD));
+		}
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_coswid_firmware_parse_entity(FuCoswidFirmware *self,
+				cbor_item_t *item,
+				gpointer user_data,
+				GError **error)
 {
 	FuCoswidFirmwarePrivate *priv = GET_PRIVATE(self);
 	struct cbor_pair *pairs = cbor_map_handle(item);
@@ -195,6 +429,10 @@ fu_coswid_firmware_parse_entity(FuCoswidFirmware *self, cbor_item_t *item, GErro
 				}
 				entity->roles[entity_role_cnt++] = role;
 			}
+		} else {
+			g_debug("unhandled tag %s from %s",
+				fu_coswid_tag_to_string(tag_id),
+				fu_coswid_tag_to_string(FU_COSWID_TAG_ENTITY));
 		}
 	}
 
@@ -236,6 +474,15 @@ fu_coswid_firmware_parse(FuFirmware *firmware,
 		fflush(stdout);
 	}
 
+	/* sanity check */
+	if (!cbor_isa_map(item)) {
+		g_set_error_literal(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_INVALID_DATA,
+				    "root item is not a map");
+		return FALSE;
+	}
+
 	/* parse out anything interesting */
 	pairs = cbor_map_handle(item);
 	for (gsize i = 0; i < cbor_map_size(item); i++) {
@@ -262,26 +509,35 @@ fu_coswid_firmware_parse(FuFirmware *firmware,
 		} else if (tag_id == FU_COSWID_TAG_VERSION_SCHEME) {
 			priv->version_scheme = cbor_get_uint16(pairs[i].value);
 		} else if (tag_id == FU_COSWID_TAG_SOFTWARE_META) {
-			if (!fu_coswid_firmware_parse_meta(self, pairs[i].value, error))
+			if (!fu_coswid_firmware_parse_one_or_many(self,
+								  pairs[i].value,
+								  fu_coswid_firmware_parse_meta,
+								  NULL, /* user_data */
+								  error))
 				return FALSE;
 		} else if (tag_id == FU_COSWID_TAG_LINK) {
-			for (guint j = 0; j < cbor_array_size(pairs[i].value); j++) {
-				g_autoptr(cbor_item_t) value = cbor_array_get(pairs[i].value, j);
-				if (!fu_coswid_firmware_parse_link(self, value, error))
-					return FALSE;
-			}
-		} else if (tag_id == FU_COSWID_TAG_HASH) {
-			for (guint j = 0; j < cbor_array_size(pairs[i].value); j++) {
-				g_autoptr(cbor_item_t) value = cbor_array_get(pairs[i].value, j);
-				if (!fu_coswid_firmware_parse_hash(self, value, error))
-					return FALSE;
-			}
+			if (!fu_coswid_firmware_parse_one_or_many(self,
+								  pairs[i].value,
+								  fu_coswid_firmware_parse_link,
+								  NULL, /* user_data */
+								  error))
+				return FALSE;
+		} else if (tag_id == FU_COSWID_TAG_PAYLOAD) {
+			if (!fu_coswid_firmware_parse_one_or_many(self,
+								  pairs[i].value,
+								  fu_coswid_firmware_parse_payload,
+								  NULL, /* user_data */
+								  error))
+				return FALSE;
 		} else if (tag_id == FU_COSWID_TAG_ENTITY) {
-			for (guint j = 0; j < cbor_array_size(pairs[i].value); j++) {
-				g_autoptr(cbor_item_t) value = cbor_array_get(pairs[i].value, j);
-				if (!fu_coswid_firmware_parse_entity(self, value, error))
-					return FALSE;
-			}
+			if (!fu_coswid_firmware_parse_one_or_many(self,
+								  pairs[i].value,
+								  fu_coswid_firmware_parse_entity,
+								  NULL, /* user_data */
+								  error))
+				return FALSE;
+		} else {
+			g_debug("unhandled tag %s from root", fu_coswid_tag_to_string(tag_id));
 		}
 	}
 
@@ -337,10 +593,13 @@ fu_coswid_firmware_get_checksum(FuFirmware *firmware, GChecksumType csum_kind, G
 	}
 
 	/* find the correct hash kind */
-	for (guint i = 0; i < priv->hashes->len; i++) {
-		FuCoswidFirmwareHash *hash = g_ptr_array_index(priv->hashes, i);
-		if (hash->alg_id == alg_id)
-			return fu_byte_array_to_string(hash->value);
+	for (guint i = 0; i < priv->payloads->len; i++) {
+		FuCoswidFirmwarePayload *payload = g_ptr_array_index(priv->payloads, i);
+		for (guint j = 0; j < payload->hashes->len; j++) {
+			FuCoswidFirmwareHash *hash = g_ptr_array_index(payload->hashes, j);
+			if (hash->alg_id == alg_id)
+				return fu_byte_array_to_string(hash->value);
+		}
 	}
 	g_set_error(error,
 		    G_IO_ERROR,
@@ -391,6 +650,15 @@ fu_coswid_firmware_write_tag_uint16(cbor_item_t *root, FuCoswidTag tag, guint16 
 }
 
 static void
+fu_coswid_firmware_write_tag_uint64(cbor_item_t *root, FuCoswidTag tag, guint64 item)
+{
+	g_autoptr(cbor_item_t) key = cbor_build_uint8(tag);
+	g_autoptr(cbor_item_t) val = cbor_build_uint64(item);
+	if (!cbor_map_add(root, (struct cbor_pair){.key = key, .value = val}))
+		g_critical("failed to push to indefinite map");
+}
+
+static void
 fu_coswid_firmware_write_tag_int8(cbor_item_t *root, FuCoswidTag tag, gint8 item)
 {
 	g_autoptr(cbor_item_t) key = cbor_build_uint8(tag);
@@ -411,6 +679,47 @@ fu_coswid_firmware_write_tag_item(cbor_item_t *root, FuCoswidTag tag, cbor_item_
 	g_autoptr(cbor_item_t) key = cbor_build_uint8(tag);
 	if (!cbor_map_add(root, (struct cbor_pair){.key = key, .value = item}))
 		g_critical("failed to push to indefinite map");
+}
+
+static void
+fu_coswid_firmware_write_hash(cbor_item_t *root, FuCoswidFirmwareHash *hash)
+{
+	g_autoptr(cbor_item_t) item_hash = cbor_new_definite_array(2);
+	g_autoptr(cbor_item_t) item_hash_alg_id = cbor_build_uint8(hash->alg_id);
+	g_autoptr(cbor_item_t) item_hash_value =
+	    cbor_build_bytestring(hash->value->data, hash->value->len);
+	if (!cbor_array_push(item_hash, item_hash_alg_id))
+		g_critical("failed to push to definite array");
+	if (!cbor_array_push(item_hash, item_hash_value))
+		g_critical("failed to push to definite array");
+	if (!cbor_array_push(root, item_hash))
+		g_critical("failed to push to indefinite array");
+}
+
+static void
+fu_coswid_firmware_write_payload(cbor_item_t *root, FuCoswidFirmwarePayload *payload)
+{
+	g_autoptr(cbor_item_t) item_payload = cbor_new_indefinite_map();
+	g_autoptr(cbor_item_t) item_file = cbor_new_indefinite_map();
+	if (payload->name != NULL) {
+		fu_coswid_firmware_write_tag_string(item_file,
+						    FU_COSWID_TAG_FS_NAME,
+						    payload->name);
+	}
+	if (payload->size != 0) {
+		fu_coswid_firmware_write_tag_uint64(item_file, FU_COSWID_TAG_SIZE, payload->size);
+	}
+	if (payload->hashes->len > 0) {
+		g_autoptr(cbor_item_t) item_hashes = cbor_new_indefinite_array();
+		for (guint j = 0; j < payload->hashes->len; j++) {
+			FuCoswidFirmwareHash *hash = g_ptr_array_index(payload->hashes, j);
+			fu_coswid_firmware_write_hash(item_hashes, hash);
+		}
+		fu_coswid_firmware_write_tag_item(item_file, FU_COSWID_TAG_HASH, item_hashes);
+	}
+	fu_coswid_firmware_write_tag_item(item_payload, FU_COSWID_TAG_FILE, item_file);
+	if (!cbor_array_push(root, item_payload))
+		g_critical("failed to push to indefinite array");
 }
 #endif
 
@@ -523,23 +832,14 @@ fu_coswid_firmware_write(FuFirmware *firmware, GError **error)
 		fu_coswid_firmware_write_tag_item(root, FU_COSWID_TAG_LINK, item_links);
 	}
 
-	/* add hashes */
-	if (priv->hashes->len > 0) {
-		g_autoptr(cbor_item_t) item_hashes = cbor_new_indefinite_array();
-		for (guint i = 0; i < priv->hashes->len; i++) {
-			FuCoswidFirmwareHash *hash = g_ptr_array_index(priv->hashes, i);
-			g_autoptr(cbor_item_t) item_hash = cbor_new_definite_array(2);
-			g_autoptr(cbor_item_t) item_hash_alg_id = cbor_build_uint8(hash->alg_id);
-			g_autoptr(cbor_item_t) item_hash_value =
-			    cbor_build_bytestring(hash->value->data, hash->value->len);
-			if (!cbor_array_push(item_hash, item_hash_alg_id))
-				g_critical("failed to push to definite array");
-			if (!cbor_array_push(item_hash, item_hash_value))
-				g_critical("failed to push to definite array");
-			if (!cbor_array_push(item_hashes, item_hash))
-				g_critical("failed to push to indefinite array");
+	/* add payloads */
+	if (priv->payloads->len > 0) {
+		g_autoptr(cbor_item_t) item_payloads = cbor_new_indefinite_array();
+		for (guint i = 0; i < priv->payloads->len; i++) {
+			FuCoswidFirmwarePayload *payload = g_ptr_array_index(priv->payloads, i);
+			fu_coswid_firmware_write_payload(item_payloads, payload);
 		}
-		fu_coswid_firmware_write_tag_item(root, FU_COSWID_TAG_HASH, item_hashes);
+		fu_coswid_firmware_write_tag_item(root, FU_COSWID_TAG_PAYLOAD, item_payloads);
 	}
 
 	/* serialize */
@@ -645,9 +945,11 @@ fu_coswid_firmware_build_link(FuCoswidFirmware *self, XbNode *n, GError **error)
 }
 
 static gboolean
-fu_coswid_firmware_build_hash(FuCoswidFirmware *self, XbNode *n, GError **error)
+fu_coswid_firmware_build_hash(FuCoswidFirmware *self,
+			      XbNode *n,
+			      FuCoswidFirmwarePayload *payload,
+			      GError **error)
 {
-	FuCoswidFirmwarePrivate *priv = GET_PRIVATE(self);
 	const gchar *tmp;
 	g_autoptr(FuCoswidFirmwareHash) hash = g_new0(FuCoswidFirmwareHash, 1);
 
@@ -674,7 +976,39 @@ fu_coswid_firmware_build_hash(FuCoswidFirmware *self, XbNode *n, GError **error)
 	}
 
 	/* success */
-	g_ptr_array_add(priv->hashes, g_steal_pointer(&hash));
+	g_ptr_array_add(payload->hashes, g_steal_pointer(&hash));
+	return TRUE;
+}
+
+static gboolean
+fu_coswid_firmware_build_payload(FuCoswidFirmware *self, XbNode *n, GError **error)
+{
+	FuCoswidFirmwarePrivate *priv = GET_PRIVATE(self);
+	const gchar *tmp;
+	guint64 tmp64;
+	g_autoptr(FuCoswidFirmwarePayload) payload = fu_coswid_firmware_payload_new();
+	g_autoptr(GPtrArray) hashes = NULL;
+
+	/* required */
+	tmp = xb_node_query_text(n, "name", NULL);
+	if (tmp != NULL)
+		payload->name = g_strdup(tmp);
+	tmp64 = xb_node_query_text_as_uint(n, "size", NULL);
+	if (tmp64 != G_MAXUINT64)
+		payload->size = tmp64;
+
+	/* multiple hashes allowed */
+	hashes = xb_node_query(n, "hash", 0, NULL);
+	if (hashes != NULL) {
+		for (guint i = 0; i < hashes->len; i++) {
+			XbNode *c = g_ptr_array_index(hashes, i);
+			if (!fu_coswid_firmware_build_hash(self, c, payload, error))
+				return FALSE;
+		}
+	}
+
+	/* success */
+	g_ptr_array_add(priv->payloads, g_steal_pointer(&payload));
 	return TRUE;
 }
 
@@ -685,7 +1019,7 @@ fu_coswid_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
 	FuCoswidFirmwarePrivate *priv = GET_PRIVATE(self);
 	const gchar *tmp;
 	g_autoptr(GPtrArray) links = NULL;
-	g_autoptr(GPtrArray) hashes = NULL;
+	g_autoptr(GPtrArray) payloads = NULL;
 	g_autoptr(GPtrArray) entities = NULL;
 
 	/* simple properties */
@@ -722,12 +1056,12 @@ fu_coswid_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
 		}
 	}
 
-	/* multiple hashes allowed */
-	hashes = xb_node_query(n, "hash", 0, NULL);
-	if (hashes != NULL) {
-		for (guint i = 0; i < hashes->len; i++) {
-			XbNode *c = g_ptr_array_index(hashes, i);
-			if (!fu_coswid_firmware_build_hash(self, c, error))
+	/* multiple payloads allowed */
+	payloads = xb_node_query(n, "payload", 0, NULL);
+	if (payloads != NULL) {
+		for (guint i = 0; i < payloads->len; i++) {
+			XbNode *c = g_ptr_array_index(payloads, i);
+			if (!fu_coswid_firmware_build_payload(self, c, error))
 				return FALSE;
 		}
 	}
@@ -769,12 +1103,20 @@ fu_coswid_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbB
 						  fu_coswid_link_rel_to_string(link->rel));
 		}
 	}
-	for (guint i = 0; i < priv->hashes->len; i++) {
-		FuCoswidFirmwareHash *hash = g_ptr_array_index(priv->hashes, i);
-		g_autoptr(XbBuilderNode) bc = xb_builder_node_insert(bn, "hash", NULL);
-		g_autofree gchar *value = fu_byte_array_to_string(hash->value);
-		fu_xmlb_builder_insert_kv(bc, "alg_id", fu_coswid_hash_alg_to_string(hash->alg_id));
-		fu_xmlb_builder_insert_kv(bc, "href", value);
+	for (guint i = 0; i < priv->payloads->len; i++) {
+		FuCoswidFirmwarePayload *payload = g_ptr_array_index(priv->payloads, i);
+		g_autoptr(XbBuilderNode) bc = xb_builder_node_insert(bn, "payload", NULL);
+		fu_xmlb_builder_insert_kv(bc, "name", payload->name);
+		fu_xmlb_builder_insert_kx(bc, "size", payload->size);
+		for (guint j = 0; j < payload->hashes->len; j++) {
+			FuCoswidFirmwareHash *hash = g_ptr_array_index(payload->hashes, j);
+			g_autoptr(XbBuilderNode) bh = xb_builder_node_insert(bc, "hash", NULL);
+			g_autofree gchar *value = fu_byte_array_to_string(hash->value);
+			fu_xmlb_builder_insert_kv(bh,
+						  "alg_id",
+						  fu_coswid_hash_alg_to_string(hash->alg_id));
+			fu_xmlb_builder_insert_kv(bh, "value", value);
+		}
 	}
 	for (guint i = 0; i < priv->entities->len; i++) {
 		FuCoswidFirmwareEntity *entity = g_ptr_array_index(priv->entities, i);
@@ -796,7 +1138,8 @@ fu_coswid_firmware_init(FuCoswidFirmware *self)
 	FuCoswidFirmwarePrivate *priv = GET_PRIVATE(self);
 	priv->version_scheme = FU_COSWID_VERSION_SCHEME_SEMVER;
 	priv->links = g_ptr_array_new_with_free_func((GDestroyNotify)fu_coswid_firmware_link_free);
-	priv->hashes = g_ptr_array_new_with_free_func((GDestroyNotify)fu_coswid_firmware_hash_free);
+	priv->payloads =
+	    g_ptr_array_new_with_free_func((GDestroyNotify)fu_coswid_firmware_payload_free);
 	priv->entities =
 	    g_ptr_array_new_with_free_func((GDestroyNotify)fu_coswid_firmware_entity_free);
 }
@@ -811,7 +1154,7 @@ fu_coswid_firmware_finalize(GObject *object)
 	g_free(priv->summary);
 	g_free(priv->colloquial_version);
 	g_ptr_array_unref(priv->links);
-	g_ptr_array_unref(priv->hashes);
+	g_ptr_array_unref(priv->payloads);
 	g_ptr_array_unref(priv->entities);
 
 	G_OBJECT_CLASS(fu_coswid_firmware_parent_class)->finalize(object);
