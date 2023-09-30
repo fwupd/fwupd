@@ -3930,7 +3930,7 @@ fu_firmware_builder_round_trip_func(void)
 #ifdef HAVE_CBOR
 	    {FU_TYPE_USWID_FIRMWARE,
 	     "uswid.builder.xml",
-	     "b4631ebb64931da604500b9a7263225708195f54"},
+	     "b473fbdbe00f860c4da43f9499569394bac81f14"},
 #endif
 	    {G_TYPE_INVALID, NULL, NULL}};
 	g_type_ensure(FU_TYPE_COSWID_FIRMWARE);
