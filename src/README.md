@@ -61,6 +61,15 @@ already a suitable GUID, it will be converted to one.
 * Value: the GUID, e.g. `537f7800-8529-5656-b2fa-b0901fe91696`
 * Minimum fwupd version: **1.0.3**
 
+### Guid[quirk]
+
+Adds an extra quirk-match-only GUID for a specific hardware device.
+If the value provided is not already a suitable GUID, it will be converted to one.
+
+* Key: the device ID, e.g. `USB\VID_0763&PID_2806`
+* Value: the GUID, e.g. `537f7800-8529-5656-b2fa-b0901fe91696`
+* Minimum fwupd version: **1.9.6**
+
 ### CounterpartGuid
 
 Adds an counterpart GUID for a specific hardware device. If the value provided

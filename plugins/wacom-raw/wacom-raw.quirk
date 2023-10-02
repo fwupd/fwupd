@@ -5,116 +5,116 @@
 #Lenovo X1 Yoga Gen7 5308
 [HIDRAW\VEN_056A&DEV_5308]
 Plugin = wacom_raw
-Guid = WacomAES
+Guid[quirk] = WacomAES
 
 #Lenovo X1 Yoga Gen7 5309
 [HIDRAW\VEN_056A&DEV_5309]
 Plugin = wacom_raw
-Guid = WacomAES
+Guid[quirk] = WacomAES
 
 #Lenovo X1 Yoga Gen7 530A
 [HIDRAW\VEN_056A&DEV_530A]
 Plugin = wacom_raw
-Guid = WacomAES
+Guid[quirk] = WacomAES
 
 #Lenovo X1 Yoga Gen7 530B
 [HIDRAW\VEN_056A&DEV_530B]
 Plugin = wacom_raw
-Guid = WacomAES
+Guid[quirk] = WacomAES
 
 #Lenovo X1 Yoga Gen7 52B5
 [HIDRAW\VEN_056A&DEV_52B5]
 Plugin = wacom_raw
-Guid = WacomAES
+Guid[quirk] = WacomAES
 
 #Lenovo X1 Yoga Gen7 52C4
 [HIDRAW\VEN_056A&DEV_52C4]
 Plugin = wacom_raw
-Guid = WacomAES
+Guid[quirk] = WacomAES
 
 # Dell Chromebook Enterprise 5300
 [HIDRAW\VEN_2D1F&DEV_4946]
 Plugin = wacom_raw
-Guid = WacomAES
+Guid[quirk] = WacomAES
 
 # Moffet 14-LGD-TPK
 [HIDRAW\VEN_2D1F&DEV_4970]
 Plugin = wacom_raw
-Guid = WacomAES
+Guid[quirk] = WacomAES
 Flags = self-recovery
 
 # Moffet 14-Sharp-HH
 [HIDRAW\VEN_2D1F&DEV_4971]
 Plugin = wacom_raw
-Guid = WacomAES
+Guid[quirk] = WacomAES
 Flags = self-recovery
 
 # Moffet 14-Sharp-VIA
 [HIDRAW\VEN_2D1F&DEV_4972]
 Plugin = wacom_raw
-Guid = WacomAES
+Guid[quirk] = WacomAES
 Flags = self-recovery
 
 # Dell Latitude 5175
 [HIDRAW\VEN_056A&DEV_4807]
 Plugin = wacom_raw
-Guid = WacomAES
+Guid[quirk] = WacomAES
 
 # Dell XPS 12 9250
 [HIDRAW\VEN_056A&DEV_4822]
 Plugin = wacom_raw
-Guid = WacomAES
+Guid[quirk] = WacomAES
 
 # Dell Venue 8 Pro 5855
 [HIDRAW\VEN_056A&DEV_4824]
 Plugin = wacom_raw
-Guid = WacomAES
+Guid[quirk] = WacomAES
 
 # Dell XPS 13 9365
 [HIDRAW\VEN_056A&DEV_4831]
 Plugin = wacom_raw
-Guid = WacomAES
+Guid[quirk] = WacomAES
 
 # Dell Latitude 5285
 [HIDRAW\VEN_056A&DEV_484C]
 Plugin = wacom_raw
-Guid = WacomAES
+Guid[quirk] = WacomAES
 
 # Dell Latitude 7390 2-in-1
 [HIDRAW\VEN_056A&DEV_4841]
 Plugin = wacom_raw
-Guid = WacomAES
+Guid[quirk] = WacomAES
 
 # Dell XPS-15 9575
 [HIDRAW\VEN_056A&DEV_4875]
 Plugin = wacom_raw
-Guid = WacomAES
+Guid[quirk] = WacomAES
 
 # Dell Latitude 7400 2-in-1
 [HIDRAW\VEN_056A&DEV_48C9]
 Plugin = wacom_raw
-Guid = WacomAES
+Guid[quirk] = WacomAES
 
 # Dell XPS-15 9570
 [HIDRAW\VEN_056A&DEV_488F]
 Plugin = wacom_raw
-Guid = WacomAES
+Guid[quirk] = WacomAES
 
 # Dell XPS 13 7390 2-in-1
 [HIDRAW\VEN_056A&DEV_48ED]
 Plugin = wacom_raw
-Guid = WacomAES
+Guid[quirk] = WacomAES
 
 # AES bootloader mode
 [HIDRAW\VEN_056A&DEV_0094]
 Plugin = wacom_raw
-Guid = WacomAES
+Guid[quirk] = WacomAES
 Flags = is-bootloader
 
 # EMR bootloader mode
 [HIDRAW\VEN_056A&DEV_012B]
 Plugin = wacom_raw
-Guid = WacomEMR
+Guid[quirk] = WacomEMR
 Flags = is-bootloader
 
 [WacomEMR_W9013]

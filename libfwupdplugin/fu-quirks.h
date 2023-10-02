@@ -118,6 +118,14 @@ fu_quirks_add_possible_key(FuQuirks *self, const gchar *possible_key);
  **/
 #define FU_QUIRKS_GUID "Guid"
 /**
+ * FU_QUIRKS_GUID_QUIRK:
+ *
+ * The quirk key for the GUID, only used for quirk matching.
+ *
+ * Since: 1.9.6
+ **/
+#define FU_QUIRKS_GUID_QUIRK "Guid[quirk]"
+/**
  * FU_QUIRKS_COUNTERPART_GUID:
  *
  * The quirk key for the counterpart GUID.
