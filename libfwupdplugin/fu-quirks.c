@@ -42,6 +42,24 @@
  * obviously need code changes, but allows us to get most existing devices working
  * in an easy way without the user compiling anything.
  *
+ * Plugins may add support for additional quirks that are relevant only for those plugins,
+ * and should be documented in the per-plugin `README.md` files.
+ *
+ * You can add quirk files in `/usr/share/fwupd/quirks.d` or `/var/lib/fwupd/quirks.d/`.
+ *
+ * Here is an example as seen in the CSR plugin:
+ *
+ * |[
+ * [USB\VID_0A12&PID_1337]
+ * Plugin = dfu_csr
+ * Name = H05
+ * Summary = Bluetooth Headphones
+ * Icon = audio-headphones
+ * Vendor = AIAIAI
+ * [USB\VID_0A12&PID_1337&REV_2520]
+ * Version = 1.2
+ * ]|
+ *
  * See also: [class@FuDevice], [class@FuPlugin]
  */
 
