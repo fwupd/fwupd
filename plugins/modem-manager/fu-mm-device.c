@@ -1154,6 +1154,20 @@ fu_mm_device_writeln(const gchar *fn, const gchar *buf, GError **error)
 }
 
 static gboolean
+fu_mm_device_set_autosuspend_delay(FuMmDevice *self, guint timeout_ms, GError **error)
+{
+	g_autofree gchar *device_sysfs_path = NULL;
+	g_autofree gchar *autosuspend_delay_filename = NULL;
+	g_autofree gchar *buf = g_strdup_printf("%u", timeout_ms);
+
+	/* autosuspend delay updated for a proper firmware update */
+	fu_mm_utils_get_port_info(self->port_mbim, NULL, &device_sysfs_path, NULL, NULL);
+	autosuspend_delay_filename =
+	    g_build_filename(device_sysfs_path, "/power/autosuspend_delay_ms", NULL);
+	return fu_mm_device_writeln(autosuspend_delay_filename, buf, error);
+}
+
+static gboolean
 fu_mm_device_write_firmware_mbim_qdu(FuDevice *device,
 				     GBytes *fw,
 				     FuProgress *progress,
@@ -1164,8 +1178,6 @@ fu_mm_device_write_firmware_mbim_qdu(FuDevice *device,
 	const gchar *filename = NULL;
 	const gchar *csum;
 	FuMmDevice *self = FU_MM_DEVICE(device);
-	g_autofree gchar *device_sysfs_path = NULL;
-	g_autofree gchar *autosuspend_delay_filename = NULL;
 	g_autofree gchar *csum_actual = NULL;
 	g_autofree gchar *version = NULL;
 	g_autoptr(FuArchive) archive = NULL;
@@ -1219,10 +1231,7 @@ fu_mm_device_write_firmware_mbim_qdu(FuDevice *device,
 	g_debug("[%s] MD5 matched", filename);
 
 	/* autosuspend delay updated for a proper firmware update */
-	fu_mm_utils_get_port_info(self->port_mbim, NULL, &device_sysfs_path, NULL, NULL);
-	autosuspend_delay_filename =
-	    g_build_filename(device_sysfs_path, "/power/autosuspend_delay_ms", NULL);
-	if (!fu_mm_device_writeln(autosuspend_delay_filename, "20000", error))
+	if (!fu_mm_device_set_autosuspend_delay(self, 20000, error))
 		return FALSE;
 
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_WRITE);
@@ -1702,6 +1711,24 @@ fu_mm_device_attach_qmi_pdc_idle(gpointer user_data)
 }
 
 static gboolean
+fu_mm_device_cleanup(FuDevice *device,
+		     FuProgress *progress,
+		     FwupdInstallFlags install_flags,
+		     GError **error)
+{
+	FuMmDevice *self = FU_MM_DEVICE(device);
+
+	/* restore default configuration */
+	if (self->update_methods & MM_MODEM_FIRMWARE_UPDATE_METHOD_MBIM_QDU) {
+		if (!fu_mm_device_set_autosuspend_delay(self, 2000, error))
+			return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_mm_device_attach(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuMmDevice *self = FU_MM_DEVICE(device);
@@ -1941,6 +1968,7 @@ fu_mm_device_class_init(FuMmDeviceClass *klass)
 	klass_device->detach = fu_mm_device_detach;
 	klass_device->write_firmware = fu_mm_device_write_firmware;
 	klass_device->attach = fu_mm_device_attach;
+	klass_device->cleanup = fu_mm_device_cleanup;
 	klass_device->set_progress = fu_mm_device_set_progress;
 	klass_device->incorporate = fu_mm_device_incorporate;
 
