@@ -39,6 +39,61 @@ CounterpartGuid = USB\VID_0489&PID_E0B8
 Summary = Foxconn T77w968/eSIM LTE modem (fastboot)
 CounterpartGuid = USB\VID_0489&PID_E0B5
 
+# T99W265 with MBIM only
+[USB\VID_0489&PID_E0DA]
+Summary = Foxconn T99W265 LTE modem with MBIM only
+CounterpartGuid = USB\VID_0489&PID_E0DA
+
+# T99W265 with MBIM and Serial port
+[USB\VID_0489&PID_E0DB]
+Summary = Foxconn T99W265 LTE modem with MBIM and Serial
+CounterpartGuid = USB\VID_0489&PID_E0DB
+
+# T99W175 based on QC LE1.2
+[PCI\VID_105B&PID_E0AB]
+Summary = Foxconn T99W175 5G modem
+CounterpartGuid = PCI\VID_105B&PID_E0AB
+
+# T99W175(DW5930e with eSIM)
+[PCI\VID_105B&PID_E0B0]
+Summary = Foxconn T99W175 5G modem with eSIM for DW5930e
+CounterpartGuid = PCI\VID_105B&PID_E0B0
+
+# T99W175(DW5930e without eSIM)
+[PCI\VID_105B&PID_E0B1]
+Summary = Foxconn T99W175 5G modem without eSIM for DW5930e
+CounterpartGuid = PCI\VID_105B&PID_E0B1
+
+# T99W175 based on QC LE1.4
+[PCI\VID_105B&PID_E0BF]
+Summary = Foxconn T99W175 5G modem
+CounterpartGuid = PCI\VID_105B&PID_E0BF
+
+# T99W175 variant
+[PCI\VID_105B&PID_E0C3]
+Summary = Foxconn T99W175 5G modem
+CounterpartGuid = PCI\VID_105B&PID_E0C3
+
+# T99W368 Foxconn variant based on SDX65
+[PCI\VID_105B&PID_E0D8]
+Summary = Foxconn T99W368 5G modem
+CounterpartGuid = PCI\VID_105B&PID_E0D8
+
+# T99W373 Foxconn variant based on SDX62
+[PCI\VID_105B&PID_E0D9]
+Summary = Foxconn T99W373 5G modem
+CounterpartGuid = PCI\VID_105B&PID_E0D9
+
+# T99W373(DW5932e with eSIM) based on SDX62
+[PCI\VID_105B&PID_E0F5]
+Summary = Foxconn T99W373 5G modem with eSIM for DW5932e
+CounterpartGuid = PCI\VID_105B&PID_E0F5
+
+# T99W373 (DW5932e without eSIM) based on SDX62
+[PCI\VID_105B&PID_E0F9]
+Summary = Foxconn T99W373 5G modem without eSIM for DW5932e
+CounterpartGuid = PCI\VID_105B&PID_E0F9
+
 # Quectel EG25-G
 [USB\VID_2C7C&PID_0125]
 Summary = Quectel EG25-G modem
