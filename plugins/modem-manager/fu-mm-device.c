@@ -26,13 +26,13 @@
  * modem boots without SIM card inserted (and therefore the initialization
  * may be very slow) and also where carrier config switching is explicitly
  * required (e.g. if switching from the default (DF) to generic (GC).*/
-#define FU_MM_DEVICE_REMOVE_DELAY_REPROBE 180000 /* ms */
+#define FU_MM_DEVICE_REMOVE_DELAY_REPROBE 210000 /* ms */
 
 #define FU_MM_DEVICE_AT_RETRIES 3
 #define FU_MM_DEVICE_AT_DELAY	3000 /* ms */
 
 /* Amount of time for the modem to get firmware version */
-#define MAX_WAIT_TIME_SECS 150 /* s */
+#define MAX_WAIT_TIME_SECS 240 /* s */
 
 /**
  * FU_MM_DEVICE_FLAG_DETACH_AT_FASTBOOT_HAS_NO_RESPONSE
