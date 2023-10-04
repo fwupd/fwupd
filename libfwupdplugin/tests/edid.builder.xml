@@ -1,0 +1,6 @@
+<firmware gtype="FuEdid">
+  <product_code>0x1234</product_code>
+  <serial_number>0x87654321</serial_number>
+  <pnp_id>HUG</pnp_id>
+  <eisa_id>Hughes</eisa_id>
+</firmware>

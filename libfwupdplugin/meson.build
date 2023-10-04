@@ -13,6 +13,7 @@ fwupdplugin_structs = [
   'fu-cfu-firmware.rs', # fuzzing
   'fu-coswid.rs', # fuzzing
   'fu-dfu-firmware.rs', # fuzzing
+  'fu-edid.rs', # fuzzing
   'fu-efi.rs', # fuzzing
   'fu-elf.rs', # fuzzing
   'fu-fdt.rs', # fuzzing
@@ -76,6 +77,7 @@ fwupdplugin_src = [
   'fu-dfu-firmware.c', # fuzzing
   'fu-dfuse-firmware.c', # fuzzing
   'fu-dump.c', # fuzzing
+  'fu-edid.c', # fuzzing
   'fu-efi-common.c', # fuzzing
   'fu-efi-device-path.c', # fuzzing
   'fu-efi-device-path-list.c', # fuzzing
@@ -199,6 +201,7 @@ fwupdplugin_headers = [
   'fu-dfu-firmware.h',
   'fu-dfuse-firmware.h',
   'fu-dump.h',
+  'fu-edid.h',
   'fu-efi-common.h',
   'fu-efi-firmware-file.h',
   'fu-efi-firmware-filesystem.h',
