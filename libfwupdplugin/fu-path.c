@@ -456,7 +456,12 @@ fu_path_from_kind(FuPathKind path_kind)
 		if (tmp != NULL)
 			return g_strdup(tmp);
 		return g_strdup("/boot");
-
+	/* /dev */
+	case FU_PATH_KIND_DEVFS:
+		tmp = g_getenv("FWUPD_DEVFS");
+		if (tmp != NULL)
+			return g_strdup(tmp);
+		return g_strdup("/dev");
 	/* this shouldn't happen */
 	default:
 		g_warning("cannot build path for unknown kind %u", path_kind);
