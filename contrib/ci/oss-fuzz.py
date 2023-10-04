@@ -384,6 +384,7 @@ def _build(bld: Builder) -> None:
     for fzr in [
         Fuzzer("csv"),
         Fuzzer("dfuse"),
+        Fuzzer("edid", pattern="edid"),
         Fuzzer("fdt"),
         Fuzzer("fit"),
         Fuzzer("fmap"),

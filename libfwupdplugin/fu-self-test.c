@@ -3893,6 +3893,7 @@ fu_firmware_builder_round_trip_func(void)
 	    {FU_TYPE_EFI_LOAD_OPTION,
 	     "efi-load-option.builder.xml",
 	     "7ef696d22902ae97ef5f73ad9c85a28095ad56f1"},
+	    {FU_TYPE_EDID, "edid.builder.xml", "64cef10b75ccce684a483d576dd4a4ce6bef8165"},
 	    {FU_TYPE_EFI_FIRMWARE_SECTION,
 	     "efi-firmware-section.builder.xml",
 	     "2aae6c35c94fcfb415dbe95f408b9ce91ee846ed"},
