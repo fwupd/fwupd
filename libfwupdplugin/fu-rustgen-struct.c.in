@@ -140,6 +140,8 @@
     {{item.c_setter}}(st, "{{item.default}}", NULL);
 {%- elif item.type == Type.GUID %}
     {{item.c_setter}}(st, (fwupd_guid_t *) "{{item.default}}");
+{%- elif item.type == Type.U8 and item.multiplier %}
+    memcpy(st->data + {{item.c_define('OFFSET')}}, "{{item.default}}", {{item.size}});
 {%- else %}
     {{item.c_setter}}(st, {{item.default}});
 {%- endif %}
@@ -227,7 +229,7 @@
 {%- for item in obj.items | selectattr('constant') %}
 {%- if item.type == Type.STRING %}
     if (strncmp((const gchar *) (st->data + {{item.offset}}), "{{item.constant}}", {{item.size}}) != 0) {
-{%- elif item.type == Type.GUID %}
+{%- elif item.type == Type.GUID or (item.type == Type.U8 and item.multiplier) %}
     if (memcmp(st->data + {{item.offset}}, "{{item.constant}}", {{item.size}}) != 0) {
 {%- else %}
     if ({{item.c_getter}}(st) != {{item.constant}}) {

@@ -899,7 +899,7 @@ The struct types currently supported are:
 
 Arrays of types are also allowed, with the format `[type; multiple]`, for example:
 
-- `buf: [u8; 12]` for a C array of `guint8 buf[12] = {0};`
+- `buf: [u8; 3] = 0x123456` for a C array of `guint8 buf[3] = {0x12, 0x34, 0x56};`
 - `val: [u64be; 7]`  for a C array of `guint64 val[7] = {0};`
 - `str: [char; 4] = "ABCD"` for a C array of `gchar buf[4] = {'A','B','C','D'};`
   -- NOTE: `fu_struct_example_get_str()` would return a `NUL`-terminated string of `ABCD\0`.
