@@ -174,6 +174,8 @@ class StructObj:
             for item in self.items:
                 if item.constant and item.type != Type.STRING:
                     item.add_private_export("Getters")
+                if item.struct_obj:
+                    item.struct_obj.add_private_export("Validate")
         if derive == "New":
             for item in self.items:
                 if item.constant:
