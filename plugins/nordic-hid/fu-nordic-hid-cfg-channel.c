@@ -609,7 +609,6 @@ fu_nordic_hid_cfg_channel_update_peers(FuNordicHidCfgChannel *self,
 	gboolean peers_supported = FALSE;
 	guint8 peer_id;
 	guint cnt = 0;
-	g_autoptr(GError) error_local = NULL;
 
 	if (!fu_nordic_hid_cfg_channel_index_peers_cmd(self, &peers_supported, error))
 		return FALSE;
