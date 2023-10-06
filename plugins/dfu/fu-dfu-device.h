@@ -41,7 +41,7 @@ fu_dfu_device_upload(FuDfuDevice *self,
 		     FuDfuTargetTransferFlags flags,
 		     GError **error);
 gboolean
-fu_dfu_device_refresh(FuDfuDevice *self, GError **error);
+fu_dfu_device_refresh(FuDfuDevice *self, guint timeout_ms, GError **error);
 gboolean
 fu_dfu_device_refresh_and_clear(FuDfuDevice *self, GError **error);
 gboolean

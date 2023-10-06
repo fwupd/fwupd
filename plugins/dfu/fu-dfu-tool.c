@@ -345,7 +345,7 @@ fu_dfu_tool_read_alt(FuDfuTool *self, gchar **values, GError **error)
 	locker = fu_device_locker_new(device, error);
 	if (locker == NULL)
 		return FALSE;
-	if (!fu_dfu_device_refresh(device, error))
+	if (!fu_dfu_device_refresh(device, 0, error))
 		return FALSE;
 
 	/* set up progress */
@@ -445,7 +445,7 @@ fu_dfu_tool_read(FuDfuTool *self, gchar **values, GError **error)
 	locker = fu_device_locker_new(device, error);
 	if (locker == NULL)
 		return FALSE;
-	if (!fu_dfu_device_refresh(device, error))
+	if (!fu_dfu_device_refresh(device, 0, error))
 		return FALSE;
 
 	/* APP -> DFU */
@@ -535,7 +535,7 @@ fu_dfu_tool_write_alt(FuDfuTool *self, gchar **values, GError **error)
 	locker = fu_device_locker_new(device, error);
 	if (locker == NULL)
 		return FALSE;
-	if (!fu_dfu_device_refresh(device, error))
+	if (!fu_dfu_device_refresh(device, 0, error))
 		return FALSE;
 
 	/* set up progress */
@@ -652,7 +652,7 @@ fu_dfu_tool_write(FuDfuTool *self, gchar **values, GError **error)
 	locker = fu_device_locker_new(device, error);
 	if (locker == NULL)
 		return FALSE;
-	if (!fu_dfu_device_refresh(device, error))
+	if (!fu_dfu_device_refresh(device, 0, error))
 		return FALSE;
 
 	/* APP -> DFU */
