@@ -35,8 +35,8 @@ static gboolean
 fu_amd_gpu_set_device_file(FuDevice *device, const gchar *base, GError **error)
 {
 	const gchar *f;
-	GDir *dir;
 	g_autofree gchar *ddir = NULL;
+	g_autoptr(GDir) dir = NULL;
 
 	ddir = g_build_filename(base, "drm", NULL);
 	dir = g_dir_open(ddir, 0, error);
