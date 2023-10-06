@@ -110,8 +110,9 @@ fu_pxi_composite_receiver_cmd(guint8 opcode,
 	g_byte_array_prepend(wireless_mod_cmd, &target, 0x01); /* target */
 	g_byte_array_prepend(wireless_mod_cmd, &hid_sn, 0x01); /* hid command sn */
 
-	/* prepend length and rf command code */
-	len = wireless_mod_cmd->len;
+	/* prepend length and rf command code, the param len not include "hid_sn" byte and "target"
+	 * byte */
+	len = wireless_mod_cmd->len - 2;
 	g_byte_array_prepend(wireless_mod_cmd, &len, 0x01);
 	g_byte_array_prepend(wireless_mod_cmd, &rf_cmd_code, 0x01); /* command code */
 
