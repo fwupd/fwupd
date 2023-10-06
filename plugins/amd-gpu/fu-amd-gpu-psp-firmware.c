@@ -194,7 +194,6 @@ fu_amd_gpu_psp_firmware_parse(FuFirmware *firmware,
 	gsize bufsz;
 	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
 	g_autoptr(GByteArray) efs = NULL;
-	g_autoptr(GByteArray) l1 = NULL;
 
 	efs = fu_struct_efs_parse(buf, bufsz, 0, error);
 	if (efs == NULL)
