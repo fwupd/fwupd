@@ -689,7 +689,7 @@ gboolean
 fu_dfu_device_refresh_and_clear(FuDfuDevice *self, GError **error)
 {
 	FuDfuDevicePrivate *priv = GET_PRIVATE(self);
-	if (!fu_dfu_device_refresh(self, error))
+	if (!fu_dfu_device_refresh(self, 0, error))
 		return FALSE;
 	switch (priv->state) {
 	case FU_DFU_STATE_DFU_UPLOAD_IDLE:
@@ -713,6 +713,7 @@ fu_dfu_device_refresh_and_clear(FuDfuDevice *self, GError **error)
 /**
  * fu_dfu_device_refresh:
  * @self: a #FuDfuDevice
+ * @timeout_ms: a timeout, or 0 to use the default device timeout
  * @error: (nullable): optional return location for an error
  *
  * Refreshes the cached properties on the DFU device.
@@ -720,7 +721,7 @@ fu_dfu_device_refresh_and_clear(FuDfuDevice *self, GError **error)
  * Returns: %TRUE for success
  **/
 gboolean
-fu_dfu_device_refresh(FuDfuDevice *self, GError **error)
+fu_dfu_device_refresh(FuDfuDevice *self, guint timeout_ms, GError **error)
 {
 	FuDfuDevicePrivate *priv = GET_PRIVATE(self);
 	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
@@ -730,6 +731,10 @@ fu_dfu_device_refresh(FuDfuDevice *self, GError **error)
 
 	g_return_val_if_fail(FU_IS_DFU_DEVICE(self), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	/* fall back to default */
+	if (timeout_ms == 0)
+		timeout_ms = priv->timeout_ms;
 
 	/* the device has no DFU runtime, so cheat */
 	if (priv->state == FU_DFU_STATE_APP_IDLE &&
@@ -758,7 +763,7 @@ fu_dfu_device_refresh(FuDfuDevice *self, GError **error)
 					   buf,
 					   sizeof(buf),
 					   &actual_length,
-					   priv->timeout_ms,
+					   timeout_ms,
 					   NULL, /* cancellable */
 					   &error_local)) {
 		/* got STALL */
@@ -1492,7 +1497,7 @@ fu_dfu_device_error_fixup(FuDfuDevice *self, GError **error)
 		return;
 
 	/* get the status */
-	if (!fu_dfu_device_refresh(self, NULL))
+	if (!fu_dfu_device_refresh(self, 0, NULL))
 		return;
 
 	/* not in an error state */
