@@ -408,7 +408,7 @@ fu_dfu_target_manifest_wait(FuDfuTarget *self, GError **error)
 	guint polling_count = 0;
 
 	/* get the status */
-	if (!fu_dfu_device_refresh(device, error))
+	if (!fu_dfu_device_refresh(device, 0, error))
 		return FALSE;
 
 	/* wait for FU_DFU_STATE_DFU_MANIFEST to not be set */
@@ -426,7 +426,7 @@ fu_dfu_target_manifest_wait(FuDfuTarget *self, GError **error)
 
 		fu_device_sleep(FU_DEVICE(device),
 				fu_dfu_device_get_download_timeout(device) + 1000);
-		if (!fu_dfu_device_refresh(device, error))
+		if (!fu_dfu_device_refresh(device, 0, error))
 			return FALSE;
 	}
 
@@ -451,14 +451,14 @@ fu_dfu_target_check_status(FuDfuTarget *self, GError **error)
 	g_autoptr(GTimer) timer = g_timer_new();
 
 	/* get the status */
-	if (!fu_dfu_device_refresh(device, error))
+	if (!fu_dfu_device_refresh(device, 0, error))
 		return FALSE;
 
 	/* wait for dfuDNBUSY to not be set */
 	while (fu_dfu_device_get_state(device) == FU_DFU_STATE_DFU_DNBUSY) {
 		g_debug("waiting for FU_DFU_STATE_DFU_DNBUSY to clear");
 		fu_device_sleep(FU_DEVICE(device), fu_dfu_device_get_download_timeout(device));
-		if (!fu_dfu_device_refresh(device, error))
+		if (!fu_dfu_device_refresh(device, 0, error))
 			return FALSE;
 		/* this is a really long time to save fwupd in case
 		 * the device has got wedged */
@@ -718,9 +718,10 @@ fu_dfu_target_download_chunk(FuDfuTarget *self,
 		return FALSE;
 	}
 
-	/* for STM32 devices, the action only occurs when we do GetStatus */
+	/* for STM32 devices, the action only occurs when we do GetStatus --
+	 * and it can take a long time to complete! */
 	if (fu_dfu_device_get_version(device) == FU_DFU_FIRMARE_VERSION_DFUSE) {
-		if (!fu_dfu_device_refresh(device, error))
+		if (!fu_dfu_device_refresh(device, 35000, error))
 			return FALSE;
 	}
 
