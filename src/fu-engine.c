@@ -6424,6 +6424,7 @@ fu_engine_adopt_children(FuEngine *self, FuDevice *device)
 				device,
 				fu_device_get_physical_id(device_tmp))) {
 				fu_device_set_parent(device, device_tmp);
+				fu_engine_ensure_device_supported(self, device_tmp);
 				break;
 			}
 		}
@@ -6436,6 +6437,7 @@ fu_engine_adopt_children(FuEngine *self, FuDevice *device)
 				FuDevice *device_tmp = g_ptr_array_index(devices, i);
 				if (fu_device_has_guid(device_tmp, guid)) {
 					fu_device_set_parent(device, device_tmp);
+					fu_engine_ensure_device_supported(self, device_tmp);
 					break;
 				}
 			}
