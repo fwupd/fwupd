@@ -2835,8 +2835,8 @@ msgstr "Ovaj alat dopušta administratoru postavljanje upita i upravljanje fwupd
 msgid "This tool allows an administrator to use the fwupd plugins without being installed on the host system."
 msgstr "Ovaj alat dopušta administratoru korištenje fwupd priključaka bez instalacije na sustavu."
 
-#. TRANSLATORS: the %1 is a BIOS setting name.  %2 and %3 are the
-#. values, e.g. "True" or "Windows10"
+#. TRANSLATORS: the %1 is a BIOS setting name.
+#. * %2 and %3 are the values, e.g. "True" or "Windows10"
 #, c-format
 msgid "This tool can change the BIOS setting '%s' from '%s' to '%s' automatically, but it will only be active after restarting the computer."
 msgstr "Ovaj alat može promijeniti BIOS postavku '%s' iz '%s' u '%s' automatski, ali će biti aktivno nakon ponovnog pokretanja računala."

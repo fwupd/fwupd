@@ -2065,6 +2065,14 @@ msgstr "Wyjście w formacie JSON"
 msgid "Override the default ESP path"
 msgstr "Zastępuje domyślną ścieżkę ESP"
 
+#. TRANSLATORS: if we can get metadata from peer-to-peer clients
+msgid "P2P Firmware"
+msgstr "Oprogramowanie sprzętowe P2P"
+
+#. TRANSLATORS: if we can get metadata from peer-to-peer clients
+msgid "P2P Metadata"
+msgstr "Metadane P2P"
+
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "PATH"
 msgstr "ŚCIEŻKA"
@@ -2886,8 +2894,8 @@ msgstr "To narzędzie umożliwia administratorowi odpytywanie i sterowanie usł
 msgid "This tool allows an administrator to use the fwupd plugins without being installed on the host system."
 msgstr "To narzędzie umożliwia administratorowi używanie wtyczek fwupd bez ich instalacji na komputerze."
 
-#. TRANSLATORS: the %1 is a BIOS setting name.  %2 and %3 are the
-#. values, e.g. "True" or "Windows10"
+#. TRANSLATORS: the %1 is a BIOS setting name.
+#. * %2 and %3 are the values, e.g. "True" or "Windows10"
 #, c-format
 msgid "This tool can change the BIOS setting '%s' from '%s' to '%s' automatically, but it will only be active after restarting the computer."
 msgstr "To narzędzie może automatycznie zmienić ustawienie BIOS-u „%s” z „%s” na „%s”, ale zmiana będzie aktywna dopiero po ponownym uruchomieniu komputera."

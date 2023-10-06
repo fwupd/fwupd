@@ -2960,8 +2960,8 @@ msgstr "이 도구를 사용하면 시스템 관리자가 펌웨어 설치 및 �
 msgid "This tool allows an administrator to use the fwupd plugins without being installed on the host system."
 msgstr "이 도구를 사용하면 시스템 관리자가 fwupd 플러그인을 호스트 시스템에 설치하지 않고 사용할 수 있습니다."
 
-#. TRANSLATORS: the %1 is a BIOS setting name.  %2 and %3 are the
-#. values, e.g. "True" or "Windows10"
+#. TRANSLATORS: the %1 is a BIOS setting name.
+#. * %2 and %3 are the values, e.g. "True" or "Windows10"
 #, c-format
 msgid "This tool can change the BIOS setting '%s' from '%s' to '%s' automatically, but it will only be active after restarting the computer."
 msgstr "이 도구에서 현재 '%s' BIOS 설정을 '%s'에서 '%s'(으)로 자동으로 바꿀 수 있습니다만, 컴퓨터를 다시 시작해야 합니다."

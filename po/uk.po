@@ -3009,8 +3009,8 @@ msgstr "За допомогою цього інструмента адмініс
 msgid "This tool allows an administrator to use the fwupd plugins without being installed on the host system."
 msgstr "За допомогою цього інструмента адміністратор може скористатися додатками fwupd без встановлення їх до основної системи."
 
-#. TRANSLATORS: the %1 is a BIOS setting name.  %2 and %3 are the
-#. values, e.g. "True" or "Windows10"
+#. TRANSLATORS: the %1 is a BIOS setting name.
+#. * %2 and %3 are the values, e.g. "True" or "Windows10"
 #, c-format
 msgid "This tool can change the BIOS setting '%s' from '%s' to '%s' automatically, but it will only be active after restarting the computer."
 msgstr "Цей інструмент здатен змінити параметр BIOS «%s» з «%s» на «%s» автоматично, але нове значення буде задіяно лише після перезапуску комп'ютера."

@@ -2987,8 +2987,8 @@ msgstr "Detta verktyg låter en administratör ställa frågor till och styra fw
 msgid "This tool allows an administrator to use the fwupd plugins without being installed on the host system."
 msgstr "Detta verktyg tillåter en administratör att använda fwupd-insticksmoduler utan att dessa är installerade på värdsystemet."
 
-#. TRANSLATORS: the %1 is a BIOS setting name.  %2 and %3 are the
-#. values, e.g. "True" or "Windows10"
+#. TRANSLATORS: the %1 is a BIOS setting name.
+#. * %2 and %3 are the values, e.g. "True" or "Windows10"
 #, c-format
 msgid "This tool can change the BIOS setting '%s' from '%s' to '%s' automatically, but it will only be active after restarting the computer."
 msgstr "Detta verktyg kan automatiskt ändra BIOS-inställningen ”%s” från ”%s” till ”%s”, men den kommer aktiveras först efter att datorn startats om."

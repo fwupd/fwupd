@@ -2139,6 +2139,14 @@ msgstr "Výstup ve formátu JSON"
 msgid "Override the default ESP path"
 msgstr "Přepsat výchozí popis umístění na ESP oddílu"
 
+#. TRANSLATORS: if we can get metadata from peer-to-peer clients
+msgid "P2P Firmware"
+msgstr "Firmware z P2P"
+
+#. TRANSLATORS: if we can get metadata from peer-to-peer clients
+msgid "P2P Metadata"
+msgstr "Metadata z P2P"
+
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "PATH"
 msgstr "POPIS-UMÍSTĚNÍ"
@@ -3004,8 +3012,8 @@ msgstr "Tento nástroj správci umožňuje dotazovat a ovládat proces služby f
 msgid "This tool allows an administrator to use the fwupd plugins without being installed on the host system."
 msgstr "Tento nástroj správci umožňuje použít zásuvné moduly pro fwupd bez toho, aby se instalovaly na hostitelský systém."
 
-#. TRANSLATORS: the %1 is a BIOS setting name.  %2 and %3 are the
-#. values, e.g. "True" or "Windows10"
+#. TRANSLATORS: the %1 is a BIOS setting name.
+#. * %2 and %3 are the values, e.g. "True" or "Windows10"
 #, c-format
 msgid "This tool can change the BIOS setting '%s' from '%s' to '%s' automatically, but it will only be active after restarting the computer."
 msgstr "Tento nástroj může změnit nastavení BIOS „%s“ z „%sȜ na „%s“ automaticky, ale toto se projeví až po restartu počítače."

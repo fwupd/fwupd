@@ -2113,6 +2113,14 @@ msgstr "Sortida en el format JSON"
 msgid "Override the default ESP path"
 msgstr "Preferència sobre el camí ESP predeterminat"
 
+#. TRANSLATORS: if we can get metadata from peer-to-peer clients
+msgid "P2P Firmware"
+msgstr "Microprogramari des de P2P"
+
+#. TRANSLATORS: if we can get metadata from peer-to-peer clients
+msgid "P2P Metadata"
+msgstr "Metadades des de P2P"
+
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "PATH"
 msgstr "CAMÍ"
@@ -2974,8 +2982,8 @@ msgstr "Aquesta eina permet que un administrador consulti i controli el dimoni �
 msgid "This tool allows an administrator to use the fwupd plugins without being installed on the host system."
 msgstr "Aquesta eina permet a un administrador usar els connectors de «fwupd» sense estar instal·lats en el sistema amfitrió."
 
-#. TRANSLATORS: the %1 is a BIOS setting name.  %2 and %3 are the
-#. values, e.g. "True" or "Windows10"
+#. TRANSLATORS: the %1 is a BIOS setting name.
+#. * %2 and %3 are the values, e.g. "True" or "Windows10"
 #, c-format
 msgid "This tool can change the BIOS setting '%s' from '%s' to '%s' automatically, but it will only be active after restarting the computer."
 msgstr "Aquesta eina pot canviar la configuració del BIOS «%s» des de «%s» a «%s» de forma automàtica, però només estarà activa una vegada es reiniciï l'ordinador."

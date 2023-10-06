@@ -597,6 +597,10 @@ msgstr "Szekrényarchívum összeállítása belsővezérlőprogram-bloból és 
 msgid "Build a firmware file"
 msgstr "Belsővezérlőprogram-fájl összeállítása"
 
+#. TRANSLATORS: longer description
+msgid "CPU Microcode must be updated to mitigate against various information-disclosure security issues."
+msgstr "A CPU-mikrokódot frissíteni kell a különböző információfeltárási biztonsági problémák kárenyhítéséhez."
+
 #. TRANSLATORS: this is to abort the interactive prompt
 msgid "Cancel"
 msgstr "Mégse"
@@ -1698,6 +1702,14 @@ msgstr "Intel CET engedélyezve"
 msgid "Intel Control-Flow Enforcement Technology detects and prevents certain methods for running malicious software on the device."
 msgstr "Az Intel vezérlőáramlás-kényszerítési technológia felismer és megakadályoz bizonyos metódusokat abban, hogy kártékony szoftvert futtassanak az eszközön."
 
+#. TRANSLATORS: Title: GDS is where the CPU leaks information
+msgid "Intel GDS Mitigation"
+msgstr "Intel GDS kárenyhítés"
+
+#. TRANSLATORS: Title: GDS is where the CPU leaks information
+msgid "Intel GDS mitigation"
+msgstr "Intel GDS kárenyhítés"
+
 #. TRANSLATORS: Title: MEI = Intel Management Engine
 msgid "Intel Management Engine Manufacturing Mode"
 msgstr "Intel menedzsmentmotor gyártói mód"
@@ -1944,6 +1956,11 @@ msgstr "Metaadatok URI-ja"
 msgid "Metadata can be obtained from the Linux Vendor Firmware Service."
 msgstr "A metaadatok nem szerezhetőek be a Linux gyártói belső vezérlőprogram szolgáltatásból."
 
+#. TRANSLATORS: error message for a user who ran fwupdmgr
+#. * refresh recently
+msgid "Metadata is up to date; use --force to refresh again."
+msgstr "A metaadatok naprakészek, használja a --force kapcsolót az újbóli frissítéshez."
+
 #. TRANSLATORS: smallest version number installable on device
 msgid "Minimum Version"
 msgstr "Legkisebb verzió"
@@ -2101,6 +2118,14 @@ msgstr "Kiment JSON-formátumban"
 msgid "Override the default ESP path"
 msgstr "Az alapértelmezett ESP-útvonal felülbírálása"
 
+#. TRANSLATORS: if we can get metadata from peer-to-peer clients
+msgid "P2P Firmware"
+msgstr "Egyenrangú belső vezérlőprogram"
+
+#. TRANSLATORS: if we can get metadata from peer-to-peer clients
+msgid "P2P Metadata"
+msgstr "Egyenrangú metaadatok"
+
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "PATH"
 msgstr "ÚTVONAL"
@@ -2161,6 +2186,11 @@ msgstr "A folytatás előtt győződjön meg arról, hogy rendelkezik-e a kötet
 #, c-format
 msgid "Please enter a number from 0 to %u: "
 msgstr "Adjon meg egy számot 0 és %u között: "
+
+#. TRANSLATORS: the user isn't reading the question -- please don't translate
+#. * 'Y' or 'N' as these are hardcoded
+msgid "Please enter either Y or N: "
+msgstr "Adjon meg Y (igen) vagy N (nem) értéket: "
 
 #. TRANSLATORS: Failed to open plugin, hey Arch users
 msgid "Plugin dependencies missing"
@@ -2957,8 +2987,8 @@ msgstr "Ez az eszköz lehetővé teszi a rendszergazdáknak az fwupd démon lek�
 msgid "This tool allows an administrator to use the fwupd plugins without being installed on the host system."
 msgstr "Ez az eszköz lehetővé teszi a rendszergazdáknak az fwupd bővítményeinek használatát anélkül, hogy telepítve lennének a gazdarendszeren."
 
-#. TRANSLATORS: the %1 is a BIOS setting name.  %2 and %3 are the
-#. values, e.g. "True" or "Windows10"
+#. TRANSLATORS: the %1 is a BIOS setting name.
+#. * %2 and %3 are the values, e.g. "True" or "Windows10"
 #, c-format
 msgid "This tool can change the BIOS setting '%s' from '%s' to '%s' automatically, but it will only be active after restarting the computer."
 msgstr "Ez az eszköz képes automatikusan megváltoztatni a(z) „%s” BIOS-beállítást „%s” értékről „%s” értékre, de csak a számítógép újraindítása után lesz aktív."

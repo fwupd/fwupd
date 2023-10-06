@@ -33,6 +33,48 @@
     <binary>fwupdtool</binary>
   </provides>
   <releases>
+    <release version="1.9.6" date="2023-10-06">
+      <description>
+        <p>
+          This release adds the following features:
+        </p>
+        <ul>
+          <li>Add a launchd agent for macOS</li>
+          <li>Add a new security attribute for BIOS capsule updates to be enabled</li>
+          <li>Add functionality to fix specific host security attributes</li>
+          <li>Add global information from the context into the report data</li>
+          <li>Add support for coSWID payload sections</li>
+          <li>Add support for parsing the EDID</li>
+          <li>Allow adding only-quirk instance IDs from quirk files</li>
+          <li>Install a sysusers.d systemd file when using -Dsystemd_unit_user</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Allow devices to require a connected display</li>
+          <li>Allow Wacom modules to specify a status polling interval</li>
+          <li>Do not show Intel CET unsupported as success</li>
+          <li>Do not show multiple Genesys GL32xx devices for the same physical device</li>
+          <li>Fix a fuzzing timeout in the HID descriptor parser</li>
+          <li>Recalculate the SUPPORTED flag after adopting a child device</li>
+          <li>Reduce the amount of memory used when chunking large firmware</li>
+          <li>Speed up logitech-bulkcontroller firmware updates</li>
+          <li>Stop reading ownership and TPM flashes left in Dell plugin</li>
+          <li>Try to use the LVFS when using report-history --force</li>
+          <li>Write the coSWID TAG_ID as a bytestring when possible</li>
+        </ul>
+        <p>This release adds support for the following hardware:</p>
+        <ul>
+          <li>AMD dGPUs, Navi3x and above</li>
+          <li>Foxconn SDX12, SDX55 and SDX6X devices</li>
+          <li>Google Rex Intel USB-4 retimers</li>
+          <li>MediaTek DP AUX Scalers</li>
+          <li>Quectel EM160 module</li>
+          <li>Star Labs StarBook Mk VIr2</li>
+          <li>VLI VL105-VL109</li>
+          <li>Wacom DTH134 and DTC121 Tablets</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.9.5" date="2023-09-04">
       <description>
         <p>
